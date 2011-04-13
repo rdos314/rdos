@@ -47,8 +47,6 @@ debug_active    DW ?
 curr_row        DW ?
 curr_col        DW ?
 
-spin_lock       DW ?
-
 data    ENDS
 
 IFDEF __WASM__
@@ -1790,10 +1788,10 @@ ShowHere    Endp
 ;
 ;           DESCRIPTION:    Enter crash handler
 ;
-;           RETURNS:        CY      Chain to NMI
+;           RETURNS:        FS      Current processor
+;                           CY      Chain to NMI
 ;                           NC
-;                               FS  Current processor
-;
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EnterHandler    Proc near 
@@ -1815,28 +1813,21 @@ enter_do:
     or ax,ax
     jz enter_fault_do
 ;
+    GetProcessor
+    or fs:ps_flags,PS_FLAG_NMI
     stc
     jmp enter_done
 
 enter_fault_do:
     mov ax,SEG data    
     mov ds,ax
-
-enter_lock_loop:
-    mov ax,1
-    xchg ax,ds:spin_lock
-    or ax,ax
-    jz enter_locked
 ;
-    pause    
-    jmp enter_lock_loop
-
-enter_locked:    
     mov ax,ds:debug_core
     or ax,ax
     jz enter_first
 ;
-    mov ds:spin_lock,0
+    GetProcessor
+    or fs:ps_flags,PS_FLAG_NMI
     stc
     jmp enter_done
 
@@ -1871,6 +1862,9 @@ enter_first:
     pop bx
     pop es
     pop ds    
+;
+    mov ax,5
+    call DelayMs
 ;
     xor ax,ax
 
@@ -1948,7 +1942,7 @@ crash_gate:
     cli    
     push fs
     call EnterHandler
-    jc nmi_block
+    jc crash_gate_chain
 ;
     call SaveCore    
     pop ax
@@ -1960,6 +1954,18 @@ crash_gate:
     pop eax
     mov fs:cs_cs,ax
     jmp CrashHandler
+
+crash_gate_chain:
+    call SaveCore    
+    pop ax
+    mov fs:cs_fs,ax
+;    
+    pop eax
+    mov fs:cs_eip,eax
+;
+    pop eax
+    mov fs:cs_cs,ax
+    jmp nmi_block
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1974,13 +1980,13 @@ crash_gate:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 crash_fault_name    DB 'Crash Fault', 0
-
+    
 crash_fault:
     cli    
     push eax
     push fs
     call EnterHandler
-    jc nmi_block
+    jc crash_fault_chain
 ;
     call SaveCore    
     pop ax
@@ -2053,6 +2059,78 @@ crash_fault_vm:
     mov fs:cs_esp,eax
     jmp CrashHandler
 
+crash_fault_chain:
+    call SaveCore    
+    pop ax
+    mov fs:cs_fs,ax
+;
+    pop eax    
+    mov fs:cs_fault,eax
+;
+    mov ax,[bp].pm_ds
+    mov fs:cs_ds,ax
+;    
+    mov eax,[bp].vm_eax
+    mov fs:cs_eax,eax
+;    
+    mov eax,[bp].vm_ebx
+    mov fs:cs_ebx,eax
+;
+    mov eax,ebp
+    mov ax,[bp]
+    mov fs:cs_ebp,eax
+;    
+    mov eax,[bp].vm_eflags
+    mov fs:cs_eflags,eax
+;
+    mov ax,[bp].vm_cs
+    mov fs:cs_cs,ax
+;    
+    mov eax,[bp].vm_eip
+    mov fs:cs_eip,eax
+;
+    test dword ptr [bp].vm_eflags,20000h
+    jnz crash_fault_chain_vm
+
+crash_fault_chain_pm:
+    mov al,[bp].vm_cs
+    test al,3
+    jz crash_fault_chain_kernel
+;
+    mov ax,[bp].vm_ss
+    mov fs:cs_ss,ax
+;    
+    mov eax,[bp].vm_esp
+    mov fs:cs_esp,eax
+    jmp nmi_block
+    
+crash_fault_chain_kernel:
+    mov ax,bp
+    add ax,vm_esp
+    movzx eax,ax
+    mov fs:cs_esp,eax
+    jmp nmi_block
+
+crash_fault_chain_vm:
+    mov ax,[bp].vm_gs
+    mov fs:cs_gs,ax
+;
+    mov ax,[bp].vm_fs
+    mov fs:cs_fs,ax
+;
+    mov ax,[bp].vm_ds
+    mov fs:cs_ds,ax
+;    
+    mov ax,[bp].vm_es
+    mov fs:cs_es,ax
+;    
+    mov ax,[bp].vm_ss
+    mov fs:cs_ss,ax
+;    
+    mov eax,[bp].vm_esp
+    mov fs:cs_esp,eax
+    jmp nmi_block
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2066,10 +2144,10 @@ crash_fault_vm:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 crash_tss_name    DB 'Crash Tss', 0
-
+    
 crash_tss:
     call EnterHandler
-    jc nmi_block
+    jc crash_tss_chain
 ;    
     mov ax,double_tss_data_sel
     mov ds,ax
@@ -2167,6 +2245,103 @@ crash_tss:
     sidt fword ptr fs:cs_idtr
     jmp CrashHandler
 
+crash_tss_chain:    
+    mov ax,double_tss_data_sel
+    mov ds,ax
+    mov bx,ds:tss_back_link
+    mov fs:cs_tr,bx
+;
+    mov ax,gdt_sel
+    mov ds,ax
+    and bx,0FFF8h
+    xor ecx,ecx
+    mov cl,[bx+6]
+    and cl,0Fh
+    shl ecx,16
+    mov cx,[bx]
+    inc ecx
+    mov edx,[bx+2]
+    rol edx,8
+    mov dl,[bx+7]
+    ror edx,8
+;       
+    AllocateGdt
+    CreateDataSelector16
+    mov ds,bx
+    mov eax,dword ptr ds:tss_eax
+    mov fs:cs_eax,eax
+;    
+    mov eax,dword ptr ds:tss_ecx
+    mov fs:cs_ecx,eax
+;
+    mov eax,dword ptr ds:tss_edx
+    mov fs:cs_edx,eax
+;
+    mov eax,dword ptr ds:tss_ebx
+    mov fs:cs_ebx,eax
+;
+    mov eax,dword ptr ds:tss_esp    
+    mov fs:cs_esp,eax
+;
+    mov eax,dword ptr ds:tss_ebp    
+    mov fs:cs_ebp,eax
+;    
+    mov eax,dword ptr ds:tss_esi
+    mov fs:cs_esi,eax
+;
+    mov eax,dword ptr ds:tss_edi    
+    mov fs:cs_edi,eax
+;    
+    mov ax,ds:tss_es
+    mov fs:cs_es,ax
+;
+    mov ax,ds:tss_cs    
+    mov fs:cs_cs,ax
+;    
+    mov ax,ds:tss_ss
+    mov fs:cs_ss,ax
+;
+    mov ax,ds:tss_ds    
+    mov fs:cs_ds,ax
+;
+    mov ax,ds:tss_fs    
+    mov fs:cs_fs,ax
+;
+    mov ax,ds:tss_gs    
+    mov fs:cs_gs,ax    
+;
+    mov ax,ds:tss_ldt
+    mov fs:cs_ldt,ax
+;
+    mov fs:cs_fault,8
+;
+    mov eax,dword ptr ds:tss_eflags
+    mov fs:cs_eflags,eax
+;
+    mov eax,cr0
+    mov fs:cs_cr0,eax
+    mov eax,cr2
+    mov fs:cs_cr2,eax
+    mov eax,cr3
+    mov fs:cs_cr3,eax
+    mov eax,cr4
+    mov fs:cs_cr4,eax
+;
+    mov eax,dr0
+    mov fs:cs_dr0,eax
+    mov eax,dr1
+    mov fs:cs_dr1,eax
+    mov eax,dr2
+    mov fs:cs_dr2,eax
+    mov eax,dr3
+    mov fs:cs_dr3,eax
+    mov eax,dr7
+    mov fs:cs_dr7,eax
+;
+    sgdt fword ptr fs:cs_gdtr
+    sidt fword ptr fs:cs_idtr
+    jmp nmi_block
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -2183,7 +2358,6 @@ init_crashdeb    PROC near
     mov ds,ax
     mov ds:debug_active,0
     mov ds:curr_num,0
-    mov ds:spin_lock,0
     mov ds:debug_core,0
 ;    
     mov ax,cs
