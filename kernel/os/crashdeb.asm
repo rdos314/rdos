@@ -1928,6 +1928,41 @@ EnterHandler    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           StartCrashCore
+;
+;           DESCRIPTION:    Start crash core
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_crash_core_name    DB 'Start Crash Core', 0
+
+start_crash_core:
+    GetProcessor
+    call SaveCore
+;    
+    call InitCrashKeyboard
+
+start_crash_loop:
+    call GetCrashKey
+    jc handle_next
+;    
+    test ah,80h
+    jnz start_crash_loop
+;    
+    cmp al,1Bh
+    jne start_crash_loop
+;
+    call EnterHandler
+    jc start_crash_chain
+;
+    jmp CrashHandler
+
+start_crash_chain:
+    jmp nmi_block            
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CrashGate
 ;
 ;           DESCRIPTION:    Crash with a gate
@@ -2363,6 +2398,12 @@ init_crashdeb    PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET start_crash_core
+    mov edi,OFFSET start_crash_core_name
+    xor cl,cl
+    mov ax,start_crash_core_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET crash_gate
     mov edi,OFFSET crash_gate_name

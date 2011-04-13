@@ -917,6 +917,10 @@ ThreadToSel     MACRO
 
 ;;;;;;;;;;; Crash handler ;;;;;;;;;;;;;;;;
 
+StartCrashCore       MACRO
+    OsGate start_crash_core_nr
+                    ENDM
+
 CrashGate       MACRO
     OsGate crash_gate_nr
                     ENDM
