@@ -420,7 +420,7 @@ ap_task_wait:
 
     GetApicId
     cmp edx,2
-    je ap_start
+    jne ap_start
 
 stopl:
     jmp stopl
