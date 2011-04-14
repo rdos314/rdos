@@ -89,8 +89,6 @@ code    SEGMENT byte use16 public 'CODE'
     extrn prot_exception:near
     extrn virt_exception:near
 
-    extrn do_app_usercall32:near
-
     extrn do_oscall:near
     extrn do_usercall16:near
     extrn do_usercall32:near
@@ -1352,11 +1350,14 @@ trap_13:
     cmp al,67h
     je t13_retry
 ;
+    cmp al,9Ah
+    je t13_retry
+;
     jmp t13_default        
         
 t13_not_int:
     cmp al,67h
-    jne t13_not_kernel_call
+    jne t13_default
 ;
     mov al,[ebx+1]
     cmp al,9Ah
@@ -1427,30 +1428,6 @@ t13_int_user:
     pop edx
     pop ecx
     jmp t13_end
-
-t13_not_kernel_call:    
-    cmp al,9Ah
-    jne t13_default
-;
-    mov ax,[ebx+5]
-    cmp ax,2
-    jne t13_default
-;        
-    push ds
-    mov ax,system_data_sel
-    mov ds,ax
-    call ds:leave_patch_proc
-    pop ds
-;
-    call do_app_usercall32
-    jmp t13_check
-
-t13_check:    
-    jnc t13_end
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    call ds:enter_patch_proc
 
 t13_default:
     mov ax,system_data_sel
@@ -1785,7 +1762,7 @@ pretask13:
         
 pretask_gpf_not_int:
     cmp al,67h
-    jne pretask_gpf_not_oscall
+    jne pretask_gpf_default
 ;
     mov al,[ebx+2]
     cmp al,9Ah
@@ -1815,12 +1792,6 @@ pretask_kernel_gate:
     pop edx
     pop ecx
     jmp pretask_gpf_reexec
-
-pretask_gpf_not_oscall:    
-    jmp pretask_gpf_default
-
-pretask_gpf_check:      
-    jnc pretask_gpf_reexec
 
 pretask_gpf_default:
     mov al,13
