@@ -94,6 +94,7 @@ code    SEGMENT byte use16 public 'CODE'
     extrn do_oscall:near
     extrn do_usercall16:near
     extrn do_usercall32:near
+    extrn do_usergate32:near
 
     assume cs:code
 
@@ -277,6 +278,63 @@ int_retry:
     mov ds,ax
     call ds:leave_patch_proc
     mov [bp+12],ebx
+;    
+    popad
+    pop es
+    pop ds
+    pop ebp
+    add sp,8
+    iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           int9A
+;
+;           DESCRIPTION:    Trap handlers for int 9A
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+int_gate_tab:
+igt00   DW OFFSET dummy_gate
+igt01   DW OFFSET dummy_gate
+igt02   DW OFFSET dummy_gate
+igt03   DW OFFSET do_usergate32
+
+int9A:
+    sub sp,8
+    push ebp
+    mov bp,sp
+    push ds
+    push es
+    pushad
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    EnterSection ds:patch_section
+;
+    mov ds,[bp+16]
+    mov ebx,[bp+12]
+    sub ebx,2
+    mov [bp+12],ebx
+    mov al,ds:[ebx]
+    cmp al,0CDh
+    jne intg_retry    
+;
+    mov si,ds:[ebx+6]
+    cmp si,4
+    jb intg_call
+;
+    xor si,si
+
+intg_call:    
+    add si,si
+    call word ptr cs:[si].int_gate_tab    
+
+intg_retry:
+    mov ax,system_data_sel
+    mov ds,ax
+    LeaveSection ds:patch_section
 ;    
     popad
     pop es
@@ -1300,6 +1358,10 @@ t13_not_int:
     cmp al,67h
     jne t13_not_kernel_call
 ;
+    mov al,[ebx+1]
+    cmp al,9Ah
+    je t13_int_user
+;    
     mov al,[ebx+2]
     cmp al,9Ah
     jne t13_default
@@ -1312,6 +1374,37 @@ t13_not_int:
     ja t13_default
 
 t13_int_call:
+    push ds
+    mov ax,system_data_sel
+    mov ds,ax
+    call ds:leave_patch_proc
+    pop ds
+;
+    push ecx
+    push edx
+;    
+    push ebx
+    mov bx,ds
+    call local_get_selector_base_size
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax
+;
+    mov al,0CDh
+    xchg al,ds:[ebx]
+    pop edx
+    pop ecx
+    jmp t13_end
+
+t13_int_user:
+    mov ax,[ebx+6]
+    or ax,ax
+    jz t13_default
+;
+    cmp ax,3
+    ja t13_default
+;
     push ds
     mov ax,system_data_sel
     mov ds,ax
@@ -1798,6 +1891,7 @@ ri15    DW      3Dh,    OFFSET default_int2,    kernel_code,    0
 ri17    DW      3Fh,    OFFSET default_int2,    kernel_code,    0
 rg66    DW      66h,    OFFSET int66,          kernel_code,    3
 rg67    DW      67h,    OFFSET int67,          kernel_code,    3
+rg9A    DW      9Ah,    OFFSET int9A,          kernel_code,    3
 pg7_end DW      0FFFFh
 
     public init_pretask_traps
@@ -1826,7 +1920,11 @@ init_pretask_next:
     call local_create_int_gate_sel
     add di,8
     jmp init_pretask_next
+
 init_pretask_end:
+    mov ax,system_data_sel
+    mov ds,ax
+    InitSection ds:patch_section
     ret
 init_pretask_traps      ENDP
 

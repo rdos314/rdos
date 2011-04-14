@@ -802,6 +802,65 @@ do_usercall32   Proc near
     ret
 do_usercall32  Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           do_usergate32
+;
+;           DESCRIPTION:    do usergate32
+;
+;           PARAMETERS:     DS:EBX      Instruction
+;                           SS:BP       Stack frame
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public do_usergate32
+
+do_usergate32   Proc near
+    mov edi,ds:[ebx+2]
+    shl edi,5
+    mov ax,usergate_sel
+    mov es,ax
+;
+    push ebx
+    mov bx,ds
+    call local_get_selector_base_size
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax
+;
+    mov ax,es:[edi].gate_sel32
+    or ax,ax
+    jnz do_usergate32_defined
+;
+    push ds
+    push bx
+    push esi
+    AllocateGdt
+    or bx,3
+    mov es:[edi].gate_sel32,bx
+    mov esi,es:[edi].gate_entry_offset32
+    mov ds,es:[edi].gate_entry_sel32
+    xor cl,cl
+    CreateCallGateSelector32
+    mov ax,bx
+    pop esi
+    pop bx
+    pop ds
+
+do_usergate32_defined:
+    xor eax,eax
+    xchg eax,ds:[ebx+2]
+;
+    mov ax,es:[edi].gate_sel32
+    xchg ax,ds:[ebx+6]
+;    
+    mov al,90h
+    xchg al,ds:[ebx]
+    ret
+do_usergate32  Endp
+
 code    ENDS
 
     END

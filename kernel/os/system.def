@@ -153,6 +153,8 @@ leave_patch_proc    DW ?
 patch_spinlock      DW ?
 shut_spinlock       DW ?
 
+patch_section		section_typ <>
+
 system_size			DB ?
 
 system_seg	ENDS
