@@ -1944,7 +1944,7 @@ start_crash_core:
 
 start_crash_loop:
     call GetCrashKey
-    jc handle_next
+    jc start_crash_loop
 ;    
     test ah,80h
     jnz start_crash_loop
