@@ -1849,9 +1849,13 @@ StartCore   Proc near
     db 66h
     sidt fword ptr es:[di].ap_idt
 ;
+    push cx
+    push edx
     CreateCoreGdt
     mov word ptr es:[di].ap_gdt,cx
     mov dword ptr es:[di].ap_gdt+2,edx
+    pop edx
+    pop cx
 ;
     push es
     mov eax,200h
@@ -1917,10 +1921,12 @@ scLoop2:
     jmp scDone
 
 scOk:
+    push es
     mov edx,dword ptr es:[di].ap_gdt+2
     CreateProcessor
     mov ax,es
     mov fs,ax    
+    pop es
     clc
 
 scDone:
