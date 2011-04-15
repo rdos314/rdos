@@ -5424,8 +5424,9 @@ clear_signal    PROC far
     push ds
     push ax
 ;
-    GetThread
+    mov ax,core_data_sel
     mov ds,ax
+    mov ds,ds:ps_curr_thread
     mov ds:p_signal,0
 ;
     pop ax
@@ -6652,10 +6653,11 @@ get_system_time_name    DB 'Get System Time',0
 get_system_time PROC far
     push ds
     push es
+    mov ax,core_data_sel
+    mov ds,ax
+    mov es,ds:ps_curr_thread
     mov ax,task_sel
     mov ds,ax
-    GetThread
-    mov es,ax
     cli
     call ds:update_clock_proc
     LocalGetSystemTime
@@ -6682,10 +6684,11 @@ get_time_name   DB 'Get Time',0
 get_time    PROC far
     push ds
     push es
+    mov ax,core_data_sel
+    mov ds,ax
+    mov es,ds:ps_curr_thread
     mov ax,task_sel
     mov ds,ax
-    GetThread
-    mov es,ax
     cli
     call ds:update_clock_proc
     LocalGetSystemTime
