@@ -142,6 +142,13 @@ init_gdt    PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET create_core_gdt
+    mov edi,OFFSET create_core_gdt_name
+    xor cl,cl
+    mov ax,create_core_gdt_nr
+    RegisterOsGate
+;
     mov esi,OFFSET allocate_gdt
     mov edi,OFFSET allocate_name
     xor cl,cl
@@ -205,6 +212,71 @@ init_gdt    PROC near
     ret
 init_gdt    ENDP
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateCoreGdt
+;
+;           DESCRIPTION:    Create a new GDT for a processor core
+;
+;           RETURNS:        CX      Size of GDT
+;                           EDX     Linear base address of GDT
+;                                                   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_core_gdt_name   DB 'Create Core Gdt',0
+
+create_core_gdt    PROC far
+    push ds
+    push es
+    push eax
+    push ebx
+    push esi
+    push edi
+;    
+    mov ax,flat_sel
+    mov ds,ax
+    mov es,ax
+;
+    mov eax,system_linear - gdt_core_linear
+    AllocateBigLinear
+    mov ebx,edx
+    add edx,gdt_linear - gdt_core_linear
+    mov edi,edx
+    mov esi,gdt_linear
+    mov ecx,48h SHR 2
+    rep movs dword ptr es:[edi],ds:[esi]
+;
+    sub edi,8
+    mov [edi+2],ebx
+    mov al,92h
+    xchg al,[edi+5]
+    mov [edi+7],al
+    add edi,8
+;
+    mov ax,sys_page_sel
+    mov ds,ax
+    mov es,ax
+;
+    shr esi,10
+    shr edi,10
+    mov ecx,0Fh
+    rep movs dword ptr es:[edi],ds:[esi]
+;
+    mov bx,gdt_sel
+    mov ds,bx
+    mov cx,[bx]
+    inc cx
+;
+    pop edi
+    pop esi
+    pop ebx
+    pop eax
+    pop es
+    pop ds    
+    retf32
+create_core_gdt     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

@@ -202,6 +202,12 @@ EmulateOpcode   MACRO
 
 ;;;;;;;; DESCRIPTORS ;;;;;;;;;;;;
 
+;  OUT  CX      Size of GDT
+;  OUT  EDX     Linear base address of GDT
+CreateCoreGdt     MACRO
+    OsGate create_core_gdt_nr
+                    ENDM
+
 ;       BX          GDT DESCRIPTOR
 AllocateGdt     MACRO
     OsGate allocate_gdt_nr

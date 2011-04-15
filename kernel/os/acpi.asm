@@ -444,8 +444,20 @@ acpi_name       DB 'Acpi Test',0
 
 acpi_pr:
     int 3
-    mov ax,0
-;    NewUserGate test_gate_nr
+    CreateCoreGdt
+    int 3
+    dec cx
+    push bp
+    push edx
+    push cx
+    mov bp,sp
+;    
+    db 66h
+    lgdt fword ptr [bp]
+;
+    pop cx
+    pop edx
+    pop bp    
 
 acpi_loop:
     int 3
