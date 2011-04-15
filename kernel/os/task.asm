@@ -3671,12 +3671,12 @@ null_base   DB 'Null'
     public null_thread0
 
 null_thread0:
+    mov ax,task_sel
+    mov ds,ax
     mov ax,core_data_sel
     mov fs,ax
     mov fs,fs:ps_sel
-    mov ax,task_sel
-    mov ds,ax
-    GetThread
+    mov ax,fs:ps_curr_thread
     mov es,ax
     mov es:p_sleep_sel,fs
     mov es:p_sleep_offset,0
