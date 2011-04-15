@@ -41,13 +41,20 @@ flat_sel			EQU 20h
 system_data_sel		EQU 28h
 kernel_code			EQU 30h
 ;
-shutdown_code_sel		EQU 38h
-shutdown_pretask_gate	EQU 40h
-shutdown_task_gate		EQU 48h
+shutdown_code_sel	EQU 38h
+
+;
+; processor core selector
+;
+
+core_data_sel       EQU 40h
 
 ;
 ; used in kernel and device-drivers only
 ;
+
+shutdown_pretask_gate	EQU 48h
+
 sys_dir_sel			EQU 50h
 sys_page_sel		EQU 58h
 process_dir_sel		EQU 60h
@@ -59,6 +66,7 @@ phys_page_sel		EQU 80h
 temp_sel			EQU 88h
 ;
 tss_data_sel        EQU 90h
+shutdown_task_gate	EQU 98h
 ;
 acpi_code_sel       EQU 0A0h
 acpi_data_sel       EQU 0A8h

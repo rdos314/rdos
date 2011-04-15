@@ -74,10 +74,10 @@ create_gdt      PROC near
     mov cx,1000h
     rep movsb
     xor al,al
-    mov cx,0E000h
+    mov cx,0E048h
     rep stosb
     mov ds,bx
-    mov word ptr [bx],0EFFFh ; initial size = F000
+    mov word ptr [bx],0F047h ; initial size = F048 (F000 + private core space)
     mov si,bx
     mov di,gdt_sel
     movsd
@@ -94,7 +94,7 @@ create_gdt      PROC near
 ;
     mov ax,gdt_sel
     mov ds,ax
-    mov cx,0D000h
+    mov cx,0D048h
     shr cx,3
     mov si,2000h
     xor bx,bx

@@ -36,7 +36,7 @@ INCLUDE ..\pcdev\apic.inc
 
 MAJOR_VERSION = 9
 MINOR_VERSION = 1
-RELEASE = 1
+RELEASE = 2
 
 IFDEF __WASM__
    .686p
