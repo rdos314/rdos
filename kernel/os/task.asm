@@ -100,8 +100,6 @@ load_unlock_proc    DW ?
 lock_list_proc      DW ?
 unlock_list_proc    DW ?
 
-get_cpu_proc    DD ?
-
 processor_preempt   DD ?
 
 processor_count     DW ?
@@ -1157,7 +1155,6 @@ proc_init:
     HookState
 ;
     mov edx,gdt_linear
-    mov di,OFFSET get_processor_single
     CreateProcessor
 ;
     pop ds
@@ -3674,9 +3671,11 @@ null_base   DB 'Null'
     public null_thread0
 
 null_thread0:
+    mov ax,core_data_sel
+    mov fs,ax
+    mov fs,fs:ps_sel
     mov ax,task_sel
     mov ds,ax
-    call ds:get_cpu_proc
     GetThread
     mov es,ax
     mov es:p_sleep_sel,fs
@@ -3798,10 +3797,10 @@ locked_debug_exception:
     movzx ax,al
     push fs
     push ax
-    mov ax,task_sel
-    mov ds,ax
+    mov ax,core_data_sel
+    mov fs,ax
+    mov fs,fs:ps_sel
     pop ax
-    call ds:get_cpu_proc
     jmp debug_normal
 
 debug_exception:
@@ -3986,7 +3985,6 @@ double_block:
 ;       DESCRIPTION:    Create processor
 ;
 ;       PARAMETERS:     EDX     Core GDT linear
-;                       ES:DI   Get processor callback
 ;
 ;       RETURNS:        AX      Processor #
 ;                       ES      Processor sel
@@ -4001,11 +3999,6 @@ create_processor    Proc far
     push cx
     push si
     push di
-;    
-    mov ax,task_sel
-    mov ds,ax
-    mov word ptr ds:get_cpu_proc,di
-    mov word ptr ds:get_cpu_proc+2,es
 ;   
     mov ax,flat_sel
     mov ds,ax
@@ -4104,37 +4097,13 @@ create_processor    Endp
     public get_task_lock
     
 get_task_lock   Proc near
-    push ds
     push fs
-    mov ax,task_sel
-    mov ds,ax
-    call ds:get_cpu_proc
+    mov ax,core_data_sel
+    mov fs,ax
     mov ax,fs:ps_nesting
     pop fs
-    pop ds
     ret
 get_task_lock    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetProcessorSingle
-;
-;           DESCRIPTION:    Get current processor selector (single processor version)
-;
-;       RETURNS:    FS      Processor sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_processor_single    Proc far
-    push ax
-    mov ax,task_sel
-    mov fs,ax
-    mov fs,fs:processor_arr
-    pop ax
-    ret
-get_processor_single    Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4150,15 +4119,11 @@ get_processor_single    Endp
 get_processor_name      DB 'Get Processor',0
 
 get_processor   Proc far
-    push ds
     push ax
-;
-    mov ax,task_sel
-    mov ds,ax
-    call ds:get_cpu_proc
-;
-    pop ax
-    pop ds
+    mov ax,core_data_sel
+    mov fs,ax
+    mov fs,fs:ps_sel
+    pop ax    
     retf32
 get_processor   Endp
 
@@ -4393,7 +4358,11 @@ UnlockListMultiple      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TryLockDefault  Proc near
-    call ds:get_cpu_proc
+    push ax
+    mov ax,core_data_sel
+    mov fs,ax
+    mov fs,fs:ps_sel
+    pop ax
     add fs:ps_nesting,1
     stc
     ret
@@ -4412,7 +4381,11 @@ TryLockDefault  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockDefault     Proc near
-    call ds:get_cpu_proc
+    push ax
+    mov ax,core_data_sel
+    mov fs,ax
+    mov fs,fs:ps_sel
+    pop ax
     add fs:ps_nesting,1
     stc
     ret
@@ -4468,7 +4441,11 @@ LoadUnlockDefault       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TryLockSingle   Proc near
-    call ds:get_cpu_proc
+    push ax
+    mov ax,core_data_sel
+    mov fs,ax
+    mov fs,fs:ps_sel
+    pop ax
     add fs:ps_nesting,1
     ret
 TryLockSingle   Endp
@@ -4489,7 +4466,11 @@ TryLockSingle   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockSingle      Proc near
-    call ds:get_cpu_proc
+    push ax
+    mov ax,core_data_sel
+    mov fs,ax
+    mov fs,fs:ps_sel
+    pop ax
     add fs:ps_nesting,1
     jc lsDone
 ;
@@ -4648,7 +4629,9 @@ tlmGet:
     or ax,ax
     jnz tlmSpinLock
 ;
-    call ds:get_cpu_proc
+    mov ax,core_data_sel
+    mov fs,ax
+    mov fs,fs:ps_sel
 ;    
     mov ax,ds:owner_sel
     or ax,ax
@@ -4712,7 +4695,9 @@ lmGet:
     or ax,ax
     jnz lmSpinLock
 ;
-    call ds:get_cpu_proc
+    mov ax,core_data_sel
+    mov fs,ax
+    mov fs,fs:ps_sel
 ;    
     mov ax,ds:owner_sel
     or ax,ax
@@ -5050,7 +5035,9 @@ unlock_task     Proc far
 ;    
     mov ax,task_sel
     mov ds,ax
-    call ds:get_cpu_proc
+    mov ax,core_data_sel
+    mov fs,ax
+    mov fs,fs:ps_sel
     call ds:unlock_proc
 ;
     pop ax
@@ -5245,7 +5232,9 @@ timer_clock_done:
 ;
     mov bx,task_sel
     mov ds,bx
-    call ds:get_cpu_proc
+    mov bx,core_data_sel
+    mov fs,bx
+    mov fs,fs:ps_sel
     jmp LoadCurrentThread
 
 

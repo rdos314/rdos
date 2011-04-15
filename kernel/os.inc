@@ -620,7 +620,6 @@ GetApicId    MACRO
                         ENDM
 
 ;   IN  EDX     Base of core GDT
-;   IN  ES:DI   Callback for get processor
 ;   OUT AX      Processor #
 ;   OUT ES      Processor selector
 CreateProcessor    MACRO
