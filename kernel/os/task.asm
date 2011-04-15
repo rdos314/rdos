@@ -5226,11 +5226,6 @@ timer_clock_done:
     call ds:init_clock_proc
 ;
     mov bx,task_sel
-    GetSelectorBaseSize
-    mov bx,tasking_sel
-    CreateDataSelector16
-;
-    mov bx,task_sel
     mov ds,bx
     mov bx,core_data_sel
     mov fs,bx
