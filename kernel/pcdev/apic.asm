@@ -125,14 +125,10 @@ mp_thread           DW ?
 
 mp_flags            DW ?
 
-mp_get_proc         DW ?
-
 mp_processor_sign   DD ?
 mp_proc             DW ?
 
 isa_redir_arr       DD 16 DUP(?,?)
-
-apic_arr            DW 256 DUP(?)
 
 data    ENDS
 
@@ -512,112 +508,6 @@ get_id_msr Proc far
     pop eax
     retf32
 get_id_msr Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   GetProcessorId
-;
-;               DESCRIPTION:    Get processor #
-;
-;       RETURNS:        AX  Processor
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_processor_id_name    DB 'Get Processor ID',0
-
-get_processor_id_mem  Proc far
-    push ds
-    push ebx
-;    
-    mov ax,apic_mem_sel
-    mov ds,ax
-    mov ebx,ds:APIC_ID
-    shr ebx,24
-    add bx,bx
-    mov ax,SEG data
-    mov ds,ax
-    mov ds,ds:[bx].apic_arr
-    mov ax,ds:ps_id
-;
-    pop ebx
-    pop ds
-    retf32
-get_processor_id_mem Endp
-
-get_processor_id_msr Proc far
-    push ds
-    push bx
-    push ecx
-;
-    mov ecx,MSR_APIC_ID
-    rdmsr
-    movzx bx,al
-    add bx,bx
-    mov ax,SEG data
-    mov ds,ax
-    mov ds,ds:[bx].apic_arr
-    mov ax,ds:ps_id
-;
-    pop ecx
-    pop bx
-    pop ds
-    retf32
-get_processor_id_msr Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   GetProcessor
-;
-;               DESCRIPTION:    Get processor selector
-;
-;       RETURNS:        FS      Processor selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_processor_mem  Proc far
-    push ds
-    push ax
-    push ebx
-;    
-    mov ax,apic_mem_sel
-    mov ds,ax
-    mov ebx,ds:APIC_ID
-    shr ebx,24
-    add bx,bx
-    mov ax,SEG data
-    mov ds,ax
-    mov fs,ds:[bx].apic_arr
-;
-    pop ebx
-    pop ax
-    pop ds
-    ret
-get_processor_mem Endp
-
-get_processor_msr Proc far
-    push ds
-    push eax
-    push bx
-    push ecx
-    push edx
-;
-    mov ecx,MSR_APIC_ID
-    rdmsr
-    movzx bx,al
-    add bx,bx
-    mov ax,SEG data
-    mov ds,ax
-    mov fs,ds:[bx].apic_arr
-;
-    pop edx
-    pop ecx
-    pop bx
-    pop eax
-    pop ds
-    ret
-get_processor_msr Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1549,12 +1439,6 @@ smemgLint1Ok:
     mov ax,disable_all_irq_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET get_processor_id_mem
-    mov edi,OFFSET get_processor_id_name
-    xor dx,dx
-    mov ax,get_processor_id_nr
-    RegisterBimodalUserGate
-;
     mov ax,cs
     mov ds,ax
     xor bl,bl
@@ -1769,12 +1653,6 @@ smsrgLint1Ok:
     mov ax,reload_sys_timer_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET get_processor_id_msr
-    mov edi,OFFSET get_processor_id_name
-    xor dx,dx
-    mov ax,get_processor_id_nr
-    RegisterBimodalUserGate
-;
     mov ax,cs
     mov ds,ax
     xor bl,bl
@@ -1905,18 +1783,19 @@ SetupMsrGates   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:               StartCore
+;       NAME:           StartCore
 ;
-;               DESCRIPTION:    Start a CPU core
+;       DESCRIPTION:    Start a CPU core
 ;
 ;       PARAMETERS:     EDX         APIC ID
+;
+;       RETURNS:        FS          Processor sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StartCore   Proc near
     push ds
     push es
-    push fs
     pushad
 ;
     mov ax,SEG data
@@ -1968,10 +1847,11 @@ StartCore   Proc near
     mov es:[di].ap_cr4,eax
 ;
     db 66h
-    sgdt fword ptr es:[di].ap_gdt
-;
-    db 66h
     sidt fword ptr es:[di].ap_idt
+;
+    CreateCoreGdt
+    mov word ptr es:[di].ap_gdt,cx
+    mov dword ptr es:[di].ap_gdt+2,edx
 ;
     push es
     mov eax,200h
@@ -2031,10 +1911,16 @@ scLoop2:
     call DelayMs    
     loop scLoop2
 ;
+    xor ax,ax
+    mov fs,ax
     stc
     jmp scDone
 
 scOk:
+    mov edx,dword ptr es:[di].ap_gdt+2
+    CreateProcessor
+    mov ax,es
+    mov fs,ax    
     clc
 
 scDone:
@@ -2059,7 +1945,6 @@ scDone:
 ;
     popf   
     popad
-    pop fs
     pop es
     pop ds
     ret
@@ -2482,46 +2367,6 @@ apic_name       DB 'Apic Test',0
 
 apic_pr:
     int 3
-    mov ax,idt_sel
-    mov ds,ax
-    mov bx,2 * 8
-    mov eax,[bx]
-    mov edx,[bx+4]    
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,ds:apic_arr
-;    
-    xor ax,ax
-    mov bh,1
-    mov bl,1
-    FindPciClassAll
-    jc apic_pr_done
-;
-    mov cl,10h
-    ReadPciDword
-    mov cl,al    
-    and ax,0FFFCh
-;
-    mov si,ax
-;
-    mov ax,get_pci_irq_nr
-    IsValidOsGate
-    jc apic_pr_dir
-;
-    mov cl,PCI_interrupt_pin
-    ReadPciByte
-    GetPciIrqNr
-    jmp apic_pr_read
-
-apic_pr_dir:
-    mov cl,PCI_interrupt_line
-    ReadPciByte
-
-apic_pr_read:
-    call ReadIoApicInt
-
-apic_pr_done:
     retf            
 
     
@@ -2897,24 +2742,6 @@ InitSmp Proc near
     push es
     pushad
 ;    
-    mov ax,SEG data
-    mov ds,ax
-    mov ds:mp_get_proc,0
-    mov ax,ds:mp_flags
-;    
-    test ds:mp_flags,MP_FLAG_MEM
-    jnz init_smp_check_msr
-;   
-    mov ds:mp_get_proc,OFFSET get_processor_mem
-    jmp init_smp_done
-
-init_smp_check_msr:
-    test ds:mp_flags,MP_FLAG_MSR
-    jnz init_smp_done
-;    
-    mov ds:mp_get_proc,OFFSET get_processor_msr
-
-init_smp_done:
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -3001,16 +2828,9 @@ SetupIrq    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
-    mov bx,SEG data
-    mov es,bx
-    mov di,OFFSET apic_arr
-    xor ax,ax
-    mov cx,100h
-    rep stosw
-    mov es:mp_flags,0
-;
     mov ax,SEG data
     mov ds,ax
+    mov ds:mp_flags,0
     mov bx,OFFSET isa_redir_arr
     xor edx,edx
     mov eax,40h
@@ -3056,9 +2876,6 @@ init_proc:
 init_boot_proc:
     GetProcessor
     movzx edx,es:[di].ap_apic_id
-    movzx bx,dl
-    add bx,bx
-    mov ds:[bx].apic_arr,fs    
     mov fs:ps_apic,edx
 ;
     mov al,es:[di].ap_acpi_id
@@ -3082,22 +2899,7 @@ init_ap_proc:
     call InitIpi
     
 init_ap_create:       
-    push es
-    push di    
-    mov di,ds:mp_get_proc
-    mov ax,cs
-    mov es,ax
-    CreateProcessor    
-    mov ax,es
-    mov fs,ax
-    pop di
-    pop es
-;
     mov fs:ps_apic,edx
-;
-    movzx bx,dl
-    add bx,bx
-    mov ds:[bx].apic_arr,fs
 ;
     mov al,es:[di].ap_acpi_id
     mov fs:ps_acpi,al
