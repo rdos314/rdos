@@ -5930,7 +5930,9 @@ enter_user_section      PROC far
     lock sub ds:[ebx].us_value,1
     jc eusDone
 ;
-    str ax
+    mov ax,core_data_sel
+    mov fs,ax
+    mov ax,fs:ps_curr_thread
     cmp ax,ds:[ebx].us_owner
     je eusDone
 ;
@@ -5963,7 +5965,9 @@ eusUnlock:
     pop ds
     
 eusDone:
-    str ax
+    mov ax,core_data_sel
+    mov fs,ax
+    mov ax,fs:ps_curr_thread
     mov ds:[ebx].us_owner,ax
     inc ds:[ebx].us_count
 
@@ -6029,7 +6033,9 @@ leave_user_section      PROC far
     DerefHandle
     jc lusDone
 ;
-    str ax
+    mov ax,core_data_sel
+    mov fs,ax
+    mov ax,fs:ps_curr_thread
     cmp ax,ds:[ebx].us_owner
     jne lusDone
 ;
