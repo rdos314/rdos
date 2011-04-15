@@ -49,16 +49,14 @@ shutdown_code_sel	EQU 38h
 
 core_data_sel       EQU 40h
 
+double_tss_sel      EQU 48h
+double_tss_data_sel EQU 50h
+
 ;
 ; used in kernel and device-drivers only
 ;
 
-shutdown_pretask_gate	EQU 48h
-
-sys_dir_sel			EQU 50h
-sys_page_sel		EQU 58h
-process_dir_sel		EQU 60h
-process_page_sel	EQU 68h
+shutdown_pretask_gate	EQU 68h
 ;
 process_sel			EQU 70h
 phys_list_sel		EQU 78h
@@ -151,8 +149,10 @@ handle_sel			EQU 290h
 handle_mem_sel		EQU 298h
 handle_data_sel		EQU 2A0h
 
-double_tss_sel      EQU 2B0h
-double_tss_data_sel EQU 2B8h
+sys_dir_sel			EQU 2B0h
+sys_page_sel		EQU 2B8h
+process_dir_sel		EQU 2C0h
+process_page_sel	EQU 2C8h
 
 ;
 ; GDT selectors device-driver selectors
