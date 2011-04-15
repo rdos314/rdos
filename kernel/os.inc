@@ -964,6 +964,14 @@ GetDebugThreadSel MACRO
 
 ;;;;;;; INTERRUPTS & EXCEPTIONS ;;;;;;;;
 
+InitTrapGates  MACRO
+    OsGate init_trap_gates_nr
+                    ENDM
+
+InitTssGates  MACRO
+    OsGate init_tss_gates_nr
+                    ENDM
+
 SimSti  MACRO
     OsGate sim_sti_nr
                     ENDM

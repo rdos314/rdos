@@ -73,6 +73,10 @@ allocate_dma_physical_nr	= 71
 free_physical_nr			= 72
 
 create_process_nr			= 74
+
+init_trap_gates_nr          = 75
+init_tss_gates_nr           = 76
+
 wake_thread_nr				= 79
 sleep_thread_nr				= 80
 clear_signal_nr				= 83

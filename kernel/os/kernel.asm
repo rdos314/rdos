@@ -75,6 +75,7 @@ ENDIF
     extrn init_int:near
     extrn init_app:near
     extrn init_trap_vectors:near
+    extrn init_tss_int:near
     extrn move_adapters:near
     extrn init_device:near
     extrn init_swap:near
@@ -723,6 +724,7 @@ prot_init:
     call init_thread
     call init_handle
     call init_int
+    call init_tss_int
     call init_trap_vectors
     call init_swap
     call init_device    

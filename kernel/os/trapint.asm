@@ -1547,6 +1547,8 @@ default_int2:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+init_trap_gates_name    DB 'Init Trap Gates', 0
+
 idt_trap_tab:
 ;
 ;               int #   Entry                   Selector        Dpl
@@ -1574,11 +1576,11 @@ ig_entry    EQU 2
 ig_sel      EQU 4
 ig_dpl      EQU 6
 
-;
 
-    public init_task_traps
-
-init_task_traps PROC near
+init_trap_gates PROC far
+    push ds
+    pusha
+;    
     mov di,OFFSET idt_trap_tab
 init_task_trap_next:
     mov ax,cs:[di]
@@ -1593,8 +1595,10 @@ init_task_trap_next:
     add di,8
     jmp init_task_trap_next
 init_task_trap_end:
-    ret
-init_task_traps ENDP
+    popa
+    pop ds
+    retf32
+init_trap_gates ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2434,6 +2438,12 @@ init_irq_loop:
     mov edi,OFFSET pm_exception_handler
     mov al,3
     HookProt32Int
+;
+    mov esi,OFFSET init_trap_gates
+    mov edi,OFFSET init_trap_gates_name
+    xor cl,cl
+    mov ax,init_trap_gates_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET segment_not_present
     mov edi,OFFSET segment_not_present_name

@@ -43,9 +43,25 @@ code	SEGMENT byte use16 public 'CODE'
 
 	assume cs:code
 
-	public init_task_tasks
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           INIT_TSS_GATES
+;
+;           DESCRIPTION:    Init TSS gates
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_task_tasks	Proc near
+
+init_tss_gates_name DB 'Init TSS Gates', 0
+
+init_tss_gates	Proc far
+    push ds
+    push es
+    pushad
+;    
     mov eax,400h
     AllocateSmallLinear
     mov bx,double_tss_sel
@@ -86,8 +102,37 @@ init_task_tasks	Proc near
 	mov byte ptr [bx+5],85h
 	mov word ptr [bx+6],0    
 ;
-	ret
-init_task_tasks	Endp
+    popad
+    pop es
+    pop ds
+	retf32
+init_tss_gates	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           INIT_TSS_INT
+;
+;           DESCRIPTION:    Init TSS int
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public init_tss_int
+
+init_tss_int       PROC near
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;
+    mov esi,OFFSET init_tss_gates
+    mov edi,OFFSET init_tss_gates_name
+    xor cl,cl
+    mov ax,init_tss_gates_nr
+    RegisterOsGate
+    ret
+init_tss_int    Endp
 	
 code	ENDS
 

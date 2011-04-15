@@ -120,8 +120,6 @@ code    SEGMENT byte public use16 'CODE'
     extrn free_process_paging:near
     extrn init_process_mem:near
     extrn init_process_app:near
-    extrn init_task_traps:near
-    extrn init_task_tasks:near
     extrn free_handle_process:near
 
     extrn start_processor_null_threads:near
@@ -805,8 +803,8 @@ trap_terminate_process  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 trap_init_tasking       PROC near
-    call init_task_tasks
-    call init_task_traps
+    InitTrapGates
+    InitTssGates
     call trap_create_process
     push cx
     mov ax,proc_data_sel
