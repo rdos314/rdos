@@ -32,6 +32,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE system.def
+INCLUDE proc.inc
 
 
     .386p
@@ -158,6 +159,11 @@ init_gdt    PROC near
     xor dx,dx
     mov ax,get_free_gdt_nr
     RegisterBimodalUserGate
+;
+    mov edx,gdt_core_linear
+    mov bx,core_data_sel
+    mov ecx,SIZE processor_seg
+    CreateDataSelector16
 ;
     xor edx,edx
     mov bx,__0000

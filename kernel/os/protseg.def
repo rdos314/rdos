@@ -86,8 +86,8 @@ video_focus_linear		EQU 0FE000000h
 
 page0_linear			EQU 0FE022000h
 gdt_core_linear         EQU 0FE023000h
-gdt_linear				EQU 0FE023FB8h
-system_linear			EQU 0FE034000h
-system_linear_size		EQU 000FCC000h
+gdt_linear				EQU 0FE024FB8h      ; this address must be aligned to core_data_sel
+system_linear			EQU 0FE035000h
+system_linear_size		EQU 000FCB000h
 
 kernel_linear			EQU 0FF000000h
