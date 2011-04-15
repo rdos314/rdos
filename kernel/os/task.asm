@@ -1156,6 +1156,7 @@ proc_init:
     mov edi,OFFSET check_list
     HookState
 ;
+    mov edx,gdt_linear
     mov di,OFFSET get_processor_single
     CreateProcessor
 ;
@@ -3980,14 +3981,15 @@ double_block:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateProcessor
+;       NAME:           CreateProcessor
 ;
-;           DESCRIPTION:    Create processor
+;       DESCRIPTION:    Create processor
 ;
-;       PARAMETERS:     ES:DI   Get processor callback
+;       PARAMETERS:     EDX     Core GDT linear
+;                       ES:DI   Get processor callback
 ;
-;       RETURNS:    AX      Processor #
-;               ES      Processor sel
+;       RETURNS:        AX      Processor #
+;                       ES      Processor sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3998,23 +4000,31 @@ create_processor    Proc far
     push bx
     push cx
     push si
+    push di
 ;    
     mov ax,task_sel
     mov ds,ax
     mov word ptr ds:get_cpu_proc,di
     mov word ptr ds:get_cpu_proc+2,es
-;    
-    mov eax,SIZE processor_seg
-    AllocateSmallGlobalMem
+;   
+    mov ax,flat_sel
+    mov ds,ax
+    mov ax,gdt_sel
+    mov es,ax
 ;
-    push cx
-    push di
-    mov cx,ax
+    AllocateGdt
+    mov eax,[edx+core_data_sel]
+    mov es:[bx],eax    
+;    
+    mov eax,[edx+core_data_sel+4]
+    mov es:[bx+4],eax
+    mov es,bx
+;
+    mov cx,SIZE processor_seg
     xor di,di
     xor al,al
     rep stosb
-    pop di
-    pop cx
+    mov es:ps_sel,es
 ;
     push es
     mov eax,200h    
@@ -4070,6 +4080,7 @@ timer_free_list_create:
 ;
     mov ax,es:ps_id     
 ;
+    pop di
     pop si
     pop cx
     pop bx

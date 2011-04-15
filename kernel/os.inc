@@ -619,6 +619,7 @@ GetApicId    MACRO
     OsGate get_apic_id_nr
                         ENDM
 
+;   IN  EDX     Base of core GDT
 ;   IN  ES:DI   Callback for get processor
 ;   OUT AX      Processor #
 ;   OUT ES      Processor selector
