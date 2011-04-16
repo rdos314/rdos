@@ -1922,9 +1922,12 @@ init_idt    Proc near
     pusha
     mov bx,idt_sel
     mov ds,bx
-    mov cx,idt_size
-    movzx eax,cx
+    mov ecx,idt_size
+    mov edx,idt_linear
     mov bx,temp_sel
+;    CreateDataSelector16
+;    mov es,bx
+    mov eax,ecx
     AllocateFixedSystemMem
     xor si,si
     xor di,di

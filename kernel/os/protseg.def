@@ -85,9 +85,11 @@ phys_page_linear		EQU 0FDC00000h
 video_focus_linear		EQU 0FE000000h
 
 page0_linear			EQU 0FE022000h
-gdt_core_linear         EQU 0FE023000h
-gdt_linear				EQU 0FE024FB8h      ; this address must be aligned to core_data_sel
-system_linear			EQU 0FE035000h
-system_linear_size		EQU 000FCB000h
+idt_core_linear			EQU 0FE023000h
+idt_linear			    EQU 0FE023F00h
+gdt_core_linear         EQU 0FE025000h
+gdt_linear				EQU 0FE026FB8h      ; this address must be aligned to core_data_sel
+system_linear			EQU 0FE037000h
+system_linear_size		EQU 000FC9000h
 
 kernel_linear			EQU 0FF000000h
