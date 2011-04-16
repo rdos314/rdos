@@ -62,9 +62,8 @@ init_tss_gates	Proc far
     push es
     pushad
 ;    
-    mov bx,idt_sel
-    GetSelectorBaseSize
-    and dx,0F000h
+    mov eax,400h
+    AllocateSmallLinear
 ;
     mov bx,double_tss_sel
 	mov ecx,400h
@@ -81,11 +80,9 @@ init_tss_gates	Proc far
     xor eax,eax
     rep stosd
 ;
-    AllocateGdt
-    add edx,400h
-    mov ecx,200h
-    CreateDataSelector16
-    mov ds:tss_ss,bx
+    mov eax,200h
+    AllocateSmallGlobalMem
+    mov ds:tss_ss,es
     mov dword ptr ds:tss_esp,200h
     mov eax,cr3
     mov dword ptr ds:tss_cr3,eax

@@ -1920,13 +1920,13 @@ init_idt    Proc near
     push ds
     push es
     pusha
+;
     mov bx,idt_sel
     mov ds,bx
     mov ecx,idt_size
-    mov edx,idt_linear
+    mov eax,idt_size
     mov bx,temp_sel
-    CreateDataSelector16
-    mov es,bx
+    AllocateFixedSystemMem
     xor si,si
     xor di,di
     rep movsb
@@ -1942,76 +1942,11 @@ init_idt    Proc near
     db 66h
     lidt fword ptr [bx]
 ;
-;   without this allocation kernel will not boot. Should be resolved!
-;
-    mov eax,idt_size
-    mov bx,temp_sel
-    AllocateFixedSystemMem
-;
     popa
     pop es
     pop ds
     ret
 init_idt    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateCoreIdt
-;
-;           DESCRIPTION:    Create a new IDT for a processor core
-;
-;           RETURNS:        CX      Size of IDT
-;                           EDX     Linear base address of IDT
-;                                                   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_core_idt_name   DB 'Create Core Idt',0
-
-create_core_idt    PROC far
-    push ds
-    push es
-    push eax
-    push ebx
-    push esi
-    push edi
-;    
-    mov ax,flat_sel
-    mov ds,ax
-    mov es,ax
-;
-    mov eax,2000h
-    AllocateBigLinear
-    mov ebx,edx
-    add edx,idt_linear - idt_core_linear
-    mov edi,edx
-    mov esi,idt_linear
-    mov ecx,100h SHR 2
-    rep movs dword ptr es:[edi],ds:[esi]
-;
-    mov ax,sys_page_sel
-    mov ds,ax
-    mov es,ax
-;
-    shr esi,10
-    shr edi,10
-    movs dword ptr es:[edi],ds:[esi]
-;
-    mov bx,gdt_sel
-    mov ds,bx
-    mov bx,idt_sel
-    mov cx,[bx]
-    inc cx
-;
-    pop edi
-    pop esi
-    pop ebx
-    pop eax
-    pop es
-    pop ds    
-    retf32
-create_core_idt     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2505,12 +2440,6 @@ init_irq_loop:
     mov edi,OFFSET pm_exception_handler
     mov al,3
     HookProt32Int
-;
-    mov esi,OFFSET create_core_idt
-    mov edi,OFFSET create_core_idt_name
-    xor cl,cl
-    mov ax,create_core_idt_nr
-    RegisterOsGate
 ;
     mov esi,OFFSET init_trap_gates
     mov edi,OFFSET init_trap_gates_name

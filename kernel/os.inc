@@ -964,12 +964,6 @@ GetDebugThreadSel MACRO
 
 ;;;;;;; INTERRUPTS & EXCEPTIONS ;;;;;;;;
 
-;  OUT  CX      Size of IDT
-;  OUT  EDX     Linear base address of IDT
-CreateCoreIdt     MACRO
-    OsGate create_core_idt_nr
-                    ENDM
-
 InitTrapGates  MACRO
     OsGate init_trap_gates_nr
                     ENDM

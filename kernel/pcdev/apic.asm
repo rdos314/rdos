@@ -411,19 +411,12 @@ ap_task_wait:
     test ax,MP_FLAG_TASK
     jz ap_task_wait
 ;
-;    InitTrapGates
-;    InitTssGates
-;
     call InitApic
     sti
 
     GetApicId
     cmp edx,3
-;    je ap_crash
-
-    
-stopl:
-    jmp stopl
+    je ap_crash
     
     StartProcessor
 
@@ -1855,12 +1848,11 @@ StartCore   Proc near
 ;
     push cx
     push edx
-;
-    CreateCoreIdt
-    mov word ptr es:[di].ap_idt,cx
-    mov dword ptr es:[di].ap_idt+2,edx
+    db 66h
+    sidt fword ptr es:[di].ap_idt
 ;    
     CreateCoreGdt
+    dec cx
     mov word ptr es:[di].ap_gdt,cx
     mov dword ptr es:[di].ap_gdt+2,edx
 ;    
@@ -2383,12 +2375,6 @@ apic_name       DB 'Apic Test',0
 
 apic_pr:
     int 3
-    CreateCoreIdt
-    push edx
-    push cx
-    db 66h
-    mov bp,sp
-    lidt fword ptr [bp]
     retf            
 
     

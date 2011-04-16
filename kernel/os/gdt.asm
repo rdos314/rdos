@@ -234,7 +234,7 @@ create_core_gdt    PROC far
     push ebx
     push esi
     push edi
-;    
+;   
     mov ax,flat_sel
     mov ds,ax
     mov es,ax
@@ -243,6 +243,7 @@ create_core_gdt    PROC far
     AllocateBigLinear
     mov ebx,edx
     add edx,gdt_linear - gdt_core_linear
+;    
     mov edi,edx
     mov esi,gdt_linear
     mov ecx,48h SHR 2
