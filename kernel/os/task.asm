@@ -4720,8 +4720,12 @@ lmTake:
     mov ds:owner_sel,fs
     add fs:ps_nesting,1
     mov ds:owner_lock,0    
-    sti
+    jc lmDone
 ;
+    CrashGate
+
+lmDone:     
+    sti
     pop dx
     pop ax
     ret
@@ -4760,12 +4764,15 @@ tumGet:
     jnz tumSpinLock
     
 tumRetry:    
-    sub fs:ps_nesting,1
-    jnc tumUnlock
-;
     mov ax,fs
     cmp ax,ds:owner_sel
-    jne tumUnlock
+    je tumUnlockIsMine
+;
+    CrashGate
+
+tumUnlockIsMine:
+    sub fs:ps_nesting,1
+    jnc tumUnlock
 ;
     mov ax,fs:ps_curr_thread
     or ax,ax
@@ -4886,13 +4893,13 @@ lumOwnerOk:
 ;
     dec ds:owner_wait    
     call WakeProcessor
-    jmp lumUnlockDo
+    jmp lumDone
 
 lumUnlock:
     mov eax,fs:ps_mask
     not eax
     and eax,ds:processor_preempt
-    jz lumUnlockDo
+    jz lumDone
 ;
     push fs
     push bx
@@ -4910,8 +4917,6 @@ lumPreemptDo:
     UnblockProcessor
     pop bx
     pop fs
-
-lumUnlockDo:
 
 lumDone:
     pop eax
