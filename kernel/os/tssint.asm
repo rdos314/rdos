@@ -62,9 +62,8 @@ init_tss_gates	Proc far
     push es
     pushad
 ;    
-    mov eax,400h
-    AllocateSmallLinear
     mov bx,double_tss_sel
+    mov edx,idt_core_linear
 	mov ecx,400h
 	CreateTssSelector
 ;
@@ -79,9 +78,11 @@ init_tss_gates	Proc far
     xor eax,eax
     rep stosd
 ;
-    mov eax,200h
-    AllocateSmallGlobalMem
-    mov ds:tss_ss,es
+    AllocateGdt
+    mov edx,idt_core_linear + 400h
+    mov ecx,200h
+    CreateDataSelector16
+    mov ds:tss_ss,bx
     mov dword ptr ds:tss_esp,200h
     mov eax,cr3
     mov dword ptr ds:tss_cr3,eax
