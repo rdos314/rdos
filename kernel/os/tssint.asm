@@ -62,8 +62,11 @@ init_tss_gates	Proc far
     push es
     pushad
 ;    
+    mov bx,idt_sel
+    GetSelectorBaseSize
+    and dx,0F000h
+;
     mov bx,double_tss_sel
-    mov edx,idt_core_linear
 	mov ecx,400h
 	CreateTssSelector
 ;
@@ -79,7 +82,7 @@ init_tss_gates	Proc far
     rep stosd
 ;
     AllocateGdt
-    mov edx,idt_core_linear + 400h
+    add edx,400h
     mov ecx,200h
     CreateDataSelector16
     mov ds:tss_ss,bx
