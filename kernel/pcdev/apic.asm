@@ -412,7 +412,6 @@ ap_task_wait:
     jz ap_task_wait
 ;
     call InitApic
-    sti
 
     GetApicId
     cmp edx,3

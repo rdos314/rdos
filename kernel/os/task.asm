@@ -4764,15 +4764,12 @@ tumGet:
     jnz tumSpinLock
     
 tumRetry:    
-    mov ax,fs
-    cmp ax,ds:owner_sel
-    je tumUnlockIsMine
-;
-    CrashGate
-
-tumUnlockIsMine:
     sub fs:ps_nesting,1
     jnc tumUnlock
+;
+    mov ax,fs
+    cmp ax,ds:owner_sel
+    jne tumUnlock
 ;
     mov ax,fs:ps_curr_thread
     or ax,ax
