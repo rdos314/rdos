@@ -802,22 +802,22 @@ SendStartup Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SendIntMem Proc near
+    pushf
     push ds
     push eax
     push ecx
     push edx
 ;    
+    cli
     shl edx,24
     mov cx,apic_mem_sel
     mov ds,cx
 
 simemLoop:
-    cli
     mov ecx,ds:APIC_ICR
     test cx,1000h
     jz simemDo
 ;
-    sti
     ipause
     jmp simemLoop
 
@@ -827,12 +827,12 @@ simemDo:
     mov ah,40h
     movzx eax,ax
     mov ds:APIC_ICR,eax
-    sti
 ;
     pop edx
     pop ecx
     pop eax
     pop ds
+    popf
     ret
 SendIntMem Endp
        
@@ -849,9 +849,11 @@ SendIntMem Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SendIntMsr Proc near
+    pushf
     push eax
     push ecx
 ;
+    cli
     mov ah,40h
     movzx eax,ax
     push eax
@@ -859,12 +861,10 @@ SendIntMsr Proc near
 
 simsrLoop:
     mov ecx,MSR_APIC_ICR
-    cli
     rdmsr
     test ax,1000h
     jz simsrDo
 ;    
-    sti
     ipause
     jmp simsrLoop
     
@@ -874,10 +874,10 @@ simsrDo:
 ;
     mov ecx,MSR_APIC_ICR
     wrmsr
-    sti
 ;
     pop ecx
     pop eax
+    popf
     ret
 SendIntMsr Endp
        
