@@ -1925,10 +1925,8 @@ init_idt    Proc near
     mov ecx,idt_size
     mov edx,idt_linear
     mov bx,temp_sel
-;    CreateDataSelector16
-;    mov es,bx
-    mov eax,ecx
-    AllocateFixedSystemMem
+    CreateDataSelector16
+    mov es,bx
     xor si,si
     xor di,di
     rep movsb
@@ -1943,6 +1941,13 @@ init_idt    Proc near
     mov [bx+5],al
     db 66h
     lidt fword ptr [bx]
+;
+;   without this allocation kernel will not boot. Should be resolved!
+;
+    mov eax,idt_size
+    mov bx,temp_sel
+    AllocateFixedSystemMem
+;
     popa
     pop es
     pop ds
