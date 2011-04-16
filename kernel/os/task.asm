@@ -4790,19 +4790,23 @@ tumSwap:
 
 tumWake:
     mov ds:owner_sel,0  
+    mov ds:owner_lock,0
+    sti
     mov al,ds:owner_wait
     or al,al
     jz tumUnlock
 ;
     dec ds:owner_wait    
     call WakeProcessor
-    jmp tumUnlockDo
+    jmp tumDone
 
 tumUnlock:
+    mov ds:owner_lock,0
+    sti
     mov eax,fs:ps_mask
     not eax
     and eax,ds:processor_preempt
-    jz tumUnlockDo
+    jz tumDone
 ;
     push fs
     push bx
@@ -4820,9 +4824,6 @@ tumPreemptDo:
     UnblockProcessor
     pop bx
     pop fs
-
-tumUnlockDo:
-    mov ds:owner_lock,0
 
 tumDone:
     sti
@@ -5729,10 +5730,15 @@ leave_section   PROC far
 ;
     mov ds,dx
     mov ax,ds:[esi].cs_list
+    cmp ax,-1
+    je lcsFree
+;    
     or ax,ax
     jnz lcsUnblock
 ;
     mov ds:[esi].cs_list,-1
+
+lcsFree:
     mov ax,task_sel
     mov ds,ax
     jmp lcsUnlock

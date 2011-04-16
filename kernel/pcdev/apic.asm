@@ -421,6 +421,8 @@ ap_task_wait:
     StartProcessor
 
 ap_crash:
+    jmp ap_crash
+    
     StartCrashCore
 
 apic_tab    DB 'APIC'
