@@ -76,6 +76,7 @@ create_process_nr			= 74
 
 init_trap_gates_nr          = 75
 init_tss_gates_nr           = 76
+create_core_idt_nr          = 77
 
 wake_thread_nr				= 79
 sleep_thread_nr				= 80
