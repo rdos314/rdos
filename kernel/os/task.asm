@@ -92,8 +92,8 @@ owner_sel       DW ?
 owner_lock      DW ?
 list_lock       DW ?
 
-int_nesting     DW ?
-int_sel         DW ?
+int_core_count   DW ?
+int_core_sel     DW ?
 
 try_lock_proc       DW ?
 lock_proc       DW ?
@@ -749,8 +749,8 @@ init_tlb_done:
     mov ds:has_list,0
     mov ds:has_term,0
     mov ds:owner_sel,0
-    mov ds:int_nesting,-1
-    mov ds:int_sel,0
+    mov ds:int_core_count,0
+    mov ds:int_core_sel,0
     mov ds:system_thread,0
     mov ds:owner_lock,0
     mov ds:owner_wait,0
@@ -4648,14 +4648,19 @@ tlmGet:
     je tlmTake
 
 tlmFail:
-    add ds:int_nesting,1
+    add fs:ps_nesting,1
     jnc tlmNested
 ;
-    mov fs:int_sel,fs
+    inc ds:int_core_count
+    mov ax,ds:int_core_sel
+    or ax,ax
+    jnz tlmNested
+;
+    mov ds:int_core_sel,fs
 
-tlmNested:    
-    add fs:ps_nesting,1
+tlmNested:
     mov ds:owner_lock,0
+    sti
     clc
     jmp tlmDone
 
@@ -4663,10 +4668,9 @@ tlmTake:
     mov ds:owner_sel,fs
     add fs:ps_nesting,1
     mov ds:owner_lock,0    
+    sti
 
 tlmDone:
-    sti
-;
     pop dx
     pop ax
     ret
@@ -4784,14 +4788,17 @@ tumRetry:
     sub fs:ps_nesting,1
     jnc tumUnlock
 ;
+    mov ax,ds:int_core_count
+    or ax,ax
+    jnz tumInt
+;
     mov ax,fs
     cmp ax,ds:owner_sel
-    jne tumUnlock
+    je tumOwner
 ;
-    mov ax,fs:ps_curr_thread
-    or ax,ax
-    jz tumWake
-;
+    CrashGate    
+
+tumOwner:        
     test fs:ps_flags,PS_FLAG_TIMER      
     jnz tumSwap
 ;       
@@ -4805,18 +4812,75 @@ tumSwap:
 ;
     mov ds:owner_lock,0
     sti
+;
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz tumDone
+;    
     push OFFSET tumDone
     call SaveLockedThread
     jmp ContinueCurrentThread
 
+tumInt:
+    mov ax,fs
+    cmp ax,ds:owner_sel
+    je tumIntOwner
+;
+    cmp ax,ds:int_core_sel
+    jne tumIntCoreOk
+;
+    mov ds:int_core_sel,0
+
+tumIntCoreOk:
+    dec ds:int_core_count
+    mov ds:owner_lock,0
+    jmp tumDone
+            
+tumIntOwner:
+    dec ds:int_core_count
+    mov ax,ds:int_core_sel
+    or ax,ax
+    jnz tumSwitchOwner
+;
+    push fs
+    push bx
+    push cx
+;    
+    mov cx,ds:processor_count
+    mov bx,OFFSET processor_arr
+
+tumIntLoop:
+    mov fs,ds:[bx]
+    mov ax,fs:ps_nesting
+    cmp ax,-1
+    jne tumIntFound
+;
+    add bx,2
+    loop tumIntLoop
+;
+    CrashGate
+
+tumIntFound:
+    mov ax,fs
+;
+    pop cx    
+    pop bx
+    pop fs
+    
+tumSwitchOwner:
+    mov ds:owner_sel,ax
+    mov ds:int_core_sel,0
+    mov ds:owner_lock,0
+    jmp tumDone
+    
 tumWake:
     mov ds:owner_sel,0  
-    mov ds:owner_lock,0
-    sti
     mov al,ds:owner_wait
     or al,al
     jz tumUnlock
 ;
+    mov ds:owner_lock,0
+    sti
     call WakeProcessor
     jmp tumDone
 
@@ -4895,19 +4959,63 @@ lumNestingOk:
 ;
     CrashGate
 
-lumOwnerOk:    
-    mov ds:owner_sel,0  
-    mov ds:owner_lock,0
-    sti
+lumOwnerOk:
+    mov ax,ds:int_core_count
+    or ax,ax
+    jnz lumInt
 ;
+    mov ds:owner_sel,0  
     mov al,ds:owner_wait
     or al,al
     jz lumUnlock
 ;
+    mov ds:owner_lock,0
+    sti
     call WakeProcessor
     jmp lumDone
 
+lumInt:
+    dec ds:int_core_count
+    mov ax,ds:int_core_sel
+    or ax,ax
+    jnz lumSwitchOwner
+;
+    push fs
+    push bx
+    push cx
+;    
+    mov cx,ds:processor_count
+    mov bx,OFFSET processor_arr
+
+lumIntLoop:
+    mov fs,ds:[bx]
+    mov ax,fs:ps_nesting
+    cmp ax,-1
+    jne lumIntFound
+;
+    add bx,2
+    loop lumIntLoop
+;
+    CrashGate
+
+lumIntFound:
+    mov ax,fs
+;
+    pop cx    
+    pop bx
+    pop fs
+    
+lumSwitchOwner:
+    mov ds:owner_sel,ax
+    mov ds:int_core_sel,0
+    mov ds:owner_lock,0
+    sti
+    jmp lumDone
+
 lumUnlock:
+    mov ds:owner_lock,0
+    sti
+;
     mov eax,fs:ps_mask
     not eax
     and eax,ds:processor_preempt
