@@ -4721,7 +4721,9 @@ lmGet:
 ;
     mov dx,fs
     cmp ax,dx
-    je lmTake
+    jne lmHalt
+;
+    CrashGate
 
 lmHalt:
     mov ax,1
@@ -4807,15 +4809,15 @@ tumOwner:
     jz tumWake
 
 tumSwap:
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz tumWake
+;
     add fs:ps_nesting,1
     jnc tumRetry
 ;
     mov ds:owner_lock,0
     sti
-;
-    mov ax,fs:ps_curr_thread
-    or ax,ax
-    jz tumDone
 ;    
     push OFFSET tumDone
     call SaveLockedThread
