@@ -92,6 +92,9 @@ owner_sel       DW ?
 owner_lock      DW ?
 list_lock       DW ?
 
+int_nesting     DW ?
+int_sel         DW ?
+
 try_lock_proc       DW ?
 lock_proc       DW ?
 unlock_proc     DW ?
@@ -746,6 +749,8 @@ init_tlb_done:
     mov ds:has_list,0
     mov ds:has_term,0
     mov ds:owner_sel,0
+    mov ds:int_nesting,-1
+    mov ds:int_sel,0
     mov ds:system_thread,0
     mov ds:owner_lock,0
     mov ds:owner_wait,0
@@ -4580,6 +4585,7 @@ wpLoop:
     or ax,ax
     jz wpNext
 ;
+    dec ds:owner_wait    
     ResumeProcessor
     jmp wpDone
 
@@ -4642,6 +4648,12 @@ tlmGet:
     je tlmTake
 
 tlmFail:
+    add ds:int_nesting,1
+    jnc tlmNested
+;
+    mov fs:int_sel,fs
+
+tlmNested:    
     add fs:ps_nesting,1
     mov ds:owner_lock,0
     clc
@@ -4708,12 +4720,17 @@ lmGet:
     je lmTake
 
 lmHalt:
+    mov ax,1
+    xchg ax,fs:ps_wait
+    or ax,ax
+    jnz lmStartWait
+;    
     inc ds:owner_wait
-    mov fs:ps_wait,1
+
+lmStartWait:
     mov ds:owner_lock,0
     sti
     hlt
-    mov fs:ps_wait,0
     jmp lmSpinLock
 
 lmTake:
@@ -4800,7 +4817,6 @@ tumWake:
     or al,al
     jz tumUnlock
 ;
-    dec ds:owner_wait    
     call WakeProcessor
     jmp tumDone
 
@@ -4888,7 +4904,6 @@ lumOwnerOk:
     or al,al
     jz lumUnlock
 ;
-    dec ds:owner_wait    
     call WakeProcessor
     jmp lumDone
 
