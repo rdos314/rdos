@@ -48,6 +48,7 @@ ENQ = 5
 ESC = 1Bh
 RS = 1Eh
 FF = 0Ch
+ACK = 06h
 
 cmd_session_struc   STRUC
 
@@ -1438,10 +1439,10 @@ SendCut   Proc near
     call CreateSessionSel
 ;
     mov di,SIZE cmd_session_struc
-    mov al,RS
+    mov al,ESC
     stosb
 ;
-    xor al,al
+    mov al,RS
     stosb
 ;    
     call InsertSessionSel
@@ -1544,17 +1545,6 @@ print_bitmap_cut:
 
 print_bitmap_fwait:
     call ForcePrint
-    push cx
-    push dx
-    movzx cx,al
-    mov ax,32000
-    xor dx,dx
-    div cx
-    pop dx
-    pop cx
-    add ax,200
-    WaitMilliSec
-;
     call SendCut
         
 print_bitmap_done:
@@ -1650,6 +1640,50 @@ eject_media   Proc far
     pop ds
     ret
 eject_media    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WaitForPrint
+;
+;       DESCRIPTION:    Wait for print to complete
+;
+;       PARAMETERS:     DS      Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_print   Proc far
+    push ds
+    push es
+    push ax
+    push cx
+    push di
+;
+    mov ax,SEG data
+    mov ds,ax
+;    
+    mov cx,3
+    call CreateWaitSessionSel
+;    
+    mov di,SIZE cmd_session_struc
+    mov al,ESC
+    stosb
+;    
+    mov al,ACK
+    stosb
+;    
+    mov al,0FEh
+    stosb
+;
+    call InsertSessionSel
+;    
+    pop di
+    pop cx
+    pop ax
+    pop es
+    pop ds
+    ret
+wait_for_print    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1781,6 +1815,9 @@ kr203_thread:
 ;    
     mov word ptr es:pr_eject_media_proc,OFFSET eject_media
     mov word ptr es:pr_eject_media_proc+2,cs
+;    
+    mov word ptr es:pr_wait_for_print_proc,OFFSET wait_for_print
+    mov word ptr es:pr_wait_for_print_proc+2,cs
 ;    
     GetSystemTime
     add eax,1193000 * 2  ; 2s

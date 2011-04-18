@@ -69,23 +69,6 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           test
-;
-;           DESCRIPTION:    test gate
-;
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_name   DB 'Test Gate', 0
-
-test_pr Proc far
-    mov ax,1234h
-    retf32
-test_pr Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           INIT_USERGATE
 ;
 ;           DESCRIPTION:    Init module
@@ -157,12 +140,6 @@ init_usergate_loop:
     mov edi,OFFSET is_valid_usergate_name
     xor dx,dx
     mov ax,is_valid_usergate_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET test_pr
-    mov edi,OFFSET test_name
-    xor dx,dx
-    mov ax,test_gate_nr
     RegisterBimodalUserGate
 ;
     popa

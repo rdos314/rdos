@@ -309,6 +309,20 @@ void TPrinterDevice::PrintBitmap(TBitmapGraphicDevice *bitmap)
 
 /*##########################################################################
 #
+#   Name       : TPrinterDevice::WaitForPrint
+#
+#   Purpose....: Wait for printing to complete
+#
+#   Parameters.: 
+#
+##########################################################################*/
+void TPrinterDevice::WaitForPrint()
+{
+    RdosWaitForPrint(FHandle);
+}
+
+/*##########################################################################
+#
 #   Name       : TPrinterDevice::PresentMedia
 #
 #   Purpose....: Present media to customer

@@ -52,6 +52,7 @@ public:
 
     TBitmapGraphicDevice *CreateBitmap(int Height);
     void PrintBitmap(TBitmapGraphicDevice *bitmap);
+    void WaitForPrint();
 
     virtual void PresentMedia(int mm);
     virtual void EjectMedia();

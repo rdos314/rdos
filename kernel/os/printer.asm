@@ -622,6 +622,44 @@ eject_media_done:
     pop ds
     retf32
 eject_media      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WaitForPrint
+;
+;       description:    Wait for printout to finish
+;
+;       PARAMETERS:     BX              Printer handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_print_name DB 'WaitForPrint',0
+
+wait_for_print       Proc far
+    push ds
+    push ax
+    push ebx
+;
+    push ax
+    mov ax,PRINTER_HANDLE
+    DerefHandle
+    pop ax
+    jc wait_for_print_done
+;
+    mov ds,[ebx].printer_sel
+    mov ebx,ds:pr_wait_for_print_proc
+    or ebx,ebx
+    jz wait_for_print_done
+;       
+    call ds:pr_wait_for_print_proc
+
+wait_for_print_done:
+    pop ebx
+    pop ax
+    pop ds
+    retf32
+wait_for_print      Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -654,6 +692,7 @@ add_printer    Proc far
     mov ds:pr_print_bitmap_proc,0
     mov ds:pr_present_media_proc,0
     mov ds:pr_eject_media_proc,0
+    mov ds:pr_wait_for_print_proc,0
 ;
     mov dx,ds
     mov bx,SEG data
@@ -776,6 +815,12 @@ init    Proc far
     mov edi,OFFSET eject_media_name
     xor dx,dx
     mov ax,eject_printer_media_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET wait_for_print
+    mov edi,OFFSET wait_for_print_name
+    xor dx,dx
+    mov ax,wait_for_print_nr
     RegisterBimodalUserGate
 ;
     mov bx,SEG data

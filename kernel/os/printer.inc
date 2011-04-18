@@ -53,6 +53,8 @@ pr_present_media_proc       DD ?
 
 pr_eject_media_proc         DD ?
 
+pr_wait_for_print_proc      DD ?
+
 printer_device              DW ?
 
 printer_struc	ENDS
