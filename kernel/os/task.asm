@@ -4903,16 +4903,17 @@ LockMultiple    Proc near
     push ax
     push bx
     push cx
-;
+
+lmLock:
     ReqSpinlock
     GetCurrCore
 ;
     add fs:ps_nesting,1
-    jc lmCheck
+    jc lmNestingOk
 ;
     CrashGate
 
-lmCheck:
+lmNestingOk:
     mov ax,ds:owner_sel
     or ax,ax
     jz lmTake
@@ -4925,10 +4926,10 @@ lmCheck:
     inc ds:owner_wait
 
 lmStartWait:
+    sub fs:ps_nesting,1
     RelSpinlock
     hlt
-    ReqSpinlock
-    jmp lmCheck
+    jmp lmLock
 
 lmTake:
     mov ds:owner_sel,fs
