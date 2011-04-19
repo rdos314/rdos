@@ -4716,28 +4716,28 @@ ver_ok:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           UpdateBlocked
+;           NAME:           UpdateWaitOwner
 ;
-;           DESCRIPTION:    Update blocked processors
+;           DESCRIPTION:    Update processors waiting for owner acquiral
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;               FS      Processor selector
 ;
+;       RETURNS:        CY      Some core waked up
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UpdateBlocked   Macro
-    local update_preempt
-    local update_done
+UpdateWaitOwner   Macro
+    local wake_done
     local wake_loop
     local wake_next
-    local preempt_loop
-    local preempt_do
 
-    push fs
     mov al,ds:owner_wait
     or al,al
-    jz update_preempt
+    clc
+    jz wake_done
 ;
+    push fs
     mov cx,ds:processor_count
     mov bx,OFFSET processor_arr
 
@@ -4750,18 +4750,41 @@ wake_loop:
 ;
     dec ds:owner_wait    
     ResumeProcessor
-    jmp update_done
+    pop fs
+    stc
+    jmp wake_done
 
 wake_next:
     add bx,2
     loop wake_loop
+    pop fs
 
-update_preempt:
+wake_done:
+                Endm
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UpdateBlocked
+;
+;           DESCRIPTION:    Update blocked processors
+;
+;       PARAMETERS:     DS      Task_sel
+;               FS      Processor selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateBlocked   Macro
+    local preempt_loop
+    local preempt_do
+    local update_done
+
     mov eax,fs:ps_mask
     not eax
     and eax,ds:processor_preempt
     jz update_done
 ;
+    push fs
     mov bx,OFFSET processor_arr
 
 preempt_loop:
@@ -4774,9 +4797,9 @@ preempt_loop:
 preempt_do: 
     mov fs,ds:[bx]
     UnblockProcessor
+    pop fs
 
 update_done:
-    pop fs
                 Endm
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5018,7 +5041,10 @@ tumIntOwner:
     
 tumWake:
     mov ds:owner_sel,0  
+    UpdateWaitOwner
     RelSpinlock
+    jc tumDone
+;    
     UpdateBlocked
     jmp tumDone
 
@@ -5098,7 +5124,10 @@ umInt:
 
 umWake:
     mov ds:owner_sel,0  
+    UpdateWaitOwner
     RelSpinlock
+    jc umDone
+;    
     UpdateBlocked
 
 umDone:
@@ -5154,7 +5183,10 @@ lumOwnerOk:
 
 lumWake:
     mov ds:owner_sel,0  
+    UpdateWaitOwner
     RelSpinlock
+    jc lumDone
+;    
     UpdateBlocked
 
 lumDone:    
