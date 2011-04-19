@@ -5183,6 +5183,8 @@ is_processor_blocked_name    DB 'Is Processor Blocked',0
 is_processor_blocked    Proc far
     push eax
 ;    
+    mov ax,task_sel
+    mov ds,ax
     mov eax,fs:ps_mask
     and eax,ds:processor_preempt
     jz ipbNo
