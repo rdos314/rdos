@@ -4755,8 +4755,6 @@ wake_loop:
 wake_next:
     add bx,2
     loop wake_loop
-;
-    CrashGate
 
 update_preempt:
     mov eax,fs:ps_mask
