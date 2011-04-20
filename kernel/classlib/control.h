@@ -114,6 +114,7 @@ protected:
     
     void Unload();
     void HandleUpdate();
+    void HandleApply();
 	void SetClipRect(TGraphicDevice *dev, int xmin, int ymin);
 	void SetClipRect(TGraphicDevice *dev, int xmin, int ymin, int xmax, int ymax);
 	void UpdateChildren(TGraphicDevice *dev, int xmin, int ymin, int width, int height);

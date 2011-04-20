@@ -1410,6 +1410,38 @@ void TControl::HandleUpdate()
 
 /*##########################################################################
 #
+#   Name       : TControl::HandleApply
+#
+#   Purpose....: Handle apply
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::HandleApply()
+{
+    TControl *control;
+    
+    Protect();
+
+    NotifyChildChange();
+    Update();
+
+    control = FControlList;
+
+    while (control)
+    {
+        if (control->IsVisible())
+            control->HandleApply();
+        control = control->FNext;
+    }
+
+    Unprotect();
+}
+
+/*##########################################################################
+#
 #   Name       : TControl::SetClipRect
 #
 #   Purpose....: Set cliprec for control
@@ -2229,7 +2261,7 @@ void TControlThread::Apply(TGraphicDevice *dev)
     while (control)
     {
         if (control->IsVisible())
-            control->HandleUpdate();
+            control->HandleApply();
 
         control = control->FNext;
     }
