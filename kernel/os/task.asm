@@ -4632,6 +4632,8 @@ LoadUnlockSingle    Endp
 ReqSpinlock  Macro
     local spin_loop
     local spin_get
+
+    xor cx,cx
     
 spin_loop:
     sti
@@ -4640,7 +4642,9 @@ spin_loop:
     jz spin_get
 ;
     pause
-    jmp spin_loop
+    loop spin_loop
+;
+    CrashGate    
 
 spin_get:
     cli
@@ -4663,7 +4667,6 @@ spin_get:
 
 RelSpinlock Macro
     mov ds:owner_lock,0
-    sti
             Endm
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4890,6 +4893,7 @@ tlmFail:
 
 tlmNested:
     RelSpinlock
+    sti
     clc
     jmp tlmDone
 
@@ -4897,6 +4901,7 @@ tlmTake:
     mov ds:owner_sel,fs
     add fs:ps_nesting,1
     RelSpinlock
+    sti
 
 tlmDone:
     pop cx
@@ -4949,12 +4954,14 @@ lmNestingOk:
 lmStartWait:
     sub fs:ps_nesting,1
     RelSpinlock
+    sti
     hlt
     jmp lmLock
 
 lmTake:
     mov ds:owner_sel,fs
     RelSpinlock
+    sti
 
 lmDone:     
     pop cx
@@ -5012,6 +5019,7 @@ tumSwap:
 ;
     add fs:ps_nesting,1
     RelSpinlock    
+    sti
     push OFFSET tumDone
     call SaveLockedThread
     jmp ContinueCurrentThread
@@ -5029,6 +5037,7 @@ tumInt:
 tumIntCoreOk:
     dec ds:int_core_count
     RelSpinlock
+    sti
     jmp tumDone
             
 tumIntOwner:
@@ -5037,12 +5046,14 @@ tumIntOwner:
     mov ds:owner_sel,ax
     mov ds:int_core_sel,0
     RelSpinlock
+    sti
     jmp tumDone
     
 tumWake:
     mov ds:owner_sel,0  
     UpdateWaitOwner
     RelSpinlock
+    sti
     jc tumDone
 ;    
     UpdateBlocked
@@ -5050,6 +5061,7 @@ tumWake:
 
 tumUnlock:
     RelSpinlock
+    sti
 
 tumDone:
     pop cx
@@ -5110,6 +5122,7 @@ umSwap:
 ;
     add fs:ps_nesting,1
     RelSpinlock    
+    sti
     push OFFSET umDone
     call SaveLockedThread
     jmp ContinueCurrentThread
@@ -5120,12 +5133,14 @@ umInt:
     mov ds:owner_sel,ax
     mov ds:int_core_sel,0
     RelSpinlock
+    sti
     jmp umDone
 
 umWake:
     mov ds:owner_sel,0  
     UpdateWaitOwner
     RelSpinlock
+    sti
     jc umDone
 ;    
     UpdateBlocked
