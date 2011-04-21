@@ -1508,11 +1508,17 @@ GetValue    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+ip_name         DB 'IP',0
+mask_name           DB 'NETMASK',0
+gateway_name    DB 'GATEWAY',0
+
 init_tasking    Proc far
     push ds
     push es
     pushad
 ;    
+    mov ax,SEG data
+    mov ds,ax    
     mov ax,cs
     mov es,ax
     mov di,OFFSET ip_name
@@ -1563,10 +1569,6 @@ init_tasking    Endp
 ;           DESCRIPTION:    Init net driver
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ip_name         DB 'IP',0
-mask_name           DB 'NETMASK',0
-gateway_name    DB 'GATEWAY',0
 
 init    PROC far
     mov bx,SEG data

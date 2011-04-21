@@ -456,4 +456,8 @@ start_crash_core_nr         = 391
 read_pnp_byte_nr            = 393
 write_pnp_byte_nr           = 394
 
+add_sys_env_var_nr          = 395
+delete_sys_env_var_nr       = 396
+find_sys_env_var_nr         = 397
+
 osgate_entries				= 400

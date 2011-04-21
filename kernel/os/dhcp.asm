@@ -2359,6 +2359,8 @@ ReceiveClientDhcp       Endp
 
 dhcp_thread_name    DB 'DHCP',0
 
+ip_name         DB 'IP',0
+
 dhcp_thread_pr:
     mov ax,250
     WaitMilliSec

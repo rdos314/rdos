@@ -425,7 +425,8 @@ close_env   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-add_env_var_name    DB 'Add Env Var',0
+add_env_var_name        DB 'Add Env Var',0
+add_sys_env_var_name    DB 'Add Sys Env Var',0
 
 add_env_base    Proc near
     push es
@@ -636,6 +637,22 @@ add_env_var32:
     ApiCheckEax
     retf32
 
+add_sys_env_var:
+    push ds
+    push es
+    pushad
+;    
+    LockSysEnv
+    call add_env_base
+    pushf
+    UnlockSysEnv
+    popf
+;
+    popad
+    pop es
+    pop ds
+    retf32   
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -648,7 +665,8 @@ add_env_var32:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-delete_env_var_name DB 'Delete Env Var',0
+delete_env_var_name     DB 'Delete Env Var',0
+delete_sys_env_var_name DB 'Delete Sys Env Var',0
 
 delete_env_base Proc near
     mov ebp,esi
@@ -791,6 +809,24 @@ delete_env_var32:
     ApiCheckEax
     retf32
 
+
+delete_sys_env_var:
+    push ds
+    push es
+    pushad
+;    
+    LockSysEnv
+    mov es,bx
+    call delete_env_base
+    pushf
+    UnlockSysEnv
+    popf
+;
+    popad
+    pop es
+    pop ds
+    retf32
+       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -804,7 +840,8 @@ delete_env_var32:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-find_env_var_name   DB 'Find Env Var',0
+find_env_var_name       DB 'Find Env Var',0
+find_sys_env_var_name   DB 'Find Sys Env Var',0
 
 find_env_base   Proc near
     push es
@@ -934,6 +971,22 @@ find_env_var32:
     ApiCheckEax
     retf32
 
+find_sys_env_var:
+    push ds
+    push es
+    pushad
+;    
+    LockSysEnv
+    call find_env_base
+    pushf
+    UnlockSysEnv
+    popf
+;
+    popad
+    pop es
+    pop ds
+    retf32
+       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1335,6 +1388,24 @@ init_device_loop:
     mov edi,OFFSET unlock_proc_env_name
     xor cl,cl
     mov ax,unlock_proc_env_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET add_sys_env_var
+    mov edi,OFFSET add_sys_env_var_name
+    xor cl,cl
+    mov ax,add_sys_env_var_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET delete_sys_env_var
+    mov edi,OFFSET delete_sys_env_var_name
+    xor cl,cl
+    mov ax,delete_sys_env_var_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET find_sys_env_var
+    mov edi,OFFSET find_sys_env_var_name
+    xor cl,cl
+    mov ax,find_sys_env_var_nr
     RegisterOsGate
 ;
     mov esi,OFFSET open_sys_env

@@ -1441,6 +1441,23 @@ UnlockProcEnv   MACRO
     OsGate unlock_proc_env_nr
             ENDM
 
+; IN  DS:(E)SI      Env var name
+; IN  ES:(E)DI      Env var data
+AddSysEnvVar	MACRO
+	OsGate add_sys_env_var_nr
+	        ENDM
+
+; IN  DS:(E)SI      Env var name
+DeleteSysEnvVar	MACRO
+	OsGate delete_sys_env_var_nr
+	        ENDM
+
+; IN  DS:(E)SI      Env var name
+; IN  ES:(E)DI      Env var data
+FindSysEnvVar	MACRO
+	OsGate find_sys_env_var_nr
+	        ENDM
+
 ;;;;;;;;;;;; Focus ;;;;;;;;;;;;;
 
 ;       ES:EDI       Address to callback
