@@ -36,13 +36,15 @@ INCLUDE system.inc
 INCLUDE ip.inc
 INCLUDE udp.inc
 
-    extrn init_dns:near
-    extrn init_icmp:near
+    extrn init_task_dhcp:near
+    extrn init_task_cache:near
+    extrn init_task_dns:near
+    extrn init_task_icmp:near
+    extrn init_task_udp:near
+    extrn init_task_ntp:near
+    extrn init_task_tcp:near
+
     extrn init_cache:near
-    extrn init_udp:near
-    extrn init_dhcp:near
-    extrn init_ntp:near
-    extrn init_tcp:near
     extrn IsDhcpDone:near
 
 Reverse MACRO
@@ -1500,6 +1502,62 @@ GetValue    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           init_tasking
+;
+;           DESCRIPTION:    Init tasking
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_tasking    Proc far
+    push ds
+    push es
+    pushad
+;    
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET ip_name
+    call GetIPNumber
+    mov ds:my_ip,eax
+;
+    mov di,OFFSET mask_name
+    call GetIpNumber
+    mov ds:ip_mask,eax
+;
+    mov di,OFFSET gateway_name
+    call GetIPNumber
+    mov ds:gateway,eax
+;
+    call init_task_dhcp
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;
+    mov al,1
+    mov edi,OFFSET define_mask
+    AddDhcpOption
+;
+    mov al,3
+    mov edi,OFFSET define_gateway
+    AddDhcpOption
+;
+    call init_task_cache
+    call init_task_dns
+    call init_task_icmp
+    call init_task_udp
+    call init_task_ntp
+    call init_task_tcp
+;
+    popad
+    pop es
+    pop ds
+    retf32
+init_tasking    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           init
 ;
 ;           DESCRIPTION:    Init net driver
@@ -1516,20 +1574,6 @@ init    PROC far
     mov ds,bx
     mov ds:protocol_count,0
     mov ds:curr_id,1
-;
-    mov ax,cs
-    mov es,ax
-    mov di,OFFSET ip_name
-    call GetIPNumber
-    mov ds:my_ip,eax
-;
-    mov di,OFFSET mask_name
-    call GetIpNumber
-    mov ds:ip_mask,eax
-;
-    mov di,OFFSET gateway_name
-    call GetIPNumber
-    mov ds:gateway,eax
 ;
     mov ax,cs
     mov ds,ax
@@ -1599,34 +1643,18 @@ init    PROC far
     mov dx,800h
     mov ax,SEG data
     mov ds,ax
-    push ds:my_ip
     mov ds:my_ip,0
     mov esi,OFFSET my_ip
     mov edi,OFFSET receive
     RegisterNetProtocol
     mov ds:ip_handle,bx
-    pop ds:my_ip
-;
-    call init_dhcp
 ;
     mov ax,cs
-    mov ds,ax
     mov es,ax
-;
-    mov al,1
-    mov edi,OFFSET define_mask
-    AddDhcpOption
-;
-    mov al,3
-    mov edi,OFFSET define_gateway
-    AddDhcpOption
-;
-    call init_cache
-    call init_dns
-    call init_icmp
-    call init_udp
-    call init_ntp
-    call init_tcp
+    mov edi,OFFSET init_tasking
+    HookInitTasking
+;   
+    call init_cache 
     clc
     ret
 init    ENDP

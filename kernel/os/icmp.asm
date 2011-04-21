@@ -391,9 +391,9 @@ ping_node       Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public init_icmp
+    public init_task_icmp
 
-init_icmp       PROC near
+init_task_icmp       PROC near
     mov ax,SEG data
     mov ds,ax
     InitSection ds:ping_section
@@ -413,7 +413,7 @@ init_icmp       PROC near
     mov ax,ping_nr
     RegisterBimodalUserGate
     ret
-init_icmp       ENDP
+init_task_icmp       ENDP
 
 code    ENDS
 

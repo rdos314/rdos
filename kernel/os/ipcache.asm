@@ -704,29 +704,25 @@ update_round_trip_time  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           init_cache_entries
+;           NAME:           init_task_cache
 ;
-;           DESCRIPTION:    Init IP cache entries
+;           DESCRIPTION:    Init IP cache, tasking part
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LocalHost       DB 'LocalHost', 0
+    public init_task_cache
+
+LocalHost   DB 'LocalHost', 0
 LocalIp     DB 127,0,0,0
 
-init_cache_entries      Proc far
-    push es
-    pushad
-;
+init_task_cache PROC near
     mov ax,cs
     mov es,ax
     mov edi,OFFSET LocalHost
     mov edx,dword ptr cs:LocalIp
     call DefineHostByName
-;
-    popad
-    pop es
-    retf32
-init_cache_entries      Endp
+    ret
+init_task_cache Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -773,9 +769,6 @@ init_cache      PROC near
     xor cl,cl
     mov ax,update_round_trip_time_nr
     RegisterOsGate
-;
-    mov edi,OFFSET init_cache_entries
-    HookInitTasking
 ;
     mov ax,SEG data
     mov ds,ax

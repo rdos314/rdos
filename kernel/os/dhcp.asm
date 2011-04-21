@@ -2425,56 +2425,21 @@ dhcp_thread_done:
     call define_ip
     retf
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           Init_dhcp_thread
+;           NAME:           init_task_dhcp
 ;
-;           DESCRIPTION:    init DHCP thread
-;
-;       PARAMETERS:     
-;
-;           RETURNS:        
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_dhcp_thread    Proc far
-    push ds
-    push es
-    pusha
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov si,OFFSET dhcp_thread_pr
-    mov di,OFFSET dhcp_thread_name
-    mov ax,3
-    mov cx,256
-    CreateThread
-;
-    popa
-    pop es
-    pop ds
-    retf32
-init_dhcp_thread    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           init_dhcp
-;
-;           DESCRIPTION:    Init dhcp driver
+;           DESCRIPTION:    Init dhcp driver, tasking part
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 dhcp_name       DB 'DHCP', 0
 dhcp_ip_name        DB 'DHCP.IP',0
 
-    public init_dhcp
+    public init_task_dhcp
 
-init_dhcp       PROC near
+init_task_dhcp       PROC near
     mov bx,SEG data
     mov ds,bx
     mov es,bx
@@ -2512,17 +2477,23 @@ init_dhcp_enabled_ok:
     mov ds,ax
     mov es,ax
 ;
-    mov edi,OFFSET init_dhcp_thread
-    HookInitTasking
-;
     mov esi,OFFSET add_dhcp_option
     mov edi,OFFSET add_dhcp_option_name
     xor cl,cl
     mov ax,add_dhcp_option_nr
     RegisterOsGate
 ;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov si,OFFSET dhcp_thread_pr
+    mov di,OFFSET dhcp_thread_name
+    mov ax,3
+    mov cx,256
+    CreateThread
+;
     ret
-init_dhcp       ENDP
+init_task_dhcp       ENDP
 
 code    ENDS
 

@@ -252,15 +252,15 @@ define_ntp_server       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           init
+;           NAME:           init_task_ntp
 ;
-;           DESCRIPTION:    Init NTP driver
+;           DESCRIPTION:    Init NTP driver, tasking part
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public init_ntp
+    public init_task_ntp
 
-init_ntp    PROC near
+init_task_ntp    PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -276,7 +276,7 @@ init_ntp    PROC near
     AddDhcpOption
 ;
     ret
-init_ntp    ENDP
+init_task_ntp    ENDP
 
 code    ENDS
 

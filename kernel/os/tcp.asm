@@ -5566,55 +5566,18 @@ tcp_active_wait:
     WaitMilliSec
     jmp tcp_active_loop
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           init_tcp_thread
+;           NAME:           init_task_tcp
 ;
-;           DESCRIPTION:    Create supervisor thread
-;
-;       PARAMETERS:     
-;
-;           RETURNS:        
+;           DESCRIPTION:    Init tcp driver, tasking part
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_tcp_thread Proc far
-    push ds
-    push es
-    pusha
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov si,OFFSET tcp_thread_pr
-    mov di,OFFSET tcp_thread_name
-    mov ax,3
-    mov cx,256
-    CreateThread
-;
-    popa
-    pop es
-    pop ds
-    retf32
-init_tcp_thread Endp
+    public init_task_tcp
 
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           init_tcp
-;
-;           DESCRIPTION:    Init tcp driver
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public init_tcp
-
-init_tcp    PROC near
+init_task_tcp    PROC near
     mov bx,SEG data
     mov es,bx
     mov es:ConnectionList,0
@@ -5634,9 +5597,6 @@ init_tcp    PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    mov edi,OFFSET init_tcp_thread
-    HookInitTasking
 ;
     mov edi,OFFSET delete_socket_handle
     mov ax,TCP_SOCKET_HANDLE
@@ -5766,8 +5726,17 @@ init_tcp    PROC near
     mov edi,OFFSET Receive
     HookIp
 ;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov si,OFFSET tcp_thread_pr
+    mov di,OFFSET tcp_thread_name
+    mov ax,3
+    mov cx,256
+    CreateThread
+;
     ret
-init_tcp    ENDP
+init_task_tcp    ENDP
 
 code    ENDS
 

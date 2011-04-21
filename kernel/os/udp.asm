@@ -740,15 +740,15 @@ listen_udp_port Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           init_udp
+;           NAME:           init_task_udp
 ;
-;           DESCRIPTION:    Init udp driver
+;           DESCRIPTION:    Init udp driver, tasking part
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public init_udp
+    public init_task_udp
 
-init_udp    PROC near
+init_task_udp    PROC near
     push ds
     push es
     pusha
@@ -796,7 +796,7 @@ query_list_create:
     pop es
     pop ds
     ret
-init_udp    ENDP
+init_task_udp    ENDP
 
 code    ENDS
 

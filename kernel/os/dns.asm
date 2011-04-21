@@ -892,18 +892,18 @@ define_dns      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           init
+;           NAME:           init_task_dns
 ;
-;           DESCRIPTION:    Init tcp driver
+;           DESCRIPTION:    Init dns driver, tasking part
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 dns1_name           DB 'DNS1',0
 dns2_name           DB 'DNS2',0
 
-    public init_dns
+    public init_task_dns
 
-init_dns    PROC near
+init_task_dns    PROC near
     mov ax,SEG data
     mov ds,ax
     mov ds:dns_curr_id,1
@@ -948,7 +948,7 @@ init_dns    PROC near
     AddDhcpOption
 ;
     ret
-init_dns    ENDP
+init_task_dns    ENDP
 
 code    ENDS
 
