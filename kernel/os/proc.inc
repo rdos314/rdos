@@ -65,6 +65,13 @@ ps_preempt_msb	    DD ?
 
 ps_last_lsb         DD ?
 
+ps_tsc_guard        DD ?
+ps_last_tsc         DD ?
+
+ps_clock_tics       DW ?
+
+ps_system_time      DD ?,?
+
 ps_timer_head		DW ?
 ps_timer_free		DW ?
 ps_timer_entries    DB 256 * SIZE timer_struc DUP(?)

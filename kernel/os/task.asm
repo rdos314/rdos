@@ -64,11 +64,7 @@ init_clock_proc     DW ?
 get_time_proc   DW ?
 
 tsc_sub_tics    DD ?
-tsc_guard       DD ?
-last_tsc        DD ?
 
-clock_tics          DW ?
-system_time         DD ?,?
 time_diff           DD ?,?
 
 apic_mul_tics       DD ?
@@ -389,10 +385,13 @@ InitPitClock    Proc near
     out TIMER2,al
     jmp short $+2
     out TIMER2,al
-    mov ds:clock_tics,0
+    mov fs:ps_clock_tics,0
     jmp short $+2
     mov al,0Dh
     out 61h,al
+;    
+    mov fs:ps_system_time,0
+    mov fs:ps_system_time+4,0
 ;
     pop ax
     pop ds      
@@ -424,13 +423,13 @@ GetPitTime  Proc near
     in al,TIMER2
     xchg al,ah
     mov dx,ax
-    xchg ax,ds:clock_tics
+    xchg ax,fs:ps_clock_tics
     sub ax,dx
     movzx eax,ax
-    add ds:system_time,eax
-    adc ds:system_time+4,0
-    mov eax,ds:system_time
-    mov edx,ds:system_time+4
+    add fs:ps_system_time,eax
+    adc fs:ps_system_time+4,0
+    mov eax,fs:ps_system_time
+    mov edx,fs:ps_system_time+4
     sti
     ret
 GetPitTime  Endp
@@ -462,8 +461,10 @@ InitTscClock    Proc near
     mov ds:tsc_sub_tics,eax
 ;    
     rdtsc
-    mov ds:last_tsc,eax
-    mov ds:tsc_guard,0
+    mov fs:ps_last_tsc,eax
+    mov fs:ps_tsc_guard,0
+    mov fs:ps_system_time,0
+    mov fs:ps_system_time+4,0
 ;
     popad
     pop es      
@@ -485,15 +486,15 @@ InitTscClock    Endp
 GetTscTime  Proc near
     cli
     rdtsc
-    mov edx,ds:last_tsc
-    mov ds:last_tsc,eax
+    mov edx,fs:ps_last_tsc
+    mov fs:ps_last_tsc,eax
     sub eax,edx
     mul ds:tsc_sub_tics
-    add ds:tsc_guard,eax
-    adc ds:system_time,edx
-    adc ds:system_time+4,0
-    mov eax,ds:system_time
-    mov edx,ds:system_time+4
+    add fs:ps_tsc_guard,eax
+    adc fs:ps_system_time,edx
+    adc fs:ps_system_time+4,0
+    mov eax,fs:ps_system_time
+    mov edx,fs:ps_system_time+4
     sti
     ret
 GetTscTime  Endp
@@ -763,8 +764,6 @@ init_tlb_done:
     mov ds:owner_wait,0
     mov ds:list_lock,0
     mov ds:help_call_ip,0
-    mov ds:system_time,0
-    mov ds:system_time+4,0
     mov ds:time_diff,0
     mov ds:time_diff+4,0
     mov bx,OFFSET ptab
@@ -3415,6 +3414,7 @@ start_processor:
     mov ds,ax
     call ds:lock_proc
     StartSysTimer
+    call ds:init_clock_proc
     or fs:ps_flags,PS_FLAG_PREEMPT    
     jmp LoadCurrentThread
     
@@ -7062,12 +7062,16 @@ set_system_time_name    DB 'Set System Time',0
 
 set_system_time PROC far
     push ds
+    push fs
     push bx
+    mov bx,core_data_sel
+    mov fs,bx
     mov bx,task_sel
     mov ds,bx
-    mov ds:system_time,eax
-    mov ds:system_time+4,edx
+    mov fs:ps_system_time,eax
+    mov fs:ps_system_time+4,edx
     pop bx
+    pop fs
     pop ds
     retf32
 set_system_time ENDP
