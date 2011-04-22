@@ -61,7 +61,7 @@ help_call_ip    DW ?
 help_call_cs    DW ?
 
 init_clock_proc     DW ?
-update_clock_proc   DW ?
+get_time_proc   DW ?
 
 tsc_sub_tics    DD ?
 tsc_guard       DD ?
@@ -119,11 +119,6 @@ IFDEF __WASM__
 ELSE
     .386p
 ENDIF
-
-LocalGetSystemTime      MACRO
-    mov eax,ds:system_time
-    mov edx,ds:system_time+4
-                    ENDM
 
 LocalRemoveTimer    MACRO
     local timer_return
@@ -408,15 +403,19 @@ InitPitClock    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           UpdatePitClock
+;           NAME:           GetPitTime
 ;
-;           DESCRIPTION:    Update clock using PIT timer 2
+;           DESCRIPTION:    Get time using PIT timer 2
 ;
 ;           PARAMETERS:         ES      Current thread
 ;
+;           RETURNS:        EDX:EAX     Current system time
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UpdatePitClock  Proc near
+GetPitTime  Proc near
+    pushf
+    cli
     mov al,80h
     out TIMER_CONTROL,al
     jmp short $+2
@@ -431,8 +430,11 @@ UpdatePitClock  Proc near
     movzx eax,ax
     add ds:system_time,eax
     adc ds:system_time+4,0
+    mov eax,ds:system_time
+    mov edx,ds:system_time+4
+    popf
     ret
-UpdatePitClock  Endp
+GetPitTime  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -473,15 +475,17 @@ InitTscClock    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           UpdateTscClock
+;           NAME:           GetTscTime
 ;
-;           DESCRIPTION:    Update clock using TSC
+;           DESCRIPTION:    Get time using TSC
 ;
 ;           PARAMETERS:         ES      Current thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UpdateTscClock  Proc near
+GetTscTime  Proc near
+    pushf
+    cli
     rdtsc
     mov edx,ds:last_tsc
     mov ds:last_tsc,eax
@@ -490,8 +494,11 @@ UpdateTscClock  Proc near
     add ds:tsc_guard,eax
     adc ds:system_time,edx
     adc ds:system_time+4,0
+    mov eax,ds:system_time
+    mov edx,ds:system_time+4
+    popf
     ret
-UpdateTscClock  Endp
+GetTscTime  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -523,8 +530,7 @@ start_pit_timer    Proc far
     xchg ah,al
     jmp short $+2
     out TIMER0,al
-    call ds:update_clock_proc
-    LocalGetSystemTime
+    call ds:get_time_proc
     xor al,al
     out TIMER_CONTROL,al
     jmp short $+2
@@ -627,7 +633,7 @@ ntdSetPit:
     mov ds:tsc_tics,0
     and ds:cpu_feature_flags, NOT 10h
     call InitPitClock
-    mov es:update_clock_proc,OFFSET UpdatePitClock
+    mov es:get_time_proc,OFFSET GetPitTime
     jmp ntdDone
 
 ntdPit:
@@ -2544,10 +2550,7 @@ SetupPreempt    Proc near
     jz spDone    
 
 spSet:
-    cli
-    call ds:update_clock_proc
-    LocalGetSystemTime
-    sti
+    call ds:get_time_proc
     add eax,1193
     adc edx,0
     mov fs:ps_preempt_lsb,eax
@@ -2753,8 +2756,7 @@ load_reload_loop:
 ;    
     and fs:ps_flags,NOT PS_FLAG_TIMER   
     cli
-    call ds:update_clock_proc
-    LocalGetSystemTime
+    call ds:get_time_proc
     mov fs:ps_last_lsb,eax
     add eax,ds:update_tics
     adc edx,0
@@ -3073,10 +3075,7 @@ SaveCurrentThread       Proc near
     mov ds,ax
     call ds:lock_proc
 ;
-    cli    
-    call ds:update_clock_proc
-    LocalGetSystemTime
-    sti
+    call ds:get_time_proc
     mov ds,fs:ps_curr_thread
     sub eax,fs:ps_last_lsb
     add ds:p_lsb_tics,eax
@@ -3148,10 +3147,7 @@ SaveLockedThread    Proc near
 ;
     mov ax,task_sel
     mov ds,ax
-    cli    
-    call ds:update_clock_proc
-    LocalGetSystemTime
-    sti
+    call ds:get_time_proc
     mov ds,fs:ps_curr_thread
     sub eax,fs:ps_last_lsb
     add ds:p_lsb_tics,eax
@@ -3221,10 +3217,7 @@ SkipCurrentThread       Proc near
     pop ax
 ;
     push eax
-    cli    
-    call ds:update_clock_proc
-    LocalGetSystemTime
-    sti
+    call ds:get_time_proc
     push ds
     mov ds,fs:ps_curr_thread
     sub eax,fs:ps_last_lsb
@@ -3351,8 +3344,7 @@ reload_timer_loop:
     and fs:ps_flags,NOT PS_FLAG_TIMER   
     mov es,fs:ps_curr_thread
     cli
-    call ds:update_clock_proc
-    LocalGetSystemTime
+    call ds:get_time_proc
     add eax,ds:update_tics
     adc edx,0
     mov bx,fs:ps_timer_head
@@ -3388,10 +3380,8 @@ reload_check_preempt:
     jmp ContinueCurrentThread
 
 reload_preempt_block:
-    cli
-    call ds:update_clock_proc
-    LocalGetSystemTime
     sti
+    call ds:get_time_proc
     add eax,1193
     adc edx,0
     mov fs:ps_preempt_lsb,eax
@@ -5508,13 +5498,13 @@ init_first_thread:
     mov es,ax
     mov ds:update_tics,0
     mov ds:init_clock_proc,OFFSET InitPitClock
-    mov ds:update_clock_proc,OFFSET UpdatePitClock
+    mov ds:get_time_proc,OFFSET GetPitTime
     mov eax,es:tsc_tics
     or eax,eax
     jz timer_clock_done
 ;
     mov ds:init_clock_proc,OFFSET InitTscClock
-    mov ds:update_clock_proc,OFFSET UpdateTscClock
+    mov ds:get_time_proc,OFFSET GetTscTime
 
 timer_clock_done:
     mov bx,task_sel
@@ -6681,10 +6671,7 @@ wait_milli_sec  PROC far
     push dx
     push ax
     pop ebx
-    cli
-    call ds:update_clock_proc
-    LocalGetSystemTime
-    sti
+    call ds:get_time_proc
 ;
     add eax,ebx
     adc edx,0
@@ -6734,10 +6721,7 @@ wait_micro_sec  PROC far
     push eax
     pop ax
     pop ebx
-    cli
-    call ds:update_clock_proc
-    LocalGetSystemTime
-    sti
+    call ds:get_time_proc
     add eax,ebx
     adc edx,0
 ;
@@ -6956,10 +6940,7 @@ get_system_time PROC far
     mov es,fs:ps_curr_thread
     mov ax,task_sel
     mov ds,ax
-    cli
-    call ds:update_clock_proc
-    LocalGetSystemTime
-    sti
+    call ds:get_time_proc
 ;    
     pop fs
     pop es
@@ -6991,12 +6972,9 @@ get_time    PROC far
     mov es,fs:ps_curr_thread
     mov ax,task_sel
     mov ds,ax
-    cli
-    call ds:update_clock_proc
-    LocalGetSystemTime
+    call ds:get_time_proc
     add eax,ds:time_diff
     adc edx,ds:time_diff+4
-    sti
 ;
     pop fs
     pop es
