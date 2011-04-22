@@ -414,7 +414,6 @@ InitPitClock    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetPitTime  Proc near
-    pushf
     cli
     mov al,80h
     out TIMER_CONTROL,al
@@ -432,7 +431,7 @@ GetPitTime  Proc near
     adc ds:system_time+4,0
     mov eax,ds:system_time
     mov edx,ds:system_time+4
-    popf
+    sti
     ret
 GetPitTime  Endp
 
@@ -484,7 +483,6 @@ InitTscClock    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetTscTime  Proc near
-    pushf
     cli
     rdtsc
     mov edx,ds:last_tsc
@@ -496,7 +494,7 @@ GetTscTime  Proc near
     adc ds:system_time+4,0
     mov eax,ds:system_time
     mov edx,ds:system_time+4
-    popf
+    sti
     ret
 GetTscTime  Endp
 
@@ -531,6 +529,7 @@ start_pit_timer    Proc far
     jmp short $+2
     out TIMER0,al
     call ds:get_time_proc
+    cli
     xor al,al
     out TIMER_CONTROL,al
     jmp short $+2
@@ -2755,8 +2754,8 @@ load_reload_loop:
     lock and ds:processor_preempt,eax
 ;    
     and fs:ps_flags,NOT PS_FLAG_TIMER   
-    cli
     call ds:get_time_proc
+    cli
     mov fs:ps_last_lsb,eax
     add eax,ds:update_tics
     adc edx,0
@@ -3343,8 +3342,8 @@ reload_timer_loop:
 ;    
     and fs:ps_flags,NOT PS_FLAG_TIMER   
     mov es,fs:ps_curr_thread
-    cli
     call ds:get_time_proc
+    cli
     add eax,ds:update_tics
     adc edx,0
     mov bx,fs:ps_timer_head
