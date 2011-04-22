@@ -5517,15 +5517,15 @@ init_first_thread:
     mov ds:update_clock_proc,OFFSET UpdateTscClock
 
 timer_clock_done:
-    StartSysTimer
-    mov ds:update_tics,eax
-    call ds:init_clock_proc
-;
     mov bx,task_sel
     mov ds,bx
     mov bx,core_data_sel
     mov fs,bx
     mov fs,fs:ps_sel
+;
+    StartSysTimer
+    mov ds:update_tics,eax
+    call ds:init_clock_proc
     jmp LoadCurrentThread
 
 
@@ -6949,15 +6949,19 @@ get_system_time_name    DB 'Get System Time',0
 get_system_time PROC far
     push ds
     push es
+    push fs
+;    
     mov ax,core_data_sel
-    mov ds,ax
-    mov es,ds:ps_curr_thread
+    mov fs,ax
+    mov es,fs:ps_curr_thread
     mov ax,task_sel
     mov ds,ax
     cli
     call ds:update_clock_proc
     LocalGetSystemTime
     sti
+;    
+    pop fs
     pop es
     pop ds
     retf32
@@ -6980,9 +6984,11 @@ get_time_name   DB 'Get Time',0
 get_time    PROC far
     push ds
     push es
+    push fs
+;    
     mov ax,core_data_sel
-    mov ds,ax
-    mov es,ds:ps_curr_thread
+    mov fs,ax
+    mov es,fs:ps_curr_thread
     mov ax,task_sel
     mov ds,ax
     cli
@@ -6991,6 +6997,8 @@ get_time    PROC far
     add eax,ds:time_diff
     adc edx,ds:time_diff+4
     sti
+;
+    pop fs
     pop es
     pop ds
     retf32
