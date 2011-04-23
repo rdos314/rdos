@@ -39,9 +39,10 @@ INCLUDE proc.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\apicheck.inc
 
-TIME_SYNC_IDLE  = 0
-TIME_SYNC_WAIT  = 1
-TIME_SYNC_READ  = 2
+TIME_SYNC_RESET = 0
+TIME_SYNC_IDLE  = 1
+TIME_SYNC_WAIT  = 2
+TIME_SYNC_READ  = 3
 
 section_handle_seg          STRUC
 
@@ -63,6 +64,8 @@ prio_act            DW ?
 
 init_clock_proc     DW ?
 get_time_proc       DW ?
+
+bsp_core            DW ?
 
 time_sync_state     DW ?
 sync_core_count     DW ?
@@ -777,7 +780,7 @@ init_tlb_done:
     mov ds:last_time+4,0
     mov ds:time_diff,0
     mov ds:time_diff+4,0
-    mov ds:time_sync_state,0
+    mov ds:time_sync_state,TIME_SYNC_RESET
     mov bx,OFFSET ptab
     mov ds:prio_act,bx
 ;
@@ -1179,6 +1182,10 @@ proc_init:
 ;
     mov edx,gdt_linear
     CreateProcessor
+;    
+    mov ax,task_sel
+    mov ds,ax
+    mov ds:bsp_core,es
 ;
     pop ds
     popa
@@ -2561,10 +2568,24 @@ SetupPreempt    Proc near
 
 spSet:
     call ds:get_time_proc
+    mov ecx,eax
     add eax,1193
     adc edx,0
     mov fs:ps_preempt_lsb,eax
     mov fs:ps_preempt_msb,edx
+;
+    cmp ds:time_sync_state,TIME_SYNC_IDLE
+    jne spDone
+;    
+    mov ax,fs
+    cmp ax,ds:bsp_core
+    jne spDone
+;
+    sub ecx,ds:last_time
+    sub ecx,1193
+    jc spDone
+;
+    call DoSyncTime
 
 spDone:
     and fs:ps_flags,NOT PS_FLAG_PREEMPT
@@ -3424,9 +3445,16 @@ start_processor_name    DB 'Start Processor', 0
 start_processor:
     mov ax,task_sel
     mov ds,ax
+    mov ax,core_data_sel
+    mov fs,ax
+    or fs:ps_flags,PS_FLAG_ACTIVE
+    sti
+
+start_wait_time_sync:
+    test fs:ps_flags,PS_FLAG_INIT_CLOCK
+    jnz start_wait_time_sync
+;    
     call ds:lock_proc
-    StartSysTimer
-    call ds:init_clock_proc
     or fs:ps_flags,PS_FLAG_PREEMPT    
     jmp LoadCurrentThread
     
@@ -3687,16 +3715,15 @@ null_thread0:
     mov es:p_sleep_sel,fs
     mov es:p_sleep_offset,0
     mov fs:ps_null_thread,ax
+    or fs:ps_flags,PS_FLAG_ACTIVE
 ;
     mov ax,start_ap_cores_nr
     IsValidOsGate
     jc null_ap_ok
 ;
     call SetupMpPatch
-    call ds:get_time_proc
-    mov ds:last_time,eax
-    mov ds:last_time+4,edx 
     StartApCores    
+    call DoSyncTime
 
 null_ap_ok:   
     push OFFSET null_loop0
@@ -4053,7 +4080,7 @@ create_processor    Proc far
     mov es:ps_nesting,-1
     mov es:ps_curr_thread,0
     mov es:ps_last_thread,-1
-    mov es:ps_flags,0
+    mov es:ps_flags,PS_FLAG_INIT_CLOCK
     mov es:ps_null_thread,0
     mov es:ps_apic,-1
     mov es:ps_wait,0
@@ -5425,12 +5452,26 @@ sync_clock_int:
     mov ds,ax
     mov ax,core_data_sel
     mov fs,ax
+    test fs:ps_flags,PS_FLAG_INIT_CLOCK
+    jz sync_ack_core
+    
+    StartSysTimer
+    call ds:init_clock_proc
+    and fs:ps_flags,NOT PS_FLAG_INIT_CLOCK
+
+sync_ack_core:    
+    cmp ds:time_sync_state,TIME_SYNC_WAIT
+    jne sync_clock_end
+;
     lock sub ds:sync_core_count,1
 
 sync_clock_wait_read:
-    cmp ds:time_sync_state,TIME_SYNC_READ
-    jne sync_clock_wait_read
+    cmp ds:time_sync_state,TIME_SYNC_WAIT
+    je sync_clock_wait_read
 ;
+    cmp ds:time_sync_state,TIME_SYNC_READ
+    jne sync_clock_end
+;    
     call ds:get_time_proc
 
 sync_clock_wait_idle:
@@ -5442,6 +5483,9 @@ sync_clock_wait_idle:
     sub eax,fs:ps_system_time
     add fs:ps_system_time,eax
     adc fs:ps_system_time+4,0    
+
+sync_clock_end:
+    SendEoi
 ;
     pop edx
     pop eax
@@ -5476,8 +5520,11 @@ sync_int_loop:
     cmp ax,dx
     je sync_int_next
 ;
-    lock add ds:sync_core_count,1
     mov fs,ax
+    test fs:ps_flags,PS_FLAG_ACTIVE
+    jz sync_int_next
+;    
+    lock add ds:sync_core_count,1
     mov al,60h
     SendInt
 
@@ -5490,7 +5537,7 @@ sync_int_next:
     pop fs
 ;
     push cx
-    xor cx,cx
+    mov cx,256
 
 sync_wait_loop:
     mov ax,ds:sync_core_count
@@ -5498,8 +5545,6 @@ sync_wait_loop:
     jz sync_wait_done
 ;
     loop sync_wait_loop
-;
-    CrashGate    
 
 sync_wait_done:
     pop cx

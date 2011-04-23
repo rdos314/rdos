@@ -1249,6 +1249,9 @@ start_ap_cores  Proc far
     mov ds,ax
     or ds:mp_flags,MP_FLAG_TASK
 ;
+    mov ax,1
+    call DelayMs
+;    
     pop ax
     pop ds
     retf32

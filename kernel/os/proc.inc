@@ -29,6 +29,8 @@ PS_FLAG_PREEMPT     = 1
 PS_FLAG_PRIO_CHANGE = 2
 PS_FLAG_TIMER       = 4
 PS_FLAG_NMI         = 8
+PS_FLAG_INIT_CLOCK  = 10h
+PS_FLAG_ACTIVE      = 20h
 
 timer_struc	STRUC
 
