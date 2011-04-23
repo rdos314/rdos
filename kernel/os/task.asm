@@ -61,9 +61,6 @@ ptab                DW 256 DUP(?)
 
 prio_act            DW ?
 
-help_call_ip        DW ?
-help_call_cs        DW ?
-
 init_clock_proc     DW ?
 get_time_proc       DW ?
 
@@ -776,7 +773,6 @@ init_tlb_done:
     mov ds:owner_lock,0
     mov ds:owner_wait,0
     mov ds:list_lock,0
-    mov ds:help_call_ip,0
     mov ds:last_time,0
     mov ds:last_time+4,0
     mov ds:time_diff,0
