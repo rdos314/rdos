@@ -39,6 +39,10 @@ INCLUDE proc.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\apicheck.inc
 
+TIME_SYNC_IDLE  = 0
+TIME_SYNC_WAIT  = 1
+TIME_SYNC_READ  = 2
+
 section_handle_seg          STRUC
 
 us_base     handle_header <>
@@ -53,17 +57,20 @@ section_handle_seg          ENDS
 
 task_seg    STRUC
 
-ptab            DW 256 DUP(?)
+ptab                DW 256 DUP(?)
 
 prio_act            DW ?
 
-help_call_ip    DW ?
-help_call_cs    DW ?
+help_call_ip        DW ?
+help_call_cs        DW ?
 
 init_clock_proc     DW ?
-get_time_proc   DW ?
+get_time_proc       DW ?
 
-tsc_sub_tics    DD ?
+time_sync_state     DW ?
+sync_core_count     DW ?
+
+tsc_sub_tics        DD ?
 
 time_diff           DD ?,?
 
@@ -774,6 +781,7 @@ init_tlb_done:
     mov ds:last_time+4,0
     mov ds:time_diff,0
     mov ds:time_diff+4,0
+    mov ds:time_sync_state,0
     mov bx,OFFSET ptab
     mov ds:prio_act,bx
 ;
@@ -5399,6 +5407,114 @@ do_unblock_processor    Proc far
     retf32
 do_unblock_processor    Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           sync_clock_int
+;
+;           DESCRIPTION:    Clock synchronization int
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public sync_clock_int
+
+sync_clock_int:
+    push ds
+    push fs
+    push eax
+    push edx
+;
+    mov ax,task_sel
+    mov ds,ax
+    mov ax,core_data_sel
+    mov fs,ax
+    lock sub ds:sync_core_count,1
+
+sync_clock_wait_read:
+    cmp ds:time_sync_state,TIME_SYNC_READ
+    jne sync_clock_wait_read
+;
+    call ds:get_time_proc
+
+sync_clock_wait_idle:
+    cmp ds:time_sync_state,TIME_SYNC_IDLE
+    jne sync_clock_wait_idle    
+;
+    cli
+    mov eax,ds:last_time
+    sub eax,fs:ps_system_time
+    add fs:ps_system_time,eax
+    adc fs:ps_system_time+4,0    
+;
+    pop edx
+    pop eax
+    pop fs
+    pop ds
+    iretd
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DoSyncTime
+;
+;           DESCRIPTION:    Perform a clock synchronization
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DoSyncTime  Proc near
+    mov ds:sync_core_count,0
+    mov ds:time_sync_state,TIME_SYNC_WAIT
+    mov dx,fs
+;
+    push fs
+    push bx
+    push cx
+;
+    mov cx,ds:processor_count
+    mov bx,OFFSET processor_arr
+
+sync_int_loop:
+    mov ax,[bx]
+    cmp ax,dx
+    je sync_int_next
+;
+    lock add ds:sync_core_count,1
+    mov fs,ax
+    mov al,60h
+    SendInt
+
+sync_int_next:
+    add bx,2
+    loop sync_int_loop
+;
+    pop cx
+    pop bx
+    pop fs
+;
+    push cx
+    xor cx,cx
+
+sync_wait_loop:
+    mov ax,ds:sync_core_count
+    or ax,ax
+    jz sync_wait_done
+;
+    loop sync_wait_loop
+;
+    CrashGate    
+
+sync_wait_done:
+    pop cx
+    cli
+    mov ds:time_sync_state,TIME_SYNC_READ
+    call ds:get_time_proc
+    mov ds:last_time,eax
+    mov ds:last_time+4,edx
+    mov ds:time_sync_state,TIME_SYNC_IDLE
+    ret
+DoSyncTime  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
