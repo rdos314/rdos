@@ -72,6 +72,8 @@ apic_mul_rest       DW ?
 
 update_tics         DD ?
 
+last_time           DD ?,?
+
 signal_list         DW ?
 has_signal      DB ?
 has_list        DB ?
@@ -428,6 +430,7 @@ GetPitTime  Proc near
     movzx eax,ax
     add fs:ps_system_time,eax
     adc fs:ps_system_time+4,0
+;    
     mov eax,fs:ps_system_time
     mov edx,fs:ps_system_time+4
     sti
@@ -463,8 +466,11 @@ InitTscClock    Proc near
     rdtsc
     mov fs:ps_last_tsc,eax
     mov fs:ps_tsc_guard,0
-    mov fs:ps_system_time,0
-    mov fs:ps_system_time+4,0
+;
+    mov eax,ds:last_time
+    mov edx,ds:last_time+4
+    mov fs:ps_system_time,eax
+    mov fs:ps_system_time+4,edx
 ;
     popad
     pop es      
@@ -764,6 +770,8 @@ init_tlb_done:
     mov ds:owner_wait,0
     mov ds:list_lock,0
     mov ds:help_call_ip,0
+    mov ds:last_time,0
+    mov ds:last_time+4,0
     mov ds:time_diff,0
     mov ds:time_diff+4,0
     mov bx,OFFSET ptab
@@ -3681,6 +3689,9 @@ null_thread0:
     jc null_ap_ok
 ;
     call SetupMpPatch
+    call ds:get_time_proc
+    mov ds:last_time,eax
+    mov ds:last_time+4,edx 
     StartApCores    
 
 null_ap_ok:   
@@ -7071,6 +7082,8 @@ set_system_time PROC far
     mov fs:ps_system_time,eax
     mov fs:ps_system_time+4,edx
     pop bx
+    mov ds:last_time,eax
+    mov ds:last_time+4,edx
     pop fs
     pop ds
     retf32
