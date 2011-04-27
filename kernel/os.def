@@ -414,7 +414,6 @@ unlock_task_nr              = 366
 
 get_processor_nr            = 368
 
-resume_processor_nr         = 369
 start_processor_nr          = 370
 
 reload_sys_timer_nr         = 373

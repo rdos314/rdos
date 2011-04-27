@@ -642,11 +642,6 @@ StartProcessor    MACRO
                         ENDM
 
 ;   IN  FS      Processor selector
-ResumeProcessor    MACRO
-    OsGate resume_processor_nr
-                        ENDM
-
-;   IN  FS      Processor selector
 SendNmi    MACRO
     OsGate send_nmi_nr
                 ENDM

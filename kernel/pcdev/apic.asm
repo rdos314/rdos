@@ -1262,36 +1262,6 @@ start_ap_cores  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   ResumeProcessor
-;
-;               DESCRIPTION:    Send a resume request
-;
-;       PARAMETERS:     FS      Processor selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-resume_processor_name    DB 'Resume Processor',0
-
-resume_processor  Proc far
-    push ds
-    push ax
-    push edx
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov al,80h
-    mov edx,fs:ps_apic
-    call ds:mp_int_proc
-;
-    pop edx
-    pop ax
-    pop ds
-    retf32
-resume_processor  Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           SendInt
 ;
 ;       DESCRIPTION:    Send int to processor
@@ -2607,30 +2577,6 @@ init_local_apic_done:
     ret
 InitLocalApic   Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;               NAME:                   ResumeInt
-;
-;               DESCRIPTION:    Resume IPI int
-;
-;               PARAMETERS:             
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-resume_int:
-    push ds
-    push ax
-;
-    mov ax,SEG data
-    mov ds,ax
-    call ds:mp_eoi_proc
-;
-    pop ax
-    pop ds
-    iretd
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -2645,8 +2591,7 @@ ipi_tab:
 ;
 ;                       int #   Entry                   
 ;
-ipi80   DW      80h,    OFFSET resume_int
-    DW      0FFFFh
+DW      0FFFFh
 
 ;
 ; tabell offsets
@@ -2702,12 +2647,6 @@ InitSmp Proc near
     mov edi,OFFSET start_ap_cores_name
     xor cl,cl
     mov ax,start_ap_cores_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET resume_processor
-    mov edi,OFFSET resume_processor_name
-    xor cl,cl
-    mov ax,resume_processor_nr
     RegisterOsGate
 ;
     mov esi,OFFSET send_int
