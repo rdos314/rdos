@@ -85,12 +85,6 @@ system_thread       DW ?
 
 list_lock       DW ?
 
-try_lock_proc       DW ?
-lock_proc           DW ?
-try_unlock_proc     DW ?
-unlock_proc         DW ?
-load_unlock_proc    DW ?
-
 lock_list_proc      DW ?
 unlock_list_proc    DW ?
 
@@ -834,11 +828,6 @@ init_tlb_done:
 ;
     mov ax,task_sel
     mov ds,ax
-    mov ds:try_lock_proc,OFFSET TryLockDefault
-    mov ds:lock_proc,OFFSET LockDefault
-    mov ds:try_unlock_proc,OFFSET TryUnlockDefault
-    mov ds:unlock_proc,OFFSET UnlockDefault
-    mov ds:load_unlock_proc,OFFSET LoadUnlockDefault
     mov ds:lock_list_proc,OFFSET LockListSingle
     mov ds:unlock_list_proc,OFFSET UnlockListSingle
     mov ds:lock_core_list_proc,OFFSET LockCoreListSingle
@@ -2953,7 +2942,7 @@ load_actions_done:
     push ds
     mov ax,task_sel
     mov ds,ax
-    call ds:load_unlock_proc
+    call LoadUnlockCore
     mov ax,fs:ps_has_signal
     or ax,fs:ps_wakeup_list
     pop ds
@@ -2966,7 +2955,7 @@ load_relock:
     sti
     mov ax,task_sel
     mov ds,ax
-    call ds:lock_proc
+    call LockCore
     jmp load_retry
         
 load_regs:
@@ -3154,7 +3143,7 @@ SaveCurrentThread       Proc near
 ;    
     mov ax,task_sel
     mov ds,ax
-    call ds:lock_proc
+    call LockCore
 ;
     call ds:get_time_proc
     mov ds,fs:ps_curr_thread
@@ -3294,7 +3283,7 @@ SkipCurrentThread       Proc near
     push ax
     mov ax,task_sel
     mov ds,ax
-    call ds:lock_proc
+    call LockCore
     pop ax
 ;
     push eax
@@ -3481,7 +3470,7 @@ reload_timer_do:
     ReloadSysTimer
 
 reload_timer_done:
-    call ds:try_unlock_proc
+    call TryUnlockCore
 
 reload_timer_end:       
     ret
@@ -3511,7 +3500,7 @@ start_wait_time_sync:
     test fs:ps_flags,PS_FLAG_INIT_CLOCK
     jnz start_wait_time_sync
 ;    
-    call ds:lock_proc
+    call LockCore
     or fs:ps_flags,PS_FLAG_PREEMPT    
     jmp LoadCurrentThread
     
@@ -3685,11 +3674,6 @@ start_processor_null_threads    Proc near
     mov ax,task_sel
     mov ds,ax
 ;    
-    mov ds:try_lock_proc,OFFSET TryLockSingle
-    mov ds:lock_proc,OFFSET LockSingle
-    mov ds:try_unlock_proc,OFFSET TryUnlockSingle
-    mov ds:unlock_proc,OFFSET UnlockSingle
-    mov ds:load_unlock_proc,OFFSET LoadUnlockSingle
     mov ds:lock_list_proc,OFFSET LockListSingle
     mov ds:unlock_list_proc,OFFSET UnlockListSingle
     mov ds:lock_core_list_proc,OFFSET LockCoreListSingle
@@ -3698,11 +3682,6 @@ start_processor_null_threads    Proc near
     cmp cx,1
     jbe start_locks_ok
 ;
-    mov ds:try_lock_proc,OFFSET TryLockSingle
-    mov ds:lock_proc,OFFSET LockSingle
-    mov ds:try_unlock_proc,OFFSET TryUnlockSingle
-    mov ds:unlock_proc,OFFSET UnlockSingle
-    mov ds:load_unlock_proc,OFFSET LoadUnlockSingle
     mov ds:lock_list_proc,OFFSET LockListMultiple
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
     mov ds:lock_core_list_proc,OFFSET LockCoreListMultiple
@@ -3847,7 +3826,7 @@ WakeThread      PROC near
     mov es,dx
     mov bx,task_sel
     mov ds,bx
-    call ds:try_lock_proc
+    call TryLockCore
 ;
     mov di,es:[esi]
     or di,di
@@ -3875,7 +3854,7 @@ wtOtherCore:
     CrashGate
     
 wtUnlock:    
-    call ds:try_unlock_proc
+    call TryUnlockCore
 ;
     pop di
     pop bx
@@ -3917,7 +3896,7 @@ debug_exception:
     mov ax,task_sel
     mov ds,ax
     pop ax
-    call ds:try_lock_proc
+    call TryLockCore
     jc debug_normal
 
 debug_fault:
@@ -4055,7 +4034,7 @@ double_fault:
 ;    
     mov ax,task_sel
     mov ds,ax
-    call ds:try_lock_proc
+    call TryLockCore
     jc double_fault_lock_ok
 ;    
     CrashTss
@@ -4558,106 +4537,9 @@ UnlockCoreListMultiple      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           TryLockDefault
+;           NAME:           TryLockCore
 ;
-;           DESCRIPTION:    Try to lock, pre-tasking version
-;
-;       PARAMETERS:     DS      Task_sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TryLockDefault  Proc near
-    push ax
-    mov ax,core_data_sel
-    mov fs,ax
-    mov fs,fs:ps_sel
-    pop ax
-    add fs:ps_nesting,1
-    stc
-    ret
-TryLockDefault  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LockDefault
-;
-;           DESCRIPTION:    Lock, pre-tasking version
-;
-;       PARAMETERS:     DS      Task_sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockDefault     Proc near
-    push ax
-    mov ax,core_data_sel
-    mov fs,ax
-    mov fs,fs:ps_sel
-    pop ax
-    add fs:ps_nesting,1
-    stc
-    ret
-LockDefault     Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           TryUnlockDefault
-;
-;           DESCRIPTION:    Try to unlock, pre-tasking version
-;
-;       PARAMETERS:     DS      Task_sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TryUnlockDefault   Proc near
-    sub fs:ps_nesting,1
-    ret
-TryUnlockDefault   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UnlockDefault
-;
-;           DESCRIPTION:    Thread unlock, pre-tasking version
-;
-;       PARAMETERS:     DS      Task_sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockDefault       Proc near
-    sub fs:ps_nesting,1
-    ret
-UnlockDefault       Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LoadUnlockDefault
-;
-;           DESCRIPTION:    Thread load unlock, pre-tasking version
-;
-;       PARAMETERS:     DS      Task_sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadUnlockDefault       Proc near
-    sub fs:ps_nesting,1
-    ret
-LoadUnlockDefault       Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           TryLockSingle
-;
-;           DESCRIPTION:    Try to lock, single processor version
+;           DESCRIPTION:    Try to lock
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;
@@ -4666,7 +4548,7 @@ LoadUnlockDefault       Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-TryLockSingle   Proc near
+TryLockCore   Proc near
     push ax
     mov ax,core_data_sel
     mov fs,ax
@@ -4674,15 +4556,15 @@ TryLockSingle   Proc near
     pop ax
     add fs:ps_nesting,1
     ret
-TryLockSingle   Endp
+TryLockCore   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           LockSingle
+;           NAME:           LockCore
 ;
-;           DESCRIPTION:    Lock, single processor version
+;           DESCRIPTION:    Lock
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;
@@ -4691,135 +4573,135 @@ TryLockSingle   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LockSingle      Proc near
+LockCore      Proc near
     push ax
     mov ax,core_data_sel
     mov fs,ax
     mov fs,fs:ps_sel
     pop ax
     add fs:ps_nesting,1
-    jc lsDone
+    jc lcDone
 ;
     CrashGate
 
-lsDone:     
+lcDone:     
     ret
-LockSingle      Endp
+LockCore      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           TryUnlockSingle
+;           NAME:           TryUnlockCore
 ;
-;           DESCRIPTION:    Try to unlock, single processor version
+;           DESCRIPTION:    Try to unlock
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;               FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-TryUnlockSingle    Proc near
+TryUnlockCore    Proc near
     push ax
     
-tusRetry:    
+tucRetry:    
     cli
     sub fs:ps_nesting,1
-    jnc tusDone
+    jnc tucDone
 ;
     mov ax,fs:ps_curr_thread
     or ax,ax
-    jz tusDone
+    jz tucDone
 ;    
     test fs:ps_flags,PS_FLAG_TIMER      
-    jnz tusSwap
+    jnz tucSwap
 ;    
     mov ax,fs:ps_has_signal
     or ax,fs:ps_wakeup_list
-    jz tusDone
+    jz tucDone
 
-tusSwap:
+tucSwap:
     add fs:ps_nesting,1
-    jnc tusRetry
+    jnc tucRetry
 ;
     sti
-    push OFFSET tusDone
+    push OFFSET tucDone
     call SaveLockedThread
     jmp ContinueCurrentThread
 
-tusDone:
+tucDone:
     sti
     pop ax
     ret
-TryUnlockSingle    Endp
+TryUnlockCore    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           UnlockSingle
+;           NAME:           UnlockCore
 ;
-;           DESCRIPTION:    Unlock, single processor version
+;           DESCRIPTION:    Unlock
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;               FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UnlockSingle    Proc near
+UnlockCore    Proc near
     push ax
     
-usRetry:    
+ucRetry:    
     cli
     sub fs:ps_nesting,1
-    jc usNestOk
+    jc ucNestOk
 ;
     CrashGate
 
-usNestOk:    
+ucNestOk:    
     test fs:ps_flags,PS_FLAG_TIMER      
-    jnz usSwap
+    jnz ucSwap
 ;    
     mov ax,fs:ps_has_signal
     or ax,fs:ps_wakeup_list
-    jz usDone
+    jz ucDone
 
-usSwap:
+ucSwap:
     add fs:ps_nesting,1
-    jnc usRetry
+    jnc ucRetry
 ;
     sti
-    push OFFSET usDone
+    push OFFSET ucDone
     call SaveLockedThread
     jmp ContinueCurrentThread
 
-usDone:
+ucDone:
     sti
     pop ax
     ret
-UnlockSingle    Endp
+UnlockCore    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           LoadUnlockSingle
+;           NAME:           LoadUnlockCore
 ;
-;           DESCRIPTION:    Thread load unlock, single processor version
+;           DESCRIPTION:    Thread load unlock
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;               FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LoadUnlockSingle    Proc near
+LoadUnlockCore    Proc near
     cli
     sub fs:ps_nesting,1
-    jc lulsDone
+    jc lulcDone
 ;
     CrashGate
 
-lulsDone:       
+lulcDone:       
     ret
-LoadUnlockSingle    Endp
+LoadUnlockCore    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4836,7 +4718,7 @@ enter_int_name  DB 'Enter Int',0
 enter_int       Proc far
     mov ax,task_sel
     mov ds,ax
-    call ds:try_lock_proc
+    call TryLockCore
     retf32
 enter_int       Endp
 
@@ -4855,7 +4737,7 @@ leave_int_name  DB 'Leave Int',0
 leave_int       Proc far
     mov ax,task_sel
     mov ds,ax
-    call ds:try_unlock_proc
+    call TryUnlockCore
     retf32
 leave_int       Endp
 
@@ -4878,7 +4760,7 @@ lock_task       Proc far
 ;    
     mov ax,task_sel
     mov ds,ax
-    call ds:lock_proc
+    call LockCore
 ;       
     pop ax
     pop fs
@@ -4908,7 +4790,7 @@ unlock_task     Proc far
     mov ax,core_data_sel
     mov fs,ax
     mov fs,fs:ps_sel
-    call ds:unlock_proc
+    call UnlockCore
 ;
     pop ax
     pop fs
@@ -4942,7 +4824,7 @@ timer_int:
     out INT0_CONTROL,al
     mov ax,task_sel
     mov ds,ax
-    call ds:try_lock_proc
+    call TryLockCore
     call ReloadTimer
 ;
     popad
@@ -5102,7 +4984,7 @@ start_timer     PROC far
 ;
     mov si,task_sel
     mov ds,si
-    call ds:try_lock_proc
+    call TryLockCore
     cli
     pushf
     LocalStartTimer
@@ -5139,7 +5021,7 @@ stop_timer      PROC far
 ;
     mov si,task_sel
     mov ds,si
-    call ds:try_lock_proc
+    call TryLockCore
     cli
     pushf
     LocalStopTimer
@@ -5177,7 +5059,7 @@ init_first_thread:
 ;    
     mov ax,task_sel
     mov ds,ax
-    call ds:lock_proc
+    call LockCore
     mov di,es:p_prio
     mov fs:ps_prio_act,di
     InsertCoreBlock
@@ -5434,13 +5316,13 @@ signal_thread   PROC far
 ;    
     mov ax,task_sel
     mov ds,ax
-    call ds:try_lock_proc
+    call TryLockCore
 ;
     mov es,bx
     mov es:p_signal,1
     mov fs:ps_has_signal,1
 ;
-    call ds:try_unlock_proc
+    call TryUnlockCore
     
 signal_done:       
     pop ax
@@ -5495,7 +5377,7 @@ wait_for_signal PROC far
 ;
     mov ax,task_sel
     mov ds,ax
-    call ds:lock_proc
+    call LockCore
 ;    
     mov es,fs:ps_curr_thread
     xor al,al
@@ -5513,12 +5395,12 @@ wait_for_signal PROC far
 wait_for_signal_clear:
     mov ax,task_sel
     mov ds,ax
-    call ds:lock_proc
+    call LockCore
     mov es,fs:ps_curr_thread
     mov es:p_signal,0
 
 wait_for_signal_unlock:
-    call ds:unlock_proc
+    call UnlockCore
 ;       
     pop ax
     pop fs
@@ -5569,7 +5451,7 @@ wait_for_signal_timeout PROC far
 ;
     mov ax,task_sel
     mov ds,ax
-    call ds:lock_proc
+    call LockCore
 ;
     mov cx,cs
     mov es,cx
@@ -5594,14 +5476,14 @@ wait_for_signal_timeout PROC far
 wait_for_signal_timeout_clear:
     mov ax,task_sel
     mov ds,ax
-    call ds:lock_proc
+    call LockCore
     mov es,fs:ps_curr_thread
     mov es:p_signal,0
     
 wait_for_signal_timeout_unlock:
     mov bx,fs:ps_curr_thread
     StopTimer
-    call ds:unlock_proc
+    call UnlockCore
 ;
     pop edi
     pop cx
@@ -5636,7 +5518,7 @@ enter_section   PROC far
     mov ax,ds
     mov dx,task_sel
     mov ds,dx
-    call ds:lock_proc
+    call LockCore
 ;
     mov ds,ax
     mov dx,ds:[esi].cs_list
@@ -5656,7 +5538,7 @@ ecsBlock:
 ecsUnlock:
     mov dx,task_sel
     mov ds,dx
-    call ds:unlock_proc
+    call UnlockCore
     
 ecsDone:
     pop ax
@@ -5705,7 +5587,7 @@ leave_section   PROC far
     mov dx,ds
     mov ax,task_sel
     mov ds,ax
-    call ds:lock_proc
+    call LockCore
 ;
     mov ds,dx
     mov ax,ds:[esi].cs_list
@@ -5757,7 +5639,7 @@ lcsOtherCore:
     CrashGate    
 
 lcsUnlock:
-    call ds:unlock_proc
+    call UnlockCore
 
 lcsDone:
     pop ax
@@ -5927,7 +5809,7 @@ enter_user_section      PROC far
     push ds
     mov ax,task_sel
     mov ds,ax
-    call ds:lock_proc
+    call LockCore
     pop ds
 ;    
     mov ax,ds:[ebx].us_list
@@ -5949,7 +5831,7 @@ eusUnlock:
     push ds
     mov ax,task_sel
     mov ds,ax
-    call ds:unlock_proc
+    call UnlockCore
     pop ds
     
 eusDone:
@@ -6051,7 +5933,7 @@ lusNotCountError:
     push ds
     mov ax,task_sel
     mov ds,ax
-    call ds:lock_proc
+    call LockCore
     pop ds
 ;
     mov ax,ds:[ebx].us_list
@@ -6100,7 +5982,7 @@ lusOtherCore:
     CrashGate
 
 lusUnlock:
-    call ds:unlock_proc
+    call UnlockCore
 
 lusDone:
     pop ax
