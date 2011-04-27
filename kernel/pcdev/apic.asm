@@ -420,8 +420,6 @@ ap_task_wait:
     StartProcessor
 
 ap_crash:
-    jmp ap_crash
-
     StartCrashCore
 
 apic_tab    DB 'APIC'
@@ -1002,8 +1000,9 @@ start_apic_mem_timer    Proc far
     add eax,80000000h
     adc edx,0
 ;
-    mov eax,81h
+    mov eax,80h
     mov es:APIC_TIMER,eax
+    xor eax,eax
 ;
     pop esi
     pop edx
@@ -1046,9 +1045,10 @@ start_apic_msr_timer    Proc far
     add eax,80000000h
     adc edx,0
 ;
-    mov eax,81h
+    mov eax,80h
     mov ecx,MSR_APIC_TIMER
     wrmsr
+    xor eax,eax
 ;
     pop esi
     pop edx
@@ -2578,6 +2578,35 @@ init_local_apic_done:
 InitLocalApic   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           TimerInt
+;
+;               DESCRIPTION:    Timer interrupt
+;
+;               PARAMETERS:             
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+timer_int:
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+    call ds:mp_eoi_proc
+    TimerExpired
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    iretd
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;               NAME:                   InitIpi
@@ -2591,7 +2620,8 @@ ipi_tab:
 ;
 ;                       int #   Entry                   
 ;
-DW      0FFFFh
+pi80   DW      80h,    OFFSET timer_int
+       DW      0FFFFh
 
 ;
 ; tabell offsets

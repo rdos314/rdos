@@ -416,6 +416,8 @@ get_processor_nr            = 368
 
 start_processor_nr          = 370
 
+timer_expired_nr            = 371
+
 reload_sys_timer_nr         = 373
 start_sys_timer_nr          = 374
 

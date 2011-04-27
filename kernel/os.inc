@@ -641,6 +641,10 @@ StartProcessor    MACRO
     OsGate start_processor_nr
                         ENDM
 
+TimerExpired    MACRO
+    OsGate timer_expired_nr
+                        ENDM
+
 ;   IN  FS      Processor selector
 SendNmi    MACRO
     OsGate send_nmi_nr

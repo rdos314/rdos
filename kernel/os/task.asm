@@ -877,6 +877,12 @@ proc_init:
     mov ax,start_processor_nr
     RegisterOsGate
 ;
+    mov si,OFFSET timer_expired
+    mov di,OFFSET timer_expired_name
+    xor cl,cl
+    mov ax,timer_expired_nr
+    RegisterOsGate
+;
     mov si,OFFSET start_pit_timer
     mov di,OFFSET start_pit_timer_name
     xor cl,cl
@@ -4827,6 +4833,27 @@ timer_int:
     pop ds
     iretd
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TimerExpired
+;
+;           DESCRIPTION:    Timer expired notification
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+timer_expired_name   DB 'Timer Expired', 0
+
+timer_expired    Proc far
+    mov ax,task_sel
+    mov ds,ax
+    call TryLockCore
+    call ReloadTimer
+    retf32
+timer_expired    Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5315,7 +5342,6 @@ signal_thread   PROC far
     mov es,bx
     mov es:p_signal,1
     mov fs:ps_has_signal,1
-;
     call TryUnlockCore
     
 signal_done:       
