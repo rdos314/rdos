@@ -49,6 +49,10 @@ processor_seg   STRUC
 ps_ptab             DW 256 DUP(?)
 ps_prio_act         DW ?
 
+ps_signal_list      DW ?
+ps_wakeup_list      DW ?
+ps_has_signal       DW ?
+
 ps_sel              DW ?
 ps_id               DW ?
 ps_ss               DW ?

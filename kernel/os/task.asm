@@ -76,15 +76,12 @@ update_tics         DD ?
 
 last_time           DD ?,?
 
-signal_list         DW ?
-has_signal      DB ?
-has_list        DB ?
-has_term        DB ?
-owner_wait      DB ?
-
-wakeup_list     DW ?
 term_thread_list    DW ?
 term_proc_list      DW ?
+
+has_term        DB ?
+
+owner_wait      DB ?
 
 system_thread       DW ?
 
@@ -850,12 +847,8 @@ init_tlb_done:
     mov ds:load_unlock_proc,OFFSET LoadUnlockDefault
     mov ds:lock_list_proc,OFFSET LockListSingle
     mov ds:unlock_list_proc,OFFSET UnlockListSingle
-    mov ds:signal_list,0
-    mov ds:wakeup_list,0
     mov ds:term_thread_list,0
     mov ds:term_proc_list,0
-    mov ds:has_signal,0
-    mov ds:has_list,0
     mov ds:has_term,0
     mov ds:owner_sel,0
     mov ds:int_core_count,0
@@ -2984,8 +2977,8 @@ load_actions_done:
     mov ax,task_sel
     mov ds,ax
     call ds:load_unlock_proc
-    mov al,ds:has_signal
-    or al,ds:has_list
+    mov ax,fs:ps_has_signal
+    or ax,fs:ps_wakeup_list
     pop ds
     jnz load_relock
 ;
@@ -3878,10 +3871,9 @@ WakeThread      PROC near
     mov es:p_data,eax
     pop ds
 ;
-    mov di,OFFSET wakeup_list
-    InsertBlock
+    mov di,OFFSET ps_wakeup_list
+    InsertCoreBlock
 ;       
-    mov ds:has_list,1
     call ds:unlock_list_proc
     
 wtUnlock:    
@@ -4169,6 +4161,10 @@ ptab_init:
     add bx,2
     loop ptab_init
 ;
+    mov es:ps_signal_list,0
+    mov es:ps_wakeup_list,0
+    mov es:ps_has_signal,0
+;
     mov es:ps_nesting,-1
     mov es:ps_curr_thread,0
     mov es:ps_last_thread,-1
@@ -4316,14 +4312,13 @@ get_processor_num   Endp
 UpdateLists Proc near
 
 ulWakeupLoop:
-    mov ds:has_list,0
     call ds:lock_list_proc
-    mov si,OFFSET wakeup_list
-    mov ax,[si]
+    mov si,OFFSET ps_wakeup_list
+    mov ax,fs:[si]
     or ax,ax
     jz ulWakeupDone
 ;
-    RemoveBlock
+    RemoveCoreBlock
     mov di,es:p_prio
     InsertCoreBlock
     cmp di,fs:ps_prio_act
@@ -4339,9 +4334,9 @@ ulWakeupPrioOk:
 ulWakeupDone:
     call ds:unlock_list_proc
 ;    
-    mov ds:has_signal,0
-    mov si,OFFSET signal_list
-    mov ax,[si]
+    mov fs:ps_has_signal,0
+    mov si,OFFSET ps_signal_list
+    mov ax,fs:[si]
     or ax,ax
     jz ulSignalDone
 ;       
@@ -4354,8 +4349,8 @@ ulSignalLoop:
     jz ulSignalNext
 ;
     call ds:lock_list_proc
-    mov [si],dx
-    RemoveBlock
+    mov fs:[si],dx
+    RemoveCoreBlock
     mov di,es:p_prio
     InsertCoreBlock
     cmp di,fs:ps_prio_act
@@ -4367,8 +4362,8 @@ ulSignalLoop:
 ulSignalPrioOk:
     call ds:unlock_list_proc
 ;    
-    mov si,OFFSET signal_list
-    mov ax,[si]
+    mov si,OFFSET ps_signal_list
+    mov ax,fs:[si]
     or ax,ax
     jz ulSignalDone
 ;       
@@ -4653,8 +4648,8 @@ tusRetry:
     test fs:ps_flags,PS_FLAG_TIMER      
     jnz tusSwap
 ;    
-    mov al,ds:has_signal
-    or al,ds:has_list
+    mov ax,fs:ps_has_signal
+    or ax,fs:ps_wakeup_list
     jz tusDone
 
 tusSwap:
@@ -4698,8 +4693,8 @@ usNestOk:
     test fs:ps_flags,PS_FLAG_TIMER      
     jnz usSwap
 ;    
-    mov al,ds:has_signal
-    or al,ds:has_list
+    mov ax,fs:ps_has_signal
+    or ax,fs:ps_wakeup_list
     jz usDone
 
 usSwap:
@@ -5131,8 +5126,8 @@ tumOwner:
     test fs:ps_flags,PS_FLAG_TIMER      
     jnz tumSwap
 ;       
-    mov al,ds:has_signal
-    or al,ds:has_list
+    mov ax,fs:ps_has_signal
+    or ax,fs:ps_wakeup_list
     jz tumWake
 
 tumSwap:
@@ -5234,8 +5229,8 @@ umOwnerOk:
     test fs:ps_flags,PS_FLAG_TIMER      
     jnz umSwap
 ;       
-    mov al,ds:has_signal
-    or al,ds:has_list
+    mov ax,fs:ps_has_signal
+    or ax,fs:ps_wakeup_list
     jz umWake
 
 umSwap:
@@ -6003,7 +5998,7 @@ signal_thread   PROC far
 ;
     mov es,bx
     mov es:p_signal,1
-    mov ds:has_signal,1
+    mov fs:ps_has_signal,1
 ;
     call ds:try_unlock_proc
     
@@ -6071,8 +6066,8 @@ wait_for_signal PROC far
     push OFFSET wait_for_signal_clear
     call SaveLockedThread
 ;
-    mov ax,task_sel
-    mov edi,OFFSET signal_list
+    mov ax,fs
+    mov edi,OFFSET ps_signal_list
     jmp BlockCurrentThread
 
 wait_for_signal_clear:
@@ -6152,8 +6147,8 @@ wait_for_signal_timeout PROC far
     push OFFSET wait_for_signal_timeout_clear
     call SaveLockedThread
 ;
-    mov ax,task_sel
-    mov edi,OFFSET signal_list
+    mov ax,fs
+    mov edi,OFFSET ps_signal_list
     jmp BlockCurrentThread
 
 wait_for_signal_timeout_clear:
@@ -6304,10 +6299,9 @@ lcsUnblock:
     mov es:p_data,0
     pop ds
 ;
-    mov di,OFFSET wakeup_list
-    InsertBlock
+    mov di,OFFSET ps_wakeup_list
+    InsertCoreBlock
 ;       
-    mov ds:has_list,1
     call ds:unlock_list_proc
 ;       
     pop di
@@ -6639,10 +6633,9 @@ lusUnblock:
     mov es:p_data,0
     pop ds
 ;
-    mov di,OFFSET wakeup_list
-    InsertBlock
+    mov di,OFFSET ps_wakeup_list
+    InsertCoreBlock
 ;       
-    mov ds:has_list,1
     call ds:unlock_list_proc
 ;
     pop di
@@ -6861,9 +6854,8 @@ wake_until      PROC far
     mov ds,ax
     mov es,cx
     call ds:lock_list_proc
-    mov di,OFFSET wakeup_list
-    InsertBlock
-    mov ds:has_list,1
+    mov di,OFFSET ps_wakeup_list
+    InsertCoreBlock
     call ds:unlock_list_proc
     retf32
 wake_until      ENDP
@@ -7045,6 +7037,17 @@ check_cpu_loop:
     cmp bx,fs:ps_null_thread
     je check_null_ok
 ;
+    push fs
+    mov fs,bx
+    mov eax,fs:p_sleep_offset
+    cmp eax,OFFSET ps_signal_list
+    pop fs
+    jne check_not_signal
+;       
+    mov si,OFFSET Signal_state
+    jmp check_copy_zero
+    
+check_not_signal:
     inc dx
     add si,2
     loop check_cpu_loop
@@ -7095,14 +7098,6 @@ check_not_wait:
     cmp ax,task_sel
     jne check_not_task
 ;
-    mov eax,fs:p_sleep_offset
-    cmp eax,OFFSET signal_list
-    jne check_not_signal
-;       
-    mov si,OFFSET Signal_state
-    jmp check_copy_zero
-    
-check_not_signal:
     mov si,OFFSET Ready_state
     jmp check_copy_cpu
 
