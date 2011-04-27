@@ -69,9 +69,6 @@ tsc_sub_tics        DD ?
 
 time_diff           DD ?,?
 
-apic_mul_tics       DD ?
-apic_mul_rest       DW ?
-
 update_tics         DD ?
 
 last_time           DD ?,?
@@ -79,11 +76,9 @@ last_time           DD ?,?
 term_thread_list    DW ?
 term_proc_list      DW ?
 
-has_term        DB ?
-
 system_thread       DW ?
 
-list_lock       DW ?
+list_lock           DW ?
 
 lock_list_proc      DW ?
 unlock_list_proc    DW ?
@@ -834,7 +829,6 @@ init_tlb_done:
     mov ds:unlock_core_list_proc,OFFSET UnlockCoreListSingle
     mov ds:term_thread_list,0
     mov ds:term_proc_list,0
-    mov ds:has_term,0
     mov ds:system_thread,0
     mov ds:list_lock,0
     mov ds:last_time,0
