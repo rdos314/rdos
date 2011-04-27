@@ -647,20 +647,6 @@ ResumeProcessor    MACRO
                         ENDM
 
 ;   IN  FS      Processor selector
-IsProcessorBlocked    MACRO
-    OsGate is_processor_blocked_nr
-                        ENDM
-
-;   IN  FS      Processor selector
-UnblockProcessor    MACRO
-    OsGate unblock_processor_nr
-                        ENDM
-
-DoUnblockProcessor    MACRO
-    OsGate do_unblock_processor_nr
-                        ENDM
-
-;   IN  FS      Processor selector
 SendNmi    MACRO
     OsGate send_nmi_nr
                 ENDM

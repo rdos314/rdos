@@ -1069,8 +1069,6 @@ nest_text       DB 'Nesting=',0
 flag_preempt    DB 'Preempt ',0
 flag_prio       DB 'Prio ',0
 flag_timer      DB 'Timer ',0
-flag_wait       DB 'Wait ',0
-flag_blocked    DB 'Blocked ',0
 
 WriteProcFlags     PROC near
     push fs
@@ -1106,23 +1104,6 @@ wpfNoPrio:
     call ShowAsciiz
 
 wpfNoTimer:
-    mov ax,gs:ps_wait
-    or ax,ax
-    jz wpfNoWait
-;
-    mov di, OFFSET flag_wait
-    call ShowAsciiz
-
-wpfNoWait:
-    mov ax,gs
-    mov fs,ax
-    IsProcessorBlocked
-    jnc wpfNoBlocked
-;
-    mov di, OFFSET flag_blocked
-    call ShowAsciiz
-
-wpfNoBlocked:
     pop fs
     ret
 WriteProcFlags     ENDP

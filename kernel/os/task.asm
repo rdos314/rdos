@@ -81,16 +81,9 @@ term_proc_list      DW ?
 
 has_term        DB ?
 
-owner_wait      DB ?
-
 system_thread       DW ?
 
-owner_sel       DW ?
-owner_lock      DW ?
 list_lock       DW ?
-
-int_core_count   DW ?
-int_core_sel     DW ?
 
 try_lock_proc       DW ?
 lock_proc           DW ?
@@ -103,8 +96,6 @@ unlock_list_proc    DW ?
 
 lock_core_list_proc      DW ?
 unlock_core_list_proc    DW ?
-
-processor_preempt   DD ?
 
 processor_count     DW ?
 processor_arr       DW 32 DUP(?)
@@ -855,12 +846,7 @@ init_tlb_done:
     mov ds:term_thread_list,0
     mov ds:term_proc_list,0
     mov ds:has_term,0
-    mov ds:owner_sel,0
-    mov ds:int_core_count,0
-    mov ds:int_core_sel,0
     mov ds:system_thread,0
-    mov ds:owner_lock,0
-    mov ds:owner_wait,0
     mov ds:list_lock,0
     mov ds:last_time,0
     mov ds:last_time+4,0
@@ -868,7 +854,6 @@ init_tlb_done:
     mov ds:time_diff+4,0
     mov ds:time_sync_state,TIME_SYNC_RESET
 ;
-    mov ds:processor_preempt,0
     mov ds:processor_count,0
 ;
     mov bx,OFFSET processor_arr
@@ -907,18 +892,6 @@ proc_init:
     mov di,OFFSET start_processor_name
     xor cl,cl
     mov ax,start_processor_nr
-    RegisterOsGate
-;
-    mov si,OFFSET is_processor_blocked
-    mov di,OFFSET is_processor_blocked_name
-    xor cl,cl
-    mov ax,is_processor_blocked_nr
-    RegisterOsGate
-;
-    mov si,OFFSET do_unblock_processor
-    mov di,OFFSET do_unblock_processor_name
-    xor cl,cl
-    mov ax,do_unblock_processor_nr
     RegisterOsGate
 ;
     mov si,OFFSET start_pit_timer
@@ -2860,10 +2833,6 @@ load_thread_loop:
     call GetNextThread
 
 load_reload_loop:
-    mov eax,fs:ps_mask
-    not eax
-    lock and ds:processor_preempt,eax
-;    
     and fs:ps_flags,NOT PS_FLAG_TIMER   
     call ds:get_time_proc
     cli
@@ -3457,15 +3426,9 @@ ReloadTimer Proc near
     jc reload_timer_loop
 ;
     or fs:ps_flags,PS_FLAG_TIMER    
-    mov eax,fs:ps_mask
-    lock or ds:processor_preempt,eax
     jmp reload_timer_done
 
 reload_timer_loop:
-    mov eax,fs:ps_mask
-    not eax
-    lock and ds:processor_preempt,eax
-;    
     and fs:ps_flags,NOT PS_FLAG_TIMER   
     mov es,fs:ps_curr_thread
     call ds:get_time_proc
@@ -3735,11 +3698,11 @@ start_processor_null_threads    Proc near
     cmp cx,1
     jbe start_locks_ok
 ;
-    mov ds:try_lock_proc,OFFSET TryLockMultiple
-    mov ds:lock_proc,OFFSET LockMultiple
-    mov ds:try_unlock_proc,OFFSET TryUnlockMultiple
-    mov ds:unlock_proc,OFFSET UnlockMultiple
-    mov ds:load_unlock_proc,OFFSET LoadUnlockMultiple
+    mov ds:try_lock_proc,OFFSET TryLockSingle
+    mov ds:lock_proc,OFFSET LockSingle
+    mov ds:try_unlock_proc,OFFSET TryUnlockSingle
+    mov ds:unlock_proc,OFFSET UnlockSingle
+    mov ds:load_unlock_proc,OFFSET LoadUnlockSingle
     mov ds:lock_list_proc,OFFSET LockListMultiple
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
     mov ds:lock_core_list_proc,OFFSET LockCoreListMultiple
@@ -4180,10 +4143,6 @@ create_processor    Proc far
     inc ds:processor_count
 ;
     mov es:ps_id,ax     
-    mov cl,al
-    mov eax,1
-    shl eax,cl
-    mov es:ps_mask,eax
 ;
     xor ax,ax
     mov bx,OFFSET ps_ptab
@@ -4207,7 +4166,6 @@ ptab_init:
     mov es:ps_flags,PS_FLAG_INIT_CLOCK
     mov es:ps_null_thread,0
     mov es:ps_apic,-1
-    mov es:ps_wait,0
     mov es:ps_last_lsb,0
 ;    
     mov es:cs_usel,flat_sel
@@ -4867,636 +4825,6 @@ LoadUnlockSingle    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ReqSpinlock
-;
-;           DESCRIPTION:    Request spinlock
-;
-;       PARAMETERS:     DS      Task_sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReqSpinlock  Macro
-    local spin_loop
-    local spin_get
-
-    xor cx,cx
-    
-spin_loop:
-    sti
-    mov ax,ds:owner_lock
-    or ax,ax
-    jz spin_get
-;
-    pause
-    loop spin_loop
-;
-    CrashGate    
-
-spin_get:
-    cli
-    inc ax
-    xchg ax,ds:owner_lock
-    or ax,ax
-    jnz spin_loop
-            Endm
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           RelSpinlock
-;
-;           DESCRIPTION:    Release spinlock
-;
-;       PARAMETERS:     DS      Task_sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RelSpinlock Macro
-    mov ds:owner_lock,0
-            Endm
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetCurrCore
-;
-;           DESCRIPTION:    Get current core
-;
-;       PARAMETERS:     DS      Task_sel
-;
-;       RETURNS:        FS      Processor sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetCurrCore Macro
-    mov ax,core_data_sel
-    mov fs,ax
-    mov fs,fs:ps_sel
-            Endm    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           VerifyCurrCore
-;
-;           DESCRIPTION:    Verify current core
-;
-;       PARAMETERS:     DS      Task_sel
-;                       FS      Processor sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-VerifyCurrCore Macro
-    local ver_ok
-    
-    mov bx,fs
-    mov ax,core_data_sel
-    mov fs,ax
-    mov ax,fs:ps_sel
-    cmp ax,bx
-    je ver_ok
-;
-    CrashGate    
-
-ver_ok:
-    mov fs,ax
-            Endm
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UpdateWaitOwner
-;
-;           DESCRIPTION:    Update processors waiting for owner acquiral
-;
-;       PARAMETERS:     DS      Task_sel
-;               FS      Processor selector
-;
-;       RETURNS:        CY      Some core waked up
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateWaitOwner   Macro
-    local wake_done
-    local wake_loop
-    local wake_next
-
-    mov al,ds:owner_wait
-    or al,al
-    clc
-    jz wake_done
-;
-    push fs
-    mov cx,ds:processor_count
-    mov bx,OFFSET processor_arr
-
-wake_loop:
-    mov fs,[bx]
-    xor ax,ax
-    xchg ax,fs:ps_wait
-    or ax,ax
-    jz wake_next
-;
-    dec ds:owner_wait    
-    ResumeProcessor
-    pop fs
-    stc
-    jmp wake_done
-
-wake_next:
-    add bx,2
-    loop wake_loop
-    pop fs
-
-wake_done:
-                Endm
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UpdateBlocked
-;
-;           DESCRIPTION:    Update blocked processors
-;
-;       PARAMETERS:     DS      Task_sel
-;               FS      Processor selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateBlocked   Macro
-    local preempt_loop
-    local preempt_do
-    local update_done
-
-    mov eax,fs:ps_mask
-    not eax
-    and eax,ds:processor_preempt
-    jz update_done
-;
-    push fs
-    mov bx,OFFSET processor_arr
-
-preempt_loop:
-    rcr eax,1
-    jc preempt_do
-;
-    add bx,2
-    jmp preempt_loop
-
-preempt_do: 
-    mov fs,ds:[bx]
-    UnblockProcessor
-    pop fs
-
-update_done:
-                Endm
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetIntProcessor
-;
-;           DESCRIPTION:    Get pending int processor
-;
-;       PARAMETERS:     DS      Task_sel
-;               FS      Processor selector
-;
-;       RETRURNS:       AX      Processor selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetIntProcessor   Macro
-    local get_done
-    local get_loop
-    local get_found
-
-    mov ax,ds:int_core_sel
-    or ax,ax
-    jnz get_done
-;
-    push fs
-    mov cx,ds:processor_count
-    mov bx,OFFSET processor_arr
-
-get_loop:
-    mov fs,ds:[bx]
-    mov ax,fs:ps_nesting
-    cmp ax,-1
-    jne get_found
-;
-    add bx,2
-    loop get_loop
-;
-    CrashGate
-
-get_found:
-    mov ax,fs
-    pop fs
-
-get_done:
-        Endm
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           TryLockMultiple
-;
-;           DESCRIPTION:    Try to lock, multiple processor version
-;
-;       PARAMETERS:     DS      Task_sel
-;
-;       RETURNS:    CY      Owner of section
-;               FS      Processor selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- 
-TryLockMultiple Proc near
-    push ax
-    push bx
-    push cx
-;
-    ReqSpinlock
-    GetCurrCore
-;    
-    mov ax,ds:owner_sel
-    or ax,ax
-    jz tlmTake
-;
-    mov bx,fs
-    cmp ax,bx
-    je tlmTake
-
-tlmFail:
-    add fs:ps_nesting,1
-    jnc tlmNested
-;
-    inc ds:int_core_count
-    mov ax,ds:int_core_sel
-    or ax,ax
-    jnz tlmNested
-;
-    mov ds:int_core_sel,fs
-
-tlmNested:
-    RelSpinlock
-    sti
-    clc
-    jmp tlmDone
-
-tlmTake:
-    mov ds:owner_sel,fs
-    add fs:ps_nesting,1
-    RelSpinlock
-    sti
-
-tlmDone:
-    pop cx
-    pop bx
-    pop ax
-    ret
-TryLockMultiple Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LockMultiple
-;
-;           DESCRIPTION:    Lock, multiple processor version
-;
-;       PARAMETERS:     DS      Task_sel
-;
-;       RETURNS:    CY      Owner of section
-;               FS      Processor selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockMultiple    Proc near
-    push ax
-    push bx
-    push cx
-
-lmLock:
-    ReqSpinlock
-    GetCurrCore
-;
-    add fs:ps_nesting,1
-    jc lmNestingOk
-;
-    CrashGate
-
-lmNestingOk:
-    mov ax,ds:owner_sel
-    or ax,ax
-    jz lmTake
-;
-    mov ax,1
-    xchg ax,fs:ps_wait
-    or ax,ax
-    jnz lmStartWait
-;    
-    inc ds:owner_wait
-
-lmStartWait:
-    sub fs:ps_nesting,1
-    RelSpinlock
-    sti
-    hlt
-    jmp lmLock
-
-lmTake:
-    mov ds:owner_sel,fs
-    RelSpinlock
-    sti
-
-lmDone:     
-    pop cx
-    pop bx
-    pop ax
-    ret
-LockMultiple    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           TryUnlockMultiple
-;
-;           DESCRIPTION:    Try unlock, multiple processor version
-;
-;       PARAMETERS:     DS      Task_sel
-;               FS      Processor selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TryUnlockMultiple  Proc near
-    push eax
-    push bx
-    push cx
-;
-    ReqSpinlock
-    VerifyCurrCore
-;    
-    sub fs:ps_nesting,1
-    jnc tumUnlock
-;
-    mov ax,ds:int_core_count
-    or ax,ax
-    jnz tumInt
-;
-    mov ax,fs
-    cmp ax,ds:owner_sel
-    je tumOwner
-;
-    CrashGate    
-
-tumOwner:        
-    test fs:ps_flags,PS_FLAG_TIMER      
-    jnz tumSwap
-;       
-    mov ax,fs:ps_has_signal
-    or ax,fs:ps_wakeup_list
-    jz tumWake
-
-tumSwap:
-    mov ax,fs:ps_curr_thread
-    or ax,ax
-    jz tumWake
-;
-    add fs:ps_nesting,1
-    RelSpinlock    
-    sti
-    push OFFSET tumDone
-    call SaveLockedThread
-    jmp ContinueCurrentThread
-
-tumInt:
-    mov ax,fs
-    cmp ax,ds:owner_sel
-    je tumIntOwner
-;
-    cmp ax,ds:int_core_sel
-    jne tumIntCoreOk
-;
-    mov ds:int_core_sel,0
-
-tumIntCoreOk:
-    dec ds:int_core_count
-    RelSpinlock
-    sti
-    jmp tumDone
-            
-tumIntOwner:
-    dec ds:int_core_count
-    GetIntProcessor    
-    mov ds:owner_sel,ax
-    mov ds:int_core_sel,0
-    RelSpinlock
-    sti
-    jmp tumDone
-    
-tumWake:
-    mov ds:owner_sel,0  
-    UpdateWaitOwner
-    RelSpinlock
-    sti
-    jc tumDone
-;    
-    UpdateBlocked
-    jmp tumDone
-
-tumUnlock:
-    RelSpinlock
-    sti
-
-tumDone:
-    pop cx
-    pop bx
-    pop eax
-    ret
-TryUnlockMultiple  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UnlockMultiple
-;
-;           DESCRIPTION:    Unlock, multiple processor version
-;
-;       PARAMETERS:     DS      Task_sel
-;               FS      Processor selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockMultiple      Proc near
-    push eax
-    push bx
-    push cx
-;    
-    ReqSpinlock
-    VerifyCurrCore
-;
-    sub fs:ps_nesting,1
-    jc umNestingOk
-;
-    CrashGate
-
-umNestingOk:
-    mov ax,fs
-    cmp ax,ds:owner_sel
-    je umOwnerOk
-;
-    CrashGate
-
-umOwnerOk:
-    mov ax,ds:int_core_count
-    or ax,ax
-    jnz umInt
-;
-    test fs:ps_flags,PS_FLAG_TIMER      
-    jnz umSwap
-;       
-    mov ax,fs:ps_has_signal
-    or ax,fs:ps_wakeup_list
-    jz umWake
-
-umSwap:
-    mov ax,fs:ps_curr_thread
-    or ax,ax
-    jz umWake
-;
-    add fs:ps_nesting,1
-    RelSpinlock    
-    sti
-    push OFFSET umDone
-    call SaveLockedThread
-    jmp ContinueCurrentThread
-
-umInt:
-    dec ds:int_core_count
-    GetIntProcessor
-    mov ds:owner_sel,ax
-    mov ds:int_core_sel,0
-    RelSpinlock
-    sti
-    jmp umDone
-
-umWake:
-    mov ds:owner_sel,0  
-    UpdateWaitOwner
-    RelSpinlock
-    sti
-    jc umDone
-;    
-    UpdateBlocked
-
-umDone:
-    pop cx
-    pop bx
-    pop eax
-    ret
-UnlockMultiple      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LoadUnlockMultiple
-;
-;           DESCRIPTION:    Thread load unlock, multiple processor version
-;
-;       PARAMETERS:     DS      Task_sel
-;               FS      Processor selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadUnlockMultiple      Proc near
-    push eax
-    push bx
-    push cx
-;
-    ReqSpinlock
-    VerifyCurrCore
-;    
-    sub fs:ps_nesting,1
-    jc lumNestingOk
-;
-    CrashGate
-
-lumNestingOk:
-    mov ax,fs
-    cmp ax,ds:owner_sel
-    je lumOwnerOk
-;
-    CrashGate
-
-lumOwnerOk:
-    mov ax,ds:int_core_count
-    or ax,ax
-    jz lumWake
-;
-    dec ds:int_core_count
-    GetIntProcessor
-    mov ds:owner_sel,ax
-    mov ds:int_core_sel,0
-    RelSpinlock
-    jmp lumDone
-
-lumWake:
-    mov ds:owner_sel,0  
-    UpdateWaitOwner
-    RelSpinlock
-    jc lumDone
-;    
-    UpdateBlocked
-
-lumDone:    
-    pop cx
-    pop bx
-    pop eax
-    ret
-LoadUnlockMultiple      Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           IsProcessorBlocked
-;
-;       DESCRIPTION:    Check if processor is blocked
-;
-;       PARAMETERS:     FS      Processor selector
-;
-;       RETURNS:        CY      Blocked
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-is_processor_blocked_name    DB 'Is Processor Blocked',0
-
-is_processor_blocked    Proc far
-    push eax
-;    
-    mov ax,task_sel
-    mov ds,ax
-    mov eax,fs:ps_mask
-    and eax,ds:processor_preempt
-    jz ipbNo
-
-ippYes:
-    stc
-    jmp ipbDone
-
-ipbNo:
-    clc
-
-ipbDone:
-    pop eax
-    retf32
-is_processor_blocked    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           EnterInt
 ;
 ;           DESCRIPTION:    Enter interrupt notification
@@ -5622,28 +4950,6 @@ timer_int:
     pop es
     pop ds
     iretd
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           DoUnblockProcessor
-;
-;           DESCRIPTION:    Preempt processor from running thread
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-do_unblock_processor_name   DB 'Do Unblock Processor', 0
-
-do_unblock_processor    Proc far
-    mov ax,task_sel
-    mov ds,ax
-    call ds:try_lock_proc
-    call ReloadTimer
-    retf32
-do_unblock_processor    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -1292,37 +1292,6 @@ resume_processor  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:           UnblockProcessor
-;
-;               DESCRIPTION:    Send an unblock req
-;
-;       PARAMETERS:     FS      Processor selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-unblock_processor_name    DB 'Unblock Processor',0
-
-unblock_processor  Proc far
-    push ds
-    push ax
-    push edx
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov al,81h
-    mov edx,fs:ps_apic
-    call ds:mp_int_proc
-;
-    pop edx
-    pop ax
-    pop ds
-    retf32
-unblock_processor  Endp
-
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           SendInt
 ;
 ;       DESCRIPTION:    Send int to processor
@@ -2663,34 +2632,6 @@ resume_int:
     iretd
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;               NAME:           UnblockInt
-;
-;               DESCRIPTION:    Unblock IPI int
-;
-;               PARAMETERS:             
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-unblock_int:
-    push ds
-    push es
-    push fs
-    pushad
-;
-    mov ax,SEG data
-    mov ds,ax
-    call ds:mp_eoi_proc
-    DoUnblockProcessor
-;
-    popad
-    pop fs
-    pop es
-    pop ds
-    iretd
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;               NAME:                   InitIpi
@@ -2705,7 +2646,6 @@ ipi_tab:
 ;                       int #   Entry                   
 ;
 ipi80   DW      80h,    OFFSET resume_int
-ipi81   DW      81h,    OFFSET unblock_int
     DW      0FFFFh
 
 ;
@@ -2768,12 +2708,6 @@ InitSmp Proc near
     mov edi,OFFSET resume_processor_name
     xor cl,cl
     mov ax,resume_processor_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET unblock_processor
-    mov edi,OFFSET unblock_processor_name
-    xor cl,cl
-    mov ax,unblock_processor_nr
     RegisterOsGate
 ;
     mov esi,OFFSET send_int

@@ -65,8 +65,6 @@ ps_last_thread      DW ?
 ps_flags            DW ?
 ps_null_thread      DW ?
 ps_apic             DD ?
-ps_wait             DW ?
-ps_mask             DD ?
 
 ps_acpi             DB ?
 ps_resv             DB ?

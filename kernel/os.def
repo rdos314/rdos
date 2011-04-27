@@ -412,15 +412,10 @@ locked_debug_exception_nr   = 364
 lock_task_nr                = 365
 unlock_task_nr              = 366
 
-is_processor_blocked_nr     = 367
-
 get_processor_nr            = 368
 
 resume_processor_nr         = 369
 start_processor_nr          = 370
-
-unblock_processor_nr        = 371
-do_unblock_processor_nr     = 372
 
 reload_sys_timer_nr         = 373
 start_sys_timer_nr          = 374
