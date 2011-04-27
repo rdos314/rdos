@@ -415,7 +415,7 @@ ap_task_wait:
 
     GetApicId
     cmp edx,3
-    je ap_crash
+;    je ap_crash
     
     StartProcessor
 

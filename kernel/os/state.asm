@@ -34,6 +34,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE system.def
 INCLUDE system.inc
+INCLUDE proc.inc
 
 state_data_seg  STRUC
 
@@ -238,6 +239,12 @@ get_thread_state    Proc far
     mov es:[edi].st_time,eax
     mov eax,ds:p_lsb_tics
     mov es:[edi].st_time+4,eax
+;
+    push ds
+    mov ds,ds:p_core_sel
+    mov ax,ds:ps_id
+    pop ds
+    mov es:[edi].st_core,ax
 ;
     push edi
     add edi,OFFSET st_list

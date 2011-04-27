@@ -3791,6 +3791,7 @@ null_thread:
     mov es:p_sleep_sel,fs
     mov es:p_sleep_offset,0
     mov fs:ps_null_thread,ax
+    mov es:p_core_sel,fs
 ;
     push OFFSET null_loop
     call SaveCurrentThread
