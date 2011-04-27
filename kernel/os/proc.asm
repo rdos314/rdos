@@ -1058,6 +1058,8 @@ init_thread_block       PROC near
     mov es:p_process_sel,ax
     pop fs
 ;
+    mov ax,ds:p_core_sel
+    mov es:p_core_sel,ax
     mov ax,ds:p_app_sel
     mov es:p_app_sel,ax
     mov ax,ds:p_ldt_sel
@@ -2317,6 +2319,7 @@ init_first_process      Proc near
     mov ds:tss_es,fs
     GetProcessor
     mov fs:ps_null_thread,es
+    mov es:p_core_sel,fs
     ret
 init_first_process      Endp
 
