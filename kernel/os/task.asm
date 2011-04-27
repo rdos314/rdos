@@ -3871,10 +3871,18 @@ WakeThread      PROC near
     mov es:p_data,eax
     pop ds
 ;
+    mov ax,fs
+    cmp ax,es:p_core_sel
+    jne wtOtherCore
+;    
     mov di,OFFSET ps_wakeup_list
     InsertCoreBlock
 ;       
     call ds:unlock_list_proc
+    jmp wtUnlock
+
+wtOtherCore:
+    CrashGate
     
 wtUnlock:    
     call ds:try_unlock_proc
@@ -5793,7 +5801,12 @@ wake_new    PROC near
     call SaveCurrentThread
 ;
     mov es,dx
-    cli
+    mov ax,fs
+    cmp ax,es:p_core_sel
+    jne wake_new_other_core
+;
+    call ds:lock_list_proc    
+;    
     mov di,es:p_prio
     InsertCoreBlock
     cmp di,fs:ps_prio_act
@@ -5803,7 +5816,11 @@ wake_new    PROC near
     or fs:ps_flags,PS_FLAG_PRIO_CHANGE
 
 wake_new_lower:
+    call ds:unlock_list_proc    
     jmp ContinueCurrentThread
+
+wake_new_other_core:
+    CrashGate
 
 wake_new_done:
     popf
@@ -6299,6 +6316,10 @@ lcsUnblock:
     mov es:p_data,0
     pop ds
 ;
+    mov ax,fs
+    cmp ax,es:p_core_sel
+    jne lcsOtherCore
+;    
     mov di,OFFSET ps_wakeup_list
     InsertCoreBlock
 ;       
@@ -6307,6 +6328,10 @@ lcsUnblock:
     pop di
     pop esi
     pop es
+    jmp lcsUnlock
+
+lcsOtherCore:
+    CrashGate    
 
 lcsUnlock:
     call ds:unlock_proc
@@ -6633,6 +6658,10 @@ lusUnblock:
     mov es:p_data,0
     pop ds
 ;
+    mov ax,fs
+    cmp ax,es:p_core_sel
+    jne lusOtherCore
+;    
     mov di,OFFSET ps_wakeup_list
     InsertCoreBlock
 ;       
@@ -6641,6 +6670,10 @@ lusUnblock:
     pop di
     pop esi
     pop es
+    jmp lusUnlock
+
+lusOtherCore:
+    CrashGate
 
 lusUnlock:
     call ds:unlock_proc
