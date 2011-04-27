@@ -46,6 +46,9 @@ timer_struc	ENDS
 
 processor_seg   STRUC
 
+ps_ptab             DW 256 DUP(?)
+ps_prio_act         DW ?
+
 ps_sel              DW ?
 ps_id               DW ?
 ps_ss               DW ?

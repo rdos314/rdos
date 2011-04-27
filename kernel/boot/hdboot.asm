@@ -1609,8 +1609,6 @@ UnmarkEntry   Endp
 
 HandleMenu  Proc near    
     mov cs:Tics, 5 * 17
-    movzx ax,cs:DefaultBoot
-    mov cs:CurrEntry,ax
 
 hmWaitKey:
     mov ah,1
@@ -2071,16 +2069,13 @@ part_stop:
     public Start
     
 Start:
+    mov cs:DefaultBoot,al
     call SetupVectors
     sti
-    push ax
-    push dx
     mov al,dl
     call WriteHexByte
     mov al,' '
     call WriteChar
-    pop dx
-    pop ax
 ;
     mov cs:DriveNr,dl
 
@@ -2088,44 +2083,31 @@ boot_retry:
     test dl,2
     jz boot_prim
 ;
-    push ax
-    push dx
     mov ax,170h
     call WriteHexWord
     mov al,' '
     call WriteChar
-    pop dx
-    pop ax
 
     mov cs:IoBase,170h
     jmp boot_base_ok    
 
 boot_prim:
-    push ax
-    push dx
     mov ax,1F0h
     call WriteHexWord
     mov al,' '
     call WriteChar
-    pop dx
-    pop ax
 
     mov cs:IoBase,1F0h
 
 boot_base_ok:
     and dl,1
     mov cs:DiscSubUnit,dl
-
-    push ax
-    push dx
+;    
     mov al,dl
     call WriteHexByte
     mov al,' '
     call WriteChar
-    pop dx
-    pop ax      
 ;       
-    mov cs:DefaultBoot,al
     mov ax,DATA_SEG
     mov ds,ax
     xor bx,bx
@@ -2291,7 +2273,7 @@ LoadStart:
 stop:
     jmp stop
 
-pad db 301 DUP(0)
+pad db 329 DUP(0)
 
 _TEXT   ends    
 

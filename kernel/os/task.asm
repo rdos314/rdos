@@ -55,12 +55,7 @@ us_count    DW ?
 
 section_handle_seg          ENDS
 
-
 task_seg    STRUC
-
-ptab                DW 256 DUP(?)
-
-prio_act            DW ?
 
 init_clock_proc     DW ?
 get_time_proc       DW ?
@@ -218,6 +213,74 @@ timer_stop_this:
 timer_stop_done:
                 ENDM
 
+;       fs:di   list
+;       es          block
+
+InsertCoreBlock     MACRO
+    LOCAL ins_empty
+    LOCAL ins_done
+    mov es:p_sleep_sel,ds
+    mov word ptr es:p_sleep_offset,di
+    mov word ptr es:p_sleep_offset+2,0
+    push di
+    mov di,fs:[di]
+    or di,di
+    je ins_empty
+    push ds
+    push si
+    mov ds,di
+    mov si,ds:p_prev
+    mov ds:p_prev,es
+    mov ds,si
+    mov ds:p_next,es
+    mov es:p_next,di
+    mov es:p_prev,si
+    pop si
+    pop ds
+    pop di
+    jmp ins_done
+ins_empty:
+    mov es:p_next,es
+    mov es:p_prev,es
+    pop di
+    mov fs:[di],es
+ins_done:
+        ENDM
+
+;       fs:di   list
+;       es          block
+
+InsertCoreFirst     MACRO
+    LOCAL ins_empty
+    LOCAL ins_done
+    mov es:p_sleep_sel,ds
+    mov word ptr es:p_sleep_offset,di
+    mov word ptr es:p_sleep_offset+2,0
+    push di
+    mov di,fs:[di]
+    or di,di
+    je ins_empty
+    push ds
+    push si
+    mov ds,di
+    mov si,ds:p_prev
+    mov ds:p_prev,es
+    mov ds,si
+    mov ds:p_next,es
+    mov es:p_next,di
+    mov es:p_prev,si
+    pop si
+    pop ds
+    pop di
+    jmp ins_done
+ins_empty:
+    mov es:p_next,es
+    mov es:p_prev,es
+    pop di
+ins_done:
+    mov fs:[di],es
+        ENDM
+
 ;       ds:di   list
 ;       es          block
 
@@ -284,6 +347,31 @@ ins_empty:
     pop di
 ins_done:
     mov [di],es
+        ENDM
+
+;       fs:si       list
+;       es              block
+
+RemoveCoreBlock     MACRO
+    LOCAL rem_done
+    push si
+    mov es,fs:[si]
+    push di
+    push ds
+    mov di,es:p_next
+    cmp di,fs:[si]
+    mov fs:[si],di
+    mov si,es:p_prev
+    mov ds,di
+    mov ds:p_prev,si
+    mov ds,si
+    mov ds:p_next,di
+    pop ds
+    pop di
+    pop si
+    jne rem_done
+    mov word ptr fs:[si],0
+rem_done:
         ENDM
 
 ;       ds:si       list
@@ -781,14 +869,6 @@ init_tlb_done:
     mov ds:time_diff,0
     mov ds:time_diff+4,0
     mov ds:time_sync_state,TIME_SYNC_RESET
-    mov bx,OFFSET ptab
-    mov ds:prio_act,bx
-;
-    mov cx,256
-ptab_init:
-    mov word ptr [bx],0
-    add bx,2
-    loop ptab_init
 ;
     mov ds:processor_preempt,0
     mov ds:processor_count,0
@@ -2432,8 +2512,8 @@ HandlePreempt    Proc near
     test fs:ps_flags,PS_FLAG_PREEMPT
     jz hpDone
 ;
-    mov si,ds:prio_act
-    mov ax,[si]
+    mov si,fs:ps_prio_act
+    mov ax,fs:[si]
     or ax,ax
     jz hpDone
 ;       
@@ -2442,7 +2522,7 @@ HandlePreempt    Proc near
 ;    
     mov es,ax
     mov ax,es:p_next
-    mov [si],ax
+    mov fs:[si],ax
 
 hpDone:
     ret
@@ -2462,8 +2542,8 @@ HandlePreempt   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandlePrio    Proc near
-    mov si,ds:prio_act
-    mov ax,[si]
+    mov si,fs:ps_prio_act
+    mov ax,fs:[si]
     or ax,ax
     jnz hpqInt
 ;
@@ -2471,7 +2551,7 @@ HandlePrio    Proc near
     jz hpqDone
 ;
     sub si,2
-    mov ds:prio_act,si
+    mov fs:ps_prio_act,si
     jmp HandlePrio
 
 hpqInt:
@@ -2485,8 +2565,8 @@ hpqInt:
 ;
     call ds:lock_list_proc
     mov ax,es
-    mov si,ds:prio_act
-    RemoveBlock          
+    mov si,fs:ps_prio_act
+    RemoveCoreBlock          
     push ds  
     mov ds,ax
     mov di,OFFSET ms_wait_sti
@@ -2515,15 +2595,15 @@ HandlePrio  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetPrioThread    Proc near
-    mov si,ds:prio_act
-    mov ax,[si]
+    mov si,fs:ps_prio_act
+    mov ax,fs:[si]
     or ax,ax
     jz gptNull
 ;    
-    RemoveBlock
+    RemoveCoreBlock
 
 gptLoop:
-    mov ax,[si]
+    mov ax,fs:[si]
     or ax,ax
     jnz gptDone
 ;
@@ -2531,7 +2611,7 @@ gptLoop:
     jz gptDone
 ;
     sub si,2
-    mov ds:prio_act,si
+    mov fs:ps_prio_act,si
     jmp gptLoop
 
 gptNull:
@@ -2823,11 +2903,11 @@ load_retry:
     je load_thread_loop
 ;
     mov di,es:p_prio
-    InsertFirst
-    cmp di,ds:prio_act
+    InsertCoreFirst
+    cmp di,fs:ps_prio_act
     jbe load_thread_loop
 ;
-    mov ds:prio_act,di
+    mov fs:ps_prio_act,di
     or fs:ps_flags,PS_FLAG_PRIO_CHANGE
     jmp load_thread_loop
 
@@ -3294,11 +3374,11 @@ ContinueCurrentThread:
     cmp ax,fs:ps_null_thread
     je cctPop
 ;    
-    InsertFirst
-    cmp di,ds:prio_act
+    InsertCoreFirst
+    cmp di,fs:ps_prio_act
     jbe cctPop
 ;
-    mov ds:prio_act,di
+    mov fs:ps_prio_act,di
     or fs:ps_flags,PS_FLAG_PRIO_CHANGE
 
 cctPop:
@@ -3625,6 +3705,7 @@ stThreadOk:
 start_processor_null_threads    Proc near
     mov ax,task_sel
     mov ds,ax
+;    
     mov ds:try_lock_proc,OFFSET TryLockSingle
     mov ds:lock_proc,OFFSET LockSingle
     mov ds:try_unlock_proc,OFFSET TryUnlockSingle
@@ -4077,6 +4158,17 @@ create_processor    Proc far
     shl eax,cl
     mov es:ps_mask,eax
 ;
+    xor ax,ax
+    mov bx,OFFSET ps_ptab
+    mov es:ps_prio_act,bx
+;
+    mov cx,256
+
+ptab_init:
+    mov es:[bx],ax
+    add bx,2
+    loop ptab_init
+;
     mov es:ps_nesting,-1
     mov es:ps_curr_thread,0
     mov es:ps_last_thread,-1
@@ -4233,11 +4325,11 @@ ulWakeupLoop:
 ;
     RemoveBlock
     mov di,es:p_prio
-    InsertBlock
-    cmp di,ds:prio_act
+    InsertCoreBlock
+    cmp di,fs:ps_prio_act
     jbe ulWakeupPrioOk
 ;       
-    mov ds:prio_act,di
+    mov fs:ps_prio_act,di
     or fs:ps_flags,PS_FLAG_PRIO_CHANGE
 
 ulWakeupPrioOk:
@@ -4265,11 +4357,11 @@ ulSignalLoop:
     mov [si],dx
     RemoveBlock
     mov di,es:p_prio
-    InsertBlock
-    cmp di,ds:prio_act
+    InsertCoreBlock
+    cmp di,fs:ps_prio_act
     jbe ulSignalPrioOk
 ;       
-    mov ds:prio_act,di
+    mov fs:ps_prio_act,di
     or fs:ps_flags,PS_FLAG_PRIO_CHANGE
 
 ulSignalPrioOk:
@@ -5658,8 +5750,8 @@ init_first_thread:
     mov ds,ax
     call ds:lock_proc
     mov di,es:p_prio
-    mov ds:prio_act,di
-    InsertBlock
+    mov fs:ps_prio_act,di
+    InsertCoreBlock
 ;
     mov ax,system_data_sel
     mov es,ax
@@ -5708,11 +5800,11 @@ wake_new    PROC near
     mov es,dx
     cli
     mov di,es:p_prio
-    InsertBlock
-    cmp di,ds:prio_act
+    InsertCoreBlock
+    cmp di,fs:ps_prio_act
     jb wake_new_lower
 ;       
-    mov ds:prio_act,di
+    mov fs:ps_prio_act,di
     or fs:ps_flags,PS_FLAG_PRIO_CHANGE
 
 wake_new_lower:
