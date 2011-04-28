@@ -65,8 +65,6 @@ last_time           DD ?,?
 term_thread_list    DW ?
 term_proc_list      DW ?
 
-system_thread       DW ?
-
 list_lock           DW ?
 
 processor_count     DW ?
@@ -430,10 +428,11 @@ code    SEGMENT byte public use16 'CODE'
 
 time_diff               DD 0,0
 update_tics             DD 0
-
 tsc_sub_tics            DD 0
 
 bsp_core                DW 0
+
+system_thread           DW 0
 
 init_clock_proc         DW OFFSET InitPitClock
 get_time_proc           DW OFFSET GetPitTime
@@ -824,7 +823,6 @@ init_tlb_done:
     mov ds,ax
     mov ds:term_thread_list,0
     mov ds:term_proc_list,0
-    mov ds:system_thread,0
     mov ds:list_lock,0
     mov ds:last_time,0
     mov ds:last_time+4,0
@@ -2608,15 +2606,23 @@ spSet:
     mov fs:ps_preempt_lsb,eax
     mov fs:ps_preempt_msb,edx
 ;
+    push ds
+    mov ax,task_sel
+    mov ds,ax
     cmp ds:time_sync_state,TIME_SYNC_IDLE
+    pop ds
     jne spDone
 ;    
     mov ax,fs
     cmp ax,cs:bsp_core
     jne spDone
 ;
+    push ds
+    mov ax,task_sel
+    mov ds,ax
     sub ecx,ds:last_time
     sub ecx,1193
+    pop ds
     jc spDone
 ;
     call DoSyncTime
@@ -3666,10 +3672,13 @@ DeleteProcess   Endp
 system_thread_name  DB 'System', 0
 
 system_thread_pr:
-    mov ax,task_sel
+    mov ax,kernel_patch_sel
     mov ds,ax
     GetThread
     mov ds:system_thread,ax
+;
+    mov ax,task_sel
+    mov ds,ax    
 
 stLoop:
     WaitForSignal
@@ -4553,12 +4562,14 @@ UnlockCoreListSingle    Endp
 ;
 ;           DESCRIPTION:    Lock list, multiple processor version
 ;
-;       PARAMETERS:     DS      Task_sel
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockListMultiple    Proc near
+    push ds
     push ax
+;
+    mov ax,task_sel
+    mov ds,ax    
 
 llSpinLock:    
     sti
@@ -4580,6 +4591,7 @@ llGet:
 
 llDone:
     pop ax    
+    pop ds
     ret
 LockListMultiple    Endp
 
@@ -4591,13 +4603,19 @@ LockListMultiple    Endp
 ;
 ;           DESCRIPTION:    Unlock list, multiple processor version
 ;
-;       PARAMETERS:     DS      Task_sel
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlockListMultiple      Proc near
+    push ds
+    push ax
+;
+    mov ax,task_sel
+    mov ds,ax    
     mov ds:list_lock,0
     sti
+;
+    pop ax
+    pop ds    
     ret
 UnlockListMultiple      Endp
 
@@ -5080,6 +5098,10 @@ wakeup_int:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DoSyncTime  Proc near
+    push ds
+    mov ax,task_sel
+    mov ds,ax
+;    
     mov ds:sync_core_count,0
     mov ds:time_sync_state,TIME_SYNC_WAIT
     mov dx,fs
@@ -5130,6 +5152,8 @@ sync_wait_done:
     mov ds:last_time,eax
     mov ds:last_time+4,edx
     mov ds:time_sync_state,TIME_SYNC_IDLE
+;
+    pop ds
     ret
 DoSyncTime  Endp
 
@@ -5353,7 +5377,7 @@ swap_out    ENDP
 cleanup_thread:
     call SkipCurrentThread
 ;    
-    mov bx,ds:system_thread
+    mov bx,cs:system_thread
     Signal    
 ;
     mov ax,task_sel
@@ -5375,7 +5399,7 @@ cleanup_thread:
 cleanup_process:
     call SkipCurrentThread
 ;    
-    mov bx,ds:system_thread
+    mov bx,cs:system_thread
     Signal    
 ;
     mov ax,task_sel
@@ -6844,10 +6868,10 @@ set_system_time PROC far
     push bx
     mov bx,core_data_sel
     mov fs,bx
-    mov bx,task_sel
-    mov ds,bx
     mov fs:ps_system_time,eax
     mov fs:ps_system_time+4,edx
+    mov bx,task_sel
+    mov ds,bx
     pop bx
     mov ds:last_time,eax
     mov ds:last_time+4,edx
