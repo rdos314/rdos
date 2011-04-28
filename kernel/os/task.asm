@@ -3187,6 +3187,13 @@ SaveCurrentThread       Proc near
     mov ds,ds:p_tss_data_sel
     pushfd
     pop dword ptr ds:tss_eflags
+;    
+    pushf
+    pop ax
+    and ax,NOT 100h
+    push ax
+    popf
+;
     mov dword ptr ds:tss_ecx,ecx
     mov dword ptr ds:tss_ebx,ebx
     mov dword ptr ds:tss_ebp,ebp

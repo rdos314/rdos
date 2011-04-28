@@ -86,6 +86,8 @@ code    SEGMENT byte use16 public 'CODE'
     extrn sync_clock_int:near
     extrn wakeup_int:near
 
+    extrn get_task_lock:near
+
     extrn get_thread:near
     extrn prot_exception:near
     extrn virt_exception:near
@@ -390,15 +392,19 @@ trap_1:
     push ebx
     push ds
 ;
+    call get_task_lock
+    add ax,1
+    jnc t1_ret
+;    
     GetThread
+    or ax,ax
+    jz t1_ret
+;    
     mov ds,ax
     mov ds,ds:p_tss_data_sel
     mov ax,[bp].vm_err
     mov ds:tss_error_code,ax
-;
     sti
-    GetThread
-    mov ds,ax
 ;
     mov eax,[bp].vm_eflags
     or eax,10100h
