@@ -62,8 +62,6 @@ sync_core_count     DW ?
 
 tsc_sub_tics        DD ?
 
-update_tics         DD ?
-
 last_time           DD ?,?
 
 term_thread_list    DW ?
@@ -441,6 +439,7 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 time_diff           DD 0,0
+update_tics         DD 0
 
 bsp_core            DW 0
 
@@ -2874,7 +2873,7 @@ load_reload_loop:
     call cs:get_time_proc
     cli
     mov fs:ps_last_lsb,eax
-    add eax,ds:update_tics
+    add eax,cs:update_tics
     adc edx,0
     mov bx,fs:ps_timer_head
     mov ecx,fs:ps_preempt_msb
@@ -3486,7 +3485,7 @@ reload_timer_loop:
     mov es,fs:ps_curr_thread
     call cs:get_time_proc
     cli
-    add eax,ds:update_tics
+    add eax,cs:update_tics
     adc edx,0
     mov bx,fs:ps_timer_head
     mov ecx,fs:ps_preempt_msb
@@ -5264,7 +5263,6 @@ init_first_thread:
     mov ds,ax
     mov ax,system_data_sel
     mov es,ax
-    mov ds:update_tics,0
     mov ds:init_clock_proc,OFFSET InitPitClock
     mov ds:get_time_proc,OFFSET GetPitTime
     mov eax,es:tsc_tics
@@ -5282,7 +5280,12 @@ timer_clock_done:
     mov fs,fs:ps_sel
 ;
     StartSysTimer
+    push ds
+    mov bx,kernel_patch_sel
+    mov ds,bx
     mov ds:update_tics,eax
+    pop ds
+;
     call cs:init_clock_proc
     jmp LoadCurrentThread
 
