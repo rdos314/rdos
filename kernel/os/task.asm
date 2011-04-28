@@ -3875,21 +3875,16 @@ WakeThread      PROC near
     push bx
     push di
 ;    
-    mov es,dx
-    mov bx,task_sel
-    mov ds,bx
+    mov ds,dx
     call TryLockCore
 ;
-    mov di,es:[esi]
+    mov di,ds:[esi]
     or di,di
     jz wtUnlock
 ;       
     call cs:lock_list_proc
-    push ds
-    mov ds,dx    
     RemoveBlock32
     mov es:p_data,eax
-    pop ds
     call cs:unlock_list_proc
 ;
     mov ax,fs
