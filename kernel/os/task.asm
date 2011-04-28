@@ -3129,7 +3129,6 @@ load_vm:
 ;       PARAMETERS:     Stack, return IP
 ;
 ;       RETURNS:    SS:SP       Processor stack
-;               DS      Task sel
 ;               FS      Processor selector
 ;               ES, GS      Clear
 ;
@@ -3147,10 +3146,7 @@ SaveCurrentThread       Proc near
     push ax
     popf
 ;    
-    mov ax,task_sel
-    mov ds,ax
     call LockCore
-;
     call cs:get_time_proc
     mov ds,fs:ps_curr_thread
     sub eax,fs:ps_last_lsb
@@ -3182,11 +3178,6 @@ SaveCurrentThread       Proc near
     mov dword ptr ds:tss_eip,edx
     mov dword ptr ds:tss_esp,esp
     mov edx,dword ptr ds:tss_edx
-;    
-    push ax
-    mov ax,task_sel
-    mov ds,ax
-    pop ax
 ;    
     mov ss,fs:ps_ss
     mov sp,fs:ps_sp
@@ -3210,7 +3201,6 @@ SaveCurrentThread   Endp
 ;               FS      Processor selector
 ;
 ;       RETURNS:    SS:SP       Processor stack
-;               DS      Task sel
 ;               ES, GS      Clear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3221,8 +3211,6 @@ SaveLockedThread    Proc near
     push eax
     push edx
 ;
-    mov ax,task_sel
-    mov ds,ax
     call cs:get_time_proc
     mov ds,fs:ps_curr_thread
     sub eax,fs:ps_last_lsb
@@ -3255,11 +3243,6 @@ SaveLockedThread    Proc near
     mov dword ptr ds:tss_esp,esp
     mov edx,dword ptr ds:tss_edx
 ;    
-    push ax
-    mov ax,task_sel
-    mov ds,ax
-    pop ax
-;    
     mov ss,fs:ps_ss
     mov sp,fs:ps_sp
     push bp
@@ -3279,19 +3262,13 @@ SaveLockedThread   Endp
 ;           DESCRIPTION:    Skip current thread (no save of registers)
 ;
 ;       RETURNS:    SS:SP       Processor stack
-;               DS      Task sel
 ;               FS      Processor selector
 ;               ES, GS      Clear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SkipCurrentThread       Proc near       
-    push ax
-    mov ax,task_sel
-    mov ds,ax
     call LockCore
-    pop ax
-;
     push eax
     call cs:get_time_proc
     push ds
@@ -3324,7 +3301,6 @@ SkipCurrentThread   Endp
 ;               Also releases scheduler lock
 ;
 ;       PARAMETERS:     FS      Processor selector
-;               DS      Task sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3372,7 +3348,6 @@ cctDone:
 ;
 ;           PARAMETERS:         AX:EDI      Block list. AX = 0, no sleep list
 ;               FS      Processor selector
-;               DS      Task sel
 ;
 ;       RETURNS:    ES      Blocked thread
 ;
@@ -3419,8 +3394,7 @@ bctUnlock:
 ;
 ;           DESCRIPTION:    Reload timer
 ;
-;       PARAMETERS:     DS      Task sel
-;               FS      Processor sel
+;       PARAMETERS:     FS      Processor sel
 ;               CY      Lock succeeded
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
