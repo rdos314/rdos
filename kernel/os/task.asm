@@ -5380,8 +5380,6 @@ signal_thread   PROC far
     or bx,bx
     jz signal_done
 ;    
-    mov ax,task_sel
-    mov ds,ax
     call TryLockCore
 ;
     mov es,bx
@@ -5440,8 +5438,6 @@ wait_for_signal PROC far
     push fs
     push ax
 ;
-    mov ax,task_sel
-    mov ds,ax
     call LockCore
 ;    
     mov es,fs:ps_curr_thread
@@ -5458,8 +5454,6 @@ wait_for_signal PROC far
     jmp BlockCurrentThread
 
 wait_for_signal_clear:
-    mov ax,task_sel
-    mov ds,ax
     call LockCore
     mov es,fs:ps_curr_thread
     mov es:p_signal,0
@@ -5514,8 +5508,6 @@ wait_for_signal_timeout PROC far
     push cx
     push edi
 ;
-    mov ax,task_sel
-    mov ds,ax
     call LockCore
 ;
     mov cx,cs
@@ -5539,8 +5531,6 @@ wait_for_signal_timeout PROC far
     jmp BlockCurrentThread
 
 wait_for_signal_timeout_clear:
-    mov ax,task_sel
-    mov ds,ax
     call LockCore
     mov es,fs:ps_curr_thread
     mov es:p_signal,0
