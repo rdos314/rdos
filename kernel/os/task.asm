@@ -5050,8 +5050,6 @@ start_timer     PROC far
     push fs
     pushad
 ;
-    mov si,task_sel
-    mov ds,si
     call TryLockCore
     cli
     pushf
@@ -5087,8 +5085,6 @@ stop_timer      PROC far
     push fs
     pushad
 ;
-    mov si,task_sel
-    mov ds,si
     call TryLockCore
     cli
     pushf
@@ -5125,8 +5121,6 @@ init_first_thread:
     mov eax,dword ptr ds:tss_esp
     mov dword ptr ds:tss_esp0,eax
 ;    
-    mov ax,task_sel
-    mov ds,ax
     call LockCore
     mov di,es:p_prio
     mov fs:ps_prio_act,di
@@ -5144,18 +5138,14 @@ init_first_thread:
     mov ds:get_time_proc,OFFSET GetTscTime
 
 timer_clock_done:
-    mov bx,task_sel
-    mov ds,bx
     mov bx,core_data_sel
     mov fs,bx
     mov fs,fs:ps_sel
 ;
     StartSysTimer
-    push ds
     mov bx,kernel_patch_sel
     mov ds,bx
     mov ds:update_tics,eax
-    pop ds
 ;
     call cs:init_clock_proc
     jmp LoadCurrentThread
