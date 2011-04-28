@@ -862,10 +862,10 @@ remove_ov_done:
     jz write_call_far16
 ;
     mov dx,[si+5]
-    cmp dx,3
+    cmp dx,2
     je oscall
 ;        
-    cmp dx,2
+    cmp dx,3
     je usercall_32
 ;
     cmp dx,1

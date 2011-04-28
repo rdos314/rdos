@@ -444,6 +444,9 @@ acpi_name       DB 'Acpi Test',0
 
 acpi_pr:
     int 3
+    GetProcessor
+    int 3
+    GetVersion
 
 acpi_loop:
     int 3
