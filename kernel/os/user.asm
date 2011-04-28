@@ -95,7 +95,7 @@ init_usergate   PROC near
 init_usergate_loop:
     mov es:[di].gate_name_offset,OFFSET illegal_gate_name
     mov es:[di].gate_name_sel,cs
-    mov es:[di].gate_entry_offset16,OFFSET illegal_gate16
+    mov es:[di].gate_entry_offset16,OFFSET illegal_gate32
     mov es:[di].gate_entry_sel16,cs
     mov es:[di].gate_entry_offset32,OFFSET illegal_gate32
     mov es:[di].gate_entry_sel32,cs     
