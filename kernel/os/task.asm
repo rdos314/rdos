@@ -71,12 +71,6 @@ system_thread       DW ?
 
 list_lock           DW ?
 
-lock_list_proc      DW ?
-unlock_list_proc    DW ?
-
-lock_core_list_proc      DW ?
-unlock_core_list_proc    DW ?
-
 processor_count     DW ?
 processor_arr       DW 32 DUP(?)
 
@@ -438,13 +432,19 @@ code    SEGMENT byte public use16 'CODE'
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-time_diff           DD 0,0
-update_tics         DD 0
+time_diff               DD 0,0
+update_tics             DD 0
 
-bsp_core            DW 0
+bsp_core                DW 0
 
-init_clock_proc     DW 0
-get_time_proc       DW 0
+init_clock_proc         DW OFFSET InitPitClock
+get_time_proc           DW OFFSET GetPitTime
+
+lock_list_proc          DW OFFSET LockListSingle
+unlock_list_proc        DW OFFSET UnlockListSingle
+
+lock_core_list_proc     DW OFFSET LockCoreListSingle
+unlock_core_list_proc   DW OFFSET UnlockCoreListSingle
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -838,10 +838,6 @@ init_tlb_done:
 ;
     mov ax,task_sel
     mov ds,ax
-    mov ds:lock_list_proc,OFFSET LockListSingle
-    mov ds:unlock_list_proc,OFFSET UnlockListSingle
-    mov ds:lock_core_list_proc,OFFSET LockCoreListSingle
-    mov ds:unlock_core_list_proc,OFFSET UnlockCoreListSingle
     mov ds:term_thread_list,0
     mov ds:term_proc_list,0
     mov ds:system_thread,0
@@ -2540,13 +2536,13 @@ hpqInt:
     mov si,fs:ps_prio_act
     RemoveCoreBlock          
 ;    
-    call ds:lock_list_proc
+    call cs:lock_list_proc
     push ds  
     mov ds,ax
     mov di,OFFSET ms_wait_sti
     InsertBlock
     pop ds
-    call ds:unlock_list_proc
+    call cs:unlock_list_proc
     jmp HandlePrio
 
 hpqDone:
@@ -2830,12 +2826,12 @@ MoveThread  Proc near
     push fs
 ;
     mov fs,es:p_core_sel
-    call ds:lock_core_list_proc
+    call cs:lock_core_list_proc
     mov ax,fs:ps_has_signal
     or ax,fs:ps_wakeup_list
     mov di,OFFSET ps_wakeup_list
     InsertCoreBlock
-    call ds:unlock_core_list_proc
+    call cs:unlock_core_list_proc
 ;
     or ax,ax
     jnz mtDone
@@ -3441,21 +3437,21 @@ BlockCurrentThread:
     cmp ax,dx
     je bctCore
 ;
-    call ds:lock_list_proc    
+    call cs:lock_list_proc    
     push ds
     mov ds,ax
     InsertBlock32
     pop ds
-    call ds:unlock_list_proc
+    call cs:unlock_list_proc
     jmp bctUnlock    
 
 bctCore:
-    call ds:lock_core_list_proc    
+    call cs:lock_core_list_proc    
     push ds
     mov ds,ax
     InsertBlock32
     pop ds
-    call ds:unlock_core_list_proc
+    call cs:unlock_core_list_proc
 
 bctUnlock:      
     jmp LoadCurrentThread
@@ -3700,9 +3696,9 @@ stThreadLoop:
     or ax,ax
     jz stThreadOK
 ;
-    call ds:lock_list_proc
+    call cs:lock_list_proc
     RemoveBlock
-    call ds:unlock_list_proc
+    call cs:unlock_list_proc
 ;
     call DeleteThread
     jmp stThreadLoop
@@ -3713,9 +3709,9 @@ stThreadOk:
     or ax,ax
     jz stLoop
 ;
-    call ds:lock_list_proc
+    call cs:lock_list_proc
     RemoveBlock
-    call ds:unlock_list_proc
+    call cs:unlock_list_proc
 ;    
     call DeleteProcess
     jmp stThreadLoop
@@ -3811,14 +3807,12 @@ start_processor_null_threads    Proc near
     mov ax,task_sel
     mov ds,ax
 ;    
-    mov ds:lock_list_proc,OFFSET LockListSingle
-    mov ds:unlock_list_proc,OFFSET UnlockListSingle
-    mov ds:lock_core_list_proc,OFFSET LockCoreListSingle
-    mov ds:unlock_core_list_proc,OFFSET UnlockCoreListSingle
     mov cx,ds:processor_count
     cmp cx,1
     jbe start_locks_ok
 ;
+    mov ax,kernel_patch_sel
+    mov ds,ax
     mov ds:lock_list_proc,OFFSET LockListMultiple
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
     mov ds:lock_core_list_proc,OFFSET LockCoreListMultiple
@@ -3979,13 +3973,13 @@ WakeThread      PROC near
     or di,di
     jz wtUnlock
 ;       
-    call ds:lock_list_proc
+    call cs:lock_list_proc
     push ds
     mov ds,dx    
     RemoveBlock32
     mov es:p_data,eax
     pop ds
-    call ds:unlock_list_proc
+    call cs:unlock_list_proc
 ;
     mov ax,fs
     cmp ax,es:p_core_sel
@@ -3995,10 +3989,10 @@ WakeThread      PROC near
     jmp wtUnlock
 
 wtHere:    
-    call ds:lock_core_list_proc
+    call cs:lock_core_list_proc
     mov di,OFFSET ps_wakeup_list
     InsertCoreBlock
-    call ds:unlock_core_list_proc
+    call cs:unlock_core_list_proc
     
 wtUnlock:    
     call TryUnlockCore
@@ -4432,7 +4426,7 @@ get_processor_num   Endp
 UpdateLists Proc near
 
 ulWakeupLoop:
-    call ds:lock_core_list_proc
+    call cs:lock_core_list_proc
     mov si,OFFSET ps_wakeup_list
     mov ax,fs:[si]
     or ax,ax
@@ -4448,11 +4442,11 @@ ulWakeupLoop:
     or fs:ps_flags,PS_FLAG_PRIO_CHANGE
 
 ulWakeupPrioOk:
-    call ds:unlock_core_list_proc
+    call cs:unlock_core_list_proc
     jmp ulWakeupLoop
 
 ulWakeupDone:
-    call ds:unlock_core_list_proc
+    call cs:unlock_core_list_proc
 ;    
     mov fs:ps_has_signal,0
     mov si,OFFSET ps_signal_list
@@ -4468,7 +4462,7 @@ ulSignalLoop:
     or cl,cl
     jz ulSignalNext
 ;
-    call ds:lock_core_list_proc
+    call cs:lock_core_list_proc
     mov fs:[si],dx
     RemoveCoreBlock
     mov di,es:p_prio
@@ -4480,7 +4474,7 @@ ulSignalLoop:
     or fs:ps_flags,PS_FLAG_PRIO_CHANGE
 
 ulSignalPrioOk:
-    call ds:unlock_core_list_proc
+    call cs:unlock_core_list_proc
 ;    
     mov si,OFFSET ps_signal_list
     mov ax,fs:[si]
@@ -5259,16 +5253,14 @@ init_first_thread:
     mov fs:ps_prio_act,di
     InsertCoreBlock
 ;
-    mov ax,kernel_patch_sel
-    mov ds,ax
     mov ax,system_data_sel
     mov es,ax
-    mov ds:init_clock_proc,OFFSET InitPitClock
-    mov ds:get_time_proc,OFFSET GetPitTime
     mov eax,es:tsc_tics
     or eax,eax
     jz timer_clock_done
 ;
+    mov ax,kernel_patch_sel
+    mov ds,ax
     mov ds:init_clock_proc,OFFSET InitTscClock
     mov ds:get_time_proc,OFFSET GetTscTime
 
@@ -5816,14 +5808,14 @@ lcsUnblock:
     mov ax,task_sel
     mov ds,ax
 ;       
-    call ds:lock_list_proc
+    call cs:lock_list_proc
     push ds
     mov ds,dx
     add esi,OFFSET cs_list
     RemoveBlock32
     mov es:p_data,0
     pop ds
-    call ds:unlock_list_proc
+    call cs:unlock_list_proc
 ;
     mov ax,fs
     cmp ax,es:p_core_sel
@@ -5833,10 +5825,10 @@ lcsUnblock:
     jmp lcsUnblocked
 
 lcsHere:    
-    call ds:lock_core_list_proc
+    call cs:lock_core_list_proc
     mov di,OFFSET ps_wakeup_list
     InsertCoreBlock
-    call ds:unlock_core_list_proc
+    call cs:unlock_core_list_proc
 
 lcsUnblocked:
     pop di
@@ -6161,13 +6153,13 @@ lusUnblock:
     mov ax,task_sel
     mov ds,ax   
 ;
-    call ds:lock_list_proc
+    call cs:lock_list_proc
     push ds
     mov ds,dx
     RemoveBlock32
     mov es:p_data,0
     pop ds
-    call ds:unlock_list_proc
+    call cs:unlock_list_proc
 ;
     mov ax,fs
     cmp ax,es:p_core_sel
@@ -6177,10 +6169,10 @@ lusUnblock:
     jmp lusUnblocked    
 
 lusHere:    
-    call ds:lock_core_list_proc
+    call cs:lock_core_list_proc
     mov di,OFFSET ps_wakeup_list
     InsertCoreBlock
-    call ds:unlock_core_list_proc
+    call cs:unlock_core_list_proc
 
 lusUnblocked:
     pop di
@@ -6414,10 +6406,10 @@ wake_until      PROC far
     jmp wuDone
 
 wuHere:    
-    call ds:lock_core_list_proc
+    call cs:lock_core_list_proc
     mov di,OFFSET ps_wakeup_list
     InsertCoreBlock
-    call ds:unlock_core_list_proc
+    call cs:unlock_core_list_proc
 
 wuDone:    
     retf32
