@@ -57,8 +57,6 @@ section_handle_seg          ENDS
 
 task_seg    STRUC
 
-bsp_core            DW ?
-
 time_sync_state     DW ?
 sync_core_count     DW ?
 
@@ -443,6 +441,8 @@ code    SEGMENT byte public use16 'CODE'
 ;           NAME:           Procedure addresses for SMP/non-SMP variants
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+bsp_core            DW ?
 
 init_clock_proc     DW ?
 get_time_proc       DW ?
@@ -1236,7 +1236,7 @@ proc_init:
     mov edx,gdt_linear
     CreateProcessor
 ;    
-    mov ax,task_sel
+    mov ax,kernel_patch_sel
     mov ds,ax
     mov ds:bsp_core,es
 ;
@@ -2632,7 +2632,7 @@ spSet:
     jne spDone
 ;    
     mov ax,fs
-    cmp ax,ds:bsp_core
+    cmp ax,cs:bsp_core
     jne spDone
 ;
     sub ecx,ds:last_time
