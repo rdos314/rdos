@@ -60,8 +60,6 @@ task_seg    STRUC
 time_sync_state     DW ?
 sync_core_count     DW ?
 
-tsc_sub_tics        DD ?
-
 last_time           DD ?,?
 
 term_thread_list    DW ?
@@ -76,8 +74,6 @@ processor_arr       DW 32 DUP(?)
 
 thread_base_tics    DD 256 DUP(?)
 thread_used_tics    DD 256 DUP(?)
-
-task_seg_size       DB ?
 
 task_seg    ENDS
 
@@ -435,6 +431,8 @@ code    SEGMENT byte public use16 'CODE'
 time_diff               DD 0,0
 update_tics             DD 0
 
+tsc_sub_tics            DD 0
+
 bsp_core                DW 0
 
 init_clock_proc         DW OFFSET InitPitClock
@@ -534,9 +532,12 @@ GetPitTime  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitTscClock    Proc near
+    push ds
     push es
     pushad
 ;    
+    mov ax,kernel_patch_sel
+    mov ds,ax
     mov ax,system_data_sel
     mov es,ax
     mov edx,10000h
@@ -551,6 +552,8 @@ InitTscClock    Proc near
     mov fs:ps_last_tsc,eax
     mov fs:ps_tsc_guard,0
 ;
+    mov ax,task_sel
+    mov ds,ax
     mov eax,ds:last_time
     mov edx,ds:last_time+4
     mov fs:ps_system_time,eax
@@ -558,6 +561,7 @@ InitTscClock    Proc near
 ;
     popad
     pop es      
+    pop ds
     ret
 InitTscClock    Endp
 
@@ -579,7 +583,7 @@ GetTscTime  Proc near
     mov edx,fs:ps_last_tsc
     mov fs:ps_last_tsc,eax
     sub eax,edx
-    mul ds:tsc_sub_tics
+    mul cs:tsc_sub_tics
     add fs:ps_tsc_guard,eax
     adc fs:ps_system_time,edx
     adc fs:ps_system_time+4,0
@@ -703,15 +707,6 @@ notify_time_drift       Proc far
     or ecx,ecx
     jz ntdPit
 ;
-;    cmp eax,MAX_DRIFT
-;    jge ntdSetPit
-;
-;    cmp eax,-MAX_DRIFT
-;    jle ntdSetPit
-;    
-    mov cx,task_sel
-    mov es,cx
-;
     mov ecx,es:tsc_sub_tics
     shr ecx,3
     imul ecx
@@ -720,17 +715,6 @@ notify_time_drift       Proc far
     idiv ecx
 ;    
     sub es:tsc_sub_tics,eax
-    jmp ntdDone
-
-ntdSetPit:
-    mov ds:tsc_tics,0
-    and ds:cpu_feature_flags, NOT 10h
-    call InitPitClock
-;
-    mov ax,kernel_patch_sel
-    mov es,ax    
-    mov es:get_time_proc,OFFSET GetPitTime
-    jmp ntdDone
 
 ntdPit:
 
@@ -833,7 +817,7 @@ init_task       PROC near
 
 init_tlb_done:
     mov bx,task_sel
-    mov eax,OFFSET task_seg_size
+    mov eax,SIZE task_seg
     call local_allocate_fixed_system_mem
 ;
     mov ax,task_sel
