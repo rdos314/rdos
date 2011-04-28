@@ -100,6 +100,7 @@ random_proc_sel     EQU 140h
 term_code_sel		EQU 14Bh
 state_data_sel		EQU 150h
 ;
+kernel_patch_sel    EQU 170h
 kernel_tss			EQU 178h
 kernel_stack		EQU 188h
 ;

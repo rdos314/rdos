@@ -44,6 +44,7 @@ ELSE
     .386p
 ENDIF
 
+    extrn local_get_selector_base_size:near
     extrn local_create_data_sel16:near
     extrn local_create_tss_sel:near
 
@@ -699,7 +700,7 @@ prot_init:
     call init_os_protseg
     call init_usergate
     call init_user_protseg
-;
+;        
     mov esi,OFFSET get_version
     mov edi,OFFSET get_version_name
     xor dx,dx
@@ -712,6 +713,12 @@ prot_init:
     call init_system
     call init_physical_gates
     call move_adapters
+;
+    mov bx,cs
+    call local_get_selector_base_size
+    mov bx,kernel_patch_sel
+    call local_create_data_sel16
+;    
     call init_paging_gates
     call init_physical_gates
     call init_mem_sels

@@ -57,9 +57,6 @@ section_handle_seg          ENDS
 
 task_seg    STRUC
 
-init_clock_proc     DW ?
-get_time_proc       DW ?
-
 bsp_core            DW ?
 
 time_sync_state     DW ?
@@ -443,6 +440,16 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           Procedure addresses for SMP/non-SMP variants
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_clock_proc     DW ?
+get_time_proc       DW ?
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           InitPitClock
 ;
 ;           DESCRIPTION:    Init clock using PIT timer 2
@@ -613,7 +620,7 @@ start_pit_timer    Proc far
     xchg ah,al
     jmp short $+2
     out TIMER0,al
-    call ds:get_time_proc
+    call cs:get_time_proc
     cli
     xor al,al
     out TIMER_CONTROL,al
@@ -717,6 +724,9 @@ ntdSetPit:
     mov ds:tsc_tics,0
     and ds:cpu_feature_flags, NOT 10h
     call InitPitClock
+;
+    mov ax,kernel_patch_sel
+    mov es,ax    
     mov es:get_time_proc,OFFSET GetPitTime
     jmp ntdDone
 
@@ -2611,7 +2621,7 @@ SetupPreempt    Proc near
     jz spDone    
 
 spSet:
-    call ds:get_time_proc
+    call cs:get_time_proc
     mov ecx,eax
     add eax,1193
     adc edx,0
@@ -2860,7 +2870,7 @@ load_thread_loop:
 
 load_reload_loop:
     and fs:ps_flags,NOT PS_FLAG_TIMER   
-    call ds:get_time_proc
+    call cs:get_time_proc
     cli
     mov fs:ps_last_lsb,eax
     add eax,ds:update_tics
@@ -3190,7 +3200,7 @@ SaveCurrentThread       Proc near
     mov ds,ax
     call LockCore
 ;
-    call ds:get_time_proc
+    call cs:get_time_proc
     mov ds,fs:ps_curr_thread
     sub eax,fs:ps_last_lsb
     add ds:p_lsb_tics,eax
@@ -3262,7 +3272,7 @@ SaveLockedThread    Proc near
 ;
     mov ax,task_sel
     mov ds,ax
-    call ds:get_time_proc
+    call cs:get_time_proc
     mov ds,fs:ps_curr_thread
     sub eax,fs:ps_last_lsb
     add ds:p_lsb_tics,eax
@@ -3332,7 +3342,7 @@ SkipCurrentThread       Proc near
     pop ax
 ;
     push eax
-    call ds:get_time_proc
+    call cs:get_time_proc
     push ds
     mov ds,fs:ps_curr_thread
     sub eax,fs:ps_last_lsb
@@ -3473,7 +3483,7 @@ ReloadTimer Proc near
 reload_timer_loop:
     and fs:ps_flags,NOT PS_FLAG_TIMER   
     mov es,fs:ps_curr_thread
-    call ds:get_time_proc
+    call cs:get_time_proc
     cli
     add eax,ds:update_tics
     adc edx,0
@@ -3511,7 +3521,7 @@ reload_check_preempt:
 
 reload_preempt_block:
     sti
-    call ds:get_time_proc
+    call cs:get_time_proc
     add eax,1193
     adc edx,0
     mov fs:ps_preempt_lsb,eax
@@ -5017,7 +5027,7 @@ sync_clock_int:
     jz sync_ack_core
     
     StartSysTimer
-    call ds:init_clock_proc
+    call cs:init_clock_proc
     and fs:ps_flags,NOT PS_FLAG_INIT_CLOCK
 
 sync_ack_core:    
@@ -5033,7 +5043,7 @@ sync_clock_wait_read:
     cmp ds:time_sync_state,TIME_SYNC_READ
     jne sync_clock_end
 ;    
-    call ds:get_time_proc
+    call cs:get_time_proc
 
 sync_clock_wait_idle:
     cmp ds:time_sync_state,TIME_SYNC_IDLE
@@ -5138,7 +5148,7 @@ sync_wait_done:
     pop cx
     cli
     mov ds:time_sync_state,TIME_SYNC_READ
-    call ds:get_time_proc
+    call cs:get_time_proc
     mov ds:last_time,eax
     mov ds:last_time+4,edx
     mov ds:time_sync_state,TIME_SYNC_IDLE
@@ -5249,6 +5259,8 @@ init_first_thread:
     mov fs:ps_prio_act,di
     InsertCoreBlock
 ;
+    mov ax,kernel_patch_sel
+    mov ds,ax
     mov ax,system_data_sel
     mov es,ax
     mov ds:update_tics,0
@@ -5270,7 +5282,7 @@ timer_clock_done:
 ;
     StartSysTimer
     mov ds:update_tics,eax
-    call ds:init_clock_proc
+    call cs:init_clock_proc
     jmp LoadCurrentThread
 
 
@@ -6469,7 +6481,7 @@ wait_milli_sec  PROC far
     push dx
     push ax
     pop ebx
-    call ds:get_time_proc
+    call cs:get_time_proc
 ;
     add eax,ebx
     adc edx,0
@@ -6519,7 +6531,7 @@ wait_micro_sec  PROC far
     push eax
     pop ax
     pop ebx
-    call ds:get_time_proc
+    call cs:get_time_proc
     add eax,ebx
     adc edx,0
 ;
@@ -6741,7 +6753,7 @@ get_system_time PROC far
     mov es,fs:ps_curr_thread
     mov ax,task_sel
     mov ds,ax
-    call ds:get_time_proc
+    call cs:get_time_proc
 ;    
     pop fs
     pop es
@@ -6773,7 +6785,7 @@ get_time    PROC far
     mov es,fs:ps_curr_thread
     mov ax,task_sel
     mov ds,ax
-    call ds:get_time_proc
+    call cs:get_time_proc
     add eax,ds:time_diff
     adc edx,ds:time_diff+4
 ;
