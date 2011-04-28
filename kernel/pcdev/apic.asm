@@ -414,8 +414,8 @@ ap_task_wait:
     call InitApic
 
     GetApicId
-    cmp edx,3
-    je ap_crash
+    cmp edx,2
+    jae ap_crash
     
     StartProcessor
 
