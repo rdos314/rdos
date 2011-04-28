@@ -39,6 +39,9 @@ INCLUDE proc.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\apicheck.inc
 
+
+MAX_CORES   = 64
+
 TIME_SYNC_RESET = 0
 TIME_SYNC_IDLE  = 1
 TIME_SYNC_WAIT  = 2
@@ -66,9 +69,6 @@ term_thread_list    DW ?
 term_proc_list      DW ?
 
 list_lock           DW ?
-
-processor_count     DW ?
-processor_arr       DW 32 DUP(?)
 
 thread_base_tics    DD 256 DUP(?)
 thread_used_tics    DD 256 DUP(?)
@@ -442,6 +442,9 @@ unlock_list_proc        DW OFFSET UnlockListSingle
 
 lock_core_list_proc     DW OFFSET LockCoreListSingle
 unlock_core_list_proc   DW OFFSET UnlockCoreListSingle
+
+core_count              DW 0
+core_arr                DW MAX_CORES DUP(0)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -827,15 +830,6 @@ init_tlb_done:
     mov ds:last_time,0
     mov ds:last_time+4,0
     mov ds:time_sync_state,TIME_SYNC_RESET
-;
-    mov ds:processor_count,0
-;
-    mov bx,OFFSET processor_arr
-    mov cx,32
-proc_init:
-    mov word ptr [bx],0
-    add bx,2
-    loop proc_init
 ;
     mov ax,cs
     mov ds,ax
@@ -3797,10 +3791,7 @@ btInRange:
     public start_processor_null_threads
 
 start_processor_null_threads    Proc near
-    mov ax,task_sel
-    mov ds,ax
-;    
-    mov cx,ds:processor_count
+    mov cx,cs:core_count
     cmp cx,1
     jbe start_locks_ok
 ;
@@ -3842,19 +3833,12 @@ start_locks_ok:
     xor al,al
     stosb
 ;
-    mov ax,task_sel
-    mov ds,ax
-    mov cx,ds:processor_count
-    mov bx,OFFSET processor_arr
-;
-    add bx,2
+    mov cx,cs:core_count
     sub cx,1
     jz start_processor_free
 
 create_null_loop:
-    push ds
     push cx
-;    
     mov ax,cs
     mov ds,ax
     xor ax,ax
@@ -3862,13 +3846,10 @@ create_null_loop:
     mov si,OFFSET null_thread
     xor di,di
     CreateThread
-;
     pop cx
-    pop ds
+;
     mov di,5
     inc byte ptr es:[di]
-;    
-    add bx,2
     loop create_null_loop
 
 start_processor_free:
@@ -4247,13 +4228,13 @@ create_processor    Proc far
     mov es:ps_ss,ax
     mov es:ps_sp,200h
 ;
-    mov ax,task_sel
+    mov ax,kernel_patch_sel
     mov ds,ax
-    mov ax,ds:processor_count
+    mov ax,ds:core_count
     mov si,ax
     add si,si
-    mov [si].processor_arr,es
-    inc ds:processor_count
+    mov ds:[si].core_arr,es
+    inc ds:core_count
 ;
     mov es:ps_id,ax     
 ;
@@ -4375,18 +4356,15 @@ get_processor   Endp
 get_processor_num_name      DB 'Get Processor Number',0
 
 get_processor_num   Proc far
-    push ds
     push ax
     push bx
 ;
-    mov bx,task_sel
-    mov ds,bx
-    cmp ax,ds:processor_count
+    cmp ax,cs:core_count
     jae gpnFail
 ;
     mov bx,ax
     add bx,bx
-    mov ax,ds:[bx].processor_arr
+    mov ax,cs:[bx].core_arr
     mov fs,ax
     clc
     jmp gpnDone
@@ -4399,7 +4377,6 @@ gpnFail:
 gpnDone:
     pop bx
     pop ax
-    pop ds
     retf32
 get_processor_num   Endp
 
@@ -5110,11 +5087,11 @@ DoSyncTime  Proc near
     push bx
     push cx
 ;
-    mov cx,ds:processor_count
-    mov bx,OFFSET processor_arr
+    mov cx,cs:core_count
+    mov bx,OFFSET core_arr
 
 sync_int_loop:
-    mov ax,[bx]
+    mov ax,cs:[bx]
     cmp ax,dx
     je sync_int_next
 ;
@@ -6586,14 +6563,12 @@ check_list      Proc far
     push ax
     push si
 ;
-    mov ax,task_sel
-    mov ds,ax
-    mov cx,ds:processor_count
-    mov si,OFFSET processor_arr
+    mov cx,cs:core_count
+    mov si,OFFSET core_arr
     xor dx,dx
 
 check_cpu_loop:
-    mov fs,ds:[si]
+    mov fs,cs:[si]
     cmp bx,fs:ps_curr_thread
     je check_curr_ok
 ;
