@@ -3820,6 +3820,8 @@ start_locks_ok:
     stosb
 ;
     mov cx,cs:core_count
+    mov bx,OFFSET core_arr
+    add bx,2
     sub cx,1
     jz start_processor_free
 
@@ -3836,6 +3838,7 @@ create_null_loop:
 ;
     mov di,5
     inc byte ptr es:[di]
+    add bx,2
     loop create_null_loop
 
 start_processor_free:
@@ -3883,9 +3886,7 @@ null_loop0:
 
 null_thread:
     sti
-    mov ax,task_sel
-    mov ds,ax
-    mov fs,ds:[bx]
+    mov fs,cs:[bx]
     GetThread
     mov es,ax
     mov es:p_sleep_sel,fs
