@@ -3477,8 +3477,6 @@ ReloadTimer Endp
 start_processor_name    DB 'Start Processor', 0
 
 start_processor:
-    mov ax,task_sel
-    mov ds,ax
     mov ax,core_data_sel
     mov fs,ax
     or fs:ps_flags,PS_FLAG_ACTIVE
@@ -3810,8 +3808,6 @@ null_base   DB 'Null'
     public null_thread0
 
 null_thread0:
-    mov ax,task_sel
-    mov ds,ax
     mov ax,core_data_sel
     mov fs,ax
     mov fs,fs:ps_sel
@@ -3831,17 +3827,12 @@ null_thread0:
     call DoSyncTime
 
 null_ap_ok:   
-    push OFFSET null_loop0
+    push OFFSET null_loop
     call SaveCurrentThread
 ;    
     xor ax,ax
     xor edi,edi
     jmp BlockCurrentThread
-
-null_loop0:    
-    jmp null_loop
-
-
 
 null_thread:
     sti
@@ -3953,10 +3944,6 @@ locked_debug_exception:
 debug_exception:
     movzx ax,al
     push fs
-    push ax
-    mov ax,task_sel
-    mov ds,ax
-    pop ax
     call TryLockCore
     jc debug_normal
 
@@ -4042,9 +4029,6 @@ debug_vm:
     mov dword ptr ds:tss_esp,eax
 
 debug_save_ok:
-    mov ax,task_sel
-    mov ds,ax
-;    
     mov ss,fs:ps_ss
     mov sp,fs:ps_sp
 ;
@@ -4093,8 +4077,6 @@ double_fault:
     mov bx,double_tss_sel
     and byte ptr ds:[bx+5],NOT 2
 ;    
-    mov ax,task_sel
-    mov ds,ax
     call TryLockCore
     jc double_fault_lock_ok
 ;    
@@ -4334,8 +4316,7 @@ get_processor_num   Endp
 ;
 ;           DESCRIPTION:    Update lists (signals + wakeup)
 ;
-;       PARAMETERS:     DS      Task_sel
-;               FS      Processor sel
+;       PARAMETERS:     FS      Processor sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4416,8 +4397,6 @@ UpdateLists Endp
 ;
 ;           DESCRIPTION:    Lock list, single processor version
 ;
-;       PARAMETERS:     DS      Task_sel
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockListSingle  Proc near
@@ -4433,8 +4412,6 @@ LockListSingle  Endp
 ;
 ;           DESCRIPTION:    Unlock list, single processor version
 ;
-;       PARAMETERS:     DS      Task_sel
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlockListSingle    Proc near
@@ -4449,8 +4426,7 @@ UnlockListSingle    Endp
 ;
 ;           DESCRIPTION:    Lock core list, single processor version
 ;
-;       PARAMETERS:         DS      Task_sel
-;                           FS      Core sel
+;       PARAMETERS:         FS      Core sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4467,8 +4443,7 @@ LockCoreListSingle  Endp
 ;
 ;           DESCRIPTION:    Unlock core list, single processor version
 ;
-;       PARAMETERS:         DS      Task_sel
-;                           FS      Core sel
+;       PARAMETERS:         FS      Core sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4549,8 +4524,7 @@ UnlockListMultiple      Endp
 ;
 ;           DESCRIPTION:    Lock core list, multiple processor version
 ;
-;       PARAMETERS:         DS      Task_sel
-;                           FS      Core sel
+;       PARAMETERS:         FS      Core sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4588,8 +4562,7 @@ LockCoreListMultiple    Endp
 ;
 ;           DESCRIPTION:    Unlock core list, multiple processor version
 ;
-;       PARAMETERS:         DS      Task_sel
-;                           FS      Core sel
+;       PARAMETERS:         FS      Core sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4606,8 +4579,6 @@ UnlockCoreListMultiple      Endp
 ;           NAME:           TryLockCore
 ;
 ;           DESCRIPTION:    Try to lock
-;
-;       PARAMETERS:     DS      Task_sel
 ;
 ;       RETURNS:    CY      Owner of section
 ;               FS      Processor selector
@@ -4631,8 +4602,6 @@ TryLockCore   Endp
 ;           NAME:           LockCore
 ;
 ;           DESCRIPTION:    Lock
-;
-;       PARAMETERS:     DS      Task_sel
 ;
 ;       RETURNS:    CY      Owner of section
 ;               FS      Processor selector
@@ -4662,8 +4631,7 @@ LockCore      Endp
 ;
 ;           DESCRIPTION:    Try to unlock
 ;
-;       PARAMETERS:     DS      Task_sel
-;               FS      Processor selector
+;       PARAMETERS:     FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4708,8 +4676,7 @@ TryUnlockCore    Endp
 ;
 ;           DESCRIPTION:    Unlock
 ;
-;       PARAMETERS:     DS      Task_sel
-;               FS      Processor selector
+;       PARAMETERS:     FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4753,8 +4720,7 @@ UnlockCore    Endp
 ;
 ;           DESCRIPTION:    Thread load unlock
 ;
-;       PARAMETERS:     DS      Task_sel
-;               FS      Processor selector
+;       PARAMETERS:     FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4782,8 +4748,6 @@ LoadUnlockCore    Endp
 enter_int_name  DB 'Enter Int',0
 
 enter_int       Proc far
-    mov ax,task_sel
-    mov ds,ax
     call TryLockCore
     retf32
 enter_int       Endp
@@ -4801,8 +4765,6 @@ enter_int       Endp
 leave_int_name  DB 'Leave Int',0
 
 leave_int       Proc far
-    mov ax,task_sel
-    mov ds,ax
     call TryUnlockCore
     retf32
 leave_int       Endp
@@ -4822,13 +4784,9 @@ lock_task_name  DB 'Lock Task',0
 lock_task       Proc far
     push ds
     push fs
-    push ax
 ;    
-    mov ax,task_sel
-    mov ds,ax
     call LockCore
 ;       
-    pop ax
     pop fs
     pop ds
     retf32
@@ -4851,8 +4809,6 @@ unlock_task     Proc far
     push fs
     push ax
 ;    
-    mov ax,task_sel
-    mov ds,ax
     mov ax,core_data_sel
     mov fs,ax
     mov fs,fs:ps_sel
@@ -4888,8 +4844,7 @@ timer_int:
 ;
     mov al,20h
     out INT0_CONTROL,al
-    mov ax,task_sel
-    mov ds,ax
+;
     call TryLockCore
     call ReloadTimer
 ;
@@ -4913,8 +4868,6 @@ timer_int:
 timer_expired_name   DB 'Timer Expired', 0
 
 timer_expired    Proc far
-    mov ax,task_sel
-    mov ds,ax
     call TryLockCore
     call ReloadTimer
     retf32
@@ -5001,15 +4954,11 @@ sync_clock_end:
 wakeup_int:
     push ds
     push fs
-    push eax
 ;
     SendEoi
-    mov ax,task_sel
-    mov ds,ax
     call TryLockCore
     call TryUnlockCore
 ;
-    pop eax
     pop fs
     pop ds
     iretd    
