@@ -3176,12 +3176,6 @@ SaveCurrentThread       Proc near
     push ds
     push eax
     push edx
-;
-    pushf
-    pop ax
-    and ax,NOT 100h
-    push ax
-    popf
 ;    
     call LockCore
     call cs:get_time_proc
