@@ -62,8 +62,6 @@ sync_core_count     DW ?
 
 tsc_sub_tics        DD ?
 
-time_diff           DD ?,?
-
 update_tics         DD ?
 
 last_time           DD ?,?
@@ -442,10 +440,12 @@ code    SEGMENT byte public use16 'CODE'
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-bsp_core            DW ?
+time_diff           DD 0,0
 
-init_clock_proc     DW ?
-get_time_proc       DW ?
+bsp_core            DW 0
+
+init_clock_proc     DW 0
+get_time_proc       DW 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -694,8 +694,8 @@ notify_time_drift       Proc far
     push ecx
     push edx
 ;    
-    mov cx,task_sel
-    mov es,cx
+    mov cx,kernel_patch_sel
+    mov es,cx    
 ;
     sub es:time_diff,eax
     sbb es:time_diff,0
@@ -709,6 +709,9 @@ notify_time_drift       Proc far
 ;
 ;    cmp eax,-MAX_DRIFT
 ;    jle ntdSetPit
+;    
+    mov cx,task_sel
+    mov es,cx
 ;
     mov ecx,es:tsc_sub_tics
     shr ecx,3
@@ -846,8 +849,6 @@ init_tlb_done:
     mov ds:list_lock,0
     mov ds:last_time,0
     mov ds:last_time+4,0
-    mov ds:time_diff,0
-    mov ds:time_diff+4,0
     mov ds:time_sync_state,TIME_SYNC_RESET
 ;
     mov ds:processor_count,0
@@ -6786,8 +6787,8 @@ get_time    PROC far
     mov ax,task_sel
     mov ds,ax
     call cs:get_time_proc
-    add eax,ds:time_diff
-    adc edx,ds:time_diff+4
+    add eax,cs:time_diff
+    adc edx,cs:time_diff+4
 ;
     pop fs
     pop es
@@ -6812,18 +6813,10 @@ get_time    ENDP
 time_to_system_time_name    DB 'Time To System Time',0
 
 time_to_system_time     PROC far
-    push ds
-    push bx
-    mov bx,task_sel
-    mov ds,bx
-;
     cli
-    sub eax,ds:time_diff
-    sbb edx,ds:time_diff+4
+    sub eax,cs:time_diff
+    sbb edx,cs:time_diff+4
     sti
-;
-    pop bx
-    pop ds
     retf32
 time_to_system_time     ENDP
 
@@ -6844,18 +6837,10 @@ time_to_system_time     ENDP
 system_time_to_time_name    DB 'System Time To Time',0
 
 system_time_to_time     PROC far
-    push ds
-    push bx
-    mov bx,task_sel
-    mov ds,bx
-;
     cli
-    add eax,ds:time_diff
-    adc edx,ds:time_diff+4
+    add eax,cs:time_diff
+    adc edx,cs:time_diff+4
     sti
-;
-    pop bx
-    pop ds
     retf32
 system_time_to_time     ENDP
 
@@ -6909,7 +6894,7 @@ update_time_name    DB 'Update Time',0
 update_time     PROC far
     push ds
     push bx
-    mov bx,task_sel
+    mov bx,kernel_patch_sel
     mov ds,bx
     cli
     mov ds:time_diff,eax
