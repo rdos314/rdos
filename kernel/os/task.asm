@@ -2802,7 +2802,41 @@ acDone:
     pop dx
     ret
 AddCallback Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           MoveThread
+;
+;           DESCRIPTION:    Move thread to another core
+;
+;       PARAMETERS:         DS      Task sel
+;                           FS      Processor selector
+;                           ES      Thread to move
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+MoveThread  Proc near
+    push fs
+;
+    mov fs,es:p_core_sel
+    call ds:lock_core_list_proc
+    mov ax,fs:ps_has_signal
+    or ax,fs:ps_wakeup_list
+    mov di,OFFSET ps_wakeup_list
+    InsertCoreBlock
+    call ds:unlock_core_list_proc
+;
+    or ax,ax
+    jnz mtDone
+;
+    mov al,61h
+    SendInt
+
+mtDone:    
+    pop fs
+    ret
+MoveThread  Endp            
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2862,6 +2896,10 @@ load_retry:
     cmp ax,fs:ps_null_thread
     je load_thread_loop
 ;
+    mov ax,fs
+    cmp ax,es:p_core_sel
+    jne load_move_thread
+;    
     mov di,es:p_prio
     InsertCoreFirst
     cmp di,fs:ps_prio_act
@@ -2871,6 +2909,10 @@ load_retry:
     or fs:ps_flags,PS_FLAG_PRIO_CHANGE
 
 load_retry_do:
+    jmp load_thread_loop
+
+load_move_thread:
+    call MoveThread
     jmp load_thread_loop
 
 load_reload_timer:
@@ -3336,6 +3378,14 @@ ContinueCurrentThread:
     cmp ax,fs:ps_null_thread
     je cctPop
 ;    
+    mov ax,fs
+    cmp ax,es:p_core_sel
+    je cctInsertHere
+;
+    call MoveThread
+    jmp cctPop
+
+cctInsertHere:
     InsertCoreFirst
     cmp di,fs:ps_prio_act
     jbe cctPop
@@ -3929,16 +3979,16 @@ WakeThread      PROC near
 ;
     mov ax,fs
     cmp ax,es:p_core_sel
-    jne wtOtherCore
-;    
+    je wtHere
+;
+    call MoveThread
+    jmp wtUnlock
+
+wtHere:    
     call ds:lock_core_list_proc
     mov di,OFFSET ps_wakeup_list
     InsertCoreBlock
     call ds:unlock_core_list_proc
-    jmp wtUnlock
-
-wtOtherCore:
-    CrashGate
     
 wtUnlock:    
     call TryUnlockCore
@@ -5004,6 +5054,33 @@ sync_clock_end:
     pop ds
     iretd
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           wakeup_int
+;
+;           DESCRIPTION:    IPI wakeup int
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public wakeup_int
+
+wakeup_int:
+    push ds
+    push fs
+    push eax
+;
+    SendEoi
+    mov ax,task_sel
+    mov ds,ax
+    call TryLockCore
+    call TryUnlockCore
+;
+    pop eax
+    pop fs
+    pop ds
+    iretd    
+    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5219,8 +5296,12 @@ wake_new    PROC near
     mov es,dx
     mov ax,fs
     cmp ax,es:p_core_sel
-    jne wake_new_other_core
+    je wake_here
 ;
+    call MoveThread
+    jmp ContinueCurrentThread
+
+wake_here:
     mov di,es:p_prio
     InsertCoreBlock
     cmp di,fs:ps_prio_act
@@ -5730,20 +5811,21 @@ lcsUnblock:
 ;
     mov ax,fs
     cmp ax,es:p_core_sel
-    jne lcsOtherCore
+    je lcsHere
 ;    
+    call MoveThread
+    jmp lcsUnblocked
+
+lcsHere:    
     call ds:lock_core_list_proc
     mov di,OFFSET ps_wakeup_list
     InsertCoreBlock
     call ds:unlock_core_list_proc
-;       
+
+lcsUnblocked:
     pop di
     pop esi
     pop es
-    jmp lcsUnlock
-
-lcsOtherCore:
-    CrashGate    
 
 lcsUnlock:
     call UnlockCore
@@ -6073,13 +6155,18 @@ lusUnblock:
 ;
     mov ax,fs
     cmp ax,es:p_core_sel
-    jne lusOtherCore
-;    
+    je lusHere
+;
+    call MoveThread
+    jmp lusUnblocked    
+
+lusHere:    
     call ds:lock_core_list_proc
     mov di,OFFSET ps_wakeup_list
     InsertCoreBlock
     call ds:unlock_core_list_proc
-;
+
+lusUnblocked:
     pop di
     pop esi
     pop es
@@ -6298,11 +6385,25 @@ get_cpu_time    ENDP
 wake_until      PROC far
     mov ax,task_sel
     mov ds,ax
+    mov ax,core_data_sel
+    mov fs,ax
+    mov ax,fs:ps_sel
+    mov fs,ax
     mov es,cx
+;
+    cmp ax,es:p_core_sel
+    je wuHere
+;
+    call MoveThread
+    jmp wuDone
+
+wuHere:    
     call ds:lock_core_list_proc
     mov di,OFFSET ps_wakeup_list
     InsertCoreBlock
     call ds:unlock_core_list_proc
+
+wuDone:    
     retf32
 wake_until      ENDP
 

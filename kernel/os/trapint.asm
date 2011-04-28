@@ -84,6 +84,7 @@ code    SEGMENT byte use16 public 'CODE'
 
     extrn timer_int:near
     extrn sync_clock_int:near
+    extrn wakeup_int:near
 
     extrn get_thread:near
     extrn prot_exception:near
@@ -1864,9 +1865,10 @@ ri14    DW      3Ch,    OFFSET default_int2,    kernel_code,    0
 ri15    DW      3Dh,    OFFSET default_int2,    kernel_code,    0
 ri17    DW      3Fh,    OFFSET default_int2,    kernel_code,    0
 rg60    DW      60h,    OFFSET sync_clock_int,  kernel_code,    0
-rg66    DW      66h,    OFFSET int66,          kernel_code,    3
-rg67    DW      67h,    OFFSET int67,          kernel_code,    3
-rg9A    DW      9Ah,    OFFSET int9A,          kernel_code,    3
+rg61    DW      61h,    OFFSET wakeup_int,      kernel_code,    0
+rg66    DW      66h,    OFFSET int66,           kernel_code,    3
+rg67    DW      67h,    OFFSET int67,           kernel_code,    3
+rg9A    DW      9Ah,    OFFSET int9A,           kernel_code,    3
 pg7_end DW      0FFFFh
 
     public init_pretask_traps
