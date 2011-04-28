@@ -5841,12 +5841,7 @@ enter_user_section      PROC far
     cmp ax,ds:[ebx].us_owner
     je eusDone
 ;
-    push ds
-    mov ax,task_sel
-    mov ds,ax
     call LockCore
-    pop ds
-;    
     mov ax,ds:[ebx].us_list
     cmp ax,-1
     jne eusBlock
@@ -5863,11 +5858,7 @@ eusBlock:
     jmp BlockCurrentThread
 
 eusUnlock:
-    push ds
-    mov ax,task_sel
-    mov ds,ax
     call UnlockCore
-    pop ds
     
 eusDone:
     mov ax,core_data_sel
@@ -5965,19 +5956,12 @@ lusNotCountError:
     lock add ds:[ebx].us_value,1
     jc lusDone
 ;    
-    push ds
-    mov ax,task_sel
-    mov ds,ax
     call LockCore
-    pop ds
-;
     mov ax,ds:[ebx].us_list
     or ax,ax
     jnz lusUnblock
 ;
     mov ds:[ebx].us_list,-1
-    mov ax,task_sel
-    mov ds,ax
     jmp lusUnlock
 
 lusUnblock:
@@ -5986,17 +5970,9 @@ lusUnblock:
     push di
 ;    
     lea esi,ds:[ebx].us_list
-    mov dx,ds
-;    
-    mov ax,task_sel
-    mov ds,ax   
-;
     call cs:lock_list_proc
-    push ds
-    mov ds,dx
     RemoveBlock32
     mov es:p_data,0
-    pop ds
     call cs:unlock_list_proc
 ;
     mov ax,fs
