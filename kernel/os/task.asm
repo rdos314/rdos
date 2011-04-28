@@ -596,8 +596,6 @@ GetTscTime  Endp
 start_pit_timer_name    DB 'Start Pit Timer', 0
 
 start_pit_timer    Proc far
-    mov ax,task_sel
-    mov ds,ax
     push es
     xor ax,ax
     mov es,ax
@@ -2434,8 +2432,7 @@ sim_get_flags   ENDP
 ;
 ;           DESCRIPTION:    Handle preempt
 ;
-;           PARAMETERS:     DS      Task sel
-;               FS      Processor selector
+;           PARAMETERS:     FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2467,8 +2464,7 @@ HandlePreempt   Endp
 ;
 ;           DESCRIPTION:    Handle prio
 ;
-;           PARAMETERS:     DS      Task sel
-;               FS      Processor selector
+;           PARAMETERS:     FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2519,8 +2515,7 @@ HandlePrio  Endp
 ;
 ;           DESCRIPTION:    Get thread from standard list
 ;
-;           PARAMETERS:     DS      Task sel
-;               FS      Processor selector
+;           PARAMETERS:     FS      Processor selector
 ;
 ;       RETURNS:    ES      Thread
 ;
@@ -2561,8 +2556,7 @@ GetPrioThread   Endp
 ;
 ;           DESCRIPTION:    Setup preempt
 ;
-;           PARAMETERS:     DS      Task sel
-;               FS      Processor selector
+;           PARAMETERS:     FS      Processor selector
 ;               ES      Thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2620,8 +2614,7 @@ SetupPreempt    Endp
 ;
 ;           DESCRIPTION:    Get next thread to run
 ;
-;           PARAMETERS:     DS      Task sel
-;               FS      Processor selector
+;           PARAMETERS:     FS      Processor selector
 ;
 ;       RETURNS:    ES      Thread to run next
 ;
@@ -2786,8 +2779,7 @@ AddCallback Endp
 ;
 ;           DESCRIPTION:    Move thread to another core
 ;
-;       PARAMETERS:         DS      Task sel
-;                           FS      Processor selector
+;       PARAMETERS:         FS      Processor selector
 ;                           ES      Thread to move
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2821,8 +2813,7 @@ MoveThread  Endp
 ;
 ;           DESCRIPTION:    Load register-state for current thread
 ;
-;       PARAMETERS:     DS      Task sel
-;               FS      Processor selector
+;       PARAMETERS:     FS  Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2960,13 +2951,9 @@ load_suspend_done:
 load_bp_done:
 
 load_actions_done: 
-    push ds
-    mov ax,task_sel
-    mov ds,ax
     call LoadUnlockCore
     mov ax,fs:ps_has_signal
     or ax,fs:ps_wakeup_list
-    pop ds
     jnz load_relock
 ;
     test fs:ps_flags,PS_FLAG_TIMER
@@ -2974,8 +2961,6 @@ load_actions_done:
 
 load_relock:
     sti
-    mov ax,task_sel
-    mov ds,ax
     call LockCore
     jmp load_retry
         
