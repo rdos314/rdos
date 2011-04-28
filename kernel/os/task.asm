@@ -116,8 +116,6 @@ timer_return:
     pop bx
     pop fs
     pop es
-    mov ax,task_sel
-    mov ds,ax
     cli
     mov ax,fs:ps_timer_free
     mov fs:[bx].ps_timer_next,ax
@@ -453,17 +451,11 @@ core_arr                DW MAX_CORES DUP(0)
 ;
 ;           DESCRIPTION:    Init clock using PIT timer 2
 ;
-;           PARAMETERS:         
+;           PARAMETERS:     FS      Core
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitPitClock    Proc near
-    push ds
-    push ax
-;
-    mov ax,task_sel
-    mov ds,ax
-;    
     mov al,0B4h
     out TIMER_CONTROL,al
     jmp short $+2
@@ -478,9 +470,6 @@ InitPitClock    Proc near
 ;    
     mov fs:ps_system_time,0
     mov fs:ps_system_time+4,0
-;
-    pop ax
-    pop ds      
     ret
 InitPitClock    Endp
 
@@ -529,25 +518,24 @@ GetPitTime  Endp
 ;
 ;           DESCRIPTION:    Init clock using TSC
 ;
-;           PARAMETERS:         
+;           PARAMETERS:     FS      Core
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitTscClock    Proc near
     push ds
-    push es
-    pushad
 ;    
-    mov ax,kernel_patch_sel
-    mov ds,ax
     mov ax,system_data_sel
-    mov es,ax
+    mov ds,ax
     mov edx,10000h
     xor eax,eax
-    mov ecx,es:tsc_tics
+    mov ecx,ds:tsc_tics
     shl ecx,16
-    mov cx,es:tsc_rest
+    mov cx,ds:tsc_rest
     div ecx
+;    
+    mov dx,kernel_patch_sel
+    mov ds,dx
     mov ds:tsc_sub_tics,eax
 ;    
     rdtsc
@@ -560,9 +548,7 @@ InitTscClock    Proc near
     mov edx,ds:last_time+4
     mov fs:ps_system_time,eax
     mov fs:ps_system_time+4,edx
-;
-    popad
-    pop es      
+;    
     pop ds
     ret
 InitTscClock    Endp
@@ -4998,10 +4984,14 @@ sync_clock_int:
     mov fs,ax
     test fs:ps_flags,PS_FLAG_INIT_CLOCK
     jz sync_ack_core
-    
+;
+    push es
+    pushad    
     StartSysTimer
     call cs:init_clock_proc
     and fs:ps_flags,NOT PS_FLAG_INIT_CLOCK
+    popad
+    pop es
 
 sync_ack_core:    
     cmp ds:time_sync_state,TIME_SYNC_WAIT
