@@ -276,67 +276,27 @@ get_cs_bitness_done:
     call GetOpBuf
 ;
     mov bp,si
+
+remove_ov_loop:
     mov al,[si]
     cmp al,66h
-    jne write_op_override_done
+    je remove_ads16
 ;
+    cmp al,67h
+    jne remove_ov_done
+;    
+    inc dh
+    inc si
+    jmp remove_ov_loop
+
+remove_ads16:
     inc dh
     inc si
     xor dl,1
+    jmp remove_ov_loop
 
-write_op_override_done:
-    mov ax,[si]
-    cmp ax,0B0Fh
-    jne not_illegal_op
-
-write_illegal16:
-    mov al,[si+2]
-    cmp al,0CAh
-    je write_illegal_osgate
-;
-    cmp al,0CBh
-    je write_illegal_osgate
-;
-    cmp al,0D6h
-    je write_illegal_usergate
-;
-    cmp al,0D7h
-    je write_illegal_usergate
-    jmp write_special_end
-
-write_illegal_osgate:
-    mov ax,[si+3]
-    cmp ax,osgate_entries
-    jnc write_special_fail
-;
-    shl ax,3
-    mov bx,ax
-    mov ax,SEG data
-    mov es,ax
-    mov di,OFFSET op_in_text
-    mov cx,40
-    call GetIllegalOsGate
-    mov ds:op_size,bx
-    clc
-    jmp write_special_end
-
-write_illegal_usergate:
-    mov eax,[si+3]
-    cmp eax,usergate_entries
-    jnc write_special_fail
-;
-    shl eax,5
-    mov ebx,eax
-    mov ax,SEG data
-    mov es,ax
-    mov di,OFFSET op_in_text
-    mov cx,40
-    call GetIllegalUserGate
-    mov ds:op_size,bx
-    clc
-    jmp write_special_end
-
-not_illegal_op:
+remove_ov_done:
+    mov al,[si]
     cmp al,9Ah
     jne not_call_far
 ;
@@ -344,6 +304,9 @@ not_illegal_op:
     jz write_call_far16
 ;
     mov dx,[si+5]
+    cmp dx,3
+    je oscall
+;        
     cmp dx,2
     je usercall_32
 ;
@@ -362,6 +325,22 @@ usercall_32:
     mov di,OFFSET op_in_text
     mov cx,40
     call GetIllegalUserGate
+    mov ds:op_size,bx
+    clc
+    jmp write_special_end
+
+oscall:
+    mov eax,[si+1]
+    cmp eax,osgate_entries
+    jnc write_special_fail
+;
+    shl eax,4
+    mov ebx,eax
+    mov ax,SEG data
+    mov es,ax
+    mov di,OFFSET op_in_text
+    mov cx,40
+    call GetIllegalOsGate
     mov ds:op_size,bx
     clc
     jmp write_special_end
