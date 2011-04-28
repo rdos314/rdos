@@ -6205,8 +6205,6 @@ get_cpu_time    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 wake_until      PROC far
-    mov ax,task_sel
-    mov ds,ax
     mov ax,core_data_sel
     mov fs,ax
     mov ax,fs:ps_sel
@@ -6559,8 +6557,6 @@ get_system_time PROC far
     mov ax,core_data_sel
     mov fs,ax
     mov es,fs:ps_curr_thread
-    mov ax,task_sel
-    mov ds,ax
     call cs:get_time_proc
 ;    
     pop fs
@@ -6591,8 +6587,6 @@ get_time    PROC far
     mov ax,core_data_sel
     mov fs,ax
     mov es,fs:ps_curr_thread
-    mov ax,task_sel
-    mov ds,ax
     call cs:get_time_proc
     add eax,cs:time_diff
     adc edx,cs:time_diff+4
