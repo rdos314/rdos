@@ -5633,41 +5633,26 @@ leave_section   PROC far
     push ds
     push fs
 ;
-    mov dx,ds
-    mov ax,task_sel
-    mov ds,ax
     call LockCore
-;
-    mov ds,dx
     mov ax,ds:[esi].cs_list
     cmp ax,-1
-    je lcsFree
+    je lcsUnlock
 ;    
     or ax,ax
     jnz lcsUnblock
 ;
     mov ds:[esi].cs_list,-1
-
-lcsFree:
-    mov ax,task_sel
-    mov ds,ax
     jmp lcsUnlock
 
 lcsUnblock:
     push es    
     push esi
     push di
-;
-    mov ax,task_sel
-    mov ds,ax
 ;       
     call cs:lock_list_proc
-    push ds
-    mov ds,dx
     add esi,OFFSET cs_list
     RemoveBlock32
     mov es:p_data,0
-    pop ds
     call cs:unlock_list_proc
 ;
     mov ax,fs
