@@ -1557,52 +1557,99 @@ debug_pace      PROC far
     push ds
     push es
     pushad
+;    
     call local_get_debug_thread_sel
     or ax,ax
     jz debug_pace_done
+;
     mov bx,ax
     mov es,bx
     mov es,es:p_tss_data_sel
+;
+    xor cl,cl
+    mov bx,es:tss_cs
+    test byte ptr es:tss_eflags+2,2
+    jnz debug_pace_bitness_done
+;
+    test bx,4
+    jz debug_pace_bitness_gdt
+
+debug_pace_bitness_ldt:
+    mov ds,es:tss_thread
+    mov ds,ds:p_ldt_sel
+    jmp debug_pace_bitness_get
+
+debug_pace_bitness_gdt:
+    mov ax,gdt_sel
+    mov ds,ax
+
+debug_pace_bitness_get:
+    and bx,0FFF8h
+    mov cl,ds:[bx+6]
+    shr cl,6
+    and cl,1
+
+debug_pace_bitness_done:
     mov dx,es:tss_cs
     mov esi,dword ptr es:tss_eip
     call ReadWord
-    push ax
-    add esi,2
-    call ReadWord
-    mov dx,ax
-    pop ax
+;    
     xor ebx,ebx
     add bx,2
     cmp al,0E2h
     je debug_pace_step
+;
     cmp al,0CDh
     je debug_pace_step
+;    
     inc bx
+    test cl,1
+    jz debug_pace_size_ok
+;
+    add bx,2
+
+debug_pace_size_ok:    
     cmp al,0E8h
     je debug_pace_step
-    add bx,2
-    cmp ax,00B0Fh
-    jne debug_pace_not_gate
-    and dl,0FEh
-    cmp dl,0D6h
-    jne debug_pace_step
-    add bx,3
-    jmp debug_pace_step
-debug_pace_not_gate:
+;
+    xor ebx,ebx
+
+debug_pace_far_loop:
+    mov esi,dword ptr es:tss_eip
+    add esi,ebx
+    call ReadWord
+    cmp al,66h
+    je debug_pace_far_ov66
+;   
+    cmp al,67h
+    je debug_pace_far_ov67 
+;
     cmp al,9Ah
-    je debug_pace_step
+    je debug_pace_far_call
+;
+    jmp debug_pace_trace   
+
+debug_pace_far_ov66:
     inc bx
-    cmp ax,9A66h
-    jne debug_pace_trace
+    xor cl,1
+    jmp debug_pace_far_loop
+
+debug_pace_far_ov67:
+    inc bx
+    jmp debug_pace_far_loop
+
+debug_pace_far_call:
+    add bx,5
+    test cl,1
+    jz debug_pace_step
 ;
     add bx,2
     
 debug_pace_step:
-    push ax
     mov ax,es:tss_eflags+2
     test ax,2
-    jz debug_pace_step_prot
-    pop ax
+    jz debug_pace_step_prot    
+;
     xor eax,eax
     xor edx,edx
     mov ax,es:tss_cs
@@ -1610,46 +1657,34 @@ debug_pace_step:
     mov dx,es:tss_eip
     add eax,edx
     jmp debug_pace_step_do
+    
 debug_pace_step_prot:
     mov si,es:tss_cs
     test si,4
     jz debug_pace_step_gdt
+;
     xor eax,eax
     mov ds,es:tss_thread
     mov ds,ds:p_ldt_sel
     mov si,es:tss_cs
     and si,0FFF8h
-    pop ax
-    cmp al,0E8h
-    jne debug_pace_ldt16
-    mov al,[si+6]
-    test al,40h
-    jz debug_pace_ldt16
-    add bx,2
-debug_pace_ldt16:
     mov eax,[si+2]
     rol eax,8
     mov al,[si+7]
     ror eax,8
     add eax,dword ptr es:tss_eip
     jmp debug_pace_step_do
+
 debug_pace_step_gdt:
     and si,0FFF8h
     mov ax,gdt_sel
-    mov ds,ax
-    pop ax
-    cmp al,0E8h
-    jne debug_pace_gdt16
-    mov al,[si+6]
-    test al,40h
-    jz debug_pace_gdt16
-    add bx,2
-debug_pace_gdt16:
+    mov ds,ax    
     mov eax,[si+2]
     rol eax,8
     mov al,[si+7]
     ror eax,8
     add eax,dword ptr es:tss_eip
+
 debug_pace_step_do:
     add eax,ebx
     mov es:tss_dr0,eax
@@ -1661,6 +1696,7 @@ debug_pace_step_do:
     and ax,NOT 100h
     mov es:tss_eflags,ax
     jmp debug_pace_do
+    
 debug_pace_trace:
     mov eax,es:tss_dr7
     and ax,0FFFCh
@@ -1680,6 +1716,7 @@ debug_pace_do:
     mov [si],bx
     mov es,ax
     Wake
+
 debug_pace_done:
     popad
     pop es
