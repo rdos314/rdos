@@ -761,7 +761,6 @@ op_far32:
         add ax,kolon_sep
         mov [di-2],ax
         mov eax,[si+1]
-        add eax,dword ptr ds:op_ads
         call add_hex_dword
         add si,6
         ret
