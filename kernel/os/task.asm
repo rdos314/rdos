@@ -5570,12 +5570,7 @@ enter_section   PROC far
     push ds
     push fs
 ;    
-    mov ax,ds
-    mov dx,task_sel
-    mov ds,dx
     call LockCore
-;
-    mov ds,ax
     mov dx,ds:[esi].cs_list
     cmp dx,-1
     jne ecsBlock
@@ -5584,6 +5579,7 @@ enter_section   PROC far
     jmp ecsUnlock
 
 ecsBlock:
+    mov ax,ds
     push OFFSET ecsDone
     call SaveLockedThread
 ;
@@ -5591,8 +5587,6 @@ ecsBlock:
     jmp BlockCurrentThread
 
 ecsUnlock:
-    mov dx,task_sel
-    mov ds,dx
     call UnlockCore
     
 ecsDone:
