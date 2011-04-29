@@ -738,21 +738,17 @@ prot_init:
 ;
     mov bx,system_data_sel
     mov ds,bx
-        mov edx,ds:flat_base
-        mov ecx,flat_size
-        sub ecx,edx
-        mov bx,flat_code_sel
-        CreateCodeSelector32
+    mov edx,ds:flat_base
+    mov ecx,flat_size
+    sub ecx,edx
+    mov bx,flat_code_sel
+    CreateCodeSelector32
 ;
-        mov bx,flat_data_sel
-        CreateDataSelector32
+    mov bx,flat_data_sel
+    CreateDataSelector32
 ;
     call init_first_process
-    call init_first_thread
-    int 3
-stop_l:
-    int 3
-    jmp stop_l
+    jmp init_first_thread
     
 code    ENDS
 
