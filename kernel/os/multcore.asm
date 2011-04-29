@@ -130,7 +130,6 @@ sync_clock_wait_read:
     jne sync_clock_end
 ;    
     GetSystemTime
-    sti
     mov edx,eax
 
 sync_clock_wait_idle:
