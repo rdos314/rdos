@@ -39,6 +39,8 @@ INCLUDE proc.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\apicheck.inc
 
+MAX_CORES   = 64
+
 section_handle_seg          STRUC
 
 us_base     handle_header <>
@@ -58,6 +60,9 @@ term_thread_list    DW ?
 term_proc_list      DW ?
 
 list_lock           DW ?
+
+core_count          DW ?
+core_arr            DW MAX_CORES DUP(?)
 
 task_seg    ENDS
 
@@ -806,6 +811,7 @@ init_tlb_done:
     mov ds:term_thread_list,0
     mov ds:term_proc_list,0
     mov ds:list_lock,0
+    mov ds:core_count,0
     InitSection ds:term_thread_section
 ;
     mov ax,system_data_sel
@@ -4073,7 +4079,22 @@ double_block:
 add_core_name   DB 'Add Core',0
 
 add_core    PROC far
-    mov fs:ps_id,0
+    push ds
+    push ax
+    push si
+;    
+    mov ax,task_sel
+    mov ds,ax
+    mov ax,ds:core_count
+    mov si,ax
+    add si,si
+    mov ds:[si].core_arr,fs
+    inc ds:core_count
+    mov fs:ps_id,ax     
+;
+    pop si
+    pop ax
+    pop ds    
     retf32
 add_core    Endp
 
@@ -4248,40 +4269,78 @@ get_core   Endp
 get_core_num_name      DB 'Get Core Number',0
 
 get_core_num   Proc far
+    push ds
     push ax
-;    
-    or ax,ax
-    stc    
-    jne gcnDone
-;    
-    mov ax,core_data_sel
+    push bx
+;
+    mov bx,task_sel
+    mov ds,bx    
+;
+    cmp ax,ds:core_count
+    jae gpnFail
+;
+    mov bx,ax
+    add bx,bx
+    mov ax,ds:[bx].core_arr
     mov fs,ax
-    mov ax,fs:ps_sel
     clc
+    jmp gpnDone
 
-gcnDone:
+gpnFail:
+    xor ax,ax
     mov fs,ax
+    stc
+
+gpnDone:
+    pop bx
     pop ax
+    pop ds
     retf32
 get_core_num   Endp
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           GetCoreCount
+;           NAME:           GetCore
 ;
-;       DESCRIPTION:    Get number of cores
+;           DESCRIPTION:    Get current core #
 ;
-;       RETURNS:        CX      Number of cores    
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;           RETURNS:        AX          Core ID
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_core_count_name      DB 'Get Core Count',0
+get_core_id_name   DB 'Get Core ID',0
 
-get_core_count   Proc far
-    mov cx,1
+get_core_id    PROC far
+    push ds
+    mov ax,core_data_sel
+    mov ds,ax
+    mov ax,ds:ps_id
+    pop ds
     retf32
-get_core_count   Endp
+get_core_id    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetCoreCount
+;
+;           DESCRIPTION:    Get number of cores
+;
+;           RETURNS:        CX          Number of cores
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_core_count_name   DB 'Get Core Count',0
+
+get_core_count    PROC far
+    push ds
+    mov cx,task_sel
+    mov ds,cx
+    mov cx,ds:core_count
+    pop ds
+    retf32
+get_core_count    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5976,29 +6035,6 @@ get_thread_pr   PROC far
     pop ds
     retf32
 get_thread_pr   ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetCore
-;
-;           DESCRIPTION:    Get current core #
-;
-;           RETURNS:        AX          Processor
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_core_id_name   DB 'Get Core ID',0
-
-get_core_id    PROC far
-    push ds
-    mov ax,core_data_sel
-    mov ds,ax
-    mov ax,ds:ps_id
-    pop ds
-    retf32
-get_core_id    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

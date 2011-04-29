@@ -20,8 +20,8 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; TASK.ASM
-; Scheduling and thread handling module
+; MULTCORE.ASM
+; Multicore function
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -63,9 +63,6 @@ data    SEGMENT byte public 'DATA'
 
 time_sync_state     DW ?
 sync_core_count     DW ?
-
-core_count          DW ?
-core_arr            DW MAX_CORES DUP(?)
 
 thread_base_tics    DD 256 DUP(?)
 
@@ -146,7 +143,7 @@ sync_clock_wait_idle:
 sync_clock_end:
     sti
     LeaveInt
-;
+;    
     pop edx
     pop eax
     pop fs
@@ -169,21 +166,22 @@ DoSyncTime  Proc near
 ;    
     mov ds:sync_core_count,0
     mov ds:time_sync_state,TIME_SYNC_WAIT
-    mov dx,fs
 ;
     push fs
     push bx
     push cx
 ;
-    mov cx,ds:core_count
-    mov bx,OFFSET core_arr
+    GetCoreCount
+    sub cx,1
+    jbe sync_int_done
+;
+    mov bx,1
 
 sync_int_loop:
-    mov ax,ds:[bx]
-    cmp ax,dx
-    je sync_int_next
+    mov ax,bx
+    GetCoreNumber
+    jc sync_int_next
 ;
-    mov fs,ax
     test fs:ps_flags,PS_FLAG_ACTIVE
     jz sync_int_next
 ;    
@@ -192,9 +190,10 @@ sync_int_loop:
     SendInt
 
 sync_int_next:
-    add bx,2
+    inc bx
     loop sync_int_loop
-;
+
+sync_int_done:
     pop cx
     pop bx
     pop fs
@@ -717,149 +716,6 @@ btBalanceClockLoop:
 ;
     jmp btBalanceLoop    
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetCore
-;
-;           DESCRIPTION:    Get current core selector
-;
-;       RETURNS:    FS      Core sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_core_name      DB 'Get Core',0
-
-get_core   Proc far
-    push ax
-    mov ax,core_data_sel
-    mov fs,ax
-    mov fs,fs:ps_sel
-    pop ax    
-    retf32
-get_core   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           GetCoreNumber
-;
-;       DESCRIPTION:    Get core selector for specified processor #
-;
-;       PARAMETERS:     AX      Core #
-;
-;       RETURNS:        FS      Core sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_core_num_name      DB 'Get Core Number',0
-
-get_core_num   Proc far
-    push ds
-    push ax
-    push bx
-;
-    mov bx,SEG data
-    mov ds,bx    
-;
-    cmp ax,ds:core_count
-    jae gpnFail
-;
-    mov bx,ax
-    add bx,bx
-    mov ax,ds:[bx].core_arr
-    mov fs,ax
-    clc
-    jmp gpnDone
-
-gpnFail:
-    xor ax,ax
-    mov fs,ax
-    stc
-
-gpnDone:
-    pop bx
-    pop ax
-    retf32
-get_core_num   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetCore
-;
-;           DESCRIPTION:    Get current core #
-;
-;           RETURNS:        AX          Core ID
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_core_id_name   DB 'Get Core ID',0
-
-get_core_id    PROC far
-    push ds
-    mov ax,core_data_sel
-    mov ds,ax
-    mov ax,ds:ps_id
-    pop ds
-    retf32
-get_core_id    ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetCoreCount
-;
-;           DESCRIPTION:    Get number of cores
-;
-;           RETURNS:        CX          Number of cores
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_core_count_name   DB 'Get Core Count',0
-
-get_core_count    PROC far
-    push ds
-    mov cx,SEG data
-    mov ds,cx
-    mov cx,ds:core_count
-    pop ds
-    retf32
-get_core_count    ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AddCore
-;
-;           DESCRIPTION:    Add a core
-;
-;           PARAMETERS:     FS      Core sel
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-add_core_name   DB 'Add Core',0
-
-add_core    PROC far
-    push ds
-    push ax
-    push si
-;    
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,ds:core_count
-    mov si,ax
-    add si,si
-    mov ds:[si].core_arr,fs
-    inc ds:core_count
-    mov fs:ps_id,ax     
-;
-    pop si
-    pop ax
-    pop ds    
-    retf32
-add_core    Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -907,7 +763,6 @@ init    Proc far
     mov ax,SEG data
     mov ds,ax
     mov ds:time_sync_state,TIME_SYNC_RESET
-    mov ds:core_count,0
 ;
     mov ax,cs
     mov ds,ax
@@ -917,36 +772,6 @@ init    Proc far
     mov bl,0
     mov esi,OFFSET sync_clock_int
     CreateIntGateSelector
-;    
-    mov esi,OFFSET get_core_num
-    mov edi,OFFSET get_core_num_name
-    xor cl,cl
-    mov ax,get_core_num_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET get_core_id
-    mov edi,OFFSET get_core_id_name
-    xor dx,dx
-    mov ax,get_core_id_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET get_core
-    mov edi,OFFSET get_core_name
-    xor cl,cl
-    mov ax,get_core_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET get_core_count
-    mov edi,OFFSET get_core_count_name
-    xor cl,cl
-    mov ax,get_core_count_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET add_core
-    mov edi,OFFSET add_core_name
-    xor cl,cl
-    mov ax,add_core_nr
-    RegisterOsGate
 ;
     mov esi,OFFSET start_multicore
     mov edi,OFFSET start_multicore_name
