@@ -199,13 +199,14 @@ sync_int_done:
     pop fs
 ;
     push cx
-    mov cx,256
+    mov cx,15000
 
 sync_wait_loop:
     mov ax,ds:sync_core_count
     or ax,ax
     jz sync_wait_done
 ;
+    pause
     loop sync_wait_loop
 
 sync_wait_done:
@@ -679,6 +680,8 @@ PickThread  Endp
 balancer_thread_name  DB 'Core Balancer', 0
 
 balancer_thread_pr:
+    call DoSyncTime
+;
     mov cx,50
 
 btInitClockLoop:
@@ -740,9 +743,7 @@ start_multicore    PROC far
     mov di,OFFSET balancer_thread_name
     mov ax,10
     CreateThread
-;
     StartApCores    
-    call DoSyncTime
 ;
     popa
     pop es
