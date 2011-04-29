@@ -462,13 +462,12 @@ InitPitClock    Endp
 ;
 ;           DESCRIPTION:    Get time using PIT timer 2
 ;
-;           PARAMETERS:         ES      Current thread
-;
 ;           RETURNS:        EDX:EAX     Current system time
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetPitTime  Proc near
+    pushf
     cli
     mov al,80h
     out TIMER_CONTROL,al
@@ -487,7 +486,7 @@ GetPitTime  Proc near
 ;    
     mov eax,fs:ps_system_time
     mov edx,fs:ps_system_time+4
-    sti
+    popf
     ret
 GetPitTime  Endp
 
@@ -542,11 +541,12 @@ InitTscClock    Endp
 ;
 ;           DESCRIPTION:    Get time using TSC
 ;
-;           PARAMETERS:         ES      Current thread
+;           RETURNS:        EDX:EAX     Current system time
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetTscTime  Proc near
+    pushf
     cli
     rdtsc
     mov edx,fs:ps_last_tsc
@@ -558,7 +558,7 @@ GetTscTime  Proc near
     adc fs:ps_system_time+4,0
     mov eax,fs:ps_system_time
     mov edx,fs:ps_system_time+4
-    sti
+    popf
     ret
 GetTscTime  Endp
 
@@ -591,7 +591,6 @@ start_pit_timer    Proc far
     jmp short $+2
     out TIMER0,al
     call cs:get_time_proc
-    cli
     xor al,al
     out TIMER_CONTROL,al
     jmp short $+2
@@ -611,6 +610,7 @@ start_pit_timer    Proc far
     and al,NOT 1
     out INT0_MASK,al
     pop eax
+    sti
 ;       
     pop es
     retf32
@@ -2869,8 +2869,8 @@ load_thread_loop:
 
 load_reload_loop:
     and fs:ps_flags,NOT PS_FLAG_TIMER   
-    call cs:get_time_proc
     cli
+    call cs:get_time_proc
     mov fs:ps_last_lsb,eax
     add eax,cs:update_tics
     adc edx,0
@@ -3452,7 +3452,6 @@ reload_timer_loop:
     and fs:ps_flags,NOT PS_FLAG_TIMER   
     mov es,fs:ps_curr_thread
     call cs:get_time_proc
-    cli
     add eax,cs:update_tics
     adc edx,0
     mov bx,fs:ps_timer_head
@@ -6442,18 +6441,7 @@ debug_break:
 get_system_time_name    DB 'Get System Time',0
 
 get_system_time PROC far
-    push ds
-    push es
-    push fs
-;    
-    mov ax,core_data_sel
-    mov fs,ax
-    mov es,fs:ps_curr_thread
     call cs:get_time_proc
-;    
-    pop fs
-    pop es
-    pop ds
     retf32
 get_system_time ENDP
 
@@ -6472,23 +6460,11 @@ get_system_time ENDP
 get_time_name   DB 'Get Time',0
 
 get_time    PROC far
-    push ds
-    push es
-    push fs
-;    
-    mov ax,core_data_sel
-    mov fs,ax
-    mov es,fs:ps_curr_thread
     call cs:get_time_proc
     add eax,cs:time_diff
     adc edx,cs:time_diff+4
-;
-    pop fs
-    pop es
-    pop ds
     retf32
 get_time    ENDP
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

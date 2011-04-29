@@ -59,7 +59,7 @@ cb_elapsed          DD ?
 
 core_balance_struc  ENDS
 
-multicore_data_seg    STRUC
+data    SEGMENT byte public 'DATA'
 
 time_sync_state     DW ?
 sync_core_count     DW ?
@@ -72,7 +72,7 @@ thread_base_tics    DD 256 DUP(?)
 thread_balance_arr  DB MAX_CORES * SIZE thread_balance_struc DUP(?)
 core_balance_arr    DB MAX_CORES * SIZE core_balance_struc DUP(?)
 
-multicore_data_seg    ENDS
+data    ENDS
 
 IFDEF __WASM__
     .686p
@@ -85,6 +85,198 @@ code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           sync_clock_int
+;
+;           DESCRIPTION:    Clock synchronization int
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+sync_clock_int:
+    push ds
+    push fs
+    push eax
+    push edx
+;
+    EnterInt
+    SendEoi
+    sti
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,core_data_sel
+    mov fs,ax
+    test fs:ps_flags,PS_FLAG_INIT_CLOCK
+    jz sync_ack_core
+;
+    StartSysTimer
+    StartClock
+    and fs:ps_flags,NOT PS_FLAG_INIT_CLOCK
+
+sync_ack_core:    
+    cmp ds:time_sync_state,TIME_SYNC_WAIT
+    jne sync_clock_end
+;
+    cli
+    lock sub ds:sync_core_count,1
+
+sync_clock_wait_read:
+    cmp ds:time_sync_state,TIME_SYNC_WAIT
+    je sync_clock_wait_read
+;
+    cmp ds:time_sync_state,TIME_SYNC_READ
+    jne sync_clock_end
+;    
+    GetSystemTime
+    sti
+    mov edx,eax
+
+sync_clock_wait_idle:
+    cmp ds:time_sync_state,TIME_SYNC_IDLE
+    jne sync_clock_wait_idle    
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:last_time
+    sub eax,edx
+    add fs:ps_system_time,eax
+    adc fs:ps_system_time+4,0
+
+sync_clock_end:
+    sti
+    LeaveInt
+;
+    pop edx
+    pop eax
+    pop fs
+    pop ds
+    iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DoSyncTime
+;
+;           DESCRIPTION:    Perform a clock synchronization
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DoSyncTime  Proc near
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+;    
+    mov ds:sync_core_count,0
+    mov ds:time_sync_state,TIME_SYNC_WAIT
+    mov dx,fs
+;
+    push fs
+    push bx
+    push cx
+;
+    mov cx,ds:core_count
+    mov bx,OFFSET core_arr
+
+sync_int_loop:
+    mov ax,ds:[bx]
+    cmp ax,dx
+    je sync_int_next
+;
+    mov fs,ax
+    test fs:ps_flags,PS_FLAG_ACTIVE
+    jz sync_int_next
+;    
+    lock add ds:sync_core_count,1
+    mov al,60h
+    SendInt
+
+sync_int_next:
+    add bx,2
+    loop sync_int_loop
+;
+    pop cx
+    pop bx
+    pop fs
+;
+    push cx
+    mov cx,256
+
+sync_wait_loop:
+    mov ax,ds:sync_core_count
+    or ax,ax
+    jz sync_wait_done
+;
+    loop sync_wait_loop
+
+sync_wait_done:
+    pop cx
+    cli
+    mov ds:time_sync_state,TIME_SYNC_READ
+;    
+    mov ax,system_data_sel
+    mov ds,ax
+    GetSystemTime
+    mov ds:last_time,eax
+    mov ds:last_time+4,edx
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:time_sync_state,TIME_SYNC_IDLE
+    sti
+;
+    pop ds
+    ret
+DoSyncTime  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitBalancerLists
+;
+;           DESCRIPTION:    Initialize balancer lists
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitBalancerLists Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;    
+    mov ax,SEG data
+    mov ds,ax    
+;
+    mov ax,system_data_sel
+    mov es,ax
+;    
+    mov cx,256
+    mov si,OFFSET thread_arr
+    mov di,OFFSET thread_base_tics
+
+btInitLoop:
+    xor eax,eax
+    mov ax,es:[si]
+    or ax,ax
+    jz btInitNext
+;
+    mov fs,ax
+    mov eax,fs:p_lsb_tics
+
+btInitNext:
+    mov ds:[di],eax
+    add si,2
+    add di,4
+    loop btInitLoop
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+InitBalancerLists   Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -266,7 +458,7 @@ CreateBalancerLists Proc near
     GetThread
     mov bp,ax
 ;    
-    mov ax,task_sel
+    mov ax,SEG data
     mov ds,ax
 ;         
     call ResetThreadList
@@ -489,46 +681,33 @@ PickThread  Endp
 balancer_thread_name  DB 'Core Balancer', 0
 
 balancer_thread_pr:
-    mov ax,500
+    mov cx,50
+
+btInitClockLoop:
+    mov ax,10
     WaitMilliSec
-;    
-    mov ax,task_sel
-    mov ds,ax    
-;
-    mov ax,system_data_sel
-    mov es,ax
-;    
-    mov cx,256
-    mov si,OFFSET thread_arr
-    mov di,OFFSET thread_base_tics
-
-btInitLoop:
-    xor eax,eax
-    mov ax,es:[si]
-    or ax,ax
-    jz btInitNext
-;
-    mov fs,ax
-    mov eax,fs:p_lsb_tics
-
-btInitNext:
-    mov ds:[di],eax
-    add si,2
-    add di,4
-    loop btInitLoop
+    call DoSyncTime
+    loop btInitClockLoop
 ;    
     EnterTermThreadSection
-
+    call InitBalancerLists
+    
 btBalanceLoop:
     LeaveTermThreadSection
 ;    
-    mov ax,100
+    mov cx,10
+
+btBalanceClockLoop:
+    mov ax,10
     WaitMilliSec
+    call DoSyncTime
+    loop btBalanceClockLoop
 ;   
-    EnterTermThreadSection
-;
+    mov ax,SEG data
+    mov ds,ax
     mov ax,system_data_sel
     mov es,ax
+    EnterTermThreadSection
 ;    
     call CreateBalancerLists
     call CenterCoreList
@@ -581,7 +760,7 @@ get_core_num   Proc far
     push ax
     push bx
 ;
-    mov bx,multicore_data_sel
+    mov bx,SEG data
     mov ds,bx    
 ;
     cmp ax,ds:core_count
@@ -642,7 +821,7 @@ get_core_count_name   DB 'Get Core Count',0
 
 get_core_count    PROC far
     push ds
-    mov cx,multicore_data_sel
+    mov cx,SEG data
     mov ds,cx
     mov cx,ds:core_count
     pop ds
@@ -667,7 +846,7 @@ add_core    PROC far
     push ax
     push si
 ;    
-    mov ax,multicore_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov ax,ds:core_count
     mov si,ax
@@ -716,167 +895,6 @@ start_multicore    PROC far
     retf32
 start_multicore Endp
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           sync_clock_int
-;
-;           DESCRIPTION:    Clock synchronization int
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-sync_clock_int:
-    push ds
-    push fs
-    push eax
-    push edx
-;
-    mov ax,task_sel
-    mov ds,ax
-    mov ax,core_data_sel
-    mov fs,ax
-    test fs:ps_flags,PS_FLAG_INIT_CLOCK
-    jz sync_ack_core
-;
-    StartSysTimer
-    StartClock
-    and fs:ps_flags,NOT PS_FLAG_INIT_CLOCK
-
-sync_ack_core:    
-    cmp ds:time_sync_state,TIME_SYNC_WAIT
-    jne sync_clock_end
-;
-    lock sub ds:sync_core_count,1
-
-sync_clock_wait_read:
-    cmp ds:time_sync_state,TIME_SYNC_WAIT
-    je sync_clock_wait_read
-;
-    cmp ds:time_sync_state,TIME_SYNC_READ
-    jne sync_clock_end
-;    
-    GetSystemTime
-
-sync_clock_wait_idle:
-    cmp ds:time_sync_state,TIME_SYNC_IDLE
-    jne sync_clock_wait_idle    
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    cli
-    mov eax,ds:last_time
-    sub eax,fs:ps_system_time
-    add fs:ps_system_time,eax
-    adc fs:ps_system_time+4,0    
-
-sync_clock_end:
-    SendEoi
-;
-    pop edx
-    pop eax
-    pop fs
-    pop ds
-    iretd
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           DoSyncTime
-;
-;           DESCRIPTION:    Perform a clock synchronization
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DoSyncTime  Proc near
-    push ds
-    mov ax,task_sel
-    mov ds,ax
-;    
-    mov ds:sync_core_count,0
-    mov ds:time_sync_state,TIME_SYNC_WAIT
-    mov dx,fs
-;
-    push fs
-    push bx
-    push cx
-;
-    mov cx,ds:core_count
-    mov bx,OFFSET core_arr
-
-sync_int_loop:
-    mov ax,ds:[bx]
-    cmp ax,dx
-    je sync_int_next
-;
-    mov fs,ax
-    test fs:ps_flags,PS_FLAG_ACTIVE
-    jz sync_int_next
-;    
-    lock add ds:sync_core_count,1
-    mov al,60h
-    SendInt
-
-sync_int_next:
-    add bx,2
-    loop sync_int_loop
-;
-    pop cx
-    pop bx
-    pop fs
-;
-    push cx
-    mov cx,256
-
-sync_wait_loop:
-    mov ax,ds:sync_core_count
-    or ax,ax
-    jz sync_wait_done
-;
-    loop sync_wait_loop
-
-sync_wait_done:
-    pop cx
-    cli
-    mov ds:time_sync_state,TIME_SYNC_READ
-    mov ax,system_data_sel
-    mov ds,ax
-    GetSystemTime
-    mov ds:last_time,eax
-    mov ds:last_time+4,edx
-    mov ds:time_sync_state,TIME_SYNC_IDLE
-;
-    pop ds
-    ret
-DoSyncTime  Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           StartTimeSync
-;
-;           DESCRIPTION:    Start time-sync process
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StartTimeSync    Proc near
-    mov ax,multicore_data_sel
-    mov ds,ax
-    cmp ds:time_sync_state,TIME_SYNC_IDLE
-    jne stsDone
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    sub ecx,ds:last_time
-    sub ecx,1193
-    pop ds
-    jc stsDone
-;
-    call DoSyncTime
-
-stsDone:
-    ret
-StartTimeSync    Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -887,6 +905,11 @@ StartTimeSync    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    Proc far
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:time_sync_state,TIME_SYNC_RESET
+    mov ds:core_count,0
+;
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -896,42 +919,45 @@ init    Proc far
     mov esi,OFFSET sync_clock_int
     CreateIntGateSelector
 ;    
-    mov si,OFFSET get_core_num
-    mov di,OFFSET get_core_num_name
+    mov esi,OFFSET get_core_num
+    mov edi,OFFSET get_core_num_name
     xor cl,cl
     mov ax,get_core_num_nr
     RegisterOsGate
 ;
-    mov si,OFFSET get_core_id
-    mov di,OFFSET get_core_id_name
+    mov esi,OFFSET get_core_id
+    mov edi,OFFSET get_core_id_name
     xor dx,dx
     mov ax,get_core_id_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET get_core
-    mov di,OFFSET get_core_name
+    mov esi,OFFSET get_core
+    mov edi,OFFSET get_core_name
     xor cl,cl
     mov ax,get_core_nr
     RegisterOsGate
 ;
-    mov si,OFFSET add_core
-    mov di,OFFSET add_core_name
+    mov esi,OFFSET get_core_count
+    mov edi,OFFSET get_core_count_name
+    xor cl,cl
+    mov ax,get_core_count_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET add_core
+    mov edi,OFFSET add_core_name
     xor cl,cl
     mov ax,add_core_nr
     RegisterOsGate
 ;
-    mov si,OFFSET start_multicore
-    mov di,OFFSET start_multicore_name
+    mov esi,OFFSET start_multicore
+    mov edi,OFFSET start_multicore_name
     xor cl,cl
     mov ax,start_multicore_nr
     RegisterOsGate
-;
-    mov ds:time_sync_state,TIME_SYNC_RESET
-    mov ds:core_count,0
+    clc
     ret
 init    Endp
 
 code    ENDS
 
     END init
-
