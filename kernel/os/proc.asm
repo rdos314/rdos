@@ -2317,7 +2317,7 @@ init_first_process      Proc near
     call init_first_tss
     call create_enviroment
     mov ds:tss_es,fs
-    GetProcessor
+    GetCore
     mov fs:ps_null_thread,es
     mov es:p_core_sel,fs
     ret

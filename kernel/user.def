@@ -466,7 +466,7 @@ get_options_nr              = 385
 
 fork_nr                     = 386
 
-get_processor_id_nr         = 387
+get_core_id_nr              = 387
 
 create_user_read_write_section_nr	= 388
 delete_user_read_write_section_nr	= 389

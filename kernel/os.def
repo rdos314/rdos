@@ -403,20 +403,22 @@ debug_exception_nr          = 360
 
 start_ap_cores_nr           = 361
 
-create_processor_nr         = 362
-
-get_processor_num_nr        = 363
+create_core_nr              = 362
+get_core_num_nr             = 363
 
 locked_debug_exception_nr   = 364
 
 lock_task_nr                = 365
 unlock_task_nr              = 366
 
-get_processor_nr            = 368
-
-start_processor_nr          = 370
+add_core_nr                 = 367
+get_core_nr                 = 368
+get_core_count_nr           = 369
+start_core_nr               = 370
 
 timer_expired_nr            = 371
+
+start_multicore_nr          = 372
 
 reload_sys_timer_nr         = 373
 start_sys_timer_nr          = 374
@@ -456,4 +458,9 @@ add_sys_env_var_nr          = 395
 delete_sys_env_var_nr       = 396
 find_sys_env_var_nr         = 397
 
-osgate_entries				= 400
+enter_term_thread_nr        = 398
+leave_term_thread_nr        = 399
+
+start_clock_nr              = 400
+
+osgate_entries				= 420

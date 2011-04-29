@@ -619,26 +619,40 @@ GetApicId    MACRO
     OsGate get_apic_id_nr
                         ENDM
 
+;   IN  FS      Core selector
+AddCore    MACRO
+    OsGate add_core_nr
+                        ENDM
+
+;   OUT CX      Core count
+GetCoreCount    MACRO
+    OsGate get_core_count_nr
+                        ENDM
+
 ;   IN  EDX     Base of core GDT
-;   OUT AX      Processor #
-;   OUT ES      Processor selector
-CreateProcessor    MACRO
-    OsGate create_processor_nr
+;   OUT AX      Core #
+;   OUT ES      Core selector
+CreateCore    MACRO
+    OsGate create_core_nr
                         ENDM
 
-;   OUT FS      Processor selector
-GetProcessor    MACRO
-    OsGate get_processor_nr
+;   OUT FS      Core selector
+GetCore    MACRO
+    OsGate get_core_nr
                         ENDM
 
-;   IN  AX      Processor #
-;   OUT FS      Processor selector
-GetProcessorNumber    MACRO
-    OsGate get_processor_num_nr
+;   IN  AX      Core #
+;   OUT FS      Core selector
+GetCoreNumber    MACRO
+    OsGate get_core_num_nr
                         ENDM
 
-StartProcessor    MACRO
-    OsGate start_processor_nr
+StartMulticore    MACRO
+    OsGate start_multicore_nr
+                        ENDM
+
+StartCore    MACRO
+    OsGate start_core_nr
                         ENDM
 
 TimerExpired    MACRO
@@ -863,12 +877,24 @@ ReloadSysTimer    MACRO
     OsGate reload_sys_timer_nr
                         ENDM
 
+StartClock    MACRO
+    OsGate start_clock_nr
+                        ENDM
+
 EnterInt    MACRO
     OsGate enter_int_nr
                         ENDM
 
 LeaveInt    MACRO
     OsGate leave_int_nr
+                        ENDM
+
+EnterTermThreadSection    MACRO
+    OsGate enter_term_thread_nr
+                        ENDM
+
+LeaveTermThreadSection    MACRO
+    OsGate leave_term_thread_nr
                         ENDM
 
 LockTask    MACRO

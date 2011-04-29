@@ -39,14 +39,6 @@ INCLUDE proc.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\apicheck.inc
 
-
-MAX_CORES   = 64
-
-TIME_SYNC_RESET = 0
-TIME_SYNC_IDLE  = 1
-TIME_SYNC_WAIT  = 2
-TIME_SYNC_READ  = 3
-
 section_handle_seg          STRUC
 
 us_base     handle_header <>
@@ -58,40 +50,14 @@ us_count    DW ?
 
 section_handle_seg          ENDS
 
-thread_balance_struc    STRUC
-
-tb_thread_sel       DW ?
-tb_pad              DW ?
-tb_elapsed          DD ?
-
-thread_balance_struc    ENDS
-
-core_balance_struc  STRUC
-
-cb_thread_sel       DW ?
-cb_pad              DW ?
-cb_elapsed          DD ?
-
-core_balance_struc  ENDS
-
 task_seg    STRUC
 
-time_sync_state     DW ?
-sync_core_count     DW ?
-
-last_time           DD ?,?
+term_thread_section section_typ <>
 
 term_thread_list    DW ?
 term_proc_list      DW ?
 
 list_lock           DW ?
-
-balancer_section    section_typ <>
-
-thread_base_tics    DD 256 DUP(?)
-
-thread_balance_arr  DB MAX_CORES * SIZE thread_balance_struc DUP(?)
-core_balance_arr    DB MAX_CORES * SIZE core_balance_struc DUP(?)
 
 task_seg    ENDS
 
@@ -448,8 +414,6 @@ time_diff               DD 0,0
 update_tics             DD 0
 tsc_sub_tics            DD 0
 
-bsp_core                DW 0
-
 system_thread           DW 0
 
 init_clock_proc         DW OFFSET InitPitClock
@@ -460,9 +424,6 @@ unlock_list_proc        DW OFFSET UnlockListSingle
 
 lock_core_list_proc     DW OFFSET LockCoreListSingle
 unlock_core_list_proc   DW OFFSET UnlockCoreListSingle
-
-core_count              DW 0
-core_arr                DW MAX_CORES DUP(0)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -562,7 +523,7 @@ InitTscClock    Proc near
     mov fs:ps_last_tsc,eax
     mov fs:ps_tsc_guard,0
 ;
-    mov ax,task_sel
+    mov ax,system_data_sel
     mov ds,ax
     mov eax,ds:last_time
     mov edx,ds:last_time+4
@@ -680,6 +641,22 @@ reload_pit_timer    Proc far
     out INT0_MASK,al
     retf32
 reload_pit_timer  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StartClock
+;
+;           DESCRIPTION:    Start clock
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_clock_name    DB 'Start Clock', 0
+
+start_clock Proc far
+    call cs:init_clock_proc
+    retf32
+start_clock Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -831,10 +808,12 @@ init_tlb_done:
     mov ds:term_thread_list,0
     mov ds:term_proc_list,0
     mov ds:list_lock,0
+    InitSection ds:term_thread_section
+;
+    mov ax,system_data_sel
+    mov ds,ax    
     mov ds:last_time,0
     mov ds:last_time+4,0
-    mov ds:time_sync_state,TIME_SYNC_RESET
-    InitSection ds:balancer_section
 ;
     mov ax,cs
     mov ds,ax
@@ -843,28 +822,40 @@ init_tlb_done:
     xor esi,esi
     xor edi,edi
 ;
-    mov si,OFFSET create_processor
-    mov di,OFFSET create_processor_name
+    mov si,OFFSET add_core
+    mov di,OFFSET add_core_name
     xor cl,cl
-    mov ax,create_processor_nr
+    mov ax,add_core_nr
     RegisterOsGate
 ;
-    mov si,OFFSET get_processor
-    mov di,OFFSET get_processor_name
+    mov si,OFFSET create_core
+    mov di,OFFSET create_core_name
     xor cl,cl
-    mov ax,get_processor_nr
+    mov ax,create_core_nr
     RegisterOsGate
 ;
-    mov si,OFFSET get_processor_num
-    mov di,OFFSET get_processor_num_name
+    mov si,OFFSET get_core
+    mov di,OFFSET get_core_name
     xor cl,cl
-    mov ax,get_processor_num_nr
+    mov ax,get_core_nr
     RegisterOsGate
 ;
-    mov si,OFFSET start_processor
-    mov di,OFFSET start_processor_name
+    mov si,OFFSET get_core_count
+    mov di,OFFSET get_core_count_name
     xor cl,cl
-    mov ax,start_processor_nr
+    mov ax,get_core_count_nr
+    RegisterOsGate
+;
+    mov si,OFFSET get_core_num
+    mov di,OFFSET get_core_num_name
+    xor cl,cl
+    mov ax,get_core_num_nr
+    RegisterOsGate
+;
+    mov si,OFFSET start_core
+    mov di,OFFSET start_core_name
+    xor cl,cl
+    mov ax,start_core_nr
     RegisterOsGate
 ;
     mov si,OFFSET timer_expired
@@ -883,6 +874,12 @@ init_tlb_done:
     mov di,OFFSET reload_pit_timer_name
     xor cl,cl
     mov ax,reload_sys_timer_nr
+    RegisterOsGate
+;
+    mov si,OFFSET start_clock
+    mov di,OFFSET start_clock_name
+    xor cl,cl
+    mov ax,start_clock_nr
     RegisterOsGate
 ;
     mov si,OFFSET enter_int
@@ -907,6 +904,18 @@ init_tlb_done:
     mov di,OFFSET unlock_task_name
     xor cl,cl
     mov ax,unlock_task_nr
+    RegisterOsGate
+;
+    mov si,OFFSET enter_term_thread
+    mov di,OFFSET enter_term_thread_name
+    xor cl,cl
+    mov ax,enter_term_thread_nr
+    RegisterOsGate
+;
+    mov si,OFFSET leave_term_thread
+    mov di,OFFSET leave_term_thread_name
+    xor cl,cl
+    mov ax,leave_term_thread_nr
     RegisterOsGate
 ;
     mov si,OFFSET debug_exception
@@ -987,10 +996,10 @@ init_tlb_done:
     mov ax,get_thread_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET get_processor_id
-    mov di,OFFSET get_processor_id_name
+    mov si,OFFSET get_core_id
+    mov di,OFFSET get_core_id_name
     xor dx,dx
-    mov ax,get_processor_id_nr
+    mov ax,get_core_id_nr
     RegisterBimodalUserGate
 ;
     mov si,OFFSET get_cpu_time
@@ -1211,11 +1220,7 @@ init_tlb_done:
     HookState
 ;
     mov edx,gdt_linear
-    CreateProcessor
-;    
-    mov ax,kernel_patch_sel
-    mov ds,ax
-    mov ds:bsp_core,es
+    CreateCore
 ;
     pop ds
     popa
@@ -2490,7 +2495,7 @@ sim_get_flags   ENDP
 ;
 ;           DESCRIPTION:    Handle preempt
 ;
-;           PARAMETERS:     FS      Processor selector
+;           PARAMETERS:     FS      Core selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2522,7 +2527,7 @@ HandlePreempt   Endp
 ;
 ;           DESCRIPTION:    Handle prio
 ;
-;           PARAMETERS:     FS      Processor selector
+;           PARAMETERS:     FS      Core selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2573,7 +2578,7 @@ HandlePrio  Endp
 ;
 ;           DESCRIPTION:    Get thread from standard list
 ;
-;           PARAMETERS:     FS      Processor selector
+;           PARAMETERS:     FS      Core selector
 ;
 ;       RETURNS:    ES      Thread
 ;
@@ -2614,7 +2619,7 @@ GetPrioThread   Endp
 ;
 ;           DESCRIPTION:    Setup preempt
 ;
-;           PARAMETERS:     FS      Processor selector
+;           PARAMETERS:     FS      Core selector
 ;               ES      Thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2637,27 +2642,6 @@ spSet:
     adc edx,0
     mov fs:ps_preempt_lsb,eax
     mov fs:ps_preempt_msb,edx
-;
-    push ds
-    mov ax,task_sel
-    mov ds,ax
-    cmp ds:time_sync_state,TIME_SYNC_IDLE
-    pop ds
-    jne spDone
-;    
-    mov ax,fs
-    cmp ax,cs:bsp_core
-    jne spDone
-;
-    push ds
-    mov ax,task_sel
-    mov ds,ax
-    sub ecx,ds:last_time
-    sub ecx,1193
-    pop ds
-    jc spDone
-;
-    call DoSyncTime
 
 spDone:
     and fs:ps_flags,NOT PS_FLAG_PREEMPT
@@ -2672,7 +2656,7 @@ SetupPreempt    Endp
 ;
 ;           DESCRIPTION:    Get next thread to run
 ;
-;           PARAMETERS:     FS      Processor selector
+;           PARAMETERS:     FS      Core selector
 ;
 ;       RETURNS:    ES      Thread to run next
 ;
@@ -2837,7 +2821,7 @@ AddCallback Endp
 ;
 ;           DESCRIPTION:    Move thread to another core
 ;
-;       PARAMETERS:         FS      Processor selector
+;       PARAMETERS:         FS      Core selector
 ;                           ES      Thread to move
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2871,7 +2855,7 @@ MoveThread  Endp
 ;
 ;           DESCRIPTION:    Load register-state for current thread
 ;
-;       PARAMETERS:     FS  Processor selector
+;       PARAMETERS:     FS  Core selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3186,8 +3170,8 @@ load_vm:
 ;
 ;       PARAMETERS:     Stack, return IP
 ;
-;       RETURNS:    SS:SP       Processor stack
-;               FS      Processor selector
+;       RETURNS:    SS:SP       Core stack
+;               FS          Core selector
 ;               ES, GS      Clear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3257,9 +3241,9 @@ SaveCurrentThread   Endp
 ;           DESCRIPTION:    Save state of current thread when lock is already taken
 ;
 ;       PARAMETERS:     Stack, return IP
-;               FS      Processor selector
+;               FS      Core selector
 ;
-;       RETURNS:    SS:SP       Processor stack
+;       RETURNS:    SS:SP       Core stack
 ;               ES, GS      Clear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3320,8 +3304,8 @@ SaveLockedThread   Endp
 ;
 ;           DESCRIPTION:    Skip current thread (no save of registers)
 ;
-;       RETURNS:    SS:SP       Processor stack
-;               FS      Processor selector
+;       RETURNS:    SS:SP   Core stack
+;               FS          Core selector
 ;               ES, GS      Clear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3359,7 +3343,7 @@ SkipCurrentThread   Endp
 ;           DESCRIPTION:    Continue current thread, by putting it into the ready-list.
 ;               Also releases scheduler lock
 ;
-;       PARAMETERS:     FS      Processor selector
+;       PARAMETERS:     FS      Core selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3406,7 +3390,7 @@ cctDone:
 ;               Also releases scheduler lock
 ;
 ;           PARAMETERS:         AX:EDI      Block list. AX = 0, no sleep list
-;               FS      Processor selector
+;               FS      Core selector
 ;
 ;       RETURNS:    ES      Blocked thread
 ;
@@ -3453,7 +3437,7 @@ bctUnlock:
 ;
 ;           DESCRIPTION:    Reload timer
 ;
-;       PARAMETERS:     FS      Processor sel
+;       PARAMETERS:     FS      Core sel
 ;               CY      Lock succeeded
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3527,15 +3511,15 @@ ReloadTimer Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           StartProcessor
+;           NAME:           StartCore
 ;
-;           DESCRIPTION:    Start processor
+;           DESCRIPTION:    Start core
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_processor_name    DB 'Start Processor', 0
+start_core_name    DB 'Start Core', 0
 
-start_processor:
+start_core:
     mov ax,core_data_sel
     mov fs,ax
     or fs:ps_flags,PS_FLAG_ACTIVE
@@ -3675,12 +3659,12 @@ system_thread_pr:
 ;
     mov ax,task_sel
     mov ds,ax    
-    EnterSection ds:balancer_section
+    EnterSection ds:term_thread_section
 
 stLoop:
-    LeaveSection ds:balancer_section
+    LeaveSection ds:term_thread_section
     WaitForSignal
-    EnterSection ds:balancer_section
+    EnterSection ds:term_thread_section
 
 stThreadLoop:
     mov si,OFFSET term_thread_list
@@ -3711,460 +3695,6 @@ stThreadOk:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ResetThreadList
-;
-;           DESCRIPTION:    Reset thread list
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ResetThreadList Proc near
-    push eax
-    push bx
-    push cx
-;
-    mov cx,MAX_CORES
-    mov bx,OFFSET thread_balance_arr
-    xor eax,eax
-
-rtlLoop:    
-    mov [bx].tb_thread_sel,ax
-    mov [bx].tb_pad,ax
-    mov [bx].tb_elapsed,eax
-    add bx,SIZE thread_balance_struc
-    loop rtlLoop
-;
-    pop cx
-    pop bx
-    pop eax
-    ret
-ResetThreadList Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AddThreadList
-;
-;           DESCRIPTION:    Add to thread list
-;
-;           PARAMETERS:     ES  Thread
-;                           EAX Elapsed
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddThreadList Proc near
-    pusha
-;
-    mov cx,MAX_CORES
-    mov bx,OFFSET thread_balance_arr
-
-atlFindLoop:    
-    mov dx,ds:[bx].tb_thread_sel
-    or dx,dx
-    jz atlInsert
-;
-    cmp eax,ds:[bx].tb_elapsed
-    ja atlInsert
-;        
-    add bx,SIZE thread_balance_struc
-    loop atlFindLoop
-;
-    jmp atlDone 
-
-atlInsert:
-    mov dx,es
-
-atlInsertLoop:    
-    push ds:[bx].tb_thread_sel
-    push ds:[bx].tb_elapsed
-    mov ds:[bx].tb_thread_sel,dx
-    mov ds:[bx].tb_elapsed,eax
-    pop eax
-    pop dx
-    or dx,dx
-    jz atlDone
-;    
-    add bx,SIZE thread_balance_struc
-    loop atlInsertLoop
-
-atlDone:    
-    popa
-    ret
-AddThreadList Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ResetCoreList
-;
-;           DESCRIPTION:    Reset core list
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ResetCoreList Proc near
-    push eax
-    push bx
-    push cx
-;
-    mov cx,MAX_CORES
-    mov bx,OFFSET core_balance_arr
-    xor eax,eax
-
-rclLoop:    
-    mov [bx].cb_thread_sel,ax
-    mov [bx].cb_pad,ax
-    mov [bx].cb_elapsed,eax
-    add bx,SIZE core_balance_struc
-    loop rclLoop
-;
-    pop cx
-    pop bx
-    pop eax
-    ret
-ResetCoreList Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AddCoreList
-;
-;           DESCRIPTION:    Add to core list
-;
-;           PARAMETERS:     ES  Thread
-;                           EAX Elapsed
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddCoreList Proc near
-    pusha
-;
-    mov cx,MAX_CORES
-    mov bx,OFFSET core_balance_arr
-
-aclFindLoop:    
-    mov dx,ds:[bx].cb_thread_sel
-    or dx,dx
-    jz aclInsert
-;
-    cmp eax,ds:[bx].cb_elapsed
-    ja aclInsert
-;        
-    add bx,SIZE core_balance_struc
-    loop aclFindLoop
-;
-    jmp aclDone 
-
-aclInsert:
-    mov dx,es
-
-aclInsertLoop:    
-    push ds:[bx].cb_thread_sel
-    push ds:[bx].cb_elapsed
-    mov ds:[bx].cb_thread_sel,dx
-    mov ds:[bx].cb_elapsed,eax
-    pop eax
-    pop dx
-    or dx,dx
-    jz aclDone
-;    
-    add bx,SIZE core_balance_struc
-    loop aclInsertLoop
-
-aclDone:    
-    popa
-    ret
-AddCoreList Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateBalancerLists
-;
-;           DESCRIPTION:    Create elapsed time list
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateBalancerLists Proc near
-    GetThread
-    mov bp,ax
-;    
-    mov ax,task_sel
-    mov ds,ax
-;         
-    call ResetThreadList
-    call ResetCoreList
-;    
-    mov cx,256
-    mov si,OFFSET thread_arr
-    mov di,OFFSET thread_base_tics
-
-cbGetLoop:
-    mov bx,es:[si]
-    or bx,bx
-    jnz cbHandle
-;
-    xor eax,eax
-    mov ds:[di],eax
-    jmp cbGetNext
-
-cbHandle:
-    cmp bx,bp
-    je cbGetNext
-;    
-    push es
-    mov es,bx
-    mov eax,es:p_lsb_tics
-    mov edx,eax
-    sub edx,ds:[di]
-    jnc cbInRange
-;
-    xor edx,edx
-
-cbInRange:    
-    mov ds:[di],eax
-;
-    mov fs,es:p_core_sel
-    cmp bx,fs:ps_null_thread
-    je cbInsertCore
-
-cbInsertThread: 
-    mov eax,edx
-    cmp eax,120
-    jb cbAddPop
-;    
-    call AddThreadList
-    jmp cbAddPop
-
-cbInsertCore:
-    mov eax,edx   
-    test fs:ps_flags,PS_FLAG_ACTIVE
-    jz cbAddPop
-;    
-    call AddCoreList
-
-cbAddPop:
-    pop es
-
-cbGetNext:
-    add si,2
-    add di,4
-    loop cbGetLoop
-    ret
-CreateBalancerLists Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CenterCoreList
-;
-;           DESCRIPTION:    Center core list
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CenterCoreList Proc near
-    pusha
-;
-    mov cx,MAX_CORES
-    mov bx,OFFSET core_balance_arr
-    xor eax,eax
-    xor dx,dx
-
-cclSumLoop:
-    mov si,ds:[bx].cb_thread_sel
-    or si,si
-    jz cclSumDone
-;
-    inc dx
-    add eax,ds:[bx].cb_elapsed
-;    
-    add bx,SIZE core_balance_struc
-    loop cclSumLoop
-
-cclSumDone:
-    movzx ecx,dx
-    xor edx,edx
-    div ecx
-;
-    mov cx,MAX_CORES
-    mov bx,OFFSET core_balance_arr
-
-cclBiasLoop:
-    mov si,ds:[bx].cb_thread_sel
-    or si,si
-    jz cclBiasDone
-;
-    sub ds:[bx].cb_elapsed,eax
-    add bx,SIZE core_balance_struc
-    loop cclBiasLoop
-
-cclBiasDone:    
-    popa
-    ret
-CenterCoreList Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetCoreIndex
-;
-;           DESCRIPTION:    Get core index
-;
-;           PARAMETERS:     AX      Core sel
-;
-;           RETURNS:        DI      Core structure
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetCoreIndex  Proc near
-    push es
-    push cx
-;   
-    mov es,ax
-    mov ax,es:ps_null_thread
-;
-    mov cx,MAX_CORES
-    mov di,OFFSET core_balance_arr
-
-gciLoop:
-    cmp ax,ds:[di].cb_thread_sel
-    je gciFound
-;
-    add di,SIZE core_balance_struc
-    loop gciLoop
-    stc
-    jmp gciDone
-
-gciFound:
-    clc
-
-gciDone:
-    pop cx
-    pop es
-    ret
-GetCoreIndex  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           PickThread
-;
-;           DESCRIPTION:    Pick thread to switch
-;
-;           RETURNS:        ES      Thread
-;                           FS      New core
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PickThread  Proc near
-    mov eax,ds:core_balance_arr.cb_elapsed
-    cmp eax,2 * 1193
-    jb ptDone
-;    
-    mov cx,MAX_CORES
-    mov bx,OFFSET thread_balance_arr
-
-ptLoop:
-    mov ax,ds:[bx].tb_thread_sel
-    or ax,ax
-    stc
-    jz ptDone
-;
-    mov es,ax
-    mov ax,es:p_core_sel
-    call GetCoreIndex
-    jc ptNext
-;
-    mov eax,ds:[di].cb_elapsed
-    test eax,80000000h    
-    jz ptNext
-;
-    neg eax
-    mov edx,ds:[bx].tb_elapsed
-    shr edx,1
-    add edx,ds:[bx].tb_elapsed
-    shr edx,1
-    cmp edx,eax
-    ja ptNext
-;
-    int 3
-    clc    
-
-ptNext:    
-    add bx,SIZE thread_balance_struc
-    loop ptLoop
-;
-    stc
-
-ptDone:    
-    ret
-PickThread  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Balancer thread
-;
-;           DESCRIPTION:    Balances threads among available cores
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-balancer_thread_name  DB 'Core Balancer', 0
-
-balancer_thread_pr:
-    mov ax,500
-    WaitMilliSec
-;    
-    mov ax,task_sel
-    mov ds,ax    
-;
-    mov ax,system_data_sel
-    mov es,ax
-;    
-    mov cx,256
-    mov si,OFFSET thread_arr
-    mov di,OFFSET thread_base_tics
-
-btInitLoop:
-    xor eax,eax
-    mov ax,es:[si]
-    or ax,ax
-    jz btInitNext
-;
-    mov fs,ax
-    mov eax,fs:p_lsb_tics
-
-btInitNext:
-    mov ds:[di],eax
-    add si,2
-    add di,4
-    loop btInitLoop
-;    
-    EnterSection ds:balancer_section
-
-btBalanceLoop:
-    LeaveSection ds:balancer_section
-;    
-    mov ax,100
-    WaitMilliSec
-;   
-    EnterSection ds:balancer_section
-;
-    mov ax,system_data_sel
-    mov es,ax
-;    
-    call CreateBalancerLists
-    call CenterCoreList
-    call PickThread
-    jc btBalanceLoop
-;    
-    int 3
-;
-    jmp btBalanceLoop    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           StartProcessorNullThreads
 ;
 ;           DESCRIPTION:    Start each of the null threads for a processor
@@ -4175,7 +3705,7 @@ btBalanceLoop:
     public start_processor_null_threads
 
 start_processor_null_threads    Proc near
-    mov cx,cs:core_count
+    GetCoreCount
     cmp cx,1
     jbe start_locks_ok
 ;
@@ -4185,15 +3715,6 @@ start_processor_null_threads    Proc near
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
     mov ds:lock_core_list_proc,OFFSET LockCoreListMultiple
     mov ds:unlock_core_list_proc,OFFSET UnlockCoreListMultiple
-;    
-    mov ecx,200h
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov si,OFFSET balancer_thread_pr
-    mov di,OFFSET balancer_thread_name
-    mov ax,10
-    CreateThread
 
 start_locks_ok:    
     mov ecx,200h
@@ -4217,9 +3738,8 @@ start_locks_ok:
     xor al,al
     stosb
 ;
-    mov cx,cs:core_count
-    mov bx,OFFSET core_arr
-    add bx,2
+    GetCoreCount
+    mov bx,1
     sub cx,1
     jz start_processor_free
 
@@ -4236,7 +3756,7 @@ create_null_loop:
 ;
     mov di,5
     inc byte ptr es:[di]
-    add bx,2
+    inc bx
     loop create_null_loop
 
 start_processor_free:
@@ -4259,13 +3779,12 @@ null_thread0:
     mov fs:ps_null_thread,ax
     or fs:ps_flags,PS_FLAG_ACTIVE
 ;
-    mov ax,start_ap_cores_nr
+    mov ax,start_multicore_nr
     IsValidOsGate
     jc null_ap_ok
 ;
     call SetupMpPatch
-    StartApCores    
-    call DoSyncTime
+    StartMulticore
 
 null_ap_ok:   
     push OFFSET null_loop
@@ -4277,7 +3796,8 @@ null_ap_ok:
 
 null_thread:
     sti
-    mov fs,cs:[bx]
+    mov ax,bx
+    GetCoreNumber
     GetThread
     mov es,ax
     mov es:p_sleep_sel,fs
@@ -4541,24 +4061,41 @@ double_block:
     mov edi,OFFSET debug_list       
     jmp BlockCurrentThread
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddCore
+;
+;           DESCRIPTION:    Add a core
+;
+;           PARAMETERS:     FS      Core sel
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_core_name   DB 'Add Core',0
+
+add_core    PROC far
+    mov fs:ps_id,0
+    retf32
+add_core    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CreateProcessor
+;       NAME:           CreateCore
 ;
-;       DESCRIPTION:    Create processor
+;       DESCRIPTION:    Create core
 ;
 ;       PARAMETERS:     EDX     Core GDT linear
 ;
-;       RETURNS:        AX      Processor #
-;                       ES      Processor sel
+;       RETURNS:        AX      Core #
+;                       ES      Core sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_processor_name   DB 'Create Processor',0
+create_core_name   DB 'Create Core',0
 
-create_processor    Proc far
+create_core    Proc far
     push ds
     push bx
     push cx
@@ -4591,16 +4128,6 @@ create_processor    Proc far
     pop es
     mov es:ps_ss,ax
     mov es:ps_sp,200h
-;
-    mov ax,kernel_patch_sel
-    mov ds,ax
-    mov ax,ds:core_count
-    mov si,ax
-    add si,si
-    mov ds:[si].core_arr,es
-    inc ds:core_count
-;
-    mov es:ps_id,ax     
 ;
     xor ax,ax
     mov bx,OFFSET ps_ptab
@@ -4640,6 +4167,7 @@ ptab_init:
     mov cx,0FFh
     add bx,SIZE timer_struc
     mov es:ps_timer_free,bx
+
 timer_free_list_create:
     mov ax,bx
     add ax,SIZE timer_struc
@@ -4647,6 +4175,11 @@ timer_free_list_create:
     mov bx,ax
     loop timer_free_list_create
 ;
+    push fs
+    mov ax,es
+    mov fs,ax
+    AddCore
+    pop fs
     mov ax,es:ps_id     
 ;
     pop di
@@ -4655,9 +4188,7 @@ timer_free_list_create:
     pop bx
     pop ds      
     retf32
-create_processor    Endp
-
-
+create_core    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4684,66 +4215,75 @@ get_task_lock    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetProcessor
+;           NAME:           GetCore
 ;
-;           DESCRIPTION:    Get current processor selector
+;           DESCRIPTION:    Get current core selector
 ;
-;       RETURNS:    FS      Processor sel
+;       RETURNS:    FS      Core sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_processor_name      DB 'Get Processor',0
+get_core_name      DB 'Get Core',0
 
-get_processor   Proc far
+get_core   Proc far
     push ax
     mov ax,core_data_sel
     mov fs,ax
     mov fs,fs:ps_sel
     pop ax    
     retf32
-get_processor   Endp
-
+get_core   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           GetProcessorNumber
+;       NAME:           GetCoreNumber
 ;
-;       DESCRIPTION:    Get processor selector for specified processor #
+;       DESCRIPTION:    Get core selector for specified processor #
 ;
-;       PARAMETERS:     AX      Processor #
+;       PARAMETERS:     AX      Core #
 ;
-;       RETURNS:        FS      Processor sel
+;       RETURNS:        FS      Core sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_processor_num_name      DB 'Get Processor Number',0
+get_core_num_name      DB 'Get Core Number',0
 
-get_processor_num   Proc far
+get_core_num   Proc far
     push ax
-    push bx
-;
-    cmp ax,cs:core_count
-    jae gpnFail
-;
-    mov bx,ax
-    add bx,bx
-    mov ax,cs:[bx].core_arr
+;    
+    or ax,ax
+    stc    
+    jne gcnDone
+;    
+    mov ax,core_data_sel
     mov fs,ax
+    mov ax,fs:ps_sel
     clc
-    jmp gpnDone
 
-gpnFail:
-    xor ax,ax
+gcnDone:
     mov fs,ax
-    stc
-
-gpnDone:
-    pop bx
     pop ax
     retf32
-get_processor_num   Endp
+get_core_num   Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetCoreCount
+;
+;       DESCRIPTION:    Get number of cores
+;
+;       RETURNS:        CX      Number of cores    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_core_count_name      DB 'Get Core Count',0
+
+get_core_count   Proc far
+    mov cx,1
+    retf32
+get_core_count   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4752,7 +4292,7 @@ get_processor_num   Endp
 ;
 ;           DESCRIPTION:    Update lists (signals + wakeup)
 ;
-;       PARAMETERS:     FS      Processor sel
+;       PARAMETERS:     FS      core sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5017,7 +4557,7 @@ UnlockCoreListMultiple      Endp
 ;           DESCRIPTION:    Try to lock
 ;
 ;       RETURNS:    CY      Owner of section
-;               FS      Processor selector
+;               FS      Core selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5040,7 +4580,7 @@ TryLockCore   Endp
 ;           DESCRIPTION:    Lock
 ;
 ;       RETURNS:    CY      Owner of section
-;               FS      Processor selector
+;               FS      Core selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5067,7 +4607,7 @@ LockCore      Endp
 ;
 ;           DESCRIPTION:    Try to unlock
 ;
-;       PARAMETERS:     FS      Processor selector
+;       PARAMETERS:     FS      Core selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5112,7 +4652,7 @@ TryUnlockCore    Endp
 ;
 ;           DESCRIPTION:    Unlock
 ;
-;       PARAMETERS:     FS      Processor selector
+;       PARAMETERS:     FS      Core selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5156,7 +4696,7 @@ UnlockCore    Endp
 ;
 ;           DESCRIPTION:    Thread load unlock
 ;
-;       PARAMETERS:     FS      Processor selector
+;       PARAMETERS:     FS      Core selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5205,6 +4745,53 @@ leave_int       Proc far
     retf32
 leave_int       Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           EnterTermThreadSection
+;
+;           DESCRIPTION:    Enter thread termination section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+enter_term_thread_name  DB 'Enter Terminate Thread Section',0
+
+enter_term_thread       Proc far
+    push ds
+    push ax
+;
+    mov ax,task_sel
+    mov ds,ax
+    EnterSection ds:term_thread_section
+;
+    pop ax
+    pop ds
+    retf32
+enter_term_thread       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LeaveTermThreadSection
+;
+;           DESCRIPTION:    Leave thread termination section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+leave_term_thread_name  DB 'Leave Terminate Thread Section',0
+
+leave_term_thread       Proc far
+    push ds
+    push ax
+;
+    mov ax,task_sel
+    mov ds,ax
+    LeaveSection ds:term_thread_section
+;
+    pop ax
+    pop ds
+    retf32
+leave_term_thread       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5309,73 +4896,6 @@ timer_expired    Proc far
     retf32
 timer_expired    Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           sync_clock_int
-;
-;           DESCRIPTION:    Clock synchronization int
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public sync_clock_int
-
-sync_clock_int:
-    push ds
-    push fs
-    push eax
-    push edx
-;
-    mov ax,task_sel
-    mov ds,ax
-    mov ax,core_data_sel
-    mov fs,ax
-    test fs:ps_flags,PS_FLAG_INIT_CLOCK
-    jz sync_ack_core
-;
-    push es
-    pushad    
-    StartSysTimer
-    call cs:init_clock_proc
-    and fs:ps_flags,NOT PS_FLAG_INIT_CLOCK
-    popad
-    pop es
-
-sync_ack_core:    
-    cmp ds:time_sync_state,TIME_SYNC_WAIT
-    jne sync_clock_end
-;
-    lock sub ds:sync_core_count,1
-
-sync_clock_wait_read:
-    cmp ds:time_sync_state,TIME_SYNC_WAIT
-    je sync_clock_wait_read
-;
-    cmp ds:time_sync_state,TIME_SYNC_READ
-    jne sync_clock_end
-;    
-    call cs:get_time_proc
-
-sync_clock_wait_idle:
-    cmp ds:time_sync_state,TIME_SYNC_IDLE
-    jne sync_clock_wait_idle    
-;
-    cli
-    mov eax,ds:last_time
-    sub eax,fs:ps_system_time
-    add fs:ps_system_time,eax
-    adc fs:ps_system_time+4,0    
-
-sync_clock_end:
-    SendEoi
-;
-    pop edx
-    pop eax
-    pop fs
-    pop ds
-    iretd
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -5398,76 +4918,6 @@ wakeup_int:
     pop fs
     pop ds
     iretd    
-    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           DoSyncTime
-;
-;           DESCRIPTION:    Perform a clock synchronization
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DoSyncTime  Proc near
-    push ds
-    mov ax,task_sel
-    mov ds,ax
-;    
-    mov ds:sync_core_count,0
-    mov ds:time_sync_state,TIME_SYNC_WAIT
-    mov dx,fs
-;
-    push fs
-    push bx
-    push cx
-;
-    mov cx,cs:core_count
-    mov bx,OFFSET core_arr
-
-sync_int_loop:
-    mov ax,cs:[bx]
-    cmp ax,dx
-    je sync_int_next
-;
-    mov fs,ax
-    test fs:ps_flags,PS_FLAG_ACTIVE
-    jz sync_int_next
-;    
-    lock add ds:sync_core_count,1
-    mov al,60h
-    SendInt
-
-sync_int_next:
-    add bx,2
-    loop sync_int_loop
-;
-    pop cx
-    pop bx
-    pop fs
-;
-    push cx
-    mov cx,256
-
-sync_wait_loop:
-    mov ax,ds:sync_core_count
-    or ax,ax
-    jz sync_wait_done
-;
-    loop sync_wait_loop
-
-sync_wait_done:
-    pop cx
-    cli
-    mov ds:time_sync_state,TIME_SYNC_READ
-    call cs:get_time_proc
-    mov ds:last_time,eax
-    mov ds:last_time+4,edx
-    mov ds:time_sync_state,TIME_SYNC_IDLE
-;
-    pop ds
-    ret
-DoSyncTime  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5588,7 +5038,7 @@ timer_clock_done:
     mov ds,bx
     mov ds:update_tics,eax
 ;
-    call cs:init_clock_proc
+    StartClock
     jmp LoadCurrentThread
 
 
@@ -6533,25 +5983,24 @@ get_thread_pr   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetProcessor
+;           NAME:           GetCore
 ;
-;           DESCRIPTION:    Get current processor #
+;           DESCRIPTION:    Get current core #
 ;
 ;           RETURNS:        AX          Processor
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_processor_id_name   DB 'Get Processor ID',0
+get_core_id_name   DB 'Get Core ID',0
 
-get_processor_id    PROC far
+get_core_id    PROC far
     push ds
     mov ax,core_data_sel
     mov ds,ax
     mov ax,ds:ps_id
     pop ds
     retf32
-get_processor_id    ENDP
-
+get_core_id    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6831,12 +6280,14 @@ check_list      Proc far
     push ax
     push si
 ;
-    mov cx,cs:core_count
-    mov si,OFFSET core_arr
+    GetCoreCount
     xor dx,dx
 
 check_cpu_loop:
-    mov fs,cs:[si]
+    mov ax,dx
+    GetCoreNumber
+    jc check_not_cpu
+;    
     cmp bx,fs:ps_curr_thread
     je check_curr_ok
 ;
@@ -7109,7 +6560,7 @@ set_system_time PROC far
     mov fs,bx
     mov fs:ps_system_time,eax
     mov fs:ps_system_time+4,edx
-    mov bx,task_sel
+    mov bx,system_data_sel
     mov ds,bx
     pop bx
     mov ds:last_time,eax

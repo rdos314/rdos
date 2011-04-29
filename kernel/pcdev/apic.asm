@@ -417,7 +417,7 @@ ap_task_wait:
     cmp edx,2
     jae ap_crash
     
-    StartProcessor
+    StartCore
 
 ap_crash:
     jmp ap_crash
@@ -971,6 +971,7 @@ start_apic_timer_name    DB 'Start Apic Timer', 0
 start_apic_mem_timer    Proc far
     push ds
     push es
+    push bx
     push ecx
     push edx
     push esi
@@ -991,7 +992,7 @@ start_apic_mem_timer    Proc far
     mov es,bx
     mov es:APIC_INIT_COUNT,eax    
     push fs
-    GetProcessor
+    GetCore
     pop fs
     mov eax,es:APIC_CURR_COUNT    
     neg eax
@@ -1009,6 +1010,7 @@ start_apic_mem_timer    Proc far
     pop esi
     pop edx
     pop ecx
+    pop bx
     pop es
     pop ds
     retf32
@@ -1035,7 +1037,7 @@ start_apic_msr_timer    Proc far
     mov ecx,MSR_APIC_INIT_COUNT
     wrmsr
     push fs
-    GetProcessor
+    GetCore
     pop fs
     mov ecx,MSR_APIC_CURR_COUNT
     rdmsr
@@ -1728,7 +1730,7 @@ SetupMsrGates   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           StartCore
+;       NAME:           DoStartCore
 ;
 ;       DESCRIPTION:    Start a CPU core
 ;
@@ -1738,7 +1740,7 @@ SetupMsrGates   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartCore   Proc near
+DoStartCore   Proc near
     push ds
     push es
     pushad
@@ -1870,7 +1872,7 @@ scLoop2:
 scOk:
     push es
     mov edx,dword ptr es:[di].ap_gdt+2
-    CreateProcessor
+    CreateCore
     mov ax,es
     mov fs,ax    
     pop es
@@ -1901,7 +1903,7 @@ scDone:
     pop es
     pop ds
     ret
-StartCore   Endp
+DoStartCore   Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2791,7 +2793,7 @@ init_proc:
     jnz init_ap_proc
 
 init_boot_proc:
-    GetProcessor
+    GetCore
     movzx edx,es:[di].ap_apic_id
     mov fs:ps_apic,edx
 ;
@@ -2806,7 +2808,7 @@ init_ap_proc:
     jz init_table_next
 ;    
     movzx edx,es:[di].ap_apic_id
-    call StartCore
+    call DoStartCore
     jc init_table_next    
 ;    
     cmp bp,1

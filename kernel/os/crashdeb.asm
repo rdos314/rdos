@@ -1438,7 +1438,7 @@ nmi_handler:
     push ebp
     mov bp,sp
 ;    
-    GetProcessor
+    GetCore
     test fs:ps_flags,PS_FLAG_NMI
     jnz nmi_ret
 ;
@@ -1650,17 +1650,17 @@ CrashHandler:
     mov ds:curr_row,0
     mov ds:curr_col,0
 ;
-    GetProcessor
+    GetCore
     mov ax,fs
     mov gs,ax
     call ShowCrashCore
 ;
     sti
     mov ax,ds:curr_num
-    GetProcessorNumber
+    GetCoreNumber
     mov ax,fs
     mov gs,ax
-    GetProcessor
+    GetCore
 ;    
     mov al,'R'
     jmp handle_func
@@ -1689,11 +1689,11 @@ handle_loop:
 ;
     mov ax,ds:curr_num
     inc ax
-    GetProcessorNumber
+    GetCoreNumber
     jnc handle_next_set
 ;
     xor ax,ax
-    GetProcessorNumber
+    GetCoreNumber
         
 handle_next_set:
     mov ds:curr_num,ax
@@ -1813,7 +1813,7 @@ enter_do:
     or ax,ax
     jz enter_fault_do
 ;
-    GetProcessor
+    GetCore
     or fs:ps_flags,PS_FLAG_NMI
     stc
     jmp enter_done
@@ -1826,7 +1826,7 @@ enter_fault_do:
     or ax,ax
     jz enter_first
 ;
-    GetProcessor
+    GetCore
     or fs:ps_flags,PS_FLAG_NMI
     stc
     jmp enter_done
@@ -1835,7 +1835,7 @@ enter_first:
     DisableAllIrq    
     push eax
     sti
-    GetProcessor
+    GetCore
     or fs:ps_flags,PS_FLAG_NMI
     pop eax
     mov fs:cs_irq,eax
@@ -1869,7 +1869,7 @@ enter_first:
     xor ax,ax
 
 handle_int_loop:    
-    GetProcessorNumber
+    GetCoreNumber
     jc handle_int_done
 ;
     test fs:ps_flags,PS_FLAG_NMI
@@ -1895,7 +1895,7 @@ handle_int_done:
     xor ax,ax
 
 handle_nmi_loop:    
-    GetProcessorNumber
+    GetCoreNumber
     jc handle_nmi_done
 ;
     test fs:ps_flags,PS_FLAG_NMI
@@ -1916,7 +1916,7 @@ handle_nmi_next:
 
 handle_nmi_done:
     call SetupFaultHandlers
-    GetProcessor
+    GetCore
     clc
 
 enter_done:
@@ -1937,7 +1937,7 @@ EnterHandler    Endp
 start_crash_core_name    DB 'Start Crash Core', 0
 
 start_crash_core:
-    GetProcessor
+    GetCore
     call SaveCore
 ;    
     call InitCrashKeyboard
