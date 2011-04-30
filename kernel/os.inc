@@ -881,6 +881,10 @@ StartClock    MACRO
     OsGate start_clock_nr
                         ENDM
 
+SyncClock    MACRO
+    OsGate sync_clock_nr
+                        ENDM
+
 EnterInt    MACRO
     OsGate enter_int_nr
                         ENDM

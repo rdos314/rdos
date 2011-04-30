@@ -462,5 +462,6 @@ enter_term_thread_nr        = 398
 leave_term_thread_nr        = 399
 
 start_clock_nr              = 400
+sync_clock_nr               = 401
 
 osgate_entries				= 420

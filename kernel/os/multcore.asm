@@ -85,26 +85,25 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           sync_clock_int
+;           NAME:           SyncClock
 ;
-;           DESCRIPTION:    Clock synchronization int
+;           DESCRIPTION:    Clock synchronization from AP core
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-sync_clock_int:
+sync_clock_name DB 'Sync Clock', 0
+
+sync_clock  Proc far
     push ds
     push fs
     push eax
     push edx
-;
-    EnterInt
-    SendEoi
-    sti
 ;    
     mov ax,SEG data
     mov ds,ax
     mov ax,core_data_sel
     mov fs,ax
+    cli
     test fs:ps_flags,PS_FLAG_INIT_CLOCK
     jz sync_ack_core
 ;
@@ -116,7 +115,6 @@ sync_ack_core:
     cmp ds:time_sync_state,TIME_SYNC_WAIT
     jne sync_clock_end
 ;
-    cli
     lock sub ds:sync_core_count,1
 
 sync_clock_wait_read:
@@ -141,14 +139,12 @@ sync_clock_wait_idle:
     adc fs:ps_system_time+4,0
 
 sync_clock_end:
-    sti
-    LeaveInt
-;    
     pop edx
     pop eax
     pop fs
     pop ds
-    iretd
+    retf32
+sync_clock  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -164,53 +160,6 @@ DoSyncTime  Proc near
     mov ax,SEG data
     mov ds,ax
 ;    
-    mov ds:sync_core_count,0
-    mov ds:time_sync_state,TIME_SYNC_WAIT
-;
-    push fs
-    push bx
-    push cx
-;
-    GetCoreCount
-    sub cx,1
-    jbe sync_int_done
-;
-    mov bx,1
-
-sync_int_loop:
-    mov ax,bx
-    GetCoreNumber
-    jc sync_int_next
-;
-    test fs:ps_flags,PS_FLAG_ACTIVE
-    jz sync_int_next
-;    
-    lock add ds:sync_core_count,1
-    mov al,60h
-    SendInt
-
-sync_int_next:
-    inc bx
-    loop sync_int_loop
-
-sync_int_done:
-    pop cx
-    pop bx
-    pop fs
-;
-    push cx
-    mov cx,15000
-
-sync_wait_loop:
-    mov ax,ds:sync_core_count
-    or ax,ax
-    jz sync_wait_done
-;
-    pause
-    loop sync_wait_loop
-
-sync_wait_done:
-    pop cx
     cli
     mov ds:time_sync_state,TIME_SYNC_READ
 ;    
@@ -697,13 +646,8 @@ balancer_thread_name  DB 'Core Balancer', 0
 balancer_thread_pr:
     call DoSyncTime
 ;
-    mov cx,50
-
-btInitClockLoop:
-    mov ax,10
+    mov ax,500
     WaitMilliSec
-    call DoSyncTime
-    loop btInitClockLoop
 ;    
     EnterTermThreadSection
     call InitBalancerLists
@@ -711,13 +655,8 @@ btInitClockLoop:
 btBalanceLoop:
     LeaveTermThreadSection
 ;    
-    mov cx,10
-
-btBalanceClockLoop:
-    mov ax,10
+    mov ax,100
     WaitMilliSec
-    call DoSyncTime
-    loop btBalanceClockLoop
 ;   
     mov ax,SEG data
     mov ds,ax
@@ -774,21 +713,22 @@ start_multicore Endp
 init    Proc far
     mov ax,SEG data
     mov ds,ax
-    mov ds:time_sync_state,TIME_SYNC_RESET
+    mov ds:time_sync_state,TIME_SYNC_WAIT
 ;
     mov ax,cs
     mov ds,ax
     mov es,ax
 ;
-    mov al,60h
-    mov bl,0
-    mov esi,OFFSET sync_clock_int
-    CreateIntGateSelector
-;
     mov esi,OFFSET start_multicore
     mov edi,OFFSET start_multicore_name
     xor cl,cl
     mov ax,start_multicore_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET sync_clock
+    mov edi,OFFSET sync_clock_name
+    xor cl,cl
+    mov ax,sync_clock_nr
     RegisterOsGate
     clc
     ret

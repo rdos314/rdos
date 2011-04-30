@@ -3527,12 +3527,9 @@ start_core:
     mov ax,core_data_sel
     mov fs,ax
     or fs:ps_flags,PS_FLAG_ACTIVE
+    SyncClock    
+;
     sti
-
-start_wait_time_sync:
-    test fs:ps_flags,PS_FLAG_INIT_CLOCK
-    jnz start_wait_time_sync
-;    
     call LockCore
     or fs:ps_flags,PS_FLAG_PREEMPT    
     jmp LoadCurrentThread
@@ -4009,9 +4006,19 @@ debug_block:
     call es:p_debug_proc
 
 debug_block_do:
+    mov fs:ps_curr_thread,0
+;
     mov ax,system_data_sel
+    mov ds,ax
     mov edi,OFFSET debug_list       
-    jmp BlockCurrentThread
+;
+    call cs:lock_list_proc
+    InsertBlock32
+    call cs:unlock_list_proc
+;    
+    mov es:p_sleep_sel,ds
+    mov es:p_sleep_offset,edi
+    jmp LoadCurrentThread
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4060,10 +4067,20 @@ double_fatal_no_thread:
 double_block:
     mov es,ax    
     mov es:p_error_code,8
-;
+    mov fs:ps_curr_thread,0
+,    
     mov ax,system_data_sel
+    mov ds,ax
     mov edi,OFFSET debug_list       
-    jmp BlockCurrentThread
+;
+    call cs:lock_list_proc
+    InsertBlock32
+    call cs:unlock_list_proc
+;    
+    mov es:p_sleep_sel,ds
+    mov es:p_sleep_offset,edi
+    jmp LoadCurrentThread
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5189,10 +5206,20 @@ cleanup_thread:
     mov bx,cs:system_thread
     Signal    
 ;
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
     mov ax,task_sel
+    mov ds,ax
     mov edi,OFFSET term_thread_list
-    jmp BlockCurrentThread
-
+;
+    call cs:lock_list_proc
+    InsertBlock32
+    call cs:unlock_list_proc
+;    
+    xor ax,ax
+    mov es,ax
+    jmp LoadCurrentThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5211,10 +5238,20 @@ cleanup_process:
     mov bx,cs:system_thread
     Signal    
 ;
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
     mov ax,task_sel
+    mov ds,ax
     mov edi,OFFSET term_proc_list
-    jmp BlockCurrentThread
-
+;
+    call cs:lock_list_proc
+    InsertBlock32
+    call cs:unlock_list_proc
+;    
+    xor ax,ax
+    mov es,ax
+    jmp LoadCurrentThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5267,8 +5304,18 @@ sleep_thread    PROC far
     push OFFSET sleep_thread_done
     call SaveCurrentThread
 ;
+    mov ds,ax
     movzx edi,di    
-    jmp BlockCurrentThread
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    call cs:lock_list_proc
+    InsertBlock32
+    call cs:unlock_list_proc
+;    
+    mov es:p_sleep_sel,ds
+    mov es:p_sleep_offset,edi
+    jmp LoadCurrentThread
 
 sleep_thread_done:
     GetThread
@@ -5387,6 +5434,7 @@ wait_for_signal PROC far
     push ax
 ;
     call LockCore
+    call cs:lock_core_list_proc
 ;    
     mov es,fs:ps_curr_thread
     xor al,al
@@ -5398,13 +5446,26 @@ wait_for_signal PROC far
     call SaveLockedThread
 ;
     mov ax,fs
+    mov ds,ax
     mov edi,OFFSET ps_signal_list
-    jmp BlockCurrentThread
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    InsertBlock32
+    call cs:unlock_core_list_proc
+;    
+    mov es:p_sleep_sel,ds
+    mov es:p_sleep_offset,edi
+    jmp LoadCurrentThread
 
 wait_for_signal_clear:
     call LockCore
     mov es,fs:ps_curr_thread
     mov es:p_signal,0
+    jmp wait_for_signal_unlock
+    
+wait_for_signal_unlock_list:
+    call cs:unlock_core_list_proc
 
 wait_for_signal_unlock:
     call UnlockCore
