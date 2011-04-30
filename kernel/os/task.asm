@@ -5330,16 +5330,36 @@ signal_thread   PROC far
     push fs
 ;
     or bx,bx
-    jz signal_done
+    jz stDone
 ;    
-    call TryLockCore
-;
+    mov ax,core_data_sel
+    mov fs,ax
+    mov ax,fs:ps_sel
     mov es,bx
+    cmp ax,es:p_core_sel
+    je stThis
+;
+    mov fs,ax
+    call cs:lock_core_list_proc
+    mov ax,fs:ps_has_signal
+    or ax,fs:ps_wakeup_list
+    mov es:p_signal,1
+    mov fs:ps_has_signal,1
+    call cs:unlock_core_list_proc
+    or ax,ax
+    jnz stDone
+;
+    mov al,61h
+    SendInt
+    jmp stDone
+    
+stThis:    
+    call TryLockCore
     mov es:p_signal,1
     mov fs:ps_has_signal,1
     call TryUnlockCore
     
-signal_done:       
+stDone:       
     pop ax
     verr ax
     jz signal_fs_ok
