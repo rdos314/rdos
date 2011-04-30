@@ -5519,6 +5519,7 @@ enter_section   PROC far
     push fs
 ;    
     call LockCore
+    call cs:lock_list_proc
     mov dx,ds:[esi].cs_list
     cmp dx,-1
     jne ecsBlock
@@ -5527,6 +5528,7 @@ enter_section   PROC far
     jmp ecsUnlock
 
 ecsBlock:
+    call cs:unlock_list_proc
     mov ax,ds
     push OFFSET ecsDone
     call SaveLockedThread
@@ -5535,6 +5537,7 @@ ecsBlock:
     jmp BlockCurrentThread
 
 ecsUnlock:
+    call cs:unlock_list_proc
     call UnlockCore
     
 ecsDone:
@@ -5582,22 +5585,22 @@ leave_section   PROC far
     push fs
 ;
     call LockCore
+    call cs:lock_list_proc
     mov ax,ds:[esi].cs_list
     cmp ax,-1
-    je lcsUnlock
+    je lcsUnlockList
 ;    
     or ax,ax
     jnz lcsUnblock
 ;
     mov ds:[esi].cs_list,-1
-    jmp lcsUnlock
+    jmp lcsUnlockList
 
 lcsUnblock:
     push es    
     push esi
     push di
 ;       
-    call cs:lock_list_proc
     add esi,OFFSET cs_list
     RemoveBlock32
     mov es:p_data,0
@@ -5620,6 +5623,10 @@ lcsUnblocked:
     pop di
     pop esi
     pop es
+    jmp lcsUnlock
+
+lcsUnlockList:
+    call cs:unlock_list_proc
 
 lcsUnlock:
     call UnlockCore
@@ -5790,6 +5797,7 @@ enter_user_section      PROC far
     je eusDone
 ;
     call LockCore
+    call cs:lock_list_proc
     mov ax,ds:[ebx].us_list
     cmp ax,-1
     jne eusBlock
@@ -5798,6 +5806,7 @@ enter_user_section      PROC far
     jmp eusUnlock
 
 eusBlock:
+    call cs:unlock_list_proc
     mov ax,ds
     push OFFSET eusDone
     call SaveLockedThread
@@ -5806,6 +5815,7 @@ eusBlock:
     jmp BlockCurrentThread
 
 eusUnlock:
+    call cs:unlock_list_proc
     call UnlockCore
     
 eusDone:
@@ -5905,12 +5915,13 @@ lusNotCountError:
     jc lusDone
 ;    
     call LockCore
+    call cs:lock_list_proc
     mov ax,ds:[ebx].us_list
     or ax,ax
     jnz lusUnblock
 ;
     mov ds:[ebx].us_list,-1
-    jmp lusUnlock
+    jmp lusUnlockList
 
 lusUnblock:
     push es
@@ -5918,7 +5929,6 @@ lusUnblock:
     push di
 ;    
     lea esi,ds:[ebx].us_list
-    call cs:lock_list_proc
     RemoveBlock32
     mov es:p_data,0
     call cs:unlock_list_proc
@@ -5942,8 +5952,8 @@ lusUnblocked:
     pop es
     jmp lusUnlock
 
-lusOtherCore:
-    CrashGate
+lusUnlockList:
+    call cs:unlock_list_proc
 
 lusUnlock:
     call UnlockCore

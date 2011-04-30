@@ -655,8 +655,23 @@ ptLoop:
     cmp edx,eax
     ja ptNext
 ;
-    int 3
-    clc    
+    mov si,OFFSET core_balance_arr    
+    mov ax,ds:[si].cb_thread_sel
+    or ax,ax
+    jz ptNext
+;
+    mov eax,ds:[si].cb_elapsed
+    or eax,eax
+    jz ptNext
+;
+    test eax,80000000h
+    jnz ptNext
+;
+    mov fs,ds:[si].cb_thread_sel
+    mov ax,fs:p_core_sel
+    mov es:p_core_sel,ax
+    clc
+    jmp ptDone
 
 ptNext:    
     add bx,SIZE thread_balance_struc
@@ -713,10 +728,6 @@ btBalanceClockLoop:
     call CreateBalancerLists
     call CenterCoreList
     call PickThread
-    jc btBalanceLoop
-;    
-    int 3
-;
     jmp btBalanceLoop    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
