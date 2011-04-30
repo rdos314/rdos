@@ -2855,9 +2855,9 @@ MoveThread  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           LoadCurrentThread
+;           NAME:           LoadThread
 ;
-;           DESCRIPTION:    Load register-state for current thread
+;           DESCRIPTION:    Load a new thread
 ;
 ;       PARAMETERS:     FS  Core selector
 ;
@@ -2865,7 +2865,7 @@ MoveThread  Endp
 
     extrn thread_create:near
 
-LoadCurrentThread:
+LoadThread:
 
 load_thread_loop:
     call UpdateLists
@@ -3382,56 +3382,7 @@ cctPop:
 
 cctDone:
     mov fs:ps_curr_thread,0
-    jmp LoadCurrentThread
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           BlockCurrentThread
-;
-;           DESCRIPTION:    Block current thread.
-;               Also releases scheduler lock
-;
-;           PARAMETERS:         AX:EDI      Block list. AX = 0, no sleep list
-;               FS      Core selector
-;
-;       RETURNS:    ES      Blocked thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-BlockCurrentThread:
-    mov es,fs:ps_curr_thread
-    mov fs:ps_curr_thread,0
-;
-    mov es:p_sleep_sel,ax
-    mov es:p_sleep_offset,edi
-;
-    or ax,ax
-    jz bctUnlock
-;    
-    mov dx,fs
-    cmp ax,dx
-    je bctCore
-;
-    call cs:lock_list_proc    
-    push ds
-    mov ds,ax
-    InsertBlock32
-    pop ds
-    call cs:unlock_list_proc
-    jmp bctUnlock    
-
-bctCore:
-    call cs:lock_core_list_proc    
-    push ds
-    mov ds,ax
-    InsertBlock32
-    pop ds
-    call cs:unlock_core_list_proc
-
-bctUnlock:      
-    jmp LoadCurrentThread
+    jmp LoadThread
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3532,7 +3483,7 @@ start_core:
     sti
     call LockCore
     or fs:ps_flags,PS_FLAG_PREEMPT    
-    jmp LoadCurrentThread
+    jmp LoadThread
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3790,10 +3741,13 @@ null_thread0:
 null_ap_ok:   
     push OFFSET null_loop
     call SaveCurrentThread
-;    
-    xor ax,ax
-    xor edi,edi
-    jmp BlockCurrentThread
+;
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    mov es:p_sleep_sel,0
+    mov es:p_sleep_offset,0
+    jmp LoadThread
 
 null_thread:
     sti
@@ -3809,9 +3763,12 @@ null_thread:
     push OFFSET null_loop
     call SaveCurrentThread
 ;
-    xor ax,ax
-    xor edi,edi
-    jmp BlockCurrentThread
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    mov es:p_sleep_sel,0
+    mov es:p_sleep_offset,0
+    jmp LoadThread
     
 null_loop:
     hlt
@@ -4018,7 +3975,7 @@ debug_block_do:
 ;    
     mov es:p_sleep_sel,ds
     mov es:p_sleep_offset,edi
-    jmp LoadCurrentThread
+    jmp LoadThread
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4068,7 +4025,7 @@ double_block:
     mov es,ax    
     mov es:p_error_code,8
     mov fs:ps_curr_thread,0
-,    
+;    
     mov ax,system_data_sel
     mov ds,ax
     mov edi,OFFSET debug_list       
@@ -4079,7 +4036,7 @@ double_block:
 ;    
     mov es:p_sleep_sel,ds
     mov es:p_sleep_offset,edi
-    jmp LoadCurrentThread
+    jmp LoadThread
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5113,7 +5070,7 @@ timer_clock_done:
     mov ds:update_tics,eax
 ;
     StartClock
-    jmp LoadCurrentThread
+    jmp LoadThread
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5219,7 +5176,7 @@ cleanup_thread:
 ;    
     xor ax,ax
     mov es,ax
-    jmp LoadCurrentThread
+    jmp LoadThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5251,7 +5208,7 @@ cleanup_process:
 ;    
     xor ax,ax
     mov es,ax
-    jmp LoadCurrentThread
+    jmp LoadThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5315,7 +5272,7 @@ sleep_thread    PROC far
 ;    
     mov es:p_sleep_sel,ds
     mov es:p_sleep_offset,edi
-    jmp LoadCurrentThread
+    jmp LoadThread
 
 sleep_thread_done:
     GetThread
@@ -5456,20 +5413,18 @@ wait_for_signal PROC far
 ;    
     mov es:p_sleep_sel,ds
     mov es:p_sleep_offset,edi
-    jmp LoadCurrentThread
+    jmp LoadThread
 
 wait_for_signal_clear:
-    call LockCore
     mov es,fs:ps_curr_thread
     mov es:p_signal,0
-    jmp wait_for_signal_unlock
+    jmp wait_for_signal_done
     
-wait_for_signal_unlock_list:
-    call cs:unlock_core_list_proc
-
 wait_for_signal_unlock:
+    call cs:unlock_core_list_proc
     call UnlockCore
-;       
+
+wait_for_signal_done:       
     pop ax
     pop fs
     pop es
@@ -5518,6 +5473,7 @@ wait_for_signal_timeout PROC far
     push edi
 ;
     call LockCore
+    call cs:lock_core_list_proc
 ;
     mov cx,cs
     mov es,cx
@@ -5536,19 +5492,30 @@ wait_for_signal_timeout PROC far
     call SaveLockedThread
 ;
     mov ax,fs
+    mov ds,ax
     mov edi,OFFSET ps_signal_list
-    jmp BlockCurrentThread
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    InsertBlock32
+    call cs:unlock_core_list_proc
+;    
+    mov es:p_sleep_sel,ds
+    mov es:p_sleep_offset,edi
+    jmp LoadThread
 
 wait_for_signal_timeout_clear:
-    call LockCore
     mov es,fs:ps_curr_thread
     mov es:p_signal,0
+    jmp wait_for_signal_timeout_done
     
 wait_for_signal_timeout_unlock:
     mov bx,fs:ps_curr_thread
     StopTimer
+    call cs:unlock_core_list_proc
     call UnlockCore
-;
+
+wait_for_signal_timeout_done:
     pop edi
     pop cx
     pop bx
@@ -5589,13 +5556,21 @@ enter_section   PROC far
     jmp ecsUnlock
 
 ecsBlock:
-    call cs:unlock_list_proc
     mov ax,ds
     push OFFSET ecsDone
     call SaveLockedThread
 ;
+    mov ds,ax
     lea edi,[esi].cs_list   
-    jmp BlockCurrentThread
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    InsertBlock32
+    call cs:unlock_list_proc
+;    
+    mov es:p_sleep_sel,ds
+    mov es:p_sleep_offset,edi
+    jmp LoadThread
 
 ecsUnlock:
     call cs:unlock_list_proc
@@ -5867,13 +5842,21 @@ enter_user_section      PROC far
     jmp eusUnlock
 
 eusBlock:
-    call cs:unlock_list_proc
     mov ax,ds
     push OFFSET eusDone
     call SaveLockedThread
 ;
+    mov ds,ax
     lea edi,[ebx].us_list     
-    jmp BlockCurrentThread
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    InsertBlock32
+    call cs:unlock_list_proc
+;    
+    mov es:p_sleep_sel,ds
+    mov es:p_sleep_offset,edi
+    jmp LoadThread
 
 eusUnlock:
     call cs:unlock_list_proc
@@ -6250,9 +6233,12 @@ wait_until      PROC far
     LocalStartTimer
     sti
 ;
-    xor ax,ax    
-    mov edi,1
-    jmp BlockCurrentThread
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    mov es:p_sleep_sel,0
+    mov es:p_sleep_offset,1
+    jmp LoadThread
 
 wait_until_done:
     popf
@@ -6297,10 +6283,13 @@ wait_milli_sec  PROC far
     cli
     LocalStartTimer
     sti     
-;    
-    xor ax,ax
-    mov edi,1
-    jmp BlockCurrentThread
+;
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    mov es:p_sleep_sel,0
+    mov es:p_sleep_offset,1
+    jmp LoadThread
 
 wait_milli_done:
     popf
@@ -6346,10 +6335,13 @@ wait_micro_sec  PROC far
     cli
     LocalStartTimer
     sti
-;    
-    xor ax,ax
-    mov edi,1
-    jmp BlockCurrentThread
+;
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    mov es:p_sleep_sel,0
+    mov es:p_sleep_offset,1
+    jmp LoadThread
 
 wait_micro_done:
     popf
