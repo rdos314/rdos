@@ -5339,6 +5339,7 @@ signal_thread   PROC far
     cmp ax,es:p_core_sel
     je stThis
 ;
+    mov es:p_core_sel,fs
     mov fs,ax
     call cs:lock_core_list_proc
     mov ax,fs:ps_has_signal
@@ -5436,6 +5437,8 @@ wait_for_signal PROC far
     jmp LoadThread
 
 wait_for_signal_clear:
+    mov ax,core_data_sel
+    mov fs,ax
     mov es,fs:ps_curr_thread
     mov es:p_signal,0
     jmp wait_for_signal_done
