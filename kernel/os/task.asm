@@ -5449,9 +5449,9 @@ wait_for_signal PROC far
     push ax
 ;
     call LockCore
-    call cs:lock_core_list_proc
 ;    
     mov es,fs:ps_curr_thread
+    call cs:lock_core_list_proc
     xor al,al
     xchg al,es:p_signal
     or al,al
@@ -5542,6 +5542,7 @@ wait_for_signal_timeout PROC far
     StartTimer
 ;    
     mov es,bx
+    call cs:lock_core_list_proc
     xor al,al
     xchg al,es:p_signal
     or al,al
@@ -5573,6 +5574,7 @@ wait_for_signal_timeout_clear:
     jmp wait_for_signal_timeout_done
     
 wait_for_signal_timeout_unlock:
+    call cs:unlock_core_list_proc
     mov bx,fs:ps_curr_thread
     StopTimer
     call UnlockCore
