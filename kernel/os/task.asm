@@ -425,8 +425,6 @@ time_diff               DD 0,0
 update_tics             DD 0
 tsc_sub_tics            DD 0
 
-bsp_core                DW 0
-
 system_thread           DW 0
 
 init_clock_proc         DW OFFSET InitPitClock
@@ -477,8 +475,6 @@ InitPitClock    Endp
 ;           NAME:           GetPitTime
 ;
 ;           DESCRIPTION:    Get time using PIT timer 2
-;
-;           PARAMETERS:         ES      Current thread
 ;
 ;           RETURNS:        EDX:EAX     Current system time
 ;
@@ -558,7 +554,7 @@ InitTscClock    Endp
 ;
 ;           DESCRIPTION:    Get time using TSC
 ;
-;           PARAMETERS:         ES      Current thread
+;           RETURNS:        EDX:EAX     System time
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1222,10 +1218,6 @@ init_tlb_done:
 ;
     mov edx,gdt_linear
     CreateCore
-;    
-    mov ax,kernel_patch_sel
-    mov ds,ax
-    mov ds:bsp_core,es
 ;
     pop ds
     popa
@@ -6390,12 +6382,14 @@ check_list      Proc far
     push ax
     push si
 ;
-    mov cx,cs:core_count
-    mov si,OFFSET core_arr
+    GetCoreCount
     xor dx,dx
 
 check_cpu_loop:
-    mov fs,cs:[si]
+    mov ax,dx
+    GetCoreNumber
+    jc check_not_cpu
+;    
     cmp bx,fs:ps_curr_thread
     je check_curr_ok
 ;
@@ -6550,18 +6544,13 @@ debug_break:
 get_system_time_name    DB 'Get System Time',0
 
 get_system_time PROC far
-    push ds
-    push es
     push fs
 ;    
     mov ax,core_data_sel
     mov fs,ax
-    mov es,fs:ps_curr_thread
     call cs:get_time_proc
 ;    
     pop fs
-    pop es
-    pop ds
     retf32
 get_system_time ENDP
 
@@ -6580,20 +6569,15 @@ get_system_time ENDP
 get_time_name   DB 'Get Time',0
 
 get_time    PROC far
-    push ds
-    push es
     push fs
 ;    
     mov ax,core_data_sel
     mov fs,ax
-    mov es,fs:ps_curr_thread
     call cs:get_time_proc
     add eax,cs:time_diff
     adc edx,cs:time_diff+4
 ;
     pop fs
-    pop es
-    pop ds
     retf32
 get_time    ENDP
 
