@@ -5565,14 +5565,19 @@ wait_for_signal_timeout PROC far
 
 wait_for_signal_timeout_clear:
     call LockCore
-    mov es,fs:ps_curr_thread
+    mov bx,fs:ps_curr_thread
+    StopTimer
+    mov es,bx
     mov es:p_signal,0
+    call UnlockCore
+    jmp wait_for_signal_timeout_done
     
 wait_for_signal_timeout_unlock:
     mov bx,fs:ps_curr_thread
     StopTimer
     call UnlockCore
-;
+
+wait_for_signal_timeout_done:
     pop edi
     pop cx
     pop bx
