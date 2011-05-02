@@ -5498,6 +5498,7 @@ wait_for_signal PROC far
     push ax
 ;
     call LockCore
+    call cs:lock_core_list_proc
 ;    
     mov es,fs:ps_curr_thread
     xor al,al
@@ -5509,17 +5510,30 @@ wait_for_signal PROC far
     call SaveLockedThread
 ;
     mov ax,fs
+    mov ds,ax
     mov edi,OFFSET ps_signal_list
-    jmp BlockCurrentThread
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    InsertBlock32
+    call cs:unlock_core_list_proc
+;        
+    mov es:p_sleep_sel,ds
+    mov es:p_sleep_offset,edi
+    jmp LoadThread
 
 wait_for_signal_clear:
-    call LockCore
+    mov ax,core_data_sel
+    mov fs,ax
     mov es,fs:ps_curr_thread
     mov es:p_signal,0
+    jmp wait_for_signal_done
 
 wait_for_signal_unlock:
+    call cs:unlock_core_list_proc
     call UnlockCore
-;       
+
+wait_for_signal_done:       
     pop ax
     pop fs
     pop es
