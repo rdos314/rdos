@@ -3388,55 +3388,6 @@ cctDone:
     mov fs:ps_curr_thread,0
     jmp LoadThread
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           BlockCurrentThread
-;
-;           DESCRIPTION:    Block current thread.
-;               Also releases scheduler lock
-;
-;           PARAMETERS:         AX:EDI      Block list. AX = 0, no sleep list
-;               FS      Core selector
-;
-;       RETURNS:    ES      Blocked thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-BlockCurrentThread:
-    mov es,fs:ps_curr_thread
-    mov fs:ps_curr_thread,0
-;
-    mov es:p_sleep_sel,ax
-    mov es:p_sleep_offset,edi
-;
-    or ax,ax
-    jz bctUnlock
-;    
-    mov dx,fs
-    cmp ax,dx
-    je bctCore
-;
-    call cs:lock_list_proc    
-    push ds
-    mov ds,ax
-    InsertBlock32
-    pop ds
-    call cs:unlock_list_proc
-    jmp bctUnlock    
-
-bctCore:
-    call cs:lock_core_list_proc    
-    push ds
-    mov ds,ax
-    InsertBlock32
-    pop ds
-    call cs:unlock_core_list_proc
-
-bctUnlock:      
-    jmp LoadThread
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5600,8 +5551,17 @@ wait_for_signal_timeout PROC far
     call SaveLockedThread
 ;
     mov ax,fs
+    mov ds,ax
     mov edi,OFFSET ps_signal_list
-    jmp BlockCurrentThread
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    InsertBlock32
+    call cs:unlock_core_list_proc
+;        
+    mov es:p_sleep_sel,ds
+    mov es:p_sleep_offset,edi
+    jmp LoadThread
 
 wait_for_signal_timeout_clear:
     call LockCore
