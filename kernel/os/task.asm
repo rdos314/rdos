@@ -5644,6 +5644,7 @@ enter_section   PROC far
     push fs
 ;    
     call LockCore
+    call cs:lock_list_proc
     mov dx,ds:[esi].cs_list
     cmp dx,-1
     jne ecsBlock
@@ -5656,10 +5657,20 @@ ecsBlock:
     push OFFSET ecsDone
     call SaveLockedThread
 ;
+    mov ds,ax
     lea edi,[esi].cs_list   
-    jmp BlockCurrentThread
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    InsertBlock32
+    call cs:unlock_list_proc
+;
+    mov es:p_sleep_sel,ds
+    mov es:p_sleep_offset,edi    
+    jmp LoadThread
 
 ecsUnlock:
+    call cs:unlock_list_proc
     call UnlockCore
     
 ecsDone:
@@ -5685,7 +5696,6 @@ ecsDs:
     pop ax
     retf32
 enter_section   ENDP
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5707,22 +5717,22 @@ leave_section   PROC far
     push fs
 ;
     call LockCore
+    call cs:lock_list_proc
     mov ax,ds:[esi].cs_list
     cmp ax,-1
-    je lcsUnlock
+    je lcsUnlockList
 ;    
     or ax,ax
     jnz lcsUnblock
 ;
     mov ds:[esi].cs_list,-1
-    jmp lcsUnlock
+    jmp lcsUnlockList
 
 lcsUnblock:
     push es    
     push esi
     push di
 ;       
-    call cs:lock_list_proc
     add esi,OFFSET cs_list
     RemoveBlock32
     mov es:p_data,0
@@ -5745,6 +5755,10 @@ lcsUnblocked:
     pop di
     pop esi
     pop es
+    jmp lcsUnlock
+
+lcsUnlockList:
+    call cs:unlock_list_proc
 
 lcsUnlock:
     call UnlockCore
@@ -5772,7 +5786,6 @@ lcsDs:
     pop ax
     retf32
 leave_section   ENDP
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
