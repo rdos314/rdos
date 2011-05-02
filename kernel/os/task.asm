@@ -70,9 +70,6 @@ term_proc_list      DW ?
 
 list_lock           DW ?
 
-thread_base_tics    DD 256 DUP(?)
-thread_used_tics    DD 256 DUP(?)
-
 task_seg    ENDS
 
 IFDEF __WASM__
@@ -3648,81 +3645,6 @@ stThreadOk:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           Balancer thread
-;
-;           DESCRIPTION:    Balances threads among available cores
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-balancer_thread_name  DB 'Core Balancer', 0
-
-balancer_thread_pr:
-    mov ax,25
-    WaitMilliSec
-;    
-    mov ax,task_sel
-    mov es,ax    
-    mov ax,system_data_sel
-    mov ds,ax
-;    
-    mov cx,256
-    mov si,OFFSET thread_arr
-    mov di,OFFSET thread_base_tics
-
-btInitLoop:
-    xor eax,eax
-    lodsw
-    or ax,ax
-    jz btInitNext
-;
-    mov fs,ax
-    mov eax,fs:p_lsb_tics
-    xor dx,dx
-    mov fs,dx
-
-btInitNext:
-    stosd
-    loop btInitLoop
-
-btBalanceLoop:
-    mov ax,100
-    WaitMilliSec
-;   
-    mov cx,256
-    mov si,OFFSET thread_arr
-    mov di,OFFSET thread_base_tics
-    mov bx,OFFSET thread_used_tics
-
-btGetLoop:
-    xor eax,eax
-    lodsw
-    or ax,ax
-    jz btGetNext
-;
-    mov fs,ax
-    mov eax,fs:p_lsb_tics
-    xor dx,dx
-    mov fs,dx
-
-btGetNext:
-    mov edx,eax
-    sub edx,es:[di]
-    jnc btInRange
-;
-    xor edx,edx
-
-btInRange:    
-    stosd
-    mov es:[bx],edx
-    add bx,4
-    loop btGetLoop
-;
-    int 3
-    jmp btBalanceLoop    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           StartProcessorNullThreads
 ;
 ;           DESCRIPTION:    Start each of the null threads for a processor
@@ -3743,15 +3665,6 @@ start_processor_null_threads    Proc near
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
     mov ds:lock_core_list_proc,OFFSET LockCoreListMultiple
     mov ds:unlock_core_list_proc,OFFSET UnlockCoreListMultiple
-;    
-    mov ecx,200h
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov si,OFFSET balancer_thread_pr
-    mov di,OFFSET balancer_thread_name
-    mov ax,10
-    CreateThread
 
 start_locks_ok:    
     mov ecx,200h
