@@ -5270,10 +5270,20 @@ cleanup_thread:
     mov bx,cs:system_thread
     Signal    
 ;
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;    
     mov ax,task_sel
+    mov ds,ax    
     mov edi,OFFSET term_thread_list
-    jmp BlockCurrentThread
-
+;
+    call cs:lock_list_proc
+    InsertBlock32
+    call cs:unlock_list_proc
+;
+    xor ax,ax
+    mov es,ax
+    jmp LoadThread        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5292,10 +5302,20 @@ cleanup_process:
     mov bx,cs:system_thread
     Signal    
 ;
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0    
+;
     mov ax,task_sel
+    mov ds,ax
     mov edi,OFFSET term_proc_list
-    jmp BlockCurrentThread
-
+;
+    call cs:lock_list_proc
+    InsertBlock32
+    call cs:unlock_list_proc
+;
+    xor ax,ax
+    mov es,ax        
+    jmp LoadThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
