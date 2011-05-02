@@ -5368,8 +5368,18 @@ sleep_thread    PROC far
     push OFFSET sleep_thread_done
     call SaveCurrentThread
 ;
+    mov ds,ax
     movzx edi,di    
-    jmp BlockCurrentThread
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    call cs:lock_list_proc
+    InsertBlock32
+    call cs:unlock_list_proc
+;        
+    mov es:p_sleep_sel,ds
+    mov es:p_sleep_offset,edi
+    jmp LoadThread
 
 sleep_thread_done:
     GetThread
