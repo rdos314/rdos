@@ -6366,9 +6366,12 @@ wait_until      PROC far
     LocalStartTimer
     sti
 ;
-    xor ax,ax    
-    mov edi,1
-    jmp BlockCurrentThread
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    mov es:p_sleep_sel,0
+    mov es:p_sleep_offset,1    
+    jmp LoadThread
 
 wait_until_done:
     popf
@@ -6414,9 +6417,12 @@ wait_milli_sec  PROC far
     LocalStartTimer
     sti     
 ;    
-    xor ax,ax
-    mov edi,1
-    jmp BlockCurrentThread
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    mov es:p_sleep_sel,0
+    mov es:p_sleep_offset,1    
+    jmp LoadThread
 
 wait_milli_done:
     popf
@@ -6463,9 +6469,12 @@ wait_micro_sec  PROC far
     LocalStartTimer
     sti
 ;    
-    xor ax,ax
-    mov edi,1
-    jmp BlockCurrentThread
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    mov es:p_sleep_sel,0
+    mov es:p_sleep_offset,1    
+    jmp LoadThread
 
 wait_micro_done:
     popf
