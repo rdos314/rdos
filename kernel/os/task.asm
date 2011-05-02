@@ -5928,6 +5928,7 @@ enter_user_section      PROC far
     je eusDone
 ;
     call LockCore
+    call cs:lock_list_proc
     mov ax,ds:[ebx].us_list
     cmp ax,-1
     jne eusBlock
@@ -5940,10 +5941,20 @@ eusBlock:
     push OFFSET eusDone
     call SaveLockedThread
 ;
+    mov ds,ax
     lea edi,[ebx].us_list     
-    jmp BlockCurrentThread
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    InsertBlock32
+    call cs:unlock_list_proc
+;
+    mov es:p_sleep_sel,ds
+    mov es:p_sleep_offset,edi    
+    jmp LoadThread
 
 eusUnlock:
+    call cs:unlock_list_proc
     call UnlockCore
     
 eusDone:
@@ -5983,7 +5994,6 @@ eusDs:
     ApiCheckEax
     retf32
 enter_user_section      ENDP
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -6043,12 +6053,13 @@ lusNotCountError:
     jc lusDone
 ;    
     call LockCore
+    call cs:lock_list_proc
     mov ax,ds:[ebx].us_list
     or ax,ax
     jnz lusUnblock
 ;
     mov ds:[ebx].us_list,-1
-    jmp lusUnlock
+    jmp lusUnlockList
 
 lusUnblock:
     push es
@@ -6056,7 +6067,6 @@ lusUnblock:
     push di
 ;    
     lea esi,ds:[ebx].us_list
-    call cs:lock_list_proc
     RemoveBlock32
     mov es:p_data,0
     call cs:unlock_list_proc
@@ -6080,8 +6090,8 @@ lusUnblocked:
     pop es
     jmp lusUnlock
 
-lusOtherCore:
-    CrashGate
+lusUnlockList:
+    call cs:unlock_list_proc
 
 lusUnlock:
     call UnlockCore
@@ -6116,7 +6126,6 @@ lusDs:
     ApiCheckEax
     retf32
 leave_user_section      ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
