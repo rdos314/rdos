@@ -411,14 +411,11 @@ locked_debug_exception_nr   = 364
 lock_task_nr                = 365
 unlock_task_nr              = 366
 
-add_core_nr                 = 367
 get_core_nr                 = 368
 get_core_count_nr           = 369
 start_core_nr               = 370
 
 timer_expired_nr            = 371
-
-start_multicore_nr          = 372
 
 reload_sys_timer_nr         = 373
 start_sys_timer_nr          = 374
@@ -457,9 +454,6 @@ write_pnp_byte_nr           = 394
 add_sys_env_var_nr          = 395
 delete_sys_env_var_nr       = 396
 find_sys_env_var_nr         = 397
-
-enter_term_thread_nr        = 398
-leave_term_thread_nr        = 399
 
 start_clock_nr              = 400
 sync_clock_nr               = 401

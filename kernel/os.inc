@@ -619,11 +619,6 @@ GetApicId    MACRO
     OsGate get_apic_id_nr
                         ENDM
 
-;   IN  FS      Core selector
-AddCore    MACRO
-    OsGate add_core_nr
-                        ENDM
-
 ;   OUT CX      Core count
 GetCoreCount    MACRO
     OsGate get_core_count_nr
@@ -645,10 +640,6 @@ GetCore    MACRO
 ;   OUT FS      Core selector
 GetCoreNumber    MACRO
     OsGate get_core_num_nr
-                        ENDM
-
-StartMulticore    MACRO
-    OsGate start_multicore_nr
                         ENDM
 
 StartCore    MACRO
@@ -891,14 +882,6 @@ EnterInt    MACRO
 
 LeaveInt    MACRO
     OsGate leave_int_nr
-                        ENDM
-
-EnterTermThreadSection    MACRO
-    OsGate enter_term_thread_nr
-                        ENDM
-
-LeaveTermThreadSection    MACRO
-    OsGate leave_term_thread_nr
                         ENDM
 
 LockTask    MACRO
