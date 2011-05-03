@@ -3409,6 +3409,23 @@ ContinueCurrentThread:
     cmp ax,fs:ps_null_thread
     je cctPop
 ;
+    test fs:ps_flags,PS_FLAG_PREEMPT
+    jz cctLocal
+;
+    mov ax,task_sel
+    mov ds,ax
+    call cs:lock_ready_proc
+    InsertBlock
+    cmp di,ds:global_prio_act
+    jb cctGlobalUnlock
+;
+    mov ds:global_prio_act,di
+
+cctGlobalUnlock:
+    call cs:unlock_ready_proc    
+    jmp cctPop
+        
+cctLocal:
     InsertCoreFirst
     cmp di,fs:ps_prio_act
     jbe cctPop
@@ -5122,6 +5139,7 @@ swap_out    PROC far
     pushf
     push OFFSET swap_out_done
     call SaveCurrentThread
+    or fs:ps_flags,PS_FLAG_PREEMPT
     jmp ContinueCurrentThread
 
 swap_out_done:
