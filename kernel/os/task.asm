@@ -2955,8 +2955,8 @@ load_bp_done:
 
 load_actions_done: 
     call LoadUnlockCore
-    mov ax,fs:ps_has_signal
-    or ax,fs:ps_wakeup_list
+    mov ax,fs:ps_wakeup_list
+    or ax,ax
     jnz load_relock
 ;
     test fs:ps_flags,PS_FLAG_TIMER
@@ -3152,10 +3152,12 @@ SaveCurrentThread       Proc near
 ;    
     mov ds,ds:p_tss_data_sel
     pushfd
-    pop dword ptr ds:tss_eflags
-;    
+    pop eax
+    or ax,200h
+    mov dword ptr ds:tss_eflags,eax    
+;
     pushf
-    pop ax
+    pop ax    
     and ax,NOT 100h
     push ax
     popf
@@ -3223,7 +3225,9 @@ SaveLockedThread    Proc near
 ;
     mov ds,ds:p_tss_data_sel
     pushfd
-    pop dword ptr ds:tss_eflags
+    pop eax
+    or ax,200h
+    mov dword ptr ds:tss_eflags,eax
     mov dword ptr ds:tss_ecx,ecx
     mov dword ptr ds:tss_ebx,ebx
     mov dword ptr ds:tss_ebp,ebp
@@ -4048,9 +4052,7 @@ ptab_init:
     add bx,2
     loop ptab_init
 ;
-    mov es:ps_signal_list,0
     mov es:ps_wakeup_list,0
-    mov es:ps_has_signal,0
     mov es:ps_list_lock,0
 ;
     mov es:ps_nesting,-1
@@ -4215,49 +4217,6 @@ ulWakeupPrioOk:
 
 ulWakeupDone:
     call cs:unlock_core_list_proc
-;    
-    mov fs:ps_has_signal,0
-    mov si,OFFSET ps_signal_list
-    mov ax,fs:[si]
-    or ax,ax
-    jz ulSignalDone
-;       
-    mov dx,ax
-
-ulSignalLoop:
-    mov es,dx
-    mov cl,es:p_signal
-    or cl,cl
-    jz ulSignalNext
-;
-    call cs:lock_core_list_proc
-    mov fs:[si],dx
-    RemoveCoreBlock
-    mov di,es:p_prio
-    InsertCoreBlock
-    cmp di,fs:ps_prio_act
-    jbe ulSignalPrioOk
-;       
-    mov fs:ps_prio_act,di
-    or fs:ps_flags,PS_FLAG_PRIO_CHANGE
-
-ulSignalPrioOk:
-    call cs:unlock_core_list_proc
-;    
-    mov si,OFFSET ps_signal_list
-    mov ax,fs:[si]
-    or ax,ax
-    jz ulSignalDone
-;       
-    mov dx,ax
-    jmp ulSignalLoop
-
-ulSignalNext:   
-    mov dx,es:p_next
-    cmp dx,ax
-    jne ulSignalLoop
-
-ulSignalDone:    
     ret    
 UpdateLists Endp
 
@@ -4607,8 +4566,8 @@ tucRetry:
     test fs:ps_flags,PS_FLAG_TIMER      
     jnz tucSwap
 ;    
-    mov ax,fs:ps_has_signal
-    or ax,fs:ps_wakeup_list
+    mov ax,fs:ps_wakeup_list
+    or ax,ax
     jz tucDone
 
 tucSwap:
@@ -4651,8 +4610,8 @@ ucNestOk:
     test fs:ps_flags,PS_FLAG_TIMER      
     jnz ucSwap
 ;    
-    mov ax,fs:ps_has_signal
-    or ax,fs:ps_wakeup_list
+    mov ax,fs:ps_wakeup_list
+    or ax,ax
     jz ucDone
 
 ucSwap:
