@@ -60,6 +60,7 @@ us_value    DW ?
 us_list     DW ?
 us_owner    DW ?
 us_count    DW ?
+us_lock     DW ?
 
 section_handle_seg          ENDS
 
@@ -4693,6 +4694,26 @@ UnlockKernelSectionMultiple    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockUserSectionMultiple  Proc near
+    push ax
+
+lusmSpinLock:    
+    mov ax,ds:[esi].us_lock
+    or ax,ax
+    je lusmGet
+;
+    pause
+    jmp lusmSpinLock
+
+lusmGet:
+    inc ax
+    xchg ax,ds:[esi].us_lock
+    or ax,ax
+    je lusmDone
+;
+    jmp lusmSpinLock
+
+lusmDone:
+    pop ax    
     ret
 LockUserSectionMultiple  Endp
 
@@ -4708,6 +4729,8 @@ LockUserSectionMultiple  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlockUserSectionMultiple    Proc near
+    mov ds:[esi].us_lock,0
+    sti
     ret
 UnlockUserSectionMultiple    Endp
 
