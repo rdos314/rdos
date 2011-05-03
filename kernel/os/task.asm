@@ -6345,12 +6345,14 @@ wait_micro_sec  ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Wait_state DB 'Wait',0
-Ready_state DB 'Ready',0
-Signal_state DB 'Signal',0
-Debug_state DB 'Debug',0
+Wait_state      DB 'Wait',0
+Ready_state     DB 'Ready',0
+Signal_state    DB 'Signal',0
+Debug_state     DB 'Debug',0
 
-Run_state DB 'Run ', 0
+Wakeup_state    DB 'Wakeup ',0 
+Run_state       DB 'Run ', 0
+Ready_cpu_state DB 'Ready ',0
 
 check_list      Proc far
     push ds
@@ -6371,7 +6373,18 @@ check_cpu_loop:
 ;
     cmp bx,fs:ps_null_thread
     je check_null_ok
-;    
+;   
+    mov ax,fs
+    mov fs,bx
+    cmp ax,fs:p_sleep_sel
+    jne check_cpu_next
+;
+    mov eax,fs:p_sleep_offset
+    cmp ax,OFFSET ps_wakeup_list
+    je check_wakeup_ok
+    jmp check_cpu_ready_ok
+
+check_cpu_next:
     inc dx
     add si,2
     loop check_cpu_loop
@@ -6380,10 +6393,18 @@ check_cpu_loop:
 check_curr_ok:
     mov si,OFFSET Run_state
     jmp check_copy_id
-
+    
 check_null_ok:
-    mov si,OFFSET Ready_state
-    jmp check_copy_cpu
+    mov si,OFFSET Ready_cpu_state
+    jmp check_copy_id
+
+check_wakeup_ok:
+    mov si,OFFSET Wakeup_state
+    jmp check_copy_id
+
+check_cpu_ready_ok:
+    mov si,OFFSET Ready_cpu_state
+    jmp check_copy_id
 
 check_copy_id:
     mov al,cs:[si]
