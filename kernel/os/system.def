@@ -241,8 +241,8 @@ thread_seg	STRUC
 	p_tss_data_sel	    DW ?
 	p_387_sel		    DW ?
 	p_thread_sel	    DW ?
-	p_core_sel          DW ?
 	p_app_sel		    DW ?
+	p_spinlock          DW ?
 	p_free_proc		    DD ?
 	p_cr3			    DD ?
 	p_error_code	    DW ?

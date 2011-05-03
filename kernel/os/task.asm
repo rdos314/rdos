@@ -2814,40 +2814,6 @@ AddCallback Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           MoveThread
-;
-;           DESCRIPTION:    Move thread to another core
-;
-;       PARAMETERS:         FS      Core selector
-;                           ES      Thread to move
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-MoveThread  Proc near
-    push fs
-;
-    mov fs,es:p_core_sel
-    call cs:lock_core_list_proc
-    mov ax,fs:ps_has_signal
-    or ax,fs:ps_wakeup_list
-    mov di,OFFSET ps_wakeup_list
-    InsertCoreBlock
-    call cs:unlock_core_list_proc
-;
-    or ax,ax
-    jnz mtDone
-;
-    mov al,61h
-    SendInt
-
-mtDone:    
-    pop fs
-    ret
-MoveThread  Endp            
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           LoadThread
 ;
 ;           DESCRIPTION:    Load a new thread
@@ -2901,10 +2867,6 @@ load_retry:
     mov ax,es
     cmp ax,fs:ps_null_thread
     je load_thread_loop
-;
-    mov ax,fs
-    cmp ax,es:p_core_sel
-    jne load_move_thread
 ;    
     mov di,es:p_prio
     InsertCoreFirst
@@ -2915,10 +2877,6 @@ load_retry:
     or fs:ps_flags,PS_FLAG_PRIO_CHANGE
 
 load_retry_do:
-    jmp load_thread_loop
-
-load_move_thread:
-    call MoveThread
     jmp load_thread_loop
 
 load_reload_timer:
@@ -3354,15 +3312,7 @@ ContinueCurrentThread:
     mov di,es:p_prio
     cmp ax,fs:ps_null_thread
     je cctPop
-;    
-    mov ax,fs
-    cmp ax,es:p_core_sel
-    je cctInsertHere
 ;
-    call MoveThread
-    jmp cctPop
-
-cctInsertHere:
     InsertCoreFirst
     cmp di,fs:ps_prio_act
     jbe cctPop
@@ -3749,7 +3699,6 @@ null_thread:
     mov es:p_sleep_sel,fs
     mov es:p_sleep_offset,0
     mov fs:ps_null_thread,ax
-    mov es:p_core_sel,fs
 ;
     push OFFSET null_loop
     call SaveCurrentThread
@@ -3797,14 +3746,6 @@ WakeThread      PROC near
     mov es:p_data,eax
     call cs:unlock_list_proc
 ;
-    mov ax,fs
-    cmp ax,es:p_core_sel
-    je wtHere
-;
-    call MoveThread
-    jmp wtUnlock
-
-wtHere:    
     call cs:lock_core_list_proc
     mov di,OFFSET ps_wakeup_list
     InsertCoreBlock
@@ -5056,14 +4997,6 @@ wake_new    PROC near
     call SaveCurrentThread
 ;
     mov es,dx
-    mov ax,fs
-    cmp ax,es:p_core_sel
-    je wake_here
-;
-    call MoveThread
-    jmp ContinueCurrentThread
-
-wake_here:
     mov di,es:p_prio
     InsertCoreBlock
     cmp di,fs:ps_prio_act
@@ -5609,15 +5542,7 @@ lcsUnblock:
     RemoveBlock32
     mov es:p_data,0
     call cs:unlock_list_proc
-;
-    mov ax,fs
-    cmp ax,es:p_core_sel
-    je lcsHere
 ;    
-    call MoveThread
-    jmp lcsUnblocked
-
-lcsHere:    
     call cs:lock_core_list_proc
     mov di,OFFSET ps_wakeup_list
     InsertCoreBlock
@@ -5943,14 +5868,6 @@ lusUnblock:
     mov es:p_data,0
     call cs:unlock_list_proc
 ;
-    mov ax,fs
-    cmp ax,es:p_core_sel
-    je lusHere
-;
-    call MoveThread
-    jmp lusUnblocked    
-
-lusHere:    
     call cs:lock_core_list_proc
     mov di,OFFSET ps_wakeup_list
     InsertCoreBlock
@@ -6193,14 +6110,6 @@ wake_until      PROC far
     mov ax,fs:ps_sel
     mov fs,ax
     mov es,cx
-;
-    cmp ax,es:p_core_sel
-    je wuHere
-;
-    call MoveThread
-    jmp wuDone
-
-wuHere:    
     call cs:lock_core_list_proc
     mov di,OFFSET ps_wakeup_list
     InsertCoreBlock
