@@ -5491,7 +5491,6 @@ enter_section_name      DB 'Enter Critical Section',0
 enter_section   PROC far
     push ax
     push dx
-    push ds
     push fs
 ;    
     call LockCore
@@ -5534,15 +5533,6 @@ ecsDone:
 ecsFs:
     mov fs,ax
 ;
-    pop ax
-    verr ax
-    jz ecsDs
-;
-    xor ax,ax
-    
-ecsDs:
-    mov ds,ax
-;
     pop dx
     pop ax
     retf32
@@ -5564,7 +5554,6 @@ leave_section_name      DB 'Leave Critical Section',0
 leave_section   PROC far
     push ax
     push dx
-    push ds
     push fs
 ;
     call LockCore
@@ -5615,15 +5604,6 @@ lcsDone:
     
 lcsFs:
     mov fs,ax
-;
-    pop ax
-    verr ax
-    jz lcsDs
-;
-    xor ax,ax
-    
-lcsDs:
-    mov ds,ax
 ;
     pop dx
     pop ax
