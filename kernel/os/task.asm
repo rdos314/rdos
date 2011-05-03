@@ -5284,7 +5284,6 @@ signal_thread_name      DB 'Signal',0
 
 signal_thread   PROC far
     push ax
-    push ds
     push es
     push fs
 ;
@@ -5326,15 +5325,6 @@ signal_fs_ok:
     
 signal_es_ok:
     mov es,ax
-;       
-    pop ax
-    verr ax
-    jz signal_ds_ok
-;
-    xor ax,ax
-    
-signal_ds_ok:
-    mov ds,ax
     pop ax
     retf32
 signal_thread   ENDP
@@ -5354,7 +5344,6 @@ signal_thread   ENDP
 wait_for_signal_name    DB 'Wait For Signal',0
 
 wait_for_signal PROC far
-    push ds
     push es
     push fs
     push ax
@@ -5393,7 +5382,6 @@ wait_for_signal_done:
     pop ax
     pop fs
     pop es
-    pop ds
     retf32
 wait_for_signal ENDP
 
@@ -5429,7 +5417,6 @@ signal_timeout  Endp
 wait_for_signal_timeout_name    DB 'Wait For Signal With Timeout',0
 
 wait_for_signal_timeout PROC far
-    push ds
     push es
     push fs
     push ax
@@ -5485,7 +5472,6 @@ wait_for_signal_timeout_done:
     pop ax
     pop fs
     pop es
-    pop ds
     retf32
 wait_for_signal_timeout ENDP
     
