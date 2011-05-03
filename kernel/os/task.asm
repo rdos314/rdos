@@ -434,26 +434,32 @@ code    SEGMENT byte public use16 'CODE'
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-time_diff               DD 0,0
-update_tics             DD 0
-tsc_sub_tics            DD 0
+time_diff                   DD 0,0
+update_tics                 DD 0
+tsc_sub_tics                DD 0
 
-system_thread           DW 0
+system_thread               DW 0
 
-init_clock_proc         DW OFFSET InitPitClock
-get_time_proc           DW OFFSET GetPitTime
+init_clock_proc             DW OFFSET InitPitClock
+get_time_proc               DW OFFSET GetPitTime
 
-lock_list_proc          DW OFFSET LockListSingle
-unlock_list_proc        DW OFFSET UnlockListSingle
+lock_list_proc              DW OFFSET LockListSingle
+unlock_list_proc            DW OFFSET UnlockListSingle
 
-lock_thread_proc        DW OFFSET LockThreadSingle
-unlock_thread_proc      DW OFFSET UnlockThreadSingle
+lock_thread_proc            DW OFFSET LockThreadSingle
+unlock_thread_proc          DW OFFSET UnlockThreadSingle
 
-lock_ready_proc         DW OFFSET LockReadySingle
-unlock_ready_proc       DW OFFSET UnlockReadySingle
+lock_ready_proc             DW OFFSET LockReadySingle
+unlock_ready_proc           DW OFFSET UnlockReadySingle
 
-core_count              DW 0
-core_arr                DW MAX_CORES DUP(0)
+lock_kernel_section_proc    DW OFFSET LockKernelSectionSingle
+unlock_kernel_section_proc  DW OFFSET UnlockKernelSectionSingle
+
+lock_user_section_proc      DW OFFSET LockUserSectionSingle
+unlock_user_section_proc    DW OFFSET UnlockUserSectionSingle
+
+core_count                  DW 0
+core_arr                    DW MAX_CORES DUP(0)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3757,6 +3763,10 @@ start_processor_null_threads    Proc near
     mov ds:unlock_thread_proc,OFFSET UnlockThreadMultiple
     mov ds:lock_ready_proc,OFFSET LockReadyMultiple
     mov ds:unlock_ready_proc,OFFSET UnlockReadyMultiple
+    mov ds:lock_kernel_section_proc,OFFSET LockKernelSectionMultiple
+    mov ds:unlock_kernel_section_proc,OFFSET UnlockKernelSectionMultiple
+    mov ds:lock_user_section_proc,OFFSET LockUserSectionMultiple
+    mov ds:unlock_user_section_proc,OFFSET UnlockUserSectionMultiple
 
 start_locks_ok:    
     mov ecx,200h
@@ -4412,6 +4422,66 @@ UnlockReadySingle    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           LockKernelSectionSingle
+;
+;           DESCRIPTION:    Lock kernel critical section, single processor version
+;
+;           PARAMETERS:     DS:ESI      Section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockKernelSectionSingle  Proc near
+    ret
+LockKernelSectionSingle  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockKernelSectionSingle
+;
+;           DESCRIPTION:    Unlock kernel critical section, single processor version
+;
+;           PARAMETERS:     DS:ESI      Section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockKernelSectionSingle    Proc near
+    ret
+UnlockKernelSectionSingle    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LockUserSectionSingle
+;
+;           DESCRIPTION:    Lock user critical section, single processor version
+;
+;           PARAMETERS:     DS:ESI      Section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockUserSectionSingle  Proc near
+    ret
+LockUserSectionSingle  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockUserSectionSingle
+;
+;           DESCRIPTION:    Unlock user critical section, single processor version
+;
+;           PARAMETERS:     DS:ESI      Section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockUserSectionSingle    Proc near
+    ret
+UnlockUserSectionSingle    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           LockListMultiple
 ;
 ;           DESCRIPTION:    Lock list, multiple processor version
@@ -4580,6 +4650,66 @@ UnlockReadyMultiple    Proc near
     sti
     ret
 UnlockReadyMultiple    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LockKernelSectionMultiple
+;
+;           DESCRIPTION:    Lock kernel critical section, multiple processor version
+;
+;           PARAMETERS:     DS:ESI      Section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockKernelSectionMultiple  Proc near
+    ret
+LockKernelSectionMultiple  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockKernelSectionMultiple
+;
+;           DESCRIPTION:    Unlock kernel critical section, multiple processor version
+;
+;           PARAMETERS:     DS:ESI      Section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockKernelSectionMultiple    Proc near
+    ret
+UnlockKernelSectionMultiple    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LockUserSectionMultiple
+;
+;           DESCRIPTION:    Lock user critical section, multiple processor version
+;
+;           PARAMETERS:     DS:ESI      Section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockUserSectionMultiple  Proc near
+    ret
+LockUserSectionMultiple  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockUserSectionMultiple
+;
+;           DESCRIPTION:    Unlock user critical section, multiple processor version
+;
+;           PARAMETERS:     DS:ESI      Section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockUserSectionMultiple    Proc near
+    ret
+UnlockUserSectionMultiple    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5572,7 +5702,7 @@ enter_section   PROC far
     push fs
 ;    
     call LockCore
-    call cs:lock_list_proc
+    call cs:lock_kernel_section_proc
     mov dx,ds:[esi].cs_list
     cmp dx,-1
     jne ecsBlock
@@ -5591,14 +5721,14 @@ ecsBlock:
     mov fs:ps_curr_thread,0
 ;
     InsertBlock32
-    call cs:unlock_list_proc
+    call cs:unlock_kernel_section_proc
 ;
     mov es:p_sleep_sel,ds
     mov es:p_sleep_offset,edi    
     jmp LoadThread
 
 ecsUnlock:
-    call cs:unlock_list_proc
+    call cs:unlock_kernel_section_proc
     call UnlockCore
     
 ecsDone:
@@ -5635,7 +5765,7 @@ leave_section   PROC far
     push fs
 ;
     call LockCore
-    call cs:lock_list_proc
+    call cs:lock_kernel_section_proc
     mov ax,ds:[esi].cs_list
     cmp ax,-1
     je lcsUnlockList
@@ -5654,7 +5784,7 @@ lcsUnblock:
     add esi,OFFSET cs_list
     RemoveBlock32
     mov es:p_data,0
-    call cs:unlock_list_proc
+    call cs:unlock_kernel_section_proc
 ;    
     cli
     mov di,OFFSET ps_wakeup_list
@@ -5668,7 +5798,7 @@ lcsUnblocked:
     jmp lcsUnlock
 
 lcsUnlockList:
-    call cs:unlock_list_proc
+    call cs:unlock_kernel_section_proc
 
 lcsUnlock:
     call UnlockCore
@@ -5829,7 +5959,7 @@ enter_user_section      PROC far
     je eusDone
 ;
     call LockCore
-    call cs:lock_list_proc
+    call cs:lock_user_section_proc
     mov ax,ds:[ebx].us_list
     cmp ax,-1
     jne eusBlock
@@ -5848,14 +5978,14 @@ eusBlock:
     mov fs:ps_curr_thread,0
 ;
     InsertBlock32
-    call cs:unlock_list_proc
+    call cs:unlock_user_section_proc
 ;
     mov es:p_sleep_sel,ds
     mov es:p_sleep_offset,edi    
     jmp LoadThread
 
 eusUnlock:
-    call cs:unlock_list_proc
+    call cs:unlock_user_section_proc
     call UnlockCore
     
 eusDone:
@@ -5954,7 +6084,7 @@ lusNotCountError:
     jc lusDone
 ;    
     call LockCore
-    call cs:lock_list_proc
+    call cs:lock_user_section_proc
     mov ax,ds:[ebx].us_list
     or ax,ax
     jnz lusUnblock
@@ -5970,7 +6100,7 @@ lusUnblock:
     lea esi,ds:[ebx].us_list
     RemoveBlock32
     mov es:p_data,0
-    call cs:unlock_list_proc
+    call cs:unlock_user_section_proc
 ;
     cli
     mov di,OFFSET ps_wakeup_list
@@ -5984,7 +6114,7 @@ lusUnblocked:
     jmp lusUnlock
 
 lusUnlockList:
-    call cs:unlock_list_proc
+    call cs:unlock_user_section_proc
 
 lusUnlock:
     call UnlockCore
