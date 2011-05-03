@@ -45,6 +45,8 @@ MAX_CORES   = 64
 SLEEP_SEL_WAIT  = 1
 SLEEP_SEL_SIGNAL = 2
 
+DEFAULT_GLOBAL  = 35        ; 35% of wakeup-entries are put into global ready-queue
+
 TIME_SYNC_RESET = 0
 TIME_SYNC_IDLE  = 1
 TIME_SYNC_WAIT  = 2
@@ -67,6 +69,9 @@ global_ptab         DW 256 DUP(?)
 global_prio_act     DW ?
 
 global_spinlock     DW ?
+
+global_post_perc    DB ?
+curr_post_val       DB ?
 
 time_sync_state     DW ?
 sync_core_count     DW ?
@@ -835,6 +840,8 @@ init_tlb_done:
     mov ds:last_time_val+4,0
     mov ds:time_sync_state,TIME_SYNC_RESET
 ;
+    mov ds:global_post_perc,DEFAULT_GLOBAL
+    mov ds:curr_post_val,0
     mov ds:global_spinlock,0
     xor ax,ax
     mov bx,OFFSET global_ptab
@@ -2724,6 +2731,7 @@ SetupPreempt    Endp
 ;           DESCRIPTION:    Get next thread to run
 ;
 ;           PARAMETERS:     FS      Core selector
+;                           DS      Task sel
 ;
 ;       RETURNS:    ES      Thread to run next
 ;
@@ -2731,8 +2739,6 @@ SetupPreempt    Endp
 
 GetNextThread    Proc near
     sti
-    mov ax,task_sel
-    mov ds,ax
     and fs:ps_flags,NOT PS_FLAG_PRIO_CHANGE
 ;
     call HandleGlobal
@@ -2900,24 +2906,53 @@ AddCallback Endp
 LoadThread:
 
 load_thread_loop:
+    mov ax,task_sel
+    mov ds,ax
+
+load_thread_wakeup_loop:    
     cli
     mov si,OFFSET ps_wakeup_list
     mov ax,fs:[si]
     or ax,ax
     jz load_thread_wakeup_done
 ;
+    mov al,ds:curr_post_val
+    add al,ds:global_post_perc
+    sub al,100
+    jnc load_thread_wakeup_global
+
+load_wakeup_local:
+    add al,100
+    mov ds:curr_post_val,al
     RemoveCoreBlock
+    sti
+;    
     mov di,es:p_prio
     InsertCoreBlock
     cmp di,fs:ps_prio_act
-    jbe load_thread_wakeup_prio_ok
+    jbe load_thread_wakeup_loop
 ;       
     mov fs:ps_prio_act,di
+    jmp load_thread_wakeup_loop
 
-load_thread_wakeup_prio_ok:
+load_thread_wakeup_global:
+    mov ds:curr_post_val,al
+;
+    RemoveCoreBlock
     sti
-    jmp load_thread_loop
+;
+    mov di,es:p_prio
+    call cs:lock_ready_proc
+    InsertBlock
+    cmp di,ds:global_prio_act
+    jb load_thread_global_unlock
+;
+    mov ds:global_prio_act,di
 
+load_thread_global_unlock:
+    call cs:unlock_ready_proc    
+    jmp load_thread_wakeup_loop
+    
 load_thread_wakeup_done:
     sti    
     call GetNextThread
