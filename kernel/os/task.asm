@@ -2511,6 +2511,53 @@ sim_get_flags   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           HandleGlobal
+;
+;           DESCRIPTION:    Handle global list
+;
+;           PARAMETERS:     DS      Task sel
+;                           FS      Core selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleGlobal    Proc near
+    mov si,ds:global_prio_act
+    cmp si,fs:ps_prio_act
+    jbe hgDone
+;
+    call cs:lock_ready_proc
+    RemoveBlock
+;
+    mov ax,[si]
+    or ax,ax
+    jnz hgUnlock
+
+hgPrioLoop:
+    or si,si
+    jz hgSavePrio
+;    
+    sub si,2
+    mov ax,[si]
+    or ax,ax
+    jz hgPrioLoop
+
+hgSavePrio:
+    mov ds:global_prio_act,si
+
+hgUnlock:
+    call cs:unlock_ready_proc
+;
+    mov di,es:p_prio
+    InsertCoreBlock
+    mov fs:ps_prio_act,di
+
+hgDone:    
+    ret
+HandleGlobal   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           HandlePreempt
 ;
 ;           DESCRIPTION:    Handle preempt
@@ -2684,8 +2731,11 @@ SetupPreempt    Endp
 
 GetNextThread    Proc near
     sti
+    mov ax,task_sel
+    mov ds,ax
     and fs:ps_flags,NOT PS_FLAG_PRIO_CHANGE
 ;
+    call HandleGlobal
     call HandlePreempt
     call HandlePrio
     call GetPrioThread
@@ -2850,7 +2900,26 @@ AddCallback Endp
 LoadThread:
 
 load_thread_loop:
-    call UpdateLists
+    cli
+    mov si,OFFSET ps_wakeup_list
+    mov ax,fs:[si]
+    or ax,ax
+    jz load_thread_wakeup_done
+;
+    RemoveCoreBlock
+    mov di,es:p_prio
+    InsertCoreBlock
+    cmp di,fs:ps_prio_act
+    jbe load_thread_wakeup_prio_ok
+;       
+    mov fs:ps_prio_act,di
+
+load_thread_wakeup_prio_ok:
+    sti
+    jmp load_thread_loop
+
+load_thread_wakeup_done:
+    sti    
     call GetNextThread
 
 load_reload_loop:
@@ -4196,45 +4265,6 @@ gpnDone:
     retf32
 get_core_num   Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UpdateLists
-;
-;           DESCRIPTION:    Update lists (signals + wakeup)
-;
-;       PARAMETERS:     FS      Core sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateLists Proc near
-
-ulWakeupLoop:
-    cli
-    mov si,OFFSET ps_wakeup_list
-    mov ax,fs:[si]
-    or ax,ax
-    jz ulWakeupDone
-;
-    RemoveCoreBlock
-    mov di,es:p_prio
-    InsertCoreBlock
-    cmp di,fs:ps_prio_act
-    jbe ulWakeupPrioOk
-;       
-    mov fs:ps_prio_act,di
-    or fs:ps_flags,PS_FLAG_PRIO_CHANGE
-
-ulWakeupPrioOk:
-    sti
-    jmp ulWakeupLoop
-
-ulWakeupDone:
-    sti
-    ret    
-UpdateLists Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -5060,15 +5090,10 @@ wake_new    PROC near
     call SaveCurrentThread
 ;
     mov es,dx
-    mov di,es:p_prio
+    cli
+    mov di,OFFSET ps_wakeup_list
     InsertCoreBlock
-    cmp di,fs:ps_prio_act
-    jb wake_new_lower
-;       
-    mov fs:ps_prio_act,di
-    or fs:ps_flags,PS_FLAG_PRIO_CHANGE
-
-wake_new_lower:
+    sti
     jmp ContinueCurrentThread
 
 wake_new_other_core:
