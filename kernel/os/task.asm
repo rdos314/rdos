@@ -5358,15 +5358,14 @@ wait_for_signal PROC far
     or al,al
     jnz wait_for_signal_unlock
 ;
-    push OFFSET wait_for_signal_clear
-    call SaveLockedThread
-;    
-    mov es,fs:ps_curr_thread
-    mov fs:ps_curr_thread,0
-;
     mov es:p_sleep_sel,SLEEP_SEL_SIGNAL
     mov es:p_sleep_offset,0    
     call cs:unlock_thread_proc
+;
+    push OFFSET wait_for_signal_clear
+    call SaveLockedThread
+;    
+    mov fs:ps_curr_thread,0
     jmp LoadThread
 
 wait_for_signal_clear:
@@ -5444,15 +5443,14 @@ wait_for_signal_timeout PROC far
     or al,al
     jnz wait_for_signal_timeout_unlock
 ;
-    push OFFSET wait_for_signal_timeout_clear
-    call SaveLockedThread
-;    
-    mov es,fs:ps_curr_thread
-    mov fs:ps_curr_thread,0
-;
     mov es:p_sleep_sel,SLEEP_SEL_SIGNAL
     mov es:p_sleep_offset,0    
     call cs:unlock_thread_proc
+;
+    push OFFSET wait_for_signal_timeout_clear
+    call SaveLockedThread
+;    
+    mov fs:ps_curr_thread,0
     jmp LoadThread
 
 wait_for_signal_timeout_clear:
