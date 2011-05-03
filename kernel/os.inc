@@ -46,14 +46,17 @@ pm_call     EQU -12
 section_typ     STRUC
 cs_value    DW ?
 cs_list     DW ?
+cs_lock     DW ?
 section_typ     ENDS
 
 read_write_section_typ  STRUC
 ssync_value         DW ?
 ssync_list          DW ?
+ssync_lock          DW ?
 sread_value         DW ?
-swrite_value    DW ?
+swrite_value        DW ?
 swrite_list         DW ?
+swrite_lock         DW ?
 read_write_section_typ  ENDS
 
 pause   MACRO
@@ -702,6 +705,7 @@ SignalWait      MACRO
 InitSection     MACRO section
     mov section.cs_value,0
     mov section.cs_list,0
+    mov section.cs_lock,0
                         ENDM
 
 EnterSection    MACRO section
@@ -733,9 +737,11 @@ leave_section_donep:
 InitReadWriteSection    MACRO section
     mov section.ssync_value,0
     mov section.ssync_list,0
+    mov section.ssync_lock,0
     mov section.sread_value,0
     mov section.swrite_value,0
     mov section.swrite_list,0
+    mov section.swrite_lock,0
                         ENDM
 
 EnterReadSection    MACRO section

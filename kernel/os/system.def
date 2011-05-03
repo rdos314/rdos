@@ -100,8 +100,8 @@ phys_free_pages		DD ?
 free_phys_list		DD ?
 free_dma_phys_list	DD ?
 unused_phys_list	DD ?
-phys_section		section_typ <>
-gdt_section			section_typ <>
+
+dummy_pad           DW 4 DUP(?)
 
 debug_list			DW ?
 
@@ -146,6 +146,9 @@ apic_rest           DW ?
 ; EDX   Linear address
 ; ECX   Pages
 tlb_flush_proc      DD ?
+
+phys_section		section_typ <>
+gdt_section			section_typ <>
 
 enter_patch_proc    DW ?
 leave_patch_proc    DW ?

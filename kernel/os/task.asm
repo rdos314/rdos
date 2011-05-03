@@ -2540,6 +2540,14 @@ HandleGlobal    Proc near
     jbe hgDone
 ;
     call cs:lock_ready_proc
+    mov si,ds:global_prio_act
+    cmp si,fs:ps_prio_act
+    ja hgRemove
+;
+    call cs:unlock_ready_proc
+    jmp hgDone    
+
+hgRemove:
     RemoveBlock
 ;
     mov ax,[si]
@@ -2923,6 +2931,12 @@ load_thread_wakeup_loop:
     or ax,ax
     jz load_thread_wakeup_done
 ;
+    RemoveCoreBlock
+    sti
+    mov di,es:p_prio
+    or di,di
+    jz load_wakeup_local_do
+;    
     mov al,ds:curr_post_val
     add al,ds:global_post_perc
     sub al,100
@@ -2931,10 +2945,8 @@ load_thread_wakeup_loop:
 load_wakeup_local:
     add al,100
     mov ds:curr_post_val,al
-    RemoveCoreBlock
-    sti
-;    
-    mov di,es:p_prio
+
+load_wakeup_local_do:    
     InsertCoreBlock
     cmp di,fs:ps_prio_act
     jbe load_thread_wakeup_loop
@@ -2945,10 +2957,6 @@ load_wakeup_local:
 load_thread_wakeup_global:
     mov ds:curr_post_val,al
 ;
-    RemoveCoreBlock
-    sti
-;
-    mov di,es:p_prio
     call cs:lock_ready_proc
     InsertBlock
     cmp di,ds:global_prio_act
@@ -3448,7 +3456,7 @@ ContinueCurrentThread:
     push es
     mov es,ax
     mov di,es:p_prio
-    cmp ax,fs:ps_null_thread
+    or di,di
     je cctPop
 ;
     test fs:ps_flags,PS_FLAG_PREEMPT
@@ -3754,7 +3762,7 @@ stThreadOk:
 start_processor_null_threads    Proc near
     GetCoreCount
     cmp cx,1
-    jbe start_locks_ok
+;    jbe start_locks_ok
 ;
     mov ax,kernel_patch_sel
     mov ds,ax
@@ -4664,6 +4672,26 @@ UnlockReadyMultiple    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockKernelSectionMultiple  Proc near
+    push ax
+
+lksmSpinLock:    
+    mov ax,ds:[esi].cs_lock
+    or ax,ax
+    je lksmGet
+;
+    pause
+    jmp lksmSpinLock
+
+lksmGet:
+    inc ax
+    xchg ax,ds:[esi].cs_lock
+    or ax,ax
+    je lksmDone
+;
+    jmp lksmSpinLock
+
+lksmDone:
+    pop ax    
     ret
 LockKernelSectionMultiple  Endp
 
@@ -4679,6 +4707,8 @@ LockKernelSectionMultiple  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlockKernelSectionMultiple    Proc near
+    mov ds:[esi].cs_lock,0
+    sti
     ret
 UnlockKernelSectionMultiple    Endp
 
@@ -5725,7 +5755,7 @@ enter_section   PROC far
     push fs
 ;    
     call LockCore
-    call cs:lock_kernel_section_proc
+    call cs:lock_list_proc
     mov dx,ds:[esi].cs_list
     cmp dx,-1
     jne ecsBlock
@@ -5744,14 +5774,14 @@ ecsBlock:
     mov fs:ps_curr_thread,0
 ;
     InsertBlock32
-    call cs:unlock_kernel_section_proc
+    call cs:unlock_list_proc
 ;
     mov es:p_sleep_sel,ds
     mov es:p_sleep_offset,edi    
     jmp LoadThread
 
 ecsUnlock:
-    call cs:unlock_kernel_section_proc
+    call cs:unlock_list_proc
     call UnlockCore
     
 ecsDone:
@@ -5788,7 +5818,7 @@ leave_section   PROC far
     push fs
 ;
     call LockCore
-    call cs:lock_kernel_section_proc
+    call cs:lock_list_proc
     mov ax,ds:[esi].cs_list
     cmp ax,-1
     je lcsUnlockList
@@ -5807,7 +5837,7 @@ lcsUnblock:
     add esi,OFFSET cs_list
     RemoveBlock32
     mov es:p_data,0
-    call cs:unlock_kernel_section_proc
+    call cs:unlock_list_proc
 ;    
     cli
     mov di,OFFSET ps_wakeup_list
@@ -5821,7 +5851,7 @@ lcsUnblocked:
     jmp lcsUnlock
 
 lcsUnlockList:
-    call cs:unlock_kernel_section_proc
+    call cs:unlock_list_proc
 
 lcsUnlock:
     call UnlockCore
