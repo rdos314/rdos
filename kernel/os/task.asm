@@ -63,6 +63,11 @@ section_handle_seg          ENDS
 
 task_seg    STRUC
 
+global_ptab         DW 256 DUP(?)
+global_prio_act     DW ?
+
+global_spinlock     DW ?
+
 time_sync_state     DW ?
 sync_core_count     DW ?
 
@@ -438,6 +443,9 @@ unlock_list_proc        DW OFFSET UnlockListSingle
 
 lock_thread_proc        DW OFFSET LockThreadSingle
 unlock_thread_proc      DW OFFSET UnlockThreadSingle
+
+lock_ready_proc         DW OFFSET LockReadySingle
+unlock_ready_proc       DW OFFSET UnlockReadySingle
 
 core_count              DW 0
 core_arr                DW MAX_CORES DUP(0)
@@ -826,6 +834,18 @@ init_tlb_done:
     mov ds:last_time_val,0
     mov ds:last_time_val+4,0
     mov ds:time_sync_state,TIME_SYNC_RESET
+;
+    mov ds:global_spinlock,0
+    xor ax,ax
+    mov bx,OFFSET global_ptab
+    mov ds:global_prio_act,bx
+;
+    mov cx,256
+
+glob_ptab_init:
+    mov ds:[bx],ax
+    add bx,2
+    loop glob_ptab_init
 ;
     mov ax,cs
     mov ds,ax
@@ -3614,6 +3634,8 @@ start_processor_null_threads    Proc near
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
     mov ds:lock_thread_proc,OFFSET LockThreadMultiple
     mov ds:unlock_thread_proc,OFFSET UnlockThreadMultiple
+    mov ds:lock_ready_proc,OFFSET LockReadyMultiple
+    mov ds:unlock_ready_proc,OFFSET UnlockReadyMultiple
 
 start_locks_ok:    
     mov ecx,200h
@@ -4278,6 +4300,36 @@ UnlockThreadSingle    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           LockReadySingle
+;
+;           DESCRIPTION:    Lock global ready-queue, single processor version
+;
+;           PARAMETERS:     DS      Task sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockReadySingle  Proc near
+    ret
+LockReadySingle  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockReadySingle
+;
+;           DESCRIPTION:    Unlock global ready-queue, single processor version
+;
+;           PARAMETERS:     DS      Task sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockReadySingle    Proc near
+    ret
+UnlockReadySingle    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           LockListMultiple
 ;
 ;           DESCRIPTION:    Lock list, multiple processor version
@@ -4393,6 +4445,59 @@ UnlockThreadMultiple      Proc near
     sti
     ret
 UnlockThreadMultiple      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LockReadyMultiple
+;
+;           DESCRIPTION:    Lock global ready-queue, multiple processor version
+;
+;           PARAMETERS:     DS      Task sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockReadyMultiple  Proc near
+    push ax
+    sti
+
+lrSpinLock:    
+    mov ax,ds:global_spinlock
+    or ax,ax
+    je lrGet
+;
+    pause
+    jmp lrSpinLock
+
+lrGet:
+    inc ax
+    xchg ax,ds:global_spinlock
+    or ax,ax
+    je lrDone
+;
+    jmp lrSpinLock
+
+lrDone:
+    pop ax    
+    ret
+LockReadyMultiple  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockReadyMultiple
+;
+;           DESCRIPTION:    Unlock global ready-queue, multiple processor version
+;
+;           PARAMETERS:     DS      Task sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockReadyMultiple    Proc near
+    mov ds:global_spinlock,0
+    sti
+    ret
+UnlockReadyMultiple    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
