@@ -436,9 +436,6 @@ get_time_proc           DW OFFSET GetPitTime
 lock_list_proc          DW OFFSET LockListSingle
 unlock_list_proc        DW OFFSET UnlockListSingle
 
-lock_core_list_proc     DW OFFSET LockCoreListSingle
-unlock_core_list_proc   DW OFFSET UnlockCoreListSingle
-
 lock_thread_proc        DW OFFSET LockThreadSingle
 unlock_thread_proc      DW OFFSET UnlockThreadSingle
 
@@ -3615,8 +3612,6 @@ start_processor_null_threads    Proc near
     mov ds,ax
     mov ds:lock_list_proc,OFFSET LockListMultiple
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
-    mov ds:lock_core_list_proc,OFFSET LockCoreListMultiple
-    mov ds:unlock_core_list_proc,OFFSET UnlockCoreListMultiple
     mov ds:lock_thread_proc,OFFSET LockThreadMultiple
     mov ds:unlock_thread_proc,OFFSET UnlockThreadMultiple
 
@@ -3758,10 +3753,10 @@ WakeThread      PROC near
     mov es:p_data,eax
     call cs:unlock_list_proc
 ;
-    call cs:lock_core_list_proc
+    cli
     mov di,OFFSET ps_wakeup_list
     InsertCoreBlock
-    call cs:unlock_core_list_proc
+    sti
     
 wtUnlock:    
     call TryUnlockCore
@@ -4053,8 +4048,6 @@ ptab_init:
     loop ptab_init
 ;
     mov es:ps_wakeup_list,0
-    mov es:ps_list_lock,0
-;
     mov es:ps_nesting,-1
     mov es:ps_curr_thread,0
     mov es:ps_last_thread,-1
@@ -4196,7 +4189,7 @@ get_core_num   Endp
 UpdateLists Proc near
 
 ulWakeupLoop:
-    call cs:lock_core_list_proc
+    cli
     mov si,OFFSET ps_wakeup_list
     mov ax,fs:[si]
     or ax,ax
@@ -4212,11 +4205,11 @@ ulWakeupLoop:
     or fs:ps_flags,PS_FLAG_PRIO_CHANGE
 
 ulWakeupPrioOk:
-    call cs:unlock_core_list_proc
+    sti
     jmp ulWakeupLoop
 
 ulWakeupDone:
-    call cs:unlock_core_list_proc
+    sti
     ret    
 UpdateLists Endp
 
@@ -4248,39 +4241,6 @@ UnlockListSingle    Proc near
     sti
     ret
 UnlockListSingle    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LockCoreListSingle
-;
-;           DESCRIPTION:    Lock core list, single processor version
-;
-;       PARAMETERS:         FS      Core sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockCoreListSingle  Proc near
-    cli
-    ret
-LockCoreListSingle  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UnlockCoreListSingle
-;
-;           DESCRIPTION:    Unlock core list, single processor version
-;
-;       PARAMETERS:         FS      Core sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockCoreListSingle    Proc near
-    sti
-    ret
-UnlockCoreListSingle    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4378,61 +4338,6 @@ UnlockListMultiple      Proc near
     pop ds    
     ret
 UnlockListMultiple      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LockCoreListMultiple
-;
-;           DESCRIPTION:    Lock core list, multiple processor version
-;
-;       PARAMETERS:         FS      Core sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockCoreListMultiple    Proc near
-    push ax
-
-lclSpinLock:    
-    sti
-    mov ax,fs:ps_list_lock
-    or ax,ax
-    je lclGet
-;
-    pause
-    jmp lclSpinLock
-
-lclGet:
-    cli
-    inc ax
-    xchg ax,fs:ps_list_lock
-    or ax,ax
-    je lclDone
-;
-    jmp lclSpinLock
-
-lclDone:
-    pop ax    
-    ret
-LockCoreListMultiple    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UnlockCoreListMultiple
-;
-;           DESCRIPTION:    Unlock core list, multiple processor version
-;
-;       PARAMETERS:         FS      Core sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockCoreListMultiple      Proc near
-    mov fs:ps_list_lock,0
-    sti
-    ret
-UnlockCoreListMultiple      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5593,10 +5498,10 @@ lcsUnblock:
     mov es:p_data,0
     call cs:unlock_list_proc
 ;    
-    call cs:lock_core_list_proc
+    cli
     mov di,OFFSET ps_wakeup_list
     InsertCoreBlock
-    call cs:unlock_core_list_proc
+    sti
 
 lcsUnblocked:
     pop di
@@ -5918,10 +5823,10 @@ lusUnblock:
     mov es:p_data,0
     call cs:unlock_list_proc
 ;
-    call cs:lock_core_list_proc
+    cli
     mov di,OFFSET ps_wakeup_list
     InsertCoreBlock
-    call cs:unlock_core_list_proc
+    sti
 
 lusUnblocked:
     pop di
@@ -6160,12 +6065,10 @@ wake_until      PROC far
     mov ax,fs:ps_sel
     mov fs,ax
     mov es,cx
-    call cs:lock_core_list_proc
+    cli
     mov di,OFFSET ps_wakeup_list
     InsertCoreBlock
-    call cs:unlock_core_list_proc
-
-wuDone:    
+    sti
     retf32
 wake_until      ENDP
 

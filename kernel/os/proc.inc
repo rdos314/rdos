@@ -51,8 +51,6 @@ ps_prio_act         DW ?
 
 ps_wakeup_list      DW ?
 
-ps_list_lock        DW ?
-
 ps_sel              DW ?
 ps_id               DW ?
 ps_ss               DW ?
