@@ -43,6 +43,7 @@ INCLUDE ..\apicheck.inc
 MAX_CORES   = 64
 
 SLEEP_SEL_WAIT  = 1
+SLEEP_SEL_SIGNAL = 2
 
 TIME_SYNC_RESET = 0
 TIME_SYNC_IDLE  = 1
@@ -5320,12 +5321,22 @@ signal_thread   PROC far
 ;
     or bx,bx
     jz signal_done
-;    
-    call TryLockCore
 ;
     mov es,bx
+    call TryLockCore
+    call cs:lock_thread_proc
     mov es:p_signal,1
-    mov fs:ps_has_signal,1
+    mov ax,es:p_sleep_sel
+    cmp ax,SLEEP_SEL_SIGNAL
+    jne signal_unlock
+;
+    push di
+    mov di,OFFSET ps_wakeup_list
+    InsertCoreBlock
+    pop di
+
+signal_unlock:
+    call cs:unlock_thread_proc
     call TryUnlockCore
     
 signal_done:       
@@ -5382,7 +5393,7 @@ wait_for_signal PROC far
     call LockCore
 ;    
     mov es,fs:ps_curr_thread
-    call cs:lock_core_list_proc
+    call cs:lock_thread_proc
     xor al,al
     xchg al,es:p_signal
     or al,al
@@ -5390,18 +5401,13 @@ wait_for_signal PROC far
 ;
     push OFFSET wait_for_signal_clear
     call SaveLockedThread
-;
-    mov ax,fs
-    mov ds,ax
-    mov edi,OFFSET ps_signal_list
+;    
     mov es,fs:ps_curr_thread
     mov fs:ps_curr_thread,0
 ;
-    InsertBlock32
-    call cs:unlock_core_list_proc
-;        
-    mov es:p_sleep_sel,ds
-    mov es:p_sleep_offset,edi
+    mov es:p_sleep_sel,SLEEP_SEL_SIGNAL
+    mov es:p_sleep_offset,0    
+    call cs:unlock_thread_proc
     jmp LoadThread
 
 wait_for_signal_clear:
@@ -5412,7 +5418,7 @@ wait_for_signal_clear:
     jmp wait_for_signal_done
 
 wait_for_signal_unlock:
-    call cs:unlock_core_list_proc
+    call cs:unlock_thread_proc
     call UnlockCore
 
 wait_for_signal_done:       
@@ -5473,7 +5479,7 @@ wait_for_signal_timeout PROC far
     StartTimer
 ;    
     mov es,bx
-    call cs:lock_core_list_proc
+    call cs:lock_thread_proc
     xor al,al
     xchg al,es:p_signal
     or al,al
@@ -5481,18 +5487,13 @@ wait_for_signal_timeout PROC far
 ;
     push OFFSET wait_for_signal_timeout_clear
     call SaveLockedThread
-;
-    mov ax,fs
-    mov ds,ax
-    mov edi,OFFSET ps_signal_list
+;    
     mov es,fs:ps_curr_thread
     mov fs:ps_curr_thread,0
 ;
-    InsertBlock32
-    call cs:unlock_core_list_proc
-;        
-    mov es:p_sleep_sel,ds
-    mov es:p_sleep_offset,edi
+    mov es:p_sleep_sel,SLEEP_SEL_SIGNAL
+    mov es:p_sleep_offset,0    
+    call cs:unlock_thread_proc
     jmp LoadThread
 
 wait_for_signal_timeout_clear:
@@ -5505,7 +5506,7 @@ wait_for_signal_timeout_clear:
     jmp wait_for_signal_timeout_done
     
 wait_for_signal_timeout_unlock:
-    call cs:unlock_core_list_proc
+    call cs:unlock_thread_proc
     mov bx,fs:ps_curr_thread
     StopTimer
     call UnlockCore
@@ -5520,7 +5521,6 @@ wait_for_signal_timeout_done:
     pop ds
     retf32
 wait_for_signal_timeout ENDP
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -6397,18 +6397,7 @@ check_cpu_loop:
 ;
     cmp bx,fs:ps_null_thread
     je check_null_ok
-;
-    push fs
-    mov fs,bx
-    mov eax,fs:p_sleep_offset
-    cmp eax,OFFSET ps_signal_list
-    pop fs
-    jne check_not_signal
-;       
-    mov si,OFFSET Signal_state
-    jmp check_copy_zero
-    
-check_not_signal:
+;    
     inc dx
     add si,2
     loop check_cpu_loop
@@ -6455,6 +6444,13 @@ check_not_cpu:
     jmp check_copy_zero
 
 check_not_wait:
+    cmp ax,SLEEP_SEL_SIGNAL
+    jne check_not_signal
+;
+    mov si,OFFSET Signal_state
+    jmp check_copy_zero
+    
+check_not_signal:
     cmp ax,task_sel
     jne check_not_task
 ;
