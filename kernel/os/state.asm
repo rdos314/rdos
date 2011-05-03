@@ -240,8 +240,6 @@ get_thread_state    Proc far
     mov eax,ds:p_lsb_tics
     mov es:[edi].st_time+4,eax
 ;
-    mov es:[edi].st_core,0
-;
     push edi
     add edi,OFFSET st_list
     mov bx,ds

@@ -231,17 +231,14 @@ void TStateCommand::WriteOne(ThreadState *State)
                   sprintf(str, "%3d ", micro);
          Write(str);
 
-        memcpy(str, State->List, 17);
-        str[17] = 0;
+        memcpy(str, State->List, 20);
+        str[20] = 0;
         len = strlen(str);
 
-        for (i = len; i < 17; i++)
+        for (i = len; i < 20; i++)
                   str[i] = ' ';
 
         Write(str);
-
-         sprintf(str, "%02hX ", State->Core);
-         Write(str);
 
         if (State->Sel)
         {

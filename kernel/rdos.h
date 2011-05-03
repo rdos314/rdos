@@ -53,7 +53,6 @@ typedef struct ThreadState
      char List[32];
      long Offset;
      short int Sel;
-     short int Core;
 } ThreadState;
 
 typedef struct Tss

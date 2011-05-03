@@ -33,7 +33,6 @@ st_time		DD ?,?
 st_list		DB 32 DUP(?)
 st_offs 	DD ?
 st_sel		DW ?
-st_core     DW ?
 state_struc	ENDS
 
 	
