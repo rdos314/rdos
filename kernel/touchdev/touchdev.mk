@@ -1,6 +1,6 @@
-project : C:\rdos\kernel\touchdev\ts2003.rdv C:\rdos\kernel\touchdev\egalax.&
-rdv C:\rdos\kernel\touchdev\dmc6000.rdv .SYMBOLIC
+project : E:\rdos\kernel\touchdev\ts2003.rdv E:\rdos\kernel\touchdev\egalax.&
+rdv E:\rdos\kernel\touchdev\dmc6000.rdv .SYMBOLIC
 
-!include C:\rdos\kernel\touchdev\ts2003.mk1
-!include C:\rdos\kernel\touchdev\egalax.mk1
-!include C:\rdos\kernel\touchdev\dmc6000.mk1
+!include E:\rdos\kernel\touchdev\ts2003.mk1
+!include E:\rdos\kernel\touchdev\egalax.mk1
+!include E:\rdos\kernel\touchdev\dmc6000.mk1

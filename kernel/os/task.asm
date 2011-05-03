@@ -5865,6 +5865,7 @@ create_user_section     PROC far
     mov ds:[ebx].us_list,0
     mov ds:[ebx].us_owner,0
     mov ds:[ebx].us_count,0
+    mov ds:[ebx].us_lock,0
     mov [ebx].hh_sign,SECTION_HANDLE
     mov bx,[ebx].hh_handle
     clc
