@@ -42,6 +42,8 @@ INCLUDE ..\apicheck.inc
 
 MAX_CORES   = 64
 
+SLEEP_SEL_WAIT  = 1
+
 TIME_SYNC_RESET = 0
 TIME_SYNC_IDLE  = 1
 TIME_SYNC_WAIT  = 2
@@ -435,6 +437,9 @@ unlock_list_proc        DW OFFSET UnlockListSingle
 
 lock_core_list_proc     DW OFFSET LockCoreListSingle
 unlock_core_list_proc   DW OFFSET UnlockCoreListSingle
+
+lock_thread_proc        DW OFFSET LockThreadSingle
+unlock_thread_proc      DW OFFSET UnlockThreadSingle
 
 core_count              DW 0
 core_arr                DW MAX_CORES DUP(0)
@@ -3607,6 +3612,8 @@ start_processor_null_threads    Proc near
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
     mov ds:lock_core_list_proc,OFFSET LockCoreListMultiple
     mov ds:unlock_core_list_proc,OFFSET UnlockCoreListMultiple
+    mov ds:lock_thread_proc,OFFSET LockThreadMultiple
+    mov ds:unlock_thread_proc,OFFSET UnlockThreadMultiple
 
 start_locks_ok:    
     mov ecx,200h
@@ -4315,6 +4322,38 @@ UnlockCoreListSingle    Proc near
     ret
 UnlockCoreListSingle    Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LockThreadSingle
+;
+;           DESCRIPTION:    Lock thread, single processor version
+;
+;           PARAMETERS:     ES      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockThreadSingle  Proc near
+    cli
+    ret
+LockThreadSingle  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockThreadSingle
+;
+;           DESCRIPTION:    Unlock thread, single processor version
+;
+;           PARAMETERS:     ES      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockThreadSingle    Proc near
+    sti
+    ret
+UnlockThreadSingle    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4435,6 +4474,60 @@ UnlockCoreListMultiple      Proc near
     ret
 UnlockCoreListMultiple      Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LockThreadMultiple
+;
+;           DESCRIPTION:    Lock thread, multiple processor version
+;
+;           PARAMETERS:     ES      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockThreadMultiple    Proc near
+    push ax
+
+ltSpinLock:    
+    sti
+    mov ax,es:p_spinlock
+    or ax,ax
+    je ltGet
+;
+    pause
+    jmp ltSpinLock
+
+ltGet:
+    cli
+    inc ax
+    xchg ax,es:p_spinlock
+    or ax,ax
+    je ltDone
+;
+    jmp ltSpinLock
+
+ltDone:
+    pop ax    
+    ret
+LockThreadMultiple    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockThreadMultiple
+;
+;           DESCRIPTION:    Unlock thread, multiple processor version
+;
+;           PARAMETERS:     ES      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockThreadMultiple      Proc near
+    mov es:p_spinlock,0
+    sti
+    ret
+UnlockThreadMultiple      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6150,8 +6243,8 @@ wait_until      PROC far
     mov es,fs:ps_curr_thread
     mov fs:ps_curr_thread,0
 ;
-    mov es:p_sleep_sel,0
-    mov es:p_sleep_offset,1    
+    mov es:p_sleep_sel,SLEEP_SEL_WAIT
+    mov es:p_sleep_offset,0
     jmp LoadThread
 
 wait_until_done:
@@ -6201,8 +6294,8 @@ wait_milli_sec  PROC far
     mov es,fs:ps_curr_thread
     mov fs:ps_curr_thread,0
 ;
-    mov es:p_sleep_sel,0
-    mov es:p_sleep_offset,1    
+    mov es:p_sleep_sel,SLEEP_SEL_WAIT
+    mov es:p_sleep_offset,0    
     jmp LoadThread
 
 wait_milli_done:
@@ -6253,8 +6346,8 @@ wait_micro_sec  PROC far
     mov es,fs:ps_curr_thread
     mov fs:ps_curr_thread,0
 ;
-    mov es:p_sleep_sel,0
-    mov es:p_sleep_offset,1    
+    mov es:p_sleep_sel,SLEEP_SEL_WAIT
+    mov es:p_sleep_offset,0
     jmp LoadThread
 
 wait_micro_done:
@@ -6354,15 +6447,14 @@ check_copy_id_done:
     
 check_not_cpu:
     mov fs,bx
-    mov eax,fs:p_sleep_offset
-    cmp eax,1
-    jnz check_not_wait
+    mov ax,fs:p_sleep_sel
+    cmp ax,SLEEP_SEL_WAIT
+    jne check_not_wait
 ;
     mov si,OFFSET Wait_state
     jmp check_copy_zero
-    
+
 check_not_wait:
-    mov ax,fs:p_sleep_sel
     cmp ax,task_sel
     jne check_not_task
 ;
