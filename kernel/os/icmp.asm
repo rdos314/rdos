@@ -299,7 +299,7 @@ ping_node Proc far
     push eax
     mov ax,SEG data
     mov ds,ax
-    EnterSection ds:ping_section
+    EnterNewSection ds:ping_section
     push edx
     GetSystemTime
     mov ds:ping_id,eax
@@ -354,7 +354,7 @@ ping_node Proc far
     StopTimer
     mov ds:ping_thread,0
     mov al,ds:ping_status
-    LeaveSection ds:ping_section
+    LeaveNewSection ds:ping_section
 ;
     or al,al
     stc
@@ -366,7 +366,7 @@ ping_node Proc far
 ping_pop_fail:
     mov ax,SEG data
     mov ds,ax
-    LeaveSection ds:ping_section
+    LeaveNewSection ds:ping_section
     pop eax
 
 ping_done:

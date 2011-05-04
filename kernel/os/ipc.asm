@@ -191,7 +191,7 @@ EnterIpcSection Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    EnterSection ds:ipc_section
+    EnterNewSection ds:ipc_section
 ;
     pop ax
     pop ds
@@ -215,7 +215,7 @@ LeaveIpcSection Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    LeaveSection ds:ipc_section
+    LeaveNewSection ds:ipc_section
 ;
     pop ax
     pop ds

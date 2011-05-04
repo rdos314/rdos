@@ -135,7 +135,7 @@ get_random      PROC far
 ;    
     mov bx,random_proc_sel
     mov ds,bx
-        EnterSection ds:mtsect
+        EnterNewSection ds:mtsect
 ;
     mov bx,ds:mti
     cmp bx,4 * N
@@ -167,7 +167,7 @@ get_random_do:
     shr edx,18
     xor eax,edx
 ;
-        LeaveSection ds:mtsect
+        LeaveNewSection ds:mtsect
     pop edx
     pop bx
     pop ds    

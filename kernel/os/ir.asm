@@ -115,7 +115,7 @@ notify_ir_data	Proc far
     mov ax,ir_data_sel
     mov ds,ax
 ;
-    EnterSection ds:ir_section
+    EnterNewSection ds:ir_section
 ;
     or cx,cx
     jz nidLeave
@@ -127,7 +127,7 @@ nidLoop:
     loop nidLoop
 
 nidLeave:
-    LeaveSection ds:ir_section
+    LeaveNewSection ds:ir_section
 ;
     pop di
     pop cx
