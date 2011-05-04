@@ -801,7 +801,7 @@ mask_copy    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetMask	Proc near
-	EnterSection ds:v_sprite_section
+	EnterNewSection ds:v_sprite_section
 	push word ptr [bp].curr_x
 	push ebx
 	push cx
@@ -870,7 +870,7 @@ set_mask_done:
 	pop cx
 	pop ebx
 	pop word ptr [bp].curr_x
-	LeaveSection ds:v_sprite_section
+	LeaveNewSection ds:v_sprite_section
 	ret
 SetMask Endp
 
@@ -889,7 +889,7 @@ SetMask Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HollowLine	Proc near
-	EnterSection ds:v_sprite_section
+	EnterNewSection ds:v_sprite_section
 	push word ptr [bp].curr_x
 	push cx
 	push edi
@@ -973,7 +973,7 @@ hollow_line_done:
 	pop edi
 	pop cx
 	pop word ptr [bp].curr_x
-	LeaveSection ds:v_sprite_section
+	LeaveNewSection ds:v_sprite_section
 	ret
 HollowLine	Endp
 
@@ -992,7 +992,7 @@ HollowLine	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FilledLine	Proc near
-	EnterSection ds:v_sprite_section
+	EnterNewSection ds:v_sprite_section
 	push word ptr [bp].curr_x
 	push cx
 	push edi
@@ -1059,7 +1059,7 @@ filled_line_done:
 	pop edi
 	pop cx
 	pop word ptr [bp].curr_x
-	LeaveSection ds:v_sprite_section
+	LeaveNewSection ds:v_sprite_section
 	ret
 FilledLine	Endp
 
@@ -1079,7 +1079,7 @@ FilledLine	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SplitLine	Proc near
-	EnterSection ds:v_sprite_section
+	EnterNewSection ds:v_sprite_section
 	push word ptr [bp].curr_x
 	push cx
 	push dx
@@ -1184,7 +1184,7 @@ split_line_done:
 	pop dx
 	pop cx
 	pop word ptr [bp].curr_x
-	LeaveSection ds:v_sprite_section
+	LeaveNewSection ds:v_sprite_section
 	ret
 SplitLine	Endp
 
@@ -1264,7 +1264,7 @@ set_native	Proc far
 	sub sp,4
 	mov [bp].curr_x,cx
 	mov [bp].curr_y,dx
-	EnterSection ds:v_sprite_section
+	EnterNewSection ds:v_sprite_section
 ;
     cmp dx,ds:v_y_min
     jl set_native_done
@@ -1337,7 +1337,7 @@ set_native_sprite_hidden:
     ShowSpriteLine
 
 set_native_done:
-	LeaveSection ds:v_sprite_section
+	LeaveNewSection ds:v_sprite_section
     add sp,4
 	popad
 	pop fs
@@ -1529,7 +1529,7 @@ set_pixel	Proc far
 	sub sp,4
 	mov [bp].curr_x,cx
 	mov [bp].curr_y,dx
-	EnterSection ds:v_sprite_section
+	EnterNewSection ds:v_sprite_section
 ;
     cmp cx,ds:v_x_min
     jl set_pixel_done
@@ -1569,7 +1569,7 @@ set_pixel_no_sprite:
     call ds:set_proc
 
 set_pixel_done:
-	LeaveSection ds:v_sprite_section
+	LeaveNewSection ds:v_sprite_section
     add sp,4
     pop bp
 	pop edi
@@ -1606,7 +1606,7 @@ draw_mask_line	Proc far
 	mov bp,sp
 	sub sp,4	
 	mov [bp].curr_x,edx
-	EnterSection ds:v_sprite_section
+	EnterNewSection ds:v_sprite_section
 ;
     push ax
     mov ax,[bp].curr_y
@@ -1712,7 +1712,7 @@ draw_mask_line_do:
     ShowSpriteLine
 
 draw_mask_line_done:
-	LeaveSection ds:v_sprite_section
+	LeaveNewSection ds:v_sprite_section
     add sp,4
 	popad
 	pop gs
@@ -2135,7 +2135,7 @@ line_bresen_sprite:
 	jmp line_bresen_dx_sprite_next
 
 line_bresen_dx_sprite_loop:
-	EnterSection ds:v_sprite_section
+	EnterNewSection ds:v_sprite_section
 	push ax
 	mov ax,1
 	HideSpriteLine
@@ -2143,7 +2143,7 @@ line_bresen_dx_sprite_loop:
 	call ds:set_proc
 	ShowSpriteLine
 	pop ax
-	LeaveSection ds:v_sprite_section
+	LeaveNewSection ds:v_sprite_section
 ;
 	cmp cx,[bp].dl_x2
 	je line_done
@@ -2179,7 +2179,7 @@ line_bresen_dx_sprite_next:
 	jmp line_bresen_dx_sprite_loop
 
 line_bresen_dy_sprite_loop:
-	EnterSection ds:v_sprite_section
+	EnterNewSection ds:v_sprite_section
 	push ax
 	mov ax,1
 	HideSpriteLine
@@ -2187,7 +2187,7 @@ line_bresen_dy_sprite_loop:
 	call ds:set_proc
 	ShowSpriteLine
 	pop ax
-	LeaveSection ds:v_sprite_section
+	LeaveNewSection ds:v_sprite_section
 ;
 	cmp dx,[bp].dl_y2
 	je line_done
@@ -2349,14 +2349,14 @@ line_vert_sprite_loop:
     cmp dx,ds:v_y_max
     jg line_vert_sprite_next
 ;
-	EnterSection ds:v_sprite_section
+	EnterNewSection ds:v_sprite_section
     push ax
     mov ax,1
     HideSpriteLine
     pop ax
 	call ds:set_proc
 	ShowSpriteLine
-	LeaveSection ds:v_sprite_section
+	LeaveNewSection ds:v_sprite_section
 
 line_vert_sprite_next:
 	add edi,esi
