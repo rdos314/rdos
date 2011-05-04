@@ -180,7 +180,7 @@ FindReceiveMailslotHost Proc near
     push es
     push bx
 ;
-    EnterSection ds:m_host_section
+    EnterNewSection ds:m_host_section
     mov ax,ds:m_host_list
 
 find_rec_mailslot_host_loop:
@@ -200,7 +200,7 @@ find_rec_mailslot_host_done:
     pushf
     xor bx,bx
     mov es,bx
-    LeaveSection ds:m_host_section
+    LeaveNewSection ds:m_host_section
     popf
 ;
     pop bx
@@ -251,11 +251,11 @@ AddReceiveMailslotHost  Proc near
     InitSection ds:h_reply_section
     pop ds
 ;    
-    EnterSection ds:m_host_section
+    EnterNewSection ds:m_host_section
     mov ax,ds:m_host_list
     mov es:h_link,ax
     mov ds:m_host_list,es
-    LeaveSection ds:m_host_section
+    LeaveNewSection ds:m_host_section
     mov ax,es
 ;
     pop di
@@ -1603,7 +1603,7 @@ SuperviseMailslot       Proc near
     push cx
 ;
     xor cx,cx
-    EnterSection ds:m_host_section
+    EnterNewSection ds:m_host_section
     mov ax,ds:m_host_list
     push ds
 
@@ -1621,7 +1621,7 @@ supervise_mailslot_host_loop:
 
 supervise_mailslot_host_done:
     pop ds
-    LeaveSection ds:m_host_section
+    LeaveNewSection ds:m_host_section
 ;
     or cx,cx
     stc
