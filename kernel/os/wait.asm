@@ -256,7 +256,7 @@ is_wait_idle Proc far
     DerefHandle
     jc is_wait_idle_done
 ;
-    EnterSection ds:[ebx].wh_section
+    EnterNewSection ds:[ebx].wh_section
     mov dx,ds:[ebx].wh_obj_list
     or dx,dx
     jz is_wait_idle_ok_leave
@@ -271,13 +271,13 @@ is_wait_idle_loop:
     jnz is_wait_idle_loop
 
 is_wait_idle_ok_leave:
-    LeaveSection ds:[ebx].wh_section
+    LeaveNewSection ds:[ebx].wh_section
     clc
     jmp is_wait_idle_done
 
 is_wait_idle_fail_leave:
     mov ecx,es:wo_id
-    LeaveSection ds:[ebx].wh_section
+    LeaveNewSection ds:[ebx].wh_section
     stc
 
 is_wait_idle_done:
@@ -328,7 +328,7 @@ wait_no_timeout Proc far
     DerefHandle
     jc wait_no_timeout_done
 ;
-    EnterSection ds:[ebx].wh_section
+    EnterNewSection ds:[ebx].wh_section
     mov al,ds:[ebx].wh_running
     or al,al
     jnz wait_no_timeout_stopped_leave
@@ -351,12 +351,12 @@ wait_no_timeout_start_loop:
 
 wait_no_timeout_start_leave:
     inc ds:[ebx].wh_running
-    LeaveSection ds:[ebx].wh_section
+    LeaveNewSection ds:[ebx].wh_section
 
 wait_no_timeout_do:
     WaitForSignal
 ;
-    EnterSection ds:[ebx].wh_section
+    EnterNewSection ds:[ebx].wh_section
     mov al,ds:[ebx].wh_running
     or al,al
     jz wait_no_timeout_stopped_leave
@@ -388,7 +388,7 @@ wait_no_timeout_stop_next:
     jnz wait_no_timeout_stop_loop
 
 wait_no_timeout_stopped_leave:
-    LeaveSection ds:[ebx].wh_section
+    LeaveNewSection ds:[ebx].wh_section
     clc
 
 wait_no_timeout_done:
@@ -460,7 +460,7 @@ wait_timeout Proc far
     pop ax
     jc wait_timeout_done
 ;
-    EnterSection ds:[ebx].wh_section
+    EnterNewSection ds:[ebx].wh_section
     push ax
     mov al,ds:[ebx].wh_running
     or al,al
@@ -502,7 +502,7 @@ wait_timeout_start_timer:
     pop bx
 ;
     inc ds:[ebx].wh_running
-    LeaveSection ds:[ebx].wh_section
+    LeaveNewSection ds:[ebx].wh_section
 
 wait_timeout_do:
     WaitForSignal
@@ -513,7 +513,7 @@ wait_timeout_do:
     pop bx
 ;
     xor ecx,ecx
-    EnterSection ds:[ebx].wh_section
+    EnterNewSection ds:[ebx].wh_section
     mov al,ds:[ebx].wh_running
     or al,al
     jz wait_timeout_stopped_leave
@@ -545,7 +545,7 @@ wait_timeout_stop_next:
     jnz wait_timeout_stop_loop
 
 wait_timeout_stopped_leave:
-    LeaveSection ds:[ebx].wh_section
+    LeaveNewSection ds:[ebx].wh_section
     clc
 
 wait_timeout_done:
@@ -594,7 +594,7 @@ stop_wait Proc far
     DerefHandle
     jc stop_wait_done
 ;
-    EnterSection ds:[ebx].wh_section
+    EnterNewSection ds:[ebx].wh_section
     mov al,ds:[ebx].wh_running
     or al,al
     jz stop_wait_leave
@@ -624,7 +624,7 @@ stop_wait_signal:
     pop bx
 
 stop_wait_leave:
-    LeaveSection ds:[ebx].wh_section
+    LeaveNewSection ds:[ebx].wh_section
     clc
 
 stop_wait_done:
@@ -675,7 +675,7 @@ add_wait    Proc far
     pop ax
     jc add_wait_done
 ;
-    EnterSection ds:[ebx].wh_section
+    EnterNewSection ds:[ebx].wh_section
 ;    
     movzx eax,ax
     add eax,SIZE wait_obj_header
@@ -704,7 +704,7 @@ add_wait    Proc far
     pop bx
 
 awLeave:
-    LeaveSection ds:[ebx].wh_section
+    LeaveNewSection ds:[ebx].wh_section
     clc
 
 add_wait_done:
@@ -739,7 +739,7 @@ remove_wait    Proc far
     DerefHandle
     jc remove_wait_done
 ;
-    EnterSection ds:[ebx].wh_section
+    EnterNewSection ds:[ebx].wh_section
 ;
     xor dx,dx
     mov ax,ds:[ebx].wh_obj_list
@@ -771,7 +771,7 @@ remove_wait_head:
     jmp remove_wait_loop
 
 remove_wait_leave:
-    LeaveSection ds:[ebx].wh_section
+    LeaveNewSection ds:[ebx].wh_section
     clc
 
 remove_wait_done:
