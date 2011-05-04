@@ -311,7 +311,7 @@ int9A:
 ;
     mov ax,system_data_sel
     mov ds,ax
-    EnterSection ds:patch_section
+    EnterNewSection ds:patch_section
 ;
     mov ds,[bp+16]
     mov ebx,[bp+12]
@@ -334,7 +334,7 @@ intg_call:
 intg_retry:
     mov ax,system_data_sel
     mov ds,ax
-    LeaveSection ds:patch_section
+    LeaveNewSection ds:patch_section
 ;    
     popad
     pop es
