@@ -711,13 +711,13 @@ CreateConnection    Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    EnterSection ds:ListSection
+    EnterNewSection ds:ListSection
     mov dx,ds:ConnectionList
     mov es:tcp_next,dx
     mov ds:ConnectionList,es
     inc ds:ConnectionCount
     call CheckConnectionList
-    LeaveSection ds:ListSection
+    LeaveNewSection ds:ListSection
     mov ax,es
     mov ds,ax
     call GetIss
@@ -845,7 +845,7 @@ FindConnection  Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    EnterSection ds:ListSection
+    EnterNewSection ds:ListSection
     mov ax,ds:ConnectionList
 
 find_connection_loop:
@@ -863,7 +863,7 @@ find_connection_next:
     jmp find_connection_loop
 
 find_connection_fail:
-    LeaveSection ds:ListSection
+    LeaveNewSection ds:ListSection
     stc
     jmp find_connection_done
 
@@ -879,14 +879,14 @@ find_connection_ok:
     LeaveNewSection ds:tcp_section
     mov ax,SEG data
     mov ds,ax
-    LeaveSection ds:ListSection
+    LeaveNewSection ds:ListSection
     stc
     jmp find_connection_done
 
 find_connection_not_deleted:
     mov ax,SEG data
     mov ds,ax
-    LeaveSection ds:ListSection
+    LeaveNewSection ds:ListSection
     pop ds
     clc
 
@@ -917,7 +917,7 @@ FindWildConnection      Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    EnterSection ds:ListSection
+    EnterNewSection ds:ListSection
     mov ax,ds:ConnectionList
 
 find_wild_connection_loop:
@@ -937,7 +937,7 @@ find_wild_connection_next:
     jmp find_wild_connection_loop
 
 find_wild_connection_fail:
-    LeaveSection ds:ListSection
+    LeaveNewSection ds:ListSection
     stc
     jmp find_wild_connection_done
 
@@ -953,14 +953,14 @@ find_wild_connection_ok:
     LeaveNewSection ds:tcp_section
     mov ax,SEG data
     mov ds,ax
-    LeaveSection ds:ListSection
+    LeaveNewSection ds:ListSection
     stc
     jmp find_wild_connection_done
 
 find_wild_connection_not_deleted:
     mov ax,SEG data
     mov ds,ax
-    LeaveSection ds:ListSection
+    LeaveNewSection ds:ListSection
     pop ds
     clc
 
@@ -1008,11 +1008,11 @@ CreateListen    Proc near
     mov es:tcp_listen_wait,0
     mov dx,SEG data
     mov ds,dx
-    EnterSection ds:ListSection
+    EnterNewSection ds:ListSection
     mov dx,ds:ListenList
     mov es:tcp_listen_next,dx
     mov ds:ListenList,es
-    LeaveSection ds:ListSection
+    LeaveNewSection ds:ListSection
     mov dx,es
     mov ds,dx
 ;
@@ -1046,7 +1046,7 @@ DeleteListen    Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    EnterSection ds:ListSection
+    EnterNewSection ds:ListSection
 ;       
     mov ax,ds:ListenList
     cmp ax,bx
@@ -1094,7 +1094,7 @@ delete_listen_connections:
 delete_listen_unlinked:
     mov ax,SEG data
     mov ds,ax
-    LeaveSection ds:ListSection
+    LeaveNewSection ds:ListSection
     FreeMem
 ;
     pop edx
@@ -1125,7 +1125,7 @@ FindListen      Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    EnterSection ds:ListSection
+    EnterNewSection ds:ListSection
     mov ax,ds:ListenList
 
 find_listen_loop:
@@ -1139,12 +1139,12 @@ find_listen_next:
     jmp find_listen_loop
 
 find_listen_fail:
-    LeaveSection ds:ListSection
+    LeaveNewSection ds:ListSection
     stc
     jmp find_listen_done
 
 find_listen_ok:
-    LeaveSection ds:ListSection
+    LeaveNewSection ds:ListSection
     mov ax,es
     mov ds,ax
     clc
@@ -3494,7 +3494,6 @@ close_tcp_listen    Proc far
     jz close_tcp_listen_done
 ;
     mov ds,ax
-;       EnterSection ds:tcp_section
     call DeleteListen
     clc
 
@@ -5446,7 +5445,7 @@ tcp_active_loop:
     or ax,ax
     jz tcp_sleep
 ;
-    EnterSection ds:ListSection
+    EnterNewSection ds:ListSection
     mov ax,ds:ConnectionList
     push ds
 
@@ -5561,7 +5560,7 @@ tcp_delete_timeout_done:
 
 tcp_active_wait:
     pop ds
-    LeaveSection ds:ListSection
+    LeaveNewSection ds:ListSection
     mov ax,100
     WaitMilliSec
     jmp tcp_active_loop
