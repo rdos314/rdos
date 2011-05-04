@@ -695,9 +695,9 @@ parse_dir_dot_loop:
     jne parse_dir_dot_ended
 ;
     inc edi
-    EnterSection ds:ds_list_section
+    EnterNewSection ds:ds_list_section
     mov bx,ds:ds_parent
-    LeaveSection ds:ds_list_section
+    LeaveNewSection ds:ds_list_section
     or bx,bx
     jz parse_dir_fail
 ;
@@ -735,7 +735,7 @@ parse_dir_next:
 parse_dir_tree_next:
     pop esi
     pop esi
-    EnterSection ds:ds_list_section
+    EnterNewSection ds:ds_list_section
     mov bx,fs:[esi].de_sel
     or bx,bx
     jnz parse_dir_tree_cached
@@ -748,7 +748,7 @@ parse_dir_tree_next:
     mov fs:[esi].de_sel,bx
 
 parse_dir_tree_cached:
-    LeaveSection ds:ds_list_section
+    LeaveNewSection ds:ds_list_section
     mov ax,ds
     mov ds,bx
     EnterReadSection ds:ds_access_section
@@ -1975,7 +1975,7 @@ SetupFileSel    Proc near
     push ecx
 ;
     mov al,ds:ds_drive
-    EnterSection ds:ds_list_section
+    EnterNewSection ds:ds_list_section
     mov bx,fs:[edx].dfe_file_sel
     or bx,bx
     jnz setup_file_sel_leave
@@ -1986,7 +1986,7 @@ SetupFileSel    Proc near
     mov fs:[edx].dfe_file_sel,bx
 
 setup_file_sel_leave:
-    LeaveSection ds:ds_list_section
+    LeaveNewSection ds:ds_list_section
 ;
     pop ecx
     ret
