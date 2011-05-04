@@ -115,6 +115,8 @@ emulate_exception:
     mov ds,ds:p_tss_data_sel
     mov ax,[bp].vm_err
     mov ds:tss_error_code,ax
+    xor ax,ax
+    mov ds,ax
     mov eax,[bp].vm_eflags
     test eax,20000h
     pop ax
@@ -405,6 +407,8 @@ trap_1:
     mov ds:tss_error_code,ax
     sti
 ;
+    xor ax,ax
+    mov ds,ax
     mov eax,[bp].vm_eflags
     or eax,10100h
     mov [bp].vm_eflags,eax
@@ -453,6 +457,8 @@ trap_2:
     mov ds,ds:p_tss_data_sel
     mov ax,[bp].vm_err
     mov ds:tss_error_code,ax
+    xor ax,ax
+    mov ds,ax
     mov al,2
     test byte ptr [bp+2].vm_eflags,2
     jnz t2_vm
@@ -493,6 +499,8 @@ trap_3:
     mov ds,ds:p_tss_data_sel
     mov ax,[bp].vm_err
     mov ds:tss_error_code,ax
+    xor ax,ax
+    mov ds,ax
     mov eax,[bp].vm_eflags
     test eax,20000h
     jnz t3_vm
@@ -1020,6 +1028,8 @@ trap_6:
     mov ds,ds:p_tss_data_sel
     mov ax,[bp].vm_err
     mov ds:tss_error_code,ax
+    xor ax,ax
+    mov ds,ax
     test byte ptr [bp+2].vm_eflags,2
     jnz t6_vm
     mov ds,[bp].vm_cs
@@ -1089,6 +1099,8 @@ trap_7:
     mov ds,ds:p_tss_data_sel
     mov ax,[bp].vm_err
     mov ds:tss_error_code,ax
+    xor ax,ax
+    mov ds,ax
     mov eax,cr0
     test al,4
     jz math_real_fpu
@@ -1191,6 +1203,8 @@ trap_10:
     mov ds,ds:p_tss_data_sel
     mov ax,[bp].vm_err
     mov ds:tss_error_code,ax
+    xor ax,ax
+    mov ds,ax
     mov al,10
     test byte ptr [bp+2].vm_eflags,2
     jnz t10_vm
@@ -1236,6 +1250,8 @@ trap_11:
     mov ds,ds:p_tss_data_sel
     mov ax,[bp].vm_err
     mov ds:tss_error_code,ax
+    xor ax,ax
+    mov ds,ax
     mov al,11
     test byte ptr [bp+2].vm_eflags,2
     jnz t11_vm
@@ -1295,6 +1311,8 @@ t12_thread:
     mov ds,ds:p_tss_data_sel
     mov ax,[bp].vm_err
     mov ds:tss_error_code,ax
+    xor ax,ax
+    mov ds,ax
     mov al,11
     test byte ptr [bp+2].vm_eflags,2
     jnz t11_vm

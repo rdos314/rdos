@@ -4067,6 +4067,7 @@ debug_save_ok:
     mov sp,fs:ps_sp
 ;
     xor ax,ax
+    mov ds,ax
     mov es,ax
     mov gs,ax    
 ;
