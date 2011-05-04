@@ -584,7 +584,7 @@ hook_thread_loop:
 
 hook_thread_done:
     mov ds:fs_init_done,1
-    LeaveSection ds:fs_init_section
+    LeaveNewSection ds:fs_init_section
     ret
 hook_thread     Endp
 
@@ -743,7 +743,7 @@ init    PROC far
     push ds
     mov ds,bx
     InitSection ds:fs_init_section
-    EnterSection ds:fs_init_section
+    EnterNewSection ds:fs_init_section
 ;    
     mov ds:fs_init_done,0
     mov ds:file_defs,0

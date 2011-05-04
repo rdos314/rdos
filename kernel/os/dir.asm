@@ -141,8 +141,8 @@ validate_drive_retry:
     stc
     jnz validate_drive_done
 ;
-    EnterSection ds:fs_init_section
-    LeaveSection ds:fs_init_section
+    EnterNewSection ds:fs_init_section
+    LeaveNewSection ds:fs_init_section
     jmp validate_drive_retry
 
 validate_drive_defined:
