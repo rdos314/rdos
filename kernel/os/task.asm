@@ -190,7 +190,7 @@ timer_stop_done:
 InsertCoreBlock     MACRO
     LOCAL ins_empty
     LOCAL ins_done
-    mov es:p_sleep_sel,ds
+    mov es:p_sleep_sel,fs
     mov word ptr es:p_sleep_offset,di
     mov word ptr es:p_sleep_offset+2,0
     push di
@@ -224,7 +224,7 @@ ins_done:
 InsertCoreFirst     MACRO
     LOCAL ins_empty
     LOCAL ins_done
-    mov es:p_sleep_sel,ds
+    mov es:p_sleep_sel,fs
     mov word ptr es:p_sleep_offset,di
     mov word ptr es:p_sleep_offset+2,0
     push di
@@ -5775,6 +5775,7 @@ enter_section   PROC far
     push fs
 ;    
     call LockCore
+    call cs:lock_list_proc
     mov dx,ds:[esi].cs_list
     cmp dx,-1
     jne ecsBlock
@@ -5793,12 +5794,14 @@ ecsBlock:
     mov fs:ps_curr_thread,0
 ;
     InsertBlock32
+    call cs:unlock_list_proc
 ;
     mov es:p_sleep_sel,ds
     mov es:p_sleep_offset,edi    
     jmp LoadThread
 
 ecsUnlock:
+    call cs:unlock_list_proc
     call UnlockCore
     
 ecsDone:
@@ -5835,6 +5838,7 @@ leave_section   PROC far
     push fs
 ;
     call LockCore
+    call cs:lock_list_proc
     mov ax,ds:[esi].cs_list
     cmp ax,-1
     je lcsUnlockList
@@ -5853,6 +5857,7 @@ lcsUnblock:
     add esi,OFFSET cs_list
     RemoveBlock32
     mov es:p_data,0
+    call cs:unlock_list_proc
 ;    
     cli
     mov di,OFFSET ps_wakeup_list
@@ -5866,6 +5871,7 @@ lcsUnblocked:
     jmp lcsUnlock
 
 lcsUnlockList:
+    call cs:unlock_list_proc
 
 lcsUnlock:
     call UnlockCore
