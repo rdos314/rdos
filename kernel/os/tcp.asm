@@ -3212,11 +3212,11 @@ receive_listen:
 ;
     push es
     mov es,bx
-    EnterSection ds:tcp_listen_section
+    EnterNewSection ds:tcp_listen_section
     mov ax,ds:tcp_listen_list
     mov es:tcp_listen_link,ax
     mov ds:tcp_listen_list,es
-    LeaveSection ds:tcp_listen_section
+    LeaveNewSection ds:tcp_listen_section
     pop es
 ;
     mov bx,ds:tcp_listen_wait   
@@ -3433,7 +3433,7 @@ get_tcp_listen  Proc far
 ;    
     mov ax,[ebx].listen_handle_sel
     mov ds,ax
-    EnterSection ds:tcp_listen_section
+    EnterNewSection ds:tcp_listen_section
     mov dx,ds:tcp_listen_list
     or dx,dx
     jz get_listen_leave
@@ -3443,7 +3443,7 @@ get_tcp_listen  Proc far
     mov ds:tcp_listen_list,bx
 
 get_listen_leave:
-    LeaveSection ds:tcp_listen_section          
+    LeaveNewSection ds:tcp_listen_section          
     or dx,dx
     stc
     jz get_listen_done
@@ -3910,7 +3910,7 @@ delete_listen_handle    Proc far
     jz delete_listen_handle_done
 ;    
     mov ds,ax
-    EnterSection ds:tcp_listen_section
+    EnterNewSection ds:tcp_listen_section
     call DeleteListen
     clc
 

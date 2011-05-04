@@ -2935,6 +2935,8 @@ LoadThread:
 load_thread_loop:
     mov ax,task_sel
     mov ds,ax
+    xor ax,ax
+    mov es,ax
 
 load_thread_wakeup_loop:    
     cli
@@ -2981,6 +2983,8 @@ load_thread_global_unlock:
     jmp load_thread_wakeup_loop
     
 load_thread_wakeup_done:
+    xor ax,ax
+    mov es,ax
     sti    
     call GetNextThread
 
@@ -3338,6 +3342,7 @@ SaveCurrentThread       Proc near
     push bp
 ;
     xor bp,bp
+    mov ds,bp
     mov es,bp
     mov gs,bp    
     ret
@@ -3404,6 +3409,7 @@ SaveLockedThread    Proc near
     push bp
 ;
     xor bp,bp
+    mov ds,bp
     mov es,bp
     mov gs,bp    
     ret
@@ -3442,6 +3448,7 @@ SkipCurrentThread       Proc near
     push bp
 ;
     xor bp,bp
+    mov ds,bp
     mov es,bp
     mov gs,bp    
     ret
