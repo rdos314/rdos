@@ -71,9 +71,6 @@ global_prio_act     DW ?
 
 global_spinlock     DW ?
 
-global_post_perc    DB ?
-curr_post_val       DB ?
-
 time_sync_state     DW ?
 sync_core_count     DW ?
 
@@ -847,8 +844,6 @@ init_tlb_done:
     mov ds:last_time_val+4,0
     mov ds:time_sync_state,TIME_SYNC_RESET
 ;
-    mov ds:global_post_perc,DEFAULT_GLOBAL
-    mov ds:curr_post_val,0
     mov ds:global_spinlock,0
     xor ax,ax
     mov bx,OFFSET global_ptab
@@ -2951,14 +2946,14 @@ load_thread_wakeup_loop:
     or di,di
     jz load_wakeup_local_do
 ;    
-    mov al,ds:curr_post_val
-    add al,ds:global_post_perc
+    mov al,fs:ps_curr_post
+    add al,fs:ps_global_post_perc
     sub al,100
     jnc load_thread_wakeup_global
 
 load_wakeup_local:
     add al,100
-    mov ds:curr_post_val,al
+    mov fs:ps_curr_post,al
 
 load_wakeup_local_do:    
     InsertCoreBlock
@@ -2969,7 +2964,7 @@ load_wakeup_local_do:
     jmp load_thread_wakeup_loop
 
 load_thread_wakeup_global:
-    mov ds:curr_post_val,al
+    mov fs:ps_curr_post,al
 ;
     call cs:lock_ready_proc
     InsertBlock
@@ -3604,7 +3599,6 @@ start_core:
     mov fs,ax
     or fs:ps_flags,PS_FLAG_ACTIVE
     SyncClock
-;        
     sti
     call LockCore
     or fs:ps_flags,PS_FLAG_PREEMPT    
@@ -3888,7 +3882,7 @@ null_thread:
     mov es:p_sleep_offset,0
     mov fs:ps_null_thread,ax
 ;
-    push OFFSET null_loop
+    push OFFSET null_loop_start
     call SaveCurrentThread
 ;    
     mov es,fs:ps_curr_thread
@@ -3897,6 +3891,13 @@ null_thread:
     mov es:p_sleep_sel,0
     mov es:p_sleep_offset,0    
     jmp LoadThread
+
+null_loop_start:
+    GetApicId
+    cmp edx,3
+
+stopl:
+    jz stopl
     
 null_loop:
     hlt
@@ -4237,6 +4238,8 @@ ptab_init:
     mov es:ps_null_thread,0
     mov es:ps_apic,-1
     mov es:ps_last_lsb,0
+    mov es:ps_global_post_perc,DEFAULT_GLOBAL
+    mov es:ps_curr_post,0
 ;    
     mov es:cs_usel,flat_sel
     mov es:cs_uoffs,0

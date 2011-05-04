@@ -415,7 +415,7 @@ ap_task_wait:
 
     GetApicId
     cmp edx,3
-    jae ap_crash
+;    jae ap_crash
     
     StartCore
 

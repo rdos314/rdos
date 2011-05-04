@@ -2031,6 +2031,10 @@ run_process     PROC near
     mov ax,2
     mov ecx,200h
     CreateProcess
+;
+    mov ax,100
+    WaitMilliSec
+;
     popad
     pop es
     pop ds

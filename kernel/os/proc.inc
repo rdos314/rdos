@@ -75,6 +75,9 @@ ps_last_tsc         DD ?
 
 ps_clock_tics       DW ?
 
+ps_global_post_perc DB ?
+ps_curr_post        DB ?
+
 ps_system_time      DD ?,?
 
 ps_timer_head		DW ?
