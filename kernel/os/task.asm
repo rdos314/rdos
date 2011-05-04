@@ -4465,7 +4465,7 @@ UnlockKernelSectionSingle    Endp
 ;
 ;           DESCRIPTION:    Lock user critical section, single processor version
 ;
-;           PARAMETERS:     DS:ESI      Section
+;           PARAMETERS:     DS:EBX      Section
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4480,7 +4480,7 @@ LockUserSectionSingle  Endp
 ;
 ;           DESCRIPTION:    Unlock user critical section, single processor version
 ;
-;           PARAMETERS:     DS:ESI      Section
+;           PARAMETERS:     DS:EBX      Section
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4719,7 +4719,7 @@ UnlockKernelSectionMultiple    Endp
 ;
 ;           DESCRIPTION:    Lock user critical section, multiple processor version
 ;
-;           PARAMETERS:     DS:ESI      Section
+;           PARAMETERS:     DS:EBX      Section
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4727,7 +4727,7 @@ LockUserSectionMultiple  Proc near
     push ax
 
 lusmSpinLock:    
-    mov ax,ds:[esi].us_lock
+    mov ax,ds:[ebx].us_lock
     or ax,ax
     je lusmGet
 ;
@@ -4736,7 +4736,7 @@ lusmSpinLock:
 
 lusmGet:
     inc ax
-    xchg ax,ds:[esi].us_lock
+    xchg ax,ds:[ebx].us_lock
     or ax,ax
     je lusmDone
 ;
@@ -4754,12 +4754,12 @@ LockUserSectionMultiple  Endp
 ;
 ;           DESCRIPTION:    Unlock user critical section, multiple processor version
 ;
-;           PARAMETERS:     DS:ESI      Section
+;           PARAMETERS:     DS:EBX      Section
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlockUserSectionMultiple    Proc near
-    mov ds:[esi].us_lock,0
+    mov ds:[ebx].us_lock,0
     sti
     ret
 UnlockUserSectionMultiple    Endp
