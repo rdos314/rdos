@@ -614,7 +614,7 @@ parse_dir_root:
     jz parse_dir_fail
 ;
     mov ds,bx
-    EnterSection ds:fs_list_section
+    EnterNewSection ds:fs_list_section
     mov ebp,ds:fs_mount_id
     mov bx,ds:fs_root_dir_sel
     or bx,bx
@@ -635,7 +635,7 @@ parse_dir_root:
 
 parse_dir_buffered:
     EnterReadSection ds:fs_access_section
-    LeaveSection ds:fs_list_section
+    LeaveNewSection ds:fs_list_section
 
 parse_dir_start:
     mov ds:fs_access_parse,1
@@ -843,7 +843,7 @@ GetDeviceRoot   Proc near
 ;    
     mov ds,bx
     EnterReadSection ds:fs_access_section
-    EnterSection ds:fs_list_section
+    EnterNewSection ds:fs_list_section
     mov bx,ds:fs_root_dir_sel
     or bx,bx
     jnz get_device_root_done
@@ -861,7 +861,7 @@ GetDeviceRoot   Proc near
     pop ds
 
 get_device_root_done:
-    LeaveSection ds:fs_list_section
+    LeaveNewSection ds:fs_list_section
     mov ds,bx
     clc
 
