@@ -289,8 +289,8 @@ ResetReceiveMailslotHost    Proc near
 ;
     mov ds,ax
     call FlushResponses
-    EnterSection ds:h_req_section
-    EnterSection ds:h_reply_section
+    EnterNewSection ds:h_req_section
+    EnterNewSection ds:h_reply_section
 ;
     add ds:h_req_connection,10000h
     mov ds:h_req_index,0
@@ -323,8 +323,8 @@ reset_req_next:
     add di,2
     loop reset_req_loop
 ;
-    LeaveSection ds:h_reply_section
-    LeaveSection ds:h_req_section
+    LeaveNewSection ds:h_reply_section
+    LeaveNewSection ds:h_req_section
 
 reset_host_done:
     pop di
@@ -439,7 +439,7 @@ SendData    Proc near
     xor ax,ax
     mov fs,ax
     mov gs,ax
-    LeaveSection ds:h_reply_section
+    LeaveNewSection ds:h_reply_section
     mov ds,ax
 ;
     add cx,bx
@@ -829,7 +829,7 @@ ReplyToSmp      Proc near
     FreeMem
     pop es
 ;
-    EnterSection ds:h_reply_section
+    EnterNewSection ds:h_reply_section
     mov es:l_host_entry,ds
     mov es:l_connection,ebx
     mov es:l_size,ecx
@@ -1276,7 +1276,7 @@ HandleRequest   Proc near
     push eax
     push bx
 ;
-    EnterSection ds:h_req_section
+    EnterNewSection ds:h_req_section
     mov eax,es:[di].sh_connection
     Reverse
     sub eax,ds:h_req_connection
@@ -1324,12 +1324,12 @@ handle_req_out_of_range:
     jmp handle_req_leave
 
 handle_req_check_reply:
-    LeaveSection ds:h_req_section
+    LeaveNewSection ds:h_req_section
 ;
     mov eax,es:[di].sh_connection
     Reverse
     mov ebx,eax
-    EnterSection ds:h_reply_section
+    EnterNewSection ds:h_reply_section
     call FindReply
     jc handle_reply_reset
 ;
@@ -1350,7 +1350,7 @@ handle_reply_reset:
     pop ds
 
 handle_reply_leave:
-    LeaveSection ds:h_reply_section
+    LeaveNewSection ds:h_reply_section
     jmp handle_req_done
 
 handle_req_reset_leave:
@@ -1364,7 +1364,7 @@ handle_req_reset_leave:
     pop ds
 
 handle_req_leave:
-    LeaveSection ds:h_req_section
+    LeaveNewSection ds:h_req_section
 
 handle_req_done:
     pop bx
@@ -1467,7 +1467,7 @@ ReceiverAck     Proc near
     Reverse
     mov ebx,eax
 ;
-    EnterSection ds:h_reply_section
+    EnterNewSection ds:h_reply_section
     call FindReply
     jc proc_ack_done
 ;
@@ -1484,7 +1484,7 @@ ReceiverAck     Proc near
 proc_ack_done:
     xor ax,ax
     mov es,ax
-    LeaveSection ds:h_reply_section
+    LeaveNewSection ds:h_reply_section
     clc
 ;
     pop edx
