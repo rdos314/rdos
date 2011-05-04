@@ -229,7 +229,7 @@ allocate_ldt    PROC far
     push bx
     mov ds,bx
     mov es,bx
-    EnterSection ds:app_ldt_section
+    EnterNewSection ds:app_ldt_section
     mov ds,ds:app_ldt_data_sel
 allocate_ldt_again:
     mov bx,es:app_ldt_free
@@ -289,7 +289,7 @@ al1:
     mov es:app_ldt_free,di
     mov di,ds
     pop ds
-    LeaveSection ds:app_ldt_section
+    LeaveNewSection ds:app_ldt_section
     mov ds,di
 ;
     pop di
@@ -382,7 +382,7 @@ allocate_multiple_ldt   PROC far
     mov bx,ds
     mov es,bx
     push ds
-    EnterSection ds:app_ldt_section
+    EnterNewSection ds:app_ldt_section
     mov ds,ds:app_ldt_data_sel
     mov bx,ldt_start
 allocate_mldt_retry_loop:
@@ -438,7 +438,7 @@ allocate_mldt_save_head:
 allocate_mldt_end:
     pop cx
     pop ds
-    LeaveSection ds:app_ldt_section
+    LeaveNewSection ds:app_ldt_section
 ;
     pop di
     pop si
@@ -475,7 +475,7 @@ free_ldt    PROC far
     pop ax
 ;       
     push ds
-    EnterSection ds:app_ldt_section
+    EnterNewSection ds:app_ldt_section
     mov si,ds
     mov es,si
     mov ds,ds:app_ldt_data_sel
@@ -484,7 +484,7 @@ free_ldt    PROC far
     mov [bx],si
     mov es:app_ldt_free,bx
     pop ds
-    LeaveSection ds:app_ldt_section
+    LeaveNewSection ds:app_ldt_section
     pop si
     pop es
     pop ds
