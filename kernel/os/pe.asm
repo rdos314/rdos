@@ -732,7 +732,7 @@ FindLib Proc near
     jc find_lib_done
 ;    
     mov ds,bx
-    EnterSection ds:mod_section
+    EnterNewSection ds:mod_section
     mov ax,ds:mod_list
     or ax,ax
     jz find_lib_try_app
@@ -762,13 +762,13 @@ find_lib_try_app:
     jc find_lib_ok
 
 find_lib_fail:
-    LeaveSection ds:mod_section
+    LeaveNewSection ds:mod_section
     stc
     jmp find_lib_done
 
 find_lib_ok:
     mov edi,es:lib_base
-    LeaveSection ds:mod_section
+    LeaveNewSection ds:mod_section
     clc
 
 find_lib_done:
@@ -842,7 +842,7 @@ FindDll Proc near
     jc find_dll_end
 ;    
     mov ds,bx
-    EnterSection ds:mod_section
+    EnterNewSection ds:mod_section
     mov ax,ds:mod_list
     or ax,ax
     jz find_dll_fail
@@ -875,14 +875,14 @@ find_dll_next:
     jne find_dll_check_dll
 
 find_dll_fail:
-    LeaveSection ds:mod_section
+    LeaveNewSection ds:mod_section
     stc
     jmp find_dll_end
 
 find_dll_ok:
     pop esi
     mov edi,es:lib_base
-    LeaveSection ds:mod_section
+    LeaveNewSection ds:mod_section
     clc
 
 find_dll_end:
@@ -2356,7 +2356,7 @@ load_object     Proc far
     push ds
     mov ax,es
     mov ds,ax
-    EnterSection ds:mod_section
+    EnterNewSection ds:mod_section
     pop ds
 ;
     xor eax,eax
@@ -2441,7 +2441,7 @@ load_object_map:
 load_object_leave:
     mov ax,es
     mov ds,ax
-    LeaveSection ds:mod_section
+    LeaveNewSection ds:mod_section
     
 load_object_done:
     popad

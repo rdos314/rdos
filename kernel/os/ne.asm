@@ -459,7 +459,7 @@ demand_load_ldt:
 ;    
     push ax
     mov ds,ax
-    EnterSection ds:mod_section
+    EnterNewSection ds:mod_section
 ;
     GetThread
 	mov ds,ax
@@ -587,7 +587,7 @@ demand_load_data:
 
 demand_load_leave:
     pop ds
-	LeaveSection ds:mod_section
+	LeaveNewSection ds:mod_section
 	clc
 demand_load_end:
 	pop edi
@@ -1152,7 +1152,7 @@ get_dll	Proc near
 ;
     push ds
     mov ds,bx
-    EnterSection ds:mod_section
+    EnterNewSection ds:mod_section
     mov ax,ds:mod_list
     or ax,ax
     jz get_dll_fail
@@ -1178,14 +1178,14 @@ get_dll_next:
 get_dll_fail:
 	xor bx,bx
     pop ds
-    LeaveSection ds:mod_section
+    LeaveNewSection ds:mod_section
 	stc
 	jmp get_dll_end
 
 get_dll_ok:
 	mov bx,ds
     pop ds
-    LeaveSection ds:mod_section
+    LeaveNewSection ds:mod_section
 	clc
 
 get_dll_end:
