@@ -663,7 +663,7 @@ CopyToReceiver  Proc near
     mov es,bx
     mov fs,bx
     xchg bx,ds:m_rec_thread
-    LeaveSection ds:m_section
+    LeaveNewSection ds:m_section
     Signal
 ;
     pop edi
@@ -818,7 +818,7 @@ receive_mailslot    Proc near
     jz receive_mailslot_done
 ;
     mov ds,ax
-    EnterSection ds:m_section
+    EnterNewSection ds:m_section
     mov ax,ds:m_req_list
     or ax,ax
     jz rec_empty
@@ -850,13 +850,13 @@ rec_empty:
     GetThread
     mov ds:m_rec_thread,ax
     call InsertReceive
-    LeaveSection ds:m_section
+    LeaveNewSection ds:m_section
     WaitForSignal
 ;
-    EnterSection ds:m_section
+    EnterNewSection ds:m_section
     call RemoveReceive
     mov ecx,ds:m_rec_size
-    LeaveSection ds:m_section
+    LeaveNewSection ds:m_section
     clc
 
 receive_mailslot_done:

@@ -787,7 +787,7 @@ CopyFromSmp     Proc near
 ;
     xor ax,ax
     mov es,ax
-    LeaveSection ds:m_section
+    LeaveNewSection ds:m_section
 ;
     pop edi
     pop esi
@@ -870,7 +870,7 @@ ReplyToSmp      Endp
 SmpToReceiver   Proc near
     push ax
 ;
-    EnterSection ds:m_section
+    EnterNewSection ds:m_section
     mov ax,ds:m_rec_thread
     or ax,ax
     jz send_smp_busy
@@ -883,7 +883,7 @@ send_smp_busy:
     call QueueReceiveRequest
     xor ax,ax
     mov es,ax
-    LeaveSection ds:m_section
+    LeaveNewSection ds:m_section
     jmp send_smp_done
 
 send_smp_idle:
