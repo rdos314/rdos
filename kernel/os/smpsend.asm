@@ -148,7 +148,7 @@ FindSendMailslot	Proc near
 ;
 	mov ds,ax
 	push ds
-	EnterSection ds:shd_section
+	EnterNewSection ds:shd_section
 ;
 	mov ax,bx
 	mov bx,ds:shd_mailslot_list
@@ -171,7 +171,7 @@ find_send_mailslot_loop:
 find_send_mailslot_done:	
 	pop ds
 	pushf
-	LeaveSection ds:shd_section
+	LeaveNewSection ds:shd_section
 	popf
 	mov ds,bx
 ;
@@ -540,7 +540,7 @@ GetSendMailslot	Proc near
 	mov ds,ax
 	push ds
 ;
-	EnterSection ds:shd_section
+	EnterNewSection ds:shd_section
 	mov bx,ds:shd_mailslot_list
 	or bx,bx
 	jz get_send_mailslot_query
@@ -567,7 +567,7 @@ get_send_mailslot_found:
 	mov bx,ds
 	pop edi
 	pop ds
-	LeaveSection ds:shd_section
+	LeaveNewSection ds:shd_section
 	mov ds,bx
 	jmp get_send_mailslot_ok
 	
@@ -580,7 +580,7 @@ get_send_mailslot_next:
 get_send_mailslot_query:	
 	pop ds
 	call QueryMailslot
-	LeaveSection ds:shd_section
+	LeaveNewSection ds:shd_section
 ;
 	mov ds,ax
 	LeaveNewSection ds:m_section
@@ -1840,7 +1840,7 @@ NameReply	Proc near
 	mov di,si
 	add di,2
 ;
-	EnterSection ds:shd_section
+	EnterNewSection ds:shd_section
 	push ds
 	push si
 	mov bx,ds:shd_mailslot_list
@@ -1875,7 +1875,7 @@ name_reply_pop_done:
 	pop si
 	pop ds
 	pop di
-	LeaveSection ds:shd_section
+	LeaveNewSection ds:shd_section
 	jmp name_reply_done
 
 name_reply_found:
@@ -1884,7 +1884,7 @@ name_reply_found:
 	pop si
 	pop ds
 	pop di
-	LeaveSection ds:shd_section
+	LeaveNewSection ds:shd_section
 ;
 	mov ds,bx
 	call HandleName
@@ -1951,7 +1951,7 @@ SendSupervise	Proc near
 	mov ax,fs
 	mov ds,ax
 ;
-	EnterSection ds:shd_section
+	EnterNewSection ds:shd_section
 	push ds
 	mov bx,ds:shd_mailslot_list
 	or bx,bx
@@ -1967,7 +1967,7 @@ send_supervise_loop:
 
 send_supervise_leave:	
 	pop ds
-	LeaveSection ds:shd_section
+	LeaveNewSection ds:shd_section
 	ret
 SendSupervise	Endp
 
