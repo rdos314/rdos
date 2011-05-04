@@ -5978,6 +5978,7 @@ lncsUnblock:
     add esi,OFFSET cs_list
     RemoveBlock32
     mov es:p_data,0
+    sub esi,OFFSET cs_list
     call cs:unlock_kernel_section_proc
 ;    
     cli

@@ -465,7 +465,7 @@ FindListen      Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    EnterSection ds:udp_section
+    EnterNewSection ds:udp_section
     mov ax,ds:listen_list
 
 find_listen_loop:
@@ -480,12 +480,12 @@ find_listen_next:
     jmp find_listen_loop
 
 find_listen_fail:
-    LeaveSection ds:udp_section
+    LeaveNewSection ds:udp_section
     stc
     jmp find_listen_done
 
 find_listen_ok:
-    LeaveSection ds:udp_section
+    LeaveNewSection ds:udp_section
     mov ax,es
     mov ds,ax
     clc
@@ -723,11 +723,11 @@ listen_udp_port Proc far
 ;       
     mov ax,SEG data
     mov ds,ax
-    EnterSection ds:udp_section
+    EnterNewSection ds:udp_section
     mov ax,ds:listen_list
     mov es:udp_listen_next,ax
     mov ds:listen_list,es
-    LeaveSection ds:udp_section
+    LeaveNewSection ds:udp_section
 ;
     pop cx
     pop eax
