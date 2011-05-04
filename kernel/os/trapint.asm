@@ -2020,7 +2020,7 @@ request_private_irq_handler     Proc far
     mov si,bx
     add si,si
     mov si,word ptr cs:[si].irq_offs_table
-    EnterSection ds:[si].usage_section
+    EnterNewSection ds:[si].usage_section
     mov ds:[si].user_data,dx
     mov ds:[si].user_handler,edi
     mov word ptr ds:[si+4].user_handler,es
@@ -2227,7 +2227,7 @@ release_private_irq_handler     Proc far
     add bx,bx
     mov bx,word ptr cs:[bx].irq_offs_table
     call ds:[bx].irq_disable_proc
-    LeaveSection ds:[bx].usage_section
+    LeaveNewSection ds:[bx].usage_section
 ;
     pop dx
     pop bx
@@ -2407,9 +2407,9 @@ init_irq_loop:
     loop init_irq_loop
 ;
     mov bx,OFFSET irq_arr
-    EnterSection ds:[bx].usage_section
+    EnterNewSection ds:[bx].usage_section
     add bx,2 * SIZE irq_struc
-    EnterSection ds:[bx].usage_section
+    EnterNewSection ds:[bx].usage_section
 ;
     xor cx,cx
     mov ax,cs
