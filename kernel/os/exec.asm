@@ -1290,8 +1290,8 @@ spFocusDone:
     mov eax,ds:app_loader_name
     mov gs:s_loader_name,eax
 ;
+    InitSection gs:s_sect1
     mov gs:s_sect1.cs_value,-1
-    mov gs:s_sect1.cs_list,0
 ;
     pop bx
     pop eax
@@ -1356,7 +1356,7 @@ WaitForSpawn Proc near
 ;    
     mov ax,gs
     mov ds,ax
-    EnterSection ds:s_sect1
+    EnterNewSection ds:s_sect1
 ;
     pop ax
     pop ds
@@ -1511,7 +1511,7 @@ spCopyExeLoop:
     mov ax,gs
     mov ds,ax
     mov es,ax
-    LeaveSection ds:s_sect1
+    LeaveNewSection ds:s_sect1
     WaitForSignal
 ;
     mov ax,10
@@ -1554,7 +1554,7 @@ spFail:
     mov gs:s_ret_code,-1
     mov ax,gs
     mov ds,ax
-    LeaveSection ds:s_sect1
+    LeaveNewSection ds:s_sect1
     WaitForSignal
 ;
     mov ax,10
