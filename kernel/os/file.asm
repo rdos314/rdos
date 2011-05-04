@@ -101,7 +101,7 @@ InsertFileSel   Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    EnterSection ds:fs_file_section
+    EnterNewSection ds:fs_file_section
 ;
     mov es,bx
     mov di,ds:fs_file_list
@@ -127,7 +127,7 @@ ins_file_sel_empty:
     mov ds:fs_file_list,es
 
 ins_file_sel_leave:
-    LeaveSection ds:fs_file_section
+    LeaveNewSection ds:fs_file_section
 ;
     pop di
     pop ebx
@@ -157,7 +157,7 @@ RemoveFileSel   Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    EnterSection ds:fs_file_section
+    EnterNewSection ds:fs_file_section
 ;
     mov ax,ds:fs_file_list
     or ax,ax
@@ -198,7 +198,7 @@ rem_file_sel_empty:
     mov ds:fs_file_list,0
 
 rem_file_sel_leave:
-    LeaveSection ds:fs_file_section
+    LeaveNewSection ds:fs_file_section
     pop si
     pop ebx
     pop eax
@@ -1116,7 +1116,7 @@ swap_all    Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    EnterSection ds:fs_file_section
+    EnterNewSection ds:fs_file_section
 ;    
     mov bx,ds:fs_file_list
 
@@ -1135,7 +1135,7 @@ swap_all_loop:
 ;    
     xor ax,ax
     mov es,ax
-    LeaveSection ds:fs_file_section
+    LeaveNewSection ds:fs_file_section
 ;
     pop bx
     pop ax
@@ -2731,7 +2731,7 @@ delete_handle   Endp
 swap_proc       Proc far
     mov ax,SEG data
     mov ds,ax
-    EnterSection ds:fs_file_section
+    EnterNewSection ds:fs_file_section
 ;    
     mov bx,ds:fs_file_list
 
@@ -2750,7 +2750,7 @@ swap_loop:
 ;    
     xor ax,ax
     mov es,ax
-    LeaveSection ds:fs_file_section
+    LeaveNewSection ds:fs_file_section
     retf32
 swap_proc       Endp
 
