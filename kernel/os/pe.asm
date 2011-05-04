@@ -3948,7 +3948,7 @@ allocate_mem    PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    EnterSection ds:app_lib_section     
+    EnterNewSection ds:app_lib_section     
 ;
     mov ax,ds:app_mem_blocks
     or ax,ax
@@ -3973,7 +3973,7 @@ alloc_ins_empty:
 
 alloc_ins_done:
     mov ds:app_mem_blocks,es
-    LeaveSection ds:app_lib_section     
+    LeaveNewSection ds:app_lib_section     
 ;
     pop ecx
     pop eax
@@ -4006,7 +4006,7 @@ free_mem    PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    EnterSection ds:app_lib_section     
+    EnterNewSection ds:app_lib_section     
 
 free_mem_more:
     mov ax,ds:app_mem_blocks
@@ -4057,7 +4057,7 @@ free_mem_last_block:
     mov ds:app_mem_blocks,0
 
 free_mem_done:
-    LeaveSection ds:app_lib_section     
+    LeaveNewSection ds:app_lib_section     
 ;
     pop edi
     pop si
@@ -4130,7 +4130,7 @@ debug_alloc_fill_ok:
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    EnterSection ds:app_lib_section     
+    EnterNewSection ds:app_lib_section     
 ;
     mov ax,ds:app_mem_blocks
     or ax,ax
@@ -4155,7 +4155,7 @@ debug_alloc_ins_empty:
 
 debug_alloc_ins_done:
     mov ds:app_mem_blocks,es
-    LeaveSection ds:app_lib_section     
+    LeaveNewSection ds:app_lib_section     
 ;
     pop ecx
     pop eax
@@ -4188,7 +4188,7 @@ debug_free_mem  PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    EnterSection ds:app_lib_section     
+    EnterNewSection ds:app_lib_section     
 
 debug_free_mem_more:
     mov ax,ds:app_mem_blocks
@@ -4265,7 +4265,7 @@ debug_free_mem_last_block:
     mov ds:app_mem_blocks,0
 
 debug_free_mem_done:
-    LeaveSection ds:app_lib_section     
+    LeaveNewSection ds:app_lib_section     
 ;
     pop edi
     pop si
