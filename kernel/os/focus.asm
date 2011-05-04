@@ -554,7 +554,7 @@ set_focus       PROC far
     pushad
     mov bx,SEG data
     mov ds,bx
-    EnterSection ds:focus_section
+    EnterNewSection ds:focus_section
     xor bh,bh
     mov bl,al
     add bx,bx
@@ -595,7 +595,7 @@ set_focus_no_lost:
     mov ds,bx
     call trap_got_focus
 set_focus_done:
-    LeaveSection ds:focus_section
+    LeaveNewSection ds:focus_section
     popad
     pop es
     pop ds
