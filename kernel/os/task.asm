@@ -1144,6 +1144,18 @@ glob_ptab_init:
     mov ax,leave_section_nr
     RegisterOsGate
 ;
+    mov si,OFFSET enter_new_section
+    mov di,OFFSET enter_new_section_name
+    xor cl,cl
+    mov ax,enter_new_section_nr
+    RegisterOsGate
+;
+    mov si,OFFSET leave_new_section
+    mov di,OFFSET leave_new_section_name
+    xor cl,cl
+    mov ax,leave_new_section_nr
+    RegisterOsGate
+;
     mov si,OFFSET get_debug_thread_sel
     mov di,OFFSET get_debug_thread_sel_name
     xor cl,cl
@@ -5755,7 +5767,6 @@ enter_section   PROC far
     push fs
 ;    
     call LockCore
-    call cs:lock_list_proc
     mov dx,ds:[esi].cs_list
     cmp dx,-1
     jne ecsBlock
@@ -5774,14 +5785,12 @@ ecsBlock:
     mov fs:ps_curr_thread,0
 ;
     InsertBlock32
-    call cs:unlock_list_proc
 ;
     mov es:p_sleep_sel,ds
     mov es:p_sleep_offset,edi    
     jmp LoadThread
 
 ecsUnlock:
-    call cs:unlock_list_proc
     call UnlockCore
     
 ecsDone:
@@ -5818,7 +5827,6 @@ leave_section   PROC far
     push fs
 ;
     call LockCore
-    call cs:lock_list_proc
     mov ax,ds:[esi].cs_list
     cmp ax,-1
     je lcsUnlockList
@@ -5837,7 +5845,6 @@ lcsUnblock:
     add esi,OFFSET cs_list
     RemoveBlock32
     mov es:p_data,0
-    call cs:unlock_list_proc
 ;    
     cli
     mov di,OFFSET ps_wakeup_list
@@ -5851,7 +5858,6 @@ lcsUnblocked:
     jmp lcsUnlock
 
 lcsUnlockList:
-    call cs:unlock_list_proc
 
 lcsUnlock:
     call UnlockCore
@@ -5870,6 +5876,141 @@ lcsFs:
     pop ax
     retf32
 leave_section   ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           enter_new_section
+;
+;           DESCRIPTION:    Enter new section
+;
+;           PARAMETERS:         DS:ESI      ADDRESS OF SECTION
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+enter_new_section_name      DB 'Enter New Critical Section',0
+
+enter_new_section   PROC far
+    push ax
+    push dx
+    push fs
+;    
+    call LockCore
+    call cs:lock_kernel_section_proc
+    mov dx,ds:[esi].cs_list
+    cmp dx,-1
+    jne encsBlock
+;
+    mov ds:[esi].cs_list,0
+    jmp encsUnlock
+
+encsBlock:
+    mov ax,ds
+    push OFFSET encsDone
+    call SaveLockedThread
+;
+    mov ds,ax
+    lea edi,[esi].cs_list   
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    InsertBlock32
+    call cs:unlock_kernel_section_proc
+;
+    mov es:p_sleep_sel,ds
+    mov es:p_sleep_offset,edi    
+    jmp LoadThread
+
+encsUnlock:
+    call cs:unlock_kernel_section_proc
+    call UnlockCore
+    
+encsDone:
+    pop ax
+    verr ax
+    jz encsFs
+;
+    xor ax,ax
+    
+encsFs:
+    mov fs,ax
+;
+    pop dx
+    pop ax
+    retf32
+enter_new_section   ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           LeaveNewSection
+;
+;           DESCRIPTION:    Leave new section
+;
+;           PARAMETERS:         DS:ESI      ADDRESS OF SECTION
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+leave_new_section_name      DB 'Leave New Critical Section',0
+ 
+leave_new_section   PROC far
+    push ax
+    push dx
+    push fs
+;
+    call LockCore
+    call cs:lock_kernel_section_proc
+    mov ax,ds:[esi].cs_list
+    cmp ax,-1
+    je lncsUnlockList
+;    
+    or ax,ax
+    jnz lncsUnblock
+;
+    mov ds:[esi].cs_list,-1
+    jmp lncsUnlockList
+
+lncsUnblock:
+    push es    
+    push esi
+    push di
+;       
+    add esi,OFFSET cs_list
+    RemoveBlock32
+    mov es:p_data,0
+    call cs:unlock_kernel_section_proc
+;    
+    cli
+    mov di,OFFSET ps_wakeup_list
+    InsertCoreBlock
+    sti
+
+lncsUnblocked:
+    pop di
+    pop esi
+    pop es
+    jmp lncsUnlock
+
+lncsUnlockList:
+    call cs:unlock_kernel_section_proc
+
+lncsUnlock:
+    call UnlockCore
+
+lncsDone:
+    pop ax
+    verr ax
+    jz lncsFs
+;
+    xor ax,ax
+    
+lncsFs:
+    mov fs,ax
+;
+    pop dx
+    pop ax
+    retf32
+leave_new_section   ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

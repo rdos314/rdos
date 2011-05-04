@@ -458,4 +458,7 @@ find_sys_env_var_nr         = 397
 start_clock_nr              = 400
 sync_clock_nr               = 401
 
+enter_new_section_nr        = 402
+leave_new_section_nr        = 403
+
 osgate_entries				= 420

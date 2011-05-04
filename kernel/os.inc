@@ -734,6 +734,32 @@ leave_section_donep:
     popf
                         ENDM
 
+EnterNewSection    MACRO section
+    LOCAL enter_new_section_donep
+    pushf
+    lock sub section.cs_value,1
+    jc enter_new_section_donep
+    push esi
+    lea esi,section
+    OsGate enter_new_section_nr
+    pop esi
+enter_new_section_donep:
+    popf
+                        ENDM
+
+LeaveNewSection    MACRO section
+    LOCAL leave_new_section_donep
+    pushf
+    lock add section.cs_value,1
+    jc leave_new_section_donep
+    push esi
+    lea esi,section
+    OsGate leave_new_section_nr
+    pop esi
+leave_new_section_donep:
+    popf
+                        ENDM
+
 InitReadWriteSection    MACRO section
     mov section.ssync_value,0
     mov section.ssync_list,0
