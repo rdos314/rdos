@@ -218,7 +218,7 @@ LockIni Proc near
 ;       
     push ds
     mov ds,[esi].ih_sel
-    EnterSection ds:if_section
+    EnterNewSection ds:if_section
     pop ds
 ;
     mov bx,[esi].ih_file_handle
@@ -290,7 +290,7 @@ UnlockIni       Proc near
 
 uiNoMem:
     mov ds,[esi].ih_sel
-    LeaveSection ds:if_section
+    LeaveNewSection ds:if_section
 ;    
     popad
     pop es
@@ -792,11 +792,11 @@ FreeIniSel      proc near
     cmp cx,ds:is_sys_sel
     jne fisPriv
 ;
-    EnterSection ds:is_section
+    EnterNewSection ds:is_section
     mov es,cx
     mov ds:is_sys_sel,0
     FreeMem
-    LeaveSection ds:is_section
+    LeaveNewSection ds:is_section
     jmp fisDone
 
 fisPriv:
@@ -882,7 +882,7 @@ open_sys_ini    Proc far
     xor bx,bx
     mov ax,SEG data
     mov ds,ax
-    EnterSection ds:is_section
+    EnterNewSection ds:is_section
 ;
     mov ax,ds:is_sys_sel
     or ax,ax
@@ -900,7 +900,7 @@ open_sys_ini    Proc far
 osiCreateHandle:
     mov ax,SEG data
     mov ds,ax
-    LeaveSection ds:is_section
+    LeaveNewSection ds:is_section
 ;
     mov ds,ds:is_sys_sel
     call CreateIniHandle
