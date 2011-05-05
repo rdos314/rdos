@@ -67,7 +67,7 @@ read_pnp_byte  Proc far
 ;
     mov dx,SEG data
     mov ds,dx
-    EnterSection ds:PnpSection
+    EnterNewSection ds:PnpSection
 ;
     mov dx,2Eh
     mov al,87h
@@ -91,7 +91,7 @@ read_pnp_byte  Proc far
     mov al,0AAh
     out dx,al
     pop ax
-    LeaveSection ds:PnpSection    
+    LeaveNewSection ds:PnpSection    
 ;
     pop dx
     pop ds
@@ -120,7 +120,7 @@ write_pnp_byte  Proc far
 ;
     mov dx,SEG data
     mov ds,dx
-    EnterSection ds:PnpSection
+    EnterNewSection ds:PnpSection
 ;
     push ax
     mov dx,2Eh
@@ -144,7 +144,7 @@ write_pnp_byte  Proc far
 ;
     mov al,0AAh
     out dx,al
-    LeaveSection ds:PnpSection
+    LeaveNewSection ds:PnpSection
 ;
     pop ax
     pop dx
