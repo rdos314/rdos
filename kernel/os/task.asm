@@ -4167,15 +4167,22 @@ create_core    Proc far
     push ds
     push bx
     push cx
+    push edx
     push si
-    push di
+    push edi
 ;   
     mov ax,flat_sel
     mov ds,ax
     mov ax,gdt_sel
     mov es,ax
 ;
-    AllocateGdt
+    mov ax,cs:core_count
+    mov cx,core_sel_size
+    push dx
+    mul cx
+    pop dx
+    mov bx,ax
+    add bx,core_sel_base + core_sel_offs
     mov eax,[edx+core_data_sel]
     mov es:[bx],eax    
 ;    
@@ -4189,13 +4196,62 @@ create_core    Proc far
     rep stosb
     mov es:ps_sel,es
 ;
-    push es
     mov eax,200h    
-    AllocateSmallGlobalMem
-    mov ax,es
-    pop es
-    mov es:ps_ss,ax
+    AllocateSmallLinear
+;    
+    mov ax,cs:core_count
+    mov cx,core_sel_size
+    push dx
+    mul cx
+    pop dx
+    mov bx,ax
+    add bx,core_sel_base + core_ss_offs
+    mov ecx,200h    
+    CreateDataSelector16
+;       
+    mov es:ps_ss,bx
     mov es:ps_sp,200h
+;    
+    push es
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov eax,2000h + OFFSET tss_bitmap_space
+    AllocateBigLinear
+    mov edi,edx
+;    
+    xor al,al
+    mov cx,OFFSET tss_bitmap_space
+    rep stos byte ptr es:[edi]
+;
+    mov cx,800h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    mov es:[edx].tss_bitmap,OFFSET tss_bitmap_space
+    pop es
+;
+    mov ax,cs:core_count
+    mov cx,core_sel_size
+    push dx
+    mul cx
+    pop dx
+    mov bx,ax
+    add bx,core_sel_base + core_tss_data_offs
+    mov ecx,2000h + OFFSET tss_bitmap_space
+    CreateDataSelector16
+    mov fs:ps_tss_data_sel,bx
+;
+    mov ax,cs:core_count
+    mov cx,core_sel_size
+    push dx
+    mul cx
+    pop dx
+    mov bx,ax
+    add bx,core_sel_base + core_tss_offs
+    mov ecx,2000h + OFFSET tss_bitmap_space
+    CreateTssSelector
+    mov fs:ps_tss_sel,bx
 ;
     mov ax,kernel_patch_sel
     mov ds,ax
@@ -4204,8 +4260,7 @@ create_core    Proc far
     add si,si
     mov ds:[si].core_arr,es
     inc ds:core_count
-;
-    mov es:ps_id,ax     
+    mov es:ps_id,ax    
 ;
     xor ax,ax
     mov bx,OFFSET ps_ptab
@@ -4252,8 +4307,9 @@ timer_free_list_create:
 ;
     mov ax,es:ps_id     
 ;
-    pop di
+    pop edi
     pop si
+    pop edx
     pop cx
     pop bx
     pop ds      

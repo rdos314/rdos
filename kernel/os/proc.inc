@@ -51,17 +51,22 @@ ps_prio_act         DW ?
 
 ps_wakeup_list      DW ?
 
-ps_sel              DW ?
 ps_id               DW ?
+
+ps_sel              DW ?
+ps_tss_sel          DW ?
+ps_tss_data_sel     DW ?
+
 ps_ss               DW ?
 ps_sp               DW ?
+
 ps_nesting          DW ?
 ps_curr_thread      DW ?
 ps_last_thread      DW ?
 ps_flags            DW ?
 ps_null_thread      DW ?
-ps_apic             DD ?
 
+ps_apic             DD ?
 ps_acpi             DB ?
 ps_resv             DB ?
 

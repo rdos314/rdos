@@ -421,3 +421,14 @@ video_page4_sel		EQU 0F20h
 video_page5_sel		EQU 0F28h
 video_page6_sel		EQU 0F30h
 video_page7_sel		EQU 0F38h
+
+; core selectors. Reserve space for 20h * MAX_CORES entries
+
+core_sel_base       EQU 1000h
+core_sel_size       EQU 20h
+
+core_tss_offs       EQU 0h      ; don't change this (TR)
+core_tss_data_offs  EQU 8h
+core_sel_offs       EQU 10h
+core_ss_offs        EQU 18h
+
