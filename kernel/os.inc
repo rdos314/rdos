@@ -747,12 +747,11 @@ InitReadWriteSection    MACRO section
 EnterReadSection    MACRO section
     LOCAL enter_sync_ok,enter_read_ok,enter_read_done
     pushf
-    cli
     lock sub section.ssync_value,1
     jc enter_sync_ok
     push esi
     mov esi,OFFSET section.ssync_value
-    OsGate enter_section_nr
+    OsGate enter_new_section_nr
     pop esi
 enter_sync_ok:
     lock sub section.sread_value,1
@@ -761,14 +760,14 @@ enter_sync_ok:
     jc enter_read_ok
     push esi
     mov esi,OFFSET section.swrite_value
-    OsGate enter_section_nr
+    OsGate enter_new_section_nr
     pop esi
 enter_read_ok:
     lock add section.ssync_value,1
     jc enter_read_done
     push esi
     mov esi,OFFSET section.ssync_value
-    OsGate leave_section_nr
+    OsGate leave_new_section_nr
     pop esi
 enter_read_done:
     popf
@@ -777,12 +776,11 @@ enter_read_done:
 LeaveReadSection    MACRO section
     LOCAL leave_sync_ok,leave_read_ok,leave_read_done
     pushf
-    cli
     lock sub section.ssync_value,1
     jc leave_sync_ok
     push esi
     mov esi,OFFSET section.ssync_value
-    OsGate enter_section_nr
+    OsGate enter_new_section_nr
     pop esi
 leave_sync_ok:
     lock add section.sread_value,1
@@ -791,14 +789,14 @@ leave_sync_ok:
     jc leave_read_ok
     push esi
     mov esi,OFFSET section.swrite_value
-    OsGate leave_section_nr
+    OsGate leave_new_section_nr
     pop esi
 leave_read_ok:
     lock add section.ssync_value,1
     jc leave_read_done
     push esi
     mov esi,OFFSET section.ssync_value
-    OsGate leave_section_nr
+    OsGate leave_new_section_nr
     pop esi
 leave_read_done:
     popf
@@ -807,103 +805,17 @@ leave_read_done:
 EnterWriteSection       MACRO section
     LOCAL enter_section_done
     pushf
-    cli
     lock sub section.swrite_value,1
     jc enter_section_done
     push esi
     mov esi,OFFSET section.swrite_value
-    OsGate enter_section_nr
+    OsGate enter_new_section_nr
     pop esi
 enter_section_done:
     popf
                         ENDM
 
 LeaveWriteSection       MACRO section
-    LOCAL leave_section_done
-    pushf
-    cli
-    lock add section.swrite_value,1
-    jc leave_section_done
-    push esi
-    mov esi,OFFSET section.swrite_value
-    OsGate leave_section_nr
-    pop esi
-leave_section_done:
-    popf
-                        ENDM
-
-EnterNewReadSection    MACRO section
-    LOCAL enter_sync_ok,enter_read_ok,enter_read_done
-    pushf
-    lock sub section.ssync_value,1
-    jc enter_sync_ok
-    push esi
-    mov esi,OFFSET section.ssync_value
-    OsGate enter_new_section_nr
-    pop esi
-enter_sync_ok:
-    lock sub section.sread_value,1
-    jnc enter_read_ok
-    lock sub section.swrite_value,1
-    jc enter_read_ok
-    push esi
-    mov esi,OFFSET section.swrite_value
-    OsGate enter_new_section_nr
-    pop esi
-enter_read_ok:
-    lock add section.ssync_value,1
-    jc enter_read_done
-    push esi
-    mov esi,OFFSET section.ssync_value
-    OsGate leave_new_section_nr
-    pop esi
-enter_read_done:
-    popf
-                        ENDM
-
-LeaveNewReadSection    MACRO section
-    LOCAL leave_sync_ok,leave_read_ok,leave_read_done
-    pushf
-    lock sub section.ssync_value,1
-    jc leave_sync_ok
-    push esi
-    mov esi,OFFSET section.ssync_value
-    OsGate enter_new_section_nr
-    pop esi
-leave_sync_ok:
-    lock add section.sread_value,1
-    jnc leave_read_ok
-    lock add section.swrite_value,1
-    jc leave_read_ok
-    push esi
-    mov esi,OFFSET section.swrite_value
-    OsGate leave_new_section_nr
-    pop esi
-leave_read_ok:
-    lock add section.ssync_value,1
-    jc leave_read_done
-    push esi
-    mov esi,OFFSET section.ssync_value
-    OsGate leave_new_section_nr
-    pop esi
-leave_read_done:
-    popf
-                        ENDM
-
-EnterNewWriteSection       MACRO section
-    LOCAL enter_section_done
-    pushf
-    lock sub section.swrite_value,1
-    jc enter_section_done
-    push esi
-    mov esi,OFFSET section.swrite_value
-    OsGate enter_new_section_nr
-    pop esi
-enter_section_done:
-    popf
-                        ENDM
-
-LeaveNewWriteSection       MACRO section
     LOCAL leave_section_done
     pushf
     lock add section.swrite_value,1

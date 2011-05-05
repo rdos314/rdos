@@ -1123,9 +1123,9 @@ swap_all    Proc near
 swap_all_loop:  
     push ds
     mov ds,bx
-    EnterNewWriteSection ds:file_size_section
+    EnterWriteSection ds:file_size_section
     call swap_file
-    LeaveNewWriteSection ds:file_size_section
+    LeaveWriteSection ds:file_size_section
     pop ds
 ;
     mov es,bx
@@ -1185,7 +1185,7 @@ read_file       Proc near
     call swap_all 
 
 read_file_mem_all_ok:   
-    EnterNewReadSection ds:file_size_section
+    EnterReadSection ds:file_size_section
     cmp edx,ds:file_size
     jnc read_file_done
 ;
@@ -1304,7 +1304,7 @@ read_file_do:
 
 read_file_done:
     pushf
-    LeaveNewReadSection ds:file_size_section
+    LeaveReadSection ds:file_size_section
     popf
     mov eax,ebp
 ;
@@ -1360,7 +1360,7 @@ write_file      Proc near
     call swap_all 
 
 write_file_mem_all_ok:  
-    EnterNewWriteSection ds:file_size_section
+    EnterWriteSection ds:file_size_section
     cmp edx,ds:file_size
     jnc write_file_extend
 ;
@@ -1509,7 +1509,7 @@ write_file_do:
 
 write_file_done:
     pushf
-    LeaveNewWriteSection ds:file_size_section
+    LeaveWriteSection ds:file_size_section
     popf
     mov eax,ebp
 ;
@@ -1814,9 +1814,9 @@ get_file_size:
     jz get_file_size_done
 ;
     mov ds,bx
-    EnterNewReadSection ds:file_size_section
+    EnterReadSection ds:file_size_section
     mov eax,ds:file_size
-    LeaveNewReadSection ds:file_size_section
+    LeaveReadSection ds:file_size_section
     clc
 
 get_file_size_done:
@@ -1868,9 +1868,9 @@ set_file_size:
     jz set_file_size_done
 ;
     mov ds,bx
-    EnterNewWriteSection ds:file_size_section
+    EnterWriteSection ds:file_size_section
     CallFileSystem fs_set_file_size_proc
-    LeaveNewWriteSection ds:file_size_section
+    LeaveWriteSection ds:file_size_section
 
 set_file_size_done:
     pop edx
@@ -2429,7 +2429,7 @@ map_to_file     Proc near
     mov ax,flat_sel
     mov es,ax
 ;
-    EnterNewReadSection ds:file_size_section
+    EnterReadSection ds:file_size_section
     cmp edx,ds:file_size
     jnc map_to_file_leave
 ;
@@ -2500,7 +2500,7 @@ map_to_file_do_first:
     clc
 
 map_to_file_leave:
-    LeaveNewReadSection ds:file_size_section
+    LeaveReadSection ds:file_size_section
     jmp map_to_file_done
 
 map_to_file_read:
@@ -2738,9 +2738,9 @@ swap_proc       Proc far
 swap_loop:      
     push ds
     mov ds,bx
-    EnterNewWriteSection ds:file_size_section
+    EnterWriteSection ds:file_size_section
     call swap_file
-    LeaveNewWriteSection ds:file_size_section
+    LeaveWriteSection ds:file_size_section
     pop ds
 ;
     mov es,bx
