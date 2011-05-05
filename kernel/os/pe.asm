@@ -732,7 +732,7 @@ FindLib Proc near
     jc find_lib_done
 ;    
     mov ds,bx
-    EnterNewSection ds:mod_section
+    EnterSection ds:mod_section
     mov ax,ds:mod_list
     or ax,ax
     jz find_lib_try_app
@@ -762,13 +762,13 @@ find_lib_try_app:
     jc find_lib_ok
 
 find_lib_fail:
-    LeaveNewSection ds:mod_section
+    LeaveSection ds:mod_section
     stc
     jmp find_lib_done
 
 find_lib_ok:
     mov edi,es:lib_base
-    LeaveNewSection ds:mod_section
+    LeaveSection ds:mod_section
     clc
 
 find_lib_done:
@@ -842,7 +842,7 @@ FindDll Proc near
     jc find_dll_end
 ;    
     mov ds,bx
-    EnterNewSection ds:mod_section
+    EnterSection ds:mod_section
     mov ax,ds:mod_list
     or ax,ax
     jz find_dll_fail
@@ -875,14 +875,14 @@ find_dll_next:
     jne find_dll_check_dll
 
 find_dll_fail:
-    LeaveNewSection ds:mod_section
+    LeaveSection ds:mod_section
     stc
     jmp find_dll_end
 
 find_dll_ok:
     pop esi
     mov edi,es:lib_base
-    LeaveNewSection ds:mod_section
+    LeaveSection ds:mod_section
     clc
 
 find_dll_end:
@@ -2356,7 +2356,7 @@ load_object     Proc far
     push ds
     mov ax,es
     mov ds,ax
-    EnterNewSection ds:mod_section
+    EnterSection ds:mod_section
     pop ds
 ;
     xor eax,eax
@@ -2441,7 +2441,7 @@ load_object_map:
 load_object_leave:
     mov ax,es
     mov ds,ax
-    LeaveNewSection ds:mod_section
+    LeaveSection ds:mod_section
     
 load_object_done:
     popad
@@ -3948,7 +3948,7 @@ allocate_mem    PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    EnterNewSection ds:app_lib_section     
+    EnterSection ds:app_lib_section     
 ;
     mov ax,ds:app_mem_blocks
     or ax,ax
@@ -3973,7 +3973,7 @@ alloc_ins_empty:
 
 alloc_ins_done:
     mov ds:app_mem_blocks,es
-    LeaveNewSection ds:app_lib_section     
+    LeaveSection ds:app_lib_section     
 ;
     pop ecx
     pop eax
@@ -4006,7 +4006,7 @@ free_mem    PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    EnterNewSection ds:app_lib_section     
+    EnterSection ds:app_lib_section     
 
 free_mem_more:
     mov ax,ds:app_mem_blocks
@@ -4057,7 +4057,7 @@ free_mem_last_block:
     mov ds:app_mem_blocks,0
 
 free_mem_done:
-    LeaveNewSection ds:app_lib_section     
+    LeaveSection ds:app_lib_section     
 ;
     pop edi
     pop si
@@ -4130,7 +4130,7 @@ debug_alloc_fill_ok:
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    EnterNewSection ds:app_lib_section     
+    EnterSection ds:app_lib_section     
 ;
     mov ax,ds:app_mem_blocks
     or ax,ax
@@ -4155,7 +4155,7 @@ debug_alloc_ins_empty:
 
 debug_alloc_ins_done:
     mov ds:app_mem_blocks,es
-    LeaveNewSection ds:app_lib_section     
+    LeaveSection ds:app_lib_section     
 ;
     pop ecx
     pop eax
@@ -4188,7 +4188,7 @@ debug_free_mem  PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    EnterNewSection ds:app_lib_section     
+    EnterSection ds:app_lib_section     
 
 debug_free_mem_more:
     mov ax,ds:app_mem_blocks
@@ -4265,7 +4265,7 @@ debug_free_mem_last_block:
     mov ds:app_mem_blocks,0
 
 debug_free_mem_done:
-    LeaveNewSection ds:app_lib_section     
+    LeaveSection ds:app_lib_section     
 ;
     pop edi
     pop si

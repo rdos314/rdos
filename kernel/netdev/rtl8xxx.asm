@@ -791,7 +791,7 @@ sPadOk:
     and dx,0FFFh
     or ax,dx
 ;
-    EnterNewSection ds:TxSection
+    EnterSection ds:TxSection
     or ecx,80000h
     push ecx
     push eax
@@ -843,7 +843,7 @@ ssNoPrev:
     inc bx
     and bx,3
     mov ds:TxBufPtr,bx
-    LeaveNewSection ds:TxSection
+    LeaveSection ds:TxSection
 ;
     pop edi
     pop dx

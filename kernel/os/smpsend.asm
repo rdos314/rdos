@@ -148,7 +148,7 @@ FindSendMailslot	Proc near
 ;
 	mov ds,ax
 	push ds
-	EnterNewSection ds:shd_section
+	EnterSection ds:shd_section
 ;
 	mov ax,bx
 	mov bx,ds:shd_mailslot_list
@@ -171,7 +171,7 @@ find_send_mailslot_loop:
 find_send_mailslot_done:	
 	pop ds
 	pushf
-	LeaveNewSection ds:shd_section
+	LeaveSection ds:shd_section
 	popf
 	mov ds,bx
 ;
@@ -232,7 +232,7 @@ SendData	Proc near
 	xor ax,ax
 	mov fs,ax
 	mov gs,ax
-	LeaveNewSection ds:m_section
+	LeaveSection ds:m_section
 	mov ds,ax
 ;
 	add cx,bx
@@ -289,7 +289,7 @@ SendAck	Proc near
 	xor ax,ax
 	mov fs,ax
 	mov gs,ax
-	LeaveNewSection ds:m_section
+	LeaveSection ds:m_section
 	mov ds,ax
 ;
 	add cx,bx
@@ -483,7 +483,7 @@ QueryMailslot	Proc near
 ;	
 	push ds
 	mov ds,bx
-	EnterNewSection ds:m_section
+	EnterSection ds:m_section
 	pop ds
 ;	
 	mov es,bx
@@ -540,7 +540,7 @@ GetSendMailslot	Proc near
 	mov ds,ax
 	push ds
 ;
-	EnterNewSection ds:shd_section
+	EnterSection ds:shd_section
 	mov bx,ds:shd_mailslot_list
 	or bx,bx
 	jz get_send_mailslot_query
@@ -567,7 +567,7 @@ get_send_mailslot_found:
 	mov bx,ds
 	pop edi
 	pop ds
-	LeaveNewSection ds:shd_section
+	LeaveSection ds:shd_section
 	mov ds,bx
 	jmp get_send_mailslot_ok
 	
@@ -580,10 +580,10 @@ get_send_mailslot_next:
 get_send_mailslot_query:	
 	pop ds
 	call QueryMailslot
-	LeaveNewSection ds:shd_section
+	LeaveSection ds:shd_section
 ;
 	mov ds,ax
-	LeaveNewSection ds:m_section
+	LeaveSection ds:m_section
 	call SendNameRequest
 
 get_send_mailslot_ok:
@@ -813,7 +813,7 @@ dequeue_active_conn_ok:
 	pop ds
 	call SendData	
 ;
-	EnterNewSection ds:m_section
+	EnterSection ds:m_section
 
 dequeue_active_no_pending:
 	movzx ebx,ds:vm_index
@@ -916,7 +916,7 @@ activate_mailslot_loop:
 	mov gs:l_timeout,eax
 	pop ds
 	call SendData
-	EnterNewSection ds:m_section
+	EnterSection ds:m_section
 	jmp activate_mailslot_loop
 
 activate_mailslot_done:
@@ -1233,7 +1233,7 @@ SendToSmp	Proc near
 	mov gs,ax
 	pop es
 ;
-	EnterNewSection ds:m_section
+	EnterSection ds:m_section
 	mov gs:l_size,ecx
 	mov gs:l_pos,0
 	mov gs:l_ack,0
@@ -1274,7 +1274,7 @@ send_to_smp_queue:
 	call QueuePendingRequest
 	xor ax,ax
 	mov gs,ax
-	LeaveNewSection ds:m_section
+	LeaveSection ds:m_section
 
 send_to_smp_wait:
 	WaitForSignal
@@ -1323,7 +1323,7 @@ SmpToSender	Proc near
 	mov bx,gs:l_send_thread
 	mov ecx,gs:l_size
 	call DequeueActiveRequest
-	LeaveNewSection ds:m_section
+	LeaveSection ds:m_section
 ;
 	mov es,bx
 	mov es:p_data,ecx
@@ -1560,7 +1560,7 @@ copy_reply_move_done:
 copy_reply_leave:
 	xor ax,ax
 	mov gs,ax
-	LeaveNewSection ds:m_section
+	LeaveSection ds:m_section
 
 copy_reply_done:
 	popad
@@ -1592,7 +1592,7 @@ HandleReply	Proc near
 	or al,al
 	jz handle_reply_done
 ;
-	EnterNewSection ds:m_section
+	EnterSection ds:m_section
 	mov eax,es:[di].sh_connection
 	Reverse
 	mov ebx,eax
@@ -1621,7 +1621,7 @@ handle_reply_copy:
 handle_reply_leave:
 	xor ax,ax
 	mov gs,ax
-	LeaveNewSection ds:m_section
+	LeaveSection ds:m_section
 
 handle_reply_done:
     pop edx
@@ -1691,7 +1691,7 @@ HandleReset	Proc near
 	call FindSendMailslot
 	jc handle_reset_done
 ;
-	EnterNewSection ds:m_section
+	EnterSection ds:m_section
 	mov eax,es:[si].sr_connection
 	Reverse
 ;
@@ -1707,12 +1707,12 @@ HandleReset	Proc near
 handle_reset_do:
     push edx
 	mov ds:vm_valid,0
-	LeaveNewSection ds:m_section
+	LeaveSection ds:m_section
 	mov fs,ds:vm_host
 	call FlushResponses
-	EnterNewSection ds:m_section
+	EnterSection ds:m_section
 	call ResetMailslot
-	LeaveNewSection ds:m_section
+	LeaveSection ds:m_section
 ;
 	push ds
 	mov ds,fs:shd_host
@@ -1728,7 +1728,7 @@ handle_reset_do:
 	jmp handle_reset_done
 
 handle_reset_leave:
-	LeaveNewSection ds:m_section
+	LeaveSection ds:m_section
 
 handle_reset_done:
 	clc
@@ -1757,7 +1757,7 @@ HandleName	Proc near
 	push eax
 	push edx
 ;
-	EnterNewSection ds:m_section
+	EnterSection ds:m_section
 	mov al,ds:vm_valid
 	or al,al
 	jnz handle_name_done
@@ -1802,7 +1802,7 @@ handle_name_rtt_done:
 	call ActivateMailslot
 
 handle_name_done:
-	LeaveNewSection ds:m_section
+	LeaveSection ds:m_section
 	pop edx
 	pop eax
 	ret
@@ -1840,7 +1840,7 @@ NameReply	Proc near
 	mov di,si
 	add di,2
 ;
-	EnterNewSection ds:shd_section
+	EnterSection ds:shd_section
 	push ds
 	push si
 	mov bx,ds:shd_mailslot_list
@@ -1875,7 +1875,7 @@ name_reply_pop_done:
 	pop si
 	pop ds
 	pop di
-	LeaveNewSection ds:shd_section
+	LeaveSection ds:shd_section
 	jmp name_reply_done
 
 name_reply_found:
@@ -1884,7 +1884,7 @@ name_reply_found:
 	pop si
 	pop ds
 	pop di
-	LeaveNewSection ds:shd_section
+	LeaveSection ds:shd_section
 ;
 	mov ds,bx
 	call HandleName
@@ -1951,7 +1951,7 @@ SendSupervise	Proc near
 	mov ax,fs
 	mov ds,ax
 ;
-	EnterNewSection ds:shd_section
+	EnterSection ds:shd_section
 	push ds
 	mov bx,ds:shd_mailslot_list
 	or bx,bx
@@ -1967,7 +1967,7 @@ send_supervise_loop:
 
 send_supervise_leave:	
 	pop ds
-	LeaveNewSection ds:shd_section
+	LeaveSection ds:shd_section
 	ret
 SendSupervise	Endp
 
@@ -1987,7 +1987,7 @@ ResendData	Proc near
 ;
 	mov si,OFFSET vm_arr
 	mov cx,MAX_PENDING_REQUESTS
-	EnterNewSection ds:m_section
+	EnterSection ds:m_section
 
 resend_data_loop:
 	push cx
@@ -2018,7 +2018,7 @@ resend_data_loop:
 
 resend_data_timeout_ok:
 	call SendData
-	EnterNewSection ds:m_section
+	EnterSection ds:m_section
 
 resend_data_next:
 	pop cx
@@ -2028,7 +2028,7 @@ resend_data_next:
 ;
 	xor ax,ax
 	mov gs,ax
-	LeaveNewSection ds:m_section
+	LeaveSection ds:m_section
 	pop gs
 	ret
 ResendData	Endp

@@ -754,11 +754,11 @@ create_module   PROC far
     jz create_module_done
 ;
     mov ds,ax    
-    EnterNewSection ds:mod_section
+    EnterSection ds:mod_section
     mov ax,ds:mod_list
     mov ds:mod_list,es
     mov es:mod_next,ax
-    LeaveNewSection ds:mod_section
+    LeaveSection ds:mod_section
     
 create_module_done:    
     pop dx
@@ -805,7 +805,7 @@ free_module     PROC far
     jz free_module_done
 ;
     mov ds,si
-    EnterNewSection ds:mod_section
+    EnterSection ds:mod_section
     mov ax,ds:mod_list
     or ax,ax
     jz free_module_leave
@@ -845,7 +845,7 @@ free_mod_handle:
 
 free_module_leave:      
     mov ds,si
-    LeaveNewSection ds:mod_section
+    LeaveSection ds:mod_section
         
 free_module_done:
     pop si

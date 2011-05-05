@@ -1418,9 +1418,9 @@ demand_mount    Proc far
     mov ds,ax
     mov al,es:disc_sub_unit
     mov edi,OFFSET boot_sect
-    EnterNewSection ds:FloppySection
+    EnterSection ds:FloppySection
     call ReadBootSector
-    LeaveNewSection ds:FloppySection
+    LeaveSection ds:FloppySection
     jc drive_assign_done1
 ;
     call InstallMain
@@ -1488,7 +1488,7 @@ check_media     Proc near
 ;
     mov bx,fs
     mov ds,bx
-    EnterNewSection ds:disc_section
+    EnterSection ds:disc_section
 ;
     mov al,fs:boot_drive_nr
     mov bx,SEG data
@@ -1550,7 +1550,7 @@ check_media_free:
 check_media_done:
     mov bx,fs
     mov ds,bx
-    LeaveNewSection ds:disc_section
+    LeaveSection ds:disc_section
 ;
     pop dx
     pop bx
@@ -1579,9 +1579,9 @@ check_media_proc    Proc far
     mov ax,SEG data
     mov ds,ax
     mov fs,bx
-    EnterNewSection ds:FloppySection
+    EnterSection ds:FloppySection
     call check_media
-    LeaveNewSection ds:FloppySection
+    LeaveSection ds:FloppySection
 ;
     pop ax
     pop fs
@@ -1882,9 +1882,9 @@ discbuf_thread:
 
 discbuf_thread_loop:
     WaitForDiscRequest
-    EnterNewSection ds:FloppySection
+    EnterSection ds:FloppySection
     call perform_one
-    LeaveNewSection ds:FloppySection
+    LeaveSection ds:FloppySection
     jmp discbuf_thread_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

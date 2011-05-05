@@ -272,7 +272,7 @@ local_allocate_physical       PROC near
     mov bx,system_data_sel
     mov ds,bx
     push ds
-    EnterNewSection ds:phys_section
+    EnterSection ds:phys_section
     dec ds:phys_free_pages
     mov dx,phys_list_sel
     mov es,dx
@@ -299,7 +299,7 @@ allocate_mark:
     mov eax,[eax]
     xor al,al
     pop ds
-    LeaveNewSection ds:phys_section
+    LeaveSection ds:phys_section
     pop edx
     pop ebx
     pop es
@@ -347,7 +347,7 @@ allocate_dma_physical   PROC far
     mov bx,system_data_sel
     mov ds,bx
     push ds
-    EnterNewSection ds:phys_section
+    EnterSection ds:phys_section
     dec ds:phys_free_pages
     mov dx,phys_list_sel
     mov es,dx
@@ -363,7 +363,7 @@ allocate_dma_physical   PROC far
     mov eax,[eax]
     xor al,al
     pop ds
-    LeaveNewSection ds:phys_section
+    LeaveSection ds:phys_section
     pop edx
     pop ebx
     pop es
@@ -394,7 +394,7 @@ local_free_physical   PROC near
     mov bx,system_data_sel
     mov ds,bx
     push ds
-    EnterNewSection ds:phys_section
+    EnterSection ds:phys_section
     inc ds:phys_free_pages
     xor ebx,ebx
     mov dx,phys_list_sel
@@ -420,7 +420,7 @@ free_link_page:
     mov ds,dx
     mov [ebx],eax
     pop ds
-    LeaveNewSection ds:phys_section
+    LeaveSection ds:phys_section
     pop edx
     pop ebx
     pop es
@@ -636,7 +636,7 @@ allocate_multiple_physical      PROC far
     mov es,ax
     mov ax,phys_page_sel
     mov fs,ax
-    EnterNewSection ds:phys_section
+    EnterSection ds:phys_section
     or ecx,ecx
     jz allocate_multi_fail
 ;
@@ -651,11 +651,11 @@ allocate_multiple_physical      PROC far
     mov eax,edx
     clc
 ;
-    LeaveNewSection ds:phys_section
+    LeaveSection ds:phys_section
     jmp allocate_multi_done
 
 allocate_multi_fail:
-    LeaveNewSection ds:phys_section
+    LeaveSection ds:phys_section
     stc
 
 allocate_multi_done:

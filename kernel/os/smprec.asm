@@ -180,7 +180,7 @@ FindReceiveMailslotHost Proc near
     push es
     push bx
 ;
-    EnterNewSection ds:m_host_section
+    EnterSection ds:m_host_section
     mov ax,ds:m_host_list
 
 find_rec_mailslot_host_loop:
@@ -200,7 +200,7 @@ find_rec_mailslot_host_done:
     pushf
     xor bx,bx
     mov es,bx
-    LeaveNewSection ds:m_host_section
+    LeaveSection ds:m_host_section
     popf
 ;
     pop bx
@@ -251,11 +251,11 @@ AddReceiveMailslotHost  Proc near
     InitSection ds:h_reply_section
     pop ds
 ;    
-    EnterNewSection ds:m_host_section
+    EnterSection ds:m_host_section
     mov ax,ds:m_host_list
     mov es:h_link,ax
     mov ds:m_host_list,es
-    LeaveNewSection ds:m_host_section
+    LeaveSection ds:m_host_section
     mov ax,es
 ;
     pop di
@@ -289,8 +289,8 @@ ResetReceiveMailslotHost    Proc near
 ;
     mov ds,ax
     call FlushResponses
-    EnterNewSection ds:h_req_section
-    EnterNewSection ds:h_reply_section
+    EnterSection ds:h_req_section
+    EnterSection ds:h_reply_section
 ;
     add ds:h_req_connection,10000h
     mov ds:h_req_index,0
@@ -323,8 +323,8 @@ reset_req_next:
     add di,2
     loop reset_req_loop
 ;
-    LeaveNewSection ds:h_reply_section
-    LeaveNewSection ds:h_req_section
+    LeaveSection ds:h_reply_section
+    LeaveSection ds:h_req_section
 
 reset_host_done:
     pop di
@@ -439,7 +439,7 @@ SendData    Proc near
     xor ax,ax
     mov fs,ax
     mov gs,ax
-    LeaveNewSection ds:h_reply_section
+    LeaveSection ds:h_reply_section
     mov ds,ax
 ;
     add cx,bx
@@ -787,7 +787,7 @@ CopyFromSmp     Proc near
 ;
     xor ax,ax
     mov es,ax
-    LeaveNewSection ds:m_section
+    LeaveSection ds:m_section
 ;
     pop edi
     pop esi
@@ -829,7 +829,7 @@ ReplyToSmp      Proc near
     FreeMem
     pop es
 ;
-    EnterNewSection ds:h_reply_section
+    EnterSection ds:h_reply_section
     mov es:l_host_entry,ds
     mov es:l_connection,ebx
     mov es:l_size,ecx
@@ -870,7 +870,7 @@ ReplyToSmp      Endp
 SmpToReceiver   Proc near
     push ax
 ;
-    EnterNewSection ds:m_section
+    EnterSection ds:m_section
     mov ax,ds:m_rec_thread
     or ax,ax
     jz send_smp_busy
@@ -883,7 +883,7 @@ send_smp_busy:
     call QueueReceiveRequest
     xor ax,ax
     mov es,ax
-    LeaveNewSection ds:m_section
+    LeaveSection ds:m_section
     jmp send_smp_done
 
 send_smp_idle:
@@ -1276,7 +1276,7 @@ HandleRequest   Proc near
     push eax
     push bx
 ;
-    EnterNewSection ds:h_req_section
+    EnterSection ds:h_req_section
     mov eax,es:[di].sh_connection
     Reverse
     sub eax,ds:h_req_connection
@@ -1324,12 +1324,12 @@ handle_req_out_of_range:
     jmp handle_req_leave
 
 handle_req_check_reply:
-    LeaveNewSection ds:h_req_section
+    LeaveSection ds:h_req_section
 ;
     mov eax,es:[di].sh_connection
     Reverse
     mov ebx,eax
-    EnterNewSection ds:h_reply_section
+    EnterSection ds:h_reply_section
     call FindReply
     jc handle_reply_reset
 ;
@@ -1350,7 +1350,7 @@ handle_reply_reset:
     pop ds
 
 handle_reply_leave:
-    LeaveNewSection ds:h_reply_section
+    LeaveSection ds:h_reply_section
     jmp handle_req_done
 
 handle_req_reset_leave:
@@ -1364,7 +1364,7 @@ handle_req_reset_leave:
     pop ds
 
 handle_req_leave:
-    LeaveNewSection ds:h_req_section
+    LeaveSection ds:h_req_section
 
 handle_req_done:
     pop bx
@@ -1467,7 +1467,7 @@ ReceiverAck     Proc near
     Reverse
     mov ebx,eax
 ;
-    EnterNewSection ds:h_reply_section
+    EnterSection ds:h_reply_section
     call FindReply
     jc proc_ack_done
 ;
@@ -1484,7 +1484,7 @@ ReceiverAck     Proc near
 proc_ack_done:
     xor ax,ax
     mov es,ax
-    LeaveNewSection ds:h_reply_section
+    LeaveSection ds:h_reply_section
     clc
 ;
     pop edx
@@ -1603,7 +1603,7 @@ SuperviseMailslot       Proc near
     push cx
 ;
     xor cx,cx
-    EnterNewSection ds:m_host_section
+    EnterSection ds:m_host_section
     mov ax,ds:m_host_list
     push ds
 
@@ -1621,7 +1621,7 @@ supervise_mailslot_host_loop:
 
 supervise_mailslot_host_done:
     pop ds
-    LeaveNewSection ds:m_host_section
+    LeaveSection ds:m_host_section
 ;
     or cx,cx
     stc

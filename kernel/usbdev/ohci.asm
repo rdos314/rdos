@@ -262,7 +262,7 @@ AllocateBlock32 PROC near
 ;    
     mov ax,SEG data
     mov ds,ax
-    EnterNewSection ds:OhciSection
+    EnterSection ds:OhciSection
     mov edx,ds:OhciList32
     or edx,edx
     jnz allocate_block32_done
@@ -289,7 +289,7 @@ allocate_block32_loop:
 allocate_block32_done:
     mov eax,es:[edx]
     mov ds:OhciList32,eax
-    LeaveNewSection ds:OhciSection
+    LeaveSection ds:OhciSection
 ;
     pop eax
     pop ds
@@ -317,11 +317,11 @@ FreeBlock32     PROC near
     mov ax,SEG data
     mov ds,ax
 ;    
-    EnterNewSection ds:OhciSection
+    EnterSection ds:OhciSection
     mov eax,ds:OhciList32
     mov es:[edx],eax
     mov ds:OhciList32,edx
-    LeaveNewSection ds:OhciSection
+    LeaveSection ds:OhciSection
 ;       
     pop eax
     pop ds
@@ -619,7 +619,7 @@ AddControlEd    PROC near
     push gs
     push ebx
 ;
-    EnterNewSection ds:ohc_section
+    EnterSection ds:ohc_section
     call AllocateEd
     mov gs,ds:ohc_reg_sel
     mov ebx,gs:HcControlHeadEd
@@ -642,7 +642,7 @@ AddControlEd    PROC near
 ;    
     pop edx
     pop eax
-    LeaveNewSection ds:ohc_section
+    LeaveSection ds:ohc_section
 ;    
     pop ebx
     pop gs
@@ -670,7 +670,7 @@ AddBulkEd       PROC near
     push gs
     push ebx
 ;
-    EnterNewSection ds:ohc_section
+    EnterSection ds:ohc_section
     call AllocateEd
     mov gs,ds:ohc_reg_sel
     mov ebx,gs:HcBulkHeadEd
@@ -693,7 +693,7 @@ AddBulkEd       PROC near
 ;    
     pop edx
     pop eax
-    LeaveNewSection ds:ohc_section
+    LeaveSection ds:ohc_section
 ;    
     pop ebx
     pop gs
@@ -875,7 +875,7 @@ GetIntrEd  ENDP
 AddIntrEd       PROC near
     push ebx
 ;
-    EnterNewSection ds:ohc_section
+    EnterSection ds:ohc_section
     call AllocateEd
 ;
     call GetIntrEd
@@ -899,7 +899,7 @@ AddIntrEd       PROC near
 ;    
     pop edx
     pop eax
-    LeaveNewSection ds:ohc_section
+    LeaveSection ds:ohc_section
 ;    
     pop ebx
     ret
@@ -1913,7 +1913,7 @@ ClosePipe   Proc far
 ;    
     call RemovePipe
 ;
-    EnterNewSection ds:ohc_section
+    EnterSection ds:ohc_section
     mov edx,fs:osp_ed
     mov al,fs:usbp_mode
     cmp al,MODE_CONTROL
@@ -2092,7 +2092,7 @@ rpSetupDone:
     mov ax,2
     WaitMilliSec
 ;
-    LeaveNewSection ds:ohc_section
+    LeaveSection ds:ohc_section
     mov ax,fs
     mov es,ax
     xor ax,ax

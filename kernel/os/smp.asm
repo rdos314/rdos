@@ -182,14 +182,14 @@ FindHost    Proc near
     InitSection ds:shd_section
     pop ds
 ;
-    EnterNewSection ds:smp_host_section    
+    EnterSection ds:smp_host_section    
     mov ax,ds:smp_host_list
     mov es:shd_link,ax
     mov ds:smp_host_list,es
     mov ax,es
     mov fs:[bx],ax
     pop fs
-    LeaveNewSection ds:smp_host_section
+    LeaveSection ds:smp_host_section
 
 find_host_buffered:
     call LeaveIpcSection
@@ -395,7 +395,7 @@ Supervise       Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    EnterNewSection ds:smp_host_section
+    EnterSection ds:smp_host_section
     mov ax,ds:smp_host_list
 
 supervise_loop:
@@ -416,7 +416,7 @@ supervise_loop:
 supervise_leave:
     xor ax,ax
     mov fs,ax
-    LeaveNewSection ds:smp_host_section
+    LeaveSection ds:smp_host_section
 ;
     or cx,cx
     stc

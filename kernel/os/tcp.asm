@@ -707,17 +707,17 @@ CreateConnection    Proc near
     mov ax,es
     mov ds,ax
     InitSection ds:tcp_section
-    EnterNewSection ds:tcp_section
+    EnterSection ds:tcp_section
 ;
     mov ax,SEG data
     mov ds,ax
-    EnterNewSection ds:ListSection
+    EnterSection ds:ListSection
     mov dx,ds:ConnectionList
     mov es:tcp_next,dx
     mov ds:ConnectionList,es
     inc ds:ConnectionCount
     call CheckConnectionList
-    LeaveNewSection ds:ListSection
+    LeaveSection ds:ListSection
     mov ax,es
     mov ds,ax
     call GetIss
@@ -845,7 +845,7 @@ FindConnection  Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    EnterNewSection ds:ListSection
+    EnterSection ds:ListSection
     mov ax,ds:ConnectionList
 
 find_connection_loop:
@@ -863,7 +863,7 @@ find_connection_next:
     jmp find_connection_loop
 
 find_connection_fail:
-    LeaveNewSection ds:ListSection
+    LeaveSection ds:ListSection
     stc
     jmp find_connection_done
 
@@ -871,22 +871,22 @@ find_connection_ok:
     mov ax,es
     push ax
     mov ds,ax
-    EnterNewSection ds:tcp_section
+    EnterSection ds:tcp_section
     test ds:tcp_pending,FLAG_DELETE_NET
     jz find_connection_not_deleted
 ;
     pop ax
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
     mov ax,SEG data
     mov ds,ax
-    LeaveNewSection ds:ListSection
+    LeaveSection ds:ListSection
     stc
     jmp find_connection_done
 
 find_connection_not_deleted:
     mov ax,SEG data
     mov ds,ax
-    LeaveNewSection ds:ListSection
+    LeaveSection ds:ListSection
     pop ds
     clc
 
@@ -917,7 +917,7 @@ FindWildConnection      Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    EnterNewSection ds:ListSection
+    EnterSection ds:ListSection
     mov ax,ds:ConnectionList
 
 find_wild_connection_loop:
@@ -937,7 +937,7 @@ find_wild_connection_next:
     jmp find_wild_connection_loop
 
 find_wild_connection_fail:
-    LeaveNewSection ds:ListSection
+    LeaveSection ds:ListSection
     stc
     jmp find_wild_connection_done
 
@@ -945,22 +945,22 @@ find_wild_connection_ok:
     mov ax,es
     push ax
     mov ds,ax
-    EnterNewSection ds:tcp_section
+    EnterSection ds:tcp_section
     test ds:tcp_pending,FLAG_DELETE_NET
     jz find_wild_connection_not_deleted
 ;
     pop ax
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
     mov ax,SEG data
     mov ds,ax
-    LeaveNewSection ds:ListSection
+    LeaveSection ds:ListSection
     stc
     jmp find_wild_connection_done
 
 find_wild_connection_not_deleted:
     mov ax,SEG data
     mov ds,ax
-    LeaveNewSection ds:ListSection
+    LeaveSection ds:ListSection
     pop ds
     clc
 
@@ -1008,11 +1008,11 @@ CreateListen    Proc near
     mov es:tcp_listen_wait,0
     mov dx,SEG data
     mov ds,dx
-    EnterNewSection ds:ListSection
+    EnterSection ds:ListSection
     mov dx,ds:ListenList
     mov es:tcp_listen_next,dx
     mov ds:ListenList,es
-    LeaveNewSection ds:ListSection
+    LeaveSection ds:ListSection
     mov dx,es
     mov ds,dx
 ;
@@ -1046,7 +1046,7 @@ DeleteListen    Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    EnterNewSection ds:ListSection
+    EnterSection ds:ListSection
 ;       
     mov ax,ds:ListenList
     cmp ax,bx
@@ -1094,7 +1094,7 @@ delete_listen_connections:
 delete_listen_unlinked:
     mov ax,SEG data
     mov ds,ax
-    LeaveNewSection ds:ListSection
+    LeaveSection ds:ListSection
     FreeMem
 ;
     pop edx
@@ -1125,7 +1125,7 @@ FindListen      Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    EnterNewSection ds:ListSection
+    EnterSection ds:ListSection
     mov ax,ds:ListenList
 
 find_listen_loop:
@@ -1139,12 +1139,12 @@ find_listen_next:
     jmp find_listen_loop
 
 find_listen_fail:
-    LeaveNewSection ds:ListSection
+    LeaveSection ds:ListSection
     stc
     jmp find_listen_done
 
 find_listen_ok:
-    LeaveNewSection ds:ListSection
+    LeaveSection ds:ListSection
     mov ax,es
     mov ds,ax
     clc
@@ -3169,7 +3169,7 @@ Receive Proc far
     jnz receive_wild_syn
 
 receive_leave_no_connection:
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
     jmp receive_no_connection
 
 receive_wild_syn:
@@ -3205,18 +3205,18 @@ receive_listen:
     call ProcessOptions
     call ReceiveListen
     pop es
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
 ;
     mov bx,ds
     pop ds
 ;
     push es
     mov es,bx
-    EnterNewSection ds:tcp_listen_section
+    EnterSection ds:tcp_listen_section
     mov ax,ds:tcp_listen_list
     mov es:tcp_listen_link,ax
     mov ds:tcp_listen_list,es
-    LeaveNewSection ds:tcp_listen_section
+    LeaveSection ds:tcp_listen_section
     pop es
 ;
     mov bx,ds:tcp_listen_wait   
@@ -3263,7 +3263,7 @@ receive_leave:
     Signal
 
 receive_no_writer:    
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
     jmp receive_free
 
 no_options      DB 0
@@ -3433,7 +3433,7 @@ get_tcp_listen  Proc far
 ;    
     mov ax,[ebx].listen_handle_sel
     mov ds,ax
-    EnterNewSection ds:tcp_listen_section
+    EnterSection ds:tcp_listen_section
     mov dx,ds:tcp_listen_list
     or dx,dx
     jz get_listen_leave
@@ -3443,7 +3443,7 @@ get_tcp_listen  Proc far
     mov ds:tcp_listen_list,bx
 
 get_listen_leave:
-    LeaveNewSection ds:tcp_listen_section          
+    LeaveSection ds:tcp_listen_section          
     or dx,dx
     stc
     jz get_listen_done
@@ -3536,7 +3536,7 @@ wait_for_tcp_connection Proc far
 ;
     push ebx
     mov ds,ax
-    EnterNewSection ds:tcp_section
+    EnterSection ds:tcp_section
     cmp ds:tcp_state,STATE_ESTAB
     jae wait_tcp_ok
 ;
@@ -3550,11 +3550,11 @@ wait_for_tcp_connection Proc far
 wait_tcp_retry: 
     GetThread
     mov ds:tcp_owner,ax
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
 ;
     WaitForSignal
     mov ds:tcp_owner,0
-    EnterNewSection ds:tcp_section
+    EnterSection ds:tcp_section
     cmp ds:tcp_state,STATE_ESTAB
     jae wait_tcp_ok
 ;
@@ -3564,7 +3564,7 @@ wait_tcp_retry:
     jmp wait_tcp_fail
 
 wait_tcp_ok:
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
     pop ebx
     clc
     jmp wait_tcp_done
@@ -3572,7 +3572,7 @@ wait_tcp_ok:
 wait_tcp_fail:
     mov ds:tcp_delete_timeout,240 * 10
     mov ds:tcp_owner,0
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
     pop ebx
     FreeHandle
     stc
@@ -3622,7 +3622,7 @@ open_tcp_connection     Proc far
     call FindConnection
     jc open_tcp_create
 ;
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
     stc
     jmp open_tcp_done
 
@@ -3648,7 +3648,7 @@ open_tcp_create:
     div ecx
     mov ds:tcp_user_timeout,ax
     or ds:tcp_pending,FLAG_WAIT
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
 ;
     or di,di
     jz open_tcp_handle
@@ -3665,10 +3665,10 @@ open_tcp_create:
 ;
     WaitForSignal
     mov ds:tcp_owner,0
-    EnterNewSection ds:tcp_section
+    EnterSection ds:tcp_section
     cmp ds:tcp_state,STATE_ESTAB
     jne open_tcp_fail
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
 
 open_tcp_handle:
     mov ds:tcp_owner,0
@@ -3683,7 +3683,7 @@ open_tcp_handle:
     jmp open_tcp_done
 
 open_tcp_fail:
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
 
 open_tcp_arp_fail:
     or ds:tcp_pending,FLAG_DELETE_NET
@@ -3802,11 +3802,11 @@ close_tcp_connection    Proc far
     jz close_tcp_done
 ;
     mov ds,ax
-    EnterNewSection ds:tcp_section
+    EnterSection ds:tcp_section
     movzx bx,ds:tcp_state
     add bx,bx
     call word ptr cs:[bx].close_tab
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
 ;
     mov bx,ds:tcp_owner
     or bx,bx
@@ -3863,11 +3863,11 @@ delete_socket_handle    Proc far
     jz delete_socket_handle_done
 ;    
     mov ds,ax
-    EnterNewSection ds:tcp_section
+    EnterSection ds:tcp_section
     movzx bx,ds:tcp_state
     add bx,bx
     call word ptr cs:[bx].close_tab
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
     clc
 
 delete_socket_handle_done:
@@ -3910,7 +3910,7 @@ delete_listen_handle    Proc far
     jz delete_listen_handle_done
 ;    
     mov ds,ax
-    EnterNewSection ds:tcp_listen_section
+    EnterSection ds:tcp_listen_section
     call DeleteListen
     clc
 
@@ -3961,7 +3961,7 @@ delete_tcp_connection   Proc far
     test ds:tcp_pending,FLAG_UNLINKED
     jz delete_tcp_mark
 ;    
-    EnterNewSection ds:tcp_section
+    EnterSection ds:tcp_section
     sti
     call DeleteConnection
     jmp delete_tcp_handle
@@ -4362,11 +4362,11 @@ abort_tcp_connection    Proc far
     jz abort_tcp_done
 ;
     mov ds,ax
-    EnterNewSection ds:tcp_section
+    EnterSection ds:tcp_section
     movzx bx,ds:tcp_state
     add bx,bx
     call word ptr cs:[bx].abort_tab
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
     pop bx
 
 abort_tcp_done:
@@ -4852,12 +4852,12 @@ read_tcp_wait:
     ClearSignal
     GetThread
     mov ds:tcp_owner,ax
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
     WaitForSignal
     mov ds:tcp_owner,0
     pop edi
     pop ecx
-    EnterNewSection ds:tcp_section
+    EnterSection ds:tcp_section
     jmp read_tcp_retry
 
 read_tcp_fail:
@@ -4926,12 +4926,12 @@ read_tcp_connection16   Proc far
     mov ds,ax
     movzx ecx,cx
     movzx edi,di
-    EnterNewSection ds:tcp_section
+    EnterSection ds:tcp_section
     movzx bx,ds:tcp_state
     add bx,bx
     call word ptr cs:[bx].read_tab
     pushf
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
     popf
 
 read_tcp_done16:
@@ -4968,12 +4968,12 @@ read_tcp_connection32   Proc far
     jz read_tcp_done32
 ;
     mov ds,ax
-    EnterNewSection ds:tcp_section
+    EnterSection ds:tcp_section
     movzx bx,ds:tcp_state
     add bx,bx
     call word ptr cs:[bx].read_tab
     pushf
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
     popf
 
 read_tcp_done32:
@@ -5057,9 +5057,9 @@ write_tcp_full:
     ClearSignal
     GetThread
     mov ds:tcp_writer,ax
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
     WaitForSignal
-    EnterNewSection ds:tcp_section
+    EnterSection ds:tcp_section
     mov ds:tcp_writer,0
     jmp write_tcp_retry
 
@@ -5134,12 +5134,12 @@ write_tcp_connection16  Proc far
     movzx ecx,cx
     movzx edi,di
     mov ds,bx
-    EnterNewSection ds:tcp_section
+    EnterSection ds:tcp_section
     movzx bx,ds:tcp_state
     add bx,bx
     call word ptr cs:[bx].write_tab
     pushf
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
     popf
 
 write_tcp_done16:
@@ -5166,12 +5166,12 @@ write_tcp_connection32  Proc far
     jz write_tcp_done32
 ;
     mov ds,ax
-    EnterNewSection ds:tcp_section
+    EnterSection ds:tcp_section
     movzx bx,ds:tcp_state
     add bx,bx
     call word ptr cs:[bx].write_tab
     pushf
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
     popf
 
 write_tcp_done32:
@@ -5211,7 +5211,7 @@ push_tcp_connection     Proc far
     jz push_tcp_done
 ;
     mov ds,ax
-    EnterNewSection ds:tcp_section
+    EnterSection ds:tcp_section
     test ds:tcp_pending,FLAG_SEND_PUSH
     jnz push_send_done
 ;       
@@ -5220,7 +5220,7 @@ push_tcp_connection     Proc far
     call SendData
 
 push_send_done:
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
 
 push_tcp_done:
     popad
@@ -5264,9 +5264,9 @@ poll_tcp_connection     Proc far
     jz poll_tcp_done
 ;
     mov ds,ax
-    EnterNewSection ds:tcp_section
+    EnterSection ds:tcp_section
     movzx eax,ds:tcp_receive_count
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
     clc
 
 poll_tcp_done:
@@ -5445,7 +5445,7 @@ tcp_active_loop:
     or ax,ax
     jz tcp_sleep
 ;
-    EnterNewSection ds:ListSection
+    EnterSection ds:ListSection
     mov ax,ds:ConnectionList
     push ds
 
@@ -5454,7 +5454,7 @@ tcp_active_next:
     jz tcp_active_wait
 ;
     mov ds,ax
-    EnterNewSection ds:tcp_section
+    EnterSection ds:tcp_section
     test ds:tcp_pending,FLAG_DELETE_NET OR FLAG_DELETE_USER
     jz tcp_update
 ;
@@ -5506,7 +5506,7 @@ tcp_delete_do:
     test ds:tcp_pending,FLAG_DELETE_USER
     jnz tcp_delete_conn_del
 ;
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
     jmp tcp_delete_conn_done
 
 tcp_delete_conn_del:
@@ -5555,12 +5555,12 @@ tcp_delete_timeout_do:
 
 tcp_delete_timeout_done:
     mov ax,ds:tcp_next
-    LeaveNewSection ds:tcp_section
+    LeaveSection ds:tcp_section
     jmp tcp_active_next
 
 tcp_active_wait:
     pop ds
-    LeaveNewSection ds:ListSection
+    LeaveSection ds:ListSection
     mov ax,100
     WaitMilliSec
     jmp tcp_active_loop

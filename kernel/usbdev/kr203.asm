@@ -206,7 +206,7 @@ CreateWaitSessionSel    Endp
 
 InsertSessionSel   Proc near
     push bx
-    EnterNewSection ds:kr_section
+    EnterSection ds:kr_section
 ;    
     inc ds:kr_session_count
     mov bx,ds:kr_session_list
@@ -231,7 +231,7 @@ issEmpty:
     mov ds:kr_session_list,es
 
 issDone:
-    LeaveNewSection ds:kr_section
+    LeaveSection ds:kr_section
     mov bx,ds:kr_session_thread
     Signal
     pop bx
@@ -560,7 +560,7 @@ UpdateStatus   Proc near
     push cx
     push di
 ;
-    EnterNewSection ds:kr_status_section    
+    EnterSection ds:kr_status_section    
     call ClearStatus
 ;
     mov bx,ds:kr_out_req
@@ -601,7 +601,7 @@ dsStatusLoop:
     jmp dsStatusLoop
 
 dsStatusDone:    
-    LeaveNewSection ds:kr_status_section    
+    LeaveSection ds:kr_status_section    
 ;    
     pop di
     pop cx
@@ -629,12 +629,12 @@ dsLoop:
     or ax,ax
     jz dsDone
 ;
-    EnterNewSection ds:kr_section
+    EnterSection ds:kr_section
     mov es,ds:kr_session_list
     mov ax,es:cs_next
     mov ds:kr_session_list,ax
     dec ds:kr_session_count
-    LeaveNewSection ds:kr_section
+    LeaveSection ds:kr_section
 ;
     push ds
     push es

@@ -1356,7 +1356,7 @@ WaitForSpawn Proc near
 ;    
     mov ax,gs
     mov ds,ax
-    EnterNewSection ds:s_sect1
+    EnterSection ds:s_sect1
 ;
     pop ax
     pop ds
@@ -1511,7 +1511,7 @@ spCopyExeLoop:
     mov ax,gs
     mov ds,ax
     mov es,ax
-    LeaveNewSection ds:s_sect1
+    LeaveSection ds:s_sect1
     WaitForSignal
 ;
     mov ax,10
@@ -1554,7 +1554,7 @@ spFail:
     mov gs:s_ret_code,-1
     mov ax,gs
     mov ds,ax
-    LeaveNewSection ds:s_sect1
+    LeaveSection ds:s_sect1
     WaitForSignal
 ;
     mov ax,10

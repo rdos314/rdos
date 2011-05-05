@@ -497,11 +497,11 @@ bios_proc_check:
     or ax,ax
     jz bios_proc_loop
 ;
-    EnterNewSection ds:bios_section
+    EnterSection ds:bios_section
     mov fs,ds:bios_list
     mov ax,fs:list_link
     mov ds:bios_list,ax
-    LeaveNewSection ds:bios_section
+    LeaveSection ds:bios_section
 ;
     mov ax,flat_sel
     mov ds,ax
@@ -581,11 +581,11 @@ V86_bios_int    Proc far
     mov ds,ax
 ;
     ClearSignal
-    EnterNewSection ds:bios_section
+    EnterSection ds:bios_section
     mov ax,ds:bios_list
     mov es:list_link,ax
     mov ds:bios_list,es
-    LeaveNewSection ds:bios_section
+    LeaveSection ds:bios_section
 ;
     mov bx,ds:bios_thread
     Signal

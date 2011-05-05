@@ -344,7 +344,7 @@ GetHidSel Proc near
 ;
     mov di,SEG data
     mov ds,di
-    EnterNewSection ds:hid_section
+    EnterSection ds:hid_section
 ;
     mov di,ds:hid_dev_list
     or di,di
@@ -372,7 +372,7 @@ ghsOk:
     clc
 
 ghsDone:   
-    LeaveNewSection ds:hid_section
+    LeaveSection ds:hid_section
 ;    
     pop di
     pop si
@@ -401,7 +401,7 @@ InsertHidSel    Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    EnterNewSection ds:hid_section
+    EnterSection ds:hid_section
 ;
     mov es,bx
     mov di,ds:hid_dev_list
@@ -427,7 +427,7 @@ ins_hid_sel_empty:
     mov ds:hid_dev_list,es
 
 ins_hid_sel_leave:
-    LeaveNewSection ds:hid_section
+    LeaveSection ds:hid_section
 ;
     pop di
     pop ax
@@ -456,7 +456,7 @@ RemoveHidSel    Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    EnterNewSection ds:hid_section
+    EnterSection ds:hid_section
 ;
     mov es,bx
     cmp bx,es:hid_next
@@ -479,7 +479,7 @@ rem_hid_sel_empty:
     mov ds:hid_dev_list,0
 
 rem_hid_sel_leave:
-    LeaveNewSection ds:hid_section
+    LeaveSection ds:hid_section
     pop si
     pop ax
     pop es

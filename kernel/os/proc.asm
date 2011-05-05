@@ -1710,7 +1710,7 @@ terminate_proc:
     sub ds:pd_ref_count,1
     jz terminate_free_pd
 ;
-    EnterNewSection ds:pd_section
+    EnterSection ds:pd_section
 ;    
     mov ds:pd_proc_sel,0
     mov ax,ds:pd_wait
@@ -1721,7 +1721,7 @@ terminate_proc:
     SignalWait
 
 terminate_proc_sig_done:   
-    LeaveNewSection ds:pd_section
+    LeaveSection ds:pd_section
     xor ax,ax
     mov ds,ax
     jmp terminate_pd_done    

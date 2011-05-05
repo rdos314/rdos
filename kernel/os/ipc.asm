@@ -191,7 +191,7 @@ EnterIpcSection Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    EnterNewSection ds:ipc_section
+    EnterSection ds:ipc_section
 ;
     pop ax
     pop ds
@@ -215,7 +215,7 @@ LeaveIpcSection Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    LeaveNewSection ds:ipc_section
+    LeaveSection ds:ipc_section
 ;
     pop ax
     pop ds
@@ -663,7 +663,7 @@ CopyToReceiver  Proc near
     mov es,bx
     mov fs,bx
     xchg bx,ds:m_rec_thread
-    LeaveNewSection ds:m_section
+    LeaveSection ds:m_section
     Signal
 ;
     pop edi
@@ -818,7 +818,7 @@ receive_mailslot    Proc near
     jz receive_mailslot_done
 ;
     mov ds,ax
-    EnterNewSection ds:m_section
+    EnterSection ds:m_section
     mov ax,ds:m_req_list
     or ax,ax
     jz rec_empty
@@ -850,13 +850,13 @@ rec_empty:
     GetThread
     mov ds:m_rec_thread,ax
     call InsertReceive
-    LeaveNewSection ds:m_section
+    LeaveSection ds:m_section
     WaitForSignal
 ;
-    EnterNewSection ds:m_section
+    EnterSection ds:m_section
     call RemoveReceive
     mov ecx,ds:m_rec_size
-    LeaveNewSection ds:m_section
+    LeaveSection ds:m_section
     clc
 
 receive_mailslot_done:

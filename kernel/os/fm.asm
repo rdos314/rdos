@@ -493,7 +493,7 @@ open_fm    Proc
     push ebx
     mov ax,SEG data
     mov ds,ax
-    EnterNewSection ds:fm_section
+    EnterSection ds:fm_section
 ;
     mov bx,OFFSET fm_sel_arr
     mov ax,ds:fm_sel_count
@@ -502,7 +502,7 @@ open_fm    Proc
     mov ds:[bx],es
     inc ds:fm_sel_count
 ;
-    LeaveNewSection ds:fm_section
+    LeaveSection ds:fm_section
     pop ebx
     pop ds    
 ;
@@ -1184,11 +1184,11 @@ pfnAttOk:
     pop edx
     pop ebx   
 ;
-    EnterNewSection ds:f_section
+    EnterSection ds:f_section
     mov es:n_curr_volume,0
     mov es:n_callb, OFFSET PlayAttack
     call InsertNoteSel
-    LeaveNewSection ds:f_section
+    LeaveSection ds:f_section
 ;
     mov ax,SEG data
     mov ds,ax
@@ -1715,7 +1715,7 @@ ufsCheckZero:
     or ax,ax
     jz ufsDone
 ;
-    EnterNewSection ds:f_section
+    EnterSection ds:f_section
     mov ax,ds:f_note_list
     mov si,ax
 
@@ -1729,10 +1729,10 @@ ufsSetLoop:
 ;
     xor ax,ax
     mov es,ax
-    LeaveNewSection ds:f_section
+    LeaveSection ds:f_section
 
 ufsHasBuffers:
-    EnterNewSection ds:f_section
+    EnterSection ds:f_section
 
 ufsRestart:
     mov ax,ds:f_note_list
@@ -1781,7 +1781,7 @@ ufsLeave:
     mov es,ax
     mov fs,ax
     mov gs,ax
-    LeaveNewSection ds:f_section
+    LeaveSection ds:f_section
 ;    
     mov bx,ds:f_thread
     Signal
@@ -1812,7 +1812,7 @@ ufsPostDone:
     or ax,ax
     jz ufsFreeAudio
 ;
-    EnterNewSection ds:f_section
+    EnterSection ds:f_section
     or ds:f_flags,FLAG_FM_ZERO
     mov ds:f_buf_pos,0
 ;
@@ -1834,7 +1834,7 @@ ufsClearNext:
 ;
     xor ax,ax
     mov es,ax
-    LeaveNewSection ds:f_section
+    LeaveSection ds:f_section
     jmp ufsDone
 
 ufsFreeAudio:
@@ -1879,7 +1879,7 @@ fm_wait_loop:
     or cx,cx
     jz fm_wait_loop
 ;    
-    EnterNewSection ds:fm_section
+    EnterSection ds:fm_section
     mov cx,ds:fm_sel_count
 
 fm_handle_loop:
@@ -1927,7 +1927,7 @@ fm_free_next:
     loop fm_free_loop    
 
 fm_leave:
-    LeaveNewSection ds:fm_section
+    LeaveSection ds:fm_section
     jmp fm_wait_loop    
 
 

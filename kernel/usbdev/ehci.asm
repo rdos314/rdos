@@ -201,7 +201,7 @@ AllocateBlock64 PROC near
 ;    
     mov ax,SEG data
     mov ds,ax
-    EnterNewSection ds:EhciSection
+    EnterSection ds:EhciSection
     mov edx,ds:EhciList64
         or edx,edx
         jnz allocate_block64_done
@@ -228,7 +228,7 @@ allocate_block64_loop:
 allocate_block64_done:
         mov eax,es:[edx]
         mov ds:EhciList64,eax
-    LeaveNewSection ds:EhciSection
+    LeaveSection ds:EhciSection
 ;
         pop eax
         pop ds
@@ -256,11 +256,11 @@ FreeBlock64     PROC near
     mov ax,SEG data
     mov ds,ax
 ;    
-    EnterNewSection ds:EhciSection
+    EnterSection ds:EhciSection
         mov eax,ds:EhciList64
         mov es:[edx],eax
         mov ds:EhciList64,edx
-    LeaveNewSection ds:EhciSection
+    LeaveSection ds:EhciSection
 ;       
         pop eax
         pop ds
@@ -514,7 +514,7 @@ AddControlQh    PROC near
     push gs
     push ebx
 ;
-    EnterNewSection ds:ehc_section
+    EnterSection ds:ehc_section
     call AllocateQh
     mov ebx,eax
 ;    
@@ -574,7 +574,7 @@ acqEndFound:
 
 acqDone:
     mov eax,ebx
-    LeaveNewSection ds:ehc_section
+    LeaveSection ds:ehc_section
 ;    
     pop ebx
     pop gs

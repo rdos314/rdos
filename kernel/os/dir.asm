@@ -141,8 +141,8 @@ validate_drive_retry:
     stc
     jnz validate_drive_done
 ;
-    EnterNewSection ds:fs_init_section
-    LeaveNewSection ds:fs_init_section
+    EnterSection ds:fs_init_section
+    LeaveSection ds:fs_init_section
     jmp validate_drive_retry
 
 validate_drive_defined:
@@ -614,7 +614,7 @@ parse_dir_root:
     jz parse_dir_fail
 ;
     mov ds,bx
-    EnterNewSection ds:fs_list_section
+    EnterSection ds:fs_list_section
     mov ebp,ds:fs_mount_id
     mov bx,ds:fs_root_dir_sel
     or bx,bx
@@ -635,7 +635,7 @@ parse_dir_root:
 
 parse_dir_buffered:
     EnterReadSection ds:fs_access_section
-    LeaveNewSection ds:fs_list_section
+    LeaveSection ds:fs_list_section
 
 parse_dir_start:
     mov ds:fs_access_parse,1
@@ -695,9 +695,9 @@ parse_dir_dot_loop:
     jne parse_dir_dot_ended
 ;
     inc edi
-    EnterNewSection ds:ds_list_section
+    EnterSection ds:ds_list_section
     mov bx,ds:ds_parent
-    LeaveNewSection ds:ds_list_section
+    LeaveSection ds:ds_list_section
     or bx,bx
     jz parse_dir_fail
 ;
@@ -735,7 +735,7 @@ parse_dir_next:
 parse_dir_tree_next:
     pop esi
     pop esi
-    EnterNewSection ds:ds_list_section
+    EnterSection ds:ds_list_section
     mov bx,fs:[esi].de_sel
     or bx,bx
     jnz parse_dir_tree_cached
@@ -748,7 +748,7 @@ parse_dir_tree_next:
     mov fs:[esi].de_sel,bx
 
 parse_dir_tree_cached:
-    LeaveNewSection ds:ds_list_section
+    LeaveSection ds:ds_list_section
     mov ax,ds
     mov ds,bx
     EnterReadSection ds:ds_access_section
@@ -843,7 +843,7 @@ GetDeviceRoot   Proc near
 ;    
     mov ds,bx
     EnterReadSection ds:fs_access_section
-    EnterNewSection ds:fs_list_section
+    EnterSection ds:fs_list_section
     mov bx,ds:fs_root_dir_sel
     or bx,bx
     jnz get_device_root_done
@@ -861,7 +861,7 @@ GetDeviceRoot   Proc near
     pop ds
 
 get_device_root_done:
-    LeaveNewSection ds:fs_list_section
+    LeaveSection ds:fs_list_section
     mov ds,bx
     clc
 
@@ -1975,7 +1975,7 @@ SetupFileSel    Proc near
     push ecx
 ;
     mov al,ds:ds_drive
-    EnterNewSection ds:ds_list_section
+    EnterSection ds:ds_list_section
     mov bx,fs:[edx].dfe_file_sel
     or bx,bx
     jnz setup_file_sel_leave
@@ -1986,7 +1986,7 @@ SetupFileSel    Proc near
     mov fs:[edx].dfe_file_sel,bx
 
 setup_file_sel_leave:
-    LeaveNewSection ds:ds_list_section
+    LeaveSection ds:ds_list_section
 ;
     pop ecx
     ret

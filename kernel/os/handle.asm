@@ -417,7 +417,7 @@ allocate_handle PROC far
 ;
     mov si,handle_sel
     mov ds,si
-    EnterNewSection ds:handle_section
+    EnterSection ds:handle_section
     mov ax,cx
     call allocate_handle_mem
     mov [bx].hh_sign,0
@@ -433,7 +433,7 @@ alloc_retry:
     cmp si,OFFSET handle_arr
     jbe alloc_retry
 ;       
-    LeaveNewSection ds:handle_section
+    LeaveSection ds:handle_section
 ;       
     mov ax,handle_mem_sel
     mov ds,ax
@@ -469,7 +469,7 @@ free_handle     PROC far
 ;
     mov ax,handle_sel
     mov ds,ax
-    EnterNewSection ds:handle_section
+    EnterSection ds:handle_section
     mov ax,handle_mem_sel
     mov ds,ax
     mov si,[bx].hh_handle
@@ -484,7 +484,7 @@ free_handle     PROC far
     mov ax,ds:handle_list
     mov [si],ax
     mov ds:handle_list,si
-    LeaveNewSection ds:handle_section
+    LeaveSection ds:handle_section
     xor bx,bx
 ;
     pop ax
@@ -533,7 +533,7 @@ clone_handle_mem    PROC far
 ;    
     mov ax,handle_sel
     mov ds,ax
-    EnterNewSection ds:handle_section
+    EnterSection ds:handle_section
 ;
     mov ax,handle_mem_sel
     mov ds,ax
@@ -553,7 +553,7 @@ clone_handle_mem    PROC far
     mov cx,MAX_HANDLES
     rep movsw
 ;    
-    LeaveNewSection ds:handle_section
+    LeaveSection ds:handle_section
 ;
     pop di
     pop si
@@ -591,9 +591,9 @@ deref_handle    PROC far
     mov dx,handle_sel
     mov ds,dx
     mov si,bx
-    EnterNewSection ds:handle_section
+    EnterSection ds:handle_section
     mov bx,word ptr [bx+si].handle_arr
-    LeaveNewSection ds:handle_section
+    LeaveSection ds:handle_section
     mov dx,handle_mem_sel
     mov ds,dx
     cmp ax,[bx].hh_sign
@@ -725,7 +725,7 @@ get_free_handles    Proc far
 ;
     mov si,handle_sel
     mov ds,si
-    EnterNewSection ds:handle_section
+    EnterSection ds:handle_section
 ;
     xor ax,ax       
     mov si,ds:handle_list
@@ -739,7 +739,7 @@ get_free_loop:
     jmp get_free_loop 
 
 get_free_done:   
-    LeaveNewSection ds:handle_section
+    LeaveSection ds:handle_section
 ;
     pop si
     pop ds
@@ -766,7 +766,7 @@ get_free_handle_mem     Proc far
 ;
     mov si,handle_sel
     mov ds,si
-    EnterNewSection ds:handle_section
+    EnterSection ds:handle_section
 ;
     xor eax,eax
     mov si,handle_mem_sel
@@ -787,7 +787,7 @@ get_free_mem_loop:
 ;
     mov si,handle_sel
     mov ds,si
-    LeaveNewSection ds:handle_section
+    LeaveSection ds:handle_section
 ;
     pop si
     pop ds

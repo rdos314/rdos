@@ -589,7 +589,7 @@ WriteTaskFile   ENDP
 ReadDrive       Proc near
     push bx
     mov ds,fs:disc_ide_sel
-    EnterNewSection ds:IdeSection
+    EnterSection ds:IdeSection
     GetThread
     mov ds:IdeThread,ax
     mov ax,fs:disc_io_base
@@ -634,7 +634,7 @@ ReadDriveDone:
     pushf
     mov ds:IdeThread,0
     mov ds:IdeIoBase,0
-    LeaveNewSection ds:IdeSection
+    LeaveSection ds:IdeSection
     popf
     ret
 ReadDrive       Endp
@@ -657,7 +657,7 @@ ReadDrive       Endp
 WriteDrive      Proc near
     push bx
     mov ds,fs:disc_ide_sel
-    EnterNewSection ds:IdeSection
+    EnterSection ds:IdeSection
     GetThread
     mov ds:IdeThread,ax
     mov ax,fs:disc_io_base
@@ -701,7 +701,7 @@ WriteDriveDone:
     pushf
     mov ds:IdeThread,0
     mov ds:IdeIoBase,0
-    LeaveNewSection ds:IdeSection
+    LeaveSection ds:IdeSection
     popf
     ret
 WriteDrive      Endp
@@ -1349,7 +1349,7 @@ InstallPartition    Endp
 
 read_drive      Proc near
     mov ds,fs:disc_ide_sel
-    EnterNewSection ds:IdeSection
+    EnterSection ds:IdeSection
     mov bp,3
 
 read_drive_retry_loop:
@@ -1459,7 +1459,7 @@ read_drive_ok:
     jnz read_sector_loop
 
 read_drive_done:
-    LeaveNewSection ds:IdeSection
+    LeaveSection ds:IdeSection
     ret
 read_drive      Endp
 
@@ -1479,7 +1479,7 @@ read_drive      Endp
 
 write_drive     Proc near
     mov ds,fs:disc_ide_sel
-    EnterNewSection ds:IdeSection
+    EnterSection ds:IdeSection
     mov bp,3
 
 write_drive_retry_loop:
@@ -1581,7 +1581,7 @@ write_drive_ok:
     jnz write_sector_loop
 
 write_drive_done:
-    LeaveNewSection ds:IdeSection
+    LeaveSection ds:IdeSection
     ret
 write_drive     Endp
 

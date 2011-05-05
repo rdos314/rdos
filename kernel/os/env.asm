@@ -198,7 +198,7 @@ lock_sys_env    Proc far
 ;
     mov bx,SEG data
     mov ds,bx
-    EnterNewSection ds:env_sys_section
+    EnterSection ds:env_sys_section
     mov bx,ds:env_sys_raw_sel
 ;
     pop ds
@@ -223,7 +223,7 @@ unlock_sys_env    Proc far
 ;
     mov bx,SEG data
     mov ds,bx
-    LeaveNewSection ds:env_sys_section
+    LeaveSection ds:env_sys_section
 ;
     pop bx
     pop ds
@@ -249,7 +249,7 @@ lock_proc_env    Proc far
 ;
     mov bx,env_proc_sel
     mov ds,bx
-    EnterNewSection ds:env_proc_section
+    EnterSection ds:env_proc_section
     mov bx,ds:env_proc_raw_sel
 ;
     pop ds
@@ -274,7 +274,7 @@ unlock_proc_env    Proc far
 ;
     mov bx,env_proc_sel
     mov ds,bx
-    LeaveNewSection ds:env_proc_section
+    LeaveSection ds:env_proc_section
 ;
     pop bx
     pop ds

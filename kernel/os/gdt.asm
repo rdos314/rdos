@@ -302,7 +302,7 @@ allocate_gdt    PROC far
     mov ds,si
     mov si,gdt_sel
     mov es,si
-    EnterNewSection ds:gdt_section
+    EnterSection ds:gdt_section
     xor di,di
     mov si,es:[di]
     or si,si
@@ -356,7 +356,7 @@ alloc_gdt_room:
     mov bx,si
     mov si,es:[si]
     mov es:[di],si
-    LeaveNewSection ds:gdt_section
+    LeaveSection ds:gdt_section
 ;
     pop di
     pop si
@@ -389,14 +389,14 @@ free_gdt    PROC far
     mov si,gdt_sel
     mov es,si
 ;
-    EnterNewSection ds:gdt_section
+    EnterSection ds:gdt_section
     mov byte ptr es:[bx+5],0
     xor si,si
     mov si,es:[si]
     mov es:[bx],si
     xor si,si
     mov es:[si],bx
-    LeaveNewSection ds:gdt_section
+    LeaveSection ds:gdt_section
 ;
     pop si
     pop es
@@ -429,7 +429,7 @@ get_free_gdt    PROC far
     mov ds,si
     mov si,gdt_sel
     mov es,si
-    EnterNewSection ds:gdt_section
+    EnterSection ds:gdt_section
     xor di,di
     mov si,es:[di]
 
@@ -445,7 +445,7 @@ gfgLoop:
     jmp gfgLoop
 
 gfgDone:
-    LeaveNewSection ds:gdt_section
+    LeaveSection ds:gdt_section
 ;
     pop di
     pop si
