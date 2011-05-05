@@ -843,9 +843,9 @@ open_com_ftdi	Proc far
     mov dx,ds
     mov ax,es
     mov ds,ax
-    EnterSection ds:uds_section
+    EnterNewSection ds:uds_section
     mov ds:uds_port_sel,dx
-    LeaveSection ds:uds_section       
+    LeaveNewSection ds:uds_section       
 ;
     mov ax,SEG data
     mov ds,ax    
@@ -899,9 +899,9 @@ ccfTimerClosed:
     jz ccfNoDevice
 ;
     mov ds,bx    
-    EnterSection ds:uds_section
+    EnterNewSection ds:uds_section
     mov ds:uds_port_sel,0
-    LeaveSection ds:uds_section       
+    LeaveNewSection ds:uds_section       
 
 ccfNoDevice:    
     mov ds,ax
@@ -1768,9 +1768,9 @@ open_com_pl	Proc far
     mov dx,ds
     mov ax,es
     mov ds,ax
-    EnterSection ds:uds_section
+    EnterNewSection ds:uds_section
     mov ds:uds_port_sel,dx
-    LeaveSection ds:uds_section       
+    LeaveNewSection ds:uds_section       
 ;
     mov ax,SEG data
     mov ds,ax    
@@ -1824,9 +1824,9 @@ ccpTimerClosed:
     jz ccpNoDevice
 ;
     mov ds,bx    
-    EnterSection ds:uds_section
+    EnterNewSection ds:uds_section
     mov ds:uds_port_sel,0
-    LeaveSection ds:uds_section       
+    LeaveNewSection ds:uds_section       
 
 ccpNoDevice:    
     mov ds,ax
@@ -2629,9 +2629,9 @@ icmDivisorOk:
     mov dx,ds
     mov ax,es
     mov ds,ax
-    EnterSection ds:uds_section
+    EnterNewSection ds:uds_section
     mov ds:uds_port_sel,dx
-    LeaveSection ds:uds_section       
+    LeaveNewSection ds:uds_section       
 ;
     mov ax,SEG data
     mov ds,ax    
@@ -3541,9 +3541,9 @@ utDevLoop:
     push cx
     push si
 ;
-    EnterSection ds:uds_section
+    EnterNewSection ds:uds_section
     call HandleDevice
-    LeaveSection ds:uds_section
+    LeaveNewSection ds:uds_section
 ;
     pop si
     pop cx
@@ -3714,7 +3714,7 @@ apDescrDone:
     sti
     mov dx,es
     mov ds,dx
-    EnterSection ds:uds_section
+    EnterNewSection ds:uds_section
     mov al,ds:uds_flag
     or al,FLAG_UDS_REINIT
     and al,NOT FLAG_UDS_DISCONNECT
@@ -3728,7 +3728,7 @@ apDescrDone:
 ;
     mov dx,es
     mov ds,dx    
-    LeaveSection ds:uds_section
+    LeaveNewSection ds:uds_section
 ;    
     mov ax,SEG data
     mov ds,ax
@@ -4398,7 +4398,7 @@ udCheckLoop:
     push ds
     pushad
     mov ds,dx
-    EnterSection ds:uds_section
+    EnterNewSection ds:uds_section
     or ds:uds_flag,FLAG_UDS_DISCONNECT
 ;    
     mov dx,SEG data
@@ -4438,7 +4438,7 @@ udPortSendOk:
     pop es
 
 udPortHandleOk:    
-    LeaveSection ds:uds_section    
+    LeaveNewSection ds:uds_section    
 ;    
     popad
     pop ds
