@@ -88,7 +88,7 @@ switch_mode_done:
     mov ax,ds
     call SetVideoObj
 ;
-	EnterSection ds:v_section
+	EnterNewSection ds:v_section
 	push ds
 	mov ds:v_has_focus,1
 	mov es,ds:v_mem_sel
@@ -98,7 +98,7 @@ switch_mode_done:
 	mov ecx,1000h
 	rep stos dword ptr es:[edi]
 	pop ds
-	LeaveSection ds:v_section
+	LeaveNewSection ds:v_section
 
 switch_to_done:
 	popad
@@ -120,12 +120,12 @@ switch_from	Proc far
 	push es
 	pushad
 ;
-	EnterSection ds:v_section
+	EnterNewSection ds:v_section
 	push ds
 	mov ds:v_has_focus,0
 	mov es,ds:v_buf_sel
 	pop ds
-	LeaveSection ds:v_section
+	LeaveNewSection ds:v_section
 ;
 	popad
 	pop es
