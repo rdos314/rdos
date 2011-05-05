@@ -269,7 +269,7 @@ AllocateBlock32 PROC near
 ;    
     mov ax,SEG data
     mov ds,ax
-    EnterSection ds:UhciSection
+    EnterNewSection ds:UhciSection
     mov edx,ds:UhciList32
     or edx,edx
     jnz allocate_block32_done
@@ -296,7 +296,7 @@ allocate_block32_loop:
 allocate_block32_done:
     mov eax,es:[edx]
     mov ds:UhciList32,eax
-    LeaveSection ds:UhciSection
+    LeaveNewSection ds:UhciSection
 ;
     pop eax
     pop ds
@@ -324,11 +324,11 @@ FreeBlock32     PROC near
     mov ax,SEG data
     mov ds,ax
 ;    
-    EnterSection ds:UhciSection
+    EnterNewSection ds:UhciSection
     mov eax,ds:UhciList32
     mov es:[edx],eax
     mov ds:UhciList32,edx
-    LeaveSection ds:UhciSection
+    LeaveNewSection ds:UhciSection
 ;       
     pop eax
     pop ds
