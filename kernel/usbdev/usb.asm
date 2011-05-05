@@ -1339,7 +1339,7 @@ start_usb_req   Proc far
 ;
     push ds
     mov ds,[ebx].rh_pipe_sel
-    EnterSection ds:usbp_section
+    EnterNewSection ds:usbp_section
     pop ds
     or ds:[ebx].rh_flags,REQ_FLAG_LOCKED
 
@@ -1417,7 +1417,7 @@ stop_usb_req    Proc far
 ;
     push ds
     mov ds,[ebx].rh_pipe_sel
-    LeaveSection ds:usbp_section
+    LeaveNewSection ds:usbp_section
     pop ds
     and ds:[ebx].rh_flags,NOT REQ_FLAG_LOCKED
 
@@ -1638,7 +1638,7 @@ crFreeHandle:
 ;
     push ds
     mov ds,[ebx].rh_pipe_sel
-    LeaveSection ds:usbp_section
+    LeaveNewSection ds:usbp_section
     pop ds
 
 crLockOk:
@@ -2409,7 +2409,7 @@ lock_usb_pipe   Proc far
 ;
     push ds
     mov ds,ds:[ebx].up_pipe_sel
-    EnterSection ds:usbp_section
+    EnterNewSection ds:usbp_section
     pop ds
 
 lupDone:
@@ -2444,7 +2444,7 @@ unlock_usb_pipe   Proc far
 ;       
     push ds
     mov ds,ds:[ebx].up_pipe_sel
-    LeaveSection ds:usbp_section
+    LeaveNewSection ds:usbp_section
     pop ds
 
 uupDone:
