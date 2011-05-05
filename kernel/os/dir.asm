@@ -586,7 +586,7 @@ parse_dir_rel:
     cmp ebp,ds:fs_mount_id
     jne parse_dir_root
 ;
-    EnterReadSection ds:fs_access_section
+    EnterNewReadSection ds:fs_access_section
     jmp parse_dir_start
 
 parse_dir_old:
@@ -634,7 +634,7 @@ parse_dir_root:
     pop ds
 
 parse_dir_buffered:
-    EnterReadSection ds:fs_access_section
+    EnterNewReadSection ds:fs_access_section
     LeaveSection ds:fs_list_section
 
 parse_dir_start:
@@ -803,7 +803,7 @@ ParseEnd    Proc near
     mov ds,ds:[si].fs_sel
     cli
     mov ds:fs_access_parse,0
-    LeaveReadSection ds:fs_access_section
+    LeaveNewReadSection ds:fs_access_section
 ;
     pop si
     pop ax
@@ -842,7 +842,7 @@ GetDeviceRoot   Proc near
     jz get_device_root_end
 ;    
     mov ds,bx
-    EnterReadSection ds:fs_access_section
+    EnterNewReadSection ds:fs_access_section
     EnterSection ds:fs_list_section
     mov bx,ds:fs_root_dir_sel
     or bx,bx
@@ -1111,7 +1111,7 @@ GetCurDirBase   Proc near
     movzx bx,al
     add bx,bx
     mov ds,ds:[bx].fs_sel
-    EnterReadSection ds:fs_access_section
+    EnterNewReadSection ds:fs_access_section
     mov ds:fs_access_parse,1
     mov edx,ds:fs_mount_id
 ;
@@ -1202,7 +1202,7 @@ get_cur_dir_ok:
     mov ds,ds:[bx].fs_sel
     cli
     mov ds:fs_access_parse,0
-    LeaveReadSection ds:fs_access_section
+    LeaveNewReadSection ds:fs_access_section
     clc
 
 get_cur_dir_done:
@@ -2850,7 +2850,7 @@ stop_file_system    Proc far
     jmp stop_done
 
 stop_file_enter:
-    EnterWriteSection ds:fs_access_section
+    EnterNewWriteSection ds:fs_access_section
 ;
     CallFileSystem fs_flush_proc
     jc stop_leave_done
@@ -2884,7 +2884,7 @@ stop_leave_pop_done:
     pop ds
 
 stop_leave_done:
-    LeaveWriteSection ds:fs_access_section
+    LeaveNewWriteSection ds:fs_access_section
     
 stop_done:
     popad
