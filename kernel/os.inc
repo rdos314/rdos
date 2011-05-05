@@ -715,7 +715,7 @@ EnterSection    MACRO section
     jc enter_section_donep
     push esi
     lea esi,section
-    OsGate enter_new_section_nr
+    OsGate enter_section_nr
     pop esi
 enter_section_donep:
     popf
@@ -728,7 +728,7 @@ LeaveSection    MACRO section
     jc leave_section_donep
     push esi
     lea esi,section
-    OsGate leave_new_section_nr
+    OsGate leave_section_nr
     pop esi
 leave_section_donep:
     popf
@@ -751,7 +751,7 @@ EnterReadSection    MACRO section
     jc enter_sync_ok
     push esi
     mov esi,OFFSET section.ssync_value
-    OsGate enter_new_section_nr
+    OsGate enter_section_nr
     pop esi
 enter_sync_ok:
     lock sub section.sread_value,1
@@ -760,14 +760,14 @@ enter_sync_ok:
     jc enter_read_ok
     push esi
     mov esi,OFFSET section.swrite_value
-    OsGate enter_new_section_nr
+    OsGate enter_section_nr
     pop esi
 enter_read_ok:
     lock add section.ssync_value,1
     jc enter_read_done
     push esi
     mov esi,OFFSET section.ssync_value
-    OsGate leave_new_section_nr
+    OsGate leave_section_nr
     pop esi
 enter_read_done:
     popf
@@ -780,7 +780,7 @@ LeaveReadSection    MACRO section
     jc leave_sync_ok
     push esi
     mov esi,OFFSET section.ssync_value
-    OsGate enter_new_section_nr
+    OsGate enter_section_nr
     pop esi
 leave_sync_ok:
     lock add section.sread_value,1
@@ -789,14 +789,14 @@ leave_sync_ok:
     jc leave_read_ok
     push esi
     mov esi,OFFSET section.swrite_value
-    OsGate leave_new_section_nr
+    OsGate leave_section_nr
     pop esi
 leave_read_ok:
     lock add section.ssync_value,1
     jc leave_read_done
     push esi
     mov esi,OFFSET section.ssync_value
-    OsGate leave_new_section_nr
+    OsGate leave_section_nr
     pop esi
 leave_read_done:
     popf
@@ -809,7 +809,7 @@ EnterWriteSection       MACRO section
     jc enter_section_done
     push esi
     mov esi,OFFSET section.swrite_value
-    OsGate enter_new_section_nr
+    OsGate enter_section_nr
     pop esi
 enter_section_done:
     popf
@@ -822,7 +822,7 @@ LeaveWriteSection       MACRO section
     jc leave_section_done
     push esi
     mov esi,OFFSET section.swrite_value
-    OsGate leave_new_section_nr
+    OsGate leave_section_nr
     pop esi
 leave_section_done:
     popf
