@@ -419,6 +419,8 @@ ap_task_wait:
     test ax,MP_FLAG_TASK
     jz ap_task_wait
 ;
+    SetupIoBitmap
+;    
     call InitApic
 
     GetApicId

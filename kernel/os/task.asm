@@ -893,6 +893,12 @@ glob_ptab_init:
     mov ax,start_core_nr
     RegisterOsGate
 ;
+    mov si,OFFSET setup_io_bitmap
+    mov di,OFFSET setup_io_bitmap_name
+    xor cl,cl
+    mov ax,setup_io_bitmap_nr
+    RegisterOsGate
+;
     mov si,OFFSET timer_expired
     mov di,OFFSET timer_expired_name
     xor cl,cl
@@ -3763,6 +3769,8 @@ stThreadOk:
     public start_processor_null_threads
 
 start_processor_null_threads    Proc near
+    SetupIoBitmap
+;    
     GetCoreCount
     cmp cx,1
 ;    jbe start_locks_ok
@@ -4319,7 +4327,39 @@ timer_free_list_create:
     retf32
 create_core    Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupIoBitmap
+;
+;       DESCRIPTION:    Setup IO bitmap
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+setup_io_bitmap_name   DB 'Setup IO Bitmap',0
+
+setup_io_bitmap    Proc far
+    push ds
+    push es
+    push si
+    push di
+;
+    str ax
+    add ax,core_tss_data_offs
+    mov es,ax    
+    mov di,OFFSET c_tss_io_bitmap
+    mov cx,40h
+    mov ax,io_bitmap_sel
+    mov ds,ax
+    xor si,si
+    rep movsw
+;    
+    pop di
+    pop si
+    pop es
+    pop ds
+    retf32
+setup_io_bitmap     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

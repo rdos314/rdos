@@ -668,6 +668,10 @@ StartApCores    MACRO
     OsGate start_ap_cores_nr
                     ENDM
 
+SetupIoBitmap    MACRO
+    OsGate setup_io_bitmap_nr
+                        ENDM
+
 ;;;;;;;;;;; Signal & waits ;;;;;;;;;;;;;;;;
 
 ClearSignal     MACRO

@@ -1314,32 +1314,6 @@ init_default_tss    PROC near
 ;
     mov ds:tss_thread,es
     mov ds:tss_error_code,dx
-;
-    push ds
-    push es
-    push si
-    push di
-    mov ax,ds
-    mov es,ax
-    mov di,OFFSET p_tss_end
-    mov cx,40h
-    mov ax,io_bitmap_sel
-    mov ds,ax
-    xor si,si
-    rep movsw
-    mov bx,di
-    pop di
-    pop si
-    pop es
-    pop ds
-    mov al,0
-    mov cx,tss_size
-fill_bm_vm_more:
-    mov [bx],al
-    inc bx
-    cmp bx,cx
-    jb fill_bm_vm_more          
-    mov byte ptr [bx-1],0FFh
     ret
 init_default_tss    ENDP
 
