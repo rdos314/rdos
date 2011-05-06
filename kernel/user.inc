@@ -960,12 +960,6 @@ DeleteIni	MACRO
 
 ;;;;;;;;;;;;;; DEBUGGING ;;;;;;;;;;;
 
-; IN  ES:(E)DI        TSS data buffer
-; IN  AX              Thread ID
-GetDebugTss     MACRO
-	UserGate get_debug_tss_nr
-						ENDM
-
 ; OUT AX               Thread ID
 ;GetDebugThread MACRO
 ;	UserGate get_debug_thread_nr

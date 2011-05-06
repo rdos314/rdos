@@ -1187,13 +1187,6 @@ glob_ptab_init:
     mov ax,get_debug_thread_nr
     RegisterBimodalUserGate
 ;
-    mov bx,OFFSET get_debug_tss16
-    mov si,OFFSET get_debug_tss32
-    mov di,OFFSET get_debug_tss_name
-    mov dx,virt_es_in
-    mov ax,get_debug_tss_nr
-    RegisterUserGate
-;
     mov si,OFFSET debug_trace
     mov di,OFFSET debug_trace_name
     xor dx,dx
@@ -1443,55 +1436,6 @@ get_debug_done:
     pop es
     retf32
 get_debug_thread    ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           GET_DEBUG_TSS
-;
-;           DESCRIPTION:    Get currently debugged TSS
-;
-;           PARAMETERS:         ES:(E)DI    BUFFER FOR TSS
-;                           AX              THREAD BLOCK OR 0
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_debug_tss_name      DB 'Get Debug TSS',0
-
-get_debug_tss16 PROC far
-    push ds
-    push si
-    call local_get_debug_thread_sel
-    or ax,ax
-    jz get_debug_tss_done16
-    mov ds,ax
-    mov ds,ds:p_tss_data_sel
-    xor si,si
-    mov cx,OFFSET p_tss_end
-    rep movsb
-get_debug_tss_done16:   
-    pop si
-    pop ds
-    retf32
-get_debug_tss16 ENDP
-
-get_debug_tss32 PROC far
-    push ds
-    push esi
-    call local_get_debug_thread_sel
-    or ax,ax
-    jz get_debug_tss_done32
-    mov ds,ax
-    mov ds,ds:p_tss_data_sel
-    xor esi,esi
-    mov ecx,OFFSET p_tss_end
-    rep movs byte ptr es:[edi],ds:[esi]
-get_debug_tss_done32:   
-    pop esi
-    pop ds
-    retf32
-get_debug_tss32 ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
