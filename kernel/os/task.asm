@@ -3023,11 +3023,17 @@ load_retry_do:
 load_reload_timer:
     neg eax
     ReloadSysTimer
-;       
+;
     sti
+    mov ds,es:p_tss_data_sel
+    mov ax,ds:p_tss_ess0
+;    
+    mov ds,fs:ps_tss_data_sel
+    mov ds:c_tss_ess0,ax
+    mov bx,fs:ps_tss_sel
+;
     mov ax,gdt_sel
     mov ds,ax
-    mov bx,es:p_tss_sel
     and byte ptr ds:[bx+5],NOT 2
     ltr bx
 ;
@@ -4216,19 +4222,20 @@ create_core    Proc far
     mov ax,flat_sel
     mov es,ax
 ;
-    mov eax,2000h + OFFSET tss_bitmap_space
+    mov eax,2000h + OFFSET c_tss_bitmap_space
     AllocateBigLinear
     mov edi,edx
 ;    
     xor al,al
-    mov cx,OFFSET tss_bitmap_space
+    mov cx,OFFSET c_tss_bitmap_space
     rep stos byte ptr es:[edi]
 ;
     mov cx,800h
     xor eax,eax
     rep stos dword ptr es:[edi]
 ;
-    mov es:[edx].p_tss_bitmap,OFFSET tss_bitmap_space
+    mov es:[edx].c_tss_bitmap,OFFSET c_tss_bitmap_space
+    mov es:[edx].c_tss_esp0,stack0_size
     pop es
 ;
     mov ax,cs:core_count
@@ -4238,9 +4245,9 @@ create_core    Proc far
     pop dx
     mov bx,ax
     add bx,core_sel_base + core_tss_data_offs
-    mov ecx,2000h + OFFSET tss_bitmap_space
+    mov ecx,2000h + OFFSET c_tss_bitmap_space
     CreateDataSelector16
-    mov fs:ps_tss_data_sel,bx
+    mov es:ps_tss_data_sel,bx
 ;
     mov ax,cs:core_count
     mov cx,core_sel_size
@@ -4249,9 +4256,9 @@ create_core    Proc far
     pop dx
     mov bx,ax
     add bx,core_sel_base + core_tss_offs
-    mov ecx,2000h + OFFSET tss_bitmap_space
+    mov ecx,2000h + OFFSET c_tss_bitmap_space
     CreateTssSelector
-    mov fs:ps_tss_sel,bx
+    mov es:ps_tss_sel,bx
 ;
     mov ax,kernel_patch_sel
     mov ds,ax

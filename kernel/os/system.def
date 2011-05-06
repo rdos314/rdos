@@ -398,4 +398,6 @@ c_tss_ldt			DW ?,?
 c_tss_t			    DW ?
 c_tss_bitmap		DW ?
 
+c_tss_bitmap_space  DW ?
+
 core_tss_seg		ENDS
