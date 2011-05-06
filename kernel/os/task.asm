@@ -2788,8 +2788,10 @@ acKernel:
     mov ss,dx
     mov sp,word ptr ds:p_tss_esp
 ;
+    xor dx,dx
     push ds:p_tss_eflags
-    push dword ptr ds:p_tss_cs
+    push dx
+    push ds:p_tss_cs
     push ds:p_tss_eip
 ;
     mov ds:p_tss_ss,ss
@@ -2806,10 +2808,13 @@ acPm:
     mov ss,dx
     mov sp,word ptr ds:p_tss_esp0
 ;
-    push dword ptr ds:p_tss_ss
+    xor dx,dx
+    push dx
+    push ds:p_tss_ss
     push ds:p_tss_esp
     push ds:p_tss_eflags
-    push dword ptr ds:p_tss_cs
+    push dx
+    push ds:p_tss_cs
     push ds:p_tss_eip
 ;
     mov ds:p_tss_ss,ss
@@ -2826,14 +2831,21 @@ acVm:
     mov ss,dx
     mov sp,word ptr ds:p_tss_esp0
 ;
-    push dword ptr ds:p_tss_gs
-    push dword ptr ds:p_tss_fs
-    push dword ptr ds:p_tss_ds
-    push dword ptr ds:p_tss_es
-    push dword ptr ds:p_tss_ss
+    xor dx,dx
+    push dx
+    push ds:p_tss_gs
+    push dx
+    push ds:p_tss_fs
+    push dx
+    push ds:p_tss_ds
+    push dx
+    push ds:p_tss_es
+    push dx
+    push ds:p_tss_ss
     push ds:p_tss_esp
     push ds:p_tss_eflags
-    push dword ptr ds:p_tss_cs
+    push dx
+    push ds:p_tss_cs
     push ds:p_tss_eip
 ;
     mov ds:p_tss_ss,ss
@@ -3077,8 +3089,11 @@ load_kernel:
 load_kernel_ss0_ok:
     mov ss,ax
     mov esp,ds:p_tss_esp
+;
+    xor ax,ax
     push ds:p_tss_eflags
-    push dword ptr ds:p_tss_cs
+    push ax
+    push ds:p_tss_cs
     push ds:p_tss_eip
 ;       
     mov ecx,ds:p_tss_ecx
@@ -3132,10 +3147,13 @@ load_pm_app:
     mov ss,ax
     mov esp,ds:p_tss_esp0
 ;
-    push dword ptr ds:p_tss_ss
+    xor ax,ax
+    push ax
+    push ds:p_tss_ss
     push ds:p_tss_esp
     push ds:p_tss_eflags
-    push dword ptr ds:p_tss_cs
+    push ax
+    push ds:p_tss_cs
     push ds:p_tss_eip
 ;       
     mov ecx,ds:p_tss_ecx
@@ -3189,14 +3207,21 @@ load_vm:
     mov ss,ax
     mov esp,ds:p_tss_esp0
 ;
-    push dword ptr ds:p_tss_gs
-    push dword ptr ds:p_tss_fs
-    push dword ptr ds:p_tss_ds
-    push dword ptr ds:p_tss_es
-    push dword ptr ds:p_tss_ss
+    xor ax,ax
+    push ax
+    push ds:p_tss_gs
+    push ax
+    push ds:p_tss_fs
+    push ax
+    push ds:p_tss_ds
+    push ax
+    push ds:p_tss_es
+    push ax
+    push ds:p_tss_ss
     push ds:p_tss_esp
     push ds:p_tss_eflags
-    push dword ptr ds:p_tss_cs
+    push ax
+    push ds:p_tss_cs
     push ds:p_tss_eip
 ;
     mov eax,ds:p_tss_eax
