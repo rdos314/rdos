@@ -57,13 +57,6 @@ typedef struct ThreadState
 
 typedef struct Tss
 {
-    long BackLink;
-    long esp0;
-    long ess0;
-    long esp1;
-    long ess1;
-    long esp2;
-    long ess2;
     long cr3;
     long eip;
     long eflags;
@@ -75,15 +68,13 @@ typedef struct Tss
     long ebp;
     long esi;
     long edi;
-    long es;
-    long cs;
-    long ss;
-    long ds;
-    long fs;
-    long gs;
-    long ldt;
-    short int t;
-    short int bitmap;
+    short int es;
+    short int cs;
+    short int ss;
+    short int ds;
+    short int fs;
+    short int gs;
+    short int ldt;
     long dr[4];
     long dr7;
     long MathControl;
@@ -91,12 +82,10 @@ typedef struct Tss
     long MathTag;
     long MathEip;
     short int MathCs;
-    char MathOp[2];
     long MathDataOffs;
-    long MathDataSel;
+    short int MathDataSel;
     long double st[8];
-    short int MathPrevOp;
-    char guard[16];
+    char WcSpace[16];
 } Tss;
 
 // Exception handling prototypes 

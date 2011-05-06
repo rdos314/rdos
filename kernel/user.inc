@@ -64,6 +64,52 @@ virt_gs_out		EQU 80h
 virt_seg_in		EQU 0Fh
 virt_seg_out	EQU 0F0h
 
+; interface data-type
+
+user_tss_struc  STRUC
+
+ut_cr3              DD ?
+ut_eip              DD ?
+ut_eflags           DD ?
+ut_eax              DD ?
+ut_ecx              DD ?
+ut_edx              DD ?
+ut_ebx              DD ?
+ut_esp              DD ?
+ut_ebp              DD ?
+ut_esi              DD ?
+ut_edi              DD ?
+ut_es               DW ?
+ut_cs               DW ?
+ut_ss               DW ?
+ut_ds               DW ?
+ut_fs               DW ?
+ut_gs               DW ?
+ut_ldt              DW ?
+ut_dr0              DD ?
+ut_dr1              DD ?
+ut_dr2              DD ?
+ut_dr3              DD ?
+ut_dr7              DD ?
+ut_math_control     DD ?
+ut_math_status      DD ?
+ut_math_tag         DD ?
+ut_math_eip		    DD ?
+ut_math_cs	        DW ?
+ut_math_data_offs	DD ?
+ut_math_data_sel	DW ?
+ut_st0              DT ?
+ut_st1              DT ?
+ut_st2              DT ?
+ut_st3              DT ?
+ut_st4              DT ?
+ut_st5              DT ?
+ut_st6              DT ?
+ut_st7              DT ?
+
+user_tss_struc  ENDS
+
+
 UserGate16	MACRO gate_nr
     db 67h
     db 66h

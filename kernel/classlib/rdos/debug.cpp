@@ -506,12 +506,6 @@ void TDebugThread::SetException(TExceptionEvent *event)
             break;
     }
 
-    Esp0 = tss.esp0;
-    Ess0 = tss.ess0;
-    Esp1 = tss.esp1;    
-    Ess1 = tss.ess1;
-    Esp2 = tss.esp2;
-    Ess2 = tss.ess2;    
     Cr3 = tss.cr3;
     Eflags = tss.eflags;
     Eax = tss.eax;
@@ -527,7 +521,7 @@ void TDebugThread::SetException(TExceptionEvent *event)
     Ds = tss.ds;
     Fs = tss.fs;
     Gs = tss.gs;
-         Ldt = tss.ldt;
+    Ldt = tss.ldt;
 
     for (i = 0; i < 4; i++)
         Dr[i] = tss.dr[i];
@@ -535,13 +529,6 @@ void TDebugThread::SetException(TExceptionEvent *event)
     Dr7 = tss.dr7;
     MathControl = tss.MathControl;
     MathStatus = tss.MathStatus;
-    MathTag = tss.MathTag;
-    MathEip = tss.MathEip;
-    MathCs = tss.MathCs;
-    MathOp[0] = tss.MathOp[0];
-    MathOp[1] = tss.MathOp[1];
-    MathDataOffs = tss.MathDataOffs;
-    MathDataSel = tss.MathDataSel;
 
     for (i = 0; i < 8; i++)
         St[i] = tss.st[i];
@@ -630,12 +617,6 @@ void TDebugThread::SetException(TKernelExceptionEvent *event)
 
     Cs = tss.cs;
     Eip = tss.eip;
-    Esp0 = tss.esp0;
-    Ess0 = tss.ess0;
-    Esp1 = tss.esp1;    
-    Ess1 = tss.ess1;
-    Esp2 = tss.esp2;
-    Ess2 = tss.ess2;    
     Cr3 = tss.cr3;
     Eflags = tss.eflags;
     Eax = tss.eax;
@@ -651,7 +632,7 @@ void TDebugThread::SetException(TKernelExceptionEvent *event)
     Ds = tss.ds;
     Fs = tss.fs;
     Gs = tss.gs;
-         Ldt = tss.ldt;
+    Ldt = tss.ldt;
 
     for (i = 0; i < 4; i++)
         Dr[i] = tss.dr[i];
@@ -662,8 +643,6 @@ void TDebugThread::SetException(TKernelExceptionEvent *event)
     MathTag = tss.MathTag;
     MathEip = tss.MathEip;
     MathCs = tss.MathCs;
-    MathOp[0] = tss.MathOp[0];
-    MathOp[1] = tss.MathOp[1];
     MathDataOffs = tss.MathDataOffs;
     MathDataSel = tss.MathDataSel;
 
@@ -709,6 +688,10 @@ void TDebugThread::WriteRegs()
     tss.MathControl = MathControl;
     tss.MathStatus = MathStatus;
     tss.MathTag = MathTag;
+    tss.MathEip = MathEip;
+    tss.MathCs = MathCs;
+    tss.MathDataOffs = MathDataOffs;
+    tss.MathDataSel = MathDataSel;
 
     for (i = 0; i < 8; i++)
         tss.st[i] = St[i];

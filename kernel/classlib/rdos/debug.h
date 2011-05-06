@@ -135,12 +135,6 @@ public:
     long Eip;
     short int Cs;
 
-    long Esp0;
-    long Ess0;
-    long Esp1;
-    long Ess1;
-    long Esp2;
-    long Ess2;
     long Cr3;
     long Eflags;
     long Eax;
@@ -165,9 +159,8 @@ public:
     long MathTag;
     long MathEip;
     short int MathCs;
-    char MathOp[2];
     long MathDataOffs;
-    long MathDataSel;
+    short int MathDataSel;
     long double St[8];
 
     TDebugThread *Next;
