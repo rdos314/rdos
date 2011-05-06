@@ -312,11 +312,11 @@ process_seg	ENDS
 tss_seg		STRUC
 
 p_tss_esp0		    DD ?
-p_tss_ess0		    DW ?,?
+p_tss_ess0		    DW ?
 p_tss_esp1		    DD ?
-p_tss_ess1		    DW ?,?
+p_tss_ess1		    DW ?
 p_tss_esp2		    DD ?
-p_tss_ess2		    DW ?,?
+p_tss_ess2		    DW ?
 p_tss_cr3	        DD ?
 p_tss_eip			DD ?
 p_tss_eflags		DD ?
@@ -328,13 +328,13 @@ p_tss_esp			DD ?
 p_tss_ebp			DD ?
 p_tss_esi			DD ?
 p_tss_edi			DD ?
-p_tss_es			DW ?,?
-p_tss_cs			DW ?,?
-p_tss_ss			DW ?,?
-p_tss_ds			DW ?,?
-p_tss_fs			DW ?,?
-p_tss_gs			DW ?,?
-p_tss_ldt			DW ?,?
+p_tss_es			DW ?
+p_tss_cs			DW ?
+p_tss_ss			DW ?
+p_tss_ds			DW ?
+p_tss_fs			DW ?
+p_tss_gs			DW ?
+p_tss_ldt			DW ?
 p_tss_dr0			DD ?
 p_tss_dr1			DD ?
 p_tss_dr2			DD ?
