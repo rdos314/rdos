@@ -1251,6 +1251,9 @@ glob_ptab_init:
     mov edx,gdt_linear
     CreateCore
 ;
+    mov bx,es:ps_tss_sel
+    ltr bx
+;
     pop ds
     popa
     ret
@@ -3026,16 +3029,9 @@ load_reload_timer:
 ;
     sti
     mov ds,es:p_tss_data_sel
-    mov ax,ds:p_tss_ess0
-;    
+    mov ax,ds:p_tss_ess0    
     mov ds,fs:ps_tss_data_sel
     mov ds:c_tss_ess0,ax
-    mov bx,fs:ps_tss_sel
-;
-    mov ax,gdt_sel
-    mov ds,ax
-    and byte ptr ds:[bx+5],NOT 2
-    ltr bx
 ;
     mov ax,sys_dir_sel
     mov ds,ax

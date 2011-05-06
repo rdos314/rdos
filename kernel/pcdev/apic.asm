@@ -400,6 +400,14 @@ ApInit:
     mov ss,dx
     mov sp,200h    
 ;
+    GetCoreCount
+    mov ax,cx
+    mov cx,core_sel_size
+    mul cx
+    mov bx,ax
+    add bx,core_sel_base + core_tss_offs
+    ltr bx
+;
     mov ax,SEG data
     mov ds,ax
     mov eax,12345678h
