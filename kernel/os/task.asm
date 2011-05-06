@@ -1461,7 +1461,7 @@ get_debug_tss16 PROC far
     mov ds,ax
     mov ds,ds:p_tss_data_sel
     xor si,si
-    mov cx,OFFSET tss_bitmap_space
+    mov cx,OFFSET p_tss_end
     rep movsb
 get_debug_tss_done16:   
     pop si
@@ -1478,7 +1478,7 @@ get_debug_tss32 PROC far
     mov ds,ax
     mov ds,ds:p_tss_data_sel
     xor esi,esi
-    mov ecx,OFFSET tss_bitmap_space
+    mov ecx,OFFSET p_tss_end
     rep movs byte ptr es:[edi],ds:[esi]
 get_debug_tss_done32:   
     pop esi

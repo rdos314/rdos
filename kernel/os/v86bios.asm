@@ -400,45 +400,6 @@ bios_loop:
     IsValidOsGate
     jnc bios_bitmap_done
 ;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_tss_data_sel
-    mov ax,flat_sel
-    mov es,ax
-;
-    mov eax,2000h + OFFSET tss_bitmap_space
-    AllocateSmallLinear
-    mov edi,edx
-    xor esi,esi
-    mov cx,OFFSET tss_bitmap_space
-    rep movs byte ptr es:[edi],ds:[esi]
-;
-    mov cx,800h
-    xor eax,eax
-    rep stos dword ptr es:[edi]
-;
-    GetThread
-    mov ds,ax
-    mov bx,ds:p_tss_data_sel
-    mov ecx,2000h + OFFSET tss_bitmap_space
-    CreateDataSelector16
-;
-    mov bx,ds:p_tss_sel
-    mov ax,gdt_sel
-    mov ds,ax
-;
-    mov al,bl
-    dec ecx
-    mov [bx],cx
-    mov [bx+2],edx
-    shl al,5
-    or al,8Bh
-    xchg al,[bx+5]
-    shr ecx,16
-    and cx,0Fh
-    or ch,al
-    mov [bx+6],cx
-;
     mov ax,1
     WaitMilliSec
 

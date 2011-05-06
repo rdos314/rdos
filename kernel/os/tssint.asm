@@ -87,7 +87,7 @@ init_tss_gates	Proc far
     mov eax,cr3
     mov ds:c_tss_cr3,eax
 ;
-    mov ds:c_tss_bitmap, OFFSET tss_bitmap_space
+    mov ds:c_tss_bitmap, OFFSET c_tss_bitmap_space
     mov bx,3FFh
     mov byte ptr ds:[bx],-1    
 ;

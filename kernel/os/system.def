@@ -311,7 +311,6 @@ process_seg	ENDS
 
 tss_seg		STRUC
 
-p_tss_back_link     DD ?
 p_tss_esp0		    DD ?
 p_tss_ess0		    DW ?,?
 p_tss_esp1		    DD ?
@@ -336,8 +335,6 @@ p_tss_ds			DW ?,?
 p_tss_fs			DW ?,?
 p_tss_gs			DW ?,?
 p_tss_ldt			DW ?,?
-p_tss_t			    DW ?
-p_tss_bitmap		DW ?
 p_tss_dr0			DD ?
 p_tss_dr1			DD ?
 p_tss_dr2			DD ?
@@ -363,8 +360,8 @@ p_math_prev_op	    DB ?,?
 
 tss_thread		    DW ?
 tss_error_code	    DW ?
-tss_res_space	    DB 18 DUP(?)
-tss_bitmap_space    DW ?
+
+p_tss_end           DW ?
 
 tss_seg		ENDS
 

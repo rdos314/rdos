@@ -1241,13 +1241,7 @@ init_virt_thread    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_default_tss    PROC near
-    xor cx,cx
-    xor bx,bx
-    xor edx,edx
-    mov ds:p_tss_back_link,edx
-;
-    mov dx,stack0_size
-    mov ds:p_tss_esp0,edx
+    mov ds:p_tss_esp0,stack0_size
 ;       
     push es
     push eax
@@ -1296,9 +1290,6 @@ init_default_tss    PROC near
 ;    
     sldt dx
     mov ds:p_tss_ldt,dx
-    mov ds:p_tss_t,0
-;
-    mov ds:p_tss_bitmap,OFFSET tss_bitmap_space
 ;
 ; dr0 - dr7
 ;
@@ -1330,7 +1321,7 @@ init_default_tss    PROC near
     push di
     mov ax,ds
     mov es,ax
-    mov di,OFFSET tss_bitmap_space
+    mov di,OFFSET p_tss_end
     mov cx,40h
     mov ax,io_bitmap_sel
     mov ds,ax
@@ -1765,7 +1756,6 @@ init_tss_iopl_done:
     mov ds:p_tss_ds,ax
     mov ds:p_tss_fs,ax
     mov ds:p_tss_gs,ax
-    mov ds:p_tss_t,0
     ret
 init_process_tss    ENDP
 
@@ -2165,7 +2155,6 @@ first_move_pad:
     mov al,' '
     rep stosb
 first_move_done:
-;
     mov es:p_sleep_sel,0
     mov es:p_sleep_offset,0
     push ds
@@ -2195,22 +2184,10 @@ init_first_thread       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_first_tss  PROC near
-    push es
-    mov ax,ds
-    mov es,ax
-    xor di,di
-    xor ax,ax
-    mov cx,64h
-    rep stosb
-    xor ax,ax
-    stosw
-    mov ax,OFFSET tss_bitmap_space
-    stosw
-    pop es
+    xor edx,edx
 ;
 ; dr0 - dr7
 ;
-    xor edx,edx
     mov ds:p_tss_dr0,edx
     mov ds:p_tss_dr1,edx
     mov ds:p_tss_dr2,edx
@@ -2232,15 +2209,18 @@ init_first_tss  PROC near
     mov ds:tss_thread,es
     mov ds:tss_error_code,dx
 ;
-    mov bx,OFFSET tss_bitmap_space
-    xor al,al
-    mov cx,tss_size
-fill_bm_mod_more:
-    mov [bx],al
-    inc bx
-    cmp bx,cx
-    jb fill_bm_mod_more         
-    mov byte ptr [bx-1],0FFh
+    mov ds:p_tss_cr3,edx
+    mov ds:p_tss_eax,edx
+    mov ds:p_tss_ecx,edx
+    mov ds:p_tss_edx,edx
+    mov ds:p_tss_ebx,edx
+    mov ds:p_tss_ebp,edx
+    mov ds:p_tss_esi,edx
+    mov ds:p_tss_edi,edx    
+    mov ds:p_tss_es,dx
+    mov ds:p_tss_ds,dx
+    mov ds:p_tss_fs,dx
+    mov ds:p_tss_gs,dx
 ;
     mov eax,OFFSET init_first_process_callback
     mov ds:p_tss_eip,eax
