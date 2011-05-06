@@ -91,8 +91,8 @@ default_copy_done:
 ;
     mov ds,bx
     mov ds,ds:p_tss_data_sel
-    mov cx,ds:tss_cs
-    mov edx,dword ptr ds:tss_eip
+    mov cx,ds:p_tss_cs
+    mov edx,ds:p_tss_eip
     clc
 ;
     pop si
@@ -454,7 +454,7 @@ get_thread_tss_found:
     mov ds,ax
     mov ds,ds:p_tss_data_sel
     xor esi,esi
-    mov ecx,OFFSET math_st0
+    mov ecx,OFFSET p_math_st0
     rep movs byte ptr es:[edi],ds:[esi]
 ;
     mov eax,cr0
@@ -462,7 +462,7 @@ get_thread_tss_found:
     jz get_thread_real_fpu
 
 get_thread_emul_fpu:
-    mov ax,ds:math_status
+    mov ax,ds:p_math_status
     shr ax,3
     mov al,ah
     and ax,7
@@ -470,7 +470,7 @@ get_thread_emul_fpu:
     mov si,ax
     shl ax,2
     add si,ax
-    add si,OFFSET math_st0
+    add si,OFFSET p_math_st0
     shr ax,3
     mov dx,8
 
@@ -483,7 +483,7 @@ get_thread_emul_loop:
     jne get_thread_emul_next
 ;
     xor al,al
-    mov si,OFFSET math_st0
+    mov si,OFFSET p_math_st0
 
 get_thread_emul_next:
     sub dx,1
@@ -576,7 +576,7 @@ set_thread_tss_found:
     mov es,es:p_tss_data_sel
     mov esi,edi
     xor edi,edi
-    mov ecx,OFFSET math_st0
+    mov ecx,OFFSET p_math_st0
     rep movs byte ptr es:[edi],ds:[esi]
 ;
     mov eax,cr0
@@ -584,7 +584,7 @@ set_thread_tss_found:
     jz set_thread_real_fpu
 
 set_thread_emul_fpu:
-    mov ax,es:math_status
+    mov ax,es:p_math_status
     shr ax,3
     mov al,ah
     and ax,7
@@ -592,7 +592,7 @@ set_thread_emul_fpu:
     mov di,ax
     shl ax,2
     add di,ax
-    add di,OFFSET math_st0
+    add di,OFFSET p_math_st0
     shr ax,3
     mov dx,8
 
@@ -605,7 +605,7 @@ set_thread_emul_loop:
     jne set_thread_emul_next
 ;
     xor al,al
-    mov di,OFFSET math_st0
+    mov di,OFFSET p_math_st0
 
 set_thread_emul_next:
     sub dx,1

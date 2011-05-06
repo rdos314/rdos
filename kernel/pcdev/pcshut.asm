@@ -462,7 +462,7 @@ et_vm   DB 'PM ',       'VM '
 et_end  DB 0FFh
 
 write_eflags    PROC near
-    mov bx,OFFSET tss_eflags
+    mov bx,OFFSET p_tss_eflags
     mov eax,gs:[bx]
     mov di,OFFSET eflags_tab
     mov cx,cs
@@ -580,39 +580,39 @@ ke18    DB 'Invalid selector    '
 
 dword_reg_tab1:
     DB 'EAX='
-    DW OFFSET tss_eax
+    DW OFFSET p_tss_eax
     DB 'EBX='
-    DW OFFSET tss_ebx
+    DW OFFSET p_tss_ebx
     DB 'ECX='
-    DW OFFSET tss_ecx
+    DW OFFSET p_tss_ecx
     DB 'EDX='
-    DW OFFSET tss_edx
+    DW OFFSET p_tss_edx
     DB 'ESI='
-    DW OFFSET tss_esi
+    DW OFFSET p_tss_esi
     DB 'EDI='
-    DW OFFSET tss_edi
+    DW OFFSET p_tss_edi
     DB 0
 dword_reg_tab2:
     DB 'EPC='
-    DW OFFSET tss_eip
+    DW OFFSET p_tss_eip
     DB 'ESP='
-    DW OFFSET tss_esp
+    DW OFFSET p_tss_esp
     DB 'EBP='
-    DW OFFSET tss_ebp
+    DW OFFSET p_tss_ebp
     DB 0
 word_reg_tab:
     DB 'CS='
-    DW OFFSET tss_cs
+    DW OFFSET p_tss_cs
     DB 'SS='
-    DW OFFSET tss_ss
+    DW OFFSET p_tss_ss
     DB 'DS='
-    DW OFFSET tss_ds
+    DW OFFSET p_tss_ds
     DB 'ES='
-    DW OFFSET tss_es
+    DW OFFSET p_tss_es
     DB 'FS='
-    DW OFFSET tss_fs
+    DW OFFSET p_tss_fs
     DB 'GS='
-    DW OFFSET tss_gs
+    DW OFFSET p_tss_gs
     DB 0
 
 pm_es   EQU -12
@@ -638,33 +638,33 @@ abort_pretask_do:
     mov ax,system_data_sel
     mov es,ax
     mov eax,[bp].vm_eip
-    mov dword ptr es:tss_eip,eax
+    mov es:p_tss_eip,eax
     mov eax,[bp].vm_eflags
-    mov dword ptr es:tss_eflags,eax
+    mov es:p_tss_eflags,eax
     mov eax,[bp].vm_eax
-    mov dword ptr es:tss_eax,eax
-    mov dword ptr es:tss_ecx,ecx
-    mov dword ptr es:tss_edx,edx
+    mov es:p_tss_eax,eax
+    mov es:p_tss_ecx,ecx
+    mov es:p_tss_edx,edx
     mov eax,[bp].vm_ebx
-    mov dword ptr es:tss_ebx,eax
+    mov es:p_tss_ebx,eax
     movzx eax,bp
     add eax,18
-    mov dword ptr es:tss_esp,eax
-    mov dword ptr es:tss_esi,esi
-    mov dword ptr es:tss_edi,edi
+    mov es:p_tss_esp,eax
+    mov es:p_tss_esi,esi
+    mov es:p_tss_edi,edi
     mov ax,[bp].vm_cs
-    mov es:tss_cs,ax
-    mov es:tss_ss,ss
+    mov es:p_tss_cs,ax
+    mov es:p_tss_ss,ss
     mov ax,[bp].pm_ds
-    mov es:tss_ds,ax
+    mov es:p_tss_ds,ax
     mov ax,[bp].pm_es
-    mov es:tss_es,ax
-    mov es:tss_fs,fs
-    mov es:tss_gs,gs
+    mov es:p_tss_es,ax
+    mov es:p_tss_fs,fs
+    mov es:p_tss_gs,gs
     mov bp,[bp].vm_bp
-    mov dword ptr es:tss_ebp,ebp
+    mov es:p_tss_ebp,ebp
     sldt ax
-    mov es:tss_ldt,ax       
+    mov es:p_tss_ldt,ax       
     mov ax,es
     mov gs,ax
 ;

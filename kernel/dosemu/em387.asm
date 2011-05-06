@@ -94,17 +94,17 @@ SaveFp  MACRO
         GetThread
         mov fs,ax
         mov fs,fs:p_tss_data_sel
-        mov dx,word ptr fs:math_op
-        mov word ptr fs:math_prev_op,dx
+        mov dx,word ptr fs:p_math_op
+        mov word ptr fs:p_math_prev_op,dx
         and al,7
-        mov fs:math_op,al
+        mov fs:p_math_op,al
         mov bx,[bp].reg_old_bp
         mov eax,ss:[bx].vm_eip
-        mov fs:math_eip,eax
+        mov fs:p_math_eip,eax
         mov ax,[bp].reg_cs
-        mov fs:math_cs,ax
-        mov fs:math_data_offs,0
-        mov fs:math_data_sel,0
+        mov fs:p_math_cs,ax
+        mov fs:p_math_data_offs,0
+        mov fs:p_math_data_sel,0
                 ENDM
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -117,7 +117,7 @@ SaveFp  MACRO
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SaveFp2 MACRO
-        mov fs:math_op+1,al
+        mov fs:p_math_op+1,al
                 ENDM
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -137,8 +137,8 @@ EmFi&op&Word    Proc near
         mov bl,al
         call LoadWordMem
         push ax
-        mov fs:math_data_offs,ebx
-        mov fs:math_data_sel,si
+        mov fs:p_math_data_offs,ebx
+        mov fs:p_math_data_sel,si
         mov ax,sp
         push ss
         push ax
@@ -186,8 +186,8 @@ EmFi&op&Dword   Proc near
         mov bl,al
         call LoadDwordMem
         push eax
-        mov fs:math_data_offs,ebx
-        mov fs:math_data_sel,si
+        mov fs:p_math_data_offs,ebx
+        mov fs:p_math_data_sel,si
         mov ax,sp
         push ss
         push ax
@@ -235,8 +235,8 @@ EmF&op&Single   Proc near
         mov bl,al
         call LoadDwordMem
         push eax
-        mov fs:math_data_offs,ebx
-        mov fs:math_data_sel,si
+        mov fs:p_math_data_offs,ebx
+        mov fs:p_math_data_sel,si
         mov ax,sp
         push ss
         push ax
@@ -285,8 +285,8 @@ EmF&op&Double   Proc near
         call LoadQwordMem
         push edx
         push eax
-        mov fs:math_data_offs,ebx
-        mov fs:math_data_sel,si
+        mov fs:p_math_data_offs,ebx
+        mov fs:p_math_data_sel,si
         mov ax,sp
         push ss
         push ax
@@ -438,8 +438,8 @@ EmFi&op&rWord   Proc near
         mov bl,al
         call LoadWordMem
         push ax
-        mov fs:math_data_offs,ebx
-        mov fs:math_data_sel,si
+        mov fs:p_math_data_offs,ebx
+        mov fs:p_math_data_sel,si
         mov ax,sp
         push ss
         push ax
@@ -487,8 +487,8 @@ EmFi&op&rDword  Proc near
         mov bl,al
         call LoadDwordMem
         push eax
-        mov fs:math_data_offs,ebx
-        mov fs:math_data_sel,si
+        mov fs:p_math_data_offs,ebx
+        mov fs:p_math_data_sel,si
         mov ax,sp
         push ss
         push ax
@@ -536,8 +536,8 @@ EmF&op&rSingle  Proc near
         mov bl,al
         call LoadDwordMem
         push eax
-        mov fs:math_data_offs,ebx
-        mov fs:math_data_sel,si
+        mov fs:p_math_data_offs,ebx
+        mov fs:p_math_data_sel,si
         mov ax,sp
         push ss
         push ax
@@ -586,8 +586,8 @@ EmF&op&rDouble  Proc near
         call LoadQwordMem
         push edx
         push eax
-        mov fs:math_data_offs,ebx
-        mov fs:math_data_sel,si
+        mov fs:p_math_data_offs,ebx
+        mov fs:p_math_data_sel,si
         mov ax,sp
         push ss
         push ax
@@ -732,9 +732,9 @@ EmF&op&rpStiSt  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InvalidFault    Proc near
-        or fs:math_status, STATUS_IE
-        and fs:math_status, NOT STATUS_SF
-        test fs:math_control, CONTROL_IM
+        or fs:p_math_status, STATUS_IE
+        and fs:p_math_status, NOT STATUS_SF
+        test fs:p_math_control, CONTROL_IM
         jz FpFault
         ret
 InvalidFault    Endp
@@ -749,8 +749,8 @@ InvalidFault    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StackOverflowFault      Proc near
-        or fs:math_status, STATUS_IE OR STATUS_SF OR STATUS_C1
-        test fs:math_control, CONTROL_IM
+        or fs:p_math_status, STATUS_IE OR STATUS_SF OR STATUS_C1
+        test fs:p_math_control, CONTROL_IM
         jz FpFault
         ret
 StackOverflowFault      Endp
@@ -765,9 +765,9 @@ StackOverflowFault      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StackUnderflowFault     Proc near
-        or fs:math_status, STATUS_IE OR STATUS_SF
-        and fs:math_status, NOT STATUS_C1
-        test fs:math_control, CONTROL_IM
+        or fs:p_math_status, STATUS_IE OR STATUS_SF
+        and fs:p_math_status, NOT STATUS_C1
+        test fs:p_math_control, CONTROL_IM
         jz FpFault
         ret
 StackUnderflowFault     Endp
@@ -787,7 +787,7 @@ StackUnderflowFault     Endp
 
 GetReal Proc near
         mov al,bl
-        movzx ebx,fs:math_status
+        movzx ebx,fs:p_math_status
         rol bx,5
         add bl,al
         and bx,7
@@ -795,7 +795,7 @@ GetReal Proc near
         add cl,cl
         mov ax,11b
         shl ax,cl
-        mov cx,fs:math_tag
+        mov cx,fs:p_math_tag
         and cx,ax
         cmp ax,cx
         jne GetRealOk
@@ -808,9 +808,9 @@ GetRealOk:
         add bx,bx
         add bx,bx
         add bx,ax
-        mov eax,dword ptr fs:[bx].math_st0
-        mov edx,dword ptr fs:[bx+4].math_st0
-        mov cx,word ptr fs:[bx+8].math_st0
+        mov eax,dword ptr fs:[bx].p_math_st0
+        mov edx,dword ptr fs:[bx+4].p_math_st0
+        mov cx,word ptr fs:[bx+8].p_math_st0
         ret
 GetReal Endp
 
@@ -830,7 +830,7 @@ PutReal Proc near
         push ax
         push cx
         mov al,bl
-        movzx ebx,fs:math_status
+        movzx ebx,fs:p_math_status
         rol bx,5
         add bl,al
         and bx,7
@@ -842,9 +842,9 @@ PutReal Proc near
         add bx,cx
         pop cx
         pop ax
-        mov dword ptr fs:[bx].math_st0,eax
-        mov dword ptr fs:[bx+4].math_st0,edx
-        mov word ptr fs:[bx+8].math_st0,cx
+        mov dword ptr fs:[bx].p_math_st0,eax
+        mov dword ptr fs:[bx+4].p_math_st0,edx
+        mov word ptr fs:[bx+8].p_math_st0,cx
 ;
         and cx,7FFFh
         jz PutRealZero
@@ -872,11 +872,11 @@ PutRealTag:
         mov ax,11b
         shl ax,cl
         shl dx,cl
-        mov bx,fs:math_tag
+        mov bx,fs:p_math_tag
         not ax
         and bx,ax
         or bx,dx
-        mov fs:math_tag,bx
+        mov fs:p_math_tag,bx
         ret
 PutReal Endp
 
@@ -894,7 +894,7 @@ PutReal Endp
 PushReal        Proc near
         push ax
         push cx
-        mov ax,fs:math_status
+        mov ax,fs:p_math_status
         mov bx,ax
         rol bx,5
         dec bx
@@ -904,11 +904,11 @@ PushReal        Proc near
         ror bx,5
         and ax,NOT STATUS_TOP
         or ax,bx
-        mov fs:math_status,ax
+        mov fs:p_math_status,ax
         add cl,cl
         mov ax,11b
         shl ax,cl
-        mov bx,fs:math_tag
+        mov bx,fs:p_math_tag
         and bx,ax
         cmp ax,bx
         je PushNoOv
@@ -924,9 +924,9 @@ PushNoOv:
         add bx,cx
         pop cx
         pop ax
-        mov dword ptr fs:[bx].math_st0,eax
-        mov dword ptr fs:[bx+4].math_st0,edx
-        mov word ptr fs:[bx+8].math_st0,cx
+        mov dword ptr fs:[bx].p_math_st0,eax
+        mov dword ptr fs:[bx+4].p_math_st0,edx
+        mov word ptr fs:[bx+8].p_math_st0,cx
 ;
         and cx,7FFFh
         jz PushRealZero
@@ -954,11 +954,11 @@ PushRealTag:
         mov ax,11b
         shl ax,cl
         shl dx,cl
-        mov bx,fs:math_tag
+        mov bx,fs:p_math_tag
         not ax
         and bx,ax
         or bx,dx
-        mov fs:math_tag,bx
+        mov fs:p_math_tag,bx
         ret
 PushReal        Endp
 
@@ -972,7 +972,7 @@ PushReal        Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PopReal Proc near
-        mov ax,fs:math_status
+        mov ax,fs:p_math_status
         mov bx,ax
         rol bx,5
         mov cl,bl
@@ -980,15 +980,15 @@ PopReal Proc near
         add cl,cl
         mov ax,11b
         shl ax,cl
-        or fs:math_tag,ax
+        or fs:p_math_tag,ax
         inc bx
         and bx,7
         mov cl,bl
         ror bx,5
-        mov ax,fs:math_status
+        mov ax,fs:p_math_status
         and ax,NOT STATUS_TOP
         or ax,bx
-        mov fs:math_status,ax
+        mov fs:p_math_status,ax
         ret
 PopReal Endp
 
@@ -1017,13 +1017,13 @@ EmWait  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EmFinit Proc near
-        mov fs:math_control,37Fh
-        mov fs:math_status,0
-        mov fs:math_tag,0FFFFh
-        mov fs:math_eip,0
-        mov fs:math_cs,0
-        mov fs:math_data_offs,0
-        mov fs:math_data_sel,0
+        mov fs:p_math_control,37Fh
+        mov fs:p_math_status,0
+        mov fs:p_math_tag,0FFFFh
+        mov fs:p_math_eip,0
+        mov fs:p_math_cs,0
+        mov fs:p_math_data_offs,0
+        mov fs:p_math_data_sel,0
         ret
 EmFinit Endp
         
@@ -1037,7 +1037,7 @@ EmFinit Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EmFclex Proc near
-        and fs:math_status, 0FF00h
+        and fs:p_math_status, 0FF00h
         ret
 EmFclex Endp
         
@@ -1064,7 +1064,7 @@ EmFnop  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EmFdecstp       Proc near
-        mov ax,fs:math_status
+        mov ax,fs:p_math_status
         mov bx,ax
         rol bx,5
         dec bx
@@ -1072,7 +1072,7 @@ EmFdecstp       Proc near
         ror bx,5
         and ax,NOT STATUS_TOP
         or ax,bx
-        mov fs:math_status,ax
+        mov fs:p_math_status,ax
         ret
 EmFdecstp       Endp
         
@@ -1086,7 +1086,7 @@ EmFdecstp       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EmFincstp       Proc near
-        mov ax,fs:math_status
+        mov ax,fs:p_math_status
         mov bx,ax
         rol bx,5
         inc bx
@@ -1094,7 +1094,7 @@ EmFincstp       Proc near
         ror bx,5
         and ax,NOT STATUS_TOP
         or ax,bx
-        mov fs:math_status,ax
+        mov fs:p_math_status,ax
         ret
 EmFincstp       Endp
         
@@ -1110,14 +1110,14 @@ EmFincstp       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EmFfreeSt       Proc near
-        mov cx,fs:math_status
+        mov cx,fs:p_math_status
         rol cx,5
         add cl,al
         and cl,7
         add cl,cl
         mov ax,11b
         shl ax,cl
-        or fs:math_tag,ax
+        or fs:p_math_tag,ax
         ret
 EmFfreeSt       Endp
         
@@ -1135,9 +1135,9 @@ EmFfreeSt       Endp
 EmFldcw Proc near
         mov bl,al
         call LoadWordMem
-        mov fs:math_data_offs,ebx
-        mov fs:math_data_sel,si
-        mov fs:math_control,ax
+        mov fs:p_math_data_offs,ebx
+        mov fs:p_math_data_sel,si
+        mov fs:p_math_control,ax
         ret
 EmFldcw Endp
         
@@ -1154,10 +1154,10 @@ EmFldcw Endp
 
 EmFstcw Proc near
         mov bl,al
-        mov ax,fs:math_control
+        mov ax,fs:p_math_control
         call SaveWordMem
-        mov fs:math_data_offs,ebx
-        mov fs:math_data_sel,si
+        mov fs:p_math_data_offs,ebx
+        mov fs:p_math_data_sel,si
         ret
 EmFstcw Endp
         
@@ -1174,10 +1174,10 @@ EmFstcw Endp
 
 EmFstsw Proc near
         mov bl,al
-        mov ax,fs:math_status
+        mov ax,fs:p_math_status
         call SaveWordMem
-        mov fs:math_data_offs,ebx
-        mov fs:math_data_sel,si
+        mov fs:p_math_data_offs,ebx
+        mov fs:p_math_data_sel,si
         ret
 EmFstsw Endp
         
@@ -1191,7 +1191,7 @@ EmFstsw Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EmFstswAx       Proc near
-        mov ax,fs:math_status
+        mov ax,fs:p_math_status
         mov word ptr [bp].reg_eax,ax
         ret
 EmFstswAx       Endp
@@ -1213,31 +1213,31 @@ EmFstswAx       Endp
 LoadEnvPm16     Proc near
         call ReadWord
         add ebx,2
-        mov fs:math_control,ax
+        mov fs:p_math_control,ax
 ;
         call ReadWord
         add ebx,2
-        mov fs:math_status,ax
+        mov fs:p_math_status,ax
 ;
         call ReadWord
         add ebx,2
-        mov fs:math_tag,ax
+        mov fs:p_math_tag,ax
 ;
         call ReadWord
         add ebx,2
-        mov word ptr fs:math_eip,ax
+        mov word ptr fs:p_math_eip,ax
 ;
         call ReadWord
         add ebx,2
-        mov fs:math_cs,ax
+        mov fs:p_math_cs,ax
 ;
         call ReadWord
         add ebx,2
-        mov word ptr fs:math_data_offs,ax
+        mov word ptr fs:p_math_data_offs,ax
 ;
         call ReadWord
         add ebx,2
-        mov fs:math_data_sel,ax
+        mov fs:p_math_data_sel,ax
         ret
 LoadEnvPm16     Endp
         
@@ -1256,31 +1256,31 @@ LoadEnvPm16     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SaveEnvPm16     Proc near
-        mov ax,fs:math_control
+        mov ax,fs:p_math_control
         call WriteWord
         add ebx,2
 ;
-        mov ax,fs:math_status
+        mov ax,fs:p_math_status
         call WriteWord
         add ebx,2
 ;
-        mov ax,fs:math_tag
+        mov ax,fs:p_math_tag
         call WriteWord
         add ebx,2
 ;
-        mov eax,fs:math_eip
+        mov eax,fs:p_math_eip
         call WriteWord
         add ebx,2
 ;
-        mov ax,fs:math_cs
+        mov ax,fs:p_math_cs
         call WriteWord
         add ebx,2
 ;
-        mov eax,fs:math_data_offs
+        mov eax,fs:p_math_data_offs
         call WriteWord
         add ebx,2
 ;
-        mov ax,fs:math_data_sel
+        mov ax,fs:p_math_data_sel
         call WriteWord
         add ebx,2
         ret
@@ -1303,34 +1303,34 @@ SaveEnvPm16     Endp
 LoadEnvPm32     Proc near
         call ReadDword
         add ebx,4
-        mov fs:math_control,ax
+        mov fs:p_math_control,ax
 ;
         call ReadDword
         add ebx,4
-        mov fs:math_status,ax
+        mov fs:p_math_status,ax
 ;
         call ReadDword
         add ebx,4
-        mov fs:math_tag,ax
+        mov fs:p_math_tag,ax
 ;
         call ReadDword
         add ebx,4
-        mov fs:math_eip,eax
+        mov fs:p_math_eip,eax
 ;
         call ReadDword
         add ebx,4
-        mov fs:math_cs,ax
+        mov fs:p_math_cs,ax
         shr eax,16
-        mov fs:math_op,ah
-        mov fs:math_op+1,al
+        mov fs:p_math_op,ah
+        mov fs:p_math_op+1,al
 ;
         call ReadDword
         add ebx,4
-        mov fs:math_data_offs,eax
+        mov fs:p_math_data_offs,eax
 ;
         call ReadDword
         add ebx,4
-        mov fs:math_data_sel,ax
+        mov fs:p_math_data_sel,ax
         ret
 LoadEnvPm32     Endp
         
@@ -1350,38 +1350,38 @@ LoadEnvPm32     Endp
 
 SaveEnvPm32     Proc near
         mov eax,-1
-        mov ax,fs:math_control
+        mov ax,fs:p_math_control
         call WriteDword
         add ebx,4
 ;
         mov eax,-1
-        mov ax,fs:math_status
+        mov ax,fs:p_math_status
         call WriteDword
         add ebx,4
 ;
         mov eax,-1
-        mov ax,fs:math_tag
+        mov ax,fs:p_math_tag
         call WriteDword
         add ebx,4
 ;
-        mov eax,fs:math_eip
+        mov eax,fs:p_math_eip
         call ReadDword
         add ebx,4
 ;
-        mov ah,fs:math_op
+        mov ah,fs:p_math_op
         and ah,7
-        mov al,fs:math_op+1
+        mov al,fs:p_math_op+1
         shl eax,16
-        mov ax,fs:math_cs
+        mov ax,fs:p_math_cs
         call WriteDword
         add ebx,4
 ;
-        mov eax,fs:math_data_offs
+        mov eax,fs:p_math_data_offs
         call ReadDword
         add ebx,4
 ;
         mov eax,-1
-        mov ax,fs:math_data_sel
+        mov ax,fs:p_math_data_sel
         call ReadDword
         add ebx,4
         ret
@@ -1404,35 +1404,35 @@ SaveEnvPm32     Endp
 LoadEnvRm16     Proc near
         call ReadWord
         add ebx,2
-        mov fs:math_control,ax
+        mov fs:p_math_control,ax
 ;
         call ReadWord
         add ebx,2
-        mov fs:math_status,ax
+        mov fs:p_math_status,ax
 ;
         call ReadWord
         add ebx,2
-        mov fs:math_tag,ax
+        mov fs:p_math_tag,ax
 ;
         call ReadWord
         add ebx,2
-        mov word ptr fs:math_eip,ax
+        mov word ptr fs:p_math_eip,ax
 ;
         call ReadWord
         add ebx,2
-        mov fs:math_op,ah
-        mov fs:math_op+1,al
+        mov fs:p_math_op,ah
+        mov fs:p_math_op+1,al
         and ax,0F000h
-        mov fs:math_cs,ax
+        mov fs:p_math_cs,ax
 ;
         call ReadWord
         add ebx,2
-        mov word ptr fs:math_data_offs,ax
+        mov word ptr fs:p_math_data_offs,ax
 ;
         call ReadWord
         add ebx,2
         and ax,0F000h
-        mov fs:math_data_sel,ax
+        mov fs:p_math_data_sel,ax
         ret
 LoadEnvRm16     Endp
         
@@ -1451,47 +1451,47 @@ LoadEnvRm16     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SaveEnvRm16     Proc near
-        mov ax,fs:math_control
+        mov ax,fs:p_math_control
         call WriteWord
         add ebx,2
 ;
-        mov ax,fs:math_status
+        mov ax,fs:p_math_status
         call WriteWord
         add ebx,2
 ;
-        mov ax,fs:math_tag
+        mov ax,fs:p_math_tag
         call WriteWord
         add ebx,2
 ;
-        movzx eax,word ptr fs:math_eip
-        movzx edx,fs:math_cs
+        movzx eax,word ptr fs:p_math_eip
+        movzx edx,fs:p_math_cs
         shl edx,4
         add eax,edx
         call WriteWord
         add ebx,2
 ;
-        movzx eax,word ptr fs:math_eip
-        movzx edx,fs:math_cs
+        movzx eax,word ptr fs:p_math_eip
+        movzx edx,fs:p_math_cs
         shl edx,4
         add eax,edx
         shr eax,4
         and ah,0F0h
-        mov al,fs:math_op
+        mov al,fs:p_math_op
         and al,7
         or ah,al
-        mov al,fs:math_op+1
+        mov al,fs:p_math_op+1
         call WriteWord
         add ebx,2
 ;
-        movzx eax,word ptr fs:math_data_offs
-        movzx edx,fs:math_data_sel
+        movzx eax,word ptr fs:p_math_data_offs
+        movzx edx,fs:p_math_data_sel
         shl edx,4
         add eax,edx
         call WriteWord
         add ebx,2
 ;
-        movzx eax,word ptr fs:math_data_offs
-        movzx edx,fs:math_data_sel
+        movzx eax,word ptr fs:p_math_data_offs
+        movzx edx,fs:p_math_data_sel
         shl edx,4
         add eax,edx
         shr eax,4
@@ -1565,8 +1565,8 @@ EmFldenv        Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EmFstenv        Proc near
-        mov bx,word ptr fs:math_prev_op
-        mov word ptr fs:math_op,bx
+        mov bx,word ptr fs:p_math_prev_op
+        mov word ptr fs:p_math_op,bx
 ;
         mov bl,al
         mov bh,bl
@@ -1658,7 +1658,7 @@ EmFrstorRm16:
 
 EmFrstorSt:
         mov cx,8
-        lea di,fs:math_st0
+        lea di,fs:p_math_st0
 
 EmFrstorLoop:
         push cx
@@ -1686,8 +1686,8 @@ EmFRstor        Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EmFSave Proc near
-        mov bx,word ptr fs:math_prev_op
-        mov word ptr fs:math_op,bx
+        mov bx,word ptr fs:p_math_prev_op
+        mov word ptr fs:p_math_op,bx
 ;
         mov bl,al
         mov bh,bl
@@ -1727,7 +1727,7 @@ EmFsaveRm16:
 
 EmFsaveSt:
         mov cx,8
-        lea di,fs:math_st0
+        lea di,fs:p_math_st0
 
 EmFsaveLoop:
         push cx
@@ -1889,8 +1889,8 @@ EmFildWord      Proc near
         mov bl,al
         call LoadWordMem
         push ax
-        mov fs:math_data_offs,ebx
-        mov fs:math_data_sel,si
+        mov fs:p_math_data_offs,ebx
+        mov fs:p_math_data_sel,si
         mov ax,sp
         push ss
         push ax
@@ -1915,8 +1915,8 @@ EmFildDword     Proc near
         mov bl,al
         call LoadDwordMem
         push eax
-        mov fs:math_data_offs,ebx
-        mov fs:math_data_sel,si
+        mov fs:p_math_data_offs,ebx
+        mov fs:p_math_data_sel,si
         mov ax,sp
         push ss
         push ax
@@ -1942,8 +1942,8 @@ EmFildQword     Proc near
         call LoadQwordMem
         push edx
         push eax
-        mov fs:math_data_offs,ebx
-        mov fs:math_data_sel,si
+        mov fs:p_math_data_offs,ebx
+        mov fs:p_math_data_sel,si
         mov ax,sp
         push ss
         push ax
@@ -1968,8 +1968,8 @@ EmFldSingle     Proc near
         mov bl,al
         call LoadDwordMem
         push eax
-        mov fs:math_data_offs,ebx
-        mov fs:math_data_sel,si
+        mov fs:p_math_data_offs,ebx
+        mov fs:p_math_data_sel,si
         mov ax,sp
         push ss
         push ax
@@ -1995,8 +1995,8 @@ EmFldDouble     Proc near
         call LoadQwordMem
         push edx
         push eax
-        mov fs:math_data_offs,ebx
-        mov fs:math_data_sel,si
+        mov fs:p_math_data_offs,ebx
+        mov fs:p_math_data_sel,si
         mov ax,sp
         push ss
         push ax
@@ -2041,8 +2041,8 @@ EmFbld  Proc near
         push cx
         push edx
         push eax
-        mov fs:math_data_offs,ebx
-        mov fs:math_data_sel,si
+        mov fs:p_math_data_offs,ebx
+        mov fs:p_math_data_sel,si
         mov ax,sp
         push ss
         push ax
@@ -2092,7 +2092,7 @@ EmFistWord      Proc near
         mov ax,sp
         push ss
         push ax
-        push fs:math_control
+        push fs:p_math_control
         call RealToInt
         jnc EmFistWordSave
 ;
@@ -2143,7 +2143,7 @@ EmFistDword     Proc near
         mov ax,sp
         push ss
         push ax
-        push fs:math_control
+        push fs:p_math_control
         call RealToLong
         jnc EmFistDwordSave
 ;
@@ -2194,7 +2194,7 @@ EmFistpQword    Proc near
         mov ax,sp
         push ss
         push ax
-        push fs:math_control
+        push fs:p_math_control
         call RealToQword
         jnc EmFistpQwordSave
 ;
@@ -2385,7 +2385,7 @@ EmFbstp Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EmFstSt Proc near
-        movzx ebx,fs:math_status
+        movzx ebx,fs:p_math_status
         rol bx,5
         and bl,7
         mov bh,bl
@@ -2395,7 +2395,7 @@ EmFstSt Proc near
         add cl,cl
         mov ax,11b
         shl ax,cl
-        mov dx,fs:math_tag
+        mov dx,fs:p_math_tag
         mov si,dx
         and dx,ax
         cmp ax,dx
@@ -2413,7 +2413,7 @@ EmFstStOk:
         not ax
         and si,ax
         or si,dx
-        mov fs:math_tag,si
+        mov fs:p_math_tag,si
 ;
         movzx si,bh
         add si,si
@@ -2429,12 +2429,12 @@ EmFstStOk:
         add di,di
         add di,ax
 ;
-        mov eax,dword ptr fs:[si].math_st0
-        mov dword ptr fs:[di].math_st0,eax
-        mov eax,dword ptr fs:[si+4].math_st0
-        mov dword ptr fs:[di+4].math_st0,eax
-        mov ax,word ptr fs:[si+8].math_st0
-        mov word ptr fs:[di+8].math_st0,ax
+        mov eax,dword ptr fs:[si].p_math_st0
+        mov dword ptr fs:[di].p_math_st0,eax
+        mov eax,dword ptr fs:[si+4].p_math_st0
+        mov dword ptr fs:[di+4].p_math_st0,eax
+        mov ax,word ptr fs:[si+8].p_math_st0
+        mov word ptr fs:[di+8].p_math_st0,ax
         ret
 EmFstSt Endp
 
@@ -2502,8 +2502,8 @@ EmFiComWord     Proc near
         mov bl,al
         call LoadWordMem
         push ax
-        mov fs:math_data_offs,ebx
-        mov fs:math_data_sel,si
+        mov fs:p_math_data_offs,ebx
+        mov fs:p_math_data_sel,si
         mov ax,sp
         push ss
         push ax
@@ -2527,10 +2527,10 @@ EmFiComWord     Proc near
         call CmpReal
         add sp,20
 ;
-        mov dx,fs:math_status
+        mov dx,fs:p_math_status
         and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
         or dx,ax
-        mov fs:math_status,dx
+        mov fs:p_math_status,dx
         ret
 EmFiComWord     Endp
 
@@ -2555,8 +2555,8 @@ EmFiComDword    Proc near
         mov bl,al
         call LoadDwordMem
         push eax
-        mov fs:math_data_offs,ebx
-        mov fs:math_data_sel,si
+        mov fs:p_math_data_offs,ebx
+        mov fs:p_math_data_sel,si
         mov ax,sp
         push ss
         push ax
@@ -2580,10 +2580,10 @@ EmFiComDword    Proc near
         call CmpReal
         add sp,20
 ;
-        mov dx,fs:math_status
+        mov dx,fs:p_math_status
         and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
         or dx,ax
-        mov fs:math_status,dx
+        mov fs:p_math_status,dx
         ret
 EmFiComDword    Endp
 
@@ -2608,8 +2608,8 @@ EmFComSingle    Proc near
         mov bl,al
         call LoadDwordMem
         push eax
-        mov fs:math_data_offs,ebx
-        mov fs:math_data_sel,si
+        mov fs:p_math_data_offs,ebx
+        mov fs:p_math_data_sel,si
         mov ax,sp
         push ss
         push ax
@@ -2633,10 +2633,10 @@ EmFComSingle    Proc near
         call CmpReal
         add sp,20
 ;
-        mov dx,fs:math_status
+        mov dx,fs:p_math_status
         and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
         or dx,ax
-        mov fs:math_status,dx
+        mov fs:p_math_status,dx
         ret
 EmFComSingle    Endp
 
@@ -2662,8 +2662,8 @@ EmFComDouble    Proc near
         call LoadQwordMem
         push edx
         push eax
-        mov fs:math_data_offs,ebx
-        mov fs:math_data_sel,si
+        mov fs:p_math_data_offs,ebx
+        mov fs:p_math_data_sel,si
         mov ax,sp
         push ss
         push ax
@@ -2687,10 +2687,10 @@ EmFComDouble    Proc near
         call CmpReal
         add sp,20
 ;
-        mov dx,fs:math_status
+        mov dx,fs:p_math_status
         and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
         or dx,ax
-        mov fs:math_status,dx
+        mov fs:p_math_status,dx
         ret
 EmFComDouble    Endp
 
@@ -2732,10 +2732,10 @@ EmFComStSti     Proc near
         call CmpReal
         add sp,20
 ;
-        mov dx,fs:math_status
+        mov dx,fs:p_math_status
         and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
         or dx,ax
-        mov fs:math_status,dx
+        mov fs:p_math_status,dx
         ret
 EmFComStSti     Endp
 
@@ -2779,10 +2779,10 @@ EmFTst  Proc near
         call CmpReal
         add sp,20
 ;
-        mov dx,fs:math_status
+        mov dx,fs:p_math_status
         and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
         or dx,ax
-        mov fs:math_status,dx
+        mov fs:p_math_status,dx
         ret
 EmFTst  Endp
 
@@ -2816,10 +2816,10 @@ EmFCompp        Proc near
         call CmpReal
         add sp,20
 ;
-        mov dx,fs:math_status
+        mov dx,fs:p_math_status
         and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
         or dx,ax
-        mov fs:math_status,dx
+        mov fs:p_math_status,dx
 ;
         call PopReal
         call PopReal
@@ -2836,13 +2836,13 @@ EmFCompp        Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EmFxam  Proc near
-        mov cx,fs:math_status
+        mov cx,fs:p_math_status
         rol cx,5
         and cl,7
         add cl,cl
         mov ax,11b
         shl ax,cl
-        and ax,fs:math_tag
+        and ax,fs:p_math_tag
         shr ax,cl
         and ax,3
         cmp ax,TAG_EMPTY
@@ -2897,10 +2897,10 @@ EmFxamSign:
         or bx,STATUS_C1 
 
 EmFxamDone:
-        mov dx,fs:math_status
+        mov dx,fs:p_math_status
         and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
         or dx,bx
-        mov fs:math_status,dx
+        mov fs:p_math_status,dx
         ret
 EmFxam  Endp
 
@@ -2958,7 +2958,7 @@ EmFrndint       Proc near
         mov ax,sp
         push ss
         push ax
-        push fs:math_control
+        push fs:p_math_control
         call RealToQword
         jnc EmFrndintDo
 ;
@@ -3270,7 +3270,7 @@ EmFprem Proc near
         push ax
         push ss
         push bx
-        push fs:math_control
+        push fs:p_math_control
         call CalcPartialRemainder
         add sp,20
         xor bl,bl
@@ -3304,7 +3304,7 @@ EmFprem1        Proc near
         push ax
         push ss
         push bx
-        push fs:math_control
+        push fs:p_math_control
         call CalcPartialRemainder
         add sp,20
         xor bl,bl

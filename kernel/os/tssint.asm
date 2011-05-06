@@ -82,17 +82,17 @@ init_tss_gates	Proc far
 ;
     mov eax,200h
     AllocateSmallGlobalMem
-    mov ds:tss_ss,es
-    mov dword ptr ds:tss_esp,200h
+    mov ds:c_tss_ss,es
+    mov ds:c_tss_esp,200h
     mov eax,cr3
-    mov dword ptr ds:tss_cr3,eax
+    mov ds:c_tss_cr3,eax
 ;
-    mov ds:tss_bitmap, OFFSET tss_bitmap_space
+    mov ds:c_tss_bitmap, OFFSET tss_bitmap_space
     mov bx,3FFh
     mov byte ptr ds:[bx],-1    
 ;
-    mov ds:tss_cs,cs
-    mov dword ptr ds:tss_eip,OFFSET double_fault
+    mov ds:c_tss_cs,cs
+    mov ds:c_tss_eip,OFFSET double_fault
 ;
 	mov ax,idt_sel
 	mov ds,ax

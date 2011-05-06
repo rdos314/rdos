@@ -1275,7 +1275,7 @@ ReadWord    Proc near
     push cx
     push esi
     mov bx,es:tss_thread
-    test es:tss_eflags+2,2
+    test word ptr es:p_tss_eflags+2,2
     jz read_word_prot
 read_word_virt:
     ReadThreadSegment
@@ -1319,7 +1319,7 @@ WriteWord       Proc near
     push esi
     mov cx,ax
     mov bx,es:tss_thread
-    test es:tss_eflags+2,2
+    test word ptr es:p_tss_eflags+2,2
     jz write_word_prot
 write_word_virt:
     mov al,cl
@@ -1507,8 +1507,8 @@ debug_trace     PROC far
     mov bx,ax
     mov es,bx
     mov es,es:p_tss_data_sel
-    mov dx,es:tss_cs
-    mov esi,dword ptr es:tss_eip
+    mov dx,es:p_tss_cs
+    mov esi,es:p_tss_eip
     call ReadWord
     push ax
     add esi,2
@@ -1518,9 +1518,9 @@ debug_trace     PROC far
     cmp al,0CDh
     jne debug_trace_trace
 ;
-    test es:tss_eflags+2,2
+    test word ptr es:p_tss_eflags+2,2
     jz debug_trace_trace
-    and es:tss_eflags+2,NOT 2
+    and word ptr es:p_tss_eflags+2,NOT 2
     mov dx,vm_int_sel
     movzx esi,ah
     shl esi,2
@@ -1533,33 +1533,33 @@ debug_trace     PROC far
 ;
     push dx
     push bx
-    or es:tss_eflags+2,2
+    or word ptr es:p_tss_eflags+2,2
     mov bx,es:tss_thread
-    mov dx,es:tss_ss
-    movzx esi,es:tss_esp
+    mov dx,es:p_tss_ss
+    movzx esi,word ptr es:p_tss_esp
     sub esi,6
     pop ax
     pop cx
-    xchg ax,es:tss_eip
-    xchg cx,es:tss_cs
+    xchg ax,word ptr es:p_tss_eip
+    xchg cx,es:p_tss_cs
     add ax,2
     call WriteWord
     mov ax,cx
     add esi,2
     call WriteWord
-    mov ax,es:tss_eflags
+    mov ax,word ptr es:p_tss_eflags
     add esi,2
     call WriteWord
-    sub es:tss_esp,6
+    sub es:p_tss_esp,6
     jmp debug_trace_done
 debug_trace_trace:
-    mov eax,es:tss_dr7
+    mov eax,es:p_tss_dr7
     and ax,0FFFCh
-    mov es:tss_dr7,eax
+    mov es:p_tss_dr7,eax
     mov bx,es:tss_thread
-    mov ax,es:tss_eflags
+    mov ax,word ptr es:p_tss_eflags
     or ax,100h
-    mov es:tss_eflags,ax
+    mov word ptr es:p_tss_eflags,ax
     mov ax,system_data_sel
     mov ds,ax
     mov si,OFFSET debug_list
@@ -1589,15 +1589,15 @@ debug_trace     ENDP
 debug_pace_name DB 'Debug Pace',0
 
 load_breaks Proc near
-    mov eax,ds:tss_dr0
+    mov eax,ds:p_tss_dr0
     mov dr0,eax
-    mov eax,ds:tss_dr1
+    mov eax,ds:p_tss_dr1
     mov dr1,eax
-    mov eax,ds:tss_dr2
+    mov eax,ds:p_tss_dr2
     mov dr2,eax
-    mov eax,ds:tss_dr3
+    mov eax,ds:p_tss_dr3
     mov dr3,eax
-    mov eax,ds:tss_dr7
+    mov eax,ds:p_tss_dr7
     mov dr7,eax
     and ax,0FFh
     jnz load_break_done
@@ -1622,8 +1622,8 @@ debug_pace      PROC far
     mov es,es:p_tss_data_sel
 ;
     xor cl,cl
-    mov bx,es:tss_cs
-    test byte ptr es:tss_eflags+2,2
+    mov bx,es:p_tss_cs
+    test byte ptr es:p_tss_eflags+2,2
     jnz debug_pace_bitness_done
 ;
     test bx,4
@@ -1645,8 +1645,8 @@ debug_pace_bitness_get:
     and cl,1
 
 debug_pace_bitness_done:
-    mov dx,es:tss_cs
-    mov esi,dword ptr es:tss_eip
+    mov dx,es:p_tss_cs
+    mov esi,es:p_tss_eip
     call ReadWord
 ;    
     xor ebx,ebx
@@ -1670,7 +1670,7 @@ debug_pace_size_ok:
     xor ebx,ebx
 
 debug_pace_far_loop:
-    mov esi,dword ptr es:tss_eip
+    mov esi,es:p_tss_eip
     add esi,ebx
     call ReadWord
     cmp al,66h
@@ -1701,33 +1701,33 @@ debug_pace_far_call:
     add bx,2
     
 debug_pace_step:
-    mov ax,es:tss_eflags+2
+    mov ax,word ptr es:p_tss_eflags+2
     test ax,2
     jz debug_pace_step_prot    
 ;
     xor eax,eax
     xor edx,edx
-    mov ax,es:tss_cs
+    mov ax,es:p_tss_cs
     shl eax,4
-    mov dx,es:tss_eip
+    mov dx,word ptr es:p_tss_eip
     add eax,edx
     jmp debug_pace_step_do
     
 debug_pace_step_prot:
-    mov si,es:tss_cs
+    mov si,es:p_tss_cs
     test si,4
     jz debug_pace_step_gdt
 ;
     xor eax,eax
     mov ds,es:tss_thread
     mov ds,ds:p_ldt_sel
-    mov si,es:tss_cs
+    mov si,es:p_tss_cs
     and si,0FFF8h
     mov eax,[si+2]
     rol eax,8
     mov al,[si+7]
     ror eax,8
-    add eax,dword ptr es:tss_eip
+    add eax,es:p_tss_eip
     jmp debug_pace_step_do
 
 debug_pace_step_gdt:
@@ -1738,27 +1738,27 @@ debug_pace_step_gdt:
     rol eax,8
     mov al,[si+7]
     ror eax,8
-    add eax,dword ptr es:tss_eip
+    add eax,es:p_tss_eip
 
 debug_pace_step_do:
     add eax,ebx
-    mov es:tss_dr0,eax
-    mov eax,es:tss_dr7
+    mov es:p_tss_dr0,eax
+    mov eax,es:p_tss_dr7
     and eax,0FFF0FFFCh
     or ax,1
-    mov es:tss_dr7,eax
-    mov ax,es:tss_eflags
+    mov es:p_tss_dr7,eax
+    mov ax,word ptr es:p_tss_eflags
     and ax,NOT 100h
-    mov es:tss_eflags,ax
+    mov word ptr es:p_tss_eflags,ax
     jmp debug_pace_do
     
 debug_pace_trace:
-    mov eax,es:tss_dr7
+    mov eax,es:p_tss_dr7
     and ax,0FFFCh
-    mov es:tss_dr7,eax
-    mov ax,es:tss_eflags
+    mov es:p_tss_dr7,eax
+    mov ax,word ptr es:p_tss_eflags
     or ax,100h
-    mov es:tss_eflags,ax
+    mov word ptr es:p_tss_eflags,ax
 
 debug_pace_do:
     mov bx,es:tss_thread
@@ -1803,12 +1803,12 @@ debug_go    PROC far
     mov bx,ax
     mov es,bx
     mov es,es:p_tss_data_sel
-    mov eax,es:tss_dr7
+    mov eax,es:p_tss_dr7
     and ax,0FFFCh
-    mov es:tss_dr7,eax
-    mov ax,es:tss_eflags
+    mov es:p_tss_dr7,eax
+    mov ax,word ptr es:p_tss_eflags
     and ax,NOT 100h
-    mov es:tss_eflags,ax
+    mov word ptr es:p_tss_eflags,ax
 ;
     mov ax,system_data_sel
     mov ds,ax
@@ -1976,7 +1976,7 @@ AddBreak PROC near
 ;   
     movzx bx,al
     shl bx,2 
-    add bx,OFFSET tss_dr0
+    add bx,OFFSET p_tss_dr0
     mov ds:[bx],edx
 ;
     cmp cl,7
@@ -2016,8 +2016,8 @@ abSizeOk:
     shl cl,1
     mov dx,1
     shl dx,cl
-    and ds:tss_dr7,esi
-    or ds:tss_dr7,edx
+    and ds:p_tss_dr7,esi
+    or ds:p_tss_dr7,edx
     or es:p_flags,THREAD_FLAG_BP
     clc
     jmp abDone
@@ -2067,7 +2067,7 @@ RemoveBreak PROC near
     shl dx,cl
 ;    
     not edx
-    and ds:tss_dr7,edx
+    and ds:p_tss_dr7,edx
     clc
     jmp rbDone
 
@@ -2821,26 +2821,26 @@ AddCallback Proc near
     push si
     push di
 ;    
-    test dword ptr ds:tss_eflags,20000h
+    test ds:p_tss_eflags,20000h
     jnz acVm
 ;
-    test word ptr ds:tss_cs,3
+    test ds:p_tss_cs,3
     jnz acPm
 
 acKernel:
     mov si,ss
     mov di,sp
 ;    
-    mov dx,ds:tss_ss
+    mov dx,ds:p_tss_ss
     mov ss,dx
-    mov sp,ds:tss_esp
+    mov sp,word ptr ds:p_tss_esp
 ;
-    push dword ptr ds:tss_eflags
-    push dword ptr ds:tss_cs
-    push dword ptr ds:tss_eip
+    push ds:p_tss_eflags
+    push dword ptr ds:p_tss_cs
+    push ds:p_tss_eip
 ;
-    mov ds:tss_ss,ss
-    mov ds:tss_esp,sp
+    mov ds:p_tss_ss,ss
+    mov word ptr ds:p_tss_esp,sp
     mov ss,si
     mov sp,di
     jmp acDone
@@ -2849,18 +2849,18 @@ acPm:
     mov si,ss
     mov di,sp
 ;    
-    mov dx,ds:tss_ess0
+    mov dx,ds:p_tss_ess0
     mov ss,dx
-    mov sp,ds:tss_esp0
+    mov sp,word ptr ds:p_tss_esp0
 ;
-    push dword ptr ds:tss_ss
-    push dword ptr ds:tss_esp
-    push dword ptr ds:tss_eflags
-    push dword ptr ds:tss_cs
-    push dword ptr ds:tss_eip
+    push dword ptr ds:p_tss_ss
+    push ds:p_tss_esp
+    push ds:p_tss_eflags
+    push dword ptr ds:p_tss_cs
+    push ds:p_tss_eip
 ;
-    mov ds:tss_ss,ss
-    mov ds:tss_esp,sp
+    mov ds:p_tss_ss,ss
+    mov word ptr ds:p_tss_esp,sp
     mov ss,si
     mov sp,di
     jmp acDone
@@ -2869,30 +2869,30 @@ acVm:
     mov si,ss
     mov di,sp
 ;    
-    mov dx,ds:tss_ess0
+    mov dx,ds:p_tss_ess0
     mov ss,dx
-    mov sp,ds:tss_esp0
+    mov sp,word ptr ds:p_tss_esp0
 ;
-    push dword ptr ds:tss_gs
-    push dword ptr ds:tss_fs
-    push dword ptr ds:tss_ds
-    push dword ptr ds:tss_es
-    push dword ptr ds:tss_ss
-    push dword ptr ds:tss_esp
-    push dword ptr ds:tss_eflags
-    push dword ptr ds:tss_cs
-    push dword ptr ds:tss_eip
+    push dword ptr ds:p_tss_gs
+    push dword ptr ds:p_tss_fs
+    push dword ptr ds:p_tss_ds
+    push dword ptr ds:p_tss_es
+    push dword ptr ds:p_tss_ss
+    push ds:p_tss_esp
+    push ds:p_tss_eflags
+    push dword ptr ds:p_tss_cs
+    push ds:p_tss_eip
 ;
-    mov ds:tss_ss,ss
-    mov ds:tss_esp,sp
-    and dword ptr ds:tss_eflags,NOT 20000h
+    mov ds:p_tss_ss,ss
+    mov word ptr ds:p_tss_esp,sp
+    and ds:p_tss_eflags,NOT 20000h
     mov ss,si
     mov sp,di
 
 acDone:   
-    mov ds:tss_cs,cs
+    mov ds:p_tss_cs,cs
     movzx ebx,bx
-    mov dword ptr ds:tss_eip,ebx
+    mov ds:p_tss_eip,ebx
 ;
     pop di
     pop si
@@ -3057,7 +3057,7 @@ load_cr3_ok:
     or al,8
     mov cr0,eax    
 ;
-    lldt ds:tss_ldt
+    lldt ds:p_tss_ldt
 ;
     mov ax,es:p_flags
     or ax,ax
@@ -3106,37 +3106,37 @@ load_regs:
     mov fs:ps_curr_thread,es
     mov fs:ps_last_thread,es
 ;
-    test dword ptr ds:tss_eflags,20000h
+    test ds:p_tss_eflags,20000h
     jnz load_vm
 ;
-    test word ptr ds:tss_cs,3
+    test ds:p_tss_cs,3
     jnz load_pm_app
 
 load_kernel:
-    mov ax,word ptr ds:tss_ss
-    cmp ax,word ptr ds:tss_ess0
+    mov ax,ds:p_tss_ss
+    cmp ax,ds:p_tss_ess0
     je load_kernel_ss0_ok
 ;
-    mov dx,word ptr ds:tss_ess0
-    mov esi,dword ptr ds:tss_eip
-    mov di,word ptr ds:tss_cs
+    mov dx,ds:p_tss_ess0
+    mov esi,ds:p_tss_eip
+    mov di,ds:p_tss_cs
     int 3
 
 load_kernel_ss0_ok:
     mov ss,ax
-    mov esp,dword ptr ds:tss_esp
-    push dword ptr ds:tss_eflags
-    push dword ptr ds:tss_cs
-    push dword ptr ds:tss_eip
+    mov esp,ds:p_tss_esp
+    push ds:p_tss_eflags
+    push dword ptr ds:p_tss_cs
+    push ds:p_tss_eip
 ;       
-    mov ecx,dword ptr ds:tss_ecx
-    mov edx,dword ptr ds:tss_edx
-    mov ebx,dword ptr ds:tss_ebx
-    mov ebp,dword ptr ds:tss_ebp
-    mov esi,dword ptr ds:tss_esi
-    mov edi,dword ptr ds:tss_edi
+    mov ecx,ds:p_tss_ecx
+    mov edx,ds:p_tss_edx
+    mov ebx,ds:p_tss_ebx
+    mov ebp,ds:p_tss_ebp
+    mov esi,ds:p_tss_esi
+    mov edi,ds:p_tss_edi
 ;
-    mov ax,word ptr ds:tss_es
+    mov ax,ds:p_tss_es
     verr ax
     jz load_kernel_es
 ;
@@ -3145,7 +3145,7 @@ load_kernel_ss0_ok:
 load_kernel_es:
     mov es,ax
 ;       
-    mov ax,word ptr ds:tss_fs
+    mov ax,ds:p_tss_fs
     verr ax
     jz load_kernel_fs
 ;
@@ -3154,7 +3154,7 @@ load_kernel_es:
 load_kernel_fs:
     mov fs,ax
 ;       
-    mov ax,word ptr ds:tss_gs
+    mov ax,ds:p_tss_gs
     verr ax
     jz load_kernel_gs
 ;
@@ -3163,7 +3163,7 @@ load_kernel_fs:
 load_kernel_gs:
     mov gs,ax
 ;       
-    mov ax,word ptr ds:tss_ds
+    mov ax,ds:p_tss_ds
     verr ax
     jz load_kernel_ds
 ;
@@ -3171,29 +3171,29 @@ load_kernel_gs:
     
 load_kernel_ds:
     push ax
-    mov eax,dword ptr ds:tss_eax
+    mov eax,ds:p_tss_eax
     pop ds
     iretd
 
 load_pm_app:    
-    mov ax,word ptr ds:tss_ess0
+    mov ax,ds:p_tss_ess0
     mov ss,ax
-    mov esp,dword ptr ds:tss_esp0
+    mov esp,ds:p_tss_esp0
 ;
-    push dword ptr ds:tss_ss
-    push dword ptr ds:tss_esp
-    push dword ptr ds:tss_eflags
-    push dword ptr ds:tss_cs
-    push dword ptr ds:tss_eip
+    push dword ptr ds:p_tss_ss
+    push ds:p_tss_esp
+    push ds:p_tss_eflags
+    push dword ptr ds:p_tss_cs
+    push ds:p_tss_eip
 ;       
-    mov ecx,dword ptr ds:tss_ecx
-    mov edx,dword ptr ds:tss_edx
-    mov ebx,dword ptr ds:tss_ebx
-    mov ebp,dword ptr ds:tss_ebp
-    mov esi,dword ptr ds:tss_esi
-    mov edi,dword ptr ds:tss_edi
+    mov ecx,ds:p_tss_ecx
+    mov edx,ds:p_tss_edx
+    mov ebx,ds:p_tss_ebx
+    mov ebp,ds:p_tss_ebp
+    mov esi,ds:p_tss_esi
+    mov edi,ds:p_tss_edi
 ;
-    mov ax,word ptr ds:tss_es
+    mov ax,ds:p_tss_es
     verr ax
     jz load_pm_app_es
 ;
@@ -3202,7 +3202,7 @@ load_pm_app:
 load_pm_app_es:
     mov es,ax
 ;       
-    mov ax,word ptr ds:tss_fs
+    mov ax,ds:p_tss_fs
     verr ax
     jz load_pm_app_fs
 ;
@@ -3211,7 +3211,7 @@ load_pm_app_es:
 load_pm_app_fs:
     mov fs,ax
 ;       
-    mov ax,word ptr ds:tss_gs
+    mov ax,ds:p_tss_gs
     verr ax
     jz load_pm_app_gs
 ;
@@ -3220,7 +3220,7 @@ load_pm_app_fs:
 load_pm_app_gs:
     mov gs,ax
 ;       
-    mov ax,word ptr ds:tss_ds
+    mov ax,ds:p_tss_ds
     verr ax
     jz load_pm_app_ds
 ;
@@ -3228,32 +3228,32 @@ load_pm_app_gs:
     
 load_pm_app_ds:
     push ax
-    mov eax,dword ptr ds:tss_eax
+    mov eax,ds:p_tss_eax
     pop ds
     iretd
 
 load_vm:
-    mov ax,word ptr ds:tss_ess0
+    mov ax,ds:p_tss_ess0
     mov ss,ax
-    mov esp,dword ptr ds:tss_esp0
+    mov esp,ds:p_tss_esp0
 ;
-    push dword ptr ds:tss_gs
-    push dword ptr ds:tss_fs
-    push dword ptr ds:tss_ds
-    push dword ptr ds:tss_es
-    push dword ptr ds:tss_ss
-    push dword ptr ds:tss_esp
-    push dword ptr ds:tss_eflags
-    push dword ptr ds:tss_cs
-    push dword ptr ds:tss_eip
+    push dword ptr ds:p_tss_gs
+    push dword ptr ds:p_tss_fs
+    push dword ptr ds:p_tss_ds
+    push dword ptr ds:p_tss_es
+    push dword ptr ds:p_tss_ss
+    push ds:p_tss_esp
+    push ds:p_tss_eflags
+    push dword ptr ds:p_tss_cs
+    push ds:p_tss_eip
 ;
-    mov eax,dword ptr ds:tss_eax
-    mov ecx,dword ptr ds:tss_ecx
-    mov edx,dword ptr ds:tss_edx
-    mov ebx,dword ptr ds:tss_ebx
-    mov ebp,dword ptr ds:tss_ebp
-    mov esi,dword ptr ds:tss_esi
-    mov edi,dword ptr ds:tss_edi
+    mov eax,ds:p_tss_eax
+    mov ecx,ds:p_tss_ecx
+    mov edx,ds:p_tss_edx
+    mov ebx,ds:p_tss_ebx
+    mov ebp,ds:p_tss_ebp
+    mov esi,ds:p_tss_esi
+    mov edi,ds:p_tss_edi
     iretd
 
 
@@ -3289,7 +3289,7 @@ SaveCurrentThread       Proc near
     pushfd
     pop eax
     or ax,200h
-    mov dword ptr ds:tss_eflags,eax    
+    mov ds:p_tss_eflags,eax    
 ;
     pushf
     pop ax    
@@ -3297,28 +3297,28 @@ SaveCurrentThread       Proc near
     push ax
     popf
 ;
-    mov dword ptr ds:tss_ecx,ecx
-    mov dword ptr ds:tss_ebx,ebx
-    mov dword ptr ds:tss_ebp,ebp
-    mov dword ptr ds:tss_esi,esi
-    mov dword ptr ds:tss_edi,edi
-    mov word ptr ds:tss_es,es
-    mov word ptr ds:tss_cs,cs
-    mov word ptr ds:tss_ss,ss
-    mov word ptr ds:tss_gs,gs
+    mov ds:p_tss_ecx,ecx
+    mov ds:p_tss_ebx,ebx
+    mov ds:p_tss_ebp,ebp
+    mov ds:p_tss_esi,esi
+    mov ds:p_tss_edi,edi
+    mov ds:p_tss_es,es
+    mov ds:p_tss_cs,cs
+    mov ds:p_tss_ss,ss
+    mov ds:p_tss_gs,gs
 ;
-    pop dword ptr ds:tss_edx
+    pop ds:p_tss_edx
     pop eax
-    mov dword ptr ds:tss_eax,eax
+    mov ds:p_tss_eax,eax
 ;
-    pop word ptr ds:tss_ds
-    pop word ptr ds:tss_fs
+    pop ds:p_tss_ds
+    pop ds:p_tss_fs
     pop bp
     pop dx
     movzx edx,dx
-    mov dword ptr ds:tss_eip,edx
-    mov dword ptr ds:tss_esp,esp
-    mov edx,dword ptr ds:tss_edx
+    mov ds:p_tss_eip,edx
+    mov ds:p_tss_esp,esp
+    mov edx,ds:p_tss_edx
 ;    
     mov ss,fs:ps_ss
     mov sp,fs:ps_sp
@@ -3363,29 +3363,29 @@ SaveLockedThread    Proc near
     pushfd
     pop eax
     or ax,200h
-    mov dword ptr ds:tss_eflags,eax
-    mov dword ptr ds:tss_ecx,ecx
-    mov dword ptr ds:tss_ebx,ebx
-    mov dword ptr ds:tss_ebp,ebp
-    mov dword ptr ds:tss_esi,esi
-    mov dword ptr ds:tss_edi,edi
-    mov word ptr ds:tss_es,es
-    mov word ptr ds:tss_cs,cs
-    mov word ptr ds:tss_ss,ss
-    mov word ptr ds:tss_gs,gs
+    mov ds:p_tss_eflags,eax
+    mov ds:p_tss_ecx,ecx
+    mov ds:p_tss_ebx,ebx
+    mov ds:p_tss_ebp,ebp
+    mov ds:p_tss_esi,esi
+    mov ds:p_tss_edi,edi
+    mov ds:p_tss_es,es
+    mov ds:p_tss_cs,cs
+    mov ds:p_tss_ss,ss
+    mov ds:p_tss_gs,gs
 ;
-    pop dword ptr ds:tss_edx
+    pop ds:p_tss_edx
     pop eax
-    mov dword ptr ds:tss_eax,eax
+    mov ds:p_tss_eax,eax
 ;
-    pop word ptr ds:tss_ds
-    pop word ptr ds:tss_fs
+    pop ds:p_tss_ds
+    pop ds:p_tss_fs
     pop bp
     pop dx
     movzx edx,dx
-    mov dword ptr ds:tss_eip,edx
-    mov dword ptr ds:tss_esp,esp
-    mov edx,dword ptr ds:tss_edx
+    mov ds:p_tss_eip,edx
+    mov ds:p_tss_esp,esp
+    mov edx,ds:p_tss_edx
 ;    
     mov ss,fs:ps_ss
     mov sp,fs:ps_sp
@@ -3607,7 +3607,7 @@ start_core:
 DeleteThread    Proc near
     push es
     mov es,es:p_tss_data_sel
-    mov es,es:tss_ess0
+    mov es,es:p_tss_ess0
     FreeMem
     pop es
 ;
@@ -3684,7 +3684,7 @@ cleanup_process_linear_next:
     sti
     push es
     mov es,es:p_tss_data_sel
-    mov es,es:tss_ess0
+    mov es,es:p_tss_ess0
     FreeMem
     pop es
 ;
@@ -3986,23 +3986,23 @@ debug_normal:
     mov ds,ds:p_tss_data_sel
 ;
     mov eax,[bp].vm_eax
-    mov dword ptr ds:tss_eax,eax
+    mov ds:p_tss_eax,eax
     mov eax,[bp].vm_ebx
-    mov dword ptr ds:tss_ebx,eax
-    mov dword ptr ds:tss_ecx,ecx
-    mov dword ptr ds:tss_edx,edx
-    mov dword ptr ds:tss_esi,esi
-    mov dword ptr ds:tss_edi,edi
+    mov ds:p_tss_ebx,eax
+    mov ds:p_tss_ecx,ecx
+    mov ds:p_tss_edx,edx
+    mov ds:p_tss_esi,esi
+    mov ds:p_tss_edi,edi
     mov eax,ebp
     mov ax,[bp]
-    mov dword ptr ds:tss_ebp,eax
+    mov ds:p_tss_ebp,eax
 ;       
     mov eax,[bp].vm_eflags
-    mov dword ptr ds:tss_eflags,eax
+    mov ds:p_tss_eflags,eax
     mov ax,[bp].vm_cs
-    mov ds:tss_cs,ax
+    mov ds:p_tss_cs,ax
     mov eax,[bp].vm_eip
-    mov dword ptr ds:tss_eip,eax
+    mov ds:p_tss_eip,eax
 ;       
     pop si
     test dword ptr [bp].vm_eflags,20000h
@@ -4014,42 +4014,42 @@ debug_pm:
     jz debug_kernel
 ;
     mov ax,[bp].vm_ss
-    mov ds:tss_ss,ax
+    mov ds:p_tss_ss,ax
     mov eax,[bp].vm_esp
-    mov dword ptr ds:tss_esp,eax
+    mov ds:p_tss_esp,eax
     jmp debug_pm_common
     
 debug_kernel:
     mov ax,ss
-    mov ds:tss_ss,ax
+    mov ds:p_tss_ss,ax
     mov ax,bp
     add ax,vm_esp
     movzx eax,ax
-    mov dword ptr ds:tss_esp,eax
+    mov ds:p_tss_esp,eax
     
 debug_pm_common:
     mov ax,[bp].pm_ds
-    mov ds:tss_ds,ax
+    mov ds:p_tss_ds,ax
     mov ax,es
-    mov ds:tss_es,ax
-    mov ds:tss_fs,si
+    mov ds:p_tss_es,ax
+    mov ds:p_tss_fs,si
     mov ax,gs
-    mov ds:tss_gs,ax
+    mov ds:p_tss_gs,ax
     jmp debug_save_ok
 
 debug_vm:
     mov ax,[bp].vm_gs
-    mov ds:tss_gs,ax
+    mov ds:p_tss_gs,ax
     mov ax,[bp].vm_fs
-    mov ds:tss_fs,ax
+    mov ds:p_tss_fs,ax
     mov ax,[bp].vm_ds
-    mov ds:tss_ds,ax
+    mov ds:p_tss_ds,ax
     mov ax,[bp].vm_es
-    mov ds:tss_es,ax
+    mov ds:p_tss_es,ax
     mov ax,[bp].vm_ss
-    mov ds:tss_ss,ax
+    mov ds:p_tss_ss,ax
     mov eax,[bp].vm_esp
-    mov dword ptr ds:tss_esp,eax
+    mov ds:p_tss_esp,eax
 
 debug_save_ok:
     mov ss,fs:ps_ss
@@ -4228,7 +4228,7 @@ create_core    Proc far
     xor eax,eax
     rep stos dword ptr es:[edi]
 ;
-    mov es:[edx].tss_bitmap,OFFSET tss_bitmap_space
+    mov es:[edx].p_tss_bitmap,OFFSET tss_bitmap_space
     pop es
 ;
     mov ax,cs:core_count
@@ -5338,10 +5338,10 @@ stop_timer      ENDP
 
 init_first_thread:
     mov ds,es:p_tss_data_sel
-    mov ax,word ptr ds:tss_ss
-    mov word ptr ds:tss_ess0,ax
-    mov eax,dword ptr ds:tss_esp
-    mov dword ptr ds:tss_esp0,eax
+    mov ax,ds:p_tss_ss
+    mov ds:p_tss_ess0,ax
+    mov eax,ds:p_tss_esp
+    mov ds:p_tss_esp0,eax
 ;    
     call LockCore
     mov di,es:p_prio
@@ -6711,8 +6711,8 @@ check_copy_id_done:
 ;
     mov ds,bx
     mov ds,ds:p_tss_data_sel
-    mov cx,ds:tss_cs
-    mov edx,dword ptr ds:tss_eip   
+    mov cx,ds:p_tss_cs
+    mov edx,ds:p_tss_eip   
     clc
     jmp check_done
     
@@ -6758,8 +6758,8 @@ check_copy_zero:
 check_copy_cpu:
     mov ds,bx
     mov ds,ds:p_tss_data_sel
-    mov cx,ds:tss_cs
-    mov edx,dword ptr ds:tss_eip   
+    mov cx,ds:p_tss_cs
+    mov edx,ds:p_tss_eip   
     jmp check_copy
 
 check_copy_sleep:

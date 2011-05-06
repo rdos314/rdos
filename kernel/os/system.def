@@ -310,57 +310,92 @@ process_seg	STRUC
 process_seg	ENDS
 
 tss_seg		STRUC
-tss_back_link	DW ?,?
-tss_esp0		DW ?,?
-tss_ess0		DW ?,?
-tss_esp1		DW ?,?
-tss_ess1		DW ?,?
-tss_esp2		DW ?,?
-tss_ess2		DW ?,?
-tss_cr3			DW ?,?
-tss_eip			DW ?,?
-tss_eflags		DW ?,?
-tss_eax			DW ?,?
-tss_ecx			DW ?,?
-tss_edx			DW ?,?
-tss_ebx			DW ?,?
-tss_esp			DW ?,?
-tss_ebp			DW ?,?
-tss_esi			DW ?,?
-tss_edi			DW ?,?
-tss_es			DW ?,?
-tss_cs			DW ?,?
-tss_ss			DW ?,?
-tss_ds			DW ?,?
-tss_fs			DW ?,?
-tss_gs			DW ?,?
-tss_ldt			DW ?,?
-tss_t			DW ?
-tss_bitmap		DW ?
-tss_dr0			DD ?
-tss_dr1			DD ?
-tss_dr2			DD ?
-tss_dr3			DD ?
-tss_dr7			DD ?
-math_control	DW ?,?
-math_status		DW ?,?
-math_tag		DW ?,?
-math_eip		DD ?
-math_cs			DW ?
-math_op			DB ?,?
-math_data_offs	DD ?
-math_data_sel	DW ?,?
-math_st0		DT ?
-math_st1		DT ?
-math_st2		DT ?
-math_st3		DT ?
-math_st4		DT ?
-math_st5		DT ?
-math_st6		DT ?
-math_st7		DT ?
-math_prev_op	DB ?,?
-tss_thread		DW ?
-tss_error_code	DW ?
-tss_res_space	DB 18 DUP(?)
-tss_bitmap_space DW ?
+
+p_tss_back_link     DD ?
+p_tss_esp0		    DD ?
+p_tss_ess0		    DW ?,?
+p_tss_esp1		    DD ?
+p_tss_ess1		    DW ?,?
+p_tss_esp2		    DD ?
+p_tss_ess2		    DW ?,?
+p_tss_cr3	        DD ?
+p_tss_eip			DD ?
+p_tss_eflags		DD ?
+p_tss_eax			DD ?
+p_tss_ecx			DD ?
+p_tss_edx			DD ?
+p_tss_ebx			DD ?
+p_tss_esp			DD ?
+p_tss_ebp			DD ?
+p_tss_esi			DD ?
+p_tss_edi			DD ?
+p_tss_es			DW ?,?
+p_tss_cs			DW ?,?
+p_tss_ss			DW ?,?
+p_tss_ds			DW ?,?
+p_tss_fs			DW ?,?
+p_tss_gs			DW ?,?
+p_tss_ldt			DW ?,?
+p_tss_t			    DW ?
+p_tss_bitmap		DW ?
+p_tss_dr0			DD ?
+p_tss_dr1			DD ?
+p_tss_dr2			DD ?
+p_tss_dr3			DD ?
+p_tss_dr7			DD ?
+p_math_control	    DW ?,?
+p_math_status		DW ?,?
+p_math_tag		    DW ?,?
+p_math_eip		    DD ?
+p_math_cs			DW ?
+p_math_op			DB ?,?
+p_math_data_offs	DD ?
+p_math_data_sel	    DW ?,?
+p_math_st0		    DT ?
+p_math_st1		    DT ?
+p_math_st2		    DT ?
+p_math_st3		    DT ?
+p_math_st4		    DT ?
+p_math_st5		    DT ?
+p_math_st6		    DT ?
+p_math_st7		    DT ?
+p_math_prev_op	    DB ?,?
+
+tss_thread		    DW ?
+tss_error_code	    DW ?
+tss_res_space	    DB 18 DUP(?)
+tss_bitmap_space    DW ?
+
 tss_seg		ENDS
+
+core_tss_seg		STRUC
+
+c_tss_back_link	    DD ?
+c_tss_esp0		    DD ?
+c_tss_ess0		    DW ?,?
+c_tss_esp1		    DD ?
+c_tss_ess1		    DW ?,?
+c_tss_esp2		    DD ?
+c_tss_ess2		    DW ?,?
+c_tss_cr3			DD ?
+c_tss_eip			DD ?
+c_tss_eflags		DD ?
+c_tss_eax			DD ?
+c_tss_ecx			DD ?
+c_tss_edx			DD ?
+c_tss_ebx			DD ?
+c_tss_esp			DD ?
+c_tss_ebp			DD ?
+c_tss_esi			DD ?
+c_tss_edi			DD ?
+c_tss_es			DW ?,?
+c_tss_cs			DW ?,?
+c_tss_ss			DW ?,?
+c_tss_ds			DW ?,?
+c_tss_fs			DW ?,?
+c_tss_gs			DW ?,?
+c_tss_ldt			DW ?,?
+c_tss_t			    DW ?
+c_tss_bitmap		DW ?
+
+core_tss_seg		ENDS

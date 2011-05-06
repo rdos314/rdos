@@ -353,12 +353,12 @@ WriteEflags     PROC near
     push di
     mov ax,cs
     mov es,ax
-    mov ax,gs:tss_eflags
+    mov ax,word ptr gs:p_tss_eflags
     and ax,200h
     shr ax,7
-    or ax,gs:tss_eflags+2
+    or ax,word ptr gs:p_tss_eflags+2
     shl eax,16
-    mov ax,gs:tss_eflags
+    mov ax,word ptr gs:p_tss_eflags
     push ds
     mov ds,gs:tss_thread
     mov ds,ds:p_process_sel
@@ -391,7 +391,7 @@ eflags_skip:
     loop eflags_loop
     mov di,OFFSET iopl_text
     WriteAsciiz
-    mov ax,gs:tss_eflags
+    mov ax,word ptr gs:p_tss_eflags
     shr ax,12
     and ax,3
     add ax,'0'
@@ -416,21 +416,21 @@ word_reg_tab1:
     DB ' TR='
     DW 0
     DB ' DT='
-    DW OFFSET tss_ldt
+    DW OFFSET p_tss_ldt
     DB 0
 word_reg_tab2:
     DB ' CS='
-    DW OFFSET tss_cs
+    DW OFFSET p_tss_cs
     DB ' DS='
-    DW OFFSET tss_ds
+    DW OFFSET p_tss_ds
     DB ' ES='
-    DW OFFSET tss_es
+    DW OFFSET p_tss_es
     DB ' FS='
-    DW OFFSET tss_fs
+    DW OFFSET p_tss_fs
     DB ' GS='
-    DW OFFSET tss_gs
+    DW OFFSET p_tss_gs
     DB ' SS='
-    DW OFFSET tss_ss
+    DW OFFSET p_tss_ss
     DB 0
 
 WriteWordRegs   PROC near
@@ -470,27 +470,27 @@ WriteWordRegs   ENDP
 
 dword_reg_tab1:
     DB ' EAX='
-    DW OFFSET tss_eax
+    DW OFFSET p_tss_eax
     DB ' EBX='
-    DW OFFSET tss_ebx
+    DW OFFSET p_tss_ebx
     DB ' ECX='
-    DW OFFSET tss_ecx
+    DW OFFSET p_tss_ecx
     DB ' EDX='
-    DW OFFSET tss_edx
+    DW OFFSET p_tss_edx
     DB 0
 dword_reg_tab2:
     DB ' ESI='
-    DW OFFSET tss_esi
+    DW OFFSET p_tss_esi
     DB ' EDI='
-    DW OFFSET tss_edi
+    DW OFFSET p_tss_edi
     DB ' ESP='
-    DW OFFSET tss_esp
+    DW OFFSET p_tss_esp
     DB ' EBP='
-    DW OFFSET tss_ebp
+    DW OFFSET p_tss_ebp
     DB 0
 dword_reg_tab3:
     DB ' EPC='
-    DW OFFSET tss_eip
+    DW OFFSET p_tss_eip
     DB 0
 
 WriteDwordRegs  PROC near
@@ -576,7 +576,7 @@ ft_ldt  DB 'ldt ',0
 ft_gdt  DB 'gdt ',0
 
 WriteFault      PROC near
-    test gs:tss_eflags+2,2
+    test word ptr gs:p_tss_eflags+2,2
     jnz write_fault_end
     mov es,gs:tss_thread
     mov ax,es:p_error_code
@@ -765,38 +765,38 @@ data_next:
     call NewLine
     pop ds
 ;
-    mov ax,gs:tss_cs
-    mov bx,gs:tss_eip+2
+    mov ax,gs:p_tss_cs
+    mov bx,word ptr gs:p_tss_eip+2
     shl ebx,16
-    mov bx,gs:tss_eip
+    mov bx,word ptr gs:p_tss_eip
     call WriteDataRow
     call NewLine
 ;
-    mov ax,gs:tss_ss
-    mov bx,gs:tss_esp+2
+    mov ax,gs:p_tss_ss
+    mov bx,word ptr gs:p_tss_esp+2
     shl ebx,16
-    mov bx,gs:tss_esp
+    mov bx,word ptr gs:p_tss_esp
     call WriteDataRow
     call NewLine
 ;
-    mov ax,gs:tss_es
+    mov ax,gs:p_tss_es
     xor ebx,ebx
     call WriteDataRow
     call NewLine
 ;
     mov es,gs:tss_thread
-    push gs:tss_eflags+2
-    mov gs:tss_eflags+2,0
+    push word ptr gs:p_tss_eflags+2
+    mov word ptr gs:p_tss_eflags+2,0
     mov ax,es:p_pm_deb_sel
     mov ebx,es:p_pm_deb_offs
     call WriteDataRow
     call NewLine
 ;
-    mov gs:tss_eflags+2,2
+    mov word ptr gs:p_tss_eflags+2,2
     mov ax,es:p_vm_deb_sel
     mov ebx,es:p_vm_deb_offs
     call WriteDataRow
-    pop gs:tss_eflags+2
+    pop word ptr gs:p_tss_eflags+2
     ret
 WriteData       ENDP
 
@@ -806,8 +806,8 @@ GetMne  PROC near
 ;
     xor dl,dl
     xor dh,dh
-    mov bx,gs:tss_cs
-    test byte ptr gs:tss_eflags+2,2
+    mov bx,gs:p_tss_cs
+    test byte ptr gs:p_tss_eflags+2,2
     jnz get_cs_bitness_done
 
 get_cs_bitness_pm:
@@ -956,11 +956,11 @@ not_call_far:
     inc dh    
     movzx ebx,dh
     add ebx,[si]
-    add ebx,dword ptr gs:tss_eip
+    add ebx,gs:p_tss_eip
     add ebx,4
 ;
     push ebx
-    mov dx,gs:tss_cs
+    mov dx,gs:p_tss_cs
     mov ax,SEG data
     mov es,ax
     mov di,OFFSET op_in_text
@@ -970,7 +970,7 @@ not_call_far:
     pop ebx
     jnc write_special_end
 ;
-    mov dx,gs:tss_cs
+    mov dx,gs:p_tss_cs
     mov ax,SEG data
     mov es,ax
     mov di,OFFSET op_in_text
@@ -984,10 +984,10 @@ write_call_near16:
     inc dh
     movzx bx,dh
     add bx,[si]
-    add bx,gs:tss_eip
+    add bx,word ptr gs:p_tss_eip
     add bx,2
     push bx
-    mov dx,gs:tss_cs
+    mov dx,gs:p_tss_cs
     mov ax,SEG data
     mov es,ax
     mov di,OFFSET op_in_text
@@ -997,7 +997,7 @@ write_call_near16:
     pop bx
     jnc write_special_end
 ;
-    mov dx,gs:tss_cs
+    mov dx,gs:p_tss_cs
     mov ax,SEG data
     mov es,ax
     mov di,OFFSET op_in_text
@@ -1017,10 +1017,10 @@ GetMne  ENDP
 
 LoadInstr       PROC near
     xor di,di
-    mov ax,gs:tss_eflags+2
+    mov ax,word ptr gs:p_tss_eflags+2
     test ax,2
     jnz seg_size_ok
-    mov bx,gs:tss_cs
+    mov bx,gs:p_tss_cs
     test bx,4
     jz code_in_gdt
 code_in_ldt:
@@ -1046,8 +1046,8 @@ seg_size_ok:
     mov ax,SEG data
     mov ds,ax
     mov es,gs:tss_thread
-    mov dx,gs:tss_cs
-    mov ebx,dword ptr gs:tss_eip
+    mov dx,gs:p_tss_cs
+    mov ebx,gs:p_tss_eip
     call SetIpAds
     call GetOpBuf
     mov cx,16
@@ -1175,8 +1175,8 @@ WriteCoproc     Proc near
     mov ax,cs
     mov es,ax
     finit
-    mov dx,gs:math_tag
-    mov ax,gs:math_status
+    mov dx,gs:p_math_tag
+    mov ax,gs:p_math_status
     shr ax,3
     mov cl,ah
     and cl,7
@@ -1190,11 +1190,11 @@ WriteCoproc     Proc near
     mov ax,si
     shl ax,2
     add si,ax
-    add si,OFFSET math_st0
+    add si,OFFSET p_math_st0
     jmp write_math_do
 
 write_real_math:
-    mov si,OFFSET math_st0
+    mov si,OFFSET p_math_st0
 
 write_math_do:
     mov ax,dx
@@ -1202,10 +1202,10 @@ write_math_do:
     call write_math
 ;
     ror ax,2
-    cmp si,OFFSET math_st7
+    cmp si,OFFSET p_math_st7
     jne write_inc_st1
 ;
-    mov si,OFFSET math_st0
+    mov si,OFFSET p_math_st0
     jmp write_st1
 
 write_inc_st1:
@@ -1216,10 +1216,10 @@ write_st1:
     call write_math
 ;
     ror ax,2
-    cmp si,OFFSET math_st7
+    cmp si,OFFSET p_math_st7
     jne write_inc_st2
 ;
-    mov si,OFFSET math_st0
+    mov si,OFFSET p_math_st0
     jmp write_st2
 
 write_inc_st2:
@@ -1230,10 +1230,10 @@ write_st2:
     call write_math
 ;
     ror ax,2
-    cmp si,OFFSET math_st7
+    cmp si,OFFSET p_math_st7
     jne write_inc_st3
 ;
-    mov si,OFFSET math_st0
+    mov si,OFFSET p_math_st0
     jmp write_st3
 
 write_inc_st3:
@@ -1244,10 +1244,10 @@ write_st3:
     call write_math
 ;
     ror ax,2
-    cmp si,OFFSET math_st7
+    cmp si,OFFSET p_math_st7
     jne write_inc_st4
 ;
-    mov si,OFFSET math_st0
+    mov si,OFFSET p_math_st0
     jmp write_st4
 
 write_inc_st4:
@@ -1258,10 +1258,10 @@ write_st4:
     call write_math
 ;
     ror ax,2
-    cmp si,OFFSET math_st7
+    cmp si,OFFSET p_math_st7
     jne write_inc_st5
 ;
-    mov si,OFFSET math_st0
+    mov si,OFFSET p_math_st0
     jmp write_st5
 
 write_inc_st5:
@@ -1272,10 +1272,10 @@ write_st5:
     call write_math
 ;
     ror ax,2
-    cmp si,OFFSET math_st7
+    cmp si,OFFSET p_math_st7
     jne write_inc_st6
 ;
-    mov si,OFFSET math_st0
+    mov si,OFFSET p_math_st0
     jmp write_st6
 
 write_inc_st6:
@@ -1286,10 +1286,10 @@ write_st6:
     call write_math
 ;
     ror ax,2
-    cmp si,OFFSET math_st7
+    cmp si,OFFSET p_math_st7
     jne write_inc_st7
 ;
-    mov si,OFFSET math_st0
+    mov si,OFFSET p_math_st0
     jmp write_st7
 
 write_inc_st7:
@@ -1409,7 +1409,7 @@ interact_set    ENDP
 
 change_eax      PROC near
     mov dx,gs
-    mov esi,OFFSET tss_eax
+    mov esi,OFFSET p_tss_eax
     push di
     ret
     ret
@@ -1417,7 +1417,7 @@ change_eax      ENDP
 
 change_ebx      PROC near
     mov dx,gs
-    mov esi,OFFSET tss_ebx
+    mov esi,OFFSET p_tss_ebx
     push di
     ret
     ret
@@ -1425,7 +1425,7 @@ change_ebx      ENDP
 
 change_ecx      PROC near
     mov dx,gs
-    mov esi,OFFSET tss_ecx
+    mov esi,OFFSET p_tss_ecx
     push di
     ret
     ret
@@ -1433,7 +1433,7 @@ change_ecx      ENDP
 
 change_edx      PROC near
     mov dx,gs
-    mov esi,OFFSET tss_edx
+    mov esi,OFFSET p_tss_edx
     push di
     ret
     ret
@@ -1441,7 +1441,7 @@ change_edx      ENDP
 
 change_esi      PROC near
     mov dx,gs
-    mov esi,OFFSET tss_esi
+    mov esi,OFFSET p_tss_esi
     push di
     ret
     ret
@@ -1449,7 +1449,7 @@ change_esi      ENDP
 
 change_edi      PROC near
     mov dx,gs
-    mov esi,OFFSET tss_edi
+    mov esi,OFFSET p_tss_edi
     push di
     ret
     ret
@@ -1457,7 +1457,7 @@ change_edi      ENDP
 
 change_esp      PROC near
     mov dx,gs
-    mov esi,OFFSET tss_esp
+    mov esi,OFFSET p_tss_esp
     push di
     ret
     ret
@@ -1465,7 +1465,7 @@ change_esp      ENDP
 
 change_ebp      PROC near
     mov dx,gs
-    mov esi,OFFSET tss_ebp
+    mov esi,OFFSET p_tss_ebp
     push di
     ret
     ret
@@ -1473,7 +1473,7 @@ change_ebp      ENDP
 
 change_epc      PROC near
     mov dx,gs
-    mov esi,OFFSET tss_eip
+    mov esi,OFFSET p_tss_eip
     push di
     ret
     ret
@@ -1482,7 +1482,7 @@ change_epc      ENDP
 change_cs       PROC near
     and cl,3
     mov dx,gs
-    mov esi,OFFSET tss_cs
+    mov esi,OFFSET p_tss_cs
     push di
     ret
     ret
@@ -1491,7 +1491,7 @@ change_cs       ENDP
 change_ds       PROC near
     and cl,3
     mov dx,gs
-    mov esi,OFFSET tss_ds
+    mov esi,OFFSET p_tss_ds
     push di
     ret
     ret
@@ -1500,7 +1500,7 @@ change_ds       ENDP
 change_es       PROC near
     and cl,3
     mov dx,gs
-    mov esi,OFFSET tss_es
+    mov esi,OFFSET p_tss_es
     push di
     ret
     ret
@@ -1509,7 +1509,7 @@ change_es       ENDP
 change_fs       PROC near
     and cl,3
     mov dx,gs
-    mov esi,OFFSET tss_fs
+    mov esi,OFFSET p_tss_fs
     push di
     ret
     ret
@@ -1518,7 +1518,7 @@ change_fs       ENDP
 change_gs       PROC near
     and cl,3
     mov dx,gs
-    mov esi,OFFSET tss_gs
+    mov esi,OFFSET p_tss_gs
     push di
     ret
     ret
@@ -1527,62 +1527,62 @@ change_gs       ENDP
 change_ss       PROC near
     and cl,3
     mov dx,gs
-    mov esi,OFFSET tss_ss
+    mov esi,OFFSET p_tss_ss
     push di
     ret
     ret
 change_ss       ENDP
 
 toggle_cy       PROC near
-    mov bx,OFFSET tss_eflags
+    mov bx,OFFSET p_tss_eflags
     xor word ptr gs:[bx],1
     ret
 toggle_cy       ENDP
 
 toggle_pa       PROC near
-    mov bx,OFFSET tss_eflags
+    mov bx,OFFSET p_tss_eflags
     xor word ptr gs:[bx],4
     ret
 toggle_pa       ENDP
 
 toggle_ac       PROC near
-    mov bx,OFFSET tss_eflags
+    mov bx,OFFSET p_tss_eflags
     xor word ptr gs:[bx],10h
     ret
 toggle_ac       ENDP
 
 toggle_zr       PROC near
-    mov bx,OFFSET tss_eflags
+    mov bx,OFFSET p_tss_eflags
     xor word ptr gs:[bx],40h
     ret
 toggle_zr       ENDP
 
 toggle_pl       PROC near
-    mov bx,OFFSET tss_eflags
+    mov bx,OFFSET p_tss_eflags
     xor word ptr gs:[bx],80h
     ret
 toggle_pl       ENDP
 
 toggle_im       PROC near
-    mov bx,OFFSET tss_eflags
+    mov bx,OFFSET p_tss_eflags
     xor word ptr gs:[bx],200h
     ret
 toggle_im       ENDP
 
 toggle_dir      PROC near
-    mov bx,OFFSET tss_eflags
+    mov bx,OFFSET p_tss_eflags
     xor word ptr gs:[bx],400h
     ret
 toggle_dir      ENDP
 
 toggle_ov       PROC near
-    mov bx,OFFSET tss_eflags
+    mov bx,OFFSET p_tss_eflags
     xor word ptr gs:[bx],800h
     ret
 toggle_ov       ENDP
 
 toggle_nt       PROC near
-    mov bx,OFFSET tss_eflags
+    mov bx,OFFSET p_tss_eflags
     xor word ptr gs:[bx],4000h
     ret
 toggle_nt       ENDP
@@ -1631,42 +1631,42 @@ mem_ads PROC near
 mem_ads ENDP
 
 mem_cs  PROC near
-    mov dx,gs:tss_cs
-    mov si,OFFSET tss_eip
+    mov dx,gs:p_tss_cs
+    mov si,OFFSET p_tss_eip
     mov esi,gs:[si]
     call mem_do
     ret
 mem_cs  ENDP
 
 mem_ss  PROC near
-    mov dx,gs:tss_ss
-    mov si,OFFSET tss_esp
+    mov dx,gs:p_tss_ss
+    mov si,OFFSET p_tss_esp
     mov esi,gs:[si]
     call mem_do
     ret
 mem_ss  ENDP
 
 mem_es  PROC near
-    mov dx,gs:tss_es
+    mov dx,gs:p_tss_es
     xor esi,esi
     call mem_do
     ret
 mem_es  ENDP
 
 mem_pm  PROC near
-    push gs:tss_eflags+2
-    mov gs:tss_eflags+2,0
+    push word ptr gs:p_tss_eflags+2
+    mov word ptr gs:p_tss_eflags+2,0
     mov es,gs:tss_thread
     mov dx,es:p_pm_deb_sel
     mov esi,es:p_pm_deb_offs
     call mem_do
-    pop gs:tss_eflags+2
+    pop word ptr gs:p_tss_eflags+2
     ret
 mem_pm  ENDP
 
 change_pm_sel   PROC near
-    push gs:tss_eflags+2
-    mov gs:tss_eflags+2,0
+    push word ptr gs:p_tss_eflags+2
+    mov word ptr gs:p_tss_eflags+2,0
     mov dx,gs:tss_thread
     and cl,3
     mov esi,OFFSET p_pm_deb_sel
@@ -1680,13 +1680,13 @@ change_pm_sel_ret:
     jnz change_pm_sel_error
     inc byte ptr [bp].vm_edx
 change_pm_sel_error:
-    pop gs:tss_eflags+2
+    pop word ptr gs:p_tss_eflags+2
     ret
 change_pm_sel   ENDP
 
 change_pm_offs  PROC near
-    push gs:tss_eflags+2
-    mov gs:tss_eflags+2,0
+    push word ptr gs:p_tss_eflags+2
+    mov word ptr gs:p_tss_eflags+2,0
     mov dx,gs:tss_thread
     mov esi,OFFSET p_pm_deb_offs
     push cx
@@ -1699,24 +1699,24 @@ change_pm_offs_ret:
     jnz change_pm_offs_error
     inc byte ptr [bp].vm_edx
 change_pm_offs_error:
-    pop gs:tss_eflags+2
+    pop word ptr gs:p_tss_eflags+2
     ret
 change_pm_offs  ENDP
 
 mem_vm  PROC near
-    push gs:tss_eflags+2
-    mov gs:tss_eflags+2,2
+    push word ptr gs:p_tss_eflags+2
+    mov word ptr gs:p_tss_eflags+2,2
     mov es,gs:tss_thread
     mov dx,es:p_vm_deb_sel
     mov esi,es:p_vm_deb_offs
     call mem_do
-    pop gs:tss_eflags+2
+    pop word ptr gs:p_tss_eflags+2
     ret
 mem_vm  ENDP
 
 change_vm_sel   PROC near
-    push gs:tss_eflags+2
-    mov gs:tss_eflags+2,0
+    push word ptr gs:p_tss_eflags+2
+    mov word ptr gs:p_tss_eflags+2,0
     mov dx,gs:tss_thread
     and cl,3
     mov esi,OFFSET p_vm_deb_sel
@@ -1730,13 +1730,13 @@ change_vm_sel_ret:
     jnz change_vm_sel_error
     inc byte ptr [bp].vm_edx
 change_vm_sel_error:
-    pop gs:tss_eflags+2
+    pop word ptr gs:p_tss_eflags+2
     ret
 change_vm_sel   ENDP
 
 change_vm_offs  PROC near
-    push gs:tss_eflags+2
-    mov gs:tss_eflags+2,0
+    push word ptr gs:p_tss_eflags+2
+    mov word ptr gs:p_tss_eflags+2,0
     mov dx,gs:tss_thread
     mov esi,OFFSET p_vm_deb_offs
     push cx
@@ -1749,7 +1749,7 @@ change_vm_offs_ret:
     jnz change_vm_offs_error
     inc byte ptr [bp].vm_edx
 change_vm_offs_error:
-    pop gs:tss_eflags+2
+    pop word ptr gs:p_tss_eflags+2
     ret
 change_vm_offs  ENDP
 
@@ -2025,17 +2025,17 @@ virt_sw_run     PROC near
     mov [bx+6],dx   
     pop ds
     mov ax,[bp].vm_ebx
-    xchg ax,ds:tss_eip
-    xchg bx,ds:tss_cs
+    xchg ax,word ptr ds:p_tss_eip
+    xchg bx,ds:p_tss_cs
     push es
     push bx
-    mov bx,ds:tss_ss
+    mov bx,ds:p_tss_ss
     mov es,bx
     pop bx
     xor edx,edx
-    mov dx,ds:tss_esp
+    mov dx,word ptr ds:p_tss_esp
     sub dx,4
-    mov ds:tss_esp,dx
+    mov word ptr ds:p_tss_esp,dx
     mov es:[edx],ax
     mov es:[edx+2],bx
     pop es

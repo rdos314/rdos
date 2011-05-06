@@ -1244,11 +1244,10 @@ init_default_tss    PROC near
     xor cx,cx
     xor bx,bx
     xor edx,edx
-    mov [bx],edx
+    mov ds:p_tss_back_link,edx
 ;
     mov dx,stack0_size
-    add bx,4
-    mov [bx],edx
+    mov ds:p_tss_esp0,edx
 ;       
     push es
     push eax
@@ -1257,79 +1256,68 @@ init_default_tss    PROC near
     mov dx,es
     pop eax
     pop es
-    add bx,4
-    mov [bx],edx
+    mov ds:p_tss_ess0,dx
 ;
-    xor dx,dx
-    add bx,4
-    mov [bx],edx
-    add bx,4
-    mov [bx],edx
-;
-    add bx,4
-    mov [bx],edx
-    add bx,4
-    mov [bx],edx
-    add bx,4
+    mov ds:p_tss_esp1,edx
+    mov ds:p_tss_ess1,dx
+    mov ds:p_tss_esp2,edx
+    mov ds:p_tss_ess2,dx
 ;
     mov edx,cr3
     mov es:p_cr3,edx
-    mov [bx],edx
-    add bx,4
+    mov ds:p_tss_cr3,edx
+;
     mov edx,[bp].cr_offs
-    mov [bx],edx
-    add bx,8
+    mov ds:p_tss_eip,edx
+;
     mov edx,[bp].cr_eax
-    mov [bx],edx
-    add bx,4
+    mov ds:p_tss_eax,edx
+;
     mov edx,[bp].cr_ecx
-    mov [bx],edx
-    add bx,4
+    mov ds:p_tss_ecx,edx
+;
     mov edx,[bp].cr_edx
-    mov [bx],edx
-    add bx,4
+    mov ds:p_tss_edx,edx
+;    
     mov edx,[bp].cr_ebx
-    mov [bx],edx
-    add bx,8
+    mov ds:p_tss_ebx,edx
+;
     mov edx,[bp].cr_ebp
-    mov [bx],edx
-    add bx,4
+    mov ds:p_tss_ebp,edx
+;
     mov edx,[bp].cr_esi
-    mov [bx],edx
-    add bx,4
+    mov ds:p_tss_esi,edx
+;    
     mov edx,[bp].cr_edi
-    mov [bx],edx
-    xor edx,edx
-    add bx,8
+    mov ds:p_tss_edi,edx
+;    
     mov dx,[bp].cr_seg
-    mov [bx],edx
-    mov bx,OFFSET tss_ldt
+    mov ds:p_tss_cs,dx
+;    
     sldt dx
-    mov [bx],edx
-    add bx,4
-;       mov dx,1
-    mov [bx],dx
-    mov word ptr [bx+2],OFFSET tss_bitmap_space
-    add bx,4
+    mov ds:p_tss_ldt,dx
+    mov ds:p_tss_t,0
+;
+    mov ds:p_tss_bitmap,OFFSET tss_bitmap_space
 ;
 ; dr0 - dr7
 ;
     xor edx,edx
-    mov ds:tss_dr0,edx
-    mov ds:tss_dr1,edx
-    mov ds:tss_dr2,edx
-    mov ds:tss_dr3,edx
-    mov ds:tss_dr7,edx
+    mov ds:p_tss_dr0,edx
+    mov ds:p_tss_dr1,edx
+    mov ds:p_tss_dr2,edx
+    mov ds:p_tss_dr3,edx
+    mov ds:p_tss_dr7,edx
 ;
 ; 387 status
 ;
-    mov ds:math_control,37Fh
-    mov ds:math_status,0
-    mov ds:math_tag,0FFFFh
-    mov ds:math_eip,0
-    mov ds:math_cs,0
-    mov ds:math_data_offs,0
-    mov ds:math_data_sel,0
+    mov ds:p_math_control,37Fh
+    mov ds:p_math_status,0
+    mov ds:p_math_tag,0FFFFh
+    mov ds:p_math_eip,0
+    mov ds:p_math_cs,0
+    mov ds:p_math_data_offs,0
+    mov ds:p_math_data_sel,0
 ;
 ; thread control
 ;
@@ -1386,8 +1374,8 @@ init_prot_tss   PROC near
     mov dx,[bp].cr_flags
     or dx,200h
     and dx,NOT 7000h
-    mov ds:tss_eflags,dx
-    mov ds:tss_eflags+2,0
+    movzx edx,dx
+    mov ds:p_tss_eflags,edx
 ;
     mov es:p_free_proc,0
     mov ax,[bp].cr_seg
@@ -1412,9 +1400,8 @@ init_prot_tss_default:
     mov eax,[bp].cr_stack
     AllocateLocalMem
     sub eax,6
-    mov dword ptr ds:tss_esp,eax
-    mov ds:tss_ss,es
-    mov ds:tss_ss+2,0
+    mov ds:p_tss_esp,eax
+    mov ds:p_tss_ss,es
     mov es:[eax+4],dx
     mov word ptr es:[eax+2],term_code_sel
     mov word ptr es:[eax],0
@@ -1425,30 +1412,29 @@ init_prot_tss_default:
 
 init_kernel_tss:
     push es
-    movzx eax,ds:tss_ess0
-    mov dword ptr ds:tss_ss,eax
+    mov ax,ds:p_tss_ess0
+    mov ds:p_tss_ss,ax
     mov bx,stack0_size - 6
     mov es,ax
     mov es:[bx+4],dx
     mov es:[bx+2],cs
     mov word ptr es:[bx],OFFSET terminate_thread
     pop es
-    mov dword ptr ds:tss_esp,stack0_size - 6
+    mov ds:p_tss_esp,stack0_size - 6
     mov es:p_stack_sel,0
 
 init_prot_tss_com:
-    mov bx,OFFSET tss_es
     mov ax,[bp].cr_es
-    mov [bx],eax
-    add bx,0Ch
+    mov ds:p_tss_es,ax
+;
     mov ax,[bp].cr_ds
-    mov [bx],eax
-    add bx,4
+    mov ds:p_tss_ds,ax
+;    
     mov ax,[bp].cr_fs
-    mov [bx],eax
-    add bx,4
+    mov ds:p_tss_fs,ax
+;    
     mov ax,[bp].cr_gs
-    mov [bx],eax
+    mov ds:p_tss_gs,ax    
     pop fs
     ret
 init_prot_tss   ENDP
@@ -1473,45 +1459,39 @@ init_virt_tss   PROC near
     push eax
     mov ax,es
     SelectorToSegment
-    mov bx,OFFSET tss_ss
-    mov [bx],eax
+    mov ds:p_tss_ss,ax
     pop eax
     sub eax,6
-    mov bx,OFFSET tss_esp
-    mov [bx],eax
+    mov ds:p_tss_esp,eax
     mov dx,[bp].cr_flags
-    or dx,200h
+    movzx edx,dx 
+    or edx,20200h
     and dx,NOT 7000h
-    mov ds:tss_eflags,dx
-    mov ds:tss_eflags+2,2
+    mov ds:p_tss_eflags,edx
     mov es:[eax+4],dx
 ;       mov dx,SEG code
     mov es:[eax+2],dx
 ;       mov dx,OFFSET terminate_thread_pr
     mov es:[eax],dx
-    mov bx,OFFSET tss_es
     mov ax,es
     pop es
     mov es:p_stack_sel,ax
 ;
     mov ax,[bp].cr_es
     SelectorToSegment
-    mov [bx],eax
-    add bx,0Ch
+    mov ds:p_tss_es,ax
 ;
     mov ax,[bp].cr_ds
     SelectorToSegment
-    mov [bx],eax
-    add bx,4
+    mov ds:p_tss_ds,ax
 ;
     mov ax,[bp].cr_fs
     SelectorToSegment
-    mov [bx],eax
-    add bx,4
+    mov ds:p_tss_fs,ax
 ;
     mov ax,[bp].cr_gs
     SelectorToSegment
-    mov [bx],eax
+    mov ds:p_tss_gs,ax
     ret
 init_virt_tss   ENDP
 
@@ -1574,7 +1554,7 @@ create_prot:
     call init_prot_tss
 create_tss_done:
 ;
-    mov es:p_flags,THREAD_FLAG_CREATE
+    or es:p_flags,THREAD_FLAG_CREATE
     call wake_new
     pop edi
     pop esi
@@ -1754,17 +1734,13 @@ terminate_pd_done:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_process_tss    PROC near
-    mov ax,OFFSET create_process_callback
-    mov ds:tss_eip,ax
-    mov ds:tss_eip+2,0
-    mov ds:tss_cs,cs
-    mov ds:tss_cs+2,0
-    mov ax,ds:tss_ess0
-    mov ds:tss_ss,ax
-    mov ds:tss_ss+2,0
-    mov ax,stack0_size
-    mov ds:tss_esp,ax
-    mov ds:tss_esp+2,0
+    mov eax,OFFSET create_process_callback
+    mov ds:p_tss_eip,eax
+    mov ds:p_tss_cs,cs
+    mov ax,ds:p_tss_ess0
+    mov ds:p_tss_ss,ax
+    mov eax,stack0_size
+    mov ds:p_tss_esp,eax
 ;
     mov ax,[bp].cr_mode
     test ax,1
@@ -1772,26 +1748,24 @@ init_process_tss    PROC near
     mov ax,[bp].cr_flags
     or dx,200h
     and dx,NOT 7000h
-    mov ds:tss_eflags,ax
-    mov ds:tss_eflags+2,0
+    movzx edx,dx
+    mov ds:p_tss_eflags,eax
     jmp init_tss_iopl_done
+
 init_tss_prot_iopl:
     mov ax,[bp].cr_flags
     or ax,200h
     and ax,NOT 7000h
-    mov ds:tss_eflags,ax
-    mov ds:tss_eflags+2,0
+    movzx eax,ax
+    mov ds:p_tss_eflags,eax
+
 init_tss_iopl_done:     
-    mov bx,OFFSET tss_es
-    xor eax,eax
-    mov [bx],eax
-    add bx,0Ch
-    mov [bx],eax
-    add bx,4
-    mov [bx],eax
-    add bx,4
-    mov [bx],eax
-    mov ds:tss_t,0
+    xor ax,ax
+    mov ds:p_tss_es,ax
+    mov ds:p_tss_ds,ax
+    mov ds:p_tss_fs,ax
+    mov ds:p_tss_gs,ax
+    mov ds:p_tss_t,0
     ret
 init_process_tss    ENDP
 
@@ -1811,7 +1785,7 @@ init_process_callback   PROC near
     push es
     mov eax,1000h
     AllocateGlobalMem
-    mov ds:tss_ds,es
+    mov ds:p_tss_ds,es
 ;
     mov ax,[bp].cr_mode
     mov es:cm_mode,ax
@@ -1908,7 +1882,7 @@ create_enviroment       PROC near
     pop es
     pop ds
     mov es:p_cr3,eax
-    mov dword ptr ds:tss_cr3,eax
+    mov ds:p_tss_cr3,eax
     ret
 create_enviroment       ENDP
 
@@ -2237,21 +2211,21 @@ init_first_tss  PROC near
 ; dr0 - dr7
 ;
     xor edx,edx
-    mov ds:tss_dr0,edx
-    mov ds:tss_dr1,edx
-    mov ds:tss_dr2,edx
-    mov ds:tss_dr3,edx
-    mov ds:tss_dr7,edx
+    mov ds:p_tss_dr0,edx
+    mov ds:p_tss_dr1,edx
+    mov ds:p_tss_dr2,edx
+    mov ds:p_tss_dr3,edx
+    mov ds:p_tss_dr7,edx
 ;
 ; 387 status
 ;
-    mov ds:math_control,37Fh
-    mov ds:math_status,0
-    mov ds:math_tag,0FFFFh
-    mov ds:math_eip,0
-    mov ds:math_cs,0
-    mov ds:math_data_offs,0
-    mov ds:math_data_sel,0
+    mov ds:p_math_control,37Fh
+    mov ds:p_math_status,0
+    mov ds:p_math_tag,0FFFFh
+    mov ds:p_math_eip,0
+    mov ds:p_math_cs,0
+    mov ds:p_math_data_offs,0
+    mov ds:p_math_data_sel,0
 ;
 ; thread control
 ;
@@ -2268,23 +2242,23 @@ fill_bm_mod_more:
     jb fill_bm_mod_more         
     mov byte ptr [bx-1],0FFh
 ;
-    mov ax,OFFSET init_first_process_callback
-    mov ds:tss_eip,ax
-    mov ds:tss_cs,cs
+    mov eax,OFFSET init_first_process_callback
+    mov ds:p_tss_eip,eax
+    mov ds:p_tss_cs,cs
 ;
     push es
     mov eax,stack0_size
     AllocateSmallGlobalMem
     mov ax,es
     pop es    
-    mov ds:tss_ss,ax
-    mov ax,stack0_size
-    mov ds:tss_esp,ax
+    mov ds:p_tss_ss,ax
+    mov eax,stack0_size
+    mov ds:p_tss_esp,eax
 ;
-    pushf
-    pop ax
+    pushfd
+    pop eax
     and ax,NOT 7000h
-    mov ds:tss_eflags,ax
+    mov ds:p_tss_eflags,eax
     ret
 init_first_tss  ENDP
 
@@ -2315,7 +2289,7 @@ init_first_process      Proc near
     mov ds,es:p_tss_data_sel
     call init_first_tss
     call create_enviroment
-    mov ds:tss_es,fs
+    mov ds:p_tss_es,fs
     GetCore
     mov fs:ps_null_thread,es
     mov es:p_spinlock,0

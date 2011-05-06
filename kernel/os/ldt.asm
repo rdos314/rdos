@@ -116,7 +116,7 @@ create_ldt      PROC near
     GetThread
     mov es,ax
     mov es,es:p_tss_data_sel
-    mov es:tss_ldt,bx
+    mov es:p_tss_ldt,bx
     mov ds:app_ldt_sel,bx
     lldt bx
     AllocateGdt
@@ -181,7 +181,7 @@ destroy_ldt     PROC near
     mov ds,ax
     mov ds,ds:p_tss_data_sel
     xor bx,bx
-    xchg bx,ds:tss_ldt
+    xchg bx,ds:p_tss_ldt
     xor ax,ax
     lldt ax
     FreeGdt
@@ -245,7 +245,7 @@ allocate_ldt_again:
     GetThread
     mov ds,ax
     mov ds,ds:p_tss_data_sel
-    mov bx,ds:tss_ldt
+    mov bx,ds:p_tss_ldt
     mov ax,gdt_sel
     mov ds,ax
     mov ax,[bx]
@@ -323,7 +323,7 @@ allocate_mldt_extend    PROC near
     GetThread
     mov ds,ax
     mov ds,ds:p_tss_data_sel
-    mov bx,ds:tss_ldt
+    mov bx,ds:p_tss_ldt
     mov ax,gdt_sel
     mov ds,ax
     mov ax,[bx]
@@ -368,7 +368,7 @@ allocate_multiple_ldt   PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_tss_data_sel
-    mov bx,ds:tss_ldt
+    mov bx,ds:p_tss_ldt
     mov ax,gdt_sel
     mov ds,ax
     mov dx,[bx]

@@ -1131,13 +1131,13 @@ math_real_fpu:
 ;    
     mov ds,ax
     push bx
-    mov bx,OFFSET math_control
+    mov bx,OFFSET p_math_control
     db 9Bh, 66h, 0DDh, 37h      ;       32-bit fsave [bx]
     pop bx
 
 math_reload:
     mov ds,bx
-    mov bx,OFFSET math_control
+    mov bx,OFFSET p_math_control
     db 9Bh, 66h, 0DDh, 27h      ;       32-bit frstor [bx]
 
 math_done:

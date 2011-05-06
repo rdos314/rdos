@@ -658,19 +658,19 @@ init_cpu_done:
     call local_create_data_sel16
 ;
     mov ds,bx
-    mov ds:tss_cs,cs
-    mov dword ptr ds:tss_eip,OFFSET prot_init
-    mov ds:tss_ss,kernel_stack
-    mov ds:tss_esp,800h
-    mov ds:tss_ds,0
-    mov ds:tss_es,0
-    mov ds:tss_fs,0
-    mov ds:tss_gs,0
-    mov ds:tss_ldt,0
-    mov dword ptr ds:tss_eflags,0
-    mov dword ptr ds:tss_back_link,0
-    mov ds:tss_t,0
-    mov ds:tss_bitmap,800h
+    mov ds:c_tss_cs,cs
+    mov dword ptr ds:c_tss_eip,OFFSET prot_init
+    mov ds:c_tss_ss,kernel_stack
+    mov ds:c_tss_esp,800h
+    mov ds:c_tss_ds,0
+    mov ds:c_tss_es,0
+    mov ds:c_tss_fs,0
+    mov ds:c_tss_gs,0
+    mov ds:c_tss_ldt,0
+    mov dword ptr ds:c_tss_eflags,0
+    mov dword ptr ds:c_tss_back_link,0
+    mov ds:c_tss_t,0
+    mov ds:c_tss_bitmap,800h
     xor ax,ax
     mov ds,ax
     call local_create_tss_sel

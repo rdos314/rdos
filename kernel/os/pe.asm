@@ -3014,7 +3014,7 @@ init_thread     PROC far
     mov ebp,fs:flat_base
     mov ax,flat_data_sel
     mov fs,ax
-    mov es,ds:tss_ebx
+    mov es,word ptr ds:p_tss_ebx
     mov ebx,es:pvModuleHandle
     mov edx,es:pvProcessHandle
     push es
@@ -3048,19 +3048,19 @@ init_thread     PROC far
     mov es:pvArbitrary,ecx
     mov es:pvModuleHandle,ebx
     mov es:pvProcessHandle,edx
-    mov ds:tss_fs,es
-    mov ds:tss_ds,fs
-    mov ds:tss_ss,fs
-    mov ds:tss_es,fs
-    mov ds:tss_cs,flat_code_sel
-    mov ds:tss_gs,0
+    mov ds:p_tss_fs,es
+    mov ds:p_tss_ds,fs
+    mov ds:p_tss_ss,fs
+    mov ds:p_tss_es,fs
+    mov ds:p_tss_cs,flat_code_sel
+    mov ds:p_tss_gs,0
     pop eax
     add eax,200h
     and ax,0F000h
     add eax,1000h
     AllocateLocalLinear
     sub edx,ebp
-    mov dword ptr ds:tss_ebx,edx
+    mov ds:p_tss_ebx,edx
     mov es:pvFirstExcept,-1
     mov es:pvStackUserBottom,edx
     mov es:pvStackUserSize,eax
@@ -3074,9 +3074,9 @@ init_thread     PROC far
     pop es
     mov es:pvThreadHandle,eax
     mov fs:[edx+24h],eax
-    mov dword ptr ds:tss_ebp,edx
+    mov ds:p_tss_ebp,edx
     sub edx,10h
-    mov dword ptr ds:tss_ecx,edx
+    mov ds:p_tss_ecx,edx
     sub edx,100h
     mov es:pvTLSArray,edx
     sub edx,8
@@ -3136,7 +3136,7 @@ init_thread_no_tls:
     xor eax,eax
     mov fs:[edx],eax                        ; return address
     sub edx,4
-    mov dword ptr ds:tss_esp,edx
+    mov ds:p_tss_esp,edx
 ;
     pop ebp
     pop edi
