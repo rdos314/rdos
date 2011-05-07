@@ -1459,7 +1459,6 @@ debug_trace     PROC far
     jz debug_trace_done
     mov bx,ax
     mov es,bx
-    mov es,es:p_tss_data_sel
     mov dx,es:p_tss_cs
     mov esi,es:p_tss_eip
     call ReadWord
@@ -1572,7 +1571,6 @@ debug_pace      PROC far
 ;
     mov bx,ax
     mov es,bx
-    mov es,es:p_tss_data_sel
 ;
     xor cl,cl
     mov bx,es:p_tss_cs
@@ -1755,7 +1753,6 @@ debug_go    PROC far
     jz debug_go_done
     mov bx,ax
     mov es,bx
-    mov es,es:p_tss_data_sel
     mov eax,es:p_tss_dr7
     and ax,0FFFCh
     mov es:p_tss_dr7,eax
@@ -1917,20 +1914,18 @@ ast06  DB 2
 ast07  DB 2
 
 AddBreak PROC near
-    push ds
     push bx
     push cx
     push edx
     push esi
 ;
-    mov ds,es:p_tss_data_sel
     cmp al,4
     jae abFail
 ;   
     movzx bx,al
     shl bx,2 
     add bx,OFFSET p_tss_dr0
-    mov ds:[bx],edx
+    mov es:[bx],edx
 ;
     cmp cl,7
     jbe abSizeOk
@@ -1969,8 +1964,8 @@ abSizeOk:
     shl cl,1
     mov dx,1
     shl dx,cl
-    and ds:p_tss_dr7,esi
-    or ds:p_tss_dr7,edx
+    and es:p_tss_dr7,esi
+    or es:p_tss_dr7,edx
     or es:p_flags,THREAD_FLAG_BP
     clc
     jmp abDone
@@ -1983,7 +1978,6 @@ abDone:
     pop edx
     pop cx
     pop bx
-    pop ds
     ret
 AddBreak ENDP
 
@@ -2000,11 +1994,9 @@ AddBreak ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RemoveBreak PROC near
-    push ds
     push cx
     push edx
 ;
-    mov ds,es:p_tss_data_sel
     cmp al,4
     jae rbFail
 ;    
@@ -2020,7 +2012,7 @@ RemoveBreak PROC near
     shl dx,cl
 ;    
     not edx
-    and ds:p_tss_dr7,edx
+    and es:p_tss_dr7,edx
     clc
     jmp rbDone
 
@@ -2030,7 +2022,6 @@ rbFail:
 rbDone:   
     pop edx
     pop cx
-    pop ds
     ret
 RemoveBreak ENDP
 
@@ -2990,8 +2981,7 @@ load_reload_timer:
     ReloadSysTimer
 ;
     sti
-    mov ds,es:p_tss_data_sel
-    mov ax,ds:p_tss_ess0    
+    mov ax,es:p_tss_ess0    
     mov ds,fs:ps_tss_data_sel
     mov ds:c_tss_ess0,ax
 ;
@@ -3015,7 +3005,8 @@ load_reload_cr3:
     mov cr3,eax
 
 load_cr3_ok:
-    mov ds,es:p_tss_data_sel
+    mov ax,es
+    mov ds,ax
 ;
     mov eax,cr0
     or al,8
@@ -3023,28 +3014,28 @@ load_cr3_ok:
 ;
     lldt ds:p_tss_ldt
 ;
-    mov ax,es:p_flags
+    mov ax,ds:p_flags
     or ax,ax
     jz load_actions_done
 ;
     test ax,THREAD_FLAG_CREATE
     jz load_create_done
 ;
-    and es:p_flags,NOT THREAD_FLAG_CREATE
+    and ds:p_flags,NOT THREAD_FLAG_CREATE
     mov bx,OFFSET thread_create
     call AddCallback
     
 load_create_done:
-    mov ax,es:p_flags
+    mov ax,ds:p_flags
     test ax,THREAD_FLAG_SUSPEND
     jz load_suspend_done
 ;
-    and es:p_flags,NOT THREAD_FLAG_SUSPEND
+    and ds:p_flags,NOT THREAD_FLAG_SUSPEND
     mov bx,OFFSET thread_suspend
     call AddCallback
 
 load_suspend_done:
-    mov ax,es:p_flags
+    mov ax,ds:p_flags
     test ax,THREAD_FLAG_BP
     jz load_bp_done
 ;
@@ -3262,7 +3253,6 @@ SaveCurrentThread       Proc near
     add ds:p_lsb_tics,eax
     adc ds:p_msb_tics,0
 ;    
-    mov ds,ds:p_tss_data_sel
     pushfd
     pop eax
     or ax,200h
@@ -3336,7 +3326,6 @@ SaveLockedThread    Proc near
     add ds:p_lsb_tics,eax
     adc ds:p_msb_tics,0
 ;
-    mov ds,ds:p_tss_data_sel
     pushfd
     pop eax
     or ax,200h
@@ -3583,13 +3572,9 @@ start_core:
 
 DeleteThread    Proc near
     push es
-    mov es,es:p_tss_data_sel
     mov es,es:p_tss_ess0
     FreeMem
     pop es
-;
-    mov bx,es:p_tss_data_sel
-    FreeMem
 ;
     FreeMem
     ret
@@ -3657,13 +3642,9 @@ cleanup_process_linear_next:
 ;
     sti
     push es
-    mov es,es:p_tss_data_sel
     mov es,es:p_tss_ess0
     FreeMem
     pop es
-;
-    mov bx,es:p_tss_data_sel
-    FreeGdt
 ;
     FreeMem
     ret
@@ -3956,7 +3937,6 @@ debug_normal:
 ;    
     mov ds,fs:ps_curr_thread 
     mov ds:p_error_code,ax
-    mov ds,ds:p_tss_data_sel
 ;
     mov eax,[bp].vm_eax
     mov ds:p_tss_eax,eax
@@ -5343,7 +5323,8 @@ stop_timer      ENDP
     public init_first_thread
 
 init_first_thread:
-    mov ds,es:p_tss_data_sel
+    mov ax,es
+    mov ds,ax
     mov ax,ds:p_tss_ss
     mov ds:p_tss_ess0,ax
     mov eax,ds:p_tss_esp
@@ -6716,7 +6697,6 @@ check_copy_id_done:
     stos byte ptr es:[edi]
 ;
     mov ds,bx
-    mov ds,ds:p_tss_data_sel
     mov cx,ds:p_tss_cs
     mov edx,ds:p_tss_eip   
     clc
@@ -6763,7 +6743,6 @@ check_copy_zero:
 
 check_copy_cpu:
     mov ds,bx
-    mov ds,ds:p_tss_data_sel
     mov cx,ds:p_tss_cs
     mov edx,ds:p_tss_eip   
     jmp check_copy
