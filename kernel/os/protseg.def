@@ -32,14 +32,6 @@ k_data_size			EQU 2000h
 l_stack_size		EQU 2000h
 thread_data_size	EQU 0FFFFh
 
-tss_size			EQU 400h
-;
-thread_seg_offs		EQU 0
-thread_387_offs		EQU 80h
-thread_tss_offs		EQU 400h
-;
-thread_size			EQU 800h
-
 stack0_size			EQU 1000h
 
 
