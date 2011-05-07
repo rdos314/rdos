@@ -805,7 +805,8 @@ not_empty_r:
     call write_stg
 ;
     mov di,es:p_error_code
-    mov gs,es:p_tss_data_sel
+    mov ax,es
+    mov gs,ax
     shl di,3
     mov ax,di
     add ax,ax

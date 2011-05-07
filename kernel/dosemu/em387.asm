@@ -93,7 +93,6 @@ Const1  DT 1.0
 SaveFp  MACRO
         GetThread
         mov fs,ax
-        mov fs,fs:p_tss_data_sel
         mov dx,word ptr fs:p_math_op
         mov word ptr fs:p_math_prev_op,dx
         and al,7

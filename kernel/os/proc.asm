@@ -1020,7 +1020,6 @@ allocate_thread_block   PROC near
     mov eax,SIZE thread_seg
     AllocateSmallGlobalMem
     mov es:p_thread_sel,es
-    mov es:p_tss_data_sel,es
     mov es:tss_thread,es
     ret
 allocate_thread_block   ENDP
