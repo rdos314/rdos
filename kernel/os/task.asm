@@ -4859,9 +4859,9 @@ TryLockCore   Proc near
     push ax
     mov ax,core_data_sel
     mov fs,ax
-    mov fs,fs:ps_sel
     pop ax
     add fs:ps_nesting,1
+    mov fs,fs:ps_sel
     ret
 TryLockCore   Endp
 
@@ -4882,7 +4882,6 @@ LockCore      Proc near
     push ax
     mov ax,core_data_sel
     mov fs,ax
-    mov fs,fs:ps_sel
     pop ax
     add fs:ps_nesting,1
     jc lcDone
@@ -4890,6 +4889,7 @@ LockCore      Proc near
     CrashGate
 
 lcDone:     
+    mov fs,fs:ps_sel
     ret
 LockCore      Endp
 
