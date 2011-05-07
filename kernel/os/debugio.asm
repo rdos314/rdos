@@ -360,8 +360,7 @@ WriteEflags     PROC near
     shl eax,16
     mov ax,word ptr gs:p_tss_eflags
     push ds
-    mov ds,gs:tss_thread
-    mov ds,ds:p_process_sel
+    mov ds,gs:p_process_sel
     and ax,NOT 200h
     mov bx,ds:ms_virt_flags
     and bx,200h
@@ -524,7 +523,7 @@ WriteDwordRegs  ENDP
 
 WriteDataRow    PROC near
     mov dx,ax
-    mov ax,gs:tss_thread
+    mov ax,gs
     mov es,ax
     call WriteHexPtr32
     mov cx,16
@@ -578,8 +577,7 @@ ft_gdt  DB 'gdt ',0
 WriteFault      PROC near
     test word ptr gs:p_tss_eflags+2,2
     jnz write_fault_end
-    mov es,gs:tss_thread
-    mov ax,es:p_error_code
+    mov ax,gs:p_error_code
     cmp ax,3
     je write_fault_end
     mov ax,cs
@@ -653,8 +651,7 @@ ke17    DB 'Invalid handle          '
 ke18    DB 'Invalid selector        '
 
 WriteIntCode    Proc near
-    mov es,gs:tss_thread
-    mov dx,es:p_error_code
+    mov dx,gs:p_error_code
     mov bx,dx
     add bx,bx
     add bx,bx
@@ -681,7 +678,7 @@ WriteIntCode    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteThread     Proc near
-    mov ax,gs:tss_thread
+    mov ax,gs
     mov es,ax
     mov ax,es:p_id
     call WriteHexWord
@@ -730,7 +727,7 @@ WriteFreeMem    PROC near
 ;
     mov di,OFFSET local_mem_comment
     WriteAsciiz
-    mov bx,gs:tss_thread
+    mov bx,gs
     UsedLocalLinearThread
     call WriteHexDword
     call NewLine
@@ -784,7 +781,8 @@ data_next:
     call WriteDataRow
     call NewLine
 ;
-    mov es,gs:tss_thread
+    mov ax,gs
+    mov es,ax
     push word ptr gs:p_tss_eflags+2
     mov word ptr gs:p_tss_eflags+2,0
     mov ax,es:p_pm_deb_sel
@@ -815,8 +813,7 @@ get_cs_bitness_pm:
     jz get_cs_bitness_gdt
 
 get_cs_bitness_ldt:
-    mov es,gs:tss_thread
-    mov es,es:p_ldt_sel
+    mov es,gs:p_ldt_sel
     jmp get_cs_bitness_test
 
 get_cs_bitness_gdt:
@@ -1027,8 +1024,7 @@ code_in_ldt:
     and bx,0FFF8h
     xor esi,esi
     mov si,bx
-    mov es,gs:tss_thread
-    mov es,es:p_ldt_sel
+    mov es,gs:p_ldt_sel
     mov al,es:[bx+6]
     shr al,6
     and ax,1
@@ -1045,7 +1041,8 @@ code_in_gdt:
 seg_size_ok:
     mov ax,SEG data
     mov ds,ax
-    mov es,gs:tss_thread
+    mov ax,gs
+    mov es,ax
     mov dx,gs:p_tss_cs
     mov ebx,gs:p_tss_eip
     call SetIpAds
@@ -1602,7 +1599,7 @@ toggle_nt       ENDP
 mem_do  PROC near
     mov cl,[bp].vm_edx
     sub cl,cs:[bx+debug_col]
-    mov bx,gs:tss_thread
+    mov bx,gs
 mem_do_next:
     cmp cl,3
     jc mem_do_alloc
@@ -1656,7 +1653,8 @@ mem_es  ENDP
 mem_pm  PROC near
     push word ptr gs:p_tss_eflags+2
     mov word ptr gs:p_tss_eflags+2,0
-    mov es,gs:tss_thread
+    push gs
+    pop es
     mov dx,es:p_pm_deb_sel
     mov esi,es:p_pm_deb_offs
     call mem_do
@@ -1667,7 +1665,7 @@ mem_pm  ENDP
 change_pm_sel   PROC near
     push word ptr gs:p_tss_eflags+2
     mov word ptr gs:p_tss_eflags+2,0
-    mov dx,gs:tss_thread
+    mov dx,gs
     and cl,3
     mov esi,OFFSET p_pm_deb_sel
     push cx
@@ -1687,7 +1685,7 @@ change_pm_sel   ENDP
 change_pm_offs  PROC near
     push word ptr gs:p_tss_eflags+2
     mov word ptr gs:p_tss_eflags+2,0
-    mov dx,gs:tss_thread
+    mov dx,gs
     mov esi,OFFSET p_pm_deb_offs
     push cx
     push OFFSET change_pm_offs_ret
@@ -1706,7 +1704,8 @@ change_pm_offs  ENDP
 mem_vm  PROC near
     push word ptr gs:p_tss_eflags+2
     mov word ptr gs:p_tss_eflags+2,2
-    mov es,gs:tss_thread
+    push gs
+    pop es
     mov dx,es:p_vm_deb_sel
     mov esi,es:p_vm_deb_offs
     call mem_do
@@ -1717,7 +1716,7 @@ mem_vm  ENDP
 change_vm_sel   PROC near
     push word ptr gs:p_tss_eflags+2
     mov word ptr gs:p_tss_eflags+2,0
-    mov dx,gs:tss_thread
+    mov dx,gs
     and cl,3
     mov esi,OFFSET p_vm_deb_sel
     push cx
@@ -1737,7 +1736,7 @@ change_vm_sel   ENDP
 change_vm_offs  PROC near
     push word ptr gs:p_tss_eflags+2
     mov word ptr gs:p_tss_eflags+2,0
-    mov dx,gs:tss_thread
+    mov dx,gs
     mov esi,OFFSET p_vm_deb_offs
     push cx
     push OFFSET change_vm_offs_ret
@@ -1994,7 +1993,7 @@ pace_sw PROC near
 pace_sw ENDP
 
 reg_sw  PROC near
-    mov ax,gs:tss_thread
+    mov ax,gs
     mov es,ax
     mov gs,ax
     call WriteCpu

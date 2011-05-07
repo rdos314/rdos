@@ -3067,11 +3067,7 @@ init_thread     PROC far
     add edx,eax
     sub edx,88h
     mov es:pvTEB,edx
-    mov ax,ds:tss_thread
-    push es
-    mov es,ax
-    movzx eax,es:p_id
-    pop es
+    movzx eax,ds:p_id
     mov es:pvThreadHandle,eax
     mov fs:[edx+24h],eax
     mov ds:p_tss_ebp,edx
