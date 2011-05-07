@@ -235,6 +235,8 @@ THREAD_FLAG_SUSPEND = 4
 
 thread_seg	STRUC
 
+p_tss_resv          DB 300 DUP(?)
+
 p_next			    DW ?
 p_prev			    DW ?
 p_prio			    DW ?
