@@ -1497,7 +1497,8 @@ create_thread   PROC near
     call allocate_thread_block
     mov dx,[bp].cr_prio
     call init_thread_block
-    mov ds,es:p_tss_data_sel
+    mov ax,es
+    mov ds,ax
     call init_default_tss
     mov ax,[bp].cr_mode
     test ax,1
@@ -1591,7 +1592,7 @@ terminate_thread:
     SimSti
     GetThread
     mov ds,ax
-    mov bx,ds:p_tss_data_sel
+    mov bx,ax
 ;
     mov ax,system_data_sel
     mov ds,ax
@@ -1894,7 +1895,8 @@ create_process  PROC far
     call init_thread_block
     mov es:p_debug_proc,0
     call init_process_block
-    mov ds,es:p_tss_data_sel
+    mov ax,es
+    mov ds,ax
     call init_default_tss
     call create_enviroment
     mov ax,[bp].cr_mode
@@ -2231,7 +2233,8 @@ init_first_process      Proc near
     call allocate_thread_block
     call init_first_thread
     call init_process_block
-    mov ds,es:p_tss_data_sel
+    mov ax,es
+    mov ds,ax
     call init_first_tss
     call create_enviroment
     mov ds:p_tss_es,fs

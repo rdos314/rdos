@@ -1968,9 +1968,7 @@ debug_do:
     jz debug_err
 ;
     mov ds,bx
-    mov dx,ds:p_tss_data_sel
-    mov ds,dx
-    mov gs,dx
+    mov gs,bx
 
 debug_next:
     movzx bx,al
