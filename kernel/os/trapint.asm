@@ -112,7 +112,6 @@ emulate_exception:
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_tss_data_sel
     mov ax,[bp].vm_err
     mov ds:tss_error_code,ax
     xor ax,ax
@@ -402,7 +401,6 @@ trap_1:
     jz t1_ret
 ;    
     mov ds,ax
-    mov ds,ds:p_tss_data_sel
     mov ax,[bp].vm_err
     mov ds:tss_error_code,ax
     sti
@@ -454,7 +452,6 @@ trap_2:
     push ds
     GetThread
     mov ds,ax
-    mov ds,ds:p_tss_data_sel
     mov ax,[bp].vm_err
     mov ds:tss_error_code,ax
     xor ax,ax
@@ -496,7 +493,6 @@ trap_3:
     push ds
     GetThread
     mov ds,ax
-    mov ds,ds:p_tss_data_sel
     mov ax,[bp].vm_err
     mov ds:tss_error_code,ax
     xor ax,ax
@@ -1025,7 +1021,6 @@ trap_6:
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_tss_data_sel
     mov ax,[bp].vm_err
     mov ds:tss_error_code,ax
     xor ax,ax
@@ -1096,7 +1091,6 @@ trap_7:
     push ds
     GetThread
     mov ds,ax
-    mov ds,ds:p_tss_data_sel
     mov ax,[bp].vm_err
     mov ds:tss_error_code,ax
     xor ax,ax
@@ -1113,7 +1107,7 @@ math_emulate_fpu:
 math_real_fpu:
     GetThread
     mov ds,ax
-    mov bx,ds:p_tss_data_sel
+    mov bx,ax
 ;
     mov ax,system_data_sel
     mov ds,ax
@@ -1200,7 +1194,6 @@ trap_10:
     push ds
     GetThread
     mov ds,ax
-    mov ds,ds:p_tss_data_sel
     mov ax,[bp].vm_err
     mov ds:tss_error_code,ax
     xor ax,ax
@@ -1247,7 +1240,6 @@ trap_11:
     push ds
     GetThread
     mov ds,ax
-    mov ds,ds:p_tss_data_sel
     mov ax,[bp].vm_err
     mov ds:tss_error_code,ax
     xor ax,ax
@@ -1308,7 +1300,6 @@ trap_12:
 
 t12_thread:
     mov ds,ax
-    mov ds,ds:p_tss_data_sel
     mov ax,[bp].vm_err
     mov ds:tss_error_code,ax
     xor ax,ax
