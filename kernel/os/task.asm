@@ -1276,7 +1276,7 @@ ReadWord    Proc near
     push bx
     push cx
     push esi
-    mov bx,es:tss_thread
+    mov bx,es
     test word ptr es:p_tss_eflags+2,2
     jz read_word_prot
 read_word_virt:
@@ -1320,7 +1320,7 @@ WriteWord       Proc near
     push cx
     push esi
     mov cx,ax
-    mov bx,es:tss_thread
+    mov bx,es
     test word ptr es:p_tss_eflags+2,2
     jz write_word_prot
 write_word_virt:
@@ -1486,7 +1486,7 @@ debug_trace     PROC far
     push dx
     push bx
     or word ptr es:p_tss_eflags+2,2
-    mov bx,es:tss_thread
+    mov bx,es
     mov dx,es:p_tss_ss
     movzx esi,word ptr es:p_tss_esp
     sub esi,6
@@ -1508,7 +1508,7 @@ debug_trace_trace:
     mov eax,es:p_tss_dr7
     and ax,0FFFCh
     mov es:p_tss_dr7,eax
-    mov bx,es:tss_thread
+    mov bx,es
     mov ax,word ptr es:p_tss_eflags
     or ax,100h
     mov word ptr es:p_tss_eflags,ax
@@ -1581,8 +1581,7 @@ debug_pace      PROC far
     jz debug_pace_bitness_gdt
 
 debug_pace_bitness_ldt:
-    mov ds,es:tss_thread
-    mov ds,ds:p_ldt_sel
+    mov ds,es:p_ldt_sel
     jmp debug_pace_bitness_get
 
 debug_pace_bitness_gdt:
@@ -1670,8 +1669,7 @@ debug_pace_step_prot:
     jz debug_pace_step_gdt
 ;
     xor eax,eax
-    mov ds,es:tss_thread
-    mov ds,ds:p_ldt_sel
+    mov ds,es:p_ldt_sel
     mov si,es:p_tss_cs
     and si,0FFF8h
     mov eax,[si+2]
@@ -1712,7 +1710,7 @@ debug_pace_trace:
     mov word ptr es:p_tss_eflags,ax
 
 debug_pace_do:
-    mov bx,es:tss_thread
+    mov bx,es
     mov ds,bx
     or ds:p_flags,THREAD_FLAG_BP
 ;
