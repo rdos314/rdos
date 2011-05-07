@@ -372,7 +372,7 @@ interact_incr   PROC near
     mov al,cl
     pushf
     add esi,eax
-    mov bx,gs:tss_thread
+    mov bx,gs
     test word ptr gs:p_tss_eflags+2,2
     jz interact_inc_read_prot
 interact_inc_read_virt:
@@ -432,7 +432,7 @@ interact_decr   PROC near
     mov al,cl
     pushf
     add esi,eax
-    mov bx,gs:tss_thread
+    mov bx,gs
     test word ptr gs:p_tss_eflags+2,2
     jz interact_dec_read_prot
 interact_dec_read_virt:
@@ -493,7 +493,7 @@ interact_set_value      PROC near
     mov al,cl
     pushf
     add esi,eax
-    mov bx,gs:tss_thread
+    mov bx,gs
     test word ptr gs:p_tss_eflags+2,2
     jz interact_set_read_prot
 interact_set_read_virt:

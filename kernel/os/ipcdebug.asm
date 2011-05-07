@@ -104,8 +104,7 @@ req_tss PROC near
 ;
     mov ax,word ptr es:p_tss_eflags
     push ds
-    mov ds,gs:tss_thread
-    mov ds,ds:p_process_sel
+    mov ds,gs:p_process_sel
     and ax,NOT 200h
     mov bx,ds:ms_virt_flags
     and bx,200h
@@ -131,7 +130,7 @@ req_tss Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 req_thread      PROC near
-    mov bx,gs:tss_thread
+    mov bx,gs
     xor di,di
     GetThreadTss
 ;
@@ -257,8 +256,7 @@ get_cs_bitness_pm:
     jz get_cs_bitness_gdt
 
 get_cs_bitness_ldt:
-    mov es,gs:tss_thread
-    mov es,es:p_ldt_sel
+    mov es,gs:p_ldt_sel
     jmp get_cs_bitness_test
 
 get_cs_bitness_gdt:
@@ -478,8 +476,7 @@ code_in_ldt:
     and bx,0FFF8h
     xor esi,esi
     mov si,bx
-    mov es,gs:tss_thread
-    mov es,es:p_ldt_sel
+    mov es,gs:p_ldt_sel
     mov al,es:[bx+6]
     shr al,6
     and ax,1
@@ -496,7 +493,8 @@ code_in_gdt:
 seg_size_ok:
     mov ax,SEG data
     mov ds,ax
-    mov es,gs:tss_thread
+    mov ax,gs
+    mov es,ax
     mov dx,gs:p_tss_cs
     mov ebx,gs:p_tss_eip
     call SetIpAds
@@ -1058,7 +1056,7 @@ toggle_nt       ENDP
 mem_do  PROC near
     mov cl,es:db_x
     sub cl,cs:[bx+debug_col]
-    mov bx,gs:tss_thread
+    mov bx,gs
 mem_do_next:
     cmp cl,3
     jc mem_do_alloc
@@ -1166,12 +1164,9 @@ mem_es  ENDP
 
 mem_pm  PROC near
     push word ptr gs:p_tss_eflags+2
-    push ds
     mov word ptr gs:p_tss_eflags+2,0
-    mov ds,gs:tss_thread
-    mov dx,ds:p_pm_deb_sel
-    mov esi,ds:p_pm_deb_offs
-    pop ds
+    mov dx,gs:p_pm_deb_sel
+    mov esi,gs:p_pm_deb_offs
     call mem_do
     pop word ptr gs:p_tss_eflags+2
     ret
@@ -1191,7 +1186,7 @@ mem_pm  ENDP
 change_pm_sel   PROC near
     push word ptr gs:p_tss_eflags+2
     mov word ptr gs:p_tss_eflags+2,0
-    mov dx,gs:tss_thread
+    mov dx,gs
     and cl,3
     mov esi,OFFSET p_pm_deb_sel
     push cx
@@ -1222,7 +1217,7 @@ change_pm_sel   ENDP
 change_pm_offs  PROC near
     push word ptr gs:p_tss_eflags+2
     mov word ptr gs:p_tss_eflags+2,0
-    mov dx,gs:tss_thread
+    mov dx,gs
     mov esi,OFFSET p_pm_deb_offs
     push cx
     push OFFSET change_pm_offs_ret
@@ -1252,11 +1247,8 @@ change_pm_offs  ENDP
 mem_vm  PROC near
     push word ptr gs:p_tss_eflags+2
     mov word ptr gs:p_tss_eflags+2,2
-    push ds
-    mov ds,gs:tss_thread
-    mov dx,ds:p_vm_deb_sel
-    mov esi,ds:p_vm_deb_offs
-    pop ds
+    mov dx,gs:p_vm_deb_sel
+    mov esi,gs:p_vm_deb_offs
     call mem_do
     pop word ptr gs:p_tss_eflags+2
     ret
@@ -1276,7 +1268,7 @@ mem_vm  ENDP
 change_vm_sel   PROC near
     push word ptr gs:p_tss_eflags+2
     mov word ptr gs:p_tss_eflags+2,0
-    mov dx,gs:tss_thread
+    mov dx,gs
     and cl,3
     mov esi,OFFSET p_vm_deb_sel
     push cx
@@ -1307,7 +1299,7 @@ change_vm_sel   ENDP
 change_vm_offs  PROC near
     push word ptr gs:p_tss_eflags+2
     mov word ptr gs:p_tss_eflags+2,0
-    mov dx,gs:tss_thread
+    mov dx,gs
     mov esi,OFFSET p_vm_deb_offs
     push cx
     push OFFSET change_vm_offs_ret

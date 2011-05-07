@@ -631,34 +631,14 @@ WriteThread   PROC near
     push es
     push di
 ;    
-    mov bx,gs:cs_tr    
-    and bx,NOT 3
-    or bx,bx
-    jz wtNoThread
-;
-    test bx,4
-    jnz wtNoThread
-;
-    movzx ecx,word ptr gs:cs_gdtr
-    mov edx,dword ptr gs:cs_gdtr+2
-    cmp bx,cx
-    ja wtNoThread
-;
-    mov ax,flat_sel
-    mov es,ax
-    movzx ebx,bx
-    add ebx,edx
-;
-    mov al,es:[ebx+5]
-    test al,80h
+    mov ax,gs:cs_tr
+    or ax,ax
     jz wtNoThread
 ;    
-    mov edx,es:[ebx+2]
-    rol edx,8
-    mov dl,es:[ebx+7]
-    ror edx,8
+    mov ax,gs:ps_curr_thread
+    or ax,ax
+    jz wtNoThread
 ;
-    mov ax,es:[edx].tss_thread
     verr ax
     jnz wtNoThread
 ;

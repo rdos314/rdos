@@ -1020,7 +1020,6 @@ allocate_thread_block   PROC near
     mov eax,SIZE thread_seg
     AllocateSmallGlobalMem
     mov es:p_thread_sel,es
-    mov es:tss_thread,es
     ret
 allocate_thread_block   ENDP
 
@@ -1302,7 +1301,6 @@ init_default_tss    PROC near
 ;
 ; thread control
 ;
-    mov ds:tss_thread,es
     mov ds:tss_error_code,dx
     ret
 init_default_tss    ENDP
@@ -2172,7 +2170,6 @@ init_first_tss  PROC near
 ;
 ; thread control
 ;
-    mov ds:tss_thread,es
     mov ds:tss_error_code,dx
 ;
     mov ds:p_tss_cr3,edx
