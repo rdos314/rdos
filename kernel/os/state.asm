@@ -90,7 +90,6 @@ default_copy_done:
     stos byte ptr es:[edi]
 ;
     mov ds,bx
-    mov ds,ds:p_tss_data_sel
     mov cx,ds:p_tss_cs
     mov edx,ds:p_tss_eip
     clc
@@ -452,7 +451,6 @@ get_thread_tss_found:
     push esi
     push edi
     mov ds,ax
-    mov ds,ds:p_tss_data_sel
 ;
     mov eax,ds:p_tss_cr3
     mov es:[edi].ut_cr3,eax
@@ -664,7 +662,6 @@ set_thread_tss_found:
     mov cx,es
     mov ds,cx
     mov es,ax
-    mov es,es:p_tss_data_sel
     mov esi,edi
 ;
     mov eax,ds:[esi].ut_cr3

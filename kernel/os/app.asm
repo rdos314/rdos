@@ -579,7 +579,6 @@ close_app_last:
 ;
     GetThread
     mov es,ax
-    mov es,es:p_tss_data_sel
     cli
     mov bx,fs
     or bx,bx

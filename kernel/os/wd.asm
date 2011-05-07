@@ -173,7 +173,6 @@ kw_save_loop:
     mov es:fss_state.st_offs,0
     mov es:fss_state.st_sel,0
 ;
-    mov ds,ds:p_tss_data_sel
     push cx
     mov cx,SIZE thread_seg
     xor si,si

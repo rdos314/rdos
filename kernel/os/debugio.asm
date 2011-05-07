@@ -1994,8 +1994,9 @@ pace_sw PROC near
 pace_sw ENDP
 
 reg_sw  PROC near
-    mov es,gs:tss_thread
-    mov gs,es:p_tss_data_sel
+    mov ax,gs:tss_thread
+    mov es,ax
+    mov gs,ax
     call WriteCpu
     ret
 reg_sw  ENDP
@@ -2344,8 +2345,6 @@ no_wait_debug:
     jmp debug_end
 
 debug_do:
-    mov ds,ax
-    mov ax,ds:p_tss_data_sel
     mov ds,ax
     mov gs,ax
 
