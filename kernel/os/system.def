@@ -282,7 +282,6 @@ p_math_st6		    DT ?
 p_math_st7		    DT ?
 p_math_prev_op	    DB ?,?
 
-tss_thread		    DW ?
 tss_error_code	    DW ?
 
 p_tss_end           DW ?
