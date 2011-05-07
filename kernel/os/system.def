@@ -235,7 +235,57 @@ THREAD_FLAG_SUSPEND = 4
 
 thread_seg	STRUC
 
-p_tss_resv          DB 300 DUP(?)
+p_tss_esp0		    DD ?
+p_tss_ess0		    DW ?
+p_tss_esp1		    DD ?
+p_tss_ess1		    DW ?
+p_tss_esp2		    DD ?
+p_tss_ess2		    DW ?
+p_tss_cr3	        DD ?
+p_tss_eip			DD ?
+p_tss_eflags		DD ?
+p_tss_eax			DD ?
+p_tss_ecx			DD ?
+p_tss_edx			DD ?
+p_tss_ebx			DD ?
+p_tss_esp			DD ?
+p_tss_ebp			DD ?
+p_tss_esi			DD ?
+p_tss_edi			DD ?
+p_tss_es			DW ?
+p_tss_cs			DW ?
+p_tss_ss			DW ?
+p_tss_ds			DW ?
+p_tss_fs			DW ?
+p_tss_gs			DW ?
+p_tss_ldt			DW ?
+p_tss_dr0			DD ?
+p_tss_dr1			DD ?
+p_tss_dr2			DD ?
+p_tss_dr3			DD ?
+p_tss_dr7			DD ?
+p_math_control	    DW ?,?
+p_math_status		DW ?,?
+p_math_tag		    DW ?,?
+p_math_eip		    DD ?
+p_math_cs			DW ?
+p_math_op			DB ?,?
+p_math_data_offs	DD ?
+p_math_data_sel	    DW ?,?
+p_math_st0		    DT ?
+p_math_st1		    DT ?
+p_math_st2		    DT ?
+p_math_st3		    DT ?
+p_math_st4		    DT ?
+p_math_st5		    DT ?
+p_math_st6		    DT ?
+p_math_st7		    DT ?
+p_math_prev_op	    DB ?,?
+
+tss_thread		    DW ?
+tss_error_code	    DW ?
+
+p_tss_end           DW ?
 
 p_next			    DW ?
 p_prev			    DW ?
@@ -314,62 +364,6 @@ ms_thread_count	DW ?
 ms_pd_sel       DW ?
 
 process_seg	ENDS
-
-tss_seg		STRUC
-
-p_tss_esp0		    DD ?
-p_tss_ess0		    DW ?
-p_tss_esp1		    DD ?
-p_tss_ess1		    DW ?
-p_tss_esp2		    DD ?
-p_tss_ess2		    DW ?
-p_tss_cr3	        DD ?
-p_tss_eip			DD ?
-p_tss_eflags		DD ?
-p_tss_eax			DD ?
-p_tss_ecx			DD ?
-p_tss_edx			DD ?
-p_tss_ebx			DD ?
-p_tss_esp			DD ?
-p_tss_ebp			DD ?
-p_tss_esi			DD ?
-p_tss_edi			DD ?
-p_tss_es			DW ?
-p_tss_cs			DW ?
-p_tss_ss			DW ?
-p_tss_ds			DW ?
-p_tss_fs			DW ?
-p_tss_gs			DW ?
-p_tss_ldt			DW ?
-p_tss_dr0			DD ?
-p_tss_dr1			DD ?
-p_tss_dr2			DD ?
-p_tss_dr3			DD ?
-p_tss_dr7			DD ?
-p_math_control	    DW ?,?
-p_math_status		DW ?,?
-p_math_tag		    DW ?,?
-p_math_eip		    DD ?
-p_math_cs			DW ?
-p_math_op			DB ?,?
-p_math_data_offs	DD ?
-p_math_data_sel	    DW ?,?
-p_math_st0		    DT ?
-p_math_st1		    DT ?
-p_math_st2		    DT ?
-p_math_st3		    DT ?
-p_math_st4		    DT ?
-p_math_st5		    DT ?
-p_math_st6		    DT ?
-p_math_st7		    DT ?
-p_math_prev_op	    DB ?,?
-
-tss_thread		    DW ?
-tss_error_code	    DW ?
-
-p_tss_end           DW ?
-
-tss_seg		ENDS
 
 core_tss_seg		STRUC
 

@@ -39,7 +39,7 @@ fault_sector_seg STRUC
 
 fss_sign        DD ?
 fss_state           state_struc <>
-fss_tss         tss_seg <>
+fss_tss         thread_seg <>
 
 fault_sector_seg ENDS
 
@@ -175,7 +175,7 @@ kw_save_loop:
 ;
     mov ds,ds:p_tss_data_sel
     push cx
-    mov cx,SIZE tss_seg
+    mov cx,SIZE thread_seg
     xor si,si
     mov di,OFFSET fss_tss
     rep movsb
@@ -487,7 +487,7 @@ get_fault_thread_tss    PROC near
     mov ax,fs
     mov es,ax
     mov edi,ebp
-    mov ecx,SIZE tss_seg
+    mov ecx,SIZE thread_seg
     rep movs byte ptr es:[edi],ds:[esi]
     clc
     jmp gftEnd    

@@ -97,7 +97,7 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 req_tss PROC near
-    mov cx,SIZE tss_seg
+    mov cx,OFFSET p_tss_end
     xor di,di
     xor si,si
     rep movs byte ptr es:[di],gs:[si]
@@ -113,7 +113,7 @@ req_tss PROC near
     pop ds
     mov word ptr es:p_tss_eflags,ax
 ;
-    mov cx,SIZE tss_seg
+    mov cx,OFFSET p_tss_end
     xor di,di
     ReplyMailslot
     ret
