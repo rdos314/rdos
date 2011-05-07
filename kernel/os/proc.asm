@@ -1023,10 +1023,7 @@ allocate_thread_block   PROC near
 ;
     mov eax,tss_size
     AllocateSmallLinear
-    AllocateGdt
     mov ecx,tss_size
-    CreateTssSelector
-    mov es:p_tss_sel,bx
 ;
     AllocateGdt
     CreateDataSelector16

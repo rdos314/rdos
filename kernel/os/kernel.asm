@@ -346,7 +346,6 @@ init_pre_tasking    PROC near
     call AllocateRam
     mov cr3,esi
     mov es:p_thread_sel,es
-    mov es:p_tss_sel,kernel_tss
     mov es:p_tss_data_sel,0
     mov es:p_cr3,esi
     mov ax,cs

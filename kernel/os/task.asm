@@ -3588,9 +3588,6 @@ DeleteThread    Proc near
     FreeMem
     pop es
 ;
-    mov bx,es:p_tss_sel
-    FreeGdt
-;
     mov bx,es:p_tss_data_sel
     FreeMem
 ;
@@ -3666,9 +3663,6 @@ cleanup_process_linear_next:
     pop es
 ;
     mov bx,es:p_tss_data_sel
-    FreeGdt
-;
-    mov bx,es:p_tss_sel
     FreeGdt
 ;
     FreeMem

@@ -234,79 +234,83 @@ THREAD_FLAG_BP      = 2
 THREAD_FLAG_SUSPEND = 4
 
 thread_seg	STRUC
-	p_next			    DW ?
-	p_prev			    DW ?
-	p_prio			    DW ?
-	p_lsb_tics		    DD ?
-	p_msb_tics		    DD ?
-	p_data			    DD ?
-	p_tss_sel		    DW ?
-	p_tss_data_sel	    DW ?
-	p_387_sel		    DW ?
-	p_thread_sel	    DW ?
-	p_app_sel		    DW ?
-	p_spinlock          DW ?
-	p_free_proc		    DD ?
-	p_cr3			    DD ?
-	p_error_code	    DW ?
-	p_vm_deb_sel	    DW ?
-	p_vm_deb_offs	    DD ?
-	p_pm_deb_sel	    DW ?
-	p_pm_deb_offs	    DD ?
-	p_id			    DW ?
-	p_flags             DW ?
-	p_events		    DW ?
-	p_process_sel	    DW ?
-	p_ldt_sel		    DW ?
-	p_signal		    DB ?
-	p_parent_switch	    DB ?
-	p_lib_sel		    DW ?
-	p_stack_sel		    DW ?
-	p_sleep_sel		    DW ?
-	p_sleep_offset	    DD ?
-	p_wait_list		    DW ?
-	p_kill			    DB ?
-	p_is_waiting	    DB ?
-	p_ref_count		    DW ?
 
-    p_int_locked_stack	DW ?
-    p_int_prot16_stack	DW ?
-    p_int_prot32_stack	DW ?
-    p_int_real_stack	DD ?
+p_next			    DW ?
+p_prev			    DW ?
+p_prio			    DW ?
+p_lsb_tics		    DD ?
+p_msb_tics		    DD ?
+p_data			    DD ?
+p_tss_data_sel	    DW ?
+p_387_sel		    DW ?
+p_thread_sel	    DW ?
+p_app_sel		    DW ?
+p_spinlock          DW ?
+p_free_proc		    DD ?
+p_cr3			    DD ?
+p_error_code	    DW ?
+p_vm_deb_sel	    DW ?
+p_vm_deb_offs	    DD ?
+p_pm_deb_sel	    DW ?
+p_pm_deb_offs	    DD ?
+p_id			    DW ?
+p_flags             DW ?
+p_events		    DW ?
+p_process_sel	    DW ?
+p_ldt_sel		    DW ?
+p_signal		    DB ?
+p_parent_switch	    DB ?
+p_lib_sel		    DW ?
+p_stack_sel		    DW ?
+p_sleep_sel		    DW ?
+p_sleep_offset	    DD ?
+p_wait_list		    DW ?
+p_kill			    DB ?
+p_is_waiting	    DB ?
+p_ref_count		    DW ?
 
-    p_mailslot_sel      DW ?
+p_int_locked_stack	DW ? 
+p_int_prot16_stack	DW ?
+p_int_prot32_stack	DW ?
+p_int_real_stack	DD ?
 
-    p_forecolor	        DB ?
-    p_backcolor	        DB ?
-    p_row			    DW ?
-    p_col			    DW ?
+p_mailslot_sel      DW ?
 
-    p_debug_proc        DD ?
-    p_debug_event       DW ?
+p_forecolor	        DB ?
+p_backcolor	        DB ?
+p_row			    DW ?
+p_col			    DW ?
+
+p_debug_proc        DD ?
+p_debug_event       DW ?
     
-	thread_name		    DB 32 DUP(?)
+thread_name		    DB 32 DUP(?)
 
 thread_seg	ENDS
 
 proc_descr_seg  STRUC
-    pd_proc_sel     DW ?
-    pd_exit_code    DW ?
-    pd_wait         DW ?
-    pd_dr0          DD ?
-    pd_dr1          DD ?
-    pd_dr2          DD ?
-    pd_dr3          DD ?
-    pd_dr7          DD ?
-    pd_ref_count    DB ?
-    pd_section		section_typ <>    
+
+pd_proc_sel     DW ?
+pd_exit_code    DW ?
+pd_wait         DW ?
+pd_dr0          DD ?
+pd_dr1          DD ?
+pd_dr2          DD ?
+pd_dr3          DD ?
+pd_dr7          DD ?
+pd_ref_count    DB ?
+pd_section		section_typ <>    
+
 proc_descr_seg  ENDS
 
 process_seg	STRUC
-	ms_virt_flags	DW ?
-	ms_wait_sti		DW ?
-	ms_cli_thread	DW ?
-	ms_thread_count	DW ?
-	ms_pd_sel       DW ?
+
+ms_virt_flags	DW ?
+ms_wait_sti		DW ?
+ms_cli_thread	DW ?
+ms_thread_count	DW ?
+ms_pd_sel       DW ?
+
 process_seg	ENDS
 
 tss_seg		STRUC
