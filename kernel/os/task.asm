@@ -4828,10 +4828,8 @@ UnlockUserSectionMultiple    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TryLockCore   Proc near
-    push ax
-    mov ax,core_data_sel
-    mov fs,ax
-    pop ax
+    push word ptr core_data_sel
+    pop fs
     add fs:ps_nesting,1
     mov fs,fs:ps_sel
     ret
@@ -4851,10 +4849,8 @@ TryLockCore   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockCore      Proc near
-    push ax
-    mov ax,core_data_sel
-    mov fs,ax
-    pop ax
+    push word ptr core_data_sel
+    pop fs
     add fs:ps_nesting,1
     jc lcDone
 ;
