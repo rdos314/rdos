@@ -4124,13 +4124,7 @@ create_core    Proc far
     mov ax,gdt_sel
     mov es,ax
 ;
-    mov ax,cs:core_count
-    mov cx,core_sel_size
-    push dx
-    mul cx
-    pop dx
-    mov bx,ax
-    add bx,core_sel_base + core_sel_offs
+    AllocateGdt
     mov eax,[edx+core_data_sel]
     mov es:[bx],eax    
 ;    
