@@ -3567,6 +3567,9 @@ DeleteThread    Proc near
     FreeMem
     pop es
 ;
+    mov bx,es:p_tss_sel
+    FreeGdt
+;    
     FreeMem
     ret
 DeleteThread    Endp
@@ -3637,6 +3640,9 @@ cleanup_process_linear_next:
     FreeMem
     pop es
 ;
+    mov bx,es:p_tss_sel
+    FreeGdt
+;    
     FreeMem
     ret
 DeleteProcess   Endp
