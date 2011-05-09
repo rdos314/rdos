@@ -456,6 +456,9 @@ unlock_kernel_section_proc  DW OFFSET UnlockKernelSectionSingle
 lock_user_section_proc      DW OFFSET LockUserSectionSingle
 unlock_user_section_proc    DW OFFSET UnlockUserSectionSingle
 
+flush_global_tlb_proc       DW OFFSET FlushGlobalTlbSingle
+flush_process_tlb_proc      DW OFFSET FlushProcessTlbSingle
+
 core_count                  DW 0
 core_arr                    DW MAX_CORES DUP(0)
 
@@ -3679,6 +3682,8 @@ start_processor_null_threads    Proc near
     mov ds:unlock_kernel_section_proc,OFFSET UnlockKernelSectionMultiple
     mov ds:lock_user_section_proc,OFFSET LockUserSectionMultiple
     mov ds:unlock_user_section_proc,OFFSET UnlockUserSectionMultiple
+    mov ds:flush_global_tlb_proc,OFFSET FlushGlobalTlbMultiple
+    mov ds:flush_process_tlb_proc,OFFSET FlushProcessTlbMultiple
 
 start_locks_ok:    
     mov ecx,200h
@@ -4922,6 +4927,58 @@ unlock_task     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           FlushGlobalTlbSingle
+;
+;           DESCRIPTION:    Flush global TLB entries, single processor version
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FlushGlobalTlbSingle    Proc near
+    ret
+FlushGlobalTlbSingle    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FlushProcessTlbSingle
+;
+;           DESCRIPTION:    Flush process TLB entries, single processor version
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FlushProcessTlbSingle    Proc near
+    ret
+FlushProcessTlbSingle    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FlushGlobalTlbMultiple
+;
+;           DESCRIPTION:    Flush global TLB entries, multiple processor version
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FlushGlobalTlbMultiple    Proc near
+    ret
+FlushGlobalTlbMultiple    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FlushProcessTlbMultiple
+;
+;           DESCRIPTION:    Flush process TLB entries, multiple processor version
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FlushProcessTlbMultiple    Proc near
+    ret
+FlushProcessTlbMultiple    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           FlushGlobalTLB
 ;
 ;           DESCRIPTION:    Flush global TLB entries
@@ -4934,8 +4991,11 @@ flush_global_tlb_name    DB 'Flush Global TLB',0
     
 local_flush_global_tlb    Proc near
     push eax
+;
+    call cs:flush_global_tlb_proc
     mov eax,cr3
     mov cr3,eax
+;    
     pop eax
     ret
 local_flush_global_tlb  Endp
@@ -4960,8 +5020,11 @@ flush_process_tlb_name    DB 'Flush Process TLB',0
 
 local_flush_process_tlb Proc near
     push eax
+;
+    call cs:flush_process_tlb_proc
     mov eax,cr3
     mov cr3,eax
+;    
     pop eax
     ret
 local_flush_process_tlb Endp
