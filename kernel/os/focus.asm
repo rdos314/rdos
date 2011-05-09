@@ -571,6 +571,8 @@ set_focus_no_lost:
     mov ds:focus_switched,1
     mov ds:focus_current_thread,bx
     mov ds,bx
+;    
+    LockTask
     mov eax,cr3
     push eax
     mov eax,ds:p_cr3
@@ -590,6 +592,7 @@ set_focus_no_lost:
     mov ax,sys_dir_sel
     mov ds,ax
     mov [bx],edx
+    UnlockTask
 ;
     mov bx,SEG data
     mov ds,bx
