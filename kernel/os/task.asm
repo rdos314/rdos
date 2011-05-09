@@ -80,7 +80,6 @@ term_thread_list    DW ?
 term_proc_list      DW ?
 
 list_lock           DW ?
-tlb_lock            DW ?
 
 task_seg    ENDS
 
@@ -773,7 +772,6 @@ init_task       PROC near
     mov ds:term_thread_list,0
     mov ds:term_proc_list,0
     mov ds:list_lock,0
-    mov ds:tlb_lock,0
     mov ds:last_time_val,0
     mov ds:last_time_val+4,0
     mov ds:time_sync_state,TIME_SYNC_RESET
@@ -2930,7 +2928,7 @@ load_reload_timer:
     mov bx,es:p_tss_sel
     and byte ptr ds:[bx+5],NOT 2
     ltr bx
-;
+;    
     mov ax,sys_dir_sel
     mov ds,ax
     mov bx,(io_focus_linear SHR 20) AND 0FFFh
@@ -2938,12 +2936,19 @@ load_reload_timer:
     mov bx,process_dir_sel
     mov ds,bx
     mov bx,(io_focus_linear SHR 20) AND 0FFFh
+;
+    xor cl,cl
+    xchg cl,fs:ps_tlb_flush
+;
     cmp edx,[bx]
     jne load_reload_cr3
 ;
     mov eax,cr3
     cmp eax,es:p_cr3
-    je load_cr3_ok
+    jne load_reload_cr3
+;
+    or cl,cl
+    jz load_cr3_ok
 
 load_reload_cr3:    
     mov [bx],edx        
@@ -4937,6 +4942,10 @@ unlock_task     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FlushGlobalTlbSingle    Proc near
+    push eax
+    mov eax,cr3
+    mov cr3,eax
+    pop eax
     ret
 FlushGlobalTlbSingle    Endp
 
@@ -4950,6 +4959,10 @@ FlushGlobalTlbSingle    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FlushProcessTlbSingle    Proc near
+    push eax
+    mov eax,cr3
+    mov cr3,eax
+    pop eax
     ret
 FlushProcessTlbSingle    Endp
 
@@ -4963,36 +4976,16 @@ FlushProcessTlbSingle    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FlushGlobalTlbMultiple    Proc near
-    ret
     push ds
+    push fs
+    push eax
     push bx
     push cx
     push si
 ;
-    mov ax,task_sel
-    mov ds,ax    
-
-fgtSpinLock:    
-    sti
-    mov ax,ds:tlb_lock
-    or ax,ax
-    je fgtGet
-;
-    pause
-    jmp fgtSpinLock
-
-fgtGet:
-    inc ax
-    cli
-    xchg ax,ds:tlb_lock
-    or ax,ax
-    je fgtDone
-;
-    jmp fgtSpinLock
-
-fgtDone:
     mov ax,core_data_sel
     mov ds,ax
+    cli    
     mov ds:ps_tlb_flush,1    
     mov si,ds:ps_sel
     sti
@@ -5005,9 +4998,9 @@ fgtLoop:
     cmp ax,si
     je fgtNext
 ;
-    mov ds,ax
+    mov fs,ax
     mov al,1
-    xchg al,ds:ps_tlb_flush
+    xchg al,fs:ps_tlb_flush
     or al,al
     jnz fgtNext
 ;
@@ -5018,13 +5011,22 @@ fgtNext:
     add bx,2
     loop fgtLoop
 ;
-    mov ax,task_sel
+    mov ax,core_data_sel
     mov ds,ax
-    mov ds:tlb_lock,0
+    mov al,1
+    xchg al,ds:ps_tlb_flush
+    or al,al
+    jz fgtDone
 ;
+    mov eax,cr3
+    mov cr3,eax    
+        
+fgtDone:
     pop si
     pop cx
     pop bx
+    pop eax
+    pop fs
     pop ds
     ret
 FlushGlobalTlbMultiple    Endp
@@ -5039,6 +5041,69 @@ FlushGlobalTlbMultiple    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FlushProcessTlbMultiple    Proc near
+    push ds
+    push fs
+    push eax
+    push bx
+    push cx
+    push edx
+    push si
+;
+    mov ax,core_data_sel
+    mov ds,ax
+    cli    
+    mov ds:ps_tlb_flush,1    
+    mov si,ds:ps_sel
+    sti
+;   
+    mov edx,cr3
+    mov bx,OFFSET core_arr
+    mov cx,cs:core_count
+
+fptLoop:
+    mov ax,cs:[bx]
+    cmp ax,si
+    je fptNext
+;
+    mov fs,ax
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz fptNext
+;
+    mov ds,ax
+    cmp edx,ds:p_cr3
+    jne fptNext
+;
+    mov al,1
+    xchg al,fs:ps_tlb_flush
+    or al,al
+    jnz fptNext
+;
+    mov al,81h
+    SendInt
+
+fptNext:
+    add bx,2
+    loop fptLoop
+;
+    mov ax,core_data_sel
+    mov ds,ax
+    mov al,1
+    xchg al,ds:ps_tlb_flush
+    or al,al
+    jz fptDone
+;
+    mov eax,cr3
+    mov cr3,eax    
+        
+fptDone:
+    pop si
+    pop edx
+    pop cx
+    pop bx
+    pop eax
+    pop fs
+    pop ds
     ret
 FlushProcessTlbMultiple    Endp
 
@@ -5056,18 +5121,12 @@ flush_global_tlb_name    DB 'Flush Global TLB',0
     public local_flush_global_tlb
     
 local_flush_global_tlb    Proc near
-    push eax
-;
     call cs:flush_global_tlb_proc
-    mov eax,cr3
-    mov cr3,eax
-;    
-    pop eax
     ret
 local_flush_global_tlb  Endp
 
 flush_global_tlb     Proc far
-    call local_flush_global_tlb
+    call cs:flush_global_tlb_proc
     retf32
 flush_global_tlb     Endp
 
@@ -5085,18 +5144,12 @@ flush_process_tlb_name    DB 'Flush Process TLB',0
     public local_flush_process_tlb
 
 local_flush_process_tlb Proc near
-    push eax
-;
     call cs:flush_process_tlb_proc
-    mov eax,cr3
-    mov cr3,eax
-;    
-    pop eax
     ret
 local_flush_process_tlb Endp
 
 flush_process_tlb     Proc far
-    call local_flush_process_tlb
+    call cs:flush_process_tlb_proc
     retf32
 flush_process_tlb     Endp
 
