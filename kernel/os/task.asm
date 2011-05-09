@@ -4963,6 +4963,7 @@ FlushProcessTlbSingle    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FlushGlobalTlbMultiple    Proc near
+    ret
     push ds
     push bx
     push cx
@@ -4985,7 +4986,7 @@ fgtGet:
     cli
     xchg ax,ds:tlb_lock
     or ax,ax
-    je gftDone
+    je fgtDone
 ;
     jmp fgtSpinLock
 
