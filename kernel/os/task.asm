@@ -4998,11 +4998,18 @@ unlock_task     Endp
 
 flush_global_tlb_name    DB 'Flush Global TLB',0
 
-flush_global_tlb     Proc far
+    public local_flush_global_tlb
+    
+local_flush_global_tlb    Proc near
     push eax
     mov eax,cr3
     mov cr3,eax
     pop eax
+    ret
+local_flush_global_tlb  Endp
+
+flush_global_tlb     Proc far
+    call local_flush_global_tlb
     retf32
 flush_global_tlb     Endp
 
@@ -5017,11 +5024,18 @@ flush_global_tlb     Endp
 
 flush_process_tlb_name    DB 'Flush Process TLB',0
 
-flush_process_tlb     Proc far
+    public local_flush_process_tlb
+
+local_flush_process_tlb Proc near
     push eax
     mov eax,cr3
     mov cr3,eax
     pop eax
+    ret
+local_flush_process_tlb Endp
+
+flush_process_tlb     Proc far
+    call local_flush_process_tlb
     retf32
 flush_process_tlb     Endp
 

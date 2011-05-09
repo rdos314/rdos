@@ -86,6 +86,8 @@ local_mem_seg   ENDS
     .386p
 
     extrn local_create_data_sel16:near
+    extrn local_flush_global_tlb:near
+    extrn local_flush_process_tlb:near
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -1377,12 +1379,6 @@ resize_flat_shrink_nopage:
     add edx,4
     loop resize_flat_shrink_loop
 ;
-;    pop edx
-;    pop ecx
-;       shl edx,10
-;    mov ax,system_data_sel
-;    mov ds,ax
-;    call ds:tlb_flush_proc
     clc
 
 resize_flat_leave:
@@ -1391,8 +1387,9 @@ resize_flat_leave:
     LeaveSection ds:local_mem_section
 
 resize_flat_done:
-    mov edx,cr3
-    mov cr3,edx
+    pushf
+    call local_flush_process_tlb
+    popf
 ;    
     pop esi
     pop edx
@@ -1919,18 +1916,11 @@ free_big_nopage:
     add edx,4
     loop free_big_loop
 ;
-;    pop edx
-;    pop ecx
-;       shl edx,10
-;    mov ax,system_data_sel
-;    mov ds,ax
-;    call ds:tlb_flush_proc
-;       
     mov ax,mem_sel
     mov ds,ax
     LeaveSection ds:big_section
-    mov edx,cr3
-    mov cr3,edx
+;
+    call local_flush_global_tlb    
     ret
 free_big_mem    ENDP
 
@@ -2294,18 +2284,11 @@ free_blocal_nopage:
     add edx,4
     loop free_blocal_loop
 ;
-;    pop edx
-;    pop ecx
-;       shl edx,10
-;    mov ax,system_data_sel
-;    mov ds,ax
-;    call ds:tlb_flush_proc
-;       
     mov bx,local_mem_sel
     mov ds,bx
     LeaveSection ds:local_mem_section
-    mov edx,cr3
-    mov cr3,edx
+;
+    call local_flush_process_tlb
     ret
 free_big_local_mem      ENDP
     
