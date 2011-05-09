@@ -1244,9 +1244,6 @@ glob_ptab_init:
     mov edx,gdt_linear
     CreateCore
 ;
-    mov bx,es:ps_tss_sel
-    ltr bx
-;
     pop ds
     popa
     ret
