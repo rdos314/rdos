@@ -41,6 +41,9 @@ INCLUDE system.inc
     extrn local_free_physical:near
     extrn AllocateRam:near
     extrn prot_exception:near
+
+    extrn local_flush_global_tlb:near
+    extrn local_flush_process_tlb:near
     
 code    SEGMENT byte public 'CODE'
 
@@ -1138,8 +1141,7 @@ trap_error_do:
 
 trap_not_present:
     call page_fault
-    mov eax,cr3
-    mov cr3,eax
+    call local_flush_global_tlb
 
 trap_14_done:
     pop edi
@@ -1198,8 +1200,7 @@ hook_pagef_mark:
     jz hook_pagef_do
 ;
     call local_free_physical
-    mov eax,cr3
-    mov cr3,eax
+    call local_flush_process_tlb
     mov eax,2
 
 hook_pagef_do:
@@ -1519,17 +1520,9 @@ set_inv_free:
 set_inv_next:
     add edx,4
     loop set_inv_mark
-;
-;    pop edx
-;    pop ecx
-;       shl edx,10
-;    mov ax,system_data_sel
-;    mov ds,ax
-;    call ds:tlb_flush_proc
     
 set_inv_done:
-    mov eax,cr3
-    mov cr3,eax
+    call local_flush_process_tlb
 ;    
     pop edx
     pop ecx
@@ -1618,8 +1611,7 @@ set_readwrite_next:
 ;    call ds:tlb_flush_proc
 
 set_readwrite_done:
-    mov eax,cr3
-    mov cr3,eax
+    call local_flush_process_tlb
 ;    
     pop edx
     pop ecx
