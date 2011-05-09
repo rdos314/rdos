@@ -455,8 +455,6 @@ add_sys_env_var_nr          = 395
 delete_sys_env_var_nr       = 396
 find_sys_env_var_nr         = 397
 
-setup_io_bitmap_nr          = 398
-
 start_clock_nr              = 400
 sync_clock_nr               = 401
 

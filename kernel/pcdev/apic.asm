@@ -419,7 +419,6 @@ ap_task_wait:
     mov bx,ax
     add bx,core_sel_base + core_tss_offs
     ltr bx
-    SetupIoBitmap
 ;    
     call InitApic
 
