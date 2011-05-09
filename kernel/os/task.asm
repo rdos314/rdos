@@ -4150,15 +4150,11 @@ create_core    Proc far
     mov ax,flat_sel
     mov es,ax
 ;
-    mov eax,2000h + OFFSET c_tss_bitmap_space
+    mov eax,4000h
     AllocateBigLinear
     mov edi,edx
-;    
-    xor al,al
-    mov cx,OFFSET c_tss_bitmap_space
-    rep stos byte ptr es:[edi]
 ;
-    mov cx,800h
+    mov cx,1000h
     xor eax,eax
     rep stos dword ptr es:[edi]
 ;
