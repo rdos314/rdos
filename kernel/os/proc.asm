@@ -1020,9 +1020,14 @@ allocate_thread_block   PROC near
     mov eax,SIZE thread_seg
     AllocateSmallGlobalMem
     mov es:p_thread_sel,es
+;
+    mov bx,es
+    GetSelectorBaseSize
+    AllocateGdt
+    CreateTssSelector
+    mov es:p_tss_sel,bx
     ret
 allocate_thread_block   ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1230,7 +1235,10 @@ init_virt_thread    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_default_tss    PROC near
+    mov ds:p_tss_back_link,0
     mov ds:p_tss_esp0,stack0_size
+    mov ds:p_tss_t,0
+    mov ds:p_tss_bitmap,OFFSET p_tss_io_bitmap
 ;       
     push es
     push eax
@@ -1302,6 +1310,25 @@ init_default_tss    PROC near
 ; thread control
 ;
     mov ds:tss_error_code,dx
+;
+    push ds
+    push es
+    push si
+    push di    
+;
+    mov ax,ds
+    mov es,ax
+    mov di,OFFSET p_tss_io_bitmap
+    mov cx,40h
+    mov ax,io_bitmap_sel
+    mov ds,ax
+    xor si,si
+    rep movsw
+;
+    pop di
+    pop si
+    pop es
+    pop ds        
     ret
 init_default_tss    ENDP
 
@@ -2184,10 +2211,18 @@ init_first_tss  PROC near
     mov ds:p_tss_ds,dx
     mov ds:p_tss_fs,dx
     mov ds:p_tss_gs,dx
+    mov ds:p_tss_t,0
+    mov ds:p_tss_bitmap,OFFSET p_tss_io_bitmap
+    mov ds:p_tss_back_link,0
 ;
     mov eax,OFFSET init_first_process_callback
     mov ds:p_tss_eip,eax
     mov ds:p_tss_cs,cs
+;
+    mov di,OFFSET p_tss_io_bitmap
+    xor ax,ax
+    mov cx,40h
+    rep stosw
 ;
     push es
     mov eax,stack0_size
