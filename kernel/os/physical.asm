@@ -37,6 +37,7 @@ INCLUDE ..\driver.def
     .386p
 
     extrn local_create_data_sel16:near
+    extrn local_flush_process_tlb:near
     extrn AllocateRam:near
 
 code    SEGMENT byte public use16 'CODE'
@@ -743,8 +744,8 @@ set_physical_page       Proc far
     shr ebx,10
     and bl,0FCh
     mov [ebx],eax
-    mov ebx,cr3
-    mov cr3,ebx
+    call local_flush_process_tlb    
+;
     pop ebx
     pop ds
     retf32
