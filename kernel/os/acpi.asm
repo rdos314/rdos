@@ -142,8 +142,7 @@ GetRsdp Proc near
     or al,7
     SetPhysicalPage
     and si,0FFFh
-    mov eax,cr3
-    mov cr3,eax
+    FlushGlobalTLB
 ;    
     mov cx,40h
 
@@ -162,8 +161,7 @@ get_rsdp_bios:
     and ax,0F000h
     or al,7
     SetPhysicalPage
-    mov eax,cr3
-    mov cr3,eax
+    FlushGlobalTLB
 ;
     mov esi,edi
     and si,0FFFh

@@ -442,6 +442,14 @@ UnhookPage      MACRO
     OsGate unhook_page_nr
                     ENDM
 
+FlushGlobalTLB      MACRO
+    OsGate flush_global_tlb_nr
+                    ENDM
+
+FlushProcessTLB      MACRO
+    OsGate flush_process_tlb_nr
+                    ENDM
+
 ;;;;;;;;;;; LINEAR MEMORY MANAGEMENT ;;;;;;;;
 
 ;       EAX         Byte count

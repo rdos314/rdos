@@ -947,6 +947,18 @@ glob_ptab_init:
     mov ax,unlock_task_nr
     RegisterOsGate
 ;
+    mov si,OFFSET flush_global_tlb
+    mov di,OFFSET flush_global_tlb_name
+    xor cl,cl
+    mov ax,flush_global_tlb_nr
+    RegisterOsGate
+;
+    mov si,OFFSET flush_process_tlb
+    mov di,OFFSET flush_process_tlb_name
+    xor cl,cl
+    mov ax,flush_global_tlb_nr
+    RegisterOsGate
+;
     mov si,OFFSET debug_exception
     mov di,OFFSET debug_exception_name
     xor cl,cl
@@ -4973,6 +4985,45 @@ unlock_task     Proc far
     pop ds      
     retf32
 unlock_task     Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FlushGlobalTLB
+;
+;           DESCRIPTION:    Flush global TLB entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+flush_global_tlb_name    DB 'Flush Global TLB',0
+
+flush_global_tlb     Proc far
+    push eax
+    mov eax,cr3
+    mov cr3,eax
+    pop eax
+    retf32
+flush_global_tlb     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FlushProcessTLB
+;
+;           DESCRIPTION:    Flush process TLB entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+flush_process_tlb_name    DB 'Flush Process TLB',0
+
+flush_process_tlb     Proc far
+    push eax
+    mov eax,cr3
+    mov cr3,eax
+    pop eax
+    retf32
+flush_process_tlb     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
