@@ -1602,13 +1602,6 @@ set_readwrite_allocated:
 set_readwrite_next:
     add edx,4
     loop set_readwrite_mark
-;       
-;    pop edx
-;    pop ecx
-;       shl edx,10
-;    mov ax,system_data_sel
-;    mov ds,ax
-;    call ds:tlb_flush_proc
 
 set_readwrite_done:
     call local_flush_process_tlb

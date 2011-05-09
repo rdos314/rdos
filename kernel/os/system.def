@@ -143,10 +143,6 @@ tsc_rest            DW ?
 apic_tics           DD ?
 apic_rest           DW ?
 
-; EDX   Linear address
-; ECX   Pages
-tlb_flush_proc      DD ?
-
 phys_section		section_typ <>
 gdt_section			section_typ <>
 

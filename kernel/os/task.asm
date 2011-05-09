@@ -820,17 +820,6 @@ init_task       PROC near
     pusha
     push ds
 ;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov word ptr ds:tlb_flush_proc+2,cs
-    mov word ptr ds:tlb_flush_proc,OFFSET TlbFlush386
-    mov al,ds:cpu_type
-    cmp al,3
-    je init_tlb_done
-;
-;    mov word ptr ds:tlb_flush_proc,OFFSET TlbFlush486
-
-init_tlb_done:
     mov bx,task_sel
     mov eax,SIZE task_seg
     call local_allocate_fixed_system_mem
