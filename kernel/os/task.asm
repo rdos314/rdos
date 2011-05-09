@@ -1241,6 +1241,15 @@ glob_ptab_init:
     mov edi,OFFSET check_list
     HookState
 ;
+    mov eax,4000h
+    AllocateBigLinear
+    mov edi,edx    
+    mov ax,flat_sel
+    mov es,ax
+    mov cx,1000h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
     mov edx,gdt_linear
     CreateCore
 ;
@@ -4145,20 +4154,6 @@ create_core    Proc far
     pop es
     mov es:ps_ss,ax
     mov es:ps_sp,200h
-;    
-    push es
-    mov ax,flat_sel
-    mov es,ax
-;
-    mov eax,4000h
-    AllocateBigLinear
-    mov edi,edx
-;
-    mov cx,1000h
-    xor eax,eax
-    rep stos dword ptr es:[edi]
-;
-    pop es
 ;
     mov ax,kernel_patch_sel
     mov ds,ax
