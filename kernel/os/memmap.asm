@@ -637,14 +637,14 @@ CloseMapped     Proc near
     mov [si],es
     push ds
     push si
-    mov ax,es:p_next
+    mov ax,es:map_next
     cmp ax,[si]
     mov [si],ax
-    mov si,es:p_prev
+    mov si,es:map_prev
     mov ds,ax
-    mov ds:p_prev,si
+    mov ds:map_prev,si
     mov ds,si
-    mov ds:p_next,ax
+    mov ds:map_next,ax
     pop si
     pop ds
     jne close_mapped_leave
