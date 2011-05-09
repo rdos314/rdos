@@ -54,8 +54,6 @@ ps_wakeup_list      DW ?
 ps_id               DW ?
 
 ps_sel              DW ?
-ps_tss_sel          DW ?
-ps_tss_data_sel     DW ?
 
 ps_ss               DW ?
 ps_sp               DW ?

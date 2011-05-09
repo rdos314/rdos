@@ -4183,7 +4183,7 @@ create_core    Proc far
     add bx,core_sel_base + core_tss_data_offs
     mov ecx,2000h + OFFSET c_tss_bitmap_space
     CreateDataSelector16
-    mov es:ps_tss_data_sel,bx
+;    mov es:ps_tss_data_sel,bx
 ;
     mov ax,cs:core_count
     mov cx,core_sel_size
@@ -4194,7 +4194,7 @@ create_core    Proc far
     add bx,core_sel_base + core_tss_offs
     mov ecx,2000h + OFFSET c_tss_bitmap_space
     CreateTssSelector
-    mov es:ps_tss_sel,bx
+;    mov es:ps_tss_sel,bx
 ;
     mov ax,kernel_patch_sel
     mov ds,ax
