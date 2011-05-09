@@ -2979,9 +2979,11 @@ load_reload_timer:
     ReloadSysTimer
 ;
     sti
-    mov ax,es:p_tss_ess0    
-    mov ds,fs:ps_tss_data_sel
-    mov ds:c_tss_ess0,ax
+    mov ax,gdt_sel
+    mov ds,ax
+    mov bx,es:p_tss_sel
+    and byte ptr ds:[bx+5],NOT 2
+    ltr bx
 ;
     mov ax,sys_dir_sel
     mov ds,ax
