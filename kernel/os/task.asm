@@ -4138,20 +4138,12 @@ create_core    Proc far
     rep stosb
     mov es:ps_sel,es
 ;
+    push es
     mov eax,200h    
-    AllocateSmallLinear
-;    
-    mov ax,cs:core_count
-    mov cx,core_sel_size
-    push dx
-    mul cx
-    pop dx
-    mov bx,ax
-    add bx,core_sel_base + core_ss_offs
-    mov ecx,200h    
-    CreateDataSelector16
-;       
-    mov es:ps_ss,bx
+    AllocateSmallGlobalMem
+    mov ax,es
+    pop es
+    mov es:ps_ss,ax
     mov es:ps_sp,200h
 ;    
     push es
