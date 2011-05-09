@@ -4167,14 +4167,15 @@ create_core    Proc far
     pop es
 ;
     mov ax,cs:core_count
-    mov cx,core_sel_size
+;    mov cx,core_sel_size
+    mov cx,1
     push dx
     mul cx
     pop dx
     mov bx,ax
-    add bx,core_sel_base + core_tss_data_offs
+;    add bx,core_sel_base + core_tss_data_offs
     mov ecx,2000h + OFFSET c_tss_bitmap_space
-    CreateDataSelector16
+;    CreateDataSelector16
 ;    mov es:ps_tss_data_sel,bx
 ;
     mov ax,kernel_patch_sel
