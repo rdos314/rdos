@@ -83,7 +83,6 @@ code    SEGMENT byte use16 public 'CODE'
     extrn local_get_selector_base_size:near
 
     extrn timer_int:near
-    extrn wakeup_int:near
 
     extrn get_task_lock:near
 
@@ -1878,7 +1877,6 @@ ri13    DW      3Bh,    OFFSET default_int2,    kernel_code,    0
 ri14    DW      3Ch,    OFFSET default_int2,    kernel_code,    0
 ri15    DW      3Dh,    OFFSET default_int2,    kernel_code,    0
 ri17    DW      3Fh,    OFFSET default_int2,    kernel_code,    0
-rg61    DW      61h,    OFFSET wakeup_int,      kernel_code,    0
 rg66    DW      66h,    OFFSET int66,           kernel_code,    3
 rg67    DW      67h,    OFFSET int67,           kernel_code,    3
 rg9A    DW      9Ah,    OFFSET int9A,           kernel_code,    3

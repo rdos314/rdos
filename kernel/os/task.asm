@@ -80,6 +80,7 @@ term_thread_list    DW ?
 term_proc_list      DW ?
 
 list_lock           DW ?
+tlb_lock            DW ?
 
 task_seg    ENDS
 
@@ -772,6 +773,7 @@ init_task       PROC near
     mov ds:term_thread_list,0
     mov ds:term_proc_list,0
     mov ds:list_lock,0
+    mov ds:tlb_lock,0
     mov ds:last_time_val,0
     mov ds:last_time_val+4,0
     mov ds:time_sync_state,TIME_SYNC_RESET
@@ -4134,6 +4136,7 @@ ptab_init:
     mov es:ps_last_lsb,0
     mov es:ps_global_post_perc,DEFAULT_GLOBAL
     mov es:ps_curr_post,0
+    mov es:ps_tlb_flush,0
 ;    
     mov es:cs_usel,flat_sel
     mov es:cs_uoffs,0
@@ -4960,6 +4963,68 @@ FlushProcessTlbSingle    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FlushGlobalTlbMultiple    Proc near
+    push ds
+    push bx
+    push cx
+    push si
+;
+    mov ax,task_sel
+    mov ds,ax    
+
+fgtSpinLock:    
+    sti
+    mov ax,ds:tlb_lock
+    or ax,ax
+    je fgtGet
+;
+    pause
+    jmp fgtSpinLock
+
+fgtGet:
+    inc ax
+    cli
+    xchg ax,ds:tlb_lock
+    or ax,ax
+    je gftDone
+;
+    jmp fgtSpinLock
+
+fgtDone:
+    mov ax,core_data_sel
+    mov ds,ax
+    mov ds:ps_tlb_flush,1    
+    mov si,ds:ps_sel
+    sti
+;    
+    mov bx,OFFSET core_arr
+    mov cx,cs:core_count
+
+fgtLoop:
+    mov ax,cs:[bx]
+    cmp ax,si
+    je fgtNext
+;
+    mov ds,ax
+    mov al,1
+    xchg al,ds:ps_tlb_flush
+    or al,al
+    jnz fgtNext
+;
+    mov al,81h
+    SendInt
+
+fgtNext:
+    add bx,2
+    loop fgtLoop
+;
+    mov ax,task_sel
+    mov ds,ax
+    mov ds:tlb_lock,0
+;
+    pop si
+    pop cx
+    pop bx
+    pop ds
     ret
 FlushGlobalTlbMultiple    Endp
 
@@ -5086,29 +5151,6 @@ timer_expired    Proc far
     call ReloadTimer
     retf32
 timer_expired    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           wakeup_int
-;
-;           DESCRIPTION:    IPI wakeup int
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public wakeup_int
-
-wakeup_int:
-    push ds
-    push fs
-;
-    SendEoi
-    call TryLockCore
-    call TryUnlockCore
-;
-    pop fs
-    pop ds
-    iretd    
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

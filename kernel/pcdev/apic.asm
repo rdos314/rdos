@@ -2607,6 +2607,38 @@ timer_int:
     pop ds
     iretd
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           tlb_flush_int
+;
+;           DESCRIPTION:    TLB flush int
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+tlb_flush_int:
+    push ds
+    push eax
+;    
+    mov ax,core_data_sel
+    mov ds,ax
+    xor al,al
+    xchg al,ds:ps_tlb_flush
+;
+    or al,al
+    jz tfiDone
+;
+    mov eax,cr3
+    mov cr3,eax
+        
+tfiDone:
+    mov ax,SEG data
+    mov ds,ax
+    call ds:mp_eoi_proc
+;    
+    pop eax
+    pop ds
+    iretd    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2623,6 +2655,7 @@ ipi_tab:
 ;                       int #   Entry                   
 ;
 pi80   DW      80h,    OFFSET timer_int
+pi81   DW      81h,    OFFSET tlb_flush_int
        DW      0FFFFh
 
 ;

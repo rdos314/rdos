@@ -66,7 +66,8 @@ ps_null_thread      DW ?
 
 ps_apic             DD ?
 ps_acpi             DB ?
-ps_resv             DB ?
+
+ps_tlb_flush        DB ?
 
 ps_preempt_lsb      DD ?
 ps_preempt_msb	    DD ?
