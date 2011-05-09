@@ -4162,8 +4162,6 @@ create_core    Proc far
     xor eax,eax
     rep stos dword ptr es:[edi]
 ;
-    mov es:[edx].c_tss_bitmap,OFFSET c_tss_bitmap_space
-    mov es:[edx].c_tss_esp0,stack0_size
     pop es
 ;
     mov ax,kernel_patch_sel
