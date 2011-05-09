@@ -400,6 +400,13 @@ bios_loop:
     IsValidOsGate
     jnc bios_bitmap_done
 ;
+    GetThread
+    mov es,ax
+    mov di,OFFSET p_tss_io_bitmap
+    mov cx,40h
+    xor ax,ax
+    rep stosw
+;    
     mov ax,1
     WaitMilliSec
 
