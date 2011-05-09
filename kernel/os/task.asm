@@ -741,66 +741,6 @@ ntdDone:
     retf32
 notify_time_drift  Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           TlbFlush386
-;
-;           DESCRIPTION:    TLB flush, 386 version
-;
-;           PARAMETERS:         EDX     Linear base
-;               ECX     Page entries
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- 
-TlbFlush386 Proc far
-    push eax
-    mov eax,cr3
-    mov cr3,eax
-    pop eax
-    ret
-TlbFlush386 Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           TlbFlush486
-;
-;           DESCRIPTION:    TLB flush, 486 or higher version
-;
-;           PARAMETERS:         EDX     Linear base
-;               ECX     Page entries
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IFNDEF __WASM__
- .486p
-ENDIF
-
-TlbFlush486 Proc far
-    push ecx
-    push edx
-;
-    or ecx,ecx
-    jz tfDone
-
-tfLoop:
-    invlpg [edx]
-    add edx,1000h
-    loop tfLoop    
-
-tfDone:    
-    pop edx
-    pop ecx
-    ret
-TlbFlush486 Endp
-
-IFNDEF __WASM__
- .386p
-ENDIF
- 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -3603,6 +3543,7 @@ DeleteProcess    Proc near
     FreeMem
     pop es
 ;
+    call LockCore
     cli
     mov bx,es
     mov ax,process_dir_sel
@@ -3654,6 +3595,8 @@ cleanup_process_linear_next:
     FreeGdt
 ;    
     FreeMem
+;
+    call UnlockCore
     ret
 DeleteProcess   Endp
     
