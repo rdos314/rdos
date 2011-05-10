@@ -202,7 +202,6 @@ init_alias_bit_loop:
 	add edx,1000h
 	loop init_alias_bit_loop
 ;
-    FlushGlobalTLB
 	mov ax,ds
 	clc
 ;

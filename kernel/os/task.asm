@@ -459,6 +459,10 @@ unlock_user_section_proc    DW OFFSET UnlockUserSectionSingle
 flush_global_tlb_proc       DW OFFSET FlushGlobalTlbSingle
 flush_process_tlb_proc      DW OFFSET FlushProcessTlbSingle
 
+lock_tlb_proc               DW OFFSET LockTlbSingle
+unlock_tlb_proc             DW OFFSET UnlockTlbSingle
+free_tlb_proc               DW OFFSET FreeTlbSingle
+
 core_count                  DW 0
 core_arr                    DW MAX_CORES DUP(0)
 
@@ -877,18 +881,6 @@ glob_ptab_init:
     mov di,OFFSET unlock_task_name
     xor cl,cl
     mov ax,unlock_task_nr
-    RegisterOsGate
-;
-    mov si,OFFSET flush_global_tlb
-    mov di,OFFSET flush_global_tlb_name
-    xor cl,cl
-    mov ax,flush_global_tlb_nr
-    RegisterOsGate
-;
-    mov si,OFFSET flush_process_tlb
-    mov di,OFFSET flush_process_tlb_name
-    xor cl,cl
-    mov ax,flush_global_tlb_nr
     RegisterOsGate
 ;
     mov si,OFFSET debug_exception
@@ -3691,6 +3683,9 @@ start_processor_null_threads    Proc near
     mov ds:unlock_user_section_proc,OFFSET UnlockUserSectionMultiple
     mov ds:flush_global_tlb_proc,OFFSET FlushGlobalTlbMultiple
     mov ds:flush_process_tlb_proc,OFFSET FlushProcessTlbMultiple
+    mov ds:lock_tlb_proc,OFFSET LockTlbMultiple
+    mov ds:unlock_tlb_proc,OFFSET UnlockTlbMultiple
+    mov ds:free_tlb_proc,OFFSET FreeTlbMultiple
 
 start_locks_ok:    
     mov ecx,200h
@@ -5110,13 +5105,135 @@ FlushProcessTlbMultiple    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           LockTlbSingle
+;
+;           DESCRIPTION:    Lock TLB entries, single processor version
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockTlbSingle    Proc near
+    ret
+LockTlbSingle    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockTlbSingle
+;
+;           DESCRIPTION:    Unlock TLB entries, single processor version
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockTlbSingle    Proc near
+    ret
+UnlockTlbSingle    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FreeTlbSingle
+;
+;           DESCRIPTION:    Free TLB entries, single processor version
+;
+;           PARAMETERS:     CX      Number of entries
+;                           DS:EDX  Address of physical pages
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeTlbSingle    Proc near
+    push cx
+    push edx
+    
+ftsLoop:
+    xor eax,eax
+    xchg eax,[edx]
+    test al,1
+    jz ftsNext
+;
+    test ax,800h
+    jnz ftsNext
+;
+    FreePhysical
+
+ftsNext:
+    add edx,4
+    loop ftsLoop
+;
+    pop edx
+    pop cx    
+    ret
+FreeTlbSingle    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LockTlbMultiple
+;
+;           DESCRIPTION:    Lock TLB entries, multiple processor version
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockTlbMultiple    Proc near
+    ret
+LockTlbMultiple    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockTlbMultiple
+;
+;           DESCRIPTION:    Unlock TLB entries, multiple processor version
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockTlbMultiple    Proc near
+    ret
+UnlockTlbMultiple    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FreeTlbMultiple
+;
+;           DESCRIPTION:    Free TLB entries, multiple processor version
+;
+;           PARAMETERS:     CX      Number of entries
+;                           DS:EDX  Address of physical pages
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeTlbMultiple    Proc near
+    push cx
+    push edx
+    
+ftmLoop:
+    xor eax,eax
+    xchg eax,[edx]
+    test al,1
+    jz ftmNext
+;
+    test ax,800h
+    jnz ftmNext
+;
+    FreePhysical
+
+ftmNext:
+    add edx,4
+    loop ftmLoop
+;
+    pop edx
+    pop cx    
+    ret
+FreeTlbMultiple    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           FlushGlobalTLB
 ;
 ;           DESCRIPTION:    Flush global TLB entries
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-flush_global_tlb_name    DB 'Flush Global TLB',0
 
     public local_flush_global_tlb
     
@@ -5124,11 +5241,6 @@ local_flush_global_tlb    Proc near
     call cs:flush_global_tlb_proc
     ret
 local_flush_global_tlb  Endp
-
-flush_global_tlb     Proc far
-    call cs:flush_global_tlb_proc
-    retf32
-flush_global_tlb     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5139,8 +5251,6 @@ flush_global_tlb     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-flush_process_tlb_name    DB 'Flush Process TLB',0
-
     public local_flush_process_tlb
 
 local_flush_process_tlb Proc near
@@ -5148,11 +5258,73 @@ local_flush_process_tlb Proc near
     ret
 local_flush_process_tlb Endp
 
-flush_process_tlb     Proc far
-    call cs:flush_process_tlb_proc
-    retf32
-flush_process_tlb     Endp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FreeGlobalTLB
+;
+;           DESCRIPTION:    Free & flush global TLB entries
+;
+;           PARAMETERS:     CX      Number of entries
+;                           EDX     Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public local_free_global_tlb
+    
+local_free_global_tlb    Proc near
+    call cs:lock_tlb_proc
+;    
+    push ds
+    push eax
+    push edx
+    mov ax,sys_page_sel
+    mov ds,ax
+    shr edx,10
+    and dl,0FCh    
+    call cs:free_tlb_proc
+    pop edx
+    pop eax
+    pop ds
+;    
+    call cs:flush_global_tlb_proc
+    call cs:unlock_tlb_proc
+    ret
+local_free_global_tlb  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FreeProcessTLB
+;
+;           DESCRIPTION:    Free process TLB entries
+;
+;           PARAMETERS:     CX      Number of entries
+;                           EDX     Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public local_free_process_tlb
+
+local_free_process_tlb Proc near
+    call cs:lock_tlb_proc
+;    
+    push ds
+    push eax
+    push edx
+    mov ax,process_page_sel
+    mov ds,ax
+    shr edx,10
+    and dl,0FCh    
+    call cs:free_tlb_proc
+    pop edx
+    pop eax
+    pop ds    
+;    
+    call cs:flush_process_tlb_proc
+    call cs:unlock_tlb_proc
+    ret
+local_free_process_tlb Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

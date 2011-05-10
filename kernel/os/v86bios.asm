@@ -479,7 +479,8 @@ bios_proc_check:
 ;
     call HandleInputSel
     push fs:list_flags
-    FlushGlobalTLB
+    mov eax,cr3
+    mov cr3,eax
     mov eax,fs:list_eax
     mov ebx,fs:list_ebx
     mov ecx,fs:list_ecx

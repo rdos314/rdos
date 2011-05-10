@@ -86,8 +86,8 @@ local_mem_seg   ENDS
     .386p
 
     extrn local_create_data_sel16:near
-    extrn local_flush_global_tlb:near
-    extrn local_flush_process_tlb:near
+    extrn local_free_global_tlb:near
+    extrn local_free_process_tlb:near
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -1353,44 +1353,29 @@ resize_flat_shrink:
     sub ecx,eax
     add ds:local_big_avail_mem,ecx
     sub ds:local_big_used_mem,ecx
-    shr edx,10
     shr ecx,12
-    mov ax,process_page_sel
-    mov ds,ax
 ;
-;    push ecx
-;    push edx
+    mov eax,flat_size
+    sub eax,edx
+    jc resize_flat_leave
+;    
+    shl eax,12
+    cmp cx,ax
+    jbe resize_flat_size_ok
+;
+    mov cx,ax    
 
-resize_flat_shrink_loop:
-    cmp edx,(flat_size SHR 10) AND 003FFFFFh
-    jae resize_flat_leave
+resize_flat_size_ok:
+    or cx,cx
+    jz resize_flat_leave
 ;
-    xor eax,eax
-    xchg eax,[edx]
-    test al,1
-    jz resize_flat_shrink_nopage
-;
-    test ax,800h
-    jnz resize_flat_shrink_nopage
-;
-    FreePhysical
-
-resize_flat_shrink_nopage:
-    add edx,4
-    loop resize_flat_shrink_loop
-;
+    call local_free_process_tlb
     clc
 
 resize_flat_leave:
-    mov bx,local_mem_sel
-    mov ds,bx
     LeaveSection ds:local_mem_section
 
-resize_flat_done:
-    pushf
-    call local_flush_process_tlb
-    popf
-;    
+resize_flat_done:    
     pop esi
     pop edx
     pop ecx
@@ -1885,7 +1870,6 @@ free_pages      ENDP
 free_name       DB 'Free Memory',0
 
 free_big_mem    PROC near
-    shr edx,10
     dec ecx
     and cx,0F000h
     add ecx,1000h
@@ -1895,32 +1879,8 @@ free_big_mem    PROC near
     add es:big_avail_mem,ecx
     sub es:big_used_mem,ecx
     shr ecx,12
-    mov ax,sys_page_sel
-    mov ds,ax
-;
-;    push ecx
-;    push edx
-    
-free_big_loop:
-    xor eax,eax
-    xchg eax,[edx]
-    test al,1
-    jz free_big_nopage
-;
-    test ax,800h
-    jnz free_big_nopage
-;
-    FreePhysical
-
-free_big_nopage:
-    add edx,4
-    loop free_big_loop
-;
-    mov ax,mem_sel
-    mov ds,ax
+    call local_free_global_tlb    
     LeaveSection ds:big_section
-;
-    call local_flush_global_tlb    
     ret
 free_big_mem    ENDP
 
@@ -2257,38 +2217,14 @@ free_big_local_mem      PROC near
     mov ds,ax
     mov es,ax
     EnterSection ds:local_mem_section
-    shr edx,10
     dec ecx
     and cx,0F000h
     add ecx,1000h
     add es:local_big_avail_mem,ecx
     sub es:local_big_used_mem,ecx
     shr ecx,12
-    mov ax,process_page_sel
-    mov ds,ax
-;       push ecx
-;       push edx
-    
-free_blocal_loop:
-    xor eax,eax
-    xchg eax,[edx]
-    test al,1
-    jz free_blocal_nopage
-;
-    test ax,800h
-    jnz free_blocal_nopage
-;
-    FreePhysical
-
-free_blocal_nopage:
-    add edx,4
-    loop free_blocal_loop
-;
-    mov bx,local_mem_sel
-    mov ds,bx
+    call local_free_process_tlb
     LeaveSection ds:local_mem_section
-;
-    call local_flush_process_tlb
     ret
 free_big_local_mem      ENDP
     

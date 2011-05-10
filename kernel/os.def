@@ -455,9 +455,6 @@ add_sys_env_var_nr          = 395
 delete_sys_env_var_nr       = 396
 find_sys_env_var_nr         = 397
 
-flush_global_tlb_nr         = 398
-flush_process_tlb_nr        = 399
-
 start_clock_nr              = 400
 sync_clock_nr               = 401
 

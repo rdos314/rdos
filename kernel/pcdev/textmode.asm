@@ -165,7 +165,6 @@ switch_mode_done:
 	mov eax,edx
 	or ax,807h
 	SetThreadPhysicalPage
-	FlushGlobalTLB
 ;
 	mov ds:v_has_focus,1
 	mov ds,ds:v_buf_sel
@@ -193,7 +192,6 @@ switch_mode_done:
 	or ax,807h
 	mov edx,ds:v_mem_base
 	SetPhysicalPage
-	FlushGlobalTLB
 
 switch_to_done:
 ;
@@ -226,7 +224,6 @@ switch_from	Proc far
 	mov eax,edx
 	or ax,807h
 	SetPhysicalPage
-	FlushGlobalTLB
 ;
 	EnterSection ds:v_section
 	push ds
@@ -264,8 +261,6 @@ switch_from	Proc far
 	SetPhysicalPage
 
 switch_from_done:
-	FlushGlobalTLB
-;
 	popad
 	pop es
 	ret
@@ -778,7 +773,6 @@ init_mono_loop:
 	or ax,807h
 	mov edx,ds:v_mem_base
 	SetPhysicalPage
-	FlushGlobalTLB
 	pop ax
 	clc
 ;

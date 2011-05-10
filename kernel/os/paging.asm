@@ -42,7 +42,6 @@ INCLUDE system.inc
     extrn AllocateRam:near
     extrn prot_exception:near
 
-    extrn local_flush_global_tlb:near
     extrn local_flush_process_tlb:near
     
 code    SEGMENT byte public 'CODE'
@@ -1141,7 +1140,8 @@ trap_error_do:
 
 trap_not_present:
     call page_fault
-    call local_flush_global_tlb
+    mov eax,cr3
+    mov cr3,eax
 
 trap_14_done:
     pop edi
@@ -1200,7 +1200,8 @@ hook_pagef_mark:
     jz hook_pagef_do
 ;
     call local_free_physical
-    call local_flush_process_tlb
+    mov eax,cr3
+    mov cr3,eax
     mov eax,2
 
 hook_pagef_do:
@@ -1448,7 +1449,7 @@ set_flat_linear_valid   ENDP
 ;
 ;           DESCRIPTION:    Set flat page to invalid
 ;
-;           PARAMETERS:         EAX         Size
+;           PARAMETERS:     EAX         Size
 ;                           EDX         Offset in user-mode flat selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1474,6 +1475,7 @@ set_flat_linear_invalid PROC far
     cmp edx,flat_size
     jae set_inv_done
 ;
+    push edx
     mov bx,process_page_sel
     mov ds,bx
 ;
@@ -1486,8 +1488,7 @@ set_flat_linear_invalid PROC far
     sub ecx,edx
     shr edx,10
     shr ecx,12
-;       push ecx
-;       push edx
+    push cx
 
 set_inv_mark:
     mov eax,[edx]
@@ -1520,10 +1521,12 @@ set_inv_free:
 set_inv_next:
     add edx,4
     loop set_inv_mark
-    
-set_inv_done:
+;
+    pop cx
+    pop edx
     call local_flush_process_tlb
-;    
+    
+set_inv_done:    
     pop edx
     pop ecx
     pop bx
@@ -1566,6 +1569,7 @@ set_flat_linear_readwrite       PROC far
     cmp edx,flat_size
     jae set_readwrite_done
 ;
+    push edx
     mov bx,process_page_sel
     mov ds,bx
 ;
@@ -1578,9 +1582,7 @@ set_flat_linear_readwrite       PROC far
     sub ecx,edx
     shr edx,10
     shr ecx,12
-;
-;    push ecx
-;    push edx
+    push cx
 
 set_readwrite_mark:
     mov eax,[edx]
@@ -1602,10 +1604,12 @@ set_readwrite_allocated:
 set_readwrite_next:
     add edx,4
     loop set_readwrite_mark
+;
+    pop cx
+    pop edx
+    call local_flush_process_tlb
 
 set_readwrite_done:
-    call local_flush_process_tlb
-;    
     pop edx
     pop ecx
     pop bx

@@ -738,14 +738,18 @@ set_physical_page_name  DB 'Set Physical Page',0
 set_physical_page       Proc far
     push ds
     push ebx
+    push cx
+;
     mov bx,process_page_sel
     mov ds,bx
     mov ebx,edx
     shr ebx,10
     and bl,0FCh
     mov [ebx],eax
+    mov cx,1
     call local_flush_process_tlb    
 ;
+    pop cx
     pop ebx
     pop ds
     retf32
