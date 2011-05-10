@@ -401,11 +401,30 @@ bios_loop:
     jnc bios_bitmap_done
 ;
     GetThread
+    mov bx,ax
+    GetSelectorBaseSize
+    mov esi,edx
+    mov eax,ecx
+    add eax,2000h - 80h
+    AllocateSmallLinear
+    mov edi,edx
+    push eax
+;
+    inc ecx
+    mov ax,flat_sel
     mov es,ax
-    mov di,OFFSET p_tss_io_bitmap
-    mov cx,40h
-    xor ax,ax
-    rep stosw
+    rep movs byte ptr es:[edi],es:[esi]
+;
+    sub edi,80h
+    xor eax,eax
+    mov ecx,800h
+    rep stos dword ptr es:[edi]
+;
+    pop ecx
+    CreateDataSelector16
+    mov es,bx
+    mov bx,es:p_tss_sel
+    CreateTssSelector
 ;    
     mov ax,1
     WaitMilliSec
