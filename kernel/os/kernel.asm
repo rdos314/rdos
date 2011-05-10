@@ -518,6 +518,32 @@ init_tsc Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           setup_global_paging
+;
+;           DESCRIPTION:    Setup global paging
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_global_paging Proc near
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:cpu_feature_flags
+    test ax,2000h
+    jz setup_global_paging_done
+;
+    mov eax,cr4
+    or al,80h
+    mov cr4,eax
+
+setup_global_paging_done:
+    ret
+setup_global_paging Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Init
 ;
 ;           DESCRIPTION:    Kernel startup procedure
@@ -711,6 +737,7 @@ prot_init:
     call init_system
     call init_physical_gates
     call move_adapters
+    call setup_global_paging
 ;
     mov bx,cs
     call local_get_selector_base_size
