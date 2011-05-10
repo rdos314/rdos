@@ -456,8 +456,8 @@ unlock_kernel_section_proc  DW OFFSET UnlockKernelSectionSingle
 lock_user_section_proc      DW OFFSET LockUserSectionSingle
 unlock_user_section_proc    DW OFFSET UnlockUserSectionSingle
 
-flush_global_tlb_proc       DW OFFSET FlushGlobalTlbSingle
-flush_process_tlb_proc      DW OFFSET FlushProcessTlbSingle
+flush_global_tlb_proc       DW OFFSET FlushTlb386
+flush_process_tlb_proc      DW OFFSET FlushTlb386
 
 lock_tlb_proc               DW OFFSET LockTlbSingle
 unlock_tlb_proc             DW OFFSET UnlockTlbSingle
@@ -3665,12 +3665,21 @@ stThreadOk:
     public start_processor_null_threads
 
 start_processor_null_threads    Proc near
-    GetCoreCount
-    cmp cx,1
-;    jbe start_locks_ok
+    mov ax,system_data_sel
+    mov ds,ax
+    mov al,ds:cpu_type
+    cmp al,3
+    jbe start_locks_ok
 ;
     mov ax,kernel_patch_sel
     mov ds,ax
+    mov ds:flush_global_tlb_proc,OFFSET FlushTlb486
+    mov ds:flush_process_tlb_proc,OFFSET FlushTlb486
+;    
+    GetCoreCount
+    cmp cx,1
+    jbe start_locks_ok
+;
     mov ds:lock_list_proc,OFFSET LockListMultiple
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
     mov ds:lock_thread_proc,OFFSET LockThreadMultiple
@@ -4926,40 +4935,68 @@ unlock_task     Proc far
     retf32
 unlock_task     Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FlushGlobalTlbSingle
+;           NAME:           FlushTlb386
 ;
-;           DESCRIPTION:    Flush global TLB entries, single processor version
+;           DESCRIPTION:    Flush TLB entries, 386 processor version
+;
+;           PARAMETERS:     CX      Number of entries
+;                           EDX     Linear address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FlushGlobalTlbSingle    Proc near
+FlushTlb386    Proc near
     push eax
     mov eax,cr3
     mov cr3,eax
     pop eax
     ret
-FlushGlobalTlbSingle    Endp
+FlushTlb386    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FlushProcessTlbSingle
+;           NAME:           FlushTlb486
 ;
-;           DESCRIPTION:    Flush process TLB entries, single processor version
+;           DESCRIPTION:    Flush TLB entries, 486+ processor version
+;
+;           PARAMETERS:     CX      Number of entries
+;                           EDX     Linear address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FlushProcessTlbSingle    Proc near
-    push eax
-    mov eax,cr3
-    mov cr3,eax
-    pop eax
+FlushTlb486    Proc near
+    push ds
+    push ax
+    push cx
+    push edx
+;
+    cmp cx,4
+    jae ft4All
+;
+    mov ax,flat_sel
+    mov ds,ax
+
+ft4Loop:
+    invlpg [edx]
+    add edx,1000h
+    loop ft4Loop
+;
+    jmp ft4Done
+        
+ft4All:    
+    mov edx,cr3
+    mov cr3,edx
+
+ft4Done:    
+    pop edx
+    pop cx
+    pop ax
+    pop ds
     ret
-FlushProcessTlbSingle    Endp
+FlushTlb486    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4967,6 +5004,9 @@ FlushProcessTlbSingle    Endp
 ;           NAME:           FlushGlobalTlbMultiple
 ;
 ;           DESCRIPTION:    Flush global TLB entries, multiple processor version
+;
+;           PARAMETERS:     CX      Number of entries
+;                           EDX     Linear address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5032,6 +5072,9 @@ FlushGlobalTlbMultiple    Endp
 ;           NAME:           FlushProcessTlbMultiple
 ;
 ;           DESCRIPTION:    Flush process TLB entries, multiple processor version
+;
+;           PARAMETERS:     CX      Number of entries
+;                           EDX     Linear address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
