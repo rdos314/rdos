@@ -5031,6 +5031,7 @@ FlushTlb486    Endp
 FreeGlobalTlbSingle Proc near
     push ds
     push eax
+    push cx
     push edx
 ;    
     mov ax,sys_page_sel
@@ -5054,9 +5055,10 @@ fgtsNext:
     loop fgtsLoop
 ;
     pop edx
+    pop cx
     pop eax
     pop ds
-    call cs:flush_process_tlb_proc
+    call cs:flush_global_tlb_proc
     ret
 FreeGlobalTlbSingle Endp
 
@@ -5075,6 +5077,7 @@ FreeGlobalTlbSingle Endp
 FreeProcessTlbSingle Proc near
     push ds
     push eax
+    push cx
     push edx
 ;    
     mov ax,process_page_sel
@@ -5098,6 +5101,7 @@ fptsNext:
     loop fptsLoop
 ;
     pop edx
+    pop cx
     pop eax
     pop ds
     call cs:flush_process_tlb_proc
