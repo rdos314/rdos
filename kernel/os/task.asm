@@ -478,7 +478,8 @@ unlock_user_section_proc    DW OFFSET UnlockUserSectionSingle
 flush_global_tlb_proc       DW OFFSET FlushTlb386
 flush_process_tlb_proc      DW OFFSET FlushTlb386
 
-free_tlb_proc               DW OFFSET FreeTlbSingle
+free_global_tlb_proc        DW OFFSET FreeGlobalTlbSingle
+free_process_tlb_proc       DW OFFSET FreeProcessTlbSingle
 
 core_count                  DW 0
 core_arr                    DW MAX_CORES DUP(0)
@@ -4952,38 +4953,592 @@ FlushTlb486    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FreeTlbSingle
+;           NAME:           FreeGlobalTlbSingle
 ;
-;           DESCRIPTION:    Free TLB entries, single processor version
+;           DESCRIPTION:    Free global TLB entries, single processor version
 ;
 ;           PARAMETERS:     CX      Number of entries
-;                           DS:EDX  Address of physical pages
+;                           EDX     Linear address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FreeTlbSingle    Proc near
+FreeGlobalTlbSingle Proc near
+    push ds
+    push eax
     push cx
     push edx
+;    
+    mov ax,sys_page_sel
+    mov ds,ax
+    shr edx,10
+    and dl,0FCh    
     
-ftsLoop:
+fgtsLoop:
     xor eax,eax
     xchg eax,[edx]
     test al,1
-    jz ftsNext
+    jz fgtsNext
 ;
     test ax,800h
-    jnz ftsNext
+    jnz fgtsNext
 ;
     FreePhysical
 
-ftsNext:
+fgtsNext:
     add edx,4
-    loop ftsLoop
+    loop fgtsLoop
 ;
     pop edx
-    pop cx    
+    pop cx
+    pop eax
+    pop ds
+    call cs:flush_global_tlb_proc
     ret
-FreeTlbSingle    Endp
+FreeGlobalTlbSingle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FreeProcessTlbSingle
+;
+;           DESCRIPTION:    Free process TLB entries, single processor version
+;
+;           PARAMETERS:     CX      Number of entries
+;                           EDX     Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeProcessTlbSingle Proc near
+    push ds
+    push eax
+    push cx
+    push edx
+;    
+    mov ax,process_page_sel
+    mov ds,ax
+    shr edx,10
+    and dl,0FCh    
+    
+fptsLoop:
+    xor eax,eax
+    xchg eax,[edx]
+    test al,1
+    jz fptsNext
+;
+    test ax,800h
+    jnz fptsNext
+;
+    FreePhysical
+
+fptsNext:
+    add edx,4
+    loop fptsLoop
+;
+    pop edx
+    pop cx
+    pop eax
+    pop ds
+    call cs:flush_process_tlb_proc
+    ret
+FreeProcessTlbSingle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LockTlb
+;
+;           DESCRIPTION:    Lock TLB
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockTlb    Proc near
+    mov ax,task_sel
+    mov ds,ax
+
+ltmSpinLock:    
+    mov ax,ds:tlb_spinlock
+    or ax,ax
+    je ltmGet
+;
+    pause
+    jmp ltmSpinLock
+
+ltmGet:
+    inc ax
+    xchg ax,ds:tlb_spinlock
+    or ax,ax
+    je ltmDone
+;
+    jmp ltmSpinLock
+
+ltmDone:
+    ret
+LockTlb    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockTlb
+;
+;           DESCRIPTION:    Unlock TLB
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockTlb    Proc near
+    mov ds:tlb_spinlock,0
+    ret
+UnlockTlb    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AllocateTlb
+;
+;           DESCRIPTION:    Allocate TLB header
+;
+;           PARAMETERS:     CX      Max number of physical entries
+;                           EDX     Linear base
+;                           FS      Core sel
+;
+;           RETURNS:        ES      Entry selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateTlb     Proc near
+    movzx eax,cx
+    shl eax,2
+    add eax,OFFSET th_phys_arr
+    AllocateSmallGlobalMem
+    mov es:th_linear,edx
+    mov ax,cs:core_count
+    mov es:th_remain_cores,ax
+;
+    mov di,OFFSET th_core_bits
+    xor al,al
+    mov cx,MAX_CORES SHR 3
+    rep stosb    
+;
+    mov cx,fs:ps_id
+    bts word ptr es:th_core_bits,cx
+;    
+    ret
+AllocateTlb     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InsertTlb
+;
+;           DESCRIPTION:    Insert TLB entry
+;
+;           PARAMETERS:     ES      Entry selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertTlb     Proc near
+    mov ax,ds:tlb_list
+    mov es:th_next,ax
+    mov ds:tlb_list,es
+    ret
+InsertTlb   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FlushTlb
+;
+;           DESCRIPTION:    Flush TLB entries
+;
+;           PARAMETERS:     ES      Entry selector
+;                           FS      Core sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FlushTlb     Proc near
+    push ds
+    push ax
+    push cx
+    push edx
+;
+    mov ax,fs:ps_id
+    bt es:th_core_bits,ax
+    jnc ftDone
+;    
+    mov ax,flat_sel
+    mov ds,ax
+    mov edx,es:th_linear
+    mov cx,es:th_page_count
+
+ftLoop:
+    invlpg [edx]
+    add edx,1000h
+    loop ftLoop
+;    
+    mov ax,fs:ps_id
+    btr es:th_core_bits,ax
+    dec es:th_remain_cores
+
+ftDone:
+    pop edx
+    pop cx
+    pop ax    
+    pop ds
+    ret
+FlushTlb   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FreeTlb
+;
+;           DESCRIPTION:    Free TLB entries and selector
+;
+;           PARAMETERS:     ES      Entry selector
+;                           FS      Core sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeTlb     Proc near
+    push eax
+    push cx
+    push si
+;    
+    mov cx,es:th_phys_count
+    or cx,cx
+    jz frtDone
+;
+    mov si,OFFSET th_phys_arr    
+
+frtLoop:
+    mov eax,es:[si]
+    FreePhysical
+    add si,4
+    loop frtLoop
+
+frtDone:
+    FreeMem
+;    
+    pop si
+    pop cx
+    pop eax    
+    ret
+FreeTlb   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FlushGlobalTlbMultiple
+;
+;           DESCRIPTION:    Flush global TLB entries, multiple processor version
+;
+;           PARAMETERS:     CX      Number of entries
+;                           EDX     Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FlushGlobalTlbMultiple    Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;
+    call LockCore
+;
+    push cx
+    xor cx,cx    
+    call AllocateTlb
+    pop cx
+    mov es:th_page_count,cx
+    mov es:th_phys_count,0
+;
+    call LockTlb
+    call InsertTlb
+;
+    mov bx,OFFSET core_arr
+    mov cx,cs:core_count
+
+fgtLoop:
+    mov ax,cs:[bx]
+    cmp ax,si
+    je fgtNext
+;
+    push fs
+    mov fs,ax
+    mov ax,fs:ps_id
+    bts es:th_core_bits,ax
+    inc es:th_remain_cores
+;
+    mov al,81h
+    SendInt
+    pop fs
+
+fgtNext:
+    add bx,2
+    loop fgtLoop
+;
+    call FlushTlb
+    call UnlockTlb
+    call UnlockCore
+;    
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+FlushGlobalTlbMultiple    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FlushProcessTlbMultiple
+;
+;           DESCRIPTION:    Flush process TLB entries, multiple processor version
+;
+;           PARAMETERS:     CX      Number of entries
+;                           EDX     Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FlushProcessTlbMultiple    Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;
+    call LockCore
+;
+    push cx
+    xor cx,cx    
+    call AllocateTlb
+    pop cx
+    mov es:th_page_count,cx
+    mov es:th_phys_count,0
+;
+    call LockTlb
+    call InsertTlb
+;
+    mov bx,OFFSET core_arr
+    mov cx,cs:core_count
+    mov edx,cr3
+
+fptLoop:
+    mov ax,cs:[bx]
+    cmp ax,si
+    je fptNext
+;
+    push fs
+    mov fs,ax
+;
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz fptSend
+;
+    mov ds,ax
+    cmp edx,ds:p_cr3
+    jne fptNextPop
+
+fptSend:
+    mov ax,fs:ps_id
+    bts es:th_core_bits,ax
+    inc es:th_remain_cores
+;
+    mov al,81h
+    SendInt
+
+fptNextPop:    
+    pop fs
+
+fptNext:
+    add bx,2
+    loop fptLoop
+;
+    call FlushTlb
+    call UnlockTlb
+    call UnlockCore
+;    
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+FlushProcessTlbMultiple    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FreeGlobalTlbMultiple
+;
+;           DESCRIPTION:    Free global TLB entries, multiple processor version
+;
+;           PARAMETERS:     CX      Number of entries
+;                           EDX     Linear base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeGlobalTlbMultiple    Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;
+    call LockCore
+;
+    call AllocateTlb
+    mov es:th_page_count,cx
+    mov es:th_phys_count,0
+;
+    mov ax,sys_page_sel
+    mov ds,ax
+    shr edx,10
+    and dl,0FCh    
+    mov di,OFFSET th_phys_arr    
+    
+fgtmEntryLoop:
+    xor eax,eax
+    xchg eax,[edx]
+    test al,1
+    jz fgtmEntryNext
+;
+    test ax,800h
+    jnz fgtmEntryNext
+;
+    stosd
+    inc es:th_phys_count
+
+fgtmEntryNext:
+    add edx,4
+    loop fgtmEntryLoop
+;
+    call LockTlb
+    call InsertTlb
+;
+    mov bx,OFFSET core_arr
+    mov cx,cs:core_count
+
+fgtmCoreLoop:
+    mov ax,cs:[bx]
+    cmp ax,si
+    je fgtmCoreNext
+;
+    push fs
+    mov fs,ax
+    mov ax,fs:ps_id
+    bts es:th_core_bits,ax
+    inc es:th_remain_cores
+;
+    mov al,81h
+    SendInt
+    pop fs
+
+fgtmCoreNext:
+    add bx,2
+    loop fgtmCoreLoop
+;
+    call FlushTlb
+    call UnlockTlb
+    call UnlockCore
+;    
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+FreeGlobalTlbMultiple    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FreeProcessTlbMultiple
+;
+;           DESCRIPTION:    Free process TLB entries, multiple processor version
+;
+;           PARAMETERS:     CX      Number of entries
+;                           EDX     Linear base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeProcessTlbMultiple    Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;
+    call LockCore
+;
+    call AllocateTlb
+    mov es:th_page_count,cx
+    mov es:th_phys_count,0
+;
+    mov ax,process_page_sel
+    mov ds,ax
+    shr edx,10
+    and dl,0FCh    
+    mov di,OFFSET th_phys_arr    
+    
+fptmEntryLoop:
+    xor eax,eax
+    xchg eax,[edx]
+    test al,1
+    jz fptmEntryNext
+;
+    test ax,800h
+    jnz fptmEntryNext
+;
+    stosd
+    inc es:th_phys_count
+
+fptmEntryNext:
+    add edx,4
+    loop fptmEntryLoop
+;
+    call LockTlb
+    call InsertTlb
+;
+    mov bx,OFFSET core_arr
+    mov cx,cs:core_count
+    mov edx,cr3
+
+fptmCoreLoop:
+    mov ax,cs:[bx]
+    cmp ax,si
+    je fptmCoreNext
+;
+    push fs
+    mov fs,ax
+;
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz fptmSend
+;
+    mov ds,ax
+    cmp edx,ds:p_cr3
+    jne fptmNextPop
+
+fptmSend:
+    mov ax,fs:ps_id
+    bts es:th_core_bits,ax
+    inc es:th_remain_cores
+;
+    mov al,81h
+    SendInt
+
+fptmNextPop:    
+    pop fs
+
+fptmCoreNext:
+    add bx,2
+    loop fptmCoreLoop
+;
+    call FlushTlb
+    call UnlockTlb
+    call UnlockCore
+;    
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+FreeProcessTlbMultiple    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5032,19 +5587,7 @@ local_flush_process_tlb Endp
     public local_free_global_tlb
     
 local_free_global_tlb    Proc near
-    push ds
-    push eax
-    push edx
-    mov ax,sys_page_sel
-    mov ds,ax
-    shr edx,10
-    and dl,0FCh    
-    call cs:free_tlb_proc
-    pop edx
-    pop eax
-    pop ds
-;    
-    call cs:flush_global_tlb_proc
+    call cs:free_global_tlb_proc
     ret
 local_free_global_tlb  Endp
 
@@ -5063,19 +5606,7 @@ local_free_global_tlb  Endp
     public local_free_process_tlb
 
 local_free_process_tlb Proc near
-    push ds
-    push eax
-    push edx
-    mov ax,process_page_sel
-    mov ds,ax
-    shr edx,10
-    and dl,0FCh    
-    call cs:free_tlb_proc
-    pop edx
-    pop eax
-    pop ds    
-;    
-    call cs:flush_process_tlb_proc
+    call cs:free_process_tlb_proc
     ret
 local_free_process_tlb Endp
 
