@@ -72,7 +72,6 @@ ENDIF
     extrn init_mem_sels:near
     extrn init_osgate:near
     extrn init_usergate:near
-    extrn init_io:near
     extrn init_int:near
     extrn init_app:near
     extrn init_trap_vectors:near
@@ -749,7 +748,6 @@ prot_init:
     call init_tsc
     call init_state
     call init_task
-    call init_io
     call init_ldt
     call init_app
     call init_thread
