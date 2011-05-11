@@ -2170,42 +2170,6 @@ clear_break ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           VIRT_sti
-;
-;           DESCRIPTION:    Simulate STI
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public virt_sti
-
-virt_sti    PROC near
-    push ax
-    GetThread
-    mov ds,ax
-    pop ax
-    mov ds,ds:p_process_sel
-    mov ds:ms_virt_flags,7200h
-virt_sti_test_wake:
-    cli
-    cmp ds:ms_wait_sti,0
-    jz virt_sti_nowake
-    push si
-    mov si,OFFSET ms_wait_sti
-    Wake
-    pop si
-    jmp virt_sti_test_wake
-virt_sti_nowake:
-    sti
-    inc byte ptr [bp].vm_eip
-    ret
-virt_sti    ENDP
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           sim_sti
 ;
 ;           DESCRIPTION:    Simulate STI
@@ -2237,34 +2201,6 @@ sim_sti_nowake:
     pop ds
     retf32
 sim_sti ENDP
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           virt_cli
-;
-;           DESCRIPTION:    Simulate CLI
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public virt_cli
-
-virt_cli    PROC near
-    push ax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_process_sel
-    cli
-    mov ds:ms_cli_thread,ax
-    mov ds:ms_virt_flags,7000h
-    sti
-    inc byte ptr [bp].vm_eip
-    pop ax
-    ret
-virt_cli    ENDP
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
