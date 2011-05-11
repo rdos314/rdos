@@ -38,9 +38,10 @@ INCLUDE ..\os.inc
     extrn init_cpu_gates:near
     extrn init_random:near
     extrn init_crc:near
-        extrn init_time:near
-        extrn init_env:near
-        extrn init_wait:near
+    extrn init_time:near
+    extrn init_env:near
+    extrn init_wait:near
+    extrn init_swap:near
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -58,6 +59,7 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
+    call init_swap
     call init_cpu_gates
     call init_random
     call init_crc
