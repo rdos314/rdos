@@ -797,6 +797,8 @@ init_task       PROC near
     mov ds:last_time_val,0
     mov ds:last_time_val+4,0
     mov ds:time_sync_state,TIME_SYNC_RESET
+    mov ds:tlb_spinlock,0
+    mov ds:tlb_list,0
 ;
     mov ds:global_spinlock,0
     xor ax,ax
@@ -3644,9 +3646,10 @@ start_processor_null_threads    Proc near
     mov ds:unlock_kernel_section_proc,OFFSET UnlockKernelSectionMultiple
     mov ds:lock_user_section_proc,OFFSET LockUserSectionMultiple
     mov ds:unlock_user_section_proc,OFFSET UnlockUserSectionMultiple
-;    mov ds:flush_global_tlb_proc,OFFSET FlushGlobalTlbMultiple
-;    mov ds:flush_process_tlb_proc,OFFSET FlushProcessTlbMultiple
-;    mov ds:free_tlb_proc,OFFSET FreeTlbMultiple
+    mov ds:flush_global_tlb_proc,OFFSET FlushGlobalTlbMultiple
+    mov ds:flush_process_tlb_proc,OFFSET FlushProcessTlbMultiple
+    mov ds:free_global_tlb_proc,OFFSET FreeGlobalTlbMultiple
+    mov ds:free_process_tlb_proc,OFFSET FreeProcessTlbMultiple
 
 start_locks_ok:    
     mov ecx,200h
