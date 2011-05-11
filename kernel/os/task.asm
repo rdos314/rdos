@@ -5185,6 +5185,7 @@ LockTlbBlock    Endp
 
 UnlockTlbBlock    Proc near
     mov ds:tlb_block_spinlock,0
+    sti
     ret
 UnlockTlbBlock    Endp
 
@@ -5358,9 +5359,6 @@ AllocateTlb     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InsertTlb     Proc near
-    mov cx,fs:ps_id
-    bts word ptr es:[edx].th_core_bits,cx
-;
     mov eax,ds:tlb_list
     mov es:[edx].th_next,eax
     mov ds:tlb_list,edx
@@ -5541,6 +5539,120 @@ utlDone:
     ret
 UpdateTlbList   Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupGlobalTlbCores
+;
+;           DESCRIPTION:    Setup global TLB cores that should handle the request
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupGlobalTlbCores    Proc near
+    push fs
+;
+    mov bx,OFFSET core_arr
+    mov cx,cs:core_count
+
+sgtcLoop:
+    mov fs,cs:[bx]
+    mov ax,fs:ps_id
+    bts es:[edx].th_core_bits,ax
+    inc es:[edx].th_remain_cores
+;
+    add bx,2
+    loop sgtcLoop
+;
+    pop fs
+    ret
+SetupGlobalTlbCores Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupProcessTlbCores
+;
+;           DESCRIPTION:    Setup process TLB cores that should handle the request
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupProcessTlbCores    Proc near
+    push ds
+    push fs
+;
+    mov bx,OFFSET core_arr
+    mov cx,cs:core_count
+    mov edi,cr3
+
+sptcLoop:
+    mov fs,cs:[bx]
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz sptcAdd
+;
+    mov ds,ax
+    cmp edi,ds:p_cr3
+    jne sptcNext
+
+sptcAdd:
+    mov ax,fs:ps_id
+    bts es:[edx].th_core_bits,ax
+    inc es:[edx].th_remain_cores
+
+sptcNext:
+    add bx,2
+    loop sptcLoop
+;
+    pop fs
+    pop ds
+    ret
+SetupProcessTlbCores Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SignalTlbCores
+;
+;           DESCRIPTION:    Signal cores that have new, pending requests
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SignalTlbCores    Proc near
+    push fs
+;
+    mov fs:ps_tlb_flush,1
+    mov si,fs:ps_sel
+    mov bx,OFFSET core_arr
+    mov cx,cs:core_count
+    xor di,di
+
+stcLoop:
+    bt es:[edx].th_core_bits,di
+    jnc stcNext
+;    
+    mov ax,cs:[bx]
+    cmp ax,si
+    je stcNext
+;
+    mov fs,ax
+    mov al,1
+    xchg al,fs:ps_tlb_flush
+    or al,al
+    jnz stcNext    
+;
+    mov al,81h
+    SendInt
+
+stcNext:
+    add bx,2
+    inc di
+    loop stcLoop
+;
+    pop fs
+    ret
+SignalTlbCores  Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -5570,32 +5682,11 @@ FlushGlobalTlbMultiple    Proc near
 ;
     call TryLockCore
     call LockTlb
+    call SetupGlobalTlbCores
     call InsertTlb
     call UnlockTlb
 ;
-    mov si,fs:ps_sel
-    mov bx,OFFSET core_arr
-    mov cx,cs:core_count
-
-fgtLoop:
-    mov ax,cs:[bx]
-    cmp ax,si
-    je fgtNext
-;
-    push fs
-    mov fs,ax
-    mov ax,fs:ps_id
-    bts es:[edx].th_core_bits,ax
-    inc es:[edx].th_remain_cores
-;
-    mov al,81h
-    SendInt
-    pop fs
-
-fgtNext:
-    add bx,2
-    loop fgtLoop
-;
+    call SignalTlbCores
     call UpdateTlbList
     call TryUnlockCore
 ;    
@@ -5635,47 +5726,11 @@ FlushProcessTlbMultiple    Proc near
 ;
     call TryLockCore
     call LockTlb
+    call SetupProcessTlbCores
     call InsertTlb
     call UnlockTlb
 ;
-    mov si,fs:ps_sel
-    mov bx,OFFSET core_arr
-    mov cx,cs:core_count
-    mov edi,cr3
-
-fptLoop:
-    mov ax,cs:[bx]
-    cmp ax,si
-    je fptNext
-;
-    push ds
-    push fs
-    mov fs,ax
-;
-    mov ax,fs:ps_curr_thread
-    or ax,ax
-    jz fptSend
-;
-    mov ds,ax
-    cmp edi,ds:p_cr3
-    jne fptNextPop
-
-fptSend:
-    mov ax,fs:ps_id
-    bts es:[edx].th_core_bits,ax
-    inc es:[edx].th_remain_cores
-;
-    mov al,81h
-    SendInt
-
-fptNextPop:    
-    pop fs
-    pop ds
-
-fptNext:
-    add bx,2
-    loop fptLoop
-;
+    call SignalTlbCores
     call UpdateTlbList
     call TryUnlockCore
 ;    
@@ -5752,31 +5807,11 @@ fgtmBlockDone:
 ;
     call TryLockCore
     call LockTlb
+    call SetupGlobalTlbCores
     call InsertTlb
     call UnlockTlb
 ;
-    mov si,fs:ps_sel
-    mov bx,OFFSET core_arr
-    mov cx,cs:core_count
-
-fgtmCoreLoop:
-    mov ax,cs:[bx]
-    cmp ax,si
-    je fgtmCoreNext
-;
-    push fs
-    mov fs,ax
-    mov ax,fs:ps_id
-    bts es:[edx].th_core_bits,ax
-    inc es:[edx].th_remain_cores
-;
-    mov al,81h
-    SendInt
-    pop fs
-
-fgtmCoreNext:
-    add bx,2
-    loop fgtmCoreLoop
+    call SignalTlbCores
 ;
     pop edx
     pop cx
@@ -5857,46 +5892,11 @@ fptmBlockDone:
 ;
     call TryLockCore
     call LockTlb
+    call SetupProcessTlbCores
     call InsertTlb
     call UnlockTlb
 ;
-    mov si,fs:ps_sel
-    mov bx,OFFSET core_arr
-    mov cx,cs:core_count
-    mov edi,cr3
-
-fptmCoreLoop:
-    mov ax,cs:[bx]
-    cmp ax,si
-    je fptmCoreNext
-;
-    push ds
-    push fs
-    mov fs,ax
-;
-    mov ax,fs:ps_curr_thread
-    or ax,ax
-    jz fptmSend
-;
-    mov ds,ax
-    cmp edi,ds:p_cr3
-    jne fptmNextPop
-
-fptmSend:
-    mov ax,fs:ps_id
-    bts es:[edx].th_core_bits,ax
-    inc es:[edx].th_remain_cores
-;
-    mov al,81h
-    SendInt
-
-fptmNextPop:    
-    pop fs
-    pop ds
-
-fptmCoreNext:
-    add bx,2
-    loop fptmCoreLoop
+    call SignalTlbCores
 ;
     pop edx
     pop cx
