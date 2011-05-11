@@ -3576,6 +3576,26 @@ system_thread_pr:
     GetThread
     mov ds:system_thread,ax
 ;
+
+    mov eax,5000h
+    AllocateGlobalMem
+    xor di,di
+    xor al,al
+    mov cx,ax
+    rep stosb
+;    
+    mov ax,10
+    WaitMilliSec
+;    
+    int 3
+    mov bx,es
+    GetSelectorBaseSize
+    mov cx,5
+    call FreeGlobalTlbMultiple
+    int 3
+;    
+
+;
     mov ax,task_sel
     mov ds,ax    
 
@@ -5108,6 +5128,8 @@ UnlockTlb    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateTlb     Proc near
+    push cx
+;    
     movzx eax,cx
     shl eax,2
     add eax,OFFSET th_phys_arr
@@ -5120,10 +5142,8 @@ AllocateTlb     Proc near
     xor al,al
     mov cx,MAX_CORES SHR 3
     rep stosb    
-;
-    mov cx,fs:ps_id
-    bts word ptr es:th_core_bits,cx
 ;    
+    pop cx
     ret
 AllocateTlb     Endp
 
@@ -5139,6 +5159,9 @@ AllocateTlb     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InsertTlb     Proc near
+    mov cx,fs:ps_id
+    bts word ptr es:th_core_bits,cx
+;
     mov ax,ds:tlb_list
     mov es:th_next,ax
     mov ds:tlb_list,es
@@ -5245,8 +5268,6 @@ FlushGlobalTlbMultiple    Proc near
     push fs
     pushad
 ;
-    call LockCore
-;
     push cx
     xor cx,cx    
     call AllocateTlb
@@ -5254,9 +5275,11 @@ FlushGlobalTlbMultiple    Proc near
     mov es:th_page_count,cx
     mov es:th_phys_count,0
 ;
+    call LockCore
     call LockTlb
     call InsertTlb
 ;
+    mov si,fs:ps_sel
     mov bx,OFFSET core_arr
     mov cx,cs:core_count
 
@@ -5308,8 +5331,6 @@ FlushProcessTlbMultiple    Proc near
     push fs
     pushad
 ;
-    call LockCore
-;
     push cx
     xor cx,cx    
     call AllocateTlb
@@ -5317,9 +5338,11 @@ FlushProcessTlbMultiple    Proc near
     mov es:th_page_count,cx
     mov es:th_phys_count,0
 ;
+    call LockCore
     call LockTlb
     call InsertTlb
 ;
+    mov si,fs:ps_sel
     mov bx,OFFSET core_arr
     mov cx,cs:core_count
     mov edx,cr3
@@ -5384,8 +5407,6 @@ FreeGlobalTlbMultiple    Proc near
     push fs
     pushad
 ;
-    call LockCore
-;
     call AllocateTlb
     mov es:th_page_count,cx
     mov es:th_phys_count,0
@@ -5412,9 +5433,14 @@ fgtmEntryNext:
     add edx,4
     loop fgtmEntryLoop
 ;
+;    call LockCore
+    mov ax,core_data_sel        ; instead of lockcore
+    mov fs,ax
+;
     call LockTlb
     call InsertTlb
 ;
+    mov si,fs:ps_sel
     mov bx,OFFSET core_arr
     mov cx,cs:core_count
 
@@ -5439,7 +5465,7 @@ fgtmCoreNext:
 ;
     call FlushTlb
     call UnlockTlb
-    call UnlockCore
+;    call UnlockCore
 ;    
     popad
     pop fs
@@ -5465,8 +5491,6 @@ FreeProcessTlbMultiple    Proc near
     push es
     push fs
     pushad
-;
-    call LockCore
 ;
     call AllocateTlb
     mov es:th_page_count,cx
@@ -5494,9 +5518,11 @@ fptmEntryNext:
     add edx,4
     loop fptmEntryLoop
 ;
+    call LockCore
     call LockTlb
     call InsertTlb
 ;
+    mov si,fs:ps_sel
     mov bx,OFFSET core_arr
     mov cx,cs:core_count
     mov edx,cr3
