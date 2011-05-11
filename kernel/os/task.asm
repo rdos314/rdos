@@ -42,6 +42,10 @@ INCLUDE ..\apicheck.inc
 
 MAX_CORES   = 64
 
+TLB_FIXED_SIZE          = 64
+MAX_TLB_PHYS_ENTRIES    = 10
+TLB_LINEAR_SIZE         = 10000h
+
 SLEEP_SEL_WAIT  = 1
 SLEEP_SEL_SIGNAL = 2
 
@@ -66,7 +70,7 @@ section_handle_seg          ENDS
 
 tlb_struc   STRUC
 
-th_next             DW ?
+th_next             DD ?
 
 th_remain_cores     DW ?
 
@@ -76,7 +80,9 @@ th_linear           DD ?
 th_page_count       DW ?
 th_phys_count       DW ?
 
-th_phys_arr         DD ?
+th_spare            DW ?
+
+th_phys_arr         DD MAX_TLB_PHYS_ENTRIES DUP(?)
 
 tlb_struc   ENDS
 
@@ -98,7 +104,11 @@ term_proc_list      DW ?
 list_lock           DW ?
 
 tlb_spinlock        DW ?
-tlb_list            DW ?
+tlb_list            DD ?
+
+tlb_block_spinlock  DW ?
+tlb_block_list      DD ?
+tlb_curr_linear     DD ?
 
 task_seg    ENDS
 
@@ -108,335 +118,6 @@ IFDEF __WASM__
 ELSE
     .386p
 ENDIF
-
-LocalRemoveTimer    MACRO
-    local timer_return
-
-    cli
-    mov bx,fs:ps_timer_head
-    mov ax,fs:[bx].ps_timer_next
-    mov fs:ps_timer_head,ax
-    sti
-    push es
-    push fs
-    push bx
-;    
-    xor eax,eax
-    mov ax,cs
-    push eax
-    mov ax,OFFSET timer_return
-    push eax
-    mov ax,fs:[bx].ps_timer_sel
-    push eax
-    push fs:[bx].ps_timer_offset
-;    
-    mov ecx,fs:[bx].ps_timer_id
-    mov eax,fs:[bx].ps_timer_lsb
-    mov edx,fs:[bx].ps_timer_msb    
-;    
-    xor bx,bx
-    mov ds,bx
-    mov es,bx
-    retf32
-
-timer_return:
-    pop bx
-    pop fs
-    pop es
-    cli
-    mov ax,fs:ps_timer_free
-    mov fs:[bx].ps_timer_next,ax
-    mov fs:ps_timer_free,bx
-    sti
-                    ENDM
-
-LocalStartTimer MACRO
-    LOCAL start_try_next
-    LOCAL start_insert
-    mov si,fs:ps_timer_free
-    mov fs:[si].ps_timer_owner,bx
-    mov bx,fs:[si].ps_timer_next
-    mov fs:ps_timer_free,bx
-    mov fs:[si].ps_timer_lsb,eax
-    mov fs:[si].ps_timer_msb,edx
-    mov fs:[si].ps_timer_id,ecx
-    mov fs:[si].ps_timer_offset,edi
-    mov fs:[si].ps_timer_sel,es
-    mov bx,OFFSET ps_timer_head
-    push si
-start_try_next:
-    mov si,bx
-    mov bx,fs:[bx].ps_timer_next
-    cmp edx,fs:[bx].ps_timer_msb
-    jc start_insert
-    jnz start_try_next
-    cmp eax,fs:[bx].ps_timer_lsb
-    jnc start_try_next
-start_insert:
-    pop fs:[si].ps_timer_next
-    mov si,fs:[si].ps_timer_next
-    mov fs:[si].ps_timer_next,bx
-                ENDM
-
-LocalStopTimer  MACRO
-    LOCAL timer_stop_next
-    LOCAL timer_stop_this
-    LOCAL timer_stop_done
-    mov cx,bx
-    mov bx,OFFSET ps_timer_head
-timer_stop_next:
-    mov si,bx
-    mov bx,fs:[bx].ps_timer_next
-    or bx,bx
-    je timer_stop_done
-    cmp cx,fs:[bx].ps_timer_owner
-    jne timer_stop_next
-timer_stop_this:
-    mov ax,fs:[bx].ps_timer_next
-    mov fs:[si].ps_timer_next,ax
-    mov ax,fs:ps_timer_free
-    mov fs:[bx].ps_timer_next,ax
-    mov fs:ps_timer_free,bx
-timer_stop_done:
-                ENDM
-
-;       fs:di   list
-;       es          block
-
-InsertCoreBlock     MACRO
-    LOCAL ins_empty
-    LOCAL ins_done
-    mov es:p_sleep_sel,fs
-    mov word ptr es:p_sleep_offset,di
-    mov word ptr es:p_sleep_offset+2,0
-    push di
-    mov di,fs:[di]
-    or di,di
-    je ins_empty
-    push ds
-    push si
-    mov ds,di
-    mov si,ds:p_prev
-    mov ds:p_prev,es
-    mov ds,si
-    mov ds:p_next,es
-    mov es:p_next,di
-    mov es:p_prev,si
-    pop si
-    pop ds
-    pop di
-    jmp ins_done
-ins_empty:
-    mov es:p_next,es
-    mov es:p_prev,es
-    pop di
-    mov fs:[di],es
-ins_done:
-        ENDM
-
-;       fs:di   list
-;       es          block
-
-InsertCoreFirst     MACRO
-    LOCAL ins_empty
-    LOCAL ins_done
-    mov es:p_sleep_sel,fs
-    mov word ptr es:p_sleep_offset,di
-    mov word ptr es:p_sleep_offset+2,0
-    push di
-    mov di,fs:[di]
-    or di,di
-    je ins_empty
-    push ds
-    push si
-    mov ds,di
-    mov si,ds:p_prev
-    mov ds:p_prev,es
-    mov ds,si
-    mov ds:p_next,es
-    mov es:p_next,di
-    mov es:p_prev,si
-    pop si
-    pop ds
-    pop di
-    jmp ins_done
-ins_empty:
-    mov es:p_next,es
-    mov es:p_prev,es
-    pop di
-ins_done:
-    mov fs:[di],es
-        ENDM
-
-;       ds:di   list
-;       es          block
-
-InsertBlock     MACRO
-    LOCAL ins_empty
-    LOCAL ins_done
-    mov es:p_sleep_sel,ds
-    mov word ptr es:p_sleep_offset,di
-    mov word ptr es:p_sleep_offset+2,0
-    push di
-    mov di,[di]
-    or di,di
-    je ins_empty
-    push ds
-    push si
-    mov ds,di
-    mov si,ds:p_prev
-    mov ds:p_prev,es
-    mov ds,si
-    mov ds:p_next,es
-    mov es:p_next,di
-    mov es:p_prev,si
-    pop si
-    pop ds
-    pop di
-    jmp ins_done
-ins_empty:
-    mov es:p_next,es
-    mov es:p_prev,es
-    pop di
-    mov [di],es
-ins_done:
-        ENDM
-
-;       ds:di   list
-;       es          block
-
-InsertFirst     MACRO
-    LOCAL ins_empty
-    LOCAL ins_done
-    mov es:p_sleep_sel,ds
-    mov word ptr es:p_sleep_offset,di
-    mov word ptr es:p_sleep_offset+2,0
-    push di
-    mov di,[di]
-    or di,di
-    je ins_empty
-    push ds
-    push si
-    mov ds,di
-    mov si,ds:p_prev
-    mov ds:p_prev,es
-    mov ds,si
-    mov ds:p_next,es
-    mov es:p_next,di
-    mov es:p_prev,si
-    pop si
-    pop ds
-    pop di
-    jmp ins_done
-ins_empty:
-    mov es:p_next,es
-    mov es:p_prev,es
-    pop di
-ins_done:
-    mov [di],es
-        ENDM
-
-;       fs:si       list
-;       es              block
-
-RemoveCoreBlock     MACRO
-    LOCAL rem_done
-    push si
-    mov es,fs:[si]
-    push di
-    push ds
-    mov di,es:p_next
-    cmp di,fs:[si]
-    mov fs:[si],di
-    mov si,es:p_prev
-    mov ds,di
-    mov ds:p_prev,si
-    mov ds,si
-    mov ds:p_next,di
-    pop ds
-    pop di
-    pop si
-    jne rem_done
-    mov word ptr fs:[si],0
-rem_done:
-        ENDM
-
-;       ds:si       list
-;       es              block
-
-RemoveBlock     MACRO
-    LOCAL rem_done
-    push si
-    mov es,[si]
-    push di
-    push ds
-    mov di,es:p_next
-    cmp di,[si]
-    mov [si],di
-    mov si,es:p_prev
-    mov ds,di
-    mov ds:p_prev,si
-    mov ds,si
-    mov ds:p_next,di
-    pop ds
-    pop di
-    pop si
-    jne rem_done
-    mov word ptr [si],0
-rem_done:
-        ENDM
-        
-InsertBlock32   MACRO
-    LOCAL ins_empty
-    LOCAL ins_done
-    mov es:p_sleep_sel,ds
-    mov es:p_sleep_offset,edi
-    push di
-    mov di,[edi]
-    or di,di
-    je ins_empty
-    push ds
-    push si
-    mov ds,di
-    mov si,ds:p_prev
-    mov ds:p_prev,es
-    mov ds,si
-    mov ds:p_next,es
-    mov es:p_next,di
-    mov es:p_prev,si
-    pop si
-    pop ds
-    pop di
-    jmp ins_done
-ins_empty:
-    mov es:p_next,es
-    mov es:p_prev,es
-    pop di
-    mov [edi],es
-ins_done:
-        ENDM
-
-RemoveBlock32   MACRO
-    LOCAL rem_done
-    push esi
-    mov es,[esi]
-    push di
-    push ds
-    mov di,es:p_next
-    cmp di,[esi]
-    mov [esi],di
-    mov si,es:p_prev
-    mov ds,di
-    mov ds:p_prev,si
-    mov ds,si
-    mov ds:p_next,di
-    pop ds
-    pop di
-    pop esi
-    jne rem_done
-    mov word ptr [esi],0
-rem_done:
-        ENDM
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -483,6 +164,412 @@ free_process_tlb_proc       DW OFFSET FreeProcessTlbSingle
 
 core_count                  DW 0
 core_arr                    DW MAX_CORES DUP(0)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           LocalRemoveTimer
+;
+;           DESCRIPTION:    Remove timer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LocalRemoveTimer Proc near
+    cli
+    mov bx,fs:ps_timer_head
+    mov ax,fs:[bx].ps_timer_next
+    mov fs:ps_timer_head,ax
+    sti
+    push es
+    push fs
+    push bx
+;    
+    xor eax,eax
+    mov ax,cs
+    push eax
+    mov ax,OFFSET timer_return
+    push eax
+    mov ax,fs:[bx].ps_timer_sel
+    push eax
+    push fs:[bx].ps_timer_offset
+;    
+    mov ecx,fs:[bx].ps_timer_id
+    mov eax,fs:[bx].ps_timer_lsb
+    mov edx,fs:[bx].ps_timer_msb    
+;    
+    xor bx,bx
+    mov ds,bx
+    mov es,bx
+    retf32
+
+timer_return:
+    pop bx
+    pop fs
+    pop es
+    cli
+    mov ax,fs:ps_timer_free
+    mov fs:[bx].ps_timer_next,ax
+    mov fs:ps_timer_free,bx
+    sti
+    ret
+LocalRemoveTimer    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           LocalStartTimer
+;
+;           DESCRIPTION:    Start timer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LocalStartTimer Proc near
+    mov si,fs:ps_timer_free
+    mov fs:[si].ps_timer_owner,bx
+    mov bx,fs:[si].ps_timer_next
+    mov fs:ps_timer_free,bx
+    mov fs:[si].ps_timer_lsb,eax
+    mov fs:[si].ps_timer_msb,edx
+    mov fs:[si].ps_timer_id,ecx
+    mov fs:[si].ps_timer_offset,edi
+    mov fs:[si].ps_timer_sel,es
+    mov bx,OFFSET ps_timer_head
+    push si
+
+start_try_next:
+    mov si,bx
+    mov bx,fs:[bx].ps_timer_next
+    cmp edx,fs:[bx].ps_timer_msb
+    jc start_insert
+    jnz start_try_next
+    cmp eax,fs:[bx].ps_timer_lsb
+    jnc start_try_next
+
+start_insert:
+    pop fs:[si].ps_timer_next
+    mov si,fs:[si].ps_timer_next
+    mov fs:[si].ps_timer_next,bx
+    ret
+LocalStartTimer Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           LocalStopTimer
+;
+;           DESCRIPTION:    Stop timer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LocalStopTimer Proc near
+    mov cx,bx
+    mov bx,OFFSET ps_timer_head
+
+timer_stop_next:
+    mov si,bx
+    mov bx,fs:[bx].ps_timer_next
+    or bx,bx
+    je timer_stop_done
+    cmp cx,fs:[bx].ps_timer_owner
+    jne timer_stop_next
+
+timer_stop_this:
+    mov ax,fs:[bx].ps_timer_next
+    mov fs:[si].ps_timer_next,ax
+    mov ax,fs:ps_timer_free
+    mov fs:[bx].ps_timer_next,ax
+    mov fs:ps_timer_free,bx
+
+timer_stop_done:
+    ret
+LocalStopTimer  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           InsertCoreBlock
+;
+;           DESCRIPTION:    Insert thread into core list
+;
+;           PARAMETERS:     FS:DI       List
+;                           ES          Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertCoreBlock Proc near
+    mov es:p_sleep_sel,fs
+    mov word ptr es:p_sleep_offset,di
+    mov word ptr es:p_sleep_offset+2,0
+    push di
+    mov di,fs:[di]
+    or di,di
+    je icbEmpty
+;    
+    push ds
+    push si
+    mov ds,di
+    mov si,ds:p_prev
+    mov ds:p_prev,es
+    mov ds,si
+    mov ds:p_next,es
+    mov es:p_next,di
+    mov es:p_prev,si
+    pop si
+    pop ds
+    pop di
+    jmp icbDone
+    
+icbEmpty:
+    mov es:p_next,es
+    mov es:p_prev,es
+    pop di
+    mov fs:[di],es
+
+icbDone:
+    ret
+InsertCoreBlock Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           InsertCoreFirst
+;
+;           DESCRIPTION:    Insert thread first into core list
+;
+;           PARAMETERS:     FS:DI       List
+;                           ES          Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertCoreFirst Proc near
+    mov es:p_sleep_sel,fs
+    mov word ptr es:p_sleep_offset,di
+    mov word ptr es:p_sleep_offset+2,0
+    push di
+    mov di,fs:[di]
+    or di,di
+    je icfEmpty
+;
+    push ds
+    push si
+    mov ds,di
+    mov si,ds:p_prev
+    mov ds:p_prev,es
+    mov ds,si
+    mov ds:p_next,es
+    mov es:p_next,di
+    mov es:p_prev,si
+    pop si
+    pop ds
+    pop di
+    jmp icfDone
+    
+icfEmpty:
+    mov es:p_next,es
+    mov es:p_prev,es
+    pop di
+
+icfDone:
+    mov fs:[di],es
+    ret
+InsertCoreFirst Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           InsertBlock
+;
+;           DESCRIPTION:    Insert thread into global list
+;
+;           PARAMETERS:     DS:DI       List
+;                           ES          Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertBlock Proc near
+    mov es:p_sleep_sel,ds
+    mov word ptr es:p_sleep_offset,di
+    mov word ptr es:p_sleep_offset+2,0
+    push di
+    mov di,[di]
+    or di,di
+    je ibEmpty
+;
+    push ds
+    push si
+    mov ds,di
+    mov si,ds:p_prev
+    mov ds:p_prev,es
+    mov ds,si
+    mov ds:p_next,es
+    mov es:p_next,di
+    mov es:p_prev,si
+    pop si
+    pop ds
+    pop di
+    jmp ibDone
+    
+ibEmpty:
+    mov es:p_next,es
+    mov es:p_prev,es
+    pop di
+    mov [di],es
+
+ibDone:
+    ret
+InsertBlock Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           RemoveCoreBlock
+;
+;           DESCRIPTION:    Remove thread from core list
+;
+;           PARAMETERS:     FS:SI       List
+;                           ES          Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveCoreBlock Proc near
+    push si
+    mov es,fs:[si]
+    push di
+    push ds
+    mov di,es:p_next
+    cmp di,fs:[si]
+    mov fs:[si],di
+    mov si,es:p_prev
+    mov ds,di
+    mov ds:p_prev,si
+    mov ds,si
+    mov ds:p_next,di
+    pop ds
+    pop di
+    pop si
+    jne rcbDone
+;    
+    mov word ptr fs:[si],0
+    
+rcbDone:
+    ret
+RemoveCoreBlock Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           RemoveBlock
+;
+;           DESCRIPTION:    Remove thread from global list
+;
+;           PARAMETERS:     DS:SI       List
+;                           ES          Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveBlock Proc near
+    push si
+    mov es,[si]
+    push di
+    push ds
+    mov di,es:p_next
+    cmp di,[si]
+    mov [si],di
+    mov si,es:p_prev
+    mov ds,di
+    mov ds:p_prev,si
+    mov ds,si
+    mov ds:p_next,di
+    pop ds
+    pop di
+    pop si
+    jne rblDone
+;    
+    mov word ptr [si],0
+
+rblDone:
+    ret
+RemoveBlock Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           InsertBlock
+;
+;           DESCRIPTION:    Insert thread into global list
+;
+;           PARAMETERS:     DS:EDI       List
+;                           ES          Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertBlock32 Proc near
+    mov es:p_sleep_sel,ds
+    mov es:p_sleep_offset,edi
+    push di
+    mov di,[edi]
+    or di,di
+    je ib32Empty
+;
+    push ds
+    push si
+    mov ds,di
+    mov si,ds:p_prev
+    mov ds:p_prev,es
+    mov ds,si
+    mov ds:p_next,es
+    mov es:p_next,di
+    mov es:p_prev,si
+    pop si
+    pop ds
+    pop di
+    jmp ib32Done
+    
+ib32Empty:
+    mov es:p_next,es
+    mov es:p_prev,es
+    pop di
+    mov [edi],es
+ib32Done:
+    ret
+InsertBlock32   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           RemoveBlock32
+;
+;           DESCRIPTION:    Remove thread from global list
+;
+;           PARAMETERS:     DS:ESI       List
+;                           ES          Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveBlock32 Proc near
+    push esi
+    mov es,[esi]
+    push di
+    push ds
+    mov di,es:p_next
+    cmp di,[esi]
+    mov [esi],di
+    mov si,es:p_prev
+    mov ds,di
+    mov ds:p_prev,si
+    mov ds,si
+    mov ds:p_next,di
+    pop ds
+    pop di
+    pop esi
+    jne rb32Done
+    
+    mov word ptr [esi],0
+
+rb32Done:
+    ret
+RemoveBlock32   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -799,6 +886,12 @@ init_task       PROC near
     mov ds:time_sync_state,TIME_SYNC_RESET
     mov ds:tlb_spinlock,0
     mov ds:tlb_list,0
+    mov ds:tlb_block_spinlock,0
+    mov ds:tlb_block_list,0
+;
+    mov eax,TLB_LINEAR_SIZE
+    AllocateBigLinear
+    mov ds:tlb_curr_linear,edx    
 ;
     mov ds:global_spinlock,0
     xor ax,ax
@@ -2377,7 +2470,7 @@ HandleGlobal    Proc near
     jmp hgDone    
 
 hgRemove:
-    RemoveBlock
+    call RemoveBlock
 ;
     mov ax,[si]
     or ax,ax
@@ -2399,7 +2492,7 @@ hgUnlock:
     call cs:unlock_ready_proc
 ;
     mov di,es:p_prio
-    InsertCoreBlock
+    call InsertCoreBlock
     mov fs:ps_prio_act,di
 
 hgDone:    
@@ -2473,13 +2566,13 @@ hpqInt:
 ;
     mov ax,es
     mov si,fs:ps_prio_act
-    RemoveCoreBlock          
+    call RemoveCoreBlock          
 ;    
     call cs:lock_list_proc
     push ds  
     mov ds,ax
     mov di,OFFSET ms_wait_sti
-    InsertBlock
+    call InsertBlock
     pop ds
     call cs:unlock_list_proc
     jmp HandlePrio
@@ -2508,7 +2601,7 @@ GetPrioThread    Proc near
     or ax,ax
     jz gptNull
 ;    
-    RemoveCoreBlock
+    call RemoveCoreBlock
 
 gptLoop:
     mov ax,fs:[si]
@@ -2774,7 +2867,7 @@ load_thread_wakeup_loop:
     or ax,ax
     jz load_thread_wakeup_done
 ;
-    RemoveCoreBlock
+    call RemoveCoreBlock
     sti
     mov di,es:p_prio
     or di,di
@@ -2790,7 +2883,7 @@ load_wakeup_local:
     mov fs:ps_curr_post,al
 
 load_wakeup_local_do:    
-    InsertCoreBlock
+    call InsertCoreBlock
     cmp di,fs:ps_prio_act
     jbe load_thread_wakeup_loop
 ;       
@@ -2801,7 +2894,7 @@ load_thread_wakeup_global:
     mov fs:ps_curr_post,al
 ;
     call cs:lock_ready_proc
-    InsertBlock
+    call InsertBlock
     cmp di,ds:global_prio_act
     jb load_thread_global_unlock
 ;
@@ -2840,7 +2933,7 @@ load_check_timer:
     sbb edx,fs:[bx].ps_timer_msb
     jc load_reload_timer
 ;       
-    LocalRemoveTimer
+    call LocalRemoveTimer
     jmp load_reload_loop
 
 load_check_preempt:
@@ -2856,7 +2949,7 @@ load_retry:
     je load_thread_loop
 ;    
     mov di,es:p_prio
-    InsertCoreFirst
+    call InsertCoreFirst
     cmp di,fs:ps_prio_act
     jbe load_retry_do
 ;
@@ -3332,7 +3425,7 @@ ContinueCurrentThread:
     mov ax,task_sel
     mov ds,ax
     call cs:lock_ready_proc
-    InsertBlock
+    call InsertBlock
     cmp di,ds:global_prio_act
     jb cctGlobalUnlock
 ;
@@ -3343,7 +3436,7 @@ cctGlobalUnlock:
     jmp cctPop
         
 cctLocal:
-    InsertCoreFirst
+    call InsertCoreFirst
     cmp di,fs:ps_prio_act
     jbe cctPop
 ;
@@ -3398,7 +3491,7 @@ reload_check_timer:
     sbb edx,fs:[bx].ps_timer_msb
     jc reload_timer_do
 ;       
-    LocalRemoveTimer
+    call LocalRemoveTimer
     jmp reload_timer_loop
 
 reload_check_preempt:
@@ -3589,7 +3682,7 @@ stThreadLoop:
     jz stThreadOK
 ;
     call cs:lock_list_proc
-    RemoveBlock
+    call RemoveBlock
     call cs:unlock_list_proc
 ;
     call DeleteThread
@@ -3602,7 +3695,7 @@ stThreadOk:
     jz stLoop
 ;
     call cs:lock_list_proc
-    RemoveBlock
+    call RemoveBlock
     call cs:unlock_list_proc
 ;    
     call DeleteProcess
@@ -3792,13 +3885,13 @@ WakeThread      PROC near
     jz wtUnlock
 ;       
     call cs:lock_list_proc
-    RemoveBlock32
+    call RemoveBlock32
     mov es:p_data,eax
     call cs:unlock_list_proc
 ;
     cli
     mov di,OFFSET ps_wakeup_list
-    InsertCoreBlock
+    call InsertCoreBlock
     sti
     
 wtUnlock:    
@@ -3952,7 +4045,7 @@ debug_block_do:
     mov edi,OFFSET debug_list       
 ;
     call cs:lock_list_proc
-    InsertBlock32
+    call InsertBlock32
     call cs:unlock_list_proc
 ;
     mov es:p_sleep_sel,ds
@@ -4012,7 +4105,7 @@ double_block:
     mov edi,OFFSET debug_list       
 ;
     call cs:lock_list_proc
-    InsertBlock32
+    call InsertBlock32
     call cs:unlock_list_proc
 ;
     mov es:p_sleep_sel,ds
@@ -5048,6 +5141,132 @@ FreeProcessTlbSingle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           LockTlbBlock
+;
+;       DESCRIPTION:    Lock TLB block
+;
+;       PARAMETERS:     DS      Task sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockTlbBlock    Proc near
+
+ltbSpinLock:    
+    mov ax,ds:tlb_block_spinlock
+    or ax,ax
+    je ltbGet
+;
+    pause
+    jmp ltbSpinLock
+
+ltbGet:
+    cli
+    inc ax
+    xchg ax,ds:tlb_block_spinlock
+    or ax,ax
+    je ltbDone
+;
+    jmp ltbSpinLock
+
+ltbDone:
+    ret
+LockTlbBlock    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UnlockTlbBlock
+;
+;       DESCRIPTION:    Unlock TLB block
+;
+;       PARAMETERS:     DS      Task sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockTlbBlock    Proc near
+    mov ds:tlb_block_spinlock,0
+    ret
+UnlockTlbBlock    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateTlbBlock
+;
+;       DESCRIPTION:    Allocate 64-byte TLB block
+;
+;       PARAMETERS:     DS      Task sel
+;                       ES      Flat sel
+;
+;       RETURNS:        EDX     Data address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateTlbBlock PROC near
+    push eax
+;    
+    call LockTlbBlock
+    mov edx,ds:tlb_block_list
+    or edx,edx
+    jnz atbDone
+;
+    push ecx
+    mov edx,ds:tlb_curr_linear
+    add ds:tlb_curr_linear,1000h
+    mov ds:tlb_block_list,edx
+    mov ecx,64
+    
+atbLoop:
+    mov eax,edx
+    add eax,ecx
+    mov es:[edx],eax
+    mov edx,eax
+    test dx,0FFFh
+    jnz atbLoop
+;
+    sub edx,ecx
+    mov dword ptr es:[edx],0
+    mov edx,ds:tlb_block_list
+    pop ecx
+
+atbDone:
+    mov eax,es:[edx]
+    mov ds:tlb_block_list,eax
+    call UnlockTlbBlock
+;
+    pop eax
+    ret
+AllocateTlbBlock ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeTlbBlock
+;
+;       DESCRIPTION:    Free 64-byte TLB block
+;
+;       PARAMETERS:     DS      Task sel
+;                       ES      Flat sel
+;                       EDX     Data address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeTlbBlock     PROC near
+    push eax
+;    
+    call LockTlbBlock
+    mov eax,ds:tlb_block_list
+    mov es:[edx],eax
+    mov ds:tlb_block_list,edx
+    call UnlockTlbBlock
+;       
+    pop eax
+    ret
+FreeTlbBlock     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           LockTlb
 ;
 ;           DESCRIPTION:    Lock TLB
@@ -5067,6 +5286,7 @@ ltmSpinLock:
     jmp ltmSpinLock
 
 ltmGet:
+    cli
     inc ax
     xchg ax,ds:tlb_spinlock
     or ax,ax
@@ -5089,6 +5309,7 @@ LockTlb    Endp
 
 UnlockTlb    Proc near
     mov ds:tlb_spinlock,0
+    sti
     ret
 UnlockTlb    Endp
 
@@ -5099,31 +5320,28 @@ UnlockTlb    Endp
 ;
 ;           DESCRIPTION:    Allocate TLB header
 ;
-;           PARAMETERS:     CX      Max number of physical entries
+;           PARAMETERS:     ES      Flat sel
 ;                           EDX     Linear base
 ;                           FS      Core sel
 ;
-;           RETURNS:        ES      Entry selector
+;           RETURNS:        EDX     Entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateTlb     Proc near
-    push cx
+    push ecx
 ;    
-    movzx eax,cx
-    shl eax,2
-    add eax,OFFSET th_phys_arr
-    AllocateSmallGlobalMem
-    mov es:th_linear,edx
+    call AllocateTlbBlock
+    mov es:[edx].th_linear,edx
     mov ax,cs:core_count
-    mov es:th_remain_cores,ax
+    mov es:[edx].th_remain_cores,ax
 ;
-    mov di,OFFSET th_core_bits
+    lea edi,[edx].th_core_bits
     xor al,al
-    mov cx,MAX_CORES SHR 3
-    rep stosb    
+    mov ecx,MAX_CORES SHR 3
+    rep stos byte ptr es:[edi]
 ;    
-    pop cx
+    pop ecx
     ret
 AllocateTlb     Endp
 
@@ -5134,17 +5352,18 @@ AllocateTlb     Endp
 ;
 ;           DESCRIPTION:    Insert TLB entry
 ;
-;           PARAMETERS:     ES      Entry selector
+;           PARAMETERS:     ES      Flat sel
+;                           EDX     Entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InsertTlb     Proc near
     mov cx,fs:ps_id
-    bts word ptr es:th_core_bits,cx
+    bts word ptr es:[edx].th_core_bits,cx
 ;
-    mov ax,ds:tlb_list
-    mov es:th_next,ax
-    mov ds:tlb_list,es
+    mov eax,ds:tlb_list
+    mov es:[edx].th_next,eax
+    mov ds:tlb_list,edx
     ret
 InsertTlb   Endp
 
@@ -5155,8 +5374,9 @@ InsertTlb   Endp
 ;
 ;           DESCRIPTION:    Flush TLB entries
 ;
-;           PARAMETERS:     ES      Entry selector
+;           PARAMETERS:     ES      Flat sel
 ;                           FS      Core sel
+;                           EDX     Entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5164,30 +5384,26 @@ FlushTlb     Proc near
     push ax
 ;
     mov ax,fs:ps_id
-    bt es:th_core_bits,ax
+    bt es:[edx].th_core_bits,ax
     jnc ftDone
 ;
-    push ds
     push cx
-    push edx
+    push edi
 ;    
-    mov ax,flat_sel
-    mov ds,ax
-    mov edx,es:th_linear
-    mov cx,es:th_page_count
+    mov edi,es:[edx].th_linear
+    mov cx,es:[edx].th_page_count
 
 ftLoop:
-    invlpg [edx]
-    add edx,1000h
+    invlpg es:[edi]
+    add edi,1000h
     loop ftLoop
 ;    
     mov ax,fs:ps_id
-    btr es:th_core_bits,ax
-    dec es:th_remain_cores
+    btr es:[edx].th_core_bits,ax
+    dec es:[edx].th_remain_cores
 ;    
-    pop edx
+    pop edi
     pop cx
-    pop ds
 
 ftDone:
     pop ax    
@@ -5201,7 +5417,9 @@ FlushTlb   Endp
 ;
 ;           DESCRIPTION:    Flush TLB list
 ;
-;           PARAMETERS:     FS      Core sel
+;           PARAMETERS:     DS      Task sel
+;                           ES      Flat sel
+;                           FS      Core sel
 ;
 ;           RETURNS:        NC      List is done
 ;                           CY  ES  Entry that should be finalized
@@ -5209,41 +5427,34 @@ FlushTlb   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FlushTlbList     Proc near
-    push ds
-;
-    mov ax,task_sel
-    mov ds,ax
-;
     xor si,si
-    mov ax,ds:tlb_list
+    mov edx,ds:tlb_list
 
 ftlLoop:
-    or ax,ax
+    or edx,edx
     jz ftlEmpty
 ;
-    mov es,ax
     call FlushTlb
-    mov ax,es:th_remain_cores
+    mov ax,es:[edx].th_remain_cores
     or ax,ax
     jz ftlRemove
 ;
-    mov si,es
-    mov ax,es:th_next
+    mov esi,edx
+    mov eax,es:[edx].th_next
     jmp ftlLoop
 
 ftlRemove:
-    or si,si
+    or esi,esi
     jz ftlRemoveHead
 ;
-    mov ax,es:th_next
-    mov ds,si
-    mov ds:th_next,ax
+    mov eax,es:[edx].th_next
+    mov es:[esi].th_next,eax
     stc
     jmp ftlDone
         
 ftlRemoveHead:
-    mov ax,es:th_next
-    mov ds:tlb_list,ax
+    mov eax,es:[edx].th_next
+    mov ds:tlb_list,eax
     stc 
     jmp ftlDone      
 
@@ -5251,7 +5462,6 @@ ftlEmpty:
     clc
 
 ftlDone:    
-    pop ds
     ret
 FlushTlbList   Endp
 
@@ -5262,32 +5472,33 @@ FlushTlbList   Endp
 ;
 ;           DESCRIPTION:    Free TLB entries and selector
 ;
-;           PARAMETERS:     ES      Entry selector
+;           PARAMETERS:     ES      Flat sel
 ;                           FS      Core sel
+;                           EDX     Entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeTlb     Proc near
     push eax
     push cx
-    push si
+    push esi
 ;    
-    mov cx,es:th_phys_count
+    mov cx,es:[edx].th_phys_count
     or cx,cx
     jz frtDone
 ;
-    mov si,OFFSET th_phys_arr    
-
+    lea esi,[edx].th_phys_arr
+    
 frtLoop:
-    mov eax,es:[si]
+    mov eax,es:[esi]
     FreePhysical
-    add si,4
+    add esi,4
     loop frtLoop
 
 frtDone:
     FreeMem
 ;    
-    pop si
+    pop esi
     pop cx
     pop eax    
     ret
@@ -5301,12 +5512,12 @@ FreeTlb   Endp
 ;           DESCRIPTION:    Update TLB list (scheduler should be locked)
 ;
 ;           PARAMETERS:     FS  Core sel
+;                           ES  Flat sel
+;                           DS  Task sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateTlbList    Proc near
-    mov ax,task_sel    
-    mov ds,ax
 
 utlLoop:
     call LockTlb    
@@ -5348,12 +5559,14 @@ FlushGlobalTlbMultiple    Proc near
     push fs
     pushad
 ;
-    push cx
-    xor cx,cx    
+    mov ax,task_sel
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+;
     call AllocateTlb
-    pop cx
-    mov es:th_page_count,cx
-    mov es:th_phys_count,0
+    mov es:[edx].th_page_count,cx
+    mov es:[edx].th_phys_count,0
 ;
     call TryLockCore
     call LockTlb
@@ -5372,8 +5585,8 @@ fgtLoop:
     push fs
     mov fs,ax
     mov ax,fs:ps_id
-    bts es:th_core_bits,ax
-    inc es:th_remain_cores
+    bts es:[edx].th_core_bits,ax
+    inc es:[edx].th_remain_cores
 ;
     mov al,81h
     SendInt
@@ -5411,12 +5624,14 @@ FlushProcessTlbMultiple    Proc near
     push fs
     pushad
 ;
-    push cx
-    xor cx,cx    
+    mov ax,task_sel
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+;    
     call AllocateTlb
-    pop cx
-    mov es:th_page_count,cx
-    mov es:th_phys_count,0
+    mov es:[edx].th_page_count,cx
+    mov es:[edx].th_phys_count,0
 ;
     call TryLockCore
     call LockTlb
@@ -5426,13 +5641,14 @@ FlushProcessTlbMultiple    Proc near
     mov si,fs:ps_sel
     mov bx,OFFSET core_arr
     mov cx,cs:core_count
-    mov edx,cr3
+    mov edi,cr3
 
 fptLoop:
     mov ax,cs:[bx]
     cmp ax,si
     je fptNext
 ;
+    push ds
     push fs
     mov fs,ax
 ;
@@ -5441,19 +5657,20 @@ fptLoop:
     jz fptSend
 ;
     mov ds,ax
-    cmp edx,ds:p_cr3
+    cmp edi,ds:p_cr3
     jne fptNextPop
 
 fptSend:
     mov ax,fs:ps_id
-    bts es:th_core_bits,ax
-    inc es:th_remain_cores
+    bts es:[edx].th_core_bits,ax
+    inc es:[edx].th_remain_cores
 ;
     mov al,81h
     SendInt
 
 fptNextPop:    
     pop fs
+    pop ds
 
 fptNext:
     add bx,2
@@ -5487,19 +5704,27 @@ FreeGlobalTlbMultiple    Proc near
     push fs
     pushad
 ;
+    mov ax,task_sel
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+
+fgtmBlockLoop:
+    mov esi,edx
     call AllocateTlb
-    mov es:th_page_count,cx
-    mov es:th_phys_count,0
+    mov es:[edx].th_page_count,0
+    mov es:[edx].th_phys_count,0
 ;
+    push ds
     mov ax,sys_page_sel
     mov ds,ax
-    shr edx,10
-    and dl,0FCh    
-    mov di,OFFSET th_phys_arr    
+    shr esi,10
+    and si,0FFFCh    
+    lea edi,[edx].th_phys_arr
     
 fgtmEntryLoop:
     xor eax,eax
-    xchg eax,[edx]
+    xchg eax,[esi]
     test al,1
     jz fgtmEntryNext
 ;
@@ -5507,11 +5732,23 @@ fgtmEntryLoop:
     jnz fgtmEntryNext
 ;
     stosd
-    inc es:th_phys_count
+    mov ax,es:[edx].th_phys_count
+    inc ax
+    mov es:[edx].th_phys_count,ax
+    cmp ax,MAX_TLB_PHYS_ENTRIES
+    je fgtmBlockDone    
 
 fgtmEntryNext:
-    add edx,4
+    inc es:[edx].th_page_count
+    add esi,4
     loop fgtmEntryLoop
+
+fgtmBlockDone:
+    pop ds
+;
+    shl esi,10
+    push cx
+    push esi
 ;
     call TryLockCore
     call LockTlb
@@ -5530,8 +5767,8 @@ fgtmCoreLoop:
     push fs
     mov fs,ax
     mov ax,fs:ps_id
-    bts es:th_core_bits,ax
-    inc es:th_remain_cores
+    bts es:[edx].th_core_bits,ax
+    inc es:[edx].th_remain_cores
 ;
     mov al,81h
     SendInt
@@ -5540,6 +5777,11 @@ fgtmCoreLoop:
 fgtmCoreNext:
     add bx,2
     loop fgtmCoreLoop
+;
+    pop edx
+    pop cx
+    or cx,cx
+    jnz fgtmBlockLoop
 ;
     call UpdateTlbList    
     call TryUnlockCore
@@ -5569,19 +5811,27 @@ FreeProcessTlbMultiple    Proc near
     push fs
     pushad
 ;
+    mov ax,task_sel
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+
+fptmBlockLoop:
+    mov esi,edx
     call AllocateTlb
-    mov es:th_page_count,cx
-    mov es:th_phys_count,0
+    mov es:[edx].th_page_count,cx
+    mov es:[edx].th_phys_count,0
 ;
+    push ds
     mov ax,process_page_sel
     mov ds,ax
-    shr edx,10
-    and dl,0FCh    
-    mov di,OFFSET th_phys_arr    
+    shr esi,10
+    and si,0FFFCh    
+    lea edi,[edx].th_phys_arr
     
 fptmEntryLoop:
     xor eax,eax
-    xchg eax,[edx]
+    xchg eax,[esi]
     test al,1
     jz fptmEntryNext
 ;
@@ -5589,11 +5839,21 @@ fptmEntryLoop:
     jnz fptmEntryNext
 ;
     stosd
-    inc es:th_phys_count
+    mov ax,es:[edx].th_phys_count
+    inc ax
+    mov es:[edx].th_phys_count,ax
+    cmp ax,MAX_TLB_PHYS_ENTRIES
+    je fptmBlockDone    
 
 fptmEntryNext:
-    add edx,4
+    inc es:[edx].th_page_count
+    add esi,4
     loop fptmEntryLoop
+
+fptmBlockDone:
+    shl esi,10
+    push cx
+    push esi
 ;
     call TryLockCore
     call LockTlb
@@ -5603,13 +5863,14 @@ fptmEntryNext:
     mov si,fs:ps_sel
     mov bx,OFFSET core_arr
     mov cx,cs:core_count
-    mov edx,cr3
+    mov edi,cr3
 
 fptmCoreLoop:
     mov ax,cs:[bx]
     cmp ax,si
     je fptmCoreNext
 ;
+    push ds
     push fs
     mov fs,ax
 ;
@@ -5618,23 +5879,29 @@ fptmCoreLoop:
     jz fptmSend
 ;
     mov ds,ax
-    cmp edx,ds:p_cr3
+    cmp edi,ds:p_cr3
     jne fptmNextPop
 
 fptmSend:
     mov ax,fs:ps_id
-    bts es:th_core_bits,ax
-    inc es:th_remain_cores
+    bts es:[edx].th_core_bits,ax
+    inc es:[edx].th_remain_cores
 ;
     mov al,81h
     SendInt
 
 fptmNextPop:    
     pop fs
+    pop ds
 
 fptmCoreNext:
     add bx,2
     loop fptmCoreLoop
+;
+    pop edx
+    pop cx
+    or cx,cx
+    jnz fptmBlockLoop
 ;
     call UpdateTlbList
     call TryUnlockCore
@@ -5889,7 +6156,7 @@ start_timer     PROC far
     call TryLockCore
     cli
     pushf
-    LocalStartTimer
+    call LocalStartTimer
     popf
     call ReloadTimer
     sti
@@ -5924,7 +6191,7 @@ stop_timer      PROC far
     call TryLockCore
     cli
     pushf
-    LocalStopTimer
+    call LocalStopTimer
     popf
     call ReloadTimer
     sti
@@ -5961,7 +6228,7 @@ init_first_thread:
     call LockCore
     mov di,es:p_prio
     mov fs:ps_prio_act,di
-    InsertCoreBlock
+    call InsertCoreBlock
 ;
     mov ax,system_data_sel
     mov es,ax
@@ -6009,7 +6276,7 @@ wake_new    PROC near
     mov es,dx
     cli
     mov di,OFFSET ps_wakeup_list
-    InsertCoreBlock
+    call InsertCoreBlock
     sti
     jmp ContinueCurrentThread
 
@@ -6073,7 +6340,7 @@ cleanup_thread:
     mov edi,OFFSET term_thread_list
 ;
     call cs:lock_list_proc
-    InsertBlock32
+    call InsertBlock32
     call cs:unlock_list_proc
 ;
     xor ax,ax
@@ -6105,7 +6372,7 @@ cleanup_process:
     mov edi,OFFSET term_proc_list
 ;
     call cs:lock_list_proc
-    InsertBlock32
+    call InsertBlock32
     call cs:unlock_list_proc
 ;
     xor ax,ax
@@ -6169,7 +6436,7 @@ sleep_thread    PROC far
     mov fs:ps_curr_thread,0
 ;
     call cs:lock_list_proc
-    InsertBlock32
+    call InsertBlock32
     call cs:unlock_list_proc
 ;        
     mov es:p_sleep_sel,ds
@@ -6243,7 +6510,7 @@ signal_thread   PROC far
 ;
     push di
     mov di,OFFSET ps_wakeup_list
-    InsertCoreBlock
+    call InsertCoreBlock
     pop di
 
 signal_unlock:
@@ -6455,7 +6722,7 @@ ecsBlock:
     mov es,fs:ps_curr_thread
     mov fs:ps_curr_thread,0
 ;
-    InsertBlock32
+    call InsertBlock32
     call cs:unlock_kernel_section_proc
 ;
     mov es:p_sleep_sel,ds
@@ -6517,14 +6784,14 @@ lcsUnblock:
     push di
 ;       
     add esi,OFFSET cs_list
-    RemoveBlock32
+    call RemoveBlock32
     mov es:p_data,0
     sub esi,OFFSET cs_list
     call cs:unlock_kernel_section_proc
 ;    
     cli
     mov di,OFFSET ps_wakeup_list
-    InsertCoreBlock
+    call InsertCoreBlock
     sti
 
 lcsUnblocked:
@@ -6714,7 +6981,7 @@ eusBlock:
     mov es,fs:ps_curr_thread
     mov fs:ps_curr_thread,0
 ;
-    InsertBlock32
+    call InsertBlock32
     call cs:unlock_user_section_proc
 ;
     mov es:p_sleep_sel,ds
@@ -6835,13 +7102,13 @@ lusUnblock:
     push di
 ;    
     lea esi,ds:[ebx].us_list
-    RemoveBlock32
+    call RemoveBlock32
     mov es:p_data,0
     call cs:unlock_user_section_proc
 ;
     cli
     mov di,OFFSET ps_wakeup_list
-    InsertCoreBlock
+    call InsertCoreBlock
     sti
 
 lusUnblocked:
@@ -7083,7 +7350,7 @@ wake_until      PROC far
     mov es,cx
     cli
     mov di,OFFSET ps_wakeup_list
-    InsertCoreBlock
+    call InsertCoreBlock
     sti
     retf32
 wake_until      ENDP
@@ -7113,7 +7380,7 @@ wait_until      PROC far
     mov edi,OFFSET wake_until
     xor bx,bx
     cli
-    LocalStartTimer
+    call LocalStartTimer
     sti
 ;
     mov es,fs:ps_curr_thread
@@ -7164,7 +7431,7 @@ wait_milli_sec  PROC far
     mov edi,OFFSET wake_until
     xor bx,bx
     cli
-    LocalStartTimer
+    call LocalStartTimer
     sti     
 ;    
     mov es,fs:ps_curr_thread
@@ -7216,7 +7483,7 @@ wait_micro_sec  PROC far
     mov edi,OFFSET wake_until
     xor bx,bx
     cli
-    LocalStartTimer
+    call LocalStartTimer
     sti
 ;    
     mov es,fs:ps_curr_thread
