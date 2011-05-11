@@ -478,8 +478,6 @@ unlock_user_section_proc    DW OFFSET UnlockUserSectionSingle
 flush_global_tlb_proc       DW OFFSET FlushTlb386
 flush_process_tlb_proc      DW OFFSET FlushTlb386
 
-lock_tlb_proc               DW OFFSET LockTlbSingle
-unlock_tlb_proc             DW OFFSET UnlockTlbSingle
 free_tlb_proc               DW OFFSET FreeTlbSingle
 
 core_count                  DW 0
@@ -3645,11 +3643,9 @@ start_processor_null_threads    Proc near
     mov ds:unlock_kernel_section_proc,OFFSET UnlockKernelSectionMultiple
     mov ds:lock_user_section_proc,OFFSET LockUserSectionMultiple
     mov ds:unlock_user_section_proc,OFFSET UnlockUserSectionMultiple
-    mov ds:flush_global_tlb_proc,OFFSET FlushGlobalTlbMultiple
-    mov ds:flush_process_tlb_proc,OFFSET FlushProcessTlbMultiple
-    mov ds:lock_tlb_proc,OFFSET LockTlbMultiple
-    mov ds:unlock_tlb_proc,OFFSET UnlockTlbMultiple
-    mov ds:free_tlb_proc,OFFSET FreeTlbMultiple
+;    mov ds:flush_global_tlb_proc,OFFSET FlushGlobalTlbMultiple
+;    mov ds:flush_process_tlb_proc,OFFSET FlushProcessTlbMultiple
+;    mov ds:free_tlb_proc,OFFSET FreeTlbMultiple
 
 start_locks_ok:    
     mov ecx,200h
@@ -4956,179 +4952,6 @@ FlushTlb486    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FlushGlobalTlbMultiple
-;
-;           DESCRIPTION:    Flush global TLB entries, multiple processor version
-;
-;           PARAMETERS:     CX      Number of entries
-;                           EDX     Linear address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FlushGlobalTlbMultiple    Proc near
-    push ds
-    push fs
-    push eax
-    push bx
-    push cx
-    push si
-;
-    mov ax,core_data_sel
-    mov ds,ax
-    cli    
-    mov ds:ps_tlb_flush,1    
-    mov si,ds:ps_sel
-    sti
-;    
-    mov bx,OFFSET core_arr
-    mov cx,cs:core_count
-
-fgtLoop:
-    mov ax,cs:[bx]
-    cmp ax,si
-    je fgtNext
-;
-    mov fs,ax
-    mov al,1
-    xchg al,fs:ps_tlb_flush
-    or al,al
-    jnz fgtNext
-;
-    mov al,81h
-    SendInt
-
-fgtNext:
-    add bx,2
-    loop fgtLoop
-;
-    mov ax,core_data_sel
-    mov ds,ax
-    mov al,1
-    xchg al,ds:ps_tlb_flush
-    or al,al
-    jz fgtDone
-;
-    mov eax,cr3
-    mov cr3,eax    
-        
-fgtDone:
-    pop si
-    pop cx
-    pop bx
-    pop eax
-    pop fs
-    pop ds
-    ret
-FlushGlobalTlbMultiple    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FlushProcessTlbMultiple
-;
-;           DESCRIPTION:    Flush process TLB entries, multiple processor version
-;
-;           PARAMETERS:     CX      Number of entries
-;                           EDX     Linear address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FlushProcessTlbMultiple    Proc near
-    push ds
-    push fs
-    push eax
-    push bx
-    push cx
-    push edx
-    push si
-;
-    mov ax,core_data_sel
-    mov ds,ax
-    cli    
-    mov ds:ps_tlb_flush,1    
-    mov si,ds:ps_sel
-    sti
-;   
-    mov edx,cr3
-    mov bx,OFFSET core_arr
-    mov cx,cs:core_count
-
-fptLoop:
-    mov ax,cs:[bx]
-    cmp ax,si
-    je fptNext
-;
-    mov fs,ax
-    mov ax,fs:ps_curr_thread
-    or ax,ax
-    jz fptNext
-;
-    mov ds,ax
-    cmp edx,ds:p_cr3
-    jne fptNext
-;
-    mov al,1
-    xchg al,fs:ps_tlb_flush
-    or al,al
-    jnz fptNext
-;
-    mov al,81h
-    SendInt
-
-fptNext:
-    add bx,2
-    loop fptLoop
-;
-    mov ax,core_data_sel
-    mov ds,ax
-    mov al,1
-    xchg al,ds:ps_tlb_flush
-    or al,al
-    jz fptDone
-;
-    mov eax,cr3
-    mov cr3,eax    
-        
-fptDone:
-    pop si
-    pop edx
-    pop cx
-    pop bx
-    pop eax
-    pop fs
-    pop ds
-    ret
-FlushProcessTlbMultiple    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LockTlbSingle
-;
-;           DESCRIPTION:    Lock TLB entries, single processor version
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockTlbSingle    Proc near
-    ret
-LockTlbSingle    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UnlockTlbSingle
-;
-;           DESCRIPTION:    Unlock TLB entries, single processor version
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockTlbSingle    Proc near
-    ret
-UnlockTlbSingle    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           FreeTlbSingle
 ;
 ;           DESCRIPTION:    Free TLB entries, single processor version
@@ -5161,68 +4984,6 @@ ftsNext:
     pop cx    
     ret
 FreeTlbSingle    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LockTlbMultiple
-;
-;           DESCRIPTION:    Lock TLB entries, multiple processor version
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockTlbMultiple    Proc near
-    ret
-LockTlbMultiple    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UnlockTlbMultiple
-;
-;           DESCRIPTION:    Unlock TLB entries, multiple processor version
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockTlbMultiple    Proc near
-    ret
-UnlockTlbMultiple    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FreeTlbMultiple
-;
-;           DESCRIPTION:    Free TLB entries, multiple processor version
-;
-;           PARAMETERS:     CX      Number of entries
-;                           DS:EDX  Address of physical pages
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeTlbMultiple    Proc near
-    push cx
-    push edx
-    
-ftmLoop:
-    xor eax,eax
-    xchg eax,[edx]
-    test al,1
-    jz ftmNext
-;
-    test ax,800h
-    jnz ftmNext
-;
-    FreePhysical
-
-ftmNext:
-    add edx,4
-    loop ftmLoop
-;
-    pop edx
-    pop cx    
-    ret
-FreeTlbMultiple    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5271,8 +5032,6 @@ local_flush_process_tlb Endp
     public local_free_global_tlb
     
 local_free_global_tlb    Proc near
-    call cs:lock_tlb_proc
-;    
     push ds
     push eax
     push edx
@@ -5286,7 +5045,6 @@ local_free_global_tlb    Proc near
     pop ds
 ;    
     call cs:flush_global_tlb_proc
-    call cs:unlock_tlb_proc
     ret
 local_free_global_tlb  Endp
 
@@ -5305,8 +5063,6 @@ local_free_global_tlb  Endp
     public local_free_process_tlb
 
 local_free_process_tlb Proc near
-    call cs:lock_tlb_proc
-;    
     push ds
     push eax
     push edx
@@ -5320,7 +5076,6 @@ local_free_process_tlb Proc near
     pop ds    
 ;    
     call cs:flush_process_tlb_proc
-    call cs:unlock_tlb_proc
     ret
 local_free_process_tlb Endp
 
