@@ -5181,14 +5181,15 @@ InsertTlb   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FlushTlb     Proc near
-    push ds
     push ax
-    push cx
-    push edx
 ;
     mov ax,fs:ps_id
     bt es:th_core_bits,ax
     jnc ftDone
+;
+    push ds
+    push cx
+    push edx
 ;    
     mov ax,flat_sel
     mov ds,ax
@@ -5203,14 +5204,76 @@ ftLoop:
     mov ax,fs:ps_id
     btr es:th_core_bits,ax
     dec es:th_remain_cores
-
-ftDone:
+;    
     pop edx
     pop cx
-    pop ax    
     pop ds
+
+ftDone:
+    pop ax    
     ret
 FlushTlb   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FlushTlbList
+;
+;           DESCRIPTION:    Flush TLB list
+;
+;           PARAMETERS:     FS      Core sel
+;
+;           RETURNS:        NC      List is done
+;                           CY  ES  Entry that should be finalized
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FlushTlbList     Proc near
+    push ds
+;
+    mov ax,task_sel
+    mov ds,ax
+;
+    xor si,si
+    mov ax,ds:tlb_list
+
+ftlLoop:
+    or ax,ax
+    jz ftlEmpty
+;
+    mov es,ax
+    call FlushTlb
+    mov ax,es:th_remain_cores
+    or ax,ax
+    jz ftlRemove
+;
+    mov si,es
+    mov ax,es:th_next
+    jmp ftlLoop
+
+ftlRemove:
+    or si,si
+    jz ftlRemoveHead
+;
+    mov ax,es:th_next
+    mov ds,si
+    mov ds:th_next,ax
+    stc
+    jmp ftlDone
+        
+ftlRemoveHead:
+    mov ax,es:th_next
+    mov ds:tlb_list,ax
+    stc 
+    jmp ftlDone      
+
+ftlEmpty:
+    clc
+
+ftlDone:    
+    pop ds
+    ret
+FlushTlbList   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5439,6 +5502,7 @@ fgtmEntryNext:
 ;
     call LockTlb
     call InsertTlb
+    call UnlockTlb
 ;
     mov si,fs:ps_sel
     mov bx,OFFSET core_arr
@@ -5462,9 +5526,19 @@ fgtmCoreLoop:
 fgtmCoreNext:
     add bx,2
     loop fgtmCoreLoop
-;
-    call FlushTlb
+
+fgtmHandleLoop:
+    call LockTlb    
+    call FlushTlbList
+    pushf
     call UnlockTlb
+    popf
+    jnc fgtmUnlock
+;
+    call FreeTlb
+    jmp fgtmHandleLoop
+       
+fgtmUnlock:    
 ;    call UnlockCore
 ;    
     popad
