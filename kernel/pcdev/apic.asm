@@ -2618,6 +2618,14 @@ tlb_flush_int:
     push ds
     push eax
 ;
+    mov ax,core_data_sel
+    mov ds,ax
+    xor al,al
+    xchg al,ds:ps_tlb_flush
+;
+    or al,al
+    jz tfiDone
+;        
     mov eax,cr3
     mov cr3,eax
         
