@@ -64,6 +64,22 @@ us_lock     DW ?
 
 section_handle_seg          ENDS
 
+tlb_struc   STRUC
+
+th_next             DW ?
+
+th_remain_cores     DW ?
+
+th_core_bits        DW (MAX_CORES SHR 4) DUP(?)
+
+th_linear           DD ?
+th_page_count       DW ?
+th_phys_count       DW ?
+
+th_phys_arr         DD ?
+
+tlb_struc   ENDS
+
 task_seg    STRUC
 
 global_ptab         DW 256 DUP(?)
@@ -80,6 +96,9 @@ term_thread_list    DW ?
 term_proc_list      DW ?
 
 list_lock           DW ?
+
+tlb_spinlock        DW ?
+tlb_list            DW ?
 
 task_seg    ENDS
 
