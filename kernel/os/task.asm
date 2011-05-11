@@ -3576,26 +3576,6 @@ system_thread_pr:
     GetThread
     mov ds:system_thread,ax
 ;
-
-    mov eax,5000h
-    AllocateGlobalMem
-    xor di,di
-    xor al,al
-    mov cx,ax
-    rep stosb
-;    
-    mov ax,10
-    WaitMilliSec
-;    
-    int 3
-    mov bx,es
-    GetSelectorBaseSize
-    mov cx,5
-    call FreeGlobalTlbMultiple
-    int 3
-;    
-
-;
     mov ax,task_sel
     mov ds,ax    
 
@@ -3654,7 +3634,7 @@ start_processor_null_threads    Proc near
 ;    
     GetCoreCount
     cmp cx,1
-    jbe start_locks_ok
+;    jbe start_locks_ok
 ;
     mov ds:lock_list_proc,OFFSET LockListMultiple
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
@@ -5316,6 +5296,43 @@ FreeTlb   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           UpdateTlbList
+;
+;           DESCRIPTION:    Update TLB list (scheduler should be locked)
+;
+;           PARAMETERS:     FS  Core sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateTlbList    Proc near
+    mov ax,task_sel    
+    mov ds,ax
+
+utlLoop:
+    call LockTlb    
+    call FlushTlbList
+    pushf
+    call UnlockTlb
+    popf
+    jnc utlDone
+;
+    mov ax,fs:ps_nesting
+    or ax,ax
+    jnz utlQueue
+;    
+    call FreeTlb
+    jmp utlLoop
+
+utlQueue:
+; should insert into reclaim queue here!
+       
+utlDone:    
+    ret
+UpdateTlbList   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           FlushGlobalTlbMultiple
 ;
 ;           DESCRIPTION:    Flush global TLB entries, multiple processor version
@@ -5338,9 +5355,10 @@ FlushGlobalTlbMultiple    Proc near
     mov es:th_page_count,cx
     mov es:th_phys_count,0
 ;
-    call LockCore
+    call TryLockCore
     call LockTlb
     call InsertTlb
+    call UnlockTlb
 ;
     mov si,fs:ps_sel
     mov bx,OFFSET core_arr
@@ -5365,9 +5383,8 @@ fgtNext:
     add bx,2
     loop fgtLoop
 ;
-    call FlushTlb
-    call UnlockTlb
-    call UnlockCore
+    call UpdateTlbList
+    call TryUnlockCore
 ;    
     popad
     pop fs
@@ -5401,9 +5418,10 @@ FlushProcessTlbMultiple    Proc near
     mov es:th_page_count,cx
     mov es:th_phys_count,0
 ;
-    call LockCore
+    call TryLockCore
     call LockTlb
     call InsertTlb
+    call UnlockTlb
 ;
     mov si,fs:ps_sel
     mov bx,OFFSET core_arr
@@ -5441,9 +5459,8 @@ fptNext:
     add bx,2
     loop fptLoop
 ;
-    call FlushTlb
-    call UnlockTlb
-    call UnlockCore
+    call UpdateTlbList
+    call TryUnlockCore
 ;    
     popad
     pop fs
@@ -5496,10 +5513,7 @@ fgtmEntryNext:
     add edx,4
     loop fgtmEntryLoop
 ;
-;    call LockCore
-    mov ax,core_data_sel        ; instead of lockcore
-    mov fs,ax
-;
+    call TryLockCore
     call LockTlb
     call InsertTlb
     call UnlockTlb
@@ -5526,20 +5540,9 @@ fgtmCoreLoop:
 fgtmCoreNext:
     add bx,2
     loop fgtmCoreLoop
-
-fgtmHandleLoop:
-    call LockTlb    
-    call FlushTlbList
-    pushf
-    call UnlockTlb
-    popf
-    jnc fgtmUnlock
 ;
-    call FreeTlb
-    jmp fgtmHandleLoop
-       
-fgtmUnlock:    
-;    call UnlockCore
+    call UpdateTlbList    
+    call TryUnlockCore
 ;    
     popad
     pop fs
@@ -5592,9 +5595,10 @@ fptmEntryNext:
     add edx,4
     loop fptmEntryLoop
 ;
-    call LockCore
+    call TryLockCore
     call LockTlb
     call InsertTlb
+    call UnlockTlb
 ;
     mov si,fs:ps_sel
     mov bx,OFFSET core_arr
@@ -5632,9 +5636,8 @@ fptmCoreNext:
     add bx,2
     loop fptmCoreLoop
 ;
-    call FlushTlb
-    call UnlockTlb
-    call UnlockCore
+    call UpdateTlbList
+    call TryUnlockCore
 ;    
     popad
     pop fs
