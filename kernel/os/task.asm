@@ -3677,11 +3677,18 @@ system_thread_pr:
     mov ax,10
     WaitMilliSec
 ;
-    int 3
+    mov ax,flat_sel
+    mov es,ax
     mov eax,10000h
     AllocateBigLinear
+    mov edi,edx
+    add edi,2000h
+    xor al,al
+    mov ecx,0C000h
+    rep stos byte ptr es:[edi]
+    int 3
     mov cx,10h
-    call FlushGlobalTlbMultiple        
+    call FreeGlobalTlbMultiple        
 
 stLoop:
     WaitForSignal
@@ -5711,11 +5718,7 @@ FlushGlobalTlbMultiple    Proc near
     mov ax,flat_sel
     mov es,ax
 ;
-;    call TryLockCore
-    mov ax,core_data_sel
-    mov fs,ax
-    stc
-;
+    call TryLockCore
     pushf
 ;
     call AllocateTlb
@@ -5730,7 +5733,7 @@ FlushGlobalTlbMultiple    Proc near
 ;
     popf
     call UpdateTlbList
-;    call TryUnlockCore
+    call TryUnlockCore
 ;
     popad
     pop fs
@@ -5809,7 +5812,10 @@ FreeGlobalTlbMultiple    Proc near
     mov ax,flat_sel
     mov es,ax
 ;    
-    call TryLockCore
+;    call TryLockCore
+    mov ax,core_data_sel
+    mov fs,ax
+    stc
     pushf
 
 fgtmBlockLoop:
@@ -5834,12 +5840,26 @@ fgtmEntryLoop:
     test ax,800h
     jnz fgtmEntryNext
 ;
-    stosd
+    stos dword ptr es:[edi]
     mov ax,es:[edx].th_phys_count
     inc ax
     mov es:[edx].th_phys_count,ax
     cmp ax,MAX_TLB_PHYS_ENTRIES
-    je fgtmBlockDone    
+    jne fgtmEntryNext
+
+fgtmLastLoop:
+    inc es:[edx].th_page_count
+    add esi,4    
+    sub cx,1
+    jz fgtmBlockDone    
+;
+    mov eax,[esi]
+    test al,1
+    jnz fgtmBlockDone
+;     
+    xor eax,eax   
+    mov [esi],eax
+    jmp fgtmLastLoop
 
 fgtmEntryNext:
     inc es:[edx].th_page_count
@@ -5867,7 +5887,7 @@ fgtmBlockDone:
 ;
     popf
     call UpdateTlbList    
-    call TryUnlockCore
+;    call TryUnlockCore
 ;    
     popad
     pop fs
@@ -5924,12 +5944,26 @@ fptmEntryLoop:
     test ax,800h
     jnz fptmEntryNext
 ;
-    stosd
+    stos dword ptr es:[edi]
     mov ax,es:[edx].th_phys_count
     inc ax
     mov es:[edx].th_phys_count,ax
     cmp ax,MAX_TLB_PHYS_ENTRIES
-    je fptmBlockDone    
+    jne fptmEntryNext
+
+fptmLastLoop:
+    inc es:[edx].th_page_count
+    add esi,4    
+    sub cx,1
+    jz fptmBlockDone    
+;
+    mov eax,[esi]
+    test al,1
+    jnz fptmBlockDone
+;     
+    xor eax,eax   
+    mov [esi],eax
+    jmp fptmLastLoop
 
 fptmEntryNext:
     inc es:[edx].th_page_count
