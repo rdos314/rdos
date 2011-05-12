@@ -109,6 +109,7 @@ tlb_list            DD ?
 tlb_block_spinlock  DW ?
 tlb_block_list      DD ?
 tlb_curr_linear     DD ?
+tlb_remain_linear   DD ?
 
 task_seg    ENDS
 
@@ -892,6 +893,7 @@ init_task       PROC near
     mov eax,TLB_LINEAR_SIZE
     AllocateBigLinear
     mov ds:tlb_curr_linear,edx    
+    mov ds:tlb_remain_linear,eax
 ;
     mov ds:global_spinlock,0
     xor ax,ax
@@ -3671,6 +3673,15 @@ system_thread_pr:
 ;
     mov ax,task_sel
     mov ds,ax    
+;
+    mov ax,10
+    WaitMilliSec
+;
+    int 3
+    mov eax,10000h
+    AllocateBigLinear
+    mov cx,10h
+    call FlushGlobalTlbMultiple        
 
 stLoop:
     WaitForSignal
@@ -5212,6 +5223,12 @@ AllocateTlbBlock PROC near
     jnz atbDone
 ;
     push ecx
+    sub ds:tlb_remain_linear,1000h
+    jnz atbUseMore
+;
+    CrashGate
+
+atbUseMore:
     mov edx,ds:tlb_curr_linear
     add ds:tlb_curr_linear,1000h
     mov ds:tlb_block_list,edx
@@ -5332,10 +5349,10 @@ UnlockTlb    Endp
 AllocateTlb     Proc near
     push ecx
 ;    
+    push edx
     call AllocateTlbBlock
-    mov es:[edx].th_linear,edx
-    mov ax,cs:core_count
-    mov es:[edx].th_remain_cores,ax
+    pop es:[edx].th_linear
+    mov es:[edx].th_remain_cores,0
 ;
     lea edi,[edx].th_core_bits
     xor al,al
@@ -5425,7 +5442,7 @@ FlushTlb   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FlushTlbList     Proc near
-    xor si,si
+    xor esi,esi
     mov edx,ds:tlb_list
 
 ftlLoop:
@@ -5468,7 +5485,7 @@ FlushTlbList   Endp
 ;
 ;           NAME:           FreeTlb
 ;
-;           DESCRIPTION:    Free TLB entries and selector
+;           DESCRIPTION:    Free TLB entries
 ;
 ;           PARAMETERS:     ES      Flat sel
 ;                           FS      Core sel
@@ -5482,9 +5499,6 @@ FreeTlb     Proc near
     push esi
 ;    
     mov cx,es:[edx].th_phys_count
-    or cx,cx
-    jz frtDone
-;
     lea esi,[edx].th_phys_arr
     
 frtLoop:
@@ -5494,8 +5508,6 @@ frtLoop:
     loop frtLoop
 
 frtDone:
-    FreeMem
-;    
     pop esi
     pop cx
     pop eax    
@@ -5512,33 +5524,56 @@ FreeTlb   Endp
 ;           PARAMETERS:     FS  Core sel
 ;                           ES  Flat sel
 ;                           DS  Task sel
+;                           CY  Scheduler lock succeeded
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateTlbList    Proc near
+    jc utlBaseLoop
 
-utlLoop:
+utlLockedLoop:    
     call LockTlb    
     call FlushTlbList
     pushf
     call UnlockTlb
     popf
+    sti
     jnc utlDone
-;
-    mov ax,fs:ps_nesting
+;    
+    mov ax,es:[edx].th_phys_count
     or ax,ax
-    jnz utlQueue
+    jz utlLockedFreeBlock
+;    
+; should insert into reclaim queue here!
+;
+    jmp utlLockedLoop
+
+utlLockedFreeBlock:    
+    call FreeTlbBlock
+    jmp utlLockedLoop
+
+utlBaseLoop:
+    call LockTlb    
+    call FlushTlbList
+    pushf
+    call UnlockTlb
+    popf
+    sti
+    jnc utlDone
+;    
+    mov ax,es:[edx].th_phys_count
+    or ax,ax
+    jz utlBaseFreeBlock
 ;    
     call FreeTlb
-    jmp utlLoop
 
-utlQueue:
-; should insert into reclaim queue here!
+utlBaseFreeBlock:    
+    call FreeTlbBlock
+    jmp utlBaseLoop
        
 utlDone:    
     ret
 UpdateTlbList   Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5676,20 +5711,27 @@ FlushGlobalTlbMultiple    Proc near
     mov ax,flat_sel
     mov es,ax
 ;
+;    call TryLockCore
+    mov ax,core_data_sel
+    mov fs,ax
+    stc
+;
+    pushf
+;
     call AllocateTlb
     mov es:[edx].th_page_count,cx
     mov es:[edx].th_phys_count,0
-;
-    call TryLockCore
+;    
     call LockTlb
     call SetupGlobalTlbCores
     call InsertTlb
     call UnlockTlb
-;
     call SignalTlbCores
+;
+    popf
     call UpdateTlbList
-    call TryUnlockCore
-;    
+;    call TryUnlockCore
+;
     popad
     pop fs
     pop es
@@ -5719,18 +5761,21 @@ FlushProcessTlbMultiple    Proc near
     mov ds,ax
     mov ax,flat_sel
     mov es,ax
+;
+    call TryLockCore
+    pushf
 ;    
     call AllocateTlb
     mov es:[edx].th_page_count,cx
     mov es:[edx].th_phys_count,0
-;
-    call TryLockCore
+;    
     call LockTlb
     call SetupProcessTlbCores
     call InsertTlb
     call UnlockTlb
-;
     call SignalTlbCores
+;
+    popf
     call UpdateTlbList
     call TryUnlockCore
 ;    
@@ -5763,6 +5808,9 @@ FreeGlobalTlbMultiple    Proc near
     mov ds,ax
     mov ax,flat_sel
     mov es,ax
+;    
+    call TryLockCore
+    pushf
 
 fgtmBlockLoop:
     mov esi,edx
@@ -5805,7 +5853,6 @@ fgtmBlockDone:
     push cx
     push esi
 ;
-    call TryLockCore
     call LockTlb
     call SetupGlobalTlbCores
     call InsertTlb
@@ -5818,6 +5865,7 @@ fgtmBlockDone:
     or cx,cx
     jnz fgtmBlockLoop
 ;
+    popf
     call UpdateTlbList    
     call TryUnlockCore
 ;    
@@ -5850,7 +5898,10 @@ FreeProcessTlbMultiple    Proc near
     mov ds,ax
     mov ax,flat_sel
     mov es,ax
-
+;
+    call TryLockCore
+    pushf
+ 
 fptmBlockLoop:
     mov esi,edx
     call AllocateTlb
@@ -5890,7 +5941,6 @@ fptmBlockDone:
     push cx
     push esi
 ;
-    call TryLockCore
     call LockTlb
     call SetupProcessTlbCores
     call InsertTlb
@@ -5903,6 +5953,7 @@ fptmBlockDone:
     or cx,cx
     jnz fptmBlockLoop
 ;
+    popf
     call UpdateTlbList
     call TryUnlockCore
 ;    
