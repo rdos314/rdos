@@ -458,4 +458,6 @@ find_sys_env_var_nr         = 397
 start_clock_nr              = 400
 sync_clock_nr               = 401
 
+flush_tlb_nr                = 402
+
 osgate_entries				= 420

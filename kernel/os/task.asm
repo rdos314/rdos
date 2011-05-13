@@ -978,6 +978,12 @@ glob_ptab_init:
     mov ax,sync_clock_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET flush_tlb
+    mov edi,OFFSET flush_tlb_name
+    xor cl,cl
+    mov ax,flush_tlb_nr
+    RegisterOsGate
+;
     mov si,OFFSET enter_int
     mov di,OFFSET enter_int_name
     xor cl,cl
@@ -5394,7 +5400,7 @@ InsertTlb   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FlushTlb
+;           NAME:           FlushTlbMulti
 ;
 ;           DESCRIPTION:    Flush TLB entries
 ;
@@ -5404,7 +5410,7 @@ InsertTlb   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FlushTlb     Proc near
+FlushTlbMulti     Proc near
     push ax
 ;
     mov ax,fs:ps_id
@@ -5432,7 +5438,7 @@ ftLoop:
 ftDone:
     pop ax    
     ret
-FlushTlb   Endp
+FlushTlbMulti   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5458,7 +5464,7 @@ ftlLoop:
     or edx,edx
     jz ftlEmpty
 ;
-    call FlushTlb
+    call FlushTlbMulti
     mov ax,es:[edx].th_remain_cores
     or ax,ax
     jz ftlRemove
@@ -5695,6 +5701,29 @@ utlBaseFreeBlock:
 utlDone:    
     ret
 UpdateTlbList   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FlushTlb
+;
+;           DESCRIPTION:    Flush request from core ISR (81)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+flush_tlb_name  DB 'Flush TLB', 0
+
+flush_tlb   Proc far
+    mov ax,task_sel
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+;    
+    call TryLockCore
+    call UpdateTlbList
+    call TryUnlockCore
+    retf32
+flush_tlb   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
