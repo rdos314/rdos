@@ -110,6 +110,8 @@ tlb_block_spinlock  DW ?
 tlb_block_list      DD ?
 tlb_curr_linear     DD ?
 tlb_remain_linear   DD ?
+tlb_reclaim_lock    DW ?
+tlb_reclaim_list    DD ?
 
 task_seg    ENDS
 
@@ -889,6 +891,8 @@ init_task       PROC near
     mov ds:tlb_list,0
     mov ds:tlb_block_spinlock,0
     mov ds:tlb_block_list,0
+    mov ds:tlb_reclaim_list,0
+    mov ds:tlb_reclaim_lock,0
 ;
     mov eax,TLB_LINEAR_SIZE
     AllocateBigLinear
@@ -2861,6 +2865,18 @@ load_thread_loop:
     mov ds,ax
     xor ax,ax
     mov es,ax
+;
+    xor al,al
+    xchg al,fs:ps_tlb_flush
+    or al,al
+    jz load_thread_tlb_flush_ok
+;
+    mov ax,flat_sel
+    mov es,ax
+    stc
+    call UpdateTlbList    
+
+load_thread_tlb_flush_ok:
 
 load_thread_wakeup_loop:    
     cli
@@ -2980,18 +2996,12 @@ load_reload_timer:
     mov ds,bx
     mov bx,(io_focus_linear SHR 20) AND 0FFFh
 ;
-    xor cl,cl
-    xchg cl,fs:ps_tlb_flush
-;
     cmp edx,[bx]
     jne load_reload_cr3
 ;
     mov eax,cr3
     cmp eax,es:p_cr3
-    jne load_reload_cr3
-;
-    or cl,cl
-    jz load_cr3_ok
+    je load_cr3_ok
 
 load_reload_cr3:    
     mov [bx],edx        
@@ -3673,27 +3683,19 @@ system_thread_pr:
 ;
     mov ax,task_sel
     mov ds,ax    
-;
-    mov ax,10
-    WaitMilliSec
-;
-    mov ax,flat_sel
-    mov es,ax
-    mov eax,10000h
-    AllocateBigLinear
-    mov edi,edx
-    add edi,2000h
-    xor al,al
-    mov ecx,0C000h
-    rep stos byte ptr es:[edi]
-    int 3
-    mov cx,10h
-    call FreeGlobalTlbMultiple        
 
 stLoop:
     WaitForSignal
 
 stThreadLoop:
+    mov eax,ds:tlb_reclaim_list
+    or eax,eax
+    jz stReclaimOk
+;
+    call UpdateReclaim
+    jmp stThreadLoop
+    
+stReclaimOk:
     mov si,OFFSET term_thread_list
     mov ax,[si]
     or ax,ax
@@ -3745,7 +3747,7 @@ start_processor_null_threads    Proc near
 ;    
     GetCoreCount
     cmp cx,1
-    jbe start_locks_ok
+;    jbe start_locks_ok
 ;
     mov ds:lock_list_proc,OFFSET LockListMultiple
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
@@ -5524,6 +5526,114 @@ FreeTlb   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           LockReclaim
+;
+;           DESCRIPTION:    Lock TLB reclaim list
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockReclaim    Proc near
+    mov ax,task_sel
+    mov ds,ax
+
+lrlSpinLock:    
+    mov ax,ds:tlb_reclaim_lock
+    or ax,ax
+    je lrlGet
+;
+    pause
+    jmp lrlSpinLock
+
+lrlGet:
+    cli
+    inc ax
+    xchg ax,ds:tlb_reclaim_lock
+    or ax,ax
+    je lrlDone
+;
+    jmp lrlSpinLock
+
+lrlDone:
+    ret
+LockReclaim    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockReclaim
+;
+;           DESCRIPTION:    Unlock reclaim
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockReclaim    Proc near
+    mov ds:tlb_reclaim_lock,0
+    sti
+    ret
+UnlockReclaim    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InsertReclaim
+;
+;           DESCRIPTION:    Insert TLB entry into reclaim list
+;
+;           PARAMETERS:     ES      Flat sel
+;                           EDX     Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertReclaim     Proc near
+    mov eax,ds:tlb_reclaim_list
+    mov es:[edx].th_next,eax
+    mov ds:tlb_reclaim_list,edx
+    ret
+InsertReclaim   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UpdateReclaim
+;
+;           DESCRIPTION:    Update reclaim list
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateReclaim    Proc near
+    push ds
+    push es
+;
+    mov ax,task_sel
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+    
+urLoop:
+    call LockReclaim
+    mov edx,ds:tlb_reclaim_list
+    or edx,edx
+    jz urUnlock    
+;
+    mov eax,es:[edx].th_next
+    mov ds:tlb_reclaim_list,eax
+    call UnlockReclaim
+;
+    call FreeTlb
+    call FreeTlbBlock
+    jmp urLoop
+ 
+urUnlock:    
+    call UnlockReclaim
+;
+    pop es
+    pop ds    
+    ret
+UpdateReclaim   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UpdateTlbList
 ;
 ;           DESCRIPTION:    Update TLB list (scheduler should be locked)
@@ -5536,6 +5646,7 @@ FreeTlb   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateTlbList    Proc near
+    mov fs:ps_tlb_flush,0
     jc utlBaseLoop
 
 utlLockedLoop:    
@@ -5551,8 +5662,11 @@ utlLockedLoop:
     or ax,ax
     jz utlLockedFreeBlock
 ;    
-; should insert into reclaim queue here!
-;
+    call LockReclaim
+    call InsertReclaim
+    call UnlockReclaim
+    mov bx,cs:system_thread
+    Signal    
     jmp utlLockedLoop
 
 utlLockedFreeBlock:    
@@ -5812,10 +5926,7 @@ FreeGlobalTlbMultiple    Proc near
     mov ax,flat_sel
     mov es,ax
 ;    
-;    call TryLockCore
-    mov ax,core_data_sel
-    mov fs,ax
-    stc
+    call TryLockCore
     pushf
 
 fgtmBlockLoop:
@@ -5887,7 +5998,7 @@ fgtmBlockDone:
 ;
     popf
     call UpdateTlbList    
-;    call TryUnlockCore
+    call TryUnlockCore
 ;    
     popad
     pop fs
@@ -5919,7 +6030,10 @@ FreeProcessTlbMultiple    Proc near
     mov ax,flat_sel
     mov es,ax
 ;
-    call TryLockCore
+;    call TryLockCore
+    mov ax,core_data_sel
+    mov fs,ax
+    clc
     pushf
  
 fptmBlockLoop:
@@ -5971,6 +6085,8 @@ fptmEntryNext:
     loop fptmEntryLoop
 
 fptmBlockDone:
+    pop ds
+;
     shl esi,10
     push cx
     push esi
@@ -5989,7 +6105,7 @@ fptmBlockDone:
 ;
     popf
     call UpdateTlbList
-    call TryUnlockCore
+;    call TryUnlockCore
 ;    
     popad
     pop fs
