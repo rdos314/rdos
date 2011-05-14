@@ -164,6 +164,8 @@ flush_process_tlb_proc      DW OFFSET FlushTlb386
 free_global_tlb_proc        DW OFFSET FreeGlobalTlbSingle
 free_process_tlb_proc       DW OFFSET FreeProcessTlbSingle
 
+tpr_proc                    DW OFFSET NoTpr
+
 core_count                  DW 0
 core_arr                    DW MAX_CORES DUP(0)
 
@@ -2985,6 +2987,8 @@ load_reload_timer:
     ReloadSysTimer
 ;
     sti
+    call cs:tpr_proc
+;    
     lock or fs:ps_flags,PS_FLAG_LOADING
     mov ax,gdt_sel
     mov ds,ax
@@ -3725,6 +3729,74 @@ stThreadOk:
     call DeleteProcess
     jmp stThreadLoop
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           NoTpr
+;
+;           DESCRIPTION:    Dummy task priority loader
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NoTpr   Proc near
+    ret
+NoTpr   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ApicMemTpr
+;
+;           DESCRIPTION:    Set APIC memory-mapped TPR
+;
+;           PARAMETERS:     ES      thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ApicMemTpr   Proc near
+    mov ax,es:p_prio
+    shr ax,1
+    cmp ax,3
+    jbe amemSet
+;
+    mov ax,3
+
+amemSet:
+    movzx eax,ax
+    mov bx,apic_mem_sel
+    mov ds,bx
+    mov ds:APIC_TPR,eax
+    ret
+ApicMemTpr   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ApicMsrTpr
+;
+;           DESCRIPTION:    Set APIC MSR-base TPR
+;
+;           PARAMETERS:     ES      thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ApicMsrTpr   Proc near
+    mov ax,es:p_prio
+    shr ax,1
+    cmp ax,3
+    jbe amsrSet
+;
+    mov ax,3
+
+amsrSet:
+    movzx eax,ax
+    mov ecx,MSR_APIC_TPR
+    wrmsr
+    ret
+ApicMsrTpr   Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3767,6 +3839,20 @@ start_processor_null_threads    Proc near
     mov ds:flush_process_tlb_proc,OFFSET FlushProcessTlbMultiple
     mov ds:free_global_tlb_proc,OFFSET FreeGlobalTlbMultiple
     mov ds:free_process_tlb_proc,OFFSET FreeProcessTlbMultiple
+;
+    mov ax,has_apic_msr_nr
+    IsValidOsGate
+    jc start_no_msr
+;
+    mov ds:tpr_proc,OFFSET ApicMsrTpr
+    jmp start_locks_ok
+    
+start_no_msr:
+    mov ax,has_apic_mem_nr
+    IsValidOsGate
+    jc start_locks_ok
+;
+    mov ds:tpr_proc,OFFSET ApicMemTpr        
 
 start_locks_ok:    
     mov ecx,200h

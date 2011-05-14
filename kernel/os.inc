@@ -626,6 +626,16 @@ GetApicId    MACRO
     OsGate get_apic_id_nr
                         ENDM
 
+;   OUT NC      Has APIC mem interface
+HasApicMem    MACRO
+    OsGate has_apic_mem_nr
+                        ENDM
+
+;   OUT NC      Has APIC MSR interface
+HasApicMsr    MACRO
+    OsGate has_apic_msr_nr
+                        ENDM
+
 ;   OUT CX      Core count
 GetCoreCount    MACRO
     OsGate get_core_count_nr

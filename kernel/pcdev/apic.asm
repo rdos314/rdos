@@ -475,6 +475,42 @@ DelayMs Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           HasApicMem
+;
+;       DESCRIPTION:    Check for APIC memory-based interface
+;
+;       RETURNS:        NC      Present        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_apic_mem_name    DB 'Has APIC Mem',0
+
+has_apic_mem  Proc far
+    clc
+    retf32
+has_apic_mem Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           HasApicMsr
+;
+;       DESCRIPTION:    Check for APIC MSR-based interface
+;
+;       RETURNS:        NC      Present        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_apic_msr_name    DB 'Has APIC Msr',0
+
+has_apic_msr  Proc far
+    clc
+    retf32
+has_apic_msr Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;               NAME:                   GetId
 ;
 ;               DESCRIPTION:    Get own ID, memory mode
@@ -1388,6 +1424,12 @@ smemgLint1Ok:
     mov ax,disable_all_irq_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET has_apic_mem
+    mov edi,OFFSET has_apic_mem_name
+    xor cl,cl
+    mov ax,has_apic_mem_nr
+    RegisterOsGate
+;
     mov ax,cs
     mov ds,ax
     xor bl,bl
@@ -1600,6 +1642,12 @@ smsrgLint1Ok:
     mov edi,OFFSET reload_apic_timer_name
     xor cl,cl
     mov ax,reload_sys_timer_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET has_apic_msr
+    mov edi,OFFSET has_apic_msr_name
+    xor cl,cl
+    mov ax,has_apic_msr_nr
     RegisterOsGate
 ;
     mov ax,cs

@@ -440,6 +440,9 @@ acpi_name       DB 'Acpi Test',0
 
 acpi_pr:
     int 3
+    HasApicMsr
+    HasApicMem
+    
     mov ax,100
     WaitMilliSec
 

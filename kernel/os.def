@@ -455,6 +455,9 @@ add_sys_env_var_nr          = 395
 delete_sys_env_var_nr       = 396
 find_sys_env_var_nr         = 397
 
+has_apic_mem_nr             = 398
+has_apic_msr_nr             = 399
+
 start_clock_nr              = 400
 sync_clock_nr               = 401
 
