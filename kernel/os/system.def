@@ -144,8 +144,6 @@ apic_tics           DD ?
 apic_rest           DW ?
 
 phys_spinlock		spinlock_typ <>
-phys_space          DW ?
-
 gdt_section			section_typ <>
 
 enter_patch_proc    DW ?
