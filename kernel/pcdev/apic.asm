@@ -416,8 +416,12 @@ ap_task_wait:
     GetApicId
     cmp edx,3
     jae ap_crash
-    
+;    
     StartCore
+
+stopl:
+    jmp stopl
+
 
 ap_crash:    
     StartCrashCore

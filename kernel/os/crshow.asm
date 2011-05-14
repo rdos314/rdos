@@ -1287,6 +1287,21 @@ GetBitness   ENDP
 ReadData        Proc near
     push ds
     push ebx
+;
+    mov ebx,gs:cs_cr3
+    mov cr3,ebx
+    mov bx,flat_sel
+    mov ds,bx
+    mov al,[edx]
+    clc
+;
+    pop ebx
+    pop ds
+    ret
+        
+
+    push ds
+    push ebx
     push edx
     push si
     push di
@@ -1325,8 +1340,15 @@ ReadData        Proc near
     mov bx,SEG data
     mov ds,bx
     mov edx,ds:big_linear
-    call LocalSetPhysicalPage
+    mov bx,process_page_sel
+    mov ds,bx
+    mov ebx,edx
+    shr ebx,10
+    and bl,0FCh
+    mov [ebx],eax
 ;
+    mov bx,SEG data
+    mov ds,bx
     movzx edx,di
     add edx,ds:big_linear
     mov ax,flat_sel
@@ -1388,13 +1410,12 @@ wdrDataNext:
     mov al,' '
     call ShowChar
 ;
+    sub bp,1
+    jz wdrChar
+;
     add edx,1
     sub ecx,1
-    jc wdrDataInv
-;    
-    sub bp,1
-    jnz wdrDataLoop            
-    jmp wdrChar
+    jnc wdrDataLoop            
 
 wdrDataInv:
     mov al,'!'
@@ -1897,8 +1918,9 @@ InitCrashShow    Proc near
     mov ds,ax
     mov ds:curr_pos,0
 ;
-    mov eax,1000h
-    AllocateBigLinear
+;    mov eax,1000h
+;    AllocateBigLinear
+    mov edx,global_page_linear + global_page_size - 1000h
     mov ds:big_linear,edx
 ;        
     pop ds

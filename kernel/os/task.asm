@@ -3754,7 +3754,7 @@ start_processor_null_threads    Proc near
 ;    
     GetCoreCount
     cmp cx,1
-;    jbe start_locks_ok
+    jbe start_locks_ok
 ;
     mov ds:lock_list_proc,OFFSET LockListMultiple
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
