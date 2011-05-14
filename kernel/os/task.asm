@@ -3764,6 +3764,7 @@ ApicMemTpr   Proc near
     mov ax,3
 
 amemSet:
+    shl ax,4
     movzx eax,ax
     mov bx,apic_mem_sel
     mov ds,bx
@@ -3791,6 +3792,7 @@ ApicMsrTpr   Proc near
     mov ax,3
 
 amsrSet:
+    shl ax,4
     movzx eax,ax
     mov ecx,MSR_APIC_TPR
     wrmsr

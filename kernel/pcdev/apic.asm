@@ -2456,6 +2456,15 @@ InitApic    Proc near
 ;
     mov eax,0Bh
     mov es:APIC_DIV_CONFIG,eax
+;
+    mov eax,-1
+    mov es:APIC_DEST_FORMAT,eax
+;
+    mov eax,80000000h    
+    mov es:APIC_LOG_DEST,eax
+;
+    mov eax,0FFh
+    mov es:APIC_TPR,eax
     ret
 InitApic    Endp
     
