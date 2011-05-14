@@ -1290,79 +1290,36 @@ ReadData        Proc near
 ;
     mov ebx,gs:cs_cr3
     mov cr3,ebx
-    mov bx,flat_sel
+;
+    mov bx,process_dir_sel
     mov ds,bx
-    mov al,[edx]
-    clc
-;
-    pop ebx
-    pop ds
-    ret
-        
-
-    push ds
-    push ebx
-    push edx
-    push si
-    push di
-;
-    mov di,dx
-    and di,0FFFh
-;    
-    and dx,0F000h
-    mov ax,process_dir_sel
-    mov ds,ax
-    mov si,(alias_linear SHR 20) AND 0FFFh
-    mov eax,gs:cs_cr3
-    or ax,803h
-    mov [si],eax
-    mov eax,cr3
-    mov cr3,eax
-;
-    mov eax,alias_linear
-    shr edx,10
-    and dl,0FCh
-    add edx,eax
     mov ebx,edx
-    shr edx,10
-    and dl,0FCh
-    mov ax,process_page_sel
-    mov ds,ax
-    mov eax,[edx]
+    shr ebx,20
+    and bl,0FCh
+    mov eax,[bx]
     test al,1
     stc
-    jz read_data_done
-;       
-    mov ax,flat_sel
-    mov ds,ax
-    mov eax,ds:[ebx]
-;       
-    mov bx,SEG data
-    mov ds,bx
-    mov edx,ds:big_linear
+    jz rdDone
+;
     mov bx,process_page_sel
     mov ds,bx
     mov ebx,edx
     shr ebx,10
     and bl,0FCh
-    mov [ebx],eax
-;
-    mov bx,SEG data
+    mov eax,[ebx]
+    test al,1
+    stc
+    jz rdDone
+;        
+    mov bx,flat_sel
     mov ds,bx
-    movzx edx,di
-    add edx,ds:big_linear
-    mov ax,flat_sel
-    mov ds,ax
-    mov al,ds:[edx]
+    mov al,[edx]
     clc
-    
-read_data_done:
-    pop di
-    pop si
-    pop edx
+
+rdDone:
     pop ebx
     pop ds
-    ret
+    ret        
 ReadData        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

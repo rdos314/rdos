@@ -5471,7 +5471,7 @@ ftlLoop:
     jz ftlRemove
 ;
     mov esi,edx
-    mov eax,es:[edx].th_next
+    mov edx,es:[edx].th_next
     jmp ftlLoop
 
 ftlRemove:
