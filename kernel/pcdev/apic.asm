@@ -415,13 +415,11 @@ ap_task_wait:
 
     GetApicId
     cmp edx,3
-;    jae ap_crash
+    jae ap_crash
     
     StartCore
 
-ap_crash:
-    jmp ap_crash
-    
+ap_crash:    
     StartCrashCore
 
 apic_tab    DB 'APIC'

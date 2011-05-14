@@ -44,7 +44,8 @@ MAX_CORES   = 64
 
 TLB_FIXED_SIZE          = 64
 MAX_TLB_PHYS_ENTRIES    = 10
-TLB_LINEAR_SIZE         = 10000h
+;TLB_LINEAR_SIZE         = 10000h
+TLB_LINEAR_SIZE         = 100000h
 
 SLEEP_SEL_WAIT  = 1
 SLEEP_SEL_SIGNAL = 2
@@ -5742,10 +5743,14 @@ SetupGlobalTlbCores    Proc near
 
 sgtcLoop:
     mov fs,cs:[bx]
+    test fs:ps_flags,PS_FLAG_ACTIVE
+    jz sgtcNext
+;    
     mov ax,fs:ps_id
     bts es:[edx].th_core_bits,ax
     inc es:[edx].th_remain_cores
-;
+
+sgtcNext:
     add bx,2
     loop sgtcLoop
 ;
@@ -5772,6 +5777,9 @@ SetupProcessTlbCores    Proc near
 
 sptcLoop:
     mov fs,cs:[bx]
+    test fs:ps_flags,PS_FLAG_ACTIVE
+    jz sptcNext
+;    
     mov ax,fs:ps_curr_thread
     or ax,ax
     jz sptcAdd
@@ -6059,10 +6067,7 @@ FreeProcessTlbMultiple    Proc near
     mov ax,flat_sel
     mov es,ax
 ;
-;    call TryLockCore
-    mov ax,core_data_sel
-    mov fs,ax
-    clc
+    call TryLockCore
     pushf
  
 fptmBlockLoop:
@@ -6134,7 +6139,7 @@ fptmBlockDone:
 ;
     popf
     call UpdateTlbList
-;    call TryUnlockCore
+    call TryUnlockCore
 ;    
     popad
     pop fs
