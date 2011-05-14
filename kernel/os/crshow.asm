@@ -44,7 +44,6 @@ op_in_text      DB 100 DUP(?)
 op_text_end     DW ?
 op_size         DW ?
 
-big_linear      DD ?
 curr_pos        DW ?
 
 data    ENDS
@@ -1874,11 +1873,6 @@ InitCrashShow    Proc near
     mov ax,SEG data
     mov ds,ax
     mov ds:curr_pos,0
-;
-;    mov eax,1000h
-;    AllocateBigLinear
-    mov edx,global_page_linear + global_page_size - 1000h
-    mov ds:big_linear,edx
 ;        
     pop ds
     ret
