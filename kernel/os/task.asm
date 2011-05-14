@@ -111,8 +111,6 @@ tlb_block_spinlock  DW ?
 tlb_block_list      DD ?
 tlb_curr_linear     DD ?
 tlb_remain_linear   DD ?
-tlb_reclaim_lock    DW ?
-tlb_reclaim_list    DD ?
 
 task_seg    ENDS
 
@@ -892,8 +890,6 @@ init_task       PROC near
     mov ds:tlb_list,0
     mov ds:tlb_block_spinlock,0
     mov ds:tlb_block_list,0
-    mov ds:tlb_reclaim_list,0
-    mov ds:tlb_reclaim_lock,0
 ;
     mov eax,TLB_LINEAR_SIZE
     AllocateBigLinear
@@ -3695,14 +3691,6 @@ stLoop:
     WaitForSignal
 
 stThreadLoop:
-    mov eax,ds:tlb_reclaim_list
-    or eax,eax
-    jz stReclaimOk
-;
-    call UpdateReclaim
-    jmp stThreadLoop
-    
-stReclaimOk:
     mov si,OFFSET term_thread_list
     mov ax,[si]
     or ax,ax
@@ -5533,114 +5521,6 @@ FreeTlb   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           LockReclaim
-;
-;           DESCRIPTION:    Lock TLB reclaim list
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockReclaim    Proc near
-    mov ax,task_sel
-    mov ds,ax
-
-lrlSpinLock:    
-    mov ax,ds:tlb_reclaim_lock
-    or ax,ax
-    je lrlGet
-;
-    pause
-    jmp lrlSpinLock
-
-lrlGet:
-    cli
-    inc ax
-    xchg ax,ds:tlb_reclaim_lock
-    or ax,ax
-    je lrlDone
-;
-    jmp lrlSpinLock
-
-lrlDone:
-    ret
-LockReclaim    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UnlockReclaim
-;
-;           DESCRIPTION:    Unlock reclaim
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockReclaim    Proc near
-    mov ds:tlb_reclaim_lock,0
-    sti
-    ret
-UnlockReclaim    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           InsertReclaim
-;
-;           DESCRIPTION:    Insert TLB entry into reclaim list
-;
-;           PARAMETERS:     ES      Flat sel
-;                           EDX     Entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InsertReclaim     Proc near
-    mov eax,ds:tlb_reclaim_list
-    mov es:[edx].th_next,eax
-    mov ds:tlb_reclaim_list,edx
-    ret
-InsertReclaim   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UpdateReclaim
-;
-;           DESCRIPTION:    Update reclaim list
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateReclaim    Proc near
-    push ds
-    push es
-;
-    mov ax,task_sel
-    mov ds,ax
-    mov ax,flat_sel
-    mov es,ax
-    
-urLoop:
-    call LockReclaim
-    mov edx,ds:tlb_reclaim_list
-    or edx,edx
-    jz urUnlock    
-;
-    mov eax,es:[edx].th_next
-    mov ds:tlb_reclaim_list,eax
-    call UnlockReclaim
-;
-    call FreeTlb
-    call FreeTlbBlock
-    jmp urLoop
- 
-urUnlock:    
-    call UnlockReclaim
-;
-    pop es
-    pop ds    
-    ret
-UpdateReclaim   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           UpdateTlbList
 ;
 ;           DESCRIPTION:    Update TLB list (scheduler should be locked)
@@ -5648,37 +5528,10 @@ UpdateReclaim   Endp
 ;           PARAMETERS:     FS  Core sel
 ;                           ES  Flat sel
 ;                           DS  Task sel
-;                           CY  Scheduler lock succeeded
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateTlbList    Proc near
-    mov fs:ps_tlb_flush,0
-    jc utlBaseLoop
-
-utlLockedLoop:    
-    call LockTlb    
-    call FlushTlbList
-    pushf
-    call UnlockTlb
-    popf
-    sti
-    jnc utlDone
-;    
-    mov ax,es:[edx].th_phys_count
-    or ax,ax
-    jz utlLockedFreeBlock
-;    
-    call LockReclaim
-    call InsertReclaim
-    call UnlockReclaim
-    mov bx,cs:system_thread
-    Signal    
-    jmp utlLockedLoop
-
-utlLockedFreeBlock:    
-    call FreeTlbBlock
-    jmp utlLockedLoop
 
 utlBaseLoop:
     call LockTlb    
