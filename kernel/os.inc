@@ -43,6 +43,10 @@ vm_ebx      EQU -8
 pm_ds       EQU -10
 pm_call     EQU -12
 
+spinlock_typ    STRUC
+sl_value    DW ?
+spinlock_typ    ENDS
+
 section_typ     STRUC
 cs_value    DW ?
 cs_list     DW ?
@@ -699,6 +703,51 @@ AddWait MACRO
 SignalWait      MACRO
     OsGate signal_wait_nr
                     ENDM
+
+;;;;;;;;;;; Spinlocks ;;;;;;;;;;;;;;;;
+
+InitSpinlock     MACRO spinlock
+    mov spinlock.sl_value,0
+                        ENDM
+
+RequestSpinlock MACRO spinlock
+    local rs_lock
+    local rs_get
+    local rs_done
+
+    push ax
+
+rs_lock:    
+    sti
+    mov ax,spinlock.sl_value
+    or ax,ax
+    je rs_get
+;
+    pause
+    jmp rs_lock
+
+rs_get:
+    cli
+    inc ax
+    xchg ax,spinlock.sl_value
+    or ax,ax
+    je rs_done
+;
+    jmp rs_lock
+
+rs_done:
+    pop ax
+    ENDM
+
+
+ReleaseSpinlock MACRO spinlock
+    mov spinlock.sl_value,0
+    sti
+    ENDM
+
+ReleaseSpinlockNoSti MACRO spinlock
+    mov spinlock.sl_value,0
+    ENDM
 
 ;;;;;;;;;;; Critical section ;;;;;;;;;;;;;;;;
 
