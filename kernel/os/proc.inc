@@ -31,6 +31,8 @@ PS_FLAG_TIMER       = 4
 PS_FLAG_NMI         = 8
 PS_FLAG_INIT_CLOCK  = 10h
 PS_FLAG_ACTIVE      = 20h
+PS_FLAG_FLUSH       = 40h
+PS_FLAG_LOADING     = 80h
 
 timer_struc	STRUC
 

@@ -2664,7 +2664,7 @@ spSet:
     mov fs:ps_preempt_msb,edx
 
 spDone:
-    and fs:ps_flags,NOT PS_FLAG_PREEMPT
+    lock and fs:ps_flags,NOT PS_FLAG_PREEMPT
     ret
 SetupPreempt    Endp
     
@@ -2685,7 +2685,7 @@ SetupPreempt    Endp
 
 GetNextThread    Proc near
     sti
-    and fs:ps_flags,NOT PS_FLAG_PRIO_CHANGE
+    lock and fs:ps_flags,NOT PS_FLAG_PRIO_CHANGE
 ;
     call HandleGlobal
     call HandlePreempt
@@ -2932,7 +2932,7 @@ load_thread_wakeup_done:
     call GetNextThread
 
 load_reload_loop:
-    and fs:ps_flags,NOT PS_FLAG_TIMER   
+    lock and fs:ps_flags,NOT PS_FLAG_TIMER   
     call cs:get_time_proc
     cli
     mov fs:ps_last_lsb,eax
@@ -2962,7 +2962,7 @@ load_check_preempt:
     sbb edx,fs:ps_preempt_msb
     jc load_reload_timer
 ;       
-    or fs:ps_flags,PS_FLAG_PREEMPT
+    lock or fs:ps_flags,PS_FLAG_PREEMPT
 
 load_retry:
     mov ax,es
@@ -2975,7 +2975,7 @@ load_retry:
     jbe load_retry_do
 ;
     mov fs:ps_prio_act,di
-    or fs:ps_flags,PS_FLAG_PRIO_CHANGE
+    lock or fs:ps_flags,PS_FLAG_PRIO_CHANGE
 
 load_retry_do:
     jmp load_thread_loop
@@ -2985,6 +2985,7 @@ load_reload_timer:
     ReloadSysTimer
 ;
     sti
+    lock or fs:ps_flags,PS_FLAG_LOADING
     mov ax,gdt_sel
     mov ds,ax
     mov bx,es:p_tss_sel
@@ -2999,6 +3000,13 @@ load_reload_timer:
     mov ds,bx
     mov bx,(io_focus_linear SHR 20) AND 0FFFh
 ;
+    test fs:ps_flags,PS_FLAG_FLUSH
+    jz load_not_flush
+;
+    lock and fs:ps_flags, NOT PS_FLAG_FLUSH
+    jmp load_reload_cr3
+
+load_not_flush:
     cmp edx,[bx]
     jne load_reload_cr3
 ;
@@ -3067,6 +3075,7 @@ load_relock:
 load_regs:
     mov fs:ps_curr_thread,es
     mov fs:ps_last_thread,es
+    lock and fs:ps_flags,NOT PS_FLAG_LOADING
 ;
     test ds:p_tss_eflags,20000h
     jnz load_vm
@@ -3456,7 +3465,7 @@ cctLocal:
     jbe cctPop
 ;
     mov fs:ps_prio_act,di
-    or fs:ps_flags,PS_FLAG_PRIO_CHANGE
+    lock or fs:ps_flags,PS_FLAG_PRIO_CHANGE
 
 cctPop:
     pop es    
@@ -3481,11 +3490,11 @@ cctDone:
 ReloadTimer Proc near
     jc reload_timer_loop
 ;
-    or fs:ps_flags,PS_FLAG_TIMER    
+    lock or fs:ps_flags,PS_FLAG_TIMER    
     jmp reload_timer_done
 
 reload_timer_loop:
-    and fs:ps_flags,NOT PS_FLAG_TIMER   
+    lock and fs:ps_flags,NOT PS_FLAG_TIMER   
     mov es,fs:ps_curr_thread
     call cs:get_time_proc
     cli
@@ -3514,7 +3523,7 @@ reload_check_preempt:
     sbb edx,fs:ps_preempt_msb
     jc reload_timer_do
 ;
-    or fs:ps_flags,PS_FLAG_PREEMPT
+    lock or fs:ps_flags,PS_FLAG_PREEMPT
     mov ax,fs:ps_curr_thread
     or ax,ax
     jz reload_preempt_block
@@ -3558,11 +3567,11 @@ start_core_name    DB 'Start Core', 0
 start_core:
     mov ax,core_data_sel
     mov fs,ax
-    or fs:ps_flags,PS_FLAG_ACTIVE
+    lock or fs:ps_flags,PS_FLAG_ACTIVE
     SyncClock
     sti
     call LockCore
-    or fs:ps_flags,PS_FLAG_PREEMPT    
+    lock or fs:ps_flags,PS_FLAG_PREEMPT    
     jmp LoadThread
     
 
@@ -3820,7 +3829,7 @@ null_thread0:
     mov es:p_sleep_sel,fs
     mov es:p_sleep_offset,0
     mov fs:ps_null_thread,ax
-    or fs:ps_flags,PS_FLAG_ACTIVE
+    lock or fs:ps_flags,PS_FLAG_ACTIVE
 ;
     mov ax,start_ap_cores_nr
     IsValidOsGate
@@ -5599,9 +5608,28 @@ sgtcLoop:
     test fs:ps_flags,PS_FLAG_ACTIVE
     jz sgtcNext
 ;    
+    test fs:ps_flags,PS_FLAG_LOADING
+    jnz sgtcAdd
+;    
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz sgtcNoThread
+;
+    cmp ax,fs:ps_null_thread
+    je sgtcFlush
+
+sgtcAdd:        
     mov ax,fs:ps_id
     bts es:[edx].th_core_bits,ax
     inc es:[edx].th_remain_cores
+    jmp sgtcNext
+
+sgtcNoThread:
+    test fs:ps_flags,PS_FLAG_LOADING
+    jnz sgtcAdd
+
+sgtcFlush:
+    lock or fs:ps_flags,PS_FLAG_FLUSH
 
 sgtcNext:
     add bx,2
@@ -5633,19 +5661,33 @@ sptcLoop:
     test fs:ps_flags,PS_FLAG_ACTIVE
     jz sptcNext
 ;    
+    test fs:ps_flags,PS_FLAG_LOADING
+    jnz sptcAdd
+;
     mov ax,fs:ps_curr_thread
     or ax,ax
-    jz sptcAdd
+    jz sptcNoThread
 ;
+    cmp ax,fs:ps_null_thread
+    je sptcFlush
+;    
     mov ds,ax
     cmp edi,ds:p_cr3
-    jne sptcNext
+    jne sptcFlush
 
 sptcAdd:
     mov ax,fs:ps_id
     bts es:[edx].th_core_bits,ax
     inc es:[edx].th_remain_cores
+    jmp sptcNext
 
+sptcNoThread:
+    test fs:ps_flags,PS_FLAG_LOADING
+    jnz sptcAdd
+    
+sptcFlush:  
+    lock or fs:ps_flags,PS_FLAG_FLUSH
+    
 sptcNext:
     add bx,2
     loop sptcLoop
@@ -6150,7 +6192,7 @@ sync_clock  Proc far
 ;
     StartSysTimer
     StartClock
-    and fs:ps_flags,NOT PS_FLAG_INIT_CLOCK
+    lock and fs:ps_flags,NOT PS_FLAG_INIT_CLOCK
 
 sync_ack_core:    
     cmp ds:time_sync_state,TIME_SYNC_WAIT
@@ -6394,7 +6436,7 @@ swap_out    PROC far
     pushf
     push OFFSET swap_out_done
     call SaveCurrentThread
-    or fs:ps_flags,PS_FLAG_PREEMPT
+    lock or fs:ps_flags,PS_FLAG_PREEMPT
     jmp ContinueCurrentThread
 
 swap_out_done:

@@ -419,11 +419,11 @@ ap_task_wait:
 ;    
     StartCore
 
+ap_crash:    
+
 stopl:
     jmp stopl
 
-
-ap_crash:    
     StartCrashCore
 
 apic_tab    DB 'APIC'
