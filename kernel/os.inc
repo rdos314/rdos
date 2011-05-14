@@ -718,11 +718,11 @@ RequestSpinlock MACRO spinlock
     push ax
 
 rs_lock:    
-    sti
     mov ax,spinlock.sl_value
     or ax,ax
     je rs_get
 ;
+    sti
     pause
     jmp rs_lock
 
@@ -1496,20 +1496,20 @@ UnlockProcEnv   MACRO
 
 ; IN  DS:(E)SI      Env var name
 ; IN  ES:(E)DI      Env var data
-AddSysEnvVar	MACRO
-	OsGate add_sys_env_var_nr
-	        ENDM
+AddSysEnvVar    MACRO
+        OsGate add_sys_env_var_nr
+                ENDM
 
 ; IN  DS:(E)SI      Env var name
-DeleteSysEnvVar	MACRO
-	OsGate delete_sys_env_var_nr
-	        ENDM
+DeleteSysEnvVar MACRO
+        OsGate delete_sys_env_var_nr
+                ENDM
 
 ; IN  DS:(E)SI      Env var name
 ; IN  ES:(E)DI      Env var data
-FindSysEnvVar	MACRO
-	OsGate find_sys_env_var_nr
-	        ENDM
+FindSysEnvVar   MACRO
+        OsGate find_sys_env_var_nr
+                ENDM
 
 ;;;;;;;;;;;; Focus ;;;;;;;;;;;;;
 

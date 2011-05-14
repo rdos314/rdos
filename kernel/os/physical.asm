@@ -34,7 +34,12 @@ INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\driver.def
 
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
     .386p
+ENDIF
 
     extrn local_create_data_sel16:near
     extrn local_flush_process_tlb:near
@@ -165,7 +170,7 @@ init_physical   PROC near
     mov ax,system_data_sel
     mov ds,ax
 ;
-    InitSection ds:phys_section
+    InitSpinlock ds:phys_spinlock
     mov bx,phys_page_sel
     mov edx,phys_page_linear
     mov ecx,ds:phys_free_pages
@@ -274,7 +279,7 @@ local_allocate_physical       PROC near
     mov ds,bx
     pushf
     push ds
-    EnterSection ds:phys_section
+    RequestSpinlock ds:phys_spinlock
     dec ds:phys_free_pages
     mov dx,phys_list_sel
     mov es,dx
@@ -301,7 +306,7 @@ allocate_mark:
     mov eax,[eax]
     xor al,al
     pop ds
-    LeaveSection ds:phys_section
+    ReleaseSpinlockNoSti ds:phys_spinlock
     popf
     pop edx
     pop ebx
@@ -351,7 +356,7 @@ allocate_dma_physical   PROC far
     mov ds,bx
     pushf
     push ds
-    EnterSection ds:phys_section
+    RequestSpinlock ds:phys_spinlock
     dec ds:phys_free_pages
     mov dx,phys_list_sel
     mov es,dx
@@ -367,7 +372,7 @@ allocate_dma_physical   PROC far
     mov eax,[eax]
     xor al,al
     pop ds
-    LeaveSection ds:phys_section
+    ReleaseSpinlockNoSti ds:phys_spinlock
     popf
     pop edx
     pop ebx
@@ -400,7 +405,7 @@ local_free_physical   PROC near
     mov ds,bx
     pushf
     push ds
-    EnterSection ds:phys_section
+    RequestSpinlock ds:phys_spinlock
     inc ds:phys_free_pages
     xor ebx,ebx
     mov dx,phys_list_sel
@@ -426,7 +431,7 @@ free_link_page:
     mov ds,dx
     mov [ebx],eax
     pop ds
-    LeaveSection ds:phys_section
+    ReleaseSpinlockNoSti ds:phys_spinlock
     popf
     pop edx
     pop ebx
@@ -644,7 +649,7 @@ allocate_multiple_physical      PROC far
     mov ax,phys_page_sel
     mov fs,ax
     pushf
-    EnterSection ds:phys_section
+    RequestSpinlock ds:phys_spinlock
     or ecx,ecx
     jz allocate_multi_fail
 ;
@@ -657,13 +662,13 @@ allocate_multiple_physical      PROC far
     call allocate_multi_entries
     sub ds:phys_free_pages,ecx
     mov eax,edx
-    LeaveSection ds:phys_section
+    ReleaseSpinlockNoSti ds:phys_spinlock
     popf
     clc
     jmp allocate_multi_done
 
 allocate_multi_fail:
-    LeaveSection ds:phys_section
+    ReleaseSpinlockNoSti ds:phys_spinlock
     popf
     stc
 
