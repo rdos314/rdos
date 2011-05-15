@@ -1013,6 +1013,16 @@ init_mouse      Proc far
     GetThread
     mov ds:mouse_thread,ax
 ;
+    mov al,12
+    IsIrqFree
+    jc init_mouse_done    
+;
+    mov al,12
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET keyb_int
+    RequestPrivateIrqHandler
+;
     int 3
     mov al,0FFh
     call SendMouseCommand
@@ -1021,11 +1031,6 @@ init_mouse      Proc far
 ;    stc
 ;    call CheckAux
 ;    jc init_mouse_done
-;
-    mov al,12
-    IsIrqFree
-    jc init_mouse_done
-    
 init_check_aux_loop:
     RequestSpinlock ds:hw_spinlock
     in al,64h
