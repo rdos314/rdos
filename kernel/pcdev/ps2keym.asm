@@ -974,6 +974,9 @@ init_check_read:
     in al,60h
     ReleaseSpinlock ds:hw_spinlock
 ;
+    or al,al
+    jnz init_mouse_revoke
+;    
     mov al,12
     mov bx,cs
     mov es,bx
