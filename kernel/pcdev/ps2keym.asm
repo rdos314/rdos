@@ -903,7 +903,6 @@ send_mouse_command_wait:
     jmp send_mouse_cmd_done
 
 send_mouse_cmd_fail:
-    int 3
     stc
 
 send_mouse_cmd_done:
@@ -1014,9 +1013,14 @@ init_mouse      Proc far
     GetThread
     mov ds:mouse_thread,ax
 ;
-    stc
-    call CheckAux
-    jc init_mouse_done
+    int 3
+    mov al,0FFh
+    call SendMouseCommand
+    jc init_mouse_done 
+       
+;    stc
+;    call CheckAux
+;    jc init_mouse_done
 ;
     mov al,12
     IsIrqFree

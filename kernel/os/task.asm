@@ -3007,11 +3007,10 @@ load_retry_do:
     jmp load_thread_loop
 
 load_reload_timer:
-    call UnlockTimer
     neg eax
     ReloadSysTimer
+    call UnlockTimer
 ;
-    sti
     call cs:tpr_proc
 ;    
     lock or fs:ps_flags,PS_FLAG_LOADING
@@ -3572,9 +3571,9 @@ reload_preempt_block:
     jmp reload_timer_loop
 
 reload_timer_do:
-    call UnlockTimer
     neg eax
     ReloadSysTimer
+    call UnlockTimer
 
 reload_timer_done:
     call TryUnlockCore
