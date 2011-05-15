@@ -1011,26 +1011,6 @@ init_enable_loop1:
 
 init_enable_prefix:
     ReleaseSpinlock ds:hw_spinlock
-    int 3
-    RequestSpinlock ds:hw_spinlock
-    mov al,60h
-    out 64h,al
-
-init_enable_loop2:
-    in al,64h
-    test al,2
-    jz init_enable_do
-;
-    ReleaseSpinlock ds:hw_spinlock
-    mov eax,10
-    WaitMilliSec
-    RequestSpinlock ds:hw_spinlock
-    jmp init_enable_loop2
-
-init_enable_do:
-    mov al,47h
-    out 60h,al
-    ReleaseSpinlock ds:hw_spinlock
 ;
     mov al,0F3h
     call SendMouseCommand
