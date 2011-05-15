@@ -60,6 +60,8 @@ status_mouse_ack    EQU 8
 
 data    SEGMENT byte public 'DATA'
 
+hw_spinlock         spinlock_typ <>
+
 mode_thread         DW ?
 mouse_thread    DW ?
 command         DB ?
@@ -74,7 +76,12 @@ mouse_dy        DB ?
 
 data    ENDS
 
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
     .386p
+ENDIF
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -767,12 +774,13 @@ send_check_ready:
     jmp send_check_ready
 
 send_command_do:
-    cli
+    RequestSpinlock ds:hw_spinlock
     mov al,ds:status
     or al,status_key_req
     and al,NOT status_key_ack
     mov ds:status,al
-    sti
+    ReleaseSpinlock ds:hw_spinlock
+;
     mov ax,cs
     mov es,ax
     GetSystemTime
@@ -817,7 +825,7 @@ SendMouseTimeout    Proc far
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 SendMouseTimeout    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -867,12 +875,13 @@ send_mouse_check_prefix:
     jmp send_mouse_check_prefix
 
 send_mouse_command_do:
-    cli
+    RequestSpinlock ds:hw_spinlock
     mov al,ds:status
     or al,status_mouse_req
     and al,NOT status_mouse_ack
     mov ds:status,al
-    sti
+    ReleaseSpinlock ds:hw_spinlock
+;    
     mov al,ds:command
     out 60h,al
 
@@ -1159,7 +1168,6 @@ UpdateMode      ENDP
 mode_name       DB 'Keyboard LEDs',0
 
 mode_pr:
-    sti
     mov ax,SEG data
     mov ds,ax
     GetThread
@@ -1192,17 +1200,21 @@ mode_thread_mode:
 keyb_int    Proc far
     cld
 keyb_int_loop:
-    cli
+    RequestSpinlock ds:hw_spinlock
     in al,64h
     test al,1
-    jz keyb_int_done
+    jnz keyb_int_get_cmd
 ;
+    ReleaseSpinlock ds:hw_spinlock
+    jmp keyb_int_done
+
+keyb_int_get_cmd:
     test al,20h
     jz keyb_int_keyboard
 
 keyb_int_mouse:
     in al,60h
-    sti
+    ReleaseSpinlock ds:hw_spinlock
 ;
     test ds:status,status_mouse_req
     jz mouse_int_not_resend
@@ -1210,11 +1222,13 @@ keyb_int_mouse:
     cmp al,0FAh
     jnz mouse_int_not_ack
 ;
-    cli
+    RequestSpinlock ds:hw_spinlock
     mov al,ds:status
     or al,status_mouse_ack
     and al,NOT status_mouse_req
     mov ds:status,al
+    ReleaseSpinlock ds:hw_spinlock
+;
     mov bx,ds:mouse_thread
     Signal
     jmp keyb_int_loop
@@ -1258,7 +1272,8 @@ mouse_ypos:
 
 keyb_int_keyboard:
     in al,60h
-    sti
+    ReleaseSpinlock ds:hw_spinlock
+;
     or al,al
     je keyb_int_loop
 ;
@@ -1268,11 +1283,13 @@ keyb_int_keyboard:
     cmp al,0FAh
     jnz keyb_int_not_ack
 ;
-    cli
+    RequestSpinlock ds:hw_spinlock
     mov al,ds:status
     or al,status_key_ack
     and al,NOT status_key_req
     mov ds:status,al
+    ReleaseSpinlock ds:hw_spinlock
+;
     mov bx,ds:mode_thread
     Signal
     jmp keyb_int_loop
@@ -1403,6 +1420,7 @@ init    PROC far
     mov ds:mouse_thread,ax
     mov ds:status,0
     mov ds:focus_req,0
+    InitSpinlock ds:hw_spinlock
     ret
 init    ENDP
 
