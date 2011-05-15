@@ -903,6 +903,7 @@ send_mouse_command_wait:
     jmp send_mouse_cmd_done
 
 send_mouse_cmd_fail:
+    int 3
     stc
 
 send_mouse_cmd_done:
@@ -1013,24 +1014,14 @@ init_mouse      Proc far
     GetThread
     mov ds:mouse_thread,ax
 ;
+    stc
+    call CheckAux
+    jc init_mouse_done
+;
     mov al,12
     IsIrqFree
-    jc init_mouse_done    
-;
-    mov al,12
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET keyb_int
-    RequestPrivateIrqHandler
-;
-    int 3
-    mov al,0FFh
-    call SendMouseCommand
-    jc init_mouse_done 
-       
-;    stc
-;    call CheckAux
-;    jc init_mouse_done
+    jc init_mouse_done
+    
 init_check_aux_loop:
     RequestSpinlock ds:hw_spinlock
     in al,64h
@@ -1066,6 +1057,16 @@ init_check_read:
     mov es,bx
     mov edi,OFFSET keyb_int
     RequestPrivateIrqHandler
+;
+    mov al,0FFh
+    call SendMouseCommand
+    jc init_mouse_revoke
+;
+    mov al,12
+    ReleasePrivateIrqHandler
+;
+    mov ax,150
+    WaitMilliSec
     
 init_enable_aux_loop:
     RequestSpinlock ds:hw_spinlock
