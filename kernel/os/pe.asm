@@ -187,7 +187,7 @@ NotifyKernelDebug   Proc far
     push dx
     push di
 ;    
-    mov dx,es:p_error_code
+    movzx dx,es:p_fault_vector
     mov ds,es:p_app_sel
     mov ds,ds:app_mod_sel
 ;

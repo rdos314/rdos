@@ -577,13 +577,13 @@ ft_gdt  DB 'gdt ',0
 WriteFault      PROC near
     test word ptr gs:p_tss_eflags+2,2
     jnz write_fault_end
-    mov ax,gs:p_error_code
+    mov eax,gs:p_fault_code
     cmp ax,3
     je write_fault_end
     mov ax,cs
     mov es,ax
     mov di,OFFSET ft_inst
-    mov ax,gs:tss_error_code
+    mov eax,gs:p_fault_code
     or ax,ax
     jz write_fault_end
     test ax,1
@@ -592,7 +592,7 @@ WriteFault      PROC near
 fault_not_int:
     WriteAsciiz
 ;
-    mov ax,gs:tss_error_code
+    mov eax,gs:p_fault_code
     test ax,2
     jz fault_not_idt
     mov di,OFFSET ft_idt
@@ -604,7 +604,7 @@ fault_not_idt:
     mov di,OFFSET ft_ldt
 write_fault_reason:
     WriteAsciiz
-    mov ax,gs:tss_error_code
+    mov eax,gs:p_fault_code
     and ax,0FFF8h
     call WriteHexWord
     ret
@@ -651,7 +651,7 @@ ke17    DB 'Invalid handle          '
 ke18    DB 'Invalid selector        '
 
 WriteIntCode    Proc near
-    mov dx,gs:p_error_code
+    movzx dx,gs:p_fault_vector
     mov bx,dx
     add bx,bx
     add bx,bx

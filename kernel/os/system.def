@@ -284,8 +284,6 @@ p_math_st6		    DT ?
 p_math_st7		    DT ?
 p_math_prev_op	    DB ?,?
 
-tss_error_code	    DW ?
-
 p_tss_end           DW ?
 
 p_next			    DW ?
@@ -300,7 +298,6 @@ p_app_sel		    DW ?
 p_spinlock          DW ?
 p_free_proc		    DD ?
 p_cr3			    DD ?
-p_error_code	    DW ?
 p_vm_deb_sel	    DW ?
 p_vm_deb_offs	    DD ?
 p_pm_deb_sel	    DW ?
@@ -325,6 +322,10 @@ p_int_locked_stack	DW ?
 p_int_prot16_stack	DW ?
 p_int_prot32_stack	DW ?
 p_int_real_stack	DD ?
+
+p_fault_vector      DB ?
+p_fault_space       DB ?
+p_fault_code        DD ?
 
 p_mailslot_sel      DW ?
 

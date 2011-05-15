@@ -109,12 +109,6 @@ emulate PROC near
 
 emulate_exception:
     push ax
-    GetThread
-    mov ds,ax
-    mov ax,[bp].vm_err
-    mov ds:tss_error_code,ax
-    xor ax,ax
-    mov ds,ax
     mov eax,[bp].vm_eflags
     test eax,20000h
     pop ax
@@ -362,6 +356,12 @@ trap_0:
     push eax
     push ebx
     push ds
+    GetThread
+    mov ds,ax
+    mov ds:p_fault_vector,0
+    mov ds:p_fault_code,0
+    xor ax,ax
+    mov ds,ax
     mov al,0
     call emulate
     pop ds
@@ -400,8 +400,8 @@ trap_1:
     jz t1_ret
 ;    
     mov ds,ax
-    mov ax,[bp].vm_err
-    mov ds:tss_error_code,ax
+    mov ds:p_fault_vector,1
+    mov ds:p_fault_code,0
     sti
 ;
     xor ax,ax
@@ -451,8 +451,8 @@ trap_2:
     push ds
     GetThread
     mov ds,ax
-    mov ax,[bp].vm_err
-    mov ds:tss_error_code,ax
+    mov ds:p_fault_vector,2
+    mov ds:p_fault_code,0
     xor ax,ax
     mov ds,ax
     mov al,2
@@ -492,8 +492,8 @@ trap_3:
     push ds
     GetThread
     mov ds,ax
-    mov ax,[bp].vm_err
-    mov ds:tss_error_code,ax
+    mov ds:p_fault_vector,3
+    mov ds:p_fault_code,0
     xor ax,ax
     mov ds,ax
     mov eax,[bp].vm_eflags
@@ -534,6 +534,10 @@ trap_4:
     push eax
     push ebx
     push ds
+    GetThread
+    mov ds,ax
+    mov ds:p_fault_vector,4
+    mov ds:p_fault_code,0
     mov al,4
     call emulate
     pop ds
@@ -565,6 +569,10 @@ trap_5:
     push eax
     push ebx
     push ds
+    GetThread
+    mov ds,ax
+    mov ds:p_fault_vector,5
+    mov ds:p_fault_code,0
     mov al,5
     call emulate
     pop ds
@@ -1017,11 +1025,11 @@ trap_6:
     push eax
     push ebx
     push ds
-;
     GetThread
     mov ds,ax
-    mov ax,[bp].vm_err
-    mov ds:tss_error_code,ax
+    mov ds:p_fault_vector,6
+    mov ds:p_fault_code,0
+;
     xor ax,ax
     mov ds,ax
     test byte ptr [bp+2].vm_eflags,2
@@ -1090,8 +1098,8 @@ trap_7:
     push ds
     GetThread
     mov ds,ax
-    mov ax,[bp].vm_err
-    mov ds:tss_error_code,ax
+    mov ds:p_fault_vector,7
+    mov ds:p_fault_code,0
     xor ax,ax
     mov ds,ax
     mov eax,cr0
@@ -1162,6 +1170,12 @@ trap_9:
     push eax
     push ebx
     push ds
+    GetThread
+    mov ds,ax
+    mov ds:p_fault_vector,7
+    mov ds:p_fault_code,0
+    xor ax,ax
+    mov ds,ax
     mov al,9
     call emulate
     pop ds
@@ -1193,8 +1207,9 @@ trap_10:
     push ds
     GetThread
     mov ds,ax
-    mov ax,[bp].vm_err
-    mov ds:tss_error_code,ax
+    mov ds:p_fault_vector,10
+    mov eax,[bp].vm_err
+    mov ds:p_fault_code,eax
     xor ax,ax
     mov ds,ax
     mov al,10
@@ -1239,8 +1254,9 @@ trap_11:
     push ds
     GetThread
     mov ds,ax
-    mov ax,[bp].vm_err
-    mov ds:tss_error_code,ax
+    mov ds:p_fault_vector,11
+    mov eax,[bp].vm_err
+    mov ds:p_fault_code,eax
     xor ax,ax
     mov ds,ax
     mov al,11
@@ -1299,8 +1315,9 @@ trap_12:
 
 t12_thread:
     mov ds,ax
-    mov ax,[bp].vm_err
-    mov ds:tss_error_code,ax
+    mov ds:p_fault_vector,12
+    mov eax,[bp].vm_err
+    mov ds:p_fault_code,eax
     xor ax,ax
     mov ds,ax
     mov al,11
@@ -1446,7 +1463,15 @@ t13_default:
     mov ax,system_data_sel
     mov ds,ax
     call ds:leave_patch_proc
-;    
+;
+    GetThread
+    mov ds,ax
+    mov ds:p_fault_vector,13
+    mov eax,[bp].vm_err
+    mov ds:p_fault_code,eax
+    xor ax,ax
+    mov ds,ax
+;
     mov al,13
     call emulate
     jmp t13_end
@@ -1484,6 +1509,12 @@ trap_16:
     push eax
     push ebx
     push ds
+    GetThread
+    mov ds,ax
+    mov ds:p_fault_vector,16
+    mov ds:p_fault_code,0
+    xor ax,ax
+    mov ds,ax
     mov al,16
     call emulate
     pop ds

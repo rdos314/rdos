@@ -1309,8 +1309,9 @@ init_default_tss    PROC near
 ;
 ; thread control
 ;
-    mov ds:tss_error_code,dx
-;
+    mov ds:p_fault_vector,-1
+    mov ds:p_fault_code,0
+; 
     push ds
     push es
     push si
@@ -2197,7 +2198,8 @@ init_first_tss  PROC near
 ;
 ; thread control
 ;
-    mov ds:tss_error_code,dx
+    mov ds:p_fault_vector,-1
+    mov ds:p_fault_code,0
 ;
     mov ds:p_tss_cr3,edx
     mov ds:p_tss_eax,edx

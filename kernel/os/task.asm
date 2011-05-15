@@ -4086,7 +4086,8 @@ debug_normal:
     jz debug_fault
 ;    
     mov ds,fs:ps_curr_thread 
-    mov ds:p_error_code,ax
+;    mov ds:p_fault_vector,al
+;    mov ds:p_fault_code,0
 ;
     mov eax,[bp].vm_eax
     mov ds:p_tss_eax,eax
@@ -4235,7 +4236,8 @@ double_fatal_no_thread:
     
 double_block:
     mov es,ax    
-    mov es:p_error_code,8
+    mov es:p_fault_vector,8
+    mov es:p_fault_code,0
     mov fs:ps_curr_thread,0
 ;    
     mov ax,system_data_sel

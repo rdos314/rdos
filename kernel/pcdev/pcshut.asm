@@ -516,7 +516,7 @@ ft_gdt  DB 'Gdt '
 write_fault     PROC near
     mov ax,cs
     mov es,ax
-    mov ax,gs:tss_error_code
+    mov eax,gs:p_fault_code
     test ax,2
     jz fault_not_idt
     mov di,OFFSET ft_idt
@@ -530,7 +530,7 @@ write_fault_reason:
     mov ah,11
     mov cx,4
     call write_stg
-    mov ax,gs:tss_error_code
+    mov eax,gs:p_fault_code
     and ax,0FFF8h
     mov cl,11
     call write_hex_word
@@ -804,7 +804,7 @@ not_empty_r:
     mov ah,11
     call write_stg
 ;
-    mov di,es:p_error_code
+    movzx di,es:p_fault_vector
     mov ax,es
     mov gs,ax
     shl di,3
