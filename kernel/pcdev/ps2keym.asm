@@ -1011,16 +1011,6 @@ init_enable_loop1:
 init_enable_prefix:
     ReleaseSpinlock ds:hw_spinlock
 ;
-    mov ax,250
-    WaitMilliSec
-;    
-    mov al,0FFh
-    call SendMouseCommand
-    jc init_mouse_revoke
-;
-    mov ax,100
-    WaitMilliSec
-;
     mov al,0F3h
     call SendMouseCommand
     jc init_mouse_revoke
@@ -1047,20 +1037,8 @@ init_enable_prefix:
     jmp init_mouse_done
 
 init_mouse_revoke:
-    mov al,60h
-    out 64h,al
-
-init_disable_loop2:
-    in al,64h
-    test al,2
-    jz init_disable_do
-    mov eax,10
-    WaitMilliSec
-    jmp init_disable_loop2
-
-init_disable_do:
-    mov al,65h
-    out 60h,al
+    mov ax,0FFh
+    call SendCommand
 ;
     mov al,12
     ReleasePrivateIrqHandler
