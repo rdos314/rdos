@@ -58,14 +58,21 @@ status_key_ack      EQU 4
 
 data    SEGMENT byte public 'DATA'
 
+hw_spinlock         spinlock_typ <>
+
 mode_thread         DW ?
-command         DB ?
-status          DB ?
-focus_req       DB ?
+command             DB ?
+status              DB ?
+focus_req           DB ?
 
 data    ENDS
 
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
     .386p
+ENDIF
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -758,12 +765,13 @@ send_check_ready:
     jmp send_check_ready
 
 send_command_do:
-    cli
+    RequestSpinlock ds:hw_spinlock
     mov al,ds:status
     or al,status_key_req
     and al,NOT status_key_ack
     mov ds:status,al
-    sti
+    ReleaseSpinlock ds:hw_spinlock
+;
     mov ax,cs
     mov es,ax
     GetSystemTime
@@ -858,13 +866,18 @@ mode_thread_mode:
 keyb_int    Proc far
     cld
 keyb_int_loop:
-    cli
+    RequestSpinlock ds:hw_spinlock
     in al,64h
     test al,1
-    jz keyb_int_done
-;
+    jnz keyb_int_get_cmd
+;    
+    ReleaseSpinlock ds:hw_spinlock
+    jmp keyb_int_done
+
+keyb_int_get_cmd:
     in al,60h
-    sti
+    ReleaseSpinlock ds:hw_spinlock
+;
     or al,al
     je keyb_int_loop
 ;
@@ -874,11 +887,13 @@ keyb_int_loop:
     cmp al,0FAh
     jnz keyb_int_not_ack
 ;
-    cli
+    RequestSpinlock ds:hw_spinlock
     mov al,ds:status
     or al,status_key_ack
     and al,NOT status_key_req
     mov ds:status,al
+    ReleaseSpinlock ds:hw_spinlock
+;
     mov bx,ds:mode_thread
     Signal
     jmp keyb_int_loop
@@ -1002,6 +1017,7 @@ init    PROC far
     mov ds:mode_thread,ax
     mov ds:status,0
     mov ds:focus_req,0
+    InitSpinlock ds:hw_spinlock
     ret
 init    ENDP
 

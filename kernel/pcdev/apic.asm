@@ -2052,7 +2052,7 @@ enable_irq  Proc far
     push edx
 ;
     movzx edx,al
-    mov dh,0A0h
+    mov dh,0A9h
     cmp al,10h
     jae enable_irq_do
 ;    
@@ -2079,8 +2079,9 @@ enable_irq_do:
 ;
     inc bl
     mov ds:ioapic_regsel,bl
-    GetApicId
-    shl edx,24
+    mov edx,0FF000000h
+;    GetApicId
+;    shl edx,24
     mov ds:ioapic_window,edx
 ;
     pop edx
@@ -2460,7 +2461,7 @@ InitApic    Proc near
     mov eax,-1
     mov es:APIC_DEST_FORMAT,eax
 ;
-    mov eax,80000000h    
+    mov eax,10000000h    
     mov es:APIC_LOG_DEST,eax
 ;
     mov eax,0FFh
