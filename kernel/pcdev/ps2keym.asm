@@ -855,10 +855,13 @@ SendMouseCommand    proc near
 ;
     mov ds:command,al
 send_mouse_check_ready:
+    RequestSpinlock ds:hw_spinlock
     in al,64h
     test al,2
     jz send_mouse_prefix
-    mov eax,10
+;
+    ReleaseSpinlock ds:hw_spinlock
+    mov eax,1
     WaitMilliSec
     jmp send_mouse_check_ready
 
@@ -870,20 +873,22 @@ send_mouse_check_prefix:
     in al,64h
     test al,2
     jz send_mouse_command_do
-    mov eax,10
+;    
+    ReleaseSpinlock ds:hw_spinlock
+    mov eax,1
     WaitMilliSec
+    RequestSpinlock ds:hw_spinlock
     jmp send_mouse_check_prefix
 
 send_mouse_command_do:
-    RequestSpinlock ds:hw_spinlock
     mov al,ds:status
     or al,status_mouse_req
     and al,NOT status_mouse_ack
     mov ds:status,al
-    ReleaseSpinlock ds:hw_spinlock
 ;    
     mov al,ds:command
     out 60h,al
+    ReleaseSpinlock ds:hw_spinlock
 
 send_mouse_command_wait:
     WaitForSignal
@@ -898,6 +903,7 @@ send_mouse_command_wait:
     jmp send_mouse_cmd_done
 
 send_mouse_cmd_fail:
+    int 3
     stc
 
 send_mouse_cmd_done:
@@ -922,10 +928,12 @@ SendMouseCommand    Endp
 CheckAux    Proc near
     mov cx,100
 check_aux_wait1:
+    RequestSpinlock ds:hw_spinlock
     in al,64h
     test al,2
     jz check_aux_prefix
 ;
+    ReleaseSpinlock ds:hw_spinlock
     mov eax,10
     WaitMilliSec
     loop check_aux_wait1
@@ -940,8 +948,10 @@ check_aux_wait2:
     test al,2
     jz check_aux_command
 ;
+    ReleaseSpinlock ds:hw_spinlock
     mov eax,10
     WaitMilliSec
+    RequestSpinlock ds:hw_spinlock
     jmp check_aux_wait2
 
 check_aux_command:
@@ -956,6 +966,7 @@ check_aux_wait3:
 ;
     mov ah,al
     in al,60h
+    ReleaseSpinlock ds:hw_spinlock
     test ah,20h
     jz check_aux_fail
 ;
@@ -966,8 +977,10 @@ check_aux_wait3:
     jmp check_aux_done
 
 check_aux_delay:
+    ReleaseSpinlock ds:hw_spinlock
     mov eax,10
     WaitMilliSec
+    RequestSpinlock ds:hw_spinlock
     loop check_aux_wait3
 
 check_aux_fail:
@@ -1010,9 +1023,12 @@ init_mouse      Proc far
     jc init_mouse_done
     
 init_check_aux_loop:
+    RequestSpinlock ds:hw_spinlock
     in al,64h
     test al,2
     jz init_check_aux_do
+;
+    ReleaseSpinlock ds:hw_spinlock
     mov eax,10
     WaitMilliSec
     jmp init_check_aux_loop
@@ -1026,12 +1042,15 @@ init_check_loop1:
     test al,2
     jz init_check_read
 ;
+    ReleaseSpinlock ds:hw_spinlock
     mov eax,10
     WaitMilliSec
+    RequestSpinlock ds:hw_spinlock
     jmp init_check_loop1
 
 init_check_read:
     in al,60h
+    ReleaseSpinlock ds:hw_spinlock
 ;
     mov al,12
     mov bx,cs
@@ -1040,9 +1059,12 @@ init_check_read:
     RequestPrivateIrqHandler
     
 init_enable_aux_loop:
+    RequestSpinlock ds:hw_spinlock
     in al,64h
     test al,2
     jz init_enable_aux_do
+;
+    ReleaseSpinlock ds:hw_spinlock
     mov eax,10
     WaitMilliSec
     jmp init_enable_aux_loop
@@ -1055,8 +1077,11 @@ init_enable_loop1:
     in al,64h
     test al,2
     jz init_enable_prefix
+;
+    ReleaseSpinlock ds:hw_spinlock
     mov eax,10
     WaitMilliSec
+    RequestSpinlock ds:hw_spinlock
     jmp init_enable_loop1
 
 init_enable_prefix:
@@ -1067,13 +1092,17 @@ init_enable_loop2:
     in al,64h
     test al,2
     jz init_enable_do
+;
+    ReleaseSpinlock ds:hw_spinlock
     mov eax,10
     WaitMilliSec
+    RequestSpinlock ds:hw_spinlock
     jmp init_enable_loop2
 
 init_enable_do:
     mov al,47h
     out 60h,al
+    ReleaseSpinlock ds:hw_spinlock
 ;
     mov al,0F3h
     call SendMouseCommand
