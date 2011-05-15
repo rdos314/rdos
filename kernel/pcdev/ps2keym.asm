@@ -1010,6 +1010,9 @@ init_enable_loop1:
     jmp init_enable_loop1
 
 init_enable_prefix:
+    ReleaseSpinlock ds:hw_spinlock
+    int 3
+    RequestSpinlock ds:hw_spinlock
     mov al,60h
     out 64h,al
 
