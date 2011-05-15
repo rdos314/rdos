@@ -1057,16 +1057,6 @@ init_check_read:
     mov es,bx
     mov edi,OFFSET keyb_int
     RequestPrivateIrqHandler
-;
-    mov al,0FFh
-    call SendMouseCommand
-    jc init_mouse_revoke
-;
-    mov al,12
-    ReleasePrivateIrqHandler
-;
-    mov ax,150
-    WaitMilliSec
     
 init_enable_aux_loop:
     RequestSpinlock ds:hw_spinlock
