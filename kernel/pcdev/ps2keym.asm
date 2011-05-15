@@ -919,80 +919,6 @@ SendMouseCommand    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           CheckAux
-;
-;           DESCRIPTION:    Check for AUX (mouse) port
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CheckAux    Proc near
-    mov cx,100
-check_aux_wait1:
-    RequestSpinlock ds:hw_spinlock
-    in al,64h
-    test al,2
-    jz check_aux_prefix
-;
-    ReleaseSpinlock ds:hw_spinlock
-    mov eax,10
-    WaitMilliSec
-    loop check_aux_wait1
-    jmp check_aux_fail
-
-check_aux_prefix:
-    mov al,0D3h
-    out 64h,al
-
-check_aux_wait2:
-    in al,64h
-    test al,2
-    jz check_aux_command
-;
-    ReleaseSpinlock ds:hw_spinlock
-    mov eax,10
-    WaitMilliSec
-    RequestSpinlock ds:hw_spinlock
-    jmp check_aux_wait2
-
-check_aux_command:
-    mov al,0F4h
-    out 60h,al
-;
-    mov cx,10
-check_aux_wait3:
-    in al,64h
-    test al,1
-    jz check_aux_delay
-;
-    mov ah,al
-    in al,60h
-    ReleaseSpinlock ds:hw_spinlock
-    test ah,20h
-    jz check_aux_fail
-;
-    cmp al,0F4h
-    jne check_aux_fail
-;
-    clc
-    jmp check_aux_done
-
-check_aux_delay:
-    ReleaseSpinlock ds:hw_spinlock
-    mov eax,10
-    WaitMilliSec
-    RequestSpinlock ds:hw_spinlock
-    loop check_aux_wait3
-
-check_aux_fail:
-    stc
-
-check_aux_done:
-    ret
-CheckAux    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           init_mouse
 ;
 ;           DESCRIPTION:    Init mouse hardware
@@ -1013,10 +939,6 @@ init_mouse      Proc far
     mov ds:mouse_counter,0
     GetThread
     mov ds:mouse_thread,ax
-;
-    stc
-    call CheckAux
-    jc init_mouse_done
 ;
     mov al,12
     IsIrqFree
