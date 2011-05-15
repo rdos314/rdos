@@ -903,7 +903,6 @@ send_mouse_command_wait:
     jmp send_mouse_cmd_done
 
 send_mouse_cmd_fail:
-    int 3
     stc
 
 send_mouse_cmd_done:
@@ -1011,6 +1010,16 @@ init_enable_loop1:
 
 init_enable_prefix:
     ReleaseSpinlock ds:hw_spinlock
+;
+    mov ax,250
+    WaitMilliSec
+;    
+    mov al,0FFh
+    call SendMouseCommand
+    jc init_mouse_revoke
+;
+    mov ax,100
+    WaitMilliSec
 ;
     mov al,0F3h
     call SendMouseCommand
