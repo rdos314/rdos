@@ -1729,6 +1729,18 @@ init_thread Proc far
     mov ax,100
     WaitMilliSec
 ;    
+    mov bl,6
+    mov ax,250
+    call SetWordParameter
+;    
+    mov bl,7
+    mov ax,1000
+    call SetWordParameter
+;    
+    mov bl,8
+    mov al,75
+    call SetByteParameter
+;    
     mov bl,65
     mov al,0
     call SetByteParameter
