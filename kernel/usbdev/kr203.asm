@@ -35,6 +35,9 @@ include usb.inc
 
 MAX_OUT_SIZE = 260 * 16
 
+FLAG_ATTACHED          = 1
+FLAG_STARTED           = 2
+
 STATUS_PAPER_JAM       = 1h
 STATUS_CUTTER_JAM      = 2h
 STATUS_NO_PAPER        = 4h
@@ -93,6 +96,8 @@ kr_in_pipe          DB ?
 kr_section          section_typ <>
 
 kr_status           DW ?
+
+kr_flag             DB ?
 
 kr_status_section   section_typ <>
 
@@ -636,6 +641,9 @@ dsLoop:
     dec ds:kr_session_count
     LeaveSection ds:kr_section
 ;
+    test ds:kr_flag,FLAG_ATTACHED
+    jz dsFree
+;    
     push ds
     push es
     pusha
@@ -904,6 +912,48 @@ OpenPipes   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:               ClosePipes
+;
+;               DESCRIPTION:    Close pipes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClosePipes    Proc near
+    mov ax,SEG data
+    mov ds,ax
+    xor ax,ax
+    mov es,ax
+;    
+    mov bx,ds:kr_in_req
+    CloseUsbReq
+    mov ds:kr_in_req,0
+;
+    mov bx,ds:kr_in_handle
+    CloseUsbPipe    
+    mov ds:kr_in_handle,0
+;
+    mov bx,ds:kr_out_req
+    CloseUsbReq
+    mov ds:kr_out_req,0
+;
+    mov bx,ds:kr_out_handle
+    CloseUsbPipe    
+    mov ds:kr_out_handle,0
+;
+    mov es,ds:kr_in_buffer
+    mov es,ds:kr_in_buffer
+    FreeMem    
+    mov ds:kr_in_buffer,0
+;
+    mov es,ds:kr_out_buffer
+    FreeMem    
+    mov ds:kr_out_buffer,0
+    ret
+ClosePipes   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           IsJammed
 ;
 ;       DESCRIPTION:    Check if printer is jammed
@@ -920,6 +970,10 @@ is_jammed   Proc far
 ;    
     mov ax,SEG data
     mov ds,ax
+    test ds:kr_flag,FLAG_ATTACHED
+    clc
+    jz ijDone
+;    
     mov ax,ds:kr_session_thread
     or ax,ax
     clc
@@ -957,6 +1011,10 @@ is_paper_low   Proc far
 ;    
     mov ax,SEG data
     mov ds,ax
+    test ds:kr_flag,FLAG_ATTACHED
+    clc
+    jz iplDone
+;
     mov ax,ds:kr_session_thread
     or ax,ax
     clc
@@ -994,6 +1052,10 @@ is_paper_end   Proc far
 ;    
     mov ax,SEG data
     mov ds,ax
+    test ds:kr_flag,FLAG_ATTACHED
+    clc
+    jz ipeDone
+;    
     mov ax,ds:kr_session_thread
     or ax,ax
     clc
@@ -1031,6 +1093,10 @@ is_ok   Proc far
 ;    
     mov ax,SEG data
     mov ds,ax
+    test ds:kr_flag,FLAG_ATTACHED
+    stc
+    jz ioDone
+;
     mov ax,ds:kr_session_thread
     or ax,ax
     stc
@@ -1068,6 +1134,10 @@ is_head_lifted   Proc far
 ;    
     mov ax,SEG data
     mov ds,ax
+    test ds:kr_flag,FLAG_ATTACHED
+    clc
+    jz ihlDone
+;    
     mov ax,ds:kr_session_thread
     or ax,ax
     clc
@@ -1105,6 +1175,10 @@ has_paper_in_presenter   Proc far
 ;    
     mov ax,SEG data
     mov ds,ax
+    test ds:kr_flag,FLAG_ATTACHED
+    clc
+    jz hppDone
+;
     mov ax,ds:kr_session_thread
     or ax,ax
     clc
@@ -1143,6 +1217,14 @@ print_test   Proc far
 ;
     mov ax,SEG data
     mov ds,ax
+    test ds:kr_flag,FLAG_ATTACHED
+    stc
+    jz ptDone
+;
+    mov ax,ds:kr_session_thread
+    or ax,ax
+    stc
+    jz ptDone
 ;    
     mov cx,3
     call CreateWaitSessionSel
@@ -1158,7 +1240,9 @@ print_test   Proc far
     stosb
 ;
     call InsertSessionSel
-;    
+    clc
+
+ptDone:    
     pop di
     pop cx
     pop ax
@@ -1474,6 +1558,14 @@ print_bitmap   Proc far
 ;
     mov ax,SEG data
     mov ds,ax
+    test ds:kr_flag,FLAG_ATTACHED
+    stc
+    jz print_bitmap_done
+;
+    mov ax,ds:kr_session_thread
+    or ax,ax
+    stc
+    jz print_bitmap_done
 ;
     GetBitmapInfo
     jc print_bitmap_done
@@ -1578,6 +1670,14 @@ present_media   Proc far
     mov bl,al
     mov ax,SEG data
     mov ds,ax
+    test ds:kr_flag,FLAG_ATTACHED
+    stc
+    jz present_media_done
+;
+    mov ax,ds:kr_session_thread
+    or ax,ax
+    stc
+    jz present_media_done
 ;    
     mov cx,3
     call CreateWaitSessionSel
@@ -1593,7 +1693,9 @@ present_media   Proc far
     stosb
 ;
     call InsertSessionSel
-;    
+    clc
+
+present_media_done:    
     pop di
     pop cx
     pop bx
@@ -1623,6 +1725,14 @@ eject_media   Proc far
 ;
     mov ax,SEG data
     mov ds,ax
+    test ds:kr_flag,FLAG_ATTACHED
+    stc
+    jz eject_media_done
+;
+    mov ax,ds:kr_session_thread
+    or ax,ax
+    stc
+    jz eject_media_done
 ;    
     mov cx,1
     call CreateWaitSessionSel
@@ -1632,7 +1742,9 @@ eject_media   Proc far
     stosb
 ;
     call InsertSessionSel
-;    
+    clc
+
+eject_media_done:    
     pop di
     pop cx
     pop ax
@@ -1661,6 +1773,14 @@ wait_for_print   Proc far
 ;
     mov ax,SEG data
     mov ds,ax
+    test ds:kr_flag,FLAG_ATTACHED
+    stc
+    jz wait_for_print_done
+;
+    mov ax,ds:kr_session_thread
+    or ax,ax
+    stc
+    jz wait_for_print_done
 ;    
     mov cx,3
     call CreateWaitSessionSel
@@ -1676,7 +1796,9 @@ wait_for_print   Proc far
     stosb
 ;
     call InsertSessionSel
-;    
+    clc
+    
+wait_for_print_done:
     pop di
     pop cx
     pop ax
@@ -1697,8 +1819,10 @@ wait_for_print    Endp
 StatusTimeout  Proc far
     mov ax,SEG data
     mov ds,ax
-;
     mov bx,ds:kr_session_thread
+    or bx,bx
+    jz stDone
+;    
     Signal    
 ;    
     add eax,1193000 * 2 ; 2s to next call
@@ -1708,6 +1832,8 @@ StatusTimeout  Proc far
     mov edi,OFFSET StatusTimeout
     mov bx,ds:kr_session_thread
     StartTimer
+
+stDone:    
     retf32
 StatusTimeout  Endp
 
@@ -1840,7 +1966,8 @@ kr203_thread:
     mov bx,ds:kr_session_thread
     mov cx,ds       
     StartTimer
-;
+
+krRestart:
     call OpenPipes
     call ClearReceiver
 ;    
@@ -1857,16 +1984,46 @@ kr203_thread:
     mov ds,ax
     
 krLoop:
+    test ds:kr_flag,FLAG_ATTACHED
+    jz krDetached
+
+krDoSession:
     call DoSession
     call UpdateStatus
 ;    
     mov bx,ds:kr_session_list
     or bx,bx
     jnz krLoop
-;    
+
+krWait:    
     WaitForSignal
     jmp krLoop
-    
+        
+krDetached:
+    mov ax,ds:kr_session_list
+    or ax,ax
+    jz krDetachClose
+;
+    EnterSection ds:kr_section
+    mov es,ds:kr_session_list
+    mov ax,es:cs_next
+    mov ds:kr_session_list,ax
+    dec ds:kr_session_count
+    LeaveSection ds:kr_section
+;
+    call FreeSessionSel
+    jmp krDetached
+
+krDetachClose:
+    call ClosePipes
+
+krWaitAttach:
+    test ds:kr_flag,FLAG_ATTACHED
+    jnz krRestart
+;
+    WaitForSignal
+    jmp krWaitAttach        
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1895,6 +2052,7 @@ OpenPrinterPipes Proc near
     mov ds:kr_out_pipe,0
     mov ds:kr_in_pipe,0
     mov ds:kr_max_in,0
+    or ds:kr_flag,FLAG_ATTACHED
 ;
     movzx cx,es:[di].uid_len
     add di,cx
@@ -1939,6 +2097,11 @@ opDescrDone:
     or al,al
     jz opDone
 ;    
+    test ds:kr_flag,FLAG_STARTED
+    jnz opDone
+;
+    or ds:kr_flag,FLAG_STARTED    
+;
     mov dx,cs
     mov ds,dx
     mov es,dx
@@ -2057,7 +2220,11 @@ usb_attach  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 usb_detach  Proc far
-    int 3
+    mov ax,SEG data
+    mov ds,ax
+    and ds:kr_flag,NOT FLAG_ATTACHED
+    mov bx,ds:kr_session_thread
+    Signal
     retf32
 usb_detach  Endp
 
@@ -2076,6 +2243,7 @@ init    Proc far
     mov ds,ax
     InitSection ds:kr_section
     InitSection ds:kr_status_section
+    mov ds:kr_flag,0
 ;    
     mov ax,cs
     mov ds,ax
