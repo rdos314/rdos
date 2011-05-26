@@ -989,7 +989,7 @@ get_free_mem    PROC far
     push edx
     UsedLocalLinear
     mov edx,eax
-    AvailableLocalLinear
+    AvailableSmallLocalLinear
     mov eax,800000h
     add edx,eax
     shr edx,12

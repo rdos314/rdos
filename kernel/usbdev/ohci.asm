@@ -2287,6 +2287,9 @@ UpdatePort   Proc near
     or ax,ax
     jz upReclaimOk
 ;
+    verr ax
+    jnz upReclaimOk
+;    
     mov gs,ax
     mov ax,5
     WaitMilliSec

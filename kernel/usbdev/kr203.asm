@@ -37,6 +37,7 @@ MAX_OUT_SIZE = 260 * 16
 
 FLAG_ATTACHED          = 1
 FLAG_STARTED           = 2
+FLAG_CLOSED            = 4
 
 STATUS_PAPER_JAM       = 1h
 STATUS_CUTTER_JAM      = 2h
@@ -46,6 +47,7 @@ STATUS_FEED_ERROR      = 10h
 STATUS_TEMP_ERROR      = 20h
 STATUS_PAPER_LOW       = 40h
 STATUS_PAPER_PRESENTER = 80h
+STATUS_OFFLINE         = 100h
 
 ENQ = 5
 ESC = 1Bh
@@ -581,9 +583,13 @@ UpdateStatus   Proc near
     mov al,1
     stosb
 ;
+    test ds:kr_flag,FLAG_ATTACHED
+    jz dsOffline
+;    
     mov cx,3
     StartUsbReq
 ;
+    xor dx,dx
     mov bx,ds:kr_in_req
     IsUsbReqStarted
     jnc dsStatusLoop
@@ -594,6 +600,9 @@ dsStatusLoop:
     mov ax,5
     WaitMilliSec
 ;
+    test ds:kr_flag,FLAG_ATTACHED
+    jz dsOffline
+;
     mov bx,ds:kr_in_req
     IsUsbReqReady
     jc dsStatusDone
@@ -603,9 +612,17 @@ dsStatusLoop:
     call NotifyStatus
 ;
     StartUsbReq
+    mov dx,1
     jmp dsStatusLoop
 
 dsStatusDone:    
+    or dx,dx
+    jnz dsStatusOk
+
+dsOffline:    
+    or ds:kr_status,STATUS_OFFLINE
+
+dsStatusOk:
     LeaveSection ds:kr_status_section    
 ;    
     pop di
@@ -642,12 +659,13 @@ dsLoop:
     LeaveSection ds:kr_section
 ;
     test ds:kr_flag,FLAG_ATTACHED
-    jz dsFree
+    jz dsCheckRead
 ;    
     push ds
     push es
     pusha
 ;    
+    mov cx,10
     mov bx,ds:kr_out_req
     IsUsbReqStarted
     jc dsWriteDo
@@ -656,9 +674,14 @@ dsWriteWait:
     IsUsbReqReady
     jnc dsWriteDo
 ;
+    test ds:kr_flag,FLAG_ATTACHED
+    jz dsWritePop
+;
     mov ax,5
     WaitMilliSec
     loop dsWriteWait
+;
+    jmp dsWritePop
 
 dsWriteDo:
     mov ax,es
@@ -670,17 +693,22 @@ dsWriteDo:
     rep movsb
     mov cx,ds:cs_req_size
     StartUsbReq
-;
+
+dsWritePop:
     popa
     pop es
     pop ds    
-;
+
+dsCheckRead:
     mov ax,es:cs_wait
     or ax,ax
     jz dsFree
 ;
     push bx
     push cx
+;
+    test ds:kr_flag,FLAG_ATTACHED
+    jz dsSignal
 ;
     mov cx,10
 
@@ -697,6 +725,9 @@ dsReadStarted:
     mov bx,ds:kr_in_req
     IsUsbReqReady
     jnc dsGetData
+;
+    test ds:kr_flag,FLAG_ATTACHED
+    jz dsSignal
 ;
     mov ax,5
     WaitMilliSec
@@ -739,6 +770,9 @@ dsAllocReply:
     mov es:cs_reply_size,cx
 
 dsReadMore:
+    test ds:kr_flag,FLAG_ATTACHED
+    jz dsSignal
+;
     cmp cx,es:cs_reply_min
     jae dsSignal
 ;
@@ -903,9 +937,6 @@ OpenPipes   Proc near
     mov es,ds:kr_out_buffer
     AddWriteUsbDataReq
 ;
-    mov ds:kr_session_list,0
-    mov ds:kr_session_count,0
-;
     ret
 OpenPipes   Endp    
 
@@ -923,6 +954,7 @@ ClosePipes    Proc near
     mov ds,ax
     xor ax,ax
     mov es,ax
+    mov fs,ax
 ;    
     mov bx,ds:kr_in_req
     CloseUsbReq
@@ -948,6 +980,8 @@ ClosePipes    Proc near
     mov es,ds:kr_out_buffer
     FreeMem    
     mov ds:kr_out_buffer,0
+;
+    lock or ds:kr_flag,FLAG_CLOSED
     ret
 ClosePipes   Endp
 
@@ -1103,7 +1137,7 @@ is_ok   Proc far
     jz ioDone
 ;
     mov ax,ds:kr_status
-    test ax,STATUS_FEED_ERROR OR STATUS_TEMP_ERROR
+    test ax,STATUS_FEED_ERROR OR STATUS_TEMP_ERROR OR STATUS_OFFLINE
     clc
     jz ioDone
 ;
@@ -1316,6 +1350,10 @@ poWait:
 ;
     mov ax,5
     WaitMilliSec
+;
+    test ds:kr_flag,FLAG_ATTACHED
+    jz poDone
+;        
     jmp poWait
 
 poDo:
@@ -1366,7 +1404,8 @@ poCopy:
     loop poCopy
 ;        
     call InsertSessionSel
-;
+
+poDone:
     popad
     pop es
     pop ds    
@@ -1398,6 +1437,10 @@ p16Wait:
 ;
     mov ax,1
     WaitMilliSec
+;
+    test ds:kr_flag,FLAG_ATTACHED
+    jz p16Done
+;    
     jmp p16Wait
 
 p16Do:
@@ -1459,7 +1502,8 @@ p16Copy:
     jnz p16YCopy
 ;
     call InsertSessionSel
-;
+
+p16Done:
     popad
     pop es
     pop ds    
@@ -1609,6 +1653,10 @@ print_bitmap_wait:
     add ax,10
     WaitMilliSec
     xor bp,bp
+;
+    test ds:kr_flag,FLAG_ATTACHED
+    stc
+    jz print_bitmap_done
 
 print_bitmap16:
     call PrintLine16
@@ -2012,6 +2060,8 @@ krDetached:
     LeaveSection ds:kr_section
 ;
     call FreeSessionSel
+    xor ax,ax
+    mov es,ax
     jmp krDetached
 
 krDetachClose:
@@ -2052,7 +2102,10 @@ OpenPrinterPipes Proc near
     mov ds:kr_out_pipe,0
     mov ds:kr_in_pipe,0
     mov ds:kr_max_in,0
-    or ds:kr_flag,FLAG_ATTACHED
+    mov ds:kr_session_list,0
+    mov ds:kr_session_count,0
+;
+    lock or ds:kr_flag,FLAG_ATTACHED
 ;
     movzx cx,es:[di].uid_len
     add di,cx
@@ -2100,7 +2153,7 @@ opDescrDone:
     test ds:kr_flag,FLAG_STARTED
     jnz opDone
 ;
-    or ds:kr_flag,FLAG_STARTED    
+    lock or ds:kr_flag,FLAG_STARTED    
 ;
     mov dx,cs
     mov ds,dx
@@ -2220,11 +2273,42 @@ usb_attach  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 usb_detach  Proc far
-    mov ax,SEG data
-    mov ds,ax
-    and ds:kr_flag,NOT FLAG_ATTACHED
+    mov si,SEG data
+    mov ds,si
+    test ds:kr_flag,FLAG_ATTACHED
+    jz udDone
+;    
+    cmp al,byte ptr ds:kr_device
+    jne udDone
+;
+    cmp bx,ds:kr_controller
+    jne udDone
+;
+    mov ax,5
+    WaitMilliSec
+;        
+    mov cx,100
+    lock and ds:kr_flag,NOT FLAG_ATTACHED
+
+udWaitLoop:
+;    
     mov bx,ds:kr_session_thread
     Signal
+;
+    mov ax,5
+    WaitMilliSec
+;
+    test ds:kr_flag,FLAG_CLOSED
+    jnz udWaitDone
+;
+    loop udWaitLoop    
+
+udWaitDone:
+    lock and ds:kr_flag,NOT FLAG_CLOSED
+    mov ax,25
+    WaitMilliSec
+
+udDone:    
     retf32
 usb_detach  Endp
 

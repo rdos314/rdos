@@ -381,10 +381,16 @@ init_mem    PROC near
     mov ax,reserve_local_linear_nr
     RegisterOsGate
 ;
-    mov si,OFFSET available_local_linear
-    mov di,OFFSET available_local_linear_name
+    mov si,OFFSET available_small_local_linear
+    mov di,OFFSET available_small_local_linear_name
     xor dx,dx
-    mov ax,available_local_linear_nr
+    mov ax,available_small_local_linear_nr
+    RegisterBimodalUserGate
+;
+    mov si,OFFSET available_big_local_linear
+    mov di,OFFSET available_big_local_linear_name
+    xor dx,dx
+    mov ax,available_big_local_linear_nr
     RegisterBimodalUserGate
 ;
     mov si,OFFSET used_local_linear
@@ -1548,24 +1554,47 @@ available_small_linear  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           AVAILABLE_LOCAL_LINEAR
+;           NAME:           AVAILABLE_LOCAL_SMALL_LINEAR
 ;
-;           DESCRIPTION:    Available local (process) memory
+;           DESCRIPTION:    Available local small (process) memory
 ;
 ;           RETURNS:        EAX         Number of bytes
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-available_local_linear_name     DB 'Available Local Linear',0
+available_small_local_linear_name     DB 'Available Small Local Linear',0
 
-available_local_linear  PROC far
+available_small_local_linear  PROC far
     push ds
     mov ax,local_mem_sel
     mov ds,ax
     mov eax,ds:local_avail_mem
     pop ds
     retf32
-available_local_linear  ENDP
+available_small_local_linear  ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AVAILABLE_LOCAL_BIG_LINEAR
+;
+;           DESCRIPTION:    Available local big (process) memory
+;
+;           RETURNS:        EAX         Number of bytes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+available_big_local_linear_name     DB 'Available Big Local Linear',0
+
+available_big_local_linear  PROC far
+    push ds
+    mov ax,local_mem_sel
+    mov ds,ax
+    mov eax,ds:local_big_avail_mem
+    pop ds
+    retf32
+available_big_local_linear  ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

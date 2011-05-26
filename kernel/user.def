@@ -2,7 +2,7 @@
 allocate_dos_mem_nr			= 0
 allocate_local_mem_nr		= 1
 free_mem_nr					= 2
-available_local_linear_nr	= 3
+available_small_local_linear_nr	= 3
 used_local_linear_nr		= 4
 available_vm_linear_nr		= 5
 used_vm_linear_nr			= 6
@@ -522,5 +522,7 @@ eject_printer_media_nr      = 425
 wait_for_print_nr           = 426
 
 has_audio_nr                = 427
+
+available_big_local_linear_nr	= 428
 
 usergate_entries			= 430

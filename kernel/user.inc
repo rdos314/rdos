@@ -188,8 +188,13 @@ FreeMem MACRO
 						ENDM
 
 ; OUT EAX     Number of bytes
-AvailableLocalLinear    MACRO
-	UserGate available_local_linear_nr
+AvailableSmallLocalLinear    MACRO
+	UserGate available_small_local_linear_nr
+						ENDM
+
+; OUT EAX     Number of bytes
+AvailableBigLocalLinear    MACRO
+	UserGate available_big_local_linear_nr
 						ENDM
 
 ; OUT EAX     Number of bytes

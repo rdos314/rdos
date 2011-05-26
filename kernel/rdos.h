@@ -244,6 +244,8 @@ int RDOSAPI RdosGetFreePhysical();
 int RDOSAPI RdosGetFreeGdt();
 int RDOSAPI RdosGetFreeSmallKernelLinear();
 int RDOSAPI RdosGetFreeBigKernelLinear();
+int RDOSAPI RdosGetFreeSmallLocalLinear();
+int RDOSAPI RdosGetFreeBigLocalLinear();
 
 int RDOSAPI RdosGetFreeHandles();
 int RDOSAPI RdosGetFreeHandleMem();
@@ -947,6 +949,14 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosGetFreeBigKernelLinear = \
     CallGate_available_big_linear  \
+    value [eax];
+
+#pragma aux RdosGetFreeSmallLocalLinear = \
+    CallGate_available_small_local_linear  \
+    value [eax];
+
+#pragma aux RdosGetFreeBigLocalLinear = \
+    CallGate_available_big_local_linear  \
     value [eax];
 
 #pragma aux RdosGetMaxComPort = \
@@ -2997,6 +3007,14 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosGetFreeBigKernelLinear = \
     CallGate_available_big_linear  \
+    value [eax];
+
+#pragma aux RdosGetFreeSmallLocalLinear = \
+    CallGate_available_small_local_linear  \
+    value [eax];
+
+#pragma aux RdosGetFreeBigLocalLinear = \
+    CallGate_available_big_local_linear  \
     value [eax];
 
 #pragma aux RdosGetMaxComPort = \

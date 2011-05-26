@@ -633,11 +633,15 @@ trap_usb_attach PROC near
 
 trap_attach_loop:
     push ds
-    push si
+    push ax
+    push bx
     push cx
+    push si
     call fword ptr [si]
-    pop cx
     pop si
+    pop cx
+    pop bx
+    pop ax
     pop ds
 ;       
     add si,8
@@ -678,11 +682,15 @@ trap_usb_detach PROC near
 
 trap_detach_loop:
     push ds
-    push si
+    push ax
+    push bx
     push cx
+    push si
     call fword ptr [si]
-    pop cx
     pop si
+    pop cx
+    pop bx
+    pop ax
     pop ds
 ;       
     add si,8

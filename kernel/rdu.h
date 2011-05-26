@@ -3,7 +3,7 @@
 #define CallGate_allocate_dos_mem 0x67 0x9a 0 0 0 0 3 0
 #define CallGate_allocate_local_mem 0x67 0x9a 1 0 0 0 3 0
 #define CallGate_free_mem 0x67 0x9a 2 0 0 0 3 0
-#define CallGate_available_local_linear 0x67 0x9a 3 0 0 0 3 0
+#define CallGate_available_small_local_linear 0x67 0x9a 3 0 0 0 3 0
 #define CallGate_used_local_linear 0x67 0x9a 4 0 0 0 3 0
 #define CallGate_available_vm_linear 0x67 0x9a 5 0 0 0 3 0
 #define CallGate_used_vm_linear 0x67 0x9a 6 0 0 0 3 0
@@ -67,7 +67,6 @@
 #define CallGate_free_app_mem 0x67 0x9a 58 0 0 0 3 0
 #define CallGate_get_psp_sel 0x67 0x9a 59 0 0 0 3 0
 
-#define CallGate_get_debug_tss 0x67 0x9a 60 0 0 0 3 0
 #define CallGate_get_debug_thread 0x67 0x9a 61 0 0 0 3 0
 #define CallGate_debug_trace 0x67 0x9a 62 0 0 0 3 0
 #define CallGate_debug_pace 0x67 0x9a 63 0 0 0 3 0
@@ -467,7 +466,7 @@
 
 #define CallGate_fork 0x67 0x9a 130 1 0 0 3 0
 
-#define CallGate_get_processor_id 0x67 0x9a 131 1 0 0 3 0
+#define CallGate_get_core_id 0x67 0x9a 131 1 0 0 3 0
 
 #define CallGate_create_user_read_write_section 0x67 0x9a 132 1 0 0 3 0
 #define CallGate_delete_user_read_write_section 0x67 0x9a 133 1 0 0 3 0
@@ -525,12 +524,14 @@
 
 #define CallGate_has_audio 0x67 0x9a 171 1 0 0 3 0
 
+#define CallGate_available_big_local_linear 0x67 0x9a 172 1 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
 #define CallGate_allocate_local_mem 0x3e 0x67 0x9a 1 0 0 0 3 0
 #define CallGate_free_mem 0x3e 0x67 0x9a 2 0 0 0 3 0
-#define CallGate_available_local_linear 0x3e 0x67 0x9a 3 0 0 0 3 0
+#define CallGate_available_small_local_linear 0x3e 0x67 0x9a 3 0 0 0 3 0
 #define CallGate_used_local_linear 0x3e 0x67 0x9a 4 0 0 0 3 0
 #define CallGate_available_vm_linear 0x3e 0x67 0x9a 5 0 0 0 3 0
 #define CallGate_used_vm_linear 0x3e 0x67 0x9a 6 0 0 0 3 0
@@ -594,7 +595,6 @@
 #define CallGate_free_app_mem 0x3e 0x67 0x9a 58 0 0 0 3 0
 #define CallGate_get_psp_sel 0x3e 0x67 0x9a 59 0 0 0 3 0
 
-#define CallGate_get_debug_tss 0x3e 0x67 0x9a 60 0 0 0 3 0
 #define CallGate_get_debug_thread 0x3e 0x67 0x9a 61 0 0 0 3 0
 #define CallGate_debug_trace 0x3e 0x67 0x9a 62 0 0 0 3 0
 #define CallGate_debug_pace 0x3e 0x67 0x9a 63 0 0 0 3 0
@@ -994,7 +994,7 @@
 
 #define CallGate_fork 0x3e 0x67 0x9a 130 1 0 0 3 0
 
-#define CallGate_get_processor_id 0x3e 0x67 0x9a 131 1 0 0 3 0
+#define CallGate_get_core_id 0x3e 0x67 0x9a 131 1 0 0 3 0
 
 #define CallGate_create_user_read_write_section 0x3e 0x67 0x9a 132 1 0 0 3 0
 #define CallGate_delete_user_read_write_section 0x3e 0x67 0x9a 133 1 0 0 3 0
@@ -1051,5 +1051,7 @@
 #define CallGate_wait_for_print 0x3e 0x67 0x9a 170 1 0 0 3 0
 
 #define CallGate_has_audio 0x3e 0x67 0x9a 171 1 0 0 3 0
+
+#define CallGate_available_big_local_linear 0x3e 0x67 0x9a 172 1 0 0 3 0
 
 #endif
