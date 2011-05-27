@@ -20,70 +20,53 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# acpi.c
-# ACPI device
+# osacpi.c
+# OS interface for ACPI
 #
 ########################################################################*/
 
 #include "rdos.h"
 #include "rdosdev.h"
-#include "string.h"
+#include "acpi.h"
+#include "acpiosxf.h"
 
-#include "malloc.h"
-
-typedef void thread_fn( void * );
-
-typedef struct thread_args {
-    thread_fn   *rtn;
-    void        *argument;
-    int         signal;
-    int         tid;
-} thread_args;
-
-void TestThread(void *param)
+/*##########################################################################
+#
+#   Name       : AcpiOsInitialize
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsInitialize()
 {
+    return AE_OK;
 }
 
-#pragma aux begin_thread_helper "*" \
-                  parm caller [gs ebx] \
-                  value struct routine [eax] \
-                  modify [eax ebx ecx edx esi edi]
-
-static void __far begin_thread_helper( void *param )
+/*##########################################################################
+#
+#   Name       : AcpiOsTerminate
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsTerminate()
 {
-    thread_args         *td = (thread_args *)param;
-    thread_fn           *rtn;
-    void                *arg;
-
-    td->tid = RdosGetThreadHandle();    
-    rtn = td->rtn;
-    arg = td->argument;
-    RdosSignal( td->signal );
-
-    (*rtn)( arg );
-     return;
+    return AE_OK;
 }
 
-int main()
+/*##########################################################################
+#
+#   Name       : AcpiOsPredefinedOverride
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsPredefinedOverride(const ACPI_PREDEFINED_NAMES *Obj, ACPI_STRING *NewValue)
 {
-    thread_args         *td;
-    void                *arglist = 0;
+    return AE_OK;
+}
 
-    td = malloc( sizeof( *td ) );
-    if( td == NULL ) {
-        return( -1L );
-    }
-
-    td->rtn = &TestThread;
-    td->argument = arglist;
-    td->signal = RdosGetThreadHandle();
-    RdosClearSignal();
-
-    RdosCreateKernelThread( 5, 0x1000, begin_thread_helper, "Test thread", td );
-
-    RdosWaitForSignal();
-    free( td );
-
-    return 0;
+/*##########################################################################
+#
+#   Name       : AcpiOsTableOverride
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsTableOverride(ACPI_TABLE_HEADER *Table, ACPI_TABLE_HEADER **NewTable)
+{
+    return AE_OK;
 }
 
