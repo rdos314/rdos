@@ -136,7 +136,7 @@ int main()
     RdosSyncTime(NtpIp);
 
     vbe = new TVideoGraphicDevice(32, 1280, 768);
-    control = new TControlThread("Control", vbe);
+    control = new TDisplayControlThread("Control", vbe);
     vbe->SetFont(&Font);
 
     bitmap = TJpegBitmapDevice::Create("d:\\heat\\back.jpg");

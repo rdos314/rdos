@@ -184,7 +184,7 @@ pic_int_req2:
     Signal
     
 pic_int_not_req2:    
-    ret
+    retf32
 pic_int Endp
 
 
@@ -1092,7 +1092,7 @@ PicTimeout1     Proc far
     or ds:ResetFlag,1
     mov bx,ds:PicThread0
         Signal
-        ret
+        retf32
 PicTimeout1     Endp
 
 
@@ -1168,7 +1168,7 @@ ptNoReset1:
         adc edx,0
         mov bx,cs
         mov es,bx
-        mov di,OFFSET PicTimeout1
+        mov edi,OFFSET PicTimeout1
         mov bx,ds:PicThread0
         StopTimer
         StartTimer
@@ -1192,7 +1192,7 @@ PicTimeout2     Proc far
     or ds:ResetFlag,2
     mov bx,ds:PicThread1
         Signal
-        ret
+        retf32
 PicTimeout2     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1267,7 +1267,7 @@ ptNoReset2:
         adc edx,0
         mov bx,cs
         mov es,bx
-        mov di,OFFSET PicTimeout2
+        mov edi,OFFSET PicTimeout2
         mov bx,ds:PicThread1
         StopTimer
         StartTimer
@@ -1985,7 +1985,7 @@ InitDriver  Proc far
         mov ds,bx
         mov bx,cs
         mov es,bx
-        mov di,OFFSET pic_int
+        mov edi,OFFSET pic_int
         RequestPrivateIrqHandler
 ;
     cli
@@ -2035,7 +2035,7 @@ InitDriver  Proc far
     popad
     pop es
     pop ds
-    ret
+    retf32
 InitDriver  Endp
 
 
@@ -2097,7 +2097,7 @@ init    PROC far
         mov ax,cs
         mov ds,ax
         mov es,ax
-        mov di,OFFSET InitDriver
+        mov edi,OFFSET InitDriver
         HookInitTasking
 ;
         mov esi,OFFSET open_icsp

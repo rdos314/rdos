@@ -242,6 +242,7 @@ void TCirc::Execute()
 {
 	int min, sec;
 	int ms, us;
+	int year, month, day, hour;
 	unsigned long msb, lsb;
 	int LastMin;
 	int i;
@@ -268,6 +269,7 @@ void TCirc::Execute()
 	{
 		RdosGetTime(&msb, &lsb);
 		RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
+		RdosDecodeMsbTics(lsb, &year, &month, &day, &hour);
 
 		if (min != LastMin)
 		{
@@ -289,6 +291,9 @@ void TCirc::Execute()
 
 			if (FSpeed > 9.9)
 			    FSpeed = 9.9;
+
+            if (month >= 6 && month <= 8)
+                FSpeed = 9.9;
 
             if (MotorCount)
             {
