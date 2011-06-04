@@ -56,14 +56,14 @@ TCirc::TCirc(TGraphicDevice *dev)
 {
     int i, j;
     int SetArr[MAX_FUZZY_VARS];
-	int RuleArr[5][3] =
+        int RuleArr[5][3] =
                 {
                     {3, 4, 4},
                     {2, 3, 4},
                     {2, 2, 2},
                     {1, 1, 1},
                     {0, 0, 0},
-				};
+                                };
 
     FMotorVar.Add(0, new TLowFuzzySet(25.0, 50.0));
     FMotorVar.Add(1, new TMidFuzzySet(25.0, 50.0, 75.0));
@@ -86,7 +86,7 @@ TCirc::TCirc(TGraphicDevice *dev)
 
     for (i = 0; i < 5; i++)
     {
-		for (j = 0; j < 3; j++)
+                for (j = 0; j < 3; j++)
         {
             SetArr[0] = j;
             SetArr[1] = i;
@@ -97,9 +97,9 @@ TCirc::TCirc(TGraphicDevice *dev)
     FMotorVar.SetInputValue(0.0);
     FTempDiffVar.SetInputValue(0.0);
 
-	vbe = new TGraphicDevice(*dev);
+        vbe = new TGraphicDevice(*dev);
 
-	Start("Circ", 0x2000);
+        Start("Circ", 0x2000);
 }
 
 /*##########################################################################
@@ -131,7 +131,7 @@ TCirc::~TCirc()
 ##########################################################################*/
 void TCirc::DeviceName(char *Name, int Size) const
 {
-	strcpy(Name, "CIRC");
+        strcpy(Name, "CIRC");
 }
 
 /*##########################################################################
@@ -204,7 +204,7 @@ long double TCirc::ReadCircValve()
     int Valve;
 
     RdosReadSerialVal(2, 2, &Valve);
-	return (long double)Valve / 0x7FFFFFFF * 10.0;
+        return (long double)Valve / 0x7FFFFFFF * 10.0;
 }
 
 /*##########################################################################
@@ -219,13 +219,13 @@ long double TCirc::ReadCircValve()
 ##########################################################################*/
 void TCirc::WriteCircValve(long double value)
 {
-	int temp;
+        int temp;
 
-	temp = (int)(value / 10.0 * (long double)0x7FFFFFFF);
-	if (temp < 0)
-		temp = 0x7FFFFFFF;
+        temp = (int)(value / 10.0 * (long double)0x7FFFFFFF);
+        if (temp < 0)
+                temp = 0x7FFFFFFF;
 
-	RdosWriteSerialVal(2, 2, temp);
+        RdosWriteSerialVal(2, 2, temp);
 }
 
 /*##########################################################################
@@ -240,85 +240,86 @@ void TCirc::WriteCircValve(long double value)
 ##########################################################################*/
 void TCirc::Execute()
 {
-	int min, sec;
-	int ms, us;
-	int year, month, day, hour;
-	unsigned long msb, lsb;
-	int LastMin;
-	int i;
-	long double ValArr[MAX_FUZZY_VARS];
-	long double val;
-	 char str[50];
-	TFont font(10);
+        int min, sec;
+        int ms, us;
+        int year, month, day, hour;
+        unsigned long msb, lsb;
+        int LastMin;
+        int i;
+        long double ValArr[MAX_FUZZY_VARS];
+        long double val;
+         char str[50];
+        TFont font(10);
 
-	vbe->SetFont(&font);
+        vbe->SetFont(&font);
 
-	MotorSum = 0;
-	MotorCount = 0;
-	TempSum = 0;
-	TempCount = 0;
+        MotorSum = 0;
+        MotorCount = 0;
+        TempSum = 0;
+        TempCount = 0;
 
-	for (i = 0; i < MAX_FUZZY_VARS; i++)
-		ValArr[i] = 0.0;
+        for (i = 0; i < MAX_FUZZY_VARS; i++)
+                ValArr[i] = 0.0;
 
-	FSpeed = ReadCircValve();
-	RdosGetTime(&msb, &lsb);
-	RdosDecodeLsbTics(lsb, &LastMin, &sec, &ms, &us);
+        FSpeed = ReadCircValve();
+        RdosGetTime(&msb, &lsb);
+        RdosDecodeLsbTics(lsb, &LastMin, &sec, &ms, &us);
 
-	while (FInstalled)
-	{
-		RdosGetTime(&msb, &lsb);
-		RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
-		RdosDecodeMsbTics(lsb, &year, &month, &day, &hour);
+        while (FInstalled)
+        {
+                RdosGetTime(&msb, &lsb);
+                RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
+                RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
 
-		if (min != LastMin)
-		{
-			LastMin = min;
+                if (min != LastMin)
+                {
+                        LastMin = min;
 
-			FSection.Enter();
+                        FSection.Enter();
 
-			if (MotorCount)
-				ValArr[0] = (long double)MotorSum / (long double)MotorCount / 10.0;
+                        if (MotorCount)
+                                ValArr[0] = (long double)MotorSum / (long double)MotorCount / 10.0;
 
-			if (TempCount)
-				ValArr[1] = (long double)TempSum / (long double)TempCount / 10.0;
+                        if (TempCount)
+                                ValArr[1] = (long double)TempSum / (long double)TempCount / 10.0;
 
-			val = Calc(ValArr);
-			FSpeed += val;
-			
-			if (FSpeed < 0.0)
-			    FSpeed = 0.0;
+                        val = Calc(ValArr);
+                        FSpeed += val;
+                        
+                        if (FSpeed < 0.0)
+                            FSpeed = 0.0;
 
-			if (FSpeed > 9.9)
-			    FSpeed = 9.9;
+                        if (FSpeed > 9.9)
+                            FSpeed = 9.9;
 
-            if (month >= 6 && month <= 8)
-                FSpeed = 9.9;
 
             if (MotorCount)
             {
-	    		FSpeed = (long double)MotorSum / (long double)MotorCount / 10.0;
-    			    
-    			WriteCircValve(FSpeed);
-    	    }
+                        if (month >= 6 && month <= 8)
+                            FSpeed = 9.9;
+                        else
+                            FSpeed = (long double)MotorSum / (long double)MotorCount / 10.0;
+                            
+                        WriteCircValve(FSpeed);
+            }
 
-			MotorSum = 0;
-			MotorCount = 0;
-			TempSum = 0;
-			TempCount = 0;
+                        MotorSum = 0;
+                        MotorCount = 0;
+                        TempSum = 0;
+                        TempCount = 0;
 
-			FSection.Leave();
-    			
-    		sprintf(str, "Circ: %4.1Lf V", FSpeed);
+                        FSection.Leave();
+                        
+                sprintf(str, "Circ: %4.1Lf V", FSpeed);
 
-	    	vbe->SetFilledStyle();
-           	vbe->SetDrawColor(0, 0, 0);
-	        vbe->DrawRect(550, 316, 550 + 100, 316 + 16);
-		
-        	vbe->SetDrawColor(255, 255, 255);
-        	vbe->DrawString(550, 316, str);
-		}
+                vbe->SetFilledStyle();
+                vbe->SetDrawColor(0, 0, 0);
+                vbe->DrawRect(550, 316, 550 + 100, 316 + 16);
+                
+                vbe->SetDrawColor(255, 255, 255);
+                vbe->DrawString(550, 316, str);
+                }
 
-		RdosWaitMilli(1000);
-	}
+                RdosWaitMilli(1000);
+        }
 }
