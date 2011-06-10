@@ -525,4 +525,9 @@ has_audio_nr                = 427
 
 available_big_local_linear_nr	= 428
 
-usergate_entries			= 430
+get_allocated_usb_blocks_nr     = 429
+get_reclaimed_usb_blocks_nr     = 430
+get_alloc_usb_blocks_nr         = 431
+get_free_usb_blocks_nr          = 432
+
+usergate_entries			= 440

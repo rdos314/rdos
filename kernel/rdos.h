@@ -591,6 +591,11 @@ void RDOSAPI RdosWriteUsbStatus(int Handle);
 int RDOSAPI RdosIsUsbTransactionDone(int Handle);
 int RDOSAPI RdosWasUsbTransactionOk(int Handle);
 
+int RDOSAPI RdosGetAllocatedUsbBlocks();
+int RDOSAPI RdosGetReclaimedUsbBlocks();
+int RDOSAPI RdosGetAllocUsbBlocks();
+int RDOSAPI RdosGetFreeUsbBlocks();
+
 int RDOSAPI RdosOpenICSP(int DeviceID);
 void RDOSAPI RdosCloseICSP(int Handle);
 int RDOSAPI RdosWriteICSPCommand(int Handle, int Cmd);
@@ -2612,6 +2617,22 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     parm [ebx] \
     value [eax];
 
+#pragma aux RdosGetAllocatedUsbBlocks = \
+    CallGate_get_allocated_usb_blocks \
+    value [eax];
+
+#pragma aux RdosGetReclaimedUsbBlocks = \
+    CallGate_get_reclaimed_usb_blocks \
+    value [eax];
+
+#pragma aux RdosGetAllocUsbBlocks = \
+    CallGate_get_alloc_usb_blocks \
+    value [eax];
+
+#pragma aux RdosGetFreeUsbBlocks = \
+    CallGate_get_free_usb_blocks \
+    value [eax];
+
 #pragma aux RdosOpenICSP = \
     CallGate_open_icsp \
     ValidateHandle \
@@ -4560,6 +4581,22 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_was_usb_trans_ok \
     CarryToBool \
     parm [ebx] \
+    value [eax];
+
+#pragma aux RdosGetAllocatedUsbBlocks = \
+    CallGate_get_allocated_usb_blocks \
+    value [eax];
+
+#pragma aux RdosGetReclaimedUsbBlocks = \
+    CallGate_get_reclaimed_usb_blocks \
+    value [eax];
+
+#pragma aux RdosGetAllocUsbBlocks = \
+    CallGate_get_alloc_usb_blocks \
+    value [eax];
+
+#pragma aux RdosGetFreeUsbBlocks = \
+    CallGate_get_free_usb_blocks \
     value [eax];
 
 #pragma aux RdosOpenICSP = \
