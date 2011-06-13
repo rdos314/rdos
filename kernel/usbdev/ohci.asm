@@ -188,6 +188,8 @@ OhciUsedBlocks  DD ?
 OhciReclaimed   DD ?
 OhciAllocBlocks DD ?
 OhciFreeBlocks  DD ?
+OhciSignalled   DD ?
+OhciCloseCount  DD ?
 OhciList32      DD ?
 OhciSection     section_typ <>
 OhciThread      DW ?
@@ -1826,7 +1828,8 @@ EndTransfer   Proc far
     mov es,ax
 ;    
     xor bp,bp
-    mov edx,fs:osp_data_list
+    xor edx,edx
+    xchg edx,fs:osp_data_list
 
 etLoop:
     mov ax,es:[edx].otd_flags
@@ -1860,7 +1863,6 @@ etNext:
     jnz etLoop
 ;
     mov fs:osp_data_size,bp
-    mov fs:osp_data_list,0
     or fs:osp_flags, OSP_FLAG_TRANSFER_OK
 
 etReset:
@@ -1918,6 +1920,12 @@ GetDataSize   Endp
 ClosePipe   Proc far
     push es
     pushad
+;    
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    inc ds:OhciCloseCount
+    pop ds
 ;    
     call RemovePipe
 ;
@@ -2215,6 +2223,7 @@ update_reverse_loop:
     or ax,803h
     mov edx,ds:ohc_map_linear
     SetPhysicalPage
+;    
     mov edx,fs:[bx].otd_my_va
 ;
     mov ax,es:[edx].otd_pipe_sel
@@ -2225,6 +2234,12 @@ update_insert_pipe:
     mov gs,ax
     test gs:osp_flags, OSP_FLAG_TRANSFER_PENDING
     jz update_insert_reclaim
+;
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    inc ds:OhciSignalled
+    pop ds
 ;    
     mov ecx,gs:osp_data_list
     mov es:[edx].otd_next_va,ecx
@@ -2759,6 +2774,8 @@ ohci_thread     proc far
     mov ds:OhciReclaimed,0
     mov ds:OhciAllocBlocks,0
     mov ds:OhciFreeBlocks,0
+    mov ds:OhciSignalled,0
+    mov ds:OhciCloseCount,0
 ;    
     call InitPciAdapter
     mov cx,ds:OhciFuncCount
@@ -2923,6 +2940,54 @@ get_free_usb_blocks    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetSignalledUsbBlocks
+;
+;           DESCRIPTION:    Get signalled USB blocks
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        EAX     Number of blocks
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_signalled_usb_blocks_name       DB 'Get Signalled USB Blocks',0
+
+get_signalled_usb_blocks    Proc far
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    mov eax,ds:OhciSignalled
+    pop ds
+    retf32
+get_signalled_usb_blocks    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetUsbClosedCount
+;
+;           DESCRIPTION:    Get closed count
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        EAX     Number of blocks
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_usb_close_count_name       DB 'Get USB Close Count',0
+
+get_usb_close_count    Proc far
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    mov eax,ds:OhciCloseCount
+    pop ds
+    retf32
+get_usb_close_count    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Init
 ;
 ;           DESCRIPTION:    init device
@@ -2970,6 +3035,18 @@ Init    Proc far
     mov edi,OFFSET get_free_usb_blocks_name
     xor dx,dx
     mov ax,get_free_usb_blocks_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_signalled_usb_blocks
+    mov edi,OFFSET get_signalled_usb_blocks_name
+    xor dx,dx
+    mov ax,get_signalled_usb_blocks_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_usb_close_count
+    mov edi,OFFSET get_usb_close_count_name
+    xor dx,dx
+    mov ax,get_usb_close_count_nr
     RegisterBimodalUserGate
 ;
     clc

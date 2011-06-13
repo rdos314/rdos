@@ -529,5 +529,7 @@ get_allocated_usb_blocks_nr     = 429
 get_reclaimed_usb_blocks_nr     = 430
 get_alloc_usb_blocks_nr         = 431
 get_free_usb_blocks_nr          = 432
+get_signalled_usb_blocks_nr     = 433
+get_usb_close_count_nr          = 434
 
 usergate_entries			= 440

@@ -1356,6 +1356,7 @@ surStart:
     mov ax,ds:[ebx].rh_list
     mov fs,ds:[ebx].rh_pipe_sel
     mov ds,ds:[ebx].rh_func_sel
+    call ds:end_transfer_proc
 
 surReqLoop:
     or ax,ax

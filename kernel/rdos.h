@@ -595,6 +595,8 @@ int RDOSAPI RdosGetAllocatedUsbBlocks();
 int RDOSAPI RdosGetReclaimedUsbBlocks();
 int RDOSAPI RdosGetAllocUsbBlocks();
 int RDOSAPI RdosGetFreeUsbBlocks();
+int RDOSAPI RdosGetSignalledUsbBlocks();
+int RDOSAPI RdosGetUsbCloseCount();
 
 int RDOSAPI RdosOpenICSP(int DeviceID);
 void RDOSAPI RdosCloseICSP(int Handle);
@@ -2633,6 +2635,14 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_get_free_usb_blocks \
     value [eax];
 
+#pragma aux RdosGetSignalledUsbBlocks = \
+    CallGate_get_signalled_usb_blocks \
+    value [eax];
+
+#pragma aux RdosGetUsbCloseCount = \
+    CallGate_get_usb_close_count \
+    value [eax];
+
 #pragma aux RdosOpenICSP = \
     CallGate_open_icsp \
     ValidateHandle \
@@ -4597,6 +4607,14 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosGetFreeUsbBlocks = \
     CallGate_get_free_usb_blocks \
+    value [eax];
+
+#pragma aux RdosGetSignalledUsbBlocks = \
+    CallGate_get_signalled_usb_blocks \
+    value [eax];
+
+#pragma aux RdosGetUsbCloseCount = \
+    CallGate_get_usb_close_count \
     value [eax];
 
 #pragma aux RdosOpenICSP = \
