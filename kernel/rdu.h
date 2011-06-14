@@ -527,11 +527,7 @@
 #define CallGate_available_big_local_linear 0x67 0x9a 172 1 0 0 3 0
 
 #define CallGate_get_allocated_usb_blocks 0x67 0x9a 173 1 0 0 3 0
-#define CallGate_get_reclaimed_usb_blocks 0x67 0x9a 174 1 0 0 3 0
-#define CallGate_get_alloc_usb_blocks 0x67 0x9a 175 1 0 0 3 0
-#define CallGate_get_free_usb_blocks 0x67 0x9a 176 1 0 0 3 0
-#define CallGate_get_signalled_usb_blocks 0x67 0x9a 177 1 0 0 3 0
-#define CallGate_get_usb_close_count 0x67 0x9a 178 1 0 0 3 0
+#define CallGate_get_usb_close_count 0x67 0x9a 174 1 0 0 3 0
 
 #else
 
@@ -1062,10 +1058,6 @@
 #define CallGate_available_big_local_linear 0x3e 0x67 0x9a 172 1 0 0 3 0
 
 #define CallGate_get_allocated_usb_blocks 0x3e 0x67 0x9a 173 1 0 0 3 0
-#define CallGate_get_reclaimed_usb_blocks 0x3e 0x67 0x9a 174 1 0 0 3 0
-#define CallGate_get_alloc_usb_blocks 0x3e 0x67 0x9a 175 1 0 0 3 0
-#define CallGate_get_free_usb_blocks 0x3e 0x67 0x9a 176 1 0 0 3 0
-#define CallGate_get_signalled_usb_blocks 0x3e 0x67 0x9a 177 1 0 0 3 0
-#define CallGate_get_usb_close_count 0x3e 0x67 0x9a 178 1 0 0 3 0
+#define CallGate_get_usb_close_count 0x3e 0x67 0x9a 174 1 0 0 3 0
 
 #endif

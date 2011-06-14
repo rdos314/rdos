@@ -140,11 +140,13 @@ uhci_qh ENDS
 
 data    SEGMENT byte public 'DATA'
 
-UhciList32   DD ?
-UhciSection  section_typ <>
-UhciThread   DW ?
-UhciCount    DW ?
-UhciFunc     DW 16 DUP (?)
+UhciUsedBlocks  DD ?
+UhciCloseCount  DD ?
+UhciList32      DD ?
+UhciSection     section_typ <>
+UhciThread      DW ?
+UhciCount       DW ?
+UhciFunc        DW 16 DUP (?)
 
 data    ENDS
 
@@ -270,6 +272,7 @@ AllocateBlock32 PROC near
     mov ax,SEG data
     mov ds,ax
     EnterSection ds:UhciSection
+    inc ds:UhciUsedBlocks
     mov edx,ds:UhciList32
     or edx,edx
     jnz allocate_block32_done
@@ -325,6 +328,7 @@ FreeBlock32     PROC near
     mov ds,ax
 ;    
     EnterSection ds:UhciSection
+    dec ds:UhciUsedBlocks
     mov eax,ds:UhciList32
     mov es:[edx],eax
     mov ds:UhciList32,edx
@@ -2100,6 +2104,12 @@ ClosePipe   Proc far
     push eax
     push edx
 ;    
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    inc ds:UhciCloseCount
+    pop ds
+;    
     call RemovePipe
 ;
     mov al,fs:usbp_mode
@@ -2808,6 +2818,54 @@ init_usb    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetAllocatedUsbBlocks
+;
+;           DESCRIPTION:    Get allocated USB blocks
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        EAX     Number of blocks
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_allocated_usb_blocks_name       DB 'Get Allocated USB Blocks',0
+
+get_allocated_usb_blocks    Proc far
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    mov eax,ds:UhciUsedBlocks
+    pop ds
+    retf32
+get_allocated_usb_blocks    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetUsbClosedCount
+;
+;           DESCRIPTION:    Get closed count
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        EAX     Number of blocks
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_usb_close_count_name       DB 'Get USB Close Count',0
+
+get_usb_close_count    Proc far
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    mov eax,ds:UhciCloseCount
+    pop ds
+    retf32
+get_usb_close_count    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Init
 ;
 ;           DESCRIPTION:    init device
@@ -2822,11 +2880,26 @@ Init    Proc far
     mov bx,SEG data
     mov ds,bx
     InitSection ds:UhciSection
+    mov ds:UhciUsedBlocks,0
+    mov ds:UhciCloseCount,0
 ;
     mov ax,cs
+    mov ds,ax
     mov es,ax
     mov edi,OFFSET init_usb
     HookInitTasking
+;
+    mov esi,OFFSET get_allocated_usb_blocks
+    mov edi,OFFSET get_allocated_usb_blocks_name
+    xor dx,dx
+    mov ax,get_allocated_usb_blocks_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_usb_close_count
+    mov edi,OFFSET get_usb_close_count_name
+    xor dx,dx
+    mov ax,get_usb_close_count_nr
+    RegisterBimodalUserGate
     clc
     ret
 Init    Endp

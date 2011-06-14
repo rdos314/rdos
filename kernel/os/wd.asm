@@ -38,8 +38,8 @@ FAULT_SIGN  EQU 0AC92BE63h
 fault_sector_seg STRUC
 
 fss_sign        DD ?
-fss_state           state_struc <>
-fss_tss         thread_seg <>
+fss_state       state_struc <>
+fss_tss         DD ?
 
 fault_sector_seg ENDS
 
@@ -174,8 +174,9 @@ kw_save_loop:
     mov es:fss_state.st_sel,0
 ;
     push cx
-    mov cx,SIZE thread_seg
-    xor si,si
+    mov cx,OFFSET p_tss_end
+    mov si,OFFSET p_tss_cr3
+    sub cx,si
     mov di,OFFSET fss_tss
     rep movsb
     pop cx
@@ -486,7 +487,7 @@ get_fault_thread_tss    PROC near
     mov ax,fs
     mov es,ax
     mov edi,ebp
-    mov ecx,SIZE thread_seg
+    mov ecx,OFFSET p_tss_end
     rep movs byte ptr es:[edi],ds:[esi]
     clc
     jmp gftEnd    

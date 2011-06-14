@@ -68,13 +68,14 @@ typedef struct Tss
     long ebp;
     long esi;
     long edi;
-    short int es;
-    short int cs;
-    short int ss;
-    short int ds;
-    short int fs;
-    short int gs;
-    short int ldt;
+    long es;
+    long cs;
+    long ss;
+    long ds;
+    long fs;
+    long gs;
+    long ldt;
+    long t_bitmap;
     long dr[4];
     long dr7;
     long MathControl;
@@ -82,8 +83,10 @@ typedef struct Tss
     long MathTag;
     long MathEip;
     short int MathCs;
+    char MathOp[2];
     long MathDataOffs;
     short int MathDataSel;
+    char MathResv[2];
     long double st[8];
     char WcSpace[16];
 } Tss;
@@ -592,10 +595,6 @@ int RDOSAPI RdosIsUsbTransactionDone(int Handle);
 int RDOSAPI RdosWasUsbTransactionOk(int Handle);
 
 int RDOSAPI RdosGetAllocatedUsbBlocks();
-int RDOSAPI RdosGetReclaimedUsbBlocks();
-int RDOSAPI RdosGetAllocUsbBlocks();
-int RDOSAPI RdosGetFreeUsbBlocks();
-int RDOSAPI RdosGetSignalledUsbBlocks();
 int RDOSAPI RdosGetUsbCloseCount();
 
 int RDOSAPI RdosOpenICSP(int DeviceID);
@@ -2623,22 +2622,6 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_get_allocated_usb_blocks \
     value [eax];
 
-#pragma aux RdosGetReclaimedUsbBlocks = \
-    CallGate_get_reclaimed_usb_blocks \
-    value [eax];
-
-#pragma aux RdosGetAllocUsbBlocks = \
-    CallGate_get_alloc_usb_blocks \
-    value [eax];
-
-#pragma aux RdosGetFreeUsbBlocks = \
-    CallGate_get_free_usb_blocks \
-    value [eax];
-
-#pragma aux RdosGetSignalledUsbBlocks = \
-    CallGate_get_signalled_usb_blocks \
-    value [eax];
-
 #pragma aux RdosGetUsbCloseCount = \
     CallGate_get_usb_close_count \
     value [eax];
@@ -4591,26 +4574,6 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_was_usb_trans_ok \
     CarryToBool \
     parm [ebx] \
-    value [eax];
-
-#pragma aux RdosGetAllocatedUsbBlocks = \
-    CallGate_get_allocated_usb_blocks \
-    value [eax];
-
-#pragma aux RdosGetReclaimedUsbBlocks = \
-    CallGate_get_reclaimed_usb_blocks \
-    value [eax];
-
-#pragma aux RdosGetAllocUsbBlocks = \
-    CallGate_get_alloc_usb_blocks \
-    value [eax];
-
-#pragma aux RdosGetFreeUsbBlocks = \
-    CallGate_get_free_usb_blocks \
-    value [eax];
-
-#pragma aux RdosGetSignalledUsbBlocks = \
-    CallGate_get_signalled_usb_blocks \
     value [eax];
 
 #pragma aux RdosGetUsbCloseCount = \

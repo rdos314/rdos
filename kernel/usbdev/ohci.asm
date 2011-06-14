@@ -185,10 +185,6 @@ hcca_struc  ENDS
 data    SEGMENT byte public 'DATA'
 
 OhciUsedBlocks  DD ?
-OhciReclaimed   DD ?
-OhciAllocBlocks DD ?
-OhciFreeBlocks  DD ?
-OhciSignalled   DD ?
 OhciCloseCount  DD ?
 OhciList32      DD ?
 OhciSection     section_typ <>
@@ -270,7 +266,6 @@ AllocateBlock32 PROC near
     mov ds,ax
     EnterSection ds:OhciSection
     inc ds:OhciUsedBlocks
-    inc ds:OhciAllocBlocks
     mov edx,ds:OhciList32
     or edx,edx
     jnz allocate_block32_done
@@ -327,7 +322,6 @@ FreeBlock32     PROC near
 ;    
     EnterSection ds:OhciSection
     dec ds:OhciUsedBlocks
-    inc ds:OhciFreeBlocks
     mov eax,ds:OhciList32
     mov es:[edx],eax
     mov ds:OhciList32,edx
@@ -2234,12 +2228,6 @@ update_insert_pipe:
     mov gs,ax
     test gs:osp_flags, OSP_FLAG_TRANSFER_PENDING
     jz update_insert_reclaim
-;
-    push ds
-    mov ax,SEG data
-    mov ds,ax
-    inc ds:OhciSignalled
-    pop ds
 ;    
     mov ecx,gs:osp_data_list
     mov es:[edx].otd_next_va,ecx
@@ -2251,12 +2239,6 @@ update_insert_pipe:
     jmp update_reverse_next
 
 update_insert_reclaim:
-    push ds
-    mov ax,SEG data
-    mov ds,ax
-    inc ds:OhciReclaimed
-    pop ds
-;    
     mov ecx,ds:ohc_reclaim_list
     mov es:[edx].otd_next_va,ecx
     mov ds:ohc_reclaim_list,edx
@@ -2771,10 +2753,6 @@ ohci_thread     proc far
     mov ds:OhciThread,ax
     mov ds:OhciFuncCount,0
     mov ds:OhciUsedBlocks,0
-    mov ds:OhciReclaimed,0
-    mov ds:OhciAllocBlocks,0
-    mov ds:OhciFreeBlocks,0
-    mov ds:OhciSignalled,0
     mov ds:OhciCloseCount,0
 ;    
     call InitPciAdapter
@@ -2868,102 +2846,6 @@ get_allocated_usb_blocks    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetReclaimedUsbBlocks
-;
-;           DESCRIPTION:    Get reclaimed USB blocks
-;
-;       PARAMETERS:     
-;
-;           RETURNS:        EAX     Number of blocks
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_reclaimed_usb_blocks_name       DB 'Get Reclaimed USB Blocks',0
-
-get_reclaimed_usb_blocks    Proc far
-    push ds
-    mov ax,SEG data
-    mov ds,ax
-    mov eax,ds:OhciReclaimed
-    pop ds
-    retf32
-get_reclaimed_usb_blocks    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetAllocUsbBlocks
-;
-;           DESCRIPTION:    Get alloc USB blocks
-;
-;       PARAMETERS:     
-;
-;           RETURNS:        EAX     Number of blocks
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_alloc_usb_blocks_name       DB 'Get Alloc USB Blocks',0
-
-get_alloc_usb_blocks    Proc far
-    push ds
-    mov ax,SEG data
-    mov ds,ax
-    mov eax,ds:OhciAllocBlocks
-    pop ds
-    retf32
-get_alloc_usb_blocks    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetFreeUsbBlocks
-;
-;           DESCRIPTION:    Get free USB blocks
-;
-;       PARAMETERS:     
-;
-;           RETURNS:        EAX     Number of blocks
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_free_usb_blocks_name       DB 'Get Free USB Blocks',0
-
-get_free_usb_blocks    Proc far
-    push ds
-    mov ax,SEG data
-    mov ds,ax
-    mov eax,ds:OhciFreeBlocks
-    pop ds
-    retf32
-get_free_usb_blocks    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetSignalledUsbBlocks
-;
-;           DESCRIPTION:    Get signalled USB blocks
-;
-;       PARAMETERS:     
-;
-;           RETURNS:        EAX     Number of blocks
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_signalled_usb_blocks_name       DB 'Get Signalled USB Blocks',0
-
-get_signalled_usb_blocks    Proc far
-    push ds
-    mov ax,SEG data
-    mov ds,ax
-    mov eax,ds:OhciSignalled
-    pop ds
-    retf32
-get_signalled_usb_blocks    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           GetUsbClosedCount
 ;
 ;           DESCRIPTION:    Get closed count
@@ -3017,30 +2899,6 @@ Init    Proc far
     mov edi,OFFSET get_allocated_usb_blocks_name
     xor dx,dx
     mov ax,get_allocated_usb_blocks_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET get_reclaimed_usb_blocks
-    mov edi,OFFSET get_reclaimed_usb_blocks_name
-    xor dx,dx
-    mov ax,get_reclaimed_usb_blocks_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET get_alloc_usb_blocks
-    mov edi,OFFSET get_alloc_usb_blocks_name
-    xor dx,dx
-    mov ax,get_alloc_usb_blocks_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET get_free_usb_blocks
-    mov edi,OFFSET get_free_usb_blocks_name
-    xor dx,dx
-    mov ax,get_free_usb_blocks_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET get_signalled_usb_blocks
-    mov edi,OFFSET get_signalled_usb_blocks_name
-    xor dx,dx
-    mov ax,get_signalled_usb_blocks_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_usb_close_count

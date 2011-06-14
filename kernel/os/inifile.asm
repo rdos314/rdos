@@ -1576,26 +1576,7 @@ CacheEntryAttrib    Proc near
     mov edi,ds:[ebx].ih_base
     add edi,ds:[ebx].ih_file_size
     sub edi,ecx
-    dec edi
     call GetEntrySize
-    mov ax,flat_data_sel
-    mov es,ax
-    add ecx,2
-    mov al,es:[edi]
-    cmp al,0Ah
-    jne ceaDone
-;
-    dec ecx
-    dec edi
-    mov al,es:[edi]
-    cmp al,0Dh
-    jne ceaDone
-;
-    dec ecx
-    dec edi
-
-ceaDone:
-    inc edi
     mov ds:[ebx].ih_entry_base,edi
     mov ds:[ebx].ih_entry_size,ecx
 ;
@@ -1634,9 +1615,11 @@ MoveForEntry    Proc near
     cmp edi,esi
     je mfeDone
 ;
-    dec esi
     mov ax,flat_data_sel
     mov es,ax
+;
+    mov ds:[ebx].ih_entry_base,edi
+    dec esi
     mov eax,esi
     sub esi,ecx
     mov ecx,esi
@@ -1676,11 +1659,6 @@ AddEntry    Proc near
     mov edx,ds:[ebx].ih_entry_base
     mov ax,flat_data_sel
     mov ds,ax
-;
-    mov ax,0A0Dh
-    mov ds:[edx],ax
-    inc edx
-    inc edx
 
 aeVarLoop:
     mov al,fs:[esi]
