@@ -2495,6 +2495,11 @@ CloseUsbPipe      MACRO
 						ENDM
 
 ;   IN  BX          Handle
+ResetUsbPipe      MACRO
+	UserGate reset_usb_pipe_nr
+						ENDM
+
+;   IN  BX          Handle
 LockUsbPipe      MACRO
 	UserGate lock_usb_pipe_nr
 						ENDM

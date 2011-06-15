@@ -582,6 +582,7 @@ int RDOSAPI RdosGetUsbDevice(int Controller, int Device, void *ptr, int maxsize)
 int RDOSAPI RdosGetUsbConfig(int Controller, int Device, int Config, void *ptr, int maxsize);
 int RDOSAPI RdosOpenUsbPipe(int Controller, int Device, int Pipe);
 void RDOSAPI RdosCloseUsbPipe(int handle);
+void RDOSAPI RdosResetUsbPipe(int handle);
 void RDOSAPI RdosLockUsbPipe(int handle);
 void RDOSAPI RdosUnlockUsbPipe(int handle);
 void RDOSAPI RdosAddWaitForUsbPipe(int Handle, int PipeHandle, void *ID);
@@ -2568,6 +2569,10 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_close_usb_pipe \
     parm [ebx];
 
+#pragma aux RdosResetUsbPipe = \
+    CallGate_reset_usb_pipe \
+    parm [ebx];
+
 #pragma aux RdosLockUsbPipe = \
     CallGate_lock_usb_pipe \
     parm [ebx];
@@ -4524,6 +4529,10 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosCloseUsbPipe = \
     CallGate_close_usb_pipe \
+    parm [ebx];
+
+#pragma aux RdosResetUsbPipe = \
+    CallGate_reset_usb_pipe \
     parm [ebx];
 
 #pragma aux RdosLockUsbPipe = \

@@ -141,6 +141,8 @@ ohc_bulk_linear     DD ?
 ohc_pipe_list       DW ?
 ohc_reclaim_list    DD ?
 
+ohc_reset           DW ?
+
 ohc_section     section_typ <>
 
 ohc_32_cnt      DB 32 DUP(?)
@@ -2182,6 +2184,35 @@ IsConnected Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ResetPipe
+;
+;           DESCRIPTION:    Reset port for pipe
+;
+;       PARAMETERS:         DS      Function selector
+;                           FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ResetPipe   Proc far
+    push es
+    push ax
+    push cx
+;    
+    mov es,fs:usbp_function_sel
+    mov cl,es:usbf_port
+    mov ax,1
+    shl ax,cl
+    or ds:ohc_reset,ax
+;
+    pop cx
+    pop ax
+    pop es
+    ret
+ResetPipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UpdateQueue
 ;
 ;           DESCRIPTION:    Update done queue
@@ -2299,13 +2330,15 @@ UpdatePort   Proc near
     or ax,ax
     jz upReclaimOk
 ;
-    verr ax
-    jnz upReclaimOk
-;    
-    mov gs,ax
+    push ax
     mov ax,5
     WaitMilliSec
+    pop ax
+;
+    IsValidUsbPipeSel
+    jc upReclaimOk
 ;    
+    mov gs,ax
     test gs:osp_flags, OSP_FLAG_TRANSFER_PENDING
     jz upReclaimOk
 ;    
@@ -2327,8 +2360,29 @@ upNoReclaim:
     shl si,2
     movzx di,cl
     add di,di
-;    
     mov es,ds:ohc_reg_sel
+;    
+    mov ax,1
+    shl ax,cl
+    test ax,ds:ohc_reset
+    jz upNoReset
+;
+    not ax
+    and ds:ohc_reset,ax
+;        
+    mov eax,es:[si].HcRhPortStatus
+    test al,1
+    jz upNoReset
+;
+    mov bx,ds:[di].usb_port_sel_arr
+    or bx,bx
+    jz upNoReset
+;    
+    mov al,cl
+    NotifyUsbDetach
+    jmp upAttach
+    
+upNoReset:
     mov eax,es:[si].HcRhPortStatus
     test al,1
     stc
@@ -2536,6 +2590,7 @@ ot13 DW OFFSET ClosePipe,       SEG code
 ot14 DW OFFSET WaitForCompletion,   SEG code
 ot15 DW OFFSET ChangeAddress,       SEG code
 ot16 DW OFFSET IsConnected,     SEG code
+ot17 DW OFFSET ResetPipe,       SEG code
 
 InitFunction    Proc near
     push es
@@ -2547,7 +2602,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,17
+    mov cx,18
 
 ifTabLoop:
     lods dword ptr cs:[si]
@@ -2647,6 +2702,7 @@ AddFunction  Proc near
 ;
     mov ds:ohc_pipe_list,0
     mov ds:ohc_reclaim_list,0
+    mov ds:ohc_reset,0
     mov ds:ohc_reg_sel,bp
     mov ds:ohc_int_status,0
     mov ds:ohc_linear,edx

@@ -1733,6 +1733,66 @@ AddData Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:       ForceCrLf
+;
+;       DESCRIPTION:    Force file to end with at least one CR LF
+;
+;       PARAMETERS:     DS:EBX       Ini handle data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ForceCrLf    Proc near
+    push es
+    push eax
+    push ecx
+    push edi
+
+fclRetry:
+    mov ax,flat_data_sel
+    mov es,ax
+;
+    mov edi,ds:[ebx].ih_base
+    mov ecx,ds:[ebx].ih_file_size
+    add edi,ecx
+    dec edi
+    sub ecx,1
+    jbe fclDone
+;    
+    mov al,es:[edi]
+    cmp al,0Ah
+    je fclDone
+;
+    cmp al,' '
+    jne fclGrow
+;    
+    dec edi
+    sub ecx,1
+    jz fclGrow
+;
+    mov al,es:[edi]
+    cmp al,' '
+    je fclAdd
+
+fclGrow:
+    mov ecx,2
+    call GrowIni
+    jmp fclRetry    
+
+fclAdd:
+    mov ax,0A0Dh
+    mov es:[edi],ax
+
+fclDone:
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+ForceCrLf    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:       WriteIni
 ;
 ;       DESCRIPTION:    Write ini var
@@ -1763,6 +1823,7 @@ write_ini       Proc near
     jz wiFail
 ;
     call LockIni
+    call ForceCrLf
 
 wiFindLoop:    
     call FindIniSection    

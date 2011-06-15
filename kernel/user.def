@@ -528,4 +528,6 @@ available_big_local_linear_nr	= 428
 get_allocated_usb_blocks_nr     = 429
 get_usb_close_count_nr          = 430
 
+reset_usb_pipe_nr               = 431
+
 usergate_entries			= 440

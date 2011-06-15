@@ -529,6 +529,8 @@
 #define CallGate_get_allocated_usb_blocks 0x67 0x9a 173 1 0 0 3 0
 #define CallGate_get_usb_close_count 0x67 0x9a 174 1 0 0 3 0
 
+#define CallGate_reset_usb_pipe 0x67 0x9a 175 1 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1059,5 +1061,7 @@
 
 #define CallGate_get_allocated_usb_blocks 0x3e 0x67 0x9a 173 1 0 0 3 0
 #define CallGate_get_usb_close_count 0x3e 0x67 0x9a 174 1 0 0 3 0
+
+#define CallGate_reset_usb_pipe 0x3e 0x67 0x9a 175 1 0 0 3 0
 
 #endif

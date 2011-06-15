@@ -2414,6 +2414,12 @@ HookUsbDetach   MACRO
     OsGate hook_usb_detach_nr
                     ENDM
 
+; IN  ES      Usb function selector
+; IN  AX      Pipe sel
+IsValidUsbPipeSel   MACRO
+    OsGate is_valid_usb_pipe_sel_nr
+                    ENDM
+
 ; IN  BX    Pipe handle
 ; OUT BX    Req handle
 CreateUsbReq      MACRO

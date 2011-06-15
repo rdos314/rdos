@@ -2240,6 +2240,22 @@ IsConnected   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ResetPipe
+;
+;           DESCRIPTION:    Reset port for pipe
+;
+;       PARAMETERS:         DS      Function selector
+;                           FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ResetPipe   Proc far
+    ret
+ResetPipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UpdatePort
 ;
 ;           DESCRIPTION:    Update root-hub port status
@@ -2357,6 +2373,7 @@ ut13 DW OFFSET ClosePipe,       SEG code
 ut14 DW OFFSET WaitForCompletion,   SEG code
 ut15 DW OFFSET ChangeAddress,       SEG code
 ut16 DW OFFSET IsConnected,     SEG code
+ut17 DW OFFSET ResetPipe,       SEG code
 
 InitFunction    Proc near
     pushad
@@ -2373,7 +2390,7 @@ InitFunction    Proc near
 ;
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,17
+    mov cx,18
 
 ifTabLoop:
     lods dword ptr cs:[si]
