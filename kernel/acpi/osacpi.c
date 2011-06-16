@@ -101,3 +101,49 @@ void AcpiOsUnmapMemory(void *LogicalAddress, ACPI_SIZE Length)
     linear = RdosPointerToOffset(LogicalAddress);
     RdosFreeLinear(linear, Length);
 }
+
+/*##########################################################################
+#
+#   Name       : AcpiOsGetPhysicalAddress
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsGetPhysicalAddress(void *LogicalAddress, ACPI_PHYSICAL_ADDRESS *PhysicalAddress)
+{
+    long linear;
+
+    linear = RdosPointerToOffset(LogicalAddress);
+    *PhysicalAddress = RdosGetPhysicalPage(linear);
+
+    return AE_OK;
+}
+
+/*##########################################################################
+#
+#   Name       : AcpiOsAllocate
+#
+##########################################################################*/
+void *AcpiOsAllocate(ACPI_SIZE Size)
+{
+    return RdosAllocateSmallGlobalMem(Size);
+}
+
+/*##########################################################################
+#
+#   Name       : AcpiOsFree
+#
+##########################################################################*/
+void AcpiOsFree(void *Memory)
+{
+    int sel = RdosPointerToSelector(Memory);    
+    RdosFreeMem(sel);
+}
+
+/*##########################################################################
+#
+#   Name       : AcpiOsGetThreadId
+#
+##########################################################################*/
+ACPI_THREAD_ID AcpiOsGetThreadId()
+{
+    return RdosGetThreadHandle();
+}
