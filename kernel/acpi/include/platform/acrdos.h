@@ -138,6 +138,7 @@
 
 #define ACPI_USE_SYSTEM_CLIBRARY 
 #define ACPI_USE_STANDARD_HEADERS
+#define ACPI_USE_LOCAL_CACHE
 
 /*! [End] no source code translation !*/
 

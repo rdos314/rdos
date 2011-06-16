@@ -70,3 +70,34 @@ ACPI_STATUS AcpiOsTableOverride(ACPI_TABLE_HEADER *Table, ACPI_TABLE_HEADER **Ne
     return AE_OK;
 }
 
+/*##########################################################################
+#
+#   Name       : AcpiOsMapMemory
+#
+##########################################################################*/
+void *AcpiOsMapMemory(ACPI_PHYSICAL_ADDRESS PhysicalAddress, ACPI_SIZE Length)
+{
+    long linear;
+
+    linear = RdosAllocateBigGlobalLinear(Length);
+    if (linear)
+    {
+        RdosSetPhysicalPage(linear, PhysicalAddress);
+        return RdosLinearToPointer(linear);
+    }
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : AcpiOsUnmapMemory
+#
+##########################################################################*/
+void AcpiOsUnmapMemory(void *LogicalAddress, ACPI_SIZE Length)
+{
+    long linear;
+
+    linear = RdosPointerToOffset(LogicalAddress);
+    RdosFreeLinear(linear, Length);
+}

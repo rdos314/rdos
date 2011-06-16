@@ -438,6 +438,7 @@ void RdosReturnFail();
 
 void *RdosSelectorToPointer(int sel);
 void *RdosSelectorOffsetToPointer(int sel, long offset);
+void *RdosLinearToPointer(int linear);
 int RdosPointerToSelector(void *ptr);
 int RdosPointerToOffset(void *ptr);
 
@@ -760,6 +761,11 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
 #pragma aux RdosSelectorOffsetToPointer = \
     "mov dx,bx" \
     parm [ebx] [eax] \
+    value [dx eax];
+
+#pragma aux RdosLinearToPointer = \
+    "mov dx,0x20" \
+    parm [eax] \
     value [dx eax];
 
 #pragma aux RdosPointerToSelector = \
