@@ -1382,6 +1382,9 @@ send_ack_size_ok:
     mov es:[di].tcp_flags, ACK OR FIN
 
 send_ack_data_no_fin:
+    cmp cx,ds:tcp_send_count
+    jne send_ack_data_no_push
+;
     test ds:tcp_pending,FLAG_SEND_PUSH
     jz send_ack_data_no_push
 ;
