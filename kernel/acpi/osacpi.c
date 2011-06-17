@@ -30,6 +30,16 @@
 #include "acpi.h"
 #include "acpiosxf.h"
 
+struct TExecReq
+{
+    struct TExecReq *Next;
+    ACPI_EXECUTE_TYPE Type;
+    ACPI_OSD_EXEC_CALLBACK Function;
+    void *Context;
+};
+
+struct TExecReq *ExecList = 0;
+
 /*##########################################################################
 #
 #   Name       : AcpiOsInitialize
@@ -146,4 +156,34 @@ void AcpiOsFree(void *Memory)
 ACPI_THREAD_ID AcpiOsGetThreadId()
 {
     return RdosGetThreadHandle();
+}
+
+/*##########################################################################
+#
+#   Name       : AcpiOsExecute
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsExecute(ACPI_EXECUTE_TYPE Type, ACPI_OSD_EXEC_CALLBACK Function, void *Context)
+{
+    struct TExecReq *req = (struct TExecReq *)malloc(sizeof(struct TExecReq));
+    struct TExecReq *ptr;
+
+    req->Next = 0;
+    req->Type = Type;
+    req->Function = Function;
+    req->Context = Context;
+
+    if (ExecList)
+    {
+        ptr = ExecList;
+
+        while (ptr->Next)
+            ptr = ptr->Next;
+
+        ptr->Next = req;
+    }
+    else
+        ExecList = req;
+
+    return AE_OK;
 }
