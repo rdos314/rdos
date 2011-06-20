@@ -166,6 +166,22 @@ void TRad::SetWinterRef()
 
 /*##########################################################################
 #
+#   Name       : TRad::SetSummerRef
+#
+#   Purpose....: Set summer time reference (cool generation)
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRad::SetSummerRef()
+{
+	RefType = 3;
+	FUpdateRefType = TRUE;
+}
+
+/*##########################################################################
+#
 #   Name       : TRad::SetRef
 #
 #   Purpose....: Set reference temperature

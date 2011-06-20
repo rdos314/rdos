@@ -7,7 +7,7 @@
 #DEFINE PAGE0   BCF 3,5
 #DEFINE PAGE1   BSF 3,5
 
-NODEID:	EQU 0x24
+NODEID:	EQU 0x27
 DELAY_TICS:	EQU .200
 
 AL:			EQU 0x0C
@@ -41,6 +41,7 @@ DummyVal	EQU 0x26
 Ambient		EQU 0x27
 RefType		EQU 0x28
 LightTemp	EQU 0x29
+Cooler      EQU 0x2A
 
 
 	        org 4
@@ -86,6 +87,7 @@ RESET:		PAGE1
 			clrf LightHigh
 			clrf DummyVal
 			clrf RefType
+			clrf Cooler
 			goto ILOOP
 
 RecRef:		movlw 0
@@ -163,6 +165,14 @@ SendAmbient:
 			call Send1
 			return
 
+SendCooler:
+            movlw 5
+			movwf FLREG
+			movlw Cooler
+			movwf FSR
+			call Send1
+			return
+
 SendRefType:
             movlw 5
 			movwf FLREG
@@ -207,16 +217,16 @@ HandlePend:
 			goto StartTemp      ; 14
 			goto StartTemp      ; 15
 			goto RecTemp		; 16
-			goto SendAmbient	; 17
-			goto SendRefType	; 18
-			goto RecRef			; 19
-			goto SendRef1		; 20
-			goto RecLightLow	; 21
-			goto SendTemp		; 22
-			goto RecAuxTemp    	; 23
-			goto RecLight		; 24
-			goto StartFuzzy		; 25
-			return				; 26
+			goto SendCooler     ; 17
+			goto SendAmbient	; 18
+			goto SendRefType	; 19
+			goto RecRef			; 20
+			goto SendRef1		; 21
+			goto RecLightLow	; 22
+			goto SendTemp		; 23
+			goto RecAuxTemp    	; 24
+			goto RecLight		; 25
+			goto StartFuzzy		; 26
 			return				; 27
 			return				; 28
 			return				; 29
@@ -344,7 +354,20 @@ WriteAmbient:
 WriteRefType:
             movf T0,W
 			movwf RefType
+;
+   	        sublw .3
+			btfss STATUS,Z
+			goto WriteRefHeat
+
+WriteRefCooler:
+            movlw 1
+            movwf Cooler
 			return
+
+WriteRefHeat:
+            movlw 0
+            movwf Cooler
+            return			
 			
 ILOOP:		call POLLTIMER
 			btfss PORTA,0

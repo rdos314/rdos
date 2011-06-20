@@ -45,6 +45,8 @@ NumDivHigh	EQU 0x28
 
 PrevErrorIndex	EQU 0x29
 
+Cooler      EQU 0x2A
+
 	org 4
  	org 5
 
@@ -61,7 +63,7 @@ SetVal:
 	return		    	; 2
 	return	    		; 3
 	goto SetAmbient	    ; 4
-	return		    	; 5
+	goto SetCooler		; 5
 	return	    		; 6
 	goto UpdateFuzzy    ; 7
 
@@ -688,11 +690,24 @@ TempOutputPXL:
 	goto CalcHighSlope
 
 UpdateFuzzy:
+    movf Cooler,W
+    btfss STATUS,Z
+    goto UpdateFuzzyCooler
+
+UpdateFuzzyHeater:    
     movf RefVal,W
 	subwf TempVal, W
 	addlw .127
 	movwf ErrorIndex
-;
+	goto UpdateFuzzyCommon
+
+UpdateFuzzyCooler:
+	movf TempVal, W
+	subwf RefVal, W
+	addlw .127
+	movwf ErrorIndex
+
+UpdateFuzzyCommon:
 	movf PrevErrorIndex, W
 	subwf ErrorIndex, W
 	addlw .127
@@ -917,6 +932,7 @@ Main:
 	movlw b'00001100'
 	movwf PORTB
 ;
+    clrf Cooler
 	clrf RefVal
 	clrf TempVal
 	clrf Da1
@@ -966,6 +982,11 @@ SetTemp:
 SetAmbient:
 	movf Val,W
 	movwf AmbientIndex
+	return
+
+SetCooler:	
+	movf Val,W
+	movwf Cooler
 	return
 
 GetRef:

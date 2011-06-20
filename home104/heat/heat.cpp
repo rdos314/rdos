@@ -81,6 +81,7 @@ int main()
     int init = 0x8000;
     int ambient;
     int night;
+    int summer;
     int refsum;
     TGraphicDevice *vbe;
     TFont Font(25);
@@ -323,12 +324,20 @@ int main()
 
         ambient = 10 * Ws->GetOutdoorTemp();
 
-        night = FALSE;
-        if (CurrTime->GetHour() >= 19)
-            night = TRUE;
-        else
-            if (CurrTime->GetHour() < 5)
+        summer = FALSE;
+
+        if (CurrTime->GetMonth() >= 6 && CurrTime->GetMonth() <= 8)
+            summer = TRUE;
+
+        if (!summer)
+        {
+            night = FALSE;
+            if (CurrTime->GetHour() >= 19)
                 night = TRUE;
+            else
+                if (CurrTime->GetHour() < 5)
+                    night = TRUE;
+        }
 
         delete CurrTime;
 
@@ -357,15 +366,20 @@ int main()
                 if (temperr < temperrmax)
                     temperrmax = temperr;
 
-                if (night)
-                {
-                    if (ambient < 0)
-                        RadArr[i]->SetWinterRef();
-                    else
-                        RadArr[i]->SetNightRef();
-                }
+                if (summer)
+                    RadArr[i]->SetSummerRef();
                 else
-                    RadArr[i]->SetDayRef();
+                {
+                    if (night)
+                    {
+                        if (ambient < 0)
+                            RadArr[i]->SetWinterRef();
+                        else
+                            RadArr[i]->SetNightRef();
+                    }
+                    else
+                        RadArr[i]->SetDayRef();
+                }
 
                 RadArr[i]->SetAmbient(ambient);
              }

@@ -42,6 +42,7 @@ public:
 	void SetDayRef();
 	void SetNightRef();
 	void SetWinterRef();
+	void SetSummerRef();
 	void SetRef(int Temp);
 	void SetAmbient(int rel);
 
