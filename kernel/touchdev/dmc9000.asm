@@ -33,12 +33,12 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 
-        .386p
+    .386p
 
 ; Auto-detect doesn't seem to work so give COM port here:
 
-COM_PORT = 2
-        
+COM_PORT = 1
+    
 
 X_START = 0
 Y_START = 0
@@ -52,23 +52,222 @@ td_port         DW ?
 td_x            DW ?
 td_y            DW ?
 td_control      DB ?
+td_in_buf       DB 6 DUP(?)
+td_out_buf      DB 6 DUP(?)
 
 touch_data_seg  ENDS
 
 code    SEGMENT byte public use16 'CODE'
 
-        assume cs:code
+    assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   HandleTouch
+;               NAME:                   ClearPort
 ;
-;               DESCRIPTION:    Handle touch-screen
+;               DESCRIPTION:    Clear comport before sending command
+;
+;       PARAMETERS:     
+;
+;       RETURNS:        NC      OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearPort Proc near
+    push eax
+    push bx
+    push cx
+    push edx
+;    
+    mov cx,256
+
+cpLoop:
+    push cx
+    GetSystemTime
+    add eax,100 * 1192
+    adc edx,0
+    mov bx,ds:td_wait
+    WaitWithTimeout
+    pop cx
+;
+    mov bx,ds:td_port
+    ReadCom
+    jc cpOk
+;    
+    loop cpLoop
+;
+    stc
+    jmp cpDone
+
+cpOk:
+    clc
+
+cpDone:
+    pop edx
+    pop cx
+    pop bx
+    pop eax   
+    ret
+ClearPort Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   SendCmd
+;
+;               DESCRIPTION:    Send t_out_buf
+;
+;       PARAMETERS:     
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendCmd Proc near
+    push ax
+    push bx
+    push cx
+    push si
+;    
+    mov bx,ds:td_port
+    mov ds:td_out_buf+5,0FFh
+    mov cx,5
+    mov si,OFFSET td_out_buf
+
+scLoop:
+    lodsb
+    sub ds:td_out_buf+5,al
+    WriteCom
+    loop scLoop
+;
+    lodsb
+    WriteCom
+;
+    pop si
+    pop cx
+    pop bx
+    pop ax   
+    ret
+SendCmd Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   GetResponse
+;
+;               DESCRIPTION:    Receive response
+;
+;       PARAMETERS:     
+;
+;       RETURNS:        NC      OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetResponse Proc near
+    push eax
+    push bx
+    push cx
+    push edx
+    push si
+;    
+    mov ds:td_in_buf+5,0FFh
+    mov cx,5
+    mov si,OFFSET td_in_buf
+
+grLoop:
+    push cx
+    GetSystemTime
+    add eax,100 * 1192
+    adc edx,0
+    mov bx,ds:td_wait
+    WaitWithTimeout
+    pop cx
+;
+    mov bx,ds:td_port
+    ReadCom
+    jc grDone
+;
+    mov ds:[si],al
+    sub ds:td_in_buf+5,al
+    inc si
+    loop grLoop
+;
+    GetSystemTime
+    add eax,100 * 1192
+    adc edx,0
+    mov bx,ds:td_wait
+    WaitWithTimeout
+;
+    mov bx,ds:td_port
+    ReadCom
+    jc grDone
+;
+    cmp al,ds:[si]
+    clc
+    jz grDone
+;
+    stc
+
+grDone:
+    pop si
+    pop edx
+    pop cx
+    pop bx
+    pop eax   
+    ret
+GetResponse Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   CheckVersion
+;
+;               DESCRIPTION:    Check touch version
+;
+;       PARAMETERS:     
+;
+;               RETURNS:                NC  Version ok
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckVersion    Proc near
+    call ClearPort
+    jc cvDone
+;    
+    mov ds:td_out_buf,0F2h
+    mov ds:td_out_buf+1,0
+    mov ds:td_out_buf+2,0
+    mov ds:td_out_buf+3,0
+    mov ds:td_out_buf+4,0
+    call SendCmd
+    call GetResponse
+    jc cvDone
+;
+    mov al,ds:td_in_buf
+    cmp al,0F2h
+    stc
+    jne cvDone
+;    
+    mov al,ds:td_in_buf+1
+    cmp al,0D9h
+    stc
+    jne cvDone
+;
+    clc    
+
+cvDone:    
+    ret
+CheckVersion    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           HandleTouch
+;
+;           DESCRIPTION:    Handle touch-screen
 ;
 ;       PARAMETERS:     AL  Port
 ;
-;               RETURNS:                
+;           RETURNS:        
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -89,6 +288,16 @@ HandleTouch:
     mov bx,ds:td_wait
     xor ecx,ecx
     AddWaitForCom
+    ResetRts
+    ResetDtr
+;
+    mov ax,50
+    WaitMilliSec
+;        
+    SetRts
+    SetDtr
+;
+    call CheckVersion    
 
 htLoop:
     GetSystemTime
@@ -127,7 +336,7 @@ htOk:
     and ax,7
     shl ax,7
     mov ds:td_x,ax
-;            
+;        
     GetSystemTime
     add eax,10 * 1192
     adc edx,0
@@ -142,7 +351,7 @@ htOk:
     jnz htSyn
 ;
     or byte ptr ds:td_x,al
-;            
+;        
     GetSystemTime
     add eax,10 * 1192
     adc edx,0
@@ -159,7 +368,7 @@ htOk:
     and ax,7
     shl ax,7
     mov ds:td_y,ax
-;            
+;        
     GetSystemTime
     add eax,10 * 1192
     adc edx,0
@@ -237,13 +446,13 @@ htYMaxOk:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Touch_thread
+;           NAME:           Touch_thread
 ;
-;               DESCRIPTION:    Touch-screen thread
+;           DESCRIPTION:    Touch-screen thread
 ;
 ;       PARAMETERS:     
 ;
-;               RETURNS:                
+;           RETURNS:        
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -262,59 +471,59 @@ touch_thread:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   INIT_TOUCH
+;           NAME:           INIT_TOUCH
 ;
-;               DESCRIPTION:    Init touch
+;           DESCRIPTION:    Init touch
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_touch_name DB 'Init Touch', 0
 
 init_touch      Proc far
-        push ds
-        push es
+    push ds
+    push es
 ;
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
-        mov di,OFFSET touch_name
-        mov si,OFFSET touch_thread
-        mov ax,4
-        mov cx,100h
-        CreateThread
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov di,OFFSET touch_name
+    mov si,OFFSET touch_thread
+    mov ax,4
+    mov cx,100h
+    CreateThread
 ;
-        pop es
-        pop ds
-        retf32
+    pop es
+    pop ds
+    retf32
 init_touch      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   INIT
+;           NAME:           INIT
 ;
-;               DESCRIPTION:    Init touch-screen
+;           DESCRIPTION:    Init touch-screen
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
-        mov eax,SIZE touch_data_seg
-        mov bx,touch_data_sel
-        AllocateFixedSystemMem
+    mov eax,SIZE touch_data_seg
+    mov bx,touch_data_sel
+    AllocateFixedSystemMem
 ;
-        mov ax,cs
-        mov es,ax
-        mov edi,OFFSET init_touch
-        HookInitTasking
-        clc
-        ret
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET init_touch
+    HookInitTasking
+    clc
+    ret
 init    ENDP
 
 code    ENDS
 
-        END init
-        
+    END init
+    
