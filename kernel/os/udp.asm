@@ -612,6 +612,9 @@ receive_not_query:
     pop es
     pop ds
 ;
+    or cx,cx
+    jz receive_free
+;    
     mov edx,es:ip_source
     push es
     push di

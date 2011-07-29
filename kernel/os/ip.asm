@@ -43,6 +43,7 @@ INCLUDE udp.inc
     extrn init_task_udp:near
     extrn init_task_ntp:near
     extrn init_task_tcp:near
+    extrn init_task_syslog:near
 
     extrn init_cache:near
     extrn IsDhcpDone:near
@@ -1553,6 +1554,7 @@ init_tasking    Proc far
     call init_task_udp
     call init_task_ntp
     call init_task_tcp
+    call init_task_syslog
 ;
     popad
     pop es
