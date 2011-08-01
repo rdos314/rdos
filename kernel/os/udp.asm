@@ -606,7 +606,6 @@ receive_not_query:
     call fword ptr ds:udp_listen_callback
 ;
     mov ax,es
-    mov fs,ax
 ;
     pop edi
     pop es
@@ -615,6 +614,7 @@ receive_not_query:
     or cx,cx
     jz receive_free
 ;    
+    mov fs,ax
     mov edx,es:ip_source
     push es
     push di

@@ -2714,3 +2714,30 @@ PlayFmNote      MACRO
 	UserGate play_fm_note_nr
 	                ENDM
 
+
+;;;;;;;;;;; syslog ;;;;;;;;;;
+
+;   IN  SI          Severity (LSB), Facility (MSB)
+;   IN  EDX:EAX     Time
+;   IN  (E)CX       Msg size
+;   IN  ES:(E)DI    Msg buf
+AddSyslog      MACRO
+	UserGate add_syslog_nr
+	                ENDM
+
+;   OUT BX          Handle 
+OpenSyslog      MACRO
+	UserGate open_syslog_nr
+	                ENDM
+
+;   IN  BX          Handle 
+CloseSyslog      MACRO
+	UserGate close_syslog_nr
+	                ENDM
+
+;   IN  AX          Syslog handle 
+;   IN  BX          Wait handle
+;   IN  ECX         Signalled ID
+AddWaitForSyslog      MACRO
+	UserGate add_wait_for_syslog_nr
+	                ENDM

@@ -7,6 +7,7 @@
 #define OsGate_register_usergate32 0x3E 0x67 0x9a 5 0 0 0 2 0
 #define OsGate_register_usergate_v86 0x3E 0x67 0x9a 6 0 0 0 2 0
 #define OsGate_create_alias_sel16 0x3E 0x67 0x9a 7 0 0 0 2 0
+#define OsGate_create_core_gdt 0x3E 0x67 0x9a 8 0 0 0 2 0
 #define OsGate_emulate_opcode 0x3E 0x67 0x9a 9 0 0 0 2 0
 
 #define OsGate_allocate_gdt 0x3E 0x67 0x9a 10 0 0 0 2 0
@@ -72,6 +73,10 @@
 #define OsGate_free_physical 0x3E 0x67 0x9a 72 0 0 0 2 0
 
 #define OsGate_create_process 0x3E 0x67 0x9a 74 0 0 0 2 0
+
+#define OsGate_init_trap_gates 0x3E 0x67 0x9a 75 0 0 0 2 0
+#define OsGate_init_tss_gates 0x3E 0x67 0x9a 76 0 0 0 2 0
+
 #define OsGate_wake_thread 0x3E 0x67 0x9a 79 0 0 0 2 0
 #define OsGate_sleep_thread 0x3E 0x67 0x9a 80 0 0 0 2 0
 #define OsGate_clear_signal 0x3E 0x67 0x9a 83 0 0 0 2 0
@@ -255,15 +260,6 @@
 #define OsGate_hide_sprite_line 0x3E 0x67 0x9a 0 1 0 0 2 0
 #define OsGate_show_sprite_line 0x3E 0x67 0x9a 1 1 0 0 2 0
 
-#define OsGate_start_com_port 0x3E 0x67 0x9a 2 1 0 0 2 0
-#define OsGate_stop_com_port 0x3E 0x67 0x9a 3 1 0 0 2 0
-
-#define OsGate_start_keyboard 0x3E 0x67 0x9a 4 1 0 0 2 0
-#define OsGate_stop_keyboard 0x3E 0x67 0x9a 5 1 0 0 2 0
-
-#define OsGate_start_floppy 0x3E 0x67 0x9a 6 1 0 0 2 0
-#define OsGate_stop_floppy 0x3E 0x67 0x9a 7 1 0 0 2 0
-
 #define OsGate_set_keyboard_state 0x3E 0x67 0x9a 8 1 0 0 2 0
 
 #define OsGate_add_wait 0x3E 0x67 0x9a 10 1 0 0 2 0
@@ -407,24 +403,19 @@
 
 #define OsGate_start_ap_cores 0x3E 0x67 0x9a 105 1 0 0 2 0
 
-#define OsGate_create_processor 0x3E 0x67 0x9a 106 1 0 0 2 0
-
-#define OsGate_get_processor_num 0x3E 0x67 0x9a 107 1 0 0 2 0
+#define OsGate_create_core 0x3E 0x67 0x9a 106 1 0 0 2 0
+#define OsGate_get_core_num 0x3E 0x67 0x9a 107 1 0 0 2 0
 
 #define OsGate_locked_debug_exception 0x3E 0x67 0x9a 108 1 0 0 2 0
 
 #define OsGate_lock_task 0x3E 0x67 0x9a 109 1 0 0 2 0
 #define OsGate_unlock_task 0x3E 0x67 0x9a 110 1 0 0 2 0
 
-#define OsGate_is_processor_blocked 0x3E 0x67 0x9a 111 1 0 0 2 0
+#define OsGate_get_core 0x3E 0x67 0x9a 112 1 0 0 2 0
+#define OsGate_get_core_count 0x3E 0x67 0x9a 113 1 0 0 2 0
+#define OsGate_start_core 0x3E 0x67 0x9a 114 1 0 0 2 0
 
-#define OsGate_get_processor 0x3E 0x67 0x9a 112 1 0 0 2 0
-
-#define OsGate_resume_processor 0x3E 0x67 0x9a 113 1 0 0 2 0
-#define OsGate_start_processor 0x3E 0x67 0x9a 114 1 0 0 2 0
-
-#define OsGate_unblock_processor 0x3E 0x67 0x9a 115 1 0 0 2 0
-#define OsGate_do_unblock_processor 0x3E 0x67 0x9a 116 1 0 0 2 0
+#define OsGate_timer_expired 0x3E 0x67 0x9a 115 1 0 0 2 0
 
 #define OsGate_reload_sys_timer 0x3E 0x67 0x9a 117 1 0 0 2 0
 #define OsGate_start_sys_timer 0x3E 0x67 0x9a 118 1 0 0 2 0
@@ -455,7 +446,22 @@
 #define OsGate_crash_tss 0x3E 0x67 0x9a 133 1 0 0 2 0
 #define OsGate_crash_fault 0x3E 0x67 0x9a 134 1 0 0 2 0
 
-#define OsGate_register_old_osgate 0x3E 0x67 0x9a 135 1 0 0 2 0
+#define OsGate_start_crash_core 0x3E 0x67 0x9a 135 1 0 0 2 0
 
-#define OsGate_test_gate 0x3E 0x67 0x9a 136 1 0 0 2 0
+#define OsGate_read_pnp_byte 0x3E 0x67 0x9a 137 1 0 0 2 0
+#define OsGate_write_pnp_byte 0x3E 0x67 0x9a 138 1 0 0 2 0
+
+#define OsGate_add_sys_env_var 0x3E 0x67 0x9a 139 1 0 0 2 0
+#define OsGate_delete_sys_env_var 0x3E 0x67 0x9a 140 1 0 0 2 0
+#define OsGate_find_sys_env_var 0x3E 0x67 0x9a 141 1 0 0 2 0
+
+#define OsGate_has_apic_mem 0x3E 0x67 0x9a 142 1 0 0 2 0
+#define OsGate_has_apic_msr 0x3E 0x67 0x9a 143 1 0 0 2 0
+
+#define OsGate_start_clock 0x3E 0x67 0x9a 144 1 0 0 2 0
+#define OsGate_sync_clock 0x3E 0x67 0x9a 145 1 0 0 2 0
+
+#define OsGate_flush_tlb 0x3E 0x67 0x9a 146 1 0 0 2 0
+
+#define OsGate_is_valid_usb_pipe_sel 0x3E 0x67 0x9a 147 1 0 0 2 0
 

@@ -410,6 +410,7 @@ void RDOSAPI RdosAddWaitForKeyboard(int Handle, void *ID);
 void RDOSAPI RdosAddWaitForMouse(int Handle, void *ID);
 void RDOSAPI RdosAddWaitForCom(int Handle, int ComHandle, void *ID);
 void RDOSAPI RdosAddWaitForAdc(int Handle, int AdcHandle, void *ID);
+void RDOSAPI RdosAddWaitForSysLog(int Handle, int SyslogHandle, void *ID);
 
 int RDOSAPI RdosCreateSignal();
 void RDOSAPI RdosResetSignal(int Handle);
@@ -536,6 +537,9 @@ void RDOSAPI RdosClearDebugEvent(int handle);
 void RDOSAPI RdosContinueDebugEvent(int handle, int thread);
 
 #endif
+
+int RDOSAPI RdosOpenSyslog();
+void RDOSAPI RdosCloseSyslog(int handle);
 
 int RDOSAPI RdosOpenAdc(int channel);
 void RDOSAPI RdosCloseAdc(int handle);
@@ -1783,6 +1787,10 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_add_wait_for_com  \
     parm [ebx] [eax] [ecx];
 
+#pragma aux RdosAddWaitForSyslog = \
+    CallGate_add_wait_for_syslog  \
+    parm [ebx] [eax] [ecx];
+
 #pragma aux RdosAddWaitForAdc = \
     CallGate_add_wait_for_adc  \
     parm [ebx] [eax] [ecx];
@@ -2361,6 +2369,15 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosContinueDebugEvent = \
     CallGate_continue_debug_event  \
     parm [ebx] [eax];
+
+#pragma aux RdosOpenSyslog = \
+    CallGate_open_syslog  \
+    ValidateHandle \
+    value [ebx];
+
+#pragma aux RdosCloseSyslog = \
+    CallGate_close_syslog  \
+    parm [ebx];
 
 #pragma aux RdosOpenAdc = \
     CallGate_open_adc  \
@@ -3789,6 +3806,10 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_add_wait_for_com  \
     parm [ebx] [eax] [ecx];
 
+#pragma aux RdosAddWaitForSyslog = \
+    CallGate_add_wait_for_syslog  \
+    parm [ebx] [eax] [ecx];
+
 #pragma aux RdosAddWaitForAdc = \
     CallGate_add_wait_for_adc  \
     parm [ebx] [eax] [ecx];
@@ -4308,6 +4329,15 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_calc_crc  \
     parm [ebx] [ax] [es edi] [ecx] \
     value [ax];
+
+#pragma aux RdosOpenSyslog = \
+    CallGate_open_syslog  \
+    ValidateHandle \
+    value [ebx];
+
+#pragma aux RdosCloseSyslog = \
+    CallGate_close_syslog  \
+    parm [ebx];
 
 #pragma aux RdosOpenAdc = \
     CallGate_open_adc  \

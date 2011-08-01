@@ -35,5 +35,6 @@ wo_id           DD ?
 wo_thread       DW ?
 wo_next         DW ?
 wo_signalled    DW ?
+wo_list         DW ?
 
 wait_obj_header ENDS
