@@ -132,3 +132,38 @@ void TSyslogDevice::WaitForLog()
                         return;
         }
 }
+
+/*##########################################################################
+#
+#   Name       : TSyslogDevice::GetLog
+#
+#   Purpose....: Get log entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: character
+#
+##########################################################################*/
+int TSyslogDevice::GetLog(int *facility, int *severity, TDateTime &time, TString &log)
+{
+    char *buf;
+    unsigned long lsb, msb;
+
+    buf = new char[512];
+
+    *facility = RdosGetSyslog(FHandle, severity, &msb, &lsb, buf, 512);
+
+    if (*facility)
+    {
+        log = TString(buf);
+        time = TDateTime(msb, lsb);
+        delete buf;
+        return TRUE;
+    }
+    else
+    {
+        log = "";
+        delete buf;
+        return FALSE;
+    }
+}

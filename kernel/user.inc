@@ -2735,6 +2735,15 @@ CloseSyslog      MACRO
 	UserGate close_syslog_nr
 	                ENDM
 
+;   IN  BX          Handle 
+;   IN  (E)CX       Buf size
+;   IN  ES:(E)DI    Msg buf
+;   OUT SI          Severity (LSB), Facility (MSB)
+;   OUT EDX:EAX     Time
+GetSyslog      MACRO
+	UserGate get_syslog_nr
+	                ENDM
+
 ;   IN  AX          Syslog handle 
 ;   IN  BX          Wait handle
 ;   IN  ECX         Signalled ID

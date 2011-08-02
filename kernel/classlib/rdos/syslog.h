@@ -25,27 +25,30 @@
 #
 ########################################################################*/
 
-#ifndef	_SYSLOG_H
+#ifndef _SYSLOG_H
 #define _SYSLOG_H
 
 #include "waitdev.h"
+#include "datetime.h"
+#include "str.h"
 
 class TSyslogDevice : public TWaitDevice
 {
 public:
     TSyslogDevice();
-	~TSyslogDevice();
+        ~TSyslogDevice();
 
-	virtual void DeviceName(char *Name, int MaxLen) const;
+        virtual void DeviceName(char *Name, int MaxLen) const;
 
-	void WaitForLog();
+        void WaitForLog();
+        int GetLog(int *facility, int *severity, TDateTime &time, TString &buf);
 
 protected:
-	virtual void SignalNewData();
-	virtual void Add(TWait *Wait);
+        virtual void SignalNewData();
+        virtual void Add(TWait *Wait);
 
 private:
-	int FHandle;
+        int FHandle;
 };
 
 #endif

@@ -36,7 +36,7 @@ INCLUDE system.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\wait.inc
 
-LOG_BUF_COUNT   = 16
+LOG_BUF_COUNT   = 20h
 
 log_buf_entry   STRUC
 
@@ -44,6 +44,8 @@ log_facility        DB ?
 log_severity        DB ?
 
 log_time            DD ?,?
+
+log_size            DD ?
 
 log_msg_buf         DB ?
 
@@ -221,7 +223,7 @@ GetMonth    Endp
 ;       Parameters:     ECX     Msg size
 ;                       ES:EDI  Msg data
 ;                       EDX:EAX Time
-;                       SI      Facility + severity
+;                       SI      Facility (MSB) + severity (LSB)
 ;
 ;       Returns:        BX      Entry
 ;
@@ -262,8 +264,9 @@ ceAlloc:
     AllocateSmallGlobalMem
     pop ax
 ;    
-    mov es:log_facility,al
-    mov es:log_severity,ah
+    mov es:log_facility,ah
+    mov es:log_severity,al
+    mov es:log_size,ecx
 ;
     pop edx
     pop eax
@@ -322,6 +325,19 @@ aeHeadOk:
 
 aeEmptyOk:
     mov [si],bx
+;
+    mov ax,ds:log_obj_list
+    or ax,ax
+    jz aeSignalDone
+
+aeSignalLoop:    
+    mov es,ax
+    mov ax,es:wo_list
+    SignalWait
+    or ax,ax
+    jnz aeSignalLoop
+
+aeSignalDone:
     LeaveSection ds:log_section
 ;
     pop si
@@ -340,7 +356,7 @@ AddEntry Endp
 ;       Parameters:     (E)CX       Msg size
 ;                       ES:(E)DI    Msg data
 ;                       EDX:EAX     Time
-;                       SI          Facility + severity
+;                       SI          Facility (MSB) + severity (LSB)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -595,14 +611,29 @@ start_wait_for_syslog PROC far
 ;
     mov eax,[ebx].sl_curr_id
 ;
+    push fs
     mov dx,SEG data
     mov ds,dx
     EnterSection ds:log_section
 ;
     cmp eax,ds:log_head_id
     jne start_wait_ready
-;    
+;   
+    mov bx,ax 
     mov ax,ds:log_obj_list
+
+start_wait_check_loop:
+    or ax,ax
+    jz start_wait_insert
+;
+    cmp ax,bx
+    je start_wait_leave
+;
+    mov fs,ax
+    mov ax,fs:wo_list
+    jmp start_wait_check_loop
+
+start_wait_insert:
     mov es:wo_list,ax
     mov ds:log_obj_list,es
     jmp start_wait_leave
@@ -611,6 +642,7 @@ start_wait_ready:
     SignalWait
 
 start_wait_leave:    
+    pop fs
     LeaveSection ds:log_section
 
 start_wait_done:
@@ -786,6 +818,129 @@ add_wait_done:
 add_wait_for_syslog   ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetSyslog
+;
+;           DESCRIPTION:    Get syslog
+;
+;           PARAMETERS:     BX          Syslog handle
+;                           (E)CX       Buf size
+;                           ES:(E)DI    Msg buf
+;
+;           RETURNS:        SI          Severity (LSB), Facility (MSB)
+;                           EDX:EAX     Time
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_syslog_name    DB 'Get Syslog',0
+
+get_syslog     PROC near
+    push ds
+    push ebx
+    push ecx
+    push edi
+;
+    mov ax,SYSLOG_HANDLE
+    DerefHandle
+    jc gsFail
+;
+    push ds
+    mov edx,[ebx].sl_curr_id
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:log_section
+    mov eax,ds:log_head_id
+    sub eax,edx
+    jz gsLeaveFail
+;
+    cmp eax,LOG_BUF_COUNT
+    jb gsIdOk
+;
+    mov eax,LOG_BUF_COUNT - 1
+
+gsIdOk:
+    mov si,ds:log_head_entry
+    inc si
+    sub si,ax
+    jnc gsEntryOk
+;
+    add si,LOG_BUF_COUNT
+
+gsEntryOk:    
+    add si,si
+    mov edx,eax
+    mov eax,ds:log_head_id
+    sub eax,edx
+    inc eax
+    mov dx,ds:[si].log_buf_arr
+    pop ds
+    mov [ebx].sl_curr_id,eax
+;
+    dec ecx
+    mov ds,dx
+    mov eax,ds:log_size
+    cmp eax,ecx
+    jae gsSizeOk
+;
+    mov ecx,eax
+
+gsSizeOk:
+    mov esi,OFFSET log_msg_buf
+    rep movs byte ptr es:[edi],ds:[esi]
+    mov byte ptr es:[edi],0
+;    
+    mov al,ds:log_severity
+    mov ah,ds:log_facility
+    mov si,ax
+    mov eax,ds:log_time
+    mov edx,ds:log_time+4        
+;
+    mov ax,SEG data
+    mov ds,ax
+    LeaveSection ds:log_section
+    jmp gsDone
+
+gsLeaveFail:
+    LeaveSection ds:log_section
+    pop ax
+
+gsFail:
+    xor si,si
+    xor eax,eax
+    xor edx,edx
+    mov byte ptr es:[edi],0
+    
+gsDone:
+    pop edi
+    pop ecx
+    pop ebx
+    pop ds
+    ret
+get_syslog     ENDP
+
+get_syslog16    Proc far
+    push ecx
+    push esi
+    push edi
+;
+    movzx ecx,cx
+    movzx esi,si
+    movzx edi,di
+    call get_syslog
+;
+    pop edi
+    pop esi
+    pop ecx 
+    retf32
+get_syslog16    Endp 
+
+get_syslog32    Proc far
+    call get_syslog
+    retf32
+get_syslog32    Endp
+  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           init_task_syslog
@@ -845,6 +1000,13 @@ init_task_syslog    PROC near
     xor dx,dx
     mov ax,add_wait_for_syslog_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET get_syslog16
+    mov esi,OFFSET get_syslog32
+    mov edi,OFFSET get_syslog_name
+    mov dx,virt_es_in
+    mov ax,get_syslog_nr
+    RegisterUserGate
 ;
     ret
 init_task_syslog    ENDP

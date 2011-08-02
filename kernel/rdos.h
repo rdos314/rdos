@@ -540,6 +540,7 @@ void RDOSAPI RdosContinueDebugEvent(int handle, int thread);
 
 int RDOSAPI RdosOpenSyslog();
 void RDOSAPI RdosCloseSyslog(int handle);
+int RDOSAPI RdosGetSyslog(int handle, int *severity, unsigned long *msb, unsigned long *lsb, char *buf, int size);
 
 int RDOSAPI RdosOpenAdc(int channel);
 void RDOSAPI RdosCloseAdc(int handle);
@@ -2378,6 +2379,26 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosCloseSyslog = \
     CallGate_close_syslog  \
     parm [ebx];
+
+#pragma aux RdosGetSyslog = \
+    "push edi" \
+    "push esi" \
+    "push edx" \
+    "push eax" \
+    CallGate_get_syslog  \
+    "pop edi" \
+    "mov [edi],eax" \
+    "pop edi" \
+    "mov [edi],edx" \
+    "pop edi" \
+    "movzx eax,si" \
+    "xor ah,ah" \
+    "mov [edi],eax" \
+    "movzx eax,si" \
+    "mov al,ah" \
+    "xor ah,ah" \        
+    parm [ebx] [esi] [edx] [eax] [edi] [ecx] \
+    value [eax];
 
 #pragma aux RdosOpenAdc = \
     CallGate_open_adc  \
@@ -4338,6 +4359,26 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosCloseSyslog = \
     CallGate_close_syslog  \
     parm [ebx];
+
+#pragma aux RdosGetSyslog = \
+    "push edi" \
+    "push esi" \
+    "push edx" \
+    "push eax" \
+    CallGate_get_syslog  \
+    "pop edi" \
+    "mov gs:[edi],eax" \
+    "pop edi" \
+    "mov gs:[edi],edx" \
+    "pop edi" \
+    "movzx eax,si" \
+    "xor ah,ah" \
+    "mov fs:[edi],eax" \
+    "movzx eax,si" \
+    "mov al,ah" \
+    "xor ah,ah" \        
+    parm [ebx] [fs esi] [gs edx] [gs eax] [es edi] [ecx] \
+    value [eax];
 
 #pragma aux RdosOpenAdc = \
     CallGate_open_adc  \

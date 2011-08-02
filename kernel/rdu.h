@@ -535,6 +535,7 @@
 #define CallGate_open_syslog 0x67 0x9a 177 1 0 0 3 0
 #define CallGate_close_syslog 0x67 0x9a 178 1 0 0 3 0
 #define CallGate_add_wait_for_syslog 0x67 0x9a 179 1 0 0 3 0
+#define CallGate_get_syslog 0x67 0x9a 180 1 0 0 3 0
 
 #else
 
@@ -1073,5 +1074,6 @@
 #define CallGate_open_syslog 0x3e 0x67 0x9a 177 1 0 0 3 0
 #define CallGate_close_syslog 0x3e 0x67 0x9a 178 1 0 0 3 0
 #define CallGate_add_wait_for_syslog 0x3e 0x67 0x9a 179 1 0 0 3 0
+#define CallGate_get_syslog 0x3e 0x67 0x9a 180 1 0 0 3 0
 
 #endif
