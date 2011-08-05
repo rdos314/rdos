@@ -2584,6 +2584,7 @@ receive_syn_sent_ok:
     or ds:tcp_pending, FLAG_DELAY_ACK
     mov ds:tcp_ack_timeout,4
     call InitConnection
+    call SendAck
     jmp receive_syn_sent_done
 
 receive_syn_sent_reset:
