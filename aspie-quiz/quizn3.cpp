@@ -925,11 +925,11 @@ void TQuizN3::LoadPopulations()
 					score = Row.Quiz[i] - 1;
 					id = IdArr[i];
 
-					DsmAs.Add(Row.Aspie, id, score);
-					DsmAdd.Add(Row.ADHD, id, score);
-					DsmDyslexia.Add(Row.Dyslexia, id, score);
-					DsmBipolar.Add(Row.Bipolar, id, score);
-					DsmSocialPhobia.Add(Row.Social, id, score);
+//					DsmAs.Add(Row.Aspie, id, score);
+//					DsmAdd.Add(Row.ADHD, id, score);
+//					DsmDyslexia.Add(Row.Dyslexia, id, score);
+//					DsmBipolar.Add(Row.Bipolar, id, score);
+//					DsmSocialPhobia.Add(Row.Social, id, score);
 				}
 			}
 		}

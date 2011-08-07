@@ -312,9 +312,9 @@ void TQuizG3::LoadPopulations()
 					score = Row.Quiz[i] - 1;
 					id = IdArr[i];
 
-					DsmAs.Add(Row.Aspie, id, score);
-					DsmAdd.Add(Row.ADHD, id, score);
-					DsmSocialPhobia.Add(Row.Social, id, score);
+//					DsmAs.Add(Row.Aspie, id, score);
+//					DsmAdd.Add(Row.ADHD, id, score);
+//					DsmSocialPhobia.Add(Row.Social, id, score);
 				}
 			}
 		}

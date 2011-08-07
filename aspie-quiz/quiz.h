@@ -591,23 +591,6 @@ protected:
 	static TBirthMonth BirthMonth;
 	static TBirthYear BirthYear;
 
-    static TDsmPopulation DsmAutism;
-	static TDsmPopulation DsmAs;
-    static TDsmPopulation DsmAdd;
-    static TDsmPopulation DsmTs;
-    static TDsmPopulation DsmHyperlexia;
-    static TDsmPopulation DsmDyspraxia;
-	static TDsmPopulation DsmDyslexia;
-	static TDsmPopulation DsmDyscalculia;
-	static TDsmPopulation DsmOCD;
-	static TDsmPopulation DsmODD;
-	static TDsmPopulation DsmSynaesthesia;
-	static TDsmPopulation DsmPA;
-	static TDsmPopulation DsmDysgraphia;
-	static TDsmPopulation DsmBipolar;
-	static TDsmPopulation DsmSchizophrenia;
-	static TDsmPopulation DsmSocialPhobia;
-
 	int UseNtResult;
 	int RefCount;
 	TReferer *RefArr[MAX_REFERERS];

@@ -908,12 +908,12 @@ void TQuizR4::LoadPopulations()
 				score = Row.Quiz[i] - 1;
 				id = IdArr[i];
 
-				DsmAutism.Add(Row.Autism, id, score);
-				DsmAdd.Add(Row.ADHD, id, score);
-				DsmTs.Add(Row.TS, id, score);
-				DsmDyslexia.Add(Row.Dyslexia, id, score);
-				DsmDyscalculia.Add(Row.Dyscalculia, id, score);
-				DsmOCD.Add(Row.OCD, id, score);
+//				DsmAutism.Add(Row.Autism, id, score);
+//				DsmAdd.Add(Row.ADHD, id, score);
+//				DsmTs.Add(Row.TS, id, score);
+//				DsmDyslexia.Add(Row.Dyslexia, id, score);
+//				DsmDyscalculia.Add(Row.Dyscalculia, id, score);
+//				DsmOCD.Add(Row.OCD, id, score);
 			}
 		}
 

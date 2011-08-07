@@ -961,9 +961,9 @@ void TQuiz9::LoadPopulations()
 				score = Row.Quiz[i] - 1;
 				id = IdArr[i];
 
-				DsmAutism.Add(Row.Autism, id, score);
-				DsmAs.Add(Row.Aspie, id, score);
-				DsmAdd.Add(Row.ADHD, id, score);
+//				DsmAutism.Add(Row.Autism, id, score);
+//				DsmAs.Add(Row.Aspie, id, score);
+//				DsmAdd.Add(Row.ADHD, id, score);
 			}
 		}
 

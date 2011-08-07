@@ -76,23 +76,6 @@ static int GlobalAxisCount[MAX_GLOBAL_QUESTIONS][MAX_GROUP_COUNT];
 static long double GlobalDxSum[MAX_GLOBAL_QUESTIONS][DX_COUNT];
 static int GlobalDxCount[MAX_GLOBAL_QUESTIONS][DX_COUNT];
 
-TDsmPopulation TQuiz::DsmAutism;
-TDsmPopulation TQuiz::DsmAs;
-TDsmPopulation TQuiz::DsmAdd;
-TDsmPopulation TQuiz::DsmTs;
-TDsmPopulation TQuiz::DsmHyperlexia;
-TDsmPopulation TQuiz::DsmDyspraxia;
-TDsmPopulation TQuiz::DsmDyslexia;
-TDsmPopulation TQuiz::DsmDyscalculia;
-TDsmPopulation TQuiz::DsmOCD;
-TDsmPopulation TQuiz::DsmODD;
-TDsmPopulation TQuiz::DsmSynaesthesia;
-TDsmPopulation TQuiz::DsmPA;
-TDsmPopulation TQuiz::DsmDysgraphia;
-TDsmPopulation TQuiz::DsmBipolar;
-TDsmPopulation TQuiz::DsmSchizophrenia;
-TDsmPopulation TQuiz::DsmSocialPhobia;
-
 int TQuiz::PredYesOk[POP_TYPE_COUNT];
 int TQuiz::PredYesFail[POP_TYPE_COUNT];
 int TQuiz::PredNoOk[POP_TYPE_COUNT];
@@ -3399,22 +3382,22 @@ void TQuiz::CalcGlobal()
         if (GlobalInited)
                 return;
 
-        DsmAutism.Correlate();
-        DsmAs.Correlate();
-        DsmAdd.Correlate();
-        DsmTs.Correlate();
-        DsmHyperlexia.Correlate();
-        DsmDyspraxia.Correlate();
-        DsmDyslexia.Correlate();
-        DsmDyscalculia.Correlate();
-        DsmOCD.Correlate();
-        DsmODD.Correlate();
-        DsmSynaesthesia.Correlate();
-        DsmPA.Correlate();
-        DsmDysgraphia.Correlate();
-        DsmBipolar.Correlate();
-        DsmSchizophrenia.Correlate();
-        DsmSocialPhobia.Correlate();
+//        DsmAutism.Correlate();
+//        DsmAs.Correlate();
+//        DsmAdd.Correlate();
+//        DsmTs.Correlate();
+//        DsmHyperlexia.Correlate();
+//        DsmDyspraxia.Correlate();
+//        DsmDyslexia.Correlate();
+//        DsmDyscalculia.Correlate();
+//        DsmOCD.Correlate();
+//        DsmODD.Correlate();
+//        DsmSynaesthesia.Correlate();
+//        DsmPA.Correlate();
+//        DsmDysgraphia.Correlate();
+//		  DsmBipolar.Correlate();
+//		  DsmSchizophrenia.Correlate();
+//		  DsmSocialPhobia.Correlate();
 
         GlobalInited = TRUE;
 
@@ -10875,202 +10858,203 @@ void TQuiz::WriteDsmReport(TFile &File, TDsmPopulation &DsmPop)
 *##########################################################################*/
 void TQuiz::WriteDsmReport(const char *filename, int PopType)
 {
-        TFile file(filename, 0);
-        
-    switch (PopType)
-    {
-        case POP_TYPE_AUTISM:
+/*
+		  TFile file(filename, 0);
+
+	 switch (PopType)
+	 {
+		  case POP_TYPE_AUTISM:
 
 #ifdef ENGLISH
-                        file.Write("<h2>Autism diagnosis correlations</h2>\n");
+								file.Write("<h2>Autism diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-                file.Write("<h2>Autism diagnos korrelationer</h2>\n");
+					 file.Write("<h2>Autism diagnos korrelationer</h2>\n");
 #endif
-            WriteDsmReport(file, DsmAutism);
-            break;
-            
-        case POP_TYPE_AS:
+				WriteDsmReport(file, DsmAutism);
+				break;
+
+		  case POP_TYPE_AS:
 
 #ifdef ENGLISH
-                file.Write("<h2>AS/HFA/PDD diagnosis correlations</h2>\n");
+					 file.Write("<h2>AS/HFA/PDD diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-                file.Write("<h2>AS/HFA/PDD diagnos korrelationer</h2>\n");
+					 file.Write("<h2>AS/HFA/PDD diagnos korrelationer</h2>\n");
 #endif
-            WriteDsmReport(file, DsmAs);
-            break;
-            
-        case POP_TYPE_ADD:
+				WriteDsmReport(file, DsmAs);
+				break;
+
+		  case POP_TYPE_ADD:
 
 #ifdef ENGLISH
-                file.Write("<h2>ADD/ADHD diagnosis correlations</h2>\n");
+					 file.Write("<h2>ADD/ADHD diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-                        file.Write("<h2>ADD/ADHD diagnos korrelationer</h2>\n");
+								file.Write("<h2>ADD/ADHD diagnos korrelationer</h2>\n");
 #endif
-            WriteDsmReport(file, DsmAdd);
-            break;
-            
-        case POP_TYPE_TS:
+				WriteDsmReport(file, DsmAdd);
+				break;
+
+		  case POP_TYPE_TS:
 
 #ifdef ENGLISH
-                file.Write("<h2>Tourette diagnosis correlations</h2>\n");
+					 file.Write("<h2>Tourette diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-                file.Write("<h2>Tourette diagnos korrelationer</h2>\n");
+					 file.Write("<h2>Tourette diagnos korrelationer</h2>\n");
 #endif
-            WriteDsmReport(file, DsmTs);
-            break;
-            
-        case POP_TYPE_HYPERLEXIA:
+				WriteDsmReport(file, DsmTs);
+				break;
+
+		  case POP_TYPE_HYPERLEXIA:
 
 #ifdef ENGLISH
-                file.Write("<h2>Hyperlexia diagnosis correlations</h2>\n");
+					 file.Write("<h2>Hyperlexia diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-                file.Write("<h2>Hyperlexi diagnos korrelationer</h2>\n");
+					 file.Write("<h2>Hyperlexi diagnos korrelationer</h2>\n");
 #endif
-            WriteDsmReport(file, DsmHyperlexia);
-            break;
-            
-        case POP_TYPE_DYSPRAXIA:
+				WriteDsmReport(file, DsmHyperlexia);
+				break;
+
+		  case POP_TYPE_DYSPRAXIA:
 
 #ifdef ENGLISH
-                file.Write("<h2>Dyspraxia diagnosis correlations</h2>\n");
+					 file.Write("<h2>Dyspraxia diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-                file.Write("<h2>Dyspraxi diagnos korrelationer</h2>\n");
+					 file.Write("<h2>Dyspraxi diagnos korrelationer</h2>\n");
 #endif
-            WriteDsmReport(file, DsmDyspraxia);
-            break;
-            
-        case POP_TYPE_DYSLEXIA:
+				WriteDsmReport(file, DsmDyspraxia);
+				break;
+
+		  case POP_TYPE_DYSLEXIA:
 
 #ifdef ENGLISH
-                file.Write("<h2>Dyslexia diagnosis correlations</h2>\n");
+					 file.Write("<h2>Dyslexia diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-                file.Write("<h2>Dyslexi diagnos korrelationer</h2>\n");
+					 file.Write("<h2>Dyslexi diagnos korrelationer</h2>\n");
 #endif
-            WriteDsmReport(file, DsmDyslexia);
-            break;
-            
-        case POP_TYPE_DYSCALCULIA:
+				WriteDsmReport(file, DsmDyslexia);
+				break;
+
+		  case POP_TYPE_DYSCALCULIA:
 
 #ifdef ENGLISH
-                file.Write("<h2>Dyscalculia diagnosis correlations</h2>\n");
+					 file.Write("<h2>Dyscalculia diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-                file.Write("<h2>Dyskalkuli diagnos korrelationer</h2>\n");
+					 file.Write("<h2>Dyskalkuli diagnos korrelationer</h2>\n");
 #endif
-            WriteDsmReport(file, DsmDyscalculia);
-            break;
-            
-        case POP_TYPE_OCD:
+				WriteDsmReport(file, DsmDyscalculia);
+				break;
+
+		  case POP_TYPE_OCD:
 
 #ifdef ENGLISH
-                        file.Write("<h2>Obsessive Compulsive Disorder diagnosis correlations</h2>\n");
+								file.Write("<h2>Obsessive Compulsive Disorder diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-                        file.Write("<h2>Tvångssyndrom diagnos korrelationer</h2>\n");
+								file.Write("<h2>Tvångssyndrom diagnos korrelationer</h2>\n");
 #endif
-                        WriteDsmReport(file, DsmOCD);
-                        break;
+								WriteDsmReport(file, DsmOCD);
+								break;
 
-                case POP_TYPE_ODD:
+					 case POP_TYPE_ODD:
 
 #ifdef ENGLISH
-                        file.Write("<h2>ODD diagnosis correlations</h2>\n");
+								file.Write("<h2>ODD diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-                        file.Write("<h2>ODD diagnos korrelationer</h2>\n");
+								file.Write("<h2>ODD diagnos korrelationer</h2>\n");
 #endif
-                        WriteDsmReport(file, DsmODD);
-                        break;
-            
-        case POP_TYPE_SYNAESTHESIA:
+								WriteDsmReport(file, DsmODD);
+								break;
+
+		  case POP_TYPE_SYNAESTHESIA:
 
 #ifdef ENGLISH
-                file.Write("<h2>Synaesthesia diagnosis correlations</h2>\n");
+					 file.Write("<h2>Synaesthesia diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-                file.Write("<h2>Synestesi diagnos korrelationer</h2>\n");
+					 file.Write("<h2>Synestesi diagnos korrelationer</h2>\n");
 #endif
-            WriteDsmReport(file, DsmSynaesthesia);
-            break;
-            
-        case POP_TYPE_PA:
+				WriteDsmReport(file, DsmSynaesthesia);
+				break;
+
+		  case POP_TYPE_PA:
 
 #ifdef ENGLISH
-                file.Write("<h2>Prosopagnosia diagnosis correlations</h2>\n");
+					 file.Write("<h2>Prosopagnosia diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-                file.Write("<h2>Prosopagnosi diagnos korrelationer</h2>\n");
+					 file.Write("<h2>Prosopagnosi diagnos korrelationer</h2>\n");
 #endif
-            WriteDsmReport(file, DsmPA);
-                        break;
-            
-        case POP_TYPE_DYSGRAPHIA:
+				WriteDsmReport(file, DsmPA);
+								break;
+
+		  case POP_TYPE_DYSGRAPHIA:
 
 #ifdef ENGLISH
-                file.Write("<h2>Dysgraphia diagnosis correlations</h2>\n");
+					 file.Write("<h2>Dysgraphia diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-                        file.Write("<h2>Dysgrafi diagnos korrelationer</h2>\n");
+								file.Write("<h2>Dysgrafi diagnos korrelationer</h2>\n");
 #endif
-            WriteDsmReport(file, DsmDysgraphia);
-            break;
-            
-        case POP_TYPE_BIPOLAR:
+				WriteDsmReport(file, DsmDysgraphia);
+				break;
+
+		  case POP_TYPE_BIPOLAR:
 
 #ifdef ENGLISH
-                file.Write("<h2>Bipolar diagnosis correlations</h2>\n");
+					 file.Write("<h2>Bipolar diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-                        file.Write("<h2>Bipolär diagnos korrelationer</h2>\n");
+								file.Write("<h2>Bipolär diagnos korrelationer</h2>\n");
 #endif
-            WriteDsmReport(file, DsmBipolar);
-            break;
-            
-        case POP_TYPE_SCHIZOPHRENIA:
+				WriteDsmReport(file, DsmBipolar);
+				break;
+
+		  case POP_TYPE_SCHIZOPHRENIA:
 
 #ifdef ENGLISH
-                file.Write("<h2>Schizophrenia diagnosis correlations</h2>\n");
+					 file.Write("<h2>Schizophrenia diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-                file.Write("<h2>Schizofreni diagnos korrelationer</h2>\n");
+					 file.Write("<h2>Schizofreni diagnos korrelationer</h2>\n");
 #endif
-            WriteDsmReport(file, DsmSchizophrenia);
-            break;
+				WriteDsmReport(file, DsmSchizophrenia);
+				break;
 
-        case POP_TYPE_SOCIAL_PHOBIA:
+		  case POP_TYPE_SOCIAL_PHOBIA:
 
 #ifdef ENGLISH
-                file.Write("<h2>Social phobia diagnosis correlations</h2>\n");
+					 file.Write("<h2>Social phobia diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-                file.Write("<h2>Social fobi diagnos korrelationer</h2>\n");
+					 file.Write("<h2>Social fobi diagnos korrelationer</h2>\n");
 #endif
-            WriteDsmReport(file, DsmSocialPhobia);
-            break;
-    }            
+				WriteDsmReport(file, DsmSocialPhobia);
+				break;
+	 } */
 }
 
 /*##################  TQuiz::ExportBirthMonthHistogram ##########################
@@ -11082,7 +11066,7 @@ void TQuiz::WriteDsmReport(const char *filename, int PopType)
 *##########################################################################*/
 void TQuiz::ExportBirthMonthHistogram(const char *filename)
 {
-    BirthMonth.ExportHistogram(filename);
+	 BirthMonth.ExportHistogram(filename);
 }
 
 /*##################  TQuiz::ExportBirthYearHistogram ##########################
