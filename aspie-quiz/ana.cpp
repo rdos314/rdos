@@ -97,6 +97,7 @@
 #include "quizg6.h"
 #include "quizg7.h"
 #include "quizg8.h"
+#include "quizh1.h"
 
 #include "quizdbf.h"
 #include "quizdbg.h"
@@ -500,7 +501,7 @@ void ExportAncestry2(const char *filename, int Ancestry)
 		  }
         outfile.Write("\n");
 
-         for (v = 0; v < 8; v++)
+         for (v = 0; v < 9; v++)
 		  {
 						switch (v)
 					 {
@@ -534,6 +535,10 @@ void ExportAncestry2(const char *filename, int Ancestry)
 
                         case 7:
                                 infile = new TFile("ancg8.bin");
+										  break;
+
+                        case 8:
+                                infile = new TFile("anch1.bin");
 										  break;
 
                   }
@@ -884,7 +889,7 @@ void ExportFinal2(const char *filename)
 		  TFile outfile(filename, 0);
 
 
-        for (v = 0; v < 8; v++)
+        for (v = 0; v < 9; v++)
         {
                 switch (v)
                 {
@@ -918,6 +923,10 @@ void ExportFinal2(const char *filename)
 
                         case 7:
                                 infile = new TFile("ancg8.bin");
+										  break;
+
+                        case 8:
+                                infile = new TFile("anch1.bin");
 										  break;
                 }
 
@@ -1137,6 +1146,9 @@ int main(int argc, char **argv)
 
         printf("G8\r\n");
         Quiz[58] = new TQuizG8("quizg8.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46], Quiz[47], Quiz[48], Quiz[49], Quiz[50], Quiz[51], Quiz[52], Quiz[53], Quiz[54], Quiz[55], Quiz[56], Quiz[57]);
+
+        printf("H1\r\n");
+        Quiz[59] = new TQuizH1("quizh1.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46], Quiz[47], Quiz[48], Quiz[49], Quiz[50], Quiz[51], Quiz[52], Quiz[53], Quiz[54], Quiz[55], Quiz[56], Quiz[57], Quiz[58]);
 
 		  printf("Start analysis\r\n");
 
@@ -1648,6 +1660,13 @@ int main(int argc, char **argv)
 		  Quiz[58]->ExportExcelCase("pca\\youngg8.dat", PCA_TYPE_YOUNG);
 		  Quiz[58]->ExportExcelCase("pca\\oldg8.dat", PCA_TYPE_OLD);
 
+		  printf("allh1\r\n");
+			Quiz[59]->ExportExcelCase("pca\\allh1.dat", PCA_TYPE_ALL);
+			Quiz[59]->ExportExcelCase("pca\\maleh1.dat", PCA_TYPE_MALE);
+			Quiz[59]->ExportExcelCase("pca\\femaleh1.dat", PCA_TYPE_FEMALE);
+		  Quiz[59]->ExportExcelCase("pca\\youngh1.dat", PCA_TYPE_YOUNG);
+		  Quiz[59]->ExportExcelCase("pca\\oldh1.dat", PCA_TYPE_OLD);
+
 		  printf("aspie\r\n");
 
 #ifdef EXPORT
@@ -1713,6 +1732,7 @@ int main(int argc, char **argv)
 			Quiz[56]->ExportExcelAspie("pca\\aspieg6.dat");
 			Quiz[57]->ExportExcelAspie("pca\\aspieg7.dat");
 			Quiz[58]->ExportExcelAspie("pca\\aspieg8.dat");
+			Quiz[59]->ExportExcelAspie("pca\\aspieh1.dat");
 
 
         printf("import\r\n");
