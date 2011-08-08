@@ -91,7 +91,7 @@ int main(int argc, char **argv)
 
 	printf("import aspie\r\n");
 
-    Quiz[0]->ImportFinalMvsp("pca\\allfin.txt");
+    Quiz[0]->ImportFinalMvsp("pca\\allfin2.txt");
 
 	Quiz[0]->ImportMvspAspie("pca\\aspfin2.txt");
 

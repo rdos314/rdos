@@ -767,18 +767,50 @@ void TQuizFinal2::LoadReferers()
 		if (Row.ADHD == 2)
 			UpdateReferer(&AddRef, Row.AsResult, Row.NtResult, GroupResult);
 
+		if (Row.ADHD == 2)
+		{
+			if (Row.Gender == 1)
+				UpdateReferer(&MaleAddRef, Row.AsResult, Row.NtResult, GroupResult);
+			else
+				UpdateReferer(&FemaleAddRef, Row.AsResult, Row.NtResult, GroupResult);
+		}
+
 		if (Row.OCD == 2)
 			UpdateReferer(&OCDRef, Row.AsResult, Row.NtResult, GroupResult);
+
+		if (Row.OCD == 2)
+		{
+			if (Row.Gender == 1)
+				UpdateReferer(&MaleOCDRef, Row.AsResult, Row.NtResult, GroupResult);
+			else
+				UpdateReferer(&FemaleOCDRef, Row.AsResult, Row.NtResult, GroupResult);
+		}
 
 		if (Row.Social == 2)
 			UpdateReferer(&SocialPhobiaRef, Row.AsResult, Row.NtResult, GroupResult);
 
-		if (Row.Aspie)
+		if (Row.Social == 2)
+		{
+			if (Row.Gender == 1)
+				UpdateReferer(&MaleSocialRef, Row.AsResult, Row.NtResult, GroupResult);
+			else
+				UpdateReferer(&FemaleSocialRef, Row.AsResult, Row.NtResult, GroupResult);
+		}
+
+		if (Row.Aspie == 2)
 		{
 			if (Row.Gender == 1)
 				UpdateReferer(&MaleAsRef, Row.AsResult, Row.NtResult, GroupResult);
 			else
 				UpdateReferer(&FemaleAsRef, Row.AsResult, Row.NtResult, GroupResult);
+		}
+
+		if (Row.AsResult - Row.NtResult >= 35)
+		{
+		    if (Row.Gender == 1)
+				UpdateReferer(&MaleAspieRef, Row.AsResult, Row.NtResult, GroupResult);
+			else
+				UpdateReferer(&FemaleAspieRef, Row.AsResult, Row.NtResult, GroupResult);
 		}
 	}
 }

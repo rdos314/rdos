@@ -409,8 +409,12 @@ TQuiz::TQuiz(int Questions)
          SelfAsRef("", "Self-diagnosed AS/HFA/PDD"),
          MaleAsRef("", "Male AS/HFA/PDD"),
          FemaleAsRef("", "Female AS/HFA/PDD"),
+         MaleAspieRef("", "Male Aspie"),
+         FemaleAspieRef("", "Female Aspie"),
           MaleNonAsRef("", "Male non-AS/HFA/PDD"),
          FemaleNonAsRef("", "Female non-AS/HFA/PDD"),
+         MaleAddRef("", "Male ADD/ADHD"),
+         FemaleAddRef("", "Female ADD/ADHD"),
          MaleRef("", "Male"),
          FemaleRef("", "Female"),
          HyperlexiaRef("", "Hyperlexia"),
@@ -418,6 +422,8 @@ TQuiz::TQuiz(int Questions)
          DyslexiaRef("", "Dyslexia"),
          DyscalculiaRef("", "Dyscalculia"),
          OCDRef("", "OCD"),
+         MaleOCDRef("", "Male OCD"),
+         FemaleOCDRef("", "Female OCD"),
          ODDRef("", "ODD"),
          SynaesthesiaRef("", "Synaesthesia"),
          PARef("", "Prosapagnosia"),
@@ -425,6 +431,8 @@ TQuiz::TQuiz(int Questions)
          BipolarRef("", "Bipolar"),
          SchizophreniaRef("", "Schizophrenia"),
          SocialPhobiaRef("", "Social phobia"),
+         MaleSocialRef("", "Male Social phobia"),
+         FemaleSocialRef("", "Female Social phobia"),
          AmerindianRef("", "Native American"),
          AfroAmericanRef("", "Afroamerican"),
          MixedAfroAmericanRef("", "Mixed American"),
@@ -5315,29 +5323,35 @@ void TQuiz::WriteReferers(const char *filename)
     file.Write("Groups");
         WriteFieldFooter(file);
 
-        WriteFieldHeader(file, 66);
-        file.Write("Web site / description");
-        WriteFieldFooter(file);
+		WriteFieldHeader(file, 66);
+		file.Write("Web site / description");
+		WriteFieldFooter(file);
 
-        file.Write("</tr>");
+		file.Write("</tr>");
 
-        WriteReferer(file, &AutismRef);
-        WriteReferer(file, &AsRef);
-        WriteReferer(file, &TsRef);
-        WriteReferer(file, &AddRef);
-        WriteReferer(file, &SelfAsRef);
-        WriteReferer(file, &MaleAsRef);
-        WriteReferer(file, &FemaleAsRef);
-        WriteReferer(file, &MaleNonAsRef);
-        WriteReferer(file, &FemaleNonAsRef);
-        WriteReferer(file, &MaleRef);
-        WriteReferer(file, &FemaleRef);
-        WriteReferer(file, &AspieRef);
-        WriteReferer(file, &HyperlexiaRef);
-        WriteReferer(file, &DyspraxiaRef);
-        WriteReferer(file, &DyslexiaRef);
-        WriteReferer(file, &DyscalculiaRef);
-        WriteReferer(file, &OCDRef);
+		WriteReferer(file, &AutismRef);
+		WriteReferer(file, &AsRef);
+		WriteReferer(file, &TsRef);
+		WriteReferer(file, &AddRef);
+		WriteReferer(file, &MaleAddRef);
+		WriteReferer(file, &FemaleAddRef);
+		WriteReferer(file, &SelfAsRef);
+		WriteReferer(file, &MaleAsRef);
+		WriteReferer(file, &FemaleAsRef);
+		WriteReferer(file, &MaleNonAsRef);
+		WriteReferer(file, &FemaleNonAsRef);
+		WriteReferer(file, &MaleAspieRef);
+		WriteReferer(file, &FemaleAspieRef);
+		WriteReferer(file, &MaleRef);
+		WriteReferer(file, &FemaleRef);
+		WriteReferer(file, &AspieRef);
+		WriteReferer(file, &HyperlexiaRef);
+		WriteReferer(file, &DyspraxiaRef);
+		WriteReferer(file, &DyslexiaRef);
+		WriteReferer(file, &DyscalculiaRef);
+		WriteReferer(file, &OCDRef);
+		WriteReferer(file, &FemaleOCDRef);
+		WriteReferer(file, &MaleOCDRef);
         WriteReferer(file, &ODDRef);
         WriteReferer(file, &SynaesthesiaRef);
         WriteReferer(file, &PARef);
@@ -5345,6 +5359,8 @@ void TQuiz::WriteReferers(const char *filename)
         WriteReferer(file, &BipolarRef);
         WriteReferer(file, &SchizophreniaRef);
         WriteReferer(file, &SocialPhobiaRef);
+        WriteReferer(file, &FemaleSocialRef);
+		WriteReferer(file, &MaleSocialRef);
         WriteReferer(file, &WhiteRef);
         WriteReferer(file, &AsianRef);
         WriteReferer(file, &AmerindianRef);
@@ -9351,11 +9367,12 @@ void TQuiz::WriteLinkReport(const char *filename)
 #endif
 
         file.Write("<a name=\"QUIZ");
-        WriteName(file);
+        CrossQuiz[58]->WriteName(file);
         file.Write("\">");
         file.Write("Version ");
-        WriteName(file);
+        CrossQuiz[58]->WriteName(file);
         file.Write("</a>");
+
 
 #ifdef ENGLISH
         file.Write(" <a href=\"quizg8.htm\">overview</a> <a href=\"relg8.htm\">related questions</a> <a href=\"refg8.htm\">referer sites</a> <a href=\"retestg8.htm\">score stability</a> <a href=\"raceg8.htm\">ancestry</a>");
@@ -9364,6 +9381,23 @@ void TQuiz::WriteLinkReport(const char *filename)
 
 #ifdef SWEDISH
          file.Write(" <a href=\"quizg8.htm\">översikt</a> <a href=\"relg8.htm\">relaterade frågor</a> <a href=\"refg8.htm\">referenssajter</a> <a href=\"retestg8.htm\">poäng stabilitet</a> <a href=\"raceg8.htm\">ursprung</a>");
+         file.Write("<br>");
+#endif
+
+        file.Write("<a name=\"QUIZ");
+        WriteName(file);
+        file.Write("\">");
+        file.Write("Version ");
+        WriteName(file);
+        file.Write("</a>");
+
+#ifdef ENGLISH
+        file.Write(" <a href=\"quizh1.htm\">overview</a> <a href=\"relh1.htm\">related questions</a> <a href=\"refh1.htm\">referer sites</a> <a href=\"retesth1.htm\">score stability</a> <a href=\"raceh1.htm\">ancestry</a>");
+        file.Write("<br>");
+#endif
+
+#ifdef SWEDISH
+         file.Write(" <a href=\"quizh1.htm\">översikt</a> <a href=\"relh1.htm\">relaterade frågor</a> <a href=\"refh1.htm\">referenssajter</a> <a href=\"retesth1.htm\">poäng stabilitet</a> <a href=\"raceh1.htm\">ursprung</a>");
          file.Write("<br>");
 #endif
 
