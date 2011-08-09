@@ -1384,7 +1384,7 @@ static int IsPca(TQuizRow *row, int PcaType)
 				if (row->Autism == 2 || row->Aspie == 2)
 				return TRUE;
 			else
-                return FALSE;
+					 return FALSE;
 
     }
 	return FALSE;
@@ -1408,7 +1408,7 @@ void TQuizR4::ExportExcelCase(const char *filename, int PcaType)
 	file.Write("\"\", ");
 	file.Write("\"\", ");
 
-	for (i = 0; i < N; i++)
+	for (i = 0; i < GetQuizN(); i++)
 	{
 		if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
 		{
@@ -1437,17 +1437,17 @@ void TQuizR4::ExportExcelCase(const char *filename, int PcaType)
 			sprintf(str, "\"%d\", ", Row.NtResult);
 			file.Write(str);
 
-			for (i = 0; i < N; i++)
+			for (i = 0; i < GetQuizN(); i++)
 			{
 				if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
 				{
-    				ival = Row.Quiz[i];
-	    			if (ival)
-		    			ival--;
-    
+					ival = Row.Quiz[i];
+					if (ival)
+						ival--;
+
 					if (i < 153 && ival > 2)
 						ival = 0;
-                    
+
 					sprintf(str, "%d", ival);
 					file.Write(str);
 					if (i != N - 1)
@@ -1493,37 +1493,37 @@ void TQuizR4::ExportExcelAspie(const char *filename)
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-	    if (Row.AqResult)
-	    {
-    		sprintf(str, "\"%d\", ", Row.AsResult);
-	    	file.Write(str);
+		 if (Row.AqResult)
+		 {
+			sprintf(str, "\"%d\", ", Row.AsResult);
+			file.Write(str);
 
-    		sprintf(str, "\"%d\", ", Row.NtResult);
-	    	file.Write(str);
+			sprintf(str, "\"%d\", ", Row.NtResult);
+			file.Write(str);
 
-    		for (i = 0; i < N; i++)
-    		{
-	    		ival = Row.Quiz[i];
+			for (i = 0; i < N; i++)
+			{
+				ival = Row.Quiz[i];
 
-		    	if (ival)
-			    {
-				    if (Quiz[i].Reverse)
-					    ival = GetCatCount(i) - ival;
-    				else
-	    				ival--;
-		    	}
+				if (ival)
+				 {
+					 if (Quiz[i].Reverse)
+						 ival = GetCatCount(i) - ival;
+					else
+						ival--;
+				}
 
 
-			    if (ival >= GetCatCount(i))
-				    ival = 0;
+				 if (ival >= GetCatCount(i))
+					 ival = 0;
 
-    			sprintf(str, "%d", ival);
-	    		file.Write(str);
-		    	if (i != N - 1)
-			    	file.Write(", ");
-    		}
-	    	file.Write("\n");
-	    }
+				sprintf(str, "%d", ival);
+				file.Write(str);
+				if (i != N - 1)
+					file.Write(", ");
+			}
+			file.Write("\n");
+		 }
 	}
 }
 

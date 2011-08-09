@@ -31,7 +31,7 @@
 #include <math.h>
 
 // #define EXPORT       1
-// #define ALL          1
+#define ALL          1
 // #define CONV         1
 
 #include "file.h"
@@ -331,7 +331,7 @@ void ExportAncestry(const char *filename, int Ancestry)
                                                         use = TRUE;
                                                 break;
 
-								  case COUNTRY_SSA:
+                                  case COUNTRY_SSA:
                                          if (Row.Lang == 0 && Row.Country >= 1000 && Row.Country < 2000)
                                                  use = TRUE;
                                                  break;
@@ -362,7 +362,7 @@ void ExportAncestry(const char *filename, int Ancestry)
                                                  break;
 
                                   case COUNTRY_S_EUROPE:
-										 if (Row.Lang == 0 && Row.Country >= 2400 && Row.Country < 2600)
+                                         if (Row.Lang == 0 && Row.Country >= 2400 && Row.Country < 2600)
                                                  use = TRUE;
                                                  break;
 
@@ -393,7 +393,7 @@ void ExportAncestry(const char *filename, int Ancestry)
 
 						case US_INDIAN:
                          if (Row.Ancestry == 3 && Row.Country == 7302)
-							use = TRUE;
+                            use = TRUE;
 													  break;
 
                   case US_AFRO:
@@ -424,7 +424,7 @@ void ExportAncestry(const char *filename, int Ancestry)
                                   case ALL_AFRO:
                                          if (Row.Ancestry == 5 || (Row.Ancestry >= 1000 && Row.Ancestry < 2000))
                                                 use = TRUE;
-										 break;
+                                         break;
 
                                   case ALL_CAUC:
                                          if ((Row.Ancestry >= 2000 && Row.Ancestry < 3000) || Row.Ancestry == 3205)
@@ -486,7 +486,7 @@ void ExportAncestry2(const char *filename, int Ancestry)
         TFile outfile(filename, 0);
 
         outfile.Write("\"\", ");
-		outfile.Write("\"\", ");
+        outfile.Write("\"\", ");
 
         for (i = 0; i < 150; i++)
         {
@@ -517,7 +517,7 @@ void ExportAncestry2(const char *filename, int Ancestry)
 										  infile = new TFile("ancg3.bin");
 										  break;
 
-						case 3:
+                        case 3:
                                 infile = new TFile("ancg4.bin");
                                 break;
 
@@ -548,7 +548,7 @@ void ExportAncestry2(const char *filename, int Ancestry)
                          use = FALSE;
                          switch (Ancestry)
                          {
-										  case ANCESTRY_ALL:
+                                          case ANCESTRY_ALL:
                                                         use = TRUE;
                                                         break;
 
@@ -579,7 +579,7 @@ void ExportAncestry2(const char *filename, int Ancestry)
 
                                         case ANCESTRY_AUSTRALIAN:
                                                 if (Row.Ancestry == 1)
-														use = TRUE;
+                                                        use = TRUE;
                                                         break;
 
                                         case ANCESTRY_ENGLAND:
@@ -610,7 +610,7 @@ void ExportAncestry2(const char *filename, int Ancestry)
                                         case ANCESTRY_CZECH:
                                                 if (Row.Lang == 5)
                                                         use = TRUE;
-												break;
+                                                break;
 
                                         case ANCESTRY_HOLLAND:
 																if (Row.Lang == 6)
@@ -672,7 +672,7 @@ void ExportAncestry2(const char *filename, int Ancestry)
                                                  use = TRUE;
                                                  break;
 
-								  case REGION_AFRO_US:
+                                  case REGION_AFRO_US:
                                          if (Row.Lang == 0 && Row.Ancestry == 5)
                                                  use = TRUE;
                                                  break;
@@ -703,7 +703,7 @@ void ExportAncestry2(const char *filename, int Ancestry)
                                          break;
 
                                   case ALL_INDIAN:
-										 if (Row.Ancestry == 3)
+                                         if (Row.Ancestry == 3)
                                                 use = TRUE;
                                          break;
 
@@ -723,7 +723,7 @@ void ExportAncestry2(const char *filename, int Ancestry)
                                          break;
                                 }
 
-								if (use)
+                                if (use)
 										  {
                                         sprintf(str, "\"%d\", ", Row.AsResult);
                                 outfile.Write(str);
@@ -765,7 +765,7 @@ void ExportFinal(const char *filename)
         TQuizRow QRow;
         int i;
         int v;
-		int ival;
+        int ival;
         char str[80];
         int use;
         TFile *infile;
@@ -786,7 +786,7 @@ void ExportFinal(const char *filename)
 
                         case 2:
                                 infile = new TFile("ancf3.bin");
-								break;
+                                break;
 
                         case 3:
                                 infile = new TFile("ancf4.bin");
@@ -796,7 +796,7 @@ void ExportFinal(const char *filename)
                                 infile = new TFile("ancf5.bin");
                                 break;
 
-						case 5:
+                        case 5:
                                 infile = new TFile("ancf6.bin");
                                 break;
 
@@ -817,7 +817,7 @@ void ExportFinal(const char *filename)
                                 break;
 
                         case 10:
-								infile = new TFile("ancf11.bin");
+                                infile = new TFile("ancf11.bin");
                                 break;
 
                         case 11:
@@ -848,7 +848,7 @@ void ExportFinal(const char *filename)
                                 QRow.BirthYear = ARow.BirthYear;
                                 QRow.BirthMonth = ARow.BirthMonth;
                                 QRow.Gender = ARow.Gender;
-								QRow.Country = ARow.Country;
+                                QRow.Country = ARow.Country;
 										  QRow.Ancestry = ARow.Ancestry;
                                 QRow.Aspie = ARow.Aspie;
                                 QRow.ADHD = ARow.ADHD;
@@ -889,7 +889,7 @@ void ExportFinal2(const char *filename)
 		  TFile outfile(filename, 0);
 
 
-		for (v = 0; v < 9; v++)
+        for (v = 0; v < 9; v++)
         {
                 switch (v)
                 {
@@ -910,50 +910,50 @@ void ExportFinal2(const char *filename)
                                 break;
 
                         case 4:
-								infile = new TFile("ancg5.bin");
-								break;
+                                infile = new TFile("ancg5.bin");
+                                break;
 
-						case 5:
-								infile = new TFile("ancg6.bin");
-								break;
+                        case 5:
+                                infile = new TFile("ancg6.bin");
+                                break;
 
-						case 6:
-								infile = new TFile("ancg7.bin");
-								break;
+                        case 6:
+                                infile = new TFile("ancg7.bin");
+                                break;
 
-						case 7:
-								infile = new TFile("ancg8.bin");
+                        case 7:
+                                infile = new TFile("ancg8.bin");
 										  break;
 
-						case 8:
-								infile = new TFile("anch1.bin");
+                        case 8:
+                                infile = new TFile("anch1.bin");
 										  break;
-				}
+                }
 
 					 while (infile->Read(&ARow, sizeof(ARow)))
 					 {
-						if (ARow.Lang == 0)
-						{
-								QRow.BirthYear = ARow.BirthYear;
-								QRow.BirthMonth = ARow.BirthMonth;
-								QRow.Gender = ARow.Gender;
-								QRow.Country = ARow.Country;
-								QRow.Ancestry = ARow.Ancestry;
-								QRow.Aspie = ARow.Aspie;
-								QRow.ADHD = ARow.ADHD;
-								QRow.OCD = ARow.OCD;
-								QRow.Social = ARow.Social;
-								QRow.AsResult = ARow.AsResult;
-								QRow.NtResult = ARow.NtResult;
+                        if (ARow.Lang == 0)
+                        {
+                                QRow.BirthYear = ARow.BirthYear;
+                                QRow.BirthMonth = ARow.BirthMonth;
+                                QRow.Gender = ARow.Gender;
+                                QRow.Country = ARow.Country;
+                                QRow.Ancestry = ARow.Ancestry;
+                                QRow.Aspie = ARow.Aspie;
+                                QRow.ADHD = ARow.ADHD;
+                                QRow.OCD = ARow.OCD;
+                                QRow.Social = ARow.Social;
+                                QRow.AsResult = ARow.AsResult;
+                                QRow.NtResult = ARow.NtResult;
 
-								strcpy(QRow.Referer, ARow.Referer);
+                                strcpy(QRow.Referer, ARow.Referer);
 
-								for (i = 0; i < 150; i++)
-										QRow.Quiz[i] = ARow.Quiz[i];
+                                for (i = 0; i < 150; i++)
+                                        QRow.Quiz[i] = ARow.Quiz[i];
 
-								outfile.Write(&QRow, sizeof(QRow));
-						}
-				}
+                                outfile.Write(&QRow, sizeof(QRow));
+                        }
+                }
 					 delete infile;
 		  }
 }
@@ -982,7 +982,7 @@ int main(int argc, char **argv)
 		  printf("ND\r\n");
         Quiz[3] = new TQuizNd("quiznd.bin", Quiz[0], Quiz[1], Quiz[2]);
 
-		printf("5\r\n");
+        printf("5\r\n");
         Quiz[4] = new TQuiz5("quiz5.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3]);
 
         printf("6\r\n");
@@ -1013,7 +1013,7 @@ int main(int argc, char **argv)
         Quiz[13] = new TQuizR5("quizr5.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12]);
 
         printf("R6\r\n");
-		Quiz[14] = new TQuizR6("quizr6.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13]);
+        Quiz[14] = new TQuizR6("quizr6.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13]);
 
         printf("R7\r\n");
         Quiz[15] = new TQuizR7("quizr7.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14]);
@@ -1106,7 +1106,7 @@ int main(int argc, char **argv)
         Quiz[44] = new TQuizF12("quizf12.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43]);
 
         printf("F13\r\n");
-		Quiz[45] = new TQuizF13("quizf13.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44]);
+        Quiz[45] = new TQuizF13("quizf13.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44]);
 
         printf("F14\r\n");
         Quiz[46] = new TQuizF14("quizf14.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45]);
@@ -1145,10 +1145,10 @@ int main(int argc, char **argv)
         Quiz[57] = new TQuizG7("quizg7.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46], Quiz[47], Quiz[48], Quiz[49], Quiz[50], Quiz[51], Quiz[52], Quiz[53], Quiz[54], Quiz[55], Quiz[56]);
 
         printf("G8\r\n");
-		Quiz[58] = new TQuizG8("quizg8.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46], Quiz[47], Quiz[48], Quiz[49], Quiz[50], Quiz[51], Quiz[52], Quiz[53], Quiz[54], Quiz[55], Quiz[56], Quiz[57]);
+        Quiz[58] = new TQuizG8("quizg8.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46], Quiz[47], Quiz[48], Quiz[49], Quiz[50], Quiz[51], Quiz[52], Quiz[53], Quiz[54], Quiz[55], Quiz[56], Quiz[57]);
 
-		printf("H1\r\n");
-		Quiz[59] = new TQuizH1("quizh1.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46], Quiz[47], Quiz[48], Quiz[49], Quiz[50], Quiz[51], Quiz[52], Quiz[53], Quiz[54], Quiz[55], Quiz[56], Quiz[57], Quiz[58]);
+        printf("H1\r\n");
+        Quiz[59] = new TQuizH1("quizh1.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46], Quiz[47], Quiz[48], Quiz[49], Quiz[50], Quiz[51], Quiz[52], Quiz[53], Quiz[54], Quiz[55], Quiz[56], Quiz[57], Quiz[58]);
 
 		  printf("Start analysis\r\n");
 
@@ -1159,12 +1159,41 @@ int main(int argc, char **argv)
 		  Quiz[36]->WritePartner("eval\\partner.htm");
 
 		  printf("Export final\r\n");
-
-		  ExportFinal("final.bin");
+  
+          ExportFinal("final.bin");
 
 		  printf("Export final 2\r\n");
 
 		  ExportFinal2("final2.bin");
+
+#ifdef ANCESTRY
+
+			ExportAncestry("pca\\allf.dat", ANCESTRY_ALL);
+			ExportAncestry("pca\\cauc.dat", ANCESTRY_CAUCASIAN);
+			ExportAncestry("pca\\asian.dat", ANCESTRY_ASIAN);
+			ExportAncestry("pca\\amerind.dat", ANCESTRY_AMERIND);
+			ExportAncestry("pca\\african.dat", ANCESTRY_AFRICAN);
+			ExportAncestry("pca\\arab.dat", ANCESTRY_ARAB);
+			ExportAncestry("pca\\austral.dat", ANCESTRY_AUSTRALIAN);
+			ExportAncestry("pca\\uk.dat", ANCESTRY_ENGLAND);
+			ExportAncestry("pca\\sw.dat", ANCESTRY_SWEDEN);
+			ExportAncestry("pca\\no.dat", ANCESTRY_NORWAY);
+			ExportAncestry("pca\\br.dat", ANCESTRY_PORTUGAL);
+			ExportAncestry("pca\\de.dat", ANCESTRY_GERMANY);
+			ExportAncestry("pca\\cz.dat", ANCESTRY_CZECH);
+			ExportAncestry("pca\\nl.dat", ANCESTRY_HOLLAND);
+			ExportAncestry("pca\\cssa.dat", COUNTRY_SSA);
+			ExportAncestry("pca\\carab.dat", COUNTRY_ARAB);
+			ExportAncestry("pca\\csasia.dat", COUNTRY_S_ASIA);
+			ExportAncestry("pca\\ceasia.dat", COUNTRY_E_ASIA);
+			ExportAncestry("pca\\cnasia.dat", COUNTRY_N_ASIA);
+			ExportAncestry("pca\\cneuro.dat", COUNTRY_N_EUROPE);
+			ExportAncestry("pca\\cseuro.dat", COUNTRY_S_EUROPE);
+			ExportAncestry("pca\\ceeuro.dat", COUNTRY_E_EUROPE);
+			ExportAncestry("pca\\reuro.dat", REGION_EUROPE);
+			ExportAncestry("pca\\rus.dat", REGION_US);
+			ExportAncestry("pca\\raustral.dat", REGION_AUSTRALIA);
+			ExportAncestry("pca\\rafrous.dat", REGION_AFRO_US);
 
 			ExportAncestry2("pca\\usind.dat", US_INDIAN);
 			ExportAncestry2("pca\\usafro.dat", US_AFRO);
@@ -1177,6 +1206,7 @@ int main(int argc, char **argv)
 			ExportAncestry2("pca\\allcauc.dat", ALL_CAUC);
 			ExportAncestry2("pca\\allasia.dat", ALL_ASIA);
 
+#endif
 
 #ifdef ALL
 //  Quiz[0]->CheckCross();
@@ -1216,31 +1246,31 @@ int main(int argc, char **argv)
 
 //      Quiz[49]->CheckCross();
 
-		printf("all1\r\n");
-		Quiz[0]->ExportExcelCase("pca\\all1.dat", PCA_TYPE_ALL);
-		Quiz[0]->ExportExcelCase("pca\\male1.dat", PCA_TYPE_MALE);
-		Quiz[0]->ExportExcelCase("pca\\female1.dat", PCA_TYPE_FEMALE);
+        printf("all1\r\n");
+        Quiz[0]->ExportExcelCase("pca\\all1.dat", PCA_TYPE_ALL);
+        Quiz[0]->ExportExcelCase("pca\\male1.dat", PCA_TYPE_MALE);
+        Quiz[0]->ExportExcelCase("pca\\female1.dat", PCA_TYPE_FEMALE);
 
 		  printf("all2\r\n");
-		Quiz[1]->ExportExcelCase("pca\\all2.dat", PCA_TYPE_ALL);
+        Quiz[1]->ExportExcelCase("pca\\all2.dat", PCA_TYPE_ALL);
 		  Quiz[1]->ExportExcelCase("pca\\male2.dat", PCA_TYPE_MALE);
-		Quiz[1]->ExportExcelCase("pca\\female2.dat", PCA_TYPE_FEMALE);
-		Quiz[1]->ExportExcelCase("pca\\young2.dat", PCA_TYPE_YOUNG);
-		Quiz[1]->ExportExcelCase("pca\\old2.dat", PCA_TYPE_OLD);
+        Quiz[1]->ExportExcelCase("pca\\female2.dat", PCA_TYPE_FEMALE);
+        Quiz[1]->ExportExcelCase("pca\\young2.dat", PCA_TYPE_YOUNG);
+        Quiz[1]->ExportExcelCase("pca\\old2.dat", PCA_TYPE_OLD);
 
-		printf("all3\r\n");
-		 Quiz[2]->ExportExcelCase("pca\\all3.dat", PCA_TYPE_ALL);
-		 Quiz[2]->ExportExcelCase("pca\\male3.dat", PCA_TYPE_MALE);
-		 Quiz[2]->ExportExcelCase("pca\\female3.dat", PCA_TYPE_FEMALE);
-		Quiz[2]->ExportExcelCase("pca\\young3.dat", PCA_TYPE_YOUNG);
-		Quiz[2]->ExportExcelCase("pca\\old3.dat", PCA_TYPE_OLD);
+        printf("all3\r\n");
+         Quiz[2]->ExportExcelCase("pca\\all3.dat", PCA_TYPE_ALL);
+         Quiz[2]->ExportExcelCase("pca\\male3.dat", PCA_TYPE_MALE);
+         Quiz[2]->ExportExcelCase("pca\\female3.dat", PCA_TYPE_FEMALE);
+		  Quiz[2]->ExportExcelCase("pca\\young3.dat", PCA_TYPE_YOUNG);
+        Quiz[2]->ExportExcelCase("pca\\old3.dat", PCA_TYPE_OLD);
 
-		printf("all4\r\n");
-		 Quiz[3]->ExportExcelCase("pca\\all4.dat", PCA_TYPE_ALL);
-		 Quiz[3]->ExportExcelCase("pca\\male4.dat", PCA_TYPE_MALE);
-		 Quiz[3]->ExportExcelCase("pca\\female4.dat", PCA_TYPE_FEMALE);
-		Quiz[3]->ExportExcelCase("pca\\young4.dat", PCA_TYPE_YOUNG);
-		Quiz[3]->ExportExcelCase("pca\\old4.dat", PCA_TYPE_OLD);
+        printf("all4\r\n");
+         Quiz[3]->ExportExcelCase("pca\\all4.dat", PCA_TYPE_ALL);
+         Quiz[3]->ExportExcelCase("pca\\male4.dat", PCA_TYPE_MALE);
+         Quiz[3]->ExportExcelCase("pca\\female4.dat", PCA_TYPE_FEMALE);
+        Quiz[3]->ExportExcelCase("pca\\young4.dat", PCA_TYPE_YOUNG);
+        Quiz[3]->ExportExcelCase("pca\\old4.dat", PCA_TYPE_OLD);
 
         printf("all5\r\n");
          Quiz[4]->ExportExcelCase("pca\\all5.dat", PCA_TYPE_ALL);
@@ -1256,11 +1286,11 @@ int main(int argc, char **argv)
         Quiz[5]->ExportExcelCase("pca\\young6.dat", PCA_TYPE_YOUNG);
         Quiz[5]->ExportExcelCase("pca\\old6.dat", PCA_TYPE_OLD);
 
-        printf("all7\r\n");
+		  printf("all7\r\n");
          Quiz[6]->ExportExcelCase("pca\\all7.dat", PCA_TYPE_ALL);
          Quiz[6]->ExportExcelCase("pca\\male7.dat", PCA_TYPE_MALE);
          Quiz[6]->ExportExcelCase("pca\\female7.dat", PCA_TYPE_FEMALE);
-		Quiz[6]->ExportExcelCase("pca\\young7.dat", PCA_TYPE_YOUNG);
+        Quiz[6]->ExportExcelCase("pca\\young7.dat", PCA_TYPE_YOUNG);
         Quiz[6]->ExportExcelCase("pca\\old7.dat", PCA_TYPE_OLD);
 
         printf("all8\r\n");
@@ -1280,7 +1310,7 @@ int main(int argc, char **argv)
         printf("allr1\r\n");
          Quiz[9]->ExportExcelCase("pca\\allr1.dat", PCA_TYPE_ALL);
          Quiz[9]->ExportExcelCase("pca\\maler1.dat", PCA_TYPE_MALE);
-         Quiz[9]->ExportExcelCase("pca\\femaler1.dat", PCA_TYPE_FEMALE);
+			Quiz[9]->ExportExcelCase("pca\\femaler1.dat", PCA_TYPE_FEMALE);
         Quiz[9]->ExportExcelCase("pca\\youngr1.dat", PCA_TYPE_YOUNG);
         Quiz[9]->ExportExcelCase("pca\\oldr1.dat", PCA_TYPE_OLD);
 
@@ -1291,7 +1321,7 @@ int main(int argc, char **argv)
         Quiz[10]->ExportExcelCase("pca\\youngr2.dat", PCA_TYPE_YOUNG);
         Quiz[10]->ExportExcelCase("pca\\oldr2.dat", PCA_TYPE_OLD);
 
-		printf("allr3\r\n");
+        printf("allr3\r\n");
          Quiz[11]->ExportExcelCase("pca\\allr3.dat", PCA_TYPE_ALL);
 			Quiz[11]->ExportExcelCase("pca\\maler3.dat", PCA_TYPE_MALE);
          Quiz[11]->ExportExcelCase("pca\\femaler3.dat", PCA_TYPE_FEMALE);
@@ -1302,7 +1332,7 @@ int main(int argc, char **argv)
          Quiz[12]->ExportExcelCase("pca\\allr4.dat", PCA_TYPE_ALL);
          Quiz[12]->ExportExcelCase("pca\\maler4.dat", PCA_TYPE_MALE);
          Quiz[12]->ExportExcelCase("pca\\femaler4.dat", PCA_TYPE_FEMALE);
-		Quiz[12]->ExportExcelCase("pca\\youngr4.dat", PCA_TYPE_YOUNG);
+        Quiz[12]->ExportExcelCase("pca\\youngr4.dat", PCA_TYPE_YOUNG);
         Quiz[12]->ExportExcelCase("pca\\oldr4.dat", PCA_TYPE_OLD);
 
         printf("allr5\r\n");
@@ -1322,18 +1352,18 @@ int main(int argc, char **argv)
 		  printf("allr7\r\n");
          Quiz[15]->ExportExcelCase("pca\\allr7.dat", PCA_TYPE_ALL);
          Quiz[15]->ExportExcelCase("pca\\maler7.dat", PCA_TYPE_MALE);
-		 Quiz[15]->ExportExcelCase("pca\\femaler7.dat", PCA_TYPE_FEMALE);
+         Quiz[15]->ExportExcelCase("pca\\femaler7.dat", PCA_TYPE_FEMALE);
 		  Quiz[15]->ExportExcelCase("pca\\youngr7.dat", PCA_TYPE_YOUNG);
         Quiz[15]->ExportExcelCase("pca\\oldr7.dat", PCA_TYPE_OLD);
 
         printf("alls1\r\n");
          Quiz[16]->ExportExcelCase("pca\\alls1.dat", PCA_TYPE_ALL);
-         Quiz[16]->ExportExcelCase("pca\\males1.dat", PCA_TYPE_MALE);
+			Quiz[16]->ExportExcelCase("pca\\males1.dat", PCA_TYPE_MALE);
          Quiz[16]->ExportExcelCase("pca\\females1.dat", PCA_TYPE_FEMALE);
         Quiz[16]->ExportExcelCase("pca\\youngs1.dat", PCA_TYPE_YOUNG);
         Quiz[16]->ExportExcelCase("pca\\olds1.dat", PCA_TYPE_OLD);
 
-		printf("alls2\r\n");
+        printf("alls2\r\n");
          Quiz[17]->ExportExcelCase("pca\\alls2.dat", PCA_TYPE_ALL);
          Quiz[17]->ExportExcelCase("pca\\males2.dat", PCA_TYPE_MALE);
          Quiz[17]->ExportExcelCase("pca\\females2.dat", PCA_TYPE_FEMALE);
@@ -1352,7 +1382,7 @@ int main(int argc, char **argv)
          Quiz[19]->ExportExcelCase("pca\\males4.dat", PCA_TYPE_MALE);
          Quiz[19]->ExportExcelCase("pca\\females4.dat", PCA_TYPE_FEMALE);
         Quiz[19]->ExportExcelCase("pca\\youngs4.dat", PCA_TYPE_YOUNG);
-        Quiz[19]->ExportExcelCase("pca\\olds4.dat", PCA_TYPE_OLD);
+		  Quiz[19]->ExportExcelCase("pca\\olds4.dat", PCA_TYPE_OLD);
 
         printf("alls5\r\n");
          Quiz[20]->ExportExcelCase("pca\\alls5.dat", PCA_TYPE_ALL);
@@ -1364,7 +1394,7 @@ int main(int argc, char **argv)
         printf("alls6\r\n");
          Quiz[21]->ExportExcelCase("pca\\alls6.dat", PCA_TYPE_ALL);
          Quiz[21]->ExportExcelCase("pca\\males6.dat", PCA_TYPE_MALE);
-		 Quiz[21]->ExportExcelCase("pca\\females6.dat", PCA_TYPE_FEMALE);
+         Quiz[21]->ExportExcelCase("pca\\females6.dat", PCA_TYPE_FEMALE);
 		  Quiz[21]->ExportExcelCase("pca\\youngs6.dat", PCA_TYPE_YOUNG);
         Quiz[21]->ExportExcelCase("pca\\olds6.dat", PCA_TYPE_OLD);
 
@@ -1376,7 +1406,7 @@ int main(int argc, char **argv)
         Quiz[22]->ExportExcelCase("pca\\olds7.dat", PCA_TYPE_OLD);
 
         printf("alls8\r\n");
-         Quiz[23]->ExportExcelCase("pca\\alls8.dat", PCA_TYPE_ALL);
+			Quiz[23]->ExportExcelCase("pca\\alls8.dat", PCA_TYPE_ALL);
          Quiz[23]->ExportExcelCase("pca\\males8.dat", PCA_TYPE_MALE);
          Quiz[23]->ExportExcelCase("pca\\females8.dat", PCA_TYPE_FEMALE);
         Quiz[23]->ExportExcelCase("pca\\youngs8.dat", PCA_TYPE_YOUNG);
@@ -1384,7 +1414,7 @@ int main(int argc, char **argv)
 
         printf("alls9\r\n");
          Quiz[24]->ExportExcelCase("pca\\alls9.dat", PCA_TYPE_ALL);
-		 Quiz[24]->ExportExcelCase("pca\\males9.dat", PCA_TYPE_MALE);
+         Quiz[24]->ExportExcelCase("pca\\males9.dat", PCA_TYPE_MALE);
          Quiz[24]->ExportExcelCase("pca\\females9.dat", PCA_TYPE_FEMALE);
         Quiz[24]->ExportExcelCase("pca\\youngs9.dat", PCA_TYPE_YOUNG);
         Quiz[24]->ExportExcelCase("pca\\olds9.dat", PCA_TYPE_OLD);
@@ -1400,7 +1430,7 @@ int main(int argc, char **argv)
 			Quiz[26]->ExportExcelCase("pca\\alls11.dat", PCA_TYPE_ALL);
          Quiz[26]->ExportExcelCase("pca\\males11.dat", PCA_TYPE_MALE);
          Quiz[26]->ExportExcelCase("pca\\fems11.dat", PCA_TYPE_FEMALE);
-        Quiz[26]->ExportExcelCase("pca\\youngs11.dat", PCA_TYPE_YOUNG);
+		  Quiz[26]->ExportExcelCase("pca\\youngs11.dat", PCA_TYPE_YOUNG);
         Quiz[26]->ExportExcelCase("pca\\olds11.dat", PCA_TYPE_OLD);
 
         printf("alls12\r\n");
@@ -1424,9 +1454,9 @@ int main(int argc, char **argv)
         Quiz[29]->ExportExcelCase("pca\\youngn2.dat", PCA_TYPE_YOUNG);
         Quiz[29]->ExportExcelCase("pca\\oldn2.dat", PCA_TYPE_OLD);
 
-        printf("alln3\r\n");
+		  printf("alln3\r\n");
          Quiz[30]->ExportExcelCase("pca\\alln3.dat", PCA_TYPE_ALL);
-		 Quiz[30]->ExportExcelCase("pca\\malen3.dat", PCA_TYPE_MALE);
+         Quiz[30]->ExportExcelCase("pca\\malen3.dat", PCA_TYPE_MALE);
          Quiz[30]->ExportExcelCase("pca\\femalen3.dat", PCA_TYPE_FEMALE);
         Quiz[30]->ExportExcelCase("pca\\youngn3.dat", PCA_TYPE_YOUNG);
         Quiz[30]->ExportExcelCase("pca\\oldn3.dat", PCA_TYPE_OLD);
@@ -1446,9 +1476,9 @@ int main(int argc, char **argv)
         Quiz[33]->ExportExcelCase("pca\\oldf1.dat", PCA_TYPE_OLD);
 
         printf("allf2\r\n");
-		 Quiz[34]->ExportExcelCase("pca\\allf2.dat", PCA_TYPE_ALL);
+         Quiz[34]->ExportExcelCase("pca\\allf2.dat", PCA_TYPE_ALL);
          Quiz[34]->ExportExcelCase("pca\\malef2.dat", PCA_TYPE_MALE);
-         Quiz[34]->ExportExcelCase("pca\\femalef2.dat", PCA_TYPE_FEMALE);
+			Quiz[34]->ExportExcelCase("pca\\femalef2.dat", PCA_TYPE_FEMALE);
         Quiz[34]->ExportExcelCase("pca\\youngf2.dat", PCA_TYPE_YOUNG);
         Quiz[34]->ExportExcelCase("pca\\oldf2.dat", PCA_TYPE_OLD);
 
@@ -1457,7 +1487,7 @@ int main(int argc, char **argv)
          Quiz[35]->ExportExcelCase("pca\\malef3.dat", PCA_TYPE_MALE);
          Quiz[35]->ExportExcelCase("pca\\femalef3.dat", PCA_TYPE_FEMALE);
         Quiz[35]->ExportExcelCase("pca\\youngf3.dat", PCA_TYPE_YOUNG);
-		Quiz[35]->ExportExcelCase("pca\\oldf3.dat", PCA_TYPE_OLD);
+        Quiz[35]->ExportExcelCase("pca\\oldf3.dat", PCA_TYPE_OLD);
 
         printf("allf4\r\n");
          Quiz[36]->ExportExcelCase("pca\\allf4.dat", PCA_TYPE_ALL);
@@ -1477,7 +1507,7 @@ int main(int argc, char **argv)
          Quiz[38]->ExportExcelCase("pca\\allf6.dat", PCA_TYPE_ALL);
          Quiz[38]->ExportExcelCase("pca\\malef6.dat", PCA_TYPE_MALE);
          Quiz[38]->ExportExcelCase("pca\\femalef6.dat", PCA_TYPE_FEMALE);
-		Quiz[38]->ExportExcelCase("pca\\youngf6.dat", PCA_TYPE_YOUNG);
+        Quiz[38]->ExportExcelCase("pca\\youngf6.dat", PCA_TYPE_YOUNG);
         Quiz[38]->ExportExcelCase("pca\\oldf6.dat", PCA_TYPE_OLD);
 
         printf("allf7\r\n");
@@ -1488,7 +1518,7 @@ int main(int argc, char **argv)
 		  Quiz[39]->ExportExcelCase("pca\\oldf7.dat", PCA_TYPE_OLD);
 
 		  printf("allf8\r\n");
-		 Quiz[40]->ExportExcelCase("pca\\allf8.dat", PCA_TYPE_ALL);
+         Quiz[40]->ExportExcelCase("pca\\allf8.dat", PCA_TYPE_ALL);
          Quiz[40]->ExportExcelCase("pca\\malef8.dat", PCA_TYPE_MALE);
          Quiz[40]->ExportExcelCase("pca\\femalef8.dat", PCA_TYPE_FEMALE);
         Quiz[40]->ExportExcelCase("pca\\youngf8.dat", PCA_TYPE_YOUNG);
@@ -1496,7 +1526,7 @@ int main(int argc, char **argv)
 
         printf("allf9\r\n");
          Quiz[41]->ExportExcelCase("pca\\allf9.dat", PCA_TYPE_ALL);
-         Quiz[41]->ExportExcelCase("pca\\malef9.dat", PCA_TYPE_MALE);
+			Quiz[41]->ExportExcelCase("pca\\malef9.dat", PCA_TYPE_MALE);
          Quiz[41]->ExportExcelCase("pca\\femalef9.dat", PCA_TYPE_FEMALE);
         Quiz[41]->ExportExcelCase("pca\\youngf9.dat", PCA_TYPE_YOUNG);
         Quiz[41]->ExportExcelCase("pca\\oldf9.dat", PCA_TYPE_OLD);
@@ -1519,8 +1549,8 @@ int main(int argc, char **argv)
          Quiz[44]->ExportExcelCase("pca\\allf12.dat", PCA_TYPE_ALL);
          Quiz[44]->ExportExcelCase("pca\\malef12.dat", PCA_TYPE_MALE);
          Quiz[44]->ExportExcelCase("pca\\femf12.dat", PCA_TYPE_FEMALE);
-		Quiz[44]->ExportExcelCase("pca\\youngf12.dat", PCA_TYPE_YOUNG);
-        Quiz[44]->ExportExcelCase("pca\\oldf12.dat", PCA_TYPE_OLD);
+        Quiz[44]->ExportExcelCase("pca\\youngf12.dat", PCA_TYPE_YOUNG);
+		  Quiz[44]->ExportExcelCase("pca\\oldf12.dat", PCA_TYPE_OLD);
 
         printf("allf13\r\n");
          Quiz[45]->ExportExcelCase("pca\\allf13.dat", PCA_TYPE_ALL);
@@ -1539,7 +1569,7 @@ int main(int argc, char **argv)
         printf("allf15\r\n");
          Quiz[47]->ExportExcelCase("pca\\allf15.dat", PCA_TYPE_ALL);
          Quiz[47]->ExportExcelCase("pca\\malef15.dat", PCA_TYPE_MALE);
-		 Quiz[47]->ExportExcelCase("pca\\femf15.dat", PCA_TYPE_FEMALE);
+         Quiz[47]->ExportExcelCase("pca\\femf15.dat", PCA_TYPE_FEMALE);
         Quiz[47]->ExportExcelCase("pca\\youngf15.dat", PCA_TYPE_YOUNG);
         Quiz[47]->ExportExcelCase("pca\\oldf15.dat", PCA_TYPE_OLD);
 
@@ -1550,7 +1580,7 @@ int main(int argc, char **argv)
         Quiz[32]->ExportExcelCase("pca\\youngfi.dat", PCA_TYPE_YOUNG);
         Quiz[32]->ExportExcelCase("pca\\oldfi.dat", PCA_TYPE_OLD);
 
-		printf("allge\r\n");
+        printf("allge\r\n");
          Quiz[48]->ExportExcelCase("pca\\allge.dat", PCA_TYPE_ALL);
          Quiz[48]->ExportExcelCase("pca\\malege.dat", PCA_TYPE_MALE);
          Quiz[48]->ExportExcelCase("pca\\femalege.dat", PCA_TYPE_FEMALE);
@@ -1581,7 +1611,7 @@ int main(int argc, char **argv)
         Quiz[51]->ExportExcelCase("pca\\youngg1.dat", PCA_TYPE_YOUNG);
         Quiz[51]->ExportExcelCase("pca\\oldg1.dat", PCA_TYPE_OLD);
 
-		printf("allg2\r\n");
+        printf("allg2\r\n");
 			Quiz[52]->ExportExcelCase("pca\\allg2.dat", PCA_TYPE_ALL);
 			Quiz[52]->ExportExcelCase("pca\\maleg2.dat", PCA_TYPE_MALE);
          Quiz[52]->ExportExcelCase("pca\\femaleg2.dat", PCA_TYPE_FEMALE);
@@ -1694,9 +1724,9 @@ int main(int argc, char **argv)
 
 #endif
 
-		 Quiz[51]->ExportExcelAspie("pca\\aspieg1.dat");
-		 Quiz[52]->ExportExcelAspie("pca\\aspieg2.dat");
-		 Quiz[53]->ExportExcelAspie("pca\\aspieg3.dat");
+         Quiz[51]->ExportExcelAspie("pca\\aspieg1.dat");
+         Quiz[52]->ExportExcelAspie("pca\\aspieg2.dat");
+         Quiz[53]->ExportExcelAspie("pca\\aspieg3.dat");
 			Quiz[54]->ExportExcelAspie("pca\\aspieg4.dat");
 			Quiz[55]->ExportExcelAspie("pca\\aspieg5.dat");
 			Quiz[56]->ExportExcelAspie("pca\\aspieg6.dat");
@@ -1705,26 +1735,26 @@ int main(int argc, char **argv)
 			Quiz[59]->ExportExcelAspie("pca\\aspieh1.dat");
 
 
-		printf("import\r\n");
-		 Quiz[0]->ImportMvsp("pca\\all1.txt", PCA_TYPE_ALL);
+        printf("import\r\n");
+         Quiz[0]->ImportMvsp("pca\\all1.txt", PCA_TYPE_ALL);
 
-		 Quiz[1]->ImportMvsp("pca\\all2.txt", PCA_TYPE_ALL);
-		 Quiz[1]->ImportMvsp("pca\\male2.txt", PCA_TYPE_MALE);
-		 Quiz[1]->ImportMvsp("pca\\female2.txt", PCA_TYPE_FEMALE);
+         Quiz[1]->ImportMvsp("pca\\all2.txt", PCA_TYPE_ALL);
+         Quiz[1]->ImportMvsp("pca\\male2.txt", PCA_TYPE_MALE);
+         Quiz[1]->ImportMvsp("pca\\female2.txt", PCA_TYPE_FEMALE);
 			Quiz[1]->ImportMvsp("pca\\old2.txt", PCA_TYPE_OLD);
-		 Quiz[1]->ImportMvsp("pca\\young2.txt", PCA_TYPE_YOUNG);
+         Quiz[1]->ImportMvsp("pca\\young2.txt", PCA_TYPE_YOUNG);
 
-		 Quiz[2]->ImportMvsp("pca\\all3.txt", PCA_TYPE_ALL);
+         Quiz[2]->ImportMvsp("pca\\all3.txt", PCA_TYPE_ALL);
 			Quiz[2]->ImportMvsp("pca\\male3.txt", PCA_TYPE_MALE);
 			Quiz[2]->ImportMvsp("pca\\female3.txt", PCA_TYPE_FEMALE);
-		 Quiz[2]->ImportMvsp("pca\\old3.txt", PCA_TYPE_OLD);
-		 Quiz[2]->ImportMvsp("pca\\young3.txt", PCA_TYPE_YOUNG);
+         Quiz[2]->ImportMvsp("pca\\old3.txt", PCA_TYPE_OLD);
+         Quiz[2]->ImportMvsp("pca\\young3.txt", PCA_TYPE_YOUNG);
 
-		 Quiz[3]->ImportMvsp("pca\\all4.txt", PCA_TYPE_ALL);
-		 Quiz[3]->ImportMvsp("pca\\male4.txt", PCA_TYPE_MALE);
-		 Quiz[3]->ImportMvsp("pca\\female4.txt", PCA_TYPE_FEMALE);
-		 Quiz[3]->ImportMvsp("pca\\old4.txt", PCA_TYPE_OLD);
-		 Quiz[3]->ImportMvsp("pca\\young4.txt", PCA_TYPE_YOUNG);
+         Quiz[3]->ImportMvsp("pca\\all4.txt", PCA_TYPE_ALL);
+         Quiz[3]->ImportMvsp("pca\\male4.txt", PCA_TYPE_MALE);
+         Quiz[3]->ImportMvsp("pca\\female4.txt", PCA_TYPE_FEMALE);
+         Quiz[3]->ImportMvsp("pca\\old4.txt", PCA_TYPE_OLD);
+         Quiz[3]->ImportMvsp("pca\\young4.txt", PCA_TYPE_YOUNG);
 
          Quiz[4]->ImportMvsp("pca\\all5.txt", PCA_TYPE_ALL);
          Quiz[4]->ImportMvsp("pca\\male5.txt", PCA_TYPE_MALE);

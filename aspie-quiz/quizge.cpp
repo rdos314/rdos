@@ -925,7 +925,44 @@ void TQuizExp2::LoadPopulations()
 ##########################################################################*/
 void TQuizExp2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4, TQuiz *QuizF5, TQuiz *QuizF6, TQuiz *QuizF7, TQuiz *QuizF8, TQuiz *QuizF9, TQuiz *QuizF10, TQuiz *QuizF11, TQuiz *QuizF12, TQuiz *QuizF13, TQuiz *QuizF14, TQuiz *QuizF15)
 {
-
+	 DefineCross(QuizF15, 0, 1);
+	 DefineCross(QuizF15, 1, 3);
+	 DefineCross(QuizF15, 2, 4);
+	 DefineCross(QuizF15, 3, 5);
+	 DefineCross(QuizF15, 4, 8);
+	 DefineCross(QuizF15, 5, 6);
+	 DefineCross(QuizF15, 6, 7);
+	 DefineCross(QuizNd, 7, 68);
+	 DefineCross(QuizF15, 8, 9);
+	 DefineCross(QuizF15, 9, 10);
+	 DefineCross(QuizF15, 10, 11);
+	 DefineCross(QuizF15, 11, 12);
+	 DefineCross(QuizF15, 12, 13);
+	 DefineCross(QuizF15, 13, 14);
+	 DefineCross(QuizF15, 14, 15);
+	 DefineCross(QuizF15, 15, 16);
+	 DefineCross(QuizF15, 16, 35);
+	 DefineCross(QuizF15, 17, 17);
+	 DefineCross(QuizF15, 18, 18);
+	 DefineCross(QuizF15, 19, 19);
+	 DefineCross(QuizF15, 20, 20);
+	 DefineCross(QuizF15, 21, 21);
+	 DefineCross(QuizF15, 22, 22);
+	 DefineCross(QuizF15, 23, 23);
+	 DefineCross(QuizF15, 24, 24);
+	 DefineCross(QuizF15, 25, 25);
+	 DefineCross(QuizF15, 26, 26);
+	 DefineCross(QuizF15, 27, 27);
+	 DefineCross(QuizF15, 28, 28);
+	 DefineCross(QuizF15, 29, 132);
+	 DefineCross(QuizF15, 30, 29);
+	 DefineCross(QuizF15, 31, 30);
+	 DefineCross(QuizF15, 32, 32);
+	 DefineCross(QuizF11, 33, 176);
+	 DefineCross(QuizF15, 34, 31);
+	 DefineCross(QuizF15, 35, 138);
+	 DefineCross(QuizF15, 36, 2);
+	 DefineCross(QuizF15, 37, 139);
 	 DefineCross(QuizF15, 38, 33);
 	 DefineCross(QuizF15, 39, 131);
 	 DefineCross(QuizF15, 40, 161);
