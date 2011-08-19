@@ -1014,7 +1014,12 @@ device_reset_dtr    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_line_state  Proc far
-    mov al,ds:pds_line
+    push dx
+    mov dx,ds:pds_base
+    add dx,6
+    in al,dx
+    pop dx
+;    mov al,ds:pds_line
     shr al,4
     and al,0Fh
     ret
