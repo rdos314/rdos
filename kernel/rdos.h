@@ -343,7 +343,8 @@ int RDOSAPI RdosGetDeviceInfo(int CodeSel, char *Name, unsigned int *CodeSize, u
 
 int RDOSAPI RdosGetSelectorInfo(int CodeSel, int *Limit, int *Bitness);
 
-void RDOSAPI RdosCpuReset();
+void RDOSAPI RdosSoftReset();
+void RDOSAPI RdosHardReset();
 int RDOSAPI RdosPowerFailure();
 int RDOSAPI RdosGetCpuVersion(char *VendorStr, int *FeatureFlags, int *freq);
 void RDOSAPI RdosGetVersion(int *Major, int *Minor, int *Release);
@@ -1389,8 +1390,11 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     parm [eax] \
     value [eax];
 
-#pragma aux RdosCpuReset = \
-    CallGate_cpu_reset;
+#pragma aux RdosSoftReset = \
+    CallGate_soft_reset;
+
+#pragma aux RdosHardReset = \
+    CallGate_hard_reset;
 
 #pragma aux RdosPowerFailure = \
     CallGate_power_failure \
@@ -3461,8 +3465,11 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     modify [ecx] \
     value [eax];
 
-#pragma aux RdosCpuReset = \
-    CallGate_cpu_reset;
+#pragma aux RdosSoftReset = \
+    CallGate_soft_reset;
+
+#pragma aux RdosHardReset = \
+    CallGate_hard_reset;
 
 #pragma aux RdosPowerFailure = \
     CallGate_power_failure \

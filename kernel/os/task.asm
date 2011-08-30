@@ -1089,10 +1089,16 @@ glob_ptab_init:
     mov ax,wait_for_signal_timeout_nr
     RegisterOsGate
 ;
-    mov si,OFFSET cpu_reset
-    mov di,OFFSET cpu_reset_name
+    mov si,OFFSET soft_reset
+    mov di,OFFSET soft_reset_name
     xor dx,dx
-    mov ax,cpu_reset_nr
+    mov ax,soft_reset_nr
+    RegisterBimodalUserGate
+;
+    mov si,OFFSET hard_reset
+    mov di,OFFSET hard_reset_name
+    xor dx,dx
+    mov ax,hard_reset_nr
     RegisterBimodalUserGate
 ;
     mov si,OFFSET power_failure
@@ -7530,15 +7536,15 @@ get_core_count    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CpuReset
+;           NAME:           SoftReset
 ;
-;           DESCRIPTION:    Trigger a CPU reset
+;           DESCRIPTION:    Trigger a CPU soft reset
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-cpu_reset_name  DB 'Cpu Reset',0
+soft_reset_name  DB 'Soft Reset',0
 
-cpu_reset       PROC far
+soft_reset       PROC far
     cli
 wait_gate1:
     in al,64h
@@ -7560,8 +7566,23 @@ reset_wait:
     jmp reset_wait
     
     retf32
-cpu_reset       ENDP
+soft_reset       ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           HardReset
+;
+;           DESCRIPTION:    Trigger a CPU hard reset
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hard_reset_name  DB 'Hard Reset',0
+
+hard_reset       PROC far
+    SoftReset
+    retf32
+hard_reset       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

@@ -2696,7 +2696,7 @@ timer_func_loop:
     test al,20h
     jz tNonFatal
 ;
-    CpuReset
+    SoftReset
 
 tNonFatal:
     call UpdatePipeList

@@ -310,8 +310,6 @@
 
 #define CallGate_erase_disc_sectors 0x67 0x9a 22 1 0 0 3 0
 
-#define CallGate_cpu_reset 0x67 0x9a 23 1 0 0 3 0
-
 #define CallGate_enable_cts 0x67 0x9a 24 1 0 0 3 0
 #define CallGate_disable_cts 0x67 0x9a 25 1 0 0 3 0
 
@@ -536,6 +534,9 @@
 #define CallGate_close_syslog 0x67 0x9a 178 1 0 0 3 0
 #define CallGate_add_wait_for_syslog 0x67 0x9a 179 1 0 0 3 0
 #define CallGate_get_syslog 0x67 0x9a 180 1 0 0 3 0
+
+#define CallGate_soft_reset 0x67 0x9a 181 1 0 0 3 0
+#define CallGate_hard_reset 0x67 0x9a 182 1 0 0 3 0
 
 #else
 
@@ -849,8 +850,6 @@
 
 #define CallGate_erase_disc_sectors 0x3e 0x67 0x9a 22 1 0 0 3 0
 
-#define CallGate_cpu_reset 0x3e 0x67 0x9a 23 1 0 0 3 0
-
 #define CallGate_enable_cts 0x3e 0x67 0x9a 24 1 0 0 3 0
 #define CallGate_disable_cts 0x3e 0x67 0x9a 25 1 0 0 3 0
 
@@ -1075,5 +1074,8 @@
 #define CallGate_close_syslog 0x3e 0x67 0x9a 178 1 0 0 3 0
 #define CallGate_add_wait_for_syslog 0x3e 0x67 0x9a 179 1 0 0 3 0
 #define CallGate_get_syslog 0x3e 0x67 0x9a 180 1 0 0 3 0
+
+#define CallGate_soft_reset 0x3e 0x67 0x9a 181 1 0 0 3 0
+#define CallGate_hard_reset 0x3e 0x67 0x9a 182 1 0 0 3 0
 
 #endif

@@ -363,8 +363,12 @@ PowerFailure        MACRO
 	UserGate power_failure_nr
 						ENDM
 
-CpuReset        MACRO
-	UserGate cpu_reset_nr
+SoftReset        MACRO
+	UserGate soft_reset_nr
+						ENDM
+
+HardReset        MACRO
+	UserGate hard_reset_nr
 						ENDM
 
 ; OUT AX         Core nr

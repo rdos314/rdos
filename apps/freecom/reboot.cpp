@@ -100,7 +100,7 @@ int TRebootCommand::Execute(char *param)
         if (LeadOptions(&param, 0) != E_None)
                 return 1;
 
-    RdosCpuReset();
+    RdosSoftReset();
     
         return 0;
 }

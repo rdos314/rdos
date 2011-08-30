@@ -111,7 +111,7 @@ del_scan    PROC near
     cmp cx,alt_pressed OR ctrl_pressed
     jne num_scan
 ;
-    CpuReset
+    SoftReset
     ret
 del_scan    Endp
 

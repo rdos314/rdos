@@ -1803,7 +1803,7 @@ EnterHandler    Proc near
     verr ax
     jnz enter_do
 ;
-    CpuReset
+    SoftReset
 
 enter_do:
     mov ax,system_data_sel

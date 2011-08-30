@@ -1086,7 +1086,7 @@ DelKey   Proc near
     cmp cx,alt_pressed OR ctrl_pressed
     jne dkNum
 ;
-    CpuReset
+    SoftReset
 
 dkNum:
     pop cx

@@ -309,8 +309,6 @@ kick_watchdog_nr            = 277
 
 erase_disc_sectors_nr       = 278
 
-cpu_reset_nr                = 279
-
 enable_cts_nr               = 280
 disable_cts_nr              = 281
 
@@ -535,5 +533,8 @@ open_syslog_nr                  = 433
 close_syslog_nr                 = 434
 add_wait_for_syslog_nr          = 435
 get_syslog_nr                   = 436
+
+soft_reset_nr                   = 437
+hard_reset_nr                   = 438
 
 usergate_entries			= 440
