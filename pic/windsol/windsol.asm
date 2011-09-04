@@ -101,11 +101,11 @@ HandleLoop:
     goto HandleLow
 
 HandleHigh:
-    bcf LATB,0
+    bsf LATB,0
     goto HandleLoop
 
 HandleLow:
-    bsf LATB,0
+    bcf LATB,0
     goto HandleLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
