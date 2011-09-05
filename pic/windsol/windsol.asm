@@ -80,6 +80,13 @@ AdTab1:
 
 
 ResetStart:
+    movlw b'00000001'
+    movwf PORTA
+    movwf LATA
+;
+    movlw b'11111110'
+    movwf TRISA
+;
 	movlw b'00001000'
     movwf PORTB
     movwf LATB
@@ -97,20 +104,22 @@ ResetStart:
     movlw b'10000111'
     movwf T0CON
 ;
-    movlw b'11111111'
+    movlw b'11101111'
     movwf OSCCON
 ;
     call LoadAdTab
 ;
-    movlw 0xC0
+    movlw 0x2C
     movwf temp0
-    movlw 3
+    movlw 0x1
     movwf temp1    
     call SetupWind
 
+
 HandleLoop:
+    bsf LATA,0
     call WaitForSample
-	call Sample
+	call TestSample
     call UpdateWind
     goto HandleLoop
 
@@ -170,6 +179,7 @@ UpdateWind:
     goto UpdateWindDumpOff
 
 UpdateWindDumpOn:
+    bcf LATA,0
     lfsr FSR0,ad01h
     btfsc INDF0,7
     goto UpdateWindTurnOff
@@ -214,6 +224,7 @@ UpdateWindDumpOffNotEq:
 UpdateWindTurnOn:
     bsf LATB,0
     return
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Mul16
@@ -326,6 +337,128 @@ WaitForSample:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitSample:
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; TestSample
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TestSample:
+    clrf ad_cur
+	bsf LATC,0
+    bsf LATC,1
+    movlw 4
+    movwf ad_cnt
+    bcf LATC,3
+    bsf LATC,5
+    movlw 4
+    movwf temp0
+;
+    movlw 0x30
+    movwf ad_conf
+;
+    bcf LATC,0
+    goto ad_test_loop1
+
+ad_test_set0:
+    bcf LATC,5
+    goto ad_test_clk0
+
+ad_test_loop0:
+    bsf LATC,3
+    rlcf ad_conf,F
+
+ad_test_bit0:
+    btfsc STATUS,C
+    goto ad_test_set1
+
+ad_test_clk0:
+    bcf LATC,3
+    decfsz temp0,F
+    bra ad_test_loop0
+;
+    goto ad_test_init_done
+
+ad_test_set1:
+    bsf LATC,5
+    goto ad_test_clk1
+
+ad_test_loop1:
+    bsf LATC,3
+    rlcf ad_conf,F
+
+ad_test_bit1:
+    btfss STATUS,C
+    goto ad_test_set0
+
+ad_test_clk1:
+    bcf LATC,3
+    decfsz temp0,F
+    bra ad_test_loop1
+
+ad_test_init_done:
+    bsf LATC,3
+    call WaitSample
+    bcf LATC,3
+    nop
+    nop
+    nop
+
+test_sample_start:
+    bsf LATC,3
+    nop
+    nop
+    nop
+    bcf LATC,3
+;
+    bcf LATC,5
+;
+    btfsc ad_cur,0
+    goto test_sample_start1
+
+test_sample_start0:
+    bcf LATC,1
+    movf INDF1,W
+    movwf ad_conf
+    goto test_sample_started
+
+test_sample_start1:
+	bcf LATC,0
+    movf INDF0,W
+    movwf ad_conf
+
+test_sample_started:
+    clrf ad_vall
+    clrf ad_valh
+    movlw 0xE
+    movwf temp0
+
+test_sample_loop:
+    bcf STATUS,C
+    rlcf ad_vall,F
+    rlcf ad_valh,F
+    bsf LATC,3
+    btfsc PORTC,4
+    bsf ad_vall,0
+    bcf LATC,3
+    decfsz temp0,F
+    bra test_sample_loop
+;
+    bsf LATC,0
+;
+    lfsr FSR0,ad01l
+    movf ad_vall,W
+    movwf INDF0
+    incf FSR0L,F
+;
+    movlw 0x1F
+    andwf ad_valh,F
+    movlw 0xE0
+    btfsc ad_valh,4
+    iorwf ad_valh,F
+;
+    movf ad_valh,W
+    movwf INDF0
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
