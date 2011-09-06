@@ -44,18 +44,26 @@ solar_i_msb		EQU 0x18
 wind_p0			EQU 0x19
 wind_p1			EQU 0x1A
 wind_p2			EQU 0x1B
+wind_p3			EQU 0x1C
+wind_p4         EQU 0x1D
 
-wind_ref_lsb	EQU 0x1C
-wind_ref_msb	EQU 0x1D
+wind_ref_lsb	EQU 0x1E
+wind_ref_msb	EQU 0x1F
 
-run_yloop       EQU 0x1E
-run_iloop       EQU 0x1F
+run_yloop       EQU 0x20
+run_iloop       EQU 0x21
 
-flags			EQU 0x20
+flags			EQU 0x22
 
-wind_pp0        EQU 0x21
-wind_pp1        EQU 0x22
-wind_pp2        EQU 0x23
+wind_pp0        EQU 0x23
+wind_pp1        EQU 0x24
+wind_pp2        EQU 0x25
+wind_pp3		EQU 0x26
+wind_pp4		EQU 0x27
+
+wind_u2_0       EQU 0x28
+wind_u2_1       EQU 0x29
+wind_u2_2       EQU 0x2A
 
 Arg1l	EQU 0x40
 Arg1h	EQU 0x41
@@ -100,10 +108,12 @@ ResetStart:
 	clrf wind_p0
     clrf wind_p1
     clrf wind_p2
+    clrf wind_p3
+    clrf wind_p4
 ;
-    movlw 0xB0
+    movlw 0x0
     movwf wind_ref_lsb
-    movlw 0x4
+    movlw 0x5
     movwf wind_ref_msb
     call RunReg
 ;
@@ -113,7 +123,7 @@ ResetStart:
     addwfc wind_ref_msb,F
 ;
     bsf flags,FLAG_WIND_U_INCREASE
-
+   
 HandleLoop:
     call RunReg
     call WindControl
@@ -132,12 +142,18 @@ RunReg:
     movwf wind_pp1
     movf wind_p2,W
     movwf wind_pp2
+    movf wind_p3,W
+    movwf wind_pp3
+    movf wind_p4,W
+    movwf wind_pp4
 ;
 	clrf wind_p0
     clrf wind_p1
     clrf wind_p2
+    clrf wind_p3
+    clrf wind_p4
 ;
-    movlw 0x10
+    movlw 0x40
     movwf run_yloop
         
 RunYLoop:
@@ -149,6 +165,7 @@ RunILoop:
     call WaitForSample
 	call Sample
     call UpdateWindDump
+    call WindSquare
     call UpdateWindPower
 ;
     decfsz run_iloop,F
@@ -157,6 +174,28 @@ RunILoop:
     decfsz run_yloop,F
     bra RunYLoop
 ;
+    movf wind_p4,W
+    cpfseq wind_pp4
+    goto RunWindPower4Ne
+	goto RunWindPower4Eq
+
+RunWindPower4Ne:
+    cpfsgt wind_pp4
+    goto RunNewLarger
+    goto RunOldLarger
+
+RunWindPower4Eq:
+    movf wind_p3,W
+    cpfseq wind_pp3
+    goto RunWindPower3Ne
+	goto RunWindPower3Eq
+
+RunWindPower3Ne:
+    cpfsgt wind_pp3
+    goto RunNewLarger
+    goto RunOldLarger
+
+RunWindPower3Eq:
     movf wind_p2,W
     cpfseq wind_pp2
     goto RunWindPower2Ne
@@ -192,6 +231,42 @@ RunOldLarger:
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; WindSquare
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WindSquare:
+    clrf wind_u2_0
+    clrf wind_u2_1
+    clrf wind_u2_2
+;   
+    btfsc wind_u_msb,7
+    return
+;
+    movf wind_u_lsb,W
+    mulwf wind_u_lsb
+    movf PRODL,W
+    addwf wind_u2_0,F
+    movf PRODH,W
+    addwfc wind_u2_1,F
+;
+    movf wind_u_lsb,W
+    mulwf wind_u_msb
+    movf PRODL,W
+    addwf wind_u2_1,F
+    movf PRODH,W
+    addwfc wind_u2_2,F
+    movf PRODL,W
+    addwf wind_u2_1,F
+    movf PRODH,W
+    addwfc wind_u2_2,F
+;
+    movf wind_u_msb,W
+    mulwf wind_u_msb
+    movf PRODL,W
+    addwf wind_u2_2,F
+    return            
+         
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; WindControl
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -202,6 +277,8 @@ WindControl:
     movf wind_p0,W
     iorwf wind_p1,W
     iorwf wind_p2,W
+    iorwf wind_p3,W
+    iorwf wind_p4,W
     btfss STATUS,Z
     goto WindControlLessPower
 
@@ -256,11 +333,11 @@ WindControlDecrease:
     addwf wind_ref_lsb,F
     movlw 0xFF
     addwfc wind_ref_msb,F
+    bcf flags,FLAG_WIND_U_INCREASE
 ;
     btfss STATUS,C
     goto WindControlZero
 ;
-    bcf flags,FLAG_WIND_U_INCREASE
     return
 
 WindControlZero:
@@ -285,7 +362,7 @@ SetupWind:
     movwf wind_low_msb
     movwf wind_high_msb
 ;
-    movlw 5
+    movlw 4
     movwf temp2
 
 swRotateLoop:
@@ -377,14 +454,18 @@ UpdateWindPower:
     btfss LATB,0
 	return
 ;
-    movf wind_u_lsb,W
+    movf wind_u2_0,W
     addwf wind_p0,F
 ;
-    movf wind_u_msb,W
+    movf wind_u2_1,W
     addwfc wind_p1,F
 ;
-    movlw 0
+    movf wind_u2_2,W
     addwfc wind_p2,F
+;
+    movlw 0
+    addwfc wind_p3,F
+    addwfc wind_p4,F
 	return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
