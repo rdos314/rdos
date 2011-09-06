@@ -109,9 +109,9 @@ ResetStart:
 ;
     call LoadAdTab
 ;
-    movlw 0x2C
+    movlw 0x20
     movwf temp0
-    movlw 0x1
+    movlw 0x3
     movwf temp1    
     call SetupWind
 
