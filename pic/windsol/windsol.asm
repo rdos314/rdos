@@ -3,6 +3,9 @@
 #DEFINE PAGE0   BCF 3,5
 #DEFINE PAGE1   BSF 3,5
 
+FLAG_WIND_U_INCREASE        EQU 0
+FLAG_WIND_POWER_INCREASE    EQU 1
+
 temp0	EQU 0x0
 temp1   EQU 0x1
 temp2   EQU 0x2
@@ -21,63 +24,50 @@ wind_low_msb    EQU 0xA
 wind_high_lsb   EQU 0xB
 wind_high_msb   EQU 0xC
 
-Arg1l	EQU 0x20
-Arg1h	EQU 0x21
-Arg2l	EQU 0x22
-Arg2h	EQU 0x23
-Res0	EQU 0x24
-Res1	EQU 0x25
-Res2	EQU 0x26
-Res3	EQU 0x27
+wind_u_lsb		EQU 0xD
+wind_u_msb		EQU 0xE
 
-; AD bank
+wind_i_lsb		EQU 0xF
+wind_i_msb		EQU 0x10
 
-ad00	EQU 0x100
-ad00l	EQU 0x101
-ad00h	EQU 0x102
+solar_low_lsb   EQU 0x11
+solar_low_msb   EQU 0x12
+solar_high_lsb  EQU 0x13
+solar_high_msb  EQU 0x14
 
-ad01	EQU 0x104
-ad01l	EQU 0x105
-ad01h	EQU 0x106
+solar_u_lsb		EQU 0x15
+solar_u_msb		EQU 0x16
 
-ad02	EQU 0x108
-ad02l	EQU 0x109
-ad02h	EQU 0x10A
+solar_i_lsb		EQU 0x17
+solar_i_msb		EQU 0x18
 
-ad03	EQU 0x10C
-ad03l	EQU 0x10D
-ad03h	EQU 0x10E
+wind_p0			EQU 0x19
+wind_p1			EQU 0x1A
+wind_p2			EQU 0x1B
 
-ad10	EQU 0x110
-ad10l	EQU 0x111
-ad10h	EQU 0x112
+wind_ref_lsb	EQU 0x1C
+wind_ref_msb	EQU 0x1D
 
-ad11	EQU 0x114
-ad11l	EQU 0x115
-ad11h	EQU 0x116
+run_yloop       EQU 0x1E
+run_iloop       EQU 0x1F
 
-ad12	EQU 0x118
-ad12l	EQU 0x119
-ad12h	EQU 0x11A
+flags			EQU 0x20
 
-ad13	EQU 0x11C
-ad13l	EQU 0x11D
-ad13h	EQU 0x11E
+wind_pp0        EQU 0x21
+wind_pp1        EQU 0x22
+wind_pp2        EQU 0x23
+
+Arg1l	EQU 0x40
+Arg1h	EQU 0x41
+Arg2l	EQU 0x42
+Arg2h	EQU 0x43
+Res0	EQU 0x44
+Res1	EQU 0x45
+Res2	EQU 0x46
+Res3	EQU 0x47
+
 
     goto ResetStart
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Tables
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AdTab0:
-    db b'00010000', b'00110000'
-    db b'01010000', b'01110000'
-
-AdTab1:
-    db b'10000000', b'00110000'
-    db b'01010000', b'01110000'
-
 
 ResetStart:
     movlw b'00000001'
@@ -94,7 +84,7 @@ ResetStart:
     movlw b'11100000'
     movwf TRISB
 ;
-    movlw b'11000011'
+    movlw b'11100011'
     movwf PORTC
     movwf LATC
 ;
@@ -104,36 +94,194 @@ ResetStart:
     movlw b'10000111'
     movwf T0CON
 ;
-    movlw b'11101111'
+    movlw b'11111111'
     movwf OSCCON
 ;
-    call LoadAdTab
+	clrf wind_p0
+    clrf wind_p1
+    clrf wind_p2
 ;
     movlw 0xB0
-    movwf temp0
+    movwf wind_ref_lsb
     movlw 0x4
-    movwf temp1    
-    call SetupWind
-
+    movwf wind_ref_msb
+    call RunReg
+;
+	movlw 0x14
+    addwf wind_ref_lsb,F
+    movlw 0
+    addwfc wind_ref_msb,F
+;
+    bsf flags,FLAG_WIND_U_INCREASE
 
 HandleLoop:
-    bsf LATA,0
-    call WaitForSample
-	call TestSample
-    call UpdateWind
+    call RunReg
+    call WindControl
     goto HandleLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RunReg
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RunReg:
+    call SetupWind
+;
+    movf wind_p0,W
+    movwf wind_pp0
+    movf wind_p1,W
+    movwf wind_pp1
+    movf wind_p2,W
+    movwf wind_pp2
+;
+	clrf wind_p0
+    clrf wind_p1
+    clrf wind_p2
+;
+    movlw 0x10
+    movwf run_yloop
+        
+RunYLoop:
+    movlw 0x80
+    movwf run_iloop
+
+RunILoop:
+    bsf LATA,0
+    call WaitForSample
+	call Sample
+    call UpdateWindDump
+    call UpdateWindPower
+;
+    decfsz run_iloop,F
+    bra RunILoop
+;
+    decfsz run_yloop,F
+    bra RunYLoop
+;
+    movf wind_p2,W
+    cpfseq wind_pp2
+    goto RunWindPower2Ne
+	goto RunWindPower2Eq
+
+RunWindPower2Ne:
+    cpfsgt wind_pp2
+    goto RunNewLarger
+    goto RunOldLarger
+
+RunWindPower2Eq:
+    movf wind_p1,W
+    cpfseq wind_pp1
+    goto RunWindPower1Ne
+    goto RunWindPower1Eq
+
+RunWindPower1Ne:
+    cpfsgt wind_pp1
+    goto RunNewLarger
+    goto RunOldLarger
+
+RunWindPower1Eq:
+    movf wind_p0,W
+    cpfslt wind_pp0
+    goto RunOldLarger
+
+RunNewLarger:
+    bsf flags,FLAG_WIND_POWER_INCREASE
+    return
+
+RunOldLarger:
+    bcf flags,FLAG_WIND_POWER_INCREASE
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; WindControl
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WindControl:
+    btfsc flags,FLAG_WIND_POWER_INCREASE
+    goto WindControlMorePower
+;
+    movf wind_p0,W
+    iorwf wind_p1,W
+    iorwf wind_p2,W
+    btfss STATUS,Z
+    goto WindControlLessPower
+
+WindControlNoPower:
+    movf wind_ref_lsb,W
+    iorwf wind_ref_msb,W
+    btfsc STATUS,Z
+    goto WindControlIncrease
+;
+    movf wind_u_lsb,W
+    movwf wind_ref_lsb
+    movwf temp0
+    movf wind_u_msb,W
+    movwf wind_ref_msb
+    movwf temp1
+;
+    bcf STATUS,C
+    rrcf temp1,F
+    rrcf temp0,F
+    bcf STATUS,C
+    rrcf temp1,F
+    rrcf temp0,F
+    comf temp1,F
+    comf temp0,F
+;
+    movf temp0,W
+    bsf STATUS,C
+    addwfc wind_ref_lsb,F
+    movf temp1,W
+    addwfc wind_ref_msb,F    
+    bcf flags,FLAG_WIND_U_INCREASE
+    return
+
+WindControlMorePower:
+    btfss flags,FLAG_WIND_U_INCREASE
+    goto WindControlDecrease
+
+WindControlIncrease:
+	movlw 0x14
+    addwf wind_ref_lsb,F
+    movlw 0
+    addwfc wind_ref_msb,F
+    bsf flags,FLAG_WIND_U_INCREASE
+    return
+
+WindControlLessPower:
+    btfss flags,FLAG_WIND_U_INCREASE
+    goto WindControlIncrease
+    
+WindControlDecrease:
+	movlw 0xEC
+    addwf wind_ref_lsb,F
+    movlw 0xFF
+    addwfc wind_ref_msb,F
+;
+    btfss STATUS,C
+    goto WindControlZero
+;
+    bcf flags,FLAG_WIND_U_INCREASE
+    return
+
+WindControlZero:
+    clrf wind_ref_lsb
+    clrf wind_ref_msb
+    bcf flags,FLAG_WIND_U_INCREASE
+    return
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; SetupWind
-; temp1:temp0 voltage reference
+; wind_ref voltage reference
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupWind:
-    movf temp0,W
+    movf wind_ref_lsb,W
+    movwf temp0
     movwf wind_low_lsb
     movwf wind_high_lsb
 ;
-    movf temp1,W
+    movf wind_ref_msb,W
+    movwf temp1
     movwf wind_low_msb
     movwf wind_high_msb
 ;
@@ -171,60 +319,73 @@ swRotateLoop:
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; UpdateWind
+; UpdateWindDump
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UpdateWind:
+UpdateWindDump:
     btfss LATB,0
     goto UpdateWindDumpOff
 
 UpdateWindDumpOn:
     bcf LATA,0
-    lfsr FSR0,ad01h
-    btfsc INDF0,7
-    goto UpdateWindTurnOff
+    btfsc wind_u_msb,7
+    goto UpdateWindDumpTurnOff
 ;
     movf wind_low_msb,W
-    cpfseq INDF0
+    cpfseq wind_u_msb
     goto UpdateWindDumpOnNotEq
 ;
-    lfsr FSR0,ad01l
     movf wind_low_lsb,W
-    cpfslt INDF0
+    cpfslt wind_u_lsb
     return
-    goto UpdateWindTurnOff
+    goto UpdateWindDumpTurnOff
 
 UpdateWindDumpOnNotEq:
-    cpfslt INDF0
+    cpfslt wind_u_msb
     return
 
-UpdateWindTurnOff:
+UpdateWindDumpTurnOff:
     bcf LATB,0
     return
     
 UpdateWindDumpOff:
-    lfsr FSR0,ad01h
-    btfsc INDF0,7
+    btfsc wind_u_msb,7
     return
 ;
     movf wind_high_msb,W
-    cpfseq INDF0
+    cpfseq wind_u_msb
     goto UpdateWindDumpOffNotEq
 ;
-    lfsr FSR0,ad01l
-    movf wind_low_lsb,W
-    cpfsgt INDF0
+    movf wind_high_lsb,W
+    cpfsgt wind_u_lsb
     return
-    goto UpdateWindTurnOn
+    goto UpdateWindDumpTurnOn
 
 UpdateWindDumpOffNotEq:
-    cpfsgt INDF0
+    cpfsgt wind_u_msb
     return
 
-UpdateWindTurnOn:
+UpdateWindDumpTurnOn:
     bsf LATB,0
     return
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UpdateWindPower
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateWindPower:
+    btfss LATB,0
+	return
+;
+    movf wind_u_lsb,W
+    addwf wind_p0,F
+;
+    movf wind_u_msb,W
+    addwfc wind_p1,F
+;
+    movlw 0
+    addwfc wind_p2,F
+	return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Mul16
@@ -280,160 +441,83 @@ MulDone:
 	return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; LoadAdTab
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadAdTab:
-    clrf TBLPTRU
-    clrf TBLPTRH
-;
-    movlw AdTab0
-    movwf TBLPTRL
-    lfsr FSR0,ad00
-;
-	movlw 4
-    movwf temp0
-
-LoadAd0:
-    tblrd *+
-    movf TABLAT,W
-    movwf INDF0
-    movlw 4
-    addwf FSR0L,F
-    decfsz temp0
-    bra LoadAd0
-;
-    movlw AdTab1
-    movwf TBLPTRL
-    lfsr FSR0,ad10
-;
-	movlw 4
-    movwf temp0
-
-LoadAd1:
-    tblrd *+
-    movf TABLAT,W
-    movwf INDF0
-    movlw 4
-    addwf FSR0L,F
-    decfsz temp0,F
-    bra LoadAd1
-    return
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; WaitForSample
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForSample:
-;    btfsc TMR0L,3       ; decomment for 512us period
-;    goto WaitForSample
+    btfsc TMR0L,1
+    goto WaitForSample
 ;
     btfsc TMR0L,2
     goto WaitForSample
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; WaitSample
+; SampleOneA
+; IN   W   config word
+; OUT  ad_vall, ad_valh
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WaitSample:
-    return
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; TestSample
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TestSample:
-    clrf ad_cur
-	bsf LATC,0
-    bsf LATC,1
-    movlw 4
-    movwf ad_cnt
-    bcf LATC,3
-    bsf LATC,5
+SampleOne:
+    movwf ad_conf
+;
     movlw 4
     movwf temp0
-;
-    movlw 0x30
-    movwf ad_conf
-;
-    bcf LATC,0
-    goto ad_test_loop1
+    goto sample_one_loop1
 
-ad_test_set0:
+sample_one_set0:
     bcf LATC,5
-    goto ad_test_clk0
+    goto sample_one_clk0
 
-ad_test_loop0:
+sample_one_loop0:
     bsf LATC,3
     rlcf ad_conf,F
 
-ad_test_bit0:
+sample_one_a_bit0:
     btfsc STATUS,C
-    goto ad_test_set1
+    goto sample_one_set1
 
-ad_test_clk0:
+sample_one_clk0:
     bcf LATC,3
     decfsz temp0,F
-    bra ad_test_loop0
+    bra sample_one_loop0
 ;
-    goto ad_test_init_done
+    goto sample_one_setup_ok
 
-ad_test_set1:
+sample_one_set1:
     bsf LATC,5
-    goto ad_test_clk1
+    goto sample_one_clk1
 
-ad_test_loop1:
+sample_one_loop1:
     bsf LATC,3
     rlcf ad_conf,F
 
-ad_test_bit1:
+sample_one_bit1:
     btfss STATUS,C
-    goto ad_test_set0
+    goto sample_one_set0
 
-ad_test_clk1:
+sample_one_clk1:
     bcf LATC,3
     decfsz temp0,F
-    bra ad_test_loop1
+    bra sample_one_loop1
 
-ad_test_init_done:
-    bsf LATC,3
-    call WaitSample
-    bcf LATC,3
-    nop
-    nop
-    nop
-
-test_sample_start:
+sample_one_setup_ok:
     bsf LATC,3
     nop
-    nop
-    nop
+;
     bcf LATC,3
+    nop
 ;
-    bcf LATC,5
-;
-    btfsc ad_cur,0
-    goto test_sample_start1
-
-test_sample_start0:
-    bcf LATC,1
-    movf INDF1,W
-    movwf ad_conf
-    goto test_sample_started
-
-test_sample_start1:
-	bcf LATC,0
-    movf INDF0,W
-    movwf ad_conf
-
-test_sample_started:
+    bsf LATC,3
     clrf ad_vall
     clrf ad_valh
     movlw 0xE
     movwf temp0
+    bsf LATC,5
+;
+    bcf LATC,3
 
-test_sample_loop:
+sample_one_loop:
     bcf STATUS,C
     rlcf ad_vall,F
     rlcf ad_valh,F
@@ -442,23 +526,13 @@ test_sample_loop:
     bsf ad_vall,0
     bcf LATC,3
     decfsz temp0,F
-    bra test_sample_loop
-;
-    bsf LATC,0
-;
-    lfsr FSR0,ad01l
-    movf ad_vall,W
-    movwf INDF0
-    incf FSR0L,F
+    bra sample_one_loop
 ;
     movlw 0x1F
     andwf ad_valh,F
     movlw 0xE0
     btfsc ad_valh,4
     iorwf ad_valh,F
-;
-    movf ad_valh,W
-    movwf INDF0
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -466,238 +540,49 @@ test_sample_loop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Sample:
-    clrf ad_cur
-	bsf LATC,0
-    bsf LATC,1
-    movlw 4
-    movwf ad_cnt
-    bcf LATC,3
-    bsf LATC,5
-    movlw 4
-    movwf temp0
-;
-    lfsr FSR0,ad00
-    lfsr FSR1,ad10
-;
-    movf INDF0,W
-    movwf ad_conf
-;
+    movlw 0x30
     bcf LATC,0
-    goto ad_init_loop1
-
-ad_init_set0:
-    bcf LATC,5
-    goto ad_init_clk0
-
-ad_init_loop0:
-    bsf LATC,3
-    rlcf ad_conf,F
-
-ad_init_bit0:
-    btfsc STATUS,C
-    goto ad_init_set1
-
-ad_init_clk0:
-    bcf LATC,3
-    decfsz temp0,F
-    bra ad_init_loop0
-;
-    goto ad_init_done
-
-ad_init_set1:
-    bsf LATC,5
-    goto ad_init_clk1
-
-ad_init_loop1:
-    bsf LATC,3
-    rlcf ad_conf,F
-
-ad_init_bit1:
-    btfss STATUS,C
-    goto ad_init_set0
-
-ad_init_clk1:
-    bcf LATC,3
-    decfsz temp0,F
-    bra ad_init_loop1
-
-ad_init_done:
-    bsf LATC,3
-    call WaitSample
-    bcf LATC,3
-    nop
-    nop
-    nop
-
-sample_start:
-    bsf LATC,3
-    nop
-    nop
-    nop
-    bcf LATC,3
-;
-    bcf LATC,5
-;
-    btfsc ad_cur,0
-    goto sample_start1
-
-sample_start0:
-    bcf LATC,1
-    movf INDF1,W
-    movwf ad_conf
-    goto sample_started
-
-sample_start1:
-	bcf LATC,0
-    movf INDF0,W
-    movwf ad_conf
-
-sample_started:
-    clrf ad_vall
-    clrf ad_valh
-    movlw 9
-    movwf temp0
-
-sample_pre_loop0:
-    bcf STATUS,C
-    rlcf ad_vall,F
-    rlcf ad_valh,F
-    bsf LATC,3
-    btfsc PORTC,4
-    bsf ad_vall,0
-    bcf LATC,3
-    decfsz temp0,F
-    bra sample_pre_loop0
-;            
-    bsf LATC,5
-    bcf STATUS,C
-    rlcf ad_vall,F
-    rlcf ad_valh,F
-    bsf LATC,3
-    btfsc PORTC,4
-    bsf ad_vall,0
-    bcf LATC,3
-;            
-	movlw 4
-    movwf temp0
-    goto sample_loop1
-
-sample_set0:
-    bcf LATC,5
-    goto sample_clk0
-
-sample_loop0:
-    bsf LATC,3
-    bcf STATUS,C
-    rlcf ad_vall,F
-    rlcf ad_valh,F
-    rlcf ad_conf,F
-
-sample_bit0:
-    btfsc STATUS,C
-    goto sample_set1
-
-sample_clk0:
-    btfsc PORTC,4
-    bsf ad_vall,0
-;
-    bcf LATC,3
-    decfsz temp0,F
-    bra sample_loop0
-;
-    goto sample_done
-
-sample_set1:
-    bsf LATC,5
-    goto sample_clk1
-
-sample_loop1:
-    bsf LATC,3
-    bcf STATUS,C
-    rlcf ad_vall,F
-    rlcf ad_valh,F
-    rlcf ad_conf,F
-
-sample_bit1:
-    btfss STATUS,C
-    goto sample_set0
-
-sample_clk1:
-    btfsc PORTC,4
-    bsf ad_vall,0
-;
-    bcf LATC,3
-    decfsz temp0,F
-    bra sample_loop1
-
-sample_done:
-    btfsc ad_cur,0
-    goto sample_done1
-
-sample_done0:
+    call SampleOne
     bsf LATC,0
-    bsf ad_cur,0
-    incf FSR0L,F
-    movf ad_vall,W
-    movwf INDF0
-    incf FSR0L,F
 ;
-    movlw 0x1F
-    andwf ad_valh,F
-    movlw 0xE0
-    btfsc ad_valh,4
-    iorwf ad_valh,F
+    movf ad_vall,W
+    movwf wind_u_lsb
 ;
     movf ad_valh,W
-    movwf INDF0
-    incf FSR0L,F
-    incf FSR0L,F
-    decfsz ad_cnt,F
-    goto sample_start
+    movwf wind_u_msb
+;    
+    movlw 0x50
+    bcf LATC,0
+    call SampleOne
+    bsf LATC,0
 ;
-    bsf LATC,3
-    nop
-    nop
-    nop
-    bcf LATC,3
+    movf ad_vall,W
+    movwf solar_u_lsb
 ;
-    clrf ad_vall
-    clrf ad_valh
-    movlw 0xE
-    movwf temp0
-
-sample_last_loop:
-    bcf STATUS,C
-    rlcf ad_vall,F
-    rlcf ad_valh,F
-    bsf LATC,3
-    btfsc PORTC,4
-    bsf ad_vall,0
-    bcf LATC,3
-    decfsz temp0,F
-    bra sample_last_loop
-        
-sample_done1:
+    movf ad_valh,W
+    movwf solar_u_msb
+;    
+    movlw 0x80
+    bcf LATC,1
+    call SampleOne
     bsf LATC,1
-    bcf ad_cur,0
-    incf FSR1L,F
-    movf ad_vall,W
-    movwf INDF1
-    incf FSR1L,F
 ;
-    movlw 0x1F
-    andwf ad_valh,F
-    movlw 0xE0
-    btfsc ad_valh,4
-    iorwf ad_valh,F
+    movf ad_vall,W
+    movwf wind_i_lsb
 ;
     movf ad_valh,W
-    movwf INDF1
-    incf FSR1L,F
-    incf FSR1L,F
-    movf ad_cnt,W
-    btfss STATUS,Z
-    goto sample_start
-    return 
+    movwf wind_i_msb
+;    
+    movlw 0x60
+    bcf LATC,0
+    call SampleOne
+    bsf LATC,0
+;
+    movf ad_vall,W
+    movwf solar_i_lsb
+;
+    movf ad_valh,W
+    movwf solar_i_msb
+    return
  
     end
