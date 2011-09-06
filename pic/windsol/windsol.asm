@@ -109,9 +109,9 @@ ResetStart:
 ;
     call LoadAdTab
 ;
-    movlw 0x20
+    movlw 0xB0
     movwf temp0
-    movlw 0x3
+    movlw 0x4
     movwf temp1    
     call SetupWind
 
@@ -137,7 +137,7 @@ SetupWind:
     movwf wind_low_msb
     movwf wind_high_msb
 ;
-    movlw 4
+    movlw 5
     movwf temp2
 
 swRotateLoop:
