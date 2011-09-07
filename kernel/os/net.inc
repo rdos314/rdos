@@ -41,6 +41,7 @@ d_handle_list	DW ?
 d_thread		DW ?
 d_packet_size	DD ?
 d_class			DW ?
+d_link_up       DW ?
 
 ; OUT NC		Data available
 ; OUT ECX		Size (0 means do not preallocate)
@@ -71,6 +72,9 @@ d_address		DD ?,?
 ; OUT ES:ESI	Source address
 ; OUT ES:EDI	Dest address
 d_get_address	DD ?,?
+
+; OUT NC        Link ok
+d_get_link_state	DD ?,?
 
 driver_data	ENDS
 

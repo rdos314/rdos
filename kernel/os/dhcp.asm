@@ -2090,6 +2090,36 @@ is_dhcp_done:
     ret
 IsDhcpDone      Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IsDhcpEnabled
+;
+;           DESCRIPTION:    Check if DHCP is enabled
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public IsDhcpEnabled
+
+IsDhcpEnabled      Proc near
+    push ds
+    push ax
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov al,ds:dhcp_enabled
+    or al,al
+    stc
+    jz is_dhcp_enabled_done
+;
+    clc
+
+is_dhcp_enabled_done:
+    pop ax
+    pop ds
+    ret
+IsDhcpEnabled      Endp
+
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

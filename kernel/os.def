@@ -465,4 +465,7 @@ flush_tlb_nr                = 402
 
 is_valid_usb_pipe_sel_nr    = 403
 
+hook_net_link_up_nr         = 404
+req_arp_nr                  = 405
+
 osgate_entries				= 420

@@ -47,6 +47,7 @@ INCLUDE udp.inc
 
     extrn init_cache:near
     extrn IsDhcpDone:near
+    extrn IsDhcpEnabled:near
 
 Reverse MACRO
     xchg al,ah
@@ -1498,7 +1499,35 @@ find_val_done:
     pop ds
     ret
 GetValue    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           LinkUpArp
+;
+;       Purpose:        Send link-up ARP identification
+;
+;       Parameters:     FS      Driver sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+link_up_arp  Proc far
+    push ds
+    push bx
+;    
+    call IsDhcpEnabled
+    jnc link_up_done
+;    
+    mov bx,SEG data
+    mov ds,bx
+    mov esi,OFFSET gateway
+    mov bx,ds:ip_handle
+    ReqArp
+
+link_up_done:
+    pop bx
+    pop ds    
+    retf32
+link_up_arp Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1657,6 +1686,9 @@ init    PROC far
     mov es,ax
     mov edi,OFFSET init_tasking
     HookInitTasking
+;
+    mov edi,OFFSET link_up_arp
+    HookNetLinkUp
 ;   
     call init_cache 
     clc

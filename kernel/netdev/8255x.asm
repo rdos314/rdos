@@ -1365,6 +1365,43 @@ GetPktAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           GetLinkState
+;
+;               DESCRIPTION:    Get link state
+;
+;               RETURNS:        NC  Link up
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetLinkState1  Proc far
+    push ds
+    push ax
+;
+    mov ax,ether_data_sel
+    mov ds,ax
+    clc
+;
+    pop ax
+    pop ds    
+    retf32
+GetLinkState1     Endp
+
+GetLinkState2  Proc far
+    push ds
+    push ax
+;
+    mov ax,ether_data2_sel
+    mov ds,ax
+    clc
+;
+    pop ax
+    pop ds    
+    retf32
+GetLinkState2     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:                   DispatchTable
 ;
 ;               DESCRIPTION:    Driver dispatch table
@@ -1381,6 +1418,7 @@ DispTable1:
         DD OFFSET Send1,                        SEG code
         DD OFFSET GetAddress1,          SEG code
         DD OFFSET GetPktAddress,        SEG code
+        DD OFFSET GetLinkState1,        SEG code
 
 DispTable2:
         DD OFFSET Preview2,                     SEG code
@@ -1390,6 +1428,7 @@ DispTable2:
         DD OFFSET Send2,                        SEG code
         DD OFFSET GetAddress2,          SEG code
         DD OFFSET GetPktAddress,        SEG code
+        DD OFFSET GetLinkState2,        SEG code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

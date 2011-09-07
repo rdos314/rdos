@@ -55,7 +55,7 @@ Cfg9346 = 50h
 Config0 = 51h
 Config1 = 52h
 FlashReg = 54h
-GPPinData = 58h
+MediaReg = 58h
 GPPinDir = 59h
 MII_SMI = 5Ah
 HltClk = 5Bh
@@ -147,6 +147,7 @@ RxRingSel               DW ?
 RxRingPtr       DW ?
 TxSelArr        DW 4 DUP(?)
 TxBufPtr        DW 0
+MediaStatus     DB ?
 TxThread        DW ?
 TxSection       section_typ <>
 EthernetAddress     DB 6 DUP(?)
@@ -434,8 +435,13 @@ ihResetDone:
     out dx,al
 ;
     mov dx,ds:IoBase
+    add dx,MediaReg
+    in al,dx
+    mov ds:MediaStatus,al
+;
+    mov dx,ds:IoBase
     add dx,IntrMask
-    mov ax,RxOk OR RxErr OR TxOK OR TxErr  
+    mov ax,RxOk OR RxErr OR TxOK OR TxErr OR RxUnderrun
     out dx,ax 
     clc
 
@@ -466,8 +472,9 @@ niLoop:
     jz niNotUnderrun
 ;
     mov dx,ds:IoBase
-    add dx,CSCR
-    in ax,dx
+    add dx,MediaReg
+    in al,dx
+    mov ds:MediaStatus,al
 
 niNotUnderrun:
     mov dx,ds:IoBase
@@ -901,6 +908,59 @@ GetPktAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetLinkState
+;
+;           DESCRIPTION:    Get link state
+;
+;           RETURNS:        NC      Link up
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetLinkState1  Proc far
+    push ds
+    push ax
+    push dx
+;    
+    mov ax,ether_data_sel
+    mov ds,ax
+    mov al,ds:MediaStatus
+    test al,4
+    clc
+    jz gls1Done
+;
+    stc
+
+gls1Done:
+    pop dx
+    pop ax
+    pop ds
+    retf32
+GetLinkState1     Endp
+
+GetLinkState2  Proc far
+    push ds
+    push ax
+    push dx
+;    
+    mov ax,ether_data2_sel
+    mov ds,ax
+    mov al,ds:MediaStatus
+    test al,4
+    clc
+    jz gls2Done
+;
+    stc
+
+gls2Done:
+    pop dx
+    pop ax
+    pop ds
+    retf32
+GetLinkState2     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           DispatchTable
 ;
 ;           DESCRIPTION:    Driver dispatch table
@@ -917,6 +977,7 @@ DispTable1:
     DD OFFSET Send1,            SEG code
     DD OFFSET GetAddress1,      SEG code
     DD OFFSET GetPktAddress,    SEG code
+    DD OFFSET GetLinkState1,    SEG code
 
 DispTable2:
     DD OFFSET Preview2,         SEG code
@@ -926,6 +987,7 @@ DispTable2:
     DD OFFSET Send2,            SEG code
     DD OFFSET GetAddress2,      SEG code
     DD OFFSET GetPktAddress,    SEG code
+    DD OFFSET GetLinkState2,    SEG code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -940,8 +1002,8 @@ DispTable2:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DriverName1     DB 'RTL8139-1',0
-DriverName2     DB 'RTL8139-2',0
+DriverName1     DB 'RTL8xxx-1',0
+DriverName2     DB 'RTL8xxx-2',0
 
 PciVendorTab:
 pci00   DW 10ECh, 8139h

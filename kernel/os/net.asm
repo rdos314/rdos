@@ -98,6 +98,9 @@ class_arr               DW 20h DUP(?)
 protocol_count      DW ?
 protocol_arr        DW 20h DUP(?)
 
+net_link_up_hooks      DB ?
+net_link_up_hook_arr   DD 2*16 DUP(?)
+
 data    ENDS
 
 code    SEGMENT byte public 'CODE'
@@ -1104,7 +1107,56 @@ receive_data_done:
     pop ds
     ret
 ReceiveData     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           CheckLink
+;
+;       Purpose:        Check link state
+;
+;       Parameters:     FS          driver handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+CheckLink   Proc near
+    call fword ptr fs:d_get_link_state
+    jc check_link_down
+
+check_link_up:
+    mov ax,fs:d_link_up
+    or ax,ax
+    jnz check_link_done
+;
+    mov fs:d_link_up,1
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov cl,ds:net_link_up_hooks
+    or cl,cl
+    je check_link_done
+;
+    mov bx,OFFSET net_link_up_hook_arr
+
+check_link_loop:
+    push ds
+    push ebx
+    push ecx
+    call fword ptr [bx]
+    pop ecx
+    pop ebx
+    pop ds
+    add bx,8
+    dec cl
+    jnz check_link_loop
+;
+    jmp check_link_done
+
+check_link_down:    
+    mov fs:d_link_up,0
+
+check_link_done:
+    ret
+CheckLink   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1121,6 +1173,7 @@ NetThread:
     GetThread
     mov fs:d_thread,ax
 net_thread_loop:
+    call CheckLink
     call ReceiveData
     WaitForSignal
     jmp net_thread_loop
@@ -1184,6 +1237,7 @@ register_driver_insert:
     add bx,bx
     mov fs:[bx].driver_arr,es
     mov es:d_class,fs
+    mov es:d_link_up,1
     mov bx,es
 
 register_driver_done:
@@ -1651,7 +1705,91 @@ send_broadcast  Proc far
     pop ds
     retf32
 send_broadcast  Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           ReqArp
+;
+;       Purpose:        Send ARP request
+;
+;       Parameters:     BX          protocol
+;                       FS          driver handle
+;                       DS:ESI      logical destination
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+req_arp_name     DB 'Req Arp',0
+
+req_arp  Proc far
+    push ds
+    push gs
+    push ecx
+    push esi
+    push edi
+    push bp
+;
+    mov bp,ds
+    mov gs,bx
+    mov ds,fs:d_class
+;
+    mov ecx,4
+    add cl,gs:p_logical_addr_len
+    adc ch,0
+    add cl,ds:addr_len
+    adc ch,0
+    add cx,cx
+    call fword ptr fs:d_get_buffer
+;
+    mov ah,ds:class_id
+    xor al,al
+    mov es:[di].arp_class,ax
+    mov dx,gs:p_packet_type
+    xchg dl,dh
+    mov es:[di].arp_type,dx
+    xchg dl,dh
+    mov al,ds:addr_len
+    mov es:[di].arp_hw_len,al
+    mov al,gs:p_logical_addr_len
+    mov es:[di].arp_prot_len,al
+    mov es:[di].arp_op,100h
+    add edi,SIZE arp_data
+;
+    movzx ecx,ds:addr_len
+    push ds
+    push esi
+    call fword ptr fs:d_address
+    rep movs byte ptr es:[edi],ds:[esi]
+    pop esi
+    pop ds
+;    
+    movzx cx,gs:p_logical_addr_len
+    push si
+    mov si,OFFSET p_logical_my_addr
+    rep movs byte ptr es:[di],gs:[si]
+    pop si
+;    
+    xor al,al
+    movzx cx,ds:addr_len
+    rep stosb
+;    
+    push ds
+    mov ds,bp
+    movzx ecx,gs:p_logical_addr_len
+    rep movs byte ptr es:[edi],ds:[esi]
+    pop ds
+;
+    mov dx,806h
+    mov esi,OFFSET broadcast_addr
+    call fword ptr fs:d_send
+;
+    pop bp
+    pop edi
+    pop esi
+    pop ecx
+    pop gs
+    pop ds
+    retf32
+req_arp  Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1887,7 +2025,6 @@ define_protocol_address Proc far
     pop ds
     retf32
 define_protocol_address Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2202,6 +2339,41 @@ GetTimestamp    Proc near
     ret
 GetTimestamp    Endp
 
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           HookNetLinkUp
+;
+;       Purpose:        Hook on net link up
+;
+;       Parameters:     ES:EDI   Callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_net_link_up_name      DB 'Hook Net Link Up', 0
+
+hook_net_link_up   Proc far
+    push ds
+    push ax
+    push bx
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov al,ds:net_link_up_hooks
+    mov bl,al
+    xor bh,bh
+    shl bx,3
+    add bx,OFFSET net_link_up_hook_arr
+    mov [bx],edi
+    mov [bx+4],es
+    inc al
+    mov ds:net_link_up_hooks,al
+;
+    pop bx
+    pop ax
+    pop ds
+    retf32
+hook_net_link_up   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2562,6 +2734,7 @@ init    PROC far
     mov ds:capture_handle,0
     mov ds:capture_thread,0
     mov ds:capture_list,0
+    mov ds:net_link_up_hooks,0
     InitSection ds:arp_section
     InitSection ds:capture_section
 ;
@@ -2662,6 +2835,12 @@ init    PROC far
     mov ax,net_received_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET hook_net_link_up
+    mov edi,OFFSET hook_net_link_up_name
+    xor cl,cl
+    mov ax,hook_net_link_up_nr
+    RegisterOsGate
+;
     mov esi,OFFSET add_net_source_address
     mov edi,OFFSET add_net_source_address_name
     xor cl,cl
@@ -2672,6 +2851,12 @@ init    PROC far
     mov edi,OFFSET notify_ethernet_packet_name
     xor cl,cl
     mov ax,notify_ethernet_packet_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET req_arp
+    mov edi,OFFSET req_arp_name
+    xor cl,cl
+    mov ax,req_arp_nr
     RegisterOsGate
 ;
     mov esi,OFFSET ether_broadcast

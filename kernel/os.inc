@@ -1667,6 +1667,13 @@ NetBroadcast    MACRO
     OsGate net_broadcast_nr
                 ENDM
 
+; IN  BX        Protocol handle
+; IN  FS        Driver sel
+; IN  DS:ESI    Logical destination
+ReqArp    MACRO
+    OsGate req_arp_nr
+                        ENDM
+
 ; IN  ECX       SIZE
 ; OUT ES:EDI    DATA BUFFER TO USE
 ; OUT NC        SUCCESS
@@ -1694,6 +1701,12 @@ NetReceived     MACRO
 AddNetSourceAddress     MACRO
     OsGate add_net_source_address_nr
                         ENDM
+
+; IN  ES:EDI       Net link up callback
+;           FS     Driver sel
+HookNetLinkUp  MACRO
+    OsGate hook_net_link_up_nr
+                    ENDM
 
 ; IN  AL          Protocol
 ; IN  ES:EDI      Receiver callback

@@ -1,5 +1,5 @@
-project : G:\rdos\kernel\netdev\rtl8xxx.rdv G:\rdos\kernel\netdev\8255x.rdv &
+project : c:\rdos\kernel\netdev\rtl8xxx.rdv c:\rdos\kernel\netdev\8255x.rdv &
 .SYMBOLIC
 
-!include G:\rdos\kernel\netdev\rtl8xxx.mk1
-!include G:\rdos\kernel\netdev\8255x.mk1
+!include c:\rdos\kernel\netdev\rtl8xxx.mk1
+!include c:\rdos\kernel\netdev\8255x.mk1
