@@ -5,6 +5,8 @@
 
 FLAG_WIND_U_INCREASE        EQU 0
 FLAG_WIND_POWER_INCREASE    EQU 1
+FLAG_WIND_WAIT_LOAD			EQU 2
+FLAG_WIND_WAIT_UNLOAD		EQU 3
 
 temp0	EQU 0x0
 temp1   EQU 0x1
@@ -50,8 +52,8 @@ wind_p4         EQU 0x1D
 wind_ref_lsb	EQU 0x1E
 wind_ref_msb	EQU 0x1F
 
-run_yloop       EQU 0x20
-run_iloop       EQU 0x21
+wind_yloop      EQU 0x20
+wind_iloop      EQU 0x21
 
 flags			EQU 0x22
 
@@ -64,6 +66,9 @@ wind_pp4		EQU 0x27
 wind_u2_0       EQU 0x28
 wind_u2_1       EQU 0x29
 wind_u2_2       EQU 0x2A
+
+load_delay_lsb	EQU 0x2B
+load_delay_msb	EQU 0x2C
 
 Arg1l	EQU 0x40
 Arg1h	EQU 0x41
@@ -115,119 +120,75 @@ ResetStart:
     movwf wind_ref_lsb
     movlw 0x5
     movwf wind_ref_msb
-    call RunReg
-;
-	movlw 0x14
-    addwf wind_ref_lsb,F
-    movlw 0
-    addwfc wind_ref_msb,F
-;
+    call SetupWind
     bsf flags,FLAG_WIND_U_INCREASE
    
 HandleLoop:
-    call RunReg
-    call WindControl
-    goto HandleLoop
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; RunReg
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RunReg:
-    call SetupWind
-;
-    movf wind_p0,W
-    movwf wind_pp0
-    movf wind_p1,W
-    movwf wind_pp1
-    movf wind_p2,W
-    movwf wind_pp2
-    movf wind_p3,W
-    movwf wind_pp3
-    movf wind_p4,W
-    movwf wind_pp4
-;
-	clrf wind_p0
-    clrf wind_p1
-    clrf wind_p2
-    clrf wind_p3
-    clrf wind_p4
-;
-    movlw 0x40
-    movwf run_yloop
-        
-RunYLoop:
-    movlw 0x80
-    movwf run_iloop
-
-RunILoop:
     bsf LATA,0
     call WaitForSample
 	call Sample
+	call PollWind
+    goto HandleLoop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; PollWind
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PollWind:
     call UpdateWindDump
+    btfss flags,FLAG_WIND_WAIT_LOAD
+    goto PollWindNotLoad
+
+PollWindLoad:
+    btfsc LATB,0
+    goto PollWindClearLoad
+;
+    decfsz load_delay_lsb,F
+    return
+;
+    movlw 0x80
+    movwf load_delay_lsb
+;
+    decfsz load_delay_msb,F
+    return
+    goto PollWindReport
+
+PollWindClearLoad:
+    bsf flags,FLAG_WIND_WAIT_UNLOAD
+    bcf flags,FLAG_WIND_WAIT_LOAD
+    
+PollWindNotLoad:
+    btfss flags,FLAG_WIND_WAIT_UNLOAD
+    goto PollWindNotUnload
+
+PollWindUnload:
+    btfsc LATB,0
+    return
+;
+    bcf flags,FLAG_WIND_WAIT_UNLOAD
+    movlw 0x40
+    movwf wind_yloop
+;
+    movlw 0x80
+    movwf wind_iloop
+
+PollWindNotUnload:
     call WindSquare
     call UpdateWindPower
 ;
-    decfsz run_iloop,F
-    bra RunILoop
+    decfsz wind_iloop,F
+    return
 ;
-    decfsz run_yloop,F
-    bra RunYLoop
+    movlw 0x80
+    movwf wind_iloop
 ;
-    movf wind_p4,W
-    cpfseq wind_pp4
-    goto RunWindPower4Ne
-	goto RunWindPower4Eq
-
-RunWindPower4Ne:
-    cpfsgt wind_pp4
-    goto RunNewLarger
-    goto RunOldLarger
-
-RunWindPower4Eq:
-    movf wind_p3,W
-    cpfseq wind_pp3
-    goto RunWindPower3Ne
-	goto RunWindPower3Eq
-
-RunWindPower3Ne:
-    cpfsgt wind_pp3
-    goto RunNewLarger
-    goto RunOldLarger
-
-RunWindPower3Eq:
-    movf wind_p2,W
-    cpfseq wind_pp2
-    goto RunWindPower2Ne
-	goto RunWindPower2Eq
-
-RunWindPower2Ne:
-    cpfsgt wind_pp2
-    goto RunNewLarger
-    goto RunOldLarger
-
-RunWindPower2Eq:
-    movf wind_p1,W
-    cpfseq wind_pp1
-    goto RunWindPower1Ne
-    goto RunWindPower1Eq
-
-RunWindPower1Ne:
-    cpfsgt wind_pp1
-    goto RunNewLarger
-    goto RunOldLarger
-
-RunWindPower1Eq:
-    movf wind_p0,W
-    cpfslt wind_pp0
-    goto RunOldLarger
-
-RunNewLarger:
-    bsf flags,FLAG_WIND_POWER_INCREASE
+    decfsz wind_yloop,F
     return
 
-RunOldLarger:
-    bcf flags,FLAG_WIND_POWER_INCREASE
+PollWindReport:
+    call WindPowerCompare
+    call WindControl
+    call SetupWind
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -265,6 +226,67 @@ WindSquare:
     movf PRODL,W
     addwf wind_u2_2,F
     return            
+         
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; WindPowerCompare
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WindPowerCompare:
+    movf wind_p4,W
+    cpfseq wind_pp4
+    goto WindPower4Ne
+	goto WindPower4Eq
+
+WindPower4Ne:
+    cpfsgt wind_pp4
+    goto WindNewLarger
+    goto WindOldLarger
+
+WindPower4Eq:
+    movf wind_p3,W
+    cpfseq wind_pp3
+    goto WindPower3Ne
+	goto WindPower3Eq
+
+WindPower3Ne:
+    cpfsgt wind_pp3
+    goto WindNewLarger
+    goto WindOldLarger
+
+WindPower3Eq:
+    movf wind_p2,W
+    cpfseq wind_pp2
+    goto WindPower2Ne
+	goto WindPower2Eq
+
+WindPower2Ne:
+    cpfsgt wind_pp2
+    goto WindNewLarger
+    goto WindOldLarger
+
+WindPower2Eq:
+    movf wind_p1,W
+    cpfseq wind_pp1
+    goto WindPower1Ne
+    goto WindPower1Eq
+
+WindPower1Ne:
+    cpfsgt wind_pp1
+    goto WindNewLarger
+    goto WindOldLarger
+
+WindPower1Eq:
+    movf wind_p0,W
+    cpfslt wind_pp0
+    goto WindOldLarger
+
+WindNewLarger:
+    bsf flags,FLAG_WIND_POWER_INCREASE
+    return
+
+WindOldLarger:
+    bcf flags,FLAG_WIND_POWER_INCREASE
+    return
          
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; WindControl
@@ -393,6 +415,29 @@ swRotateLoop:
     addwf wind_low_lsb,F
     movf temp1,W
     addwfc wind_low_msb,F
+;
+    movf wind_p0,W
+    movwf wind_pp0
+    movf wind_p1,W
+    movwf wind_pp1
+    movf wind_p2,W
+    movwf wind_pp2
+    movf wind_p3,W
+    movwf wind_pp3
+    movf wind_p4,W
+    movwf wind_pp4
+;
+	clrf wind_p0
+    clrf wind_p1
+    clrf wind_p2
+    clrf wind_p3
+    clrf wind_p4
+;
+    bsf flags,FLAG_WIND_WAIT_LOAD
+;
+    movlw 0x80
+    movwf load_delay_msb
+    movwf load_delay_lsb
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
