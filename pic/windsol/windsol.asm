@@ -90,14 +90,14 @@ ResetStart:
     movlw b'11111110'
     movwf TRISA
 ;
-	movlw b'00001000'
+	movlw b'00000000'
     movwf PORTB
     movwf LATB
 ;
     movlw b'11100000'
     movwf TRISB
 ;
-    movlw b'11100011'
+    movlw b'10100111'
     movwf PORTC
     movwf LATC
 ;
