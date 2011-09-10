@@ -398,6 +398,39 @@ int main()
 //          Vp->SetAmbient(refsum / count, 100); // 10C outside temperature
          }
 
+         if (count)
+         {
+            if (RdosReadSerialLines(1, &diostat))
+            {
+                if (circmax < 25)
+                {
+                    if ((diostat & 0x40) != 0)
+                        RdosToggleSerialLine(1, 6);   // heat
+                        
+                    if ((diostat & 0x20) != 0)
+                        RdosToggleSerialLine(1, 5);   // cold
+                }
+                
+                if (circmax > 75)
+                {               
+                    if ((diostat & 0x20) == 0)
+                        RdosToggleSerialLine(1, 5);   // cold
+
+                    if ((diostat & 0x40) == 0)
+                        RdosToggleSerialLine(1, 6);   // heat
+                }
+
+                if (circmax == 0)
+                    if ((diostat & 0x10) != 0)
+                        RdosToggleSerialLine(1, 4);
+
+                if (circmax > 25)
+                    if ((diostat & 0x10) == 0)
+                        RdosToggleSerialLine(1, 4);
+                
+            }
+        }
+
         val = Ws->GetIndoorTemp();
         sprintf(str, "%5.1Lf", val);
           IndoorTable->SetText(0, 1, str);

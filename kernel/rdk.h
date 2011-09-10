@@ -465,3 +465,6 @@
 
 #define OsGate_is_valid_usb_pipe_sel 0x3E 0x67 0x9a 147 1 0 0 2 0
 
+#define OsGate_hook_net_link_up 0x3E 0x67 0x9a 148 1 0 0 2 0
+#define OsGate_req_arp 0x3E 0x67 0x9a 149 1 0 0 2 0
+
