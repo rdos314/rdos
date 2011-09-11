@@ -49,50 +49,44 @@ wind_p0			EQU 0x19
 wind_p1			EQU 0x1A
 wind_p2			EQU 0x1B
 wind_p3			EQU 0x1C
-wind_p4         EQU 0x1D
 
-wind_ref_lsb	EQU 0x1E
-wind_ref_msb	EQU 0x1F
+wind_ref_lsb	EQU 0x1D
+wind_ref_msb	EQU 0x1E
 
-wind_yloop      EQU 0x20
-wind_iloop      EQU 0x21
+wind_yloop      EQU 0x1F
+wind_iloop      EQU 0x20
 
-flags			EQU 0x22
+flags			EQU 0x21
 
-wind_pp0        EQU 0x23
-wind_pp1        EQU 0x24
-wind_pp2        EQU 0x25
-wind_pp3		EQU 0x26
-wind_pp4		EQU 0x27
+wind_pp0        EQU 0x22
+wind_pp1        EQU 0x23
+wind_pp2        EQU 0x24
+wind_pp3		EQU 0x25
 
-wind_cp_0       EQU 0x28
-wind_cp_1       EQU 0x29
-wind_cp_2       EQU 0x2A
+wind_cp_0       EQU 0x26
+wind_cp_1       EQU 0x27
+wind_cp_2       EQU 0x28
 
-load_delay_lsb	EQU 0x2B
-load_delay_msb	EQU 0x2C
+load_delay_lsb	EQU 0x29
+load_delay_msb	EQU 0x2A
 
-solar_ref_lsb	EQU 0x2D
-solar_ref_msb	EQU 0x2E
+solar_ref_lsb	EQU 0x2B
+solar_ref_msb	EQU 0x2C
 
-solar_cp_0      EQU 0x2F
-solar_cp_1      EQU 0x30
-solar_cp_2      EQU 0x31
+solar_cp_0      EQU 0x2D
+solar_cp_1      EQU 0x2E
+solar_cp_2      EQU 0x2F
 
-solar_yloop     EQU 0x32
-solar_iloop     EQU 0x33
+solar_yloop     EQU 0x30
+solar_iloop     EQU 0x31
 
-solar_p0		EQU 0x34
-solar_p1		EQU 0x35
-solar_p2		EQU 0x36
-solar_p3		EQU 0x37
-solar_p4        EQU 0x38
+solar_p0		EQU 0x32
+solar_p1		EQU 0x33
+solar_p2		EQU 0x34
 
-solar_pp0       EQU 0x39
-solar_pp1       EQU 0x3A
-solar_pp2       EQU 0x3B
-solar_pp3		EQU 0x3C
-solar_pp4		EQU 0x3D
+solar_pp0       EQU 0x35
+solar_pp1       EQU 0x36
+solar_pp2       EQU 0x37
 
 Arg1l	EQU 0x40
 Arg1h	EQU 0x41
@@ -138,13 +132,10 @@ ResetStart:
     clrf wind_p1
     clrf wind_p2
     clrf wind_p3
-    clrf wind_p4
 ;
 	clrf solar_p0
     clrf solar_p1
     clrf solar_p2
-    clrf solar_p3
-    clrf solar_p4
 ;
     movlw 0x0
     movwf wind_ref_lsb
@@ -276,17 +267,6 @@ CalcWindPower:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WindPowerCompare:
-    movf wind_p4,W
-    cpfseq wind_pp4
-    goto WindPower4Ne
-	goto WindPower4Eq
-
-WindPower4Ne:
-    cpfsgt wind_pp4
-    goto WindNewLarger
-    goto WindOldLarger
-
-WindPower4Eq:
     movf wind_p3,W
     cpfseq wind_pp3
     goto WindPower3Ne
@@ -337,6 +317,10 @@ WindOldLarger:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WindControl:
+    movlw 3
+    cpfslt wind_p3
+    goto WindControlDecrease
+;
     btfsc flags,FLAG_WIND_POWER_INCREASE
     goto WindControlMorePower
 ;
@@ -344,7 +328,6 @@ WindControl:
     iorwf wind_p1,W
     iorwf wind_p2,W
     iorwf wind_p3,W
-    iorwf wind_p4,W
     btfss STATUS,Z
     goto WindControlLessPower
 
@@ -395,11 +378,11 @@ WindControlLessPower:
     goto WindControlIncrease
     
 WindControlDecrease:
+    bcf flags,FLAG_WIND_U_INCREASE
 	movlw 0xEC
     addwf wind_ref_lsb,F
     movlw 0xFF
     addwfc wind_ref_msb,F
-    bcf flags,FLAG_WIND_U_INCREASE
 ;
     btfss STATUS,C
     goto WindControlZero
@@ -478,14 +461,11 @@ swRotateLoop:
     movwf wind_pp2
     movf wind_p3,W
     movwf wind_pp3
-    movf wind_p4,W
-    movwf wind_pp4
 ;
 	clrf wind_p0
     clrf wind_p1
     clrf wind_p2
     clrf wind_p3
-    clrf wind_p4
 ;
     bsf flags,FLAG_WIND_WAIT_LOAD
 ;
@@ -561,7 +541,6 @@ UpdateWindPower:
 ;
     movlw 0
     addwfc wind_p3,F
-    addwfc wind_p4,F
 	return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -642,10 +621,6 @@ UpdateSolarPower:
 ;
     movf solar_cp_2,W
     addwfc solar_p2,F
-;
-    movlw 0
-    addwfc solar_p3,F
-    addwfc solar_p4,F
 	return
          
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -653,28 +628,6 @@ UpdateSolarPower:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SolarPowerCompare:
-    movf solar_p4,W
-    cpfseq solar_pp4
-    goto SolarPower4Ne
-	goto SolarPower4Eq
-
-SolarPower4Ne:
-    cpfsgt solar_pp4
-    goto SolarNewLarger
-    goto SolarOldLarger
-
-SolarPower4Eq:
-    movf solar_p3,W
-    cpfseq solar_pp3
-    goto SolarPower3Ne
-	goto SolarPower3Eq
-
-SolarPower3Ne:
-    cpfsgt solar_pp3
-    goto SolarNewLarger
-    goto SolarOldLarger
-
-SolarPower3Eq:
     movf solar_p2,W
     cpfseq solar_pp2
     goto SolarPower2Ne
@@ -720,8 +673,6 @@ SolarControl:
     movf solar_p0,W
     iorwf solar_p1,W
     iorwf solar_p2,W
-    iorwf solar_p3,W
-    iorwf solar_p4,W
     btfss STATUS,Z
     goto SolarControlLessPower
 
@@ -843,16 +794,10 @@ ssRotateLoop:
     movwf solar_pp1
     movf solar_p2,W
     movwf solar_pp2
-    movf solar_p3,W
-    movwf solar_pp3
-    movf solar_p4,W
-    movwf solar_pp4
 ;
 	clrf solar_p0
     clrf solar_p1
     clrf solar_p2
-    clrf solar_p3
-    clrf solar_p4
 ;
     movlw 0x40
     movwf solar_yloop
