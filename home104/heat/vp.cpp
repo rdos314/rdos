@@ -43,7 +43,7 @@
 #define TRUE !FALSE
 
 #define VOLUME_TANK 500
-#define VOLUME_HEAT 200
+#define VOLUME_HEAT 100
 
 /*##########################################################################
 #
@@ -58,61 +58,61 @@
 ##########################################################################*/
 TVp::TVp(TControlThread *control)
 {
-	int i, j;
-	int SetArr[MAX_FUZZY_VARS];
-	int RuleArr[3][5] =
-				{
-					{3, 2, 1, 0, 0},
-					{4, 3, 3, 3, 2},
-					{6, 6, 5, 4, 3},
-				};
+        int i, j;
+        int SetArr[MAX_FUZZY_VARS];
+        int RuleArr[3][5] =
+                                {
+                                        {3, 2, 1, 0, 0},
+                                        {4, 3, 3, 3, 2},
+                                        {6, 6, 5, 4, 3},
+                                };
 
-	FTempDiffVar.Add(0, new TLowFuzzySet(-1.0, -0.5));
-	FTempDiffVar.Add(1, new TMidFuzzySet(-1.0, -0.5, 0.0));
-	FTempDiffVar.Add(2, new TMidFuzzySet(-0.5, 0.0, 0.5));
-	FTempDiffVar.Add(3, new TMidFuzzySet(0.0, 0.5, 1.0));
-	FTempDiffVar.Add(4, new THighFuzzySet(0.5, 1.0));
-	AddInput(0, &FTempDiffVar);
+        FTempDiffVar.Add(0, new TLowFuzzySet(-1.0, -0.5));
+        FTempDiffVar.Add(1, new TMidFuzzySet(-1.0, -0.5, 0.0));
+        FTempDiffVar.Add(2, new TMidFuzzySet(-0.5, 0.0, 0.5));
+        FTempDiffVar.Add(3, new TMidFuzzySet(0.0, 0.5, 1.0));
+        FTempDiffVar.Add(4, new THighFuzzySet(0.5, 1.0));
+        AddInput(0, &FTempDiffVar);
 
-	FAmbientVar.Add(0, new TLowFuzzySet(0.25, 0.5));
-	FAmbientVar.Add(1, new TMidFuzzySet(0.25, 0.5, 1.0));
-	FAmbientVar.Add(2, new THighFuzzySet(0.5, 1.0));
-	AddInput(1, &FAmbientVar);
+        FAmbientVar.Add(0, new TLowFuzzySet(0.25, 0.5));
+        FAmbientVar.Add(1, new TMidFuzzySet(0.25, 0.5, 1.0));
+        FAmbientVar.Add(2, new THighFuzzySet(0.5, 1.0));
+        AddInput(1, &FAmbientVar);
 
-	FOutputVar.Add(0, new TLowFuzzySet(-0.8, -0.4));
-	FOutputVar.Add(1, new TMidFuzzySet(-0.8, -0.4, -0.2));
-	FOutputVar.Add(2, new TMidFuzzySet(-0.4, -0.2, 0.0));
-	FOutputVar.Add(3, new TMidFuzzySet(-0.2, 0.0, 0.2));
-	FOutputVar.Add(4, new TMidFuzzySet(0.0, 0.2, 0.4));
-	FOutputVar.Add(5, new TMidFuzzySet(0.2, 0.4, 0.8));
-	FOutputVar.Add(6, new THighFuzzySet(0.4, 0.8));
-	AddOutput(&FOutputVar);
+        FOutputVar.Add(0, new TLowFuzzySet(-0.8, -0.4));
+        FOutputVar.Add(1, new TMidFuzzySet(-0.8, -0.4, -0.2));
+        FOutputVar.Add(2, new TMidFuzzySet(-0.4, -0.2, 0.0));
+        FOutputVar.Add(3, new TMidFuzzySet(-0.2, 0.0, 0.2));
+        FOutputVar.Add(4, new TMidFuzzySet(0.0, 0.2, 0.4));
+        FOutputVar.Add(5, new TMidFuzzySet(0.2, 0.4, 0.8));
+        FOutputVar.Add(6, new THighFuzzySet(0.4, 0.8));
+        AddOutput(&FOutputVar);
 
-	for (i = 0; i < 3; i++)
-	{
-		for (j = 0; j < 5; j++)
-		{
-			SetArr[0] = j;
-			SetArr[1] = i;
-			DefineRule(SetArr, RuleArr[i][j]);
-		}
-	}
+        for (i = 0; i < 3; i++)
+        {
+                for (j = 0; j < 5; j++)
+                {
+                        SetArr[0] = j;
+                        SetArr[1] = i;
+                        DefineRule(SetArr, RuleArr[i][j]);
+                }
+        }
 
-	FTempDiffVar.SetInputValue(0.0);
-	FAmbientVar.SetInputValue(0.5);
+        FTempDiffVar.SetInputValue(0.0);
+        FAmbientVar.SetInputValue(0.5);
 
     FControl = control;
 
-	FTankTemp = 200;
-	FHeatTemp = 200;
+        FTankTemp = 200;
+        FHeatTemp = 200;
 
-	FValidTank = FALSE;
-	FValidHeat = FALSE;
-	FValidPTank = FALSE;
-	FValidPHeat = FALSE;
-	FValidAmbient = FALSE;
+        FValidTank = FALSE;
+        FValidHeat = FALSE;
+        FValidPTank = FALSE;
+        FValidPHeat = FALSE;
+        FValidAmbient = FALSE;
 
-	Start("Vp", 0x2000);
+        Start("Vp", 0x2000);
 }
 
 /*##########################################################################
@@ -143,7 +143,7 @@ TVp::~TVp()
 ##########################################################################*/
 void TVp::DeviceName(char *Name, int Size) const
 {
-	strcpy(Name, "VP");
+        strcpy(Name, "VP");
 }
 
 /*##########################################################################
@@ -175,7 +175,7 @@ int TVp::HasValidTankTemp()
 ##########################################################################*/
 int TVp::HasValidHeatTemp()
 {
-	return FValidHeat;
+        return FValidHeat;
 }
 
 /*##########################################################################
@@ -191,7 +191,7 @@ int TVp::HasValidHeatTemp()
 ##########################################################################*/
 int TVp::GetTankTemp()
 {
-	return FTankTemp;
+        return FTankTemp;
 }
 
 /*##########################################################################
@@ -207,7 +207,7 @@ int TVp::GetTankTemp()
 ##########################################################################*/
 int TVp::GetHeatTemp()
 {
-	return FHeatTemp;
+        return FHeatTemp;
 }
 
 /*##########################################################################
@@ -223,7 +223,7 @@ int TVp::GetHeatTemp()
 ##########################################################################*/
 int TVp::HasValidTankP()
 {
-	return FValidPTank;
+        return FValidPTank;
 }
 
 /*##########################################################################
@@ -239,7 +239,7 @@ int TVp::HasValidTankP()
 ##########################################################################*/
 long double TVp::GetTankP()
 {
-	return PTank;
+        return PTank;
 }
 
 /*##########################################################################
@@ -255,7 +255,7 @@ long double TVp::GetTankP()
 ##########################################################################*/
 int TVp::HasValidHeatP()
 {
-	return FValidPHeat;
+        return FValidPHeat;
 }
 
 /*##########################################################################
@@ -271,7 +271,7 @@ int TVp::HasValidHeatP()
 ##########################################################################*/
 long double TVp::GetHeatP()
 {
-	return PHeat;
+        return PHeat;
 }
 
 /*##########################################################################
@@ -289,7 +289,7 @@ void TVp::SetTempError(int diff)
     FSection.Enter();
     
     TempCount++;
-	TempSum += diff;
+        TempSum += diff;
 
     FSection.Leave();    
 }
@@ -344,23 +344,24 @@ void TVp::SetAmbient(int ref, int ambient)
 ##########################################################################*/
 void TVp::Execute()
 {
-	int year, month, day;
-	int hour, min, sec;
-	int ms, us;
-	unsigned long msb, lsb;
-	int LastMin;
-	int i;
-	long double ValArr[MAX_FUZZY_VARS];
-	long double val;
-	 int ival;
-	int diostat;
-	long double dT;
-	int Sum;
-	int Count;
-	int PrevCount;
-	long double PrevVal;
-	int EpLimit;
-	char str[50];
+        int year, month, day;
+        int hour, min, sec;
+        int ms, us;
+        unsigned long msb, lsb;
+        int LastMin;
+        int i;
+        long double ValArr[MAX_FUZZY_VARS];
+        long double val;
+         int ival;
+        int diostat;
+        long double dT;
+        int Sum;
+        int Count;
+        int PrevCount;
+        long double PrevVal;
+        int EpLimit;
+        char str[50];
+        long tempval;
 
     TLabelFactory CommentLabelFactory;
     TLabelFactory ValueLabelFactory;
@@ -384,134 +385,134 @@ void TVp::Execute()
     UnitLabelFactory.SetDrawColor(0, 0, 0);
     UnitLabelFactory.AlignLeft();
 
-	TLabelControl *Label;
+        TLabelControl *Label;
     TTableControl *Table;
 
-	Label = new TLabelControl(FControl, 900, 500, 200, 30);
+        Label = new TLabelControl(FControl, 900, 500, 200, 30);
     Label->SetFont(20);
     Label->SetBackTransparent();
     Label->SetDrawColor(0, 0, 0);
     Label->SetText("V„rme");
     Label->Show();
 
-	Table = new TTableControl(FControl, 900, 530, 300, 300);
-	Table->SetRowSpacing(5);
-	Table->SetColSpacing(8);
-	Table->SetSpacingTransparent();
-	Table->SetBackTransparent();
-	Table->AddLabelColumn(&CommentLabelFactory, 150);
-	Table->AddLabelColumn(&ValueLabelFactory, 80);
-	Table->AddLabelColumn(&UnitLabelFactory, 70);
+        Table = new TTableControl(FControl, 900, 530, 400, 300);
+        Table->SetRowSpacing(5);
+        Table->SetColSpacing(8);
+        Table->SetSpacingTransparent();
+        Table->SetBackTransparent();
+        Table->AddLabelColumn(&CommentLabelFactory, 220);
+        Table->AddLabelColumn(&ValueLabelFactory, 80);
+        Table->AddLabelColumn(&UnitLabelFactory, 70);
 
-	Table->AddRow(24, 45);
-	Table->AddRow(24, 45);
-	Table->AddRow(24, 45);
-	Table->AddRow(24, 45);
-	Table->AddRow(24, 45);
+        Table->AddRow(24, 45);
+        Table->AddRow(24, 45);
+        Table->AddRow(24, 45);
+        Table->AddRow(24, 45);
+        Table->AddRow(24, 45);
 
-	Table->SetText(0, 0, "Tank temp");
-	Table->SetText(0, 2, "C");
+        Table->SetText(0, 0, "Tank temp");
+        Table->SetText(0, 2, "C");
 
-	Table->SetText(1, 0, "Tank effekt");
-	Table->SetText(1, 2, "kW");
+        Table->SetText(1, 0, "Tank effekt");
+        Table->SetText(1, 2, "kW");
 
-	Table->SetText(2, 0, "Panna temp");
-	Table->SetText(2, 2, "C");
+        Table->SetText(2, 0, "F”rv„rme temp");
+        Table->SetText(2, 2, "C");
 
-	Table->SetText(3, 0, "Panna effekt");
-	Table->SetText(3, 2, "kW");
+        Table->SetText(3, 0, "F”rv„rme effekt");
+        Table->SetText(3, 2, "W");
 
-	Table->SetText(4, 0, "VP");
-	Table->SetText(4, 2, "V");
+        Table->SetText(4, 0, "VP");
+        Table->SetText(4, 2, "V");
 
 
-	TempSum = 0;
-	TempCount = 0;
-	AmbientSum = 0;
-	AmbientCount = 0;
+        TempSum = 0;
+        TempCount = 0;
+        AmbientSum = 0;
+        AmbientCount = 0;
 
-	for (i = 0; i < MAX_FUZZY_VARS; i++)
-		ValArr[i] = 0.0;
+        for (i = 0; i < MAX_FUZZY_VARS; i++)
+                ValArr[i] = 0.0;
 
     ValArr[1] = 0.5;
 
-	FTankSum = 0;
-	FTankCount = 0;
+        FTankSum = 0;
+        FTankCount = 0;
 
-	FHeatSum = 0;
-	FHeatCount = 0;
+        FHeatSum = 0;
+        FHeatCount = 0;
 
-	RdosGetTime(&msb, &lsb);
-	RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
-	RdosDecodeLsbTics(lsb, &LastMin, &sec, &ms, &us);
+        RdosGetTime(&msb, &lsb);
+        RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+        RdosDecodeLsbTics(lsb, &LastMin, &sec, &ms, &us);
 
-	while (FInstalled)
-	{
-		if (RdosReadSerialRaw(0x40, 0, &ival))
-		{
-			 FTankSum += ival;
+        while (FInstalled)
+        {
+                if (RdosReadSerialRaw(0x40, 0, &ival))
+                {
+                         FTankSum += ival;
             FTankCount++;
 
             if (FTankCount >= 50)
             {
-				FTankTemp = FTankSum / FTankCount;
+                                FTankTemp = FTankSum / FTankCount;
 
-				val = (long double)FTankTemp / 10;
-				sprintf(str, "%5.1Lf", val);
-        		Table->SetText(0, 1, str);
+                                val = (long double)FTankTemp / 10;
+                                sprintf(str, "%5.1Lf", val);
+                        Table->SetText(0, 1, str);
 
-				FValidTank = TRUE;
+                                FValidTank = TRUE;
 
-				FTankSum = 0;
-				FTankCount = 0;
-			}
-		}
+                                FTankSum = 0;
+                                FTankCount = 0;
+                        }
+                }
 
-		if (RdosReadSerialRaw(0x40, 1, &ival))
-		{
-			FHeatSum += ival;
-			FHeatCount++;
+                if (RdosReadSerialRaw(0x40, 1, &ival))
+                {
+                        FHeatSum += ival;
+                        FHeatCount++;
 
-			if (FHeatCount >= 50)
-			{
-				FHeatTemp = FHeatSum / FHeatCount;
+                        if (FHeatCount >= 50)
+                        {
+                                FHeatTemp = FHeatSum / FHeatCount;
 
-				if (FHeatTemp > FMaxHeatTemp)
-				    FMaxHeatTemp = FHeatTemp;
+                                if (FHeatTemp > FMaxHeatTemp)
+                                    FMaxHeatTemp = FHeatTemp;
 
-				val = (long double)FHeatTemp / 10;
-				sprintf(str, "%5.1Lf", val);
-        		Table->SetText(2, 1, str);
+                                val = (long double)FHeatTemp / 10;
+                                sprintf(str, "%5.1Lf", val);
+                        Table->SetText(2, 1, str);
 
-				FValidHeat = TRUE;
+                                FValidHeat = TRUE;
 
-				FHeatSum = 0;
-				FHeatCount = 0;
-			}
-		}
+                                FHeatSum = 0;
+                                FHeatCount = 0;
+                        }
+                }
 
-		RdosGetTime(&msb, &lsb);
-		RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
-		RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
+                RdosGetTime(&msb, &lsb);
+                RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+                RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
 
-		if (LastMin != min && TempCount)
-		{
-			LastMin = min;
+                if (LastMin != min && TempCount)
+                {
+                        LastMin = min;
 
-			if (FMaxHeatDay != day)
-			{
-			    FMaxHeatDay = day;
-			    FMaxHeatTemp = 0;
-			}
+                        if (FMaxHeatDay != day)
+                        {
+                            FMaxHeatDay = day;
+                            FMaxHeatTemp = 0;
+                        }
 
-			for (i = 1; i < 40; i++)
-			{
-			    TankArr[i-1] = TankArr[i];
-				 ValidTankArr[i-1] = ValidTankArr[i];
-			}
+                        for (i = 1; i < 40; i++)
+                        {
+                            TankArr[i-1] = TankArr[i];
+                                 ValidTankArr[i-1] = ValidTankArr[i];
+                        }
 
-			TankArr[39] = FTankTemp;
-			ValidTankArr[39] = FValidTank;
+                        TankArr[39] = FTankTemp;
+                        ValidTankArr[39] = FValidTank;
 
             if (FValidTank)
             {
@@ -528,110 +529,111 @@ void TVp::Execute()
                 }
 
                 if (PrevCount)
-					PrevVal = (long double)Sum / (long double)PrevCount / 10.0;
-				else
-					PrevVal = 0;
+                                        PrevVal = (long double)Sum / (long double)PrevCount / 10.0;
+                                else
+                                        PrevVal = 0;
 
-				Sum = 0;
-				Count = 0;
+                                Sum = 0;
+                                Count = 0;
 
-				for (i = 0; i < 10; i++)
-				{
-					if (ValidTankArr[i + 30])
-					{
-						Sum += TankArr[i + 30] * i;
-						Count += i;
-					}
-				}
+                                for (i = 0; i < 10; i++)
+                                {
+                                        if (ValidTankArr[i + 30])
+                                        {
+                                                Sum += TankArr[i + 30] * i;
+                                                Count += i;
+                                        }
+                                }
 
-				if (Count)
-					val = (long double)Sum / (long double)Count / 10.0;
-				else
-					val = 0;
+                                if (Count)
+                                        val = (long double)Sum / (long double)Count / 10.0;
+                                else
+                                        val = 0;
 
-				if (Count && PrevCount)
-				{
-					dT = val - PrevVal;
-					PTank = 0.07 * VOLUME_TANK * dT / 30;
-					FValidPTank = TRUE;
+                                if (Count && PrevCount)
+                                {
+                                        dT = val - PrevVal;
+                                        PTank = 0.07 * VOLUME_TANK * dT / 30;
+                                        FValidPTank = TRUE;
 
-					sprintf(str, "%5.2Lf", PTank);
-            		Table->SetText(1, 1, str);
-				}
-			}
+                                        sprintf(str, "%5.2Lf", PTank);
+                        Table->SetText(1, 1, str);
+                                }
+                        }
 
-			for (i = 1; i < 20; i++)
-			{
-				HeatArr[i-1] = HeatArr[i];
-				ValidHeatArr[i-1] = ValidHeatArr[i];
-			}
+                        for (i = 1; i < 20; i++)
+                        {
+                                HeatArr[i-1] = HeatArr[i];
+                                ValidHeatArr[i-1] = ValidHeatArr[i];
+                        }
 
-			HeatArr[19] = FHeatTemp;
-			ValidHeatArr[19] = FValidHeat;
+                        HeatArr[19] = FHeatTemp;
+                        ValidHeatArr[19] = FValidHeat;
 
-			if (FValidHeat)
-			{
-				Sum = 0;
-				PrevCount = 0;
+                        if (FValidHeat)
+                        {
+                                Sum = 0;
+                                PrevCount = 0;
 
-				for (i = 0; i < 5; i++)
-				{
-					if (ValidHeatArr[i])
-					{
-						Sum += HeatArr[i] * i;
-						PrevCount += i;
-					}
-				}
+                                for (i = 0; i < 5; i++)
+                                {
+                                        if (ValidHeatArr[i])
+                                        {
+                                                Sum += HeatArr[i] * i;
+                                                PrevCount += i;
+                                        }
+                                }
 
-				if (PrevCount)
-					PrevVal = (long double)Sum / (long double)PrevCount / 10.0;
-				else
-					PrevVal = 0;
+                                if (PrevCount)
+                                        PrevVal = (long double)Sum / (long double)PrevCount / 10.0;
+                                else
+                                        PrevVal = 0;
 
-				Sum = 0;
-				Count = 0;
+                                Sum = 0;
+                                Count = 0;
 
-				for (i = 0; i < 5; i++)
-				{
-					if (ValidHeatArr[i + 15])
-					{
-						Sum += HeatArr[i + 15] * i;
-						Count += i;
-					}
-				}
+                                for (i = 0; i < 5; i++)
+                                {
+                                        if (ValidHeatArr[i + 15])
+                                        {
+                                                Sum += HeatArr[i + 15] * i;
+                                                Count += i;
+                                        }
+                                }
 
-				if (Count)
-					val = (long double)Sum / (long double)Count / 10.0;
-				else
-					val = 0;
+                                if (Count)
+                                        val = (long double)Sum / (long double)Count / 10.0;
+                                else
+                                        val = 0;
 
-				if (Count && PrevCount)
-				{
-					dT = val - PrevVal;
-					PHeat = 0.07 * VOLUME_HEAT * dT / 15;
-					FValidPHeat = TRUE;
+                                if (Count && PrevCount)
+                                {
+                                        dT = val - PrevVal;
+                                        PHeat = 0.07 * VOLUME_HEAT * dT / 15;
+                                        FValidPHeat = TRUE;
 
-					sprintf(str, "%5.2Lf", PHeat);
-            		Table->SetText(3, 1, str);
-				}
-			}
+                    tempval = (long)(1000.0 * PHeat); 
+                                        sprintf(str, "%d", tempval);
+                        Table->SetText(3, 1, str);
+                                }
+                        }
 
-			FSection.Enter();
+                        FSection.Enter();
 
-			if (TempCount)
-				ValArr[0] = (long double)TempSum / (long double)TempCount / 10.0;
+                        if (TempCount)
+                                ValArr[0] = (long double)TempSum / (long double)TempCount / 10.0;
 
             if (AmbientCount)
                 ValArr[1] = AmbientSum / (long double)AmbientCount; 
 
-			TempSum = 0;
-			TempCount = 0;
-			AmbientSum = 0;
-			AmbientCount = 0;
+                        TempSum = 0;
+                        TempCount = 0;
+                        AmbientSum = 0;
+                        AmbientCount = 0;
 
-			FSection.Leave();
-		}
+                        FSection.Leave();
+                }
 
-		RdosWaitMilli(1000);
-	}
+                RdosWaitMilli(1000);
+        }
 }
