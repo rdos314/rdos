@@ -1227,6 +1227,12 @@ glob_ptab_init:
     mov ax,leave_section_nr
     RegisterOsGate
 ;
+    mov si,OFFSET cond_enter_section
+    mov di,OFFSET cond_enter_section_name
+    xor cl,cl
+    mov ax,cond_enter_section_nr
+    RegisterOsGate
+;
     mov si,OFFSET get_debug_thread_sel
     mov di,OFFSET get_debug_thread_sel_name
     xor cl,cl
@@ -7103,6 +7109,189 @@ lcsFs:
     pop ax
     retf32
 leave_section   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           cond_section_timeout
+;
+;           DESCRIPTION:    Timeout on enter section
+;
+;       PARAMETERS:         CX       thread to remove from list
+;               
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cond_section_timeout Proc far
+    push ds
+    push es
+    push fs
+    push esi
+;    
+    mov es,cx
+    call TryLockCore
+;    
+    mov eax,es:p_data
+    cmp eax,-1
+    jne cstDone
+;    
+    mov ds,es:p_sleep_sel
+    mov esi,es:p_sleep_offset
+;    
+    sub esi,OFFSET cs_list
+    call cs:lock_kernel_section_proc
+;    
+    add esi,OFFSET cs_list
+    mov ax,[esi]
+    or ax,ax
+    jz cstUnlock
+;    
+    cmp ax,-1
+    je cstUnlock
+;
+    call RemoveBlock32
+
+cstUnlock:
+    sub esi,OFFSET cs_list
+    call cs:unlock_kernel_section_proc
+
+cstDone:
+    call TryUnlockCore
+;
+    pop esi
+    pop fs
+    pop es
+    pop ds    
+    retf32
+cond_section_timeout  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           cond_enter_section
+;
+;           DESCRIPTION:    Conditional enter section
+;
+;           PARAMETERS:     DS:ESI      ADDRESS OF SECTION
+;                           EAX         Timeout in milliseconds
+;
+;           RETURNS:        CY          Entered ok
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cond_enter_section_name      DB 'Conditional Enter Critical Section',0
+
+cond_enter_section   PROC far
+    push eax
+    push edx
+    push fs
+;    
+    call LockCore
+    call cs:lock_kernel_section_proc
+    push ds
+    mov ds,fs:ps_curr_thread
+    mov ds:p_data,-1
+    pop ds
+;
+    mov dx,ds:[esi].cs_list
+    cmp dx,-1
+    jne cecsBlock
+;
+    mov ds:[esi].cs_list,0
+    jmp cecsUnlockOk
+
+cecsBlock:
+    or eax,eax
+    jz cecsUnlockFail
+;
+    push es
+    push bx
+    push ecx
+    push edi
+;    
+    mov eax,1193
+    mul ecx
+    push edx
+    push eax
+    GetSystemTime
+    pop ecx
+    add eax,ecx
+    pop ecx
+    adc edx,ecx
+;
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET cond_section_timeout
+    mov bx,fs:ps_curr_thread
+    mov cx,bx
+    call LocalStartTimer
+;
+    pop edi
+    pop ecx
+    pop bx
+    pop es
+;        
+    mov ax,ds
+    push OFFSET cecsDone
+    call SaveLockedThread
+;
+    mov ds,ax
+    lea edi,[esi].cs_list   
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    call InsertBlock32
+    call cs:unlock_kernel_section_proc
+;
+    mov es:p_sleep_sel,ds
+    mov es:p_sleep_offset,edi    
+    jmp LoadThread
+
+cecsUnlockOk:
+    call cs:unlock_kernel_section_proc
+    call UnlockCore
+    stc
+    jmp cecsLeave
+
+cecsUnlockFail:
+    call cs:unlock_kernel_section_proc
+    call UnlockCore
+    clc
+    jmp cecsLeave
+    
+cecsDone:
+    call LockCore
+    push ds
+    push bx
+;    
+    mov bx,fs:ps_curr_thread
+    StopTimer
+;    
+    mov ds,bx
+    mov eax,ds:p_data
+    call UnlockCore
+;
+    pop bx
+    pop ds
+    or eax,eax
+    stc
+    jz cecsLeave
+;    
+    clc
+
+cecsLeave:
+    pop ax
+    verr ax
+    jz cecsFs
+;
+    xor ax,ax
+    
+cecsFs:
+    mov fs,ax
+;
+    pop edx
+    pop eax
+    retf32
+cond_enter_section   ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

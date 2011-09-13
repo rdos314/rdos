@@ -362,6 +362,11 @@ typedef void __far (__rdos_usb_state_callback)(int controller, char device);
 
 // structures
 
+struct TSpinlock
+{
+    short int value;
+};
+
 struct TKernelSection
 {
     long value;
@@ -525,9 +530,14 @@ void RdosWaitForSignalWithTimeout(long msb, long lsb);
 int RdosAddWait(int space_needed, int wait_handle, struct TWaitHeader *wait_table);
 void RdosSignalWait(int wait_obj);
 
+void RdosInitSpinlock(struct TSpinlock *spinlock);
+short int RdosRequestSpinlock(struct TSpinlock *spinlock);
+void RdosReleaseSpinlock(struct TSpinlock *spinlock, short int flags);
+
 void RdosInitKernelSection(struct TKernelSection *section);
 void RdosEnterKernelSection(struct TKernelSection *section);
 void RdosLeaveKernelSection(struct TKernelSection *section);
+int RdosCondEnterKernelSection(struct TKernelSection *section, int mswait);
 
 void RdosLockScheduler();
 void RdosUnlockScheduler();
@@ -1057,21 +1067,6 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     OsGate_get_apic_id  \
     value [edx];
 
-#pragma aux RdosGetProcessor = \
-    "push fs" \
-    OsGate_get_processor  \
-    "mov eax,fs" \
-    "pop fs" \
-    value [eax];
-
-#pragma aux RdosGetProcessorNum = \
-    "push fs" \
-    OsGate_get_processor_num  \
-    "mov eax,fs" \
-    "pop fs" \
-    parm [eax] \
-    value [eax];
-
 #pragma aux RdosSendNmi = \
     "push fs" \
     "mov fs,bx" \
@@ -1121,6 +1116,37 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     "pop es" \
     parm [eax];
 
+#pragma aux RdosInitSpinlock = \
+    "mov word ptr es:[edi],0" \
+    parm [es edi]; 
+
+#pragma aux RdosRequestSpinlock = \
+    "pushf" \
+    "rs_lock: " \    
+    "mov ax,es:[edi]" \
+    "or ax,ax" \
+    "je short rs_get" \
+    "sti" \
+    0xF3 0x90 \
+    "jmp rs_lock" \
+    "rs_get: " \
+    "cli" \
+    "inc ax" \
+    "xchg ax,es:[edi]" \
+    "or ax,ax" \
+    "je rs_done" \
+    "jmp rs_lock" \
+    "rs_done: "\
+    "pop ax" \
+    parm [es edi] \
+    value [ax];
+
+#pragma aux RdosReleaseSpinlock = \
+    "push ax" \
+    "mov word ptr es:[edi],0" \
+    "popf" \
+    parm [es edi] [ax]; 
+
 #pragma aux RdosInitKernelSection = \
     "mov dword ptr es:[edi],0" \
     "mov word ptr es:[edi+4],0" \
@@ -1155,6 +1181,27 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     " pop ds" \
     "leave_done: " \
     parm [es edi]; 
+
+#pragma aux RdosCondEnterKernelSection = \
+    " lock sub dword ptr es:[edi],1" \
+    " jc short enter_ok" \
+    " push ds" \
+    " push esi" \
+    " mov esi,es" \
+    " mov ds,esi" \
+    " mov esi,edi" \
+    " add esi,4" \
+    OsGate_cond_enter_section \
+    " pop esi" \
+    " pop ds" \
+    "jc enter_ok" \
+    "xor eax,eax" \
+    "jmp enter_leave" \
+    "enter_ok: " \
+    "mov eax,1" \
+    "enter_leave: "\
+    parm [es edi] [eax] \
+    value [eax];
 
 #pragma aux RdosCreateKernelThread = \
     "push ds" \

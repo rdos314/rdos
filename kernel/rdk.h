@@ -84,6 +84,7 @@
 #define OsGate_wait_for_signal 0x3E 0x67 0x9a 85 0 0 0 2 0
 #define OsGate_enter_section 0x3E 0x67 0x9a 86 0 0 0 2 0
 #define OsGate_leave_section 0x3E 0x67 0x9a 87 0 0 0 2 0
+#define OsGate_cond_enter_section 0x3E 0x67 0x9a 88 0 0 0 2 0
 #define OsGate_start_timer 0x3E 0x67 0x9a 89 0 0 0 2 0
 #define OsGate_stop_timer 0x3E 0x67 0x9a 90 0 0 0 2 0
 #define OsGate_debug_break 0x3E 0x67 0x9a 92 0 0 0 2 0

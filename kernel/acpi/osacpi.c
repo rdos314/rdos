@@ -187,3 +187,119 @@ ACPI_STATUS AcpiOsExecute(ACPI_EXECUTE_TYPE Type, ACPI_OSD_EXEC_CALLBACK Functio
 
     return AE_OK;
 }
+
+/*##########################################################################
+#
+#   Name       : AcpiOsCreateLock
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsCreateLock(ACPI_SPINLOCK *OutHandle)
+{
+    *OutHandle = (ACPI_SPINLOCK)malloc(sizeof(struct TSpinlock));
+    RdosInitSpinlock(*OutHandle);
+    return AE_OK;
+}
+
+/*##########################################################################
+#
+#   Name       : AcpiOsDeleteLock
+#
+##########################################################################*/
+void AcpiOsDeleteLock(ACPI_SPINLOCK Handle)
+{
+    free(Handle);
+}
+
+/*##########################################################################
+#
+#   Name       : AcpiOsAcquireLock
+#
+##########################################################################*/
+ACPI_CPU_FLAGS AcpiOsAcquireLock(ACPI_SPINLOCK Handle)
+{
+    return RdosRequestSpinlock(Handle);
+}
+
+/*##########################################################################
+#
+#   Name       : AcpiOsReleaseLock
+#
+##########################################################################*/
+void AcpiOsReleaseLock(ACPI_SPINLOCK Handle, ACPI_CPU_FLAGS Flags)
+{
+    RdosReleaseSpinlock(Handle, Flags);
+}
+
+/*##########################################################################
+#
+#   Name       : AcpiOsCreateMutex
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsCreateMutex(ACPI_MUTEX *OutHandle)
+{
+    *OutHandle = (ACPI_MUTEX)malloc(sizeof(struct TKernelSection));
+    RdosInitKernelSection(*OutHandle);
+    return AE_OK;
+}
+
+/*##########################################################################
+#
+#   Name       : AcpiOsDeleteMutex
+#
+##########################################################################*/
+void AcpiOsDeleteMutex(ACPI_MUTEX Handle)
+{
+    free(Handle);
+}
+
+/*##########################################################################
+#
+#   Name       : AcpiOsAcquireMutex
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsAcquireMutex(ACPI_MUTEX Handle, UINT16 Timeout)
+{
+    if (Timeout == -1)
+    {
+        RdosEnterKernelSection(Handle);
+        return AE_OK;
+    }
+    else
+    {
+        if (RdosCondEnterKernelSection(Handle, Timeout))
+            return AE_OK;
+        else
+            return AE_TIME;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : AcpiOsReleaseMutex
+#
+##########################################################################*/
+void AcpiOsReleaseMutex(ACPI_MUTEX Handle)
+{
+    RdosLeaveSection(Handle);
+}
+
+/*##########################################################################
+#
+#   Name       : AcpiOsCreateSemaphore
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsCreateSemaphore(UINT32 MaxUnits, UINT32 InitUnits, ACPI_SEMAPHORE *OutHandle)
+{
+    struct TSemaphore *sema;
+    
+    sema = (struct TSemaphore *)malloc(sizeof(struct TSemaphore));
+    RdosInitKernelSection(&sema->gate);
+    RdosInitKernelSection(&sema->mutex);
+    sema->maxval = MaxUnits;
+    sema->currval = InitUnits;
+    *OutHandle = sema;
+    return AE_OK;
+}
+http://www.acpica.org/download/acpica-reference.pdf
+http://www.cs.umd.edu/~shankar/412-Notes/10x-countingSemUsingBinarySem.pdf
+

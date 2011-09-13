@@ -116,6 +116,8 @@
 #ifndef __ACRDOS_H__
 #define __ACRDOS_H__
 
+#include "rdosdev.h"
+
 /*! [Begin] no source code translation (Keep the include) */
 
 #define COMPILER_DEPENDENT_INT64    __int64
@@ -139,6 +141,20 @@
 #define ACPI_USE_SYSTEM_CLIBRARY 
 #define ACPI_USE_STANDARD_HEADERS
 #define ACPI_USE_LOCAL_CACHE
+
+struct TSemaphore
+{
+    int maxval;
+    int currval;
+    struct TKernelSection gate;
+    struct TKernelSection mutex;
+};
+
+#define ACPI_MUTEX_TYPE ACPI_OSL_MUTEX
+#define ACPI_CPU_FLAGS  short int
+#define ACPI_SPINLOCK struct TSpinlock *
+#define ACPI_MUTEX struct TKernelSection *
+#define ACPI_SEMAPHORE struct TSemaphore *
 
 /*! [End] no source code translation !*/
 

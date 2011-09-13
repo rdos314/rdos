@@ -793,6 +793,17 @@ leave_section_donep:
     popf
                         ENDM
 
+CondEnterSection    MACRO section
+    LOCAL enter_section_donep
+    lock sub section.cs_value,1
+    jc enter_section_donep
+    push esi
+    lea esi,section
+    OsGate cond_enter_section_nr
+    pop esi
+enter_section_donep:
+                        ENDM
+
 InitReadWriteSection    MACRO section
     mov section.ssync_value,0
     mov section.ssync_list,0

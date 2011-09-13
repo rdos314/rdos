@@ -84,6 +84,7 @@ signal_nr					= 84
 wait_for_signal_nr			= 85
 enter_section_nr			= 86
 leave_section_nr			= 87
+cond_enter_section_nr       = 88
 start_timer_nr				= 89
 stop_timer_nr				= 90
 debug_break_nr				= 92
