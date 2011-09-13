@@ -40,6 +40,44 @@ struct TExecReq
 
 struct TExecReq *ExecList = 0;
 
+long MapLinear;
+struct TSpinlock MapLock;
+
+char ReadBytePort(short int address);
+short int ReadWordPort(short int address);
+long ReadDwordPort(short int address);
+
+void WriteBytePort(short int address, char val);
+void WriteWordPort(short int address, short int val);
+void WriteDwordPort(short int address, long val);
+
+#pragma aux ReadBytePort = \
+    "in al,dx" \
+    parm [dx] \
+    value [al];
+
+#pragma aux ReadWordPort = \
+    "in ax,dx" \
+    parm [dx] \
+    value [ax];
+
+#pragma aux ReadDwordPort = \
+    "in eax,dx" \
+    parm [dx] \
+    value [eax];
+
+#pragma aux WriteBytePort = \
+    "out dx,al" \
+    parm [dx] [al];
+
+#pragma aux WriteWordPort = \
+    "out dx,ax" \
+    parm [dx] [ax];
+
+#pragma aux WriteDwordPort = \
+    "out dx,eax" \
+    parm [dx] [eax];
+
 /*##########################################################################
 #
 #   Name       : AcpiOsInitialize
@@ -47,6 +85,9 @@ struct TExecReq *ExecList = 0;
 ##########################################################################*/
 ACPI_STATUS AcpiOsInitialize()
 {
+    MapLinear = RdosAllocateBigGlobalLinear(0x1000);
+    RdosInitSpinlock(&MapLock);
+
     return AE_OK;
 }
 
@@ -259,7 +300,7 @@ void AcpiOsDeleteMutex(ACPI_MUTEX Handle)
 ##########################################################################*/
 ACPI_STATUS AcpiOsAcquireMutex(ACPI_MUTEX Handle, UINT16 Timeout)
 {
-    if (Timeout == -1)
+    if (Timeout == 0xFFFF)
     {
         RdosEnterKernelSection(Handle);
         return AE_OK;
@@ -280,7 +321,7 @@ ACPI_STATUS AcpiOsAcquireMutex(ACPI_MUTEX Handle, UINT16 Timeout)
 ##########################################################################*/
 void AcpiOsReleaseMutex(ACPI_MUTEX Handle)
 {
-    RdosLeaveSection(Handle);
+    RdosLeaveKernelSection(Handle);
 }
 
 /*##########################################################################
@@ -297,9 +338,398 @@ ACPI_STATUS AcpiOsCreateSemaphore(UINT32 MaxUnits, UINT32 InitUnits, ACPI_SEMAPH
     RdosInitKernelSection(&sema->mutex);
     sema->maxval = MaxUnits;
     sema->currval = InitUnits;
+
+    if (InitUnits == 0)
+        RdosEnterKernelSection(&sema->gate);
+
     *OutHandle = sema;
     return AE_OK;
 }
-http://www.acpica.org/download/acpica-reference.pdf
-http://www.cs.umd.edu/~shankar/412-Notes/10x-countingSemUsingBinarySem.pdf
 
+/*##########################################################################
+#
+#   Name       : AcpiOsDeleteSemaphore
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsDeleteSemaphore(ACPI_SEMAPHORE Handle)
+{
+    free(Handle);
+    return AE_OK;
+}
+
+/*##########################################################################
+#
+#   Name       : AcpiOsWaitSemaphore
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsWaitSemaphore(ACPI_SEMAPHORE Handle, UINT32 Units, UINT16 Timeout)
+{
+    int ok = TRUE;
+
+    if (Timeout == 0xFFFF)
+        RdosEnterKernelSection(&Handle->gate);
+    else
+        ok = RdosCondEnterKernelSection(&Handle->gate, Timeout);
+
+    if (Handle->maxval > 1)
+    {
+        if (ok)
+        {
+            RdosEnterKernelSection(&Handle->mutex);
+
+            if (Handle->currval >= Units)
+            {
+                Handle->currval -= Units;
+
+                if (Handle->currval > 0)
+                    RdosLeaveKernelSection(&Handle->gate);
+            }
+            else
+                ok = FALSE;
+
+            RdosLeaveKernelSection(&Handle->mutex);
+        }
+    }
+
+    if (ok)
+        return AE_OK;
+    else
+        return AE_TIME;
+}
+    
+/*##########################################################################
+#
+#   Name       : AcpiOsSignalSemaphore
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsSignalSemaphore(ACPI_SEMAPHORE Handle, UINT32 Units)
+{
+    if (Handle->maxval == 1)
+        RdosLeaveKernelSection(&Handle->gate);
+    else
+    {
+        RdosEnterKernelSection(&Handle->mutex);
+        Handle->currval += Units;
+        if (Handle->currval == Units)
+            RdosLeaveKernelSection(&Handle->gate);
+        RdosLeaveKernelSection(&Handle->mutex);
+    }
+    return AE_OK;
+}
+    
+/*##########################################################################
+#
+#   Name       : AcpiOsSignal
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsSignal(UINT32 Function, void *Info)
+{
+    return AE_OK;
+}
+    
+/*##########################################################################
+#
+#   Name       : AcpiOsStall
+#
+##########################################################################*/
+void AcpiOsStall(UINT32 us)
+{
+    RdosWaitMicro(us);
+}
+    
+/*##########################################################################
+#
+#   Name       : AcpiOsSleep
+#
+##########################################################################*/
+void AcpiOsSleep(UINT64 ms)
+{
+    unsigned long msb, lsb;
+    int min, sec, milli, micro;
+    int temp;
+    int remain;
+    
+    RdosGetSysTime(&msb, &lsb);
+
+    RdosDecodeLsbTics(lsb, &min, &sec, &milli, &micro); 
+
+    while (ms > 1000 * 3600)
+    {
+        msb++;
+        ms -= 1000 * 3600;
+    }
+
+    remain = ms;
+
+    temp = remain % 1000;
+
+    milli += temp;
+    remain -= temp;
+
+    remain = remain / 1000;
+    temp = remain % 60;
+
+    sec += temp;
+    remain -= temp;
+
+    remain = remain / 60;
+    temp = remain % 60;
+
+    min += temp;    
+
+    lsb = RdosCodeLsbTics(min, sec, milli, micro);
+    
+    RdosWaitUntil(msb, lsb);
+}
+    
+/*##########################################################################
+#
+#   Name       : AcpiOsGetTimer
+#
+##########################################################################*/
+UINT64 AcpiOsGetTimer()
+{
+    UINT64 val;
+    unsigned long msb, lsb;
+    int min, sec, milli, micro;
+    
+    RdosGetSysTime(&msb, &lsb);
+    RdosDecodeLsbTics(lsb, &min, &sec, &milli, &micro); 
+
+    val = msb;
+    val = val * 24 + min;
+    val = val * 60 + sec;
+    val = val * 60 + milli;
+    val = val * 1000 + micro;
+    
+    return 10 * val;
+}
+    
+/*##########################################################################
+#
+#   Name       : AcpiOsReadMemory
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsReadMemory(ACPI_PHYSICAL_ADDRESS Address, UINT32 *Value, UINT32 Width)
+{
+    ACPI_CPU_FLAGS flags;
+    long page;
+    long offset;
+    void *ptr;
+    long res = 0;
+
+    page = Address & 0xFFFFF000;
+    offset = Address & 0xFFF;
+
+    flags = RdosRequestSpinlock(&MapLock);
+
+    RdosSetPhysicalPage(MapLinear, page | 0x3);
+    ptr = RdosLinearToPointer(MapLinear + offset);
+
+    switch (Width)
+    {
+        case 8:
+            (char)res = *(char *)ptr;
+            break;
+
+        case 16:
+            (short int)res = *(short int *)ptr;
+            break;
+
+        case 32:
+            res = *(long *)ptr;
+            break;
+    }
+
+    *Value = res;
+
+    RdosReleaseSpinlock(&MapLock, flags);
+
+    return AE_OK;
+}
+    
+/*##########################################################################
+#
+#   Name       : AcpiOsWriteMemory
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsWriteMemory(ACPI_PHYSICAL_ADDRESS Address, UINT32 Value, UINT32 Width)
+{
+    ACPI_CPU_FLAGS flags;
+    long page;
+    long offset;
+    void *ptr;
+
+    page = Address & 0xFFFFF000;
+    offset = Address & 0xFFF;
+
+    flags = RdosRequestSpinlock(&MapLock);
+
+    RdosSetPhysicalPage(MapLinear, page | 0x3);
+    ptr = RdosLinearToPointer(MapLinear + offset);
+
+    switch (Width)
+    {
+        case 8:
+            *(char *)ptr = (char)Value;
+            break;
+
+        case 16:
+            *(short int *)ptr = (short int)Value;
+            break;
+
+        case 32:
+            *(long *)ptr = Value;
+            break;
+    }
+
+    RdosReleaseSpinlock(&MapLock, flags);
+
+    return AE_OK;
+}
+    
+/*##########################################################################
+#
+#   Name       : AcpiOsReadPort
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsReadPort(ACPI_IO_ADDRESS Address, UINT32 *Value, UINT32 Width)
+{
+    long res = 0;
+
+    switch (Width)
+    {
+        case 8:
+            (char)res = ReadBytePort(Address);
+            break;
+
+        case 16:
+            (short int)res = ReadWordPort(Address);
+            break;
+
+        case 32:
+            res = ReadDwordPort(Address);
+            break;
+    }
+
+    *Value = res;
+
+    return AE_OK;
+}
+    
+/*##########################################################################
+#
+#   Name       : AcpiOsWritePort
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsWritePort(ACPI_IO_ADDRESS Address, UINT32 Value, UINT32 Width)
+{
+    switch (Width)
+    {
+        case 8:
+            WriteBytePort(Address, (char)Value);
+            break;
+
+        case 16:
+            WriteWordPort(Address, (short int)Value);
+            break;
+
+        case 32:
+            WriteDwordPort(Address, Value);
+            break;
+    }
+
+    return AE_OK;
+}
+    
+/*##########################################################################
+#
+#   Name       : AcpiOsReadPciConfiguration
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsReadPciConfiguration(ACPI_PCI_ID *PciId, UINT32 Reg, UINT64 *Value, UINT32 Width)
+{
+    UINT64 res = 0;
+
+    switch (Width)
+    {
+        case 8:
+            (char)res = RdosReadPciByte(PciId->Bus, PciId->Device, PciId->Function, Reg);
+            break;
+
+        case 16:
+            (short int)res = RdosReadPciWord(PciId->Bus, PciId->Device, PciId->Function, Reg);
+            break;
+
+        case 32:
+            res = RdosReadPciDword(PciId->Bus, PciId->Device, PciId->Function, Reg);
+            break;
+    }
+
+    *Value = res;
+
+    return AE_OK;
+}
+    
+/*##########################################################################
+#
+#   Name       : AcpiOsWritePciConfiguration
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsWritePciConfiguration(ACPI_PCI_ID *PciId, UINT32 Reg, UINT64 Value, UINT32 Width)
+{
+    switch (Width)
+    {
+        case 8:
+            RdosWritePciByte(PciId->Bus, PciId->Device, PciId->Function, Reg, (char)Value);
+            break;
+
+        case 16:
+            RdosWritePciWord(PciId->Bus, PciId->Device, PciId->Function, Reg, (short int)Value);
+            break;
+
+        case 32:
+            RdosWritePciDword(PciId->Bus, PciId->Device, PciId->Function, Reg, Value);
+            break;
+    }
+
+    return AE_OK;
+}
+    
+/*##########################################################################
+#
+#   Name       : AcpiOsPrintf
+#
+##########################################################################*/
+void ACPI_INTERNAL_VAR_XFACE AcpiOsPrintf(const char *Format,  ...)
+{
+}
+    
+/*##########################################################################
+#
+#   Name       : AcpiOsVprintf
+#
+##########################################################################*/
+void AcpiOsVprintf(const char *Format, va_list Args)
+{
+}
+    
+/*##########################################################################
+#
+#   Name       : AcpiOsInstallInterruptHandler
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsInstallInterruptHandler(UINT32 Level, ACPI_OSD_HANDLER Handler, void *Context)
+{
+    return AE_OK;
+}
+    
+/*##########################################################################
+#
+#   Name       : AcpiOsRemoveInterruptHandler
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsRemoveInterruptHandler(UINT32 Level, ACPI_OSD_HANDLER Handler)
+{
+    return AE_OK;
+}

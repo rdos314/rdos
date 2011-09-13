@@ -682,6 +682,14 @@ void RdosInsertFileEntry(int dir_sel, int file_entry);
 int RdosGetFileInfo(int handle, char *access, char *drive, int *file_sel);
 int RdosDuplFileInfo(char access, char drive, int file_sel);
 
+char RdosReadPciByte(char bus, char dev, char func, char reg);
+short int RdosReadPciWord(char bus, char dev, char func, char reg);
+long RdosReadPciDword(char bus, char dev, char func, char reg);
+
+void RdosWritePciByte(char bus, char dev, char func, char reg, char val);
+void RdosWritePciWord(char bus, char dev, char func, char reg, short int val);
+void RdosWritePciDword(char bus, char dev, char func, char reg, long val);
+
 void RdosInitMouse();
 void RdosUpdateMouse(int button_state, int delta_x, int delta_y);
 void RdosInvertMouse(int delta_x, int delta_y);
@@ -1707,6 +1715,33 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     OsGate_dupl_file_info \
     parm [cl] [ch] [eax] \
     value [ebx];
+
+#pragma aux RdosReadPciByte = \
+    OsGate_read_pci_byte \
+    parm [bh] [bl] [ch] [cl] \
+    value [al];
+
+#pragma aux RdosReadPciWord = \
+    OsGate_read_pci_word \
+    parm [bh] [bl] [ch] [cl] \
+    value [ax];
+
+#pragma aux RdosReadPciDword = \
+    OsGate_read_pci_dword \
+    parm [bh] [bl] [ch] [cl] \
+    value [eax];
+
+#pragma aux RdosWritePciByte = \
+    OsGate_write_pci_byte \
+    parm [bh] [bl] [ch] [cl] [al];
+
+#pragma aux RdosWritePciWord = \
+    OsGate_write_pci_word \
+    parm [bh] [bl] [ch] [cl] [ax];
+
+#pragma aux RdosWritePciDword = \
+    OsGate_write_pci_dword \
+    parm [bh] [bl] [ch] [cl] [eax];
 
 #pragma aux RdosInitMouse = \
     OsGate_init_mouse;
