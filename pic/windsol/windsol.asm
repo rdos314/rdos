@@ -123,7 +123,7 @@ ResetStart:
     movwf PORTC
     movwf LATC
 ;
-    movlw b'10010000'
+    movlw b'11010000'
     movwf TRISC
 ;
     movlw b'10000111'
@@ -131,6 +131,21 @@ ResetStart:
 ;
     movlw b'11111111'
     movwf OSCCON
+;
+    movlw 0x67
+    movwf SPBRG
+;
+    movlw 0
+    movwf SPBRGH
+;
+    movlw b'00001000'
+    movwf BAUDCON
+;
+	movlw b'00100100'
+    movwf TXSTA
+;
+    movlw b'10010000'
+    movwf RCSTA
 ;
 	clrf wind_p0
     clrf wind_p1
@@ -954,6 +969,17 @@ MulDone:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForSample:
+    btfss PIR1,4
+    goto WaitSampleLoop
+;
+	movlw 0x41
+    movwf TXREG
+    nop
+    nop
+    nop
+    nop
+
+WaitSampleLoop:
     btfsc TMR0L,1
     goto WaitForSample
 ;
