@@ -538,6 +538,8 @@
 #define CallGate_soft_reset 0x67 0x9a 181 1 0 0 3 0
 #define CallGate_hard_reset 0x67 0x9a 182 1 0 0 3 0
 
+#define CallGate_is_emergency_stopped 0x67 0x9a 183 1 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1077,5 +1079,7 @@
 
 #define CallGate_soft_reset 0x3e 0x67 0x9a 181 1 0 0 3 0
 #define CallGate_hard_reset 0x3e 0x67 0x9a 182 1 0 0 3 0
+
+#define CallGate_is_emergency_stopped 0x3e 0x67 0x9a 183 1 0 0 3 0
 
 #endif

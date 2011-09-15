@@ -363,6 +363,12 @@ PowerFailure        MACRO
 	UserGate power_failure_nr
 						ENDM
 
+;  OUT CY       Not emergency stopped
+;      NC       Emergency stopped
+IsEmergencyStopped        MACRO
+	UserGate is_emergency_stopped_nr
+						ENDM
+
 SoftReset        MACRO
 	UserGate soft_reset_nr
 						ENDM

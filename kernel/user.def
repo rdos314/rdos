@@ -537,4 +537,6 @@ get_syslog_nr                   = 436
 soft_reset_nr                   = 437
 hard_reset_nr                   = 438
 
+is_emergency_stopped_nr         = 439
+
 usergate_entries			= 440

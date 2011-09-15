@@ -346,6 +346,7 @@ int RDOSAPI RdosGetSelectorInfo(int CodeSel, int *Limit, int *Bitness);
 void RDOSAPI RdosSoftReset();
 void RDOSAPI RdosHardReset();
 int RDOSAPI RdosPowerFailure();
+int RDOSAPI RdosIsEmergencyStopped();
 int RDOSAPI RdosGetCpuVersion(char *VendorStr, int *FeatureFlags, int *freq);
 void RDOSAPI RdosGetVersion(int *Major, int *Minor, int *Release);
 void RDOSAPI RdosCreateThread(void (*Start)(void *Param), const char *Name, void *Param, int StackSize);
@@ -1399,6 +1400,11 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosPowerFailure = \
     CallGate_power_failure \
     "movzx eax,ax"  \
+    value [eax];
+
+#pragma aux RdosIsEmergencyStopped = \
+    CallGate_is_emergency_stopped \
+    CarryToBool \    
     value [eax];
 
 #pragma aux RdosGetVersion = \
@@ -3474,6 +3480,11 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosPowerFailure = \
     CallGate_power_failure \
     "movzx eax,ax"  \
+    value [eax];
+
+#pragma aux RdosIsEmergencyStopped = \
+    CallGate_is_emergency_stopped \
+    CarryToBool \    
     value [eax];
 
 #pragma aux RdosGetVersion = \
