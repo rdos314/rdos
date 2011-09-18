@@ -9,6 +9,7 @@ FLAG_WIND_WAIT_LOAD			EQU 2
 FLAG_WIND_WAIT_UNLOAD		EQU 3
 FLAG_SOLAR_U_INCREASE       EQU 4
 FLAG_SOLAR_POWER_INCREASE   EQU 5
+FLAG_SKIP_TX				EQU 6
 
 temp0	EQU 0x0
 temp1   EQU 0x1
@@ -132,7 +133,7 @@ ResetStart:
     movlw b'11111111'
     movwf OSCCON
 ;
-    movlw 0x67
+    movlw 0xCF
     movwf SPBRG
 ;
     movlw 0
@@ -969,8 +970,15 @@ MulDone:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForSample:
+    btfsc flags, FLAG_SKIP_TX
+    goto WaitForSampleSkip    
 	movlw 0x41
     movwf TXREG
+    bsf flags, FLAG_SKIP_TX
+    goto WaitForSampleLoop
+
+WaitForSampleSkip:
+    bcf flags, FLAG_SKIP_TX
 
 WaitForSampleLoop:
     btfsc TMR0L,1
