@@ -112,7 +112,7 @@ ResetStart:
     movlw b'11111110'
     movwf TRISA
 ;
-	movlw b'00001000'
+	movlw b'00001100'
     movwf PORTB
     movwf LATB
 ;
@@ -969,22 +969,15 @@ MulDone:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForSample:
-    btfss PIR1,4
-    goto WaitSampleLoop
-;
 	movlw 0x41
     movwf TXREG
-    nop
-    nop
-    nop
-    nop
 
-WaitSampleLoop:
+WaitForSampleLoop:
     btfsc TMR0L,1
-    goto WaitForSample
+    goto WaitForSampleLoop
 ;
     btfsc TMR0L,2
-    goto WaitForSample
+    goto WaitForSampleLoop
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
