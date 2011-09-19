@@ -145,6 +145,18 @@ mw0:
     DW 0x0667
     DW 0
 
+ui2:
+    DW 0xFA0
+
+ui1:
+    DW 0x190
+
+ui0:
+    DW 0x28
+
+mui2:
+    DW 0x4
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Tables (first 255 words)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1001,6 +1013,46 @@ UpdateSolarChargerTurnOn:
     bcf LATB,3
     return
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Conv2One
+;    FSR0:  2 byte power
+;    FSR1:  Buffer in/out
+;    TBLPTR: Table to use
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Conv2One:
+    tblrd *+
+    movf TABLAT,W
+    movwf temp0
+;    
+    tblrd *+
+    movf TABLAT,W
+    movwf temp1
+;
+    movlw '0'
+    movwf INDF1
+
+Conv2OneLoop:
+    movf temp0,W
+    subwf val0,F
+;
+    movf temp1,W
+    subwfb val1,F
+; 
+    btfss STATUS,C
+    goto Conv2OneRevert
+
+Conv2OneIncDec:
+    incf INDF1
+    goto Conv2OneLoop
+
+Conv2OneRevert:
+    movf temp0,W
+    addwf val0,F
+;
+    movf temp1,W
+    addwfc val1,F
+    return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Conv4One
@@ -1120,6 +1172,45 @@ ConvPower:
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; ConvUI
+;    FSR0:  2 byte voltage / current
+;    FSR1:  Buffer in/out
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConvUI:
+    movf INDF0,W
+    movwf val0
+    incf FSR0L,F
+;
+    movf INDF0,W
+    movwf val1
+    incf FSR0L,F
+;
+    movlw ui2
+    movwf TBLPTRL
+    call Conv2One
+;
+    incf FSR1L,F
+    movlw ui1
+    movwf TBLPTRL
+    call Conv2One
+;
+    incf FSR1L,F
+    movlw ui0
+    movwf TBLPTRL
+    call Conv2One
+;
+    incf FSR1L,F
+    movlw '.'
+    movwf INDF1
+;
+    incf FSR1L,F
+    movlw mui2
+    movwf TBLPTRL
+    call Conv2One
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; CreateStat
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1135,6 +1226,30 @@ CreateStat:
 ;
     lfsr 0,solar_ps0
     call ConvPower
+;
+    incf FSR1L,F
+    movlw ' '
+    movwf INDF1
+    incf FSR1L,F
+;
+    lfsr 0,wind_ref_lsb
+    call ConvUI
+;
+    incf FSR1L,F
+    movlw ' '
+    movwf INDF1
+    incf FSR1L,F
+;
+    lfsr 0,solar_ref_lsb
+    call ConvUI
+;
+    incf FSR1L,F
+    movlw 0xD
+    movwf INDF1
+;
+    incf FSR1L,F
+    movlw 0xA
+    movwf INDF1
 ;
     incf FSR1L,F
     clrf INDF1
