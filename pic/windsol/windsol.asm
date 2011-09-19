@@ -93,17 +93,61 @@ solar_pp1       EQU 0x39
 solar_pp2       EQU 0x3A
 solar_pp3       EQU 0x3B
 
-Arg1l	EQU 0x40
-Arg1h	EQU 0x41
-Arg2l	EQU 0x42
-Arg2h	EQU 0x43
-Res0	EQU 0x44
-Res1	EQU 0x45
-Res2	EQU 0x46
-Res3	EQU 0x47
+wind_ps0        EQU 0x3C
+wind_ps1        EQU 0x3D
+wind_ps2        EQU 0x3E
+wind_ps3		EQU 0x3F
 
+solar_ps0       EQU 0x40
+solar_ps1       EQU 0x41
+solar_ps2       EQU 0x42
+solar_ps3       EQU 0x43
+
+sec_lsb         EQU 0x46
+sec_msb         EQU 0x47
+
+val0			EQU 0x48
+val1			EQU 0x49
+val2			EQU 0x4A
+val3			EQU 0x4B
+
+; serial buffer page (1)
+
+ser_buf         EQU 0x100
 
     goto ResetStart
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Tables (first 255 words)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+w2:
+    DW 0
+    DW 0x9C4
+
+w1:
+    DW 0
+    DW 0xFA
+
+w0:
+    DW 0
+    DW 0x19
+
+mw2:
+    DW 0x8000
+    DW 2 
+
+mw1:
+    DW 0x4000
+    DW 0
+
+mw0:    
+    DW 0x0667
+    DW 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Tables (first 255 words)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ResetStart:
     movlw b'00000001'
@@ -148,6 +192,9 @@ ResetStart:
     movlw b'10010000'
     movwf RCSTA
 ;
+    clrf TBLPTRH
+    clrf TBLPTRU
+;
 	clrf wind_p0
     clrf wind_p1
     clrf wind_p2
@@ -158,6 +205,23 @@ ResetStart:
     clrf solar_p1
     clrf solar_p2
     clrf solar_p3
+;
+	clrf wind_ps0
+    clrf wind_ps1
+    clrf wind_ps2
+    clrf wind_ps3
+;
+	clrf solar_ps0
+    clrf solar_ps1
+    clrf solar_ps2
+    clrf solar_ps3
+;
+    clrf sec_lsb
+    movlw 4
+    movwf sec_msb
+;
+    lfsr 2,ser_buf
+    clrf INDF2
 ;
     movlw 0x0
     movwf wind_ref_lsb
@@ -179,6 +243,7 @@ HandleLoop:
 	call Sample
 	call PollWind
     call PollSolar
+    call PollStat
     goto HandleLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -579,6 +644,18 @@ UpdateWindPower:
     movlw 0
     addwfc wind_p3,F
     addwfc wind_p4,F
+;    
+    movf wind_cp_0,W
+    addwf wind_ps0,F
+;
+    movf wind_cp_1,W
+    addwfc wind_ps1,F
+;
+    movf wind_cp_2,W
+    addwfc wind_ps2,F
+;
+    movlw 0
+    addwfc wind_ps3,F
 	return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -662,6 +739,18 @@ UpdateSolarPower:
 ;    
     movlw 0
     addwfc solar_p3,F
+;    
+    movf solar_cp_0,W
+    addwf solar_ps0,F
+;
+    movf solar_cp_1,W
+    addwfc solar_ps1,F
+;
+    movf solar_cp_2,W
+    addwfc solar_ps2,F
+;    
+    movlw 0
+    addwfc solar_ps3,F
 	return
          
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -912,58 +1001,172 @@ UpdateSolarChargerTurnOn:
     bcf LATB,3
     return
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Mul16
+; Conv4One
+;    FSR0:  4 byte power
+;    FSR1:  Buffer in/out
+;    TBLPTR: Table to use
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Mul16:
-    movf Arg1l,W
-    mulwf Arg2l
-	movff PRODH, Res1
-    movff PRODL, Res0
+Conv4One:
+    tblrd *+
+    movf TABLAT,W
+    movwf temp0
+;    
+    tblrd *+
+    movf TABLAT,W
+    movwf temp1
 ;
-	movf Arg1h,W
-    mulwf Arg2h
-    movff PRODH, Res3
-    movff PRODL, Res2
+    tblrd *+
+    movf TABLAT,W
+    movwf temp2
+;    
+    tblrd *+
+    movf TABLAT,W
+    movwf temp3
 ;
-	movf Arg1l,W
-    mulwf Arg2h
-    movf PRODL,W
-    addwf Res1,F
-    movf PRODH,W
-    addwfc Res2,F
-    clrf WREG
-    addwfc Res3,F
-;
-    movf Arg1h,W
-    mulwf Arg2l
-    movf PRODL,W
-    addwf Res1,F
-    movf PRODH,W
-    addwfc Res2,F
-    clrf WREG
-    addwfc Res3,F
-;
-	btfss Arg2h,7
-    bra MulSignArg1
-;
-	movf Arg1l,W
-    subwf Res2
-    movf Arg1h,w
-    subwfb Res3
+    movlw '0'
+    movwf INDF1
 
-MulSignArg1:
-    btfss Arg1h,7
-    bra MulDone
+Conv4OneLoop:
+    movf temp0,W
+    subwf val0,F
 ;
-	movf Arg2l,W
-    subwf Res2
-    movf Arg2h,W
-    subwfb Res3
+    movf temp1,W
+    subwfb val1,F
+;
+    movf temp2,W
+    subwfb val2,F
+;
+    movf temp3,W
+    subwfb val3,F
+; 
+    btfss STATUS,C
+    goto Conv4OneRevert
 
-MulDone:
-	return
+Conv4OneIncDec:
+    incf INDF1
+    goto Conv4OneLoop
+
+Conv4OneRevert:
+    movf temp0,W
+    addwf val0,F
+;
+    movf temp1,W
+    addwfc val1,F
+;
+    movf temp2,W
+    addwfc val2,F
+;
+    movf temp3,W
+    addwfc val3,F
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; ConvPower
+;    FSR0:  4 byte power
+;    FSR1:  Buffer in/out
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConvPower:
+    movf INDF0,W
+    movwf val0
+    incf FSR0L,F
+;
+    movf INDF0,W
+    movwf val1
+    incf FSR0L,F
+;
+    movf INDF0,W
+    movwf val2
+    incf FSR0L,F
+;
+    movf INDF0,W
+    movwf val3
+;
+    movlw w2
+    movwf TBLPTRL
+    call Conv4One
+;
+    incf FSR1L,F
+    movlw w1
+    movwf TBLPTRL
+    call Conv4One
+;
+    incf FSR1L,F
+    movlw w0
+    movwf TBLPTRL
+    call Conv4One
+;
+    incf FSR1L,F
+    movlw '.'
+    movwf INDF1
+;
+    incf FSR1L,F
+    movlw mw2
+    movwf TBLPTRL
+    call Conv4One
+;
+    incf FSR1L,F
+    movlw mw1
+    movwf TBLPTRL
+    call Conv4One
+;
+    incf FSR1L,F
+    movlw mw0
+    movwf TBLPTRL
+    call Conv4One    
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; CreateStat
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateStat:
+    lfsr 0,wind_ps0
+    lfsr 1,ser_buf
+    call ConvPower
+;
+    incf FSR1L,F
+    movlw ' '
+    movwf INDF1
+    incf FSR1L,F
+;
+    lfsr 0,solar_ps0
+    call ConvPower
+;
+    incf FSR1L,F
+    clrf INDF1
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; PollStat
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PollStat:
+    decfsz sec_lsb,F
+    return
+;
+    decfsz sec_msb,F
+    return
+;
+    movlw 4
+    movwf sec_msb
+    call CreateStat
+;
+	clrf wind_ps0
+    clrf wind_ps1
+    clrf wind_ps2
+    clrf wind_ps3
+;
+	clrf solar_ps0
+    clrf solar_ps1
+    clrf solar_ps2
+    clrf solar_ps3
+;
+    lfsr 2,ser_buf
+    return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; WaitForSample
@@ -972,8 +1175,14 @@ MulDone:
 WaitForSample:
     btfsc flags, FLAG_SKIP_TX
     goto WaitForSampleSkip    
-	movlw 0x41
+;
+    movf INDF2,W
+    btfsc STATUS,Z
+    goto WaitForSampleLoop
+;
     movwf TXREG
+    incf FSR2L,F
+;
     bsf flags, FLAG_SKIP_TX
     goto WaitForSampleLoop
 
