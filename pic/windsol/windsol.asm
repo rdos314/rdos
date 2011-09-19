@@ -9,7 +9,6 @@ FLAG_WIND_WAIT_LOAD			EQU 2
 FLAG_WIND_WAIT_UNLOAD		EQU 3
 FLAG_SOLAR_U_INCREASE       EQU 4
 FLAG_SOLAR_POWER_INCREASE   EQU 5
-FLAG_SKIP_TX				EQU 6
 
 temp0	EQU 0x0
 temp1   EQU 0x1
@@ -111,6 +110,8 @@ val1			EQU 0x49
 val2			EQU 0x4A
 val3			EQU 0x4B
 
+tx_count		EQU 0x4C
+
 ; serial buffer page (1)
 
 ser_buf         EQU 0x100
@@ -189,10 +190,10 @@ ResetStart:
     movlw b'11111111'
     movwf OSCCON
 ;
-    movlw 0xCF
+    movlw 0x40
     movwf SPBRG
 ;
-    movlw 0
+    movlw 3
     movwf SPBRGH
 ;
     movlw b'00001000'
@@ -227,6 +228,9 @@ ResetStart:
     clrf solar_ps1
     clrf solar_ps2
     clrf solar_ps3
+;
+	movlw 6
+    movwf tx_count
 ;
     clrf sec_lsb
     movlw 4
@@ -1288,21 +1292,19 @@ PollStat:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForSample:
-    btfsc flags, FLAG_SKIP_TX
-    goto WaitForSampleSkip    
-;
     movf INDF2,W
     btfsc STATUS,Z
     goto WaitForSampleLoop
 ;
+    decfsz tx_count,F
+    goto WaitForSampleLoop
+;
+    movlw 6
+    movwf tx_count
+;
+    movf INDF2,W
     movwf TXREG
     incf FSR2L,F
-;
-    bsf flags, FLAG_SKIP_TX
-    goto WaitForSampleLoop
-
-WaitForSampleSkip:
-    bcf flags, FLAG_SKIP_TX
 
 WaitForSampleLoop:
     btfsc TMR0L,1
