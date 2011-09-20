@@ -158,6 +158,15 @@ ui0:
 mui2:
     DW 0x4
 
+tm0:
+    DW 0x4
+
+t0:
+    DW 0x28
+
+t1:
+    DW 0x190
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Tables (first 255 words)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1190,6 +1199,28 @@ ConvUI:
     movwf val1
     incf FSR0L,F
 ;
+    btfss val1,7
+    goto ConvUIPos
+
+ConvUINeg:     
+    movlw '-'
+    movwf INDF1
+    incf FSR1L,F
+;
+    comf val0,F
+    comf val1,F
+    movlw 1
+    addwf val0,F
+    movlw 0
+    addwfc val1,F
+    goto ConvUIDo
+
+ConvUIPos:        
+    movlw '+'
+    movwf INDF1
+    incf FSR1L,F
+
+ConvUIDo:
     movlw ui2
     movwf TBLPTRL
     call Conv2One
@@ -1210,6 +1241,62 @@ ConvUI:
 ;
     incf FSR1L,F
     movlw mui2
+    movwf TBLPTRL
+    call Conv2One
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; ConvTemp
+;    FSR0:  2 byte temperature
+;    FSR1:  Buffer in/out
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConvTemp:
+    movf INDF0,W
+    movwf val0
+    incf FSR0L,F
+;
+    movf INDF0,W
+    movwf val1
+    incf FSR0L,F
+;
+    btfss val1,7
+    goto ConvTempPos
+
+ConvTempNeg:     
+    movlw '-'
+    movwf INDF1
+    incf FSR1L,F
+;
+    comf val0,F
+    comf val1,F
+    movlw 1
+    addwf val0,F
+    movlw 0
+    addwfc val1,F
+    goto ConvTempDo
+
+ConvTempPos:        
+    movlw '+'
+    movwf INDF1
+    incf FSR1L,F
+
+ConvTempDo:
+    movlw t1
+    movwf TBLPTRL
+    call Conv2One
+;
+    incf FSR1L,F
+    movlw t0
+    movwf TBLPTRL
+    call Conv2One
+;
+    incf FSR1L,F
+    movlw '.'
+    movwf INDF1
+;
+    incf FSR1L,F
+    movlw tm0
     movwf TBLPTRL
     call Conv2One
     return
@@ -1246,6 +1333,45 @@ CreateStat:
 ;
     lfsr 0,solar_ref_lsb
     call ConvUI
+;
+    movlw 0x30
+    bcf LATC,1
+    call SampleOne
+    bsf LATC,1
+;
+    incf FSR1L,F
+    movlw ' '
+    movwf INDF1
+    incf FSR1L,F
+;
+    lfsr 0,ad_vall
+    call ConvUI
+;
+    movlw 0x50
+    bcf LATC,1
+    call SampleOne
+    bsf LATC,1
+;
+    incf FSR1L,F
+    movlw ' '
+    movwf INDF1
+    incf FSR1L,F
+;
+    lfsr 0,ad_vall
+    call ConvTemp
+;
+    movlw 0x70
+    bcf LATC,1
+    call SampleOne
+    bsf LATC,1
+;
+    incf FSR1L,F
+    movlw ' '
+    movwf INDF1
+    incf FSR1L,F
+;
+    lfsr 0,ad_vall
+    call ConvTemp
 ;
     incf FSR1L,F
     movlw 0xD
