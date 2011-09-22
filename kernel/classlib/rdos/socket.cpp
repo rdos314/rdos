@@ -458,6 +458,36 @@ TSocketServer::~TSocketServer()
 
 /*##########################################################################
 #
+#   Name       : TSocketServer::NotifyStarted
+#
+#   Purpose....: Notify server started
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSocketServer::NotifyStarted()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TSocketServer::NotifyStopped
+#
+#   Purpose....: Notify server stopped
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSocketServer::NotifyStopped()
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TSocketServer::Execute
 #
 #   Purpose....: Execute socket server
@@ -470,7 +500,9 @@ TSocketServer::~TSocketServer()
 void TSocketServer::Execute()
 {
     RdosWaitMilli(50);
-    
+
+    NotifyStarted();
+        
 	if (FSocket->WaitForConnection(6000))
 	{
     	HandleSocket();
@@ -480,6 +512,8 @@ void TSocketServer::Execute()
 	FSocket->Close();
     delete FSocket;
     FSocket = 0;	
+
+    NotifyStopped();
 }
 
 /*##########################################################################

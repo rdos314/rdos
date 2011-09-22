@@ -79,6 +79,8 @@ public:
     
 protected:
     virtual void HandleSocket() = 0;
+    virtual void NotifyStarted();
+    virtual void NotifyStopped();
     virtual void Execute();
     
     TSocketServer *FNext;
