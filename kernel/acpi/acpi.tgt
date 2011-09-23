@@ -66,32 +66,32 @@ WString
 0xB08
 0
 17
-MVState
+MCState
 18
 WString
 8
 RDEVLINK
 19
 WString
-17
-?????Error count:
+21
+?????Verbose map file
+1
 1
 20
-WString
-3
-250
-0
+MVState
 21
-MCState
-22
 WString
 8
 RDEVLINK
+22
+WString
+17
+?????Error count:
+1
 23
 WString
-10
-?????Quiet
-1
+3
+250
 0
 24
 MCState
@@ -101,8 +101,8 @@ WString
 RDEVLINK
 26
 WString
-24
-?????Produce symbol file
+10
+?????Quiet
 1
 0
 27

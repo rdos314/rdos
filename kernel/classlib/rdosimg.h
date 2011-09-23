@@ -124,6 +124,26 @@ protected:
     char *FDeviceData;
     int FDeviceSize;
 };
+
+class TRdosDevice32BaseObject : public TRdosObject
+{
+public:
+    TRdosDevice32BaseObject();
+    TRdosDevice32BaseObject(TFile *File, int Size);
+
+#ifdef __RDOS__
+    TRdosDevice32BaseObject(int adapter, int entry, int size);
+#endif
+    
+    virtual ~TRdosDevice32BaseObject();
+
+protected:
+    int LoadDeviceFile(const char *FileName, const char *Param);
+
+    TRdosDevice32Header *FDeviceHeader;    
+    char *FDeviceData;
+    int FDeviceSize;
+};
     
 class TRdosKernelObject : public TRdosSimpleDeviceBaseObject
 {
@@ -196,6 +216,21 @@ public:
 #endif
     
     virtual ~TRdosDevice16Object();
+
+    virtual TString GetInfo();
+};
+    
+class TRdosDevice32Object : public TRdosDevice32BaseObject
+{
+public:
+    TRdosDevice32Object(const char *DeviceFileName, const char *Param);
+    TRdosDevice32Object(TFile *File, int Size);
+
+#ifdef __RDOS__
+    TRdosDevice32Object(int adapter, int entry, int size);
+#endif
+    
+    virtual ~TRdosDevice32Object();
 
     virtual TString GetInfo();
 };

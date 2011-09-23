@@ -171,6 +171,7 @@ typedef struct _EXCEPTION_POINTERS {
 // API functions
 
 void RDOSAPI RdosDebug();
+void RDOSAPI RdosLoad32();
 
 short int RDOSAPI RdosSwapShort(short int val);
 long RDOSAPI RdosSwapLong(long val);
@@ -672,6 +673,9 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosDebug = \
     "int 3";
+
+#pragma aux RdosLoad32 = \
+    CallGate_load_device32  \
 
 #pragma aux RdosSwapShort = \
     "xchg al,ah"    \
@@ -2905,6 +2909,9 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosDebug = \
     "int 3";
+
+#pragma aux RdosLoad32 = \
+    CallGate_load_device32  \
 
 #pragma aux RdosSwapShort = \
     "xchg al,ah"    \

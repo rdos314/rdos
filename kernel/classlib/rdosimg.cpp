@@ -690,6 +690,141 @@ int TRdosDevice16BaseObject::LoadDeviceFile(const char *FileName, const char *Pa
 
 /*##########################################################################
 #
+#   Name       : TRdosDevice32BaseObject::TRdosDevice32BaseObject
+#
+#   Purpose....: Constructor for TRdosDevice32BaseObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDevice32BaseObject::TRdosDevice32BaseObject()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosDevice32BaseObject::TRdosDevice32BaseObject
+#
+#   Purpose....: Constructor for TRdosDevice32BaseObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDevice32BaseObject::TRdosDevice32BaseObject(TFile *File, int Size)
+ : TRdosObject(File, Size)
+{
+    FDeviceHeader = (TRdosDevice32Header *)FData; 
+    FDeviceSize = FSize - FDeviceHeader->Size;
+    FDeviceData = FData + FDeviceHeader->Size;    
+}
+
+#ifdef __RDOS__
+
+/*##########################################################################
+#
+#   Name       : TRdosDevice32BaseObject::TRdosDevice32BaseObject
+#
+#   Purpose....: Constructor for TRdosDevice32BaseObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDevice32BaseObject::TRdosDevice32BaseObject(int adapter, int entry, int size)
+  : TRdosObject(adapter, entry, size)
+{
+    FDeviceHeader = (TRdosDevice32Header *)FData; 
+    FDeviceSize = FSize - FDeviceHeader->Size;
+    FDeviceData = FData + FDeviceHeader->Size;    
+}
+
+#endif
+
+/*##########################################################################
+#
+#   Name       : TRdosDevice32BaseObject::~TRdosDevice32BaseObject
+#
+#   Purpose....: Destructor for TRdosDevice32BaseObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDevice32BaseObject::~TRdosDevice32BaseObject()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosDevice32BaseObject::LoadDeviceFile
+#
+#   Purpose....: Load device file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRdosDevice32BaseObject::LoadDeviceFile(const char *FileName, const char *Param)
+{
+    TRdvHeader32 ExeHeader;
+    TFile File(FileName);
+    int HeaderSize;
+    int Size;
+    char *ptr;
+
+    if (FData)
+        delete FData;
+    FData = 0;
+    FSize = 0;
+
+    if (File.IsOpen())
+    {
+        ExeHeader.Signature = 0;
+        File.Read(&ExeHeader, sizeof(TRdvHeader32));
+
+        if (ExeHeader.Signature != 0x3252)
+            return FALSE;
+
+        HeaderSize = sizeof(TRdosDevice32Header);
+        HeaderSize += strlen(FileName);
+        HeaderSize += strlen(Param);
+        HeaderSize++;
+
+        FDeviceSize = ExeHeader.CodeSize + ExeHeader.DataSize;
+        FSize = FDeviceSize + HeaderSize;
+        FData = new char[FSize];
+        FDeviceHeader = (TRdosDevice32Header *)FData;
+        FDeviceData = FData + HeaderSize;
+
+        FDeviceHeader->Size = HeaderSize;
+        FDeviceHeader->StartIp = ExeHeader.Eip;
+        FDeviceHeader->CodeSize = ExeHeader.CodeSize;
+        FDeviceHeader->CodeSel = ExeHeader.CodeSel;
+        FDeviceHeader->DataSize = ExeHeader.DataSize;
+        FDeviceHeader->DataSel = ExeHeader.DataSel;
+
+        ptr = &FDeviceHeader->NameParam;
+        strcpy(ptr, FileName);
+        ptr += strlen(FileName);
+        ptr++;        
+        strcpy(ptr, Param);
+
+        File.Read(FDeviceData, FDeviceSize);
+
+        return TRUE;
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
 #   Name       : TRdosKernelObject::TRdosKernelObject
 #
 #   Purpose....: Constructor for TRdosKernelObject
@@ -1132,6 +1267,105 @@ TString TRdosDevice16Object::GetInfo()
     char *ptr;
 
     strcpy(str, "Device16 ");
+
+    ptr = &FDeviceHeader->NameParam;
+    strcat(str, ptr);
+    strcat(str, " ");
+
+    ptr += strlen(ptr);
+    ptr++;
+    strcat(str, ptr);
+    
+    return TString(str);
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosDevice32Object::TRdosDevice32Object
+#
+#   Purpose....: Constructor for TRdosDevice32Object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDevice32Object::TRdosDevice32Object(const char *DeviceFileName, const char *Param)
+{
+    if (LoadDeviceFile(DeviceFileName, Param))
+        FType = RDOS_OBJECT_DEVICE32;
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosDevice32Object::TRdosDevice32Object
+#
+#   Purpose....: Constructor for TRdosDevice32Object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDevice32Object::TRdosDevice32Object(TFile *File, int Size)
+ : TRdosDevice32BaseObject(File, Size)
+{
+    FType = RDOS_OBJECT_DEVICE32;
+}
+
+#ifdef __RDOS__
+
+/*##########################################################################
+#
+#   Name       : TRdosDevice32Object::TRdosDevice32Object
+#
+#   Purpose....: Constructor for TRdosDevice32Object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDevice32Object::TRdosDevice32Object(int adapter, int entry, int size)
+  : TRdosDevice32BaseObject(adapter, entry, size)
+{
+    FType = RDOS_OBJECT_DEVICE32;
+}
+
+#endif
+
+/*##########################################################################
+#
+#   Name       : TRdosDevice32Object::~TRdosDevice32Object
+#
+#   Purpose....: Destructor for TRdosDevice32Object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDevice32Object::~TRdosDevice32Object()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosDevice32Object::GetInfo
+#
+#   Purpose....: Get printable object info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TRdosDevice32Object::GetInfo()
+{
+    char str[256];
+    char *ptr;
+
+    strcpy(str, "Device32 ");
 
     ptr = &FDeviceHeader->NameParam;
     strcat(str, ptr);
@@ -2033,6 +2267,10 @@ void TRdosImage::AddImage(const char *ImageFile)
                         obj = new TRdosDevice16Object(&File, size);
                         break;
 
+                    case RDOS_OBJECT_DEVICE32:
+                        obj = new TRdosDevice32Object(&File, size);
+                        break;
+
                     case RDOS_OBJECT_DOS_DEVICE:
                         obj = new TRdosDosDeviceObject(&File, size);
                         break;
@@ -2128,6 +2366,10 @@ void TRdosImage::AddRunning()
 
                         case RDOS_OBJECT_DEVICE16:
                             obj = new TRdosDevice16Object(adapter, entry, size);
+                            break;
+
+                        case RDOS_OBJECT_DEVICE32:
+                            obj = new TRdosDevice32Object(adapter, entry, size);
                             break;
 
                         case RDOS_OBJECT_DOS_DEVICE:
@@ -2229,6 +2471,12 @@ void TRdosImage::AddConfigCmd(const char *cmd, const char *param)
         {
             delete obj;
             obj = new TRdosDevice16Object(fullname, ptr);
+        } 
+
+        if (obj->GetType() != RDOS_OBJECT_DEVICE16)
+        {
+            delete obj;
+            obj = new TRdosDevice32Object(fullname, ptr);
         } 
     }
     
