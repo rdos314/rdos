@@ -167,6 +167,21 @@ t0:
 t1:
     DW 0x190
 
+h4:
+    DW 0x2710
+
+h3:
+    DW 0x3E8
+
+h2:
+    DW 0x64
+
+h1:
+    DW 0xA
+
+h0:
+    DW 1
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Tables (first 255 words)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1245,6 +1260,47 @@ ConvUIDo:
     call Conv2One
     return
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; ConvRaw
+;    FSR0:  2 byte voltage / current
+;    FSR1:  Buffer in/out
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConvRaw:
+    movf INDF0,W
+    movwf val0
+    incf FSR0L,F
+;
+    movf INDF0,W
+    movwf val1
+    incf FSR0L,F
+;
+    movlw h4
+    movwf TBLPTRL
+    call Conv2One
+;
+    incf FSR1L,F
+    movlw h3
+    movwf TBLPTRL
+    call Conv2One
+;
+    incf FSR1L,F
+    movlw h2
+    movwf TBLPTRL
+    call Conv2One
+;
+    incf FSR1L,F
+    movlw h1
+    movwf TBLPTRL
+    call Conv2One
+;
+    incf FSR1L,F
+    movlw h0
+    movwf TBLPTRL
+    call Conv2One
+    return
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; ConvTemp
 ;    FSR0:  2 byte temperature
@@ -1345,7 +1401,7 @@ CreateStat:
     incf FSR1L,F
 ;
     lfsr 0,ad_vall
-    call ConvUI
+    call ConvRaw
 ;
     movlw 0x50
     bcf LATC,1
@@ -1358,12 +1414,12 @@ CreateStat:
     incf FSR1L,F
 ;
     lfsr 0,ad_vall
-    call ConvTemp
+    call ConvRaw
 ;
-    movlw 0x70
-    bcf LATC,1
+    movlw 0x30
+    bcf LATC,0
     call SampleOne
-    bsf LATC,1
+    bsf LATC,0
 ;
     incf FSR1L,F
     movlw ' '
@@ -1371,7 +1427,7 @@ CreateStat:
     incf FSR1L,F
 ;
     lfsr 0,ad_vall
-    call ConvTemp
+    call ConvRaw
 ;
     incf FSR1L,F
     movlw 0xD
@@ -1510,6 +1566,8 @@ sample_one_loop:
     rlcf ad_vall,F
     rlcf ad_valh,F
     bsf LATC,3
+    nop
+    nop
     btfsc PORTC,4
     bsf ad_vall,0
     bcf LATC,3
