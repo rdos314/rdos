@@ -37,6 +37,7 @@
 #include "datetime.h"
 #include "circ.h"
 #include "vp.h"
+#include "power.h"
 #include "videodev.h"
 #include "radcntrl.h"
 #include "solar.h"
@@ -59,6 +60,7 @@ int main()
     TRad *RadArr[8];
     TCirc *Circ;
     TVp *Vp;
+    TPower *Power;
     int i;
     int diostat;
     int mask;
@@ -187,6 +189,8 @@ int main()
 
     Vp = new TVp(control);
     Store->Add(Vp);
+
+    Power = new TPower(control);
 
     for (;;)
     {

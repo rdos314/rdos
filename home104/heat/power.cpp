@@ -34,7 +34,7 @@
 #include <math.h>
 
 #include "serial.h"
-#include "vp.h"
+#include "power.h"
 #include "table.h"
 
 #define FALSE 0
@@ -101,10 +101,17 @@ void TPower::DeviceName(char *Name, int Size) const
 ##########################################################################*/
 void TPower::Execute()
 {
-    TSerialDevice serial(4, 2400, 'N', 8, 1)
+    TSerialDevice serial(4, 2400, 'N', 8, 1);
     char str[256];
+    char ch;
     int i;
     int ok;
+    int count;
+
+    long double wind_power;
+    long double solar_power;
+    long double wind_u;
+    long double solar_u;
     
     TLabelFactory CommentLabelFactory;
     TLabelFactory ValueLabelFactory;
@@ -131,20 +138,22 @@ void TPower::Execute()
     TLabelControl *Label;
     TTableControl *Table;
 
-    Label = new TLabelControl(FControl, 25, 500, 200, 30);
+    Label = new TLabelControl(FControl, 25, 25, 200, 30);
     Label->SetFont(20);
     Label->SetBackTransparent();
     Label->SetDrawColor(0, 0, 0);
     Label->SetText("Energi");
     Label->Show();
 
-    Table = new TTableControl(FControl, 50, 530, 400, 300);
+    Table = new TTableControl(FControl, 50, 50, 500, 300);
     Table->SetRowSpacing(5);
     Table->SetColSpacing(8);
     Table->SetSpacingTransparent();
     Table->SetBackTransparent();
-    Table->AddLabelColumn(&CommentLabelFactory, 220);
-    Table->AddLabelColumn(&ValueLabelFactory, 80);
+    Table->AddLabelColumn(&CommentLabelFactory, 100);
+    Table->AddLabelColumn(&ValueLabelFactory, 100);
+    Table->AddLabelColumn(&UnitLabelFactory, 70);
+    Table->AddLabelColumn(&ValueLabelFactory, 100);
     Table->AddLabelColumn(&UnitLabelFactory, 70);
 
     Table->AddRow(24, 45);
@@ -152,9 +161,11 @@ void TPower::Execute()
 
     Table->SetText(0, 0, "Vind");
     Table->SetText(0, 2, "W");
+    Table->SetText(0, 4, "volt");
 
     Table->SetText(1, 0, "Sol");
     Table->SetText(1, 2, "W");
+    Table->SetText(1, 4, "volt");
 
     serial.Open();
 
@@ -165,10 +176,39 @@ void TPower::Execute()
             ok = TRUE;
             for (i = 0; i < 256 && ok; i++)
             {
-                str[i] = serial.Read();
-                ok = serial.WaitForChar(100);
+                ch = serial.Read();
+                str[i] = ch;
+                if (ch == 0xd || ch == 0xa)
+                    break;
+                else                
+                    ok = serial.WaitForChar(100);
             }
-            str[i] = 0;            
+            str[i] = 0;
+
+            if (i == 47)
+            {
+                count = sscanf(str, "%Lf %Lf %Lf %Lf", &wind_power, &solar_power, &wind_u, &solar_u);
+                if (count == 4)
+                {
+                    if (wind_u < 0.0)
+                        wind_u = 0.0;
+
+                    if (solar_u < 0.0)
+                        solar_u = 0.0;
+                        
+                    sprintf(str, "%6.3Lf", wind_power);
+                    Table->SetText(0, 1, str);
+
+                    sprintf(str, "%5.1Lf", wind_u);
+                    Table->SetText(0, 3, str);
+
+                    sprintf(str, "%6.3Lf", solar_power);
+                    Table->SetText(1, 1, str);
+
+                    sprintf(str, "%5.1Lf", solar_u);
+                    Table->SetText(1, 3, str);
+                }
+            }         
         }
     }
 }

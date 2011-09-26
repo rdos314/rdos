@@ -41,6 +41,7 @@ public:
 protected:
 	virtual void Execute();
 
+    TControlThread *FControl;
 	TSection FSection;
 };
 
