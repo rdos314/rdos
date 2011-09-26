@@ -300,6 +300,7 @@ floppy_code_sel		EQU 720h
 floppy_data_sel		EQU 728h
 
 printer_code_sel	EQU 730h
+printer_data_sel    EQU 738h
 
 xms_local_sel		EQU 740h
 

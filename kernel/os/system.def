@@ -47,6 +47,7 @@ RdosDosDevice = 16
 RdosFile = 17
 
 RdosDevice16 = 18
+RdosDevice32 = 19
 
 RdosEnd = 0E5E5h
 
@@ -90,6 +91,17 @@ dev16_data_sel      DW ?
 dev16_init_ip       DW ?
 
 device16_header   ENDS
+
+device32_header   STRUC
+
+dev32_size          DD ?
+dev32_code_size     DD ?
+dev32_code_sel      DW ?
+dev32_data_size     DD ?
+dev32_data_sel      DW ?
+dev32_init_ip       DD ?
+
+device32_header   ENDS
 
 system_seg	STRUC
 

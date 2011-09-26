@@ -26,6 +26,8 @@
 ########################################################################*/
 
 #include <string.h>
+#include <stdio.h>
+
 #include "rdos.h"
 #include "debug.h"
 
@@ -338,11 +340,23 @@ void TDebugThread::ActivateBreaks(TDebugBreak *BreakList)
 {
     TDebugBreak *b = BreakList;
     char brinstr = 0xCC;
+    int bnum = 0;
 
     while (b)
     {
-        RdosReadThreadMem(ThreadID, b->Sel, b->Offset, &b->Instr, 1);
-        RdosWriteThreadMem(ThreadID, b->Sel, b->Offset, &brinstr, 1);
+        if ((b->Sel & 0x3) == 0x3)
+        {
+            RdosReadThreadMem(ThreadID, b->Sel, b->Offset, &b->Instr, 1);
+            RdosWriteThreadMem(ThreadID, b->Sel, b->Offset, &brinstr, 1);
+        }
+        else
+        {
+            if (bnum < 4)
+            {
+                RdosSetCodeBreak(ThreadID, bnum, b->Sel, b->Offset);
+                bnum++;
+            }
+        }
 
         b = b->Next;
     }
@@ -362,13 +376,25 @@ void TDebugThread::ActivateBreaks(TDebugBreak *BreakList)
 void TDebugThread::DeactivateBreaks(TDebugBreak *BreakList)
 {
     TDebugBreak *b = BreakList;
+    int bnum = 0;
 
     if (!FWasTrace)
     {
         while (b)
         {
-            RdosWriteThreadMem(ThreadID, b->Sel, b->Offset, &b->Instr, 1);
-            b = b->Next;
+            if ((b->Sel & 0x3) == 0x3)
+            {
+                RdosWriteThreadMem(ThreadID, b->Sel, b->Offset, &b->Instr, 1);
+                b = b->Next;
+            }
+            else
+            {
+                if (bnum < 4)
+                {
+                    RdosClearBreak(ThreadID, bnum);
+                    bnum++;
+                }
+            }
         }
     }
 }
@@ -567,11 +593,13 @@ void TDebugThread::SetException(TKernelExceptionEvent *event)
             break;
 
         case 1:
+            FaultText = "Hardware breakpoint";
             FHasTrace = TRUE;
             break;
 
         case 3:
-            FHasBreak = TRUE;
+            FaultText = "Software breakpoint";
+            FHasException = TRUE;
             break;
 
         case 4:
@@ -1020,6 +1048,38 @@ void TDebug::InsertThread(TDebugThread *thread)
         CurrentThread = thread;
 
     FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::FindModule
+#
+#   Purpose....: Find module with specific CS selector
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDebugModule *TDebug::FindModule(int Cs)
+{
+    TDebugModule *m;
+
+    FSection.Enter();
+
+    m = ModuleList;
+
+    while (m)
+    {
+        if (m->CodeSel == Cs)
+            break;
+
+        m = m->Next;
+    }
+
+    FSection.Leave();
+
+    return m;
 }
 
 /*##########################################################################
@@ -1587,15 +1647,51 @@ void TDebug::UpdateModules()
     
     if (FMemoryModel != DEBUG_MEMORY_MODEL_FLAT)
     {
-        m = new TDebugModule(CurrentThread->Cs);
-        if (m->Handle)
+        if (!FindModule(CurrentThread->Cs))
         {
-            InsertModule(m);
-            FModuleChanged = TRUE;
+            m = new TDebugModule(CurrentThread->Cs);
+            if (m->Handle)
+            {
+                InsertModule(m);
+                FModuleChanged = TRUE;
+            }
+            else
+                delete m;
         }
-        else
-            delete m;
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::IsBreak
+#
+#   Purpose....: Check for breakpoint
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebug::IsBreak(int Sel, long Offset)
+{
+    TDebugBreak *b;
+    int ok = FALSE;
+    
+    FSection.Enter();
+
+    b = BreakList;
+
+    while (b && !ok)
+    {
+        if (b->Sel == Sel && b->Offset == Offset)
+            ok = TRUE;
+        else
+            b = b->Next;
+    }
+
+    FSection.Leave();
+
+    return ok;
 }
 
 /*##########################################################################
@@ -1735,7 +1831,7 @@ void TDebug::DoGo()
         while (RdosGetDebugThread() != CurrentThread->ThreadID)
             RdosDebugNext();
         CurrentThread->ActivateBreaks(BreakList);
-        RdosDebugGo();
+        RdosDebugRun();
     }
 }
 
@@ -2099,6 +2195,7 @@ void TDebug::HandleFreeDll(int handle)
 void TDebug::HandleKernelException(TKernelExceptionEvent *event, int thread)
 {
     TDebugThread *Thread;
+    char str[128];
 
     FSection.Enter();
 
@@ -2108,7 +2205,15 @@ void TDebug::HandleKernelException(TKernelExceptionEvent *event, int thread)
         Thread = Thread->Next;
 
     if (Thread)
+    {
         Thread->SetException(event);
+
+        if (Thread->HasTraceOccurred())
+        {
+            sprintf(str, "Trace: %04hX:%08lX\r\n", Thread->Cs, Thread->Eip);
+            RdosWriteString(str);
+        }
+    }        
 
     FSection.Leave();
 }
@@ -2216,7 +2321,7 @@ void TDebug::SignalNewData()
 
     RdosClearDebugEvent(FHandle);
 
-    if (debtype == EVENT_EXCEPTION || EVENT_KERNEL)
+    if (debtype == EVENT_EXCEPTION || debtype == EVENT_KERNEL)
     {
         if (CurrentThread)
         {

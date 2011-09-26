@@ -992,6 +992,10 @@ DebugGo MACRO
 	UserGate debug_go_nr
 						ENDM
 
+DebugRun MACRO
+	UserGate debug_run_nr
+						ENDM
+
 DebugNext       MACRO
 	UserGate debug_next_nr
 						ENDM

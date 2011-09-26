@@ -68,14 +68,13 @@ typedef struct Tss
     long ebp;
     long esi;
     long edi;
-    long es;
-    long cs;
-    long ss;
-    long ds;
-    long fs;
-    long gs;
-    long ldt;
-    long t_bitmap;
+    short int es;
+    short int cs;
+    short int ss;
+    short int ds;
+    short int fs;
+    short int gs;
+    short int ldt;
     long dr[4];
     long dr7;
     long MathControl;
@@ -83,10 +82,8 @@ typedef struct Tss
     long MathTag;
     long MathEip;
     short int MathCs;
-    char MathOp[2];
     long MathDataOffs;
     short int MathDataSel;
-    char MathResv[2];
     long double st[8];
     char WcSpace[16];
 } Tss;
@@ -232,14 +229,15 @@ int RDOSAPI RdosGetDebugThread();
 void RDOSAPI RdosGetThreadTss(int Thread, Tss *tss);
 void RDOSAPI RdosSetThreadTss(int Thread, Tss *tss);
 
-int RDOSAPI RdosSetCodeBreak(int Thread, int Reg, void *Address);
-int RDOSAPI RdosSetReadDataBreak(int Thread, int Reg, void *Address, int Size);
-int RDOSAPI RdosSetWriteDataBreak(int Thread, int Reg, void *Address, int Size);
+int RDOSAPI RdosSetCodeBreak(int Thread, int Reg, int Sel, long Offset);
+int RDOSAPI RdosSetReadDataBreak(int Thread, int Reg, int Sel, long Offset, int Size);
+int RDOSAPI RdosSetWriteDataBreak(int Thread, int Reg, int Sel, long Offset, int Size);
 void RDOSAPI RdosClearBreak(int Thread, int Reg);
 
 void RDOSAPI RdosDebugTrace();
 void RDOSAPI RdosDebugPace();
 void RDOSAPI RdosDebugGo();
+void RDOSAPI RdosDebugRun();
 void RDOSAPI RdosDebugNext();
 
 #endif
@@ -927,25 +925,28 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosDebugGo = \
     CallGate_debug_go;
 
+#pragma aux RdosDebugRun = \
+    CallGate_debug_run;
+
 #pragma aux RdosDebugNext = \
     CallGate_debug_next;
 
 #pragma aux RdosSetCodeBreak = \
     CallGate_set_code_break  \
     CarryToBool \
-    parm [ebx] [eax] [edi] \
+    parm [ebx] [eax] [si] [edi] \
     value [eax];
 
 #pragma aux RdosSetReadDataBreak = \
     CallGate_set_read_data_break  \
     CarryToBool \
-    parm [ebx] [eax] [edi] [ecx] \
+    parm [ebx] [eax] [si] [edi] [ecx] \
     value [eax];
 
 #pragma aux RdosSetWriteDataBreak = \
     CallGate_set_write_data_break  \
     CarryToBool \
-    parm [ebx] [eax] [edi] [ecx] \
+    parm [ebx] [eax] [si] [edi] [ecx] \
     value [eax];
 
 #pragma aux RdosClearBreak = \

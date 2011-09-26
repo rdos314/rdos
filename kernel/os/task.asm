@@ -1293,6 +1293,12 @@ glob_ptab_init:
     mov ax,debug_go_nr
     RegisterBimodalUserGate
 ;
+    mov si,OFFSET debug_run
+    mov di,OFFSET debug_run_name
+    xor dx,dx
+    mov ax,debug_run_nr
+    RegisterBimodalUserGate
+;
     mov si,OFFSET debug_next
     mov di,OFFSET debug_next_name
     xor dx,dx
@@ -1865,6 +1871,44 @@ debug_go_done:
     retf32
 debug_go    ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           DebugRun
+;
+;           DESCRIPTION:    Run currently debugged thread with current DR-settings
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+debug_run_name   DB 'Debug Run',0
+
+debug_run    PROC far
+    push ds
+    push es
+    pushad
+    call local_get_debug_thread_sel
+    or ax,ax
+    jz debug_run_done
+;
+    mov bx,ax
+    mov es,bx
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov si,OFFSET debug_list
+    mov [si],bx
+    mov es,ax
+    Wake
+
+debug_run_done:
+    popad
+    pop es
+    pop ds
+    retf32
+debug_run    ENDP
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1946,7 +1990,7 @@ ConvBreakThread Endp
 ;
 ;           DESCRIPTION:    Convert break address to linear address
 ;
-;           PARAMETERS:     ES:(E)DI        Address
+;           PARAMETERS:     SI:(E)DI        Address
 ;
 ;           RETURNS:        EDX             Linear address
 ;
@@ -1956,7 +2000,7 @@ BreakToLinear PROC near
     push bx
     push ecx
 ;
-    mov bx,es
+    mov bx,si
     GetSelectorBaseSize
     jc btlDone
 ;
@@ -2125,7 +2169,7 @@ RemoveBreak ENDP
 ;           DESCRIPTION:    Set a code breakpoint
 ;
 ;           PARAMETERS:     BX              Thread ID
-;                           ES:(E)DI        Address
+;                           SI:(E)DI        Address
 ;                           AL              Debug register (0..3)    
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2179,7 +2223,7 @@ set_code_break32  Endp
 ;           DESCRIPTION:    Set a read-data breakpoint
 ;
 ;           PARAMETERS:     BX              Thread ID
-;                           ES:(E)DI        Address
+;                           SI:(E)DI        Address
 ;                           AL              Debug register (1..3)    
 ;                           CL              Size of region (1,2,4 or 8)
 ;
@@ -2231,7 +2275,7 @@ set_read_data_break32  Endp
 ;           DESCRIPTION:    Set a write-data breakpoint
 ;
 ;           PARAMETERS:     BX              Thread ID
-;                           ES:(E)DI        Address
+;                           SI:(E)DI        Address
 ;                           AL              Debug register (1..3)    
 ;                           CL              Size of region (1,2,4 or 8)
 ;

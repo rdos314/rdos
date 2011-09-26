@@ -541,4 +541,6 @@ is_emergency_stopped_nr         = 439
 
 load_device32_nr                = 440
 
+debug_run_nr                    = 441
+
 usergate_entries			= 460

@@ -227,6 +227,7 @@ public:
 
 	void AddBreak(int Sel, long Offset, int Hw);
 	void ClearBreak(int Sel, long Offset);
+	int IsBreak(int Sel, long Offset);
 
     void WaitForLoad(int timeout);
 	void Go();
@@ -256,6 +257,8 @@ protected:
 	virtual void Execute();
 
 	void InsertThread(TDebugThread *thread);
+
+    TDebugModule *FindModule(int Cs);
 	void InsertModule(TDebugModule *module);
 
 	int HasModule(const char *Name);
