@@ -59,7 +59,6 @@ TDataStore::TDataStore()
     int i;
     
         FStorList = 0;
-    FWs = 0;
     FCirc = 0;
     FVp = 0;
 
@@ -106,22 +105,6 @@ void TDataStore::Add(TRad *Rad)
         if (i < RAD_COUNT)
             FRadArr[i] = Rad;
     }
-}
-
-/*##########################################################################
-#
-#   Name       : TDataStore::Add
-#
-#   Purpose....: Add weather station
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDataStore::Add(TWs2300 *ws)
-{
-    FWs = ws;
 }
 
 /*##########################################################################
@@ -207,26 +190,6 @@ void TDataStore::GetCurrData(THeatData *data)
         data->HasTankP = FALSE;
         data->HasHeatTemp = FALSE;
         data->HasHeatP = FALSE;
-
-        if (FWs)
-        {
-                 data->HasWs = TRUE;
-                 data->IndoorTemp = FWs->GetIndoorTemp();
-                 data->IndoorHumidity = FWs->GetIndoorHumidity();
-                 data->OutdoorTemp = FWs->GetOutdoorTemp();
-                 data->OutdoorHumidity = FWs->GetOutdoorHumidity();
-                 data->DewPoint = FWs->GetDewPoint();
-                 data->WindChill = FWs->GetWindChill();
-                 data->WindSpeed = FWs->GetWindSpeed();
-                 data->WindDir = FWs->GetWindDir();
-                 data->AirPressure = FWs->GetAirPressure();
-
-                 if (FHour == 0)
-                 {
-                          data->HasRain = TRUE;
-                          data->Rain1h = FWs->GetRain1h();
-                 }
-        }
 
         if (FCirc)
         {

@@ -35,7 +35,6 @@
 
 #include "rad.h"
 #include "datetime.h"
-#include "ws2300.h"
 #include "circ.h"
 #include "vp.h"
 #include "videodev.h"
@@ -58,7 +57,6 @@
 int main()
 {
     TRad *RadArr[8];
-    TWs2300 *Ws;
     TCirc *Circ;
     TVp *Vp;
     int i;
@@ -118,12 +116,6 @@ int main()
     UnitLabelFactory.SetBackTransparent();
     UnitLabelFactory.SetDrawColor(0, 0, 0);
     UnitLabelFactory.AlignLeft();
-
-    TLabelControl *IndoorLabel;
-    TTableControl *IndoorTable;
-
-    TLabelControl *OutdoorLabel;
-    TTableControl *OutdoorTable;
     
     RdosWaitMilli(1000);
 
@@ -140,8 +132,12 @@ int main()
     control = new TDisplayControlThread("Control", vbe);
     vbe->SetFont(&Font);
 
-    bitmap = TJpegBitmapDevice::Create("d:\\heat\\back.jpg");
-    vbe->Blit(bitmap, 0, 0, 0, 0, 1280, 768);
+//    bitmap = TJpegBitmapDevice::Create("d:\\heat\\back.jpg");
+//    vbe->Blit(bitmap, 0, 0, 0, 0, 1280, 768);
+
+    vbe->SetDrawColor(0, 20, 50);
+    vbe->SetFilledStyle();
+    vbe->DrawRect(0, 0, 1279, 767);
 
     RadControl = new TRadControl(control, RAD_X, RAD_Y, 800, 30 * 8);
 
@@ -186,96 +182,11 @@ int main()
         Store->Add(RadArr[i]);
     }
 
-    Ws = new TWs2300(1);
-    Store->Add(Ws);
-
     Circ = new TCirc(vbe);
     Store->Add(Circ);
 
     Vp = new TVp(control);
     Store->Add(Vp);
-
-    IndoorLabel = new TLabelControl(control, 900, 10, 300, 30);
-    IndoorLabel->SetFont(20);
-    IndoorLabel->SetBackTransparent();
-    IndoorLabel->SetDrawColor(0, 0, 0);
-    IndoorLabel->SetText("Inomhus");
-    IndoorLabel->Show();
-
-    IndoorTable = new TTableControl(control, 900, 40, 300, 60);
-    IndoorTable->SetRowSpacing(5);
-    IndoorTable->SetColSpacing(8);
-    IndoorTable->SetSpacingTransparent();
-    IndoorTable->SetBackTransparent();
-    IndoorTable->AddLabelColumn(&CommentLabelFactory, 150);
-    IndoorTable->AddLabelColumn(&ValueLabelFactory, 80);
-    IndoorTable->AddLabelColumn(&UnitLabelFactory, 70);
-
-    IndoorTable->AddRow(24, 45);
-    IndoorTable->AddRow(24, 45);
-
-    IndoorTable->SetText(0, 0, "Temperatur");
-    IndoorTable->SetText(0, 2, "C");
-
-    IndoorTable->SetText(1, 0, "Fuktighet");
-    IndoorTable->SetText(1, 2, "%");
-
-    IndoorTable->Show();
-
-    OutdoorLabel = new TLabelControl(control, 900, 100, 300, 30);
-    OutdoorLabel->SetFont(20);
-    OutdoorLabel->SetBackTransparent();
-    OutdoorLabel->SetDrawColor(0, 0, 0);
-    OutdoorLabel->SetText("Utomhus");
-    OutdoorLabel->Show();
-
-    OutdoorTable = new TTableControl(control, 900, 130, 300, 300);
-    OutdoorTable->SetRowSpacing(5);
-    OutdoorTable->SetColSpacing(8);
-    OutdoorTable->SetSpacingTransparent();
-    OutdoorTable->SetBackTransparent();
-    OutdoorTable->AddLabelColumn(&CommentLabelFactory, 150);
-    OutdoorTable->AddLabelColumn(&ValueLabelFactory, 80);
-    OutdoorTable->AddLabelColumn(&UnitLabelFactory, 70);
-
-     OutdoorTable->AddRow(24, 45);
-     OutdoorTable->AddRow(24, 45);
-     OutdoorTable->AddRow(24, 45);
-     OutdoorTable->AddRow(24, 45);
-     OutdoorTable->AddRow(24, 45);
-     OutdoorTable->AddRow(24, 45);
-     OutdoorTable->AddRow(24, 45);
-     OutdoorTable->AddRow(24, 45);
-     OutdoorTable->AddRow(24, 45);
-
-     OutdoorTable->SetText(0, 0, "Temperatur");
-     OutdoorTable->SetText(0, 2, "C");
-
-     OutdoorTable->SetText(1, 0, "Fuktighet");
-     OutdoorTable->SetText(1, 2, "%");
-
-     OutdoorTable->SetText(2, 0, "Daggpunkt");
-     OutdoorTable->SetText(2, 2, "C");
-
-     OutdoorTable->SetText(3, 0, "Vindkomp");
-     OutdoorTable->SetText(3, 2, "C");
-
-     OutdoorTable->SetText(4, 0, "Vind");
-     OutdoorTable->SetText(4, 2, "m/s");
-
-     OutdoorTable->SetText(5, 0, "Vindrikt");
-     OutdoorTable->SetText(5, 2, "");
-
-     OutdoorTable->SetText(6, 0, "Regn, timme");
-     OutdoorTable->SetText(6, 2, "mm");
-
-     OutdoorTable->SetText(7, 0, "Regn, dygn");
-     OutdoorTable->SetText(7, 2, "mm");
-
-     OutdoorTable->SetText(8, 0, "Lufttryck");
-     OutdoorTable->SetText(8, 2, "hPa");
-
-     OutdoorTable->Show();
 
     for (;;)
     {
@@ -322,7 +233,7 @@ int main()
         else
             printf("------");
 
-        ambient = 10 * Ws->GetOutdoorTemp();
+        ambient = 150;
 
         summer = FALSE;
 
@@ -394,8 +305,7 @@ int main()
         if (count)
         {
             Vp->SetTempError(temperrmax);
-            Vp->SetAmbient(refsum / count, (int)(10.0 * Ws->GetOutdoorTemp()));
-//          Vp->SetAmbient(refsum / count, 100); // 10C outside temperature
+            Vp->SetAmbient(refsum / count, 100); // 10C outside temperature
          }
 
          if (count)
@@ -430,121 +340,6 @@ int main()
                 
             }
         }
-
-        val = Ws->GetIndoorTemp();
-        sprintf(str, "%5.1Lf", val);
-          IndoorTable->SetText(0, 1, str);
-
-        val = Ws->GetIndoorHumidity();
-        sprintf(str, "%4.0Lf", val);
-          IndoorTable->SetText(1, 1, str);
-
-        val = Ws->GetOutdoorTemp();
-        sprintf(str, "%5.1Lf", val);
-          OutdoorTable->SetText(0, 1, str);
-
-        val = Ws->GetOutdoorHumidity();
-        sprintf(str, "%4.0Lf", val);
-          OutdoorTable->SetText(1, 1, str);
-
-        val = Ws->GetDewPoint();
-        sprintf(str, "%5.1Lf", val);
-          OutdoorTable->SetText(2, 1, str);
-
-        val = Ws->GetWindChill();
-        sprintf(str, "%5.1Lf", val);
-          OutdoorTable->SetText(3, 1, str);
-
-        val = Ws->GetWindSpeed();
-        sprintf(str, "%5.1Lf", val);
-        OutdoorTable->SetText(4, 1, str);
-
-        val = Ws->GetWindDir();
-        ival = (int)(val / 22 + 0.5);
-
-        switch (ival)
-        {
-                case 0:
-                     strcpy(str, "N");
-                     break;
-
-                case 1:
-                     strcpy(str, "NNO");
-                     break;
-
-                case 2:
-                     strcpy(str, "NO");
-                     break;
-
-                case 3:
-                     strcpy(str, "ONO");
-                     break;
-
-                case 4:
-                     strcpy(str, "O");
-                     break;
-
-                case 5:
-                     strcpy(str, "OSO");
-                     break;
-
-                case 6:
-                     strcpy(str, "SO");
-                     break;
-
-                case 7:
-                     strcpy(str, "SSO");
-                     break;
-
-                case 8:
-                     strcpy(str, "S");
-                     break;
-
-                case 9:
-                     strcpy(str, "SSV");
-                     break;
-
-                case 10:
-                     strcpy(str, "SV");
-                     break;
-
-                case 11:
-                     strcpy(str, "VSV");
-                     break;
-
-                case 12:
-                     strcpy(str, "V");
-                     break;
-
-                case 13:
-                     strcpy(str, "VNV");
-                     break;
-
-                case 14:
-                     strcpy(str, "NV");
-                     break;
-
-                case 15:
-                     strcpy(str, "NNV");
-                     break;
-
-                case 16:
-                     strcpy(str, "N");
-                     break;
-        }
-        OutdoorTable->SetText(5, 1, str);
-
-        val = Ws->GetRain1h();
-        sprintf(str, "%5.1Lf", val);
-        OutdoorTable->SetText(6, 1, str);
-
-        val = Ws->GetRain24h();
-        sprintf(str, "%5.1Lf", val);
-        OutdoorTable->SetText(7, 1, str);
-
-        val = Ws->GetAirPressure();
-        sprintf(str, "%6.1Lf", val);
-        OutdoorTable->SetText(8, 1, str);
 
         RdosWaitMilli(1000);
 

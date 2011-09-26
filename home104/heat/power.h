@@ -1,6 +1,6 @@
 /*#######################################################################
 # RDOS operating system
-# Copyright (C) 1988-2006, Leif Ekblad
+# Copyright (C) 1988-2003, Leif Ekblad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,50 +20,28 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# datastor.h
-# Permanent data store class
+# power.h
+# Renewable power class
 #
 ########################################################################*/
 
-#ifndef DATASTOR_H
-#define DATASTOR_H
+#ifndef POWER_H
+#define POWER_H
 
-#include "thread.h"
-#include "storlist.h"
-#include "rad.h"
-#include "circ.h"
-#include "vp.h"
-#include "heatdata.h"
-#include "realserv.h"
+#include "control.h"
 
-class TDataStore : public TThread
+class TPower : public TDevice
 {
 public:
-        TDataStore();
-        ~TDataStore();
+	TPower(TControlThread *control);
+	~TPower();
 
-        void Add(TRad *rad);
-    void Add(TCirc *circ);
-    void Add(TVp *vp);
-    
+	void DeviceName(char *Name, int Size) const;
+
 protected:
-    void GetCurrRad(TRad *rad, TRadData *data);
-    void GetCurrData(THeatData *data);
-    void SendRealtime(TRealtimeSocketServerFactory *fact, TRadData *data);
+	virtual void Execute();
 
-    virtual void Execute();
-
-    int FYear;
-    int FMonth;
-    int FDay;
-    int FHour;
-    int FMin;
-
-        TStorageList *FStorList;
-    TRad *FRadArr[RAD_COUNT];
-    TCirc *FCirc;
-        TVp *FVp;
+	TSection FSection;
 };
-
 
 #endif
