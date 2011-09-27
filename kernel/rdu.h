@@ -544,6 +544,8 @@
 
 #define CallGate_debug_run 0x67 0x9a 185 1 0 0 3 0
 
+#define CallGate_get_bitness 0x67 0x9a 186 1 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1089,5 +1091,7 @@
 #define CallGate_load_device32 0x3e 0x67 0x9a 184 1 0 0 3 0
 
 #define CallGate_debug_run 0x3e 0x67 0x9a 185 1 0 0 3 0
+
+#define CallGate_get_bitness 0x3e 0x67 0x9a 186 1 0 0 3 0
 
 #endif

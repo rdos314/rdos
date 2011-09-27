@@ -202,13 +202,24 @@ void TDebugThread::ClearBreak()
 ##########################################################################*/
 int TDebugThread::GetMemoryModel()
 {
+    int limit;
+    int bitness;
+    
     if (Cs == 0x1B3)
         return DEBUG_MEMORY_MODEL_FLAT;
 
-    if (Cs == 0x30)
-        return DEBUG_MEMORY_MODEL_16;
+    if (RdosGetSelectorInfo(Cs, &limit, &bitness))
+    {
+        if (limit == 0xFFFFFFFF)
+            return DEBUG_MEMORY_MODEL_FLAT;
+        
+        if (bitness == 16)    
+            return DEBUG_MEMORY_MODEL_16;
 
-// this need more validation!
+        if (bitness == 32)
+            return DEBUG_MEMORY_MODEL_32;
+    }
+
     return DEBUG_MEMORY_MODEL_16;
 }
 
@@ -383,10 +394,7 @@ void TDebugThread::DeactivateBreaks(TDebugBreak *BreakList)
         while (b)
         {
             if ((b->Sel & 0x3) == 0x3)
-            {
                 RdosWriteThreadMem(ThreadID, b->Sel, b->Offset, &b->Instr, 1);
-                b = b->Next;
-            }
             else
             {
                 if (bnum < 4)
@@ -395,6 +403,7 @@ void TDebugThread::DeactivateBreaks(TDebugBreak *BreakList)
                     bnum++;
                 }
             }
+            b = b->Next;
         }
     }
 }
@@ -938,10 +947,11 @@ TDebugBreak::TDebugBreak(int sel, long offset, int Hw)
 #   Returns....: *
 #
 ##########################################################################*/
-TDebug::TDebug(const char *Program, const char *Param, const char *StartDir)
+TDebug::TDebug(const char *Program, const char *Param, const char *StartDir, const char *LogFile)
  : FProgram(Program),
-        FParam(Param),
-        FStartDir(StartDir)
+   FParam(Param),
+   FStartDir(StartDir),
+   FLogFile(LogFile, 0)
 {
     ThreadList = 0;
     ModuleList = 0;
@@ -995,6 +1005,44 @@ TDebug::~TDebug()
 void TDebug::DeviceName(char *Name, int MaxLen) const
 {
         strncpy(Name,"Debug device",MaxLen);
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::LogMsg
+#
+#   Purpose....: Log message
+#
+##########################################################################*/
+void TDebug::LogMsg(const char *Msg)
+{
+    char timestr[128];
+    TString str(Msg);
+    unsigned long msb, lsb;
+    int year, month, day;
+    int hour, min, sec;
+    int ms, us;
+
+    str += "\r\n";
+
+    RdosWriteString(str.GetData());
+
+    if (FLogFile.IsOpen())
+    {
+        RdosGetTime(&msb, &lsb);
+        RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+        RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us); 
+
+        sprintf(timestr, "%4d-%02d-%02d %02d.%02d.%02d,%03d %03d ", 
+                                year, month, day,
+                                hour, min, sec,
+                                ms, us);
+        str = timestr;
+        str += Msg;
+        str += "\r\n";        
+        
+        FLogFile.Write(str.GetData());
+    }
 }
 
 /*##########################################################################
@@ -1642,7 +1690,22 @@ void TDebug::UpdateModules()
     if (model != FMemoryModel)
     {
         FMemoryModel = model;
-        FConfigChange = FALSE;
+        FConfigChange = TRUE;
+
+        switch (FMemoryModel)
+        {
+            case DEBUG_MEMORY_MODEL_FLAT:
+                LogMsg("Flat");
+                break;
+
+            case DEBUG_MEMORY_MODEL_16:
+                LogMsg("16-bit device");
+                break;
+
+            case DEBUG_MEMORY_MODEL_32:
+                LogMsg("32-bit device");
+                break;
+        }
     }
     
     if (FMemoryModel != DEBUG_MEMORY_MODEL_FLAT)
@@ -1848,6 +1911,8 @@ void TDebug::DoGo()
 ##########################################################################*/
 void TDebug::Go()
 {
+    LogMsg("Go");
+
     if (CurrentThread)
     {
         UserSignal.Clear();
@@ -1872,6 +1937,8 @@ void TDebug::Trace()
     char Instr[2] = {0, 0};
     int Sel;
     long Offset;
+
+    LogMsg("Trace");
 
     if (CurrentThread)
     {
@@ -1910,6 +1977,8 @@ void TDebug::Trace()
 int TDebug::AsyncGo(int Timeout)
 {
     TWaitDevice *wait;
+
+    LogMsg("Async go");
     
     if (CurrentThread)
     {
@@ -1942,6 +2011,8 @@ int TDebug::AsyncTrace(int Timeout)
     int ok;
     TWaitDevice *wait;
     char Instr[2] = {0, 0};
+
+    LogMsg("Async trace");
 
     if (CurrentThread)
     {
@@ -2210,8 +2281,8 @@ void TDebug::HandleKernelException(TKernelExceptionEvent *event, int thread)
 
         if (Thread->HasTraceOccurred())
         {
-            sprintf(str, "Trace: %04hX:%08lX\r\n", Thread->Cs, Thread->Eip);
-            RdosWriteString(str);
+            sprintf(str, "Trace: %04hX:%08lX", Thread->Cs, Thread->Eip);
+            LogMsg(str);
         }
     }        
 
@@ -2249,26 +2320,26 @@ void TDebug::SignalNewData()
     switch (debtype)
     {
         case EVENT_EXCEPTION:
-            RdosWriteString("Exception\r\n");
+            LogMsg("Exception");
             RdosGetDebugEventData(FHandle, &ee);
             HandleException(&ee, thread);
             break;
 
         case EVENT_CREATE_THREAD:
-            RdosWriteString("Create thread\r\n");
+            LogMsg("Create thread");
             RdosGetDebugEventData(FHandle, &cte);
             HandleCreateThread(&cte);
             FThreadChanged = TRUE;
             break;
 
         case EVENT_CREATE_PROCESS:
-            RdosWriteString("Create process\r\n");
+            LogMsg("Create process");
             RdosGetDebugEventData(FHandle, &cpe);
             HandleCreateProcess(&cpe);
             break;
 
         case EVENT_TERMINATE_THREAD:
-            RdosWriteString("Terminate thread\r\n");
+            LogMsg("Terminate thread");
             HandleTerminateThread(thread);
             FThreadChanged = TRUE;
             if (!CurrentThread)
@@ -2283,7 +2354,7 @@ void TDebug::SignalNewData()
             break;
 
         case EVENT_TERMINATE_PROCESS:
-            RdosWriteString("Terminate process\r\n");
+            LogMsg("Terminate process");
             RdosGetDebugEventData(FHandle, &ExitCode);
             HandleTerminateProcess(ExitCode);
             FInstalled = FALSE;
@@ -2291,31 +2362,31 @@ void TDebug::SignalNewData()
             break;
 
         case EVENT_LOAD_DLL:
-            RdosWriteString("Load DLL\r\n");
+            LogMsg("Load DLL");
             RdosGetDebugEventData(FHandle, &lde);
             HandleLoadDll(&lde);
             FModuleChanged = TRUE;
             break;
 
         case EVENT_FREE_DLL:
-            RdosWriteString("Free DLL\r\n");
+            LogMsg("Free DLL");
             RdosGetDebugEventData(FHandle, &handle);
             HandleFreeDll(handle);
             FModuleChanged = TRUE;
             break;
 
         case EVENT_KERNEL:
-            RdosWriteString("Kernel exception\r\n");
+            LogMsg("Kernel exception");
             RdosGetDebugEventData(FHandle, &kev);
             HandleKernelException(&kev, thread);
             break;                    
 
         case 0:
-            RdosWriteString("Null event\r\n");
+            LogMsg("Null event");
             break;
 
         default:
-            RdosWriteString("Unknown event\r\n");
+            LogMsg("Unknown event");
             break;
     }
 

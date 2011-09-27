@@ -1386,9 +1386,13 @@ trap_13:
     jmp t13_default        
         
 t13_not_int:
+    cmp al,3Eh
+    je t13_32
+;
     cmp al,67h
     jne t13_default
-;
+
+t13_16:
     mov al,[ebx+1]
     cmp al,9Ah
     je t13_int_user
@@ -1404,7 +1408,7 @@ t13_not_int:
     cmp ax,3
     ja t13_default
 
-t13_int_call:
+t13_int_call16:
     push ds
     mov ax,system_data_sel
     mov ds,ax
@@ -1436,6 +1440,39 @@ t13_int_user:
     cmp ax,3
     ja t13_default
 ;
+    push ds
+    mov ax,system_data_sel
+    mov ds,ax
+    call ds:leave_patch_proc
+    pop ds
+;
+    push ecx
+    push edx
+;    
+    push ebx
+    mov bx,ds
+    call local_get_selector_base_size
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax
+;
+    mov al,0CDh
+    xchg al,ds:[ebx]
+    pop edx
+    pop ecx
+    jmp t13_end
+
+t13_32:
+    mov al,[ebx+1]
+    cmp al,67h
+    jne t13_default
+;
+    mov ax,[ebx+7]
+    cmp ax,3
+    jne t13_default
+
+t13_int_call32:
     push ds
     mov ax,system_data_sel
     mov ds,ax

@@ -48,8 +48,9 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TWdSocketServerFactory::TWdSocketServerFactory(int Port, int MaxConnections, int BufferSize)
-  : TSocketServerFactory(Port, MaxConnections, BufferSize)
+TWdSocketServerFactory::TWdSocketServerFactory(int Port, int MaxConnections, int BufferSize, const char *LogFile)
+  : TSocketServerFactory(Port, MaxConnections, BufferSize),
+  FLogFile(LogFile)
 {
     FSupplList = 0;
 }
@@ -137,8 +138,8 @@ TWdSupplFactory *TWdSocketServerFactory::GetSuppl(const char *name)
 ##########################################################################*/
 TSocketServer *TWdSocketServerFactory::Create(TSocket *Socket)
 {
-	TWdSocketServer *server;
-	server = new TWdSocketServer(this, "WD", 0x7000, Socket);
+        TWdSocketServer *server;
+        server = new TWdSocketServer(this, "WD", 0x7000, Socket);
 
-	return server;
+        return server;
 }

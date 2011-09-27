@@ -1140,7 +1140,7 @@ get_selector_info_check:
     shl ecx,16
     mov cx,[bx]
     mov al,16
-    test byte ptr [bx+6],80h
+    test byte ptr [bx+6],40h
     jz get_selector_info_small
 ;
     mov al,32

@@ -29,24 +29,27 @@
 #define _WDFACT_H
 
 #include "socket.h"
+#include "str.h"
 
 class TWdSupplFactory;
 
 class TWdSocketServerFactory : public TSocketServerFactory
 {
 public:
-	TWdSocketServerFactory(int Port, int MaxConnections, int BufferSize);
-	~TWdSocketServerFactory();
+        TWdSocketServerFactory(int Port, int MaxConnections, int BufferSize, const char *LogFile);
+        ~TWdSocketServerFactory();
 
-	void AddSuppl(TWdSupplFactory *SupplFactory);
+        void AddSuppl(TWdSupplFactory *SupplFactory);
     TWdSupplFactory *GetSuppl(const char *name);
     
-	virtual TSocketServer *Create(TSocket *Socket);
+        virtual TSocketServer *Create(TSocket *Socket);
+
+        TString FLogFile;
 
 protected:
-	void Init();
+        void Init();
 
-	TWdSupplFactory *FSupplList;
+        TWdSupplFactory *FSupplList;
 };
 
 #endif

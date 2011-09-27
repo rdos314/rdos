@@ -56,7 +56,6 @@ install_device32    Proc near
     push es
     pushad
 ;       
-    int 3
     mov ecx,[edx].len
     sub ecx,SIZE rdos_header
     add edx,SIZE rdos_header

@@ -25,6 +25,8 @@
 #
 ########################################################################*/
 
+#include <string.h>
+
 #include "rdos.h"
 #include "wdfact.h"
 #include "wdfile.h"
@@ -36,16 +38,26 @@
 
 int main(int argc, char **argv)
 {
-        TWdSupplFactory *suppl;
-        TWdSocketServerFactory fact(0xDEB, 16, 0x7000);
+    char LogFile[256];
 
-        suppl = new TWdFileFactory(&fact);
-        suppl = new TWdFileInfoFactory(&fact);
-        suppl = new TWdEnvFactory(&fact);
-        suppl = new TWdRunThreadFactory(&fact);
-        suppl = new TWdCapFactory(&fact);
-        suppl = new TWdAsyncFactory(&fact);
+    LogFile[0] = 0;
+    
+    if (argc > 1)
+    {
+        strcpy(LogFile, argv[1]);
+        strlwr(LogFile);
+    }
 
-        for (;;)
-                fact.WaitForever();
+    TWdSupplFactory *suppl;
+    TWdSocketServerFactory fact(0xDEB, 16, 0x7000, LogFile);
+
+    suppl = new TWdFileFactory(&fact);
+    suppl = new TWdFileInfoFactory(&fact);
+    suppl = new TWdEnvFactory(&fact);
+    suppl = new TWdRunThreadFactory(&fact);
+    suppl = new TWdCapFactory(&fact);
+    suppl = new TWdAsyncFactory(&fact);
+
+    for (;;)
+        fact.WaitForever();
 }

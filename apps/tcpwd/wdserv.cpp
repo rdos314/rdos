@@ -1355,7 +1355,7 @@ void TWdSocketServer::ReqProgLoad()
         if (str.GetSize())
         {
             argstr = name + strlen(name) + 1;       
-            FDebug = new TDebug(str.GetData(), argstr, curdir.Get().GetData());
+            FDebug = new TDebug(str.GetData(), argstr, curdir.Get().GetData(), FFactory->FLogFile.GetData());
 
             RdosWaitMilli(500);
             FDebug->WaitForLoad(5000);

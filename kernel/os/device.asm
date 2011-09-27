@@ -661,16 +661,39 @@ find_dev_loop:
     mov bx,[esi].dev16_data_sel
     add esi,SIZE device16_header
 
-find_copy_name:
+find_copy_name16:
     lods byte ptr [esi]
     stos byte ptr es:[edi]
     or al,al
-    jnz find_copy_name
+    jnz find_copy_name16
 ;    
     clc
     jmp find_dev_done
     
 find_not_dev16:
+    cmp ax,RdosDevice32
+    jne find_not_dev32
+;
+    mov esi,edx
+    add esi,SIZE rdos_header
+    cmp bx,[esi].dev32_code_sel
+    jne find_next_dev
+;
+    mov eax,[esi].dev32_code_size    
+    mov edx,[esi].dev32_data_size
+    mov bx,[esi].dev32_data_sel
+    add esi,SIZE device32_header
+
+find_copy_name32:
+    lods byte ptr [esi]
+    stos byte ptr es:[edi]
+    or al,al
+    jnz find_copy_name32
+;    
+    clc
+    jmp find_dev_done
+
+find_not_dev32:
     cmp ax,RdosKernel
     jne find_not_kernel
 ;
