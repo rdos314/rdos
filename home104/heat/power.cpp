@@ -40,6 +40,67 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+TTableControl *Table;
+
+/*##########################################################################
+#
+#   Name       : BatteryThread
+#
+#   Purpose....: Battery thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void BatteryThread(void *Param)
+{
+    int ival;
+    long double fval;
+    int bat_sum;
+    int bat_count;
+    int diostat;
+    char str[256];
+
+    bat_count = 0;
+    bat_sum = 0;
+
+    for (;;)
+    {
+        RdosWaitMilli(1000);
+
+        if (RdosReadSerialRaw(0x40, 2, &ival))
+        {
+            bat_count++;
+            bat_sum += ival;
+
+            if (bat_count >= 25)
+            {
+                fval = (long double)bat_sum / 2500.0;
+                sprintf(str, "%5.1Lf", fval);            
+                Table->SetText(2, 3, str);
+
+                bat_count = 0;
+                bat_sum = 0;
+
+                if (RdosReadSerialLines(1, &diostat))
+                {
+                    if ((diostat & 2) == 0)
+                    {
+                        if (fval < 23.5)
+                            RdosToggleSerialLine(1, 1);     // turn on charger
+                    }
+                    else                            
+                    {
+                        if (fval > 27.0)
+                            RdosToggleSerialLine(1, 1);     // turn off charger
+                    }
+                }
+            }
+        }
+    }
+}
+
 /*##########################################################################
 #
 #   Name       : TPower::TPower
@@ -56,6 +117,8 @@ TPower::TPower(TControlThread *control)
     FControl = control;
 
     Start("Power", 0x2000);
+
+    RdosCreateThread(BatteryThread, "Battery", 0, 0x4000);
 }
 
 /*##########################################################################
@@ -101,12 +164,12 @@ void TPower::DeviceName(char *Name, int Size) const
 ##########################################################################*/
 void TPower::Execute()
 {
+    int count;
     TSerialDevice serial(4, 2400, 'N', 8, 1);
     char str[256];
     char ch;
     int i;
     int ok;
-    int count;
 
     long double wind_power;
     long double solar_power;
@@ -136,7 +199,6 @@ void TPower::Execute()
     UnitLabelFactory.AlignLeft();
 
     TLabelControl *Label;
-    TTableControl *Table;
 
     Label = new TLabelControl(FControl, 25, 25, 200, 30);
     Label->SetFont(20);
@@ -158,6 +220,7 @@ void TPower::Execute()
 
     Table->AddRow(24, 45);
     Table->AddRow(24, 45);
+    Table->AddRow(24, 45);
 
     Table->SetText(0, 0, "Vind");
     Table->SetText(0, 2, "W");
@@ -167,10 +230,14 @@ void TPower::Execute()
     Table->SetText(1, 2, "W");
     Table->SetText(1, 4, "volt");
 
+    Table->SetText(2, 0, "Batteri");
+    Table->SetText(1, 2, "W");
+    Table->SetText(2, 4, "volt");
+
     serial.Open();
 
     while (FInstalled)
-    {
+    {        
         if (serial.WaitForChar(10000))
         {
             ok = TRUE;
