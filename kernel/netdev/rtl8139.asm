@@ -20,8 +20,8 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; RTL8xxx.ASM
-; RTL8xxx series network driver
+; RTL8139.ASM
+; RTL8139 series network driver
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1002,24 +1002,23 @@ DispTable2:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DriverName1     DB 'RTL8xxx-1',0
-DriverName2     DB 'RTL8xxx-2',0
+DriverName1     DB 'RTL8139-1',0
+DriverName2     DB 'RTL8139-2',0
 
 PciVendorTab:
 pci00   DW 10ECh, 8139h
 pci01   DW 10ECh, 8138h
-pci02   DW 10ECh, 8129h
-pci03   DW 10ECh, 8168h
-pci04   DW 1186h, 1300h
-pci05   DW 1113h, 1211h
-pci06   DW 1186h, 1300h
-pci07   DW 018Ah, 0106h
-pci08   DW 021Bh, 8139h
-pci09   DW 13D1h, 0AB06h
-pci10   DW 02ACh, 1012h 
-pci11   DW 1432h, 9130h
-pci12   DW 1186h, 1340h
-pci13   DW 0,     0
+pci02   DW 10ECh, 8168h
+pci03   DW 1186h, 1300h
+pci04   DW 1113h, 1211h
+pci05   DW 1186h, 1300h
+pci06   DW 018Ah, 0106h
+pci07   DW 021Bh, 8139h
+pci08   DW 13D1h, 0AB06h
+pci09   DW 02ACh, 1012h 
+pci10   DW 1432h, 9130h
+pci11   DW 1186h, 1340h
+pci12   DW 0,     0
 
 InitPrimaryPciAdapter   Proc near
     mov bp,ax
