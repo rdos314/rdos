@@ -543,4 +543,6 @@ load_device32_nr                = 440
 
 debug_run_nr                    = 441
 
+test_gate_nr                    = 442
+
 usergate_entries			= 460

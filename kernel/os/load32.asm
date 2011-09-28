@@ -54,6 +54,8 @@ code    SEGMENT byte public 'CODE'
 install_device32    Proc near
     push ds
     push es
+    push fs
+    push gs
     pushad
 ;       
     mov ecx,[edx].len
@@ -96,14 +98,18 @@ install_device32_sel_ok:
     mov es,ax
     mov eax,[esi].dev32_init_ip
     mov ds,bx
-    push word ptr cs
-    push dword ptr OFFSET install_device32_end
+    mov ebx,cs
+    push ebx
+    mov ebx,OFFSET install_device32_end
+    push ebx
     push ebp
     push eax
     retf32
 
 install_device32_end:
     popad
+    pop gs
+    pop fs
     pop es
     pop ds
     ret
@@ -130,6 +136,9 @@ install_adapter Proc near
 
 install_adapter_loop:
     mov ax,[edx].typ
+    cmp ax,RdosEnd
+    je install_adapter_done
+;    
     cmp ax,RdosDevice32
     jne install_adapter_next
 ;       

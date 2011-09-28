@@ -1470,7 +1470,7 @@ t13_32:
 ;
     mov ax,[ebx+7]
     cmp ax,3
-    jne t13_default
+    ja t13_default
 
 t13_int_call32:
     push ds

@@ -31,59 +31,15 @@
 
 #include "malloc.h"
 
-typedef void thread_fn( void * );
+#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
-typedef struct thread_args {
-    thread_fn   *rtn;
-    void        *argument;
-    int         signal;
-    int         tid;
-} thread_args;
-
-void TestThread(void *param)
+void __far ImplTestGate(const char *msg)
 {
-}
-
-#pragma aux begin_thread_helper "*" \
-                  parm caller [gs ebx] \
-                  value struct routine [eax] \
-                  modify [eax ebx ecx edx esi edi]
-
-static void __far begin_thread_helper( void *param )
-{
-    thread_args         *td = (thread_args *)param;
-    thread_fn           *rtn;
-    void                *arg;
-
-    td->tid = RdosGetThreadHandle();    
-    rtn = td->rtn;
-    arg = td->argument;
-    RdosSignal( td->signal );
-
-    (*rtn)( arg );
-     return;
+    RdosWriteString(msg);
 }
 
 int main()
 {
-    thread_args         *td;
-    void                *arglist = 0;
-
-    td = malloc( sizeof( *td ) );
-    if( td == NULL ) {
-        return( -1L );
-    }
-
-    td->rtn = &TestThread;
-    td->argument = arglist;
-    td->signal = RdosGetThreadHandle();
-    RdosClearSignal();
-
-    RdosCreateKernelThread( 5, 0x1000, begin_thread_helper, "Test thread", td );
-
-    RdosWaitForSignal();
-    free( td );
-
-    return 0;
+    RdosRegisterUserGate(442, &ImplTestGate, "Test Gate");
 }
 

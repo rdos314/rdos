@@ -544,7 +544,7 @@
 
 #define CallGate_debug_run 0x67 0x9a 185 1 0 0 3 0
 
-#define CallGate_get_bitness 0x67 0x9a 186 1 0 0 3 0
+#define CallGate_test_gate 0x67 0x9a 186 1 0 0 3 0
 
 #else
 
@@ -1092,6 +1092,6 @@
 
 #define CallGate_debug_run 0x3e 0x67 0x9a 185 1 0 0 3 0
 
-#define CallGate_get_bitness 0x3e 0x67 0x9a 186 1 0 0 3 0
+#define CallGate_test_gate 0x3e 0x67 0x9a 186 1 0 0 3 0
 
 #endif

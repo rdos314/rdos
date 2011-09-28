@@ -12,10 +12,12 @@ extern "C" {
 
 // special user-mode gates
 
-#define UserGate_free_mem 0x9a 2 0 0 0 2 0
-#define UserGate_create_thread 0x9a 28 0 0 0 2 0
+#define UserGate_free_mem 0x3e 0x67 0x9a 2 0 0 0 2 0
+#define UserGate_create_thread 0x3e 0x67 0x9a 28 0 0 0 2 0
 
 // callback pragmas
+
+typedef void __far (__rdos_gate_callback)();
 
 typedef void __far (__rdos_swap_callback)(char level);
 
@@ -437,6 +439,8 @@ struct TFileSystemTable
 // function definitions
 
 int RdosIsValidOsGate(int gate);
+void RdosRegisterOsGate(int gate, __rdos_gate_callback *callb_proc, const char *name);
+void RdosRegisterUserGate(int gate, __rdos_gate_callback *callb_proc, const char *name);
 
 void RdosReturnOk();
 void RdosReturnFail();
@@ -763,6 +767,22 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     CarryToBool \
     parm [eax] \
     value [eax];
+
+#pragma aux RdosRegisterOsGate = \
+    "push ds" \
+    "push cs" \
+    "pop ds" \
+    OsGate_register_osgate  \
+    "pop ds" \
+    parm [eax] [esi] [es edi];
+
+#pragma aux RdosRegisterUserGate = \
+    "push ds" \
+    "push cs" \
+    "pop ds" \
+    OsGate_register_usergate  \
+    "pop ds" \
+    parm [eax] [esi] [es edi];
 
 #pragma aux RdosReturnOk = \
     "clc" ;
