@@ -395,6 +395,81 @@ install_device16    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           install_device32
+;
+;           DESCRIPTION:    Install 32-bit device
+;
+;           PARAMETERS:     DS:EDX      Data buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+install_device32    Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;       
+    mov ecx,[edx].len
+    sub ecx,SIZE rdos_header
+    add edx,SIZE rdos_header
+    mov esi,edx
+    mov ebx,[esi].dev32_size
+    mov edi,esi
+    add edi,SIZE device32_header
+
+install_device32_param_loop:
+    mov al,[edi]
+    inc edi
+    or al,al
+    jnz install_device32_param_loop
+;       
+    mov ecx,[esi].dev32_code_size
+    add edx,ebx
+    mov bx,[esi].dev32_code_sel
+    or bx,bx
+    jnz install_device32_cr_code
+;
+    mov bx,device_code_sel
+
+install_device32_cr_code:
+    mov bp,bx
+    CreateCodeSelector32
+;
+    xor bx,bx
+    add edx,ecx
+    mov ecx,[esi].dev32_data_size
+    or ecx,ecx
+    jz install_device32_sel_ok
+;
+    mov bx,[esi].dev32_data_sel
+    CreateDataSelector32
+
+install_device32_sel_ok:
+    mov ax,ds
+    mov es,ax
+    mov eax,[esi].dev32_init_ip
+    mov ds,bx
+    mov ebx,cs
+    push ebx
+    mov ebx,OFFSET install_device32_end
+    push ebx
+    push ebp
+    push eax
+    retf32
+
+install_device32_end:
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+install_device32    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           install_adapter
 ;
 ;           DESCRIPTION:    install devices in adapter
@@ -433,8 +508,16 @@ not_install_dos_device:
     jmp install_adapter_next
 
 not_install_dev16:
+    cmp ax,RdosDevice32
+    jne not_install_dev32
+;       
+    call install_device32
+    jmp install_adapter_next
+
+not_install_dev32:
     cmp ax,RdosEnd
     je install_adapter_done
+
 install_adapter_next:
     add edx,[edx].len
     jmp install_adapter_loop

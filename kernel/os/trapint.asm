@@ -1843,12 +1843,19 @@ pretask13:
     cmp al,67h
     je pretask_gpf_reexec
 ;
+    cmp al,9Ah
+    je pretask_gpf_reexec
+;
     jmp pretask_gpf_default
         
 pretask_gpf_not_int:
+    cmp al,3Eh
+    je pretask_gpf_32
+;
     cmp al,67h
     jne pretask_gpf_default
-;
+
+pretask_gpf_16:
     mov al,[ebx+2]
     cmp al,9Ah
     jne pretask_gpf_default
@@ -1860,7 +1867,34 @@ pretask_gpf_not_int:
     cmp ax,3
     ja pretask_gpf_default
 
-pretask_kernel_gate:
+pretask_kernel_gate16:
+    push ecx
+    push edx
+;    
+    push ebx
+    mov bx,ds
+    call local_get_selector_base_size
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax
+;
+    mov al,0CDh
+    xchg al,ds:[ebx]
+    pop edx
+    pop ecx
+    jmp pretask_gpf_reexec
+
+pretask_gpf_32:
+    mov al,[ebx+1]
+    cmp al,67h
+    jne pretask_gpf_default
+;
+    mov ax,[ebx+7]
+    cmp ax,3
+    ja pretask_gpf_default
+
+pretask_kernel_gate32:
     push ecx
     push edx
 ;    
