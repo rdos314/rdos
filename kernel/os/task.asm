@@ -1895,6 +1895,10 @@ debug_run    PROC far
     mov bx,ax
     mov es,bx
 ;
+    mov ax,word ptr es:p_tss_eflags
+    and ax,NOT 100h
+    mov word ptr es:p_tss_eflags,ax
+;
     mov ax,system_data_sel
     mov ds,ax
     mov si,OFFSET debug_list
@@ -3115,7 +3119,7 @@ load_cr3_ok:
 ;
     mov ax,ds:p_flags
     or ax,ax
-    jz load_actions_done
+    jz load_bp_done
 ;
     test ax,THREAD_FLAG_CREATE
     jz load_create_done
@@ -3139,8 +3143,11 @@ load_suspend_done:
     jz load_bp_done
 ;
     call load_breaks
+    jmp load_actions_done
 
 load_bp_done:
+    xor eax,eax
+    mov dr7,eax
 
 load_actions_done: 
     call LoadUnlockCore

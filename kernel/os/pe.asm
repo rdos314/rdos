@@ -188,8 +188,16 @@ NotifyKernelDebug   Proc far
     push di
 ;    
     movzx dx,es:p_fault_vector
-    mov ds,es:p_app_sel
-    mov ds,ds:app_mod_sel
+    mov ax,es:p_app_sel
+    verr ax
+    jnz nkeDone
+;    
+    mov ds,ax
+    mov ax,ds:app_mod_sel
+    verr ax
+    jnz nkeDone
+;
+    mov ds,ax
 ;
     mov ax,es:p_debug_event
     or ax,ax

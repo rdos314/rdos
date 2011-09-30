@@ -1773,6 +1773,11 @@ void TDebug::AddBreak(int Sel, long Offset, int Hw)
     TDebugBreak *newbr = new TDebugBreak(Sel, Offset, Hw);
     TDebugBreak *b;
     int found = FALSE;
+
+    char str[128];
+
+    sprintf(str, "Break: %04hX:%08lX", Sel, Offset);
+    LogMsg(str);
     
     FSection.Enter();
 
@@ -2200,6 +2205,7 @@ void TDebug::HandleTerminateThread(int thread)
 void TDebug::HandleException(TExceptionEvent *event, int thread)
 {
     TDebugThread *Thread;
+    char str[128];
 
     FSection.Enter();
 
@@ -2215,6 +2221,9 @@ void TDebug::HandleException(TExceptionEvent *event, int thread)
         if (FWaitLoad)
             Thread->ClearBreak();
         FWaitLoad = FALSE;
+
+        sprintf(str, "Exception: %04hX:%08lX", Thread->Cs, Thread->Eip);
+        LogMsg(str);
     }
 
     FSection.Leave();

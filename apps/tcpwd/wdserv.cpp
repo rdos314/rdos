@@ -921,7 +921,7 @@ void TWdSocketServer::ReqMapAddr()
     long Offset = GetDword();
     int Sel = GetWord();
     int Handle = GetDword();
-        TDebugModule *mod;
+    TDebugModule *mod;
 
     if (FDebug)
     {
@@ -964,6 +964,27 @@ void TWdSocketServer::ReqMapAddr()
                     break;
 
                 default:
+                    if (Sel == mod->CodeSel)
+                    {
+                        PutDword(Offset);
+                        PutWord(mod->CodeSel);
+                        PutDword(0);
+                        PutDword(mod->ImageSize - 1);
+                        break;
+                    }
+
+                    if (Sel == mod->DataSel)
+                    {
+                        PutDword(Offset);
+                        PutWord(mod->DataSel);
+                        PutDword(0);
+                        if (mod->DataSel && mod->DataSize)
+                            PutDword(mod->DataSize - 1);
+                        else
+                            PutDword(0);
+                        break;
+                    }
+                    
                     PutDword(Offset);
                     PutWord(0);
                     PutDword(0);
