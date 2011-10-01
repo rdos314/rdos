@@ -33,6 +33,9 @@ INCLUDE ..\user.inc
 INCLUDE ..\pcdev\pci.inc
 INCLUDE ..\os\net.inc
 
+RX_DESCR_COUNT = 32
+TX_DESCR_COUNT = 32
+
 IR_SER = 8000h
 IR_Timeout = 4000h
 IR_SWInt = 100h
@@ -77,12 +80,64 @@ REG_CCR = 0E0h
 REG_RDSAR = 0E4h
 REG_MTPS = 0ECh
 
+RX_OWN = 8000h
+RX_EOR = 4000h
+RX_FS = 2000h
+RX_LS = 1000h
+RX_MAR = 800h
+RX_PAM = 400h
+RX_BAR = 200h
+RX_RWT = 40h
+RX_RES = 20h
+RX_RUNT = 10h
+RX_CRC = 8
+RX_PID1 = 4
+RX_PID0 = 2
+RX_IPF = 1
+RX_UDPF = 8000h
+RX_TCPF = 4000h
+
+rx_descr    STRUC
+
+rx_fl_size  DW ?
+rx_flags    DW ?
+rx_resv     DD ?
+rx_low_ads  DD ?
+rx_high_ads DD ?
+
+rx_descr    ENDS
+
+TX_OWN = 8000h
+TX_EOR = 4000h
+TX_FS = 2000h
+TX_LS = 1000h
+TX_LGSEN = 800h
+TX_IPCS = 4
+TX_UDPS = 2
+TX_TCPCS = 1
+
+tx_descr    STRUC
+
+tx_size     DW ?
+tx_flags    DW ?
+tx_resv     DD ?
+tx_low_ads  DD ?
+tx_high_ads DD ?
+
+tx_descr    ENDS
  
 data    STRUC
 
 IoBase              DW ?
 Handle              DW ?
+RxRingSel           DW ?
+RxRingPhys          DD ?
+TxRingSel           DW ?
+TxRingPhys          DD ?
 EthernetAddress     DB 6 DUP(?)
+
+RxLinearArr         DD RX_DESCR_COUNT DUP(?)
+TxLinearArr         DD TX_DESCR_COUNT DUP(?)
 
 data    ENDS
 
@@ -101,15 +156,78 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateBufferRings
+;           NAME:           CreateRxRing
 ;
-;           DESCRIPTION:    Create buffer rings
+;           DESCRIPTION:    Create RX ring
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateBufferRings    Proc near
+CreateRxRing    Proc near
+    mov ax,flat_sel
+    mov es,ax
+    mov eax,1000h
+    AllocateBigLinear
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    GetPhysicalPage
+    and ax,0F000h
+    mov ds:RxRingPhys,eax
+;
+    mov ecx,0FFFh
+    AllocateGdt
+    CreateDataSelector16
+    mov ds:RxRingSel,bx
+;
+    mov es,bx
+    mov cx,RX_DESCR_COUNT
+    mov si,OFFSET RxLinearArr
+    xor di,di
+
+crLoop:
+    mov es:[di].rx_fl_size,1FF8h
+    mov es:[di].rx_flags,RX_OWN
+;
+    push ecx
+    mov eax,2000h    
+    AllocateBigLinear
+    mov ds:[si],edx
+;    
+    mov ecx,2
+    AllocateMultiplePhysical
+    pop ecx
+    mov es:[di].rx_low_ads,eax
+;
+    mov al,67h
+    SetPhysicalPage
+    add edx,1000h
+    add eax,1000h
+    SetPhysicalPage
+;
+    push es
+    push ecx
+    push edi
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,ds:[si]
+    mov ecx,800h
+    mov eax,11223344h
+    rep stos dword ptr es:[edi] 
+    pop edi
+    pop ecx
+    pop es       
+;
+    add si,4
+    add di,16
+    sub cx,1
+    jnz crLoop   
+;
+    sub di,16
+    or es:[di].rx_flags,RX_EOR
     ret
-CreateBufferRings   Endp
+CreateRxRing   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -153,6 +271,24 @@ ihResetDone:
     add dx,REG_9346CR
     mov al,0C0h
     out dx,al
+;
+    mov dx,ds:IoBase
+    add dx,REG_CCR
+    in ax,dx
+    and ax,NOT 200h
+    or al,8
+    out dx,ax 
+;
+    call CreateRxRing
+    mov dx,ds:IoBase
+    add dx,REG_RDSAR + 4
+    xor eax,eax
+    out dx,eax
+;
+    sub dx,4
+    mov eax,ds:RxRingPhys
+    out dx,eax
+    in eax,dx
 ;    
     mov dx,ds:IoBase
     add dx,REG_IMR
@@ -161,14 +297,8 @@ ihResetDone:
 ;
     mov dx,ds:IoBase
     add dx,REG_RMS
-    mov ax,3FFFh
+    mov ax,2000h
     out dx,ax
-;
-    mov dx,ds:IoBase
-    add dx,REG_CCR
-    in ax,dx
-    and ax,NOT 218h
-    out dx,ax 
 ;
     mov dx,ds:IoBase
     add dx,REG_MTPS
@@ -179,15 +309,13 @@ ihResetDone:
     add dx,REG_9346CR
     mov al,0
     out dx,al
-;
-    call CreateBufferRings
 ;    
     mov dx,ds:IoBase
     add dx,REG_CR
     in al,dx
     or al,0Ch
     out dx,al
-    
+;    
     mov dx,ds:IoBase
     add dx,REG_TCR
     in eax,dx
@@ -200,13 +328,22 @@ ihResetDone:
     add dx,REG_RCR
     in eax,dx
     or eax,10000h
-    and ax,NOT 0E000h    
+    and ax,1FFFh    
     or ax,8000h
     and ax,NOT 700h
     or ax,400h
-    and al,3Fh
+    and al,0C0h
     or al,0Ah
     out dx,eax
+;
+    int 3
+    mov dx,ds:IoBase
+    add dx,REG_RCR
+    in eax,dx
+;
+    mov dx,ds:IoBase
+    add dx,REG_ISR
+    in ax,dx    
     clc
 
 ihDone:
