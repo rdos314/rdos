@@ -134,6 +134,9 @@ RxRingSel           DW ?
 RxRingPhys          DD ?
 TxRingSel           DW ?
 TxRingPhys          DD ?
+TxThread            DW ?
+RxCurrDescr         DW ?
+RxCurrLinear        DD ?
 EthernetAddress     DB 6 DUP(?)
 
 RxLinearArr         DD RX_DESCR_COUNT DUP(?)
@@ -335,20 +338,55 @@ ihResetDone:
     and al,0C0h
     or al,0Ah
     out dx,eax
-;
-    int 3
-    mov dx,ds:IoBase
-    add dx,REG_RCR
-    in eax,dx
-;
-    mov dx,ds:IoBase
-    add dx,REG_ISR
-    in ax,dx    
     clc
 
 ihDone:
     ret
 InitHardware    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           NetInt
+;
+;           DESCRIPTION:    Network card interrupt
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NetInt  Proc far
+niLoop:
+    mov dx,ds:IoBase
+    add dx,REG_ISR
+    in ax,dx
+    out dx,ax
+    test ax,IR_ROK OR IR_RDU
+    jz niNotRx
+;
+    mov bx,ds:Handle
+    or bx,bx
+    jz niNotRx
+;
+    NetReceived
+    jmp niLoop
+
+niNotRx:
+    test ax,IR_TOK OR IR_TER
+    jz niNotTx
+;
+    mov bx,ds:TxThread
+    or bx,bx
+    jz niNotTx
+;
+    Signal
+    jmp niLoop
+
+niNotTx:
+    retf32
+NetInt  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -365,36 +403,69 @@ InitHardware    Endp
 
 Preview1:
     push ds
-    push fs
-    push ebx
+    push es
+    push bx
+    push si
 ;
     mov ax,ether_data_sel
     mov ds,ax
-    jmp preview_loop
+    jmp preview_do
     
 Preview2:
     push ds
-    push fs
-    push ebx
+    push es
+    push bx
+    push si
 ;
     mov ax,ether_data2_sel
     mov ds,ax
 
+preview_do:
+    mov es,ds:RxRingSel
+    mov cx,RX_DESCR_COUNT
+    xor bx,bx
+    mov si,OFFSET RxLinearArr
+    
 preview_loop:
-    pop ebx
-    pop fs
+    test es:[bx].rx_flags,RX_OWN
+    jz preview_found
+;
+    add si,4
+    add bx,16
+    loop preview_loop
+    stc
+    jmp preview_done        
+
+preview_found:
+    mov cx,es:[bx].rx_fl_size
+    and ecx,1FFFh
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov edx,ds:[si]
+    mov ds:RxCurrDescr,bx
+    mov ds:RxCurrLinear,edx
+    mov dx,es:[edx+12]
+    xchg dl,dh
+    clc
+        
+preview_done:
+    pop si
+    pop bx
+    pop es
     pop ds
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           Receive
+;       NAME:           Receive
 ;
-;           DESCRIPTION:    Receive data
+;       DESCRIPTION:    Receive data
+;
+;       PARAMETERS:     ECX             size of data
 ;
 ;       RETURNS:        ES:EDI          data buffer
-;                           ECX             size of data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -418,6 +489,16 @@ Receive2:
     mov ds,ax
     
 receive_do:
+    mov ax,flat_sel
+    mov fs,ax
+    mov edx,ds:RxCurrLinear
+    AllocateGdt
+    CreateAliasSelector16
+    xor edi,edi
+    mov es,bx
+    NotifyEthernetPacket
+    mov edi,14
+    sub ecx,14
 ;
     pop edx
     pop bx
@@ -436,9 +517,8 @@ receive_do:
 
 Remove1:
     push ds
-    push ebx
-    push cx
-    push dx
+    push es
+    push bx
 ;
     mov ax,ether_data_sel
     mov ds,ax
@@ -446,18 +526,20 @@ Remove1:
 
 Remove2:
     push ds
-    push ebx
-    push cx
-    push dx
+    push es
+    push bx
 ;
     mov ax,ether_data2_sel
     mov ds,ax
 
 remove_do:
+    mov es,ds:RxRingSel
+    mov bx,ds:RxCurrDescr
+    mov es:[bx].rx_fl_size,1FF8h
+    mov es:[bx].rx_flags,RX_OWN
 ;
-    pop dx
-    pop cx
-    pop ebx
+    pop bx
+    pop es
     pop ds
     retf32
 
@@ -483,10 +565,9 @@ GetBuffer       Proc far
 
     mov eax,64
 
-gbSizeOk:       
+gbSizeOk:
+    int 3       
     add eax,4
-    AllocateGlobalMem
-    mov edi,14
     pop eax
     retf32
 GetBuffer       Endp
@@ -507,6 +588,7 @@ GetBuffer       Endp
 
 Send1:
 Send2:
+    int 3
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -572,8 +654,16 @@ GetLinkState1  Proc far
 ;    
     mov ax,ether_data_sel
     mov ds,ax
+    mov dx,ds:IoBase
+    add dx,REG_PHYStatus
+    in al,dx
+    test al,2
     clc
+    jnz gls1Ok
 ;
+    stc
+
+gls1Ok:
     pop dx
     pop ax
     pop ds
@@ -587,8 +677,16 @@ GetLinkState2  Proc far
 ;    
     mov ax,ether_data2_sel
     mov ds,ax
+    mov dx,ds:IoBase
+    add dx,REG_PHYStatus
+    in al,dx
+    test al,2
     clc
+    jnz gls2Ok
 ;
+    stc
+
+gls2Ok:
     pop dx
     pop ax
     pop ds
@@ -677,12 +775,26 @@ init_pci1_found:
     xor ch,ch
     mov cl,PCI_interrupt_line
     ReadPciByte
+    mov al,21 ; temporary fix before ACPI
     mov bx,cs
     mov es,bx
-;    mov edi,OFFSET NetInt    
-;    RequestSharedIrqHandler
+    mov edi,OFFSET NetInt    
+    RequestSharedIrqHandler
 ;
     call InitHardware
+;    
+    push ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET DispTable1
+    mov edi,OFFSET DriverName1
+    mov al,1
+    mov dx,0
+    mov ecx,1600
+    RegisterNetDriver
+    pop ds
+    mov ds:Handle,bx
     mov ax,bp   
     clc
 
@@ -722,10 +834,23 @@ init_pci2_found:
     ReadPciByte
     mov bx,cs
     mov es,bx
-;    mov edi,OFFSET NetInt    
-;    RequestSharedIrqHandler
+    mov edi,OFFSET NetInt    
+    RequestSharedIrqHandler
 ;
     call InitHardware
+;    
+    push ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET DispTable2
+    mov edi,OFFSET DriverName2
+    mov al,1
+    mov dx,0
+    mov ecx,1600
+    RegisterNetDriver
+    pop ds
+    mov ds:Handle,bx
     mov ax,bp   
     clc
 
@@ -749,7 +874,6 @@ InitSecondaryPciAdapter Endp
 detect_name     DB 'RTL8169',0
 
 detect_thread   proc far
-    int 3
     xor ax,ax
     call InitPrimaryPciAdapter
 ;
