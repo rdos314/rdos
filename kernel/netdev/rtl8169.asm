@@ -137,6 +137,7 @@ TxRingPhys          DD ?
 TxThread            DW ?
 RxCurrDescr         DW ?
 RxCurrLinear        DD ?
+TxSection           section_typ <>
 EthernetAddress     DB 6 DUP(?)
 
 RxLinearArr         DD RX_DESCR_COUNT DUP(?)
@@ -209,19 +210,6 @@ crLoop:
     add eax,1000h
     SetPhysicalPage
 ;
-    push es
-    push ecx
-    push edi
-    mov ax,flat_sel
-    mov es,ax
-    mov edi,ds:[si]
-    mov ecx,800h
-    mov eax,11223344h
-    rep stos dword ptr es:[edi] 
-    pop edi
-    pop ecx
-    pop es       
-;
     add si,4
     add di,16
     sub cx,1
@@ -231,6 +219,68 @@ crLoop:
     or es:[di].rx_flags,RX_EOR
     ret
 CreateRxRing   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateTxRing
+;
+;           DESCRIPTION:    Create TX ring
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateTxRing    Proc near
+    mov ax,flat_sel
+    mov es,ax
+    mov eax,1000h
+    AllocateBigLinear
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    GetPhysicalPage
+    and ax,0F000h
+    mov ds:TxRingPhys,eax
+;
+    mov ecx,0FFFh
+    AllocateGdt
+    CreateDataSelector16
+    mov ds:TxRingSel,bx
+;
+    mov es,bx
+    mov cx,TX_DESCR_COUNT
+    mov si,OFFSET TxLinearArr
+    xor di,di
+
+ctLoop:
+    mov es:[di].tx_flags,TX_LS OR TX_FS
+;
+    push ecx
+    mov eax,2000h    
+    AllocateBigLinear
+    mov ds:[si],edx
+;    
+    mov ecx,2
+    AllocateMultiplePhysical
+    pop ecx
+    mov es:[di].tx_low_ads,eax
+;
+    mov al,67h
+    SetPhysicalPage
+    add edx,1000h
+    add eax,1000h
+    SetPhysicalPage
+;
+    add si,4
+    add di,16
+    sub cx,1
+    jnz ctLoop   
+;
+    sub di,16
+    or es:[di].tx_flags,TX_EOR
+    ret
+CreateTxRing   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -291,7 +341,16 @@ ihResetDone:
     sub dx,4
     mov eax,ds:RxRingPhys
     out dx,eax
-    in eax,dx
+;
+    call CreateTxRing    
+    mov dx,ds:IoBase
+    add dx,REG_TNPDS + 4
+    xor eax,eax
+    out dx,eax
+;
+    sub dx,4
+    mov eax,ds:TxRingPhys
+    out dx,eax
 ;    
     mov dx,ds:IoBase
     add dx,REG_IMR
@@ -556,21 +615,73 @@ remove_do:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetBuffer       Proc far
-    push eax
-    mov eax,14
-    add eax,ecx
-    cmp eax,64
-    jae gbSizeOk
+GetBuffer1:
+    push ds
+    push bx
+    push si
+;
+    mov ax,ether_data_sel
+    mov ds,ax
+    jmp get_buffer
 
-    mov eax,64
+GetBuffer2:
+    push ds
+    push bx
+    push si
+;
+    mov ax,ether_data2_sel
+    mov ds,ax
 
-gbSizeOk:
-    int 3       
-    add eax,4
-    pop eax
+get_buffer:
+    push cx
+    mov es,ds:TxRingSel
+    mov cx,TX_DESCR_COUNT
+    xor bx,bx
+    mov si,OFFSET TxLinearArr
+    EnterSection ds:TxSection
+
+get_buffer_loop:
+    test es:[bx].tx_flags,TX_OWN
+    jnz get_buffer_next
+;
+    mov ax,es:[bx].tx_size
+    and ax,1FFFh
+    jz get_buffer_found
+        
+get_buffer_next:
+    add si,4
+    add bx,16
+    loop get_buffer_loop
+;
+    LeaveSection ds:TxSection
+    pop cx
+    xor edi,edi
+    mov es,di
+    stc
+    jmp get_buffer_done
+
+get_buffer_found:
+    pop cx
+    add cx,14
+    mov es:[bx].tx_size,cx
+    LeaveSection ds:TxSection
+;
+    mov edx,ds:[si]
+    push bx
+    AllocateGdt
+    CreateAliasSelector16
+    mov es,bx
+    pop ax
+    mov edi,14
+    mov es:[edi-2],ax
+    sub cx,14
+    clc
+
+get_buffer_done:
+    pop si
+    pop bx
+    pop ds    
     retf32
-GetBuffer       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -587,8 +698,82 @@ GetBuffer       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Send1:
-Send2:
+    push ds
+    push bx
+    push dx
+    push si
+    push edi
+;
     int 3
+    xor di,di
+    mov ax,ds:[esi]
+    stosw
+    mov ax,[esi+2]
+    stosw
+    mov ax,[esi+4]
+    stosw
+;
+    mov ax,ether_data_sel
+    mov ds,ax
+    jmp send_do
+    
+Send2:
+    push ds
+    push bx
+    push si
+    push edi
+;
+    xor di,di
+    mov ax,ds:[esi]
+    stosw
+    mov ax,[esi+2]
+    stosw
+    mov ax,[esi+4]
+    stosw
+;
+    mov ax,ether_data2_sel
+    mov ds,ax
+
+send_do:
+    mov ax,word ptr ds:EthernetAddress
+    stosw
+    mov ax,word ptr ds:EthernetAddress+2
+    stosw
+    mov ax,word ptr ds:EthernetAddress+4
+    stosw
+;    
+    mov ax,dx
+    xchg al,ah
+    xchg ax,es:[di]
+    add di,2
+    mov si,ax
+;
+    add ecx,14
+    cmp ecx,60
+    jae sPadOk
+;
+    mov ecx,60
+
+sPadOk: 
+    add ecx,4
+    xor edi,edi
+    NotifyEthernetPacket
+    FreeMem
+;
+    mov es,ds:TxRingSel
+    or es:[si].tx_flags,TX_OWN
+    mov es:[si].tx_size,cx
+;
+    mov dx,ds:IoBase
+    add dx,REG_TPPoll
+    mov al,40h
+    out dx,al    
+;
+    pop edi
+    pop si
+    pop dx
+    pop bx
+    pop ds
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -708,7 +893,7 @@ DispTable1:
     DD OFFSET Preview1,         SEG code
     DD OFFSET Receive1,         SEG code
     DD OFFSET Remove1,          SEG code
-    DD OFFSET GetBuffer,        SEG code
+    DD OFFSET GetBuffer1,       SEG code
     DD OFFSET Send1,            SEG code
     DD OFFSET GetAddress1,      SEG code
     DD OFFSET GetPktAddress,    SEG code
@@ -718,7 +903,7 @@ DispTable2:
     DD OFFSET Preview2,         SEG code
     DD OFFSET Receive2,         SEG code
     DD OFFSET Remove2,          SEG code
-    DD OFFSET GetBuffer,        SEG code
+    DD OFFSET GetBuffer2,       SEG code
     DD OFFSET Send2,            SEG code
     DD OFFSET GetAddress2,      SEG code
     DD OFFSET GetPktAddress,    SEG code
@@ -930,6 +1115,7 @@ Init    Proc far
     xor di,di
     xor al,al
     rep stosb
+    InitSection ds:TxSection
 ;
     mov eax,SIZE data
     mov bx,ether_data2_sel
@@ -940,6 +1126,7 @@ Init    Proc far
     xor di,di
     xor al,al
     rep stosb
+    InitSection ds:TxSection
 ;
     mov ax,cs
     mov es,ax
