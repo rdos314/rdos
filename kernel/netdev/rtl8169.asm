@@ -381,7 +381,6 @@ ihResetDone:
     mov dx,ds:IoBase
     add dx,REG_TCR
     in eax,dx
-    or eax,10000h
     and ax,NOT 700h
     or ax,400h
     out dx,eax
@@ -704,7 +703,6 @@ Send1:
     push si
     push edi
 ;
-    int 3
     xor di,di
     mov ax,ds:[esi]
     stosw
@@ -720,6 +718,7 @@ Send1:
 Send2:
     push ds
     push bx
+    push dx
     push si
     push edi
 ;
@@ -749,17 +748,16 @@ send_do:
     mov si,ax
 ;
     add ecx,14
+    xor edi,edi
+    NotifyEthernetPacket
+    FreeMem
+;    
     cmp ecx,60
     jae sPadOk
 ;
     mov ecx,60
 
 sPadOk: 
-    add ecx,4
-    xor edi,edi
-    NotifyEthernetPacket
-    FreeMem
-;
     mov es,ds:TxRingSel
     or es:[si].tx_flags,TX_OWN
     mov es:[si].tx_size,cx
@@ -768,6 +766,9 @@ sPadOk:
     add dx,REG_TPPoll
     mov al,40h
     out dx,al    
+;
+    xor ax,ax
+    mov es,ax
 ;
     pop edi
     pop si
