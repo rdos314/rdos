@@ -495,9 +495,6 @@ preview_loop:
     jmp preview_done        
 
 preview_found:
-    mov cx,es:[bx].rx_fl_size
-    and ecx,1FFFh
-;
     mov ax,flat_sel
     mov es,ax
     mov edx,ds:[si]
@@ -505,6 +502,7 @@ preview_found:
     mov ds:RxCurrLinear,edx
     mov dx,es:[edx+12]
     xchg dl,dh
+    xor ecx,ecx
     clc
         
 preview_done:
@@ -550,6 +548,10 @@ receive_do:
     mov ax,flat_sel
     mov fs,ax
     mov edx,ds:RxCurrLinear
+    mov bx,ds:RxCurrDescr
+    mov cx,es:[bx].rx_fl_size
+    and ecx,1FFFh
+;
     AllocateGdt
     CreateAliasSelector16
     xor edi,edi
