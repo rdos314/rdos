@@ -43,13 +43,7 @@ void __far AcpiThread(void *param)
 
 void __far ImplTestGate(const char *msg)
 {
-    _asm push es
-    _asm push fs
-    _asm push gs
     RdosCreateKernelThread(5, 0x1000, &AcpiThread, "Acpi", 0);
-    _asm pop gs
-    _asm pop fs
-    _asm pop es
 }
 
 #pragma aux InitTasking "*" rdosdev parm routine
