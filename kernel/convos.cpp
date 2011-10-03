@@ -53,6 +53,62 @@ int main()
                     if (GateName[Size - 3] == '_')
                         GateName[Size - 3] = 0;
 
+                    sprintf(Macro, "#define osgate_%s %d\r\n",
+                            GateName,
+                            GateId);
+                    OutFile.Write(Macro);
+                }
+            }
+        }
+        else
+        {
+            OutFile.Write("\r\n");
+        }
+
+        ptr = next;
+        next = strchr(ptr, 0xd);
+    }
+
+    OutFile.Write("\r\n\r\n");
+
+    InFile.SetPos(0);
+    Size = InFile.Read(Buffer, MAX_USER_SIZE);
+    Buffer[Size] = 0;
+
+    ptr = Buffer;
+    next = strchr(ptr, 0xd);
+
+    while (next)
+    {
+        if (*next == 0xd)
+        {
+            *next = 0;
+            next++;
+        }
+
+        if (*next == 0xa)
+        {
+            *next = 0;
+            next++;
+        }
+
+        if (strchr(ptr, '='))
+        {
+            if (sscanf(ptr, "%s = %d", GateName, &GateId) == 2)
+            {
+                if (strcmp(GateName, "osgate_entries") != 0)
+                {
+                    Size = strlen(GateName);
+
+                    if (GateName[Size - 1] == 'r')
+                        GateName[Size - 1] = 0;
+
+                    if (GateName[Size - 2] == 'n')
+                        GateName[Size - 2] = 0;
+
+                    if (GateName[Size - 3] == '_')
+                        GateName[Size - 3] = 0;
+
                     sprintf(Macro, "#define OsGate_%s 0x3E 0x67 0x9a %d %d %d %d 2 0\r\n",
                             GateName,
                             GateId & 0xFF,

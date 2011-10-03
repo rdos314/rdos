@@ -31,15 +31,36 @@
 
 #include "malloc.h"
 
+#pragma aux AcpiThread "*" rdosdev parm routine [es edi]
+
+void __far AcpiThread(void *param)
+{
+    _asm int 3
+    RdosWriteString("Hello");
+}
+
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
-    RdosWriteString(msg);
+    _asm push es
+    _asm push fs
+    _asm push gs
+    RdosCreateKernelThread(5, 0x1000, &AcpiThread, "Acpi", 0);
+    _asm pop gs
+    _asm pop fs
+    _asm pop es
+}
+
+#pragma aux InitTasking "*" rdosdev parm routine
+
+void __far InitTasking()
+{
+    RdosRegisterUserGate(usergate_test_gate, &ImplTestGate, "Test Gate");
 }
 
 int main()
 {
-    RdosRegisterUserGate(442, &ImplTestGate, "Test Gate");
+    RdosHookInitTasking(&InitTasking);
 }
 
