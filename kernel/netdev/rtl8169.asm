@@ -137,6 +137,8 @@ TxRingPhys          DD ?
 TxThread            DW ?
 RxCurrDescr         DW ?
 RxCurrLinear        DD ?
+TxCurrDescr         DW ?
+TxLastDescr         DW ?
 TxSection           section_typ <>
 EthernetAddress     DB 6 DUP(?)
 
@@ -279,6 +281,9 @@ ctLoop:
 ;
     sub di,16
     or es:[di].tx_flags,TX_EOR
+;
+    mov ds:TxCurrDescr,0
+    mov ds:TxLastDescr,di
     ret
 CreateTxRing   Endp
 
@@ -527,7 +532,6 @@ preview_done:
 
 Receive1:
     push ds
-    push fs
     push bx
     push edx
 ;
@@ -537,7 +541,6 @@ Receive1:
 
 Receive2:
     push ds
-    push fs
     push bx
     push edx
 ;
@@ -545,13 +548,15 @@ Receive2:
     mov ds,ax
     
 receive_do:
-    mov ax,flat_sel
-    mov fs,ax
     mov edx,ds:RxCurrLinear
     mov bx,ds:RxCurrDescr
+    mov es,ds:RxRingSel
     mov cx,es:[bx].rx_fl_size
     and ecx,1FFFh
-;
+    cmp cx,16
+    jae rdok
+    int 3
+rdok:
     AllocateGdt
     CreateAliasSelector16
     xor edi,edi
@@ -562,7 +567,6 @@ receive_do:
 ;
     pop edx
     pop bx
-    pop fs
     pop ds
     retf32
 
@@ -634,40 +638,36 @@ GetBuffer2:
     mov ds,ax
 
 get_buffer:
-    push cx
     mov es,ds:TxRingSel
-    mov cx,TX_DESCR_COUNT
-    xor bx,bx
-    mov si,OFFSET TxLinearArr
     EnterSection ds:TxSection
+    mov si,ds:TxCurrDescr
+    mov ax,si
+    cmp ax,ds:TxLastDescr
+    je get_buffer_first_descr
+;
+    add ax,16
+    jmp get_buffer_save_curr
 
-get_buffer_loop:
-    test es:[bx].tx_flags,TX_OWN
-    jnz get_buffer_next
+get_buffer_first_descr:
+    xor ax,ax
+
+get_buffer_save_curr:
+    mov ds:TxCurrDescr,ax
+    LeaveSection ds:TxSection
+;
+    mov bx,si
+    shr si,2
+    add si,OFFSET TxLinearArr
 ;
     mov ax,es:[bx].tx_size
-    and ax,1FFFh
-    jz get_buffer_found
-        
-get_buffer_next:
-    add si,4
-    add bx,16
-    loop get_buffer_loop
-;
-    LeaveSection ds:TxSection
-    pop cx
-    xor edi,edi
-    mov es,di
+    or ax,ax
     stc
-    jmp get_buffer_done
-
-get_buffer_found:
-    pop cx
+    jnz get_buffer_done
+;
     add cx,14
     mov es:[bx].tx_size,cx
-    LeaveSection ds:TxSection
-;
     mov edx,ds:[si]
+;    
     push bx
     AllocateGdt
     CreateAliasSelector16
@@ -764,19 +764,26 @@ sPadOk:
     or es:[si].tx_flags,TX_OWN
     mov es:[si].tx_size,cx
 ;
+    xor ax,ax
+    mov es,ax
+;
     mov dx,ds:IoBase
     add dx,REG_TPPoll
     mov al,40h
     out dx,al    
 ;
-    xor ax,ax
-    mov es,ax
-;
     pop edi
     pop si
     pop dx
     pop bx
-    pop ds
+    pop ax
+    verr ax
+    jz send_load_ds
+;
+    xor ax,ax
+    
+send_load_ds:
+    mov ds,ax
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
