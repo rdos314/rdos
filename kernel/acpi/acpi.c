@@ -34,27 +34,33 @@
 
 extern void InitOsAcpi();
 
+ACPI_STATUS Status;
+
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
-    ACPI_STATUS Status;
-    
-    Status = AcpiInitializeSubsystem();
-    if (Status == AE_OK)
-        Status = AcpiInitializeTables(0, 0, 0);
+    char str[128];
+
+    sprintf(str, "Status: %d\r\n", Status);
+    RdosWriteString(str);
 }
 
 #pragma aux InitTasking "*" rdosdev parm routine
 
 void __far InitTasking()
 {
+
     RdosRegisterUserGate(usergate_test_gate, &ImplTestGate, "Test Gate");
     InitOsAcpi();
-}
+
+    if (Status)   
+        Status = AcpiInitializeSubsystem();
+} 
 
 int main()
 {
-    RdosHookInitTasking(&InitTasking);
+     Status = AcpiInitializeTables(0, 0, 0);
+     RdosHookInitTasking(&InitTasking);
 }
 

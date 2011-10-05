@@ -82,7 +82,6 @@ check_rsdp_loop:
     or al,al
     jnz check_rsdp_fail
 ;
-    mov eax,[si+16]
     clc
     jmp check_rsdp_done
 
@@ -174,6 +173,9 @@ get_rsdp_bios_page:
     jmp get_rsdp_done
 
 get_rsdp_ok:
+    GetPhysicalPage
+    and ax,0F000h
+    or ax,si
 
 get_rsdp_done:  
     push eax

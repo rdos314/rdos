@@ -179,6 +179,7 @@ void AcpiOsUnmapMemory(void *LogicalAddress, ACPI_SIZE Length)
         size += 0x1000;
     }
 
+    RdosSetPhysicalPage(linear, 0);
     RdosFreeLinear(linear, size);
 }
 

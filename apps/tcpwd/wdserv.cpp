@@ -1836,6 +1836,9 @@ void TWdSocketServer::ReqMachineData()
 
     if (RdosGetSelectorInfo(sel, &size, &bitness))
     {
+        if (size > 0xFFFF)
+            bitness = 32;
+            
         PutDword(0);
         PutDword(size);
         if (bitness == 16)
