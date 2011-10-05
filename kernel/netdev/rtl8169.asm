@@ -1,6 +1,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; RDOS operating system
-; Copyright (C) 1988-2000, Leif Ekblad
+; Copyright (C) 1988-2011, Leif Ekblad
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
@@ -553,10 +553,6 @@ receive_do:
     mov es,ds:RxRingSel
     mov cx,es:[bx].rx_fl_size
     and ecx,1FFFh
-    cmp cx,16
-    jae rdok
-    int 3
-rdok:
     AllocateGdt
     CreateAliasSelector16
     xor edi,edi
