@@ -999,10 +999,17 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     value [dx eax];
 
 #pragma aux RdosFreeMem = \
+    "push ax" \
     "push es" \
     "mov es,bx" \
     UserGate_free_mem  \
-    "pop es" \
+    "pop ax" \
+    "verr ax" \
+    "jz short es_load" \
+    "xor ax,ax" \
+    "es_load: " \
+    "mov es,ax" \
+    "pop ax" \
     parm [ebx];
 
 #pragma aux RdosAllocateBigGlobalLinear = \

@@ -28,22 +28,21 @@
 #include "rdos.h"
 #include "rdosdev.h"
 #include "string.h"
+#include "acpi.h"
 
 #include "malloc.h"
 
-#pragma aux AcpiThread "*" rdosdev parm routine [es edi]
-
-void __far AcpiThread(void *param)
-{
-    _asm int 3
-    RdosWriteString("Hello");
-}
+extern void InitOsAcpi();
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
-    RdosCreateKernelThread(5, 0x1000, &AcpiThread, "Acpi", 0);
+    ACPI_STATUS Status;
+    
+    Status = AcpiInitializeSubsystem();
+    if (Status == AE_OK)
+        Status = AcpiInitializeTables(0, 0, 0);
 }
 
 #pragma aux InitTasking "*" rdosdev parm routine
@@ -51,6 +50,7 @@ void __far ImplTestGate(const char *msg)
 void __far InitTasking()
 {
     RdosRegisterUserGate(usergate_test_gate, &ImplTestGate, "Test Gate");
+    InitOsAcpi();
 }
 
 int main()

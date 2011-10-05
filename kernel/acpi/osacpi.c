@@ -39,6 +39,8 @@ struct TExecReq
 };
 
 struct TExecReq *ExecList = 0;
+int ExecThread = 0;
+struct TKernelSection ExecSection;
 
 long MapLinear;
 struct TSpinlock MapLock;
@@ -108,6 +110,7 @@ ACPI_STATUS AcpiOsTerminate()
 ##########################################################################*/
 ACPI_STATUS AcpiOsPredefinedOverride(const ACPI_PREDEFINED_NAMES *Obj, ACPI_STRING *NewValue)
 {
+    *NewValue = 0;
     return AE_OK;
 }
 
@@ -118,6 +121,7 @@ ACPI_STATUS AcpiOsPredefinedOverride(const ACPI_PREDEFINED_NAMES *Obj, ACPI_STRI
 ##########################################################################*/
 ACPI_STATUS AcpiOsTableOverride(ACPI_TABLE_HEADER *Table, ACPI_TABLE_HEADER **NewTable)
 {
+    *NewTable = 0;
     return AE_OK;
 }
 
@@ -129,12 +133,24 @@ ACPI_STATUS AcpiOsTableOverride(ACPI_TABLE_HEADER *Table, ACPI_TABLE_HEADER **Ne
 void *AcpiOsMapMemory(ACPI_PHYSICAL_ADDRESS PhysicalAddress, ACPI_SIZE Length)
 {
     long linear;
+    long offset;
+    long size;
 
-    linear = RdosAllocateBigGlobalLinear(Length);
+    offset = PhysicalAddress & 0xFFF;
+    PhysicalAddress &= 0xFFFFF000;
+
+    size = Length + offset;
+    if (size & 0xFFF)
+    {
+        size &= 0xFFFFF000;
+        size += 0x1000;
+    }
+
+    linear = RdosAllocateBigGlobalLinear(size);
     if (linear)
     {
-        RdosSetPhysicalPage(linear, PhysicalAddress);
-        return RdosLinearToPointer(linear);
+        RdosSetPhysicalPage(linear, PhysicalAddress | 0x3);
+        return RdosLinearToPointer(linear + offset);
     }
     else
         return 0;
@@ -148,9 +164,22 @@ void *AcpiOsMapMemory(ACPI_PHYSICAL_ADDRESS PhysicalAddress, ACPI_SIZE Length)
 void AcpiOsUnmapMemory(void *LogicalAddress, ACPI_SIZE Length)
 {
     long linear;
+    long offset;
+    long size;
 
     linear = RdosPointerToOffset(LogicalAddress);
-    RdosFreeLinear(linear, Length);
+
+    offset = linear & 0xFFF;
+    linear &= 0xFFFFF000;
+
+    size = Length + offset;
+    if (size & 0xFFF)
+    {
+        size &= 0xFFFFF000;
+        size += 0x1000;
+    }
+
+    RdosFreeLinear(linear, size);
 }
 
 /*##########################################################################
@@ -161,9 +190,14 @@ void AcpiOsUnmapMemory(void *LogicalAddress, ACPI_SIZE Length)
 ACPI_STATUS AcpiOsGetPhysicalAddress(void *LogicalAddress, ACPI_PHYSICAL_ADDRESS *PhysicalAddress)
 {
     long linear;
+    long offset;
 
     linear = RdosPointerToOffset(LogicalAddress);
-    *PhysicalAddress = RdosGetPhysicalPage(linear);
+
+    offset = linear & 0xFFF;
+    linear &= 0xFFFFF000;
+
+    *PhysicalAddress = RdosGetPhysicalPage(linear) + offset;
 
     return AE_OK;
 }
@@ -208,6 +242,10 @@ ACPI_STATUS AcpiOsExecute(ACPI_EXECUTE_TYPE Type, ACPI_OSD_EXEC_CALLBACK Functio
 {
     struct TExecReq *req = (struct TExecReq *)malloc(sizeof(struct TExecReq));
     struct TExecReq *ptr;
+    int HasThread = ExecThread;
+
+    if (HasThread)
+        RdosEnterKernelSection(&ExecSection);
 
     req->Next = 0;
     req->Type = Type;
@@ -225,6 +263,12 @@ ACPI_STATUS AcpiOsExecute(ACPI_EXECUTE_TYPE Type, ACPI_OSD_EXEC_CALLBACK Functio
     }
     else
         ExecList = req;
+
+    if (HasThread)
+    {
+        RdosLeaveKernelSection(&ExecSection);
+        RdosSignal(ExecThread);
+    }
 
     return AE_OK;
 }
@@ -732,4 +776,53 @@ ACPI_STATUS AcpiOsInstallInterruptHandler(UINT32 Level, ACPI_OSD_HANDLER Handler
 ACPI_STATUS AcpiOsRemoveInterruptHandler(UINT32 Level, ACPI_OSD_HANDLER Handler)
 {
     return AE_OK;
+}
+    
+/*##########################################################################
+#
+#   Name       : AcpiThread
+#
+##########################################################################*/
+#pragma aux AcpiThread "*" rdosdev parm routine [es edi]
+void __far AcpiThread(void *param)
+{
+    struct TExecReq *exec;
+
+    ExecThread = RdosGetThreadHandle();
+
+    for (;;)
+    {
+        for (;;)
+        {
+            exec = 0;
+            RdosEnterKernelSection(&ExecSection);
+            if (ExecList)
+            {
+                exec = ExecList;
+                ExecList = ExecList->Next;
+            }
+            RdosLeaveKernelSection(&ExecSection);
+
+            if (exec)
+            {
+                (*exec->Function)(exec->Context);
+                free(exec);
+            }
+            else
+                break;
+            
+        }
+        RdosWaitForSignal();
+    }
+}
+    
+/*##########################################################################
+#
+#   Name       : InitOsAcpi
+#
+##########################################################################*/
+void InitOsAcpi()
+{
+    RdosInitKernelSection(&ExecSection);
+    RdosCreateKernelThread(5, 0x1000, &AcpiThread, "Acpi Exec", 0);
 }
