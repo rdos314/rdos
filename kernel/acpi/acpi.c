@@ -42,6 +42,9 @@ void __far ImplTestGate(const char *msg)
 {
     char str[128];
 
+    sprintf(str, "Status: %d\r\n", Status);
+    RdosWriteString(str);
+
     if (Status == 0)
         Status = AcpiEnableSubsystem(ACPI_FULL_INITIALIZATION);
 
