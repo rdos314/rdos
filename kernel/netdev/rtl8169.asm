@@ -130,6 +130,7 @@ data    STRUC
 
 IoBase              DW ?
 Handle              DW ?
+Isr                 DW ?
 RxRingSel           DW ?
 RxRingPhys          DD ?
 TxRingSel           DW ?
@@ -404,6 +405,7 @@ ihResetDone:
     clc
 
 ihDone:
+    mov ds:Isr,0
     ret
 InitHardware    Endp
 
@@ -425,6 +427,7 @@ niLoop:
     mov dx,ds:IoBase
     add dx,REG_ISR
     in ax,dx
+    or ds:Isr,ax
     out dx,ax
     test ax,IR_ROK OR IR_RDU
     jz niNotRx
@@ -596,7 +599,10 @@ remove_do:
     mov es,ds:RxRingSel
     mov bx,ds:RxCurrDescr
     mov es:[bx].rx_fl_size,1FF8h
-    mov es:[bx].rx_flags,RX_OWN
+    mov ax,es:[bx].rx_flags
+    and ax,RX_EOR
+    or ax,RX_OWN
+    mov es:[bx].rx_flags,ax
 ;
     pop bx
     pop es
