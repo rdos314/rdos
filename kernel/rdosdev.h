@@ -438,6 +438,11 @@ struct TFileSystemTable
 
 // function definitions
 
+int RdosGetGateDs();
+int RdosGetGateEs();
+int RdosGetGateFs();
+int RdosGetGateGs();
+
 int RdosIsValidOsGate(int gate);
 void RdosRegisterOsGate(int gate, __rdos_gate_callback *callb_proc, const char *name);
 void RdosRegisterUserGate(int gate, __rdos_gate_callback *callb_proc, const char *name);
@@ -580,9 +585,9 @@ void RdosHookState(__rdos_hook_state_callback *callb_proc);
 void RdosSendEoi(int irq);
 int RdosIsIrqFree(int irq);
 
-void RdosRequestPrivateIrqHandler(int irq, __rdos_irq_callback *irq_proc);
+void RdosRequestPrivateIrqHandler(int irq, __rdos_irq_callback *irq_proc, int ds_sel);
 void RdosReleasePrivateIrqHandler(int irq);
-void RdosRequestSharedIrqHandler(int irq, __rdos_irq_callback *irq_proc);
+void RdosRequestSharedIrqHandler(int irq, __rdos_irq_callback *irq_proc, int ds_sel);
 
 void RdosSetupIrqDetect();
 int RdosPollIrqDetect();
@@ -761,6 +766,22 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
 
 // check carry flag, and set edi=0 if set
 #define ValidateEdi 0x73 2 0x33 0xFF
+
+#pragma aux RdosGetGateDs = \
+    "mov eax,[ebp+16]" \
+    value [eax];
+
+#pragma aux RdosGetGateEs = \
+    "mov eax,[ebp+12]" \
+    value [eax];
+
+#pragma aux RdosGetGateFs = \
+    "mov eax,[ebp+8]" \
+    value [eax];
+
+#pragma aux RdosGetGateGs = \
+    "mov eax,[ebp+4]" \
+    value [eax];
 
 #pragma aux RdosIsValidOsGate = \
     OsGate_is_valid_osgate  \
@@ -1319,16 +1340,22 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     value [eax];
 
 #pragma aux RdosRequestPrivateIrqHandler = \
+    "push ds" \
+    "mov ds,ebx" \
     OsGate_request_private_irq_handler \
-    parm [eax] [es edi];
+    "pop ds" \
+    parm [eax] [es edi] [ebx];
 
 #pragma aux RdosReleasePrivateIrqHandler = \
     OsGate_release_private_irq_handler \
     parm [eax];
 
 #pragma aux RdosRequestSharedIrqHandler = \
+    "push ds" \
+    "mov ds,ebx" \
     OsGate_request_shared_irq_handler \
-    parm [eax] [es edi];
+    "pop ds" \
+    parm [eax] [es edi] [ebx];
 
 #pragma aux RdosSetupIrqDetect = \
     OsGate_setup_irq_detect;

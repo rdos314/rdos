@@ -38,6 +38,12 @@ struct TExecReq
     void *Context;
 };
 
+struct TIntReq
+{
+    ACPI_OSD_HANDLER Handler;
+    void *Context;
+};
+
 struct TExecReq *ExecList = 0;
 int ExecThread = 0;
 struct TKernelSection ExecSection;
@@ -87,7 +93,7 @@ void WriteDwordPort(short int address, long val);
 ##########################################################################*/
 ACPI_STATUS AcpiOsInitialize()
 {
-    MapLinear = RdosAllocateBigGlobalLinear(0x1000);
+    MapLinear = RdosAllocateBigGlobalLinear(0x2000);
     RdosInitSpinlock(&MapLock);
 
     return AE_OK;
@@ -135,6 +141,7 @@ void *AcpiOsMapMemory(ACPI_PHYSICAL_ADDRESS PhysicalAddress, ACPI_SIZE Length)
     long linear;
     long offset;
     long size;
+    long ads;
 
     offset = PhysicalAddress & 0xFFF;
     PhysicalAddress &= 0xFFFFF000;
@@ -149,8 +156,15 @@ void *AcpiOsMapMemory(ACPI_PHYSICAL_ADDRESS PhysicalAddress, ACPI_SIZE Length)
     linear = RdosAllocateBigGlobalLinear(size);
     if (linear)
     {
-        RdosSetPhysicalPage(linear, PhysicalAddress | 0x3);
-        return RdosLinearToPointer(linear + offset);
+        ads = linear + offset;
+        while (size)
+        {
+            RdosSetPhysicalPage(linear, PhysicalAddress | 0x3);
+            linear += 0x1000;
+            PhysicalAddress += 0x1000;
+            size -= 0x1000;
+        }
+        return RdosLinearToPointer(ads);
     }
     else
         return 0;
@@ -166,6 +180,7 @@ void AcpiOsUnmapMemory(void *LogicalAddress, ACPI_SIZE Length)
     long linear;
     long offset;
     long size;
+    long base;
 
     linear = RdosPointerToOffset(LogicalAddress);
 
@@ -179,7 +194,15 @@ void AcpiOsUnmapMemory(void *LogicalAddress, ACPI_SIZE Length)
         size += 0x1000;
     }
 
-    RdosSetPhysicalPage(linear, 0);
+    base = linear;
+
+    while (size)
+    {
+        RdosSetPhysicalPage(linear, 0);
+        linear += 0x1000;
+        size -= 0x1000;
+    }
+
     RdosFreeLinear(linear, size);
 }
 
@@ -210,7 +233,15 @@ ACPI_STATUS AcpiOsGetPhysicalAddress(void *LogicalAddress, ACPI_PHYSICAL_ADDRESS
 ##########################################################################*/
 void *AcpiOsAllocate(ACPI_SIZE Size)
 {
-    return RdosAllocateSmallGlobalMem(Size);
+    long linear;
+    
+    if (Size < 0x1000)
+    {
+        linear = RdosAllocateSmallGlobalLinear(Size);
+        return RdosLinearToPointer(linear);
+    }
+    else
+        return RdosAllocateBigGlobalMem(Size);
 }
 
 /*##########################################################################
@@ -220,8 +251,17 @@ void *AcpiOsAllocate(ACPI_SIZE Size)
 ##########################################################################*/
 void AcpiOsFree(void *Memory)
 {
+    int linear;
+    
     int sel = RdosPointerToSelector(Memory);    
-    RdosFreeMem(sel);
+
+    if (sel == 0x20)
+    {
+        linear = RdosPointerToOffset(Memory);
+        RdosFreeLinear(linear, 0);  // small linear won't require a size!
+    }
+    else
+        RdosFreeMem(sel);
 }
 
 /*##########################################################################
@@ -569,6 +609,7 @@ ACPI_STATUS AcpiOsReadMemory(ACPI_PHYSICAL_ADDRESS Address, UINT32 *Value, UINT3
     flags = RdosRequestSpinlock(&MapLock);
 
     RdosSetPhysicalPage(MapLinear, page | 0x3);
+    RdosSetPhysicalPage(MapLinear + 0x1000, (page + 0x1000) | 0x3);
     ptr = RdosLinearToPointer(MapLinear + offset);
 
     switch (Width)
@@ -611,6 +652,7 @@ ACPI_STATUS AcpiOsWriteMemory(ACPI_PHYSICAL_ADDRESS Address, UINT32 Value, UINT3
     flags = RdosRequestSpinlock(&MapLock);
 
     RdosSetPhysicalPage(MapLinear, page | 0x3);
+    RdosSetPhysicalPage(MapLinear + 0x1000, (page + 0x1000) | 0x3);
     ptr = RdosLinearToPointer(MapLinear + offset);
 
     switch (Width)
@@ -761,12 +803,43 @@ void AcpiOsVprintf(const char *Format, va_list Args)
     
 /*##########################################################################
 #
+#   Name       : IrqStub
+#
+##########################################################################*/
+#pragma aux IrqStub "*" rdosdev parm routine
+void __far IrqStub()
+{
+    int sel;
+    struct TIntReq *req;
+
+    sel = RdosGetGateDs();
+    req = (struct TIntReq *)RdosSelectorToPointer(sel);
+
+    (*req->Handler)(req->Context);
+}
+    
+/*##########################################################################
+#
 #   Name       : AcpiOsInstallInterruptHandler
 #
 ##########################################################################*/
 ACPI_STATUS AcpiOsInstallInterruptHandler(UINT32 Level, ACPI_OSD_HANDLER Handler, void *Context)
 {
-    return AE_OK;
+    struct TIntReq *req;
+    int sel;
+
+    if (RdosIsIrqFree(Level))
+    {
+        req = (struct TIntReq *)RdosAllocateSmallGlobalMem(sizeof(struct TIntReq));
+        req->Handler = Handler;
+        req->Context = Context;
+                
+        sel = RdosPointerToSelector(req);        
+        RdosRequestPrivateIrqHandler(Level, &IrqStub, sel);
+        return AE_OK;
+    }
+    else
+        return AE_NOT_ACQUIRED;
 }
     
 /*##########################################################################
