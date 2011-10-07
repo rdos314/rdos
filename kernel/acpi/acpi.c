@@ -38,6 +38,13 @@ ACPI_STATUS Status;
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
+
+ACPI_STATUS AddDevice(ACPI_HANDLE Object, UINT32 Nesting, void *Context, void **ReturnVal)
+{
+    RdosWriteString("Obj\r\n");
+    return AE_OK;
+}
+
 void __far ImplTestGate(const char *msg)
 {
     char str[128];
@@ -46,10 +53,7 @@ void __far ImplTestGate(const char *msg)
     RdosWriteString(str);
 
     if (Status == 0)
-        Status = AcpiEnableSubsystem(ACPI_FULL_INITIALIZATION);
-
-    sprintf(str, "Status: %d\r\n", Status);
-    RdosWriteString(str);
+        AcpiGetDevices(0, AddDevice, 0, 0);
 }
 
 #pragma aux InitTasking "*" rdosdev parm routine
@@ -60,6 +64,12 @@ void __far InitTasking()
 
     if (Status == 0)
         Status = AcpiLoadTables();
+
+    if (Status == 0)
+        Status = AcpiEnableSubsystem(ACPI_FULL_INITIALIZATION);
+
+    if (Status == 0)
+        Status = AcpiInitializeObjects(ACPI_FULL_INITIALIZATION);
 
     RdosRegisterUserGate(usergate_test_gate, &ImplTestGate, "Test Gate");
 } 

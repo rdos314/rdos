@@ -467,7 +467,7 @@ AcpiPsCreateOp (
         }
     }
 
-    if (WalkState->DescendingCallback != NULL)
+    if (WalkState->DescendingCallback != 0)
     {
         /*
          * Find the object. This will either insert the object into
@@ -1017,7 +1017,7 @@ AcpiPsCompleteFinalOp (
     {
         if (Op)
         {
-            if (WalkState->AscendingCallback != NULL)
+            if (WalkState->AscendingCallback != 0)
             {
                 WalkState->Op = Op;
                 WalkState->OpInfo = AcpiPsGetOpcodeInfo (Op->Common.AmlOpcode);
@@ -1109,7 +1109,7 @@ AcpiPsParseLoop (
     ACPI_FUNCTION_TRACE_PTR (PsParseLoop, WalkState);
 
 
-    if (WalkState->DescendingCallback == NULL)
+    if (WalkState->DescendingCallback == 0)
     {
         return_ACPI_STATUS (AE_BAD_PARAMETER);
     }
@@ -1313,7 +1313,7 @@ AcpiPsParseLoop (
 
         /* This op complete, notify the dispatcher */
 
-        if (WalkState->AscendingCallback != NULL)
+        if (WalkState->AscendingCallback != 0)
         {
             WalkState->Op = Op;
             WalkState->Opcode = Op->Common.AmlOpcode;

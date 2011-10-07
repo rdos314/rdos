@@ -278,7 +278,7 @@ AcpiInstallFixedEventHandler (
 
     /* Don't allow two handlers. */
 
-    if (NULL != AcpiGbl_FixedEventHandlers[Event].Handler)
+    if (AcpiGbl_FixedEventHandlers[Event].Handler != 0)
     {
         Status = AE_ALREADY_EXISTS;
         goto Cleanup;

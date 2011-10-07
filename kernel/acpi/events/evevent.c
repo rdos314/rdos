@@ -368,7 +368,7 @@ AcpiEvFixedEventDispatch (
      * Make sure we've got a handler. If not, report an error. The event is
      * disabled to prevent further interrupts.
      */
-    if (NULL == AcpiGbl_FixedEventHandlers[Event].Handler)
+    if (AcpiGbl_FixedEventHandlers[Event].Handler == 0)
     {
         (void) AcpiWriteBitRegister (
                 AcpiGbl_FixedEventInfo[Event].EnableRegisterId,

@@ -372,7 +372,7 @@ AcpiEvExecuteRegMethod (
         return_ACPI_STATUS (AE_NOT_EXIST);
     }
 
-    if (RegionObj2->Extra.Method_REG == NULL)
+    if (RegionObj2->Extra.Method_REG == 0)
     {
         return_ACPI_STATUS (AE_OK);
     }

@@ -1085,7 +1085,7 @@ ACPI_STATUS (*ACPI_ADR_SPACE_HANDLER) (
     void                            *HandlerContext,
     void                            *RegionContext);
 
-#define ACPI_DEFAULT_HANDLER            NULL
+#define ACPI_DEFAULT_HANDLER            0
 
 typedef
 ACPI_STATUS (*ACPI_ADR_SPACE_SETUP) (
