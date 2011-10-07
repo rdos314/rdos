@@ -188,7 +188,6 @@ typedef struct acpi_object_common
 typedef struct acpi_object_integer
 {
     ACPI_OBJECT_COMMON_HEADER
-    UINT8                           Fill[3];            /* Prevent warning on some compilers */
     UINT64                          Value;
 
 } ACPI_OBJECT_INTEGER;
@@ -353,12 +352,9 @@ typedef struct acpi_object_power_resource
 typedef struct acpi_object_processor
 {
     ACPI_OBJECT_COMMON_HEADER
-
-    /* The next two fields take advantage of the 3-byte space before NOTIFY_INFO */
-
+    ACPI_COMMON_NOTIFY_INFO
     UINT8                           ProcId;
     UINT8                           Length;
-    ACPI_COMMON_NOTIFY_INFO
     ACPI_IO_ADDRESS                 Address;
 
 } ACPI_OBJECT_PROCESSOR;
