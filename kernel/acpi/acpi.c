@@ -52,15 +52,6 @@ void __far ImplTestGate(const char *msg)
     sprintf(str, "Status: %d\r\n", Status);
     RdosWriteString(str);
 
-    if (Status == 0)
-        Status = AcpiLoadTables();
-
-    if (Status == 0)
-        Status = AcpiEnableSubsystem(ACPI_FULL_INITIALIZATION);
-
-    if (Status == 0)
-        Status = AcpiInitializeObjects(ACPI_FULL_INITIALIZATION);
-
     sprintf(str, "Status: %d\r\n", Status);
     RdosWriteString(str);
 
@@ -73,6 +64,15 @@ void __far ImplTestGate(const char *msg)
 void __far InitTasking()
 {
     InitOsAcpi();
+
+    if (Status == 0)
+        Status = AcpiLoadTables();
+
+    if (Status == 0)
+        Status = AcpiEnableSubsystem(ACPI_FULL_INITIALIZATION);
+
+    if (Status == 0)
+        Status = AcpiInitializeObjects(ACPI_FULL_INITIALIZATION);
 
     RdosRegisterUserGate(usergate_test_gate, &ImplTestGate, "Test Gate");
 } 
