@@ -41,7 +41,11 @@ ACPI_STATUS Status;
 
 ACPI_STATUS AddDevice(ACPI_HANDLE Object, UINT32 Nesting, void *Context, void **ReturnVal)
 {
-    RdosWriteString("Obj\r\n");
+    ACPI_STATUS Status;
+    ACPI_DEVICE_INFO *Info;
+
+    Status = AcpiGetObjectInfo(Object, &Info);
+    
     return AE_OK;
 }
 
