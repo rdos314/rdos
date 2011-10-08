@@ -972,7 +972,7 @@ init_pci1_found:
     xor ch,ch
     mov cl,PCI_interrupt_line
     ReadPciByte
-    mov al,21 ; temporary fix before ACPI
+    mov al,20 ; temporary fix before ACPI
     mov bx,cs
     mov es,bx
     mov edi,OFFSET NetInt    
