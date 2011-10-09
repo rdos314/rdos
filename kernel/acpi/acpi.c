@@ -30,6 +30,7 @@
 #include "string.h"
 #include "acpi.h"
 
+#include <stdio.h>
 #include "malloc.h"
 
 extern void InitOsAcpi();
@@ -39,12 +40,48 @@ ACPI_STATUS Status;
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 
-ACPI_STATUS AddDevice(ACPI_HANDLE Object, UINT32 Nesting, void *Context, void **ReturnVal)
+ACPI_STATUS AddObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, void **ReturnVal)
 {
     ACPI_STATUS Status;
     ACPI_DEVICE_INFO *Info;
+    ACPI_HANDLE *Curr;
+    ACPI_HANDLE *Parent;
+    ACPI_DEVICE_INFO *Pinfo;
+    int len;
+    int i;
+    int pos;
+    char str[65];
 
     Status = AcpiGetObjectInfo(Object, &Info);
+
+    if (Status == AE_OK && (Info->CurrentStatus & 3 == 3))
+    {
+        pos = 5 * (Nesting - 1);    
+        memcpy(&str[pos], &Info->Name, 4);
+        str[pos+4] = 0;
+
+        Curr = Object;
+        for (i = Nesting - 1; i; i--)
+        {
+            pos = 5 * (i - 1);
+            memcpy(&str[pos], "----", 4);
+            
+            if (AcpiGetParent(Curr, &Parent) == AE_OK)
+            {
+                if (AcpiGetObjectInfo(Parent, &Pinfo) == AE_OK)
+                {
+                    memcpy(&str[pos], &Pinfo->Name, 4);
+                    Curr = Parent;
+                }
+            }
+            str[pos + 4] = '.';
+        }
+        
+        RdosWriteString(str);
+        sprintf(str, " (%08LX), ", Info->Address);
+        RdosWriteString(str);
+        
+    }
     
     return AE_OK;
 }
@@ -56,11 +93,12 @@ void __far ImplTestGate(const char *msg)
     sprintf(str, "Status: %d\r\n", Status);
     RdosWriteString(str);
 
-    sprintf(str, "Status: %d\r\n", Status);
-    RdosWriteString(str);
-
     if (Status == 0)
-        AcpiGetDevices(0, AddDevice, 0, 0);
+    {
+        RdosWriteString("DEV: ");
+        AcpiWalkNamespace(ACPI_TYPE_DEVICE, ACPI_ROOT_OBJECT, 16, AddObject, 0, 0, 0);
+        RdosWriteString("\r\n");
+    }        
 }
 
 #pragma aux InitTasking "*" rdosdev parm routine
