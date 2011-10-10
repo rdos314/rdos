@@ -545,4 +545,9 @@ debug_run_nr                    = 441
 
 test_gate_nr                    = 442
 
+get_acpi_status_nr              = 443
+get_acpi_device_nr              = 444
+get_cpu_temperature_nr          = 445
+get_acpi_object_nr              = 446
+
 usergate_entries			= 460

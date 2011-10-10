@@ -1751,3 +1751,9 @@ Current keyboard map: %s
 :TEXT_ERROR_INVALID_KEYB
 Invalid keyboard map
 .
+
+:TEXT_CMDHELP_ACPI
+Shows ACPI information
+
+ACPI
+.

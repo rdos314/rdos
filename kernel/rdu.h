@@ -545,6 +545,11 @@
 
 #define usergate_test_gate 442
 
+#define usergate_get_acpi_status 443
+#define usergate_get_acpi_device 444
+#define usergate_get_cpu_temperature 445
+#define usergate_get_acpi_object 446
+
 
 
 #ifdef __FLAT__
@@ -1095,6 +1100,11 @@
 
 #define CallGate_test_gate 0x67 0x9a 186 1 0 0 3 0
 
+#define CallGate_get_acpi_status 0x67 0x9a 187 1 0 0 3 0
+#define CallGate_get_acpi_device 0x67 0x9a 188 1 0 0 3 0
+#define CallGate_get_cpu_temperature 0x67 0x9a 189 1 0 0 3 0
+#define CallGate_get_acpi_object 0x67 0x9a 190 1 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1642,5 +1652,10 @@
 #define CallGate_debug_run 0x3e 0x67 0x9a 185 1 0 0 3 0
 
 #define CallGate_test_gate 0x3e 0x67 0x9a 186 1 0 0 3 0
+
+#define CallGate_get_acpi_status 0x3e 0x67 0x9a 187 1 0 0 3 0
+#define CallGate_get_acpi_device 0x3e 0x67 0x9a 188 1 0 0 3 0
+#define CallGate_get_cpu_temperature 0x3e 0x67 0x9a 189 1 0 0 3 0
+#define CallGate_get_acpi_object 0x3e 0x67 0x9a 190 1 0 0 3 0
 
 #endif

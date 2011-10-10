@@ -443,9 +443,23 @@ int RdosGetGateEs();
 int RdosGetGateFs();
 int RdosGetGateGs();
 
+void RdosSetSuccess();
+void RdosSetFailure();
+
+void RdosExtendAx();
+void RdosExtendBx();
+void RdosExtendCx();
+void RdosExtendDx();
+void RdosExtendSi();
+void RdosExtendDi();
+
+void RdosSaveEax();
+void RdosRestoreEax();
+
 int RdosIsValidOsGate(int gate);
 void RdosRegisterOsGate(int gate, __rdos_gate_callback *callb_proc, const char *name);
-void RdosRegisterUserGate(int gate, __rdos_gate_callback *callb_proc, const char *name);
+void RdosRegisterBimodalUserGate(int gate, __rdos_gate_callback *callb_proc, const char *name);
+void RdosRegisterUserGate(int gate, __rdos_gate_callback *callb_proc16, __rdos_gate_callback *callb_proc32, const char *name);
 
 void RdosReturnOk();
 void RdosReturnFail();
@@ -783,6 +797,36 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     "mov eax,[ebp+4]" \
     value [eax];
 
+#pragma aux RdosSetSuccess = \
+    "clc";
+
+#pragma aux RdosSetFailure = \
+    "stc";
+
+#pragma aux RdosSaveEax = \
+    "push eax";
+
+#pragma aux RdosRestoreEax = \
+    "pop eax";
+
+#pragma aux RdosExtendAx = \
+    "movzx eax,ax";
+
+#pragma aux RdosExtendBx = \
+    "movzx ebx,bx";
+
+#pragma aux RdosExtendCx = \
+    "movzx ecx,cx";
+
+#pragma aux RdosExtendDx = \
+    "movzx edx,dx";
+
+#pragma aux RdosExtendSi = \
+    "movzx esi,si";
+
+#pragma aux RdosExtendDi = \
+    "movzx edi,di";
+
 #pragma aux RdosIsValidOsGate = \
     OsGate_is_valid_osgate  \
     CarryToBool \
@@ -797,13 +841,23 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     "pop ds" \
     parm [eax] [esi] [es edi];
 
+#pragma aux RdosRegisterBimodalUserGate = \
+    "push ds" \
+    "push cs" \
+    "pop ds" \
+    "xor dx,dx" \
+    OsGate_register_bimodal_usergate  \
+    "pop ds" \
+    parm [eax] [esi] [es edi];
+
 #pragma aux RdosRegisterUserGate = \
     "push ds" \
     "push cs" \
     "pop ds" \
+    "xor dx,dx" \
     OsGate_register_usergate  \
     "pop ds" \
-    parm [eax] [esi] [es edi];
+    parm [eax] [ebx] [esi] [es edi];
 
 #pragma aux RdosReturnOk = \
     "clc" ;

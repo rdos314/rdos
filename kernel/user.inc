@@ -2764,3 +2764,29 @@ GetSyslog      MACRO
 AddWaitForSyslog      MACRO
 	UserGate add_wait_for_syslog_nr
 	                ENDM
+
+
+;;;;;;;;;;; ACPI ;;;;;;;;;;
+
+;   OUT EAX         ACPI status
+GetAcpiStatus      MACRO
+	UserGate get_acpi_status_nr
+	                ENDM
+
+;   IN  EAX         Device #
+;   IN  ES:(E)DI    ACPI name buffer
+GetAcpiDevice      MACRO
+	UserGate get_acpi_device_nr
+	                ENDM
+
+;   IN  EAX         Device #
+;   IN  EDX         Object #
+;   IN  ES:(E)DI    ACPI name buffer
+GetAcpiObject      MACRO
+	UserGate get_acpi_object_nr
+	                ENDM
+
+;   OUT EAX         Temperature in tenth of degrees Kelvin
+GetCpuTemperature      MACRO
+	UserGate get_cpu_temperature_nr
+	                ENDM

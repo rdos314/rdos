@@ -182,6 +182,11 @@ long RDOSAPI RdosSwapLong(long val);
 long RDOSAPI RdosGetLongRandom();
 long RDOSAPI RdosGetRandom(long range);
 
+long RDOSAPI RdosGetAcpiStatus();
+int RDOSAPI RdosGetAcpiDevice(int Index, char *AcpiName);
+int RDOSAPI RdosGetAcpiObject(int Device, int Index, char *AcpiName);
+int RDOSAPI RdosGetCpuTemperature();
+
 void RDOSAPI RdosSetTextMode();
 int RDOSAPI RdosSetVideoMode(int *BitsPerPixel, int *xres, int *yres, int *linesize, void **buffer);
 void RDOSAPI RdosSetClipRect(int handle, int xmin, int ymin, int xmax, int ymax);
@@ -703,6 +708,32 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     parm [edx] \
     value [edx] \
     modify [eax];
+
+#pragma aux RdosGetAcpiStatus = \
+    CallGate_get_acpi_status  \
+    "jnc AcpiDone" \
+    "mov eax,-1" \
+    "AcpiDone: " \
+    value [eax];
+
+#pragma aux RdosGetAcpiDevice = \
+    CallGate_get_acpi_device  \
+    CarryToBool \
+    parm [eax] [edi] \
+    value [eax];
+
+#pragma aux RdosGetAcpiObject = \
+    CallGate_get_acpi_object  \
+    CarryToBool \
+    parm [eax] [edx] [edi] \
+    value [eax];
+
+#pragma aux RdosGetCpuTemperature = \
+    CallGate_get_cpu_temperature  \
+    "jnc TempDone" \
+    "xor eax,eax" \
+    "TempDone: " \
+    value [eax];
 
 #pragma aux RdosSetTextMode = \
     "mov ax,3"  \

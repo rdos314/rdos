@@ -76,6 +76,7 @@
 #include "volume.h"
 #include "sysinfo.h"
 #include "keyb.h"
+#include "acpi.h"
 
 #include "file.h"
 #include "path.h"
@@ -94,6 +95,7 @@ static TFsPartitionFactory *fat16;
 static TFsPartitionFactory *fat32;
 static TFsPartitionFactory *flashfs;
 
+static TCommandFactory *acpi;
 static TCommandFactory *call;
 static TCommandFactory *cd;
 static TCommandFactory *chdir;
@@ -213,6 +215,7 @@ TSession::TSession()
                 cd = new TCdFactory;
                 capture = new TCaptureFactory;
                 call = new TCallFactory;
+                acpi = new TAcpiFactory;
                 help = new THelpFactory;
 
                 History = new TStringList;
