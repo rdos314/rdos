@@ -37,7 +37,7 @@ INCLUDE ..\os\net.inc
 
 RX_ENTRIES   EQU 20h
 RX_BUF_SIZE  EQU 800h
-RX_RING_SIZE EQU 10000h         ; 20h * 800h
+RX_RING_SIZE EQU 10000h     ; 20h * 800h
 TX_ENTRIES   EQU 80h
 TX_BUF_SIZE  EQU 20h
 TX_RING_SIZE EQU TX_ENTRIES * TX_BUF_SIZE
@@ -60,17 +60,17 @@ MAC_82551_10      = 16
 SCBStatus       = 0
 SCBCommand      = 2
 SCBPointer      = 4
-Port            = 8
+Port        = 8
 EeControl       = 0Eh
 MDIControl      = 10h
 RxDMASize       = 14h
 
 ; EeControl bits
 
-EESK        = 1
-EECS        = 2
-EEDI        = 4
-EEDO        = 8
+EESK    = 1
+EECS    = 2
+EEDI    = 4
+EEDO    = 8
 
 ; The EEPROM commands include the always-set leading bit.
 
@@ -91,81 +91,81 @@ CB_TX_SF    = 8
 
 ; RU commands 
 
-RU_NOP          = 0
-RU_START        = 1
+RU_NOP      = 0
+RU_START    = 1
 RU_RESUME       = 2
 RU_DMA_REDIR    = 3
-RU_ABORT        = 4
-RU_HDS          = 5
-RU_BASE         = 6
+RU_ABORT    = 4
+RU_HDS      = 5
+RU_BASE     = 6
 
 ; CU commands
 
-CU_NOP          = 00h
-CU_START        = 10h
+CU_NOP      = 00h
+CU_START    = 10h
 CU_RESUME       = 20h
 CU_DUMP_CNT     = 40h
 CU_DUMP_STAT    = 50h
-CU_BASE         = 60h
+CU_BASE     = 60h
 CU_DUMP_RESET   = 70h
 
 ; int bits
 
-ACK_SW_INT          = 4
-ACK_RNR             = 10h
-ACK_CU_IDLE         = 20h
+ACK_SW_INT      = 4
+ACK_RNR         = 10h
+ACK_CU_IDLE     = 20h
 ACK_FRAME_RX    = 40h
-ACK_CU_CMD          = 80h
+ACK_CU_CMD      = 80h
 
 ; SCBStatus bits
 
 CB_COMPLETE     = 8000h
-CB_OK           = 2000h
+CB_OK       = 2000h
 
 ; Cmd bits
 
-CMD_EL          = 8000h
-CMD_S           = 4000h
-CMD_I           = 2000h
-CMD_NC          = 20h
-CMD_H           = 10h
-CMD_SF          = 8
+CMD_EL      = 8000h
+CMD_S       = 4000h
+CMD_I       = 2000h
+CMD_NC      = 20h
+CMD_H       = 10h
+CMD_SF      = 8
 
 ; status bits
 
-ST_C            = 8000h
-ST_OK           = 2000h
+ST_C        = 8000h
+ST_OK       = 2000h
 
 ; actual count bits
 
-AC_EOF          = 8000h
-AC_F            = 4000h
+AC_EOF      = 8000h
+AC_F        = 4000h
 
 cnf  STRUC
 
 cnf_byte_count      DB ?
-cnf_fifo            DB ?
+cnf_fifo        DB ?
 cnf_adaptive_ifs    DB ?
-cnf_3               DB ?
-cnf_rx_dma          DB ?
-cnf_tx_dma          DB ?
-cnf_6               DB ?
-cnf_7               DB ?
-cnf_8               DB ?
-cnf_9               DB ?
-cnf_10              DB ?
-cnf_11              DB ?
-cnf_12              DB ?
-cnf_13              DB ?
-cnf_14              DB ?
-cnf_15              DB ?
+cnf_3           DB ?
+cnf_rx_dma      DB ?
+cnf_tx_dma      DB ?
+cnf_6           DB ?
+cnf_7           DB ?
+cnf_8           DB ?
+cnf_9           DB ?
+cnf_10          DB ?
+cnf_11          DB ?
+cnf_12          DB ?
+cnf_13          DB ?
+cnf_14          DB ?
+cnf_15          DB ?
 cnf_fc_delay_lo     DB ?
 cnf_fc_delay_hi     DB ?
-cnf_18              DB ?
-cnf_19              DB ?
-cnf_20              DB ?
-cnf_21              DB ?
-cnf_22              DB ?
+cnf_18          DB ?
+cnf_19          DB ?
+cnf_20          DB ?
+cnf_21          DB ?
+cnf_22          DB ?
 
 cnf  ENDS
 
@@ -173,10 +173,10 @@ rfd     STRUC
 
 rfd_status      DW ?
 rfd_command     DW ?
-rfd_link        DD ?
-rfd_rbd         DD ?
+rfd_link    DD ?
+rfd_rbd     DD ?
 rfd_actual_size DW ?
-rfd_size        DW ?
+rfd_size    DW ?
 
 rfd     ENDS
 
@@ -184,7 +184,7 @@ txd     STRUC
 
 txd_status      DW ?
 txd_command     DW ?
-txd_link        DD ?
+txd_link    DD ?
 txd_tbd_arr     DD ?
 txd_tcb_size    DW ?
 txd_threshold   DB ?
@@ -194,10 +194,10 @@ txd     ENDS
 
 tbd     STRUC
 
-tbd_buf         DD ?
+tbd_buf     DD ?
 tbd_actual_size DW ?
-tbd_el          DW ?
-tbd_sel         DW ?
+tbd_el      DW ?
+tbd_sel     DW ?
 
 tbd     ENDS
 
@@ -205,82 +205,82 @@ cb  STRUC
 
 cb_status       DW ?
 cb_command      DW ?
-cb_link         DD ?
+cb_link     DD ?
 
 cb  ENDS
 
 data    STRUC
 
-MemBase             DD ?
-FlashBase           DD ?
-IoBase                          DW ?
-Handle                          DW ?
-WaitThread          DW ?
-IntStat             DB ?
-EeAdrLen            DB ?
-RevID               DB ?
-TxSection           section_typ <>
-EthernetAddress         DB 6 DUP(?)
+MemBase         DD ?
+FlashBase       DD ?
+IoBase              DW ?
+Handle              DW ?
+WaitThread      DW ?
+IntStat         DB ?
+EeAdrLen        DB ?
+RevID           DB ?
+TxSection       section_typ <>
+EthernetAddress     DB 6 DUP(?)
 
-RxRingPhys          DD ?
-RxRingLinear        DD ?
-RxRingSize          DD ?
-RxRingSel           DW ?
+RxRingPhys      DD ?
+RxRingLinear    DD ?
+RxRingSize      DD ?
+RxRingSel       DW ?
 RxRingCurrPtr       DD ?
 
-TxRingPhys          DD ?
-TxRingLinear        DD ?
-TxRingSize          DD ?
-TxRingSel           DW ?
+TxRingPhys      DD ?
+TxRingLinear    DD ?
+TxRingSize      DD ?
+TxRingSel       DW ?
 TxRingCurrPtr       DD ?
-TxRingAckPtr        DD ?
+TxRingAckPtr    DD ?
 TxRingStarted       DB ?
 
 data    ENDS
 
 code    SEGMENT byte public 'CODE'
 
-        assume cs:code
+    assume cs:code
 
 .386p
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Reset
+;           NAME:           Reset
 ;
-;               DESCRIPTION:    Reset controller
+;           DESCRIPTION:    Reset controller
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Reset   Proc near
-        pusha
+    pusha
 ;
-        mov dx,ds:IoBase
-        add dx,Port
+    mov dx,ds:IoBase
+    add dx,Port
 ;       
-        mov eax,2
-        out dx,eax
+    mov eax,2
+    out dx,eax
 ;
     mov ax,20
     WaitMicroSec
 ;       
-        mov eax,0
-        out dx,eax
+    mov eax,0
+    out dx,eax
 ;
     mov ax,20
     WaitMicroSec
 ;
-    popa        
+    popa    
     ret
 Reset   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   EeDelay
+;           NAME:           EeDelay
 ;
-;               DESCRIPTION:    Delay for EE
+;           DESCRIPTION:    Delay for EE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -295,25 +295,25 @@ EeDelay Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetEeSize
+;           NAME:           GetEeSize
 ;
-;               DESCRIPTION:    Determine EE size
+;           DESCRIPTION:    Determine EE size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetEeSize       Proc near
-        pusha
+    pusha
 ;
-        mov dx,ds:IoBase
-        add dx,EeControl
+    mov dx,ds:IoBase
+    add dx,EeControl
 ;
-        mov al,EECS OR EESK
-        out dx,al
+    mov al,EECS OR EESK
+    out dx,al
     call EeDelay
 ;
-        mov bx,EE_READ_CMD
-        mov cx,3
-        mov si,4
+    mov bx,EE_READ_CMD
+    mov cx,3
+    mov si,4
 
 gesCodeLoop:
     mov al,EECS
@@ -340,7 +340,7 @@ gesAddressLoop:
     mov al,EECS
     out dx,al
     call EeDelay
-;         
+;     
     or al,EESK
     out dx,al
     call EeDelay
@@ -375,40 +375,40 @@ gesDataLoop:
     call EeDelay
     clc
 
-gesDone:           
+gesDone:       
     popa
-        ret
+    ret
 GetEeSize       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadEe
+;           NAME:           ReadEe
 ;
-;               DESCRIPTION:    Read from EE
+;           DESCRIPTION:    Read from EE
 ;
-;       PARAMETERS:     BX              Location
+;       PARAMETERS:     BX          Location
 ;
-;               RETURNS:                AX              Result
+;           RETURNS:        AX          Result
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadEe  Proc near
     push cx
-        push dx
-        push si
+    push dx
+    push si
 ;
-        mov dx,ds:IoBase
-        add dx,EeControl
+    mov dx,ds:IoBase
+    add dx,EeControl
 ;
-        mov al,EECS OR EESK
-        out dx,al
+    mov al,EECS OR EESK
+    out dx,al
     call EeDelay
 ;
     push bx
-        mov bx,EE_READ_CMD
-        mov cx,3
-        mov si,4
+    mov bx,EE_READ_CMD
+    mov cx,3
+    mov si,4
 
 reCodeLoop:
     mov al,EECS
@@ -444,7 +444,7 @@ reAddressLoop:
 reAddressWrite:
     out dx,al
     call EeDelay
-;         
+;     
     or al,EESK
     out dx,al
     call EeDelay
@@ -484,39 +484,39 @@ reDataNext:
     pop si
     pop dx
     pop cx
-        ret
+    ret
 ReadEe  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadEthernetAddress
+;           NAME:           ReadEthernetAddress
 ;
-;               DESCRIPTION:    Read the ethernet address
+;           DESCRIPTION:    Read the ethernet address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadEthernetAddress     Proc near
-        xor bx,bx
-        mov si,OFFSET EthernetAddress
+    xor bx,bx
+    mov si,OFFSET EthernetAddress
 
 reaReadLoop:
-        call ReadEe
-        mov ds:[si],ax
-        add si,2
-        inc bx
-        cmp bx,3
-        jne reaReadLoop
+    call ReadEe
+    mov ds:[si],ax
+    add si,2
+    inc bx
+    cmp bx,3
+    jne reaReadLoop
 ;
-        ret
+    ret
 ReadEthernetAddress     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WaitForAccept
+;           NAME:           WaitForAccept
 ;
-;               DESCRIPTION:    Wait for RU / CU command acceptance
+;           DESCRIPTION:    Wait for RU / CU command acceptance
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -540,38 +540,38 @@ WaitForAccept   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   InitCmd
+;           NAME:           InitCmd
 ;
-;               DESCRIPTION:    Init command ring
+;           DESCRIPTION:    Init command ring
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitCmd Proc near
-        mov ecx,TX_RING_SIZE SHR 12
-        AllocateMultiplePhysical
-        jc icDone
+    mov ecx,TX_RING_SIZE SHR 12
+    AllocateMultiplePhysical
+    jc icDone
 ;
-        mov ds:TxRingPhys,eax
-        mov eax,TX_RING_SIZE
-        AllocateBigLinear
-        mov ds:TxRingLinear,edx
-        mov ds:TxRingSize,eax
+    mov ds:TxRingPhys,eax
+    mov eax,TX_RING_SIZE
+    AllocateBigLinear
+    mov ds:TxRingLinear,edx
+    mov ds:TxRingSize,eax
 ;
-        mov eax,ds:TxRingPhys
-        or al,7
-        mov ecx,TX_RING_SIZE SHR 12
+    mov eax,ds:TxRingPhys
+    or al,7
+    mov ecx,TX_RING_SIZE SHR 12
 
 ic_ring_loop:
-        SetPhysicalPage
-        add eax,1000h
-        add edx,1000h
-        loop ic_ring_loop
+    SetPhysicalPage
+    add eax,1000h
+    add edx,1000h
+    loop ic_ring_loop
 ;
-        mov ecx,ds:TxRingSize
-        mov edx,ds:TxRingLinear
-        AllocateGdt
-        CreateDataSelector16
-        mov ds:TxRingSel,bx
+    mov ecx,ds:TxRingSize
+    mov edx,ds:TxRingLinear
+    AllocateGdt
+    CreateDataSelector16
+    mov ds:TxRingSel,bx
 ;
     mov eax,ds:TxRingPhys
     mov dx,ds:IoBase
@@ -583,18 +583,18 @@ ic_ring_loop:
     mov al,CU_BASE
     out dx,al
     call WaitForAccept    
-        clc
+    clc
 
 icDone:
-        ret
+    ret
 InitCmd Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Config
+;           NAME:           Config
 ;
-;               DESCRIPTION:    Configure
+;           DESCRIPTION:    Configure
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -644,7 +644,7 @@ config_do:
     out dx,al
     call WaitForAccept    
     WaitForSignal
-        clc
+    clc
 ;
     ret
 Config  Endp
@@ -652,9 +652,9 @@ Config  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SetupEthernetAddress
+;           NAME:           SetupEthernetAddress
 ;
-;               DESCRIPTION:    Setup ethernet address
+;           DESCRIPTION:    Setup ethernet address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -681,7 +681,7 @@ SetupEthernetAddress    Proc near
     out dx,al
     call WaitForAccept    
     WaitForSignal
-        clc
+    clc
 ;
     ret
 SetupEthernetAddress    Endp
@@ -689,12 +689,12 @@ SetupEthernetAddress    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   InitRfd
+;           NAME:           InitRfd
 ;
-;               DESCRIPTION:    Init RFD block
+;           DESCRIPTION:    Init RFD block
 ;
 ;       PARAMETERS:     ES:EDX      RFD address
-;                       EAX         Next RFD
+;               EAX     Next RFD
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -714,39 +714,39 @@ InitRfd Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   InitRx
+;           NAME:           InitRx
 ;
-;               DESCRIPTION:    Init receiver
+;           DESCRIPTION:    Init receiver
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitRx  Proc near
-        mov ecx,RX_RING_SIZE SHR 12
-        AllocateMultiplePhysical
-        jc irDone
+    mov ecx,RX_RING_SIZE SHR 12
+    AllocateMultiplePhysical
+    jc irDone
 ;
-        mov ds:RxRingPhys,eax
-        mov eax,RX_RING_SIZE
-        AllocateBigLinear
-        mov ds:RxRingLinear,edx
-        mov ds:RxRingSize,eax
+    mov ds:RxRingPhys,eax
+    mov eax,RX_RING_SIZE
+    AllocateBigLinear
+    mov ds:RxRingLinear,edx
+    mov ds:RxRingSize,eax
 ;
-        mov eax,ds:RxRingPhys
-        or al,7
-        mov ecx,RX_RING_SIZE SHR 12
+    mov eax,ds:RxRingPhys
+    or al,7
+    mov ecx,RX_RING_SIZE SHR 12
 
 ir_rxring_loop:
-        SetPhysicalPage
-        add eax,1000h
-        add edx,1000h
-        loop ir_rxring_loop
+    SetPhysicalPage
+    add eax,1000h
+    add edx,1000h
+    loop ir_rxring_loop
 ;
-        mov ecx,ds:RxRingSize
-        mov edx,ds:RxRingLinear
-        AllocateGdt
-        CreateDataSelector16
-        mov ds:RxRingSel,bx
-        mov ds:RxRingCurrPtr,0
+    mov ecx,ds:RxRingSize
+    mov edx,ds:RxRingLinear
+    AllocateGdt
+    CreateDataSelector16
+    mov ds:RxRingSel,bx
+    mov ds:RxRingCurrPtr,0
 ;
     mov es,bx   
     xor edx,edx
@@ -782,23 +782,23 @@ irInitRfd:
     mov dx,ds:IoBase
     add dx,SCBCommand
     mov al,RU_START
-    out dx,al         
+    out dx,al     
     call WaitForAccept    
-        clc
+    clc
 
 irDone:
-        ret
+    ret
 InitRx  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   InitTxd
+;           NAME:           InitTxd
 ;
-;               DESCRIPTION:    Init TXD block
+;           DESCRIPTION:    Init TXD block
 ;
 ;       PARAMETERS:     ES:EDX      TXD address
-;                       EAX         Next TXD
+;               EAX     Next TXD
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -824,9 +824,9 @@ InitTxd Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   InitTx
+;           NAME:           InitTx
 ;
-;               DESCRIPTION:    Init transmit ring
+;           DESCRIPTION:    Init transmit ring
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -845,17 +845,17 @@ itInitTxd:
     xor eax,eax
     call InitTxd
 ;    
-        mov ds:TxRingCurrPtr,0
-        mov ds:TxRingAckPtr,0
-        ret
+    mov ds:TxRingCurrPtr,0
+    mov ds:TxRingAckPtr,0
+    ret
 InitTx  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   PurgeTx
+;           NAME:           PurgeTx
 ;
-;               DESCRIPTION:    Remove sent packets
+;           DESCRIPTION:    Remove sent packets
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -897,19 +897,19 @@ ptLeave:
     pop edx
     pop fs
     pop es    
-        ret
+    ret
 PurgeTx Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   NetInt
+;           NAME:           NetInt
 ;
-;               DESCRIPTION:    Network card interrupt
+;           DESCRIPTION:    Network card interrupt
 ;
 ;       PARAMETERS:     
 ;
-;               RETURNS:                
+;           RETURNS:        
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -924,14 +924,14 @@ niLoop:
     test al,ACK_FRAME_RX
     jz niNotRx
 ;
-        mov bx,ds:Handle
-        or bx,bx
-        jz niNotRx
+    mov bx,ds:Handle
+    or bx,bx
+    jz niNotRx
 ;
     push ax
-        NetReceived
-        pop ax
-        and al,NOT ACK_FRAME_RX
+    NetReceived
+    pop ax
+    and al,NOT ACK_FRAME_RX
 
 niNotRx:
     or al,al
@@ -951,14 +951,14 @@ NetInt  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Preview
+;           NAME:           Preview
 ;
-;               DESCRIPTION:    Return size of block or no more data
+;           DESCRIPTION:    Return size of block or no more data
 ;
-;               RETURNS:                NC              Data available
-;                                               ECX             Size of data (0)
-;                                               DX              Packet type
-;                                               
+;           RETURNS:        NC          Data available
+;                           ECX         Size of data (0)
+;                           DX          Packet type
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Preview1:
@@ -966,17 +966,17 @@ Preview1:
     push fs
     push ebx
 ;
-        mov ax,ether_data_sel
-        mov ds,ax
-        jmp preview_common
-        
+    mov ax,ether_data_sel
+    mov ds,ax
+    jmp preview_common
+    
 Preview2:
     push ds
     push fs
     push ebx
 ;
-        mov ax,ether_data2_sel
-        mov ds,ax
+    mov ax,ether_data2_sel
+    mov ds,ax
 
 preview_common:
     mov fs,ds:RxRingSel
@@ -1013,11 +1013,11 @@ preview_unsusp:
 preview_save_next:    
     mov ds:RxRingCurrPtr,ebx
     jmp preview_loop
-        
+    
 preview_ok:    
     add ebx,SIZE RFD
-        mov dx,fs:[ebx+12]      
-        xchg dl,dh
+    mov dx,fs:[ebx+12]      
+    xchg dl,dh
     xor ecx,ecx
     clc
 
@@ -1025,17 +1025,17 @@ preview_done:
     pop ebx
     pop fs
     pop ds
-        retf32
+    retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Receive
+;           NAME:           Receive
 ;
-;               DESCRIPTION:    Receive data
+;           DESCRIPTION:    Receive data
 ;
-;       RETURNS:            ES:EDI              data buffer
-;                                               ECX                     size of data
+;       RETURNS:        ES:EDI          data buffer
+;                           ECX             size of data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1045,9 +1045,9 @@ Receive1:
     push bx
     push edx
 ;
-        mov ax,ether_data_sel
-        mov ds,ax
-        jmp receive_do
+    mov ax,ether_data_sel
+    mov ds,ax
+    jmp receive_do
 
 Receive2:
     push ds
@@ -1055,11 +1055,11 @@ Receive2:
     push bx
     push edx
 ;
-        mov ax,ether_data2_sel
-        mov ds,ax
+    mov ax,ether_data2_sel
+    mov ds,ax
     
 receive_do:
-        mov fs,ds:RxRingSel
+    mov fs,ds:RxRingSel
     mov edx,ds:RxRingCurrPtr
     mov cx,fs:[edx].rfd_actual_size
     and ecx,3FFFh
@@ -1069,21 +1069,21 @@ receive_do:
     CreateAliasSelector16
     mov es,bx
     NotifyEthernetPacket
-        mov edi,14
-        sub ecx,14
+    mov edi,14
+    sub ecx,14
 ;
     pop edx
     pop bx
-        pop fs
-        pop ds
-        retf32
+    pop fs
+    pop ds
+    retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Remove
+;           NAME:           Remove
 ;
-;               DESCRIPTION:    Remove data from buffer ring
+;           DESCRIPTION:    Remove data from buffer ring
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1091,16 +1091,16 @@ Remove1:
     push ds
     push ebx
 ;
-        mov bx,ether_data_sel
-        mov ds,bx
-        jmp remove_do
+    mov bx,ether_data_sel
+    mov ds,bx
+    jmp remove_do
 
 Remove2:
     push ds
     push ebx
 ;
-        mov bx,ether_data2_sel
-        mov ds,bx
+    mov bx,ether_data2_sel
+    mov ds,bx
 
 remove_do:
     mov ebx,ds:RxRingCurrPtr
@@ -1109,119 +1109,119 @@ remove_do:
 ;
     pop ebx
     pop ds
-        retf32
+    retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetBuffer
+;           NAME:           GetBuffer
 ;
-;               DESCRIPTION:    Get buffer
+;           DESCRIPTION:    Get buffer
 ;
-;       PARAMETERS:     ECX             size
+;       PARAMETERS:     ECX         size
 ;
-;               RETURNS:                ES:EDI  data buffer
+;           RETURNS:        ES:EDI  data buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetBuffer       Proc far
-        push eax
-        mov eax,14
-        add eax,ecx
-        cmp eax,64
-        jae gbSizeOk
+    push eax
+    mov eax,14
+    add eax,ecx
+    cmp eax,64
+    jae gbSizeOk
 
     mov eax,64
 
 gbSizeOk:       
     add eax,4
-        AllocateGlobalMem
-        mov edi,14
-        pop eax
-        retf32
+    AllocateGlobalMem
+    mov edi,14
+    pop eax
+    retf32
 GetBuffer       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Send
+;           NAME:           Send
 ;
-;               DESCRIPTION:    Send data
+;           DESCRIPTION:    Send data
 ;
-;       PARAMETERS:     ECX             size
-;                                               DX              packet type
-;                                               DS:ESI  dest address
-;                                               ES:EDI  data buffer
+;       PARAMETERS:     ECX         size
+;                           DX          packet type
+;                           DS:ESI  dest address
+;                           ES:EDI  data buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Send1:
-        push eax
-        push bx
-        push ecx
-        push dx
-        push esi
-        push edi
+    push eax
+    push bx
+    push ecx
+    push dx
+    push esi
+    push edi
 ;
-        xor di,di
-        mov ax,ds:[esi]
-        stosw
-        mov ax,[esi+2]
-        stosw
-        mov ax,[esi+4]
-        stosw
+    xor di,di
+    mov ax,ds:[esi]
+    stosw
+    mov ax,[esi+2]
+    stosw
+    mov ax,[esi+4]
+    stosw
 ;
-        mov ax,ether_data_sel
-        mov ds,ax
-        jmp send_do
+    mov ax,ether_data_sel
+    mov ds,ax
+    jmp send_do
 
 Send2:
-        push eax
-        push bx
-        push ecx
-        push dx
-        push esi
-        push edi
+    push eax
+    push bx
+    push ecx
+    push dx
+    push esi
+    push edi
 ;
-        xor di,di
-        mov ax,ds:[esi]
-        stosw
-        mov ax,[esi+2]
-        stosw
-        mov ax,[esi+4]
-        stosw
+    xor di,di
+    mov ax,ds:[esi]
+    stosw
+    mov ax,[esi+2]
+    stosw
+    mov ax,[esi+4]
+    stosw
 ;
-        mov ax,ether_data2_sel
-        mov ds,ax
+    mov ax,ether_data2_sel
+    mov ds,ax
 
-send_do:        
+send_do:    
     call PurgeTx
 ;    
-        mov ax,word ptr ds:EthernetAddress
-        stosw
-        mov ax,word ptr ds:EthernetAddress+2
-        stosw
-        mov ax,word ptr ds:EthernetAddress+4
-        stosw
+    mov ax,word ptr ds:EthernetAddress
+    stosw
+    mov ax,word ptr ds:EthernetAddress+2
+    stosw
+    mov ax,word ptr ds:EthernetAddress+4
+    stosw
 ;
-        mov ax,dx
-        xchg al,ah
-        stosw
-        add ecx,14
+    mov ax,dx
+    xchg al,ah
+    stosw
+    add ecx,14
 ;
     xor edi,edi
     NotifyEthernetPacket
     mov bx,es
-        push ecx
-        GetSelectorBaseSize
-        pop ecx
-        GetPhysicalPage
-        and ax,0F000h
-        and ecx,0FFFh
-        and dx,0FFFh
-        or ax,dx
+    push ecx
+    GetSelectorBaseSize
+    pop ecx
+    GetPhysicalPage
+    and ax,0F000h
+    and ecx,0FFFh
+    and dx,0FFFh
+    or ax,dx
 ;
-        EnterSection ds:TxSection
+    EnterSection ds:TxSection
 
 send_retry_buf:
     mov edx,ds:TxRingCurrPtr
@@ -1306,70 +1306,70 @@ send_resume:
 send_leave:    
     xor ax,ax
     mov es,ax
-        LeaveSection ds:TxSection
-        mov ds,ax
+    LeaveSection ds:TxSection
+    mov ds,ax
 ;
-        pop edi
-        pop esi
-        pop dx
-        pop ecx
-        pop bx
-        pop eax
+    pop edi
+    pop esi
+    pop dx
+    pop ecx
+    pop bx
+    pop eax
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetAddress
+;           NAME:           GetAddress
 ;
-;               DESCRIPTION:    Get adapter address
+;           DESCRIPTION:    Get adapter address
 ;
-;               RETURNS:                DS:ESI  address
+;           RETURNS:        DS:ESI  address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetAddress1  Proc far
-        mov si,ether_data_sel
-        mov ds,si
-        mov esi,OFFSET EthernetAddress  
-        retf32
+    mov si,ether_data_sel
+    mov ds,si
+    mov esi,OFFSET EthernetAddress  
+    retf32
 GetAddress1     Endp
 
 GetAddress2  Proc far
-        mov si,ether_data2_sel
-        mov ds,si
-        mov esi,OFFSET EthernetAddress  
-        retf32
+    mov si,ether_data2_sel
+    mov ds,si
+    mov esi,OFFSET EthernetAddress  
+    retf32
 GetAddress2     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetPktAddress
+;           NAME:           GetPktAddress
 ;
-;               DESCRIPTION:    Get packet addresses
+;           DESCRIPTION:    Get packet addresses
 ;
-;               PARAMETERS:             ES              Data buffer selector
+;           PARAMETERS:         ES          Data buffer selector
 ;
-;               RETURNS:                ES:ESI  Source address
-;                                               ES:EDI  Dest address
+;           RETURNS:        ES:ESI  Source address
+;                           ES:EDI  Dest address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetPktAddress   Proc far
-        mov esi,6
-        xor edi,edi
-        retf32
+    mov esi,6
+    xor edi,edi
+    retf32
 GetPktAddress   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           GetLinkState
+;           NAME:       GetLinkState
 ;
-;               DESCRIPTION:    Get link state
+;           DESCRIPTION:    Get link state
 ;
-;               RETURNS:        NC  Link up
+;           RETURNS:    NC  Link up
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1402,44 +1402,44 @@ GetLinkState2     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   DispatchTable
+;           NAME:           DispatchTable
 ;
-;               DESCRIPTION:    Driver dispatch table
+;           DESCRIPTION:    Driver dispatch table
 ;
 ;       PARAMETERS:     
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DispTable1:
-        DD OFFSET Preview1,                     SEG code
-        DD OFFSET Receive1,                     SEG code
-        DD OFFSET Remove1,                      SEG code
-        DD OFFSET GetBuffer,            SEG code
-        DD OFFSET Send1,                        SEG code
-        DD OFFSET GetAddress1,          SEG code
-        DD OFFSET GetPktAddress,        SEG code
-        DD OFFSET GetLinkState1,        SEG code
+    DD OFFSET Preview1,             SEG code
+    DD OFFSET Receive1,             SEG code
+    DD OFFSET Remove1,              SEG code
+    DD OFFSET GetBuffer,        SEG code
+    DD OFFSET Send1,            SEG code
+    DD OFFSET GetAddress1,      SEG code
+    DD OFFSET GetPktAddress,    SEG code
+    DD OFFSET GetLinkState1,    SEG code
 
 DispTable2:
-        DD OFFSET Preview2,                     SEG code
-        DD OFFSET Receive2,                     SEG code
-        DD OFFSET Remove2,                      SEG code
-        DD OFFSET GetBuffer,            SEG code
-        DD OFFSET Send2,                        SEG code
-        DD OFFSET GetAddress2,          SEG code
-        DD OFFSET GetPktAddress,        SEG code
-        DD OFFSET GetLinkState2,        SEG code
+    DD OFFSET Preview2,             SEG code
+    DD OFFSET Receive2,             SEG code
+    DD OFFSET Remove2,              SEG code
+    DD OFFSET GetBuffer,        SEG code
+    DD OFFSET Send2,            SEG code
+    DD OFFSET GetAddress2,      SEG code
+    DD OFFSET GetPktAddress,    SEG code
+    DD OFFSET GetLinkState2,    SEG code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   InitPciAdapter
+;           NAME:           InitPciAdapter
 ;
-;               DESCRIPTION:    Init PCI adapter if found
+;           DESCRIPTION:    Init PCI adapter if found
 ;
 ;       PARAMETERS:     
 ;
-;               RETURNS:                NC              Adapter found
+;           RETURNS:        NC          Adapter found
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1456,63 +1456,63 @@ pci05   DW 8086h, 1229h
 pci06   DW 0,     0
 
 InitPrimaryPciAdapter   Proc near
-        mov ax,ether_data_sel
-        mov ds,ax
-        mov si,OFFSET PciVendorTab
+    mov ax,ether_data_sel
+    mov ds,ax
+    mov si,OFFSET PciVendorTab
 init_pci1_loop:
-        xor ax,ax
-        mov dx,cs:[si]
-        mov cx,cs:[si+2]
-        or dx,dx
-        stc
-        jz init_pci1_done
+    xor ax,ax
+    mov dx,cs:[si]
+    mov cx,cs:[si+2]
+    or dx,dx
+    stc
+    jz init_pci1_done
 ;
-        FindPciDevice
-        jnc init_pci1_found
+    FindPciDevice
+    jnc init_pci1_found
 ;
-        add si,4
-        jmp init_pci1_loop
+    add si,4
+    jmp init_pci1_loop
 
 init_pci1_found:
     mov bp,bx
-        mov cx,PCI_revisionID
-        ReadPciByte
-        mov ds:RevID,al
+    mov cx,PCI_revisionID
+    ReadPciByte
+    mov ds:RevID,al
 ;       
-        mov cx,10h
-        ReadPciDword
-        mov edx,eax
-        and dx,0FFE0h
-        mov ds:MemBase,edx
+    mov cx,10h
+    ReadPciDword
+    mov edx,eax
+    and dx,0FFE0h
+    mov ds:MemBase,edx
 ;       
-        mov cx,14h
-        ReadPciDword
-        mov dx,ax
-        and dx,0FFE0h
-        mov ds:IoBase,dx
+    mov cx,14h
+    ReadPciDword
+    mov dx,ax
+    and dx,0FFE0h
+    mov ds:IoBase,dx
 ;       
-        mov cx,18h
-        ReadPciDword
-        mov edx,eax
-        and dx,0FFE0h
-        mov ds:FlashBase,edx
+    mov cx,18h
+    ReadPciDword
+    mov edx,eax
+    and dx,0FFE0h
+    mov ds:FlashBase,edx
 ;
     call Reset
 ;    
     call GetEeSize
     jc init_pci1_done
-;        
+;    
     GetThread
     mov ds:WaitThread,ax
     mov ds:IntStat,0
 ;    
-        xor ch,ch
-        mov cl,PCI_interrupt_line
-        ReadPciByte
-        mov bx,cs
-        mov es,bx
-        mov di,OFFSET NetInt    
-        RequestPrivateIrqHandler
+    xor ch,ch
+    mov cl,PCI_interrupt_line
+    ReadPciByte
+    mov bx,cs
+    mov es,bx
+    mov di,OFFSET NetInt    
+    RequestPrivateIrqHandler
 ;
     call ReadEthernetAddress
     call InitCmd
@@ -1522,51 +1522,51 @@ init_pci1_found:
     mov ds:WaitThread,0
     call InitTx
 ;
-        push ds
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
-        mov esi,OFFSET DispTable1
-        mov edi,OFFSET DriverName1
-        mov al,1
-        mov dx,0
-        mov ecx,1600
-        RegisterNetDriver
-        pop ds
-        mov ds:Handle,bx
+    push ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET DispTable1
+    mov edi,OFFSET DriverName1
+    mov al,1
+    mov dx,0
+    mov ecx,1600
+    RegisterNetDriver
+    pop ds
+    mov ds:Handle,bx
 ;       
     mov al,ds:IntStat
     test al,ACK_FRAME_RX
     jz init_pci1_ok
 ;
-        mov bx,ds:Handle
-        NetReceived
+    mov bx,ds:Handle
+    NetReceived
 
 init_pci1_ok:
     mov bx,bp   
     clc
 
 init_pci1_done:
-        ret
+    ret
 InitPrimaryPciAdapter   Endp
 
 InitSecondaryPciAdapter Proc near
     mov bp,bx
-        mov ax,ether_data2_sel
-        mov ds,ax
-        mov si,OFFSET PciVendorTab
+    mov ax,ether_data2_sel
+    mov ds,ax
+    mov si,OFFSET PciVendorTab
 init_pci2_loop:
     xor ax,ax
 
 init_pci2_retry:
-        mov dx,cs:[si]
-        mov cx,cs:[si+2]
-        or dx,dx
-        stc
-        jz init_pci2_done
+    mov dx,cs:[si]
+    mov cx,cs:[si+2]
+    or dx,dx
+    stc
+    jz init_pci2_done
 ;
-        FindPciDevice
-        jc init_pci2_next
+    FindPciDevice
+    jc init_pci2_next
 ;
     cmp bx,bp
     jne init_pci2_found 
@@ -1578,49 +1578,49 @@ init_pci2_retry:
     jmp init_pci2_retry
 
 init_pci2_next:
-        add si,4
-        jmp init_pci2_loop
+    add si,4
+    jmp init_pci2_loop
 
 init_pci2_found:
     mov bp,bx
-        mov cx,PCI_revisionID
-        ReadPciByte
-        mov ds:RevID,al
+    mov cx,PCI_revisionID
+    ReadPciByte
+    mov ds:RevID,al
 ;       
-        mov cx,10h
-        ReadPciDword
-        mov edx,eax
-        and dx,0FFE0h
-        mov ds:MemBase,edx
+    mov cx,10h
+    ReadPciDword
+    mov edx,eax
+    and dx,0FFE0h
+    mov ds:MemBase,edx
 ;       
-        mov cx,14h
-        ReadPciDword
-        mov dx,ax
-        and dx,0FFE0h
-        mov ds:IoBase,dx
+    mov cx,14h
+    ReadPciDword
+    mov dx,ax
+    and dx,0FFE0h
+    mov ds:IoBase,dx
 ;       
-        mov cx,18h
-        ReadPciDword
-        mov edx,eax
-        and dx,0FFE0h
-        mov ds:FlashBase,edx
+    mov cx,18h
+    ReadPciDword
+    mov edx,eax
+    and dx,0FFE0h
+    mov ds:FlashBase,edx
 ;
     call Reset
 ;    
     call GetEeSize
     jc init_pci2_done
-;        
+;    
     GetThread
     mov ds:WaitThread,ax
     mov ds:IntStat,0
 ;    
-        xor ch,ch
-        mov cl,PCI_interrupt_line
-        ReadPciByte
-        mov bx,cs
-        mov es,bx
-        mov di,OFFSET NetInt    
-        RequestPrivateIrqHandler
+    xor ch,ch
+    mov cl,PCI_interrupt_line
+    ReadPciByte
+    mov bx,cs
+    mov es,bx
+    mov di,OFFSET NetInt    
+    RequestPrivateIrqHandler
 ;
     call ReadEthernetAddress
     call InitCmd
@@ -1630,128 +1630,112 @@ init_pci2_found:
     mov ds:WaitThread,0
     call InitTx
 ;
-        push ds
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
-        mov esi,OFFSET DispTable2
-        mov edi,OFFSET DriverName2
-        mov al,1
-        mov dx,0
-        mov ecx,1600
-        RegisterNetDriver
-        pop ds
-        mov ds:Handle,bx
+    push ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET DispTable2
+    mov edi,OFFSET DriverName2
+    mov al,1
+    mov dx,0
+    mov ecx,1600
+    RegisterNetDriver
+    pop ds
+    mov ds:Handle,bx
 ;       
     mov al,ds:IntStat
     test al,ACK_FRAME_RX
     jz init_pci2_ok
 ;
-        mov bx,ds:Handle
-        NetReceived
+    mov bx,ds:Handle
+    NetReceived
 
 init_pci2_ok:
     mov bx,bp   
     clc
 
 init_pci2_done:
-        ret
+    ret
 InitSecondaryPciAdapter Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Init_net
+;           NAME:           Init_net
 ;
-;               DESCRIPTION:    inits adpater
+;           DESCRIPTION:    inits adpater
 ;
 ;       PARAMETERS:     
 ;
-;               RETURNS:                
+;           RETURNS:        
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-detect_name     DB '8255x',0
-
-detect_thread   proc far
-        call InitPrimaryPciAdapter
-        jc dt_done
+init_net    Proc far
+    push ds
+    push es
+    pusha
+;
+    call InitPrimaryPciAdapter
+    jc dt_done
 ;       
-        call InitSecondaryPciAdapter
-
-dt_done:
-        ret
-detect_thread   endp
-        
-init_net        Proc far
-        push ds
-        push es
-        pusha
-;
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
-        mov di,OFFSET detect_name
-        mov si,OFFSET detect_thread
-        mov ax,4
-        mov cx,100h
-        CreateThread
-
-init_net_done:
-        popa
-        pop es
-        pop ds
-        retf32
-init_net        Endp
+    call InitSecondaryPciAdapter
+´
+dt_done:    
+    popa
+    pop es
+    pop ds
+    retf32
+init_net    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Init
+;           NAME:           Init
 ;
-;               DESCRIPTION:    init device
+;           DESCRIPTION:    init device
 ;
 ;       PARAMETERS:     
 ;
-;               RETURNS:                
+;           RETURNS:        
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Init    Proc far
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;
-        mov eax,SIZE data
-        mov bx,ether_data_sel
-        AllocateFixedSystemMem
-        mov ds,bx
-        mov es,bx
-        mov cx,ax
-        xor di,di
-        xor al,al
-        rep stosb
-        InitSection ds:TxSection
+    mov eax,SIZE data
+    mov bx,ether_data_sel
+    AllocateFixedSystemMem
+    mov ds,bx
+    mov es,bx
+    mov cx,ax
+    xor di,di
+    xor al,al
+    rep stosb
+    InitSection ds:TxSection
 ;
-        mov eax,SIZE data
-        mov bx,ether_data2_sel
-        AllocateFixedSystemMem
-        mov ds,bx
-        mov es,bx
-        mov cx,ax
-        xor di,di
-        xor al,al
-        rep stosb
-        InitSection ds:TxSection
+    mov eax,SIZE data
+    mov bx,ether_data2_sel
+    AllocateFixedSystemMem
+    mov ds,bx
+    mov es,bx
+    mov cx,ax
+    xor di,di
+    xor al,al
+    rep stosb
+    InitSection ds:TxSection
 ;
-        mov ax,cs
-        mov es,ax
-        mov edi,OFFSET init_net
-        HookInitTasking
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET init_net
+    HookInitPci
     clc
-        ret
+    ret
 Init    Endp
 
 code ENDS
 
-        END init
+    END init

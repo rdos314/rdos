@@ -2272,6 +2272,11 @@ WritePnpByte     MACRO
 
 ;;;;;;;;;;;;; PCI ;;;;;;;;;;;;;;
 
+;  IN  ES:EDI      INIT CALLBACK
+HookInitPci      MACRO
+    OsGate hook_init_pci_nr
+                    ENDM
+
 BiosPciInt      MACRO
     OsGate bios_pci_int_nr
                     ENDM

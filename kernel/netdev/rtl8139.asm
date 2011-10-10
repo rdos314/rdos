@@ -1150,33 +1150,18 @@ InitSecondaryPciAdapter Endp
 ;           RETURNS:        
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-detect_name     DB 'RTL8139',0
-
-detect_thread   proc far
-    xor ax,ax
-    call InitPrimaryPciAdapter
-;
-    inc ax
-    call InitSecondaryPciAdapter
-    ret
-detect_thread   endp
     
 init_net    Proc far
     push ds
     push es
     pusha
 ;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov di,OFFSET detect_name
-    mov si,OFFSET detect_thread
-    mov ax,4
-    mov cx,100h
-    CreateThread
-
-init_net_done:
+    xor ax,ax
+    call InitPrimaryPciAdapter
+;
+    inc ax
+    call InitSecondaryPciAdapter
+;    
     popa
     pop es
     pop ds
@@ -1230,7 +1215,7 @@ Init    Proc far
     mov ax,cs
     mov es,ax
     mov edi,OFFSET init_net
-    HookInitTasking
+    HookInitPci
     clc
     ret
 Init    Endp

@@ -2745,34 +2745,23 @@ port_timer  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           Init_net
-;
-;           DESCRIPTION:    inits adpater
-;
-;       PARAMETERS:     
-;
-;           RETURNS:        
+;           NAME:           UHCI thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 uhci_name       DB 'UHCI',0
 
-uhci_thread     proc far
+uhci_thread:
     mov ax,SEG data
     mov ds,ax
     GetThread
     mov ds:UhciThread,ax
 ;    
-    call InitPciAdapter
-;
     mov ax,750
     WaitMilliSec
 ;    
-    mov cx,ds:UhciCount 
-    or cx,cx
-    jz uhci_thread_exit
-;    
     mov bx,OFFSET UhciFunc
+    mov cx,ds:UhciCount 
 
 uhci_func_loop:
     push ds
@@ -2807,14 +2796,30 @@ uhci_poll_loop:
 ;
     jmp uhci_handle_loop    
 
-uhci_thread_exit:
-    ret
-uhci_thread     endp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Init_usb
+;
+;           DESCRIPTION:    inits adpater
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 init_usb    Proc far
     push ds
     push es
     pusha
+;    
+    mov ax,SEG data
+    mov ds,ax
+    call InitPciAdapter    
+    mov cx,ds:UhciCount 
+    or cx,cx
+    jz init_usb_done
 ;
     mov ax,cs
     mov ds,ax
@@ -2904,7 +2909,7 @@ Init    Proc far
     mov ds,ax
     mov es,ax
     mov edi,OFFSET init_usb
-    HookInitTasking
+    HookInitPci
 ;
     mov esi,OFFSET get_allocated_usb_blocks
     mov edi,OFFSET get_allocated_usb_blocks_name

@@ -1645,31 +1645,20 @@ InitPciAdapter  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           Init_usb
-;
-;           DESCRIPTION:    inits adpater
-;
-;       PARAMETERS:     
-;
-;           RETURNS:        
+;           NAME:           EHCI thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ehci_name       DB 'EHCI',0
 
-ehci_thread     proc far
+ehci_thread:
     mov ax,SEG data
     mov ds,ax
     GetThread
     mov ds:EhciThread,ax
-    mov ds:EhciFuncCount,0
-;    
-    call InitPciAdapter
-    mov cx,ds:EhciFuncCount
-    or cx,cx    
-    jz ehci_thread_exit
 ;    
     mov si,OFFSET EhciFuncArr
+    mov cx,ds:EhciFuncCount
 
 etInitLoop:
     ClearSignal
@@ -1699,14 +1688,30 @@ ehci_thread_loop:
     call UpdateUsb
     jmp ehci_thread_loop
 
-ehci_thread_exit:
-    ret
-ehci_thread     endp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Init_usb
+;
+;           DESCRIPTION:    inits adpater
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 init_usb    Proc far
     push ds
     push es
     pusha
+;    
+    mov ax,SEG data
+    mov ds,ax
+    call InitPciAdapter
+    mov cx,ds:EhciFuncCount
+    or cx,cx    
+    jz init_usb_done
 ;
     mov ax,cs
     mov ds,ax
@@ -1741,11 +1746,12 @@ Init    Proc far
     mov bx,SEG data
     mov ds,bx
     InitSection ds:EhciSection
+    mov ds:EhciFuncCount,0
 ;
     mov ax,cs
     mov es,ax
     mov edi,OFFSET init_usb
-    HookInitTasking
+    HookInitPci
     clc
 ;       
     ret

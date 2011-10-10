@@ -2802,21 +2802,14 @@ InitPciAdapter  Endp
 
 ohci_name       DB 'OHCI',0
 
-ohci_thread     proc far
+ohci_thread:
     mov ax,SEG data
     mov ds,ax
     GetThread
     mov ds:OhciThread,ax
-    mov ds:OhciFuncCount,0
-    mov ds:OhciUsedBlocks,0
-    mov ds:OhciCloseCount,0
 ;    
-    call InitPciAdapter
-    mov cx,ds:OhciFuncCount
-    or cx,cx    
-    jz ohci_thread_exit
-;
     mov si,OFFSET OhciFuncArr
+    mov cx,ds:OhciFuncCount
 
 otInitLoop:
     ClearSignal
@@ -2850,14 +2843,30 @@ ohci_thread_loop:
     call UpdateUsb
     jmp ohci_thread_loop
 
-ohci_thread_exit:
-    ret
-ohci_thread     endp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Init_usb
+;
+;           DESCRIPTION:    inits adpater
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 init_usb    Proc far
     push ds
     push es
     pusha
+;
+    mov ax,SEG data
+    mov ds,ax
+    call InitPciAdapter
+    mov cx,ds:OhciFuncCount
+    or cx,cx    
+    jz init_usb_done
 ;
     mov ax,cs
     mov ds,ax
@@ -2944,12 +2953,15 @@ Init    Proc far
     mov bx,SEG data
     mov ds,bx       
     InitSection ds:OhciSection
+    mov ds:OhciFuncCount,0
+    mov ds:OhciUsedBlocks,0
+    mov ds:OhciCloseCount,0
 ;
     mov ax,cs
     mov ds,ax
     mov es,ax
     mov edi,OFFSET init_usb
-    HookInitTasking
+    HookInitPci
 ;
     mov esi,OFFSET get_allocated_usb_blocks
     mov edi,OFFSET get_allocated_usb_blocks_name

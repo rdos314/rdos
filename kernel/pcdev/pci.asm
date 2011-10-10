@@ -40,6 +40,9 @@ MAX_PCI_DEVICES = 256
 
 data    SEGMENT byte public 'DATA'
 
+pci_init_hooks		DW ?
+pci_init_hook_arr	DD 32 DUP(?,?)
+
 pci_device_arr      DD MAX_PCI_DEVICES DUP(?,?)
 
 data    ENDS
@@ -47,6 +50,41 @@ data    ENDS
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           HookInitPci
+;
+;           DESCRIPTION:    Hook init PCI
+;
+;           PARAMETERS:     ES:EDI       CALLBACK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_init_pci_name      DB 'Hook Init PCI',0
+
+hook_init_pci   Proc far
+    push ds
+    push ax
+    push bx
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:pci_init_hooks
+    mov bx,ax
+    shl bx,3
+    add bx,OFFSET pci_init_hook_arr
+    mov [bx],edi
+    mov [bx+4],es
+    inc ax
+    mov ds:pci_init_hooks,ax
+;
+    pop bx
+    pop ax
+    pop ds
+    retf32
+hook_init_pci   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -437,7 +475,6 @@ find_pci_device Proc far
     mov di,SEG data
     mov ds,di
     mov si,OFFSET pci_device_arr
-    xor si,si
 ;
     mov di,ax
     mov bx,cx
@@ -930,6 +967,74 @@ init_pci_device_done:
 init_pci_devices    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Init_pci_thread
+;
+;           DESCRIPTION:    Init_pci_thread
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_pci_thread_name DB 'Init PCI', 0
+
+init_pci_thread Proc far
+    mov ax,SEG data
+    mov ds,ax
+    mov cx,ds:pci_init_hooks
+    or cx,cx
+    je hook_thread_done
+;
+    mov bx,OFFSET pci_init_hook_arr
+
+hook_thread_loop:
+    push ds
+    push bx
+    push cx
+    call fword ptr [bx]
+    pop cx
+    pop bx
+    pop ds
+    add bx,8
+    loop hook_thread_loop
+
+hook_thread_done:
+    ret
+init_pci_thread Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Init_pci
+;
+;           DESCRIPTION:    Create hook thread
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_pci    Proc far
+    push ds
+    push es
+    pushad
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov si,OFFSET init_pci_thread
+    mov di,OFFSET init_pci_thread_name
+    mov ax,3
+    mov cx,256
+    CreateThread
+;
+    popad
+    pop es
+    pop ds
+    retf32
+init_pci    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           init
@@ -948,12 +1053,21 @@ init    Proc far
     mov eax,-1
     mov di,OFFSET pci_device_arr
     rep stosd
+    mov ds:pci_init_hooks,0
 ;
     call init_pci_devices
 ;
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov edi,OFFSET init_pci
+    HookInitTasking
+;
+    mov esi,OFFSET hook_init_pci
+    mov edi,OFFSET hook_init_pci_name
+    mov ax,hook_init_pci_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET bios_pci_int
     mov edi,OFFSET bios_pci_int_name

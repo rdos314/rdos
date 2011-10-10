@@ -473,4 +473,6 @@ req_arp_nr                  = 405
 begin_disc_handler_nr       = 406
 end_disc_handler_nr         = 407
 
+hook_init_pci_nr            = 408
+
 osgate_entries				= 420

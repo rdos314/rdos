@@ -810,6 +810,7 @@ init    PROC far
     mov ds:fs_init_done,0
     mov ds:file_defs,0
     mov ds:fs_init_hooks,0
+    mov ds:fs_done_hooks,0
     pop ds
 ;
     mov di,OFFSET fs_sel
