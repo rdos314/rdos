@@ -2091,12 +2091,7 @@ init_adapter_process    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-cmd_start_name  DB 'Autostart', 0
-
-cmd_start_thread    Proc far
-    mov ax,1000
-    WaitMilliSec
-;
+cmd_start    Proc far
     mov ax,system_data_sel
     mov ds,ax
     mov cx,ds:rom_modules
@@ -2106,39 +2101,8 @@ init_sys_loop:
     call init_adapter_process
     add bx,SIZE adapter_typ
     loop init_sys_loop
-    ret
-cmd_start_thread    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           init_sys
-;
-;           DESCRIPTION:    Start all processes
-;
-;       RETURN VALUE:
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_sys    PROC far
-    push ds
-    push es
-    pushad
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov si,OFFSET cmd_start_thread
-    mov di,OFFSET cmd_start_name
-    mov ax,4
-    mov cx,1024
-    CreateThread
-;
-    popad
-    pop es
-    pop ds
     retf32
-init_sys    ENDP
+cmd_start    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2160,8 +2124,8 @@ init    PROC far
     mov ds,ax
     mov es,ax
 ;
-    mov edi,OFFSET init_sys
-    HookInitTasking
+    mov edi,OFFSET cmd_start
+    HookFileSystemStarted
 ;
     mov esi,OFFSET hook_load_exe
     mov edi,OFFSET hook_load_exe_name

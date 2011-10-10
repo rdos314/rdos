@@ -244,6 +244,7 @@ free_file_list_entry_nr		= 239
 cache_dir_nr				= 240
 insert_dir_entry_nr			= 241
 insert_file_entry_nr		= 242
+hook_file_system_started_nr	= 243
 
 get_file_info_nr			= 247
 dupl_file_info_nr			= 248

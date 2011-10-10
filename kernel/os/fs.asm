@@ -108,6 +108,43 @@ hook_init_file_system   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           HookFileSystemStarted
+;
+;           DESCRIPTION:    Hook file-system started
+;
+;           PARAMETERS:     ES:EDI       CALLBACK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_file_system_started_name      DB 'Hook File System Started',0
+
+hook_file_system_started   Proc far
+    push ds
+    push ax
+    push bx
+    push cx
+    mov cx,ds
+    mov ax,fs_sys_data_sel
+    mov ds,ax
+    mov al,ds:fs_done_hooks
+    mov bl,al
+    xor bh,bh
+    shl bx,3
+    add bx,OFFSET fs_done_hook_arr
+    mov [bx],edi
+    mov [bx+4],es
+    inc al
+    mov ds:fs_done_hooks,al
+    pop cx
+    pop bx
+    pop ax
+    pop ds
+    retf32
+hook_file_system_started   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           REGISTER_FILE_SYSTEM
 ;
 ;           DESCRIPTION:    Register a file system
@@ -585,6 +622,26 @@ hook_thread_loop:
 hook_thread_done:
     mov ds:fs_init_done,1
     LeaveSection ds:fs_init_section
+;
+    mov cl,ds:fs_done_hooks
+    or cl,cl
+    je hook_started_done
+;
+    mov bx,OFFSET fs_done_hook_arr
+
+hook_started_loop:
+    push ds
+    push bx
+    push cx
+    call fword ptr [bx]
+    pop cx
+    pop bx
+    pop ds
+    add bx,8
+    dec cl
+    jnz hook_started_loop
+
+hook_started_done:
     ret
 hook_thread     Endp
 
@@ -677,6 +734,11 @@ init    PROC far
     mov esi,OFFSET hook_init_file_system
     mov edi,OFFSET hook_init_file_system_name
     mov ax,hook_init_file_system_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET hook_file_system_started
+    mov edi,OFFSET hook_file_system_started_name
+    mov ax,hook_file_system_started_nr
     RegisterOsGate
 ;
     mov esi,OFFSET register_file_system

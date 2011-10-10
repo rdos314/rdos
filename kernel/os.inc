@@ -2074,6 +2074,11 @@ HookInitFileSystem      MACRO
     OsGate hook_init_file_system_nr
                     ENDM
 
+;  IN  ES:EDI      INIT CALLBACK
+HookFileSystemStarted      MACRO
+    OsGate hook_file_system_started_nr
+                    ENDM
+
 ;  IN   DS:ESI       File system name
 ;  IN   ES:EDI       File system table
 RegisterFileSystem      MACRO
