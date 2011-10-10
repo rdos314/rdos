@@ -1841,6 +1841,14 @@ NotifyEthernetPacket    MACRO
                     ENDM
 
 ;;;;;;;;;;; DRIVE ;;;;;;;;;;;;
+
+BeginDiscHandler    MACRO
+    OsGate begin_disc_handler_nr
+                    ENDM
+
+EndDiscHandler    MACRO
+    OsGate end_disc_handler_nr
+                    ENDM
             
 ;       ES:EDI   Disc system table
 HookInitDisc    MACRO

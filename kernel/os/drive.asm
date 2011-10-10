@@ -142,7 +142,7 @@ boot_struc          ENDS
 
 data    SEGMENT byte public 'DATA'
 
-disc_params             DB ?
+disc_params         DB ?
 disc_curr_param     DW ?
 disc_param_arr      DD MAX_DRIVES DUP(?,?)
 disc_def_arr        DW MAX_DRIVES DUP(?)
@@ -150,6 +150,8 @@ drive_def_arr       DW MAX_DRIVES DUP(?)
 drive_wait_arr      DB 4*DRIVE_WAIT_NUM DUP(?)
 drive_wait_free     DW ?
 drive_wait_count    DW ?
+disc_handlers       DW ?
+disc_start_thread   DW ?
 
 data    ENDS
 
@@ -4810,6 +4812,59 @@ format_drive16  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           BeginDiscHandler
+;
+;           DESCRIPTION:    Begin a disc-handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+begin_disc_handler_name     DB 'Begin Disc Handler',0
+
+begin_disc_handler  Proc far
+    push ds
+    push ax
+    mov ax,SEG data
+    mov ds,ax
+    inc ds:disc_handlers
+    pop ax
+    pop ds
+    retf32
+begin_disc_handler  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           EndDiscHandler
+;
+;           DESCRIPTION:    End a disc-handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+end_disc_handler_name     DB 'End Disc Handler',0
+
+end_disc_handler  Proc far
+    push ds
+    push ax
+    push bx
+;
+    mov ax,SEG data
+    mov ds,ax
+    sub ds:disc_handlers,1
+    jnz edhDone
+;
+    mov bx,ds:disc_start_thread
+    Signal
+
+edhDone:
+    pop bx
+    pop ax
+    pop ds
+    retf32
+end_disc_handler  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           HOOK_INIT_DISC
 ;
 ;           DESCRIPTION:    Add an InitDisc hook
@@ -5060,6 +5115,18 @@ demand_load_drive       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_disc       Proc far
+    mov ax,SEG data
+    mov ds,ax
+    ClearSignal
+    GetThread
+    mov ds:disc_start_thread,ax
+;
+    sub ds:disc_handlers,1
+    jz init_disc_do
+;
+    WaitForSignal
+    
+init_disc_do:        
     call run_disc_assign
     call run_drive_assign1
     call run_drive_assign2
@@ -5086,6 +5153,16 @@ init    PROC far
     mov esi,OFFSET hook_init_disc
     mov edi,OFFSET hook_init_disc_name
     mov ax,hook_init_disc_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET begin_disc_handler
+    mov edi,OFFSET begin_disc_handler_name
+    mov ax,begin_disc_handler_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET end_disc_handler
+    mov edi,OFFSET end_disc_handler_name
+    mov ax,end_disc_handler_nr
     RegisterOsGate
 ;
     mov esi,OFFSET install_disc
@@ -5318,6 +5395,8 @@ init    PROC far
     mov bx,SEG data
     mov es,bx
     mov es:disc_params,0
+    mov es:disc_handlers,1
+    mov es:disc_thread,0
 ;
     mov cx,MAX_DRIVES
     mov di,OFFSET disc_def_arr

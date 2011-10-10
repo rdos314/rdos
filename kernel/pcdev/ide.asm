@@ -2770,7 +2770,22 @@ cpiDone:
     ret
 CheckPciIde Endp
 
-init    PROC far
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Init_ide
+;
+;           DESCRIPTION:    inits adpater
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+detect_name     DB 'IDE',0
+
+detect_thread   proc far
     xor bp,bp
     mov ax,cs
     mov ds,ax
@@ -2862,6 +2877,50 @@ init_ide_pci:
     HookInitDisc
 
 init_ide_exit:
+    EndDiscHandler
+    ret
+detect_thread   endp
+    
+init_ide    Proc far
+    push ds
+    push es
+    pusha
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov di,OFFSET detect_name
+    mov si,OFFSET detect_thread
+    mov ax,4
+    mov cx,100h
+    CreateThread
+;
+    popa
+    pop es
+    pop ds
+    retf32
+init_ide    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Init_net
+;
+;           DESCRIPTION:    inits adpater
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init    PROC far
+    BeginDiscHandler
+;
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET init_ide
+    HookInitTasking
     clc
     ret
 init    ENDP
