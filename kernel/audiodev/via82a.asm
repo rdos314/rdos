@@ -30,6 +30,7 @@ INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE ..\os\protseg.def
 INCLUDE ..\pcdev\pci.inc
 
 VIA_PCM_STATUS          = 0
@@ -756,7 +757,7 @@ init_dev    Proc far
     mov di,OFFSET detect_name
     mov si,OFFSET detect_thread
     mov ax,4
-    mov cx,100h
+    mov cx,stack0_size
     CreateThread
 ;
     popa

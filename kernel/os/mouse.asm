@@ -1407,7 +1407,7 @@ hook_mouse_do:
     mov es,ax
     mov si,OFFSET hook_thread
     mov di,OFFSET hook_thread_name
-    mov cx,100h
+    mov cx,stack0_size
     mov ax,4
     CreateThread
 ;
@@ -1552,7 +1552,7 @@ init_mouse_thread       PROC far
     mov si,OFFSET mouse_thread
     mov di,OFFSET mouse_thread_name
     mov ax,3
-    mov cx,256
+    mov cx,stack0_size
     CreateThread
 
 init_mouse_done:

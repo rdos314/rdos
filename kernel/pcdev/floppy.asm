@@ -31,6 +31,7 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\drive.inc
+INCLUDE ..\os\protseg.def
 
 boot_struc      STRUC
 
@@ -1947,7 +1948,7 @@ install_unit    Proc near
     mov es,ax
     mov si,OFFSET discbuf_thread
     mov ax,2
-    mov cx,100h
+    mov cx,stack0_size
     CreateThread
     ret
 install_unit    Endp
@@ -1978,7 +1979,7 @@ disc_assign     Proc far
     mov si,OFFSET floppy_super
     mov di,OFFSET floppy_super_name
     mov ax,4
-    mov cx,1024
+    mov cx,stack0_size
     CreateThread
 ;
 ;    in al,INT0_MASK

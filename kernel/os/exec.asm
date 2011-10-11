@@ -35,6 +35,7 @@ INCLUDE int.def
 INCLUDE exec.def
 INCLUDE system.def
 INCLUDE system.inc
+INCLUDE ..\fs.inc
 
 data    SEGMENT byte public 'DATA'
 
@@ -2094,8 +2095,10 @@ init_adapter_process    Endp
 cmd_start_name  DB 'Autostart', 0
 
 cmd_start_thread    Proc far
-    mov ax,1000
-    WaitMilliSec
+    mov ax,fs_sys_data_sel
+    mov ds,ax
+    EnterSection ds:fs_init_section
+    LeaveSection ds:fs_init_section
 ;
     mov ax,system_data_sel
     mov ds,ax
@@ -2131,7 +2134,7 @@ init_sys    PROC far
     mov si,OFFSET cmd_start_thread
     mov di,OFFSET cmd_start_name
     mov ax,4
-    mov cx,1024
+    mov cx,stack0_size
     CreateThread
 ;
     popad

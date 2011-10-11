@@ -1763,7 +1763,7 @@ init_vbe_thread PROC far
 ;
     mov si,OFFSET vbe_thread
     mov di,OFFSET vbe_thread_name
-    mov cx,500
+    mov cx,stack0_size
     mov ax,4
     CreateThread
 ;

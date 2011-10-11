@@ -31,6 +31,7 @@ include ..\user.def
 include ..\user.inc
 include ..\driver.def
 include ..\os\printer.inc
+INCLUDE ..\os\protseg.def
 include usb.inc
 
 MAX_OUT_SIZE = 260 * 16
@@ -2025,7 +2026,7 @@ krRestart:
     mov di,OFFSET init_thread_name
     mov si,OFFSET init_thread
     mov ax,2
-    mov cx,100h
+    mov cx,stack0_size
     CreateThread
 ;
     mov ax,SEG data
@@ -2161,7 +2162,7 @@ opDescrDone:
     mov di,OFFSET kr203_thread_name
     mov si,OFFSET kr203_thread
     mov ax,2
-    mov cx,100h
+    mov cx,stack0_size
     CreateThread
     
 opDone:

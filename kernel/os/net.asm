@@ -1247,7 +1247,7 @@ register_driver_done:
     mov ax,cs
     mov ds,ax
     mov si,OFFSET NetThread
-    mov cx,400h
+    mov cx,stack0_size
     mov ax,20
     CreateThread
 ;
@@ -2624,7 +2624,7 @@ start_net_capture       Proc
     mov si,OFFSET capture_thread_pr
     mov di,OFFSET capture_thread_name
     mov ax,3
-    mov cx,256
+    mov cx,stack0_size
     CreateThread
 ;       
     pop di
@@ -2697,7 +2697,7 @@ init_net    Proc far
     mov si,OFFSET arp_thread_pr
     mov di,OFFSET arp_thread_name
     mov ax,3
-    mov cx,256
+    mov cx,stack0_size
     CreateThread
 ;
     popa

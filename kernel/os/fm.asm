@@ -1942,7 +1942,7 @@ init_fm_thread  Proc far
     mov di,OFFSET fm_name
     mov si,OFFSET fm_thread_pr
     mov ax,4
-    mov cx,100h
+    mov cx,stack0_size
     CreateThread
 ;
     popa

@@ -1019,7 +1019,7 @@ init_keyb_thread	PROC far
 	mov es,ax
 	mov si,OFFSET keyboard_pr
 	mov di,OFFSET keyboard_name
-	mov cx,500
+	mov cx,stack0_size
 	mov ax,4
 	CreateThread
 ;

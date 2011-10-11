@@ -30,6 +30,7 @@ INCLUDE ..\os.def
 INCLUDE ..\os.inc
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
+INCLUDE ..\os\protseg.def
 INCLUDE ..\pcdev\pci.inc
 INCLUDE usb.inc
 
@@ -2827,7 +2828,7 @@ init_usb    Proc far
     mov di,OFFSET uhci_name
     mov si,OFFSET uhci_thread
     mov ax,4
-    mov cx,100h
+    mov cx,stack0_size
     CreateThread
 
 init_usb_done:

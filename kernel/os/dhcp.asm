@@ -2521,7 +2521,7 @@ init_dhcp_enabled_ok:
     mov si,OFFSET dhcp_thread_pr
     mov di,OFFSET dhcp_thread_name
     mov ax,3
-    mov cx,256
+    mov cx,stack0_size
     CreateThread
 ;
     ret

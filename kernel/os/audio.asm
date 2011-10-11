@@ -1177,7 +1177,7 @@ init_audio      Proc far
     mov di,OFFSET audio_name
     mov si,OFFSET audio_thread
     mov ax,4
-    mov cx,100h
+    mov cx,stack0_size
     CreateThread
 ;       
     popa

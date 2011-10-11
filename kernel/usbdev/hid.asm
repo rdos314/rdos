@@ -30,6 +30,7 @@ include ..\os.inc
 include ..\user.def
 include ..\user.inc
 include ..\driver.def
+INCLUDE ..\os\protseg.def
 include ..\usbdev\usb.inc
 
 STD_KEY = 1
@@ -2086,7 +2087,7 @@ SetupBootKeyboard    Proc near
     mov di,OFFSET hid_key_thread_name
     mov si,OFFSET hid_key_thread_pr
     mov ax,2
-    mov cx,100h
+    mov cx,stack0_size
     CreateThread
 ;
     pop di

@@ -31,6 +31,7 @@ INCLUDE ..\driver.def
 INCLUDE ..\os\port.def
 INCLUDE ..\os\system.def
 INCLUDE apic.inc
+INCLUDE ..\os\protseg.def
 INCLUDE ..\os\proc.inc
 INCLUDE ..\os\irq.inc
 INCLUDE ..\os\acpi.def
@@ -2403,7 +2404,7 @@ init_apic_thread        PROC far
 ;       
     mov si,OFFSET apic_pr
     mov di,OFFSET apic_name
-    mov cx,500
+    mov cx,stack0_size
     mov ax,4
     CreateThread
 

@@ -2027,7 +2027,7 @@ init_system     PROC far
     mov es,ax
     mov si,OFFSET debug_thread_pr
     mov di,OFFSET debug_thread_name
-    mov cx,512
+    mov cx,stack0_size
     mov ax,26
     CreateThread
     popa

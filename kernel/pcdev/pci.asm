@@ -1025,7 +1025,7 @@ init_pci    Proc far
     mov si,OFFSET init_pci_thread
     mov di,OFFSET init_pci_thread_name
     mov ax,3
-    mov cx,256
+    mov cx,stack0_size
     CreateThread
 ;
     popad

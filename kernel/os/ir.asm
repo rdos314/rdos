@@ -186,7 +186,7 @@ init_ir	Proc far
 	mov di,OFFSET ir_name
 	mov si,OFFSET ir_thread
 	mov ax,4
-	mov cx,100h
+	mov cx,stack0_size
 	CreateThread
 ;	
 	popa

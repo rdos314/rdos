@@ -985,7 +985,7 @@ init_keyb_thread    PROC far
     mov es,ax
     mov si,OFFSET mode_pr
     mov di,OFFSET mode_name
-    mov cx,500
+    mov cx,stack0_size
     mov ax,4
     CreateThread
 ;

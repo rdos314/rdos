@@ -1038,7 +1038,7 @@ check_key_state PROC near
     mov es,ax
     mov si,OFFSET keyboard_emul_pr
     mov di,OFFSET keyboard_emul_name
-    mov cx,100h
+    mov cx,stack0_size
     mov ax,3
     CreateThread
     popa
@@ -1261,7 +1261,7 @@ init_keyb_thread    PROC far
 ;
     mov si,OFFSET keyboard_pr
     mov di,OFFSET keyboard_name
-    mov cx,500
+    mov cx,stack0_size
     mov ax,4
     CreateThread
 ;

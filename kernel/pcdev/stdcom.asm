@@ -32,6 +32,7 @@ include ..\user.inc
 include ..\driver.def
 include ..\pcdev\pci.inc
 include ..\os\com.inc
+include ..\os\protseg.def
 
 MAX_PORTS       = 16
 MAX_IRQS    = 16
@@ -1487,7 +1488,7 @@ init_pci    Proc far
     mov di,OFFSET detect_name
     mov si,OFFSET detect_thread
     mov ax,4
-    mov cx,100h
+    mov cx,stack0_size
     CreateThread
 ;
     popa

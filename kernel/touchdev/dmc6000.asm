@@ -30,6 +30,7 @@ INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE ..\os\protseg.def
 
 touch_data_seg  STRUC
 
@@ -484,7 +485,7 @@ init_touch      Proc far
         mov di,OFFSET touch_name1
         mov si,OFFSET touch_thread
         mov ax,4
-        mov cx,100h
+        mov cx,stack0_size
         CreateThread
 ;
     mov bx,1
@@ -494,7 +495,7 @@ init_touch      Proc far
         mov di,OFFSET touch_name2
         mov si,OFFSET touch_thread
         mov ax,4
-        mov cx,100h
+        mov cx,stack0_size
         CreateThread
 ;
     mov bx,2
@@ -504,7 +505,7 @@ init_touch      Proc far
         mov di,OFFSET touch_name3
         mov si,OFFSET touch_thread
         mov ax,4
-        mov cx,100h
+        mov cx,stack0_size
         CreateThread
 ;
     mov bx,3
@@ -514,7 +515,7 @@ init_touch      Proc far
         mov di,OFFSET touch_name4
         mov si,OFFSET touch_thread
         mov ax,4
-        mov cx,100h
+        mov cx,stack0_size
         CreateThread
 ;
         pop es

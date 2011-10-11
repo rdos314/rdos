@@ -30,6 +30,7 @@ INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE ..\os\protseg.def
 
 ; Auto-detect doesn't seem to work so give COM port here:
 
@@ -317,7 +318,7 @@ init_touch      Proc far
         mov di,OFFSET touch_name
         mov si,OFFSET touch_thread
         mov ax,4
-        mov cx,100h
+        mov cx,stack0_size
         CreateThread
 ;
         pop es

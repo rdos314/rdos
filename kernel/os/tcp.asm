@@ -5735,7 +5735,7 @@ init_task_tcp    PROC near
     mov si,OFFSET tcp_thread_pr
     mov di,OFFSET tcp_thread_name
     mov ax,3
-    mov cx,256
+    mov cx,stack0_size
     CreateThread
 ;
     ret

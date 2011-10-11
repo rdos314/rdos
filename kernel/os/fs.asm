@@ -55,6 +55,16 @@ CallFileSystem  MACRO   call_proc
     pop ds
                 ENDM
 
+
+data    SEGMENT byte public 'DATA'
+
+fs_init_hooks		DB ?
+fs_done_hooks		DB ?
+fs_init_hook_arr	DD 32 DUP(?,?)
+fs_done_hook_arr	DD 32 DUP(?,?)
+
+data    ENDS
+
 code    SEGMENT byte public 'CODE'
 
     .386p
@@ -86,7 +96,7 @@ hook_init_file_system   Proc far
     push ax
     push bx
 ;    
-    mov ax,fs_sys_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov al,ds:fs_init_hooks
     mov bl,al
@@ -122,7 +132,7 @@ hook_file_system_started   Proc far
     push ax
     push bx
 ;    
-    mov ax,fs_sys_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov al,ds:fs_done_hooks
     mov bl,al
@@ -598,7 +608,7 @@ init_process    ENDP
 hook_thread_name DB 'Init File System', 0
 
 hook_thread     PROC far
-    mov ax,fs_sys_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov cl,ds:fs_init_hooks
     or cl,cl
@@ -618,9 +628,13 @@ hook_thread_loop:
     jnz hook_thread_loop
 
 hook_thread_done:
+    mov ax,fs_sys_data_sel
+    mov ds,ax
     mov ds:fs_init_done,1
     LeaveSection ds:fs_init_section
 ;
+    mov ax,SEG data
+    mov ds,ax
     mov cl,ds:fs_done_hooks
     or cl,cl
     je hook_started_done
@@ -665,7 +679,7 @@ init_hook_thread    Proc far
     mov si,OFFSET hook_thread
     mov di,OFFSET hook_thread_name
     mov ax,3
-    mov cx,256
+    mov cx,stack0_size
     CreateThread
 ;
     popad
@@ -807,6 +821,9 @@ init    PROC far
 ;    
     mov ds:fs_init_done,0
     mov ds:file_defs,0
+;
+    mov ax,SEG data
+    mov ds,ax    
     mov ds:fs_init_hooks,0
     mov ds:fs_done_hooks,0
     pop ds

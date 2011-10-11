@@ -31,6 +31,7 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\drive.inc
+INCLUDE protseg.def
 
 boot_media_struc    STRUC
 
@@ -398,7 +399,7 @@ cfdSave:
     mov si,OFFSET discbuf_thread
     mov di,OFFSET discbuf_name
     mov ax,4
-    mov cx,100h
+    mov cx,stack0_size
     CreateThread
     pop ecx
     pop es
@@ -549,7 +550,7 @@ ofdSave:
     mov si,OFFSET discbuf_thread
     mov di,OFFSET discbuf_name
     mov ax,4
-    mov cx,100h
+    mov cx,stack0_size
     CreateThread
     pop es
 ;

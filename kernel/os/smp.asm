@@ -518,7 +518,7 @@ init_system     Proc far
     mov si,OFFSET smp_thread_pr
     mov di,OFFSET smp_thread_name
     mov ax,4
-    mov cx,256
+    mov cx,stack0_size
     CreateThread
 ;
     popa

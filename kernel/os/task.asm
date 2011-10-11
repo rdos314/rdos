@@ -3946,7 +3946,7 @@ start_no_msr:
     mov ds:tpr_proc,OFFSET ApicMemTpr        
 
 start_locks_ok:    
-    mov ecx,200h
+    mov ecx,stack0_size
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -3977,7 +3977,7 @@ create_null_loop:
     mov ax,cs
     mov ds,ax
     xor ax,ax
-    mov ecx,200h
+    mov ecx,stack0_size
     mov si,OFFSET null_thread
     xor di,di
     CreateThread

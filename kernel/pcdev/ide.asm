@@ -31,6 +31,7 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\drive.inc
+INCLUDE ..\os\protseg.def
 INCLUDE pci.inc
 
 part_struc      STRUC
@@ -1855,7 +1856,7 @@ install_primary:
 install_cr_thread:
     mov si,OFFSET discbuf_thread
     mov ax,2
-    mov cx,100h
+    mov cx,stack0_size
     CreateThread
     pop ds
     clc
@@ -2022,7 +2023,7 @@ install_pci_unit_ok:
     mov di,OFFSET pci_name_str
     mov si,OFFSET discbuf_thread
     mov ax,2
-    mov cx,100h
+    mov cx,stack0_size
     CreateThread
     pop ds
     clc

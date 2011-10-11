@@ -31,6 +31,7 @@ INCLUDE ..\..\kernel\os.inc
 INCLUDE ..\..\kernel\user.inc
 INCLUDE ..\..\kernel\driver.def
 INCLUDE ..\..\kernel\os\system.def
+INCLUDE ..\..\kernel\os\protseg.def
 INCLUDE acpi.def
 
 acpi_data_seg STRUC    
@@ -477,7 +478,7 @@ init_acpi_thread        PROC far
 ;       
     mov si,OFFSET acpi_pr
     mov di,OFFSET acpi_name
-    mov cx,500
+    mov cx,stack0_size
     mov ax,4
     CreateThread
 

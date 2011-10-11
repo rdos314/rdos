@@ -399,7 +399,7 @@ check_timer_start:
     mov es,ax
     mov si,OFFSET timer_pr
     mov di,OFFSET timer_name
-    mov cx,100h
+    mov cx,stack0_size
     mov ax,3
     CreateThread
     popa
@@ -571,7 +571,7 @@ check_timer16_start:
     mov es,ax
     mov si,OFFSET timer16_pr
     mov di,OFFSET timer_name
-    mov cx,100h
+    mov cx,stack0_size
     mov ax,3
     CreateThread
     popa
