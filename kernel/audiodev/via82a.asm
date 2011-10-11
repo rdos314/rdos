@@ -672,10 +672,12 @@ has_audio  Endp
 PciVendorTab:
 pci00   DW 1106h, 3058h
 pci01   DW 0,     0
-
-detect_name     DB 'VT82C-AC97',0
-
-detect_thread   proc far
+    
+init_dev    Proc far
+    push ds
+    push es
+    pusha
+;
     mov ax,SEG data
     mov ds,ax
     mov ds:IoBase,0
@@ -743,23 +745,6 @@ init_ch_loop:
     loop init_ch_loop
 
 init_pci_done:
-    ret
-detect_thread   endp
-    
-init_dev    Proc far
-    push ds
-    push es
-    pusha
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov di,OFFSET detect_name
-    mov si,OFFSET detect_thread
-    mov ax,4
-    mov cx,stack0_size
-    CreateThread
-;
     popa
     pop es
     pop ds
@@ -782,7 +767,7 @@ init    PROC far
     mov ds,ax
     mov es,ax
     mov edi,OFFSET init_dev
-    HookInitTasking
+    HookInitPci
 ;
     mov esi,OFFSET has_audio
     mov edi,OFFSET has_audio_name
