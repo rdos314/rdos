@@ -1327,7 +1327,7 @@ DoSpawn Proc near
     mov si,OFFSET spawn_startup
     mov bx,gs
     mov ax,2
-    mov ecx,200h
+    mov ecx,stack0_size
     CreateProcess
 ;
     pop di
@@ -2030,7 +2030,7 @@ run_process     PROC near
     mov ds,ax
     mov si,OFFSET load_process
     mov ax,2
-    mov ecx,200h
+    mov ecx,stack0_size
     CreateProcess
 ;
     mov ax,100
@@ -2164,7 +2164,7 @@ init    PROC far
     mov es,ax
 ;
     mov edi,OFFSET init_sys
-    HookInitTasking
+    HookFileSystemStarted
 ;
     mov esi,OFFSET hook_load_exe
     mov edi,OFFSET hook_load_exe_name
