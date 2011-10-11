@@ -85,8 +85,7 @@ hook_init_file_system   Proc far
     push ds
     push ax
     push bx
-    push cx
-    mov cx,ds
+;    
     mov ax,fs_sys_data_sel
     mov ds,ax
     mov al,ds:fs_init_hooks
@@ -98,7 +97,7 @@ hook_init_file_system   Proc far
     mov [bx+4],es
     inc al
     mov ds:fs_init_hooks,al
-    pop cx
+;    
     pop bx
     pop ax
     pop ds
@@ -122,8 +121,7 @@ hook_file_system_started   Proc far
     push ds
     push ax
     push bx
-    push cx
-    mov cx,ds
+;    
     mov ax,fs_sys_data_sel
     mov ds,ax
     mov al,ds:fs_done_hooks
@@ -135,7 +133,7 @@ hook_file_system_started   Proc far
     mov [bx+4],es
     inc al
     mov ds:fs_done_hooks,al
-    pop cx
+;    
     pop bx
     pop ax
     pop ds
