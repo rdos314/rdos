@@ -1414,11 +1414,13 @@ InitPciAdapter  Endp
 ;       RETURNS:    
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-detect_name DB 'Serial PCI',0
-
-detect_thread   proc far
-    mov ax,100
+    
+init_pci    Proc far
+    push ds
+    push es
+    pusha
+;
+    mov ax,25
     WaitMilliSec
 ; 
     mov dx,3F8h
@@ -1474,29 +1476,12 @@ dtpci:
 ;    mov ax,SEG data
 ;    mov ds,ax
 ;    mov cx,ds:sd_ports
-    ret
-detect_thread   endp
-    
-init_pci    Proc far
-    push ds
-    push es
-    pusha
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov di,OFFSET detect_name
-    mov si,OFFSET detect_thread
-    mov ax,4
-    mov cx,stack0_size
-    CreateThread
 ;
     popa
     pop es
     pop ds
     retf32
 init_pci    Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1512,7 +1497,7 @@ init    Proc far
     mov ds,ax
     mov es,ax
     mov edi,OFFSET init_pci
-    HookInitTasking
+    HookInitPci
     clc
     ret
 init    Endp
