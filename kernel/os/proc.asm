@@ -1617,19 +1617,6 @@ terminate_thread:
     SimSti
     GetThread
     mov ds,ax
-    mov bx,ax
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov ax,ds:math_tss
-    cmp ax,bx
-    jne terminate_fpu_ok
-;
-    mov ds:math_tss,0
-
-terminate_fpu_ok:
-    GetThread
-    mov ds,ax
     mov al,ds:p_parent_switch
     or al,al
     jz terminate_focus_ok

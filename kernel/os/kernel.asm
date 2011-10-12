@@ -377,7 +377,6 @@ init_boot_system    PROC near
     mov ds:debug_list,ax
     mov ds:debug_thread,ax
     mov ds:flat_base,0
-    mov ds:math_tss,ax
     mov ds:check_point,0
     mov ds:patch_spinlock,0
     mov ds:shut_spinlock,0

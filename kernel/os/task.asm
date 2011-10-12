@@ -3111,6 +3111,23 @@ load_cr3_ok:
     mov ax,es
     mov ds,ax
 ;
+    test fs:ps_flags,PS_FLAG_FPU
+    jz load_fpu_ok
+;    
+    mov bx,fs:ps_math_thread
+    cmp ax,bx
+    je load_fpu_ok
+;
+    push ds
+    mov ds,bx
+    mov bx,OFFSET p_math_control
+    clts
+    db 9Bh, 66h, 0DDh, 37h      ;       32-bit fsave [bx]
+    pop ds
+;
+    lock and fs:ps_flags,NOT PS_FLAG_FPU
+
+load_fpu_ok:
     mov eax,cr0
     or al,8
     mov cr0,eax    
@@ -6668,6 +6685,7 @@ swap_out    ENDP
     
 cleanup_thread:
     call SkipCurrentThread
+    lock and fs:ps_flags,NOT PS_FLAG_FPU
 ;    
     mov bx,cs:system_thread
     Signal    
@@ -6700,6 +6718,7 @@ cleanup_thread:
     
 cleanup_process:
     call SkipCurrentThread
+    lock and fs:ps_flags,NOT PS_FLAG_FPU
 ;    
     mov bx,cs:system_thread
     Signal    

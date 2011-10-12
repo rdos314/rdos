@@ -35,6 +35,7 @@ INCLUDE ..\driver.def
 INCLUDE system.def
 INCLUDE system.inc
 INCLUDE irq.inc
+INCLUDE proc.inc
 
 ;
 seg_es  EQU 0
@@ -1113,32 +1114,15 @@ math_emulate_fpu:
 
 math_real_fpu:
     GetThread
-    mov bx,ax
-;
-    mov ax,system_data_sel
     mov ds,ax
-    mov ax,ds:math_tss
+    mov bx,OFFSET p_math_control
     clts
-    cmp ax,bx
-    je math_done
-;
-    mov ds:math_tss,bx
-    or ax,ax
-    jz math_reload
-;
-    verr ax
-    jnz math_reload
-;    
-    mov ds,ax
-    push bx
-    mov bx,OFFSET p_math_control
-    db 9Bh, 66h, 0DDh, 37h      ;       32-bit fsave [bx]
-    pop bx
-
-math_reload:
-    mov ds,bx
-    mov bx,OFFSET p_math_control
     db 9Bh, 66h, 0DDh, 27h      ;       32-bit frstor [bx]
+;
+    mov bx,core_data_sel
+    mov ds,bx
+    mov ds:ps_math_thread,ax
+    lock or ds:ps_flags,PS_FLAG_FPU
 
 math_done:
     pop ds

@@ -33,6 +33,7 @@ PS_FLAG_INIT_CLOCK  = 10h
 PS_FLAG_ACTIVE      = 20h
 PS_FLAG_FLUSH       = 40h
 PS_FLAG_LOADING     = 80h
+PS_FLAG_FPU         = 100h
 
 timer_struc	STRUC
 
@@ -65,6 +66,7 @@ ps_curr_thread      DW ?
 ps_last_thread      DW ?
 ps_flags            DW ?
 ps_null_thread      DW ?
+ps_math_thread      DW ?
 
 ps_apic             DD ?
 ps_acpi             DB ?

@@ -105,7 +105,7 @@ device32_header   ENDS
 
 system_seg	STRUC
 
-math_tss			DW ?
+dummy_pad1          DW ?
 
 phys_free_pages		DD ?
 
@@ -113,7 +113,7 @@ free_phys_list		DD ?
 free_dma_phys_list	DD ?
 unused_phys_list	DD ?
 
-dummy_pad           DW 4 DUP(?)
+dummy_pad2          DW 4 DUP(?)
 
 debug_list			DW ?
 
