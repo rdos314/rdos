@@ -41,6 +41,8 @@ public:
 
 	operator long double () const;
 
+    void SetCurrent();
+
 	long GetMsb() const;
 	long GetLsb() const;
 	void SetRaw(unsigned long Msb, unsigned long Lsb);

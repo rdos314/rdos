@@ -201,6 +201,23 @@ TDateTime::operator long double () const
 
 /*##########################################################################
 #
+#   Name       : TDateTime::SetCurrent
+#
+#   Purpose....: Set current data & time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDateTime::SetCurrent()
+{
+    RdosGetTime(&FMsb, &FLsb);
+    RawToRecord();
+}
+
+/*##########################################################################
+#
 #   Name       : TDateTime::SetRaw
 #
 #   Purpose....: Set data in raw format
