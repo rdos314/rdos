@@ -4409,6 +4409,7 @@ ptab_init:
     mov es:ps_last_thread,-1
     mov es:ps_flags,PS_FLAG_INIT_CLOCK
     mov es:ps_null_thread,0
+    mov es:ps_math_thread,0
     mov es:ps_apic,-1
     mov es:ps_last_lsb,0
     mov es:ps_global_post_perc,DEFAULT_GLOBAL
@@ -6686,6 +6687,7 @@ swap_out    ENDP
 cleanup_thread:
     call SkipCurrentThread
     lock and fs:ps_flags,NOT PS_FLAG_FPU
+    mov fs:ps_math_thread,0
 ;    
     mov bx,cs:system_thread
     Signal    
@@ -6719,6 +6721,7 @@ cleanup_thread:
 cleanup_process:
     call SkipCurrentThread
     lock and fs:ps_flags,NOT PS_FLAG_FPU
+    mov fs:ps_math_thread,0
 ;    
     mov bx,cs:system_thread
     Signal    
