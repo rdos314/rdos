@@ -1113,7 +1113,6 @@ math_emulate_fpu:
 
 math_real_fpu:
     GetThread
-    mov ds,ax
     mov bx,ax
 ;
     mov ax,system_data_sel
