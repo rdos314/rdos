@@ -3126,12 +3126,12 @@ load_cr3_ok:
     pop ds
 ;
     lock and fs:ps_flags,NOT PS_FLAG_FPU
-
-load_fpu_ok:
+;
     mov eax,cr0
     or al,8
     mov cr0,eax    
-;
+
+load_fpu_ok:
     lldt ds:p_tss_ldt
 ;
     mov ax,ds:p_flags
@@ -3675,6 +3675,10 @@ ReloadTimer Endp
 start_core_name    DB 'Start Core', 0
 
 start_core:
+    mov eax,cr0
+    or al,8
+    mov cr0,eax    
+;    
     mov ax,core_data_sel
     mov fs,ax
     lock or fs:ps_flags,PS_FLAG_ACTIVE
@@ -6576,6 +6580,10 @@ stop_timer      ENDP
     public init_first_thread
 
 init_first_thread:
+    mov eax,cr0
+    or al,8
+    mov cr0,eax    
+;    
     mov ax,es
     mov ds,ax
     mov ax,ds:p_tss_ss
