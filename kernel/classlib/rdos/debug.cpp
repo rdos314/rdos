@@ -564,6 +564,11 @@ void TDebugThread::SetException(TExceptionEvent *event)
     Dr7 = tss.dr7;
     MathControl = tss.MathControl;
     MathStatus = tss.MathStatus;
+    MathTag = tss.MathTag;
+    MathEip = tss.MathEip;
+    MathCs = tss.MathCs;
+    MathDataOffs = tss.MathDataOffs;
+    MathDataSel = tss.MathDataSel;
 
     for (i = 0; i < 8; i++)
         St[i] = tss.st[i];
@@ -725,10 +730,6 @@ void TDebugThread::WriteRegs()
     tss.MathControl = MathControl;
     tss.MathStatus = MathStatus;
     tss.MathTag = MathTag;
-    tss.MathEip = MathEip;
-    tss.MathCs = MathCs;
-    tss.MathDataOffs = MathDataOffs;
-    tss.MathDataSel = MathDataSel;
 
     for (i = 0; i < 8; i++)
         tss.st[i] = St[i];
