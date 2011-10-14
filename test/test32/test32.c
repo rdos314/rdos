@@ -5,7 +5,7 @@ void main()
 {
     long double x,y,z;
 
-    RdosDebug();
+    RdosLoad32();
     
     x = 1.23;
     y = 5.34;

@@ -2281,8 +2281,15 @@ fE      DW OFFSET free_system
 fF      DW OFFSET free_system
 
 free_mem    PROC far
-    push ds
     pushad
+    push ds
+    push fs
+    push gs
+;
+    xor ax,ax
+    mov ds,ax
+    mov fs,ax
+    mov gs,ax
 ;
     mov bx,es
     mov ax,mem_sel
@@ -2348,8 +2355,32 @@ free_mem_clear:
     xor ax,ax
     mov es,ax
 free_mem_end:
+    pop ax
+    verr ax
+    jz free_mem_gs_ok
+;
+    xor ax,ax
+    
+free_mem_gs_ok:
+    mov gs,ax
+    pop ax
+    verr ax
+    jz free_mem_fs_ok
+;
+    xor ax,ax
+    
+free_mem_fs_ok:
+    mov fs,ax
+    pop ax
+    verr ax
+    jz free_mem_ds_ok
+;
+    xor ax,ax
+    
+free_mem_ds_ok:
+    mov ds,ax
+;    
     popad
-    pop ds
     retf32
 free_mem    ENDP
 
