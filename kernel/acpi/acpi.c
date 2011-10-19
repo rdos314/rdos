@@ -65,6 +65,7 @@ struct TDeviceEntry *DeviceArr[MAX_DEVICE_COUNT];
 
 void __far ImplTestGate(const char *msg)
 {
+    printf("Testing..\r\n");
 }
 
 /*##########################################################################

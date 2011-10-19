@@ -43,7 +43,12 @@ SYS_BASE EQU 0DE000000h
 
 code    SEGMENT byte public 'CODE'
 
-.386p
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
+    .386p
+ENDIF
     
     assume cs:code
                       
@@ -80,7 +85,7 @@ SendEvent Proc near
     mov ds,ax
     mov ds,ds:p_app_sel
     mov ds,ds:app_mod_sel
-    LockTask
+    RequestSpinlock ds:lib_spinlock
 ;
     mov ax,ds:lib_events
     or ax,ax
@@ -107,7 +112,7 @@ seInsDone:
     mov ds:lib_events,es
     xor ax,ax
     mov es,ax
-    UnlockTask
+    ReleaseSpinlock ds:lib_spinlock
 ;
     push es
 
@@ -613,6 +618,7 @@ create_lib_size_ok:
     mov es:lib_file_handle,bx
     mov es:lib_run_now,0
     mov es:lib_init_param,0
+    InitSpinlock es:lib_spinlock
 ;
     mov es:mod_free_dll_proc,0
 ;
@@ -3556,7 +3562,7 @@ get_debug_event Proc far
     push si
 ;
     mov ds,bx
-    LockTask
+    RequestSpinlock ds:lib_spinlock
     mov ax,ds:lib_events
     or ax,ax
     jz gdeLeaveFail
@@ -3577,7 +3583,7 @@ get_debug_event Proc far
     mov ds:lib_events,0
 
 gdeRemoved:
-    UnlockTask
+    ReleaseSpinlock ds:lib_spinlock
 ;
     mov ds:lib_curr_event,es
     mov bl,es:event_code
@@ -3586,7 +3592,7 @@ gdeRemoved:
     jmp gdeDone
 
 gdeLeaveFail:
-    UnlockTask
+    ReleaseSpinlock ds:lib_spinlock
     xor bl,bl
     xor ax,ax
     stc
@@ -3867,6 +3873,7 @@ notify_pe_exception     Proc far
     mov ds,ds:p_app_sel
     mov ds,ds:app_mod_sel
     LockTask
+    RequestSpinlock ds:lib_spinlock
 ;
     mov ax,ds:lib_events
     or ax,ax
@@ -3891,6 +3898,7 @@ neEmpty:
 
 neInsDone:
     mov ds:lib_events,es
+    ReleaseSpinlock ds:lib_spinlock
     xor ax,ax
     mov es,ax
 ;
