@@ -5,7 +5,7 @@ void main()
 {
     long double x,y,z;
 
-    RdosLoad32();
+//    RdosTestGate("");
     
     x = 1.23;
     y = 5.34;

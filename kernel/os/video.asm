@@ -1052,6 +1052,84 @@ write_size_string32     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           WriteAttributeString
+;
+;           DESCRIPTION:    Write a number of characters & attributes
+;
+;           PARAMETERS:     AX          Col
+;                           DX          Row
+;                           ES:(E)DI    String
+;                           (E)CX       Number of characters            
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_attr_string_name  DB 'Write Attribute String',0
+
+write_attr_string16     PROC far
+    push ds
+    pusha
+;    
+    HideMouse
+    or cx,cx
+    jz write_attr_string_done16
+;    
+    mov si,cx
+    mov cx,ax
+
+write_attr_string_loop16:
+    mov al,es:[di]
+    mov bl,es:[di+1]
+    mov bh,bl
+    shr bh,4
+    and bx,0F0Fh
+    add di,2
+    CallVideo write_char_proc
+    inc cx
+    sub si,1
+    jnz write_attr_string_loop16
+
+write_attr_string_done16:
+    ShowMouse
+;       
+    popa
+    pop ds
+    retf32
+write_attr_string16     ENDP
+
+write_attr_string32     PROC far
+    push ds
+    pushad
+;
+    HideMouse
+    or ecx,ecx
+    jz write_attr_string_done32
+;
+    mov esi,ecx
+    mov cx,ax
+
+write_attr_string_loop32:
+    mov al,es:[edi]
+    mov bl,es:[edi+1]
+    mov bh,bl
+    shr bh,4
+    and bx,0F0Fh
+    add edi,2
+    CallVideo write_char_proc
+    inc cx
+    sub esi,1
+    jnz write_attr_string_loop32
+
+write_attr_string_done32:
+    ShowMouse
+;
+    popad
+    pop ds
+    retf32
+write_attr_string32     ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           SetClipRect
 ;
 ;           DESCRIPTION:    Set clipping rectangle
@@ -3363,6 +3441,13 @@ init_video      PROC near
     mov edi,OFFSET write_size_string_name
     mov dx,virt_es_in
     mov ax,write_size_string_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET write_attr_string16
+    mov esi,OFFSET write_attr_string32
+    mov edi,OFFSET write_attr_string_name
+    mov dx,virt_es_in
+    mov ax,write_attrib_string_nr
     RegisterUserGate
 ;
     mov esi,OFFSET set_clip_rect

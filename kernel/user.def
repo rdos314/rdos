@@ -550,4 +550,6 @@ get_acpi_device_nr              = 444
 get_cpu_temperature_nr          = 445
 get_acpi_object_nr              = 446
 
+write_attrib_string_nr          = 447
+
 usergate_entries			= 460

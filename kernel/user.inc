@@ -2141,6 +2141,14 @@ WriteSizeString MACRO
 	UserGate write_size_string_nr
 						ENDM
 
+;	IN  AX              Column number (x)
+;	IN  DX              Row number (y)
+;	IN  ES:(E)DI        Buffer
+;   IN  (E)CX           Count
+WriteAttributeString MACRO
+	UserGate write_attrib_string_nr
+						ENDM
+
 ;;;;;;;;;;; FONT ;;;;;;;;;;
 
 ;	IN  AX              Requested font height
