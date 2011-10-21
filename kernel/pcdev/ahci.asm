@@ -108,8 +108,10 @@ CheckPciAhci Proc near
     FindPciClassAll
     jc cpaDone
 ;
+    push cx
     mov eax,2000h
     AllocateBigLinear
+    pop cx
 ;    
     mov cl,PCI_nbr_base_address5
     ReadPciDword
@@ -117,8 +119,10 @@ CheckPciAhci Proc near
     or al,67h
     SetPhysicalPage
     AllocateGdt
+    push cx
     mov ecx,10FFh
     CreateDataSelector16
+    pop cx
     mov es,bx
     
 cpaDone:
