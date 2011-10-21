@@ -34,6 +34,8 @@ INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
 INCLUDE pci.inc
 
+MAX_AHCI_DEVICES    = 16
+
 FIS_TYPE_HTD            = 27h
 FIS_TYPE_DTH            = 34h
 FIS_TYPE_DMA_ACTIVATE   = 39h
@@ -76,9 +78,34 @@ fdth_resv2      DW ?,?,?
 
 fis_dth_struc   ENDS
 
+hba_struc   STRUC
+
+hba_cap         DD ?
+hba_ghc         DD ?
+hba_is          DD ?
+hba_pi          DD ?
+hba_vs          DD ?
+hba_ccc_ctl     DD ?
+hba_ccc_ports   DD ?
+hba_em_loc      DD ?
+hba_em_ctl      DD ?
+hba_cap2        DD ?
+hba_bohc        DD ?
+
+hba_struc   ENDS
+
+ahci_device_struc   STRUC
+
+ad_hba_sel          DW ?
+ad_port_count       DW ?
+ad_hba_offset_arr   DW ?
+
+ahci_device_struc   ENDS
+
 data    SEGMENT byte public 'DATA'
 
-ahci_count      DW ?
+ahci_dev_count      DW ?
+ahci_dev_arr        DW MAX_AHCI_DEVICES DUP(?)
 
 data    ENDS
 
@@ -92,6 +119,62 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AddDevice
+;
+;       DESCRIPTION:    Add an AHCI-device
+;
+;       PARAMETERS:     FS          HBA selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddDevice   Proc near
+    mov eax,fs:hba_pi
+    xor dx,dx
+    mov cx,32
+
+adPortCheckLoop:
+    rcr eax,1
+    jnc adPortCheckNext
+;
+    inc dx
+
+adPortCheckNext:
+    loop adPortCheckLoop
+;
+    movzx eax,dx
+    add eax,eax
+    add eax,OFFSET ad_hba_offset_arr
+    AllocateSmallGlobalMem
+    mov es:ad_port_count,dx
+    mov es:ad_hba_sel,fs
+;
+    mov cx,32
+    mov eax,fs:hba_pi
+    mov bx,OFFSET ad_hba_offset_arr
+    mov si,100h
+
+adPortAddLoop:
+    rcr eax,1
+    jnc adPortAddNext
+;
+    mov es:[bx],si
+    add bx,2
+
+adPortAddNext:
+    add si,80h
+    loop adPortAddLoop        
+;
+    mov bx,ds:ahci_dev_count
+    add bx,bx
+    add bx,OFFSET ahci_dev_arr
+    mov ds:[bx],es
+    inc ds:ahci_dev_count
+    ret
+AddDevice   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CheckPciAhci
 ;
 ;           DESCRIPTION:    Check for PCI AHCI devices
@@ -100,9 +183,13 @@ code    SEGMENT byte public use16 'CODE'
 
 CheckPciAhci Proc near
     mov ax,SEG data
-    mov es,ax
+    mov ds,ax
+    mov ds:ahci_dev_count,0
 ;    
-    xor ax,ax
+    xor si,si
+
+cpaLoop: 
+    mov ax,si
     mov bh,1
     mov bl,6
     FindPciClassAll
@@ -123,7 +210,15 @@ CheckPciAhci Proc near
     mov ecx,10FFh
     CreateDataSelector16
     pop cx
-    mov es,bx
+    mov fs,bx
+    test fs:hba_ghc,80000000h
+    jz cpaNext
+;
+    call AddDevice
+
+cpaNext:
+    inc si
+    jmp cpaLoop
     
 cpaDone:
     ret
