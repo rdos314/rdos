@@ -35,6 +35,7 @@ INCLUDE ..\os\protseg.def
 INCLUDE pci.inc
 
 MAX_AHCI_DEVICES    = 16
+MAX_AHCI_PORTS      = 32
 
 FIS_TYPE_HTD            = 27h
 FIS_TYPE_DTH            = 34h
@@ -275,6 +276,8 @@ data    SEGMENT byte public 'DATA'
 
 ahci_dev_count      DW ?
 ahci_dev_arr        DW MAX_AHCI_DEVICES DUP(?)
+ahci_port_count     DW ?
+ahci_port_arr       DW MAX_AHCI_PORTS DUP(?)
 
 data    ENDS
 
@@ -860,6 +863,76 @@ saStart:
 saDone:
     ret
 StartAhci Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WaitPortDet
+;
+;           DESCRIPTION:    Wait for port detect to become valid
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitPortDet Proc near
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:ahci_port_count,0
+;    
+    mov dx,100
+
+wpdRetry:    
+    mov cx,ds:ahci_dev_count
+    mov si,OFFSET ahci_dev_arr
+
+wpdDev:
+    push ds
+    push cx
+    push si
+;
+    mov ds,ds:[si]
+    mov cx,32
+    mov si,OFFSET ad_port_arr
+
+wpdPort:
+    mov ax,ds:[si]
+    or ax,ax
+    jz wpdNext    
+;
+    mov es,ax
+    mov es,es:ap_hba_sel
+    mov eax,es:hba_pxssts
+    and al,0Fh
+    cmp al,3
+    jne wpdWait
+;
+    mov eax,es:hba_pxtfd
+    and al,88h
+    jnz wpdWait
+    
+wpdNext:
+    add si,2
+    loop wpdPort
+;    
+    pop si
+    pop cx
+    pop ds
+;
+    add si,2
+    loop wpdDev        
+    jmp wpdDone
+
+wpdWait:
+    pop si
+    pop cx
+    pop ds
+;
+    mov ax,10
+    WaitMilliSec
+    jmp wpdRetry
+
+wpdDone:
+    ret
+WaitPortDet Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -877,8 +950,9 @@ StartAhci Endp
 ahci_name DB 'AHCI',0
 
 ahci_thread:
-    int 3
     call StartAhci
+    int 3
+    call WaitPortDet
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
