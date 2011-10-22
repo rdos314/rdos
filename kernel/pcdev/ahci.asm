@@ -612,7 +612,6 @@ adPortAddNext:
     mov ds:[bx],es
     inc ds:ahci_dev_count
 ;
-    int 3
     or dword ptr fs:hba_ghc,HBA_GHC_HR
 ;
     popad
@@ -623,25 +622,25 @@ AddDevice   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CheckPciAhci
+;           NAME:           InitPciAhci
 ;
-;           DESCRIPTION:    Check for PCI AHCI devices
+;           DESCRIPTION:    Init PCI AHCI devices
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CheckPciAhci Proc near
+InitPciAhci Proc near
     mov ax,SEG data
     mov ds,ax
     mov ds:ahci_dev_count,0
 ;    
     xor si,si
 
-cpaLoop: 
+ipaLoop: 
     mov ax,si
     mov bh,1
     mov bl,6
     FindPciClassAll
-    jc cpaDone
+    jc ipaDone
 ;
     push cx
     mov eax,2000h
@@ -666,18 +665,93 @@ cpaLoop:
     pop cx
     mov fs,bx
     test fs:hba_ghc,80000000h
-    jz cpaNext
+    jz ipaNext
 ;
     call AddDevice
 
-cpaNext:
+ipaNext:
     inc si
-    jmp cpaLoop
+    jmp ipaLoop
     
-cpaDone:
+ipaDone:
     ret
-CheckPciAhci Endp
+InitPciAhci Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           StartDevice
+;
+;           DESCRIPTION:    Start device
+;
+;           PARAMETERS:     DS     Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartDevice Proc near
+    ret
+StartDevice Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           StartAhci
+;
+;           DESCRIPTION:    Start AHCI devices
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartAhci Proc near
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov dx,100
+
+saRetry:    
+    mov cx,ds:ahci_dev_count
+    or cx,cx
+    jz saDone
+;    
+    mov si,OFFSET ahci_dev_arr
+
+saCheck:
+    mov fs,ds:[si]
+    mov fs,fs:ad_hba_sel
+    test fs:hba_ghc,HBA_GHC
+    jnz saWait
+;
+    add si,2
+    loop saCheck    
+    jmp saCheckDone
+
+saWait:
+    sub dx,1
+    jz saCheckDone
+;    
+    mov ax,10
+    WaitMilliSec
+    jmp saRetry    
+
+saCheckDone:    
+    mov cx,ds:ahci_dev_count
+    mov si,OFFSET ahci_dev_arr
+
+saStart:
+    push ds
+    push cx
+    push si
+    mov ds,ds:[si]
+    call StartDevice    
+    pop si
+    pop cx
+    pop ds
+    add si,2
+    loop saStart
+
+saDone:
+    ret
+StartAhci Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -695,7 +769,7 @@ ahci_name DB 'AHCI',0
 
 ahci_thread:
     int 3
-    call CheckPciAhci
+    call StartAhci
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -714,6 +788,8 @@ init_ahci    Proc far
     push ds
     push es
     pusha
+;    
+    call InitPciAhci
 ;    
     mov ax,cs
     mov ds,ax
