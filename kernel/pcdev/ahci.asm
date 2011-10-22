@@ -420,6 +420,7 @@ apPhysLoop:
     push es
     push eax
     push ecx
+    push edi
 ;    
     mov edi,edx
     mov ax,flat_sel
@@ -428,6 +429,7 @@ apPhysLoop:
     shr ecx,2
     rep stos dword ptr es:[edi]
 ;
+    pop edi
     pop ecx
     pop eax
     pop es
