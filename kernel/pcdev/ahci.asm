@@ -324,6 +324,11 @@ AddPort     Proc near
     push ds
     pushad
 ;    
+    AllocateGdt
+    mov ecx,80h
+    CreateDataSelector16
+    push bx
+;    
     call GetSlotEntry
     movzx ecx,cs:[bx].prd_pages
     inc cx
@@ -369,7 +374,10 @@ apPhysLoop:
 ;
     mov ds:ap_linear,edx
     mov ds:ap_physical,eax
-    mov ds:ap_pages,cx
+    mov ds:ap_pages,cx    
+;
+    pop ax
+    mov ds:ap_hba_sel,ax
 ;
     popad
     pop ds    
