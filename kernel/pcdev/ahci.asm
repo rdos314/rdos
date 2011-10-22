@@ -365,6 +365,46 @@ CreatePortFis   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CreatePortCmdList
+;
+;       DESCRIPTION:    Create port command list
+;
+;       PARAMETERS:     DS      Port sel
+;                       FS      HBA sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreatePortCmdList   Proc near
+    push es
+    push eax
+    push bx
+    push ecx
+    push edx
+;    
+    mov ecx,ap_cmd_size
+    mov edx,ap_cmd
+    add edx,ds:ap_linear
+    AllocateGdt
+    CreateDataSelector16
+    mov ds:ap_cmd_sel,bx    
+;
+    mov eax,ap_cmd
+    add eax,ds:ap_physical
+    mov es,ds:ap_hba_sel
+    mov es:hba_pxclb,eax
+    mov es:hba_pxclbu,0
+; 
+    pop edx
+    pop ecx
+    pop bx
+    pop eax
+    pop es       
+    ret
+CreatePortCmdList   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AddPort
 ;
 ;       DESCRIPTION:    Add an AHCI port
@@ -434,7 +474,6 @@ apPhysLoop:
     pop ecx
     pop eax
     pop es
-    int 3
 ;                
     push bx
     AllocateGdt
@@ -445,6 +484,7 @@ apPhysLoop:
     pop bx
     pop cx
 ;
+    int 3
     mov ds:ap_linear,edx
     mov ds:ap_physical,eax
     mov ds:ap_pages,cx    
@@ -453,6 +493,7 @@ apPhysLoop:
     mov ds:ap_hba_sel,ax
 ;
     call CreatePortFis
+    call CreatePortCmdList
 ;
     popad
     pop ds    
