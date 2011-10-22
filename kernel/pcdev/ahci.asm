@@ -326,6 +326,7 @@ CreatePortFis   Proc near
     push ecx
     push edx
 ;    
+    mov eax,fs:hba_cap
     test eax,HBA_CAP_FBSS
     jz cpfInHeader
 
