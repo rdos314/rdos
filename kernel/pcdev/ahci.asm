@@ -752,10 +752,7 @@ spDo:
     mov gs:hba_pxclb,eax
     mov gs:hba_pxclbu,0
 ;
-    or gs:hba_pxcmd,HBA_PXCMD_FRE
-;
-    mov eax,gs:hba_pxserr
-    mov gs:hba_pxserr,eax    
+    or gs:hba_pxcmd,HBA_PXCMD_FRE OR HBA_PXCMD_SUD
 ;
     mov eax,gs:hba_pxis
     mov gs:hba_pxis,eax
@@ -876,7 +873,6 @@ StartAhci Endp
 WaitPortDet Proc near
     mov ax,SEG data
     mov ds,ax
-    mov ds:ahci_port_count,0
 ;    
     mov dx,100
 
@@ -904,10 +900,6 @@ wpdPort:
     and al,0Fh
     cmp al,3
     jne wpdWait
-;
-    mov eax,es:hba_pxtfd
-    and al,88h
-    jnz wpdWait
     
 wpdNext:
     add si,2
@@ -933,6 +925,61 @@ wpdWait:
 wpdDone:
     ret
 WaitPortDet Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ClearPortSerr
+;
+;           DESCRIPTION:    Clear port SERR
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearPortSerr Proc near
+    mov ax,SEG data
+    mov ds,ax
+;    
+    mov cx,ds:ahci_dev_count
+    mov si,OFFSET ahci_dev_arr
+
+cpsDev:
+    push ds
+    push cx
+    push si
+;
+    mov ds,ds:[si]
+    mov cx,32
+    mov si,OFFSET ad_port_arr
+
+cpsPort:
+    mov ax,ds:[si]
+    or ax,ax
+    jz cpsNext    
+;
+    mov es,ax
+    mov es,es:ap_hba_sel
+;    
+    mov eax,es:hba_pxssts
+    and al,0Fh
+    cmp al,3
+    jne cpsNext
+;
+    mov eax,0FFFFFFFFh
+    mov es:hba_pxserr,eax
+    
+cpsNext:
+    add si,2
+    loop cpsPort
+;    
+    pop si
+    pop cx
+    pop ds
+;
+    add si,2
+    loop cpsDev        
+;    
+    ret
+ClearPortSerr Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -950,9 +997,17 @@ WaitPortDet Endp
 ahci_name DB 'AHCI',0
 
 ahci_thread:
+    mov cx,ds:ahci_dev_count
+    or cx,cx
+    jz ahci_thread_done
+;    
     call StartAhci
-    int 3
     call WaitPortDet
+    int 3
+    call ClearPortSerr
+
+ahci_thread_done:
+    int 3    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
