@@ -121,46 +121,46 @@ HBA_PXCMD_ASP   =  8000000h
 HBA_PXCMD_ALPE  =  4000000h
 HBA_PXCMD_DLAE  =  2000000h
 HBA_PXCMD_ATAPI =  1000000h
-HBE_PXCMD_APSTE =   800000h
-HBE_PXCMD_FBSCP =   400000h
-HBE_PXCMD_ESP   =   200000h
-HBE_PXCMD_CPD   =   100000h
-HBE_PXCMD_MPSP  =    80000h
-HBE_PXCMD_HPCP  =    40000h
-HBE_PXCMD_PMA   =    20000h
-HBE_PXCMD_CPS   =    10000h
-HBE_PXCMD_CR    =     8000h
-HBE_PXCMD_FR    =     4000h
-HBE_PXCMD_MPSS  =     2000h
-HBE_PXCMD_FRE   =       10h
-HBE_PXCMD_CLO   =        8h
-HBE_PXCMD_POD   =        4h
-HBE_PXCMD_SUD   =        2h
-HBE_PXCMD_ST    =        1h
+HBA_PXCMD_APSTE =   800000h
+HBA_PXCMD_FBSCP =   400000h
+HBA_PXCMD_ESP   =   200000h
+HBA_PXCMD_CPD   =   100000h
+HBA_PXCMD_MPSP  =    80000h
+HBA_PXCMD_HPCP  =    40000h
+HBA_PXCMD_PMA   =    20000h
+HBA_PXCMD_CPS   =    10000h
+HBA_PXCMD_CR    =     8000h
+HBA_PXCMD_FR    =     4000h
+HBA_PXCMD_MPSS  =     2000h
+HBA_PXCMD_FRE   =       10h
+HBA_PXCMD_CLO   =        8h
+HBA_PXCMD_POD   =        4h
+HBA_PXCMD_SUD   =        2h
+HBA_PXCMD_ST    =        1h
 
-HBE_PXI_CPD    = 80000000h
-HBE_PXI_TFE    = 40000000h
-HBE_PXI_HBF    = 20000000h
-HBE_PXI_HBD    = 10000000h
-HBE_PXI_IF     =  8000000h
-HBE_PXI_INF    =  4000000h
-HBE_PXI_OF     =  1000000h
-HBE_PXI_IPM    =   800000h
-HBE_PXI_PRC    =   400000h
-HBE_PXI_DPM    =       80h
-HBE_PXI_PC     =       40h
-HBE_PXI_DP     =       20h
-HBE_PXI_UF     =       10h
-HBE_PXI_SDB    =        8h
-HBE_PXI_DS     =        4h
-HBE_PXI_PS     =        2h
-HBE_PXI_DHR    =        1h
+HBA_PXI_CPD    = 80000000h
+HBA_PXI_TFE    = 40000000h
+HBA_PXI_HBF    = 20000000h
+HBA_PXI_HBD    = 10000000h
+HBA_PXI_IF     =  8000000h
+HBA_PXI_INF    =  4000000h
+HBA_PXI_OF     =  1000000h
+HBA_PXI_IPM    =   800000h
+HBA_PXI_PRC    =   400000h
+HBA_PXI_DPM    =       80h
+HBA_PXI_PC     =       40h
+HBA_PXI_DP     =       20h
+HBA_PXI_UF     =       10h
+HBA_PXI_SDB    =        8h
+HBA_PXI_DS     =        4h
+HBA_PXI_PS     =        2h
+HBA_PXI_DHR    =        1h
 
-HBE_PXI_FATAL  = 78000000h
-HBE_PXI_INFO   = 814000C0h
-HBE_PXI_FIS    =       1Fh
+HBA_PXI_FATAL  = 78000000h
+HBA_PXI_INFO   = 814000C0h
+HBA_PXI_FIS    =       1Fh
 
-HBE_PXI_ENABLE = HBE_PXI_FATAL OR HBE_PXI_INFO OR HBE_PXI_DP
+HBA_PXI_ENABLE = HBA_PXI_FATAL OR HBA_PXI_INFO OR HBA_PXI_DP
 
 hba_port_struc  STRUC
 
@@ -392,12 +392,6 @@ cpfInHeader:
     mov ecx,ap_fis_size
 
 cpfDo:
-    mov es,ds:ap_hba_sel
-    mov eax,ds:ap_physical
-    add eax,edx
-    mov es:hba_pxfb,eax
-    mov es:hba_pxfbu,0
-;
     mov eax,ds:ap_linear
     add edx,eax
     AllocateGdt
@@ -438,12 +432,6 @@ CreatePortCmdList   Proc near
     AllocateGdt
     CreateDataSelector16
     mov ds:ap_cmd_sel,bx    
-;
-    mov eax,ap_cmd
-    add eax,ds:ap_physical
-    mov es,ds:ap_hba_sel
-    mov es:hba_pxclb,eax
-    mov es:hba_pxclbu,0
 ;
     pop cx
     pop dx
@@ -737,7 +725,31 @@ InitPciAhci Endp
 
 StartPort Proc near
     mov gs,es:ap_hba_sel
-    or gs:hba_pxcmd,HBE_PXCMD_FRE
+    mov eax,fs:hba_cap
+    test eax,HBA_CAP_FBSS
+    jz spInHeader
+
+spLastPage:
+    movzx edx,es:ap_pages
+    dec edx
+    shl edx,12
+    jmp spDo
+
+spInHeader:
+    mov edx,ap_fis
+
+spDo:
+    mov eax,es:ap_physical
+    add eax,edx
+    mov gs:hba_pxfb,eax
+    mov gs:hba_pxfbu,0
+;
+    mov eax,ap_cmd
+    add eax,es:ap_physical
+    mov gs:hba_pxclb,eax
+    mov gs:hba_pxclbu,0
+;
+    or gs:hba_pxcmd,HBA_PXCMD_FRE
 ;
     mov eax,gs:hba_pxserr
     mov gs:hba_pxserr,eax    
@@ -745,7 +757,7 @@ StartPort Proc near
     mov eax,gs:hba_pxis
     mov gs:hba_pxis,eax
 ;    
-    mov eax,HBE_PXI_ENABLE
+    mov eax,HBA_PXI_ENABLE
     mov gs:hba_pxie,eax       
     ret
 StartPort Endp
@@ -763,6 +775,8 @@ StartPort Endp
 
 StartDevice Proc near
     mov fs,ds:ad_hba_sel
+    or fs:hba_ghc,HBA_GHC_AE
+;
     mov cx,32
     mov si,OFFSET ad_port_arr
 
