@@ -980,6 +980,78 @@ cpsNext:
 ;    
     ret
 ClearPortSerr Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ActivatePorts
+;
+;           DESCRIPTION:    Activate functioning ports
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ActivatePorts Proc near
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:ahci_port_count,0
+;    
+    mov cx,ds:ahci_dev_count
+    mov si,OFFSET ahci_dev_arr
+
+apDev:
+    push ds
+    push cx
+    push si
+;
+    mov ds,ds:[si]
+    mov cx,32
+    mov si,OFFSET ad_port_arr
+
+apPort:
+    mov bx,ds:[si]
+    or bx,bx
+    jz apNext    
+;
+    mov es,bx
+    mov es,es:ap_hba_sel
+;    
+    mov eax,es:hba_pxssts
+    and al,0Fh
+    cmp al,3
+    jne apNext
+;
+    mov eax,es:hba_pxtfd
+    and al,88h
+    jnz apNext
+;
+    or es:hba_pxcmd,HBA_PXCMD_ST
+    push ds
+    push si
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov si,ds:ahci_port_count 
+    add si,si
+    add si,OFFSET ahci_port_arr
+    mov ds:[si],bx
+    inc ds:ahci_port_count
+;
+    pop si
+    pop ds
+    
+apNext:
+    add si,2
+    loop apPort
+;    
+    pop si
+    pop cx
+    pop ds
+;
+    add si,2
+    loop apDev        
+;    
+    ret
+ActivatePorts Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1003,8 +1075,9 @@ ahci_thread:
 ;    
     call StartAhci
     call WaitPortDet
-    int 3
     call ClearPortSerr
+    int 3
+    call ActivatePorts
 
 ahci_thread_done:
     int 3    
