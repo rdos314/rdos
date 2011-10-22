@@ -96,6 +96,11 @@ HBA_CAP_CCCS        =       80h
 HBA_CAP_EMS         =       40h
 HBA_CAP_SXS         =       20h
 
+HBA_GHC_AE          = 80000000h
+HBA_GHC_MRSM        =        4h
+HBA_GHC_IE          =        2h
+HBA_GHC_HR          =        1h
+
 hba_struc   STRUC
 
 hba_cap         DD ?
@@ -171,6 +176,7 @@ ahci_port_struc     STRUC
 ap_linear           DD ?
 ap_physical         DD ?
 ap_pages            DW ?
+ap_device           DW ?
 
 ap_hba_sel          DW ?
 ap_fis_sel          DW ?
@@ -380,7 +386,6 @@ CreatePortCmdList   Proc near
 ;    
     push cs:[bx].prd_size
     push cs:[bx].prd_slots
-    push cs:[bx].prd_entries
 ;    
     mov ecx,ap_cmd_size
     mov edx,ap_cmd
@@ -395,7 +400,6 @@ CreatePortCmdList   Proc near
     mov es:hba_pxclb,eax
     mov es:hba_pxclbu,0
 ;
-    pop bx
     pop cx
     pop dx
 ;
@@ -407,7 +411,6 @@ CreatePortCmdList   Proc near
 
 cpclLoop:
     mov es:[di].acl_ctba,eax
-    mov es:[di].acl_prdtl,bx
     mov es:[di].acl_flags,5
     add di,20h
     add eax,edx
@@ -549,10 +552,10 @@ apPhysLoop:
     pop bx
     pop cx
 ;
-    int 3
     mov ds:ap_linear,edx
     mov ds:ap_physical,eax
     mov ds:ap_pages,cx    
+    mov ds:ap_device,es
 ;
     pop ax
     mov ds:ap_hba_sel,ax
@@ -608,6 +611,9 @@ adPortAddNext:
     add bx,OFFSET ahci_dev_arr
     mov ds:[bx],es
     inc ds:ahci_dev_count
+;
+    int 3
+    or dword ptr fs:hba_ghc,HBA_GHC_HR
 ;
     popad
     pop es    
