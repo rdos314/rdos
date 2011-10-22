@@ -117,6 +117,51 @@ hba_bohc        DD ?
 
 hba_struc   ENDS
 
+HBA_PXCMD_ASP   =  8000000h
+HBA_PXCMD_ALPE  =  4000000h
+HBA_PXCMD_DLAE  =  2000000h
+HBA_PXCMD_ATAPI =  1000000h
+HBE_PXCMD_APSTE =   800000h
+HBE_PXCMD_FBSCP =   400000h
+HBE_PXCMD_ESP   =   200000h
+HBE_PXCMD_CPD   =   100000h
+HBE_PXCMD_MPSP  =    80000h
+HBE_PXCMD_HPCP  =    40000h
+HBE_PXCMD_PMA   =    20000h
+HBE_PXCMD_CPS   =    10000h
+HBE_PXCMD_CR    =     8000h
+HBE_PXCMD_FR    =     4000h
+HBE_PXCMD_MPSS  =     2000h
+HBE_PXCMD_FRE   =       10h
+HBE_PXCMD_CLO   =        8h
+HBE_PXCMD_POD   =        4h
+HBE_PXCMD_SUD   =        2h
+HBE_PXCMD_ST    =        1h
+
+HBE_PXI_CPD    = 80000000h
+HBE_PXI_TFE    = 40000000h
+HBE_PXI_HBF    = 20000000h
+HBE_PXI_HBD    = 10000000h
+HBE_PXI_IF     =  8000000h
+HBE_PXI_INF    =  4000000h
+HBE_PXI_OF     =  1000000h
+HBE_PXI_IPM    =   800000h
+HBE_PXI_PRC    =   400000h
+HBE_PXI_DPM    =       80h
+HBE_PXI_PC     =       40h
+HBE_PXI_DP     =       20h
+HBE_PXI_UF     =       10h
+HBE_PXI_SDB    =        8h
+HBE_PXI_DS     =        4h
+HBE_PXI_PS     =        2h
+HBE_PXI_DHR    =        1h
+
+HBE_PXI_FATAL  = 78000000h
+HBE_PXI_INFO   = 814000C0h
+HBE_PXI_FIS    =       1Fh
+
+HBE_PXI_ENABLE = HBE_PXI_FATAL OR HBE_PXI_INFO OR HBE_PXI_DP
+
 hba_port_struc  STRUC
 
 hba_pxclb       DD ?
@@ -664,7 +709,7 @@ ipaLoop:
     CreateDataSelector16
     pop cx
     mov fs,bx
-    test fs:hba_ghc,80000000h
+    test fs:hba_ghc,HBA_GHC_AE
     jz ipaNext
 ;
     call AddDevice
@@ -680,6 +725,34 @@ InitPciAhci Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           StartPort
+;
+;           DESCRIPTION:    Start port
+;
+;           PARAMETERS:     DS     Device
+;                           FS     HBA sel
+;                           ES     Port sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartPort Proc near
+    mov gs,es:ap_hba_sel
+    or gs:hba_pxcmd,HBE_PXCMD_FRE
+;
+    mov eax,gs:hba_pxserr
+    mov gs:hba_pxserr,eax    
+;
+    mov eax,gs:hba_pxis
+    mov gs:hba_pxis,eax
+;    
+    mov eax,HBE_PXI_ENABLE
+    mov gs:hba_pxie,eax       
+    ret
+StartPort Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           StartDevice
 ;
 ;           DESCRIPTION:    Start device
@@ -689,6 +762,28 @@ InitPciAhci Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StartDevice Proc near
+    mov fs,ds:ad_hba_sel
+    mov cx,32
+    mov si,OFFSET ad_port_arr
+
+sdLoop:
+    mov ax,ds:[si]
+    or ax,ax
+    jz sdNext
+;    
+    push cx
+    push si
+    mov es,ax
+    call StartPort
+    pop si
+    pop cx
+
+sdNext:
+    add si,2
+    loop sdLoop
+;
+    mov eax,fs:hba_pi
+    mov fs:hba_is,eax
     ret
 StartDevice Endp
 
