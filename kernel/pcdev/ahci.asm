@@ -158,8 +158,7 @@ ahci_slot_struc  STRUC
 
 as_entries      DW ?
 as_slots        DW ?
-as_list_arr     DW 32 DUP(?)
-as_table_arr    DW 32 DUP(?)
+as_index_arr    DW 32 DUP(?)
 
 ahci_slot_struc  ENDS
 
@@ -371,15 +370,17 @@ CreatePortFis   Endp
 ;
 ;       PARAMETERS:     DS      Port sel
 ;                       FS      HBA sel
+;                       CS:BX   Slot entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreatePortCmdList   Proc near
     push es
-    push eax
-    push bx
-    push ecx
-    push edx
+    pushad
+;    
+    push cs:[bx].prd_size
+    push cs:[bx].prd_slots
+    push cs:[bx].prd_entries
 ;    
     mov ecx,ap_cmd_size
     mov edx,ap_cmd
@@ -393,14 +394,78 @@ CreatePortCmdList   Proc near
     mov es,ds:ap_hba_sel
     mov es:hba_pxclb,eax
     mov es:hba_pxclbu,0
-; 
-    pop edx
-    pop ecx
+;
     pop bx
-    pop eax
+    pop cx
+    pop dx
+;
+    mov es,ds:ap_cmd_sel
+    xor di,di
+    mov eax,ds:ap_physical
+    add eax,1000h
+    movzx edx,dx
+
+cpclLoop:
+    mov es:[di].acl_ctba,eax
+    mov es:[di].acl_prdtl,bx
+    mov es:[di].acl_flags,5
+    add di,20h
+    add eax,edx
+    loop cpclLoop    
+; 
+    popad
     pop es       
     ret
 CreatePortCmdList   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreatePortSlots
+;
+;       DESCRIPTION:    Create port slot area
+;
+;       PARAMETERS:     DS      Port sel
+;                       FS      HBA sel
+;                       CS:BX   Slot entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreatePortSlots Proc near
+    push es
+    pushad
+;    
+    push bx
+    mov edx,ds:ap_linear
+    add edx,1000h - SIZE ahci_slot_struc
+    movzx ecx,cs:[bx].prd_pages
+    shl ecx,12
+    add ecx,SIZE ahci_slot_struc
+    AllocateGdt
+    CreateDataSelector16    
+    mov ds:ap_slot_sel,bx
+    mov es,bx
+    pop bx    
+;
+    mov ax,cs:[bx].prd_slots
+    mov es:as_slots,ax
+    mov ax,cs:[bx].prd_entries
+    mov es:as_entries,ax
+;
+    mov cx,es:as_slots
+    mov ax,SIZE ahci_slot_struc
+    mov dx,cs:[bx].prd_size
+    mov di,OFFSET as_index_arr        
+
+cpsLoop:
+    stosw
+    add ax,dx
+    loop cpsLoop
+;
+    popad
+    pop es    
+    ret
+CreatePortSlots Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
