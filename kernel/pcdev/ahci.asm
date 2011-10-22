@@ -559,6 +559,7 @@ apPhysLoop:
 ;
     call CreatePortFis
     call CreatePortCmdList
+    call CreatePortSlots
 ;
     popad
     pop ds    
