@@ -310,6 +310,60 @@ GetSlotEntry     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CreatePortFis
+;
+;       DESCRIPTION:    Create port FIS area
+;
+;       PARAMETERS:     DS      Port sel
+;                       FS      HBA sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreatePortFis   Proc near
+    push es
+    push eax
+    push bx
+    push ecx
+    push edx
+;    
+    test eax,HBA_CAP_FBSS
+    jz cpfInHeader
+
+cpfLastPage:
+    movzx edx,ds:ap_pages
+    dec edx
+    shl edx,12
+    mov ecx,1000h
+    jmp cpfDo
+
+cpfInHeader:
+    mov edx,ap_fis
+    mov ecx,ap_fis_size
+
+cpfDo:
+    mov es,ds:ap_hba_sel
+    mov eax,ds:ap_physical
+    add eax,edx
+    mov es:hba_pxfb,eax
+    mov es:hba_pxfbu,0
+;
+    mov eax,ds:ap_linear
+    add edx,eax
+    AllocateGdt
+    CreateDataSelector16
+    mov ds:ap_fis_sel,bx    
+;    
+    pop edx
+    pop ecx
+    pop bx
+    pop eax
+    pop es   
+    ret
+CreatePortFis   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AddPort
 ;
 ;       DESCRIPTION:    Add an AHCI port
@@ -362,6 +416,22 @@ apPhysLoop:
     sub eax,ecx
     sub edx,ecx
     xor al,al
+;
+    push es
+    push eax
+    push ecx
+;    
+    mov edi,edx
+    mov ax,flat_sel
+    mov es,ax
+    xor eax,eax
+    shr ecx,2
+    rep stos dword ptr es:[edi]
+;
+    pop ecx
+    pop eax
+    pop es
+    int 3
 ;                
     push bx
     AllocateGdt
@@ -378,6 +448,8 @@ apPhysLoop:
 ;
     pop ax
     mov ds:ap_hba_sel,ax
+;
+    call CreatePortFis
 ;
     popad
     pop ds    
