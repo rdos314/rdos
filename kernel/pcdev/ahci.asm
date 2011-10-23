@@ -1131,6 +1131,9 @@ ahci_thread:
     call ClearPortSerr
     call ActivatePorts
     int 3
+    mov ax,SEG data
+    mov ds,ax
+    mov ds,ds:ahci_port_arr
     call AllocateSlot
 
 ahci_thread_done:
