@@ -37,6 +37,10 @@ INCLUDE pci.inc
 MAX_AHCI_DEVICES    = 16
 MAX_AHCI_PORTS      = 32
 
+ATA_DMA_READ            = 25h
+ATA_DMA_WRITE           = 35h
+ATA_PIO_IDENTIFY        = 0ECh
+
 FIS_TYPE_HTD            = 27h
 FIS_TYPE_DTH            = 34h
 FIS_TYPE_DMA_ACTIVATE   = 39h
@@ -1110,9 +1114,9 @@ AllocateSlot    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           SetupAtaRead
+;       NAME:           SetupAta
 ;
-;       DESCRIPTION:    Setup ATA read
+;       DESCRIPTION:    Setup ATA
 ;
 ;       PARAMETERS:     DS      Port sel
 ;                       GS:SI   PRDT entry 
@@ -1122,11 +1126,11 @@ AllocateSlot    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupAtaRead    Proc near
+SetupAta    Proc near
     push edx
 ;
     mov gs:[si].fhtd_type,FIS_TYPE_HTD
-    mov gs:[si].fhtd_port_flags,0
+    mov gs:[si].fhtd_port_flags,80h
     mov gs:[si].fhtd_command,al
     mov dword ptr gs:[si].fhtd_lbal,edx
     xor dl,dl
@@ -1137,7 +1141,7 @@ SetupAtaRead    Proc near
 ;
     pop edx    
     ret
-SetupAtaRead    Endp
+SetupAta    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1172,7 +1176,7 @@ ahci_thread:
     xor edx,edx
     mov cx,1
     mov al,0ECh
-    call SetupAtaRead
+    call SetupAta
 
 ahci_thread_done:
     int 3    
