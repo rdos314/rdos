@@ -1110,6 +1110,38 @@ AllocateSlot    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SetupAtaRead
+;
+;       DESCRIPTION:    Setup ATA read
+;
+;       PARAMETERS:     DS      Port sel
+;                       GS:SI   PRDT entry 
+;                       AL      Command code
+;                       EDX     Sector #
+;                       CX      Sectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupAtaRead    Proc near
+    push edx
+;
+    mov gs:[si].fhtd_type,FIS_TYPE_HTD
+    mov gs:[si].fhtd_port_flags,0
+    mov gs:[si].fhtd_command,al
+    mov dword ptr gs:[si].fhtd_lbal,edx
+    xor dl,dl
+    xchg dl,gs:[si].fhtd_device
+    movzx edx,dl
+    mov dword ptr gs:[si].fhtd_lbah,edx
+    mov gs:[si].fhtd_count,cx
+;
+    pop edx    
+    ret
+SetupAtaRead    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ahci_thread
 ;
 ;           DESCRIPTION:    AHCI thread
@@ -1136,6 +1168,11 @@ ahci_thread:
     mov ds,ax
     mov ds,ds:ahci_port_arr
     call AllocateSlot
+;
+    xor edx,edx
+    mov cx,1
+    mov al,0ECh
+    call SetupAtaRead
 
 ahci_thread_done:
     int 3    

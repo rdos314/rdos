@@ -1676,6 +1676,7 @@ ChksumPmLoop:
     mov eax,1024
     AllocateSmallGlobalMem
     mov ds:v_pm16_stack,es
+    jmp SetupVm
 ;
     mov ax,es
     mov es,bx

@@ -3195,6 +3195,7 @@ load_kernel:
     mov ax,ds:p_tss_ss
     cmp ax,ds:p_tss_ess0
     je load_kernel_ss0_ok
+    jmp load_kernel_ss0_ok
 ;
     mov dx,ds:p_tss_ess0
     mov esi,ds:p_tss_eip

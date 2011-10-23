@@ -367,7 +367,8 @@ void cdecl main()
         Mouse->OnRightUp = RightUp;
         Mouse->OnRightDown = RightDown;
 
-        vbe = new TVideoGraphicDevice(24, 640, 480);
+        vbe = new TVideoGraphicDevice(24, 1366, 768);
+//        vbe = new TVideoGraphicDevice(24, 640, 480);
 //      vbe = new TVideoGraphicDevice(24, 800, 600);
 //      vbe = new TVideoGraphicDevice(1, 240, 128);
 
