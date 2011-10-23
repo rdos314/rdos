@@ -1082,7 +1082,7 @@ AllocateSlot Proc near
     mov gs,ds:ap_slot_sel
     mov edx,es:hba_pxci
     not edx
-    and edx,ds:as_slot_mask
+    and edx,gs:as_slot_mask
     stc
     jz asDone        
 ;
@@ -1129,8 +1129,8 @@ ahci_thread:
     call StartAhci
     call WaitPortDet
     call ClearPortSerr
-    call ActivatePorts
     int 3
+    call ActivatePorts
     mov ax,SEG data
     mov ds,ax
     mov ds,ds:ahci_port_arr
