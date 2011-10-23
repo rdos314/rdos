@@ -1098,6 +1098,7 @@ asLoop:
     jmp asLoop
 
 asFound:
+    mov si,gs:[si]
     clc
 
 asDone:
