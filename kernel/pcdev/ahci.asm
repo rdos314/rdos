@@ -209,6 +209,7 @@ ahci_slot_struc  STRUC
 
 as_entries      DW ?
 as_slots        DW ?
+as_slot_mask    DD ?
 as_index_arr    DW 32 DUP(?)
 
 ahci_slot_struc  ENDS
@@ -491,6 +492,12 @@ CreatePortSlots Proc near
     mov ax,cs:[bx].prd_entries
     mov es:as_entries,ax
 ;
+    mov cx,32
+    sub cx,es:as_slots
+    mov eax,0FFFFFFFFh
+    shr eax,cl
+    mov es:as_slot_mask,eax
+;    
     mov cx,es:as_slots
     mov ax,SIZE ahci_slot_struc
     mov dx,cs:[bx].prd_size
@@ -1052,6 +1059,52 @@ apNext:
 ;    
     ret
 ActivatePorts Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AllocateSlot
+;
+;   DESCRIPTION:    Allocate a slot
+;
+;   PARAMETERS:     DS      Port sel
+;
+;   RETURNS:        AX      Slot #
+;                   GS:SI   PRDT entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateSlot Proc near
+    push es
+    push edx
+;
+    mov es,ds:ap_hba_sel
+    mov gs,ds:ap_slot_sel
+    mov edx,es:hba_pxci
+    not edx
+    and edx,ds:as_slot_mask
+    stc
+    jz asDone        
+;
+    mov si,OFFSET as_index_arr
+    xor ax,ax
+
+asLoop:
+    rcr edx,1
+    jc asFound
+;
+    add si,2
+    inc ax
+    jmp asLoop
+
+asFound:
+    clc
+
+asDone:
+    pop edx
+    pop es               
+    ret
+AllocateSlot    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1076,8 +1129,9 @@ ahci_thread:
     call StartAhci
     call WaitPortDet
     call ClearPortSerr
-    int 3
     call ActivatePorts
+    int 3
+    call AllocateSlot
 
 ahci_thread_done:
     int 3    
