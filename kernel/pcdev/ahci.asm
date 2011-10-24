@@ -1071,10 +1071,10 @@ ActivatePorts Endp
 ;
 ;   DESCRIPTION:    Allocate a slot
 ;
-;   PARAMETERS:     DS      Port sel
+;   PARAMETERS:     GS      Port sel
 ;
-;   RETURNS:        AX      Slot #
-;                   GS:SI   PRDT entry
+;   RETURNS:        AL      Slot #
+;                   DS:BX   PRDT entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1082,27 +1082,27 @@ AllocateSlot Proc near
     push es
     push edx
 ;
-    mov es,ds:ap_hba_sel
-    mov gs,ds:ap_slot_sel
+    mov es,gs:ap_hba_sel
+    mov ds,gs:ap_slot_sel
     mov edx,es:hba_pxci
     not edx
-    and edx,gs:as_slot_mask
+    and edx,ds:as_slot_mask
     stc
     jz asDone        
 ;
-    mov si,OFFSET as_index_arr
-    xor ax,ax
+    mov bx,OFFSET as_index_arr
+    xor al,al
 
 asLoop:
     rcr edx,1
     jc asFound
 ;
-    add si,2
-    inc ax
+    add bx,2
+    inc al
     jmp asLoop
 
 asFound:
-    mov si,gs:[si]
+    mov bx,ds:[bx]
     clc
 
 asDone:
@@ -1118,30 +1118,163 @@ AllocateSlot    Endp
 ;
 ;       DESCRIPTION:    Setup ATA
 ;
-;       PARAMETERS:     DS      Port sel
-;                       GS:SI   PRDT entry 
+;       PARAMETERS:     GS      Port sel
+;                       DS:BX   PRDT entry 
 ;                       AL      Command code
 ;                       EDX     Sector #
 ;                       CX      Sectors
+;
+;       RETURNS:        DS:BX   First PRD entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupAta    Proc near
     push edx
 ;
-    mov gs:[si].fhtd_type,FIS_TYPE_HTD
-    mov gs:[si].fhtd_port_flags,80h
-    mov gs:[si].fhtd_command,al
-    mov dword ptr gs:[si].fhtd_lbal,edx
+    mov ds:[bx].fhtd_type,FIS_TYPE_HTD
+    mov ds:[bx].fhtd_port_flags,80h
+    mov ds:[bx].fhtd_command,al
+    mov dword ptr gs:[bx].fhtd_lbal,edx
     xor dl,dl
-    xchg dl,gs:[si].fhtd_device
+    xchg dl,ds:[bx].fhtd_device
     movzx edx,dl
-    mov dword ptr gs:[si].fhtd_lbah,edx
-    mov gs:[si].fhtd_count,cx
+    mov dword ptr ds:[bx].fhtd_lbah,edx
+    mov ds:[bx].fhtd_count,cx
+    add bx,act_prd
 ;
     pop edx    
     ret
 SetupAta    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AddPrdEntry
+;
+;       DESCRIPTION:    Add a single PRD entry
+;
+;       PARAMETERS:     GS      Port sel
+;                       DS:BX   PRD entry
+;                       ECX     Size
+;                       ESI     Linear base
+;                       EDI     Disc handle
+;                       
+;       RETURNS:        DS:BX   Next PRD entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddPrdEntry     Proc near
+    push eax
+    push edx
+    push esi
+;
+    mov edx,esi
+    and dx,0F000h        
+    GetPhysicalPage
+    and ax,0F000h
+    and esi,0FFFh
+    add esi,eax
+    mov ds:[bx].ape_base,esi
+    mov ds:[bx+4].ape_base,0
+    mov ds:[bx].ape_handle,edi
+;
+    mov eax,ecx
+    or eax,80000000h    
+    mov ds:[bx].ape_byte_count,eax
+    add bx,10h
+;
+    pop esi
+    pop edx
+    pop eax        
+    ret
+AddPrdEntry     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupReadCmd
+;
+;       DESCRIPTION:    Setup read command
+;
+;       PARAMETERS:     GS      Port sel
+;                       AX      Slot #
+;                       CX      Sectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupReadCmd    Proc near
+    push ds
+    push bx
+;
+    mov ds,gs:ap_cmd_sel
+    mov bx,ax
+    shl bx,5
+    mov ds:[bx].acl_prdtl,cx
+    mov ds:[bx].acl_flags,485h
+    mov ds:[bx].acl_prd_count,0
+;
+    pop bx    
+    pop ds
+    ret
+SetupReadCmd    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupWriteCmd
+;
+;       DESCRIPTION:    Setup write command
+;
+;       PARAMETERS:     GS      Port sel
+;                       AX      Slot #
+;                       CX      Sectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupWriteCmd    Proc near
+    push ds
+    push bx
+;
+    mov ds,gs:ap_cmd_sel
+    mov bx,ax
+    shl bx,5
+    mov ds:[bx].acl_prdtl,cx
+    mov ds:[bx].acl_flags,4C5h
+    mov ds:[bx].acl_prd_count,0
+;
+    pop bx    
+    pop ds
+    ret
+SetupWriteCmd    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           StartCmd
+;
+;   DESCRIPTION:    Start a command
+;
+;   PARAMETERS:     GS      Port sel
+;                   AL      Slot #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartCmd Proc near
+    push ds
+    push cx
+    push edx
+;
+    mov ds,gs:ap_hba_sel
+    mov cl,al
+    mov edx,1
+    shl edx,cl
+    mov ds:hba_pxci,edx
+;
+    pop edx
+    pop cx
+    pop es               
+    ret
+StartCmd    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1168,15 +1301,35 @@ ahci_thread:
     call ClearPortSerr
     int 3
     call ActivatePorts
+;    
+    mov eax,1000h
+    AllocateBigLinear
+    mov esi,edx
+    mov ax,flat_sel
+    mov es,ax
+    mov byte ptr es:[esi],0
+;    
     mov ax,SEG data
     mov ds,ax
-    mov ds,ds:ahci_port_arr
+    mov gs,ds:ahci_port_arr
     call AllocateSlot
+    push ax
 ;
     xor edx,edx
     mov cx,1
     mov al,0ECh
     call SetupAta
+;    
+    push cx
+    xor edi,edi
+    mov ecx,200h
+    call AddPrdEntry
+    pop cx
+;
+    pop ax
+    call SetupReadCmd
+;
+    call StartCmd
 
 ahci_thread_done:
     int 3    

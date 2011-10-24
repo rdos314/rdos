@@ -148,6 +148,9 @@ kick_watchdog   Proc far
 
 kw_save_loop:
     mov ds,ax
+    mov bx,ds:p_id
+    mov di,OFFSET fss_tss
+    GetThreadTss
 ;
     mov es:fss_sign,FAULT_SIGN
     mov ax,ds:p_id
@@ -172,14 +175,6 @@ kw_save_loop:
 ;
     mov es:fss_state.st_offs,0
     mov es:fss_state.st_sel,0
-;
-    push cx
-    mov cx,OFFSET p_tss_end
-    mov si,OFFSET p_tss_cr3
-    sub cx,si
-    mov di,OFFSET fss_tss
-    rep movsb
-    pop cx
 ;
     push cx
     mov al,fs:fault_disc
