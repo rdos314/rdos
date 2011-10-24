@@ -1134,7 +1134,7 @@ SetupAta    Proc near
     mov ds:[bx].fhtd_type,FIS_TYPE_HTD
     mov ds:[bx].fhtd_port_flags,80h
     mov ds:[bx].fhtd_command,al
-    mov dword ptr gs:[bx].fhtd_lbal,edx
+    mov dword ptr ds:[bx].fhtd_lbal,edx
     xor dl,dl
     xchg dl,ds:[bx].fhtd_device
     movzx edx,dl
