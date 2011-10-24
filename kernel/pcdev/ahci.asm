@@ -1197,7 +1197,7 @@ AddPrdEntry     Endp
 ;       DESCRIPTION:    Setup read command
 ;
 ;       PARAMETERS:     GS      Port sel
-;                       AX      Slot #
+;                       AL      Slot #
 ;                       CX      Sectors
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1207,7 +1207,7 @@ SetupReadCmd    Proc near
     push bx
 ;
     mov ds,gs:ap_cmd_sel
-    mov bx,ax
+    movzx bx,al
     shl bx,5
     mov ds:[bx].acl_prdtl,cx
     mov ds:[bx].acl_flags,485h
@@ -1226,7 +1226,7 @@ SetupReadCmd    Endp
 ;       DESCRIPTION:    Setup write command
 ;
 ;       PARAMETERS:     GS      Port sel
-;                       AX      Slot #
+;                       AL      Slot #
 ;                       CX      Sectors
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1236,7 +1236,7 @@ SetupWriteCmd    Proc near
     push bx
 ;
     mov ds,gs:ap_cmd_sel
-    mov bx,ax
+    movzx bx,al
     shl bx,5
     mov ds:[bx].acl_prdtl,cx
     mov ds:[bx].acl_flags,4C5h
