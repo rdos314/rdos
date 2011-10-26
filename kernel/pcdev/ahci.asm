@@ -1348,6 +1348,8 @@ MapCmdTable Endp
 ahci_name DB 'AHCI',0
 
 ahci_thread:
+    int 3
+    call InitPciAhci
     mov cx,ds:ahci_dev_count
     or cx,cx
     jz ahci_thread_done
@@ -1410,7 +1412,7 @@ init_ahci    Proc far
     push es
     pusha
 ;    
-    call InitPciAhci
+;    call InitPciAhci
 ;    
     mov ax,cs
     mov ds,ax
