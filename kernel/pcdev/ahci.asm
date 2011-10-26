@@ -1298,6 +1298,39 @@ ViewErrors Proc near
     mov ds,gs:ap_fis_sel    
     ret
 ViewErrors Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           MapCmdTable
+;
+;   DESCRIPTION:    Map command list table
+;
+;   PARAMETERS:     GS      Port sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MapCmdTable Proc near
+    push ds
+    push es
+    pushad
+;    
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    mov ds,gs:ap_hba_sel
+    mov eax,ds:hba_pxclb
+    or al,67h
+    SetPhysicalPage
+;
+    popad
+    pop es
+    pop ds
+    ret
+MapCmdTable Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1352,6 +1385,7 @@ ahci_thread:
     pop ax
     call SetupReadCmd
 ;
+    call MapCmdTable
     call StartCmd
     call ViewErrors
 
