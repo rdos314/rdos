@@ -1275,6 +1275,29 @@ StartCmd Proc near
     pop es               
     ret
 StartCmd    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ViewErrors
+;
+;   DESCRIPTION:    View chip errors
+;
+;   PARAMETERS:     GS      Port sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ViewErrors Proc near
+    mov ds,gs:ap_hba_sel
+    mov eax,ds:hba_pxis
+    mov eax,ds:hba_pxcmd
+    mov eax,ds:hba_pxtfd
+    mov eax,ds:hba_pxssts
+    mov eax,ds:hba_pxserr
+;
+    mov ds,gs:ap_fis_sel    
+    ret
+ViewErrors Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1330,6 +1353,7 @@ ahci_thread:
     call SetupReadCmd
 ;
     call StartCmd
+    call ViewErrors
 
 ahci_thread_done:
     int 3    
