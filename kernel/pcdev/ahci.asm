@@ -1430,6 +1430,7 @@ GetDriveParams  Proc near
     call StartCmd
     call WaitForCompletion
 ;
+    mov ds,gs:ap_hba_sel
     mov eax,ds:hba_pxtfd
     test al,1
     stc
@@ -1453,29 +1454,6 @@ gdpDone:
     ret
 GetDriveParams  Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           ViewErrors
-;
-;   DESCRIPTION:    View chip errors
-;
-;   PARAMETERS:     GS      Port sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ViewErrors Proc near
-    mov ds,gs:ap_hba_sel
-    mov eax,ds:hba_pxis
-    mov eax,ds:hba_pxcmd
-    mov eax,ds:hba_pxtfd
-    mov eax,ds:hba_pxssts
-    mov eax,ds:hba_pxserr
-;
-    mov ds,gs:ap_fis_sel    
-    ret
-ViewErrors Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
