@@ -1337,6 +1337,120 @@ StartCmd    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           WaitForCompletion
+;
+;   DESCRIPTION:    Wait for completion
+;
+;   PARAMETERS:     GS      Port sel
+;                   AL      Slot #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForCompletion Proc near
+    push ds
+    push cx
+    push edx
+;
+    mov ds,gs:ap_hba_sel
+    mov cl,al
+    mov edx,1
+    shl edx,cl
+
+wfcLoop:
+    mov eax,ds:hba_pxci
+    test eax,edx
+    jz wfcDone
+;
+    mov ax,1
+    WaitMilliSec
+    jmp wfcLoop        
+
+wfcDone:
+    pop edx
+    pop cx
+    pop es               
+    ret
+WaitForCompletion    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetDriveParams
+;
+;       DESCRIPTION:    Get drive param
+;
+;       PARAMETERS:     AL      Port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetDriveParams  Proc near
+    push es
+    pushad
+;
+    movzx bx,al
+    add bx,bx
+    add bx,OFFSET ahci_port_arr
+;    
+    mov ax,flat_sel
+    mov es,ax    
+    mov eax,1000h
+    AllocateBigLinear
+    mov esi,edx
+    mov al,es:[esi]
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:[bx]
+    or ax,ax
+    stc
+    jz gdpDone
+;    
+    mov gs,ax
+    call AllocateSlot
+    push ax
+;
+    xor edx,edx
+    mov cx,1
+    mov al,0ECh
+    call SetupAta
+;    
+    push cx
+    xor edi,edi
+    mov ecx,200h
+    call AddPrdEntry
+    pop cx
+;
+    pop ax
+    call SetupReadCmd
+    call StartCmd
+    call WaitForCompletion
+;
+    mov eax,ds:hba_pxtfd
+    test al,1
+    stc
+    jnz gdpDone
+;
+    mov eax,es:[esi+120]
+    mov ax,es:[esi+98]
+    test ax,200h
+    jz gdpDone
+
+gdpDone:
+    pushf
+    mov ecx,1000h
+    mov edx,esi
+    FreeLinear
+    popf
+;
+    popad
+    pop es
+    ret
+GetDriveParams  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           ViewErrors
 ;
 ;   DESCRIPTION:    View chip errors
@@ -1356,39 +1470,6 @@ ViewErrors Proc near
     mov ds,gs:ap_fis_sel    
     ret
 ViewErrors Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           MapCmdTable
-;
-;   DESCRIPTION:    Map command list table
-;
-;   PARAMETERS:     GS      Port sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-MapCmdTable Proc near
-    push ds
-    push es
-    pushad
-;    
-    mov ax,flat_sel
-    mov es,ax
-;
-    mov eax,1000h
-    AllocateBigLinear
-;
-    mov ds,gs:ap_hba_sel
-    mov eax,ds:hba_pxclb
-    or al,67h
-    SetPhysicalPage
-;
-    popad
-    pop es
-    pop ds
-    ret
-MapCmdTable Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1415,35 +1496,8 @@ ahci_thread:
     call WaitPortDet
     call ClearPortSerr
     call ActivatePorts
-;    
-    mov eax,1000h
-    AllocateBigLinear
-    mov esi,edx
-    mov ax,flat_sel
-    mov es,ax
-    mov byte ptr es:[esi],0
-;    
-    mov ax,SEG data
-    mov ds,ax
-    mov gs,ds:ahci_port_arr
-    call AllocateSlot
-    push ax
-;
-    xor edx,edx
-    mov cx,1
-    mov al,0ECh
-    call SetupAta
-;    
-    push cx
-    xor edi,edi
-    mov ecx,200h
-    call AddPrdEntry
-    pop cx
-;
-    pop ax
-    call SetupReadCmd
-    call StartCmd
     int 3
+    call GetDriveParams
 
 ahci_thread_done:
     int 3    
