@@ -856,7 +856,6 @@ saWait:
     jmp saRetry    
 
 saCheckDone:    
-    int 3
     mov cx,ds:ahci_dev_count
     mov si,OFFSET ahci_dev_arr
 
