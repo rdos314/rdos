@@ -760,6 +760,8 @@ spDo:
     add eax,edx
     mov gs:hba_pxfb,eax
     mov gs:hba_pxfbu,0
+    int 3
+    mov eax,gs:hba_pxfb
 ;
     mov eax,ap_cmd
     add eax,es:ap_physical
