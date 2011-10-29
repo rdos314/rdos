@@ -752,9 +752,8 @@ raCheck:
     mov fs,ds:[si]
     mov fs,fs:ad_hba_sel
     mov eax,fs:hba_bohc
-    and al,3
-    cmp al,2
-    jne raWait    
+    test al,1
+    jnz raWait
 ;
     add si,2
     loop raCheck    
