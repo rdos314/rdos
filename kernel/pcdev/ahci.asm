@@ -222,6 +222,10 @@ ahci_slot_struc  ENDS
 ; port structure
 ;
 
+PORT_FLAG_ATA       =   1h
+PORT_FLAG_48_BIT    =   2h
+
+
 ahci_port_struc     STRUC
 
 ap_linear           DD ?
@@ -235,6 +239,8 @@ ap_cmd_sel          DW ?
 ap_slot_sel         DW ?
 
 ap_flags            DW ?
+
+ap_sector_count     DD ?
 
 ahci_port_struc     ENDS
 
@@ -1436,10 +1442,29 @@ GetDriveParams  Proc near
     stc
     jnz gdpDone
 ;
+    or gs:ap_flags,PORT_FLAG_ATA
+    mov ax,es:[esi+166]
+    test ax,4000h
+    jz gdp24
+
+gdp48:
+    or gs:ap_flags,PORT_FLAG_48_BIT
+    mov edx,es:[esi+204]
+    mov eax,es:[esi+200]
+    or edx,edx
+    jz gdp48Save
+;
+    mov eax,0FFFFFFFFh
+
+gdp48Save:
+    mov gs:ap_sector_count,eax
+    clc
+    jmp gdpDone
+
+gdp24:
     mov eax,es:[esi+120]
-    mov ax,es:[esi+98]
-    test ax,200h
-    jz gdpDone
+    mov gs:ap_sector_count,eax
+    clc
 
 gdpDone:
     pushf
@@ -1480,12 +1505,18 @@ ahci_thread:
     call WaitPortDet
     call ClearPortSerr
     call ActivatePorts
-    int 3
     xor al,al
     call GetDriveParams
 ;    
     mov al,1
     call GetDriveParams
+    int 3
+    mov ax,SEG data
+    mov ds,ax
+    mov gs,ds:ahci_port_arr
+    mov eax,gs:ap_sector_count
+    mov ax,gs:ap_flags
+    
 
 ahci_thread_done:
     int 3    
