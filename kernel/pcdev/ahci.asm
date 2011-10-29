@@ -1442,6 +1442,9 @@ GetDriveParams  Proc near
     stc
     jnz gdpDone
 ;
+    mov ax,1
+    WaitMilliSec
+;    
     or gs:ap_flags,PORT_FLAG_ATA
     mov ax,es:[esi+166]
     test ax,4000h
