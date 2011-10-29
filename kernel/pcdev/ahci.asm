@@ -635,6 +635,7 @@ AddDevice   Proc near
     push es
     pushad
 ;
+    or dword ptr fs:hba_bohc,2
     mov eax,SIZE ahci_device_struc
     AllocateSmallGlobalMem
     mov es:ad_hba_sel,fs
@@ -661,8 +662,6 @@ adPortAddNext:
     add bx,OFFSET ahci_dev_arr
     mov ds:[bx],es
     inc ds:ahci_dev_count
-;
-    or dword ptr fs:hba_ghc,HBA_GHC_HR
 ;
     popad
     pop es    
@@ -726,6 +725,63 @@ ipaNext:
 ipaDone:
     ret
 InitPciAhci Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ResetAhci
+;
+;           DESCRIPTION:    Reset AHCI devices
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ResetAhci Proc near
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov dx,100
+
+raRetry:    
+    mov cx,ds:ahci_dev_count
+    or cx,cx
+    jz raDone
+;    
+    mov si,OFFSET ahci_dev_arr
+
+raCheck:
+    mov fs,ds:[si]
+    mov fs,fs:ad_hba_sel
+    mov eax,fs:hba_bohc
+    and al,3
+    cmp al,2
+    jne raWait    
+;
+    add si,2
+    loop raCheck    
+    jmp raCheckDone
+
+raWait:
+    sub dx,1
+    jz raCheckDone
+;    
+    mov ax,10
+    WaitMilliSec
+    jmp raRetry    
+
+raCheckDone:    
+    mov cx,ds:ahci_dev_count
+    mov si,OFFSET ahci_dev_arr
+
+raReset:
+    mov fs,ds:[si]
+    mov fs,fs:ad_hba_sel
+    or dword ptr fs:hba_ghc,HBA_GHC_HR
+    add si,2
+    loop raReset
+
+raDone:
+    ret
+ResetAhci Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1360,6 +1416,8 @@ ahci_thread:
     or cx,cx
     jz ahci_thread_done
 ;    
+    int 3
+    call ResetAhci
     call StartAhci
     call WaitPortDet
     call ClearPortSerr
