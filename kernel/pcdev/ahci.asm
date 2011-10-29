@@ -816,12 +816,6 @@ spDo:
     mov gs:hba_pxfb,eax
     mov gs:hba_pxfbu,0
     mov eax,gs:hba_pxfb
-;
-    mov eax,ap_cmd
-    add eax,es:ap_physical
-    mov gs:hba_pxclb,eax
-    mov gs:hba_pxclbu,0
-;
     or gs:hba_pxcmd,HBA_PXCMD_FRE OR HBA_PXCMD_SUD
 ;
     mov eax,gs:hba_pxis
@@ -1082,8 +1076,8 @@ apPort:
     or bx,bx
     jz apNext    
 ;
-    mov es,bx
-    mov es,es:ap_hba_sel
+    mov gs,bx
+    mov es,gs:ap_hba_sel
 ;    
     mov eax,es:hba_pxssts
     and al,0Fh
@@ -1094,7 +1088,12 @@ apPort:
     and al,88h
     jnz apNext
 ;
+    mov eax,ap_cmd
+    add eax,gs:ap_physical
+    mov es:hba_pxclb,eax
+    mov es:hba_pxclbu,0
     or es:hba_pxcmd,HBA_PXCMD_ST
+;
     push ds
     push si
 ;    
@@ -1413,7 +1412,6 @@ ahci_thread:
 ;    
     call ResetAhci
     call StartAhci
-    int 3
     call WaitPortDet
     call ClearPortSerr
     int 3
