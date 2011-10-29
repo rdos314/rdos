@@ -1355,7 +1355,6 @@ ahci_thread:
     or cx,cx
     jz ahci_thread_done
 ;    
-    int 3
     call StartAhci
     call WaitPortDet
     call ClearPortSerr
