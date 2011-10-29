@@ -1319,6 +1319,7 @@ SetupWriteCmd    Endp
 
 StartCmd Proc near
     push ds
+    push eax
     push cx
     push edx
 ;
@@ -1330,7 +1331,8 @@ StartCmd Proc near
 ;
     pop edx
     pop cx
-    pop es               
+    pop eax
+    pop ds
     ret
 StartCmd    Endp
 
@@ -1348,6 +1350,7 @@ StartCmd    Endp
 
 WaitForCompletion Proc near
     push ds
+    push eax
     push cx
     push edx
 ;
@@ -1368,7 +1371,8 @@ wfcLoop:
 wfcDone:
     pop edx
     pop cx
-    pop es               
+    pop eax
+    pop ds
     ret
 WaitForCompletion    Endp
 
@@ -1385,6 +1389,7 @@ WaitForCompletion    Endp
 
 GetDriveParams  Proc near
     push es
+    push gs
     pushad
 ;
     movzx bx,al
@@ -1443,6 +1448,7 @@ gdpDone:
     popf
 ;
     popad
+    pop gs
     pop es
     ret
 GetDriveParams  Endp
@@ -1497,6 +1503,10 @@ ahci_thread:
     call ClearPortSerr
     call ActivatePorts
     int 3
+    xor al,al
+    call GetDriveParams
+;    
+    mov al,1
     call GetDriveParams
 
 ahci_thread_done:
