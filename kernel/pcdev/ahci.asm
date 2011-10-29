@@ -815,7 +815,6 @@ spDo:
     add eax,edx
     mov gs:hba_pxfb,eax
     mov gs:hba_pxfbu,0
-    int 3
     mov eax,gs:hba_pxfb
 ;
     mov eax,ap_cmd
@@ -913,9 +912,6 @@ saWait:
     jmp saRetry    
 
 saCheckDone:    
-    mov ax,25
-    WaitMilliSec
-;
     mov cx,ds:ahci_dev_count
     mov si,OFFSET ahci_dev_arr
 
@@ -1415,8 +1411,8 @@ ahci_thread:
     or cx,cx
     jz ahci_thread_done
 ;    
-    int 3
     call ResetAhci
+    int 3
     call StartAhci
     call WaitPortDet
     call ClearPortSerr
