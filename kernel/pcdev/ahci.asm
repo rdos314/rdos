@@ -1412,8 +1412,8 @@ ahci_thread:
     jz ahci_thread_done
 ;    
     call ResetAhci
-    int 3
     call StartAhci
+    int 3
     call WaitPortDet
     call ClearPortSerr
     int 3
