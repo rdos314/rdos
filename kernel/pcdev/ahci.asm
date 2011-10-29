@@ -234,6 +234,8 @@ ap_fis_sel          DW ?
 ap_cmd_sel          DW ?
 ap_slot_sel         DW ?
 
+ap_flags            DW ?
+
 ahci_port_struc     ENDS
 
 ;
@@ -603,6 +605,7 @@ apPhysLoop:
     mov ds:ap_physical,eax
     mov ds:ap_pages,cx    
     mov ds:ap_device,es
+    mov ds:ap_flags,0
 ;
     pop ax
     mov ds:ap_hba_sel,ax
@@ -1349,7 +1352,6 @@ ahci_name DB 'AHCI',0
 
 ahci_thread:
     int 3
-    call InitPciAhci
     mov cx,ds:ahci_dev_count
     or cx,cx
     jz ahci_thread_done
@@ -1412,7 +1414,7 @@ init_ahci    Proc far
     push es
     pusha
 ;    
-;    call InitPciAhci
+    call InitPciAhci
 ;    
     mov ax,cs
     mov ds,ax
