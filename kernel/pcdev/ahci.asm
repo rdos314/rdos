@@ -1093,6 +1093,8 @@ apPort:
     mov es:hba_pxclb,eax
     mov es:hba_pxclbu,0
     or es:hba_pxcmd,HBA_PXCMD_ST
+    mov eax,es:hba_pxclb
+    int 3
 ;
     push ds
     push si
