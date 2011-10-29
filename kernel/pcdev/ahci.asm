@@ -840,7 +840,7 @@ saRetry:
 saCheck:
     mov fs,ds:[si]
     mov fs,fs:ad_hba_sel
-    test fs:hba_ghc,HBA_GHC
+    test fs:hba_ghc,HBA_GHC_HR
     jnz saWait
 ;
     add si,2
@@ -1351,11 +1351,11 @@ MapCmdTable Endp
 ahci_name DB 'AHCI',0
 
 ahci_thread:
-    int 3
     mov cx,ds:ahci_dev_count
     or cx,cx
     jz ahci_thread_done
 ;    
+    int 3
     call StartAhci
     call WaitPortDet
     call ClearPortSerr
