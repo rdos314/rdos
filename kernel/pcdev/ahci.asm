@@ -1093,8 +1093,6 @@ apPort:
     mov es:hba_pxclb,eax
     mov es:hba_pxclbu,0
     or es:hba_pxcmd,HBA_PXCMD_ST
-    mov eax,es:hba_pxclb
-    int 3
 ;
     push ds
     push si
@@ -1416,7 +1414,6 @@ ahci_thread:
     call StartAhci
     call WaitPortDet
     call ClearPortSerr
-    int 3
     call ActivatePorts
 ;    
     mov eax,1000h
@@ -1445,10 +1442,8 @@ ahci_thread:
 ;
     pop ax
     call SetupReadCmd
-;
-    call MapCmdTable
     call StartCmd
-    call ViewErrors
+    int 3
 
 ahci_thread_done:
     int 3    
