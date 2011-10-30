@@ -362,6 +362,7 @@ ihHandlePort:
     jnc ihHandleNext
 ;
     push es
+    push fs
     push eax
     push edx
     push si
@@ -370,8 +371,9 @@ ihHandlePort:
     pop si
     pop edx
     pop eax
+    pop fs
     pop es
-    mov es:hba_is,edx
+    mov fs:hba_is,edx
 
 ihHandleNext:
     or eax,eax
