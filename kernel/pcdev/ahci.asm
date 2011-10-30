@@ -353,7 +353,6 @@ ihLoop:
     jz ihNext
 
 ihHandle:
-    mov cx,32
     mov si,OFFSET ad_port_arr
     mov edx,1
 
