@@ -322,9 +322,11 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IrqPort  Proc near
+    push es
     mov es,ds:ap_hba_sel
     mov eax,es:hba_pxis
     mov es:hba_pxis,eax
+    pop es
     ret
 IrqPort Endp
 
