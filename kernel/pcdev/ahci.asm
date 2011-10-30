@@ -340,10 +340,10 @@ IrqPort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IrqHandler  Proc near
-    mov ax,SEG data
-    mov ds,ax
 
 ihRetry:    
+    mov ax,SEG data
+    mov ds,ax
     mov cx,ds:ahci_dev_count
     mov si,OFFSET ahci_dev_arr
 
