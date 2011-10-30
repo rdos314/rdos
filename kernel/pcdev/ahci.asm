@@ -698,10 +698,14 @@ apPhysLoop:
     pop ax
     mov ds:ap_hba_sel,ax
 ;
+    push es
+    mov ax,ds
+    mov es,ax
     mov cx,32
     mov di,OFFSET ap_thread_arr
     xor ax,ax
     rep stosw
+    pop es
 ;
     call CreatePortFis
     call CreatePortCmdList
