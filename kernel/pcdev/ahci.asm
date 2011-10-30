@@ -1323,6 +1323,7 @@ AddPrdEntry     Proc near
     mov ds:[bx].ape_handle,edi
 ;
     mov eax,ecx
+    dec eax
     or eax,80000000h    
     mov ds:[bx].ape_byte_count,eax
     add bx,10h
