@@ -322,11 +322,9 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IrqPort  Proc near
-    push es
     mov es,ds:ap_hba_sel
     mov eax,es:hba_pxis
     mov es:hba_pxis,eax
-    pop es
     ret
 IrqPort Endp
 
@@ -351,29 +349,37 @@ ihLoop:
     mov es,ds:[si]
     mov fs,es:ad_hba_sel
     mov eax,fs:hba_is
-    or eax,eax
+    and eax,fs:hba_pi
     jz ihNext
 
 ihHandle:
     mov cx,32
     mov si,OFFSET ad_port_arr
+    mov edx,1
 
 ihHandlePort:    
     shr eax,1
     jnc ihHandleNext
 ;
+    push es
     push eax
+    push edx
     push si
     mov ds,es:[si]
     call IrqPort    
     pop si
+    pop edx
     pop eax
+    pop es
+    mov es:hba_is,edx
 
 ihHandleNext:
+    or eax,eax
+    jz ihRetry
+;    
+    shl edx,1
     add si,2
-    loop ihHandlePort        
-;
-    jmp ihRetry
+    jmp ihHandlePort        
 
 ihNext:
     add si,2
