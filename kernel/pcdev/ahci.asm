@@ -242,6 +242,8 @@ ap_flags            DW ?
 
 ap_sector_count     DD ?
 
+ap_thread_arr       DW 32 DUP(?)
+
 ahci_port_struc     ENDS
 
 ;
@@ -695,6 +697,11 @@ apPhysLoop:
 ;
     pop ax
     mov ds:ap_hba_sel,ax
+;
+    mov cx,32
+    mov di,OFFSET ap_thread_arr
+    xor ax,ax
+    rep stosw
 ;
     call CreatePortFis
     call CreatePortCmdList
@@ -1391,6 +1398,34 @@ SetupWriteCmd    Proc near
     pop ds
     ret
 SetupWriteCmd    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupWait
+;
+;       DESCRIPTION:    Setup wait
+;
+;       PARAMETERS:     GS      Port sel
+;                       AL      Slot #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupWait    Proc near
+    push ax
+    push bx
+;
+    ClearSignal
+;
+    movzx bx,al
+    add bx,bx
+    GetThread
+    mov gs:[bx].ap_thread_arr,ax
+;
+    pop bx    
+    pop ax
+    ret
+SetupWait    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1520,6 +1555,7 @@ GetDriveParams  Proc near
 ;
     pop ax
     call SetupReadCmd
+    call SetupWait
     call StartCmd
     call WaitForCompletion
 ;
