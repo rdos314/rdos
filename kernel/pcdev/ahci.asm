@@ -313,6 +313,77 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           IrqPort
+;
+;       DESCRIPTION:    IRQ port handler
+;
+;       PARAMETERS:     DS      Port sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IrqPort  Proc near
+    mov es,ds:ap_hba_sel
+    mov eax,es:hba_pxis
+    mov es:hba_pxis,eax
+    ret
+IrqPort Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IrqHandler
+;
+;       DESCRIPTION:    IRQ handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IrqHandler  Proc near
+    mov ax,SEG data
+    mov ds,ax
+
+ihRetry:    
+    mov cx,ds:ahci_dev_count
+    mov si,OFFSET ahci_dev_arr
+
+ihLoop:
+    mov es,ds:[si]
+    mov fs,es:ad_hba_sel
+    mov eax,fs:hba_is
+    or eax,eax
+    jz ihNext
+
+ihHandle:
+    mov cx,32
+    mov si,OFFSET ad_port_arr
+
+ihHandlePort:    
+    shr eax,1
+    jnc ihHandleNext
+;
+    push eax
+    push si
+    mov ds,es:[si]
+    call IrqPort    
+    pop si
+    pop eax
+
+ihHandleNext:
+    add si,2
+    loop ihHandlePort        
+;
+    jmp ihRetry
+
+ihNext:
+    add si,2
+    loop ihLoop
+
+ihDone:        
+    ret
+IrqHandler  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           GetSlotEntry
 ;
 ;       DESCRIPTION:    Get slot entry to use
@@ -1355,6 +1426,12 @@ StartCmd    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForCompletion Proc near
+    int 3
+
+wfcL:
+    call IrqHandler
+    jmp wfcL
+
     push ds
     push eax
     push cx
