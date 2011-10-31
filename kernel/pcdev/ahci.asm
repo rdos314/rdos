@@ -213,7 +213,6 @@ ahci_slot_struc  STRUC
 
 as_entries      DW ?
 as_slots        DW ?
-as_slot_mask    DD ?
 as_index_arr    DW 32 DUP(?)
 
 ahci_slot_struc  ENDS
@@ -242,7 +241,10 @@ ap_flags            DW ?
 
 ap_sector_count     DD ?
 
-ap_thread_arr       DW 32 DUP(?)
+ap_spinlock         spinlock_typ <>
+ap_slot_mask        DD ?
+ap_reserved_mask    DD ?
+ap_active_mask      DD ?
 
 ahci_port_struc     ENDS
 
@@ -268,10 +270,14 @@ ap_cmd_size     = 400h
 
 ahci_command_list_struc  STRUC
 
-acl_flags        DW ?
-acl_prdtl        DW ?
-acl_prd_count    DD ?
-acl_ctba         DD ?,?
+acl_flags           DW ?
+acl_prdtl           DW ?
+acl_transfer_count  DD ?
+acl_ctba            DD ?,?
+acl_resv1           DD ?,?
+acl_resv2           DW ?
+acl_thread          DW ?
+acl_total_count     DD ?
 
 ahci_command_list_struc  ENDS
 
@@ -296,7 +302,13 @@ ahci_port_arr       DW MAX_AHCI_PORTS DUP(?)
 
 data    ENDS
 
+
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
     .386p
+ENDIF
 
 prd_slot_table  STRUC
 
@@ -327,6 +339,44 @@ IrqPort  Proc near
     mov es,ds:ap_hba_sel
     mov eax,es:hba_pxis
     mov es:hba_pxis,eax
+    test eax,HBA_PXI_DP
+    jz ipDone
+;
+    RequestSpinlock ds:ap_spinlock
+    mov edx,es:hba_pxci
+    mov eax,ds:ap_active_mask
+    xor eax,edx
+    and eax,ds:ap_active_mask
+    ReleaseSpinlock ds:ap_spinlock       
+;
+    and eax,ds:ap_slot_mask
+    jz ipDone
+;
+    mov es,gs:ap_cmd_sel
+    xor si,si
+
+ipSlotLoop:
+    clc
+    rcr eax,1
+    jnc ipSlotNext
+;
+    mov eax,es:[si].acl_transfer_count
+    cmp eax,es:[si].acl_total_count
+    jb ipSlotNext
+;
+    xor bx,bx
+    xchg bx,es:[si].acl_thread
+    or bx,bx
+    jz ipSlotNext
+;    
+    Signal
+
+ipSlotNext:
+    add si,20h
+    or eax,eax
+    jnz ipSlotLoop
+
+ipDone:    
     ret
 IrqPort Endp
 
@@ -590,7 +640,7 @@ CreatePortSlots Proc near
     sub cx,es:as_slots
     mov eax,0FFFFFFFFh
     shr eax,cl
-    mov es:as_slot_mask,eax
+    mov ds:ap_slot_mask,eax
 ;    
     mov cx,es:as_slots
     mov ax,SIZE ahci_slot_struc
@@ -694,18 +744,12 @@ apPhysLoop:
     mov ds:ap_pages,cx    
     mov ds:ap_device,es
     mov ds:ap_flags,0
+    mov ds:ap_active_mask,0
+    mov ds:ap_reserved_mask,0
+    InitSpinlock ds:ap_spinlock
 ;
     pop ax
     mov ds:ap_hba_sel,ax
-;
-    push es
-    mov ax,ds
-    mov es,ax
-    mov cx,32
-    mov di,OFFSET ap_thread_arr
-    xor ax,ax
-    rep stosw
-    pop es
 ;
     call CreatePortFis
     call CreatePortCmdList
@@ -1236,17 +1280,22 @@ ActivatePorts Endp
 AllocateSlot Proc near
     push es
     push edx
+    push esi
 ;
-    mov es,gs:ap_hba_sel
-    mov ds,gs:ap_slot_sel
-    mov edx,es:hba_pxci
-    not edx
-    and edx,ds:as_slot_mask
-    stc
-    jz asDone        
-;
-    mov bx,OFFSET as_index_arr
     xor al,al
+    xor bx,bx
+    mov esi,1
+    mov es,gs:ap_hba_sel
+;
+    RequestSpinlock gs:ap_spinlock
+    mov edx,gs:ap_reserved_mask
+    not edx
+    and edx,gs:ap_slot_mask
+    jnz asLoop
+;
+    ReleaseSpinlock gs:ap_spinlock
+    stc
+    jmp asDone
 
 asLoop:
     rcr edx,1
@@ -1254,13 +1303,19 @@ asLoop:
 ;
     add bx,2
     inc al
+    shl esi,1
     jmp asLoop
 
 asFound:
-    mov bx,ds:[bx]
+    or gs:ap_reserved_mask,esi
+    ReleaseSpinlock gs:ap_spinlock
+;    
+    mov ds,gs:ap_slot_sel
+    mov bx,ds:[bx].as_index_arr
     clc
 
 asDone:
+    pop esi
     pop edx
     pop es               
     ret
@@ -1360,16 +1415,28 @@ AddPrdEntry     Endp
 
 SetupReadCmd    Proc near
     push ds
+    push ax
     push bx
+    push ecx
 ;
     mov ds,gs:ap_cmd_sel
     movzx bx,al
     shl bx,5
     mov ds:[bx].acl_prdtl,cx
     mov ds:[bx].acl_flags,485h
-    mov ds:[bx].acl_prd_count,0
+    mov ds:[bx].acl_transfer_count,0
 ;
+    movzx ecx,cx
+    shl ecx,9
+    mov ds:[bx].acl_total_count,ecx
+;
+    ClearSignal
+    GetThread
+    mov ds:[bx].acl_thread,ax        
+;
+    pop ecx
     pop bx    
+    pop ax
     pop ds
     ret
 SetupReadCmd    Endp
@@ -1389,47 +1456,31 @@ SetupReadCmd    Endp
 
 SetupWriteCmd    Proc near
     push ds
+    push ax
     push bx
+    push ecx
 ;
     mov ds,gs:ap_cmd_sel
     movzx bx,al
     shl bx,5
     mov ds:[bx].acl_prdtl,cx
     mov ds:[bx].acl_flags,4C5h
-    mov ds:[bx].acl_prd_count,0
+    mov ds:[bx].acl_transfer_count,0
 ;
+    movzx ecx,cx
+    shl ecx,9
+    mov ds:[bx].acl_total_count,ecx
+;
+    ClearSignal
+    GetThread
+    mov ds:[bx].acl_thread,ax        
+;
+    pop ecx
     pop bx    
+    pop ax
     pop ds
     ret
 SetupWriteCmd    Endp
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           SetupWait
-;
-;       DESCRIPTION:    Setup wait
-;
-;       PARAMETERS:     GS      Port sel
-;                       AL      Slot #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupWait    Proc near
-    push ax
-    push bx
-;
-    ClearSignal
-;
-    movzx bx,al
-    add bx,bx
-    GetThread
-    mov gs:[bx].ap_thread_arr,ax
-;
-    pop bx    
-    pop ax
-    ret
-SetupWait    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1453,7 +1504,11 @@ StartCmd Proc near
     mov cl,al
     mov edx,1
     shl edx,cl
+;
+    RequestSpinlock gs:ap_spinlock
     mov ds:hba_pxci,edx
+    or gs:ap_active_mask,edx
+    ReleaseSpinlock gs:ap_spinlock
 ;
     pop edx
     pop cx
@@ -1544,22 +1599,20 @@ GetDriveParams  Proc near
 ;    
     mov gs,ax
     call AllocateSlot
-    push ax
 ;
+    push ax
     xor edx,edx
     mov cx,1
     mov al,0ECh
     call SetupAta
+    pop ax
 ;    
-    push cx
     xor edi,edi
     mov ecx,200h
     call AddPrdEntry
-    pop cx
 ;
-    pop ax
+    mov cx,1
     call SetupReadCmd
-    call SetupWait
     call StartCmd
     call WaitForCompletion
 ;
