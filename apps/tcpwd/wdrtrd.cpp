@@ -386,28 +386,32 @@ void TWdRunThreadService::ReqGetRuntime()
 ##########################################################################*/
 void TWdRunThreadService::ReqPoll()
 {
-	short int CondFlags = 0;
+        short int CondFlags = 0;
     TDebug *Debug = GetDebug();
     TDebugThread *curr = 0;
 
     if (Debug)
     {
-		if (Debug->IsTerminated())
-			CondFlags |= COND_TERMINATE;
+        if (Debug->IsTerminated())
+            CondFlags |= COND_TERMINATE;
 
-		if (Debug->HasThreadChange())
-		{
-			Debug->ClearThreadChange();
-			CondFlags |= COND_THREAD;
-            curr = Debug->GetCurrentThread();
-            SetCurrentThread(curr);
-		}
+        if (Debug->HasThreadChange())
+        {
+            CondFlags |= COND_THREAD;
+            curr = Debug->GetNewThread();
+            if (curr)
+            {
+                Debug->SetCurrentThread(curr->ThreadID);
+                SetCurrentThread(curr);
+            }
+            Debug->ClearThreadChange();
+        }
 
-		if (Debug->HasModuleChange())
-		{
-			Debug->ClearModuleChange();
-			CondFlags |= COND_LIBRARIES;
-		}
+        if (Debug->HasModuleChange())
+        {
+            Debug->ClearModuleChange();
+            CondFlags |= COND_LIBRARIES;
+        }
     }
     PutWord(CondFlags);
 }
@@ -441,7 +445,11 @@ void TWdRunThreadService::ReqSet()
             status = 0;
 
             if (newid)
+            {
                 Debug->SetCurrentThread(newid);
+                t = Debug->GetCurrentThread();        
+                SetCurrentThread(t);
+            }
         }
     }
 

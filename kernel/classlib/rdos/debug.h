@@ -217,6 +217,7 @@ public:
     int GetNextThread(int ThreadID);
     int GetNextModule(int Module);
     
+    TDebugThread *GetNewThread();
     TDebugThread *GetCurrentThread();
     void SetCurrentThread(int ThreadID);
 
@@ -297,6 +298,7 @@ protected:
 
     TSignalDevice UserSignal;
 
+    TDebugThread *NewThread;
     int FThreadChanged;
     int FModuleChanged;
 

@@ -160,10 +160,14 @@ void TWdAsyncService::ReqAsyncGo()
 
             if (debug->HasThreadChange())
             {
-                debug->ClearThreadChange();
                 CondFlags |= COND_THREAD;
-                curr = debug->GetCurrentThread();
-                SetCurrentThread(curr);
+                curr = debug->GetNewThread();
+                if (curr)
+                {
+                    debug->SetCurrentThread(curr->ThreadID);
+                    SetCurrentThread(curr);
+                }
+                debug->ClearThreadChange();
             }
 
             if (debug->HasModuleChange())
@@ -246,10 +250,14 @@ void TWdAsyncService::ReqAsyncStep()
 
             if (debug->HasThreadChange())
             {
-                debug->ClearThreadChange();
                 CondFlags |= COND_THREAD;
-                curr = debug->GetCurrentThread();
-                SetCurrentThread(curr);
+                curr = debug->GetNewThread();
+                if (curr)
+                {
+                    debug->SetCurrentThread(curr->ThreadID);
+                    SetCurrentThread(curr);
+                }
+                debug->ClearThreadChange();
             }
 
             if (debug->HasModuleChange())
@@ -332,10 +340,14 @@ void TWdAsyncService::ReqAsyncPoll()
 
             if (debug->HasThreadChange())
             {
-                debug->ClearThreadChange();
                 CondFlags |= COND_THREAD;
-                curr = debug->GetCurrentThread();
-                SetCurrentThread(curr);
+                curr = debug->GetNewThread();
+                if (curr)
+                {
+                    debug->SetCurrentThread(curr->ThreadID);
+                    SetCurrentThread(curr);
+                }
+                debug->ClearThreadChange();
             }
 
             if (debug->HasModuleChange())
@@ -403,8 +415,8 @@ void TWdAsyncService::ReqAsyncStop()
 {
     TDebug *debug = GetDebug();
 
-    if (debug)
-        debug->ExitAsync();
+//    if (debug)
+//        debug->ExitAsync();
 
     PutDword(0);
     PutWord(0);    
@@ -412,7 +424,7 @@ void TWdAsyncService::ReqAsyncStop()
     PutDword(0);
     PutWord(0);   
 
-    PutWord(COND_TERMINATE);
+    PutWord(COND_STOP);
 }
 
 /*##########################################################################

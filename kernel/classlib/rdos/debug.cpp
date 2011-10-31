@@ -957,6 +957,7 @@ TDebug::TDebug(const char *Program, const char *Param, const char *StartDir, con
     ThreadList = 0;
     ModuleList = 0;
     CurrentThread = 0;
+    NewThread = 0;
     BreakList = 0;
 
     FThreadChanged = FALSE;
@@ -1293,7 +1294,7 @@ void TDebug::WaitForLoad(int timeout)
 ##########################################################################*/
 int TDebug::HasThreadChange()
 {
-    return FThreadChanged;
+    return FThreadChanged || NewThread;
 }
 
 /*##########################################################################
@@ -1310,6 +1311,7 @@ int TDebug::HasThreadChange()
 void TDebug::ClearThreadChange()
 {
     FThreadChanged = FALSE;
+    NewThread = 0;
 }
 
 /*##########################################################################
@@ -1438,6 +1440,22 @@ TDebugModule *TDebug::GetMainModule()
 TDebugThread *TDebug::GetCurrentThread()
 {
     return CurrentThread;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::GetNewThread
+#
+#   Purpose....: Get new thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDebugThread *TDebug::GetNewThread()
+{
+    return NewThread;
 }
 
 /*##########################################################################
@@ -2154,6 +2172,7 @@ void TDebug::HandleTerminateProcess(int exitcode)
     }
 
     CurrentThread = 0;
+    NewThread = 0;
     FThreadChanged = TRUE;
     FModuleChanged = TRUE;
 
@@ -2294,6 +2313,11 @@ void TDebug::HandleKernelException(TKernelExceptionEvent *event, int thread)
             sprintf(str, "Trace: %04hX:%08lX", Thread->Cs, Thread->Eip);
             LogMsg(str);
         }
+        else
+        {
+            sprintf(str, "Exception: %04hX:%08lX in %d", Thread->Cs, Thread->Eip, thread);
+            LogMsg(str);
+        }
     }        
 
     FSection.Leave();
@@ -2352,15 +2376,8 @@ void TDebug::SignalNewData()
             LogMsg("Terminate thread");
             HandleTerminateThread(thread);
             FThreadChanged = TRUE;
-            if (!CurrentThread)
-            {
-                CurrentThread = ThreadList;
-                while (CurrentThread && !CurrentThread->IsDebug())
-                    CurrentThread = CurrentThread->Next;
-
-                if (!CurrentThread)
-                    CurrentThread = ThreadList;
-            }
+            if (CurrentThread->ThreadID == thread)
+                CurrentThread = 0;
             break;
 
         case EVENT_TERMINATE_PROCESS:
@@ -2412,10 +2429,7 @@ void TDebug::SignalNewData()
             {
                 newt = LockThread(thread);
                 if (newt)
-                {
-                    CurrentThread = newt;
-                    FThreadChanged = TRUE;
-                }
+                    NewThread = newt;
                 UnlockThread();
             }
             UpdateModules();
