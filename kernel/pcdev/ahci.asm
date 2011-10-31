@@ -1009,6 +1009,8 @@ sdNext:
 ;
     mov eax,fs:hba_pi
     mov fs:hba_is,eax
+;    
+    or fs:hba_ghc,HBA_GHC_IE
     ret
 StartDevice Endp
 
