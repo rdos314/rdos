@@ -394,6 +394,7 @@ IrqPort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AhciInt  Proc far
+    int 3
     mov fs,ds:ad_hba_sel
 
 aiRetry:    
@@ -1539,6 +1540,14 @@ StartCmd    Endp
 
 WaitForCompletion Proc near
     WaitForSignal
+    int 3
+;
+    mov fs,gs:ap_hba_sel
+    mov eax,fs:hba_pi
+    mov ds,gs:ap_device
+    mov fs,ds:ad_hba_sel
+    mov eax,fs:hba_ghc
+    mov eax,fs:hba_is
     ret
 WaitForCompletion    Endp
 
