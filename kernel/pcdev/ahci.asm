@@ -362,8 +362,8 @@ ipSlotLoop:
     shr eax,1
     jnc ipSlotNext
 ;
-    mov eax,ds:[si].acl_transfer_count
-    cmp eax,ds:[si].acl_total_count
+    mov edx,ds:[si].acl_transfer_count
+    cmp edx,ds:[si].acl_total_count
     jb ipSlotNext
 ;
     xor bx,bx
@@ -846,6 +846,7 @@ ipaLoop:
 ;
     mov cl,PCI_interrupt_line
     ReadPciByte
+    mov al,19           ; later use ACPI for this
 ;        
     AllocateGdt
     push cx
@@ -982,7 +983,7 @@ StartDevice Proc near
     mov bx,cs
     mov es,bx
     mov edi,OFFSET AhciInt    
-;    RequestSharedIrqHandler
+    RequestSharedIrqHandler
 ;
     mov fs,ds:ad_hba_sel
     or fs:hba_ghc,HBA_GHC_AE
@@ -1535,34 +1536,7 @@ StartCmd    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForCompletion Proc near
-    int 3
-    mov ds,gs:ap_device
-    call AhciInt
-
-    push ds
-    push eax
-    push cx
-    push edx
-;
-    mov ds,gs:ap_hba_sel
-    mov cl,al
-    mov edx,1
-    shl edx,cl
-
-wfcLoop:
-    mov eax,ds:hba_pxci
-    test eax,edx
-    jz wfcDone
-;
-    mov ax,1
-    WaitMilliSec
-    jmp wfcLoop        
-
-wfcDone:
-    pop edx
-    pop cx
-    pop eax
-    pop ds
+    WaitForSignal
     ret
 WaitForCompletion    Endp
 
@@ -1624,9 +1598,6 @@ GetDriveParams  Proc near
     test al,1
     stc
     jnz gdpDone
-;
-    mov ax,1
-    WaitMilliSec
 ;    
     or gs:ap_flags,PORT_FLAG_ATA
     mov ax,es:[esi+166]
@@ -1643,6 +1614,7 @@ gdp48:
     mov eax,0FFFFFFFFh
 
 gdp48Save:
+    int 3
     mov gs:ap_sector_count,eax
     clc
     jmp gdpDone
