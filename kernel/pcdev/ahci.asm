@@ -291,6 +291,8 @@ ahci_device_struc   STRUC
 ad_hba_sel          DW ?
 ad_port_arr         DW 32 DUP(?)
 
+ad_irq              DB ?
+
 ahci_device_struc   ENDS
 
 data    SEGMENT byte public 'DATA'
@@ -331,41 +333,41 @@ code    SEGMENT byte public use16 'CODE'
 ;
 ;       DESCRIPTION:    IRQ port handler
 ;
-;       PARAMETERS:     DS      Port sel
+;       PARAMETERS:     DS      Device sel
+;                       ES      Port sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IrqPort  Proc near
-    mov es,ds:ap_hba_sel
-    mov eax,es:hba_pxis
-    mov es:hba_pxis,eax
+    mov ds,es:ap_hba_sel
+    mov eax,ds:hba_pxis
+    mov ds:hba_pxis,eax
     test eax,HBA_PXI_DP
     jz ipDone
 ;
-    RequestSpinlock ds:ap_spinlock
-    mov edx,es:hba_pxci
-    mov eax,ds:ap_active_mask
+    RequestSpinlock es:ap_spinlock
+    mov edx,ds:hba_pxci
+    mov eax,es:ap_active_mask
     xor eax,edx
-    and eax,ds:ap_active_mask
-    ReleaseSpinlock ds:ap_spinlock       
+    and eax,es:ap_active_mask
+    ReleaseSpinlock es:ap_spinlock       
 ;
-    and eax,ds:ap_slot_mask
+    and eax,es:ap_slot_mask
     jz ipDone
 ;
-    mov es,gs:ap_cmd_sel
+    mov ds,es:ap_cmd_sel
     xor si,si
 
 ipSlotLoop:
-    clc
-    rcr eax,1
+    shr eax,1
     jnc ipSlotNext
 ;
-    mov eax,es:[si].acl_transfer_count
-    cmp eax,es:[si].acl_total_count
+    mov eax,ds:[si].acl_transfer_count
+    cmp eax,ds:[si].acl_total_count
     jb ipSlotNext
 ;
     xor bx,bx
-    xchg bx,es:[si].acl_thread
+    xchg bx,ds:[si].acl_thread
     or bx,bx
     jz ipSlotNext
 ;    
@@ -383,64 +385,54 @@ IrqPort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           IrqHandler
+;       NAME:           AhciInt
 ;
 ;       DESCRIPTION:    IRQ handler
 ;
+;       PARAMETERS:     DS      Device selector
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-IrqHandler  Proc near
+AhciInt  Proc far
+    mov fs,ds:ad_hba_sel
 
-ihRetry:    
-    mov ax,SEG data
-    mov ds,ax
-    mov cx,ds:ahci_dev_count
-    mov si,OFFSET ahci_dev_arr
-
-ihLoop:
-    mov es,ds:[si]
-    mov fs,es:ad_hba_sel
+aiRetry:    
     mov eax,fs:hba_is
     and eax,fs:hba_pi
-    jz ihNext
-
-ihHandle:
+    jz aiDone
+;
     mov si,OFFSET ad_port_arr
     mov edx,1
 
-ihHandlePort:    
+aiHandlePort:    
     shr eax,1
-    jnc ihHandleNext
+    jnc aiHandleNext
 ;
+    push ds
     push es
-    push fs
     push eax
     push edx
     push si
-    mov ds,es:[si]
+    mov es,ds:[si]
     call IrqPort    
     pop si
     pop edx
     pop eax
-    pop fs
     pop es
+    pop ds
     mov fs:hba_is,edx
 
-ihHandleNext:
+aiHandleNext:
     or eax,eax
-    jz ihRetry
+    jz aiRetry
 ;    
     shl edx,1
     add si,2
-    jmp ihHandlePort        
+    jmp aiHandlePort        
 
-ihNext:
-    add si,2
-    loop ihLoop
-
-ihDone:        
-    ret
-IrqHandler  Endp
+aiDone:        
+    retf32
+AhciInt  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -769,6 +761,7 @@ AddPort     Endp
 ;
 ;       PARAMETERS:     FS          HBA selector
 ;                       EDX         HBA linear
+;                       AL          IRQ line
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -777,9 +770,12 @@ AddDevice   Proc near
     pushad
 ;
     or dword ptr fs:hba_bohc,2
+    push ax
     mov eax,SIZE ahci_device_struc
     AllocateSmallGlobalMem
+    pop ax
     mov es:ad_hba_sel,fs
+    mov es:ad_irq,al
 ;
     mov cx,32
     mov eax,fs:hba_pi
@@ -847,6 +843,9 @@ ipaLoop:
     add edx,1000h
     SetPhysicalPage
     sub edx,1000h
+;
+    mov cl,PCI_interrupt_line
+    ReadPciByte
 ;        
     AllocateGdt
     push cx
@@ -979,6 +978,12 @@ StartPort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StartDevice Proc near
+    mov al,ds:ad_irq
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET AhciInt    
+;    RequestSharedIrqHandler
+;
     mov fs,ds:ad_hba_sel
     or fs:hba_ghc,HBA_GHC_AE
 ;
@@ -1531,10 +1536,8 @@ StartCmd    Endp
 
 WaitForCompletion Proc near
     int 3
-
-wfcL:
-    call IrqHandler
-    jmp wfcL
+    mov ds,gs:ap_device
+    call AhciInt
 
     push ds
     push eax
