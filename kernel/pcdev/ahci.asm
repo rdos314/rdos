@@ -400,7 +400,6 @@ IrqPort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AhciInt  Proc far
-    int 3
     mov fs,ds:ad_hba_sel
 
 aiRetry:    
@@ -1056,8 +1055,8 @@ SetupInts Proc near
     mov cl,al
     add cl,2
     ReadPciWord
-    test al,1
-    jz siIrq
+    or al,1
+    WritePciWord
 ;    
     mov si,cx
     mov cl,al
