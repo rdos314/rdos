@@ -2498,6 +2498,25 @@ init_irq_loop:
     add bx,SIZE irq_struc
     loop init_irq_loop
 ;
+    xor esi,esi
+    mov cx,64
+    mov bx,OFFSET msi_arr
+
+init_msi_loop:
+    mov ds:[bx].user_handler,0
+    mov ds:[bx+4].user_handler,0
+    mov ds:[bx].user_data,0
+    InitSection ds:[bx].usage_section
+;
+    mov word ptr ds:[bx].irq_enable_proc,OFFSET dummy_enable
+    mov word ptr ds:[bx].irq_enable_proc+2,cs
+;
+    mov word ptr ds:[bx].irq_disable_proc,OFFSET dummy_disable
+    mov word ptr ds:[bx].irq_disable_proc+2,cs
+;
+    add bx,SIZE irq_struc
+    loop init_msi_loop
+;
     mov bx,OFFSET irq_arr
     EnterSection ds:[bx].usage_section
     add bx,2 * SIZE irq_struc

@@ -475,4 +475,7 @@ end_disc_handler_nr         = 407
 
 hook_init_pci_nr            = 408
 
+allocate_msi_ints_nr        = 409
+request_msi_handler_nr      = 410
+
 osgate_entries				= 420

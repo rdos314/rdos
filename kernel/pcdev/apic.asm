@@ -236,6 +236,98 @@ mem_irq_handle_done&nr:
     iretd
 
     ENDM
+
+msimac  MACRO nr
+
+msr_msi&nr:
+    push ds
+    push es
+    push fs
+    pushad
+;
+    EnterInt
+    sti
+;       
+    mov ax,irq_sys_sel
+    mov es,ax
+    mov bx,OFFSET msi_arr + nr * SIZE irq_struc
+    mov ax,word ptr es:[bx+4].user_handler
+    or ax,ax
+    jz msr_msi_default_error&nr
+;
+    mov ds,es:[bx].user_data
+    xor eax,eax
+    mov ax,cs
+    push eax
+    mov ax,OFFSET msr_msi_handle_done&nr
+    push eax
+    push es:[bx+4].user_handler
+    push es:[bx].user_handler
+    xor ax,ax
+    mov es,ax
+    retf32
+
+msr_msi_default_error&nr:
+
+msr_msi_handle_done&nr:
+    cli
+    xor eax,eax
+    mov ecx,MSR_APIC_EOI
+    wrmsr
+    LeaveInt
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    iretd
+
+mem_msi&nr:
+    push ds
+    push es
+    push fs
+    pushad
+;
+    EnterInt
+    sti
+;       
+    mov ax,irq_sys_sel
+    mov es,ax
+    mov bx,OFFSET msi_arr + nr * SIZE irq_struc
+    mov ax,word ptr es:[bx+4].user_handler
+    or ax,ax
+    jz mem_msi_default_error&nr
+;
+    mov ds,es:[bx].user_data
+    xor eax,eax
+    mov ax,cs
+    push eax
+    mov ax,OFFSET mem_msi_handle_done&nr
+    push eax
+    push es:[bx+4].user_handler
+    push es:[bx].user_handler
+    xor ax,ax
+    mov es,ax
+    retf32
+
+mem_msi_default_error&nr:
+
+mem_msi_handle_done&nr:
+    cli
+;    
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+    LeaveInt
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    iretd
+
+    ENDM
     
 
     assume cs:code
@@ -1554,6 +1646,262 @@ smemgLint1Ok:
     mov al,5Fh
     mov esi,OFFSET mem_irq31
     CreateIntGateSelector
+;
+    mov al,0A0h
+    mov esi,OFFSET mem_msi0
+    CreateIntGateSelector
+;
+    mov al,0A1h
+    mov esi,OFFSET mem_msi1
+    CreateIntGateSelector
+;
+    mov al,0A2h
+    mov esi,OFFSET mem_msi2
+    CreateIntGateSelector
+;
+    mov al,0A3h
+    mov esi,OFFSET mem_msi3
+    CreateIntGateSelector
+;
+    mov al,0A4h
+    mov esi,OFFSET mem_msi4
+    CreateIntGateSelector
+;
+    mov al,0A5h
+    mov esi,OFFSET mem_msi5
+    CreateIntGateSelector
+;
+    mov al,0A6h
+    mov esi,OFFSET mem_msi6
+    CreateIntGateSelector
+;
+    mov al,0A7h
+    mov esi,OFFSET mem_msi7
+    CreateIntGateSelector
+;
+    mov al,0A8h
+    mov esi,OFFSET mem_msi8
+    CreateIntGateSelector
+;
+    mov al,0A9h
+    mov esi,OFFSET mem_msi9
+    CreateIntGateSelector
+;
+    mov al,0AAh
+    mov esi,OFFSET mem_msi10
+    CreateIntGateSelector
+;
+    mov al,0ABh
+    mov esi,OFFSET mem_msi11
+    CreateIntGateSelector
+;
+    mov al,0ACh
+    mov esi,OFFSET mem_msi12
+    CreateIntGateSelector
+;
+    mov al,0ADh
+    mov esi,OFFSET mem_msi13
+    CreateIntGateSelector
+;
+    mov al,0AEh
+    mov esi,OFFSET mem_msi14
+    CreateIntGateSelector
+;
+    mov al,0AFh
+    mov esi,OFFSET mem_msi15
+    CreateIntGateSelector
+;
+    mov al,0B0h
+    mov esi,OFFSET mem_msi16
+    CreateIntGateSelector
+;
+    mov al,0B1h
+    mov esi,OFFSET mem_msi17
+    CreateIntGateSelector
+;
+    mov al,0B2h
+    mov esi,OFFSET mem_msi18
+    CreateIntGateSelector
+;
+    mov al,0B3h
+    mov esi,OFFSET mem_msi19
+    CreateIntGateSelector
+;
+    mov al,0B4h
+    mov esi,OFFSET mem_msi20
+    CreateIntGateSelector
+;
+    mov al,0B5h
+    mov esi,OFFSET mem_msi21
+    CreateIntGateSelector
+;
+    mov al,0B6h
+    mov esi,OFFSET mem_msi22
+    CreateIntGateSelector
+;
+    mov al,0B7h
+    mov esi,OFFSET mem_msi23
+    CreateIntGateSelector
+;
+    mov al,0B8h
+    mov esi,OFFSET mem_msi24
+    CreateIntGateSelector
+;
+    mov al,0B9h
+    mov esi,OFFSET mem_msi25
+    CreateIntGateSelector
+;
+    mov al,0BAh
+    mov esi,OFFSET mem_msi26
+    CreateIntGateSelector
+;
+    mov al,0BBh
+    mov esi,OFFSET mem_msi27
+    CreateIntGateSelector
+;
+    mov al,0BCh
+    mov esi,OFFSET mem_msi28
+    CreateIntGateSelector
+;
+    mov al,0BDh
+    mov esi,OFFSET mem_msi29
+    CreateIntGateSelector
+;
+    mov al,0BEh
+    mov esi,OFFSET mem_msi30
+    CreateIntGateSelector
+;
+    mov al,0BFh
+    mov esi,OFFSET mem_msi31
+    CreateIntGateSelector
+;
+    mov al,0C0h
+    mov esi,OFFSET mem_msi32
+    CreateIntGateSelector
+;
+    mov al,0C1h
+    mov esi,OFFSET mem_msi33
+    CreateIntGateSelector
+;
+    mov al,0C2h
+    mov esi,OFFSET mem_msi34
+    CreateIntGateSelector
+;
+    mov al,0C3h
+    mov esi,OFFSET mem_msi35
+    CreateIntGateSelector
+;
+    mov al,0C4h
+    mov esi,OFFSET mem_msi36
+    CreateIntGateSelector
+;
+    mov al,0C5h
+    mov esi,OFFSET mem_msi37
+    CreateIntGateSelector
+;
+    mov al,0C6h
+    mov esi,OFFSET mem_msi38
+    CreateIntGateSelector
+;
+    mov al,0C7h
+    mov esi,OFFSET mem_msi39
+    CreateIntGateSelector
+;
+    mov al,0C8h
+    mov esi,OFFSET mem_msi40
+    CreateIntGateSelector
+;
+    mov al,0C9h
+    mov esi,OFFSET mem_msi41
+    CreateIntGateSelector
+;
+    mov al,0CAh
+    mov esi,OFFSET mem_msi42
+    CreateIntGateSelector
+;
+    mov al,0CBh
+    mov esi,OFFSET mem_msi43
+    CreateIntGateSelector
+;
+    mov al,0CCh
+    mov esi,OFFSET mem_msi44
+    CreateIntGateSelector
+;
+    mov al,0CDh
+    mov esi,OFFSET mem_msi45
+    CreateIntGateSelector
+;
+    mov al,0CEh
+    mov esi,OFFSET mem_msi46
+    CreateIntGateSelector
+;
+    mov al,0CFh
+    mov esi,OFFSET mem_msi47
+    CreateIntGateSelector
+;
+    mov al,0D0h
+    mov esi,OFFSET mem_msi48
+    CreateIntGateSelector
+;
+    mov al,0D1h
+    mov esi,OFFSET mem_msi49
+    CreateIntGateSelector
+;
+    mov al,0D2h
+    mov esi,OFFSET mem_msi50
+    CreateIntGateSelector
+;
+    mov al,0D3h
+    mov esi,OFFSET mem_msi51
+    CreateIntGateSelector
+;
+    mov al,0D4h
+    mov esi,OFFSET mem_msi52
+    CreateIntGateSelector
+;
+    mov al,0D5h
+    mov esi,OFFSET mem_msi53
+    CreateIntGateSelector
+;
+    mov al,0D6h
+    mov esi,OFFSET mem_msi54
+    CreateIntGateSelector
+;
+    mov al,0D7h
+    mov esi,OFFSET mem_msi55
+    CreateIntGateSelector
+;
+    mov al,0D8h
+    mov esi,OFFSET mem_msi56
+    CreateIntGateSelector
+;
+    mov al,0D9h
+    mov esi,OFFSET mem_msi57
+    CreateIntGateSelector
+;
+    mov al,0DAh
+    mov esi,OFFSET mem_msi58
+    CreateIntGateSelector
+;
+    mov al,0DBh
+    mov esi,OFFSET mem_msi59
+    CreateIntGateSelector
+;
+    mov al,0DCh
+    mov esi,OFFSET mem_msi60
+    CreateIntGateSelector
+;
+    mov al,0DDh
+    mov esi,OFFSET mem_msi61
+    CreateIntGateSelector
+;
+    mov al,0DEh
+    mov esi,OFFSET mem_msi62
+    CreateIntGateSelector
+;
+    mov al,0DFh
+    mov esi,OFFSET mem_msi63
+    CreateIntGateSelector
 ;    
     ret
 SetupMemGates   Endp
@@ -1773,6 +2121,262 @@ smsrgLint1Ok:
 ;
     mov al,5Fh
     mov esi,OFFSET msr_irq31
+    CreateIntGateSelector
+;
+    mov al,0A0h
+    mov esi,OFFSET msr_msi0
+    CreateIntGateSelector
+;
+    mov al,0A1h
+    mov esi,OFFSET msr_msi1
+    CreateIntGateSelector
+;
+    mov al,0A2h
+    mov esi,OFFSET msr_msi2
+    CreateIntGateSelector
+;
+    mov al,0A3h
+    mov esi,OFFSET msr_msi3
+    CreateIntGateSelector
+;
+    mov al,0A4h
+    mov esi,OFFSET msr_msi4
+    CreateIntGateSelector
+;
+    mov al,0A5h
+    mov esi,OFFSET msr_msi5
+    CreateIntGateSelector
+;
+    mov al,0A6h
+    mov esi,OFFSET msr_msi6
+    CreateIntGateSelector
+;
+    mov al,0A7h
+    mov esi,OFFSET msr_msi7
+    CreateIntGateSelector
+;
+    mov al,0A8h
+    mov esi,OFFSET msr_msi8
+    CreateIntGateSelector
+;
+    mov al,0A9h
+    mov esi,OFFSET msr_msi9
+    CreateIntGateSelector
+;
+    mov al,0AAh
+    mov esi,OFFSET msr_msi10
+    CreateIntGateSelector
+;
+    mov al,0ABh
+    mov esi,OFFSET msr_msi11
+    CreateIntGateSelector
+;
+    mov al,0ACh
+    mov esi,OFFSET msr_msi12
+    CreateIntGateSelector
+;
+    mov al,0ADh
+    mov esi,OFFSET msr_msi13
+    CreateIntGateSelector
+;
+    mov al,0AEh
+    mov esi,OFFSET msr_msi14
+    CreateIntGateSelector
+;
+    mov al,0AFh
+    mov esi,OFFSET msr_msi15
+    CreateIntGateSelector
+;
+    mov al,0B0h
+    mov esi,OFFSET msr_msi16
+    CreateIntGateSelector
+;
+    mov al,0B1h
+    mov esi,OFFSET msr_msi17
+    CreateIntGateSelector
+;
+    mov al,0B2h
+    mov esi,OFFSET msr_msi18
+    CreateIntGateSelector
+;
+    mov al,0B3h
+    mov esi,OFFSET msr_msi19
+    CreateIntGateSelector
+;
+    mov al,0B4h
+    mov esi,OFFSET msr_msi20
+    CreateIntGateSelector
+;
+    mov al,0B5h
+    mov esi,OFFSET msr_msi21
+    CreateIntGateSelector
+;
+    mov al,0B6h
+    mov esi,OFFSET msr_msi22
+    CreateIntGateSelector
+;
+    mov al,0B7h
+    mov esi,OFFSET msr_msi23
+    CreateIntGateSelector
+;
+    mov al,0B8h
+    mov esi,OFFSET msr_msi24
+    CreateIntGateSelector
+;
+    mov al,0B9h
+    mov esi,OFFSET msr_msi25
+    CreateIntGateSelector
+;
+    mov al,0BAh
+    mov esi,OFFSET msr_msi26
+    CreateIntGateSelector
+;
+    mov al,0BBh
+    mov esi,OFFSET msr_msi27
+    CreateIntGateSelector
+;
+    mov al,0BCh
+    mov esi,OFFSET msr_msi28
+    CreateIntGateSelector
+;
+    mov al,0BDh
+    mov esi,OFFSET msr_msi29
+    CreateIntGateSelector
+;
+    mov al,0BEh
+    mov esi,OFFSET msr_msi30
+    CreateIntGateSelector
+;
+    mov al,0BFh
+    mov esi,OFFSET msr_msi31
+    CreateIntGateSelector
+;
+    mov al,0C0h
+    mov esi,OFFSET msr_msi32
+    CreateIntGateSelector
+;
+    mov al,0C1h
+    mov esi,OFFSET msr_msi33
+    CreateIntGateSelector
+;
+    mov al,0C2h
+    mov esi,OFFSET msr_msi34
+    CreateIntGateSelector
+;
+    mov al,0C3h
+    mov esi,OFFSET msr_msi35
+    CreateIntGateSelector
+;
+    mov al,0C4h
+    mov esi,OFFSET msr_msi36
+    CreateIntGateSelector
+;
+    mov al,0C5h
+    mov esi,OFFSET msr_msi37
+    CreateIntGateSelector
+;
+    mov al,0C6h
+    mov esi,OFFSET msr_msi38
+    CreateIntGateSelector
+;
+    mov al,0C7h
+    mov esi,OFFSET msr_msi39
+    CreateIntGateSelector
+;
+    mov al,0C8h
+    mov esi,OFFSET msr_msi40
+    CreateIntGateSelector
+;
+    mov al,0C9h
+    mov esi,OFFSET msr_msi41
+    CreateIntGateSelector
+;
+    mov al,0CAh
+    mov esi,OFFSET msr_msi42
+    CreateIntGateSelector
+;
+    mov al,0CBh
+    mov esi,OFFSET msr_msi43
+    CreateIntGateSelector
+;
+    mov al,0CCh
+    mov esi,OFFSET msr_msi44
+    CreateIntGateSelector
+;
+    mov al,0CDh
+    mov esi,OFFSET msr_msi45
+    CreateIntGateSelector
+;
+    mov al,0CEh
+    mov esi,OFFSET msr_msi46
+    CreateIntGateSelector
+;
+    mov al,0CFh
+    mov esi,OFFSET msr_msi47
+    CreateIntGateSelector
+;
+    mov al,0D0h
+    mov esi,OFFSET msr_msi48
+    CreateIntGateSelector
+;
+    mov al,0D1h
+    mov esi,OFFSET msr_msi49
+    CreateIntGateSelector
+;
+    mov al,0D2h
+    mov esi,OFFSET msr_msi50
+    CreateIntGateSelector
+;
+    mov al,0D3h
+    mov esi,OFFSET msr_msi51
+    CreateIntGateSelector
+;
+    mov al,0D4h
+    mov esi,OFFSET msr_msi52
+    CreateIntGateSelector
+;
+    mov al,0D5h
+    mov esi,OFFSET msr_msi53
+    CreateIntGateSelector
+;
+    mov al,0D6h
+    mov esi,OFFSET msr_msi54
+    CreateIntGateSelector
+;
+    mov al,0D7h
+    mov esi,OFFSET msr_msi55
+    CreateIntGateSelector
+;
+    mov al,0D8h
+    mov esi,OFFSET msr_msi56
+    CreateIntGateSelector
+;
+    mov al,0D9h
+    mov esi,OFFSET msr_msi57
+    CreateIntGateSelector
+;
+    mov al,0DAh
+    mov esi,OFFSET msr_msi58
+    CreateIntGateSelector
+;
+    mov al,0DBh
+    mov esi,OFFSET msr_msi59
+    CreateIntGateSelector
+;
+    mov al,0DCh
+    mov esi,OFFSET msr_msi60
+    CreateIntGateSelector
+;
+    mov al,0DDh
+    mov esi,OFFSET msr_msi61
+    CreateIntGateSelector
+;
+    mov al,0DEh
+    mov esi,OFFSET msr_msi62
+    CreateIntGateSelector
+;
+    mov al,0DFh
+    mov esi,OFFSET msr_msi63
     CreateIntGateSelector
 ;       
     ret
@@ -2003,6 +2607,8 @@ ReadIoApicInt   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; fixed IRQs (IOAPIC)
+
     irqmac 1
     irqmac 3
     irqmac 4
@@ -2034,6 +2640,72 @@ ReadIoApicInt   Endp
     irqmac 30
     irqmac 31
 
+; Allocatable IRQs (MSI)
+
+    msimac 0
+    msimac 1
+    msimac 2
+    msimac 3
+    msimac 4
+    msimac 5
+    msimac 6
+    msimac 7
+    msimac 8
+    msimac 9
+    msimac 10
+    msimac 11
+    msimac 12
+    msimac 13
+    msimac 14
+    msimac 15
+    msimac 16
+    msimac 17
+    msimac 18
+    msimac 19
+    msimac 20
+    msimac 21
+    msimac 22
+    msimac 23
+    msimac 24
+    msimac 25
+    msimac 26
+    msimac 27
+    msimac 28
+    msimac 29
+    msimac 30
+    msimac 31
+    msimac 32
+    msimac 33
+    msimac 34
+    msimac 35
+    msimac 36
+    msimac 37
+    msimac 38
+    msimac 39
+    msimac 40
+    msimac 41
+    msimac 42
+    msimac 43
+    msimac 44
+    msimac 45
+    msimac 46
+    msimac 47
+    msimac 48
+    msimac 49
+    msimac 50
+    msimac 51
+    msimac 52
+    msimac 53
+    msimac 54
+    msimac 55
+    msimac 56
+    msimac 57
+    msimac 58
+    msimac 59
+    msimac 60
+    msimac 61
+    msimac 62
+    msimac 63
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2777,6 +3449,280 @@ InitSmp Proc near
     pop ds
     ret
 InitSmp Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AllocateMsiInts
+;
+;       DESCRIPTION:    Allocate MSI interrupts
+;
+;       PARAMETERS:     CX      Number of ints (1,2,4,8,16 or 32)
+;
+;       RETURNS:        EDX     MSI address
+;                       EAX     MSI data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_msi_ints_name    DB 'Allocate MSI Ints',0
+
+allocate_msi_ints  Proc far
+    push ds
+    push si
+;    
+    mov dx,ds
+    mov ax,irq_sys_sel
+    mov ds,ax
+;
+    cmp cx,32
+    ja amiFailed
+;
+    cmp cx,16
+    jbe amiNot32
+
+ami32:
+    xor ax,ax
+    mov edx,ds:msi_mask
+    or edx,edx
+    jnz ami32_1
+;
+    mov edx,-1
+    mov ds:msi_mask,edx    
+    jmp amiOk
+
+ami32_1:
+    mov ax,32
+    mov edx,ds:msi_mask+4
+    or edx,edx
+    jnz amiFailed
+;
+    mov edx,-1
+    mov ds:msi_mask,edx    
+    jmp amiOk
+
+amiNot32:    
+    cmp cx,8
+    jbe amiNot16
+
+ami16:
+    xor ax,ax
+    mov si,OFFSET msi_mask
+
+ami16Loop:
+    mov dx,ds:[si]
+    or dx,dx
+    jnz ami16Next
+;
+    mov dx,-1
+    mov ds:[si],dx
+    jmp amiOk
+
+ami16Next:
+    add ax,16
+    add si,2
+    cmp ax,64
+    jne ami16Loop
+    jmp amiFailed
+
+amiNot16:
+    cmp cx,4
+    jbe amiNot8
+
+ami8:
+    xor ax,ax
+    mov si,OFFSET msi_mask
+
+ami8Loop:
+    mov dl,ds:[si]
+    or dl,dl
+    jnz ami8Next
+;
+    mov dl,-1
+    mov ds:[si],dl
+    jmp amiOk
+
+ami8Next:
+    add ax,8
+    inc si
+    cmp ax,64
+    jne ami8Loop
+    jmp amiFailed
+        
+amiNot8:
+    cmp cx,2
+    jbe amiNot4
+
+ami4:
+    xor ax,ax
+    mov si,OFFSET msi_mask
+
+ami4Loop:
+    mov dl,ds:[si]
+    test dl,0Fh
+    jnz ami4_1
+;
+    mov dl,0Fh
+    or ds:[si],dl
+    jmp amiOk
+
+ami4_1:
+    add ax,4
+    test dl,0F0h
+    jnz ami4Next
+;    
+    mov dl,0F0h
+    or ds:[si],dl
+    jmp amiOk
+
+ami4Next:
+    add ax,4
+    inc si
+    cmp ax,64
+    jne ami4Loop
+    jmp amiFailed
+        
+amiNot4:
+    cmp cx,1
+    jbe ami1
+
+ami2:
+    xor ax,ax
+    mov si,OFFSET msi_mask
+
+ami2Loop:
+    mov dl,ds:[si]
+    test dl,03h
+    jnz ami2_1
+;
+    mov dl,03h
+    or ds:[si],dl
+    jmp amiOk
+
+ami2_1:
+    add ax,2
+    test dl,0Ch
+    jnz ami2_2
+;
+    mov dl,0Ch
+    or ds:[si],dl
+    jmp amiOk
+
+ami2_2:
+    add ax,2
+    test dl,30h
+    jnz ami2_3
+;
+    mov dl,30h
+    or ds:[si],dl
+    jmp amiOk
+
+ami2_3:
+    add ax,2
+    test dl,0C0h
+    jnz ami2Next
+;
+    mov dl,0C0h
+    or ds:[si],dl
+    jmp amiOk
+
+ami2Next:
+    add ax,2
+    inc si
+    cmp ax,64
+    jne ami2Loop
+    jmp amiFailed
+
+ami1:
+    xor ax,ax
+    mov si,OFFSET msi_mask
+
+ami1ByteLoop:
+    mov dl,ds:[si]
+    cmp dl,-1
+    je ami1NextByte
+;
+    mov dh,1
+
+ami1BitLoop:
+    shr dl,1
+    jc amiBitNext
+;    
+    or ds:[si],dh
+    jmp amiOk
+
+amiBitNext:
+    shl dh,1
+    inc ax
+    jmp ami1BitLoop
+
+ami1NextByte:
+    add ax,8
+    inc si
+    cmp ax,64
+    jne ami1ByteLoop
+    jmp amiFailed
+
+amiOk:
+    movzx eax,al
+    add al,0A0h
+    mov ah,1
+    mov edx,0FEEFF00Ch
+    clc
+    jmp amiDone
+
+amiFailed:
+    stc
+
+amiDone:    
+    pop si
+    pop ds    
+    retf32
+allocate_msi_ints  Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RequestMsiHandler
+;
+;       DESCRIPTION:    Request an MSI-based interrupt-handler
+;
+;       PARAMETERS:     DS      Data passed to handler
+;                       ES:EDI  Handler address
+;                       EAX     MSI data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+request_msi_handler_name    DB 'Request MSI Handler',0
+
+request_msi_handler  Proc far
+    push ds
+    push eax
+    push dx
+    push si
+;    
+    push ds
+    mov dx,irq_sys_sel
+    mov ds,dx
+;
+    sub ax,0A0h
+    xor ah,ah
+    mov dx,SIZE irq_struc
+    mul dx
+    mov si,OFFSET msi_arr
+    add si,ax
+    pop dx
+;
+    EnterSection ds:[si].usage_section
+    mov ds:[si].user_data,dx
+    mov ds:[si].user_handler,edi
+    mov word ptr ds:[si+4].user_handler,es
+;    
+    pop si
+    pop dx
+    pop eax
+    pop ds    
+    retf32
+request_msi_handler  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2789,9 +3735,7 @@ InitSmp Endp
 
 SetupIrq    Proc near
     push ds
-    push eax
-    push bx
-    push cx
+    pushad
 ;    
     mov ax,irq_sys_sel
     mov ds,ax
@@ -2813,9 +3757,26 @@ init_irq_loop:
     add bx,SIZE irq_struc
     loop init_irq_loop
 ;
-    pop cx
-    pop bx
-    pop eax
+    mov ds:msi_mask,0
+    mov ds:msi_mask+4,0
+;    
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;
+    mov esi,OFFSET allocate_msi_ints
+    mov edi,OFFSET allocate_msi_ints_name
+    xor cl,cl
+    mov ax,allocate_msi_ints_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET request_msi_handler
+    mov edi,OFFSET request_msi_handler_name
+    xor cl,cl
+    mov ax,request_msi_handler_nr
+    RegisterOsGate
+;
+    popad
     pop ds
     ret
 SetupIrq    Endp        

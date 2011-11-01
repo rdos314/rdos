@@ -244,6 +244,7 @@
 #define osgate_cache_dir 240
 #define osgate_insert_dir_entry 241
 #define osgate_insert_file_entry 242
+#define osgate_hook_file_system_started 243
 
 #define osgate_get_file_info 247
 #define osgate_dupl_file_info 248
@@ -468,6 +469,13 @@
 
 #define osgate_hook_net_link_up 404
 #define osgate_req_arp 405
+
+#define osgate_begin_disc_handler 406
+#define osgate_end_disc_handler 407
+
+#define osgate_hook_init_pci 408
+
+#define osgate_request_msi_handler 409
 
 
 
@@ -717,6 +725,7 @@
 #define OsGate_cache_dir 0x3E 0x67 0x9a 240 0 0 0 2 0
 #define OsGate_insert_dir_entry 0x3E 0x67 0x9a 241 0 0 0 2 0
 #define OsGate_insert_file_entry 0x3E 0x67 0x9a 242 0 0 0 2 0
+#define OsGate_hook_file_system_started 0x3E 0x67 0x9a 243 0 0 0 2 0
 
 #define OsGate_get_file_info 0x3E 0x67 0x9a 247 0 0 0 2 0
 #define OsGate_dupl_file_info 0x3E 0x67 0x9a 248 0 0 0 2 0
@@ -941,4 +950,11 @@
 
 #define OsGate_hook_net_link_up 0x3E 0x67 0x9a 148 1 0 0 2 0
 #define OsGate_req_arp 0x3E 0x67 0x9a 149 1 0 0 2 0
+
+#define OsGate_begin_disc_handler 0x3E 0x67 0x9a 150 1 0 0 2 0
+#define OsGate_end_disc_handler 0x3E 0x67 0x9a 151 1 0 0 2 0
+
+#define OsGate_hook_init_pci 0x3E 0x67 0x9a 152 1 0 0 2 0
+
+#define OsGate_request_msi_handler 0x3E 0x67 0x9a 153 1 0 0 2 0
 
