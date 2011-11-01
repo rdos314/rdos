@@ -475,7 +475,9 @@
 
 #define osgate_hook_init_pci 408
 
-#define osgate_request_msi_handler 409
+#define osgate_allocate_msi_ints 409
+#define osgate_request_msi_handler 410
+#define osgate_free_msi_int 411
 
 
 
@@ -956,5 +958,7 @@
 
 #define OsGate_hook_init_pci 0x3E 0x67 0x9a 152 1 0 0 2 0
 
-#define OsGate_request_msi_handler 0x3E 0x67 0x9a 153 1 0 0 2 0
+#define OsGate_allocate_msi_ints 0x3E 0x67 0x9a 153 1 0 0 2 0
+#define OsGate_request_msi_handler 0x3E 0x67 0x9a 154 1 0 0 2 0
+#define OsGate_free_msi_int 0x3E 0x67 0x9a 155 1 0 0 2 0
 

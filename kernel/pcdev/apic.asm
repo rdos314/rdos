@@ -3460,7 +3460,7 @@ InitSmp Endp
 ;       PARAMETERS:     CX      Number of ints (1,2,4,8,16 or 32)
 ;
 ;       RETURNS:        EDX     MSI address
-;                       EAX     MSI data
+;                       AX      MSI data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3663,7 +3663,6 @@ ami1NextByte:
     jmp amiFailed
 
 amiOk:
-    movzx eax,al
     add al,0A0h
     mov ah,1
     mov edx,0FEEFF00Ch
@@ -3688,7 +3687,7 @@ allocate_msi_ints  Endp
 ;
 ;       PARAMETERS:     DS      Data passed to handler
 ;                       ES:EDI  Handler address
-;                       EAX     MSI data
+;                       AX      MSI data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3723,6 +3722,38 @@ request_msi_handler  Proc far
     pop ds    
     retf32
 request_msi_handler  Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FreeMsiInt
+;
+;       DESCRIPTION:    Free a single MSI int vector
+;
+;       PARAMETERS:     AX      MSI data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_msi_int_name    DB 'Free MSI Int',0
+
+free_msi_int  Proc far
+    push ds
+    push ax
+    push si
+;    
+    mov si,irq_sys_sel
+    mov ds,si
+;
+    sub ax,0A0h
+    xor ah,ah
+    mov si,OFFSET msi_mask
+    btc ds:[si],ax
+;
+    pop si
+    pop ax
+    pop ds
+    retf32
+free_msi_int    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3774,6 +3805,12 @@ init_irq_loop:
     mov edi,OFFSET request_msi_handler_name
     xor cl,cl
     mov ax,request_msi_handler_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_msi_int
+    mov edi,OFFSET free_msi_int_name
+    xor cl,cl
+    mov ax,free_msi_int_nr
     RegisterOsGate
 ;
     popad

@@ -477,5 +477,6 @@ hook_init_pci_nr            = 408
 
 allocate_msi_ints_nr        = 409
 request_msi_handler_nr      = 410
+free_msi_int_nr             = 411
 
 osgate_entries				= 420

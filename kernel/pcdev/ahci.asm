@@ -291,7 +291,13 @@ ahci_device_struc   STRUC
 ad_hba_sel          DW ?
 ad_port_arr         DW 32 DUP(?)
 
-ad_irq              DB ?
+ad_msi_address      DD ?
+ad_msi_data         DW ?
+ad_msi_ints         DW ?
+
+ad_pci_bus          DB ?
+ad_pci_device       DB ?
+ad_pci_function     DB ?
 
 ahci_device_struc   ENDS
 
@@ -434,6 +440,61 @@ aiHandleNext:
 aiDone:        
     retf32
 AhciInt  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AhciPortInt
+;
+;       DESCRIPTION:    Port-based IRQ handler
+;
+;       PARAMETERS:     DS      Port sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AhciPortInt  Proc far
+    mov es,ds:ap_hba_sel
+    mov eax,es:hba_pxis
+    mov es:hba_pxis,eax
+    test eax,HBA_PXI_DP
+    jz apiDone
+;
+    RequestSpinlock ds:ap_spinlock
+    mov edx,es:hba_pxci
+    mov eax,ds:ap_active_mask
+    xor eax,edx
+    and eax,ds:ap_active_mask
+    ReleaseSpinlock ds:ap_spinlock       
+;
+    and eax,ds:ap_slot_mask
+    jz apiDone
+;
+    mov es,ds:ap_cmd_sel
+    xor si,si
+
+apiSlotLoop:
+    shr eax,1
+    jnc apiSlotNext
+;
+    mov eax,es:[si].acl_transfer_count
+    cmp eax,es:[si].acl_total_count
+    jb apiSlotNext
+;
+    xor bx,bx
+    xchg bx,es:[si].acl_thread
+    or bx,bx
+    jz apiSlotNext
+;    
+    Signal
+
+apiSlotNext:
+    add si,20h
+    or eax,eax
+    jnz apiSlotLoop
+
+apiDone:    
+    retf32
+AhciPortInt Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -760,9 +821,12 @@ AddPort     Endp
 ;
 ;       DESCRIPTION:    Add an AHCI-device
 ;
-;       PARAMETERS:     FS          HBA selector
-;                       EDX         HBA linear
-;                       AL          IRQ line
+;       PARAMETERS:     FS      HBA selector
+;                       EDX     HBA linear
+;                       BH      PCI Bus
+;                       BL      PCI Device
+;                       CH      PCI Function
+
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -776,7 +840,9 @@ AddDevice   Proc near
     AllocateSmallGlobalMem
     pop ax
     mov es:ad_hba_sel,fs
-    mov es:ad_irq,al
+    mov es:ad_pci_bus,bh
+    mov es:ad_pci_device,bl
+    mov es:ad_pci_function,ch
 ;
     mov cx,32
     mov eax,fs:hba_pi
@@ -844,17 +910,16 @@ ipaLoop:
     add edx,1000h
     SetPhysicalPage
     sub edx,1000h
-;
-    mov cl,PCI_interrupt_line
-    ReadPciByte
-    mov al,19           ; later use ACPI for this
+
 ;        
+    push bx
     AllocateGdt
     push cx
     mov ecx,100h
     CreateDataSelector16
     pop cx
     mov fs,bx
+    pop bx
     test fs:hba_ghc,HBA_GHC_AE
     jz ipaNext
 ;
@@ -971,6 +1036,171 @@ StartPort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetupInts
+;
+;           DESCRIPTION:    Setup device ints
+;
+;           PARAMETERS:     DS     Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupInts Proc near
+    int 3
+    mov bh,ds:ad_pci_bus
+    mov bl,ds:ad_pci_device
+    mov ch,ds:ad_pci_function
+    mov al,5
+    FindPciCapability
+    jc siIrq
+;
+    mov cl,al
+    add cl,2
+    ReadPciWord
+    test al,1
+    jz siIrq
+;    
+    mov si,cx
+    mov cl,al
+    shr cl,1
+    and cl,7
+    mov dx,1
+    shl dx,cl
+    mov cx,dx
+    cmp cx,1
+    je siAllocOne
+
+siAllocMany:
+    AllocateMsiInts
+    jc siAllocOne
+;    
+    mov ds:ad_msi_address,edx
+    mov ds:ad_msi_data,ax
+    mov ds:ad_msi_ints,cx
+;
+    mov cx,si
+    ReadPciWord
+    and al,8Fh
+    mov dl,al
+    and dl,0Eh
+    shl dl,3
+    or al,dl
+    WritePciWord        
+    jmp siAllocDone
+
+siAllocOne:
+    mov cx,1
+    AllocateMsiInts
+    jc siIrq
+;    
+    mov ds:ad_msi_address,edx
+    mov ds:ad_msi_data,ax
+    mov ds:ad_msi_ints,1
+;
+    mov cx,si
+    ReadPciWord
+    and al,8Fh
+    WritePciWord        
+
+siAllocDone:        
+    test ax,100h
+    jnz siMsiVector
+;
+    test ax,80h
+    jnz siMsi64
+
+siMsi32:
+    add cl,2
+    mov eax,ds:ad_msi_address
+    WritePciDword
+;
+    add cl,4    
+    mov ax,ds:ad_msi_data
+    WritePciWord
+    jmp siMsiHandlers
+
+siMsi64:
+    add cl,2
+    mov eax,ds:ad_msi_address
+    WritePciDword
+;
+    add cl,4
+    xor eax,eax
+    WritePciDword
+;    
+    add cl,4    
+    mov ax,ds:ad_msi_data
+    WritePciWord
+    jmp siMsiHandlers
+
+siMsiVector:
+    add cl,2
+    mov eax,ds:ad_msi_address
+    WritePciDword
+;
+    add cl,4
+    xor eax,eax
+    WritePciDword
+;    
+    add cl,4    
+    mov ax,ds:ad_msi_data
+    WritePciWord
+
+siMsiHandlers:
+    mov cx,ds:ad_msi_ints
+    cmp cx,1
+    je siMsiSingle
+
+siMsiMulti:
+    mov si,OFFSET ad_port_arr
+    mov ax,ds:ad_msi_data
+
+siMultiLoop:
+    mov dx,ds:[si]
+    or dx,dx
+    jz siMultiFree
+
+siMultiSetup:
+    push ds
+    mov ds,dx
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET AhciPortInt
+    RequestMsiHandler
+    pop ds
+    jmp siMultiNext
+
+siMultiFree:
+    FreeMsiInt
+
+siMultiNext:
+    inc ax    
+    add si,2
+    loop siMultiLoop
+;
+    jmp siOk
+    
+siMsiSingle:
+    mov ax,ds:ad_msi_data
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET AhciInt
+    RequestMsiHandler
+    jmp siOk
+
+siIrq:
+    GetPciIrqNr
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET AhciInt
+    RequestSharedIrqHandler
+
+siOk:    
+    ret
+SetupInts Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           StartDevice
 ;
 ;           DESCRIPTION:    Start device
@@ -980,12 +1210,6 @@ StartPort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StartDevice Proc near
-    mov al,ds:ad_irq
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET AhciInt    
-    RequestSharedIrqHandler
-;
     mov fs,ds:ad_hba_sel
     or fs:hba_ghc,HBA_GHC_AE
 ;
@@ -1064,7 +1288,10 @@ saStart:
     push cx
     push si
     mov ds,ds:[si]
+;
+    call SetupInts
     call StartDevice    
+;    
     pop si
     pop cx
     pop ds

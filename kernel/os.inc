@@ -1229,16 +1229,21 @@ RequestSharedIrqHandler MACRO
 
 ; IN  CX        Number of ints (1,2,4,8,16 or 32)
 ; OUT EDX       MSI address
-; OUT EAX       MSI data
+; OUT AX        MSI data
 AllocateMsiInts    MACRO
     OsGate allocate_msi_ints_nr
                     ENDM
 
-; IN  EAX       MSI data
+; IN  AX        MSI data
 ; IN  DS        Data passed to handler
 ; IN  ES:EDI    Handler address
 RequestMsiHandler    MACRO
     OsGate request_msi_handler_nr
+                    ENDM
+
+; IN  AX        MSI data
+FreeMsiInt    MACRO
+    OsGate free_msi_int_nr
                     ENDM
 
 SetupIrqDetect  MACRO
@@ -2386,7 +2391,9 @@ FindPciDevice   MACRO
     OsGate find_pci_device_nr
                     ENDM
 
-; IN  AL    Interrupt pin
+; IN  BH    Bus
+; IN  BL    Device
+; IN  CH    Function
 ; OUT AL    Interrupt line
 GetPciIrqNr     MACRO
     OsGate get_pci_irq_nr
