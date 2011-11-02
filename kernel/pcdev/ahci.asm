@@ -1023,12 +1023,6 @@ spDo:
     mov gs:hba_pxfbu,0
     mov eax,gs:hba_pxfb
     or gs:hba_pxcmd,HBA_PXCMD_FRE OR HBA_PXCMD_SUD
-;
-    mov eax,gs:hba_pxis
-    mov gs:hba_pxis,eax
-;    
-    mov eax,HBA_PXI_ENABLE
-    mov gs:hba_pxie,eax       
     ret
 StartPort Endp
 
@@ -1232,10 +1226,6 @@ sdNext:
     add si,2
     loop sdLoop
 ;
-    mov eax,fs:hba_pi
-    mov fs:hba_is,eax
-;    
-    or fs:hba_ghc,HBA_GHC_IE
     ret
 StartDevice Endp
 
@@ -1399,6 +1389,12 @@ cpsPort:
 ;
     mov es,ax
     mov es,es:ap_hba_sel
+;
+    mov eax,es:hba_pxis
+    mov es:hba_pxis,eax
+;    
+    mov eax,HBA_PXI_ENABLE
+    mov es:hba_pxie,eax       
 ;    
     mov eax,es:hba_pxssts
     and al,0Fh
@@ -1411,7 +1407,14 @@ cpsPort:
 cpsNext:
     add si,2
     loop cpsPort
+;
+    mov fs,ds:ad_hba_sel
 ;    
+    mov eax,fs:hba_pi
+    mov fs:hba_is,eax
+;    
+    or fs:hba_ghc,HBA_GHC_IE
+;
     pop si
     pop cx
     pop ds
