@@ -1055,8 +1055,8 @@ SetupInts Proc near
     mov cl,al
     add cl,2
     ReadPciWord
-    or al,1
-    WritePciWord
+    test al,1
+    jz siIrq
 ;    
     mov si,cx
     mov cl,al
@@ -1188,6 +1188,7 @@ siMsiSingle:
 
 siIrq:
     GetPciIrqNr
+    mov al,19       ; fix before ACPI is ready
     mov di,cs
     mov es,di
     mov edi,OFFSET AhciInt
