@@ -1038,7 +1038,6 @@ StartPort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupInts Proc near
-    int 3
     mov bh,ds:ad_pci_bus
     mov bl,ds:ad_pci_device
     mov ch,ds:ad_pci_function
@@ -1049,8 +1048,10 @@ SetupInts Proc near
     mov cl,al
     add cl,2
     ReadPciWord
-    test al,1
-    jz siIrq
+    or al,1
+    WritePciWord
+;    test al,1
+;    jz siIrq
 ;    
     mov si,cx
     mov cl,al
@@ -1182,7 +1183,7 @@ siMsiSingle:
 
 siIrq:
     GetPciIrqNr
-    mov al,19       ; fix before ACPI is ready
+    mov al,14       ; fix before ACPI is ready
     mov di,cs
     mov es,di
     mov edi,OFFSET AhciInt
@@ -1769,24 +1770,7 @@ StartCmd    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForCompletion Proc near
-    int 3
-    mov bh,ds:ad_pci_bus
-    mov bl,ds:ad_pci_device
-    mov ch,ds:ad_pci_function
-    mov cl,PCI_command_reg
-    ReadPciWord
-;
-    mov cl,PCI_status_reg
-    ReadPciWord
-;
     WaitForSignal
-;
-    mov fs,gs:ap_hba_sel
-    mov eax,fs:hba_pi
-    mov ds,gs:ap_device
-    mov fs,ds:ad_hba_sel
-    mov eax,fs:hba_ghc
-    mov eax,fs:hba_is
     ret
 WaitForCompletion    Endp
 

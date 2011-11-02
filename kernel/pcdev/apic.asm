@@ -3665,7 +3665,7 @@ ami1NextByte:
 amiOk:
     add al,0A0h
     mov ah,1
-    mov edx,0FEEFF00Ch
+    mov edx,0FEEFF000h
     clc
     jmp amiDone
 
