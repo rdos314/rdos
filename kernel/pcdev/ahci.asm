@@ -1765,8 +1765,17 @@ StartCmd    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForCompletion Proc near
-    WaitForSignal
     int 3
+    mov bh,ds:ad_pci_bus
+    mov bl,ds:ad_pci_device
+    mov ch,ds:ad_pci_function
+    mov cl,PCI_command_reg
+    ReadPciWord
+;
+    mov cl,PCI_status_reg
+    ReadPciWord
+;
+    WaitForSignal
 ;
     mov fs,gs:ap_hba_sel
     mov eax,fs:hba_pi
