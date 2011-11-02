@@ -1389,12 +1389,6 @@ cpsPort:
 ;
     mov es,ax
     mov es,es:ap_hba_sel
-;
-    mov eax,es:hba_pxis
-    mov es:hba_pxis,eax
-;    
-    mov eax,HBA_PXI_ENABLE
-    mov es:hba_pxie,eax       
 ;    
     mov eax,es:hba_pxssts
     and al,0Fh
@@ -1403,6 +1397,12 @@ cpsPort:
 ;
     mov eax,0FFFFFFFFh
     mov es:hba_pxserr,eax
+;
+    mov eax,es:hba_pxis
+    mov es:hba_pxis,eax
+;    
+    mov eax,HBA_PXI_ENABLE
+    mov es:hba_pxie,eax
     
 cpsNext:
     add si,2
