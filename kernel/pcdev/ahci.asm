@@ -36,6 +36,7 @@ INCLUDE pci.inc
 
 MAX_AHCI_DEVICES    = 16
 MAX_AHCI_PORTS      = 32
+MAX_NAME_SIZE       = 16
 
 ATA_DMA_READ            = 25h
 ATA_DMA_WRITE           = 35h
@@ -238,13 +239,19 @@ ap_cmd_sel          DW ?
 ap_slot_sel         DW ?
 
 ap_flags            DW ?
-
-ap_sector_count     DD ?
+ap_is               DD ?
+ap_errors           DD ?
 
 ap_spinlock         spinlock_typ <>
 ap_slot_mask        DD ?
 ap_reserved_mask    DD ?
 ap_active_mask      DD ?
+
+ap_sector_count     DD ?
+ap_sectors_per_unit DW ?
+ap_units            DW ?
+ap_disc_sel         DW ?
+ap_disc_nr          DB ?
 
 ahci_port_struc     ENDS
 
@@ -308,6 +315,8 @@ ahci_dev_arr        DW MAX_AHCI_DEVICES DUP(?)
 ahci_port_count     DW ?
 ahci_port_arr       DW MAX_AHCI_PORTS DUP(?)
 
+name_str            DB MAX_NAME_SIZE DUP(?)
+
 data    ENDS
 
 
@@ -348,6 +357,33 @@ IrqPort  Proc near
     mov ds,es:ap_hba_sel
     mov eax,ds:hba_pxis
     mov ds:hba_pxis,eax
+    or es:ap_is,eax
+    test eax,HBA_PXI_FATAL OR HBA_PXI_INFO
+    jz ipNotError
+;
+    mov ds,es:ap_cmd_sel
+    xor si,si
+    mov cx,32
+
+ipSignalLoop:
+    xor bx,bx
+    xchg bx,ds:[si].acl_thread
+    or bx,bx
+    jz ipSignalNext
+;    
+    Signal
+
+ipSignalNext:
+    add si,20h
+    loop ipSignalLoop
+;
+    mov ds,es:ap_hba_sel
+    mov eax,ds:hba_pxserr
+    mov ds:hba_pxserr,eax
+    or es:ap_errors,eax
+    jmp ipDone
+
+ipNotError:    
     test eax,HBA_PXI_DP
     jz ipDone
 ;
@@ -455,6 +491,33 @@ AhciPortInt  Proc far
     mov es,ds:ap_hba_sel
     mov eax,es:hba_pxis
     mov es:hba_pxis,eax
+    or ds:ap_is,eax
+    test eax,HBA_PXI_FATAL OR HBA_PXI_INFO
+    jz apiNotError
+;
+    mov es,ds:ap_cmd_sel
+    xor si,si
+    mov cx,32
+
+apiSignalLoop:
+    xor bx,bx
+    xchg bx,es:[si].acl_thread
+    or bx,bx
+    jz ipSignalNext
+;    
+    Signal
+
+apiSignalNext:
+    add si,20h
+    loop apiSignalLoop
+;
+    mov es,ds:ap_hba_sel
+    mov eax,es:hba_pxserr
+    mov es:hba_pxserr,eax
+    or ds:ap_errors,eax
+    jmp apiDone
+
+apiNotError:    
     test eax,HBA_PXI_DP
     jz apiDone
 ;
@@ -799,6 +862,8 @@ apPhysLoop:
     mov ds:ap_flags,0
     mov ds:ap_active_mask,0
     mov ds:ap_reserved_mask,0
+    mov ds:ap_is,0
+    mov ds:ap_errors,0
     InitSpinlock ds:ap_spinlock
 ;
     pop ax
@@ -1770,7 +1835,47 @@ StartCmd    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForCompletion Proc near
+    push ds
+    push eax
+    push cx
+    push edx
+    push si
+
+wfcLoop:
     WaitForSignal
+;
+    mov ds,gs:ap_cmd_sel
+    movzx si,al
+    shl si,5
+    mov edx,ds:[si].acl_transfer_count
+    cmp edx,ds:[si].acl_total_count
+    clc
+    je wfcRel
+;    
+    mov dx,ds:[si].acl_thread
+    or dx,dx
+    jnz wfcLoop
+;
+    stc
+
+wfcRel:    
+    pushf
+    mov cl,al
+    mov edx,1
+    shl edx,cl
+    not edx
+;
+    RequestSpinlock gs:ap_spinlock
+    and gs:ap_active_mask,edx
+    and gs:ap_reserved_mask,edx
+    ReleaseSpinlock gs:ap_spinlock
+    popf
+;
+    pop si
+    pop edx
+    pop cx
+    pop eax
+    pop ds
     ret
 WaitForCompletion    Endp
 
@@ -1826,12 +1931,7 @@ GetDriveParams  Proc near
     call SetupReadCmd
     call StartCmd
     call WaitForCompletion
-;
-    mov ds,gs:ap_hba_sel
-    mov eax,ds:hba_pxtfd
-    test al,1
-    stc
-    jnz gdpDone
+    jc gdpDone
 ;    
     or gs:ap_flags,PORT_FLAG_ATA
     mov ax,es:[esi+166]
@@ -1871,47 +1971,266 @@ gdpDone:
     ret
 GetDriveParams  Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CalcParam
+;
+;       DESCRIPTION:    Calculate various parameters
+;
+;       PARAMETERS:     DS      Port sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CalcParam       Proc near
+    pushad
+;
+    mov eax,1
+    mov edx,ds:ap_sector_count
+
+calc_param_norm_loop:
+    shl eax,1
+    shr edx,1
+    cmp eax,edx
+    jc calc_param_norm_loop
+;
+    cmp edx,10000h
+    jc calc_param_in_range
+;
+    shr edx,1
+
+calc_param_in_range:    
+    mov esi,edx
+    mov ebx,edx
+    mov ecx,edx
+
+calc_param_loop:
+    xor edx,edx
+    mov eax,ds:ap_sector_count
+    div esi
+    cmp ecx,edx
+    jc calc_param_next
+;       
+    mov ecx,edx
+    mov ebx,esi
+    or edx,edx
+    jz calc_param_ok
+
+calc_param_next:
+    inc esi
+    cmp esi,eax
+    jbe calc_param_loop
+;
+    xor edx,edx
+    mov eax,ds:ap_sector_count
+    div ebx
+
+calc_param_ok:
+    mov ds:ap_sectors_per_unit,bx
+    mov ds:ap_units,ax
+    mul bx
+    push dx
+    push ax
+    pop ds:ap_sector_count
+;
+    popad
+    ret
+CalcParam       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           discbuf_thread
+;
+;       DESCRIPTION:    Thread to handle disc buffer queue
+;
+;       PARAMETERS:     FS      Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+discbuf_thread:
+    int 3
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ahci_thread
+;       NAME:           install_disc_unit
 ;
-;           DESCRIPTION:    AHCI thread
+;       DESCRIPTION:    Install a disc
 ;
-;       PARAMETERS:     
-;
-;           RETURNS:        
+;       PARAMETERS:     AL      Port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ahci_name DB 'AHCI',0
+install_disc_unit Proc near
+    push ds
+    push es
+    pushad
+;   
+    call GetDriveParams
+    jc idDone
+;     
+    mov ax,SEG data
+    mov ds,ax
+    movzx bx,al
+    add bx,bx
+    add bx,OFFSET ahci_port_arr
+    mov bx,ds:[bx]
+    mov ds,bx
+;
+    mov ecx,10000h
+    InstallDisc
+    mov ds:ap_disc_sel,bx
+    mov ds:ap_disc_nr,al
+;
+    call CalcParam
+    mov ax,ds:ap_sectors_per_unit
+    mov dx,ds:ap_units
+    mov cx,512
+    mov si,-1
+    mov di,-1
+    mov bx,ds:ap_disc_sel
+    SetDiscParam
+;
+    mov ax,cs
+    mov ds,ax
+    mov ax,SEG data    
+    mov es,ax
+    mov di,OFFSET name_str
+    mov si,OFFSET discbuf_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
 
-ahci_thread:
-    mov cx,ds:ahci_dev_count
-    or cx,cx
-    jz ahci_thread_done
-;    
+idDone:
+    popad
+    pop es
+    pop ds        
+    ret
+install_disc_unit   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           Disc assign
+;
+;       DESCRIPTION:    Assign discs for AHCI
+;
+;       PARAMETERS:     
+;
+;       RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disc_thread_name   DB 'Ahci ',0
+
+disc_assign Proc far
     call ResetAhci
     call StartAhci
     call WaitPortDet
     call ClearPortSerr
     call ActivatePorts
-    xor al,al
-    call GetDriveParams
 ;    
-    mov al,1
-    call GetDriveParams
-    int 3
     mov ax,SEG data
     mov ds,ax
-    mov gs,ds:ahci_port_arr
-    mov eax,gs:ap_sector_count
-    mov ax,gs:ap_flags
-    
+    mov es,ax
+    mov cx,ds:ahci_port_count
+    or cx,cx
+    jz disc_assign_done
+;
+    mov di,OFFSET name_str
+    mov si,OFFSET disc_thread_name
 
-ahci_thread_done:
-    int 3    
+disc_assign_name_loop:    
+    lods byte ptr cs:[si]
+    stosb
+    or al,al
+    jnz disc_assign_name_loop
+;
+    dec di
+    mov bx,di
+    mov al,'0'
+    stosb
+    xor al,al
+    stosb
+;
+    xor al,al
+
+disc_assign_loop:
+    mov ah,al
+    add ah,'0'
+    mov ds:[bx],ah
+;    
+    call install_disc_unit
+    inc al
+    loop disc_assign_loop
+
+disc_assign_done:    
+    retf32
+disc_assign Endp  
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           drive_assigne1
+;
+;       DESCRIPTION:    Drive assign, pass 1
+;
+;       PARAMETERS:     BX      Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+drive_assign1   Proc far
+    retf32
+drive_assign1   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           drive_assign2
+;
+;       DESCRIPTION:    Assign disc drives, pass 2
+;
+;       PARAMETERS:     BX      Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+drive_assign2   Proc far
+    retf32
+drive_assign2   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           demand_mount
+;
+;       DESCRIPTION:    Mount disc drive on demand
+;
+;       PARAMETERS:     BX      Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+demand_mount    Proc far
+    retf32
+demand_mount    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           erase
+;
+;       DESCRIPTION:    Erase sectors
+;
+;       PARAMETERS:     BX      Disc handle
+;                       EDX     Start sector
+;                       ECX     Number of sectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+erase   Proc far
+    stc
+    retf32
+erase   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1926,23 +2245,34 @@ ahci_thread_done:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+disc_ctrl:
+dct00  DD OFFSET disc_assign,      SEG code
+dct01  DD OFFSET drive_assign1,    SEG code
+dct02  DD OFFSET drive_assign2,    SEG code
+dct03  DD OFFSET demand_mount,     SEG code
+dct04  DD OFFSET erase,            SEG code
+
 init_ahci    Proc far
     push ds
     push es
     pusha
 ;    
     call InitPciAhci
-;    
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov cx,ds:ahci_dev_count
+    or cx,cx
+    jz iaDone
+;
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov di,OFFSET ahci_name
-    mov si,OFFSET ahci_thread
-    mov ax,4
-    mov cx,stack0_size
-    CreateThread
-;
-;    EndDiscHandler
+    mov edi,OFFSET disc_ctrl
+    HookInitDisc
+    
+iaDone:
+    EndDiscHandler
 ;
     popa
     pop es
@@ -1964,7 +2294,7 @@ init_ahci    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
-;    BeginDiscHandler
+    BeginDiscHandler
 ;
     mov ax,cs
     mov es,ax
