@@ -503,7 +503,7 @@ apiSignalLoop:
     xor bx,bx
     xchg bx,es:[si].acl_thread
     or bx,bx
-    jz ipSignalNext
+    jz apiSignalNext
 ;    
     Signal
 
@@ -1948,7 +1948,6 @@ gdp48:
     mov eax,0FFFFFFFFh
 
 gdp48Save:
-    int 3
     mov gs:ap_sector_count,eax
     clc
     jmp gdpDone
@@ -2050,6 +2049,7 @@ CalcParam       Endp
 
 discbuf_thread:
     int 3
+    mov bx,fs:ap_disc_sel
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2070,8 +2070,8 @@ install_disc_unit Proc near
     call GetDriveParams
     jc idDone
 ;     
-    mov ax,SEG data
-    mov ds,ax
+    mov dx,SEG data
+    mov ds,dx
     movzx bx,al
     add bx,bx
     add bx,OFFSET ahci_port_arr
@@ -2092,12 +2092,14 @@ install_disc_unit Proc near
     mov bx,ds:ap_disc_sel
     SetDiscParam
 ;
+    mov ax,ds
+    mov fs,ax
     mov ax,cs
     mov ds,ax
     mov ax,SEG data    
     mov es,ax
-    mov di,OFFSET name_str
-    mov si,OFFSET discbuf_thread
+    mov edi,OFFSET name_str
+    mov esi,OFFSET discbuf_thread
     mov ax,2
     mov cx,stack0_size
     CreateThread
@@ -2252,6 +2254,7 @@ dct02  DD OFFSET drive_assign2,    SEG code
 dct03  DD OFFSET demand_mount,     SEG code
 dct04  DD OFFSET erase,            SEG code
 
+
 init_ahci    Proc far
     push ds
     push es
@@ -2270,6 +2273,12 @@ init_ahci    Proc far
     mov es,ax
     mov edi,OFFSET disc_ctrl
     HookInitDisc
+;
+;    mov edi,OFFSET ahci_thread_name
+;    mov esi,OFFSET ahci_thread
+;    mov ax,2
+;    mov cx,stack0_size
+;    CreateThread
     
 iaDone:
     EndDiscHandler
