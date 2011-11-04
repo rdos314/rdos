@@ -2039,6 +2039,52 @@ CalcParam       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ReadSector
+;
+;       DESCRIPTION:    Read a single sector
+;
+;       PARAMETERS:     GS      Port sel
+;                       EDX     Sector
+;                       EDI     4k-aligned linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadSector  Proc near
+    push es
+    pushad
+;    
+    mov esi,edi
+    call AllocateSlot
+;
+    push ax
+    mov al,25h
+    test gs:ap_flags,PORT_FLAG_48_BIT
+    jnz rsOpOk
+;    
+    mov al,0C8h
+
+rsOpOk:
+    mov cx,1
+    call SetupAta
+    pop ax
+;    
+    xor edi,edi
+    mov ecx,200h
+    call AddPrdEntry
+;
+    mov cx,1
+    call SetupReadCmd
+    call StartCmd
+    call WaitForCompletion
+;
+    popad
+    pop es
+    ret
+ReadSector  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           discbuf_thread
 ;
 ;       DESCRIPTION:    Thread to handle disc buffer queue
@@ -2049,6 +2095,15 @@ CalcParam       Endp
 
 discbuf_thread:
     int 3
+    mov eax,1000h
+    AllocateBigLinear
+    mov edi,edx
+;    
+    mov ax,fs
+    mov gs,ax
+    xor edx,edx
+    call ReadSector
+;    
     mov bx,fs:ap_disc_sel
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
