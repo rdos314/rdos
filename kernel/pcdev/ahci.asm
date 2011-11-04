@@ -2418,57 +2418,6 @@ InstallPartition    Endp
 
 discbuf_thread:
     int 3
-;
-    mov ax,fs
-    mov gs,ax
-;    
-    mov ax,flat_sel
-    mov es,ax
-;
-    mov eax,1000h
-    AllocateBigLinear
-    mov edi,edx
-    mov byte ptr es:[edi],0
-;    
-    xor edx,edx
-    call ReadSector
-;
-    mov esi,1BEh
-
-drive_assign_loop2:
-    mov cl,es:[esi+edi].part_type
-    or cl,cl
-    jz drive_assign_next_part2
-;
-    cmp cl,5
-    je drive_assign_install2
-;
-    cmp cl,0Fh
-    jne drive_assign_next_part2
-
-drive_assign_install2:
-    push esi
-    push edi
-;
-    mov edx,es:[esi+edi].part_start_sector
-
-drive_assign_ext:
-    call InstallExtended
-;
-    pop edi
-    pop esi
-
-drive_assign_next_part2:
-    add si,10h
-    cmp si,1FEh
-    jne drive_assign_loop2
-;
-    mov ecx,1000h
-    mov edx,edi
-    FreeLinear
-;
-    mov bx,gs:ap_disc_sel
-    StartDisc
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2746,6 +2695,55 @@ InstallExtended Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 drive_assign2   Proc far
+    mov gs,bx
+;    
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov edi,edx
+    mov byte ptr es:[edi],0
+;    
+    xor edx,edx
+    call ReadSector
+;
+    mov esi,1BEh
+
+drive_assign_loop2:
+    mov cl,es:[esi+edi].part_type
+    or cl,cl
+    jz drive_assign_next_part2
+;
+    cmp cl,5
+    je drive_assign_install2
+;
+    cmp cl,0Fh
+    jne drive_assign_next_part2
+
+drive_assign_install2:
+    push esi
+    push edi
+;
+    mov edx,es:[esi+edi].part_start_sector
+
+drive_assign_ext:
+    call InstallExtended
+;
+    pop edi
+    pop esi
+
+drive_assign_next_part2:
+    add si,10h
+    cmp si,1FEh
+    jne drive_assign_loop2
+;
+    mov ecx,1000h
+    mov edx,edi
+    FreeLinear
+;
+    mov bx,gs:ap_disc_sel
+    StartDisc
     retf32
 drive_assign2   Endp
 
