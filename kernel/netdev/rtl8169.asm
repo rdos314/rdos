@@ -924,6 +924,118 @@ DispTable2:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetupInts
+;
+;           DESCRIPTION:    Setup PCI or MSI IRQ
+;
+;       PARAMETERS:         BH    Bus
+;                           BL    Device
+;                           CH    Function
+;                           DS    Ether sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupInts   Proc near
+    push ax
+    push bx
+    push cx
+    push edx
+    push edi
+;    
+    mov al,5
+    FindPciCapability
+    jc siIrq
+
+siMsi:
+    mov cl,al
+    add cl,2
+    ReadPciWord
+    or al,1
+    WritePciWord
+;
+    push cx
+    mov cx,1
+    AllocateMsiInts
+    pop cx
+    jc siIrq
+;    
+    push ax
+    push edx
+;
+    ReadPciWord
+    and al,8Fh
+    WritePciWord
+;
+    test ax,100h
+    jnz siVector
+;
+    test ax,80h
+    jnz si64
+
+si32:
+    add cl,2
+    pop eax
+    WritePciDword
+;
+    add cl,4    
+    pop ax
+    WritePciWord
+    jmp siMsiHandler
+
+si64:
+    add cl,2
+    pop eax
+    WritePciDword
+;
+    add cl,4
+    xor eax,eax
+    WritePciDword
+;    
+    add cl,4    
+    pop ax
+    WritePciWord
+    jmp siMsiHandler
+
+siVector:
+    add cl,2
+    pop eax
+    WritePciDword
+;
+    add cl,4
+    xor eax,eax
+    WritePciDword
+;    
+    add cl,4    
+    pop ax
+    WritePciWord
+
+siMsiHandler:
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET NetInt
+    RequestMsiHandler
+    jmp siDone
+
+siIrq:
+    GetPciIrqNr
+    mov al,20 ; temporary fix before ACPI
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET NetInt    
+    RequestSharedIrqHandler
+
+siDone:
+    pop edi
+    pop edx
+    pop cx
+    pop bx
+    pop ax
+    ret
+SetupInts    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitPciAdapter
 ;
 ;           DESCRIPTION:    Init PCI adapter if found
@@ -969,90 +1081,8 @@ init_pci1_found:
     mov dx,ax
     and dx,0FFE0h
     mov ds:IoBase,dx
-;
-    mov al,5
-    FindPciCapability
-    jc init_pci1_irq
-
-init_pci1_msi:
-    mov cl,al
-    add cl,2
-    ReadPciWord
-    or al,1
-    WritePciWord
-;
-    push cx
-    mov cx,1
-    AllocateMsiInts
-    pop cx
-    jc init_pci1_irq
 ;    
-    push ax
-    push edx
-;
-    ReadPciWord
-    and al,8Fh
-    WritePciWord
-;
-    test ax,100h
-    jnz init_pci1_vector
-;
-    test ax,80h
-    jnz init_pci1_64
-
-init_pci1_32:
-    add cl,2
-    pop eax
-    WritePciDword
-;
-    add cl,4    
-    pop ax
-    WritePciWord
-    jmp init_pci1_handlers
-
-init_pci1_64:
-    add cl,2
-    pop eax
-    WritePciDword
-;
-    add cl,4
-    xor eax,eax
-    WritePciDword
-;    
-    add cl,4    
-    pop ax
-    WritePciWord
-    jmp init_pci1_handlers
-
-init_pci1_vector:
-    add cl,2
-    pop eax
-    WritePciDword
-;
-    add cl,4
-    xor eax,eax
-    WritePciDword
-;    
-    add cl,4    
-    pop ax
-    WritePciWord
-
-init_pci1_handlers:
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET NetInt
-    RequestMsiHandler
-    jmp init_pci1_hw_init
-
-init_pci1_irq:
-    GetPciIrqNr
-    mov al,20 ; temporary fix before ACPI
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET NetInt    
-    RequestSharedIrqHandler
-
-init_pci1_hw_init:
+    call SetupInts
     call InitHardware
 ;    
     push ds
@@ -1101,14 +1131,7 @@ init_pci2_found:
     and dx,0FFE0h
     mov ds:IoBase,dx
 ;
-    xor ch,ch
-    mov cl,PCI_interrupt_line
-    ReadPciByte
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET NetInt    
-    RequestSharedIrqHandler
-;
+    call SetupInts
     call InitHardware
 ;    
     push ds
