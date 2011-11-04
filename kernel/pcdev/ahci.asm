@@ -2095,14 +2095,18 @@ ReadSector  Endp
 
 discbuf_thread:
     int 3
+    mov ax,flat_sel
+    mov es,ax
     mov eax,1000h
     AllocateBigLinear
     mov edi,edx
+    mov byte ptr es:[edi],0
 ;    
     mov ax,fs
     mov gs,ax
     xor edx,edx
     call ReadSector
+    int 3
 ;    
     mov bx,fs:ap_disc_sel
         
