@@ -2418,6 +2418,17 @@ InstallPartition    Endp
 
 discbuf_thread:
     int 3
+
+
+start_thread_name   DB 'Start Disc', 0
+
+start_thread:
+    int 3
+    mov ax,fs
+    mov gs,ax
+    mov bx,gs:ap_disc_sel
+    StartDisc
+    int 3
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2468,6 +2479,15 @@ install_disc_unit Proc near
     mov es,ax
     mov edi,OFFSET name_str
     mov esi,OFFSET discbuf_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET start_thread_name
+    mov esi,OFFSET start_thread
     mov ax,2
     mov cx,stack0_size
     CreateThread
@@ -2741,9 +2761,6 @@ drive_assign_next_part2:
     mov ecx,1000h
     mov edx,edi
     FreeLinear
-;
-    mov bx,gs:ap_disc_sel
-    StartDisc
     retf32
 drive_assign2   Endp
 
