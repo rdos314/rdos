@@ -940,7 +940,8 @@ DriverName2     DB 'RTL8169-2',0
 PciVendorTab:
 pci00   DW 10ECh, 8129h
 pci01   DW 1186h, 4300h
-pci02   DW 0,     0
+pci02   DW 10ECh, 8136h
+pci03   DW 0,     0
 
 InitPrimaryPciAdapter   Proc near
     mov bp,ax
@@ -969,15 +970,89 @@ init_pci1_found:
     and dx,0FFE0h
     mov ds:IoBase,dx
 ;
-    xor ch,ch
-    mov cl,PCI_interrupt_line
-    ReadPciByte
+    mov al,5
+    FindPciCapability
+    jc init_pci1_irq
+
+init_pci1_msi:
+    mov cl,al
+    add cl,2
+    ReadPciWord
+    or al,1
+    WritePciWord
+;
+    push cx
+    mov cx,1
+    AllocateMsiInts
+    pop cx
+    jc init_pci1_irq
+;    
+    push ax
+    push edx
+;
+    ReadPciWord
+    and al,8Fh
+    WritePciWord
+;
+    test ax,100h
+    jnz init_pci1_vector
+;
+    test ax,80h
+    jnz init_pci1_64
+
+init_pci1_32:
+    add cl,2
+    pop eax
+    WritePciDword
+;
+    add cl,4    
+    pop ax
+    WritePciWord
+    jmp init_pci1_handlers
+
+init_pci1_64:
+    add cl,2
+    pop eax
+    WritePciDword
+;
+    add cl,4
+    xor eax,eax
+    WritePciDword
+;    
+    add cl,4    
+    pop ax
+    WritePciWord
+    jmp init_pci1_handlers
+
+init_pci1_vector:
+    add cl,2
+    pop eax
+    WritePciDword
+;
+    add cl,4
+    xor eax,eax
+    WritePciDword
+;    
+    add cl,4    
+    pop ax
+    WritePciWord
+
+init_pci1_handlers:
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET NetInt
+    RequestMsiHandler
+    jmp init_pci1_hw_init
+
+init_pci1_irq:
+    GetPciIrqNr
     mov al,20 ; temporary fix before ACPI
     mov bx,cs
     mov es,bx
     mov edi,OFFSET NetInt    
     RequestSharedIrqHandler
-;
+
+init_pci1_hw_init:
     call InitHardware
 ;    
     push ds

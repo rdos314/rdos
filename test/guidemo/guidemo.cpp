@@ -351,7 +351,7 @@ void cdecl main()
         TKeyboardDevice *Keyboard;
         TMouseDevice *Mouse;
 
-        RdosWaitMilli(250);
+//        RdosWaitMilli(250);
 
 /*        RdosSetWriteDataBreak(0, 1, &vbe, 4);
         RdosClearBreak(0, 1); */

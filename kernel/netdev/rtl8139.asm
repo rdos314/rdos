@@ -1008,17 +1008,16 @@ DriverName2     DB 'RTL8139-2',0
 PciVendorTab:
 pci00   DW 10ECh, 8139h
 pci01   DW 10ECh, 8138h
-pci02   DW 10ECh, 8168h
-pci03   DW 1186h, 1300h
-pci04   DW 1113h, 1211h
-pci05   DW 1186h, 1300h
-pci06   DW 018Ah, 0106h
-pci07   DW 021Bh, 8139h
-pci08   DW 13D1h, 0AB06h
-pci09   DW 02ACh, 1012h 
-pci10   DW 1432h, 9130h
-pci11   DW 1186h, 1340h
-pci12   DW 0,     0
+pci02   DW 1186h, 1300h
+pci03   DW 1113h, 1211h
+pci04   DW 1186h, 1300h
+pci05   DW 018Ah, 0106h
+pci06   DW 021Bh, 8139h
+pci07   DW 13D1h, 0AB06h
+pci08   DW 02ACh, 1012h 
+pci09   DW 1432h, 9130h
+pci10   DW 1186h, 1340h
+pci11   DW 0,     0
 
 InitPrimaryPciAdapter   Proc near
     mov bp,ax
