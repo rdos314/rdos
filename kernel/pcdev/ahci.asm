@@ -51,6 +51,19 @@ FIS_TYPE_BIST           = 58h
 FIS_TYPE_PIO_SETUP      = 5Fh
 FIS_TYPE_DEVICE_BITS    = 0A1h
 
+part_struc      STRUC
+
+part_status             DB ?
+part_start_head         DB ?
+part_start_cyl_sector   DW ?
+part_type               DB ?
+part_end_head           DB ?
+part_end_cyl_sector     DW ?
+part_start_sector       DD ?
+part_sectors            DD ?
+
+part_struc      ENDS
+
 fis_htd_struc   STRUC
 
 fhtd_type       DB ?
@@ -2085,6 +2098,316 @@ ReadSector  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:       InstallPartition
+;
+;       DESCRIPTION:    Install partition
+;
+;       PARAMETERS:     GS      Port sel
+;                       ES      flat sel
+;                       CL      Partition type
+;                       EDX     Start sector
+;                       EAX     Number of sectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+fs_unknown      DB 'UNKNOWN '
+fs_fat12        DB 'FAT12   '
+fs_fat16        DB 'FAT16   '
+fs_fat32        DB 'FAT32   '
+fs_hpfs         DB 'HPFS    '
+fs_rdfs         DB 'RDFS    '
+fs_flashfs      DB 'FLASHFS '
+
+FsTab:
+fs00    DW OFFSET fs_unknown
+fs01    DW OFFSET fs_fat12
+fs02    DW OFFSET fs_unknown
+fs03    DW OFFSET fs_unknown
+fs04    DW OFFSET fs_fat16
+fs05    DW OFFSET fs_unknown
+fs06    DW OFFSET fs_fat16
+fs07    DW OFFSET fs_hpfs
+fs08    DW OFFSET fs_unknown
+fs09    DW OFFSET fs_unknown
+fs0A    DW OFFSET fs_unknown
+fs0B    DW OFFSET fs_fat32
+fs0C    DW OFFSET fs_fat32
+fs0D    DW OFFSET fs_unknown
+fs0E    DW OFFSET fs_unknown
+fs0F    DW OFFSET fs_unknown
+fs10    DW OFFSET fs_unknown
+fs11    DW OFFSET fs_unknown
+fs12    DW OFFSET fs_unknown
+fs13    DW OFFSET fs_unknown
+fs14    DW OFFSET fs_unknown
+fs15    DW OFFSET fs_unknown
+fs16    DW OFFSET fs_unknown
+fs17    DW OFFSET fs_unknown
+fs18    DW OFFSET fs_unknown
+fs19    DW OFFSET fs_unknown
+fs1A    DW OFFSET fs_unknown
+fs1B    DW OFFSET fs_unknown
+fs1C    DW OFFSET fs_unknown
+fs1D    DW OFFSET fs_unknown
+fs1E    DW OFFSET fs_unknown
+fs1F    DW OFFSET fs_unknown
+fs20    DW OFFSET fs_unknown
+fs21    DW OFFSET fs_unknown
+fs22    DW OFFSET fs_unknown
+fs23    DW OFFSET fs_unknown
+fs24    DW OFFSET fs_unknown
+fs25    DW OFFSET fs_unknown
+fs26    DW OFFSET fs_unknown
+fs27    DW OFFSET fs_unknown
+fs28    DW OFFSET fs_unknown
+fs29    DW OFFSET fs_unknown
+fs2A    DW OFFSET fs_unknown
+fs2B    DW OFFSET fs_unknown
+fs2C    DW OFFSET fs_unknown
+fs2D    DW OFFSET fs_unknown
+fs2E    DW OFFSET fs_unknown
+fs2F    DW OFFSET fs_unknown
+fs30    DW OFFSET fs_unknown
+fs31    DW OFFSET fs_unknown
+fs32    DW OFFSET fs_unknown
+fs33    DW OFFSET fs_unknown
+fs34    DW OFFSET fs_unknown
+fs35    DW OFFSET fs_unknown
+fs36    DW OFFSET fs_unknown
+fs37    DW OFFSET fs_unknown
+fs38    DW OFFSET fs_unknown
+fs39    DW OFFSET fs_unknown
+fs3A    DW OFFSET fs_unknown
+fs3B    DW OFFSET fs_unknown
+fs3C    DW OFFSET fs_unknown
+fs3D    DW OFFSET fs_unknown
+fs3E    DW OFFSET fs_unknown
+fs3F    DW OFFSET fs_unknown
+fs40    DW OFFSET fs_unknown
+fs41    DW OFFSET fs_unknown
+fs42    DW OFFSET fs_unknown
+fs43    DW OFFSET fs_unknown
+fs44    DW OFFSET fs_unknown
+fs45    DW OFFSET fs_unknown
+fs46    DW OFFSET fs_unknown
+fs47    DW OFFSET fs_unknown
+fs48    DW OFFSET fs_unknown
+fs49    DW OFFSET fs_unknown
+fs4A    DW OFFSET fs_unknown
+fs4B    DW OFFSET fs_unknown
+fs4C    DW OFFSET fs_unknown
+fs4D    DW OFFSET fs_unknown
+fs4E    DW OFFSET fs_unknown
+fs4F    DW OFFSET fs_unknown
+fs50    DW OFFSET fs_unknown
+fs51    DW OFFSET fs_unknown
+fs52    DW OFFSET fs_unknown
+fs53    DW OFFSET fs_unknown
+fs54    DW OFFSET fs_unknown
+fs55    DW OFFSET fs_unknown
+fs56    DW OFFSET fs_unknown
+fs57    DW OFFSET fs_unknown
+fs58    DW OFFSET fs_unknown
+fs59    DW OFFSET fs_unknown
+fs5A    DW OFFSET fs_unknown
+fs5B    DW OFFSET fs_unknown
+fs5C    DW OFFSET fs_unknown
+fs5D    DW OFFSET fs_unknown
+fs5E    DW OFFSET fs_unknown
+fs5F    DW OFFSET fs_unknown
+fs60    DW OFFSET fs_unknown
+fs61    DW OFFSET fs_unknown
+fs62    DW OFFSET fs_unknown
+fs63    DW OFFSET fs_unknown
+fs64    DW OFFSET fs_unknown
+fs65    DW OFFSET fs_unknown
+fs66    DW OFFSET fs_unknown
+fs67    DW OFFSET fs_unknown
+fs68    DW OFFSET fs_unknown
+fs69    DW OFFSET fs_unknown
+fs6A    DW OFFSET fs_unknown
+fs6B    DW OFFSET fs_unknown
+fs6C    DW OFFSET fs_unknown
+fs6D    DW OFFSET fs_unknown
+fs6E    DW OFFSET fs_unknown
+fs6F    DW OFFSET fs_unknown
+fs70    DW OFFSET fs_unknown
+fs71    DW OFFSET fs_unknown
+fs72    DW OFFSET fs_unknown
+fs73    DW OFFSET fs_unknown
+fs74    DW OFFSET fs_unknown
+fs75    DW OFFSET fs_unknown
+fs76    DW OFFSET fs_unknown
+fs77    DW OFFSET fs_unknown
+fs78    DW OFFSET fs_unknown
+fs79    DW OFFSET fs_unknown
+fs7A    DW OFFSET fs_unknown
+fs7B    DW OFFSET fs_unknown
+fs7C    DW OFFSET fs_unknown
+fs7D    DW OFFSET fs_unknown
+fs7E    DW OFFSET fs_unknown
+fs7F    DW OFFSET fs_unknown
+fs80    DW OFFSET fs_unknown
+fs81    DW OFFSET fs_unknown
+fs82    DW OFFSET fs_unknown
+fs83    DW OFFSET fs_unknown
+fs84    DW OFFSET fs_unknown
+fs85    DW OFFSET fs_unknown
+fs86    DW OFFSET fs_unknown
+fs87    DW OFFSET fs_unknown
+fs88    DW OFFSET fs_unknown
+fs89    DW OFFSET fs_unknown
+fs8A    DW OFFSET fs_unknown
+fs8B    DW OFFSET fs_unknown
+fs8C    DW OFFSET fs_unknown
+fs8D    DW OFFSET fs_unknown
+fs8E    DW OFFSET fs_unknown
+fs8F    DW OFFSET fs_unknown
+fs90    DW OFFSET fs_unknown
+fs91    DW OFFSET fs_unknown
+fs92    DW OFFSET fs_unknown
+fs93    DW OFFSET fs_unknown
+fs94    DW OFFSET fs_unknown
+fs95    DW OFFSET fs_unknown
+fs96    DW OFFSET fs_unknown
+fs97    DW OFFSET fs_unknown
+fs98    DW OFFSET fs_unknown
+fs99    DW OFFSET fs_unknown
+fs9A    DW OFFSET fs_unknown
+fs9B    DW OFFSET fs_unknown
+fs9C    DW OFFSET fs_unknown
+fs9D    DW OFFSET fs_unknown
+fs9E    DW OFFSET fs_unknown
+fs9F    DW OFFSET fs_unknown
+fsA0    DW OFFSET fs_unknown
+fsA1    DW OFFSET fs_unknown
+fsA2    DW OFFSET fs_unknown
+fsA3    DW OFFSET fs_unknown
+fsA4    DW OFFSET fs_unknown
+fsA5    DW OFFSET fs_unknown
+fsA6    DW OFFSET fs_unknown
+fsA7    DW OFFSET fs_unknown
+fsA8    DW OFFSET fs_unknown
+fsA9    DW OFFSET fs_unknown
+fsAA    DW OFFSET fs_unknown
+fsAB    DW OFFSET fs_unknown
+fsAC    DW OFFSET fs_unknown
+fsAD    DW OFFSET fs_unknown
+fsAE    DW OFFSET fs_rdfs
+fsAF    DW OFFSET fs_flashfs
+fsB0    DW OFFSET fs_unknown
+fsB1    DW OFFSET fs_unknown
+fsB2    DW OFFSET fs_unknown
+fsB3    DW OFFSET fs_unknown
+fsB4    DW OFFSET fs_unknown
+fsB5    DW OFFSET fs_unknown
+fsB6    DW OFFSET fs_unknown
+fsB7    DW OFFSET fs_unknown
+fsB8    DW OFFSET fs_unknown
+fsB9    DW OFFSET fs_unknown
+fsBA    DW OFFSET fs_unknown
+fsBB    DW OFFSET fs_unknown
+fsBC    DW OFFSET fs_unknown
+fsBD    DW OFFSET fs_unknown
+fsBE    DW OFFSET fs_unknown
+fsBF    DW OFFSET fs_unknown
+fsC0    DW OFFSET fs_unknown
+fsC1    DW OFFSET fs_unknown
+fsC2    DW OFFSET fs_unknown
+fsC3    DW OFFSET fs_unknown
+fsC4    DW OFFSET fs_unknown
+fsC5    DW OFFSET fs_unknown
+fsC6    DW OFFSET fs_unknown
+fsC7    DW OFFSET fs_unknown
+fsC8    DW OFFSET fs_unknown
+fsC9    DW OFFSET fs_unknown
+fsCA    DW OFFSET fs_unknown
+fsCB    DW OFFSET fs_unknown
+fsCC    DW OFFSET fs_unknown
+fsCD    DW OFFSET fs_unknown
+fsCE    DW OFFSET fs_unknown
+fsCF    DW OFFSET fs_unknown
+fsD0    DW OFFSET fs_unknown
+fsD1    DW OFFSET fs_unknown
+fsD2    DW OFFSET fs_unknown
+fsD3    DW OFFSET fs_unknown
+fsD4    DW OFFSET fs_unknown
+fsD5    DW OFFSET fs_unknown
+fsD6    DW OFFSET fs_unknown
+fsD7    DW OFFSET fs_unknown
+fsD8    DW OFFSET fs_unknown
+fsD9    DW OFFSET fs_unknown
+fsDA    DW OFFSET fs_unknown
+fsDB    DW OFFSET fs_unknown
+fsDC    DW OFFSET fs_unknown
+fsDD    DW OFFSET fs_unknown
+fsDE    DW OFFSET fs_unknown
+fsDF    DW OFFSET fs_unknown
+fsE0    DW OFFSET fs_unknown
+fsE1    DW OFFSET fs_unknown
+fsE2    DW OFFSET fs_unknown
+fsE3    DW OFFSET fs_unknown
+fsE4    DW OFFSET fs_unknown
+fsE5    DW OFFSET fs_unknown
+fsE6    DW OFFSET fs_unknown
+fsE7    DW OFFSET fs_unknown
+fsE8    DW OFFSET fs_unknown
+fsE9    DW OFFSET fs_unknown
+fsEA    DW OFFSET fs_unknown
+fsEB    DW OFFSET fs_unknown
+fsEC    DW OFFSET fs_unknown
+fsED    DW OFFSET fs_unknown
+fsEE    DW OFFSET fs_unknown
+fsEF    DW OFFSET fs_unknown
+fsF0    DW OFFSET fs_unknown
+fsF1    DW OFFSET fs_unknown
+fsF2    DW OFFSET fs_unknown
+fsF3    DW OFFSET fs_unknown
+fsF4    DW OFFSET fs_unknown
+fsF5    DW OFFSET fs_unknown
+fsF6    DW OFFSET fs_unknown
+fsF7    DW OFFSET fs_unknown
+fsF8    DW OFFSET fs_unknown
+fsF9    DW OFFSET fs_unknown
+fsFA    DW OFFSET fs_unknown
+fsFB    DW OFFSET fs_unknown
+fsFC    DW OFFSET fs_unknown
+fsFD    DW OFFSET fs_unknown
+fsFE    DW OFFSET fs_unknown
+fsFF    DW OFFSET fs_unknown
+
+InstallPartition    Proc near
+    push es
+    pushad
+;
+    mov di,cs
+    mov es,di
+    movzx di,cl
+    shl di,1
+
+install_part_test_avail:
+    mov ecx,eax
+    mov di,word ptr cs:[di].FsTab
+    movzx edi,di
+    IsFileSystemAvailable
+    jc install_part_done
+;
+    AllocateStaticDrive
+    mov ah,gs:disc_nr
+    OpenDrive
+;
+    InstallFileSystem
+    clc
+
+install_part_done:
+    popad
+    pop es
+    ret
+InstallPartition    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           discbuf_thread
 ;
 ;       DESCRIPTION:    Thread to handle disc buffer queue
@@ -2106,9 +2429,28 @@ discbuf_thread:
     mov gs,ax
     xor edx,edx
     call ReadSector
-    int 3
-;    
-    mov bx,fs:ap_disc_sel
+;
+    mov esi,1BEh
+
+drive_assign_loop1:
+    mov cl,es:[esi+edi].part_type
+    or cl,cl
+    jz drive_assign_free1
+;
+    mov eax,es:[esi+edi].part_sectors
+    mov edx,es:[esi+edi].part_start_sector
+    call InstallPartition
+
+drive_assign_next_part1:
+    add si,10h
+    cmp si,1FEh
+    jne drive_assign_loop1
+
+drive_assign_free1:
+    mov ecx,1000h
+    mov edx,edi
+    FreeLinear
+;
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
