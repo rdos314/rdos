@@ -2393,7 +2393,7 @@ install_part_test_avail:
     jc install_part_done
 ;
     AllocateStaticDrive
-    mov ah,gs:disc_nr
+    mov ah,gs:ap_disc_nr
     OpenDrive
 ;
     InstallFileSystem
