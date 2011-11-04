@@ -2418,38 +2418,6 @@ InstallPartition    Endp
 
 discbuf_thread:
     int 3
-    mov ax,flat_sel
-    mov es,ax
-    mov eax,1000h
-    AllocateBigLinear
-    mov edi,edx
-    mov byte ptr es:[edi],0
-;    
-    mov ax,fs
-    mov gs,ax
-    xor edx,edx
-    call ReadSector
-;
-    mov esi,1BEh
-
-drive_assign_loop1:
-    mov cl,es:[esi+edi].part_type
-    or cl,cl
-    jz drive_assign_free1
-;
-    mov eax,es:[esi+edi].part_sectors
-    mov edx,es:[esi+edi].part_start_sector
-    call InstallPartition
-
-drive_assign_next_part1:
-    add si,10h
-    cmp si,1FEh
-    jne drive_assign_loop1
-
-drive_assign_free1:
-    mov ecx,1000h
-    mov edx,edi
-    FreeLinear
 ;
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2584,6 +2552,38 @@ disc_assign Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 drive_assign1   Proc far
+    mov gs,bx
+;    
+    mov ax,flat_sel
+    mov es,ax
+    mov eax,1000h
+    AllocateBigLinear
+    mov edi,edx
+    mov byte ptr es:[edi],0
+;    
+    xor edx,edx
+    call ReadSector
+;
+    mov esi,1BEh
+
+drive_assign_loop1:
+    mov cl,es:[esi+edi].part_type
+    or cl,cl
+    jz drive_assign_free1
+;
+    mov eax,es:[esi+edi].part_sectors
+    mov edx,es:[esi+edi].part_start_sector
+    call InstallPartition
+
+drive_assign_next_part1:
+    add si,10h
+    cmp si,1FEh
+    jne drive_assign_loop1
+
+drive_assign_free1:
+    mov ecx,1000h
+    mov edx,edi
+    FreeLinear
     retf32
 drive_assign1   Endp
 
