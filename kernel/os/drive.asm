@@ -2360,13 +2360,6 @@ get_disc_request_array  Proc far
     mov es,ax
     mov ds,bx
     EnterSection ds:disc_section
-    mov ax,ds:disc_io_count
-    or ax,ax
-    jz get_disc_req_arr_io_ok
-;
-    int 3
-
-get_disc_req_arr_io_ok: 
 
 ifdef DEBUG
     call CheckAll
