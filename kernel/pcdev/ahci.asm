@@ -329,7 +329,11 @@ ahci_dev_arr        DW MAX_AHCI_DEVICES DUP(?)
 ahci_port_count     DW ?
 ahci_port_arr       DW MAX_AHCI_PORTS DUP(?)
 
-name_str            DB MAX_NAME_SIZE DUP(?)
+req_name_ptr        DW ?
+req_name_str        DB MAX_NAME_SIZE DUP(?)
+
+notify_name_ptr     DW ?
+notify_name_str     DB MAX_NAME_SIZE DUP(?)
 
 data    ENDS
 
@@ -2451,7 +2455,7 @@ perform_one     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           discbuf_thread
+;       NAME:           req_discbuf_thread
 ;
 ;       DESCRIPTION:    Thread to handle disc buffer queue
 ;
@@ -2459,7 +2463,7 @@ perform_one     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-discbuf_thread:
+req_discbuf_thread:
     int 3
     mov ax,flat_sel
     mov es,ax
@@ -2472,6 +2476,36 @@ discbuf_thread_loop:
     call perform_one
     jmp discbuf_thread_loop
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           notify_discbuf_thread
+;
+;       DESCRIPTION:    Thread to handle completed requests
+;
+;       PARAMETERS:     FS      Port sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_discbuf_thread:
+    int 3
+    mov ax,flat_sel
+    mov es,ax
+    mov ax,fs
+    mov gs,ax
+    mov bx,gs:ap_disc_sel
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           start_disc
+;
+;       DESCRIPTION:    Thread to StartDisc (temporary)
+;
+;       PARAMETERS:     FS      Port sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start_thread_name   DB 'Start Disc', 0
 
@@ -2530,8 +2564,14 @@ install_disc_unit Proc near
     mov ds,ax
     mov ax,SEG data    
     mov es,ax
-    mov edi,OFFSET name_str
-    mov esi,OFFSET discbuf_thread
+    mov edi,OFFSET req_name_str
+    mov esi,OFFSET req_discbuf_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+;
+    mov edi,OFFSET notify_name_str
+    mov esi,OFFSET notify_discbuf_thread
     mov ax,2
     mov cx,stack0_size
     CreateThread
@@ -2565,7 +2605,8 @@ install_disc_unit   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-disc_thread_name   DB 'Ahci ',0
+req_disc_thread_name   DB 'Ahci Req ',0
+notify_disc_thread_name   DB 'Ahci Notify ',0
 
 disc_assign Proc far
     call ResetAhci
@@ -2581,17 +2622,33 @@ disc_assign Proc far
     or cx,cx
     jz disc_assign_done
 ;
-    mov di,OFFSET name_str
-    mov si,OFFSET disc_thread_name
+    mov di,OFFSET req_name_str
+    mov si,OFFSET req_disc_thread_name
 
-disc_assign_name_loop:    
+req_disc_assign_name_loop:    
     lods byte ptr cs:[si]
     stosb
     or al,al
-    jnz disc_assign_name_loop
+    jnz req_disc_assign_name_loop
 ;
     dec di
-    mov bx,di
+    mov ds:req_name_ptr,di
+    mov al,'0'
+    stosb
+    xor al,al
+    stosb
+;
+    mov di,OFFSET notify_name_str
+    mov si,OFFSET notify_disc_thread_name
+
+notify_disc_assign_name_loop:    
+    lods byte ptr cs:[si]
+    stosb
+    or al,al
+    jnz notify_disc_assign_name_loop
+;
+    dec di
+    mov ds:notify_name_ptr,di
     mov al,'0'
     stosb
     xor al,al
@@ -2602,6 +2659,9 @@ disc_assign_name_loop:
 disc_assign_loop:
     mov ah,al
     add ah,'0'
+    mov bx,ds:req_name_ptr
+    mov ds:[bx],ah
+    mov bx,ds:notify_name_ptr
     mov ds:[bx],ah
 ;    
     call install_disc_unit
