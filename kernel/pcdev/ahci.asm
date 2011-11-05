@@ -2425,6 +2425,7 @@ InstallPartition    Endp
 perform_one     Proc near
 
 perform_one_loop:
+    mov bx,gs:ap_disc_sel
     movzx ecx,gs:ap_entries
     GetDiscRequestArray
     jc perform_one_done
@@ -2445,7 +2446,6 @@ perform_one_write:
     jmp perform_one_loop
 
 perform_one_read:
-    int 3    
     call AllocateSlot
     jnc perform_read_has_slot
 ;
@@ -2523,7 +2523,6 @@ perform_one     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 req_discbuf_thread:
-    int 3
     mov ax,flat_sel
     mov es,ax
     mov ax,fs
