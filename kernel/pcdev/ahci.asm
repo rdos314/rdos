@@ -251,6 +251,7 @@ ap_cmd_sel          DW ?
 ap_slot_sel         DW ?
 
 ap_entries          DW ?
+ap_notify_thread    DW ?
 
 ap_flags            DW ?
 ap_is               DD ?
@@ -2471,10 +2472,10 @@ req_discbuf_thread:
     mov gs,ax
     mov bx,gs:ap_disc_sel
 
-discbuf_thread_loop:
+req_discbuf_loop:
     WaitForDiscRequest
     call perform_one
-    jmp discbuf_thread_loop
+    jmp req_discbuf_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2493,9 +2494,15 @@ notify_discbuf_thread:
     mov es,ax
     mov ax,fs
     mov gs,ax
-    mov bx,gs:ap_disc_sel
+;
+    GetThread
+    mov gs:ap_notify_thread,ax
 
-
+notify_discbuf_loop:
+    WaitForSignal
+    int 3
+    jmp notify_discbuf_loop
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
