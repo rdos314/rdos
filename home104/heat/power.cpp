@@ -87,12 +87,12 @@ void BatteryThread(void *Param)
                 {
                     if ((diostat & 2) == 0)
                     {
-                        if (fval < 23.5)
+                        if (fval < 23.0)
                             RdosToggleSerialLine(1, 1);     // turn on charger
                     }
                     else                            
                     {
-                        if (fval > 27.0)
+                        if (fval > 26.0)
                             RdosToggleSerialLine(1, 1);     // turn off charger
                     }
                 }

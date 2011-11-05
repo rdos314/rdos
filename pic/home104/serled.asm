@@ -67,7 +67,7 @@ RESET:		PAGE1
 			movlw 0xFF
 			movwf TEMP
 ;
-            movlw .25
+            movlw 0xFF
             movwf Period
 ;
             clrf LedState

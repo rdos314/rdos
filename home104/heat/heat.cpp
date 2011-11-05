@@ -126,6 +126,7 @@ int main()
     RdosWriteSerialVal(2, 0, 0);
     RdosWriteSerialVal(2, 1, 0);
 
+    RdosWriteSerialRaw(0x10, 0, 1);
 
     NtpIp = RdosNameToIp("ntp.lth.se");
     RdosSyncTime(NtpIp);

@@ -505,6 +505,11 @@ WindControlMorePower:
     goto WindControlDecrease
 
 WindControlIncrease:
+    movlw 7
+    subwf wind_ref_msb,W
+    btfsc STATUS,Z
+    return
+;
 	movlw 0x14
     addwf wind_ref_lsb,F
     movlw 0
