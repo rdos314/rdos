@@ -225,7 +225,6 @@ ahci_prd_entry  ENDS
 
 ahci_slot_struc  STRUC
 
-as_entries      DW ?
 as_slots        DW ?
 as_index_arr    DW 32 DUP(?)
 
@@ -250,6 +249,8 @@ ap_hba_sel          DW ?
 ap_fis_sel          DW ?
 ap_cmd_sel          DW ?
 ap_slot_sel         DW ?
+
+ap_entries          DW ?
 
 ap_flags            DW ?
 ap_is               DD ?
@@ -763,7 +764,7 @@ CreatePortSlots Proc near
     mov ax,cs:[bx].prd_slots
     mov es:as_slots,ax
     mov ax,cs:[bx].prd_entries
-    mov es:as_entries,ax
+    mov ds:ap_entries,ax
 ;
     mov cx,32
     sub cx,es:as_slots
@@ -2404,6 +2405,48 @@ install_part_done:
     pop es
     ret
 InstallPartition    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           Perform_one
+;
+;       DESCRIPTION:    Perform one request
+;
+;       PARAMETERS:     GS      Port sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+perform_one     Proc near
+
+perform_one_loop:
+    movzx ecx,gs:ap_entries
+    GetDiscRequestArray
+    jc perform_one_done
+;
+    mov edi,es:[esi]
+    mov al,es:[edi].dh_state
+    cmp al,STATE_EMPTY
+    je perform_one_read
+;
+    cmp al,STATE_DIRTY
+    je perform_one_write
+;
+    cmp al,STATE_SEQ
+    jne perform_one_done
+
+perform_one_write:
+    int 3
+    jmp perform_one_loop
+
+perform_one_read:
+    int 3
+    jmp perform_one_loop
+
+perform_one_done:
+    ret
+perform_one     Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2412,12 +2455,22 @@ InstallPartition    Endp
 ;
 ;       DESCRIPTION:    Thread to handle disc buffer queue
 ;
-;       PARAMETERS:     FS      Disc handle
+;       PARAMETERS:     FS      Port sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 discbuf_thread:
     int 3
+    mov ax,flat_sel
+    mov es,ax
+    mov ax,fs
+    mov gs,ax
+    mov bx,gs:ap_disc_sel
+
+discbuf_thread_loop:
+    WaitForDiscRequest
+    call perform_one
+    jmp discbuf_thread_loop
 
 
 start_thread_name   DB 'Start Disc', 0
