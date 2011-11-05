@@ -2445,13 +2445,71 @@ perform_one_write:
     jmp perform_one_loop
 
 perform_one_read:
-    int 3
+    int 3    
+    call AllocateSlot
+    jnc perform_read_has_slot
+;
+    mov ax,10
+    WaitMilliSec
+    jmp perform_one_read
+
+perform_read_has_slot:
+    push ax
+    mov al,25h
+    test gs:ap_flags,PORT_FLAG_48_BIT
+    jnz perform_read_op_ok
+;    
+    mov al,0C8h
+
+perform_read_op_ok:
+    push ax
+    movzx edx,es:[edi].dh_unit
+    movzx eax,gs:ap_sectors_per_unit
+    mul edx
+    movzx edx,es:[edi].dh_sector
+    add edx,eax
+    pop ax
+    call SetupAta
+;
+    pop ax
+    push cx
+
+perform_read_queue_loop:
+    mov edi,es:[esi]
+    push ecx
+    push esi
+    mov esi,es:[edi].dh_data
+    mov ecx,200h
+    call AddPrdEntry
+    pop esi
+    pop ecx
+    add esi,4
+    loop perform_read_queue_loop
+;
+    pop cx
+;
+    push ds    
+    mov ds,gs:ap_cmd_sel
+    movzx bx,al
+    shl bx,5
+    mov ds:[bx].acl_prdtl,cx
+    mov ds:[bx].acl_flags,485h
+    mov ds:[bx].acl_transfer_count,0
+;
+    movzx ecx,cx
+    shl ecx,9
+    mov ds:[bx].acl_total_count,ecx
+;
+    mov cx,gs:ap_notify_thread
+    mov ds:[bx].acl_thread,cx        
+    pop ds
+;
+    call StartCmd
     jmp perform_one_loop
 
 perform_one_done:
     ret
 perform_one     Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2489,7 +2547,6 @@ req_discbuf_loop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_discbuf_thread:
-    int 3
     mov ax,flat_sel
     mov es,ax
     mov ax,fs
