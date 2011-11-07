@@ -236,6 +236,7 @@ ahci_slot_struc  ENDS
 
 PORT_FLAG_ATA       =   1h
 PORT_FLAG_48_BIT    =   2h
+PORT_FLAG_ATAPI     =   4h
 
 
 ahci_port_struc     STRUC
@@ -1350,7 +1351,7 @@ cpsPort:
     mov eax,es:hba_pxis
     mov es:hba_pxis,eax
 ;    
-    mov eax,HBA_PXI_ENABLE OR HBA_PXI_FIS
+    mov eax,HBA_PXI_ENABLE
     mov es:hba_pxie,eax
     
 cpsNext:
@@ -1466,11 +1467,28 @@ wpdPort:
     jz wpdNext    
 ;
     mov es,ax
-    mov es,es:ap_hba_sel
-    mov eax,es:hba_pxssts
+    mov fs,es:ap_hba_sel
+    mov eax,fs:hba_pxssts
     and al,0Fh
     cmp al,3
     jne wpdWait
+;
+    mov fs,es:ap_fis_sel
+    mov di,OFFSET ap_rfis
+    mov al,fs:[di].fdth_type
+    cmp al,FIS_TYPE_DTH
+    jne wpdWait
+;
+    mov al,fs:[di].fdth_error
+    cmp al,1
+    jnz wpdNext
+;
+    mov eax,dword ptr fs:[di].fdth_lbal
+    and eax,0FFFFFFh
+    cmp eax,0EB1401h
+    jne wpdNext
+;        
+    or es:ap_flags,PORT_FLAG_ATAPI
     
 wpdNext:
     add si,2
@@ -1920,6 +1938,10 @@ GetDriveParams  Proc near
     jz gdpDone
 ;    
     mov gs,ax
+    test gs:ap_flags,PORT_FLAG_ATAPI
+    stc
+    jnz gdpDone
+;    
     call AllocateSlot
 ;
     push ax
