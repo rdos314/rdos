@@ -1010,6 +1010,7 @@ siVector:
     WritePciWord
 
 siMsiHandler:
+    int 3
     mov di,cs
     mov es,di
     mov edi,OFFSET NetInt
