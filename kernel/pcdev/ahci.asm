@@ -2686,6 +2686,7 @@ disc_assign Proc far
     call WaitPortDet
     call ActivatePorts
 ;    
+    int 3
     mov ax,SEG data
     mov ds,ax
     mov es,ax
