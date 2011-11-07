@@ -1323,21 +1323,11 @@ SetupInts Endp
 ;
 ;           DESCRIPTION:    Clear SERR
 ;
+;           PARAMETERS:     DS     Device
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClearSerr Proc near
-    mov ax,SEG data
-    mov ds,ax
-;    
-    mov cx,ds:ahci_dev_count
-    mov si,OFFSET ahci_dev_arr
-
-cpsDev:
-    push ds
-    push cx
-    push si
-;
-    mov ds,ds:[si]
     mov cx,32
     mov si,OFFSET ad_port_arr
 
@@ -1373,14 +1363,6 @@ cpsNext:
     mov fs:hba_is,eax
 ;    
     or fs:hba_ghc,HBA_GHC_IE
-;
-    pop si
-    pop cx
-    pop ds
-;
-    add si,2
-    loop cpsDev        
-;    
     ret
 ClearSerr Endp
 
