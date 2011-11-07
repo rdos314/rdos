@@ -1443,12 +1443,12 @@ StartAhci Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitPortDet Proc near
-    mov ax,SEG data
-    mov ds,ax
-;    
     mov dx,100
 
 wpdRetry:    
+    mov ax,SEG data
+    mov ds,ax
+;    
     mov cx,ds:ahci_dev_count
     mov si,OFFSET ahci_dev_arr
 
@@ -2686,7 +2686,6 @@ disc_assign Proc far
     call WaitPortDet
     call ActivatePorts
 ;    
-    int 3
     mov ax,SEG data
     mov ds,ax
     mov es,ax
