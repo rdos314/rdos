@@ -1420,8 +1420,8 @@ saStart:
     mov ds,ds:[si]
 ;
     call SetupInts
-    call ClearSerr
     call StartDevice    
+    call ClearSerr
 ;    
     pop si
     pop cx
