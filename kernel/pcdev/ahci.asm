@@ -2686,6 +2686,7 @@ disc_assign Proc far
     call ResetAhci
     call StartAhci
     call WaitPortDet
+    int 3
     call ActivatePorts
 ;    
     mov ax,SEG data
