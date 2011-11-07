@@ -1339,11 +1339,6 @@ cpsPort:
 ;
     mov es,ax
     mov es,es:ap_hba_sel
-;    
-    mov eax,es:hba_pxssts
-    and al,0Fh
-    cmp al,3
-    jne cpsNext
 ;
     mov eax,0FFFFFFFFh
     mov es:hba_pxserr,eax
