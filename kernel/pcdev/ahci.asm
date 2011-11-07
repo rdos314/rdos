@@ -1507,10 +1507,11 @@ wpdWait:
     pop cx
     pop ds
 ;
-    int 3
     mov ax,10
     WaitMilliSec
-    jmp wpdRetry
+;
+    sub dx,1    
+    jnz wpdRetry
 
 wpdDone:
     ret
