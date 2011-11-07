@@ -1116,6 +1116,42 @@ StartPort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           StartDevice
+;
+;           DESCRIPTION:    Start device
+;
+;           PARAMETERS:     DS     Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartDevice Proc near
+    mov fs,ds:ad_hba_sel
+;
+    mov cx,32
+    mov si,OFFSET ad_port_arr
+
+sdLoop:
+    mov ax,ds:[si]
+    or ax,ax
+    jz sdNext
+;    
+    push cx
+    push si
+    mov es,ax
+    call StartPort
+    pop si
+    pop cx
+
+sdNext:
+    add si,2
+    loop sdLoop
+;
+    ret
+StartDevice Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           SetupInts
 ;
 ;           DESCRIPTION:    Setup device ints
@@ -1283,38 +1319,70 @@ SetupInts Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           StartDevice
+;           NAME:           ClearSerr
 ;
-;           DESCRIPTION:    Start device
-;
-;           PARAMETERS:     DS     Device
+;           DESCRIPTION:    Clear SERR
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartDevice Proc near
-    mov fs,ds:ad_hba_sel
+ClearSerr Proc near
+    mov ax,SEG data
+    mov ds,ax
+;    
+    mov cx,ds:ahci_dev_count
+    mov si,OFFSET ahci_dev_arr
+
+cpsDev:
+    push ds
+    push cx
+    push si
 ;
+    mov ds,ds:[si]
     mov cx,32
     mov si,OFFSET ad_port_arr
 
-sdLoop:
+cpsPort:
     mov ax,ds:[si]
     or ax,ax
-    jz sdNext
-;    
-    push cx
-    push si
+    jz cpsNext    
+;
     mov es,ax
-    call StartPort
+    mov es,es:ap_hba_sel
+;    
+    mov eax,es:hba_pxssts
+    and al,0Fh
+    cmp al,3
+    jne cpsNext
+;
+    mov eax,0FFFFFFFFh
+    mov es:hba_pxserr,eax
+;
+    mov eax,es:hba_pxis
+    mov es:hba_pxis,eax
+;    
+    mov eax,HBA_PXI_ENABLE OR HBA_PXI_FIS
+    mov es:hba_pxie,eax
+    
+cpsNext:
+    add si,2
+    loop cpsPort
+;
+    mov fs,ds:ad_hba_sel
+;    
+    mov eax,fs:hba_pi
+    mov fs:hba_is,eax
+;    
+    or fs:hba_ghc,HBA_GHC_IE
+;
     pop si
     pop cx
-
-sdNext:
-    add si,2
-    loop sdLoop
+    pop ds
 ;
+    add si,2
+    loop cpsDev        
+;    
     ret
-StartDevice Endp
+ClearSerr Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1369,6 +1437,7 @@ saStart:
     mov ds,ds:[si]
 ;
     call SetupInts
+    call ClearSerr
     call StartDevice    
 ;    
     pop si
@@ -1445,74 +1514,6 @@ wpdWait:
 wpdDone:
     ret
 WaitPortDet Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ClearPortSerr
-;
-;           DESCRIPTION:    Clear port SERR
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClearPortSerr Proc near
-    mov ax,SEG data
-    mov ds,ax
-;    
-    mov cx,ds:ahci_dev_count
-    mov si,OFFSET ahci_dev_arr
-
-cpsDev:
-    push ds
-    push cx
-    push si
-;
-    mov ds,ds:[si]
-    mov cx,32
-    mov si,OFFSET ad_port_arr
-
-cpsPort:
-    mov ax,ds:[si]
-    or ax,ax
-    jz cpsNext    
-;
-    mov es,ax
-    mov es,es:ap_hba_sel
-;    
-    mov eax,es:hba_pxssts
-    and al,0Fh
-    cmp al,3
-    jne cpsNext
-;
-    mov eax,0FFFFFFFFh
-    mov es:hba_pxserr,eax
-;
-    mov eax,es:hba_pxis
-    mov es:hba_pxis,eax
-;    
-    mov eax,HBA_PXI_ENABLE
-    mov es:hba_pxie,eax
-    
-cpsNext:
-    add si,2
-    loop cpsPort
-;
-    mov fs,ds:ad_hba_sel
-;    
-    mov eax,fs:hba_pi
-    mov fs:hba_is,eax
-;    
-    or fs:hba_ghc,HBA_GHC_IE
-;
-    pop si
-    pop cx
-    pop ds
-;
-    add si,2
-    loop cpsDev        
-;    
-    ret
-ClearPortSerr Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2680,7 +2681,6 @@ disc_assign Proc far
     call ResetAhci
     call StartAhci
     call WaitPortDet
-    call ClearPortSerr
     call ActivatePorts
 ;    
     mov ax,SEG data
