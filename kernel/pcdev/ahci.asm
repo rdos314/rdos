@@ -1918,7 +1918,6 @@ GetDriveParams  Proc near
     push gs
     pushad
 ;
-    int 3
     movzx bx,al
     add bx,bx
     add bx,OFFSET ahci_port_arr
@@ -2677,6 +2676,7 @@ req_disc_thread_name   DB 'Ahci Req ',0
 notify_disc_thread_name   DB 'Ahci Notify ',0
 
 disc_assign Proc far
+    int 3
     call ResetAhci
     call StartAhci
     call WaitPortDet
