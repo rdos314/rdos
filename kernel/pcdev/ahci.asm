@@ -2681,7 +2681,6 @@ req_disc_thread_name   DB 'Ahci Req ',0
 notify_disc_thread_name   DB 'Ahci Notify ',0
 
 disc_assign Proc far
-    int 3
     call ResetAhci
     call StartAhci
     call WaitPortDet
@@ -3002,7 +3001,7 @@ dct02  DD OFFSET drive_assign2,    SEG code
 dct03  DD OFFSET demand_mount,     SEG code
 dct04  DD OFFSET erase,            SEG code
 
-init_debug_name DB 'AHCI debug',0
+; init_debug_name DB 'AHCI debug',0
 
 init_ahci    Proc far
     push ds
@@ -3021,19 +3020,19 @@ init_ahci    Proc far
     mov ds,ax
     mov es,ax
     mov edi,OFFSET disc_ctrl
-;    HookInitDisc
+    HookInitDisc
 ;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov edi,OFFSET init_debug_name
-    mov esi,OFFSET disc_assign
-    mov ax,2
-    mov cx,stack0_size
-    CreateThread
+;    mov ax,cs
+;    mov ds,ax
+;    mov es,ax
+;    mov edi,OFFSET init_debug_name
+;    mov esi,OFFSET disc_assign
+;    mov ax,2
+;    mov cx,stack0_size
+;    CreateThread
     
 iaDone:
-;    EndDiscHandler
+    EndDiscHandler
 ;
     popa
     pop es
@@ -3055,13 +3054,13 @@ init_ahci    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
-;    BeginDiscHandler
+    BeginDiscHandler
 ;
     mov ax,cs
     mov es,ax
     mov edi,OFFSET init_ahci
-;    HookInitPci
-    HookInitTasking
+    HookInitPci
+;    HookInitTasking
     clc
     ret
 init    ENDP
