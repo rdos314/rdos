@@ -2563,6 +2563,41 @@ notify_discbuf_thread:
 notify_discbuf_loop:
     WaitForSignal
     int 3
+;
+    mov ds,gs:ap_hba_sel
+    RequestSpinlock gs:ap_spinlock
+    mov edx,ds:hba_pxci
+    mov eax,gs:ap_active_mask
+    xor eax,edx
+    and eax,gs:ap_active_mask
+    ReleaseSpinlock gs:ap_spinlock       
+;
+    and eax,gs:ap_slot_mask
+    jz notify_discbuf_loop
+;
+    mov ds,gs:ap_cmd_sel
+    xor si,si
+    mov ebx,1
+
+notify_cmd_loop:
+    shr eax,1
+    jnc notify_cmd_next
+;
+    mov edx,ds:[si].acl_transfer_count
+    cmp edx,ds:[si].acl_total_count
+    jb notify_cmd_next
+;
+    int 3
+    mov edx,ebx
+    not edx
+    and gs:ap_active_mask,edx    
+    
+notify_cmd_next:
+    shl ebx,1
+    add si,20h
+    or eax,eax
+    jnz notify_cmd_loop
+;    
     jmp notify_discbuf_loop
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
