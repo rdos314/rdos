@@ -642,6 +642,91 @@ void TControl::Delete(TControl *control)
 
 /*##########################################################################
 #
+#   Name       : TControl::GetControlThread
+#
+#   Purpose....: Get control thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TControlThread *TControl::GetControlThread()
+{
+    if (FDev)
+        return FDev;
+    else
+    {
+        if (FParent)
+            return FParent->GetControlThread();
+        else
+            return 0;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::GetBpp
+#
+#   Purpose....: Get bits per pixel
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TControl::GetBpp()
+{
+    TControlThread *ct = GetControlThread();
+
+    if (ct)
+        return ct->FGraphic->GetBpp();
+    else
+        return 1;
+}        
+
+/*##########################################################################
+#
+#   Name       : TControl::SetMouseMarker
+#
+#   Purpose....: Set mouse marker
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSprite *TControl::SetMouseMarker(TGraphicDevice *MouseBitmap, TGraphicDevice *MouseMask, int HotX, int HotY)
+{
+    TControlThread *ct = GetControlThread();
+
+    if (ct)
+        return ct->SetMouseMarker(MouseBitmap, MouseMask, HotX, HotY);
+    else
+        return 0;
+}        
+
+/*##########################################################################
+#
+#   Name       : TControl::RestoreMouseMarker
+#
+#   Purpose....: Restore mouse marker
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::RestoreMouseMarker(TSprite *Sprite)
+{
+    TControlThread *ct = GetControlThread();
+
+    if (ct)
+        ct->RestoreMouseMarker(Sprite);
+}        
+
+/*##########################################################################
+#
 #   Name       : TControl::Set
 #
 #   Purpose....: Set control parameters from ini-file
@@ -1889,6 +1974,7 @@ TControlThread::TControlThread()
 ##########################################################################*/
 TControlThread::TControlThread(TGraphicDevice *dev)
 {
+    FVbe = FGraphic;
     FGraphic = new TGraphicDevice(*dev);
     Init();
 }
@@ -1956,6 +2042,37 @@ void TControlThread::Init()
 int TControlThread::IsRedrawEnabled()
 {
     return TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::SetMouseMarker
+#
+#   Purpose....: Set mouse marker
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSprite *TControlThread::SetMouseMarker(TGraphicDevice *MouseBitmap, TGraphicDevice *MouseMask, int HotX, int HotY)
+{
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::RestoreMouseMarker
+#
+#   Purpose....: Restore mouse marker
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::RestoreMouseMarker(TSprite *Sprite)
+{
 }
 
 /*##########################################################################
@@ -2496,6 +2613,38 @@ void TDisplayControlThread::Add(TMouseDevice *Mouse)
 
 /*##########################################################################
 #
+#   Name       : TDisplayControlThread::Protect
+#
+#   Purpose....: Protect control during redraw
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDisplayControlThread::Protect()
+{
+    TControlThread::Protect();
+}
+
+/*##########################################################################
+#
+#   Name       : TDisplayControlThread::Unprotect
+#
+#   Purpose....: Unprotect control during redraw
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDisplayControlThread::Unprotect()
+{
+    TControlThread::Unprotect();
+}
+
+/*##########################################################################
+#
 #   Name       : TDisplayControlThread::SetMouseMarker
 #
 #   Purpose....: Set mouse marker
@@ -2505,7 +2654,32 @@ void TDisplayControlThread::Add(TMouseDevice *Mouse)
 #   Returns....: *
 #
 ##########################################################################*/
-void TDisplayControlThread::SetMouseMarker(TGraphicDevice *MouseBitmap, TGraphicDevice *MouseMask, int HotX, int HotY)
+TSprite *TDisplayControlThread::SetMouseMarker(TGraphicDevice *MouseBitmap, TGraphicDevice *MouseMask, int HotX, int HotY)
+{
+    TSprite *OldSprite = FMouseSprite;
+
+    if (OldSprite)
+        OldSprite->Hide();
+
+    FMouseSprite = FVbe->CreateSprite(MouseBitmap, MouseMask, HotX, HotY);
+    FMouseSprite->Move(FVbe->GetWidth() / 2, FGraphic->GetHeight() / 2);
+    FMouseSprite->Show();
+
+    return OldSprite;
+}
+
+/*##########################################################################
+#
+#   Name       : TDisplayControlThread::RestoreMouseMarker
+#
+#   Purpose....: Restore mouse marker
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDisplayControlThread::RestoreMouseMarker(TSprite *Sprite)
 {
     if (FMouseSprite)
     {
@@ -2513,8 +2687,12 @@ void TDisplayControlThread::SetMouseMarker(TGraphicDevice *MouseBitmap, TGraphic
         delete FMouseSprite;
     }
 
-        FMouseSprite = FGraphic->CreateSprite(MouseBitmap, MouseMask, HotX, HotY);
+    FMouseSprite = Sprite;
+    if (FMouseSprite)
+    {
+        FMouseSprite->Move(FVbe->GetWidth() / 2, FVbe->GetHeight() / 2);
         FMouseSprite->Show();
+    }        
 }
 
 /*##########################################################################

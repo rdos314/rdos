@@ -192,5 +192,5 @@ Pad     db 263 dup(0)
 
 _TEXT    ENDS
 
-    END
+    END BootSectInit
     

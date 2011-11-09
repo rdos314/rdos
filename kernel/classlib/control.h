@@ -51,6 +51,10 @@ public:
 
     virtual void Set(const char *IniName, const char *IniSection);
 
+    int GetBpp();
+    TSprite *SetMouseMarker(TGraphicDevice *MouseBitmap, TGraphicDevice *MouseMask, int HotX, int HotY);
+    void RestoreMouseMarker(TSprite *Sprite);
+
     void Resize(int xsize, int ysize);
     void Move(int xstart, int ystart);
     
@@ -126,6 +130,8 @@ protected:
 	void Protect();
 	void Unprotect();
 
+	TControlThread *GetControlThread();
+
 private:
     void Init();
 	void Add(TControl *Control);
@@ -162,12 +168,15 @@ public:
 
     void GetSize(int *x, int *y) const;
 
+    virtual TSprite *SetMouseMarker(TGraphicDevice *MouseBitmap, TGraphicDevice *MouseMask, int HotX, int HotY);
+    virtual void RestoreMouseMarker(TSprite *Sprite);
+
     void EnumerateControls(void *Data, void (*CallBack)(void *Data, TControl *Control));
     TControl *GetControl(int ControlId);
 
 protected:
-	void Protect();
-	void Unprotect();
+	virtual void Protect();
+	virtual void Unprotect();
 
     void Signal();
     void Add(TControl *control);
@@ -179,6 +188,7 @@ protected:
     virtual void PutKey(char ch);
 
     TGraphicDevice *FGraphic;
+    TGraphicDevice *FVbe;
 
     TWait FWait;
     TSignalDevice FSignal;
@@ -198,7 +208,9 @@ public:
 
     void Add(TKeyboardDevice *Keyboard);
     void Add(TMouseDevice *Mouse);
-    void SetMouseMarker(TGraphicDevice *MouseBitmap, TGraphicDevice *MouseMask, int HotX, int HotY);
+
+    virtual TSprite *SetMouseMarker(TGraphicDevice *MouseBitmap, TGraphicDevice *MouseMask, int HotX, int HotY);
+    virtual void RestoreMouseMarker(TSprite *Sprite);
 
     void SetDefaultRedrawTimeout(int millisec);
     void DisableRedraw();
@@ -223,6 +235,9 @@ public:
 	void (*OnRightDown)(TControlThread *dev, int x, int y, int ButtonState, int KeyState);
 
 protected:
+	virtual void Protect();
+	virtual void Unprotect();
+
     TDateTime GetRedrawTime();
     void HandleUpdate();
 	virtual void Execute();

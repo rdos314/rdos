@@ -77,16 +77,24 @@ fat_file_size   DD ?
 
 fat_dir_struc   ENDS
 
-        extrn Init:near
 
-.code
+bios_mem_type   STRUC
 
-        .386p
+mem_base    DD ?, ?
+mem_size    DD ?, ?
+mem_type    DD ?
 
-        public BootLoadInit
+bios_mem_type   ENDS
 
-BootLoadInit:
-        jmp Start
+_TEXT segment byte public use16 'CODE'
+
+    .386p
+
+; make sure the first instruction is a jump to the startup-code
+
+    jmp Start
+
+    extrn init:near
 
 ReadCount               DW 0
 RdosSectors                 DW 0,0
@@ -1254,56 +1262,93 @@ LoadAdapterDone DB 'Load adapter done',0
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+bios_buf bios_mem_type <>
+
 GetRamSize      Proc near
-        push ds
-        push es
-        push eax
-        push ebx
+    push ds
+    push es
+    push eax
+    push ebx
+    push di
 ;
-        mov word ptr cs:GetRamSizeRmCs,cs
-        cli
-        mov eax,cr0
-        or al,1
-        mov cr0,eax
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET bios_buf
+    xor ebx,ebx
+
+GetRamSizeRetry:    
+    mov eax,0E820h
+    mov ecx,20
+    mov edx,534D4150h
+    int 15h
+    jc GetRamSizeScan
 ;
-        db 0EAh
-        dw OFFSET GetRamSizePm
-        dw 20h
+    cmp eax,534D4150h
+    jne GetRamSizeScan
+;
+    mov eax,cs:bios_buf.mem_type
+    cmp eax,1
+    jne GetRamSizeNext 
+;
+    mov ecx,cs:bios_buf.mem_base
+    cmp ecx,100000h
+    jb GetRamSizeNext
+;
+    add ecx,cs:bios_buf.mem_size
+    jmp GetRamSizeExit
+
+GetRamSizeNext:
+    or ebx,ebx
+    jnz GetRamSizeRetry
+    
+GetRamSizeScan:
+    mov word ptr cs:GetRamSizeRmCs,cs
+    cli
+    mov eax,cr0
+    or al,1
+    mov cr0,eax
+;
+    db 0EAh
+    dw OFFSET GetRamSizePm
+    dw 20h
 
 GetRamSizePm:
-        mov ax,flat_sel
-        mov ds,ax
-        mov ebx,110000h
-        mov eax,851A7EC2h
+    mov ax,flat_sel
+    mov ds,ax
+    mov ebx,110000h
+    mov eax,851A7EC2h
 
 GetRamSizeLoop:
-        mov [ebx],eax
-        cmp eax,[ebx]
-        jne GetRamSizeDone
-        add ebx,1000h
-        jnc GetRamSizeLoop
+    mov [ebx],eax
+    cmp eax,[ebx]
+    jne GetRamSizeDone
+    add ebx,1000h
+    jnc GetRamSizeLoop
 
 GetRamSizeDone:
-        mov ax,source_sel
-        mov ds,ax
+    mov ax,source_sel
+    mov ds,ax
 ;
-        mov eax,cr0
-        and al,NOT 1
-        mov cr0,eax
+    mov eax,cr0
+    and al,NOT 1
+    mov cr0,eax
 ;
-        db 0EAh
-        dw OFFSET GetRamSizeRm
+    db 0EAh
+    dw OFFSET GetRamSizeRm
 GetRamSizeRmCs:
-        dw 0
+    dw 0
 
 GetRamSizeRm:
-        mov ecx,ebx
-        sti
-        pop ebx
-        pop eax
-        pop es
-        pop ds
-        ret
+    mov ecx,ebx
+    sti
+
+GetRamSizeExit: 
+    pop di
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
 GetRamSize      Endp
 
 ReadError       db 'Cannot read rdos.bin',0Dh,0Ah,0
@@ -1334,12 +1379,14 @@ part_stop:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public Start
+
 Start:
-        sti
-        mov cs:DriveNr,dl
-        mov cs:DefaultBoot,al
-        mov ax,DATA_SEG
-        mov ds,ax
+    sti
+    mov cs:DriveNr,dl
+    mov cs:DefaultBoot,al
+    mov ax,DATA_SEG
+    mov ds,ax
     xor bx,bx
     call InitIrq
     jc read_part_error
@@ -1431,4 +1478,6 @@ LoadDefaultOk:
 stop:
         jmp stop
 
-        END
+_TEXT   ends    
+
+    END Start
