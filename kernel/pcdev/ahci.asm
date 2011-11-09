@@ -1749,7 +1749,7 @@ SetupReadCmd    Proc near
     movzx bx,al
     shl bx,5
     mov ds:[bx].acl_prdtl,cx
-    mov ds:[bx].acl_flags,485h
+    mov ds:[bx].acl_flags,85h
     mov ds:[bx].acl_transfer_count,0
 ;
     movzx ecx,cx
@@ -1790,7 +1790,7 @@ SetupWriteCmd    Proc near
     movzx bx,al
     shl bx,5
     mov ds:[bx].acl_prdtl,cx
-    mov ds:[bx].acl_flags,4C5h
+    mov ds:[bx].acl_flags,0C5h
     mov ds:[bx].acl_transfer_count,0
 ;
     movzx ecx,cx
@@ -2499,7 +2499,7 @@ perform_read_queue_loop:
     movzx bx,al
     shl bx,5
     mov ds:[bx].acl_prdtl,cx
-    mov ds:[bx].acl_flags,485h
+    mov ds:[bx].acl_flags,85h
     mov ds:[bx].acl_transfer_count,0
 ;
     movzx ecx,cx
@@ -2636,7 +2636,6 @@ notify_cmd_loop:
     cmp edx,ds:[si].acl_total_count
     jb notify_cmd_next
 ;
-    int 3
     push eax
     mov ax,si
     shr ax,5
