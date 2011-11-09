@@ -2543,6 +2543,56 @@ req_discbuf_loop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           NotifyCmdList
+;
+;       DESCRIPTION:    Notify command list
+;
+;       PARAMETERS:     ES      Flat sel
+;                       GS      Port sel
+;                       AL      CMD list #
+;                       CX      Entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyCmdList   Proc near
+    push ds
+    push bx
+    push si
+    push edi
+;
+    mov ds,gs:ap_slot_sel
+    movzx si,al
+    add si,si
+    mov si,ds:[si].as_index_arr
+    add si,act_prd
+    or cx,cx
+    jz nclDone
+
+nclLoop:
+    xor edi,edi
+    xchg edi,ds:[si].ape_handle
+    or edi,edi
+    jz nclNext
+;
+    mov es:[edi].dh_state,STATE_USED
+    mov bx,gs:ap_disc_sel
+    DiscRequestCompleted
+
+nclNext:
+    add si,10h
+    loop nclLoop
+        
+nclDone:
+    pop edi
+    pop si    
+    pop bx
+    pop ds
+    ret
+NotifyCmdList   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           notify_discbuf_thread
 ;
 ;       DESCRIPTION:    Thread to handle completed requests
@@ -2562,7 +2612,6 @@ notify_discbuf_thread:
 
 notify_discbuf_loop:
     WaitForSignal
-    int 3
 ;
     mov ds,gs:ap_hba_sel
     RequestSpinlock gs:ap_spinlock
@@ -2588,9 +2637,16 @@ notify_cmd_loop:
     jb notify_cmd_next
 ;
     int 3
-    mov edx,ebx
-    not edx
-    and gs:ap_active_mask,edx    
+    push eax
+    mov ax,si
+    shr ax,5
+    mov cx,ds:[si].acl_prdtl
+    call NotifyCmdList
+    mov eax,ebx
+    not eax
+    and gs:ap_active_mask,eax
+    pop eax
+;
     
 notify_cmd_next:
     shl ebx,1
