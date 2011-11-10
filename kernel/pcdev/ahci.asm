@@ -1307,7 +1307,7 @@ siMsiSingle:
 
 siIrq:
     GetPciIrqNr
-    mov al,14       ; fix before ACPI is ready
+    mov al,19       ; fix before ACPI is ready
     mov di,cs
     mov es,di
     mov edi,OFFSET AhciInt
@@ -2435,7 +2435,7 @@ perform_one_loop:
     movzx ecx,gs:ap_entries
     GetDiscRequestArray
     jc perform_one_done
-;
+;    
     mov edi,es:[esi]
     mov al,es:[edi].dh_state
     cmp al,STATE_EMPTY
@@ -2485,6 +2485,7 @@ perform_read_queue_loop:
     push ecx
     push esi
     mov esi,es:[edi].dh_data
+    mov cl,es:[esi]
     mov ecx,200h
     call AddPrdEntry
     pop esi
@@ -2644,8 +2645,8 @@ notify_cmd_loop:
     mov eax,ebx
     not eax
     and gs:ap_active_mask,eax
+    and gs:ap_reserved_mask,eax
     pop eax
-;
     
 notify_cmd_next:
     shl ebx,1
@@ -2654,27 +2655,6 @@ notify_cmd_next:
     jnz notify_cmd_loop
 ;    
     jmp notify_discbuf_loop
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           start_disc
-;
-;       DESCRIPTION:    Thread to StartDisc (temporary)
-;
-;       PARAMETERS:     FS      Port sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-start_thread_name   DB 'Start Disc', 0
-
-start_thread:
-    int 3
-    mov ax,fs
-    mov gs,ax
-    mov bx,gs:ap_disc_sel
-    StartDisc
-    int 3
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2734,15 +2714,6 @@ install_disc_unit Proc near
     mov ax,2
     mov cx,stack0_size
     CreateThread
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov edi,OFFSET start_thread_name
-    mov esi,OFFSET start_thread
-    mov ax,2
-    mov cx,stack0_size
-    CreateThread
 
 idDone:
     popad
@@ -2768,16 +2739,6 @@ req_disc_thread_name   DB 'Ahci Req ',0
 notify_disc_thread_name   DB 'Ahci Notify ',0
 
 disc_assign Proc far
-    mov ax,SEG data
-    mov ds,ax
-    mov ds,ds:ahci_dev_arr
-;
-    mov bh,ds:ad_pci_bus
-    mov bl,ds:ad_pci_device
-    mov ch,ds:ad_pci_function
-    mov cl,8
-    ReadPciDword
-;
     call ResetAhci
     call StartAhci
     call WaitPortDet
@@ -3042,6 +3003,9 @@ drive_assign_next_part2:
     mov ecx,1000h
     mov edx,edi
     FreeLinear
+;    
+    mov bx,gs:ap_disc_sel
+    StartDisc
     retf32
 drive_assign2   Endp
 
@@ -3098,8 +3062,6 @@ dct02  DD OFFSET drive_assign2,    SEG code
 dct03  DD OFFSET demand_mount,     SEG code
 dct04  DD OFFSET erase,            SEG code
 
-init_debug_name DB 'AHCI debug',0
-
 init_ahci    Proc far
     push ds
     push es
@@ -3118,15 +3080,6 @@ init_ahci    Proc far
     mov es,ax
     mov edi,OFFSET disc_ctrl
     HookInitDisc
-;
-;    mov ax,cs
-;    mov ds,ax
-;    mov es,ax
-;    mov edi,OFFSET init_debug_name
-;    mov esi,OFFSET disc_assign
-;    mov ax,2
-;    mov cx,stack0_size
-;    CreateThread
     
 iaDone:
     EndDiscHandler
@@ -3157,7 +3110,6 @@ init    PROC far
     mov es,ax
     mov edi,OFFSET init_ahci
     HookInitPci
-;    HookInitTasking
     clc
     ret
 init    ENDP

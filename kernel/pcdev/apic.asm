@@ -146,6 +146,7 @@ msr_irq&nr:
     pushad
 ;
     EnterInt
+    push fs
     sti
 ;       
     mov ax,irq_sys_sel
@@ -178,6 +179,7 @@ msr_irq_handle_done&nr:
     xor eax,eax
     mov ecx,MSR_APIC_EOI
     wrmsr
+    pop fs
     LeaveInt
 ;
     popad
@@ -193,6 +195,7 @@ mem_irq&nr:
     pushad
 ;
     EnterInt
+    push fs
     sti
 ;       
     mov ax,irq_sys_sel
@@ -227,6 +230,7 @@ mem_irq_handle_done&nr:
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
+    pop fs
     LeaveInt
 ;
     popad
@@ -246,6 +250,7 @@ msr_msi&nr:
     pushad
 ;
     EnterInt
+    push fs
     sti
 ;       
     mov ax,irq_sys_sel
@@ -274,6 +279,7 @@ msr_msi_handle_done&nr:
     xor eax,eax
     mov ecx,MSR_APIC_EOI
     wrmsr
+    pop fs
     LeaveInt
 ;
     popad
@@ -289,6 +295,7 @@ mem_msi&nr:
     pushad
 ;
     EnterInt
+    push fs
     sti
 ;       
     mov ax,irq_sys_sel
@@ -319,6 +326,7 @@ mem_msi_handle_done&nr:
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
+    pop fs
     LeaveInt
 ;
     popad
