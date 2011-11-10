@@ -558,8 +558,8 @@ apiSlotLoop:
     shr eax,1
     jnc apiSlotNext
 ;
-    mov eax,es:[si].acl_transfer_count
-    cmp eax,es:[si].acl_total_count
+    mov edx,es:[si].acl_transfer_count
+    cmp edx,es:[si].acl_total_count
     jb apiSlotNext
 ;
     xor bx,bx
