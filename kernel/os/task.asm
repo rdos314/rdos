@@ -2062,6 +2062,24 @@ AddBreak PROC near
     cmp al,4
     jae abFail
 ;   
+    mov ch,1
+    mov esi,edx
+
+abFixSizeLoop:
+    test esi,1
+    jnz abFixSizeFix
+;
+    cmp ch,cl
+    jae abFixSizeOk
+;
+    shl ch,1
+    shr esi,1
+    jmp abFixSizeLoop
+
+abFixSizeFix:
+    mov cl,ch
+
+abFixSizeOk:
     movzx bx,al
     shl bx,2 
     add bx,OFFSET p_tss_dr0

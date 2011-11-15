@@ -347,11 +347,23 @@ void TDebugThread::SetupTrace()
 #   Returns....: *
 #
 ##########################################################################*/
-void TDebugThread::ActivateBreaks(TDebugBreak *BreakList)
+void TDebugThread::ActivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList)
 {
     TDebugBreak *b = BreakList;
+    TDebugWatch *w = WatchList;
     char brinstr = 0xCC;
     int bnum = 0;
+
+    while (w)
+    {
+        if (bnum < 4)
+        {
+            RdosSetWriteDataBreak(ThreadID, bnum, w->Sel, w->Offset, w->Size);
+            bnum++;
+        }
+        w = w->Next;
+    }
+
 
     while (b)
     {
@@ -384,13 +396,24 @@ void TDebugThread::ActivateBreaks(TDebugBreak *BreakList)
 #   Returns....: *
 #
 ##########################################################################*/
-void TDebugThread::DeactivateBreaks(TDebugBreak *BreakList)
+void TDebugThread::DeactivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList)
 {
     TDebugBreak *b = BreakList;
+    TDebugWatch *w = WatchList;
     int bnum = 0;
 
     if (!FWasTrace)
     {
+        while (w)
+        {
+            if (bnum < 4)
+            {
+                RdosClearBreak(ThreadID, bnum);
+                bnum++;
+            }
+            w = w->Next;
+        }
+
         while (b)
         {
             if ((b->Sel & 0x3) == 0x3)
@@ -939,6 +962,25 @@ TDebugBreak::TDebugBreak(int sel, long offset, int Hw)
 
 /*##########################################################################
 #
+#   Name       : TDebugWatch::TDebugWatch
+#
+#   Purpose....: Debug watchpoint
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDebugWatch::TDebugWatch(int sel, long offset, int size)
+{
+    Sel = sel;
+    Offset = offset;
+    Size = size;
+    Next = 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TDebug::TDebug
 #
 #   Purpose....: Debugger constructor
@@ -959,6 +1001,7 @@ TDebug::TDebug(const char *Program, const char *Param, const char *StartDir, con
     CurrentThread = 0;
     NewThread = 0;
     BreakList = 0;
+    WatchList = 0;
 
     FThreadChanged = FALSE;
     FModuleChanged = FALSE;
@@ -1778,6 +1821,39 @@ int TDebug::IsBreak(int Sel, long Offset)
 
 /*##########################################################################
 #
+#   Name       : TDebug::IsWatch
+#
+#   Purpose....: Check for watch-point
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebug::IsWatch(int Sel, long Offset)
+{
+    TDebugWatch *w;
+    int ok = FALSE;
+    
+    FSection.Enter();
+
+    w = WatchList;
+
+    while (w && !ok)
+    {
+        if (w->Sel == Sel && w->Offset == Offset)
+            ok = TRUE;
+        else
+            w = w->Next;
+    }
+
+    FSection.Leave();
+
+    return ok;
+}
+
+/*##########################################################################
+#
 #   Name       : TDebug::AddBreak
 #
 #   Purpose....: Add breakpoint
@@ -1870,6 +1946,98 @@ void TDebug::ClearBreak(int Sel, long Offset)
 
 /*##########################################################################
 #
+#   Name       : TDebug::AddWatch
+#
+#   Purpose....: Add watchpoint
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::AddWatch(int Sel, long Offset, int Size)
+{
+    TDebugWatch *neww = new TDebugWatch(Sel, Offset, Size);
+    TDebugWatch *w;
+    int found = FALSE;
+
+    char str[128];
+
+    sprintf(str, "Watch: %04hX:%08lX, %d byte(s)", Sel, Offset, Size);
+    LogMsg(str);
+    
+    FSection.Enter();
+
+    neww->Next = 0;
+
+    w = WatchList;
+    if (w)
+    {
+        while (w->Next)
+        {
+            if (w->Sel == Sel && w->Offset == Offset)
+                found = TRUE;
+            w = w->Next;
+        }
+
+        if (!found)
+            w->Next = neww;            
+    }
+    else
+        WatchList = neww;
+
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::ClearWatch
+#
+#   Purpose....: Clear watchpoint
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::ClearWatch(int Sel, long Offset, int Size)
+{
+    TDebugWatch *w;
+    TDebugWatch *delw;
+    
+    FSection.Enter();
+
+    w = WatchList;
+
+    if (w)
+    {
+        if (w->Offset == Offset && w->Sel == Sel)
+        {
+            WatchList = w->Next;
+            delete w;
+        }
+        else
+        {
+            while (w->Next)
+            {
+                delw = w->Next;
+                
+                if (delw->Offset == Offset && delw->Sel == Sel)
+                {
+                    w->Next = delw->Next;
+                    delete delw;
+                }
+                else
+                    w = w->Next;                    
+            }
+        }
+    }
+
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
 #   Name       : TDebug::DoTrace
 #
 #   Purpose....: Do a trace operation
@@ -1910,14 +2078,14 @@ void TDebug::DoGo()
     if ((CurrentThread->Cs & 0x3) == 0x3)
     {
         CurrentThread->SetupGo();
-        CurrentThread->ActivateBreaks(BreakList);
+        CurrentThread->ActivateBreaks(BreakList, WatchList);
         RdosContinueDebugEvent(FHandle, CurrentThread->ThreadID);
     }
     else
     {
         while (RdosGetDebugThread() != CurrentThread->ThreadID)
             RdosDebugNext();
-        CurrentThread->ActivateBreaks(BreakList);
+        CurrentThread->ActivateBreaks(BreakList, WatchList);
         RdosDebugRun();
     }
 }
@@ -2423,7 +2591,7 @@ void TDebug::SignalNewData()
     {
         if (CurrentThread)
         {
-            CurrentThread->DeactivateBreaks(BreakList);
+            CurrentThread->DeactivateBreaks(BreakList, WatchList);
 
             if (thread != CurrentThread->ThreadID)
             {

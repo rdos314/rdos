@@ -95,6 +95,18 @@ public:
     TDebugBreak *Next;
 };
 
+class TDebugWatch
+{
+public:
+	TDebugWatch(int Sel, long Offset, int Size);
+
+	int Sel;
+	long Offset;
+	int Size;
+
+    TDebugWatch *Next;
+};
+
 class TDebugThread
 {
 public:
@@ -110,8 +122,8 @@ public:
     int WriteMem(int Sel, long Offset, char *Buf, int Size);
     void WriteRegs();
 
-    void ActivateBreaks(TDebugBreak *BreakList);
-    void DeactivateBreaks(TDebugBreak *BreakList);
+    void ActivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList);
+    void DeactivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList);
 
     void SetupGo();
     void SetupTrace();
@@ -231,6 +243,10 @@ public:
 	void ClearBreak(int Sel, long Offset);
 	int IsBreak(int Sel, long Offset);
 
+	void AddWatch(int Sel, long Offset, int Size);
+	void ClearWatch(int Sel, long Offset, int Size);
+	int IsWatch(int Sel, long Offset);
+
     void WaitForLoad(int timeout);
 	void Go();
 	void Trace();
@@ -295,6 +311,7 @@ protected:
 	TDebugModule *ModuleList;
 
     TDebugBreak *BreakList;
+    TDebugWatch *WatchList;
 
     TSignalDevice UserSignal;
 

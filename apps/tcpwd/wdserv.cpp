@@ -1446,7 +1446,15 @@ void TWdSocketServer::ReqProgKill()
 ##########################################################################*/
 void TWdSocketServer::ReqSetWatch()
 {
-    _asm int 3
+    long Offset = GetDword();
+    int Sel = GetWord();
+    int Size = GetByte();
+
+    if (FDebug)
+        FDebug->AddWatch(Sel, Offset, Size);
+
+    PutDword(0);
+    PutDword(0x80000000 + 100000);
 }
 
 /*##########################################################################
@@ -1462,7 +1470,12 @@ void TWdSocketServer::ReqSetWatch()
 ##########################################################################*/
 void TWdSocketServer::ReqClearWatch()
 {
-    _asm int 3
+    long Offset = GetDword();
+    int Sel = GetWord();
+    int Size = GetByte();
+
+    if (FDebug)
+        FDebug->ClearWatch(Sel, Offset, Size);
 }
 
 /*##########################################################################
