@@ -2660,6 +2660,12 @@ NotifyCmdList   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+notify_timeout  Proc far
+    mov bx,cx
+    Signal
+    retf32
+notify_timeout  Endp
+
 notify_discbuf_thread:
     mov ax,flat_sel
     mov es,ax
@@ -2670,7 +2676,23 @@ notify_discbuf_thread:
     mov gs:ap_notify_thread,ax
 
 notify_discbuf_loop:
+    push es
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET notify_timeout
+    mov bx,gs:ap_notify_thread
+    mov cx,bx
+    GetSystemTime
+    add eax,11930
+    adc edx,0
+    StartTimer        
+    pop es
+
+notify_discbuf_wait:    
     WaitForSignal
+;
+    mov bx,gs:ap_notify_thread
+    StopTimer    
 ;
     mov ds,gs:ap_hba_sel
     RequestSpinlock gs:ap_spinlock
