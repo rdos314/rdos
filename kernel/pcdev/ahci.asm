@@ -237,6 +237,7 @@ ahci_slot_struc  ENDS
 PORT_FLAG_ATA       =   1h
 PORT_FLAG_48_BIT    =   2h
 PORT_FLAG_ATAPI     =   4h
+PORT_FLAG_TIMER     =   8h
 
 
 ahci_port_struc     STRUC
@@ -1126,6 +1127,7 @@ StartPort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StartDevice Proc near
+    mov dx,ds:ad_msi_ints
     mov fs,ds:ad_hba_sel
 ;
     mov cx,32
@@ -1137,10 +1139,20 @@ sdLoop:
     jz sdNext
 ;    
     push cx
+    push dx
     push si
+;
     mov es,ax
+    or dx,dx
+    jnz sdStart
+;
+    or es:ap_flags,PORT_FLAG_TIMER
+
+sdStart:    
     call StartPort
+;
     pop si
+    pop dx
     pop cx
 
 sdNext:
@@ -1162,6 +1174,10 @@ StartDevice Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupInts Proc near
+    mov ds:ad_msi_address,0
+    mov ds:ad_msi_data,0
+    mov ds:ad_msi_ints,0
+;    
     mov bh,ds:ad_pci_bus
     mov bl,ds:ad_pci_device
     mov ch,ds:ad_pci_function
@@ -2428,6 +2444,12 @@ InstallPartition    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+notify_timeout  Proc far
+    mov bx,cx
+    Signal
+    retf32
+notify_timeout  Endp
+
 perform_one     Proc near
 
 perform_one_loop:
@@ -2436,6 +2458,30 @@ perform_one_loop:
     GetDiscRequestArray
     jc perform_one_done
 ;    
+    test gs:ap_flags,PORT_FLAG_TIMER
+    jz perform_one_timer_done
+;    
+    push es
+    push bx
+    push cx
+;
+    mov bx,gs:ap_notify_thread
+    StopTimer    
+;    
+    mov cx,bx
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET notify_timeout
+    GetSystemTime
+    add eax,1193 * 15
+    adc edx,0
+    StartTimer        
+;
+    pop cx    
+    pop bx
+    pop es
+
+perform_one_timer_done:
     mov edi,es:[esi]
     mov al,es:[edi].dh_state
     cmp al,STATE_EMPTY
@@ -2660,12 +2706,6 @@ NotifyCmdList   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-notify_timeout  Proc far
-    mov bx,cx
-    Signal
-    retf32
-notify_timeout  Endp
-
 notify_discbuf_thread:
     mov ax,flat_sel
     mov es,ax
@@ -2676,24 +2716,9 @@ notify_discbuf_thread:
     mov gs:ap_notify_thread,ax
 
 notify_discbuf_loop:
-    push es
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET notify_timeout
-    mov bx,gs:ap_notify_thread
-    mov cx,bx
-    GetSystemTime
-    add eax,11930
-    adc edx,0
-    StartTimer        
-    pop es
-
-notify_discbuf_wait:    
     WaitForSignal
-;
-    mov bx,gs:ap_notify_thread
-    StopTimer    
-;
+
+notify_discbuf_retry:
     mov ds,gs:ap_hba_sel
     RequestSpinlock gs:ap_spinlock
     mov edx,ds:hba_pxci
@@ -2705,6 +2730,7 @@ notify_discbuf_wait:
     and eax,gs:ap_slot_mask
     jz notify_discbuf_loop
 ;
+    xor cx,cx
     mov ds,gs:ap_cmd_sel
     xor si,si
     mov ebx,1
@@ -2715,9 +2741,14 @@ notify_cmd_loop:
 ;
     mov edx,ds:[si].acl_transfer_count
     cmp edx,ds:[si].acl_total_count
-    jb notify_cmd_next
+    jae notify_cmd_done
 ;
+    inc cx
+    jmp notify_cmd_next
+
+notify_cmd_done:
     push eax
+    push cx
     mov ax,si
     shr ax,5
     mov cx,ds:[si].acl_prdtl
@@ -2726,6 +2757,7 @@ notify_cmd_loop:
     not eax
     and gs:ap_active_mask,eax
     and gs:ap_reserved_mask,eax
+    pop cx
     pop eax
     
 notify_cmd_next:
@@ -2734,7 +2766,12 @@ notify_cmd_next:
     or eax,eax
     jnz notify_cmd_loop
 ;    
-    jmp notify_discbuf_loop
+    or cx,cx
+    jz notify_discbuf_loop
+;
+    mov ax,1
+    WaitMilliSec
+    jmp notify_discbuf_retry
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
