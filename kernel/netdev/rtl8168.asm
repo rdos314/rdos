@@ -20,8 +20,8 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; RTL8169.ASM
-; RTL8169S/8110 series network driver
+; RTL8168.ASM
+; RTL8168/8111/8136 series network driver
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1046,13 +1046,12 @@ SetupInts    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DriverName1     DB 'RTL8169-1',0
-DriverName2     DB 'RTL8169-2',0
+DriverName1     DB 'RTL8168-1',0
+DriverName2     DB 'RTL8168-2',0
 
 PciVendorTab:
-pci00   DW 10ECh, 8129h
-pci01   DW 1186h, 4300h
-pci02   DW 0,     0
+pci00   DW 10ECh, 8136h
+pci01   DW 0,     0
 
 InitPrimaryPciAdapter   Proc near
     mov bp,ax
