@@ -36,8 +36,22 @@ INCLUDE ..\os\net.inc
 RX_DESCR_COUNT = 32
 TX_DESCR_COUNT = 32
 
-IR_SER = 8000h
+; The EEPROM commands include the alway-set leading bit.
+
+EE_WRITE_CMD = 5
+EE_READ_CMD = 6
+EE_ERASE_CMD = 7
+
+EE_PROGRAM    = 80h
+EE_CS         = 8
+EE_CLK        = 4
+EE_DATA_WRITE = 2
+EE_DATA_READ  = 1
+EE_ENB        = EE_PROGRAM + EE_CS
+EE_DIS        = EE_PROGRAM
+
 IR_Timeout = 4000h
+IR_FEmp = 200h
 IR_SWInt = 100h
 IR_TDU = 80h
 IR_FOVW = 40h
@@ -60,7 +74,6 @@ REG_ISR = 3Eh
 REG_TCR = 40h
 REG_RCR = 44h
 REG_TCTR = 48h
-REG_MPC = 4Ch
 REG_9346CR = 50h
 REG_CONFIG0 = 51h
 REG_CONFIG1 = 52h
@@ -70,9 +83,6 @@ REG_CONFIG4 = 55h
 REG_CONFIG5 = 56h
 REG_TimerInt = 58h
 REG_PHYAR = 60h
-REG_TBICSR0 = 64h
-REG_TBI_ANAR = 68h
-REG_TBI_LPAR = 6Ah
 REG_PHYStatus = 6Ch
 
 REG_RMS = 0DAh
@@ -142,6 +152,7 @@ TxCurrDescr         DW ?
 TxLastDescr         DW ?
 TxSection           section_typ <>
 EthernetAddress     DB 6 DUP(?)
+EeAdrLen            DB ?
 
 RxLinearArr         DD RX_DESCR_COUNT DUP(?)
 TxLinearArr         DD TX_DESCR_COUNT DUP(?)
@@ -163,6 +174,138 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ReadEe
+;
+;           DESCRIPTION:    Read Ee location
+;
+;       PARAMETERS:     BX          Location
+;
+;           RETURNS:        AX          Result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadEe  Proc near
+    push bx
+    push cx
+    push si
+;
+    mov si,bx
+    mov dx,ds:IoBase
+    add dx,REG_9346CR
+;
+    mov al,EE_DIS
+    out dx,al
+    mov al,EE_ENB
+    out dx,al
+;
+    mov bx,EE_READ_CMD
+    movzx cx,ds:EeAdrLen
+    shl bx,cl
+    or bx,si
+;
+    add cx,4
+    mov si,1
+    shl si,cl
+    inc cx
+
+reSetupLoop:
+    test bx,si
+    jz reSetup0
+;
+    mov al,EE_DATA_WRITE + EE_ENB
+    out dx,al
+    jmp reSetupShift
+
+reSetup0:
+    mov al,EE_ENB
+    out dx,al
+
+reSetupShift:
+    push ax
+    in eax,dx
+    pop ax
+;
+    or al,EE_CLK
+    out dx,al
+    in eax,dx
+;
+    shr si,1
+    loop reSetupLoop
+;
+    mov al,EE_ENB
+    out dx,al
+    in eax,dx
+;
+    mov cx,16
+    xor bx,bx
+
+reReadLoop:
+    shl bx,1
+;
+    mov al,EE_ENB + EE_CLK
+    out dx,al
+    in eax,dx
+;
+    in al,dx
+    test al,EE_DATA_READ
+    jz reReadNext
+;
+    or bx,1
+
+reReadNext:
+    mov al,EE_ENB
+    out dx,al
+    in eax,dx
+;
+    loop reReadLoop
+;
+    mov al,NOT EE_CS
+    out dx,al
+;
+    mov ax,bx
+;
+    pop si
+    pop cx
+    pop bx
+    ret
+ReadEe  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadEthernetAddress
+;
+;           DESCRIPTION:    Read the ethernet address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadEthernetAddress     Proc near
+    mov ds:EeAdrLen,8 
+    xor bx,bx
+    call ReadEe
+    cmp ax,8129h
+    jz reaReadAdr
+;
+    mov ds:EeAdrLen,6
+
+reaReadAdr:
+    mov bx,7
+    mov si,OFFSET EthernetAddress
+
+reaReadLoop:
+    call ReadEe
+    mov ds:[si],ax
+    add si,2
+    inc bx
+    cmp bx,10
+    jne reaReadLoop
+;
+    ret
+ReadEthernetAddress     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CreateRxRing
 ;
 ;           DESCRIPTION:    Create RX ring
@@ -170,6 +313,9 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateRxRing    Proc near
+    push es
+    pushad
+;    
     mov ax,flat_sel
     mov es,ax
     mov eax,1000h
@@ -220,6 +366,9 @@ crLoop:
 ;
     sub di,16
     or es:[di].rx_flags,RX_EOR
+;
+    popad
+    pop es
     ret
 CreateRxRing   Endp
 
@@ -233,6 +382,9 @@ CreateRxRing   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateTxRing    Proc near
+    push es
+    pushad
+;    
     mov ax,flat_sel
     mov es,ax
     mov eax,1000h
@@ -285,15 +437,22 @@ ctLoop:
 ;
     mov ds:TxCurrDescr,0
     mov ds:TxLastDescr,di
+;
+    popad
+    pop es
     ret
 CreateTxRing   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           InitHardware
+;       NAME:           InitHardware
 ;
-;           DESCRIPTION:    Initialize hardware
+;       DESCRIPTION:    Initialize hardware
+;
+;       PARAMETERS:         BH    Bus
+;                           BL    Device
+;                           CH    Function
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -304,6 +463,7 @@ InitHardware    Proc near
     or al,10h
     out dx,al
 ;
+    push cx
     mov cx,10000
 
 ihResetWait:
@@ -314,29 +474,25 @@ ihResetWait:
     pause
     loop ihResetWait
 ;
+    pop cx
     stc
     jmp ihDone
 
 ihResetDone:
+    pop cx
+;
     mov dx,ds:IoBase
     add dx,REG_IDR0
     in eax,dx
     mov dword ptr ds:EthernetAddress,eax
     add dx,4
-    in ax,dx
+    in eax,dx
     mov word ptr ds:EthernetAddress+4,ax
 ;
     mov dx,ds:IoBase
     add dx,REG_9346CR
     mov al,0C0h
     out dx,al
-;
-    mov dx,ds:IoBase
-    add dx,REG_CCR
-    in ax,dx
-    and ax,NOT 200h
-    or al,8
-    out dx,ax 
 ;
     call CreateRxRing
     mov dx,ds:IoBase
@@ -360,7 +516,7 @@ ihResetDone:
 ;    
     mov dx,ds:IoBase
     add dx,REG_IMR
-    mov ax,IR_SER OR IR_TOK OR IR_ROK OR IR_LinkChg
+    mov ax,IR_TOK OR IR_ROK OR IR_LinkChg
     out dx,ax    
 ;
     mov dx,ds:IoBase
@@ -373,6 +529,12 @@ ihResetDone:
     mov al,3Bh
     out dx,al           
 ;
+    mov dx,ds:IoBase
+    add dx,REG_CONFIG3
+    in al,dx
+    or al,40h
+    out dx,al
+;    
     mov dx,ds:IoBase
     add dx,REG_9346CR
     mov al,0
@@ -394,7 +556,6 @@ ihResetDone:
     mov dx,ds:IoBase
     add dx,REG_RCR
     in eax,dx
-    or eax,10000h
     and ax,1FFFh    
     or ax,8000h
     and ax,NOT 700h
@@ -954,7 +1115,7 @@ siMsi:
     WritePciWord
 ;
     push cx
-    mov cx,1
+    mov cx,2
     AllocateMsiInts
     pop cx
     jc siIrq
