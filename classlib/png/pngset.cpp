@@ -14,7 +14,7 @@
  */
 
 #define PNG_INTERNAL
-#include "png.h"
+#include "pnglib.h"
 
 #if defined(PNG_bKGD_SUPPORTED)
 void PNGAPI
@@ -137,7 +137,7 @@ png_set_gAMA_fixed(png_structp png_ptr, png_infop info_ptr, png_fixed_point
 void PNGAPI
 png_set_hIST(png_structp png_ptr, png_infop info_ptr, png_uint_16p hist)
 {
-   int	i;
+   int  i;
 
    png_debug1(1, "in %s storage function\n", "hIST");
    if (png_ptr == NULL || info_ptr == NULL)
@@ -736,10 +736,10 @@ png_set_tRNS(png_structp png_ptr, png_infop info_ptr,
    if (trans != NULL)
    {
        /*
-	* It may not actually be necessary to set png_ptr->trans here;
-	* we do it for backward compatibility with the way the png_handle_tRNS
-	* function used to do the allocation.
-	*/
+        * It may not actually be necessary to set png_ptr->trans here;
+        * we do it for backward compatibility with the way the png_handle_tRNS
+        * function used to do the allocation.
+        */
 #ifdef PNG_FREE_ME_SUPPORTED
        png_free_data(png_ptr, info_ptr, PNG_FREE_TRNS, 0);
 #endif
@@ -1015,8 +1015,8 @@ png_set_asm_flags (png_structp png_ptr, png_uint_32 asm_flags)
      * so first zero them out of the master copy, then logical-OR in the
      * allowed subset that was requested */
 
-    png_ptr->asm_flags &= ~settable_asm_flags;			/* zero them */
-    png_ptr->asm_flags |= (asm_flags & settable_asm_flags);	/* set them */
+    png_ptr->asm_flags &= ~settable_asm_flags;                  /* zero them */
+    png_ptr->asm_flags |= (asm_flags & settable_asm_flags);     /* set them */
 }
 #endif /* ?PNG_ASSEMBLER_CODE_SUPPORTED */
 

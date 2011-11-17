@@ -12,7 +12,7 @@
  */
 
 #define PNG_INTERNAL
-#include "png.h"
+#include "pnglib.h"
 
 /* Create a PNG structure for reading, and allocate any memory needed. */
 png_structp PNGAPI
@@ -83,11 +83,11 @@ png_create_read_struct_2(png_const_charp user_png_ver, png_voidp error_ptr,
 
    if (png_ptr->flags & PNG_FLAG_LIBRARY_MISMATCH)
    {
-	 /* Libpng 0.90 and later are binary incompatible with libpng 0.89, so
-	  * we must recompile any applications that use any older library version.
-	  * For versions after libpng 1.0, we will be compatible, so we need
-	  * only check the first digit.
-	  */
+         /* Libpng 0.90 and later are binary incompatible with libpng 0.89, so
+          * we must recompile any applications that use any older library version.
+          * For versions after libpng 1.0, we will be compatible, so we need
+          * only check the first digit.
+          */
    }
 
    /* initialize zbuf - compression buffer */

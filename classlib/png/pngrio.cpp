@@ -16,7 +16,7 @@
  */
 
 #define PNG_INTERNAL
-#include "png.h"
+#include "pnglib.h"
 #include "rdos.h"
 
 /* Read the data from whatever input you are using.  The default routine
@@ -29,7 +29,7 @@ png_read_data(png_structp png_ptr, png_bytep data, png_size_t length)
 {
    png_debug1(4,"reading %d bytes\n", (int)length);
    if (RdosReadFile(png_ptr->file_handle, data, length) != length)
-	  png_error(png_ptr, "Read Error");
+          png_error(png_ptr, "Read Error");
 }
 
 #if !defined(PNG_NO_STDIO)
@@ -46,7 +46,7 @@ png_default_read_data(png_structp png_ptr, png_bytep data, png_size_t length)
    check = RdosReadFile(png_ptr->file_handle, data, length);
 
    if (check != length)
-	  png_error(png_ptr, "Read Error");
+          png_error(png_ptr, "Read Error");
 }
 #else
 /* this is the model-independent version. Since the standard I/O library
