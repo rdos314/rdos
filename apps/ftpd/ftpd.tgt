@@ -67,8 +67,8 @@ r????Include directories:
 1
 17
 WString
-65
-"\rdos\classlib;\rdos\classlib\rdos;$(%watcom)/h;$(%watcom)/rdos"
+85
+"\rdos\classlib;\rdos\classlib\rdos;\rdos\classlib\ftpd;$(%watcom)/h;$(%watcom)/rdos"
 0
 18
 MRState
