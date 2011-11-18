@@ -17,7 +17,7 @@ int main(int argc, char **argv)
         int width = 640;
         int height = 480;
         TGraphicDevice *vbe;
-        TControlThread *controlthread;
+        TDisplayControlThread *controlthread;
         char FileName[256];
         TKeyboardDevice *Keyboard;
         TMouseDevice *Mouse;
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
         Keyboard = new TKeyboardDevice;
         Mouse = new TMouseDevice;
 
-        controlthread = new TControlThread("Control", vbe);
+        controlthread = new TDisplayControlThread("Control", vbe);
         controlthread->Add(Keyboard);
         controlthread->Add(Mouse);
 
