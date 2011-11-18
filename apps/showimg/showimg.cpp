@@ -22,30 +22,9 @@ int main(int argc, char **argv)
 
         if (argc == 1)
         {
-        int i;
-
-                vbe = new TVideoGraphicDevice(24, 1024, 600);
-
-        for (;;)
-        {       
-                for (i = 0; i <= 256; i++)
-                {
-                sprintf(FileName, "%d.jpg", i);
-                    bitmap = TJpegBitmapDevice::Create(FileName);
-
-                if (bitmap)
-                {
-                        vbe->Blit(bitmap, 0, 0, 0, 0, bitmap->GetWidth(), bitmap->GetHeight());
-                        delete bitmap;
-                }
-            }                                           
-                }
-
-//              printf("usage: showimg filename\r\n");
-//              return 1;
+              printf("usage: showimg filename\r\n");
+              return 1;
         }
-
-        RdosWaitMilli(250);
 
         strcpy(FileName, argv[1]);
         strlwr(FileName);
@@ -107,14 +86,15 @@ int main(int argc, char **argv)
                 else
                         width = 4 * height / 3;
 
-                width = 1400;
-                height = 1050;
+//                width = 1400;
+//                height = 1050;
 
                 vbe = new TVideoGraphicDevice(24, width, height);
                 vbe->Blit(bitmap, 0, 0, 0, 0, bitmap->GetWidth(), bitmap->GetHeight());
                 RdosReadKeyboard();
                 delete bitmap;
                 delete vbe;
+                RdosSetTextMode();
         }
         else
                 printf("invalid filename\r\n");
