@@ -41,6 +41,8 @@
 #define     FALSE   0
 #define     TRUE    !FALSE
 
+#pragma pack( push, 1 )
+
 struct TExeHeader
 {
     short int Signature;
@@ -78,6 +80,8 @@ struct TRdvHeader32
     long DataSize;
     short int DataSel;
 };
+
+#pragma pack( pop )
 
 /*##########################################################################
 #

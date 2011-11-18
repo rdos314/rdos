@@ -10,7 +10,7 @@
 
 /* get internal access to png.h */
 #define PNG_INTERNAL
-#include "png.h"
+#include "pnglib.h"
 #ifdef PNG_WRITE_SUPPORTED
 
 /* Writes all the PNG information.  This is the suggested way to use the
@@ -461,10 +461,10 @@ png_create_write_struct_2(png_const_charp user_png_ver, png_voidp error_ptr,
    if (setjmp(png_ptr->jmpbuf))
 #endif
    {
-	  png_free(png_ptr, png_ptr->zbuf);
-	  png_ptr->zbuf=NULL;
-	  png_destroy_struct(png_ptr);
-	  return (NULL);
+          png_free(png_ptr, png_ptr->zbuf);
+          png_ptr->zbuf=NULL;
+          png_destroy_struct(png_ptr);
+          return (NULL);
    }
 #ifdef USE_FAR_KEYWORD
    png_memcpy(png_ptr->jmpbuf,jmpbuf,sizeof(jmp_buf));
@@ -478,11 +478,11 @@ png_create_write_struct_2(png_const_charp user_png_ver, png_voidp error_ptr,
 
    if (png_ptr->flags & PNG_FLAG_LIBRARY_MISMATCH)
    {
-	 /* Libpng 0.90 and later are binary incompatible with libpng 0.89, so
-	  * we must recompile any applications that use any older library version.
-	  * For versions after libpng 1.0, we will be compatible, so we need
-	  * only check the first digit.
-	  */
+         /* Libpng 0.90 and later are binary incompatible with libpng 0.89, so
+          * we must recompile any applications that use any older library version.
+          * For versions after libpng 1.0, we will be compatible, so we need
+          * only check the first digit.
+          */
    }
 
    /* initialize zbuf - compression buffer */
@@ -524,7 +524,7 @@ png_write_init_2(png_structp png_ptr, png_const_charp user_png_ver,
            user_png_ver);
         png_warning(png_ptr, msg);
       }
-	  png_warning(png_ptr, msg);
+          png_warning(png_ptr, msg);
    }
 #endif
    if(sizeof(png_struct) > png_struct_size)
@@ -567,11 +567,11 @@ png_write_init_3(png_structpp ptr_ptr, png_const_charp user_png_ver,
 #endif
 
    if (sizeof(png_struct) > png_struct_size)
-	 {
-	   png_destroy_struct(png_ptr);
-	   png_ptr = (png_structp)png_create_struct(PNG_STRUCT_PNG);
-	   *ptr_ptr = png_ptr;
-	 }
+         {
+           png_destroy_struct(png_ptr);
+           png_ptr = (png_structp)png_create_struct(PNG_STRUCT_PNG);
+           *ptr_ptr = png_ptr;
+         }
 
    /* reset all variables to 0 */
    png_memset(png_ptr, 0, sizeof (png_struct));

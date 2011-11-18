@@ -16,7 +16,7 @@
  */
 
 #define PNG_INTERNAL
-#include "png.h"
+#include "pnglib.h"
 #include "rdos.h"
 #ifdef PNG_WRITE_SUPPORTED
 
@@ -30,7 +30,7 @@ void /* PRIVATE */
 png_write_data(png_structp png_ptr, png_bytep data, png_size_t length)
 {
    if (RdosWriteFile(png_ptr->file_handle, data, length) != length)
-	  png_error(png_ptr, "Write Error");
+          png_error(png_ptr, "Write Error");
 }
 
 #if !defined(PNG_NO_STDIO)
@@ -47,7 +47,7 @@ png_default_write_data(png_structp png_ptr, png_bytep data, png_size_t length)
    check = RdosWriteFile(png_ptr->file_handle, data, length);
 
    if (check != length)
-	  png_error(png_ptr, "Write Error");
+          png_error(png_ptr, "Write Error");
 }
 #else
 /* this is the model-independent version. Since the standard I/O library

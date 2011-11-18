@@ -30,6 +30,8 @@
 #ifndef _RDOSHDR_H
 #define _RDOSHDR_H
 
+#pragma pack( push, 1 )
+
 #define RDOS_OBJECT_KERNEL          0
 #define RDOS_OBJECT_FONT            1
 #define RDOS_OBJECT_SIMPLE_DEVICE   2
@@ -111,6 +113,8 @@ typedef struct TRdosFileHeader
     char Attrib;
     char FileName;
 } TRdosFileHeader;
+
+#pragma pack( pop )
 
 #endif
 
