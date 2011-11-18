@@ -4,10 +4,10 @@ projectIdent
 VpeMain
 1
 WRect
-512
 0
-7978
-9216
+0
+7961
+9200
 2
 MProject
 3
@@ -28,10 +28,10 @@ WVList
 VComponent
 8
 WRect
-188
-185
-5680
-4300
+172
+160
+5659
+4280
 0
 0
 9
@@ -39,5 +39,5 @@ WFileName
 10
 convos.tgt
 0
-0
+2
 7

@@ -199,8 +199,8 @@ r????Include directories:
 1
 49
 WString
-126
-"\rdos\kernel;\rdos\kernel\classlib;\rdos\kernel\acpi\include;\rdos\kernel\acpi\include\platform;$(%watcom)/h;$(%watcom)/rdos"
+119
+"\rdos\kernel;\rdos\classlib;\rdos\kernel\acpi\include;\rdos\kernel\acpi\include\platform;$(%watcom)/h;$(%watcom)/rdos"
 0
 50
 MVState
