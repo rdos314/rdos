@@ -2683,19 +2683,8 @@ CheckPciIde Proc near
     mov bh,1
     mov bl,1
     FindPciClassAll
-    jnc cpiHasIde
-;
-    mov ax,ahci_code_sel
-    verr ax
-    jz cpiDone
-;    
-    xor ax,ax
-    mov bh,8Fh
-    mov bl,1
-    FindPciClassAll
     jc cpiDone
-
-cpiHasIde:
+;
     mov cl,10h
     ReadPciDword
     mov cl,al    
@@ -2733,6 +2722,7 @@ cpiBar3Done:
 
 cpiLoop:
     mov ax,dx
+    mov bh,1
     mov bl,1
     FindPciClassAll
     jc cpiDone
