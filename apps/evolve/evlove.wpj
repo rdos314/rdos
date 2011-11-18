@@ -4,10 +4,10 @@ projectIdent
 VpeMain
 1
 WRect
-1024
-458
-7948
-9216
+0
+0
+7916
+9200
 2
 MProject
 3
@@ -30,8 +30,8 @@ VComponent
 WRect
 0
 0
-5680
-4300
+5674
+4293
 0
 0
 9
@@ -39,5 +39,5 @@ WFileName
 10
 evlove.tgt
 0
-2
+3
 7
