@@ -1,5 +1,5 @@
-project : G:\rdos\kernel\audiodev\via82a.rdv G:\rdos\kernel\audiodev\cs5536a&
+project : E:\rdos\kernel\audiodev\via82a.rdv E:\rdos\kernel\audiodev\cs5536a&
 .rdv .SYMBOLIC
 
-!include G:\rdos\kernel\audiodev\via82a.mk1
-!include G:\rdos\kernel\audiodev\cs5536a.mk1
+!include E:\rdos\kernel\audiodev\via82a.mk1
+!include E:\rdos\kernel\audiodev\cs5536a.mk1
