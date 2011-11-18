@@ -1,6 +1,0 @@
-NAME    ADVAPI32
-EXPORTS
-	RegCloseKey
-	RegOpenKeyA
-	RegOpenKeyExA
-	RegQueryValueExA

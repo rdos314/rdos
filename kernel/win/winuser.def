@@ -1,9 +1,0 @@
-NAME    USER
-EXETYPE OS2
-EXPORTS 
-
-		MessageBox	@1
-
-		InitApp		@5
-
-		LoadString	@176
