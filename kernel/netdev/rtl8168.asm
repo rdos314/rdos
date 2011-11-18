@@ -150,9 +150,11 @@ RxCurrDescr         DW ?
 RxCurrLinear        DD ?
 TxCurrDescr         DW ?
 TxLastDescr         DW ?
+IrqLock             spinlock_typ <>
 TxSection           section_typ <>
 EthernetAddress     DB 6 DUP(?)
 EeAdrLen            DB ?
+TimerStarted        DB ?
 
 RxLinearArr         DD RX_DESCR_COUNT DUP(?)
 TxLinearArr         DD TX_DESCR_COUNT DUP(?)
@@ -516,7 +518,7 @@ ihResetDone:
 ;    
     mov dx,ds:IoBase
     add dx,REG_IMR
-    mov ax,IR_TOK OR IR_ROK OR IR_LinkChg
+    mov ax,IR_TOK OR IR_ROK OR IR_RER OR IR_LinkChg
     out dx,ax    
 ;
     mov dx,ds:IoBase
@@ -587,10 +589,12 @@ NetInt  Proc far
 niLoop:
     mov dx,ds:IoBase
     add dx,REG_ISR
+    RequestSpinlock ds:IrqLock
     in ax,dx
     or ds:Isr,ax
     out dx,ax
-    test ax,IR_ROK OR IR_RDU
+    ReleaseSpinlock ds:IrqLock
+    test ax,IR_ROK OR IR_RDU OR IR_RER
     jz niNotRx
 ;
     mov bx,ds:Handle
@@ -614,6 +618,65 @@ niNotRx:
 niNotTx:
     retf32
 NetInt  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           NetTimeout
+;
+;           DESCRIPTION:    Network card timeout
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NetTimeout  Proc far
+    push eax
+    push edx
+;    
+    mov ds,cx
+    mov dx,ds:IoBase
+    add dx,REG_ISR
+    RequestSpinlock ds:IrqLock
+    in ax,dx
+    or ds:Isr,ax
+    out dx,ax
+    ReleaseSpinlock ds:IrqLock
+    test ax,IR_ROK OR IR_RDU OR IR_RER
+    jz ntNotRx
+;
+    mov bx,ds:Handle
+    or bx,bx
+    jz ntNotRx
+;
+    NetReceived
+    jmp ntDone
+
+ntNotRx:
+    test ax,IR_TOK OR IR_TER
+    jz ntDone
+;
+    mov bx,ds:TxThread
+    or bx,bx
+    jz ntDone
+;
+    Signal
+
+ntDone:    
+    pop edx
+    pop eax
+;    
+    add eax,1193
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov bx,cx
+    mov edi,OFFSET NetTimeout
+    StartTimer
+    retf32
+NetTimeout  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -648,6 +711,22 @@ Preview2:
     mov ds,ax
 
 preview_do:
+    mov al,ds:TimerStarted
+    or al,al
+    jnz preview_timer_ok
+;    
+    mov ds:TimerStarted,1
+    GetSystemTime
+    add eax,11930
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov bx,ds
+    mov cx,bx
+    mov edi,OFFSET NetTimeout
+    StartTimer
+
+preview_timer_ok:    
     mov es,ds:RxRingSel
     mov cx,RX_DESCR_COUNT
     xor bx,bx
@@ -786,6 +865,7 @@ remove_do:
 GetBuffer1:
     push ds
     push bx
+    push edx
     push si
 ;
     mov ax,ether_data_sel
@@ -795,6 +875,7 @@ GetBuffer1:
 GetBuffer2:
     push ds
     push bx
+    push edx
     push si
 ;
     mov ax,ether_data2_sel
@@ -843,6 +924,7 @@ get_buffer_save_curr:
 
 get_buffer_done:
     pop si
+    pop edx
     pop bx
     pop ds    
     retf32
@@ -1370,6 +1452,7 @@ Init    Proc far
     xor al,al
     rep stosb
     InitSection ds:TxSection
+    InitSpinlock ds:IrqLock
 ;
     mov eax,SIZE data
     mov bx,ether_data2_sel
