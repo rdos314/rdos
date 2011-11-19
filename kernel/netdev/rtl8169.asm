@@ -625,6 +625,7 @@ remove_do:
 GetBuffer1:
     push ds
     push bx
+    push edx
     push si
 ;
     mov ax,ether_data_sel
@@ -634,6 +635,7 @@ GetBuffer1:
 GetBuffer2:
     push ds
     push bx
+    push edx
     push si
 ;
     mov ax,ether_data2_sel
@@ -682,6 +684,7 @@ get_buffer_save_curr:
 
 get_buffer_done:
     pop si
+    pop edx
     pop bx
     pop ds    
     retf32
