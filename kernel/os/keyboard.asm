@@ -1175,7 +1175,7 @@ get1_not_num:
 get1_not_caps:  
     pop bx
     pop ds
-    ret
+    retf32
 get_status1     Endp
 
     
@@ -1212,7 +1212,7 @@ get2_not_print:
 get2_not_scroll:
     pop bx
     pop ds
-    ret
+    retf32
 get_status2     Endp
 
     
