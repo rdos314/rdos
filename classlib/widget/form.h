@@ -82,6 +82,7 @@ protected:
     void Remove(TFormControlEntry *entry);
 
     TControl *GetControl(const char *name);
+    TPanelControl *GetPanel(const char *name);
     TLabelControl *GetLabel(const char *name);
     TButtonControl *GetButton(const char *name);
     TFileViewControl *GetFileView(const char *name);
@@ -90,6 +91,7 @@ protected:
     THorScrollControl *GetHorScroll(const char *name);
     TImageControl *GetImage(const char *name);
 
+    void LoadPanel(const char *IniName, const char *Name);
     void LoadLabel(const char *IniName, const char *Name);
     void LoadButton(const char *IniName, const char *Name);
     void LoadFileView(const char *IniName, const char *Name);

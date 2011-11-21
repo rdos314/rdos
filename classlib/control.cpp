@@ -1974,7 +1974,7 @@ TControlThread::TControlThread()
 ##########################################################################*/
 TControlThread::TControlThread(TGraphicDevice *dev)
 {
-    FVbe = FGraphic;
+    FVbe = dev;
     FGraphic = new TGraphicDevice(*dev);
     Init();
 }

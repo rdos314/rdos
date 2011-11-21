@@ -42,6 +42,7 @@
 #define FORM_TYPE_VER_SCROLL    6
 #define FORM_TYPE_HOR_SCROLL    7
 #define FORM_TYPE_IMAGE         8
+#define FORM_TYPE_PANEL         9
 
 TSection TFormControl::FSection;
 
@@ -100,7 +101,7 @@ TFormControlEntry::TFormControlEntry(TControl *control, const char *name, int ty
 TFormControlEntry::~TFormControlEntry()
 {
     if (FControl)
-	 	delete FControl;
+                delete FControl;
 }
     
 /*##########################################################################
@@ -206,8 +207,8 @@ int TFormControl::IsFormControl(TControl *control)
 ##########################################################################*/
 void TFormControl::RecalcInner()
 {
-	 int xstart, ystart;
-	 int xsize, ysize;
+         int xstart, ystart;
+         int xsize, ysize;
 
     TFormControlEntry *p;
 
@@ -229,8 +230,8 @@ void TFormControl::RecalcInner()
         if (FInnerHeight < ystart + ysize - 1)
             FInnerHeight = ystart + ysize - 1;
 
-		  p = p->FNext;
-	 }
+                  p = p->FNext;
+         }
     FSection.Leave();
 }
 
@@ -443,6 +444,42 @@ TButtonControl *TFormControl::GetButton(const char *name)
 
     if (p)
         return (TButtonControl *)p->FControl;
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFormControl::GetPanel
+#
+#   Purpose....: Get a panel control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPanelControl *TFormControl::GetPanel(const char *name)
+{
+    TFormControlEntry *p;
+    TControl *control;
+
+    FSection.Enter();
+
+    p = FControlList;
+
+    while (p)
+    {
+        if (p->FType == FORM_TYPE_PANEL && p->FName == name)
+            break;
+        else
+            p = p->FNext;
+    }
+
+    FSection.Leave();
+
+    if (p)
+        return (TPanelControl *)p->FControl;
     else
         return 0;
 }
@@ -749,6 +786,28 @@ void TFormControl::OnCreateImage(const char *name, TImageControl *image)
 
 /*##########################################################################
 #
+#   Name       : TFormControl::LoadPanel
+#
+#   Purpose....: Load a panel control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFormControl::LoadPanel(const char *IniName, const char *Name)
+{
+    TPanelControl *panel;
+
+    panel = new TPanelControl(this);
+    panel->Set(IniName, Name);
+    OnCreatePanel(Name, panel); 
+
+    Add(Name, panel, FORM_TYPE_PANEL);
+}
+
+/*##########################################################################
+#
 #   Name       : TFormControl::LoadLabel
 #
 #   Purpose....: Load a label control
@@ -830,7 +889,7 @@ void TFormControl::LoadList(const char *IniName, const char *Name)
 {
     TListControl *list;
 
-	list = new TListControl(this);
+        list = new TListControl(this);
     list->Set(IniName, Name);
     OnCreatePanel(Name, list); 
     OnCreateList(Name, list); 
@@ -855,9 +914,9 @@ void TFormControl::LoadVerScroll(const char *IniName, const char *Name)
 
     scroll = new TVerScrollControl(this);
     scroll->Set(IniName, Name);
-	OnCreateVerScroll(Name, scroll);
+        OnCreateVerScroll(Name, scroll);
 
-	Add(Name, scroll, FORM_TYPE_VER_SCROLL);
+        Add(Name, scroll, FORM_TYPE_VER_SCROLL);
 }
 
 /*##########################################################################
@@ -873,13 +932,13 @@ void TFormControl::LoadVerScroll(const char *IniName, const char *Name)
 ##########################################################################*/
 void TFormControl::LoadHorScroll(const char *IniName, const char *Name)
 {
-	THorScrollControl *scroll;
+        THorScrollControl *scroll;
 
-	scroll = new THorScrollControl(this);
-	scroll->Set(IniName, Name);
+        scroll = new THorScrollControl(this);
+        scroll->Set(IniName, Name);
     OnCreateHorScroll(Name, scroll); 
 
-	Add(Name, scroll, FORM_TYPE_HOR_SCROLL);
+        Add(Name, scroll, FORM_TYPE_HOR_SCROLL);
 }
 
 /*##########################################################################
@@ -895,13 +954,13 @@ void TFormControl::LoadHorScroll(const char *IniName, const char *Name)
 ##########################################################################*/
 void TFormControl::LoadImage(const char *IniName, const char *Name)
 {
-	TImageControl *image;
+        TImageControl *image;
 
-	image = new TImageControl(this);
-	image->Set(IniName, Name);
+        image = new TImageControl(this);
+        image->Set(IniName, Name);
     OnCreateImage(Name, image); 
 
-	Add(Name, image, FORM_TYPE_IMAGE);
+        Add(Name, image, FORM_TYPE_IMAGE);
 }
 
 /*##########################################################################
@@ -944,6 +1003,9 @@ void TFormControl::LoadControl(const char *IniName, const char *Name)
 
         if (!strcmp(str, "Image"))
             LoadImage(IniName, Name);
+
+        if (!strcmp(str, "Panel"))
+            LoadPanel(IniName, Name);
     }
 }
 
