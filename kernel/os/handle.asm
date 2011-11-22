@@ -33,7 +33,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE ..\handle.inc
 
-MAX_HANDLES = 400h
+MAX_HANDLES = 1000h
 
 handle_block    STRUC
 hf_prev DW ?

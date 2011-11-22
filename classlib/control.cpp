@@ -1042,6 +1042,38 @@ void TControl::GetSize(int *x, int *y) const
 
 /*##########################################################################
 #
+#   Name       : TControl::GetWidth
+#
+#   Purpose....: Get width of control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TControl::GetWidth() const
+{
+    return FWidth;
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::GetHeight
+#
+#   Purpose....: Get height of control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TControl::GetHeight() const
+{
+    return FHeight;
+}
+
+/*##########################################################################
+#
 #   Name       : TControl::PutKey
 #
 #   Purpose....: Put key into buffer
