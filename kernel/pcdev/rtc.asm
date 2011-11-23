@@ -43,9 +43,16 @@ data    SEGMENT byte public 'DATA'
 
 cmos_tics_base  DD ?,?
 
+cmos_spinlock   spinlock_typ <>
+
 data    ENDS
 
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
     .386p
+ENDIF
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -134,7 +141,9 @@ setup_int       PROC near
     mov esi,OFFSET rtc_int 
     CreateIntGateSelector
 ;       
-    cli
+    mov ax,SEG data
+    mov ds,ax
+    RequestSpinlock ds:cmos_spinlock
 ;
     mov al,0Ch
     out 70h,al
@@ -175,7 +184,7 @@ setup_int       PROC near
     mov al,ah
     or al,40h
     out 71h,al
-    sti
+    ReleaseSpinlock ds:cmos_spinlock
     ret
 setup_int   Endp
     
@@ -197,7 +206,11 @@ setup_int   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_cmos_time   PROC near
-    cli
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    RequestSpinlock ds:cmos_spinlock
+
 get_cmos_wait_update:
     mov al,0Ah
     out 70h,al
@@ -244,7 +257,8 @@ get_cmos_wait_idle:
     jmp short $+2
     in al,71h
     mov dl,al
-    sti
+    ReleaseSpinlock ds:cmos_spinlock
+
 get_time_decode:
     mov al,ah
     and ah,0Fh
@@ -301,6 +315,7 @@ get_time_decode:
 get_time_2000:
     add dx,2000
 get_time_end:
+    pop ds
     ret
 get_cmos_time ENDP
 
@@ -322,6 +337,8 @@ get_cmos_time ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_cmos_time   PROC near
+    push ds
+;    
     sub dx,1900
     cmp dx,100
     jc set_cmos_year_ok
@@ -370,8 +387,10 @@ set_cmos_year_ok:
     add al,ah
     mov dl,al
 ;
+    mov ax,SEG data
+    mov ds,ax
     pop ax
-    cli
+    RequestSpinlock ds:cmos_spinlock
 ;
     mov al,0Bh
     out 70h,al
@@ -429,7 +448,8 @@ set_cmos_year_ok:
     out 71h,al
     jmp short $+2
 ;
-    sti
+    ReleaseSpinlock ds:cmos_spinlock
+    pop ds
     ret
 set_cmos_time ENDP
     
@@ -648,7 +668,6 @@ cio05   DW OFFSET cmos_error
 
 rtc_io Proc far
     SimSti
-    sti
     push ds
     mov bx,SEG data
     mov ds,bx
@@ -682,6 +701,10 @@ rtc_io  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    Proc far
+    mov ax,SEG data
+    mov ds,ax
+    InitSpinlock ds:cmos_spinlock
+;    
     mov ax,cs
     mov ds,ax
     mov es,ax

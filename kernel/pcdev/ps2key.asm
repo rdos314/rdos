@@ -833,7 +833,6 @@ UpdateMode      ENDP
 mode_name       DB 'Keyboard LEDs',0
 
 mode_pr:
-    sti
     mov ax,SEG data
     mov ds,ax
     GetThread
