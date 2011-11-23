@@ -71,7 +71,12 @@ sys_section             section_typ <>
 
 data    ENDS
 
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
     .386p
+ENDIF
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -772,9 +777,9 @@ CreateHandle    Proc near
     mov [ebx].view_base,0
     mov [ebx].view_size,0
 ;
-    cli
     mov ax,fs_process_sel
     mov es,ax
+    RequestSpinlock es:memmap_spinlock
     mov edi,es:memmap_list
     or edi,edi
     je create_ins_empty
@@ -792,7 +797,7 @@ create_ins_empty:
     mov es:memmap_list,ebx
 
 create_ins_done:
-    sti
+    ReleaseSpinlock es:memmap_spinlock
     mov [ebx].hh_sign,MEMMAP_HANDLE
     mov bx,[ebx].hh_handle
 ;
@@ -1080,7 +1085,7 @@ close_mapping   Proc far
 ;
     mov ax,fs_process_sel
     mov es,ax
-    cli
+    RequestSpinlock es:memmap_spinlock
     mov es:memmap_list,ebx
     mov edi,[ebx].memmap_next
     cmp edi,ebx
@@ -1093,7 +1098,7 @@ close_mapping   Proc far
     mov es:memmap_list,0
 
 close_rem_done:
-    sti
+    ReleaseSpinlock es:memmap_spinlock
     mov ax,ds:[ebx].memmap_sel
     or ax,ax
     jz cfm_done
@@ -1407,7 +1412,7 @@ delete_handle   Proc far
 ;
     mov ax,fs_process_sel
     mov es,ax
-    cli
+    RequestSpinlock es:memmap_spinlock
     mov es:memmap_list,ebx
     mov edi,[ebx].memmap_next
     cmp edi,ebx
@@ -1420,7 +1425,7 @@ delete_handle   Proc far
     mov es:memmap_list,0
 
 delete_handle_rem_done:
-    sti
+    ReleaseSpinlock es:memmap_spinlock
     mov ax,ds:[ebx].memmap_sel
     or ax,ax
     jz delete_handle_done
@@ -1455,6 +1460,7 @@ init_memmap_process     PROC near
     mov ax,fs_process_sel
     mov es,ax
     mov es:memmap_list,0
+    InitSpinlock es:memmap_spinlock
     ret
 init_memmap_process     Endp
 

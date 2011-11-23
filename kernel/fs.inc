@@ -64,6 +64,7 @@ fs_process_seg	STRUC
 cur_dir_sel			DW 256 DUP(?)
 curr_drive			DB ?
 memmap_list			DD ?
+memmap_spinlock     spinlock_typ <>
 
 fs_process_seg	ENDS
 
