@@ -43,15 +43,15 @@ CONTROL_DTR = 1
 CONTROL_RTS = 2
 CONTROL_CTS = 4
 
-FLAG_CTS        = 10h
-FLAG_DSR        = 20h
-FLAG_RI         = 40h
+FLAG_CTS    = 10h
+FLAG_DSR    = 20h
+FLAG_RI     = 40h
 FLAG_RLSD       = 80h
-FLAG_DR         = 100h
-FLAG_OE         = 200h
-FLAG_PE         = 400h
-FLAG_FE         = 800h
-FLAG_BI         = 1000h
+FLAG_DR     = 100h
+FLAG_OE     = 200h
+FLAG_PE     = 400h
+FLAG_FE     = 800h
+FLAG_BI     = 1000h
 FLAG_THRE       = 2000h
 FLAG_TEMT       = 4000h
 FLAG_FIFO_ERR   = 8000h
@@ -77,20 +77,20 @@ ups_base_struc  com_port_struc <>
 
 ups_device_sel      DW ?
 ups_controller      DW ?
-ups_device          DW ?
+ups_device      DW ?
 ups_control_wait    DW ?
 ups_control_pipe    DW ?
-ups_index           DW ?
+ups_index       DW ?
 ups_device_type     DW ?
-ups_divisor         DD ?
+ups_divisor     DD ?
 ups_timer_active    DB ?
 ups_data_bits       DB ?
 ups_stop_bits       DB ?
-ups_parity          DB ?
-ups_control         DB ?
+ups_parity      DB ?
+ups_control     DB ?
 
 ups_pl_control      DB ?
-ups_pl_buf          DB 7 DUP(?)
+ups_pl_buf      DB 7 DUP(?)
 
 usbcom_port_struc       ENDS
 
@@ -98,38 +98,40 @@ usbcom_device_struc   STRUC
 
 uds_base_struc    com_device_struc <>
 
-uds_section         section_typ <>
-uds_port_sel        DW ?
+uds_section     section_typ <>
+uds_port_sel    DW ?
 uds_device_type     DW ?
-uds_in_size         DW ?
-uds_out_size        DW ?
+uds_in_size     DW ?
+uds_out_size    DW ?
 uds_interface       DB ?
-uds_intr_in         DB ?
-uds_bulk_in         DB ?
-uds_bulk_out        DB ?
+uds_intr_in     DB ?
+uds_bulk_in     DB ?
+uds_bulk_out    DB ?
 uds_intr_handle     DW ?
 uds_in_handle       DW ?
 uds_out_handle      DW ?
 uds_intr_buffer     DW ?
 uds_in_buffer       DW ?
 uds_out_buffer      DW ?
-uds_intr_req        DW ?
-uds_in_req          DW ?
-uds_out_req         DW ?
-uds_link            DW ?
+uds_intr_req    DW ?
+uds_in_req      DW ?
+uds_out_req     DW ?
+uds_link        DW ?
 uds_port_offset     DW ?
-uds_flag            DB ?
+uds_flag        DB ?
 uds_intr_interval   DB ?
 
 usbcom_device_struc   ENDS
 
 data    SEGMENT byte public 'DATA'
 
-sd_thread           DW ?
-sd_dead_list        DW ?
+sd_thread       DW ?
+sd_dead_list    DW ?
 
-sd_ports            DW ?
-sd_port_arr         DW MAX_PORTS DUP(?)
+sd_spinlock     spinlock_typ <>
+
+sd_ports        DW ?
+sd_port_arr     DW MAX_PORTS DUP(?)
 
 data    ENDS
 
@@ -137,17 +139,21 @@ data    ENDS
 
 code    SEGMENT byte public 'CODE'
 
-        assume cs:code
+    assume cs:code
 
-        .386p
-
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
+    .386p
+ENDIF
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SendSignal
+;           NAME:           SendSignal
 ;
-;               description:    Sends signal to USB-handler thread
+;           description:    Sends signal to USB-handler thread
 ;
 ;       Parameters:     CX      Port selector
 ;
@@ -180,9 +186,9 @@ SendSignal  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   StartSendTimer
+;           NAME:           StartSendTimer
 ;
-;               description:    Starts send timeout
+;           description:    Starts send timeout
 ;
 ;       Parameters:     DS      Port selector
 ;
@@ -197,16 +203,16 @@ StartSendTimer Proc near
     or al,al
     jnz sstDone
 ;
-        GetSystemTime
-        add eax,11930
-        adc edx,0
+    GetSystemTime
+    add eax,11930
+    adc edx,0
 ;       
-        mov bx,cs
-        mov es,bx
-        mov edi,OFFSET SendSignal
-        mov bx,ds
-        mov cx,bx
-        StartTimer
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET SendSignal
+    mov bx,ds
+    mov cx,bx
+    StartTimer
 
 sstDone:
     popad
@@ -218,14 +224,14 @@ StartSendTimer Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetDivisorError
+;           NAME:           GetDivisorError
 ;
-;               description:    Get baud-rate divisor, error type
+;           description:    Get baud-rate divisor, error type
 ;
-;               PARAMETERS:             DS      Port selector
-;                                               ECX             baudrate
+;           PARAMETERS:         DS      Port selector
+;                           ECX         baudrate
 ;
-;       RETURNS:        ECX     Divisor to use
+;       RETURNS:    ECX     Divisor to use
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -239,14 +245,14 @@ GetDivisorError Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetSioDivisor
+;           NAME:           GetSioDivisor
 ;
-;               description:    Get baud-rate divisor, SIO type
+;           description:    Get baud-rate divisor, SIO type
 ;
-;               PARAMETERS:             DS      Port selector
-;                                               ECX             baudrate
+;           PARAMETERS:         DS      Port selector
+;                           ECX         baudrate
 ;
-;       RETURNS:        ECX     Divisor to use
+;       RETURNS:    ECX     Divisor to use
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -293,9 +299,9 @@ GetSioDivisor Proc near
     cmp ecx,115200
     je gdsDone
 ;
-    mov al,5                        
+    mov al,5            
 
-gdsDone:                           
+gdsDone:               
     movzx ecx,al
     clc
 ;
@@ -307,14 +313,14 @@ GetSioDivisor Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Get232AmDivisor
+;           NAME:           Get232AmDivisor
 ;
-;               description:    Get baud-rate divisor, 232AM type
+;           description:    Get baud-rate divisor, 232AM type
 ;
-;               PARAMETERS:             DS      Port selector
-;                                               ECX             baudrate
+;           PARAMETERS:         DS      Port selector
+;                           ECX         baudrate
 ;
-;       RETURNS:        ECX     Divisor to use
+;       RETURNS:    ECX     Divisor to use
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -346,7 +352,7 @@ get_am_not1:
 ;
     or cx,4000h
     jmp get_am_part_ok
-        
+    
 get_am_not4:
     or al,al
     je get_am_part_ok
@@ -371,14 +377,14 @@ Get232AmDivisor Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Get232BmDivisor
+;           NAME:           Get232BmDivisor
 ;
-;               description:    Get baud-rate divisor, 232BM type
+;           description:    Get baud-rate divisor, 232BM type
 ;
-;               PARAMETERS:             DS      Port selector
-;                                               ECX             baudrate
+;           PARAMETERS:         DS      Port selector
+;                           ECX         baudrate
 ;
-;       RETURNS:        ECX     Divisor to use
+;       RETURNS:    ECX     Divisor to use
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -420,7 +426,7 @@ get_bm_not1:
 ;
     mov ecx,1
 
-get_bm_not4001:            
+get_bm_not4001:        
     clc
 ;    
     pop edx
@@ -428,19 +434,19 @@ get_bm_not4001:
     pop eax    
     ret
 Get232BmDivisor Endp
-        
+    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetBaudDivisor
+;           NAME:           GetBaudDivisor
 ;
-;               description:    Get baud-rate divisor
+;           description:    Get baud-rate divisor
 ;
-;               PARAMETERS:             DS      Port selector
-;                                               ECX             baudrate
+;           PARAMETERS:         DS      Port selector
+;                           ECX         baudrate
 ;
-;       RETURNS:        CX     Divisor to use
+;       RETURNS:    CX     Divisor to use
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -471,15 +477,15 @@ gbdCall:
     ret
 GetBaudDivisor  Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   ResetSio
+;           NAME:           ResetSio
 ;
-;               DESCRIPTION:    Reset SIO
+;           DESCRIPTION:    Reset SIO
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -524,15 +530,15 @@ reset_sio       PROC near
     ret
 reset_sio Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SetLatencyTimer
+;           NAME:           SetLatencyTimer
 ;
-;               DESCRIPTION:    Set latency timer
+;           DESCRIPTION:    Set latency timer
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -577,19 +583,19 @@ set_latency_timer       PROC near
     ret
 set_latency_timer Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SetBaud
+;           NAME:           SetBaud
 ;
-;               DESCRIPTION:    Set baudrate
+;           DESCRIPTION:    Set baudrate
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_baud        PROC near
+set_baud    PROC near
     push es
     pushad
 ;
@@ -641,19 +647,19 @@ set_baud_index_ok:
     ret
 set_baud Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SetData
+;           NAME:           SetData
 ;
-;               DESCRIPTION:    Set data format
+;           DESCRIPTION:    Set data format
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_data        PROC near
+set_data    PROC near
     push es
     pushad
 ;
@@ -727,12 +733,12 @@ set_data Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   InitComFtdi
+;           NAME:           InitComFtdi
 ;
-;               description:    Init serial port, FTDI version
+;           description:    Init serial port, FTDI version
 ;
-;               PARAMETERS:             DS      Port selector
-;                                       ES              Device selector
+;           PARAMETERS:         DS      Port selector
+;                       ES          Device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -786,23 +792,23 @@ init_ftdi_cts_ok:
 init_ftdi_done:
     popad
     pop ds
-        ret
+    ret
 InitComFtdi     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   open_com_ftdi
+;           NAME:           open_com_ftdi
 ;
-;               description:    Open a serial port, FTDI version
+;           description:    Open a serial port, FTDI version
 ;
-;               PARAMETERS:             DS      Port selector
-;                                       ES              Device selector
-;                                               AH              # of data bits
-;                                               BL              # of stop bits
-;                                               BH              parity
-;                                               ECX             baudrate
+;           PARAMETERS:         DS      Port selector
+;                       ES          Device selector
+;                           AH          # of data bits
+;                           BL          # of stop bits
+;                           BH          parity
+;                           ECX         baudrate
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -857,18 +863,18 @@ open_com_ftdi   Proc far
 open_ftdi_done:
     popad
     pop ds
-        ret
+    ret
 open_com_ftdi   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   close_com_ftid
+;           NAME:           close_com_ftid
 ;
-;               description:    Close serial port, FTDI version
+;           description:    Close serial port, FTDI version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -915,18 +921,18 @@ ccfNoDevice:
 ;
     pop bx
     pop ds    
-        ret
+    ret
 close_com_ftdi  Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   enable_cts_ftdi
+;           NAME:           enable_cts_ftdi
 ;
-;               DESCRIPTION:    Enable CTS signal, FTDI version
+;           DESCRIPTION:    Enable CTS signal, FTDI version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -973,19 +979,19 @@ enable_cts_ftdi PROC far
     ret
 enable_cts_ftdi Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   disable_cts_ftdi
+;           NAME:           disable_cts_ftdi
 ;
-;               DESCRIPTION:    Disable CTS signal, FTDI version
+;           DESCRIPTION:    Disable CTS signal, FTDI version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-disable_cts_ftdi        PROC far
+disable_cts_ftdi    PROC far
     push es
     pushad
 ;
@@ -1031,11 +1037,11 @@ disable_cts_ftdi Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   set_dtr_ftdi
+;           NAME:           set_dtr_ftdi
 ;
-;               description:    Set DTR signal, FTDI version
+;           description:    Set DTR signal, FTDI version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1078,18 +1084,18 @@ set_dtr_ftdi    Proc far
 ;
     popad
     pop es    
-        ret
+    ret
 set_dtr_ftdi    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   reset_dtr_ftdi
+;           NAME:           reset_dtr_ftdi
 ;
-;               description:    Reset DTR signal, FTDI version
+;           description:    Reset DTR signal, FTDI version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1132,18 +1138,18 @@ reset_dtr_ftdi  Proc far
 ;
     popad
     pop es    
-        ret
+    ret
 reset_dtr_ftdi  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   set_rts_ftdi
+;           NAME:           set_rts_ftdi
 ;
-;               description:    Set RTS signal, FTDI version
+;           description:    Set RTS signal, FTDI version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1186,18 +1192,18 @@ set_rts_ftdi    Proc far
 ;
     popad
     pop es    
-        ret
+    ret
 set_rts_ftdi    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   reset_rts_ftdi
+;           NAME:           reset_rts_ftdi
 ;
-;               description:    Reset RTS signal, FTDI version
+;           description:    Reset RTS signal, FTDI version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1240,20 +1246,20 @@ reset_rts_ftdi  Proc far
 ;
     popad
     pop es    
-        ret
+    ret
 reset_rts_ftdi  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Fish
+;           NAME:           Fish
 ;
-;               description:    Some cranky stuff in the PL device
+;           description:    Some cranky stuff in the PL device
 ;
-;               PARAMETERS:             DS      Port selector
-;                       AX      Value
-;                       DX      Index
+;           PARAMETERS:         DS      Port selector
+;               AX      Value
+;               DX      Index
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1281,7 +1287,7 @@ Fish    Proc near
 ;
     mov cx,1
     ReqUsbData
-;        
+;    
     WriteUsbStatus
 ;    
     GetSystemTime
@@ -1306,11 +1312,11 @@ Fish    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadLineState
+;           NAME:           ReadLineState
 ;
-;               description:    Read current line state
+;           description:    Read current line state
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1343,7 +1349,7 @@ ReadLineState   Proc near
     mov edi,OFFSET ups_pl_buf
     ReqUsbData
     pop es
-;        
+;    
     WriteUsbStatus
 ;    
     GetSystemTime
@@ -1373,11 +1379,11 @@ ReadLineState    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   UpdateLineState
+;           NAME:           UpdateLineState
 ;
-;               description:    Update current line state after open
+;           description:    Update current line state after open
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1414,7 +1420,7 @@ ulsParity:
     mov al,ds:ups_data_bits
     mov ds:ups_pl_buf+6,al    
 ;
-    pop eax              
+    pop eax          
     ret
 UpdateLineState Endp
 
@@ -1422,11 +1428,11 @@ UpdateLineState Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteLineState
+;           NAME:           WriteLineState
 ;
-;               description:    Write current line state
+;           description:    Write current line state
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1459,7 +1465,7 @@ WriteLineState  Proc near
     mov cx,7
     WriteUsbData
     pop es
-;        
+;    
     ReqUsbStatus
 ;    
     GetSystemTime
@@ -1484,11 +1490,11 @@ WriteLineState    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteControl
+;           NAME:           WriteControl
 ;
-;               description:    Write current control state
+;           description:    Write current control state
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1516,7 +1522,7 @@ WriteControl    Proc near
     LockUsbPipe
     mov cx,8
     WriteUsbControl
-;        
+;    
     ReqUsbStatus
 ;    
     GetSystemTime
@@ -1541,13 +1547,13 @@ WriteControl    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Soup
+;           NAME:           Soup
 ;
-;               description:    Some cranky stuff in the PL device
+;           description:    Some cranky stuff in the PL device
 ;
-;               PARAMETERS:             DS      Port selector
-;                       AX      Value
-;                       DX      Index
+;           PARAMETERS:         DS      Port selector
+;               AX      Value
+;               DX      Index
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1572,7 +1578,7 @@ Soup    Proc near
     LockUsbPipe
     mov cx,8
     WriteUsbControl
-;        
+;    
     ReqUsbStatus
 ;    
     GetSystemTime
@@ -1597,12 +1603,12 @@ Soup    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   InitComPl
+;           NAME:           InitComPl
 ;
-;               description:    Init a serial port, PL2303 version
+;           description:    Init a serial port, PL2303 version
 ;
-;               PARAMETERS:             DS      Port selector
-;                                       ES              Device selector
+;           PARAMETERS:         DS      Port selector
+;                       ES          Device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1722,16 +1728,16 @@ InitComPl Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   open_com_pl
+;           NAME:           open_com_pl
 ;
-;               description:    Open a serial port, PL2303 version
+;           description:    Open a serial port, PL2303 version
 ;
-;               PARAMETERS:             DS      Port selector
-;                                       ES              Device selector
-;                                               AH              # of data bits
-;                                               BL              # of stop bits
-;                                               BH              parity
-;                                               ECX             baudrate
+;           PARAMETERS:         DS      Port selector
+;                       ES          Device selector
+;                           AH          # of data bits
+;                           BL          # of stop bits
+;                           BH          parity
+;                           ECX         baudrate
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1789,11 +1795,11 @@ open_com_pl Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   close_com_pl
+;           NAME:           close_com_pl
 ;
-;               description:    Close serial port, PL2303 version
+;           description:    Close serial port, PL2303 version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1840,18 +1846,18 @@ ccpNoDevice:
 ;
     pop bx
     pop ds    
-        ret
+    ret
 close_com_pl    Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   enable_cts_pl
+;           NAME:           enable_cts_pl
 ;
-;               DESCRIPTION:    Enable CTS signal, PL2303 version
+;           DESCRIPTION:    Enable CTS signal, PL2303 version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1885,7 +1891,7 @@ ecpIndexOk:
     LockUsbPipe
     mov cx,8
     WriteUsbControl
-;        
+;    
     ReqUsbStatus
 ;    
     GetSystemTime
@@ -1906,15 +1912,15 @@ ecpIndexOk:
     ret
 enable_cts_pl Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   disable_cts_pl
+;           NAME:           disable_cts_pl
 ;
-;               DESCRIPTION:    Disable CTS signal, PL2303 version
+;           DESCRIPTION:    Disable CTS signal, PL2303 version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1927,11 +1933,11 @@ disable_cts_pl Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   set_dtr_pl
+;           NAME:           set_dtr_pl
 ;
-;               description:    Set DTR signal, PL2303 version
+;           description:    Set DTR signal, PL2303 version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1939,18 +1945,18 @@ set_dtr_pl      Proc far
     or ds:ups_control,CONTROL_DTR
     or ds:ups_pl_control,1
     call WriteControl
-        ret
+    ret
 set_dtr_pl      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   reset_dtr_pl
+;           NAME:           reset_dtr_pl
 ;
-;               description:    Reset DTR signal, PL2303 version
+;           description:    Reset DTR signal, PL2303 version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1958,18 +1964,18 @@ reset_dtr_pl    Proc far
     and ds:ups_control,NOT CONTROL_DTR
     and ds:ups_pl_control,NOT 1
     call WriteControl
-        ret
+    ret
 reset_dtr_pl    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   set_rts_pl
+;           NAME:           set_rts_pl
 ;
-;               description:    Set RTS signal, PL2303 version
+;           description:    Set RTS signal, PL2303 version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1977,18 +1983,18 @@ set_rts_pl      Proc far
     or ds:ups_control,CONTROL_RTS
     or ds:ups_pl_control,2
     call WriteControl
-        ret
+    ret
 set_rts_pl      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   reset_rts_pl
+;           NAME:           reset_rts_pl
 ;
-;               description:    Reset RTS signal, PL2303 version
+;           description:    Reset RTS signal, PL2303 version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1996,20 +2002,20 @@ reset_rts_pl    Proc far
     and ds:ups_control,NOT CONTROL_RTS
     and ds:ups_pl_control,NOT 2
     call WriteControl
-        ret
+    ret
 reset_rts_pl    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           GetFixedMctDivisor
+;           NAME:       GetFixedMctDivisor
 ;
-;               description:    Get divisor for fixed MCT rates
+;           description:    Get divisor for fixed MCT rates
 ;
-;               PARAMETERS:             ECX     Baudrate
+;           PARAMETERS:         ECX     Baudrate
 ;
-;       RETURNS:        ECX     Divisor
+;       RETURNS:    ECX     Divisor
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2086,7 +2092,7 @@ gfmdNot57600:
 gfmdNot115200:
     mov ecx,8
 
-gfmdDone:               
+gfmdDone:           
     ret
 GetFixedMctDivisor  Endp
     
@@ -2094,13 +2100,13 @@ GetFixedMctDivisor  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           GetVariableMctDivisor
+;           NAME:       GetVariableMctDivisor
 ;
-;               description:    Get divisor for variable MCT rates
+;           description:    Get divisor for variable MCT rates
 ;
-;               PARAMETERS:             ECX     Baudrate
+;           PARAMETERS:         ECX     Baudrate
 ;
-;       RETURNS:        ECX     Divisor
+;       RETURNS:    ECX     Divisor
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2114,19 +2120,19 @@ GetVariableMctDivisor   Proc near
     mov ecx,eax
 ;
     pop edx
-    pop eax            
+    pop eax        
     ret
 GetVariableMctDivisor   Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SetBaudMct
+;           NAME:           SetBaudMct
 ;
-;               DESCRIPTION:    Set baudrate, MCT version
+;           DESCRIPTION:    Set baudrate, MCT version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2167,7 +2173,7 @@ SetBaudMct      PROC near
     mov cx,4
     WriteUsbData
     pop es
-;        
+;    
     ReqUsbStatus
 ;    
     GetSystemTime
@@ -2197,11 +2203,11 @@ SetBaudMct Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           SendUnknownMct
+;           NAME:       SendUnknownMct
 ;
-;               description:    Send unknown message #1, MCT version
+;           description:    Send unknown message #1, MCT version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2242,7 +2248,7 @@ SendUnknownMct  Proc near
     mov cx,1
     WriteUsbData
     pop es
-;        
+;    
     ReqUsbStatus
 ;    
     GetSystemTime
@@ -2272,11 +2278,11 @@ SendUnknownMct    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           SendCtsMct
+;           NAME:       SendCtsMct
 ;
-;               description:    Send CTS control, MCT version
+;           description:    Send CTS control, MCT version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2323,7 +2329,7 @@ scmValOk:
     mov cx,1
     WriteUsbData
     pop es
-;        
+;    
     ReqUsbStatus
 ;    
     GetSystemTime
@@ -2353,11 +2359,11 @@ SendCtsMct    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           SetLineControl
+;           NAME:       SetLineControl
 ;
-;               description:    Set line control register
+;           description:    Set line control register
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2371,30 +2377,30 @@ SetLineControl  Proc near
     push bp  
 ;    
     mov al,ds:ups_data_bits
-        sub al,5
-        and al,3
+    sub al,5
+    and al,3
 ;
-        mov ah,ds:ups_stop_bits
-        dec ah
-        and ah,1
-        shl ah,2
-        or al,ah
+    mov ah,ds:ups_stop_bits
+    dec ah
+    and ah,1
+    shl ah,2
+    or al,ah
 ;
     mov ah,ds:ups_parity 
-        cmp ah,'E'
-        je slcEven
+    cmp ah,'E'
+    je slcEven
 ;       
-        cmp ah,'O'
-        je slcOdd
+    cmp ah,'O'
+    je slcOdd
 ;
-        jmp slcParityOk
+    jmp slcParityOk
 
 slcEven:
-        or al,18h
-        jmp slcParityOk
+    or al,18h
+    jmp slcParityOk
 
 slcOdd:
-        or al,8
+    or al,8
 
 slcParityOk:
     push ax    
@@ -2425,7 +2431,7 @@ slcParityOk:
     mov cx,1
     WriteUsbData
     pop es
-;        
+;    
     ReqUsbStatus
 ;    
     GetSystemTime
@@ -2455,11 +2461,11 @@ SetLineControl    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           WriteModemControl
+;           NAME:       WriteModemControl
 ;
-;               description:    Write modem control register
+;           description:    Write modem control register
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2483,7 +2489,7 @@ rmcRtsOk:
 ;
     or al,1
 
-rmcDtrOk:        
+rmcDtrOk:    
     push ax    
     mov bp,sp
 ;
@@ -2512,7 +2518,7 @@ rmcDtrOk:
     mov cx,1
     WriteUsbData
     pop es
-;        
+;    
     ReqUsbStatus
 ;    
     GetSystemTime
@@ -2542,12 +2548,12 @@ WriteModemControl    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   InitComMct
+;           NAME:           InitComMct
 ;
-;               description:    Init a serial port, MCT version
+;           description:    Init a serial port, MCT version
 ;
-;               PARAMETERS:             DS      Port selector
-;                                       ES              Device selector
+;           PARAMETERS:         DS      Port selector
+;                       ES          Device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2570,16 +2576,16 @@ InitComMct Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   open_com_mct
+;           NAME:           open_com_mct
 ;
-;               description:    Open a serial port, MCT version
+;           description:    Open a serial port, MCT version
 ;
-;               PARAMETERS:             DS      Port selector
-;                                       ES              Device selector
-;                                               AH              # of data bits
-;                                               BL              # of stop bits
-;                                               BH              parity
-;                                               ECX             baudrate
+;           PARAMETERS:         DS      Port selector
+;                       ES          Device selector
+;                           AH          # of data bits
+;                           BL          # of stop bits
+;                           BH          parity
+;                           ECX         baudrate
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2649,11 +2655,11 @@ open_com_mct Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   close_com_mct
+;           NAME:           close_com_mct
 ;
-;               description:    Close serial port, MCT version
+;           description:    Close serial port, MCT version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2665,18 +2671,18 @@ close_com_mct   Proc far
 ;
     pop bx
     pop ds    
-        ret
+    ret
 close_com_mct   Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   enable_cts_mct
+;           NAME:           enable_cts_mct
 ;
-;               DESCRIPTION:    Enable CTS signal, MCT version
+;           DESCRIPTION:    Enable CTS signal, MCT version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2695,15 +2701,15 @@ enable_cts_mct  PROC far
     ret
 enable_cts_mct Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   disable_cts_mct
+;           NAME:           disable_cts_mct
 ;
-;               DESCRIPTION:    Disable CTS signal, MCT version
+;           DESCRIPTION:    Disable CTS signal, MCT version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2726,83 +2732,83 @@ disable_cts_mct Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   set_dtr_mct
+;           NAME:           set_dtr_mct
 ;
-;               description:    Set DTR signal, MCT version
+;           description:    Set DTR signal, MCT version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_dtr_mct     Proc far
     or ds:ups_control,CONTROL_DTR
     call WriteModemControl
-        ret
+    ret
 set_dtr_mct     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   reset_dtr_mct
+;           NAME:           reset_dtr_mct
 ;
-;               description:    Reset DTR signal, MCT version
+;           description:    Reset DTR signal, MCT version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 reset_dtr_mct   Proc far
     and ds:ups_control,NOT CONTROL_DTR
     call WriteModemControl
-        ret
+    ret
 reset_dtr_mct   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   set_rts_mct
+;           NAME:           set_rts_mct
 ;
-;               description:    Set RTS signal, MCT version
+;           description:    Set RTS signal, MCT version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_rts_mct     Proc far
     or ds:ups_control,CONTROL_RTS
     call WriteModemControl
-        ret
+    ret
 set_rts_mct     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   reset_rts_mct
+;           NAME:           reset_rts_mct
 ;
-;               description:    Reset RTS signal, MCT version
+;           description:    Reset RTS signal, MCT version
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 reset_rts_mct   Proc far
     and ds:ups_control,NOT CONTROL_RTS
     call WriteModemControl
-        ret
+    ret
 reset_rts_mct   Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   EnableAutoRts
+;           NAME:           EnableAutoRts
 ;
-;               DESCRIPTION:    Enable automatic RTS on send
+;           DESCRIPTION:    Enable automatic RTS on send
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2810,31 +2816,31 @@ enable_auto_rts PROC far
     ret
 enable_auto_rts Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   DisableAutoRts
+;           NAME:           DisableAutoRts
 ;
-;               DESCRIPTION:    Disable automatic RTS on send
+;           DESCRIPTION:    Disable automatic RTS on send
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-disable_auto_rts        PROC far
+disable_auto_rts    PROC far
     ret
 disable_auto_rts Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   FlushCom
+;           NAME:           FlushCom
 ;
-;               DESCRIPTION:    Flush com
+;           DESCRIPTION:    Flush com
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2846,11 +2852,11 @@ flush_com Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   start_send
+;           NAME:           start_send
 ;
-;               description:    Start send
+;           description:    Start send
 ;
-;               PARAMETERS:             DS      Port selector
+;           PARAMETERS:         DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2866,8 +2872,8 @@ start_send      PROC far
     test es:uds_flag,FLAG_UDS_DISCONNECT
     jz ssOk
 ;
-        mov ds:send_count,0
-        jmp ssDone
+    mov ds:send_count,0
+    jmp ssDone
 
 ssOk:    
     call StartSendTimer
@@ -2875,34 +2881,34 @@ ssOk:
 ssDone:
     pop ax
     pop es    
-        ret
+    ret
 start_send      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           CreatePortFtdi
+;           NAME:       CreatePortFtdi
 ;
-;               description:    Create port selector
+;           description:    Create port selector
 ;
-;               RETURNS:                ES      Port selector
+;           RETURNS:        ES      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ftdi_port_tab:
-fpt00 DW OFFSET open_com_ftdi,              SEG code
-fpt01 DW OFFSET close_com_ftdi,         SEG code
-fpt02 DW OFFSET enable_cts_ftdi,        SEG code
+fpt00 DW OFFSET open_com_ftdi,          SEG code
+fpt01 DW OFFSET close_com_ftdi,     SEG code
+fpt02 DW OFFSET enable_cts_ftdi,    SEG code
 fpt03 DW OFFSET disable_cts_ftdi,       SEG code
-fpt04 DW OFFSET set_dtr_ftdi,           SEG code
-fpt05 DW OFFSET reset_dtr_ftdi,         SEG code
-fpt06 DW OFFSET set_rts_ftdi,           SEG code
-fpt07 DW OFFSET reset_rts_ftdi,         SEG code
-fpt08 DW OFFSET enable_auto_rts,        SEG code
+fpt04 DW OFFSET set_dtr_ftdi,       SEG code
+fpt05 DW OFFSET reset_dtr_ftdi,     SEG code
+fpt06 DW OFFSET set_rts_ftdi,       SEG code
+fpt07 DW OFFSET reset_rts_ftdi,     SEG code
+fpt08 DW OFFSET enable_auto_rts,    SEG code
 fpt09 DW OFFSET disable_auto_rts,       SEG code
-fpt10 DW OFFSET flush_com,              SEG code
-fpt11 DW OFFSET start_send,             SEG code
+fpt10 DW OFFSET flush_com,          SEG code
+fpt11 DW OFFSET start_send,         SEG code
 
 CreatePortFtdi  Proc far
     pushad
@@ -2925,38 +2931,38 @@ CreatePortFtdi  Proc far
     mov es:ups_controller,ax
     mov ax,ds:cd_device
     mov es:ups_device,ax
-;        
+;    
     popad
-        ret
+    ret
 CreatePortFtdi  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           CreatePortPl2303
+;           NAME:       CreatePortPl2303
 ;
-;               description:    Create port selector
+;           description:    Create port selector
 ;
-;               RETURNS:                ES      Port selector
+;           RETURNS:        ES      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 pl2303_port_tab:
-ppt00 DW OFFSET open_com_pl,         SEG code
-ppt01 DW OFFSET close_com_pl,        SEG code
+ppt00 DW OFFSET open_com_pl,     SEG code
+ppt01 DW OFFSET close_com_pl,    SEG code
 ppt02 DW OFFSET enable_cts_pl,       SEG code
 ppt03 DW OFFSET disable_cts_pl,      SEG code
-ppt04 DW OFFSET set_dtr_pl,          SEG code
-ppt05 DW OFFSET reset_dtr_pl,        SEG code
-ppt06 DW OFFSET set_rts_pl,          SEG code
-ppt07 DW OFFSET reset_rts_pl,        SEG code
+ppt04 DW OFFSET set_dtr_pl,      SEG code
+ppt05 DW OFFSET reset_dtr_pl,    SEG code
+ppt06 DW OFFSET set_rts_pl,      SEG code
+ppt07 DW OFFSET reset_rts_pl,    SEG code
 ppt08 DW OFFSET enable_auto_rts,     SEG code
 ppt09 DW OFFSET disable_auto_rts,    SEG code
-ppt10 DW OFFSET flush_com,           SEG code
-ppt11 DW OFFSET start_send,          SEG code
+ppt10 DW OFFSET flush_com,       SEG code
+ppt11 DW OFFSET start_send,      SEG code
 
-CreatePortPl2303        Proc far
+CreatePortPl2303    Proc far
     pushad
 ;
     mov eax,SIZE usbcom_port_struc
@@ -2977,36 +2983,36 @@ CreatePortPl2303        Proc far
     mov es:ups_controller,ax
     mov ax,ds:cd_device
     mov es:ups_device,ax
-;        
+;    
     popad
-        ret
-CreatePortPl2303        Endp
+    ret
+CreatePortPl2303    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           CreatePortMct
+;           NAME:       CreatePortMct
 ;
-;               description:    Create port selector
+;           description:    Create port selector
 ;
-;               RETURNS:                ES      Port selector
+;           RETURNS:        ES      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 mct_port_tab:
-mct00 DW OFFSET open_com_mct,               SEG code
-mct01 DW OFFSET close_com_mct,          SEG code
-mct02 DW OFFSET enable_cts_mct,         SEG code
-mct03 DW OFFSET disable_cts_mct,        SEG code
-mct04 DW OFFSET set_dtr_mct,            SEG code
-mct05 DW OFFSET reset_dtr_mct,          SEG code
-mct06 DW OFFSET set_rts_mct,            SEG code
-mct07 DW OFFSET reset_rts_mct,          SEG code
-mct08 DW OFFSET enable_auto_rts,        SEG code
+mct00 DW OFFSET open_com_mct,           SEG code
+mct01 DW OFFSET close_com_mct,      SEG code
+mct02 DW OFFSET enable_cts_mct,     SEG code
+mct03 DW OFFSET disable_cts_mct,    SEG code
+mct04 DW OFFSET set_dtr_mct,        SEG code
+mct05 DW OFFSET reset_dtr_mct,      SEG code
+mct06 DW OFFSET set_rts_mct,        SEG code
+mct07 DW OFFSET reset_rts_mct,      SEG code
+mct08 DW OFFSET enable_auto_rts,    SEG code
 mct09 DW OFFSET disable_auto_rts,       SEG code
-mct10 DW OFFSET flush_com,              SEG code
-mct11 DW OFFSET start_send,             SEG code
+mct10 DW OFFSET flush_com,          SEG code
+mct11 DW OFFSET start_send,         SEG code
 
 CreatePortMct   Proc far
     pushad
@@ -3029,21 +3035,21 @@ CreatePortMct   Proc far
     mov es:ups_controller,ax
     mov ax,ds:cd_device
     mov es:ups_device,ax
-;        
+;    
     popad
-        ret
+    ret
 CreatePortMct   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               OpenPort
+;           NAME:           OpenPort
 ;
-;               DESCRIPTION:    Open port
+;           DESCRIPTION:    Open port
 ;
 ;       PARAMETERS:     FS      SEG data
-;                       DS      Function sel
+;               DS      Function sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3100,7 +3106,7 @@ OpenPort    Proc near
     mov es,ds:uds_intr_buffer
     AddReadUsbDataReq
 
-opDone:            
+opDone:        
     ret
 OpenPort    Endp
 
@@ -3108,9 +3114,9 @@ OpenPort    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               ClosePort
+;           NAME:           ClosePort
 ;
-;               DESCRIPTION:    Close port
+;           DESCRIPTION:    Close port
 ;
 ;       PARAMETERS:     DS      Function sel
 ;
@@ -3176,9 +3182,9 @@ ClosePort   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               ReInit
+;           NAME:           ReInit
 ;
-;               DESCRIPTION:    Reinit port
+;           DESCRIPTION:    Reinit port
 ;
 ;       PARAMETERS:     DS      Function sel
 ;
@@ -3217,9 +3223,9 @@ ReInit    Proc near
     movzx ecx,bx
     AddWaitForUsbPipe
 ;
-        mov cx,es:uds_device_type
-        movzx di,ch
-        add di,di
+    mov cx,es:uds_device_type
+    movzx di,ch
+    add di,di
     call word ptr cs:[di].reinit_port_tab    
 ;
     pop di
@@ -3233,13 +3239,13 @@ ReInit  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               PollRead
+;           NAME:           PollRead
 ;
-;               DESCRIPTION:    Poll input-buffer
+;           DESCRIPTION:    Poll input-buffer
 ;
 ;       PARAMETERS:     FS      SEG data
-;                       DS      Function sel
-;                       SI      Buffer offset
+;               DS      Function sel
+;               SI      Buffer offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3248,40 +3254,40 @@ PollRead    Proc near
     push fs
     mov fs,ds:uds_in_buffer
     mov ds,ds:uds_port_sel
-        mov es,ds:rec_buf
+    mov es,ds:rec_buf
 
 prGetLoop:
-        lods byte ptr fs:[si]
-        cli
-        mov dx,ds:rec_count
-        cmp dx,ds:rec_size
-        je prSignal
+    lods byte ptr fs:[si]
+    RequestSpinlock ds:com_spinlock
+    mov dx,ds:rec_count
+    cmp dx,ds:rec_size
+    je prSignal
 ;       
-        inc dx
-        mov ds:rec_count,dx
-        mov bx,ds:rec_tail
-        mov es:[bx],al
-        inc bx
-        cmp bx,ds:rec_size
-        jnz prWrapOk
+    inc dx
+    mov ds:rec_count,dx
+    mov bx,ds:rec_tail
+    mov es:[bx],al
+    inc bx
+    cmp bx,ds:rec_size
+    jnz prWrapOk
 ;
-        xor bx,bx
-        
+    xor bx,bx
+    
 prWrapOk:
-        mov ds:rec_tail,bx
-        sti
+    mov ds:rec_tail,bx
+    ReleaseSpinlock ds:com_spinlock
     loop prGetLoop
 
 prSignal:
-    sti
+    ReleaseSpinlock ds:com_spinlock
     mov bx,ds:avail_obj
     or bx,bx
     jz prDone
 ;
     mov es,bx
     SignalWait
-        mov ds:avail_obj,0
-        
+    mov ds:avail_obj,0
+    
 prDone:
     pop fs
     pop ds
@@ -3292,12 +3298,12 @@ PollRead    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               PollWrite
+;           NAME:           PollWrite
 ;
-;               DESCRIPTION:    Poll output-buffer
+;           DESCRIPTION:    Poll output-buffer
 ;
 ;       PARAMETERS:     FS      SEG data
-;                       DS      Function sel
+;               DS      Function sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3314,49 +3320,49 @@ PollWrite    Proc near
     jnz pwDone
 ;    
     xor di,di
-        mov fs,ds:send_buf
+    mov fs,ds:send_buf
     cmp ds:uds_device_type,DEVICE_TYPE_SIO
     jne pwStartOk
 ;
     mov di,1
 
 pwStartOk:
-        mov dx,ds:send_count
-        or dx,dx
-        jz pwDone
+    mov dx,ds:send_count
+    or dx,dx
+    jz pwDone
 
 pwLoop:
-    cli
-        mov dx,ds:send_count
-        or dx,dx
-        jz pwSend
+    RequestSpinlock ds:com_spinlock
+    mov dx,ds:send_count
+    or dx,dx
+    jz pwSend
 ;       
-        dec dx
-        mov ds:send_count,dx
-        mov bx,ds:send_head
-        mov al,fs:[bx]
-        stosb
-        inc bx
-        cmp bx,ds:send_size
-        jnz pwWrapOk
+    dec dx
+    mov ds:send_count,dx
+    mov bx,ds:send_head
+    mov al,fs:[bx]
+    stosb
+    inc bx
+    cmp bx,ds:send_size
+    jnz pwWrapOk
 ;       
-        xor bx,bx
+    xor bx,bx
 
 pwWrapOk:
-        mov ds:send_head,bx
-        sti
+    mov ds:send_head,bx
+    ReleaseSpinlock ds:com_spinlock
 ;
     inc cx
     cmp cx,bp
     jb pwLoop
 
 pwSend:
-    sti
+    ReleaseSpinlock ds:com_spinlock
     mov ax,ds:send_size    
     or ax,ax
     jz pwTimerOk
 ;
-    call StartSendTimer        
+    call StartSendTimer    
 
 pwTimerOk:
     cmp ds:uds_device_type,DEVICE_TYPE_SIO
@@ -3378,12 +3384,12 @@ PollWrite   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               HandleDevice
+;           NAME:           HandleDevice
 ;
-;               DESCRIPTION:    Handle device
+;           DESCRIPTION:    Handle device
 ;
 ;       PARAMETERS:     FS      SEG data
-;                       DS      Function sel
+;               DS      Function sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3403,7 +3409,7 @@ hdOpen:
     or bx,bx
     jnz hdIsOpen
 ;
-    call OpenPort        
+    call OpenPort    
 ;
     test ds:uds_flag,FLAG_UDS_REINIT
     jz hdIsOpen    
@@ -3428,11 +3434,11 @@ hdOpenOk:
 ;    
     mov ax,ds:uds_device_type
     xor al,al
-        xor si,si
+    xor si,si
     cmp ax,DEVICE_TYPE_PL2303
     je hdPollReadDo
 ;
-        mov si,2
+    mov si,2
     sub cx,2
     jbe hdReadRestart
 
@@ -3510,9 +3516,9 @@ HandleDevice    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   UsbComThread
+;           NAME:           UsbComThread
 ;
-;               DESCRIPTION:    Com-port handler thread
+;           DESCRIPTION:    Com-port handler thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3552,7 +3558,7 @@ utDevLoop:
 utDevNext:
     add si,2
     loop utDevLoop
-;        
+;    
     jmp utLoop
 
 utEnd:
@@ -3561,14 +3567,14 @@ utEnd:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   AddPort
+;           NAME:           AddPort
 ;
-;               DESCRIPTION:    Add port to list of available ports
+;           DESCRIPTION:    Add port to list of available ports
 ;
 ;       PARAMETERS:     AL      Device address
-;                       BX      Controller id
-;                       DX      Device type
-;                       ES:DI   Interface descriptor + endpoints
+;               BX      Controller id
+;               DX      Device type
+;               ES:DI   Interface descriptor + endpoints
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3596,28 +3602,28 @@ AddPort Proc near
     or dx,dx
     jnz apThreadStarted
 ;
-        mov ds:sd_thread,-1
+    mov ds:sd_thread,-1
     push ds
     push es
     push ax
     push si
     push di    
 ;    
-        mov dx,cs
-        mov ds,dx
-        mov es,dx
-        mov di,OFFSET usbcom_thread_name
-        mov si,OFFSET usbcom_thread
-        mov ax,2
-        mov cx,stack0_size
-        CreateThread
+    mov dx,cs
+    mov ds,dx
+    mov es,dx
+    mov di,OFFSET usbcom_thread_name
+    mov si,OFFSET usbcom_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
 ;
     pop di
     pop si
     pop ax
     pop es
     pop ds
-            
+        
 apThreadStarted:
     push bx
     xor bx,bx
@@ -3686,7 +3692,7 @@ apDescrNext:
     add di,cx
     cmp di,es:ucd_size
     jb apDescrLoop    
-        
+    
 apDescrDone:
     shl ebp,16
     mov bp,bx    
@@ -3701,18 +3707,19 @@ apDescrDone:
 ;
     or ch,ch
     jz apDone
-;        
+;    
     push ax
     mov ax,ds:sd_dead_list
     or ax,ax
     pop ax
     jz apNoRecover
 ;
-    cli
+    RequestSpinlock ds:sd_spinlock
     mov es,ds:sd_dead_list
     mov dx,es:uds_link
     mov ds:sd_dead_list,dx
-    sti
+    ReleaseSpinlock ds:sd_spinlock
+;
     mov dx,es
     mov ds,dx
     EnterSection ds:uds_section
@@ -3742,14 +3749,14 @@ apNoRecover:
     mov cl,es:[di].uid_id
     push ax
     mov eax,SIZE usbcom_device_struc
-        AllocateSmallGlobalMem
-        pop ax
+    AllocateSmallGlobalMem
+    pop ax
     mov es:uds_interface,cl
-        mov es:uds_device_type,dx
-        pop dx
-        mov es:uds_port_sel,0
-        mov es:uds_bulk_in,dh
-        mov es:uds_bulk_out,dl
+    mov es:uds_device_type,dx
+    pop dx
+    mov es:uds_port_sel,0
+    mov es:uds_bulk_in,dh
+    mov es:uds_bulk_out,dl
 ;
     mov dx,si
     mov es:uds_intr_in,dl
@@ -3758,16 +3765,16 @@ apNoRecover:
     mov es:uds_out_size,bp
     shr ebp,16
     mov es:uds_in_size,bp
-        mov es:uds_in_handle,0
-        mov es:uds_in_req,0
-        mov es:uds_in_buffer,0
-        mov es:uds_out_handle,0
-        mov es:uds_out_req,0
-        mov es:uds_out_buffer,0
-        mov es:uds_intr_handle,0
-        mov es:uds_intr_buffer,0
-        mov es:uds_intr_req,0
-        mov es:uds_flag,0
+    mov es:uds_in_handle,0
+    mov es:uds_in_req,0
+    mov es:uds_in_buffer,0
+    mov es:uds_out_handle,0
+    mov es:uds_out_req,0
+    mov es:uds_out_buffer,0
+    mov es:uds_intr_handle,0
+    mov es:uds_intr_buffer,0
+    mov es:uds_intr_req,0
+    mov es:uds_flag,0
 ;
     push ds
     mov si,es
@@ -3781,9 +3788,9 @@ apNoRecover:
     inc ds:sd_ports
     mov es:uds_port_offset,si
 ;
-        mov cx,es:uds_device_type
-        movzx di,ch
-        add di,di
+    mov cx,es:uds_device_type
+    movzx di,ch
+    add di,di
     mov di,word ptr cs:[di].create_port_tab    
     mov dx,es
     mov ds,dx
@@ -3805,12 +3812,12 @@ AddPort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           AttachFTDI
+;           NAME:       AttachFTDI
 ;
-;               description:    Attach FTDI devices
+;           description:    Attach FTDI devices
 ;
-;               Parameters:     BX      Controller #
-;                       AL      Device address
+;           Parameters:     BX      Controller #
+;               AL      Device address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4013,7 +4020,7 @@ aftLoop:
 
 aftNext:
     add bp,4
-    loop aftLoop        
+    loop aftLoop    
 ;
     jmp aftDone    
 
@@ -4088,12 +4095,12 @@ AttachFTDI  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           AttachPL2303
+;           NAME:       AttachPL2303
 ;
-;               description:    Attach PL2303 devices
+;           description:    Attach PL2303 devices
 ;
-;               Parameters:     BX      Controller #
-;                       AL      Device address
+;           Parameters:     BX      Controller #
+;               AL      Device address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4159,7 +4166,7 @@ aplLoop:
 
 aplNext:
     add bp,4
-    loop aplLoop        
+    loop aplLoop    
 ;
     jmp aplDone    
 
@@ -4189,7 +4196,7 @@ aplFound:
 aplDescrType01:
     mov si,DEVICE_TYPE_PL_01
 
-aplDescrDeviceOk:        
+aplDescrDeviceOk:    
     xor dl,dl
     mov cx,1000h
     xor di,di
@@ -4234,12 +4241,12 @@ AttachPL2303  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           AttachMct
+;           NAME:       AttachMct
 ;
-;               description:    Attach MCT devices
+;           description:    Attach MCT devices
 ;
-;               Parameters:     BX      Controller #
-;                       AL      Device address
+;           Parameters:     BX      Controller #
+;               AL      Device address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4279,7 +4286,7 @@ amctLoop:
 
 amctNext:
     add bp,4
-    loop amctLoop        
+    loop amctLoop    
 ;
     jmp amctDone    
 
@@ -4342,12 +4349,12 @@ AttachMct  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           usb_attach
+;           NAME:       usb_attach
 ;
-;               description:    USB attach callback
+;           description:    USB attach callback
 ;
-;               Parameters:     BX      Controller #
-;                       AL      Device address
+;           Parameters:     BX      Controller #
+;               AL      Device address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4362,12 +4369,12 @@ usb_attach  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           usb_detach
+;           NAME:       usb_detach
 ;
-;               description:    USB detach callback
+;           description:    USB detach callback
 ;
-;               Parameters:     BX      Controller #
-;                       AL      Device address
+;           Parameters:     BX      Controller #
+;               AL      Device address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4405,11 +4412,13 @@ udCheckLoop:
     mov dx,SEG data
     mov ds,dx
     mov word ptr [si],0
-    cli
+;    
+    RequestSpinlock ds:sd_spinlock
     mov ax,ds:sd_dead_list
     mov es:uds_link,ax
     mov ds:sd_dead_list,es
-    sti
+    ReleaseSpinlock ds:sd_spinlock
+;
     mov ax,es
     mov ds,ax
     call ClosePort
@@ -4460,22 +4469,23 @@ usb_detach  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   init
+;           NAME:           init
 ;
-;               description:    Init device
+;           description:    Init device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    Proc far
-        mov bx,SEG data
-        mov es,bx
-        mov es:sd_ports,0
-        mov es:sd_thread,0
-        mov es:sd_dead_list,0
+    mov bx,SEG data
+    mov es,bx
+    mov es:sd_ports,0
+    mov es:sd_thread,0
+    mov es:sd_dead_list,0
+    InitSpinlock es:sd_spinlock
 ;       
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;
     mov edi,OFFSET usb_attach
     HookUsbAttach
@@ -4483,9 +4493,9 @@ init    Proc far
     mov edi,OFFSET usb_detach
     HookUsbDetach
     clc
-        ret
+    ret
 init    Endp
 
 code    ENDS
 
-        END init
+    END init

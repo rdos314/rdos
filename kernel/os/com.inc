@@ -116,6 +116,8 @@ send_wait       DW ?
 
 com_device      DW ?
 
+com_spinlock    spinlock_typ <>
+
 line_reserved   DB ?
 
 com_port_struc	ENDS

@@ -65,7 +65,12 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
     .386p
+ENDIF
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -221,6 +226,7 @@ open_com    Proc far
     pop es
     mov al,es:cd_line_reserved
     mov ds:line_reserved,al
+    InitSpinlock ds:com_spinlock
 ;
     pop ecx
     pop bx
@@ -463,14 +469,14 @@ flush_com       PROC far
     mov ds,[ebx].port_sel
     call ds:flush_com_proc
 ;       
-    cli
+    RequestSpinlock ds:com_spinlock
     mov ds:send_count,0
     mov ds:send_head,0
     mov ds:send_tail,0
     mov ds:rec_count,0
     mov ds:rec_head,0
     mov ds:rec_tail,0
-    sti
+    ReleaseSpinlock ds:com_spinlock
 
 flush_com_done:
     pop ebx
@@ -508,7 +514,7 @@ read_com    PROC far
     mov ds,[ebx].port_sel
     mov es,ds:rec_buf
 ;
-    cli
+    RequestSpinlock ds:com_spinlock
     mov cx,ds:rec_count
     or cx,cx
     jz com_read_no_char
@@ -522,12 +528,12 @@ read_com    PROC far
     xor bx,bx
 com_read_nix_wrap:
     mov ds:rec_head,bx
-    sti
+    ReleaseSpinlock ds:com_spinlock
     xor ah,ah
     clc
     jmp com_read_done
 com_read_no_char:
-    sti
+    ReleaseSpinlock ds:com_spinlock
     stc
     mov ax,-1
 com_read_done:
@@ -606,7 +612,7 @@ write_com       PROC far
 ;
     mov ds,[ebx].port_sel
     mov es,ds:send_buf
-    cli
+    RequestSpinlock ds:com_spinlock
     mov cx,ds:send_count
     cmp cx,ds:send_size
     je com_send_full
@@ -624,21 +630,21 @@ com_send_no_wrap:
 ;
     inc cx
     mov ds:send_count,cx
-    sti
+    ReleaseSpinlock ds:com_spinlock
     call ds:start_send_com_proc
     jmp com_send_ok_done
     
 com_send_ok:
     inc cx
     mov ds:send_count,cx
+    ReleaseSpinlock ds:com_spinlock
     
 com_send_ok_done:
-    sti
     xor ax,ax
     jmp com_send_end
     
 com_send_full:
-    sti
+    ReleaseSpinlock ds:com_spinlock
     mov ax,-1
 
 com_send_end:
