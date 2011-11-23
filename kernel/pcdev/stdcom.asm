@@ -82,7 +82,12 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
     .386p
+ENDIF
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -163,7 +168,7 @@ line_err    ENDP
 rec_pr  PROC near
     mov es,ds:rec_buf
     mov dx,ds:base
-    cli
+    RequestSpinlock ds:com_spinlock
     in al,dx
 ;    test ds:flgs, FLG_ENABLE_AUTO_RTS
 ;    jz rec_pr_save
@@ -180,6 +185,7 @@ rec_pr_save:
     mov cx,ds:rec_count
     cmp cx,ds:rec_size
     je rec_exit
+;    
     inc cx
     mov ds:rec_count,cx
     mov bx,ds:rec_tail          ; get tail pointer
@@ -192,17 +198,21 @@ rec_pr_save:
     
 rec_no_wrap:
     mov ds:rec_tail,bx
+    ReleaseSpinlock ds:com_spinlock
 ;
     mov bx,ds:avail_obj
     or bx,bx
-    jz rec_exit
+    jz rec_done
 ;
     mov es,bx
     SignalWait
     mov ds:avail_obj,0
+    jmp rec_done
     
 rec_exit:
-    sti
+    ReleaseSpinlock ds:com_spinlock
+
+rec_done:
     ret
 rec_pr  ENDP
 
@@ -267,7 +277,7 @@ rts_off Endp
 trans_pr    PROC near
     mov es,ds:send_buf
     mov dx,ds:base
-    cli
+    RequestSpinlock ds:com_spinlock
     mov cx,ds:send_count
     or cx,cx                    ;  buffer empty ?
     jnz trans_not_empty
@@ -276,6 +286,7 @@ trans_end:
     mov al,IER_BITS + 1
     inc dx
     out dx,al
+    ReleaseSpinlock ds:com_spinlock
 ;
     test ds:flgs, FLG_ENABLE_AUTO_RTS
     jz trans_signal_wait
@@ -322,8 +333,9 @@ trans_send:
     xor bx,bx
 trans_not_wrap:
     mov ds:send_head,bx
+    ReleaseSpinlock ds:com_spinlock
+
 trans_exit:
-    sti
     ret
 trans_pr    ENDP
 
@@ -420,11 +432,11 @@ open_com    Proc far
     push si
 ;
     push ax
-    cli
+    RequestSpinlock ds:com_spinlock
     mov es:pds_handle,ds
     mov ds:dev_handle,es
     mov ds:flgs,0
-    sti
+    ReleaseSpinlock ds:com_spinlock
     pop ax
 ;
     mov dl,ah
@@ -679,12 +691,12 @@ flush_com   PROC far
     push ax
     push dx
 ;
-    cli
+    RequestSpinlock ds:com_spinlock
     mov dx,ds:base
     mov al,IER_BITS + 1
     inc dx
     out dx,al
-    sti
+    ReleaseSpinlock ds:com_spinlock
 ;   
     pop dx
     pop ax
@@ -707,7 +719,14 @@ start_send  PROC far
     push ax
     push dx
 ;
-    cli    
+    test ds:flgs, FLG_ENABLE_AUTO_RTS
+    jz com_send_timer_stopped
+;
+    mov bx,ds
+    StopTimer
+
+com_send_timer_stopped:
+    RequestSpinlock ds:com_spinlock
     test ds:flgs, FLG_ENABLE_CTS
     jz com_send_enable
 ;
@@ -720,9 +739,6 @@ start_send  PROC far
 com_send_enable:
     test ds:flgs, FLG_ENABLE_AUTO_RTS
     jz com_send_start
-;
-    mov bx,ds
-    StopTimer
 ;   
     mov dx,ds:base
     add dx,4
@@ -737,7 +753,7 @@ com_send_start:
     out dx,al
     
 com_send_ok:
-    sti
+    ReleaseSpinlock ds:com_spinlock
     pop dx
     pop ax
     ret

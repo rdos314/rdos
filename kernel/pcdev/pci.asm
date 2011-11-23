@@ -34,11 +34,18 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE pci.inc
 
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
     .386p
+ENDIF
 
 MAX_PCI_DEVICES = 256
 
 data    SEGMENT byte public 'DATA'
+
+pci_spinlock        spinlock_typ <>
 
 pci_init_hooks		DW ?
 pci_init_hook_arr	DD 32 DUP(?,?)
@@ -98,10 +105,14 @@ hook_init_pci   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetPciBusCount  Proc near
+    push ds
     push ebx
     push ecx
     push dx
 ;
+    mov ax,SEG data
+    mov ds,ax
+;    
     mov ebx,80000000h
     mov ecx,80000000h
 
@@ -109,11 +120,11 @@ get_pci_bus_count_loop:
     mov eax,ecx
     mov dx,0CF8h
     and al,0FCh
-    cli
+    RequestSpinlock ds:pci_spinlock
     out dx,eax
     mov dx,0CFCh
     in eax,dx
-    sti
+    ReleaseSpinlock ds:pci_spinlock
     cmp ax,-1
     je get_pci_bus_count_next
     shr eax,16
@@ -132,6 +143,7 @@ get_pci_bus_count_next:
     pop dx
     pop ecx
     pop ebx
+    pop ds
     ret
 GetPciBusCount  Endp
 
@@ -154,10 +166,14 @@ GetPciBusCount  Endp
 read_pci_byte_name      DB 'Read PCI byte',0
 
 read_pci_byte   Proc far
+    push ds
     push bx
     push ecx
     push dx
 ;
+    mov ax,SEG data
+    mov ds,ax
+;    
     mov al,bh
     mov ah,80h
     shl eax,16
@@ -168,17 +184,18 @@ read_pci_byte   Proc far
 ;
     and al,0FCh
     mov dx,0CF8h
-    cli
+    RequestSpinlock ds:pci_spinlock
     out dx,eax
     mov dx,0CFCh
     and cl,3
     or dl,cl
     in al,dx
-    sti
+    ReleaseSpinlock ds:pci_spinlock
 ;
     pop dx
     pop ecx
     pop bx
+    pop ds
     retf32
 read_pci_byte   Endp
 
@@ -200,12 +217,15 @@ read_pci_byte   Endp
 write_pci_byte_name     DB 'Write PCI byte',0
 
 write_pci_byte  Proc far
+    push ds
     push eax
     push bx
     push ecx
     push dx
 ;
     push ax
+    mov ax,SEG data
+    mov ds,ax
     mov al,bh
     mov ah,80h
     shl eax,16
@@ -216,19 +236,20 @@ write_pci_byte  Proc far
 ;
     and al,0FCh
     mov dx,0CF8h
-    cli
+    RequestSpinlock ds:pci_spinlock
     out dx,eax
     mov dx,0CFCh
     and cl,3
     or dl,cl
     pop ax
     out dx,al
-    sti
+    ReleaseSpinlock ds:pci_spinlock
 ;
     pop dx
     pop ecx
     pop bx
     pop eax
+    pop ds
     retf32
 write_pci_byte  Endp
 
@@ -251,10 +272,13 @@ write_pci_byte  Endp
 read_pci_word_name      DB 'Read PCI word',0
 
 read_pci_word   Proc far
+    push ds
     push bx
     push ecx
     push dx
 ;
+    mov ax,SEG data
+    mov ds,ax
     mov al,bh
     mov ah,80h
     shl eax,16
@@ -265,17 +289,18 @@ read_pci_word   Proc far
 ;
     and al,0FCh
     mov dx,0CF8h
-    cli
+    RequestSpinlock ds:pci_spinlock
     out dx,eax
     mov dx,0CFCh
     and cl,2
     or dl,cl
     in ax,dx
-    sti
+    ReleaseSpinlock ds:pci_spinlock
 ;
     pop dx
     pop ecx
     pop bx
+    pop ds
     retf32
 read_pci_word   Endp
 
@@ -297,12 +322,15 @@ read_pci_word   Endp
 write_pci_word_name     DB 'Write PCI word',0
 
 write_pci_word  Proc far
+    push ds
     push eax
     push bx
     push ecx
     push dx
 ;
     push ax
+    mov ax,SEG data
+    mov ds,ax
     mov al,bh
     mov ah,80h
     shl eax,16
@@ -313,19 +341,20 @@ write_pci_word  Proc far
 ;
     mov dx,0CF8h
     and al,0FCh
-    cli
+    RequestSpinlock ds:pci_spinlock
     out dx,eax
     mov dx,0CFCh
     and cl,2
     or dl,cl
     pop ax
     out dx,ax
-    sti
+    ReleaseSpinlock ds:pci_spinlock
 ;
     pop dx
     pop ecx
     pop bx
     pop eax
+    pop ds
     retf32
 write_pci_word  Endp
 
@@ -348,9 +377,13 @@ write_pci_word  Endp
 read_pci_dword_name     DB 'Read PCI dword',0
 
 read_pci_dword  Proc far
+    push ds
     push bx
     push ecx
     push dx
+;
+    mov ax,SEG data
+    mov ds,ax
 ;
     mov al,bh
     mov ah,80h
@@ -361,15 +394,16 @@ read_pci_dword  Proc far
     mov al,cl
 ;
     mov dx,0CF8h
-    cli
+    RequestSpinlock ds:pci_spinlock
     out dx,eax
     mov dx,0CFCh
     in eax,dx
-    sti
+    ReleaseSpinlock ds:pci_spinlock
 ;
     pop dx
     pop ecx
     pop bx
+    pop ds
     retf32
 read_pci_dword  Endp
 
@@ -391,12 +425,15 @@ read_pci_dword  Endp
 write_pci_dword_name    DB 'Write PCI dword',0
 
 write_pci_dword Proc far
+    push ds
     push eax
     push bx
     push ecx
     push dx
 ;
     push eax
+    mov ax,SEG data
+    mov ds,ax
     mov al,bh
     mov ah,80h
     shl eax,16
@@ -406,17 +443,18 @@ write_pci_dword Proc far
     mov al,cl
 ;
     mov dx,0CF8h
-    cli
+    RequestSpinlock ds:pci_spinlock
     out dx,eax
     mov dx,0CFCh
     pop eax
     out dx,eax
-    sti
+    ReleaseSpinlock ds:pci_spinlock
 ;
     pop dx
     pop ecx
     pop bx
     pop eax
+    pop ds
     retf32
 write_pci_dword Endp
    
@@ -562,11 +600,11 @@ find_pci_class_loop:
     mov eax,ds:[si+4]
     mov dx,0CF8h
     mov al,8
-    cli
+    RequestSpinlock ds:pci_spinlock
     out dx,eax
     mov dx,0CFCh
     in eax,dx
-    sti
+    ReleaseSpinlock ds:pci_spinlock
     xor al,al
     cmp eax,ebx
     jne find_pci_class_next 
@@ -638,11 +676,11 @@ find_pci_class_all_loop:
     mov eax,ds:[si+4]
     mov dx,0CF8h
     mov al,8
-    cli
+    RequestSpinlock ds:pci_spinlock
     out dx,eax
     mov dx,0CFCh
     in eax,dx
-    sti
+    ReleaseSpinlock ds:pci_spinlock
     shr eax,16
     cmp ax,bx
     jne find_pci_class_all_next     
@@ -938,11 +976,11 @@ init_pci_device_loop:
     mov eax,ecx
     mov dx,0CF8h
     and al,0FCh
-    cli
+    RequestSpinlock es:pci_spinlock
     out dx,eax
     mov dx,0CFCh
     in eax,dx
-    sti
+    ReleaseSpinlock es:pci_spinlock
 ;       
     or eax,eax
     jz init_pci_next
@@ -1054,6 +1092,7 @@ init    Proc far
     mov di,OFFSET pci_device_arr
     rep stosd
     mov ds:pci_init_hooks,0
+    InitSpinlock ds:pci_spinlock
 ;
     call init_pci_devices
 ;
