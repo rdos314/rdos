@@ -759,7 +759,7 @@ InitDrive       Proc near
     mov ah,27
     jnc InitDriveOk
     xor al,al
-    int 3
+;    int 3
     stc
 InitDriveOk:
     mov ds:[bx].Gap,al
@@ -1320,8 +1320,11 @@ read_boot_sector_done:
     mov ecx,1000h
     FreeLinear
     popf
+    jc read_boot_sector_end
+;    
     mov ds:[bx].BootValid,1
-;
+
+read_boot_sector_end:
     pop edi
     pop esi
     pop edx
