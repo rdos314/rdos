@@ -106,6 +106,7 @@ sHead           DB ?
 sSector         DB ?
 sBytesPerSector DB ?
 
+FloppySpinlock  spinlock_typ <>
 FloppySection   section_typ <>
 
 data    ENDS
@@ -116,7 +117,12 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
-.386p
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
+    .386p
+ENDIF
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -254,7 +260,6 @@ ExecutePhase   Proc near
     jnz ExecutePhaseDone
     stc
 ExecutePhaseDone:
-    sti
     pop di
     pop dx
     pop ax
@@ -476,7 +481,6 @@ ExecuteSensePhase   Proc near
     stc
     jz ExecuteSenseDone
 ExecuteSenseCmd:
-    sti
     call SenseIntCmd
 ExecuteSenseDone:
     pop di
@@ -786,16 +790,17 @@ SelectDrive     Proc near
     mov cl,al
     mov ah,10h
     rol ah,cl
-    cli
+;
+    RequestSpinlock ds:FloppySpinlock
     mov al,ds:DriveControl
     test al,ah
     jnz SelectDriveMotorOn
 ;
-    sti
+    ReleaseSpinlock ds:FloppySpinlock
     call ResetController
     jc SelectDriveDone
 ;
-    cli
+    RequestSpinlock ds:FloppySpinlock
     mov ds:[bx].MotorCount,255
     mov al,ds:DriveControl
     and al,0F0h
@@ -804,20 +809,25 @@ SelectDrive     Proc near
     mov ds:DriveControl,al
     mov dx,3F2h
     out dx,al
-    sti
+    ReleaseSpinlock ds:FloppySpinlock
+;
     mov ax,MotorOnWait
     WaitMilliSec
+;    
+    RequestSpinlock ds:FloppySpinlock
     mov al,ds:DriveControl
     jmp SelectDriveInit
 
 SelectDriveMotorOn:
-    cli
     mov al,ds:DriveControl
     mov ah,al
     and ah,3
     cmp ah,cl
     clc
-    je SelectDriveDone
+    jne SelectDriveInit
+;    
+    ReleaseSpinlock ds:FloppySpinlock
+    jmp SelectDriveDone
 
 SelectDriveInit:
     and al,NOT 3
@@ -825,7 +835,8 @@ SelectDriveInit:
     mov dx,3F2h
     out dx,al
     mov ds:DriveControl,al
-    sti
+    ReleaseSpinlock ds:FloppySpinlock
+;
     mov ax,100
     WaitMicroSec
     mov al,ds:[bx].Gap
@@ -834,15 +845,17 @@ SelectDriveInit:
     jnz SelectDriveRecal
     call InitDrive
     jc SelectDriveDone
+
 SelectDriveRecal:
     mov ax,100
     WaitMilliSec
     mov al,bl
     call RecalibrateCmd
     jnc SelectDriveDone
+
     call RecalibrateCmd
+
 SelectDriveDone:
-    sti
     mov ds:[bx].MotorCount,25
     pop dx
     pop cx
@@ -907,7 +920,8 @@ setup_dma_inrange:
     mov edx,eax
     pop eax
     pop es
-    cli
+;
+    RequestSpinlock ds:FloppySpinlock    
     out 0Ch,al
     jcxz short $+2
     jcxz short $+2
@@ -939,7 +953,8 @@ setup_dma_inrange:
     jcxz short $+2
     mov al,2
     out 0Ah,al
-    sti
+    ReleaseSpinlock ds:FloppySpinlock    
+;
     pop edx
     pop ax
     ret
@@ -1105,12 +1120,14 @@ ReadDriveRetry:
     mov ds:cTrack,-1
     push ax
     push dx
-    cli
+;    
+    RequestSpinlock ds:FloppySpinlock
     mov al,0Ch
     mov ds:DriveControl,al
     mov dx,3F2h
     out dx,al
-    sti
+    ReleaseSpinlock ds:FloppySpinlock
+;    
     pop dx
     pop ax
     sub si,1
@@ -1178,12 +1195,14 @@ WriteDriveRetry:
     mov ds:cTrack,-1
     push ax
     push dx
-    cli
+;
+    RequestSpinlock ds:FloppySpinlock
     mov al,0Ch
     mov ds:DriveControl,al
     mov dx,3F2h
     out dx,al
-    sti
+    ReleaseSpinlock ds:FloppySpinlock
+;    
     pop dx
     pop ax
     sub si,1
@@ -1612,23 +1631,24 @@ floppy_super_loop:
     mov cx,4
     mov ah,NOT 10h
 floppy_super_motor_loop:
-    cli
+    RequestSpinlock ds:FloppySpinlock
     mov al,ds:[bx].MotorCount
     or al,al
     jz floppy_super_motor_next
+;
     sub al,1
     mov ds:[bx].MotorCount,al
-    sti
     jnz floppy_super_motor_next
-    cli
+;    
     mov al,ds:DriveControl
     and al,ah
     mov dx,3F2h
     mov al,0
     out dx,al
     mov ds:DriveControl,al
+
 floppy_super_motor_next:
-    sti
+    ReleaseSpinlock ds:FloppySpinlock
     inc bx
     shl ah,1
     loop floppy_super_motor_loop
@@ -1637,7 +1657,7 @@ floppy_super_motor_next:
     or bx,bx
     jz floppy_super_wait
 ;
-    cli
+    RequestSpinlock ds:FloppySpinlock
     mov al,ds:IntFlag
     or al,al
     jnz floppy_super_signal
@@ -1645,13 +1665,17 @@ floppy_super_motor_next:
     mov al,ds:TimeoutCount
     sub al,1
     mov ds:TimeoutCount,al
-    jnz floppy_super_wait
+    jnz floppy_super_wait_release
 
 floppy_super_signal:
+    ReleaseSpinlock ds:FloppySpinlock
     Signal
+    jmp floppy_super_wait
+
+floppy_super_wait_release:
+    ReleaseSpinlock ds:FloppySpinlock
 
 floppy_super_wait:
-    sti
     mov ax,100
     WaitMilliSec
     jmp floppy_super_loop
@@ -2082,6 +2106,7 @@ init    PROC far
     mov ax,SEG data
     mov ds,ax
     InitSection ds:FloppySection    
+    InitSpinlock ds:FloppySpinlock
 ;
     mov ax,cs
     mov ds,ax
