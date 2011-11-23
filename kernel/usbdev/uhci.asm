@@ -1,4 +1,4 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; RDOS operating system
 ; Copyright (C) 1988-2000, Leif Ekblad
 ;
@@ -78,6 +78,7 @@ uhc_period_td    DD ?
 uhc_io_base      DW ?
 
 uhc_pipe_list    DW ?
+uhc_spinlock     spinlock_typ <>
 
 uhc_pci_bus_dev  DW ?
 uhc_pci_func     DB ?
@@ -156,7 +157,12 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
-.386p
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
+    .386p
+ENDIF
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -171,7 +177,9 @@ code    SEGMENT byte public 'CODE'
 
 UpdatePipeList  Proc near
     push ax
-;    
+
+uplLoop:
+    RequestSpinlock ds:uhc_spinlock
     mov ax,ds:uhc_pipe_list
     or ax,ax
     jz uplDone
@@ -188,7 +196,7 @@ UpdatePipeList  Proc near
     mov ax,flat_sel
     mov es,ax
 
-uplLoop:
+uplElemLoop:
     mov edx,fs:usp_qh
     or edx,edx
     jz uplNext
@@ -202,13 +210,23 @@ uplLoop:
 ;    
     xor bx,bx
     xchg bx,fs:usp_signal
+    or bx,bx
+    jz uplNext
+;
+    ReleaseSpinlock ds:uhc_spinlock    
     Signal
+    pop di
+    pop dx
+    pop ebx
+    pop fs
+    pop es    
+    jmp uplLoop
 
 uplNext:    
     mov ax,fs:usp_next
     mov fs,ax
     cmp ax,di
-    jne uplLoop
+    jne uplElemLoop
 ;
     pop di
     pop dx
@@ -217,10 +235,10 @@ uplNext:
     pop es    
 
 uplDone:    
+    ReleaseSpinlock ds:uhc_spinlock
     pop ax
     ret
 UpdatePipeList  Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -355,6 +373,7 @@ FreeBlock32     ENDP
 
 InsertPipe  Proc near
     push di
+    RequestSpinlock ds:uhc_spinlock
     mov di,ds:uhc_pipe_list
     or di,di
     je ipEmpty
@@ -362,14 +381,12 @@ InsertPipe  Proc near
     push ds
     push si
     mov ds,di
-    cli
     mov si,ds:usp_prev
     mov ds:usp_prev,fs
     mov ds,si
     mov ds:usp_next,fs
     mov fs:usp_next,di
     mov fs:usp_prev,si
-    sti
     pop si
     pop ds
     pop di
@@ -382,6 +399,7 @@ ipEmpty:
     mov ds:uhc_pipe_list,fs
 
 ipDone:
+    ReleaseSpinlock ds:uhc_spinlock
     mov fs:usp_signal,0
     ret
 InsertPipe  Endp
@@ -403,6 +421,7 @@ RemovePipe  Proc near
     push si
     push di
 ;       
+    RequestSpinlock ds:uhc_spinlock
     push ds
     mov si,fs:usp_prev
     mov di,fs:usp_next
@@ -426,6 +445,7 @@ rpEmpty:
     mov ds:uhc_pipe_list,0    
 
 rpDone:
+    ReleaseSpinlock ds:uhc_spinlock
     pop di
     pop si
     ret
@@ -2500,6 +2520,8 @@ AddFunction  Proc near
     mov ds:uhc_io_base,dx
     mov ds:uhc_pci_bus_dev,bx
     mov ds:uhc_pci_func,ch
+    mov ds:uhc_pipe_list,0
+    InitSpinlock ds:uhc_spinlock
 ;    
     mov eax,1000h
     AllocateBigLinear
