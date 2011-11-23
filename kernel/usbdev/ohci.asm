@@ -142,6 +142,8 @@ ohc_bulk_linear     DD ?
 ohc_pipe_list       DW ?
 ohc_reclaim_list    DD ?
 
+ohc_spinlock        spinlock_typ <>
+
 ohc_reset           DW ?
 
 ohc_section     section_typ <>
@@ -202,7 +204,12 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
-.386p
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
+    .386p
+ENDIF
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -350,6 +357,8 @@ FreeBlock32     ENDP
 
 InsertPipe  Proc near
     push di
+    RequestSpinlock ds:ohc_spinlock
+;
     mov di,ds:ohc_pipe_list
     or di,di
     je ipEmpty
@@ -357,14 +366,12 @@ InsertPipe  Proc near
     push ds
     push si
     mov ds,di
-    cli
     mov si,ds:osp_prev
     mov ds:osp_prev,fs
     mov ds,si
     mov ds:osp_next,fs
     mov fs:osp_next,di
     mov fs:osp_prev,si
-    sti
     pop si
     pop ds
     pop di
@@ -380,6 +387,7 @@ ipDone:
     mov fs:osp_data_list,0
     mov fs:osp_signal,0
     mov fs:osp_flags,0
+    ReleaseSpinlock ds:ohc_spinlock
     ret
 InsertPipe  Endp
 
@@ -400,6 +408,7 @@ RemovePipe  Proc near
     push si
     push di
 ;       
+    RequestSpinlock ds:ohc_spinlock
     push ds
     mov si,fs:osp_prev
     mov di,fs:osp_next
@@ -423,6 +432,7 @@ rpEmpty:
     mov ds:ohc_pipe_list,0    
 
 rpDone:
+    ReleaseSpinlock ds:ohc_spinlock
     pop di
     pop si
     ret
@@ -2321,11 +2331,12 @@ UpdatePort   Proc near
     push edx
     mov ax,flat_sel
     mov es,ax
-    cli
+;    
+    RequestSpinlock ds:ohc_spinlock
     mov edx,ds:ohc_reclaim_list
     mov ecx,es:[edx].otd_next_va
     mov ds:ohc_reclaim_list,ecx
-    sti
+    ReleaseSpinlock ds:ohc_spinlock
 ;    
     mov ax,es:[edx].otd_pipe_sel
     or ax,ax
@@ -2701,6 +2712,7 @@ AddFunction  Proc near
     mov cx,400h
     rep stosd
 ;
+    InitSpinlock ds:ohc_spinlock
     mov ds:ohc_pipe_list,0
     mov ds:ohc_reclaim_list,0
     mov ds:ohc_reset,0

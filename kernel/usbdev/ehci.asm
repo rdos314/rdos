@@ -90,6 +90,8 @@ ehc_section     section_typ <>
 ehc_pipe_list       DW ?
 ehc_async_head_va   DD ?
 
+ehc_spinlock        spinlock_typ <>
+
 ehci_func_sel    ENDS
 
 ehci_pipe   STRUC
@@ -180,7 +182,12 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
-.386p
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
+    .386p
+ENDIF
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -283,6 +290,7 @@ FreeBlock64     ENDP
 
 InsertPipe  Proc near
     push di
+    RequestSpinlock ds:ehc_spinlock
     mov di,ds:ehc_pipe_list
     or di,di
     je ipEmpty
@@ -290,14 +298,12 @@ InsertPipe  Proc near
     push ds
     push si
     mov ds,di
-    cli
     mov si,ds:esp_prev
     mov ds:esp_prev,fs
     mov ds,si
     mov ds:esp_next,fs
     mov fs:esp_next,di
     mov fs:esp_prev,si
-    sti
     pop si
     pop ds
     pop di
@@ -310,6 +316,7 @@ ipEmpty:
     mov ds:ehc_pipe_list,fs
 
 ipDone:
+    ReleaseSpinlock ds:ehc_spinlock
     ret
 InsertPipe  Endp
 
@@ -330,6 +337,7 @@ RemovePipe  Proc near
     push si
     push di
 ;       
+    RequestSpinlock ds:ehc_spinlock
     push ds
     mov si,fs:esp_prev
     mov di,fs:esp_next
@@ -353,6 +361,7 @@ rpEmpty:
     mov ds:ehc_pipe_list,0    
 
 rpDone:
+    ReleaseSpinlock ds:ehc_spinlock
     pop di
     pop si
     ret
@@ -1531,6 +1540,7 @@ AddFunction  Proc near
     mov ds:ehc_map_sel,bx
     mov ds:ehc_pipe_list,0
     mov ds:ehc_async_head_va,0
+    InitSpinlock ds:ehc_spinlock
 ;
     mov es,bp
     mov cl,es:hcp_CAPLEN
