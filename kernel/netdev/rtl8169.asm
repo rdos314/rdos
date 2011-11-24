@@ -665,9 +665,14 @@ get_buffer_save_curr:
 ;
     mov ax,es:[bx].tx_size
     or ax,ax
-    stc
-    jnz get_buffer_done
+    jz get_buffer_take
 ;
+    xor ax,ax
+    mov es,ax    
+    stc
+    jmp get_buffer_done
+
+get_buffer_take:
     add cx,14
     mov es:[bx].tx_size,cx
     mov edx,ds:[si]

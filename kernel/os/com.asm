@@ -608,7 +608,7 @@ write_com       PROC far
     mov ax,SERIAL_HANDLE
     DerefHandle
     pop ax
-    jc com_send_full
+    jc com_send_fail
 ;
     mov ds,[ebx].port_sel
     mov es,ds:send_buf
@@ -645,6 +645,8 @@ com_send_ok_done:
     
 com_send_full:
     ReleaseSpinlock ds:com_spinlock
+
+com_send_fail:
     mov ax,-1
 
 com_send_end:
