@@ -1209,10 +1209,10 @@ glob_ptab_init:
     mov ax,sim_get_flags_nr
     RegisterOsGate
 ;
-    mov si,OFFSET debug_break
-    mov di,OFFSET debug_break_name
+    mov si,OFFSET debug_exc_break
+    mov di,OFFSET debug_exc_break_name
     xor cl,cl
-    mov ax,debug_break_nr
+    mov ax,debug_exc_break_nr
     RegisterOsGate
 ;
     mov si,OFFSET enter_section
@@ -8264,9 +8264,9 @@ check_list      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-debug_break_name    DB 'Debug Break',0
+debug_exc_break_name    DB 'Debug Exc Break',0
 
-debug_break:
+debug_exc_break:
     DebugException
 
     

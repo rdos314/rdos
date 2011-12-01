@@ -1027,8 +1027,8 @@ LockedDebugException    MACRO
     OsGate locked_debug_exception_nr
                         ENDM
 
-DebugBreak      MACRO
-    OsGate debug_break_nr
+DebugExcBreak      MACRO
+    OsGate debug_exc_break_nr
                     ENDM
 
 ; OUT AX           Thread ID

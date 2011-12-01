@@ -87,7 +87,7 @@
 #define osgate_cond_enter_section 88
 #define osgate_start_timer 89
 #define osgate_stop_timer 90
-#define osgate_debug_break 92
+#define osgate_debug_exc_break 92
 #define osgate_hook_create_thread 93
 #define osgate_hook_create_process 94
 #define osgate_hook_terminate_thread 95
@@ -570,7 +570,7 @@
 #define OsGate_cond_enter_section 0x3E 0x67 0x9a 88 0 0 0 2 0
 #define OsGate_start_timer 0x3E 0x67 0x9a 89 0 0 0 2 0
 #define OsGate_stop_timer 0x3E 0x67 0x9a 90 0 0 0 2 0
-#define OsGate_debug_break 0x3E 0x67 0x9a 92 0 0 0 2 0
+#define OsGate_debug_exc_break 0x3E 0x67 0x9a 92 0 0 0 2 0
 #define OsGate_hook_create_thread 0x3E 0x67 0x9a 93 0 0 0 2 0
 #define OsGate_hook_create_process 0x3E 0x67 0x9a 94 0 0 0 2 0
 #define OsGate_hook_terminate_thread 0x3E 0x67 0x9a 95 0 0 0 2 0
