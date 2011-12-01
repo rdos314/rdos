@@ -43,6 +43,8 @@ INCLUDE ..\os.inc
     extrn init_wait:near
     extrn init_swap:near
     extrn init_io:near
+    extrn init_app:near
+    extrn init_ldt:near
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -60,6 +62,8 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
+    call init_ldt
+    call init_app
     call init_io
     call init_swap
     call init_cpu_gates

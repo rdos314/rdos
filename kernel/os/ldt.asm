@@ -62,6 +62,7 @@ init_ldt    PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
+;    
     mov esi,OFFSET allocate_ldt
     mov edi,OFFSET allocate_name
     xor cl,cl

@@ -64,8 +64,6 @@ sim_ret     EQU 2
 
 code    SEGMENT byte public use16 'CODE'
 
-    extrn create_ldt:near
-
     extrn set_flags:near
     extrn get_flags:near
     extrn allocate_switch_stack:near

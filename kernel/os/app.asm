@@ -101,6 +101,9 @@ init_app    PROC near
     xor esi,esi
     xor edi,edi
 ;
+    mov di,OFFSET init_process
+    HookCreateProcess
+;
     mov si,OFFSET open_app
     mov di,OFFSET open_app_name
     xor cl,cl
@@ -459,21 +462,19 @@ run_open_hooks  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           init_process_app
+;           NAME:           init_process
 ;
 ;           DESCRIPTION:    Init per-process data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public init_process_app
-
-init_process_app    PROC near
+init_process    PROC far
     call create_ldt
     mov al,16
     SetBitness
     call run_open_hooks
-    ret
-init_process_app    ENDP
+    retf32
+init_process    ENDP
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
