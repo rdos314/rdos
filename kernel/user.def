@@ -552,4 +552,6 @@ get_acpi_object_nr              = 446
 
 write_attrib_string_nr          = 447
 
+debug_break_nr                  = 448
+
 usergate_entries			= 460

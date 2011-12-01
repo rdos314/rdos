@@ -1107,6 +1107,12 @@ glob_ptab_init:
     mov ax,power_failure_nr
     RegisterBimodalUserGate
 ;
+;    mov si,OFFSET debug_break
+;    mov di,OFFSET debug_break_name
+;    xor dx,dx
+;    mov ax,debug_break_nr
+;    RegisterBimodalUserGate
+;
     mov si,OFFSET get_thread_pr
     mov di,OFFSET get_thread_name
     xor dx,dx
@@ -4293,6 +4299,36 @@ debug_block_do:
     mov es:p_sleep_sel,ds
     mov es:p_sleep_offset,edi
     jmp LoadThread        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           DebugBreak
+;
+;           DESCRIPTION:    Put current thread in debugger
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+debug_break_name   DB 'Debug Bread',0
+
+db_eax   EQU -8
+db_fs    EQU -4
+db_ds    EQU -2
+db_bp    EQU 0
+db_eip   EQU 2
+db_cs    EQU 6
+db_esp   EQU 10
+db_ss    EQU 14 
+
+debug_break:
+    int 3
+;    push bp
+;    push ds
+;    push fs
+;    push eax
+;    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

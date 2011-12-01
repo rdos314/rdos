@@ -975,6 +975,10 @@ DeleteIni	MACRO
 
 ;;;;;;;;;;;;;; DEBUGGING ;;;;;;;;;;;
 
+DebugBreak      MACRO
+	UserGate debug_break_nr
+						ENDM
+
 ; OUT AX               Thread ID
 ;GetDebugThread MACRO
 ;	UserGate get_debug_thread_nr
