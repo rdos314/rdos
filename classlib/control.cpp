@@ -2628,7 +2628,7 @@ void TDisplayControlThread::Add(TKeyboardDevice *Keyboard)
 void TDisplayControlThread::Add(TMouseDevice *Mouse)
 {
     FMouse = Mouse;
-
+    
     Mouse->Owner = this;
     Mouse->OnMove = MouseMove;
         Mouse->OnLeftUp = LeftUp;

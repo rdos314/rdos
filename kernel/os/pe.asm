@@ -2371,7 +2371,16 @@ load_object     Proc far
     mov ax,es
     mov ds,ax
     EnterSection ds:mod_section
+;
+    mov ax,process_page_sel
+    mov ds,ax
+    mov eax,edx
+    add eax,ecx
+    shr eax,10
+    mov eax,[eax]
     pop ds
+    test al,1
+    jnz load_object_leave
 ;
     xor eax,eax
     mov ebp,edx
