@@ -1777,10 +1777,10 @@ is_debug_event_idle Endp
 add_wait_for_debug_event_name   DB 'Add Wait For Debug Event',0
 
 add_wait_tab:
-aw0 DD OFFSET start_wait_for_debug_event,   kernel_code
-aw1 DD OFFSET stop_wait_for_debug_event,    kernel_code
-aw2 DD OFFSET dummy_clear_debug_event,      kernel_code
-aw3 DD OFFSET is_debug_event_idle,          kernel_code
+aw0 DD OFFSET start_wait_for_debug_event,   util_code_sel
+aw1 DD OFFSET stop_wait_for_debug_event,    util_code_sel
+aw2 DD OFFSET dummy_clear_debug_event,      util_code_sel
+aw3 DD OFFSET is_debug_event_idle,          util_code_sel
 
 add_wait_for_debug_event    PROC far
     push ds
