@@ -1060,7 +1060,8 @@ DriverName2     DB 'RTL8169-2',0
 PciVendorTab:
 pci00   DW 10ECh, 8129h
 pci01   DW 1186h, 4300h
-pci02   DW 0,     0
+pci02   DW 10ECh, 8168h
+pci03   DW 0,     0
 
 InitPrimaryPciAdapter   Proc near
     mov bp,ax
