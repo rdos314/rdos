@@ -355,6 +355,7 @@ int RDOSAPI RdosGetDeviceInfo(int CodeSel, char *Name, unsigned int *CodeSize, u
 
 int RDOSAPI RdosGetSelectorInfo(int CodeSel, int *Limit, int *Bitness);
 
+int RDOSAPI RdosHasHardReset();
 void RDOSAPI RdosSoftReset();
 void RDOSAPI RdosHardReset();
 int RDOSAPI RdosPowerFailure();
@@ -1434,6 +1435,11 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_suspend_and_signal_thread  \
     CarryToBool \
     parm [eax] \
+    value [eax];
+
+#pragma aux RdosHasHardReset = \
+    CallGate_has_hard_reset \
+    CarryToBool \
     value [eax];
 
 #pragma aux RdosSoftReset = \

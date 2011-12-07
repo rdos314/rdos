@@ -554,6 +554,8 @@
 
 #define usergate_debug_break 448
 
+#define usergate_has_hard_reset 449
+
 
 
 #ifdef __FLAT__
@@ -1113,6 +1115,8 @@
 
 #define CallGate_debug_break 0x67 0x9a 192 1 0 0 3 0
 
+#define CallGate_has_hard_reset 0x67 0x9a 193 1 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1669,5 +1673,7 @@
 #define CallGate_write_attrib_string 0x3e 0x67 0x9a 191 1 0 0 3 0
 
 #define CallGate_debug_break 0x3e 0x67 0x9a 192 1 0 0 3 0
+
+#define CallGate_has_hard_reset 0x3e 0x67 0x9a 193 1 0 0 3 0
 
 #endif

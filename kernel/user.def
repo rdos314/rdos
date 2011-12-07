@@ -554,4 +554,6 @@ write_attrib_string_nr          = 447
 
 debug_break_nr                  = 448
 
+has_hard_reset_nr               = 449
+
 usergate_entries			= 460

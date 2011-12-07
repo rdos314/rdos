@@ -377,6 +377,10 @@ HardReset        MACRO
 	UserGate hard_reset_nr
 						ENDM
 
+HasHardReset        MACRO
+	UserGate has_hard_reset_nr
+						ENDM
+
 ; OUT AX         Core nr
 GetCoreId        MACRO
 	UserGate get_core_id_nr
