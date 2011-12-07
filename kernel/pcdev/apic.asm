@@ -51,7 +51,7 @@ MP_FLAG_MSR = 2
 MP_FLAG_TASK = 4
 
 
-; PIC IRQs active low, edge triggered
+; PCI IRQs active low, edge triggered
 
 apic_struc  STRUC
 
@@ -92,7 +92,6 @@ ao_flags        DW ?
 
 apic_override_struc ENDS
 
-
 apic_table  STRUC
 
 apic_base       acpi_table <>
@@ -112,6 +111,14 @@ ioapic_resv         DB 15 DUP(?)
 ioapic_window       DD ?
 
 ioapic_data_seg ENDS
+
+global_int_struc    STRUC
+
+gi_ioapic_sel       DW ?
+gi_ioapic_id        DB ?
+gi_int_num          DB ?
+
+global_int_struc    ENDS
         
 data    SEGMENT byte public 'DATA'
 
@@ -130,6 +137,11 @@ mp_processor_sign   DD ?
 mp_proc             DW ?
 
 isa_redir_arr       DD 16 DUP(?,?)
+
+ioapic_count        DW ?
+ioapic_arr          DW 16 DUP(?)
+
+global_int_arr      DD 256 DUP(?)
 
 data    ENDS
 
@@ -3049,9 +3061,9 @@ GetMp Endp
 apic_name       DB 'Apic Test',0
 
 apic_pr:
-    int 3
+    int 3 
+    call InitApicTable   
     retf            
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3180,20 +3192,6 @@ InitApicTimer Proc near
 ;    
     mov ax,system_data_sel
     mov ds,ax
-;    
-    mov ecx,1Bh
-    rdmsr
-;    
-    push eax
-    mov eax,1000h
-    AllocateBigLinear
-    pop eax
-    and ax,0F000h
-    or ax,33h
-    SetPhysicalPage    
-    mov bx,apic_mem_sel
-    mov ecx,1000h
-    CreateDataSelector16
 ;
     mov eax,1000h
     AllocateBigLinear
@@ -3825,6 +3823,160 @@ init_irq_loop:
     pop ds
     ret
 SetupIrq    Endp        
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           InitApicTable
+;
+;               DESCRIPTION:    Init basic APIC vars
+;
+;               PARAMETERS:     ES      Apic table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitApicTable    Proc near
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:ioapic_count,0
+;
+    mov bx,OFFSET isa_redir_arr
+    xor edx,edx
+    mov eax,40h
+    mov cx,16
+
+init_apic_redir_loop:
+    mov [bx],eax
+    add bx,4
+    mov [bx],edx
+    add bx,4
+    inc al
+    loop init_apic_redir_loop
+;
+    mov bx,OFFSET isa_redir_arr + 2 * 8
+    mov eax,10000h
+    mov [bx],eax 
+;
+    push es
+    mov ax,SEG data
+    mov es,ax
+    mov cx,256
+    xor eax,eax
+    mov di,OFFSET global_int_arr
+    rep stosd        
+    pop es
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov eax,es:apic_phys
+    or ax,33h
+    SetPhysicalPage    
+    mov bx,apic_mem_sel
+    mov ecx,1000h
+    CreateDataSelector16
+;
+    mov di,OFFSET apic_entries
+    mov cx,es:act_size
+    sub cx,OFFSET apic_entries - OFFSET apic_phys
+    xor bp,bp
+
+init_apic_loop:
+    cmp al,1
+    je init_apic_ioapic
+;    
+    cmp al,2
+    je init_apic_redir
+;
+    jmp init_apic_next    
+
+init_apic_ioapic:
+    push ecx
+    mov eax,1000h
+    AllocateBigLinear
+    mov eax,es:[di].aio_phys
+    or ax,33h
+    SetPhysicalPage    
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov ax,bx
+;
+    mov bx,ds:ioapic_count
+    add bx,bx
+    mov ds:[bx].ioapic_arr,ax
+    inc ds:ioapic_count
+;
+    mov ebx,es:[di].aio_int_base
+    shl bx,2
+    add bx,OFFSET global_int_arr
+    mov cx,24
+    xor dl,dl
+
+init_ioapic_loop:
+    mov ds:[bx].gi_ioapic_sel,ax
+    mov ds:[bx].gi_ioapic_id,dl
+    add bx,4
+    inc dl
+    loop init_ioapic_loop
+;    
+    pop ecx
+    jmp init_apic_next
+
+init_apic_redir:
+    mov al,es:[di].ao_bus
+    or al,al
+    jnz init_apic_next
+;
+    mov al,es:[di].ao_source
+    cmp al,16
+    jae init_apic_next
+;
+    movzx bx,al
+    shl bx,3
+    add bx,OFFSET isa_redir_arr
+;
+    mov eax,es:[di].ao_int
+    cmp eax,80h
+    jae init_apic_next
+;
+    add al,40h
+    mov [bx],al
+;
+    mov ax,es:[di].ao_flags
+    test al,1
+    jz init_apic_redir_pol_ok
+;
+    test al,2
+    jz init_apic_redir_pol_high
+
+init_apic_redir_pol_low:
+    or word ptr [bx],2000h
+    jmp init_apic_redir_pol_ok
+
+init_apic_redir_pol_high:
+    and word ptr [bx], NOT 2000h
+
+init_apic_redir_pol_ok:
+    test al,4
+    jz init_apic_next
+;
+    test al,8
+    jz init_apic_redir_edge
+
+init_apic_redir_level:
+    or word ptr [bx],8000h
+    jmp init_apic_next
+
+init_apic_redir_edge:
+    and word ptr [bx],7FFFh
+
+init_apic_next:
+    movzx ax,es:[di].apic_len
+    add di,ax
+    sub cx,ax
+    ja init_apic_loop
+    ret
+InitApicTable    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3836,29 +3988,15 @@ SetupIrq    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
-    mov ax,SEG data
-    mov ds,ax
-    mov ds:mp_flags,0
-    mov bx,OFFSET isa_redir_arr
-    xor edx,edx
-    mov eax,40h
-    mov cx,16
-
-init_redir_loop:
-    mov [bx],eax
-    add bx,4
-    mov [bx],edx
-    add bx,4
-    inc al
-    loop init_redir_loop
-;
-    mov bx,OFFSET isa_redir_arr + 2 * 8
-    mov eax,10000h
-    mov [bx],eax 
-;       
     mov eax,dword ptr cs:apic_tab
     GetAcpiTable
     jc init_apic_gates_ok
+;
+    call InitApicTable
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:mp_flags,0       
 ;
     call InitApicTimer
     call InitLocalApic
@@ -3871,11 +4009,7 @@ init_redir_loop:
 init_table_loop:
     mov al,es:[di].apic_type
     or al,al
-    jz init_proc
-    cmp al,2
-    je init_redir
-;
-    jmp init_table_next    
+    jnz init_table_next    
     
 init_proc:
     or bp,bp
@@ -3913,55 +4047,6 @@ init_ap_create:
     mov fs:ps_acpi,al
 ;
     inc bp
-    jmp init_table_next
-
-init_redir:
-    mov al,es:[di].ao_bus
-    or al,al
-    jnz init_table_next
-;
-    mov al,es:[di].ao_source
-    cmp al,16
-    jae init_table_next
-;
-    movzx bx,al
-    shl bx,3
-    add bx,OFFSET isa_redir_arr
-;
-    mov eax,es:[di].ao_int
-    cmp eax,80h
-    jae init_table_next
-;
-    add al,40h
-    mov [bx],al
-;
-    mov ax,es:[di].ao_flags
-    test al,1
-    jz init_redir_pol_ok
-;
-    test al,2
-    jz init_redir_pol_high
-
-init_redir_pol_low:
-    or word ptr [bx],2000h
-    jmp init_redir_pol_ok
-
-init_redir_pol_high:
-    and word ptr [bx], NOT 2000h
-
-init_redir_pol_ok:
-    test al,4
-    jz init_table_next
-;
-    test al,8
-    jz init_redir_edge
-
-init_redir_level:
-    or word ptr [bx],8000h
-    jmp init_table_next
-
-init_redir_edge:
-    and word ptr [bx],7FFFh
 
 init_table_next:
     movzx ax,es:[di].apic_len
@@ -3970,7 +4055,7 @@ init_table_next:
     ja init_table_loop
 ;
     call SetupIrq    
-;    
+;
     mov ax,cs
     mov es,ax
     mov edi,OFFSET init_apic_thread
