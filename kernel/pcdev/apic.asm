@@ -3880,7 +3880,6 @@ init_apic_redir_loop:
     mov di,OFFSET apic_entries
     mov cx,es:act_size
     sub cx,OFFSET apic_entries - OFFSET apic_phys
-    xor bp,bp
 
 init_apic_loop:
     mov al,es:[di].apic_type
@@ -3980,23 +3979,19 @@ init_apic_next:
     ja init_apic_loop
     ret
 InitApicTable    Endp
-
+      
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   Init
+;               NAME:           InitApicCores
 ;
-;               DESCRIPTION:    Init apic mp module
+;               DESCRIPTION:    Init APIC cores
+;
+;               PARAMETERS:     ES      Apic table
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init    PROC far
-    mov eax,dword ptr cs:apic_tab
-    GetAcpiTable
-    jc init_apic_gates_ok
-;
-    call InitApicTable
-;    
+InitApicCores    Proc near
     mov ax,SEG data
     mov ds,ax
     mov ds:mp_flags,0       
@@ -4009,12 +4004,11 @@ init    PROC far
     sub cx,OFFSET apic_entries - OFFSET apic_phys
     xor bp,bp
 
-init_table_loop:
+init_core_loop:
     mov al,es:[di].apic_type
     or al,al
-    jnz init_table_next    
-    
-init_proc:
+    jnz init_core_next    
+;    
     or bp,bp
     jnz init_ap_proc
 
@@ -4026,16 +4020,16 @@ init_boot_proc:
     mov al,es:[di].ap_acpi_id
     mov fs:ps_acpi,al
     inc bp
-    jmp init_table_next
+    jmp init_core_next
 
 init_ap_proc:
     mov eax,es:[di].ap_flags
     test al,1
-    jz init_table_next
+    jz init_core_next
 ;    
     movzx edx,es:[di].ap_apic_id
     call DoStartCore
-    jc init_table_next    
+    jc init_core_next    
 ;    
     cmp bp,1
     jnz init_ap_create
@@ -4051,12 +4045,31 @@ init_ap_create:
 ;
     inc bp
 
-init_table_next:
+init_core_next:
     movzx ax,es:[di].apic_len
     add di,ax
     sub cx,ax
-    ja init_table_loop
+    ja init_core_loop
+;   
+    ret
+InitApicCores   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
 ;
+;               NAME:                   Init
+;
+;               DESCRIPTION:    Init apic mp module
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init    PROC far
+    mov eax,dword ptr cs:apic_tab
+    GetAcpiTable
+    jc init_apic_gates_ok
+;
+    call InitApicTable
+    call InitApicCores
     call SetupIrq    
 ;
     mov ax,cs
