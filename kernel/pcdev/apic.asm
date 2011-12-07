@@ -3062,6 +3062,8 @@ apic_name       DB 'Apic Test',0
 
 apic_pr:
     int 3 
+    mov eax,dword ptr cs:apic_tab
+    GetAcpiTable
     call InitApicTable   
     retf            
     
@@ -3881,6 +3883,7 @@ init_apic_redir_loop:
     xor bp,bp
 
 init_apic_loop:
+    mov al,es:[di].apic_type
     cmp al,1
     je init_apic_ioapic
 ;    
