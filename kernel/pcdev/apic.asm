@@ -121,7 +121,6 @@ global_int_struc    ENDS
         
 data    SEGMENT byte public 'DATA'
 
-mp_eoi_proc         DW ?
 mp_stop_proc        DW ?
 mp_isr_proc         DW ?
 
@@ -982,7 +981,6 @@ smemgLint1Disable:
 smemgLint1Ok:
     mov ax,SEG data
     mov ds,ax
-    mov ds:mp_eoi_proc, OFFSET SendEoiMem
     mov ds:mp_stop_proc, OFFSET StopApicTimerMem
     mov ds:mp_isr_proc, OFFSET GetIsrMem
 ;
@@ -2317,10 +2315,12 @@ timer_int:
     push es
     push fs
     pushad
-;
-    mov ax,SEG data
+;    
+    mov ax,apic_mem_sel
     mov ds,ax
-    call ds:mp_eoi_proc
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+;    
     TimerExpired
 ;
     popad
@@ -2343,10 +2343,12 @@ tlb_flush_int:
     push es
     push fs
     pushad
-;
-    mov ax,SEG data
+;    
+    mov ax,apic_mem_sel
     mov ds,ax
-    call ds:mp_eoi_proc
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+;
     FlushTlb    
 ;    
     popad
