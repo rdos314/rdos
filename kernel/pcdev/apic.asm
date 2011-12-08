@@ -3274,27 +3274,10 @@ InitLocalApic   Proc near
     mov ax,system_data_sel
     mov ds,ax
     mov eax,ds:cpu_feature_flags
-    test ax,20h
-    jz init_local_apic_mmio
-;    
-    mov ecx,1Bh
-    rdmsr
-    test ah,8
-    jz init_local_apic_done
 ;
-    test ah,4
-    jnz init_local_apic_msr
-
-init_local_apic_mmio:
     or es:mp_flags, MP_FLAG_MEM
     call SetupMemGates
-    jmp init_local_apic_done
-
-init_local_apic_msr:
-    or es:mp_flags, MP_FLAG_MSR
-    call SetupMsrGates
-
-init_local_apic_done:
+;    
     mov ax,cs
     mov ds,ax
     mov es,ax
