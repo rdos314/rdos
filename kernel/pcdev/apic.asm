@@ -121,7 +121,6 @@ global_int_struc    ENDS
         
 data    SEGMENT byte public 'DATA'
 
-mp_int_proc         DW ?
 mp_eoi_proc         DW ?
 mp_stop_proc        DW ?
 mp_isr_proc         DW ?
@@ -541,21 +540,6 @@ send_eoi_mem  Proc far
     pop ds
     retf32
 send_eoi_mem Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   SendInitMem
-;
-;               DESCRIPTION:    Send init request using shared memory
-;
-;       PARAMETERS:     EDX     Destination
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendInitMem Proc near
-    ret
-SendInitMem Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -665,80 +649,6 @@ SendStartup Proc near
     pop ds    
     ret
 SendStartup Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   SendIntMem
-;
-;               DESCRIPTION:    Send int request using shared memory
-;
-;       PARAMETERS:     EDX     Destination
-;                       AL      Vector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendIntMem Proc near
-    pushf
-    push ds
-    push eax
-    push ecx
-    push edx
-;    
-    cli
-    shl edx,24
-    mov cx,apic_mem_sel
-    mov ds,cx
-
-simemLoop:
-    mov ecx,ds:APIC_ICR
-    test cx,1000h
-    jz simemDo
-;
-    ipause
-    jmp simemLoop
-
-simemDo:    
-    mov ds:APIC_ICR+10h,edx
-;
-    mov ah,40h
-    movzx eax,ax
-    mov ds:APIC_ICR,eax
-;
-    pop edx
-    pop ecx
-    pop eax
-    pop ds
-    popf
-    ret
-SendIntMem Endp
-       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   SendInt
-;
-;               DESCRIPTION:    Send int request
-;
-;       PARAMETERS:     EDX     Destination
-;                       AL      Vector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendInt Proc near
-    push ds
-    push ax
-    push bx
-;    
-    mov bx,SEG data
-    mov ds,bx
-    call ds:mp_int_proc
-;
-    pop bx
-    pop ax
-    pop ds    
-    ret
-SendInt Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -991,19 +901,39 @@ start_ap_cores  Endp
 send_int_name    DB 'Send Int',0
 
 send_int  Proc far
+    pushf
     push ds
+    push eax
+    push ecx
     push edx
+;    
+    cli
+    shl edx,24
+    mov cx,apic_mem_sel
+    mov ds,cx
+
+simemLoop:
+    mov ecx,ds:APIC_ICR
+    test cx,1000h
+    jz simemDo
 ;
-    mov dx,SEG data
-    mov ds,dx
-    mov edx,fs:ps_apic
-    call ds:mp_int_proc
+    ipause
+    jmp simemLoop
+
+simemDo:    
+    mov ds:APIC_ICR+10h,edx
+;
+    mov ah,40h
+    movzx eax,ax
+    mov ds:APIC_ICR,eax
 ;
     pop edx
-    pop ds
+    pop ecx
+    pop eax
+    pop ds    
+    popf
     retf32
 send_int  Endp
-
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1052,7 +982,6 @@ smemgLint1Disable:
 smemgLint1Ok:
     mov ax,SEG data
     mov ds,ax
-    mov ds:mp_int_proc, OFFSET SendIntMem
     mov ds:mp_eoi_proc, OFFSET SendEoiMem
     mov ds:mp_stop_proc, OFFSET StopApicTimerMem
     mov ds:mp_isr_proc, OFFSET GetIsrMem
