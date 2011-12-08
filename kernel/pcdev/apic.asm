@@ -2773,9 +2773,19 @@ disable_irq  Proc far
     push ds
     push eax
     push bx
-;    
-    mov bx,ioapic_mem_sel
+;
+    mov bx,SEG data
     mov ds,bx
+    movzx bx,al
+    shl bx,2
+    add bx,OFFSET global_int_arr
+    mov ax,ds:[bx].gi_ioapic_sel
+    or ax,ax
+    jz disable_irq_done
+;    
+    push ax
+    mov al,ds:[bx].gi_ioapic_id
+    pop ds
 ;       
     mov bl,10h
     add bl,al
@@ -2789,7 +2799,8 @@ disable_irq  Proc far
     mov ds:ioapic_regsel,bl
     xor eax,eax
     mov ds:ioapic_window,eax
-;
+
+disable_irq_done:
     pop bx
     pop eax
     pop ds
