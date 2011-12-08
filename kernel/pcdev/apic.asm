@@ -2579,42 +2579,6 @@ scDone:
     pop ds
     ret
 DoStartCore   Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   ReadIoApicInt
-;
-;               DESCRIPTION:    Read setting for IO-APIC int
-;
-;       PARAMETERS:     AL      Int #
-;
-;       RETURNS:        EDX:EAX IO-APIC setting
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadIoApicInt   Proc near
-    push ds
-    push bx
-;    
-    mov bx,ioapic_mem_sel
-    mov ds,bx
-;       
-    mov bl,10h
-    add bl,al
-    add bl,al
-;    
-    mov ds:ioapic_regsel,bl
-    mov eax,ds:ioapic_window
-;
-    inc bl
-    mov ds:ioapic_regsel,bl
-    mov edx,ds:ioapic_window
-;
-    pop bx
-    pop ds
-    ret
-ReadIoApicInt   Endp 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2730,11 +2694,11 @@ ReadIoApicInt   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   EnableIrq
+;   NAME:           EnableIrq
 ;
-;               description:    Enable IRQ in IOAPIC controller
+;   Description:    Enable IRQ in IOAPIC controller
 ;
-;               PARAMETERS:             AL                      irq nr
+;   PARAMETERS:     AL                      irq nr
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2760,8 +2724,18 @@ enable_irq  Proc far
 enable_irq_do:
     add dl,40h
 ;    
-    mov bx,ioapic_mem_sel
+    mov bx,SEG data
     mov ds,bx
+    movzx bx,al
+    shl bx,2
+    add bx,OFFSET global_int_arr
+    mov ax,ds:[bx].gi_ioapic_sel
+    or ax,ax
+    jz enable_irq_done
+;    
+    push ax
+    mov al,ds:[bx].gi_ioapic_id
+    pop ds
 ;       
     mov bl,10h
     add bl,al
@@ -2773,10 +2747,9 @@ enable_irq_do:
     inc bl
     mov ds:ioapic_regsel,bl
     mov edx,0FF000000h
-;    GetApicId
-;    shl edx,24
     mov ds:ioapic_window,edx
-;
+
+enable_irq_done:
     pop edx
     pop bx
     pop eax
