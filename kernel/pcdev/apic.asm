@@ -524,7 +524,7 @@ ap_task_wait:
     test ax,MP_FLAG_TASK
     jz ap_task_wait
 ;    
-    call InitApic
+    call InitApicInts
 
     GetApicId
     cmp edx,3
@@ -2858,7 +2858,7 @@ daiLoop:
     add si,2
     loop daiApicLoop    
 ;
-    call InitApic
+    call InitApicInts
     mov bx,SEG data
     mov ds,bx
     call ds:mp_isr_proc
@@ -3109,16 +3109,15 @@ init_apic_thread        ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   InitApic
+;               NAME:                   InitApicInts
 ;
-;               DESCRIPTION:    Init APIC timer
+;               DESCRIPTION:    Init APIC ints
 ;
 ;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-InitApic    Proc near
+InitApicInts    Proc near
     mov bx,apic_mem_sel
     mov es,bx
 ;
@@ -3158,7 +3157,7 @@ InitApic    Proc near
     mov eax,0FFh
     mov es:APIC_TPR,eax
     ret
-InitApic    Endp
+InitApicInts    Endp
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3191,7 +3190,7 @@ InitApicTimer Proc near
     mov ax,system_data_sel
     mov ds,ax
 ;
-    call InitApic
+    call InitApicInts
 
 init_tsc_start:
     xor cx,cx    
