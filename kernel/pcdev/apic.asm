@@ -121,7 +121,6 @@ global_int_struc    ENDS
         
 data    SEGMENT byte public 'DATA'
 
-mp_stop_proc        DW ?
 mp_isr_proc         DW ?
 
 mp_thread           DW ?
@@ -737,29 +736,6 @@ start_apic_mem_timer  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           StopApicTimer
-;
-;       DESCRIPTION:    Stop APIC timer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StopApicTimerMem    Proc near
-    push ds
-    push eax
-;
-    mov ax,apic_mem_sel
-    mov ds,ax
-    mov eax,10000h
-    mov ds:APIC_TIMER,eax
-;
-    pop eax
-    pop ds
-    ret
-StopApicTimerMem  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           GetIsr
 ;
 ;       DESCRIPTION:    Get ISR
@@ -981,7 +957,6 @@ smemgLint1Disable:
 smemgLint1Ok:
     mov ax,SEG data
     mov ds,ax
-    mov ds:mp_stop_proc, OFFSET StopApicTimerMem
     mov ds:mp_isr_proc, OFFSET GetIsrMem
 ;
     mov ax,cs
@@ -1830,10 +1805,11 @@ disable_all_irq  Proc far
     push bx
     push cx
     push si
-; 
-    mov bx,SEG data
-    mov ds,bx
-    call ds:mp_stop_proc   
+;
+    mov ax,apic_mem_sel
+    mov ds,ax
+    mov eax,10000h
+    mov ds:APIC_TIMER,eax
 ;    
     mov cx,ds:ioapic_count
     mov si,OFFSET ioapic_arr
