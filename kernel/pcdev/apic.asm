@@ -3118,6 +3118,10 @@ init_apic_thread        ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitApicInts    Proc near
+    push es
+    push eax
+    push bx
+;    
     mov bx,apic_mem_sel
     mov es,bx
 ;
@@ -3156,6 +3160,10 @@ InitApicInts    Proc near
 ;
     mov eax,0FFh
     mov es:APIC_TPR,eax
+;
+    pop bx
+    pop eax
+    pop es    
     ret
 InitApicInts    Endp
     
@@ -3189,8 +3197,8 @@ InitApicTimer Proc near
 ;    
     mov ax,system_data_sel
     mov ds,ax
-;
-    call InitApicInts
+    mov ax,apic_mem_sel
+    mov es,ax
 
 init_tsc_start:
     xor cx,cx    
@@ -4051,6 +4059,7 @@ init    PROC far
     jc init_apic_gates_ok
 ;
     call InitApicTable
+    call InitApicInts
     call InitApicTimer
     call InitLocalApic
     call InitApicCores
