@@ -121,7 +121,6 @@ global_int_struc    ENDS
         
 data    SEGMENT byte public 'DATA'
 
-mp_startup_proc     DW ?
 mp_int_proc         DW ?
 mp_eoi_proc         DW ?
 mp_stop_proc        DW ?
@@ -629,40 +628,6 @@ send_nmi_mem Proc far
     pop ds
     retf32
 send_nmi_mem Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   SendStartupMem
-;
-;               DESCRIPTION:    Send startup request using shared memory
-;
-;       PARAMETERS:     EDX     Destination
-;                       AL      Vector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendStartupMem Proc near
-    push ds
-    push eax
-    push ecx
-    push edx
-;    
-    shl edx,24
-    mov cx,apic_mem_sel
-    mov ds,cx
-    mov ds:APIC_ICR+10h,edx
-;
-    mov ah,46h
-    movzx eax,ax
-    mov ds:APIC_ICR,eax
-;
-    pop edx
-    pop ecx
-    pop eax
-    pop ds
-    ret
-SendStartupMem Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -678,17 +643,25 @@ SendStartupMem Endp
 
 SendStartup Proc near
     push ds
-    push ax
-    push bx
-;    
-    mov bx,SEG data
-    mov ds,bx
-    call ds:mp_startup_proc
+    push eax
+    push ecx
+    push edx
+;        
+    shl edx,24
+    mov cx,apic_mem_sel
+    mov ds,cx
+    mov ds:APIC_ICR+10h,edx
+;
+    mov ah,46h
+    movzx eax,ax
+    mov ds:APIC_ICR,eax
+;
     mov ax,1
     call DelayMs
 ;
-    pop bx
-    pop ax
+    pop edx
+    pop ecx
+    pop eax
     pop ds    
     ret
 SendStartup Endp
@@ -1079,7 +1052,6 @@ smemgLint1Disable:
 smemgLint1Ok:
     mov ax,SEG data
     mov ds,ax
-    mov ds:mp_startup_proc, OFFSET SendStartupMem
     mov ds:mp_int_proc, OFFSET SendIntMem
     mov ds:mp_eoi_proc, OFFSET SendEoiMem
     mov ds:mp_stop_proc, OFFSET StopApicTimerMem
