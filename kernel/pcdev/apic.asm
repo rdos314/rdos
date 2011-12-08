@@ -2824,15 +2824,21 @@ disable_all_irq  Proc far
     push ds
     push bx
     push cx
+    push si
 ; 
     mov bx,SEG data
     mov ds,bx
     call ds:mp_stop_proc   
 ;    
-    mov cx,24
-    mov bx,ioapic_mem_sel
-    mov ds,bx
-;       
+    mov cx,ds:ioapic_count
+    mov si,OFFSET ioapic_arr
+
+daiApicLoop:
+    push ds
+    push cx
+    mov ds,ds:[si]
+;    
+    mov cx,24       
     mov bl,10h
 
 daiLoop:   
@@ -2847,11 +2853,17 @@ daiLoop:
     inc bl
     loop daiLoop
 ;
+    pop cx
+    pop ds
+    add si,2
+    loop daiApicLoop    
+;
     call InitApic
     mov bx,SEG data
     mov ds,bx
     call ds:mp_isr_proc
 ;
+    pop si
     pop cx
     pop bx
     pop ds
