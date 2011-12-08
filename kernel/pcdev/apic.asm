@@ -121,7 +121,6 @@ global_int_struc    ENDS
         
 data    SEGMENT byte public 'DATA'
 
-mp_init_proc        DW ?
 mp_startup_proc     DW ?
 mp_int_proc         DW ?
 mp_eoi_proc         DW ?
@@ -556,6 +555,21 @@ send_eoi_mem Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SendInitMem Proc near
+    ret
+SendInitMem Endp
+       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:                   SendInit
+;
+;               DESCRIPTION:    Send init request
+;
+;       PARAMETERS:     EDX     Destination
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendInit Proc near
     push ds
     push eax
     push edx
@@ -574,11 +588,14 @@ SendInitMem Proc near
     mov eax,08500h
     mov ds:APIC_ICR,eax
 ;
+    mov ax,20
+    call DelayMs
+;
     pop edx
     pop eax
-    pop ds
+    pop ds    
     ret
-SendInitMem Endp
+SendInit Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -612,32 +629,6 @@ send_nmi_mem Proc far
     pop ds
     retf32
 send_nmi_mem Endp
-       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   SendInit
-;
-;               DESCRIPTION:    Send init request
-;
-;       PARAMETERS:     EDX     Destination
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendInit Proc near
-    push ds
-    push ax
-;    
-    mov ax,SEG data
-    mov ds,ax
-    call ds:mp_init_proc
-    mov ax,20
-    call DelayMs
-;
-    pop ax
-    pop ds    
-    ret
-SendInit Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1044,13 +1035,13 @@ send_int  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SetupMemGates
+;               NAME:                   SetupGates
 ;
 ;               DESCRIPTION:    Set up shared memory gates for APIC
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupMemGates   Proc near
+SetupGates   Proc near
     mov ax,apic_mem_sel
     mov ds,ax    
 ;
@@ -1088,7 +1079,6 @@ smemgLint1Disable:
 smemgLint1Ok:
     mov ax,SEG data
     mov ds,ax
-    mov ds:mp_init_proc, OFFSET SendInitMem
     mov ds:mp_startup_proc, OFFSET SendStartupMem
     mov ds:mp_int_proc, OFFSET SendIntMem
     mov ds:mp_eoi_proc, OFFSET SendEoiMem
@@ -1516,7 +1506,7 @@ smemgLint1Ok:
     CreateIntGateSelector
 ;    
     ret
-SetupMemGates   Endp
+SetupGates   Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2392,7 +2382,7 @@ InitLocalApic   Proc near
     mov eax,ds:cpu_feature_flags
 ;
     or es:mp_flags, MP_FLAG_MEM
-    call SetupMemGates
+    call SetupGates
 ;    
     mov ax,cs
     mov ds,ax
