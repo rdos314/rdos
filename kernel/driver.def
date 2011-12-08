@@ -406,8 +406,6 @@ apic_mem_sel        EQU 0A50h
 
 pic_code_sel        EQU 0A58h
 
-ioapic_mem_sel      EQU 0A60h
-
 util_code_sel       EQU 0A70h
 util_data_sel       EQU 0A78h
 

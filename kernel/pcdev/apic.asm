@@ -3191,16 +3191,6 @@ InitApicTimer Proc near
     mov ax,system_data_sel
     mov ds,ax
 ;
-    mov eax,1000h
-    AllocateBigLinear
-    mov eax,ebp
-    mov eax,0FEC00000h
-    or ax,33h
-    SetPhysicalPage    
-    mov bx,ioapic_mem_sel
-    mov ecx,1000h
-    CreateDataSelector16
-;
     call InitApic
 
 init_tsc_start:
