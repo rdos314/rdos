@@ -47,7 +47,6 @@ ipause   MACRO
     ENDM
 
 MP_FLAG_MEM = 1
-MP_FLAG_MSR = 2
 MP_FLAG_TASK = 4
 
 
@@ -151,55 +150,6 @@ code    SEGMENT byte public use16 'CODE'
 
 irqmac  MACRO nr
 
-msr_irq&nr:
-    push ds
-    push es
-    push fs
-    pushad
-;
-    EnterInt
-    push fs
-    sti
-;       
-    mov ax,irq_sys_sel
-    mov es,ax
-    mov bx,OFFSET irq_arr + nr * SIZE irq_struc
-    mov ax,word ptr es:[bx+4].user_handler
-    or ax,ax
-    jz msr_irq_default_error&nr
-;
-    mov ds,es:[bx].user_data
-    xor eax,eax
-    mov ax,cs
-    push eax
-    mov ax,OFFSET msr_irq_handle_done&nr
-    push eax
-    push es:[bx+4].user_handler
-    push es:[bx].user_handler
-    xor ax,ax
-    mov es,ax
-    retf32
-
-msr_irq_default_error&nr:
-;
-; unmask IRQ here
-;
-    or es:bad_irqs, 1 SHL nr
-
-msr_irq_handle_done&nr:
-    cli
-    xor eax,eax
-    mov ecx,MSR_APIC_EOI
-    wrmsr
-    pop fs
-    LeaveInt
-;
-    popad
-    pop fs
-    pop es
-    pop ds
-    iretd
-
 mem_irq&nr:
     push ds
     push es
@@ -254,51 +204,6 @@ mem_irq_handle_done&nr:
     ENDM
 
 msimac  MACRO nr
-
-msr_msi&nr:
-    push ds
-    push es
-    push fs
-    pushad
-;
-    EnterInt
-    push fs
-    sti
-;       
-    mov ax,irq_sys_sel
-    mov es,ax
-    mov bx,OFFSET msi_arr + nr * SIZE irq_struc
-    mov ax,word ptr es:[bx+4].user_handler
-    or ax,ax
-    jz msr_msi_default_error&nr
-;
-    mov ds,es:[bx].user_data
-    xor eax,eax
-    mov ax,cs
-    push eax
-    mov ax,OFFSET msr_msi_handle_done&nr
-    push eax
-    push es:[bx+4].user_handler
-    push es:[bx].user_handler
-    xor ax,ax
-    mov es,ax
-    retf32
-
-msr_msi_default_error&nr:
-
-msr_msi_handle_done&nr:
-    cli
-    xor eax,eax
-    mov ecx,MSR_APIC_EOI
-    wrmsr
-    pop fs
-    LeaveInt
-;
-    popad
-    pop fs
-    pop es
-    pop ds
-    iretd
 
 mem_msi&nr:
     push ds
@@ -588,42 +493,6 @@ DelayMs Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           HasApicMem
-;
-;       DESCRIPTION:    Check for APIC memory-based interface
-;
-;       RETURNS:        NC      Present        
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-has_apic_mem_name    DB 'Has APIC Mem',0
-
-has_apic_mem  Proc far
-    clc
-    retf32
-has_apic_mem Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           HasApicMsr
-;
-;       DESCRIPTION:    Check for APIC MSR-based interface
-;
-;       RETURNS:        NC      Present        
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-has_apic_msr_name    DB 'Has APIC Msr',0
-
-has_apic_msr  Proc far
-    clc
-    retf32
-has_apic_msr Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;               NAME:                   GetId
 ;
 ;               DESCRIPTION:    Get own ID, memory mode
@@ -647,19 +516,6 @@ get_id_mem  Proc far
     pop ds
     retf32
 get_id_mem Endp
-
-get_id_msr Proc far
-    push eax
-    push ecx
-;
-    mov ecx,MSR_APIC_ID
-    rdmsr
-    mov edx,eax
-;
-    pop ecx
-    pop eax
-    retf32
-get_id_msr Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -687,19 +543,6 @@ send_eoi_mem  Proc far
     pop ds
     retf32
 send_eoi_mem Endp
-
-send_eoi_msr Proc far
-    push eax
-    push ecx
-;
-    xor eax,eax
-    mov ecx,MSR_APIC_EOI
-    wrmsr
-;
-    pop ecx
-    pop eax
-    retf32
-send_eoi_msr Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -736,37 +579,6 @@ SendInitMem Proc near
     pop ds
     ret
 SendInitMem Endp
-       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   SendInitMsr
-;
-;               DESCRIPTION:    Send init request using MSRs
-;
-;       PARAMETERS:     EDX     Destination
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendInitMsr Proc near
-    push eax
-    push ecx
-;
-    mov eax,0C500h
-    mov ecx,MSR_APIC_ICR
-    wrmsr
-;    
-    mov ax,1
-    call DelayMs
-;
-    mov eax,08500h
-    mov ecx,MSR_APIC_ICR
-    wrmsr
-;
-    pop ecx
-    pop eax
-    ret
-SendInitMsr Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -800,31 +612,6 @@ send_nmi_mem Proc far
     pop ds
     retf32
 send_nmi_mem Endp
-       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           SendNmiMsr
-;
-;       DESCRIPTION:    Send NMI request using MSRs
-;
-;       PARAMETERS:     FS      Destination processor
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-send_nmi_msr Proc far
-    push eax
-    push ecx
-;
-    mov edx,fs:ps_apic
-    mov eax,4400h
-    mov ecx,MSR_APIC_ICR
-    wrmsr
-;
-    pop ecx
-    pop eax
-    retf32
-send_nmi_msr Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -885,32 +672,6 @@ SendStartupMem Proc near
     pop ds
     ret
 SendStartupMem Endp
-       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   SendStartupMsr
-;
-;               DESCRIPTION:    Send startup request using MSRs
-;
-;       PARAMETERS:     EDX     Destination
-;                       AL      Vector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendStartupMsr Proc near
-    push eax
-    push ecx
-;
-    mov ah,46h
-    movzx eax,ax
-    mov ecx,MSR_APIC_ICR
-    wrmsr
-;
-    pop ecx
-    pop eax
-    ret
-SendStartupMsr Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -988,51 +749,6 @@ simemDo:
     ret
 SendIntMem Endp
        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   SendIntMsr
-;
-;               DESCRIPTION:    Send int request using MSRs
-;
-;       PARAMETERS:     EDX     Destination
-;                       AL      Vector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendIntMsr Proc near
-    pushf
-    push eax
-    push ecx
-;
-    cli
-    mov ah,40h
-    movzx eax,ax
-    push eax
-    push edx
-
-simsrLoop:
-    mov ecx,MSR_APIC_ICR
-    rdmsr
-    test ax,1000h
-    jz simsrDo
-;    
-    ipause
-    jmp simsrLoop
-    
-simsrDo:
-    pop edx    
-    pop eax
-;
-    mov ecx,MSR_APIC_ICR
-    wrmsr
-;
-    pop ecx
-    pop eax
-    popf
-    ret
-SendIntMsr Endp
-       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -1082,28 +798,6 @@ SendEoiMem Proc near
     pop ds
     ret
 SendEoiMem Endp
-       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   SendEoiMsr
-;
-;               DESCRIPTION:    Send EOI using MSRs
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendEoiMsr Proc near
-    push eax
-    push ecx
-;
-    xor eax,eax
-    mov ecx,MSR_APIC_EOI
-    wrmsr
-;
-    pop ecx
-    pop eax
-    ret
-SendEoiMsr Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1167,51 +861,6 @@ start_apic_mem_timer    Proc far
     retf32
 start_apic_mem_timer  Endp
 
-start_apic_msr_timer    Proc far
-    push ds
-    push ecx
-    push edx
-    push esi
-;
-    mov ax,system_data_sel
-    mov ds,ax
-;
-    mov edx,10000h
-    xor eax,eax
-    mov ecx,ds:apic_tics
-    shl ecx,16
-    mov cx,ds:apic_rest
-    div ecx
-    mov esi,eax
-;
-    mov eax,80000000h
-    mov ecx,MSR_APIC_INIT_COUNT
-    wrmsr
-    push fs
-    GetCore
-    pop fs
-    mov ecx,MSR_APIC_CURR_COUNT
-    rdmsr
-    neg eax
-    add eax,80000000h
-    mul esi
-    add eax,eax
-    adc edx,edx
-    add eax,80000000h
-    adc edx,0
-;
-    mov eax,80h
-    mov ecx,MSR_APIC_TIMER
-    wrmsr
-    xor eax,eax
-;
-    pop esi
-    pop edx
-    pop ecx
-    pop ds
-    retf32
-start_apic_msr_timer  Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -1235,19 +884,6 @@ StopApicTimerMem    Proc near
     ret
 StopApicTimerMem  Endp
 
-StopApicTimerMsr    Proc near
-    push eax
-    push ecx
-;
-    mov eax,10000h
-    mov ecx,MSR_APIC_TIMER
-    wrmsr
-;
-    pop ecx
-    pop eax
-    ret
-StopApicTimerMsr  Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -1269,17 +905,6 @@ GetIsrMem    Proc near
     pop ds
     ret
 GetIsrMem  Endp
-
-GetIsrMsr    Proc near
-    push ecx
-;
-    mov ecx,MSR_APIC_ISR + 2
-    rdmsr
-;
-    pop ecx
-    ret
-GetIsrMsr  Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1319,33 +944,6 @@ reload_apic_mem_timer    Proc far
     pop ds
     retf32
 reload_apic_mem_timer  Endp
-
-reload_apic_msr_timer    Proc far
-    push ds
-    push eax
-    push ecx
-    push edx
-;
-    mov cx,system_data_sel
-    mov ds,cx
-;    
-    mov ecx,ds:apic_tics
-    shl ecx,16
-    mov cx,ds:apic_rest
-    shl eax,16
-    mul ecx
-    inc edx
-;
-    mov eax,edx
-    mov ecx,MSR_APIC_INIT_COUNT
-    wrmsr
-;
-    pop edx
-    pop ecx
-    pop eax
-    pop ds
-    retf32
-reload_apic_msr_timer  Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1535,12 +1133,6 @@ smemgLint1Ok:
     mov edi,OFFSET disable_all_irq_name
     xor cl,cl
     mov ax,disable_all_irq_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET has_apic_mem
-    mov edi,OFFSET has_apic_mem_name
-    xor cl,cl
-    mov ax,has_apic_mem_nr
     RegisterOsGate
 ;
     mov ax,cs
@@ -1925,482 +1517,6 @@ smemgLint1Ok:
 ;    
     ret
 SetupMemGates   Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   SetupMsrGates
-;
-;               DESCRIPTION:    Set up MSR gates for x2APIC mode
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupMsrGates   Proc near
-    mov ecx,MSR_APIC_LINT0
-    rdmsr
-    test eax,10000h
-    jnz smsrgLint0Ok
-;    
-    and ah,7
-    cmp ah,4
-    je smsrgLint0Disable
-;
-    cmp ah,7
-    jne smsrgLint0Ok
-
-smsrgLint0Disable:
-    mov eax,10000h
-    wrmsr
-
-smsrgLint0Ok:
-    mov ecx,MSR_APIC_LINT1
-    rdmsr
-    test eax,10000h
-    jnz smsrgLint1Ok
-;    
-    and ah,7
-    cmp ah,4
-    je smsrgLint1Disable
-;
-    cmp ah,7
-    jne smsrgLint1Ok
-
-smsrgLint1Disable:
-    mov eax,10000h
-    wrmsr
-
-smsrgLint1Ok:
-    mov ax,SEG data
-    mov ds,ax
-    mov ds:mp_init_proc, OFFSET SendInitMsr
-    mov ds:mp_startup_proc, OFFSET SendStartupMsr
-    mov ds:mp_int_proc, OFFSET SendIntMsr
-    mov ds:mp_eoi_proc, OFFSET SendEoiMsr
-    mov ds:mp_stop_proc, OFFSET StopApicTimerMsr
-    mov ds:mp_isr_proc, OFFSET GetIsrMsr
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-;
-    mov esi,OFFSET get_id_msr
-    mov edi,OFFSET get_id_name
-    xor cl,cl
-    mov ax,get_apic_id_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET send_eoi_msr
-    mov edi,OFFSET send_eoi_name
-    xor cl,cl
-    mov ax,send_eoi_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET send_nmi_msr
-    mov edi,OFFSET send_nmi_name
-    xor cl,cl
-    mov ax,send_nmi_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET start_apic_msr_timer
-    mov edi,OFFSET start_apic_timer_name
-    xor cl,cl
-    mov ax,start_sys_timer_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET reload_apic_msr_timer
-    mov edi,OFFSET reload_apic_timer_name
-    xor cl,cl
-    mov ax,reload_sys_timer_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET has_apic_msr
-    mov edi,OFFSET has_apic_msr_name
-    xor cl,cl
-    mov ax,has_apic_msr_nr
-    RegisterOsGate
-;
-    mov ax,cs
-    mov ds,ax
-    xor bl,bl
-;
-    mov al,41h
-    mov esi,OFFSET msr_irq1
-    CreateIntGateSelector
-;
-    mov al,43h
-    mov esi,OFFSET msr_irq3
-    CreateIntGateSelector
-;
-    mov al,44h
-    mov esi,OFFSET msr_irq4
-    CreateIntGateSelector
-;
-    mov al,45h
-    mov esi,OFFSET msr_irq5
-    CreateIntGateSelector
-;
-    mov al,46h
-    mov esi,OFFSET msr_irq6
-    CreateIntGateSelector
-;
-    mov al,47h
-    mov esi,OFFSET msr_irq7
-    CreateIntGateSelector
-;
-    mov al,48h
-    mov esi,OFFSET msr_irq8
-    CreateIntGateSelector
-;
-    mov al,49h
-    mov esi,OFFSET msr_irq9
-    CreateIntGateSelector
-;
-    mov al,4Ah
-    mov esi,OFFSET msr_irq10
-    CreateIntGateSelector
-;
-    mov al,4Bh
-    mov esi,OFFSET msr_irq11
-    CreateIntGateSelector
-;
-    mov al,4Ch
-    mov esi,OFFSET msr_irq12
-    CreateIntGateSelector
-;
-    mov al,4Dh
-    mov esi,OFFSET msr_irq13
-    CreateIntGateSelector
-;
-    mov al,4Eh
-    mov esi,OFFSET msr_irq14
-    CreateIntGateSelector
-;
-    mov al,4Fh
-    mov esi,OFFSET msr_irq15
-    CreateIntGateSelector
-;
-    mov al,50h
-    mov esi,OFFSET msr_irq16
-    CreateIntGateSelector
-;
-    mov al,51h
-    mov esi,OFFSET msr_irq17
-    CreateIntGateSelector
-;
-    mov al,52h
-    mov esi,OFFSET msr_irq18
-    CreateIntGateSelector
-;
-    mov al,53h
-    mov esi,OFFSET msr_irq19
-    CreateIntGateSelector
-;
-    mov al,54h
-    mov esi,OFFSET msr_irq20
-    CreateIntGateSelector
-;
-    mov al,55h
-    mov esi,OFFSET msr_irq21
-    CreateIntGateSelector
-;
-    mov al,56h
-    mov esi,OFFSET msr_irq22
-    CreateIntGateSelector
-;
-    mov al,57h
-    mov esi,OFFSET msr_irq23
-    CreateIntGateSelector
-;
-    mov al,58h
-    mov esi,OFFSET msr_irq24
-    CreateIntGateSelector
-;
-    mov al,59h
-    mov esi,OFFSET msr_irq25
-    CreateIntGateSelector
-;
-    mov al,5Ah
-    mov esi,OFFSET msr_irq26
-    CreateIntGateSelector
-;
-    mov al,5Bh
-    mov esi,OFFSET msr_irq27
-    CreateIntGateSelector
-;
-    mov al,5Ch
-    mov esi,OFFSET msr_irq28
-    CreateIntGateSelector
-;
-    mov al,5Dh
-    mov esi,OFFSET msr_irq29
-    CreateIntGateSelector
-;
-    mov al,5Eh
-    mov esi,OFFSET msr_irq30
-    CreateIntGateSelector
-;
-    mov al,5Fh
-    mov esi,OFFSET msr_irq31
-    CreateIntGateSelector
-;
-    mov al,0A0h
-    mov esi,OFFSET msr_msi0
-    CreateIntGateSelector
-;
-    mov al,0A1h
-    mov esi,OFFSET msr_msi1
-    CreateIntGateSelector
-;
-    mov al,0A2h
-    mov esi,OFFSET msr_msi2
-    CreateIntGateSelector
-;
-    mov al,0A3h
-    mov esi,OFFSET msr_msi3
-    CreateIntGateSelector
-;
-    mov al,0A4h
-    mov esi,OFFSET msr_msi4
-    CreateIntGateSelector
-;
-    mov al,0A5h
-    mov esi,OFFSET msr_msi5
-    CreateIntGateSelector
-;
-    mov al,0A6h
-    mov esi,OFFSET msr_msi6
-    CreateIntGateSelector
-;
-    mov al,0A7h
-    mov esi,OFFSET msr_msi7
-    CreateIntGateSelector
-;
-    mov al,0A8h
-    mov esi,OFFSET msr_msi8
-    CreateIntGateSelector
-;
-    mov al,0A9h
-    mov esi,OFFSET msr_msi9
-    CreateIntGateSelector
-;
-    mov al,0AAh
-    mov esi,OFFSET msr_msi10
-    CreateIntGateSelector
-;
-    mov al,0ABh
-    mov esi,OFFSET msr_msi11
-    CreateIntGateSelector
-;
-    mov al,0ACh
-    mov esi,OFFSET msr_msi12
-    CreateIntGateSelector
-;
-    mov al,0ADh
-    mov esi,OFFSET msr_msi13
-    CreateIntGateSelector
-;
-    mov al,0AEh
-    mov esi,OFFSET msr_msi14
-    CreateIntGateSelector
-;
-    mov al,0AFh
-    mov esi,OFFSET msr_msi15
-    CreateIntGateSelector
-;
-    mov al,0B0h
-    mov esi,OFFSET msr_msi16
-    CreateIntGateSelector
-;
-    mov al,0B1h
-    mov esi,OFFSET msr_msi17
-    CreateIntGateSelector
-;
-    mov al,0B2h
-    mov esi,OFFSET msr_msi18
-    CreateIntGateSelector
-;
-    mov al,0B3h
-    mov esi,OFFSET msr_msi19
-    CreateIntGateSelector
-;
-    mov al,0B4h
-    mov esi,OFFSET msr_msi20
-    CreateIntGateSelector
-;
-    mov al,0B5h
-    mov esi,OFFSET msr_msi21
-    CreateIntGateSelector
-;
-    mov al,0B6h
-    mov esi,OFFSET msr_msi22
-    CreateIntGateSelector
-;
-    mov al,0B7h
-    mov esi,OFFSET msr_msi23
-    CreateIntGateSelector
-;
-    mov al,0B8h
-    mov esi,OFFSET msr_msi24
-    CreateIntGateSelector
-;
-    mov al,0B9h
-    mov esi,OFFSET msr_msi25
-    CreateIntGateSelector
-;
-    mov al,0BAh
-    mov esi,OFFSET msr_msi26
-    CreateIntGateSelector
-;
-    mov al,0BBh
-    mov esi,OFFSET msr_msi27
-    CreateIntGateSelector
-;
-    mov al,0BCh
-    mov esi,OFFSET msr_msi28
-    CreateIntGateSelector
-;
-    mov al,0BDh
-    mov esi,OFFSET msr_msi29
-    CreateIntGateSelector
-;
-    mov al,0BEh
-    mov esi,OFFSET msr_msi30
-    CreateIntGateSelector
-;
-    mov al,0BFh
-    mov esi,OFFSET msr_msi31
-    CreateIntGateSelector
-;
-    mov al,0C0h
-    mov esi,OFFSET msr_msi32
-    CreateIntGateSelector
-;
-    mov al,0C1h
-    mov esi,OFFSET msr_msi33
-    CreateIntGateSelector
-;
-    mov al,0C2h
-    mov esi,OFFSET msr_msi34
-    CreateIntGateSelector
-;
-    mov al,0C3h
-    mov esi,OFFSET msr_msi35
-    CreateIntGateSelector
-;
-    mov al,0C4h
-    mov esi,OFFSET msr_msi36
-    CreateIntGateSelector
-;
-    mov al,0C5h
-    mov esi,OFFSET msr_msi37
-    CreateIntGateSelector
-;
-    mov al,0C6h
-    mov esi,OFFSET msr_msi38
-    CreateIntGateSelector
-;
-    mov al,0C7h
-    mov esi,OFFSET msr_msi39
-    CreateIntGateSelector
-;
-    mov al,0C8h
-    mov esi,OFFSET msr_msi40
-    CreateIntGateSelector
-;
-    mov al,0C9h
-    mov esi,OFFSET msr_msi41
-    CreateIntGateSelector
-;
-    mov al,0CAh
-    mov esi,OFFSET msr_msi42
-    CreateIntGateSelector
-;
-    mov al,0CBh
-    mov esi,OFFSET msr_msi43
-    CreateIntGateSelector
-;
-    mov al,0CCh
-    mov esi,OFFSET msr_msi44
-    CreateIntGateSelector
-;
-    mov al,0CDh
-    mov esi,OFFSET msr_msi45
-    CreateIntGateSelector
-;
-    mov al,0CEh
-    mov esi,OFFSET msr_msi46
-    CreateIntGateSelector
-;
-    mov al,0CFh
-    mov esi,OFFSET msr_msi47
-    CreateIntGateSelector
-;
-    mov al,0D0h
-    mov esi,OFFSET msr_msi48
-    CreateIntGateSelector
-;
-    mov al,0D1h
-    mov esi,OFFSET msr_msi49
-    CreateIntGateSelector
-;
-    mov al,0D2h
-    mov esi,OFFSET msr_msi50
-    CreateIntGateSelector
-;
-    mov al,0D3h
-    mov esi,OFFSET msr_msi51
-    CreateIntGateSelector
-;
-    mov al,0D4h
-    mov esi,OFFSET msr_msi52
-    CreateIntGateSelector
-;
-    mov al,0D5h
-    mov esi,OFFSET msr_msi53
-    CreateIntGateSelector
-;
-    mov al,0D6h
-    mov esi,OFFSET msr_msi54
-    CreateIntGateSelector
-;
-    mov al,0D7h
-    mov esi,OFFSET msr_msi55
-    CreateIntGateSelector
-;
-    mov al,0D8h
-    mov esi,OFFSET msr_msi56
-    CreateIntGateSelector
-;
-    mov al,0D9h
-    mov esi,OFFSET msr_msi57
-    CreateIntGateSelector
-;
-    mov al,0DAh
-    mov esi,OFFSET msr_msi58
-    CreateIntGateSelector
-;
-    mov al,0DBh
-    mov esi,OFFSET msr_msi59
-    CreateIntGateSelector
-;
-    mov al,0DCh
-    mov esi,OFFSET msr_msi60
-    CreateIntGateSelector
-;
-    mov al,0DDh
-    mov esi,OFFSET msr_msi61
-    CreateIntGateSelector
-;
-    mov al,0DEh
-    mov esi,OFFSET msr_msi62
-    CreateIntGateSelector
-;
-    mov al,0DFh
-    mov esi,OFFSET msr_msi63
-    CreateIntGateSelector
-;       
-    ret
-SetupMsrGates   Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

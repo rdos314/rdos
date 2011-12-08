@@ -3976,22 +3976,9 @@ start_processor_null_threads    Proc near
     mov ds:flush_process_tlb_proc,OFFSET FlushProcessTlbMultiple
     mov ds:free_global_tlb_proc,OFFSET FreeGlobalTlbMultiple
     mov ds:free_process_tlb_proc,OFFSET FreeProcessTlbMultiple
-;
-    mov ax,has_apic_msr_nr
-    IsValidOsGate
-    jc start_no_msr
-;
-    mov ds:tpr_proc,OFFSET ApicMsrTpr
-    jmp start_locks_ok
-    
-start_no_msr:
-    mov ax,has_apic_mem_nr
-    IsValidOsGate
-    jc start_locks_ok
-;
     mov ds:tpr_proc,OFFSET ApicMemTpr        
 
-start_locks_ok:    
+start_locks_ok:
     mov ecx,stack0_size
     mov ax,cs
     mov ds,ax
