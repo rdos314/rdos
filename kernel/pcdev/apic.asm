@@ -3977,13 +3977,6 @@ InitApicTable    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitApicCores    Proc near
-    mov ax,SEG data
-    mov ds,ax
-    mov ds:mp_flags,0       
-;
-    call InitApicTimer
-    call InitLocalApic
-;
     mov di,OFFSET apic_entries
     mov cx,es:act_size
     sub cx,OFFSET apic_entries - OFFSET apic_phys
@@ -4049,13 +4042,19 @@ InitApicCores   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:mp_flags,0       
+;
     mov eax,dword ptr cs:apic_tab
     GetAcpiTable
     jc init_apic_gates_ok
 ;
     call InitApicTable
+    call InitApicTimer
+    call InitLocalApic
     call InitApicCores
-    call SetupIrq    
+    call SetupIrq 
 ;
     mov ax,cs
     mov es,ax
