@@ -701,28 +701,6 @@ start_apic_timer  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           GetIsr
-;
-;       DESCRIPTION:    Get ISR
-;
-;       RETURNS:        EAX     ISR
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetIsrMem    Proc near
-    push ds
-;
-    mov ax,apic_mem_sel
-    mov ds,ax
-    mov eax,ds:APIC_ISR + 20h
-;
-    pop ds
-    ret
-GetIsrMem  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;               NAME:                   ReloadSysTimer
 ;
 ;               DESCRIPTION:    Reload APIC timer
@@ -1807,9 +1785,10 @@ daiLoop:
     loop daiApicLoop    
 ;
     call InitApicInts
-    mov bx,SEG data
-    mov ds,bx
-    call GetIsrMem
+;
+    mov ax,apic_mem_sel
+    mov ds,ax
+    mov eax,ds:APIC_ISR + 20h
 ;
     pop si
     pop cx
