@@ -1902,6 +1902,20 @@ SetupMsiInts    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           SpuriousInt
+;
+;               DESCRIPTION:    Spurious int
+;
+;               PARAMETERS:             
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+spurious_int:
+    iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:           TimerInt
 ;
 ;               DESCRIPTION:    Timer interrupt
@@ -1970,6 +1984,7 @@ ipi_tab:
 ;
 ;                       int #   Entry                   
 ;
+pi0F   DW      0Fh,    OFFSET spurious_int
 pi80   DW      80h,    OFFSET timer_int
 pi81   DW      81h,    OFFSET tlb_flush_int
        DW      0FFFFh
