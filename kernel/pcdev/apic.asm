@@ -480,7 +480,7 @@ SetupLocalApic    Proc near
     mov eax,10000000h    
     mov es:APIC_LOG_DEST,eax
 ;
-    mov eax,0FFh
+    mov eax,0
     mov es:APIC_TPR,eax
 ;
     mov eax,es:APIC_LINT0
