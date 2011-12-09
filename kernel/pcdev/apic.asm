@@ -830,15 +830,15 @@ send_int  Proc far
     mov cx,apic_mem_sel
     mov ds,cx
 
-simemLoop:
+siLoop:
     mov ecx,ds:APIC_ICR
     test cx,1000h
-    jz simemDo
+    jz siDo
 ;
     ipause
-    jmp simemLoop
+    jmp siLoop
 
-simemDo:    
+siDo:    
     mov ds:APIC_ICR+10h,edx
 ;
     mov ah,40h
@@ -868,36 +868,36 @@ SetupGates   Proc near
 ;
     mov eax,ds:APIC_LINT0
     test eax,10000h
-    jnz smemgLint0Ok
+    jnz sgLint0Ok
 ;    
     and ah,7
     cmp ah,4
-    je smemgLint0Disable
+    je sgLint0Disable
 ;
     cmp ah,7
-    jne smemgLint0Ok
+    jne sgLint0Ok
 
-smemgLint0Disable:
+sgLint0Disable:
     mov eax,10000h
     mov ds:APIC_LINT0,eax
 
-smemgLint0Ok:
+sgLint0Ok:
     mov eax,ds:APIC_LINT1
     test eax,10000h
-    jnz smemgLint1Ok
+    jnz sgLint1Ok
 ;    
     and ah,7
     cmp ah,4
-    je smemgLint1Disable
+    je sgLint1Disable
 ;
     cmp ah,7
-    jne smemgLint1Ok
+    jne sgLint1Ok
 
-smemgLint1Disable:
+sgLint1Disable:
     mov eax,10000h
     mov ds:APIC_LINT1,eax
 
-smemgLint1Ok:
+sgLint1Ok:
     mov ax,SEG data
     mov ds,ax
 ;
