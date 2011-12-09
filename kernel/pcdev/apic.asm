@@ -2098,7 +2098,7 @@ tlb_flush_int:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   InitIpi
+;               NAME:           InitIpi
 ;
 ;               DESCRIPTION:    Init IPIs
 ;
@@ -2144,42 +2144,6 @@ ipiDone:
     pop ds
     ret
 InitIpi Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   InitSmp
-;
-;               DESCRIPTION:    Init multiprocessing
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitSmp Proc near
-    push ds
-    push es
-    pushad
-;    
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-;
-    mov esi,OFFSET start_ap_cores
-    mov edi,OFFSET start_ap_cores_name
-    xor cl,cl
-    mov ax,start_ap_cores_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET send_int
-    mov edi,OFFSET send_int_name
-    xor cl,cl
-    mov ax,send_int_nr
-    RegisterOsGate
-;
-    popad       
-    pop es
-    pop ds
-    ret
-InitSmp Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2521,28 +2485,6 @@ init_irq_loop:
 ;
     mov ds:msi_mask,0
     mov ds:msi_mask+4,0
-;    
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-;
-    mov esi,OFFSET allocate_msi_ints
-    mov edi,OFFSET allocate_msi_ints_name
-    xor cl,cl
-    mov ax,allocate_msi_ints_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET request_msi_handler
-    mov edi,OFFSET request_msi_handler_name
-    xor cl,cl
-    mov ax,request_msi_handler_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET free_msi_int
-    mov edi,OFFSET free_msi_int_name
-    xor cl,cl
-    mov ax,free_msi_int_nr
-    RegisterOsGate
 ;
     popad
     pop ds
@@ -2749,15 +2691,7 @@ init_ap_proc:
     call DoStartCore
     jc init_core_next    
 ;    
-    cmp bp,1
-    jnz init_ap_create
-;    
-    call InitSmp
-    call InitIpi
-    
-init_ap_create:       
     mov fs:ps_apic,edx
-;
     mov al,es:[di].ap_acpi_id
     mov fs:ps_acpi,al
 ;
@@ -2790,6 +2724,43 @@ init    PROC far
     GetAcpiTable
     jc init_apic_gates_ok
 ;
+    push es
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;
+    mov esi,OFFSET start_ap_cores
+    mov edi,OFFSET start_ap_cores_name
+    xor cl,cl
+    mov ax,start_ap_cores_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET send_int
+    mov edi,OFFSET send_int_name
+    xor cl,cl
+    mov ax,send_int_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_msi_ints
+    mov edi,OFFSET allocate_msi_ints_name
+    xor cl,cl
+    mov ax,allocate_msi_ints_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET request_msi_handler
+    mov edi,OFFSET request_msi_handler_name
+    xor cl,cl
+    mov ax,request_msi_handler_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_msi_int
+    mov edi,OFFSET free_msi_int_name
+    xor cl,cl
+    mov ax,free_msi_int_nr
+    RegisterOsGate
+    pop es
+;
+    call InitIpi
     call InitApicTable
     call InitApicInts
     call InitApicTimer
