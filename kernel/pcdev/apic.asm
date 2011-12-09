@@ -427,8 +427,6 @@ stopl:
 
 ap_crash:    
     StartCrashCore
-
-apic_tab    DB 'APIC'
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -527,45 +525,6 @@ send_eoi  Proc far
     pop ds
     retf32
 send_eoi Endp
-       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   SendInit
-;
-;               DESCRIPTION:    Send init request
-;
-;       PARAMETERS:     EDX     Destination
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendInit Proc near
-    push ds
-    push eax
-    push edx
-;    
-    shl edx,24
-    mov ax,apic_mem_sel
-    mov ds,ax
-    mov ds:APIC_ICR+10h,edx
-;
-    mov eax,0C500h
-    mov ds:APIC_ICR,eax
-;    
-    mov ax,1
-    call DelayMs
-;
-    mov eax,08500h
-    mov ds:APIC_ICR,eax
-;
-    mov ax,20
-    call DelayMs
-;
-    pop edx
-    pop eax
-    pop ds    
-    ret
-SendInit Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -599,43 +558,6 @@ send_nmi Proc far
     pop ds
     retf32
 send_nmi Endp
-       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   SendStartup
-;
-;               DESCRIPTION:    Send startup request
-;
-;       PARAMETERS:     EDX     Destination
-;                       AL      Vector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendStartup Proc near
-    push ds
-    push eax
-    push ecx
-    push edx
-;        
-    shl edx,24
-    mov cx,apic_mem_sel
-    mov ds,cx
-    mov ds:APIC_ICR+10h,edx
-;
-    mov ah,46h
-    movzx eax,ax
-    mov ds:APIC_ICR,eax
-;
-    mov ax,1
-    call DelayMs
-;
-    pop edx
-    pop ecx
-    pop eax
-    pop ds    
-    ret
-SendStartup Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -852,262 +774,6 @@ siDo:
     popf
     retf32
 send_int  Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           DoStartCore
-;
-;       DESCRIPTION:    Start a CPU core
-;
-;       PARAMETERS:     EDX         APIC ID
-;
-;       RETURNS:        FS          Processor sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DoStartCore   Proc near
-    push ds
-    push es
-    pushad
-;
-    mov ax,SEG data
-    mov fs,ax
-;    
-    mov ebp,edx    
-    mov eax,2000h
-    AllocateBigLinear
-;
-    mov eax,63h
-    SetPhysicalPage
-;    
-    mov eax,1063h
-    add edx,1000h
-    SetPhysicalPage
-    sub edx,1000h
-;
-    AllocateGdt
-    mov ecx,2000h
-    CreateDataSelector32
-    mov es,bx
-    mov ax,cs
-    mov ds,ax
-;
-    mov di,0F80h
-    mov si,OFFSET table_start
-    mov cx,OFFSET table_end - OFFSET table_start
-    rep movsb
-;
-    mov di,1000h
-    mov si,OFFSET real_start
-    mov cx,OFFSET real_end - OFFSET real_start
-    rep movsb
-;
-    mov di,1400h
-    mov si,OFFSET prot_start
-    mov cx,OFFSET prot_end - OFFSET prot_start
-    rep movsb
-;
-    mov di,1800h
-    mov eax,cr0
-    mov es:[di].ap_cr0,eax
-    mov eax,cr3
-    mov es:[di].ap_cr3,eax
-;
-    db 0Fh
-    db 20h
-    db 0E0h     ; mov eax,cr4
-    mov es:[di].ap_cr4,eax
-;
-    push cx
-    push edx
-    db 66h
-    sidt fword ptr es:[di].ap_idt
-;    
-    CreateCoreGdt
-    dec cx
-    mov word ptr es:[di].ap_gdt,cx
-    mov dword ptr es:[di].ap_gdt+2,edx
-;    
-    pop edx
-    pop cx
-;
-    push es
-    mov eax,200h
-    AllocateSmallGlobalMem
-    mov ax,es
-    pop es
-    mov es:[di].ap_ss,ax
-;
-    mov bx,467h
-    mov ax,0
-    mov es:[bx],ax
-    mov ax,100h
-    mov es:[bx+2],ax
-;
-    mov al,0Fh
-    out 70h,al
-    jmp short $+2
-;
-    mov al,0Ah
-    out 71h,al
-    jmp short $+2
-;
-    mov fs:mp_processor_sign,0
-;
-    xchg edx,ebp
-    call SendInit
-;
-    mov eax,fs:mp_processor_sign
-    cmp eax,12345678h
-    je scOk
-;    
-    mov al,1
-    call SendStartup
-    
-    mov cx,250
-
-scLoop1:
-    mov eax,fs:mp_processor_sign
-    cmp eax,12345678h
-    je scOk
-;    
-    mov ax,1
-    call DelayMs    
-    loop scLoop1
-;
-    mov al,1    
-    call SendStartup
-;    
-    mov cx,250
-
-scLoop2:
-    mov eax,fs:mp_processor_sign
-    cmp eax,12345678h
-    je scOk
-;    
-    mov ax,1
-    call DelayMs    
-    loop scLoop2
-;
-    xor ax,ax
-    mov fs,ax
-    stc
-    jmp scDone
-
-scOk:
-    push es
-    mov edx,dword ptr es:[di].ap_gdt+2
-    CreateCore
-    mov ax,es
-    mov fs,ax    
-    pop es
-    clc
-
-scDone:
-    pushf
-;
-    mov al,0Fh
-    out 70h,al
-    jmp short $+2
-;
-    xor al,al
-    out 71h,al
-    jmp short $+2
-;
-    mov edx,ebp
-    xor eax,eax
-    add edx,1000h
-    SetPhysicalPage
-    sub edx,1000h
-;    
-    SetPhysicalPage
-    FreeMem
-;
-    popf   
-    popad
-    pop es
-    pop ds
-    ret
-DoStartCore   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;               NAME:                   IRQx
-;
-;               DESCRIPTION:    IRQ handlers
-;
-;               PARAMETERS:             
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-; Allocatable IRQs (MSI)
-
-    msimac 0
-    msimac 1
-    msimac 2
-    msimac 3
-    msimac 4
-    msimac 5
-    msimac 6
-    msimac 7
-    msimac 8
-    msimac 9
-    msimac 10
-    msimac 11
-    msimac 12
-    msimac 13
-    msimac 14
-    msimac 15
-    msimac 16
-    msimac 17
-    msimac 18
-    msimac 19
-    msimac 20
-    msimac 21
-    msimac 22
-    msimac 23
-    msimac 24
-    msimac 25
-    msimac 26
-    msimac 27
-    msimac 28
-    msimac 29
-    msimac 30
-    msimac 31
-    msimac 32
-    msimac 33
-    msimac 34
-    msimac 35
-    msimac 36
-    msimac 37
-    msimac 38
-    msimac 39
-    msimac 40
-    msimac 41
-    msimac 42
-    msimac 43
-    msimac 44
-    msimac 45
-    msimac 46
-    msimac 47
-    msimac 48
-    msimac 49
-    msimac 50
-    msimac 51
-    msimac 52
-    msimac 53
-    msimac 54
-    msimac 55
-    msimac 56
-    msimac 57
-    msimac 58
-    msimac 59
-    msimac 60
-    msimac 61
-    msimac 62
-    msimac 63
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1306,278 +972,6 @@ disable_all_irq Endp
 enable_irq_detect  Proc far
     ret
 enable_irq_detect   Endp
-      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   apic_pr
-;
-;               DESCRIPTION:    APIC test thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-apic_name       DB 'Apic Test',0
-
-apic_pr:
-    int 3 
-    mov eax,dword ptr cs:apic_tab
-    GetAcpiTable
-    call InitApicTable   
-    retf            
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   init_apic_thread
-;
-;               DESCRIPTION:    Init apic threads
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_apic_thread        PROC far
-    push ds
-    push es
-    pusha
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov eax,ds:cpu_feature_flags
-    test ax,200h
-;    jz init_thread_done
-;    
-;    mov ecx,1Bh
-;    rdmsr
-;    test ah,8
-;    jz init_thread_done
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-;       
-    mov si,OFFSET apic_pr
-    mov di,OFFSET apic_name
-    mov cx,stack0_size
-    mov ax,4
-    CreateThread
-
-init_thread_done:
-    popa
-    pop es
-    pop ds
-    retf32
-init_apic_thread        ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;               NAME:                   InitApicInts
-;
-;               DESCRIPTION:    Init APIC ints
-;
-;               PARAMETERS:             
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitApicInts    Proc near
-    push es
-    push eax
-    push bx
-;    
-    mov bx,apic_mem_sel
-    mov es,bx
-;
-    mov eax,8700h
-    mov es:APIC_LINT0,eax
-;
-    mov eax,400h
-    mov es:APIC_LINT1,eax 
-;   
-    mov eax,10000h
-    mov es:APIC_LERROR,eax
-;
-    mov eax,10000h
-    mov es:APIC_THERMAL,eax
-;
-    mov eax,10000h
-    mov es:APIC_PERF,eax
-;
-    mov eax,10000h
-    mov es:APIC_TIMER,eax
-;
-    mov eax,es:APIC_SPUR
-    and eax,NOT 1000h
-    or eax,100h
-    mov al,0Fh
-    mov es:APIC_SPUR,eax    
-;
-    mov eax,0Bh
-    mov es:APIC_DIV_CONFIG,eax
-;
-    mov eax,-1
-    mov es:APIC_DEST_FORMAT,eax
-;
-    mov eax,10000000h    
-    mov es:APIC_LOG_DEST,eax
-;
-    mov eax,0FFh
-    mov es:APIC_TPR,eax
-;
-    pop bx
-    pop eax
-    pop es    
-    ret
-InitApicInts    Endp
-    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;               NAME:                   InitApicTimer
-;
-;               DESCRIPTION:    Init APIC timer
-;
-;               PARAMETERS:             EAX     Physical base of timer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_tics   MACRO
-    mov al,0
-    out TIMER_CONTROL,al
-    jmp short $+2
-    in al,TIMER0
-    mov ah,al
-    jmp short $+2
-    in al,TIMER0
-    xchg al,ah
-            ENDM
-
-InitApicTimer Proc near    
-    push ds
-    push es
-    pushad
-;    
-    mov ax,system_data_sel
-    mov ds,ax
-    mov ax,apic_mem_sel
-    mov es,ax
-
-init_tsc_start:
-    xor cx,cx    
-
-init_tsc_wait_start_high:
-    read_tics    
-    test ax,8000h
-    jnz init_tsc_wait_start_high_ok
-    loop init_tsc_wait_start_high    
-
-init_tsc_wait_start_high_ok:
-    xor cx,cx    
-
-init_tsc_wait_start_low:
-    read_tics    
-    test ax,8000h
-    jz init_tsc_wait_start_low_ok
-    loop init_tsc_wait_start_low
-
-init_tsc_wait_start_low_ok:    
-    mov eax,-1
-    mov es:APIC_INIT_COUNT,eax
-
-init_apic_start_done:
-    xor cx,cx
-
-init_tsc_wait_high:    
-    read_tics
-    test ax,8000h
-    jnz init_tsc_wait_high_ok
-    loop init_tsc_wait_high
-
-init_tsc_wait_high_ok:
-    xor cx,cx
-
-init_tsc_wait_low:    
-    read_tics
-    test ax,8000h
-    jz init_tsc_wait_low_ok
-    loop init_tsc_wait_low
-
-init_tsc_wait_low_ok:
-    mov eax,-1
-    sub eax,es:APIC_CURR_COUNT    
-    xor edx,edx
-    mov ecx,8000h
-    div ecx
-;
-    mov ds:apic_tics,eax
-    mov ds:apic_rest,dx    
-;    
-    popad
-    pop es
-    pop ds
-    ret
-InitApicTimer Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;               NAME:                   InitLocalApic
-;
-;               DESCRIPTION:    Init local APIC access
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitLocalApic   Proc near
-    push ds
-    push es
-    pushad
-;    
-    mov ax,system_data_sel
-    mov ds,ax
-    mov eax,ds:cpu_feature_flags
-;
-    mov ax,apic_mem_sel
-    mov ds,ax    
-;
-    mov eax,ds:APIC_LINT0
-    test eax,10000h
-    jnz sgLint0Ok
-;    
-    and ah,7
-    cmp ah,4
-    je sgLint0Disable
-;
-    cmp ah,7
-    jne sgLint0Ok
-
-sgLint0Disable:
-    mov eax,10000h
-    mov ds:APIC_LINT0,eax
-
-sgLint0Ok:
-    mov eax,ds:APIC_LINT1
-    test eax,10000h
-    jnz sgLint1Ok
-;    
-    and ah,7
-    cmp ah,4
-    je sgLint1Disable
-;
-    cmp ah,7
-    jne sgLint1Ok
-
-sgLint1Disable:
-    mov eax,10000h
-    mov ds:APIC_LINT1,eax
-
-sgLint1Ok:
-;
-    popad
-    pop es
-    pop ds
-    ret
-InitLocalApic   Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2074,6 +1468,71 @@ SetupPicInts    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    msimac 0
+    msimac 1
+    msimac 2
+    msimac 3
+    msimac 4
+    msimac 5
+    msimac 6
+    msimac 7
+    msimac 8
+    msimac 9
+    msimac 10
+    msimac 11
+    msimac 12
+    msimac 13
+    msimac 14
+    msimac 15
+    msimac 16
+    msimac 17
+    msimac 18
+    msimac 19
+    msimac 20
+    msimac 21
+    msimac 22
+    msimac 23
+    msimac 24
+    msimac 25
+    msimac 26
+    msimac 27
+    msimac 28
+    msimac 29
+    msimac 30
+    msimac 31
+    msimac 32
+    msimac 33
+    msimac 34
+    msimac 35
+    msimac 36
+    msimac 37
+    msimac 38
+    msimac 39
+    msimac 40
+    msimac 41
+    msimac 42
+    msimac 43
+    msimac 44
+    msimac 45
+    msimac 46
+    msimac 47
+    msimac 48
+    msimac 49
+    msimac 50
+    msimac 51
+    msimac 52
+    msimac 53
+    msimac 54
+    msimac 55
+    msimac 56
+    msimac 57
+    msimac 58
+    msimac 59
+    msimac 60
+    msimac 61
+    msimac 62
+    msimac 63
+
 SetupMsiInts    Proc near
     push ds
     push es
@@ -2453,6 +1912,260 @@ ipiDone:
     pop ds
     ret
 SetupIpiInts Endp
+       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:                   SendInit
+;
+;               DESCRIPTION:    Send init request
+;
+;       PARAMETERS:     EDX     Destination
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendInit Proc near
+    push ds
+    push eax
+    push edx
+;    
+    shl edx,24
+    mov ax,apic_mem_sel
+    mov ds,ax
+    mov ds:APIC_ICR+10h,edx
+;
+    mov eax,0C500h
+    mov ds:APIC_ICR,eax
+;    
+    mov ax,1
+    call DelayMs
+;
+    mov eax,08500h
+    mov ds:APIC_ICR,eax
+;
+    mov ax,20
+    call DelayMs
+;
+    pop edx
+    pop eax
+    pop ds    
+    ret
+SendInit Endp
+       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:                   SendStartup
+;
+;               DESCRIPTION:    Send startup request
+;
+;       PARAMETERS:     EDX     Destination
+;                       AL      Vector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendStartup Proc near
+    push ds
+    push eax
+    push ecx
+    push edx
+;        
+    shl edx,24
+    mov cx,apic_mem_sel
+    mov ds,cx
+    mov ds:APIC_ICR+10h,edx
+;
+    mov ah,46h
+    movzx eax,ax
+    mov ds:APIC_ICR,eax
+;
+    mov ax,1
+    call DelayMs
+;
+    pop edx
+    pop ecx
+    pop eax
+    pop ds    
+    ret
+SendStartup Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DoStartCore
+;
+;       DESCRIPTION:    Start a CPU core
+;
+;       PARAMETERS:     EDX         APIC ID
+;
+;       RETURNS:        FS          Processor sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DoStartCore   Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov fs,ax
+;    
+    mov ebp,edx    
+    mov eax,2000h
+    AllocateBigLinear
+;
+    mov eax,63h
+    SetPhysicalPage
+;    
+    mov eax,1063h
+    add edx,1000h
+    SetPhysicalPage
+    sub edx,1000h
+;
+    AllocateGdt
+    mov ecx,2000h
+    CreateDataSelector32
+    mov es,bx
+    mov ax,cs
+    mov ds,ax
+;
+    mov di,0F80h
+    mov si,OFFSET table_start
+    mov cx,OFFSET table_end - OFFSET table_start
+    rep movsb
+;
+    mov di,1000h
+    mov si,OFFSET real_start
+    mov cx,OFFSET real_end - OFFSET real_start
+    rep movsb
+;
+    mov di,1400h
+    mov si,OFFSET prot_start
+    mov cx,OFFSET prot_end - OFFSET prot_start
+    rep movsb
+;
+    mov di,1800h
+    mov eax,cr0
+    mov es:[di].ap_cr0,eax
+    mov eax,cr3
+    mov es:[di].ap_cr3,eax
+;
+    db 0Fh
+    db 20h
+    db 0E0h     ; mov eax,cr4
+    mov es:[di].ap_cr4,eax
+;
+    push cx
+    push edx
+    db 66h
+    sidt fword ptr es:[di].ap_idt
+;    
+    CreateCoreGdt
+    dec cx
+    mov word ptr es:[di].ap_gdt,cx
+    mov dword ptr es:[di].ap_gdt+2,edx
+;    
+    pop edx
+    pop cx
+;
+    push es
+    mov eax,200h
+    AllocateSmallGlobalMem
+    mov ax,es
+    pop es
+    mov es:[di].ap_ss,ax
+;
+    mov bx,467h
+    mov ax,0
+    mov es:[bx],ax
+    mov ax,100h
+    mov es:[bx+2],ax
+;
+    mov al,0Fh
+    out 70h,al
+    jmp short $+2
+;
+    mov al,0Ah
+    out 71h,al
+    jmp short $+2
+;
+    mov fs:mp_processor_sign,0
+;
+    xchg edx,ebp
+    call SendInit
+;
+    mov eax,fs:mp_processor_sign
+    cmp eax,12345678h
+    je scOk
+;    
+    mov al,1
+    call SendStartup
+    
+    mov cx,250
+
+scLoop1:
+    mov eax,fs:mp_processor_sign
+    cmp eax,12345678h
+    je scOk
+;    
+    mov ax,1
+    call DelayMs    
+    loop scLoop1
+;
+    mov al,1    
+    call SendStartup
+;    
+    mov cx,250
+
+scLoop2:
+    mov eax,fs:mp_processor_sign
+    cmp eax,12345678h
+    je scOk
+;    
+    mov ax,1
+    call DelayMs    
+    loop scLoop2
+;
+    xor ax,ax
+    mov fs,ax
+    stc
+    jmp scDone
+
+scOk:
+    push es
+    mov edx,dword ptr es:[di].ap_gdt+2
+    CreateCore
+    mov ax,es
+    mov fs,ax    
+    pop es
+    clc
+
+scDone:
+    pushf
+;
+    mov al,0Fh
+    out 70h,al
+    jmp short $+2
+;
+    xor al,al
+    out 71h,al
+    jmp short $+2
+;
+    mov edx,ebp
+    xor eax,eax
+    add edx,1000h
+    SetPhysicalPage
+    sub edx,1000h
+;    
+    SetPhysicalPage
+    FreeMem
+;
+    popf   
+    popad
+    pop es
+    pop ds
+    ret
+DoStartCore   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2648,6 +2361,217 @@ init_apic_next:
     ja init_apic_loop
     ret
 InitApicTable    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   InitApicInts
+;
+;               DESCRIPTION:    Init APIC ints
+;
+;               PARAMETERS:             
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitApicInts    Proc near
+    push es
+    push eax
+    push bx
+;    
+    mov bx,apic_mem_sel
+    mov es,bx
+;
+    mov eax,8700h
+    mov es:APIC_LINT0,eax
+;
+    mov eax,400h
+    mov es:APIC_LINT1,eax 
+;   
+    mov eax,10000h
+    mov es:APIC_LERROR,eax
+;
+    mov eax,10000h
+    mov es:APIC_THERMAL,eax
+;
+    mov eax,10000h
+    mov es:APIC_PERF,eax
+;
+    mov eax,10000h
+    mov es:APIC_TIMER,eax
+;
+    mov eax,es:APIC_SPUR
+    and eax,NOT 1000h
+    or eax,100h
+    mov al,0Fh
+    mov es:APIC_SPUR,eax    
+;
+    mov eax,0Bh
+    mov es:APIC_DIV_CONFIG,eax
+;
+    mov eax,-1
+    mov es:APIC_DEST_FORMAT,eax
+;
+    mov eax,10000000h    
+    mov es:APIC_LOG_DEST,eax
+;
+    mov eax,0FFh
+    mov es:APIC_TPR,eax
+;
+    pop bx
+    pop eax
+    pop es    
+    ret
+InitApicInts    Endp
+    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   InitApicTimer
+;
+;               DESCRIPTION:    Init APIC timer
+;
+;               PARAMETERS:             EAX     Physical base of timer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_tics   MACRO
+    mov al,0
+    out TIMER_CONTROL,al
+    jmp short $+2
+    in al,TIMER0
+    mov ah,al
+    jmp short $+2
+    in al,TIMER0
+    xchg al,ah
+            ENDM
+
+InitApicTimer Proc near    
+    push ds
+    push es
+    pushad
+;    
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ax,apic_mem_sel
+    mov es,ax
+
+init_tsc_start:
+    xor cx,cx    
+
+init_tsc_wait_start_high:
+    read_tics    
+    test ax,8000h
+    jnz init_tsc_wait_start_high_ok
+    loop init_tsc_wait_start_high    
+
+init_tsc_wait_start_high_ok:
+    xor cx,cx    
+
+init_tsc_wait_start_low:
+    read_tics    
+    test ax,8000h
+    jz init_tsc_wait_start_low_ok
+    loop init_tsc_wait_start_low
+
+init_tsc_wait_start_low_ok:    
+    mov eax,-1
+    mov es:APIC_INIT_COUNT,eax
+
+init_apic_start_done:
+    xor cx,cx
+
+init_tsc_wait_high:    
+    read_tics
+    test ax,8000h
+    jnz init_tsc_wait_high_ok
+    loop init_tsc_wait_high
+
+init_tsc_wait_high_ok:
+    xor cx,cx
+
+init_tsc_wait_low:    
+    read_tics
+    test ax,8000h
+    jz init_tsc_wait_low_ok
+    loop init_tsc_wait_low
+
+init_tsc_wait_low_ok:
+    mov eax,-1
+    sub eax,es:APIC_CURR_COUNT    
+    xor edx,edx
+    mov ecx,8000h
+    div ecx
+;
+    mov ds:apic_tics,eax
+    mov ds:apic_rest,dx    
+;    
+    popad
+    pop es
+    pop ds
+    ret
+InitApicTimer Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   InitLocalApic
+;
+;               DESCRIPTION:    Init local APIC access
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitLocalApic   Proc near
+    push ds
+    push es
+    pushad
+;    
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:cpu_feature_flags
+;
+    mov ax,apic_mem_sel
+    mov ds,ax    
+;
+    mov eax,ds:APIC_LINT0
+    test eax,10000h
+    jnz sgLint0Ok
+;    
+    and ah,7
+    cmp ah,4
+    je sgLint0Disable
+;
+    cmp ah,7
+    jne sgLint0Ok
+
+sgLint0Disable:
+    mov eax,10000h
+    mov ds:APIC_LINT0,eax
+
+sgLint0Ok:
+    mov eax,ds:APIC_LINT1
+    test eax,10000h
+    jnz sgLint1Ok
+;    
+    and ah,7
+    cmp ah,4
+    je sgLint1Disable
+;
+    cmp ah,7
+    jne sgLint1Ok
+
+sgLint1Disable:
+    mov eax,10000h
+    mov ds:APIC_LINT1,eax
+
+sgLint1Ok:
+;
+    popad
+    pop es
+    pop ds
+    ret
+InitLocalApic   Endp
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2709,6 +2633,54 @@ init_core_next:
 ;   
     ret
 InitApicCores   Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:                   apic_pr
+;
+;               DESCRIPTION:    APIC test thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+apic_name       DB 'Apic Test',0
+
+apic_pr:
+    int 3 
+    mov eax,dword ptr cs:apic_tab
+    GetAcpiTable
+    call InitApicTable   
+    retf            
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:                   init_apic_thread
+;
+;               DESCRIPTION:    Init apic threads
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_apic_thread        PROC far
+    push ds
+    push es
+    pusha
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;       
+    mov si,OFFSET apic_pr
+    mov di,OFFSET apic_name
+    mov cx,stack0_size
+    mov ax,4
+    CreateThread
+;
+    popa
+    pop es
+    pop ds
+    retf32
+init_apic_thread        ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2718,6 +2690,8 @@ InitApicCores   Endp
 ;               DESCRIPTION:    Init apic mp module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+apic_tab    DB 'APIC'
 
 init    PROC far
     mov ax,SEG data
