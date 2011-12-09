@@ -650,7 +650,7 @@ SendStartup Endp
 
 start_apic_timer_name    DB 'Start Apic Timer', 0
 
-start_apic_mem_timer    Proc far
+start_apic_timer    Proc far
     push ds
     push es
     push bx
@@ -696,7 +696,7 @@ start_apic_mem_timer    Proc far
     pop es
     pop ds
     retf32
-start_apic_mem_timer  Endp
+start_apic_timer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -733,7 +733,7 @@ GetIsrMem  Endp
 
 reload_apic_timer_name    DB 'Reload Apic Timer', 0
 
-reload_apic_mem_timer    Proc far
+reload_apic_timer    Proc far
     push ds
     push eax
     push ecx
@@ -757,7 +757,7 @@ reload_apic_mem_timer    Proc far
     pop eax
     pop ds
     retf32
-reload_apic_mem_timer  Endp
+reload_apic_timer  Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -945,13 +945,13 @@ smemgLint1Ok:
     mov ax,send_nmi_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET start_apic_mem_timer
+    mov esi,OFFSET start_apic_timer
     mov edi,OFFSET start_apic_timer_name
     xor cl,cl
     mov ax,start_sys_timer_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET reload_apic_mem_timer
+    mov esi,OFFSET reload_apic_timer
     mov edi,OFFSET reload_apic_timer_name
     xor cl,cl
     mov ax,reload_sys_timer_nr
