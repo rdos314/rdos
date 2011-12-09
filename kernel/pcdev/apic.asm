@@ -477,9 +477,9 @@ DelayMs Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GetId
+;               NAME:           GetId
 ;
-;               DESCRIPTION:    Get own ID, memory mode
+;               DESCRIPTION:    Get own ID
 ;
 ;       RETURNS:        EDX     Apic ID
 ;
@@ -487,7 +487,7 @@ DelayMs Endp
 
 get_id_name    DB 'Get Apic ID',0
 
-get_id_mem  Proc far
+get_id  Proc far
     push ds
     push ax
 ;    
@@ -499,7 +499,7 @@ get_id_mem  Proc far
     pop ax
     pop ds
     retf32
-get_id_mem Endp
+get_id Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -514,7 +514,7 @@ get_id_mem Endp
 
 send_eoi_name    DB 'Send EOI',0
 
-send_eoi_mem  Proc far
+send_eoi  Proc far
     push ds
     push eax
 ;    
@@ -526,7 +526,7 @@ send_eoi_mem  Proc far
     pop eax
     pop ds
     retf32
-send_eoi_mem Endp
+send_eoi Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -570,9 +570,9 @@ SendInit Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           SendNmiMem
+;       NAME:           SendNmi
 ;
-;       DESCRIPTION:    Send NMI request using shared memory
+;       DESCRIPTION:    Send NMI request
 ;
 ;       PARAMETERS:     FS      Destination processor
 ;
@@ -580,7 +580,7 @@ SendInit Endp
 
 send_nmi_name   DB 'Send NMI', 0
 
-send_nmi_mem Proc far
+send_nmi Proc far
     push ds
     push eax
     push edx
@@ -598,7 +598,7 @@ send_nmi_mem Proc far
     pop eax
     pop ds
     retf32
-send_nmi_mem Endp
+send_nmi Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -636,30 +636,6 @@ SendStartup Proc near
     pop ds    
     ret
 SendStartup Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   SendEoiMem
-;
-;               DESCRIPTION:    Send EOI using shared memory
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendEoiMem Proc near
-    push ds
-    push eax
-;    
-    mov ax,apic_mem_sel
-    mov ds,ax
-    xor eax,eax
-    mov ds:APIC_EOI,eax
-;
-    pop eax
-    pop ds
-    ret
-SendEoiMem Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -951,19 +927,19 @@ smemgLint1Ok:
     mov ds,ax
     mov es,ax
 ;
-    mov esi,OFFSET get_id_mem
+    mov esi,OFFSET get_id
     mov edi,OFFSET get_id_name
     xor cl,cl
     mov ax,get_apic_id_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET send_eoi_mem
+    mov esi,OFFSET send_eoi
     mov edi,OFFSET send_eoi_name
     xor cl,cl
     mov ax,send_eoi_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET send_nmi_mem
+    mov esi,OFFSET send_nmi
     mov edi,OFFSET send_nmi_name
     xor cl,cl
     mov ax,send_nmi_nr
