@@ -483,6 +483,38 @@ SetupLocalApic    Proc near
     mov eax,0FFh
     mov es:APIC_TPR,eax
 ;
+    mov eax,es:APIC_LINT0
+    test eax,10000h
+    jnz sgLint0Ok
+;    
+    and ah,7
+    cmp ah,4
+    je sgLint0Disable
+;
+    cmp ah,7
+    jne sgLint0Ok
+
+sgLint0Disable:
+    mov eax,10000h
+    mov es:APIC_LINT0,eax
+
+sgLint0Ok:
+    mov eax,es:APIC_LINT1
+    test eax,10000h
+    jnz sgLint1Ok
+;    
+    and ah,7
+    cmp ah,4
+    je sgLint1Disable
+;
+    cmp ah,7
+    jne sgLint1Ok
+
+sgLint1Disable:
+    mov eax,10000h
+    mov es:APIC_LINT1,eax
+
+sgLint1Ok:
     pop bx
     pop eax
     pop es    
@@ -2018,15 +2050,15 @@ SetupIrq    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:           InitApicTable
+;               NAME:           ProcessApicTable
 ;
-;               DESCRIPTION:    Init basic APIC vars
+;               DESCRIPTION:    Define basic APIC vars
 ;
 ;               PARAMETERS:     ES      Apic table
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InitApicTable    Proc near
+ProcessApicTable    Proc near
     mov ax,SEG data
     mov ds,ax
     mov ds:ioapic_count,0
@@ -2167,7 +2199,7 @@ init_apic_next:
     sub cx,ax
     ja init_apic_loop
     ret
-InitApicTable    Endp
+ProcessApicTable    Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2256,66 +2288,6 @@ init_tsc_wait_low_ok:
     pop ds
     ret
 InitApicTimer Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;               NAME:                   InitLocalApic
-;
-;               DESCRIPTION:    Init local APIC access
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitLocalApic   Proc near
-    push ds
-    push es
-    pushad
-;    
-    mov ax,system_data_sel
-    mov ds,ax
-    mov eax,ds:cpu_feature_flags
-;
-    mov ax,apic_mem_sel
-    mov ds,ax    
-;
-    mov eax,ds:APIC_LINT0
-    test eax,10000h
-    jnz sgLint0Ok
-;    
-    and ah,7
-    cmp ah,4
-    je sgLint0Disable
-;
-    cmp ah,7
-    jne sgLint0Ok
-
-sgLint0Disable:
-    mov eax,10000h
-    mov ds:APIC_LINT0,eax
-
-sgLint0Ok:
-    mov eax,ds:APIC_LINT1
-    test eax,10000h
-    jnz sgLint1Ok
-;    
-    and ah,7
-    cmp ah,4
-    je sgLint1Disable
-;
-    cmp ah,7
-    jne sgLint1Ok
-
-sgLint1Disable:
-    mov eax,10000h
-    mov ds:APIC_LINT1,eax
-
-sgLint1Ok:
-;
-    popad
-    pop es
-    pop ds
-    ret
-InitLocalApic   Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2574,17 +2546,15 @@ DoStartCore   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:           StartupCores
+;               NAME:           StartupApCores
 ;
-;               DESCRIPTION:    Init APIC cores
+;               DESCRIPTION:    Startup application cores
 ;
 ;               PARAMETERS:     ES      Apic table
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartupCores    Proc near
-    mov bx,es
-
+StartupApCores    Proc near
     mov di,OFFSET apic_entries
     mov cx,es:act_size
     sub cx,OFFSET apic_entries - OFFSET apic_phys
@@ -2630,7 +2600,7 @@ init_core_next:
     ja init_core_loop
 ;   
     ret
-StartupCores   Endp
+StartupApCores   Endp
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2645,9 +2615,6 @@ apic_name       DB 'Apic Test',0
 
 apic_pr:
     int 3 
-    mov eax,dword ptr cs:apic_tab
-    GetAcpiTable
-    call InitApicTable   
     retf            
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2783,12 +2750,11 @@ init    PROC far
     call SetupMsiInts
     call SetupIrq 
 ;
-    call InitApicTable
-;    
+    call ProcessApicTable
     call SetupLocalApic
+;    
     call InitApicTimer
-    call InitLocalApic
-    call StartupCores
+    call StartupApCores
 ;
     mov ax,cs
     mov es,ax
