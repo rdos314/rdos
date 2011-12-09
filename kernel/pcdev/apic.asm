@@ -2650,6 +2650,70 @@ init_apic_thread        ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;               NAME:           DisablePic
+;
+;               DESCRIPTION:    Disable legacy PIC
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DisablePic  Proc near
+    push edx
+;
+    cli
+    mov al,0FFh
+    out 21h,al
+    jmp short $+2
+    out 0A1h,al
+    jmp short $+2
+;
+    xor edx,edx
+    mov al,0Bh
+    out 0A0h,al
+    jmp short $+2
+    in al,0A0h
+    mov dh,al
+
+daiSlaveLoop:
+    or al,al
+    jz daiSlaveOk
+;
+    mov al,20h
+    out 0A0h,al
+    jmp short $+2
+    mov al,0Bh
+    out 0A0h,al
+    jmp short $+2
+    in al,0A0h
+    jmp daiSlaveLoop
+
+daiSlaveOk:
+    mov al,0Bh
+    out 20h,al
+    jmp short $+2
+    in al,20h
+    mov dl,al
+
+daiMasterLoop:
+    or al,al
+    jz daiMasterOk
+;
+    mov al,20h
+    out 20h,al
+    jmp short $+2
+    mov al,0Bh
+    out 20h,al
+    jmp short $+2
+    in al,20h
+    jmp daiMasterLoop
+
+daiMasterOk:
+    pop edx
+    ret
+DisablePic  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;               NAME:                   Init
 ;
 ;               DESCRIPTION:    Init apic mp module
@@ -2745,6 +2809,8 @@ init    PROC far
     RegisterOsGate
     pop es
 ;
+    call DisablePic
+;    
     call SetupIpiInts
     call SetupPicInts
     call SetupMsiInts
