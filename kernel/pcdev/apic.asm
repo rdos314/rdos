@@ -1042,39 +1042,6 @@ DoStartCore   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; fixed IRQs (IOAPIC)
-
-    irqmac 1
-    irqmac 3
-    irqmac 4
-    irqmac 5
-    irqmac 6
-    irqmac 7
-    irqmac 8
-    irqmac 9
-    irqmac 10
-    irqmac 11
-    irqmac 12
-    irqmac 13
-    irqmac 14
-    irqmac 15
-    irqmac 16
-    irqmac 17
-    irqmac 18
-    irqmac 19
-    irqmac 20
-    irqmac 21
-    irqmac 22
-    irqmac 23
-    irqmac 24
-    irqmac 25
-    irqmac 26
-    irqmac 27
-    irqmac 28
-    irqmac 29
-    irqmac 30
-    irqmac 31
-
 ; Allocatable IRQs (MSI)
 
     msimac 0
@@ -1609,48 +1576,6 @@ sgLint1Ok:
     mov ds,ax
     mov es,ax
 ;
-    mov esi,OFFSET get_id
-    mov edi,OFFSET get_id_name
-    xor cl,cl
-    mov ax,get_apic_id_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET send_eoi
-    mov edi,OFFSET send_eoi_name
-    xor cl,cl
-    mov ax,send_eoi_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET send_nmi
-    mov edi,OFFSET send_nmi_name
-    xor cl,cl
-    mov ax,send_nmi_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET start_apic_timer
-    mov edi,OFFSET start_apic_timer_name
-    xor cl,cl
-    mov ax,start_sys_timer_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET reload_apic_timer
-    mov edi,OFFSET reload_apic_timer_name
-    xor cl,cl
-    mov ax,reload_sys_timer_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET disable_all_irq
-    mov edi,OFFSET disable_all_irq_name
-    xor cl,cl
-    mov ax,disable_all_irq_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET get_pci_irq
-    mov edi,OFFSET get_pci_irq_name
-    xor cl,cl
-    mov ax,get_pci_irq_nr
-    RegisterOsGate
-;
     mov ax,cs
     mov ds,ax
     xor bl,bl
@@ -2036,114 +1961,6 @@ sgLint1Ok:
     pop ds
     ret
 InitLocalApic   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;               NAME:           TimerInt
-;
-;               DESCRIPTION:    Timer interrupt
-;
-;               PARAMETERS:             
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-timer_int:
-    push ds
-    push es
-    push fs
-    pushad
-;    
-    mov ax,apic_mem_sel
-    mov ds,ax
-    xor eax,eax
-    mov ds:APIC_EOI,eax
-;    
-    TimerExpired
-;
-    popad
-    pop fs
-    pop es
-    pop ds
-    iretd
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           tlb_flush_int
-;
-;           DESCRIPTION:    TLB flush int
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-tlb_flush_int:
-    push ds
-    push es
-    push fs
-    pushad
-;    
-    mov ax,apic_mem_sel
-    mov ds,ax
-    xor eax,eax
-    mov ds:APIC_EOI,eax
-;
-    FlushTlb    
-;    
-    popad
-    pop fs
-    pop es
-    pop ds
-    iretd    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:           InitIpi
-;
-;               DESCRIPTION:    Init IPIs
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-ipi_tab:
-;
-;                       int #   Entry                   
-;
-pi80   DW      80h,    OFFSET timer_int
-pi81   DW      81h,    OFFSET tlb_flush_int
-       DW      0FFFFh
-
-;
-; tabell offsets
-;
-ipi_nr          EQU 0
-ipi_entry       EQU 2
-
-InitIpi Proc near
-    push ds
-    pushad
-;    
-    mov ax,cs
-    mov ds,ax
-    xor bl,bl
-    mov di,OFFSET ipi_tab
-
-ipiLoop:
-    mov ax,cs:[di]
-    cmp ax,0FFFFh
-    jz ipiDone
-;
-    mov al,cs:[di].ipi_nr
-    movzx esi, word ptr cs:[di].ipi_entry
-    CreateIntGateSelector
-    add di,4
-    jmp ipiLoop
-    
-ipiDone:
-    popad
-    pop ds
-    ret
-InitIpi Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2451,6 +2268,292 @@ free_msi_int  Proc far
 free_msi_int    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           SetupPicInts
+;
+;               DESCRIPTION:    Setup IO-APIC IRQs
+;
+;               PARAMETERS:             
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    irqmac 1
+    irqmac 3
+    irqmac 4
+    irqmac 5
+    irqmac 6
+    irqmac 7
+    irqmac 8
+    irqmac 9
+    irqmac 10
+    irqmac 11
+    irqmac 12
+    irqmac 13
+    irqmac 14
+    irqmac 15
+    irqmac 16
+    irqmac 17
+    irqmac 18
+    irqmac 19
+    irqmac 20
+    irqmac 21
+    irqmac 22
+    irqmac 23
+    irqmac 24
+    irqmac 25
+    irqmac 26
+    irqmac 27
+    irqmac 28
+    irqmac 29
+    irqmac 30
+    irqmac 31
+
+SetupPicInts    Proc near
+    push ds
+    push es
+    pushad
+;    
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;
+    xor bl,bl
+;
+    mov al,41h
+    mov esi,OFFSET irq1
+    CreateIntGateSelector
+;
+    mov al,43h
+    mov esi,OFFSET irq3
+    CreateIntGateSelector
+;
+    mov al,44h
+    mov esi,OFFSET irq4
+    CreateIntGateSelector
+;
+    mov al,45h
+    mov esi,OFFSET irq5
+    CreateIntGateSelector
+;
+    mov al,46h
+    mov esi,OFFSET irq6
+    CreateIntGateSelector
+;
+    mov al,47h
+    mov esi,OFFSET irq7
+    CreateIntGateSelector
+;
+    mov al,48h
+    mov esi,OFFSET irq8
+    CreateIntGateSelector
+;
+    mov al,49h
+    mov esi,OFFSET irq9
+    CreateIntGateSelector
+;
+    mov al,4Ah
+    mov esi,OFFSET irq10
+    CreateIntGateSelector
+;
+    mov al,4Bh
+    mov esi,OFFSET irq11
+    CreateIntGateSelector
+;
+    mov al,4Ch
+    mov esi,OFFSET irq12
+    CreateIntGateSelector
+;
+    mov al,4Dh
+    mov esi,OFFSET irq13
+    CreateIntGateSelector
+;
+    mov al,4Eh
+    mov esi,OFFSET irq14
+    CreateIntGateSelector
+;
+    mov al,4Fh
+    mov esi,OFFSET irq15
+    CreateIntGateSelector
+;
+    mov al,50h
+    mov esi,OFFSET irq16
+    CreateIntGateSelector
+;
+    mov al,51h
+    mov esi,OFFSET irq17
+    CreateIntGateSelector
+;
+    mov al,52h
+    mov esi,OFFSET irq18
+    CreateIntGateSelector
+;
+    mov al,53h
+    mov esi,OFFSET irq19
+    CreateIntGateSelector
+;
+    mov al,54h
+    mov esi,OFFSET irq20
+    CreateIntGateSelector
+;
+    mov al,55h
+    mov esi,OFFSET irq21
+    CreateIntGateSelector
+;
+    mov al,56h
+    mov esi,OFFSET irq22
+    CreateIntGateSelector
+;
+    mov al,57h
+    mov esi,OFFSET irq23
+    CreateIntGateSelector
+;
+    mov al,58h
+    mov esi,OFFSET irq24
+    CreateIntGateSelector
+;
+    mov al,59h
+    mov esi,OFFSET irq25
+    CreateIntGateSelector
+;
+    mov al,5Ah
+    mov esi,OFFSET irq26
+    CreateIntGateSelector
+;
+    mov al,5Bh
+    mov esi,OFFSET irq27
+    CreateIntGateSelector
+;
+    mov al,5Ch
+    mov esi,OFFSET irq28
+    CreateIntGateSelector
+;
+    mov al,5Dh
+    mov esi,OFFSET irq29
+    CreateIntGateSelector
+;
+    mov al,5Eh
+    mov esi,OFFSET irq30
+    CreateIntGateSelector
+;
+    mov al,5Fh
+    mov esi,OFFSET irq31
+    CreateIntGateSelector
+;
+    popad
+    pop es
+    pop ds
+    ret
+SetupPicInts    Endp 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           TimerInt
+;
+;               DESCRIPTION:    Timer interrupt
+;
+;               PARAMETERS:             
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+timer_int:
+    push ds
+    push es
+    push fs
+    pushad
+;    
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+;    
+    TimerExpired
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           tlb_flush_int
+;
+;           DESCRIPTION:    TLB flush int
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+tlb_flush_int:
+    push ds
+    push es
+    push fs
+    pushad
+;    
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+;
+    FlushTlb    
+;    
+    popad
+    pop fs
+    pop es
+    pop ds
+    iretd    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           SetupIpiInts
+;
+;               DESCRIPTION:    Setup IPIs
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ipi_tab:
+;
+;                       int #   Entry                   
+;
+pi80   DW      80h,    OFFSET timer_int
+pi81   DW      81h,    OFFSET tlb_flush_int
+       DW      0FFFFh
+
+;
+; tabell offsets
+;
+ipi_nr          EQU 0
+ipi_entry       EQU 2
+
+SetupIpiInts Proc near
+    push ds
+    pushad
+;    
+    mov ax,cs
+    mov ds,ax
+    xor bl,bl
+    mov di,OFFSET ipi_tab
+
+ipiLoop:
+    mov ax,cs:[di]
+    cmp ax,0FFFFh
+    jz ipiDone
+;
+    mov al,cs:[di].ipi_nr
+    movzx esi, word ptr cs:[di].ipi_entry
+    CreateIntGateSelector
+    add di,4
+    jmp ipiLoop
+    
+ipiDone:
+    popad
+    pop ds
+    ret
+SetupIpiInts Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;               NAME:                   SetupIrq
@@ -2741,6 +2844,48 @@ init    PROC far
     mov ax,send_int_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET get_id
+    mov edi,OFFSET get_id_name
+    xor cl,cl
+    mov ax,get_apic_id_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET send_eoi
+    mov edi,OFFSET send_eoi_name
+    xor cl,cl
+    mov ax,send_eoi_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET send_nmi
+    mov edi,OFFSET send_nmi_name
+    xor cl,cl
+    mov ax,send_nmi_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET start_apic_timer
+    mov edi,OFFSET start_apic_timer_name
+    xor cl,cl
+    mov ax,start_sys_timer_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET reload_apic_timer
+    mov edi,OFFSET reload_apic_timer_name
+    xor cl,cl
+    mov ax,reload_sys_timer_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET disable_all_irq
+    mov edi,OFFSET disable_all_irq_name
+    xor cl,cl
+    mov ax,disable_all_irq_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_pci_irq
+    mov edi,OFFSET get_pci_irq_name
+    xor cl,cl
+    mov ax,get_pci_irq_nr
+    RegisterOsGate
+;
     mov esi,OFFSET allocate_msi_ints
     mov edi,OFFSET allocate_msi_ints_name
     xor cl,cl
@@ -2760,7 +2905,9 @@ init    PROC far
     RegisterOsGate
     pop es
 ;
-    call InitIpi
+    call SetupIpiInts
+    call SetupPicInts
+;
     call InitApicTable
     call InitApicInts
     call InitApicTimer
