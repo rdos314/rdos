@@ -447,10 +447,10 @@ SetupLocalApic    Proc near
     mov bx,apic_mem_sel
     mov es,bx
 ;
-    mov eax,8700h
+    mov eax,10000h
     mov es:APIC_LINT0,eax
 ;
-    mov eax,400h
+    mov eax,10000h
     mov es:APIC_LINT1,eax 
 ;   
     mov eax,10000h
@@ -483,38 +483,6 @@ SetupLocalApic    Proc near
     mov eax,0
     mov es:APIC_TPR,eax
 ;
-    mov eax,es:APIC_LINT0
-    test eax,10000h
-    jnz sgLint0Ok
-;    
-    and ah,7
-    cmp ah,4
-    je sgLint0Disable
-;
-    cmp ah,7
-    jne sgLint0Ok
-
-sgLint0Disable:
-    mov eax,10000h
-    mov es:APIC_LINT0,eax
-
-sgLint0Ok:
-    mov eax,es:APIC_LINT1
-    test eax,10000h
-    jnz sgLint1Ok
-;    
-    and ah,7
-    cmp ah,4
-    je sgLint1Disable
-;
-    cmp ah,7
-    jne sgLint1Ok
-
-sgLint1Disable:
-    mov eax,10000h
-    mov es:APIC_LINT1,eax
-
-sgLint1Ok:
     pop bx
     pop eax
     pop es    
@@ -2607,13 +2575,16 @@ init_ap_proc:
     mov fs:ps_acpi,al
 ;
     inc bp
+    cmp bp,5
+    je init_core_done
 
 init_core_next:
     movzx ax,es:[di].apic_len
     add di,ax
     sub cx,ax
     ja init_core_loop
-;   
+
+init_core_done:
     ret
 StartupApCores   Endp
       

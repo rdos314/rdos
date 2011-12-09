@@ -3714,6 +3714,13 @@ start_core:
     jmp LoadThread
     
 
+    GetApicId
+    cmp edx,4
+
+stopl:
+    je stopl
+    
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3908,33 +3915,6 @@ amemSet:
 ApicMemTpr   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ApicMsrTpr
-;
-;           DESCRIPTION:    Set APIC MSR-base TPR
-;
-;           PARAMETERS:     ES      thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ApicMsrTpr   Proc near
-    mov ax,es:p_prio
-    shr ax,1
-    cmp ax,3
-    jbe amsrSet
-;
-    mov ax,3
-
-amsrSet:
-    shl ax,4
-    movzx eax,ax
-    mov ecx,MSR_APIC_TPR
-    wrmsr
-    ret
-ApicMsrTpr   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           StartProcessorNullThreads
@@ -4082,10 +4062,6 @@ null_thread:
 
 null_loop_start:
     GetApicId
-    cmp edx,3
-
-stopl:
-    jz stopl
     
 null_loop:
     hlt
