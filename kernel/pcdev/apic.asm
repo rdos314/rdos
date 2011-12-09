@@ -46,8 +46,7 @@ ipause   MACRO
     db 90h
     ENDM
 
-MP_FLAG_MEM = 1
-MP_FLAG_TASK = 4
+MP_FLAG_TASK = 1
 
 
 ; PCI IRQs active low, edge triggered
@@ -120,10 +119,6 @@ gi_int_num          DB ?
 global_int_struc    ENDS
         
 data    SEGMENT byte public 'DATA'
-
-mp_isr_proc         DW ?
-
-mp_thread           DW ?
 
 mp_flags            DW ?
 
@@ -425,18 +420,12 @@ ap_task_wait:
     jz ap_task_wait
 ;    
     call InitApicInts
-
-    GetApicId
-    cmp edx,3
-;    jae ap_crash
-;    
     StartCore
 
 stopl:
     jmp stopl
 
 ap_crash:    
-
     StartCrashCore
 
 apic_tab    DB 'APIC'
@@ -957,7 +946,6 @@ smemgLint1Disable:
 smemgLint1Ok:
     mov ax,SEG data
     mov ds,ax
-    mov ds:mp_isr_proc, OFFSET GetIsrMem
 ;
     mov ax,cs
     mov ds,ax
@@ -1811,6 +1799,9 @@ disable_all_irq  Proc far
     mov eax,10000h
     mov ds:APIC_TIMER,eax
 ;    
+    mov ax,SEG data
+    mov ds,ax
+;    
     mov cx,ds:ioapic_count
     mov si,OFFSET ioapic_arr
 
@@ -1842,7 +1833,7 @@ daiLoop:
     call InitApicInts
     mov bx,SEG data
     mov ds,bx
-    call ds:mp_isr_proc
+    call GetIsrMem
 ;
     pop si
     pop cx
@@ -2256,7 +2247,6 @@ InitLocalApic   Proc near
     mov ds,ax
     mov eax,ds:cpu_feature_flags
 ;
-    or es:mp_flags, MP_FLAG_MEM
     call SetupGates
 ;    
     mov ax,cs
@@ -2953,6 +2943,8 @@ InitApicTable    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitApicCores    Proc near
+    mov bx,es
+
     mov di,OFFSET apic_entries
     mov cx,es:act_size
     sub cx,OFFSET apic_entries - OFFSET apic_phys
