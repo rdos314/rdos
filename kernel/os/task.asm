@@ -186,7 +186,7 @@ free_process_tlb_proc       DW OFFSET FreeProcessTlbSingle
 
 tpr_proc                    DW OFFSET NoTpr
 
-; preempt_reload_proc         DW OFFSET TimerPreemptReload
+preempt_reload_proc         DW OFFSET TimerPreemptReload
 
 core_count                  DW 0
 core_arr                    DW MAX_CORES DUP(0)
@@ -2911,6 +2911,70 @@ AddCallback Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           TimerPreemptReload
+;
+;           DESCRIPTION:    Timer & preemption reload
+;
+;       PARAMETERS:         DS  Task sel
+;                           FS  Core selector
+;
+;       RETURNS:            NC      Load a new task
+;                           CY      Retry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TimerPreemptReload  Proc near
+
+preempt_reload_loop:
+    lock and fs:ps_flags,NOT PS_FLAG_TIMER   
+    call cs:get_time_proc
+;
+    call LockTimer
+    mov fs:ps_last_lsb,eax
+    add eax,cs:update_tics
+    adc edx,0
+    mov bx,ds:timer_head
+    mov ecx,fs:ps_preempt_msb
+    cmp ecx,ds:[bx].timer_msb
+    jc preempt_reload_check_preempt
+;
+    jnz preempt_reload_check_timer
+;       
+    mov ecx,fs:ps_preempt_lsb
+    cmp ecx,ds:[bx].timer_lsb
+    jc preempt_reload_check_preempt
+
+preempt_reload_check_timer:
+    sub eax,ds:[bx].timer_lsb
+    sbb edx,ds:[bx].timer_msb
+    jc preempt_reload_timer
+;       
+    call LocalRemoveTimer
+    jmp preempt_reload_loop
+
+preempt_reload_check_preempt:
+    sub eax,fs:ps_preempt_lsb
+    sbb edx,fs:ps_preempt_msb
+    jc preempt_reload_timer
+;       
+    call UnlockTimer
+    lock or fs:ps_flags,PS_FLAG_PREEMPT
+    stc
+    jmp preempt_timer_reload_done
+
+preempt_reload_timer:
+    neg eax
+    ReloadSysTimer
+    call UnlockTimer
+    clc
+
+preempt_timer_reload_done:
+    ret
+TimerPreemptReload  Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           LoadThread
 ;
 ;           DESCRIPTION:    Load a new thread
@@ -2992,49 +3056,7 @@ load_thread_wakeup_done:
     call GetNextThread
 
 load_reload_loop:
-    lock and fs:ps_flags,NOT PS_FLAG_TIMER   
-    call cs:get_time_proc
-;
-    call LockTimer
-    mov fs:ps_last_lsb,eax
-    add eax,cs:update_tics
-    adc edx,0
-    mov bx,ds:timer_head
-    mov ecx,fs:ps_preempt_msb
-    cmp ecx,ds:[bx].timer_msb
-    jc load_check_preempt
-;
-    jnz load_check_timer
-;       
-    mov ecx,fs:ps_preempt_lsb
-    cmp ecx,ds:[bx].timer_lsb
-    jc load_check_preempt
-
-load_check_timer:
-    sub eax,ds:[bx].timer_lsb
-    sbb edx,ds:[bx].timer_msb
-    jc load_reload_timer
-;       
-    call LocalRemoveTimer
-    jmp load_reload_loop
-
-load_check_preempt:
-    sub eax,fs:ps_preempt_lsb
-    sbb edx,fs:ps_preempt_msb
-    jc load_reload_timer
-;       
-    call UnlockTimer
-    lock or fs:ps_flags,PS_FLAG_PREEMPT
-    stc
-    jmp load_preempt_ok
-
-load_reload_timer:
-    neg eax
-    ReloadSysTimer
-    call UnlockTimer
-    clc
-
-load_preempt_ok:
+    call cs:preempt_reload_proc
     jnc load_a_task
     
 load_retry:
