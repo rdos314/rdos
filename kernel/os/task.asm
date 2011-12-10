@@ -3647,84 +3647,6 @@ cctDone:
     mov fs:ps_curr_thread,0
     jmp LoadThread
 
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ReloadTimerPreempt
-;
-;           DESCRIPTION:    Reload timer and preempt
-;
-;       PARAMETERS:     DS      Task sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReloadTimerPreempt Proc near
-    call TryLockCore
-    jc reload_timer_preempt_loop
-;
-    lock or fs:ps_flags,PS_FLAG_TIMER    
-    jmp reload_timer_preempt_done
-
-reload_timer_preempt_loop:
-    lock and fs:ps_flags,NOT PS_FLAG_TIMER   
-    call cs:get_time_proc
-    call LockTimer
-    add eax,cs:update_tics
-    adc edx,0
-    mov bx,ds:timer_head
-    mov ecx,fs:ps_preempt_msb
-    cmp ecx,ds:[bx].timer_msb
-    jc reload_check_preempt
-    jnz reload_check_timer
-;       
-    mov ecx,fs:ps_preempt_lsb
-    cmp ecx,ds:[bx].timer_lsb
-    jc reload_check_preempt
-
-reload_check_timer:
-    sub eax,ds:[bx].timer_lsb
-    sbb edx,ds:[bx].timer_msb
-    jc reload_timer_preempt_do
-;       
-    call LocalRemoveTimer
-    jmp reload_timer_preempt_loop
-
-reload_check_preempt:
-    sub eax,fs:ps_preempt_lsb
-    sbb edx,fs:ps_preempt_msb
-    jc reload_timer_preempt_do
-;
-    call UnlockTimer
-    lock or fs:ps_flags,PS_FLAG_PREEMPT
-    mov ax,fs:ps_curr_thread
-    or ax,ax
-    jz reload_preempt_block
-;    
-    push OFFSET reload_timer_preempt_end
-    call SaveLockedThread
-    jmp ContinueCurrentThread
-
-reload_preempt_block:
-    sti
-    call cs:get_time_proc
-    add eax,1193
-    adc edx,0
-    mov fs:ps_preempt_lsb,eax
-    mov fs:ps_preempt_msb,edx
-    jmp reload_timer_preempt_loop
-
-reload_timer_preempt_do:
-    neg eax
-    ReloadSysTimer
-    call UnlockTimer
-
-reload_timer_preempt_done:
-    call TryUnlockCore
-
-reload_timer_preempt_end:       
-    ret
-ReloadTimerPreempt Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6448,9 +6370,73 @@ local_free_process_tlb Endp
 preempt_timer_expired_name   DB 'Preempt Timer Expired', 0
 
 preempt_timer_expired    Proc far
+    call TryLockCore
+    jc reload_timer_preempt_locked
+;
+    lock or fs:ps_flags,PS_FLAG_TIMER    
+    jmp reload_timer_preempt_done
+
+reload_timer_preempt_locked:
     mov ax,task_sel
     mov ds,ax
-    call ReloadTimerPreempt
+
+reload_timer_preempt_loop:
+    lock and fs:ps_flags,NOT PS_FLAG_TIMER   
+    call cs:get_time_proc
+    call LockTimer
+    add eax,cs:update_tics
+    adc edx,0
+    mov bx,ds:timer_head
+    mov ecx,fs:ps_preempt_msb
+    cmp ecx,ds:[bx].timer_msb
+    jc reload_check_preempt
+    jnz reload_check_timer
+;       
+    mov ecx,fs:ps_preempt_lsb
+    cmp ecx,ds:[bx].timer_lsb
+    jc reload_check_preempt
+
+reload_check_timer:
+    sub eax,ds:[bx].timer_lsb
+    sbb edx,ds:[bx].timer_msb
+    jc reload_timer_preempt_do
+;       
+    call LocalRemoveTimer
+    jmp reload_timer_preempt_loop
+
+reload_check_preempt:
+    sub eax,fs:ps_preempt_lsb
+    sbb edx,fs:ps_preempt_msb
+    jc reload_timer_preempt_do
+;
+    call UnlockTimer
+    lock or fs:ps_flags,PS_FLAG_PREEMPT
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz reload_preempt_block
+;    
+    push OFFSET reload_timer_preempt_end
+    call SaveLockedThread
+    jmp ContinueCurrentThread
+
+reload_preempt_block:
+    sti
+    call cs:get_time_proc
+    add eax,1193
+    adc edx,0
+    mov fs:ps_preempt_lsb,eax
+    mov fs:ps_preempt_msb,edx
+    jmp reload_timer_preempt_loop
+
+reload_timer_preempt_do:
+    neg eax
+    ReloadSysTimer
+    call UnlockTimer
+
+reload_timer_preempt_done:
+    call TryUnlockCore
+
+reload_timer_preempt_end:       
     retf32
 preempt_timer_expired    Endp
     
@@ -6575,7 +6561,7 @@ start_timer     PROC far
     mov ax,task_sel
     mov ds,ax
     call LocalStartTimer
-    call ReloadTimerPreempt
+    PreemptTimerExpired
 ;
     popad
     pop fs
