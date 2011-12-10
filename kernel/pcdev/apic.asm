@@ -2886,7 +2886,7 @@ init    PROC far
 ;    
     call InitApicTimer
     call SetupPit
-;    call StartupApCores
+    call StartupApCores
 ;
     mov ax,cs
     mov es,ax

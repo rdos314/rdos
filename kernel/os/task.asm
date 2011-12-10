@@ -3649,13 +3649,6 @@ start_core:
     mov eax,cr0
     or al,8
     mov cr0,eax    
-
-    GetApicId
-    cmp edx,4
-
-stopl:
-    je stopl
-    
 ;    
     mov ax,core_data_sel
     mov fs,ax
@@ -4007,7 +4000,6 @@ null_thread:
     jmp LoadThread
 
 null_loop_start:
-    GetApicId
     
 null_loop:
     hlt
