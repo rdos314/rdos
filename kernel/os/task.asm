@@ -6303,7 +6303,9 @@ reload_timer_loop:
     sbb edx,ds:[bx].timer_msb
     jc reload_timer_do
 ;       
+    call TryLockCore
     call LocalRemoveTimer
+    call TryUnlockCore
     jmp reload_timer_loop
 
 reload_timer_do:
