@@ -938,6 +938,15 @@ ReloadSysTimer    MACRO
     OsGate reload_sys_timer_nr
                         ENDM
 
+StartPreemptTimer    MACRO
+    OsGate start_preempt_timer_nr
+                        ENDM
+
+;   IN  AX      Tic count
+ReloadPreemptTimer    MACRO
+    OsGate reload_preempt_timer_nr
+                        ENDM
+
 EnterInt    MACRO
     OsGate enter_int_nr
                         ENDM

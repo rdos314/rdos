@@ -129,8 +129,8 @@ clock_tics          DW ?
 system_time         DD ?,?
 
 timer_spinlock      DW ?
-timer_head                  DW ?
-timer_free                  DW ?
+timer_head          DW ?
+timer_free          DW ?
 timer_entries       DB 256 * SIZE timer_struc DUP(?)
 
 task_seg    ENDS
@@ -185,6 +185,8 @@ free_global_tlb_proc        DW OFFSET FreeGlobalTlbSingle
 free_process_tlb_proc       DW OFFSET FreeProcessTlbSingle
 
 tpr_proc                    DW OFFSET NoTpr
+
+; preempt_reload_proc         DW OFFSET TimerPreemptReload
 
 core_count                  DW 0
 core_arr                    DW MAX_CORES DUP(0)
@@ -3023,7 +3025,18 @@ load_check_preempt:
 ;       
     call UnlockTimer
     lock or fs:ps_flags,PS_FLAG_PREEMPT
+    stc
+    jmp load_preempt_ok
 
+load_reload_timer:
+    neg eax
+    ReloadSysTimer
+    call UnlockTimer
+    clc
+
+load_preempt_ok:
+    jnc load_a_task
+    
 load_retry:
     mov ax,task_sel
     mov ds,ax
@@ -3042,11 +3055,7 @@ load_retry:
 load_retry_do:
     jmp load_thread_loop
 
-load_reload_timer:
-    neg eax
-    ReloadSysTimer
-    call UnlockTimer
-;
+load_a_task:
     call cs:tpr_proc
 ;    
     lock or fs:ps_flags,PS_FLAG_LOADING
