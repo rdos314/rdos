@@ -124,6 +124,10 @@ tlb_block_list      DD ?
 tlb_curr_linear     DD ?
 tlb_remain_linear   DD ?
 
+clock_tics          DW ?
+
+system_time         DD ?,?
+
 timer_spinlock      DW ?
 timer_head                  DW ?
 timer_free                  DW ?
@@ -625,11 +629,11 @@ RemoveBlock32   Endp
 ;
 ;           DESCRIPTION:    Init clock using PIT timer 2
 ;
-;           PARAMETERS:     FS      Core
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitPitClock    Proc near
+    mov ax,task_sel
+    mov ds,ax
     mov al,0B4h
     out TIMER_CONTROL,al
     jmp short $+2
@@ -637,13 +641,10 @@ InitPitClock    Proc near
     out TIMER2,al
     jmp short $+2
     out TIMER2,al
-    mov fs:ps_clock_tics,0
+    mov ds:clock_tics,0
     jmp short $+2
     mov al,0Dh
     out 61h,al
-;    
-    mov fs:ps_system_time,0
-    mov fs:ps_system_time+4,0
     ret
 InitPitClock    Endp
 
@@ -660,6 +661,8 @@ InitPitClock    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetPitTime  Proc near
+    mov ax,task_sel
+    mov ds,ax
     cli
     mov al,80h
     out TIMER_CONTROL,al
@@ -670,14 +673,14 @@ GetPitTime  Proc near
     in al,TIMER2
     xchg al,ah
     mov dx,ax
-    xchg ax,fs:ps_clock_tics
+    xchg ax,ds:clock_tics
     sub ax,dx
     movzx eax,ax
-    add fs:ps_system_time,eax
-    adc fs:ps_system_time+4,0
+    add ds:system_time,eax
+    adc ds:system_time+4,0
 ;    
-    mov eax,fs:ps_system_time
-    mov edx,fs:ps_system_time+4
+    mov eax,ds:system_time
+    mov edx,ds:system_time+4
     sti
     ret
 GetPitTime  Endp
@@ -718,8 +721,8 @@ InitTscClock    Proc near
     mov ds,ax
     mov eax,ds:last_time_val
     mov edx,ds:last_time_val+4
-    mov fs:ps_system_time,eax
-    mov fs:ps_system_time+4,edx
+    mov ds:system_time,eax
+    mov ds:system_time+4,edx
 ;    
     pop ds
     ret
@@ -738,6 +741,8 @@ InitTscClock    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetTscTime  Proc near
+    mov ax,task_sel
+    mov ds,ax
     cli
     rdtsc
     mov edx,fs:ps_last_tsc
@@ -745,10 +750,10 @@ GetTscTime  Proc near
     sub eax,edx
     mul cs:tsc_sub_tics
     add fs:ps_tsc_guard,eax
-    adc fs:ps_system_time,edx
-    adc fs:ps_system_time+4,0
-    mov eax,fs:ps_system_time
-    mov edx,fs:ps_system_time+4
+    adc ds:system_time,edx
+    adc ds:system_time+4,0
+    mov eax,ds:system_time
+    mov edx,ds:system_time+4
     sti
     ret
 GetTscTime  Endp
@@ -768,10 +773,6 @@ GetTscTime  Endp
 start_pit_timer_name    DB 'Start Pit Timer', 0
 
 start_pit_timer    Proc far
-    push es
-    xor ax,ax
-    mov es,ax
-;    
     mov ax,30h
     out TIMER_CONTROL,al
 ;
@@ -802,8 +803,6 @@ start_pit_timer    Proc far
     and al,NOT 1
     out INT0_MASK,al
     pop eax
-;       
-    pop es
     retf32
 start_pit_timer    Endp
 
@@ -832,22 +831,6 @@ reload_pit_timer    Proc far
     out INT0_MASK,al
     retf32
 reload_pit_timer  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           StartClock
-;
-;           DESCRIPTION:    Start clock
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-start_clock_name  DB 'Start Clock',0
-
-start_clock  Proc far
-    call cs:init_clock_proc
-    retf32
-start_clock Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -931,6 +914,8 @@ init_task       PROC near
     mov ds:last_time_val,0
     mov ds:last_time_val+4,0
     mov ds:time_sync_state,TIME_SYNC_RESET
+    mov ds:system_time,0
+    mov ds:system_time+4,0
     mov ds:tlb_spinlock,0
     mov ds:tlb_list,0
     mov ds:tlb_block_spinlock,0
@@ -1023,18 +1008,6 @@ timer_free_list_create:
     mov di,OFFSET reload_pit_timer_name
     xor cl,cl
     mov ax,reload_sys_timer_nr
-    RegisterOsGate
-;
-    mov si,OFFSET start_clock
-    mov di,OFFSET start_clock_name
-    xor cl,cl
-    mov ax,start_clock_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET sync_clock
-    mov edi,OFFSET sync_clock_name
-    xor cl,cl
-    mov ax,sync_clock_nr
     RegisterOsGate
 ;
     mov esi,OFFSET flush_tlb
@@ -3436,7 +3409,11 @@ SaveCurrentThread       Proc near
     push edx
 ;    
     call LockCore
+;    
+    mov ax,task_sel
+    mov ds,ax
     call cs:get_time_proc
+;    
     mov ds,fs:ps_curr_thread
     sub eax,fs:ps_last_lsb
     add ds:p_lsb_tics,eax
@@ -3509,6 +3486,8 @@ SaveLockedThread    Proc near
     push eax
     push edx
 ;
+    mov ax,task_sel
+    mov ds,ax
     call cs:get_time_proc
     mov ds,fs:ps_curr_thread
     sub eax,fs:ps_last_lsb
@@ -3570,8 +3549,10 @@ SaveLockedThread   Endp
 SkipCurrentThread       Proc near       
     call LockCore
     push eax
-    call cs:get_time_proc
     push ds
+    mov ax,task_sel
+    mov ds,ax
+    call cs:get_time_proc
     mov ds,fs:ps_curr_thread
     sub eax,fs:ps_last_lsb
     add ds:p_lsb_tics,eax
@@ -3674,7 +3655,7 @@ stopl:
     mov ax,core_data_sel
     mov fs,ax
     lock or fs:ps_flags,PS_FLAG_ACTIVE
-    SyncClock
+;
     sti
     call LockCore
     lock or fs:ps_flags,PS_FLAG_PREEMPT    
@@ -6439,70 +6420,6 @@ reload_timer_preempt_done:
 reload_timer_preempt_end:       
     retf32
 preempt_timer_expired    Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SyncClock
-;
-;           DESCRIPTION:    Clock synchronization from AP core
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-sync_clock_name DB 'Sync Clock', 0
-
-sync_clock  Proc far
-    push ds
-    push fs
-    push eax
-    push edx
-;    
-    mov ax,task_sel
-    mov ds,ax
-    mov ax,core_data_sel
-    mov fs,ax
-    cli
-    test fs:ps_flags,PS_FLAG_INIT_CLOCK
-    jz sync_ack_core
-;
-    StartSysTimer
-    StartClock
-    lock and fs:ps_flags,NOT PS_FLAG_INIT_CLOCK
-
-sync_ack_core:    
-    cmp ds:time_sync_state,TIME_SYNC_WAIT
-    jne sync_clock_end
-;
-    lock sub ds:sync_core_count,1
-
-sync_clock_wait_read:
-    cmp ds:time_sync_state,TIME_SYNC_WAIT
-    je sync_clock_wait_read
-;
-    cmp ds:time_sync_state,TIME_SYNC_READ
-    jne sync_clock_end
-;    
-    GetSystemTime
-    mov edx,eax
-
-sync_clock_wait_idle:
-    cmp ds:time_sync_state,TIME_SYNC_IDLE
-    jne sync_clock_wait_idle    
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov eax,ds:last_time
-    sub eax,edx
-    add fs:ps_system_time,eax
-    adc fs:ps_system_time+4,0
-
-sync_clock_end:
-    pop edx
-    pop eax
-    pop fs
-    pop ds
-    retf32
-sync_clock  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6661,10 +6578,10 @@ init_first_thread:
     or eax,eax
     jz timer_clock_done
 ;
-    mov ax,kernel_patch_sel
-    mov ds,ax
-    mov ds:init_clock_proc,OFFSET InitTscClock
-    mov ds:get_time_proc,OFFSET GetTscTime
+;    mov ax,kernel_patch_sel
+;    mov ds,ax
+;    mov ds:init_clock_proc,OFFSET InitTscClock
+;    mov ds:get_time_proc,OFFSET GetTscTime
 
 timer_clock_done:
     mov bx,core_data_sel
@@ -6676,7 +6593,7 @@ timer_clock_done:
     mov ds,bx
     mov ds:update_tics,eax
 ;
-    StartClock
+    call cs:init_clock_proc
     jmp LoadThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8051,13 +7968,13 @@ wait_milli_sec  PROC far
     push dx
     push ax
     pop ebx
+    mov ax,task_sel
+    mov ds,ax
     call cs:get_time_proc
 ;
     add eax,ebx
     adc edx,0
 ;
-    mov cx,task_sel
-    mov ds,cx
     mov cx,es
     mov bx,cs
     mov es,bx
@@ -8104,12 +8021,12 @@ wait_micro_sec  PROC far
     push eax
     pop ax
     pop ebx
+    mov ax,task_sel
+    mov ds,ax
     call cs:get_time_proc
     add eax,ebx
     adc edx,0
 ;
-    mov cx,task_sel
-    mov ds,cx
     mov cx,es
     mov bx,cs
     mov es,bx
@@ -8334,13 +8251,11 @@ debug_exc_break:
 get_system_time_name    DB 'Get System Time',0
 
 get_system_time PROC far
-    push fs
-;    
-    mov ax,core_data_sel
-    mov fs,ax
+    push ds
+    mov ax,task_sel
+    mov ds,ax
     call cs:get_time_proc
-;    
-    pop fs
+    pop ds
     retf32
 get_system_time ENDP
 
@@ -8359,15 +8274,13 @@ get_system_time ENDP
 get_time_name   DB 'Get Time',0
 
 get_time    PROC far
-    push fs
-;    
-    mov ax,core_data_sel
-    mov fs,ax
+    push ds
+    mov ax,task_sel
+    mov ds,ax
     call cs:get_time_proc
     add eax,cs:time_diff
     adc edx,cs:time_diff+4
-;
-    pop fs
+    pop ds
     retf32
 get_time    ENDP
 
@@ -8436,18 +8349,14 @@ set_system_time_name    DB 'Set System Time',0
 
 set_system_time PROC far
     push ds
-    push fs
     push bx
-    mov bx,core_data_sel
-    mov fs,bx
-    mov fs:ps_system_time,eax
-    mov fs:ps_system_time+4,edx
     mov bx,task_sel
     mov ds,bx
-    pop bx
+    mov ds:system_time,eax
+    mov ds:system_time+4,edx
     mov ds:last_time_val,eax
     mov ds:last_time_val+4,edx
-    pop fs
+    pop bx
     pop ds
     retf32
 set_system_time ENDP

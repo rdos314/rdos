@@ -457,9 +457,6 @@ add_sys_env_var_nr          = 395
 delete_sys_env_var_nr       = 396
 find_sys_env_var_nr         = 397
 
-start_clock_nr              = 400
-sync_clock_nr               = 401
-
 flush_tlb_nr                = 402
 
 is_valid_usb_pipe_sel_nr    = 403

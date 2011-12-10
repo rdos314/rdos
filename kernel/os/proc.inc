@@ -68,12 +68,8 @@ ps_last_lsb         DD ?
 ps_tsc_guard        DD ?
 ps_last_tsc         DD ?
 
-ps_clock_tics       DW ?
-
 ps_global_post_perc DB ?
 ps_curr_post        DB ?
-
-ps_system_time      DD ?,?
 
 cs_irq              DD ?
 cs_fault            DD ?
