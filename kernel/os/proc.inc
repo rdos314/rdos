@@ -35,18 +35,6 @@ PS_FLAG_FLUSH       = 40h
 PS_FLAG_LOADING     = 80h
 PS_FLAG_FPU         = 100h
 
-timer_struc	STRUC
-
-ps_timer_next		DW ?
-ps_timer_sel		DW ?
-ps_timer_lsb		DD ?
-ps_timer_msb		DD ?
-ps_timer_offset	    DD ?
-ps_timer_id		    DD ?
-ps_timer_owner		DW ?
-
-timer_struc	ENDS
-
 processor_seg   STRUC
 
 ps_ptab             DW 256 DUP(?)
@@ -86,11 +74,6 @@ ps_global_post_perc DB ?
 ps_curr_post        DB ?
 
 ps_system_time      DD ?,?
-
-ps_timer_spinlock   DW ?
-ps_timer_head		DW ?
-ps_timer_free		DW ?
-ps_timer_entries    DB 256 * SIZE timer_struc DUP(?)
 
 cs_irq              DD ?
 cs_fault            DD ?

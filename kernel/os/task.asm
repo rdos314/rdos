@@ -69,6 +69,18 @@ us_lock     DW ?
 
 section_handle_seg          ENDS
 
+timer_struc     STRUC
+
+timer_next              DW ?
+timer_sel               DW ?
+timer_lsb               DD ?
+timer_msb               DD ?
+timer_offset    DD ?
+timer_id                DD ?
+timer_owner             DW ?
+
+timer_struc     ENDS
+
 tlb_struc   STRUC
 
 th_next             DD ?
@@ -111,6 +123,11 @@ tlb_block_spinlock  DW ?
 tlb_block_list      DD ?
 tlb_curr_linear     DD ?
 tlb_remain_linear   DD ?
+
+timer_spinlock      DW ?
+timer_head                  DW ?
+timer_free                  DW ?
+timer_entries       DB 256 * SIZE timer_struc DUP(?)
 
 task_seg    ENDS
 
@@ -176,7 +193,7 @@ core_arr                    DW MAX_CORES DUP(0)
 ;
 ;       DESCRIPTION:    Lock timer struc
 ;
-;       PARAMETERS:     FS      Core data sel
+;       PARAMETERS:     DS      Task sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -184,7 +201,7 @@ LockTimer    Proc near
     push ax
 
 ltiSpinLock:    
-    mov ax,fs:ps_timer_spinlock
+    mov ax,ds:timer_spinlock
     or ax,ax
     je ltiGet
 ;
@@ -195,7 +212,7 @@ ltiSpinLock:
 ltiGet:
     cli
     inc ax
-    xchg ax,fs:ps_timer_spinlock
+    xchg ax,ds:timer_spinlock
     or ax,ax
     je ltiDone
 ;
@@ -213,12 +230,12 @@ LockTimer    Endp
 ;
 ;       DESCRIPTION:    Unlock timer
 ;
-;       PARAMETERS:     FS      Core data sel
+;       PARAMETERS:     DS      task sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlockTimer    Proc near
-    mov fs:ps_timer_spinlock,0
+    mov ds:timer_spinlock,0
     sti
     ret
 UnlockTimer    Endp
@@ -230,32 +247,34 @@ UnlockTimer    Endp
 ;
 ;           DESCRIPTION:    Remove timer. Should be called with timer-spinlock taken
 ;
+;           PARAMETERS:     DS      Task sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LocalRemoveTimer Proc near
-    mov bx,fs:ps_timer_head
-    mov ax,fs:[bx].ps_timer_next
-    mov fs:ps_timer_head,ax
+    mov bx,ds:timer_head
+    mov ax,ds:[bx].timer_next
+    mov ds:timer_head,ax
 ;    
+    push ds
     push es
-    push fs
 ;    
     xor eax,eax
     mov ax,cs
     push eax
     mov ax,OFFSET timer_return
     push eax
-    mov ax,fs:[bx].ps_timer_sel
+    mov ax,ds:[bx].timer_sel
     push eax
-    push fs:[bx].ps_timer_offset
+    push ds:[bx].timer_offset
 ;
-    mov ax,fs:ps_timer_free
-    mov fs:[bx].ps_timer_next,ax
-    mov fs:ps_timer_free,bx
+    mov ax,ds:timer_free
+    mov ds:[bx].timer_next,ax
+    mov ds:timer_free,bx
 ;    
-    mov ecx,fs:[bx].ps_timer_id
-    mov eax,fs:[bx].ps_timer_lsb
-    mov edx,fs:[bx].ps_timer_msb        
+    mov ecx,ds:[bx].timer_id
+    mov eax,ds:[bx].timer_lsb
+    mov edx,ds:[bx].timer_msb        
     call UnlockTimer
 ;    
     xor bx,bx
@@ -264,8 +283,8 @@ LocalRemoveTimer Proc near
     retf32
 
 timer_return:
-    pop fs
     pop es
+    pop ds
     ret
 LocalRemoveTimer    Endp
 
@@ -276,36 +295,38 @@ LocalRemoveTimer    Endp
 ;
 ;           DESCRIPTION:    Start timer
 ;
+;           PARAMETERS:     DS      Task sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LocalStartTimer Proc near
     call LockTimer
 ;    
-    mov si,fs:ps_timer_free
-    mov fs:[si].ps_timer_owner,bx
-    mov bx,fs:[si].ps_timer_next
-    mov fs:ps_timer_free,bx
-    mov fs:[si].ps_timer_lsb,eax
-    mov fs:[si].ps_timer_msb,edx
-    mov fs:[si].ps_timer_id,ecx
-    mov fs:[si].ps_timer_offset,edi
-    mov fs:[si].ps_timer_sel,es
-    mov bx,OFFSET ps_timer_head
+    mov si,ds:timer_free
+    mov ds:[si].timer_owner,bx
+    mov bx,ds:[si].timer_next
+    mov ds:timer_free,bx
+    mov ds:[si].timer_lsb,eax
+    mov ds:[si].timer_msb,edx
+    mov ds:[si].timer_id,ecx
+    mov ds:[si].timer_offset,edi
+    mov ds:[si].timer_sel,es
+    mov bx,OFFSET timer_head
     push si
 
 start_try_next:
     mov si,bx
-    mov bx,fs:[bx].ps_timer_next
-    cmp edx,fs:[bx].ps_timer_msb
+    mov bx,ds:[bx].timer_next
+    cmp edx,ds:[bx].timer_msb
     jc start_insert
     jnz start_try_next
-    cmp eax,fs:[bx].ps_timer_lsb
+    cmp eax,ds:[bx].timer_lsb
     jnc start_try_next
 
 start_insert:
-    pop fs:[si].ps_timer_next
-    mov si,fs:[si].ps_timer_next
-    mov fs:[si].ps_timer_next,bx
+    pop ds:[si].timer_next
+    mov si,ds:[si].timer_next
+    mov ds:[si].timer_next,bx
     call UnlockTimer
     ret
 LocalStartTimer Endp
@@ -931,6 +952,23 @@ glob_ptab_init:
     mov ds:[bx],ax
     add bx,2
     loop glob_ptab_init
+;
+    mov ds:timer_spinlock,0
+    mov bx,OFFSET timer_entries
+    mov ds:[bx].timer_next,0
+    mov ds:[bx].timer_msb,0FFFFFFFFh
+    mov ds:[bx].timer_lsb,0FFFFFFFFh
+    mov ds:timer_head,bx
+;       
+    mov cx,0FFh
+    add bx,SIZE timer_struc
+    mov ds:timer_free,bx
+timer_free_list_create:
+    mov ax,bx
+    add ax,SIZE timer_struc
+    mov ds:[bx].timer_next,ax
+    mov bx,ax
+    loop timer_free_list_create
 ;
     mov ax,cs
     mov ds,ax
@@ -3047,20 +3085,20 @@ load_reload_loop:
     mov fs:ps_last_lsb,eax
     add eax,cs:update_tics
     adc edx,0
-    mov bx,fs:ps_timer_head
+    mov bx,ds:timer_head
     mov ecx,fs:ps_preempt_msb
-    cmp ecx,fs:[bx].ps_timer_msb
+    cmp ecx,ds:[bx].timer_msb
     jc load_check_preempt
 ;
     jnz load_check_timer
 ;       
     mov ecx,fs:ps_preempt_lsb
-    cmp ecx,fs:[bx].ps_timer_lsb
+    cmp ecx,ds:[bx].timer_lsb
     jc load_check_preempt
 
 load_check_timer:
-    sub eax,fs:[bx].ps_timer_lsb
-    sbb edx,fs:[bx].ps_timer_msb
+    sub eax,ds:[bx].timer_lsb
+    sbb edx,ds:[bx].timer_msb
     jc load_reload_timer
 ;       
     call LocalRemoveTimer
@@ -3075,6 +3113,8 @@ load_check_preempt:
     lock or fs:ps_flags,PS_FLAG_PREEMPT
 
 load_retry:
+    mov ax,task_sel
+    mov ds,ax
     mov ax,es
     cmp ax,fs:ps_null_thread
     je load_thread_loop
@@ -3611,50 +3651,49 @@ cctDone:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           ReloadTimer
+;           NAME:           ReloadTimerPreempt
 ;
-;           DESCRIPTION:    Reload timer
+;           DESCRIPTION:    Reload timer and preempt
 ;
-;       PARAMETERS:     FS      Core sel
-;               CY      Lock succeeded
+;       PARAMETERS:     DS      Task sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReloadTimer Proc near
-    jc reload_timer_loop
+ReloadTimerPreempt Proc near
+    call TryLockCore
+    jc reload_timer_preempt_loop
 ;
     lock or fs:ps_flags,PS_FLAG_TIMER    
-    jmp reload_timer_done
+    jmp reload_timer_preempt_done
 
-reload_timer_loop:
+reload_timer_preempt_loop:
     lock and fs:ps_flags,NOT PS_FLAG_TIMER   
-    mov es,fs:ps_curr_thread
     call cs:get_time_proc
     call LockTimer
     add eax,cs:update_tics
     adc edx,0
-    mov bx,fs:ps_timer_head
+    mov bx,ds:timer_head
     mov ecx,fs:ps_preempt_msb
-    cmp ecx,fs:[bx].ps_timer_msb
+    cmp ecx,ds:[bx].timer_msb
     jc reload_check_preempt
     jnz reload_check_timer
 ;       
     mov ecx,fs:ps_preempt_lsb
-    cmp ecx,fs:[bx].ps_timer_lsb
+    cmp ecx,ds:[bx].timer_lsb
     jc reload_check_preempt
 
 reload_check_timer:
-    sub eax,fs:[bx].ps_timer_lsb
-    sbb edx,fs:[bx].ps_timer_msb
-    jc reload_timer_do
+    sub eax,ds:[bx].timer_lsb
+    sbb edx,ds:[bx].timer_msb
+    jc reload_timer_preempt_do
 ;       
     call LocalRemoveTimer
-    jmp reload_timer_loop
+    jmp reload_timer_preempt_loop
 
 reload_check_preempt:
     sub eax,fs:ps_preempt_lsb
     sbb edx,fs:ps_preempt_msb
-    jc reload_timer_do
+    jc reload_timer_preempt_do
 ;
     call UnlockTimer
     lock or fs:ps_flags,PS_FLAG_PREEMPT
@@ -3662,7 +3701,7 @@ reload_check_preempt:
     or ax,ax
     jz reload_preempt_block
 ;    
-    push OFFSET reload_timer_end
+    push OFFSET reload_timer_preempt_end
     call SaveLockedThread
     jmp ContinueCurrentThread
 
@@ -3673,20 +3712,19 @@ reload_preempt_block:
     adc edx,0
     mov fs:ps_preempt_lsb,eax
     mov fs:ps_preempt_msb,edx
-    jmp reload_timer_loop
+    jmp reload_timer_preempt_loop
 
-reload_timer_do:
+reload_timer_preempt_do:
     neg eax
     ReloadSysTimer
     call UnlockTimer
 
-reload_timer_done:
+reload_timer_preempt_done:
     call TryUnlockCore
 
-reload_timer_end:       
+reload_timer_preempt_end:       
     ret
-ReloadTimer Endp
-
+ReloadTimerPreempt Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3703,6 +3741,13 @@ start_core:
     mov eax,cr0
     or al,8
     mov cr0,eax    
+
+    GetApicId
+    cmp edx,4
+
+stopl:
+    je stopl
+    
 ;    
     mov ax,core_data_sel
     mov fs,ax
@@ -3712,13 +3757,6 @@ start_core:
     call LockCore
     lock or fs:ps_flags,PS_FLAG_PREEMPT    
     jmp LoadThread
-    
-
-    GetApicId
-    cmp edx,4
-
-stopl:
-    je stopl
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4522,23 +4560,6 @@ ptab_init:
     mov es:cs_uoffs,0
     mov es:cs_fault,-1
     mov es:cs_irq,0
-;
-    mov es:ps_timer_spinlock,0
-    mov bx,OFFSET ps_timer_entries
-    mov es:[bx].ps_timer_next,0
-    mov es:[bx].ps_timer_msb,0FFFFFFFFh
-    mov es:[bx].ps_timer_lsb,0FFFFFFFFh
-    mov es:ps_timer_head,bx
-;       
-    mov cx,0FFh
-    add bx,SIZE timer_struc
-    mov es:ps_timer_free,bx
-timer_free_list_create:
-    mov ax,bx
-    add ax,SIZE timer_struc
-    mov es:[bx].ps_timer_next,ax
-    mov bx,ax
-    loop timer_free_list_create
 ;
     mov ax,es:ps_id     
 ;
@@ -6437,8 +6458,9 @@ timer_int:
     mov al,20h
     out INT0_CONTROL,al
 ;
-    call TryLockCore
-    call ReloadTimer
+    mov ax,task_sel
+    mov ds,ax
+    call ReloadTimerPreempt
 ;
     popad
     pop fs
@@ -6460,8 +6482,9 @@ timer_int:
 timer_expired_name   DB 'Timer Expired', 0
 
 timer_expired    Proc far
-    call TryLockCore
-    call ReloadTimer
+    mov ax,task_sel
+    mov ds,ax
+    call ReloadTimerPreempt
     retf32
 timer_expired    Endp
     
@@ -6583,12 +6606,10 @@ start_timer     PROC far
     push fs
     pushad
 ;
-    call TryLockCore
-    pushf
+    mov ax,task_sel
+    mov ds,ax
     call LocalStartTimer
-    popf
-    call ReloadTimer
-    sti
+    call ReloadTimerPreempt
 ;
     popad
     pop fs
@@ -6612,40 +6633,34 @@ start_timer     ENDP
 stop_timer_name DB 'Stop Timer',0
 
 stop_timer      PROC far
-    push fs
+    push ds
     push ax
     push bx
     push cx
     push si
 ;    
-    mov cx,cs:core_count
-    mov si,OFFSET core_arr
-
-stop_core_loop:
-    push bx
-    push cx
-    push si
-; 
-    mov fs,cs:[si]   
+    mov ax,task_sel
+    mov ds,ax
+;    
     call LockTimer    
 ;
     mov cx,bx
-    mov bx,OFFSET ps_timer_head
+    mov bx,OFFSET timer_head
 
 timer_stop_next:
     mov si,bx
-    mov bx,fs:[bx].ps_timer_next
+    mov bx,ds:[bx].timer_next
     or bx,bx
     je timer_stop_done
-    cmp cx,fs:[bx].ps_timer_owner
+    cmp cx,ds:[bx].timer_owner
     jne timer_stop_next
 
 timer_stop_this:
-    mov ax,fs:[bx].ps_timer_next
-    mov fs:[si].ps_timer_next,ax
-    mov ax,fs:ps_timer_free
-    mov fs:[bx].ps_timer_next,ax
-    mov fs:ps_timer_free,bx
+    mov ax,ds:[bx].timer_next
+    mov ds:[si].timer_next,ax
+    mov ax,ds:timer_free
+    mov ds:[bx].timer_next,ax
+    mov ds:timer_free,bx
 
 timer_stop_done:
     call UnlockTimer
@@ -6653,14 +6668,8 @@ timer_stop_done:
     pop si
     pop cx
     pop bx
-    add si,2
-    loop stop_core_loop    
-;
-    pop si
-    pop cx
-    pop bx
     pop ax
-    pop fs    
+    pop ds
     retf32
 stop_timer      ENDP
 
@@ -7397,12 +7406,16 @@ cecsBlock:
     pop ecx
     adc edx,ecx
 ;
-    mov ax,cs
-    mov es,ax
+    push ds
+    mov cx,task_sel
+    mov ds,cx
+    mov cx,cs
+    mov es,cx
     mov edi,OFFSET cond_section_timeout
     mov bx,fs:ps_curr_thread
     mov cx,bx
     call LocalStartTimer
+    pop ds
 ;
     pop edi
     pop ecx
@@ -8040,6 +8053,8 @@ wait_until      PROC far
     push OFFSET wait_until_done
     call SaveCurrentThread
 ;
+    mov cx,task_sel
+    mov ds,cx
     mov cx,fs:ps_curr_thread
     mov bx,cs
     mov es,bx
@@ -8089,6 +8104,8 @@ wait_milli_sec  PROC far
     add eax,ebx
     adc edx,0
 ;
+    mov cx,task_sel
+    mov ds,cx
     mov cx,es
     mov bx,cs
     mov es,bx
@@ -8139,6 +8156,8 @@ wait_micro_sec  PROC far
     add eax,ebx
     adc edx,0
 ;
+    mov cx,task_sel
+    mov ds,cx
     mov cx,es
     mov bx,cs
     mov es,bx
