@@ -124,8 +124,8 @@ tlb_block_list      DD ?
 tlb_curr_linear     DD ?
 tlb_remain_linear   DD ?
 
+systime_spinlock    DW ?
 clock_tics          DW ?
-
 system_time         DD ?,?
 
 timer_spinlock      DW ?
@@ -157,7 +157,6 @@ code    SEGMENT byte public use16 'CODE'
 
 time_diff                   DD 0,0
 update_tics                 DD 0
-tsc_sub_tics                DD 0
 
 system_thread               DW 0
 
@@ -218,11 +217,8 @@ ltiGet:
     inc ax
     xchg ax,ds:timer_spinlock
     or ax,ax
-    je ltiDone
+    jne ltiSpinLock
 ;
-    jmp ltiSpinLock
-
-ltiDone:
     pop ax
     ret
 LockTimer    Endp
@@ -663,7 +659,23 @@ InitPitClock    Endp
 GetPitTime  Proc near
     mov ax,task_sel
     mov ds,ax
+
+gptSpinLock:    
+    mov ax,ds:systime_spinlock
+    or ax,ax
+    je gptGet
+;
+    sti
+    pause
+    jmp gptSpinLock
+
+gptGet:
     cli
+    inc ax
+    xchg ax,ds:systime_spinlock
+    or ax,ax
+    jne gptSpinLock
+;
     mov al,80h
     out TIMER_CONTROL,al
     jmp short $+2
@@ -681,82 +693,11 @@ GetPitTime  Proc near
 ;    
     mov eax,ds:system_time
     mov edx,ds:system_time+4
+;    
+    mov ds:systime_spinlock,0
     sti
     ret
 GetPitTime  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           InitTscClock
-;
-;           DESCRIPTION:    Init clock using TSC
-;
-;           PARAMETERS:     FS      Core
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitTscClock    Proc near
-    push ds
-;    
-    mov ax,system_data_sel
-    mov ds,ax
-    mov edx,10000h
-    xor eax,eax
-    mov ecx,ds:tsc_tics
-    shl ecx,16
-    mov cx,ds:tsc_rest
-    div ecx
-;    
-    mov dx,kernel_patch_sel
-    mov ds,dx
-    mov ds:tsc_sub_tics,eax
-;    
-    rdtsc
-    mov fs:ps_last_tsc,eax
-    mov fs:ps_tsc_guard,0
-;
-    mov ax,task_sel
-    mov ds,ax
-    mov eax,ds:last_time_val
-    mov edx,ds:last_time_val+4
-    mov ds:system_time,eax
-    mov ds:system_time+4,edx
-;    
-    pop ds
-    ret
-InitTscClock    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           GetTscTime
-;
-;           DESCRIPTION:    Get time using TSC
-;
-;           RETURNS:        EDX:EAX     System time
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetTscTime  Proc near
-    mov ax,task_sel
-    mov ds,ax
-    cli
-    rdtsc
-    mov edx,fs:ps_last_tsc
-    mov fs:ps_last_tsc,eax
-    sub eax,edx
-    mul cs:tsc_sub_tics
-    add fs:ps_tsc_guard,eax
-    adc ds:system_time,edx
-    adc ds:system_time+4,0
-    mov eax,ds:system_time
-    mov edx,ds:system_time+4
-    sti
-    ret
-GetTscTime  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -859,21 +800,6 @@ notify_time_drift       Proc far
 ;
     sub es:time_diff,eax
     sbb es:time_diff,0
-;    
-    mov ecx,ds:tsc_tics
-    or ecx,ecx
-    jz ntdPit
-;
-    mov ecx,es:tsc_sub_tics
-    shr ecx,3
-    imul ecx
-;
-    mov ecx,1193182
-    idiv ecx
-;    
-    sub es:tsc_sub_tics,eax
-
-ntdPit:
 
 ntdDone:
     pop edx
@@ -914,6 +840,7 @@ init_task       PROC near
     mov ds:last_time_val,0
     mov ds:last_time_val+4,0
     mov ds:time_sync_state,TIME_SYNC_RESET
+    mov ds:systime_spinlock,0
     mov ds:system_time,0
     mov ds:system_time+4,0
     mov ds:tlb_spinlock,0
@@ -6572,18 +6499,6 @@ init_first_thread:
     mov fs:ps_prio_act,di
     call InsertCoreBlock
 ;
-    mov ax,system_data_sel
-    mov es,ax
-    mov eax,es:tsc_tics
-    or eax,eax
-    jz timer_clock_done
-;
-;    mov ax,kernel_patch_sel
-;    mov ds,ax
-;    mov ds:init_clock_proc,OFFSET InitTscClock
-;    mov ds:get_time_proc,OFFSET GetTscTime
-
-timer_clock_done:
     mov bx,core_data_sel
     mov fs,bx
     mov fs,fs:ps_sel
