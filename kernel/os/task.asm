@@ -919,6 +919,18 @@ timer_free_list_create:
     mov ax,start_core_nr
     RegisterOsGate
 ;
+    mov si,OFFSET preempt_expired
+    mov di,OFFSET preempt_expired_name
+    xor cl,cl
+    mov ax,preempt_expired_nr
+    RegisterOsGate
+;
+    mov si,OFFSET timer_expired
+    mov di,OFFSET timer_expired_name
+    xor cl,cl
+    mov ax,timer_expired_nr
+    RegisterOsGate
+;
     mov si,OFFSET preempt_timer_expired
     mov di,OFFSET preempt_timer_expired_name
     xor cl,cl
@@ -6263,6 +6275,80 @@ local_free_process_tlb Proc near
     call cs:free_process_tlb_proc
     ret
 local_free_process_tlb Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TimerExpired
+;
+;           DESCRIPTION:    Timer expired notification
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+timer_expired_name   DB 'Timer Expired', 0
+
+timer_expired    Proc far
+    mov ax,task_sel
+    mov ds,ax
+
+reload_timer_loop:
+    call cs:get_time_proc
+    call LockTimer
+    add eax,cs:update_tics
+    adc edx,0
+    mov bx,ds:timer_head
+    sub eax,ds:[bx].timer_lsb
+    sbb edx,ds:[bx].timer_msb
+    jc reload_timer_do
+;       
+    call LocalRemoveTimer
+    jmp reload_timer_loop
+
+reload_timer_do:
+    neg eax
+    ReloadSysTimer
+    call UnlockTimer
+    retf32
+timer_expired    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           PreemptExpired
+;
+;           DESCRIPTION:    Preemption expired notification
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+preempt_expired_name   DB 'Preempt Expired', 0
+
+preempt_expired    Proc far
+    call TryLockCore
+    jc reload_preempt_locked
+;
+    lock or fs:ps_flags,PS_FLAG_PREEMPT
+    jmp reload_preempt_done
+
+reload_preempt_locked:
+    lock or fs:ps_flags,PS_FLAG_PREEMPT
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz reload_preempt_done
+;    
+    push OFFSET reload_preempt_end
+    call SaveLockedThread
+    jmp ContinueCurrentThread
+
+reload_preempt_done:
+    call TryUnlockCore
+
+reload_preempt_end:       
+    retf32
+preempt_expired    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

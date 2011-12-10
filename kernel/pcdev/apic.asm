@@ -1903,7 +1903,37 @@ timer_int:
     xor eax,eax
     mov ds:APIC_EOI,eax
 ;    
-    PreemptTimerExpired
+    TimerExpired
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           PreemptInt
+;
+;               DESCRIPTION:    Preempt interrupt
+;
+;               PARAMETERS:             
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+preempt_int:
+    push ds
+    push es
+    push fs
+    pushad
+;    
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+;    
+    PreemptExpired
 ;
     popad
     pop fs
@@ -1954,6 +1984,7 @@ ipi_tab:
 ;
 pi0F   DW      0Fh,    OFFSET spurious_int
 pi40   DW      40h,    OFFSET timer_int
+pi80   DW      80h,    OFFSET preempt_int
 pi81   DW      81h,    OFFSET tlb_flush_int
        DW      0FFFFh
 

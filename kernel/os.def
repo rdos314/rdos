@@ -418,6 +418,7 @@ get_core_count_nr           = 369
 start_core_nr               = 370
 
 preempt_timer_expired_nr    = 371
+timer_expired_nr            = 372
 
 reload_sys_timer_nr         = 373
 start_sys_timer_nr          = 374
@@ -437,6 +438,8 @@ find_pci_class_all_nr       = 380
 show_proc_debug_nr          = 381
 
 get_pci_irq_nr              = 382
+
+preempt_expired_nr          = 383
 
 send_eoi_nr                 = 384
 send_int_nr                 = 385
