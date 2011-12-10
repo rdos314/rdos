@@ -1942,9 +1942,9 @@ tlb_flush_int:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:           SetupIpiInts
+;               NAME:           SetupInts
 ;
-;               DESCRIPTION:    Setup IPIs
+;               DESCRIPTION:    Setup ints
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1953,7 +1953,7 @@ ipi_tab:
 ;                       int #   Entry                   
 ;
 pi0F   DW      0Fh,    OFFSET spurious_int
-pi80   DW      80h,    OFFSET timer_int
+pi40   DW      40h,    OFFSET timer_int
 pi81   DW      81h,    OFFSET tlb_flush_int
        DW      0FFFFh
 
@@ -1963,7 +1963,7 @@ pi81   DW      81h,    OFFSET tlb_flush_int
 ipi_nr          EQU 0
 ipi_entry       EQU 2
 
-SetupIpiInts Proc near
+SetupInts Proc near
     push ds
     pushad
 ;    
@@ -1987,7 +1987,7 @@ ipiDone:
     popad
     pop ds
     ret
-SetupIpiInts Endp
+SetupInts Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2696,6 +2696,57 @@ daiMasterOk:
     pop edx
     ret
 DisablePic  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SetupPit
+;
+;   Description:    Setup PIT timer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupPit  Proc near
+    push ds
+    push eax
+    push bx
+    push edx
+;
+    mov bx,SEG data
+    mov ds,bx
+    xor al,al
+    mov edx,ds:isa_redir_arr
+    mov al,dl
+    sub al,40h
+    mov dl,40h
+;    
+    movzx bx,al
+    shl bx,2
+    add bx,OFFSET global_int_arr
+    mov ax,ds:[bx].gi_ioapic_sel
+;    
+    push ax
+    mov al,ds:[bx].gi_ioapic_id
+    pop ds
+;       
+    mov bl,10h
+    add bl,al
+    add bl,al
+;    
+    mov ds:ioapic_regsel,bl
+    mov ds:ioapic_window,edx
+;
+    inc bl
+    mov ds:ioapic_regsel,bl
+    mov edx,0FF000000h
+    mov ds:ioapic_window,edx
+;
+    pop edx
+    pop bx
+    pop eax
+    pop ds
+    ret
+SetupPit  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2752,17 +2803,17 @@ init    PROC far
     mov ax,send_nmi_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET start_apic_timer
-    mov edi,OFFSET start_apic_timer_name
-    xor cl,cl
-    mov ax,start_sys_timer_nr
-    RegisterOsGate
+;    mov esi,OFFSET start_apic_timer
+;    mov edi,OFFSET start_apic_timer_name
+;    xor cl,cl
+;    mov ax,start_sys_timer_nr
+;    RegisterOsGate
 ;
-    mov esi,OFFSET reload_apic_timer
-    mov edi,OFFSET reload_apic_timer_name
-    xor cl,cl
-    mov ax,reload_sys_timer_nr
-    RegisterOsGate
+;    mov esi,OFFSET reload_apic_timer
+;    mov edi,OFFSET reload_apic_timer_name
+;    xor cl,cl
+;    mov ax,reload_sys_timer_nr
+;    RegisterOsGate
 ;
     mov esi,OFFSET disable_all_irq
     mov edi,OFFSET disable_all_irq_name
@@ -2797,7 +2848,7 @@ init    PROC far
 ;
     call DisablePic
 ;    
-    call SetupIpiInts
+    call SetupInts
     call SetupPicInts
     call SetupMsiInts
     call SetupIrq 
@@ -2806,7 +2857,8 @@ init    PROC far
     call SetupLocalApic
 ;    
     call InitApicTimer
-    call StartupApCores
+    call SetupPit
+;    call StartupApCores
 ;
     mov ax,cs
     mov es,ax
