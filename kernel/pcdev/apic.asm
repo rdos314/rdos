@@ -623,11 +623,9 @@ send_nmi Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   StartSysTimer
+;               NAME:           StartPreemptionTimer
 ;
 ;               DESCRIPTION:    Start APIC timer
-;
-;               RETURNS:                EAX      Update tics
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -670,7 +668,6 @@ start_apic_timer    Proc far
 ;
     mov eax,80h
     mov es:APIC_TIMER,eax
-    xor eax,eax
 ;
     pop esi
     pop edx
@@ -684,11 +681,11 @@ start_apic_timer  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   ReloadSysTimer
+;               NAME:           ReloadPreemptionTimer
 ;
 ;               DESCRIPTION:    Reload APIC timer
 ;
-;               PARAMETERS:             AX      Reload tics
+;               PARAMETERS:     AX      Reload tics
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2834,17 +2831,17 @@ init    PROC far
     mov ax,send_nmi_nr
     RegisterOsGate
 ;
-;    mov esi,OFFSET start_apic_timer
-;    mov edi,OFFSET start_apic_timer_name
-;    xor cl,cl
-;    mov ax,start_sys_timer_nr
-;    RegisterOsGate
+    mov esi,OFFSET start_apic_timer
+    mov edi,OFFSET start_apic_timer_name
+    xor cl,cl
+    mov ax,start_preempt_timer_nr
+    RegisterOsGate
 ;
-;    mov esi,OFFSET reload_apic_timer
-;    mov edi,OFFSET reload_apic_timer_name
-;    xor cl,cl
-;    mov ax,reload_sys_timer_nr
-;    RegisterOsGate
+    mov esi,OFFSET reload_apic_timer
+    mov edi,OFFSET reload_apic_timer_name
+    xor cl,cl
+    mov ax,reload_preempt_timer_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET disable_all_irq
     mov edi,OFFSET disable_all_irq_name

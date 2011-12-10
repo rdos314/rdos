@@ -2971,6 +2971,41 @@ preempt_reload_timer:
 preempt_timer_reload_done:
     ret
 TimerPreemptReload  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           PreemptReload
+;
+;           DESCRIPTION:    Preemption reload
+;
+;       PARAMETERS:         DS  Task sel
+;                           FS  Core selector
+;
+;       RETURNS:            NC      Load a new task
+;                           CY      Retry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PreemptReload  Proc near
+    call cs:get_time_proc
+    mov fs:ps_last_lsb,eax
+    sub eax,fs:ps_preempt_lsb
+    sbb edx,fs:ps_preempt_msb
+    jc preempt_reload_ok
+;       
+    lock or fs:ps_flags,PS_FLAG_PREEMPT
+    stc
+    jmp preempt_reload_done
+
+preempt_reload_ok:
+    neg eax
+    ReloadPreemptTimer
+    clc
+
+preempt_reload_done:
+    ret
+PreemptReload  Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -6627,6 +6662,16 @@ init_first_thread:
     mov ds,bx
     mov ds:update_tics,eax
 ;
+    mov ax,start_preempt_timer_nr
+    IsValidOsGate
+    jc preempt_timer_ok
+;
+    StartPreemptTimer
+    mov ax,kernel_patch_sel
+    mov ds,ax
+    mov ds:preempt_reload_proc,OFFSET PreemptReload
+        
+preempt_timer_ok:        
     call cs:init_clock_proc
     jmp LoadThread
 
