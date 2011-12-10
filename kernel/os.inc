@@ -653,8 +653,8 @@ StartCore    MACRO
     OsGate start_core_nr
                         ENDM
 
-TimerExpired    MACRO
-    OsGate timer_expired_nr
+PreemptTimerExpired    MACRO
+    OsGate preempt_timer_expired_nr
                         ENDM
 
 ;   IN  FS      Processor selector

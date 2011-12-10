@@ -417,7 +417,7 @@ get_core_nr                 = 368
 get_core_count_nr           = 369
 start_core_nr               = 370
 
-timer_expired_nr            = 371
+preempt_timer_expired_nr    = 371
 
 reload_sys_timer_nr         = 373
 start_sys_timer_nr          = 374

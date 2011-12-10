@@ -1007,10 +1007,10 @@ timer_free_list_create:
     mov ax,start_core_nr
     RegisterOsGate
 ;
-    mov si,OFFSET timer_expired
-    mov di,OFFSET timer_expired_name
+    mov si,OFFSET preempt_timer_expired
+    mov di,OFFSET preempt_timer_expired_name
     xor cl,cl
-    mov ax,timer_expired_nr
+    mov ax,preempt_timer_expired_nr
     RegisterOsGate
 ;
     mov si,OFFSET start_pit_timer
@@ -6434,59 +6434,25 @@ local_free_process_tlb Proc near
     ret
 local_free_process_tlb Endp
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           TIMER_INT
-;
-;           DESCRIPTION:    Timer interrupt handler
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public timer_int
-
-timer_int:
-    push ds
-    push es
-    push fs
-    pushad
-;
-    in al,INT0_MASK
-    or al,1
-    out INT0_MASK,al
-;
-    mov al,20h
-    out INT0_CONTROL,al
-;
-    mov ax,task_sel
-    mov ds,ax
-    call ReloadTimerPreempt
-;
-    popad
-    pop fs
-    pop es
-    pop ds
-    iretd
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           TimerExpired
+;           NAME:           PreemptTimerExpired
 ;
-;           DESCRIPTION:    Timer expired notification
+;           DESCRIPTION:    Preemption or timer expired notification
 ;
 ;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-timer_expired_name   DB 'Timer Expired', 0
+preempt_timer_expired_name   DB 'Preempt Timer Expired', 0
 
-timer_expired    Proc far
+preempt_timer_expired    Proc far
     mov ax,task_sel
     mov ds,ax
     call ReloadTimerPreempt
     retf32
-timer_expired    Endp
+preempt_timer_expired    Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

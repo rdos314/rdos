@@ -544,6 +544,84 @@ seDone:
     retf32
 send_eoi    Endp    
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TIMER_INT
+;
+;           DESCRIPTION:    Timer interrupt handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+timer_int:
+    push ds
+    push es
+    push fs
+    pushad
+;
+    in al,INT0_MASK
+    or al,1
+    out INT0_MASK,al
+;
+    mov al,20h
+    out INT0_CONTROL,al
+;
+    PreemptTimerExpired
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupInts
+;
+;           DESCRIPTION:    Setup interrupts
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+int_tab:
+
+ii0    DW      28h,    OFFSET timer_int
+ii_end DW      0FFFFh
+
+;
+; tabell offsets
+;
+ig_nr       EQU 0
+ig_entry    EQU 2
+
+SetupInts Proc near
+    push ds
+    pushad
+;    
+    mov ax,cs
+    mov ds,ax
+    xor bl,bl
+    mov di,OFFSET int_tab
+
+intLoop:
+    mov ax,cs:[di]
+    cmp ax,0FFFFh
+    jz intDone
+;
+    mov al,cs:[di].ig_nr
+    movzx esi, word ptr cs:[di].ig_entry
+    CreateIntGateSelector
+    add di,4
+    jmp intLoop
+    
+intDone:
+    popad
+    pop ds
+    ret
+SetupInts Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -730,6 +808,8 @@ init_irq_loop:
 ;
     add bx,SIZE irq_struc
     loop init_irq_loop
+;
+    call SetupInts        
     ret
 init    ENDP
 

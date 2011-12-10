@@ -83,8 +83,6 @@ code    SEGMENT byte use16 public 'CODE'
     extrn local_create_int_gate_sel:near
     extrn local_get_selector_base_size:near
 
-    extrn timer_int:near
-
     extrn get_task_lock:near
 
     extrn get_thread:near
@@ -1947,7 +1945,6 @@ pg13    DW      13,         OFFSET pretask13,           kernel_code,    0
 pg14    DW      14,         OFFSET prepaging14,         kernel_code,    0
 pg15    DW      15,         OFFSET apic_spur,           kernel_code,    0
 pg16    DW      16,         OFFSET pretask16,           kernel_code,    0
-ri0         DW      28h,    OFFSET timer_int,           kernel_code,    0
 ri1         DW      29h,    OFFSET default_int1,    kernel_code,    0
 ri2         DW      2Ah,    OFFSET default_int1,    kernel_code,    0
 ri3         DW      2Bh,    OFFSET default_int1,    kernel_code,    0

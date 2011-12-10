@@ -1903,7 +1903,7 @@ timer_int:
     xor eax,eax
     mov ds:APIC_EOI,eax
 ;    
-    TimerExpired
+    PreemptTimerExpired
 ;
     popad
     pop fs
