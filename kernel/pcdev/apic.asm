@@ -164,10 +164,12 @@ mp_flags            DW ?
 mp_processor_sign   DD ?
 mp_proc             DW ?
 
-pit_spinlock        DW ?
+time_spinlock       DW ?
 clock_tics          DW ?
 system_time         DD ?,?
 
+hpet_guard          DD ?
+prev_hpet           DD ?
 hpet_min_tics       DW ?
 hpet_sel            DW ?
 hpet_factor         DD ?
@@ -1409,7 +1411,6 @@ start_pit_timer    Proc far
 ;
     mov ax,SEG data
     mov ds,ax
-    mov ds:pit_spinlock,0
 ;    
     mov al,0B4h
     out TIMER_CONTROL,al
@@ -1511,7 +1512,7 @@ reload_pit_timer  Endp
 ;
 ;           NAME:           GetSystemTime
 ;
-;           DESCRIPTION:    Read system time
+;           DESCRIPTION:    Read system time, PIT version
 ;
 ;           RETURNS:        EDX:EAX     System time
 ;
@@ -1526,7 +1527,7 @@ get_pit_time  Proc far
     mov ds,ax
 
 gstSpinLock:    
-    mov ax,ds:pit_spinlock
+    mov ax,ds:time_spinlock
     or ax,ax
     je gstGet
 ;
@@ -1537,7 +1538,7 @@ gstSpinLock:
 gstGet:
     cli
     inc ax
-    xchg ax,ds:pit_spinlock
+    xchg ax,ds:time_spinlock
     or ax,ax
     jne gstSpinLock
 ;
@@ -1559,11 +1560,75 @@ gstGet:
     mov eax,ds:system_time
     mov edx,ds:system_time+4
 ;    
-    mov ds:pit_spinlock,0
+    mov ds:time_spinlock,0
     sti
     pop ds
     retf32
 get_pit_time  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetSystemTime
+;
+;           DESCRIPTION:    Read system time, HPET version
+;
+;           RETURNS:        EDX:EAX     System time
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_hpet_time_name    DB 'Get System Time', 0
+
+get_hpet_time  Proc far
+    push ds
+    push es
+    push ecx
+;
+    mov ax,SEG data
+    mov ds,ax
+
+ghtSpinLock:    
+    mov ax,ds:time_spinlock
+    or ax,ax
+    je ghtGet
+;
+    sti
+    pause
+    jmp ghtSpinLock
+
+ghtGet:
+    cli
+    inc ax
+    xchg ax,ds:time_spinlock
+    or ax,ax
+    jne ghtSpinLock
+;
+    mov es,ds:hpet_sel
+    mov eax,es:hpet_count
+    mov edx,eax
+    xchg edx,ds:prev_hpet
+    sub eax,edx
+    mul ds:hpet_factor
+    add eax,ds:hpet_guard
+    adc edx,0
+;
+    mov ecx,31F5C4EDh
+    div ecx
+    mov ds:hpet_guard,edx
+    add ds:system_time,eax
+    adc ds:system_time+4,0
+;    
+    mov eax,ds:system_time
+    mov edx,ds:system_time+4
+;    
+    mov ds:time_spinlock,0
+    sti
+;
+    pop ecx
+    pop es
+    pop ds
+    retf32
+get_hpet_time  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2913,57 +2978,12 @@ StartupApCores   Endp
 
 apic_name       DB 'Apic Test',0
 
-hpet_tab    DB 'HPET'
-
-PIT_VAL = 31F5C4EDh
-
 apic_pr:
     int 3 
-    mov eax,dword ptr cs:hpet_tab
-    GetAcpiTable
-    jc init_hpet_done
-;
     mov ax,SEG data
     mov ds,ax
-; 
-    mov ax,es:hpett_min_tics
-    mov ds:hpet_min_tics,ax 
-;      
-    mov eax,1000h
-    AllocateBigLinear
-    mov eax,es:hpett_phys_base
-    or ax,33h
-    SetPhysicalPage
-    AllocateGdt
-    mov ecx,1000h
-    CreateDataSelector16
-    mov ds:hpet_sel,bx
-    mov es,bx
-;
-    mov eax,es:hpet_period
-    mov ds:hpet_factor,eax
-;
-    mov eax,es:hpet_cap
-    mov al,ah
-    and ax,1Fh
-    inc ax
-    mov ds:hpet_counters,ax
-;
-    mov cx,ax
-    mov bx,OFFSET hpet_counter_arr    
-
-init_hpet_loop:
-    mov eax,es:[bx].hpetc_config
-    and ax,NOT 4004h
-    mov es:[bx].hpetc_config,eax
-    add bx,SIZE hpet_counter_struc
-    loop init_hpet_loop
-;    
-    mov eax,es:hpet_config
-    and al,NOT 3
-    or al,1
-    mov es:hpet_config,eax
-;    
+    mov es,ds:hpet_sel
+    mov eax,es:hpet_count
     mov bx,OFFSET hpet_counter_arr    
     mov eax,es:[bx].hpetc_config
     test ax,8000h
@@ -3012,8 +3032,6 @@ init_hpet_irq_ok:
     mov bx,OFFSET hpet_counter_arr    
     mov eax,es:[bx].hpetc_config
     mov eax,es:[bx].hpetc_compare
-
-init_hpet_done:    
     retf            
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3120,6 +3138,7 @@ DisablePic  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 apic_tab    DB 'APIC'
+hpet_tab    DB 'HPET'
 
 init    PROC far
     mov ax,SEG data
@@ -3127,6 +3146,9 @@ init    PROC far
     mov ds:mp_flags,0       
     mov ds:system_time,0
     mov ds:system_time+4,0
+    mov ds:time_spinlock,0
+    mov ds:prev_hpet,0
+    mov ds:hpet_guard,0
 ;
     mov eax,dword ptr cs:apic_tab
     GetAcpiTable
@@ -3232,6 +3254,62 @@ init    PROC far
     xor dx,dx
     mov ax,get_system_time_nr
     RegisterBimodalUserGate
+;
+    mov eax,dword ptr cs:hpet_tab
+    GetAcpiTable
+    jc init_hpet_done
+;
+    mov ax,SEG data
+    mov ds,ax
+; 
+    mov ax,es:hpett_min_tics
+    mov ds:hpet_min_tics,ax 
+;      
+    mov eax,1000h
+    AllocateBigLinear
+    mov eax,es:hpett_phys_base
+    or ax,33h
+    SetPhysicalPage
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov ds:hpet_sel,bx
+    mov es,bx
+;
+    mov eax,es:hpet_period
+    mov ds:hpet_factor,eax
+;
+    mov eax,es:hpet_cap
+    mov al,ah
+    and ax,1Fh
+    inc ax
+    mov ds:hpet_counters,ax
+;
+    mov cx,ax
+    mov bx,OFFSET hpet_counter_arr    
+
+init_hpet_loop:
+    mov eax,es:[bx].hpetc_config
+    and ax,NOT 4004h
+    mov es:[bx].hpetc_config,eax
+    add bx,SIZE hpet_counter_struc
+    loop init_hpet_loop
+;    
+    mov eax,es:hpet_config
+    and al,NOT 3
+    or al,1
+    mov es:hpet_config,eax
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov si,OFFSET get_hpet_time
+    mov di,OFFSET get_hpet_time_name
+    xor dx,dx
+    mov ax,get_system_time_nr
+    RegisterBimodalUserGate
+
+init_hpet_done:    
     pop es
 ;
     call DisablePic
