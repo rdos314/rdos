@@ -260,6 +260,7 @@ LocalRemoveTimer Proc near
 ;    
     push ds
     push es
+    push fs
 ;    
     xor eax,eax
     mov ax,cs
@@ -285,6 +286,7 @@ LocalRemoveTimer Proc near
     retf32
 
 timer_return:
+    pop fs
     pop es
     pop ds
     ret
@@ -6548,8 +6550,8 @@ start_timer     PROC far
     push fs
     pushad
 ;
-    mov ax,task_sel
-    mov ds,ax
+    mov si,task_sel
+    mov ds,si
     call LocalStartTimer
     PreemptTimerExpired
 ;
