@@ -170,7 +170,7 @@ system_time         DD ?,?
 
 hpet_guard          DD ?
 prev_hpet           DD ?
-hpet_min_tics       DW ?
+hpet_min_tics       DD ?
 hpet_sel            DW ?
 hpet_factor         DD ?
 hpet_counters       DW ?
@@ -1510,6 +1510,132 @@ reload_pit_timer  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           StartSysTimer
+;
+;           DESCRIPTION:    Start HPET timer
+;
+;           RETURNS:        EAX      Update tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_hpet_timer_name    DB 'Start HPET Timer', 0
+
+start_hpet_timer    Proc far
+    push ds
+    push es
+    push bx
+    push edx
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov es,ds:hpet_sel
+    mov bx,OFFSET hpet_counter_arr    
+    mov eax,es:[bx].hpetc_config
+    test ax,8000h
+    jnz start_hpet_msi
+
+start_hpet_iopic:
+    push bx
+;    
+    mov bx,OFFSET global_int_arr
+    mov ax,ds:[bx].gi_ioapic_sel
+;    
+    push ax
+    mov al,ds:[bx].gi_ioapic_id
+    pop ds
+;       
+    mov bl,10h
+    add bl,al
+    add bl,al
+;    
+    mov edx,0A940h
+    mov ds:ioapic_regsel,bl
+    mov ds:ioapic_window,edx
+;
+    inc bl
+    mov ds:ioapic_regsel,bl
+    mov edx,0FF000000h
+    mov ds:ioapic_window,edx
+;
+    pop bx
+    mov eax,es:[bx].hpetc_config
+    and ax,NOT 7E0Ah
+    or ax,104h
+    mov es:[bx].hpetc_config,eax   
+    jmp start_hpet_done
+
+start_hpet_msi: 
+    mov ax,140h
+    mov edx,0FEEFF000h
+    mov es:[bx].hpetc_msi_data,eax
+    mov es:[bx].hpetc_msi_ads,edx
+;
+    mov eax,es:[bx].hpetc_config
+    and ax,NOT 0Ah
+    or ax,4104h 
+    mov es:[bx].hpetc_config,eax
+
+start_hpet_done:
+    xor eax,eax
+;
+    pop edx
+    pop bx
+    pop es
+    pop ds
+    retf32
+start_hpet_timer    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ReloadSysTimer
+;
+;           DESCRIPTION:    Reload HPET timer
+;
+;           PARAMETERS:     AX      Reload count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reload_hpet_timer_name    DB 'Reload HPET Timer', 0
+
+reload_hpet_timer    Proc far
+    push ds
+    push eax
+    push edx
+;    
+    mov dx,SEG data
+    mov ds,dx
+    movzx eax,ax
+    mov edx,31F5C4EDh
+    mul edx
+    div ds:hpet_factor
+    inc eax
+;    
+    mov ds,ds:hpet_sel
+    add eax,ds:hpet_count
+    mov ds:hpet_counter_arr.hpetc_compare,eax
+    mov eax,ds:hpet_counter_arr.hpetc_compare
+    cmp eax,ds:hpet_count
+    jg reload_hpet_done
+;
+    push es
+    push fs
+    pushad
+    TimerExpired    
+    popad
+    pop fs
+    pop es
+     
+reload_hpet_done:
+    pop edx
+    pop eax
+    pop ds    
+    retf32
+reload_hpet_timer  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           GetSystemTime
 ;
 ;           DESCRIPTION:    Read system time, PIT version
@@ -2231,36 +2357,6 @@ timer_int:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           HpetInt
-;
-;               DESCRIPTION:    Hpet interrupt
-;
-;               PARAMETERS:             
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hpet_int:
-    push ds
-    push es
-    push fs
-    pushad
-;    
-    mov ax,apic_mem_sel
-    mov ds,ax
-    xor eax,eax
-    mov ds:APIC_EOI,eax
-;    
-    int 3
-;
-    popad
-    pop fs
-    pop es
-    pop ds
-    iretd
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;               NAME:           PreemptInt
 ;
 ;               DESCRIPTION:    Preempt interrupt
@@ -2331,7 +2427,6 @@ ipi_tab:
 ;
 pi0F   DW      0Fh,    OFFSET spurious_int
 pi40   DW      40h,    OFFSET timer_int
-pi41   DW      41h,    OFFSET hpet_int
 pi80   DW      80h,    OFFSET preempt_int
 pi81   DW      81h,    OFFSET tlb_flush_int
        DW      0FFFFh
@@ -2980,58 +3075,6 @@ apic_name       DB 'Apic Test',0
 
 apic_pr:
     int 3 
-    mov ax,SEG data
-    mov ds,ax
-    mov es,ds:hpet_sel
-    mov eax,es:hpet_count
-    mov bx,OFFSET hpet_counter_arr    
-    mov eax,es:[bx].hpetc_config
-    test ax,8000h
-    jnz init_hpet_msi
-
-init_hpet_iopic:
-    mov eax,es:[bx].hpetc_int_mask
-    test al,1
-    jz init_hpet_done
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov edi,OFFSET hpet_int
-    xor al,al
-    RequestPrivateIrqHandler
-;
-    mov eax,es:[bx].hpetc_config
-    and ax,NOT 7E0Ah
-    or ax,104h
-    mov es:[bx].hpetc_config,eax   
-    jmp init_hpet_irq_ok
-
-init_hpet_msi: 
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov edi,OFFSET hpet_int
-;
-    mov cx,1
-    AllocateMsiInts
-    jc init_hpet_done
-;
-    mov es:[bx].hpetc_msi_data,eax
-    mov es:[bx].hpetc_msi_ads,edx
-    RequestMsiHandler
-;
-    mov eax,es:[bx].hpetc_config
-    and ax,NOT 0Ah
-    or ax,4100h 
-    mov es:[bx].hpetc_config,eax   
-
-init_hpet_irq_ok:
-    mov eax,es:hpet_int_status
-    mov eax,es:hpet_count
-    mov bx,OFFSET hpet_counter_arr    
-    mov eax,es:[bx].hpetc_config
-    mov eax,es:[bx].hpetc_compare
     retf            
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3262,8 +3305,8 @@ init    PROC far
     mov ax,SEG data
     mov ds,ax
 ; 
-    mov ax,es:hpett_min_tics
-    mov ds:hpet_min_tics,ax 
+    movzx eax,es:hpett_min_tics
+    mov ds:hpet_min_tics,eax 
 ;      
     mov eax,1000h
     AllocateBigLinear
@@ -3303,6 +3346,19 @@ init_hpet_loop:
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET start_hpet_timer
+    mov edi,OFFSET start_hpet_timer_name
+    xor cl,cl
+    mov ax,start_sys_timer_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET reload_hpet_timer
+    mov edi,OFFSET reload_hpet_timer_name
+    xor cl,cl
+    mov ax,reload_sys_timer_nr
+    RegisterOsGate
+;
     mov si,OFFSET get_hpet_time
     mov di,OFFSET get_hpet_time_name
     xor dx,dx
