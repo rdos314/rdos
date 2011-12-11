@@ -124,10 +124,6 @@ tlb_block_list      DD ?
 tlb_curr_linear     DD ?
 tlb_remain_linear   DD ?
 
-systime_spinlock    DW ?
-clock_tics          DW ?
-system_time         DD ?,?
-
 timer_spinlock      DW ?
 timer_head          DW ?
 timer_free          DW ?
@@ -159,9 +155,6 @@ time_diff                   DD 0,0
 update_tics                 DD 0
 
 system_thread               DW 0
-
-init_clock_proc             DW OFFSET InitPitClock
-get_time_proc               DW OFFSET GetPitTime
 
 lock_list_proc              DW OFFSET LockListSingle
 unlock_list_proc            DW OFFSET UnlockListSingle
@@ -625,87 +618,6 @@ RemoveBlock32   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           InitPitClock
-;
-;           DESCRIPTION:    Init clock using PIT timer 2
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitPitClock    Proc near
-    mov ax,task_sel
-    mov ds,ax
-    mov al,0B4h
-    out TIMER_CONTROL,al
-    jmp short $+2
-    mov al,0
-    out TIMER2,al
-    jmp short $+2
-    out TIMER2,al
-    mov ds:clock_tics,0
-    jmp short $+2
-    mov al,0Dh
-    out 61h,al
-    ret
-InitPitClock    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           GetPitTime
-;
-;           DESCRIPTION:    Get time using PIT timer 2
-;
-;           RETURNS:        EDX:EAX     Current system time
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetPitTime  Proc near
-    mov ax,task_sel
-    mov ds,ax
-
-gptSpinLock:    
-    mov ax,ds:systime_spinlock
-    or ax,ax
-    je gptGet
-;
-    sti
-    pause
-    jmp gptSpinLock
-
-gptGet:
-    cli
-    inc ax
-    xchg ax,ds:systime_spinlock
-    or ax,ax
-    jne gptSpinLock
-;
-    mov al,80h
-    out TIMER_CONTROL,al
-    jmp short $+2
-    in al,TIMER2
-    mov ah,al
-    jmp short $+2
-    in al,TIMER2
-    xchg al,ah
-    mov dx,ax
-    xchg ax,ds:clock_tics
-    sub ax,dx
-    movzx eax,ax
-    add ds:system_time,eax
-    adc ds:system_time+4,0
-;    
-    mov eax,ds:system_time
-    mov edx,ds:system_time+4
-;    
-    mov ds:systime_spinlock,0
-    sti
-    ret
-GetPitTime  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           NotifyTimeDrift
 ;
 ;           DESCRIPTION:    Notification of time drift
@@ -770,9 +682,6 @@ init_task       PROC near
     mov ds:last_time_val,0
     mov ds:last_time_val+4,0
     mov ds:time_sync_state,TIME_SYNC_RESET
-    mov ds:systime_spinlock,0
-    mov ds:system_time,0
-    mov ds:system_time+4,0
     mov ds:tlb_spinlock,0
     mov ds:tlb_list,0
     mov ds:tlb_block_spinlock,0
@@ -1029,12 +938,6 @@ timer_free_list_create:
     mov ax,notify_time_drift_nr
     RegisterOsGate
 ;
-    mov si,OFFSET get_system_time
-    mov di,OFFSET get_system_time_name
-    xor dx,dx
-    mov ax,get_system_time_nr
-    RegisterBimodalUserGate
-;
     mov si,OFFSET get_time
     mov di,OFFSET get_time_name
     xor dx,dx
@@ -1052,12 +955,6 @@ timer_free_list_create:
     xor dx,dx
     mov ax,system_time_to_time_nr
     RegisterBimodalUserGate
-;
-    mov si,OFFSET set_system_time
-    mov di,OFFSET set_system_time_name
-    xor cl,cl
-    mov ax,set_system_time_nr
-    RegisterOsGate
 ;
     mov si,OFFSET sim_sti
     mov di,OFFSET sim_sti_name
@@ -2632,7 +2529,7 @@ SetupPreempt    Proc near
     jz spDone    
 
 spSet:
-    call cs:get_time_proc
+    GetSystemTime
     mov ecx,eax
     add eax,1193
     adc edx,0
@@ -2843,7 +2740,7 @@ TimerPreemptReload  Proc near
 
 preempt_reload_loop:
     lock and fs:ps_flags,NOT PS_FLAG_TIMER   
-    call cs:get_time_proc
+    GetSystemTime
 ;
     call LockTimer
     mov fs:ps_last_lsb,eax
@@ -2904,7 +2801,7 @@ TimerPreemptReload  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PreemptReload  Proc near
-    call cs:get_time_proc
+    GetSystemTime
     mov fs:ps_last_lsb,eax
     sub eax,fs:ps_preempt_lsb
     sbb edx,fs:ps_preempt_msb
@@ -3329,11 +3226,8 @@ SaveCurrentThread       Proc near
     push eax
     push edx
 ;    
-    call LockCore
-;    
-    mov ax,task_sel
-    mov ds,ax
-    call cs:get_time_proc
+    call LockCore    
+    GetSystemTime
 ;    
     mov ds,fs:ps_curr_thread
     sub eax,fs:ps_last_lsb
@@ -3407,9 +3301,7 @@ SaveLockedThread    Proc near
     push eax
     push edx
 ;
-    mov ax,task_sel
-    mov ds,ax
-    call cs:get_time_proc
+    GetSystemTime
     mov ds,fs:ps_curr_thread
     sub eax,fs:ps_last_lsb
     add ds:p_lsb_tics,eax
@@ -3471,9 +3363,7 @@ SkipCurrentThread       Proc near
     call LockCore
     push eax
     push ds
-    mov ax,task_sel
-    mov ds,ax
-    call cs:get_time_proc
+    GetSystemTime
     mov ds,fs:ps_curr_thread
     sub eax,fs:ps_last_lsb
     add ds:p_lsb_tics,eax
@@ -6268,7 +6158,7 @@ timer_expired    Proc far
     mov ds,ax
 
 reload_timer_loop:
-    call cs:get_time_proc
+    GetSystemTime
     call LockTimer
     add eax,cs:update_tics
     adc edx,0
@@ -6352,7 +6242,7 @@ reload_timer_preempt_locked:
 
 reload_timer_preempt_loop:
     lock and fs:ps_flags,NOT PS_FLAG_TIMER   
-    call cs:get_time_proc
+    GetSystemTime
     call LockTimer
     add eax,cs:update_tics
     adc edx,0
@@ -6391,7 +6281,7 @@ reload_check_preempt:
 
 reload_preempt_block:
     sti
-    call cs:get_time_proc
+    GetSystemTime
     add eax,1193
     adc edx,0
     mov fs:ps_preempt_lsb,eax
@@ -6580,7 +6470,6 @@ init_first_thread:
     mov ds:preempt_reload_proc,OFFSET PreemptReload
         
 preempt_timer_ok:        
-    call cs:init_clock_proc
     jmp LoadThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -7955,13 +7844,13 @@ wait_milli_sec  PROC far
     push dx
     push ax
     pop ebx
-    mov ax,task_sel
-    mov ds,ax
-    call cs:get_time_proc
+    GetSystemTime
 ;
     add eax,ebx
     adc edx,0
 ;
+    mov cx,task_sel
+    mov ds,cx
     mov cx,es
     mov bx,cs
     mov es,bx
@@ -8008,12 +7897,12 @@ wait_micro_sec  PROC far
     push eax
     pop ax
     pop ebx
-    mov ax,task_sel
-    mov ds,ax
-    call cs:get_time_proc
+    GetSystemTime
     add eax,ebx
     adc edx,0
 ;
+    mov cx,task_sel
+    mov ds,cx
     mov cx,es
     mov bx,cs
     mov es,bx
@@ -8222,30 +8111,6 @@ debug_exc_break_name    DB 'Debug Exc Break',0
 
 debug_exc_break:
     DebugException
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           GetSystemTime
-;
-;           DESCRIPTION:    Return system time.
-;
-;           PARAMETERS:         EDX:EAX     Binary time
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_system_time_name    DB 'Get System Time',0
-
-get_system_time PROC far
-    push ds
-    mov ax,task_sel
-    mov ds,ax
-    call cs:get_time_proc
-    pop ds
-    retf32
-get_system_time ENDP
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -8261,13 +8126,9 @@ get_system_time ENDP
 get_time_name   DB 'Get Time',0
 
 get_time    PROC far
-    push ds
-    mov ax,task_sel
-    mov ds,ax
-    call cs:get_time_proc
+    GetSystemTime
     add eax,cs:time_diff
     adc edx,cs:time_diff+4
-    pop ds
     retf32
 get_time    ENDP
 
@@ -8318,36 +8179,6 @@ system_time_to_time     PROC far
     sti
     retf32
 system_time_to_time     ENDP
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           SetSystemTime
-;
-;           DESCRIPTION:    Set system time. Must not be called after tasking is
-;                           started.
-;
-;           PARAMETERS:         EDX:EAX     Binary time
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_system_time_name    DB 'Set System Time',0
-
-set_system_time PROC far
-    push ds
-    push bx
-    mov bx,task_sel
-    mov ds,bx
-    mov ds:system_time,eax
-    mov ds:system_time+4,edx
-    mov ds:last_time_val,eax
-    mov ds:last_time_val+4,edx
-    pop bx
-    pop ds
-    retf32
-set_system_time ENDP
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

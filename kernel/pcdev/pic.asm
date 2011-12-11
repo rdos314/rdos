@@ -36,8 +36,21 @@ INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os\irq.inc
-        
+
+data    SEGMENT byte public 'DATA'
+
+pit_spinlock        DW ?
+clock_tics          DW ?
+system_time         DD ?,?
+
+data    ENDS
+
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
     .386p
+ENDIF
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -558,6 +571,22 @@ send_eoi    Endp
 start_pit_timer_name    DB 'Start Pit Timer', 0
 
 start_pit_timer    Proc far
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:pit_spinlock,0
+;    
+    mov al,0B4h
+    out TIMER_CONTROL,al
+    jmp short $+2
+    mov al,0
+    out TIMER2,al
+    jmp short $+2
+    out TIMER2,al
+    mov ds:clock_tics,0
+    jmp short $+2
+    mov al,0Dh
+    out 61h,al
+;
     mov ax,30h
     out TIMER_CONTROL,al
 ;
@@ -611,6 +640,92 @@ reload_pit_timer    Proc far
     out TIMER0,al
     retf32
 reload_pit_timer  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetSystemTime
+;
+;           DESCRIPTION:    Read system time
+;
+;           RETURNS:        EDX:EAX     System time
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_system_time_name    DB 'Get System Time', 0
+
+get_system_time  Proc far
+    push ds
+;
+    mov ax,SEG data
+    mov ds,ax
+
+gstSpinLock:    
+    mov ax,ds:pit_spinlock
+    or ax,ax
+    je gstGet
+;
+    sti
+    pause
+    jmp gstSpinLock
+
+gstGet:
+    cli
+    inc ax
+    xchg ax,ds:pit_spinlock
+    or ax,ax
+    jne gstSpinLock
+;
+    mov al,80h
+    out TIMER_CONTROL,al
+    jmp short $+2
+    in al,TIMER2
+    mov ah,al
+    jmp short $+2
+    in al,TIMER2
+    xchg al,ah
+    mov dx,ax
+    xchg ax,ds:clock_tics
+    sub ax,dx
+    movzx eax,ax
+    add ds:system_time,eax
+    adc ds:system_time+4,0
+;    
+    mov eax,ds:system_time
+    mov edx,ds:system_time+4
+;    
+    mov ds:pit_spinlock,0
+    sti
+    pop ds
+    retf32
+get_system_time  Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SetSystemTime
+;
+;           DESCRIPTION:    Set system time. Must not be called after tasking is
+;                           started.
+;
+;           PARAMETERS:         EDX:EAX     Binary time
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_system_time_name    DB 'Set System Time',0
+
+set_system_time PROC far
+    push ds
+    push bx
+    mov bx,SEG data
+    mov ds,bx
+    mov ds:system_time,eax
+    mov ds:system_time+4,edx
+    pop bx
+    pop ds
+    retf32
+set_system_time ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -698,6 +813,11 @@ SetupInts Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:system_time,0
+    mov ds:system_time+4,0
+;    
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -724,6 +844,18 @@ init    PROC far
     mov edi,OFFSET reload_pit_timer_name
     xor cl,cl
     mov ax,reload_sys_timer_nr
+    RegisterOsGate
+;
+    mov si,OFFSET get_system_time
+    mov di,OFFSET get_system_time_name
+    xor dx,dx
+    mov ax,get_system_time_nr
+    RegisterBimodalUserGate
+;
+    mov si,OFFSET set_system_time
+    mov di,OFFSET set_system_time_name
+    xor cl,cl
+    mov ax,set_system_time_nr
     RegisterOsGate
 ;
     mov edi,OFFSET init_process
