@@ -101,6 +101,18 @@ apic_entries    DB ?
 
 apic_table  ENDS
 
+hpet_table  STRUC
+
+hpet_base       acpi_table <>
+
+hpett_event_block    DD ?
+hpett_flags          DD ?
+hpett_phys_base      DD ?,?
+hpett_nr             DB ?
+hpett_min_tics       DW ?
+
+hpet_table  ENDS
+
 ioapic_data_seg STRUC
 
 ioapic_regsel       DB ?
@@ -117,6 +129,33 @@ gi_ioapic_id        DB ?
 gi_int_num          DB ?
 
 global_int_struc    ENDS
+
+hpet_counter_struc  STRUC
+
+hpetc_config        DD ?
+hpetc_int_mask      DD ?
+hpetc_compare       DD ?,?
+hpetc_msi_data      DD ?
+hpetc_msi_ads       DD ?
+hpetc_resv          DD ?,?
+
+hpet_counter_struc  ENDS
+
+hpet_struc      STRUC
+
+hpet_cap            DD ?
+hpet_period         DD ?
+hpet_resv1          DD ?,?
+hpet_config         DD ?,?,?,?
+hpet_int_status     DD ?,?,?,?
+
+hpet_resv2          DB 0C0h DUP(?)
+
+hpet_count          DD ?,?,?,?
+
+hpet_counter_arr    DB 32 * SIZE hpet_counter_struc DUP(?)
+
+hpet_struc      ENDS
         
 data    SEGMENT byte public 'DATA'
 
@@ -124,6 +163,11 @@ mp_flags            DW ?
 
 mp_processor_sign   DD ?
 mp_proc             DW ?
+
+hpet_min_tics       DW ?
+hpet_sel            DW ?
+hpet_factor         DD ?
+hpet_counters       DW ?
 
 isa_redir_arr       DD 16 DUP(?,?)
 
@@ -1337,6 +1381,107 @@ free_msi_int  Proc far
 free_msi_int    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StartSysTimer
+;
+;           DESCRIPTION:    Start PIT timer
+;
+;           RETURNS:        EAX      Update tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_pit_timer_name    DB 'Start Pit Timer', 0
+
+start_pit_timer    Proc far
+    push ds
+    push bx
+    push edx
+;    
+    mov ax,30h
+    out TIMER_CONTROL,al
+;
+    mov ax,100h
+    cli
+    out TIMER0,al
+    xchg ah,al
+    jmp short $+2
+    out TIMER0,al
+    jmp short $+2
+    jmp short $+2
+    xor al,al
+    out TIMER_CONTROL,al
+    jmp short $+2
+    in al,TIMER0
+    mov ah,al
+    jmp short $+2
+    in al,TIMER0
+    xchg al,ah
+    neg ax
+    add ax,100h
+    movzx eax,ax
+    add eax,eax
+    add eax,eax
+;
+    push eax
+    mov bx,SEG data
+    mov ds,bx
+    xor al,al
+    mov edx,ds:isa_redir_arr
+    mov al,dl
+    sub al,40h
+    mov dl,40h
+;    
+    movzx bx,al
+    shl bx,2
+    add bx,OFFSET global_int_arr
+    mov ax,ds:[bx].gi_ioapic_sel
+;    
+    push ax
+    mov al,ds:[bx].gi_ioapic_id
+    pop ds
+;       
+    mov bl,10h
+    add bl,al
+    add bl,al
+;    
+    mov ds:ioapic_regsel,bl
+    mov ds:ioapic_window,edx
+;
+    inc bl
+    mov ds:ioapic_regsel,bl
+    mov edx,0FF000000h
+    mov ds:ioapic_window,edx
+    pop eax
+;
+    pop edx
+    pop bx
+    pop ds
+    retf32
+start_pit_timer    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ReloadSysTimer
+;
+;           DESCRIPTION:    Reload PIT timer
+;
+;           PARAMETERS:         AX      Reload count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reload_pit_timer_name    DB 'Reload Pit Timer', 0
+
+reload_pit_timer    Proc far
+    out TIMER0,al
+    xchg al,ah
+    jmp short $+2
+    out TIMER0,al
+    retf32
+reload_pit_timer  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;               NAME:           SetupPicInts
@@ -1911,6 +2056,36 @@ timer_int:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           HpetInt
+;
+;               DESCRIPTION:    Hpet interrupt
+;
+;               PARAMETERS:             
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hpet_int:
+    push ds
+    push es
+    push fs
+    pushad
+;    
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+;    
+    int 3
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:           PreemptInt
 ;
 ;               DESCRIPTION:    Preempt interrupt
@@ -1981,6 +2156,7 @@ ipi_tab:
 ;
 pi0F   DW      0Fh,    OFFSET spurious_int
 pi40   DW      40h,    OFFSET timer_int
+pi41   DW      41h,    OFFSET hpet_int
 pi80   DW      80h,    OFFSET preempt_int
 pi81   DW      81h,    OFFSET tlb_flush_int
        DW      0FFFFh
@@ -2603,7 +2779,7 @@ init_ap_proc:
     mov fs:ps_acpi,al
 ;
     inc bp
-    cmp bp,5
+    cmp bp,4
     je init_core_done
 
 init_core_next:
@@ -2627,8 +2803,107 @@ StartupApCores   Endp
 
 apic_name       DB 'Apic Test',0
 
+hpet_tab    DB 'HPET'
+
+PIT_VAL = 31F5C4EDh
+
 apic_pr:
     int 3 
+    mov eax,dword ptr cs:hpet_tab
+    GetAcpiTable
+    jc init_hpet_done
+;
+    mov ax,SEG data
+    mov ds,ax
+; 
+    mov ax,es:hpett_min_tics
+    mov ds:hpet_min_tics,ax 
+;      
+    mov eax,1000h
+    AllocateBigLinear
+    mov eax,es:hpett_phys_base
+    or ax,33h
+    SetPhysicalPage
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov ds:hpet_sel,bx
+    mov es,bx
+;
+    mov eax,es:hpet_period
+    mov ds:hpet_factor,eax
+;
+    mov eax,es:hpet_cap
+    mov al,ah
+    and ax,1Fh
+    inc ax
+    mov ds:hpet_counters,ax
+;
+    mov cx,ax
+    mov bx,OFFSET hpet_counter_arr    
+
+init_hpet_loop:
+    mov eax,es:[bx].hpetc_config
+    and ax,NOT 4004h
+    mov es:[bx].hpetc_config,eax
+    add bx,SIZE hpet_counter_struc
+    loop init_hpet_loop
+;    
+    mov eax,es:hpet_config
+    and al,NOT 3
+    or al,1
+    mov es:hpet_config,eax
+;    
+    mov bx,OFFSET hpet_counter_arr    
+    mov eax,es:[bx].hpetc_config
+    test ax,8000h
+    jnz init_hpet_msi
+
+init_hpet_iopic:
+    mov eax,es:[bx].hpetc_int_mask
+    test al,1
+    jz init_hpet_done
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET hpet_int
+    xor al,al
+    RequestPrivateIrqHandler
+;
+    mov eax,es:[bx].hpetc_config
+    and ax,NOT 7E0Ah
+    or ax,104h
+    mov es:[bx].hpetc_config,eax   
+    jmp init_hpet_irq_ok
+
+init_hpet_msi: 
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET hpet_int
+;
+    mov cx,1
+    AllocateMsiInts
+    jc init_hpet_done
+;
+    mov es:[bx].hpetc_msi_data,eax
+    mov es:[bx].hpetc_msi_ads,edx
+    RequestMsiHandler
+;
+    mov eax,es:[bx].hpetc_config
+    and ax,NOT 0Ah
+    or ax,4100h 
+    mov es:[bx].hpetc_config,eax   
+
+init_hpet_irq_ok:
+    mov eax,es:hpet_int_status
+    mov eax,es:hpet_count
+    mov bx,OFFSET hpet_counter_arr    
+    mov eax,es:[bx].hpetc_config
+    mov eax,es:[bx].hpetc_compare
+
+init_hpet_done:    
     retf            
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2724,57 +2999,6 @@ daiMasterOk:
     pop edx
     ret
 DisablePic  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           SetupPit
-;
-;   Description:    Setup PIT timer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupPit  Proc near
-    push ds
-    push eax
-    push bx
-    push edx
-;
-    mov bx,SEG data
-    mov ds,bx
-    xor al,al
-    mov edx,ds:isa_redir_arr
-    mov al,dl
-    sub al,40h
-    mov dl,40h
-;    
-    movzx bx,al
-    shl bx,2
-    add bx,OFFSET global_int_arr
-    mov ax,ds:[bx].gi_ioapic_sel
-;    
-    push ax
-    mov al,ds:[bx].gi_ioapic_id
-    pop ds
-;       
-    mov bl,10h
-    add bl,al
-    add bl,al
-;    
-    mov ds:ioapic_regsel,bl
-    mov ds:ioapic_window,edx
-;
-    inc bl
-    mov ds:ioapic_regsel,bl
-    mov edx,0FF000000h
-    mov ds:ioapic_window,edx
-;
-    pop edx
-    pop bx
-    pop eax
-    pop ds
-    ret
-SetupPit  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2872,6 +3096,18 @@ init    PROC far
     xor cl,cl
     mov ax,free_msi_int_nr
     RegisterOsGate
+;
+    mov esi,OFFSET start_pit_timer
+    mov edi,OFFSET start_pit_timer_name
+    xor cl,cl
+    mov ax,start_sys_timer_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET reload_pit_timer
+    mov edi,OFFSET reload_pit_timer_name
+    xor cl,cl
+    mov ax,reload_sys_timer_nr
+    RegisterOsGate
     pop es
 ;
     call DisablePic
@@ -2885,7 +3121,6 @@ init    PROC far
     call SetupLocalApic
 ;    
     call InitApicTimer
-    call SetupPit
     call StartupApCores
 ;
     mov ax,cs

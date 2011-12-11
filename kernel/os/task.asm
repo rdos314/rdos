@@ -703,80 +703,6 @@ gptGet:
     ret
 GetPitTime  Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           StartSysTimer
-;
-;           DESCRIPTION:    Start PIT timer
-;
-;           RETURNS:        EAX      Update tics
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-start_pit_timer_name    DB 'Start Pit Timer', 0
-
-start_pit_timer    Proc far
-    mov ax,30h
-    out TIMER_CONTROL,al
-;
-    mov ax,100h
-    cli
-    out TIMER0,al
-    xchg ah,al
-    jmp short $+2
-    out TIMER0,al
-    call cs:get_time_proc
-    cli
-    xor al,al
-    out TIMER_CONTROL,al
-    jmp short $+2
-    in al,TIMER0
-    mov ah,al
-    jmp short $+2
-    in al,TIMER0
-    xchg al,ah
-    neg ax
-    add ax,100h
-    movzx eax,ax
-    add eax,eax
-    add eax,eax
-;
-    push eax
-    in al,INT0_MASK
-    and al,NOT 1
-    out INT0_MASK,al
-    pop eax
-    retf32
-start_pit_timer    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ReloadSysTimer
-;
-;           DESCRIPTION:    Reload PIT timer
-;
-;           PARAMETERS:         AX      Reload count
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-reload_pit_timer_name    DB 'Reload Pit Timer', 0
-
-reload_pit_timer    Proc far
-    out TIMER0,al
-    xchg al,ah
-    jmp short $+2
-    out TIMER0,al
-;
-    in al,INT0_MASK
-    and al,NOT 1
-    out INT0_MASK,al
-    retf32
-reload_pit_timer  Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -939,18 +865,6 @@ timer_free_list_create:
     mov di,OFFSET preempt_timer_expired_name
     xor cl,cl
     mov ax,preempt_timer_expired_nr
-    RegisterOsGate
-;
-    mov si,OFFSET start_pit_timer
-    mov di,OFFSET start_pit_timer_name
-    xor cl,cl
-    mov ax,start_sys_timer_nr
-    RegisterOsGate
-;
-    mov si,OFFSET reload_pit_timer
-    mov di,OFFSET reload_pit_timer_name
-    xor cl,cl
-    mov ax,reload_sys_timer_nr
     RegisterOsGate
 ;
     mov esi,OFFSET flush_tlb

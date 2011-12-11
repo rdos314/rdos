@@ -544,6 +544,74 @@ seDone:
     retf32
 send_eoi    Endp    
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StartSysTimer
+;
+;           DESCRIPTION:    Start PIT timer
+;
+;           RETURNS:        EAX      Update tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_pit_timer_name    DB 'Start Pit Timer', 0
+
+start_pit_timer    Proc far
+    mov ax,30h
+    out TIMER_CONTROL,al
+;
+    mov ax,100h
+    cli
+    out TIMER0,al
+    xchg ah,al
+    jmp short $+2
+    out TIMER0,al
+    jmp short $+2
+    jmp short $+2
+    xor al,al
+    out TIMER_CONTROL,al
+    jmp short $+2
+    in al,TIMER0
+    mov ah,al
+    jmp short $+2
+    in al,TIMER0
+    xchg al,ah
+    neg ax
+    add ax,100h
+    movzx eax,ax
+    add eax,eax
+    add eax,eax
+;
+    push eax
+    in al,INT0_MASK
+    and al,NOT 1
+    out INT0_MASK,al
+    pop eax
+    retf32
+start_pit_timer    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ReloadSysTimer
+;
+;           DESCRIPTION:    Reload PIT timer
+;
+;           PARAMETERS:         AX      Reload count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reload_pit_timer_name    DB 'Reload Pit Timer', 0
+
+reload_pit_timer    Proc far
+    out TIMER0,al
+    xchg al,ah
+    jmp short $+2
+    out TIMER0,al
+    retf32
+reload_pit_timer  Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -558,10 +626,6 @@ timer_int:
     push es
     push fs
     pushad
-;
-    in al,INT0_MASK
-    or al,1
-    out INT0_MASK,al
 ;
     mov al,20h
     out INT0_CONTROL,al
@@ -648,6 +712,18 @@ init    PROC far
     mov edi,OFFSET disable_all_irq_name
     xor cl,cl
     mov ax,disable_all_irq_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET start_pit_timer
+    mov edi,OFFSET start_pit_timer_name
+    xor cl,cl
+    mov ax,start_sys_timer_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET reload_pit_timer
+    mov edi,OFFSET reload_pit_timer_name
+    xor cl,cl
+    mov ax,reload_sys_timer_nr
     RegisterOsGate
 ;
     mov edi,OFFSET init_process

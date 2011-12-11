@@ -404,7 +404,8 @@ apic_code_sel       EQU 0A40h
 apic_data_sel       EQU 0A48h
 apic_mem_sel        EQU 0A50h
 
-pic_code_sel        EQU 0A58h
+pic_code_sel        EQU 0A60h
+pic_data_sel        EQU 0A68h
 
 util_code_sel       EQU 0A70h
 util_data_sel       EQU 0A78h
