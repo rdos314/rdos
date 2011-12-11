@@ -1612,6 +1612,7 @@ reload_hpet_timer    Proc far
     inc eax
 ;    
     mov ds,ds:hpet_sel
+    mov ds:hpet_int_status,1
     add eax,ds:hpet_count
     mov ds:hpet_counter_arr.hpetc_compare,eax
     mov eax,ds:hpet_counter_arr.hpetc_compare
