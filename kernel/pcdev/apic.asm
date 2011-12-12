@@ -1549,7 +1549,7 @@ start_hpet_iopic:
     add bl,al
     add bl,al
 ;    
-    mov edx,0A940h
+    mov edx,0A982h
     mov ds:ioapic_regsel,bl
     mov ds:ioapic_window,edx
 ;
@@ -1561,7 +1561,7 @@ start_hpet_iopic:
     pop bx
     mov eax,es:[bx].hpetc_config
     and ax,NOT 7E0Ah
-    or ax,104h
+    or ax,106h
     mov es:[bx].hpetc_config,eax   
     jmp start_hpet_done
 
@@ -2357,6 +2357,47 @@ timer_int:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           HpetInt
+;
+;               DESCRIPTION:    HPET interrupt
+;
+;               PARAMETERS:             
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hpet_int:
+    push ds
+    push es
+    push fs
+    pushad
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov ds,ds:hpet_sel
+    mov edx,ds:hpet_int_status
+    mov ds:hpet_int_status,edx
+;
+    int 3
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+;
+    test dl,1
+    jz hpet_int_done
+;  
+    TimerExpired
+
+hpet_int_done:
+    popad
+    pop fs
+    pop es
+    pop ds
+    iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:           PreemptInt
 ;
 ;               DESCRIPTION:    Preempt interrupt
@@ -2429,6 +2470,7 @@ pi0F   DW      0Fh,    OFFSET spurious_int
 pi40   DW      40h,    OFFSET timer_int
 pi80   DW      80h,    OFFSET preempt_int
 pi81   DW      81h,    OFFSET tlb_flush_int
+pi82   DW      82h,    OFFSET hpet_int
        DW      0FFFFh
 
 ;
@@ -3049,7 +3091,7 @@ init_ap_proc:
     mov fs:ps_acpi,al
 ;
     inc bp
-    cmp bp,6
+    cmp bp,4
     je init_core_done
 
 init_core_next:
