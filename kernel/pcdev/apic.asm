@@ -915,6 +915,7 @@ enable_irq  Proc far
     movzx bx,al
     shl bx,3
     mov edx,ds:[bx].isa_redir_arr
+    or dh,9
     sub dl,40h
     xchg al,dl
 
@@ -1471,6 +1472,7 @@ start_pit_timer    Proc far
     add bl,al
     add bl,al
 ;    
+    or dh,9
     mov ds:ioapic_regsel,bl
     mov ds:ioapic_window,edx
 ;
@@ -1536,9 +1538,12 @@ start_hpet_timer    Proc far
     jnz start_hpet_msi
 
 start_hpet_iopic:
+;    mov eax,es:hpet_config
+;    or al,2
+;    mov es:hpet_config,eax
     push bx
 ;    
-    mov bx,OFFSET global_int_arr
+    mov bx,OFFSET global_int_arr + 4 * 2
     mov ax,ds:[bx].gi_ioapic_sel
 ;    
     push ax
@@ -1549,7 +1554,7 @@ start_hpet_iopic:
     add bl,al
     add bl,al
 ;    
-    mov edx,0A982h
+    mov edx,2982h
     mov ds:ioapic_regsel,bl
     mov ds:ioapic_window,edx
 ;
@@ -1560,8 +1565,8 @@ start_hpet_iopic:
 ;
     pop bx
     mov eax,es:[bx].hpetc_config
-    and ax,NOT 7E0Ah
-    or ax,106h
+;    and ax,NOT 7E0Ah
+    or ax,506h
     mov es:[bx].hpetc_config,eax   
     jmp start_hpet_done
 
@@ -2377,14 +2382,10 @@ hpet_int:
     mov edx,ds:hpet_int_status
     mov ds:hpet_int_status,edx
 ;
-    int 3
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
-;
-    test dl,1
-    jz hpet_int_done
 ;  
     TimerExpired
 
@@ -3360,6 +3361,15 @@ init    PROC far
     CreateDataSelector16
     mov ds:hpet_sel,bx
     mov es,bx
+;    
+    mov eax,es:hpet_config
+    and al,NOT 2
+    mov es:hpet_config,eax
+;    
+    mov bx,OFFSET hpet_counter_arr    
+    mov eax,es:[bx].hpetc_config
+    test ax,8000h
+    jz init_hpet_done
 ;
     mov eax,es:hpet_period
     mov ds:hpet_factor,eax
