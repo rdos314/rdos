@@ -638,6 +638,7 @@ reload_pit_timer    Proc far
     xchg al,ah
     jmp short $+2
     out TIMER0,al
+    clc
     retf32
 reload_pit_timer  Endp
 

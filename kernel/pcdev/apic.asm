@@ -1504,6 +1504,7 @@ reload_pit_timer    Proc far
     xchg al,ah
     jmp short $+2
     out TIMER0,al
+    clc
     retf32
 reload_pit_timer  Endp
 
@@ -1617,16 +1618,14 @@ reload_hpet_timer    Proc far
     mov ds:hpet_counter_arr.hpetc_compare,eax
     mov eax,ds:hpet_counter_arr.hpetc_compare
     cmp eax,ds:hpet_count
-    jg reload_hpet_done
+    jg reload_hpet_ok
 ;
-    push es
-    push fs
-    pushad
-    TimerExpired    
-    popad
-    pop fs
-    pop es
+    stc
+    jmp reload_hpet_done
      
+reload_hpet_ok:
+    clc
+
 reload_hpet_done:
     pop edx
     pop eax
