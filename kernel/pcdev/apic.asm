@@ -3049,7 +3049,7 @@ init_ap_proc:
     mov fs:ps_acpi,al
 ;
     inc bp
-    cmp bp,4
+    cmp bp,6
     je init_core_done
 
 init_core_next:

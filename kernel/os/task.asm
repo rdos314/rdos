@@ -6130,8 +6130,12 @@ timer_expired_lock:
     call TryLockCore
 
 timer_expired_remove:    
-    call LocalRemoveTimer
+    mov eax,ds:[bx].timer_lsb
+    and eax,ds:[bx].timer_msb
+    add eax,1
+    jc timer_expired_idle
 ;    
+    call LocalRemoveTimer    
     GetSystemTime
     call LockTimer
     add eax,cs:update_tics
@@ -6144,7 +6148,8 @@ timer_expired_remove:
     neg eax
     ReloadSysTimer
     jc timer_expired_remove
-;
+
+timer_expired_idle:
     call UnlockTimer    
     call TryUnlockCore
     jmp timer_expired_done
@@ -6381,6 +6386,11 @@ start_retry:
     jc start_reload
 
 start_remove:
+    mov eax,ds:[bx].timer_lsb
+    and eax,ds:[bx].timer_msb
+    add eax,1
+    jc start_idle
+;    
     call LocalRemoveTimer
     jmp start_retry
 
@@ -6388,7 +6398,8 @@ start_reload:
     neg eax
     ReloadSysTimer
     jc start_remove
-;    
+
+start_idle:    
     call UnlockTimer
     call TryUnlockCore
     popad
