@@ -37,6 +37,7 @@ extern void InitAcpiTables();
 extern void InitOsAcpi();
 
 #define MAX_DEVICE_COUNT        1024
+#define MAX_PCI_IRQ_COUNT       256
 
 struct TObjectEntry
 {
@@ -62,11 +63,50 @@ struct TDeviceEntry *Root;
 int DeviceCount = 0;
 struct TDeviceEntry *DeviceArr[MAX_DEVICE_COUNT];
 
+int IrqRoutingCount = 0;
+ACPI_PCI_ROUTING_TABLE *IrqRoutingTable[MAX_PCI_IRQ_COUNT];
+
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
-    printf("Testing..\r\n");
+    ACPI_STATUS Status;
+    ACPI_BUFFER Buffer;
+    struct TDeviceEntry *DevEntry;
+    ACPI_PCI_ROUTING_TABLE *RouteEntry;
+    char *TempBuf;
+    char *ptr;
+    int i;
+
+    TempBuf = (char *)malloc( 256 * sizeof(ACPI_PCI_ROUTING_TABLE));
+
+    for (i = 0; i < MAX_DEVICE_COUNT; i++)
+    {
+        DevEntry = DeviceArr[i];
+        if (DevEntry)
+        {        
+            Buffer.Length = 256 * sizeof(ACPI_PCI_ROUTING_TABLE);
+            Buffer.Pointer = TempBuf;
+            Status = AcpiGetIrqRoutingTable(DevEntry->Handle, &Buffer);
+
+            if (Status == AE_OK)
+            {
+                ptr = (char *)malloc(Buffer.Length);
+                memcpy(ptr, TempBuf, Buffer.Length);
+                RouteEntry = (ACPI_PCI_ROUTING_TABLE *)ptr;
+
+                while (RouteEntry->Length)
+                {
+                    IrqRoutingTable[IrqRoutingCount] = RouteEntry;
+                    IrqRoutingCount++;
+                    ptr +=  RouteEntry->Length;
+                    RouteEntry = (ACPI_PCI_ROUTING_TABLE *)ptr;
+                }   
+            }
+        }
+    }
+
+    free(TempBuf);
 }
 
 /*##########################################################################

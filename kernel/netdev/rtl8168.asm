@@ -1266,7 +1266,6 @@ siMsiHandler:
 
 siIrq:
     GetPciIrqNr
-    int 3
     mov al,20 ; temporary fix before ACPI
     mov bx,cs
     mov es,bx
