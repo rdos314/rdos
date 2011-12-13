@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include "malloc.h"
 
+extern void InitAcpiTables();
 extern void InitOsAcpi();
 
 #define MAX_DEVICE_COUNT        1024
@@ -560,6 +561,8 @@ void __far InitTasking()
 ##########################################################################*/
 int main()
 {
+    InitAcpiTables();
+
     Status = AcpiInitializeSubsystem();
     if (Status == 0)
     {

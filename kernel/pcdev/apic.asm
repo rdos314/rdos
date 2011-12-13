@@ -34,7 +34,7 @@ INCLUDE apic.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\proc.inc
 INCLUDE ..\os\irq.inc
-INCLUDE ..\os\acpi.def
+INCLUDE ..\acpi\acpi.inc
 
 INCLUDE ..\user.def
 INCLUDE ..\user.inc

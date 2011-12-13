@@ -1,15 +1,13 @@
 project : c:\rdos\kernel\os\kernel.exe c:\rdos\kernel\os\font.rdv c:\rdos\ke&
-rnel\os\acpi.rdv c:\rdos\kernel\os\util.rdv c:\rdos\kernel\os\drive.rdv c:\r&
-dos\kernel\os\fs.rdv c:\rdos\kernel\os\guidev.rdv c:\rdos\kernel\os\audio.rd&
-v c:\rdos\kernel\os\exec.rdv c:\rdos\kernel\os\pe.rdv c:\rdos\kernel\os\net.&
-rdv c:\rdos\kernel\os\ip.rdv c:\rdos\kernel\os\ipc.rdv c:\rdos\kernel\os\kde&
-bug.rdv c:\rdos\kernel\os\com.rdv c:\rdos\kernel\os\fat.rdv c:\rdos\kernel\o&
-s\pcbios.rdv c:\rdos\kernel\os\wd.rdv c:\rdos\kernel\os\printer.rdv .SYMBOLI&
-C
+rnel\os\util.rdv c:\rdos\kernel\os\drive.rdv c:\rdos\kernel\os\fs.rdv c:\rdo&
+s\kernel\os\guidev.rdv c:\rdos\kernel\os\audio.rdv c:\rdos\kernel\os\exec.rd&
+v c:\rdos\kernel\os\pe.rdv c:\rdos\kernel\os\net.rdv c:\rdos\kernel\os\ip.rd&
+v c:\rdos\kernel\os\ipc.rdv c:\rdos\kernel\os\kdebug.rdv c:\rdos\kernel\os\c&
+om.rdv c:\rdos\kernel\os\fat.rdv c:\rdos\kernel\os\pcbios.rdv c:\rdos\kernel&
+\os\wd.rdv c:\rdos\kernel\os\printer.rdv .SYMBOLIC
 
 !include c:\rdos\kernel\os\kernel.mk1
 !include c:\rdos\kernel\os\font.mk1
-!include c:\rdos\kernel\os\acpi.mk1
 !include c:\rdos\kernel\os\util.mk1
 !include c:\rdos\kernel\os\drive.mk1
 !include c:\rdos\kernel\os\fs.mk1

@@ -1061,7 +1061,8 @@ PciVendorTab:
 pci00   DW 10ECh, 8129h
 pci01   DW 1186h, 4300h
 pci02   DW 10ECh, 8168h
-pci03   DW 0,     0
+pci03   DW 10ECh, 8136h
+pci04   DW 0,     0
 
 InitPrimaryPciAdapter   Proc near
     mov bp,ax
