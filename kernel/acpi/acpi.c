@@ -31,7 +31,6 @@
 #include "acpi.h"
 
 #include <stdio.h>
-#include "malloc.h"
 
 extern void InitAcpiTables();
 extern void InitOsAcpi();
@@ -47,13 +46,94 @@ struct TObjectEntry
     struct TObjectEntry *Next;
 };
 
+struct TResourceBase
+{
+    struct TResourceBase *Next
+};
+
+struct TResourceIrq
+{
+    struct TResourceIrq *Next;
+    ACPI_RESOURCE_IRQ Data;
+};
+
+struct TResourceExtendedIrq
+{
+    struct TResourceExtendedIrq *Next;
+    ACPI_RESOURCE_EXTENDED_IRQ Data;
+};
+
+struct TResourceDma
+{
+    struct TResourceDma *Next;
+    ACPI_RESOURCE_DMA Data;
+};
+
+struct TResourceIo
+{
+    struct TResourceIo *Next;
+    ACPI_RESOURCE_IO Data;
+};
+
+struct TResourceFixedIo
+{
+    struct TResourceFixedIo *Next;
+    ACPI_RESOURCE_FIXED_IO Data;
+};
+
+struct TResourceMemory24
+{
+    struct TResourceMemory24 *Next;
+    ACPI_RESOURCE_MEMORY24 Data;
+};
+
+struct TResourceMemory32
+{
+    struct TResourceMemory32 *Next;
+    ACPI_RESOURCE_MEMORY32 Data;
+};
+
+struct TResourceFixedMemory32
+{
+    struct TResourceFixedMemory32 *Next;
+    ACPI_RESOURCE_FIXED_MEMORY32 Data;
+};
+
+struct TResourceAddress16
+{
+    struct TResourceAddress16 *Next;
+    ACPI_RESOURCE_ADDRESS16 Data;
+};
+
+struct TResourceAddress32
+{
+    struct TResourceAddress32 *Next;
+    ACPI_RESOURCE_ADDRESS32 Data;
+};
+
+struct TResourceList
+{
+    struct TResourceIrq *IrqResourceList;
+    struct TResourceExtendedIrq *ExtendedIrqResourceList;
+    struct TResourceDma *DmaResourceList;
+    struct TResourceIo *IoResourceList;
+    struct TResourceFixedIo *FixedIoResourceList;
+    struct TResourceMemory24 *Memory24ResourceList;
+    struct TResourceMemory32 *Memory32ResourceList;
+    struct TResourceMemoryFixed32 *FixedMemory32ResourceList;
+    struct TResourceAddress16 *Address16ResourceList;
+    struct TResourceAddress32 *Address32ResourceList;
+};
+
 struct TDeviceEntry
 {
     char AcpiName[5];
     ACPI_HANDLE Handle;
     struct TDeviceEntry *DeviceList;
     struct TDeviceEntry *DeviceNext;
-    struct TObjectEntry *ObjectList;        
+    struct TObjectEntry *ObjectList;
+    struct TResourceList PossibleResourceList;
+    struct TResourceList CurrentResourceList;
 };
 
 ACPI_STATUS Status;
@@ -63,50 +143,18 @@ struct TDeviceEntry *Root;
 int DeviceCount = 0;
 struct TDeviceEntry *DeviceArr[MAX_DEVICE_COUNT];
 
+int HardwareCount = 0;
+struct TDeviceEntry *HardwareArr[MAX_DEVICE_COUNT];
+
 int IrqRoutingCount = 0;
 ACPI_PCI_ROUTING_TABLE *IrqRoutingTable[MAX_PCI_IRQ_COUNT];
+
+char TempResourceBuf[0x4000];
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
-    ACPI_STATUS Status;
-    ACPI_BUFFER Buffer;
-    struct TDeviceEntry *DevEntry;
-    ACPI_PCI_ROUTING_TABLE *RouteEntry;
-    char *TempBuf;
-    char *ptr;
-    int i;
-
-    TempBuf = (char *)malloc( 256 * sizeof(ACPI_PCI_ROUTING_TABLE));
-
-    for (i = 0; i < MAX_DEVICE_COUNT; i++)
-    {
-        DevEntry = DeviceArr[i];
-        if (DevEntry)
-        {        
-            Buffer.Length = 256 * sizeof(ACPI_PCI_ROUTING_TABLE);
-            Buffer.Pointer = TempBuf;
-            Status = AcpiGetIrqRoutingTable(DevEntry->Handle, &Buffer);
-
-            if (Status == AE_OK)
-            {
-                ptr = (char *)malloc(Buffer.Length);
-                memcpy(ptr, TempBuf, Buffer.Length);
-                RouteEntry = (ACPI_PCI_ROUTING_TABLE *)ptr;
-
-                while (RouteEntry->Length)
-                {
-                    IrqRoutingTable[IrqRoutingCount] = RouteEntry;
-                    IrqRoutingCount++;
-                    ptr +=  RouteEntry->Length;
-                    RouteEntry = (ACPI_PCI_ROUTING_TABLE *)ptr;
-                }   
-            }
-        }
-    }
-
-    free(TempBuf);
 }
 
 /*##########################################################################
@@ -502,7 +550,7 @@ ACPI_STATUS AddAcpiObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, voi
 
         if (Type == ACPI_TYPE_DEVICE)
         {
-            DevEntry = (struct TDeviceEntry *)malloc(sizeof(struct TDeviceEntry));
+            DevEntry = (struct TDeviceEntry *)AcpiOsAllocate(sizeof(struct TDeviceEntry));
             DevEntry->Handle = Object;
             DevEntry->DeviceList = 0;
             DevEntry->DeviceNext = 0;
@@ -549,6 +597,248 @@ ACPI_STATUS AddAcpiObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, voi
 
 /*##########################################################################
 #
+#   Name       : GetIrqRouting
+#
+#   Purpose....: Get IRQ routing tables
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GetIrqRouting()
+{
+    ACPI_STATUS Status;
+    ACPI_BUFFER Buffer;
+    struct TDeviceEntry *DevEntry;
+    ACPI_PCI_ROUTING_TABLE *RouteEntry;
+    char *ptr;
+    int i;
+
+    for (i = 0; i < MAX_DEVICE_COUNT; i++)
+    {
+        DevEntry = DeviceArr[i];
+        if (DevEntry)
+        {        
+            Buffer.Length = 0x4000;
+            Buffer.Pointer = TempResourceBuf;
+            Status = AcpiGetIrqRoutingTable(DevEntry->Handle, &Buffer);
+
+            if (Status == AE_OK)
+            {
+                ptr = (char *)AcpiOsAllocate(Buffer.Length);
+                memcpy(ptr, TempResourceBuf, Buffer.Length);
+                RouteEntry = (ACPI_PCI_ROUTING_TABLE *)ptr;
+
+                while (RouteEntry->Length)
+                {
+                    IrqRoutingTable[IrqRoutingCount] = RouteEntry;
+                    IrqRoutingCount++;
+                    ptr +=  RouteEntry->Length;
+                    RouteEntry = (ACPI_PCI_ROUTING_TABLE *)ptr;
+                }   
+            }
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : InitResource
+#
+#   Purpose....: Init an resource list
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void InitResource(struct TResourceList *list)
+{
+    list->IrqResourceList = 0;
+    list->ExtendedIrqResourceList = 0;
+    list->DmaResourceList = 0;
+    list->IoResourceList = 0;
+    list->FixedIoResourceList = 0;
+    list->Memory24ResourceList = 0;
+    list->Memory32ResourceList = 0;
+    list->FixedMemory32ResourceList = 0;
+    list->Address16ResourceList = 0;
+    list->Address32ResourceList = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : AddResource
+#
+#   Purpose....: Add an resource entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddResource(struct TResourceList *list, int size)
+{
+    int CopyLen;
+    int AllocLen;
+    char *ptr;
+    ACPI_RESOURCE *Resource;
+    struct TResourceIrq *IrqResource;
+    struct TResourceExtendedIrq *ExtendedIrqResource;
+    struct TResourceDma *DmaResource;
+    struct TResourceIo *IoResource;
+    struct TResourceFixedIo *FixedIoResource;
+    struct TResourceMemory24 *Memory24Resource;
+    struct TResourceMemory32 *Memory32Resource;
+    struct TResourceFixedMemory32 *FixedMemory32Resource;
+    struct TResourceAddress16 *Address16Resource;
+    struct TResourceAddress32 *Address32Resource;
+    
+    ptr = &TempResourceBuf;
+    Resource = (ACPI_RESOURCE *)ptr;
+
+    while (size > 0)
+    {            
+        CopyLen = Resource->Length - 2 * sizeof(UINT32);
+        if (CopyLen)
+        {
+            AllocLen = sizeof(struct TResourceBase) + CopyLen; 
+            switch (Resource->Type)
+            {
+                case ACPI_RESOURCE_TYPE_IRQ:
+                    IrqResource = (struct TResourceIrq *)AcpiOsAllocate(AllocLen);
+                    memcpy(&IrqResource->Data, &Resource->Data, CopyLen);
+                    IrqResource->Next = list->IrqResourceList;
+                    list->IrqResourceList = IrqResource;
+                    break;
+                            
+                case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
+                    ExtendedIrqResource = (struct TResourceExtendedIrq *)AcpiOsAllocate(AllocLen);
+                    memcpy(&ExtendedIrqResource->Data, &Resource->Data, CopyLen);
+                    ExtendedIrqResource->Next = list->ExtendedIrqResourceList;
+                    list->ExtendedIrqResourceList = ExtendedIrqResource;
+                    break;
+                            
+                case ACPI_RESOURCE_TYPE_DMA:
+                    DmaResource = (struct TResourceDma *)AcpiOsAllocate(AllocLen);
+                    memcpy(&DmaResource->Data, &Resource->Data, CopyLen);
+                    DmaResource->Next = list->DmaResourceList;
+                    list->DmaResourceList = DmaResource;
+                    break;
+
+                case ACPI_RESOURCE_TYPE_IO:
+                    IoResource = (struct TResourceIo *)AcpiOsAllocate(AllocLen);
+                    memcpy(&IoResource->Data, &Resource->Data, CopyLen);
+                    IoResource->Next = list->IoResourceList;
+                    list->IoResourceList = IoResource;
+                    break;
+
+                case ACPI_RESOURCE_TYPE_FIXED_IO:
+                    FixedIoResource = (struct TResourceFixedIo *)AcpiOsAllocate(AllocLen);
+                    memcpy(&FixedIoResource->Data, &Resource->Data, CopyLen);
+                    FixedIoResource->Next = list->FixedIoResourceList;
+                    list->FixedIoResourceList = FixedIoResource;
+                    break;
+
+                case ACPI_RESOURCE_TYPE_MEMORY24:
+                    Memory24Resource = (struct TResourceMemory24 *)AcpiOsAllocate(AllocLen);
+                    memcpy(&Memory24Resource->Data, &Resource->Data, CopyLen);
+                    Memory24Resource->Next = list->Memory24ResourceList;
+                    list->Memory24ResourceList = Memory24Resource;
+                    break;
+
+                case ACPI_RESOURCE_TYPE_MEMORY32:
+                    Memory32Resource = (struct TResourceMemory32 *)AcpiOsAllocate(AllocLen);
+                    memcpy(&Memory32Resource->Data, &Resource->Data, CopyLen);
+                    Memory32Resource->Next = list->Memory32ResourceList;
+                    list->Memory32ResourceList = Memory32Resource;
+                    break;
+
+                case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+                    FixedMemory32Resource = (struct TResourceFixedMemory32 *)AcpiOsAllocate(AllocLen);
+                    memcpy(&FixedMemory32Resource->Data, &Resource->Data, CopyLen);
+                    FixedMemory32Resource->Next = list->FixedMemory32ResourceList;
+                    list->FixedMemory32ResourceList = FixedMemory32Resource;
+                    break;
+
+                case ACPI_RESOURCE_TYPE_ADDRESS16:
+                    Address16Resource = (struct TResourceAddress16 *)AcpiOsAllocate(AllocLen);
+                    memcpy(&Address16Resource->Data, &Resource->Data, CopyLen);
+                    Address16Resource->Next = list->Address16ResourceList;
+                    list->Address16ResourceList = Address16Resource;
+                    break;
+
+                case ACPI_RESOURCE_TYPE_ADDRESS32:
+                    Address32Resource = (struct TResourceAddress32 *)AcpiOsAllocate(AllocLen);
+                    memcpy(&Address32Resource->Data, &Resource->Data, CopyLen);
+                    Address32Resource->Next = list->Address32ResourceList;
+                    list->Address32ResourceList = Address32Resource;
+                    break;
+
+                default:
+                    break;
+            }
+        }
+        size -= Resource->Length;
+        ptr += Resource->Length;
+        Resource = (ACPI_RESOURCE *)ptr;        
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : GetHardware
+#
+#   Purpose....: Get hardware devices
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GetHardware()
+{
+    ACPI_STATUS Status;
+    ACPI_BUFFER Buffer;
+    struct TResourceList *List;
+    struct TDeviceEntry *DevEntry;
+    int i;
+
+    for (i = 0; i < MAX_DEVICE_COUNT; i++)
+    {
+        DevEntry = DeviceArr[i];
+        if (DevEntry)
+        {        
+            List = &DevEntry->PossibleResourceList;
+            InitResource(List);
+
+            List = &DevEntry->CurrentResourceList;
+            InitResource(List);
+            
+            Buffer.Length = 0x4000;
+            Buffer.Pointer = TempResourceBuf;
+            Status = AcpiGetCurrentResources(DevEntry->Handle, &Buffer);
+            if (Status == AE_OK)
+            {
+                AddResource(List, Buffer.Length);
+
+                List = &DevEntry->PossibleResourceList;
+                Buffer.Length = 0x4000;
+                Buffer.Pointer = TempResourceBuf;
+                Status = AcpiGetPossibleResources(DevEntry->Handle, &Buffer);
+                if (Status == AE_OK)
+                    AddResource(List, Buffer.Length);
+
+                HardwareArr[HardwareCount] = DevEntry;
+                HardwareCount++;
+            }
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : InitTasking
 #
 #   Purpose....: Init tasking callback
@@ -585,7 +875,11 @@ void __far InitTasking()
     }
 
     if (Status == 0)
+    {
         AcpiWalkNamespace(ACPI_TYPE_ANY, ACPI_ROOT_OBJECT, 10, AddAcpiObject, 0, 0, 0);
+        GetHardware();        
+        GetIrqRouting();
+    }        
 } 
 
 /*##########################################################################
