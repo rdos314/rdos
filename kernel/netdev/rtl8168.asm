@@ -448,6 +448,49 @@ CreateTxRing   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           WritePhy
+;
+;           DESCRIPTION:    Write to phy
+;
+;           PARAMETERS:     DL      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WritePhy    Proc near
+    push eax
+    push cx
+    push dx
+;    
+    movzx eax,ax
+    ror eax,8
+    mov ah,dl
+    rol eax,8
+    or eax,80000000h
+;    
+    mov dx,ds:IoBase
+    add dx,REG_PHYAR
+;
+    out dx,eax
+    xor cx,cx
+
+wpWait:    
+    pause
+    in eax,dx
+    test eax,80000000h
+    jz wpDone
+    loop wpWait
+
+wpDone:
+    pop dx
+    pop cx
+    pop eax
+    ret
+WritePhy    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           InitHardware
 ;
 ;       DESCRIPTION:    Initialize hardware
@@ -569,6 +612,15 @@ ihResetDone:
 
 ihDone:
     mov ds:Isr,0
+;    
+    mov dl,4
+    mov ax,81E1h
+    call WritePhy
+;    
+    mov dx,ds:IoBase
+    add dx,REG_PHYAR
+    mov eax,80001240h
+    out dx,eax
     ret
 InitHardware    Endp
 
@@ -616,6 +668,21 @@ niNotRx:
     jmp niLoop
 
 niNotTx:
+    test ax,IR_LinkChg
+    jz niDone
+;
+    mov dx,ds:IoBase
+    add dx,REG_PHYStatus
+    in al,dx
+    test al,2
+    jnz niDone
+;
+    mov dx,ds:IoBase
+    add dx,REG_PHYAR
+    mov eax,80001240h
+    out dx,eax
+        
+niDone:
     retf32
 NetInt  Endp
 
@@ -656,7 +723,7 @@ NetTimeout  Proc far
 
 ntNotRx:
     test ax,IR_TOK OR IR_TER
-    jz ntDone
+    jz ntNotTx
 ;
     mov bx,ds:TxThread
     or bx,bx
@@ -664,6 +731,21 @@ ntNotRx:
 ;
     Signal
 
+ntNotTx:
+    test ax,IR_LinkChg
+    jz ntDone
+;
+    mov dx,ds:IoBase
+    add dx,REG_PHYStatus
+    in al,dx
+    test al,2
+    jnz ntDone
+;
+    mov dx,ds:IoBase
+    add dx,REG_PHYAR
+    mov eax,80001240h
+    out dx,eax
+        
 ntDone:    
     pop edx
     pop eax
