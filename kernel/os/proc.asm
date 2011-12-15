@@ -1050,7 +1050,8 @@ init_thread_block       PROC near
     mov es:p_process_sel,ax
     pop fs
 ;
-    mov es:p_spinlock,0
+    mov es:p_cli_spinlock,0
+    mov es:p_sti_spinlock,0
     mov ax,ds:p_app_sel
     mov es:p_app_sel,ax
     mov ax,ds:p_ldt_sel
@@ -2258,7 +2259,8 @@ init_first_process      Proc near
     mov ds:p_tss_es,fs
     GetCore
     mov fs:ps_null_thread,es
-    mov es:p_spinlock,0
+    mov es:p_cli_spinlock,0
+    mov es:p_sti_spinlock,0
     ret
 init_first_process      Endp
 

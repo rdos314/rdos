@@ -307,7 +307,8 @@ p_data			    DD ?
 p_thread_sel	    DW ?
 p_tss_sel           DW ?
 p_app_sel		    DW ?
-p_spinlock          DW ?
+p_cli_spinlock      DW ?
+p_sti_spinlock      DW ?
 p_free_proc		    DD ?
 p_cr3			    DD ?
 p_vm_deb_sel	    DW ?
