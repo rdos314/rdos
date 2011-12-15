@@ -164,6 +164,7 @@ unlock_cli_thread_proc      DW OFFSET UnlockCliThreadSingle
 
 lock_sti_thread_proc        DW OFFSET LockStiThreadSingle
 unlock_sti_thread_proc      DW OFFSET UnlockStiThreadSingle
+access_sti_thread_proc      DW OFFSET AccessStiThreadSingle
 
 lock_ready_proc             DW OFFSET LockReadySingle
 unlock_ready_proc           DW OFFSET UnlockReadySingle
@@ -2825,8 +2826,7 @@ load_thread_wakeup_loop:
 ;
     call RemoveCoreBlock
     sti
-    call cs:lock_sti_thread_proc
-    call cs:unlock_sti_thread_proc
+    call cs:access_sti_thread_proc
 ;
     mov di,es:p_prio
     or di,di
@@ -3723,6 +3723,7 @@ start_processor_null_threads    Proc near
     mov ds:unlock_cli_thread_proc,OFFSET UnlockCliThreadMultiple
     mov ds:lock_sti_thread_proc,OFFSET LockStiThreadMultiple
     mov ds:unlock_sti_thread_proc,OFFSET UnlockStiThreadMultiple
+    mov ds:access_sti_thread_proc,OFFSET AccessStiThreadMultiple
     mov ds:lock_ready_proc,OFFSET LockReadyMultiple
     mov ds:unlock_ready_proc,OFFSET UnlockReadyMultiple
     mov ds:lock_kernel_section_proc,OFFSET LockKernelSectionMultiple
@@ -4490,6 +4491,21 @@ UnlockStiThreadSingle    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AccessStiThreadSingle
+;
+;           DESCRIPTION:    Access thread lock with sti, single processor version
+;
+;           PARAMETERS:     ES      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AccessStiThreadSingle  Proc near
+    ret
+AccessStiThreadSingle  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           LockReadySingle
 ;
 ;           DESCRIPTION:    Lock global ready-queue, single processor version
@@ -4707,9 +4723,10 @@ UnlockCliThreadMultiple      Endp
 
 LockStiThreadMultiple    Proc near
     push ax
+    mov ax,1
 
 lstSpinLock:    
-    mov ax,es:p_sti_spinlock
+    xchg ax,es:p_sti_spinlock
     or ax,ax
     je lstGet
 ;
@@ -4717,16 +4734,9 @@ lstSpinLock:
     jmp lstSpinLock
 
 lstGet:
-    inc ax
-    xchg ax,es:p_sti_spinlock
-    or ax,ax
-    jne lstSpinLock
-
-lstDone:
     pop ax    
     ret
 LockStiThreadMultiple    Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4743,6 +4753,35 @@ UnlockStiThreadMultiple      Proc near
     mov es:p_sti_spinlock,0
     ret
 UnlockStiThreadMultiple      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AccessStiThreadMultiple
+;
+;           DESCRIPTION:    Access lock thread with sti, multiple processor version
+;
+;           PARAMETERS:     ES      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AccessStiThreadMultiple    Proc near
+    push ax
+    mov ax,1
+
+astSpinLock:    
+    xchg ax,es:p_sti_spinlock
+    or ax,ax
+    je astGet
+;
+    pause
+    jmp astSpinLock
+
+astGet:
+    mov es:p_sti_spinlock,ax
+    pop ax    
+    ret
+AccessStiThreadMultiple    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
