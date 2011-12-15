@@ -3311,6 +3311,70 @@ SaveLockedThread    Proc near
     ret
 SaveLockedThread   Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SaveLockedThreadKeepEs
+;
+;           DESCRIPTION:    Save state of current thread when lock is already taken
+;
+;       PARAMETERS:     Stack, return IP
+;               FS      Core selector
+;
+;       RETURNS:    SS:SP       Processor stack
+;                   GS      Clear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SaveLockedThreadKeepEs    Proc near       
+    push fs
+    push ds
+    push eax
+    push edx
+;
+    GetSystemTime
+    mov ds,fs:ps_curr_thread
+    sub eax,fs:ps_last_lsb
+    add ds:p_lsb_tics,eax
+    adc ds:p_msb_tics,0
+;
+    pushfd
+    pop eax
+    or ax,200h
+    mov ds:p_tss_eflags,eax
+    mov ds:p_tss_ecx,ecx
+    mov ds:p_tss_ebx,ebx
+    mov ds:p_tss_ebp,ebp
+    mov ds:p_tss_esi,esi
+    mov ds:p_tss_edi,edi
+    mov ds:p_tss_es,es
+    mov ds:p_tss_cs,cs
+    mov ds:p_tss_ss,ss
+    mov ds:p_tss_gs,gs
+;
+    pop ds:p_tss_edx
+    pop eax
+    mov ds:p_tss_eax,eax
+;
+    pop ds:p_tss_ds
+    pop ds:p_tss_fs
+    pop bp
+    pop dx
+    movzx edx,dx
+    mov ds:p_tss_eip,edx
+    mov ds:p_tss_esp,esp
+    mov edx,ds:p_tss_edx
+;    
+    mov ss,fs:ps_ss
+    mov sp,fs:ps_sp
+    push bp
+;
+    xor bp,bp
+    mov ds,bp
+    mov gs,bp    
+    ret
+SaveLockedThreadKeepEs   Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6945,10 +7009,8 @@ wait_for_signal PROC far
     call cs:unlock_cli_thread_proc
 ;
     push OFFSET wait_for_signal_done
-    call SaveLockedThread
-    mov es,fs:ps_curr_thread
-    call cs:unlock_sti_thread_proc
-;    
+    call SaveLockedThreadKeepEs
+õ    call cs:unlock_sti_thread_proc    
     xor ax,ax
     mov es,ax
     mov fs:ps_curr_thread,ax
@@ -7027,10 +7089,8 @@ wait_for_signal_timeout PROC far
     call cs:unlock_cli_thread_proc
 ;
     push OFFSET wait_for_signal_timeout_clear
-    call SaveLockedThread
-    mov es,fs:ps_curr_thread
-    call cs:unlock_sti_thread_proc
-;   
+    call SaveLockedThreadKeepEs
+    call cs:unlock_sti_thread_proc   
     xor ax,ax
     mov es,ax 
     mov fs:ps_curr_thread,ax
