@@ -149,11 +149,8 @@ debug_thread        DW ?
 
 flat_base           DD ?
 
-tsc_tics            DD ?
-tsc_rest            DW ?
-
-apic_tics           DD ?
-apic_rest           DW ?
+sys_tsc_tics        DD ?
+sys_tsc_rest        DW ?
 
 phys_spinlock		spinlock_typ <>
 gdt_section			section_typ <>

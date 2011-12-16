@@ -156,6 +156,7 @@ hpet_count          DD ?,?,?,?
 hpet_counter_arr    DB 32 * SIZE hpet_counter_struc DUP(?)
 
 hpet_struc      ENDS
+
         
 data    SEGMENT byte public 'DATA'
 
@@ -167,6 +168,15 @@ mp_proc             DW ?
 time_spinlock       DW ?
 clock_tics          DW ?
 system_time         DD ?,?
+
+apic_tics           DD ?
+apic_rest           DW ?
+
+tsc_conv_tics       DD ?
+prev_tsc            DD ?
+timer_tics          DW ?
+preempt_tics        DW ?
+bsp_id              DD ?
 
 hpet_guard          DD ?
 prev_hpet           DD ?
@@ -560,7 +570,7 @@ DelayMs Proc near
     push es
     pushad
 ;
-    mov dx,system_data_sel
+    mov dx,SEG data
     mov ds,dx
     movzx eax,ax
     mov ecx,1193
@@ -1308,47 +1318,10 @@ start_apic_preempt_timer_name    DB 'Start Apic Preempt Timer', 0
 
 start_apic_preempt_timer    Proc far
     push ds
-    push es
-    push bx
-    push ecx
-    push edx
-    push esi
-;
-    mov ax,system_data_sel
+    mov ax,apic_mem_sel
     mov ds,ax
-;
-    mov edx,10000h
-    xor eax,eax
-    mov ecx,ds:apic_tics
-    shl ecx,16
-    mov cx,ds:apic_rest
-    div ecx
-    mov esi,eax
-;
-    mov eax,80000000h
-    mov bx,apic_mem_sel
-    mov es,bx
-    mov es:APIC_INIT_COUNT,eax    
-    push fs
-    GetCore
-    pop fs
-    mov eax,es:APIC_CURR_COUNT    
-    neg eax
-    add eax,80000000h
-    mul esi
-    add eax,eax
-    adc edx,edx
-    add eax,80000000h
-    adc edx,0
-;
     mov eax,80h
-    mov es:APIC_TIMER,eax
-;
-    pop esi
-    pop edx
-    pop ecx
-    pop bx
-    pop es
+    mov ds:APIC_TIMER,eax
     pop ds
     retf32
 start_apic_preempt_timer  Endp
@@ -1367,45 +1340,27 @@ start_apic_mixed_timer_name    DB 'Start Apic Mixed Timer', 0
 start_apic_mixed_timer    Proc far
     push ds
     push es
-    push bx
-    push ecx
-    push edx
-    push esi
 ;
-    mov ax,system_data_sel
+    mov ax,SEG data
     mov ds,ax
+    mov ax,apic_mem_sel
+    mov es,ax
 ;
-    mov edx,10000h
-    xor eax,eax
-    mov ecx,ds:apic_tics
-    shl ecx,16
-    mov cx,ds:apic_rest
-    div ecx
-    mov esi,eax
-;
-    mov eax,80000000h
-    mov bx,apic_mem_sel
-    mov es,bx
-    mov es:APIC_INIT_COUNT,eax    
-    push fs
-    GetCore
-    pop fs
-    mov eax,es:APIC_CURR_COUNT    
-    neg eax
-    add eax,80000000h
-    mul esi
-    add eax,eax
-    adc edx,edx
-    add eax,80000000h
-    adc edx,0
-;
+    mov eax,es:APIC_ID
+    shr eax,24
+    cmp eax,ds:bsp_id
+    je start_apic_mixed_bsp
+
+start_apic_mixed_ap:
+    mov eax,80h
+    mov es:APIC_TIMER,eax
+    jmp start_apic_mixed_done
+
+start_apic_mixed_bsp:
     mov eax,83h
     mov es:APIC_TIMER,eax
-;
-    pop esi
-    pop edx
-    pop ecx
-    pop bx
+
+start_apic_mixed_done:
     pop es
     pop ds
     retf32
@@ -1430,7 +1385,7 @@ reload_apic_preempt_timer    Proc far
     push ecx
     push edx
 ;
-    mov cx,system_data_sel
+    mov cx,SEG data
     mov ds,cx
 ;    
     mov ecx,ds:apic_tics
@@ -1466,41 +1421,57 @@ reload_apic_mixed_timer_name    DB 'Reload Mixed Apic Timer', 0
 
 reload_apic_mixed_timer    Proc far
     push ds
+    push es
     push eax
     push ecx
     push edx
 ;
-    mov cx,system_data_sel
+    mov cx,SEG data
     mov ds,cx
+    mov cx,apic_mem_sel
+    mov es,cx
+    mov edx,es:APIC_ID
+    shr edx,24
+;
+    cmp edx,ds:bsp_id
+    jne reload_apic_mixed_do
+;
+    mov ds:preempt_tics,ax
+;
+    rdtsc
+    mov edx,ds:prev_tsc
+    mov ds:prev_tsc,eax
+    sub eax,edx
+    mul ds:tsc_conv_tics
+;
+    mov ax,ds:timer_tics
+    sub ax,dx
+    ja reload_apic_mixed_timer_ok
 ;    
+    mov ax,1
+
+reload_apic_mixed_timer_ok:
+    inc ax
+    mov ds:timer_tics,ax
+;
+    cmp ax,ds:preempt_tics
+    jbe reload_apic_mixed_do
+;
+    mov ax,ds:preempt_tics
+
+reload_apic_mixed_do:    
     mov ecx,ds:apic_tics
     shl ecx,16
     mov cx,ds:apic_rest
     shl eax,16
     mul ecx
     inc edx
-;
-    mov ax,core_data_sel
-    mov ds,ax
-    test ds:ps_flags,PS_FLAG_HAS_TIMER
-    mov ax,apic_mem_sel
-    mov ds,ax    
-    jz reload_apic_mixed_do
+    mov es:APIC_INIT_COUNT,edx
 ;    
-    mov eax,ds:APIC_CURR_COUNT
-    or eax,eax
-    jz reload_apic_mixed_do
-;
-    cmp eax,edx
-    jc reload_apic_mixed_end
-
-reload_apic_mixed_do:        
-    mov ds:APIC_INIT_COUNT,edx
-
-reload_apic_mixed_end:
     pop edx
     pop ecx
     pop eax
+    pop es
     pop ds
     retf32
 reload_apic_mixed_timer  Endp
@@ -1647,7 +1618,37 @@ reload_hpet_timer  Endp
 start_apic_timer_name    DB 'Start APIC Timer', 0
 
 start_apic_timer    Proc far
+    push ds
+    push es
+    push ecx
+    push edx
+;
+    mov ax,SEG data
+    mov ds,ax    
+    mov ax,system_data_sel
+    mov es,ax    
+    mov edx,10000h
     xor eax,eax
+    mov ecx,es:sys_tsc_tics
+    shl ecx,16
+    mov cx,es:sys_tsc_rest
+    div ecx    
+    mov ds:tsc_conv_tics,eax
+;
+    rdtsc
+    mov ds:prev_tsc,eax
+    mov ds:timer_tics,0FFFFh
+    mov ds:preempt_tics,0FFFFh
+;
+    GetApicId
+    mov ds:bsp_id,edx
+;
+    xor eax,eax
+;
+    pop edx
+    pop ecx
+    pop es
+    pop ds    
     retf32
 start_apic_timer    Endp
 
@@ -1667,47 +1668,74 @@ reload_apic_timer_name    DB 'Reload APIC Timer', 0
 
 reload_apic_timer    Proc far
     push ds
+    push es
     push eax
     push ecx
     push edx
 ;
-    or ax,ax
-    jz reload_apic_fail
-;
-    mov cx,system_data_sel
+    mov cx,SEG data
     mov ds,cx
+    mov cx,apic_mem_sel
+    mov es,cx
+    mov edx,es:APIC_ID
+    shr edx,24
+;
+    cmp edx,ds:bsp_id
+    je reload_apic_bsp
+
+reload_apic_ap:
+    mov edx,ds:bsp_id
+    shl edx,24
+
+reload_apic_ipi_loop:
+    mov ecx,es:APIC_ICR
+    test cx,1000h
+    jz reload_apic_send_ipi
+;
+    pause
+    jmp reload_apic_ipi_loop
+
+reload_apic_send_ipi:    
+    mov es:APIC_ICR+10h,edx
+    mov eax,4040h
+    mov es:APIC_ICR,eax
+    jmp reload_apic_done
+
+reload_apic_bsp:
+    mov ds:timer_tics,ax
+;
+    rdtsc
+    mov edx,ds:prev_tsc
+    mov ds:prev_tsc,eax
+    sub eax,edx
+    mul ds:tsc_conv_tics
+;
+    mov ax,ds:preempt_tics
+    sub ax,dx
+    ja reload_apic_timer_ok
 ;    
+    mov ax,1
+
+reload_apic_timer_ok:
+    inc ax
+    mov ds:preempt_tics,ax
+;
+    cmp ax,ds:timer_tics
+    jbe reload_apic_do
+;
+    mov ax,ds:timer_tics
+
+reload_apic_do:    
     mov ecx,ds:apic_tics
     shl ecx,16
     mov cx,ds:apic_rest
     shl eax,16
     mul ecx
     inc edx
-;
-    mov ax,core_data_sel
-    mov ds,ax
-    lock or ds:ps_flags,PS_FLAG_HAS_TIMER
-;    
-    mov ax,apic_mem_sel
-    mov ds,ax    
-    mov eax,ds:APIC_CURR_COUNT
-    or eax,eax
-    jz reload_apic_do
-;    
-    cmp eax,edx
-    jc reload_apic_ok
+    mov es:APIC_INIT_COUNT,edx
 
-reload_apic_do:        
-    mov ds:APIC_INIT_COUNT,edx
-
-reload_apic_ok:
+reload_apic_done:
     clc
-    jmp reload_apic_end
-
-reload_apic_fail:
-    stc
-
-reload_apic_end:    
     pop edx
     pop ecx
     pop eax
@@ -2520,31 +2548,25 @@ mixed_int:
     push fs
     pushad
 ;    
-    mov ax,core_data_sel
-    mov ds,ax
-    test ds:ps_flags,PS_FLAG_HAS_TIMER
-    jz mixed_preempt
-
-mixed_both:    
-    lock and ds:ps_flags,NOT PS_FLAG_HAS_TIMER
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
 ;    
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:timer_tics
+    cmp ax,ds:preempt_tics
+    jc mixed_timer_expired
+
+mixed_preempt_expired:
+    PreemptExpired
+    jmp mixed_preempt_done
+
+mixed_timer_expired:
     TimerExpired
-    PreemptExpired
-    jmp mixed_done
 
-mixed_preempt:
-    mov ax,apic_mem_sel
-    mov ds,ax
-    xor eax,eax
-    mov ds:APIC_EOI,eax
-;    
-    PreemptExpired
-
-mixed_done:    
+mixed_preempt_done:   
     popad
     pop fs
     pop es
@@ -2854,7 +2876,7 @@ InitApicTimer Proc near
     push es
     pushad
 ;    
-    mov ax,system_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov ax,apic_mem_sel
     mov es,ax
@@ -3470,10 +3492,9 @@ init    PROC far
     mov eax,dword ptr cs:hpet_tab
     GetAcpiTable
     jc init_hpet_done
-;
+; 
     mov ax,SEG data
     mov ds,ax
-; 
     movzx eax,es:hpett_min_tics
     mov ds:hpet_min_tics,eax 
 ;      

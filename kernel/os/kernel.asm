@@ -497,8 +497,8 @@ init_tsc_wait_low_ok:
     mov ecx,8000h
     div ecx
 ;    
-    mov ds:tsc_tics,eax
-    mov ds:tsc_rest,dx
+    mov ds:sys_tsc_tics,eax
+    mov ds:sys_tsc_rest,dx
 ;
     or eax,eax
     jnz init_tsc_done
@@ -573,10 +573,8 @@ init_no_bda:
     mov ds:cpu_vendor,0
     mov ds:cpu_feature_flags,0
     mov ds:max_cpuid,0
-    mov ds:tsc_tics,0
-    mov ds:tsc_rest,0
-    mov ds:apic_tics,0
-    mov ds:apic_rest,0
+    mov ds:sys_tsc_tics,0
+    mov ds:sys_tsc_rest,0
 ;
     pushfd
     pop eax

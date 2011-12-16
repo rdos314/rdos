@@ -72,18 +72,18 @@ get_cpu_version Proc near
 ;    
     mov edx,10000h
     xor eax,eax
-    mov ecx,ds:tsc_tics
+    mov ecx,ds:sys_tsc_tics
     shl ecx,16
-    mov cx,ds:tsc_rest
+    mov cx,ds:sys_tsc_rest
     div ecx    
 ;
     mov ecx,1193182
-    movzx eax,ds:tsc_rest
+    movzx eax,ds:sys_tsc_rest
     shl eax,16
     mul ecx
     mov esi,edx
 ;    
-    mov eax,ds:tsc_tics
+    mov eax,ds:sys_tsc_tics
     mul ecx
     add eax,esi
     adc edx,0    
