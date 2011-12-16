@@ -34,6 +34,7 @@ PS_FLAG_ACTIVE      = 20h
 PS_FLAG_FLUSH       = 40h
 PS_FLAG_LOADING     = 80h
 PS_FLAG_FPU         = 100h
+PS_FLAG_HAS_TIMER   = 200h
 
 processor_seg   STRUC
 
