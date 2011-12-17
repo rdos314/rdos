@@ -485,6 +485,7 @@ ap_task_wait:
     jz ap_task_wait
 ;    
     call SetupLocalApic
+    StartPreemptTimer
     StartCore
 
 stopl:
