@@ -5010,7 +5010,7 @@ tucRetry:
     or ax,ax
     jz tucDone
 ;    
-    test fs:ps_flags,PS_FLAG_TIMER      
+    test fs:ps_flags,PS_FLAG_TIMER OR PS_FLAG_PREEMPT
     jnz tucSwap
 ;    
     mov ax,fs:ps_wakeup_list
@@ -5054,7 +5054,7 @@ ucRetry:
     CrashGate
 
 ucNestOk:    
-    test fs:ps_flags,PS_FLAG_TIMER      
+    test fs:ps_flags,PS_FLAG_TIMER OR PS_FLAG_PREEMPT
     jnz ucSwap
 ;    
     mov ax,fs:ps_wakeup_list
