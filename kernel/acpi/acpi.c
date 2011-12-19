@@ -1103,9 +1103,9 @@ void __far InitTasking()
 
     if (Status == 0)
     {
-        AcpiWalkNamespace(ACPI_TYPE_ANY, ACPI_ROOT_OBJECT, 10, AddAcpiObject, 0, 0, 0);
-        GetHardware();        
-        GetIrqRouting();
+//        AcpiWalkNamespace(ACPI_TYPE_ANY, ACPI_ROOT_OBJECT, 10, AddAcpiObject, 0, 0, 0);
+//        GetHardware();        
+//        GetIrqRouting();
     }        
 } 
 
