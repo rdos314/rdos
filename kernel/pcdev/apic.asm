@@ -1740,6 +1740,7 @@ reload_apic_done:
     pop edx
     pop ecx
     pop eax
+    pop es
     pop ds
     retf32
 reload_apic_timer   Endp
@@ -1779,7 +1780,7 @@ gstGet:
     or ax,ax
     jne gstSpinLock
 ;
-    mov al,80h
+    mov al,0
     out TIMER_CONTROL,al
     jmp short $+2
     in al,TIMER0
