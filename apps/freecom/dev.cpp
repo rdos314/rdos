@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# acpi.cpp
-# ACPI command class
+# dev.cpp
+# Device command class
 #
 ########################################################################*/
 
@@ -30,7 +30,7 @@
 
 #include "cmdhelp.h"
 #include "lang.h"
-#include "acpi.h"
+#include "dev.h"
 #include "rdos.h"
 
 #define FALSE 0
@@ -38,23 +38,23 @@
 
 /*##########################################################################
 #
-#   Name       : TAcpiFactory::TAcpiFactory
+#   Name       : TDeviceFactory::TDeviceFactory
 #
-#   Purpose....: Constructor for TAcpiFactory
+#   Purpose....: Constructor for TDeviceFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TAcpiFactory::TAcpiFactory()
-  : TCommandFactory("ACPI")
+TDeviceFactory::TDeviceFactory()
+  : TCommandFactory("DEV")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TAcpiFactory::Create
+#   Name       : TDeviceFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -63,31 +63,31 @@ TAcpiFactory::TAcpiFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TAcpiFactory::Create(TSession *session, const char *param)
+TCommand *TDeviceFactory::Create(TSession *session, const char *param)
 {
-    return new TAcpiCommand(session, param);
+    return new TDeviceCommand(session, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TAcpiCommand::TAcpiCommand
+#   Name       : TDeviceCommand::TDeviceCommand
 #
-#   Purpose....: Constructor for TAcpiCommand
+#   Purpose....: Constructor for TDeviceCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TAcpiCommand::TAcpiCommand(TSession *session, const char *param)
+TDeviceCommand::TDeviceCommand(TSession *session, const char *param)
   : TCommand(session, param)
 {
-    FHelpScreen.Load(TEXT_CMDHELP_ACPI);
+    FHelpScreen.Load(TEXT_CMDHELP_DEV);
 }
 
 /*##########################################################################
 #
-#   Name       : TAcpiCommand::ShowDevices
+#   Name       : TDeviceCommand::ShowDevices
 #
 #   Purpose....: Show devices
 #
@@ -96,40 +96,67 @@ TAcpiCommand::TAcpiCommand(TSession *session, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-void TAcpiCommand::ShowDevices()
+void TDeviceCommand::ShowDevices()
 {
     int ok;
     char AcpiName[128];
+    char Str[100];
     int DevNr;
-    int ObjNr;
+    int Index;
+    int Irq;
+    int Share;
+    int Polarity;
+    int TriggerMode;
+    int Start;
+    int Stop;
+    int AccessSize;
 
     for (DevNr = 0; DevNr < 0x1000; DevNr++)
     {
-        ok = RdosGetAcpiObject(DevNr, AcpiName);
+        ok = RdosGetAcpiDevice(DevNr, AcpiName);
         if (ok)
         {
             Write(AcpiName);
 
-            for (ObjNr = 0; ObjNr < 0x1000; ObjNr++)
+            for (Index = 0; Index < 100; Index++)
             {
-                ok = RdosGetAcpiMethod(DevNr, ObjNr, AcpiName);
-                if (ok)
+                AccessSize = RdosGetAcpiDeviceIo(DevNr, Index, &Start, &Stop);
+                if (AccessSize)
                 {
-                    if (!ObjNr)
-                        Write(" (");
-                    else
-                        Write(", ");
-
-                    Write(AcpiName);           
+                    sprintf(Str, "\r\n    IO: %04hX-%04hX", Start, Stop + AccessSize - 1);
+                    Write(Str);
                 }
                 else
                     break;
             }
 
-            if (ObjNr)
-                Write(")");            
+            for (Index = 0; Index < 10; Index++)
+            {
+                Irq = RdosGetAcpiDeviceIrq(DevNr, Index, &Share, &Polarity, &TriggerMode);
+                if (Irq >= 0)
+                {
+                    sprintf(Str, "\r\n    IRQ: %d, ", Irq);
+                    Write(Str);
 
-            Write("\r\n");
+                    if (Share)
+                        Write(" sharable, ");
+                    else
+                        Write(" exclusive, ");
+
+                    if (TriggerMode)
+                        Write(" edge ");
+                    else
+                    {
+                        if (Polarity > 0)
+                            Write(" high level ");
+                        else
+                            Write(" low level ");
+                    }
+                }
+                else
+                    break;
+            }
+            Write("\r\n\r\n");
         }
         else
             break;
@@ -138,7 +165,7 @@ void TAcpiCommand::ShowDevices()
 
 /*##########################################################################
 #
-#   Name       : TAcpiCommand::Execute
+#   Name       : TDeviceCommand::Execute
 #
 #   Purpose....: Run command
 #
@@ -147,7 +174,7 @@ void TAcpiCommand::ShowDevices()
 #   Returns....: *
 #
 ##########################################################################*/
-int TAcpiCommand::Execute(char *param)
+int TDeviceCommand::Execute(char *param)
 {
     long AcpiStatus;
     int error;

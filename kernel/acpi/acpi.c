@@ -38,6 +38,25 @@ extern void InitOsAcpi();
 #define MAX_DEVICE_COUNT        1024
 #define MAX_PCI_IRQ_COUNT       256
 
+/* do not reorganize these. Shared with assembly-code and gate definitions */
+
+struct TIrqBase
+{
+    UINT8  IntNum;
+    UINT8  Share;
+    UINT8  Polarity;
+    UINT8  Triggering;
+};
+
+struct TIoBase
+{
+    UINT16 Start;
+    UINT16 Stop;
+};
+
+
+/* local definitions */
+
 struct TObjectEntry
 {
     char AcpiName[5];
@@ -48,7 +67,7 @@ struct TObjectEntry
 
 struct TResourceBase
 {
-    struct TResourceBase *Next
+    struct TResourceBase *Next;
 };
 
 struct TResourceIrq
@@ -159,6 +178,136 @@ void __far ImplTestGate(const char *msg)
 
 /*##########################################################################
 #
+#   Name       : GetAcpiDeviceIrqBase
+#
+#   Purpose....: Get ACPI device IRQ
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux GetAcpiDeviceIrqBase "*" rdosdev parm routine [eax] [edx] [es edi] value [eax]
+int GetAcpiDeviceIrqBase(int DevNr, int Index, struct TIrqBase *Irq)
+{
+    struct TResourceIrq *IrqEntry;
+    struct TResourceExtendedIrq *ExtIrqEntry;
+    struct TDeviceEntry *DevEntry;
+    
+    if (DevNr < HardwareCount)
+    {
+        DevEntry = HardwareArr[DevNr];
+        IrqEntry = DevEntry->CurrentResourceList.IrqResourceList;
+
+        while (Index && IrqEntry)
+        {
+            Index--;
+            IrqEntry = IrqEntry->Next;
+        }
+
+        if (IrqEntry)
+        {
+            if (IrqEntry->Data.InterruptCount == 1)
+            {
+                Irq->IntNum = IrqEntry->Data.Interrupts[0];
+                Irq->Share = IrqEntry->Data.Sharable;
+                if (IrqEntry->Data.Polarity)
+                    Irq->Polarity = -1;
+                else
+                    Irq->Polarity = 1;
+                Irq->Triggering = IrqEntry->Data.Triggering;
+
+                return 1;
+            }
+        }
+        else
+        {
+            ExtIrqEntry = DevEntry->CurrentResourceList.ExtendedIrqResourceList;
+
+            while (Index && ExtIrqEntry)
+            {
+                Index--;
+                ExtIrqEntry = ExtIrqEntry->Next;
+            }
+
+            if (ExtIrqEntry)
+            {
+                if (ExtIrqEntry->Data.InterruptCount == 1)
+                {
+                    Irq->IntNum = ExtIrqEntry->Data.Interrupts[0];
+                    Irq->Share = ExtIrqEntry->Data.Sharable;
+                    if (ExtIrqEntry->Data.Polarity)
+                        Irq->Polarity = -1;
+                    else
+                        Irq->Polarity = 1;
+                    Irq->Triggering = ExtIrqEntry->Data.Triggering;
+
+                    return 1;
+                }
+            }
+        }
+    }
+    return 0;    
+}
+
+/*##########################################################################
+#
+#   Name       : GetAcpiDeviceIoBase
+#
+#   Purpose....: Get ACPI device IO
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux GetAcpiDeviceIoBase "*" rdosdev parm routine [eax] [edx] [es edi] value [eax]
+int GetAcpiDeviceIoBase(int DevNr, int Index, struct TIoBase *Io)
+{
+    struct TResourceIo *IoEntry;
+    struct TResourceFixedIo *FixedIoEntry;
+    struct TDeviceEntry *DevEntry;
+    
+    if (DevNr < HardwareCount)
+    {
+        DevEntry = HardwareArr[DevNr];
+        IoEntry = DevEntry->CurrentResourceList.IoResourceList;
+
+        while (Index && IoEntry)
+        {
+            Index--;
+            IoEntry = IoEntry->Next;
+        }
+
+        if (IoEntry)
+        {
+            Io->Start = IoEntry->Data.Minimum;
+            Io->Stop = IoEntry->Data.Maximum;
+            return IoEntry->Data.AddressLength;
+        }
+        else
+        {
+            FixedIoEntry = DevEntry->CurrentResourceList.FixedIoResourceList;
+
+            while (Index && FixedIoEntry)
+            {
+                Index--;
+                FixedIoEntry = FixedIoEntry->Next;
+            }
+
+            if (FixedIoEntry)
+            {
+                Io->Start = FixedIoEntry->Data.Address;
+                Io->Stop = FixedIoEntry->Data.Address;
+                return FixedIoEntry->Data.AddressLength;
+            }
+        }
+    }
+    return 0;    
+}
+
+/*##########################################################################
+#
 #   Name       : GetAcpiStatus
 #
 #   Purpose....: Get ACPI status
@@ -192,9 +341,9 @@ int GetAcpiDevice(int Index, char *AcpiName)
     ACPI_BUFFER Buffer;
     struct TDeviceEntry *DevEntry;
     
-    if (Index < DeviceCount)
+    if (Index < HardwareCount)
     {
-        DevEntry = DeviceArr[Index];
+        DevEntry = HardwareArr[Index];
         Buffer.Length = 128;
         Buffer.Pointer = AcpiName;
         Status = AcpiGetName(DevEntry->Handle, ACPI_FULL_PATHNAME, &Buffer);
@@ -264,7 +413,85 @@ void __far ImplGetAcpiDevice32(int Index, char *AcpiName)
 #   Returns....: *
 #
 ##########################################################################*/
-int GetAcpiObject(int Device, int Index, char *AcpiName)
+int GetAcpiObject(int Index, char *AcpiName)
+{
+    ACPI_STATUS Status;
+    ACPI_BUFFER Buffer;
+    struct TDeviceEntry *DevEntry;
+    
+    if (Index < DeviceCount)
+    {
+        DevEntry = DeviceArr[Index];
+        Buffer.Length = 128;
+        Buffer.Pointer = AcpiName;
+        Status = AcpiGetName(DevEntry->Handle, ACPI_FULL_PATHNAME, &Buffer);
+        if (Status == AE_OK)
+            return TRUE;
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : GetAcpiObject16
+#
+#   Purpose....: Get ACPI object, 16-bit version
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetAcpiObject16 "*" rdosdev parm routine [eax] [es edi]
+void __far ImplGetAcpiObject16(int Index, char *AcpiName)
+{
+    RdosSaveEax();
+    RdosExtendSi();
+    RdosExtendDi();
+
+    if (GetAcpiObject(Index, AcpiName))
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
+    RdosRestoreEax();
+}
+
+/*##########################################################################
+#
+#   Name       : GetAcpiObject32
+#
+#   Purpose....: Get ACPI object, 32-bit version
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetAcpiObject32 "*" rdosdev parm routine [eax] [es edi]
+void __far ImplGetAcpiObject32(int Index, char *AcpiName)
+{
+    RdosSaveEax();
+
+    if (GetAcpiObject(Index, AcpiName))
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+    RdosRestoreEax();
+}
+
+/*##########################################################################
+#
+#   Name       : GetAcpiMethod
+#
+#   Purpose....: Get ACPI method
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int GetAcpiMethod(int Device, int Index, char *AcpiName)
 {
     struct TDeviceEntry *DevEntry;
     struct TObjectEntry *ObjEntry;
@@ -292,23 +519,23 @@ int GetAcpiObject(int Device, int Index, char *AcpiName)
 
 /*##########################################################################
 #
-#   Name       : GetAcpiObject16
+#   Name       : GetAcpiMethod16
 #
-#   Purpose....: Get ACPI object, 16-bit version
+#   Purpose....: Get ACPI method, 16-bit version
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux ImplGetAcpiObject16 "*" rdosdev parm routine [eax] [edx] [es edi]
-void __far ImplGetAcpiObject16(int Device, int Index, char *AcpiName)
+#pragma aux ImplGetAcpiMethod16 "*" rdosdev parm routine [eax] [edx] [es edi]
+void __far ImplGetAcpiMethod16(int Device, int Index, char *AcpiName)
 {
     RdosSaveEax();
     RdosExtendSi();
     RdosExtendDi();
 
-    if (GetAcpiObject(Device, Index, AcpiName))
+    if (GetAcpiMethod(Device, Index, AcpiName))
         RdosSetSuccess();
     else
         RdosSetFailure();
@@ -318,21 +545,21 @@ void __far ImplGetAcpiObject16(int Device, int Index, char *AcpiName)
 
 /*##########################################################################
 #
-#   Name       : GetAcpiObject32
+#   Name       : GetAcpiMethod32
 #
-#   Purpose....: Get ACPI object, 32-bit version
+#   Purpose....: Get ACPI method, 32-bit version
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux ImplGetAcpiObject32 "*" rdosdev parm routine [eax] [edx] [es edi]
-void __far ImplGetAcpiObject32(int Device, int Index, char *AcpiName)
+#pragma aux ImplGetAcpiMethod32 "*" rdosdev parm routine [eax] [edx] [es edi]
+void __far ImplGetAcpiMethod32(int Device, int Index, char *AcpiName)
 {
     RdosSaveEax();
 
-    if (GetAcpiObject(Device, Index, AcpiName))
+    if (GetAcpiMethod(Device, Index, AcpiName))
         RdosSetSuccess();
     else
         RdosSetFailure();
@@ -907,8 +1134,9 @@ int main()
 
     RdosHookInitTasking(&InitTasking);
     RdosRegisterBimodalUserGate(usergate_get_acpi_status, &ImplGetAcpiStatus, "Get ACPI Status");
-    RdosRegisterUserGate(usergate_get_acpi_device, &ImplGetAcpiDevice16, &ImplGetAcpiDevice32, "Get ACPI Device");
     RdosRegisterUserGate(usergate_get_acpi_object, &ImplGetAcpiObject16, &ImplGetAcpiObject32, "Get ACPI Object");
+    RdosRegisterUserGate(usergate_get_acpi_method, &ImplGetAcpiMethod16, &ImplGetAcpiMethod32, "Get ACPI Method");
+    RdosRegisterUserGate(usergate_get_acpi_device, &ImplGetAcpiDevice16, &ImplGetAcpiDevice32, "Get ACPI Device");
     RdosRegisterBimodalUserGate(usergate_get_cpu_temperature, &ImplGetCpuTemperature, "Get CPU Temperature");
 
     RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate");

@@ -1757,3 +1757,9 @@ Shows ACPI information
 
 ACPI
 .
+
+:TEXT_CMDHELP_DEV
+Shows device information
+
+DEV
+.

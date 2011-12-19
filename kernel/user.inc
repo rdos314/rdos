@@ -2789,6 +2789,19 @@ GetAcpiStatus      MACRO
 	UserGate get_acpi_status_nr
 	                ENDM
 
+;   IN  EAX         Object #
+;   IN  ES:(E)DI    ACPI name buffer
+GetAcpiObject      MACRO
+	UserGate get_acpi_object_nr
+	                ENDM
+
+;   IN  EAX         Object #
+;   IN  EDX         Method #
+;   IN  ES:(E)DI    ACPI name buffer
+GetAcpiMethod      MACRO
+	UserGate get_acpi_method_nr
+	                ENDM
+
 ;   IN  EAX         Device #
 ;   IN  ES:(E)DI    ACPI name buffer
 GetAcpiDevice      MACRO
@@ -2796,10 +2809,22 @@ GetAcpiDevice      MACRO
 	                ENDM
 
 ;   IN  EAX         Device #
-;   IN  EDX         Object #
-;   IN  ES:(E)DI    ACPI name buffer
-GetAcpiObject      MACRO
-	UserGate get_acpi_object_nr
+;   IN  EDX         IRQ #
+;   OUT AL          Global IRQ #
+;   OUT AH          Sharable (0, 1)
+;   OUT DL          Polarity (-1, +1)
+;   OUT DH          Trigger mode (0 = level, 1 = edge)
+GetAcpiDeviceIrq      MACRO
+	UserGate get_acpi_device_irq_nr
+	                ENDM
+
+;   IN  EAX         Device #
+;   IN  EDX         IO #
+;   OUT SI          Start port
+;   OUT DI          End port
+;   OUT CX          Address len
+GetAcpiDeviceIo      MACRO
+	UserGate get_acpi_device_io_nr
 	                ENDM
 
 ;   OUT EAX         Temperature in tenth of degrees Kelvin

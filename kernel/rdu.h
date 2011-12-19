@@ -546,15 +546,19 @@
 #define usergate_test_gate 442
 
 #define usergate_get_acpi_status 443
-#define usergate_get_acpi_device 444
+#define usergate_get_acpi_object 444
 #define usergate_get_cpu_temperature 445
-#define usergate_get_acpi_object 446
+#define usergate_get_acpi_method 446
 
 #define usergate_write_attrib_string 447
 
 #define usergate_debug_break 448
 
 #define usergate_has_hard_reset 449
+
+#define usergate_get_acpi_device 450
+#define usergate_get_acpi_device_irq 451
+#define usergate_get_acpi_device_io 452
 
 
 
@@ -1107,15 +1111,19 @@
 #define CallGate_test_gate 0x67 0x9a 186 1 0 0 3 0
 
 #define CallGate_get_acpi_status 0x67 0x9a 187 1 0 0 3 0
-#define CallGate_get_acpi_device 0x67 0x9a 188 1 0 0 3 0
+#define CallGate_get_acpi_object 0x67 0x9a 188 1 0 0 3 0
 #define CallGate_get_cpu_temperature 0x67 0x9a 189 1 0 0 3 0
-#define CallGate_get_acpi_object 0x67 0x9a 190 1 0 0 3 0
+#define CallGate_get_acpi_method 0x67 0x9a 190 1 0 0 3 0
 
 #define CallGate_write_attrib_string 0x67 0x9a 191 1 0 0 3 0
 
 #define CallGate_debug_break 0x67 0x9a 192 1 0 0 3 0
 
 #define CallGate_has_hard_reset 0x67 0x9a 193 1 0 0 3 0
+
+#define CallGate_get_acpi_device 0x67 0x9a 194 1 0 0 3 0
+#define CallGate_get_acpi_device_irq 0x67 0x9a 195 1 0 0 3 0
+#define CallGate_get_acpi_device_io 0x67 0x9a 196 1 0 0 3 0
 
 #else
 
@@ -1666,14 +1674,18 @@
 #define CallGate_test_gate 0x3e 0x67 0x9a 186 1 0 0 3 0
 
 #define CallGate_get_acpi_status 0x3e 0x67 0x9a 187 1 0 0 3 0
-#define CallGate_get_acpi_device 0x3e 0x67 0x9a 188 1 0 0 3 0
+#define CallGate_get_acpi_object 0x3e 0x67 0x9a 188 1 0 0 3 0
 #define CallGate_get_cpu_temperature 0x3e 0x67 0x9a 189 1 0 0 3 0
-#define CallGate_get_acpi_object 0x3e 0x67 0x9a 190 1 0 0 3 0
+#define CallGate_get_acpi_method 0x3e 0x67 0x9a 190 1 0 0 3 0
 
 #define CallGate_write_attrib_string 0x3e 0x67 0x9a 191 1 0 0 3 0
 
 #define CallGate_debug_break 0x3e 0x67 0x9a 192 1 0 0 3 0
 
 #define CallGate_has_hard_reset 0x3e 0x67 0x9a 193 1 0 0 3 0
+
+#define CallGate_get_acpi_device 0x3e 0x67 0x9a 194 1 0 0 3 0
+#define CallGate_get_acpi_device_irq 0x3e 0x67 0x9a 195 1 0 0 3 0
+#define CallGate_get_acpi_device_io 0x3e 0x67 0x9a 196 1 0 0 3 0
 
 #endif

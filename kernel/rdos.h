@@ -185,8 +185,11 @@ long RDOSAPI RdosGetLongRandom();
 long RDOSAPI RdosGetRandom(long range);
 
 long RDOSAPI RdosGetAcpiStatus();
+int RDOSAPI RdosGetAcpiObject(int Index, char *AcpiName);
+int RDOSAPI RdosGetAcpiMethod(int Object, int Index, char *AcpiName);
 int RDOSAPI RdosGetAcpiDevice(int Index, char *AcpiName);
-int RDOSAPI RdosGetAcpiObject(int Device, int Index, char *AcpiName);
+int RDOSAPI RdosGetAcpiDeviceIrq(int Device, int Index, int *Share, int *Polarity, int *TriggerMode);
+int RDOSAPI RdosGetAcpiDeviceIo(int Device, int Index, int *Start, int *End);
 int RDOSAPI RdosGetCpuTemperature();
 
 void RDOSAPI RdosSetTextMode();
@@ -720,16 +723,66 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     "AcpiDone: " \
     value [eax];
 
+#pragma aux RdosGetAcpiObject = \
+    CallGate_get_acpi_object  \
+    CarryToBool \
+    parm [eax] [edi] \
+    value [eax];
+
+#pragma aux RdosGetAcpiMethod = \
+    CallGate_get_acpi_method  \
+    CarryToBool \
+    parm [eax] [edx] [edi] \
+    value [eax];
+
 #pragma aux RdosGetAcpiDevice = \
     CallGate_get_acpi_device  \
     CarryToBool \
     parm [eax] [edi] \
     value [eax];
 
-#pragma aux RdosGetAcpiObject = \
-    CallGate_get_acpi_object  \
-    CarryToBool \
-    parm [eax] [edx] [edi] \
+#pragma aux RdosGetAcpiDeviceIrq = \
+    "push ecx" \
+    "push edx" \
+    CallGate_get_acpi_device_irq  \
+    "jc IrqFail" \
+    "movzx ecx,ah" \
+    "mov [ebx],ecx" \
+    "movzx ecx,dl" \
+    "mov [esi],ecx" \
+    "movzx ecx,dh" \
+    "mov [edi],ecx" \
+    "movzx eax,al" \
+    "jmp IrqDone" \
+    "IrqFail:" \
+    "mov eax,-1" \
+    "IrqDone:" \
+    "pop edx" \
+    "pop ecx" \
+    parm [eax] [edx] [ebx] [esi] [edi] \
+    value [eax];
+
+#pragma aux RdosGetAcpiDeviceIo = \
+    "push ecx" \
+    "push edi" \
+    "push esi" \
+    CallGate_get_acpi_device_io  \
+    "jc IoFail" \
+    "movzx eax,si" \
+    "pop esi" \
+    "mov [esi],eax" \
+    "movzx eax,di" \
+    "pop edi" \
+    "mov [edi],eax" \
+    "movzx eax,cx" \
+    "jmp IoDone" \
+    "IoFail:" \
+    "pop esi" \
+    "pop edi" \
+    "xor eax,eax" \
+    "IoDone:" \
+    "pop ecx" \
+    parm [eax] [edx] [esi] [edi] \
     value [eax];
 
 #pragma aux RdosGetCpuTemperature = \

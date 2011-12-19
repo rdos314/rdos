@@ -532,6 +532,99 @@ get_acpi_table_done:
     pop ds
     ret
 get_acpi_table  Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetAcpiDeviceIrq
+;
+;       DESCRIPTION:    Get ACPI device IRQ
+;
+;       PARAMETERS:     EAX     Device #
+;                       EDX     Index
+;
+;       RETURNS:        NC   OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_acpi_device_irq_name    DB 'Get ACPI Device Irq',0
+
+    extrn GetAcpiDeviceIrqBase:near
+
+get_acpi_device_irq  Proc far
+    push es
+    push ecx
+    push edi
+    sub esp,4
+    mov ecx,ss
+    mov es,ecx
+    movzx edi,sp
+    call GetAcpiDeviceIrqBase
+    or eax,eax
+    jz gadiFail
+
+gadiOk:
+    pop eax
+    mov edx,eax
+    shr edx,16
+    clc
+    jmp gadiDone
+
+gadiFail:
+    stc
+    pop eax
+
+gadiDone:
+    pop edi
+    pop ecx
+    pop es
+    ret
+get_acpi_device_irq Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetAcpiDeviceIo
+;
+;       DESCRIPTION:    Get ACPI device IRQ
+;
+;       PARAMETERS:     EAX     Device #
+;                       EDX     Index
+;
+;       RETURNS:        NC   OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_acpi_device_io_name    DB 'Get ACPI Device Io',0
+
+    extrn GetAcpiDeviceIoBase:near
+
+get_acpi_device_io  Proc far
+    push es
+    sub esp,4
+    mov ecx,ss
+    mov es,ecx
+    movzx edi,sp
+    call GetAcpiDeviceIoBase
+    or eax,eax
+    jz gadioFail
+
+gadioOk:
+    pop esi
+    mov edi,esi
+    shr edi,16
+    mov ecx,eax
+    clc
+    jmp gadioDone
+
+gadioFail:
+    add esp,4
+    stc
+
+gadioDone:
+    pop es
+    ret
+get_acpi_device_io Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -598,6 +691,18 @@ acpi_load_save:
     xor cl,cl
     mov ax,get_acpi_table_nr
     RegisterOsGate
+;
+    mov esi,OFFSET get_acpi_device_irq
+    mov edi,OFFSET get_acpi_device_irq_name
+    xor dx,dx
+    mov ax,get_acpi_device_irq_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_acpi_device_io
+    mov edi,OFFSET get_acpi_device_io_name
+    xor dx,dx
+    mov ax,get_acpi_device_io_nr
+    RegisterBimodalUserGate
 
 acpi_fail:
     popad

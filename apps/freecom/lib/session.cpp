@@ -77,6 +77,7 @@
 #include "sysinfo.h"
 #include "keyb.h"
 #include "acpi.h"
+#include "dev.h"
 
 #include "file.h"
 #include "path.h"
@@ -105,6 +106,7 @@ static TCommandFactory *capture;
 static TCommandFactory *cpy;
 static TCommandFactory *date;
 static TCommandFactory *del;
+static TCommandFactory *dev;
 static TCommandFactory *dir;
 static TCommandFactory *echo;
 static TCommandFactory *erase;
@@ -206,6 +208,7 @@ TSession::TSession()
                 erase = new TEraseFactory;
                 echo = new TEchoFactory;
                 dir = new TDirFactory;
+                dev = new TDeviceFactory;
                 del = new TDelFactory;
                 date = new TDateFactory;
                 cpy = new TCopyFactory;
