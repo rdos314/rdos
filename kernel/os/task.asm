@@ -144,6 +144,9 @@ update_tics                 DD 0
 
 system_thread               DW 0
 
+lock_timer_proc             DW OFFSET LockTimerGlobal
+unlock_timer_proc           DW OFFSET UnlockTimerGlobal
+
 lock_list_proc              DW OFFSET LockListSingle
 unlock_list_proc            DW OFFSET UnlockListSingle
 
@@ -179,53 +182,104 @@ core_arr                    DW MAX_CORES DUP(0)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           LockTimer
+;       NAME:           LockTimerGlobal
 ;
-;       DESCRIPTION:    Lock timer struc
+;       DESCRIPTION:    Lock timer struc, global version
 ;
 ;       PARAMETERS:     DS      Task sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LockTimer    Proc near
+LockTimerGlobal    Proc near
     push ax
 
-ltiSpinLock:    
+ltigSpinLock:    
     mov ax,ds:timer_spinlock
     or ax,ax
-    je ltiGet
+    je ltigGet
 ;
     sti
     pause
-    jmp ltiSpinLock
+    jmp ltigSpinLock
 
-ltiGet:
+ltigGet:
     cli
     inc ax
     xchg ax,ds:timer_spinlock
     or ax,ax
-    jne ltiSpinLock
+    jne ltigSpinLock
 ;
     pop ax
     ret
-LockTimer    Endp
+LockTimerGlobal    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           UnlockTimer
+;       NAME:           UnlockTimerGlobal
 ;
-;       DESCRIPTION:    Unlock timer
+;       DESCRIPTION:    Unlock timer, global version
 ;
 ;       PARAMETERS:     DS      task sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UnlockTimer    Proc near
+UnlockTimerGlobal    Proc near
     mov ds:timer_spinlock,0
     sti
     ret
-UnlockTimer    Endp
+UnlockTimerGlobal    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           LockTimerCore
+;
+;       DESCRIPTION:    Lock timer struc, per core version
+;
+;       PARAMETERS:     FS      Core data sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockTimerCore    Proc near
+    push ax
+
+lticSpinLock:    
+    mov ax,fs:ps_timer_spinlock
+    or ax,ax
+    je lticGet
+;
+    sti
+    pause
+    jmp lticSpinLock
+
+lticGet:
+    cli
+    inc ax
+    xchg ax,fs:ps_timer_spinlock
+    or ax,ax
+    jne lticSpinLock
+;
+    pop ax
+    ret
+LockTimerCore    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UnlockTimerCore
+;
+;       DESCRIPTION:    Unlock timer, per core version
+;
+;       PARAMETERS:     FS      Core data sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockTimerCore    Proc near
+    mov fs:ps_timer_spinlock,0
+    sti
+    ret
+UnlockTimerCore    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -236,6 +290,7 @@ UnlockTimer    Endp
 ;                           and timer-spinlock taken
 ;
 ;           PARAMETERS:     DS      Task sel
+;                           FS      Core sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -264,7 +319,7 @@ LocalRemoveTimer Proc near
     mov ecx,ds:[bx].timer_id
     mov eax,ds:[bx].timer_lsb
     mov edx,ds:[bx].timer_msb        
-    call UnlockTimer
+    call cs:unlock_timer_proc
 ;    
     xor bx,bx
     mov ds,bx
@@ -768,14 +823,14 @@ timer_free_list_create:
     mov ax,locked_debug_exception_nr
     RegisterOsGate
 ;
-    mov si,OFFSET start_timer
-    mov di,OFFSET start_timer_name
+    mov si,OFFSET start_global_timer
+    mov di,OFFSET start_global_timer_name
     xor cl,cl
     mov ax,start_timer_nr
     RegisterOsGate
 ;
-    mov si,OFFSET stop_timer
-    mov di,OFFSET stop_timer_name
+    mov si,OFFSET stop_global_timer
+    mov di,OFFSET stop_global_timer_name
     xor cl,cl
     mov ax,stop_timer_nr
     RegisterOsGate
@@ -2692,7 +2747,7 @@ preempt_reload_loop:
     lock and fs:ps_flags,NOT PS_FLAG_TIMER   
     GetSystemTime
 ;
-    call LockTimer
+    call cs:lock_timer_proc
     mov fs:ps_last_lsb,eax
     add eax,cs:update_tics
     adc edx,0
@@ -2720,7 +2775,7 @@ preempt_reload_check_preempt:
     sbb edx,fs:ps_preempt_msb
     jc preempt_reload_timer
 ;       
-    call UnlockTimer
+    call cs:unlock_timer_proc
     lock or fs:ps_flags,PS_FLAG_PREEMPT
     stc
     jmp preempt_timer_reload_done
@@ -2729,7 +2784,7 @@ preempt_reload_timer:
     neg eax
     ReloadSysTimer
     pushf
-    call UnlockTimer
+    call cs:unlock_timer_proc
     popf
     jc preempt_reload_loop
 
@@ -6311,9 +6366,11 @@ timer_expired_name   DB 'Timer Expired', 0
 timer_expired    Proc far
     mov ax,task_sel
     mov ds,ax
+    mov ax,core_data_sel
+    mov fs,ax
 ;
     GetSystemTime
-    call LockTimer
+    call LockTimerGlobal
     add eax,cs:update_tics
     adc edx,0
     mov bx,ds:timer_head
@@ -6332,7 +6389,7 @@ timer_expired_remove:
 ;    
     call LocalRemoveTimer    
     GetSystemTime
-    call LockTimer
+    call LockTimerGlobal
     add eax,cs:update_tics
     adc edx,0
     mov bx,ds:timer_head
@@ -6345,7 +6402,7 @@ timer_expired_remove:
     jc timer_expired_remove
 
 timer_expired_idle:
-    call UnlockTimer    
+    call UnlockTimerGlobal    
     call TryUnlockCore
     jmp timer_expired_done
 
@@ -6354,7 +6411,7 @@ timer_expired_reload:
     ReloadSysTimer
     jc timer_expired_lock
 ;
-    call UnlockTimer
+    call UnlockTimerGlobal
 
 timer_expired_done:    
     retf32
@@ -6424,7 +6481,7 @@ reload_timer_preempt_locked:
 reload_timer_preempt_loop:
     lock and fs:ps_flags,NOT PS_FLAG_TIMER   
     GetSystemTime
-    call LockTimer
+    call cs:lock_timer_proc
     add eax,cs:update_tics
     adc edx,0
     mov bx,ds:timer_head
@@ -6450,7 +6507,7 @@ reload_check_preempt:
     sbb edx,fs:ps_preempt_msb
     jc reload_timer_preempt_do
 ;
-    call UnlockTimer
+    call cs:unlock_timer_proc
     lock or fs:ps_flags,PS_FLAG_PREEMPT
     mov ax,fs:ps_curr_thread
     or ax,ax
@@ -6472,7 +6529,7 @@ reload_preempt_block:
 reload_timer_preempt_do:
     neg eax
     ReloadSysTimer
-    call UnlockTimer
+    call cs:unlock_timer_proc
 
 reload_timer_preempt_done:
     call TryUnlockCore
@@ -6518,7 +6575,7 @@ DoSyncTime  Endp
 ;
 ;           NAME:           START_TIMER
 ;
-;           DESCRIPTION:    Start a timer
+;           DESCRIPTION:    Start a timer, global version
 ;
 ;           PARAMETERS:     EDX:EAX         Timeout time
 ;                           ES:EDI          Callback
@@ -6527,9 +6584,9 @@ DoSyncTime  Endp
 ;                                                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_timer_name DB 'Start Timer',0
+start_global_timer_name DB 'Start Timer',0
 
-start_timer     PROC far
+start_global_timer     PROC far
     push ds
     push fs
     push bx
@@ -6538,7 +6595,7 @@ start_timer     PROC far
     mov si,task_sel
     mov ds,si    
 ;    
-    call LockTimer
+    call LockTimerGlobal
 ;    
     mov si,ds:timer_free
     mov ds:[si].timer_owner,bx
@@ -6555,89 +6612,89 @@ start_timer     PROC far
     mov si,bx
     mov bx,ds:[bx].timer_next
     cmp edx,ds:[bx].timer_msb
-    jc start_insert_first
-    jnz start_try_next
+    jc start_global_insert_first
+    jnz start_global_try_next
     cmp eax,ds:[bx].timer_lsb
-    jnc start_try_next
+    jnc start_global_try_next
 
-start_insert_first:
+start_global_insert_first:
     pop ds:[si].timer_next
     mov si,ds:[si].timer_next
     mov ds:[si].timer_next,bx
 ;
     call TryLockCore
-    call UnlockTimer    
+    call UnlockTimerGlobal    
     push es
     pushad
 
-start_retry:    
+start_global_retry:    
     GetSystemTime
-    call LockTimer
+    call LockTimerGlobal
     add eax,cs:update_tics
     adc edx,0
     mov bx,ds:timer_head
     sub eax,ds:[bx].timer_lsb
     sbb edx,ds:[bx].timer_msb
-    jc start_reload
+    jc start_global_reload
 
-start_remove:
+start_global_remove:
     mov eax,ds:[bx].timer_lsb
     and eax,ds:[bx].timer_msb
     add eax,1
-    jc start_idle
+    jc start_global_idle
 ;    
     call LocalRemoveTimer
-    jmp start_retry
+    jmp start_global_retry
 
-start_reload:    
+start_global_reload:    
     neg eax
     ReloadSysTimer
-    jc start_remove
+    jc start_global_remove
 
-start_idle:    
-    call UnlockTimer
+start_global_idle:    
+    call UnlockTimerGlobal
     call TryUnlockCore
     popad
     pop es
-    jmp start_done
+    jmp start_global_done
     
-start_try_next:
+start_global_try_next:
     mov si,bx
     mov bx,ds:[bx].timer_next
     cmp edx,ds:[bx].timer_msb
-    jc start_insert
-    jnz start_try_next
+    jc start_global_insert
+    jnz start_global_try_next
     cmp eax,ds:[bx].timer_lsb
-    jnc start_try_next
+    jnc start_global_try_next
 
-start_insert:
+start_global_insert:
     pop ds:[si].timer_next
     mov si,ds:[si].timer_next
     mov ds:[si].timer_next,bx
-    call UnlockTimer
+    call UnlockTimerGlobal
 
-start_done:
+start_global_done:
     pop si
     pop bx
     pop fs
     pop ds
     retf32
-start_timer     ENDP
+start_global_timer     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           STOP_TIMER
 ;
-;           DESCRIPTION:    Stop timer
+;           DESCRIPTION:    Stop timer, global version
 ;
 ;           PARAMETERS:         BX              Owner
 ;                                                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-stop_timer_name DB 'Stop Timer',0
+stop_global_timer_name DB 'Stop Timer',0
 
-stop_timer      PROC far
+stop_global_timer      PROC far
     push ds
     push ax
     push bx
@@ -6647,28 +6704,29 @@ stop_timer      PROC far
     mov ax,task_sel
     mov ds,ax
 ;    
-    call LockTimer    
+    call LockTimerGlobal
 ;
     mov cx,bx
     mov bx,OFFSET timer_head
 
-timer_stop_next:
+timer_global_stop_next:
     mov si,bx
     mov bx,ds:[bx].timer_next
     or bx,bx
-    je timer_stop_done
-    cmp cx,ds:[bx].timer_owner
-    jne timer_stop_next
+    je timer_global_stop_done
 
-timer_stop_this:
+    cmp cx,ds:[bx].timer_owner
+    jne timer_global_stop_next
+
+timer_global_stop_this:
     mov ax,ds:[bx].timer_next
     mov ds:[si].timer_next,ax
     mov ax,ds:timer_free
     mov ds:[bx].timer_next,ax
     mov ds:timer_free,bx
 
-timer_stop_done:
-    call UnlockTimer
+timer_global_stop_done:
+    call UnlockTimerGlobal
 ;
     pop si
     pop cx
@@ -6676,7 +6734,198 @@ timer_stop_done:
     pop ax
     pop ds
     retf32
-stop_timer      ENDP
+stop_global_timer      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           START_TIMER
+;
+;           DESCRIPTION:    Start a timer, per core version
+;
+;           PARAMETERS:     EDX:EAX         Timeout time
+;                           ES:EDI          Callback
+;                           BX              Owner (selector ID)
+;                           ECX             ID passed to callback
+;                                                   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_core_timer_name DB 'Start Timer',0
+
+start_core_timer     PROC far
+    push ds
+    push es
+    push fs
+    pushad
+;
+    call TryLockCore
+    pushf
+    call LockTimerCore
+;    
+    mov si,fs:ps_timer_free
+    mov fs:[si].timer_owner,bx
+    mov bx,fs:[si].timer_next
+    mov fs:ps_timer_free,bx
+    mov fs:[si].timer_lsb,eax
+    mov fs:[si].timer_msb,edx
+    mov fs:[si].timer_id,ecx
+    mov fs:[si].timer_offset,edi
+    mov fs:[si].timer_sel,es
+    mov bx,OFFSET ps_timer_head
+    push si
+
+start_core_try_next:
+    mov si,bx
+    mov bx,fs:[bx].timer_next
+    cmp edx,fs:[bx].timer_msb
+    jc start_core_insert
+    
+    jnz start_core_try_next
+
+    cmp eax,fs:[bx].timer_lsb
+    jnc start_core_try_next
+
+start_core_insert:
+    pop fs:[si].timer_next
+    mov si,fs:[si].timer_next
+    mov fs:[si].timer_next,bx
+    call UnlockTimerCore
+    popf
+    jc start_core_reload_timer_loop
+;
+    lock or fs:ps_flags,PS_FLAG_TIMER    
+    jmp start_core_reload_timer_done
+
+start_core_reload_timer_loop:
+    lock and fs:ps_flags,NOT PS_FLAG_TIMER   
+    mov es,fs:ps_curr_thread
+    GetSystemTime
+    call LockTimerCore
+    add eax,cs:update_tics
+    adc edx,0
+    mov bx,fs:ps_timer_head
+    mov ecx,fs:ps_preempt_msb
+    cmp ecx,fs:[bx].timer_msb
+    jc start_core_reload_check_preempt
+    jnz start_core_reload_check_timer
+;       
+    mov ecx,fs:ps_preempt_lsb
+    cmp ecx,fs:[bx].timer_lsb
+    jc start_core_reload_check_preempt
+
+start_core_reload_check_timer:
+    sub eax,fs:[bx].timer_lsb
+    sbb edx,fs:[bx].timer_msb
+    jc start_core_reload_timer_do
+;       
+    call LocalRemoveTimer
+    jmp start_core_reload_timer_loop
+
+start_core_reload_check_preempt:
+    sub eax,fs:ps_preempt_lsb
+    sbb edx,fs:ps_preempt_msb
+    jc start_core_reload_timer_do
+;
+    call UnlockTimerCore
+    lock or fs:ps_flags,PS_FLAG_PREEMPT
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz start_core_reload_preempt_block
+;    
+    push OFFSET start_core_reload_timer_end
+    call SaveLockedThread
+    jmp ContinueCurrentThread
+
+start_core_reload_preempt_block:
+    sti
+    GetSystemTime
+    add eax,1193
+    adc edx,0
+    mov fs:ps_preempt_lsb,eax
+    mov fs:ps_preempt_msb,edx
+    jmp start_core_reload_timer_loop
+
+start_core_reload_timer_do:
+    neg eax
+    ReloadSysTimer
+    call UnlockTimerCore
+
+start_core_reload_timer_done:
+    call TryUnlockCore
+
+start_core_reload_timer_end:       
+    popad
+    pop fs
+    pop es
+    pop ds
+    retf32
+start_core_timer     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           STOP_TIMER
+;
+;           DESCRIPTION:    Stop timer, per core version
+;
+;           PARAMETERS:         BX              Owner
+;                                                   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_core_timer_name DB 'Stop Timer',0
+
+stop_core_timer      PROC far
+    push fs
+    push ax
+    push bx
+    push cx
+    push si
+;    
+    mov cx,cs:core_count
+    mov si,OFFSET core_arr
+
+stop_core_loop:
+    push bx
+    push cx
+    push si
+; 
+    mov fs,cs:[si]   
+    call LockTimerCore
+;
+    mov cx,bx
+    mov bx,OFFSET ps_timer_head
+
+core_timer_stop_next:
+    mov si,bx
+    mov bx,fs:[bx].timer_next
+    or bx,bx
+    je core_timer_stop_done
+    cmp cx,fs:[bx].timer_owner
+    jne core_timer_stop_next
+
+core_timer_stop_this:
+    mov ax,fs:[bx].timer_next
+    mov fs:[si].timer_next,ax
+    mov ax,fs:ps_timer_free
+    mov fs:[bx].timer_next,ax
+    mov fs:ps_timer_free,bx
+
+core_timer_stop_done:
+    call UnlockTimerCore
+;
+    pop si
+    pop cx
+    pop bx
+    add si,2
+    loop stop_core_loop    
+;
+    pop si
+    pop cx
+    pop bx
+    pop ax
+    pop fs    
+    retf32
+stop_core_timer      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
