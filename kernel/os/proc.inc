@@ -34,7 +34,18 @@ PS_FLAG_ACTIVE      = 20h
 PS_FLAG_FLUSH       = 40h
 PS_FLAG_LOADING     = 80h
 PS_FLAG_FPU         = 100h
-PS_FLAG_HAS_TIMER   = 200h
+
+timer_struc	STRUC
+
+timer_next		DW ?
+timer_sel		DW ?
+timer_lsb		DD ?
+timer_msb		DD ?
+timer_offset    DD ?
+timer_id		DD ?
+timer_owner		DW ?
+
+timer_struc	ENDS
 
 processor_seg   STRUC
 
@@ -69,8 +80,17 @@ ps_last_lsb         DD ?
 ps_tsc_guard        DD ?
 ps_last_tsc         DD ?
 
+ps_clock_tics       DW ?
+
 ps_global_post_perc DB ?
 ps_curr_post        DB ?
+
+ps_system_time      DD ?,?
+
+ps_timer_spinlock   DW ?
+ps_timer_head		DW ?
+ps_timer_free		DW ?
+ps_timer_entries    DB 256 * SIZE timer_struc DUP(?)
 
 cs_irq              DD ?
 cs_fault            DD ?

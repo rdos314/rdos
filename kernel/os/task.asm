@@ -69,18 +69,6 @@ us_lock     DW ?
 
 section_handle_seg          ENDS
 
-timer_struc     STRUC
-
-timer_next              DW ?
-timer_sel               DW ?
-timer_lsb               DD ?
-timer_msb               DD ?
-timer_offset    DD ?
-timer_id                DD ?
-timer_owner             DW ?
-
-timer_struc     ENDS
-
 tlb_struc   STRUC
 
 th_next             DD ?
@@ -4299,6 +4287,24 @@ ptab_init:
     mov es:cs_uoffs,0
     mov es:cs_fault,-1
     mov es:cs_irq,0
+;
+    mov es:ps_timer_spinlock,0
+    mov bx,OFFSET ps_timer_entries
+    mov es:[bx].timer_next,0
+    mov es:[bx].timer_msb,0FFFFFFFFh
+    mov es:[bx].timer_lsb,0FFFFFFFFh
+    mov es:timer_head,bx
+;       
+    mov cx,0FFh
+    add bx,SIZE timer_struc
+    mov es:ps_timer_free,bx
+
+core_timer_list_create:
+    mov ax,bx
+    add ax,SIZE timer_struc
+    mov es:[bx].timer_next,ax
+    mov bx,ax
+    loop core_timer_list_create
 ;
     mov ax,es:ps_id     
 ;
