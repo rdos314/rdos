@@ -868,18 +868,6 @@ timer_free_list_create:
     mov ax,locked_debug_exception_nr
     RegisterOsGate
 ;
-    mov si,OFFSET start_global_timer
-    mov di,OFFSET start_global_timer_name
-    xor cl,cl
-    mov ax,start_timer_nr
-    RegisterOsGate
-;
-    mov si,OFFSET stop_global_timer
-    mov di,OFFSET stop_global_timer_name
-    xor cl,cl
-    mov ax,stop_timer_nr
-    RegisterOsGate
-;
     mov si,OFFSET wake_thread
     mov di,OFFSET wake_thread_name
     xor cl,cl
@@ -7018,6 +7006,22 @@ init_first_thread:
 ;
     StartPreemptTimer
     mov ds:preempt_reload_proc,OFFSET PreemptReload
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;
+    mov si,OFFSET start_global_timer
+    mov di,OFFSET start_global_timer_name
+    xor cl,cl
+    mov ax,start_timer_nr
+    RegisterOsGate
+;
+    mov si,OFFSET stop_global_timer
+    mov di,OFFSET stop_global_timer_name
+    xor cl,cl
+    mov ax,stop_timer_nr
+    RegisterOsGate
     jmp LoadThread
         
 preempt_timer_combined:        
@@ -7026,6 +7030,22 @@ preempt_timer_combined:
 ;
     StartSysPreemptTimer
     mov ds:update_tics,eax
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;
+    mov si,OFFSET start_core_timer
+    mov di,OFFSET start_core_timer_name
+    xor cl,cl
+    mov ax,start_timer_nr
+    RegisterOsGate
+;
+    mov si,OFFSET stop_core_timer
+    mov di,OFFSET stop_core_timer_name
+    xor cl,cl
+    mov ax,stop_timer_nr
+    RegisterOsGate
     jmp LoadThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
