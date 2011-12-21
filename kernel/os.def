@@ -462,8 +462,9 @@ find_sys_env_var_nr         = 397
 
 start_preempt_timer_nr      = 398
 reload_preempt_timer_nr     = 399
-start_clock_nr              = 400
-sync_clock_nr               = 401
+
+start_sys_preempt_timer_nr  = 400
+reload_sys_preempt_timer_nr = 401
 
 flush_tlb_nr                = 402
 

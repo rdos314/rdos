@@ -3425,18 +3425,6 @@ init    PROC far
     mov ax,send_nmi_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET start_apic_mixed_timer
-    mov edi,OFFSET start_apic_mixed_timer_name
-    xor cl,cl
-    mov ax,start_preempt_timer_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET reload_apic_mixed_timer
-    mov edi,OFFSET reload_apic_mixed_timer_name
-    xor cl,cl
-    mov ax,reload_preempt_timer_nr
-    RegisterOsGate
-;
     mov esi,OFFSET disable_all_irq
     mov edi,OFFSET disable_all_irq_name
     xor cl,cl
@@ -3471,6 +3459,18 @@ init    PROC far
     mov di,OFFSET set_system_time_name
     xor cl,cl
     mov ax,set_system_time_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET start_apic_mixed_timer
+    mov edi,OFFSET start_apic_mixed_timer_name
+    xor cl,cl
+    mov ax,start_preempt_timer_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET reload_apic_mixed_timer
+    mov edi,OFFSET reload_apic_mixed_timer_name
+    xor cl,cl
+    mov ax,reload_preempt_timer_nr
     RegisterOsGate
 ;
     mov esi,OFFSET start_apic_timer

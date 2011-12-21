@@ -2827,7 +2827,7 @@ preempt_reload_check_preempt:
 
 preempt_reload_timer:
     neg eax
-    ReloadSysTimer
+    ReloadSysPreemptTimer
     pushf
     call UnlockTimerCore
     popf
@@ -6573,7 +6573,7 @@ reload_preempt_block:
 
 reload_timer_preempt_do:
     neg eax
-    ReloadSysTimer
+    ReloadSysPreemptTimer
     call UnlockTimerCore
 
 reload_timer_preempt_done:
@@ -6892,7 +6892,7 @@ start_core_reload_preempt_block:
 
 start_core_reload_timer_do:
     neg eax
-    ReloadSysTimer
+    ReloadSysPreemptTimer
     call UnlockTimerCore
 
 start_core_reload_timer_done:
@@ -7006,21 +7006,26 @@ init_first_thread:
     mov fs,bx
     mov fs,fs:ps_sel
 ;
-    StartSysTimer
-    mov bx,kernel_patch_sel
-    mov ds,bx
-    mov ds:update_tics,eax
-;
     mov ax,start_preempt_timer_nr
     IsValidOsGate
-    jc preempt_timer_ok
+    jc preempt_timer_combined
+;
+    mov bx,kernel_patch_sel
+    mov ds,bx
+;
+    StartSysTimer
+    mov ds:update_tics,eax
 ;
     StartPreemptTimer
-    mov ax,kernel_patch_sel
-    mov ds,ax
     mov ds:preempt_reload_proc,OFFSET PreemptReload
+    jmp LoadThread
         
-preempt_timer_ok:        
+preempt_timer_combined:        
+    mov bx,kernel_patch_sel
+    mov ds,bx
+;
+    StartSysPreemptTimer
+    mov ds:update_tics,eax
     jmp LoadThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
