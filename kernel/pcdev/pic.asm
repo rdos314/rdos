@@ -571,6 +571,7 @@ send_eoi    Endp
 start_pit_timer_name    DB 'Start Pit Timer', 0
 
 start_pit_timer    Proc far
+    push ds
     mov ax,SEG data
     mov ds,ax
     mov ds:pit_spinlock,0
@@ -617,6 +618,7 @@ start_pit_timer    Proc far
     and al,NOT 1
     out INT0_MASK,al
     pop eax
+    pop ds
     retf32
 start_pit_timer    Endp
 
@@ -838,13 +840,13 @@ init    PROC far
     mov esi,OFFSET start_pit_timer
     mov edi,OFFSET start_pit_timer_name
     xor cl,cl
-    mov ax,start_sys_timer_nr
+    mov ax,start_sys_preempt_timer_nr
     RegisterOsGate
 ;
     mov esi,OFFSET reload_pit_timer
     mov edi,OFFSET reload_pit_timer_name
     xor cl,cl
-    mov ax,reload_sys_timer_nr
+    mov ax,reload_sys_preempt_timer_nr
     RegisterOsGate
 ;
     mov si,OFFSET get_system_time
