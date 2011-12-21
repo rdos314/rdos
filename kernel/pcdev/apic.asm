@@ -1357,6 +1357,7 @@ reload_sys_preempt_timer    Proc far
     mov ax,apic_mem_sel
     mov ds,ax    
     mov ds:APIC_INIT_COUNT,edx
+    clc
 ;
     pop edx
     pop ecx
