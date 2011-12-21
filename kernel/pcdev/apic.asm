@@ -172,12 +172,6 @@ system_time         DD ?,?
 apic_tics           DD ?
 apic_rest           DW ?
 
-tsc_conv_tics       DD ?
-prev_tsc            DD ?
-timer_tics          DW ?
-preempt_tics        DW ?
-bsp_id              DD ?
-
 hpet_guard          DD ?
 prev_hpet           DD ?
 hpet_min_tics       DD ?
@@ -1309,78 +1303,43 @@ free_msi_int    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:           StartPreemptionTimer
+;               NAME:           StartSysPreemptTimer
 ;
-;               DESCRIPTION:    Start APIC timer
+;               DESCRIPTION:    Start mixed system and preempt timer
+;
+;               RETURNS:        EAX      Update tics
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_apic_preempt_timer_name    DB 'Start Apic Preempt Timer', 0
+start_sys_preempt_timer_name    DB 'Start Apic Sys Preempt Timer', 0
 
-start_apic_preempt_timer    Proc far
+start_sys_preempt_timer    Proc far
     push ds
+;    
     mov ax,apic_mem_sel
     mov ds,ax
-    mov eax,80h
-    mov ds:APIC_TIMER,eax
-    pop ds
-    retf32
-start_apic_preempt_timer  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:           StartMixedTimer
-;
-;               DESCRIPTION:    Start mixed APIC timer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-start_apic_mixed_timer_name    DB 'Start Apic Mixed Timer', 0
-
-start_apic_mixed_timer    Proc far
-    push ds
-    push es
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,apic_mem_sel
-    mov es,ax
-;
-    mov eax,es:APIC_ID
-    shr eax,24
-    cmp eax,ds:bsp_id
-    je start_apic_mixed_bsp
-
-start_apic_mixed_ap:
-    mov eax,80h
-    mov es:APIC_TIMER,eax
-    jmp start_apic_mixed_done
-
-start_apic_mixed_bsp:
     mov eax,83h
-    mov es:APIC_TIMER,eax
-
-start_apic_mixed_done:
-    pop es
+    mov ds:APIC_TIMER,eax
+    xor eax,eax
+;
     pop ds
     retf32
-start_apic_mixed_timer  Endp
+start_sys_preempt_timer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:           ReloadPreemptionTimer
+;               NAME:           ReloadSysPreemptTimer
 ;
-;               DESCRIPTION:    Reload APIC timer with preemption only
+;               DESCRIPTION:    Reload mixed system and preempt timer
 ;
 ;               PARAMETERS:     AX      Reload tics
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reload_apic_preempt_timer_name    DB 'Reload Apic Preempt Timer', 0
+reload_sys_preempt_timer_name    DB 'Reload Apic Sys Preempt Timer', 0
 
-reload_apic_preempt_timer    Proc far
+reload_sys_preempt_timer    Proc far
     push ds
     push eax
     push ecx
@@ -1404,85 +1363,14 @@ reload_apic_preempt_timer    Proc far
     pop eax
     pop ds
     retf32
-reload_apic_preempt_timer  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:           ReloadPreemptionTimer
-;
-;               DESCRIPTION:    Reload APIC timer with preemption and timeout
-;
-;               PARAMETERS:     FS      Core
-;                               AX      Reload tics
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-reload_apic_mixed_timer_name    DB 'Reload Mixed Apic Timer', 0
-
-reload_apic_mixed_timer    Proc far
-    push ds
-    push es
-    push eax
-    push ecx
-    push edx
-;
-    mov cx,SEG data
-    mov ds,cx
-    mov cx,apic_mem_sel
-    mov es,cx
-    mov edx,es:APIC_ID
-    shr edx,24
-;
-    cmp edx,ds:bsp_id
-    jne reload_apic_mixed_do
-;
-    mov ds:preempt_tics,ax
-;
-    rdtsc
-    mov edx,ds:prev_tsc
-    mov ds:prev_tsc,eax
-    sub eax,edx
-    mul ds:tsc_conv_tics
-;
-    mov ax,ds:timer_tics
-    sub ax,dx
-    ja reload_apic_mixed_timer_ok
-;    
-    mov ax,1
-
-reload_apic_mixed_timer_ok:
-    inc ax
-    mov ds:timer_tics,ax
-;
-    cmp ax,ds:preempt_tics
-    jbe reload_apic_mixed_do
-;
-    mov ax,ds:preempt_tics
-
-reload_apic_mixed_do:    
-    mov ecx,ds:apic_tics
-    shl ecx,16
-    mov cx,ds:apic_rest
-    shl eax,16
-    mul ecx
-    inc edx
-    mov es:APIC_INIT_COUNT,edx
-;    
-    pop edx
-    pop ecx
-    pop eax
-    pop es
-    pop ds
-    retf32
-reload_apic_mixed_timer  Endp
+reload_sys_preempt_timer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           StartSysTimer
 ;
-;           DESCRIPTION:    Start HPET timer
+;           DESCRIPTION:    Start HPET sys timer
 ;
 ;           RETURNS:        EAX      Update tics
 ;
@@ -1608,142 +1496,62 @@ reload_hpet_timer  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           StartSysTimer
+;               NAME:           StartPreemptionTimer
 ;
-;           DESCRIPTION:    Start APIC timer as a shared resource
-;
-;           RETURNS:        EAX      Update tics
+;               DESCRIPTION:    Start APIC timer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_apic_timer_name    DB 'Start APIC Timer', 0
+start_apic_preempt_timer_name    DB 'Start Apic Preempt Timer', 0
 
-start_apic_timer    Proc far
+start_apic_preempt_timer    Proc far
     push ds
-    push es
-    push ecx
-    push edx
-;
-    mov ax,SEG data
-    mov ds,ax    
-    mov ax,system_data_sel
-    mov es,ax    
-    mov edx,10000h
-    xor eax,eax
-    mov ecx,es:sys_tsc_tics
-    shl ecx,16
-    mov cx,es:sys_tsc_rest
-    div ecx    
-    mov ds:tsc_conv_tics,eax
-;
-    rdtsc
-    mov ds:prev_tsc,eax
-    mov ds:timer_tics,0FFFFh
-    mov ds:preempt_tics,0FFFFh
-;
-    GetApicId
-    mov ds:bsp_id,edx
-;
-    xor eax,eax
-;
-    pop edx
-    pop ecx
-    pop es
-    pop ds    
+    mov ax,apic_mem_sel
+    mov ds,ax
+    mov eax,80h
+    mov ds:APIC_TIMER,eax
+    pop ds
     retf32
-start_apic_timer    Endp
+start_apic_preempt_timer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           ReloadSysTimer
+;               NAME:           ReloadPreemptionTimer
 ;
-;           DESCRIPTION:    Reload APIC mixed timer
+;               DESCRIPTION:    Reload APIC timer with preemption only
 ;
-;           PARAMETERS:     AX      Reload count
-;                           FS      Core
+;               PARAMETERS:     AX      Reload tics
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reload_apic_timer_name    DB 'Reload APIC Timer', 0
+reload_apic_preempt_timer_name    DB 'Reload Apic Preempt Timer', 0
 
-reload_apic_timer    Proc far
+reload_apic_preempt_timer    Proc far
     push ds
-    push es
     push eax
     push ecx
     push edx
 ;
     mov cx,SEG data
     mov ds,cx
-    mov cx,apic_mem_sel
-    mov es,cx
-    mov edx,es:APIC_ID
-    shr edx,24
-;
-    cmp edx,ds:bsp_id
-    je reload_apic_bsp
-
-reload_apic_ap:
-    mov edx,ds:bsp_id
-    shl edx,24
-
-reload_apic_ipi_loop:
-    mov ecx,es:APIC_ICR
-    test cx,1000h
-    jz reload_apic_send_ipi
-;
-    pause
-    jmp reload_apic_ipi_loop
-
-reload_apic_send_ipi:    
-    mov es:APIC_ICR+10h,edx
-    mov eax,4040h
-    mov es:APIC_ICR,eax
-    jmp reload_apic_done
-
-reload_apic_bsp:
-    mov ds:timer_tics,ax
-;
-    rdtsc
-    mov edx,ds:prev_tsc
-    mov ds:prev_tsc,eax
-    sub eax,edx
-    mul ds:tsc_conv_tics
-;
-    mov ax,ds:preempt_tics
-    sub ax,dx
-    ja reload_apic_timer_ok
 ;    
-    mov ax,1
-
-reload_apic_timer_ok:
-    inc ax
-    mov ds:preempt_tics,ax
-;
-    cmp ax,ds:timer_tics
-    jbe reload_apic_do
-;
-    mov ax,ds:timer_tics
-
-reload_apic_do:    
     mov ecx,ds:apic_tics
     shl ecx,16
     mov cx,ds:apic_rest
     shl eax,16
     mul ecx
     inc edx
-    mov es:APIC_INIT_COUNT,edx
-
-reload_apic_done:
-    clc
+    mov ax,apic_mem_sel
+    mov ds,ax    
+    mov ds:APIC_INIT_COUNT,edx
+;
     pop edx
     pop ecx
     pop eax
-    pop es
     pop ds
     retf32
-reload_apic_timer   Endp
+reload_apic_preempt_timer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2555,20 +2363,8 @@ mixed_int:
     xor eax,eax
     mov ds:APIC_EOI,eax
 ;    
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,ds:timer_tics
-    cmp ax,ds:preempt_tics
-    jc mixed_timer_expired
-
-mixed_preempt_expired:
-    PreemptExpired
-    jmp mixed_preempt_done
-
-mixed_timer_expired:
-    TimerExpired
-
-mixed_preempt_done:   
+    PreemptTimerExpired
+;    
     popad
     pop fs
     pop es
@@ -3461,28 +3257,16 @@ init    PROC far
     mov ax,set_system_time_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET start_apic_mixed_timer
-    mov edi,OFFSET start_apic_mixed_timer_name
+    mov esi,OFFSET start_sys_preempt_timer
+    mov edi,OFFSET start_sys_preempt_timer_name
     xor cl,cl
-    mov ax,start_preempt_timer_nr
+    mov ax,start_sys_preempt_timer_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET reload_apic_mixed_timer
-    mov edi,OFFSET reload_apic_mixed_timer_name
+    mov esi,OFFSET reload_sys_preempt_timer
+    mov edi,OFFSET reload_sys_preempt_timer_name
     xor cl,cl
-    mov ax,reload_preempt_timer_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET start_apic_timer
-    mov edi,OFFSET start_apic_timer_name
-    xor cl,cl
-    mov ax,start_sys_timer_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET reload_apic_timer
-    mov edi,OFFSET reload_apic_timer_name
-    xor cl,cl
-    mov ax,reload_sys_timer_nr
+    mov ax,reload_sys_preempt_timer_nr
     RegisterOsGate
 ;
     mov si,OFFSET get_pit_time
