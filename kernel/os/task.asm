@@ -2784,20 +2784,20 @@ preempt_reload_loop:
     mov fs:ps_last_lsb,eax
     add eax,cs:update_tics
     adc edx,0
-    mov bx,ds:timer_head
+    mov bx,fs:ps_timer_head
     mov ecx,fs:ps_preempt_msb
-    cmp ecx,ds:[bx].timer_msb
+    cmp ecx,fs:[bx].timer_msb
     jc preempt_reload_check_preempt
 ;
     jnz preempt_reload_check_timer
 ;       
     mov ecx,fs:ps_preempt_lsb
-    cmp ecx,ds:[bx].timer_lsb
+    cmp ecx,fs:[bx].timer_lsb
     jc preempt_reload_check_preempt
 
 preempt_reload_check_timer:
-    sub eax,ds:[bx].timer_lsb
-    sbb edx,ds:[bx].timer_msb
+    sub eax,fs:[bx].timer_lsb
+    sbb edx,fs:[bx].timer_msb
     jc preempt_reload_timer
 ;       
     call LocalRemoveTimerCore
@@ -4381,7 +4381,7 @@ ptab_init:
     mov es:[bx].timer_next,0
     mov es:[bx].timer_msb,0FFFFFFFFh
     mov es:[bx].timer_lsb,0FFFFFFFFh
-    mov es:timer_head,bx
+    mov es:ps_timer_head,bx
 ;       
     mov cx,0FFh
     add bx,SIZE timer_struc
@@ -6517,19 +6517,19 @@ reload_timer_preempt_loop:
     call LockTimerCore
     add eax,cs:update_tics
     adc edx,0
-    mov bx,ds:timer_head
+    mov bx,fs:ps_timer_head
     mov ecx,fs:ps_preempt_msb
-    cmp ecx,ds:[bx].timer_msb
+    cmp ecx,fs:[bx].timer_msb
     jc reload_check_preempt
     jnz reload_check_timer
 ;       
     mov ecx,fs:ps_preempt_lsb
-    cmp ecx,ds:[bx].timer_lsb
+    cmp ecx,fs:[bx].timer_lsb
     jc reload_check_preempt
 
 reload_check_timer:
-    sub eax,ds:[bx].timer_lsb
-    sbb edx,ds:[bx].timer_msb
+    sub eax,fs:[bx].timer_lsb
+    sbb edx,fs:[bx].timer_msb
     jc reload_timer_preempt_do
 ;       
     call LocalRemoveTimerCore
