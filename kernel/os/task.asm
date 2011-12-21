@@ -144,9 +144,6 @@ update_tics                 DD 0
 
 system_thread               DW 0
 
-lock_timer_proc             DW OFFSET LockTimerGlobal
-unlock_timer_proc           DW OFFSET UnlockTimerGlobal
-
 lock_list_proc              DW OFFSET LockListSingle
 unlock_list_proc            DW OFFSET UnlockListSingle
 
@@ -284,17 +281,16 @@ UnlockTimerCore    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           LocalRemoveTimer
+;           NAME:           LocalRemoveTimerGlobal
 ;
-;           DESCRIPTION:    Remove timer. Should be called with scheduler lock
-;                           and timer-spinlock taken
+;           DESCRIPTION:    Remove timer, global version
 ;
 ;           PARAMETERS:     DS      Task sel
 ;                           FS      Core sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LocalRemoveTimer Proc near
+LocalRemoveTimerGlobal Proc near
     mov bx,ds:timer_head
     mov ax,ds:[bx].timer_next
     mov ds:timer_head,ax
@@ -306,7 +302,7 @@ LocalRemoveTimer Proc near
     xor eax,eax
     mov ax,cs
     push eax
-    mov ax,OFFSET timer_return
+    mov ax,OFFSET timer_global_return
     push eax
     mov ax,ds:[bx].timer_sel
     push eax
@@ -319,19 +315,68 @@ LocalRemoveTimer Proc near
     mov ecx,ds:[bx].timer_id
     mov eax,ds:[bx].timer_lsb
     mov edx,ds:[bx].timer_msb        
-    call cs:unlock_timer_proc
+    call UnlockTimerGlobal
 ;    
     xor bx,bx
     mov ds,bx
     mov es,bx
     retf32
 
-timer_return:
+timer_global_return:
     pop fs
     pop es
     pop ds
     ret
-LocalRemoveTimer    Endp
+LocalRemoveTimerGlobal    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           LocalRemoveTimerCore
+;
+;           DESCRIPTION:    Remove timer, per core version
+;
+;           PARAMETERS:     DS      Task sel
+;                           FS      Core sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LocalRemoveTimerCore Proc near
+    mov bx,fs:ps_timer_head
+    mov ax,fs:[bx].timer_next
+    mov fs:ps_timer_head,ax
+;    
+    push es
+    push fs
+;    
+    xor eax,eax
+    mov ax,cs
+    push eax
+    mov ax,OFFSET timer_core_return
+    push eax
+    mov ax,fs:[bx].timer_sel
+    push eax
+    push fs:[bx].timer_offset
+;
+    mov ax,fs:ps_timer_free
+    mov fs:[bx].timer_next,ax
+    mov fs:ps_timer_free,bx
+;    
+    mov ecx,fs:[bx].timer_id
+    mov eax,fs:[bx].timer_lsb
+    mov edx,fs:[bx].timer_msb        
+    call UnlockTimerCore
+;    
+    xor bx,bx
+    mov ds,bx
+    mov es,bx
+    retf32
+
+timer_core_return:
+    pop fs
+    pop es
+    ret
+LocalRemoveTimerCore    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2747,7 +2792,7 @@ preempt_reload_loop:
     lock and fs:ps_flags,NOT PS_FLAG_TIMER   
     GetSystemTime
 ;
-    call cs:lock_timer_proc
+    call LockTimerCore
     mov fs:ps_last_lsb,eax
     add eax,cs:update_tics
     adc edx,0
@@ -2767,7 +2812,7 @@ preempt_reload_check_timer:
     sbb edx,ds:[bx].timer_msb
     jc preempt_reload_timer
 ;       
-    call LocalRemoveTimer
+    call LocalRemoveTimerCore
     jmp preempt_reload_loop
 
 preempt_reload_check_preempt:
@@ -2775,7 +2820,7 @@ preempt_reload_check_preempt:
     sbb edx,fs:ps_preempt_msb
     jc preempt_reload_timer
 ;       
-    call cs:unlock_timer_proc
+    call UnlockTimerCore
     lock or fs:ps_flags,PS_FLAG_PREEMPT
     stc
     jmp preempt_timer_reload_done
@@ -2784,7 +2829,7 @@ preempt_reload_timer:
     neg eax
     ReloadSysTimer
     pushf
-    call cs:unlock_timer_proc
+    call UnlockTimerCore
     popf
     jc preempt_reload_loop
 
@@ -6387,7 +6432,7 @@ timer_expired_remove:
     add eax,1
     jc timer_expired_idle
 ;    
-    call LocalRemoveTimer    
+    call LocalRemoveTimerGlobal    
     GetSystemTime
     call LockTimerGlobal
     add eax,cs:update_tics
@@ -6481,7 +6526,7 @@ reload_timer_preempt_locked:
 reload_timer_preempt_loop:
     lock and fs:ps_flags,NOT PS_FLAG_TIMER   
     GetSystemTime
-    call cs:lock_timer_proc
+    call LockTimerCore
     add eax,cs:update_tics
     adc edx,0
     mov bx,ds:timer_head
@@ -6499,7 +6544,7 @@ reload_check_timer:
     sbb edx,ds:[bx].timer_msb
     jc reload_timer_preempt_do
 ;       
-    call LocalRemoveTimer
+    call LocalRemoveTimerCore
     jmp reload_timer_preempt_loop
 
 reload_check_preempt:
@@ -6507,7 +6552,7 @@ reload_check_preempt:
     sbb edx,fs:ps_preempt_msb
     jc reload_timer_preempt_do
 ;
-    call cs:unlock_timer_proc
+    call UnlockTimerCore
     lock or fs:ps_flags,PS_FLAG_PREEMPT
     mov ax,fs:ps_curr_thread
     or ax,ax
@@ -6529,7 +6574,7 @@ reload_preempt_block:
 reload_timer_preempt_do:
     neg eax
     ReloadSysTimer
-    call cs:unlock_timer_proc
+    call UnlockTimerCore
 
 reload_timer_preempt_done:
     call TryUnlockCore
@@ -6643,7 +6688,7 @@ start_global_remove:
     add eax,1
     jc start_global_idle
 ;    
-    call LocalRemoveTimer
+    call LocalRemoveTimerGlobal
     jmp start_global_retry
 
 start_global_reload:    
@@ -6818,7 +6863,7 @@ start_core_reload_check_timer:
     sbb edx,fs:[bx].timer_msb
     jc start_core_reload_timer_do
 ;       
-    call LocalRemoveTimer
+    call LocalRemoveTimerCore
     jmp start_core_reload_timer_loop
 
 start_core_reload_check_preempt:
