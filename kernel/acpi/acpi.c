@@ -189,6 +189,8 @@ void __far ImplTestGate(const char *msg)
     struct TDeviceEntry *DevEntry;
     int i;
 
+    Load();
+    
     for (i = 0; i < MAX_DEVICE_COUNT; i++)
     {
         DevEntry = DeviceArr[i];
@@ -1210,7 +1212,7 @@ void __far InitTasking()
         if (Status != 0)
             Status |= 0x40000;
     }
-    Load();
+//    Load();
 } 
 
 /*##########################################################################
