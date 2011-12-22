@@ -52,11 +52,6 @@ SLEEP_SEL_SIGNAL = 2
 
 DEFAULT_GLOBAL  = 35        ; 35% of wakeup-entries are put into global ready-queue
 
-TIME_SYNC_RESET = 0
-TIME_SYNC_IDLE  = 1
-TIME_SYNC_WAIT  = 2
-TIME_SYNC_READ  = 3
-
 section_handle_seg          STRUC
 
 us_base     handle_header <>
@@ -93,11 +88,6 @@ global_ptab         DW 256 DUP(?)
 global_prio_act     DW ?
 
 global_spinlock     DW ?
-
-time_sync_state     DW ?
-sync_core_count     DW ?
-
-last_time_val       DD ?,?
 
 term_thread_list    DW ?
 term_proc_list      DW ?
@@ -665,6 +655,7 @@ rb32Done:
     ret
 RemoveBlock32   Endp
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -729,9 +720,6 @@ init_task       PROC near
     mov ds:term_thread_list,0
     mov ds:term_proc_list,0
     mov ds:list_lock,0
-    mov ds:last_time_val,0
-    mov ds:last_time_val+4,0
-    mov ds:time_sync_state,TIME_SYNC_RESET
     mov ds:tlb_spinlock,0
     mov ds:tlb_list,0
     mov ds:tlb_block_spinlock,0
@@ -3881,7 +3869,6 @@ null_thread0:
 ;
     call SetupMpPatch
     StartApCores    
-    call DoSyncTime
 
 null_ap_ok:   
     push OFFSET null_loop
@@ -6570,38 +6557,6 @@ reload_timer_preempt_done:
 reload_timer_preempt_end:       
     retf32
 preempt_timer_expired    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           DoSyncTime
-;
-;           DESCRIPTION:    Perform a clock synchronization
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DoSyncTime  Proc near
-    push ds
-    mov ax,task_sel
-    mov ds,ax
-;    
-    cli
-    mov ds:time_sync_state,TIME_SYNC_READ
-;    
-    mov ax,system_data_sel
-    mov ds,ax
-    GetSystemTime
-    mov ds:last_time,eax
-    mov ds:last_time+4,edx
-;
-    mov ax,task_sel
-    mov ds,ax
-    mov ds:time_sync_state,TIME_SYNC_IDLE
-    sti
-;
-    pop ds
-    ret
-DoSyncTime  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
