@@ -444,13 +444,17 @@ AcpiPsExecuteMethod (
 Cleanup:
     AcpiPsDeleteParseTree (Op);
 
-    /* End optional tracing */
 
-    AcpiPsStopTrace (Info);
+    if (Status != AE_STACK_UNDERFLOW)
+    {
+        /* End optional tracing */
 
-    /* Take away the extra reference that we gave the parameters above */
+        AcpiPsStopTrace (Info);
 
-    AcpiPsUpdateParameterList (Info, REF_DECREMENT);
+        /* Take away the extra reference that we gave the parameters above */
+
+        AcpiPsUpdateParameterList (Info, REF_DECREMENT);
+    }
 
     /* Exit now if error above */
 
