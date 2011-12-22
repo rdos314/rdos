@@ -624,7 +624,7 @@ AcpiPsParseAml (
         {
             Status = AE_OK;
         }
-        else if ((Status != AE_OK) && (WalkState->MethodDesc))
+        else if ((Status != AE_OK) && (Status != AE_STACK_UNDERFLOW) && (WalkState->MethodDesc))
         {
             /* Either the method parse or actual execution failed */
 
