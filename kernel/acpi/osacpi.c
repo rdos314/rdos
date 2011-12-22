@@ -236,6 +236,9 @@ ACPI_STATUS AcpiOsGetPhysicalAddress(void *LogicalAddress, ACPI_PHYSICAL_ADDRESS
 void *AcpiOsAllocate(ACPI_SIZE Size)
 {
     long linear;
+
+    if (Size <= 0 || Size > 0x100000)
+        return 0;
     
     if (Size < 0x1000)
     {
@@ -254,9 +257,12 @@ void *AcpiOsAllocate(ACPI_SIZE Size)
 void AcpiOsFree(void *Memory)
 {
     int linear;
-    
+
     int sel = RdosPointerToSelector(Memory);    
 
+    if (Memory == 0)
+        return;
+    
     if (sel == 0x20)
     {
         linear = RdosPointerToOffset(Memory);
