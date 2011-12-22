@@ -303,7 +303,7 @@ AcpiPsPopScope (
 
     /* Only pop the scope if there is in fact a next scope */
 
-    if (Scope->Common.Next)
+    if (Scope && Scope->Common.Next)
     {
         Scope = AcpiUtPopGenericState (&ParserState->Scope);
 
