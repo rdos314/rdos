@@ -161,9 +161,7 @@ hpet_struc      ENDS
 data    SEGMENT byte public 'DATA'
 
 mp_flags            DW ?
-
 mp_processor_sign   DD ?
-mp_proc             DW ?
 
 time_spinlock       DW ?
 clock_tics          DW ?
@@ -174,7 +172,6 @@ apic_rest           DW ?
 
 hpet_guard          DD ?
 prev_hpet           DD ?
-hpet_min_tics       DD ?
 hpet_sel            DW ?
 hpet_factor         DD ?
 hpet_counters       DW ?
@@ -3300,7 +3297,6 @@ init    PROC far
     mov eax,dword ptr cs:hpet_tab
     GetAcpiTable
     jc init_hpet_done
-    jmp init_hpet_done
 ; 
     push es
     mov ax,cs
@@ -3316,8 +3312,6 @@ init    PROC far
 ;
     mov ax,SEG data
     mov ds,ax
-    movzx eax,es:hpett_min_tics
-    mov ds:hpet_min_tics,eax 
 ;      
     mov eax,1000h
     AllocateBigLinear
