@@ -479,7 +479,18 @@ ap_task_wait:
     jz ap_task_wait
 ;    
     call SetupLocalApic
+;
+    mov ax,start_preempt_timer_nr
+    IsValidOsGate
+    jc ap_timer_combined
+;
     StartPreemptTimer
+    jmp ap_timer_done
+
+ap_timer_combined:
+    StartSysPreemptTimer
+
+ap_timer_done:    
     StartCore
 
 stopl:
