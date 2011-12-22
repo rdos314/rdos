@@ -194,7 +194,6 @@ int GetAcpiDeviceIrqBase(int DevNr, int Index, struct TIrqBase *Irq)
     struct TResourceExtendedIrq *ExtIrqEntry;
     struct TDeviceEntry *DevEntry;
 
-    Load();    
     if (DevNr < HardwareCount)
     {
         DevEntry = HardwareArr[DevNr];
@@ -269,7 +268,6 @@ int GetAcpiDeviceIoBase(int DevNr, int Index, struct TIoBase *Io)
     struct TResourceFixedIo *FixedIoEntry;
     struct TDeviceEntry *DevEntry;
     
-    Load();    
     if (DevNr < HardwareCount)
     {
         DevEntry = HardwareArr[DevNr];
@@ -343,7 +341,6 @@ int GetAcpiDevice(int Index, char *AcpiName)
     ACPI_BUFFER Buffer;
     struct TDeviceEntry *DevEntry;
     
-    Load();    
     if (Index < HardwareCount)
     {
         DevEntry = HardwareArr[Index];
@@ -422,7 +419,6 @@ int GetAcpiObject(int Index, char *AcpiName)
     ACPI_BUFFER Buffer;
     struct TDeviceEntry *DevEntry;
     
-    Load();    
     if (Index < DeviceCount)
     {
         DevEntry = DeviceArr[Index];
@@ -500,7 +496,6 @@ int GetAcpiMethod(int Device, int Index, char *AcpiName)
     struct TDeviceEntry *DevEntry;
     struct TObjectEntry *ObjEntry;
     
-    Load();    
     if (Device < DeviceCount)
     {
         DevEntry = DeviceArr[Device];
@@ -1099,6 +1094,7 @@ void __far InitTasking()
         if (Status != 0)
             Status |= 0x40000;
     }
+    Load();
 } 
 
 /*##########################################################################
