@@ -559,6 +559,7 @@
 #define usergate_get_acpi_device 450
 #define usergate_get_acpi_device_irq 451
 #define usergate_get_acpi_device_io 452
+#define usergate_get_acpi_device_mem 453
 
 
 
@@ -1124,6 +1125,7 @@
 #define CallGate_get_acpi_device 0x67 0x9a 194 1 0 0 3 0
 #define CallGate_get_acpi_device_irq 0x67 0x9a 195 1 0 0 3 0
 #define CallGate_get_acpi_device_io 0x67 0x9a 196 1 0 0 3 0
+#define CallGate_get_acpi_device_mem 0x67 0x9a 197 1 0 0 3 0
 
 #else
 
@@ -1687,5 +1689,6 @@
 #define CallGate_get_acpi_device 0x3e 0x67 0x9a 194 1 0 0 3 0
 #define CallGate_get_acpi_device_irq 0x3e 0x67 0x9a 195 1 0 0 3 0
 #define CallGate_get_acpi_device_io 0x3e 0x67 0x9a 196 1 0 0 3 0
+#define CallGate_get_acpi_device_mem 0x3e 0x67 0x9a 197 1 0 0 3 0
 
 #endif

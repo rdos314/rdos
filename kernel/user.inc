@@ -2827,6 +2827,15 @@ GetAcpiDeviceIo      MACRO
 	UserGate get_acpi_device_io_nr
 	                ENDM
 
+;   IN  EAX         Device #
+;   IN  EDX         IO #
+;   OUT ESI         Start address
+;   OUT EDI         End address
+;   OUT ECX          Address len
+GetAcpiDeviceMem      MACRO
+	UserGate get_acpi_device_mem_nr
+	                ENDM
+
 ;   OUT EAX         Temperature in tenth of degrees Kelvin
 GetCpuTemperature      MACRO
 	UserGate get_cpu_temperature_nr

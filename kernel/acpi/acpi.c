@@ -54,6 +54,12 @@ struct TIoBase
     UINT16 Stop;
 };
 
+struct TMemBase
+{
+    UINT32 Start;
+    UINT32 Stop;
+};
+
 
 /* local definitions */
 
@@ -300,6 +306,80 @@ int GetAcpiDeviceIoBase(int DevNr, int Index, struct TIoBase *Io)
                 Io->Start = FixedIoEntry->Data.Address;
                 Io->Stop = FixedIoEntry->Data.Address;
                 return FixedIoEntry->Data.AddressLength;
+            }
+        }
+    }
+    return 0;    
+}
+
+/*##########################################################################
+#
+#   Name       : GetAcpiDeviceMemBase
+#
+#   Purpose....: Get ACPI device memory usage
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux GetAcpiDeviceMemBase "*" rdosdev parm routine [eax] [edx] [es edi] value [eax]
+int GetAcpiDeviceMemBase(int DevNr, int Index, struct TMemBase *Mem)
+{
+    struct TResourceMemory24 *Mem24Entry;
+    struct TResourceMemory32 *Mem32Entry;
+    struct TResourceFixedMemory32 *FixedMem32Entry;
+    struct TDeviceEntry *DevEntry;
+    
+    if (DevNr < HardwareCount)
+    {
+        DevEntry = HardwareArr[DevNr];
+        Mem24Entry = DevEntry->Memory24ResourceList;
+
+        while (Index && Mem24Entry)
+        {
+            Index--;
+            Mem24Entry = Mem24Entry->Next;
+        }
+
+        if (Mem24Entry)
+        {
+            Mem->Start = Mem24Entry->Data.Minimum << 8;
+            Mem->Stop = Mem24Entry->Data.Maximum << 8;
+            return Mem24Entry->Data.AddressLength << 8;
+        }
+        else
+        {
+            Mem32Entry = DevEntry->Memory32ResourceList;
+
+            while (Index && Mem32Entry)
+            {
+                Index--;
+                Mem32Entry = Mem32Entry->Next;
+            }
+
+            if (Mem32Entry)
+            {
+                Mem->Start = Mem32Entry->Data.Minimum;
+                Mem->Stop = Mem32Entry->Data.Maximum;
+                return Mem32Entry->Data.AddressLength;
+            }
+            else
+            {
+                FixedMem32Entry = DevEntry->FixedMemory32ResourceList;
+
+                while (Index && FixedMem32Entry)
+                {
+                    Index--;
+                    FixedMem32Entry = FixedMem32Entry->Next;
+                }
+
+                if (FixedMem32Entry)
+                {
+                    Mem->Start = FixedMem32Entry->Data.Address;
+                    Mem->Stop = FixedMem32Entry->Data.Address;
+                    return FixedMem32Entry->Data.AddressLength;
+                }
             }
         }
     }

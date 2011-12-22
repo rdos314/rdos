@@ -586,7 +586,7 @@ get_acpi_device_irq Endp
 ;
 ;       NAME:           GetAcpiDeviceIo
 ;
-;       DESCRIPTION:    Get ACPI device IRQ
+;       DESCRIPTION:    Get ACPI device IO
 ;
 ;       PARAMETERS:     EAX     Device #
 ;                       EDX     Index
@@ -625,6 +625,50 @@ gadioDone:
     pop es
     ret
 get_acpi_device_io Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetAcpiDeviceMem
+;
+;       DESCRIPTION:    Get ACPI device memory
+;
+;       PARAMETERS:     EAX     Device #
+;                       EDX     Index
+;
+;       RETURNS:        NC   OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_acpi_device_mem_name    DB 'Get ACPI Device Mem',0
+
+    extrn GetAcpiDeviceMemBase:near
+
+get_acpi_device_mem  Proc far
+    push es
+    sub esp,8
+    mov ecx,ss
+    mov es,ecx
+    movzx edi,sp
+    call GetAcpiDeviceMemBase
+    or eax,eax
+    jz gadmemFail
+
+gadmemOk:
+    pop esi
+    pop edi
+    mov ecx,eax
+    clc
+    jmp gadmemDone
+
+gadmemFail:
+    add esp,8
+    stc
+
+gadmemDone:
+    pop es
+    ret
+get_acpi_device_mem Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -702,6 +746,12 @@ acpi_load_save:
     mov edi,OFFSET get_acpi_device_io_name
     xor dx,dx
     mov ax,get_acpi_device_io_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_acpi_device_mem
+    mov edi,OFFSET get_acpi_device_mem_name
+    xor dx,dx
+    mov ax,get_acpi_device_mem_nr
     RegisterBimodalUserGate
 
 acpi_fail:

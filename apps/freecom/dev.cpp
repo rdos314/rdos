@@ -130,6 +130,18 @@ void TDeviceCommand::ShowDevices()
                     break;
             }
 
+            for (Index = 0; Index < 100; Index++)
+            {
+                AccessSize = RdosGetAcpiDeviceMem(DevNr, Index, &Start, &Stop);
+                if (AccessSize)
+                {
+                    sprintf(Str, "\r\n    Mem: %08lX-%08lX", Start, Stop + AccessSize - 1);
+                    Write(Str);
+                }
+                else
+                    break;
+            }
+
             for (Index = 0; Index < 10; Index++)
             {
                 Irq = RdosGetAcpiDeviceIrq(DevNr, Index, &Share, &Polarity, &TriggerMode);

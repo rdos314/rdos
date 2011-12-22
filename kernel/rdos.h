@@ -190,6 +190,7 @@ int RDOSAPI RdosGetAcpiMethod(int Object, int Index, char *AcpiName);
 int RDOSAPI RdosGetAcpiDevice(int Index, char *AcpiName);
 int RDOSAPI RdosGetAcpiDeviceIrq(int Device, int Index, int *Share, int *Polarity, int *TriggerMode);
 int RDOSAPI RdosGetAcpiDeviceIo(int Device, int Index, int *Start, int *End);
+int RDOSAPI RdosGetAcpiDeviceMem(int Device, int Index, int *Start, int *End);
 int RDOSAPI RdosGetCpuTemperature();
 
 void RDOSAPI RdosSetTextMode();
@@ -781,6 +782,29 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     "pop edi" \
     "xor eax,eax" \
     "IoDone:" \
+    "pop ecx" \
+    parm [eax] [edx] [esi] [edi] \
+    value [eax];
+
+#pragma aux RdosGetAcpiDeviceMem = \
+    "push ecx" \
+    "push edi" \
+    "push esi" \
+    CallGate_get_acpi_device_mem  \
+    "jc MemFail" \
+    "mov eax,esi" \
+    "pop esi" \
+    "mov [esi],eax" \
+    "mov eax,edi" \
+    "pop edi" \
+    "mov [edi],eax" \
+    "mov eax,ecx" \
+    "jmp MemDone" \
+    "MemFail:" \
+    "pop esi" \
+    "pop edi" \
+    "xor eax,eax" \
+    "MemDone:" \
     "pop ecx" \
     parm [eax] [edx] [esi] [edi] \
     value [eax];
