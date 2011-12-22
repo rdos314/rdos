@@ -36,6 +36,7 @@ extern void InitAcpiTables();
 extern void InitOsAcpi();
 
 #define MAX_DEVICE_COUNT        1024
+#define MAX_PCI_ROOT_COUNT      8
 #define MAX_PCI_IRQ_COUNT       256
 
 /* do not reorganize these. Shared with assembly-code and gate definitions */
@@ -168,6 +169,9 @@ struct TDeviceEntry *DeviceArr[MAX_DEVICE_COUNT];
 int HardwareCount = 0;
 struct TDeviceEntry *HardwareArr[MAX_DEVICE_COUNT];
 
+int PciRootCount = 0;
+struct TDeviceEntry *PciRootArr[MAX_PCI_ROOT_COUNT];
+
 int IrqRoutingCount = 0;
 ACPI_PCI_ROUTING_TABLE *IrqRoutingTable[MAX_PCI_IRQ_COUNT];
 
@@ -180,6 +184,27 @@ void Load();
 
 void __far ImplTestGate(const char *msg)
 {
+    ACPI_STATUS Status;
+    ACPI_DEVICE_INFO *DevInfo;
+    struct TDeviceEntry *DevEntry;
+    int i;
+
+    for (i = 0; i < MAX_DEVICE_COUNT; i++)
+    {
+        DevEntry = DeviceArr[i];
+        if (DevEntry)
+        {        
+            Status = AcpiGetObjectInfo(DevEntry->Handle, &DevInfo);
+            if (Status == AE_OK)
+            {
+                if (DevInfo->Flags & ACPI_PCI_ROOT_BRIDGE)
+                {
+                    PciRootArr[PciRootCount] = DevEntry;
+                    PciRootCount++;
+                }        
+            }
+        }
+    }
 }
 
 /*##########################################################################
@@ -1083,6 +1108,7 @@ void GetHardware()
 {
     ACPI_STATUS Status;
     ACPI_BUFFER Buffer;
+    ACPI_DEVICE_INFO *DevInfo;
     struct TResourceList *List;
     struct TDeviceEntry *DevEntry;
     int i;
@@ -1111,6 +1137,16 @@ void GetHardware()
                 AddResource(DevEntry, Buffer.Length);
                 HardwareArr[HardwareCount] = DevEntry;
                 HardwareCount++;
+            }
+
+            Status = AcpiGetObjectInfo(DevEntry->Handle, &DevInfo);
+            if (Status == AE_OK)
+            {
+                if (DevInfo->Flags & ACPI_PCI_ROOT_BRIDGE)
+                {
+                    PciRootArr[PciRootCount] = DevEntry;
+                    PciRootCount++;
+                }        
             }
         }
     }
