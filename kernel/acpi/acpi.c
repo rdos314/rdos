@@ -184,6 +184,8 @@ void __far ImplTestGate(const char *msg)
     ACPI_DEVICE_INFO *DevInfo;
     struct TDeviceEntry *DevEntry;
     int i;
+
+    Load();
     
     for (i = 0; i < MAX_DEVICE_COUNT; i++)
     {
@@ -952,7 +954,7 @@ void GetIrqRouting()
             Buffer.Pointer = TempResourceBuf;
             Status = AcpiGetIrqRoutingTable(DevEntry->Handle, &Buffer);
 
-            if (Status == AE_OK)
+            if (Status == AE_OK && Buffer.Length > 0)
             {
                 ptr = (char *)AcpiOsAllocate(Buffer.Length);
                 memcpy(ptr, TempResourceBuf, Buffer.Length);
@@ -1004,7 +1006,7 @@ void AddResource(struct TDeviceEntry *DevEntry, int size)
     while (size > 0)
     {            
         CopyLen = Resource->Length - 2 * sizeof(UINT32);
-        if (CopyLen)
+        if (CopyLen > 0 && CopyLen < 0x1000)
         {
             AllocLen = sizeof(struct TResourceBase) + CopyLen; 
             switch (Resource->Type)
