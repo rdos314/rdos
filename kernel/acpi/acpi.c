@@ -130,8 +130,13 @@ struct TResourceAddress32
     ACPI_RESOURCE_ADDRESS32 Data;
 };
 
-struct TResourceList
+struct TDeviceEntry
 {
+    char AcpiName[5];
+    ACPI_HANDLE Handle;
+    struct TDeviceEntry *DeviceList;
+    struct TDeviceEntry *DeviceNext;
+    struct TObjectEntry *ObjectList;
     struct TResourceIrq *IrqResourceList;
     struct TResourceExtendedIrq *ExtendedIrqResourceList;
     struct TResourceDma *DmaResourceList;
@@ -142,20 +147,12 @@ struct TResourceList
     struct TResourceMemoryFixed32 *FixedMemory32ResourceList;
     struct TResourceAddress16 *Address16ResourceList;
     struct TResourceAddress32 *Address32ResourceList;
-};
 
-struct TDeviceEntry
-{
-    char AcpiName[5];
-    ACPI_HANDLE Handle;
-    struct TDeviceEntry *DeviceList;
-    struct TDeviceEntry *DeviceNext;
-    struct TObjectEntry *ObjectList;
-    struct TResourceList PossibleResourceList;
-    struct TResourceList CurrentResourceList;
 };
 
 ACPI_STATUS Status;
+
+int Loaded = FALSE;
 
 struct TDeviceEntry *Root;
 
@@ -169,6 +166,9 @@ int IrqRoutingCount = 0;
 ACPI_PCI_ROUTING_TABLE *IrqRoutingTable[MAX_PCI_IRQ_COUNT];
 
 char TempResourceBuf[0x4000];
+
+
+void Load();
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
@@ -193,11 +193,12 @@ int GetAcpiDeviceIrqBase(int DevNr, int Index, struct TIrqBase *Irq)
     struct TResourceIrq *IrqEntry;
     struct TResourceExtendedIrq *ExtIrqEntry;
     struct TDeviceEntry *DevEntry;
-    
+
+    Load();    
     if (DevNr < HardwareCount)
     {
         DevEntry = HardwareArr[DevNr];
-        IrqEntry = DevEntry->CurrentResourceList.IrqResourceList;
+        IrqEntry = DevEntry->IrqResourceList;
 
         while (Index && IrqEntry)
         {
@@ -222,7 +223,7 @@ int GetAcpiDeviceIrqBase(int DevNr, int Index, struct TIrqBase *Irq)
         }
         else
         {
-            ExtIrqEntry = DevEntry->CurrentResourceList.ExtendedIrqResourceList;
+            ExtIrqEntry = DevEntry->ExtendedIrqResourceList;
 
             while (Index && ExtIrqEntry)
             {
@@ -268,10 +269,11 @@ int GetAcpiDeviceIoBase(int DevNr, int Index, struct TIoBase *Io)
     struct TResourceFixedIo *FixedIoEntry;
     struct TDeviceEntry *DevEntry;
     
+    Load();    
     if (DevNr < HardwareCount)
     {
         DevEntry = HardwareArr[DevNr];
-        IoEntry = DevEntry->CurrentResourceList.IoResourceList;
+        IoEntry = DevEntry->IoResourceList;
 
         while (Index && IoEntry)
         {
@@ -287,7 +289,7 @@ int GetAcpiDeviceIoBase(int DevNr, int Index, struct TIoBase *Io)
         }
         else
         {
-            FixedIoEntry = DevEntry->CurrentResourceList.FixedIoResourceList;
+            FixedIoEntry = DevEntry->FixedIoResourceList;
 
             while (Index && FixedIoEntry)
             {
@@ -341,6 +343,7 @@ int GetAcpiDevice(int Index, char *AcpiName)
     ACPI_BUFFER Buffer;
     struct TDeviceEntry *DevEntry;
     
+    Load();    
     if (Index < HardwareCount)
     {
         DevEntry = HardwareArr[Index];
@@ -419,6 +422,7 @@ int GetAcpiObject(int Index, char *AcpiName)
     ACPI_BUFFER Buffer;
     struct TDeviceEntry *DevEntry;
     
+    Load();    
     if (Index < DeviceCount)
     {
         DevEntry = DeviceArr[Index];
@@ -496,6 +500,7 @@ int GetAcpiMethod(int Device, int Index, char *AcpiName)
     struct TDeviceEntry *DevEntry;
     struct TObjectEntry *ObjEntry;
     
+    Load();    
     if (Device < DeviceCount)
     {
         DevEntry = DeviceArr[Device];
@@ -871,31 +876,6 @@ void GetIrqRouting()
 
 /*##########################################################################
 #
-#   Name       : InitResource
-#
-#   Purpose....: Init an resource list
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void InitResource(struct TResourceList *list)
-{
-    list->IrqResourceList = 0;
-    list->ExtendedIrqResourceList = 0;
-    list->DmaResourceList = 0;
-    list->IoResourceList = 0;
-    list->FixedIoResourceList = 0;
-    list->Memory24ResourceList = 0;
-    list->Memory32ResourceList = 0;
-    list->FixedMemory32ResourceList = 0;
-    list->Address16ResourceList = 0;
-    list->Address32ResourceList = 0;
-}
-
-/*##########################################################################
-#
 #   Name       : AddResource
 #
 #   Purpose....: Add an resource entry
@@ -905,7 +885,7 @@ void InitResource(struct TResourceList *list)
 #   Returns....: *
 #
 ##########################################################################*/
-void AddResource(struct TResourceList *list, int size)
+void AddResource(struct TDeviceEntry *DevEntry, int size)
 {
     int CopyLen;
     int AllocLen;
@@ -936,71 +916,71 @@ void AddResource(struct TResourceList *list, int size)
                 case ACPI_RESOURCE_TYPE_IRQ:
                     IrqResource = (struct TResourceIrq *)AcpiOsAllocate(AllocLen);
                     memcpy(&IrqResource->Data, &Resource->Data, CopyLen);
-                    IrqResource->Next = list->IrqResourceList;
-                    list->IrqResourceList = IrqResource;
+                    IrqResource->Next = DevEntry->IrqResourceList;
+                    DevEntry->IrqResourceList = IrqResource;
                     break;
                             
                 case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
                     ExtendedIrqResource = (struct TResourceExtendedIrq *)AcpiOsAllocate(AllocLen);
                     memcpy(&ExtendedIrqResource->Data, &Resource->Data, CopyLen);
-                    ExtendedIrqResource->Next = list->ExtendedIrqResourceList;
-                    list->ExtendedIrqResourceList = ExtendedIrqResource;
+                    ExtendedIrqResource->Next = DevEntry->ExtendedIrqResourceList;
+                    DevEntry->ExtendedIrqResourceList = ExtendedIrqResource;
                     break;
                             
                 case ACPI_RESOURCE_TYPE_DMA:
                     DmaResource = (struct TResourceDma *)AcpiOsAllocate(AllocLen);
                     memcpy(&DmaResource->Data, &Resource->Data, CopyLen);
-                    DmaResource->Next = list->DmaResourceList;
-                    list->DmaResourceList = DmaResource;
+                    DmaResource->Next = DevEntry->DmaResourceList;
+                    DevEntry->DmaResourceList = DmaResource;
                     break;
 
                 case ACPI_RESOURCE_TYPE_IO:
                     IoResource = (struct TResourceIo *)AcpiOsAllocate(AllocLen);
                     memcpy(&IoResource->Data, &Resource->Data, CopyLen);
-                    IoResource->Next = list->IoResourceList;
-                    list->IoResourceList = IoResource;
+                    IoResource->Next = DevEntry->IoResourceList;
+                    DevEntry->IoResourceList = IoResource;
                     break;
 
                 case ACPI_RESOURCE_TYPE_FIXED_IO:
                     FixedIoResource = (struct TResourceFixedIo *)AcpiOsAllocate(AllocLen);
                     memcpy(&FixedIoResource->Data, &Resource->Data, CopyLen);
-                    FixedIoResource->Next = list->FixedIoResourceList;
-                    list->FixedIoResourceList = FixedIoResource;
+                    FixedIoResource->Next = DevEntry->FixedIoResourceList;
+                    DevEntry->FixedIoResourceList = FixedIoResource;
                     break;
 
                 case ACPI_RESOURCE_TYPE_MEMORY24:
                     Memory24Resource = (struct TResourceMemory24 *)AcpiOsAllocate(AllocLen);
                     memcpy(&Memory24Resource->Data, &Resource->Data, CopyLen);
-                    Memory24Resource->Next = list->Memory24ResourceList;
-                    list->Memory24ResourceList = Memory24Resource;
+                    Memory24Resource->Next = DevEntry->Memory24ResourceList;
+                    DevEntry->Memory24ResourceList = Memory24Resource;
                     break;
 
                 case ACPI_RESOURCE_TYPE_MEMORY32:
                     Memory32Resource = (struct TResourceMemory32 *)AcpiOsAllocate(AllocLen);
                     memcpy(&Memory32Resource->Data, &Resource->Data, CopyLen);
-                    Memory32Resource->Next = list->Memory32ResourceList;
-                    list->Memory32ResourceList = Memory32Resource;
+                    Memory32Resource->Next = DevEntry->Memory32ResourceList;
+                    DevEntry->Memory32ResourceList = Memory32Resource;
                     break;
 
                 case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
                     FixedMemory32Resource = (struct TResourceFixedMemory32 *)AcpiOsAllocate(AllocLen);
                     memcpy(&FixedMemory32Resource->Data, &Resource->Data, CopyLen);
-                    FixedMemory32Resource->Next = list->FixedMemory32ResourceList;
-                    list->FixedMemory32ResourceList = FixedMemory32Resource;
+                    FixedMemory32Resource->Next = DevEntry->FixedMemory32ResourceList;
+                    DevEntry->FixedMemory32ResourceList = FixedMemory32Resource;
                     break;
 
                 case ACPI_RESOURCE_TYPE_ADDRESS16:
                     Address16Resource = (struct TResourceAddress16 *)AcpiOsAllocate(AllocLen);
                     memcpy(&Address16Resource->Data, &Resource->Data, CopyLen);
-                    Address16Resource->Next = list->Address16ResourceList;
-                    list->Address16ResourceList = Address16Resource;
+                    Address16Resource->Next = DevEntry->Address16ResourceList;
+                    DevEntry->Address16ResourceList = Address16Resource;
                     break;
 
                 case ACPI_RESOURCE_TYPE_ADDRESS32:
                     Address32Resource = (struct TResourceAddress32 *)AcpiOsAllocate(AllocLen);
                     memcpy(&Address32Resource->Data, &Resource->Data, CopyLen);
-                    Address32Resource->Next = list->Address32ResourceList;
-                    list->Address32ResourceList = Address32Resource;
+                    Address32Resource->Next = DevEntry->Address32ResourceList;
+                    DevEntry->Address32ResourceList = Address32Resource;
                     break;
 
                 default:
@@ -1037,30 +1017,49 @@ void GetHardware()
         DevEntry = DeviceArr[i];
         if (DevEntry)
         {        
-            List = &DevEntry->PossibleResourceList;
-            InitResource(List);
-
-            List = &DevEntry->CurrentResourceList;
-            InitResource(List);
+            DevEntry->IrqResourceList = 0;
+            DevEntry->ExtendedIrqResourceList = 0;
+            DevEntry->DmaResourceList = 0;
+            DevEntry->IoResourceList = 0;
+            DevEntry->FixedIoResourceList = 0;
+            DevEntry->Memory24ResourceList = 0;
+            DevEntry->Memory32ResourceList = 0;
+            DevEntry->FixedMemory32ResourceList = 0;
+            DevEntry->Address16ResourceList = 0;
+            DevEntry->Address32ResourceList = 0;
             
             Buffer.Length = 0x4000;
             Buffer.Pointer = TempResourceBuf;
             Status = AcpiGetCurrentResources(DevEntry->Handle, &Buffer);
             if (Status == AE_OK)
             {
-                AddResource(List, Buffer.Length);
-
-                List = &DevEntry->PossibleResourceList;
-                Buffer.Length = 0x4000;
-                Buffer.Pointer = TempResourceBuf;
-                Status = AcpiGetPossibleResources(DevEntry->Handle, &Buffer);
-                if (Status == AE_OK)
-                    AddResource(List, Buffer.Length);
-
+                AddResource(DevEntry, Buffer.Length);
                 HardwareArr[HardwareCount] = DevEntry;
                 HardwareCount++;
             }
         }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : Load
+#
+#   Purpose....: Make sure tables are loaded & initialized
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void Load()
+{
+    if (Status == 0 && !Loaded)
+    {
+        AcpiWalkNamespace(ACPI_TYPE_ANY, ACPI_ROOT_OBJECT, 10, AddAcpiObject, 0, 0, 0);
+        GetHardware();        
+        GetIrqRouting();
+        Loaded = TRUE;
     }
 }
 
@@ -1100,13 +1099,6 @@ void __far InitTasking()
         if (Status != 0)
             Status |= 0x40000;
     }
-
-    if (Status == 0)
-    {
-//        AcpiWalkNamespace(ACPI_TYPE_ANY, ACPI_ROOT_OBJECT, 10, AddAcpiObject, 0, 0, 0);
-//        GetHardware();        
-//        GetIrqRouting();
-    }        
 } 
 
 /*##########################################################################
