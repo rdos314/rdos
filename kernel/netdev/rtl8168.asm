@@ -1380,8 +1380,11 @@ DriverName1     DB 'RTL8168-1',0
 DriverName2     DB 'RTL8168-2',0
 
 PciVendorTab:
-pci00   DW 10ECh, 8136h
-pci01   DW 0,     0
+pci00   DW 10ECh, 8129h
+pci01   DW 1186h, 4300h
+pci02   DW 10ECh, 8168h
+pci03   DW 10ECh, 8136h
+pci04   DW 0,     0
 
 InitPrimaryPciAdapter   Proc near
     mov bp,ax

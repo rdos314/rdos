@@ -821,7 +821,8 @@ AcpiPsCompleteOp (
     /*
      * Finished one argument of the containing scope
      */
-    WalkState->ParserState.Scope->ParseScope.ArgCount--;
+    if (WalkState->ParserState.Scope)
+        WalkState->ParserState.Scope->ParseScope.ArgCount--;
 
     /* Close this Op (will result in parse subtree deletion) */
 
