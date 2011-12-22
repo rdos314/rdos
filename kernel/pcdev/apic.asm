@@ -3280,6 +3280,18 @@ init    PROC far
     GetAcpiTable
     jc init_hpet_done
 ; 
+    push es
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;    
+    mov si,OFFSET get_hpet_time
+    mov di,OFFSET get_hpet_time_name
+    xor dx,dx
+    mov ax,get_system_time_nr
+    RegisterBimodalUserGate
+    pop es
+;
     mov ax,SEG data
     mov ds,ax
     movzx eax,es:hpett_min_tics
@@ -3299,11 +3311,6 @@ init    PROC far
     mov eax,es:hpet_config
     and al,NOT 2
     mov es:hpet_config,eax
-;    
-    mov bx,OFFSET hpet_counter_arr    
-    mov eax,es:[bx].hpetc_config
-    test ax,8000h
-    jz init_hpet_done
 ;
     mov eax,es:hpet_period
     mov ds:hpet_factor,eax
@@ -3328,6 +3335,11 @@ init_hpet_loop:
     and al,NOT 3
     or al,1
     mov es:hpet_config,eax
+;    
+    mov bx,OFFSET hpet_counter_arr    
+    mov eax,es:[bx].hpetc_config
+    test ax,8000h
+    jz init_hpet_done
 ;
     mov ax,cs
     mov ds,ax
@@ -3356,12 +3368,6 @@ init_hpet_loop:
     xor cl,cl
     mov ax,reload_sys_timer_nr
     RegisterOsGate
-;
-    mov si,OFFSET get_hpet_time
-    mov di,OFFSET get_hpet_time_name
-    xor dx,dx
-    mov ax,get_system_time_nr
-    RegisterBimodalUserGate
 
 init_hpet_done:    
     pop es
