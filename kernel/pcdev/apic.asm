@@ -3193,6 +3193,16 @@ init    PROC far
     mov ds:time_spinlock,0
     mov ds:prev_hpet,0
     mov ds:hpet_guard,0
+;    
+    mov al,34h
+    out TIMER_CONTROL,al
+    jmp short $+2
+    mov al,0
+    out TIMER0,al
+    jmp short $+2
+    out TIMER0,al
+    mov ds:clock_tics,0
+    jmp short $+2
 ;
     mov eax,dword ptr cs:apic_tab
     GetAcpiTable
@@ -3290,6 +3300,7 @@ init    PROC far
     mov eax,dword ptr cs:hpet_tab
     GetAcpiTable
     jc init_hpet_done
+    jmp init_hpet_done
 ; 
     push es
     mov ax,cs
