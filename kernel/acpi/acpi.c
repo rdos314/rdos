@@ -159,8 +159,6 @@ struct TDeviceEntry
 
 ACPI_STATUS Status;
 
-int Loaded = FALSE;
-
 struct TDeviceEntry *Root;
 
 int DeviceCount = 0;
@@ -178,8 +176,6 @@ ACPI_PCI_ROUTING_TABLE *IrqRoutingTable[MAX_PCI_IRQ_COUNT];
 char TempResourceBuf[0x4000];
 
 
-void Load();
-
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
@@ -188,8 +184,6 @@ void __far ImplTestGate(const char *msg)
     ACPI_DEVICE_INFO *DevInfo;
     struct TDeviceEntry *DevEntry;
     int i;
-
-    Load();
     
     for (i = 0; i < MAX_DEVICE_COUNT; i++)
     {
@@ -1167,31 +1161,6 @@ void GetHardware()
 ##########################################################################*/
 void Load()
 {
-    if (Status == 0 && !Loaded)
-    {
-        AcpiWalkNamespace(ACPI_TYPE_ANY, ACPI_ROOT_OBJECT, 10, AddAcpiObject, 0, 0, 0);
-        GetHardware();        
-        GetIrqRouting();
-        Loaded = TRUE;
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : InitTasking
-#
-#   Purpose....: Init tasking callback
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-#pragma aux InitTasking "*" rdosdev parm routine
-void __far InitTasking()
-{
-    InitOsAcpi();
-
     if (Status == 0)
     {
         Status = AcpiLoadTables();
@@ -1212,7 +1181,29 @@ void __far InitTasking()
         if (Status != 0)
             Status |= 0x40000;
     }
-//    Load();
+    if (Status == 0)
+    {
+        AcpiWalkNamespace(ACPI_TYPE_ANY, ACPI_ROOT_OBJECT, 10, AddAcpiObject, 0, 0, 0);
+        GetHardware();        
+        GetIrqRouting();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : InitTasking
+#
+#   Purpose....: Init tasking callback
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux InitTasking "*" rdosdev parm routine
+void __far InitTasking()
+{
+    InitOsAcpi();
 } 
 
 /*##########################################################################

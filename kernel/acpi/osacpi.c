@@ -59,6 +59,8 @@ void WriteBytePort(short int address, char val);
 void WriteWordPort(short int address, short int val);
 void WriteDwordPort(short int address, long val);
 
+void Load();
+
 #pragma aux ReadBytePort = \
     "in al,dx" \
     parm [dx] \
@@ -861,6 +863,8 @@ ACPI_STATUS AcpiOsRemoveInterruptHandler(UINT32 Level, ACPI_OSD_HANDLER Handler)
 void __far AcpiThread(void *param)
 {
     struct TExecReq *exec;
+
+    Load();
 
     ExecThread = RdosGetThreadHandle();
 
