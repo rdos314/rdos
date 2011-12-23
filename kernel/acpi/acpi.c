@@ -1187,7 +1187,7 @@ void GetHardware()
             DevEntry->Address16ResourceList = 0;
             DevEntry->Address32ResourceList = 0;
             
-            Buffer.Length = 0x4000;
+            Buffer.Length = 0x10;
             Buffer.Pointer = TempResourceBuf;
             Status = AcpiGetName(DevEntry->Handle, ACPI_SINGLE_NAME, &Buffer);
 
@@ -1195,24 +1195,28 @@ void GetHardware()
                 Status = -1;
 
             if (Status == AE_OK)
+            {
+                Buffer.Length = 0x4000;
+                Buffer.Pointer = TempResourceBuf;
+
                 Status = AcpiGetCurrentResources(DevEntry->Handle, &Buffer);
 
-            if (Status == AE_OK)
-            {
-                AddResource(DevEntry, Buffer.Length);
-                HardwareArr[HardwareCount] = DevEntry;
-                HardwareCount++;
-            }
-
-            Status = AcpiGetObjectInfo(DevEntry->Handle, &DevInfo);
-            if (Status == AE_OK)
-            {
-                if (DevInfo->Flags & ACPI_PCI_ROOT_BRIDGE)
+                if (Status == AE_OK)
                 {
-                    
-                    PciRootArr[PciRootCount] = DevEntry;
-                    PciRootCount++;
-                }        
+                    AddResource(DevEntry, Buffer.Length);
+                    HardwareArr[HardwareCount] = DevEntry;
+                    HardwareCount++;
+                }
+
+                Status = AcpiGetObjectInfo(DevEntry->Handle, &DevInfo);
+                if (Status == AE_OK)
+                {
+                    if (DevInfo->Flags & ACPI_PCI_ROOT_BRIDGE)
+                    {
+                        PciRootArr[PciRootCount] = DevEntry;
+                        PciRootCount++;
+                    }        
+                }
             }
         }
     }
