@@ -442,11 +442,10 @@ AcpiPsExecuteMethod (
     /* WalkState was deleted by ParseAml */
 
 Cleanup:
-    AcpiPsDeleteParseTree (Op);
-
-
     if (Status != AE_STACK_UNDERFLOW)
     {
+        AcpiPsDeleteParseTree (Op);
+
         /* End optional tracing */
 
         AcpiPsStopTrace (Info);
