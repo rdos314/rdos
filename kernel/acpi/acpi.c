@@ -234,6 +234,8 @@ void __far ImplTestGate(const char *msg)
     UINT64 PciValue;
     ACPI_HANDLE Handle;
 
+    Load();
+    
     for (i = 0; i < PciRootCount; i++)
     {
         Handle = PciRootArr[i]->Handle;

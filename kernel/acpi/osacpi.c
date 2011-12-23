@@ -240,12 +240,12 @@ void *AcpiOsAllocate(ACPI_SIZE Size)
     if (Size <= 0 || Size > 0x100000)
         return 0;
     
-    if (Size < 0x1000)
+ /*   if (Size < 0x1000)
     {
         linear = RdosAllocateSmallGlobalLinear(Size);
         return RdosLinearToPointer(linear);
     }
-    else
+    else */
         return RdosAllocateBigGlobalMem(Size);
 }
 
@@ -870,7 +870,7 @@ void __far AcpiThread(void *param)
 {
     struct TExecReq *exec;
 
-    Load();
+//    Load();
 
     ExecThread = RdosGetThreadHandle();
 
