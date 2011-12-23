@@ -1004,14 +1004,6 @@ void GetIrqRouting()
     char *ptr;
     int i;
 
-    ACPI_THREAD_STATE *Thread;
-
-    Thread = AcpiUtCreateThreadState();
-    Thread = AcpiUtCreateThreadState();
-    Thread = AcpiUtCreateThreadState();
-    Thread = AcpiUtCreateThreadState();
-    Thread = AcpiUtCreateThreadState();
-
     for (i = 0; i < MAX_DEVICE_COUNT; i++)
     {
         DevEntry = DeviceArr[i];
