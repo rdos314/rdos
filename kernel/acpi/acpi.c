@@ -38,6 +38,7 @@ extern void InitOsAcpi();
 #define MAX_DEVICE_COUNT        1024
 #define MAX_PCI_ROOT_COUNT      8
 #define MAX_PCI_IRQ_COUNT       256
+#define MAX_PCI_DEV_COUNT       256
 
 /* do not reorganize these. Shared with assembly-code and gate definitions */
 
@@ -141,6 +142,8 @@ struct TDeviceEntry
 {
     char AcpiName[5];
     ACPI_HANDLE Handle;
+    ACPI_PCI_ID PciId;
+    int IsPci;
     struct TDeviceEntry *DeviceList;
     struct TDeviceEntry *DeviceNext;
     struct TObjectEntry *ObjectList;
@@ -158,6 +161,8 @@ struct TDeviceEntry
 };
 
 ACPI_STATUS Status;
+UINT16 CurrSegment;
+UINT16 CurrBus;
 
 struct TDeviceEntry *Root;
 
@@ -170,38 +175,84 @@ struct TDeviceEntry *HardwareArr[MAX_DEVICE_COUNT];
 int PciRootCount = 0;
 struct TDeviceEntry *PciRootArr[MAX_PCI_ROOT_COUNT];
 
+int PciDevCount = 0;
+struct TDeviceEntry *PciDevArr[MAX_PCI_DEV_COUNT];
+
 int IrqRoutingCount = 0;
 ACPI_PCI_ROUTING_TABLE *IrqRoutingTable[MAX_PCI_IRQ_COUNT];
 
 char TempResourceBuf[0x4000];
 
 
+/*##########################################################################
+#
+#   Name       : AddPciObject
+#
+#   Purpose....: Walk callback for creating PCI device tree
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+ACPI_STATUS AddPciObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, void **ReturnVal)
+{
+    ACPI_DEVICE_INFO *DevInfo;
+    ACPI_STATUS DevStatus;
+    int i;
+            
+    DevStatus = AcpiGetObjectInfo(Object, &DevInfo);
+    if (DevStatus == AE_OK)
+    {
+        if (DevInfo->Valid & ACPI_VALID_ADR)
+        {
+            for (i = 0; i < DeviceCount; i++)
+            {
+                if (DeviceArr[i]->Handle == Object)
+                {
+                    DeviceArr[i]->PciId.Segment = CurrSegment;
+                    DeviceArr[i]->PciId.Bus = CurrBus;
+                    DeviceArr[i]->PciId.Device   = ACPI_HIWORD (ACPI_LODWORD (DevInfo->Address));
+                    DeviceArr[i]->PciId.Function = ACPI_LOWORD (ACPI_LODWORD (DevInfo->Address));
+                    DeviceArr[i]->IsPci = TRUE;
+                    PciDevArr[PciDevCount] = DeviceArr[i];
+                    PciDevCount++;
+                    break;
+                }
+            }
+        }
+    }
+    return AE_OK;
+}
+
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
-    ACPI_STATUS Status;
-    ACPI_DEVICE_INFO *DevInfo;
-    struct TDeviceEntry *DevEntry;
-    int i;
+    int i;    
+    ACPI_STATUS DevStatus;
+    UINT64 PciValue;
+    ACPI_HANDLE Handle;
 
-    Load();
-    
-    for (i = 0; i < MAX_DEVICE_COUNT; i++)
+    for (i = 0; i < PciRootCount; i++)
     {
-        DevEntry = DeviceArr[i];
-        if (DevEntry)
-        {        
-            Status = AcpiGetObjectInfo(DevEntry->Handle, &DevInfo);
-            if (Status == AE_OK)
-            {
-                if (DevInfo->Flags & ACPI_PCI_ROOT_BRIDGE)
-                {
-                    PciRootArr[PciRootCount] = DevEntry;
-                    PciRootCount++;
-                }        
-            }
-        }
+        Handle = PciRootArr[i]->Handle;
+        
+        DevStatus = AcpiUtEvaluateNumericObject (METHOD_NAME__SEG, Handle, &PciValue);
+
+        if (DevStatus == AE_OK)
+            CurrSegment = ACPI_LOWORD (PciValue);
+        else
+            CurrSegment = 0;
+
+        DevStatus = AcpiUtEvaluateNumericObject (METHOD_NAME__BBN, Handle, &PciValue);
+
+        if (DevStatus == AE_OK)
+            CurrBus = ACPI_LOWORD (PciValue);
+        else
+            CurrBus = 0;
+
+        AcpiWalkNamespace(ACPI_TYPE_DEVICE, Handle, 1, AddPciObject, 0, 0, 0);
     }
 }
 
@@ -1116,6 +1167,7 @@ void GetHardware()
         DevEntry = DeviceArr[i];
         if (DevEntry)
         {        
+            DevEntry->IsPci = FALSE;
             DevEntry->IrqResourceList = 0;
             DevEntry->ExtendedIrqResourceList = 0;
             DevEntry->DmaResourceList = 0;
@@ -1142,6 +1194,7 @@ void GetHardware()
             {
                 if (DevInfo->Flags & ACPI_PCI_ROOT_BRIDGE)
                 {
+                    
                     PciRootArr[PciRootCount] = DevEntry;
                     PciRootCount++;
                 }        
@@ -1163,6 +1216,8 @@ void GetHardware()
 ##########################################################################*/
 void Load()
 {
+    int i;
+
     if (Status == 0)
     {
         Status = AcpiLoadTables();
