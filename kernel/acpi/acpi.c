@@ -1189,7 +1189,14 @@ void GetHardware()
             
             Buffer.Length = 0x4000;
             Buffer.Pointer = TempResourceBuf;
-            Status = AcpiGetCurrentResources(DevEntry->Handle, &Buffer);
+            Status = AcpiGetName(DevEntry->Handle, ACPI_SINGLE_NAME, &Buffer);
+
+            if (strstr(TempResourceBuf, "MEM"))
+                Status = -1;
+
+            if (Status == AE_OK)
+                Status = AcpiGetCurrentResources(DevEntry->Handle, &Buffer);
+
             if (Status == AE_OK)
             {
                 AddResource(DevEntry, Buffer.Length);
