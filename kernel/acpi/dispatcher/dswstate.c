@@ -479,6 +479,7 @@ AcpiDsObjStackPop (
 
         if (WalkState->NumOperands == 0)
         {
+            WalkState->Next = 0;
             ACPI_ERROR ((AE_INFO,
                 "Object stack underflow! Count=%X State=%p #Ops=%u",
                 PopCount, WalkState, WalkState->NumOperands));
