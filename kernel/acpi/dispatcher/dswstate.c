@@ -482,6 +482,9 @@ AcpiDsObjStackPop (
 /* really brute-force approach to handling this bug */
             AcpiGbl_StateCache->ListHead = 0;
             AcpiGbl_StateCache->CurrentDepth = 0;
+            AcpiGbl_OperandCache->ListHead = 0;
+            AcpiGbl_OperandCache->CurrentDepth = 0;
+
             WalkState->Next = 0;
             ACPI_ERROR ((AE_INFO,
                 "Object stack underflow! Count=%X State=%p #Ops=%u",
