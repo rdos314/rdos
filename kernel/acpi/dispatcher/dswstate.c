@@ -468,6 +468,7 @@ AcpiDsObjStackPop (
     ACPI_WALK_STATE         *WalkState)
 {
     UINT32                  i;
+    ACPI_THREAD_STATE *Thread;
 
 
     ACPI_FUNCTION_NAME (DsObjStackPop);
@@ -479,6 +480,11 @@ AcpiDsObjStackPop (
 
         if (WalkState->NumOperands == 0)
         {
+            Thread = AcpiUtCreateThreadState();
+            Thread = AcpiUtCreateThreadState();
+            Thread = AcpiUtCreateThreadState();
+            Thread = AcpiUtCreateThreadState();
+
             WalkState->Next = 0;
             ACPI_ERROR ((AE_INFO,
                 "Object stack underflow! Count=%X State=%p #Ops=%u",
