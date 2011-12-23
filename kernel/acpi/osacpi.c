@@ -870,7 +870,7 @@ void __far AcpiThread(void *param)
 {
     struct TExecReq *exec;
 
-    Load();
+//    Load();
 
     ExecThread = RdosGetThreadHandle();
 
