@@ -113,7 +113,7 @@ void TPciCommand::ShowDevices()
         {
             Write(AcpiName);
             RdosGetPciDeviceInfo(DevNr, &Bus, &Device, &Function);
-            sprintf(Str, "Bus: %d, Device: %d, Function: %d\r\n", Bus, Device, Function);
+            sprintf(Str, ", Bus: %d, Device: %d, Function: %d\r\n", Bus, Device, Function);
             Write(Str);
         }
         else
