@@ -190,78 +190,12 @@ ACPI_PCI_ROUTING_TABLE *IrqRoutingTable[MAX_PCI_IRQ_COUNT];
 char TempResourceBuf[0x4000];
 
 
-/*##########################################################################
-#
-#   Name       : AddPciObject
-#
-#   Purpose....: Walk callback for creating PCI device tree
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-ACPI_STATUS AddPciObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, void **ReturnVal)
-{
-    ACPI_DEVICE_INFO *DevInfo;
-    ACPI_STATUS DevStatus;
-    int i;
-            
-    DevStatus = AcpiGetObjectInfo(Object, &DevInfo);
-    if (DevStatus == AE_OK)
-    {
-        if (DevInfo->Valid & ACPI_VALID_ADR)
-        {
-            for (i = 0; i < DeviceCount; i++)
-            {
-                if (DeviceArr[i]->Handle == Object)
-                {
-                    DeviceArr[i]->PciId.Segment = CurrSegment;
-                    DeviceArr[i]->PciId.Bus = CurrBus;
-                    DeviceArr[i]->PciId.Device   = ACPI_HIWORD (ACPI_LODWORD (DevInfo->Address));
-                    DeviceArr[i]->PciId.Function = ACPI_LOWORD (ACPI_LODWORD (DevInfo->Address));
-                    DeviceArr[i]->IsPci = TRUE;
-                    PciDevArr[PciDevCount] = DeviceArr[i];
-                    PciDevCount++;
-                    break;
-                }
-            }
-        }
-    }
-    return AE_OK;
-}
-
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
-    int i;    
-    ACPI_STATUS DevStatus;
-    UINT64 PciValue;
-    ACPI_HANDLE Handle;
-
     Load();
     
-    for (i = 0; i < PciRootCount; i++)
-    {
-        Handle = PciRootArr[i]->Handle;
-        
-        DevStatus = AcpiUtEvaluateNumericObject (METHOD_NAME__SEG, Handle, &PciValue);
-
-        if (DevStatus == AE_OK)
-            CurrSegment = ACPI_LOWORD (PciValue);
-        else
-            CurrSegment = 0;
-
-        DevStatus = AcpiUtEvaluateNumericObject (METHOD_NAME__BBN, Handle, &PciValue);
-
-        if (DevStatus == AE_OK)
-            CurrBus = ACPI_LOWORD (PciValue);
-        else
-            CurrBus = 0;
-
-        AcpiWalkNamespace(ACPI_TYPE_DEVICE, Handle, 1, AddPciObject, 0, 0, 0);
-    }
 }
 
 /*##########################################################################
@@ -1224,6 +1158,87 @@ void GetHardware()
 
 /*##########################################################################
 #
+#   Name       : AddPciObject
+#
+#   Purpose....: Walk callback for creating PCI device tree
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+ACPI_STATUS AddPciObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, void **ReturnVal)
+{
+    ACPI_DEVICE_INFO *DevInfo;
+    ACPI_STATUS DevStatus;
+    int i;
+            
+    DevStatus = AcpiGetObjectInfo(Object, &DevInfo);
+    if (DevStatus == AE_OK)
+    {
+        if (DevInfo->Valid & ACPI_VALID_ADR)
+        {
+            for (i = 0; i < DeviceCount; i++)
+            {
+                if (DeviceArr[i]->Handle == Object)
+                {
+                    DeviceArr[i]->PciId.Segment = CurrSegment;
+                    DeviceArr[i]->PciId.Bus = CurrBus;
+                    DeviceArr[i]->PciId.Device   = ACPI_HIWORD (ACPI_LODWORD (DevInfo->Address));
+                    DeviceArr[i]->PciId.Function = ACPI_LOWORD (ACPI_LODWORD (DevInfo->Address));
+                    DeviceArr[i]->IsPci = TRUE;
+                    PciDevArr[PciDevCount] = DeviceArr[i];
+                    PciDevCount++;
+                    break;
+                }
+            }
+        }
+    }
+    return AE_OK;
+}
+
+/*##########################################################################
+#
+#   Name       : GetPciDevices
+#
+#   Purpose....: Get PCI devices
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GetPciDevices()
+{
+    int i;    
+    ACPI_STATUS DevStatus;
+    UINT64 PciValue;
+    ACPI_HANDLE Handle;
+
+    for (i = 0; i < PciRootCount; i++)
+    {
+        Handle = PciRootArr[i]->Handle;
+        
+        DevStatus = AcpiUtEvaluateNumericObject (METHOD_NAME__SEG, Handle, &PciValue);
+
+        if (DevStatus == AE_OK)
+            CurrSegment = ACPI_LOWORD (PciValue);
+        else
+            CurrSegment = 0;
+
+        DevStatus = AcpiUtEvaluateNumericObject (METHOD_NAME__BBN, Handle, &PciValue);
+
+        if (DevStatus == AE_OK)
+            CurrBus = ACPI_LOWORD (PciValue);
+        else
+            CurrBus = 0;
+
+        AcpiWalkNamespace(ACPI_TYPE_DEVICE, Handle, 1, AddPciObject, 0, 0, 0);
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : Load
 #
 #   Purpose....: Make sure tables are loaded & initialized
@@ -1261,7 +1276,8 @@ void Load()
     {
         AcpiWalkNamespace(ACPI_TYPE_ANY, ACPI_ROOT_OBJECT, 10, AddAcpiObject, 0, 0, 0);
         GetHardware();        
-        GetIrqRouting();
+        GetPciDevices();
+        GetIrqRouting();        
     }
 }
 

@@ -78,6 +78,7 @@
 #include "keyb.h"
 #include "acpi.h"
 #include "dev.h"
+#include "pci.h"
 
 #include "file.h"
 #include "path.h"
@@ -122,6 +123,7 @@ static TCommandFactory *mkdir;
 static TCommandFactory *mkpart;
 static TCommandFactory *mount;
 static TCommandFactory *move;
+static TCommandFactory *pci;
 static TCommandFactory *ping;
 static TCommandFactory *prompt;
 static TCommandFactory *showpart;
@@ -191,6 +193,7 @@ TSession::TSession()
                 rd = new TRdFactory;
                 prompt = new TPromptFactory;
                 ping = new TPingFactory;
+                pci = new TPciFactory;
                 pause = new TPauseFactory;
                 path = new TPathFactory;
                 showpart = new TShowPartitionFactory;

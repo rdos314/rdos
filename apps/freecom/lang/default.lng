@@ -1763,3 +1763,9 @@ Shows device information
 
 DEV
 .
+
+:TEXT_CMDHELP_PCI
+Shows PCI information
+
+PCI
+.

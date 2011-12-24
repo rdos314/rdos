@@ -560,5 +560,6 @@ get_acpi_device_nr              = 450
 get_acpi_device_irq_nr          = 451
 get_acpi_device_io_nr           = 452
 get_acpi_device_mem_nr          = 453
+get_pci_device_nr               = 454
 
 usergate_entries			= 460
