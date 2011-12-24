@@ -68,6 +68,13 @@ struct TMemBase
     UINT32 Stop;
 };
 
+struct TPciBase
+{
+    UINT8 Bus;
+    UINT8 Device;
+    UINT8 Function;
+};
+
 
 /* local definitions */
 
@@ -150,6 +157,7 @@ struct TDeviceEntry
     ACPI_HANDLE Handle;
     ACPI_PCI_ID PciId;
     int IsPci;
+    int DevNr;
     struct TDeviceEntry *DeviceList;
     struct TDeviceEntry *DeviceNext;
     struct TObjectEntry *ObjectList;
@@ -196,6 +204,34 @@ void __far ImplTestGate(const char *msg)
 {
     Load();
     
+}
+
+/*##########################################################################
+#
+#   Name       : GetPciDeviceBase
+#
+#   Purpose....: Get PCI device
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux GetPciDeviceBase "*" rdosdev parm routine [eax] [es edi] value [eax]
+int GetPciDeviceBase(int DevNr, struct TPciBase *Pci)
+{
+    struct TDeviceEntry *DevEntry;
+
+    if (DevNr < PciDevCount)
+    {
+        DevEntry = PciDevArr[DevNr];
+        Pci->Bus = DevEntry->PciId.Bus;
+        Pci->Device = DevEntry->PciId.Device;
+        Pci->Function = DevEntry->PciId.Function;
+        return DevEntry->DevNr;
+    }
+    else
+        return -1;
 }
 
 /*##########################################################################
@@ -1110,6 +1146,7 @@ void GetHardware()
         if (DevEntry)
         {        
             DevEntry->IsPci = FALSE;
+            DevEntry->DevNr = i;
             DevEntry->IrqResourceList = 0;
             DevEntry->ExtendedIrqResourceList = 0;
             DevEntry->DmaResourceList = 0;

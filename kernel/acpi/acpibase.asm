@@ -669,6 +669,55 @@ gadmemDone:
     pop es
     ret
 get_acpi_device_mem Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetPciDevice
+;
+;       DESCRIPTION:    Get PCI device
+;
+;       PARAMETERS:     EAX     PCI Device #
+;
+;       RETURNS:        NC   OK
+;                       EAX     Device #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_device_name    DB 'Get PCI Device',0
+
+    extrn GetPciDeviceBase:near
+
+get_pci_device  Proc far
+    push es
+    push edi
+    sub esp,4
+    mov ebx,ss
+    mov es,ebx
+    movzx edi,sp
+    call GetPciDeviceBase
+    cmp eax,-1
+    jz gpdFail
+
+gpdOk:
+    pop edi
+    mov bx,di
+    xchg bl,bh
+    shr edi,16
+    mov cx,di
+    xchg cl,ch
+    clc
+    jmp gpdDone
+
+gpdFail:
+    add esp,4
+    stc
+
+gpdDone:
+    pop edi
+    pop es
+    ret
+get_pci_device Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -752,6 +801,12 @@ acpi_load_save:
     mov edi,OFFSET get_acpi_device_mem_name
     xor dx,dx
     mov ax,get_acpi_device_mem_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_pci_device
+    mov edi,OFFSET get_pci_device_name
+    xor dx,dx
+    mov ax,get_pci_device_nr
     RegisterBimodalUserGate
 
 acpi_fail:
