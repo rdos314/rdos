@@ -2837,12 +2837,17 @@ GetAcpiDeviceMem      MACRO
 	                ENDM
 
 ;   IN  EAX         PCI device #
-;   OUT EAX         ACPI device #
+;   IN  ES:(E)DI    ACPI name buffer
+GetPciDeviceName      MACRO
+	UserGate get_pci_device_name_nr
+	                ENDM
+
+;   IN  EAX         PCI device #
 ;   OUT BH          Bus
 ;   OUT BL          Device
 ;   OUT CH          Function
-GetPciDevice      MACRO
-	UserGate get_pci_device_nr
+GetPciDeviceInfo      MACRO
+	UserGate get_pci_device_info_nr
 	                ENDM
 
 ;   OUT EAX         Temperature in tenth of degrees Kelvin

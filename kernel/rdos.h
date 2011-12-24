@@ -191,7 +191,8 @@ int RDOSAPI RdosGetAcpiDevice(int Index, char *AcpiName);
 int RDOSAPI RdosGetAcpiDeviceIrq(int Device, int Index, int *Share, int *Polarity, int *TriggerMode);
 int RDOSAPI RdosGetAcpiDeviceIo(int Device, int Index, int *Start, int *End);
 int RDOSAPI RdosGetAcpiDeviceMem(int Device, int Index, int *Start, int *End);
-int RDOSAPI RdosGetPciDevice(int Index, int *Bus, int *Device, int *Function);
+int RDOSAPI RdosGetPciDeviceName(int Index, char *AcpiName);
+int RDOSAPI RdosGetPciDeviceInfo(int Index, int *Bus, int *Device, int *Function);
 int RDOSAPI RdosGetCpuTemperature();
 
 void RDOSAPI RdosSetTextMode();
@@ -810,30 +811,35 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     parm [eax] [edx] [esi] [edi] \
     value [eax];
 
-#pragma aux RdosGetPciDevice = \
-    "push edx" \
+#pragma aux RdosGetPciDeviceName = \
+    CallGate_get_pci_device_name  \
+    CarryToBool \
+    parm [eax] [edi] \
+    value [eax];
+
+#pragma aux RdosGetPciDeviceInfo = \
     "push ecx" \
     "push ebx" \
     "push esi" \
-    CallGate_get_pci_device  \
+    CallGate_get_pci_device_info  \
     "jc Fail" \
-    "movzx edx,bh" \
+    "movzx eax,bh" \
     "pop esi" \
-    "mov [esi],edx" \
-    "movzx edx,bl" \
+    "mov [esi],eax" \
+    "movzx eax,bl" \
     "pop ebx" \
-    "mov [ebx],edx" \
-    "movzx edx,ch" \
+    "mov [ebx],eax" \
+    "movzx eax,ch" \
     "pop ecx" \
-    "mov [ecx],edx" \
+    "mov [ecx],eax" \
+    "mov eax,1" \
     "jmp Done" \
     "Fail:" \
     "pop esi" \
     "pop ebx" \
     "pop ecx" \
-    "mov eax,-1" \
+    "xor eax,eax" \
     "Done:" \
-    "pop edx" \
     parm [eax] [esi] [ebx] [ecx] \
     value [eax];
 

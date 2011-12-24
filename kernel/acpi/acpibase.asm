@@ -673,9 +673,9 @@ get_acpi_device_mem Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           GetPciDevice
+;       NAME:           GetPciDeviceInfo
 ;
-;       DESCRIPTION:    Get PCI device
+;       DESCRIPTION:    Get PCI device info
 ;
 ;       PARAMETERS:     EAX     PCI Device #
 ;
@@ -684,11 +684,11 @@ get_acpi_device_mem Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_pci_device_name    DB 'Get PCI Device',0
+get_pci_device_info_name    DB 'Get PCI Device Info',0
 
     extrn GetPciDeviceBase:near
 
-get_pci_device  Proc far
+get_pci_device_info  Proc far
     push es
     push edi
     sub esp,4
@@ -696,10 +696,10 @@ get_pci_device  Proc far
     mov es,ebx
     movzx edi,sp
     call GetPciDeviceBase
-    cmp eax,-1
-    jz gpdFail
+    or eax,eax
+    jz gpdiFail
 
-gpdOk:
+gpdiOk:
     pop edi
     mov bx,di
     xchg bl,bh
@@ -707,17 +707,17 @@ gpdOk:
     mov cx,di
     xchg cl,ch
     clc
-    jmp gpdDone
+    jmp gpdiDone
 
-gpdFail:
+gpdiFail:
     add esp,4
     stc
 
-gpdDone:
+gpdiDone:
     pop edi
     pop es
     ret
-get_pci_device Endp
+get_pci_device_info Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -803,10 +803,10 @@ acpi_load_save:
     mov ax,get_acpi_device_mem_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET get_pci_device
-    mov edi,OFFSET get_pci_device_name
+    mov esi,OFFSET get_pci_device_info
+    mov edi,OFFSET get_pci_device_info_name
     xor dx,dx
-    mov ax,get_pci_device_nr
+    mov ax,get_pci_device_info_nr
     RegisterBimodalUserGate
 
 acpi_fail:

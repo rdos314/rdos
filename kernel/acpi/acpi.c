@@ -208,6 +208,84 @@ void __far ImplTestGate(const char *msg)
 
 /*##########################################################################
 #
+#   Name       : GetPciDeviceName
+#
+#   Purpose....: Get PCI device name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int GetPciDeviceName(int Index, char *AcpiName)
+{
+    ACPI_STATUS Status;
+    ACPI_BUFFER Buffer;
+    struct TDeviceEntry *DevEntry;
+    
+    if (Index < PciDevCount)
+    {
+        DevEntry = PciDevArr[Index];
+        Buffer.Length = 128;
+        Buffer.Pointer = AcpiName;
+        Status = AcpiGetName(DevEntry->Handle, ACPI_FULL_PATHNAME, &Buffer);
+        if (Status == AE_OK)
+            return TRUE;
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : GetPciDeviceName16
+#
+#   Purpose....: Get PCI device name, 16-bit version
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetPciDeviceName16 "*" rdosdev parm routine [eax] [es edi]
+void __far ImplGetPciDeviceName16(int Index, char *AcpiName)
+{
+    RdosSaveEax();
+    RdosExtendSi();
+    RdosExtendDi();
+
+    if (GetPciDeviceName(Index, AcpiName))
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
+    RdosRestoreEax();
+}
+
+/*##########################################################################
+#
+#   Name       : GetPciDeviceName32
+#
+#   Purpose....: Get PCI device name, 32-bit version
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetPciDeviceName32 "*" rdosdev parm routine [eax] [es edi]
+void __far ImplGetPciDeviceName32(int Index, char *AcpiName)
+{
+    RdosSaveEax();
+
+    if (GetPciDeviceName(Index, AcpiName))
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+    RdosRestoreEax();
+}
+
+/*##########################################################################
+#
 #   Name       : GetPciDeviceBase
 #
 #   Purpose....: Get PCI device
@@ -228,10 +306,10 @@ int GetPciDeviceBase(int DevNr, struct TPciBase *Pci)
         Pci->Bus = DevEntry->PciId.Bus;
         Pci->Device = DevEntry->PciId.Device;
         Pci->Function = DevEntry->PciId.Function;
-        return DevEntry->DevNr;
+        return TRUE;
     }
     else
-        return -1;
+        return FALSE;
 }
 
 /*##########################################################################
@@ -1364,6 +1442,7 @@ int main()
     RdosRegisterUserGate(usergate_get_acpi_object, &ImplGetAcpiObject16, &ImplGetAcpiObject32, "Get ACPI Object");
     RdosRegisterUserGate(usergate_get_acpi_method, &ImplGetAcpiMethod16, &ImplGetAcpiMethod32, "Get ACPI Method");
     RdosRegisterUserGate(usergate_get_acpi_device, &ImplGetAcpiDevice16, &ImplGetAcpiDevice32, "Get ACPI Device");
+    RdosRegisterUserGate(usergate_get_pci_device_name, &ImplGetPciDeviceName16, &ImplGetPciDeviceName32, "Get PCI Device Name");
     RdosRegisterBimodalUserGate(usergate_get_cpu_temperature, &ImplGetCpuTemperature, "Get CPU Temperature");
 
     RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate");
