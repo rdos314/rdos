@@ -6384,11 +6384,12 @@ local_free_process_tlb Endp
 timer_expired_name   DB 'Timer Expired', 0
 
 timer_expired    Proc far
+    call TryLockCore
+    sti
     mov ax,task_sel
     mov ds,ax
-    mov ax,core_data_sel
-    mov fs,ax
-;
+
+timer_expired_check:   
     GetSystemTime
     call LockTimerGlobal
     add eax,cs:update_tics
@@ -6398,42 +6399,17 @@ timer_expired    Proc far
     sbb edx,ds:[bx].timer_msb
     jc timer_expired_reload
 
-timer_expired_lock:
-    call TryLockCore
-
 timer_expired_remove:    
-    mov eax,ds:[bx].timer_lsb
-    and eax,ds:[bx].timer_msb
-    add eax,1
-    jc timer_expired_idle
-;    
     call LocalRemoveTimerGlobal    
-    GetSystemTime
-    call LockTimerGlobal
-    add eax,cs:update_tics
-    adc edx,0
-    mov bx,ds:timer_head
-    sub eax,ds:[bx].timer_lsb
-    sbb edx,ds:[bx].timer_msb
-    jnc timer_expired_remove
-;    
+    jmp timer_expired_check
+
+timer_expired_reload: 
     neg eax
     ReloadSysTimer
     jc timer_expired_remove
-
-timer_expired_idle:
+;
     call UnlockTimerGlobal    
     call TryUnlockCore
-    jmp timer_expired_done
-
-timer_expired_reload:
-    neg eax
-    ReloadSysTimer
-    jc timer_expired_lock
-;
-    call UnlockTimerGlobal
-
-timer_expired_done:    
     retf32
 timer_expired    Endp
 
