@@ -98,7 +98,7 @@ TPciCommand::TPciCommand(TSession *session, const char *param)
 ##########################################################################*/
 void TPciCommand::ShowDevices()
 {
-    int ok;
+    int PciNr;
     char AcpiName[128];
     char Str[100];
     int DevNr;
@@ -106,11 +106,12 @@ void TPciCommand::ShowDevices()
     int Device;
     int Function;
     
-    for (DevNr = 0; DevNr < 0x1000; DevNr++)
+    for (PciNr = 0; PciNr < 0x1000; PciNr++)
     {
-        ok = RdosGetPciDevice(DevNr, AcpiName, &Bus, &Device, &Function);
-        if (ok)
+        DevNr = RdosGetPciDevice(PciNr, &Bus, &Device, &Function);
+        if (DevNr >= 0)
         {
+            RdosGetAcpiDevice(DevNr, AcpiName);
             Write(AcpiName);
             sprintf(Str, "Bus: %d, Device: %d, Function: %d\r\n", Bus, Device, Function);
             Write(Str);

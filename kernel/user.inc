@@ -2837,7 +2837,7 @@ GetAcpiDeviceMem      MACRO
 	                ENDM
 
 ;   IN  EAX         PCI device #
-;   IN  ES:(E)DI    ACPI name buffer
+;   OUT EAX         ACPI device #
 ;   OUT BH          Bus
 ;   OUT BL          Device
 ;   OUT CH          Function
