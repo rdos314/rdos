@@ -212,8 +212,8 @@ void __far ImplTestGate(const char *msg)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux ImplGetPciDeviceIrq "*" rdosdev parm routine [eax] [edx] value [eax]
-int __far ImplGetPciDeviceIrq(int Index, int Pin)
+#pragma aux ImplGetPciDeviceIrq "*" rdosdev parm routine [eax] [dl] value [eax]
+int __far ImplGetPciDeviceIrq(int Index, char Pin)
 {
     struct TDeviceEntry *DevEntry;
     struct TResourceIrq *IrqEntry;
