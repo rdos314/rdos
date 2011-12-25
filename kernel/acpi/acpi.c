@@ -156,6 +156,7 @@ struct TDeviceEntry
     char AcpiName[5];
     ACPI_HANDLE Handle;
     ACPI_PCI_ID PciId;
+    ACPI_PCI_ROUTING_TABLE *PciIrq[4];
     int IsPci;
     int DevNr;
     struct TDeviceEntry *DeviceList;
@@ -192,15 +193,74 @@ struct TDeviceEntry *PciRootArr[MAX_PCI_ROOT_COUNT];
 int PciDevCount = 0;
 struct TDeviceEntry *PciDevArr[MAX_PCI_DEV_COUNT];
 
-int IrqRoutingCount = 0;
-ACPI_PCI_ROUTING_TABLE *IrqRoutingTable[MAX_PCI_IRQ_COUNT];
-
 char TempResourceBuf[0x4000];
 
 void GetPciDevices();
 void GetIrqRouting();
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
+
+/*##########################################################################
+#
+#   Name       : GetIrqRouting
+#
+#   Purpose....: Get IRQ routing tables
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GetIrqRouting()
+{
+    ACPI_STATUS Status;
+    ACPI_BUFFER Buffer;
+    struct TDeviceEntry *DevEntry;
+    struct TDeviceEntry *PciDev;
+    ACPI_PCI_ROUTING_TABLE *RouteEntry;
+    char *ptr;
+    int i;
+    int j;
+    int Device;
+    int Pin;
+
+    for (i = 0; i < PciRootCount; i++)
+    {
+        DevEntry = PciRootArr[i];
+        if (DevEntry)
+        {        
+            Buffer.Length = 0x4000;
+            Buffer.Pointer = TempResourceBuf;
+            Status = AcpiGetIrqRoutingTable(DevEntry->Handle, &Buffer);
+
+            if (Status == AE_OK && Buffer.Length > 0)
+            {
+                ptr = (char *)AcpiOsAllocate(Buffer.Length);
+                memcpy(ptr, TempResourceBuf, Buffer.Length);
+                RouteEntry = (ACPI_PCI_ROUTING_TABLE *)ptr;
+
+                while (RouteEntry->Length)
+                {
+                    Device = (int)((RouteEntry->Address >> 16) && 0xFFFF);
+                    Pin = RouteEntry->Pin;
+
+                    if (Pin >= 0 && Pin < 4)
+                    {
+                        for (j = 0; j < PciDevCount; j++)
+                        {
+                            PciDev = PciDevArr[j];
+                            if (PciDev)
+                                if (PciDev->PciId.Device == Device)
+                                    PciDev->PciIrq[Pin] = RouteEntry;
+                        }                 
+                    }
+                    ptr +=  RouteEntry->Length;
+                    RouteEntry = (ACPI_PCI_ROUTING_TABLE *)ptr;
+                }   
+            }
+        }
+    }
+}
 
 void __far ImplTestGate(const char *msg)
 {
@@ -1036,53 +1096,6 @@ ACPI_STATUS AddAcpiObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, voi
 
 /*##########################################################################
 #
-#   Name       : GetIrqRouting
-#
-#   Purpose....: Get IRQ routing tables
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void GetIrqRouting()
-{
-    ACPI_STATUS Status;
-    ACPI_BUFFER Buffer;
-    struct TDeviceEntry *DevEntry;
-    ACPI_PCI_ROUTING_TABLE *RouteEntry;
-    char *ptr;
-    int i;
-
-    for (i = 0; i < MAX_DEVICE_COUNT; i++)
-    {
-        DevEntry = DeviceArr[i];
-        if (DevEntry)
-        {        
-            Buffer.Length = 0x4000;
-            Buffer.Pointer = TempResourceBuf;
-            Status = AcpiGetIrqRoutingTable(DevEntry->Handle, &Buffer);
-
-            if (Status == AE_OK && Buffer.Length > 0)
-            {
-                ptr = (char *)AcpiOsAllocate(Buffer.Length);
-                memcpy(ptr, TempResourceBuf, Buffer.Length);
-                RouteEntry = (ACPI_PCI_ROUTING_TABLE *)ptr;
-
-                while (RouteEntry->Length)
-                {
-                    IrqRoutingTable[IrqRoutingCount] = RouteEntry;
-                    IrqRoutingCount++;
-                    ptr +=  RouteEntry->Length;
-                    RouteEntry = (ACPI_PCI_ROUTING_TABLE *)ptr;
-                }   
-            }
-        }
-    }
-}
-
-/*##########################################################################
-#
 #   Name       : AddResource
 #
 #   Purpose....: Add an resource entry
@@ -1219,12 +1232,16 @@ void GetHardware()
     struct TResourceList *List;
     struct TDeviceEntry *DevEntry;
     int i;
+    int j;
 
     for (i = 0; i < MAX_DEVICE_COUNT; i++)
     {
         DevEntry = DeviceArr[i];
         if (DevEntry)
         {        
+            for (j = 0; j < 4; j++)
+                DevEntry->PciIrq[j] = 0;
+
             DevEntry->IsPci = FALSE;
             DevEntry->DevNr = i;
             DevEntry->IrqResourceList = 0;
