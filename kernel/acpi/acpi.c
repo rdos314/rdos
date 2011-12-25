@@ -228,20 +228,23 @@ int __far ImplGetPciDeviceIrq(int Index, int Pin)
         DevEntry = PciDevArr[Index];
         DevEntry = DevEntry->PciIrq[Pin];
 
-        IrqEntry = DevEntry->IrqResourceList;
+        if (DevEntry)
+        {
+            IrqEntry = DevEntry->IrqResourceList;
 
-        if (IrqEntry)
-        {
-            if (IrqEntry->Data.InterruptCount == 1)
-                IntNum = IrqEntry->Data.Interrupts[0];
-        }
-        else
-        {
-            ExtIrqEntry = DevEntry->ExtendedIrqResourceList;
-            if (ExtIrqEntry)
+            if (IrqEntry)
             {
-                if (ExtIrqEntry->Data.InterruptCount == 1)
-                    IntNum = ExtIrqEntry->Data.Interrupts[0];
+                if (IrqEntry->Data.InterruptCount == 1)
+                    IntNum = IrqEntry->Data.Interrupts[0];
+            }
+            else
+            {
+                ExtIrqEntry = DevEntry->ExtendedIrqResourceList;
+                if (ExtIrqEntry)
+                {
+                    if (ExtIrqEntry->Data.InterruptCount == 1)
+                        IntNum = ExtIrqEntry->Data.Interrupts[0];
+                }
             }
         }
     }
