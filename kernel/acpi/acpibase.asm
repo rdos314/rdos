@@ -680,7 +680,6 @@ get_acpi_device_mem Endp
 ;       PARAMETERS:     EAX     PCI Device #
 ;
 ;       RETURNS:        NC   OK
-;                       EAX     Device #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -690,6 +689,7 @@ get_pci_device_info_name    DB 'Get PCI Device Info',0
 
 get_pci_device_info  Proc far
     push es
+    push eax
     push edi
     sub esp,4
     mov ebx,ss
@@ -715,6 +715,7 @@ gpdiFail:
 
 gpdiDone:
     pop edi
+    pop eax
     pop es
     ret
 get_pci_device_info Endp
