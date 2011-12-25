@@ -785,6 +785,12 @@ acpi_load_save:
     mov ax,get_acpi_table_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET get_pci_device_info
+    mov edi,OFFSET get_pci_device_info_name
+    xor dx,dx
+    mov ax,get_pci_device_info_nr
+    RegisterOsGate
+;
     mov esi,OFFSET get_acpi_device_irq
     mov edi,OFFSET get_acpi_device_irq_name
     xor dx,dx
@@ -801,12 +807,6 @@ acpi_load_save:
     mov edi,OFFSET get_acpi_device_mem_name
     xor dx,dx
     mov ax,get_acpi_device_mem_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET get_pci_device_info
-    mov edi,OFFSET get_pci_device_info_name
-    xor dx,dx
-    mov ax,get_pci_device_info_nr
     RegisterBimodalUserGate
 
 acpi_fail:

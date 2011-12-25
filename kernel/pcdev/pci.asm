@@ -43,14 +43,38 @@ ENDIF
 
 MAX_PCI_DEVICES = 256
 
+pci_struc   STRUC
+
+pci_vendor    DW ?
+pci_device    DW ?
+pci_id        DD ?
+
+pci_struc   ENDS
+
+ext_pci_struc  STRUC
+
+epci_bus        DB ?
+epci_device     DB ?
+epci_function   DB ?
+epci_line       DB ?
+epci_irq        DB ?
+
+epci_acpi_index DW ?
+epci_acpi_name  DB ?
+
+ext_pci_struc  ENDS
+
 data    SEGMENT byte public 'DATA'
 
 pci_spinlock        spinlock_typ <>
 
-pci_init_hooks		DW ?
-pci_init_hook_arr	DD 32 DUP(?,?)
+pci_init_hooks          DW ?
+pci_init_hook_arr       DD 32 DUP(?,?)
 
 pci_device_arr      DD MAX_PCI_DEVICES DUP(?,?)
+
+ext_pci_dev_count   DW ?    
+ext_pci_device_arr  DW MAX_PCI_DEVICES DUP(?)
 
 data    ENDS
 
@@ -1073,6 +1097,30 @@ init_pci    Proc far
 init_pci    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Test gate
+;
+;           DESCRIPTION:    Test gate
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_pr_name DB 'Test Gate', 0
+
+test_pr    Proc far
+    push ds
+    push es
+    pushad
+;
+    popad
+    pop es
+    pop ds
+    retf32 
+test_pr Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           init
@@ -1173,6 +1221,12 @@ init    Proc far
     xor cl,cl
     mov ax,find_pci_cap_nr
     RegisterOsGate
+;
+    mov esi,OFFSET test_pr
+    mov edi,OFFSET test_pr_name
+    xor dx,dx
+    mov ax,test_gate_nr
+    RegisterBimodalUserGate
 ;
     mov ax,get_pci_irq_nr
     IsValidOsGate

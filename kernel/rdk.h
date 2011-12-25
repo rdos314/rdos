@@ -417,7 +417,8 @@
 #define osgate_get_core_count 369
 #define osgate_start_core 370
 
-#define osgate_timer_expired 371
+#define osgate_preempt_timer_expired 371
+#define osgate_timer_expired 372
 
 #define osgate_reload_sys_timer 373
 #define osgate_start_sys_timer 374
@@ -438,6 +439,8 @@
 
 #define osgate_get_pci_irq 382
 
+#define osgate_preempt_expired 383
+
 #define osgate_send_eoi 384
 #define osgate_send_int 385
 #define osgate_send_nmi 386
@@ -457,11 +460,11 @@
 #define osgate_delete_sys_env_var 396
 #define osgate_find_sys_env_var 397
 
-#define osgate_has_apic_mem 398
-#define osgate_has_apic_msr 399
+#define osgate_start_preempt_timer 398
+#define osgate_reload_preempt_timer 399
 
-#define osgate_start_clock 400
-#define osgate_sync_clock 401
+#define osgate_start_sys_preempt_timer 400
+#define osgate_reload_sys_preempt_timer 401
 
 #define osgate_flush_tlb 402
 
@@ -478,6 +481,10 @@
 #define osgate_allocate_msi_ints 409
 #define osgate_request_msi_handler 410
 #define osgate_free_msi_int 411
+
+#define osgate_get_pci_device_name 412
+#define osgate_get_pci_device_info 413
+#define osgate_get_pci_device_irq 414
 
 
 
@@ -900,7 +907,8 @@
 #define OsGate_get_core_count 0x3E 0x67 0x9a 113 1 0 0 2 0
 #define OsGate_start_core 0x3E 0x67 0x9a 114 1 0 0 2 0
 
-#define OsGate_timer_expired 0x3E 0x67 0x9a 115 1 0 0 2 0
+#define OsGate_preempt_timer_expired 0x3E 0x67 0x9a 115 1 0 0 2 0
+#define OsGate_timer_expired 0x3E 0x67 0x9a 116 1 0 0 2 0
 
 #define OsGate_reload_sys_timer 0x3E 0x67 0x9a 117 1 0 0 2 0
 #define OsGate_start_sys_timer 0x3E 0x67 0x9a 118 1 0 0 2 0
@@ -921,6 +929,8 @@
 
 #define OsGate_get_pci_irq 0x3E 0x67 0x9a 126 1 0 0 2 0
 
+#define OsGate_preempt_expired 0x3E 0x67 0x9a 127 1 0 0 2 0
+
 #define OsGate_send_eoi 0x3E 0x67 0x9a 128 1 0 0 2 0
 #define OsGate_send_int 0x3E 0x67 0x9a 129 1 0 0 2 0
 #define OsGate_send_nmi 0x3E 0x67 0x9a 130 1 0 0 2 0
@@ -940,11 +950,11 @@
 #define OsGate_delete_sys_env_var 0x3E 0x67 0x9a 140 1 0 0 2 0
 #define OsGate_find_sys_env_var 0x3E 0x67 0x9a 141 1 0 0 2 0
 
-#define OsGate_has_apic_mem 0x3E 0x67 0x9a 142 1 0 0 2 0
-#define OsGate_has_apic_msr 0x3E 0x67 0x9a 143 1 0 0 2 0
+#define OsGate_start_preempt_timer 0x3E 0x67 0x9a 142 1 0 0 2 0
+#define OsGate_reload_preempt_timer 0x3E 0x67 0x9a 143 1 0 0 2 0
 
-#define OsGate_start_clock 0x3E 0x67 0x9a 144 1 0 0 2 0
-#define OsGate_sync_clock 0x3E 0x67 0x9a 145 1 0 0 2 0
+#define OsGate_start_sys_preempt_timer 0x3E 0x67 0x9a 144 1 0 0 2 0
+#define OsGate_reload_sys_preempt_timer 0x3E 0x67 0x9a 145 1 0 0 2 0
 
 #define OsGate_flush_tlb 0x3E 0x67 0x9a 146 1 0 0 2 0
 
@@ -961,4 +971,8 @@
 #define OsGate_allocate_msi_ints 0x3E 0x67 0x9a 153 1 0 0 2 0
 #define OsGate_request_msi_handler 0x3E 0x67 0x9a 154 1 0 0 2 0
 #define OsGate_free_msi_int 0x3E 0x67 0x9a 155 1 0 0 2 0
+
+#define OsGate_get_pci_device_name 0x3E 0x67 0x9a 156 1 0 0 2 0
+#define OsGate_get_pci_device_info 0x3E 0x67 0x9a 157 1 0 0 2 0
+#define OsGate_get_pci_device_irq 0x3E 0x67 0x9a 158 1 0 0 2 0
 

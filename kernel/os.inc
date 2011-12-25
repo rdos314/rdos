@@ -2407,13 +2407,34 @@ GetPciIrqNr     MACRO
     OsGate get_pci_irq_nr
                     ENDM
 
-;;;;;;;;;; POWER MANAGEMENT ;;;;;;;;;
+;;;;;;;;;; ACPI ;;;;;;;;;
 
 ;   IN  EAX     Table name
 ;   OUT ES      Table selector
 GetAcpiTable    MACRO
     OsGate get_acpi_table_nr
                     ENDM
+
+;   IN  EAX         PCI device #
+;   IN  ES:(E)DI    ACPI name buffer
+GetPciDeviceName      MACRO
+	OsGate get_pci_device_name_nr
+	                ENDM
+
+;   IN  EAX         PCI device #
+;   OUT BH          Bus
+;   OUT BL          Device
+;   OUT CH          Function
+GetPciDeviceInfo      MACRO
+	OsGate get_pci_device_info_nr
+	                ENDM
+
+;   IN  EAX         PCI device #
+;   IN  DL          Pin #
+;   OUT AL          IRQ #
+GetPciDeviceIrq      MACRO
+	OsGate get_pci_device_irq_nr
+	                ENDM
 
 ;;;;;;;;;; Com port ;;;;;;;;;
 

@@ -195,9 +195,6 @@ struct TDeviceEntry *PciDevArr[MAX_PCI_DEV_COUNT];
 
 char TempResourceBuf[0x4000];
 
-void GetPciDevices();
-void GetIrqRouting();
-
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
@@ -268,12 +265,16 @@ int __far ImplGetPciDeviceIrq(int Index, int Pin)
 #   Returns....: *
 #
 ##########################################################################*/
-int GetPciDeviceName(int Index, char *AcpiName)
+#pragma aux ImplGetPciDeviceName "*" rdosdev parm routine [eax] [es edi]
+void __far ImplGetPciDeviceName(int Index, char *AcpiName)
 {
+    int ok = FALSE;
     ACPI_STATUS Status;
     ACPI_BUFFER Buffer;
     struct TDeviceEntry *DevEntry;
-    
+
+    RdosSaveEax();
+
     if (Index < PciDevCount)
     {
         DevEntry = PciDevArr[Index];
@@ -281,57 +282,14 @@ int GetPciDeviceName(int Index, char *AcpiName)
         Buffer.Pointer = AcpiName;
         Status = AcpiGetName(DevEntry->Handle, ACPI_FULL_PATHNAME, &Buffer);
         if (Status == AE_OK)
-            return TRUE;
+            ok = TRUE;
     }
-    return FALSE;
-}
 
-/*##########################################################################
-#
-#   Name       : GetPciDeviceName16
-#
-#   Purpose....: Get PCI device name, 16-bit version
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-#pragma aux ImplGetPciDeviceName16 "*" rdosdev parm routine [eax] [es edi]
-void __far ImplGetPciDeviceName16(int Index, char *AcpiName)
-{
-    RdosSaveEax();
-    RdosExtendSi();
-    RdosExtendDi();
-
-    if (GetPciDeviceName(Index, AcpiName))
+    if (ok)
         RdosSetSuccess();
     else
         RdosSetFailure();
 
-    RdosRestoreEax();
-}
-
-/*##########################################################################
-#
-#   Name       : GetPciDeviceName32
-#
-#   Purpose....: Get PCI device name, 32-bit version
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-#pragma aux ImplGetPciDeviceName32 "*" rdosdev parm routine [eax] [es edi]
-void __far ImplGetPciDeviceName32(int Index, char *AcpiName)
-{
-    RdosSaveEax();
-
-    if (GetPciDeviceName(Index, AcpiName))
-        RdosSetSuccess();
-    else
-        RdosSetFailure();
     RdosRestoreEax();
 }
 
@@ -1524,13 +1482,13 @@ int main()
     }
 
     RdosHookInitTasking(&InitTasking);
+    RdosRegisterOsGate(osgate_get_pci_device_name, &ImplGetPciDeviceName, "Get PCI Device Name");
+    RdosRegisterOsGate(osgate_get_pci_device_irq, &ImplGetPciDeviceIrq, "Get PCI Device IRQ");
     RdosRegisterBimodalUserGate(usergate_get_acpi_status, &ImplGetAcpiStatus, "Get ACPI Status");
     RdosRegisterUserGate(usergate_get_acpi_object, &ImplGetAcpiObject16, &ImplGetAcpiObject32, "Get ACPI Object");
     RdosRegisterUserGate(usergate_get_acpi_method, &ImplGetAcpiMethod16, &ImplGetAcpiMethod32, "Get ACPI Method");
     RdosRegisterUserGate(usergate_get_acpi_device, &ImplGetAcpiDevice16, &ImplGetAcpiDevice32, "Get ACPI Device");
-    RdosRegisterUserGate(usergate_get_pci_device_name, &ImplGetPciDeviceName16, &ImplGetPciDeviceName32, "Get PCI Device Name");
-    RdosRegisterBimodalUserGate(usergate_get_pci_device_irq, &ImplGetPciDeviceIrq, "Get PCI Device IRQ");
     RdosRegisterBimodalUserGate(usergate_get_cpu_temperature, &ImplGetCpuTemperature, "Get CPU Temperature");
 
-    RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate");
+//    RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate");
 }
