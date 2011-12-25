@@ -197,13 +197,15 @@ ACPI_PCI_ROUTING_TABLE *IrqRoutingTable[MAX_PCI_IRQ_COUNT];
 
 char TempResourceBuf[0x4000];
 
+void GetPciDevices();
+void GetIrqRouting();
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
-    Load();
-    
+    GetPciDevices();
+    GetIrqRouting();        
 }
 
 /*##########################################################################
@@ -1391,8 +1393,6 @@ void Load()
     {
         AcpiWalkNamespace(ACPI_TYPE_ANY, ACPI_ROOT_OBJECT, 10, AddAcpiObject, 0, 0, 0);
         GetHardware();        
-        GetPciDevices();
-        GetIrqRouting();        
     }
 }
 
