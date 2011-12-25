@@ -241,7 +241,7 @@ void GetIrqRouting()
 
                 while (RouteEntry->Length)
                 {
-                    Device = (int)((RouteEntry->Address >> 16) && 0xFFFF);
+                    Device = ((int)RouteEntry->Address >> 16) & 0xFFFF;
                     Pin = RouteEntry->Pin;
 
                     if (Pin >= 0 && Pin < 4)
