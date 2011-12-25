@@ -53,14 +53,16 @@ pci_struc   ENDS
 
 ext_pci_struc  STRUC
 
+epci_vendor_id  DW ?
+epci_device_id  DW ?
 epci_bus        DB ?
 epci_device     DB ?
 epci_function   DB ?
 epci_line       DB ?
 epci_irq        DB ?
 
-epci_acpi_index DW ?
-epci_acpi_name  DB ?
+epci_acpi_index DD ?
+epci_acpi_name  DB 128 DUP(?)
 
 ext_pci_struc  ENDS
 
@@ -1099,6 +1101,77 @@ init_pci    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddPciDevice
+;
+;           DESCRIPTION:    Add PCI device from ACPI
+;
+;           PARAMETERS:     EAX         ACPI index
+;                           BH          Bus
+;                           BL          Device
+;                           CH          Function
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddPciDevice    Proc near
+    push eax
+;    
+    mov bp,cx
+    mov al,bh
+    mov ah,80h
+    shl eax,16
+    mov ah,bl
+    shl ah,3
+    or ah,ch
+    mov al,cl
+;
+    mov si,OFFSET pci_device_arr
+    mov cx,MAX_PCI_DEVICES
+
+apdLoop:
+    mov edx,[si+4]
+    cmp eax,edx
+    jne apdNext
+;
+    mov eax,SIZE ext_pci_struc
+    AllocateSmallGlobalMem
+    mov ax,[si]
+    mov es:epci_vendor_id,ax
+    mov ax,[si+2]
+    mov es:epci_device_id,ax
+    mov es:epci_bus,bh
+    mov es:epci_device,bl
+    mov ax,bp
+    mov es:epci_function,ah
+    pop eax
+;
+    push eax    
+    mov es:epci_acpi_index,eax    
+    mov di,OFFSET epci_acpi_name
+    GetPciDeviceName
+;    
+    mov cl,PCI_interrupt_line    
+    ReadPciByte
+    mov es:epci_line,al
+    pop eax
+;
+    push eax
+    mov dl,es:epci_line
+    GetPciDeviceIrq
+    mov es:epci_irq,al    
+    jmp apdDone
+
+apdNext: 
+    add si,8
+    loop apdLoop   
+
+apdDone:    
+    pop eax
+    ret
+AddPciDevice    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Test gate
 ;
 ;           DESCRIPTION:    Test gate
@@ -1114,12 +1187,15 @@ test_pr    Proc far
     push es
     pushad
 ;
+    mov ax,SEG data
+    mov ds,ax    
     xor eax,eax
 
 get_pci_device_loop:
     GetPciDeviceInfo
     jc get_pci_device_done
 ;
+    call AddPciDevice
     inc eax
     jmp get_pci_device_loop
     
