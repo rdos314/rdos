@@ -2850,6 +2850,13 @@ GetPciDeviceInfo      MACRO
 	UserGate get_pci_device_info_nr
 	                ENDM
 
+;   IN  EAX         PCI device #
+;   IN  DL          Pin #
+;   OUT AL          IRQ #
+GetPciDeviceIrq      MACRO
+	UserGate get_pci_device_irq_nr
+	                ENDM
+
 ;   OUT EAX         Temperature in tenth of degrees Kelvin
 GetCpuTemperature      MACRO
 	UserGate get_cpu_temperature_nr

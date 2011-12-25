@@ -102,6 +102,8 @@ void TPciCommand::ShowDevices()
     char AcpiName[128];
     char Str[100];
     int DevNr;
+    int Pin;
+    int Irq;
     int Bus;
     int Device;
     int Function;
@@ -113,8 +115,24 @@ void TPciCommand::ShowDevices()
         {
             Write(AcpiName);
             RdosGetPciDeviceInfo(DevNr, &Bus, &Device, &Function);
-            sprintf(Str, ", Bus: %d, Device: %d, Function: %d\r\n", Bus, Device, Function);
+            sprintf(Str, ", Bus: %d, Device: %d, Function: %d", Bus, Device, Function);
             Write(Str);
+
+            for (Pin = 0; Pin < 4; Pin++)
+            {
+                Irq = RdosGetPciDeviceIrq(DevNr, Pin);
+                if (Irq >= 0)
+                {
+                    if (Pin == 0)
+                        Write(", IRQ: ");
+
+                    sprintf(Str, "%d", Irq);
+                    Write(Str);
+                    if (Pin != 3)
+                        Write(", ");
+                }
+                Write("\r\n");
+            }
         }
         else
             break;
