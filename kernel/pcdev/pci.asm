@@ -1114,6 +1114,16 @@ test_pr    Proc far
     push es
     pushad
 ;
+    xor eax,eax
+
+get_pci_device_loop:
+    GetPciDeviceInfo
+    jc get_pci_device_done
+;
+    inc eax
+    jmp get_pci_device_loop
+    
+get_pci_device_done:
     popad
     pop es
     pop ds
