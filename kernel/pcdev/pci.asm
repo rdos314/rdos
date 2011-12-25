@@ -1146,7 +1146,7 @@ apdLoop:
 ;
     push eax    
     mov es:epci_acpi_index,eax    
-    mov di,OFFSET epci_acpi_name
+    mov edi,OFFSET epci_acpi_name
     GetPciDeviceName
 ;    
     mov cl,PCI_interrupt_line    

@@ -2416,7 +2416,7 @@ GetAcpiTable    MACRO
                     ENDM
 
 ;   IN  EAX         PCI device #
-;   IN  ES:(E)DI    ACPI name buffer
+;   IN  ES:EDI      ACPI name buffer
 GetPciDeviceName      MACRO
 	OsGate get_pci_device_name_nr
 	                ENDM
