@@ -156,7 +156,7 @@ struct TDeviceEntry
     char AcpiName[5];
     ACPI_HANDLE Handle;
     ACPI_PCI_ID PciId;
-    ACPI_PCI_ROUTING_TABLE *PciIrq[4];
+    struct TDeviceEntry *PciIrq[4];
     int IsPci;
     int DevNr;
     struct TDeviceEntry *DeviceList;
@@ -217,7 +217,9 @@ void GetIrqRouting()
     ACPI_BUFFER Buffer;
     struct TDeviceEntry *DevEntry;
     struct TDeviceEntry *PciDev;
+    struct TDeviceEntry *LnkDev;
     ACPI_PCI_ROUTING_TABLE *RouteEntry;
+    ACPI_HANDLE Object;
     char *ptr;
     int i;
     int j;
@@ -246,13 +248,27 @@ void GetIrqRouting()
 
                     if (Pin >= 0 && Pin < 4)
                     {
-                        for (j = 0; j < PciDevCount; j++)
+                        Status = AcpiGetHandle(DevEntry->Handle, RouteEntry->Source, &Object);
+                        if (Status == AE_OK)
                         {
-                            PciDev = PciDevArr[j];
-                            if (PciDev)
-                                if (PciDev->PciId.Device == Device)
-                                    PciDev->PciIrq[Pin] = RouteEntry;
-                        }                 
+                            for (j = 0; j < HardwareCount; j++)
+                            {
+                                LnkDev = HardwareArr[j];
+                                if (LnkDev->Handle == Object)
+                                    break;
+                            }
+
+                            if (LnkDev)
+                            {
+                                for (j = 0; j < PciDevCount; j++)
+                                {
+                                    PciDev = PciDevArr[j];
+                                    if (PciDev)
+                                        if (PciDev->PciId.Device == Device)
+                                            PciDev->PciIrq[Pin] = LnkDev;
+                                }                 
+                            }
+                        }
                     }
                     ptr +=  RouteEntry->Length;
                     RouteEntry = (ACPI_PCI_ROUTING_TABLE *)ptr;
