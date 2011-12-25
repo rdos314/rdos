@@ -131,8 +131,8 @@ void TPciCommand::ShowDevices()
                     if (Pin != 3)
                         Write(", ");
                 }
-                Write("\r\n");
             }
+            Write("\r\n");
         }
         else
             break;

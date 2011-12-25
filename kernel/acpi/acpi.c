@@ -200,88 +200,58 @@ void GetIrqRouting();
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
+void __far ImplTestGate(const char *msg)
+{
+}
+
 /*##########################################################################
 #
-#   Name       : GetIrqRouting
+#   Name       : GetPciDeviceIrq
 #
-#   Purpose....: Get IRQ routing tables
+#   Purpose....: Get PCI device IRQ
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void GetIrqRouting()
+#pragma aux ImplGetPciDeviceIrq "*" rdosdev parm routine [eax] [edx] value [eax]
+int __far ImplGetPciDeviceIrq(int Index, int Pin)
 {
-    ACPI_STATUS Status;
-    ACPI_BUFFER Buffer;
     struct TDeviceEntry *DevEntry;
-    struct TDeviceEntry *PciDev;
-    struct TDeviceEntry *LnkDev;
-    ACPI_PCI_ROUTING_TABLE *RouteEntry;
-    ACPI_HANDLE Object;
-    char *ptr;
-    int i;
-    int j;
-    int Device;
-    int Pin;
-
-    for (i = 0; i < PciRootCount; i++)
+    struct TResourceIrq *IrqEntry;
+    struct TResourceExtendedIrq *ExtIrqEntry;
+    int IntNum = -1;
+    
+    if (Index < PciDevCount)
     {
-        DevEntry = PciRootArr[i];
-        if (DevEntry)
-        {        
-            Buffer.Length = 0x4000;
-            Buffer.Pointer = TempResourceBuf;
-            Status = AcpiGetIrqRoutingTable(DevEntry->Handle, &Buffer);
+        DevEntry = PciDevArr[Index];
+        DevEntry = DevEntry->PciIrq[Pin];
 
-            if (Status == AE_OK && Buffer.Length > 0)
+        IrqEntry = DevEntry->IrqResourceList;
+
+        if (IrqEntry)
+        {
+            if (IrqEntry->Data.InterruptCount == 1)
+                IntNum = IrqEntry->Data.Interrupts[0];
+        }
+        else
+        {
+            ExtIrqEntry = DevEntry->ExtendedIrqResourceList;
+            if (ExtIrqEntry)
             {
-                ptr = (char *)AcpiOsAllocate(Buffer.Length);
-                memcpy(ptr, TempResourceBuf, Buffer.Length);
-                RouteEntry = (ACPI_PCI_ROUTING_TABLE *)ptr;
-
-                while (RouteEntry->Length)
-                {
-                    Device = ((int)RouteEntry->Address >> 16) & 0xFFFF;
-                    Pin = RouteEntry->Pin;
-
-                    if (Pin >= 0 && Pin < 4)
-                    {
-                        Status = AcpiGetHandle(DevEntry->Handle, RouteEntry->Source, &Object);
-                        if (Status == AE_OK)
-                        {
-                            for (j = 0; j < HardwareCount; j++)
-                            {
-                                LnkDev = HardwareArr[j];
-                                if (LnkDev->Handle == Object)
-                                    break;
-                            }
-
-                            if (LnkDev)
-                            {
-                                for (j = 0; j < PciDevCount; j++)
-                                {
-                                    PciDev = PciDevArr[j];
-                                    if (PciDev)
-                                        if (PciDev->PciId.Device == Device)
-                                            PciDev->PciIrq[Pin] = LnkDev;
-                                }                 
-                            }
-                        }
-                    }
-                    ptr +=  RouteEntry->Length;
-                    RouteEntry = (ACPI_PCI_ROUTING_TABLE *)ptr;
-                }   
+                if (ExtIrqEntry->Data.InterruptCount == 1)
+                    IntNum = ExtIrqEntry->Data.Interrupts[0];
             }
         }
     }
-}
 
-void __far ImplTestGate(const char *msg)
-{
-    GetPciDevices();
-    GetIrqRouting();        
+    if (IntNum >= 0)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
+    return IntNum;        
 }
 
 /*##########################################################################
@@ -1389,6 +1359,84 @@ void GetPciDevices()
 
 /*##########################################################################
 #
+#   Name       : GetIrqRouting
+#
+#   Purpose....: Get IRQ routing tables
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GetIrqRouting()
+{
+    ACPI_STATUS Status;
+    ACPI_BUFFER Buffer;
+    struct TDeviceEntry *DevEntry;
+    struct TDeviceEntry *PciDev;
+    struct TDeviceEntry *LnkDev;
+    ACPI_PCI_ROUTING_TABLE *RouteEntry;
+    ACPI_HANDLE Object;
+    char *ptr;
+    int i;
+    int j;
+    int Device;
+    int Pin;
+
+    for (i = 0; i < PciRootCount; i++)
+    {
+        DevEntry = PciRootArr[i];
+        if (DevEntry)
+        {        
+            Buffer.Length = 0x4000;
+            Buffer.Pointer = TempResourceBuf;
+            Status = AcpiGetIrqRoutingTable(DevEntry->Handle, &Buffer);
+
+            if (Status == AE_OK && Buffer.Length > 0)
+            {
+                ptr = (char *)AcpiOsAllocate(Buffer.Length);
+                memcpy(ptr, TempResourceBuf, Buffer.Length);
+                RouteEntry = (ACPI_PCI_ROUTING_TABLE *)ptr;
+
+                while (RouteEntry->Length)
+                {
+                    Device = ((int)RouteEntry->Address >> 16) & 0xFFFF;
+                    Pin = RouteEntry->Pin;
+
+                    if (Pin >= 0 && Pin < 4)
+                    {
+                        Status = AcpiGetHandle(DevEntry->Handle, RouteEntry->Source, &Object);
+                        if (Status == AE_OK)
+                        {
+                            for (j = 0; j < HardwareCount; j++)
+                            {
+                                LnkDev = HardwareArr[j];
+                                if (LnkDev->Handle == Object)
+                                    break;
+                            }
+
+                            if (LnkDev)
+                            {
+                                for (j = 0; j < PciDevCount; j++)
+                                {
+                                    PciDev = PciDevArr[j];
+                                    if (PciDev)
+                                        if (PciDev->PciId.Device == Device)
+                                            PciDev->PciIrq[Pin] = LnkDev;
+                                }                 
+                            }
+                        }
+                    }
+                    ptr +=  RouteEntry->Length;
+                    RouteEntry = (ACPI_PCI_ROUTING_TABLE *)ptr;
+                }   
+            }
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : Load
 #
 #   Purpose....: Make sure tables are loaded & initialized
@@ -1426,6 +1474,8 @@ void Load()
     {
         AcpiWalkNamespace(ACPI_TYPE_ANY, ACPI_ROOT_OBJECT, 10, AddAcpiObject, 0, 0, 0);
         GetHardware();        
+        GetPciDevices();
+        GetIrqRouting();        
     }
 }
 
@@ -1476,6 +1526,7 @@ int main()
     RdosRegisterUserGate(usergate_get_acpi_method, &ImplGetAcpiMethod16, &ImplGetAcpiMethod32, "Get ACPI Method");
     RdosRegisterUserGate(usergate_get_acpi_device, &ImplGetAcpiDevice16, &ImplGetAcpiDevice32, "Get ACPI Device");
     RdosRegisterUserGate(usergate_get_pci_device_name, &ImplGetPciDeviceName16, &ImplGetPciDeviceName32, "Get PCI Device Name");
+    RdosRegisterBimodalUserGate(usergate_get_pci_device_irq, &ImplGetPciDeviceIrq, "Get PCI Device IRQ");
     RdosRegisterBimodalUserGate(usergate_get_cpu_temperature, &ImplGetCpuTemperature, "Get CPU Temperature");
 
     RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate");
