@@ -157,7 +157,7 @@ struct TDeviceEntry
     char AcpiName[5];
     ACPI_HANDLE Handle;
     ACPI_PCI_ID PciId;
-    struct TDeviceEntry *PciIrq[4];
+    int PciIrq[4];
     int IsPci;
     int DevNr;
     struct TDeviceEntry *DeviceList;
@@ -223,34 +223,12 @@ void __far ImplTestGate(const char *msg)
 int __far ImplGetPciDeviceIrq(int Index, char Pin)
 {
     struct TDeviceEntry *DevEntry;
-    struct TResourceIrq *IrqEntry;
-    struct TResourceExtendedIrq *ExtIrqEntry;
     int IntNum = -1;
     
     if (Index < PciDevCount)
     {
         DevEntry = PciDevArr[Index];
-        DevEntry = DevEntry->PciIrq[Pin];
-
-        if (DevEntry)
-        {
-            IrqEntry = DevEntry->IrqResourceList;
-
-            if (IrqEntry)
-            {
-                if (IrqEntry->Data.InterruptCount == 1)
-                    IntNum = IrqEntry->Data.Interrupts[0];
-            }
-            else
-            {
-                ExtIrqEntry = DevEntry->ExtendedIrqResourceList;
-                if (ExtIrqEntry)
-                {
-                    if (ExtIrqEntry->Data.InterruptCount == 1)
-                        IntNum = ExtIrqEntry->Data.Interrupts[0];
-                }
-            }
-        }
+        IntNum = DevEntry->PciIrq[Pin];
     }
 
     if (IntNum >= 0)
@@ -1407,6 +1385,8 @@ void GetIrqRouting()
     struct TDeviceEntry *DevEntry;
     struct TDeviceEntry *PciDev;
     struct TDeviceEntry *LnkDev;
+    struct TResourceIrq *IrqEntry;
+    struct TResourceExtendedIrq *ExtIrqEntry;
     ACPI_PCI_ROUTING_TABLE *RouteEntry;
     ACPI_HANDLE Object;
     char *ptr;
@@ -1414,6 +1394,7 @@ void GetIrqRouting()
     int j;
     int Device;
     int Pin;
+    int Irq;
 
     for (i = 0; i < PciRootCount; i++)
     {
@@ -1437,26 +1418,51 @@ void GetIrqRouting()
 
                     if (Pin >= 0 && Pin < 4)
                     {
-                        Status = AcpiGetHandle(DevEntry->Handle, RouteEntry->Source, &Object);
-                        if (Status == AE_OK)
-                        {
-                            for (j = 0; j < HardwareCount; j++)
-                            {
-                                LnkDev = HardwareArr[j];
-                                if (LnkDev->Handle == Object)
-                                    break;
-                            }
+                        Irq = RouteEntry->SourceIndex;
 
-                            if (LnkDev)
+                        if (!Irq)
+                        {
+                            Status = AcpiGetHandle(DevEntry->Handle, RouteEntry->Source, &Object);
+                            if (Status == AE_OK)
                             {
-                                for (j = 0; j < PciDevCount; j++)
+                                for (j = 0; j < HardwareCount; j++)
                                 {
-                                    PciDev = PciDevArr[j];
-                                    if (PciDev)
-                                        if (PciDev->PciId.Device == Device)
-                                            PciDev->PciIrq[Pin] = LnkDev;
-                                }                 
+                                    LnkDev = HardwareArr[j];
+                                    if (LnkDev->Handle == Object)
+                                        break;
+                                }
+
+                                if (LnkDev)
+                                {
+                                    IrqEntry = LnkDev->IrqResourceList;
+ 
+                                    if (IrqEntry)
+                                    {
+                                        if (IrqEntry->Data.InterruptCount == 1)
+                                            Irq = IrqEntry->Data.Interrupts[0];
+                                    }
+                                    else
+                                    {
+                                        ExtIrqEntry = LnkDev->ExtendedIrqResourceList;
+                                        if (ExtIrqEntry)
+                                        {  
+                                            if (ExtIrqEntry->Data.InterruptCount == 1)
+                                                Irq = ExtIrqEntry->Data.Interrupts[0];
+                                        }
+                                    }
+                                }
                             }
+                        }
+
+                        if (Irq)
+                        {
+                            for (j = 0; j < PciDevCount; j++)
+                            {
+                                PciDev = PciDevArr[j];
+                                if (PciDev)
+                                    if (PciDev->PciId.Device == Device)
+                                        PciDev->PciIrq[Pin] = Irq;
+                            }                 
                         }
                     }
                     ptr +=  RouteEntry->Length;
