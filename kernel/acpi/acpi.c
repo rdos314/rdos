@@ -205,18 +205,6 @@ void Load();
 
 void __far ImplTestGate(const char *msg)
 {
-    ACPI_OBJECT_LIST Params;
-    ACPI_OBJECT Obj;
-    ACPI_STATUS Status;
-
-    Params.Count = 1;
-    Params.Pointer = &Obj;
-    
-    Obj.Type = ACPI_TYPE_INTEGER;
-    Obj.Integer.Value = 1;
-
-    Status = AcpiEvaluateObject(AcpiGbl_RootNode, "_PIC", &Params, NULL);
-
     Load();
 }
 

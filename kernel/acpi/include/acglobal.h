@@ -372,9 +372,9 @@ ACPI_EXTERN BOOLEAN                     AcpiGbl_DisableMemTracking;
  ****************************************************************************/
 
 #if !defined (ACPI_NO_METHOD_EXECUTION) || defined (ACPI_CONSTANT_EVAL_ONLY)
-#define NUM_PREDEFINED_NAMES            10
+#define NUM_PREDEFINED_NAMES            11
 #else
-#define NUM_PREDEFINED_NAMES            9
+#define NUM_PREDEFINED_NAMES            10
 #endif
 
 ACPI_EXTERN ACPI_NAMESPACE_NODE         AcpiGbl_RootNodeStruct;

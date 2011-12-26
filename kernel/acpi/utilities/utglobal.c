@@ -250,6 +250,7 @@ ACPI_EXPORT_SYMBOL (AcpiFormatException)
  */
 const ACPI_PREDEFINED_NAMES     AcpiGbl_PreDefinedNames[] =
 {
+    {"_PIC",    ACPI_TYPE_INTEGER,          (char *) 1},
     {"_GPE",    ACPI_TYPE_LOCAL_SCOPE,      NULL},
     {"_PR_",    ACPI_TYPE_LOCAL_SCOPE,      NULL},
     {"_SB_",    ACPI_TYPE_DEVICE,           NULL},
@@ -262,6 +263,7 @@ const ACPI_PREDEFINED_NAMES     AcpiGbl_PreDefinedNames[] =
 #if !defined (ACPI_NO_METHOD_EXECUTION) || defined (ACPI_CONSTANT_EVAL_ONLY)
     {"_OSI",    ACPI_TYPE_METHOD,           (char *) 1},
 #endif
+
 
     /* Table terminator */
 
