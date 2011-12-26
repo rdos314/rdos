@@ -250,7 +250,6 @@ ACPI_EXPORT_SYMBOL (AcpiFormatException)
  */
 const ACPI_PREDEFINED_NAMES     AcpiGbl_PreDefinedNames[] =
 {
-    {"_PIC",    ACPI_TYPE_INTEGER,          (char *) 1},
     {"_GPE",    ACPI_TYPE_LOCAL_SCOPE,      NULL},
     {"_PR_",    ACPI_TYPE_LOCAL_SCOPE,      NULL},
     {"_SB_",    ACPI_TYPE_DEVICE,           NULL},
