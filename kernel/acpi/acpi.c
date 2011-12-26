@@ -1483,7 +1483,6 @@ void Load()
     int i;
     ACPI_OBJECT_LIST Params;
     ACPI_OBJECT Obj;
-    ACPI_STATUS Status;
 
     if (Status == 0)
     {
