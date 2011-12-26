@@ -1481,25 +1481,12 @@ void GetIrqRouting()
 void Load()
 {
     int i;
-    ACPI_OBJECT_LIST Params;
-    ACPI_OBJECT Obj;
 
     if (Status == 0)
     {
         Status = AcpiLoadTables();
         if (Status != 0)
             Status |= 0x20000;
-    }
-
-    if (Status == 0)
-    {
-        Params.Count = 1;
-        Params.Pointer = &Obj;
-    
-        Obj.Type = ACPI_TYPE_INTEGER;
-        Obj.Integer.Value = 1;
-
-        AcpiEvaluateObject(NULL, "\\_PIC", &Params, NULL);
     }
 
     if (Status == 0)
