@@ -172,6 +172,8 @@ struct TDeviceEntry
     struct TResourceMemoryFixed32 *FixedMemory32ResourceList;
     struct TResourceAddress16 *Address16ResourceList;
     struct TResourceAddress32 *Address32ResourceList;
+    struct TResourceIrq *PossibleIrqResourceList;
+    struct TResourceExtendedIrq *PossibleExtendedIrqResourceList;
 
 };
 
@@ -1166,6 +1168,61 @@ void AddResource(struct TDeviceEntry *DevEntry, int size)
 
 /*##########################################################################
 #
+#   Name       : AddPossibleResource
+#
+#   Purpose....: Add a possible resource entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddPossibleResource(struct TDeviceEntry *DevEntry, int size)
+{
+    int CopyLen;
+    int AllocLen;
+    char *ptr;
+    ACPI_RESOURCE *Resource;
+    struct TResourceIrq *IrqResource;
+    struct TResourceExtendedIrq *ExtendedIrqResource;
+    
+    ptr = &TempResourceBuf;
+    Resource = (ACPI_RESOURCE *)ptr;
+
+    while (size > 0)
+    {            
+        CopyLen = Resource->Length - 2 * sizeof(UINT32);
+        if (CopyLen > 0 && CopyLen < 0x1000)
+        {
+            AllocLen = sizeof(struct TResourceBase) + CopyLen; 
+            switch (Resource->Type)
+            {
+                case ACPI_RESOURCE_TYPE_IRQ:
+                    IrqResource = (struct TResourceIrq *)AcpiOsAllocate(AllocLen);
+                    memcpy(&IrqResource->Data, &Resource->Data, CopyLen);
+                    IrqResource->Next = DevEntry->PossibleIrqResourceList;
+                    DevEntry->PossibleIrqResourceList = IrqResource;
+                    break;
+                            
+                case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
+                    ExtendedIrqResource = (struct TResourceExtendedIrq *)AcpiOsAllocate(AllocLen);
+                    memcpy(&ExtendedIrqResource->Data, &Resource->Data, CopyLen);
+                    ExtendedIrqResource->Next = DevEntry->PossibleExtendedIrqResourceList;
+                    DevEntry->PossibleExtendedIrqResourceList = ExtendedIrqResource;
+                    break;
+                            
+                default:
+                    break;
+            }
+        }
+        size -= Resource->Length;
+        ptr += Resource->Length;
+        Resource = (ACPI_RESOURCE *)ptr;        
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : GetHardware
 #
 #   Purpose....: Get hardware devices
@@ -1223,6 +1280,15 @@ void GetHardware()
                 if (Status == AE_OK)
                 {
                     AddResource(DevEntry, Buffer.Length);
+
+                    Buffer.Length = 0x4000;
+                    Buffer.Pointer = TempResourceBuf;
+
+                    Status = AcpiGetPossibleResources(DevEntry->Handle, &Buffer);
+
+                    if (Status == AE_OK)
+                        AddPossibleResource(DevEntry, Buffer.Length);
+
                     HardwareArr[HardwareCount] = DevEntry;
                     HardwareCount++;
                 }
