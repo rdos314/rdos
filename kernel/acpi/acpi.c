@@ -214,7 +214,7 @@ void __far ImplTestGate(const char *msg)
     Obj.Type = ACPI_TYPE_INTEGER;
     Obj.Integer.Value = 1;
 
-    Status = AcpiEvaluateObject(NULL, "_PIC", &Params, NULL);
+    Status = AcpiEvaluateObject(NULL, "\\_PIC", &Params, NULL);
 
     Load();
 }
