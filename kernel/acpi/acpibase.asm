@@ -723,6 +723,34 @@ get_pci_device_info Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetPicMode
+;
+;           DESCRIPTION:    Get PIC mode
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetPicMode_
+
+GetPicMode_    Proc near
+    mov eax,apic_code_sel
+    verr ax
+    jz gpmApic
+;
+    xor eax,eax
+    jmp gpmDone
+
+gpmApic:
+    mov eax,1
+
+gpmDone:        
+    ret
+GetPicMode_    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitAcpiTables
 ;
 ;           DESCRIPTION:    Initialize ACPI tables

@@ -123,6 +123,8 @@
 #include "acdebug.h"
 #include "actables.h"
 
+extern int GetPicMode();
+
 #define _COMPONENT          ACPI_UTILITIES
         ACPI_MODULE_NAME    ("utxface")
 
@@ -310,7 +312,7 @@ AcpiEnableSubsystem (
     Params.Pointer = &Obj;
     
     Obj.Type = ACPI_TYPE_INTEGER;
-    Obj.Integer.Value = 1;
+    Obj.Integer.Value = GetPicMode();
 
     AcpiEvaluateObject(NULL, "\\_PIC", &Params, NULL);
 
