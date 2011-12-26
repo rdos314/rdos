@@ -143,6 +143,7 @@
  * below.  Therefore, change this string at your own risk.
  */
 #define ACPI_OS_NAME                    "Microsoft Windows NT"
+#define ACPI_CREATE_PREDEFINED_TABLE
 
 /* Maximum objects in the various object caches */
 
