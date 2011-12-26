@@ -35,6 +35,7 @@
 #include "acobject.h"
 #include "acstruct.h"
 #include "acutils.h"
+#include "acglobal.h"
 
 #include <stdio.h>
 
@@ -214,7 +215,7 @@ void __far ImplTestGate(const char *msg)
     Obj.Type = ACPI_TYPE_INTEGER;
     Obj.Integer.Value = 1;
 
-    Status = AcpiEvaluateObject(NULL, "\\_PIC", &Params, NULL);
+    Status = AcpiEvaluateObject(AcpiGbl_RootNode, "_PIC", &Params, NULL);
 
     Load();
 }
