@@ -2430,7 +2430,7 @@ GetPciDeviceInfo      MACRO
 	                ENDM
 
 ;   IN  EAX         PCI device #
-;   IN  DL          Pin #
+;   IN  EDX         Pin #
 ;   OUT AL          IRQ #
 GetPciDeviceIrq      MACRO
 	OsGate get_pci_device_irq_nr

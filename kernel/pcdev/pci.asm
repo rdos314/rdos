@@ -1155,7 +1155,7 @@ apdLoop:
     pop eax
 ;
     push eax
-    mov dl,es:epci_line
+    movzx edx,es:epci_line
     GetPciDeviceIrq
     mov es:epci_irq,al    
     jmp apdDone
