@@ -1493,6 +1493,13 @@ void Load()
 
     if (Status == 0)
     {
+        Status = AcpiEnableSubsystem(ACPI_FULL_INITIALIZATION);
+        if (Status != 0)
+            Status |= 0x30000;
+    }
+
+    if (Status == 0)
+    {
         Params.Count = 1;
         Params.Pointer = &Obj;
     
@@ -1500,13 +1507,6 @@ void Load()
         Obj.Integer.Value = 1;
 
         Status = AcpiEvaluateObject(NULL, "\\_PIC", &Params, NULL);
-    }
-
-    if (Status == 0)
-    {
-        Status = AcpiEnableSubsystem(ACPI_FULL_INITIALIZATION);
-        if (Status != 0)
-            Status |= 0x30000;
     }
 
     if (Status == 0)
