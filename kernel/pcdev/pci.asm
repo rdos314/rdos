@@ -1230,6 +1230,7 @@ get_pci_dev_name16  Proc far
     mov si,SEG data
     mov ds,si
     cmp ax,ds:ext_pci_dev_count
+    cmc
     jc gpdn16_done
 ;
     mov si,ax
@@ -1262,6 +1263,7 @@ get_pci_dev_name32  Proc far
     mov si,SEG data
     mov ds,si
     cmp ax,ds:ext_pci_dev_count
+    cmc
     jc gpdn32_done
 ;
     mov si,ax
@@ -1309,6 +1311,7 @@ get_pci_dev_info    Proc far
     mov si,SEG data
     mov ds,si
     cmp ax,ds:ext_pci_dev_count
+    cmc
     jc gpdi_done
 ;
     mov si,ax
@@ -1348,6 +1351,7 @@ get_pci_dev_vendor    Proc far
     mov si,SEG data
     mov ds,si
     cmp ax,ds:ext_pci_dev_count
+    cmc
     jc gpdv_done
 ;
     mov si,ax
@@ -1386,6 +1390,7 @@ get_pci_dev_class    Proc far
     mov si,SEG data
     mov ds,si
     cmp ax,ds:ext_pci_dev_count
+    cmc
     jc gpdc_done
 ;
     mov si,ax
@@ -1422,6 +1427,7 @@ get_pci_dev_irq    Proc far
     mov si,SEG data
     mov ds,si
     cmp ax,ds:ext_pci_dev_count
+    cmc
     jc gpdirq_done
 ;
     mov si,ax
