@@ -120,7 +120,7 @@ void TPciCommand::ShowDevices()
         if (ok)
         {
             while (strlen(AcpiName) < 30)
-                strcpy(AcpiName, " ");
+                strcat(AcpiName, " ");
             Write(AcpiName);
         
             RdosGetPciDeviceInfo(DevNr, &Bus, &Device, &Function);
