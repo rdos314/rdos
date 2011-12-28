@@ -55,6 +55,7 @@ ext_pci_struc  STRUC
 
 epci_vendor_id  DW ?
 epci_device_id  DW ?
+epci_class      DW ?
 epci_bus        DB ?
 epci_device     DB ?
 epci_function   DB ?
@@ -1148,6 +1149,15 @@ apdLoop:
     mov es:epci_acpi_index,eax    
     mov edi,OFFSET epci_acpi_name
     GetPciDeviceName
+;    
+    mov cl,PCI_subclass
+    ReadPciByte
+    mov dl,al
+    mov cl,PCI_classcode
+    ReadPciByte
+    mov ah,al
+    mov al,dl
+    mov es:epci_class,ax
 ;    
     mov cl,PCI_interrupt_line    
     ReadPciByte
