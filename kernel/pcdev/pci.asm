@@ -1092,7 +1092,7 @@ AddPciDevice    Proc near
     mov ah,bl
     shl ah,3
     or ah,ch
-    mov al,cl
+    xor al,al
 ;
     mov si,OFFSET pci_device_arr
     mov cx,MAX_PCI_DEVICES
