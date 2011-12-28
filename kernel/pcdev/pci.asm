@@ -1468,6 +1468,10 @@ test_get_pci_device_loop:
     GetAcpiPciDeviceInfo
     jc test_get_pci_device_done
 ;
+    cmp eax,4
+    jne test_not_break
+    int 3
+test_not_break:     
     call AddPciDevice
     inc eax
     jmp test_get_pci_device_loop
