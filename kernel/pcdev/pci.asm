@@ -1071,37 +1071,6 @@ init_pci_thread Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           Init_pci
-;
-;           DESCRIPTION:    Create hook thread
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_pci    Proc far
-    push ds
-    push es
-    pushad
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov si,OFFSET init_pci_thread
-    mov di,OFFSET init_pci_thread_name
-    mov ax,3
-    mov cx,stack0_size
-    CreateThread
-;
-    popad
-    pop es
-    pop ds
-    retf32
-init_pci    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           AddPciDevice
 ;
 ;           DESCRIPTION:    Add PCI device from ACPI
@@ -1190,17 +1159,15 @@ AddPciDevice    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           Test gate
+;           NAME:           Init_pci
 ;
-;           DESCRIPTION:    Test gate
+;           DESCRIPTION:    Create hook thread
 ;
 ;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-test_pr_name DB 'Test Gate', 0
-
-test_pr    Proc far
+init_pci    Proc far
     push ds
     push es
     pushad
@@ -1218,6 +1185,140 @@ get_pci_device_loop:
     jmp get_pci_device_loop
     
 get_pci_device_done:
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov si,OFFSET init_pci_thread
+    mov di,OFFSET init_pci_thread_name
+    mov ax,3
+    mov cx,stack0_size
+    CreateThread
+;
+    popad
+    pop es
+    pop ds
+    retf32
+init_pci    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetPciDevName16/32
+;
+;           DESCRIPTION:    Get PCI device name
+;
+;           PARAMETERS:     AX          Index
+;                           ES:(E)DI    Name buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_dev_name DB 'Get PCI Device Name', 0
+
+get_pci_dev_name16  Proc far
+    retf32
+get_pci_dev_name16  Endp
+
+get_pci_dev_name32  Proc far
+    retf32
+get_pci_dev_name32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetPciDevInfo
+;
+;           DESCRIPTION:    Get PCI device info
+;
+;           PARAMETERS:     AX          Index
+;
+;           RETURNS:        BH          Bus
+;                           BL          Device
+;                           CH          Function
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_dev_info_name DB 'Get PCI Device Info', 0
+
+get_pci_dev_info    Proc far
+    retf32
+get_pci_dev_info    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetPciDevVendor
+;
+;           DESCRIPTION:    Get PCI device vendor & device
+;
+;           PARAMETERS:     AX          Index
+;
+;           RETURNS:        AX          Vendor ID
+;                           DX          Device ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_dev_vendor_name DB 'Get PCI Device Vendor', 0
+
+get_pci_dev_vendor    Proc far
+    retf32
+get_pci_dev_vendor    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetPciDevClass
+;
+;           DESCRIPTION:    Get PCI device class
+;
+;           PARAMETERS:     AX          Index
+;
+;           RETURNS:        AH          Class
+;                           AL          Sub-class
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_dev_class_name DB 'Get PCI Device Class', 0
+
+get_pci_dev_class    Proc far
+    retf32
+get_pci_dev_class    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetPciDevIrq
+;
+;           DESCRIPTION:    Get PCI device IRQ
+;
+;           PARAMETERS:     AX          Index
+;
+;           RETURNS:        AL          IRQ
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_dev_irq_name DB 'Get PCI Device IRQ', 0
+
+get_pci_dev_irq    Proc far
+    retf32
+get_pci_dev_irq    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Test gate
+;
+;           DESCRIPTION:    Test gate
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_pr_name DB 'Test Gate', 0
+
+test_pr    Proc far
+    push ds
+    push es
+    pushad
     popad
     pop es
     pop ds
@@ -1325,6 +1426,37 @@ init    Proc far
     xor cl,cl
     mov ax,find_pci_cap_nr
     RegisterOsGate
+;
+    mov ebx,OFFSET get_pci_dev_name16
+    mov esi,OFFSET get_pci_dev_name32
+    mov edi,OFFSET get_pci_dev_name
+    mov dx,virt_es_in
+    mov ax,get_pci_device_name_nr
+    RegisterUserGate
+;
+    mov esi,OFFSET get_pci_dev_info
+    mov edi,OFFSET get_pci_dev_info_name
+    xor dx,dx
+    mov ax,get_pci_device_info_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_pci_dev_vendor
+    mov edi,OFFSET get_pci_dev_vendor_name
+    xor dx,dx
+    mov ax,get_pci_device_vendor_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_pci_dev_class
+    mov edi,OFFSET get_pci_dev_class_name
+    xor dx,dx
+    mov ax,get_pci_device_class_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_pci_dev_irq
+    mov edi,OFFSET get_pci_dev_irq_name
+    xor dx,dx
+    mov ax,get_pci_device_irq_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET test_pr
     mov edi,OFFSET test_pr_name
