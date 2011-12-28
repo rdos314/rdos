@@ -1151,6 +1151,13 @@ apdLoop:
 ;    
     mov cl,PCI_interrupt_line    
     ReadPciByte
+;
+    cmp al,4
+    jc apdLineOk
+;    
+    xor al,al
+
+apdLineOk:
     mov es:epci_line,al
     pop eax
 ;
@@ -1162,7 +1169,8 @@ apdLoop:
 
 apdNext: 
     add si,8
-    loop apdLoop   
+    sub cx,1
+    jnz apdLoop   
 
 apdDone:    
     pop eax

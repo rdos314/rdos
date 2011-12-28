@@ -87,7 +87,7 @@ void cdecl main()
 
     TDataStore *DataStore;
 
-    Node = 0x2800A8C0;
+    Node = 0x4601A8C0;
 
     for (i = 0; i < 10; i++)
     {
@@ -105,7 +105,7 @@ void cdecl main()
 
      for (;;)
      {
-          socket = new TSocket(0x2800A8C0, 601, 600000, 0x4000);
+          socket = new TSocket(0x4601A8C0, 601, 600000, 0x4000);
           socket->WaitForConnection(600000);
 
           while (socket->IsOpen())

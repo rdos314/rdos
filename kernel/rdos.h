@@ -812,49 +812,6 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     parm [eax] [edx] [esi] [edi] \
     value [eax];
 
-#pragma aux RdosGetPciDeviceName = \
-    CallGate_get_pci_device_name  \
-    CarryToBool \
-    parm [eax] [edi] \
-    value [eax];
-
-#pragma aux RdosGetPciDeviceInfo = \
-    "push ecx" \
-    "push ebx" \
-    "push esi" \
-    CallGate_get_pci_device_info  \
-    "jc Fail" \
-    "movzx eax,bh" \
-    "pop esi" \
-    "mov [esi],eax" \
-    "movzx eax,bl" \
-    "pop ebx" \
-    "mov [ebx],eax" \
-    "movzx eax,ch" \
-    "pop ecx" \
-    "mov [ecx],eax" \
-    "mov eax,1" \
-    "jmp Done" \
-    "Fail:" \
-    "pop esi" \
-    "pop ebx" \
-    "pop ecx" \
-    "xor eax,eax" \
-    "Done:" \
-    parm [eax] [esi] [ebx] [ecx] \
-    value [eax];
-
-#pragma aux RdosGetPciDeviceIrq = \
-    CallGate_get_pci_device_irq  \
-    "jc Fail" \
-    "movzx eax,al" \
-    "jmp Done" \
-    "Fail:" \
-    "mov eax,-1" \
-    "Done:" \
-    parm [eax] [edx] \
-    value [eax];
-
 #pragma aux RdosGetCpuTemperature = \
     CallGate_get_cpu_temperature  \
     "jnc TempDone" \
