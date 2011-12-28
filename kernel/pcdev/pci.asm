@@ -1459,6 +1459,20 @@ test_pr    Proc far
     push ds
     push es
     pushad
+;
+    mov ax,SEG data
+    mov ds,ax    
+    xor eax,eax
+
+test_get_pci_device_loop:
+    GetAcpiPciDeviceInfo
+    jc test_get_pci_device_done
+;
+    call AddPciDevice
+    inc eax
+    jmp test_get_pci_device_loop
+    
+test_get_pci_device_done:
     popad
     pop es
     pop ds
