@@ -1456,30 +1456,6 @@ get_pci_dev_irq    Endp
 test_pr_name DB 'Test Gate', 0
 
 test_pr    Proc far
-    push ds
-    push es
-    pushad
-;
-    mov ax,SEG data
-    mov ds,ax    
-    xor eax,eax
-
-test_get_pci_device_loop:
-    GetAcpiPciDeviceInfo
-    jc test_get_pci_device_done
-;
-    cmp eax,4
-    jne test_not_break
-    int 3
-test_not_break:     
-    call AddPciDevice
-    inc eax
-    jmp test_get_pci_device_loop
-    
-test_get_pci_device_done:
-    popad
-    pop es
-    pop ds
     retf32 
 test_pr Endp   
 
