@@ -482,9 +482,9 @@
 #define osgate_request_msi_handler 410
 #define osgate_free_msi_int 411
 
-#define osgate_get_pci_device_name 412
-#define osgate_get_pci_device_info 413
-#define osgate_get_pci_device_irq 414
+#define osgate_get_acpi_pci_device_name 412
+#define osgate_get_acpi_pci_device_info 413
+#define osgate_get_acpi_pci_device_irq 414
 
 
 
@@ -972,7 +972,7 @@
 #define OsGate_request_msi_handler 0x3E 0x67 0x9a 154 1 0 0 2 0
 #define OsGate_free_msi_int 0x3E 0x67 0x9a 155 1 0 0 2 0
 
-#define OsGate_get_pci_device_name 0x3E 0x67 0x9a 156 1 0 0 2 0
-#define OsGate_get_pci_device_info 0x3E 0x67 0x9a 157 1 0 0 2 0
-#define OsGate_get_pci_device_irq 0x3E 0x67 0x9a 158 1 0 0 2 0
+#define OsGate_get_acpi_pci_device_name 0x3E 0x67 0x9a 156 1 0 0 2 0
+#define OsGate_get_acpi_pci_device_info 0x3E 0x67 0x9a 157 1 0 0 2 0
+#define OsGate_get_acpi_pci_device_irq 0x3E 0x67 0x9a 158 1 0 0 2 0
 

@@ -1148,7 +1148,7 @@ apdLoop:
     push eax    
     mov es:epci_acpi_index,eax    
     mov edi,OFFSET epci_acpi_name
-    GetPciDeviceName
+    GetAcpiPciDeviceName
 ;    
     mov cl,PCI_subclass
     ReadPciByte
@@ -1173,7 +1173,7 @@ apdLineOk:
 ;
     push eax
     movzx edx,es:epci_line
-    GetPciDeviceIrq
+    GetAcpiPciDeviceIrq
     mov es:epci_irq,al    
     jmp apdDone
 
@@ -1210,7 +1210,7 @@ test_pr    Proc far
     xor eax,eax
 
 get_pci_device_loop:
-    GetPciDeviceInfo
+    GetAcpiPciDeviceInfo
     jc get_pci_device_done
 ;
     call AddPciDevice

@@ -482,8 +482,8 @@ allocate_msi_ints_nr        = 409
 request_msi_handler_nr      = 410
 free_msi_int_nr             = 411
 
-get_pci_device_name_nr      = 412
-get_pci_device_info_nr      = 413
-get_pci_device_irq_nr       = 414
+get_acpi_pci_device_name_nr = 412
+get_acpi_pci_device_info_nr = 413
+get_acpi_pci_device_irq_nr  = 414
 
 osgate_entries				= 420

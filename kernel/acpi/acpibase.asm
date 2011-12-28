@@ -817,7 +817,7 @@ acpi_load_save:
     mov esi,OFFSET get_pci_device_info
     mov edi,OFFSET get_pci_device_info_name
     xor dx,dx
-    mov ax,get_pci_device_info_nr
+    mov ax,get_acpi_pci_device_info_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_acpi_device_irq

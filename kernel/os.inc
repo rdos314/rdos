@@ -2417,23 +2417,23 @@ GetAcpiTable    MACRO
 
 ;   IN  EAX         PCI device #
 ;   IN  ES:EDI      ACPI name buffer
-GetPciDeviceName      MACRO
-	OsGate get_pci_device_name_nr
+GetAcpiPciDeviceName      MACRO
+	OsGate get_acpi_pci_device_name_nr
 	                ENDM
 
 ;   IN  EAX         PCI device #
 ;   OUT BH          Bus
 ;   OUT BL          Device
 ;   OUT CH          Function
-GetPciDeviceInfo      MACRO
-	OsGate get_pci_device_info_nr
+GetAcpiPciDeviceInfo      MACRO
+	OsGate get_acpi_pci_device_info_nr
 	                ENDM
 
 ;   IN  EAX         PCI device #
 ;   IN  EDX         Pin #
 ;   OUT AL          IRQ #
-GetPciDeviceIrq      MACRO
-	OsGate get_pci_device_irq_nr
+GetAcpiPciDeviceIrq      MACRO
+	OsGate get_acpi_pci_device_irq_nr
 	                ENDM
 
 ;;;;;;;;;; Com port ;;;;;;;;;

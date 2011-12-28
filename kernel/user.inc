@@ -2836,6 +2836,40 @@ GetAcpiDeviceMem      MACRO
 	UserGate get_acpi_device_mem_nr
 	                ENDM
 
+;   IN  EAX         PCI device #
+;   IN  ES:EDI      ACPI name buffer
+GetPciDeviceName      MACRO
+	UserGate get_pci_device_name_nr
+	                ENDM
+
+;   IN  EAX         PCI device #
+;   OUT BH          Bus
+;   OUT BL          Device
+;   OUT CH          Function
+GetPciDeviceInfo      MACRO
+	UserGate get_pci_device_info_nr
+	                ENDM
+
+;   IN  EAX         PCI device #
+;   OUT AX          Vendor ID
+;   OUT DX          Device ID
+GetPciDeviceVendor      MACRO
+	UserGate get_pci_device_vendor_nr
+	                ENDM
+
+;   IN  EAX         PCI device #
+;   OUT AH          Class
+;   OUT AL          Sub class
+GetPciDeviceClass      MACRO
+	UserGate get_pci_device_class_nr
+	                ENDM
+
+;   IN  EAX         PCI device #
+;   OUT AL          IRQ #
+GetPciDeviceIrq      MACRO
+    UserGate get_pci_device_irq_nr
+	                ENDM
+
 ;   OUT EAX         Temperature in tenth of degrees Kelvin
 GetCpuTemperature      MACRO
 	UserGate get_cpu_temperature_nr
