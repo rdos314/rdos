@@ -102,37 +102,34 @@ void TPciCommand::ShowDevices()
     char AcpiName[128];
     char Str[100];
     int DevNr;
-    int Pin;
-    int Irq;
     int Bus;
     int Device;
     int Function;
+    int VendorID;
+    int DeviceID;
+    int Class;
+    int SubClass;
+    int Irq;
+
+    Write("ACPI Name                     ");
+    Write("Vendor/dev Class Bus Dev Func IRQ\r\n");
     
     for (DevNr = 0; DevNr < 0x1000; DevNr++)
     {
         ok = RdosGetPciDeviceName(DevNr, AcpiName);
         if (ok)
         {
+            while (strlen(AcpiName) < 30)
+                strcpy(AcpiName, " ");
             Write(AcpiName);
+        
             RdosGetPciDeviceInfo(DevNr, &Bus, &Device, &Function);
-            sprintf(Str, ", Bus: %d, Device: %d, Function: %d", Bus, Device, Function);
+            RdosGetPciDeviceVendor(DevNr, &VendorID, &DeviceID);
+            RdosGetPciDeviceClass(DevNr, &Class, &SubClass);            
+            Irq = RdosGetPciDeviceIrq(DevNr);
+            
+            sprintf(Str, "%04hX %04hX  %02d%02d   %03d %03d %03d  %03d\r\n", VendorID, DeviceID, Class, SubClass, Bus, Device, Function, Irq);
             Write(Str);
-
-            for (Pin = 0; Pin < 4; Pin++)
-            {
-                Irq = RdosGetPciDeviceIrq(DevNr, Pin);
-                if (Irq >= 0)
-                {
-                    if (Pin == 0)
-                        Write(", IRQ: ");
-
-                    sprintf(Str, "%d", Irq);
-                    Write(Str);
-                    if (Pin != 3)
-                        Write(", ");
-                }
-            }
-            Write("\r\n");
         }
         else
             break;

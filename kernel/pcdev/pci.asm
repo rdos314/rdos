@@ -77,7 +77,7 @@ pci_init_hook_arr       DD 32 DUP(?,?)
 pci_device_arr      DD MAX_PCI_DEVICES DUP(?,?)
 
 ext_pci_dev_count   DW ?    
-ext_pci_device_arr  DW MAX_PCI_DEVICES DUP(?)
+ext_pci_dev_arr     DW MAX_PCI_DEVICES DUP(?)
 
 data    ENDS
 
@@ -1144,6 +1144,13 @@ apdLineOk:
     movzx edx,es:epci_line
     GetAcpiPciDeviceIrq
     mov es:epci_irq,al    
+;    
+    mov si,OFFSET ext_pci_dev_arr
+    mov ax,ds:ext_pci_dev_count
+    add ax,ax
+    add si,ax
+    mov [si],es
+    inc ds:ext_pci_dev_count
     jmp apdDone
 
 apdNext: 
@@ -1215,10 +1222,66 @@ init_pci    Endp
 get_pci_dev_name DB 'Get PCI Device Name', 0
 
 get_pci_dev_name16  Proc far
+    push ds
+    push ax
+    push si
+    push di
+;   
+    mov si,SEG data
+    mov ds,si
+    cmp ax,ds:ext_pci_dev_count
+    jc gpdn16_done
+;
+    mov si,ax
+    add si,si
+    mov ds,ds:[si].ext_pci_dev_arr
+    mov si,OFFSET epci_acpi_name
+
+gpdn16_loop:
+    lodsb
+    stosb
+    or al,al
+    jnz gpdn16_loop
+;
+    clc
+    
+gpdn16_done:
+    pop di
+    pop si
+    pop ax
+    pop ds
     retf32
 get_pci_dev_name16  Endp
 
 get_pci_dev_name32  Proc far
+    push ds
+    push ax
+    push si
+    push edi
+;   
+    mov si,SEG data
+    mov ds,si
+    cmp ax,ds:ext_pci_dev_count
+    jc gpdn32_done
+;
+    mov si,ax
+    add si,si
+    mov ds,ds:[si].ext_pci_dev_arr
+    mov si,OFFSET epci_acpi_name
+
+gpdn32_loop:
+    lodsb
+    stos byte ptr es:[edi]
+    or al,al
+    jnz gpdn32_loop
+;
+    clc
+    
+gpdn32_done:
+    pop edi
+    pop si
+    pop ax
+    pop ds
     retf32
 get_pci_dev_name32  Endp
 
@@ -1240,6 +1303,25 @@ get_pci_dev_name32  Endp
 get_pci_dev_info_name DB 'Get PCI Device Info', 0
 
 get_pci_dev_info    Proc far
+    push ds
+    push si
+;   
+    mov si,SEG data
+    mov ds,si
+    cmp ax,ds:ext_pci_dev_count
+    jc gpdi_done
+;
+    mov si,ax
+    add si,si
+    mov ds,ds:[si].ext_pci_dev_arr
+    mov bh,ds:epci_bus
+    mov bl,ds:epci_device
+    mov ch,ds:epci_function
+    clc
+
+gpdi_done:
+    pop si
+    pop ds    
     retf32
 get_pci_dev_info    Endp
 
@@ -1260,6 +1342,24 @@ get_pci_dev_info    Endp
 get_pci_dev_vendor_name DB 'Get PCI Device Vendor', 0
 
 get_pci_dev_vendor    Proc far
+    push ds
+    push si
+;   
+    mov si,SEG data
+    mov ds,si
+    cmp ax,ds:ext_pci_dev_count
+    jc gpdv_done
+;
+    mov si,ax
+    add si,si
+    mov ds,ds:[si].ext_pci_dev_arr
+    mov ax,ds:epci_vendor_id
+    mov dx,ds:epci_device_id
+    clc
+
+gpdv_done:
+    pop si
+    pop ds    
     retf32
 get_pci_dev_vendor    Endp
 
@@ -1280,6 +1380,23 @@ get_pci_dev_vendor    Endp
 get_pci_dev_class_name DB 'Get PCI Device Class', 0
 
 get_pci_dev_class    Proc far
+    push ds
+    push si
+;   
+    mov si,SEG data
+    mov ds,si
+    cmp ax,ds:ext_pci_dev_count
+    jc gpdc_done
+;
+    mov si,ax
+    add si,si
+    mov ds,ds:[si].ext_pci_dev_arr
+    mov ax,ds:epci_class
+    clc
+
+gpdc_done:
+    pop si
+    pop ds    
     retf32
 get_pci_dev_class    Endp
 
@@ -1299,6 +1416,23 @@ get_pci_dev_class    Endp
 get_pci_dev_irq_name DB 'Get PCI Device IRQ', 0
 
 get_pci_dev_irq    Proc far
+    push ds
+    push si
+;   
+    mov si,SEG data
+    mov ds,si
+    cmp ax,ds:ext_pci_dev_count
+    jc gpdirq_done
+;
+    mov si,ax
+    add si,si
+    mov ds,ds:[si].ext_pci_dev_arr
+    mov al,ds:epci_irq
+    clc
+
+gpdirq_done:
+    pop si
+    pop ds    
     retf32
 get_pci_dev_irq    Endp
 
@@ -1345,6 +1479,7 @@ init    Proc far
     mov di,OFFSET pci_device_arr
     rep stosd
     mov ds:pci_init_hooks,0
+    mov ds:ext_pci_dev_count,0
     InitSpinlock ds:pci_spinlock
 ;
     call init_pci_devices
