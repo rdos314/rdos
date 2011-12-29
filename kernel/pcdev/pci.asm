@@ -59,7 +59,7 @@ epci_class      DW ?
 epci_bus        DB ?
 epci_device     DB ?
 epci_function   DB ?
-epci_line       DB ?
+epci_pin        DB ?
 epci_irq        DB ?
 
 epci_acpi_index DD ?
@@ -1095,7 +1095,7 @@ AddPciDevice    Proc near
     xor al,al
 ;
     mov si,OFFSET pci_device_arr
-    mov cx,MAX_PCI_DEVICES
+    mov di,MAX_PCI_DEVICES
 
 apdLoop:
     mov edx,[si+4]
@@ -1128,34 +1128,32 @@ apdLoop:
     mov al,dl
     mov es:epci_class,ax
 ;    
-    mov cl,PCI_interrupt_line    
+    mov cl,PCI_interrupt_pin
     ReadPciByte
+    mov es:epci_pin,al
+    mov es:epci_irq,0
+    or al,al
+    jz apdNoInt
 ;
-    cmp al,4
-    jc apdLineOk
-;    
-    xor al,al
-
-apdLineOk:
-    mov es:epci_line,al
     pop eax
-;
     push eax
-    movzx edx,es:epci_line
+    movzx edx,es:epci_pin
+    dec edx
     GetAcpiPciDeviceIrq
-    mov es:epci_irq,al    
-;    
+    mov es:epci_irq,al
+
+apdNoInt:    
     mov si,OFFSET ext_pci_dev_arr
     mov ax,ds:ext_pci_dev_count
     add ax,ax
     add si,ax
-    mov [si],es
+    mov ds:[si],es
     inc ds:ext_pci_dev_count
     jmp apdDone
 
 apdNext: 
     add si,8
-    sub cx,1
+    sub di,1
     jnz apdLoop   
 
 apdDone:    
