@@ -2699,6 +2699,8 @@ CheckPciIde Proc near
 ;
     mov si,ax
     GetPciIrqNr
+    jc cpiBar1Done
+;    
     call CheckPciBar
 
 cpiBar1Done:
@@ -2715,6 +2717,8 @@ cpiBar1Done:
 ;
     mov si,ax
     GetPciIrqNr
+    jc cpiBar3Done
+;    
     call CheckPciBar
 
 cpiBar3Done:
@@ -2745,6 +2749,8 @@ cpiLoop:
 ;
     mov si,ax
     GetPciIrqNr
+    jc cpiNextBar1Done
+;    
     call CheckPciBar    
 
 cpiNextBar1Done:
@@ -2761,6 +2767,8 @@ cpiNextBar1Done:
 ;
     mov si,ax
     GetPciIrqNr
+    jc cpiNextBar3Done
+;    
     call CheckPciBar
 
 cpiNextBar3Done:    

@@ -2192,6 +2192,9 @@ request_shared_irq_handler      Proc far
     push ds
     pusha
 ;
+    cmp al,32
+    jae rsih_done
+;    
     mov dx,ds
     movzx bx,al
     mov ax,irq_sys_sel
@@ -2246,7 +2249,8 @@ rsih_add:
     mov ds:[bx].sh_user_data,dx
     inc cx
     mov ds:share_count,cx
-;
+
+rsih_done:
     popa
     pop ds
     retf32

@@ -2539,6 +2539,14 @@ init_apic_ioapic:
     CreateDataSelector16
     mov ax,bx
 ;
+    push ds
+    mov ds,ax
+    mov ds:ioapic_regsel,1
+    mov ecx,ds:ioapic_window
+    shr ecx,16
+    inc cx
+    pop ds
+;    
     mov bx,ds:ioapic_count
     add bx,bx
     mov ds:[bx].ioapic_arr,ax
@@ -2547,7 +2555,6 @@ init_apic_ioapic:
     mov ebx,es:[di].aio_int_base
     shl bx,2
     add bx,OFFSET global_int_arr
-    mov cx,24
     xor dl,dl
 
 init_ioapic_loop:
