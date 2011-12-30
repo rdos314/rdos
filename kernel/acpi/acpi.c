@@ -1345,11 +1345,11 @@ ACPI_STATUS AddPciObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, void
                     PciDevCount++;
 
                     PciVal = 0;
-                    AcpiOsReadPciConfiguration(&DeviceArr[i]->PciId, 10, &PciVal, 2);
+                    AcpiOsReadPciConfiguration(&DeviceArr[i]->PciId, 10, &PciVal, 16);
                     if (PciVal == 0x604)
                     {
                         PciVal = 0;
-                        AcpiOsReadPciConfiguration(&DeviceArr[i]->PciId, 25, &PciVal, 1);
+                        AcpiOsReadPciConfiguration(&DeviceArr[i]->PciId, 25, &PciVal, 8);
                         DeviceArr[i]->SecondaryBus = PciVal;
                         
                         PciRootArr[PciRootCount] = DeviceArr[i];
