@@ -265,11 +265,20 @@ void __far ImplGetPciDeviceName(int Index, char *AcpiName)
     if (Index < PciDevCount)
     {
         DevEntry = PciDevArr[Index];
-        Buffer.Length = 128;
-        Buffer.Pointer = AcpiName;
-        Status = AcpiGetName(DevEntry->Handle, ACPI_FULL_PATHNAME, &Buffer);
-        if (Status == AE_OK)
+
+        if (DevEntry->Handle)
+        {
+            Buffer.Length = 128;
+            Buffer.Pointer = AcpiName;
+            Status = AcpiGetName(DevEntry->Handle, ACPI_FULL_PATHNAME, &Buffer);
+            if (Status == AE_OK)
+                ok = TRUE;
+        }
+        else
+        {
+            *AcpiName = 0;
             ok = TRUE;
+        }
     }
 
     if (ok)
@@ -1406,12 +1415,15 @@ void GetIrqRouting()
     struct TDeviceEntry *PciDev;
     struct TDeviceEntry *LnkDev;
     struct TResourceIrq *IrqEntry;
+    struct TDeviceEntry *TargDev;
     struct TResourceExtendedIrq *ExtIrqEntry;
     ACPI_PCI_ROUTING_TABLE *RouteEntry;
     ACPI_HANDLE Object;
     char *ptr;
     int i;
     int j;
+    int k;
+    int Bus;
     int Device;
     int Pin;
     int Irq;
@@ -1421,6 +1433,8 @@ void GetIrqRouting()
         DevEntry = PciRootArr[i];
         if (DevEntry)
         {        
+            Bus = DevEntry->SecondaryBus;
+            
             Buffer.Length = 0x4000;
             Buffer.Pointer = TempResourceBuf;
             Status = AcpiGetIrqRoutingTable(DevEntry->Handle, &Buffer);
@@ -1476,13 +1490,55 @@ void GetIrqRouting()
 
                         if (Irq)
                         {
+                            TargDev = 0;
+                            
                             for (j = 0; j < PciDevCount; j++)
                             {
                                 PciDev = PciDevArr[j];
                                 if (PciDev)
-                                    if (PciDev->PciId.Device == Device)
-                                        PciDev->PciIrq[Pin] = Irq;
-                            }                 
+                                {
+                                    if (PciDev->PciId.Bus == Bus && PciDev->PciId.Device == Device)
+                                    {
+                                        TargDev = PciDev;
+                                        break;
+                                    }
+                                }
+                            }       
+
+                            if (!TargDev)
+                            {
+                                TargDev = (struct TDeviceEntry *)AcpiOsAllocate(sizeof(struct TDeviceEntry));
+
+                                for (k = 0; k < 4; k++)
+                                    TargDev->PciIrq[k] = 0;
+
+                                TargDev->AcpiName[0] = 0;
+                                TargDev->Handle = 0;
+                                TargDev->DeviceList = 0;
+                                TargDev->DeviceNext = 0;
+                                TargDev->ObjectList = 0;
+                                TargDev->IsPci = TRUE;
+                                TargDev->DevNr = 0;
+                                TargDev->IrqResourceList = 0;
+                                TargDev->ExtendedIrqResourceList = 0;
+                                TargDev->DmaResourceList = 0;
+                                TargDev->IoResourceList = 0;
+                                TargDev->FixedIoResourceList = 0;
+                                TargDev->Memory24ResourceList = 0;
+                                TargDev->Memory32ResourceList = 0;
+                                TargDev->FixedMemory32ResourceList = 0;
+                                TargDev->Address16ResourceList = 0;
+                                TargDev->Address32ResourceList = 0;
+                                TargDev->PciId.Segment = CurrSegment;
+                                TargDev->PciId.Bus = Bus;
+                                TargDev->PciId.Device = Device;
+                                TargDev->PciId.Function = 0;
+
+                                PciDevArr[PciDevCount] = DeviceArr[i];
+                                PciDevCount++;
+                            }          
+                                    
+                            TargDev->PciIrq[Pin] = Irq;
                         }
                     }
                     ptr +=  RouteEntry->Length;
