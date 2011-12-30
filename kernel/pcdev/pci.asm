@@ -1285,7 +1285,7 @@ get_pci_device_loop:
 get_pci_device_bus_loop:
     inc ch
     call AddPciDevice
-    cmp ch,8
+    cmp ch,7
     jne get_pci_device_bus_loop
     
 get_pci_device_next:
