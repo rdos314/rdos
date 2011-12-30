@@ -1480,7 +1480,8 @@ cpdLoop:
 
 cpdNext:
     add di,2
-    loop cpdLoop
+    sub bp,1
+    jnz cpdLoop
 ;
     int 3
 
