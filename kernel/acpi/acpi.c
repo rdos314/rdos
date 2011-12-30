@@ -1534,7 +1534,7 @@ void GetIrqRouting()
                                 TargDev->PciId.Device = Device;
                                 TargDev->PciId.Function = 0;
 
-                                PciDevArr[PciDevCount] = DeviceArr[i];
+                                PciDevArr[PciDevCount] = TargDev;
                                 PciDevCount++;
                             }          
                                     
