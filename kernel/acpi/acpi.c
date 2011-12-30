@@ -271,7 +271,8 @@ void __far ImplGetPciDeviceName(int Index, char *AcpiName)
         }
         else
         {
-            *AcpiName = 0;
+            strcpy(AcpiName, "PCI-PCI ");
+            strcat(AcpiName, DevEntry->AcpiName);
             ok = TRUE;
         }
     }
@@ -1507,6 +1508,7 @@ void GetIrqRouting()
                                 for (k = 0; k < 4; k++)
                                     TargDev->PciIrq[k] = 0;
 
+                                strcpy(TargDev->AcpiName, DevEntry->AcpiName);
                                 TargDev->AcpiName[0] = 0;
                                 TargDev->Handle = 0;
                                 TargDev->DeviceList = 0;
