@@ -1495,7 +1495,7 @@ void GetIrqRouting()
                                     if (PciDev->PciId.Bus == Bus && PciDev->PciId.Device == Device)
                                     {
                                         TargDev = PciDev;
-                                        break;
+                                        TargDev->PciIrq[Pin] = Irq;
                                     }
                                 }
                             }       
@@ -1528,12 +1528,11 @@ void GetIrqRouting()
                                 TargDev->PciId.Bus = Bus;
                                 TargDev->PciId.Device = Device;
                                 TargDev->PciId.Function = 0;
+                                TargDev->PciIrq[Pin] = Irq;
 
                                 PciDevArr[PciDevCount] = TargDev;
                                 PciDevCount++;
-                            }          
-                                    
-                            TargDev->PciIrq[Pin] = Irq;
+                            }                                          
                         }
                     }
                     ptr +=  RouteEntry->Length;
