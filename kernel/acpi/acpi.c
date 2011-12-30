@@ -1509,7 +1509,6 @@ void GetIrqRouting()
                                     TargDev->PciIrq[k] = 0;
 
                                 strcpy(TargDev->AcpiName, DevEntry->AcpiName);
-                                TargDev->AcpiName[0] = 0;
                                 TargDev->Handle = 0;
                                 TargDev->DeviceList = 0;
                                 TargDev->DeviceNext = 0;
