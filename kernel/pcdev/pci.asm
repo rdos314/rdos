@@ -503,8 +503,57 @@ write_pci_dword Endp
 get_pci_irq_name    DB 'Get Pci IRQ',0
 
 get_pci_irq  Proc far
+    push ds
+    push es
+    push dx
+    push si
+;
+    mov dx,SEG data    
+    mov ds,dx
+    mov si,OFFSET ext_pci_dev_arr
+    mov dx,ds:ext_pci_dev_count
+    or dx,dx    
+    jz gpiNoAcpi
+
+gpiLoop:
+    mov es,ds:[si]
+    cmp bh,es:epci_bus
+    jne gpiNext
+;
+    cmp bl,es:epci_device
+    jne gpiNext
+;
+    cmp ch,es:epci_function
+    je gpiOk
+
+gpiNext:
+    add si,2
+    sub dx,1
+    jnz gpiLoop
+
+gpiFail:
+    stc
+    jmp gpiDone
+
+gpiNoAcpi:
     mov cl,PCI_interrupt_line
     ReadPciByte
+    clc
+    jmp gpiDone
+
+gpiOk:
+    mov al,es:epci_pin
+    or al,al
+    jz gpiFail
+;        
+    mov al,es:epci_irq
+    clc
+
+gpiDone:
+    pop si
+    pop dx
+    pop es
+    pop ds
     retf32
 get_pci_irq  Endp
 
@@ -1574,52 +1623,6 @@ test_pr    Proc far
     mov bh,2
     mov bl,0
     mov ch,0
-;
-    push ds
-    push es
-    push dx
-    push si
-;
-    mov dx,SEG data    
-    mov ds,dx
-    mov si,OFFSET ext_pci_dev_arr
-    mov dx,ds:ext_pci_dev_count
-    or dx,dx    
-    jz gpiFail
-
-gpiLoop:
-    mov es,ds:[si]
-    cmp bh,es:epci_bus
-    jne gpiNext
-;
-    cmp bl,es:epci_device
-    jne gpiNext
-;
-    cmp ch,es:epci_function
-    je gpiOk
-
-gpiNext:
-    add si,2
-    sub dx,1
-    jnz gpiLoop
-
-gpiFail:
-    stc
-    jmp gpiDone
-
-gpiOk:
-    mov al,es:epci_pin
-    or al,al
-    jz gpiFail
-;        
-    mov al,es:epci_irq
-    clc
-
-gpiDone:
-    pop si
-    pop dx
-    pop es
-    pop ds
     retf32 
 test_pr Endp   
 
@@ -1762,10 +1765,6 @@ init    Proc far
     xor dx,dx
     mov ax,test_gate_nr
     RegisterBimodalUserGate
-;
-    mov ax,get_pci_irq_nr
-    IsValidOsGate
-    jnc init_pci_done
 ;
     mov esi,OFFSET get_pci_irq
     mov edi,OFFSET get_pci_irq_name

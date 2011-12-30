@@ -691,46 +691,6 @@ send_nmi Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;   NAME:       GetPciIrq
-;
-;   DESCRIPTION:    Convert PCI int pin to int line
-;
-;   PARAMETERS:     BH          Bus
-;                   BL          Device
-;                   CH          Function
-;
-;   RETURNS:        AL      Line
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_pci_irq_name    DB 'Get Pci IRQ',0
-
-get_pci_irq  Proc far
-    mov cl,PCI_interrupt_line
-    ReadPciByte
-;    
-    cmp al,10h
-    jnc gpiOk
-;    
-    mov cl,PCI_interrupt_pin
-    ReadPciByte
-;
-    add al,10h
-    mov cl,bh
-    shl cl,2
-;    add al,cl
-    cmp al,18h
-    jc gpiOk
-;
-    int 3
-
-gpiOk:    
-    retf32
-get_pci_irq  Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           StartApCores
 ;
 ;       DESCRIPTION:    Start application cores
@@ -3244,12 +3204,6 @@ init    PROC far
     mov edi,OFFSET disable_all_irq_name
     xor cl,cl
     mov ax,disable_all_irq_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET get_pci_irq
-    mov edi,OFFSET get_pci_irq_name
-    xor cl,cl
-    mov ax,get_pci_irq_nr
     RegisterOsGate
 ;
     mov esi,OFFSET allocate_msi_ints

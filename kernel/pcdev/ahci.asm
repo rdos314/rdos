@@ -1323,7 +1323,6 @@ siMsiSingle:
 
 siIrq:
     GetPciIrqNr
-    mov al,19       ; fix before ACPI is ready
     mov di,cs
     mov es,di
     mov edi,OFFSET AhciInt

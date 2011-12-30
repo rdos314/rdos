@@ -2699,7 +2699,6 @@ CheckPciIde Proc near
 ;
     mov si,ax
     GetPciIrqNr
-    mov al,19       ; until ACPI
     call CheckPciBar
 
 cpiBar1Done:
