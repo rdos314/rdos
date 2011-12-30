@@ -1484,6 +1484,50 @@ cpdNext:
     jnz cpdLoop
 ;
     int 3
+    or bh,bh
+    jz cpdAddNoAcpi
+
+
+cpdAddNoAcpi:
+    mov eax,SIZE ext_pci_struc
+    AllocateSmallGlobalMem
+    mov ax,[si-4]
+    mov es:epci_vendor_id,ax
+    mov ax,[si-2]
+    mov es:epci_device_id,ax
+    mov es:epci_bus,bh
+    mov es:epci_device,bl
+    mov es:epci_function,ch
+    mov es:epci_acpi_index,-1
+    mov es:epci_acpi_name,0
+;    
+    mov cl,PCI_subclass
+    ReadPciByte
+    mov dl,al
+    mov cl,PCI_classcode
+    ReadPciByte
+    mov ah,al
+    mov al,dl
+    mov es:epci_class,ax
+;    
+    mov cl,PCI_interrupt_pin
+    ReadPciByte
+    mov es:epci_pin,al
+    mov es:epci_irq,0
+    or al,al
+    jz cpdNoInt
+;
+; should not happen, but fix this later!
+;
+    mov es:epci_irq,1
+
+cpdNoInt:    
+    mov si,OFFSET ext_pci_dev_arr
+    mov ax,ds:ext_pci_dev_count
+    add ax,ax
+    add si,ax
+    mov ds:[si],es
+    inc ds:ext_pci_dev_count
 
 cpdDone:                
     popad   
