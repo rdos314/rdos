@@ -198,10 +198,15 @@ struct TDeviceEntry *PciDevArr[MAX_PCI_DEV_COUNT];
 
 char TempResourceBuf[0x4000];
 
+void GetPciDevices();
+void GetIrqRouting();
+
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
+    GetPciDevices();
+    GetIrqRouting();        
 }
 
 /*##########################################################################
@@ -1210,8 +1215,11 @@ void AddPossibleResource(struct TDeviceEntry *DevEntry, int size)
 void GetHardware()
 {
     ACPI_STATUS Status;
+    ACPI_STATUS DevStatus;
     ACPI_BUFFER Buffer;
     ACPI_DEVICE_INFO *DevInfo;
+    UINT64 PciValue;
+    ACPI_HANDLE Handle;
     struct TResourceList *List;
     struct TDeviceEntry *DevEntry;
     int i;
@@ -1273,6 +1281,22 @@ void GetHardware()
                 {
                     if (DevInfo->Flags & ACPI_PCI_ROOT_BRIDGE)
                     {
+                        Handle = DevEntry->Handle;
+        
+                        DevStatus = AcpiUtEvaluateNumericObject (METHOD_NAME__SEG, Handle, &PciValue);
+
+                        if (DevStatus == AE_OK)
+                            CurrSegment = ACPI_LOWORD (PciValue);
+                        else
+                            CurrSegment = 0;
+
+                        DevStatus = AcpiUtEvaluateNumericObject (METHOD_NAME__BBN, Handle, &PciValue);
+
+                        if (DevStatus == AE_OK)
+                            DevEntry->PciId.Bus = ACPI_LOWORD (PciValue);
+                        else
+                            DevEntry->PciId.Bus = 0;
+
                         PciRootArr[PciRootCount] = DevEntry;
                         PciRootCount++;
                     }        
@@ -1336,29 +1360,13 @@ ACPI_STATUS AddPciObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, void
 ##########################################################################*/
 void GetPciDevices()
 {
-    int i;    
-    ACPI_STATUS DevStatus;
-    UINT64 PciValue;
     ACPI_HANDLE Handle;
+    int i;    
 
     for (i = 0; i < PciRootCount; i++)
     {
         Handle = PciRootArr[i]->Handle;
-        
-        DevStatus = AcpiUtEvaluateNumericObject (METHOD_NAME__SEG, Handle, &PciValue);
-
-        if (DevStatus == AE_OK)
-            CurrSegment = ACPI_LOWORD (PciValue);
-        else
-            CurrSegment = 0;
-
-        DevStatus = AcpiUtEvaluateNumericObject (METHOD_NAME__BBN, Handle, &PciValue);
-
-        if (DevStatus == AE_OK)
-            CurrBus = ACPI_LOWORD (PciValue);
-        else
-            CurrBus = 0;
-
+        CurrBus = PciRootArr[i]->PciId.Bus;
         AcpiWalkNamespace(ACPI_TYPE_DEVICE, Handle, 1, AddPciObject, 0, 0, 0);
     }
 }
@@ -1508,8 +1516,6 @@ void Load()
     {
         AcpiWalkNamespace(ACPI_TYPE_ANY, ACPI_ROOT_OBJECT, 10, AddAcpiObject, 0, 0, 0);
         GetHardware();        
-        GetPciDevices();
-        GetIrqRouting();        
     }
 }
 
