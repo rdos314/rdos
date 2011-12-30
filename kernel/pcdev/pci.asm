@@ -1595,7 +1595,7 @@ init    Proc far
     mov edi,OFFSET test_pr_name
     xor dx,dx
     mov ax,test_gate_nr
-    RegisterBimodalUserGate
+;    RegisterBimodalUserGate
 ;
     mov ax,get_pci_irq_nr
     IsValidOsGate
