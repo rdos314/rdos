@@ -1443,6 +1443,56 @@ get_pci_dev_irq    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CheckPciDevice
+;
+;           DESCRIPTION:    Check if PCI-device is part of extended struc
+;
+;           PARAMETERS:     DS:SI       Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckPciDevice    Proc near
+    push es
+    pushad
+;    
+    mov bh,ds:[si+2]
+    mov ch,ds:[si+1]
+    mov bl,ch
+    shr bl,3
+    and bl,01Fh
+    and ch,7    
+;
+    mov di,OFFSET ext_pci_dev_arr
+    mov bp,ds:ext_pci_dev_count
+    or bp,bp
+    jz cpdDone
+
+cpdLoop:
+    mov es,ds:[di]
+    cmp bh,es:epci_bus
+    jne cpdNext
+;
+    cmp bl,es:epci_device
+    jne cpdNext
+;
+    cmp ch,es:epci_function
+    je cpdDone
+
+cpdNext:
+    add di,2
+    loop cpdLoop
+;
+    int 3
+
+cpdDone:                
+    popad   
+    pop es
+    ret
+CheckPciDevice    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Test gate
 ;
 ;           DESCRIPTION:    Test gate
@@ -1454,6 +1504,22 @@ get_pci_dev_irq    Endp
 test_pr_name DB 'Test Gate', 0
 
 test_pr    Proc far
+    mov ax,SEG data
+    mov ds,ax
+    mov si,OFFSET pci_device_arr
+    mov cx,MAX_PCI_DEVICES    
+
+check_dev_loop:    
+    add si,4
+    mov eax,ds:[si]
+    cmp eax,-1
+    je check_dev_done
+;
+    call CheckPciDevice
+    add si,4
+    loop check_dev_loop    
+
+check_dev_done:    
     retf32 
 test_pr Endp   
 
