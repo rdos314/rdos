@@ -1571,6 +1571,55 @@ get_pci_dev_irq    Endp
 test_pr_name DB 'Test Gate', 0
 
 test_pr    Proc far
+    mov bh,2
+    mov bl,0
+    mov ch,0
+;
+    push ds
+    push es
+    push dx
+    push si
+;
+    mov dx,SEG data    
+    mov ds,dx
+    mov si,OFFSET ext_pci_dev_arr
+    mov dx,ds:ext_pci_dev_count
+    or dx,dx    
+    jz gpiFail
+
+gpiLoop:
+    mov es,ds:[si]
+    cmp bh,es:epci_bus
+    jne gpiNext
+;
+    cmp bl,es:epci_device
+    jne gpiNext
+;
+    cmp ch,es:epci_function
+    je gpiOk
+
+gpiNext:
+    add si,2
+    sub dx,1
+    jnz gpiLoop
+
+gpiFail:
+    stc
+    jmp gpiDone
+
+gpiOk:
+    mov al,es:epci_pin
+    or al,al
+    jz gpiFail
+;        
+    mov al,es:epci_irq
+    clc
+
+gpiDone:
+    pop si
+    pop dx
+    pop es
+    pop ds
     retf32 
 test_pr Endp   
 
