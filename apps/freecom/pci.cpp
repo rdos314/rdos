@@ -112,7 +112,7 @@ void TPciCommand::ShowDevices()
     int Irq;
 
     Write("ACPI Name                     ");
-    Write("Vendor/dev Class   Bus  Dev Func IRQ\r\n");
+    Write("Vendor/dev Class  Bus  Dev Func  IRQ\r\n");
     
     for (DevNr = 0; DevNr < 0x1000; DevNr++)
     {
@@ -128,7 +128,13 @@ void TPciCommand::ShowDevices()
             RdosGetPciDeviceClass(DevNr, &Class, &SubClass);            
             Irq = RdosGetPciDeviceIrq(DevNr);
             
-            sprintf(Str, "%04hX %04hX  %02hX%02hX  %4d %4d %4d  %3d\r\n", VendorID, DeviceID, Class, SubClass, Bus, Device, Function, Irq);
+            sprintf(Str, "%04hX %04hX  %02hX%02hX  %4d %4d %4d  ", VendorID, DeviceID, Class, SubClass, Bus, Device, Function);
+            Write(Str);
+
+            if (Irq)
+                sprintf(Str, "%3d\r\n", Irq);
+            else
+                strcpy(Str, "   \r\n");
             Write(Str);
         }
         else
