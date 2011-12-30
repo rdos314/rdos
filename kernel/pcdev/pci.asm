@@ -1177,19 +1177,6 @@ init_pci    Proc far
     push es
     pushad
 ;
-    mov ax,SEG data
-    mov ds,ax    
-    xor eax,eax
-
-get_pci_device_loop:
-    GetAcpiPciDeviceInfo
-    jc get_pci_device_done
-;
-    call AddPciDevice
-    inc eax
-    jmp get_pci_device_loop
-    
-get_pci_device_done:
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -1454,6 +1441,20 @@ get_pci_dev_irq    Endp
 test_pr_name DB 'Test Gate', 0
 
 test_pr    Proc far
+;
+    mov ax,SEG data
+    mov ds,ax    
+    xor eax,eax
+
+get_pci_device_loop:
+    GetAcpiPciDeviceInfo
+    jc get_pci_device_done
+;
+    call AddPciDevice
+    inc eax
+    jmp get_pci_device_loop
+    
+get_pci_device_done:
     retf32 
 test_pr Endp   
 
@@ -1595,7 +1596,7 @@ init    Proc far
     mov edi,OFFSET test_pr_name
     xor dx,dx
     mov ax,test_gate_nr
-;    RegisterBimodalUserGate
+    RegisterBimodalUserGate
 ;
     mov ax,get_pci_irq_nr
     IsValidOsGate
