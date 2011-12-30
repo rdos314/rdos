@@ -1083,6 +1083,8 @@ init_pci_thread Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddPciDevice    Proc near
+    push bx
+    push cx
     push eax
 ;    
     mov bp,cx
@@ -1158,6 +1160,8 @@ apdNext:
 
 apdDone:    
     pop eax
+    pop cx
+    pop bx
     ret
 AddPciDevice    Endp    
 
@@ -1186,6 +1190,16 @@ get_pci_device_loop:
     jc get_pci_device_done
 ;
     call AddPciDevice
+    or bh,bh
+    jz get_pci_device_next
+
+get_pci_device_bus_loop:
+    inc ch
+    call AddPciDevice
+    cmp ch,8
+    jne get_pci_device_bus_loop
+    
+get_pci_device_next:
     inc eax
     jmp get_pci_device_loop
     
