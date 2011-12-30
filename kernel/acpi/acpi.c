@@ -199,15 +199,10 @@ struct TDeviceEntry *PciDevArr[MAX_PCI_DEV_COUNT];
 
 char TempResourceBuf[0x4000];
 
-void GetPciDevices();
-void GetIrqRouting();
-
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
-    GetPciDevices();
-    GetIrqRouting();        
 }
 
 /*##########################################################################
@@ -1588,6 +1583,8 @@ void Load()
     {
         AcpiWalkNamespace(ACPI_TYPE_ANY, ACPI_ROOT_OBJECT, 10, AddAcpiObject, 0, 0, 0);
         GetHardware();        
+        GetPciDevices();
+        GetIrqRouting();        
     }
 }
 
@@ -1641,5 +1638,5 @@ int main()
     RdosRegisterUserGate(usergate_get_acpi_device, &ImplGetAcpiDevice16, &ImplGetAcpiDevice32, "Get ACPI Device");
     RdosRegisterBimodalUserGate(usergate_get_cpu_temperature, &ImplGetCpuTemperature, "Get CPU Temperature");
 
-    RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate");
+//    RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate");
 }
