@@ -157,6 +157,7 @@ struct TDeviceEntry
     char AcpiName[5];
     ACPI_HANDLE Handle;
     ACPI_PCI_ID PciId;
+    int SecondaryBus;
     int PciIrq[4];
     int IsPci;
     int DevNr;
@@ -1296,6 +1297,8 @@ void GetHardware()
                             DevEntry->PciId.Bus = ACPI_LOWORD (PciValue);
                         else
                             DevEntry->PciId.Bus = 0;
+                            
+                        DevEntry->SecondaryBus = DevEntry->PciId.Bus;
 
                         PciRootArr[PciRootCount] = DevEntry;
                         PciRootCount++;
@@ -1321,6 +1324,7 @@ ACPI_STATUS AddPciObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, void
 {
     ACPI_DEVICE_INFO *DevInfo;
     ACPI_STATUS DevStatus;
+    UINT64 PciVal;
     int i;
             
     DevStatus = AcpiGetObjectInfo(Object, &DevInfo);
@@ -1339,6 +1343,18 @@ ACPI_STATUS AddPciObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, void
                     DeviceArr[i]->IsPci = TRUE;
                     PciDevArr[PciDevCount] = DeviceArr[i];
                     PciDevCount++;
+
+                    PciVal = 0;
+                    AcpiOsReadPciConfiguration(&DeviceArr[i]->PciId, 10, &PciVal, 2);
+                    if (PciVal == 0x604)
+                    {
+                        PciVal = 0;
+                        AcpiOsReadPciConfiguration(&DeviceArr[i]->PciId, 25, &PciVal, 1);
+                        DeviceArr[i]->SecondaryBus = PciVal;
+                        
+                        PciRootArr[PciRootCount] = DeviceArr[i];
+                        PciRootCount++;
+                    }
                     break;
                 }
             }
@@ -1366,7 +1382,7 @@ void GetPciDevices()
     for (i = 0; i < PciRootCount; i++)
     {
         Handle = PciRootArr[i]->Handle;
-        CurrBus = PciRootArr[i]->PciId.Bus;
+        CurrBus = PciRootArr[i]->SecondaryBus;
         AcpiWalkNamespace(ACPI_TYPE_DEVICE, Handle, 1, AddPciObject, 0, 0, 0);
     }
 }
