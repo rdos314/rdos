@@ -2816,6 +2816,7 @@ InitPciAdapter  Endp
 ohci_name       DB 'OHCI',0
 
 ohci_thread:
+    int 3
     mov ax,SEG data
     mov ds,ax
     GetThread
@@ -2870,7 +2871,6 @@ ohci_thread_loop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 init_usb    Proc far
-    int 3
     push ds
     push es
     pusha
