@@ -2637,8 +2637,6 @@ ifTabLoop:
     WaitMicroSec
     mov fs:HcFmInterval,edx
     mov fs:HcPeriodicStart,0
-;
-    or fs:HcControl,100h    
 ;    
     call CreateInterrupt
 ;    
