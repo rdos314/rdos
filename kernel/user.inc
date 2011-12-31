@@ -2607,6 +2607,12 @@ CloseHid      MACRO
 	UserGate close_hid_nr
 						ENDM
 
+;   IN  BX          Handle
+;   OUT AX          Pipe #
+GetHidPipe      MACRO
+	UserGate get_hid_pipe_nr
+						ENDM
+
 ;;;;;;;;;;; ICSP (In-circuit serial programming) ;;;;;;;;;;
 
 ;   IN  AL          Device #

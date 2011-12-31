@@ -569,5 +569,6 @@ get_pci_device_irq_nr           = 458
 
 open_hid_nr                     = 459
 close_hid_nr                    = 460
+get_hid_pipe_nr                 = 461
 
-usergate_entries			    = 480
+usergate_entries			    = 512

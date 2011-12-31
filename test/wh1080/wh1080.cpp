@@ -34,6 +34,106 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+class TWh1080Pipe : public TUsbPipe
+{
+public:
+    TWh1080Pipe(int Controller, int Device, int Pipe);
+    ~TWh1080Pipe();
+
+protected:
+    virtual void Execute();
+};
+
+/*##########################################################################
+#
+#   Name       : NotifyData
+#
+#   Purpose....: New data from pipe
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void NotifyData(const char *buf)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TWh1080Pipe::TWh1080Pipe
+#
+#   Purpose....: Constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TWh1080Pipe::TWh1080Pipe(int Controller, int Device, int Pipe)
+  : TUsbPipe(Controller, Device, Pipe)
+{
+    Start("WH1080 Pipe", 0x4000);
+}
+
+/*##########################################################################
+#
+#   Name       : TWh1080Pipe::~TWh1080Pipe
+#
+#   Purpose....: Destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TWh1080Pipe::~TWh1080Pipe()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TWh1080Pipe::Execute
+#
+#   Purpose....: Execute method
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWh1080Pipe::Execute()
+{
+    char buf[8];
+
+    for (;;)
+    {
+        ReqData(buf, 8);
+        WaitForever();
+
+        if (GetDataSize() == 8)
+            NotifyData(buf);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : Execute
+#
+#   Purpose....: Execute 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void Execute(int Hid, int Controller, int Device, int Pipe)
+{
+    TWh1080Pipe StationPipe(Controller, Device, Pipe);
+
+    printf("Found weather station started\r\n");
+}
+
 /*##########################################################################
 #
 #   Name       : GetDevice
@@ -52,6 +152,7 @@ void GetDevice()
     int size;
     TUsbDevice UsbDevice;
     int handle;
+    int pipe;
     
     for (contr = 0; contr < 256; contr++)
     {
@@ -63,8 +164,8 @@ void GetDevice()
                 if (UsbDevice.vendor == 0x1941 && (unsigned short int)UsbDevice.prod == 0x8021)
                 {
                     handle = RdosOpenHid(contr, device);
-                    RdosCloseHid(handle);
-                    printf("Found weather station, controller: %d, device: %d\r\n", contr, device);
+                    pipe = RdosGetHidPipe(handle);
+                    Execute(handle, contr, device, pipe);
                 }
             }
         }

@@ -2359,6 +2359,39 @@ close_hid  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           GetHidPipe
+;
+;           DESCRIPTION:    Get HID pipe
+;
+;           PARAMETERS:     BX          HID handle
+;
+;           RETURNS:        AX          Pipe #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_hid_pipe_name     DB 'Get HID Pipe',0
+
+get_hid_pipe  Proc far
+    push ds
+    push ebx
+;
+    mov ax,HID_HANDLE
+    DerefHandle
+    jc ghpDone
+;
+    mov ds,[ebx].hh_hid_sel
+    mov al,ds:hid_intr_in
+    clc
+
+ghpDone:
+    pop ebx
+    pop ds
+    retf32
+get_hid_pipe  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           delete_handle
 ;
 ;           DESCRIPTION:    BX       HID handle
@@ -2422,6 +2455,12 @@ init    Proc far
     mov edi,OFFSET close_hid_name
     xor dx,dx
     mov ax,close_hid_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_hid_pipe
+    mov edi,OFFSET get_hid_pipe_name
+    xor dx,dx
+    mov ax,get_hid_pipe_nr
     RegisterBimodalUserGate
     clc
     ret
