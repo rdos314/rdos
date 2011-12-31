@@ -30,6 +30,65 @@
 
 #include "waitdev.h"
 
+struct TUsbDescr
+{
+    unsigned char len;
+    char type;
+};
+
+struct TUsbDevice
+{
+    char len;
+    char type;
+    short int usb_ver;
+    char class_id;
+    char sub_class;
+    char proto;
+    char maxlen;
+    short int vendor;
+    short int prod;
+    short int device;
+    char man;
+    char prodid;
+	char num;
+    char configs;
+};
+    
+struct TUsbConfig
+{
+    char len;
+    char type;
+    short int size;
+    char interface_count;
+    char config_id;
+    char config_str_id;
+    char attrib;
+    char power;
+};
+
+struct TUsbInterface
+{
+	char len;
+	char type;
+	char interface_id;
+	char alt_setting;
+	char endpoint_count;
+	char class_id;
+	char sub_class;
+	char proto;
+	char str_id;
+};
+
+struct TUsbEndpoint
+{
+	char len;
+	char type;
+	char address;
+	char attrib;
+	short int maxsize;
+	char interval;
+};
+
 class TUsbPipe : public TWaitDevice
 {
 public:

@@ -30,71 +30,13 @@
 
 #include "cmd.h"
 #include "cmdfact.h"
-
-struct TUsbDescr
-{
-    unsigned char len;
-    char type;
-};
-
-struct TUsbDevice
-{
-    char len;
-    char type;
-    short int usb_ver;
-    char class_id;
-    char sub_class;
-    char proto;
-    char maxlen;
-    short int vendor;
-    short int prod;
-    short int device;
-    char man;
-    char prodid;
-	char num;
-    char configs;
-};
-    
-struct TUsbConfig
-{
-    char len;
-    char type;
-    short int size;
-    char interface_count;
-    char config_id;
-    char config_str_id;
-    char attrib;
-    char power;
-};
-
-struct TUsbInterface
-{
-	char len;
-	char type;
-	char interface_id;
-	char alt_setting;
-	char endpoint_count;
-	char class_id;
-	char sub_class;
-	char proto;
-	char str_id;
-};
-
-struct TUsbEndpoint
-{
-	char len;
-	char type;
-	char address;
-	char attrib;
-	short int maxsize;
-	char interval;
-};
+#include "usbpipe.h"
 
 class TUsbFactory : public TCommandFactory
 {
 public:
-	TUsbFactory();
-	virtual TCommand *Create(TSession *session, const char *param);
+        TUsbFactory();
+        virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
 };
@@ -102,17 +44,17 @@ protected:
 class TUsbCommand : public TCommand
 {
 public:
-	TUsbCommand(TSession *session, const char *param);
+        TUsbCommand(TSession *session, const char *param);
 
-	virtual int Execute(char *param);
+        virtual int Execute(char *param);
 
 protected:
-	void ShowClass(char class_id, char sub_class, char protocol, int indent);
-	void ShowDevice(int control, int device, TUsbDevice *dev);
-	void ShowConfig(int config, TUsbConfig *dev);
-	void ShowInterface(TUsbInterface *descr);
-	void ShowEndpoint(TUsbEndpoint *descr);
-	void ShowDescr(TUsbDescr *descr);
+        void ShowClass(char class_id, char sub_class, char protocol, int indent);
+        void ShowDevice(int control, int device, TUsbDevice *dev);
+        void ShowConfig(int config, TUsbConfig *dev);
+        void ShowInterface(TUsbInterface *descr);
+        void ShowEndpoint(TUsbEndpoint *descr);
+        void ShowDescr(TUsbDescr *descr);
 
 };
 
