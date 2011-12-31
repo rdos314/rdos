@@ -2626,7 +2626,18 @@ ifTabLoop:
 ;    
     InitSection ds:ohc_section
     mov fs,ds:ohc_reg_sel
-;    
+    test fs:HcControl,100h
+    jz ifNotSmm
+;
+    or fs:HcCommandStatus,8    
+    mov ax,25
+    WaitMicroSec
+    test fs:HcControl,100h
+    jz ifNotSmm
+;
+    int 3    
+        
+ifNotSmm: 
     mov eax,0C000007Fh    
     mov fs:HcInterruptStatus,eax
 ;    
