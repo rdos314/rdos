@@ -2631,11 +2631,9 @@ ifTabLoop:
 ;
     or fs:HcCommandStatus,8    
     mov ax,25
-    WaitMicroSec
+    WaitMilliSec
     test fs:HcControl,100h
-    jz ifNotSmm
-;
-    int 3    
+    jnz ifDone
         
 ifNotSmm: 
     mov eax,0C000007Fh    
@@ -2665,7 +2663,8 @@ ifNotSmm:
     and ax,0F83Fh
     or al,0BCh
     mov fs:HcControl,eax
-;
+
+ifDone:
     popad
     pop es
     pop ds
@@ -2825,7 +2824,6 @@ InitPciAdapter  Endp
 ohci_name       DB 'OHCI',0
 
 ohci_thread:
-    int 3
     mov ax,SEG data
     mov ds,ax
     GetThread
