@@ -257,8 +257,9 @@ ihsCheckNext:
     jb ihsCheckLoop
 ;
     or si,si
-    jne ihsFound    
-    jmp ihsDone
+    je ihsDone
+;
+    mov di,si    
 
 ihsFound:
     mov al,es:[di].uid_id
