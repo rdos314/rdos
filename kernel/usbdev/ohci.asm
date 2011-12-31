@@ -2605,7 +2605,6 @@ ot16 DW OFFSET IsConnected,     SEG code
 ot17 DW OFFSET ResetPipe,       SEG code
 
 InitFunction    Proc near
-    int 3
     push es
     push fs
     pushad
