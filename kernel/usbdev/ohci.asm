@@ -2870,6 +2870,7 @@ ohci_thread_loop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 init_usb    Proc far
+    int 3
     push ds
     push es
     pusha
