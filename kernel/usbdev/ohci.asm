@@ -2605,6 +2605,7 @@ ot16 DW OFFSET IsConnected,     SEG code
 ot17 DW OFFSET ResetPipe,       SEG code
 
 InitFunction    Proc near
+    int 3
     push es
     push fs
     pushad
@@ -2626,6 +2627,8 @@ ifTabLoop:
 ;    
     InitSection ds:ohc_section
     mov fs,ds:ohc_reg_sel
+    mov ecx,fs:HcControl
+    and cl,0C0h
     mov edx,fs:HcFmInterval
     test fs:HcControl,100h
     jz ifNotSmm
@@ -2650,7 +2653,25 @@ ifNotSmm:
     shr eax,3
     sub edx,eax
     mov fs:HcPeriodicStart,eax
-;    
+;
+    or cl,cl
+    jnz ifNotReset
+;
+    mov ax,5
+    WaitMilliSec
+    mov eax,fs:HcControl
+    and al,NOT 0C0h
+    or al,40h
+    mov fs:HcControl,eax
+        
+ifNotReset:        
+    cmp cl,80h
+    je ifOperational
+;
+    mov ax,25
+    WaitMilliSec    
+    
+ifOperational:    
     call CreateInterrupt
 ;    
     mov eax,ohc_hca_base
