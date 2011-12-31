@@ -2813,11 +2813,13 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosGetUsbDevice = \
     CallGate_get_usb_device \
+    ValidateEax \
     parm [ebx] [eax] [edi] [ecx] \
     value [eax];
 
 #pragma aux RdosGetUsbConfig = \
     CallGate_get_usb_config \
+    ValidateEax \
     parm [ebx] [eax] [edx] [edi] [ecx] \
     value [eax];
 

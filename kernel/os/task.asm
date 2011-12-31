@@ -6398,16 +6398,19 @@ timer_expired_check:
     sub eax,ds:[bx].timer_lsb
     sbb edx,ds:[bx].timer_msb
     jc timer_expired_reload
-
-timer_expired_remove:    
+;
     call LocalRemoveTimerGlobal    
     jmp timer_expired_check
 
 timer_expired_reload: 
     neg eax
     ReloadSysTimer
-    jc timer_expired_remove
+    jnc timer_expired_done
 ;
+    call UnlockTimerGlobal
+    jmp timer_expired_check
+
+timer_expired_done:
     call UnlockTimerGlobal    
     call TryUnlockCore
     retf32
@@ -6600,12 +6603,6 @@ start_global_retry:
     sub eax,ds:[bx].timer_lsb
     sbb edx,ds:[bx].timer_msb
     jc start_global_reload
-
-start_global_remove:
-    mov eax,ds:[bx].timer_lsb
-    and eax,ds:[bx].timer_msb
-    add eax,1
-    jc start_global_idle
 ;    
     call LocalRemoveTimerGlobal
     jmp start_global_retry
@@ -6613,7 +6610,10 @@ start_global_remove:
 start_global_reload:    
     neg eax
     ReloadSysTimer
-    jc start_global_remove
+    jnc start_global_idle
+;
+    call UnlockTimerGlobal
+    jmp start_global_retry
 
 start_global_idle:    
     call UnlockTimerGlobal
