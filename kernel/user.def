@@ -567,4 +567,7 @@ get_pci_device_vendor_nr        = 456
 get_pci_device_class_nr         = 457
 get_pci_device_irq_nr           = 458
 
-usergate_entries			    = 460
+open_hid_nr                     = 459
+close_hid_nr                    = 460
+
+usergate_entries			    = 480

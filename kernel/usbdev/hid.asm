@@ -32,6 +32,7 @@ include ..\user.inc
 include ..\driver.def
 INCLUDE ..\os\protseg.def
 include ..\usbdev\usb.inc
+INCLUDE ..\handle.inc
 
 STD_KEY = 1
 CAPS_KEY = 2
@@ -111,6 +112,13 @@ hid_country_code    DB ?
 hid_descr_count     DB ?
 
 hid_device_struc   ENDS
+
+hid_handle_struc       STRUC
+
+hh_base         handle_header <>
+hh_hid_sel      DW ?
+
+hid_handle_struc       ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -2278,6 +2286,103 @@ udDone:
     retf32
 usb_detach  Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           OpenHid
+;
+;       description:    Open HID handle
+;
+;       parameters:     BX      Controller #
+;                       AL      Device address (1..128)
+;
+;       RETURNS:        BX      HID handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_hid_name DB 'Open HID', 0
+
+open_hid    Proc far
+    push ds
+    push ax
+;    
+    call GetHidSel
+    jc open_hid_done
+;    
+    push bx
+    mov cx,SIZE hid_handle_struc
+    AllocateHandle
+    pop ax
+    mov [ebx].hh_hid_sel,ax
+    mov [ebx].hh_sign,HID_HANDLE
+    mov bx,[ebx].hh_handle
+    clc
+
+open_hid_done:        
+    pop ax
+    pop ds
+    retf32
+open_hid    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CloseHid
+;
+;           DESCRIPTION:    Close an HID handle
+;
+;           PARAMETERS:     BX          HID handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_hid_name     DB 'Close HID',0
+
+close_hid  Proc far
+    push ds
+    push ax
+    push ebx
+;
+    mov ax,HID_HANDLE
+    DerefHandle
+    jc chDone
+;
+    FreeHandle
+    clc
+
+chDone:
+    pop ebx
+    pop ax
+    pop ds
+    retf32
+close_hid  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           delete_handle
+;
+;           DESCRIPTION:    BX       HID handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_handle   Proc far
+    push ds
+    push ax
+    push ebx
+;
+    mov ax,HID_HANDLE
+    DerefHandle
+    jc delete_handle_done
+;
+    FreeHandle
+    clc
+
+delete_handle_done:
+    pop ebx
+    pop ax
+    pop ds
+    retf32
+delete_handle   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2297,11 +2402,27 @@ init    Proc far
     mov ds,ax
     mov es,ax
 ;
+    mov ax,HID_HANDLE
+    mov edi,OFFSET delete_handle
+    RegisterHandle
+;
     mov edi,OFFSET usb_attach
     HookUsbAttach
 ;
     mov edi,OFFSET usb_detach
     HookUsbDetach
+;
+    mov esi,OFFSET open_hid
+    mov edi,OFFSET open_hid_name
+    xor dx,dx
+    mov ax,open_hid_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET close_hid
+    mov edi,OFFSET close_hid_name
+    xor dx,dx
+    mov ax,close_hid_nr
+    RegisterBimodalUserGate
     clc
     ret
 init    Endp

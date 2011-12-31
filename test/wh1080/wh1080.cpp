@@ -51,6 +51,7 @@ void GetDevice()
     int device;
     int size;
     TUsbDevice UsbDevice;
+    int handle;
     
     for (contr = 0; contr < 256; contr++)
     {
@@ -61,6 +62,8 @@ void GetDevice()
             {
                 if (UsbDevice.vendor == 0x1941 && (unsigned short int)UsbDevice.prod == 0x8021)
                 {
+                    handle = RdosOpenHid(contr, device);
+                    RdosCloseHid(handle);
                     printf("Found weather station, controller: %d, device: %d\r\n", contr, device);
                 }
             }

@@ -2595,6 +2595,18 @@ WasUsbTransactionOk      MACRO
 	UserGate was_usb_trans_ok_nr
 						ENDM
 
+;   IN  BX          Controller #
+;   IN  AL          Device address (1..128)
+;   OUT BX          Handle
+OpenHid      MACRO
+	UserGate open_hid_nr
+						ENDM
+
+;   IN  BX          Handle
+CloseHid      MACRO
+	UserGate close_hid_nr
+						ENDM
+
 ;;;;;;;;;;; ICSP (In-circuit serial programming) ;;;;;;;;;;
 
 ;   IN  AL          Device #

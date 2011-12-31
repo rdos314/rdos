@@ -567,6 +567,9 @@
 #define usergate_get_pci_device_class 457
 #define usergate_get_pci_device_irq 458
 
+#define usergate_open_hid 459
+#define usergate_close_hid 460
+
 
 
 #ifdef __FLAT__
@@ -1139,6 +1142,9 @@
 #define CallGate_get_pci_device_class 0x67 0x9a 201 1 0 0 3 0
 #define CallGate_get_pci_device_irq 0x67 0x9a 202 1 0 0 3 0
 
+#define CallGate_open_hid 0x67 0x9a 203 1 0 0 3 0
+#define CallGate_close_hid 0x67 0x9a 204 1 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1708,5 +1714,8 @@
 #define CallGate_get_pci_device_vendor 0x3e 0x67 0x9a 200 1 0 0 3 0
 #define CallGate_get_pci_device_class 0x3e 0x67 0x9a 201 1 0 0 3 0
 #define CallGate_get_pci_device_irq 0x3e 0x67 0x9a 202 1 0 0 3 0
+
+#define CallGate_open_hid 0x3e 0x67 0x9a 203 1 0 0 3 0
+#define CallGate_close_hid 0x3e 0x67 0x9a 204 1 0 0 3 0
 
 #endif
