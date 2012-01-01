@@ -1118,6 +1118,7 @@ UpdatePort   Proc near
     jz upDetach
     
 upAttach:
+    int 3
     mov bx,ds:[di].usb_port_sel_arr
     or bx,bx
     jnz upDone
