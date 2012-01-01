@@ -216,7 +216,7 @@ void __far ImplTestGate(const char *msg)
 {
     ACPI_STATUS Status;
     ACPI_BUFFER Buffer;
-    ACPI_OPERAND_OBJECT *PackageObject;
+    ACPI_OBJECT_PACKAGE *PackageObject;
     char AcpiName[128];
 
     Buffer.Length = 128;
@@ -230,7 +230,7 @@ void __far ImplTestGate(const char *msg)
 
     if (Status == AE_OK)
     {
-        PackageObject = (ACPI_OPERAND_OBJECT *)TempResourceBuf;
+        PackageObject = (ACPI_OBJECT_PACKAGE *)&Buffer;
     }
 
     printf("%d\r\n", Buffer.Length);    
