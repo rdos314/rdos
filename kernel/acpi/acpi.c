@@ -216,6 +216,7 @@ void __far ImplTestGate(const char *msg)
 {
     ACPI_STATUS Status;
     ACPI_BUFFER Buffer;
+    ACPI_OPERAND_OBJECT *PackageObject;
     char AcpiName[128];
 
     Buffer.Length = 128;
@@ -226,6 +227,11 @@ void __far ImplTestGate(const char *msg)
     Buffer.Length = 0x4000;
     Buffer.Pointer = TempResourceBuf;
     Status = AcpiEvaluateObject(NULL, AcpiName, NULL, &Buffer);
+
+    if (Status == AE_OK)
+    {
+        PackageObject = (ACPI_OPERAND_OBJECT *)TempResourceBuf;
+    }
 
     printf("%d\r\n", Buffer.Length);    
 }
