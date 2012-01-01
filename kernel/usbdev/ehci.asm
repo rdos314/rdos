@@ -1567,8 +1567,14 @@ afIndOk:
     or ds:ehc_flags,EHC_COMPANION
 
 afCompOk:
-    and ah,0Fh
-    mov ds:ehc_comp_ports,ah
+    mov al,ah
+    and al,0Fh
+    and ah,0F0h
+    shr ah,4
+    mul ah    
+    mov ds:ehc_comp_ports,al
+;    
+    mov ax,es:hcp_HCSPARAMS
     test al,10h
     jz afPowerOk
 ;
