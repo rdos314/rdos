@@ -180,6 +180,13 @@ struct TDeviceEntry
 
 };
 
+struct TProcessorEntry
+{
+    char AcpiName[5];
+    ACPI_HANDLE Handle;
+    struct TObjectEntry *ObjectList;
+};
+
 ACPI_STATUS Status;
 UINT16 CurrSegment;
 UINT16 CurrBus;
@@ -199,34 +206,14 @@ int PciDevCount = 0;
 struct TDeviceEntry *PciDevArr[MAX_PCI_DEV_COUNT];
 
 int ProcessorCount = 0;
-ACPI_HANDLE ProcessorArr[MAX_PROCESSOR_COUNT];
+struct TProcessorEntry *ProcessorArr[MAX_PROCESSOR_COUNT];
 
 char TempResourceBuf[0x4000];
-
-/*##########################################################################
-#
-#   Name       : AddProcessorObject
-#
-#   Purpose....: Walk callback for creating processor array
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-ACPI_STATUS AddProcessorObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, void **ReturnVal)
-{
-    ProcessorArr[ProcessorCount] = Object;
-    ProcessorCount++;
-
-    return AE_OK;
-}
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
-        AcpiWalkNamespace(ACPI_TYPE_PROCESSOR, ACPI_ROOT_OBJECT, 10, AddProcessorObject, 0, 0, 0);
 }
 
 /*##########################################################################
@@ -653,6 +640,7 @@ int GetAcpiObject(int Index, char *AcpiName)
     ACPI_STATUS Status;
     ACPI_BUFFER Buffer;
     struct TDeviceEntry *DevEntry;
+    struct TProcessorEntry *ProcEntry;
     
     if (Index < DeviceCount)
     {
@@ -662,6 +650,19 @@ int GetAcpiObject(int Index, char *AcpiName)
         Status = AcpiGetName(DevEntry->Handle, ACPI_FULL_PATHNAME, &Buffer);
         if (Status == AE_OK)
             return TRUE;
+    }
+    else
+    {
+        Index -= DeviceCount;
+        if (Index < ProcessorCount)
+        {
+            ProcEntry = ProcessorArr[Index];
+            Buffer.Length = 128;
+            Buffer.Pointer = AcpiName;
+            Status = AcpiGetName(ProcEntry->Handle, ACPI_FULL_PATHNAME, &Buffer);
+            if (Status == AE_OK)
+                return TRUE;
+        }
     }
     return FALSE;
 }
@@ -729,6 +730,7 @@ void __far ImplGetAcpiObject32(int Index, char *AcpiName)
 int GetAcpiMethod(int Device, int Index, char *AcpiName)
 {
     struct TDeviceEntry *DevEntry;
+    struct TProcessorEntry *ProcEntry;
     struct TObjectEntry *ObjEntry;
     
     if (Device < DeviceCount)
@@ -747,6 +749,28 @@ int GetAcpiMethod(int Device, int Index, char *AcpiName)
         {        
             strcpy(AcpiName, ObjEntry->AcpiName);
             return TRUE;
+        }
+    }
+    else
+    {
+        Device -= DeviceCount;
+        if (Device < ProcessorCount)
+        {
+            ProcEntry = ProcessorArr[Device];
+
+            ObjEntry = ProcEntry->ObjectList;
+
+            while (Index && ObjEntry)
+            {
+                Index--;
+                ObjEntry = ObjEntry->Next;
+            }
+
+            if (ObjEntry)
+            {        
+                strcpy(AcpiName, ObjEntry->AcpiName);
+                return TRUE;
+            }
         }
     }
     return FALSE;
@@ -907,6 +931,31 @@ struct TDeviceEntry *GetParentDevice(ACPI_HANDLE Object)
 
 /*##########################################################################
 #
+#   Name       : GetParentProcessor
+#
+#   Purpose....: Get parent processor in three
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+struct TProcessorEntry *GetParentProcessor(ACPI_HANDLE Object)
+{
+    ACPI_HANDLE Parent;
+    int i;
+
+    Parent = 0;
+    AcpiGetParent(Object, &Parent);
+
+    for (i = 0; i < ProcessorCount; i++)
+        if (ProcessorArr[i]->Handle == Parent)
+            return ProcessorArr[i];
+    return 0;            
+}
+
+/*##########################################################################
+#
 #   Name       : InsertRoot
 #
 #   Purpose....: Insert root device
@@ -958,7 +1007,7 @@ void AddDevice(struct TDeviceEntry *Parent, struct TDeviceEntry *Device)
 
 /*##########################################################################
 #
-#   Name       : AddObject
+#   Name       : AddDevObject
 #
 #   Purpose....: Add object to device-tree
 #
@@ -967,7 +1016,35 @@ void AddDevice(struct TDeviceEntry *Parent, struct TDeviceEntry *Device)
 #   Returns....: *
 #
 ##########################################################################*/
-void AddObject(struct TDeviceEntry *Parent, struct TObjectEntry *Object)
+void AddDevObject(struct TDeviceEntry *Parent, struct TObjectEntry *Object)
+{
+    struct TObjectEntry *Entry;
+
+    if (Parent->ObjectList)
+    {
+        Entry = Parent->ObjectList;
+
+        while (Entry->Next)
+            Entry = Entry->Next;
+
+        Entry->Next = Object;
+    }
+    else
+        Parent->ObjectList = Object;
+}
+
+/*##########################################################################
+#
+#   Name       : AddProcObject
+#
+#   Purpose....: Add object to processor-tree
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddProcObject(struct TProcessorEntry *Parent, struct TObjectEntry *Object)
 {
     struct TObjectEntry *Entry;
 
@@ -1002,7 +1079,9 @@ ACPI_STATUS AddAcpiObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, voi
     ACPI_BUFFER Buffer;
     struct TObjectEntry *ObjEntry;
     struct TDeviceEntry *DevEntry;
+    struct TProcessorEntry *ProcEntry;
     struct TDeviceEntry *OwnerDev;
+    struct TProcessorEntry *OwnerProc;
         
     Status = AcpiGetType(Object, &Type);
 
@@ -1020,7 +1099,7 @@ ACPI_STATUS AddAcpiObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, voi
             Buffer.Length = 5;
             Buffer.Pointer = DevEntry->AcpiName;
             AcpiGetName(Object, ACPI_SINGLE_NAME, &Buffer);
-
+    
             if (OwnerDev)
                 AddDevice(OwnerDev, DevEntry);
             else
@@ -1040,18 +1119,53 @@ ACPI_STATUS AddAcpiObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, voi
         }
         else
         {
-            if (OwnerDev)
+            if (Type == ACPI_TYPE_PROCESSOR)
             {
-                ObjEntry = (struct TObjectEntry *)AcpiOsAllocate(sizeof(struct TObjectEntry));
-                ObjEntry->Type = Type;
-                ObjEntry->Handle = Object;
-                ObjEntry->Next = 0;
+                ProcEntry = (struct TProcessorEntry *)AcpiOsAllocate(sizeof(struct TProcessorEntry));
+                ProcEntry->Handle = Object;
+                ProcEntry->ObjectList = 0;
                 Buffer.Length = 5;
-                Buffer.Pointer = ObjEntry->AcpiName;
+                Buffer.Pointer = ProcEntry->AcpiName;
                 AcpiGetName(Object, ACPI_SINGLE_NAME, &Buffer);
-                AddObject(OwnerDev, ObjEntry);
+    
+                if (ProcessorCount < MAX_PROCESSOR_COUNT)
+                {
+                    ProcessorArr[ProcessorCount] = ProcEntry;
+                    ProcessorCount++;
+                }
+                return AE_OK;
             }
-            return AE_CTRL_DEPTH;
+            else
+            {
+                if (OwnerDev)
+                {
+                    ObjEntry = (struct TObjectEntry *)AcpiOsAllocate(sizeof(struct TObjectEntry));
+                    ObjEntry->Type = Type;
+                    ObjEntry->Handle = Object;
+                    ObjEntry->Next = 0;
+                    Buffer.Length = 5;
+                    Buffer.Pointer = ObjEntry->AcpiName;
+                    AcpiGetName(Object, ACPI_SINGLE_NAME, &Buffer);
+                    AddDevObject(OwnerDev, ObjEntry);
+                }
+                else
+                {
+                    OwnerProc = GetParentProcessor(Object);
+
+                    if (OwnerProc)
+                    {
+                        ObjEntry = (struct TObjectEntry *)AcpiOsAllocate(sizeof(struct TObjectEntry));
+                        ObjEntry->Type = Type;
+                        ObjEntry->Handle = Object;
+                        ObjEntry->Next = 0;
+                        Buffer.Length = 5;
+                        Buffer.Pointer = ObjEntry->AcpiName;
+                        AcpiGetName(Object, ACPI_SINGLE_NAME, &Buffer);
+                        AddProcObject(OwnerProc, ObjEntry);
+                    }
+                }
+                return AE_OK;
+            }
         }
     }
     return AE_CTRL_TERMINATE;
