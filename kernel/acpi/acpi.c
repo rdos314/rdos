@@ -214,6 +214,7 @@ char TempResourceBuf[0x4000];
 
 void __far ImplTestGate(const char *msg)
 {
+    ACPI_STATUS Status;
     ACPI_BUFFER Buffer;
     char AcpiName[128];
 
@@ -224,7 +225,9 @@ void __far ImplTestGate(const char *msg)
 
     Buffer.Length = 0x4000;
     Buffer.Pointer = TempResourceBuf;
-    AcpiEvaluateObject(NULL, AcpiName, NULL, &Buffer);
+    Status = AcpiEvaluateObject(NULL, AcpiName, NULL, &Buffer);
+
+    printf("%d\r\n", Buffer.Length);    
 }
 
 /*##########################################################################
