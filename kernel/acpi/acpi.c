@@ -210,13 +210,21 @@ struct TProcessorEntry *ProcessorArr[MAX_PROCESSOR_COUNT];
 
 char TempResourceBuf[0x4000];
 
+struct TPct
+{
+    ACPI_PACKAGE_INFO  Common;
+    ACPI_GENERIC_ADDRESS Control;    
+    ACPI_GENERIC_ADDRESS Status;    
+};
+
+
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
     ACPI_STATUS Status;
     ACPI_BUFFER Buffer;
-    ACPI_OBJECT_PACKAGE *PackageObject;
+    struct TPct *Pct;
     char AcpiName[128];
 
     Buffer.Length = 128;
@@ -230,7 +238,7 @@ void __far ImplTestGate(const char *msg)
 
     if (Status == AE_OK)
     {
-        PackageObject = (ACPI_OBJECT_PACKAGE *)&Buffer;
+        Pct = (struct TPct *)TempResourceBuf;
     }
 
     printf("%d\r\n", Buffer.Length);    
