@@ -152,12 +152,12 @@ static ACPI_INTERFACE_INFO    AcpiDefaultSupportedInterfaces[] =
 
     /* Feature Group Strings */
 
-    {"Extended Address Space Descriptor", NULL, 0, 0}
+    {"Extended Address Space Descriptor",   NULL, 0, 0}
 
     /*
      * All "optional" feature group strings (features that are implemented
      * by the host) should be dynamically added by the host via
-     * AcpiInstallInterface and should not be manually added here.
+     * AcpiInstallInterface and should not be manually added here. (silly)
      *
      * Examples of optional feature group strings:
      *

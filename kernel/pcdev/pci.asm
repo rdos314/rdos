@@ -1764,7 +1764,7 @@ init    Proc far
     mov edi,OFFSET test_pr_name
     xor dx,dx
     mov ax,test_gate_nr
-    RegisterBimodalUserGate
+;    RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_pci_irq
     mov edi,OFFSET get_pci_irq_name

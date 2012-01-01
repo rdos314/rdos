@@ -46,6 +46,7 @@ extern void InitOsAcpi();
 #define MAX_PCI_ROOT_COUNT      8
 #define MAX_PCI_IRQ_COUNT       256
 #define MAX_PCI_DEV_COUNT       256
+#define MAX_PROCESSOR_COUNT     32
 
 /* do not reorganize these. Shared with assembly-code and gate definitions */
 
@@ -197,12 +198,35 @@ struct TDeviceEntry *PciRootArr[MAX_PCI_ROOT_COUNT];
 int PciDevCount = 0;
 struct TDeviceEntry *PciDevArr[MAX_PCI_DEV_COUNT];
 
+int ProcessorCount = 0;
+ACPI_HANDLE ProcessorArr[MAX_PROCESSOR_COUNT];
+
 char TempResourceBuf[0x4000];
+
+/*##########################################################################
+#
+#   Name       : AddProcessorObject
+#
+#   Purpose....: Walk callback for creating processor array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+ACPI_STATUS AddProcessorObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, void **ReturnVal)
+{
+    ProcessorArr[ProcessorCount] = Object;
+    ProcessorCount++;
+
+    return AE_OK;
+}
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
+        AcpiWalkNamespace(ACPI_TYPE_PROCESSOR, ACPI_ROOT_OBJECT, 10, AddProcessorObject, 0, 0, 0);
 }
 
 /*##########################################################################
@@ -1624,6 +1648,10 @@ int main()
     Status = AcpiInitializeSubsystem();
     if (Status == 0)
     {
+        AcpiUtInstallInterface("Module Device");
+        AcpiUtInstallInterface("Processor Device");
+        AcpiUtInstallInterface("3.0 Thermal Model");
+
         Status = AcpiInitializeTables(0, 0, 0);
         if (Status != 0)
             Status |= 0x10000;
@@ -1638,5 +1666,5 @@ int main()
     RdosRegisterUserGate(usergate_get_acpi_device, &ImplGetAcpiDevice16, &ImplGetAcpiDevice32, "Get ACPI Device");
     RdosRegisterBimodalUserGate(usergate_get_cpu_temperature, &ImplGetCpuTemperature, "Get CPU Temperature");
 
-//    RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate");
+    RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate");
 }
