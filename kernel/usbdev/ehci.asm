@@ -1491,6 +1491,7 @@ InitFunction    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddFunction  Proc near
+    int 3
     push es
     push ds
     push eax
