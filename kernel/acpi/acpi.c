@@ -224,7 +224,7 @@ void __far ImplTestGate(const char *msg)
 {
     ACPI_STATUS Status;
     ACPI_BUFFER Buffer;
-    struct TPct *Pct;
+    struct Package *Pct;
     char AcpiName[128];
 
     Buffer.Length = 128;
@@ -238,7 +238,7 @@ void __far ImplTestGate(const char *msg)
 
     if (Status == AE_OK)
     {
-        Pct = (struct TPct *)TempResourceBuf;
+        Pct = (struct Package *)TempResourceBuf;
     }
 
     printf("%d\r\n", Buffer.Length);    
