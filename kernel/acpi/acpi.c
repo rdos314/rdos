@@ -214,6 +214,17 @@ char TempResourceBuf[0x4000];
 
 void __far ImplTestGate(const char *msg)
 {
+    ACPI_BUFFER Buffer;
+    char AcpiName[128];
+
+    Buffer.Length = 128;
+    Buffer.Pointer = AcpiName;
+    Status = AcpiGetName(ProcessorArr[0]->Handle, ACPI_FULL_PATHNAME, &Buffer);
+    strcat(AcpiName, "._PCT");
+
+    Buffer.Length = 0x4000;
+    Buffer.Pointer = TempResourceBuf;
+    AcpiEvaluateObject(NULL, AcpiName, NULL, &Buffer);
 }
 
 /*##########################################################################
