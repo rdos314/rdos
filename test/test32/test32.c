@@ -1,14 +1,17 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include "datetime.h"
 
 #include <rdos.h>
 
 void main()
 {
-    long double x,y,z;
+    char str[80];
+    TDateTime currtime;
 
-    RdosTestGate("");
+    sprintf(str, "%d", currtime.GetDay());
+
+    RdosTestGate(str);
     
-    x = 1.23;
-    y = 5.34;
-    z = x * y;
 }
 

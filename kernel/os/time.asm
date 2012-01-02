@@ -214,7 +214,7 @@ passed_days     PROC far
         add bx,bx
         mov ax,word ptr cs:[bx].passed_days_tab
         cmp ch,2
-        jc passed_days_add_day
+        jbe passed_days_add_day
         test dx,3
         jnz passed_days_add_day
         inc ax
@@ -332,9 +332,6 @@ binary_to_time_adjust_days:
         dec ax
         test ax,3
         jnz binary_to_time_adjust_days
-        cmp dx,31+28
-        jb binary_to_time_adjust_days
-;       
         inc dx
         jmp binary_to_time_adjust_days
 binary_to_time_valid_days:
