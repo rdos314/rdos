@@ -1118,7 +1118,6 @@ UpdatePort   Proc near
     jz upDetach
     
 upAttach:
-    int 3
     mov bx,ds:[di].usb_port_sel_arr
     or bx,bx
     jnz upDone
@@ -1491,7 +1490,6 @@ InitFunction    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddFunction  Proc near
-    int 3
     push es
     push ds
     push eax

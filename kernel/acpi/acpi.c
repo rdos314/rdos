@@ -36,6 +36,7 @@
 #include "acstruct.h"
 #include "acutils.h"
 #include "acglobal.h"
+#include "amlresrc.h"
 
 #include <stdio.h>
 
@@ -184,6 +185,8 @@ struct TProcessorEntry
 {
     char AcpiName[5];
     ACPI_HANDLE Handle;
+    AML_RESOURCE_GENERIC_REGISTER *ThrottleControl;
+    AML_RESOURCE_GENERIC_REGISTER *ThrottleStatus;
     struct TObjectEntry *ObjectList;
 };
 
@@ -210,38 +213,68 @@ struct TProcessorEntry *ProcessorArr[MAX_PROCESSOR_COUNT];
 
 char TempResourceBuf[0x4000];
 
-struct TPct
+/*##########################################################################
+#
+#   Name       : GetPct
+#
+#   Purpose....: Get PCT resource
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GetPct()
 {
-    ACPI_PACKAGE_INFO  Common;
-    ACPI_GENERIC_ADDRESS Control;    
-    ACPI_GENERIC_ADDRESS Status;    
-};
+    ACPI_STATUS Status;
+    ACPI_BUFFER Buffer;
+    ACPI_OBJECT *Pct;
+    ACPI_OBJECT *Package;
+    AML_RESOURCE_GENERIC_REGISTER *GenReg;    
+    AML_RESOURCE_GENERIC_REGISTER *ProcReg;    
+    int i;
 
+    for (i = 0; i < ProcessorCount; i++)
+    {
+        ProcessorArr[i]->ThrottleControl = 0;
+        ProcessorArr[i]->ThrottleStatus = 0;
+
+        Buffer.Length = 0x4000;
+        Buffer.Pointer = TempResourceBuf;
+        Status = AcpiEvaluateObject(ProcessorArr[i]->Handle, "_PCT", NULL, &Buffer);
+
+        if (Status == AE_OK)
+        {
+            Pct = (ACPI_OBJECT *)TempResourceBuf;
+            if (Pct->Type == ACPI_TYPE_PACKAGE)
+            {
+                Package = &Pct->Package.Elements[0];
+                GenReg = (AML_RESOURCE_GENERIC_REGISTER *)Package->Buffer.Pointer;
+                if (GenReg->DescriptorType == ACPI_RESOURCE_NAME_GENERIC_REGISTER)
+                {
+                    ProcReg = (AML_RESOURCE_GENERIC_REGISTER *)AcpiOsAllocate(sizeof(AML_RESOURCE_GENERIC_REGISTER));
+                    memcpy(ProcReg, GenReg, sizeof(AML_RESOURCE_GENERIC_REGISTER));
+                    ProcessorArr[i]->ThrottleControl = ProcReg;
+                }
+
+                Package = &Pct->Package.Elements[1];
+                GenReg = (AML_RESOURCE_GENERIC_REGISTER *)Package->Buffer.Pointer;
+                if (GenReg->DescriptorType == ACPI_RESOURCE_NAME_GENERIC_REGISTER)
+                {
+                    ProcReg = (AML_RESOURCE_GENERIC_REGISTER *)AcpiOsAllocate(sizeof(AML_RESOURCE_GENERIC_REGISTER));
+                    memcpy(ProcReg, GenReg, sizeof(AML_RESOURCE_GENERIC_REGISTER));
+                    ProcessorArr[i]->ThrottleStatus = ProcReg;
+                }
+            }
+        }
+    }
+}
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
-    ACPI_STATUS Status;
-    ACPI_BUFFER Buffer;
-    struct Package *Pct;
-    char AcpiName[128];
-
-    Buffer.Length = 128;
-    Buffer.Pointer = AcpiName;
-    Status = AcpiGetName(ProcessorArr[0]->Handle, ACPI_FULL_PATHNAME, &Buffer);
-    strcat(AcpiName, "._PCT");
-
-    Buffer.Length = 0x4000;
-    Buffer.Pointer = TempResourceBuf;
-    Status = AcpiEvaluateObject(NULL, AcpiName, NULL, &Buffer);
-
-    if (Status == AE_OK)
-    {
-        Pct = (struct Package *)TempResourceBuf;
-    }
-
-    printf("%d\r\n", Buffer.Length);    
+    GetPct();
 }
 
 /*##########################################################################
