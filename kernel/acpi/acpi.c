@@ -48,6 +48,24 @@ extern void InitOsAcpi();
 #define MAX_PCI_IRQ_COUNT       256
 #define MAX_PCI_DEV_COUNT       256
 #define MAX_PROCESSOR_COUNT     32
+#define MAX_PROCESSOR_PSTATES   32
+
+#define IA32_PERF_STATUS    0x198 
+#define IA32_PERF_CTL       0x199
+
+long long ReadMsr(int Reg);
+void WriteMsr(int Reg, long long Value);
+
+#pragma aux ReadMsr = \
+    ".686p" \
+    "rdmsr" \
+    parm [ecx]  \
+    value [edx eax];
+
+#pragma aux WriteMsr = \
+    ".686p" \
+    "wrmsr" \
+    parm [ecx] [edx eax];
 
 /* do not reorganize these. Shared with assembly-code and gate definitions */
 
@@ -195,10 +213,6 @@ struct TProcessorEntry
 {
     char AcpiName[5];
     ACPI_HANDLE Handle;
-    AML_RESOURCE_GENERIC_REGISTER *ThrottleControl;
-    AML_RESOURCE_GENERIC_REGISTER *ThrottleStatus;
-    int StateCount;
-    struct TProcessorState *StateArr;
     struct TObjectEntry *ObjectList;
 };
 
@@ -223,6 +237,12 @@ struct TDeviceEntry *PciDevArr[MAX_PCI_DEV_COUNT];
 int ProcessorCount = 0;
 struct TProcessorEntry *ProcessorArr[MAX_PROCESSOR_COUNT];
 
+AML_RESOURCE_GENERIC_REGISTER *PowerControl = 0;
+AML_RESOURCE_GENERIC_REGISTER *PowerStatus = 0;
+
+int PowerStateCount;
+struct TProcessorState PowerStateArr[MAX_PROCESSOR_PSTATES];
+
 char TempResourceBuf[0x4000];
 
 /*##########################################################################
@@ -242,41 +262,31 @@ void GetPct()
     ACPI_BUFFER Buffer;
     ACPI_OBJECT *Pct;
     ACPI_OBJECT *Package;
-    AML_RESOURCE_GENERIC_REGISTER *GenReg;    
-    AML_RESOURCE_GENERIC_REGISTER *ProcReg;    
-    int i;
+    AML_RESOURCE_GENERIC_REGISTER *GenReg;
 
-    for (i = 0; i < ProcessorCount; i++)
+    Buffer.Length = 0x4000;
+    Buffer.Pointer = TempResourceBuf;
+    Status = AcpiEvaluateObject(ProcessorArr[0]->Handle, "_PCT", NULL, &Buffer);
+
+    if (Status == AE_OK)
     {
-        ProcessorArr[i]->ThrottleControl = 0;
-        ProcessorArr[i]->ThrottleStatus = 0;
-
-        Buffer.Length = 0x4000;
-        Buffer.Pointer = TempResourceBuf;
-        Status = AcpiEvaluateObject(ProcessorArr[i]->Handle, "_PCT", NULL, &Buffer);
-
-        if (Status == AE_OK)
+        Pct = (ACPI_OBJECT *)TempResourceBuf;
+        if (Pct->Type == ACPI_TYPE_PACKAGE)
         {
-            Pct = (ACPI_OBJECT *)TempResourceBuf;
-            if (Pct->Type == ACPI_TYPE_PACKAGE)
+            Package = &Pct->Package.Elements[0];
+            GenReg = (AML_RESOURCE_GENERIC_REGISTER *)Package->Buffer.Pointer;
+            if (GenReg->DescriptorType == ACPI_RESOURCE_NAME_GENERIC_REGISTER)
             {
-                Package = &Pct->Package.Elements[0];
-                GenReg = (AML_RESOURCE_GENERIC_REGISTER *)Package->Buffer.Pointer;
-                if (GenReg->DescriptorType == ACPI_RESOURCE_NAME_GENERIC_REGISTER)
-                {
-                    ProcReg = (AML_RESOURCE_GENERIC_REGISTER *)AcpiOsAllocate(sizeof(AML_RESOURCE_GENERIC_REGISTER));
-                    memcpy(ProcReg, GenReg, sizeof(AML_RESOURCE_GENERIC_REGISTER));
-                    ProcessorArr[i]->ThrottleControl = ProcReg;
-                }
+                PowerControl = (AML_RESOURCE_GENERIC_REGISTER *)AcpiOsAllocate(sizeof(AML_RESOURCE_GENERIC_REGISTER));
+                memcpy(PowerControl, GenReg, sizeof(AML_RESOURCE_GENERIC_REGISTER));
+            }
 
-                Package = &Pct->Package.Elements[1];
-                GenReg = (AML_RESOURCE_GENERIC_REGISTER *)Package->Buffer.Pointer;
-                if (GenReg->DescriptorType == ACPI_RESOURCE_NAME_GENERIC_REGISTER)
-                {
-                    ProcReg = (AML_RESOURCE_GENERIC_REGISTER *)AcpiOsAllocate(sizeof(AML_RESOURCE_GENERIC_REGISTER));
-                    memcpy(ProcReg, GenReg, sizeof(AML_RESOURCE_GENERIC_REGISTER));
-                    ProcessorArr[i]->ThrottleStatus = ProcReg;
-                }
+            Package = &Pct->Package.Elements[1];
+            GenReg = (AML_RESOURCE_GENERIC_REGISTER *)Package->Buffer.Pointer;
+            if (GenReg->DescriptorType == ACPI_RESOURCE_NAME_GENERIC_REGISTER)
+            {
+                PowerStatus = (AML_RESOURCE_GENERIC_REGISTER *)AcpiOsAllocate(sizeof(AML_RESOURCE_GENERIC_REGISTER));
+                memcpy(PowerStatus, GenReg, sizeof(AML_RESOURCE_GENERIC_REGISTER));
             }
         }
     }
@@ -300,83 +310,75 @@ void GetPss()
     ACPI_OBJECT *Pss;
     ACPI_OBJECT *Package;
     ACPI_OBJECT *Value;
-    struct TProcessorState *State;
     int Count;
-    int i;
     int j;
     int k;
     int ok;
 
-    for (i = 0; i < ProcessorCount; i++)
+    Buffer.Length = 0x4000;
+    Buffer.Pointer = TempResourceBuf;
+    Status = AcpiEvaluateObject(ProcessorArr[0]->Handle, "_PSS", NULL, &Buffer);
+
+    if (Status == AE_OK)
     {
-        ProcessorArr[i]->StateCount = 0;
-        ProcessorArr[i]->StateArr = 0;
-
-        Buffer.Length = 0x4000;
-        Buffer.Pointer = TempResourceBuf;
-        Status = AcpiEvaluateObject(ProcessorArr[i]->Handle, "_PSS", NULL, &Buffer);
-
-        if (Status == AE_OK)
+        Pss = (ACPI_OBJECT *)TempResourceBuf;
+        if (Pss->Type == ACPI_TYPE_PACKAGE)
         {
-            Pss = (ACPI_OBJECT *)TempResourceBuf;
-            if (Pss->Type == ACPI_TYPE_PACKAGE)
+            Count = Pss->Package.Count;
+
+            if (Count > MAX_PROCESSOR_PSTATES)
+                Count = MAX_PROCESSOR_PSTATES;
+                
+            ok = TRUE;
+
+            for (j = 0; j < Count && ok; j++)
             {
-                Count = Pss->Package.Count;
-                State = (struct TProcessorState *)AcpiOsAllocate(Count * sizeof(struct TProcessorState));
-                ok = TRUE;
+                Package = &Pss->Package.Elements[j];
+                ok = (Package->Type == ACPI_TYPE_PACKAGE);
+                if (ok)                    
+                    ok = (Package->Package.Count == 6);
 
-                for (j = 0; j < Count && ok; j++)
+                if (ok)
                 {
-                    Package = &Pss->Package.Elements[j];
-                    ok = (Package->Type == ACPI_TYPE_PACKAGE);
-                    if (ok)                    
-                        ok = (Package->Package.Count == 6);
-
-                    if (ok)
+                    for (k = 0; k < 6 && ok; k++)
                     {
-                        for (k = 0; k < 6 && ok; k++)
+                        Value = &Package->Package.Elements[k];
+                        ok = (Value->Type == ACPI_TYPE_INTEGER);
+                        if (ok)
                         {
-                            Value = &Package->Package.Elements[k];
-                            ok = (Value->Type == ACPI_TYPE_INTEGER);
-                            if (ok)
+                            switch (k)
                             {
-                                switch (k)
-                                {
-                                    case 0:
-                                        State[j].CoreFreq = Value->Integer.Value;
-                                        break;
+                                case 0:
+                                    PowerStateArr[j].CoreFreq = Value->Integer.Value;
+                                    break;
 
-                                    case 1:
-                                        State[j].Power = Value->Integer.Value;
-                                        break;
+                                case 1:
+                                    PowerStateArr[j].Power = Value->Integer.Value;
+                                    break;
 
-                                    case 2:
-                                        State[j].Latency = Value->Integer.Value;
-                                        break;
+                                case 2:
+                                    PowerStateArr[j].Latency = Value->Integer.Value;
+                                    break;
 
-                                    case 3:
-                                        State[j].BusLatency = Value->Integer.Value;
-                                        break;
+                                case 3:
+                                    PowerStateArr[j].BusLatency = Value->Integer.Value;
+                                    break;
 
-                                    case 4:
-                                        State[j].Control = Value->Integer.Value;
-                                        break;
+                                case 4:
+                                    PowerStateArr[j].Control = Value->Integer.Value;
+                                    break;
 
-                                    case 5:
-                                        State[j].Status = Value->Integer.Value;
-                                        break;
-                                }
+                                case 5:
+                                    PowerStateArr[j].Status = Value->Integer.Value;
+                                    break;
                             }
                         }
                     }
                 }
-
-                if (ok)
-                {
-                    ProcessorArr[i]->StateCount = Count;
-                    ProcessorArr[i]->StateArr = State;
-                }
             }
+
+            if (ok)
+                PowerStateCount = Count;
         }
     }
 }
@@ -385,8 +387,14 @@ void GetPss()
 
 void __far ImplTestGate(const char *msg)
 {
+    long long CurrState;
+    
     GetPct();
     GetPss();
+
+    CurrState = ReadMsr(IA32_PERF_STATUS);
+
+    printf("%d", CurrState);
 }
 
 /*##########################################################################
