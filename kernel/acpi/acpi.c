@@ -270,11 +270,48 @@ void GetPct()
     }
 }
 
+/*##########################################################################
+#
+#   Name       : GetPss
+#
+#   Purpose....: Get PSS resource
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GetPss()
+{
+    ACPI_STATUS Status;
+    ACPI_BUFFER Buffer;
+    ACPI_OBJECT *Pss;
+    ACPI_OBJECT *Package;
+    int i;
+
+    for (i = 0; i < ProcessorCount; i++)
+    {
+        Buffer.Length = 0x4000;
+        Buffer.Pointer = TempResourceBuf;
+        Status = AcpiEvaluateObject(ProcessorArr[i]->Handle, "_PSS", NULL, &Buffer);
+
+        if (Status == AE_OK)
+        {
+            Pss = (ACPI_OBJECT *)TempResourceBuf;
+            if (Pss->Type == ACPI_TYPE_PACKAGE)
+            {
+                Package = &Pss->Package.Elements[0];
+            }
+        }
+    }
+}
+
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
     GetPct();
+    GetPss();
 }
 
 /*##########################################################################
