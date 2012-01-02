@@ -181,12 +181,24 @@ struct TDeviceEntry
 
 };
 
+struct TProcessorState
+{
+    int CoreFreq;
+    int Power;
+    int Latency;
+    int BusLatency;
+    int Control;
+    int Status;
+};
+
 struct TProcessorEntry
 {
     char AcpiName[5];
     ACPI_HANDLE Handle;
     AML_RESOURCE_GENERIC_REGISTER *ThrottleControl;
     AML_RESOURCE_GENERIC_REGISTER *ThrottleStatus;
+    int StateCount;
+    struct TProcessorState *StateArr;
     struct TObjectEntry *ObjectList;
 };
 
@@ -287,10 +299,19 @@ void GetPss()
     ACPI_BUFFER Buffer;
     ACPI_OBJECT *Pss;
     ACPI_OBJECT *Package;
+    ACPI_OBJECT *Value;
+    struct TProcessorState *State;
+    int Count;
     int i;
+    int j;
+    int k;
+    int ok;
 
     for (i = 0; i < ProcessorCount; i++)
     {
+        ProcessorArr[i]->StateCount = 0;
+        ProcessorArr[i]->StateArr = 0;
+
         Buffer.Length = 0x4000;
         Buffer.Pointer = TempResourceBuf;
         Status = AcpiEvaluateObject(ProcessorArr[i]->Handle, "_PSS", NULL, &Buffer);
@@ -300,7 +321,61 @@ void GetPss()
             Pss = (ACPI_OBJECT *)TempResourceBuf;
             if (Pss->Type == ACPI_TYPE_PACKAGE)
             {
-                Package = &Pss->Package.Elements[0];
+                Count = Pss->Package.Count;
+                State = (struct TProcessorState *)AcpiOsAllocate(Count * sizeof(struct TProcessorState));
+                ok = TRUE;
+
+                for (j = 0; j < Count && ok; j++)
+                {
+                    Package = &Pss->Package.Elements[j];
+                    ok = (Package->Type == ACPI_TYPE_PACKAGE);
+                    if (ok)                    
+                        ok = (Package->Package.Count == 6);
+
+                    if (ok)
+                    {
+                        for (k = 0; k < 6 && ok; k++)
+                        {
+                            Value = &Package->Package.Elements[k];
+                            ok = (Value->Type == ACPI_TYPE_INTEGER);
+                            if (ok)
+                            {
+                                switch (k)
+                                {
+                                    case 0:
+                                        State[j].CoreFreq = Value->Integer.Value;
+                                        break;
+
+                                    case 1:
+                                        State[j].Power = Value->Integer.Value;
+                                        break;
+
+                                    case 2:
+                                        State[j].Latency = Value->Integer.Value;
+                                        break;
+
+                                    case 3:
+                                        State[j].BusLatency = Value->Integer.Value;
+                                        break;
+
+                                    case 4:
+                                        State[j].Control = Value->Integer.Value;
+                                        break;
+
+                                    case 5:
+                                        State[j].Status = Value->Integer.Value;
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (ok)
+                {
+                    ProcessorArr[i]->StateCount = Count;
+                    ProcessorArr[i]->StateArr = State;
+                }
             }
         }
     }
