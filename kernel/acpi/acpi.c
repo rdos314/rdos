@@ -50,8 +50,8 @@ extern void InitOsAcpi();
 #define MAX_PROCESSOR_COUNT     32
 #define MAX_PROCESSOR_PSTATES   32
 
-#define IA32_PERF_STATUS    0x198 
-#define IA32_PERF_CTL       0x199
+#define IA32_PERF_STATUS    0xC0010063
+#define IA32_PERF_CTL       0xC0010062
 
 long long ReadMsr(int Reg);
 void WriteMsr(int Reg, long long Value);
