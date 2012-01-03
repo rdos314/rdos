@@ -248,169 +248,11 @@ struct TProcessorState *PowerStateArr[MAX_PROCESSOR_PSTATES];
 
 char TempResourceBuf[0x4000];
 
-/*##########################################################################
-#
-#   Name       : GetPct
-#
-#   Purpose....: Get PCT resource
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void GetPct()
-{
-    ACPI_STATUS Status;
-    ACPI_BUFFER Buffer;
-    ACPI_OBJECT *Pct;
-    ACPI_OBJECT *Package;
-    AML_RESOURCE_GENERIC_REGISTER *GenReg;
-
-    Buffer.Length = 0x4000;
-    Buffer.Pointer = TempResourceBuf;
-    Status = AcpiEvaluateObject(ProcessorArr[0]->Handle, "_PCT", NULL, &Buffer);
-
-    if (Status == AE_OK)
-    {
-        Pct = (ACPI_OBJECT *)TempResourceBuf;
-        if (Pct->Type == ACPI_TYPE_PACKAGE)
-        {
-            Package = &Pct->Package.Elements[0];
-            GenReg = (AML_RESOURCE_GENERIC_REGISTER *)Package->Buffer.Pointer;
-            if (GenReg->DescriptorType == ACPI_RESOURCE_NAME_GENERIC_REGISTER)
-            {
-                PowerControl = (AML_RESOURCE_GENERIC_REGISTER *)AcpiOsAllocate(sizeof(AML_RESOURCE_GENERIC_REGISTER));
-                memcpy(PowerControl, GenReg, sizeof(AML_RESOURCE_GENERIC_REGISTER));
-            }
-
-            Package = &Pct->Package.Elements[1];
-            GenReg = (AML_RESOURCE_GENERIC_REGISTER *)Package->Buffer.Pointer;
-            if (GenReg->DescriptorType == ACPI_RESOURCE_NAME_GENERIC_REGISTER)
-            {
-                PowerStatus = (AML_RESOURCE_GENERIC_REGISTER *)AcpiOsAllocate(sizeof(AML_RESOURCE_GENERIC_REGISTER));
-                memcpy(PowerStatus, GenReg, sizeof(AML_RESOURCE_GENERIC_REGISTER));
-            }
-        }
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : GetPss
-#
-#   Purpose....: Get PSS resource
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void GetPss()
-{
-    struct TProcessorState *State;
-    ACPI_STATUS Status;
-    ACPI_BUFFER Buffer;
-    ACPI_OBJECT *Pss;
-    ACPI_OBJECT *Package;
-    ACPI_OBJECT *Value;
-    int Count;
-    int j;
-    int k;
-    int ok;
-
-    Buffer.Length = 0x4000;
-    Buffer.Pointer = TempResourceBuf;
-    Status = AcpiEvaluateObject(ProcessorArr[0]->Handle, "_PSS", NULL, &Buffer);
-
-    if (Status == AE_OK)
-    {
-        Pss = (ACPI_OBJECT *)TempResourceBuf;
-        if (Pss->Type == ACPI_TYPE_PACKAGE)
-        {
-            Count = Pss->Package.Count;
-
-            if (Count > MAX_PROCESSOR_PSTATES)
-                Count = MAX_PROCESSOR_PSTATES;
-                
-            ok = TRUE;
-
-            for (j = 0; j < Count && ok; j++)
-            {
-                Package = &Pss->Package.Elements[j];
-                ok = (Package->Type == ACPI_TYPE_PACKAGE);
-                if (ok)                    
-                    ok = (Package->Package.Count == 6);
-
-                if (ok)
-                {
-                    State = (struct TProcessorState *)AcpiOsAllocate(sizeof(struct TProcessorState));
-                
-                    for (k = 0; k < 6 && ok; k++)
-                    {
-                        Value = &Package->Package.Elements[k];
-                        ok = (Value->Type == ACPI_TYPE_INTEGER);
-                        if (ok)
-                        {
-                            switch (k)
-                            {
-                                case 0:
-                                    State->CoreFreq = Value->Integer.Value;
-                                    break;
-
-                                case 1:
-                                    State->Power = Value->Integer.Value;
-                                    break;
-
-                                case 2:
-                                    State->Latency = Value->Integer.Value;
-                                    break;
-
-                                case 3:
-                                    State->BusLatency = Value->Integer.Value;
-                                    break;
-
-                                case 4:
-                                    State->Control = Value->Integer.Value;
-                                    break;
-
-                                case 5:
-                                    State->Status = Value->Integer.Value;
-                                    break;
-                            }
-                        }
-                    }
-                    if (ok)
-                        PowerStateArr[j] = State;
-                }
-            }
-
-            if (ok)
-                PowerStateCount = Count;
-        }
-    }
-}
-
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
     long long CurrState;
-    ACPI_NAMESPACE_NODE *Node;
-    ACPI_OBJECT_PROCESSOR *ProcObj;
-    int i;
-
-    GetPct();
-    GetPss();
-
-    for (i = 0; i < ProcessorCount; i++)
-    {
-        Node = (ACPI_NAMESPACE_NODE *)ProcessorArr[i]->Handle;
-        ProcObj = &Node->Object->Processor;
-        ProcessorArr[i]->Id = ProcObj->ProcId;
-        ProcessorArr[i]->PblkAds = ProcObj->Address;
-        ProcessorArr[i]->PblkLen = ProcObj->Length; 
-    }
     
     CurrState = ReadMsr(IA32_PERF_STATUS);
 
@@ -1278,6 +1120,8 @@ ACPI_STATUS AddAcpiObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, voi
     ACPI_STATUS Status;
     ACPI_OBJECT_TYPE Type;
     ACPI_BUFFER Buffer;
+    ACPI_NAMESPACE_NODE *Node;
+    ACPI_OBJECT_PROCESSOR *ProcObj;
     struct TObjectEntry *ObjEntry;
     struct TDeviceEntry *DevEntry;
     struct TProcessorEntry *ProcEntry;
@@ -1328,6 +1172,12 @@ ACPI_STATUS AddAcpiObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, voi
                 Buffer.Length = 5;
                 Buffer.Pointer = ProcEntry->AcpiName;
                 AcpiGetName(Object, ACPI_SINGLE_NAME, &Buffer);
+
+                Node = (ACPI_NAMESPACE_NODE *)Object;
+                ProcObj = &Node->Object->Processor;
+                ProcEntry->Id = ProcObj->ProcId;
+                ProcEntry->PblkAds = ProcObj->Address;
+                ProcEntry->PblkLen = ProcObj->Length; 
     
                 if (ProcessorCount < MAX_PROCESSOR_COUNT)
                 {
@@ -1885,6 +1735,149 @@ void GetIrqRouting()
 
 /*##########################################################################
 #
+#   Name       : GetPct
+#
+#   Purpose....: Get PCT resource
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GetPct()
+{
+    ACPI_STATUS Status;
+    ACPI_BUFFER Buffer;
+    ACPI_OBJECT *Pct;
+    ACPI_OBJECT *Package;
+    AML_RESOURCE_GENERIC_REGISTER *GenReg;
+
+    Buffer.Length = 0x4000;
+    Buffer.Pointer = TempResourceBuf;
+    Status = AcpiEvaluateObject(ProcessorArr[0]->Handle, "_PCT", NULL, &Buffer);
+
+    if (Status == AE_OK)
+    {
+        Pct = (ACPI_OBJECT *)TempResourceBuf;
+        if (Pct->Type == ACPI_TYPE_PACKAGE)
+        {
+            Package = &Pct->Package.Elements[0];
+            GenReg = (AML_RESOURCE_GENERIC_REGISTER *)Package->Buffer.Pointer;
+            if (GenReg->DescriptorType == ACPI_RESOURCE_NAME_GENERIC_REGISTER)
+            {
+                PowerControl = (AML_RESOURCE_GENERIC_REGISTER *)AcpiOsAllocate(sizeof(AML_RESOURCE_GENERIC_REGISTER));
+                memcpy(PowerControl, GenReg, sizeof(AML_RESOURCE_GENERIC_REGISTER));
+            }
+
+            Package = &Pct->Package.Elements[1];
+            GenReg = (AML_RESOURCE_GENERIC_REGISTER *)Package->Buffer.Pointer;
+            if (GenReg->DescriptorType == ACPI_RESOURCE_NAME_GENERIC_REGISTER)
+            {
+                PowerStatus = (AML_RESOURCE_GENERIC_REGISTER *)AcpiOsAllocate(sizeof(AML_RESOURCE_GENERIC_REGISTER));
+                memcpy(PowerStatus, GenReg, sizeof(AML_RESOURCE_GENERIC_REGISTER));
+            }
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : GetPss
+#
+#   Purpose....: Get PSS resource
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GetPss()
+{
+    struct TProcessorState *State;
+    ACPI_STATUS Status;
+    ACPI_BUFFER Buffer;
+    ACPI_OBJECT *Pss;
+    ACPI_OBJECT *Package;
+    ACPI_OBJECT *Value;
+    int Count;
+    int j;
+    int k;
+    int ok;
+
+    Buffer.Length = 0x4000;
+    Buffer.Pointer = TempResourceBuf;
+    Status = AcpiEvaluateObject(ProcessorArr[0]->Handle, "_PSS", NULL, &Buffer);
+
+    if (Status == AE_OK)
+    {
+        Pss = (ACPI_OBJECT *)TempResourceBuf;
+        if (Pss->Type == ACPI_TYPE_PACKAGE)
+        {
+            Count = Pss->Package.Count;
+
+            if (Count > MAX_PROCESSOR_PSTATES)
+                Count = MAX_PROCESSOR_PSTATES;
+                
+            ok = TRUE;
+
+            for (j = 0; j < Count && ok; j++)
+            {
+                Package = &Pss->Package.Elements[j];
+                ok = (Package->Type == ACPI_TYPE_PACKAGE);
+                if (ok)                    
+                    ok = (Package->Package.Count == 6);
+
+                if (ok)
+                {
+                    State = (struct TProcessorState *)AcpiOsAllocate(sizeof(struct TProcessorState));
+                
+                    for (k = 0; k < 6 && ok; k++)
+                    {
+                        Value = &Package->Package.Elements[k];
+                        ok = (Value->Type == ACPI_TYPE_INTEGER);
+                        if (ok)
+                        {
+                            switch (k)
+                            {
+                                case 0:
+                                    State->CoreFreq = Value->Integer.Value;
+                                    break;
+
+                                case 1:
+                                    State->Power = Value->Integer.Value;
+                                    break;
+
+                                case 2:
+                                    State->Latency = Value->Integer.Value;
+                                    break;
+
+                                case 3:
+                                    State->BusLatency = Value->Integer.Value;
+                                    break;
+
+                                case 4:
+                                    State->Control = Value->Integer.Value;
+                                    break;
+
+                                case 5:
+                                    State->Status = Value->Integer.Value;
+                                    break;
+                            }
+                        }
+                    }
+                    if (ok)
+                        PowerStateArr[j] = State;
+                }
+            }
+
+            if (ok)
+                PowerStateCount = Count;
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : Load
 #
 #   Purpose....: Make sure tables are loaded & initialized
@@ -1924,6 +1917,8 @@ void Load()
         GetHardware();        
         GetPciDevices();
         GetIrqRouting();        
+        GetPct();
+        GetPss();
     }
 }
 
