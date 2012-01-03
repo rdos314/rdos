@@ -214,6 +214,9 @@ struct TProcessorEntry
     char AcpiName[5];
     ACPI_HANDLE Handle;
     struct TObjectEntry *ObjectList;
+    int Id;
+    ACPI_IO_ADDRESS PblkAds;
+    int PblkLen;
 };
 
 ACPI_STATUS Status;
@@ -388,10 +391,16 @@ void GetPss()
 void __far ImplTestGate(const char *msg)
 {
     long long CurrState;
+    ACPI_OBJECT_PROCESSOR *ProcObj;
     
     GetPct();
     GetPss();
 
+    ProcObj = (ACPI_OBJECT_PROCESSOR *)ProcessorArr[0]->Handle;
+    ProcessorArr[0]->Id = ProcObj->ProcId;
+    ProcessorArr[0]->PblkAds = ProcObj->Address;
+    ProcessorArr[0]->PblkLen = ProcObj->Length; 
+    
     CurrState = ReadMsr(IA32_PERF_STATUS);
 
     printf("%d", CurrState);
