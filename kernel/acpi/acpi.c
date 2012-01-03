@@ -50,8 +50,11 @@ extern void InitOsAcpi();
 #define MAX_PROCESSOR_COUNT     32
 #define MAX_PROCESSOR_PSTATES   32
 
-#define IA32_PERF_STATUS    0xC0010063
-#define IA32_PERF_CTL       0xC0010062
+#define AMD8_PERF_STATUS     0xC0010042
+#define AMD8_PERF_CTL        0xC0010041
+
+#define AMD10_PERF_STATUS    0xC0010063
+#define AMD10_PERF_CTL       0xC0010062
 
 long long ReadMsr(int Reg);
 void WriteMsr(int Reg, long long Value);
@@ -254,7 +257,7 @@ void __far ImplTestGate(const char *msg)
 {
     long long CurrState;
     
-    CurrState = ReadMsr(IA32_PERF_STATUS);
+    CurrState = ReadMsr(AMD8_PERF_STATUS);
 
     printf("%d", CurrState);
 }
