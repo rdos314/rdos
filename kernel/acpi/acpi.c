@@ -397,7 +397,7 @@ void __far ImplTestGate(const char *msg)
     GetPct();
     GetPss();
 
-    Node = AcpiNsValidateHandle (ProcessorArr[0]->Handle);
+    Node = (ACPI_NAMESPACE_NODE *)ProcessorArr[0]->Handle;
 
     ProcObj = (ACPI_OBJECT_PROCESSOR *)ProcessorArr[0]->Handle;
     ProcessorArr[0]->Id = ProcObj->ProcId;
