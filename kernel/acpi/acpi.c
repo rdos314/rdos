@@ -391,10 +391,13 @@ void GetPss()
 void __far ImplTestGate(const char *msg)
 {
     long long CurrState;
+    ACPI_NAMESPACE_NODE *Node;
     ACPI_OBJECT_PROCESSOR *ProcObj;
     
     GetPct();
     GetPss();
+
+    Node = AcpiNsValidateHandle (ProcessorArr[0]->Handle);
 
     ProcObj = (ACPI_OBJECT_PROCESSOR *)ProcessorArr[0]->Handle;
     ProcessorArr[0]->Id = ProcObj->ProcId;
