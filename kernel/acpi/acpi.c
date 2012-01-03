@@ -244,41 +244,9 @@ AML_RESOURCE_GENERIC_REGISTER *PowerControl = 0;
 AML_RESOURCE_GENERIC_REGISTER *PowerStatus = 0;
 
 int PowerStateCount;
-struct TProcessorState PowerStateArr[MAX_PROCESSOR_PSTATES];
+struct TProcessorState *PowerStateArr[MAX_PROCESSOR_PSTATES];
 
 char TempResourceBuf[0x4000];
-
-/*##########################################################################
-#
-#   Name       : GetCst
-#
-#   Purpose....: Get CST resource
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void GetCst()
-{
-    ACPI_STATUS Status;
-    ACPI_BUFFER Buffer;
-    ACPI_OBJECT *Cst;
-    ACPI_OBJECT *Package;
-
-    Buffer.Length = 0x4000;
-    Buffer.Pointer = TempResourceBuf;
-    Status = AcpiEvaluateObject(ProcessorArr[0]->Handle, "_CST", NULL, &Buffer);
-
-    if (Status == AE_OK)
-    {
-        Cst = (ACPI_OBJECT *)TempResourceBuf;
-        if (Cst->Type == ACPI_TYPE_PACKAGE)
-        {
-            Package = &Cst->Package.Elements[0];
-        }
-    }
-}
 
 /*##########################################################################
 #
@@ -340,6 +308,7 @@ void GetPct()
 ##########################################################################*/
 void GetPss()
 {
+    struct TProcessorState *State;
     ACPI_STATUS Status;
     ACPI_BUFFER Buffer;
     ACPI_OBJECT *Pss;
@@ -375,6 +344,8 @@ void GetPss()
 
                 if (ok)
                 {
+                    State = (struct TProcessorState *)AcpiOsAllocate(sizeof(struct TProcessorState));
+                
                     for (k = 0; k < 6 && ok; k++)
                     {
                         Value = &Package->Package.Elements[k];
@@ -384,31 +355,33 @@ void GetPss()
                             switch (k)
                             {
                                 case 0:
-                                    PowerStateArr[j].CoreFreq = Value->Integer.Value;
+                                    State->CoreFreq = Value->Integer.Value;
                                     break;
 
                                 case 1:
-                                    PowerStateArr[j].Power = Value->Integer.Value;
+                                    State->Power = Value->Integer.Value;
                                     break;
 
                                 case 2:
-                                    PowerStateArr[j].Latency = Value->Integer.Value;
+                                    State->Latency = Value->Integer.Value;
                                     break;
 
                                 case 3:
-                                    PowerStateArr[j].BusLatency = Value->Integer.Value;
+                                    State->BusLatency = Value->Integer.Value;
                                     break;
 
                                 case 4:
-                                    PowerStateArr[j].Control = Value->Integer.Value;
+                                    State->Control = Value->Integer.Value;
                                     break;
 
                                 case 5:
-                                    PowerStateArr[j].Status = Value->Integer.Value;
+                                    State->Status = Value->Integer.Value;
                                     break;
                             }
                         }
                     }
+                    if (ok)
+                        PowerStateArr[j] = State;
                 }
             }
 
@@ -427,7 +400,6 @@ void __far ImplTestGate(const char *msg)
     ACPI_OBJECT_PROCESSOR *ProcObj;
     int i;
 
-    GetCst();    
     GetPct();
     GetPss();
 
