@@ -393,16 +393,19 @@ void __far ImplTestGate(const char *msg)
     long long CurrState;
     ACPI_NAMESPACE_NODE *Node;
     ACPI_OBJECT_PROCESSOR *ProcObj;
+    int i;
     
     GetPct();
     GetPss();
 
-    Node = (ACPI_NAMESPACE_NODE *)ProcessorArr[0]->Handle;
-
-    ProcObj = (ACPI_OBJECT_PROCESSOR *)ProcessorArr[0]->Handle;
-    ProcessorArr[0]->Id = ProcObj->ProcId;
-    ProcessorArr[0]->PblkAds = ProcObj->Address;
-    ProcessorArr[0]->PblkLen = ProcObj->Length; 
+    for (i = 0; i < ProcessorCount; i++)
+    {
+        Node = (ACPI_NAMESPACE_NODE *)ProcessorArr[i]->Handle;
+        ProcObj = &Node->Object->Processor;
+        ProcessorArr[i]->Id = ProcObj->ProcId;
+        ProcessorArr[i]->PblkAds = ProcObj->Address;
+        ProcessorArr[i]->PblkLen = ProcObj->Length; 
+    }
     
     CurrState = ReadMsr(IA32_PERF_STATUS);
 
