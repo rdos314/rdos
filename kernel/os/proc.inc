@@ -82,6 +82,9 @@ ps_last_tsc         DD ?
 
 ps_clock_tics       DW ?
 
+ps_lsb_tics         DD ?
+ps_msb_tics         DD ?
+
 ps_global_post_perc DB ?
 ps_curr_post        DB ?
 

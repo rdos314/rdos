@@ -96,6 +96,9 @@ list_lock           DW ?
 
 tlb_spinlock        DW ?
 tlb_list            DD ?
+ 
+sys_lsb_tics_base   DD ?
+sys_msb_tics_base   DD ?
 
 tlb_block_spinlock  DW ?
 tlb_block_list      DD ?
@@ -3263,6 +3266,8 @@ SaveCurrentThread       Proc near
     sub eax,fs:ps_last_lsb
     add ds:p_lsb_tics,eax
     adc ds:p_msb_tics,0
+    add fs:ps_lsb_tics,eax
+    adc fs:ps_msb_tics,0
 ;    
     pushfd
     pop eax
@@ -3336,6 +3341,8 @@ SaveLockedThread    Proc near
     sub eax,fs:ps_last_lsb
     add ds:p_lsb_tics,eax
     adc ds:p_msb_tics,0
+    add fs:ps_lsb_tics,eax
+    adc fs:ps_msb_tics,0
 ;
     pushfd
     pop eax
@@ -3401,6 +3408,8 @@ SaveLockedThreadKeepEs    Proc near
     sub eax,fs:ps_last_lsb
     add ds:p_lsb_tics,eax
     adc ds:p_msb_tics,0
+    add fs:ps_lsb_tics,eax
+    adc fs:ps_msb_tics,0
 ;
     pushfd
     pop eax
@@ -3462,6 +3471,8 @@ SkipCurrentThread       Proc near
     sub eax,fs:ps_last_lsb
     add ds:p_lsb_tics,eax
     adc ds:p_msb_tics,0
+    add fs:ps_lsb_tics,eax
+    adc fs:ps_msb_tics,0
     pop ds
     pop eax
 ;    
@@ -4357,6 +4368,8 @@ ptab_init:
     mov es:ps_global_post_perc,DEFAULT_GLOBAL
     mov es:ps_curr_post,0
     mov es:ps_tlb_flush,0
+    mov es:ps_lsb_tics,0
+    mov es:ps_msb_tics,0
 ;    
     mov es:cs_usel,flat_sel
     mov es:cs_uoffs,0
@@ -6937,6 +6950,10 @@ init_first_thread:
 ;
     StartPreemptTimer
     mov ds:preempt_reload_proc,OFFSET PreemptReload
+;
+    GetSystemTime
+    mov ds:sys_lsb_tics_base,eax
+    mov ds:sys_msb_tics_base,edx
 ;
     mov ax,cs
     mov ds,ax
