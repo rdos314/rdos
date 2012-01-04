@@ -571,4 +571,7 @@ open_hid_nr                     = 459
 close_hid_nr                    = 460
 get_hid_pipe_nr                 = 461
 
+get_core_load                   = 462
+get_core_duty                   = 463
+
 usergate_entries			    = 512

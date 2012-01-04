@@ -381,6 +381,20 @@ HasHardReset        MACRO
 	UserGate has_hard_reset_nr
 						ENDM
 
+; IN  AX        Core nr
+; OUT EDX:EAX   Core tics
+; OUT ECX:EBX   Null tics
+GetCoreLoad        MACRO
+	UserGate get_core_load_nr
+						ENDM
+
+; IN  AX        Core nr
+; OUT EDX:EAX   Core tics
+; OUT ECX:EBX   Total tics
+GetCoreDuty        MACRO
+	UserGate get_core_duty_nr
+						ENDM
+
 ; OUT AX         Core nr
 GetCoreId        MACRO
 	UserGate get_core_id_nr
