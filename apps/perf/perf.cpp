@@ -52,7 +52,7 @@ int main(int argc, char **argv)
             YAxis[Cores]->SetBackColor(0, 0, 0);
             YAxis[Cores]->SetForeColor(255, 255, 255);
             PerfChart[Cores] = new TChart(vbe, XAxis[Cores], YAxis[Cores]);
-            if (Cores >= 3)
+            if (Cores < 3)
                 PerfChart[Cores]->SetWindow(20, 20 + Cores * 150, 300, 160 + Cores * 150);
             else
                 PerfChart[Cores]->SetWindow(320, 20 + (Cores - 3) * 150, 600, 160 + (Cores - 3) * 150);

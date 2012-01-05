@@ -2626,51 +2626,20 @@ ifTabLoop:
 ;    
     InitSection ds:ohc_section
     mov fs,ds:ohc_reg_sel
-    mov ecx,fs:HcControl
-    and cl,0C0h
-    mov edx,fs:HcFmInterval
-    test fs:HcControl,100h
-    jz ifNotSmm
-;
-    or fs:HcCommandStatus,8    
-
-ifWait:
-    test fs:HcControl,100h    
-    jnz ifWait
-        
-ifNotSmm: 
+;    
     mov eax,0C000007Fh    
     mov fs:HcInterruptStatus,eax
 ;    
+    mov edx,fs:HcFmInterval
     or fs:HcCommandStatus,1
 ;
     mov ax,25
     WaitMicroSec
     mov fs:HcFmInterval,edx
-    and edx,3FFFh
-    mov eax,edx
-    shr eax,3
-    sub edx,eax
-    mov fs:HcPeriodicStart,eax
+    mov fs:HcPeriodicStart,0
 ;
-    or cl,cl
-    jnz ifNotReset
-;
-    mov ax,5
-    WaitMilliSec
-    mov eax,fs:HcControl
-    and al,NOT 0C0h
-    or al,40h
-    mov fs:HcControl,eax
-        
-ifNotReset:        
-    cmp cl,80h
-    je ifOperational
-;
-    mov ax,25
-    WaitMilliSec    
-    
-ifOperational:    
+    or fs:HcControl,100h    
+;    
     call CreateInterrupt
 ;    
     mov eax,ohc_hca_base
@@ -2687,8 +2656,7 @@ ifOperational:
     and ax,0F83Fh
     or al,0BCh
     mov fs:HcControl,eax
-
-ifDone:
+;
     popad
     pop es
     pop ds
