@@ -2649,8 +2649,6 @@ ifNotSmm:
     mov fs:HcFmInterval,edx
     mov fs:HcPeriodicStart,0
 ;
-    or fs:HcControl,100h    
-;    
     or cl,cl
     jnz ifNotReset
 ;
