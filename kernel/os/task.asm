@@ -985,6 +985,18 @@ timer_free_list_create:
     mov ax,system_time_to_time_nr
     RegisterBimodalUserGate
 ;
+    mov si,OFFSET get_core_load
+    mov di,OFFSET get_core_load_name
+    xor dx,dx
+    mov ax,get_core_load_nr
+    RegisterBimodalUserGate
+;
+    mov si,OFFSET get_core_duty
+    mov di,OFFSET get_core_duty_name
+    xor dx,dx
+    mov ax,get_core_duty_nr
+    RegisterBimodalUserGate
+;
     mov si,OFFSET sim_sti
     mov di,OFFSET sim_sti_name
     xor cl,cl
@@ -8183,6 +8195,107 @@ get_core_count    PROC far
     mov cx,cs:core_count
     retf32
 get_core_count    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetCoreLoad
+;
+;           DESCRIPTION:    Get core load
+;
+;           PARAMETERS:     AX          Core #
+;
+;           RETURNS:        EDX:EAX     core tics
+;                           ECX:EBX     null tics
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_core_load_name   DB 'Get Core Load',0
+
+get_core_load    PROC far
+    cmp ax,cs:core_count
+    jae gclFail
+;
+    push ds
+    push si
+;    
+    mov si,ax
+    add si,si
+    mov ds,cs:[si].core_arr
+
+gclCoreRetry:    
+    mov edx,ds:ps_msb_tics
+    mov eax,ds:ps_lsb_tics
+    cmp edx,ds:ps_msb_tics
+    jne gclCoreRetry
+;
+    mov ds,ds:ps_null_thread
+
+gclNullRetry:
+    mov ecx,ds:p_msb_tics
+    mov ebx,ds:p_lsb_tics
+    cmp ecx,ds:p_msb_tics
+    jne gclNullRetry
+;
+    pop si
+    pop ds
+    clc
+    jmp gclDone
+
+gclFail:
+    stc
+
+gclDone:             
+    retf32
+get_core_load    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetCoreDuty
+;
+;           DESCRIPTION:    Get core duty cycle
+;
+;           PARAMETERS:     AX          Core #
+;
+;           RETURNS:        EDX:EAX     core tics
+;                           ECX:EBX     total tics
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_core_duty_name   DB 'Get Core Duty',0
+
+get_core_duty    PROC far
+    cmp ax,cs:core_count
+    jae gcdFail
+;
+    push ds
+    push si
+;    
+    mov si,ax
+    add si,si
+    mov ds,cs:[si].core_arr
+    GetSystemTime
+    mov ecx,edx
+    mov ebx,eax
+
+gcdRetry:    
+    mov edx,ds:ps_msb_tics
+    mov eax,ds:ps_lsb_tics
+    cmp edx,ds:ps_msb_tics
+    jne gcdRetry
+;
+    pop si
+    pop ds
+    clc
+    jmp gcdDone
+
+gcdFail:
+    stc
+
+gcdDone:             
+    retf32
+get_core_duty    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

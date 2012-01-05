@@ -417,6 +417,9 @@ load_device32_sel   EQU 0A90h
 ahci_code_sel       EQU 0AA0h
 ahci_data_sel       EQU 0AA8h
 
+acpi_code_sel       EQU 0B00h
+;acpi_data_sel      EQU 0B08h
+
 video_page0_sel		EQU 0F00h
 video_page1_sel		EQU 0F08h
 video_page2_sel		EQU 0F10h

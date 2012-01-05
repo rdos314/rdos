@@ -571,6 +571,9 @@
 #define usergate_close_hid 460
 #define usergate_get_hid_pipe 461
 
+#define usergate_get_core_load 462
+#define usergate_get_core_duty 463
+
 
 
 #ifdef __FLAT__
@@ -1147,6 +1150,9 @@
 #define CallGate_close_hid 0x67 0x9a 204 1 0 0 3 0
 #define CallGate_get_hid_pipe 0x67 0x9a 205 1 0 0 3 0
 
+#define CallGate_get_core_load 0x67 0x9a 206 1 0 0 3 0
+#define CallGate_get_core_duty 0x67 0x9a 207 1 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1720,5 +1726,8 @@
 #define CallGate_open_hid 0x3e 0x67 0x9a 203 1 0 0 3 0
 #define CallGate_close_hid 0x3e 0x67 0x9a 204 1 0 0 3 0
 #define CallGate_get_hid_pipe 0x3e 0x67 0x9a 205 1 0 0 3 0
+
+#define CallGate_get_core_load 0x3e 0x67 0x9a 206 1 0 0 3 0
+#define CallGate_get_core_duty 0x3e 0x67 0x9a 207 1 0 0 3 0
 
 #endif

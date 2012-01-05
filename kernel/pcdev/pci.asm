@@ -1320,7 +1320,11 @@ init_pci    Proc far
     pushad
 ;
     mov ax,SEG data
-    mov ds,ax    
+    mov ds,ax  
+    mov ax,acpi_code_sel
+    verr ax
+    jnz get_pci_device_done
+;    
     xor eax,eax
 
 get_pci_device_loop:

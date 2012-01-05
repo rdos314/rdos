@@ -376,8 +376,8 @@ void RDOSAPI RdosCreatePrioThread(void (*Start)(void *Param), int Prio, const ch
 void RDOSAPI RdosTerminateThread();
 int RDOSAPI RdosGetThreadHandle();
 
-void RDOSAPI RdosGetCoreLoad(int Core, long long *NullTics, long long *CoreTics);
-void RDOSAPI RdosGetCoreDuty(int Core, long long *CoreTics, long long *TotalTics);
+int RDOSAPI RdosGetCoreLoad(int Core, long long *NullTics, long long *CoreTics);
+int RDOSAPI RdosGetCoreDuty(int Core, long long *CoreTics, long long *TotalTics);
 
 #ifdef __RDOS__     // these are only available in user-mode
 
@@ -1630,8 +1630,10 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     "mov [esi+4],ecx" \
     "mov [edi],eax" \
     "mov [edi+4],edx" \
-    param [eax] [esi] [edi] \
-    modify [eax ebx ecx edx];
+    CarryToBool \    
+    parm [eax] [esi] [edi] \
+    value [eax] \
+    modify [ebx ecx edx];
 
 #pragma aux RdosGetCoreDuty = \
     CallGate_get_core_duty \
@@ -1639,8 +1641,10 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     "mov [esi+4],edx" \
     "mov [edi],ebx" \
     "mov [edi+4],ecx" \
-    param [eax] [esi] [edi] \
-    modify [eax ebx ecx edx];
+    CarryToBool \    
+    parm [eax] [esi] [edi] \
+    value [eax] \
+    modify [ebx ecx edx];
 
 #pragma aux RdosGetVersion = \
     CallGate_get_version  \
