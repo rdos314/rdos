@@ -2642,7 +2642,6 @@ ifNotSmm:
     mov eax,0C000007Fh    
     mov fs:HcInterruptStatus,eax
 ;    
-    mov edx,fs:HcFmInterval
     or fs:HcCommandStatus,1
 ;
     mov ax,25
