@@ -2652,6 +2652,24 @@ ifNotSmm:
 ;
     or fs:HcControl,100h    
 ;    
+    or cl,cl
+    jnz ifNotReset
+;
+    mov ax,5
+    WaitMilliSec
+    mov eax,fs:HcControl
+    and al,NOT 0C0h
+    or al,40h
+    mov fs:HcControl,eax
+        
+ifNotReset:        
+    cmp cl,80h
+    je ifOperational
+;
+    mov ax,25
+    WaitMilliSec    
+    
+ifOperational:    
     call CreateInterrupt
 ;    
     mov eax,ohc_hca_base
