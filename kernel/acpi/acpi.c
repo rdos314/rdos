@@ -241,36 +241,72 @@ struct TDeviceEntry *PciDevArr[MAX_PCI_DEV_COUNT];
 int ProcessorCount = 0;
 struct TProcessorEntry *ProcessorArr[MAX_PROCESSOR_COUNT];
 
-int CpuVer;
-char CpuVendor[40];
-int FeatureFlags;
-int BaseFreq;
-
-long long CoreTicsArr[MAX_PROCESSOR_COUNT];
-long long NullTicsArr[MAX_PROCESSOR_COUNT];
-
 AML_RESOURCE_GENERIC_REGISTER *PowerControl = 0;
 AML_RESOURCE_GENERIC_REGISTER *PowerStatus = 0;
 
 int PowerStateCount;
 struct TProcessorState *PowerStateArr[MAX_PROCESSOR_PSTATES];
 
+int PowerState;
+
+int CpuVer;
+char CpuVendor[40];
+int FeatureFlags;
+int BaseFreq;
+int CpuLoad;
+
+long long CoreTicsArr[MAX_PROCESSOR_COUNT];
+long long NullTicsArr[MAX_PROCESSOR_COUNT];
+
+typedef void (power_init_callback)();
+typedef void (power_update_callback)(int diff);
+
+power_init_callback *power_init_proc;
+power_update_callback *power_update_proc;
+
 char TempResourceBuf[0x4000];
     
 /*##########################################################################
 #
-#   Name       : PowerAmdK8
+#   Name       : InitAmdK8
 #
 ##########################################################################*/
-#pragma aux PowerAmdK8 "*" rdosdev parm routine [es edi]
-void __far PowerAmdK8(void *param)
+void InitAmdK8()
+{
+    int i;
+    int StateId = (int)ReadMsr(AMD8_PERF_STATUS);
+
+    PowerState = 0;
+
+    for (i = 0; i < PowerStateCount; i++)
+        if (StateId == PowerStateArr[i]->Status)
+            PowerState = i;
+}
+    
+/*##########################################################################
+#
+#   Name       : UpdateAmdK8
+#
+##########################################################################*/
+void UpdateAmdK8(int diff)
+{
+}
+    
+/*##########################################################################
+#
+#   Name       : PowerThread
+#
+##########################################################################*/
+#pragma aux PowerThread "*" rdosdev parm routine [es edi]
+void __far PowerThread(void *param)
 {
     long long CoreTics;
     long long NullTics;
     long long CoreDiff;
     long long NullDiff;
     int Core;
-    int Load;
+
+    (*power_init_proc)();
 
     for (Core = 0; Core < ProcessorCount; Core++)
         RdosGetCoreLoad(Core, &NullTicsArr[Core], &CoreTicsArr[Core]);
@@ -290,7 +326,13 @@ void __far PowerAmdK8(void *param)
             CoreTicsArr[Core] = CoreTics;
             NullTicsArr[Core] = NullTics;
         }
-        Load = 100 - (int)(100 * NullDiff / CoreDiff);
+        CpuLoad = 100 - (int)(100 * NullDiff / CoreDiff);
+
+        if (CpuLoad > 60)
+            (*power_update_proc)(-1);
+
+        if (CpuLoad < 40)
+            (*power_update_proc)(1);
         
     }
 }
@@ -299,7 +341,6 @@ void __far PowerAmdK8(void *param)
 
 void __far ImplTestGate(const char *msg)
 {
-    long long CurrState;
 
     ProcessorCount = RdosGetCoreCount();
     CpuVer = RdosGetCpuVersion(CpuVendor, &FeatureFlags, &BaseFreq);    
@@ -307,14 +348,17 @@ void __far ImplTestGate(const char *msg)
     if (strstr(CpuVendor, "AMD"))
     {
         if (CpuVer == 15)
-//          RdosCreateKernelThread(5, 0x1000, &PowerAmdK8, "AMD K8 Power", 0);
-            PowerAmdK8(0);
+        {
+            power_init_proc = InitAmdK8;
+            power_update_proc = UpdateAmdK8;
+        }            
     }    
-    
-    
-    CurrState = ReadMsr(AMD8_PERF_STATUS);
 
-    printf("%d", CurrState);
+    if (power_init_proc)
+    {    
+//      RdosCreateKernelThread(5, 0x1000, &PowerThread, "ACPI Power", 0);
+        PowerThread(0);
+    }    
 
 }
 
