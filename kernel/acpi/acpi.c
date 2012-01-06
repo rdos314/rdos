@@ -241,6 +241,10 @@ struct TDeviceEntry *PciDevArr[MAX_PCI_DEV_COUNT];
 int ProcessorCount = 0;
 struct TProcessorEntry *ProcessorArr[MAX_PROCESSOR_COUNT];
 
+char CpuVendor[40];
+int FeatureFlags;
+int BaseFreq;
+
 AML_RESOURCE_GENERIC_REGISTER *PowerControl = 0;
 AML_RESOURCE_GENERIC_REGISTER *PowerStatus = 0;
 
@@ -254,6 +258,8 @@ char TempResourceBuf[0x4000];
 void __far ImplTestGate(const char *msg)
 {
     long long CurrState;
+
+    RdosGetCpuVersion(CpuVendor, &FeatureFlags, &BaseFreq);    
     
     CurrState = ReadMsr(AMD8_PERF_STATUS);
 
