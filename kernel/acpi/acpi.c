@@ -290,7 +290,7 @@ void __far PowerAmdK8(void *param)
             CoreTicsArr[Core] = CoreTics;
             NullTicsArr[Core] = NullTics;
         }
-        Load = 100 - (int)(NullDiff / CoreDiff);
+        Load = 100 - (int)(100 * NullDiff / CoreDiff);
         
     }
 }
