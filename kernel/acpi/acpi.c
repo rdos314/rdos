@@ -241,9 +241,13 @@ struct TDeviceEntry *PciDevArr[MAX_PCI_DEV_COUNT];
 int ProcessorCount = 0;
 struct TProcessorEntry *ProcessorArr[MAX_PROCESSOR_COUNT];
 
+int CpuVer;
 char CpuVendor[40];
 int FeatureFlags;
 int BaseFreq;
+
+long long CoreTicsArr[MAX_PROCESSOR_COUNT];
+long long NullTicsArr[MAX_PROCESSOR_COUNT];
 
 AML_RESOURCE_GENERIC_REGISTER *PowerControl = 0;
 AML_RESOURCE_GENERIC_REGISTER *PowerStatus = 0;
@@ -252,6 +256,38 @@ int PowerStateCount;
 struct TProcessorState *PowerStateArr[MAX_PROCESSOR_PSTATES];
 
 char TempResourceBuf[0x4000];
+    
+/*##########################################################################
+#
+#   Name       : PowerAmdK8
+#
+##########################################################################*/
+#pragma aux PowerAmdK8 "*" rdosdev parm routine [es edi]
+void __far PowerAmdK8(void *param)
+{
+    long long CoreTics;
+    long long NullTics;
+    long long CoreDiff;
+    long long NullDiff;
+    int Core;
+
+    for (Core = 0; Core < ProcessorCount; Core++)
+        RdosGetCoreLoad(Core, &NullTicsArr[Core], &CoreTicsArr[Core]);
+
+    for (;;)
+    {
+        RdosWaitMilli(100);
+
+        for (Core = 0; Core < ProcessorCount; Core++)
+        {
+            RdosGetCoreLoad(Core, &NullTics, &CoreTics);
+            CoreDiff = CoreTics - CoreTicsArr[Core];
+            NullDiff = NullTics - NullTicsArr[Core];
+            CoreTicsArr[Core] = CoreTics;
+            NullTicsArr[Core] = NullTics;
+        }
+    }
+}
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
@@ -259,7 +295,16 @@ void __far ImplTestGate(const char *msg)
 {
     long long CurrState;
 
-    RdosGetCpuVersion(CpuVendor, &FeatureFlags, &BaseFreq);    
+    ProcessorCount = RdosGetCoreCount();
+    CpuVer = RdosGetCpuVersion(CpuVendor, &FeatureFlags, &BaseFreq);    
+
+    if (strstr(CpuVendor, "AMD"))
+    {
+        if (CpuVer == 15)
+//          RdosCreateKernelThread(5, 0x1000, &PowerAmdK8, "AMD K8 Power", 0);
+            PowerAmdK8(0);
+    }    
+    
     
     CurrState = ReadMsr(AMD8_PERF_STATUS);
 

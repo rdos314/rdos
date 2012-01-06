@@ -3756,6 +3756,28 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CarryToBool \    
     value [eax];
 
+#pragma aux RdosGetCoreLoad = \
+    CallGate_get_core_load \
+    "mov fs:[esi],ebx" \
+    "mov fs:[esi+4],ecx" \
+    "mov es:[edi],eax" \
+    "mov es:[edi+4],edx" \
+    CarryToBool \    
+    parm [eax] [fs esi] [es edi] \
+    value [eax] \
+    modify [ebx ecx edx];
+
+#pragma aux RdosGetCoreDuty = \
+    CallGate_get_core_duty \
+    "mov fs:[esi],eax" \
+    "mov fs:[esi+4],edx" \
+    "mov es:[edi],ebx" \
+    "mov es:[edi+4],ecx" \
+    CarryToBool \    
+    parm [eax] [fs esi] [es edi] \
+    value [eax] \
+    modify [ebx ecx edx];
+
 #pragma aux RdosGetVersion = \
     CallGate_get_version  \
     "movzx edx,dx"  \

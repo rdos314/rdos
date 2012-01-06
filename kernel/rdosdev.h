@@ -542,10 +542,11 @@ void RdosStartTimer(    int sel_id,
 void RdosStopTimer(     int sel_id);
 
 long RdosGetApicId();
-int RdosGetProcessor();
-int RdosGetProcessorNum(int num);
-void RdosSendNmi(int processor);
-void RdosSendInt(int processor, int int_num);
+int RdosGetCoreCount();
+int RdosGetCore();
+int RdosGetCoreNum(int num);
+void RdosSendNmi(int core);
+void RdosSendInt(int core, int int_num);
 
 void RdosClearSignal();
 void RdosSignal(int thread);
@@ -1422,6 +1423,44 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
 #pragma aux RdosPollIrqDetect = \
     OsGate_setup_irq_detect \
     value [eax];
+
+#pragma aux RdosGetApicId = \
+    OsGate_get_apic_id \
+    value [edx];
+
+#pragma aux RdosGetCoreCount = \
+    OsGate_get_core_count \
+    "movzx ecx,cx" \
+    value [ecx];
+
+#pragma aux RdosGetCore = \
+    "push fs" \
+    OsGate_get_core \
+    "mov eax,fs" \
+    "pop fs" \
+    value [eax];
+
+#pragma aux RdosGetCore = \
+    "push fs" \
+    OsGate_get_core_num \
+    "mov eax,fs" \
+    "pop fs" \
+    parm [eax] \
+    value [eax];
+
+#pragma aux RdosSendNmi = \
+    "push fs" \
+    "mov fs,eax" \
+    OsGate_send_nmi \
+    "pop fs" \
+    parm [eax];
+
+#pragma aux RdosSendInt = \
+    "push fs" \
+    "mov fs,edx" \
+    OsGate_send_int \
+    "pop fs" \
+    parm [edx] [eax];
 
 #pragma aux RdosAllocateHandle = \
     "push ds" \
