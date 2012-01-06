@@ -270,6 +270,7 @@ void __far PowerAmdK8(void *param)
     long long CoreDiff;
     long long NullDiff;
     int Core;
+    int Load;
 
     for (Core = 0; Core < ProcessorCount; Core++)
         RdosGetCoreLoad(Core, &NullTicsArr[Core], &CoreTicsArr[Core]);
@@ -278,14 +279,19 @@ void __far PowerAmdK8(void *param)
     {
         RdosWaitMilli(100);
 
+        CoreDiff = 0;
+        NullDiff = 0;
+        
         for (Core = 0; Core < ProcessorCount; Core++)
         {
             RdosGetCoreLoad(Core, &NullTics, &CoreTics);
-            CoreDiff = CoreTics - CoreTicsArr[Core];
-            NullDiff = NullTics - NullTicsArr[Core];
+            CoreDiff += CoreTics - CoreTicsArr[Core];
+            NullDiff += NullTics - NullTicsArr[Core];
             CoreTicsArr[Core] = CoreTics;
             NullTicsArr[Core] = NullTics;
         }
+        Load = 100 - (int)(NullDiff / CoreDiff);
+        
     }
 }
 
