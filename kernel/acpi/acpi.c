@@ -274,7 +274,7 @@ char TempResourceBuf[0x4000];
 void InitAmdK8()
 {
     int i;
-    int StateId = (int)ReadMsr(AMD8_PERF_STATUS);
+    int StateId = (int)ReadMsr(AMD8_PERF_STATUS) & 0xFFFF;
 
     PowerState = 0;
 
