@@ -159,6 +159,8 @@ hpet_struc      ENDS
 data    SEGMENT byte public 'DATA'
 
 mp_processor_sign   DD ?
+mp_cr0              DD ?
+mp_cr3              DD ?
 
 time_spinlock       DW ?
 clock_tics          DW ?
@@ -385,8 +387,6 @@ real_end:
 ; this code is loaded at 01400. It should contain no near jumps!
     
 prot_start:
-    jmp prot_start
-    
     mov ax,18h
     mov ds,ax
     mov es,ax
@@ -2806,10 +2806,13 @@ start_core   Proc far
     mov cx,OFFSET prot_end - OFFSET prot_start
     rep movsb
 ;
+    mov ax,SEG data
+    mov ds,ax
+;    
     mov di,1800h
-    mov eax,cr0
+    mov eax,ds:mp_cr0
     mov es:[di].ap_cr0,eax
-    mov eax,cr3
+    mov eax,ds:mp_cr3
     mov es:[di].ap_cr3,eax
 ;
     db 0Fh
@@ -2847,8 +2850,6 @@ start_core   Proc far
     out 71h,al
     jmp short $+2
 ;
-    mov ax,SEG data
-    mov ds,ax
     mov ds:mp_processor_sign,0
 ;
     push edx
@@ -2933,9 +2934,17 @@ start_core   Endp
 
 DoCreateCore   Proc near    
     push es
+    push eax
     push cx
     push edx
-;        
+;       
+    mov ax,SEG data
+    mov es,ax 
+    mov eax,cr0
+    mov es:mp_cr0,eax
+    mov eax,cr3
+    mov es:mp_cr3,eax
+;    
     CreateCoreGdt
     CreateCore
     mov es:ps_gdt_base,edx
@@ -2945,6 +2954,7 @@ DoCreateCore   Proc near
 ;
     pop edx
     pop cx
+    pop eax
     pop es
     ret
 DoCreateCore   Endp
