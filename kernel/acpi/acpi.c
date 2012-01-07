@@ -325,13 +325,13 @@ void UpdateAmdK8(int diff)
         ReqFid = (PowerStateArr[NewState]->Control) & 0x3F;
 
         if (NewState > PowerState)
-            RvoVid = CurrVid + Rvo;
+            RvoVid = CurrVid - Rvo;
         else
-            RvoVid = ReqVid + Rvo;
+            RvoVid = ReqVid - Rvo;
 
-        while (RvoVid > CurrVid)
+        while (RvoVid < CurrVid)
         {
-            CurrVid += Mvs;
+            CurrVid -= Mvs;
             RdosWaitMicro(Vst);
         }
 
