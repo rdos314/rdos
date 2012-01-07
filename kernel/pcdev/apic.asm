@@ -162,6 +162,7 @@ mp_processor_sign   DD ?
 mp_cr0              DD ?
 mp_cr3              DD ?
 mp_idt              DW ?,?,?
+mp_gdt              DW ?,?,?
 
 time_spinlock       DW ?
 clock_tics          DW ?
@@ -2828,12 +2829,17 @@ start_core   Proc far
     mov word ptr es:[di].ap_idt,ax
     mov eax,dword ptr ds:mp_idt+2
     mov dword ptr es:[di].ap_idt+2,eax
-;    
-    mov ax,fs:ps_gdt_size
-    dec ax
+;
+    mov ax,word ptr ds:mp_gdt
     mov word ptr es:[di].ap_gdt,ax
-    mov eax,fs:ps_gdt_base
+    mov eax,dword ptr ds:mp_gdt+2
     mov dword ptr es:[di].ap_gdt+2,eax
+;    
+;    mov ax,fs:ps_gdt_size
+;    dec ax
+;    mov word ptr es:[di].ap_gdt,ax
+;    mov eax,fs:ps_gdt_base
+;    mov dword ptr es:[di].ap_gdt+2,eax
 ;
     push es
     mov eax,200h
@@ -2953,6 +2959,9 @@ DoCreateCore   Proc near
 ;
     db 66h
     sidt fword ptr es:mp_idt
+;
+    db 66h
+    sgdt fword ptr es:mp_gdt
 ;    
     CreateCoreGdt
     CreateCore
