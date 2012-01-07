@@ -2822,6 +2822,12 @@ start_core   Proc far
     db 0E0h     ; mov eax,cr4
     mov es:[di].ap_cr4,eax
 ;
+    db 66h
+    sidt fword ptr ds:mp_idt
+;
+    db 66h
+    sgdt fword ptr ds:mp_gdt
+;
     mov ax,word ptr ds:mp_idt
     mov word ptr es:[di].ap_idt,ax
     mov eax,dword ptr ds:mp_idt+2
