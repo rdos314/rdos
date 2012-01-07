@@ -412,9 +412,6 @@ prot_start:
 ;    
     mov eax,es:ap_cr0
     mov cr0,eax
-
-stpl:
-    jmp stpl
 ;
     db 0EAh
     dw OFFSET ApInit
