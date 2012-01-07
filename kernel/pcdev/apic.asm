@@ -399,6 +399,10 @@ prot_start:
     mov es,ax
     mov eax,es:ap_cr3
     mov cr3,eax
+
+stpl:
+    jmp stpl
+        
 ;    
     db 66h
     lgdt fword ptr es:ap_gdt
