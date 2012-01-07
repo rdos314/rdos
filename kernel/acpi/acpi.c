@@ -310,6 +310,20 @@ void InitAmdK8()
 ##########################################################################*/
 void UpdateAmdK8(int diff)
 {
+    int NewState = PowerState + diff;
+
+    if (NewState < 0)
+        NewState = 0;
+
+    if (NewState >= PowerStateCount)
+        NewState = PowerStateCount - 1;
+
+    if (PowerState != NewState)
+    {
+        PowerState = NewState;
+        ReqVid = ((PowerStateArr[PowerState]->Control) >> 6) & 0x1F;
+        ReqFid = (PowerStateArr[PowerState]->Control) & 0x3F;
+    }        
 }
     
 /*##########################################################################
