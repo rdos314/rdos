@@ -396,7 +396,7 @@ void UpdateAmdK8(int diff)
         WriteMsr(AMD8_PERF_CTL, AMD8_STP_GRANT | (CurrVid << 8) | CurrFid | 0x10000);
         PowerState = NewState;
 
-        RdosWaitMilli(200);        
+        RdosWaitMilli(100);
 
     }        
 }
@@ -442,10 +442,10 @@ void __far PowerThread(void *param)
             }
         }
 
-        if (MaxCpuLoad > 65)
+        if (MaxCpuLoad > 60)
             (*power_update_proc)(-1);
 
-        if (MaxCpuLoad < 35)
+        if (MaxCpuLoad < 30)
             (*power_update_proc)(1);
         
     }
@@ -455,24 +455,6 @@ void __far PowerThread(void *param)
 
 void __far ImplTestGate(const char *msg)
 {
-
-    ProcessorCount = RdosGetCoreCount();
-
-    if (strstr(CpuVendor, "AMD"))
-    {
-        if (CpuVer == 15)
-        {
-            power_init_proc = InitAmdK8;
-            power_update_proc = UpdateAmdK8;
-        }            
-    }    
-
-    if (power_init_proc)
-    {    
-//      RdosCreateKernelThread(5, 0x1000, &PowerThread, "ACPI Power", 0);
-        PowerThread(0);
-    }    
-
 }
 
 /*##########################################################################
@@ -2144,6 +2126,20 @@ void Load()
 #pragma aux InitTasking "*" rdosdev parm routine
 void __far InitTasking()
 {
+    ProcessorCount = RdosGetCoreCount();
+
+    if (strstr(CpuVendor, "AMD"))
+    {
+        if (CpuVer == 15)
+        {
+            power_init_proc = InitAmdK8;
+            power_update_proc = UpdateAmdK8;
+        }            
+    }    
+
+    if (power_init_proc)
+        RdosCreateKernelThread(5, 0x1000, &PowerThread, "ACPI Power", 0);
+
     InitOsAcpi();
     Load();
 } 
