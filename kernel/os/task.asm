@@ -793,10 +793,10 @@ timer_free_list_create:
     mov ax,get_core_num_nr
     RegisterOsGate
 ;
-    mov si,OFFSET start_core
-    mov di,OFFSET start_core_name
+    mov si,OFFSET run_ap_core
+    mov di,OFFSET run_ap_core_name
     xor cl,cl
-    mov ax,start_core_nr
+    mov ax,run_ap_core_nr
     RegisterOsGate
 ;
     mov si,OFFSET preempt_expired
@@ -3560,15 +3560,15 @@ cctDone:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           StartCore
+;           NAME:           RunApCore
 ;
-;           DESCRIPTION:    Start core
+;           DESCRIPTION:    Run AP core
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_core_name    DB 'Start Core', 0
+run_ap_core_name    DB 'Run AP Core', 0
 
-start_core:
+run_ap_core:
     mov eax,cr0
     or al,8
     mov cr0,eax    
@@ -3886,12 +3886,11 @@ null_thread0:
     mov fs:ps_null_thread,ax
     lock or fs:ps_flags,PS_FLAG_ACTIVE
 ;
-    mov ax,start_ap_cores_nr
+    mov ax,start_core_nr
     IsValidOsGate
     jc null_ap_ok
 ;
     call SetupMpPatch
-    StartApCores    
 
 null_ap_ok:   
     push OFFSET null_loop

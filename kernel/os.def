@@ -403,8 +403,6 @@ leave_int_nr                = 359
 
 debug_exception_nr          = 360
 
-start_ap_cores_nr           = 361
-
 create_core_nr              = 362
 get_core_num_nr             = 363
 
@@ -415,7 +413,7 @@ unlock_task_nr              = 366
 
 get_core_nr                 = 368
 get_core_count_nr           = 369
-start_core_nr               = 370
+run_ap_core_nr              = 370
 
 preempt_timer_expired_nr    = 371
 timer_expired_nr            = 372
@@ -485,5 +483,7 @@ free_msi_int_nr             = 411
 get_acpi_pci_device_name_nr = 412
 get_acpi_pci_device_info_nr = 413
 get_acpi_pci_device_irq_nr  = 414
+
+start_core_nr               = 415
 
 osgate_entries				= 420

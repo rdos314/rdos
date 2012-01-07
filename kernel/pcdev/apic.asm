@@ -46,8 +46,6 @@ ipause   MACRO
     db 90h
     ENDM
 
-MP_FLAG_TASK = 1
-
 
 ; PCI IRQs active low, edge triggered
 
@@ -160,7 +158,6 @@ hpet_struc      ENDS
         
 data    SEGMENT byte public 'DATA'
 
-mp_flags            DW ?
 mp_processor_sign   DD ?
 
 time_spinlock       DW ?
@@ -469,12 +466,6 @@ ApInit:
     mov eax,12345678h
     mov ds:mp_processor_sign,eax
     cli
-
-ap_task_wait: 
-    mov ax,ds:mp_flags
-    test ax,MP_FLAG_TASK
-    jz ap_task_wait
-;    
     call SetupLocalApic
 ;
     mov ax,start_preempt_timer_nr
@@ -488,7 +479,7 @@ ap_timer_combined:
     StartSysPreemptTimer
 
 ap_timer_done:    
-    StartCore
+    RunApCore
 
 stopl:
     jmp stopl
@@ -687,33 +678,6 @@ send_nmi Proc far
     pop ds
     retf32
 send_nmi Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           StartApCores
-;
-;       DESCRIPTION:    Start application cores
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-start_ap_cores_name    DB 'Start Ap Cores',0
-
-start_ap_cores  Proc far
-    push ds
-    push ax
-;
-    mov ax,SEG data
-    mov ds,ax
-    or ds:mp_flags,MP_FLAG_TASK
-;
-    mov ax,1
-    call DelayMs
-;    
-    pop ax
-    pop ds
-    retf32
-start_ap_cores  Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2790,25 +2754,21 @@ SendStartup Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           DoStartCore
+;       NAME:           StartCore
 ;
-;       DESCRIPTION:    Start a CPU core
+;       DESCRIPTION:    Start a new AP core
 ;
-;       PARAMETERS:     EDX         APIC ID
-;
-;       RETURNS:        FS          Processor sel
+;       PARAMETERS:     FS      Core selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DoStartCore   Proc near
+start_core_name DB 'Start Core', 0
+
+start_core   Proc far
     push ds
     push es
     pushad
-;
-    mov ax,SEG data
-    mov fs,ax
 ;    
-    mov ebp,edx    
     mov eax,2000h
     AllocateBigLinear
 ;
@@ -2853,18 +2813,14 @@ DoStartCore   Proc near
     db 0E0h     ; mov eax,cr4
     mov es:[di].ap_cr4,eax
 ;
-    push cx
-    push edx
     db 66h
     sidt fword ptr es:[di].ap_idt
 ;    
-    CreateCoreGdt
-    dec cx
-    mov word ptr es:[di].ap_gdt,cx
-    mov dword ptr es:[di].ap_gdt+2,edx
-;    
-    pop edx
-    pop cx
+    mov ax,fs:ps_gdt_size
+    dec ax
+    mov word ptr es:[di].ap_gdt,ax
+    mov eax,fs:ps_gdt_base
+    mov dword ptr es:[di].ap_gdt+2,eax
 ;
     push es
     mov eax,200h
@@ -2887,12 +2843,15 @@ DoStartCore   Proc near
     out 71h,al
     jmp short $+2
 ;
-    mov fs:mp_processor_sign,0
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:mp_processor_sign,0
 ;
-    xchg edx,ebp
+    push edx
+    mov edx,fs:ps_apic
     call SendInit
 ;
-    mov eax,fs:mp_processor_sign
+    mov eax,ds:mp_processor_sign
     cmp eax,12345678h
     je scOk
 ;    
@@ -2902,12 +2861,12 @@ DoStartCore   Proc near
     mov cx,250
 
 scLoop1:
-    mov eax,fs:mp_processor_sign
+    mov eax,ds:mp_processor_sign
     cmp eax,12345678h
     je scOk
 ;    
     mov ax,1
-    call DelayMs    
+    WaitMilliSec
     loop scLoop1
 ;
     mov al,1    
@@ -2916,26 +2875,18 @@ scLoop1:
     mov cx,250
 
 scLoop2:
-    mov eax,fs:mp_processor_sign
+    mov eax,ds:mp_processor_sign
     cmp eax,12345678h
     je scOk
 ;    
     mov ax,1
-    call DelayMs    
+    WaitMilliSec
     loop scLoop2
 ;
-    xor ax,ax
-    mov fs,ax
     stc
     jmp scDone
 
 scOk:
-    push es
-    mov edx,dword ptr es:[di].ap_gdt+2
-    CreateCore
-    mov ax,es
-    mov fs,ax    
-    pop es
     clc
 
 scDone:
@@ -2949,7 +2900,7 @@ scDone:
     out 71h,al
     jmp short $+2
 ;
-    mov edx,ebp
+    pop edx
     xor eax,eax
     add edx,1000h
     SetPhysicalPage
@@ -2962,8 +2913,37 @@ scDone:
     popad
     pop es
     pop ds
+    retf32
+start_core   Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DoCreteCore
+;
+;       DESCRIPTION:    Create a CPU core
+;
+;       RETURNS:        FS          Processor sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DoCreateCore   Proc near    
+    push es
+    push cx
+    push edx
+;        
+    CreateCoreGdt
+    CreateCore
+    mov es:ps_gdt_base,edx
+    mov es:ps_gdt_size,cx
+    mov cx,es
+    mov fs,cx
+;
+    pop edx
+    pop cx
+    pop es
     ret
-DoStartCore   Endp
+DoCreateCore   Endp
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3005,17 +2985,13 @@ init_ap_proc:
     test al,1
     jz init_core_next
 ;    
+    call DoCreateCore    
     movzx edx,es:[di].ap_apic_id
-    call DoStartCore
-    jc init_core_next    
-;    
     mov fs:ps_apic,edx
     mov al,es:[di].ap_acpi_id
     mov fs:ps_acpi,al
 ;
     inc bp
-    cmp bp,4
-    je init_core_done
 
 init_core_next:
     movzx ax,es:[di].apic_len
@@ -3151,7 +3127,6 @@ hpet_tab    DB 'HPET'
 init    PROC far
     mov ax,SEG data
     mov ds,ax
-    mov ds:mp_flags,0       
     mov ds:system_time,0
     mov ds:system_time+4,0
     mov ds:time_spinlock,0
@@ -3177,10 +3152,10 @@ init    PROC far
     mov ds,ax
     mov es,ax
 ;
-    mov esi,OFFSET start_ap_cores
-    mov edi,OFFSET start_ap_cores_name
+    mov esi,OFFSET start_core
+    mov edi,OFFSET start_core_name
     xor cl,cl
-    mov ax,start_ap_cores_nr
+    mov ax,start_core_nr
     RegisterOsGate
 ;
     mov esi,OFFSET send_int

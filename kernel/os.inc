@@ -649,8 +649,8 @@ GetCoreNumber    MACRO
     OsGate get_core_num_nr
                         ENDM
 
-StartCore    MACRO
-    OsGate start_core_nr
+RunApCore    MACRO
+    OsGate run_ap_core_nr
                         ENDM
 
 TimerExpired    MACRO
@@ -676,8 +676,9 @@ SendInt    MACRO
     OsGate send_int_nr
                 ENDM
 
-StartApCores    MACRO
-    OsGate start_ap_cores_nr
+;   IN  FS      Processor selector
+StartCore    MACRO
+    OsGate start_core_nr
                     ENDM
 
 ;;;;;;;;;;; Signal & waits ;;;;;;;;;;;;;;;;

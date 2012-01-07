@@ -68,6 +68,9 @@ ps_flags            DW ?
 ps_null_thread      DW ?
 ps_math_thread      DW ?
 
+ps_gdt_base         DD ?
+ps_gdt_size         DW ?
+
 ps_apic             DD ?
 ps_acpi             DB ?
 ps_tlb_flush        DB ?
