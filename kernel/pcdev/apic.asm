@@ -447,6 +447,8 @@ page_struc  ENDS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ApInit:
+    jmp ApInit
+
     mov eax,es:ap_cr4
     db 0Fh
     db 22h
