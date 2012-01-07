@@ -402,15 +402,12 @@ prot_start:
 ;    
     db 66h
     lgdt fword ptr es:ap_gdt
-
-    mov ax,20h
-    mov es,ax
-
-stpl:
-    jmp stpl
 ;    
     db 66h
     lidt fword ptr es:ap_idt
+
+stpl:
+    jmp stpl
 ;
     mov dx,es:ap_ss
 ;    
