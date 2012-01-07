@@ -416,6 +416,8 @@ void __far PowerThread(void *param)
     int Core;
     int CpuLoad;
 
+    ProcessorCount = RdosGetCoreCount();
+
     (*power_init_proc)();
 
     for (Core = 0; Core < ProcessorCount; Core++)
@@ -2126,7 +2128,8 @@ void Load()
 #pragma aux InitTasking "*" rdosdev parm routine
 void __far InitTasking()
 {
-    ProcessorCount = RdosGetCoreCount();
+    InitOsAcpi();
+    Load();
 
     if (strstr(CpuVendor, "AMD"))
     {
@@ -2139,9 +2142,6 @@ void __far InitTasking()
 
     if (power_init_proc)
         RdosCreateKernelThread(5, 0x1000, &PowerThread, "ACPI Power", 0);
-
-    InitOsAcpi();
-    Load();
 } 
 
 /*##########################################################################
