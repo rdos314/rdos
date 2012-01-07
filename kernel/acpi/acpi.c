@@ -392,6 +392,24 @@ void UpdateAmdK8(int diff)
             }
         }
 
+        while (ReqVid > CurrVid)
+        {
+            CurrVid += Mvs;
+
+            if (CurrVid < ReqVid)
+                CurrVid = ReqVid;
+            
+            WriteMsr(AMD8_PERF_CTL, AMD8_STP_GRANT | (CurrVid << 8) | CurrFid | 0x10000);
+
+            for (;;)
+            {
+                VidState = ReadMsr(AMD8_PERF_STATUS);
+                if (VidState | 0x80000000)
+                    break;
+            }
+            RdosWaitMicro(Vst);
+        }
+
         PowerState = NewState;
     }        
 }
