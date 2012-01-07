@@ -405,11 +405,16 @@ prot_start:
 ;    
     db 66h
     lidt fword ptr es:ap_idt
+;
+    mov dx,es:ap_ss
+
+    mov ax,SEG data
+    mov ds,ax
+    mov eax,4567h
+    mov ds:mp_processor_sign,eax
 
 stpl:
     jmp stpl
-;
-    mov dx,es:ap_ss
 ;    
     mov eax,es:ap_cr0
     mov cr0,eax
