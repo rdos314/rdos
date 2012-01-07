@@ -349,6 +349,8 @@ table_end:
 
 real_start:    
     cli
+    jmp real_start
+    
     mov al,0Fh
     out 70h,al
     jmp short $+2
