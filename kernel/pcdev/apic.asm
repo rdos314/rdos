@@ -161,6 +161,7 @@ data    SEGMENT byte public 'DATA'
 mp_processor_sign   DD ?
 mp_cr0              DD ?
 mp_cr3              DD ?
+mp_idt              DW ?,?,?
 
 time_spinlock       DW ?
 clock_tics          DW ?
@@ -2823,8 +2824,10 @@ start_core   Proc far
     db 0E0h     ; mov eax,cr4
     mov es:[di].ap_cr4,eax
 ;
-    db 66h
-    sidt fword ptr es:[di].ap_idt
+    mov ax,word ptr ds:mp_idt
+    mov word ptr es:[di].ap_idt,ax
+    mov eax,dword ptr ds:mp_idt+2
+    mov dword ptr es:[di].ap_idt+2,eax
 ;    
     mov ax,fs:ps_gdt_size
     dec ax
@@ -2947,6 +2950,9 @@ DoCreateCore   Proc near
     mov es:mp_cr0,eax
     mov eax,cr3
     mov es:mp_cr3,eax
+;
+    db 66h
+    sidt fword ptr es:mp_idt
 ;    
     CreateCoreGdt
     CreateCore
