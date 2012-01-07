@@ -321,8 +321,8 @@ void UpdateAmdK8(int diff)
 
     if (PowerState != NewState)
     {
-        ReqVid = ((PowerStateArr[PowerState]->Control) >> 6) & 0x1F;
-        ReqFid = (PowerStateArr[PowerState]->Control) & 0x3F;
+        ReqVid = ((PowerStateArr[NewState]->Control) >> 6) & 0x1F;
+        ReqFid = (PowerStateArr[NewState]->Control) & 0x3F;
 
         if (NewState > PowerState)
             RvoVid = CurrVid + Rvo;
