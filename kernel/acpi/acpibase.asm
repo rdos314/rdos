@@ -719,6 +719,44 @@ gpdiDone:
     pop es
     ret
 get_pci_device_info Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetCpuVersion
+;
+;       DESCRIPTION:    Get CPU version
+;
+;       PARAMETERS:     ES:(E)DI    Vendor string
+;
+;       RETURNS:        AL      Version
+;                       EBX     Frequency
+;                       EDX     Feature flags
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_cpu_version_name    DB 'Get CPU Version',0
+
+    extrn GetCpuId:near
+    extrn GetCpuVendorFeature:near
+    extrn GetCpuFreq:near
+
+get_cpu_version16  Proc far
+    push edi
+    movzx edi,di
+    call GetCpuVendorFeature
+    call GetCpuFreq
+    call GetCpuId
+    pop edi
+    ret
+get_cpu_version16 Endp
+
+get_cpu_version32  Proc far
+    call GetCpuVendorFeature
+    call GetCpuFreq
+    call GetCpuId
+    ret
+get_cpu_version32 Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -837,6 +875,13 @@ acpi_load_save:
     xor dx,dx
     mov ax,get_acpi_device_mem_nr
     RegisterBimodalUserGate
+;
+    mov bx,OFFSET get_cpu_version16
+    mov si,OFFSET get_cpu_version32
+    mov edi,OFFSET get_cpu_version_name
+    mov dx,virt_es_in
+    mov ax,get_cpu_version_nr
+    RegisterUserGate
 
 acpi_fail:
     popad

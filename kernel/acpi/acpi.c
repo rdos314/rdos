@@ -255,7 +255,7 @@ int CpuVer;
 char CpuVendor[40];
 int FeatureFlags;
 int BaseFreq;
-int CpuLoad;
+int MaxCpuLoad;
 
 int Irt;
 int Rvo;
@@ -414,6 +414,7 @@ void __far PowerThread(void *param)
     long long CoreDiff;
     long long NullDiff;
     int Core;
+    int CpuLoad;
 
     (*power_init_proc)();
 
@@ -424,23 +425,27 @@ void __far PowerThread(void *param)
     {
         RdosWaitMilli(100);
 
-        CoreDiff = 0;
-        NullDiff = 0;
-        
+        MaxCpuLoad = 0;
         for (Core = 0; Core < ProcessorCount; Core++)
         {
             RdosGetCoreLoad(Core, &NullTics, &CoreTics);
-            CoreDiff += CoreTics - CoreTicsArr[Core];
-            NullDiff += NullTics - NullTicsArr[Core];
+            CoreDiff = CoreTics - CoreTicsArr[Core];
+            NullDiff = NullTics - NullTicsArr[Core];
             CoreTicsArr[Core] = CoreTics;
             NullTicsArr[Core] = NullTics;
-        }
-        CpuLoad = 100 - (int)(100 * NullDiff / CoreDiff);
 
-        if (CpuLoad > 65)
+            if (CoreDiff)
+            {
+                CpuLoad = 100 - (int)(100 * NullDiff / CoreDiff);
+                if (CpuLoad > MaxCpuLoad)
+                    MaxCpuLoad = CpuLoad;
+            }
+        }
+
+        if (MaxCpuLoad > 65)
             (*power_update_proc)(-1);
 
-        if (CpuLoad < 35)
+        if (MaxCpuLoad < 35)
             (*power_update_proc)(1);
         
     }
@@ -452,7 +457,6 @@ void __far ImplTestGate(const char *msg)
 {
 
     ProcessorCount = RdosGetCoreCount();
-    CpuVer = RdosGetCpuVersion(CpuVendor, &FeatureFlags, &BaseFreq);    
 
     if (strstr(CpuVendor, "AMD"))
     {
@@ -469,6 +473,61 @@ void __far ImplTestGate(const char *msg)
         PowerThread(0);
     }    
 
+}
+
+/*##########################################################################
+#
+#   Name       : GetCpuVendorFeature
+#
+#   Purpose....: Get CPU vendor and feature flags
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux GetCpuVendorFeature "*" rdosdev parm routine [es edi] value [edx]
+int GetCpuVendorFeature(char *Vendor)
+{
+    strcpy(Vendor, CpuVendor);
+    return FeatureFlags;
+}
+
+/*##########################################################################
+#
+#   Name       : GetCpuFreq
+#
+#   Purpose....: Get CPU frequency
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux GetCpuFreq "*" rdosdev parm routine value [ebx]
+int GetCpuFreq()
+{
+    if (PowerStateCount)
+        return PowerStateArr[PowerState]->CoreFreq;
+    else
+        return BaseFreq;
+}
+
+/*##########################################################################
+#
+#   Name       : GetCpuId
+#
+#   Purpose....: Get CPU version
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux GetCpuId "*" rdosdev parm routine value [eax]
+int GetCpuId()
+{
+    return CpuVer;
 }
 
 /*##########################################################################
@@ -2102,6 +2161,8 @@ void __far InitTasking()
 ##########################################################################*/
 int main()
 {
+    CpuVer = RdosGetCpuVersion(CpuVendor, &FeatureFlags, &BaseFreq);    
+
     InitAcpiTables();
 
     Status = AcpiInitializeSubsystem();
