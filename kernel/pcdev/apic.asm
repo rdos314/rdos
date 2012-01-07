@@ -349,8 +349,6 @@ table_end:
 
 real_start:    
     cli
-    jmp real_start
-    
     mov al,0Fh
     out 70h,al
     jmp short $+2
@@ -387,6 +385,8 @@ real_end:
 ; this code is loaded at 01400. It should contain no near jumps!
     
 prot_start:
+    jmp prot_start
+    
     mov ax,18h
     mov ds,ax
     mov es,ax
