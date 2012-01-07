@@ -53,6 +53,8 @@ extern void InitOsAcpi();
 #define AMD8_PERF_STATUS     0xC0010042
 #define AMD8_PERF_CTL        0xC0010041
 
+#define AMD8_STP_GRANT       0x7FFFF00000000LL
+
 #define AMD10_PERF_STATUS    0xC0010063
 #define AMD10_PERF_CTL       0xC0010062
 
@@ -311,6 +313,7 @@ void InitAmdK8()
 ##########################################################################*/
 void UpdateAmdK8(int diff)
 {
+    long long VidState;
     int NewState = PowerState + diff;
 
     if (NewState < 0)
@@ -332,6 +335,14 @@ void UpdateAmdK8(int diff)
         while (RvoVid < CurrVid)
         {
             CurrVid -= Mvs;
+            WriteMsr(AMD8_PERF_CTL, AMD8_STP_GRANT | (CurrVid << 8) | CurrFid | 0x10000);
+
+            for (;;)
+            {
+                VidState = ReadMsr(AMD8_PERF_STATUS);
+                if (VidState | 0x80000000)
+                    break;
+            }
             RdosWaitMicro(Vst);
         }
 
