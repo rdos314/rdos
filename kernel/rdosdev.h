@@ -545,6 +545,7 @@ long RdosGetApicId();
 int RdosGetCoreCount();
 int RdosGetCore();
 int RdosGetCoreNum(int num);
+void RdosStartCore(int core);
 void RdosSendNmi(int core);
 void RdosSendInt(int core, int int_num);
 
@@ -1183,6 +1184,13 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     OsGate_get_apic_id  \
     value [edx];
 
+#pragma aux RdosStartCore = \
+    "push fs" \
+    "mov fs,bx" \
+    OsGate_start_core  \
+    "pop fs" \
+    parm [ebx];
+
 #pragma aux RdosSendNmi = \
     "push fs" \
     "mov fs,bx" \
@@ -1440,7 +1448,7 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     "pop fs" \
     value [eax];
 
-#pragma aux RdosGetCore = \
+#pragma aux RdosGetCoreNum = \
     "push fs" \
     OsGate_get_core_num \
     "mov eax,fs" \

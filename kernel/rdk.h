@@ -403,8 +403,6 @@
 
 #define osgate_debug_exception 360
 
-#define osgate_start_ap_cores 361
-
 #define osgate_create_core 362
 #define osgate_get_core_num 363
 
@@ -415,7 +413,7 @@
 
 #define osgate_get_core 368
 #define osgate_get_core_count 369
-#define osgate_start_core 370
+#define osgate_run_ap_core 370
 
 #define osgate_preempt_timer_expired 371
 #define osgate_timer_expired 372
@@ -485,6 +483,8 @@
 #define osgate_get_acpi_pci_device_name 412
 #define osgate_get_acpi_pci_device_info 413
 #define osgate_get_acpi_pci_device_irq 414
+
+#define osgate_start_core 415
 
 
 
@@ -893,8 +893,6 @@
 
 #define OsGate_debug_exception 0x3E 0x67 0x9a 104 1 0 0 2 0
 
-#define OsGate_start_ap_cores 0x3E 0x67 0x9a 105 1 0 0 2 0
-
 #define OsGate_create_core 0x3E 0x67 0x9a 106 1 0 0 2 0
 #define OsGate_get_core_num 0x3E 0x67 0x9a 107 1 0 0 2 0
 
@@ -905,7 +903,7 @@
 
 #define OsGate_get_core 0x3E 0x67 0x9a 112 1 0 0 2 0
 #define OsGate_get_core_count 0x3E 0x67 0x9a 113 1 0 0 2 0
-#define OsGate_start_core 0x3E 0x67 0x9a 114 1 0 0 2 0
+#define OsGate_run_ap_core 0x3E 0x67 0x9a 114 1 0 0 2 0
 
 #define OsGate_preempt_timer_expired 0x3E 0x67 0x9a 115 1 0 0 2 0
 #define OsGate_timer_expired 0x3E 0x67 0x9a 116 1 0 0 2 0
@@ -975,4 +973,6 @@
 #define OsGate_get_acpi_pci_device_name 0x3E 0x67 0x9a 156 1 0 0 2 0
 #define OsGate_get_acpi_pci_device_info 0x3E 0x67 0x9a 157 1 0 0 2 0
 #define OsGate_get_acpi_pci_device_irq 0x3E 0x67 0x9a 158 1 0 0 2 0
+
+#define OsGate_start_core 0x3E 0x67 0x9a 159 1 0 0 2 0
 

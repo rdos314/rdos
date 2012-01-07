@@ -278,6 +278,14 @@ power_init_callback *power_init_proc;
 power_update_callback *power_update_proc;
 
 char TempResourceBuf[0x4000];
+
+#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
+
+void __far ImplTestGate(const char *msg)
+{
+    int Core = RdosGetCoreNum(1);
+    RdosStartCore(Core);
+}
     
 /*##########################################################################
 #
@@ -451,12 +459,6 @@ void __far PowerThread(void *param)
             (*power_update_proc)(1);
         
     }
-}
-
-#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
-
-void __far ImplTestGate(const char *msg)
-{
 }
 
 /*##########################################################################
