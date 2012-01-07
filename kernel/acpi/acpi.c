@@ -259,7 +259,7 @@ int CpuLoad;
 
 int Irt;
 int Rvo;
-int Pll;
+long long Pll;
 int Mvs;
 int Vst;
 int CurrVid;
@@ -297,7 +297,8 @@ void InitAmdK8()
 
     Irt = 12 << (((PowerStateArr[PowerState]->Control) >> 30) & 0x3);
     Rvo = ((PowerStateArr[PowerState]->Control) >> 28) & 0x3;
-    Pll = (((PowerStateArr[PowerState]->Control) >> 20) & 0x7F) * 12 / 10;
+    Pll = (((PowerStateArr[PowerState]->Control) >> 20) & 0x7F) * 200;
+    Pll = Pll << 32;
     Mvs = 1 << (((PowerStateArr[PowerState]->Control) >> 18) & 0x3);
     Vst = (((PowerStateArr[PowerState]->Control) >> 11) & 0x7F) * 24;
     CurrVid = ((PowerStateArr[PowerState]->Control) >> 6) & 0x1F;
@@ -335,6 +336,10 @@ void UpdateAmdK8(int diff)
         while (RvoVid < CurrVid)
         {
             CurrVid -= Mvs;
+
+            if (CurrVid < RvoVid)
+                CurrVid = RvoVid;
+            
             WriteMsr(AMD8_PERF_CTL, AMD8_STP_GRANT | (CurrVid << 8) | CurrFid | 0x10000);
 
             for (;;)
@@ -344,6 +349,47 @@ void UpdateAmdK8(int diff)
                     break;
             }
             RdosWaitMicro(Vst);
+        }
+
+        if (ReqFid > CurrFid)
+        {
+            while (ReqFid > CurrFid)
+            {
+                CurrFid += 2;
+
+                if (CurrFid > ReqFid)
+                    CurrFid = ReqFid;
+
+                WriteMsr(AMD8_PERF_CTL, Pll | (CurrVid << 8) | CurrFid | 0x10000);
+
+                for (;;)
+                {
+                    VidState = ReadMsr(AMD8_PERF_STATUS);
+                    if (VidState | 0x80000000)
+                        break;
+                }
+                RdosWaitMicro(Irt);            
+            }
+        }
+        else
+        {
+            while (ReqFid < CurrFid)
+            {
+                CurrFid -= 2;
+
+                if (CurrFid < ReqFid)
+                    CurrFid = ReqFid;
+
+                WriteMsr(AMD8_PERF_CTL, Pll | (CurrVid << 8) | CurrFid | 0x10000);
+
+                for (;;)
+                {
+                    VidState = ReadMsr(AMD8_PERF_STATUS);
+                    if (VidState | 0x80000000)
+                        break;
+                }
+                RdosWaitMicro(Irt);            
+            }
         }
 
         PowerState = NewState;
