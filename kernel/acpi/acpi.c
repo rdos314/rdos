@@ -292,13 +292,13 @@ void InitAmdK8()
         if (StateId == PowerStateArr[i]->Status)
             PowerState = i;
 
-    Irt = ((PowerStateArr[PowerState]->Control) >> 30) && 0x3;
-    Rvo = ((PowerStateArr[PowerState]->Control) >> 28) && 0x3;
-    Pll = (((PowerStateArr[PowerState]->Control) >> 20) && 0x7F) * 12 / 10;
-    Mvs = ((PowerStateArr[PowerState]->Control) >> 18) && 0x3;
-    Vst = (((PowerStateArr[PowerState]->Control) >> 11) && 0x7F) * 24;
-    CurrVid = ((PowerStateArr[PowerState]->Control) >> 6) && 0x1F;
-    CurrFid = (PowerStateArr[PowerState]->Control) && 0x3F;
+    Irt = ((PowerStateArr[PowerState]->Control) >> 30) & 0x3;
+    Rvo = ((PowerStateArr[PowerState]->Control) >> 28) & 0x3;
+    Pll = (((PowerStateArr[PowerState]->Control) >> 20) & 0x7F) * 12 / 10;
+    Mvs = ((PowerStateArr[PowerState]->Control) >> 18) & 0x3;
+    Vst = (((PowerStateArr[PowerState]->Control) >> 11) & 0x7F) * 24;
+    CurrVid = ((PowerStateArr[PowerState]->Control) >> 6) & 0x1F;
+    CurrFid = (PowerStateArr[PowerState]->Control) & 0x3F;
     ReqVid = CurrVid;
     ReqFid = CurrFid;
 }
