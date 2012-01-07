@@ -264,6 +264,7 @@ int CurrVid;
 int CurrFid;
 int ReqVid;
 int ReqFid;
+int RvoVid;
 
 long long CoreTicsArr[MAX_PROCESSOR_COUNT];
 long long NullTicsArr[MAX_PROCESSOR_COUNT];
@@ -292,10 +293,10 @@ void InitAmdK8()
         if (StateId == PowerStateArr[i]->Status)
             PowerState = i;
 
-    Irt = ((PowerStateArr[PowerState]->Control) >> 30) & 0x3;
+    Irt = 12 << (((PowerStateArr[PowerState]->Control) >> 30) & 0x3);
     Rvo = ((PowerStateArr[PowerState]->Control) >> 28) & 0x3;
     Pll = (((PowerStateArr[PowerState]->Control) >> 20) & 0x7F) * 12 / 10;
-    Mvs = ((PowerStateArr[PowerState]->Control) >> 18) & 0x3;
+    Mvs = 1 << (((PowerStateArr[PowerState]->Control) >> 18) & 0x3);
     Vst = (((PowerStateArr[PowerState]->Control) >> 11) & 0x7F) * 24;
     CurrVid = ((PowerStateArr[PowerState]->Control) >> 6) & 0x1F;
     CurrFid = (PowerStateArr[PowerState]->Control) & 0x3F;
@@ -320,9 +321,21 @@ void UpdateAmdK8(int diff)
 
     if (PowerState != NewState)
     {
-        PowerState = NewState;
         ReqVid = ((PowerStateArr[PowerState]->Control) >> 6) & 0x1F;
         ReqFid = (PowerStateArr[PowerState]->Control) & 0x3F;
+
+        if (NewState > PowerState)
+            RvoVid = CurrVid + Rvo;
+        else
+            RvoVid = ReqVid + Rvo;
+
+        while (RvoVid > CurrVid)
+        {
+            CurrVid += Mvs;
+            RdosWaitMicro(Vst);
+        }
+
+        PowerState = NewState;
     }        
 }
     
