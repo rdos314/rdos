@@ -465,11 +465,6 @@ ApInit:
     mov ds,ax
     mov eax,12345678h
     mov ds:mp_processor_sign,eax
-
-stpl:
-    jmp stpl
-    
-    cli
     call SetupLocalApic
 ;
     mov ax,start_preempt_timer_nr
@@ -2849,7 +2844,6 @@ start_core   Proc far
 ;
     mov ds:mp_processor_sign,0
 ;
-    push edx
     mov edx,fs:ps_apic
     call SendInit
 ;
