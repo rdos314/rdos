@@ -607,10 +607,10 @@ init_no_bda:
     mov eax,1
     cpuid
     mov ds:cpu_feature_flags,edx
-    shl eax,8
+    shr eax,8
     mov cl,al
     and cl,0Fh
-    shl eax,12
+    shr eax,12
     and al,0Fh
     add al,cl
     mov ds:cpu_type,al       
