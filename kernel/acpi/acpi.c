@@ -240,6 +240,7 @@ struct TDeviceEntry *PciRootArr[MAX_PCI_ROOT_COUNT];
 int PciDevCount = 0;
 struct TDeviceEntry *PciDevArr[MAX_PCI_DEV_COUNT];
 
+int ActiveProcessors = 1;
 int ProcessorCount = 0;
 struct TProcessorEntry *ProcessorArr[MAX_PROCESSOR_COUNT];
 
@@ -411,6 +412,23 @@ void UpdateAmdK8(int diff)
     
 /*##########################################################################
 #
+#   Name       : StartCore
+#
+##########################################################################*/
+void StartCore()
+{
+    int CoreId;
+
+    if (ActiveProcessors < ProcessorCount)
+    {
+        CoreId = RdosGetCoreNum(ActiveProcessors);
+        RdosStartCore(CoreId);
+        ActiveProcessors++;
+    }
+}
+    
+/*##########################################################################
+#
 #   Name       : PowerThread
 #
 ##########################################################################*/
@@ -453,7 +471,12 @@ void __far PowerThread(void *param)
         }
 
         if (MaxCpuLoad > 60)
-            (*power_update_proc)(-1);
+        {
+            if (ActiveProcessors == ProcessorCount)
+                (*power_update_proc)(-1);
+            else
+                StartCore();
+        }
 
         if (MaxCpuLoad < 30)
             (*power_update_proc)(1);
