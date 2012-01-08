@@ -159,10 +159,6 @@ hpet_struc      ENDS
 data    SEGMENT byte public 'DATA'
 
 mp_processor_sign   DD ?
-mp_cr0              DD ?
-mp_cr3              DD ?
-mp_idt              DW ?,?,?
-mp_gdt              DW ?,?,?
 
 time_spinlock       DW ?
 clock_tics          DW ?
@@ -451,8 +447,6 @@ page_struc  ENDS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ApInit:
-    jmp ApInit
-
     mov eax,es:ap_cr4
     db 0Fh
     db 22h
@@ -471,6 +465,10 @@ ApInit:
     mov ds,ax
     mov eax,12345678h
     mov ds:mp_processor_sign,eax
+
+stpl:
+    jmp stpl
+    
     cli
     call SetupLocalApic
 ;
@@ -2926,19 +2924,6 @@ DoCreateCore   Proc near
     push eax
     push cx
     push edx
-;       
-    mov ax,SEG data
-    mov es,ax 
-    mov eax,cr0
-    mov es:mp_cr0,eax
-    mov eax,cr3
-    mov es:mp_cr3,eax
-;
-    db 66h
-    sidt fword ptr es:mp_idt
-;
-    db 66h
-    sgdt fword ptr es:mp_gdt
 ;    
     CreateCoreGdt
     CreateCore
