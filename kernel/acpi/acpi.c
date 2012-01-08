@@ -412,6 +412,43 @@ void UpdateAmdK8(int diff)
     
 /*##########################################################################
 #
+#   Name       : InitAmdK10
+#
+##########################################################################*/
+void InitAmdK10()
+{
+    int i;
+    int StateId = (int)ReadMsr(AMD10_PERF_STATUS) & 0xFFFF;
+
+    PowerState = 0;
+
+    for (i = 0; i < PowerStateCount; i++)
+        if (StateId == PowerStateArr[i]->Status)
+            PowerState = i;
+}
+    
+/*##########################################################################
+#
+#   Name       : UpdateAmdK10
+#
+##########################################################################*/
+void UpdateAmdK10(int diff)
+{
+    long long VidState;
+    int NewState = PowerState + diff;
+
+    if (NewState < 0)
+        NewState = 0;
+
+    if (NewState >= PowerStateCount)
+        NewState = PowerStateCount - 1;
+
+    if (PowerState != NewState)
+        PowerState = NewState;
+}
+    
+/*##########################################################################
+#
 #   Name       : StartCore
 #
 ##########################################################################*/
@@ -2163,6 +2200,12 @@ void __far InitTasking()
             power_init_proc = InitAmdK8;
             power_update_proc = UpdateAmdK8;
         }            
+
+        if (CpuVer == 16)
+        {
+            power_init_proc = InitAmdK10;
+            power_update_proc = UpdateAmdK10;
+        }
     }    
 
     if (power_init_proc)
