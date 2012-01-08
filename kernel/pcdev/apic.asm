@@ -2774,22 +2774,23 @@ start_core   Proc far
     push ds
     push es
     pushad
-;    
-    mov eax,2000h
-    AllocateBigLinear
 ;
+    xor edx,edx
+    GetPhysicalPage
+    push eax
+;    
     mov eax,63h
     SetPhysicalPage
 ;    
+    mov edx,1000h
+    GetPhysicalPage
+    push eax
+;    
     mov eax,1063h
-    add edx,1000h
     SetPhysicalPage
-    sub edx,1000h
 ;
-    AllocateGdt
-    mov ecx,2000h
-    CreateDataSelector32
-    mov es,bx
+    mov ax,flat_sel
+    mov es,ax
     mov ax,cs
     mov ds,ax
 ;
@@ -2823,32 +2824,15 @@ start_core   Proc far
     mov es:[di].ap_cr4,eax
 ;
     db 66h
-    sidt fword ptr ds:mp_idt
-;
-    db 66h
-    sgdt fword ptr ds:mp_gdt
-;
-    mov ax,word ptr ds:mp_idt
-    mov word ptr es:[di].ap_idt,ax
-    mov eax,dword ptr ds:mp_idt+2
-    mov dword ptr es:[di].ap_idt+2,eax
-;
-    mov ax,word ptr ds:mp_gdt
-    mov word ptr es:[di].ap_gdt,ax
-    mov eax,dword ptr ds:mp_gdt+2
-    mov dword ptr es:[di].ap_gdt+2,eax
+    sidt fword ptr es:[di].ap_idt
 ;    
-;    mov ax,fs:ps_gdt_size
-;    dec ax
-;    mov word ptr es:[di].ap_gdt,ax
-;    mov eax,fs:ps_gdt_base
-;    mov dword ptr es:[di].ap_gdt+2,eax
+    mov ax,fs:ps_gdt_size
+    dec ax
+    mov word ptr es:[di].ap_gdt,ax
+    mov eax,fs:ps_gdt_base
+    mov dword ptr es:[di].ap_gdt+2,eax
 ;
-    push es
-    mov eax,200h
-    AllocateSmallGlobalMem
-    mov ax,es
-    pop es
+    mov ax,fs:ps_ss
     mov es:[di].ap_ss,ax
 ;
     mov bx,467h
@@ -2873,7 +2857,7 @@ start_core   Proc far
 ;
     mov eax,ds:mp_processor_sign
     cmp eax,12345678h
-    je scOk
+    je scDone
 ;    
     mov al,1
     call SendStartup
@@ -2883,7 +2867,7 @@ start_core   Proc far
 scLoop1:
     mov eax,ds:mp_processor_sign
     cmp eax,12345678h
-    je scOk
+    je scDone
 ;    
     mov ax,1
     WaitMilliSec
@@ -2897,21 +2881,13 @@ scLoop1:
 scLoop2:
     mov eax,ds:mp_processor_sign
     cmp eax,12345678h
-    je scOk
+    je scDone
 ;    
     mov ax,1
     WaitMilliSec
     loop scLoop2
-;
-    stc
-    jmp scDone
-
-scOk:
-    clc
 
 scDone:
-    pushf
-;
     mov al,0Fh
     out 70h,al
     jmp short $+2
@@ -2920,16 +2896,14 @@ scDone:
     out 71h,al
     jmp short $+2
 ;
-    pop edx
-    xor eax,eax
-    add edx,1000h
+    pop eax
+    mov edx,1000h
     SetPhysicalPage
-    sub edx,1000h
-;    
-    SetPhysicalPage
-    FreeMem
 ;
-    popf   
+    pop eax
+    xor edx,edx
+    SetPhysicalPage
+;
     popad
     pop es
     pop ds
