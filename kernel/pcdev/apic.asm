@@ -2813,9 +2813,9 @@ start_core   Proc far
     mov ds,ax
 ;    
     mov di,1800h
-    mov eax,ds:mp_cr0
+    mov eax,cr0
     mov es:[di].ap_cr0,eax
-    mov eax,ds:mp_cr3
+    mov eax,cr3
     mov es:[di].ap_cr3,eax
 ;
     db 0Fh
