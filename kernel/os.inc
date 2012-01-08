@@ -973,6 +973,14 @@ UnlockTask    MACRO
     OsGate unlock_task_nr
                         ENDM
 
+NullNotify  MACRO                        
+    OsGate null_notify_nr
+                        ENDM
+
+PreemptNotify  MACRO                        
+    OsGate preempt_notify_nr
+                        ENDM
+
 FlushTlb    MACRO
     OsGate flush_tlb_nr
                         ENDM

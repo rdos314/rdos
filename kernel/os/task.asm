@@ -847,6 +847,18 @@ timer_free_list_create:
     mov ax,unlock_task_nr
     RegisterOsGate
 ;
+    mov si,OFFSET null_notify
+    mov di,OFFSET null_notify_name
+    xor cl,cl
+    mov ax,null_notify_nr
+    RegisterOsGate
+;
+    mov si,OFFSET preempt_notify
+    mov di,OFFSET preempt_notify_name
+    xor cl,cl
+    mov ax,preempt_notify_nr
+    RegisterOsGate
+;
     mov si,OFFSET debug_exception
     mov di,OFFSET debug_exception_name
     xor cl,cl
@@ -2437,6 +2449,7 @@ HandlePreempt    Proc near
     test fs:ps_flags,PS_FLAG_PREEMPT
     jz hpDone
 ;
+    PreemptNotify
     mov si,fs:ps_prio_act
     mov ax,fs:[si]
     or ax,ax
@@ -3926,7 +3939,7 @@ null_thread:
 null_loop_start:
     
 null_loop:
-    hlt
+    NullNotify
     jmp null_loop
 
 
@@ -4295,6 +4308,37 @@ double_block:
     mov es:p_sleep_sel,ds
     mov es:p_sleep_offset,edi
     jmp LoadThread        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           NullNotify
+;
+;       DESCRIPTION:    Default null procedure
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+null_notify_name   DB 'Null Notify',0
+
+null_notify    Proc far
+    hlt
+    retf32
+null_notify    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PreemptNotify
+;
+;       DESCRIPTION:    Default preempt procedure
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+preempt_notify_name   DB 'Preempt Notify',0
+
+preempt_notify    Proc far
+    retf32
+preempt_notify    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
