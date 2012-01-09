@@ -42,6 +42,9 @@
 
 extern void InitAcpiTables();
 extern void InitOsAcpi();
+extern void ReqPStateUpdate(int Count);
+
+#pragma aux ReqPStateUpdate parm routine [ecx]
 
 #define MAX_DEVICE_COUNT        1024
 #define MAX_PCI_ROOT_COUNT      8
@@ -284,8 +287,7 @@ char TempResourceBuf[0x4000];
 
 void __far ImplTestGate(const char *msg)
 {
-    int Core = RdosGetCoreNum(1);
-    RdosStartCore(Core);
+    long long Stat = ReadMsr(AMD10_PERF_STATUS);
 }
     
 /*##########################################################################
@@ -429,6 +431,20 @@ void InitAmdK10()
     
 /*##########################################################################
 #
+#   Name       : ImplUpdatePState
+#
+##########################################################################*/
+#pragma aux ImplUpdatePState "*" rdosdev parm routine
+void __far ImplUpdatePState()
+{
+    int Control;
+
+    Control = PowerStateArr[PowerState];
+//    WriteMsr(AMD10_PERF_CTL, Control);
+}
+    
+/*##########################################################################
+#
 #   Name       : UpdateAmdK10
 #
 ##########################################################################*/
@@ -445,6 +461,8 @@ void UpdateAmdK10(int diff)
 
     if (PowerState != NewState)
         PowerState = NewState;
+
+    ReqPStateUpdate(ActiveProcessors);
 }
     
 /*##########################################################################
@@ -2244,6 +2262,7 @@ int main()
     RdosHookInitTasking(&InitTasking);
     RdosRegisterOsGate(osgate_get_acpi_pci_device_name, &ImplGetPciDeviceName, "Get PCI Device Name");
     RdosRegisterOsGate(osgate_get_acpi_pci_device_irq, &ImplGetPciDeviceIrq, "Get PCI Device IRQ");
+    RdosRegisterOsGate(osgate_update_pstate, &ImplUpdatePState, "Update P-State");
     RdosRegisterBimodalUserGate(usergate_get_acpi_status, &ImplGetAcpiStatus, "Get ACPI Status");
     RdosRegisterUserGate(usergate_get_acpi_object, &ImplGetAcpiObject16, &ImplGetAcpiObject32, "Get ACPI Object");
     RdosRegisterUserGate(usergate_get_acpi_method, &ImplGetAcpiMethod16, &ImplGetAcpiMethod32, "Get ACPI Method");

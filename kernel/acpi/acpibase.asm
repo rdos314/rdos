@@ -31,6 +31,7 @@ INCLUDE ..\..\kernel\os.inc
 INCLUDE ..\..\kernel\user.inc
 INCLUDE ..\..\kernel\driver.def
 INCLUDE ..\..\kernel\os\system.def
+INCLUDE ..\..\kernel\os\proc.inc
 INCLUDE acpi.inc
 
     .386p
@@ -785,6 +786,37 @@ gpmApic:
 gpmDone:        
     ret
 GetPicMode_    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReqPStateUpdate
+;
+;           DESCRIPTION:    Req p-state update for all cores
+;
+;           PARAMETERS:     ECX      Number of cores
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public ReqPStateUpdate_
+
+ReqPStateUpdate_    Proc near
+    push fs
+    push eax
+
+req_update_loop:    
+    xor eax,eax
+    GetCoreNumber
+    lock or fs:ps_flags,PS_FLAG_P_STATE
+;
+    inc eax
+    cmp eax,ecx
+    jne req_update_loop
+;
+    pop eax
+    pop fs                
+    ret
+ReqPStateUpdate_    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

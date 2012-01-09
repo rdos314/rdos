@@ -853,12 +853,6 @@ timer_free_list_create:
     mov ax,null_notify_nr
     RegisterOsGate
 ;
-    mov si,OFFSET preempt_notify
-    mov di,OFFSET preempt_notify_name
-    xor cl,cl
-    mov ax,preempt_notify_nr
-    RegisterOsGate
-;
     mov si,OFFSET debug_exception
     mov di,OFFSET debug_exception_name
     xor cl,cl
@@ -2449,7 +2443,6 @@ HandlePreempt    Proc near
     test fs:ps_flags,PS_FLAG_PREEMPT
     jz hpDone
 ;
-    PreemptNotify
     mov si,fs:ps_prio_act
     mov ax,fs:[si]
     or ax,ax
@@ -2890,6 +2883,11 @@ PreemptReload  Endp
     extrn thread_create:near
 
 LoadThread:
+    test fs:ps_flags,PS_FLAG_P_STATE
+    jz load_thread_loop
+;    
+    lock and fs:ps_flags,NOT PS_FLAG_P_STATE
+    UpdatePState
 
 load_thread_loop:
     mov ax,task_sel

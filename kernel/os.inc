@@ -977,8 +977,8 @@ NullNotify  MACRO
     OsGate null_notify_nr
                         ENDM
 
-PreemptNotify  MACRO                        
-    OsGate preempt_notify_nr
+UpdatePstate  MACRO                        
+    OsGate update_pstate_nr
                         ENDM
 
 FlushTlb    MACRO

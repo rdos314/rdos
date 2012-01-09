@@ -487,6 +487,6 @@ get_acpi_pci_device_irq_nr  = 414
 start_core_nr               = 415
 
 null_notify_nr              = 416
-preempt_notify_nr           = 417
+update_pstate_nr            = 417
 
 osgate_entries				= 420
