@@ -287,7 +287,7 @@ char TempResourceBuf[0x4000];
 
 void __far ImplTestGate(const char *msg)
 {
-    long long Stat = ReadMsr(AMD10_PERF_STATUS);
+    WriteMsr(AMD10_PERF_CTL, PowerState);
 }
     
 /*##########################################################################
@@ -437,10 +437,7 @@ void InitAmdK10()
 #pragma aux ImplUpdatePState "*" rdosdev parm routine
 void __far ImplUpdatePState()
 {
-    int Control;
-
-    Control = PowerStateArr[PowerState];
-//    WriteMsr(AMD10_PERF_CTL, Control);
+    WriteMsr(AMD10_PERF_CTL, PowerState);
 }
     
 /*##########################################################################
@@ -452,6 +449,7 @@ void UpdateAmdK10(int diff)
 {
     long long VidState;
     int NewState = PowerState + diff;
+    int Control;
 
     if (NewState < 0)
         NewState = 0;
@@ -462,6 +460,7 @@ void UpdateAmdK10(int diff)
     if (PowerState != NewState)
         PowerState = NewState;
 
+    Control = PowerStateArr[PowerState];
     ReqPStateUpdate(ActiveProcessors);
 }
     
