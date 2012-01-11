@@ -803,9 +803,10 @@ GetPicMode_    Endp
 ReqPStateUpdate_    Proc near
     push fs
     push eax
+;    
+    xor eax,eax
 
 req_update_loop:    
-    xor eax,eax
     GetCoreNumber
     lock or fs:ps_flags,PS_FLAG_P_STATE
 ;

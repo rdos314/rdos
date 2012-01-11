@@ -475,9 +475,9 @@ void StartCore()
 
     if (ActiveProcessors < ProcessorCount)
     {
-//        CoreId = RdosGetCoreNum(ActiveProcessors);
-//        RdosStartCore(CoreId);
-//        ActiveProcessors++;
+        CoreId = RdosGetCoreNum(ActiveProcessors);
+        RdosStartCore(CoreId);
+        ActiveProcessors++;
     }
 }
     
@@ -2218,7 +2218,7 @@ void __far InitTasking()
             power_update_proc = UpdateAmdK8;
         }            
 
-        if (CpuVer == 16)
+        if (CpuVer >= 16)
         {
             power_init_proc = InitAmdK10;
             power_update_proc = UpdateAmdK10;
