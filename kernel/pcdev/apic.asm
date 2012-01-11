@@ -466,13 +466,6 @@ ApInit:
     mov eax,12345678h
     mov ds:mp_processor_sign,eax
 ;
-    GetCore
-    test fs:ps_flags,PS_FLAG_ACTIVE
-    jnz ap_start_core
-;
-    ShutdownCore
-
-ap_start_core:    
     call SetupLocalApic
 ;
     mov ax,start_preempt_timer_nr
@@ -2187,6 +2180,34 @@ spurious_int:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           nmi_int
+;
+;               DESCRIPTION:    Default NMI handler
+;
+;               PARAMETERS:             
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+nmi_int:
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:           TimerInt
 ;
 ;               DESCRIPTION:    Timer interrupt
@@ -2352,6 +2373,7 @@ ipi_tab:
 ;
 ;                       int #   Entry                   
 ;
+pi02   DW      02h,    OFFSET nmi_int
 pi0F   DW      0Fh,    OFFSET spurious_int
 pi40   DW      40h,    OFFSET timer_int
 pi80   DW      80h,    OFFSET preempt_int
@@ -2772,142 +2794,8 @@ SendStartup Endp
 start_core_name DB 'Start Core', 0
 
 start_core   Proc far
-    push ds
-    push es
-    pushad
-;
-    xor edx,edx
-    GetPhysicalPage
-    push eax
-;    
-    mov eax,63h
-    SetPhysicalPage
-;    
-    mov edx,1000h
-    GetPhysicalPage
-    push eax
-;    
-    mov eax,1063h
-    SetPhysicalPage
-;
-    mov ax,flat_sel
-    mov es,ax
-    mov ax,cs
-    mov ds,ax
-;
-    mov di,0F80h
-    mov si,OFFSET table_start
-    mov cx,OFFSET table_end - OFFSET table_start
-    rep movsb
-;
-    mov di,1000h
-    mov si,OFFSET real_start
-    mov cx,OFFSET real_end - OFFSET real_start
-    rep movsb
-;
-    mov di,1400h
-    mov si,OFFSET prot_start
-    mov cx,OFFSET prot_end - OFFSET prot_start
-    rep movsb
-;
-    mov ax,SEG data
-    mov ds,ax
-;    
-    mov di,1800h
-    mov eax,cr0
-    mov es:[di].ap_cr0,eax
-    mov eax,cr3
-    mov es:[di].ap_cr3,eax
-;
-    db 0Fh
-    db 20h
-    db 0E0h     ; mov eax,cr4
-    mov es:[di].ap_cr4,eax
-;
-    db 66h
-    sidt fword ptr es:[di].ap_idt
-;    
-    mov ax,fs:ps_gdt_size
-    dec ax
-    mov word ptr es:[di].ap_gdt,ax
-    mov eax,fs:ps_gdt_base
-    mov dword ptr es:[di].ap_gdt+2,eax
-;
-    mov ax,fs:ps_ss
-    mov es:[di].ap_ss,ax
     or fs:ps_flags,PS_FLAG_ACTIVE
-;
-    mov bx,467h
-    mov ax,0
-    mov es:[bx],ax
-    mov ax,100h
-    mov es:[bx+2],ax
-;
-    mov al,0Fh
-    out 70h,al
-    jmp short $+2
-;
-    mov al,0Ah
-    out 71h,al
-    jmp short $+2
-;
-    mov ds:mp_processor_sign,0
-;
-    mov edx,fs:ps_apic
-    call SendInit
-;
-    mov eax,ds:mp_processor_sign
-    cmp eax,12345678h
-    je scDone
-;    
-    mov al,1
-    call SendStartup
-    
-    mov cx,250
-
-scLoop1:
-    mov eax,ds:mp_processor_sign
-    cmp eax,12345678h
-    je scDone
-;    
-    mov ax,1
-    WaitMilliSec
-    loop scLoop1
-;
-    mov al,1    
-    call SendStartup
-;    
-    mov cx,250
-
-scLoop2:
-    mov eax,ds:mp_processor_sign
-    cmp eax,12345678h
-    je scDone
-;    
-    mov ax,1
-    WaitMilliSec
-    loop scLoop2
-
-scDone:
-    mov al,0Fh
-    out 70h,al
-    jmp short $+2
-;
-    xor al,al
-    out 71h,al
-    jmp short $+2
-;
-    pop eax
-    mov edx,1000h
-    SetPhysicalPage
-;
-    pop eax
-    xor edx,edx
-    SetPhysicalPage
-;
-    popad
-    pop es
-    pop ds
+    SendNmi
     retf32
 start_core   Endp
    
@@ -2922,7 +2810,7 @@ start_core   Endp
 
 shutdown_core_name DB 'Shutdown Core', 0
 
-shutdown_core:
+shutdown_core   Proc far
     mov ax,apic_mem_sel
     mov ds,ax
     mov eax,0FFh
@@ -2931,11 +2819,21 @@ shutdown_core:
     GetCore
     lock and fs:ps_flags,NOT PS_FLAG_ACTIVE
     wbinvd
-    cli
+    xor ax,ax
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
+    mov gs,ax
 
 sdcLoop:    
+    cli
     hlt
-    jmp sdcLoop
+    GetCore
+    test fs:ps_flags,PS_FLAG_ACTIVE
+    jz sdcLoop
+;
+    retf32    
+shutdown_core   Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

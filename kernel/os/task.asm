@@ -3578,6 +3578,8 @@ run_ap_core:
     or al,8
     mov cr0,eax    
 ;
+    ShutdownCore
+;
     sti
     call LockCore
     lock or fs:ps_flags,PS_FLAG_PREEMPT    

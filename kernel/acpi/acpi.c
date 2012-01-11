@@ -529,10 +529,10 @@ void __far PowerThread(void *param)
 
         if (MaxCpuLoad > 60)
         {
-/*            if (ActiveProcessors == ProcessorCount) */
+            if (ActiveProcessors == ProcessorCount)
                 (*power_update_proc)(-1);
-/*            else
-                StartCore(); */
+            else
+                StartCore();
         }
 
         if (MaxCpuLoad < 30)
