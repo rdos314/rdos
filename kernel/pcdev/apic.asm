@@ -465,17 +465,12 @@ ApInit:
     mov ds,ax
     mov eax,12345678h
     mov ds:mp_processor_sign,eax
-
-stpl:
-    jmp stpl
-    
 ;
     GetCore
     test fs:ps_flags,PS_FLAG_ACTIVE
     jnz ap_start_core
 ;
-    cli
-    hlt
+    ShutdownCore
 
 ap_start_core:    
     call SetupLocalApic
@@ -2919,6 +2914,32 @@ start_core   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           ShutdownCore
+;
+;       DESCRIPTION:    Shutdown AP core
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+shutdown_core_name DB 'Shutdown Core', 0
+
+shutdown_core:
+    mov ax,apic_mem_sel
+    mov ds,ax
+    mov eax,0FFh
+    mov ds:APIC_TPR,eax
+;    
+    GetCore
+    lock and fs:ps_flags,NOT PS_FLAG_ACTIVE
+    wbinvd
+    cli
+
+sdcLoop:    
+    hlt
+    jmp sdcLoop
+       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           BootCore
 ;
 ;       DESCRIPTION:    Boot a new AP core, but don't activate it.
@@ -3309,6 +3330,12 @@ init    PROC far
     mov edi,OFFSET start_core_name
     xor cl,cl
     mov ax,start_core_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET shutdown_core
+    mov edi,OFFSET shutdown_core_name
+    xor cl,cl
+    mov ax,shutdown_core_nr
     RegisterOsGate
 ;
     mov esi,OFFSET send_int

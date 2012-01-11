@@ -847,12 +847,6 @@ timer_free_list_create:
     mov ax,unlock_task_nr
     RegisterOsGate
 ;
-    mov si,OFFSET null_notify
-    mov di,OFFSET null_notify_name
-    xor cl,cl
-    mov ax,null_notify_nr
-    RegisterOsGate
-;
     mov si,OFFSET debug_exception
     mov di,OFFSET debug_exception_name
     xor cl,cl
@@ -3933,7 +3927,7 @@ null_thread:
 null_loop_start:
     
 null_loop:
-;    hlt
+    hlt
     jmp null_loop
 
 
@@ -4302,22 +4296,6 @@ double_block:
     mov es:p_sleep_sel,ds
     mov es:p_sleep_offset,edi
     jmp LoadThread        
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           NullNotify
-;
-;       DESCRIPTION:    Default null procedure
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-null_notify_name   DB 'Null Notify',0
-
-null_notify    Proc far
-    hlt
-    retf32
-null_notify    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

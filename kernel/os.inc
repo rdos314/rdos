@@ -681,6 +681,10 @@ StartCore    MACRO
     OsGate start_core_nr
                     ENDM
 
+ShutdownCore    MACRO
+    OsGate shutdown_core_nr
+                    ENDM
+
 ;;;;;;;;;;; Signal & waits ;;;;;;;;;;;;;;;;
 
 ClearSignal     MACRO
@@ -971,10 +975,6 @@ LockTask    MACRO
 
 UnlockTask    MACRO
     OsGate unlock_task_nr
-                        ENDM
-
-NullNotify  MACRO                        
-    OsGate null_notify_nr
                         ENDM
 
 UpdatePstate  MACRO                        
