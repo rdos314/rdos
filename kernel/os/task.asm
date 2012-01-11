@@ -3583,10 +3583,6 @@ run_ap_core:
     mov eax,cr0
     or al,8
     mov cr0,eax    
-;    
-    mov ax,core_data_sel
-    mov fs,ax
-    lock or fs:ps_flags,PS_FLAG_ACTIVE
 ;
     sti
     call LockCore

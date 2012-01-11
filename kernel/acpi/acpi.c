@@ -475,9 +475,9 @@ void StartCore()
 
     if (ActiveProcessors < ProcessorCount)
     {
-        CoreId = RdosGetCoreNum(ActiveProcessors);
-        RdosStartCore(CoreId);
-        ActiveProcessors++;
+//        CoreId = RdosGetCoreNum(ActiveProcessors);
+//        RdosStartCore(CoreId);
+//        ActiveProcessors++;
     }
 }
     

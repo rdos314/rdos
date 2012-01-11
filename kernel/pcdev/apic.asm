@@ -465,6 +465,19 @@ ApInit:
     mov ds,ax
     mov eax,12345678h
     mov ds:mp_processor_sign,eax
+
+stpl:
+    jmp stpl
+    
+;
+    GetCore
+    test fs:ps_flags,PS_FLAG_ACTIVE
+    jnz ap_start_core
+;
+    cli
+    hlt
+
+ap_start_core:    
     call SetupLocalApic
 ;
     mov ax,start_preempt_timer_nr
@@ -2827,7 +2840,7 @@ start_core   Proc far
 ;
     mov ax,fs:ps_ss
     mov es:[di].ap_ss,ax
-    and fs:ps_flags,NOT PS_FLAG_NMI
+    or fs:ps_flags,PS_FLAG_ACTIVE
 ;
     mov bx,467h
     mov ax,0
@@ -2906,6 +2919,156 @@ start_core   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           BootCore
+;
+;       DESCRIPTION:    Boot a new AP core, but don't activate it.
+;
+;       PARAMETERS:     FS      Core selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BootCore    Proc near
+    push ds
+    push es
+    pushad
+;
+    xor edx,edx
+    GetPhysicalPage
+    push eax
+;    
+    mov eax,63h
+    SetPhysicalPage
+;    
+    mov edx,1000h
+    GetPhysicalPage
+    push eax
+;    
+    mov eax,1063h
+    SetPhysicalPage
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov ax,cs
+    mov ds,ax
+;
+    mov di,0F80h
+    mov si,OFFSET table_start
+    mov cx,OFFSET table_end - OFFSET table_start
+    rep movsb
+;
+    mov di,1000h
+    mov si,OFFSET real_start
+    mov cx,OFFSET real_end - OFFSET real_start
+    rep movsb
+;
+    mov di,1400h
+    mov si,OFFSET prot_start
+    mov cx,OFFSET prot_end - OFFSET prot_start
+    rep movsb
+;
+    mov ax,SEG data
+    mov ds,ax
+;    
+    mov di,1800h
+    mov eax,cr0
+    mov es:[di].ap_cr0,eax
+    mov eax,cr3
+    mov es:[di].ap_cr3,eax
+;
+    db 0Fh
+    db 20h
+    db 0E0h     ; mov eax,cr4
+    mov es:[di].ap_cr4,eax
+;
+    db 66h
+    sidt fword ptr es:[di].ap_idt
+;    
+    mov ax,fs:ps_gdt_size
+    dec ax
+    mov word ptr es:[di].ap_gdt,ax
+    mov eax,fs:ps_gdt_base
+    mov dword ptr es:[di].ap_gdt+2,eax
+;
+    mov ax,fs:ps_ss
+    mov es:[di].ap_ss,ax
+;
+    mov bx,467h
+    mov ax,0
+    mov es:[bx],ax
+    mov ax,100h
+    mov es:[bx+2],ax
+;
+    mov al,0Fh
+    out 70h,al
+    jmp short $+2
+;
+    mov al,0Ah
+    out 71h,al
+    jmp short $+2
+;
+    mov ds:mp_processor_sign,0
+;
+    mov edx,fs:ps_apic
+    call SendInit
+;
+    mov eax,ds:mp_processor_sign
+    cmp eax,12345678h
+    je bcDone
+;    
+    mov al,1
+    call SendStartup
+    
+    mov cx,250
+
+bcLoop1:
+    mov eax,ds:mp_processor_sign
+    cmp eax,12345678h
+    je bcDone
+;    
+    mov ax,1
+    call DelayMs
+    loop bcLoop1
+;
+    mov al,1    
+    call SendStartup
+;    
+    mov cx,250
+
+bcLoop2:
+    mov eax,ds:mp_processor_sign
+    cmp eax,12345678h
+    je bcDone
+;    
+    mov ax,1
+    call DelayMs
+    loop bcLoop2
+
+bcDone:
+    mov al,0Fh
+    out 70h,al
+    jmp short $+2
+;
+    xor al,al
+    out 71h,al
+    jmp short $+2
+;
+    pop eax
+    mov edx,1000h
+    SetPhysicalPage
+;
+    pop eax
+    xor edx,edx
+    SetPhysicalPage
+;
+    popad
+    pop es
+    pop ds
+    ret
+BootCore   Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           DoCreteCore
 ;
 ;       DESCRIPTION:    Create a CPU core
@@ -2924,7 +3087,6 @@ DoCreateCore   Proc near
     CreateCore
     mov es:ps_gdt_base,edx
     mov es:ps_gdt_size,cx
-    or es:ps_flags,PS_FLAG_NMI
     mov cx,es
     mov fs,cx
 ;
@@ -2980,6 +3142,7 @@ init_ap_proc:
     mov fs:ps_apic,edx
     mov al,es:[di].ap_acpi_id
     mov fs:ps_acpi,al
+    call BootCore
 ;
     inc bp
 
