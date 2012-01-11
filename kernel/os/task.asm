@@ -3937,7 +3937,7 @@ null_thread:
 null_loop_start:
     
 null_loop:
-    NullNotify
+;    hlt
     jmp null_loop
 
 

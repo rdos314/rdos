@@ -2827,6 +2827,7 @@ start_core   Proc far
 ;
     mov ax,fs:ps_ss
     mov es:[di].ap_ss,ax
+    and fs:ps_flags,NOT PS_FLAG_NMI
 ;
     mov bx,467h
     mov ax,0
@@ -2923,6 +2924,7 @@ DoCreateCore   Proc near
     CreateCore
     mov es:ps_gdt_base,edx
     mov es:ps_gdt_size,cx
+    or es:ps_flags,PS_FLAG_NMI
     mov cx,es
     mov fs,cx
 ;

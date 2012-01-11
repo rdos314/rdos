@@ -78,6 +78,8 @@ key_code    DW ?
 vk_code     DB ?
 scan_code       DB ?
 
+has_focus   DB ?
+
 data    ENDS
 
     .386p
@@ -161,6 +163,10 @@ keyboard_thread_loop:
     cmp ah,-1
     je keyboard_thread_loop
 ;
+    mov bl,es:has_focus
+    or bl,bl
+    jz keyboard_thread_loop
+;    
     mov bx,key_focus_sel
     mov ds,bx
 ;
@@ -1240,6 +1246,26 @@ init_local_sel  PROC far
     mov ds:key_int_offs,9*4
     retf32
 init_local_sel  ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           got_focus
+;
+;           DESCRIPTION:    Got focus hook
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+got_focus  PROC far
+    push ds
+    push ax
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:has_focus,1
+    pop ax
+    pop ds
+    retf32
+got_focus  ENDP
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1291,6 +1317,9 @@ init_keyboard   PROC near
 ;
     mov edi,OFFSET init_local_sel
     HookEnableFocus
+;
+    mov edi,OFFSET got_focus
+    HookGotFocus
 ;
     mov edi,OFFSET get_vm_key
     mov al,9
@@ -1391,6 +1420,7 @@ init_keyboard   PROC near
     xor ax,ax
     mov ds:shift_states,ax
     mov ds:keyboard_thread,ax
+    mov ds:has_focus,0
 ;
     mov ax,cs
     mov ds,ax
