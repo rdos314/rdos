@@ -287,7 +287,10 @@ char TempResourceBuf[0x4000];
 
 void __far ImplTestGate(const char *msg)
 {
-    WriteMsr(AMD10_PERF_CTL, PowerState);
+    long long state;
+    
+    state = ReadMsr(AMD10_PERF_CTL);
+    state = ReadMsr(AMD10_PERF_STATUS);
 }
     
 /*##########################################################################
@@ -526,10 +529,10 @@ void __far PowerThread(void *param)
 
         if (MaxCpuLoad > 60)
         {
-            if (ActiveProcessors == ProcessorCount)
+/*            if (ActiveProcessors == ProcessorCount) */
                 (*power_update_proc)(-1);
-            else
-                StartCore();
+/*            else
+                StartCore(); */
         }
 
         if (MaxCpuLoad < 30)

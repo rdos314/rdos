@@ -47,6 +47,8 @@ debug_active    DW ?
 curr_row        DW ?
 curr_col        DW ?
 
+crash_active    DW ?
+
 data    ENDS
 
 IFDEF __WASM__
@@ -1437,6 +1439,11 @@ nmi_handler:
     push ebx
     push ebp
     mov bp,sp
+; 
+    mov ax,SEG data
+    mov fs,ax
+    mov ax,fs:crash_active
+    jz nmi_ret
 ;    
     GetCore
     test fs:ps_flags,PS_FLAG_NMI
@@ -1821,6 +1828,7 @@ enter_do:
 enter_fault_do:
     mov ax,SEG data    
     mov ds,ax
+    mov ds:crash_active,1
 ;
     mov ax,ds:debug_core
     or ax,ax
@@ -2394,6 +2402,7 @@ init_crashdeb    PROC near
     mov ds:debug_active,0
     mov ds:curr_num,0
     mov ds:debug_core,0
+    mov ds:crash_active,0
 ;    
     mov ax,cs
     mov ds,ax
