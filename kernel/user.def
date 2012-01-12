@@ -574,4 +574,6 @@ get_hid_pipe_nr                 = 461
 get_core_load_nr                = 462
 get_core_duty_nr                = 463
 
+has_global_timer_nr             = 464
+
 usergate_entries			    = 512

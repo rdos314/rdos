@@ -253,6 +253,12 @@ int TInfoCommand::Execute(char *param)
         FMsg.printf(TEXT_INFO_CPU, CpuType, CpuVendor);
     Write(FMsg.GetData());
 
+    if (RdosHasGlobalTimer())
+        FMsg.printf(TEXT_INFO_GLOBAL_TIMER);
+    else
+        FMsg.printf(TEXT_INFO_LOCAL_TIMER);
+    Write(FMsg.GetData());
+
     FMsg.printf(TEXT_INFO_FEATURE);
     Write(FMsg.GetData());
 

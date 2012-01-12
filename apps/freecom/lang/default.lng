@@ -1698,6 +1698,14 @@ Free big kernel memory: %d.%05d MB
 %s CPU (%s)
 .
 
+:TEXT_INFO_GLOBAL_TIMER
+Global timer
+.
+
+:TEXT_INFO_LOCAL_TIMER
+Local timer
+.
+
 :TEXT_INFO_FEATURE
 Feature bits: 
 .

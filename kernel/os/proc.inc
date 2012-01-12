@@ -35,6 +35,7 @@ PS_FLAG_FLUSH       = 40h
 PS_FLAG_LOADING     = 80h
 PS_FLAG_FPU         = 100h
 PS_FLAG_P_STATE     = 200h
+PS_FLAG_SHUTDOWN    = 400h
 
 timer_struc	STRUC
 

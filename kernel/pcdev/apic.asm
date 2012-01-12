@@ -466,19 +466,6 @@ ApInit:
     mov eax,12345678h
     mov ds:mp_processor_sign,eax
 ;
-    call SetupLocalApic
-;
-    mov ax,start_preempt_timer_nr
-    IsValidOsGate
-    jc ap_timer_combined
-;
-    StartPreemptTimer
-    jmp ap_timer_done
-
-ap_timer_combined:
-    StartSysPreemptTimer
-
-ap_timer_done:    
     RunApCore
 
 stopl:
@@ -539,7 +526,7 @@ SetupLocalApic    Proc near
     mov eax,10000000h    
     mov es:APIC_LOG_DEST,eax
 ;
-    mov eax,0
+    mov eax,0FFh
     mov es:APIC_TPR,eax
 ;
     pop bx
@@ -547,6 +534,32 @@ SetupLocalApic    Proc near
     pop es    
     ret
 SetupLocalApic    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           EnableTpr
+;
+;               DESCRIPTION:    Set TPR to allow "lowest priority ints"
+;
+;               PARAMETERS:             
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EnableTpr    Proc near
+    push es
+    push eax
+;    
+    mov ax,apic_mem_sel
+    mov es,ax
+;
+    xor eax,eax
+    mov es:APIC_TPR,eax
+;
+    pop eax
+    pop es    
+    ret
+EnableTpr    Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -901,6 +914,7 @@ daiLoop:
     loop daiApicLoop    
 ;
     call SetupLocalApic
+    call EnableTpr
 ;
     mov ax,apic_mem_sel
     mov ds,ax
@@ -1634,6 +1648,30 @@ set_system_time PROC far
     pop ds
     retf32
 set_system_time ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           HasGlobalTimer
+;
+;           DESCRIPTION:    Check if system has global timer
+;
+;           RETURNS:        NC      Global timer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_global_timer_name    DB 'Has Global Timer', 0
+has_local_timer_name    DB 'Has Global Timer', 0
+
+has_global_timer  Proc far
+    clc
+    retf32
+has_global_timer    Endp
+
+has_local_timer  Proc far
+    stc
+    retf32
+has_local_timer    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2794,7 +2832,13 @@ SendStartup Endp
 start_core_name DB 'Start Core', 0
 
 start_core   Proc far
-    or fs:ps_flags,PS_FLAG_ACTIVE
+    test fs:ps_flags,PS_FLAG_SHUTDOWN
+    jz start_core_normal
+;
+    lock and fs:ps_flags,NOT PS_FLAG_SHUTDOWN
+
+start_core_normal:    
+    lock or fs:ps_flags,PS_FLAG_ACTIVE
     SendNmi
     retf32
 start_core   Endp
@@ -2811,13 +2855,11 @@ start_core   Endp
 shutdown_core_name DB 'Shutdown Core', 0
 
 shutdown_core   Proc far
-    mov ax,apic_mem_sel
-    mov ds,ax
-    mov eax,0FFh
-    mov ds:APIC_TPR,eax
-;    
+    call SetupLocalApic
+;
     GetCore
     lock and fs:ps_flags,NOT PS_FLAG_ACTIVE
+;
     wbinvd
     xor ax,ax
     mov ds,ax
@@ -2826,12 +2868,25 @@ shutdown_core   Proc far
     mov gs,ax
 
 sdcLoop:    
-    cli
+    sti
     hlt
     GetCore
     test fs:ps_flags,PS_FLAG_ACTIVE
     jz sdcLoop
 ;
+    mov ax,start_preempt_timer_nr
+    IsValidOsGate
+    jc sdcCombined
+;
+    StartPreemptTimer
+    jmp sdcDone
+
+sdcCombined:
+    StartSysPreemptTimer
+
+sdcDone:
+    call EnableTpr
+    sti
     retf32    
 shutdown_core   Endp
        
@@ -3074,51 +3129,6 @@ init_core_next:
 init_core_done:
     ret
 StartupApCores   Endp
-      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   apic_pr
-;
-;               DESCRIPTION:    APIC test thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-apic_name       DB 'Apic Test',0
-
-apic_pr:
-    int 3 
-    retf            
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   init_apic_thread
-;
-;               DESCRIPTION:    Init apic threads
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_apic_thread        PROC far
-    push ds
-    push es
-    pusha
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-;       
-    mov si,OFFSET apic_pr
-    mov di,OFFSET apic_name
-    mov cx,stack0_size
-    mov ax,4
-    CreateThread
-;
-    popa
-    pop es
-    pop ds
-    retf32
-init_apic_thread        ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3308,6 +3318,12 @@ init    PROC far
     mov ax,get_system_time_nr
     RegisterBimodalUserGate
 ;
+    mov si,OFFSET has_local_timer
+    mov di,OFFSET has_local_timer_name
+    xor dx,dx
+    mov ax,has_global_timer_nr
+    RegisterBimodalUserGate
+;
     mov eax,dword ptr cs:hpet_tab
     GetAcpiTable
     jc init_hpet_done
@@ -3398,6 +3414,12 @@ init_hpet_loop:
     xor cl,cl
     mov ax,reload_sys_timer_nr
     RegisterOsGate
+;
+    mov si,OFFSET has_global_timer
+    mov di,OFFSET has_global_timer_name
+    xor dx,dx
+    mov ax,has_global_timer_nr
+    RegisterBimodalUserGate
 
 init_hpet_done:    
     pop es
@@ -3411,14 +3433,10 @@ init_hpet_done:
 ;
     call ProcessApicTable
     call SetupLocalApic
+    call EnableTpr
 ;    
     call InitApicTimer
     call StartupApCores
-;
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET init_apic_thread
-    HookInitTasking
 
 init_apic_gates_ok:     
     ret

@@ -42,9 +42,12 @@
 
 extern void InitAcpiTables();
 extern void InitOsAcpi();
-extern void ReqPStateUpdate(int Count);
 
+extern void ReqPStateUpdate(int Count);
 #pragma aux ReqPStateUpdate parm routine [ecx]
+
+extern void ReqShutdown(int Core);
+#pragma aux ReqShutdown parm routine [eax]
 
 #define MAX_DEVICE_COUNT        1024
 #define MAX_PCI_ROOT_COUNT      8
@@ -486,6 +489,20 @@ void StartCore()
     
 /*##########################################################################
 #
+#   Name       : StopCore
+#
+##########################################################################*/
+void StopCore()
+{
+    if (ActiveProcessors > 1)
+    {
+        ActiveProcessors--;
+        ReqShutdown(ActiveProcessors);
+    }
+}
+    
+/*##########################################################################
+#
 #   Name       : PowerThread
 #
 ##########################################################################*/
@@ -508,7 +525,7 @@ void __far PowerThread(void *param)
 
     for (;;)
     {
-        RdosWaitMilli(100);
+        RdosWaitMilli(250);
 
         MaxCpuLoad = 0;
         for (Core = 0; Core < ProcessorCount; Core++)
@@ -536,8 +553,12 @@ void __far PowerThread(void *param)
         }
 
         if (MaxCpuLoad < 30)
-            (*power_update_proc)(1);
-        
+        {
+            if (PowerState == PowerStateCount - 1)
+                StopCore();
+            else        
+                (*power_update_proc)(1);
+        }        
     }
 }
 

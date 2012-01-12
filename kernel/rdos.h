@@ -376,6 +376,7 @@ void RDOSAPI RdosCreatePrioThread(void (*Start)(void *Param), int Prio, const ch
 void RDOSAPI RdosTerminateThread();
 int RDOSAPI RdosGetThreadHandle();
 
+int RDOSAPI RdosHasGlobalTimer();
 int RDOSAPI RdosGetCoreLoad(int Core, long long *NullTics, long long *CoreTics);
 int RDOSAPI RdosGetCoreDuty(int Core, long long *CoreTics, long long *TotalTics);
 
@@ -1621,6 +1622,11 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosIsEmergencyStopped = \
     CallGate_is_emergency_stopped \
+    CarryToBool \    
+    value [eax];
+
+#pragma aux RdosHasGlobalTimer = \
+    CallGate_has_global_timer \
     CarryToBool \    
     value [eax];
 
@@ -3753,6 +3759,11 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosIsEmergencyStopped = \
     CallGate_is_emergency_stopped \
+    CarryToBool \    
+    value [eax];
+
+#pragma aux RdosHasGlobalTimer = \
+    CallGate_has_global_timer \
     CarryToBool \    
     value [eax];
 

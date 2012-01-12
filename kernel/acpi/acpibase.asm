@@ -822,6 +822,29 @@ ReqPStateUpdate_    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ReqShutdown
+;
+;           DESCRIPTION:    Req a shutdown for a core
+;
+;           PARAMETERS:     EAX     Core #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public ReqShutdown_
+
+ReqShutdown_    Proc near
+    push fs
+;    
+    GetCoreNumber
+    lock or fs:ps_flags,PS_FLAG_SHUTDOWN
+;
+    pop fs                
+    ret
+ReqShutdown_    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitAcpiTables
 ;
 ;           DESCRIPTION:    Initialize ACPI tables

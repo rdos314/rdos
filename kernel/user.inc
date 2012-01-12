@@ -437,6 +437,11 @@ Swap       MACRO
 	UserGate swap_nr
 						ENDM
 
+;   NC      Global timer
+HasGlobalTimer       MACRO
+	UserGate has_global_timer_nr
+						ENDM
+
 ;;;;;;;;; CRITICAL SECTIONS ;;;;;;;;;;;;
 
 ; OUT BX		Section handle

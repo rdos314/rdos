@@ -3896,7 +3896,7 @@ null_thread0:
     call SetupMpPatch
 
 null_ap_ok:   
-    push OFFSET null_loop
+    push OFFSET null_loop_start
     call SaveCurrentThread
 ;    
     mov es,fs:ps_curr_thread
@@ -3927,8 +3927,17 @@ null_thread:
     jmp LoadThread
 
 null_loop_start:
+    GetCore
     
 null_loop:
+    test fs:ps_flags,PS_FLAG_SHUTDOWN
+    jz null_hlt
+;
+    lock and fs:ps_flags,NOT PS_FLAG_SHUTDOWN
+    ShutdownCore    
+    jmp null_loop
+
+null_hlt:    
     hlt
     jmp null_loop
 

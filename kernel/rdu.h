@@ -574,6 +574,8 @@
 #define usergate_get_core_load 462
 #define usergate_get_core_duty 463
 
+#define usergate_has_global_timer 464
+
 
 
 #ifdef __FLAT__
@@ -1153,6 +1155,8 @@
 #define CallGate_get_core_load 0x67 0x9a 206 1 0 0 3 0
 #define CallGate_get_core_duty 0x67 0x9a 207 1 0 0 3 0
 
+#define CallGate_has_global_timer 0x67 0x9a 208 1 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1729,5 +1733,7 @@
 
 #define CallGate_get_core_load 0x3e 0x67 0x9a 206 1 0 0 3 0
 #define CallGate_get_core_duty 0x3e 0x67 0x9a 207 1 0 0 3 0
+
+#define CallGate_has_global_timer 0x3e 0x67 0x9a 208 1 0 0 3 0
 
 #endif
