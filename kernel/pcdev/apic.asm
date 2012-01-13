@@ -2863,7 +2863,17 @@ shutdown_core:
 
 sdcLoop:    
     cli
+    mov ax,enter_c3_nr
+    IsValidOsGate
+    jc sdcHlt
+;
+;    EnterC3        
+;    jmp sdcCheck
+
+sdcHlt:    
     hlt
+
+sdcCheck:    
     GetCore
     test fs:ps_flags,PS_FLAG_ACTIVE
     jz sdcLoop

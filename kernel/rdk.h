@@ -485,9 +485,11 @@
 #define osgate_get_acpi_pci_device_irq 414
 
 #define osgate_start_core 415
+#define osgate_shutdown_core 416
 
-#define osgate_null_notify 416
 #define osgate_update_pstate 417
+
+#define osgate_enter_c3 418
 
 
 
@@ -978,7 +980,9 @@
 #define OsGate_get_acpi_pci_device_irq 0x3E 0x67 0x9a 158 1 0 0 2 0
 
 #define OsGate_start_core 0x3E 0x67 0x9a 159 1 0 0 2 0
+#define OsGate_shutdown_core 0x3E 0x67 0x9a 160 1 0 0 2 0
 
-#define OsGate_null_notify 0x3E 0x67 0x9a 160 1 0 0 2 0
 #define OsGate_update_pstate 0x3E 0x67 0x9a 161 1 0 0 2 0
+
+#define OsGate_enter_c3 0x3E 0x67 0x9a 162 1 0 0 2 0
 

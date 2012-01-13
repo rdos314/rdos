@@ -548,6 +548,7 @@ int RdosGetCoreNum(int num);
 void RdosStartCore(int core);
 void RdosSendNmi(int core);
 void RdosSendInt(int core, int int_num);
+void RdosEnterC3();
 
 void RdosClearSignal();
 void RdosSignal(int thread);
@@ -1190,6 +1191,9 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     OsGate_start_core  \
     "pop fs" \
     parm [ebx];
+
+#pragma aux RdosEnterC3 = \
+    OsGate_enter_c3;
 
 #pragma aux RdosSendNmi = \
     "push fs" \

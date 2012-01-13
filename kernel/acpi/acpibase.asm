@@ -758,6 +758,32 @@ get_cpu_version32  Proc far
     call GetCpuId
     ret
 get_cpu_version32 Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           EnterC3
+;
+;       DESCRIPTION:    Enter C3
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+enter_c3_name    DB 'Enter C3',0
+
+    extrn ImplEnterC3:near
+
+enter_c3    Proc far
+    push fs
+    push eax
+;    
+    GetCore
+    movzx eax,fs:ps_acpi
+    call ImplEnterC3
+;
+    pop eax    
+    pop fs
+    ret
+enter_c3    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -912,6 +938,12 @@ acpi_load_save:
     mov edi,OFFSET get_pci_device_info_name
     xor dx,dx
     mov ax,get_acpi_pci_device_info_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET enter_c3
+    mov edi,OFFSET enter_c3_name
+    xor cl,cl
+    mov ax,enter_c3_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_acpi_device_irq

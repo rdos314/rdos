@@ -489,4 +489,6 @@ shutdown_core_nr            = 416
 
 update_pstate_nr            = 417
 
+enter_c3_nr                 = 418
+
 osgate_entries				= 420

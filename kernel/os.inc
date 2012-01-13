@@ -685,6 +685,10 @@ ShutdownCore    MACRO
     OsGate shutdown_core_nr
                     ENDM
 
+EnterC3    MACRO
+    OsGate enter_c3_nr
+                    ENDM
+
 ;;;;;;;;;;; Signal & waits ;;;;;;;;;;;;;;;;
 
 ClearSignal     MACRO

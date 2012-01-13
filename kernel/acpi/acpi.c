@@ -64,8 +64,21 @@ extern void ReqShutdown(int Core);
 #define AMD10_PERF_STATUS    0xC0010063
 #define AMD10_PERF_CTL       0xC0010062
 
+char ReadBytePort(short int address);
+
+void CliHlt();
+
 long long ReadMsr(int Reg);
 void WriteMsr(int Reg, long long Value);
+
+#pragma aux ReadBytePort = \
+    "in al,dx" \
+    parm [dx] \
+    value [al];
+
+#pragma aux CliHlt = \
+    "cli" \
+    "hlt";
 
 #pragma aux ReadMsr = \
     ".686p" \
@@ -224,7 +237,7 @@ struct TProcessorEntry
     ACPI_HANDLE Handle;
     struct TObjectEntry *ObjectList;
     int Id;
-    ACPI_IO_ADDRESS PblkAds;
+    unsigned char *PblkAds;
     int PblkLen;
 };
 
@@ -290,10 +303,7 @@ char TempResourceBuf[0x4000];
 
 void __far ImplTestGate(const char *msg)
 {
-    long long state;
-    
-    state = ReadMsr(AMD10_PERF_CTL);
-    state = ReadMsr(AMD10_PERF_STATUS);
+    RdosEnterC3();
 }
     
 /*##########################################################################
@@ -615,6 +625,32 @@ int GetCpuFreq()
 int GetCpuId()
 {
     return CpuVer;
+}
+    
+/*##########################################################################
+#
+#   Name       : ImplEnterC3
+#
+##########################################################################*/
+#pragma aux ImplEnterC3 "*" rdosdev parm routine [eax]
+void __far ImplEnterC3(int Id)
+{
+    int Core;
+    int ok = FALSE;
+
+    for (Core = 0; Core < ProcessorCount; Core++)
+    {
+        if (ProcessorArr[Core]->Id == Id)
+        {
+            if (ProcessorArr[Core]->PblkLen == 6)
+            {
+                ReadBytePort(ProcessorArr[Core]->PblkAds[5]);
+                ok = TRUE;
+            }
+        }
+    }    
+    if (!ok)
+        CliHlt();
 }
 
 /*##########################################################################
@@ -1534,7 +1570,7 @@ ACPI_STATUS AddAcpiObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, voi
                 Node = (ACPI_NAMESPACE_NODE *)Object;
                 ProcObj = &Node->Object->Processor;
                 ProcEntry->Id = ProcObj->ProcId;
-                ProcEntry->PblkAds = ProcObj->Address;
+                ProcEntry->PblkAds = (unsigned char *)&ProcObj->Address;
                 ProcEntry->PblkLen = ProcObj->Length; 
     
                 if (ProcessorCount < MAX_PROCESSOR_COUNT)
