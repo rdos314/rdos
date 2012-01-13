@@ -467,6 +467,112 @@ ApInit:
     mov ds:mp_processor_sign,eax
 ;
     ShutdownCore
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           IRQ handler
+;
+;               DESCRIPTION:    Code for patching into IRQ handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; this code should not contain near jumps or references to near labels!
+
+irq_handler_struc   STRUC
+
+irq_linear          DD ?
+irq_handler_ads     DD ?,?
+irq_handler_data    DW ?
+irq_handler_chain   DD ?
+
+irq_handler_struc   ENDS
+
+IrqStart:
+
+irq_handler     irq_handler_struc <>
+
+IrqEntry:
+    push ds
+    push es
+    push fs
+    pushad
+;
+    EnterInt
+    push fs
+;       
+    sti
+    mov ds,cs:irq_handler_data
+    call fword ptr cs:irq_handler_ads
+    jmp dword ptr cs:irq_handler_chain
+
+IrqExit:
+    cli    
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+    pop fs
+    LeaveInt
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    iretd
+
+IrqDefault:
+    retf32
+
+IrqEnd:
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateIrq
+;
+;       DESCRIPTION:    Create new IRQ context
+;
+;       RETURNS:        DS:ESI       Address of entry-point
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateIrq   Proc near
+    push es
+    push ecx
+    push edx
+    push edi
+;
+    mov eax,OFFSET IrqEnd - OFFSET IrqStart
+    AllocateSmallLinear
+    AllocateGdt
+    mov ecx,eax
+    CreateCodeSelector16
+;
+    mov ax,cs
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+    mov esi,OFFSET IrqStart
+    mov edi,edx
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    mov es:[edx].irq_linear,edx
+    mov word ptr es:[edx].irq_handler_chain,OFFSET IrqExit - OFFSET IrqStart
+    mov word ptr es:[edx].irq_handler_chain+2,bx    
+    mov dword ptr es:[edx].irq_handler_ads,OFFSET IrqDefault - OFFSET IrqStart
+    mov word ptr es:[edx].irq_handler_ads+4,bx
+    mov es:[edx].irq_handler_data,0
+;
+    mov ds,bx
+    mov esi,OFFSET IrqEntry - OFFSET IrqStart
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop es
+    ret
+CreateIrq   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -611,15 +717,13 @@ DelayMs Endp
 test_gate_name    DB 'Test Gate',0
 
 test_gate_pr  Proc far
-    mov ax,irq_sys_sel
-    mov ds,ax
-    mov bx,OFFSET irq_bitmask
-
-test_loop:
-    mov cx,32
+    mov cx,1
     mov al,20h
     AllocateInts
-    jnc test_loop
+    call CreateIrq
+    xor bl,bl
+    SetupIntGate
+    int 20h
     retf32
 test_gate_pr    Endp
    
