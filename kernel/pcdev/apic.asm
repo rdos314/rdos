@@ -573,6 +573,104 @@ CreateIrq   Proc near
     pop es
     ret
 CreateIrq   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           MSI handler
+;
+;               DESCRIPTION:    Code for creating MSI interrupt handlers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; this code should not contain near jumps or references to near labels!
+
+msi_handler_struc   STRUC
+
+msi_handler_ads     DD ?,?
+msi_handler_data    DW ?
+
+msi_handler_struc   ENDS
+
+MsiStart:
+
+msi_handler     msi_handler_struc <>
+
+MsiEntry:
+    push ds
+    push es
+    push fs
+    pushad
+;
+    EnterInt
+    push fs
+;       
+    sti
+    mov ds,cs:msi_handler_data
+    call fword ptr cs:msi_handler_ads
+    cli    
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+    pop fs
+    LeaveInt
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    iretd
+
+MsiDefault:
+    retf32
+
+MsiEnd:
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateMsi
+;
+;       DESCRIPTION:    Create new MSI context
+;
+;       RETURNS:        DS:ESI       Address of entry-point
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateMsi   Proc near
+    push es
+    push ecx
+    push edx
+    push edi
+;
+    mov eax,OFFSET MsiEnd - OFFSET MsiStart
+    AllocateSmallLinear
+    AllocateGdt
+    mov ecx,eax
+    CreateCodeSelector16
+;
+    mov ax,cs
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+    mov esi,OFFSET MsiStart
+    mov edi,edx
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    mov dword ptr es:[edx].msi_handler_ads,OFFSET MsiDefault - OFFSET MsiStart
+    mov word ptr es:[edx].msi_handler_ads+4,bx
+    mov es:[edx].msi_handler_data,0
+;
+    mov ds,bx
+    mov esi,OFFSET MsiEntry - OFFSET MsiStart
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop es
+    ret
+CreateMsi   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -720,7 +818,7 @@ test_gate_pr  Proc far
     mov cx,1
     mov al,20h
     AllocateInts
-    call CreateIrq
+    call CreateMsi
     xor bl,bl
     SetupIntGate
     int 20h
