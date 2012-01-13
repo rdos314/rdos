@@ -587,6 +587,7 @@ CreateIrq   Endp
 
 msi_handler_struc   STRUC
 
+msi_linear          DD ?
 msi_handler_ads     DD ?,?
 msi_handler_data    DW ?
 
@@ -658,6 +659,7 @@ CreateMsi   Proc near
     mov edi,edx
     rep movs byte ptr es:[edi],ds:[esi]
 ;
+    mov es:[edx].msi_linear,edx
     mov dword ptr es:[edx].msi_handler_ads,OFFSET MsiDefault - OFFSET MsiStart
     mov word ptr es:[edx].msi_handler_ads+4,bx
     mov es:[edx].msi_handler_data,0
@@ -671,6 +673,39 @@ CreateMsi   Proc near
     pop es
     ret
 CreateMsi   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SetMsiHandler
+;
+;       DESCRIPTION:    Setup MSI handler
+;
+;       PARAMETERS:     BX      MSI handler
+;                       DS      Data passed to handler
+;                       ES:EDI  Handler address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetMsiHandler   Proc near
+    push fs
+    push ax
+    push edx
+;
+    mov fs,bx
+    mov edx,fs:msi_linear
+    mov ax,flat_sel
+    mov fs,ax
+;
+    mov fs:[edx].msi_handler_data,ds
+    mov fs:[edx].msi_handler_ads,edi
+    mov word ptr fs:[edx].msi_handler_ads+4,es
+;
+    pop edx
+    pop ax
+    pop fs    
+    ret
+SetMsiHandler   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -814,6 +849,10 @@ DelayMs Endp
 
 test_gate_name    DB 'Test Gate',0
 
+TestHandler Proc far
+    retf32
+TestHandler Endp
+
 test_gate_pr  Proc far
     mov cx,1
     mov al,20h
@@ -821,6 +860,13 @@ test_gate_pr  Proc far
     call CreateMsi
     xor bl,bl
     SetupIntGate
+    mov bx,ds
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,SEG code
+    mov es,ax
+    mov edi, OFFSET TestHandler
+    call SetMsiHandler
     int 20h
     retf32
 test_gate_pr    Endp
