@@ -52,10 +52,6 @@ irq_detect_proc     DD ?
 
 irq_arr			    DB 32 * SIZE irq_struc DUP(?)
 
-msi_mask            DD ?,?
-
-msi_arr             DB 64 * SIZE irq_struc DUP(?)
-
 irq_bitmask         DB 32 DUP(?)
 
 irq_sys_seg	ENDS
