@@ -1224,203 +1224,10 @@ enable_irq_detect   Endp
 allocate_msi_ints_name    DB 'Allocate MSI Ints',0
 
 allocate_msi_ints  Proc far
-    push ds
-    push si
+    mov al,20h
+    AllocateInts
+    jc amiFailed
 ;    
-    mov dx,ds
-    mov ax,irq_sys_sel
-    mov ds,ax
-;
-    cmp cx,32
-    ja amiFailed
-;
-    cmp cx,16
-    jbe amiNot32
-
-ami32:
-    xor ax,ax
-    mov edx,ds:msi_mask
-    or edx,edx
-    jnz ami32_1
-;
-    mov edx,-1
-    mov ds:msi_mask,edx    
-    jmp amiOk
-
-ami32_1:
-    mov ax,32
-    mov edx,ds:msi_mask+4
-    or edx,edx
-    jnz amiFailed
-;
-    mov edx,-1
-    mov ds:msi_mask,edx    
-    jmp amiOk
-
-amiNot32:    
-    cmp cx,8
-    jbe amiNot16
-
-ami16:
-    xor ax,ax
-    mov si,OFFSET msi_mask
-
-ami16Loop:
-    mov dx,ds:[si]
-    or dx,dx
-    jnz ami16Next
-;
-    mov dx,-1
-    mov ds:[si],dx
-    jmp amiOk
-
-ami16Next:
-    add ax,16
-    add si,2
-    cmp ax,64
-    jne ami16Loop
-    jmp amiFailed
-
-amiNot16:
-    cmp cx,4
-    jbe amiNot8
-
-ami8:
-    xor ax,ax
-    mov si,OFFSET msi_mask
-
-ami8Loop:
-    mov dl,ds:[si]
-    or dl,dl
-    jnz ami8Next
-;
-    mov dl,-1
-    mov ds:[si],dl
-    jmp amiOk
-
-ami8Next:
-    add ax,8
-    inc si
-    cmp ax,64
-    jne ami8Loop
-    jmp amiFailed
-        
-amiNot8:
-    cmp cx,2
-    jbe amiNot4
-
-ami4:
-    xor ax,ax
-    mov si,OFFSET msi_mask
-
-ami4Loop:
-    mov dl,ds:[si]
-    test dl,0Fh
-    jnz ami4_1
-;
-    mov dl,0Fh
-    or ds:[si],dl
-    jmp amiOk
-
-ami4_1:
-    add ax,4
-    test dl,0F0h
-    jnz ami4Next
-;    
-    mov dl,0F0h
-    or ds:[si],dl
-    jmp amiOk
-
-ami4Next:
-    add ax,4
-    inc si
-    cmp ax,64
-    jne ami4Loop
-    jmp amiFailed
-        
-amiNot4:
-    cmp cx,1
-    jbe ami1
-
-ami2:
-    xor ax,ax
-    mov si,OFFSET msi_mask
-
-ami2Loop:
-    mov dl,ds:[si]
-    test dl,03h
-    jnz ami2_1
-;
-    mov dl,03h
-    or ds:[si],dl
-    jmp amiOk
-
-ami2_1:
-    add ax,2
-    test dl,0Ch
-    jnz ami2_2
-;
-    mov dl,0Ch
-    or ds:[si],dl
-    jmp amiOk
-
-ami2_2:
-    add ax,2
-    test dl,30h
-    jnz ami2_3
-;
-    mov dl,30h
-    or ds:[si],dl
-    jmp amiOk
-
-ami2_3:
-    add ax,2
-    test dl,0C0h
-    jnz ami2Next
-;
-    mov dl,0C0h
-    or ds:[si],dl
-    jmp amiOk
-
-ami2Next:
-    add ax,2
-    inc si
-    cmp ax,64
-    jne ami2Loop
-    jmp amiFailed
-
-ami1:
-    xor ax,ax
-    mov si,OFFSET msi_mask
-
-ami1ByteLoop:
-    mov dl,ds:[si]
-    cmp dl,-1
-    je ami1NextByte
-;
-    mov dh,1
-
-ami1BitLoop:
-    shr dl,1
-    jc amiBitNext
-;    
-    or ds:[si],dh
-    jmp amiOk
-
-amiBitNext:
-    shl dh,1
-    inc ax
-    jmp ami1BitLoop
-
-ami1NextByte:
-    add ax,8
-    inc si
-    cmp ax,64
-    jne ami1ByteLoop
-    jmp amiFailed
-
-amiOk:
-    add al,0A0h
     mov ah,1
     mov edx,0FEEFF000h
     clc
@@ -1430,8 +1237,6 @@ amiFailed:
     stc
 
 amiDone:    
-    pop si
-    pop ds    
     retf32
 allocate_msi_ints  Endp
    
@@ -1451,32 +1256,19 @@ allocate_msi_ints  Endp
 request_msi_handler_name    DB 'Request MSI Handler',0
 
 request_msi_handler  Proc far
-    push ds
-    push eax
-    push dx
-    push si
+    push bx
+    push esi
 ;    
     push ds
-    mov dx,irq_sys_sel
-    mov ds,dx
-;
-    sub ax,0A0h
-    xor ah,ah
-    mov dx,SIZE irq_struc
-    mul dx
-    mov si,OFFSET msi_arr
-    add si,ax
-    pop dx
-;
-    EnterSection ds:[si].usage_section
-    mov ds:[si].user_data,dx
-    mov ds:[si].user_handler,edi
-    mov word ptr ds:[si+4].user_handler,es
-;    
-    pop si
-    pop dx
-    pop eax
+    call CreateMsi
+    xor bl,bl
+    SetupIntGate
+    mov bx,ds
     pop ds    
+    call SetMsiHandler
+;
+    pop esi
+    pop bx
     retf32
 request_msi_handler  Endp
    
@@ -1494,21 +1286,7 @@ request_msi_handler  Endp
 free_msi_int_name    DB 'Free MSI Int',0
 
 free_msi_int  Proc far
-    push ds
-    push ax
-    push si
-;    
-    mov si,irq_sys_sel
-    mov ds,si
-;
-    sub ax,0A0h
-    xor ah,ah
-    mov si,OFFSET msi_mask
-    btc ds:[si],ax
-;
-    pop si
-    pop ax
-    pop ds
+    FreeInt
     retf32
 free_msi_int    Endp
 
