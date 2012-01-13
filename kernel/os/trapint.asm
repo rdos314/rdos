@@ -2060,7 +2060,20 @@ init_idt    Endp
 setup_int_gate_name DB 'Setup Int Gate',0
 
 setup_int_gate     Proc far
+    push ds
+    push ax
+    push bx
+;
     call local_create_int_gate_sel
+    mov bx,irq_sys_sel
+    mov ds,bx
+    mov bx,OFFSET irq_bitmask
+    movzx ax,al
+    bts [bx],ax
+;
+    pop bx
+    pop ax
+    pop ds    
     retf32
 setup_int_gate  Endp
 
@@ -2080,9 +2093,250 @@ setup_int_gate  Endp
 setup_trap_gate_name DB 'Setup Trap Gate',0
 
 setup_trap_gate     Proc far
+    push ds
+    push ax
+    push bx
+;
     call local_create_trap_gate_sel
+    mov bx,irq_sys_sel
+    mov ds,bx
+    mov bx,OFFSET irq_bitmask
+    movzx ax,al
+    bts [bx],ax
+;
+    pop bx
+    pop ax
+    pop ds    
     retf32
 setup_trap_gate     Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AllocateInts
+;
+;       DESCRIPTION:    Allocate interrupts
+;
+;       PARAMETERS:     CX      Number of ints (1,2,4,8,16 or 32)
+;                       AL      Start int
+;
+;       RETURNS:        AL      Base int #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_ints_name    DB 'Allocate Ints',0
+
+allocate_ints  Proc far
+    push ds
+    push cx
+    push edx
+    push si
+;    
+    mov dx,irq_sys_sel
+    mov ds,dx
+;    
+    test al,7
+    jnz aiFailed
+;    
+    movzx si,al
+    shr si,3
+    add si,OFFSET irq_bitmask
+;
+    cmp cx,32
+    ja aiFailed
+;
+    cmp cx,16
+    jbe aiNot32
+
+ai32:
+    test al,1Fh
+    jnz aiFailed
+
+ai32Loop:
+    mov edx,ds:[si]
+    or edx,edx
+    jz ai32Ok
+;
+    add al,32
+    jc aiFailed
+;
+    add si,4
+    jmp ai32Loop
+    
+ai32Ok:
+    mov edx,-1
+    mov ds:[si],edx    
+    jmp aiOk
+
+aiNot32:    
+    cmp cx,8
+    jbe aiNot16
+
+ai16:
+    test al,0Fh
+    jnz aiFailed
+
+ai16Loop:
+    mov dx,ds:[si]
+    or dx,dx
+    jz ai16Ok
+;
+    add al,16
+    jc aiFailed
+;
+    add si,2
+    jmp ai16Loop
+    
+ai16Ok:
+    mov dx,-1
+    mov ds:[si],dx    
+    jmp aiOk
+
+aiNot16:
+    cmp cx,4
+    jbe aiNot8
+
+ai8:
+
+ai8Loop:
+    mov dl,ds:[si]
+    or dl,dl
+    jz ai8Ok
+;
+    add al,8
+    jc aiFailed
+;
+    inc si
+    jmp ai8Loop
+    
+ai8Ok:
+    mov dl,-1
+    mov ds:[si],dl
+    jmp aiOk
+        
+aiNot8:
+    cmp cx,2
+    jbe aiNot4
+
+ai4:
+
+ai4Loop:
+    mov dl,ds:[si]
+    mov dh,0Fh
+    test dl,dh
+    jz ai4Ok
+;
+    add al,4
+    shl dh,4
+    test dl,dh
+    jz ai4Ok
+;    
+    add al,4
+    jc aiFailed
+;
+    inc si
+    jmp ai4Loop
+
+ai4Ok:
+    or ds:[si],dh
+    jmp aiOk
+        
+aiNot4:
+    cmp cx,1
+    jbe ai1
+
+ai2:
+
+ai2Loop:
+    mov cx,4
+    mov dl,ds:[si]
+    mov dh,3
+
+ai2BitLoop:    
+    test dl,dh
+    jz ai2Ok
+;
+    add al,2
+    jc aiFailed
+;
+    shl dh,2
+    loop ai2BitLoop
+;
+    inc si
+    jmp ai2Loop
+
+ai2Ok:
+    or ds:[si],dh
+    jmp aiOk
+
+ai1:
+
+ai1Loop:
+    mov cx,8
+    mov dl,ds:[si]
+    mov dh,1
+
+ai1BitLoop:    
+    test dl,dh
+    jz ai1Ok
+;
+    add al,1
+    jc aiFailed
+;
+    shl dh,1
+    loop ai1BitLoop
+;
+    inc si
+    jmp ai1Loop
+
+ai1Ok:
+    or ds:[si],dh
+
+aiOk:
+    clc
+    jmp aiDone
+
+aiFailed:
+    stc
+
+aiDone:    
+    pop si
+    pop edx
+    pop cx
+    pop ds    
+    retf32
+allocate_ints  Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FreeInt
+;
+;       DESCRIPTION:    Free a single int vector
+;
+;       PARAMETERS:     AL      Int #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_int_name    DB 'Free Int',0
+
+free_int  Proc far
+    push ds
+    push ax
+    push si
+;    
+    mov si,irq_sys_sel
+    mov ds,si
+;
+    movzx ax,al
+    mov si,OFFSET irq_bitmask
+    btc ds:[si],ax
+;
+    pop si
+    pop ax
+    pop ds
+    retf32
+free_int    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2624,6 +2878,18 @@ init_avail_irq_loop:
     mov edi,OFFSET setup_trap_gate_name
     xor cl,cl
     mov ax,setup_trap_gate_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_ints
+    mov edi,OFFSET allocate_ints_name
+    xor cl,cl
+    mov ax,allocate_ints_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_int
+    mov edi,OFFSET free_int_name
+    xor cl,cl
+    mov ax,free_int_nr
     RegisterOsGate
 ;
     mov esi,OFFSET init_trap_gates

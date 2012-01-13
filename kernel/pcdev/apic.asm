@@ -614,6 +614,12 @@ test_gate_pr  Proc far
     mov ax,irq_sys_sel
     mov ds,ax
     mov bx,OFFSET irq_bitmask
+
+test_loop:
+    mov cx,32
+    mov al,20h
+    AllocateInts
+    jnc test_loop
     retf32
 test_gate_pr    Endp
    

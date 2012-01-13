@@ -492,4 +492,7 @@ update_pstate_nr            = 417
 
 enter_c3_nr                 = 418
 
-osgate_entries				= 420
+allocate_ints_nr            = 419
+free_int_nr                 = 420
+
+osgate_entries				= 440

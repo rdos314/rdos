@@ -1214,6 +1214,18 @@ HookOut MACRO
 
 ;;;;;;;;;; IRQ ;;;;;;;;;;;;;;;;;;;
 
+; IN  CX        Number of ints (1,2,4,8,16 or 32)
+; IN  AL        Start int. Must be aligned
+; OUT AL        Int base
+AllocateInts    MACRO
+    OsGate allocate_ints_nr
+                    ENDM
+
+; IN  AL        Int #
+FreeInt    MACRO
+    OsGate free_int_nr
+                    ENDM
+
 ;       AL              IRQ NR
 SendEoi MACRO
     OsGate send_eoi_nr
