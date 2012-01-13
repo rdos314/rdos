@@ -466,13 +466,7 @@ ApInit:
     mov eax,12345678h
     mov ds:mp_processor_sign,eax
 ;
-    RunApCore
-
-stopl:
-    jmp stopl
-
-ap_crash:    
-    StartCrashCore
+    ShutdownCore
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2854,7 +2848,7 @@ start_core   Endp
 
 shutdown_core_name DB 'Shutdown Core', 0
 
-shutdown_core   Proc far
+shutdown_core:
     call SetupLocalApic
 ;
     GetCore
@@ -2886,9 +2880,7 @@ sdcCombined:
 
 sdcDone:
     call EnableTpr
-    sti
-    retf32    
-shutdown_core   Endp
+    RunApCore
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

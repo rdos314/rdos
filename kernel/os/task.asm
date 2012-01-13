@@ -3578,14 +3578,11 @@ run_ap_core:
     or al,8
     mov cr0,eax    
 ;
-    ShutdownCore
-;
     sti
     call LockCore
     lock or fs:ps_flags,PS_FLAG_PREEMPT    
     jmp LoadThread
     
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3933,9 +3930,13 @@ null_loop:
     test fs:ps_flags,PS_FLAG_SHUTDOWN
     jz null_hlt
 ;
+    push OFFSET null_loop_start
+    call SaveCurrentThread
+;
+    call UnlockCore
     lock and fs:ps_flags,NOT PS_FLAG_SHUTDOWN
+    mov fs:ps_curr_thread,0
     ShutdownCore    
-    jmp null_loop
 
 null_hlt:    
     hlt
