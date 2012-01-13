@@ -602,6 +602,24 @@ DelayMs Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;               NAME:           Test gate
+;
+;               DESCRIPTION:    Test gate
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_gate_name    DB 'Test Gate',0
+
+test_gate_pr  Proc far
+    mov ax,irq_sys_sel
+    mov ds,ax
+    mov bx,OFFSET irq_bitmask
+    retf32
+test_gate_pr    Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;               NAME:           GetId
 ;
 ;               DESCRIPTION:    Get own ID
@@ -3324,6 +3342,12 @@ init    PROC far
     mov di,OFFSET has_local_timer_name
     xor dx,dx
     mov ax,has_global_timer_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET test_gate_pr
+    mov edi,OFFSET test_gate_name
+    xor dx,dx
+    mov ax,test_gate_nr
     RegisterBimodalUserGate
 ;
     mov eax,dword ptr cs:hpet_tab

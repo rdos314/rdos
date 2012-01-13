@@ -2518,6 +2518,21 @@ init_msi_loop:
     add bx,SIZE irq_struc
     loop init_msi_loop
 ;
+    mov bx,OFFSET irq_bitmask
+    mov cx,4
+
+init_used_irq_loop:
+    mov byte ptr ds:[bx],0FFh
+    inc bx
+    loop init_used_irq_loop
+;
+    mov cx,32-4
+
+init_avail_irq_loop:
+    mov byte ptr ds:[bx],0
+    inc bx
+    loop init_avail_irq_loop
+;            
     mov bx,OFFSET irq_arr
     EnterSection ds:[bx].usage_section
     add bx,2 * SIZE irq_struc
