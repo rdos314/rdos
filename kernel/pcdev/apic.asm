@@ -2862,7 +2862,7 @@ shutdown_core:
     mov gs,ax
 
 sdcLoop:    
-    sti
+    cli
     hlt
     GetCore
     test fs:ps_flags,PS_FLAG_ACTIVE
