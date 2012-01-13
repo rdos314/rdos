@@ -325,24 +325,10 @@ CreateCallGateSelector32    MACRO
     OsGate create_call_gate_sel32_nr
                             ENDM
 
-;       BX          DESCRIPTOR
-;       DX          TSS SELECTOR
+; IN  BX          DESCRIPTOR
+; IN  DX          TSS SELECTOR
 CreateTaskGateSelector  MACRO
     OsGate create_task_gate_sel_nr
-                            ENDM
-
-;       AL          INT #
-;       BL          DPL
-;       DS:ESI  ENTRY POINT
-CreateIntGateSelector   MACRO
-    OsGate create_int_gate_sel_nr
-                            ENDM
-
-;       AL          INT #
-;       BL          DPL
-;       DS:ESI  ENTRY POINT
-CreateTrapGateSelector  MACRO
-    OsGate create_trap_gate_sel_nr
                             ENDM
 
 ;       AX      SELECTOR
@@ -366,6 +352,20 @@ FreeSelector    MACRO
 SegmentNotPresent       MACRO
     OsGate segment_not_present_nr
                     ENDM
+
+; IN  AL        INT #
+; IN  BL        DPL
+; IN  DS:ESI    ENTRY POINT
+SetupIntGate   MACRO
+    OsGate setup_int_gate_nr
+                            ENDM
+
+; IN  AL        INT #
+; IN  BL        DPL
+; IN  DS:ESI    ENTRY POINT
+SetupTrapGate  MACRO
+    OsGate setup_trap_gate_nr
+                            ENDM
 
 ;;;;;;;;; PAGING ;;;;;;;;;;;;;;;;;;;;
 

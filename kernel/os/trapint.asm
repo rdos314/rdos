@@ -81,6 +81,7 @@ ENDIF
 code    SEGMENT byte use16 public 'CODE'
 
     extrn local_create_int_gate_sel:near
+    extrn local_create_trap_gate_sel:near
     extrn local_get_selector_base_size:near
 
     extrn get_task_lock:near
@@ -1653,7 +1654,7 @@ init_task_trap_next:
     mov al,cs:[di].ig_nr
     mov bl,cs:[di].ig_dpl
     movzx esi,word ptr cs:[di].ig_entry
-    CreateIntGateSelector
+    SetupIntGate
     add di,8
     jmp init_task_trap_next
 init_task_trap_end:
@@ -2043,6 +2044,45 @@ init_idt    Proc near
     ret
 init_idt    Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupIntGate
+;
+;           description:    Setup int gate
+;
+;           PARAMETERS:     AL              Int #
+;                           BL              DPL
+;                           DS:ESI          Entry-point
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_int_gate_name DB 'Setup Int Gate',0
+
+setup_int_gate     Proc far
+    call local_create_int_gate_sel
+    retf32
+setup_int_gate  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupTrapGate
+;
+;           description:    Setup trap gate
+;
+;           PARAMETERS:     AL              Int #
+;                           BL              DPL
+;                           DS:ESI          Entry-point
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_trap_gate_name DB 'Setup Trap Gate',0
+
+setup_trap_gate     Proc far
+    call local_create_trap_gate_sel
+    retf32
+setup_trap_gate     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2573,6 +2613,18 @@ init_avail_irq_loop:
     mov edi,OFFSET pm_exception_handler
     mov al,3
     HookProt32Int
+;
+    mov esi,OFFSET setup_int_gate
+    mov edi,OFFSET setup_int_gate_name
+    xor cl,cl
+    mov ax,setup_int_gate_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET setup_trap_gate
+    mov edi,OFFSET setup_trap_gate_name
+    xor cl,cl
+    mov ax,setup_trap_gate_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET init_trap_gates
     mov edi,OFFSET init_trap_gates_name

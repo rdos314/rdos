@@ -794,7 +794,7 @@ intLoop:
 ;
     mov al,cs:[di].ig_nr
     movzx esi, word ptr cs:[di].ig_entry
-    CreateIntGateSelector
+    SetupIntGate
     add di,4
     jmp intLoop
     
@@ -902,59 +902,59 @@ init    PROC far
 ;
     mov al,29h
     mov esi,OFFSET irq1
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,2Bh
     mov esi,OFFSET irq3
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,2Ch
     mov esi,OFFSET irq4
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,2Dh
     mov esi,OFFSET irq5
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,2Eh
     mov esi,OFFSET irq6
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,2Fh
     mov esi,OFFSET irq7
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,38h
     mov esi,OFFSET irq8
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,39h
     mov esi,OFFSET irq9
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,3Ah
     mov esi,OFFSET irq10
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,3Bh
     mov esi,OFFSET irq11
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,3Ch
     mov esi,OFFSET irq12
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,3Dh
     mov esi,OFFSET irq13
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,3Eh
     mov esi,OFFSET irq14
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,3Fh
     mov esi,OFFSET irq15
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,11h
     out INT0_CONTROL,al

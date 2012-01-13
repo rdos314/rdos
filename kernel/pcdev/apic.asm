@@ -1740,123 +1740,123 @@ SetupPicInts    Proc near
 ;
     mov al,41h
     mov esi,OFFSET irq1
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,43h
     mov esi,OFFSET irq3
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,44h
     mov esi,OFFSET irq4
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,45h
     mov esi,OFFSET irq5
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,46h
     mov esi,OFFSET irq6
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,47h
     mov esi,OFFSET irq7
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,48h
     mov esi,OFFSET irq8
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,49h
     mov esi,OFFSET irq9
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,4Ah
     mov esi,OFFSET irq10
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,4Bh
     mov esi,OFFSET irq11
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,4Ch
     mov esi,OFFSET irq12
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,4Dh
     mov esi,OFFSET irq13
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,4Eh
     mov esi,OFFSET irq14
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,4Fh
     mov esi,OFFSET irq15
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,50h
     mov esi,OFFSET irq16
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,51h
     mov esi,OFFSET irq17
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,52h
     mov esi,OFFSET irq18
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,53h
     mov esi,OFFSET irq19
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,54h
     mov esi,OFFSET irq20
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,55h
     mov esi,OFFSET irq21
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,56h
     mov esi,OFFSET irq22
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,57h
     mov esi,OFFSET irq23
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,58h
     mov esi,OFFSET irq24
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,59h
     mov esi,OFFSET irq25
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,5Ah
     mov esi,OFFSET irq26
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,5Bh
     mov esi,OFFSET irq27
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,5Ch
     mov esi,OFFSET irq28
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,5Dh
     mov esi,OFFSET irq29
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,5Eh
     mov esi,OFFSET irq30
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,5Fh
     mov esi,OFFSET irq31
-    CreateIntGateSelector
+    SetupIntGate
 ;
     popad
     pop es
@@ -1953,259 +1953,259 @@ SetupMsiInts    Proc near
 ;
     mov al,0A0h
     mov esi,OFFSET msi0
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0A1h
     mov esi,OFFSET msi1
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0A2h
     mov esi,OFFSET msi2
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0A3h
     mov esi,OFFSET msi3
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0A4h
     mov esi,OFFSET msi4
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0A5h
     mov esi,OFFSET msi5
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0A6h
     mov esi,OFFSET msi6
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0A7h
     mov esi,OFFSET msi7
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0A8h
     mov esi,OFFSET msi8
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0A9h
     mov esi,OFFSET msi9
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0AAh
     mov esi,OFFSET msi10
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0ABh
     mov esi,OFFSET msi11
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0ACh
     mov esi,OFFSET msi12
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0ADh
     mov esi,OFFSET msi13
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0AEh
     mov esi,OFFSET msi14
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0AFh
     mov esi,OFFSET msi15
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0B0h
     mov esi,OFFSET msi16
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0B1h
     mov esi,OFFSET msi17
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0B2h
     mov esi,OFFSET msi18
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0B3h
     mov esi,OFFSET msi19
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0B4h
     mov esi,OFFSET msi20
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0B5h
     mov esi,OFFSET msi21
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0B6h
     mov esi,OFFSET msi22
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0B7h
     mov esi,OFFSET msi23
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0B8h
     mov esi,OFFSET msi24
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0B9h
     mov esi,OFFSET msi25
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0BAh
     mov esi,OFFSET msi26
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0BBh
     mov esi,OFFSET msi27
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0BCh
     mov esi,OFFSET msi28
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0BDh
     mov esi,OFFSET msi29
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0BEh
     mov esi,OFFSET msi30
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0BFh
     mov esi,OFFSET msi31
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0C0h
     mov esi,OFFSET msi32
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0C1h
     mov esi,OFFSET msi33
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0C2h
     mov esi,OFFSET msi34
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0C3h
     mov esi,OFFSET msi35
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0C4h
     mov esi,OFFSET msi36
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0C5h
     mov esi,OFFSET msi37
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0C6h
     mov esi,OFFSET msi38
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0C7h
     mov esi,OFFSET msi39
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0C8h
     mov esi,OFFSET msi40
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0C9h
     mov esi,OFFSET msi41
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0CAh
     mov esi,OFFSET msi42
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0CBh
     mov esi,OFFSET msi43
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0CCh
     mov esi,OFFSET msi44
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0CDh
     mov esi,OFFSET msi45
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0CEh
     mov esi,OFFSET msi46
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0CFh
     mov esi,OFFSET msi47
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0D0h
     mov esi,OFFSET msi48
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0D1h
     mov esi,OFFSET msi49
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0D2h
     mov esi,OFFSET msi50
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0D3h
     mov esi,OFFSET msi51
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0D4h
     mov esi,OFFSET msi52
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0D5h
     mov esi,OFFSET msi53
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0D6h
     mov esi,OFFSET msi54
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0D7h
     mov esi,OFFSET msi55
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0D8h
     mov esi,OFFSET msi56
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0D9h
     mov esi,OFFSET msi57
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0DAh
     mov esi,OFFSET msi58
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0DBh
     mov esi,OFFSET msi59
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0DCh
     mov esi,OFFSET msi60
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0DDh
     mov esi,OFFSET msi61
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0DEh
     mov esi,OFFSET msi62
-    CreateIntGateSelector
+    SetupIntGate
 ;
     mov al,0DFh
     mov esi,OFFSET msi63
-    CreateIntGateSelector
+    SetupIntGate
 ;
     popad
     pop es
@@ -2454,7 +2454,7 @@ ipiLoop:
 ;
     mov al,cs:[di].ipi_nr
     movzx esi, word ptr cs:[di].ipi_entry
-    CreateIntGateSelector
+    SetupIntGate
     add di,4
     jmp ipiLoop
     

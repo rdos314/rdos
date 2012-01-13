@@ -1002,26 +1002,6 @@ local_create_int_gate_sel     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateIntGate
-;
-;           DESCRIPTION:    Create int gate selector
-;
-;           PARAMETERS:         AL              INT #
-;                           BL              DPL
-;                           DS:ESI      ENTRY POINT
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_int_gate_sel_name DB 'Create Interrupt Gate Selector',0
-
-create_int_gate_sel     PROC far
-    call local_create_int_gate_sel
-    retf32
-create_int_gate_sel     ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           local_create_trap_gate_sel
 ;
 ;           DESCRIPTION:    Create trap gate selector
@@ -1061,26 +1041,6 @@ local_create_trap_gate_sel    PROC near
     pop es
     ret
 local_create_trap_gate_sel    ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateTrapGate
-;
-;           DESCRIPTION:    Create trap gate selector
-;
-;           PARAMETERS:         AL              INTERRUPT #
-;                           BL              DPL
-;                           DS:ESI      ENTRY POINT
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_trap_gate_sel_name DB 'Create Trap Gate Selector',0
-
-create_trap_gate_sel    PROC far
-    call local_create_trap_gate_sel
-    retf32
-create_trap_gate_sel    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1254,18 +1214,6 @@ init_os_protseg PROC near
     mov edi,OFFSET create_task_gate_sel_name
     xor cl,cl
     mov ax,create_task_gate_sel_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET create_int_gate_sel
-    mov edi,OFFSET create_int_gate_sel_name
-    xor cl,cl
-    mov ax,create_int_gate_sel_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET create_trap_gate_sel
-    mov edi,OFFSET create_trap_gate_sel_name
-    xor cl,cl
-    mov ax,create_trap_gate_sel_nr
     RegisterOsGate
 ;
     ret

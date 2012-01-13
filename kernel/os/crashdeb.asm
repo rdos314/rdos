@@ -1396,7 +1396,7 @@ init_fault_next:
 ;
     xor bl,bl
     movzx esi,word ptr [di+2]
-    CreateIntGateSelector
+    SetupIntGate
     add di,4
     jmp init_fault_next
 
@@ -1856,7 +1856,7 @@ enter_first:
     mov al,2
     xor bl,bl
     mov esi,OFFSET nmi_handler
-    CreateIntGateSelector
+    SetupIntGate
 ;
     pop esi
     pop bx

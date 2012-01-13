@@ -139,7 +139,7 @@ setup_int       PROC near
     mov al,38h
     mov bl,0
     mov esi,OFFSET rtc_int 
-    CreateIntGateSelector
+    SetupIntGate
 ;       
     mov ax,SEG data
     mov ds,ax

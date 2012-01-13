@@ -27,8 +27,6 @@ create_tss_sel_nr			= 23
 create_call_gate_sel16_nr	= 24
 create_call_gate_sel32_nr	= 25
 create_task_gate_sel_nr		= 26
-create_int_gate_sel_nr		= 27
-create_trap_gate_sel_nr		= 28
 selector_to_segment_nr		= 29
 segment_to_selector_nr		= 30
 free_selector_nr			= 31
@@ -76,6 +74,9 @@ create_process_nr			= 74
 
 init_trap_gates_nr          = 75
 init_tss_gates_nr           = 76
+
+setup_int_gate_nr           = 77
+setup_trap_gate_nr          = 78
 
 wake_thread_nr				= 79
 sleep_thread_nr				= 80
