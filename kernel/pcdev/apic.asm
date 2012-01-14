@@ -748,6 +748,17 @@ aihChangePrio:
     jmp aihChangePrio    
 
 aihPrioOk:    
+    push ds
+    push bx
+;
+    mov ds,fs:[bx].gi_handler_sel
+    mov esi,OFFSET IrqEntry - OFFSET IrqStart
+    xor bl,bl
+    SetupIntGate
+;    
+    pop bx
+    pop ds
+;
     mov fs:[bx].gi_int_num,al
 ;
     push ds
