@@ -967,34 +967,36 @@ ReloadSysPreemptTimer    MACRO
 
 EnterInt    MACRO
     mov ax,core_data_sel
-    mov fs,ax
-    add fs:ps_nesting,1
-    push fs:ps_sel
+    mov ds,ax
+    add ds:ps_nesting,1
+    push ds:ps_sel
                         ENDM
 
 LeaveInt    MACRO
     local tucDone
     local tucSwap
 
-    pop fs
+    pop ds
     
-    sub fs:ps_nesting,1
+    sub ds:ps_nesting,1
     jnc tucDone
 ;
-    mov ax,fs:ps_curr_thread
+    mov ax,ds:ps_curr_thread
     or ax,ax
     jz tucDone
 ;    
-    test fs:ps_flags,PS_FLAG_TIMER OR PS_FLAG_PREEMPT
+    test ds:ps_flags,PS_FLAG_TIMER OR PS_FLAG_PREEMPT
     jnz tucSwap
 ;    
-    mov ax,fs:ps_wakeup_list
+    mov ax,ds:ps_wakeup_list
     or ax,ax
     jz tucDone
 
 tucSwap:
-    add fs:ps_nesting,1
+    add ds:ps_nesting,1
     sti
+    mov ax,ds
+    mov fs,ax
     OsGate irq_schedule_nr
 
 tucDone:
