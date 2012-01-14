@@ -510,12 +510,13 @@ irch_handler      irq_chain_struc <>
 
 IrqChainEntry:
     push bx
-    mov ds,cs:irch_handler_data
-    call fword ptr cs:irch_handler_ads
+    mov ds,cs:[bx].irch_handler_data
+    call fword ptr cs:[bx].irch_handler_ads
     pop bx
 ;
+    mov si,bx
     add bx,OFFSET IrqChainEnd - OFFSET IrqChainStart
-    jmp cs:irch_chain
+    jmp cs:[si].irch_chain
 
 IrqChainEnd:
     
@@ -625,7 +626,6 @@ aihChain:
     mov esi,edx
     GetSelectorBaseSize
     push ecx
-    inc ecx
     mov eax,ecx        
     add eax,OFFSET IrqChainEnd - OFFSET IrqChainStart
     AllocateSmallLinear
