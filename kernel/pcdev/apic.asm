@@ -122,9 +122,11 @@ ioapic_data_seg ENDS
 
 global_int_struc    STRUC
 
+gi_handler_sel      DW ?
 gi_ioapic_sel       DW ?
 gi_ioapic_id        DB ?
 gi_int_num          DB ?
+gi_resv             DW ?
 
 global_int_struc    ENDS
 
@@ -178,7 +180,7 @@ isa_redir_arr       DD 16 DUP(?,?)
 ioapic_count        DW ?
 ioapic_arr          DW 16 DUP(?)
 
-global_int_arr      DD 256 DUP(?)
+global_int_arr      DD 256 DUP(?,?)
 
 data    ENDS
 
@@ -673,7 +675,7 @@ CreateMsi   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           SetMsiHandler
+;       NAME:           SetupMsiHandler
 ;
 ;       DESCRIPTION:    Setup MSI handler
 ;
@@ -683,7 +685,7 @@ CreateMsi   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetMsiHandler   Proc near
+SetupMsiHandler   Proc near
     push fs
     push ax
     push edx
@@ -701,7 +703,7 @@ SetMsiHandler   Proc near
     pop ax
     pop fs    
     ret
-SetMsiHandler   Endp
+SetupMsiHandler   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1034,7 +1036,7 @@ enable_irq_do:
     mov bx,SEG data
     mov ds,bx
     movzx bx,al
-    shl bx,2
+    shl bx,3
     add bx,OFFSET global_int_arr
     mov ax,ds:[bx].gi_ioapic_sel
     or ax,ax
@@ -1084,7 +1086,7 @@ disable_irq  Proc far
     mov bx,SEG data
     mov ds,bx
     movzx bx,al
-    shl bx,2
+    shl bx,3
     add bx,OFFSET global_int_arr
     mov ax,ds:[bx].gi_ioapic_sel
     or ax,ax
@@ -1255,7 +1257,7 @@ request_msi_handler  Proc far
     SetupIntGate
     mov bx,ds
     pop ds    
-    call SetMsiHandler
+    call SetupMsiHandler
 ;
     pop esi
     pop bx
@@ -1379,7 +1381,7 @@ start_hpet_iopic:
 ;    mov es:hpet_config,eax
     push bx
 ;    
-    mov bx,OFFSET global_int_arr + 4 * 2
+    mov bx,OFFSET global_int_arr + 8 * 2
     mov ax,ds:[bx].gi_ioapic_sel
 ;    
     push ax
@@ -2211,7 +2213,7 @@ init_apic_redir_loop:
     push es
     mov ax,SEG data
     mov es,ax
-    mov cx,256
+    mov cx,256 * 2
     xor eax,eax
     mov di,OFFSET global_int_arr
     rep stosd        
@@ -2266,14 +2268,14 @@ init_apic_ioapic:
     inc ds:ioapic_count
 ;
     mov ebx,es:[di].aio_int_base
-    shl bx,2
+    shl bx,3
     add bx,OFFSET global_int_arr
     xor dl,dl
 
 init_ioapic_loop:
     mov ds:[bx].gi_ioapic_sel,ax
     mov ds:[bx].gi_ioapic_id,dl
-    add bx,4
+    add bx,8
     inc dl
     loop init_ioapic_loop
 ;    
