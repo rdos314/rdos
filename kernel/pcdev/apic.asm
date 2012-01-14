@@ -471,6 +471,32 @@ IrqExit:
     iretd
 
 IrqDetect:
+    mov ax,SEG data
+    mov ds,ax
+    movzx bx,cs:irq_detect_nr
+    shl bx,3
+    add bx,OFFSET global_int_arr
+    mov ax,ds:[bx].gi_ioapic_sel
+    or ax,ax
+    jz IrqDetectDone
+;    
+    push ax
+    mov al,ds:[bx].gi_ioapic_id
+    pop ds
+;       
+    mov bl,10h
+    add bl,al
+    add bl,al
+;    
+    mov ds:ioapic_regsel,bl
+    mov eax,10000h
+    mov ds:ioapic_window,eax
+;
+    inc bl
+    mov ds:ioapic_regsel,bl
+    xor eax,eax
+    mov ds:ioapic_window,eax
+;
     mov dl,cs:irq_detect_nr
     cmp dl,32
     jae IrqDetectDone
@@ -987,6 +1013,8 @@ TestHandler4 Proc far
 TestHandler4 Endp
 
 test_gate_pr  Proc far
+    int 25h
+;
     mov ax,SEG data
     mov ds,ax
     mov ax,SEG code
