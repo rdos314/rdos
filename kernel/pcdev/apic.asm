@@ -1082,12 +1082,16 @@ test_gate_pr  Proc far
 
 setup_isa_redir_loop:
     mov edx,ds:[bx]
+    test edx,10000h
+    jnz setup_isa_redir_next
+;    
     sub dl,40h
     movzx si,dl
     shl si,3
     or dh,9
     mov ds:[si].global_int_arr.gi_trigger_mode,dh
-;
+
+setup_isa_redir_next:
     add bx,8
     loop setup_isa_redir_loop    
 ;
