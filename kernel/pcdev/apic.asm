@@ -665,6 +665,7 @@ aihChain:
     cmp ax,OFFSET IrqEnd - OFFSET IrqStart
     jae aihChainPrev
 ;    
+    add ax,OFFSET IrqChainEnd - OFFSET IrqChainStart
     xchg ax,fs:[edx].irq_chain
     mov fs:[ebp].irch_chain,ax
     jmp aihDone
@@ -672,6 +673,7 @@ aihChain:
 aihChainPrev:
     mov edx,ebp
     sub edx,OFFSET IrqChainEnd - OFFSET IrqChainStart
+    add ax,OFFSET IrqChainEnd - OFFSET IrqChainStart
     xchg ax,fs:[edx].irch_chain
     mov fs:[ebp].irch_chain,ax
     jmp aihDone
