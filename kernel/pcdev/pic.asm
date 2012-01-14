@@ -28,6 +28,7 @@
 INCLUDE ..\os\protseg.def
 INCLUDE ..\driver.def
 INCLUDE ..\os\port.def
+INCLUDE ..\os\proc.inc
 INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\os.inc

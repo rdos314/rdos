@@ -200,7 +200,6 @@ irq&nr:
     pushad
 ;
     EnterInt
-    push fs
     sti
 ;       
     mov ax,irq_sys_sel
@@ -229,13 +228,11 @@ irq_default_error&nr:
     or es:bad_irqs, 1 SHL nr
 
 irq_handle_done&nr:
-    cli
-;    
+    cli    
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
-    pop fs
     LeaveInt
 ;
     popad
@@ -447,9 +444,8 @@ IrqEntry:
     pushad
 ;
     EnterInt
-    push fs
-;       
     sti
+;       
     mov ds,cs:irq_handler_data
     call fword ptr cs:irq_handler_ads
     jmp dword ptr cs:irq_handler_chain
@@ -460,7 +456,6 @@ IrqExit:
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
-    pop fs
     LeaveInt
 ;
     popad
@@ -552,17 +547,16 @@ MsiEntry:
     pushad
 ;
     EnterInt
-    push fs
-;       
     sti
+;       
     mov ds,cs:msi_handler_data
     call fword ptr cs:msi_handler_ads
+;
     cli    
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
-    pop fs
     LeaveInt
 ;
     popad
@@ -803,7 +797,7 @@ TestHandler Endp
 
 test_gate_pr  Proc far
     mov cx,1
-    mov al,20h
+    mov al,6
     AllocateInts
     call CreateMsi
     xor bl,bl
@@ -1172,7 +1166,7 @@ enable_irq_detect   Endp
 allocate_msi_ints_name    DB 'Allocate MSI Ints',0
 
 allocate_msi_ints  Proc far
-    mov al,20h
+    mov al,4
     AllocateInts
     jc amiFailed
 ;    

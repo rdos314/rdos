@@ -2118,7 +2118,7 @@ setup_trap_gate     Endp
 ;       DESCRIPTION:    Allocate interrupts
 ;
 ;       PARAMETERS:     CX      Number of ints (1,2,4,8,16 or 32)
-;                       AL      Start int
+;                       AL      Priority (0..31)
 ;
 ;       RETURNS:        AL      Base int #
 ;
@@ -2135,12 +2135,10 @@ allocate_ints  Proc far
     mov dx,irq_sys_sel
     mov ds,dx
 ;    
-    test al,7
-    jnz aiFailed
-;    
+    and al,0Fh
     movzx si,al
-    shr si,3
     add si,OFFSET irq_bitmask
+    shl al,3
 ;
     cmp cx,32
     ja aiFailed

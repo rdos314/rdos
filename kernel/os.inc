@@ -966,11 +966,44 @@ ReloadSysPreemptTimer    MACRO
                         ENDM
 
 EnterInt    MACRO
-    OsGate enter_int_nr
+    mov ax,core_data_sel
+    mov fs,ax
+    add fs:ps_nesting,1
+    push fs:ps_sel
                         ENDM
 
 LeaveInt    MACRO
-    OsGate leave_int_nr
+    local tucDone
+    local tucRetry
+    local tucSwap
+
+    pop fs
+    
+tucRetry:    
+    cli
+    sub fs:ps_nesting,1
+    jnc tucDone
+;
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz tucDone
+;    
+    test fs:ps_flags,PS_FLAG_TIMER OR PS_FLAG_PREEMPT
+    jnz tucSwap
+;    
+    mov ax,fs:ps_wakeup_list
+    or ax,ax
+    jz tucDone
+
+tucSwap:
+    add fs:ps_nesting,1
+    jnc tucRetry
+;
+    sti
+    OsGate irq_schedule_nr
+
+tucDone:
+    sti
                         ENDM
 
 LockTask    MACRO
@@ -1214,8 +1247,12 @@ HookOut MACRO
 
 ;;;;;;;;;; IRQ ;;;;;;;;;;;;;;;;;;;
 
+IrqSchedule    MACRO
+    OsGate irq_schedule_nr
+                    ENDM
+
 ; IN  CX        Number of ints (1,2,4,8,16 or 32)
-; IN  AL        Start int. Must be aligned
+; IN  AL        Priority (0..15)
 ; OUT AL        Int base
 AllocateInts    MACRO
     OsGate allocate_ints_nr
@@ -2430,6 +2467,15 @@ FindPciDevice   MACRO
 ; OUT AL    Interrupt line
 GetPciIrqNr     MACRO
     OsGate get_pci_irq_nr
+                    ENDM
+
+; IN  BH    Bus
+; IN  BL    Device
+; IN  CH    Function
+; OUT CL    MSI Register base
+; OUT AX    Requested vectors
+GetPciMsi    MACRO
+    OsGate get_pci_msi_nr
                     ENDM
 
 ;;;;;;;;;; ACPI ;;;;;;;;;

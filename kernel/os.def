@@ -80,6 +80,7 @@ setup_trap_gate_nr          = 78
 
 wake_thread_nr				= 79
 sleep_thread_nr				= 80
+irq_schedule_nr             = 81
 clear_signal_nr				= 83
 signal_nr					= 84
 wait_for_signal_nr			= 85
@@ -399,9 +400,6 @@ clone_app_nr                = 356
 
 get_apic_id_nr              = 357
 
-enter_int_nr                = 358
-leave_int_nr                = 359
-
 debug_exception_nr          = 360
 
 create_core_nr              = 362
@@ -494,5 +492,7 @@ enter_c3_nr                 = 418
 
 allocate_ints_nr            = 419
 free_int_nr                 = 420
+
+get_pci_msi_nr              = 421
 
 osgate_entries				= 440

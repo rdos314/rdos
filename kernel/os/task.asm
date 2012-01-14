@@ -823,16 +823,10 @@ timer_free_list_create:
     mov ax,flush_tlb_nr
     RegisterOsGate
 ;
-    mov si,OFFSET enter_int
-    mov di,OFFSET enter_int_name
+    mov si,OFFSET irq_schedule
+    mov di,OFFSET irq_schedule_name
     xor cl,cl
-    mov ax,enter_int_nr
-    RegisterOsGate
-;
-    mov si,OFFSET leave_int
-    mov di,OFFSET leave_int_name
-    xor cl,cl
-    mov ax,leave_int_nr
+    mov ax,irq_schedule_nr
     RegisterOsGate
 ;
     mov si,OFFSET lock_task
@@ -5231,40 +5225,25 @@ lulcDone:
     ret
 LoadUnlockCore    Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           EnterInt
+;           NAME:           IrqSchedule
 ;
-;           DESCRIPTION:    Enter interrupt notification
+;           DESCRIPTION:    IRQ scheduling
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-enter_int_name  DB 'Enter Int',0
+irq_schedule_name  DB 'IRQ Schedule',0
 
-enter_int       Proc far
-    call TryLockCore
+irq_schedule    Proc far    
+    push OFFSET irqsDone
+    call SaveLockedThread
+    jmp ContinueCurrentThread
+
+irqsDone:
     retf32
-enter_int       Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LeaveInt
-;
-;           DESCRIPTION:    Leave interrupt notification
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-leave_int_name  DB 'Leave Int',0
-
-leave_int       Proc far
-    call TryUnlockCore
-    retf32
-leave_int       Endp
-
+irq_schedule    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
