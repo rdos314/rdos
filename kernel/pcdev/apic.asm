@@ -1088,7 +1088,7 @@ setup_isa_redir_loop:
     or dh,9
     mov ds:[si].global_int_arr.gi_trigger_mode,dh
 ;
-    add bx,4
+    add bx,8
     loop setup_isa_redir_loop    
 ;
     mov ax,irq_sys_sel
