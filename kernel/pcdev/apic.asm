@@ -1074,26 +1074,6 @@ TestHandler4 Proc far
 TestHandler4 Endp
 
 test_gate_pr  Proc far
-    mov ax,SEG data
-    mov ds,ax
-;
-    mov cx,10h
-    mov bx,OFFSET isa_redir_arr
-
-setup_isa_redir_loop:
-    mov edx,ds:[bx]
-    test edx,10000h
-    jnz setup_isa_redir_next
-;    
-    sub dl,40h
-    movzx si,dl
-    shl si,3
-    or dh,9
-    mov ds:[si].global_int_arr.gi_trigger_mode,dh
-
-setup_isa_redir_next:
-    add bx,8
-    loop setup_isa_redir_loop    
 ;
     mov ax,irq_sys_sel
     mov ds,ax
@@ -2674,6 +2654,24 @@ setup_irq_next:
     add bx,8
     inc dl
     loop setup_irq_loop
+;
+    mov cx,10h
+    mov bx,OFFSET isa_redir_arr
+
+setup_isa_redir_loop:
+    mov edx,ds:[bx]
+    test edx,10000h
+    jnz setup_isa_redir_next
+;    
+    sub dl,40h
+    movzx si,dl
+    shl si,3
+    or dh,9
+    mov ds:[si].global_int_arr.gi_trigger_mode,dh
+
+setup_isa_redir_next:
+    add bx,8
+    loop setup_isa_redir_loop    
 ;
     ret
 SetupDefaultIrqHandlers Endp    
