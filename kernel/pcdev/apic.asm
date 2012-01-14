@@ -120,13 +120,16 @@ ioapic_window       DD ?
 
 ioapic_data_seg ENDS
 
+GI_FLAG_DETECTED    = 1
+
 global_int_struc    STRUC
 
 gi_handler_sel      DW ?
 gi_ioapic_sel       DW ?
 gi_ioapic_id        DB ?
 gi_int_num          DB ?
-gi_resv             DW ?
+gi_prio             DB ?
+gi_flags            DB ?
 
 global_int_struc    ENDS
 
@@ -475,13 +478,9 @@ IrqDetect:
     movzx bx,cs:irq_detect_nr
     shl bx,3
     add bx,OFFSET global_int_arr
-    mov ax,ds:[bx].gi_ioapic_sel
-    or ax,ax
-    jz IrqDetectDone
-;    
-    push ax
+    or ds:[bx].gi_flags,GI_FLAG_DETECTED
     mov al,ds:[bx].gi_ioapic_id
-    pop ds
+    mov ds,ds:[bx].gi_ioapic_sel
 ;       
     mov bl,10h
     add bl,al
@@ -2560,9 +2559,11 @@ setup_irq_loop:
 ;    
     push cx
     mov cx,1
-    mov al,4
+    xor al,al
+    mov ds:[bx].gi_prio,al
     AllocateInts
     mov ds:[bx].gi_int_num,al
+    mov ds:[bx].gi_flags,0
     pop cx
 ;
     push ds
