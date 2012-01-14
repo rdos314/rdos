@@ -658,12 +658,22 @@ aihChain:
     mov fs:[ebp].irch_handler_data,ds
     mov fs:[ebp].irch_handler_ads,edi
     mov word ptr fs:[ebp].irch_handler_ads+4,es
-    mov ax,fs:[edx].irq_chain
-    mov fs:[ebp].irch_chain,ax
     mov eax,ebp
     sub eax,edx
     add ax,OFFSET IrqChainEntry - OFFSET IrqChainStart
-    mov fs:[edx].irq_chain,ax
+    sub ax,OFFSET IrqChainEnd - OFFSET IrqChainStart
+    cmp ax,OFFSET IrqEnd - OFFSET IrqStart
+    jae aihChainPrev
+;    
+    xchg ax,fs:[edx].irq_chain
+    mov fs:[ebp].irch_chain,ax
+    jmp aihDone
+
+aihChainPrev:
+    mov edx,ebp
+    sub edx,OFFSET IrqChainEnd - OFFSET IrqChainStart
+    xchg ax,fs:[edx].irch_chain
+    mov fs:[ebp].irch_chain,ax
     jmp aihDone
         
 aihReplace:    
