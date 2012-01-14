@@ -441,13 +441,12 @@ IrqStart:
 irq_handler     irq_handler_struc <>
 
 IrqEntry:
-    int 3
     push ds
     push es
     push fs
     pushad
 ;
-;    EnterInt
+    EnterInt
     sti
 ;       
     mov ds,cs:irq_handler_data
@@ -461,8 +460,8 @@ IrqExit:
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
-;    mov ds:APIC_EOI,eax
-;    LeaveInt
+    mov ds:APIC_EOI,eax
+    LeaveInt
 ;
     popad
     pop fs
@@ -1013,6 +1012,10 @@ TestHandler4 Proc far
 TestHandler4 Endp
 
 test_gate_pr  Proc far
+    mov ax,irq_sys_sel
+    mov ds,ax
+    mov bx,OFFSET bad_irqs
+;
     int 25h
 ;
     mov ax,SEG data
