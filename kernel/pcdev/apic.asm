@@ -592,12 +592,12 @@ AddIrqHandler   Proc near
     push fs
     push ax
     push edx
+    push ebp
 ;
     movzx bx,al
     shl bx,3
     mov ax,SEG data
     mov fs,ax
-    mov al,fs:[bx].global_int_arr.gi_int_num
     mov bx,fs:[bx].global_int_arr.gi_handler_sel
     or bx,bx
     jz aihDone
@@ -607,11 +607,73 @@ AddIrqHandler   Proc near
     mov ax,flat_sel
     mov fs,ax
 ;
+    mov al,fs:[edx].irq_detect_nr
+    cmp al,-1
+    je aihReplace
+
+aihChain:
+    push ds
+    push es
+    push ecx
+    push esi
+    push edi
+    push ebp
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov es,ax
+;    
+    mov esi,edx
+    GetSelectorBaseSize
+    push ecx
+    inc ecx
+    mov eax,ecx        
+    add eax,OFFSET IrqChainEnd - OFFSET IrqChainStart
+    AllocateSmallLinear
+    push edx
+    mov edi,edx
+    rep movs byte ptr es:[edi],ds:[esi]
+    mov ebp,edi
+;    
+    xchg edx,ds:[edx].irq_linear
+    xor ecx,ecx
+    FreeLinear
+;
+    mov ecx,OFFSET IrqChainEnd - OFFSET IrqChainStart
+    mov esi,OFFSET IrqChainStart
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    pop edx
+    pop ecx
+    add ecx,OFFSET IrqChainEnd - OFFSET IrqChainStart
+    CreateCodeSelector16
+;    
+    pop ebp
+    pop edi
+    pop esi
+    pop ecx
+    pop es
+    pop ds
+;
+    mov fs:[ebp].irch_handler_data,ds
+    mov fs:[ebp].irch_handler_ads,edi
+    mov word ptr fs:[ebp].irch_handler_ads+4,es
+    mov ax,fs:[edx].irq_chain
+    mov fs:[ebp].irch_chain,ax
+    mov eax,ebp
+    sub eax,edx
+    add ax,OFFSET IrqChainEntry - OFFSET IrqChainStart
+    mov fs:[edx].irq_chain,ax
+    jmp aihDone
+        
+aihReplace:    
     mov fs:[edx].irq_handler_data,ds
     mov fs:[edx].irq_handler_ads,edi
     mov word ptr fs:[edx].irq_handler_ads+4,es
+    mov fs:[edx].irq_detect_nr,-1
 
 aihDone:
+    pop ebp
     pop edx
     pop ax
     pop fs    
@@ -892,16 +954,31 @@ DelayMs Endp
 
 test_gate_name    DB 'Test Gate',0
 
-TestHandler Proc far
+TestHandler1 Proc far
+    mov ax,1
     retf32
-TestHandler Endp
+TestHandler1 Endp
+
+TestHandler2 Proc far
+    mov ax,2
+    retf32
+TestHandler2 Endp
 
 test_gate_pr  Proc far
     mov ax,SEG data
     mov ds,ax
     mov ax,SEG code
     mov es,ax
-    mov edi,OFFSET TestHandler
+    mov edi,OFFSET TestHandler1
+    mov al,5
+    call AddIrqHandler
+    int 25h
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,SEG code
+    mov es,ax
+    mov edi,OFFSET TestHandler2
     mov al,5
     call AddIrqHandler
     int 25h
