@@ -597,8 +597,8 @@ AddIrqHandler   Proc near
     shl bx,3
     mov ax,SEG data
     mov fs,ax
-    mov bx,fs:[bx].global_int_arr.gi_handler_sel
     mov al,fs:[bx].global_int_arr.gi_int_num
+    mov bx,fs:[bx].global_int_arr.gi_handler_sel
     or bx,bx
     jz aihDone
 ;
