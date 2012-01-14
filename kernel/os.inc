@@ -974,13 +974,10 @@ EnterInt    MACRO
 
 LeaveInt    MACRO
     local tucDone
-    local tucRetry
     local tucSwap
 
     pop fs
     
-tucRetry:    
-    cli
     sub fs:ps_nesting,1
     jnc tucDone
 ;
@@ -997,13 +994,10 @@ tucRetry:
 
 tucSwap:
     add fs:ps_nesting,1
-    jnc tucRetry
-;
     sti
     OsGate irq_schedule_nr
 
 tucDone:
-    sti
                         ENDM
 
 LockTask    MACRO
