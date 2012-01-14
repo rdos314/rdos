@@ -854,44 +854,6 @@ TestHandler Proc far
 TestHandler Endp
 
 test_gate_pr  Proc far
-    mov ax,SEG data
-    mov ds,ax
-    mov bx,OFFSET global_int_arr
-    mov cx,256
-    xor dl,dl
-
-init_int_loop:
-    mov ax,ds:[bx].gi_ioapic_sel
-    or ax,ax
-    jz init_int_next
-;    
-    push cx
-    mov cx,1
-    mov al,4
-    AllocateInts
-    mov ds:[bx].gi_int_num,al
-    pop cx
-;
-    push ds
-    push bx
-;    
-    push ax
-    mov al,dl
-    call CreateIrq
-    pop ax
-;        
-    xor bl,bl
-    SetupIntGate
-    mov ax,ds
-;    
-    pop bx
-    pop ds
-    mov ds:[bx].gi_handler_sel,ax
-
-init_int_next:
-    add bx,8
-    inc dl
-    loop init_int_loop
 ;
     retf32
 test_gate_pr    Endp
@@ -2370,6 +2332,60 @@ init_apic_next:
     ja init_apic_loop
     ret
 ProcessApicTable    Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SetupDefaultIrqHandlers
+;
+;       DESCRIPTION:    Setup default IRQ handlers
+;
+;       PARAMETERS:     ES      Apic table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupDefaultIrqHandlers    Proc near
+    mov ax,SEG data
+    mov ds,ax
+    mov bx,OFFSET global_int_arr
+    mov cx,256
+    xor dl,dl
+
+setup_irq_loop:
+    mov ax,ds:[bx].gi_ioapic_sel
+    or ax,ax
+    jz setup_irq_next
+;    
+    push cx
+    mov cx,1
+    mov al,4
+    AllocateInts
+    mov ds:[bx].gi_int_num,al
+    pop cx
+;
+    push ds
+    push bx
+;    
+    push ax
+    mov al,dl
+    call CreateIrq
+    pop ax
+;        
+    xor bl,bl
+    SetupIntGate
+    mov ax,ds
+;    
+    pop bx
+    pop ds
+    mov ds:[bx].gi_handler_sel,ax
+
+setup_irq_next:
+    add bx,8
+    inc dl
+    loop setup_irq_loop
+;
+    ret
+SetupDefaultIrqHandlers Endp    
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3162,6 +3178,7 @@ init_hpet_done:
     call SetupIrq 
 ;
     call ProcessApicTable
+    call SetupDefaultIrqHandlers
     call SetupLocalApic
     call EnableTpr
 ;    
