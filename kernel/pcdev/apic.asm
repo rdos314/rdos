@@ -2618,7 +2618,6 @@ SetupDefaultIrqHandlers    Proc near
     mov bx,OFFSET global_int_arr
     mov cx,256
     xor dl,dl
-    mov dh,9
 
 setup_irq_loop:
     mov ax,ds:[bx].gi_ioapic_sel
@@ -2631,7 +2630,7 @@ setup_irq_loop:
     mov ds:[bx].gi_prio,al
     AllocateInts
     mov ds:[bx].gi_int_num,al
-    mov ds:[bx].gi_trigger_mode,dh
+    mov ds:[bx].gi_trigger_mode,0A9h
     pop cx
 ;
     push ds
@@ -2653,13 +2652,20 @@ setup_irq_loop:
 setup_irq_next:
     add bx,8
     inc dl
-    cmp dl,10h
-    jne setup_irq_mode_ok
-;
-    mov dh,0A9h
-
-setup_irq_mode_ok:
     loop setup_irq_loop
+;
+    mov cx,10h
+    mov bx,OFFSET global_int_arr
+    mov si,OFFSET isa_redir_arr
+
+setup_isa_redir_loop:
+    mov edx,ds:[si].isa_redir_arr
+    or dh,9
+    mov ds:[bx].gi_trigger_mode,dh
+;
+    add bx,8
+    add si,4
+    loop setup_isa_redir_loop    
 ;
     ret
 SetupDefaultIrqHandlers Endp    
