@@ -730,9 +730,9 @@ aihChainDone:
 ;    
     movzx bx,al
     shl bx,3
-    mov ax,SEG data
     add bx,OFFSET global_int_arr
-    mov fs,ax
+    mov dx,SEG data
+    mov fs,dx
     mov dl,fs:[bx].gi_prio
     cmp ah,dl
     jbe aihDone
