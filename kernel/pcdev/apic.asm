@@ -2655,16 +2655,17 @@ setup_irq_next:
     loop setup_irq_loop
 ;
     mov cx,10h
-    mov bx,OFFSET global_int_arr
-    mov si,OFFSET isa_redir_arr
+    mov bx,OFFSET isa_redir_arr
 
 setup_isa_redir_loop:
-    mov edx,ds:[si].isa_redir_arr
+    mov edx,ds:[bx].isa_redir_arr
+    sub dl,40h
+    movzx si,dl
+    shl si,3
     or dh,9
-    mov ds:[bx].gi_trigger_mode,dh
+    mov ds:[si].global_int_arr.gi_trigger_mode,dh
 ;
-    add bx,8
-    add si,4
+    add bx,4
     loop setup_isa_redir_loop    
 ;
     ret
