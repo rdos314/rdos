@@ -578,6 +578,47 @@ CreateIrq   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           AddIrqHandler
+;
+;       DESCRIPTION:    Add new IRQ handler
+;
+;       PARAMETERS:     AL      Global interrupt #
+;                       DS      Data passed to handler
+;                       ES:EDI  Handler address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddIrqHandler   Proc near
+    push fs
+    push ax
+    push edx
+;
+    movzx bx,al
+    shl bx,3
+    mov bx,ds:[bx].global_int_arr.gi_handler_sel
+    mov al,ds:[bx].global_int_arr.gi_int_num
+    or bx,bx
+    jz aihDone
+;
+    mov fs,bx
+    mov edx,fs:irq_linear
+    mov ax,flat_sel
+    mov fs,ax
+;
+    mov fs:[edx].irq_handler_data,ds
+    mov fs:[edx].irq_handler_ads,edi
+    mov word ptr fs:[edx].irq_handler_ads+4,es
+
+aihDone:
+    pop edx
+    pop ax
+    pop fs    
+    ret
+AddIrqHandler   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;               NAME:           MSI handler
 ;
 ;               DESCRIPTION:    Code for creating MSI interrupt handlers
@@ -854,7 +895,12 @@ TestHandler Proc far
 TestHandler Endp
 
 test_gate_pr  Proc far
+    mov al,5
+    call AddIrqHandler
 ;
+    mov ax,SEG data
+    mov ds,ax
+    mov bx,OFFSET global_int_arr
     retf32
 test_gate_pr    Endp
    
