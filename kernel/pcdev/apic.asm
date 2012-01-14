@@ -445,7 +445,7 @@ IrqEntry:
     push fs
     pushad
 ;
-    EnterInt
+;    EnterInt
     sti
 ;       
     mov ds,cs:irq_handler_data
@@ -459,8 +459,8 @@ IrqExit:
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
-    mov ds:APIC_EOI,eax
-    LeaveInt
+;    mov ds:APIC_EOI,eax
+;    LeaveInt
 ;
     popad
     pop fs
