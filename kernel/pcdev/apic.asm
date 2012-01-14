@@ -964,6 +964,16 @@ TestHandler2 Proc far
     retf32
 TestHandler2 Endp
 
+TestHandler3 Proc far
+    mov ax,3
+    retf32
+TestHandler3 Endp
+
+TestHandler4 Proc far
+    mov ax,4
+    retf32
+TestHandler4 Endp
+
 test_gate_pr  Proc far
     mov ax,SEG data
     mov ds,ax
@@ -979,6 +989,24 @@ test_gate_pr  Proc far
     mov ax,SEG code
     mov es,ax
     mov edi,OFFSET TestHandler2
+    mov al,5
+    call AddIrqHandler
+    int 25h
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,SEG code
+    mov es,ax
+    mov edi,OFFSET TestHandler3
+    mov al,5
+    call AddIrqHandler
+    int 25h
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,SEG code
+    mov es,ax
+    mov edi,OFFSET TestHandler4
     mov al,5
     call AddIrqHandler
     int 25h
