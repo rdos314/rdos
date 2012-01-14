@@ -429,7 +429,8 @@ irq_handler_struc   STRUC
 irq_linear          DD ?
 irq_handler_ads     DD ?,?
 irq_handler_data    DW ?
-irq_handler_chain   DD ?
+irq_chain           DW ?
+irq_detect_nr       DW ?
 
 irq_handler_struc   ENDS
 
@@ -438,6 +439,7 @@ IrqStart:
 irq_handler     irq_handler_struc <>
 
 IrqEntry:
+    int 3
     push ds
     push es
     push fs
@@ -448,7 +450,9 @@ IrqEntry:
 ;       
     mov ds,cs:irq_handler_data
     call fword ptr cs:irq_handler_ads
-    jmp dword ptr cs:irq_handler_chain
+;
+    mov bx,OFFSET IrqEnd - OFFSET IrqStart
+    jmp cs:irq_chain
 
 IrqExit:
     cli    
@@ -464,10 +468,54 @@ IrqExit:
     pop ds
     iretd
 
-IrqDefault:
+IrqDetect:
+    mov dx,cs:irq_detect_nr
+    cmp dx,32
+    jae IrqDetectDone
+;    
+    mov ax,irq_sys_sel
+    mov ds,ax
+    mov bx,OFFSET bad_irqs
+    bts ds:[bx],dx
+
+IrqDetectDone:
     retf32
 
 IrqEnd:
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           IRQ chaining
+;
+;               DESCRIPTION:    Code for adding at end of IRQ handler in order to chain
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; this code should not contain near jumps or references to near labels!
+
+irq_chain_struc  STRUC
+
+irch_handler_ads     DD ?,?
+irch_handler_data    DW ?
+irch_chain           DW ?
+
+irq_chain_struc ENDS
+
+IrqChainStart:
+
+irch_handler      irq_chain_struc <>
+
+IrqChainEntry:
+    push bx
+    mov ds,cs:irch_handler_data
+    call fword ptr cs:irch_handler_ads
+    pop bx
+;
+    add bx,OFFSET IrqChainEnd - OFFSET IrqChainStart
+    jmp cs:irch_chain
+
+IrqChainEnd:
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -476,12 +524,16 @@ IrqEnd:
 ;
 ;       DESCRIPTION:    Create new IRQ context
 ;
+;       PARAMETERS:     
+;
 ;       RETURNS:        DS:ESI       Address of entry-point
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateIrq   Proc near
     push es
+    push eax
+    push bx
     push ecx
     push edx
     push edi
@@ -501,11 +553,11 @@ CreateIrq   Proc near
     rep movs byte ptr es:[edi],ds:[esi]
 ;
     mov es:[edx].irq_linear,edx
-    mov word ptr es:[edx].irq_handler_chain,OFFSET IrqExit - OFFSET IrqStart
-    mov word ptr es:[edx].irq_handler_chain+2,bx    
-    mov dword ptr es:[edx].irq_handler_ads,OFFSET IrqDefault - OFFSET IrqStart
+    mov word ptr es:[edx].irq_chain,OFFSET IrqExit - OFFSET IrqStart
+    mov dword ptr es:[edx].irq_handler_ads,OFFSET IrqDetect - OFFSET IrqStart
     mov word ptr es:[edx].irq_handler_ads+4,bx
     mov es:[edx].irq_handler_data,0
+    mov es:[edx].irq_detect_nr,-1
 ;
     mov ds,bx
     mov esi,OFFSET IrqEntry - OFFSET IrqStart
@@ -513,6 +565,8 @@ CreateIrq   Proc near
     pop edi
     pop edx
     pop ecx
+    pop bx
+    pop eax
     pop es
     ret
 CreateIrq   Endp
@@ -564,7 +618,7 @@ MsiEntry:
     pop es
     pop ds
     iretd
-
+    
 MsiDefault:
     retf32
 
@@ -796,20 +850,14 @@ TestHandler Proc far
 TestHandler Endp
 
 test_gate_pr  Proc far
-    mov cx,1
-    mov al,6
-    AllocateInts
-    call CreateMsi
+;    mov cx,1
+;    mov al,6
+;    AllocateInts
+    call CreateIrq
+    mov al,0E0h
     xor bl,bl
     SetupIntGate
-    mov bx,ds
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,SEG code
-    mov es,ax
-    mov edi, OFFSET TestHandler
-    call SetMsiHandler
-    int 20h
+    int 0E0h
     retf32
 test_gate_pr    Endp
    
