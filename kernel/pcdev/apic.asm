@@ -624,8 +624,8 @@ AddIrqHandler   Proc near
 ;
     movzx bx,al
     shl bx,3
-    mov ax,SEG data
-    mov fs,ax
+    mov dx,SEG data
+    mov fs,dx
     mov bx,fs:[bx].global_int_arr.gi_handler_sel
     or bx,bx
     jz aihDone
