@@ -1089,7 +1089,6 @@ test_gate_pr  Proc far
     mov al,5
     mov ah,5
     call AddIrqHandler
-    int 25h
 ;
     mov ax,SEG data
     mov ds,ax
@@ -1099,7 +1098,6 @@ test_gate_pr  Proc far
     mov al,5
     mov ah,6
     call AddIrqHandler
-    int 25h
 ;
     mov ax,SEG data
     mov ds,ax
@@ -1109,7 +1107,6 @@ test_gate_pr  Proc far
     mov al,5
     mov ah,7
     call AddIrqHandler
-    int 25h
 ;
     mov ax,SEG data
     mov ds,ax
@@ -1119,7 +1116,7 @@ test_gate_pr  Proc far
     mov al,5
     mov ah,12
     call AddIrqHandler
-    int 25h
+    int 60h
 ;
     mov ax,SEG data
     mov ds,ax
