@@ -432,7 +432,7 @@ irq_linear          DD ?
 irq_handler_ads     DD ?,?
 irq_handler_data    DW ?
 irq_chain           DW ?
-irq_detect_nr       DW ?
+irq_detect_nr       DB ?
 
 irq_handler_struc   ENDS
 
@@ -471,8 +471,8 @@ IrqExit:
     iretd
 
 IrqDetect:
-    mov dx,cs:irq_detect_nr
-    cmp dx,32
+    mov dl,cs:irq_detect_nr
+    cmp dl,32
     jae IrqDetectDone
 ;    
     mov ax,irq_sys_sel
@@ -526,7 +526,7 @@ IrqChainEnd:
 ;
 ;       DESCRIPTION:    Create new IRQ context
 ;
-;       PARAMETERS:     
+;       PARAMETERS:     AL           IRQ # (for detect)
 ;
 ;       RETURNS:        DS:ESI       Address of entry-point
 ;
@@ -540,6 +540,7 @@ CreateIrq   Proc near
     push edx
     push edi
 ;
+    push ax
     mov eax,OFFSET IrqEnd - OFFSET IrqStart
     AllocateSmallLinear
     AllocateGdt
@@ -559,7 +560,8 @@ CreateIrq   Proc near
     mov dword ptr es:[edx].irq_handler_ads,OFFSET IrqDetect - OFFSET IrqStart
     mov word ptr es:[edx].irq_handler_ads+4,bx
     mov es:[edx].irq_handler_data,0
-    mov es:[edx].irq_detect_nr,-1
+    pop ax
+    mov es:[edx].irq_detect_nr,al
 ;
     mov ds,bx
     mov esi,OFFSET IrqEntry - OFFSET IrqStart
@@ -852,14 +854,45 @@ TestHandler Proc far
 TestHandler Endp
 
 test_gate_pr  Proc far
-;    mov cx,1
-;    mov al,6
-;    AllocateInts
+    mov ax,SEG data
+    mov ds,ax
+    mov bx,OFFSET global_int_arr
+    mov cx,256
+    xor dl,dl
+
+init_int_loop:
+    mov ax,ds:[bx].gi_ioapic_sel
+    or ax,ax
+    jz init_int_next
+;    
+    push cx
+    mov cx,1
+    mov al,4
+    AllocateInts
+    mov ds:[bx].gi_int_num,al
+    pop cx
+;
+    push ds
+    push bx
+;    
+    push ax
+    mov al,dl
     call CreateIrq
-    mov al,0E0h
+    pop ax
+;        
     xor bl,bl
     SetupIntGate
-    int 0E0h
+    mov ax,ds
+;    
+    pop bx
+    pop ds
+    mov ds:[bx].gi_handler_sel,ax
+
+init_int_next:
+    add bx,8
+    inc dl
+    loop init_int_loop
+;
     retf32
 test_gate_pr    Endp
    
