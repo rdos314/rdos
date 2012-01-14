@@ -609,7 +609,7 @@ AddIrqHandler   Proc near
 ;
     mov al,fs:[edx].irq_detect_nr
     cmp al,-1
-    je aihReplace
+    jne aihReplace
 
 aihChain:
     push ds
