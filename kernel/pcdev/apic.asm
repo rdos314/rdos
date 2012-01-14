@@ -120,8 +120,6 @@ ioapic_window       DD ?
 
 ioapic_data_seg ENDS
 
-GI_FLAG_DETECTED    = 1
-
 global_int_struc    STRUC
 
 gi_handler_sel      DW ?
@@ -129,7 +127,7 @@ gi_ioapic_sel       DW ?
 gi_ioapic_id        DB ?
 gi_int_num          DB ?
 gi_prio             DB ?
-gi_flags            DB ?
+gi_trigger_mode     DB ?
 
 global_int_struc    ENDS
 
@@ -478,7 +476,6 @@ IrqDetect:
     movzx bx,cs:irq_detect_nr
     shl bx,3
     add bx,OFFSET global_int_arr
-    or ds:[bx].gi_flags,GI_FLAG_DETECTED
     mov al,ds:[bx].gi_ioapic_id
     mov ds,ds:[bx].gi_ioapic_sel
 ;       
@@ -608,7 +605,7 @@ CreateIrq   Endp
 ;       DESCRIPTION:    Add new IRQ handler
 ;
 ;       PARAMETERS:     AL      Global interrupt #
-;                       AH      Requested priority (1..15)
+;                       AH      Requested priority (1..31)
 ;                       DS      Data passed to handler
 ;                       ES:EDI  Handler address
 ;
@@ -630,10 +627,10 @@ AddIrqHandler   Proc near
     or bx,bx
     jz aihDone
 ;
-    cmp ah,15
+    cmp ah,31
     jbe aihPrioHighOk
 ;
-    mov ah,15
+    mov ah,31
 
 aihPrioHighOk:
     or ah,ah
@@ -756,7 +753,7 @@ aihPrioOk:
     push ds
     mov al,fs:[bx].gi_ioapic_id
     movzx edx,fs:[bx].gi_int_num
-    mov dh,0A9h
+    mov dh,fs:[bx].gi_trigger_mode
     mov ds,fs:[bx].gi_ioapic_sel
 ;       
     mov bl,10h
@@ -2621,6 +2618,7 @@ SetupDefaultIrqHandlers    Proc near
     mov bx,OFFSET global_int_arr
     mov cx,256
     xor dl,dl
+    mov dh,9
 
 setup_irq_loop:
     mov ax,ds:[bx].gi_ioapic_sel
@@ -2633,7 +2631,7 @@ setup_irq_loop:
     mov ds:[bx].gi_prio,al
     AllocateInts
     mov ds:[bx].gi_int_num,al
-    mov ds:[bx].gi_flags,0
+    mov ds:[bx].gi_trigger_mode,dh
     pop cx
 ;
     push ds
@@ -2655,6 +2653,12 @@ setup_irq_loop:
 setup_irq_next:
     add bx,8
     inc dl
+    cmp dl,10h
+    jne setup_irq_mode_ok
+;
+    mov dh,0A9h
+
+setup_irq_mode_ok:
     loop setup_irq_loop
 ;
     ret
