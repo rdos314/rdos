@@ -617,7 +617,6 @@ aihChain:
     push ecx
     push esi
     push edi
-    push ebp
 ;
     mov ax,flat_sel
     mov ds,ax
@@ -639,8 +638,10 @@ aihChain:
     xor ecx,ecx
     FreeLinear
 ;
-    mov ecx,OFFSET IrqChainEnd - OFFSET IrqChainStart
+    mov ax,cs
+    mov ds,ax
     mov esi,OFFSET IrqChainStart
+    mov ecx,OFFSET IrqChainEnd - OFFSET IrqChainStart
     rep movs byte ptr es:[edi],ds:[esi]
 ;
     pop edx
@@ -648,7 +649,6 @@ aihChain:
     add ecx,OFFSET IrqChainEnd - OFFSET IrqChainStart
     CreateCodeSelector16
 ;    
-    pop ebp
     pop edi
     pop esi
     pop ecx
