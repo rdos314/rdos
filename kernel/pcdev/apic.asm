@@ -20,8 +20,8 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; MP.ASM
-; Multiprocessing module
+; apic.asm
+; APIC module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -608,6 +608,7 @@ CreateIrq   Endp
 ;       DESCRIPTION:    Add new IRQ handler
 ;
 ;       PARAMETERS:     AL      Global interrupt #
+;                       AH      Requested priority (1..15)
 ;                       DS      Data passed to handler
 ;                       ES:EDI  Handler address
 ;
@@ -616,6 +617,8 @@ CreateIrq   Endp
 AddIrqHandler   Proc near
     push fs
     push ax
+    push bx
+    push cx
     push edx
     push ebp
 ;
@@ -627,6 +630,20 @@ AddIrqHandler   Proc near
     or bx,bx
     jz aihDone
 ;
+    cmp ah,15
+    jbe aihPrioHighOk
+;
+    mov ah,15
+
+aihPrioHighOk:
+    or ah,ah
+    jne aihPrioLowOk
+;
+    mov ah,1    
+
+aihPrioLowOk:
+    push ax
+;   
     mov fs,bx
     mov edx,fs:irq_linear
     mov ax,flat_sel
@@ -692,7 +709,7 @@ aihChain:
     add ax,OFFSET IrqChainEnd - OFFSET IrqChainStart
     xchg ax,fs:[edx].irq_chain
     mov fs:[ebp].irch_chain,ax
-    jmp aihDone
+    jmp aihChainDone
 
 aihChainPrev:
     mov edx,ebp
@@ -700,7 +717,7 @@ aihChainPrev:
     add ax,OFFSET IrqChainEnd - OFFSET IrqChainStart
     xchg ax,fs:[edx].irch_chain
     mov fs:[ebp].irch_chain,ax
-    jmp aihDone
+    jmp aihChainDone
         
 aihReplace:    
     mov fs:[edx].irq_handler_data,ds
@@ -708,9 +725,58 @@ aihReplace:
     mov word ptr fs:[edx].irq_handler_ads+4,es
     mov fs:[edx].irq_detect_nr,-1
 
+aihChainDone:
+    pop ax
+;    
+    movzx bx,al
+    shl bx,3
+    mov ax,SEG data
+    add bx,OFFSET global_int_arr
+    mov fs,ax
+    mov dl,fs:[bx].gi_prio
+    cmp ah,dl
+    jbe aihDone
+;
+    mov fs:[bx].gi_prio,ah
+    mov al,fs:[bx].gi_int_num
+    FreeInt
+
+aihChangePrio:
+    mov al,fs:[bx].gi_prio
+    mov cx,1
+    AllocateInts
+    jnc aihPrioOk
+;
+    dec fs:[bx].gi_prio
+    jmp aihChangePrio    
+
+aihPrioOk:    
+    mov fs:[bx].gi_int_num,al
+;
+    push ds
+    mov al,fs:[bx].gi_ioapic_id
+    movzx edx,fs:[bx].gi_int_num
+    mov dh,0A9h
+    mov ds,fs:[bx].gi_ioapic_sel
+;       
+    mov bl,10h
+    add bl,al
+    add bl,al
+;    
+    mov ds:ioapic_regsel,bl
+    mov ds:ioapic_window,edx
+;
+    inc bl
+    mov ds:ioapic_regsel,bl
+    mov edx,0FF000000h
+    mov ds:ioapic_window,edx
+    pop ds
+
 aihDone:
     pop ebp
     pop edx
+    pop cx
+    pop bx
     pop ax
     pop fs    
     ret
@@ -1023,6 +1089,7 @@ test_gate_pr  Proc far
     mov es,ax
     mov edi,OFFSET TestHandler1
     mov al,5
+    mov ah,5
     call AddIrqHandler
     int 25h
 ;
@@ -1032,6 +1099,7 @@ test_gate_pr  Proc far
     mov es,ax
     mov edi,OFFSET TestHandler2
     mov al,5
+    mov ah,6
     call AddIrqHandler
     int 25h
 ;
@@ -1041,6 +1109,7 @@ test_gate_pr  Proc far
     mov es,ax
     mov edi,OFFSET TestHandler3
     mov al,5
+    mov ah,7
     call AddIrqHandler
     int 25h
 ;
@@ -1050,6 +1119,7 @@ test_gate_pr  Proc far
     mov es,ax
     mov edi,OFFSET TestHandler4
     mov al,5
+    mov ah,12
     call AddIrqHandler
     int 25h
 ;
