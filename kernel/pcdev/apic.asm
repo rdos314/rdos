@@ -897,8 +897,14 @@ TestHandler Proc far
 TestHandler Endp
 
 test_gate_pr  Proc far
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,SEG code
+    mov es,ax
+    mov edi,OFFSET TestHandler
     mov al,5
     call AddIrqHandler
+    int 25h
 ;
     mov ax,SEG data
     mov ds,ax
