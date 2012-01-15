@@ -97,11 +97,10 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 req_thread      PROC near
-    mov bx,gs
-    xor di,di
-    GetThreadTss
-;
     mov cx,SIZE thread_seg
+    xor di,di
+    xor si,si
+    rep movs byte ptr es:[di],gs:[si]
     xor di,di
     ReplyMailslot
     ret
