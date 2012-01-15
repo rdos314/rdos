@@ -88,39 +88,6 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           req_tss
-;
-;           DESCRIPTION:    Request current TSS
-;
-;           PARAMETERS:         GS              8086 TSS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-req_tss PROC near
-    mov cx,OFFSET p_tss_end
-    xor di,di
-    xor si,si
-    rep movs byte ptr es:[di],gs:[si]
-;
-    mov ax,word ptr es:p_tss_eflags
-    push ds
-    mov ds,gs:p_process_sel
-    and ax,NOT 200h
-    mov bx,ds:ms_virt_flags
-    and bx,200h
-    or ax,bx
-    pop ds
-    mov word ptr es:p_tss_eflags,ax
-;
-    mov cx,OFFSET p_tss_end
-    xor di,di
-    ReplyMailslot
-    ret
-req_tss Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           req_thread
 ;
 ;           DESCRIPTION:    Request current thread control block
@@ -1682,7 +1649,7 @@ error_sw    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 virt_sw_func_tab:
-vs_00   DW OFFSET req_tss
+vs_00   DW OFFSET error_sw
 vs_01   DW OFFSET req_thread
 vs_02   DW OFFSET req_data
 vs_03   DW OFFSET req_info

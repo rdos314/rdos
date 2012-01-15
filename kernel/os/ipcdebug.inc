@@ -66,7 +66,6 @@ ddi_mne				DB 40 DUP(?)
 
 debug_req_instr_struc	ENDS
 
-DEBUG_REQ_TSS		EQU 0
 DEBUG_REQ_THREAD	EQU 1
 DEBUG_REQ_DATA		EQU 2
 DEBUG_REQ_INFO		EQU 3
