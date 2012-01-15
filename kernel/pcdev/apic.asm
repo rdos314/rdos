@@ -1486,7 +1486,7 @@ allocate_msi_ints  Endp
 ;
 ;       PARAMETERS:     DS      Data passed to handler
 ;                       ES:EDI  Handler address
-;                       AX      MSI data
+;                       AL      Int #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
