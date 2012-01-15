@@ -1248,7 +1248,7 @@ IrqSchedule    MACRO
                     ENDM
 
 ; IN  CX        Number of ints (1,2,4,8,16 or 32)
-; IN  AL        Priority (0..15)
+; IN  AL        Priority (0..31)
 ; OUT AL        Int base
 AllocateInts    MACRO
     OsGate allocate_ints_nr

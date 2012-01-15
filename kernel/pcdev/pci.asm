@@ -916,8 +916,8 @@ get_pci_msi     Endp
 setup_pci_msi_name DB 'Setup PCI MSI',0
 
 setup_pci_msi     Proc far    
-    push eax
-    push dx
+    push ax
+    push edx
 ;    
     mov dh,al
     xor ah,ah
@@ -934,7 +934,7 @@ spmAllocDone:
     shl dl,4
 ;
     ReadPciWord
-    and al,70h
+    and al,NOT 70h
     or al,dl
     or al,1
     WritePciWord
@@ -942,8 +942,8 @@ spmAllocDone:
     mov al,dh
     GetMsiParam
 ;     
-    pop dx
-    pop eax
+    pop edx
+    pop ax
     retf32
 setup_pci_msi     Endp
 

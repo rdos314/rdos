@@ -2135,7 +2135,7 @@ allocate_ints  Proc far
     mov dx,irq_sys_sel
     mov ds,dx
 ;    
-    and al,0Fh
+    and al,1Fh
     movzx si,al
     add si,OFFSET irq_bitmask
     shl al,3

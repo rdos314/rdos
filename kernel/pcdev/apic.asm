@@ -1069,8 +1069,10 @@ test_gate_pr  Proc far
     mov bh,2
     mov bl,0
     FindPciClassAll
+    jc tpDone
 ;
     GetPciMsi
+    jc tpDone
 ;
     push cx
     movzx cx,dl
@@ -1078,7 +1080,8 @@ test_gate_pr  Proc far
     AllocateInts    
     pop cx
     SetupPciMsi
-;
+
+tpDone:
     xor ax,ax    
     retf32
 test_gate_pr    Endp
