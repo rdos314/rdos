@@ -40,8 +40,8 @@ CurrentThreadSel        DW ?
 Info                    debug_req_info_struc <>
 Mne                     debug_req_instr_struc <>
 DataHeader              debug_req_data_struc <>
-MathBuf                 DB 80 DUP(?)
 DataArr                 DB 2 * 16 DUP(?)
+MathBuf                 DB 80 DUP(?)
 ReplyBuf                DB 1024 DUP(?)
 
 data    ENDS
@@ -1065,7 +1065,7 @@ write_mode_ok:
     mov bx,ds:MailslotHandle
     mov si,OFFSET DataHeader
     mov cx,SIZE debug_req_data_struc
-    mov di,OFFSET DataArr
+    mov di,OFFSET DataHeader
     mov ax,32 + SIZE debug_req_data_struc
     SendMailslot
     cmp cx,32 + SIZE debug_req_data_struc
