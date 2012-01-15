@@ -1931,6 +1931,7 @@ ReadNode        Proc near
     xor cx,cx
     xor dx,dx
     SetCursorPosition
+    jmp read_node_local
 ;
     mov ax,cs
     mov es,ax
