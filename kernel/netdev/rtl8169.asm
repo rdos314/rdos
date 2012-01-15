@@ -1029,7 +1029,9 @@ siMsi:
     pop cx
     jc siIrq
 ;    
+    mov dl,1
     SetupPciMsi
+;    
     mov di,cs
     mov es,di
     mov edi,OFFSET NetInt

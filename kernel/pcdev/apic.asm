@@ -856,6 +856,8 @@ MsiEnd:
 
 CreateMsi   Proc near
     push es
+    push eax
+    push bx
     push ecx
     push edx
     push edi
@@ -885,6 +887,8 @@ CreateMsi   Proc near
     pop edi
     pop edx
     pop ecx
+    pop bx
+    pop eax
     pop es
     ret
 CreateMsi   Endp
