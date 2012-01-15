@@ -888,13 +888,6 @@ WriteEflags     PROC near
     or ax,word ptr gs:p_tss_eflags+2
     shl eax,16
     mov ax,word ptr gs:p_tss_eflags
-    push ds
-    mov ds,gs:p_process_sel
-    and ax,NOT 200h
-    mov bx,ds:ms_virt_flags
-    and bx,200h
-    or ax,bx
-    pop ds
     mov di,OFFSET eflags_tab
     mov cx,19
 eflags_loop:
