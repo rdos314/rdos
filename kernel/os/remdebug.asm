@@ -25,12 +25,13 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+INCLUDE protseg.def
 INCLUDE ..\os.def
 INCLUDE ..\user.def
 INCLUDE ..\os.inc
 INCLUDE ..\user.inc
-INCLUDE ..\os\ipcdebug.inc
-INCLUDE ..\os\system.def
+INCLUDE ipcdebug.inc
+INCLUDE system.def
 
 data    SEGMENT byte public 'DATA'
 
@@ -882,7 +883,7 @@ write_math_norm:
     push es
     push ax
 ;
-    mov ax,SEG data
+    mov ax,ds
     mov es,ax
     mov di,OFFSET MathBuf
     mov al,' '
@@ -1349,102 +1350,20 @@ HandleMouse     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadNode
+;               NAME:           DebugThread
 ;
-;               DESCRIPTION:    Read node to debug
+;               DESCRIPTION:    Debug thread
 ;
-;               PARAMETERS:             
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-node_string     DB 'Input IP address to debug> ',0
-mailslot_name   DB 'Debug',0
-
-ReadNode        Proc near
-    xor cx,cx
-    xor dx,dx
-    SetCursorPosition
-;
-    mov ax,cs
-    mov es,ax
-    mov di,OFFSET node_string
-    WriteAsciiz
-;
-    mov ax,ds
-    mov es,ax
-    mov cx,1024
-    mov di,OFFSET ReplyBuf
-    ReadConsole
-;
-    or ax,ax
-    jz read_node_local
-;
-    add di,ax
-    mov byte ptr [di],0
-;
-    mov si,OFFSET ReplyBuf
-    xor ebx,ebx
-    mov cx,4
-read_ip_decode:
-    xor al,al
-read_ip_digit:
-    mov dl,[si]
-    inc si
-    sub dl,'0'
-    jc read_ip_save
-    cmp dl,10
-    jnc read_ip_save
-    mov ah,10
-    mul ah
-    add al,dl
-    jmp read_ip_digit
-
-read_ip_save:
-    mov bl,al
-    ror ebx,8
-    loop read_ip_decode             
-;
-    mov edx,ebx
-    mov ax,cs
-    mov es,ax
-    mov di,OFFSET mailslot_name
-    GetRemoteMailslot
-    mov ds:MailslotHandle,bx
-    jmp read_node_init
-
-read_node_local:
-    mov ax,cs
-    mov es,ax
-    mov di,OFFSET mailslot_name
-    GetLocalMailslot
-    mov ds:MailslotHandle,bx
-
-read_node_init: 
-    mov eax,SIZE thread_seg
-    AllocateLocalMem
-    mov ds:CurrentThreadSel,es
-    mov fs,ds:CurrentThreadSel
-    mov gs,ds:CurrentThreadSel
-;
-    mov ax,ds
-    mov es,ax
-    ret
-ReadNode        Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;               NAME:           RemoteDebug
-;
-;               DESCRIPTION:    Remote debug task
-;
-;               PARAMETERS:             
+;               PARAMETERS:     EDX     IP address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-remote_debug_name   DB 'Remote Debug', 0
+debug_name   DB 'Remote Debug', 0
+mailslot_name       DB 'Debug',0
 
-remote_debug:
+debug_process:
+    int 3  
+    push edx
     xor ax,ax
     xor bx,bx
     mov cx,639
@@ -1461,13 +1380,73 @@ state_start:
     mov ax,SEG data
     mov ds,ax
     mov es,ax
-    call ReadNode
+    pop edx
+;
+    or edx,edx
+    jz debug_local
+
+debug_remote:    
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET mailslot_name
+    GetRemoteMailslot
+    mov ds:MailslotHandle,bx
+    jmp debug_init
+
+debug_local:
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET mailslot_name
+    GetLocalMailslot
+    mov ds:MailslotHandle,bx
+
+debug_init: 
+    mov eax,SIZE thread_seg
+    AllocateLocalMem
+    mov ds:CurrentThreadSel,es
+    mov fs,ds:CurrentThreadSel
+    mov gs,ds:CurrentThreadSel
+;
+    mov ax,ds
+    mov es,ax
+;    
     call WriteAll
 
 state_loop:
     call HandleKeyboard
     call HandleMouse
     jmp state_loop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           RemoteDebug
+;
+;               DESCRIPTION:    Remote debug task
+;
+;               PARAMETERS:     EDX     IP address to debug
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+remote_debug_name   DB 'Remote Debug', 0
+
+remote_debug    Proc far
+    push ds
+    push es
+    pusha
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov si,OFFSET debug_process
+    mov di,OFFSET debug_name
+    mov ecx,stack0_size
+    mov ax,20
+    CreateProcess
+    popa
+    pop es
+    pop ds
+    retf32
+remote_debug    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
