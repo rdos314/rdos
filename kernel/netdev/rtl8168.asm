@@ -1272,74 +1272,20 @@ SetupInts   Proc near
     push edx
     push edi
 ;    
-    mov al,5
-    FindPciCapability
+    GetPciMsi
     jc siIrq
 
 siMsi:
-    mov cl,al
-    add cl,2
-    ReadPciWord
-    or al,1
-    WritePciWord
-;
     push cx
-    mov cx,2
-    AllocateMsiInts
+    mov cx,1
+    mov al,14h
+    AllocateInts
     pop cx
     jc siIrq
 ;    
-    push ax
-    push edx
-;
-    ReadPciWord
-    and al,8Fh
-    WritePciWord
-;
-    test ax,100h
-    jnz siVector
-;
-    test ax,80h
-    jnz si64
-
-si32:
-    add cl,2
-    pop eax
-    WritePciDword
-;
-    add cl,4    
-    pop ax
-    WritePciWord
-    jmp siMsiHandler
-
-si64:
-    add cl,2
-    pop eax
-    WritePciDword
-;
-    add cl,4
-    xor eax,eax
-    WritePciDword
+    mov dl,1
+    SetupPciMsi
 ;    
-    add cl,4    
-    pop ax
-    WritePciWord
-    jmp siMsiHandler
-
-siVector:
-    add cl,2
-    pop eax
-    WritePciDword
-;
-    add cl,4
-    xor eax,eax
-    WritePciDword
-;    
-    add cl,4    
-    pop ax
-    WritePciWord
-
-siMsiHandler:
     mov di,cs
     mov es,di
     mov edi,OFFSET NetInt
