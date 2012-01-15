@@ -1072,6 +1072,13 @@ test_gate_pr  Proc far
 ;
     GetPciMsi
 ;
+    push cx
+    movzx cx,dl
+    mov al,20
+    AllocateInts    
+    pop cx
+    SetupPciMsi
+;
     xor ax,ax    
     retf32
 test_gate_pr    Endp
