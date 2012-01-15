@@ -1065,6 +1065,7 @@ DelayMs Endp
 test_gate_name    DB 'Test Gate',0
 
 test_gate_pr  Proc far
+    call SetupDefaultIrqHandlers
     xor ax,ax
     mov bh,0Ch
     mov bl,3
@@ -3416,7 +3417,7 @@ init_hpet_done:
     call SetupIrq 
 ;
     call ProcessApicTable
-    call SetupDefaultIrqHandlers
+;    call SetupDefaultIrqHandlers
     call SetupLocalApic
     call EnableTpr
 ;    
