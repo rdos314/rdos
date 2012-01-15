@@ -1777,3 +1777,11 @@ Shows PCI information
 
 PCI
 .
+
+:TEXT_CMDHELP_DEBUG
+Debug remote
+
+DEBUG [ip-address] [host name]
+  ip-address      IP address to remote debug
+  host name       Host name to remote debug
+.

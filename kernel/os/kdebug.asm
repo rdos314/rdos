@@ -65,6 +65,7 @@ code    SEGMENT byte use16 public 'CODE'
     extrn init_local:near
     extrn init_ipc_debug:near
     extrn init_crashdeb:near
+    extrn init_remote:near
 
     extrn SetDataSel:near
     
@@ -1006,6 +1007,7 @@ init    Proc far
     call init_local
     call init_crashdeb
     call init_ipc_debug
+    call init_remote
     ret
 init    Endp
     

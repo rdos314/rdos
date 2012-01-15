@@ -79,6 +79,7 @@
 #include "acpi.h"
 #include "dev.h"
 #include "pci.h"
+#include "debug.h"
 
 #include "file.h"
 #include "path.h"
@@ -106,6 +107,7 @@ static TCommandFactory *newsess;
 static TCommandFactory *capture;
 static TCommandFactory *cpy;
 static TCommandFactory *date;
+static TCommandFactory *debug;
 static TCommandFactory *del;
 static TCommandFactory *dev;
 static TCommandFactory *dir;
@@ -162,76 +164,77 @@ int TSession::Count = 0;
 ##########################################################################*/
 TSession::TSession()
 {
-         FArgList = 0;
-         FEcho = TRUE;
-         FCmdFile = new TFile("CON");
-         FInputFile = new TFile("CON");
-         FOutputFile = new TFile("CON");
-         FErrorFile = new TFile("CON");
+    FArgList = 0;
+    FEcho = TRUE;
+    FCmdFile = new TFile("CON");
+    FInputFile = new TFile("CON");
+    FOutputFile = new TFile("CON");
+    FErrorFile = new TFile("CON");
 
-         if (Count == 0)
-         {
-                rdfs = new TRdfsPartitionFactory;
-                fat12 = new TFat12PartitionFactory;
-                fat16 = new TFat16PartitionFactory;
-                fat32 = new TFat32PartitionFactory;
-                flashfs = new TFlashFsPartitionFactory;
+    if (Count == 0)
+    {
+        rdfs = new TRdfsPartitionFactory;
+        fat12 = new TFat12PartitionFactory;
+        fat16 = new TFat16PartitionFactory;
+        fat32 = new TFat32PartitionFactory;
+        flashfs = new TFlashFsPartitionFactory;
 
-                wait = new TWaitFactory;
-                volume = new TVolumeFactory;
-                usb = new TUsbFactory;
-                timev = new TTimeFactory;
-                type = new TTypeFactory;
-                sysinfo = new TSysinfoFactory;
-                synctime = new TSyncTimeFactory;
-                state = new TStateFactory;
-                set = new TSetFactory;
-                rmpart = new TRemovePartitionFactory;
-                rmdir = new TRmdirFactory;
-                rem = new TRemFactory;
-                reboot = new TRebootFactory;
-                rd = new TRdFactory;
-                prompt = new TPromptFactory;
-                ping = new TPingFactory;
-                pci = new TPciFactory;
-                pause = new TPauseFactory;
-                path = new TPathFactory;
-                showpart = new TShowPartitionFactory;
-                move = new TMoveFactory;
-                mount = new TMountFactory;
-                mkpart = new TMakePartitionFactory;
-                mkdir = new TMkdirFactory;
-                md = new TMdFactory;
-                keyb = new TKeybFactory;
-                inithd = new TInitHdFactory;
-                initfd = new TInitFdFactory;
-                info = new TInfoFactory;
-                exitcmd = new TExitFactory;
-                fd2file = new TFloppyToFileFactory;
-                erase = new TEraseFactory;
-                echo = new TEchoFactory;
-                dir = new TDirFactory;
-                dev = new TDeviceFactory;
-                del = new TDelFactory;
-                date = new TDateFactory;
-                cpy = new TCopyFactory;
-                newsess = new TNewSessionFactory;
-                cls = new TClsFactory;
-                chdir = new TChdirFactory;
-                cd = new TCdFactory;
-                capture = new TCaptureFactory;
-                call = new TCallFactory;
-                acpi = new TAcpiFactory;
-                help = new THelpFactory;
+        wait = new TWaitFactory;
+        volume = new TVolumeFactory;
+        usb = new TUsbFactory;
+        timev = new TTimeFactory;
+        type = new TTypeFactory;
+        sysinfo = new TSysinfoFactory;
+        synctime = new TSyncTimeFactory;
+        state = new TStateFactory;
+        set = new TSetFactory;
+        rmpart = new TRemovePartitionFactory;
+        rmdir = new TRmdirFactory;
+        rem = new TRemFactory;
+        reboot = new TRebootFactory;
+        rd = new TRdFactory;
+        prompt = new TPromptFactory;
+        ping = new TPingFactory;
+        pci = new TPciFactory;
+        pause = new TPauseFactory;
+        path = new TPathFactory;
+        showpart = new TShowPartitionFactory;
+        move = new TMoveFactory;
+        mount = new TMountFactory;
+        mkpart = new TMakePartitionFactory;
+        mkdir = new TMkdirFactory;
+        md = new TMdFactory;
+        keyb = new TKeybFactory;
+        inithd = new TInitHdFactory;
+        initfd = new TInitFdFactory;
+        info = new TInfoFactory;
+        exitcmd = new TExitFactory;
+        fd2file = new TFloppyToFileFactory;
+        erase = new TEraseFactory;
+        echo = new TEchoFactory;
+        dir = new TDirFactory;
+        dev = new TDeviceFactory;
+        del = new TDelFactory;
+        debug = new TDebugFactory;
+        date = new TDateFactory;
+        cpy = new TCopyFactory;
+        newsess = new TNewSessionFactory;
+        cls = new TClsFactory;
+        chdir = new TChdirFactory;
+        cd = new TCdFactory;
+        capture = new TCaptureFactory;
+        call = new TCallFactory;
+        acpi = new TAcpiFactory;
+        help = new THelpFactory;
 
-                History = new TStringList;
-                Keyboard = new TKeyboardDevice;
+        History = new TStringList;
+        Keyboard = new TKeyboardDevice;
 
-         }
+    }
 
-         Count++;
+    Count++;
 
-         WriteWelcome();
+    WriteWelcome();
 }
 
 /*##########################################################################
@@ -247,30 +250,30 @@ TSession::TSession()
 ##########################################################################*/
 TSession::TSession(const TSession &src)
 {
-         Count++;
+    Count++;
 
-         FArgList = 0;
-         FEcho = TRUE;
+    FArgList = 0;
+    FEcho = TRUE;
 
-        if (src.FCmdFile->IsDevice())
-                  FCmdFile = new TFile("CON");
-         else
-                  FCmdFile = new TFile(*src.FCmdFile);
+    if (src.FCmdFile->IsDevice())
+        FCmdFile = new TFile("CON");
+    else
+        FCmdFile = new TFile(*src.FCmdFile);
 
-        if (src.FInputFile->IsDevice())
-                  FInputFile = new TFile("CON");
-         else
-                  FInputFile = new TFile(*src.FInputFile);
+    if (src.FInputFile->IsDevice())
+        FInputFile = new TFile("CON");
+    else
+        FInputFile = new TFile(*src.FInputFile);
 
-        if (src.FOutputFile->IsDevice())
-                  FOutputFile = new TFile("CON");
-         else
-                  FOutputFile = new TFile(*src.FOutputFile);
+    if (src.FOutputFile->IsDevice())
+        FOutputFile = new TFile("CON");
+    else
+        FOutputFile = new TFile(*src.FOutputFile);
 
-        if (src.FErrorFile->IsDevice())
-                  FErrorFile = new TFile("CON");
-         else
-                  FErrorFile = new TFile(*src.FErrorFile);
+    if (src.FErrorFile->IsDevice())
+        FErrorFile = new TFile("CON");
+    else
+        FErrorFile = new TFile(*src.FErrorFile);
 }
 
 /*##########################################################################
@@ -286,10 +289,10 @@ TSession::TSession(const TSession &src)
 ##########################################################################*/
 TSession::~TSession()
 {
-        delete FCmdFile;
-        delete FInputFile;
-        delete FOutputFile;
-        delete FErrorFile;
+    delete FCmdFile;
+    delete FInputFile;
+    delete FOutputFile;
+    delete FErrorFile;
 
     Count--;
 
@@ -302,12 +305,12 @@ TSession::~TSession()
         delete fat32;
         delete flashfs;
 
-                  delete wait;
-                  delete volume;
+        delete wait;
+        delete volume;
         delete usb;
         delete timev;
-            delete type;
-            delete synctime;
+        delete type;
+        delete synctime;
         delete state;
         delete set;
         delete rmpart;
@@ -325,20 +328,20 @@ TSession::~TSession()
         delete mkpart;
         delete mkdir;
         delete md;
-                delete inithd;
-                delete initfd;
-                delete info;
-                delete fd2file;
-                delete exitcmd;
-                delete erase;
-                delete echo;
-                delete dir;
-                delete del;
-                delete date;
+        delete inithd;
+        delete initfd;
+        delete info;
+        delete fd2file;
+        delete exitcmd;
+        delete erase;
+        delete echo;
+        delete dir;
+        delete del;
+        delete date;
         delete cpy;
         delete newsess;
         delete cls;
-            delete chdir;
+        delete chdir;
         delete cd;
         delete capture;
         delete call;
@@ -410,59 +413,59 @@ int TSession::IsEchoOn()
 ##########################################################################*/
 void TSession::WriteWelcome()
 {
-        char VersionStr[16];
-        int Major;
-        int Minor;
-        int Release;
-        TCommand *cmd;
+    char VersionStr[16];
+    int Major;
+    int Minor;
+    int Release;
+    TCommand *cmd;
 
-        RdosGetVersion(&Major, &Minor, &Release);
-        sprintf(VersionStr, "%d.%d.%d", Major, Minor, Release);
+    RdosGetVersion(&Major, &Minor, &Release);
+    sprintf(VersionStr, "%d.%d.%d", Major, Minor, Release);
 
-        Write("FreeCom for RDOS ");
-        Write(VersionStr);
-        Write("\r\n");
-        Write("Use @ before external command to detach\r\n\r\n");
+    Write("FreeCom for RDOS ");
+    Write(VersionStr);
+    Write("\r\n");
+    Write("Use @ before external command to detach\r\n\r\n");
 
-        cmd = help->Create(this, "");
-        if (cmd)
-                cmd->Run();
+    cmd = help->Create(this, "");
+    if (cmd)
+        cmd->Run();
 
-        Write("\r\n");
+    Write("\r\n");
 }
 
 /*################## TSession::FormatTime ##########################
-*   Purpose....: Format time                                                                            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*##########################################################################*/
+ *   Purpose....: Format time                                                                            #
+ *   In params..: *                                                          #
+ *   Out params.: *                                                          #
+ *   Returns....: *                                                          #
+ *##########################################################################*/
 TString TSession::FormatTime(TDateTime &time)
 {
-        char str[40];
-        sprintf(str, "%02d.%02d.%02d,%03d", time.GetHour(), time.GetMin(), time.GetSec(), time.GetMilliSec());
-        return TString(str);
+    char str[40];
+    sprintf(str, "%02d.%02d.%02d,%03d", time.GetHour(), time.GetMin(), time.GetSec(), time.GetMilliSec());
+    return TString(str);
 }
 
 /*################## TSession::FormatLongDate ##########################
-*   Purpose....: Format long date                                                                       #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*##########################################################################*/
+ *   Purpose....: Format long date                                                                       #
+ *   In params..: *                                                          #
+ *   Out params.: *                                                          #
+ *   Returns....: *                                                          #
+ *##########################################################################*/
 TString TSession::FormatLongDate(TDateTime &date)
 {
-        char str[40];
-        sprintf(str, "%04d-%02d-%02d", date.GetYear(), date.GetMonth(), date.GetDay());
-        return TString(str);
+    char str[40];
+    sprintf(str, "%04d-%02d-%02d", date.GetYear(), date.GetMonth(), date.GetDay());
+    return TString(str);
 }
 
 /*################## TSession::DisplayPrompt ##########################
-*   Purpose....: Display prompt for user                                                                #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*##########################################################################*/
+ *   Purpose....: Display prompt for user                                                                #
+ *   In params..: *                                                          #
+ *   Out params.: *                                                          #
+ *   Returns....: *                                                          #
+ *##########################################################################*/
 void TSession::DisplayPrompt()
 {
     char promptstr[128];
@@ -488,7 +491,7 @@ void TSession::DisplayPrompt()
                 case 'Q':
                     RdosWriteChar('=');
                     break;
-            
+
                 case '$':
                     RdosWriteChar('$');
                     break;
@@ -561,45 +564,45 @@ void TSession::DisplayPrompt()
 ##########################################################################*/
 int TSession::ReadCon(char *str, int maxsize)
 {
-        int OrgX;
-        int OrgY;
-        int CurrX;
-        int CurrY;
-        int ExtKey;
-        int State;
-        int VirtKey;
-        int ScanCode;
-        int Count = 0;
-        int CurrPos = 0;
-        int i;
-        int Insert = TRUE;
-        TString prev;
-        const char *prevstr;
-        int ok;
-        int GetNext = FALSE;
+    int OrgX;
+    int OrgY;
+    int CurrX;
+    int CurrY;
+    int ExtKey;
+    int State;
+    int VirtKey;
+    int ScanCode;
+    int Count = 0;
+    int CurrPos = 0;
+    int i;
+    int Insert = TRUE;
+    TString prev;
+    const char *prevstr;
+    int ok;
+    int GetNext = FALSE;
 
-        if (History->GotoFirst())
-                prev = History->Get();
+    if (History->GotoFirst())
+        prev = History->Get();
 
-        prevstr = prev.GetData();
+    prevstr = prev.GetData();
 
-        RdosGetCursorPosition(&OrgY, &OrgX);
-        CurrX = OrgX;
-        CurrY = OrgY;
+    RdosGetCursorPosition(&OrgY, &OrgX);
+    CurrX = OrgX;
+    CurrY = OrgY;
 
-        memset(str, 0, maxsize);
+    memset(str, 0, maxsize);
 
-        for (;;)
+    for (;;)
+    {
+        Keyboard->WaitForever();
+
+        ok = Keyboard->ReadEvent(&ExtKey, &State, &VirtKey, &ScanCode);
+        if (ok)
+            ok = Keyboard->IsStdKey(ExtKey, VirtKey);
+
+        if (ok)
         {
-                Keyboard->WaitForever();
-
-                ok = Keyboard->ReadEvent(&ExtKey, &State, &VirtKey, &ScanCode);
-                if (ok)
-                    ok = Keyboard->IsStdKey(ExtKey, VirtKey);
-
-                if (ok)
-                {
-                                switch (VirtKey)
+            switch (VirtKey)
             {
                 case VK_BACK:
                     if (Count && CurrPos)
@@ -607,7 +610,7 @@ int TSession::ReadCon(char *str, int maxsize)
                         if (Count == CurrPos)
                         {
                             str[CurrPos - 1] = 0;
-                            
+
                             if (CurrX)
                                 CurrX--;
                             else
@@ -629,7 +632,7 @@ int TSession::ReadCon(char *str, int maxsize)
                             else
                             {
                                 CurrX = MAX_X;
-                                                                                  CurrY--;
+                                CurrY--;
                             }
                             RdosSetCursorPosition(CurrY, CurrX);
                             RdosWriteString(&str[CurrPos - 1]);
@@ -682,21 +685,21 @@ int TSession::ReadCon(char *str, int maxsize)
                 case VK_RETURN:
                     if (Count)
                     {
-                                                TString s(str);
+                        TString s(str);
 
-                                                if (History->Find(s))
-                                                        History->RemoveCurrent();
+                        if (History->Find(s))
+                            History->RemoveCurrent();
 
-                                                                History->AddFirst(s);
-                                                                if (History->GetSize() >= MAX_HISTORY)
-                                                                         History->RemoveLast();
-                                                  }
+                        History->AddFirst(s);
+                        if (History->GetSize() >= MAX_HISTORY)
+                            History->RemoveLast();
+                    }
                     RdosWriteString("\r\n");
                     return TRUE;
 
                 case VK_ESCAPE:
                     return FALSE;
-                    
+
 
                 case VK_RIGHT:
                     if (CurrPos != Count)
@@ -719,17 +722,17 @@ int TSession::ReadCon(char *str, int maxsize)
                         str[CurrPos] = prevstr[CurrPos];
                         RdosWriteChar(str[CurrPos]);
                         RdosGetCursorPosition(&CurrY, &CurrX);
-                                                                CurrPos++;
+                        CurrPos++;
                         Count = CurrPos;
                         str[Count] = 0;
                     }
                     break;
 
                 case VK_F3:
-                        memset(str, ' ', Count);
+                    memset(str, ' ', Count);
                     RdosSetCursorPosition(OrgY, OrgX);
                     RdosWriteString(str);
-                        
+
                     strcpy(str, prevstr);
                     RdosSetCursorPosition(OrgY, OrgX);
                     RdosWriteString(str);
@@ -740,37 +743,19 @@ int TSession::ReadCon(char *str, int maxsize)
 
                 case VK_UP:
                     if (GetNext)
-                                                                ok = History->GotoNext();
-                                                  else
-                                                  {
-                                                                ok = History->GotoFirst();
-                                                                GetNext = TRUE;
-                                                  }
-
-                                                  if (ok)
+                        ok = History->GotoNext();
+                    else
                     {
-                                                        memset(str, ' ', Count);
-                        RdosSetCursorPosition(OrgY, OrgX);
-                        RdosWriteString(str);
-                        
-                                                                prev = History->Get();
-                                                                prevstr = prev.GetData();
-                                                                strcpy(str, prevstr);
-                                                                RdosSetCursorPosition(OrgY, OrgX);
-                                                                RdosWriteString(str);
-                                                                RdosGetCursorPosition(&CurrY, &CurrX);
-                                                                Count = strlen(str);
-                                                                CurrPos = Count;
-                                                  }
-                                                  break;
+                        ok = History->GotoFirst();
+                        GetNext = TRUE;
+                    }
 
-                                         case VK_DOWN:
-                    if (History->GotoPrev())
+                    if (ok)
                     {
                         memset(str, ' ', Count);
                         RdosSetCursorPosition(OrgY, OrgX);
                         RdosWriteString(str);
-                        
+
                         prev = History->Get();
                         prevstr = prev.GetData();
                         strcpy(str, prevstr);
@@ -779,7 +764,25 @@ int TSession::ReadCon(char *str, int maxsize)
                         RdosGetCursorPosition(&CurrY, &CurrX);
                         Count = strlen(str);
                         CurrPos = Count;
-                                                  }
+                    }
+                    break;
+
+                case VK_DOWN:
+                    if (History->GotoPrev())
+                    {
+                        memset(str, ' ', Count);
+                        RdosSetCursorPosition(OrgY, OrgX);
+                        RdosWriteString(str);
+
+                        prev = History->Get();
+                        prevstr = prev.GetData();
+                        strcpy(str, prevstr);
+                        RdosSetCursorPosition(OrgY, OrgX);
+                        RdosWriteString(str);
+                        RdosGetCursorPosition(&CurrY, &CurrX);
+                        Count = strlen(str);
+                        CurrPos = Count;
+                    }
                     break;
 
                 case VK_LEFT:
@@ -798,32 +801,32 @@ int TSession::ReadCon(char *str, int maxsize)
                     break;
 
                 default:
-                                        ExtKey = ExtKey & 0xFF;
+                    ExtKey = ExtKey & 0xFF;
                     if (ExtKey >= ' ' && Count < maxsize - 1)
                     {
                         if (Insert && CurrPos != Count)
                         {
                             for (i = Count; i > CurrPos; i--)
                                 str[i] = str[i - 1];
-                                                        Count++;
-                                str[CurrPos] = (char)ExtKey;
+                            Count++;
+                            str[CurrPos] = (char)ExtKey;
                             RdosWriteChar(str[CurrPos]);
                             RdosGetCursorPosition(&CurrY, &CurrX);
-                                                                        str[Count] = 0;
-                                RdosWriteString(&str[CurrPos + 1]);
+                            str[Count] = 0;
+                            RdosWriteString(&str[CurrPos + 1]);
                             RdosSetCursorPosition(CurrY, CurrX);
                         }
                         else
                         {
                             if (CurrPos == Count)
                                 Count++;
-                                str[CurrPos] = (char)ExtKey;
+                            str[CurrPos] = (char)ExtKey;
                             RdosWriteChar(str[CurrPos]);
-                                RdosGetCursorPosition(&CurrY, &CurrX);
-                                str[Count] = 0;
+                            RdosGetCursorPosition(&CurrY, &CurrX);
+                            str[Count] = 0;
                         }
                         if (CurrX == 0)
-                                OrgY--;
+                            OrgY--;
                         CurrPos++;
                     }
                     break;
@@ -845,7 +848,7 @@ int TSession::ReadCon(char *str, int maxsize)
 ##########################################################################*/
 void TSession::SetCmdFile(TFile *File)
 {
-        FCmdFile = File;
+    FCmdFile = File;
 }
 
 /*##########################################################################
@@ -861,7 +864,7 @@ void TSession::SetCmdFile(TFile *File)
 ##########################################################################*/
 void TSession::SetInputFile(TFile *File)
 {
-        FInputFile = File;
+    FInputFile = File;
 }
 
 /*##########################################################################
@@ -877,7 +880,7 @@ void TSession::SetInputFile(TFile *File)
 ##########################################################################*/
 void TSession::SetOutputFile(TFile *File)
 {
-        FOutputFile = File;
+    FOutputFile = File;
 }
 
 /*##########################################################################
@@ -893,7 +896,7 @@ void TSession::SetOutputFile(TFile *File)
 ##########################################################################*/
 void TSession::SetErrorFile(TFile *File)
 {
-        FErrorFile = File;
+    FErrorFile = File;
 }
 
 /*##########################################################################
@@ -909,7 +912,7 @@ void TSession::SetErrorFile(TFile *File)
 ##########################################################################*/
 TFile *TSession::GetCmdFile()
 {
-        return FCmdFile;
+    return FCmdFile;
 }
 
 /*##########################################################################
@@ -925,7 +928,7 @@ TFile *TSession::GetCmdFile()
 ##########################################################################*/
 TFile *TSession::GetInputFile()
 {
-        return FInputFile;
+    return FInputFile;
 }
 
 /*##########################################################################
@@ -941,7 +944,7 @@ TFile *TSession::GetInputFile()
 ##########################################################################*/
 TFile *TSession::GetOutputFile()
 {
-        return FOutputFile;
+    return FOutputFile;
 }
 
 /*##########################################################################
@@ -957,7 +960,7 @@ TFile *TSession::GetOutputFile()
 ##########################################################################*/
 TFile *TSession::GetErrorFile()
 {
-        return FErrorFile;
+    return FErrorFile;
 }
 
 /*##########################################################################
@@ -973,13 +976,13 @@ TFile *TSession::GetErrorFile()
 ##########################################################################*/
 void TSession::Write(char ch)
 {
-        char str[2];
+    char str[2];
 
-        str[0] = ch;
-        str[1] = 0;
+    str[0] = ch;
+    str[1] = 0;
 
-        if (FOutputFile)
-                FOutputFile->Write(str, 1);
+    if (FOutputFile)
+        FOutputFile->Write(str, 1);
 }
 
 /*##########################################################################
@@ -995,10 +998,10 @@ void TSession::Write(char ch)
 ##########################################################################*/
 void TSession::Write(const char *str)
 {
-        int size = strlen(str);
+    int size = strlen(str);
 
-        if (FOutputFile)
-                FOutputFile->Write(str, size);
+    if (FOutputFile)
+        FOutputFile->Write(str, size);
 }
 
 /*##########################################################################
@@ -1014,13 +1017,13 @@ void TSession::Write(const char *str)
 ##########################################################################*/
 void TSession::WriteError(char ch)
 {
-        char str[2];
+    char str[2];
 
-        str[0] = ch;
-        str[1] = 0;
+    str[0] = ch;
+    str[1] = 0;
 
-        if (FOutputFile)
-                FOutputFile->Write(str, 1);
+    if (FOutputFile)
+        FOutputFile->Write(str, 1);
 }
 
 /*##########################################################################
@@ -1036,10 +1039,10 @@ void TSession::WriteError(char ch)
 ##########################################################################*/
 void TSession::WriteError(const char *str)
 {
-        int size = strlen(str);
+    int size = strlen(str);
 
-        if (FOutputFile)
-                FOutputFile->Write(str, size);
+    if (FOutputFile)
+        FOutputFile->Write(str, size);
 }
 
 /*##########################################################################
@@ -1055,62 +1058,62 @@ void TSession::WriteError(const char *str)
 ##########################################################################*/
 void TSession::WriteLong(long value)
 {
-        char str[4];
-        int tmp;
-        int use = FALSE;
+    char str[4];
+    int tmp;
+    int use = FALSE;
 
-        tmp = value / 1000000000;
+    tmp = value / 1000000000;
+    if (tmp)
+    {
+        use = TRUE;
+        sprintf(str, "%2d", tmp);
+    }
+    else
+        strcpy(str, "  ");
+    Write(str);
+    Write(" ");
+    value = value % 1000000000;
+
+    tmp = value / 1000000;
+    if (use)
+        sprintf(str, "%03d", tmp);
+    else
+    {
         if (tmp)
         {
-                use = TRUE;
-                sprintf(str, "%2d", tmp);
+            use = TRUE;
+            sprintf(str, "%3d", tmp);
         }
         else
-                strcpy(str, "  ");
-        Write(str);
-        Write(" ");
-        value = value % 1000000000;
+            strcpy(str, "   ");
+    }
+    Write(str);
+    Write(" ");
+    value = value % 1000000;
 
-        tmp = value / 1000000;
-        if (use)
-                sprintf(str, "%03d", tmp);
-        else
+    tmp = value / 1000;
+    if (use)
+        sprintf(str, "%03d", tmp);
+    else
+    {
+        if (tmp)
         {
-                if (tmp)
-                {
-                        use = TRUE;
-                        sprintf(str, "%3d", tmp);
-                }
-                else
-                        strcpy(str, "   ");
+            use = TRUE;
+            sprintf(str, "%3d", tmp);
         }
-        Write(str);
-        Write(" ");
-        value = value % 1000000;
-
-        tmp = value / 1000;
-        if (use)
-                sprintf(str, "%03d", tmp);
         else
-        {
-                if (tmp)
-                {
-                        use = TRUE;
-                        sprintf(str, "%3d", tmp);
-                }
-                else
-                        strcpy(str, "   ");
-        }
-        Write(str);
-        Write(" ");
-        value = value % 1000;
+            strcpy(str, "   ");
+    }
+    Write(str);
+    Write(" ");
+    value = value % 1000;
 
-        tmp = value;
-        if (use)
-                sprintf(str, "%03d", tmp);
-        else
-                sprintf(str, "%3d", tmp);
-        Write(str);
+    tmp = value;
+    if (use)
+        sprintf(str, "%03d", tmp);
+    else
+        sprintf(str, "%3d", tmp);
+    Write(str);
 }
 
 /*##########################################################################
@@ -1126,12 +1129,12 @@ void TSession::WriteLong(long value)
 ##########################################################################*/
 char TSession::Read()
 {
-        char ch = 3;
+    char ch = 3;
 
-        if (FInputFile)
-                FInputFile->Read(&ch, 1);
+    if (FInputFile)
+        FInputFile->Read(&ch, 1);
 
-        return ch;
+    return ch;
 }
 
 /*##########################################################################
@@ -1147,32 +1150,32 @@ char TSession::Read()
 ##########################################################################*/
 int TSession::ReadCmd(char *str, int maxsize)
 {
-        char ch;
-        int i;
+    char ch;
+    int i;
 
-        if (FCmdFile->IsDevice())
-            return ReadCon(str, maxsize);
-        else
+    if (FCmdFile->IsDevice())
+        return ReadCon(str, maxsize);
+    else
+    {
+        for (i = 0; i < maxsize; i++)
         {
-                for (i = 0; i < maxsize; i++)
-                {
-                        ch = 0;
-                        FCmdFile->Read(&ch, 1);
+            ch = 0;
+            FCmdFile->Read(&ch, 1);
 
-                        if (ch == 0 || ch == 0xa)
-                        {
-                                *str = 0;
-                                break;
-                        }
-                        else
-                        {
-                                *str = ch;
-                                str++;
-                        }
-                }
+            if (ch == 0 || ch == 0xa)
+            {
                 *str = 0;
-                return TRUE;
+                break;
+            }
+            else
+            {
+                *str = ch;
+                str++;
+            }
         }
+        *str = 0;
+        return TRUE;
+    }
 }
 
 /*##########################################################################
@@ -1188,35 +1191,35 @@ int TSession::ReadCmd(char *str, int maxsize)
 ##########################################################################*/
 int TSession::Read(char *str, int maxsize)
 {
-        char ch;
-        int i;
+    char ch;
+    int i;
 
-        if (FInputFile->IsDevice())
-            return ReadCon(str, maxsize);
-        else
+    if (FInputFile->IsDevice())
+        return ReadCon(str, maxsize);
+    else
+    {
+        for (i = 0; i < maxsize; i++)
         {
-                for (i = 0; i < maxsize; i++)
-                {
-                        ch = 0;
-                        FInputFile->Read(&ch, 1);
+            ch = 0;
+            FInputFile->Read(&ch, 1);
 
-                        if (ch == 3)
-                                return FALSE;
+            if (ch == 3)
+                return FALSE;
 
-                        if (ch == 0 || ch == 0xa)
-                        {
-                                *str = 0;
-                                break;
-                        }
-                        else
-                        {
-                                *str = ch;
-                                str++;
-                        }
-                }
+            if (ch == 0 || ch == 0xa)
+            {
                 *str = 0;
-                return TRUE;
+                break;
+            }
+            else
+            {
+                *str = ch;
+                str++;
+            }
         }
+        *str = 0;
+        return TRUE;
+    }
 }
 
 /*##########################################################################
@@ -1290,7 +1293,7 @@ TString TSession::ExpandParam(const char *param)
                     str += *param;
             }
             param++;
-                    
+
         }
         else
         {
@@ -1314,45 +1317,45 @@ TString TSession::ExpandParam(const char *param)
 ##########################################################################*/
 void TSession::Run()
 {
-        char param[256];
-        int ok;
-        TCommandLine *cmd;
-        TEnv *env = TEnv::OpenSysEnv();
-        
-        if (!env->Find("COMSPEC", param))
-        {
+    char param[256];
+    int ok;
+    TCommandLine *cmd;
+    TEnv *env = TEnv::OpenSysEnv();
+
+    if (!env->Find("COMSPEC", param))
+    {
         TPathName CurrDir;
         CurrDir += "command.exe";       
-            env->Add("COMSPEC", CurrDir.Get().GetData());
+        env->Add("COMSPEC", CurrDir.Get().GetData());
 
         TSession *session = new TSession(*this);
-            if (session->Run("autoexec.bat", 0) != 0)
-                session->Run("autoexec.cmd", 0);
+        if (session->Run("autoexec.bat", 0) != 0)
+            session->Run("autoexec.cmd", 0);
         delete session;
-        }
+    }
     delete env;
 
-        for (;;)
+    for (;;)
+    {
+        if (FEcho)
+            DisplayPrompt();
+
+        ok = ReadCmd(param, 256);
+        if (ok)
         {
-            if (FEcho)
-                DisplayPrompt();
-                
-                ok = ReadCmd(param, 256);
-                if (ok)
-                {
-                        cmd = new TCommandLine(this, param);
-                        if (cmd->IsExit())
-                        {
-                            delete cmd;
-                            break;
-                        }
-                        else
+            cmd = new TCommandLine(this, param);
+            if (cmd->IsExit())
+            {
+                delete cmd;
+                break;
+            }
+            else
             {                   
-                        cmd->Run();
-                        delete cmd;
-                }
-                }
+                cmd->Run();
+                delete cmd;
+            }
         }
+    }
 }
 
 /*##########################################################################
@@ -1368,16 +1371,16 @@ void TSession::Run()
 ##########################################################################*/
 void TSession::Run(const char *param)
 {
-        TCommandLine *cmd;
+    TCommandLine *cmd;
 
-        cmd = new TCommandLine(this, param);
-        if (cmd->IsExit())
+    cmd = new TCommandLine(this, param);
+    if (cmd->IsExit())
         delete cmd;
-        else
+    else
     {                   
         cmd->Run();
-            delete cmd;
-        }
+        delete cmd;
+    }
 }
 
 /*##########################################################################
@@ -1393,11 +1396,11 @@ void TSession::Run(const char *param)
 ##########################################################################*/
 int TSession::Run(const char *name, TArg *ArgList)
 {
-        char param[256];
-        int ok;
-        TCommandLine *cmd;
-        TString CmdStr;
-        const char *ptr;
+    char param[256];
+    int ok;
+    TCommandLine *cmd;
+    TString CmdStr;
+    const char *ptr;
 
     FArgList = ArgList;
     FName = name;
@@ -1410,35 +1413,35 @@ int TSession::Run(const char *name, TArg *ArgList)
     {
         while (FCmdFile->GetPos() != FCmdFile->GetSize())
         {
-                if (FEcho)
+            if (FEcho)
                 DisplayPrompt();
-                
-                ok = ReadCmd(param, 256);
-                if (ok)
-                    {
+
+            ok = ReadCmd(param, 256);
+            if (ok)
+            {
                 CmdStr = ExpandParam(param);
-                        ptr = CmdStr.GetData();
-    
-                        if (FEcho)
-                        {
-                                Write(ptr);
-                                Write('\n');
-                    }
-                
-                        cmd = new TCommandLine(this, ptr);
-                        if (cmd->IsExit())
-                        {
-                            delete cmd;
-                            break;
-                        }
-                            else
-                {                       
-                                cmd->Run();
-                                delete cmd;
-                    }
+                ptr = CmdStr.GetData();
+
+                if (FEcho)
+                {
+                    Write(ptr);
+                    Write('\n');
+                }
+
+                cmd = new TCommandLine(this, ptr);
+                if (cmd->IsExit())
+                {
+                    delete cmd;
+                    break;
                 }
                 else
-                    return 1;
+                {                       
+                    cmd->Run();
+                    delete cmd;
+                }
+            }
+            else
+                return 1;
         }
         return 0;
     }

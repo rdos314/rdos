@@ -576,4 +576,6 @@ get_core_duty_nr                = 463
 
 has_global_timer_nr             = 464
 
+remote_debug_nr                 = 465
+
 usergate_entries			    = 512

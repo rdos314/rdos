@@ -576,6 +576,8 @@
 
 #define usergate_has_global_timer 464
 
+#define usergate_remote_debug 465
+
 
 
 #ifdef __FLAT__
@@ -1157,6 +1159,8 @@
 
 #define CallGate_has_global_timer 0x67 0x9a 208 1 0 0 3 0
 
+#define CallGate_remote_debug 0x67 0x9a 209 1 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1735,5 +1739,7 @@
 #define CallGate_get_core_duty 0x3e 0x67 0x9a 207 1 0 0 3 0
 
 #define CallGate_has_global_timer 0x3e 0x67 0x9a 208 1 0 0 3 0
+
+#define CallGate_remote_debug 0x3e 0x67 0x9a 209 1 0 0 3 0
 
 #endif

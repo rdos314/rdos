@@ -998,6 +998,11 @@ DeleteIni	MACRO
 
 ;;;;;;;;;;;;;; DEBUGGING ;;;;;;;;;;;
 
+; IN  EDX           IP address (0 = local)
+RemoteDebug      MACRO
+	UserGate remote_debug_nr
+						ENDM
+
 DebugBreak      MACRO
 	UserGate debug_break_nr
 						ENDM

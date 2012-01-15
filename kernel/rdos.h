@@ -567,6 +567,8 @@ void RDOSAPI RdosContinueDebugEvent(int handle, int thread);
 
 #endif
 
+void RDOSAPI RdosRemoteDebug(long IP);
+
 int RDOSAPI RdosOpenSyslog();
 void RDOSAPI RdosCloseSyslog(int handle);
 int RDOSAPI RdosGetSyslog(int handle, int *severity, unsigned long *msb, unsigned long *lsb, char *buf, int size);
@@ -1123,6 +1125,10 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosSetThreadTss = \
     CallGate_set_thread_tss  \
     parm [ebx] [edi];
+
+#pragma aux RdosRemoteDebug = \
+    CallGate_remote_debug  \
+    parm [edx];
 
 #pragma aux RdosDebugTrace = \
     CallGate_debug_trace;
