@@ -1205,6 +1205,9 @@ ke18    DB 'Invalid selector        '
 
 WriteIntCode    Proc near
     movzx dx,gs:p_fault_vector
+    cmp dx,18
+    ja wicDone
+;    
     mov bx,dx
     add bx,bx
     add bx,bx
@@ -1218,6 +1221,8 @@ WriteIntCode    Proc near
     add di,bx
     mov cx,24
     WriteSizeString
+
+wicDone:
     ret
 WriteIntCode    Endp
 
