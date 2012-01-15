@@ -1017,7 +1017,6 @@ SetupInts   Proc near
     push edx
     push edi
 ;    
-    int 3
     GetPciMsi
     jc siIrq
 
