@@ -1067,8 +1067,8 @@ test_gate_name    DB 'Test Gate',0
 test_gate_pr  Proc far
     call SetupDefaultIrqHandlers
     xor ax,ax
-    mov bh,0Ch
-    mov bl,3
+    mov bh,1
+    mov bl,1
     FindPciClassAll
 ;
     GetPciMsi
