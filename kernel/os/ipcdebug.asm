@@ -102,6 +102,7 @@ req_thread      PROC near
     xor si,si
     rep movs byte ptr es:[di],gs:[si]
     xor di,di
+    mov cx,SIZE thread_seg
     ReplyMailslot
     ret
 req_thread      Endp
