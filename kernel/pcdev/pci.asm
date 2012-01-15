@@ -866,13 +866,15 @@ find_pci_cap    Endp
 ;
 ;           RETURNS:        NC          Success
 ;                           CL          MSI register base
-;                           AX          Requested vectors
+;                           DL          Requested vectors
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_pci_msi_name DB 'Get PCI MSI',0
 
 get_pci_msi     Proc far    
+    push ax
+;    
     mov al,5
     FindPciCapability
     jc gpmDone
@@ -884,14 +886,66 @@ get_pci_msi     Proc far
     push cx
     mov cl,al
     shr cl,1
-    mov ax,1
-    shl ax,cl
+    and cl,3
+    mov dl,1
+    shl dl,cl
     pop cx
     clc
 
-gpmDone:        
+gpmDone:       
+    pop ax 
     retf32
 get_pci_msi     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupPciMsi
+;
+;           DESCRIPTION:    Setup PCI MSI interface
+;
+;           PARAMETERS:     BH          Bus
+;                           BL          Device
+;                           CH          Function
+;                           CL          MSI register base
+;                           AL          Int base
+;                           DL          Allocated ints
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_pci_msi_name DB 'Setup PCI MSI',0
+
+setup_pci_msi     Proc far    
+    push eax
+    push dx
+;    
+    mov dh,al
+    xor ah,ah
+
+spmAllocLoop:
+    shr dl,1
+    jc spmAllocDone
+;
+    inc ah
+    jmp spmAllocLoop
+
+spmAllocDone:
+    mov dl,ah
+    shl dl,4
+;
+    ReadPciWord
+    and al,70h
+    or al,dl
+    or al,1
+    WritePciWord
+;   
+    mov al,dh
+    GetMsiParam
+;     
+    pop dx
+    pop eax
+    retf32
+setup_pci_msi     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1777,6 +1831,12 @@ init    Proc far
     mov edi,OFFSET get_pci_msi_name
     xor cl,cl
     mov ax,get_pci_msi_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET setup_pci_msi
+    mov edi,OFFSET setup_pci_msi_name
+    xor cl,cl
+    mov ax,setup_pci_msi_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET get_pci_dev_name16

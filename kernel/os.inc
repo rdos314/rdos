@@ -1293,6 +1293,13 @@ RequestSharedIrqHandler MACRO
     OsGate request_shared_irq_handler_nr
                     ENDM
 
+; IN  AL        Int base
+; OUT EDX       MSI address
+; OUT AX        MSI data
+GetMsiParam    MACRO
+    OsGate get_msi_param_nr
+                    ENDM
+
 ; IN  CX        Number of ints (1,2,4,8,16 or 32)
 ; OUT EDX       MSI address
 ; OUT AX        MSI data
@@ -2469,9 +2476,19 @@ GetPciIrqNr     MACRO
 ; IN  BL    Device
 ; IN  CH    Function
 ; OUT CL    MSI Register base
-; OUT AX    Requested vectors
+; OUT DL    Requested vectors
 GetPciMsi    MACRO
     OsGate get_pci_msi_nr
+                    ENDM
+
+; IN  BH    Bus
+; IN  BL    Device
+; IN  CH    Function
+; IN  CL    MSI Register base
+; IN  AL    Int base
+; IN  DL    Allocated vectors
+SetupPciMsi    MACRO
+    OsGate setup_pci_msi_nr
                     ENDM
 
 ;;;;;;;;;; ACPI ;;;;;;;;;

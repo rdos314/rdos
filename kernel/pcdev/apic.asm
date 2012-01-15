@@ -1415,6 +1415,28 @@ enable_irq_detect   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetMsiParam
+;
+;       DESCRIPTION:    Get MSI parameters
+;
+;       PARAMETERS:     AL      Int base
+;
+;       RETURNS:        EDX     MSI address
+;                       AX      MSI data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_msi_param_name    DB 'Get MSI Param',0
+
+get_msi_param  Proc far
+    mov ah,1
+    mov edx,0FEEFF000h
+    retf32
+get_msi_param  Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           AllocateMsiInts
 ;
 ;       DESCRIPTION:    Allocate MSI interrupts
@@ -3259,6 +3281,12 @@ init    PROC far
     mov edi,OFFSET allocate_msi_ints_name
     xor cl,cl
     mov ax,allocate_msi_ints_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_msi_param
+    mov edi,OFFSET get_msi_param_name
+    xor cl,cl
+    mov ax,get_msi_param_nr
     RegisterOsGate
 ;
     mov esi,OFFSET request_msi_handler

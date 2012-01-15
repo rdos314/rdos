@@ -494,5 +494,7 @@ allocate_ints_nr            = 419
 free_int_nr                 = 420
 
 get_pci_msi_nr              = 421
+setup_pci_msi_nr            = 422
+get_msi_param_nr            = 423
 
 osgate_entries				= 440
