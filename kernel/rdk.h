@@ -27,8 +27,6 @@
 #define osgate_create_call_gate_sel16 24
 #define osgate_create_call_gate_sel32 25
 #define osgate_create_task_gate_sel 26
-#define osgate_create_int_gate_sel 27
-#define osgate_create_trap_gate_sel 28
 #define osgate_selector_to_segment 29
 #define osgate_segment_to_selector 30
 #define osgate_free_selector 31
@@ -77,8 +75,12 @@
 #define osgate_init_trap_gates 75
 #define osgate_init_tss_gates 76
 
+#define osgate_setup_int_gate 77
+#define osgate_setup_trap_gate 78
+
 #define osgate_wake_thread 79
 #define osgate_sleep_thread 80
+#define osgate_irq_schedule 81
 #define osgate_clear_signal 83
 #define osgate_signal 84
 #define osgate_wait_for_signal 85
@@ -398,9 +400,6 @@
 
 #define osgate_get_apic_id 357
 
-#define osgate_enter_int 358
-#define osgate_leave_int 359
-
 #define osgate_debug_exception 360
 
 #define osgate_create_core 362
@@ -476,9 +475,10 @@
 
 #define osgate_hook_init_pci 408
 
-#define osgate_allocate_msi_ints 409
-#define osgate_request_msi_handler 410
-#define osgate_free_msi_int 411
+#define osgate_get_msi_param 409
+
+#define osgate_allocate_ints 410
+#define osgate_free_int 411
 
 #define osgate_get_acpi_pci_device_name 412
 #define osgate_get_acpi_pci_device_info 413
@@ -490,6 +490,10 @@
 #define osgate_update_pstate 417
 
 #define osgate_enter_c3 418
+
+#define osgate_get_pci_msi 419
+#define osgate_setup_pci_msi 420
+#define osgate_request_msi_handler 421
 
 
 
@@ -522,8 +526,6 @@
 #define OsGate_create_call_gate_sel16 0x3E 0x67 0x9a 24 0 0 0 2 0
 #define OsGate_create_call_gate_sel32 0x3E 0x67 0x9a 25 0 0 0 2 0
 #define OsGate_create_task_gate_sel 0x3E 0x67 0x9a 26 0 0 0 2 0
-#define OsGate_create_int_gate_sel 0x3E 0x67 0x9a 27 0 0 0 2 0
-#define OsGate_create_trap_gate_sel 0x3E 0x67 0x9a 28 0 0 0 2 0
 #define OsGate_selector_to_segment 0x3E 0x67 0x9a 29 0 0 0 2 0
 #define OsGate_segment_to_selector 0x3E 0x67 0x9a 30 0 0 0 2 0
 #define OsGate_free_selector 0x3E 0x67 0x9a 31 0 0 0 2 0
@@ -572,8 +574,12 @@
 #define OsGate_init_trap_gates 0x3E 0x67 0x9a 75 0 0 0 2 0
 #define OsGate_init_tss_gates 0x3E 0x67 0x9a 76 0 0 0 2 0
 
+#define OsGate_setup_int_gate 0x3E 0x67 0x9a 77 0 0 0 2 0
+#define OsGate_setup_trap_gate 0x3E 0x67 0x9a 78 0 0 0 2 0
+
 #define OsGate_wake_thread 0x3E 0x67 0x9a 79 0 0 0 2 0
 #define OsGate_sleep_thread 0x3E 0x67 0x9a 80 0 0 0 2 0
+#define OsGate_irq_schedule 0x3E 0x67 0x9a 81 0 0 0 2 0
 #define OsGate_clear_signal 0x3E 0x67 0x9a 83 0 0 0 2 0
 #define OsGate_signal 0x3E 0x67 0x9a 84 0 0 0 2 0
 #define OsGate_wait_for_signal 0x3E 0x67 0x9a 85 0 0 0 2 0
@@ -893,9 +899,6 @@
 
 #define OsGate_get_apic_id 0x3E 0x67 0x9a 101 1 0 0 2 0
 
-#define OsGate_enter_int 0x3E 0x67 0x9a 102 1 0 0 2 0
-#define OsGate_leave_int 0x3E 0x67 0x9a 103 1 0 0 2 0
-
 #define OsGate_debug_exception 0x3E 0x67 0x9a 104 1 0 0 2 0
 
 #define OsGate_create_core 0x3E 0x67 0x9a 106 1 0 0 2 0
@@ -971,9 +974,10 @@
 
 #define OsGate_hook_init_pci 0x3E 0x67 0x9a 152 1 0 0 2 0
 
-#define OsGate_allocate_msi_ints 0x3E 0x67 0x9a 153 1 0 0 2 0
-#define OsGate_request_msi_handler 0x3E 0x67 0x9a 154 1 0 0 2 0
-#define OsGate_free_msi_int 0x3E 0x67 0x9a 155 1 0 0 2 0
+#define OsGate_get_msi_param 0x3E 0x67 0x9a 153 1 0 0 2 0
+
+#define OsGate_allocate_ints 0x3E 0x67 0x9a 154 1 0 0 2 0
+#define OsGate_free_int 0x3E 0x67 0x9a 155 1 0 0 2 0
 
 #define OsGate_get_acpi_pci_device_name 0x3E 0x67 0x9a 156 1 0 0 2 0
 #define OsGate_get_acpi_pci_device_info 0x3E 0x67 0x9a 157 1 0 0 2 0
@@ -985,4 +989,8 @@
 #define OsGate_update_pstate 0x3E 0x67 0x9a 161 1 0 0 2 0
 
 #define OsGate_enter_c3 0x3E 0x67 0x9a 162 1 0 0 2 0
+
+#define OsGate_get_pci_msi 0x3E 0x67 0x9a 163 1 0 0 2 0
+#define OsGate_setup_pci_msi 0x3E 0x67 0x9a 164 1 0 0 2 0
+#define OsGate_request_msi_handler 0x3E 0x67 0x9a 165 1 0 0 2 0
 

@@ -1451,39 +1451,6 @@ get_msi_param  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           AllocateMsiInts
-;
-;       DESCRIPTION:    Allocate MSI interrupts
-;
-;       PARAMETERS:     CX      Number of ints (1,2,4,8,16 or 32)
-;
-;       RETURNS:        EDX     MSI address
-;                       AX      MSI data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-allocate_msi_ints_name    DB 'Allocate MSI Ints',0
-
-allocate_msi_ints  Proc far
-    mov al,4
-    AllocateInts
-    jc amiFailed
-;    
-    mov ah,1
-    mov edx,0FEEFF000h
-    clc
-    jmp amiDone
-
-amiFailed:
-    stc
-
-amiDone:    
-    retf32
-allocate_msi_ints  Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           RequestMsiHandler
 ;
 ;       DESCRIPTION:    Request an MSI-based interrupt-handler
@@ -1512,24 +1479,6 @@ request_msi_handler  Proc far
     pop bx
     retf32
 request_msi_handler  Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           FreeMsiInt
-;
-;       DESCRIPTION:    Free a single MSI int vector
-;
-;       PARAMETERS:     AX      MSI data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-free_msi_int_name    DB 'Free MSI Int',0
-
-free_msi_int  Proc far
-    FreeInt
-    retf32
-free_msi_int    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3291,12 +3240,6 @@ init    PROC far
     mov ax,disable_all_irq_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET allocate_msi_ints
-    mov edi,OFFSET allocate_msi_ints_name
-    xor cl,cl
-    mov ax,allocate_msi_ints_nr
-    RegisterOsGate
-;
     mov esi,OFFSET get_msi_param
     mov edi,OFFSET get_msi_param_name
     xor cl,cl
@@ -3307,12 +3250,6 @@ init    PROC far
     mov edi,OFFSET request_msi_handler_name
     xor cl,cl
     mov ax,request_msi_handler_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET free_msi_int
-    mov edi,OFFSET free_msi_int_name
-    xor cl,cl
-    mov ax,free_msi_int_nr
     RegisterOsGate
 ;
     mov si,OFFSET set_system_time

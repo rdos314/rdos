@@ -315,10 +315,7 @@ ahci_device_struc   STRUC
 ad_hba_sel          DW ?
 ad_port_arr         DW 32 DUP(?)
 
-ad_msi_address      DD ?
-ad_msi_data         DW ?
-ad_msi_ints         DW ?
-
+ad_msi              DB ?
 ad_pci_bus          DB ?
 ad_pci_device       DB ?
 ad_pci_function     DB ?
@@ -1127,7 +1124,7 @@ StartPort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StartDevice Proc near
-    mov dx,ds:ad_msi_ints
+    movzx dx,ds:ad_msi
     mov fs,ds:ad_hba_sel
 ;
     mov cx,32
@@ -1174,119 +1171,42 @@ StartDevice Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupInts Proc near
-    mov ds:ad_msi_address,0
-    mov ds:ad_msi_data,0
-    mov ds:ad_msi_ints,0
-;    
+    mov ds:ad_msi,0
     mov bh,ds:ad_pci_bus
     mov bl,ds:ad_pci_device
     mov ch,ds:ad_pci_function
-    mov al,5
-    FindPciCapability
+    GetPciMsi
     jc siIrq
 ;
-    mov cl,al
-    add cl,2
-    ReadPciWord
-    or al,1
-    WritePciWord
-;    test al,1
-;    jz siIrq
-;    
-    mov si,cx
-    mov cl,al
-    shr cl,1
-    and cl,7
-    mov dx,1
-    shl dx,cl
-    mov cx,dx
-    cmp cx,1
+    cmp dl,1
     je siAllocOne
 
 siAllocMany:
-    AllocateMsiInts
-    jc siAllocOne
-;    
-    mov ds:ad_msi_address,edx
-    mov ds:ad_msi_data,ax
-    mov ds:ad_msi_ints,cx
-;
-    mov cx,si
-    ReadPciWord
-    and al,8Fh
-    mov dl,al
-    and dl,0Eh
-    shl dl,3
-    or al,dl
-    WritePciWord        
-    jmp siAllocDone
+    push cx
+    movzx cx,dl
+    mov al,14h
+    AllocateInts
+    pop cx
+    jnc siMsiHandlers
 
 siAllocOne:
+    push cx
     mov cx,1
-    AllocateMsiInts
-    jc siIrq
-;    
-    mov ds:ad_msi_address,edx
-    mov ds:ad_msi_data,ax
-    mov ds:ad_msi_ints,1
-;
-    mov cx,si
-    ReadPciWord
-    and al,8Fh
-    WritePciWord        
-
-siAllocDone:        
-    test ax,100h
-    jnz siMsiVector
-;
-    test ax,80h
-    jnz siMsi64
-
-siMsi32:
-    add cl,2
-    mov eax,ds:ad_msi_address
-    WritePciDword
-;
-    add cl,4    
-    mov ax,ds:ad_msi_data
-    WritePciWord
-    jmp siMsiHandlers
-
-siMsi64:
-    add cl,2
-    mov eax,ds:ad_msi_address
-    WritePciDword
-;
-    add cl,4
-    xor eax,eax
-    WritePciDword
-;    
-    add cl,4    
-    mov ax,ds:ad_msi_data
-    WritePciWord
-    jmp siMsiHandlers
-
-siMsiVector:
-    add cl,2
-    mov eax,ds:ad_msi_address
-    WritePciDword
-;
-    add cl,4
-    xor eax,eax
-    WritePciDword
-;    
-    add cl,4    
-    mov ax,ds:ad_msi_data
-    WritePciWord
+    mov al,14h
+    AllocateInts
+    pop cx
+    jc siIrq    
 
 siMsiHandlers:
-    mov cx,ds:ad_msi_ints
+    mov ds:ad_msi,1
+    SetupPciMsi
+;
+    movzx cx,dl
     cmp cx,1
     je siMsiSingle
 
 siMsiMulti:
     mov si,OFFSET ad_port_arr
-    mov ax,ds:ad_msi_data
 
 siMultiLoop:
     mov dx,ds:[si]
@@ -1304,17 +1224,16 @@ siMultiSetup:
     jmp siMultiNext
 
 siMultiFree:
-    FreeMsiInt
+    FreeInt
 
 siMultiNext:
-    inc ax    
+    inc al
     add si,2
     loop siMultiLoop
 ;
     jmp siOk
     
 siMsiSingle:
-    mov ax,ds:ad_msi_data
     mov di,cs
     mov es,di
     mov edi,OFFSET AhciInt

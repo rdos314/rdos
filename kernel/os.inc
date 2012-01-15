@@ -1300,23 +1300,11 @@ GetMsiParam    MACRO
     OsGate get_msi_param_nr
                     ENDM
 
-; IN  CX        Number of ints (1,2,4,8,16 or 32)
-; OUT EDX       MSI address
-; OUT AX        MSI data
-AllocateMsiInts    MACRO
-    OsGate allocate_msi_ints_nr
-                    ENDM
-
 ; IN  AX        MSI data
 ; IN  DS        Data passed to handler
 ; IN  ES:EDI    Handler address
 RequestMsiHandler    MACRO
     OsGate request_msi_handler_nr
-                    ENDM
-
-; IN  AX        MSI data
-FreeMsiInt    MACRO
-    OsGate free_msi_int_nr
                     ENDM
 
 SetupIrqDetect  MACRO

@@ -475,9 +475,10 @@ end_disc_handler_nr         = 407
 
 hook_init_pci_nr            = 408
 
-allocate_msi_ints_nr        = 409
-request_msi_handler_nr      = 410
-free_msi_int_nr             = 411
+get_msi_param_nr            = 409
+
+allocate_ints_nr            = 410
+free_int_nr                 = 411
 
 get_acpi_pci_device_name_nr = 412
 get_acpi_pci_device_info_nr = 413
@@ -490,11 +491,8 @@ update_pstate_nr            = 417
 
 enter_c3_nr                 = 418
 
-allocate_ints_nr            = 419
-free_int_nr                 = 420
-
-get_pci_msi_nr              = 421
-setup_pci_msi_nr            = 422
-get_msi_param_nr            = 423
+get_pci_msi_nr              = 419
+setup_pci_msi_nr            = 420
+request_msi_handler_nr      = 421
 
 osgate_entries				= 440
