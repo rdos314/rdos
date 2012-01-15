@@ -917,6 +917,7 @@ setup_pci_msi_name DB 'Setup PCI MSI',0
 
 setup_pci_msi     Proc far    
     push ax
+    push cx
     push edx
 ;    
     mov dh,al
@@ -938,11 +939,65 @@ spmAllocDone:
     or al,dl
     or al,1
     WritePciWord
-;   
+;
+    test ax,100h
+    jnz spmVector
+;
+    test ax,80h
+    jnz spm64
+
+spm32:
     mov al,dh
     GetMsiParam
-;     
+    push ax
+; 
+    add cl,2
+    mov eax,edx
+    WritePciDword
+;
+    pop ax
+    add cl,4    
+    WritePciWord
+    jmp spmDone
+
+spm64:
+    mov al,dh
+    GetMsiParam
+    push ax
+;
+    add cl,2
+    mov eax,edx
+    WritePciDword
+;
+    add cl,4
+    xor eax,eax
+    WritePciDword
+;    
+    pop ax
+    add cl,4    
+    WritePciWord
+    jmp spmDone
+
+spmVector:
+    mov al,dh
+    GetMsiParam
+    push ax
+;
+    add cl,2
+    mov eax,edx
+    WritePciDword
+;
+    add cl,4
+    xor eax,eax
+    WritePciDword
+;    
+    pop ax
+    add cl,4    
+    WritePciWord
+
+spmDone:
     pop edx
+    pop cx
     pop ax
     retf32
 setup_pci_msi     Endp
