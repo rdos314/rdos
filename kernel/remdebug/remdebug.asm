@@ -1065,7 +1065,7 @@ write_mode_ok:
     mov bx,ds:MailslotHandle
     mov si,OFFSET DataHeader
     mov cx,SIZE debug_req_data_struc
-    mov di,OFFSET DataHeader
+    mov di,OFFSET DataArr
     mov ax,32 + SIZE debug_req_data_struc
     SendMailslot
     cmp cx,32 + SIZE debug_req_data_struc
