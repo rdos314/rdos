@@ -47,7 +47,6 @@ debug_req_data_struc	ENDS
 debug_req_info_struc	STRUC
 
 di_op				DB ?
-di_thread			DW ?
 di_free_physical	DD ?
 di_used_small		DD ?
 di_used_big			DD ?

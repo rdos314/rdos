@@ -125,7 +125,7 @@ req_info    PROC near
     mov es:di_used_big,eax
     UsedSmallLinear
     mov es:di_used_small,eax
-    mov bx,es:di_thread
+    mov bx,gs
     UsedLocalLinearThread
     mov es:di_used_local,eax
 ;
