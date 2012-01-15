@@ -147,6 +147,7 @@ req_info    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 req_data    Proc near
+    int 3
     mov dx,es:dd_sel
     mov esi,es:dd_offset
     mov bx,gs
