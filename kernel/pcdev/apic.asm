@@ -1066,8 +1066,8 @@ test_gate_name    DB 'Test Gate',0
 
 test_gate_pr  Proc far
     xor ax,ax
-    mov bh,1
-    mov bl,1
+    mov bh,2
+    mov bl,0
     FindPciClassAll
 ;
     GetPciMsi
