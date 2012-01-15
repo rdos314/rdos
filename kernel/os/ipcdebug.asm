@@ -149,7 +149,7 @@ req_info    Endp
 req_data    Proc near
     mov dx,es:dd_sel
     mov esi,es:dd_offset
-    mov bx,es:dd_thread
+    mov bx,gs
     mov cx,es:dd_count
     mov di,SIZE debug_req_data_struc
     mov al,es:dd_vm

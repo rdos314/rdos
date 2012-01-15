@@ -39,7 +39,6 @@ dd_op		DB ?
 dd_vm		DB ?
 dd_offset	DD ?
 dd_sel		DW ?
-dd_thread	DW ?
 dd_count	DW ?
 
 debug_req_data_struc	ENDS
