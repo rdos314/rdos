@@ -856,6 +856,46 @@ find_pci_cap    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetPciMsi
+;
+;           DESCRIPTION:    Get PCI MSI interface
+;
+;           PARAMETERS:     BH          Bus
+;                           BL          Device
+;                           CH          Function
+;
+;           RETURNS:        NC          Success
+;                           CL          MSI register base
+;                           AX          Requested vectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_msi_name DB 'Get PCI MSI',0
+
+get_pci_msi     Proc far    
+    mov al,5
+    FindPciCapability
+    jc gpmDone
+;
+    mov cl,al
+    add cl,2
+    ReadPciWord
+;
+    push cx
+    mov cl,al
+    shr cl,1
+    mov ax,1
+    shl ax,cl
+    pop cx
+    clc
+
+gpmDone:        
+    retf32
+get_pci_msi     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           bios_pci_int
 ;
 ;           DESCRIPTION:    Handling BIOS PCI int (0B1h, int 1Ah)
@@ -1731,6 +1771,12 @@ init    Proc far
     mov edi,OFFSET find_pci_cap_name
     xor cl,cl
     mov ax,find_pci_cap_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_pci_msi
+    mov edi,OFFSET get_pci_msi_name
+    xor cl,cl
+    mov ax,get_pci_msi_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET get_pci_dev_name16
