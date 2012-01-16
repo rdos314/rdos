@@ -938,10 +938,6 @@ init_mouse      Proc far
     mov ds:mouse_counter,0
     GetThread
     mov ds:mouse_thread,ax
-;
-    mov al,12
-    IsIrqFree
-    jc init_mouse_done
     
 init_check_aux_loop:
     RequestSpinlock ds:hw_spinlock

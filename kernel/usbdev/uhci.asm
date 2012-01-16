@@ -2407,7 +2407,7 @@ InitFunction    Proc near
     mov di,cs
     mov es,di
     mov di,OFFSET UhciInt   
-;       RequestSharedIrqHandler
+;       RequestIrqHandler
 ;
     mov si,OFFSET uhci_tab
     xor di,di

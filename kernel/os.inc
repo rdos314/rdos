@@ -1264,33 +1264,9 @@ SendEoi MACRO
     OsGate send_eoi_nr
                     ENDM
 
-;       AL              IRQ NR
-IsIrqFree       MACRO
-    OsGate is_irq_free_nr
-                    ENDM
-
 ; OUT EAX     Active IRQ lines
 DisableAllIrq   MACRO
     OsGate disable_all_irq_nr
-                    ENDM
-
-;       AL              IRQ NR
-;       DS              DATA PASSED TO HANDLER
-;       ES:EDI       HANDLER ADDRESS
-RequestPrivateIrqHandler    MACRO
-    OsGate request_private_irq_handler_nr
-                    ENDM
-
-;       AL              IRQ NR
-ReleasePrivateIrqHandler    MACRO
-    OsGate release_private_irq_handler_nr
-                    ENDM
-
-;       AL              IRQ NR
-;       DS              DATA PASSED TO HANDLER
-;       ES:EDI       HANDLER ADDRESS
-RequestSharedIrqHandler MACRO
-    OsGate request_shared_irq_handler_nr
                     ENDM
 
 ; IN  AL        Int base

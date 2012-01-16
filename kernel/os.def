@@ -124,9 +124,6 @@ set_bitness_nr				= 121
 hook_in_nr					= 122
 hook_out_nr					= 123
 
-request_private_irq_handler_nr	= 124
-release_private_irq_handler_nr	= 125
-
 disable_all_irq_nr          = 126
 
 set_system_time_nr			= 128
@@ -309,8 +306,6 @@ define_protocol_addr_nr     = 293
 
 register_swap_proc_nr       = 294
 
-is_irq_free_nr              = 295
-
 setup_irq_detect_nr         = 296
 poll_irq_detect_nr          = 297
 
@@ -322,8 +317,6 @@ notify_ethernet_packet_nr   = 300
 
 init_usb_device_nr          = 301
 notify_usb_attach_nr        = 302
-
-request_shared_irq_handler_nr   = 303
 
 notify_usb_detach_nr        = 304
 

@@ -784,12 +784,12 @@ init_pci_found:
     and dx,0FFE0h
     mov ds:IoBase,dx
 ;
-    mov cl,PCI_interrupt_line
-    ReadPciByte
+    GetPciIrqNr
+    mov ah,1Ah
     mov bx,cs
     mov es,bx
     mov edi,OFFSET AudioInt
-    RequestSharedIrqHandler
+    RequestIrqHandler
 ;
     mov dx,ds:IoBase
     mov cx,8
