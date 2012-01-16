@@ -44,6 +44,8 @@ pit_spinlock        DW ?
 clock_tics          DW ?
 system_time         DD ?,?
 
+global_int_arr      DW 16 DUP(?)
+
 data    ENDS
 
 IFDEF __WASM__
@@ -301,8 +303,410 @@ init_process    PROC far
     pop ds
     retf32
 init_process    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           IRQ handler
+;
+;               DESCRIPTION:    Code for patching into IRQ handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; this code should not contain near jumps or references to near labels!
 
+irq_handler_struc   STRUC
+
+irq_linear          DD ?
+irq_handler_ads     DD ?,?
+irq_handler_data    DW ?
+irq_chain           DW ?
+irq_nr              DB ?
+irq_detect_nr       DB ?
+
+irq_handler_struc   ENDS
+
+IrqStart1:
+
+irq_handler1     irq_handler_struc <>
+
+IrqEntry1:
+    push ds
+    push es
+    push fs
+    pushad
+;
+    EnterInt
+    sti
+;       
+    mov ds,cs:irq_handler_data
+    call fword ptr cs:irq_handler_ads
+;
+    mov bx,OFFSET IrqEnd1 - OFFSET IrqStart1
+    jmp cs:irq_chain
+
+IrqExit1:
+    cli    
+    mov al,cs:irq_nr
+    add al,60h
+    out INT0_CONTROL,al
+    LeaveInt
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    iretd
+
+IrqDetect1:
+    mov ah,1
+    mov cl,cs:irq_nr
+    shl ah,cl
+    in al,INT0_MASK
+    or al,ah
+    out INT0_MASK,al
+;
+    mov ax,irq_sys_sel
+    mov ds,ax
+    mov bx,OFFSET bad_irqs
+    movzx dx,cs:irq_detect_nr
+    bts ds:[bx],dx
+    retf32
+
+IrqEnd1:
+
+IrqStart2:
+
+irq_handler2     irq_handler_struc <>
+
+IrqEntry2:
+    push ds
+    push es
+    push fs
+    pushad
+;
+    EnterInt
+    sti
+;       
+    mov ds,cs:irq_handler_data
+    call fword ptr cs:irq_handler_ads
+;
+    mov bx,OFFSET IrqEnd2 - OFFSET IrqStart2
+    jmp cs:irq_chain
+
+IrqExit2:
+    cli    
+    mov al,62h
+    out INT0_CONTROL,al
+    jmp short $+2
+;
+    mov al,cs:irq_nr
+    add al,60h
+    out INT1_CONTROL,al
+    LeaveInt
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    iretd
+
+IrqDetect2:
+    mov ah,1
+    mov cl,cs:irq_nr
+    shl ah,cl
+    in al,INT1_MASK
+    or al,ah
+    out INT1_MASK,al
+;
+    mov ax,irq_sys_sel
+    mov ds,ax
+    mov bx,OFFSET bad_irqs
+    movzx dx,cs:irq_detect_nr
+    bts ds:[bx],dx
+    retf32
+
+IrqEnd2:
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           IRQ chaining
+;
+;               DESCRIPTION:    Code for adding at end of IRQ handler in order to chain
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; this code should not contain near jumps or references to near labels!
+
+irq_chain_struc  STRUC
+
+irch_handler_ads     DD ?,?
+irch_handler_data    DW ?
+irch_chain           DW ?
+
+irq_chain_struc ENDS
+
+IrqChainStart:
+
+irch_handler      irq_chain_struc <>
+
+IrqChainEntry:
+    push bx
+    mov ds,cs:[bx].irch_handler_data
+    call fword ptr cs:[bx].irch_handler_ads
+    pop bx
+;
+    mov si,bx
+    add bx,OFFSET IrqChainEnd - OFFSET IrqChainStart
+    jmp cs:[si].irch_chain
+
+IrqChainEnd:
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateIrq
+;
+;       DESCRIPTION:    Create new IRQ context
+;
+;       PARAMETERS:     AL           IRQ # 
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateIrq   Proc near
+    push ds
+    push es
+    pushad
+;
+    cmp al,8
+    jae ci2
+
+ci1:    
+    push ax
+    mov eax,OFFSET IrqEnd1 - OFFSET IrqStart1
+    AllocateSmallLinear
+    AllocateGdt
+    mov ecx,eax
+    CreateCodeSelector16
+;
+    mov ax,cs
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+    mov esi,OFFSET IrqStart1
+    mov edi,edx
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    mov es:[edx].irq_linear,edx
+    mov word ptr es:[edx].irq_chain,OFFSET IrqExit1 - OFFSET IrqStart1
+    mov dword ptr es:[edx].irq_handler_ads,OFFSET IrqDetect1 - OFFSET IrqStart1
+    mov word ptr es:[edx].irq_handler_ads+4,bx
+    mov es:[edx].irq_handler_data,0
+    pop ax
+;
+    mov si,SEG data
+    mov ds,si
+    movzx si,al
+    shl si,1
+    mov ds:[si].global_int_arr,bx
+;    
+    mov es:[edx].irq_detect_nr,al
+    mov es:[edx].irq_nr,al
+;
+    mov ds,bx
+    mov esi,OFFSET IrqEntry1 - OFFSET IrqStart1
+    add al,28h
+    xor bl,bl
+    SetupIntGate
+    jmp ciDone
+
+ci2:
+    push ax
+    mov eax,OFFSET IrqEnd2 - OFFSET IrqStart2
+    AllocateSmallLinear
+    AllocateGdt
+    mov ecx,eax
+    CreateCodeSelector16
+;
+    mov ax,cs
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+    mov esi,OFFSET IrqStart2
+    mov edi,edx
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    mov es:[edx].irq_linear,edx
+    mov word ptr es:[edx].irq_chain,OFFSET IrqExit2 - OFFSET IrqStart2
+    mov dword ptr es:[edx].irq_handler_ads,OFFSET IrqDetect2 - OFFSET IrqStart2
+    mov word ptr es:[edx].irq_handler_ads+4,bx
+    mov es:[edx].irq_handler_data,0
+    pop ax
+;
+    mov si,SEG data
+    mov ds,si
+    movzx si,al
+    shl si,1
+    mov ds:[si].global_int_arr,bx
+;    
+    mov es:[edx].irq_detect_nr,al
+    sub al,8
+    mov es:[edx].irq_nr,al
+;
+    mov ds,bx
+    mov esi,OFFSET IrqEntry2 - OFFSET IrqStart2
+    add al,38h
+    xor bl,bl
+    SetupIntGate
+
+ciDone:
+    popad
+    pop es
+    pop ds
+    ret
+CreateIrq   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddIrqHandler
+;
+;       DESCRIPTION:    Add new IRQ handler
+;
+;       PARAMETERS:     AL      Global interrupt #
+;                       DS      Data passed to handler
+;                       ES:EDI  Handler address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddIrqHandler   Proc near
+    push fs
+    push ax
+    push bx
+    push cx
+    push edx
+    push ebp
+;
+    movzx bx,al
+    shl bx,1
+    mov dx,SEG data
+    mov fs,dx
+    mov bx,fs:[bx].global_int_arr
+    or bx,bx
+    jz aihDone
+;
+    push ax
+    mov fs,bx
+    mov edx,fs:irq_linear
+    mov ax,flat_sel
+    mov fs,ax
+;
+    mov al,fs:[edx].irq_detect_nr
+    cmp al,-1
+    jne aihReplace
+
+aihChain:
+    push ds
+    push es
+    push ecx
+    push esi
+    push edi
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov es,ax
+;    
+    mov esi,edx
+    GetSelectorBaseSize
+    push ecx
+    mov eax,ecx        
+    add eax,OFFSET IrqChainEnd - OFFSET IrqChainStart
+    AllocateSmallLinear
+    push edx
+    mov edi,edx
+    rep movs byte ptr es:[edi],ds:[esi]
+    mov ebp,edi
+;    
+    xchg edx,ds:[edx].irq_linear
+    xor ecx,ecx
+    FreeLinear
+;
+    mov ax,cs
+    mov ds,ax
+    mov esi,OFFSET IrqChainStart
+    mov ecx,OFFSET IrqChainEnd - OFFSET IrqChainStart
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    pop edx
+    pop ecx
+    add ecx,OFFSET IrqChainEnd - OFFSET IrqChainStart
+    CreateCodeSelector16
+;    
+    pop edi
+    pop esi
+    pop ecx
+    pop es
+    pop ds
+;
+    mov fs:[ebp].irch_handler_data,ds
+    mov fs:[ebp].irch_handler_ads,edi
+    mov word ptr fs:[ebp].irch_handler_ads+4,es
+;
+    pop ax
+    cmp al,8
+    jae aihChain2
+
+aihChain1:    
+    mov eax,ebp
+    sub eax,edx
+    add ax,OFFSET IrqChainEntry - OFFSET IrqChainStart
+    sub ax,OFFSET IrqChainEnd - OFFSET IrqChainStart
+    cmp ax,OFFSET IrqEnd1 - OFFSET IrqStart1
+    jae aihChainPrev
+;    
+    add ax,OFFSET IrqChainEnd - OFFSET IrqChainStart
+    xchg ax,fs:[edx].irq_chain
+    mov fs:[ebp].irch_chain,ax
+    jmp aihDone
+
+aihChain2:
+    mov eax,ebp
+    sub eax,edx
+    add ax,OFFSET IrqChainEntry - OFFSET IrqChainStart
+    sub ax,OFFSET IrqChainEnd - OFFSET IrqChainStart
+    cmp ax,OFFSET IrqEnd2 - OFFSET IrqStart2
+    jae aihChainPrev
+;    
+    add ax,OFFSET IrqChainEnd - OFFSET IrqChainStart
+    xchg ax,fs:[edx].irq_chain
+    mov fs:[ebp].irch_chain,ax
+    jmp aihDone
+
+aihChainPrev:
+    mov edx,ebp
+    sub edx,OFFSET IrqChainEnd - OFFSET IrqChainStart
+    add ax,OFFSET IrqChainEnd - OFFSET IrqChainStart
+    xchg ax,fs:[edx].irch_chain
+    mov fs:[ebp].irch_chain,ax
+    jmp aihDone
+        
+aihReplace:    
+    pop ax
+    mov fs:[edx].irq_handler_data,ds
+    mov fs:[edx].irq_handler_ads,edi
+    mov word ptr fs:[edx].irq_handler_ads+4,es
+    mov fs:[edx].irq_detect_nr,-1
+
+aihDone:
+    pop ebp
+    pop edx
+    pop cx
+    pop bx
+    pop ax
+    pop fs    
+    ret
+AddIrqHandler   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -804,6 +1208,77 @@ intDone:
     pop ds
     ret
 SetupInts Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           Test gate
+;
+;               DESCRIPTION:    Test gate
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_gate_name    DB 'Test Gate',0
+
+Test1   Proc far
+    mov ax,1
+    retf32
+Test1   Endp
+
+Test2   Proc far
+    mov ax,2
+    retf32
+Test2   Endp
+
+Test3   Proc far
+    mov ax,3
+    retf32
+Test3   Endp
+
+Test4   Proc far
+    mov ax,4
+    retf32
+Test4   Endp
+
+test_gate_pr  Proc far
+    mov al,0Ah
+    call CreateIrq
+    int 3Ah
+;
+    mov dx,SEG data
+    mov ds,dx
+    mov dx,cs
+    mov es,dx
+    mov edi,OFFSET Test1
+    call AddIrqHandler
+    int 3Ah
+;
+    mov dx,SEG data
+    mov ds,dx
+    mov dx,cs
+    mov es,dx
+    mov edi,OFFSET Test2
+    call AddIrqHandler
+    int 3Ah
+;
+    mov dx,SEG data
+    mov ds,dx
+    mov dx,cs
+    mov es,dx
+    mov edi,OFFSET Test3
+    call AddIrqHandler
+    int 3Ah
+;
+    mov dx,SEG data
+    mov ds,dx
+    mov dx,cs
+    mov es,dx
+    mov edi,OFFSET Test4
+    call AddIrqHandler
+    int 3Ah
+;
+    retf32
+test_gate_pr    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -821,6 +1296,15 @@ init    PROC far
     mov ds,ax
     mov ds:system_time,0
     mov ds:system_time+4,0
+;
+    mov cx,16
+    mov si,OFFSET global_int_arr
+    xor ax,ax
+
+init_global_int:
+    mov ds:[si],ax
+    add si,2
+    loop init_global_int
 ;    
     mov ax,cs
     mov ds,ax
@@ -854,6 +1338,12 @@ init    PROC far
     mov di,OFFSET get_system_time_name
     xor dx,dx
     mov ax,get_system_time_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET test_gate_pr
+    mov edi,OFFSET test_gate_name
+    xor dx,dx
+    mov ax,test_gate_nr
     RegisterBimodalUserGate
 ;
     mov si,OFFSET set_system_time
