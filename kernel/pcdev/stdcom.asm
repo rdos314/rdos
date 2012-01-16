@@ -1137,9 +1137,9 @@ InitDetect  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DetectIrq   Proc near
-    push bx
+    push ebx
     push cx
-    push bp
+    push ebp
 ;    
     SetupIrqDetect
 ;
@@ -1169,11 +1169,11 @@ diLoop1:
     loop diLoop1    
 ;
     PollIrqDetect
-    or ax,ax
+    or eax,eax
     stc
     jz diDone
 ;
-    mov bp,ax
+    mov ebp,eax
 ;    
     push dx
     inc dx
@@ -1205,25 +1205,25 @@ diLoop3:
 ;
     PollIrqDetect
 ;
-    not ax
-    and ax,bp
+    not eax
+    and eax,ebp
     stc
     jz diDone
 ;
     xor cx,cx
-    mov bx,1
+    mov ebx,1
 
 diGetNrLoop:
-    test ax,bx
+    test eax,ebx
     jnz diGetNrDone
 ;
-    shl bx,1
+    shl ebx,1
     inc cx
     jmp diGetNrLoop
 
 diGetNrDone:
-    not bx
-    and ax,bx
+    not ebx
+    and eax,ebx
     stc
     jnz diDone
 ;
@@ -1231,9 +1231,9 @@ diGetNrDone:
     clc    
 
 diDone:
-    pop bp
+    pop ebp
     pop cx
-    pop bx
+    pop ebx
     ret
 DetectIrq   Endp
 
@@ -1340,7 +1340,8 @@ riLoop:
     push ds
     mov ds,dx
     mov al,ds:pds_irq
-    RequestSharedIrqHandler
+    mov ah,18h
+    RequestIrqHandler
     pop ds
 
 riNext:
@@ -1436,6 +1437,7 @@ init_pci    Proc far
     push es
     pusha
 ;
+    int 3
     mov ax,25
     WaitMilliSec
 ; 
