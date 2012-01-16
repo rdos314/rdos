@@ -1431,7 +1431,6 @@ init_pci    Proc far
     push es
     pusha
 ;
-    int 3
     mov ax,25
     WaitMilliSec
 ; 
