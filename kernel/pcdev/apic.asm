@@ -433,6 +433,7 @@ IrqDetect:
     add bl,al
     add bl,al
 ;    
+    cli
     mov ds:ioapic_regsel,bl
     mov eax,10000h
     mov ds:ioapic_window,eax
@@ -441,6 +442,7 @@ IrqDetect:
     mov ds:ioapic_regsel,bl
     xor eax,eax
     mov ds:ioapic_window,eax
+    sti
 ;
     mov dl,cs:irq_detect_nr
     cmp dl,32
@@ -717,6 +719,7 @@ rihPrioOk:
     add bl,al
     add bl,al
 ;    
+    cli
     mov ds:ioapic_regsel,bl
     mov ds:ioapic_window,edx
 ;
@@ -724,6 +727,7 @@ rihPrioOk:
     mov ds:ioapic_regsel,bl
     mov edx,0FF000000h
     mov ds:ioapic_window,edx
+    sti
     pop ds
 
 rihDone:
@@ -1011,7 +1015,9 @@ DelayMs Endp
 test_gate_name    DB 'Test Gate',0
 
 test_gate_pr  Proc far
-    call EnableDetect
+    mov ax,SEG data
+    mov ds,ax
+    mov eax,ds:detected_irqs
     retf32
 test_gate_pr    Endp
    
@@ -1187,7 +1193,8 @@ edLoop:
     mov bl,10h
     add bl,al
     add bl,al
-;    
+;   
+    cli 
     mov es:ioapic_regsel,bl
     mov es:ioapic_window,edx
 ;
@@ -1195,6 +1202,7 @@ edLoop:
     mov es:ioapic_regsel,bl
     mov edx,0FF000000h
     mov es:ioapic_window,edx
+    sti
 
 edNext:
     add si,8
@@ -1224,6 +1232,7 @@ setup_irq_detect    Proc far
     mov ax,SEG data
     mov ds,ax
     mov ds:detected_irqs,0
+    call EnableDetect
 ;
     Swap
     Swap
@@ -1234,7 +1243,6 @@ setup_irq_detect    Proc far
     pop ds
     retf32
 setup_irq_detect    Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1311,6 +1319,7 @@ enable_irq_do:
     add bl,al
     add bl,al
 ;    
+    cli
     mov ds:ioapic_regsel,bl
     mov ds:ioapic_window,edx
 ;
@@ -1318,6 +1327,7 @@ enable_irq_do:
     mov ds:ioapic_regsel,bl
     mov edx,0FF000000h
     mov ds:ioapic_window,edx
+    sti
 
 enable_irq_done:
     pop edx
@@ -1361,6 +1371,7 @@ disable_irq  Proc far
     add bl,al
     add bl,al
 ;    
+    cli
     mov ds:ioapic_regsel,bl
     mov eax,10000h
     mov ds:ioapic_window,eax
@@ -1369,6 +1380,7 @@ disable_irq  Proc far
     mov ds:ioapic_regsel,bl
     xor eax,eax
     mov ds:ioapic_window,eax
+    sti
 
 disable_irq_done:
     pop bx
@@ -3270,6 +3282,7 @@ init_hpet_done:
     call SetupDefaultIrqHandlers
     call SetupLocalApic
     call EnableTpr
+    call EnableDetect
 ;    
     call InitApicTimer
     call StartupApCores
