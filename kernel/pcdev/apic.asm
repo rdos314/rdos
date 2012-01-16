@@ -444,8 +444,8 @@ IrqDetect:
     mov ds:ioapic_window,eax
     sti
 ;
-    mov dl,cs:irq_detect_nr
-    cmp dl,32
+    movzx dx,cs:irq_detect_nr
+    cmp dx,32
     jae IrqDetectDone
 ;    
     mov bx,OFFSET detected_irqs
