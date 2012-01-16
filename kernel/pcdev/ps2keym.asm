@@ -1040,9 +1040,6 @@ init_enable_prefix:
 init_mouse_revoke:
     mov ax,0FFh
     call SendCommand
-;
-    mov al,12
-    ReleasePrivateIrqHandler
 
 init_mouse_done:
     pop di

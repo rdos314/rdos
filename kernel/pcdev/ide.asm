@@ -2648,10 +2648,11 @@ CheckPciBar    Proc near
     push es
     push bx
 ;    
+    mov ah,12h
     mov bx,cs
     mov es,bx
     mov edi,OFFSET ide_pci_int
-    RequestSharedIrqHandler
+    RequestIrqHandler
 ;
     pop bx
     pop es
