@@ -1163,10 +1163,8 @@ DetectIrq   Proc near
     in al,dx
     pop dx
 ;
-    mov cx,1000h
-
-diLoop1:
-    loop diLoop1    
+    mov ax,1
+    WaitMilliSec
 ;
     PollIrqDetect
     or eax,eax
@@ -1191,17 +1189,13 @@ diLoop1:
     in al,dx
     pop dx
 ;
-    mov cx,1000h
-
-diLoop2:
-    loop diLoop2
+    mov ax,1
+    WaitMilliSec
 ;
     SetupIrqDetect
 ;
-    mov cx,1000h
-
-diLoop3:
-    loop diLoop3
+    mov ax,1
+    WaitMilliSec
 ;
     PollIrqDetect
 ;

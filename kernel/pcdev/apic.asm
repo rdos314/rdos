@@ -1234,8 +1234,8 @@ setup_irq_detect    Proc far
     mov ds:detected_irqs,0
     call EnableDetect
 ;
-    Swap
-    Swap
+    mov ax,1
+    WaitMilliSec
 ;
     mov ds:detected_irqs,0       
 ;
