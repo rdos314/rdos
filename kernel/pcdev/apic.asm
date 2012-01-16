@@ -176,6 +176,8 @@ hpet_sel            DW ?
 hpet_factor         DD ?
 hpet_counters       DW ?
 
+detected_irqs       DD ?
+
 isa_redir_arr       DD 16 DUP(?,?)
 
 ioapic_count        DW ?
@@ -444,9 +446,7 @@ IrqDetect:
     cmp dl,32
     jae IrqDetectDone
 ;    
-    mov ax,irq_sys_sel
-    mov ds,ax
-    mov bx,OFFSET bad_irqs
+    mov bx,OFFSET detected_irqs
     bts ds:[bx],dx
 
 IrqDetectDone:
@@ -1011,24 +1011,7 @@ DelayMs Endp
 test_gate_name    DB 'Test Gate',0
 
 test_gate_pr  Proc far
-    xor ax,ax
-    mov bh,2
-    mov bl,0
-    FindPciClassAll
-    jc tpDone
-;
-    GetPciMsi
-    jc tpDone
-;
-    push cx
-    movzx cx,dl
-    mov al,20
-    AllocateInts    
-    pop cx
-    SetupPciMsi
-
-tpDone:
-    xor ax,ax    
+    call EnableDetect
     retf32
 test_gate_pr    Endp
    
@@ -1167,6 +1150,114 @@ siDo:
     popf
     retf32
 send_int  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           EnableDetect
+;
+;   Description:    Enable IRQ detect
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EnableDetect  Proc near
+    push ds
+    push es
+    pushad
+;    
+    mov cx,18h
+    mov bx,OFFSET global_int_arr
+    xor al,al
+
+edLoop:
+    mov dl,ds:[bx].gi_prio
+    or dl,dl
+    jnz edNext
+;
+    mov dx,ds:[bx].gi_ioapic_sel
+    or dx,dx
+    jz edNext
+;    
+    mov es,dx
+    movzx edx,ds:[bx].gi_int_num
+    mov dh,ds:[bx].gi_trigger_mode
+    mov ah,ds:[bx].gi_ioapic_id
+;       
+    mov bl,10h
+    add bl,ah
+    add bl,ah
+;    
+    mov es:ioapic_regsel,bl
+    mov es:ioapic_window,edx
+;
+    inc bl
+    mov es:ioapic_regsel,bl
+    mov edx,0FF000000h
+    mov es:ioapic_window,edx
+
+edNext:
+    add bx,8
+    loop edLoop
+;
+    popad
+    pop es
+    pop ds    
+    ret
+EnableDetect  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           setup_irq_detect
+;
+;           description:    Setup IRQ detect
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_irq_detect_name   DB 'Setup IRQ detect',0
+
+setup_irq_detect    Proc far
+    push ds
+    push ax
+;       
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:detected_irqs,0
+;
+    Swap
+    Swap
+;
+    mov ds:detected_irqs,0       
+;
+    pop ax
+    pop ds
+    retf32
+setup_irq_detect    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           poll_irq_detect
+;
+;           description:    Poll detected IRQs
+;
+;       RETURNS:    EAX      Detected IRQs
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+poll_irq_detect_name    DB 'Poll IRQ detect',0
+
+poll_irq_detect Proc far
+    push ds
+;       
+    mov ax,SEG data
+    mov ds,ax
+    mov eax,ds:detected_irqs
+;
+    pop ds
+    retf32
+poll_irq_detect Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2314,7 +2405,7 @@ SetupDefaultIrqHandlers    Proc near
     mov ax,SEG data
     mov ds,ax
     mov bx,OFFSET global_int_arr
-    mov cx,256
+    mov cx,18h
     xor dl,dl
 
 setup_irq_loop:
@@ -2995,6 +3086,18 @@ init    PROC far
     mov edi,OFFSET send_nmi_name
     xor cl,cl
     mov ax,send_nmi_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET setup_irq_detect
+    mov edi,OFFSET setup_irq_detect_name
+    xor cl,cl
+    mov ax,setup_irq_detect_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET poll_irq_detect
+    mov edi,OFFSET poll_irq_detect_name
+    xor cl,cl
+    mov ax,poll_irq_detect_nr
     RegisterOsGate
 ;
     mov esi,OFFSET disable_all_irq
