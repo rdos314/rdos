@@ -836,18 +836,13 @@ ACPI_STATUS AcpiOsInstallInterruptHandler(UINT32 Level, ACPI_OSD_HANDLER Handler
     struct TIntReq *req;
     int sel;
 
-    if (RdosIsIrqFree(Level))
-    {
-        req = (struct TIntReq *)RdosAllocateSmallGlobalMem(sizeof(struct TIntReq));
-        req->Handler = Handler;
-        req->Context = Context;
+    req = (struct TIntReq *)RdosAllocateSmallGlobalMem(sizeof(struct TIntReq));
+    req->Handler = Handler;
+    req->Context = Context;
                 
-        sel = RdosPointerToSelector(req);        
-        RdosRequestPrivateIrqHandler(Level, &IrqStub, sel);
-        return AE_OK;
-    }
-    else
-        return AE_NOT_ACQUIRED;
+    sel = RdosPointerToSelector(req);        
+    RdosRequestIrqHandler(Level, 0x10, &IrqStub, sel);
+    return AE_OK;
 }
     
 /*##########################################################################

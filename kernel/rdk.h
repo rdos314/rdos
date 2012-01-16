@@ -124,9 +124,6 @@
 #define osgate_hook_in 122
 #define osgate_hook_out 123
 
-#define osgate_request_private_irq_handler 124
-#define osgate_release_private_irq_handler 125
-
 #define osgate_disable_all_irq 126
 
 #define osgate_set_system_time 128
@@ -309,8 +306,6 @@
 
 #define osgate_register_swap_proc 294
 
-#define osgate_is_irq_free 295
-
 #define osgate_setup_irq_detect 296
 #define osgate_poll_irq_detect 297
 
@@ -322,8 +317,6 @@
 
 #define osgate_init_usb_device 301
 #define osgate_notify_usb_attach 302
-
-#define osgate_request_shared_irq_handler 303
 
 #define osgate_notify_usb_detach 304
 
@@ -494,6 +487,7 @@
 #define osgate_get_pci_msi 419
 #define osgate_setup_pci_msi 420
 #define osgate_request_msi_handler 421
+#define osgate_request_irq_handler 422
 
 
 
@@ -622,9 +616,6 @@
 
 #define OsGate_hook_in 0x3E 0x67 0x9a 122 0 0 0 2 0
 #define OsGate_hook_out 0x3E 0x67 0x9a 123 0 0 0 2 0
-
-#define OsGate_request_private_irq_handler 0x3E 0x67 0x9a 124 0 0 0 2 0
-#define OsGate_release_private_irq_handler 0x3E 0x67 0x9a 125 0 0 0 2 0
 
 #define OsGate_disable_all_irq 0x3E 0x67 0x9a 126 0 0 0 2 0
 
@@ -808,8 +799,6 @@
 
 #define OsGate_register_swap_proc 0x3E 0x67 0x9a 38 1 0 0 2 0
 
-#define OsGate_is_irq_free 0x3E 0x67 0x9a 39 1 0 0 2 0
-
 #define OsGate_setup_irq_detect 0x3E 0x67 0x9a 40 1 0 0 2 0
 #define OsGate_poll_irq_detect 0x3E 0x67 0x9a 41 1 0 0 2 0
 
@@ -821,8 +810,6 @@
 
 #define OsGate_init_usb_device 0x3E 0x67 0x9a 45 1 0 0 2 0
 #define OsGate_notify_usb_attach 0x3E 0x67 0x9a 46 1 0 0 2 0
-
-#define OsGate_request_shared_irq_handler 0x3E 0x67 0x9a 47 1 0 0 2 0
 
 #define OsGate_notify_usb_detach 0x3E 0x67 0x9a 48 1 0 0 2 0
 
@@ -993,4 +980,5 @@
 #define OsGate_get_pci_msi 0x3E 0x67 0x9a 163 1 0 0 2 0
 #define OsGate_setup_pci_msi 0x3E 0x67 0x9a 164 1 0 0 2 0
 #define OsGate_request_msi_handler 0x3E 0x67 0x9a 165 1 0 0 2 0
+#define OsGate_request_irq_handler 0x3E 0x67 0x9a 166 1 0 0 2 0
 

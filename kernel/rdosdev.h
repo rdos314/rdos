@@ -604,9 +604,7 @@ void RdosHookState(__rdos_hook_state_callback *callb_proc);
 void RdosSendEoi(int irq);
 int RdosIsIrqFree(int irq);
 
-void RdosRequestPrivateIrqHandler(int irq, __rdos_irq_callback *irq_proc, int ds_sel);
-void RdosReleasePrivateIrqHandler(int irq);
-void RdosRequestSharedIrqHandler(int irq, __rdos_irq_callback *irq_proc, int ds_sel);
+void RdosRequestIrqHandler(int irq, int prio, __rdos_irq_callback *irq_proc, int ds_sel);
 
 void RdosSetupIrqDetect();
 int RdosPollIrqDetect();
@@ -1405,29 +1403,13 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     OsGate_send_eoi \
     parm [eax];
 
-#pragma aux RdosIsIrqFree = \
-    OsGate_is_irq_free \
-    CarryToBool \    
-    parm [eax] \
-    value [eax];
-
-#pragma aux RdosRequestPrivateIrqHandler = \
+#pragma aux RdosRequestIrqHandler = \
     "push ds" \
     "mov ds,ebx" \
-    OsGate_request_private_irq_handler \
+    "mov ah,dl" \
+    OsGate_request_irq_handler \
     "pop ds" \
-    parm [eax] [es edi] [ebx];
-
-#pragma aux RdosReleasePrivateIrqHandler = \
-    OsGate_release_private_irq_handler \
-    parm [eax];
-
-#pragma aux RdosRequestSharedIrqHandler = \
-    "push ds" \
-    "mov ds,ebx" \
-    OsGate_request_shared_irq_handler \
-    "pop ds" \
-    parm [eax] [es edi] [ebx];
+    parm [eax] [edx] [es edi] [ebx];
 
 #pragma aux RdosSetupIrqDetect = \
     OsGate_setup_irq_detect;
