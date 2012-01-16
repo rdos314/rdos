@@ -2826,12 +2826,13 @@ init_ide_primary:
     mov ds:DriveSelArr+2,0
 ;
     mov al,0Eh
+    mov ah,12h
     mov bx,ide_data_sel1
     mov ds,bx
     mov bx,cs
     mov es,bx
     mov edi,OFFSET ide_int
-    RequestPrivateIrqHandler
+    RequestIrqHandler
 
 init_ide_second:
     mov dx,177h
@@ -2856,12 +2857,13 @@ init_ide_second:
     mov ds:DriveSelArr+2,0
 ;
     mov al,0Fh
+    mov ah,12h
     mov bx,ide_data_sel2
     mov ds,bx
     mov bx,cs
     mov es,bx
     mov edi,OFFSET ide_int
-    RequestPrivateIrqHandler
+    RequestIrqHandler
 
 init_ide_done:
     mov ax,cs
