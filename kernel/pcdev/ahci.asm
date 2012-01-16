@@ -1242,10 +1242,11 @@ siMsiSingle:
 
 siIrq:
     GetPciIrqNr
+    mov ah,14h
     mov di,cs
     mov es,di
     mov edi,OFFSET AhciInt
-    RequestSharedIrqHandler
+    RequestIrqHandler
 
 siOk:    
     ret

@@ -1506,13 +1506,12 @@ init_pci1_found:
     mov ds:WaitThread,ax
     mov ds:IntStat,0
 ;    
-    xor ch,ch
-    mov cl,PCI_interrupt_line
-    ReadPciByte
+    GetPciIrqNr
+    mov ah,14h
     mov bx,cs
     mov es,bx
     mov di,OFFSET NetInt    
-    RequestPrivateIrqHandler
+    RequestIrqHandler
 ;
     call ReadEthernetAddress
     call InitCmd
@@ -1614,13 +1613,12 @@ init_pci2_found:
     mov ds:WaitThread,ax
     mov ds:IntStat,0
 ;    
-    xor ch,ch
-    mov cl,PCI_interrupt_line
-    ReadPciByte
+    GetPciIrqNr
+    mov ah,14h
     mov bx,cs
     mov es,bx
     mov di,OFFSET NetInt    
-    RequestPrivateIrqHandler
+    RequestIrqHandler
 ;
     call ReadEthernetAddress
     call InitCmd

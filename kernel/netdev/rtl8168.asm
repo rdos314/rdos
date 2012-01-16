@@ -1294,10 +1294,11 @@ siMsi:
 
 siIrq:
     GetPciIrqNr
+    mov ah,14h
     mov bx,cs
     mov es,bx
     mov edi,OFFSET NetInt    
-    RequestSharedIrqHandler
+    RequestIrqHandler
 
 siDone:
     pop edi
