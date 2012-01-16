@@ -1165,6 +1165,8 @@ EnableDetect  Proc near
     push es
     pushad
 ;    
+    mov ax,SEG data
+    mov ds,ax
     mov cx,18h
     mov bx,OFFSET global_int_arr
     xor al,al
