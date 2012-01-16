@@ -1300,11 +1300,18 @@ GetMsiParam    MACRO
     OsGate get_msi_param_nr
                     ENDM
 
-; IN  AX        MSI data
+; IN  AL        Int base
 ; IN  DS        Data passed to handler
 ; IN  ES:EDI    Handler address
 RequestMsiHandler    MACRO
     OsGate request_msi_handler_nr
+                    ENDM
+
+; IN  AL        Global int #
+; IN  DS        Data passed to handler
+; IN  ES:EDI    Handler address
+RequestIrqHandler    MACRO
+    OsGate request_irq_handler_nr
                     ENDM
 
 SetupIrqDetect  MACRO

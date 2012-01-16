@@ -566,27 +566,25 @@ ciDone:
     pop ds
     ret
 CreateIrq   Endp
-    
+   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           AddIrqHandler
+;       NAME:           RequestIrqHandler
 ;
-;       DESCRIPTION:    Add new IRQ handler
+;       DESCRIPTION:    Request an IRQ-based interrupt-handler
 ;
-;       PARAMETERS:     AL      Global interrupt #
-;                       DS      Data passed to handler
+;       PARAMETERS:     DS      Data passed to handler
 ;                       ES:EDI  Handler address
+;                       AL      Global int #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddIrqHandler   Proc near
+request_irq_handler_name    DB 'Request IRQ Handler',0
+
+request_irq_handler Proc far
     push fs
-    push ax
-    push bx
-    push cx
-    push edx
-    push ebp
+    pushad
 ;
     movzx bx,al
     shl bx,1
@@ -594,7 +592,7 @@ AddIrqHandler   Proc near
     mov fs,dx
     mov bx,fs:[bx].global_int_arr
     or bx,bx
-    jz aihDone
+    jz rihDone
 ;
     push ax
     mov fs,bx
@@ -604,9 +602,9 @@ AddIrqHandler   Proc near
 ;
     mov al,fs:[edx].irq_detect_nr
     cmp al,-1
-    jne aihReplace
+    jne rihReplace
 
-aihChain:
+rihChain:
     push ds
     push es
     push ecx
@@ -655,58 +653,54 @@ aihChain:
 ;
     pop ax
     cmp al,8
-    jae aihChain2
+    jae rihChain2
 
-aihChain1:    
+rihChain1:    
     mov eax,ebp
     sub eax,edx
     add ax,OFFSET IrqChainEntry - OFFSET IrqChainStart
     sub ax,OFFSET IrqChainEnd - OFFSET IrqChainStart
     cmp ax,OFFSET IrqEnd1 - OFFSET IrqStart1
-    jae aihChainPrev
+    jae rihChainPrev
 ;    
     add ax,OFFSET IrqChainEnd - OFFSET IrqChainStart
     xchg ax,fs:[edx].irq_chain
     mov fs:[ebp].irch_chain,ax
-    jmp aihDone
+    jmp rihDone
 
-aihChain2:
+rihChain2:
     mov eax,ebp
     sub eax,edx
     add ax,OFFSET IrqChainEntry - OFFSET IrqChainStart
     sub ax,OFFSET IrqChainEnd - OFFSET IrqChainStart
     cmp ax,OFFSET IrqEnd2 - OFFSET IrqStart2
-    jae aihChainPrev
+    jae rihChainPrev
 ;    
     add ax,OFFSET IrqChainEnd - OFFSET IrqChainStart
     xchg ax,fs:[edx].irq_chain
     mov fs:[ebp].irch_chain,ax
-    jmp aihDone
+    jmp rihDone
 
-aihChainPrev:
+rihChainPrev:
     mov edx,ebp
     sub edx,OFFSET IrqChainEnd - OFFSET IrqChainStart
     add ax,OFFSET IrqChainEnd - OFFSET IrqChainStart
     xchg ax,fs:[edx].irch_chain
     mov fs:[ebp].irch_chain,ax
-    jmp aihDone
+    jmp rihDone
         
-aihReplace:    
+rihReplace:    
     pop ax
     mov fs:[edx].irq_handler_data,ds
     mov fs:[edx].irq_handler_ads,edi
     mov word ptr fs:[edx].irq_handler_ads+4,es
     mov fs:[edx].irq_detect_nr,-1
 
-aihDone:
-    pop ebp
-    pop edx
-    pop cx
-    pop bx
-    pop ax
+rihDone:
+    popad
     pop fs    
-    ret
-AddIrqHandler   Endp
+    retf32
+request_irq_handler   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -728,7 +722,6 @@ AddIrqHandler   Endp
     irqmac 8
     irqmac 9
     irqmac 10
-    irqmac 11
     irqmac 12
     irqmac 13
     irqmac 14
@@ -1264,28 +1257,7 @@ SetupDefaultIrq Endp
 
 test_gate_name    DB 'Test Gate',0
 
-Test1   Proc far
-    mov ax,1
-    retf32
-Test1   Endp
-
-Test2   Proc far
-    mov ax,2
-    retf32
-Test2   Endp
-
-Test3   Proc far
-    mov ax,3
-    retf32
-Test3   Endp
-
-Test4   Proc far
-    mov ax,4
-    retf32
-Test4   Endp
-
 test_gate_pr  Proc far
-    call SetupDefaultIrq
     retf32
 test_gate_pr    Endp
 
@@ -1320,6 +1292,12 @@ init_global_int:
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET request_irq_handler
+    mov edi,OFFSET request_irq_handler_name
+    xor cl,cl
+    mov ax,request_irq_handler_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET send_eoi
     mov edi,OFFSET send_eoi_name
@@ -1436,10 +1414,6 @@ init_global_int:
 ;
     mov al,3Ah
     mov esi,OFFSET irq10
-    SetupIntGate
-;
-    mov al,3Bh
-    mov esi,OFFSET irq11
     SetupIntGate
 ;
     mov al,3Ch
