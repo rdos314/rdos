@@ -1362,7 +1362,10 @@ debug_name   DB 'Remote Debug', 0
 mailslot_name       DB 'Debug',0
 
 debug_process:
-    int 3  
+    mov ax,43h
+    EnableFocus
+    SetFocus
+;    
     push edx
     xor ax,ax
     xor bx,bx
