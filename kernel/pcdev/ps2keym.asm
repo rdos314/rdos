@@ -1304,10 +1304,11 @@ init_keyb_thread    PROC far
     mov bx,SEG data
     mov ds,bx
     mov al,1
+    mov ah,8
     mov bx,cs
     mov es,bx
     mov edi,OFFSET keyb_int
-    RequestPrivateIrqHandler
+    RequestIrqHandler
 ;
     popa
     pop es
