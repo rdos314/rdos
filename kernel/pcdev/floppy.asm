@@ -2125,12 +2125,13 @@ init    PROC far
     HookInitDisc
 ;
     mov al,6
+    mov ah,14h
     mov bx,floppy_data_sel
     mov ds,bx
     mov bx,cs
     mov es,bx
     mov edi,OFFSET floppy_int
-    RequestPrivateIrqHandler
+    RequestIrqHandler
     clc
 
 init_floppy_done:

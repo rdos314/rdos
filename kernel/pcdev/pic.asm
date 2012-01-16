@@ -715,7 +715,6 @@ request_irq_handler   Endp
 
     irqmac 3
     irqmac 4
-    irqmac 6
     irqmac 7
     irqmac 8
     irqmac 9
@@ -1380,10 +1379,6 @@ init_global_int:
 ;
     mov al,2Ch
     mov esi,OFFSET irq4
-    SetupIntGate
-;
-    mov al,2Eh
-    mov esi,OFFSET irq6
     SetupIntGate
 ;
     mov al,2Fh
