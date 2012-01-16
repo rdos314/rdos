@@ -977,10 +977,11 @@ init_check_read:
     jnz init_mouse_revoke
 ;    
     mov al,12
+    mov ah,10
     mov bx,cs
     mov es,bx
     mov edi,OFFSET keyb_int
-    RequestPrivateIrqHandler
+    RequestIrqHandler
     
 init_enable_aux_loop:
     RequestSpinlock ds:hw_spinlock

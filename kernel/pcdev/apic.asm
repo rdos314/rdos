@@ -1921,7 +1921,6 @@ has_local_timer    Endp
     irqmac 9
     irqmac 10
     irqmac 11
-    irqmac 12
     irqmac 13
     irqmac 14
     irqmac 15
@@ -1987,10 +1986,6 @@ SetupPicInts    Proc near
 ;
     mov al,4Bh
     mov esi,OFFSET irq11
-    SetupIntGate
-;
-    mov al,4Ch
-    mov esi,OFFSET irq12
     SetupIntGate
 ;
     mov al,4Dh
