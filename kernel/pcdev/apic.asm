@@ -1168,26 +1168,25 @@ EnableDetect  Proc near
     mov ax,SEG data
     mov ds,ax
     mov cx,18h
-    mov bx,OFFSET global_int_arr
-    xor al,al
+    mov si,OFFSET global_int_arr
 
 edLoop:
-    mov dl,ds:[bx].gi_prio
+    mov dl,ds:[si].gi_prio
     or dl,dl
     jnz edNext
 ;
-    mov dx,ds:[bx].gi_ioapic_sel
+    mov dx,ds:[si].gi_ioapic_sel
     or dx,dx
     jz edNext
 ;    
     mov es,dx
-    movzx edx,ds:[bx].gi_int_num
-    mov dh,ds:[bx].gi_trigger_mode
-    mov ah,ds:[bx].gi_ioapic_id
+    movzx edx,ds:[si].gi_int_num
+    mov dh,ds:[si].gi_trigger_mode
+    mov al,ds:[si].gi_ioapic_id
 ;       
     mov bl,10h
-    add bl,ah
-    add bl,ah
+    add bl,al
+    add bl,al
 ;    
     mov es:ioapic_regsel,bl
     mov es:ioapic_window,edx
@@ -1198,7 +1197,7 @@ edLoop:
     mov es:ioapic_window,edx
 
 edNext:
-    add bx,8
+    add si,8
     loop edLoop
 ;
     popad
