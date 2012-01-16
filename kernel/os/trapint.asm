@@ -2625,62 +2625,6 @@ release_private_irq_handler     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           setup_irq_detect
-;
-;           description:    Setup IRQ detect
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-setup_irq_detect_name   DB 'Setup IRQ detect',0
-
-setup_irq_detect    Proc far
-    push ds
-    push ax
-;       
-    mov ax,irq_sys_sel
-    mov ds,ax
-    mov ds:bad_irqs,0
-;       
-    call ds:irq_detect_proc
-;
-    Swap
-    Swap
-;
-    mov ds:bad_irqs,0       
-;
-    pop ax
-    pop ds
-    retf32
-setup_irq_detect    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           poll_irq_detect
-;
-;           description:    Poll detected IRQs
-;
-;       RETURNS:    EAX      Detected IRQs
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-poll_irq_detect_name    DB 'Poll IRQ detect',0
-
-poll_irq_detect Proc far
-    push ds
-;       
-    mov ax,irq_sys_sel
-    mov ds,ax
-    mov eax,ds:bad_irqs
-;
-    pop ds
-    retf32
-poll_irq_detect Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           DummyEnable
 ;
 ;           DESCRIPTION:    Dummy enable IRQ
@@ -2905,18 +2849,6 @@ init_avail_irq_loop:
     mov edi,OFFSET release_private_irq_handler_name
     xor cl,cl
     mov ax,release_private_irq_handler_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET setup_irq_detect
-    mov edi,OFFSET setup_irq_detect_name
-    xor cl,cl
-    mov ax,setup_irq_detect_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET poll_irq_detect
-    mov edi,OFFSET poll_irq_detect_name
-    xor cl,cl
-    mov ax,poll_irq_detect_nr
     RegisterOsGate
     ret
 init_trap_vectors       ENDP
