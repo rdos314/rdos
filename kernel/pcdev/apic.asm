@@ -427,25 +427,25 @@ IrqDetect:
     shl bx,3
     add bx,OFFSET global_int_arr
     mov al,ds:[bx].gi_ioapic_id
-    mov ds,ds:[bx].gi_ioapic_sel
+    mov es,ds:[bx].gi_ioapic_sel
 ;       
     mov bl,10h
     add bl,al
     add bl,al
 ;    
     cli
-    mov ds:ioapic_regsel,bl
+    mov es:ioapic_regsel,bl
     mov eax,10000h
-    mov ds:ioapic_window,eax
+    mov es:ioapic_window,eax
 ;
     inc bl
-    mov ds:ioapic_regsel,bl
+    mov es:ioapic_regsel,bl
     xor eax,eax
-    mov ds:ioapic_window,eax
+    mov es:ioapic_window,eax
     sti
 ;
     movzx dx,cs:irq_detect_nr
-    cmp dx,32
+    cmp dx,24
     jae IrqDetectDone
 ;    
     mov bx,OFFSET detected_irqs
