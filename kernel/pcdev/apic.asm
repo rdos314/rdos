@@ -596,28 +596,26 @@ CreateIrq   Proc near
     pop es
     ret
 CreateIrq   Endp
-    
+   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           AddIrqHandler
+;       NAME:           RequestIrqHandler
 ;
-;       DESCRIPTION:    Add new IRQ handler
+;       DESCRIPTION:    Request an IRQ-based interrupt-handler
 ;
-;       PARAMETERS:     AL      Global interrupt #
-;                       AH      Requested priority (1..31)
-;                       DS      Data passed to handler
+;       PARAMETERS:     DS      Data passed to handler
 ;                       ES:EDI  Handler address
+;                       AL      Global int #
+;                       AH      Priority
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddIrqHandler   Proc near
+request_irq_handler_name    DB 'Request IRQ Handler',0
+
+request_irq_handler Proc far
     push fs
-    push ax
-    push bx
-    push cx
-    push edx
-    push ebp
+    pushad
 ;
     movzx bx,al
     shl bx,3
@@ -625,20 +623,20 @@ AddIrqHandler   Proc near
     mov fs,dx
     mov bx,fs:[bx].global_int_arr.gi_handler_sel
     or bx,bx
-    jz aihDone
+    jz rihDone
 ;
     cmp ah,31
-    jbe aihPrioHighOk
+    jbe rihPrioHighOk
 ;
     mov ah,31
 
-aihPrioHighOk:
+rihPrioHighOk:
     or ah,ah
-    jne aihPrioLowOk
+    jne rihPrioLowOk
 ;
     mov ah,1    
 
-aihPrioLowOk:
+rihPrioLowOk:
     push ax
 ;   
     mov fs,bx
@@ -648,9 +646,9 @@ aihPrioLowOk:
 ;
     mov al,fs:[edx].irq_detect_nr
     cmp al,-1
-    jne aihReplace
+    jne rihReplace
 
-aihChain:
+rihChain:
     push ds
     push es
     push ecx
@@ -701,28 +699,28 @@ aihChain:
     add ax,OFFSET IrqChainEntry - OFFSET IrqChainStart
     sub ax,OFFSET IrqChainEnd - OFFSET IrqChainStart
     cmp ax,OFFSET IrqEnd - OFFSET IrqStart
-    jae aihChainPrev
+    jae rihChainPrev
 ;    
     add ax,OFFSET IrqChainEnd - OFFSET IrqChainStart
     xchg ax,fs:[edx].irq_chain
     mov fs:[ebp].irch_chain,ax
-    jmp aihChainDone
+    jmp rihChainDone
 
-aihChainPrev:
+rihChainPrev:
     mov edx,ebp
     sub edx,OFFSET IrqChainEnd - OFFSET IrqChainStart
     add ax,OFFSET IrqChainEnd - OFFSET IrqChainStart
     xchg ax,fs:[edx].irch_chain
     mov fs:[ebp].irch_chain,ax
-    jmp aihChainDone
+    jmp rihChainDone
         
-aihReplace:    
+rihReplace:    
     mov fs:[edx].irq_handler_data,ds
     mov fs:[edx].irq_handler_ads,edi
     mov word ptr fs:[edx].irq_handler_ads+4,es
     mov fs:[edx].irq_detect_nr,-1
 
-aihChainDone:
+rihChainDone:
     pop ax
 ;    
     movzx bx,al
@@ -732,22 +730,22 @@ aihChainDone:
     mov fs,dx
     mov dl,fs:[bx].gi_prio
     cmp ah,dl
-    jbe aihDone
+    jbe rihDone
 ;
     mov fs:[bx].gi_prio,ah
     mov al,fs:[bx].gi_int_num
     FreeInt
 
-aihChangePrio:
+rihChangePrio:
     mov al,fs:[bx].gi_prio
     mov cx,1
     AllocateInts
-    jnc aihPrioOk
+    jnc rihPrioOk
 ;
     dec fs:[bx].gi_prio
-    jmp aihChangePrio    
+    jmp rihChangePrio    
 
-aihPrioOk:    
+rihPrioOk:    
     push ds
     push bx
 ;
@@ -780,15 +778,11 @@ aihPrioOk:
     mov ds:ioapic_window,edx
     pop ds
 
-aihDone:
-    pop ebp
-    pop edx
-    pop cx
-    pop bx
-    pop ax
+rihDone:
+    popad
     pop fs    
-    ret
-AddIrqHandler   Endp
+    retf32
+request_irq_handler Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1918,7 +1912,6 @@ has_local_timer    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    irqmac 1
     irqmac 3
     irqmac 4
     irqmac 5
@@ -1959,10 +1952,6 @@ SetupPicInts    Proc near
     mov es,ax
 ;
     xor bl,bl
-;
-    mov al,41h
-    mov esi,OFFSET irq1
-    SetupIntGate
 ;
     mov al,43h
     mov esi,OFFSET irq3
@@ -3240,6 +3229,12 @@ init    PROC far
     mov ax,disable_all_irq_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET request_irq_handler
+    mov edi,OFFSET request_irq_handler_name
+    xor cl,cl
+    mov ax,request_irq_handler_nr
+    RegisterOsGate
+;
     mov esi,OFFSET get_msi_param
     mov edi,OFFSET get_msi_param_name
     xor cl,cl
@@ -3395,7 +3390,7 @@ init_hpet_done:
     call SetupIrq 
 ;
     call ProcessApicTable
-;    call SetupDefaultIrqHandlers
+    call SetupDefaultIrqHandlers
     call SetupLocalApic
     call EnableTpr
 ;    
