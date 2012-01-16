@@ -1208,7 +1208,51 @@ intDone:
     pop ds
     ret
 SetupInts Endp
-   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupDefaultIrq
+;
+;           DESCRIPTION:    Setup default IRQs
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+irq_tab:
+i0 DB 1
+i1 DB 3
+i2 DB 4
+i3 DB 5
+i4 DB 6
+i5 DB 7
+i6 DB 8
+i7 DB 9
+i8 DB 10
+i9 DB 11
+iA DB 12
+iB DB 13
+iC DB 14
+iD DB 15
+iE DB -1
+
+SetupDefaultIrq Proc near
+    mov bx,OFFSET irq_tab
+
+sdiLoop:
+    mov al,cs:[bx]
+    cmp al,-1
+    je sdiDone
+;
+    call CreateIrq    
+    inc bx
+    jmp sdiLoop
+
+sdiDone:
+    ret
+SetupDefaultIrq Endp
+  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -1241,42 +1285,7 @@ Test4   Proc far
 Test4   Endp
 
 test_gate_pr  Proc far
-    mov al,0Ah
-    call CreateIrq
-    int 3Ah
-;
-    mov dx,SEG data
-    mov ds,dx
-    mov dx,cs
-    mov es,dx
-    mov edi,OFFSET Test1
-    call AddIrqHandler
-    int 3Ah
-;
-    mov dx,SEG data
-    mov ds,dx
-    mov dx,cs
-    mov es,dx
-    mov edi,OFFSET Test2
-    call AddIrqHandler
-    int 3Ah
-;
-    mov dx,SEG data
-    mov ds,dx
-    mov dx,cs
-    mov es,dx
-    mov edi,OFFSET Test3
-    call AddIrqHandler
-    int 3Ah
-;
-    mov dx,SEG data
-    mov ds,dx
-    mov dx,cs
-    mov es,dx
-    mov edi,OFFSET Test4
-    call AddIrqHandler
-    int 3Ah
-;
+    call SetupDefaultIrq
     retf32
 test_gate_pr    Endp
 
@@ -1306,6 +1315,8 @@ init_global_int:
     add si,2
     loop init_global_int
 ;    
+    call SetupDefaultIrq
+;
     mov ax,cs
     mov ds,ax
     mov es,ax
