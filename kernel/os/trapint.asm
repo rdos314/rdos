@@ -59,12 +59,6 @@ op_extend       EQU 40h
 
 irq_data_seg     STRUC
 
-bad_irqs            DD ?
-
-irq_detect_proc     DD ?
-
-irq_arr             DB 32 * SIZE irq_struc DUP(?)
-
 irq_bitmask         DB 32 DUP(?)
 
 irq_data_seg     ENDS
@@ -2347,52 +2341,6 @@ free_int  Proc far
     retf32
 free_int    Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           DummyEnable
-;
-;           DESCRIPTION:    Dummy enable IRQ
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-dummy_enable    Proc far
-    ret
-dummy_enable    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           DummyDisable
-;
-;           DESCRIPTION:    Dummy disable IRQ
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-dummy_disable    Proc far
-    ret
-dummy_disable    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           DummyDetect
-;
-;           DESCRIPTION:    Dummy detect IRQ
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-dummy_detect    Proc far
-    ret
-dummy_detect    Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2433,9 +2381,6 @@ init_trap_vectors       PROC near
     mov bx,irq_data_sel
     AllocateFixedSystemMem
     mov ds,bx
-;       
-    mov word ptr ds:irq_detect_proc,OFFSET dummy_detect
-    mov word ptr ds:irq_detect_proc+2,cs
 ;
     mov bx,OFFSET irq_bitmask
     mov cx,4
