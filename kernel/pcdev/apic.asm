@@ -33,7 +33,6 @@ INCLUDE ..\os\system.def
 INCLUDE apic.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\proc.inc
-INCLUDE ..\os\irq.inc
 INCLUDE ..\acpi\acpi.inc
 
 INCLUDE ..\user.def
@@ -1271,127 +1270,6 @@ poll_irq_detect Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           EnableIrq
-;
-;   Description:    Enable IRQ in IOAPIC controller
-;
-;   PARAMETERS:     AL                      irq nr
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-enable_irq  Proc far
-    push ds
-    push eax
-    push bx
-    push edx
-;
-    movzx edx,al
-    mov dh,0A9h
-    cmp al,10h
-    jae enable_irq_do
-;    
-    mov bx,SEG data
-    mov ds,bx
-    movzx bx,al
-    shl bx,3
-    mov edx,ds:[bx].isa_redir_arr
-    or dh,9
-    sub dl,40h
-    xchg al,dl
-
-enable_irq_do:
-    add dl,40h
-;    
-    mov bx,SEG data
-    mov ds,bx
-    movzx bx,al
-    shl bx,3
-    add bx,OFFSET global_int_arr
-    mov ax,ds:[bx].gi_ioapic_sel
-    or ax,ax
-    jz enable_irq_done
-;    
-    push ax
-    mov al,ds:[bx].gi_ioapic_id
-    pop ds
-;       
-    mov bl,10h
-    add bl,al
-    add bl,al
-;    
-    cli
-    mov ds:ioapic_regsel,bl
-    mov ds:ioapic_window,edx
-;
-    inc bl
-    mov ds:ioapic_regsel,bl
-    mov edx,0FF000000h
-    mov ds:ioapic_window,edx
-    sti
-
-enable_irq_done:
-    pop edx
-    pop bx
-    pop eax
-    pop ds
-    ret
-enable_irq  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;               NAME:                   DisableIrq
-;
-;               description:    Disable IRQ in APIC controller
-;
-;               PARAMETERS:             AL                      irq nr
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-disable_irq  Proc far
-    push ds
-    push eax
-    push bx
-;
-    mov bx,SEG data
-    mov ds,bx
-    movzx bx,al
-    shl bx,3
-    add bx,OFFSET global_int_arr
-    mov ax,ds:[bx].gi_ioapic_sel
-    or ax,ax
-    jz disable_irq_done
-;    
-    push ax
-    mov al,ds:[bx].gi_ioapic_id
-    pop ds
-;       
-    mov bl,10h
-    add bl,al
-    add bl,al
-;    
-    cli
-    mov ds:ioapic_regsel,bl
-    mov eax,10000h
-    mov ds:ioapic_window,eax
-;
-    inc bl
-    mov ds:ioapic_regsel,bl
-    xor eax,eax
-    mov ds:ioapic_window,eax
-    sti
-
-disable_irq_done:
-    pop bx
-    pop eax
-    pop ds
-    ret
-disable_irq Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;               NAME:           DisableAllIrq
 ;
 ;               description:    Disable all IRQs in APIC controller
@@ -1457,20 +1335,6 @@ daiLoop:
     pop ds
     retf32
 disable_all_irq Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;               NAME:                   EnableIrqDetect
-;
-;               description:    Enable IRQ detect in PIC controller
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-enable_irq_detect  Proc far
-    ret
-enable_irq_detect   Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2203,44 +2067,6 @@ ipiDone:
     pop ds
     ret
 SetupInts Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   SetupIrq
-;
-;               DESCRIPTION:    Setup IRQs to IOAPIC
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupIrq    Proc near
-    push ds
-    pushad
-;    
-    mov ax,irq_sys_sel
-    mov ds,ax
-;    
-    mov word ptr ds:irq_detect_proc,OFFSET enable_irq_detect
-    mov word ptr ds:irq_detect_proc+2,cs
-;    
-    mov cx,32
-    mov bx,OFFSET irq_arr
-    xor eax,eax
-
-init_irq_loop:
-    mov word ptr ds:[bx].irq_enable_proc,OFFSET enable_irq
-    mov word ptr ds:[bx].irq_enable_proc+2,cs
-;
-    mov word ptr ds:[bx].irq_disable_proc,OFFSET disable_irq
-    mov word ptr ds:[bx].irq_disable_proc+2,cs
-;
-    add bx,SIZE irq_struc
-    loop init_irq_loop
-;
-    popad
-    pop ds
-    ret
-SetupIrq    Endp        
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3273,11 +3099,8 @@ init_hpet_loop:
 init_hpet_done:    
     pop es
 ;
-    call DisablePic
-;    
+    call DisablePic    
     call SetupInts
-    call SetupIrq 
-;
     call ProcessApicTable
     call SetupDefaultIrqHandlers
     call SetupLocalApic
