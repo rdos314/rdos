@@ -2198,6 +2198,59 @@ InitIoApic    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CreateIrqHandlers
+;
+;       DESCRIPTION:    Create default IRQ handlers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateIrqHandlers    Proc near
+    mov ax,SEG data
+    mov ds,ax
+    mov bx,OFFSET global_int_arr
+    mov cx,18h
+    xor dl,dl
+
+create_irq_loop:
+    mov ax,ds:[bx].gi_ioapic_sel
+    or ax,ax
+    jz create_irq_next
+;    
+    push cx
+    mov cx,1
+    xor al,al
+    mov ds:[bx].gi_prio,al
+    AllocateInts
+    mov ds:[bx].gi_int_num,al
+    pop cx
+;
+    push ds
+    push bx
+;    
+    push ax
+    mov al,dl
+    call CreateIrq
+    pop ax
+;        
+    xor bl,bl
+    SetupIntGate
+    mov ax,ds
+;    
+    pop bx
+    pop ds
+    mov ds:[bx].gi_handler_sel,ax
+
+create_irq_next:
+    add bx,8
+    inc dl
+    loop create_irq_loop
+;
+    ret
+CreateIrqHandlers    Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;               NAME:           ProcessApicTable
 ;
 ;               DESCRIPTION:    Define basic APIC vars
@@ -2252,6 +2305,10 @@ init_apic_loop:
     cmp eax,80h
     jae init_apic_next
 ;
+    mov si,ax
+    shl si,3
+    add si,OFFSET global_int_arr
+;    
     add al,40h
     mov [bx],al
 ;
@@ -2263,10 +2320,12 @@ init_apic_loop:
     jz init_apic_redir_pol_high
 
 init_apic_redir_pol_low:
+    or [si].gi_trigger_mode,20h
     or word ptr [bx],2000h
     jmp init_apic_redir_pol_ok
 
 init_apic_redir_pol_high:
+    and [si].gi_trigger_mode,NOT 20h
     and word ptr [bx], NOT 2000h
 
 init_apic_redir_pol_ok:
@@ -2277,10 +2336,12 @@ init_apic_redir_pol_ok:
     jz init_apic_redir_edge
 
 init_apic_redir_level:
+    or [si].gi_trigger_mode,80h
     or word ptr [bx],8000h
     jmp init_apic_next
 
 init_apic_redir_edge:
+    and [si].gi_trigger_mode,7Fh
     and word ptr [bx],7FFFh
 
 init_apic_next:
@@ -2290,96 +2351,6 @@ init_apic_next:
     ja init_apic_loop
     ret
 ProcessApicTable    Endp
-      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           CreateIrqHandlers
-;
-;       DESCRIPTION:    Create default IRQ handlers
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateIrqHandlers    Proc near
-    mov ax,SEG data
-    mov ds,ax
-    mov bx,OFFSET global_int_arr
-    mov cx,18h
-    xor dl,dl
-
-create_irq_loop:
-    mov ax,ds:[bx].gi_ioapic_sel
-    or ax,ax
-    jz create_irq_next
-;    
-    push cx
-    mov cx,1
-    xor al,al
-    mov ds:[bx].gi_prio,al
-    AllocateInts
-    mov ds:[bx].gi_int_num,al
-    mov ds:[bx].gi_trigger_mode,0A9h
-    pop cx
-;
-    push ds
-    push bx
-;    
-    push ax
-    mov al,dl
-    call CreateIrq
-    pop ax
-;        
-    xor bl,bl
-    SetupIntGate
-    mov ax,ds
-;    
-    pop bx
-    pop ds
-    mov ds:[bx].gi_handler_sel,ax
-
-create_irq_next:
-    add bx,8
-    inc dl
-    loop create_irq_loop
-;
-    ret
-CreateIrqHandlers    Endp
-         
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           SetupDefaultIrqHandlers
-;
-;       DESCRIPTION:    Setup default IRQ handlers
-;
-;       PARAMETERS:     ES      Apic table
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupDefaultIrqHandlers    Proc near
-    mov ax,SEG data
-    mov ds,ax
-;
-    mov cx,10h
-    mov bx,OFFSET isa_redir_arr
-
-setup_isa_redir_loop:
-    mov edx,ds:[bx]
-    test edx,10000h
-    jnz setup_isa_redir_next
-;    
-    sub dl,40h
-    movzx si,dl
-    shl si,3
-    or dh,9
-    mov ds:[si].global_int_arr.gi_trigger_mode,dh
-
-setup_isa_redir_next:
-    add bx,8
-    loop setup_isa_redir_loop    
-;
-    ret
-SetupDefaultIrqHandlers Endp    
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3183,7 +3154,6 @@ init_hpet_done:
     call InitIoApic
     call CreateIrqHandlers
     call ProcessApicTable
-    call SetupDefaultIrqHandlers
     call SetupLocalApic
     call EnableTpr
     call EnableDetect
