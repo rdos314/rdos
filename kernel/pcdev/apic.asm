@@ -1535,38 +1535,8 @@ start_hpet_timer    Proc far
     mov eax,es:[bx].hpetc_config
     test ax,8000h
     jnz start_hpet_msi
-
-start_hpet_iopic:
-;    mov eax,es:hpet_config
-;    or al,2
-;    mov es:hpet_config,eax
-    push bx
-;    
-    mov bx,OFFSET global_int_arr + 8 * 2
-    mov ax,ds:[bx].gi_ioapic_sel
-;    
-    push ax
-    mov al,ds:[bx].gi_ioapic_id
-    pop ds
-;       
-    mov bl,10h
-    add bl,al
-    add bl,al
-;    
-    mov edx,2982h
-    mov ds:ioapic_regsel,bl
-    mov ds:ioapic_window,edx
 ;
-    inc bl
-    mov ds:ioapic_regsel,bl
-    mov edx,0FF000000h
-    mov ds:ioapic_window,edx
-;
-    pop bx
-    mov eax,es:[bx].hpetc_config
-;    and ax,NOT 7E0Ah
-    or ax,506h
-    mov es:[bx].hpetc_config,eax   
+    int 3       ; not supported!    
     jmp start_hpet_done
 
 start_hpet_msi: 
