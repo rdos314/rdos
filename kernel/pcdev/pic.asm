@@ -940,21 +940,6 @@ sdiLoop:
 sdiDone:
     ret
 SetupDefaultIrq Endp
-  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:           Test gate
-;
-;               DESCRIPTION:    Test gate
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_gate_name    DB 'Test Gate',0
-
-test_gate_pr  Proc far
-    retf32
-test_gate_pr    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1035,12 +1020,6 @@ init_global_int:
     mov di,OFFSET get_system_time_name
     xor dx,dx
     mov ax,get_system_time_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET test_gate_pr
-    mov edi,OFFSET test_gate_name
-    xor dx,dx
-    mov ax,test_gate_nr
     RegisterBimodalUserGate
 ;
     mov si,OFFSET set_system_time
