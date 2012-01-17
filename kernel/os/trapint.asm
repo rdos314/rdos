@@ -34,7 +34,6 @@ INCLUDE ..\user.inc
 INCLUDE ..\driver.def
 INCLUDE system.def
 INCLUDE system.inc
-INCLUDE irq.inc
 INCLUDE proc.inc
 
 ;
@@ -57,6 +56,18 @@ code16  EQU 0
 code32  EQU 40h
 
 op_extend       EQU 40h
+
+irq_sys_seg     STRUC
+
+bad_irqs            DD ?
+
+irq_detect_proc     DD ?
+
+irq_arr                     DB 32 * SIZE irq_struc DUP(?)
+
+irq_bitmask         DB 32 DUP(?)
+
+irq_sys_seg     ENDS
 
 CheckIt MACRO
     local trap_no_stop
@@ -2418,11 +2429,6 @@ irq_pm32:
 
 init_trap_vectors       PROC near
     xor eax,eax
-    mov ax,SIZE irq_proc_seg
-    mov bx,irq_proc_sel
-    AllocateFixedProcessMem
-;
-    xor eax,eax
     mov ax,SIZE irq_sys_seg
     mov bx,irq_sys_sel
     AllocateFixedSystemMem
@@ -2430,25 +2436,6 @@ init_trap_vectors       PROC near
 ;       
     mov word ptr ds:irq_detect_proc,OFFSET dummy_detect
     mov word ptr ds:irq_detect_proc+2,cs
-;
-    xor esi,esi
-    mov cx,32
-    mov bx,OFFSET irq_arr
-
-init_irq_loop:
-    mov ds:[bx].user_handler,0
-    mov ds:[bx+4].user_handler,0
-    mov ds:[bx].user_data,0
-    InitSection ds:[bx].usage_section
-;
-    mov word ptr ds:[bx].irq_enable_proc,OFFSET dummy_enable
-    mov word ptr ds:[bx].irq_enable_proc+2,cs
-;
-    mov word ptr ds:[bx].irq_disable_proc,OFFSET dummy_disable
-    mov word ptr ds:[bx].irq_disable_proc+2,cs
-;
-    add bx,SIZE irq_struc
-    loop init_irq_loop
 ;
     mov bx,OFFSET irq_bitmask
     mov cx,4
@@ -2464,11 +2451,6 @@ init_avail_irq_loop:
     mov byte ptr ds:[bx],0
     inc bx
     loop init_avail_irq_loop
-;            
-    mov bx,OFFSET irq_arr
-    EnterSection ds:[bx].usage_section
-    add bx,2 * SIZE irq_struc
-    EnterSection ds:[bx].usage_section
 ;
     xor cx,cx
     mov ax,cs
