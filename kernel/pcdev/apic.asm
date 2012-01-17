@@ -166,6 +166,8 @@ time_spinlock       DW ?
 clock_tics          DW ?
 system_time         DD ?,?
 
+ioapic_spinlock     DW ?
+
 apic_tics           DD ?
 apic_rest           DW ?
 
@@ -364,6 +366,54 @@ ApInit:
     mov ds:mp_processor_sign,eax
 ;
     ShutdownCore
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           LockIoApic
+;
+;       DESCRIPTION:    Lock IO-APIC 
+;
+;       PARAMETERS:     DS      SEG data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockIoApic  MACRO
+    local SpinLock
+    local Get
+
+SpinLock:    
+    mov ax,ds:ioapic_spinlock
+    or ax,ax
+    je Get
+;
+    sti
+    pause
+    jmp SpinLock
+
+Get:
+    cli
+    inc ax
+    xchg ax,ds:ioapic_spinlock
+    or ax,ax
+    jne SpinLock
+        ENDM
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UnlockIoApic
+;
+;       DESCRIPTION:    Unlock IO-APIC
+;
+;       PARAMETERS:     DS      SEG data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockIoApic    MACRO
+    mov ds:ioapic_spinlock,0
+    sti
+                ENDM
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -432,7 +482,7 @@ IrqDetect:
     add bl,al
     add bl,al
 ;    
-    cli
+    LockIoApic
     mov es:ioapic_regsel,bl
     mov eax,10000h
     mov es:ioapic_window,eax
@@ -441,7 +491,7 @@ IrqDetect:
     mov es:ioapic_regsel,bl
     xor eax,eax
     mov es:ioapic_window,eax
-    sti
+    UnlockIoApic
 ;
     movzx dx,cs:irq_detect_nr
     cmp dx,24
@@ -709,24 +759,27 @@ rihPrioOk:
     mov fs:[bx].gi_int_num,al
 ;
     push ds
+    mov ax,SEG data
+    mov ds,ax
+;    
     mov al,fs:[bx].gi_ioapic_id
     movzx edx,fs:[bx].gi_int_num
     mov dh,fs:[bx].gi_trigger_mode
-    mov ds,fs:[bx].gi_ioapic_sel
+    mov fs,fs:[bx].gi_ioapic_sel
 ;       
     mov bl,10h
     add bl,al
     add bl,al
-;    
-    cli
-    mov ds:ioapic_regsel,bl
-    mov ds:ioapic_window,edx
+;
+    LockIoApic   
+    mov fs:ioapic_regsel,bl
+    mov fs:ioapic_window,edx
 ;
     inc bl
-    mov ds:ioapic_regsel,bl
+    mov fs:ioapic_regsel,bl
     mov edx,0FF000000h
-    mov ds:ioapic_window,edx
-    sti
+    mov fs:ioapic_window,edx
+    UnlockIoApic
     pop ds
 
 rihDone:
@@ -1193,7 +1246,7 @@ edLoop:
     add bl,al
     add bl,al
 ;   
-    cli 
+    LockIoApic
     mov es:ioapic_regsel,bl
     mov es:ioapic_window,edx
 ;
@@ -1201,7 +1254,7 @@ edLoop:
     mov es:ioapic_regsel,bl
     mov edx,0FF000000h
     mov es:ioapic_window,edx
-    sti
+    UnlockIoApic
 
 edNext:
     add si,8
@@ -2869,6 +2922,7 @@ init    PROC far
     mov ds:system_time,0
     mov ds:system_time+4,0
     mov ds:time_spinlock,0
+    mov ds:ioapic_spinlock,0
     mov ds:prev_hpet,0
     mov ds:hpet_guard,0
 ;    
