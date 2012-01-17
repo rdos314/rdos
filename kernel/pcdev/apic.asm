@@ -2115,6 +2115,21 @@ InitIoApic    Proc near
     rep stosd        
     pop es
 ;
+    mov cx,16
+    mov di,OFFSET global_int_arr
+
+init_ioapic_isa_trigger_mode:
+    mov [di].gi_trigger_mode,9
+    add di,8
+    loop init_ioapic_isa_trigger_mode
+;
+    mov cx,256-16
+
+init_ioapic_pci_trigger_mode:
+    mov [di].gi_trigger_mode,0A9h
+    add di,8
+    loop init_ioapic_pci_trigger_mode
+;        
     mov eax,1000h
     AllocateBigLinear
     mov eax,es:apic_phys
