@@ -2093,35 +2093,18 @@ SetupInts Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:           ProcessApicTable
+;               NAME:           InitIoApic
 ;
-;               DESCRIPTION:    Define basic APIC vars
+;               DESCRIPTION:    Init IO-APIC
 ;
 ;               PARAMETERS:     ES      Apic table
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ProcessApicTable    Proc near
+InitIoApic    Proc near
     mov ax,SEG data
     mov ds,ax
     mov ds:ioapic_count,0
-;
-    mov bx,OFFSET isa_redir_arr
-    xor edx,edx
-    mov eax,40h
-    mov cx,16
-
-init_apic_redir_loop:
-    mov [bx],eax
-    add bx,4
-    mov [bx],edx
-    add bx,4
-    inc al
-    loop init_apic_redir_loop
-;
-    mov bx,OFFSET isa_redir_arr + 2 * 8
-    mov eax,10000h
-    mov [bx],eax 
 ;
     push es
     mov ax,SEG data
@@ -2145,17 +2128,11 @@ init_apic_redir_loop:
     mov cx,es:act_size
     sub cx,OFFSET apic_entries - OFFSET apic_phys
 
-init_apic_loop:
+init_ioapic_table_loop:
     mov al,es:[di].apic_type
     cmp al,1
-    je init_apic_ioapic
-;    
-    cmp al,2
-    je init_apic_redir
+    jne init_ioapic_table_next    
 ;
-    jmp init_apic_next    
-
-init_apic_ioapic:
     push ecx
     mov eax,1000h
     AllocateBigLinear
@@ -2193,9 +2170,57 @@ init_ioapic_loop:
     loop init_ioapic_loop
 ;    
     pop ecx
-    jmp init_apic_next
 
-init_apic_redir:
+init_ioapic_table_next:
+    movzx ax,es:[di].apic_len
+    add di,ax
+    sub cx,ax
+    ja init_ioapic_table_loop
+;    
+    ret
+InitIoApic    Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           ProcessApicTable
+;
+;               DESCRIPTION:    Define basic APIC vars
+;
+;               PARAMETERS:     ES      Apic table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProcessApicTable    Proc near
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov bx,OFFSET isa_redir_arr
+    xor edx,edx
+    mov eax,40h
+    mov cx,16
+
+init_apic_redir_loop:
+    mov [bx],eax
+    add bx,4
+    mov [bx],edx
+    add bx,4
+    inc al
+    loop init_apic_redir_loop
+;
+    mov bx,OFFSET isa_redir_arr + 2 * 8
+    mov eax,10000h
+    mov [bx],eax 
+;
+    mov di,OFFSET apic_entries
+    mov cx,es:act_size
+    sub cx,OFFSET apic_entries - OFFSET apic_phys
+
+init_apic_loop:
+    mov al,es:[di].apic_type
+    cmp al,2
+    jne init_apic_next
+;
     mov al,es:[di].ao_bus
     or al,al
     jnz init_apic_next
@@ -3140,8 +3165,9 @@ init_hpet_done:
 ;
     call DisablePic    
     call SetupInts
-    call ProcessApicTable
+    call InitIoApic
     call CreateIrqHandlers
+    call ProcessApicTable
     call SetupDefaultIrqHandlers
     call SetupLocalApic
     call EnableTpr
