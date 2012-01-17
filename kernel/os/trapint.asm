@@ -57,17 +57,17 @@ code32  EQU 40h
 
 op_extend       EQU 40h
 
-irq_sys_seg     STRUC
+irq_data_seg     STRUC
 
 bad_irqs            DD ?
 
 irq_detect_proc     DD ?
 
-irq_arr                     DB 32 * SIZE irq_struc DUP(?)
+irq_arr             DB 32 * SIZE irq_struc DUP(?)
 
 irq_bitmask         DB 32 DUP(?)
 
-irq_sys_seg     ENDS
+irq_data_seg     ENDS
 
 CheckIt MACRO
     local trap_no_stop
@@ -2076,7 +2076,7 @@ setup_int_gate     Proc far
     push bx
 ;
     call local_create_int_gate_sel
-    mov bx,irq_sys_sel
+    mov bx,irq_data_sel
     mov ds,bx
     mov bx,OFFSET irq_bitmask
     movzx ax,al
@@ -2109,7 +2109,7 @@ setup_trap_gate     Proc far
     push bx
 ;
     call local_create_trap_gate_sel
-    mov bx,irq_sys_sel
+    mov bx,irq_data_sel
     mov ds,bx
     mov bx,OFFSET irq_bitmask
     movzx ax,al
@@ -2143,7 +2143,7 @@ allocate_ints  Proc far
     push edx
     push si
 ;    
-    mov dx,irq_sys_sel
+    mov dx,irq_data_sel
     mov ds,dx
 ;    
     and al,1Fh
@@ -2334,7 +2334,7 @@ free_int  Proc far
     push ax
     push si
 ;    
-    mov si,irq_sys_sel
+    mov si,irq_data_sel
     mov ds,si
 ;
     movzx ax,al
@@ -2429,8 +2429,8 @@ irq_pm32:
 
 init_trap_vectors       PROC near
     xor eax,eax
-    mov ax,SIZE irq_sys_seg
-    mov bx,irq_sys_sel
+    mov ax,SIZE irq_data_seg
+    mov bx,irq_data_sel
     AllocateFixedSystemMem
     mov ds,bx
 ;       

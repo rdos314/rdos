@@ -134,8 +134,7 @@ callb_int32_sel		EQU 22Bh
 callb_vm16_sel		EQU 233h
 callb_vm32_sel		EQU 23Bh
 ;
-irq_sys_sel			EQU 240h
-irq_proc_sel		EQU 248h
+irq_data_sel		EQU 240h
 
 __0000				EQU 253h
 __0040				EQU 25Bh
