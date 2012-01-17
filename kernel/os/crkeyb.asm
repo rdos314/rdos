@@ -32,7 +32,6 @@ INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE system.def
 INCLUDE system.inc
-INCLUDE irq.inc
 INCLUDE ..\pcdev\key.inc
 INCLUDE ..\pcdev\apic.inc
 
