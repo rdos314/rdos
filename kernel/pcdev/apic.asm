@@ -179,8 +179,6 @@ hpet_counters       DW ?
 
 detected_irqs       DD ?
 
-isa_redir_arr       DD 16 DUP(?,?)
-
 ioapic_count        DW ?
 ioapic_arr          DW 16 DUP(?)
 
@@ -1069,6 +1067,15 @@ DelayMs Endp
 test_gate_name    DB 'Test Gate',0
 
 test_gate_pr  Proc far
+    mov ax,SEG data
+    mov ds,ax
+    mov bx,OFFSET global_int_arr
+    mov cx,256
+
+tl:
+    mov al,ds:[bx].gi_trigger_mode
+    add bx,8
+    loop tl    
     retf32
 test_gate_pr    Endp
    
@@ -2263,23 +2270,6 @@ ProcessApicTable    Proc near
     mov ax,SEG data
     mov ds,ax
 ;
-    mov bx,OFFSET isa_redir_arr
-    xor edx,edx
-    mov eax,40h
-    mov cx,16
-
-init_apic_redir_loop:
-    mov [bx],eax
-    add bx,4
-    mov [bx],edx
-    add bx,4
-    inc al
-    loop init_apic_redir_loop
-;
-    mov bx,OFFSET isa_redir_arr + 2 * 8
-    mov eax,10000h
-    mov [bx],eax 
-;
     mov di,OFFSET apic_entries
     mov cx,es:act_size
     sub cx,OFFSET apic_entries - OFFSET apic_phys
@@ -2297,20 +2287,13 @@ init_apic_loop:
     cmp al,16
     jae init_apic_next
 ;
-    movzx bx,al
-    shl bx,3
-    add bx,OFFSET isa_redir_arr
-;
     mov eax,es:[di].ao_int
     cmp eax,80h
     jae init_apic_next
 ;
-    mov si,ax
-    shl si,3
-    add si,OFFSET global_int_arr
-;    
-    add al,40h
-    mov [bx],al
+    mov bx,ax
+    shl bx,3
+    add bx,OFFSET global_int_arr
 ;
     mov ax,es:[di].ao_flags
     test al,1
@@ -2320,13 +2303,11 @@ init_apic_loop:
     jz init_apic_redir_pol_high
 
 init_apic_redir_pol_low:
-    or [si].gi_trigger_mode,20h
-    or word ptr [bx],2000h
+    or [bx].gi_trigger_mode,20h
     jmp init_apic_redir_pol_ok
 
 init_apic_redir_pol_high:
-    and [si].gi_trigger_mode,NOT 20h
-    and word ptr [bx], NOT 2000h
+    and [bx].gi_trigger_mode,NOT 20h
 
 init_apic_redir_pol_ok:
     test al,4
@@ -2336,13 +2317,11 @@ init_apic_redir_pol_ok:
     jz init_apic_redir_edge
 
 init_apic_redir_level:
-    or [si].gi_trigger_mode,80h
-    or word ptr [bx],8000h
+    or [bx].gi_trigger_mode,80h
     jmp init_apic_next
 
 init_apic_redir_edge:
-    and [si].gi_trigger_mode,7Fh
-    and word ptr [bx],7FFFh
+    and [bx].gi_trigger_mode,7Fh
 
 init_apic_next:
     movzx ax,es:[di].apic_len
