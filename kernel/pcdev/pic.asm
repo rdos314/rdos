@@ -44,6 +44,8 @@ pit_spinlock        DW ?
 clock_tics          DW ?
 system_time         DD ?,?
 
+detected_irqs       DW ?
+
 global_int_arr      DW 16 DUP(?)
 
 data    ENDS
@@ -366,9 +368,9 @@ IrqDetect1:
     or al,ah
     out INT0_MASK,al
 ;
-    mov ax,irq_sys_sel
+    mov ax,SEG data
     mov ds,ax
-    mov bx,OFFSET bad_irqs
+    mov bx,OFFSET detected_irqs
     movzx dx,cs:irq_detect_nr
     bts ds:[bx],dx
     retf32
@@ -419,9 +421,9 @@ IrqDetect2:
     or al,ah
     out INT1_MASK,al
 ;
-    mov ax,irq_sys_sel
+    mov ax,SEG data
     mov ds,ax
-    mov bx,OFFSET bad_irqs
+    mov bx,OFFSET detected_irqs
     movzx dx,cs:irq_detect_nr
     bts ds:[bx],dx
     retf32
@@ -705,25 +707,6 @@ request_irq_handler   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           IRQx
-;
-;           DESCRIPTION:    IRQ handlers
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    irqmac 3
-    irqmac 4
-    irqmac 7
-    irqmac 8
-    irqmac 9
-    irqmac 13
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           EnableIrq
 ;
 ;           description:    Enable IRQ in PIC controller
@@ -888,13 +871,13 @@ disable_all_irq Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           EnableIrqDetect
+;   NAME:           EnableDetect
 ;
-;           description:    Enable IRQ detect in PIC controller
+;   Description:    Enable IRQ detect
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-enable_irq_detect  Proc far
+EnableDetect  Proc near
     push ax
 ;    
     xor al,al
@@ -906,7 +889,61 @@ enable_irq_detect  Proc far
 ;
     pop ax
     ret
-enable_irq_detect   Endp
+EnableDetect   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           setup_irq_detect
+;
+;           description:    Setup IRQ detect
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_irq_detect_name   DB 'Setup IRQ detect',0
+
+setup_irq_detect    Proc far
+    push ds
+    push ax
+;       
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:detected_irqs,0
+    call EnableDetect
+;
+    mov ax,1
+    WaitMilliSec
+;
+    mov ds:detected_irqs,0       
+;
+    pop ax
+    pop ds
+    retf32
+setup_irq_detect    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           poll_irq_detect
+;
+;           description:    Poll detected IRQs
+;
+;       RETURNS:    EAX      Detected IRQs
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+poll_irq_detect_name    DB 'Poll IRQ detect',0
+
+poll_irq_detect Proc far
+    push ds
+;       
+    mov ax,SEG data
+    mov ds,ax
+    movzx eax,ds:detected_irqs
+;
+    pop ds
+    retf32
+poll_irq_detect Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1270,6 +1307,7 @@ init    PROC far
     mov ds,ax
     mov ds:system_time,0
     mov ds:system_time+4,0
+    mov ds:detected_irqs,0
 ;
     mov cx,16
     mov si,OFFSET global_int_arr
@@ -1290,6 +1328,18 @@ init_global_int:
     mov edi,OFFSET request_irq_handler_name
     xor cl,cl
     mov ax,request_irq_handler_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET setup_irq_detect
+    mov edi,OFFSET setup_irq_detect_name
+    xor cl,cl
+    mov ax,setup_irq_detect_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET poll_irq_detect
+    mov edi,OFFSET poll_irq_detect_name
+    xor cl,cl
+    mov ax,poll_irq_detect_nr
     RegisterOsGate
 ;
     mov esi,OFFSET send_eoi
@@ -1373,30 +1423,6 @@ init_global_int:
     mov ds,ax
     xor bl,bl
 ;
-    mov al,2Bh
-    mov esi,OFFSET irq3
-    SetupIntGate
-;
-    mov al,2Ch
-    mov esi,OFFSET irq4
-    SetupIntGate
-;
-    mov al,2Fh
-    mov esi,OFFSET irq7
-    SetupIntGate
-;
-    mov al,38h
-    mov esi,OFFSET irq8
-    SetupIntGate
-;
-    mov al,39h
-    mov esi,OFFSET irq9
-    SetupIntGate
-;
-    mov al,3Dh
-    mov esi,OFFSET irq13
-    SetupIntGate
-;
     mov al,11h
     out INT0_CONTROL,al
     jmp short $+2
@@ -1440,26 +1466,6 @@ init_global_int:
     mov al,-1
     out INT1_MASK,al
     jmp short $+2
-;
-    mov bx,irq_sys_sel
-    mov ds,bx
-;       
-    mov word ptr ds:irq_detect_proc,OFFSET enable_irq_detect
-    mov word ptr ds:irq_detect_proc+2,cs
-;    
-    mov cx,16
-    mov bx,OFFSET irq_arr
-    xor eax,eax
-
-init_irq_loop:
-    mov word ptr ds:[bx].irq_enable_proc,OFFSET enable_irq
-    mov word ptr ds:[bx].irq_enable_proc+2,cs
-;
-    mov word ptr ds:[bx].irq_disable_proc,OFFSET disable_irq
-    mov word ptr ds:[bx].irq_disable_proc+2,cs
-;
-    add bx,SIZE irq_struc
-    loop init_irq_loop
 ;
     call SetupInts        
     ret
