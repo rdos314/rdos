@@ -723,6 +723,12 @@ start_pit_timer    Endp
 reload_pit_timer_name    DB 'Reload Pit Timer', 0
 
 reload_pit_timer    Proc far
+    push ax
+    mov ax,30h
+    out TIMER_CONTROL,al
+    pop ax
+    jmp short $+2
+;
     out TIMER0,al
     xchg al,ah
     jmp short $+2
