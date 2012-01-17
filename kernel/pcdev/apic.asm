@@ -184,6 +184,8 @@ isa_redir_arr       DD 16 DUP(?,?)
 ioapic_count        DW ?
 ioapic_arr          DW 16 DUP(?)
 
+redir_arr           DB 16 DUP(?)
+
 global_int_arr      DD 256 DUP(?,?)
 
 data    ENDS
@@ -1067,9 +1069,6 @@ DelayMs Endp
 test_gate_name    DB 'Test Gate',0
 
 test_gate_pr  Proc far
-    mov ax,SEG data
-    mov ds,ax
-    mov eax,ds:detected_irqs
     retf32
 test_gate_pr    Endp
    
@@ -2255,25 +2254,23 @@ ProcessApicTable    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           SetupDefaultIrqHandlers
+;       NAME:           CreateIrqHandlers
 ;
-;       DESCRIPTION:    Setup default IRQ handlers
-;
-;       PARAMETERS:     ES      Apic table
+;       DESCRIPTION:    Create default IRQ handlers
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupDefaultIrqHandlers    Proc near
+CreateIrqHandlers    Proc near
     mov ax,SEG data
     mov ds,ax
     mov bx,OFFSET global_int_arr
     mov cx,18h
     xor dl,dl
 
-setup_irq_loop:
+create_irq_loop:
     mov ax,ds:[bx].gi_ioapic_sel
     or ax,ax
-    jz setup_irq_next
+    jz create_irq_next
 ;    
     push cx
     mov cx,1
@@ -2300,10 +2297,28 @@ setup_irq_loop:
     pop ds
     mov ds:[bx].gi_handler_sel,ax
 
-setup_irq_next:
+create_irq_next:
     add bx,8
     inc dl
-    loop setup_irq_loop
+    loop create_irq_loop
+;
+    ret
+CreateIrqHandlers    Endp
+         
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SetupDefaultIrqHandlers
+;
+;       DESCRIPTION:    Setup default IRQ handlers
+;
+;       PARAMETERS:     ES      Apic table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupDefaultIrqHandlers    Proc near
+    mov ax,SEG data
+    mov ds,ax
 ;
     mov cx,10h
     mov bx,OFFSET isa_redir_arr
@@ -3126,6 +3141,7 @@ init_hpet_done:
     call DisablePic    
     call SetupInts
     call ProcessApicTable
+    call CreateIrqHandlers
     call SetupDefaultIrqHandlers
     call SetupLocalApic
     call EnableTpr
