@@ -784,7 +784,8 @@ init_pci_found:
     and dx,0FFE0h
     mov ds:IoBase,dx
 ;
-    GetPciIrqNr
+    mov cl,PCI_interrupt_line
+    ReadPciByte
     mov ah,1Ah
     mov bx,cs
     mov es,bx
