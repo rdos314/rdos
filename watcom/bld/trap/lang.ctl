@@ -39,7 +39,7 @@ cdsay .
     <CPCMD> <DEVDIR>/trap/ser/dos.trp/ser.trp                       <RELROOT>/binw/
     <CPCMD> <DEVDIR>/trap/ser/dos.srv/serserv.exe                   <RELROOT>/binw/
 #    <CPCMD> <DEVDIR>/trap/tcp/dos.trp/tcp.trp                      <RELROOT>/binw/
-    <CPCMD> <DEVDIR>/trap/tcp/dos.srv/tcpserv.exe                   <RELROOT>/binw/
+#    <CPCMD> <DEVDIR>/trap/tcp/dos.srv/tcpserv.exe                  <RELROOT>/binw/
     <CPCMD> <DEVDIR>/trap/vdm/dos.srv/vdmserv.exe                   <RELROOT>/binw/
     <CPCMD> <DEVDIR>/trap/win/dos.trp/win.trp                       <RELROOT>/binw/
     <CPCMD> <DEVDIR>/trap/win/dos.srv/winserv.exe                   <RELROOT>/binw/
