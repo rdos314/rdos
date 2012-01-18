@@ -1,0 +1,178 @@
+File C\CMDELF.C:
+    FmtData.u.elf.exp.export = NULL;
+/*  FreeList( FmtData.u.elf.exp.export );
+    FmtData.u.elf.exportallsyms = TRUE;
+File C\CMDNOV.C:
+//  Trouble! In files, import and export specifiers may or may not have a trailing comma
+    //  we need to trap import/export prefixes here. Unfortunately the prefix context
+    //  we need to trap import/export prefixes here. Unfortunately the prefix context
+    AddNameTable( name, namelen, TRUE, &FmtData.u.nov.exp.export );
+/*  FreeList( FmtData.u.nov.exp.export );
+File C\CMDOS2.C:
+static bool             getexport( void );
+        retval =  ProcArgList( &getexport, 0 );
+static entry_export *ProcWlibDLLImportEntry( void )
+    entry_export    *exp;
+ * as exports (hey man, GO asked for it ...... ) */
+    entry_export    *exp;
+static bool getexport( void )
+    entry_export    *exp;
+    exp->next = FmtData.u.os2.exports;    // put in the front of the list for
+    FmtData.u.os2.exports = exp;          // now so ProcResidant can get to it.
+    FmtData.u.os2.exports = exp->next;       // take it off the list
+    FmtData.u.os2.exports->isresident = TRUE;
+    FmtData.u.os2.exports->isprivate = TRUE;
+    FmtData.u.os2.exports = NULL;
+File C\CMDTABLE.C:
+    "ONLyexports",  &ProcExportsDBI,    MK_NOVELL, 0,
+    "ANONymousexport",&ProcAnonExport,  MK_OS2, CF_AFTER_INC,
+    "ONLyexports",  &ProcNovDBIExports, MK_NOVELL, 0,
+File C\CMDUTILS.C:
+        //  import or export file) does not have the consistent format
+File C\GLOBAL.C:
+#define export
+File C\IMPEXP.C:
+* Description:  Utilities for handling imports and exports.
+static entry_export * FindPlace( entry_export *exp )
+// finds the correct place to put exp to keep the export list sorted.
+    entry_export *  place;
+    entry_export *  prev;
+    entry_export *  ret;
+static entry_export *FreeAnExport( entry_export *exp )
+    entry_export *  next;
+    entry_export *  exp;
+    exp = FmtData.u.os2.exports;
+void AddToExportList( entry_export *exp )
+    entry_export **     owner;
+    entry_export **     place;
+    entry_export *      curr;
+    owner = &FmtData.u.os2.exports;
+                place = &FmtData.u.os2.exports;
+    exp->sym->e.export = exp;
+entry_export * AllocExport( char *name, unsigned len )
+    entry_export *  exp;
+    exp->isexported = TRUE;
+    entry_export *  exp;
+/* assign ordinal values to entries in the export list */
+    entry_export *      exp;
+    entry_export *      place;
+    entry_export *      prev;
+    if( FmtData.u.os2.exports != NULL ) {
+        exp = prev = FmtData.u.os2.exports;
+                    if( FmtData.u.os2.exports != prev ) {
+                        FmtData.u.os2.exports = exp->next;
+            exp = FmtData.u.os2.exports;
+// Read an old DLL & match ordinals of exports in it with exports in this.
+/* check if the name is exported and hasn't been assigned a value, and if so,
+    entry_export *  place;
+    entry_export *  prev;
+    DEBUG(( DBG_OLD, "Oldlib export %s ordinal %l", name, ordinal ));
+    place = FmtData.u.os2.exports;
+                    FmtData.u.os2.exports = place;
+// Read a name table & set export ordinal value accordingly.
+    entry_export ** owner;
+    entry_export *  exp;
+    owner = &FmtData.u.os2.exports;
+    exp->isexported = FALSE;
+    return FmtData.u.elf.exportallsyms || (s->info & SYM_EXPORTED);
+File C\LOADFLAT.C:
+    entry_export        *start;
+    entry_export        *place;
+    entry_export        *prev;
+    start = FmtData.u.os2.exports;
+                    if( start->isexported ) bundle_item.e32_flags |= ENTRY_EXPORTED;
+    entry_export *exp;
+    exp = FmtData.u.os2.exports;
+        dll->u.ordinal = ((entry_export *)sym->e.export)->ordinal;
+File C\LOADNOV.C:
+    name_list * export;
+    export = FmtData.u.nov.exp.export;
+    while( export != NULL ) {
+        len = export->len;
+        sym = SymOp( ST_FIND, export->name, len );
+            LnkMsg( WRN+MSG_EXP_SYM_NOT_FOUND, "s", export->name );
+                WriteLoad( export->name, len );
+        export = export->next;
+    name_list *     export;
+        export = FmtData.u.nov.exp.export;
+        while( export != NULL ) {
+            len = export->len;
+            sym = SymOp( ST_FIND, export->name, len );
+                WriteLoad( export->name, len );
+            export = export->next;
+    name_list *     export;
+        export = FmtData.u.nov.exp.export;
+        while( export != NULL ) {
+            sym = SymOp( ST_FIND, export->name, export->len );
+            export = export->next;
+File C\LOADOS2.C:
+    entry_export    *exp;
+    for( exp = FmtData.u.os2.exports; exp != NULL; exp = exp->next ) {
+        if( !exp->isexported ) continue;
+    entry_export    *start;
+    entry_export    *place;
+    entry_export    *prev;
+    start = FmtData.u.os2.exports;
+                if( start->isexported ) {
+    entry_export    *exp;
+    for( exp = FmtData.u.os2.exports; exp != NULL; exp = exp->next ) {
+            // Keep the import name. If an alias is exported, we want the
+    AssignOrdinals();    /* make sure all exports have ordinals */
+    entry_export        *exp;
+    for( exp = FmtData.u.os2.exports; exp != NULL; exp = exp->next ) {
+File C\LOADPE.C:
+    entry_export        *n1;
+    entry_export        *n2;
+    n1 = *(entry_export **)pn1;
+    n2 = *(entry_export **)pn2;
+    pe_export_directory dir;
+    entry_export        **sort;
+    entry_export        *exp;
+    dir.ordinal_base = FmtData.u.os2.exports->ordinal;
+    for( exp = FmtData.u.os2.exports; exp != NULL; exp = exp->next ) {
+    _ChkAlloc( sort, sizeof( entry_export * ) * num_entries );
+    /* write the export directory table */
+    /* write the export address table */
+    for( exp = FmtData.u.os2.exports; exp != NULL; exp = exp->next ) {
+    qsort( sort, num_entries, sizeof( entry_export * ), &namecmp );
+    /* write out the export name ptr table */
+    /* write out the export ordinal table */
+    /* write out the export name table */
+    if( FmtData.u.os2.exports != NULL )
+    if( FmtData.u.os2.exports != NULL ) {
+/* read a PE export table, and set ordinal values accordingly. */
+    pe_export_directory table;
+    QRead( file, &table, sizeof( pe_export_directory ), fname );
+     *  Moved export check here as otherwise flags don't get propagated
+File C\OBJORL.C:
+    cb.export_fn = ExportCallback;
+File C\OBJPASS1.C:
+    entry_export        *exp;
+        exp = sym->e.export;
+                      &FmtData.u.nov.exp.export );
+        return( FALSE );    /* Not OK to process import/export records. */
+    AddNameTable( expname->name, expname->len, TRUE, &FmtData.u.nov.exp.export );
+File C\PERMDATA.C:
+    CarveExportInfo = CarveCreate(sizeof(entry_export),20*sizeof(entry_export));
+    ((entry_export *)exp)->isfree = TRUE;
+    entry_export *exp = _exp;
+        BufWritePermFile( info, exp, offsetof(entry_export, sym) );
+            sym->e.export = CarveGetIndex( CarveExportInfo, sym->e.export );
+        hdr.numexports = WriteSmallCarve( CarveExportInfo, MarkExportInfo,
+    entry_export *exp = _exp;
+    BufRead( info, exp, offsetof(entry_export, sym) );
+            sym->e.export = CarveMapIndex( CarveExportInfo, sym->e.export );
+        CarveRestart( CarveExportInfo, hdr->numexports );
+        RebuildSmallCarve( CarveExportInfo, hdr->numexports, RebuildExportInfo,
+        CarveVerifyAllGone( CarveExportInfo, "entry_export" );
+File COMMAND\COMMAND.C:
+#include "impexp.h"     // For entry_export, etc.
+void            AddToExportList( entry_export *a ) {}
+File FCENABLE\C\RECORDS.C:
+#define         PUBD32          0x91     // 32-bit export names record
+File MS2WLINK\C\KEYWORD.C:
+    "exports",          ProcExports,        7,
+        Warning( "invalid export name", OPTION_SLOT );
+            Warning( "export ordinal value is invalid", OPTION_SLOT );
+    toklen += 8;       // export keyword + space + nullchar;
+    memcpy( command, "export ", 7 );

@@ -1,0 +1,47 @@
+File C\DBGEXEC.C:
+    for( thd = HeadThd; thd != NULL; thd = thd->link ) {
+        if( thd->tid == DbgRegs->tid ) {
+            RemoteThawThread( thd->tid );
+            RemoteFreezeThread( thd->tid );
+            switch( thd->state ) {
+                RemoteThawThread( thd->tid );
+                RemoteFreezeThread( thd->tid );
+File C\DBGMISC.C:
+    buff = CnvULongHex( thd->tid, buff );
+    switch( thd->state ) {
+    StrCopy( thd->name, p );
+    if( RemoteSetThreadWithErr( thd->tid, &err ) == 0 ) {
+        Error( ERR_NONE, LIT( ERR_NO_MAKE_CURR_THREAD ), thd->tid, err );
+    DbgRegs->tid = thd->tid;
+        if( thd->state == THD_THAW ) thd->state = THD_FREEZE;
+        if( thd->state == THD_FREEZE ) thd->state = THD_THAW;
+    return( DbgRegs->tid == thd->tid );
+        if( tid < thd->tid ) break;
+        if( tid == thd->tid ) {
+                *owner = thd->link;
+                state = thd->state & ~THD_DEAD;
+            thd->state &= ~THD_DEAD;
+        owner = &thd->link;
+    thd->link = *owner;
+    strcpy( thd->name, name );
+    thd->tid = tid;
+    thd->state = state;
+    for( thd = HeadThd; thd != NULL; thd = thd->link ) {
+    return( thd->tid );
+    for( thd = HeadThd; thd != NULL; thd = thd->link ) {
+        thd->state |= THD_DEAD;
+        if( thd->state & THD_DEAD ) {
+            *owner = thd->link;
+            owner = &thd->link;
+        if( set_exec && thd != NULL && thd->tid == DbgRegs->tid ) ExecThd = thd;
+    for( thd = HeadThd; thd != NULL && thd->tid != tid; thd = thd->link )
+        for( thd = HeadThd; thd != NULL; thd = thd->link ) {
+File C\DBGWTHRD.C:
+    for( thd = HeadThd; thd != NULL; thd = thd->link ) {
+    for( thd = HeadThd; thd != NULL; thd = thd->link ) ++num;
+        if( thd->state == THD_THAW ) thd->state = THD_FREEZE;
+        if( thd->state == THD_FREEZE ) thd->state = THD_THAW;
+    for( thd = HeadThd; thd != NULL; thd = thd->link ) {
+            CnvULongHex( thd->tid, TxtBuff );
+                switch( thd->state ) {
+            line->text = thd->name;

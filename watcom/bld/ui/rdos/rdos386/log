@@ -1,0 +1,77 @@
+ Volymen i enhet C har ingen etikett.
+ Volymens serienummer „r 7EE3-D583
+
+ Inneh†ll i katalogen c:\ow\OPENWA~1\bld\ui\rdos\rdos386
+
+2011-11-02  16:07               592 uialloc.obj
+2011-11-02  16:07             1ÿ161 uiarea.obj
+2011-11-02  16:07             1ÿ806 uiattr.obj
+2011-11-02  16:07             1ÿ686 uiback.obj
+2011-11-02  16:07               677 uiballoc.obj
+2011-11-02  16:07             1ÿ483 uiband.obj
+2011-11-02  16:07               474 uibarf.obj
+2011-11-02  16:07               787 uibattr.obj
+2011-11-02  16:07               608 uibcopy.obj
+2011-11-02  16:07               555 uibfake.obj
+2011-11-02  16:07               590 uibfill.obj
+2011-11-02  16:07             1ÿ020 uibgnd.obj
+2011-11-02  16:07             1ÿ428 uibios.obj
+2011-11-02  16:07               887 uiblank.obj
+2011-11-02  16:07               904 uibmous.obj
+2011-11-02  16:07             1ÿ601 uibox.obj
+2011-11-02  16:07               592 uibpix.obj
+2011-11-02  16:07               684 uibstr.obj
+2011-11-02  16:07             1ÿ053 uicheck.obj
+2011-11-02  16:07             1ÿ683 uiconfig.obj
+2011-11-02  16:07             1ÿ802 uicurs.obj
+2011-11-02  16:07               465 uidata.obj
+2011-11-02  16:07               801 uidchfld.obj
+2011-11-02  16:07               802 uidebug.obj
+2011-11-02  16:07               469 uidevent.obj
+2011-11-02  16:07               718 uidialcb.obj
+2011-11-02  16:07            14ÿ199 uidialog.obj
+2011-11-02  16:07             1ÿ088 uidirty.obj
+2011-11-02  16:07             1ÿ307 uidlgfcn.obj
+2011-11-02  16:07               494 uiev.obj
+2011-11-02  16:07             3ÿ755 uievent.obj
+2011-11-02  16:07               977 uifar.obj
+2011-11-02  16:07               562 uifmem.obj
+2011-11-02  16:07             1ÿ132 uiforce.obj
+2011-11-02  16:07             3ÿ766 uigadget.obj
+2011-11-02  16:07             1ÿ015 uigchar.obj
+2011-11-02  16:07             1ÿ628 uiget.obj
+2011-11-02  16:07             3ÿ669 uihotspt.obj
+2011-11-02  16:07             1ÿ187 uiinit.obj
+2011-11-02  16:07             3ÿ437 uiledit.obj
+2011-11-02  16:07             1ÿ214 uilist.obj
+2011-11-02  16:07             5ÿ915 uilstbox.obj
+2011-11-02  16:07               546 uimem.obj
+2011-11-02  16:07            11ÿ091 uimenu.obj
+2011-11-02  16:07               483 uimenucr.obj
+2011-11-02  16:07               726 uimget.obj
+2011-11-02  16:07             1ÿ680 uimisc.obj
+2011-11-02  16:07             3ÿ596 uimousev.obj
+2011-11-02  16:07               558 uipad.obj
+2011-11-02  16:07               940 uipget.obj
+2011-11-02  16:07             6ÿ785 uipopup.obj
+2011-11-02  16:07               687 uiprot.obj
+2011-11-02  16:07               510 uirefer.obj
+2011-11-02  16:07             1ÿ211 uirfrsh.obj
+2011-11-02  16:07               579 uisnow.obj
+2011-11-02  16:07               742 uispawn.obj
+2011-11-02  16:07             2ÿ024 uitab.obj
+2011-11-02  16:07               868 uivattr.obj
+2011-11-02  16:07             2ÿ922 uivedit.obj
+2011-11-02  16:07               711 uivfill.obj
+2011-11-02  16:07             3ÿ264 uivfld.obj
+2011-11-02  16:07               683 uivhide.obj
+2011-11-02  16:07             2ÿ447 uivline.obj
+2011-11-02  16:07             1ÿ036 uivmove.obj
+2011-11-02  16:07             2ÿ846 uivopen.obj
+2011-11-02  16:07             1ÿ007 uivscrn.obj
+2011-11-02  16:07             1ÿ240 uivstr.obj
+2011-11-02  16:07               662 uivutil.obj
+2011-11-02  16:07             1ÿ634 uiwin.obj
+2011-11-02  16:07               477 uiyield.obj
+              70 fil(er)             122ÿ628 byte
+               0 katalog(er)  97ÿ725ÿ128ÿ704 byte ledigt

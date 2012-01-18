@@ -1,0 +1,122 @@
+File C\BLDCALL.C:
+extern  bool            SegIsCS( name * );
+File C\CSE.C:
+static instruction      *ExprHeads[LAST_CSE_OP+1];
+extern  void    SetCSEBits( instruction *ins, instruction *new_ins )
+                    SetCSEBits( ins1, new_ins );
+                SetCSEBits( ins2, new_ins );
+            SetCSEBits( first, new_ins );
+            SetCSEBits( ins1, new_ins );
+            SetCSEBits( ins2, new_ins );
+                SetCSEBits( ins1, new_ins );
+    opcode = FIRST_CSE_OP;
+        if( ++opcode > LAST_CSE_OP ) break;
+            if( _OpIsCSE( opcode )
+    opcode = FIRST_CSE_OP;
+        if( ++opcode > LAST_CSE_OP ) break;
+File C\DBSYMS.C:
+        } else if( CurrProc->state.attr & ROUTINE_ALLOCS_RETURN ) {
+File C\DUMPCONF.C:
+            if( Check(&name,HW_CS) ) { DumpLiteral( "CS"); continue; }
+File C\FOLDINS.C:
+extern  void            SetCSEBits(instruction *,instruction *);
+        SetCSEBits( ins, new_ins );
+            SetCSEBits( ins, new_ins );
+                SetCSEBits( ins, new_ins );
+File C\LOOPOPTS.C:
+    CSE does not handle this so we do it here.
+    CSE does not handle this so we do it here.
+File C\TREEFOLD.C:
+                    tn b1, b2, b3, b4; /* 4 copies of b - will be treated as CSE */
+File INTEL\386\C\386OPSEG.C:
+extern  bool            SegIsCS( name * );
+    if( op->n.class == N_MEMORY && !SegIsCS( op ) ) {
+            !SegIsCS( op->i.base ) ) {
+File INTEL\386\C\386RGTBL.C:
+                HW_D_1( HW_CS ),
+                HW_D_1( HW_CS ),
+                HW_D_2( HW_CS, HW_EAX ),
+                HW_D_2( HW_CS, HW_EDX ),
+                HW_D_2( HW_CS, HW_EBX ),
+                HW_D_2( HW_CS, HW_ECX ),
+                HW_D_2( HW_CS, HW_ESI ),
+                HW_D_2( HW_CS, HW_EDI ),
+                HW_D_2( HW_CS, HW_BP ),
+    HW_CTurnOn( fixed, HW_CS );
+File INTEL\386\C\386RTRTN.C:
+        HW_CAsgn( tmp, HW_CS );
+File INTEL\C\I86CALL.C:
+        if( state->attr & ROUTINE_ALLOCS_RETURN ) {
+            if( state->attr & ROUTINE_ALLOCS_RETURN ) {
+        if( ( state->attr & ROUTINE_ALLOCS_RETURN ) == 0 ) {
+        if( state->attr & ROUTINE_ALLOCS_RETURN ) {
+            if( CurrProc->state.attr & ROUTINE_ALLOCS_RETURN ) {
+    if( CurrProc->state.attr & ROUTINE_ALLOCS_RETURN ) {
+File INTEL\C\I86DBSUP.C:
+    HW_D( HW_CS ),  HW_D( HW_SS ),  HW_D( HW_DS ),  HW_D( HW_ES ),
+File INTEL\C\I86DFSUP.C:
+   { HW_D( HW_CS ),  DW_REG_cs },
+File INTEL\C\I86ENC.C:
+        HW_D( HW_ES ),          HW_D( HW_CS ),
+        FPP_ES,         FPP_CS,
+File INTEL\C\I86INDEX.C:
+             * if this is a CS override in flat model - that particular case is not
+             * an error because the CS override is essentially a no-op.  MN
+                HW_CEqual( ins->operands[ ins->num_operands-1 ]->r.reg, HW_CS ))
+File INTEL\C\I86OBJ.C:
+    rec->prefix_comdat_state = PCS_OFF;
+    rec->prefix_comdat_state = PCS_OFF;
+    CurrSeg->prefix_comdat_state = PCS_OFF;
+    CurrSeg->prefix_comdat_state = PCS_OFF;
+    } else if( CurrSeg->prefix_comdat_state != PCS_OFF ) {
+        if( CurrSeg->prefix_comdat_state == PCS_NEED ) {
+            CurrSeg->prefix_comdat_state = PCS_ACTIVE;
+        CurrSeg->prefix_comdat_state = PCS_NEED;
+File INTEL\C\I86REG.C:
+        state->attr |= ROUTINE_ALLOCS_RETURN;
+        if( !( state->attr & ROUTINE_ALLOCS_RETURN ) ) {
+File INTEL\C\I86SEGS.C:
+        return( HW_CS );
+            return( HW_CS ); /* all have same CS */
+            return( HW_CS );
+            return( HW_CS ); /* 89-09-01 */
+extern  bool    SegIsCS( name *op ) {
+    if( HW_CEqual( segreg, HW_CS ) )
+        HW_COnlyOn( tmp, HW_DS_ES_SS_CS );
+    if( HW_CEqual( segreg, HW_CS ) )
+File INTEL\C\I86SPLIT.C:
+        name1 = AllocRegName( HW_CS );
+File INTEL\I86\C\I86RGTBL.C:
+#define HW_SEG  (HW_DS + HW_ES + HW_SS + HW_CS + HW_FS + HW_GS)
+/*       CS,SS,ES,DS,CX,DX       AX,BX,SI,DI*/
+                HW_D_1( HW_CS ),
+                HW_D_1( HW_CS ),
+    HW_CTurnOn( tmp, HW_CS );
+File INTEL\I86\C\I86RTRTN.C:
+static void CheckForPCS( instruction *ins )
+    or pointer - integer (PCS = Pointer Constant Subtract)
+            RoutineNum = RT_PCS - BEG_RTNS;
+        CheckForPCS( ins );
+    new_ins = MakeMove( AllocRegName( HW_CS ), reg_name, U2 );
+    CheckForPCS( ins );
+File S37\C\S37CONV.C:
+static  opcode_entry    CStoD[] = {
+        &CStoD,
+CU4,   CI4,   CU4,   CI4,   C_U4_D,C_I4_D,BAD,   C_U4_D,CSTOD, OK };    /* FD*/
+File S37\C\S37OBJ.C:
+/*** collect CODE and DATA segements add CSECTS ******/
+    bead = HWMKExSym( end_lnk, XSYM_CSECT );  /* an CSECT defines a sym */
+        armode = CSECT_AMODE_24;
+        armode = CSECT_AMODE_31;
+        armode = CSECT_AMODE_ANY;
+        armode |= CSECT_RMODE_ANY;
+/**** make a CSECT name ************************************/
+    path =  FEAuxInfo( NULL, CSECT_NAME  );
+File S37\C\S37TXT.C:
+            case XSYM_CSECT:
+/*** change a ref to a sym in another CSECT to CSECT+offset ***/
+/*** Get addr of sx from start of CSECT   ****/
+    if( bead->class == XSYM_CSECT ) {
+        case XSYM_CSECT:
+            code = "CSECT";
+    if( bead->class == XSYM_CSECT ) {

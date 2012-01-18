@@ -1,0 +1,1839 @@
+ #### CODE ####
+
+[0000] S LABEL: 1
+[0000] L SET PARM: 256
+[0003] S SEMANTIC: 72
+[0005] S CHOICE: 1
+           0 L000c
+[000a] S JUMP L0010
+[000c] S LABEL: 0
+[000c] S ERROR: 6
+[000e] S JUMP L0010
+[0010] S LABEL: 0
+[0010] S LABEL: 0
+[0010] S SET PARM: 0
+[0012] S SEMANTIC: 23
+[0014] S SET PARM: 1
+[0016] S SEMANTIC: 20
+[0018] S SET PARM: 1
+[001a] S SEMANTIC: 13
+[001c] S SET PARM: 0
+[001e] S SEMANTIC: 9
+[0020] S SEMANTIC: 19
+[0022] L JUMP L03d8
+[0025] S LABEL: 2
+[0025] S SEMANTIC: 199
+[0027] S CHOICE: 1
+           0 L002e
+[002c] S JUMP L0031
+[002e] S LABEL: 0
+[002e] S SET RES: 0
+[0030] S RETURN
+[0031] S LABEL: 0
+[0031] S SET RES: 1
+[0033] S RETURN
+[0034] S LABEL: 1
+[0034] S SET PARM: 1
+[0036] S SEMANTIC: 8
+[0038] S SEMANTIC: 6
+[003a] S SET PARM: 1
+[003c] S SEMANTIC: 9
+[003e] S LABEL: 3
+[003e] S IN_CHOICE: 13
+          54 L0069
+         128 L008d
+         129 L008d
+         130 L008d
+         131 L008d
+         132 L008d
+         133 L008d
+         134 L008d
+         135 L008d
+         136 L008d
+         137 L008d
+         138 L008d
+         139 L008d
+[0067] S JUMP L0095
+[0069] S LABEL: 0
+[0069] S SET PARM: 1
+[006b] S SEMANTIC: 9
+[006d] S SET PARM: 0
+[006f] S SEMANTIC: 8
+[0071] S SEMANTIC: 5
+[0073] S IN_CHOICE: 1
+          54 L007a
+[0078] S JUMP L0086
+[007a] S LABEL: 0
+[007a] S SET PARM: 1
+[007c] S SEMANTIC: 8
+[007e] S SEMANTIC: 6
+[0080] S SET PARM: 1
+[0082] S SEMANTIC: 9
+[0084] S JUMP L003e
+[0086] S LABEL: 0
+[0086] S SEMANTIC: 12
+[0088] S SEMANTIC: 7
+[008a] S SEMANTIC: 71
+[008c] S RETURN
+[008d] S LABEL: 0
+[008d] S SEMANTIC: 11
+[008f] S SET PARM: 2
+[0091] S SEMANTIC: 9
+[0093] S JUMP L003e
+[0095] S LABEL: 0
+[0095] S SEMANTIC: 10
+[0097] S SET PARM: 1
+[0099] S SEMANTIC: 9
+[009b] S JUMP L003e
+[009d] S LABEL: 1
+[009d] S SEMANTIC: 192
+[009f] S SEMANTIC: 199
+[00a1] S CHOICE: 1
+           0 L00a8
+[00a6] S JUMP L00ab
+[00a8] S LABEL: 0
+[00a8] S SET RES: 0
+[00aa] S RETURN
+[00ab] S LABEL: 0
+[00ab] S SEMANTIC: 193
+[00ad] S SET RES: 1
+[00af] S RETURN
+[00b0] S LABEL: 2
+[00b0] L CALL L0025
+[00b3] S CHOICE: 1
+           0 L00b9
+[00b8] S RETURN
+[00b9] S LABEL: 0
+[00b9] S SEMANTIC: 201
+[00bb] S CHOICE: 1
+           0 L00c1
+[00c0] S RETURN
+[00c1] S LABEL: 0
+[00c1] S ERROR: 4
+[00c3] S RETURN
+[00c4] S LABEL: 9
+[00c4] S SEMANTIC: 3
+[00c6] S CHOICE: 1
+           0 L00cd
+[00cb] S JUMP L00d0
+[00cd] S LABEL: 0
+[00cd] S SET RES: 0
+[00cf] S RETURN
+[00d0] S LABEL: 0
+[00d0] S SEMANTIC: 70
+[00d2] S SET RES: 1
+[00d4] S RETURN
+[00d5] S LABEL: 2
+[00d5] S SEMANTIC: 192
+[00d7] S IN_CHOICE: 1
+          52 L00de
+[00dc] S JUMP L00e4
+[00de] S LABEL: 0
+[00de] S SEMANTIC: 194
+[00e0] S CALL L00b0
+[00e2] S JUMP L00fe
+[00e4] S LABEL: 0
+[00e4] L CALL L0025
+[00e7] S CHOICE: 1
+           0 L00ee
+[00ec] S JUMP L00f1
+[00ee] S LABEL: 0
+[00ee] S SET RES: 0
+[00f0] S RETURN
+[00f1] S LABEL: 0
+[00f1] S IN_CHOICE: 1
+          52 L00f8
+[00f6] S JUMP L00fe
+[00f8] S LABEL: 0
+[00f8] S SEMANTIC: 195
+[00fa] S CALL L00b0
+[00fc] S JUMP L00fe
+[00fe] S LABEL: 0
+[00fe] S LABEL: 0
+[00fe] S LABEL: 0
+[00fe] S SEMANTIC: 193
+[0100] S SET RES: 1
+[0102] S RETURN
+[0103] S LABEL: 1
+[0103] S CALL L00d5
+[0105] S CHOICE: 1
+           0 L010b
+[010a] S RETURN
+[010b] S LABEL: 0
+[010b] S SEMANTIC: 67
+[010d] S CHOICE: 1
+           0 L0113
+[0112] S RETURN
+[0113] S LABEL: 0
+[0113] S SEMANTIC: 5
+[0115] S IN_CHOICE: 1
+          54 L011c
+[011a] S JUMP L011f
+[011c] S LABEL: 0
+[011c] L JUMP L0034
+[011f] S LABEL: 0
+[011f] S SEMANTIC: 7
+[0121] S ERROR: 4
+[0123] S RETURN
+[0124] S LABEL: 3
+[0124] S SET PARM: 0
+[0126] S SEMANTIC: 64
+[0128] S SET PARM: 1
+[012a] S SEMANTIC: 96
+[012c] S SEMANTIC: 36
+[012e] S RETURN
+[012f] S LABEL: 3
+[012f] S IN_CHOICE: 1
+          46 L0136
+[0134] S JUMP L0137
+[0136] S LABEL: 0
+[0136] S RETURN
+[0137] S LABEL: 0
+[0137] S SET PARM: 0
+[0139] S SEMANTIC: 100
+[013b] S INPUT: 46
+[013d] S RETURN
+[013e] S LABEL: 6
+[013e] L SET PARM: 256
+[0141] S SEMANTIC: 72
+[0143] S CHOICE: 1
+           0 L014a
+[0148] S JUMP L017d
+[014a] S LABEL: 0
+[014a] S SET PARM: 1
+[014c] S SEMANTIC: 102
+[014e] S SET PARM: 0
+[0150] S SEMANTIC: 101
+[0152] S SET PARM: 1
+[0154] S SEMANTIC: 98
+[0156] S CHOICE: 2
+           5 L0160
+           6 L0160
+[015e] S JUMP L0164
+[0160] S LABEL: 0
+[0160] S CALL L0180
+[0162] S JUMP L017a
+[0164] S LABEL: 0
+[0164] S SET PARM: 0
+[0166] S SEMANTIC: 98
+[0168] S CHOICE: 2
+           5 L0172
+           6 L0172
+[0170] S JUMP L017a
+[0172] S LABEL: 0
+[0172] S SET PARM: 1
+[0174] S SEMANTIC: 96
+[0176] S CALL L0180
+[0178] S JUMP L017a
+[017a] S LABEL: 0
+[017a] S LABEL: 0
+[017a] S LABEL: 0
+[017a] S SEMANTIC: 46
+[017c] S RETURN
+[017d] S LABEL: 0
+[017d] S SEMANTIC: 59
+[017f] S RETURN
+[0180] S LABEL: 1
+[0180] S SET PARM: 1
+[0182] S SEMANTIC: 97
+[0184] S SEMANTIC: 69
+[0186] S SEMANTIC: 53
+[0188] S SEMANTIC: 52
+[018a] L SET PARM: 65535
+[018d] S SEMANTIC: 97
+[018f] S SEMANTIC: 33
+[0191] S RETURN
+[0192] S LABEL: 2
+[0192] L SET PARM: 256
+[0195] S SEMANTIC: 72
+[0197] S CHOICE: 1
+           0 L019e
+[019c] S JUMP L0218
+[019e] S LABEL: 0
+[019e] S SET PARM: 1
+[01a0] S SEMANTIC: 102
+[01a2] S SET PARM: 0
+[01a4] S SEMANTIC: 101
+[01a6] S SET PARM: 1
+[01a8] S SEMANTIC: 98
+[01aa] S CHOICE: 2
+           5 L01b4
+           6 L01b4
+[01b2] S JUMP L0204
+[01b4] S LABEL: 0
+[01b4] S SET PARM: 0
+[01b6] S SEMANTIC: 98
+[01b8] S CHOICE: 2
+           5 L01c2
+           6 L01c2
+[01c0] S JUMP L01ff
+[01c2] S LABEL: 0
+[01c2] S SEMANTIC: 69
+[01c4] S SEMANTIC: 53
+[01c6] S SEMANTIC: 52
+[01c8] S SEMANTIC: 69
+[01ca] S SET PARM: 3
+[01cc] S SEMANTIC: 96
+[01ce] S SEMANTIC: 69
+[01d0] S SEMANTIC: 53
+[01d2] S SEMANTIC: 52
+[01d4] S SET PARM: 1
+[01d6] S SEMANTIC: 97
+[01d8] S SET PARM: 3
+[01da] S SEMANTIC: 96
+[01dc] L SET PARM: 65535
+[01df] S SEMANTIC: 97
+[01e1] S SET PARM: 1
+[01e3] S SEMANTIC: 48
+[01e5] S CHOICE: 1
+           0 L01ec
+[01ea] S JUMP L01ef
+[01ec] S LABEL: 0
+[01ec] S ERROR: 1
+[01ee] S RETURN
+[01ef] S LABEL: 0
+[01ef] S SEMANTIC: 70
+[01f1] S SET PARM: 1
+[01f3] S SEMANTIC: 97
+[01f5] S SEMANTIC: 36
+[01f7] L SET PARM: 65535
+[01fa] S SEMANTIC: 97
+[01fc] S SEMANTIC: 34
+[01fe] S RETURN
+[01ff] S LABEL: 0
+[01ff] S CALL L0180
+[0201] S SEMANTIC: 36
+[0203] S RETURN
+[0204] S LABEL: 0
+[0204] S SET PARM: 0
+[0206] S SEMANTIC: 98
+[0208] S CHOICE: 2
+           5 L0212
+           6 L0212
+[0210] S JUMP L0215
+[0212] S LABEL: 0
+[0212] S ERROR: 1
+[0214] S RETURN
+[0215] S LABEL: 0
+[0215] S SEMANTIC: 36
+[0217] S RETURN
+[0218] S LABEL: 0
+[0218] S SEMANTIC: 60
+[021a] S RETURN
+[021b] S LABEL: 2
+[021b] L SET PARM: 256
+[021e] S SEMANTIC: 72
+[0220] S CHOICE: 1
+           0 L0227
+[0225] S JUMP L023e
+[0227] S LABEL: 0
+[0227] S SET PARM: 4
+[0229] S SEMANTIC: 22
+[022b] S CHOICE: 1
+           0 L0232
+[0230] S JUMP L0238
+[0232] S LABEL: 0
+[0232] L SET PARM: 260
+[0235] S SEMANTIC: 42
+[0237] S RETURN
+[0238] S LABEL: 0
+[0238] L SET PARM: 772
+[023b] S SEMANTIC: 42
+[023d] S RETURN
+[023e] S LABEL: 0
+[023e] L SET PARM: 33280
+[0241] S SEMANTIC: 61
+[0243] S RETURN
+[0244] S LABEL: 1
+[0244] L SET PARM: 256
+[0247] S SEMANTIC: 72
+[0249] S CHOICE: 1
+           0 L0250
+[024e] S JUMP L0266
+[0250] S LABEL: 0
+[0250] S SET PARM: 4
+[0252] S SEMANTIC: 22
+[0254] S CHOICE: 1
+           0 L025b
+[0259] S JUMP L0260
+[025b] S LABEL: 0
+[025b] S SET PARM: 7
+[025d] S SEMANTIC: 42
+[025f] S RETURN
+[0260] S LABEL: 0
+[0260] L SET PARM: 519
+[0263] S SEMANTIC: 42
+[0265] S RETURN
+[0266] S LABEL: 0
+[0266] L SET PARM: 12288
+[0269] S SEMANTIC: 61
+[026b] S RETURN
+[026c] S LABEL: 3
+[026c] S SET PARM: 0
+[026e] S SEMANTIC: 160
+[0270] S LABEL: 18
+[0270] S IN_CHOICE: 9
+          76 L02c6
+          77 L0321
+          78 L030e
+          79 L02e8
+          80 L02fb
+          81 L02d7
+          83 L02b4
+          84 L0290
+          85 L02a2
+[028d] L JUMP L0334
+[0290] S LABEL: 0
+[0290] L SET PARM: 512
+[0293] S SEMANTIC: 162
+[0295] S CHOICE: 1
+           0 L029c
+[029a] S JUMP L029e
+[029c] S LABEL: 0
+[029c] S JUMP L0270
+[029e] S LABEL: 0
+[029e] S ERROR: 0
+[02a0] S JUMP L0270
+[02a2] S LABEL: 0
+[02a2] L SET PARM: 1024
+[02a5] S SEMANTIC: 162
+[02a7] S CHOICE: 1
+           0 L02ae
+[02ac] S JUMP L02b0
+[02ae] S LABEL: 0
+[02ae] S JUMP L0270
+[02b0] S LABEL: 0
+[02b0] S ERROR: 0
+[02b2] S JUMP L0270
+[02b4] S LABEL: 0
+[02b4] L SET PARM: 256
+[02b7] S SEMANTIC: 162
+[02b9] S CHOICE: 1
+           0 L02c0
+[02be] S JUMP L02c2
+[02c0] S LABEL: 0
+[02c0] S JUMP L0270
+[02c2] S LABEL: 0
+[02c2] S ERROR: 0
+[02c4] S JUMP L0270
+[02c6] S LABEL: 0
+[02c6] S SET PARM: 1
+[02c8] S SEMANTIC: 162
+[02ca] S CHOICE: 1
+           0 L02d1
+[02cf] S JUMP L02d3
+[02d1] S LABEL: 0
+[02d1] S JUMP L0270
+[02d3] S LABEL: 0
+[02d3] S ERROR: 0
+[02d5] S JUMP L0270
+[02d7] S LABEL: 0
+[02d7] S SET PARM: 4
+[02d9] S SEMANTIC: 162
+[02db] S CHOICE: 1
+           0 L02e2
+[02e0] S JUMP L02e4
+[02e2] S LABEL: 0
+[02e2] S JUMP L0270
+[02e4] S LABEL: 0
+[02e4] S ERROR: 0
+[02e6] S JUMP L0270
+[02e8] S LABEL: 0
+[02e8] S SET PARM: 2
+[02ea] S SEMANTIC: 162
+[02ec] S CHOICE: 1
+           0 L02f3
+[02f1] S JUMP L02f6
+[02f3] S LABEL: 0
+[02f3] L JUMP L0270
+[02f6] S LABEL: 0
+[02f6] S ERROR: 0
+[02f8] L JUMP L0270
+[02fb] S LABEL: 0
+[02fb] S SET PARM: 8
+[02fd] S SEMANTIC: 162
+[02ff] S CHOICE: 1
+           0 L0306
+[0304] S JUMP L0309
+[0306] S LABEL: 0
+[0306] L JUMP L0270
+[0309] S LABEL: 0
+[0309] S ERROR: 0
+[030b] L JUMP L0270
+[030e] S LABEL: 0
+[030e] S SET PARM: 64
+[0310] S SEMANTIC: 162
+[0312] S CHOICE: 1
+           0 L0319
+[0317] S JUMP L031c
+[0319] S LABEL: 0
+[0319] L JUMP L0270
+[031c] S LABEL: 0
+[031c] S ERROR: 0
+[031e] L JUMP L0270
+[0321] S LABEL: 0
+[0321] S SET PARM: 128
+[0323] S SEMANTIC: 162
+[0325] S CHOICE: 1
+           0 L032c
+[032a] S JUMP L032f
+[032c] S LABEL: 0
+[032c] L JUMP L0270
+[032f] S LABEL: 0
+[032f] S ERROR: 0
+[0331] L JUMP L0270
+[0334] S LABEL: 0
+[0334] S SEMANTIC: 161
+[0336] S CHOICE: 1
+           0 L033d
+[033b] S JUMP L0362
+[033d] S LABEL: 0
+[033d] S SEMANTIC: 5
+[033f] L CALL L00d5
+[0342] S CHOICE: 1
+           0 L0349
+[0347] S JUMP L034e
+[0349] S LABEL: 0
+[0349] S SEMANTIC: 7
+[034b] S SET RES: 0
+[034d] S RETURN
+[034e] S LABEL: 0
+[034e] S SEMANTIC: 55
+[0350] S CHOICE: 1
+           0 L0357
+[0355] S JUMP L035e
+[0357] S LABEL: 0
+[0357] S SEMANTIC: 70
+[0359] S SEMANTIC: 6
+[035b] S SET RES: 0
+[035d] S RETURN
+[035e] S LABEL: 0
+[035e] S SEMANTIC: 7
+[0360] S JUMP L0366
+[0362] S LABEL: 0
+[0362] S CALL L0369
+[0364] S JUMP L0366
+[0366] S LABEL: 0
+[0366] S SET RES: 1
+[0368] S RETURN
+[0369] S LABEL: 0
+[0369] S SEMANTIC: 161
+[036b] L CHOICE: 9
+           1 L0399
+           2 L03b1
+           4 L03ab
+           8 L03b7
+          64 L03bd
+         128 L03c3
+         256 L0393
+         512 L03a5
+        1024 L039f
+[0391] S JUMP L03c9
+[0393] S LABEL: 0
+[0393] L SET PARM: 16384
+[0396] S SEMANTIC: 73
+[0398] S RETURN
+[0399] S LABEL: 0
+[0399] L SET PARM: 29186
+[039c] S SEMANTIC: 73
+[039e] S RETURN
+[039f] S LABEL: 0
+[039f] L SET PARM: 20993
+[03a2] S SEMANTIC: 73
+[03a4] S RETURN
+[03a5] S LABEL: 0
+[03a5] L SET PARM: 33025
+[03a8] S SEMANTIC: 73
+[03aa] S RETURN
+[03ab] S LABEL: 0
+[03ab] L SET PARM: 33026
+[03ae] S SEMANTIC: 73
+[03b0] S RETURN
+[03b1] S LABEL: 0
+[03b1] L SET PARM: 33028
+[03b4] S SEMANTIC: 73
+[03b6] S RETURN
+[03b7] S LABEL: 0
+[03b7] L SET PARM: 33032
+[03ba] S SEMANTIC: 73
+[03bc] S RETURN
+[03bd] S LABEL: 0
+[03bd] L SET PARM: 36868
+[03c0] S SEMANTIC: 73
+[03c2] S RETURN
+[03c3] S LABEL: 0
+[03c3] L SET PARM: 36872
+[03c6] S SEMANTIC: 73
+[03c8] S RETURN
+[03c9] S LABEL: 0
+[03c9] S ERROR: 2
+[03cb] S RETURN
+[03cc] S LABEL: 3
+[03cc] S SET PARM: 1
+[03ce] S SEMANTIC: 0
+[03d0] S CALL L03d8
+[03d2] L SET PARM: 65535
+[03d5] S SEMANTIC: 0
+[03d7] S RETURN
+[03d8] S LABEL: 4
+[03d8] L CALL L04e6
+[03db] S IN_CHOICE: 11
+          32 L03ff
+          63 L0410
+          64 L0424
+          65 L0438
+          66 L044c
+          67 L0461
+          68 L049e
+          69 L04b1
+          70 L04c4
+          74 L048b
+          75 L0475
+[03fe] S RETURN
+[03ff] S LABEL: 0
+[03ff] S CALL L03d8
+[0401] S SET PARM: 2
+[0403] S SEMANTIC: 20
+[0405] S SEMANTIC: 3
+[0407] S CHOICE: 1
+           0 L040d
+[040c] S RETURN
+[040d] S LABEL: 0
+[040d] S SEMANTIC: 32
+[040f] S RETURN
+[0410] S LABEL: 0
+[0410] L CALL L04d7
+[0413] S SET PARM: 2
+[0415] S SEMANTIC: 20
+[0417] S SEMANTIC: 3
+[0419] S CHOICE: 1
+           0 L041f
+[041e] S RETURN
+[041f] S LABEL: 0
+[041f] S SEMANTIC: 33
+[0421] S SEMANTIC: 32
+[0423] S RETURN
+[0424] S LABEL: 0
+[0424] L CALL L04d7
+[0427] S SET PARM: 2
+[0429] S SEMANTIC: 20
+[042b] S SEMANTIC: 3
+[042d] S CHOICE: 1
+           0 L0433
+[0432] S RETURN
+[0433] S LABEL: 0
+[0433] S SEMANTIC: 34
+[0435] S SEMANTIC: 32
+[0437] S RETURN
+[0438] S LABEL: 0
+[0438] L CALL L04d7
+[043b] S SET PARM: 2
+[043d] S SEMANTIC: 20
+[043f] S SEMANTIC: 3
+[0441] S CHOICE: 1
+           0 L0447
+[0446] S RETURN
+[0447] S LABEL: 0
+[0447] S SEMANTIC: 35
+[0449] S SEMANTIC: 32
+[044b] S RETURN
+[044c] S LABEL: 0
+[044c] L CALL L04d7
+[044f] S SET PARM: 2
+[0451] S SEMANTIC: 20
+[0453] S SEMANTIC: 3
+[0455] S CHOICE: 1
+           0 L045b
+[045a] S RETURN
+[045b] S LABEL: 0
+[045b] L CALL L013e
+[045e] S SEMANTIC: 32
+[0460] S RETURN
+[0461] S LABEL: 0
+[0461] S CALL L04d7
+[0463] S SET PARM: 2
+[0465] S SEMANTIC: 20
+[0467] S SEMANTIC: 3
+[0469] S CHOICE: 1
+           0 L046f
+[046e] S RETURN
+[046f] S LABEL: 0
+[046f] L CALL L0192
+[0472] S SEMANTIC: 32
+[0474] S RETURN
+[0475] S LABEL: 0
+[0475] S CALL L04d7
+[0477] S SET PARM: 2
+[0479] S SEMANTIC: 20
+[047b] S SEMANTIC: 3
+[047d] S CHOICE: 1
+           0 L0483
+[0482] S RETURN
+[0483] S LABEL: 0
+[0483] L CALL L0124
+[0486] S SEMANTIC: 37
+[0488] S SEMANTIC: 32
+[048a] S RETURN
+[048b] S LABEL: 0
+[048b] S CALL L04d7
+[048d] S SET PARM: 2
+[048f] S SEMANTIC: 20
+[0491] S SEMANTIC: 3
+[0493] S CHOICE: 1
+           0 L0499
+[0498] S RETURN
+[0499] S LABEL: 0
+[0499] S SEMANTIC: 37
+[049b] S SEMANTIC: 32
+[049d] S RETURN
+[049e] S LABEL: 0
+[049e] S CALL L04d7
+[04a0] S SET PARM: 2
+[04a2] S SEMANTIC: 20
+[04a4] S SEMANTIC: 3
+[04a6] S CHOICE: 1
+           0 L04ac
+[04ab] S RETURN
+[04ac] S LABEL: 0
+[04ac] S SEMANTIC: 38
+[04ae] S SEMANTIC: 32
+[04b0] S RETURN
+[04b1] S LABEL: 0
+[04b1] S CALL L04d7
+[04b3] S SET PARM: 2
+[04b5] S SEMANTIC: 20
+[04b7] S SEMANTIC: 3
+[04b9] S CHOICE: 1
+           0 L04bf
+[04be] S RETURN
+[04bf] S LABEL: 0
+[04bf] S SEMANTIC: 39
+[04c1] S SEMANTIC: 32
+[04c3] S RETURN
+[04c4] S LABEL: 0
+[04c4] S CALL L04d7
+[04c6] S SET PARM: 2
+[04c8] S SEMANTIC: 20
+[04ca] S SEMANTIC: 3
+[04cc] S CHOICE: 1
+           0 L04d2
+[04d1] S RETURN
+[04d2] S LABEL: 0
+[04d2] S SEMANTIC: 40
+[04d4] S SEMANTIC: 32
+[04d6] S RETURN
+[04d7] S LABEL: 0
+[04d7] S SEMANTIC: 3
+[04d9] S CHOICE: 1
+           0 L04e1
+[04de] L JUMP L03d8
+[04e1] S LABEL: 0
+[04e1] S SEMANTIC: 69
+[04e3] L JUMP L03d8
+[04e6] S LABEL: 0
+[04e6] S CALL L052c
+[04e8] S LABEL: 2
+[04e8] S IN_CHOICE: 1
+          62 L04ee
+[04ed] S RETURN
+[04ee] S LABEL: 0
+[04ee] S SEMANTIC: 3
+[04f0] S CHOICE: 1
+           0 L04f7
+[04f5] S JUMP L0506
+[04f7] S LABEL: 0
+[04f7] S SET PARM: 1
+[04f9] S SEMANTIC: 50
+[04fb] S CHOICE: 1
+           0 L0502
+[0500] S JUMP L0517
+[0502] S LABEL: 0
+[0502] S SEMANTIC: 70
+[0504] S JUMP L0506
+[0506] S LABEL: 0
+[0506] S LABEL: 0
+[0506] S CALL L052c
+[0508] S SEMANTIC: 3
+[050a] S CHOICE: 1
+           0 L0511
+[050f] S JUMP L04e8
+[0511] S LABEL: 0
+[0511] S SET PARM: 1
+[0513] S SEMANTIC: 50
+[0515] S JUMP L04e8
+[0517] S LABEL: 0
+[0517] S SET PARM: 1
+[0519] S SEMANTIC: 2
+[051b] S LABEL: 1
+[051b] S CALL L052c
+[051d] S IN_CHOICE: 1
+          62 L0524
+[0522] S JUMP L0526
+[0524] S LABEL: 0
+[0524] S JUMP L051b
+[0526] S LABEL: 0
+[0526] L SET PARM: 65535
+[0529] S SEMANTIC: 2
+[052b] S RETURN
+[052c] S LABEL: 0
+[052c] S CALL L0574
+[052e] S LABEL: 2
+[052e] S IN_CHOICE: 1
+          61 L0534
+[0533] S RETURN
+[0534] S LABEL: 0
+[0534] S SEMANTIC: 3
+[0536] S CHOICE: 1
+           0 L053d
+[053b] S JUMP L054e
+[053d] S LABEL: 0
+[053d] S SET PARM: 1
+[053f] S SEMANTIC: 50
+[0541] S CHOICE: 1
+           0 L0548
+[0546] S JUMP L054a
+[0548] S LABEL: 0
+[0548] S JUMP L055f
+[054a] S LABEL: 0
+[054a] S SEMANTIC: 70
+[054c] S JUMP L054e
+[054e] S LABEL: 0
+[054e] S LABEL: 0
+[054e] S CALL L0574
+[0550] S SEMANTIC: 3
+[0552] S CHOICE: 1
+           0 L0559
+[0557] S JUMP L052e
+[0559] S LABEL: 0
+[0559] S SET PARM: 1
+[055b] S SEMANTIC: 50
+[055d] S JUMP L052e
+[055f] S LABEL: 0
+[055f] S SET PARM: 1
+[0561] S SEMANTIC: 2
+[0563] S LABEL: 1
+[0563] S CALL L0574
+[0565] S IN_CHOICE: 1
+          61 L056c
+[056a] S JUMP L056e
+[056c] S LABEL: 0
+[056c] S JUMP L0563
+[056e] S LABEL: 0
+[056e] L SET PARM: 65535
+[0571] S SEMANTIC: 2
+[0573] S RETURN
+[0574] S LABEL: 0
+[0574] S CALL L058b
+[0576] S LABEL: 2
+[0576] S IN_CHOICE: 1
+          37 L057c
+[057b] S RETURN
+[057c] S LABEL: 0
+[057c] S CALL L058b
+[057e] S SEMANTIC: 3
+[0580] S CHOICE: 1
+           0 L0587
+[0585] S JUMP L0576
+[0587] S LABEL: 0
+[0587] S SEMANTIC: 40
+[0589] S JUMP L0576
+[058b] S LABEL: 0
+[058b] S CALL L05a2
+[058d] S LABEL: 2
+[058d] S IN_CHOICE: 1
+          49 L0593
+[0592] S RETURN
+[0593] S LABEL: 0
+[0593] S CALL L05a2
+[0595] S SEMANTIC: 3
+[0597] S CHOICE: 1
+           0 L059e
+[059c] S JUMP L058d
+[059e] S LABEL: 0
+[059e] S SEMANTIC: 39
+[05a0] S JUMP L058d
+[05a2] S LABEL: 0
+[05a2] S CALL L05b9
+[05a4] S LABEL: 2
+[05a4] S IN_CHOICE: 1
+          40 L05aa
+[05a9] S RETURN
+[05aa] S LABEL: 0
+[05aa] S CALL L05b9
+[05ac] S SEMANTIC: 3
+[05ae] S CHOICE: 1
+           0 L05b5
+[05b3] S JUMP L05a4
+[05b5] S LABEL: 0
+[05b5] S SEMANTIC: 38
+[05b7] S JUMP L05a4
+[05b9] S LABEL: 0
+[05b9] S CALL L05ec
+[05bb] S LABEL: 4
+[05bb] S IN_CHOICE: 2
+          55 L05c4
+          56 L05d5
+[05c3] S RETURN
+[05c4] S LABEL: 0
+[05c4] S CALL L05ec
+[05c6] S SEMANTIC: 3
+[05c8] S CHOICE: 1
+           0 L05cf
+[05cd] S JUMP L05bb
+[05cf] S LABEL: 0
+[05cf] S SET PARM: 1
+[05d1] S SEMANTIC: 48
+[05d3] S JUMP L05bb
+[05d5] S LABEL: 0
+[05d5] S CALL L05ec
+[05d7] S SEMANTIC: 3
+[05d9] S CHOICE: 1
+           0 L05e0
+[05de] S JUMP L05bb
+[05e0] S LABEL: 0
+[05e0] S SET PARM: 1
+[05e2] S SEMANTIC: 48
+[05e4] S SET PARM: 1
+[05e6] S SEMANTIC: 64
+[05e8] S SEMANTIC: 39
+[05ea] S JUMP L05bb
+[05ec] S LABEL: 0
+[05ec] S CALL L0655
+[05ee] S LABEL: 8
+[05ee] S IN_CHOICE: 4
+          33 L062f
+          34 L0640
+          57 L05fd
+          58 L0618
+[05fc] S RETURN
+[05fd] S LABEL: 0
+[05fd] S CALL L0655
+[05ff] S SEMANTIC: 3
+[0601] S CHOICE: 1
+           0 L0608
+[0606] S JUMP L05ee
+[0608] S LABEL: 0
+[0608] S SET PARM: 1
+[060a] S SEMANTIC: 96
+[060c] S SET PARM: 1
+[060e] S SEMANTIC: 49
+[0610] S SET PARM: 1
+[0612] S SEMANTIC: 64
+[0614] S SEMANTIC: 39
+[0616] S JUMP L05ee
+[0618] S LABEL: 0
+[0618] S CALL L0655
+[061a] S SEMANTIC: 3
+[061c] S CHOICE: 1
+           0 L0623
+[0621] S JUMP L05ee
+[0623] S LABEL: 0
+[0623] S SET PARM: 1
+[0625] S SEMANTIC: 49
+[0627] S SET PARM: 1
+[0629] S SEMANTIC: 64
+[062b] S SEMANTIC: 39
+[062d] S JUMP L05ee
+[062f] S LABEL: 0
+[062f] S CALL L0655
+[0631] S SEMANTIC: 3
+[0633] S CHOICE: 1
+           0 L063a
+[0638] S JUMP L05ee
+[063a] S LABEL: 0
+[063a] S SET PARM: 1
+[063c] S SEMANTIC: 49
+[063e] S JUMP L05ee
+[0640] S LABEL: 0
+[0640] S CALL L0655
+[0642] S SEMANTIC: 3
+[0644] S CHOICE: 1
+           0 L064b
+[0649] S JUMP L05ee
+[064b] S LABEL: 0
+[064b] S SET PARM: 1
+[064d] S SEMANTIC: 96
+[064f] S SET PARM: 1
+[0651] S SEMANTIC: 49
+[0653] S JUMP L05ee
+[0655] S LABEL: 0
+[0655] S CALL L0681
+[0657] S LABEL: 4
+[0657] S IN_CHOICE: 2
+          71 L0660
+          72 L066f
+[065f] S RETURN
+[0660] S LABEL: 0
+[0660] S CALL L0681
+[0662] S SEMANTIC: 3
+[0664] S CHOICE: 1
+           0 L066b
+[0669] S JUMP L0657
+[066b] S LABEL: 0
+[066b] S SEMANTIC: 37
+[066d] S JUMP L0657
+[066f] S LABEL: 0
+[066f] S CALL L0681
+[0671] S SEMANTIC: 3
+[0673] S CHOICE: 1
+           0 L067a
+[0678] S JUMP L0657
+[067a] S LABEL: 0
+[067a] L CALL L0124
+[067d] S SEMANTIC: 37
+[067f] S JUMP L0657
+[0681] S LABEL: 0
+[0681] S CALL L06ac
+[0683] S LABEL: 4
+[0683] S IN_CHOICE: 2
+          35 L068c
+          36 L069c
+[068b] S RETURN
+[068c] S LABEL: 0
+[068c] S CALL L06ac
+[068e] S SEMANTIC: 3
+[0690] S CHOICE: 1
+           0 L0697
+[0695] S JUMP L0683
+[0697] S LABEL: 0
+[0697] L CALL L013e
+[069a] S JUMP L0683
+[069c] S LABEL: 0
+[069c] S CALL L06ac
+[069e] S SEMANTIC: 3
+[06a0] S CHOICE: 1
+           0 L06a7
+[06a5] S JUMP L0683
+[06a7] S LABEL: 0
+[06a7] L CALL L0192
+[06aa] S JUMP L0683
+[06ac] S LABEL: 0
+[06ac] S CALL L06e7
+[06ae] S LABEL: 6
+[06ae] S IN_CHOICE: 3
+          38 L06ba
+          39 L06c9
+          42 L06d8
+[06b9] S RETURN
+[06ba] S LABEL: 0
+[06ba] S CALL L06e7
+[06bc] S SEMANTIC: 3
+[06be] S CHOICE: 1
+           0 L06c5
+[06c3] S JUMP L06ae
+[06c5] S LABEL: 0
+[06c5] S SEMANTIC: 33
+[06c7] S JUMP L06ae
+[06c9] S LABEL: 0
+[06c9] S CALL L06e7
+[06cb] S SEMANTIC: 3
+[06cd] S CHOICE: 1
+           0 L06d4
+[06d2] S JUMP L06ae
+[06d4] S LABEL: 0
+[06d4] S SEMANTIC: 34
+[06d6] S JUMP L06ae
+[06d8] S LABEL: 0
+[06d8] S CALL L06e7
+[06da] S SEMANTIC: 3
+[06dc] S CHOICE: 1
+           0 L06e3
+[06e1] S JUMP L06ae
+[06e3] S LABEL: 0
+[06e3] S SEMANTIC: 35
+[06e5] S JUMP L06ae
+[06e7] S LABEL: 12
+[06e7] S IN_CHOICE: 10
+          35 L0766
+          36 L0768
+          38 L074c
+          40 L073f
+          41 L0776
+          42 L0759
+          48 L0789
+          59 L070a
+          60 L0724
+          82 L079d
+[0707] L JUMP L07d7
+[070a] S LABEL: 0
+[070a] S CALL L06e7
+[070c] S SET PARM: 2
+[070e] S SEMANTIC: 20
+[0710] S SEMANTIC: 3
+[0712] S CHOICE: 1
+           0 L0718
+[0717] S RETURN
+[0718] S LABEL: 0
+[0718] S SEMANTIC: 69
+[071a] S SET PARM: 1
+[071c] S SEMANTIC: 64
+[071e] L CALL L013e
+[0721] S SEMANTIC: 32
+[0723] S RETURN
+[0724] S LABEL: 0
+[0724] S CALL L06e7
+[0726] S SET PARM: 2
+[0728] S SEMANTIC: 20
+[072a] S SEMANTIC: 3
+[072c] S CHOICE: 1
+           0 L0732
+[0731] S RETURN
+[0732] S LABEL: 0
+[0732] S SEMANTIC: 69
+[0734] L SET PARM: 65535
+[0737] S SEMANTIC: 64
+[0739] L CALL L013e
+[073c] S SEMANTIC: 32
+[073e] S RETURN
+[073f] S LABEL: 0
+[073f] S CALL L06e7
+[0741] S SEMANTIC: 3
+[0743] S CHOICE: 1
+           0 L0749
+[0748] S RETURN
+[0749] S LABEL: 0
+[0749] S SEMANTIC: 41
+[074b] S RETURN
+[074c] S LABEL: 0
+[074c] S CALL L06e7
+[074e] S SEMANTIC: 3
+[0750] S CHOICE: 1
+           0 L0756
+[0755] S RETURN
+[0756] S LABEL: 0
+[0756] L JUMP L021b
+[0759] S LABEL: 0
+[0759] S CALL L06e7
+[075b] S SEMANTIC: 3
+[075d] S CHOICE: 1
+           0 L0763
+[0762] S RETURN
+[0763] S LABEL: 0
+[0763] L JUMP L0244
+[0766] S LABEL: 0
+[0766] S JUMP L06e7
+[0768] S LABEL: 0
+[0768] L CALL L06e7
+[076b] S SEMANTIC: 3
+[076d] S CHOICE: 1
+           0 L0773
+[0772] S RETURN
+[0773] S LABEL: 0
+[0773] L JUMP L0124
+[0776] S LABEL: 0
+[0776] L CALL L06e7
+[0779] S SEMANTIC: 3
+[077b] S CHOICE: 1
+           0 L0781
+[0780] S RETURN
+[0781] S LABEL: 0
+[0781] L SET PARM: 65535
+[0784] S SEMANTIC: 64
+[0786] S SEMANTIC: 39
+[0788] S RETURN
+[0789] S LABEL: 0
+[0789] L CALL L06e7
+[078c] S SEMANTIC: 3
+[078e] S CHOICE: 1
+           0 L0794
+[0793] S RETURN
+[0794] S LABEL: 0
+[0794] S SET PARM: 0
+[0796] S SEMANTIC: 64
+[0798] S SET PARM: 1
+[079a] S SEMANTIC: 48
+[079c] S RETURN
+[079d] S LABEL: 0
+[079d] S IN_CHOICE: 1
+          45 L07a4
+[07a2] S JUMP L07c5
+[07a4] S LABEL: 0
+[07a4] L CALL L026c
+[07a7] S CHOICE: 1
+           0 L07ae
+[07ac] S JUMP L07b3
+[07ae] S LABEL: 0
+[07ae] L CALL L03cc
+[07b1] S JUMP L07c0
+[07b3] S LABEL: 0
+[07b3] S SEMANTIC: 3
+[07b5] S CHOICE: 1
+           0 L07bc
+[07ba] S JUMP L07be
+[07bc] S LABEL: 0
+[07bc] S JUMP L07c0
+[07be] S LABEL: 0
+[07be] S SEMANTIC: 70
+[07c0] S LABEL: 0
+[07c0] S LABEL: 0
+[07c0] L CALL L012f
+[07c3] S JUMP L07c8
+[07c5] S LABEL: 0
+[07c5] L CALL L06e7
+[07c8] S LABEL: 0
+[07c8] S SEMANTIC: 3
+[07ca] S CHOICE: 1
+           0 L07d0
+[07cf] S RETURN
+[07d0] S LABEL: 0
+[07d0] S SET PARM: 0
+[07d2] S SEMANTIC: 100
+[07d4] S SEMANTIC: 52
+[07d6] S RETURN
+[07d7] S LABEL: 0
+[07d7] L CALL L0917
+[07da] S LABEL: 1
+[07da] S SEMANTIC: 5
+[07dc] S IN_CHOICE: 6
+          43 L087f
+          45 L0821
+          50 L07f3
+          59 L0895
+          60 L08bb
+          73 L0883
+[07f0] L JUMP L08e2
+[07f3] S LABEL: 0
+[07f3] S SEMANTIC: 3
+[07f5] S CHOICE: 1
+           0 L07fc
+[07fa] S JUMP L0800
+[07fc] S LABEL: 0
+[07fc] S SEMANTIC: 24
+[07fe] S JUMP L0800
+[0800] S LABEL: 0
+[0800] S LABEL: 0
+[0800] L CALL L03cc
+[0803] S SEMANTIC: 3
+[0805] S CHOICE: 1
+           0 L080c
+[080a] S JUMP L0810
+[080c] S LABEL: 0
+[080c] S SEMANTIC: 25
+[080e] S JUMP L0810
+[0810] S LABEL: 0
+[0810] S LABEL: 0
+[0810] S INPUT: 51
+[0812] S SEMANTIC: 3
+[0814] S CHOICE: 1
+           0 L081c
+[0819] L JUMP L08e5
+[081c] S LABEL: 0
+[081c] S SEMANTIC: 26
+[081e] L JUMP L08e5
+[0821] S LABEL: 0
+[0821] S SEMANTIC: 1
+[0823] S CHOICE: 1
+           1 L082a
+[0828] S JUMP L082d
+[082a] S LABEL: 0
+[082a] S SEMANTIC: 6
+[082c] S RETURN
+[082d] S LABEL: 0
+[082d] S SEMANTIC: 14
+[082f] S SET PARM: 0
+[0831] S SEMANTIC: 128
+[0833] S IN_CHOICE: 1
+          46 L083a
+[0838] S JUMP L083c
+[083a] S LABEL: 0
+[083a] S JUMP L086c
+[083c] S LABEL: 0
+[083c] S LABEL: 2
+[083c] S SEMANTIC: 130
+[083e] L CALL L03cc
+[0841] S SEMANTIC: 3
+[0843] S CHOICE: 1
+           0 L084a
+[0848] S JUMP L0854
+[084a] S LABEL: 0
+[084a] S SET PARM: 0
+[084c] S SEMANTIC: 99
+[084e] S SET PARM: 1
+[0850] S SEMANTIC: 96
+[0852] S JUMP L0854
+[0854] S LABEL: 0
+[0854] S LABEL: 0
+[0854] S SEMANTIC: 131
+[0856] S SET PARM: 1
+[0858] S SEMANTIC: 129
+[085a] S IN_CHOICE: 2
+          46 L0866
+          47 L0864
+[0862] S JUMP L0868
+[0864] S LABEL: 0
+[0864] S JUMP L083c
+[0866] S LABEL: 0
+[0866] S JUMP L086c
+[0868] S LABEL: 0
+[0868] S INPUT: 46
+[086a] S JUMP L083c
+[086c] S LABEL: 0
+[086c] S LABEL: 0
+[086c] S SET PARM: 2
+[086e] S SEMANTIC: 20
+[0870] S SEMANTIC: 3
+[0872] S CHOICE: 1
+           0 L0879
+[0877] S JUMP L08e5
+[0879] S LABEL: 0
+[0879] S SET PARM: 0
+[087b] S SEMANTIC: 44
+[087d] S JUMP L08e5
+[087f] S LABEL: 0
+[087f] S CALL L08ea
+[0881] S JUMP L08e5
+[0883] S LABEL: 0
+[0883] S SEMANTIC: 3
+[0885] S CHOICE: 1
+           0 L088c
+[088a] S JUMP L0891
+[088c] S LABEL: 0
+[088c] L CALL L021b
+[088f] S JUMP L0891
+[0891] S LABEL: 0
+[0891] S LABEL: 0
+[0891] S CALL L08ea
+[0893] S JUMP L08e5
+[0895] S LABEL: 0
+[0895] S SET PARM: 2
+[0897] S SEMANTIC: 20
+[0899] S SEMANTIC: 3
+[089b] S CHOICE: 1
+           0 L08a2
+[08a0] S JUMP L08e5
+[08a2] S LABEL: 0
+[08a2] S SEMANTIC: 69
+[08a4] S SET PARM: 0
+[08a6] S SEMANTIC: 101
+[08a8] S SET PARM: 1
+[08aa] S SEMANTIC: 96
+[08ac] S SEMANTIC: 69
+[08ae] S SET PARM: 1
+[08b0] S SEMANTIC: 64
+[08b2] L CALL L013e
+[08b5] S SEMANTIC: 32
+[08b7] S SEMANTIC: 70
+[08b9] S JUMP L08e5
+[08bb] S LABEL: 0
+[08bb] S SET PARM: 2
+[08bd] S SEMANTIC: 20
+[08bf] S SEMANTIC: 3
+[08c1] S CHOICE: 1
+           0 L08c8
+[08c6] S JUMP L08e5
+[08c8] S LABEL: 0
+[08c8] S SEMANTIC: 69
+[08ca] S SET PARM: 0
+[08cc] S SEMANTIC: 101
+[08ce] S SET PARM: 1
+[08d0] S SEMANTIC: 96
+[08d2] S SEMANTIC: 69
+[08d4] L SET PARM: 65535
+[08d7] S SEMANTIC: 64
+[08d9] L CALL L013e
+[08dc] S SEMANTIC: 32
+[08de] S SEMANTIC: 70
+[08e0] S JUMP L08e5
+[08e2] S LABEL: 0
+[08e2] S SEMANTIC: 7
+[08e4] S RETURN
+[08e5] S LABEL: 0
+[08e5] S SEMANTIC: 7
+[08e7] L JUMP L07da
+[08ea] S LABEL: 0
+[08ea] L CALL L009d
+[08ed] S CHOICE: 1
+           0 L08f4
+[08f2] S JUMP L08f8
+[08f4] S LABEL: 0
+[08f4] S ERROR: 5
+[08f6] S JUMP L08f8
+[08f8] S LABEL: 0
+[08f8] S LABEL: 0
+[08f8] S SEMANTIC: 3
+[08fa] S CHOICE: 1
+           0 L0901
+[08ff] S JUMP L0914
+[0901] S LABEL: 0
+[0901] S SET PARM: 1
+[0903] S SEMANTIC: 104
+[0905] S CHOICE: 1
+           6 L090c
+[090a] S JUMP L0911
+[090c] S LABEL: 0
+[090c] S SET PARM: 0
+[090e] S SEMANTIC: 63
+[0910] S RETURN
+[0911] S LABEL: 0
+[0911] S SEMANTIC: 43
+[0913] S RETURN
+[0914] S LABEL: 0
+[0914] S SEMANTIC: 70
+[0916] S RETURN
+[0917] S LABEL: 0
+[0917] S IN_CHOICE: 2
+          43 L0921
+          53 L092c
+[091f] S JUMP L093b
+[0921] S LABEL: 0
+[0921] S SEMANTIC: 3
+[0923] S CHOICE: 1
+           0 L0929
+[0928] S RETURN
+[0929] S LABEL: 0
+[0929] S SEMANTIC: 65
+[092b] S RETURN
+[092c] S LABEL: 0
+[092c] S CALL L093b
+[092e] S SEMANTIC: 3
+[0930] S CHOICE: 1
+           0 L0936
+[0935] S RETURN
+[0936] S LABEL: 0
+[0936] S SET PARM: 1
+[0938] S SEMANTIC: 51
+[093a] S RETURN
+[093b] S LABEL: 0
+[093b] S IN_CHOICE: 2
+          45 L0945
+          50 L097d
+[0943] S JUMP L09ae
+[0945] S LABEL: 0
+[0945] L CALL L026c
+[0948] S CHOICE: 1
+           0 L094f
+[094d] S JUMP L0968
+[094f] S LABEL: 0
+[094f] L CALL L03d8
+[0952] L CALL L012f
+[0955] S SEMANTIC: 3
+[0957] S CHOICE: 1
+           0 L095e
+[095c] S JUMP L0961
+[095e] S LABEL: 0
+[095e] L JUMP L00c4
+[0961] S LABEL: 0
+[0961] S SET PARM: 0
+[0963] S SEMANTIC: 64
+[0965] L JUMP L00c4
+[0968] S LABEL: 0
+[0968] L CALL L012f
+[096b] L CALL L06e7
+[096e] S SEMANTIC: 3
+[0970] S CHOICE: 1
+           0 L0978
+[0975] L JUMP L00c4
+[0978] S LABEL: 0
+[0978] S SEMANTIC: 45
+[097a] L JUMP L00c4
+[097d] S LABEL: 0
+[097d] S SEMANTIC: 66
+[097f] S CHOICE: 1
+           0 L0986
+[0984] S JUMP L09a9
+[0986] S LABEL: 0
+[0986] L CALL L026c
+[0989] S CHOICE: 1
+           0 L0990
+[098e] S JUMP L0995
+[0990] S LABEL: 0
+[0990] S ERROR: 3
+[0992] L JUMP L00c4
+[0995] S LABEL: 0
+[0995] S INPUT: 51
+[0997] L CALL L06e7
+[099a] S SEMANTIC: 3
+[099c] S CHOICE: 1
+           0 L09a4
+[09a1] L JUMP L00c4
+[09a4] S LABEL: 0
+[09a4] S SEMANTIC: 58
+[09a6] L JUMP L00c4
+[09a9] S LABEL: 0
+[09a9] S INPUT: 51
+[09ab] L JUMP L00c4
+[09ae] S LABEL: 0
+[09ae] L CALL L0103
+[09b1] L JUMP L00c4
+
+
+ #### DECLS ####
+
+TYPE:   version_info
+ENUM:   [ 256] version_dip >> version_info
+ENUM:   [ 256] version_curr >> version_info
+TYPE:   int
+ENUM:   [65534] -2 >> int
+ENUM:   [65535] -1 >> int
+ENUM:   [   0] 0 >> int
+ENUM:   [   1] 1 >> int
+ENUM:   [   2] 2 >> int
+ENUM:   [   3] 3 >> int
+TYPE:   bool
+ENUM:   [   0] false >> bool
+ENUM:   [   1] true >> bool
+TYPE:   type_info
+ENUM:   [   0] TK_NONE >> type_info
+ENUM:   [4096] TK_DATA >> type_info
+ENUM:   [8192] TK_CODE >> type_info
+ENUM:   [12288] TK_ADDRESS >> type_info
+ENUM:   [16384] TK_VOID >> type_info
+ENUM:   [20480] TK_BOOL >> type_info
+ENUM:   [24576] TK_ENUM >> type_info
+ENUM:   [28672] TK_CHAR >> type_info
+ENUM:   [32768] TK_INTEGER >> type_info
+ENUM:   [36864] TK_REAL >> type_info
+ENUM:   [40960] TK_COMPLEX >> type_info
+ENUM:   [45056] TK_STRING >> type_info
+ENUM:   [49152] TK_POINTER >> type_info
+ENUM:   [53248] TK_STRUCT >> type_info
+ENUM:   [57344] TK_ARRAY >> type_info
+ENUM:   [61440] TK_FUNCTION >> type_info
+ENUM:   [   0] TM_NONE >> type_info
+ENUM:   [ 256] TM_NEAR >> type_info
+ENUM:   [ 512] TM_FAR >> type_info
+ENUM:   [ 768] TM_HUGE >> type_info
+ENUM:   [ 256] TM_SIGNED >> type_info
+ENUM:   [ 512] TM_UNSIGNED >> type_info
+ENUM:   [ 256] TM_IEEE >> type_info
+ENUM:   [ 512] TM_VAX1 >> type_info
+ENUM:   [ 768] TM_VAX2 >> type_info
+ENUM:   [ 256] TM_ASCII >> type_info
+ENUM:   [ 512] TM_EBCIDIC >> type_info
+ENUM:   [ 768] TM_UNICODE >> type_info
+ENUM:   [20993] TI_bool_unsigned_1 >> type_info
+ENUM:   [29186] TI_char_unsigned_2 >> type_info
+ENUM:   [33280] TI_integer_unsigned_0 >> type_info
+ENUM:   [33281] TI_integer_unsigned_1 >> type_info
+ENUM:   [33282] TI_integer_unsigned_2 >> type_info
+ENUM:   [33284] TI_integer_unsigned_4 >> type_info
+ENUM:   [33288] TI_integer_unsigned_8 >> type_info
+ENUM:   [33024] TI_integer_signed_0 >> type_info
+ENUM:   [33025] TI_integer_signed_1 >> type_info
+ENUM:   [33026] TI_integer_signed_2 >> type_info
+ENUM:   [33028] TI_integer_signed_4 >> type_info
+ENUM:   [33032] TI_integer_signed_8 >> type_info
+ENUM:   [36868] TI_real_4 >> type_info
+ENUM:   [36872] TI_real_8 >> type_info
+ENUM:   [40968] TI_complex_8 >> type_info
+ENUM:   [40976] TI_complex_16 >> type_info
+ENUM:   [12288] TI_address_0 >> type_info
+ENUM:   [16384] TI_void >> type_info
+TYPE:   symbol_type
+ENUM:   [   0] ST_NONE >> symbol_type
+ENUM:   [   1] ST_OPERATOR >> symbol_type
+ENUM:   [   2] ST_DESTRUCTOR >> symbol_type
+ENUM:   [   3] ST_TYPE >> symbol_type
+ENUM:   [   4] ST_STRUCT_TAG >> symbol_type
+ENUM:   [   5] ST_CLASS_TAG >> symbol_type
+ENUM:   [   6] ST_UNION_TAG >> symbol_type
+ENUM:   [   7] ST_ENUM_TAG >> symbol_type
+ENUM:   [   8] ST_NAMESPACE >> symbol_type
+TYPE:   symbol_kind
+ENUM:   [   0] SK_NONE >> symbol_kind
+ENUM:   [   1] SK_CODE >> symbol_kind
+ENUM:   [   2] SK_DATA >> symbol_kind
+ENUM:   [   3] SK_CONST >> symbol_kind
+ENUM:   [   4] SK_TYPE >> symbol_kind
+ENUM:   [   5] SK_PROCEDURE >> symbol_kind
+ENUM:   [   6] SK_NAMESPACE >> symbol_kind
+TYPE:   stack_form
+ENUM:   [   0] SF_NAME >> stack_form
+ENUM:   [   1] SF_SYMBOL >> stack_form
+ENUM:   [   2] SF_LVALUE >> stack_form
+ENUM:   [   3] SF_RVALUE >> stack_form
+TYPE:   type_classes
+ENUM:   [   0] class_near >> type_classes
+ENUM:   [   1] class_far >> type_classes
+TYPE:   stack_class
+ENUM:   [   0] stk_void >> stack_class
+ENUM:   [   1] stk_bool >> stack_class
+ENUM:   [   2] stk_enum >> stack_class
+ENUM:   [   3] stk_char >> stack_class
+ENUM:   [   4] stk_int >> stack_class
+ENUM:   [   5] stk_near_ptr >> stack_class
+ENUM:   [   6] stk_far_ptr >> stack_class
+ENUM:   [   7] stk_addr >> stack_class
+ENUM:   [   8] stk_real >> stack_class
+ENUM:   [   9] stk_struct >> stack_class
+ENUM:   [  10] stk_array >> stack_class
+ENUM:   [  11] stk_func >> stack_class
+ENUM:   [  12] stk_type >> stack_class
+ENUM:   [  13] stk_name >> stack_class
+ENUM:   [  14] stk_reg_set >> stack_class
+ENUM:   [  15] stk_complex >> stack_class
+ENUM:   [  16] stk_string >> stack_class
+ENUM:   [ 260] stk_unsigned >> stack_class
+ENUM:   [ 772] stk_unsigned_long >> stack_class
+ENUM:   [ 518] stk_far_ptr_long >> stack_class
+ENUM:   [ 519] stk_addr_long >> stack_class
+TYPE:   type_scalar
+ENUM:   [   0] type_void >> type_scalar
+ENUM:   [   1] type_u1 >> type_scalar
+ENUM:   [   2] type_s1 >> type_scalar
+ENUM:   [   3] type_u2 >> type_scalar
+ENUM:   [   4] type_s2 >> type_scalar
+ENUM:   [   5] type_u4 >> type_scalar
+ENUM:   [   6] type_s4 >> type_scalar
+ENUM:   [   7] type_f4 >> type_scalar
+ENUM:   [   8] type_f8 >> type_scalar
+ENUM:   [   9] type_z8 >> type_scalar
+ENUM:   [  10] type_z16 >> type_scalar
+TYPE:   dbg_switch
+ENUM:   [   1] sw_case_sensitive >> dbg_switch
+ENUM:   [   2] sw_side_effect >> dbg_switch
+ENUM:   [   4] sw_32_bit >> dbg_switch
+SEM:    [   0] ExprDepthAdj( int ) >> int
+SEM:    [   1] ExprIsCall >> bool
+SEM:    [   2] SkipCountAdd( int )
+SEM:    [   3] SkipCount >> int
+SEM:    [   4] __spare_entry__
+SEM:    [   5] ScanSave
+SEM:    [   6] ScanRestore
+SEM:    [   7] ScanPop
+SEM:    [   8] ScanString( bool )
+SEM:    [   9] MoveScanPtr( int )
+SEM:    [  10] AddChar
+SEM:    [  11] AddCEscapeChar
+SEM:    [  12] AddCCharZero
+SEM:    [  13] ScanCCharNum( bool )
+SEM:    [  14] NextNestedCall
+SEM:    [  15] UseSubstringIndex1
+SEM:    [  16] UseSubstringIndex2
+SEM:    [  17] SetEvalSubstring( bool )
+SEM:    [  18] EvalSubstring >> bool
+SEM:    [  19] PurgePgmStack
+SEM:    [  20] SwitchOn( dbg_switch )
+SEM:    [  21] SwitchOff( dbg_switch )
+SEM:    [  22] SwitchChk( dbg_switch ) >> bool
+SEM:    [  23] MarkArrayOrder( bool )
+SEM:    [  24] StartSubscript
+SEM:    [  25] AddSubscriptIndex
+SEM:    [  26] EndSubscript
+SEM:    [  32] DoAssign
+SEM:    [  33] DoMul
+SEM:    [  34] DoDiv
+SEM:    [  35] DoMod
+SEM:    [  36] DoMinus
+SEM:    [  37] DoShift
+SEM:    [  38] DoAnd
+SEM:    [  39] DoXor
+SEM:    [  40] DoOr
+SEM:    [  41] DoAddr
+SEM:    [  42] DoPoints( stack_class )
+SEM:    [  43] DoField
+SEM:    [  44] DoCall( bool )
+SEM:    [  45] DoConvert
+SEM:    [  46] DoPlus
+SEM:    [  47] DoMakeAddr
+SEM:    [  48] DoTstEQ( int ) >> bool
+SEM:    [  49] DoTstLT( int ) >> bool
+SEM:    [  50] DoTstTrue( int ) >> bool
+SEM:    [  51] DoTstExist( int ) >> bool
+SEM:    [  52] DoSizeType
+SEM:    [  53] DoBaseType
+SEM:    [  54] DoPointType( type_classes )
+SEM:    [  55] DoLkupType >> bool
+SEM:    [  56] DoMakeComplex
+SEM:    [  57] DoStringConcat
+SEM:    [  58] DoLConvert
+SEM:    [  59] DoPlusScaled
+SEM:    [  60] DoMinusScaled
+SEM:    [  61] DoPoints2( type_info )
+SEM:    [  62] DoPointType2( type_info )
+SEM:    [  63] DoScope( bool )
+SEM:    [  64] PushInt( int )
+SEM:    [  65] PushDot
+SEM:    [  66] PushRegSet >> bool
+SEM:    [  67] PushNum >> bool
+SEM:    [  68] PushScalarType( type_scalar )
+SEM:    [  69] PushDup
+SEM:    [  70] PopEntry
+SEM:    [  71] PushString
+SEM:    [  72] SSLVersion( version_info ) >> bool
+SEM:    [  73] PushType( type_info )
+SEM:    [  96] StackSwap( int )
+SEM:    [  97] StackMoveSP( int )
+SEM:    [  98] StackClass( int ) >> stack_class
+SEM:    [  99] StackValue( int )
+SEM:    [ 100] StackLValue( int )
+SEM:    [ 101] StackRValue( int )
+SEM:    [ 102] StackLRValue( int )
+SEM:    [ 103] StackKind( int ) >> type_info
+SEM:    [ 104] StackSymKind( int ) >> symbol_kind
+SEM:    [ 105] StackSymValue( int ) >> bool
+SEM:    [ 106] StackForm( int ) >> stack_form
+SEM:    [ 128] NumSet( int )
+SEM:    [ 129] NumAdd( int )
+SEM:    [ 130] NumPush
+SEM:    [ 131] NumPop
+TYPE:   bits_type
+ENUM:   [   0] bits_none >> bits_type
+ENUM:   [   1] bits_char >> bits_type
+ENUM:   [   2] bits_int >> bits_type
+ENUM:   [   4] bits_short >> bits_type
+ENUM:   [   8] bits_long >> bits_type
+ENUM:   [  16] bits_signed >> bits_type
+ENUM:   [  32] bits_unsigned >> bits_type
+ENUM:   [  64] bits_float >> bits_type
+ENUM:   [ 128] bits_double >> bits_type
+ENUM:   [ 256] bits_void >> bits_type
+ENUM:   [ 512] bits_byte >> bits_type
+ENUM:   [1024] bits_boolean >> bits_type
+ENUM:   [  17] bits_signed_char >> bits_type
+ENUM:   [  33] bits_unsigned_char >> bits_type
+ENUM:   [  18] bits_signed_int >> bits_type
+ENUM:   [  34] bits_unsigned_int >> bits_type
+ENUM:   [  20] bits_signed_short >> bits_type
+ENUM:   [  36] bits_unsigned_short >> bits_type
+ENUM:   [   6] bits_short_int >> bits_type
+ENUM:   [  22] bits_signed_short_int >> bits_type
+ENUM:   [  38] bits_unsigned_short_int >> bits_type
+ENUM:   [  24] bits_signed_long >> bits_type
+ENUM:   [  40] bits_unsigned_long >> bits_type
+ENUM:   [  10] bits_long_int >> bits_type
+ENUM:   [  26] bits_signed_long_int >> bits_type
+ENUM:   [  42] bits_unsigned_long_int >> bits_type
+ENUM:   [  72] bits_long_float >> bits_type
+ENUM:   [ 136] bits_long_double >> bits_type
+SEM:    [ 160] BitsSet( bits_type )
+SEM:    [ 161] BitsGet >> bits_type
+SEM:    [ 162] BitsOr( bits_type ) >> bool
+SEM:    [ 163] BitsAnd( bits_type ) >> bool
+SEM:    [ 192] GetInit
+SEM:    [ 193] GetFini
+SEM:    [ 194] GetModCurr
+SEM:    [ 195] GetModNameLkup
+SEM:    [ 196] GetScopeSetFile
+SEM:    [ 197] GetScopeSetCurr
+SEM:    [ 198] GetScopeLkup
+SEM:    [ 199] GetName >> bool
+SEM:    [ 200] GetOperatorName
+SEM:    [ 201] GetLineNum >> bool
+SEM:    [ 202] GetDtorName >> bool
+SEM:    [ 203] GetSetNameType( symbol_type )
+SEM:    [ 204] GetQueryName >> bool
+SEM:    [ 205] GetAddScope
+ERROR:  [   0] err_duplicate_type_spec
+ERROR:  [   1] err_ill_type
+ERROR:  [   2] err_illegal_type_spec
+ERROR:  [   3] err_loc_and_want_reg_name
+ERROR:  [   4] err_loc_and_want_operand
+ERROR:  [   5] err_loc_and_want_name
+ERROR:  [   6] err_bad_version
+INPUT:  [  32] ET_GETS              '='
+INPUT:  [  33] ET_LT                '<'
+INPUT:  [  34] ET_GT                '>'
+INPUT:  [  35] ET_PLUS              '+'
+INPUT:  [  36] ET_MINUS             '-'
+INPUT:  [  37] ET_OR                '|'
+INPUT:  [  38] ET_MUL               '*'
+INPUT:  [  39] ET_DIV               '/'
+INPUT:  [  40] ET_AND               '&'
+INPUT:  [  41] ET_NOT               '~'
+INPUT:  [  42] ET_MOD               '%'
+INPUT:  [  43] ET_DOT               '.'
+INPUT:  [  44] ET_COLON             ':'
+INPUT:  [  45] ET_LEFT_PAREN        '('
+INPUT:  [  46] ET_RIGHT_PAREN       ')'
+INPUT:  [  47] ET_COMMA             ','
+INPUT:  [  48] ET_EXCLAMATION       '!'
+INPUT:  [  49] ET_XOR               '^'
+INPUT:  [  50] ET_LEFT_BRACKET      '['
+INPUT:  [  51] ET_RIGHT_BRACKET     ']'
+INPUT:  [  52] ET_MODULE_SPEC       '@'
+INPUT:  [  53] ET_VAR_EXIST         '?'
+INPUT:  [  54] ET_STRING_QUOTE      '"'
+INPUT:  [  55] ET_EQ                '=='
+INPUT:  [  56] ET_NE                '!='
+INPUT:  [  57] ET_LE                '<='
+INPUT:  [  58] ET_GE                '>='
+INPUT:  [  59] ET_PLUS_PLUS         '++'
+INPUT:  [  60] ET_MINUS_MINUS       '--'
+INPUT:  [  61] ET_AND_AND           '&&'
+INPUT:  [  62] ET_OR_OR             '||'
+INPUT:  [  63] ET_MUL_GETS          '*='
+INPUT:  [  64] ET_DIV_GETS          '/='
+INPUT:  [  65] ET_MOD_GETS          '%='
+INPUT:  [  66] ET_PLUS_GETS         '+='
+INPUT:  [  67] ET_MINUS_GETS        '-='
+INPUT:  [  68] ET_AND_GETS          '&='
+INPUT:  [  69] ET_XOR_GETS          '^='
+INPUT:  [  70] ET_OR_GETS           '|='
+INPUT:  [  71] ET_LSHIFT            '<<'
+INPUT:  [  72] ET_RSHIFT            '>>'
+INPUT:  [  73] ET_RIGHT_ARROW       '->'
+INPUT:  [  74] ET_LSHFT_GETS        '<<='
+INPUT:  [  75] ET_RSHFT_GETS        '>>='
+INPUT:  [  76] ET_CHAR              'char'
+INPUT:  [  77] ET_DOUBLE            'double'
+INPUT:  [  78] ET_FLOAT             'float'
+INPUT:  [  79] ET_INT               'int'
+INPUT:  [  80] ET_LONG              'long'
+INPUT:  [  81] ET_SHORT             'short'
+INPUT:  [  82] ET_SIZEOF            'sizeof'
+INPUT:  [  83] ET_VOID              'void'
+INPUT:  [  84] ET_BYTE              'byte'
+INPUT:  [  85] ET_BOOLEAN           'boolean'
+INPUT:  [ 128] ET_NL                '\n'
+INPUT:  [ 129] ET_HT                '\t'
+INPUT:  [ 130] ET_VT                '\v'
+INPUT:  [ 131] ET_BS                '\b'
+INPUT:  [ 132] ET_CR                '\r'
+INPUT:  [ 133] ET_FF                '\f'
+INPUT:  [ 134] ET_BEL               '\a'
+INPUT:  [ 135] ET_BACKSLASH         '\\'
+INPUT:  [ 136] ET_QUESTION_MARK     '\?'
+INPUT:  [ 137] ET_SINGLE_QUOTE      '\''
+INPUT:  [ 138] ET_DOUBLE_QUOTE      '\"'
+INPUT:  [ 139] ET_ZERO              '\0'
+INPUT:  [4096] TSTR_PAREN           '9(x)'
+INPUT:  [4097] TSTR_POINTER_IND     '1*x'
+INPUT:  [4098] TSTR_FIELD_SELECT    '2x.y'
+INPUT:  [4099] TSTR_POINTER_FIELD   '2x->y'
+INPUT:  [4100] TSTR_ARRAY           '2x[y]'
+INPUT:  [4101] TSTR_SELF            '0x'
+INPUT:  [4102] TSTR_NULL            '0NULL'
+RULE:  [L0000] expr
+RULE:  [L03d8] assignment
+RULE:  [L0025] parse_qualified_name >> bool
+RULE:  [L0034] parse_string
+RULE:  [L009d] push_name >> bool
+RULE:  [L00b0] name_or_op_or_lnum
+RULE:  [L00c4] skip_pop >> bool
+RULE:  [L00d5] push_symbol >> bool
+RULE:  [L0103] push_token
+RULE:  [L0124] negate
+RULE:  [L012f] req_right_paren
+RULE:  [L013e] perform_add
+RULE:  [L0180] scale_int
+RULE:  [L0192] perform_minus
+RULE:  [L021b] do_points_unsigned
+RULE:  [L0244] do_points_addr
+RULE:  [L0000] do_point_type_default
+RULE:  [L0000] do_point_type_near
+RULE:  [L0000] do_point_type_far
+RULE:  [L026c] parsetypename >> bool
+RULE:  [L0369] push_scalar_type
+RULE:  [L0000] nest_expr
+RULE:  [L03cc] nest_callexpr
+RULE:  [L0000] conditional
+RULE:  [L04d7] check_dup
+RULE:  [L04e6] logical_or
+RULE:  [L052c] logical_and
+RULE:  [L0517] skip_ors
+RULE:  [L0574] inclusive_or
+RULE:  [L055f] skip_ands
+RULE:  [L058b] exclusive_or
+RULE:  [L05a2] and
+RULE:  [L05b9] equality
+RULE:  [L05ec] relational
+RULE:  [L0655] shift
+RULE:  [L0681] additive
+RULE:  [L06ac] multiplicative
+RULE:  [L0000] cast
+RULE:  [L06e7] unary
+RULE:  [L07d7] postfix
+RULE:  [L0917] segmented
+RULE:  [L08ea] field_name
+RULE:  [L093b] primary

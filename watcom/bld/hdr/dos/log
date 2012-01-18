@@ -1,0 +1,66 @@
+File ERRNO.H:
+ *  errno.h/cerrno     Error numbers
+ #ifndef errno
+  _WCRTLINK extern int *__get_errno_ptr( void );
+  #define errno (*__get_errno_ptr())
+  _WCRTDATA extern int errno;
+ typedef int errno_t;
+File STDIO.H:
+ typedef int errno_t;
+_WCRTLINK extern errno_t  fopen_s( FILE * __restrict * __restrict __streamptr,
+_WCRTLINK extern errno_t  freopen_s( FILE * __restrict * __restrict __newstreamptr,
+_WCRTLINK extern errno_t  tmpfile_s( FILE * __restrict * __restrict __streamptr);
+_WCRTLINK extern errno_t  tmpnam_s( char *__s, rsize_t __maxsize );
+_WCRTLINK extern errno_t _wfopen_s( FILE * __restrict * __restrict __streamptr,
+_WCRTLINK extern errno_t _wfreopen_s( FILE * __restrict * __restrict __newstreamptr,
+_WCRTLINK extern errno_t _wtmpnam_s( wchar_t *__s, rsize_t __maxsize );
+File STDLIB.H:
+ typedef int errno_t;
+typedef void (*constraint_handler_t)( const char * __restrict __msg, void * __restrict __ptr, errno_t __error );
+_WCRTLINK extern void abort_handler_s( const char * __restrict __msg, void * __restrict __ptr, errno_t __error );
+_WCRTLINK extern void ignore_handler_s( const char * __restrict __msg, void * __restrict __ptr, errno_t __error );
+_WCRTLINK extern errno_t getenv_s( size_t * __restrict __len, char * __restrict __value, rsize_t __maxsize, const char * __restrict __name );
+_WCRTLINK extern errno_t qsort_s( void *__base, rsize_t __nmemb, rsize_t __size,
+_WCRTLINK extern errno_t wctomb_s( int * __restrict __status, char * __restrict __s, rsize_t __smax, wchar_t __wc );
+_WCRTLINK extern errno_t mbstowcs_s( size_t * __restrict __retval, wchar_t * __restrict __dst, rsize_t __dstmax, const char * __restrict __src, rsize_t __len );
+_WCRTLINK extern errno_t wcstombs_s( size_t * __restrict __retval, char * __restrict __dst, rsize_t __dstmax, const wchar_t * __restrict __src, rsize_t __len );
+ #ifndef errno
+  _WCRTLINK extern int *__get_errno_ptr( void );
+  #define errno (*__get_errno_ptr())
+  _WCRTDATA extern int errno;
+_WCRTLINK extern int    *__get_doserrno_ptr( void );
+#define _doserrno       (*__get_doserrno_ptr())     /* DOS system error code value */
+File STRING.H:
+ typedef int errno_t;
+_WCRTLINK extern errno_t memcpy_s( void * __restrict __s1, rsize_t __s1max, const void * __restrict __s2, rsize_t __n );
+_WCRTLINK extern errno_t memmove_s( void *__s1, rsize_t __s1max, const void *__s2, rsize_t __n );
+_WCRTLINK extern errno_t strcpy_s( char * __restrict __s1, rsize_t __s1max, const char * __restrict __s2 );
+_WCRTLINK extern errno_t strncpy_s( char * __restrict s1, rsize_t __s1max, const char * __restrict __s2, rsize_t __n );
+_WCRTLINK extern errno_t strcat_s( char * __restrict __s1, rsize_t __s1max, const char * __restrict __s2 );
+_WCRTLINK extern errno_t strncat_s( char * __restrict __s1, rsize_t __s1max, const char * __restrict __s2, rsize_t __n );
+_WCRTLINK extern errno_t strerror_s( char *__s, rsize_t __maxsize, errno_t __errnum );
+_WCRTLINK extern size_t  strerrorlen_s( errno_t __errnum );
+File TIME.H:
+ typedef int errno_t;
+_WCRTLINK extern errno_t      asctime_s( char *__s, rsize_t __maxsize, const struct tm *__timeptr );
+_WCRTLINK extern errno_t      ctime_s( char *__s, rsize_t __maxsize, const time_t *__timer );
+_WCRTLINK extern errno_t      _wasctime_s( wchar_t *__s, rsize_t __maxsize, const struct tm *__timeptr );
+_WCRTLINK extern errno_t      _wctime_s( wchar_t *__s, rsize_t __maxsize, const time_t *__timer );
+File WCHAR.H:
+ typedef int errno_t;
+_WCRTLINK extern errno_t wcscpy_s( wchar_t * __restrict __s1, rsize_t __s1max, const wchar_t * __restrict __s2 );
+_WCRTLINK extern errno_t wcsncpy_s( wchar_t * __restrict __s1, rsize_t __s1max, const wchar_t * __restrict __s2, rsize_t __n );
+_WCRTLINK extern errno_t wmemcpy_s( wchar_t * __restrict __s1, rsize_t __s1max, const wchar_t * __restrict __s2, rsize_t __n );
+_WCRTLINK extern errno_t wmemmove_s( wchar_t *__s1, rsize_t __s1max, const wchar_t *__s2, rsize_t __n );
+_WCRTLINK extern errno_t wcscat_s( wchar_t * __restrict __s1, rsize_t __s1max, const wchar_t * __restrict __s2 );
+_WCRTLINK extern errno_t wcsncat_s( wchar_t * __restrict __s1, rsize_t __s1max, const wchar_t * __restrict __s2, rsize_t __n );
+_WCRTLINK extern size_t  wcserrorlen_s( errno_t __errnum );
+_WCRTLINK extern errno_t wcserror_s( wchar_t * __restrict __s, rsize_t __maxsize, errno_t __errnum );
+_WCRTLINK extern errno_t _wasctime_s( wchar_t * __restrict __s, rsize_t __maxsize, const struct tm * __timeptr );
+_WCRTLINK extern errno_t _wctime_s( wchar_t * __restrict s, rsize_t __maxsize, const time_t * __timer );
+_WCRTLINK extern errno_t mbsrtowcs_s( size_t * __restrict __retval, wchar_t * __restrict __dst, rsize_t __dstmax, const char * * __restrict __src, rsize_t __len, mbstate_t * __restrict __ps );
+_WCRTLINK extern errno_t wcrtomb_s( size_t * __restrict __retval, char * __restrict __s,  rsize_t __smax, wchar_t __wc, mbstate_t * __restrict __ps );
+_WCRTLINK extern errno_t wcsrtombs_s( size_t * __restrict __retval, char * __restrict __dst, rsize_t __dstmax, const wchar_t ** __restrict __src, rsize_t __len, mbstate_t * __restrict __ps );
+_WCRTLINK extern errno_t _fmbsrtowcs_s( size_t _WCFAR * __restrict __retval, wchar_t _WCFAR * __restrict __dst, rsize_t __dstmax, const char _WCFAR * _WCFAR * __restrict __src, rsize_t __len, mbstate_t _WCFAR * __restrict __ps );
+_WCRTLINK extern errno_t _fwcrtomb_s( size_t _WCFAR * __restrict __retval, char _WCFAR * __restrict __s, rsize_t __smax, wchar_t __wc, mbstate_t _WCFAR * __restrict __ps );
+_WCRTLINK extern errno_t _fwcsrtombs_s( size_t _WCFAR * __restrict __retval, char _WCFAR * __restrict __dst, rsize_t __dstmax, const wchar_t _WCFAR * _WCFAR * __restrict __src, rsize_t __len, mbstate_t _WCFAR * __restrict __ps );

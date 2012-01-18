@@ -1,0 +1,18 @@
+File DBGMISC.C:
+void MakeThdCurr( thread_state *thd )
+void MakeRunThdCurr( thread_state *thd )
+        MakeThdCurr( thd );
+bool IsThdCurr( thread_state *thd )
+    if( IsThdCurr( thd ) ) {
+File DBGWRTRD.C:
+extern bool             IsThdCurr( thread_state *thd );
+extern void             MakeRunThdCurr( thread_state * );
+        MakeRunThdCurr( thd );
+        if( IsThdCurr( thd ) ) {
+            if( IsThdCurr( thd ) ) {
+File DBGWTHRD.C:
+extern bool             IsThdCurr( thread_state *thd );
+extern void             MakeThdCurr( thread_state * );
+            MakeThdCurr( thd );
+        if( IsThdCurr( thd ) ) {
+            if( IsThdCurr( thd ) ) {

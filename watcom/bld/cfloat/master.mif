@@ -1,0 +1,24 @@
+proj_name       = cf
+cf_autodepends = .autodepend
+
+inc_dirs        = -I"../h"
+
+!include cproj.mif
+!include deftarg.mif
+!include defrule.mif
+
+.c: $(cfloat_dir)/c
+
+cf_objs = &
+    cfconv.obj &
+    cfdiv.obj &
+    cfinvers.obj &
+    cfmath.obj &
+    cfmem.obj &
+    cfmul.obj &
+    cftof.obj &
+    cfutil.obj &
+    u32moddi.obj
+
+cf.lib : $(cf_objs) $(__MAKEFILES__)
+        $(librarian) $(libflags) $(cf_objs)

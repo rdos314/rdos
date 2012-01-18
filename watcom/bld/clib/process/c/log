@@ -1,0 +1,55 @@
+File EXADDOS2.C:
+execveaddr_type __execaddr( void )
+    return( execve );
+File EXADDRDU.C:
+execveaddr_type __execaddr( void )
+    return( execve );
+File EXADDWNT.C:
+execveaddr_type __execaddr( void )
+    return( execve );
+File EXECADDR.C:
+execveaddr_type  __Exec_addr = 0;
+execveaddr_type __execaddr( void )
+File EXL.C:
+                return( _wexecve( path, (const CHAR_TYPE**)ap.__base,
+                return( execve( path, (const CHAR_TYPE**)ap.__base,
+                return( _wexecve( path, (const CHAR_TYPE**)ap[0],
+                return( execve( path, (const CHAR_TYPE**)ap[0],
+File EXLE.C:
+            return( __F_NAME(execve,_wexecve)( path,
+            return( __F_NAME(execve,_wexecve)( path,
+File EXV.C:
+            return( _wexecve( path, argv, (const CHAR_TYPE **)_RWD_wenviron ) );
+            return( execve( path, argv, (const CHAR_TYPE **)_RWD_environ ) );
+File EXVE.C:
+* Description:  DOS implementation of execve().
+_WCRTLINK int execve( path, argv, envp )
+void __init_execve( void )              /* called from initializer segment */
+    __Exec_addr = execve;
+File EXVEOS2.C:
+_WCRTLINK int execve( const char *path, const char *const argv[],
+File EXVEQNX.C:
+_WCRTLINK int (execve)( path, argv, envp )
+File EXVERDU.C:
+* Description:  Implementation of execve() for RDOS.
+_WCRTLINK int execve( const CHAR_TYPE *path, const CHAR_TYPE * const argv[], const CHAR_TYPE * const envp[] )
+File EXVEWNT.C:
+_WCRTLINK int __F_NAME(execve,_wexecve)( const CHAR_TYPE *path, const CHAR_TYPE * const argv[], const CHAR_TYPE * const envp[] )
+File EXVPE.C:
+    retval = __F_NAME(execve,_wexecve)( file, argv, envp );
+        retval = __F_NAME(execve,_wexecve)( buffer, argv, envp );
+File SPVE.C:
+        rc = __F_NAME(execve,_wexecve)(path, argv, envp);
+        rc = execve(path, argv, envp);
+        execveaddr_type    execve;
+        execve = __execaddr();
+        if( execve != NULL ) {
+            rc = (*execve)( path, argv, envp );
+File SPVELNX.C:
+        return( execve( path, argv, envp ) );
+        execve( path, argv, envp );
+File SPVERDU.C:
+        rc = __F_NAME(execve,_wexecve)(path, argv, envp);
+File UEXVE.C:
+_WCRTLINK int _wexecve( const wchar_t *path, const wchar_t *const argv[],
+    rc = execve( mbPath, (const char **)mbArgv, (const char **)mbEnvp );
