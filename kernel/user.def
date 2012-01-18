@@ -33,7 +33,6 @@ wait_until_nr				= 27
 create_thread_nr			= 28
 terminate_thread_nr			= 29
 get_thread_nr				= 30
-swap_nr						= 31
 
 create_user_section_nr		= 32
 create_blocked_user_section_nr = 33

@@ -931,12 +931,6 @@ timer_free_list_create:
     mov ax,get_cpu_time_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET swap_out
-    mov di,OFFSET swap_name
-    xor dx,dx
-    mov ax,swap_nr
-    RegisterBimodalUserGate
-;
     mov si,OFFSET wait_milli_sec
     mov di,OFFSET wait_milli_name
     xor dx,dx
@@ -7047,33 +7041,6 @@ wake_new_done:
     popf
     ret
 wake_new    ENDP
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           SWAP
-;
-;           DESCRIPTION:    Voluntarily swap. Should not be used!
-;
-;           PARAMETER:
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-swap_name       DB 'Swap',0
-
-swap_out    PROC far
-    pushf
-    push OFFSET swap_out_done
-    call SaveCurrentThread
-    lock or fs:ps_flags,PS_FLAG_PREEMPT
-    jmp ContinueCurrentThread
-
-swap_out_done:
-    popf
-    retf32
-swap_out    ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
