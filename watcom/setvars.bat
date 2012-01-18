@@ -18,11 +18,11 @@ REM Set this variable to 1 to get default windowing support in clib
 set DEFAULT_WINDOWING=0
 
 REM Set this variable to 0 to suppress documentation build
-set DOC_BUILD=0
+set DOC_BUILD=1
 
 REM Documentation related variables
 REM set appropriate variables to blank for help compilers which you haven't installed
-set WIN95HC=hcrtf
+set WIN95HC=\hcrtf\hcrtf
 set OS2HC=ipfc
 
 REM Subdirectory to be used for bootstrapping
