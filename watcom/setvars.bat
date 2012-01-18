@@ -6,7 +6,7 @@ REM NOTE: Do not use this batch file directly, but copy it and
 REM       modify it as necessary for your own use!!
 
 REM Change this to point to your Open Watcom source tree - must be an 8.3 name!
-set OWROOT=\rdos\watcom\bld
+set OWROOT=\rdos\watcom
 
 REM Change this to point to your existing Open Watcom installation
 set WATCOM=c:\ow\openwatcom\rel2
