@@ -9,7 +9,7 @@ REM Change this to point to your Open Watcom source tree - must be an 8.3 name!
 set OWROOT=\rdos\watcom
 
 REM Change this to point to your existing Open Watcom installation
-set WATCOM=c:\ow\openwatcom\rel2
+set WATCOM=c:\rdos\watcom\rel2
 
 REM Set this variable to 1 to get debug build
 set DEBUG_BUILD=0
