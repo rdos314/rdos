@@ -1,0 +1,655 @@
+:LAYOUT
+:PAGE
+        top_margin = 0
+        left_margin = 0
+        right_margin = '200i'
+        depth = 200
+:DEFAULT
+        spacing = 1
+        columns = 1
+        font = 0
+        justify = no
+        input_esc = '\'
+        gutter = '0.5i'
+        binding = 0
+:WIDOW
+        threshold = 2
+:FN
+        line_indent = 0
+        align = '0.3i'
+        pre_lines = 2
+        skip = 0
+        spacing = 1
+        font = 1
+        number_font = 0
+        number_style = h
+        frame = rule
+:FNREF
+        font = 0
+        number_style = hp
+:P
+        line_indent = 0
+        pre_skip = 0
+        post_skip = 1
+:PC
+        line_indent = 0
+        pre_skip = 0
+        post_skip = 1
+:FIG
+        left_adjust = 0
+        right_adjust = 0
+        pre_skip = 0
+        post_skip = 1
+        spacing = 1
+        font = 4
+        default_place = inline
+        default_frame = none
+:XMP
+        left_indent = '0.5i'
+        right_indent = 0
+        pre_skip = 0
+        post_skip = 1
+        spacing = 1
+        font = 4
+:NOTE
+        left_indent = 0
+        right_indent = 0
+        pre_skip = 1
+        post_skip = 1
+        font = 2
+        spacing = 1
+        note_string = "NOTE: "
+:H0
+        group = 0
+        indent = 0
+        pre_top_skip = 0
+        pre_skip = 0
+        post_skip = 0
+        spacing = 1
+        font = 3
+        number_font = 3
+        number_form = none
+        page_position = left
+        number_style = h
+        page_eject = no
+        line_break = yes
+        display_heading = no
+        number_reset = no
+        case = mixed
+        align = 0
+:H1
+        group = 0
+        indent = 0
+        pre_top_skip = 0
+        pre_skip = 0
+        post_skip = 0
+        spacing = 1
+        font = 3
+        number_font = 3
+        number_form = none
+        page_position = left
+        number_style = h
+        page_eject = yes
+        line_break = yes
+        display_heading = no
+        number_reset = no
+        case = mixed
+        align = 0
+:H2
+        group = 0
+        indent = 0
+        pre_top_skip = 0
+        pre_skip = 0
+        post_skip = 0
+        spacing = 1
+        font = 3
+        number_font = 3
+        number_form = none
+        page_position = left
+        number_style = h
+        page_eject = yes
+        line_break = yes
+        display_heading = no
+        number_reset = no
+        case = mixed
+        align = 0
+:H3
+        group = 0
+        indent = 0
+        pre_top_skip = 0
+        pre_skip = 0
+        post_skip = 0
+        spacing = 1
+        font = 3
+        number_font = 3
+        number_form = none
+        page_position = left
+        number_style = h
+        page_eject = yes
+        line_break = yes
+        display_heading = no
+        number_reset = no
+        case = mixed
+        align = 0
+:H4
+        group = 0
+        indent = 0
+        pre_top_skip = 0
+        pre_skip = 0
+        post_skip = 0
+        spacing = 1
+        font = 2
+        number_font = 3
+        number_form = none
+        page_position = left
+        number_style = h
+        page_eject = yes
+        line_break = yes
+        display_heading = no
+        number_reset = no
+        case = mixed
+        align = 0
+:H5
+        group = 0
+        indent = 0
+        pre_top_skip = 1
+        pre_skip = 1
+        post_skip = 0
+        spacing = 1
+        font = 15
+        number_font = 0
+        number_form = none
+        page_position = left
+        number_style = h
+        page_eject = no
+        line_break = yes
+        display_heading = yes
+        number_reset = no
+        case = mixed
+        align = 0
+:H6
+        group = 0
+        indent = 0
+        pre_top_skip = 0
+        pre_skip = 0
+        post_skip = 0
+        spacing = 1
+        font = 16
+        number_font = 0
+        number_form = none
+        page_position = left
+        number_style = h
+        page_eject = no
+        line_break = yes
+        display_heading = yes
+        number_reset = no
+        case = mixed
+        align = 0
+:HEADING
+        delim = '.'
+        stop_eject = no
+        para_indent = no
+        threshold = 2
+        max_group = 10
+:LQ
+        left_indent = '0.25i'
+        right_indent = '0.25i'
+        pre_skip = 1
+        post_skip = 1
+        spacing = 1
+        font = 0
+:DT
+        font = 4
+:GT
+        font = 2
+:DTHD
+        font = 3
+:CIT
+        font = 1
+:FIGCAP
+        pre_lines = 0
+        font = 1
+        figcap_string = "Figure "
+        string_font = 3
+        delim = '.'
+:FIGDESC
+        pre_lines = 0
+        font = 1
+:DD
+        line_left = '0.5i'
+        font = 0
+:GD
+        font = 0
+:DDHD
+        font = 3
+:ABSTRACT
+        post_skip = 1
+        pre_top_skip = 1
+        font = 1
+        spacing = 1
+        header = yes
+        abstract_string = "ABSTRACT"
+        page_eject = yes
+        page_reset = yes
+        columns = 1
+:PREFACE
+        post_skip = 1
+        pre_top_skip = 1
+        font = 1
+        spacing = 1
+        header = yes
+        preface_string = "PREFACE"
+        page_eject = yes
+        page_reset = no
+        columns = 1
+:BODY
+        post_skip = 0
+        pre_top_skip = 0
+        header = no
+        body_string = ""
+        page_eject = yes
+        page_reset = yes
+        font = 1
+:BACKM
+        post_skip = 0
+        pre_top_skip = 0
+        header = no
+        backm_string = ""
+        page_eject = yes
+        page_reset = no
+        columns = 1
+        font = 1
+:LP
+        left_indent = 0
+        right_indent = 0
+        line_indent = 0
+        pre_skip = 1
+        post_skip = 1
+        spacing = 1
+:INDEX
+        post_skip = 0
+        pre_top_skip = 0
+        left_adjust = 0
+        right_adjust = 0
+        spacing = 1
+        columns = 2
+        see_string = "See "
+        see_also_string = "See also "
+        header = no
+        index_string = "Index"
+        page_eject = yes
+        page_reset = no
+        font = 1
+:IXPGNUM
+        font = 0
+:IXMAJOR
+        font = 2
+:IXHEAD
+        pre_skip = 2
+        post_skip = 2
+        font = 2
+        indent = 0
+        frame = box
+        header = yes
+:I1
+        pre_skip = 0
+        post_skip = 0
+        skip = 0
+        font = 0
+        indent = 0
+        wrap_indent = '0.4i'
+        index_delim = "  "
+        string_font = 0
+:I2
+        pre_skip = 0
+        post_skip = 0
+        skip = 0
+        font = 0
+        indent = '0.4cm'
+        wrap_indent = '0.4i'
+        index_delim = "  "
+        string_font = 0
+:I3
+        pre_skip = 0
+        post_skip = 0
+        skip = 0
+        font = 0
+        indent = '0.4cm'
+        wrap_indent = '0.4i'
+        index_delim = "  "
+:TOC
+        left_adjust = 0
+        right_adjust = 0
+        spacing = 1
+        columns = 1
+        toc_levels = 4
+        fill_string = "."
+:TOCPGNUM
+        size = '0.4i'
+        font = 0
+:TOCH0
+        group = 0
+        indent = 0
+        skip = 1
+        pre_skip = 1
+        post_skip = 1
+        font = 14
+        align = 0
+        display_in_toc = no
+:TOCH1
+        group = 0
+        indent = 2
+        skip = 1
+        pre_skip = 1
+        post_skip = 0
+        font = 15
+        align = 0
+        display_in_toc = yes
+:TOCH2
+        group = 0
+        indent = 8
+        skip = 0
+        pre_skip = 0
+        post_skip = 0
+        font = 0
+        align = 0
+        display_in_toc = yes
+:TOCH3
+        group = 0
+        indent = 8
+        skip = 0
+        pre_skip = 0
+        post_skip = 0
+        font = 0
+        align = 0
+        display_in_toc = yes
+:TOCH4
+        group = 0
+        indent = 8
+        skip = 0
+        pre_skip = 0
+        post_skip = 0
+        font = 0
+        align = 0
+        display_in_toc = no
+:TOCH5
+        group = 0
+        indent = 8
+        skip = 0
+        pre_skip = 0
+        post_skip = 0
+        font = 0
+        align = 0
+        display_in_toc = no
+:TOCH6
+        group = 0
+        indent = '0.2i'
+        skip = 0
+        pre_skip = 0
+        post_skip = 0
+        font = 0
+        align = 0
+        display_in_toc = no
+:FIGLIST
+        left_adjust = 0
+        right_adjust = 0
+        skip = 0
+        spacing = 1
+        columns = 1
+        fill_string = "."
+:FLPGNUM
+        size = '0.4i'
+        font = 0
+:TITLEP
+        spacing = 1
+        columns = 1
+:TITLE
+        left_adjust = 0
+        right_adjust = '1i'
+        page_position = right
+        font = 2
+        pre_top_skip = 15
+        skip = 2
+:DOCNUM
+        left_adjust = 0
+        right_adjust = '1i'
+        page_position = right
+        font = 0
+        pre_skip = 2
+        docnum_string = "Document Number "
+:DATE
+        date_form = "$ml $dsn, $yl"
+        left_adjust = 0
+        right_adjust = '1i'
+        page_position = right
+        font = 0
+        pre_skip = 2
+:AUTHOR
+        left_adjust = 0
+        right_adjust = '1i'
+        page_position = right
+        font = 0
+        pre_skip = 25
+        skip = 1
+:ADDRESS
+        left_adjust = 0
+        right_adjust = '1i'
+        page_position = right
+        font = 0
+        pre_skip = 2
+:ALINE
+        skip = 1
+:FROM
+        left_adjust = 0
+        page_position = right
+        pre_top_skip = 6
+        font = 0
+:TO
+        left_adjust = 0
+        page_position = left
+        pre_top_skip = 1
+        font = 0
+:ATTN
+        left_adjust = 0
+        page_position = left
+        pre_top_skip = 1
+        font = 1
+        attn_string = "Attention: "
+        string_font = 1
+:SUBJECT
+        left_adjust = 0
+        page_position = centre
+        pre_top_skip = 2
+        font = 1
+:LETDATE
+        date_form = "$ml $dsn, $yl"
+        depth = 15
+        font = 0
+        page_position = right
+:OPEN
+        pre_top_skip = 2
+        font = 0
+        delim = ':'
+:CLOSE
+        pre_skip = 2
+        depth = 6
+        font = 0
+        page_position = centre
+        delim = ','
+        extract_threshold = 2
+:ECLOSE
+        pre_skip = 1
+        font = 0
+:DISTRIB
+        pre_top_skip = 3
+        skip = 1
+        font = 0
+        indent = '0.5i'
+        page_eject = no
+:APPENDIX
+        indent = 0
+        pre_top_skip = 0
+        pre_skip = 0
+        post_skip = 0
+        spacing = 1
+        font = 4
+        number_font = 4
+        number_form = new
+        page_position = left
+        number_style = b
+        page_eject = yes
+        line_break = yes
+        display_heading = no
+        number_reset = yes
+        case = mixed
+        align = 0
+        header = no
+        appendix_string = "APPENDIX "
+        page_reset = no
+        section_eject = yes
+        columns = 1
+:SL
+        level = 1
+        left_indent = 0
+        right_indent = 0
+        pre_skip = 0
+        skip = 0
+        spacing = 1
+        post_skip = 1
+        font = 0
+:OL
+        level = 1
+        left_indent = 0
+        right_indent = 0
+        pre_skip = 1
+        skip = 0
+        spacing = 1
+        post_skip = 1
+        font = 0
+        align = 0
+        number_style = hd
+        number_font = 0
+:UL
+        level = 1
+        left_indent = 0
+        right_indent = 0
+        pre_skip = 1
+        skip = 0
+        spacing = 1
+        post_skip = 1
+        font = 0
+        align = 0
+        bullet = ' '
+        bullet_translate = yes
+        bullet_font = 0
+:DL
+        level = 1
+        left_indent = 0
+        right_indent = 0
+        pre_skip = 1
+        skip = 1
+        spacing = 1
+        post_skip = 1
+        align = 0
+        line_break = no
+:DL
+        level = 2
+        left_indent = 0
+        right_indent = 0
+        pre_skip = 0
+        skip = 1
+        spacing = 1
+        post_skip = 1
+        align = 0
+        line_break = no
+:GL
+        level = 1
+        left_indent = 0
+        right_indent = 0
+        pre_skip = 1
+        skip = 1
+        spacing = 1
+        post_skip = 1
+        align = 0
+        delim = ':'
+:BANNER
+        left_adjust = 0
+        right_adjust = 0
+        depth = 3
+        place = top
+        docsect = index
+:BANREGION
+        indent = 0
+        hoffset = left
+        width = extend
+        voffset = 1
+        depth = 1
+        font = 3
+        refnum = 1
+        region_position = centre
+        pouring = last
+        script_format = no
+        contents = 'Index'
+:eBANREGION
+:eBANNER
+:BANNER
+        left_adjust = 0
+        right_adjust = 0
+        depth = 3
+        place = top
+        docsect = letter
+:BANREGION
+        indent = 0
+        hoffset = left
+        width = extend
+        voffset = 0
+        depth = 1
+        font = 0
+        refnum = 1
+        region_position = left
+        pouring = none
+        script_format = yes
+        contents = '/&$amp.date.// Page &$amp.$pgnuma./'
+:eBANREGION
+:eBANNER
+:BANNER
+        left_adjust = 0
+        right_adjust = 0
+        depth = 3
+        place = topodd
+        docsect = letlast
+:BANREGION
+        indent = 0
+        hoffset = left
+        width = extend
+        voffset = 0
+        depth = 1
+        font = 0
+        refnum = 1
+        region_position = left
+        pouring = none
+        script_format = yes
+        contents = '/&$amp.date.// Page &$amp.$pgnuma./'
+:eBANREGION
+:eBANNER
+:BANNER
+        left_adjust = 0
+        right_adjust = 0
+        depth = 3
+        place = top
+        docsect = figlist
+:BANREGION
+        indent = 0
+        hoffset = left
+        width = extend
+        voffset = 1
+        depth = 1
+        font = 3
+        refnum = 1
+        region_position = centre
+        pouring = last
+        script_format = no
+        contents = 'List of Figures'
+:eBANREGION
+:eBANNER
+:eLAYOUT

@@ -1,0 +1,177 @@
+.ixchap The Open Watcom Browser
+.ixline 'Browser'
+.ixsect Using the Browser
+.beglevel
+.ixsect Starting the Browser
+.ixline 'Browser' 'start'
+.ixline 'start' 'Browser'
+.ixsect Quitting the Browser
+.ixline 'Browser' 'leave'
+.ixline 'leave' 'Browser'
+.ixsect The Browser Menu Bar
+.ixline 'Browser' 'Menu Bar'
+.endlevel
+.ixsect Browser Files
+.ixline 'Browser' 'files'
+.ixline 'module file' 'in Browser'
+.beglevel
+.ixsect Creating a Browser Database File within the Browser
+.ixline 'Browser' 'create database file'
+.ixline 'database file' 'create in Browser'
+.ixsect Creating a Browser Database File from the Command Line
+.ixline 'Browser' 'create database file from command line'
+.ixline 'database file' 'create from command line'
+.ixline 'Browser' 'merger utility'
+.ixline 'merger' 'with Browser'
+.ixline 'MBR files'
+.ixline 'DBR files'
+.ixline 'CBR files'
+.ixline 'merger' 'quiet option'
+.ixline 'quiet option'
+.ixsect Opening an Existing Browser Database File
+.ixline 'Browser' 'open database file'
+.ixline 'database file' 'open in Browser'
+.ixline 'open' 'database file in Browser'
+.ixsect Working with Browser Module Files
+.ixline 'Module file' 'in Browser'
+.ixline 'Browser' 'working with module files'
+.beglevel
+.ixsect Adding a Module File
+.ixline 'Browser' 'add Module file'
+.ixline 'Module file' 'add in Browser'
+.ixsect Removing a Module File
+.ixsect Disabling a Module File
+.ixline 'Browser' 'disable module file'
+.ixline 'Module file' 'disable in Browser'
+.ixsect Enabling a Module File
+.endlevel
+.endlevel
+.ixsect Global Views
+.beglevel
+.ixsect The List View
+.ixline 'Browser' 'browsing symbols'
+.ixline 'symbols' 'browsing'
+.ixsect The Class Inheritance View
+.ixline 'Browser' 'browsing classes'
+.ixline 'browsing classes'
+.ixline 'inheritance menu item'
+.ixsect The Function Call Tree View
+.ixline 'Browser' 'browsing functions'
+.ixline 'browsing functions'
+.ixline 'call menu item'
+.ixsect Manipulating the Tree Views
+.ixline 'Browser' 'graph view'
+.ixline 'Browser' 'outline view'
+.beglevel
+.ixsect Selecting Root Nodes
+.ixline 'Root Nodes'
+.ixline 'Nodes' 'root'
+.ixline 'Browser' 'selecting root nodes'
+.beglevel
+.ixsect Disabling Root Nodes
+.ixline 'Root Nodes' 'disable'
+.ixline 'Browser' 'disable root nodes'
+.ixsect Enabling Root Nodes
+.ixline 'Browser' 'enable root nodes'
+.ixline 'Root Nodes' 'enable'
+.endlevel
+.ixsect Expanding Nodes
+.ixline 'Nodes' 'expanding'
+.ixline 'Browser' 'expanding nodes'
+.ixsect Collapsing Nodes
+.ixline 'Nodes' 'collapsing'
+.ixline 'Browser' 'collapsing nodes'
+.beglevel
+.ixsect Using the Keyboard
+.ixline 'expanding and collapsing nodes' 'using the keyboard'
+.ixline 'using the keyboard' 'to expand and collapse nodes'
+.endlevel
+.endlevel
+.endlevel
+.ixsect Viewing Detail Information
+.ixline 'Browser' 'view detail information'
+.beglevel
+.ixsect Goto Definition
+.ixline 'Browser' 'Goto Definition function'
+.ixline 'Goto Definition function'
+.ixsect Source References
+.ixline 'Browser' 'source references'
+.ixline 'Source References'
+.ixsect Symbol References
+.ixline 'Symbol references'
+.ixline 'Browser' 'symbol references'
+.endlevel
+.ixsect Locating Symbols
+.ixline 'Symbols' 'locating'
+.ixline 'Browser' 'locating symbols'
+.beglevel
+.ixsect Find
+.beglevel
+.ixsect Find Pattern
+.ixline 'Browser' 'find pattern'
+.ixline 'find pattern'
+.ixsect Find Filters
+.ixline 'find filters'
+.ixline 'Browser' 'find filters'
+.beglevel
+.ixsect Find File Filters
+.endlevel
+.ixsect Performing the Find
+.endlevel
+.ixsect Find Selected
+.ixline 'Browser' 'find selected'
+.endlevel
+.ixsect Configuring the Browser
+.ixline 'Browser' 'configure'
+.beglevel
+.ixsect Regular Expressions for Find and Query
+.ixline 'Browser' 'set regular expressions for find'
+.ixline 'Browser' 'set regular expressions for queries'
+.ixline 'regular expressions' 'in Browser'
+.ixsect Global Symbol Queries
+.beglevel
+.ixsect Query Pattern
+.ixline 'Browser' 'specifying the query pattern'
+.ixline 'query pattern'
+.ixsect Query Filters
+.ixline 'query filters'
+.ixline 'Browser' 'query filters'
+.beglevel
+.ixsect Query File Filters
+.endlevel
+.endlevel
+.ixsect Enumerator Styles
+.ixline 'enumeration styles'
+.ixline 'Browser' 'enumeration styles'
+.ixsect Member Filters for Classes
+.ixline 'Browser' 'member filters for class details'
+.ixline 'class details' 'member filters'
+.ixsect Auto-arranging of Graph Views
+.ixline 'Browser' 'auto-arranging the graph view'
+.ixline 'graph views' 'auto-arranging'
+.ixsect Line Drawing Method for Graph Views
+.ixsect Changing the Graph Orientation
+.ixline 'Browser' 'change graph orientation'
+.ixsect Defining Graph View Legends
+.ixline 'graph view legends' 'in Browser'
+.ixline 'inheritance legend menu item'
+.ixline 'call legend menu item'
+.ixline 'Browser' 'defining graph view legends'
+.ixsect Selecting a Text Editor
+.ixline 'Browser' 'selecting a text editor'
+.ixline 'set text editor'
+.ixsect Automatically Saving Options on Exit
+.ixline 'Browser' 'saving options on exit'
+.endlevel
+.ixsect Loading Options
+.ixline 'Browser' 'loading options'
+.ixline 'options' 'loading'
+.ixsect Saving Options
+.ixline 'Browser' 'saving options'
+.ixline 'Browser' 'save options'
+.ixsect Setting Source Search Paths
+.ixline 'path option'
+.ixline 'Browser' 'path option'
+.ixline 'source search path'
+.ixline 'search path'
+.ixline 'path search'
