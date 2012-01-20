@@ -162,6 +162,8 @@ data    SEGMENT byte public 'DATA'
 
 mp_processor_sign   DD ?
 
+bsp_id              DD ?
+
 time_spinlock       DW ?
 clock_tics          DW ?
 system_time         DD ?,?
@@ -1067,7 +1069,11 @@ DelayMs Endp
 test_gate_name    DB 'Test Gate',0
 
 test_gate_pr  Proc far
-    GetApicId
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    mov edx,ds:bsp_id
+    pop ds
     retf32
 test_gate_pr    Endp
    
@@ -3058,6 +3064,11 @@ init    PROC far
 ;
     mov edi,OFFSET init_task
     HookInitTasking
+;
+    mov ax,SEG data
+    mov ds,ax
+    GetApicId
+    mov bsp_id,edx
 ;
     mov eax,dword ptr cs:hpet_tab
     GetAcpiTable
