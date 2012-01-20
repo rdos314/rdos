@@ -450,6 +450,11 @@ IrqEntry:
 ;
     EnterInt
     sti
+;    
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
 ;       
     mov ds,cs:irq_handler_data
     call fword ptr cs:irq_handler_ads
@@ -459,10 +464,6 @@ IrqEntry:
 
 IrqExit:
     cli    
-    mov ax,apic_mem_sel
-    mov ds,ax
-    xor eax,eax
-    mov ds:APIC_EOI,eax
     LeaveInt
 ;
     popad
@@ -822,15 +823,16 @@ MsiEntry:
 ;
     EnterInt
     sti
+;
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
 ;       
     mov ds,cs:msi_handler_data
     call fword ptr cs:msi_handler_ads
 ;
     cli    
-    mov ax,apic_mem_sel
-    mov ds,ax
-    xor eax,eax
-    mov ds:APIC_EOI,eax
     LeaveInt
 ;
     popad
