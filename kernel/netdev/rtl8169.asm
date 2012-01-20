@@ -481,7 +481,7 @@ niLoop:
     in ax,dx
     or ds:Isr,ax
     out dx,ax
-    test ax,IR_ROK OR IR_RDU
+    test ax,IR_ROK OR IR_RDU OR IR_FOVW OR IR_SER
     jz niNotRx
 ;
     mov bx,ds:Handle
@@ -554,6 +554,13 @@ Preview2:
     mov ds,ax
 
 preview_do:
+    test ds:Isr,IR_RDU OR IR_FOVW OR IR_SER
+    jz pvdo
+;
+    int 3
+    mov ax,ds:Isr    
+
+pvdo:
     mov es,ds:RxRingSel
     mov cx,RX_DESCR_COUNT
     xor bx,bx
