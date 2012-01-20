@@ -2111,9 +2111,6 @@ InitIoApic    Proc near
     mov ds,ax
     mov ds:ioapic_count,0
 ;
-    GetApicId
-    mov ds:bsp_id,edx
-;
     push es
     mov ax,SEG data
     mov es,ax
@@ -2200,6 +2197,8 @@ init_ioapic_table_next:
     sub cx,ax
     ja init_ioapic_table_loop
 ;    
+    GetApicId
+    mov ds:bsp_id,edx
     ret
 InitIoApic    Endp
       
