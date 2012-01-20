@@ -779,7 +779,8 @@ rihPrioOk:
 ;
     inc bl
     mov fs:ioapic_regsel,bl
-    mov edx,10000000h
+    mov edx,ds:bsp_id
+    shl edx,24
     mov fs:ioapic_window,edx
     UnlockIoApic
     pop ds
@@ -1256,7 +1257,8 @@ edLoop:
 ;
     inc bl
     mov es:ioapic_regsel,bl
-    mov edx,10000000h
+    mov edx,ds:bsp_id
+    shl edx,24
     mov es:ioapic_window,edx
     UnlockIoApic
 
@@ -1410,8 +1412,14 @@ disable_all_irq Endp
 get_msi_param_name    DB 'Get MSI Param',0
 
 get_msi_param  Proc far
-    mov ah,1
-    mov edx,0FEE10000h
+    push ds
+    mov dx,SEG data
+    mov ds,dx
+    xor ah,ah
+    mov edx,ds:bsp_id
+    shl edx,12
+    or edx,0FEE00008h
+    pop ds
     retf32
 get_msi_param  Endp
    
@@ -1544,8 +1552,10 @@ start_hpet_timer    Proc far
     jmp start_hpet_done
 
 start_hpet_msi: 
-    mov ax,140h
-    mov edx,0FEE10000h
+    mov ax,40h
+    mov edx,ds:bsp_id
+    shl edx,12
+    or edx,0FEE00008h
     mov es:[bx].hpetc_msi_data,eax
     mov es:[bx].hpetc_msi_ads,edx
 ;
@@ -2124,14 +2134,14 @@ InitIoApic    Proc near
     mov di,OFFSET global_int_arr
 
 init_ioapic_isa_trigger_mode:
-    mov [di].gi_trigger_mode,8
+    mov [di].gi_trigger_mode,0
     add di,8
     loop init_ioapic_isa_trigger_mode
 ;
     mov cx,256-16
 
 init_ioapic_pci_trigger_mode:
-    mov [di].gi_trigger_mode,0A8h
+    mov [di].gi_trigger_mode,0A0h
     add di,8
     loop init_ioapic_pci_trigger_mode
 ;        
