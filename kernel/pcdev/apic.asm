@@ -777,7 +777,7 @@ rihPrioOk:
 ;
     inc bl
     mov fs:ioapic_regsel,bl
-    mov edx,0FF000000h
+    mov edx,10000000h
     mov fs:ioapic_window,edx
     UnlockIoApic
     pop ds
@@ -1067,15 +1067,7 @@ DelayMs Endp
 test_gate_name    DB 'Test Gate',0
 
 test_gate_pr  Proc far
-    mov ax,SEG data
-    mov ds,ax
-    mov bx,OFFSET global_int_arr
-    mov cx,256
-
-tl:
-    mov al,ds:[bx].gi_trigger_mode
-    add bx,8
-    loop tl    
+    GetApicId
     retf32
 test_gate_pr    Endp
    
@@ -1258,7 +1250,7 @@ edLoop:
 ;
     inc bl
     mov es:ioapic_regsel,bl
-    mov edx,0FF000000h
+    mov edx,10000000h
     mov es:ioapic_window,edx
     UnlockIoApic
 
@@ -2126,14 +2118,14 @@ InitIoApic    Proc near
     mov di,OFFSET global_int_arr
 
 init_ioapic_isa_trigger_mode:
-    mov [di].gi_trigger_mode,9
+    mov [di].gi_trigger_mode,8
     add di,8
     loop init_ioapic_isa_trigger_mode
 ;
     mov cx,256-16
 
 init_ioapic_pci_trigger_mode:
-    mov [di].gi_trigger_mode,0A9h
+    mov [di].gi_trigger_mode,0A8h
     add di,8
     loop init_ioapic_pci_trigger_mode
 ;        
@@ -2888,6 +2880,42 @@ DisablePic  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+test_thread_name    DB 'APIC Test',0
+
+test_thread:
+    int 3
+    GetApicId
+    retf
+
+init_task   Proc far
+    push ds
+    push es
+    pushad
+;    
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET test_thread
+    mov edi,OFFSET test_thread_name
+    mov ax,4
+    mov cx,stack0_size
+    CreateThread
+;
+    popad
+    pop es
+    pop ds
+    retf32
+init_task   Endp 
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:                   Init
+;
+;               DESCRIPTION:    Init apic mp module
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 apic_tab    DB 'APIC'
 hpet_tab    DB 'HPET'
 
@@ -3027,6 +3055,9 @@ init    PROC far
     xor dx,dx
     mov ax,test_gate_nr
     RegisterBimodalUserGate
+;
+    mov edi,OFFSET init_task
+    HookInitTasking
 ;
     mov eax,dword ptr cs:hpet_tab
     GetAcpiTable
