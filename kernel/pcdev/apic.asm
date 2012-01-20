@@ -2111,6 +2111,9 @@ InitIoApic    Proc near
     mov ds,ax
     mov ds:ioapic_count,0
 ;
+    GetApicId
+    mov ds:bsp_id,edx
+;
     push es
     mov ax,SEG data
     mov es,ax
@@ -3064,11 +3067,6 @@ init    PROC far
 ;
     mov edi,OFFSET init_task
     HookInitTasking
-;
-    mov ax,SEG data
-    mov ds,ax
-    GetApicId
-    mov bsp_id,edx
 ;
     mov eax,dword ptr cs:hpet_tab
     GetAcpiTable
