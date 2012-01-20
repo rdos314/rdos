@@ -449,12 +449,11 @@ IrqEntry:
     pushad
 ;
     EnterInt
-    sti
-;    
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
+    sti
 ;       
     mov ds,cs:irq_handler_data
     call fword ptr cs:irq_handler_ads
@@ -822,12 +821,11 @@ MsiEntry:
     pushad
 ;
     EnterInt
-    sti
-;
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
+    sti
 ;       
     mov ds,cs:msi_handler_data
     call fword ptr cs:msi_handler_ads
