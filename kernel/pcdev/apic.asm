@@ -1405,7 +1405,7 @@ get_msi_param_name    DB 'Get MSI Param',0
 
 get_msi_param  Proc far
     mov ah,1
-    mov edx,0FEEFF000h
+    mov edx,0FEE10000h
     retf32
 get_msi_param  Endp
    
@@ -1539,7 +1539,7 @@ start_hpet_timer    Proc far
 
 start_hpet_msi: 
     mov ax,140h
-    mov edx,0FEEFF000h
+    mov edx,0FEE10000h
     mov es:[bx].hpetc_msi_data,eax
     mov es:[bx].hpetc_msi_ads,edx
 ;

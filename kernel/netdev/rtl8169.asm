@@ -47,6 +47,7 @@ IR_TER = 8
 IR_TOK = 4
 IR_RER = 2
 IR_ROK = 1
+IR_MASK = 3FFh
 
 REG_IDR0 = 0                ; Ethernet hardware address. 
 REG_MAR0 = 8                ; Multicast
@@ -403,7 +404,7 @@ ihResetDone:
 ;    
     mov dx,ds:IoBase
     add dx,REG_IMR
-    mov ax,IR_SER OR IR_TOK OR IR_ROK OR IR_LinkChg
+    mov ax,IR_MASK
     out dx,ax    
 ;
     mov dx,ds:IoBase
@@ -558,9 +559,13 @@ preview_do:
     jz pvdo
 ;
     int 3
+    mov dx,ds:IoBase
+    add dx,REG_ISR
+    in ax,dx
     mov ax,ds:Isr    
 
 pvdo:
+    mov ds:Isr,0
     mov es,ds:RxRingSel
     mov cx,RX_DESCR_COUNT
     xor bx,bx
