@@ -1434,7 +1434,7 @@ DelayMs Endp
 test_gate_name    DB 'Test Gate',0
 
 Test1   Proc far
-    clc
+    stc
     retf32
 Test1    Endp
 
