@@ -1612,6 +1612,11 @@ Test3   Proc far
     retf32
 Test3    Endp
 
+Test4   Proc far
+    clc
+    retf32
+Test4    Endp
+
 test_gate_pr    Proc far
     mov ax,SEG data
     mov ds,ax
@@ -1635,9 +1640,17 @@ test_gate_pr    Proc far
 ;
     mov al,17h
     mov ah,18h
-    mov bx,0202h
-    mov ch,2
+    mov bx,0303h
+    mov ch,3
     mov edi,OFFSET Test3
+    RequestPciIrqHandler
+    int 0C1h
+;
+    mov al,17h
+    mov ah,22h
+    mov bx,0404h
+    mov ch,4
+    mov edi,OFFSET Test4
     RequestPciIrqHandler
     int 0C1h
 ;
