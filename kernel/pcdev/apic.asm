@@ -883,7 +883,10 @@ PciIrqEoi:
     shr eax,1
     jnc PciIrqAfterChain
 ;
-    push eax
+    push eax    
+    mov bh,cs:pci_irq_bus
+    mov bl,cs:pci_irq_device
+    mov ch,cs:pci_irq_function
     mov ds,cs:pci_irq_handler_data
     call fword ptr cs:pci_irq_handler_ads
     pop eax    
@@ -919,6 +922,80 @@ PciIrqExit:
     iretd
 
 PciIrqEnd:
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           PCI IRQ chaining
+;
+;               DESCRIPTION:    Code for adding at end of PCI IRQ handler in order to chain
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; this code should not contain near jumps or references to near labels!
+
+pci_irq_chain_struc  STRUC
+
+pci_irch_handler_ads     DD ?,?
+pci_irch_handler_data    DW ?
+pci_irch_before_eoi      DW ?
+pci_irch_after_eoi       DW ?
+pci_irch_bus             DB ?
+pci_irch_device          DB ?
+pci_irch_function        DB ?
+
+pci_irq_chain_struc ENDS
+
+PciIrqChainStart:
+
+pci_irch_handler      pci_irq_chain_struc <>
+
+PciIrqChainBefore:
+    shl edx,1
+    push eax
+    push bx
+    push edx
+;
+    mov bh,cs:pci_irch_bus
+    mov bl,cs:pci_irch_device
+    mov ch,cs:pci_irch_function
+    mov ds,cs:[bx].pci_irch_handler_data
+    call fword ptr cs:[bx].pci_irch_handler_ads
+;
+    pop edx
+    pop bx
+    pop eax    
+    jc PciIrqChainBeforeNext
+;
+    or eax,edx
+        
+PciIrqChainBeforeNext:
+    mov si,bx
+    add bx,OFFSET PciIrqChainEnd - OFFSET PciIrqChainStart
+    jmp cs:[si].pci_irch_before_eoi
+
+PciIrqChainAfter:
+    shr eax,1
+    jnc PciIrqChainAfterNext
+;
+    push eax
+    push bx
+;
+    mov bh,cs:pci_irch_bus
+    mov bl,cs:pci_irch_device
+    mov ch,cs:pci_irch_function
+    mov ds,cs:[bx].pci_irch_handler_data
+    call fword ptr cs:[bx].pci_irch_handler_ads
+;
+    pop bx
+    pop eax    
+        
+PciIrqChainAfterNext:
+    mov si,bx
+    add bx,OFFSET PciIrqChainEnd - OFFSET PciIrqChainStart
+    jmp cs:[si].pci_irch_after_eoi
+
+PciIrqChainEnd:
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1064,6 +1141,92 @@ rpihPrioLowOk:
     mov edx,fs:pci_irq_linear
     mov ax,flat_sel
     mov fs,ax
+;
+    mov ax,word ptr es:[edx].pci_irq_handler_ads+4
+    or ax,ax
+    jz rpihReplace
+
+rpihChain:
+    mov si,bp
+    push ds
+    push es
+    push ecx
+    push esi
+    push edi
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov es,ax
+;    
+    mov esi,edx
+    GetSelectorBaseSize
+    push ecx
+    mov eax,ecx        
+    add eax,OFFSET PciIrqChainEnd - OFFSET PciIrqChainStart
+    AllocateSmallLinear
+    push edx
+    mov edi,edx
+    rep movs byte ptr es:[edi],ds:[esi]
+    mov ebp,edi
+;    
+    xchg edx,ds:[edx].pci_irq_linear
+    xor ecx,ecx
+    FreeLinear
+;
+    mov ax,cs
+    mov ds,ax
+    mov esi,OFFSET PciIrqChainStart
+    mov ecx,OFFSET PciIrqChainEnd - OFFSET PciIrqChainStart
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    pop edx
+    pop ecx
+    add ecx,OFFSET PciIrqChainEnd - OFFSET PciIrqChainStart
+    CreateCodeSelector16
+;    
+    pop edi
+    pop esi
+    pop ecx
+    pop es
+    pop ds
+;
+    mov fs:[ebp].pci_irch_handler_data,ds
+    mov fs:[ebp].pci_irch_handler_ads,edi
+    mov word ptr fs:[ebp].pci_irch_handler_ads+4,es
+    mov ax,si
+    mov fs:[ebp].pci_irch_bus,ah
+    mov fs:[ebp].pci_irch_device,al
+    mov fs:[ebp].pci_irch_function,ch
+    
+    mov eax,ebp
+    sub eax,edx
+    add ax,OFFSET PciIrqChainBefore - OFFSET PciIrqChainStart
+    sub ax,OFFSET PciIrqChainEnd - OFFSET PciIrqChainStart
+    cmp ax,OFFSET PciIrqEnd - OFFSET PciIrqStart
+    jae rpihChainPrev
+;    
+    add ax,OFFSET PciIrqChainEnd - OFFSET PciIrqChainStart
+    push ax
+    xchg ax,fs:[edx].pci_irq_before_eoi
+    mov fs:[ebp].pci_irch_before_eoi,ax
+    pop ax
+    add ax,OFFSET PciIrqChainAfter - OFFSET PciIrqChainBefore
+    xchg ax,fs:[edx].pci_irq_after_eoi
+    mov fs:[ebp].pci_irch_after_eoi,ax    
+    jmp rpihChainDone
+
+rpihChainPrev:
+    mov edx,ebp
+    sub edx,OFFSET PciIrqChainEnd - OFFSET PciIrqChainStart
+    add ax,OFFSET PciIrqChainEnd - OFFSET PciIrqChainStart
+    push ax
+    xchg ax,fs:[edx].pci_irch_before_eoi
+    mov fs:[ebp].pci_irch_before_eoi,ax
+    pop ax
+    add ax,OFFSET PciIrqChainAfter - OFFSET PciIrqChainBefore
+    xchg ax,fs:[edx].pci_irch_after_eoi
+    mov fs:[ebp].pci_irch_after_eoi,ax    
+    jmp rpihChainDone
         
 rpihReplace:    
     mov fs:[edx].pci_irq_handler_data,ds
@@ -1438,6 +1601,11 @@ Test1   Proc far
     retf32
 Test1    Endp
 
+Test2   Proc far
+    clc
+    retf32
+Test2    Endp
+
 test_gate_pr    Proc far
     mov ax,SEG data
     mov ds,ax
@@ -1450,6 +1618,15 @@ test_gate_pr    Proc far
     mov edi,OFFSET Test1
     RequestPciIrqHandler
     int 0C1h
+;
+    mov al,17h
+    mov ah,18h
+    mov bx,0202h
+    mov ch,2
+    mov edi,OFFSET Test2
+    RequestPciIrqHandler
+    int 0C1h
+;
     int 3
     retf32
 test_gate_pr    Endp
