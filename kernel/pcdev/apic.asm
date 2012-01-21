@@ -1137,7 +1137,8 @@ rpihPrioHighOk:
 rpihPrioLowOk:
     push ax
 ;   
-    mov fs,dx
+    mov bx,dx
+    mov fs,bx
     mov edx,fs:pci_irq_linear
     mov ax,flat_sel
     mov fs,ax
