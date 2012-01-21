@@ -477,6 +477,11 @@ InitHardware    Endp
 
 NetInt  Proc far
     xor si,si
+;    
+    mov dx,ds:IoBase
+    add dx,REG_IMR
+    xor ax,ax
+    out dx,ax
 
 niLoop:    
     mov dx,ds:IoBase
@@ -525,6 +530,11 @@ niNotTx:
     out dx,eax
 
 niDone:
+    mov dx,ds:IoBase
+    add dx,REG_IMR
+    mov ax,IR_MASK
+    out dx,ax
+;    
     or si,si
     clc
     jnz niExit
