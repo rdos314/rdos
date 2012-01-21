@@ -805,6 +805,358 @@ request_irq_handler Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;               NAME:           PCI IRQ handler
+;
+;               DESCRIPTION:    Code for patching into PCI (level mode) IRQ handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; this code should not contain near jumps or references to near labels!
+
+pci_irq_handler_struc   STRUC
+
+pci_irq_linear          DD ?
+pci_irq_handler_ads     DD ?,?
+pci_irq_handler_data    DW ?
+pci_irq_before_eoi      DW ?
+pci_irq_after_eoi       DW ?
+pci_irq_detect_nr       DB ?
+pci_irq_bus             DB ?
+pci_irq_device          DB ?
+pci_irq_function        DB ?
+
+pci_irq_handler_struc   ENDS
+
+PciIrqStart:
+
+pci_irq_handler     pci_irq_handler_struc <>
+
+PciIrqEntry:
+    int 3
+    push ds
+    push es
+    push fs
+    pushad
+;
+    EnterInt
+    sti
+;    
+    mov ax,word ptr cs:pci_irq_handler_ads+4
+    or ax,ax
+    jz PciIrqDetectEoi
+;       
+    mov bh,cs:pci_irq_bus
+    mov bl,cs:pci_irq_device
+    mov ch,cs:pci_irq_function
+    xor cl,cl
+    ReadPciWord
+;    
+    xor eax,eax
+    mov edx,1
+    push eax
+    push edx
+;    
+    mov ds,cs:pci_irq_handler_data
+    call fword ptr cs:pci_irq_handler_ads
+;
+    pop edx
+    pop eax    
+    jc PciIrqBeforeChain
+;
+    or eax,edx
+        
+PciIrqBeforeChain:
+    mov bx,OFFSET PciIrqEnd - OFFSET PciIrqStart
+    jmp cs:pci_irq_before_eoi
+
+PciIrqEoi:
+    push eax
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+    pop eax
+;
+    or eax,eax
+    jz PciIrqDetect
+;
+    shr eax,1
+    jnc PciIrqAfterChain
+;
+    push eax
+    mov ds,cs:pci_irq_handler_data
+    call fword ptr cs:pci_irq_handler_ads
+    pop eax    
+
+PciIrqAfterChain:
+    mov bx,OFFSET PciIrqEnd - OFFSET PciIrqStart
+    jmp cs:pci_irq_after_eoi
+
+PciIrqDetectEoi:
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+
+PciIrqDetect:
+    mov ax,SEG data
+    mov ds,ax
+    movzx dx,cs:pci_irq_detect_nr
+    cmp dx,24
+    jae PciIrqExit
+;    
+    mov bx,OFFSET detected_irqs
+    bts ds:[bx],dx
+
+PciIrqExit:
+    cli
+    LeaveInt
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    iretd
+
+PciIrqEnd:
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreatePciIrq
+;
+;       DESCRIPTION:    Create new PCI IRQ context
+;
+;       PARAMETERS:     AL          IRQ # (for detect)
+;
+;       RETURNS:        DS:ESI      Address of entry-point
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreatePciIrq   Proc near
+    push es
+    push eax
+    push bx
+    push ecx
+    push edx
+    push edi
+;
+    push ax
+;
+    mov eax,OFFSET PciIrqEnd - OFFSET PciIrqStart
+    AllocateSmallLinear
+    AllocateGdt
+    mov ecx,eax
+    CreateCodeSelector16
+;
+    mov ax,cs
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+    mov esi,OFFSET PciIrqStart
+    mov edi,edx
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    mov es:[edx].pci_irq_linear,edx
+    mov word ptr es:[edx].pci_irq_before_eoi,OFFSET PciIrqEoi - OFFSET PciIrqStart
+    mov word ptr es:[edx].pci_irq_after_eoi,OFFSET PciIrqExit - OFFSET PciIrqStart
+    mov dword ptr es:[edx].pci_irq_handler_ads,0
+    mov word ptr es:[edx].pci_irq_handler_ads+4,0
+    mov es:[edx].pci_irq_handler_data,0
+    mov es:[edx].pci_irq_bus,0
+    mov es:[edx].pci_irq_device,0
+    mov es:[edx].pci_irq_function,0
+    pop ax
+    mov es:[edx].pci_irq_detect_nr,al
+;
+    mov ds,bx
+    mov esi,OFFSET PciIrqEntry - OFFSET PciIrqStart
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop bx
+    pop eax
+    pop es
+    ret
+CreatePciIrq   Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RequestPciHandler
+;
+;       DESCRIPTION:    Request PCI IRQ-based interrupt-handler
+;
+;       PARAMETERS:     DS      Data passed to handler
+;                       ES:EDI  Handler address
+;                       AL      Global int #
+;                       AH      Priority
+;                       BH      Bus
+;                       BL      Device
+;                       CH      Function
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+request_pci_irq_handler_name    DB 'Request PCI IRQ Handler',0
+
+request_pci_irq_handler Proc far
+    push fs
+    pushad
+;
+    mov bp,bx
+    movzx bx,al
+    shl bx,3
+    mov dx,SEG data
+    mov fs,dx
+    mov dx,fs:[bx].global_int_arr.gi_handler_sel
+    or dx,dx
+    jz rpihHasHandler
+;
+    mov dx,fs:[bx].global_int_arr.gi_ioapic_sel
+    or dx,dx
+    jz rpihDone
+;
+    push ax
+;    
+    push cx
+;    
+    mov cx,1
+    mov al,ah
+    mov ds:[bx].global_int_arr.gi_prio,al
+    AllocateInts
+    mov ds:[bx].global_int_arr.gi_int_num,al
+    pop cx
+;
+    push ds
+    push bx
+;    
+    push ax
+    mov al,dl
+    call CreatePciIrq
+    pop ax
+;        
+    xor bl,bl
+    SetupIntGate
+    mov dx,ds
+;    
+    pop bx
+    pop ds
+    mov ds:[bx].global_int_arr.gi_handler_sel,dx
+    
+rpihHasHandler:
+    cmp ah,31
+    jbe rpihPrioHighOk
+;
+    mov ah,31
+
+rpihPrioHighOk:
+    or ah,ah
+    jne rpihPrioLowOk
+;
+    mov ah,1    
+
+rpihPrioLowOk:
+    push ax
+;   
+    mov fs,dx
+    mov edx,fs:pci_irq_linear
+    mov ax,flat_sel
+    mov fs,ax
+        
+rpihReplace:    
+    mov fs:[edx].pci_irq_handler_data,ds
+    mov fs:[edx].pci_irq_handler_ads,edi
+    mov word ptr fs:[edx].pci_irq_handler_ads+4,es
+    mov ax,bp
+    mov fs:[edx].pci_irq_bus,ah
+    mov fs:[edx].pci_irq_device,al
+    mov fs:[edx].pci_irq_function,ch
+
+rpihChainDone:
+    pop ax
+;    
+    movzx bx,al
+    shl bx,3
+    add bx,OFFSET global_int_arr
+    mov dx,SEG data
+    mov fs,dx
+    mov dl,fs:[bx].gi_prio
+    cmp ah,dl
+    jbe rpihDone
+;
+    mov fs:[bx].gi_prio,ah
+    mov al,fs:[bx].gi_int_num
+    FreeInt
+
+rpihChangePrio:
+    mov al,fs:[bx].gi_prio
+    mov cx,1
+    AllocateInts
+    jnc rpihPrioOk
+;
+    dec fs:[bx].gi_prio
+    jmp rpihChangePrio    
+
+rpihPrioOk:    
+    push ds
+    push bx
+;
+    mov ds,fs:[bx].gi_handler_sel
+    mov esi,OFFSET PciIrqEntry - OFFSET PciIrqStart
+    xor bl,bl
+    SetupIntGate
+;    
+    pop bx
+    pop ds
+;
+    mov fs:[bx].gi_int_num,al
+;
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+;    
+    mov al,fs:[bx].gi_ioapic_id
+    movzx edx,fs:[bx].gi_int_num
+    mov dh,fs:[bx].gi_trigger_mode
+    mov fs,fs:[bx].gi_ioapic_sel
+;       
+    mov bl,10h
+    add bl,al
+    add bl,al
+;
+    LockIoApic   
+    mov fs:ioapic_regsel,bl
+    mov fs:ioapic_window,edx
+;
+    inc bl
+    mov fs:ioapic_regsel,bl
+;
+    test dh,1
+    jnz rpihLowestPrio
+
+rpihBsp:
+    mov edx,ds:bsp_id
+    shl edx,24
+    jmp rpihDeliveryOk
+
+rpihLowestPrio:
+    mov edx,0FF000000h
+
+rpihDeliveryOk:
+    mov fs:ioapic_window,edx
+    UnlockIoApic
+    pop ds
+
+rpihDone:
+    popad
+    pop fs    
+    retf32
+request_pci_irq_handler Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;               NAME:           MSI handler
 ;
 ;               DESCRIPTION:    Code for creating MSI interrupt handlers
@@ -1080,12 +1432,23 @@ DelayMs Endp
 
 test_gate_name    DB 'Test Gate',0
 
-test_gate_pr  Proc far
-    push ds
+Test1   Proc far
+    clc
+    retf32
+Test1    Endp
+
+test_gate_pr    Proc far
     mov ax,SEG data
     mov ds,ax
-    mov edx,ds:bsp_id
-    pop ds
+    mov ax,cs
+    mov es,ax
+    mov al,17h
+    mov ah,18h
+    mov bx,0101h
+    mov ch,1
+    mov edi,OFFSET Test1
+    RequestPciIrqHandler
+    int 3
     retf32
 test_gate_pr    Endp
    
@@ -1241,7 +1604,7 @@ EnableDetect  Proc near
 ;    
     mov ax,SEG data
     mov ds,ax
-    mov cx,18h
+    mov cx,10h
     mov si,OFFSET global_int_arr
 
 edLoop:
@@ -3046,6 +3409,12 @@ init    PROC far
     mov edi,OFFSET request_irq_handler_name
     xor cl,cl
     mov ax,request_irq_handler_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET request_pci_irq_handler
+    mov edi,OFFSET request_pci_irq_handler_name
+    xor cl,cl
+    mov ax,request_pci_irq_handler_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_msi_param
