@@ -838,7 +838,7 @@ PciIrqEntry:
     push fs
     pushad
 ;
-    EnterInt
+;    EnterInt
     sti
 ;    
     mov ax,word ptr cs:pci_irq_handler_ads+4
@@ -910,7 +910,7 @@ PciIrqDetect:
 
 PciIrqExit:
     cli
-    LeaveInt
+;    LeaveInt
 ;
     popad
     pop fs
