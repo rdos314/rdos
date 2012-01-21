@@ -420,29 +420,29 @@ UnlockIoApic    MACRO
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:           IRQ handler
+;               NAME:           ISA IRQ handler
 ;
-;               DESCRIPTION:    Code for patching into IRQ handler
+;               DESCRIPTION:    Code for patching into ISA (edge mode) IRQ handler
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; this code should not contain near jumps or references to near labels!
 
-irq_handler_struc   STRUC
+isa_irq_handler_struc   STRUC
 
-irq_linear          DD ?
-irq_handler_ads     DD ?,?
-irq_handler_data    DW ?
-irq_chain           DW ?
-irq_detect_nr       DB ?
+isa_irq_linear          DD ?
+isa_irq_handler_ads     DD ?,?
+isa_irq_handler_data    DW ?
+isa_irq_chain           DW ?
+isa_irq_detect_nr       DB ?
 
-irq_handler_struc   ENDS
+isa_irq_handler_struc   ENDS
 
-IrqStart:
+IsaIrqStart:
 
-irq_handler     irq_handler_struc <>
+isa_irq_handler     isa_irq_handler_struc <>
 
-IrqEntry:
+IsaIrqEntry:
     push ds
     push es
     push fs
@@ -451,13 +451,13 @@ IrqEntry:
     EnterInt
     sti
 ;       
-    mov ds,cs:irq_handler_data
-    call fword ptr cs:irq_handler_ads
+    mov ds,cs:isa_irq_handler_data
+    call fword ptr cs:isa_irq_handler_ads
 ;
-    mov bx,OFFSET IrqEnd - OFFSET IrqStart
-    jmp cs:irq_chain
+    mov bx,OFFSET IsaIrqEnd - OFFSET IsaIrqStart
+    jmp cs:isa_irq_chain
 
-IrqExit:
+IsaIrqExit:
     cli    
     mov ax,apic_mem_sel
     mov ds,ax
@@ -471,10 +471,10 @@ IrqExit:
     pop ds
     iretd
 
-IrqDetect:
+IsaIrqDetect:
     mov ax,SEG data
     mov ds,ax
-    movzx bx,cs:irq_detect_nr
+    movzx bx,cs:isa_irq_detect_nr
     shl bx,3
     add bx,OFFSET global_int_arr
     mov al,ds:[bx].gi_ioapic_id
@@ -495,59 +495,59 @@ IrqDetect:
     mov es:ioapic_window,eax
     UnlockIoApic
 ;
-    movzx dx,cs:irq_detect_nr
+    movzx dx,cs:isa_irq_detect_nr
     cmp dx,24
-    jae IrqDetectDone
+    jae IsaIrqDetectDone
 ;    
     mov bx,OFFSET detected_irqs
     bts ds:[bx],dx
 
-IrqDetectDone:
+IsaIrqDetectDone:
     retf32
 
-IrqEnd:
+IsaIrqEnd:
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:           IRQ chaining
+;               NAME:           ISA IRQ chaining
 ;
-;               DESCRIPTION:    Code for adding at end of IRQ handler in order to chain
+;               DESCRIPTION:    Code for adding at end of ISA IRQ handler in order to chain
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; this code should not contain near jumps or references to near labels!
 
-irq_chain_struc  STRUC
+isa_irq_chain_struc  STRUC
 
-irch_handler_ads     DD ?,?
-irch_handler_data    DW ?
-irch_chain           DW ?
+isa_irch_handler_ads     DD ?,?
+isa_irch_handler_data    DW ?
+isa_irch_chain           DW ?
 
-irq_chain_struc ENDS
+isa_irq_chain_struc ENDS
 
-IrqChainStart:
+IsaIrqChainStart:
 
-irch_handler      irq_chain_struc <>
+isa_irch_handler      isa_irq_chain_struc <>
 
-IrqChainEntry:
+IsaIrqChainEntry:
     push bx
-    mov ds,cs:[bx].irch_handler_data
-    call fword ptr cs:[bx].irch_handler_ads
+    mov ds,cs:[bx].isa_irch_handler_data
+    call fword ptr cs:[bx].isa_irch_handler_ads
     pop bx
 ;
     mov si,bx
-    add bx,OFFSET IrqChainEnd - OFFSET IrqChainStart
-    jmp cs:[si].irch_chain
+    add bx,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
+    jmp cs:[si].isa_irch_chain
 
-IrqChainEnd:
+IsaIrqChainEnd:
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CreateIrq
+;       NAME:           CreateIsaIrq
 ;
-;       DESCRIPTION:    Create new IRQ context
+;       DESCRIPTION:    Create new ISA IRQ context
 ;
 ;       PARAMETERS:     AL           IRQ # (for detect)
 ;
@@ -555,7 +555,7 @@ IrqChainEnd:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateIrq   Proc near
+CreateIsaIrq   Proc near
     push es
     push eax
     push bx
@@ -564,7 +564,7 @@ CreateIrq   Proc near
     push edi
 ;
     push ax
-    mov eax,OFFSET IrqEnd - OFFSET IrqStart
+    mov eax,OFFSET IsaIrqEnd - OFFSET IsaIrqStart
     AllocateSmallLinear
     AllocateGdt
     mov ecx,eax
@@ -574,20 +574,20 @@ CreateIrq   Proc near
     mov ds,ax
     mov ax,flat_sel
     mov es,ax
-    mov esi,OFFSET IrqStart
+    mov esi,OFFSET IsaIrqStart
     mov edi,edx
     rep movs byte ptr es:[edi],ds:[esi]
 ;
-    mov es:[edx].irq_linear,edx
-    mov word ptr es:[edx].irq_chain,OFFSET IrqExit - OFFSET IrqStart
-    mov dword ptr es:[edx].irq_handler_ads,OFFSET IrqDetect - OFFSET IrqStart
-    mov word ptr es:[edx].irq_handler_ads+4,bx
-    mov es:[edx].irq_handler_data,0
+    mov es:[edx].isa_irq_linear,edx
+    mov word ptr es:[edx].isa_irq_chain,OFFSET IsaIrqExit - OFFSET IsaIrqStart
+    mov dword ptr es:[edx].isa_irq_handler_ads,OFFSET IsaIrqDetect - OFFSET IsaIrqStart
+    mov word ptr es:[edx].isa_irq_handler_ads+4,bx
+    mov es:[edx].isa_irq_handler_data,0
     pop ax
-    mov es:[edx].irq_detect_nr,al
+    mov es:[edx].isa_irq_detect_nr,al
 ;
     mov ds,bx
-    mov esi,OFFSET IrqEntry - OFFSET IrqStart
+    mov esi,OFFSET IsaIrqEntry - OFFSET IsaIrqStart
 ;
     pop edi
     pop edx
@@ -596,14 +596,14 @@ CreateIrq   Proc near
     pop eax
     pop es
     ret
-CreateIrq   Endp
+CreateIsaIrq   Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;       NAME:           RequestIrqHandler
 ;
-;       DESCRIPTION:    Request an IRQ-based interrupt-handler
+;       DESCRIPTION:    Request ISA IRQ-based interrupt-handler
 ;
 ;       PARAMETERS:     DS      Data passed to handler
 ;                       ES:EDI  Handler address
@@ -612,7 +612,7 @@ CreateIrq   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-request_irq_handler_name    DB 'Request IRQ Handler',0
+request_irq_handler_name    DB 'Request ISA IRQ Handler',0
 
 request_irq_handler Proc far
     push fs
@@ -641,11 +641,11 @@ rihPrioLowOk:
     push ax
 ;   
     mov fs,bx
-    mov edx,fs:irq_linear
+    mov edx,fs:isa_irq_linear
     mov ax,flat_sel
     mov fs,ax
 ;
-    mov al,fs:[edx].irq_detect_nr
+    mov al,fs:[edx].isa_irq_detect_nr
     cmp al,-1
     jne rihReplace
 
@@ -664,26 +664,26 @@ rihChain:
     GetSelectorBaseSize
     push ecx
     mov eax,ecx        
-    add eax,OFFSET IrqChainEnd - OFFSET IrqChainStart
+    add eax,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
     AllocateSmallLinear
     push edx
     mov edi,edx
     rep movs byte ptr es:[edi],ds:[esi]
     mov ebp,edi
 ;    
-    xchg edx,ds:[edx].irq_linear
+    xchg edx,ds:[edx].isa_irq_linear
     xor ecx,ecx
     FreeLinear
 ;
     mov ax,cs
     mov ds,ax
-    mov esi,OFFSET IrqChainStart
-    mov ecx,OFFSET IrqChainEnd - OFFSET IrqChainStart
+    mov esi,OFFSET IsaIrqChainStart
+    mov ecx,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
     rep movs byte ptr es:[edi],ds:[esi]
 ;
     pop edx
     pop ecx
-    add ecx,OFFSET IrqChainEnd - OFFSET IrqChainStart
+    add ecx,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
     CreateCodeSelector16
 ;    
     pop edi
@@ -692,34 +692,34 @@ rihChain:
     pop es
     pop ds
 ;
-    mov fs:[ebp].irch_handler_data,ds
-    mov fs:[ebp].irch_handler_ads,edi
-    mov word ptr fs:[ebp].irch_handler_ads+4,es
+    mov fs:[ebp].isa_irch_handler_data,ds
+    mov fs:[ebp].isa_irch_handler_ads,edi
+    mov word ptr fs:[ebp].isa_irch_handler_ads+4,es
     mov eax,ebp
     sub eax,edx
-    add ax,OFFSET IrqChainEntry - OFFSET IrqChainStart
-    sub ax,OFFSET IrqChainEnd - OFFSET IrqChainStart
-    cmp ax,OFFSET IrqEnd - OFFSET IrqStart
+    add ax,OFFSET IsaIrqChainEntry - OFFSET IsaIrqChainStart
+    sub ax,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
+    cmp ax,OFFSET IsaIrqEnd - OFFSET IsaIrqStart
     jae rihChainPrev
 ;    
-    add ax,OFFSET IrqChainEnd - OFFSET IrqChainStart
-    xchg ax,fs:[edx].irq_chain
-    mov fs:[ebp].irch_chain,ax
+    add ax,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
+    xchg ax,fs:[edx].isa_irq_chain
+    mov fs:[ebp].isa_irch_chain,ax
     jmp rihChainDone
 
 rihChainPrev:
     mov edx,ebp
-    sub edx,OFFSET IrqChainEnd - OFFSET IrqChainStart
-    add ax,OFFSET IrqChainEnd - OFFSET IrqChainStart
-    xchg ax,fs:[edx].irch_chain
-    mov fs:[ebp].irch_chain,ax
+    sub edx,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
+    add ax,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
+    xchg ax,fs:[edx].isa_irch_chain
+    mov fs:[ebp].isa_irch_chain,ax
     jmp rihChainDone
         
 rihReplace:    
-    mov fs:[edx].irq_handler_data,ds
-    mov fs:[edx].irq_handler_ads,edi
-    mov word ptr fs:[edx].irq_handler_ads+4,es
-    mov fs:[edx].irq_detect_nr,-1
+    mov fs:[edx].isa_irq_handler_data,ds
+    mov fs:[edx].isa_irq_handler_ads,edi
+    mov word ptr fs:[edx].isa_irq_handler_ads+4,es
+    mov fs:[edx].isa_irq_detect_nr,-1
 
 rihChainDone:
     pop ax
@@ -751,7 +751,7 @@ rihPrioOk:
     push bx
 ;
     mov ds,fs:[bx].gi_handler_sel
-    mov esi,OFFSET IrqEntry - OFFSET IrqStart
+    mov esi,OFFSET IsaIrqEntry - OFFSET IsaIrqStart
     xor bl,bl
     SetupIntGate
 ;    
@@ -2247,7 +2247,7 @@ CreateIrqHandlers    Proc near
     mov ax,SEG data
     mov ds,ax
     mov bx,OFFSET global_int_arr
-    mov cx,18h
+    mov cx,10h
     xor dl,dl
 
 create_irq_loop:
@@ -2268,7 +2268,7 @@ create_irq_loop:
 ;    
     push ax
     mov al,dl
-    call CreateIrq
+    call CreateIsaIrq
     pop ax
 ;        
     xor bl,bl
