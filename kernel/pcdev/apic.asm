@@ -1019,23 +1019,23 @@ request_pci_irq_handler Proc far
     or dx,dx
     jnz rpihHasHandler
 ;    
-    push cx
-;    
+    push ax
+    push cx    
     mov cx,1
     mov al,ah
     mov ds:[bx].global_int_arr.gi_prio,al
     AllocateInts
     mov ds:[bx].global_int_arr.gi_int_num,al
+    mov dl,al
     pop cx
+    pop ax
 ;
     push ds
     push bx
 ;    
-    push ax
-    mov al,dl
     call CreatePciIrq
-    pop ax
-;        
+;   
+    mov al,dl
     xor bl,bl
     SetupIntGate
     mov dx,ds
@@ -1448,6 +1448,7 @@ test_gate_pr    Proc far
     mov ch,1
     mov edi,OFFSET Test1
     RequestPciIrqHandler
+    int 0C1h
     int 3
     retf32
 test_gate_pr    Endp
