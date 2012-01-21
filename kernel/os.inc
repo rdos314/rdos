@@ -1277,6 +1277,7 @@ GetMsiParam    MACRO
                     ENDM
 
 ; IN  AL        Int base
+; IN  AH        Priority
 ; IN  DS        Data passed to handler
 ; IN  ES:EDI    Handler address
 RequestMsiHandler    MACRO
@@ -1284,10 +1285,22 @@ RequestMsiHandler    MACRO
                     ENDM
 
 ; IN  AL        Global int #
+; IN  AH        Priority
 ; IN  DS        Data passed to handler
 ; IN  ES:EDI    Handler address
 RequestIrqHandler    MACRO
     OsGate request_irq_handler_nr
+                    ENDM
+
+; IN  AL        Global int #
+; IN  AH        Priority
+; IN  BH        Bus
+; IN  BL        Device
+; IN  CH        Function
+; IN  DS        Data passed to handler
+; IN  ES:EDI    Handler address
+RequestPciIrqHandler    MACRO
+    OsGate request_pci_irq_handler_nr
                     ENDM
 
 SetupIrqDetect  MACRO
