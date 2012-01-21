@@ -476,12 +476,16 @@ InitHardware    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NetInt  Proc far
+    xor si,si
+
+niLoop:    
     mov dx,ds:IoBase
     add dx,REG_ISR
     in ax,dx
     or ax,ax
-    jz niFail
+    jz niDone
 ;
+    mov si,1
     or ds:Isr,ax
     out dx,ax
     test ax,IR_ROK OR IR_RDU OR IR_FOVW OR IR_SER
@@ -492,8 +496,7 @@ NetInt  Proc far
     jz niNotRx
 ;
     NetReceived
-    clc
-    jmp niOk
+    jmp niLoop
 
 niNotRx:
     test ax,IR_TOK OR IR_TER
@@ -504,31 +507,31 @@ niNotRx:
     jz niNotTx
 ;
     Signal
-    jmp niOk
+    jmp niLoop
 
 niNotTx:
     test ax,IR_LinkChg
-    jz niOk
+    jz niDone
 ;
     mov dx,ds:IoBase
     add dx,REG_PHYStatus
     in al,dx
     test al,2
-    jnz niOk
+    jnz niDone
 ;
     mov dx,ds:IoBase
     add dx,REG_PHYAR
     mov eax,80001240h
     out dx,eax
 
-niOk:
-    clc
-    jmp niDone
-
-niFail:
-    clc
-        
 niDone:
+    or si,si
+    clc
+    jnz niExit
+;
+    stc
+
+niExit:            
     retf32
 NetInt  Endp
 
