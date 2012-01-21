@@ -1142,7 +1142,7 @@ rpihPrioLowOk:
     mov ax,flat_sel
     mov fs,ax
 ;
-    mov ax,word ptr es:[edx].pci_irq_handler_ads+4
+    mov ax,word ptr fs:[edx].pci_irq_handler_ads+4
     or ax,ax
     jz rpihReplace
 
