@@ -956,10 +956,11 @@ PciIrqChainBefore:
     push bx
     push edx
 ;
-    mov bh,cs:pci_irch_bus
-    mov bl,cs:pci_irch_device
-    mov ch,cs:pci_irch_function
     mov ds,cs:[bx].pci_irch_handler_data
+    mov ah,cs:[bx].pci_irch_bus
+    mov al,cs:[bx].pci_irch_device
+    mov ch,cs:[bx].pci_irch_function
+    mov bx,ax
     call fword ptr cs:[bx].pci_irch_handler_ads
 ;
     pop edx
@@ -981,10 +982,11 @@ PciIrqChainAfter:
     push eax
     push bx
 ;
-    mov bh,cs:pci_irch_bus
-    mov bl,cs:pci_irch_device
-    mov ch,cs:pci_irch_function
     mov ds,cs:[bx].pci_irch_handler_data
+    mov ah,cs:[bx].pci_irch_bus
+    mov al,cs:[bx].pci_irch_device
+    mov ch,cs:[bx].pci_irch_function
+    mov bx,ax
     call fword ptr cs:[bx].pci_irch_handler_ads
 ;
     pop bx
@@ -1598,14 +1600,19 @@ DelayMs Endp
 test_gate_name    DB 'Test Gate',0
 
 Test1   Proc far
-    stc
+    clc
     retf32
 Test1    Endp
 
 Test2   Proc far
-    clc
+    stc
     retf32
 Test2    Endp
+
+Test3   Proc far
+    clc
+    retf32
+Test3    Endp
 
 test_gate_pr    Proc far
     mov ax,SEG data
@@ -1625,6 +1632,14 @@ test_gate_pr    Proc far
     mov bx,0202h
     mov ch,2
     mov edi,OFFSET Test2
+    RequestPciIrqHandler
+    int 0C1h
+;
+    mov al,17h
+    mov ah,18h
+    mov bx,0202h
+    mov ch,2
+    mov edi,OFFSET Test3
     RequestPciIrqHandler
     int 0C1h
 ;
