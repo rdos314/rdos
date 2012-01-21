@@ -526,7 +526,7 @@ niOk:
     jmp niDone
 
 niFail:
-    stc
+    clc
         
 niDone:
     retf32
