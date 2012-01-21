@@ -1011,7 +1011,7 @@ request_pci_irq_handler Proc far
     mov fs,dx
     mov dx,fs:[bx].global_int_arr.gi_handler_sel
     or dx,dx
-    jz rpihHasHandler
+    jnz rpihHasHandler
 ;
     mov dx,fs:[bx].global_int_arr.gi_ioapic_sel
     or dx,dx
