@@ -866,7 +866,7 @@ PciIrqEntry:
     or eax,edx
         
 PciIrqBeforeChain:
-    mov bx,OFFSET PciIrqEnd - OFFSET PciIrqStart
+    mov si,OFFSET PciIrqEnd - OFFSET PciIrqStart
     jmp cs:pci_irq_before_eoi
 
 PciIrqEoi:
@@ -892,7 +892,7 @@ PciIrqEoi:
     pop eax    
 
 PciIrqAfterChain:
-    mov bx,OFFSET PciIrqEnd - OFFSET PciIrqStart
+    mov si,OFFSET PciIrqEnd - OFFSET PciIrqStart
     jmp cs:pci_irq_after_eoi
 
 PciIrqDetectEoi:
@@ -953,49 +953,47 @@ pci_irch_handler      pci_irq_chain_struc <>
 PciIrqChainBefore:
     shl edx,1
     push eax
-    push bx
     push edx
+    push si
 ;
-    mov ds,cs:[bx].pci_irch_handler_data
-    mov ah,cs:[bx].pci_irch_bus
-    mov al,cs:[bx].pci_irch_device
-    mov ch,cs:[bx].pci_irch_function
-    mov bx,ax
-    call fword ptr cs:[bx].pci_irch_handler_ads
+    mov ds,cs:[si].pci_irch_handler_data
+    mov bh,cs:[si].pci_irch_bus
+    mov bl,cs:[si].pci_irch_device
+    mov ch,cs:[si].pci_irch_function
+    call fword ptr cs:[si].pci_irch_handler_ads
 ;
+    pop si
     pop edx
-    pop bx
     pop eax    
     jc PciIrqChainBeforeNext
 ;
     or eax,edx
         
 PciIrqChainBeforeNext:
-    mov si,bx
-    add bx,OFFSET PciIrqChainEnd - OFFSET PciIrqChainStart
-    jmp cs:[si].pci_irch_before_eoi
+    mov bx,si
+    add si,OFFSET PciIrqChainEnd - OFFSET PciIrqChainStart
+    jmp cs:[bx].pci_irch_before_eoi
 
 PciIrqChainAfter:
     shr eax,1
     jnc PciIrqChainAfterNext
 ;
     push eax
-    push bx
+    push si
 ;
-    mov ds,cs:[bx].pci_irch_handler_data
-    mov ah,cs:[bx].pci_irch_bus
-    mov al,cs:[bx].pci_irch_device
-    mov ch,cs:[bx].pci_irch_function
-    mov bx,ax
-    call fword ptr cs:[bx].pci_irch_handler_ads
+    mov ds,cs:[si].pci_irch_handler_data
+    mov bh,cs:[si].pci_irch_bus
+    mov bl,cs:[si].pci_irch_device
+    mov ch,cs:[si].pci_irch_function
+    call fword ptr cs:[si].pci_irch_handler_ads
 ;
-    pop bx
+    pop si
     pop eax    
         
 PciIrqChainAfterNext:
-    mov si,bx
-    add bx,OFFSET PciIrqChainEnd - OFFSET PciIrqChainStart
-    jmp cs:[si].pci_irch_after_eoi
+    mov bx,si
+    add si,OFFSET PciIrqChainEnd - OFFSET PciIrqChainStart
+    jmp cs:[bx].pci_irch_after_eoi
 
 PciIrqChainEnd:
     
