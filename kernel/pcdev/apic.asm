@@ -1031,6 +1031,7 @@ request_pci_irq_handler Proc far
     pop ax
 ;
     push ds
+    push ax
     push bx
 ;    
     call CreatePciIrq
@@ -1041,6 +1042,7 @@ request_pci_irq_handler Proc far
     mov dx,ds
 ;    
     pop bx
+    pop ax
     pop ds
     mov ds:[bx].global_int_arr.gi_handler_sel,dx
     
