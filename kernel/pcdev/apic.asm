@@ -1652,7 +1652,7 @@ test_gate_pr    Proc far
     mov ch,4
     mov edi,OFFSET Test4
     RequestPciIrqHandler
-    int 0C1h
+    int 0F8h
 ;
     int 3
     retf32
