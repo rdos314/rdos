@@ -449,10 +449,6 @@ IrqEntry:
     pushad
 ;
     EnterInt
-    mov ax,apic_mem_sel
-    mov ds,ax
-    xor eax,eax
-    mov ds:APIC_EOI,eax
     sti
 ;       
     mov ds,cs:irq_handler_data
@@ -463,6 +459,10 @@ IrqEntry:
 
 IrqExit:
     cli    
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
     LeaveInt
 ;
     popad
@@ -779,8 +779,19 @@ rihPrioOk:
 ;
     inc bl
     mov fs:ioapic_regsel,bl
+;
+    test dh,1
+    jnz rihLowestPrio
+
+rihBsp:
     mov edx,ds:bsp_id
     shl edx,24
+    jmp rihDeliveryOk
+
+rihLowestPrio:
+    mov edx,0FF000000h
+
+rihDeliveryOk:
     mov fs:ioapic_window,edx
     UnlockIoApic
     pop ds
@@ -1257,8 +1268,19 @@ edLoop:
 ;
     inc bl
     mov es:ioapic_regsel,bl
+;
+    test dh,1
+    jnz edLowestPrio
+
+edBsp:
     mov edx,ds:bsp_id
     shl edx,24
+    jmp edDeliveryOk
+
+edLowestPrio:
+    mov edx,0FF000000h
+
+edDeliveryOk:
     mov es:ioapic_window,edx
     UnlockIoApic
 
@@ -1412,14 +1434,16 @@ disable_all_irq Endp
 get_msi_param_name    DB 'Get MSI Param',0
 
 get_msi_param  Proc far
-    push ds
-    mov dx,SEG data
-    mov ds,dx
-    xor ah,ah
-    mov edx,ds:bsp_id
-    shl edx,12
-    or edx,0FEE00008h
-    pop ds
+    mov ah,1
+    mov edx,0FEEFF000h
+;    push ds
+;    mov dx,SEG data
+;    mov ds,dx
+;    xor ah,ah
+;    mov edx,ds:bsp_id
+;    shl edx,12
+;    or edx,0FEE00008h
+;    pop ds
     retf32
 get_msi_param  Endp
    
@@ -1552,10 +1576,8 @@ start_hpet_timer    Proc far
     jmp start_hpet_done
 
 start_hpet_msi: 
-    mov ax,40h
-    mov edx,ds:bsp_id
-    shl edx,12
-    or edx,0FEE00008h
+    mov ax,140h
+    mov edx,0FEEFF000h
     mov es:[bx].hpetc_msi_data,eax
     mov es:[bx].hpetc_msi_ads,edx
 ;
@@ -2141,7 +2163,7 @@ init_ioapic_isa_trigger_mode:
     mov cx,256-16
 
 init_ioapic_pci_trigger_mode:
-    mov [di].gi_trigger_mode,0A0h
+    mov [di].gi_trigger_mode,0A9h
     add di,8
     loop init_ioapic_pci_trigger_mode
 ;        
