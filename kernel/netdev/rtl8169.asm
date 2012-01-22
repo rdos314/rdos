@@ -923,22 +923,28 @@ get_buffer_first_descr:
 
 get_buffer_save_curr:
     mov ds:TxCurrDescr,ax
-    LeaveSection ds:TxSection
 ;
     mov bx,si
     shr si,2
     add si,OFFSET TxLinearArr
-;
+
+get_buffer_retry:
     mov ax,es:[bx].tx_size
     or ax,ax
     jz get_buffer_take
 ;
-    xor ax,ax
-    mov es,ax    
-    stc
-    jmp get_buffer_done
+    mov dx,ds:IoBase
+    add dx,REG_TPPoll
+    mov al,40h
+    out dx,al    
+;
+    mov ax,5
+    WaitMilliSec    
+    jmp get_buffer_retry
 
 get_buffer_take:
+    LeaveSection ds:TxSection
+;
     add cx,14
     mov es:[bx].tx_size,cx
     mov edx,ds:[si]
