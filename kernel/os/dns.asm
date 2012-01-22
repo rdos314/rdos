@@ -453,7 +453,6 @@ DecodeNodeRequest       Proc near
     jz decode_node_inv_resp
 
 decode_node_question:
-    int 3
     movzx ax,byte ptr es:[di]
     or ax,ax
     jz decode_node_question_opt
