@@ -1292,7 +1292,6 @@ RequestIrqHandler    MACRO
     OsGate request_irq_handler_nr
                     ENDM
 
-; IN  AL        Global int #
 ; IN  AH        Priority
 ; IN  BH        Bus
 ; IN  BL        Device
@@ -2451,7 +2450,7 @@ FindPciDevice   MACRO
 ; IN  BH    Bus
 ; IN  BL    Device
 ; IN  CH    Function
-; OUT AL    Interrupt line
+; OUT AL    Global int #
 GetPciIrqNr     MACRO
     OsGate get_pci_irq_nr
                     ENDM

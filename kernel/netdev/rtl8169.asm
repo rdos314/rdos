@@ -1243,7 +1243,6 @@ siMsi:
     jmp siDone
 
 siIrq:
-    GetPciIrqNr
     mov ah,14h
     mov bx,cs
     mov es,bx

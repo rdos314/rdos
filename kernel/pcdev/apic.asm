@@ -1066,7 +1066,6 @@ CreatePciIrq   Endp
 ;
 ;       PARAMETERS:     DS      Data passed to handler
 ;                       ES:EDI  Handler address
-;                       AL      Global int #
 ;                       AH      Priority
 ;                       BH      Bus
 ;                       BL      Device
@@ -1080,6 +1079,7 @@ request_pci_irq_handler Proc far
     push fs
     pushad
 ;
+    GetPciIrqNr
     mov bp,bx
     movzx bx,al
     shl bx,3
@@ -1596,64 +1596,7 @@ DelayMs Endp
 
 test_gate_name    DB 'Test Gate',0
 
-Test1   Proc far
-    clc
-    retf32
-Test1    Endp
-
-Test2   Proc far
-    stc
-    retf32
-Test2    Endp
-
-Test3   Proc far
-    clc
-    retf32
-Test3    Endp
-
-Test4   Proc far
-    clc
-    retf32
-Test4    Endp
-
 test_gate_pr    Proc far
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,cs
-    mov es,ax
-    mov al,17h
-    mov ah,18h
-    mov bx,0101h
-    mov ch,1
-    mov edi,OFFSET Test1
-    RequestPciIrqHandler
-    int 0C1h
-;
-    mov al,17h
-    mov ah,18h
-    mov bx,0202h
-    mov ch,2
-    mov edi,OFFSET Test2
-    RequestPciIrqHandler
-    int 0C1h
-;
-    mov al,17h
-    mov ah,18h
-    mov bx,0303h
-    mov ch,3
-    mov edi,OFFSET Test3
-    RequestPciIrqHandler
-    int 0C1h
-;
-    mov al,17h
-    mov ah,22h
-    mov bx,0404h
-    mov ch,4
-    mov edi,OFFSET Test4
-    RequestPciIrqHandler
-    int 0F8h
-;
-    int 3
     retf32
 test_gate_pr    Endp
    
