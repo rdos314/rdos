@@ -929,10 +929,10 @@ get_buffer_save_curr:
     add si,OFFSET TxLinearArr
 
 get_buffer_retry:
-    mov ax,es:[bx].tx_size
-    or ax,ax
+    test es:[bx].tx_flags,TX_OWN
     jz get_buffer_take
 ;
+    int 3
     mov dx,ds:IoBase
     add dx,REG_TPPoll
     mov al,40h
@@ -1043,8 +1043,8 @@ send_do:
 
 sPadOk: 
     mov es,ds:TxRingSel
-    or es:[si].tx_flags,TX_OWN
     mov es:[si].tx_size,cx
+    or es:[si].tx_flags,TX_OWN
 ;
     xor ax,ax
     mov es,ax
