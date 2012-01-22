@@ -753,17 +753,6 @@ Preview2:
     mov ds,ax
 
 preview_do:
-    test ds:Isr,IR_RDU OR IR_FOVW OR IR_SER
-    jz pvdo
-;    
-    int 3
-    mov dx,ds:IoBase
-    add dx,REG_ISR
-    in ax,dx
-    mov ax,ds:Isr    
-
-pvdo:
-    mov ds:Isr,0
     mov es,ds:RxRingSel
     mov cx,RX_DESCR_COUNT
     xor bx,bx
