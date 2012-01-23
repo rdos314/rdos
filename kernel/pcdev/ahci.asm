@@ -1004,7 +1004,6 @@ ipaLoop:
     add edx,1000h
     SetPhysicalPage
     sub edx,1000h
-
 ;        
     push bx
     AllocateGdt
@@ -1021,7 +1020,7 @@ ipaLoop:
     mov ax,ide_code_sel
     verr ax
     pop ax    
-    jnz ipaNext
+    jz ipaNext
 ;    
     mov fs:hba_ghc,HBA_GHC_AE
     
@@ -3070,7 +3069,6 @@ dct03  DD OFFSET demand_mount,     SEG code
 dct04  DD OFFSET erase,            SEG code
 
 init_ahci    Proc far
-    int 3
     push ds
     push es
     pusha
@@ -3090,7 +3088,7 @@ init_ahci    Proc far
     HookInitDisc
     
 iaDone:
-;    EndDiscHandler
+    EndDiscHandler
 ;
     popa
     pop es
@@ -3112,7 +3110,7 @@ init_ahci    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
-;    BeginDiscHandler
+    BeginDiscHandler
 ;
     mov ax,cs
     mov es,ax

@@ -2684,10 +2684,6 @@ CheckPciBar Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckPciIde Proc near
-    mov ax,SEG data
-    mov es,ax
-    mov es:ide_pci_count,0
-;    
     xor ax,ax
     mov bh,1
     mov bl,1
@@ -2788,6 +2784,117 @@ cpiDone:
     ret
 CheckPciIde Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CheckPciSata
+;
+;           DESCRIPTION:    Check for PCI SATA devices
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckPciSata Proc near
+    xor ax,ax
+    mov bh,1
+    mov bl,6
+    FindPciClassAll
+    jc cpaDone
+;
+    mov cl,10h
+    ReadPciDword
+    mov cl,al    
+    and ax,0FFFCh
+    mov bp,ax
+;    
+    cmp ax,1F0h
+    je cpaBar1Done
+;    
+    test cl,1
+    jz cpaBar1Done
+;
+    mov si,ax
+    GetPciIrqNr
+    jc cpaBar1Done
+;    
+    call CheckPciBar
+
+cpaBar1Done:
+    mov cl,18h
+    ReadPciDword
+    mov cl,al    
+    and ax,0FFFCh
+;    
+    cmp ax,170h
+    je cpaBar3Done
+;    
+    test cl,1
+    jz cpaBar3Done
+;
+    mov si,ax
+    GetPciIrqNr
+    jc cpaBar3Done
+;    
+    call CheckPciBar
+
+cpaBar3Done:
+    mov dx,1
+
+cpaLoop:
+    mov ax,dx
+    mov bh,1
+    mov bl,6
+    FindPciClassAll
+    jc cpaDone
+;   
+    mov cl,10h
+    ReadPciDword
+    mov cl,al
+    and ax,0FFFCh
+    cmp ax,bp
+    je cpaDone
+;    
+    cmp es:ide_pci_count,MAX_PCI_COUNT
+    je cpaDone
+;    
+    cmp ax,1F0h
+    je cpaNextBar1Done
+;       
+    test cl,1
+    jz cpaNextBar1Done
+;
+    mov si,ax
+    GetPciIrqNr
+    jc cpaNextBar1Done
+;    
+    call CheckPciBar    
+
+cpaNextBar1Done:
+    mov cl,18h
+    ReadPciDword
+    mov cl,al
+    and ax,0FFFCh
+;       
+    test cl,1
+    jz cpaNextBar3Done
+;    
+    cmp ax,170h
+    je cpaNextBar3Done
+;
+    mov si,ax
+    GetPciIrqNr
+    jc cpaNextBar3Done
+;    
+    call CheckPciBar
+
+cpaNextBar3Done:    
+    inc dx
+    jmp cpaLoop
+    
+cpaDone:
+    ret
+CheckPciSata Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2802,6 +2909,7 @@ CheckPciIde Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_ide    Proc far
+    int 3
     push ds
     push es
     pusha
@@ -2885,7 +2993,12 @@ init_ide_done:
     RegisterBimodalUserGate
 
 init_ide_pci:
+    mov ax,SEG data
+    mov es,ax
+    mov es:ide_pci_count,0
+;
     call CheckPciIde
+    call CheckPciSata
     mov ax,SEG data
     mov ds,ax
     mov cx,ds:ide_pci_count
@@ -2899,7 +3012,7 @@ init_ide_pci:
     HookInitDisc
 
 init_ide_exit:
-    EndDiscHandler
+;    EndDiscHandler
 ;
     popa
     pop es
@@ -2921,7 +3034,7 @@ init_ide    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
-    BeginDiscHandler
+;    BeginDiscHandler
 ;
     mov ax,cs
     mov es,ax
