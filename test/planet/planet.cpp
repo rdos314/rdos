@@ -472,7 +472,7 @@ void cdecl main()
         RdosSetFont(VbeHandle, font);
         RdosSetFilledStyle(VbeHandle);
         RdosSetDrawColor(VbeHandle, mkcolor(255, 255, 255));
-        RdosDrawString(VbeHandle, 0, 0, "RDOS Test");
+//        RdosDrawString(VbeHandle, 0, 0, "RDOS Test");
 
         for (i = 0; i < MAX_PLANETS; i++)
         {
