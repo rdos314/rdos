@@ -379,6 +379,9 @@ IrqPort  Proc near
     test eax,HBA_PXI_FATAL OR HBA_PXI_INFO
     jz ipNotError
 ;
+    mov bx,es:ap_notify_thread
+    Signal
+;    
     mov ds,es:ap_cmd_sel
     xor si,si
     mov cx,32
@@ -386,12 +389,10 @@ IrqPort  Proc near
 ipSignalLoop:
     xor bx,bx
     xchg bx,ds:[si].acl_thread
-    mov bx,es:ap_notify_thread
-    Signal
-;    or bx,bx
-;    jz ipSignalNext
+    or bx,bx
+    jz ipSignalNext
 ;    
-;    Signal
+    Signal
 
 ipSignalNext:
     add si,20h
@@ -518,6 +519,9 @@ AhciPortInt  Proc far
     test eax,HBA_PXI_FATAL OR HBA_PXI_INFO
     jz apiNotError
 ;
+    mov bx,ds:ap_notify_thread
+    Signal
+;
     mov es,ds:ap_cmd_sel
     xor si,si
     mov cx,32
@@ -525,12 +529,10 @@ AhciPortInt  Proc far
 apiSignalLoop:
     xor bx,bx
     xchg bx,es:[si].acl_thread
-    mov bx,ds:ap_notify_thread
-    Signal
-;    or bx,bx
-;    jz apiSignalNext
+    or bx,bx
+    jz apiSignalNext
 ;    
-;    Signal
+    Signal
 
 apiSignalNext:
     add si,20h
@@ -2435,9 +2437,6 @@ perform_write_queue_loop:
     movzx ecx,cx
     shl ecx,9
     mov ds:[bx].acl_total_count,ecx
-;
-    mov cx,gs:ap_notify_thread
-    mov ds:[bx].acl_thread,cx        
     pop ds
 ;
     call StartCmd
@@ -2498,9 +2497,6 @@ perform_read_queue_loop:
     movzx ecx,cx
     shl ecx,9
     mov ds:[bx].acl_total_count,ecx
-;
-    mov cx,gs:ap_notify_thread
-    mov ds:[bx].acl_thread,cx        
     pop ds
 ;
     call StartCmd
