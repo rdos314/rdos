@@ -46,6 +46,9 @@ ipause   MACRO
     ENDM
 
 
+IRQ_TYPE_ISA    = 5Ch
+IRQ_TYPE_PCI    = 9Ah
+
 ; PCI IRQs active low, edge triggered
 
 apic_struc  STRUC
@@ -433,6 +436,7 @@ isa_irq_handler_struc   STRUC
 isa_irq_linear          DD ?
 isa_irq_handler_ads     DD ?,?
 isa_irq_handler_data    DW ?
+isa_irq_type            DW ?
 isa_irq_chain           DW ?
 isa_irq_detect_nr       DB ?
 
@@ -585,6 +589,7 @@ CreateIsaIrq   Proc near
     mov es:[edx].isa_irq_handler_data,0
     pop ax
     mov es:[edx].isa_irq_detect_nr,al
+    mov es:[edx].isa_irq_type,IRQ_TYPE_ISA
 ;
     mov ds,bx
     mov esi,OFFSET IsaIrqEntry - OFFSET IsaIrqStart
@@ -818,6 +823,7 @@ pci_irq_handler_struc   STRUC
 pci_irq_linear          DD ?
 pci_irq_handler_ads     DD ?,?
 pci_irq_handler_data    DW ?
+pci_irq_type            DW ?
 pci_irq_before_eoi      DW ?
 pci_irq_after_eoi       DW ?
 pci_irq_detect_nr       DB ?
@@ -1044,6 +1050,7 @@ CreatePciIrq   Proc near
     mov es:[edx].pci_irq_function,0
     pop ax
     mov es:[edx].pci_irq_detect_nr,al
+    mov es:[edx].isa_irq_type,IRQ_TYPE_PCI
 ;
     mov ds,bx
     mov esi,OFFSET PciIrqEntry - OFFSET PciIrqStart
@@ -1138,6 +1145,45 @@ rpihPrioLowOk:
 ;   
     mov bx,dx
     mov fs,bx
+    mov dx,fs:pci_irq_type
+    cmp dx,IRQ_TYPE_PCI
+    je rpihPciHandler
+;
+    int 3        
+    movzx bx,al
+    shl bx,3
+;    
+    push ax
+    push cx    
+    mov cx,1
+    mov al,ah
+    mov ds:[bx].global_int_arr.gi_prio,al
+    AllocateInts
+    mov ds:[bx].global_int_arr.gi_int_num,al
+    mov dl,al
+    pop cx
+    pop ax
+;
+    push ds
+    push ax
+    push bx
+;    
+    call CreatePciIrq
+;   
+    mov al,dl
+    xor bl,bl
+    SetupIntGate
+    mov dx,ds
+;    
+    pop bx
+    pop ax
+    pop ds
+    mov ds:[bx].global_int_arr.gi_handler_sel,dx
+;
+    mov bx,dx
+    mov fs,bx
+
+rpihPciHandler:    
     mov edx,fs:pci_irq_linear
     mov ax,flat_sel
     mov fs,ax
@@ -1596,7 +1642,23 @@ DelayMs Endp
 
 test_gate_name    DB 'Test Gate',0
 
+Test1   Proc far
+    retf32
+Test1   Endp
+
 test_gate_pr    Proc far
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,cs
+    mov es,ax
+    mov bh,7
+    mov bl,0
+    mov ch,0
+    mov ah,14h
+    mov edi,OFFSET Test1
+    RequestPciIrqHandler
+;    
+    
     retf32
 test_gate_pr    Endp
    
