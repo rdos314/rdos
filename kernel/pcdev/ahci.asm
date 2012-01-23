@@ -1017,6 +1017,12 @@ ipaLoop:
     test fs:hba_ghc,HBA_GHC_AE
     jnz ipaAdd
 ;
+    push ax
+    mov ax,ide_code_sel
+    verr ax
+    pop ax    
+    jnz ipaNext
+;    
     mov fs:hba_ghc,HBA_GHC_AE
     
 ipaAdd:
@@ -3064,6 +3070,7 @@ dct03  DD OFFSET demand_mount,     SEG code
 dct04  DD OFFSET erase,            SEG code
 
 init_ahci    Proc far
+    int 3
     push ds
     push es
     pusha
@@ -3083,7 +3090,7 @@ init_ahci    Proc far
     HookInitDisc
     
 iaDone:
-    EndDiscHandler
+;    EndDiscHandler
 ;
     popa
     pop es
@@ -3105,7 +3112,7 @@ init_ahci    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
-    BeginDiscHandler
+;    BeginDiscHandler
 ;
     mov ax,cs
     mov es,ax
