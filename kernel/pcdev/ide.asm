@@ -2909,7 +2909,6 @@ CheckPciSata Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_ide    Proc far
-    int 3
     push ds
     push es
     pusha
@@ -3011,7 +3010,7 @@ init_ide_pci:
     HookInitDisc
 
 init_ide_exit:
-;    EndDiscHandler
+    EndDiscHandler
 ;
     popa
     pop es
@@ -3033,7 +3032,7 @@ init_ide    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
-;    BeginDiscHandler
+    BeginDiscHandler
 ;
     mov ax,cs
     mov es,ax
