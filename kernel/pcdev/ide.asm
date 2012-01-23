@@ -2190,7 +2190,6 @@ disc_assign_pci    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 drive_assign1   Proc far
-    int 3
     mov fs,bx
     mov ds,fs:disc_ide_sel
 ;
@@ -2910,6 +2909,7 @@ CheckPciSata Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_ide    Proc far
+    int 3
     push ds
     push es
     pusha
@@ -2999,9 +2999,8 @@ init_ide_pci:
 ;
     call CheckPciIde
     call CheckPciSata
-    mov ax,SEG data
-    mov ds,ax
-    mov cx,ds:ide_pci_count
+;    
+    mov cx,es:ide_pci_count
     or cx,cx
     jz init_ide_exit
 ;    
@@ -3012,7 +3011,7 @@ init_ide_pci:
     HookInitDisc
 
 init_ide_exit:
-    EndDiscHandler
+;    EndDiscHandler
 ;
     popa
     pop es
@@ -3034,7 +3033,7 @@ init_ide    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
-    BeginDiscHandler
+;    BeginDiscHandler
 ;
     mov ax,cs
     mov es,ax
