@@ -2619,10 +2619,18 @@ CheckPciBar    Proc near
     in al,dx
     pop dx
     and al,7Fh
+    jz cpbFailPop
+;    
     cmp al,7Fh
-    pop ax
+    jne cpbOk
+
+cpbFailPop:    
     stc
-    je cpbDone
+    pop ax
+    jmp cpbDone
+
+cpbOk:
+    pop ax
 ;    
     mov di,es:ide_pci_count
     add di,di
