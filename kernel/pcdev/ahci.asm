@@ -386,10 +386,12 @@ IrqPort  Proc near
 ipSignalLoop:
     xor bx,bx
     xchg bx,ds:[si].acl_thread
-    or bx,bx
-    jz ipSignalNext
-;    
+    mov bx,es:ap_notify_thread
     Signal
+;    or bx,bx
+;    jz ipSignalNext
+;    
+;    Signal
 
 ipSignalNext:
     add si,20h
@@ -404,6 +406,9 @@ ipSignalNext:
 ipNotError:    
     test eax,HBA_PXI_DP
     jz ipDone
+;
+    mov bx,es:ap_notify_thread
+    Signal
 ;
     RequestSpinlock es:ap_spinlock
     mov edx,ds:hba_pxci
@@ -520,10 +525,12 @@ AhciPortInt  Proc far
 apiSignalLoop:
     xor bx,bx
     xchg bx,es:[si].acl_thread
-    or bx,bx
-    jz apiSignalNext
-;    
+    mov bx,ds:ap_notify_thread
     Signal
+;    or bx,bx
+;    jz apiSignalNext
+;    
+;    Signal
 
 apiSignalNext:
     add si,20h
@@ -538,6 +545,9 @@ apiSignalNext:
 apiNotError:    
     test eax,HBA_PXI_DP
     jz apiDone
+;
+    mov bx,ds:ap_notify_thread
+    Signal
 ;
     RequestSpinlock ds:ap_spinlock
     mov edx,es:hba_pxci
@@ -2351,23 +2361,6 @@ install_part_done:
     pop es
     ret
 InstallPartition    Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           Perform_one
-;
-;       DESCRIPTION:    Perform one request
-;
-;       PARAMETERS:     GS      Port sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_timeout  Proc far
-    mov bx,cx
-    Signal
-    retf32
-notify_timeout  Endp
 
 perform_one     Proc near
 
@@ -2377,30 +2370,6 @@ perform_one_loop:
     GetDiscRequestArray
     jc perform_one_done
 ;    
-    test gs:ap_flags,PORT_FLAG_TIMER
-    jz perform_one_timer_done
-;    
-    push es
-    push bx
-    push cx
-;
-    mov bx,gs:ap_notify_thread
-    StopTimer    
-;    
-    mov cx,bx
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET notify_timeout
-    GetSystemTime
-    add eax,1193 * 15
-    adc edx,0
-    StartTimer        
-;
-    pop cx    
-    pop bx
-    pop es
-
-perform_one_timer_done:
     mov edi,es:[esi]
     mov al,es:[edi].dh_state
     cmp al,STATE_EMPTY

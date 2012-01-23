@@ -504,11 +504,13 @@ void StartCore()
 ##########################################################################*/
 void StopCore()
 {
+/*
     if (ActiveProcessors > 1 && RdosHasGlobalTimer())
     {
         ActiveProcessors--;
         ReqShutdown(ActiveProcessors);
     }
+*/    
 }
     
 /*##########################################################################
