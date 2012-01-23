@@ -2758,7 +2758,7 @@ CreateIrqHandlers    Proc near
     mov ax,SEG data
     mov ds,ax
     mov bx,OFFSET global_int_arr
-    mov cx,10h
+    mov cx,18h
     xor dl,dl
 
 create_irq_loop:
