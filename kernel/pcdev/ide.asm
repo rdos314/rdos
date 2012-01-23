@@ -2190,6 +2190,7 @@ disc_assign_pci    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 drive_assign1   Proc far
+    int 3
     mov fs,bx
     mov ds,fs:disc_ide_sel
 ;
