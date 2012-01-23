@@ -651,8 +651,6 @@ InitHardware    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NetInt  Proc far
-    xor si,si
-;    
     mov dx,ds:IoBase
     add dx,REG_IMR
     xor ax,ax
@@ -709,14 +707,6 @@ niDone:
     add dx,REG_IMR
     mov ax,IR_MASK
     out dx,ax
-;
-    or si,si
-    clc
-    jnz niExit
-;
-    stc
-
-niExit:            
     retf32
 NetInt  Endp
 
@@ -1243,11 +1233,12 @@ siMsi:
     jmp siDone
 
 siIrq:
+    GetPciIrqNr
     mov ah,14h
     mov bx,cs
     mov es,bx
     mov edi,OFFSET NetInt    
-    RequestPciIrqHandler
+    RequestIrqHandler
 
 siDone:
     pop edi
