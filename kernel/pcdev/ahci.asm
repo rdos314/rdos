@@ -258,6 +258,7 @@ ap_notify_thread    DW ?
 ap_flags            DW ?
 ap_is               DD ?
 ap_errors           DD ?
+ap_restart_count    DW ?
 
 ap_spinlock         spinlock_typ <>
 ap_slot_mask        DD ?
@@ -862,6 +863,7 @@ apPhysLoop:
     mov ds:ap_reserved_mask,0
     mov ds:ap_is,0
     mov ds:ap_errors,0
+    mov ds:ap_restart_count,0
     InitSpinlock ds:ap_spinlock
 ;
     pop ax
@@ -2601,9 +2603,15 @@ notify_discbuf_retry:
     or edx,edx
     jz notify_discbuf_loop
 ;    
+    mov ax,gs:ap_restart_count
+    cmp ax,3
+    jb notify_do_reset
+;
     int 3
-    and al,NOT HBA_PXCMD_ST
-    mov ds:hba_pxcmd,eax
+
+notify_do_reset:
+    inc gs:ap_restart_count            
+    and ds:hba_pxcmd,NOT HBA_PXCMD_ST
 
 notify_wait_reset:
     mov ax,25
@@ -2626,6 +2634,7 @@ notify_wait_start:
     jmp notify_discbuf_loop
 
 notify_cmd_check:
+    mov gs:ap_restart_count,0
     xor cx,cx
     mov ds,gs:ap_cmd_sel
     xor si,si
