@@ -381,22 +381,6 @@ IrqPort  Proc near
 ;
     mov bx,es:ap_notify_thread
     Signal
-;    
-    mov ds,es:ap_cmd_sel
-    xor si,si
-    mov cx,32
-
-ipSignalLoop:
-    xor bx,bx
-    xchg bx,ds:[si].acl_thread
-    or bx,bx
-    jz ipSignalNext
-;    
-    Signal
-
-ipSignalNext:
-    add si,20h
-    loop ipSignalLoop
 ;
     mov ds,es:ap_hba_sel
     mov eax,ds:hba_pxserr
@@ -521,22 +505,6 @@ AhciPortInt  Proc far
 ;
     mov bx,ds:ap_notify_thread
     Signal
-;
-    mov es,ds:ap_cmd_sel
-    xor si,si
-    mov cx,32
-
-apiSignalLoop:
-    xor bx,bx
-    xchg bx,es:[si].acl_thread
-    or bx,bx
-    jz apiSignalNext
-;    
-    Signal
-
-apiSignalNext:
-    add si,20h
-    loop apiSignalLoop
 ;
     mov es,ds:ap_hba_sel
     mov eax,es:hba_pxserr
@@ -2617,8 +2585,41 @@ notify_discbuf_retry:
     ReleaseSpinlock gs:ap_spinlock       
 ;
     and eax,gs:ap_slot_mask
-    jz notify_discbuf_loop
+    jnz notify_cmd_check
 ;
+    mov eax,ds:hba_pxcmd
+    test eax,HBA_PXCMD_CR
+    jnz notify_discbuf_loop
+;
+    mov edx,ds:hba_pxci
+    or edx,edx
+    jz notify_discbuf_loop
+;    
+    int 3
+    and al,NOT HBA_PXCMD_ST
+    mov ds:hba_pxcmd,eax
+
+notify_wait_reset:
+    mov ax,25
+    WaitMilliSec
+    test ds:hba_pxcmd,HBA_PXCMD_ST
+    jnz notify_wait_reset        
+;
+    or ds:hba_pxcmd,HBA_PXCMD_ST        
+
+notify_wait_start:
+    mov ax,25
+    WaitMilliSec
+    test ds:hba_pxcmd,HBA_PXCMD_CR
+    jz notify_wait_start        
+;
+    mov ax,100
+    WaitMilliSec
+;
+    mov ds:hba_pxci,edx
+    jmp notify_discbuf_loop
+
+notify_cmd_check:
     xor cx,cx
     mov ds,gs:ap_cmd_sel
     xor si,si
