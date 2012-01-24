@@ -2360,6 +2360,9 @@ perform_one_write:
     call AllocateSlot
     jnc perform_write_has_slot
 ;
+    mov bx,gs:ap_notify_thread
+    Signal
+;
     mov ax,10
     WaitMilliSec
     jmp perform_one_write
@@ -2418,6 +2421,9 @@ perform_write_queue_loop:
 perform_one_read:
     call AllocateSlot
     jnc perform_read_has_slot
+;
+    mov bx,gs:ap_notify_thread
+    Signal
 ;
     mov ax,10
     WaitMilliSec
