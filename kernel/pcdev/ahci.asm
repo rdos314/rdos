@@ -2662,8 +2662,8 @@ notify_cmd_next:
     or eax,eax
     jnz notify_cmd_loop
 ;    
-    or cx,cx
-    jz notify_discbuf_retry
+;    or cx,cx
+;    jz notify_discbuf_retry
 ;
     mov ax,1
     WaitMilliSec
