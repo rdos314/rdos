@@ -2663,7 +2663,7 @@ notify_cmd_next:
     jnz notify_cmd_loop
 ;    
     or cx,cx
-    jz notify_discbuf_loop
+    jz notify_discbuf_retry
 ;
     mov ax,1
     WaitMilliSec
