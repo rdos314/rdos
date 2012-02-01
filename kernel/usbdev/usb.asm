@@ -1964,6 +1964,7 @@ config_usb_device       Proc near
     push fs
     push gs
     push ax
+    push bx
     push cx
     push esi
     push edi
@@ -2077,6 +2078,7 @@ cudDone:
     pop edi
     pop esi
     pop cx
+    pop bx
     pop ax
     pop gs
     pop fs
