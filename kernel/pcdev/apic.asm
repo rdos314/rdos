@@ -3669,12 +3669,6 @@ init    PROC far
     mov ax,has_global_timer_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET test_gate_pr
-    mov edi,OFFSET test_gate_name
-    xor dx,dx
-    mov ax,test_gate_nr
-    RegisterBimodalUserGate
-;
     mov edi,OFFSET init_task
     HookInitTasking
 ;

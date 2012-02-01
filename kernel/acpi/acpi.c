@@ -64,6 +64,10 @@ extern void ReqShutdown(int Core);
 #define AMD10_PERF_STATUS    0xC0010063
 #define AMD10_PERF_CTL       0xC0010062
 
+#define INTEL_PERF_STATUS    0x198
+#define INTEL_PERF_CTL       0x199
+
+
 char ReadBytePort(short int address);
 
 void CliHlt();
@@ -303,7 +307,14 @@ char TempResourceBuf[0x4000];
 
 void __far ImplTestGate(const char *msg)
 {
-    RdosEnterC3();
+    int i;
+    int StateId = (int)ReadMsr(INTEL_PERF_STATUS) & 0xFFFF;
+
+    PowerState = 0;
+
+    for (i = 0; i < PowerStateCount; i++)
+        if (StateId == PowerStateArr[i]->Status)
+            PowerState = i;
 }
     
 /*##########################################################################
@@ -530,7 +541,8 @@ void __far PowerThread(void *param)
 
     ProcessorCount = RdosGetCoreCount();
 
-    (*power_init_proc)();
+    if (power_init_proc)
+        (*power_init_proc)();
 
     for (Core = 0; Core < ProcessorCount; Core++)
         RdosGetCoreLoad(Core, &NullTicsArr[Core], &CoreTicsArr[Core]);
@@ -559,7 +571,10 @@ void __far PowerThread(void *param)
         if (MaxCpuLoad > 60)
         {
             if (ActiveProcessors == ProcessorCount)
-                (*power_update_proc)(-1);
+            {
+                if (power_update_proc)
+                    (*power_update_proc)(-1);
+            }
             else
                 StartCore();
         }
@@ -569,7 +584,10 @@ void __far PowerThread(void *param)
             if (PowerState == PowerStateCount - 1)
                 StopCore();
             else        
-                (*power_update_proc)(1);
+            {
+                if (power_update_proc)
+                    (*power_update_proc)(1);
+            }
         }        
     }
 }
@@ -1761,6 +1779,9 @@ void GetHardware()
     int i;
     int j;
 
+    while (ProcessorCount > 1 && ProcessorArr[ProcessorCount-1]->ObjectList == 0)
+        ProcessorCount--;
+
     for (i = 0; i < MAX_DEVICE_COUNT; i++)
     {
         DevEntry = DeviceArr[i];
@@ -2287,7 +2308,7 @@ void __far InitTasking()
         }
     }    
 
-    if (power_init_proc)
+    if (power_init_proc || RdosGetCoreCount() > 1)
         RdosCreateKernelThread(5, 0x1000, &PowerThread, "ACPI Power", 0);
 } 
 
@@ -2330,5 +2351,5 @@ int main()
     RdosRegisterUserGate(usergate_get_acpi_device, &ImplGetAcpiDevice16, &ImplGetAcpiDevice32, "Get ACPI Device");
     RdosRegisterBimodalUserGate(usergate_get_cpu_temperature, &ImplGetCpuTemperature, "Get CPU Temperature");
 
-/*    RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate"); */
+    RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate"); 
 }
