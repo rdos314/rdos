@@ -34,7 +34,7 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-class TWh1080Pipe : public TUsbPipe
+class TWh1080 : public TThread
 {
 public:
     TWh1080Pipe(int Controller, int Device, int Pipe);
@@ -42,6 +42,9 @@ public:
 
 protected:
     virtual void Execute();
+
+    TUsbPipe FControlPipe;
+    TUsbPipe FInputPipe;    
 };
 
 /*##########################################################################
@@ -61,7 +64,7 @@ void NotifyData(const char *buf)
 
 /*##########################################################################
 #
-#   Name       : TWh1080Pipe::TWh1080Pipe
+#   Name       : TWh1080::TWh1080
 #
 #   Purpose....: Constructor
 #
@@ -70,15 +73,16 @@ void NotifyData(const char *buf)
 #   Returns....: *
 #
 ##########################################################################*/
-TWh1080Pipe::TWh1080Pipe(int Controller, int Device, int Pipe)
-  : TUsbPipe(Controller, Device, Pipe)
+TWh1080::TWh1080(int Controller, int Device, int Pipe)
+  : FControlPipe(Controller, Device, 0,
+    FInputPipe(Controller, Device, Pipe)
 {
-    Start("WH1080 Pipe", 0x4000);
+    Start("WH1080", 0x4000);
 }
 
 /*##########################################################################
 #
-#   Name       : TWh1080Pipe::~TWh1080Pipe
+#   Name       : TWh1080::~TWh1080
 #
 #   Purpose....: Destructor
 #
@@ -87,13 +91,13 @@ TWh1080Pipe::TWh1080Pipe(int Controller, int Device, int Pipe)
 #   Returns....: *
 #
 ##########################################################################*/
-TWh1080Pipe::~TWh1080Pipe()
+TWh1080::~TWh1080()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TWh1080Pipe::Execute
+#   Name       : TWh1080::Execute
 #
 #   Purpose....: Execute method
 #
@@ -102,7 +106,7 @@ TWh1080Pipe::~TWh1080Pipe()
 #   Returns....: *
 #
 ##########################################################################*/
-void TWh1080Pipe::Execute()
+void TWh1080::Execute()
 {
     char buf[8];
 
@@ -129,9 +133,12 @@ void TWh1080Pipe::Execute()
 ##########################################################################*/
 void Execute(int Hid, int Controller, int Device, int Pipe)
 {
-    TWh1080Pipe StationPipe(Controller, Device, Pipe);
+    TWh1080 Station(Controller, Device, Pipe);
 
     printf("Found weather station started\r\n");
+
+    for (;;)
+        RdosWaitMilli(1000);
 }
 
 /*##########################################################################

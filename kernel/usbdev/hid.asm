@@ -2392,6 +2392,226 @@ get_hid_pipe  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           ReadHid
+;
+;           DESCRIPTION:    Read HID report
+;
+;           PARAMETERS:     BX          HID handle
+;                           ES:(E)DI    Buffer
+;                           CX          Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_hid_name     DB 'Read HID',0
+
+read_hid    Proc near
+    sub sp,8
+    mov bp,sp
+;
+    push es
+    push cx
+    push di 
+;
+    mov ax,ss
+    mov es,ax
+    mov di,bp
+;    
+    mov es:usd_type,0A1h
+    mov es:usd_req,1
+    mov es:usd_value,100h
+    mov es:usd_index,0
+    mov es:usd_len,cx
+    xor di,di
+;
+    mov bx,ds:hid_control_handle
+    LockUsbPipe
+    mov cx,8
+    WriteUsbControl
+;
+    pop di
+    pop cx
+    pop es    
+;
+    UserGateForce32 req_usb_data_nr    
+    WriteUsbStatus
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:hid_control_wait
+    WaitWithTimeout
+    add sp,8    
+;    
+    mov bx,ds:hid_control_handle
+    WasUsbTransactionOk
+    pushf
+    UnlockUsbPipe
+    popf               
+    ret
+read_hid    Endp
+
+read_hid16  Proc far
+    push ds
+    push eax
+    push ebx
+    push edx
+    push edi
+    push bp
+;
+    mov ax,HID_HANDLE
+    DerefHandle
+    jc rdDone16
+;
+    movzx edi,di
+    mov ds,[ebx].hh_hid_sel
+    call read_hid
+
+rdDone16:
+    pop bp
+    pop edi
+    pop edx
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+read_hid16  Endp
+
+read_hid32  Proc far
+    push ds
+    push eax
+    push ebx
+    push edx
+    push bp
+;
+    mov ax,HID_HANDLE
+    DerefHandle
+    jc rdDone32
+;
+    mov ds,[ebx].hh_hid_sel
+    call read_hid
+
+rdDone32:
+    pop bp
+    pop edx
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+read_hid32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           WriteHid
+;
+;           DESCRIPTION:    Write HID report
+;
+;           PARAMETERS:     BX          HID handle
+;                           ES:(E)DI    Buffer
+;                           CX          Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_hid_name     DB 'Write HID',0
+
+write_hid    Proc near
+    sub sp,8
+    mov bp,sp
+;
+    push es
+    push cx
+    push di 
+;
+    mov ax,ss
+    mov es,ax
+    mov di,bp
+;    
+    mov es:usd_type,21h
+    mov es:usd_req,9
+    mov es:usd_value,200h
+    mov es:usd_index,0
+    mov es:usd_len,cx
+    xor di,di
+;
+    mov bx,ds:hid_control_handle
+    LockUsbPipe
+    mov cx,8
+    WriteUsbControl
+;
+    pop di
+    pop cx
+    pop es    
+;
+    UserGateForce32 write_usb_data_nr    
+    ReqUsbStatus
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:hid_control_wait
+    WaitWithTimeout
+    add sp,8    
+;    
+    mov bx,ds:hid_control_handle
+    WasUsbTransactionOk
+    pushf
+    UnlockUsbPipe
+    popf               
+    ret
+write_hid    Endp
+
+write_hid16  Proc far
+    push ds
+    push eax
+    push ebx
+    push edx
+    push edi
+    push bp
+;
+    mov ax,HID_HANDLE
+    DerefHandle
+    jc wrDone16
+;
+    movzx edi,di
+    mov ds,[ebx].hh_hid_sel
+    call write_hid
+
+wrDone16:
+    pop bp
+    pop edi
+    pop edx
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+write_hid16  Endp
+
+write_hid32  Proc far
+    push ds
+    push eax
+    push ebx
+    push edx
+    push bp
+;
+    mov ax,HID_HANDLE
+    DerefHandle
+    jc wrDone32
+;
+    mov ds,[ebx].hh_hid_sel
+    call write_hid
+
+wrDone32:
+    pop bp
+    pop edx
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+write_hid32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           delete_handle
 ;
 ;           DESCRIPTION:    BX       HID handle
@@ -2462,6 +2682,20 @@ init    Proc far
     xor dx,dx
     mov ax,get_hid_pipe_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET read_hid16
+    mov esi,OFFSET read_hid32
+    mov edi,OFFSET read_hid_name
+    mov dx,virt_es_in
+    mov ax,read_hid_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET write_hid16
+    mov esi,OFFSET write_hid32
+    mov edi,OFFSET write_hid_name
+    mov dx,virt_es_in
+    mov ax,write_hid_nr
+    RegisterUserGate
     clc
     ret
 init    Endp

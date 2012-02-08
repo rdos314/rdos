@@ -33,7 +33,6 @@
 #define usergate_create_thread 28
 #define usergate_terminate_thread 29
 #define usergate_get_thread 30
-#define usergate_swap 31
 
 #define usergate_create_user_section 32
 #define usergate_create_blocked_user_section 33
@@ -578,6 +577,9 @@
 
 #define usergate_remote_debug 465
 
+#define usergate_read_hid 466
+#define usergate_write_hid 467
+
 
 
 #ifdef __FLAT__
@@ -616,7 +618,6 @@
 #define CallGate_create_thread 0x67 0x9a 28 0 0 0 3 0
 #define CallGate_terminate_thread 0x67 0x9a 29 0 0 0 3 0
 #define CallGate_get_thread 0x67 0x9a 30 0 0 0 3 0
-#define CallGate_swap 0x67 0x9a 31 0 0 0 3 0
 
 #define CallGate_create_user_section 0x67 0x9a 32 0 0 0 3 0
 #define CallGate_create_blocked_user_section 0x67 0x9a 33 0 0 0 3 0
@@ -1161,6 +1162,9 @@
 
 #define CallGate_remote_debug 0x67 0x9a 209 1 0 0 3 0
 
+#define CallGate_read_hid 0x67 0x9a 210 1 0 0 3 0
+#define CallGate_write_hid 0x67 0x9a 211 1 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1197,7 +1201,6 @@
 #define CallGate_create_thread 0x3e 0x67 0x9a 28 0 0 0 3 0
 #define CallGate_terminate_thread 0x3e 0x67 0x9a 29 0 0 0 3 0
 #define CallGate_get_thread 0x3e 0x67 0x9a 30 0 0 0 3 0
-#define CallGate_swap 0x3e 0x67 0x9a 31 0 0 0 3 0
 
 #define CallGate_create_user_section 0x3e 0x67 0x9a 32 0 0 0 3 0
 #define CallGate_create_blocked_user_section 0x3e 0x67 0x9a 33 0 0 0 3 0
@@ -1741,5 +1744,8 @@
 #define CallGate_has_global_timer 0x3e 0x67 0x9a 208 1 0 0 3 0
 
 #define CallGate_remote_debug 0x3e 0x67 0x9a 209 1 0 0 3 0
+
+#define CallGate_read_hid 0x3e 0x67 0x9a 210 1 0 0 3 0
+#define CallGate_write_hid 0x3e 0x67 0x9a 211 1 0 0 3 0
 
 #endif

@@ -2633,6 +2633,20 @@ GetHidPipe      MACRO
 	UserGate get_hid_pipe_nr
 						ENDM
 
+;   IN  BX          Handle
+;   IN  ES:(E)DI    Buffer
+;   IN  CX          Buffer Size
+ReadHid      MACRO
+	UserGate read_hid_nr
+						ENDM
+
+;   IN  BX          Handle
+;   IN  ES:(E)DI    Buffer
+;   IN  CX          Buffer Size
+WriteHid      MACRO
+	UserGate write_hid_nr
+						ENDM
+
 ;;;;;;;;;;; ICSP (In-circuit serial programming) ;;;;;;;;;;
 
 ;   IN  AL          Device #

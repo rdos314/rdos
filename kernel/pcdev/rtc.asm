@@ -66,23 +66,11 @@ code    SEGMENT byte public use16 'CODE'
 ;
 ;           DESCRIPTION:    RTC INTERRUPT
 ;
-;           PARAMETERS:         
+;           PARAMETERS:     DS      System data sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-rtc_int:
-    push ds
-    push es
-    pushad
-;
-    mov al,20h
-    out INT0_CONTROL,al
-;
-    mov bx,system_data_sel
-    mov ds,bx
-;
-    out INT1_CONTROL,al
-;
+rtc_int Proc far
     mov al,0Ch
     out 70h,al
     jmp short $+2
@@ -112,11 +100,8 @@ rtc_int_first:
     mov ds:last_time+4,edx
 
 rtc_int_done:
-    popad
-    pop es
-    pop ds
-    iretd
-
+    retf32
+rtc_int Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -135,11 +120,11 @@ setup_int       PROC near
     mov ds:time_drift,0
 ;    
     mov ax,cs
-    mov ds,ax
-    mov al,38h
-    mov bl,0
-    mov esi,OFFSET rtc_int 
-    SetupIntGate
+    mov es,ax
+    mov edi,OFFSET rtc_int 
+    mov al,8
+    mov ah,30
+    RequestIrqHandler
 ;       
     mov ax,SEG data
     mov ds,ax

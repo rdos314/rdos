@@ -634,6 +634,8 @@ int RDOSAPI RdosWasUsbTransactionOk(int Handle);
 int RDOSAPI RdosOpenHid(int Controller, int Device);
 void RDOSAPI RdosCloseHid(int handle);
 int RDOSAPI RdosGetHidPipe(int Handle);
+int RDOSAPI RdosReadHid(int Handle, char *buf, int size);
+int RDOSAPI RdosWriteHid(int Handle, const char *buf, int size);
 
 int RDOSAPI RdosGetAllocatedUsbBlocks();
 int RDOSAPI RdosGetUsbCloseCount();
@@ -2957,6 +2959,18 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     parm [ebx] \
     value [eax];
 
+#pragma aux RdosReadHid = \
+    CallGate_read_hid \
+    CarryToBool \
+    parm [ebx] [edi] [ecx] \
+    value [eax];
+
+#pragma aux RdosWriteHid = \
+    CallGate_write_hid \
+    CarryToBool \
+    parm [ebx] [edi] [ecx] \
+    value [eax];
+    
 #pragma aux RdosOpenICSP = \
     CallGate_open_icsp \
     ValidateHandle \
