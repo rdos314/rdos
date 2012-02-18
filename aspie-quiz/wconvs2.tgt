@@ -67,8 +67,8 @@ n????Include directories:
 1
 17
 WString
-80
-"\rdos\kernel\classlib;\rdos\kernel\classlib\win32;$(%watcom)/h;$(%watcom)/h/nt"
+66
+"\rdos\classlib;\rdos\classlib\win32;$(%watcom)/h;$(%watcom)/h/nt"
 0
 18
 WVList
@@ -115,8 +115,8 @@ WVList
 0
 27
 MItem
-34
-..\kernel\classlib\win32\win32.lib
+27
+..\classlib\win32\win32.lib
 28
 WString
 3
