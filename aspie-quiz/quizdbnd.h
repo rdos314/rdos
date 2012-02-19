@@ -2,6 +2,8 @@
 struct TQuizRow
 {
     long ID;
+    long LsbTime;
+    long MsbTime;
     int  BirthYear;
     char Gender;
     char Autism;
@@ -18,12 +20,10 @@ struct TQuizRow
     char PA;
     char Dysgraphia;
     char Bipolar;
-    char Referer[200];
     long AsResult;
     long NtResult;
     long Hs;
     long Hn;
     char Quiz[210];
 	char GroupResult[ACTIVE_GROUP_COUNT];
-	char DxResult[DX_COUNT];
 };
