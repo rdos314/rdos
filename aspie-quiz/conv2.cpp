@@ -42,8 +42,6 @@
 void WritePca(TFile *PcaFile, char *ValArr, int Count);
 
 static TFile quizfile("bin\\quiz2.bin", 0);
-static TFile pcafile("pca\\quiz2.csv", 0);
-
 
 /*##################  HandleRow ##########################
  *   Purpose....: Handle a row                                                                   #
@@ -272,6 +270,8 @@ void Conv2()
     TFile infile("raw\\aspie-quiz-II.csv");
     char *ptr;
 
+    OpenPca("2");
+
     size = infile.Read(buf, MAX_IN_ROW);
     buf[size] = 0;
     ptr = strchr(buf, 0xd);
@@ -294,5 +294,7 @@ void Conv2()
         if (ptr)
             ProcessRow(buf);
     }
+    ClosePca();
+
 
 }

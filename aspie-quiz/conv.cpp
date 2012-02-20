@@ -31,7 +31,7 @@
 
 #include "file.h"
 
-void Conv1();
+// void Conv1();
 void Conv2();
 void Conv3();
 void ConvNd();
@@ -43,14 +43,34 @@ void Conv9();
 void ConvR1();
 void ConvR2();
 
+#define MAX_QUESTIONS[400];
+
+struct TValArr
+{
+	int Gender;
+	int BirthYear;
+	int Count;
+	char Quiz[MAX_QUESTIONS];
+};
+
+int MaxSize;
+int ValueCount;
+TValArr *ValArr = 0;
+
+int AsArr[MAX_QUESTIONS];
+
+char Suffix[16];
+
+TFile *PcaFile = 0;
+
 /*##################  WritePca ##########################
-*   Purpose....: Write PCA                                                                      #
+*   Purpose....: Open PCA                                                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void WritePca(TFile *PcaFile, char *ValArr, int Count)
+void WritePca()
 {
     int i;
     int val;
@@ -69,6 +89,113 @@ void WritePca(TFile *PcaFile, char *ValArr, int Count)
 
         PcaFile->Write(str);
     }    
+}
+
+/*##################  OpenPca ##########################
+*   Purpose....: Open PCA                                                                      #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void OpenPca(const char *str)
+{
+    int i;
+
+    strcpy(Suffix, str);
+
+    if (ValArr)
+        delete ValArr;
+    ValArr = 0;
+    ValueCount = 0;
+
+    for (i = 0; i < MAX_QUESTIONS; i++)
+    {
+        AsArr[i] = 0;
+        NtArr[i] = 0;
+    }
+}
+
+/*##################  ClosePca ##########################
+*   Purpose....: Close PCA                                                                      #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void ClosePca()
+{
+    if (ValArr)
+        delete ValArr;
+    ValArr = 0;
+    ValueCount = 0;
+
+    delete PcaFile;
+    PcaFile = 0;
+}
+
+/*##################  AddPca ##########################
+*   Purpose....: Write PCA                                                                      #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void AddPca(int Gender, int BirthYear, int ScoreDiff, char *ScoreArr, int Count)
+{
+    int val;
+    int i;
+    TValArr *NewArr;
+
+    if (ValArr == 0)
+    {
+         MaxSize = 8;
+         ValArr = new TValArr[MaxSize];
+    }
+
+    if (ValueCount >= MaxSize)
+    {
+        MaxSize = 3 * MaxSize / 2;
+        NewArr = new TValArr[MaxSize];
+
+        for (i = 0; i < ValueCount; i++)
+            NewArr[i] = ValArr[i];
+
+        delete ValArr;
+        ValArr = NewArr;
+    }
+
+    ValArr[ValueCount].Gender = Gender;
+    ValArr[ValueCount].BirthYear = BirthYear;
+    ValArr[ValueCount].Count = Count;
+
+    for (i = 0; i < Count; i++)
+    {
+        val = ScoreArr[i];
+        ValArr[ValueCount].Quiz[i] = val;
+    }
+
+    if (ScoreDiff >= 35)
+    {
+        for (i = 0; i < Count; i++)
+        {
+            val = ScoreArr[i];
+            if (val == 3)
+                (AsArr[i])++;
+        }
+    }
+
+    if (ScoreDiff <= -35)
+    {
+        for (i = 0; i < Count; i++)
+        {
+            val = ScoreArr[i];
+            if (val == 3)
+                (AsArr[i])--;
+        }
+    }
+
+    ValueCount++;
 }
 
 /*##################  main ##########################
