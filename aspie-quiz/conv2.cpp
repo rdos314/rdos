@@ -39,9 +39,11 @@
 
 #define MAX_IN_ROW      0x1000
 
-void WritePca(TFile *PcaFile, char *ValArr, int Count);
+void OpenPca(const char *Suffix);
+void AddPca(int Gender, int BirthYear, int ScoreDiff, char *ScoreArr, int Count);
+void ClosePca();
 
-static TFile quizfile("bin\\quiz2.bin", 0);
+TFile *quizfile;
 
 /*##################  HandleRow ##########################
  *   Purpose....: Handle a row                                                                   #
@@ -52,7 +54,7 @@ static TFile quizfile("bin\\quiz2.bin", 0);
  *##########################################################################*/
 static void HandleRow(TQuizRow *Row)
 {
-    quizfile.Write(Row, sizeof(TQuizRow));
+    quizfile->Write(Row, sizeof(TQuizRow));
 
     printf("II: %d AS: %d, NT: %d\r\n", Row->ID, Row->AsResult, Row->NtResult);
 }
@@ -252,7 +254,7 @@ static void ProcessRow(char *str)
 
     UpdateScore(&Row);
     HandleRow(&Row);
-    WritePca(&pcafile, &Row.Quiz[0], i + 1);
+    AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], i + 1);
 }
 
 /*##################  Conv2 ##########################
@@ -268,8 +270,10 @@ void Conv2()
     int size;
     long pos = 0;
     TFile infile("raw\\aspie-quiz-II.csv");
+    TFile outfile("bin\\quiz2.bin", 0);
     char *ptr;
 
+    quizfile = &outfile;
     OpenPca("2");
 
     size = infile.Read(buf, MAX_IN_ROW);
@@ -295,6 +299,4 @@ void Conv2()
             ProcessRow(buf);
     }
     ClosePca();
-
-
 }

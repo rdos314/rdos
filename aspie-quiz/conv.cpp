@@ -43,14 +43,14 @@ void Conv9();
 void ConvR1();
 void ConvR2();
 
-#define MAX_QUESTIONS[400];
+#define MAX_QUESTIONS 400
 
 struct TValArr
 {
-	int Gender;
-	int BirthYear;
-	int Count;
-	char Quiz[MAX_QUESTIONS];
+        int Gender;
+        int BirthYear;
+        int Count;
+        char Quiz[MAX_QUESTIONS];
 };
 
 int MaxSize;
@@ -72,7 +72,7 @@ TFile *PcaFile = 0;
 *##########################################################################*/
 void WritePca()
 {
-    int i;
+/*    int i;
     int val;
     char str[12];
     
@@ -88,7 +88,7 @@ void WritePca()
             sprintf(str, "%d,", val);
 
         PcaFile->Write(str);
-    }    
+    }    */
 }
 
 /*##################  OpenPca ##########################
@@ -110,10 +110,7 @@ void OpenPca(const char *str)
     ValueCount = 0;
 
     for (i = 0; i < MAX_QUESTIONS; i++)
-    {
         AsArr[i] = 0;
-        NtArr[i] = 0;
-    }
 }
 
 /*##################  ClosePca ##########################
@@ -207,7 +204,7 @@ void AddPca(int Gender, int BirthYear, int ScoreDiff, char *ScoreArr, int Count)
 *##########################################################################*/
 int main(int argc, char **argv)
 {
-    Conv1();
+//    Conv1();
     Conv2();
     Conv3();
     ConvNd();
