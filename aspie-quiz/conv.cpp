@@ -45,6 +45,8 @@ void ConvR2();
 void ConvR3();
 void ConvR4();
 void ConvR5();
+void ConvR6();
+void ConvR7();
 
 #define MAX_QUESTIONS 400
 
@@ -221,6 +223,8 @@ int main(int argc, char **argv)
     ConvR3();
     ConvR4();
     ConvR5();
+    ConvR6();
+    ConvR7();
 
     return 0;
 }

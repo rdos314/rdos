@@ -8,7 +8,6 @@ struct TQuizRow
     int  BirthMonth;
 	char Gender;
     char Lang;
-    char Retake;
 	char Autism;
 	char Aspie;
 	char ADHD;
