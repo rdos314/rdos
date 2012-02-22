@@ -43,7 +43,7 @@ void OpenPca(const char *Suffix);
 void AddPca(int Gender, int BirthYear, int ScoreDiff, char *ScoreArr, int Count);
 void ClosePca();
 
-TFile *quizfile;
+static TFile *quizfile;
 
 /*##################  HandleRow ##########################
 *   Purpose....: Handle a row                                                                   #

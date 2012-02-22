@@ -31,7 +31,7 @@
 
 #include "file.h"
 
-// void Conv1();
+void Conv1();
 void Conv2();
 void Conv3();
 void ConvNd();
@@ -204,7 +204,7 @@ void AddPca(int Gender, int BirthYear, int ScoreDiff, char *ScoreArr, int Count)
 *##########################################################################*/
 int main(int argc, char **argv)
 {
-//    Conv1();
+    Conv1();
     Conv2();
     Conv3();
     ConvNd();
