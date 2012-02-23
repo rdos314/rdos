@@ -309,13 +309,13 @@ TControl::~TControl()
         FDelay = 0;
     }
 
-    Unprotect();
-
     if (FParent)
         FParent->Delete(this);
 
     if (FDev)
         FDev->Delete(this);
+
+    Unprotect();
 }
 
 /*##########################################################################
@@ -1145,8 +1145,6 @@ void TControl::Unload()
 
     FControlList = 0;
 
-    Unprotect();
-
     if (FParent)
         FParent->Delete(this);
     else
@@ -1154,6 +1152,8 @@ void TControl::Unload()
 
     FParent = 0;
     FDev = 0;
+
+    Unprotect();
 
     delete this;
 }
@@ -1359,10 +1359,10 @@ void TControl::Redraw(int millisec)
         Update();
     }
 
-    Unprotect();
-
     if (FDev)
         FDev->Signal();
+
+    Unprotect();
 }
 
 /*##########################################################################

@@ -151,8 +151,10 @@ TFormControl::TFormControl(TControl *control)
 ##########################################################################*/
 TFormControl::~TFormControl()
 {
+    Protect();
     while (FControlList)
         Remove(FControlList);
+    Unprotect();
 }
 
 /*##########################################################################
