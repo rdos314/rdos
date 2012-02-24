@@ -52,10 +52,10 @@ void ConvR7();
 
 struct TValArr
 {
-        int Gender;
-        int BirthYear;
-        int Count;
-        char Quiz[MAX_QUESTIONS];
+    int Gender;
+    int BirthYear;
+    int Count;
+    char Quiz[MAX_QUESTIONS];
 };
 
 int MaxSize;
@@ -63,37 +63,116 @@ int ValueCount;
 TValArr *ValArr = 0;
 
 int AsArr[MAX_QUESTIONS];
+int NtArr[MAX_QUESTIONS];
 
 char Suffix[16];
 
 TFile *PcaFile = 0;
 
-/*##################  WritePca ##########################
-*   Purpose....: Open PCA                                                                      #
+/*##################  WriteOne ##########################
+*   Purpose....: Write one entry                                                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void WritePca()
+void WriteOne(struct TValArr *entry)
 {
-/*    int i;
+    int i;
     int val;
     char str[12];
     
-    for (i = 0; i < Count; i++)
+    for (i = 0; i < entry->Count; i++)
     {
-        val = ValArr[i];
+        val = entry->Quiz[i];
+
         if (val > 0)
             val--;
 
-        if (i == Count - 1)            
+        if (i == entry->Count - 1)            
             sprintf(str, "%d\r\n", val);
         else
             sprintf(str, "%d,", val);
 
         PcaFile->Write(str);
-    }    */
+    }  
+}
+
+/*##################  WriteAllPca ##########################
+*   Purpose....: Write PCA, whole population                                                                      #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteAllPca()
+{
+    char str[80];
+    int i;
+
+    strcpy(str, "pca\\all");
+    strcat(str, Suffix);
+    strcat(str, ".csv");
+
+    PcaFile = new TFile(str, 0);
+    
+    for (i = 0; i < ValueCount; i++)
+        WriteOne(&ValArr[i]);
+
+    delete PcaFile;
+    PcaFile = 0;
+}
+
+/*##################  WriteMalePca ##########################
+*   Purpose....: Write PCA, male population                                                                      #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteMalePca()
+{
+    char str[80];
+    int i;
+
+    strcpy(str, "pca\\male");
+    strcat(str, Suffix);
+    strcat(str, ".csv");
+
+    PcaFile = new TFile(str, 0);
+    
+    for (i = 0; i < ValueCount; i++)
+        if (ValArr[i].Gender == 1)
+            WriteOne(&ValArr[i]);
+
+    delete PcaFile;
+    PcaFile = 0;
+}
+
+/*##################  WriteFemalePca ##########################
+*   Purpose....: Write PCA, female population                                                                      #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteFemalePca()
+{
+    char str[80];
+    int i;
+
+    strcpy(str, "pca\\fem");
+    strcat(str, Suffix);
+    strcat(str, ".csv");
+
+    PcaFile = new TFile(str, 0);
+    
+    for (i = 0; i < ValueCount; i++)
+        if (ValArr[i].Gender == 2)
+            WriteOne(&ValArr[i]);
+
+    delete PcaFile;
+    PcaFile = 0;
 }
 
 /*##################  OpenPca ##########################
@@ -115,7 +194,10 @@ void OpenPca(const char *str)
     ValueCount = 0;
 
     for (i = 0; i < MAX_QUESTIONS; i++)
+    {
         AsArr[i] = 0;
+        NtArr[i] = 0;
+    }
 }
 
 /*##################  ClosePca ##########################
@@ -127,13 +209,14 @@ void OpenPca(const char *str)
 *##########################################################################*/
 void ClosePca()
 {
+    WriteAllPca();
+    WriteMalePca();
+    WriteFemalePca();
+
     if (ValArr)
         delete ValArr;
     ValArr = 0;
     ValueCount = 0;
-
-    delete PcaFile;
-    PcaFile = 0;
 }
 
 /*##################  AddPca ##########################
@@ -193,7 +276,7 @@ void AddPca(int Gender, int BirthYear, int ScoreDiff, char *ScoreArr, int Count)
         {
             val = ScoreArr[i];
             if (val == 3)
-                (AsArr[i])--;
+                (NtArr[i]);
         }
     }
 
