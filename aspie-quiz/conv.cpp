@@ -64,6 +64,9 @@ TValArr *ValArr = 0;
 
 int AsArr[MAX_QUESTIONS];
 int NtArr[MAX_QUESTIONS];
+int AsCount;
+int NtCount;
+int ReverseArr[MAX_QUESTIONS];
 
 char Suffix[16];
 
@@ -98,6 +101,40 @@ void WriteOne(struct TValArr *entry)
     }  
 }
 
+/*##################  WriteRev ##########################
+*   Purpose....: Write rev (group) entry                                                                      #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteRev(struct TValArr *entry)
+{
+    int i;
+    int val;
+    char str[12];
+    
+    for (i = 0; i < entry->Count; i++)
+    {
+        val = entry->Quiz[i];
+
+        if (val > 0)
+        {
+            if (ReverseArr[i])
+                val = 3 - val;
+            else
+                val--;
+        }
+
+        if (i == entry->Count - 1)            
+            sprintf(str, "%d\r\n", val);
+        else
+            sprintf(str, "%d,", val);
+
+        PcaFile->Write(str);
+    }  
+}
+
 /*##################  WriteAllPca ##########################
 *   Purpose....: Write PCA, whole population                                                                      #
 *   In params..: *                                                          #
@@ -109,6 +146,8 @@ void WriteAllPca()
 {
     char str[80];
     int i;
+
+    printf("All PCA\r\n");
 
     strcpy(str, "pca\\all");
     strcat(str, Suffix);
@@ -134,6 +173,8 @@ void WriteMalePca()
 {
     char str[80];
     int i;
+
+    printf("Male PCA\r\n");
 
     strcpy(str, "pca\\male");
     strcat(str, Suffix);
@@ -161,6 +202,8 @@ void WriteFemalePca()
     char str[80];
     int i;
 
+    printf("Female PCA\r\n");
+
     strcpy(str, "pca\\fem");
     strcat(str, Suffix);
     strcat(str, ".csv");
@@ -170,6 +213,55 @@ void WriteFemalePca()
     for (i = 0; i < ValueCount; i++)
         if (ValArr[i].Gender == 2)
             WriteOne(&ValArr[i]);
+
+    delete PcaFile;
+    PcaFile = 0;
+}
+
+/*##################  CalcReverse ##########################
+*   Purpose....: Calc reversed questions                                                                      #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void CalcReverse()
+{
+    int i;
+
+    for (i = 0; i < MAX_QUESTIONS; i++)
+    {
+        if (AsArr[i] * NtCount > NtArr[i] * AsCount)
+            ReverseArr[i] = FALSE;
+        else
+            ReverseArr[i] = TRUE;
+    }
+}
+
+/*##################  WriteGroupPca ##########################
+*   Purpose....: Write group PCA, whole population                                                                      #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteGroupPca()
+{
+    char str[80];
+    int i;
+
+    printf("Group PCA\r\n");
+
+    CalcReverse();
+
+    strcpy(str, "pca\\grp");
+    strcat(str, Suffix);
+    strcat(str, ".csv");
+
+    PcaFile = new TFile(str, 0);
+    
+    for (i = 0; i < ValueCount; i++)
+        WriteRev(&ValArr[i]);
 
     delete PcaFile;
     PcaFile = 0;
@@ -193,6 +285,9 @@ void OpenPca(const char *str)
     ValArr = 0;
     ValueCount = 0;
 
+    AsCount = 0;
+    NtCount = 0;
+    
     for (i = 0; i < MAX_QUESTIONS; i++)
     {
         AsArr[i] = 0;
@@ -212,6 +307,7 @@ void ClosePca()
     WriteAllPca();
     WriteMalePca();
     WriteFemalePca();
+    WriteGroupPca();
 
     if (ValArr)
         delete ValArr;
@@ -262,6 +358,8 @@ void AddPca(int Gender, int BirthYear, int ScoreDiff, char *ScoreArr, int Count)
 
     if (ScoreDiff >= 35)
     {
+        AsCount++;
+        
         for (i = 0; i < Count; i++)
         {
             val = ScoreArr[i];
@@ -272,11 +370,13 @@ void AddPca(int Gender, int BirthYear, int ScoreDiff, char *ScoreArr, int Count)
 
     if (ScoreDiff <= -35)
     {
+        NtCount++;
+    
         for (i = 0; i < Count; i++)
         {
             val = ScoreArr[i];
             if (val == 3)
-                (NtArr[i]);
+                (NtArr[i]++);
         }
     }
 
