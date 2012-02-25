@@ -48,6 +48,11 @@ void ConvR5();
 void ConvR6();
 void ConvR7();
 void ConvS1();
+void ConvS2();
+void ConvS3();
+void ConvS4();
+void ConvS5();
+void ConvS6();
 
 #define MAX_QUESTIONS 400
 
@@ -393,7 +398,7 @@ void AddPca(int Gender, int BirthYear, int ScoreDiff, char *ScoreArr, int Count)
 *##########################################################################*/
 int main(int argc, char **argv)
 {
-    Conv1();
+/*    Conv1();
     Conv2();
     Conv3();
     ConvNd();
@@ -410,6 +415,12 @@ int main(int argc, char **argv)
     ConvR6();
     ConvR7();
     ConvS1();
+    ConvS2();
+    ConvS3(); */
+
+    ConvS4();
+    ConvS5();
+    ConvS6();
 
     return 0;
 }
