@@ -238,7 +238,7 @@ static void ProcessRow(char *str)
 				break;
 
 			default:
-				i = fieldno - 22;
+				i = fieldno - 21;
 				Row.Quiz[i] = atoi(valstr);
 
 				if (Row.TsResult && i >= 149 && i <= 175)
