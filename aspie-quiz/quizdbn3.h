@@ -2,7 +2,10 @@
 struct TQuizRow
 {
     long ID;
-    long userid;
+    long UserID;
+    long LsbTime;
+    long MsbTime;
+    long FilloutTime;
     int  BirthYear;
     int  BirthMonth;
 	 char Gender;
@@ -20,11 +23,9 @@ struct TQuizRow
 	int PredDyslexia;
 	int PredOcd;
 	int PredSocial;
-	char Referer[100];
 	long AsResult;
 	long NtResult;
 	long EatResult;
 	char Quiz[250];
 	char GroupResult[ACTIVE_GROUP_COUNT];
-	char DxResult[DX_COUNT];
 };
