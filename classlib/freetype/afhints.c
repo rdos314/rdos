@@ -19,6 +19,7 @@
 #include "afhints.h"
 #include "aferrors.h"
 #include <ftcalc.h>
+#include <ftdebug.h>
 
 
   FT_LOCAL_DEF( FT_Error )

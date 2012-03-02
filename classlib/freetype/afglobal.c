@@ -22,6 +22,7 @@
 #include "afcjk.h"
 #include "afindic.h"
 #include "afpic.h"
+#include "ftdebug.h"
 
 #include "aferrors.h"
 

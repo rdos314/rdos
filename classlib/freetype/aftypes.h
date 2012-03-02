@@ -40,7 +40,6 @@
 #include <freetype.h>
 #include <ftoutln.h>
 #include <ftobjs.h>
-#include <ftdebug.h>
 
 
 FT_BEGIN_HEADER

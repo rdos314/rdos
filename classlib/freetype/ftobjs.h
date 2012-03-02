@@ -35,7 +35,6 @@
 #include <ftdriver.h>
 #include <autohint.h>
 #include <ftserv.h>
-#include <ftpic.h>
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
 #include <ftincrem.h>
