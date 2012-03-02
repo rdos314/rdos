@@ -21,9 +21,7 @@
 #include <ftsynth.h>
 #include <ftadvanc.h>
 
-#ifdef UNIX
-#include <sys/time.h>
-#endif
+#include "rdos.h"
 
 #include "common.h"
 
@@ -128,15 +126,13 @@ face_requester( FTC_FaceID  face_id,
 double
 get_time(void)
 {
-#ifdef UNIX
-  struct timeval tv;
+    unsigned long Msb, Lsb;
+    double val;
 
-  gettimeofday(&tv, NULL);
-  return (double)tv.tv_sec + (double)tv.tv_usec / 1E6;
-#else
-  /* clock() has an awful precision (~10ms) under Linux 2.4 + glibc 2.2 */
-  return (double)clock() / (double)CLOCKS_PER_SEC;
-#endif
+    RdosGetSysTime(&Msb, &Lsb);
+    val = (double)Lsb / 1193000.0;
+    val += Msb * 60.0 * 60.0;
+    return val;
 }
 
 #define TIMER_START( timer )   ( timer )->t0 = get_time()
