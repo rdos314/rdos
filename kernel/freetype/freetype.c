@@ -29,10 +29,62 @@
 #include "rdosdev.h"
 #include "string.h"
 
+#include <ft2build.h>
+#include <freetype.h>
+
+FT_Library        lib;
+
+/*##########################################################################
+#
+#   Name       : rdos_alloc
+#
+##########################################################################*/
+void *rdos_alloc(int Size)
+{
+    long linear;
+
+    if (Size <= 0 || Size > 0x100000)
+        return 0;
+    
+    if (Size < 0x1000)
+    {
+        linear = RdosAllocateSmallGlobalLinear(Size);
+        return RdosLinearToPointer(linear);
+    }
+    else
+        return RdosAllocateBigGlobalMem(Size);
+}
+
+/*##########################################################################
+#
+#   Name       : rdos_free
+#
+##########################################################################*/
+void rdos_free(void *Memory)
+{
+    int linear;
+
+    int sel = RdosPointerToSelector(Memory);    
+
+    if (Memory == 0)
+        return;
+    
+    if (sel == 0x20)
+    {
+        linear = RdosPointerToOffset(Memory);
+        RdosFreeLinear(linear, 0);  // small linear won't require a size!
+    }
+    else
+        RdosFreeMem(sel);
+}
+
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
+    if (FT_Init_FreeType( &lib ))
+    {
+    }
 }
 
 /*##########################################################################
