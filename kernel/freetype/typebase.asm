@@ -39,7 +39,7 @@ _TEXT    SEGMENT byte public 'CODE'
 
     assume cs:_TEXT
 
-    extrn InstallFont:near
+    extrn InstallFont:far
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -68,6 +68,7 @@ load_adapter_fonts_loop:
 ;
     push ds
     push es
+    push ecx
     mov ecx,[edx].len
     mov ax,ds
     mov es,ax
@@ -75,6 +76,7 @@ load_adapter_fonts_loop:
     add edi,SIZE rdos_header
     sub ecx,SIZE rdos_header
     call InstallFont
+    pop ecx
     pop es
     pop ds
     jmp load_adapter_fonts_next

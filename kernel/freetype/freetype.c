@@ -32,9 +32,13 @@
 #include <ft2build.h>
 #include <freetype.h>
 
+#define MAX_FACES       32
+
 void InitFonts();
 
-FT_Library        lib;
+FT_Library      lib;
+int             face_count = 0;
+FT_Face         face_arr[MAX_FACES];
 
 /*##########################################################################
 #
@@ -84,8 +88,10 @@ void rdos_free(void *Memory)
 
 void __far ImplTestGate(const char *msg)
 {
-    FT_Init_FreeType( &lib );
-    InitFonts();
+    int count;
+
+    count = face_count;
+    printf("Loaded fonts: %d", count);
 }
 
 /*##########################################################################
@@ -101,10 +107,18 @@ void __far ImplTestGate(const char *msg)
 ##########################################################################*/
 #pragma aux InstallFont "*" rdosdev parm routine [es edi] [ecx]
 void __far InstallFont(void *base, int size)
-{
-    FT_Face* face;
-
-    FT_New_Memory_Face( lib, base, size, 0, face );
+{   
+    int error;
+    
+    error = FT_New_Memory_Face( lib, base, size, 0, &face_arr[face_count] );
+    if (error == 0)
+    {
+        if (face_arr[face_count]->charmap)
+        {
+            if (face_arr[face_count]->charmap->encoding == FT_ENCODING_UNICODE)
+                face_count++;
+        }
+    }
 } 
 
 /*##########################################################################
@@ -136,6 +150,9 @@ void __far InitTasking()
 ##########################################################################*/
 int main()
 {
+    FT_Init_FreeType( &lib );
+    InitFonts();
+
     RdosHookInitTasking(&InitTasking);
 
     RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate"); 
