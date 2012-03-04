@@ -260,7 +260,9 @@ FT_BEGIN_HEADER
 
 #elif defined( __WATCOMC__ )   /* Watcom C++ */
 
-  /* Watcom doesn't provide 64-bit data types */
+  /* this compiler provides the __int64 type */
+#define FT_LONG64
+#define FT_INT64  long long
 
 #elif defined( __MWERKS__ )    /* Metrowerks CodeWarrior */
 
