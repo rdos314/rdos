@@ -114,12 +114,14 @@
                    FT_Error  *p_error )
   {
     FT_Error  error = FT_Err_Ok;
+    void *new_block;
 
 
     /* Note that we now accept `item_size == 0' as a valid parameter, in
      * order to cover very weird cases where an ALLOC_MULT macro would be
      * called.
      */
+     
     if ( cur_count < 0 || new_count < 0 || item_size < 0 )
     {
       /* may help catch/prevent nasty security issues */
@@ -142,7 +144,17 @@
     }
     else
     {
-      error = FT_Err_Out_Of_Memory;
+      new_block = ft_mem_alloc( new_count*item_size, &error );
+      if (error == 0)
+      {
+        if (new_count > cur_count)
+          memcpy( new_block, block, cur_count*item_size );
+        else
+          memcpy( new_block, block, new_count*item_size ); 
+
+        ft_mem_free( block );
+        block = new_block;
+      }
     }
 
     *p_error = error;

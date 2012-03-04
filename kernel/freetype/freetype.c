@@ -40,6 +40,43 @@ FT_Library      lib;
 int             face_count = 0;
 FT_Face         face_arr[MAX_FACES];
 
+#pragma aux ImplTestGate "*" rdosdev parm routine [eax]
+void __far ImplTestGate(int vbe)
+{
+    int i;
+    int j;
+    int error;
+    int size = 32;
+    FT_Bitmap  *bitmap;
+    char *ptr;
+
+    if ( FT_IS_SCALABLE( face_arr[0] ) )
+        FT_Set_Pixel_Sizes( face_arr[0], size, size );
+
+    i = FT_Get_Char_Index( face_arr[0], 'Ö');
+    error = FT_Load_Glyph( face_arr[0], i, FT_LOAD_DEFAULT );
+
+    if (error == 0)
+        error = FT_Render_Glyph( face_arr[0]->glyph, FT_RENDER_MODE_NORMAL );
+
+    if (error == 0)
+    {
+        bitmap = &face_arr[0]->glyph->bitmap;
+
+        ptr = bitmap->buffer;
+  
+        for (i = 0; i < bitmap->rows; i++)
+        {
+            for (j = 0; j < bitmap->width; j++)
+            {
+                RdosSetDrawColor(vbe, *ptr);
+                RdosSetPixel(vbe, j, i);
+                ptr++;
+            }
+        }
+    }
+}
+
 /*##########################################################################
 #
 #   Name       : rdos_alloc
@@ -84,16 +121,6 @@ void rdos_free(void *Memory)
         RdosFreeMem(sel);
 }
 
-#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
-
-void __far ImplTestGate(const char *msg)
-{
-    int count;
-
-    count = face_count;
-    printf("Loaded fonts: %d", count);
-}
-
 /*##########################################################################
 #
 #   Name       : InstallFont
@@ -123,22 +150,6 @@ void __far InstallFont(void *base, int size)
 
 /*##########################################################################
 #
-#   Name       : InitTasking
-#
-#   Purpose....: Init tasking callback
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-#pragma aux InitTasking "*" rdosdev parm routine
-void __far InitTasking()
-{
-} 
-
-/*##########################################################################
-#
 #   Name       : main
 #
 #   Purpose....: Initialization
@@ -152,8 +163,6 @@ int main()
 {
     FT_Init_FreeType( &lib );
     InitFonts();
-
-    RdosHookInitTasking(&InitTasking);
 
     RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate"); 
 }
