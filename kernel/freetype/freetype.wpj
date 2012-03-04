@@ -4,10 +4,10 @@ projectIdent
 VpeMain
 1
 WRect
-876
-0
-8051
-10285
+2028
+-56
+8044
+10274
 2
 MProject
 3
@@ -29,9 +29,9 @@ VComponent
 8
 WRect
 288
-273
-5708
-4266
+261
+5702
+4255
 0
 0
 9
@@ -39,5 +39,5 @@ WFileName
 12
 freetype.tgt
 0
-0
+12
 7

@@ -32,6 +32,8 @@
 #include <ft2build.h>
 #include <freetype.h>
 
+void InitFonts();
+
 FT_Library        lib;
 
 /*##########################################################################
@@ -82,10 +84,28 @@ void rdos_free(void *Memory)
 
 void __far ImplTestGate(const char *msg)
 {
-    if (FT_Init_FreeType( &lib ))
-    {
-    }
+    FT_Init_FreeType( &lib );
+    InitFonts();
 }
+
+/*##########################################################################
+#
+#   Name       : InstallFont
+#
+#   Purpose....: Install font
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux InstallFont "*" rdosdev parm routine [es edi] [ecx]
+void __far InstallFont(void *base, int size)
+{
+    FT_Face* face;
+
+    FT_New_Memory_Face( lib, base, size, 0, face );
+} 
 
 /*##########################################################################
 #
