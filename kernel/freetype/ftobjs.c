@@ -1059,6 +1059,8 @@
     face->driver   = driver;
     face->stream   = stream;
 
+    RdosInitKernelSection( &face->cache_section );
+
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
     {
       int  i;
