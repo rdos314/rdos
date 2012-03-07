@@ -208,7 +208,7 @@ void RDOSAPI RdosSetDrawColor(int handle, int color);
 void RDOSAPI RdosSetLGOP(int handle, int lgop);
 void RDOSAPI RdosSetHollowStyle(int handle);
 void RDOSAPI RdosSetFilledStyle(int handle);
-int RDOSAPI RdosOpenFont(int height);
+int RDOSAPI RdosOpenFont(int id, int height);
 void RDOSAPI RdosCloseFont(int font);
 void RDOSAPI RdosGetStringMetrics(int font, const char *str, int *width, int *height);
 void RDOSAPI RdosSetFont(int handle, int font);
@@ -994,7 +994,7 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosOpenFont = \
     CallGate_open_font  \
     ValidateHandle \
-    parm [eax]  \
+    parm [edx] [eax]  \
     value [ebx];
 
 #pragma aux RdosCloseFont = \
@@ -3287,7 +3287,7 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosOpenFont = \
     CallGate_open_font  \
     ValidateHandle \
-    parm [eax]  \
+    parm [edx] [eax]  \
     value [ebx];
 
 #pragma aux RdosCloseFont = \

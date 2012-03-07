@@ -32,6 +32,7 @@ INCLUDE ..\..\kernel\user.inc
 INCLUDE ..\..\kernel\driver.def
 INCLUDE ..\..\kernel\os\system.def
 INCLUDE ..\..\kernel\os\proc.inc
+INCLUDE ..\handle.inc
 
 
 size_cache_entry    STRUC
@@ -41,106 +42,24 @@ sce_ptr_arr     DD 256 DUP(?)
 
 size_cache_entry    ENDS
 
+font_handle_struc       STRUC
+
+fh_base         handle_header <>
+fh_face         DD ?,?
+fh_size         DW ?
+
+font_handle_struc       ENDS
+
     .386p
 
 _TEXT    SEGMENT byte public 'CODE'
 
     assume cs:_TEXT
 
-    extrn InstallFont:far
+    extrn InstallFont:near
+    extrn GetFace:near
     extrn LoadGlyph:near
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           load_adapter_fonts
-;
-;           DESCRIPTION:    install all fonts in adapter
-;
-;           PARAMETERS:         edx         base address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-load_adapter_fonts      Proc near
-    push ds
-    push ax
-    push bx
-    push edx
-;    
-    mov ax,flat_sel
-    mov ds,ax
-
-load_adapter_fonts_loop:
-    mov ax,[edx].typ
-    cmp ax,RdosFont
-    jne not_install_font
-;
-    push ds
-    push es
-    push ecx
-    mov ecx,[edx].len
-    mov ax,ds
-    mov es,ax
-    mov edi,edx
-    add edi,SIZE rdos_header
-    sub ecx,SIZE rdos_header
-    call InstallFont
-    pop ecx
-    pop es
-    pop ds
-    jmp load_adapter_fonts_next
-
-not_install_font:
-    cmp ax,RdosEnd
-    je load_adapter_fonts_done
-
-load_adapter_fonts_next:
-    add edx,[edx].len
-    jmp load_adapter_fonts_loop
-
-load_adapter_fonts_done:
-    pop edx
-    pop bx
-    pop ax
-    pop ds
-    ret
-load_adapter_fonts      Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           InitFonts
-;
-;           DESCRIPTION:    Initialize freetype fonts
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public InitFonts_
-
-InitFonts_    Proc near
-    push ds
-    push es
-    pushad
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    movzx ecx,ds:rom_modules
-    mov bx,OFFSET rom_adapters
-
-init_font_loop:
-    mov edx,[bx].adapter_base
-    call load_adapter_fonts
-    add bx,SIZE adapter_typ
-    loop init_font_loop     
-;    
-    popad
-    pop es
-    pop ds
-    ret
-InitFonts_    Endp
+    extrn GetMetrics:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -468,6 +387,309 @@ ggeDone:
     pop es
     ret
 GetGlyphEntry_   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           OpenFont
+;
+;           DESCRIPTION:    Open a font and return handle
+;
+;           PARAMETERS:     AX          Font height
+;                           DX          Font #
+;
+;           RETURNS:        BX          Font handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_font_name  DB 'Open Font',0
+
+open_font       Proc far
+    push ds
+    push eax
+    push ecx
+    push edx
+    push esi
+;    
+    movzx esi,ax
+    movzx edx,dx
+    call GetFace
+    or dx,dx
+    stc
+    jz ofDone
+;
+    movzx edx,dx
+    mov cx,SIZE font_handle_struc
+    AllocateHandle
+    mov [ebx].fh_face,eax
+    mov [ebx].fh_face+4,edx
+    mov [ebx].fh_size,si
+    mov [ebx].hh_sign,FONT_HANDLE
+    mov bx,[ebx].hh_handle
+    clc
+
+ofDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop eax        
+    pop ds
+    ret
+open_font       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CloseFont
+;
+;           DESCRIPTION:    Close a font handle
+;
+;           PARAMETERS:         BX          Font handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_font_name DB 'Close Font',0
+
+close_font      Proc far
+    push ds
+    push ax
+    push ebx
+;
+    mov ax,FONT_HANDLE
+    DerefHandle
+    jc cfDone
+;
+    FreeHandle
+    clc
+
+cfDone:
+    pop ebx
+    pop ax
+    pop ds
+    ret
+close_font      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetStringMetrics
+;
+;           DESCRIPTION:    Get width & height of string
+;
+;           PARAMETERS:     BX              Font
+;                           ES:(E)DI        String 
+;
+;           RETURNS:        CX              Width
+;                           DX              Height
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_string_metrics_name DB 'Get String Metrics',0
+
+get_string_metrics32    Proc far
+    push ds
+    push eax
+    push ebx
+    push esi
+    push edi
+;
+    mov ax,FONT_HANDLE
+    DerefHandle
+    jc gsmDone32
+;
+    mov eax,[ebx].fh_face
+    mov edx,[ebx].fh_face+4
+    movzx ecx,[ebx].fh_size
+    call GetMetrics
+    mov cx,ax
+    shr eax,16
+    mov dx,ax
+    clc
+
+gsmDone32:    
+    pop edi
+    pop esi
+    pop ebx
+    pop eax
+    pop ds
+    ret
+get_string_metrics32    Endp
+
+get_string_metrics16    Proc far
+    push ds
+    push eax
+    push ebx
+    push esi
+    push edi
+;
+    mov ax,FONT_HANDLE
+    DerefHandle
+    jc gsmDone16
+;
+    movzx edi,di
+    mov eax,[ebx].fh_face
+    mov edx,[ebx].fh_face+4
+    movzx ecx,[ebx].fh_size
+    call GetMetrics
+    mov cx,ax
+    shr eax,16
+    mov dx,ax
+    clc
+
+gsmDone16:    
+    pop edi
+    pop esi
+    pop ebx
+    pop eax
+    pop ds
+    ret
+get_string_metrics16    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           delete_handle
+;
+;           DESCRIPTION:    BX              Font handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_handle   Proc far
+    push ds
+    push eax
+    push ebx
+;
+    mov ax,FONT_HANDLE
+    DerefHandle
+    jc delete_handle_done
+;
+    FreeHandle
+    clc
+
+delete_handle_done:
+    pop ebx
+    pop eax
+    pop ds
+    ret
+delete_handle   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           load_adapter_fonts
+;
+;           DESCRIPTION:    install all fonts in adapter
+;
+;           PARAMETERS:         edx         base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_adapter_fonts      Proc near
+    push ds
+    push ax
+    push bx
+    push edx
+;    
+    mov ax,flat_sel
+    mov ds,ax
+
+load_adapter_fonts_loop:
+    mov ax,[edx].typ
+    cmp ax,RdosFont
+    jne not_install_font
+;
+    push ds
+    push es
+    push ecx
+    mov ecx,[edx].len
+    mov ax,ds
+    mov es,ax
+    mov edi,edx
+    add edi,SIZE rdos_header
+    sub ecx,SIZE rdos_header
+    call InstallFont
+    pop ecx
+    pop es
+    pop ds
+    jmp load_adapter_fonts_next
+
+not_install_font:
+    cmp ax,RdosEnd
+    je load_adapter_fonts_done
+
+load_adapter_fonts_next:
+    add edx,[edx].len
+    jmp load_adapter_fonts_loop
+
+load_adapter_fonts_done:
+    pop edx
+    pop bx
+    pop ax
+    pop ds
+    ret
+load_adapter_fonts      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitFonts
+;
+;           DESCRIPTION:    Initialize freetype fonts
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public InitFonts_
+
+InitFonts_    Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    movzx ecx,ds:rom_modules
+    mov bx,OFFSET rom_adapters
+
+init_font_loop:
+    mov edx,[bx].adapter_base
+    call load_adapter_fonts
+    add bx,SIZE adapter_typ
+    loop init_font_loop     
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov ax,FONT_HANDLE
+    mov edi,OFFSET delete_handle
+    RegisterHandle
+;
+    mov esi,OFFSET open_font
+    mov edi,OFFSET open_font_name
+    xor dx,dx
+    mov ax,open_font_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET close_font
+    mov edi,OFFSET close_font_name
+    xor dx,dx
+    mov ax,close_font_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET get_string_metrics16
+    mov esi,OFFSET get_string_metrics32
+    mov edi,OFFSET get_string_metrics_name
+    mov dx,virt_es_in
+    mov ax,get_string_metrics_nr
+    RegisterUserGate
+;    
+    popad
+    pop es
+    pop ds
+    ret
+InitFonts_    Endp
 
 _TEXT    ENDS
 

@@ -2180,6 +2180,7 @@ WriteAttributeString MACRO
 ;;;;;;;;;;; FONT ;;;;;;;;;;
 
 ;	IN  AX              Requested font height
+;   IN  DX              Requested font ID
 ;	OUT	BX				Font handle
 OpenFont        MACRO
 	UserGate open_font_nr

@@ -101,6 +101,26 @@ void rdos_free(void *Memory)
 
 /*##########################################################################
 #
+#   Name       : GetFace
+#
+#   Purpose....: Convert between font ID and face
+#
+#   In params..: ID
+#   Out params.: *
+#   Returns....: Face
+#
+##########################################################################*/
+#pragma aux GetFace "*" rdosdev parm routine [edx] value [dx eax]
+FT_Face GetFace(int ID)
+{   
+    if (ID >= 0 && ID < MAX_FACES)
+        return face_arr[ID];
+    else
+        return 0;
+}
+    
+/*##########################################################################
+#
 #   Name       : LoadGlyph
 #
 #   Purpose....: Load glyph for caching
@@ -158,7 +178,7 @@ int LoadGlyph(FT_Face face, int unicode)
 #   Returns....: *
 #
 ##########################################################################*/
-FT_CacheEntry *GetGlyph(FT_Face face, int size, char *str)
+FT_CacheEntry *GetGlyph(FT_Face face, int size, const char *str)
 {
     FT_CacheEntry *entry = 0;
     int linear;
@@ -183,6 +203,43 @@ FT_CacheEntry *GetGlyph(FT_Face face, int size, char *str)
     RdosLeaveKernelSection(&face->cache_section);
 
     return entry;
+}
+    
+/*##########################################################################
+#
+#   Name       : GetMetrics
+#
+#   Purpose....: Get size of string
+#
+#   In params..: face, size, string
+#   Out params.: *
+#   Returns....: Width (low word) and height (high word)
+#
+##########################################################################*/
+#pragma aux GetMetrics "*" rdosdev parm routine [dx eax] [ecx] [es edi] value [eax]
+int GetMetrics(FT_Face face, int size, const char *str)
+{   
+    FT_CacheEntry *entry;
+    const char *ptr;
+    int width = 0;
+    int height = 0;
+
+    ptr = str;
+    
+    while (*ptr)
+    {
+        entry = GetGlyph( face, size, ptr);
+
+        if (entry)
+        {
+            if (entry->CellY > height)
+                height = entry->CellY;
+
+            width += entry->CellX;
+        }
+        ptr += RdosGetCharSize(ptr);
+    }        
+    return width + (height << 16);
 }
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [eax]
@@ -235,7 +292,7 @@ void __far ImplTestGate(int vbe)
 #
 ##########################################################################*/
 #pragma aux InstallFont "*" rdosdev parm routine [es edi] [ecx]
-void __far InstallFont(void *base, int size)
+void InstallFont(void *base, int size)
 {   
     int error;
     

@@ -11,12 +11,18 @@ void main()
     int vbe;
     int rowsize;
     void *linear;
+    int handle;
+    char test_str[] = "ÖstersjÖn";
 
     bpp = 24;
     width = 640;
     height = 640;
   
     vbe = RdosSetVideoMode(&bpp, &width, &height, &rowsize, &linear);
+
+    handle = RdosOpenFont(0, 48);
+    RdosGetStringMetrics(handle, test_str, &width, &height);
+    RdosCloseFont(handle);
 
     RdosTestGate(vbe);
     
