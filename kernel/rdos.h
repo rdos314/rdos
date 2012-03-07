@@ -181,6 +181,8 @@ void RDOSAPI RdosLoad32();
 short int RDOSAPI RdosSwapShort(short int val);
 long RDOSAPI RdosSwapLong(long val);
 
+int RDOSAPI RdosGetCharSize(const char *str);
+
 long RDOSAPI RdosGetLongRandom();
 long RDOSAPI RdosGetRandom(long range);
 
@@ -721,6 +723,23 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     "rol eax,16"    \
     "xchg al,ah"    \
     parm [eax]   \
+    value [eax];
+
+#pragma aux RdosGetCharSize = \
+    "mov al,1" \
+    "mov ah,[edi]" \
+    "test ah,80h" \
+    "jz size_ok" \
+    "inc al" \
+    "test ah,20h" \
+    "jz size_ok" \
+    "inc al" \
+    "test ah,10h" \
+    "jz size_ok" \
+    "inc al" \
+    "size_ok: " \
+    "movzx eax,al" \
+    parm [edi]   \
     value [eax];
 
 #pragma aux RdosGetLongRandom = \
@@ -3211,6 +3230,23 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     "rol eax,16"    \
     "xchg al,ah"    \
     parm [eax]   \
+    value [eax];
+
+#pragma aux RdosGetCharSize = \
+    "mov al,1" \
+    "mov ah,es:[edi]" \
+    "test ah,80h" \
+    "jz size_ok" \
+    "inc al" \
+    "test ah,20h" \
+    "jz size_ok" \
+    "inc al" \
+    "test ah,10h" \
+    "jz size_ok" \
+    "inc al" \
+    "size_ok: " \
+    "movzx eax,al" \
+    parm [es edi]   \
     value [eax];
 
 #pragma aux RdosGetLongRandom = \

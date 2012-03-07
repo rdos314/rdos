@@ -34,7 +34,22 @@
 
 #define MAX_FACES       32
 
+typedef struct  FT_CacheEntry
+{
+    int CellX;
+    int CellY;
+    int OrigX;
+    int OrigY;
+    int BitmapX;
+    int BitmapY;
+    char BitmapData[1];
+} FT_CacheEntry;
+
 void InitFonts();
+int CreateSizeCacheEntry();
+
+#pragma aux GetGlyphEntry parm routine [gs esi] [eax] [es edi] value [eax]
+int GetGlyphEntry(FT_Face face, int CacheEntry, const char *str);
 
 FT_Library      lib;
 int             face_count = 0;
@@ -86,6 +101,54 @@ void rdos_free(void *Memory)
 
 /*##########################################################################
 #
+#   Name       : LoadGlyph
+#
+#   Purpose....: Load glyph for caching
+#
+#   In params..: Unicode value
+#   Out params.: *
+#   Returns....: Linear address of glyph buffer
+#
+##########################################################################*/
+#pragma aux LoadGlyph "*" rdosdev parm routine [gs esi] [edx] value [eax]
+int LoadGlyph(FT_Face face, int unicode)
+{   
+    int error;
+    int i;
+    int entry_size;
+    int linear;
+    FT_Bitmap  *bitmap;
+    FT_CacheEntry *entry = 0;
+    
+    if ( FT_IS_SCALABLE( face) )
+        FT_Set_Pixel_Sizes( face, face->curr_size, face->curr_size );
+
+    i = FT_Get_Char_Index( face, unicode);
+    error = FT_Load_Glyph( face, i, FT_LOAD_DEFAULT );
+
+    if (error == 0)
+        error = FT_Render_Glyph( face->glyph, FT_RENDER_MODE_NORMAL );
+
+    if (error == 0)
+    {
+        bitmap = &face->glyph->bitmap;
+        entry_size = sizeof(FT_CacheEntry) + bitmap->rows * bitmap->width - 1;
+        linear = RdosAllocateSmallGlobalLinear(entry_size);
+        entry = (FT_CacheEntry *)RdosLinearToPointer(linear);
+        memcpy(entry->BitmapData, bitmap->buffer, bitmap->rows * bitmap->width);
+
+        entry->CellX = face->glyph->metrics.horiAdvance >> 6;
+        entry->CellY = face->glyph->metrics.vertAdvance >> 6;
+        entry->OrigX = face->glyph->bitmap_left;
+        entry->OrigY = entry->CellY - face->glyph->bitmap_top;
+        entry->BitmapX = bitmap->width;
+        entry->BitmapY = bitmap->rows;
+    }
+    return linear;
+}
+
+/*##########################################################################
+#
 #   Name       : GetGlyph
 #
 #   Purpose....: Get a glyph
@@ -95,117 +158,28 @@ void rdos_free(void *Memory)
 #   Returns....: *
 #
 ##########################################################################*/
-FT_CacheEntry *GetGlyph(FT_Face face, int size, unsigned int unicode)
+FT_CacheEntry *GetGlyph(FT_Face face, int size, char *str)
 {
-    FT_SizeCache *size_cache = 0;
-    FT_CacheLevel1 *level1 = 0;
-    FT_CacheLevel2 *level2 = 0;
-    FT_CacheLevel3 *level3 = 0;
     FT_CacheEntry *entry = 0;
-    FT_Bitmap  *bitmap;
-    long linear;
+    int linear;
     int i;
-    int error;
-    int entry_size;
-    unsigned int index;
 
     RdosEnterKernelSection(&face->cache_section);
 
-    size_cache = face->size_cache_arr[size];
-    if (size_cache == 0)
-    {
-        size_cache = (FT_SizeCache *)rdos_alloc(sizeof(FT_SizeCache));
-        if (size_cache)
-            for (i = 0; i < 256; i++)
-                size_cache->level_arr[i] = 0;
-        
-        face->size_cache_arr[size] = size_cache;
-    }
-
-    if (size_cache)
-    {
-        index = (unicode >> 24) & 0xFF;
-        level1 = size_cache->level_arr[index];
-
-        if (level1 == 0)
-        {
-            level1 = (FT_CacheLevel1 *)rdos_alloc(sizeof(FT_CacheLevel1));
-            if (level1)
-                for (i = 0; i < 256; i++)
-                    level1->level_arr[i] = 0;
-
-            size_cache->level_arr[index] = level1;
-        }        
-    }
-
-    if (level1)
-    {
-        index = (unicode >> 16) & 0xFF;
-        level2 = level1->level_arr[index];
-
-        if (level2 == 0)
-        {
-            level2 = (FT_CacheLevel2 *)rdos_alloc(sizeof(FT_CacheLevel2));
-            if (level2)
-                for (i = 0; i < 256; i++)
-                    level2->level_arr[i] = 0;
-
-            level1->level_arr[index] = level2;
-        }                
-    }
-
-    if (level2)
-    {
-        index = (unicode >> 8) & 0xFF;
-        level3 = level2->level_arr[index];
-
-        if (level3 == 0)
-        {
-            level3 = (FT_CacheLevel3 *)rdos_alloc(sizeof(FT_CacheLevel3));
-            if (level3)
-                for (i = 0; i < 256; i++)
-                    level3->entry_arr[i] = 0;
-
-            level2->level_arr[index] = level3;
-        }                
-    }
-
-    if (level3)
-    {
-        index = unicode & 0xFF;
-        entry = level3->entry_arr[index];
-
-        if (entry == 0)
-        {
-            if ( FT_IS_SCALABLE( face ) )
-                FT_Set_Pixel_Sizes( face, size, size );
-
-            i = FT_Get_Char_Index( face, unicode);
-            error = FT_Load_Glyph( face, i, FT_LOAD_DEFAULT );
-
-            if (error == 0)
-                error = FT_Render_Glyph( face->glyph, FT_RENDER_MODE_NORMAL );
-
-            if (error == 0)
-            {
-                bitmap = &face->glyph->bitmap;
-                entry_size = sizeof(FT_CacheEntry) + bitmap->rows * bitmap->width - 1;
-                linear = RdosAllocateSmallGlobalLinear(entry_size);
-                entry = (FT_CacheEntry *)RdosLinearToPointer(linear);
-                memcpy(entry->BitmapData, bitmap->buffer, bitmap->rows * bitmap->width);
-
-                entry->CellX = face->glyph->metrics.horiAdvance >> 6;
-                entry->CellY = face->glyph->metrics.vertAdvance >> 6;
-                entry->OrigX = face->glyph->bitmap_left;
-                entry->OrigY = entry->CellY - face->glyph->bitmap_top;
-                entry->BitmapX = bitmap->width;
-                entry->BitmapY = bitmap->rows;
-
-                level3->entry_arr[index] = entry;                
-            }
-        }
-    }    
+    face->curr_size = size;
     
+    linear = face->size_cache_arr[size];
+    if (linear == 0)
+    {
+        linear = CreateSizeCacheEntry();
+        face->size_cache_arr[size] = linear;
+    }
+
+    linear = GetGlyphEntry(face, linear, str);
+
+    if (linear)
+        entry = (FT_CacheEntry *)RdosLinearToPointer(linear);
+        
     RdosLeaveKernelSection(&face->cache_section);
 
     return entry;
@@ -217,25 +191,36 @@ void __far ImplTestGate(int vbe)
     int i;
     int j;
     int size = 32;
+    int x = 0;
+    int y = 0;
+    char test_str[] = "ÖstersjÖn";
+    char *str_ptr;
     char *ptr;
     FT_CacheEntry *entry;
 
-    entry = GetGlyph( face_arr[0], size, '�');
-
-    if (entry)
+    str_ptr = test_str;
+    
+    while (*str_ptr)
     {
-        ptr = &entry->BitmapData[0];
-  
-        for (i = 0; i < entry->BitmapY; i++)
+        entry = GetGlyph( face_arr[0], size, str_ptr);
+
+        if (entry)
         {
-            for (j = 0; j < entry->BitmapX; j++)
+            ptr = &entry->BitmapData[0];
+  
+            for (i = 0; i < entry->BitmapY; i++)
             {
-                RdosSetDrawColor(vbe, *ptr);
-                RdosSetPixel(vbe, entry->OrigX + j, entry->OrigY + i);
-                ptr++;
+                for (j = 0; j < entry->BitmapX; j++)
+                {
+                    RdosSetDrawColor(vbe, *ptr);
+                    RdosSetPixel(vbe, x + entry->OrigX + j, y + entry->OrigY + i);
+                    ptr++;
+                }
             }
         }
-    }
+        x += entry->CellX;
+        str_ptr += RdosGetCharSize(str_ptr);
+    }        
 }
 
 /*##########################################################################

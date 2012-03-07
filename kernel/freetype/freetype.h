@@ -753,78 +753,6 @@ FT_BEGIN_HEADER
   /*************************************************************************/
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Type>                                                                */
-  /*    FT_CacheEntry                                                      */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Cache entry for RDOS                                               */
-  typedef struct  FT_CacheEntry
-  {
-    int CellX;
-    int CellY;
-    int OrigX;
-    int OrigY;
-    int BitmapX;
-    int BitmapY;
-    char BitmapData[1];
-  } FT_CacheEntry;
-
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Type>                                                                */
-  /*    FT_CacheLevel3                                                     */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Level 3 cache for RDOS                                             */
-  typedef struct  FT_CacheLevel3
-  {
-    FT_CacheEntry *entry_arr[256];
-  } FT_CacheLevel3;
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Type>                                                                */
-  /*    FT_CacheLevel2                                                     */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Level 2 cache for RDOS                                             */
-  typedef struct  FT_CacheLevel2
-  {
-    FT_CacheLevel3 *level_arr[256];
-  } FT_CacheLevel2;
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Type>                                                                */
-  /*    FT_CacheLevel1                                                     */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Level 1 cache for RDOS                                             */
-  typedef struct  FT_CacheLevel1
-  {
-    FT_CacheLevel2 *level_arr[256];
-  } FT_CacheLevel1;
-
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Type>                                                                */
-  /*    FT_SizeCache                                                       */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Size cache for RDOS                                                */
-  typedef struct  FT_SizeCache
-  {
-    FT_CacheLevel1 *level_arr[256];
-  } FT_SizeCache;
-
 
   /*************************************************************************/
   /*                                                                       */
@@ -1036,7 +964,8 @@ FT_BEGIN_HEADER
 
     struct 
     TKernelSection    cache_section;
-    FT_SizeCache*     size_cache_arr[MAX_CACHE_HEIGHT];
+    int               curr_size;
+    int               size_cache_arr[MAX_CACHE_HEIGHT];
 
     FT_Face_Internal  internal;
 

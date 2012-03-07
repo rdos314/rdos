@@ -33,6 +33,14 @@ INCLUDE ..\..\kernel\driver.def
 INCLUDE ..\..\kernel\os\system.def
 INCLUDE ..\..\kernel\os\proc.inc
 
+
+size_cache_entry    STRUC
+
+sce_usage       DD ?
+sce_ptr_arr     DD 256 DUP(?)
+
+size_cache_entry    ENDS
+
     .386p
 
 _TEXT    SEGMENT byte public 'CODE'
@@ -40,6 +48,7 @@ _TEXT    SEGMENT byte public 'CODE'
     assume cs:_TEXT
 
     extrn InstallFont:far
+    extrn LoadGlyph:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -132,6 +141,333 @@ init_font_loop:
     pop ds
     ret
 InitFonts_    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateSizeCacheEntry
+;
+;           DESCRIPTION:    Create and initialize size cache entry
+;
+;           PARAMETERS:         
+;
+;           RETURNS:        EAX      Cache entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateSizeCacheEntry_
+
+CreateSizeCacheEntry_   Proc near
+    push es
+    push ecx
+    push edx
+    push edi
+;    
+    mov eax,SIZE size_cache_entry
+    AllocateSmallLinear
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,edx
+    mov es:[edi].sce_usage,0
+    add edi, OFFSET sce_ptr_arr
+    mov ecx,256
+    xor eax,eax
+    rep stosd
+    mov eax,edx
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop es
+    ret
+CreateSizeCacheEntry_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateLink
+;
+;           DESCRIPTION:    Create a link block of 2 ^ 6 entries
+;
+;           PARAMETERS:     FS      Flat sel
+;
+;           RETURNS:        EAX     Link logical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateLink   Proc near
+    push es
+    push ecx
+    push edx
+    push edi
+;    
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov eax,4 * 64
+    AllocateSmallLinear
+;
+    mov edi,edx
+    mov ecx,64
+    xor eax,eax
+    rep stosd
+    mov eax,edx
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop es
+    ret
+CreateLink   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetGlyphEntry
+;
+;           DESCRIPTION:    Get a glyph
+;
+;           PARAMETERS:     GS:ESI      Face
+;                           EAX         Cache size entry
+;                           ES:EDI      UTF-8 string
+;
+;           RETURNS:        EAX         Glyph linear address (or 0 for failure)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetGlyphEntry_
+
+GetGlyphEntry_   Proc near
+    push es
+    push fs
+    push ebx
+    push ecx
+    push edx
+    push edi
+;   
+    push esi
+;    
+    mov esi,eax
+    mov eax,flat_sel
+    mov fs,ax
+;    
+    mov al,es:[edi]
+    test al,80h
+    jz ggeOneByte
+;
+    test al,40h
+    jz ggeFail
+;
+    test al,20h
+    jz ggeTwoByte
+;
+    test al,10h
+    jz ggeThreeByte
+;
+    test al,8
+    jnz ggeFail
+;        
+    jmp ggeFourByte        
+
+ggeOneByte:
+    movzx edx,al
+    movzx ebx,al
+    shl ebx,2
+    jmp ggeLoad
+
+ggeTwoByte:
+    mov ah,es:[edi+1]
+    test ah,80h
+    jz ggeFail
+;
+    test ah,40h
+    jnz ggeFail
+;
+    and ax,3F1Fh
+    movzx edx,al
+    shl edx,6
+    or dl,ah
+;
+    movzx ebx,ah
+    shl ebx,2
+    push ebx
+;    
+    movzx ebx,al
+    or bl,80h
+    shl ebx,2
+    mov eax,fs:[ebx+esi]
+    or eax,eax
+    jnz ggeTwoLink1Ok
+;    
+    call CreateLink
+    mov fs:[ebx+esi],eax
+
+ggeTwoLink1Ok:
+    mov esi,eax
+    pop ebx
+    jmp ggeLoad
+
+ggeThreeByte:
+    mov ah,es:[edi+1]
+    test ah,80h
+    jz ggeFail
+;
+    test ah,40h
+    jnz ggeFail
+;
+    mov cl,es:[edi+2]
+    test cl,80h
+    jz ggeFail
+;
+    test cl,40h
+    jnz ggeFail
+;        
+    and ax,3F0Fh
+    and cl,3Fh
+    movzx edx,al
+    shl edx,6
+    or dl,ah
+    shl edx,6
+    or dl,cl
+;    
+    movzx ebx,cl
+    shl ebx,2
+    push ebx
+;
+    movzx ebx,ah
+    shl ebx,2
+    push ebx
+;    
+    movzx ebx,al
+    or bl,0C0h
+    shl ebx,2
+    mov eax,fs:[ebx+esi]
+    or eax,eax
+    jnz ggeThreeLink1Ok
+;    
+    call CreateLink
+    mov fs:[ebx+esi],eax
+
+ggeThreeLink1Ok:
+    mov esi,eax
+    pop ebx
+    mov eax,fs:[ebx+esi]
+    or eax,eax
+    jnz ggeThreeLink2Ok
+;    
+    call CreateLink
+    mov fs:[ebx+esi],eax
+
+ggeThreeLink2Ok:
+    mov esi,eax
+    pop ebx
+    jmp ggeLoad
+
+ggeFourByte:
+    mov ah,es:[edi+1]
+    test ah,80h
+    jz ggeFail
+;
+    test ah,40h
+    jnz ggeFail
+;
+    mov cl,es:[edi+2]
+    test cl,80h
+    jz ggeFail
+;
+    test cl,40h
+    jnz ggeFail
+;
+    mov ch,es:[edi+2]
+    test ch,80h
+    jz ggeFail
+;
+    test ch,40h
+    jnz ggeFail
+;        
+    and ax,3F07h
+    and cx,3F3Fh
+    movzx edx,al
+    shl edx,6
+    or dl,ah
+    shl edx,6
+    or dl,cl
+    shl edx,6
+    or dl,ch
+;    
+    movzx ebx,ch
+    shl ebx,2
+    push ebx
+;    
+    movzx ebx,cl
+    shl ebx,2
+    push ebx
+;    
+    movzx ebx,ah
+    shl ebx,2
+    push ebx
+;
+    movzx ebx,al
+    or bl,0E0h
+    shl ebx,2
+    mov eax,fs:[ebx+esi]
+    or eax,eax
+    jnz ggeFourLink1Ok
+;    
+    call CreateLink
+    mov fs:[ebx+esi],eax
+
+ggeFourLink1Ok:
+    mov esi,eax
+    pop ebx
+    mov eax,fs:[ebx+esi]
+    or eax,eax
+    jnz ggeFourLink2Ok
+;    
+    call CreateLink
+    mov fs:[ebx+esi],eax
+
+ggeFourLink2Ok:
+    mov esi,eax
+    pop ebx
+    mov eax,fs:[ebx+esi]
+    or eax,eax
+    jnz ggeFourLink3Ok
+;    
+    call CreateLink
+    mov fs:[ebx+esi],eax
+
+ggeFourLink3Ok:
+    mov esi,eax
+    pop ebx
+    jmp ggeLoad
+
+ggeFail:
+    pop esi
+    xor eax,eax
+    jmp ggeDone
+
+ggeLoad:    
+    add ebx,esi
+    pop esi
+    mov eax,fs:[ebx]
+    or eax,eax
+    jnz ggeDone
+
+ggeLoadIt:
+    call LoadGlyph
+    mov fs:[ebx],eax
+
+ggeDone:  
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    pop fs
+    pop es
+    ret
+GetGlyphEntry_   Endp
 
 _TEXT    ENDS
 
