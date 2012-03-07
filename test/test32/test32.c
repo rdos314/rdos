@@ -21,7 +21,9 @@ void main()
     vbe = RdosSetVideoMode(&bpp, &width, &height, &rowsize, &linear);
 
     handle = RdosOpenFont(0, 48);
+    RdosSetFont(vbe, handle);
     RdosGetStringMetrics(handle, test_str, &width, &height);
+    RdosDrawString(vbe, 0, 0, test_str);
     RdosCloseFont(handle);
 
     RdosTestGate(vbe);
