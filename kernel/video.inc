@@ -229,6 +229,12 @@ draw_rect_proc			DD ?
 ; IN  DX			b
 draw_ellipse_proc			DD ?
 
+; IN  EAX           Internal Color
+; IN  CX			number of pixels
+; IN  GS:EBX        Antialias bitmap (256 levels)
+; IN  EDI		    Dest buffer
+anti_alias_proc               DD ?
+
 v_section   	    section_typ <>
 v_sprite_section    section_typ <>
 v_mode	    	DW ?

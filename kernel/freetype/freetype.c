@@ -34,6 +34,9 @@
 
 #define MAX_FACES       32
 
+
+/* this structure is shared with asm (typebase.asm) */
+
 typedef struct  FT_CacheEntry
 {
     int CellX;
@@ -182,7 +185,6 @@ FT_CacheEntry *GetGlyph(FT_Face face, int size, const char *str)
 {
     FT_CacheEntry *entry = 0;
     int linear;
-    int i;
 
     RdosEnterKernelSection(&face->cache_section);
 
@@ -240,6 +242,23 @@ int GetMetrics(FT_Face face, int size, const char *str)
         ptr += RdosGetCharSize(ptr);
     }        
     return width + (height << 16);
+}
+    
+/*##########################################################################
+#
+#   Name       : GetCacheEntry
+#
+#   Purpose....: Get raw cache entry
+#
+#   In params..: face, size, string
+#   Out params.: *
+#   Returns....: cache entry
+#
+##########################################################################*/
+#pragma aux GetCacheEntry "*" rdosdev parm routine [dx eax] [ecx] [es edi] value [dx eax]
+FT_CacheEntry *GetCacheEntry(FT_Face face, int size, const char *str)
+{   
+    return GetGlyph( face, size, str );
 }
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [eax]

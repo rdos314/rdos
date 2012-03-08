@@ -2138,7 +2138,7 @@ draw_string_loop:
         push edi
 ;
         mov bx,ds:v_font
-        GetCharMask
+;        GetCharMask
         jc draw_string_char_next
 ;
         mov ax,es
@@ -3427,6 +3427,9 @@ errorp  Proc far
         ret
 errorp  Endp
 
+anti_alias_set:
+    retf
+
         public BitmapTab16
 
 BitmapTab16:
@@ -3465,6 +3468,7 @@ mt1F DW OFFSET draw_string,                     SEG code
 mt20 DW OFFSET draw_line,                       SEG code
 mt21 DW OFFSET draw_rect,                       SEG code
 mt22 DW OFFSET draw_ellipse,            SEG code
+mt23 DW OFFSET anti_alias_set,      SEG code
 
 code    ENDS
 

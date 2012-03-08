@@ -127,7 +127,10 @@ init_video_font_found:
     mov al,'M'
     push es
     push edi
-    GetCharMask
+;    GetCharMask
+    mov cx,8
+    mov dx,12
+;
     pop edi
     pop es
     mov es:v_pixels_per_row,dx
@@ -199,7 +202,7 @@ init_video32:
     jmp init_video_copy
 
 init_video_copy:
-    mov cx,35
+    mov cx,24h
     xor di,di
     rep movsd
 ;
@@ -567,7 +570,8 @@ crs_bitmap_loop:
     push edi
 ;
     mov bx,[bp].csb_font_handle
-    GetCharMask
+    stc
+;    GetCharMask
     jc crs_bitmap_next
 ;
     mov ax,si

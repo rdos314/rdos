@@ -2254,14 +2254,16 @@ DuplFileInfo    MACRO
 
 ;;;;;;;;;;;; VIDEO ;;;;;;;;;;;
 
-;  IN   AL          char
+;  IN   ES:EDI      UTF-8 string
 ;  IN   BX          font handle
-;  OUT  CX          width
-;  OUT  DX          height
-;  OUT  SI          row size
-;  OUT  ES:EDI      1-bit string bitmap
-GetCharMask     MACRO
-    OsGate get_char_mask_nr
+;  OUT  AX          start x
+;  OUT  BX          start y
+;  OUT  CX          bitmap width
+;  OUT  DX          bitmap height
+;  OUT  SI          advance x
+;  OUT  ES:EDI      8-bit bitmap
+GetUtf8Bitmap     MACRO
+    OsGate get_utf8_bitmap_nr
                     ENDM
 
 ;  IN  AX      Mode nr

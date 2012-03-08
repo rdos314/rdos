@@ -50,6 +50,23 @@ fh_size         DW ?
 
 font_handle_struc       ENDS
 
+;
+; this structure is shared with C (freetype.c)
+;
+
+cache_entry STRUC
+
+ce_cell_x       DD ?
+ce_cell_y       DD ?
+ce_orig_x       DD ?
+ce_orig_y       DD ?
+ce_bitmap_x     DD ?
+ce_bitmap_y     DD ?
+
+ce_data         DB ?
+
+cache_entry ENDS
+
     .386p
 
 _TEXT    SEGMENT byte public 'CODE'
@@ -60,6 +77,7 @@ _TEXT    SEGMENT byte public 'CODE'
     extrn GetFace:near
     extrn LoadGlyph:near
     extrn GetMetrics:near
+    extrn GetCacheEntry:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -549,6 +567,58 @@ get_string_metrics16    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           GetUtf8Bitmap
+;
+;           DESCRIPTION:    Get UTF-8 bitmap
+;
+;           PARAMETERS:     BX              Font
+;                           ES:EDI          String 
+;
+;           RETURNS:        AX              Start X
+;                           BX              Start Y
+;                           CX              Width
+;                           DX              Height
+;                           SI              Advance X
+;                           ES:EDI          Bitmap
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_utf8_bitmap_name DB 'Get String Metrics',0
+
+get_utf8_bitmap    Proc far
+    push ds
+;
+    mov ax,FONT_HANDLE
+    DerefHandle
+    jc gubDone
+;
+    mov eax,[ebx].fh_face
+    mov edx,[ebx].fh_face+4
+    movzx ecx,[ebx].fh_size
+    call GetCacheEntry
+    or dx,dx
+    stc
+    jz gubDone
+;    
+    mov es,dx
+    mov edi,eax
+;
+    mov eax,es:[edi].ce_orig_x
+    mov ebx,es:[edi].ce_orig_y
+    mov ecx,es:[edi].ce_bitmap_x
+    mov edx,es:[edi].ce_bitmap_y
+    mov esi,es:[edi].ce_cell_x
+    add edi,OFFSET ce_data
+    clc
+
+gubDone:    
+    pop ds
+    ret
+get_utf8_bitmap    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           delete_handle
 ;
 ;           DESCRIPTION:    BX              Font handle
@@ -665,6 +735,12 @@ init_font_loop:
     mov ax,FONT_HANDLE
     mov edi,OFFSET delete_handle
     RegisterHandle
+;
+    mov esi,OFFSET get_utf8_bitmap
+    mov edi,OFFSET get_utf8_bitmap_name
+    xor cl,cl
+    mov ax,get_utf8_bitmap_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET open_font
     mov edi,OFFSET open_font_name

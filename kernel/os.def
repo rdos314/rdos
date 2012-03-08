@@ -248,7 +248,7 @@ hook_file_system_started_nr	= 243
 get_file_info_nr			= 247
 dupl_file_info_nr			= 248
 
-get_char_mask_nr			= 250
+get_utf8_bitmap_nr			= 250
 register_video_mode_nr		= 251
 
 init_mouse_nr				= 252
