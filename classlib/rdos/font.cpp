@@ -32,16 +32,16 @@
 #
 #   Name       : TFont::TFont
 #
-#   Purpose....: Constructor for TFont		                          
+#   Purpose....: Constructor for TFont                                    
 #
-#   In params..: Height		requested font height
+#   In params..: Height         requested font height
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 TFont::TFont(int height)
 {
-    FFontHandle = RdosOpenFont(height);
+    FFontHandle = RdosOpenFont(0, height);
     FHeight = height;
 }
 
@@ -49,7 +49,7 @@ TFont::TFont(int height)
 #
 #   Name       : TFont::TFont
 #
-#   Purpose....: Copy constructor for TFont		                          
+#   Purpose....: Copy constructor for TFont                                       
 #
 #   In params..: *
 #   Out params.: *
@@ -59,14 +59,14 @@ TFont::TFont(int height)
 TFont::TFont(const TFont &src)
 {
     FHeight = src.FHeight;
-    FFontHandle = RdosOpenFont(FHeight);
+    FFontHandle = RdosOpenFont(0, FHeight);
 }
 
 /*##########################################################################
 #
 #   Name       : TFont::operator=
 #
-#   Purpose....: Assignment operator for TFont		                          
+#   Purpose....: Assignment operator for TFont                                    
 #
 #   In params..: *
 #   Out params.: *
@@ -78,7 +78,7 @@ TFont &TFont::operator=(const TFont &src)
     if (this != &src)
     {
         FHeight = src.FHeight;
-        FFontHandle = RdosOpenFont(FHeight);
+        FFontHandle = RdosOpenFont(0, FHeight);
     }
     return *this;
 }
@@ -87,7 +87,7 @@ TFont &TFont::operator=(const TFont &src)
 #
 #   Name       : TFont::~TFont
 #
-#   Purpose....: Destructor for TFont		                          
+#   Purpose....: Destructor for TFont                                     
 #
 #   In params..: *
 #   Out params.: *
@@ -103,7 +103,7 @@ TFont::~TFont()
 #
 #   Name       : TFont::GetStringMetrics
 #
-#   Purpose....: Get string metrics		                          
+#   Purpose....: Get string metrics                                       
 #
 #   In params..: str        string to meassure                
 #   Out params.: width      width of string

@@ -261,44 +261,6 @@ FT_CacheEntry *GetCacheEntry(FT_Face face, int size, const char *str)
     return GetGlyph( face, size, str );
 }
 
-#pragma aux ImplTestGate "*" rdosdev parm routine [eax]
-void __far ImplTestGate(int vbe)
-{
-    int i;
-    int j;
-    int size = 32;
-    int x = 0;
-    int y = 0;
-    char test_str[] = "ÖstersjÖn";
-    char *str_ptr;
-    char *ptr;
-    FT_CacheEntry *entry;
-
-    str_ptr = test_str;
-    
-    while (*str_ptr)
-    {
-        entry = GetGlyph( face_arr[0], size, str_ptr);
-
-        if (entry)
-        {
-            ptr = &entry->BitmapData[0];
-  
-            for (i = 0; i < entry->BitmapY; i++)
-            {
-                for (j = 0; j < entry->BitmapX; j++)
-                {
-                    RdosSetDrawColor(vbe, *ptr);
-                    RdosSetPixel(vbe, x + entry->OrigX + j, y + entry->OrigY + i);
-                    ptr++;
-                }
-            }
-        }
-        x += entry->CellX;
-        str_ptr += RdosGetCharSize(str_ptr);
-    }        
-}
-
 /*##########################################################################
 #
 #   Name       : InstallFont
@@ -341,6 +303,4 @@ int main()
 {
     FT_Init_FreeType( &lib );
     InitFonts();
-
-    RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate"); 
 }

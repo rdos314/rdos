@@ -429,6 +429,7 @@ open_font       Proc far
     push ecx
     push edx
     push esi
+    push edi
 ;    
     movzx esi,ax
     movzx edx,dx
@@ -448,6 +449,7 @@ open_font       Proc far
     clc
 
 ofDone:
+    pop edi
     pop esi
     pop edx
     pop ecx
