@@ -20,6 +20,8 @@ void main()
   
     vbe = RdosSetVideoMode(&bpp, &width, &height, &rowsize, &linear);
 
+    RdosTestGate(vbe);
+
     handle = RdosOpenFont(0, 48);
     RdosSetFont(vbe, handle);
     RdosSetFilledStyle(vbe);
@@ -29,8 +31,6 @@ void main()
     RdosSetDrawColor(vbe, 0xFFFF00);
     RdosDrawString(vbe, 0, 0, test_str);
     RdosCloseFont(handle);
-
-    RdosTestGate(vbe);
     
 }
 

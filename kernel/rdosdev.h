@@ -1286,7 +1286,6 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     " mov esi,es" \
     " mov ds,esi" \
     " mov esi,edi" \
-    " add esi,4" \
     OsGate_enter_section \
     " pop esi" \
     " pop ds" \
@@ -1301,7 +1300,6 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     " mov esi,es" \
     " mov ds,esi" \
     " mov esi,edi" \
-    " add esi,4" \
     OsGate_leave_section \
     " pop esi" \
     " pop ds" \
@@ -1316,7 +1314,6 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     " mov esi,es" \
     " mov ds,esi" \
     " mov esi,edi" \
-    " add esi,4" \
     OsGate_cond_enter_section \
     " pop esi" \
     " pop ds" \

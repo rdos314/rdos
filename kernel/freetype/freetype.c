@@ -32,6 +32,8 @@
 #include <ft2build.h>
 #include <freetype.h>
 
+// #define DEBUG       1
+
 #define MAX_FACES       32
 
 
@@ -69,13 +71,15 @@ void *rdos_alloc(int Size)
 
     if (Size <= 0 || Size > 0x100000)
         return 0;
-    
+
+#ifndef DEBUG    
     if (Size < 0x1000)
     {
         linear = RdosAllocateSmallGlobalLinear(Size);
         return RdosLinearToPointer(linear);
     }
     else
+#endif    
         return RdosAllocateBigGlobalMem(Size);
 }
 
@@ -156,14 +160,22 @@ int LoadGlyph(FT_Face face, int unicode)
     {
         bitmap = &face->glyph->bitmap;
         entry_size = sizeof(FT_CacheEntry) + bitmap->rows * bitmap->width - 1;
+
+#ifdef DEBUG
+        entry = RdosAllocateSmallGlobalMem(entry_size);
+        linear = RdosPointerToSelector(entry);
+#else
         linear = RdosAllocateSmallGlobalLinear(entry_size);
         entry = (FT_CacheEntry *)RdosLinearToPointer(linear);
+#endif
+        
         memcpy(entry->BitmapData, bitmap->buffer, bitmap->rows * bitmap->width);
 
         entry->CellX = face->glyph->metrics.horiAdvance >> 6;
         entry->CellY = face->glyph->metrics.vertAdvance >> 6;
         entry->OrigX = face->glyph->bitmap_left;
         entry->OrigY = entry->CellY - face->glyph->bitmap_top;
+        entry->OrigY += face->descender * entry->CellY / face->height;
         entry->BitmapX = bitmap->width;
         entry->BitmapY = bitmap->rows;
     }
@@ -186,9 +198,16 @@ FT_CacheEntry *GetGlyph(FT_Face face, int size, const char *str)
     FT_CacheEntry *entry = 0;
     int linear;
 
+#ifdef DEBUG
+    if (face != face_arr[0])
+    {
+        _asm int 3
+    }
+#endif
+
     RdosEnterKernelSection(&face->cache_section);
 
-    face->curr_size = size;
+    face->curr_size = size * face->height / (face->height - face->descender);
     
     linear = face->size_cache_arr[size];
     if (linear == 0)
@@ -200,7 +219,12 @@ FT_CacheEntry *GetGlyph(FT_Face face, int size, const char *str)
     linear = GetGlyphEntry(face, linear, str);
 
     if (linear)
+
+#ifdef DEBUG
+        entry = (FT_CacheEntry *)RdosSelectorToPointer(linear);
+#else            
         entry = (FT_CacheEntry *)RdosLinearToPointer(linear);
+#endif        
         
     RdosLeaveKernelSection(&face->cache_section);
 
@@ -241,6 +265,14 @@ int GetMetrics(FT_Face face, int size, const char *str)
         }
         ptr += RdosGetCharSize(ptr);
     }        
+
+    if (height == 0)
+    {
+        entry = GetGlyph( face, size, " ");
+        if (entry)
+            height = entry->CellY;
+    }
+    
     return width + (height << 16);
 }
     
@@ -290,6 +322,24 @@ void InstallFont(void *base, int size)
 
 /*##########################################################################
 #
+#   Name       : InitTasking
+#
+#   Purpose....: Init tasking callback
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux InitTasking "*" rdosdev parm routine
+void __far InitTasking()
+{
+    FT_Init_FreeType( &lib );
+    InitFonts();
+}
+
+/*##########################################################################
+#
 #   Name       : main
 #
 #   Purpose....: Initialization
@@ -301,6 +351,5 @@ void InstallFont(void *base, int size)
 ##########################################################################*/
 int main()
 {
-    FT_Init_FreeType( &lib );
-    InitFonts();
+    RdosHookInitTasking(&InitTasking);
 }

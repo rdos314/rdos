@@ -34,7 +34,6 @@ INCLUDE ..\..\kernel\os\system.def
 INCLUDE ..\..\kernel\os\proc.inc
 INCLUDE ..\handle.inc
 
-
 size_cache_entry    STRUC
 
 sce_usage       DD ?
@@ -99,20 +98,31 @@ CreateSizeCacheEntry_   Proc near
     push ecx
     push edx
     push edi
-;    
+    
+IFDEF DEBUG
+    mov eax,SIZE size_cache_entry
+    AllocateSmallGlobalMem
+    xor edi,edi
+ELSE    
     mov eax,SIZE size_cache_entry
     AllocateSmallLinear
-;
     mov ax,flat_sel
     mov es,ax
     mov edi,edx
+ENDIF
+    
     mov es:[edi].sce_usage,0
     add edi, OFFSET sce_ptr_arr
     mov ecx,256
     xor eax,eax
     rep stosd
+
+IFDEF DEBUG
+    mov eax,es
+ELSE        
     mov eax,edx
-;
+ENDIF
+
     pop edi
     pop edx
     pop ecx
@@ -138,19 +148,29 @@ CreateLink   Proc near
     push ecx
     push edx
     push edi
-;    
+
+IFDEF DEBUG    
+    mov eax,4 * 64
+    AllocateSmallGlobalMem
+    xor edi,edi
+ELSE
     mov ax,flat_sel
     mov es,ax
-;
     mov eax,4 * 64
     AllocateSmallLinear
-;
     mov edi,edx
+ENDIF
+    
     mov ecx,64
     xor eax,eax
     rep stosd
+
+IFDEF DEBUG
+    mov eax,es    
+ELSE    
     mov eax,edx
-;
+ENDIF
+
     pop edi
     pop edx
     pop ecx
@@ -184,11 +204,16 @@ GetGlyphEntry_   Proc near
     push edi
 ;   
     push esi
-;    
+
+IFDEF DEBUG
+    mov fs,ax
+    xor esi,esi
+ELSE
     mov esi,eax
     mov eax,flat_sel
     mov fs,ax
-;    
+ENDIF 
+   
     mov al,es:[edi]
     test al,80h
     jz ggeOneByte
@@ -241,7 +266,14 @@ ggeTwoByte:
     mov fs:[ebx+esi],eax
 
 ggeTwoLink1Ok:
+
+IFDEF DEBUG
+    mov fs,eax
+    xor esi,esi
+ELSE    
     mov esi,eax
+ENDIF
+    
     pop ebx
     jmp ggeLoad
 
@@ -287,7 +319,14 @@ ggeThreeByte:
     mov fs:[ebx+esi],eax
 
 ggeThreeLink1Ok:
+
+IFDEF DEBUG
+    mov fs,eax
+    xor esi,esi
+ELSE    
     mov esi,eax
+ENDIF
+
     pop ebx
     mov eax,fs:[ebx+esi]
     or eax,eax
@@ -297,7 +336,14 @@ ggeThreeLink1Ok:
     mov fs:[ebx+esi],eax
 
 ggeThreeLink2Ok:
+
+IFDEF DEBUG
+    mov fs,eax
+    xor esi,esi
+ELSE    
     mov esi,eax
+ENDIF
+
     pop ebx
     jmp ggeLoad
 
@@ -356,7 +402,14 @@ ggeFourByte:
     mov fs:[ebx+esi],eax
 
 ggeFourLink1Ok:
+
+IFDEF DEBUG
+    mov fs,eax
+    xor esi,esi
+ELSE    
     mov esi,eax
+ENDIF
+
     pop ebx
     mov eax,fs:[ebx+esi]
     or eax,eax
@@ -376,7 +429,14 @@ ggeFourLink2Ok:
     mov fs:[ebx+esi],eax
 
 ggeFourLink3Ok:
+
+IFDEF DEBUG
+    mov fs,eax
+    xor esi,esi
+ELSE    
     mov esi,eax
+ENDIF
+
     pop ebx
     jmp ggeLoad
 
