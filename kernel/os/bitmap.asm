@@ -368,7 +368,7 @@ cr_bitmap32:
     jmp cr_bitmap_copy
 
 cr_bitmap_copy:
-    mov cx,35
+    mov cx,24h
     xor di,di
     rep movsd
 ;
