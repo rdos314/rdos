@@ -845,62 +845,195 @@ mask_copy    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SetMask
+;       NAME:       AntiAliasSet
 ;
-;               DESCRIPTION:    Set mask and process sprites & limits
+;       DESCRIPTION:    Set mask using 256-level anti-alias bitmap
 ;
-;               PARAMETER:              DL          First bit
-;                                               CX                      Number of pixels
-;                                               GS:EBX      Mask to process
-;                                               ES:EDI          line buffer
+;       PARAMETERS:         AX     Internal color
+;                           CX          number of pixels
+;                           GS:EBX      Antialias bitmap
+;                           ES:EDI      Dest buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetMask Proc near
-        EnterSection ds:v_sprite_section
-        push word ptr [bp].curr_x
-        push ebx
-        push cx
-        push si
-        push edi
+anti_alias_set  Proc far
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
 ;
     or cx,cx
-    jz set_mask_done
+    jz anti_alias_set_line_done
+    
+anti_alias_set_line_loop:
+    push cx
+    mov dl,gs:[ebx]
+    or dl,dl
+    jz anti_alias_set_line_next
+;
+    cmp dl,0FFh
+    jne anti_alias_mix
+;    
+    push bx
+    mov bx,ds:v_lgop
+    add bx,bx
+    call word ptr cs:[bx].LgopTab
+    pop bx
+    jmp anti_alias_set_line_next
+
+anti_alias_mix:
+    push ax
+    push si
+    mov cx,ax
+    mov si,es:[edi]
+;    
+    shr ax,1
+    and ax,1Fh
+    mov dx,si
+    shr dx,1
+    and dx,1Fh
+    sub ax,dx
+    jz anti_alias_mix_b_ok    
+;
+    movzx dx,byte ptr gs:[ebx]
+    imul dx
+    mov dx,si
+    shr dx,1
+    and dx,1Fh
+    add dl,ah
+    shl dx,1
+    and si,NOT 3Eh
+    or si,dx
+
+anti_alias_mix_b_ok:    
+    mov ax,cx
+    shr ax,6
+    and ax,1Fh
+    mov dx,si
+    shr dx,6
+    and dx,1Fh
+    sub ax,dx
+    jz anti_alias_mix_g_ok
+;
+    movzx dx,byte ptr gs:[ebx]
+    imul dx
+    mov dx,si
+    shr dx,6
+    and dl,1Fh
+    add dl,ah
+    shl dx,6
+    and si,NOT 7C0h
+    or si,dx
+
+anti_alias_mix_g_ok:    
+    mov ax,cx
+    shr ax,11
+    and ax,1Fh
+    mov dx,es:[edi]
+    shr dx,11
+    and dx,1Fh
+    sub ax,dx
+    jz anti_alias_mix_r_ok
+;
+    movzx dx,byte ptr gs:[ebx]
+    imul dx
+    mov dx,si
+    shr dx,11
+    and dl,1Fh
+    add dl,ah
+    shl dx,11
+    and si,07FFh
+    or si,dx
+    
+anti_alias_mix_r_ok:    
+    mov ax,si
+    push bx
+    mov bx,ds:v_lgop
+    add bx,bx
+    call word ptr cs:[bx].LgopTab
+    pop bx
+;
+    pop si
+    pop ax    
+
+anti_alias_set_line_next:
+    pop cx
+    add edi,2
+    inc word ptr [bp].curr_x
+    inc ebx
+    sub cx,1
+    jnz anti_alias_set_line_loop
+
+anti_alias_set_line_done:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    ret
+anti_alias_set    Endp
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           AntiAlias
+;
+;               DESCRIPTION:    Anti-alias line and process sprites & limits
+;
+;               PARAMETER:      CX          Number of pixels
+;                               GS:EBX      Mask to process
+;                               ES:EDI      line buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AntiAlias Proc near
+    EnterSection ds:v_sprite_section
+    push word ptr [bp].curr_x
+    push ebx
+    push cx
+    push si
+    push edi
+;
+    or cx,cx
+    jz aa_done
 ;    
     mov ax,[bp].curr_y
     cmp ax,ds:v_y_min
-    jl set_mask_done
+    jl aa_done
 ;
     cmp ax,ds:v_y_max
-    jg set_mask_done
+    jg aa_done
 ;
     mov ax,[bp].curr_x
-        cmp ax,ds:v_x_max
-        jg set_mask_done
+    cmp ax,ds:v_x_max
+    jg aa_done
     
-set_mask_buf_loop:
+aa_buf_loop:
     cmp ax,ds:v_x_min
-    jge set_mask_start_ok
+    jge aa_start_ok
 
-set_mask_adv_buf:
+aa_adv_buf:
     inc ax
     add edi,2
     sub cx,1
-    jnz set_mask_buf_loop
-    jmp set_mask_done
+    jnz aa_buf_loop
+    jmp aa_done
 
-set_mask_start_ok:
+aa_start_ok:
     mov si,ds:v_x_max
     sub si,ax
     inc si
     cmp cx,si
-    jc set_mask_do
+    jc aa_do
 ;
     mov cx,si
     
-set_mask_do:
+aa_do:
     cmp ds:v_sprite_count,0
-    jz set_mask_draw
+    jz aa_draw
 ;
     push cx
     push dx
@@ -911,26 +1044,24 @@ set_mask_do:
     pop dx
     pop cx
 
-set_mask_draw:
-        mov eax,ds:v_color
-    call ds:mask_set_proc
+aa_draw:
+    mov eax,ds:v_color
+    call ds:anti_alias_proc
 ;
     cmp ds:v_sprite_count,0
-    jz set_mask_done
+    jz aa_done
 ;
     ShowSpriteLine
 
-set_mask_done:
-        pop edi
-        pop si
-        pop cx
-        pop ebx
-        pop word ptr [bp].curr_x
-        LeaveSection ds:v_sprite_section
-        ret
-SetMask Endp
-
-
+aa_done:
+    pop edi
+    pop si
+    pop cx
+    pop ebx
+    pop word ptr [bp].curr_x
+    LeaveSection ds:v_sprite_section
+    ret
+AntiAlias Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2090,117 +2221,145 @@ draw_sprite_done:
 draw_sprite_line    Endp
 
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   DrawString
+;           NAME:           DrawString
 ;
-;               DESCRIPTION:    Draw a string
+;           DESCRIPTION:    Draw a string
 ; 
-;               PARAMETER:              CX                      x
-;                                               DX                      y
-;                                               ES:EDI          string
+;           PARAMETER:          CX              x
+;                           DX              y
+;                           ES:EDI      string
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ds_dest_y               EQU -6
-ds_dest_x               EQU -8
-ds_cnt                  EQU -10
-ds_src_x                EQU -12
-ds_row_size             EQU -14
-ds_width                EQU -16
+ds_dest_y           EQU -6
+ds_dest_x           EQU -8
+ds_str_sel          EQU -10
+ds_width            EQU -12
+ds_new_x            EQU -14
+ds_new_y            EQU -16
 
 draw_string     Proc far
-        push es
-        push fs
-        push gs
-        pushad
-        mov bp,sp
-        sub sp,16
+    push es
+    push gs
+    pushad
+    mov bp,sp
+    sub sp,16
 ;
-        mov ax,es
-        mov fs,ax
-        mov ax,flat_sel
-        mov es,ax
-;
-        mov [bp].curr_x,cx
-        mov [bp].curr_y,dx
-        mov [bp].ds_dest_x,cx
-        mov [bp].ds_dest_y,dx
+    mov [bp].ds_str_sel,es
+    mov [bp].curr_x,cx
+    mov [bp].curr_y,dx
+    mov [bp].ds_dest_x,cx
+    mov [bp].ds_dest_y,dx
 
 draw_string_loop:
-        mov al,fs:[edi]
-        or al,al
-        jz draw_string_ok
+    mov al,es:[edi]
+    or al,al
+    jz draw_string_ok
 ;
-        inc edi
-        push edi
+    push edi
 ;
-        mov bx,ds:v_font
-;        GetCharMask
-        jc draw_string_char_next
+    mov bx,ds:v_font
+    GetUtf8Bitmap
+    jc draw_string_char_next
 ;
-        mov ax,es
-        mov gs,ax
-        mov ax,flat_sel
-        mov es,ax
-        mov [bp].ds_row_size,si
-        mov word ptr [bp].ds_src_x,0
-        mov [bp].ds_width,cx
-        mov cx,dx
-        or cx,cx
-        jz draw_string_char_next
+    add si,[bp].ds_dest_x
+    mov [bp].ds_new_x,si
 ;
-        movsx ebx,word ptr [bp].ds_src_x
-        sar ebx,3
-        add ebx,edi
+    mov si,[bp].ds_dest_y    
+    mov [bp].ds_new_y,si
 ;
-        movsx esi,word ptr [bp].ds_dest_x
-        mov [bp].curr_x,si
-        movsx edx,word ptr [bp].ds_dest_y
-        mov [bp].curr_y,dx
-        movzx eax,word ptr ds:v_row_size
-        imul edx
-        mov edx,esi
-        add edx,edx
-        add eax,edx
-        add eax,ds:v_app_base
-        mov edi,eax
+    add [bp].ds_dest_x,ax
+    add [bp].ds_dest_y,bx
+;
+    mov [bp].ds_width,cx
+;       
+    mov ax,es
+    mov gs,ax
+    mov ebx,edi
+    mov ax,flat_sel
+    mov es,ax
+;       
+    mov cx,dx
+    or cx,cx
+    jz draw_string_char_done
+;
+    movsx esi,word ptr [bp].ds_dest_x
+    mov [bp].curr_x,si
+    movsx edx,word ptr [bp].ds_dest_y
+    mov [bp].curr_y,dx
+    movzx eax,word ptr ds:v_row_size
+    imul edx
+    mov edx,esi
+    add edx,edx
+    add eax,edx
+    add eax,ds:v_app_base
+    mov edi,eax
 
 draw_string_char_loop:
     push cx
-        mov cx,[bp].ds_width
-        xor dl,dl
-    call SetMask
+    mov cx,[bp].ds_width
+    call AntiAlias
     pop cx
 ;
     inc word ptr [bp].curr_y
-        movzx eax,ds:v_row_size
-        add edi,eax
-        movzx eax,word ptr [bp].ds_row_size
-        add ebx,eax
-        sub cx,1
-        jnz draw_string_char_loop
+    movzx eax,ds:v_row_size
+    add edi,eax
+    movzx eax,word ptr [bp].ds_width
+    add ebx,eax
+    sub cx,1
+    jnz draw_string_char_loop
 
 draw_string_char_done:
-        mov ax,[bp].ds_width
-        add [bp].ds_dest_x,ax
+    mov ax,[bp].ds_new_x
+    mov [bp].ds_dest_x,ax
+;
+    mov ax,[bp].ds_new_y
+    mov [bp].ds_dest_y,ax
 
 draw_string_char_next:
-        pop edi
-        jmp draw_string_loop
+    pop edi
+    mov es,[bp].ds_str_sel
+    mov al,es:[edi]
+    or al,al
+    jz draw_string_ok
+;    
+    inc edi
+    mov ah,es:[edi]
+    or ah,ah
+    jz draw_string_ok
+;
+    test al,80h
+    jz draw_string_loop
+;
+    inc edi
+    test al,20h
+    jz draw_string_loop
+;
+    inc edi
+    mov ah,es:[edi]
+    or ah,ah
+    jz draw_string_ok
+;
+    test al,10h
+    jz draw_string_loop
+;
+    inc edi
+    mov ah,es:[edi]
+    or ah,ah
+    jnz draw_string_loop
 
 draw_string_ok:
-        clc
+    clc
 
 draw_string_done:
-        add sp,16
-        popad
-        pop gs
-        pop fs
-        pop es
-        ret
+    add sp,16
+    popad
+    pop gs
+    pop es
+    ret
 draw_string     Endp
 
 
@@ -3426,9 +3585,6 @@ errorp  Proc far
         stc
         ret
 errorp  Endp
-
-anti_alias_set:
-    retf
 
         public BitmapTab16
 
