@@ -197,6 +197,11 @@ void Pattern3(TGraphicDevice *dev)
 
 void TestAll(TGraphicDevice *dev)
 {
+        TFont *font;
+        
+        font = new TFont(26);
+        dev->SetFont(font);
+
         dev->SetLgopNone();
         dev->SetDrawColor(0, 0, 255);
         dev->SetFilledStyle();
@@ -230,15 +235,24 @@ void TestAll(TGraphicDevice *dev)
 
         dev->SetFilledStyle();
         dev->DrawEllipse(425, 175, 125, 125);
+
+        dev->SetDrawColor(255, 255, 255);
+        dev->DrawString(0, dev->GetHeight() / 2, "RDOS operating system åäö ÅÄÖ €");
 }
 
 TBitmapGraphicDevice *CreateMouseMask()
 {
         TBitmapGraphicDevice *mono;
-
+        TFont *font;
+        
+        font = new TFont(28);
         mono = new TBitmapGraphicDevice(1, 40, 40);
         mono->SetLgopNone();
-        mono->SetFilledStyle();
+        mono->SetFont(font);
+        mono->DrawString(0, 0, "-X-");
+
+
+/*        mono->SetFilledStyle();
         mono->DrawEllipse(20, 20, 20, 20);
         mono->SetLgopInv();
         mono->DrawRect(15, 15, 25, 25);
@@ -254,7 +268,7 @@ TBitmapGraphicDevice *CreateMouseMask()
         mono->DrawLine(1, 1, 41, 41);
         mono->DrawLine(1, 41, 41, 1);
         mono->DrawLine(1, 1, 40, 40);
-        mono->DrawLine(1, 40, 40, 1);
+        mono->DrawLine(1, 40, 40, 1); */
 
         return mono;
 }
@@ -435,7 +449,7 @@ void cdecl main()
 
         RdosWaitMilli(5000);
 
-        bitmap = new TBitmapGraphicDevice(*vbe);
+        bitmap = new TBitmapGraphicDevice(16, 480, 640);
         TestAll(bitmap);
 
         vbe->SetLgopNone();
