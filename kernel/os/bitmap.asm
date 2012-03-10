@@ -86,6 +86,8 @@ init_video_bitmap       Proc far
     mov es:v_lgop,1
     mov es:v_font,0
     mov es:v_style,0
+    mov es:v_phys_base,0
+    mov es:v_has_focus,0
     mov es:v_bpp,al
     cmp al,1
     jne init_video_no_pad
@@ -289,6 +291,8 @@ create_bitmap   Proc far
     mov es:v_font,0
     mov es:v_text_font,0
     mov es:v_style,0
+    mov es:v_phys_base,0
+    mov es:v_has_focus,0
     mov es:v_bpp,al
     cmp al,1
     jne create_bitmap_no_pad

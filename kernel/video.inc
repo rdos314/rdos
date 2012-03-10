@@ -243,6 +243,8 @@ v_height    	DW ?
 v_row_size	    DW ?
 v_app_base	    DD ?
 v_app_size	    DD ?
+v_phys_base		DD ?
+v_has_focus	    DB ?
 v_bpp   		DB ?
 v_bitmap        DW ?
 

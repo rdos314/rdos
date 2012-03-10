@@ -211,7 +211,6 @@ init_flat_check:
     mov eax,ds:vmi_lfb
     mov es:vo_lfb,eax
     mov es:vo_flags,dl
-    mov es:vo_has_focus,0
     mov es:v_mode,bx
 ;
     mov di,OFFSET vo_mode_info
@@ -227,7 +226,7 @@ init_flat_check:
     add eax,1000h
     mov es:v_app_size,eax
     AllocateBigLinear
-    mov es:vo_lfb_base,edx
+    mov es:v_phys_base,edx
     AllocateBigLinear
     mov es:vo_mem_base,edx
     AllocateLocalLinear
@@ -260,7 +259,7 @@ init_flat_check:
     pop ds
 ;
     push ds
-    mov edi,es:vo_lfb_base
+    mov edi,es:v_phys_base
     shr edi,10
     mov ecx,es:v_app_size
     shr ecx,12
@@ -334,7 +333,7 @@ delete_linear   Proc far
     mov ax,process_page_sel
     mov es,ax
 ;
-    mov edi,ds:vo_lfb_base
+    mov edi,ds:v_phys_base
     shr edi,10
     mov ecx,ds:v_app_size
     shr ecx,12
@@ -349,7 +348,7 @@ delete_linear   Proc far
     rep stos dword ptr es:[edi]
 ;
     mov ecx,ds:v_app_size
-    mov edx,ds:vo_lfb_base
+    mov edx,ds:v_phys_base
     FreeLinear
     mov edx,ds:vo_mem_base
     FreeLinear
@@ -440,17 +439,17 @@ switch_to_active:
     SimCli
     mov ax,ds
     call SetVideoObj
-    mov ds:vo_has_focus,1
+    mov ds:v_has_focus,1
 ;
     mov ax,flat_sel
     mov es,ax
     mov esi,ds:vo_mem_base
-    mov edi,ds:vo_lfb_base
+    mov edi,ds:v_phys_base
     mov ecx,ds:v_app_size
     shr ecx,2
     rep movs dword ptr es:[edi],es:[esi]
 ;
-    mov esi,ds:vo_lfb_base
+    mov esi,ds:v_phys_base
     shr esi,10
     mov edi,ds:v_app_base
     mov ecx,ds:v_app_size
@@ -501,10 +500,10 @@ switch_from_linear      Proc far
     pushad
 ;
     SimCli
-    mov ds:vo_has_focus,1
+    mov ds:v_has_focus,1
     mov ax,flat_sel
     mov es,ax
-    mov esi,ds:vo_lfb_base
+    mov esi,ds:v_phys_base
     mov edi,ds:vo_mem_base
     mov ecx,ds:v_app_size
     shr ecx,2
