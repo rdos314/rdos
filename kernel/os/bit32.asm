@@ -79,10 +79,28 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-curr_start  EQU -8
+curr_start  EQU -10
 curr_size   EQU -6
 curr_x      EQU -4
 curr_y      EQU -2
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           PhysUpdate
+;
+;           DESCRIPTION:    Do a physical update on real hardware
+;
+;           PARAMETERS:     ECX         Pixels
+;                           ES:ESI      Current pos in bitmap
+;                           ES:EDI      Current physical pos
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+phys_update Proc far
+    rep movs dword ptr es:[edi],es:[esi]
+    ret
+phys_update Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -103,15 +121,20 @@ draw_sprite_ok:
     cmp ds:v_has_focus,0
     jz draw_unblock
 ;    
-    push cx
+    push ecx
+    push esi
     push edi
 ;
-    mov cx,[bp].curr_size
-    mov edi,[bp].curr_start
+    movzx ecx,word ptr [bp].curr_size
+    mov esi,[bp].curr_start
+    mov edi,esi
+    sub edi,ds:v_app_base
+    add edi,ds:v_phys_base
     call ds:phys_update_proc
 ;
     pop edi
-    pop cx
+    pop esi
+    pop ecx
 
 draw_unblock:
     LeaveSection ds:v_sprite_section
@@ -3150,9 +3173,6 @@ errorp  Proc far
     ret
 errorp  Endp
 
-
-phys_update:
-    retf
 
     public BitmapTab32
 

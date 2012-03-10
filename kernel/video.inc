@@ -235,8 +235,9 @@ draw_ellipse_proc			DD ?
 ; IN  EDI		    Dest buffer
 anti_alias_proc               DD ?
 
-; IN  CX			number of pixels
-; IN  EDI		    Dest buffer
+; IN  ECX			Number of pixels
+; IN  ES:ESI		Bitmap buffer
+; IN  ES:EDI		Physical buffer
 phys_update_proc               DD ?
 
 v_section   	    section_typ <>

@@ -446,37 +446,8 @@ switch_to_active:
     mov esi,ds:vo_mem_base
     mov edi,ds:v_phys_base
     mov ecx,ds:v_app_size
-    shr ecx,2
-    rep movs dword ptr es:[edi],es:[esi]
-;
-    mov esi,ds:v_phys_base
-    shr esi,10
-    mov edi,ds:v_app_base
-    mov ecx,ds:v_app_size
-    GetFocusThread
-    mov es,ax
-    mov bx,alias_linear SHR 20
-    mov eax,es:p_cr3
-    mov dx,process_dir_sel
-    mov es,dx
-    or ax,803h
-    mov es:[bx],eax
-    mov eax,cr3
-    mov cr3,eax
-;
-    mov eax,alias_linear
-    shr edi,10
-    and di,0FFFCh
-    add edi,eax
-    shr ecx,12
-    push ds
-    mov bx,process_page_sel
-    mov ds,bx
-    mov bx,flat_sel
-    mov es,bx
-    rep movs dword ptr es:[edi],ds:[esi]
+    call ds:phys_update_proc
     SimSti
-    pop ds
 ;
     popad
     pop es
@@ -496,50 +467,7 @@ switch_to_linear    Endp
     public switch_from_linear
 
 switch_from_linear      Proc far
-    push es
-    pushad
-;
-    SimCli
-    mov ds:v_has_focus,1
-    mov ax,flat_sel
-    mov es,ax
-    mov esi,ds:v_phys_base
-    mov edi,ds:vo_mem_base
-    mov ecx,ds:v_app_size
-    shr ecx,2
-    rep movs dword ptr es:[edi],es:[esi]
-;
-    mov esi,ds:vo_mem_base
-    shr esi,10
-    mov edi,ds:v_app_base
-    mov ecx,ds:v_app_size
-    GetFocusThread
-    mov es,ax
-    mov bx,alias_linear SHR 20
-    mov eax,es:p_cr3
-    mov dx,process_dir_sel
-    mov es,dx
-    or ax,803h
-    mov es:[bx],eax
-    mov eax,cr3
-    mov cr3,eax
-;
-    mov eax,alias_linear
-    shr edi,10
-    and di,0FFFCh
-    add edi,eax
-    shr ecx,12
-    push ds
-    mov bx,process_page_sel
-    mov ds,bx
-    mov bx,flat_sel
-    mov es,bx
-    rep movs dword ptr es:[edi],ds:[esi]
-    SimSti
-    pop ds
-;
-    popad
-    pop es
+    mov ds:v_has_focus,0
     ret
 switch_from_linear      Endp
 
