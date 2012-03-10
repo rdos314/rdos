@@ -36,6 +36,53 @@ INCLUDE ..\video.inc
 
     .386p
 
+;
+; block buffer
+; reg = number of pixels
+; EDI = line buffer
+;
+
+BlockBuffer MACRO reg
+    local done
+    
+    EnterSection ds:v_sprite_section
+    mov [bp].curr_start,edi
+    mov word ptr [bp].curr_size,reg
+;
+    cmp ds:v_sprite_count,0
+    jz done
+;
+    push ax
+    push cx
+    push dx
+    mov ax,reg
+    mov cx,[bp].curr_x
+    mov dx,[bp].curr_y
+    HideSpriteLine
+    pop dx
+    pop cx
+    pop ax
+
+done:
+            ENDM
+
+;
+; unblock buffer
+; EDI = line buffer
+;
+
+UnblockBuffer MACRO
+    local unblock
+    
+    cmp ds:v_sprite_count,0
+    jz unblock
+;
+    ShowSpriteLine
+
+unblock:
+    LeaveSection ds:v_sprite_section
+            ENDM
+
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
@@ -49,9 +96,10 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-curr_x  EQU -4
-curr_y  EQU -2
-
+curr_start  EQU -8
+curr_size   EQU -6
+curr_x      EQU -4
+curr_y      EQU -2
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1582,7 +1630,7 @@ set_native      Proc far
     push fs
     pushad
     mov bp,sp
-    sub sp,4
+    sub sp,10
     mov [bp].curr_x,cx
     mov [bp].curr_y,dx
     EnterSection ds:v_sprite_section
@@ -1660,7 +1708,7 @@ set_native_sprite_hidden:
 
 set_native_done:
     LeaveSection ds:v_sprite_section
-    add sp,4
+    add sp,10
     popad
     pop fs
     pop es
@@ -1689,7 +1737,7 @@ set_rgb Proc far
     push fs
     pushad
     mov bp,sp
-    sub sp,4
+    sub sp,10
     mov [bp].curr_x,cx
     mov [bp].curr_y,dx
     EnterSection ds:v_sprite_section
@@ -1775,7 +1823,7 @@ set_rgb_loop:
 
 set_rgb_done:
     LeaveSection ds:v_sprite_section
-    add sp,4
+    add sp,10
     popad
     pop fs
     pop es
@@ -1804,7 +1852,7 @@ set_sprite      Proc far
     push fs
     pushad
     mov bp,sp
-    sub sp,4
+    sub sp,10
     mov [bp].curr_x,cx
     mov [bp].curr_y,dx
 ;
@@ -1860,7 +1908,7 @@ set_sprite_do:
     call ds:copy_proc
 
 set_sprite_done:
-    add sp,4
+    add sp,10
     popad
     pop fs
     pop es
@@ -1967,7 +2015,7 @@ set_pixel       Proc far
     push edi
     push bp
     mov bp,sp
-    sub sp,4
+    sub sp,10
     mov [bp].curr_x,cx
     mov [bp].curr_y,dx      
     EnterSection ds:v_sprite_section
@@ -2012,7 +2060,7 @@ set_pixel_no_sprite:
 
 set_pixel_done:
     LeaveSection ds:v_sprite_section
-    add sp,4
+    add sp,10
     pop bp
     pop edi
     pop edx
@@ -2046,7 +2094,7 @@ draw_mask_line  Proc far
     push gs
     pushad
     mov bp,sp
-    sub sp,4    
+    sub sp,10    
     mov [bp].curr_x,edx
     EnterSection ds:v_sprite_section
 ;
@@ -2153,7 +2201,7 @@ draw_mask_line_do:
 
 draw_mask_line_done:
     LeaveSection ds:v_sprite_section
-    add sp,4
+    add sp,10
     popad
     pop gs
     pop es
@@ -2183,7 +2231,7 @@ draw_sprite_line    Proc far
     push gs
     pushad
     mov bp,sp
-    sub sp,4
+    sub sp,10
     mov [bp].curr_x,ecx
 ;
     mov bx,[bp].curr_y
@@ -2219,7 +2267,7 @@ draw_sprite_line    Proc far
     call ds:mask_copy_proc
 
 draw_sprite_done:
-    add sp,4
+    add sp,10
     popad
     pop gs
     pop fs
@@ -2242,19 +2290,19 @@ draw_sprite_line    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ds_dest_y           EQU -6
-ds_dest_x           EQU -8
-ds_str_sel          EQU -10
-ds_width            EQU -12
-ds_new_x            EQU -14
-ds_new_y            EQU -16
+ds_dest_y           EQU -12
+ds_dest_x           EQU -14
+ds_str_sel          EQU -16
+ds_width            EQU -18
+ds_new_x            EQU -20
+ds_new_y            EQU -22
 
 draw_string     Proc far
     push es
     push gs
     pushad
     mov bp,sp
-    sub sp,16
+    sub sp,22
 ;
     mov [bp].ds_str_sel,es
     mov [bp].curr_x,cx
@@ -2364,7 +2412,7 @@ draw_string_ok:
     clc
 
 draw_string_done:
-    add sp,16
+    add sp,22
     popad
     pop gs
     pop es
@@ -2387,22 +2435,22 @@ draw_string     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-dl_phys_add_x   EQU -8
-dl_phys_add_y   EQU -12
-dl_log_add_x    EQU -14
-dl_log_add_y    EQU -16
-dl_dx       EQU -18
-dl_dy       EQU -20
-dl_inc_low      EQU -22
-dl_x2           EQU -24
-dl_y2           EQU -26
+dl_phys_add_x   EQU -14
+dl_phys_add_y   EQU -18
+dl_log_add_x    EQU -20
+dl_log_add_y    EQU -22
+dl_dx           EQU -24
+dl_dy           EQU -26
+dl_inc_low      EQU -28
+dl_x2           EQU -30
+dl_y2           EQU -32
 
 draw_line       Proc far
     push ds
     push es
     pushad
     mov bp,sp
-    sub sp,26
+    sub sp,32
 ;
     cmp di,dx
     je line_horiz
@@ -2881,7 +2929,7 @@ line_horiz_do:
     call FilledLine
 
 line_done:
-    add sp,26
+    add sp,32
     popad
     pop es
     pop ds
@@ -2917,7 +2965,7 @@ draw_rect       Proc far
     push es
     pushad
     mov bp,sp
-    sub sp,4
+    sub sp,10
     mov [bp].curr_x,cx
     mov [bp].curr_y,dx
 ;
@@ -2971,7 +3019,7 @@ rect_bottom:
     call word ptr cs:[bx].rect_border_style_tab
 
 rect_done:
-    add sp,4
+    add sp,10
     popad
     pop es
     pop ds
@@ -2994,26 +3042,26 @@ draw_rect       Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-de_h2       EQU -8
-de_w2       EQU -12
-de_m        EQU -18
-de_S        EQU -24
-de_T        EQU -30
-de_dSx      EQU -36
-de_dTx      EQU -42
-de_dSy      EQU -48
-de_dTy      EQU -54
-de_ddx      EQU -60
-de_ddy      EQU -66
-de_cnt      EQU -68
-de_w        EQU -70
-de_h        EQU -72
-de_p0       EQU -76
-de_p1       EQU -80
-de_width    EQU -82
-de_size     EQU -84
-de_y0       EQU -86
-de_y1       EQU -88
+de_h2       EQU -14
+de_w2       EQU -18
+de_m        EQU -24
+de_S        EQU -30
+de_T        EQU -36
+de_dSx      EQU -42
+de_dTx      EQU -48
+de_dSy      EQU -54
+de_dTy      EQU -60
+de_ddx      EQU -66
+de_ddy      EQU -72
+de_cnt      EQU -74
+de_w        EQU -76
+de_h        EQU -78
+de_p0       EQU -82
+de_p1       EQU -86
+de_width    EQU -88
+de_size     EQU -90
+de_y0       EQU -92
+de_y1       EQU -94
 
 draw_mid_ellipse_hollow Proc near
     mov ax,[bp].de_y0
@@ -3083,7 +3131,7 @@ draw_ellipse    Proc far
     push es
     pushad
     mov bp,sp
-    sub sp,88
+    sub sp,94
 ;
     cmp si,2
     jbe ellipse_end
@@ -3343,7 +3391,7 @@ ellipse_done:
     call word ptr cs:[bx].ellipse_last_style_tab
 
 ellipse_end:
-    add sp,88
+    add sp,94
     popad
     pop es
     pop ds
