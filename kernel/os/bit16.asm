@@ -1038,7 +1038,6 @@ anti_alias_set    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AntiAlias Proc near
-    EnterSection ds:v_sprite_section
     push word ptr [bp].curr_x
     push ebx
     push cx
@@ -1080,26 +1079,10 @@ aa_start_ok:
     mov cx,si
     
 aa_do:
-    cmp ds:v_sprite_count,0
-    jz aa_draw
-;
-    push cx
-    push dx
-    mov ax,cx
-    mov cx,[bp].curr_x
-    mov dx,[bp].curr_y
-    HideSpriteLine
-    pop dx
-    pop cx
-
-aa_draw:
+    BlockBuffer cx
     mov eax,ds:v_color
     call ds:anti_alias_proc
-;
-    cmp ds:v_sprite_count,0
-    jz aa_done
-;
-    ShowSpriteLine
+    UnblockBuffer
 
 aa_done:
     pop edi
@@ -1107,7 +1090,6 @@ aa_done:
     pop cx
     pop ebx
     pop word ptr [bp].curr_x
-    LeaveSection ds:v_sprite_section
     ret
 AntiAlias Endp
 
@@ -1124,7 +1106,6 @@ AntiAlias Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HollowLine      Proc near
-    EnterSection ds:v_sprite_section
     push word ptr [bp].curr_x
     push cx
     push edi
@@ -1143,27 +1124,10 @@ HollowLine      Proc near
     cmp ax,ds:v_x_min
     jl hollow_line_first_done
 ;
-    cmp ds:v_sprite_count,0
-    jz hollow_line_first_sprite_hidden
-;
-    push cx
-    push dx
-    mov ax,1
-    mov cx,[bp].curr_x
-    mov dx,[bp].curr_y    
-    HideSpriteLine
-    pop dx
-    pop cx
-;
+    BlockBuffer 1
     mov eax,ds:v_color
     call ds:set_proc
-;
-    ShowSpriteLine
-    jmp hollow_line_first_done
-
-hollow_line_first_sprite_hidden:
-    mov eax,ds:v_color
-    call ds:set_proc
+    UnblockBuffer
 
 hollow_line_first_done:
     mov ax,cx
@@ -1182,33 +1146,15 @@ hollow_line_first_done:
     cmp ax,ds:v_x_max
     jg hollow_line_done
 ;
-    cmp ds:v_sprite_count,0
-    jz hollow_line_last_sprite_hidden
-;
-    push cx
-    push dx
-    mov ax,1
-    mov cx,[bp].curr_x
-    mov dx,[bp].curr_y    
-    HideSpriteLine
-    pop dx
-    pop cx
-;
+    BlockBuffer 1
     mov eax,ds:v_color
     call ds:set_proc
-;
-    ShowSpriteLine
-    jmp hollow_line_done
-
-hollow_line_last_sprite_hidden:
-    mov eax,ds:v_color
-    call ds:set_proc
+    UnblockBuffer
 
 hollow_line_done:
     pop edi
     pop cx
     pop word ptr [bp].curr_x
-    LeaveSection ds:v_sprite_section
     ret
 HollowLine      Endp
 
@@ -1227,7 +1173,6 @@ HollowLine      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FilledLine      Proc near
-    EnterSection ds:v_sprite_section
     push word ptr [bp].curr_x
     push cx
     push edi
@@ -1268,33 +1213,16 @@ filled_line_do:
     jz filled_line_done
 ;
     mov [bp].curr_x,ax
-    cmp ds:v_sprite_count,0
-    jz filled_line_sprite_hidden
-;
-    push cx
-    push dx
-    mov ax,cx
-    mov cx,[bp].curr_x
-    mov dx,[bp].curr_y
-    HideSpriteLine
-    pop dx
-    pop cx
-;
+;    
+    BlockBuffer cx
     mov eax,ds:v_color
     call ds:slab_proc
-;
-    ShowSpriteLine
-    jmp filled_line_done
-
-filled_line_sprite_hidden:
-    mov eax,ds:v_color
-    call ds:slab_proc
+    UnblockBuffer
 
 filled_line_done:
     pop edi
     pop cx
     pop word ptr [bp].curr_x
-    LeaveSection ds:v_sprite_section
     ret
 FilledLine      Endp
 
@@ -1314,7 +1242,6 @@ FilledLine      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SplitLine       Proc near
-    EnterSection ds:v_sprite_section
     push word ptr [bp].curr_x
     push cx
     push dx
@@ -1338,17 +1265,7 @@ SplitLine       Proc near
     push cx
     mov cx,dx
 ;
-    cmp ds:v_sprite_count,0
-    jz split_left_loop
-;
-    push cx
-    push dx
-    mov ax,cx
-    mov cx,[bp].curr_x
-    mov dx,[bp].curr_y
-    HideSpriteLine
-    pop dx
-    pop cx
+    BlockBuffer cx
 
 split_left_loop:
     mov bx,[bp].curr_x
@@ -1366,12 +1283,7 @@ split_left_next:
     add edi,2
     loop split_left_loop
 ;
-    cmp ds:v_sprite_count,0
-    jz split_left_sprite_done
-;
-    ShowSpriteLine
-
-split_left_sprite_done:
+    UnblockBuffer   
     pop cx
     add [bp].curr_x,cx
 ;
@@ -1380,18 +1292,7 @@ split_left_sprite_done:
     add edi,eax
 ;
     mov cx,dx
-;
-    cmp ds:v_sprite_count,0
-    jz split_right_loop
-;
-    push cx
-    push dx
-    mov ax,cx
-    mov cx,[bp].curr_x
-    mov dx,[bp].curr_y
-    HideSpriteLine
-    pop dx
-    pop cx
+    BlockBuffer cx
 
 split_right_loop:
     mov bx,[bp].curr_x
@@ -1409,17 +1310,13 @@ split_right_next:
     add edi,2
     loop split_right_loop
 ;
-    cmp ds:v_sprite_count,0
-    jz split_line_done
-;
-    ShowSpriteLine
+    UnblockBuffer
 
 split_line_done:
     pop edi
     pop dx
     pop cx
     pop word ptr [bp].curr_x
-    LeaveSection ds:v_sprite_section
     ret
 SplitLine       Endp
 
@@ -1587,7 +1484,6 @@ set_native      Proc far
     sub sp,10
     mov [bp].curr_x,cx
     mov [bp].curr_y,dx
-    EnterSection ds:v_sprite_section
 ;
     cmp dx,ds:v_y_min
     jl set_native_done
@@ -1621,6 +1517,10 @@ set_native_do:
 ;
     push ax
     mov esi,edi
+    mov ax,es
+    mov fs,ax
+    mov ax,flat_sel
+    mov es,ax
     movsx ecx,cx
     movsx edx,dx
     movzx eax,ds:v_row_size
@@ -1635,31 +1535,11 @@ set_native_do:
     or cx,cx
     jz set_native_done
 ;
-    cmp ds:v_sprite_count,0
-    jz set_native_sprite_hidden
-;
-    push cx
-    push dx
-    mov ax,cx
-    mov cx,[bp].curr_x
-    mov dx,[bp].curr_y
-    HideSpriteLine
-    pop dx
-    pop cx
-
-set_native_sprite_hidden:
-    mov ax,es
-    mov fs,ax
-    mov ax,flat_sel
-    mov es,ax
+    BlockBuffer cx
     call ds:copy_proc
-    cmp ds:v_sprite_count,0
-    jz set_native_done
-;
-    ShowSpriteLine
+    UnblockBuffer
 
 set_native_done:
-    LeaveSection ds:v_sprite_section
     add sp,10
     popad
     pop fs
@@ -1692,7 +1572,6 @@ set_rgb Proc far
     sub sp,10
     mov [bp].curr_x,cx
     mov [bp].curr_y,dx
-    EnterSection ds:v_sprite_section
 ;
     cmp dx,ds:v_y_min
     jl set_rgb_done
@@ -1726,6 +1605,10 @@ set_rgb_do:
 ;
     push ax
     mov esi,edi
+    mov ax,es
+    mov fs,ax
+    mov ax,flat_sel
+    mov es,ax
     movsx ecx,cx
     movsx edx,dx
     movzx eax,ds:v_row_size
@@ -1740,23 +1623,7 @@ set_rgb_do:
     or cx,cx
     jz set_rgb_done
 ;
-    cmp ds:v_sprite_count,0
-    jz set_rgb_sprite_hidden
-;
-    push cx
-    push dx
-    mov ax,cx
-    mov cx,[bp].curr_x
-    mov dx,[bp].curr_y
-    HideSpriteLine
-    pop dx
-    pop cx
-
-set_rgb_sprite_hidden:
-    mov ax,es
-    mov fs,ax
-    mov ax,flat_sel
-    mov es,ax
+    BlockBuffer cx
 
 set_rgb_loop:
     lods dword ptr fs:[esi]
@@ -1780,13 +1647,9 @@ set_rgb_loop:
     inc word ptr [bp].curr_x
     loop set_rgb_loop
 ;
-    cmp ds:v_sprite_count,0
-    jz set_rgb_done
-;
-    ShowSpriteLine
+    UnblockBuffer
 
 set_rgb_done:
-    LeaveSection ds:v_sprite_section
     add sp,10
     popad
     pop fs
@@ -1992,7 +1855,6 @@ set_pixel       Proc far
     sub sp,10
     mov [bp].curr_x,cx
     mov [bp].curr_y,dx
-    EnterSection ds:v_sprite_section
 ;
     cmp cx,ds:v_x_min
     jl set_pixel_done
@@ -2016,24 +1878,13 @@ set_pixel       Proc far
     add edi,ds:v_app_base
     mov ax,flat_sel
     mov es,ax
-    cmp ds:v_sprite_count,0
-    jz set_pixel_no_sprite
 ;
-    mov ax,1
-    HideSpriteLine
-;
+    BlockBuffer 1
     mov eax,ds:v_color
     call ds:set_proc
-    ShowSpriteLine
-    jmp set_pixel_done
-
-set_pixel_no_sprite:
-    mov eax,ds:v_color
-    call ds:set_proc
+    UnblockBuffer
 
 set_pixel_done:
-    LeaveSection ds:v_sprite_section
-;
     add sp,10
     pop bp
     pop edi
@@ -2070,7 +1921,6 @@ draw_mask_line  Proc far
     mov bp,sp
     sub sp,10    
     mov [bp].curr_x,edx
-    EnterSection ds:v_sprite_section
 ;
     push ax
     mov ax,[bp].curr_y
@@ -2167,31 +2017,14 @@ draw_mask_do:
     mov bx,bp
     pop bp
 ;
-    cmp ds:v_sprite_count,0
-    jz draw_mask_line_do
-;
-    push ax
-    push cx
-    mov ax,bp
-    mov cx,[bp].curr_x
-    mov dx,[bp].curr_y
-    HideSpriteLine
-    pop cx
-    pop ax
-
-draw_mask_line_do:
     mov dl,cl
     mov cx,bx
     mov ebx,esi
+    BlockBuffer cx    
     call ds:mask_set_proc
-;
-    cmp ds:v_sprite_count,0
-    jz draw_mask_line_done
-;
-    ShowSpriteLine
+    UnblockBuffer
 
 draw_mask_line_done:
-    LeaveSection ds:v_sprite_section
     add sp,10
     popad
     pop gs
@@ -2642,15 +2475,12 @@ line_bresen_sprite:
     jmp line_bresen_dx_sprite_next
 
 line_bresen_dx_sprite_loop:
-    EnterSection ds:v_sprite_section
     push ax
-    mov ax,1
-    HideSpriteLine
+    BlockBuffer 1
     mov eax,ds:v_color
     call ds:set_proc
-    ShowSpriteLine
+    UnblockBuffer
     pop ax
-    LeaveSection ds:v_sprite_section
 ;
     cmp cx,[bp].dl_x2
     je line_done
@@ -2686,15 +2516,12 @@ line_bresen_dx_sprite_next:
     jmp line_bresen_dx_sprite_loop
 
 line_bresen_dy_sprite_loop:
-    EnterSection ds:v_sprite_section
     push ax
-    mov ax,1
-    HideSpriteLine
+    BlockBuffer 1
     mov eax,ds:v_color
     call ds:set_proc
-    ShowSpriteLine
+    UnblockBuffer
     pop ax
-    LeaveSection ds:v_sprite_section
 ;
     cmp dx,[bp].dl_y2
     je line_done
@@ -2737,8 +2564,10 @@ line_bresen_no_sprite:
 
 line_bresen_dx_loop:
     push ax
+    BlockBuffer 1
     mov eax,ds:v_color
     call ds:set_proc
+    UnblockBuffer
     pop ax
 ;
     cmp cx,[bp].dl_x2
@@ -2776,8 +2605,10 @@ line_bresen_dx_next:
 
 line_bresen_dy_loop:
     push ax
+    BlockBuffer 1
     mov eax,ds:v_color
     call ds:set_proc
+    UnblockBuffer
     pop ax
 ;
     cmp dx,[bp].dl_y2
@@ -2856,19 +2687,15 @@ line_vert_sprite_loop:
     cmp dx,ds:v_y_max
     jg line_vert_sprite_next
 ;
-    EnterSection ds:v_sprite_section
-    push ax
-    mov ax,1
-    HideSpriteLine
-    pop ax
+    BlockBuffer 1
     call ds:set_proc
-    ShowSpriteLine
-    LeaveSection ds:v_sprite_section
+    UnblockBuffer
 
 line_vert_sprite_next:
     add edi,esi
     inc word ptr [bp].curr_y
-    loop line_vert_sprite_loop
+    sub cx,1
+    jnz line_vert_sprite_loop
     jmp line_done
 
 line_vert_loop:
@@ -2879,12 +2706,15 @@ line_vert_loop:
     cmp dx,ds:v_y_max
     jg line_vert_next
 ;
+    BlockBuffer 1
     call ds:set_proc
+    UnblockBuffer
 
 line_vert_next:
     add edi,esi
     inc word ptr [bp].curr_y
-    loop line_vert_loop
+    sub cx,1
+    jnz line_vert_loop
     jmp line_done
 
 line_horiz:
