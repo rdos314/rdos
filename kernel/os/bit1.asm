@@ -36,13 +36,14 @@ INCLUDE ..\video.inc
 
     .386p
 
+
 ;
 ; block buffer
 ; reg = number of pixels
 ; EDI = line buffer
 ;
 
-BlockBuffer MACRO reg
+DrawStart MACRO reg
     local done
     
     EnterSection ds:v_sprite_section
@@ -65,24 +66,6 @@ BlockBuffer MACRO reg
 
 done:
             ENDM
-
-;
-; unblock buffer
-; EDI = line buffer
-;
-
-UnblockBuffer MACRO
-    local unblock
-    
-    cmp ds:v_sprite_count,0
-    jz unblock
-;
-    ShowSpriteLine
-
-unblock:
-    LeaveSection ds:v_sprite_section
-            ENDM
-
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
@@ -100,6 +83,40 @@ curr_size   EQU -6
 curr_x      EQU -4
 curr_y      EQU -2
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           DrawDone
+;
+;           DESCRIPTION:    Draw done notification
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DrawDone    Proc near
+    cmp ds:v_sprite_count,0
+    jz draw_sprite_ok
+;
+    ShowSpriteLine
+
+draw_sprite_ok:
+    cmp ds:v_has_focus,0
+    jz draw_unblock
+;    
+    push cx
+    push edi
+;
+    mov cx,[bp].curr_size
+    mov edi,[bp].curr_start
+    call ds:phys_update_proc
+;
+    pop edi
+    pop cx
+
+draw_unblock:
+    LeaveSection ds:v_sprite_section
+    ret
+DrawDone    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2047,10 +2064,10 @@ aa_start_ok:
     mov cx,si
     
 aa_do:
-    BlockBuffer cx
+    DrawStart cx
     mov eax,ds:v_color
     call ds:anti_alias_proc
-    UnblockBuffer
+    call DrawDone
 
 aa_done:
     pop edi
@@ -2094,10 +2111,10 @@ HollowLine      Proc near
     cmp ax,ds:v_x_min
     jl hollow_line_first_done
 ;
-    BlockBuffer 1
+    DrawStart 1
     mov eax,ds:v_color
     call ds:set_proc
-    UnblockBuffer
+    call DrawDone
 
 hollow_line_first_done:
     mov ax,cx
@@ -2115,10 +2132,10 @@ hollow_line_first_done:
     cmp ax,ds:v_x_max
     jg hollow_line_done
 ;
-    BlockBuffer 1
+    DrawStart 1
     mov eax,ds:v_color
     call ds:set_proc
-    Unblockbuffer
+    call DrawDone
 
 hollow_line_done:
     pop edi
@@ -2183,10 +2200,10 @@ filled_line_do:
 ;
     mov [bp].curr_x,ax
 ;    
-    BlockBuffer cx
+    DrawStart cx
     mov eax,ds:v_color
     call ds:slab_proc
-    UnblockBuffer
+    call DrawDone
 
 filled_line_done:
     pop edi
@@ -2234,7 +2251,7 @@ SplitLine       Proc near
     push cx
     mov cx,dx
 ;    
-    BlockBuffer cx
+    DrawStart cx
 
 split_left_loop:
     mov bx,[bp].curr_x
@@ -2252,7 +2269,7 @@ split_left_next:
     inc edi
     loop split_left_loop
 ;
-    UnblockBuffer
+    call DrawDone
     pop cx
     add [bp].curr_x,cx
 ;
@@ -2260,7 +2277,7 @@ split_left_next:
     add edi,eax
 ;
     mov cx,dx
-    BlockBuffer cx
+    DrawStart cx
 
 split_right_loop:
     mov bx,[bp].curr_x
@@ -2278,7 +2295,7 @@ split_right_next:
     inc edi
     loop split_right_loop
 ;
-    UnblockBuffer
+    call DrawDone
 
 split_line_done:
     pop edi
@@ -2472,7 +2489,7 @@ set_native      Proc far
     or cx,cx
     jz set_native_done
 ;
-    BlockBuffer cx
+    DrawStart cx
     xor ebx,ebx
 
 set_native_loop:
@@ -2492,7 +2509,7 @@ set_native_do:
     inc edi
     loop set_native_loop
 ;
-    UnblockBuffer
+    call DrawDone
 
 set_native_done:
     popad
@@ -2543,7 +2560,7 @@ set_rgb Proc far
     or cx,cx
     jz set_rgb_done
 ;
-    BlockBuffer cx
+    DrawStart cx
 
 set_rgb_loop:
     mov eax,fs:[esi]
@@ -2571,7 +2588,7 @@ set_rgb_do:
     inc edi
     loop set_rgb_loop
 ;
-    UnblockBuffer
+    call DrawDone
 
 set_rgb_done:
     popad
@@ -2789,10 +2806,10 @@ set_pixel       Proc far
     mov ax,flat_sel
     mov es,ax
 ;    
-    BlockBuffer 1
+    DrawStart 1
     mov eax,ds:v_color
     call ds:set_proc
-    UnblockBuffer
+    call DrawDone
 
 set_pixel_done:
     add sp,10
@@ -3269,10 +3286,10 @@ line_bresen_sprite:
 
 line_bresen_dx_sprite_loop:
     push ax
-    BlockBuffer 1
+    DrawStart 1
     mov eax,ds:v_color
     call ds:set_proc
-    UnblockBuffer
+    call DrawDone
     pop ax
 ;
     cmp cx,[bp].dl_x2
@@ -3310,10 +3327,10 @@ line_bresen_dx_sprite_next:
 
 line_bresen_dy_sprite_loop:
     push ax
-    BlockBuffer 1
+    DrawStart 1
     mov eax,ds:v_color
     call ds:set_proc
-    UnblockBuffer
+    call DrawDone
     pop ax
 ;
     cmp dx,[bp].dl_y2
@@ -3357,10 +3374,10 @@ line_bresen_no_sprite:
 
 line_bresen_dx_loop:
     push ax
-    BlockBuffer 1
+    DrawStart 1
     mov eax,ds:v_color
     call ds:set_proc
-    UnblockBuffer
+    call DrawDone
     pop ax
 ;
     cmp cx,[bp].dl_x2
@@ -3398,10 +3415,10 @@ line_bresen_dx_next:
 
 line_bresen_dy_loop:
     push ax
-    BlockBuffer 1
+    DrawStart 1
     mov eax,ds:v_color
     call ds:set_proc
-    UnblockBuffer
+    call DrawDone
     pop ax
 ;
     cmp dx,[bp].dl_y2
@@ -3479,9 +3496,9 @@ line_vert_sprite_loop:
     cmp dx,ds:v_y_max
     jg line_vert_sprite_next
 ;
-    BlockBuffer 1
+    DrawStart 1
     call ds:set_proc
-    UnblockBuffer
+    call DrawDone
 
 line_vert_sprite_next:
     add edi,esi
@@ -3498,9 +3515,9 @@ line_vert_loop:
     cmp dx,ds:v_y_max
     jg line_vert_next
 ;
-    BlockBuffer 1
+    DrawStart 1
     call ds:set_proc
-    UnblockBuffer
+    call DrawDone
 
 line_vert_next:
     add edi,esi
