@@ -1361,7 +1361,6 @@ set_native_do:
     add eax,edx
     add eax,ds:v_app_base
     mov edi,eax
-    mov bx,ds:v_lgop
     pop cx
 ;
     or cx,cx
