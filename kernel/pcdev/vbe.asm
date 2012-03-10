@@ -446,7 +446,8 @@ switch_to_active:
     mov esi,ds:vo_mem_base
     mov edi,ds:v_phys_base
     mov ecx,ds:v_app_size
-    call ds:phys_update_proc
+    rep movs byte ptr es:[edi],es:[esi]
+;    call ds:phys_update_proc
     SimSti
 ;
     popad
