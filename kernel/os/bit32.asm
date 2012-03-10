@@ -37,7 +37,6 @@ INCLUDE ..\video.inc
     .386p
 
 ;
-; block buffer
 ; reg = number of pixels
 ; EDI = line buffer
 ;
@@ -46,9 +45,6 @@ DrawStart MACRO reg
     local done
     
     EnterSection ds:v_sprite_section
-    mov [bp].curr_start,edi
-    mov word ptr [bp].curr_size,reg
-;
     cmp ds:v_sprite_count,0
     jz done
 ;
@@ -64,6 +60,18 @@ DrawStart MACRO reg
     pop ax
 
 done:
+    mov [bp].curr_start,edi
+    mov word ptr [bp].curr_size,reg
+            ENDM
+
+;
+; reg = number of pixels
+; EDI = line buffer
+;
+
+SpriteStart MACRO reg
+    mov [bp].curr_start,edi
+    mov word ptr [bp].curr_size,reg
             ENDM
 
 code    SEGMENT byte public use16 'CODE'
@@ -112,14 +120,47 @@ phys_update Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawDone    Proc near
+    cmp ds:v_has_focus,0
+    jz draw_sprite
+;    
+    push ecx
+    push esi
+    push edi
+;    
+    movzx ecx,word ptr [bp].curr_size
+    mov esi,[bp].curr_start
+    mov edi,esi
+    sub edi,ds:v_app_base
+    add edi,ds:v_phys_base
+    call ds:phys_update_proc
+;
+    pop edi
+    pop esi
+    pop ecx
+
+draw_sprite:    
     cmp ds:v_sprite_count,0
-    jz draw_sprite_ok
+    jz draw_unblock
 ;
     ShowSpriteLine
 
-draw_sprite_ok:
+draw_unblock:
+    LeaveSection ds:v_sprite_section
+    ret
+DrawDone    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SpriteDone
+;
+;           DESCRIPTION:    Sprite done notification
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SpriteDone    Proc near
     cmp ds:v_has_focus,0
-    jz draw_unblock
+    jz sprite_unblock
 ;    
     push ecx
     push esi
@@ -136,10 +177,9 @@ draw_sprite_ok:
     pop esi
     pop ecx
 
-draw_unblock:
-    LeaveSection ds:v_sprite_section
+sprite_unblock:
     ret
-DrawDone    Endp
+SpriteDone    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1489,7 +1529,9 @@ set_sprite_do:
     mov ax,flat_sel
     mov es,ax
 ;
+    SpriteStart cx
     call ds:copy_proc
+    call SpriteDone
 
 set_sprite_done:
     add sp,10
@@ -1815,7 +1857,9 @@ draw_sprite_line    Proc far
     mov ax,flat_sel
     mov es,ax
     mov fs,ax
+    SpriteStart cx
     call ds:mask_copy_proc
+    call SpriteDone
 
 draw_sprite_done:
     add sp,10
