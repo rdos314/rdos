@@ -468,7 +468,7 @@ void cdecl main()
         height -= 100;
 #endif
 
-        font = RdosOpenFont(50);
+        font = RdosOpenFont(0, 50);
         RdosSetFont(VbeHandle, font);
         RdosSetFilledStyle(VbeHandle);
         RdosSetDrawColor(VbeHandle, mkcolor(255, 255, 255));
