@@ -244,15 +244,16 @@ TBitmapGraphicDevice *CreateMouseMask()
 {
         TBitmapGraphicDevice *mono;
         TFont *font;
-        
-        font = new TFont(28);
+
         mono = new TBitmapGraphicDevice(1, 40, 40);
+        
+/*        font = new TFont(28);
         mono->SetLgopNone();
         mono->SetFont(font);
-        mono->DrawString(0, 0, "-X-");
+        mono->DrawString(0, 0, "-X-"); */
 
 
-/*        mono->SetFilledStyle();
+        mono->SetFilledStyle();
         mono->DrawEllipse(20, 20, 20, 20);
         mono->SetLgopInv();
         mono->DrawRect(15, 15, 25, 25);
@@ -268,7 +269,7 @@ TBitmapGraphicDevice *CreateMouseMask()
         mono->DrawLine(1, 1, 41, 41);
         mono->DrawLine(1, 41, 41, 1);
         mono->DrawLine(1, 1, 40, 40);
-        mono->DrawLine(1, 40, 40, 1); */
+        mono->DrawLine(1, 40, 40, 1); 
 
         return mono;
 }
@@ -453,7 +454,7 @@ void cdecl main()
         TestAll(bitmap);
 
         vbe->SetLgopNone();
-        vbe->Blit(bitmap, 0, 0, 0, 0, vbe->GetWidth(), vbe->GetHeight());
+        vbe->Blit(bitmap, 0, 0, 0, 0, bitmap->GetWidth(), vbe->GetHeight());
 
         delete bitmap;
 
