@@ -204,7 +204,7 @@ init_video32:
     jmp init_video_copy
 
 init_video_copy:
-    mov cx,24h
+    mov cx,25h
     xor di,di
     rep movsd
 ;
@@ -372,7 +372,7 @@ cr_bitmap32:
     jmp cr_bitmap_copy
 
 cr_bitmap_copy:
-    mov cx,24h
+    mov cx,25h
     xor di,di
     rep movsd
 ;

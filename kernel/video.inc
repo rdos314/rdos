@@ -235,6 +235,10 @@ draw_ellipse_proc			DD ?
 ; IN  EDI		    Dest buffer
 anti_alias_proc               DD ?
 
+; IN  CX			number of pixels
+; IN  EDI		    Dest buffer
+phys_update_proc               DD ?
+
 v_section   	    section_typ <>
 v_sprite_section    section_typ <>
 v_mode	    	DW ?

@@ -3455,6 +3455,9 @@ errorp  Proc far
     stc
     ret
 errorp  Endp
+
+phys_update:
+    retf
     
     public BitmapTab24
 
@@ -3495,6 +3498,7 @@ mt20 DW OFFSET draw_line,               SEG code
 mt21 DW OFFSET draw_rect,               SEG code
 mt22 DW OFFSET draw_ellipse,        SEG code
 mt23 DW OFFSET anti_alias_set,      SEG code
+mt24 DW OFFSET phys_update,         SEG code
 
 code    ENDS
 
