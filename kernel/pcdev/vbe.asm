@@ -266,7 +266,7 @@ init_flat_check:
     mov bx,process_page_sel
     mov ds,bx
     mov edx,es:vo_lfb
-    or dl,7
+    or dl,0Fh
 
 init_lfb_map_loop:
     mov ds:[edi],edx
