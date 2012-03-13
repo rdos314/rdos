@@ -709,6 +709,276 @@ delete_handle   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   Ansi unicode table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+autab:
+au80 DW 20ACh
+au81 DW 0000h
+au82 DW 201Ah
+au83 DW 0192h
+au84 DW 201Eh
+au85 DW 2026h
+au86 DW 2020h
+au87 DW 2021h
+au88 DW 02C6h
+au89 DW 2030h
+au8A DW 0160h
+au8B DW 2039h
+au8C DW 0152h
+au8D DW 0000h
+au8E DW 017Dh
+au8F DW 0000h
+au90 DW 0000h
+au91 DW 2018h
+au92 DW 2019h
+au93 DW 201Ch
+au94 DW 201Dh
+au95 DW 2022h
+au96 DW 2013h
+au97 DW 2014h
+au98 DW 02DCh
+au99 DW 2122h
+au9A DW 0161h
+au9B DW 203Ah
+au9C DW 0153h
+au9D DW 0000h
+au9E DW 017Eh
+au9F DW 0178h
+auA0 DW 00A0h
+auA1 DW 00A1h
+auA2 DW 00A2h
+auA3 DW 00A3h
+auA4 DW 00A4h
+auA5 DW 00A5h
+auA6 DW 00A6h
+auA7 DW 00A7h
+auA8 DW 00A8h
+auA9 DW 00A9h
+auAA DW 00AAh
+auAB DW 00ABh
+auAC DW 00ACh
+auAD DW 00ADh
+auAE DW 00AEh
+auAF DW 00AFh
+auB0 DW 00B0h
+auB1 DW 00B1h
+auB2 DW 00B2h
+auB3 DW 00B3h
+auB4 DW 00B4h
+auB5 DW 00B5h
+auB6 DW 00B6h
+auB7 DW 00B7h
+auB8 DW 00B8h
+auB9 DW 00B9h
+auBA DW 00BAh
+auBB DW 00BBh
+auBC DW 00BCh
+auBD DW 00BDh
+auBE DW 00BEh
+auBF DW 00BFh
+auC0 DW 00C0h
+auC1 DW 00C1h
+auC2 DW 00C2h
+auC3 DW 00C3h
+auC4 DW 00C4h
+auC5 DW 00C5h
+auC6 DW 00C6h
+auC7 DW 00C7h
+auC8 DW 00C8h
+auC9 DW 00C9h
+auCA DW 00CAh
+auCB DW 00CBh
+auCC DW 00CCh
+auCD DW 00CDh
+auCE DW 00CEh
+auCF DW 00CFh
+auD0 DW 00D0h
+auD1 DW 00D1h
+auD2 DW 00D2h
+auD3 DW 00D3h
+auD4 DW 00D4h
+auD5 DW 00D5h
+auD6 DW 00D6h
+auD7 DW 00D7h
+auD8 DW 00D8h
+auD9 DW 00D9h
+auDA DW 00DAh
+auDB DW 00DBh
+auDC DW 00DCh
+auDD DW 00DDh
+auDE DW 00DEh
+auDF DW 00DFh
+auE0 DW 00E0h
+auE1 DW 00E1h
+auE2 DW 00E2h
+auE3 DW 00E3h
+auE4 DW 00E4h
+auE5 DW 00E5h
+auE6 DW 00E6h
+auE7 DW 00E7h
+auE8 DW 00E8h
+auE9 DW 00E9h
+auEA DW 00EAh
+auEB DW 00EBh
+auEC DW 00ECh
+auED DW 00EDh
+auEE DW 00EEh
+auEF DW 00EFh
+auF0 DW 00F0h
+auF1 DW 00F1h
+auF2 DW 00F2h
+auF3 DW 00F3h
+auF4 DW 00F4h
+auF5 DW 00F5h
+auF6 DW 00F6h
+auF7 DW 00F7h
+auF8 DW 00F8h
+auF9 DW 00F9h
+auFA DW 00FAh
+auFB DW 00FBh
+auFC DW 00FCh
+auFD DW 00FDh
+auFE DW 00FEh
+auFF DW 00FFh
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AnsiToUtf8
+;
+;           DESCRIPTION:    Convert ANSI (1252) to UTF8
+;
+;           PARAMETERS:     DS:(E)SI        ANSI String 
+;                           (E)CX           Max UTF-8 size
+;                           ES:(E)DI        UTF-8 string
+;
+;           RETURNS:        EAX             Size of UTF-8 string
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ansi_to_utf8_name DB 'Ansi To UTF-8',0
+
+ansi_to_utf8    Proc near
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    xor edx,edx
+    or ecx,ecx
+    jz taDone
+;
+    sub ecx,1
+    jz taTerminate
+
+taLoop: 
+    lods byte ptr ds:[esi]   
+    test al,80h
+    jz taSimple
+
+taUnicode:
+    sub al,80h
+    movzx ebx,al
+    add ebx,ebx
+    mov ax,word ptr cs:[ebx].autab
+    or ax,ax
+    jz taLoop
+;    
+    cmp ax,800h
+    jae ta3
+
+ta2:
+    sub ecx,2
+    jc taTerminate
+;
+    mov bx,ax
+    and al,3Fh
+    shr bx,6
+    and bl,1Fh
+    mov ah,bl
+    xchg al,ah
+    or ax,80C0h
+    stos word ptr es:[edi]
+;
+    add edx,2
+    or ecx,ecx
+    jz taTerminate
+    jmp taLoop
+
+ta3:
+    sub ecx,3
+    jc taTerminate
+;
+    mov bx,ax
+    shr ax,12
+    and al,0Fh
+    or al,0E0h
+    stos byte ptr es:[edi]
+;
+    mov ax,bx
+    shr bx,6
+    mov ah,bl
+    and ax,3F3Fh
+    xchg al,ah
+    or ax,8080h
+    stos word ptr es:[edi]
+;
+    add edx,3    
+    add edx,2
+    or ecx,ecx
+    jz taTerminate
+    jmp taLoop
+    
+taSimple:
+    or al,al
+    jz taTerminate
+;    
+    stos byte ptr es:[edi]
+    inc edx
+    sub ecx,1
+    jnz taLoop
+
+taTerminate:
+    xor al,al
+    stos byte ptr es:[edi]
+
+taDone:
+    mov eax,edx
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx    
+    pop ebx
+    ret
+ansi_to_utf8    Endp
+
+ansi_to_utf8_32 Proc far
+    call ansi_to_utf8
+    ret
+ansi_to_utf8_32 Endp
+
+ansi_to_utf8_16 Proc far
+    push ecx
+    push esi
+    push edi
+;
+    movzx ecx,cx
+    movzx esi,si
+    movzx edi,di    
+    call ansi_to_utf8
+;
+    pop edi
+    pop esi    
+    ret
+ansi_to_utf8_16 Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           load_adapter_fonts
 ;
 ;           DESCRIPTION:    install all fonts in adapter
@@ -821,6 +1091,13 @@ init_font_loop:
     mov edi,OFFSET get_string_metrics_name
     mov dx,virt_es_in
     mov ax,get_string_metrics_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET ansi_to_utf8_16
+    mov esi,OFFSET ansi_to_utf8_32
+    mov edi,OFFSET ansi_to_utf8_name
+    mov dx,virt_es_in OR virt_ds_in
+    mov ax,ansi_to_utf8_nr
     RegisterUserGate
 ;    
     popad

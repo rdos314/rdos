@@ -143,7 +143,7 @@ int LoadGlyph(FT_Face face, int unicode)
     int error;
     int i;
     int entry_size;
-    int linear;
+    int linear = 0;
     FT_Bitmap  *bitmap;
     FT_CacheEntry *entry = 0;
     

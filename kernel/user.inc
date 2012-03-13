@@ -2179,6 +2179,14 @@ WriteAttributeString MACRO
 
 ;;;;;;;;;;; FONT ;;;;;;;;;;
 
+;	IN  DS:(E)SI        ANSI string
+;	IN  DS:(E)DI        UTF-8 string
+;   IN  (E)CX           Buffer size
+;	OUT EAX             String size
+AnsiToUtf8        MACRO
+	UserGate ansi_to_utf8_nr
+						ENDM
+
 ;	IN  AX              Requested font height
 ;   IN  DX              Requested font ID
 ;	OUT	BX				Font handle

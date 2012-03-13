@@ -61,7 +61,7 @@ int NativeDBStringToUnicode( int len, const char *str, char *buf ) {
         } else {
             outlen = len * 2;
         }
-        ret = MultiByteToWideChar( CP_ACP, 0, str, len, (LPWSTR)buf, outlen );
+        ret = MultiByteToWideChar( CP_UTF8, 0, str, len, (LPWSTR)buf, outlen );
     } else {
         ret = 0;
     }
