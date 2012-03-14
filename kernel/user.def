@@ -581,5 +581,6 @@ read_hid_nr                     = 466
 write_hid_nr                    = 467
 
 ansi_to_utf8_nr                 = 468
+utf8_to_ansi_nr                 = 469
 
 usergate_entries			    = 512

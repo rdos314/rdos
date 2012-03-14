@@ -848,7 +848,7 @@ auFF DW 00FFh
 ;
 ;           NAME:           AnsiToUtf8
 ;
-;           DESCRIPTION:    Convert ANSI (1252) to UTF8
+;           DESCRIPTION:    Convert ANSI (cp 1252) to UTF8
 ;
 ;           PARAMETERS:     DS:(E)SI        ANSI String 
 ;                           (E)CX           Max UTF-8 size
@@ -972,9 +972,234 @@ ansi_to_utf8_16 Proc far
     call ansi_to_utf8
 ;
     pop edi
-    pop esi    
+    pop esi
+    pop ecx
     ret
 ansi_to_utf8_16 Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetUnicode
+;
+;           DESCRIPTION:    Get unicode from UTF-8 string
+;
+;           PARAMETERS:     DS:ESI          UTF-8 String 
+;
+;           RETURNS:        EAX             Unicode
+;                           DS:ESI          Next char                           
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetUnicode  Proc near
+    xor eax,eax
+    mov al,ds:[esi]
+    or al,al
+    jz guDone
+;    
+    inc esi
+    test al,80h
+    jz guDone
+;    
+    test al,40h
+    jz guFail
+;
+    test al,20h
+    jz gu2
+;
+    test al,10h
+    jnz guFail
+
+gu3:
+    and al,0Fh
+    mov dl,ds:[esi]
+    or dl,dl
+    jz guFail
+;
+    inc esi
+    test dl,80h
+    jz guFail
+;
+    test dl,40h
+    jnz guFail
+;
+    and dl,3Fh
+    shl eax,6
+    or al,dl
+;    
+    mov dl,ds:[esi]
+    or dl,dl
+    jz guFail
+;
+    inc esi
+    test dl,80h
+    jz guFail
+;
+    test dl,40h
+    jnz guFail
+;
+    and dl,3Fh
+    shl eax,6
+    or al,dl
+    jmp guDone            
+
+gu2:
+    and al,1Fh
+    mov dl,ds:[esi]
+    or dl,dl
+    jz guFail
+;
+    inc esi
+    test dl,80h
+    jz guFail
+;
+    test dl,40h
+    jnz guFail
+;
+    and dl,3Fh
+    shl eax,6
+    or al,dl
+    jmp guDone            
+    
+guFail:
+    xor eax,eax
+
+guDone:     
+    ret
+GetUnicode  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           FindAnsi
+;
+;           DESCRIPTION:    Find Ansi char for unicode
+;
+;           PARAMETERS:     EAX             Unicode
+;
+;           RETURNS:        AL              Character
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindAnsi    Proc near
+    push ebx
+    push ecx
+;
+    or eax,eax
+    jz faFail
+;
+    test eax,0FFFF0000h
+    jnz faFail
+; 
+    cmp ax,80h
+    jb faDone
+;
+    mov ebx,OFFSET autab
+    mov ecx,80h
+
+faLoop:
+    cmp ax,cs:[ebx]
+    je faOk
+;
+    add ebx,2
+    loop faLoop
+;
+    jmp faFail
+
+faOk:
+    sub ebx,OFFSET autab
+    shr ebx,1
+    mov al,bl
+    add al,80h    
+    jmp faDone        
+
+faFail: 
+    xor al,al      
+
+faDone:
+    pop ecx
+    pop ebx
+    ret
+FindAnsi    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           Utf8ToAnsi
+;
+;           DESCRIPTION:    Convert UTF-8 to ANSI (cp 1252)
+;
+;           PARAMETERS:     DS:(E)SI        UTF-8 String 
+;                           (E)CX           Max Ansi string size
+;                           ES:(E)DI        Ansi string
+;
+;           RETURNS:        EAX             Size of Ansi string
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+utf8_to_ansi_name DB 'UTF-8 To Ansi',0
+
+utf8_to_ansi    Proc near
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    xor edx,edx
+    or ecx,ecx
+    jz tuDone
+;
+    sub ecx,1
+    jz tuTerminate
+
+tuLoop: 
+    mov al,ds:[esi]
+    or al,al
+    jz tuTerminate
+;    
+    call GetUnicode
+    call FindAnsi
+    or al,al
+    jz tuLoop
+;    
+    inc edx
+    stos byte ptr es:[edi]
+    sub ecx,1
+    jnz tuLoop
+
+tuTerminate:
+    xor al,al    
+    stos byte ptr es:[edi]
+
+tuDone:
+    mov eax,edx
+;    
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    ret
+utf8_to_ansi    Endp
+
+utf8_to_ansi_32 Proc far
+    call utf8_to_ansi
+    ret
+utf8_to_ansi_32 Endp
+
+utf8_to_ansi_16 Proc far
+    push ecx
+    push esi
+    push edi
+;
+    movzx ecx,cx
+    movzx esi,si
+    movzx edi,di    
+    call utf8_to_ansi
+;
+    pop edi
+    pop esi    
+    ret
+utf8_to_ansi_16 Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1098,6 +1323,13 @@ init_font_loop:
     mov edi,OFFSET ansi_to_utf8_name
     mov dx,virt_es_in OR virt_ds_in
     mov ax,ansi_to_utf8_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET utf8_to_ansi_16
+    mov esi,OFFSET utf8_to_ansi_32
+    mov edi,OFFSET utf8_to_ansi_name
+    mov dx,virt_es_in OR virt_ds_in
+    mov ax,utf8_to_ansi_nr
     RegisterUserGate
 ;    
     popad

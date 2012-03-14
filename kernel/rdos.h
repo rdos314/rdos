@@ -210,6 +210,7 @@ void RDOSAPI RdosSetHollowStyle(int handle);
 void RDOSAPI RdosSetFilledStyle(int handle);
 
 int RDOSAPI RdosAnsiToUtf8(const char *AnsiStr, char *Utf8Str, int BufferSize);
+int RDOSAPI RdosUtf8ToAnsi(const char *Utf8Str, char *AnsiStr, int BufferSize);
 
 int RDOSAPI RdosOpenFont(int id, int height);
 void RDOSAPI RdosCloseFont(int font);
@@ -996,6 +997,11 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosAnsiToUtf8 = \
     CallGate_ansi_to_utf8  \
+    parm [esi] [edi] [ecx]  \
+    value [eax];
+
+#pragma aux RdosUtf8ToAnsi = \
+    CallGate_utf8_to_ansi  \
     parm [esi] [edi] [ecx]  \
     value [eax];
 
@@ -3297,6 +3303,15 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     "mov eax,fs" \
     "mov ds,eax" \ 
     CallGate_ansi_to_utf8  \
+    "pop ds" \
+    parm [fs esi] [es edi] [ecx]  \
+    value [eax];
+
+#pragma aux RdosUtf8ToAnsi = \
+    "push ds" \
+    "mov eax,fs" \
+    "mov ds,eax" \ 
+    CallGate_utf8_to_ansi  \
     "pop ds" \
     parm [fs esi] [es edi] [ecx]  \
     value [eax];
