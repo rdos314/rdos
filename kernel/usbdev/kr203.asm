@@ -39,6 +39,7 @@ MAX_OUT_SIZE = 260 * 16
 FLAG_ATTACHED          = 1
 FLAG_STARTED           = 2
 FLAG_CLOSED            = 4
+FLAG_WAS_LIFTED        = 8
 
 STATUS_PAPER_JAM       = 1h
 STATUS_CUTTER_JAM      = 2h
@@ -631,6 +632,44 @@ dsStatusOk:
     pop es
     ret
 UpdateStatus    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           DoHardReset
+;
+;       DESCRIPTION:    Do hard RESET
+;
+;       PARAMETERS:     DS      Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DoHardReset   Proc near
+    push es
+    push cx
+    push di
+;
+    mov bx,ds:kr_out_req
+    mov es,ds:kr_out_buffer
+    xor di,di
+;    
+    mov al,ESC
+    stosb
+;
+    mov al,'?'
+    stosb
+;    
+    mov cx,2
+    StartUsbReq
+;    
+    mov ax,250
+    WaitMilliSec
+;    
+    pop di
+    pop cx
+    pop es
+    ret
+DoHardReset    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2040,6 +2079,29 @@ krDoSession:
     call DoSession
     call UpdateStatus
 ;    
+    test ds:kr_status,STATUS_CUTTER_JAM
+    jz krClearCutter
+;
+    test ds:kr_status,STATUS_HEAD_LIFTED
+    jnz krSetLifted
+;
+    test ds:kr_flag,FLAG_WAS_LIFTED
+    jz krClearDone
+;
+    mov ax,1000
+    WaitMilliSec
+;    
+    call DoHardReset
+    jmp krClearCutter
+
+krSetLifted:
+    lock or ds:kr_flag,FLAG_WAS_LIFTED
+    jmp krClearDone
+
+krClearCutter:
+    lock and ds:kr_flag,NOT FLAG_WAS_LIFTED
+
+krClearDone:    
     mov bx,ds:kr_session_list
     or bx,bx
     jnz krLoop
