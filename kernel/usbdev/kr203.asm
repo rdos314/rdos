@@ -1053,7 +1053,9 @@ is_jammed   Proc far
     clc
     jz ijDone
 ;
+    EnterSection ds:kr_status_section    
     mov ax,ds:kr_status
+    LeaveSection ds:kr_status_section    
     test ax,STATUS_PAPER_JAM OR STATUS_CUTTER_JAM
     clc
     jz ijDone
@@ -1094,7 +1096,9 @@ is_paper_low   Proc far
     clc
     jz iplDone
 ;
+    EnterSection ds:kr_status_section    
     mov ax,ds:kr_status
+    LeaveSection ds:kr_status_section    
     test ax,STATUS_PAPER_LOW
     clc
     jz iplDone
@@ -1135,7 +1139,9 @@ is_paper_end   Proc far
     clc
     jz ipeDone
 ;
+    EnterSection ds:kr_status_section    
     mov ax,ds:kr_status
+    LeaveSection ds:kr_status_section    
     test ax,STATUS_NO_PAPER
     clc
     jz ipeDone
@@ -1176,7 +1182,9 @@ is_ok   Proc far
     stc
     jz ioDone
 ;
+    EnterSection ds:kr_status_section    
     mov ax,ds:kr_status
+    LeaveSection ds:kr_status_section    
     test ax,STATUS_FEED_ERROR OR STATUS_TEMP_ERROR OR STATUS_OFFLINE
     clc
     jz ioDone
@@ -1217,7 +1225,9 @@ is_head_lifted   Proc far
     clc
     jz ihlDone
 ;
+    EnterSection ds:kr_status_section    
     mov ax,ds:kr_status
+    LeaveSection ds:kr_status_section    
     test ax,STATUS_HEAD_LIFTED
     clc
     jz ihlDone
@@ -1258,7 +1268,9 @@ has_paper_in_presenter   Proc far
     clc
     jz hppDone
 ;
+    EnterSection ds:kr_status_section    
     mov ax,ds:kr_status
+    LeaveSection ds:kr_status_section    
     test ax,STATUS_PAPER_PRESENTER
     clc
     jz hppDone
