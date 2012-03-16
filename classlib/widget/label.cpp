@@ -80,6 +80,8 @@ TLabelFactory::~TLabelFactory()
 void TLabelFactory::Init()
 {
     FFont = 0;
+    FFontId = 0;
+    FFontHeight = 0;
 
     FHorAlign = HOR_CENTER;
     FVerAlign = VER_CENTER;
@@ -108,15 +110,24 @@ void TLabelFactory::Set(const char *IniName, const char *IniSection)
     TIniFile Ini(IniName);
     char str[256];
     int size;
+    int id;
 
     Ini.GotoSection(IniSection);
+
+    if (Ini.ReadVar("Font.Id", str, 255))
+    {    
+        id = atoi(str);
+
+        if (id != FFontId)
+            SetFont(id, FFontHeight);
+    }
 
     if (Ini.ReadVar("Font.Size", str, 255))
     {    
         size = atoi(str);
 
-        if (size)
-            SetFont(size);
+        if (size && size != FFontHeight)
+            SetFont(FFontId, size);
     }
     
     if (Ini.ReadVar("Align", str, 255))
@@ -184,10 +195,38 @@ void TLabelFactory::Set(const char *IniName, const char *IniSection)
 ##########################################################################*/
 void TLabelFactory::SetFont(int height)
 {
-    if (FFont)
-        delete FFont;
-        
-    FFont = new TFont(height);
+    if (FFontHeight != height)
+    {
+        if (FFont)
+            delete FFont;
+
+        FFontHeight = height;
+        FFont = new TFont(FFontId, height);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::SetFont
+#
+#   Purpose....: Set font
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelFactory::SetFont(int id, int height)
+{
+    if (FFontId != id || FFontHeight != height)
+    {
+        if (FFont)
+            delete FFont;
+
+        FFontId = id;
+        FFontHeight = height;
+        FFont = new TFont(id, height);
+    }
 }
 
 /*##########################################################################
@@ -677,6 +716,8 @@ void TLabelControl::Init()
     FOrgText = 0;
     FText = 0;
     FFont = 0;
+    FFontId = 0;
+    FFontHeight = 0;
 
     FForceSingle = FALSE;
 
@@ -728,15 +769,24 @@ void TLabelControl::Set(const char *IniName, const char *IniSection)
     TIniFile Ini(IniName);
     char str[256];
     int size;
+    int id;
 
     Ini.GotoSection(IniSection);
+
+    if (Ini.ReadVar("Font.Id", str, 255))
+    {    
+        id = atoi(str);
+
+        if (id != FFontId)
+            SetFont(id, FFontHeight);
+    }
 
     if (Ini.ReadVar("Font.Size", str, 255))
     {    
         size = atoi(str);
 
-        if (size)
-            SetFont(size);
+        if (size != FFontHeight)
+            SetFont(FFontId, size);
     }
 
     if (Ini.ReadVar("Single", str, 255))
@@ -816,14 +866,46 @@ void TLabelControl::Set(const char *IniName, const char *IniSection)
 ##########################################################################*/
 void TLabelControl::SetFont(int height)
 {
-    if (FFont)
-        delete FFont;
-        
-    FFont = new TFont(height);
+    if (FFontHeight != height)
+    {
+        if (FFont)
+            delete FFont;
 
-    FSection.Enter();
-    ReformatText();
-    FSection.Leave();
+        FFontHeight = height;
+        FFont = new TFont(FFontId, height);
+
+        FSection.Enter();
+        ReformatText();
+        FSection.Leave();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::SetFont
+#
+#   Purpose....: Set font
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::SetFont(int id, int height)
+{
+    if (FFontId != id || FFontHeight != height)
+    {
+        if (FFont)
+            delete FFont;
+
+        FFontId = id;
+        FFontHeight = height;
+        FFont = new TFont(id, height);
+
+        FSection.Enter();
+        ReformatText();
+        FSection.Leave();
+    }
 }
 
 /*##########################################################################

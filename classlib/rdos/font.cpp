@@ -42,6 +42,26 @@
 TFont::TFont(int height)
 {
     FFontHandle = RdosOpenFont(0, height);
+    FId = 0;
+    FHeight = height;
+}
+
+/*##########################################################################
+#
+#   Name       : TFont::TFont
+#
+#   Purpose....: Constructor for TFont                                    
+#
+#   In params..: ID             font ID
+#                Height         requested font height
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFont::TFont(int id, int height)
+{
+    FFontHandle = RdosOpenFont(id, height);
+    FId = id;
     FHeight = height;
 }
 
@@ -58,8 +78,9 @@ TFont::TFont(int height)
 ##########################################################################*/
 TFont::TFont(const TFont &src)
 {
+    FId = src.FId;
     FHeight = src.FHeight;
-    FFontHandle = RdosOpenFont(0, FHeight);
+    FFontHandle = RdosOpenFont(FId, FHeight);
 }
 
 /*##########################################################################
@@ -77,8 +98,9 @@ TFont &TFont::operator=(const TFont &src)
 {
     if (this != &src)
     {
+        FId = src.FId;
         FHeight = src.FHeight;
-        FFontHandle = RdosOpenFont(0, FHeight);
+        FFontHandle = RdosOpenFont(FId, FHeight);
     }
     return *this;
 }
@@ -114,6 +136,21 @@ TFont::~TFont()
 void TFont::GetStringMetrics(const char *str, int *width, int *height)
 {
     RdosGetStringMetrics(FFontHandle, str, width, height);
+}
+
+/*##########################################################################
+#
+#   Name       : TFont::GetId
+#
+#   Purpose....: Get ID of font
+#
+#   In params..: 
+#   Returns....: *
+#
+##########################################################################*/
+int TFont::GetId()
+{
+    return FId;
 }
 
 /*##########################################################################

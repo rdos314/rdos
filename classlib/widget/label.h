@@ -52,6 +52,7 @@ public:
 
     virtual void Set(const char *IniName, const char *IniSection);
 
+    void SetFont(int id, int height);
     void SetFont(int height);
     void SetSpace(int xspace, int yspace);
     
@@ -90,6 +91,8 @@ protected:
     int FDrawG;
     int FDrawB;
 
+    int FFontId;
+    int FFontHeight;
     TFont *FFont;
 };
 
@@ -110,6 +113,7 @@ public:
     void AllowMultiple();
     
     void SetFont(int height);
+    void SetFont(int id, int height);
     void SetFont(TFont *font);
     TFont *GetFont();
     
@@ -159,6 +163,8 @@ private:
     int FDrawG;
     int FDrawB;
 
+    int FFontId;
+    int FFontHeight;
     TFont *FFont;
 
     char *FOrgText;
