@@ -162,15 +162,15 @@ int main()
                 break;
 
             case 3:
-                strcpy(str, "Bl†tt sovrum, nedre plan");
+                strcpy(str, "BlÃ¥tt sovrum, nedre plan");
                 break;
 
             case 4:
-                strcpy(str, "K”k");
+                strcpy(str, "KÃ¶k");
                 break;
 
             case 5:
-                strcpy(str, "Sovrum, ”vre plan");
+                strcpy(str, "Sovrum, Ã¶vre plan");
                 break;
 
             case 6:

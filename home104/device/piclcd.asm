@@ -1981,12 +1981,13 @@ InitDriver  Proc far
     pushad
 ;    
         mov al,10
+        mov ah,8
         mov bx,SEG data
         mov ds,bx
         mov bx,cs
         mov es,bx
         mov edi,OFFSET pic_int
-        RequestPrivateIrqHandler
+        RequestIrqHandler
 ;
     cli
     mov dx,IO_BASE + 8
@@ -2016,7 +2017,7 @@ InitDriver  Proc far
 ;
         mov ax,cs
         mov ds,ax
-        mov es,ax
+       mov es,ax
         mov di,OFFSET ir_name
         mov si,OFFSET ir_thread
         mov ax,4

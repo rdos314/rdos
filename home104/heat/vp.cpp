@@ -392,7 +392,7 @@ void TVp::Execute()
     Label->SetFont(20);
     Label->SetBackTransparent();
     Label->SetDrawColor(0, 0, 0);
-    Label->SetText("V„rme");
+    Label->SetText("Vâ€žrme");
     Label->Show();
 
         Table = new TTableControl(FControl, 900, 530, 400, 300);
@@ -416,10 +416,10 @@ void TVp::Execute()
         Table->SetText(1, 0, "Tank effekt");
         Table->SetText(1, 2, "kW");
 
-        Table->SetText(2, 0, "F”rv„rme temp");
+        Table->SetText(2, 0, "FÃ¶rvÃ¤rme temp");
         Table->SetText(2, 2, "C");
 
-        Table->SetText(3, 0, "F”rv„rme effekt");
+        Table->SetText(3, 0, "FÃ¶rvÃ¤rme effekt");
         Table->SetText(3, 2, "W");
 
         Table->SetText(4, 0, "VP");
