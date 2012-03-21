@@ -110,6 +110,8 @@ kr_session_thread   DW ?
 kr_session_list     DW ?
 kr_session_count    DW ?
 
+kr_init_count       DW ?
+
 data    ENDS
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
@@ -1951,7 +1953,19 @@ init_thread_name  DB 'Init KR203', 0
 init_thread Proc far
     mov ax,SEG data
     mov ds,ax
+    mov ds:kr_init_count,0
+
+init_thread_retry:
+    mov ax,ds:kr_init_count
+    cmp ax,10
+    jb init_thread_do
 ;
+    call DoHardReset
+    xor ax,ax    
+
+init_thread_do:
+    mov ds:kr_init_count,ax
+;        
     mov ax,100
     WaitMilliSec
 ;    
@@ -1977,17 +1991,17 @@ init_thread Proc far
 ;
     mov bl,65
     call GetByteParameter
-    jc init_thread    
+    jc init_thread_retry
 ;
     or al,al
-    jnz init_thread
+    jnz init_thread_retry
 ;
     mov bl,66
     call GetByteParameter
-    jc init_thread
+    jc init_thread_retry
 ;
     or al,al
-    jnz init_thread
+    jnz init_thread_retry
 ;
     ret
 init_thread Endp                
