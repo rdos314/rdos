@@ -40,6 +40,7 @@ FLAG_ATTACHED          = 1
 FLAG_STARTED           = 2
 FLAG_CLOSED            = 4
 FLAG_WAS_LIFTED        = 8
+FLAG_INIT              = 10h
 
 STATUS_PAPER_JAM       = 1h
 STATUS_CUTTER_JAM      = 2h
@@ -1953,6 +1954,8 @@ init_thread_name  DB 'Init KR203', 0
 init_thread Proc far
     mov ax,SEG data
     mov ds,ax
+    lock or ds:kr_flag, FLAG_INIT
+    lock or ds:kr_status,STATUS_OFFLINE
     mov ds:kr_init_count,0
 
 init_thread_retry:
@@ -1966,7 +1969,7 @@ init_thread_retry:
 init_thread_do:
     mov ds:kr_init_count,ax
 ;        
-    mov ax,100
+    mov ax,250
     WaitMilliSec
 ;    
     mov bl,6
@@ -2003,8 +2006,9 @@ init_thread_do:
     or al,al
     jnz init_thread_retry
 ;
+    lock and ds:kr_flag, NOT FLAG_INIT
     ret
-init_thread Endp                
+init_thread Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2103,6 +2107,17 @@ krLoop:
 
 krDoSession:
     call DoSession
+;
+    test ds:kr_flag,FLAG_INIT
+    jz krDoStatus
+;
+    lock or ds:kr_status,STATUS_OFFLINE
+;
+    mov ax,50
+    WaitMilliSec
+    jmp krLoop        
+
+krDoStatus:
     call UpdateStatus
 ;    
     test ds:kr_status,STATUS_CUTTER_JAM
