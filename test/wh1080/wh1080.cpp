@@ -29,116 +29,163 @@
 #include <stdio.h>
 
 #include "rdos.h"
-#include "ctlpipe.h"
+#include "usbpipe.h"
 
 #define FALSE 0
 #define TRUE !FALSE
 
-class TWh1080 : public TThread
-{
-public:
-    TWh1080Pipe(int Controller, int Device, int Pipe);
-    ~TWh1080Pipe();
-
-protected:
-    virtual void Execute();
-
-    TUsbPipe FControlPipe;
-    TUsbPipe FInputPipe;    
-};
+int HidHandle = 0;
 
 /*##########################################################################
 #
-#   Name       : NotifyData
+#   Name       : ReadBlock
 #
-#   Purpose....: New data from pipe
+#   Purpose....: Read block
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void NotifyData(const char *buf)
+int ReadBlock(int Offset, char *Buffer)
 {
+    char req[8];
+
+    req[0] = 0xA1;
+    req[1] = (char)(Offset / 256);
+    req[2] = (char)(Offset & 0xFF);
+    req[3] = 0x20;
+    req[4] = 0xA1;
+    req[5] = (char)(Offset / 256);
+    req[6] = (char)(Offset & 0xFF);
+    req[7] = 0x20;
+
+    RdosReadHid(HidHandle, Buffer, 32, 500);
+
+    if (RdosWriteHid(HidHandle, req, 8, 250))
+        if (RdosReadHid(HidHandle, Buffer, 32, 1000))
+            return TRUE;
+
+    return FALSE;
 }
 
 /*##########################################################################
 #
-#   Name       : TWh1080::TWh1080
+#   Name       : WriteBlock
 #
-#   Purpose....: Constructor
+#   Purpose....: Write block
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TWh1080::TWh1080(int Controller, int Device, int Pipe)
-  : FControlPipe(Controller, Device, 0,
-    FInputPipe(Controller, Device, Pipe)
+int WriteBlock(int Offset, const char *Buffer)
 {
-    Start("WH1080", 0x4000);
+    char req[8];
+
+    req[0] = 0xA0;
+    req[1] = (char)(Offset / 256);
+    req[2] = (char)(Offset & 0xFF);
+    req[3] = 0x20;
+    req[4] = 0xA0;
+    req[5] = (char)(Offset / 256);
+    req[6] = (char)(Offset & 0xFF);
+    req[7] = 0x20;
+
+    if (RdosWriteHid(HidHandle, req, 8, 250))
+        if (RdosWriteHid(HidHandle, Buffer, 32, 250))
+            if (RdosReadHid(HidHandle, req, 8, 1000))
+                return TRUE;
+        
+    return FALSE;
 }
 
 /*##########################################################################
 #
-#   Name       : TWh1080::~TWh1080
+#   Name       : WriteDataRefresh
 #
-#   Purpose....: Destructor
+#   Purpose....: Write data refresh
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TWh1080::~TWh1080()
+int WriteDataRefresh()
 {
+    char req[8];
+
+    req[0] = 0xA2;
+    req[1] = 0;
+    req[2] = 0x1A;
+    req[3] = 0x20;
+    req[4] = 0xA2;
+    req[5] = 0xAA;
+    req[6] = 0;
+    req[7] = 0x20;
+
+    if (RdosWriteHid(HidHandle, req, 8, 250))
+        if (RdosReadHid(HidHandle, req, 8, 1000))
+            return TRUE;
+        
+    return FALSE;
 }
 
 /*##########################################################################
 #
-#   Name       : TWh1080::Execute
+#   Name       : ReadFixedBlock
 #
-#   Purpose....: Execute method
+#   Purpose....: Read fixed block
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TWh1080::Execute()
+int ReadFixedBlock(char *Buffer)
 {
-    char buf[8];
+    unsigned char ch0, ch1;
 
-    for (;;)
+    if (ReadBlock(0, Buffer))
     {
-        ReqData(buf, 8);
-        WaitForever();
+        ch0 = (unsigned char)Buffer[0];
+        ch1 = (unsigned char)Buffer[1];
+    
+        if (ch0 == 0x55 && ch1 == 0xAA)
+            return TRUE;
 
-        if (GetDataSize() == 8)
-            NotifyData(buf);
+        if (ch0 == 0xFF && ch1 == 0xFF)
+            return TRUE;
+
+        if (ch0 == 0x55 && ch1 == 0x55)
+            return TRUE;
     }
+
+    return FALSE;
 }
 
 /*##########################################################################
 #
-#   Name       : Execute
+#   Name       : WriteFixedBlock
 #
-#   Purpose....: Execute 
+#   Purpose....: Write fixed block
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void Execute(int Hid, int Controller, int Device, int Pipe)
+int WriteFixedBlock(char *Buffer)
 {
-    TWh1080 Station(Controller, Device, Pipe);
+    Buffer[0] = 0x55;
+    Buffer[1] = 0xAA;
 
-    printf("Found weather station started\r\n");
+    if (WriteBlock(0, Buffer))
+        if (WriteDataRefresh())
+            return TRUE;
 
-    for (;;)
-        RdosWaitMilli(1000);
+    return FALSE;
 }
 
 /*##########################################################################
@@ -158,7 +205,6 @@ void GetDevice()
     int device;
     int size;
     TUsbDevice UsbDevice;
-    int handle;
     int pipe;
     
     for (contr = 0; contr < 256; contr++)
@@ -170,9 +216,8 @@ void GetDevice()
             {
                 if (UsbDevice.vendor == 0x1941 && (unsigned short int)UsbDevice.prod == 0x8021)
                 {
-                    handle = RdosOpenHid(contr, device);
-                    pipe = RdosGetHidPipe(handle);
-                    Execute(handle, contr, device, pipe);
+                    HidHandle = RdosOpenHid(contr, device);
+                    printf("Found weather station\r\n");
                 }
             }
         }
@@ -181,5 +226,17 @@ void GetDevice()
 
 void main()
 {
+    int ok;
+    char Buffer[32];
+    
     GetDevice();
+
+    if (HidHandle)
+    {
+        ok = ReadFixedBlock(Buffer);
+    
+        for (;;)
+            RdosWaitMilli(1000);
+    }
 }
+

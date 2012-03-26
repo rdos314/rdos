@@ -2653,6 +2653,7 @@ GetHidPipe      MACRO
 ;   IN  BX          Handle
 ;   IN  ES:(E)DI    Buffer
 ;   IN  CX          Buffer Size
+;   IN  EAX         Timeout, milliseconds
 ReadHid      MACRO
 	UserGate read_hid_nr
 						ENDM
@@ -2660,6 +2661,7 @@ ReadHid      MACRO
 ;   IN  BX          Handle
 ;   IN  ES:(E)DI    Buffer
 ;   IN  CX          Buffer Size
+;   IN  EAX         Timeout, milliseconds
 WriteHid      MACRO
 	UserGate write_hid_nr
 						ENDM
