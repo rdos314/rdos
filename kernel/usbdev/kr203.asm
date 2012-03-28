@@ -100,11 +100,10 @@ kr_in_pipe          DB ?
 
 kr_section          section_typ <>
 
+kr_temp_status      DW ?
 kr_status           DW ?
 
 kr_flag             DB ?
-
-kr_status_section   section_typ <>
 
 kr_session_thread   DW ?
 
@@ -482,7 +481,7 @@ GetWordParameter    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClearStatus   Proc near
-    mov ds:kr_status,0
+    mov ds:kr_temp_status,0
     ret
 ClearStatus    Endp
 
@@ -543,7 +542,7 @@ nsNext:
     movzx bx,byte ptr es:[di]
     add bx,bx
     mov ax,word ptr cs:[bx].stab
-    or ds:kr_status,ax
+    or ds:kr_temp_status,ax
 ;
     inc di    
     sub cx,1
@@ -572,7 +571,6 @@ UpdateStatus   Proc near
     push cx
     push di
 ;
-    EnterSection ds:kr_status_section    
     call ClearStatus
 ;
     mov bx,ds:kr_out_req
@@ -625,10 +623,11 @@ dsStatusDone:
     jnz dsStatusOk
 
 dsOffline:    
-    or ds:kr_status,STATUS_OFFLINE
+    or ds:kr_temp_status,STATUS_OFFLINE
 
 dsStatusOk:
-    LeaveSection ds:kr_status_section    
+    mov ax,ds:kr_temp_status
+    mov ds:kr_status,ax
 ;    
     pop di
     pop cx
@@ -1056,9 +1055,7 @@ is_jammed   Proc far
     clc
     jz ijDone
 ;
-    EnterSection ds:kr_status_section    
     mov ax,ds:kr_status
-    LeaveSection ds:kr_status_section    
     test ax,STATUS_PAPER_JAM OR STATUS_CUTTER_JAM
     clc
     jz ijDone
@@ -1099,9 +1096,7 @@ is_paper_low   Proc far
     clc
     jz iplDone
 ;
-    EnterSection ds:kr_status_section    
     mov ax,ds:kr_status
-    LeaveSection ds:kr_status_section    
     test ax,STATUS_PAPER_LOW
     clc
     jz iplDone
@@ -1142,9 +1137,7 @@ is_paper_end   Proc far
     clc
     jz ipeDone
 ;
-    EnterSection ds:kr_status_section    
     mov ax,ds:kr_status
-    LeaveSection ds:kr_status_section    
     test ax,STATUS_NO_PAPER
     clc
     jz ipeDone
@@ -1185,9 +1178,7 @@ is_ok   Proc far
     stc
     jz ioDone
 ;
-    EnterSection ds:kr_status_section    
     mov ax,ds:kr_status
-    LeaveSection ds:kr_status_section    
     test ax,STATUS_FEED_ERROR OR STATUS_TEMP_ERROR OR STATUS_OFFLINE
     clc
     jz ioDone
@@ -1228,9 +1219,7 @@ is_head_lifted   Proc far
     clc
     jz ihlDone
 ;
-    EnterSection ds:kr_status_section    
     mov ax,ds:kr_status
-    LeaveSection ds:kr_status_section    
     test ax,STATUS_HEAD_LIFTED
     clc
     jz ihlDone
@@ -1271,9 +1260,7 @@ has_paper_in_presenter   Proc far
     clc
     jz hppDone
 ;
-    EnterSection ds:kr_status_section    
     mov ax,ds:kr_status
-    LeaveSection ds:kr_status_section    
     test ax,STATUS_PAPER_PRESENTER
     clc
     jz hppDone
@@ -1954,13 +1941,12 @@ init_thread_name  DB 'Init KR203', 0
 init_thread Proc far
     mov ax,SEG data
     mov ds,ax
-    lock or ds:kr_flag, FLAG_INIT
-    lock or ds:kr_status,STATUS_OFFLINE
     mov ds:kr_init_count,0
 
 init_thread_retry:
     mov ax,ds:kr_init_count
-    cmp ax,10
+;    inc ax
+    cmp ax,20
     jb init_thread_do
 ;
     call DoHardReset
@@ -1969,7 +1955,7 @@ init_thread_retry:
 init_thread_do:
     mov ds:kr_init_count,ax
 ;        
-    mov ax,250
+    mov ax,2500
     WaitMilliSec
 ;    
     mov bl,6
@@ -2086,8 +2072,14 @@ kr203_thread:
     StartTimer
 
 krRestart:
+    mov ax,1000
+    WaitMilliSec
+;
     call OpenPipes
     call ClearReceiver
+;    
+    lock or ds:kr_flag, FLAG_INIT
+    lock or ds:kr_status,STATUS_OFFLINE
 ;    
     mov dx,cs
     mov ds,dx
@@ -2430,7 +2422,6 @@ init    Proc far
     mov ax,SEG data
     mov ds,ax
     InitSection ds:kr_section
-    InitSection ds:kr_status_section
     mov ds:kr_flag,0
 ;    
     mov ax,cs
