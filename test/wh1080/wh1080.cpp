@@ -60,7 +60,7 @@ int ReadBlock(int Offset, char *Buffer)
     req[6] = (char)(Offset & 0xFF);
     req[7] = 0x20;
 
-    RdosReadHid(HidHandle, Buffer, 32, 500);
+//    RdosReadHid(HidHandle, Buffer, 32, 500);
 
     if (RdosWriteHid(HidHandle, req, 8, 250))
         if (RdosReadHid(HidHandle, Buffer, 32, 1000))
