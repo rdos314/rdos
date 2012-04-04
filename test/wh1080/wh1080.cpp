@@ -34,21 +34,12 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-TWh1080Device *Wh1080 = 0;
-
 void main()
 {
-    int ok;
-    char Buffer[32];
+    TWh1080Device Wh1080;
 
-    Wh1080 = new TWh1080Device;
-
-    if (Wh1080->IsOnline())
-    {
-        ok = Wh1080->ReadFixedBlock(Buffer);
-    
+    if (Wh1080.IsOnline())
         for (;;)
             RdosWaitMilli(1000);
-    }
 }
 

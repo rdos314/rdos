@@ -38,13 +38,18 @@ public:
 
     virtual void DeviceName(char *Name, int MaxLen) const;
 
+protected:
     int ReadBlock(int Offset, char *Buffer);
     int WriteBlock(int Offset, const char *Buffer);
     int WriteDataRefresh();
     int ReadFixedBlock(char *Buffer);
     int WriteFixedBlock(char *Buffer);
 
-protected:
+    int Setup();
+    int GetCurrentPos();
+    void GetData(int Pos);
+    
+	virtual void Execute();
 };
 
 #endif

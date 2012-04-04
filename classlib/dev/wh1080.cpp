@@ -33,6 +33,25 @@
 #define     FALSE	0
 #define     TRUE	!FALSE
 
+// Weather Station record memory positions:
+#define WH1080_DELAY                0   // Position of delay parameter
+#define WH1080_HUMIDITY_IN          1   // Position of inside humidity parameter
+#define WH1080_TEMPERATURE_IN       2   // Position of inside temperature parameter
+#define WH1080_HUMIDITY_OUT         4   // Position of outside humidity parameter
+#define WH1080_TEMPERATURE_OUT      5   // Position of outside temperature parameter
+#define WH1080_ABS_PRESSURE         7   // Position of absolute pressure parameter
+#define WH1080_WIND_AVE             9   // Position of wind direction parameter
+#define WH1080_WIND_GUST            10  // Position of wind direction parameter
+#define WH1080_WIND_DIR             12  // Position of wind direction parameter
+#define WH1080_RAIN                 13  // Position of rain parameter
+#define WH1080_STATUS               15  // Position of status parameter
+
+// Control block offsets:
+#define WH1080_SAMPLING_INTERVAL    16  // Position of sampling interval
+#define WH1080_DATA_COUNT           27  // Position of data_count parameter
+#define WH1080_CURRENT_POS          30  // Position of current_pos parameter
+
+
 /*##########################################################################
 #
 #   Name       : TWh1080Device::TWh1080Device
@@ -47,6 +66,8 @@
 TWh1080Device::TWh1080Device()
   : THidDevice(0x1941, 0x8021)
 {
+    if (FHidHandle)
+        Start("WH1080", 0x4000);
 }
 
 /*##########################################################################
@@ -105,7 +126,7 @@ int TWh1080Device::ReadBlock(int Offset, char *Buffer)
     req[7] = 0x20;
 
     if (Write(req, 8))
-        if (Read(Buffer, 32, 1000))
+        if (Read(Buffer, 32, 2500))
             return TRUE;
 
     return FALSE;
@@ -137,7 +158,7 @@ int TWh1080Device::WriteBlock(int Offset, const char *Buffer)
 
     if (Write(req, 8))
         if (Write(Buffer, 32))
-            if (Read(req, 8, 1000))
+            if (Read(req, 8, 2500))
                 return TRUE;
         
     return FALSE;
@@ -168,7 +189,7 @@ int TWh1080Device::WriteDataRefresh()
     req[7] = 0x20;
 
     if (Write(req, 8))
-        if (Read(req, 8, 1000))
+        if (Read(req, 8, 2500))
             return TRUE;
         
     return FALSE;
@@ -228,4 +249,138 @@ int TWh1080Device::WriteFixedBlock(char *Buffer)
             return TRUE;
 
     return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TWh1080Device::Setup
+#
+#   Purpose....: Setup station
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TWh1080Device::Setup()
+{
+    int ok;
+    unsigned short int pos;
+    char Buffer[32];
+
+    for (;;)
+    {
+        ok = ReadFixedBlock(Buffer);
+        if (ok)
+        {
+            if (Buffer[WH1080_SAMPLING_INTERVAL] != 1)
+            {
+                Buffer[WH1080_SAMPLING_INTERVAL] = 1;
+                WriteFixedBlock(Buffer);
+            }
+
+            pos = *(unsigned short int *)(Buffer + WH1080_CURRENT_POS);
+            pos -= 0x10;
+            if (pos < 0x100)
+                pos = 0xFFF0;
+
+            return (int)pos;       
+        }       
+        RdosWaitMilli(1000);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TWh1080Device::GetCurrentPos
+#
+#   Purpose....: Get current record position
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TWh1080Device::GetCurrentPos()
+{
+    int ok;
+    unsigned short int pos;
+    char Buffer[32];
+    
+    for (;;)
+    {
+        ok = ReadFixedBlock(Buffer);
+        if (ok)
+        {
+            pos = *(unsigned short int *)(Buffer + WH1080_CURRENT_POS);
+            pos -= 0x10;
+            if (pos < 0x100)
+                pos = 0xFFF0;
+
+            return (int)pos;
+        }
+        RdosWaitMilli(1000);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TWh1080Device::GetData
+#
+#   Purpose....: Get data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWh1080Device::GetData(int Pos)
+{
+    int ok;
+    char Buffer[32];
+    char ch;
+    
+    for (;;)
+    {
+        ok = ReadBlock(Pos, Buffer);
+        if (ok)
+        {
+            ch = Buffer[0];
+            return;
+        }
+        RdosWaitMilli(1000);
+    }
+}
+                
+/*##########################################################################
+#
+#   Name       : TWh1080Device::Execute
+#
+#   Purpose....: Execute method
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWh1080Device::Execute()
+{
+    int OldPos;
+    int CurrPos;
+
+    OldPos = Setup();
+    GetData(OldPos);
+
+    while (FInstalled)
+    {
+        CurrPos = GetCurrentPos();
+
+        if (OldPos != CurrPos)
+        {
+            OldPos = CurrPos;
+            GetData(CurrPos);
+        }
+            
+        RdosWaitMilli(2500);
+    }
 }
