@@ -1,6 +1,6 @@
 /*#######################################################################
 # RDOS operating system
-# Copyright (C) 1988-2011, Leif Ekblad
+# Copyright (C) 1988-2002, Leif Ekblad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,35 +20,30 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# wh1080.cpp
-# WH1080 weather station class
+# hid.h
+# HID class
 #
 ########################################################################*/
 
-#include <string.h>
-#include <stdio.h>
+#ifndef _HID_H
+#define _HID_H
 
-#include "rdos.h"
-#include "wh1080.h"
+#include "device.h"
 
-#define FALSE 0
-#define TRUE !FALSE
-
-TWh1080Device *Wh1080 = 0;
-
-void main()
+class THidDevice : public TDevice
 {
-    int ok;
-    char Buffer[32];
+public:
+	THidDevice(unsigned short int vendor, unsigned short int prod);
+    ~THidDevice();
 
-    Wh1080 = new TWh1080Device;
+    virtual int IsOnline() const;
+    virtual void DeviceName(char *Name, int MaxLen) const;
 
-    if (Wh1080->IsOnline())
-    {
-        ok = Wh1080->ReadFixedBlock(Buffer);
-    
-        for (;;)
-            RdosWaitMilli(1000);
-    }
-}
+protected:
+    int Read(char *buf, int size, int timeout);
+    int Write(const char *buf, int size);
 
+    int FHidHandle;
+};
+
+#endif

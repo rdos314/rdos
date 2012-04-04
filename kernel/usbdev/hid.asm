@@ -2553,7 +2553,6 @@ read_hid16  Proc far
     push ebx
     push edx
     push edi
-    push bp
 ;
     push eax
     mov ax,HID_HANDLE
@@ -2566,7 +2565,6 @@ read_hid16  Proc far
     call read_hid
 
 rdDone16:
-    pop bp
     pop edi
     pop edx
     pop ebx
@@ -2580,7 +2578,6 @@ read_hid32  Proc far
     push eax
     push ebx
     push edx
-    push bp
 ;
     push eax
     mov ax,HID_HANDLE
@@ -2592,7 +2589,6 @@ read_hid32  Proc far
     call read_hid
 
 rdDone32:
-    pop bp
     pop edx
     pop ebx
     pop eax
@@ -2610,7 +2606,6 @@ read_hid32  Endp
 ;           PARAMETERS:     BX          HID handle
 ;                           ES:(E)DI    Buffer
 ;                           CX          Buffer size
-;                           EAX         Timeout, ms
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2618,12 +2613,7 @@ write_hid_name     DB 'Write HID',0
 
 write_hid    Proc near
     push ecx
-    push esi
     push edi
-;    
-    mov edx,1193
-    mul edx
-    mov esi,eax
 
 write_hid_loop:
     push cx
@@ -2664,7 +2654,6 @@ write_hid_loop:
 
 write_hid_done:    
     pop edi
-    pop esi
     pop ecx    
     ret
 write_hid    Endp
@@ -2676,7 +2665,6 @@ write_hid16  Proc far
     push ebx
     push edx
     push edi
-    push bp
 ;
     push eax
     mov ax,HID_HANDLE
@@ -2692,7 +2680,6 @@ write_hid16  Proc far
     call write_hid
 
 wrDone16:
-    pop bp
     pop edi
     pop edx
     pop ebx
@@ -2708,7 +2695,6 @@ write_hid32  Proc far
     push eax
     push ebx
     push edx
-    push bp
 ;
     push eax
     mov ax,HID_HANDLE
@@ -2723,7 +2709,6 @@ write_hid32  Proc far
     call write_hid
 
 wrDone32:
-    pop bp
     pop edx
     pop ebx
     pop eax

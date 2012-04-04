@@ -2661,7 +2661,6 @@ ReadHid      MACRO
 ;   IN  BX          Handle
 ;   IN  ES:(E)DI    Buffer
 ;   IN  CX          Buffer Size
-;   IN  EAX         Timeout, milliseconds
 WriteHid      MACRO
 	UserGate write_hid_nr
 						ENDM

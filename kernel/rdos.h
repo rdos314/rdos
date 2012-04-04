@@ -641,7 +641,7 @@ int RDOSAPI RdosOpenHid(int Controller, int Device);
 void RDOSAPI RdosCloseHid(int handle);
 int RDOSAPI RdosGetHidPipe(int Handle);
 int RDOSAPI RdosReadHid(int Handle, char *buf, int size, int ms);
-int RDOSAPI RdosWriteHid(int Handle, const char *buf, int size, int ms);
+int RDOSAPI RdosWriteHid(int Handle, const char *buf, int size);
 
 int RDOSAPI RdosGetAllocatedUsbBlocks();
 int RDOSAPI RdosGetUsbCloseCount();
@@ -3001,7 +3001,7 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosWriteHid = \
     CallGate_write_hid \
     CarryToBool \
-    parm [ebx] [edi] [ecx] [eax] \
+    parm [ebx] [edi] [ecx] \
     value [eax];
     
 #pragma aux RdosOpenICSP = \
