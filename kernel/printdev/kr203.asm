@@ -32,7 +32,7 @@ include ..\user.inc
 include ..\driver.def
 include ..\os\printer.inc
 INCLUDE ..\os\protseg.def
-include usb.inc
+include ..\usbdev\usb.inc
 
 MAX_OUT_SIZE = 260 * 16
 
