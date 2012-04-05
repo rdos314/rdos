@@ -1030,6 +1030,37 @@ ClosePipes   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetPrinterName
+;
+;       DESCRIPTION:    Get printer name
+;
+;       PARAMETERS:     DS          Printer sel
+;                       ES:EDI      Name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+my_name DB 'KR203', 0
+
+get_printer_name   Proc far
+    push si
+    push edi
+;
+    mov si,OFFSET my_name
+
+get_pr_name_loop:    
+    lods byte ptr cs:[si]
+    stos byte ptr es:[edi]
+    or al,al
+    jnz get_pr_name_loop
+;
+    pop edi
+    pop si    
+    ret
+get_printer_name   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           IsJammed
 ;
 ;       DESCRIPTION:    Check if printer is jammed
@@ -2024,6 +2055,9 @@ kr203_thread:
     mov ds,bx
     AddPrinter
     pop ds
+;
+    mov word ptr es:pr_get_name_proc,OFFSET get_printer_name
+    mov word ptr es:pr_get_name_proc+2,cs
 ;
     mov word ptr es:pr_jammed_proc,OFFSET is_jammed
     mov word ptr es:pr_jammed_proc+2,cs

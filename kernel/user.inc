@@ -2053,6 +2053,12 @@ ClosePrinter       MACRO
 						ENDM
 
 ;	IN  BX		Printer handle
+;   IN  ES:(E)DI      Name buffer
+GetPrinterName       MACRO
+	UserGate get_printer_name_nr
+						ENDM
+
+;	IN  BX		Printer handle
 ;   OUT CY      Jammed
 IsPrinterJammed       MACRO
 	UserGate is_printer_jammed_nr

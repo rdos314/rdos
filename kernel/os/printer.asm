@@ -200,6 +200,71 @@ close_printer       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetPrinterName
+;
+;       description:    Get printer name
+;
+;       PARAMETERS:     BX              Printer handle
+;                       ES:(E)DI        Printer name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_printer_name_name DB 'Get Printer Name',0
+
+get_printer_name16       Proc far
+    push ds
+    push eax
+    push ebx
+    push edi
+;
+    mov ax,PRINTER_HANDLE
+    DerefHandle
+    jc get_printer_name_done16
+;
+    movzx edi,di
+    mov ds,[ebx].printer_sel
+    mov eax,ds:pr_get_name_proc
+    or eax,eax
+    clc
+    jz get_printer_name_done16
+;       
+    call ds:pr_get_name_proc
+
+get_printer_name_done16:
+    pop edi
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+get_printer_name16       Endp
+
+get_printer_name32       Proc far
+    push ds
+    push eax
+    push ebx
+;
+    mov ax,PRINTER_HANDLE
+    DerefHandle
+    jc get_printer_name_done32
+;
+    mov ds,[ebx].printer_sel
+    mov eax,ds:pr_get_name_proc
+    or eax,eax
+    clc
+    jz get_printer_name_done32
+;       
+    call ds:pr_get_name_proc
+
+get_printer_name_done32:
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+get_printer_name32       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           IsPrinterJammed
 ;
 ;       description:    Is printer jammed
@@ -693,6 +758,7 @@ add_printer    Proc far
     mov ds:pr_present_media_proc,0
     mov ds:pr_eject_media_proc,0
     mov ds:pr_wait_for_print_proc,0
+    mov ds:pr_get_name_proc,0
 ;
     mov dx,ds
     mov bx,SEG data
@@ -822,6 +888,13 @@ init    Proc far
     xor dx,dx
     mov ax,wait_for_print_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET get_printer_name16
+    mov esi,OFFSET get_printer_name32
+    mov edi,OFFSET get_printer_name_name
+    mov dx,virt_es_in
+    mov ax,get_printer_name_nr
+    RegisterUserGate
 ;
     mov bx,SEG data
     mov es,bx

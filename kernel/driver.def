@@ -424,6 +424,9 @@ freetype_data_sel   EQU 0AB8h
 wh1080_code_sel     EQU 0AC0h
 wh1080_data_sel     EQU 0AC8h
 
+ser_print_code_sel  EQU 0AD0h
+ser_print_data_sel  EQU 0AD8h
+
 acpi_code_sel       EQU 0B00h
 ;acpi_data_sel      EQU 0B08h
 

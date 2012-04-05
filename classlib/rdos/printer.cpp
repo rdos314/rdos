@@ -148,7 +148,12 @@ void TPrinterDevice::Init(int Port)
 ##########################################################################*/
 void TPrinterDevice::DeviceName(char *Name, int MaxLen) const
 {
-	strncpy(Name,"Printer device",MaxLen);
+    char str[512];
+
+    if (RdosGetPrinterName(FHandle, str))
+    	strncpy(Name, str, MaxLen);
+    else
+    	strncpy(Name,"Printer device",MaxLen);
 }
 
 /*##########################################################################

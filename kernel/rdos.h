@@ -301,6 +301,7 @@ void RDOSAPI RdosWaitForSendCompletedCom(int Handle);
 int RDOSAPI RdosGetMaxPrinters();
 int RDOSAPI RdosOpenPrinter(char ID);
 void RDOSAPI RdosClosePrinter(int Handle);
+int RDOSAPI RdosGetPrinterName(int Handle, char *NameBuf);
 int RDOSAPI RdosIsPrinterJammed(int Handle);
 int RDOSAPI RdosIsPrinterPaperLow(int Handle);
 int RDOSAPI RdosIsPrinterPaperEnd(int Handle);
@@ -1319,6 +1320,12 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosClosePrinter = \
     CallGate_close_printer  \
     parm [ebx];
+
+#pragma aux RdosGetPrinterName = \
+    CallGate_get_printer_name  \
+    CarryToBool \
+    parm [ebx] [edi] \
+    value [eax];
 
 #pragma aux RdosIsPrinterJammed = \
     CallGate_is_printer_jammed  \
@@ -3539,6 +3546,12 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosClosePrinter = \
     CallGate_close_printer  \
     parm [ebx];
+
+#pragma aux RdosGetPrinterName = \
+    CallGate_get_printer_name  \
+    CarryToBool \
+    parm [ebx] [es edi] \
+    value [eax];
 
 #pragma aux RdosIsPrinterJammed = \
     CallGate_is_printer_jammed  \

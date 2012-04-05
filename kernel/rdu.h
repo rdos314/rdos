@@ -583,6 +583,8 @@
 #define usergate_ansi_to_utf8 468
 #define usergate_utf8_to_ansi 469
 
+#define usergate_get_printer_name 470
+
 
 
 #ifdef __FLAT__
@@ -1171,6 +1173,8 @@
 #define CallGate_ansi_to_utf8 0x67 0x9a 212 1 0 0 3 0
 #define CallGate_utf8_to_ansi 0x67 0x9a 213 1 0 0 3 0
 
+#define CallGate_get_printer_name 0x67 0x9a 214 1 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1756,5 +1760,7 @@
 
 #define CallGate_ansi_to_utf8 0x3e 0x67 0x9a 212 1 0 0 3 0
 #define CallGate_utf8_to_ansi 0x3e 0x67 0x9a 213 1 0 0 3 0
+
+#define CallGate_get_printer_name 0x3e 0x67 0x9a 214 1 0 0 3 0
 
 #endif
