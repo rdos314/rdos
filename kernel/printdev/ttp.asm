@@ -343,61 +343,6 @@ print_bitmap   Proc far
     stc
     ret
 print_bitmap    Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;   NAME:           CreatePrinter
-;
-;   DESCRIPTION:    Create printer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreatePrinter   Proc near
-    mov word ptr ds:pr_get_name_proc,OFFSET get_printer_name
-    mov word ptr ds:pr_get_name_proc+2,cs
-;
-    mov word ptr ds:pr_jammed_proc,OFFSET is_jammed
-    mov word ptr ds:pr_jammed_proc+2,cs
-;    
-    mov word ptr ds:pr_paper_low_proc,OFFSET is_paper_low
-    mov word ptr ds:pr_paper_low_proc+2,cs
-;    
-    mov word ptr ds:pr_paper_end_proc,OFFSET is_paper_end
-    mov word ptr ds:pr_paper_end_proc+2,cs
-;    
-    mov word ptr ds:pr_ok_proc,OFFSET is_ok
-    mov word ptr ds:pr_ok_proc+2,cs
-;    
-    mov word ptr ds:pr_head_lifted_proc,OFFSET is_head_lifted
-    mov word ptr ds:pr_head_lifted_proc+2,cs
-;    
-    mov word ptr ds:pr_paper_in_presenter_proc,OFFSET has_paper_in_presenter
-    mov word ptr ds:pr_paper_in_presenter_proc+2,cs
-;    
-    mov word ptr ds:pr_print_test_proc,OFFSET print_test
-    mov word ptr ds:pr_print_test_proc+2,cs
-;    
-    mov word ptr ds:pr_create_bitmap_proc,OFFSET create_bitmap
-    mov word ptr ds:pr_create_bitmap_proc+2,cs
-;    
-    mov word ptr ds:pr_print_bitmap_proc,OFFSET print_bitmap
-    mov word ptr ds:pr_print_bitmap_proc+2,cs
-;    
-    mov word ptr ds:pr_present_media_proc,OFFSET present_media
-    mov word ptr ds:pr_present_media_proc+2,cs
-;    
-    mov word ptr ds:pr_eject_media_proc,OFFSET eject_media
-    mov word ptr ds:pr_eject_media_proc+2,cs
-;    
-    mov word ptr ds:pr_wait_for_print_proc,OFFSET wait_for_print
-    mov word ptr ds:pr_wait_for_print_proc+2,cs
-;
-    xor ax,ax
-    xor dx,dx    
-    AddPrinter
-    ret
-CreatePrinter   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -447,6 +392,61 @@ wait_for_print   Proc far
     clc
     ret
 wait_for_print    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           CreatePrinter
+;
+;   DESCRIPTION:    Create printer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreatePrinter   Proc near
+    xor ax,ax
+    xor dx,dx    
+    AddPrinter
+;
+    mov word ptr ds:pr_get_name_proc,OFFSET get_printer_name
+    mov word ptr ds:pr_get_name_proc+2,cs
+;
+    mov word ptr ds:pr_jammed_proc,OFFSET is_jammed
+    mov word ptr ds:pr_jammed_proc+2,cs
+;    
+    mov word ptr ds:pr_paper_low_proc,OFFSET is_paper_low
+    mov word ptr ds:pr_paper_low_proc+2,cs
+;    
+    mov word ptr ds:pr_paper_end_proc,OFFSET is_paper_end
+    mov word ptr ds:pr_paper_end_proc+2,cs
+;    
+    mov word ptr ds:pr_ok_proc,OFFSET is_ok
+    mov word ptr ds:pr_ok_proc+2,cs
+;    
+    mov word ptr ds:pr_head_lifted_proc,OFFSET is_head_lifted
+    mov word ptr ds:pr_head_lifted_proc+2,cs
+;    
+    mov word ptr ds:pr_paper_in_presenter_proc,OFFSET has_paper_in_presenter
+    mov word ptr ds:pr_paper_in_presenter_proc+2,cs
+;    
+    mov word ptr ds:pr_print_test_proc,OFFSET print_test
+    mov word ptr ds:pr_print_test_proc+2,cs
+;    
+    mov word ptr ds:pr_create_bitmap_proc,OFFSET create_bitmap
+    mov word ptr ds:pr_create_bitmap_proc+2,cs
+;    
+    mov word ptr ds:pr_print_bitmap_proc,OFFSET print_bitmap
+    mov word ptr ds:pr_print_bitmap_proc+2,cs
+;    
+    mov word ptr ds:pr_present_media_proc,OFFSET present_media
+    mov word ptr ds:pr_present_media_proc+2,cs
+;    
+    mov word ptr ds:pr_eject_media_proc,OFFSET eject_media
+    mov word ptr ds:pr_eject_media_proc+2,cs
+;    
+    mov word ptr ds:pr_wait_for_print_proc,OFFSET wait_for_print
+    mov word ptr ds:pr_wait_for_print_proc+2,cs
+    ret
+CreatePrinter   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -529,8 +529,8 @@ ttp_next:
     jmp ttp_exit
 
 ttp_ok:       
-    int 3
     call CreatePrinter
+    int 3
 
 ttp_exit:
     xor ax,ax
