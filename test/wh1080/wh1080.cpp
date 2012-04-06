@@ -36,10 +36,67 @@
 
 void main()
 {
+    char str[256];
+    long double val;
+
     TWh1080Device Wh1080;
 
     if (Wh1080.IsOnline())
+    {
         for (;;)
-            RdosWaitMilli(1000);
+        {
+            Wh1080.WaitForData();
+
+            printf("Indoor ");
+            if (Wh1080.IsIndoorHumidityValid())
+                printf("%3.0Lf%% ", Wh1080.GetIndoorHumidity());
+            else
+                printf("--- ");
+
+            if (Wh1080.IsIndoorTemperatureValid())
+                printf("%5.1LfC ", Wh1080.GetIndoorTemperature());
+            else
+                printf("-----  ");
+            
+            printf("Outdoor ");
+            if (Wh1080.IsOutdoorHumidityValid())
+                printf("%3.0Lf%% ", Wh1080.GetOutdoorHumidity());
+            else
+                printf("---  ");
+
+            if (Wh1080.IsOutdoorTemperatureValid())
+                printf("%5.1LfC ", Wh1080.GetOutdoorTemperature());
+            else
+                printf("-----  ");
+            
+            if (Wh1080.IsPressureValid())
+                printf("%6.1Lfhpa ", Wh1080.GetPressure());
+            else
+                printf("------    ");
+            
+            if (Wh1080.IsWindAverageValid())
+                printf("%4.1Lfm/s ", Wh1080.GetWindAverage());
+            else
+                printf("---      ");
+            
+            if (Wh1080.IsWindGustValid())
+                printf("%4.1Lfm/s ", Wh1080.GetWindGust());
+            else
+                printf("---      ");
+            
+            if (Wh1080.IsWindDirValid())
+                printf("%4.0Lf ", Wh1080.GetWindDir());
+            else
+                printf("----  ");
+            
+            if (Wh1080.IsRainValid())
+                printf("%5.1Lfmm ", Wh1080.GetRain());
+            else
+                printf("-----    ");
+
+            printf("\r\n");
+                        
+        }
+    }
 }
 

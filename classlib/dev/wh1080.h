@@ -29,6 +29,8 @@
 #define _WH1080_H
 
 #include "hid.h"
+#include "section.h"
+#include "sigdev.h"
 
 class TWh1080Device : public THidDevice
 {
@@ -38,18 +40,67 @@ public:
 
     virtual void DeviceName(char *Name, int MaxLen) const;
 
+    long double GetIndoorHumidity();
+    long double GetIndoorTemperature();
+    long double GetOutdoorHumidity();
+    long double GetOutdoorTemperature();
+    long double GetPressure();
+    long double GetWindAverage();
+    long double GetWindGust();
+    long double GetWindDir();
+    long double GetRain();
+
+    void WaitForData(); 
+
+    int IsIndoorHumidityValid();
+    int IsIndoorTemperatureValid();
+    int IsOutdoorHumidityValid();
+    int IsOutdoorTemperatureValid();
+    int IsPressureValid();
+    int IsWindAverageValid();
+    int IsWindGustValid();
+    int IsWindDirValid();
+    int IsRainValid();
+
 protected:
     int ReadBlock(int Offset, char *Buffer);
     int WriteBlock(int Offset, const char *Buffer);
     int WriteDataRefresh();
     int ReadFixedBlock(char *Buffer);
     int WriteFixedBlock(char *Buffer);
+    int ReadMeassure(int Offset, char *Buffer);
 
-    int Setup();
-    int GetCurrentPos();
-    void GetData(int Pos);
+    void Setup();
+    void GetCurrentPos();
+    void DecodeData(char *Buffer);
+    void GetData();
     
 	virtual void Execute();
+
+	int FCurrPos;
+
+	TDateTime FIndoorHumidityTime;
+	TDateTime FIndoorTemperatureTime;
+	TDateTime FOutdoorHumidityTime;
+	TDateTime FOutdoorTemperatureTime;
+	TDateTime FPressureTime;
+	TDateTime FWindAverageTime;
+	TDateTime FWindGustTime;
+	TDateTime FWindDirTime;
+	TDateTime FRainTime;
+
+	long double FIndoorHumidity;
+	long double FIndoorTemperature;
+	long double FOutdoorHumidity;
+	long double FOutdoorTemperature;
+	long double FPressure;
+	long double FWindAverage;
+	long double FWindGust;
+	long double FWindDir;
+	long double FRain;	
+
+	TSection FSection;
+	TSignalDevice FSignal;
 };
 
 #endif
