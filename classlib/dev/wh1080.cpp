@@ -26,6 +26,7 @@
 ########################################################################*/
 
 #include <string.h>
+#include <stdio.h>
 
 #include "wh1080.h"
 #include "rdos.h"
@@ -494,6 +495,33 @@ int TWh1080Device::IsRainValid()
 
 /*##########################################################################
 #
+#   Name       : LogData
+#
+#   Purpose....: Log data block
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void LogData(char *Buffer)
+{
+    int i;
+    char str[80];
+
+    for (i = 0; i < 32; i++)
+    {
+        sprintf(str, "%04hX", Buffer[i]);
+        printf(&str[2]);
+        if (i % 8 == 7)
+            printf("\r\n");
+        else
+            printf(" ");
+    }
+}    
+
+/*##########################################################################
+#
 #   Name       : TWh1080Device::ReadBlock
 #
 #   Purpose....: Read block
@@ -516,10 +544,16 @@ int TWh1080Device::ReadBlock(int Offset, char *Buffer)
     req[6] = (char)(Offset & 0xFF);
     req[7] = 0x20;
 
+    printf("Read block: %04hX\r\n", Offset);
+
     if (Write(req, 8))
         if (Read(Buffer, 32, 2500))
+        {
+            LogData(Buffer);                
             return TRUE;
+        }
 
+    printf("Failed\r\n");
     return FALSE;
 }
 
@@ -644,37 +678,6 @@ int TWh1080Device::WriteFixedBlock(char *Buffer)
 
 /*##########################################################################
 #
-#   Name       : TWh1080Device::ReadMeassure
-#
-#   Purpose....: Read meassure data
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TWh1080Device::ReadMeassure(int Offset, char *Buffer)
-{
-    char req[8];
-
-    req[0] = 0xA1;
-    req[1] = (char)(Offset / 256);
-    req[2] = (char)(Offset & 0xFF);
-    req[3] = 0x20;
-    req[4] = 0xA1;
-    req[5] = (char)(Offset / 256);
-    req[6] = (char)(Offset & 0xFF);
-    req[7] = 0x20;
-
-    if (Write(req, 8))
-        if (Read(Buffer, 40, 2500))
-            return TRUE;
-
-    return FALSE;
-}
-
-/*##########################################################################
-#
 #   Name       : TWh1080Device::Setup
 #
 #   Purpose....: Setup station
@@ -701,40 +704,6 @@ void TWh1080Device::Setup()
             }
             break;
         }       
-        RdosWaitMilli(1000);
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TWh1080Device::GetCurrentPos
-#
-#   Purpose....: Get current record position
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TWh1080Device::GetCurrentPos()
-{
-    int ok;
-    unsigned short int pos;
-    char Buffer[32];
-    
-    for (;;)
-    {
-        ok = ReadFixedBlock(Buffer);
-        if (ok)
-        {
-            pos = *(unsigned short int *)(Buffer + 30);
-            pos -= 0x10;
-            if (pos < 0x100)
-                pos = 0xFFF0;
-
-            FCurrPos = (int)pos;
-            break;
-        }
         RdosWaitMilli(1000);
     }
 }
@@ -835,45 +804,68 @@ void TWh1080Device::DecodeData(char *Buffer)
 
 /*##########################################################################
 #
-#   Name       : TWh1080Device::GetData
+#   Name       : TWh1080Device::ReadWhole
 #
-#   Purpose....: Get data
+#   Purpose....: Read whole fixed block + current block
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TWh1080Device::GetData()
+void TWh1080Device::ReadWhole()
 {
-    unsigned short int ReportedPos;
-    int Offset;
     int ok;
-    char Buffer[40];
+    char Buffer[32];
+    int Offset;
+    int pos;
 
-    Offset = FCurrPos & 0xFFE0;
-    
-    ok = ReadMeassure(Offset, Buffer);
-
+    ok = ReadBlock(0, Buffer);
     if (ok)
-        ok = Buffer[0] == 1;
-        
+        pos = *(unsigned short int *)(Buffer + 30);
+
+    for (Offset = 0x20; ok && Offset < 0x100; Offset += 0x20)
+        ok = ReadBlock(Offset, Buffer);
+
+    ReadBlock(pos, Buffer);
+}
+
+/*##########################################################################
+#
+#   Name       : TWh1080Device::ReadCurr
+#
+#   Purpose....: Read current block
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWh1080Device::ReadCurr()
+{
+    int ok;
+    char Buffer[32];
+    int Offset;
+    int pos;
+
+    ok = ReadBlock(0, Buffer);
     if (ok)
     {
-        ReportedPos = *(unsigned short int *)(Buffer + 6);
-        ReportedPos -= 0x10;
-        if (ReportedPos < 0x100)
-            ReportedPos = 0xFFF0;
+        pos = *(unsigned short int *)(Buffer + 30);
 
-        ok = ReportedPos == FCurrPos;
-    }
+        pos -= 0x20;
+        if (pos < 0x100)
+            pos += 0xFF00;
 
-    if (ok) 
-    {   
-        if ((FCurrPos & 0x10) == 0)
-            DecodeData(Buffer + 8);
-        else
-            DecodeData(Buffer + 0x18);
+        ok = ReadBlock(pos, Buffer);
+        if (ok)
+        {
+            if (pos != FReadPos)
+            {
+                FReadPos = pos;
+                DecodeData(Buffer + 0x10);            
+            }
+        }
     }
 }
                 
@@ -890,23 +882,14 @@ void TWh1080Device::GetData()
 ##########################################################################*/
 void TWh1080Device::Execute()
 {
-    int OldPos;
+    FReadPos = 0;
 
-    Setup();
-    GetCurrentPos();
-    OldPos = FCurrPos;
-    GetData();
+//    Setup();
 
     while (FInstalled)
     {
-        GetCurrentPos();
-
-        if (OldPos != FCurrPos)
-        {
-            OldPos = FCurrPos;
-            GetData();
-        }
-            
-        RdosWaitMilli(2500);
+        ReadWhole();
+        ReadCurr();
+        RdosWaitMilli(15000);
     }
 }

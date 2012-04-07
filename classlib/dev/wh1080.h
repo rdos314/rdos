@@ -71,13 +71,13 @@ protected:
     int ReadMeassure(int Offset, char *Buffer);
 
     void Setup();
-    void GetCurrentPos();
+    void ReadWhole();
+    void ReadCurr();
     void DecodeData(char *Buffer);
-    void GetData();
     
 	virtual void Execute();
 
-	int FCurrPos;
+	int FReadPos;
 
 	TDateTime FIndoorHumidityTime;
 	TDateTime FIndoorTemperatureTime;

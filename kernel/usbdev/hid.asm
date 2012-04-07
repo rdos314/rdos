@@ -2352,6 +2352,10 @@ open_hid    Proc far
     CreateUsbReq
     mov ds:hid_intr_req,bx
     AddReadUsbDataReq
+;    
+    GetThread
+    xor cx,cx
+    StartUsbReq
 ;
     pop dx
     pop bx
@@ -2482,21 +2486,6 @@ read_hid_loop:
     IsUsbReqReady
     jnc read_hid_get_data
 ;    
-    IsUsbReqStarted
-    jnc read_hid_started
-;
-    push es
-    push cx
-    GetThread
-    xor cx,cx
-    StartUsbReq
-    pop cx
-    pop es
-
-read_hid_started:    
-    IsUsbReqReady
-    jnc read_hid_get_data
-;    
     GetSystemTime
     add eax,esi
     adc edx,0
@@ -2523,9 +2512,6 @@ read_hid_get_data:
     stos dword ptr es:[edi]
     mov eax,fs:[4]
     stos dword ptr es:[edi]
-;
-    sub cx,8
-    jbe read_hid_ok
 ;    
     push es
     push cx
@@ -2534,7 +2520,9 @@ read_hid_get_data:
     StartUsbReq
     pop cx
     pop es
-    jmp read_hid_loop
+;
+    sub cx,8
+    ja read_hid_loop
 
 read_hid_ok:
     clc
