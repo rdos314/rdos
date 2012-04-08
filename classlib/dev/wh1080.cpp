@@ -544,16 +544,16 @@ int TWh1080Device::ReadBlock(int Offset, char *Buffer)
     req[6] = (char)(Offset & 0xFF);
     req[7] = 0x20;
 
-    printf("Read block: %04hX\r\n", Offset);
+//    printf("Read block: %04hX\r\n", Offset);
 
     if (Write(req, 8))
         if (Read(Buffer, 32, 2500))
         {
-            LogData(Buffer);                
+//            LogData(Buffer);                
             return TRUE;
         }
 
-    printf("Failed\r\n");
+//    printf("Failed\r\n");
     return FALSE;
 }
 
@@ -739,6 +739,9 @@ void TWh1080Device::DecodeData(char *Buffer)
         usval = *(unsigned short int*)(Buffer + 2);
         if (usval != 0xFFFF)
         {
+            if (usval & 0x8000)
+                usval = -(usval & 0x7FFF);
+
             FIndoorTemperature = 0.1 * (long double)usval;
             FIndoorTemperatureTime.SetCurrent();
         }        
@@ -753,6 +756,9 @@ void TWh1080Device::DecodeData(char *Buffer)
         usval = *(unsigned short int*)(Buffer + 5);
         if (usval != 0xFFFF)
         {
+            if (usval & 0x8000)
+                usval = -(usval & 0x7FFF);
+
             FOutdoorTemperature = 0.1 * (long double)usval;
             FOutdoorTemperatureTime.SetCurrent();
         }        
@@ -827,7 +833,8 @@ void TWh1080Device::ReadWhole()
     for (Offset = 0x20; ok && Offset < 0x100; Offset += 0x20)
         ok = ReadBlock(Offset, Buffer);
 
-    ReadBlock(pos, Buffer);
+    if (ok)
+        ReadBlock(pos, Buffer);
 }
 
 /*##########################################################################
@@ -853,6 +860,14 @@ void TWh1080Device::ReadCurr()
     {
         pos = *(unsigned short int *)(Buffer + 30);
 
+// The Windows application always read the two last records, but this 
+// is a questionable approach given that the first 100h bytes are
+// part of the control block, so we will not expect the last position
+// to be read correct. A better approach would be to read only the
+// last record, but for now it is uncertain if this is a stable approach
+// as the weather station seems to hangup when alternative approaches
+// to read-out data are used.
+
         pos -= 0x20;
         if (pos < 0x100)
             pos += 0xFF00;
@@ -860,7 +875,7 @@ void TWh1080Device::ReadCurr()
         ok = ReadBlock(pos, Buffer);
         if (ok)
         {
-            if (pos != FReadPos)
+            if (pos != FReadPos && pos != 0xFFF0)
             {
                 FReadPos = pos;
                 DecodeData(Buffer + 0x10);            
@@ -884,7 +899,7 @@ void TWh1080Device::Execute()
 {
     FReadPos = 0;
 
-//    Setup();
+    Setup();
 
     while (FInstalled)
     {
