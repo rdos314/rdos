@@ -158,7 +158,7 @@ int TRemovePartitionCommand::Confirm(TFsPartition *Part)
 	{
 		sprintf(str, "%3.3f MB", Part->GetTotalSpace());
 
-		FMsg.printf(TEXT_RMPART_PART_HEAD, FPartNr, FDisc->GetDiscNr());
+		FMsg.printf(TEXT_RMPART_PART_HEAD, FPartNr, FDisc->GetDiscNr(), str);
 		Write(FMsg.GetData());
 	}
 

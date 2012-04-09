@@ -101,6 +101,21 @@ void TWh1080Device::DeviceName(char *Name, int MaxLen) const
 
 /*##########################################################################
 #
+#   Name       : TWh1080Device::NotifyData
+#
+#   Purpose....: Notify new data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWh1080Device::NotifyData()
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TWh1080Device::GetIndoorHumidity
 #
 #   Purpose....: Read indoor humidity
@@ -791,6 +806,7 @@ void TWh1080Device::DecodeData(char *Buffer)
         uch = *(unsigned char*)(Buffer + 12);
         if ((uch & 0x80) == 0)
         {
+            FWindDirIndex = (int)uch;
             FWindDir = 22.5 * (long double)uch;
             FWindDirTime.SetCurrent();
         }        
@@ -803,8 +819,9 @@ void TWh1080Device::DecodeData(char *Buffer)
         }                
 
         FSection.Leave();
-
         FSignal.Signal();
+
+        NotifyData();
     }
 }
 
@@ -882,6 +899,8 @@ void TWh1080Device::ReadCurr()
             }
         }
     }
+    else
+        NotifyData();
 }
                 
 /*##########################################################################

@@ -37,8 +37,8 @@
 
 #define STACK_SIZE      0x2000
 
-#define LIST_ID         0x2CDA
-#define LIST_SECTORS    20000
+#define LIST_ID         0x2AC0
+#define LIST_SECTORS    1440
 
 #define FALSE               0
 #define TRUE                !FALSE
@@ -141,6 +141,22 @@ void TDataStore::Add(TVp *vp)
 
 /*##########################################################################
 #
+#   Name       : TDataStore::Add
+#
+#   Purpose....: Add climate
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDataStore::Add(TClimate *climate)
+{
+    FClimate = climate;
+}
+
+/*##########################################################################
+#
 #   Name       : TDataStore::GetCurrRad
 #
 #   Purpose....: Get current rad data
@@ -183,9 +199,8 @@ void TDataStore::GetCurrData(THeatData *data)
         data->Lsb = RdosCodeLsbTics(FMin, 0, 0, 0);
 
         data->HasWs = FALSE;
-        data->HasRain = FALSE;
-        data->HasCirc = FALSE;
         data->HasVp = FALSE;
+        data->HasCirc = FALSE;
         data->HasTankTemp = FALSE;
         data->HasTankP = FALSE;
         data->HasHeatTemp = FALSE;
@@ -199,10 +214,6 @@ void TDataStore::GetCurrData(THeatData *data)
 
          if (FVp)
          {
-                  data->HasVp = TRUE;
-                  data->VpOn = FALSE;
-                  data->EpOn = FALSE;
-
                   if (FVp->HasValidTankTemp())
                   {
                                 data->HasTankTemp = TRUE;
@@ -226,6 +237,23 @@ void TDataStore::GetCurrData(THeatData *data)
                                          data->HeatP = (long double)FVp->GetHeatP() / 100.0;
                                 }
                   }
+         }
+
+         if (FClimate)
+         {
+            if (FClimate->IsWindAverageValid())
+            {
+                data->HasWs = TRUE;
+                data->IndoorTemp = FClimate->GetIndoorTemperature();
+                data->IndoorHumidity = FClimate->GetIndoorHumidity();
+                data->OutdoorTemp = FClimate->GetOutdoorTemperature();
+                data->OutdoorHumidity = FClimate->GetOutdoorHumidity();
+                data->WindAverage = FClimate->GetWindAverage();
+                data->WindGust = FClimate->GetWindGust();
+                data->WindDir = FClimate->GetWindDir();
+                data->AirPressure = FClimate->GetPressure();
+                data->Rain = FClimate->GetRain();
+            }
          }
 
          for (i = 0; i < RAD_COUNT; i++)
@@ -285,7 +313,7 @@ void TDataStore::Execute()
         RdosDecodeLsbTics(lsb, &FMin, &sec, &ms, &us);
 
         Disc = new TDisc(0);
-        StartSector = Disc->GetTotalSectors() - 4 * LIST_SECTORS;
+        StartSector = Disc->GetTotalSectors() - 10 * LIST_SECTORS + 4 * LIST_SECTORS;
 
         for (i = 0; i < 4; i++)
                  DiscStore[i] = new TDiscStorage(Disc, StartSector + LIST_SECTORS * i, LIST_SECTORS);

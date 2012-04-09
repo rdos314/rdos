@@ -109,15 +109,15 @@ void TBinData::InitEntry(TBinDataEntry *data)
 	 data->Temp.valid = FALSE;
 	 data->Humidity.valid = FALSE;
 	 data->WindSpeed.valid = FALSE;
+	 data->WindGust.valid = FALSE;
 	 data->WindDir.valid = FALSE;
 	 data->AirPressure.valid = FALSE;
+	 data->Rain.valid = FALSE;
 	 data->CircSpeed.valid = FALSE;
 	 data->TankTemp.valid = FALSE;
 	 data->TankP.valid = FALSE;
 	 data->HeatTemp.valid = FALSE;
 	 data->HeatP.valid = FALSE;
-	 data->Vp.valid = FALSE;
-	 data->Ep.valid = FALSE;
 
 	 for (rad = 0; rad < RAD_COUNT; rad++)
 		  InitRadEntry(&data->Rad[rad]);
@@ -206,16 +206,28 @@ void TBinData::DecodeOutdoor(TDeviceTag *tag, TBinDataEntry *data)
 		 }
 	}
 
+	 var = tag->GetVar(LOG_VAR_Windgust);
+	 if (var)
+	{
+		  ival = var->GetFloat1();
+
+		if (ival < 400 && ival >= 0)
+		{
+				val = (long double)ival;
+			  data->WindGust.val = val / 10.0;
+			  data->WindGust.valid = TRUE;
+		 }
+	}
+
 	 var = tag->GetVar(LOG_VAR_Winddir);
 	 if (var)
 	{
         ival = var->GetSignedInt();
 
-		if (ival <= 360 && ival >= 0)
+		if (ival <= 16 && ival >= 0)
 		{
-		    ival = ival % 360;
             val = (long double)ival;
-			  data->WindDir.val = val;
+			data->WindDir.val = val * 22.5;
 	        data->WindDir.valid = TRUE;
 	    }
 	}
@@ -230,6 +242,19 @@ void TBinData::DecodeOutdoor(TDeviceTag *tag, TBinDataEntry *data)
             val = (long double)ival;
 	        data->AirPressure.val = val / 10.0;
 	        data->AirPressure.valid = TRUE;
+	    }
+	}
+    
+    var = tag->GetVar(LOG_VAR_Rain);
+    if (var)
+	{
+        ival = var->GetFloat1();
+
+		if (ival > 0)
+		{
+            val = (long double)ival;
+	        data->Rain.val = val / 10.0;
+	        data->Rain.valid = TRUE;
 	    }
 	}
 }
@@ -262,31 +287,6 @@ void TBinData::DecodeCirc(TDeviceTag *tag, TBinDataEntry *data)
 	        data->CircSpeed.val = val / 10.0;
 	        data->CircSpeed.valid = TRUE;
 	    }
-	}
-}
-
-/*##########################################################################
-#
-#   Name       : TBinData::DecodeVp
-#
-#   Purpose....: Decode VP tag
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TBinData::DecodeVp(TDeviceTag *tag, TBinDataEntry *data)
-{
-    TDeviceVar *var;
-    long ival;
-    long double val;
-    
-    var = tag->GetVar(LOG_VAR_On);
-    if (var)
-	{
-	    data->Vp.val = var->GetBoolean();
-	    data->Vp.valid = TRUE;
 	}
 }
 
@@ -375,13 +375,6 @@ void TBinData::DecodeHeat(TDeviceTag *tag, TBinDataEntry *data)
 	        data->HeatP.val = val / 100.0;
 	        data->HeatP.valid = TRUE;
 	    }
-	}
-
-    var = tag->GetVar(LOG_VAR_On);
-    if (var)
-	{
-	    data->Ep.val = var->GetBoolean();
-	    data->Ep.valid = TRUE;
 	}
 }
 
@@ -526,10 +519,6 @@ void TBinData::CotexToBinary(TDeviceMsg *doc, TBinDataEntry *data)
 
             case LOG_TAG_CIRC:
                 DecodeCirc(tag, data);
-                break;
-                
-            case LOG_TAG_VP:
-                DecodeVp(tag, data);
                 break;
                 
             case LOG_TAG_TANK:

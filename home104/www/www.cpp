@@ -104,6 +104,9 @@ void cdecl main()
      DataStore->NotifyData = HandleRealData;
 
      for (;;)
+        RdosWaitMilli(1000);     
+
+     for (;;)
      {
           socket = new TSocket(Node, 601, 600000, 0x4000);
           socket->WaitForConnection(600000);

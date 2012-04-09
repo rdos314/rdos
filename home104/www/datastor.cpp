@@ -241,7 +241,7 @@ void TDataStore::Execute()
     {
     	RdosSyncTime(NtpIp);
 
-        socket = new TSocket(0x2800A8C0, 600, 600000, 0x4000);
+        socket = new TSocket(FServerIp, FServerPort, 600000, 0x4000);
 		socket->WaitForConnection(600000);
 
 		while (socket->IsOpen())

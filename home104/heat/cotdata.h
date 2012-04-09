@@ -58,5 +58,6 @@
 #define LOG_VAR_Rain        114
 #define LOG_VAR_On          115
 #define LOG_VAR_P           116
+#define LOG_VAR_Windgust    117
 
 #endif

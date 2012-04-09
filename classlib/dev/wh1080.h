@@ -63,6 +63,8 @@ public:
     int IsRainValid();
 
 protected:
+    virtual void NotifyData();
+
     int ReadBlock(int Offset, char *Buffer);
     int WriteBlock(int Offset, const char *Buffer);
     int WriteDataRefresh();
@@ -97,6 +99,7 @@ protected:
 	long double FWindAverage;
 	long double FWindGust;
 	long double FWindDir;
+	int FWindDirIndex;
 	long double FRain;	
 
 	TSection FSection;

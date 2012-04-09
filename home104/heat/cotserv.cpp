@@ -144,28 +144,20 @@ TDeviceMsg *TCotexSocketServer::ConvToCotex(THeatData *data)
 		ival = data->OutdoorHumidity;
 		tag->AddSignedInt(LOG_VAR_Humidity, ival);
 
-		ival = 10.0 * data->DewPoint;
-		tag->AddFloat1(LOG_VAR_Dewpoint, ival);
-
-		ival = 10.0 * data->WindChill;
-		tag->AddFloat1(LOG_VAR_Windchill, ival);
-
-		ival = 10.0 * data->WindSpeed;
+		ival = 10.0 * data->WindAverage;
 	    tag->AddFloat1(LOG_VAR_Windspeed, ival);
 
-		ival = data->WindDir;
+		ival = 10.0 * data->WindGust;
+	    tag->AddFloat1(LOG_VAR_Windgust, ival);
+
+		ival = data->WindDir / 22.5;
 		tag->AddSignedInt(LOG_VAR_Winddir, ival);
 
 		ival = 10.0 * data->AirPressure;
 		tag->AddFloat1(LOG_VAR_Pressure, ival);
 
-		if (data->HasRain)
-		{
-		    tag = doc->AddTag(LOG_TAG_RAIN);
-
-			ival = 10.0 * data->Rain1h;
-		    tag->AddFloat1(LOG_VAR_Rain, ival);
-		}
+	    ival = 10.0 * data->Rain;
+		tag->AddFloat1(LOG_VAR_Rain, ival);
 	}
 
 	if (data->HasCirc)
@@ -176,40 +168,34 @@ TDeviceMsg *TCotexSocketServer::ConvToCotex(THeatData *data)
 	}
 
     if (data->HasVp)
-	{
-		tag = doc->AddTag(LOG_TAG_VP);
-		ival = data->VpOn;
-		tag->AddBoolean(LOG_VAR_On, ival);
+    {
+    	tag = doc->AddTag(LOG_TAG_VP);
 		
-		if (data->HasTankTemp)
-		{
-			tag = doc->AddTag(LOG_TAG_TANK);
-    	    ival = 10.0 * data->TankTemp;
-		    tag->AddFloat1(LOG_VAR_Temp, ival);
+	    if (data->HasTankTemp)
+    	{
+	    	tag = doc->AddTag(LOG_TAG_TANK);
+            ival = 10.0 * data->TankTemp;
+    	    tag->AddFloat1(LOG_VAR_Temp, ival);
 
-			if (data->HasTankP)
-			{
-			    ival = 100.0 * data->TankP;
-				tag->AddFloat2(LOG_VAR_P, ival);
-			}
-		}
-
-		if (data->HasHeatTemp)
-		{
-			tag = doc->AddTag(LOG_TAG_HEAT);
-    	    ival = 10.0 * data->HeatTemp;
-			tag->AddFloat1(LOG_VAR_Temp, ival);
-
-			if (data->HasHeatP)
-			{
-			    ival = 100.0 * data->HeatP;
-				tag->AddFloat2(LOG_VAR_P, ival);
+	    	if (data->HasTankP)
+		    {
+    		    ival = 100.0 * data->TankP;
+	    		tag->AddFloat2(LOG_VAR_P, ival);
 		    }
+    	}
 
-    		ival = data->EpOn;
-	    	tag->AddBoolean(LOG_VAR_On, ival);
-
-		}
+	    if (data->HasHeatTemp)
+    	{
+	    	tag = doc->AddTag(LOG_TAG_HEAT);
+            ival = 10.0 * data->HeatTemp;
+    		tag->AddFloat1(LOG_VAR_Temp, ival);
+    
+	    	if (data->HasHeatP)
+		    {
+    			ival = 100.0 * data->HeatP;
+	    		tag->AddFloat2(LOG_VAR_P, ival);
+		    }
+        }
     }
 
     for (i = 0; i < RAD_COUNT; i++)

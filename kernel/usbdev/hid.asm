@@ -2492,7 +2492,7 @@ read_hid_loop:
     WaitForSignalWithTimeout
 ;    
     IsUsbReqReady
-    jc read_hid_done
+    jc read_hid_fail
 
 read_hid_get_data:    
     push es
@@ -2523,9 +2523,17 @@ read_hid_get_data:
 ;
     sub cx,8
     ja read_hid_loop
+;
+    clc    
+    jmp read_hid_done
 
-read_hid_ok:
-    clc
+read_hid_fail:    
+    push es
+    GetThread
+    xor cx,cx
+    StartUsbReq
+    pop es
+    stc
 
 read_hid_done:
     pop edi

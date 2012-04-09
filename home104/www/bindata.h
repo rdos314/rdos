@@ -60,17 +60,16 @@ struct TBinDataEntry
     TFloatData Temp;
     TFloatData Humidity;
     TFloatData WindSpeed;
+    TFloatData WindGust;
     TFloatData WindDir;
     TFloatData AirPressure;
+    TFloatData Rain;
 
     TFloatData CircSpeed;
     TFloatData TankTemp;
     TFloatData TankP;
     TFloatData HeatTemp;
     TFloatData HeatP;
-
-    TBoolData Vp;
-    TBoolData Ep;
 
 	TBinRadData Rad[RAD_COUNT];
 };
@@ -105,7 +104,6 @@ protected:
 
     void DecodeOutdoor(TDeviceTag *tag, TBinDataEntry *data);
     void DecodeCirc(TDeviceTag *tag, TBinDataEntry *data);
-    void DecodeVp(TDeviceTag *tag, TBinDataEntry *data);
     void DecodeTank(TDeviceTag *tag, TBinDataEntry *data);
     void DecodeHeat(TDeviceTag *tag, TBinDataEntry *data);
     void DecodeRadData(TDeviceTag *tag, TBinRadData *data);

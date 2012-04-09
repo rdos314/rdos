@@ -369,7 +369,7 @@ void TVp::Execute()
 
     CommentLabelFactory.SetSpace(4, 4);
     CommentLabelFactory.SetFont(20);
-    CommentLabelFactory.SetBackTransparent();
+    CommentLabelFactory.SetBackColor(0, 20, 50);
     CommentLabelFactory.SetDrawColor(0, 0, 0);
     CommentLabelFactory.AlignLeft();
     
@@ -381,25 +381,25 @@ void TVp::Execute()
 
     UnitLabelFactory.SetSpace(4, 4);
     UnitLabelFactory.SetFont(20);
-    UnitLabelFactory.SetBackTransparent();
+    UnitLabelFactory.SetBackColor(100, 100, 100);
     UnitLabelFactory.SetDrawColor(0, 0, 0);
     UnitLabelFactory.AlignLeft();
 
-        TLabelControl *Label;
+    TLabelControl *Label;
     TTableControl *Table;
 
-        Label = new TLabelControl(FControl, 900, 500, 200, 30);
+    Label = new TLabelControl(FControl, 850, 500, 200, 30);
     Label->SetFont(20);
-    Label->SetBackTransparent();
+    Label->SetBackColor(0, 20, 50);
     Label->SetDrawColor(0, 0, 0);
-    Label->SetText("V„rme");
+    Label->SetText("Värme");
     Label->Show();
 
-        Table = new TTableControl(FControl, 900, 530, 400, 300);
+        Table = new TTableControl(FControl, 850, 530, 400, 300);
         Table->SetRowSpacing(5);
         Table->SetColSpacing(8);
         Table->SetSpacingTransparent();
-        Table->SetBackTransparent();
+        Table->SetBackColor(0, 20, 50);
         Table->AddLabelColumn(&CommentLabelFactory, 220);
         Table->AddLabelColumn(&ValueLabelFactory, 80);
         Table->AddLabelColumn(&UnitLabelFactory, 70);
@@ -411,13 +411,13 @@ void TVp::Execute()
         Table->AddRow(24, 45);
 
         Table->SetText(0, 0, "Tank temp");
-        Table->SetText(0, 2, "C");
+        Table->SetText(0, 2, "°C");
 
         Table->SetText(1, 0, "Tank effekt");
         Table->SetText(1, 2, "kW");
 
         Table->SetText(2, 0, "Förvärme temp");
-        Table->SetText(2, 2, "C");
+        Table->SetText(2, 2, "°C");
 
         Table->SetText(3, 0, "Förvärme effekt");
         Table->SetText(3, 2, "W");

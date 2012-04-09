@@ -1,6 +1,6 @@
 /*#######################################################################
 # RDOS operating system
-# Copyright (C) 1988-2006, Leif Ekblad
+# Copyright (C) 1988-2003, Leif Ekblad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,57 +20,35 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# heatdata.h
-# Common data-type for data store
+# climate.h
+# Climate class
 #
 ########################################################################*/
 
-#ifndef HEATDATA_H
-#define HEATDATA_H
+#ifndef CLIMATE_H
+#define CLIMATE_H
 
-#define RAD_COUNT   16
+#include "wh1080.h"
+#include "graphdev.h"
+#include "table.h"
 
-struct TRadData
+class TClimate : public TWh1080Device
 {
-    char HasData;
-	 int Address;
-	 long double Ref;
-	 long double Temp;
-	 long double Motor;
-	 long double Light;
-	 long double AuxTemp;
-};
+public:
+	TClimate(TControlThread *control);
+	~TClimate();
+    
+protected:
+    virtual void NotifyData();
 
-struct THeatData
-{
-	 unsigned long Msb;
-	 unsigned long Lsb;
+    TControlThread *FControl;
 
-	 char HasWs;
-	 long double IndoorTemp;
-	 long double IndoorHumidity;
-	 long double OutdoorTemp;
-	 long double OutdoorHumidity;
-	 long double WindAverage;
-	 long double WindGust;
-	 long double WindDir;
-	 long double AirPressure;
-	 long double Rain;
+    TLabelFactory CommentLabelFactory;
+    TLabelFactory ValueLabelFactory;
+    TLabelFactory UnitLabelFactory;
 
-	 char HasCirc;
-	 long double CircSpeed;
-
-	 char HasVp;
-	 char HasTankTemp;
-	 long TankTemp;
-	 char HasTankP;
-	 long TankP;
-	 char HasHeatTemp;
-	 long HeatTemp;
-	 char HasHeatP;
-	 long HeatP;
-
-	 TRadData Rad[RAD_COUNT];
+    TTableControl Table;
+    
 };
 
 #endif

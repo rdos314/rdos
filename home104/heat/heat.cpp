@@ -37,6 +37,7 @@
 #include "datetime.h"
 #include "circ.h"
 #include "vp.h"
+#include "climate.h"
 #include "power.h"
 #include "videodev.h"
 #include "radcntrl.h"
@@ -61,6 +62,7 @@ int main()
     TCirc *Circ;
     TVp *Vp;
     TPower *Power;
+    TClimate *Climate;
     int i;
     int diostat;
     int mask;
@@ -96,28 +98,6 @@ int main()
     long double altitude;
     long double azimuth;
     TDateTime currtime;
-
-    TLabelFactory CommentLabelFactory;
-    TLabelFactory ValueLabelFactory;
-    TLabelFactory UnitLabelFactory;
-
-    CommentLabelFactory.SetSpace(4, 4);
-    CommentLabelFactory.SetFont(20);
-    CommentLabelFactory.SetBackTransparent();
-    CommentLabelFactory.SetDrawColor(0, 0, 0);
-    CommentLabelFactory.AlignLeft();
-    
-    ValueLabelFactory.SetSpace(4, 4);
-    ValueLabelFactory.SetFont(20);
-    ValueLabelFactory.SetBackColor(100, 100, 100);
-    ValueLabelFactory.SetDrawColor(0, 0, 0);
-    ValueLabelFactory.AlignRight();
-
-    UnitLabelFactory.SetSpace(4, 4);
-    UnitLabelFactory.SetFont(20);
-    UnitLabelFactory.SetBackTransparent();
-    UnitLabelFactory.SetDrawColor(0, 0, 0);
-    UnitLabelFactory.AlignLeft();
     
     RdosWaitMilli(1000);
 
@@ -141,6 +121,8 @@ int main()
     vbe->SetDrawColor(0, 20, 50);
     vbe->SetFilledStyle();
     vbe->DrawRect(0, 0, 1279, 767);
+
+    RdosWaitMilli(2000);
 
     RadControl = new TRadControl(control, RAD_X, RAD_Y, 800, 30 * 8);
 
@@ -190,6 +172,9 @@ int main()
 
     Vp = new TVp(control);
     Store->Add(Vp);
+
+    Climate = new TClimate(control);
+    Store->Add(Climate);
 
     Power = new TPower(control);
 

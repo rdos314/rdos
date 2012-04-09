@@ -33,18 +33,20 @@
 #include "rad.h"
 #include "circ.h"
 #include "vp.h"
+#include "climate.h"
 #include "heatdata.h"
 #include "realserv.h"
 
 class TDataStore : public TThread
 {
 public:
-        TDataStore();
-        ~TDataStore();
+    TDataStore();
+    ~TDataStore();
 
-        void Add(TRad *rad);
+    void Add(TRad *rad);
     void Add(TCirc *circ);
     void Add(TVp *vp);
+    void Add(TClimate *climat);
     
 protected:
     void GetCurrRad(TRad *rad, TRadData *data);
@@ -59,10 +61,11 @@ protected:
     int FHour;
     int FMin;
 
-        TStorageList *FStorList;
+    TStorageList *FStorList;
     TRad *FRadArr[RAD_COUNT];
     TCirc *FCirc;
-        TVp *FVp;
+    TVp *FVp;
+    TClimate *FClimate;
 };
 
 
