@@ -734,6 +734,7 @@ void TTableControl::Grow()
         delete FRowArr;
 
     FRowArr = newarr;
+    FRowSize = newsize;
 }
     
 /*##########################################################################

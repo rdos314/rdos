@@ -57,21 +57,95 @@ void HandleRealData(TDeviceMsg *doc)
 {
     unsigned long msb, lsb;
     TDeviceTag *header;
+    TDeviceTag *tag;
     int year, month, day, hour;
     int min, sec, ms, us;
     TFile *file;
     int size;
     char *msg;
+    TDeviceVar *var;
+    long ival;
+    long double val;
 
     header = doc->GetTag(LOG_TAG_HEADER);
     if (header)
     {
-          msb = header->GetUnsignedInt(LOG_VAR_MsbTime, 0);
+        msb = header->GetUnsignedInt(LOG_VAR_MsbTime, 0);
         lsb = header->GetUnsignedInt(LOG_VAR_LsbTime, 0);
         RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
         RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
 
-        printf("%04d-%02d-%02d %02d.%02d\r\n", year, month, day, hour, min);
+        printf("%04d-%02d-%02d %02d.%02d", year, month, day, hour, min);
+
+	    tag = doc->GetTag(LOG_TAG_OUTDOOR);
+
+        if (tag)
+        {
+            var = tag->GetVar(LOG_VAR_Temp);
+            if (var)
+          	{
+                ival = var->GetFloat1();
+
+        		if (ival < 500 && ival > -500)
+		        {
+                    val = (long double)ival;
+                    val = val / 10.0;
+                    printf(", %5.1LfC ", val);
+                }
+       	    }
+    
+            var = tag->GetVar(LOG_VAR_Humidity);
+            if (var)
+	        {
+                ival = var->GetSignedInt();
+
+        		if (ival <= 100 && ival >= 0)
+		        {
+                    val = (long double)ival;
+                    printf(", %3.0Lf%% ", val);
+        	    }
+	        }
+
+        	var = tag->GetVar(LOG_VAR_Windspeed);
+        	if (var)
+	        {
+                ival = var->GetFloat1();
+
+        		if (ival < 400 && ival >= 0)
+		        {
+				    val = (long double)ival;
+				    val = val / 10.0;
+                    printf(", %4.1Lfm/s ", val);
+        		 }
+	        }
+
+            var = tag->GetVar(LOG_VAR_Pressure);
+            if (var)
+	        {
+                ival = var->GetFloat1();
+
+        		if (ival < 11000 && ival >= 9000)
+		        {
+                    val = (long double)ival;
+                    val = val / 10.0;
+                    printf(", %6.1Lfhpa ", val);
+        	    }
+	        }
+    
+            var = tag->GetVar(LOG_VAR_Rain);
+            if (var)
+	        {
+                ival = var->GetFloat1();
+
+        		if (ival > 0)
+		        {
+                    val = (long double)ival;
+	                val = val / 10.0;
+                    printf(", %5.1Lfmm ", val);
+        	    }
+        	}
+        }
+        printf("\r\n");
      }
 }
 
@@ -101,10 +175,7 @@ void cdecl main()
     }
 
     DataStore = new TDataStore("e:\\data", "Data store", Node, 600);
-     DataStore->NotifyData = HandleRealData;
-
-     for (;;)
-        RdosWaitMilli(1000);     
+//     DataStore->NotifyData = HandleRealData;
 
      for (;;)
      {
