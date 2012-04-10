@@ -184,8 +184,8 @@ void cdecl main()
 
           while (socket->IsOpen())
           {
-                  if (socket->WaitForChar(30000))
-                  {
+                if (socket->WaitForChar(25000))
+                {
                     count = socket->Read((char *)&size, 4);
                     if (count == 4)
                     {
@@ -216,7 +216,7 @@ void cdecl main()
                 else
                 {
                     socket->Push();
-                     RdosWaitMilli(250);
+                    RdosWaitMilli(250);
                 }
           }
           delete socket;
