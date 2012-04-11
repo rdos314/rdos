@@ -86,6 +86,7 @@ void TRealtimeSocketServer::HandleSocket()
     TDeviceMsg *doc;
     int size;
     char *msg;
+    char ch;
 
 	 FFactory->InsertServer(this);
         
@@ -110,6 +111,9 @@ void TRealtimeSocketServer::HandleSocket()
 				FSocket->Push();
 
 				delete msg;
+
+                if (FSocket->WaitForChar(30000))
+                    ch = FSocket->Read();
 
 		  }
 	 }

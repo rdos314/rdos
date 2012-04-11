@@ -158,6 +158,7 @@ void cdecl main()
     TDeviceMsg *doc;
     unsigned long Node;
     int i;
+	char ch;
 
     TDataStore *DataStore;
 
@@ -200,6 +201,9 @@ void cdecl main()
                             {
                                  delete msg;
                                 HandleRealData(doc);
+        						ch = 0x6;
+	        					socket->Write(&ch, 1);
+		        				socket->Push();
                             }
                             else
                             { 
