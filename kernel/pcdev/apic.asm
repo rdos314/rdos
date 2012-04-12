@@ -1642,23 +1642,7 @@ DelayMs Endp
 
 test_gate_name    DB 'Test Gate',0
 
-Test1   Proc far
-    retf32
-Test1   Endp
-
 test_gate_pr    Proc far
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,cs
-    mov es,ax
-    mov bh,7
-    mov bl,0
-    mov ch,0
-    mov ah,14h
-    mov edi,OFFSET Test1
-    RequestPciIrqHandler
-;    
-    
     retf32
 test_gate_pr    Endp
    
@@ -3560,6 +3544,12 @@ init    PROC far
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET test_gate_pr
+    mov edi,OFFSET test_gate_name
+    xor dx,dx
+    mov ax,test_gate_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET start_core
     mov edi,OFFSET start_core_name

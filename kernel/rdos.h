@@ -169,11 +169,10 @@ typedef struct _EXCEPTION_POINTERS {
 
 // API functions
 
-void RDOSAPI RdosTestGate(int val);
+void RDOSAPI RdosTestGate();
 
 #pragma aux RdosTestGate = \
-    CallGate_test_gate \
-    parm [eax];
+    CallGate_test_gate;
 
 void RDOSAPI RdosDebug();
 void RDOSAPI RdosLoad32();
