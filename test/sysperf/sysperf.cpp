@@ -24,6 +24,8 @@ void main()
     int near_count = 0;
     int gate_count = 0;
 
+    RdosWaitMilli(2500);
+
     RdosCreateThread(sync_thread, "Sync", 0, 0x02000);
 
     while (sync_val != 1)
