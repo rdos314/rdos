@@ -189,6 +189,7 @@ kdebug_code_sel		EQU 480h
 kdebug_data_sel		EQU 488h
 
 ac97_code_sel       EQU 490h
+pcbios_proc_sel     EQU 498h
 
 pcbios_code_sel		EQU 4A0h
 pcbios_data_sel		EQU 4A8h
