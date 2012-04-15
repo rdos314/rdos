@@ -459,10 +459,8 @@ QueueResponse	Proc near
 	adc edx,ds:shd_response_time+4
 
 queue_response_set_timeout:		
-	cli
 	mov ds:shd_response_time,eax
 	mov ds:shd_response_time+4,edx
-	sti
 
 queue_response_leave:
 	xor ax,ax
@@ -629,9 +627,17 @@ ResponseSupervise	Proc near
 	or ax,ax
 	jz response_supervise_done
 ;
+    push ds
+    mov ax,fs
+    mov ds,ax
+	EnterSection ds:shd_section
+;    
 	GetSystemTime
 	sub eax,fs:shd_response_time
 	sbb edx,fs:shd_response_time+4
+;
+	LeaveSection ds:shd_section
+	pop ds
 	jc response_supervise_done
 ;
 	mov ax,gs:super_response_list
