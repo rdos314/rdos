@@ -36,11 +36,81 @@ INCLUDE exec.def
 INCLUDE system.def
 INCLUDE system.inc
 
+STUB_LINEAR     = 80000h
+STUB_PAGES      = 4
+
 .386p
+
+data    SEGMENT byte public 'DATA'
+
+stub_start      DD ?
+
+process_page_arr    DD STUB_PAGES DUP (?)
+
+data    ENDS
 
 code    SEGMENT byte public 'CODE'
     
     assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateAppStub
+;
+;       DESCRIPTION:    Create a new app stub
+;
+;       PARAMETERS:     EAX     Gate number
+;
+;       RETURN VALUE:   EDX     Linear address of stub (in user-space)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+app_stub_start:
+
+app_gate_ind    DD ?
+
+app_stub Proc near
+    push eax
+    push ecx
+    push edx
+    db 0Fh
+    db 34h
+    pop edx
+    pop ecx
+    pop eax
+    ret
+app_stub Endp
+
+app_stub_end:
+
+CreateAppStub   Proc near
+    push ds
+    push es
+    push ecx
+    push esi
+    push edi
+;
+    mov dx,SEG data
+    mov ds,dx
+    mov dx,flat_sel
+    mov es,dx
+    mov edi,ds:stub_start
+    mov edx,edi
+    mov esi,OFFSET app_gate_ind + 4
+    stosd
+    mov ecx,OFFSET app_stub_end - OFFSET app_stub_start - 4
+    rep movs byte ptr es:[edi],cs:[esi]
+    mov ds:stub_start,edi
+;
+    pop edi
+    pop esi
+    pop ecx    
+    pop es
+    pop ds
+    ret
+CreateAppStub   Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -57,6 +127,11 @@ test_thread_name  DB 'Sysenter thread', 0
 
 test_thread:
     int 3
+    call CreateAppStub
+    int 3
+    push syscall_code_sel
+    push STUB_LINEAR
+    retf
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -101,6 +176,32 @@ init_module    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:stub_start,STUB_LINEAR
+;
+    mov ax,process_page_sel
+    mov es,ax
+    mov ecx,STUB_PAGES
+    mov edx,STUB_LINEAR SHR 10
+    mov edi,OFFSET process_page_arr
+
+alloc_page_loop:
+    AllocatePhysical
+    or al,5
+    mov es:[edx],eax
+    mov ds:[edi],eax
+    add edx,4
+    add edi,4
+    loop alloc_page_loop        
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,STUB_LINEAR    
+    mov eax,90909090h
+    mov ecx,STUB_PAGES SHL 10
+    rep stosd
+;    
     mov ax,cs
     mov ds,ax
     mov es,ax

@@ -765,6 +765,14 @@ prot_init:
     mov bx,flat_data_sel
     CreateDataSelector32
 ;
+    xor edx,edx
+    mov ecx,0FFFFFFFFh
+    mov bx,syscall_code_sel
+    CreateCodeSelector32
+;    
+    mov bx,syscall_data_sel
+    CreateCodeSelector32    
+;
     call init_first_process
     jmp init_first_thread
     
