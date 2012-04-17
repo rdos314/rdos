@@ -3074,6 +3074,9 @@ load_relock:
     jmp load_retry
         
 load_regs:
+    mov ax,ds:p_tss_ess0
+    mov fs:ps_syscall_ss,ax
+;    
     mov fs:ps_curr_thread,es
     mov fs:ps_last_thread,es
     lock and fs:ps_flags,NOT PS_FLAG_LOADING
@@ -3086,16 +3089,6 @@ load_regs:
 
 load_kernel:
     mov ax,ds:p_tss_ss
-    cmp ax,ds:p_tss_ess0
-    je load_kernel_ss0_ok
-    jmp load_kernel_ss0_ok
-;
-    mov dx,ds:p_tss_ess0
-    mov esi,ds:p_tss_eip
-    mov di,ds:p_tss_cs
-    int 3
-
-load_kernel_ss0_ok:
     mov ss,ax
     mov esp,ds:p_tss_esp
 ;
@@ -3566,6 +3559,17 @@ run_ap_core:
     or al,8
     mov cr0,eax    
 ;
+    mov ax,core_data_sel
+    mov fs,ax
+    mov fs,fs:ps_sel
+;
+    mov ax,start_syscall_nr
+    IsValidOsGate
+    jc  run_core_do
+;
+    StartSyscall
+
+run_core_do:  
     sti
     call LockCore
     lock or fs:ps_flags,PS_FLAG_PREEMPT    

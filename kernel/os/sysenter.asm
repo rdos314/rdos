@@ -36,15 +36,25 @@ INCLUDE exec.def
 INCLUDE system.def
 INCLUDE system.inc
 INCLUDE gate.def
+INCLUDE proc.inc
 
 STUB_LINEAR     = 80000h
 STUB_PAGES      = 4
 
-.386p
+MSR_SYSENTER_CS  = 174h
+MSR_SYSENTER_ESP = 175h
+MSR_SYSENTER_EIP = 176h
+
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
+    .386p
+ENDIF
 
 data    SEGMENT byte public 'DATA'
 
-stub_start      DD ?
+stub_start          DD ?
 
 process_page_arr    DD STUB_PAGES DUP (?)
 
@@ -75,8 +85,16 @@ app_stub Proc near
     push eax
     push ecx
     push edx
+;
+    mov ecx,esp
+
+ap1:    
+    mov edx,OFFSET app_leave
+;        
     db 0Fh
     db 34h
+
+app_leave:
     pop edx
     pop ecx
     pop eax
@@ -99,10 +117,23 @@ CreateAppStub   Proc near
     mov edi,ds:stub_start
     mov edx,edi
     mov esi,OFFSET app_gate_ind + 4
+;
+    push edx
+    mov bx,usergate_sel
+    GetSelectorBaseSize
+    add eax,edx
+    pop edx
     stosd
+;    
     mov ecx,OFFSET app_stub_end - OFFSET app_stub_start - 4
     rep movs byte ptr es:[edi],cs:[esi]
     mov ds:stub_start,edi
+;
+    mov edi,OFFSET ap1 - OFFSET app_stub_start + 1
+    add edi,edx
+    mov eax,OFFSET app_leave - OFFSET app_stub_start
+    add eax,edx
+    mov es:[edi],eax    
 ;
     add edx,OFFSET app_stub - OFFSET app_stub_start    
 ;
@@ -166,6 +197,105 @@ syscall_patch   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           start_syscall
+;
+;       DESCRIPTION:    Start syscall. Called once per core
+;
+;       PARAMETERS:     FS      Processor core
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_syscall_name  DB 'Start Syscall', 0
+
+app_gate_nr = OFFSET app_gate_ind - OFFSET app_leave
+
+app_eax     = 8
+app_ecx     = 4
+app_edx     = 0
+
+syscall_start:
+
+syscall_entry   Proc far
+sp1:
+    mov eax,0                   ; patched to linear address of processor block
+    mov ss,cs:[eax].ps_syscall_ss
+    mov esp,stack0_size
+;   mov esp,cs:[eax].ps_esp0
+    sti
+    int 3
+    push edx
+    push ecx
+;
+    mov eax,ds:[edx].app_gate_nr
+;   push cs:[eax].
+    push dword ptr cs:[eax].user_gate_entry_sel32
+    push cs:[eax].user_gate_syscall_offset
+    mov eax,ds:[ecx].app_eax
+    mov edx,ds:[ecx].app_edx
+    mov ecx,ds:[ecx].app_ecx
+    ret
+syscall_entry   Endp
+
+syscall_end:
+
+
+start_syscall   Proc far
+    push ds
+    push es
+    pushad
+;    
+    mov edx,fs:ps_syscall_eip
+    or edx,edx
+    jnz start_syscall_load_msr
+;    
+    mov bx,fs:ps_sel
+    GetSelectorBaseSize
+    push edx
+;        
+    mov ax,flat_sel
+    mov es,ax
+    mov eax,OFFSET syscall_end - OFFSET syscall_start
+    AllocateBigLinear
+    mov edi,edx
+    mov esi,OFFSET syscall_start
+    mov ecx,eax
+    rep movs byte ptr es:[edi],cs:[esi]
+;
+    mov edi,OFFSET sp1 - OFFSET syscall_start + 1
+    pop eax
+    mov es:[edx+edi],eax    
+;
+    add edx,OFFSET syscall_entry - OFFSET syscall_start
+    mov fs:ps_syscall_eip,edx
+
+start_syscall_load_msr:    
+    mov eax,edx
+    xor edx,edx
+    mov ecx,MSR_SYSENTER_EIP
+    wrmsr
+;
+    mov eax,syscall_code_sel
+    mov ecx,MSR_SYSENTER_CS
+    wrmsr
+;
+    mov bx,fs:ps_ss
+    GetSelectorBaseSize
+    mov eax,edx
+    movzx ecx,fs:ps_sp
+    add eax,ecx
+    xor edx,edx
+    mov ecx,MSR_SYSENTER_ESP
+    wrmsr
+;
+    popad
+    pop es 
+    pop ds   
+    ret
+start_syscall   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           test_thread
 ;
 ;           DESCRIPTION:    Test thread
@@ -178,11 +308,6 @@ test_thread_name  DB 'Sysenter thread', 0
 
 test_thread:
     int 3
-    call CreateAppStub
-    int 3
-    push syscall_code_sel
-    push STUB_LINEAR
-    retf
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -262,6 +387,10 @@ init    PROC far
     or edx,edx
     jnz init_done
 ;    
+    mov eax,ds:cpu_feature_flags
+    test ax,800h
+    jz init_done
+;
     mov ax,SEG data
     mov ds,ax
     mov ds:stub_start,STUB_LINEAR
@@ -303,8 +432,16 @@ alloc_page_loop:
     xor cl,cl
     mov ax,syscall_patch_nr
     RegisterOsGate
+;
+    mov esi,OFFSET start_syscall
+    mov edi,OFFSET start_syscall_name
+    xor cl,cl
+    mov ax,start_syscall_nr
+    RegisterOsGate
+;    
+    GetCore
+    StartSyscall
         
-
 init_done:    
     ret
 init    ENDP

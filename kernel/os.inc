@@ -220,6 +220,11 @@ SyscallPatch   MACRO
     OsGate syscall_patch_nr
                     ENDM
 
+;       FS      Processor selector
+StartSyscall   MACRO
+    OsGate start_syscall_nr
+                    ENDM
+
 ;       AL          Exception #
 EmulateOpcode   MACRO
     OsGate emulate_opcode_nr

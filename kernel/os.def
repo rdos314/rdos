@@ -493,6 +493,7 @@ register_syscall_nr		    = 424
 register_bimodal_syscall_nr	= 425
 
 syscall_patch_nr            = 426
+start_syscall_nr            = 427
 
 
 osgate_entries				= 440

@@ -95,6 +95,9 @@ ps_curr_post        DB ?
 
 ps_system_time      DD ?,?
 
+ps_syscall_eip      DD ?
+ps_syscall_ss       DW ?
+
 ps_timer_spinlock   DW ?
 ps_timer_head		DW ?
 ps_timer_free		DW ?
