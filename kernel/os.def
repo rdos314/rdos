@@ -5,7 +5,6 @@ register_usergate_nr		    = 2
 register_bimodal_usergate_nr	= 3
 register_usergate16_nr		    = 4
 register_usergate32_nr		    = 5
-register_usergate_v86_nr	    = 6
 create_alias_sel16_nr           = 7
 create_core_gdt_nr              = 8
 emulate_opcode_nr			    = 9

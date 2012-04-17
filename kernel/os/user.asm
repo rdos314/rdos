@@ -117,12 +117,6 @@ init_usergate_loop:
     mov ax,register_usergate32_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET register_usergate_v86
-    mov edi,OFFSET register_usergate_v86_name
-    xor cl,cl
-    mov ax,register_usergate_v86_nr
-    RegisterOsGate
-;
     mov esi,OFFSET is_valid_usergate
     mov edi,OFFSET is_valid_usergate_name
     xor dx,dx
@@ -227,13 +221,8 @@ register_bimodal_usergate       PROC far
     mov fs:[bx].user_gate_entry_sel32,ds
     xchg dx,fs:[bx].user_gate_transfer
     or dx,dx
-    jnz register_bimodal_user_nov86
+    jz register_bimodal_user_done
 ;
-    mov fs:[bx].user_gate_entry_offset_v86,esi
-    mov fs:[bx].user_gate_entry_sel_v86,ds
-    jmp register_bimodal_user_done
-
-register_bimodal_user_nov86:
     xchg dx,fs:[bx].user_gate_transfer
     
 register_bimodal_user_done:
@@ -280,13 +269,8 @@ register_usergate       PROC far
     mov fs:[bx].user_gate_entry_sel32,ds
     xchg dx,fs:[bx].user_gate_transfer
     or dx,dx
-    jnz register_user_nov86
+    jz register_user_done
 ;
-    mov fs:[bx].user_gate_entry_offset_v86,ecx
-    mov fs:[bx].user_gate_entry_sel_v86,ds
-    jmp register_user_done
-
-register_user_nov86:
     xchg dx,fs:[bx].user_gate_transfer
     
 register_user_done:
@@ -328,13 +312,8 @@ register_usergate16     PROC far
     mov fs:[bx].user_gate_entry_sel16,ds
     xchg dx,fs:[bx].user_gate_transfer
     or dx,dx
-    jnz register_user16_nov86
+    jz register_user16_done
 ;
-    mov fs:[bx].user_gate_entry_offset_v86,esi
-    mov fs:[bx].user_gate_entry_sel_v86,ds
-    jmp register_user16_done
-
-register_user16_nov86:
     xchg dx,fs:[bx].user_gate_transfer
     
 register_user16_done:
@@ -377,42 +356,6 @@ register_usergate32     PROC far
     pop fs
     retf32
 register_usergate32     ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           REGISTER_USERGATE_V86
-;
-;           DESCRIPTION:    Register V86 gate
-;
-;           PARAMETERS:     AX          GATE NUMBER
-;                           DX          SEGMENT TRANSFER
-;                           DS:ESI   V86 GATE CALL ADDRESS
-;                           ES:EDI   GATE NAME ADDRESS
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-register_usergate_v86_name      DB 'Register V86 User Gate',0
-
-register_usergate_v86   PROC far
-    push fs
-    push bx
-;
-    mov bx,usergate_sel
-    mov fs,bx
-    mov bx,ax
-    shl bx,5
-    mov fs:[bx].user_gate_name_offset,edi
-    mov fs:[bx].user_gate_name_sel,es
-    mov fs:[bx].user_gate_entry_offset_v86,esi
-    mov fs:[bx].user_gate_entry_sel_v86,ds
-    mov fs:[bx].user_gate_transfer,dx
-;
-    pop bx
-    pop fs
-    retf32
-register_usergate_v86   ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -542,8 +485,8 @@ do_usergate_vm  PROC near
     mov ax,[bp].vm_eflags
     and ax,03FFFh
     push ax
-    push ds:[bx].user_gate_entry_sel_v86
-    push ds:[bx].user_gate_entry_offset_v86
+    push ds:[bx].user_gate_entry_sel16
+    push ds:[bx].user_gate_entry_offset16
 
 do_virtgate_translate:
     mov ax,ds:[bx].user_gate_transfer

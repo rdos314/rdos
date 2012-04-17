@@ -195,13 +195,6 @@ RegisterUserGate32      MACRO
     OsGate register_usergate32_nr
                         ENDM
 
-;       AX          GATE NUMBER
-;       DS:ESI  V86 GATE CALL ADDRESS
-;       ES:EDI  GATE NAME ADDRESS
-RegisterUserGateV86     MACRO
-    OsGate register_usergate_v86_nr
-                        ENDM
-
 ;       AL          Exception #
 EmulateOpcode   MACRO
     OsGate emulate_opcode_nr
