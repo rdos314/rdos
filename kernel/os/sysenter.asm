@@ -115,6 +115,25 @@ CreateAppStub   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           syscall_patch
+;
+;       DESCRIPTION:    Patch callback
+;
+;       PARAMETERS:     EBX      Patch linar address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+syscall_patch_name  DB 'Syscall Patch', 0
+
+syscall_patch   Proc far
+    int 3
+    stc
+    ret
+syscall_patch   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           test_thread
 ;
 ;           DESCRIPTION:    Test thread
@@ -205,6 +224,12 @@ init_module    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
+    mov bx,system_data_sel
+    mov ds,bx
+    mov edx,ds:flat_base
+    or edx,edx
+    jnz init_done
+;    
     mov ax,SEG data
     mov ds,ax
     mov ds:stub_start,STUB_LINEAR
@@ -240,6 +265,15 @@ alloc_page_loop:
 ;
     mov edi,OFFSET init_process
     HookCreateProcess    
+;
+    mov esi,OFFSET syscall_patch
+    mov edi,OFFSET syscall_patch_name
+    xor cl,cl
+    mov ax,syscall_patch_nr
+    RegisterOsGate
+        
+
+init_done:    
     ret
 init    ENDP
 

@@ -760,7 +760,16 @@ do_usergate32   Proc near
     cmp eax,-1
     je do_usergate_not_syscall
 ;
-    int 3
+    mov ax,ds
+    cmp ax,flat_code_sel
+    jne do_usergate_not_syscall    
+;
+    mov ax,syscall_patch_nr
+    IsValidOsGate
+    jz do_usergate_not_syscall
+;
+    SyscallPatch
+    jnc do_usergate32_done
 
 do_usergate_not_syscall:    
     push ebx
@@ -799,6 +808,8 @@ do_usergate32_defined:
 ;    
     mov al,90h
     xchg al,ds:[ebx]
+
+do_usergate32_done:    
     ret
 do_usergate32  Endp
 

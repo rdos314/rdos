@@ -214,6 +214,11 @@ RegisterSyscall    MACRO
     OsGate register_syscall_nr
                         ENDM
 
+;       DS:EBX      Patch position
+SyscallPatch   MACRO
+    OsGate syscall_patch_nr
+                    ENDM
+
 ;       AL          Exception #
 EmulateOpcode   MACRO
     OsGate emulate_opcode_nr
