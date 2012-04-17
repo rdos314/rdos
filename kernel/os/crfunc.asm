@@ -35,6 +35,7 @@ INCLUDE system.inc
 INCLUDE ..\pcdev\key.inc
 INCLUDE ..\pcdev\apic.inc
 INCLUDE proc.inc
+INCLUDE gate.def
 
     .386p
 
@@ -47,22 +48,6 @@ ogate_name_sel           DW ?
 ogate_flags              DW ?
 
 ogate_entry      ENDS
-
-ugate_entry      STRUC
-
-ugate_name_offset        DD ?
-ugate_name_sel           DW ?
-ugate_entry_offset16     DD ?
-ugate_entry_sel16        DW ?
-ugate_entry_offset32     DD ?
-ugate_entry_sel32        DW ?
-ugate_entry_offset_v86   DD ?    
-ugate_entry_sel_v86      DW ?
-ugate_sel16              DW ?
-ugate_sel32              DW ?
-ugate_transfer           DW ?
-
-ugate_entry      ENDS
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -345,14 +330,14 @@ LocalUserGate:
     mov ax,flat_sel
     mov ds,ax
 ;
-    mov ax,es:[edi].ugate_entry_sel32
+    mov ax,es:[edi].user_gate_entry_sel32
     mov [bp+2],ax           ; old err
-    mov eax,es:[edi].ugate_entry_offset32
+    mov eax,es:[edi].user_gate_entry_offset32
     mov [bp-2],eax
 ;
-    mov eax,es:[edi].ugate_entry_offset32
+    mov eax,es:[edi].user_gate_entry_offset32
     xchg eax,ds:[ebx+3]
-    mov ax,es:[edi].ugate_entry_sel32
+    mov ax,es:[edi].user_gate_entry_sel32
     xchg ax,ds:[ebx+7]
     mov al,90h
     xchg al,ds:[ebx]        

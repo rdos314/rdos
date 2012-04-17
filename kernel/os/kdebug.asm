@@ -32,6 +32,7 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\os\system.def
+INCLUDE gate.def
 
 ;       ds = datasegment
 
@@ -45,20 +46,6 @@ og_name_offset  DD ?
 og_name_sel     DW ?
 og_flags        DW ?
 osgate_entry    ENDS
-
-usergate_entry  STRUC
-ug_name_offset          DD ?
-ug_name_sel             DW ?
-ug_entry_offset16       DD ?
-ug_entry_sel16          DW ?
-ug_entry_offset32       DD ?
-ug_entry_sel32          DW ?
-ug_entry_offset_v86     DD ?    
-ug_entry_sel_v86        DW ?
-ug_sel16                DW ?
-ug_sel32                DW ?
-ug_transfer             DW ?
-usergate_entry  ENDS
 
 code    SEGMENT byte use16 public 'CODE'
 
@@ -162,8 +149,8 @@ GetIllegalUserGate      PROC near
     push fs
     mov ax,usergate_sel
     mov ds,ax
-    mov fs,[bx].ug_name_sel
-    mov esi,[bx].ug_name_offset
+    mov fs,[bx].user_gate_name_sel
+    mov esi,[bx].user_gate_name_offset
     xor bx,bx
 illegal_out_user_loop:
     mov al,fs:[esi]
@@ -289,24 +276,24 @@ GetUserCall     PROC near
     mov cx,usergate_entries
 
 get_usercall_scan_loop:
-    cmp dx,ds:[si].ug_entry_sel16
+    cmp dx,ds:[si].user_gate_entry_sel16
     jne get_usercall_not_entry16
 ;
-    cmp bx,word ptr ds:[si].ug_entry_offset16
+    cmp bx,word ptr ds:[si].user_gate_entry_offset16
     je get_usercall_found
 
 get_usercall_not_entry16:
-    cmp dx,ds:[si].ug_entry_sel32
+    cmp dx,ds:[si].user_gate_entry_sel32
     jne get_usercall_not_entry32
 ;
-    cmp bx,word ptr ds:[si].ug_entry_offset32
+    cmp bx,word ptr ds:[si].user_gate_entry_offset32
     je get_usercall_found
 
 get_usercall_not_entry32:
-    cmp dx,ds:[si].ug_sel16
+    cmp dx,ds:[si].user_gate_sel16
     je get_usercall_found
 ;
-    cmp dx,ds:[si].ug_sel32
+    cmp dx,ds:[si].user_gate_sel32
     je get_usercall_found
 ;
     add si,32
@@ -317,8 +304,8 @@ get_usercall_not_entry32:
 
 get_usercall_found:
     pop cx
-    mov fs,[si].ug_name_sel
-    mov esi,[si].ug_name_offset
+    mov fs,[si].user_gate_name_sel
+    mov esi,[si].user_gate_name_offset
     xor bx,bx
 
 get_usercall_out_loop:
