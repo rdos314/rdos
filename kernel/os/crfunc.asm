@@ -39,16 +39,6 @@ INCLUDE gate.def
 
     .386p
 
-ogate_entry      STRUC
-
-ogate_offset             DD ?
-ogate_sel                DW ?
-ogate_name_offset        DD ?
-ogate_name_sel           DW ?
-ogate_flags              DW ?
-
-ogate_entry      ENDS
-
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
@@ -254,14 +244,14 @@ LocalOsGate:
     mov ax,flat_sel
     mov ds,ax
 ;
-    mov ax,es:[edi].ogate_sel
+    mov ax,es:[edi].os_gate_sel
     mov [bp+2],ax           ; old err
-    mov eax,es:[edi].ogate_offset
+    mov eax,es:[edi].os_gate_offset
     mov [bp-2],eax
 ;
-    mov eax,es:[edi].ogate_offset
+    mov eax,es:[edi].os_gate_offset
     xchg eax,ds:[ebx+3]
-    mov ax,es:[edi].ogate_sel
+    mov ax,es:[edi].os_gate_sel
     xchg ax,ds:[ebx+7]
     mov al,90h
     xchg al,ds:[ebx]        

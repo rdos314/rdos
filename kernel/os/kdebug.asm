@@ -39,14 +39,6 @@ INCLUDE gate.def
 .386p
 .387
 
-osgate_entry    STRUC
-og_offset       DD ?
-og_sel          DW ?
-og_name_offset  DD ?
-og_name_sel     DW ?
-og_flags        DW ?
-osgate_entry    ENDS
-
 code    SEGMENT byte use16 public 'CODE'
 
     extrn init_local:near
@@ -110,8 +102,8 @@ GetIllegalOsGate    PROC near
     push fs
     mov ax,osgate_sel
     mov ds,ax
-    mov fs,[bx].og_name_sel
-    mov esi,[bx].og_name_offset
+    mov fs,[bx].os_gate_name_sel
+    mov esi,[bx].os_gate_name_offset
     xor bx,bx
 illegal_out_os_loop:
     mov al,fs:[si]
@@ -200,10 +192,10 @@ GetOsCall       PROC near
     mov cx,osgate_entries
 
 get_oscall_scan_loop:
-    cmp dx,ds:[si].og_sel
+    cmp dx,ds:[si].os_gate_sel
     jne get_oscall_scan_next
 ;
-    cmp bx,word ptr ds:[si].og_offset
+    cmp bx,word ptr ds:[si].os_gate_offset
     je get_oscall_found
 
 get_oscall_scan_next:
@@ -215,8 +207,8 @@ get_oscall_scan_next:
 
 get_oscall_found:
     pop cx
-    mov fs,[si].og_name_sel
-    mov si,word ptr [si].og_name_offset
+    mov fs,[si].os_gate_name_sel
+    mov si,word ptr [si].os_gate_name_offset
     xor bx,bx
 
 get_oscall_out_loop:

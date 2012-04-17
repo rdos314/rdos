@@ -25,6 +25,22 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;
+; this structure cannot be more than 16 bytes long!
+;
+
+os_gate_entry      STRUC
+os_gate_offset         DD ?
+os_gate_sel            DW ?
+os_gate_name_offset    DD ?
+os_gate_name_sel       DW ?
+os_gate_flags          DW ?
+os_gate_entry      ENDS
+
+;
+; this structure cannot be more than 32 bytes long!
+;
+
 user_gate_entry      STRUC
 user_gate_name_offset        DD ?
 user_gate_name_sel           DW ?

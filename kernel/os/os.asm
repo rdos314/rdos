@@ -30,14 +30,7 @@ INCLUDE ..\os.def
 INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE system.def
-
-gate_entry      STRUC
-gate_offset         DD ?
-gate_sel            DW ?
-gate_name_offset    DD ?
-gate_name_sel       DW ?
-gate_flags          DW ?
-gate_entry      ENDS
+INCLUDE gate.def
 
 code    SEGMENT byte public 'CODE'
 
@@ -84,18 +77,18 @@ init_osgate     PROC near
     xor di,di
     rep stosb
     xor di,di
-    mov es:[di].gate_offset,OFFSET register_gate
-    mov es:[di].gate_sel,cs
-    mov es:[di].gate_name_offset,OFFSET register_gate_name
-    mov es:[di].gate_name_sel,cs
+    mov es:[di].os_gate_offset,OFFSET register_gate
+    mov es:[di].os_gate_sel,cs
+    mov es:[di].os_gate_name_offset,OFFSET register_gate_name
+    mov es:[di].os_gate_name_sel,cs
     mov cx,osgate_entries-1
     mov di,16
 init_osgate_loop:
-    mov es:[di].gate_sel,0
-    mov es:[di].gate_offset,0
-    mov es:[di].gate_name_offset,OFFSET illegal_gate_name
-    mov es:[di].gate_name_sel,cs
-    mov es:[di].gate_flags,0
+    mov es:[di].os_gate_sel,0
+    mov es:[di].os_gate_offset,0
+    mov es:[di].os_gate_name_offset,OFFSET illegal_gate_name
+    mov es:[di].os_gate_name_sel,cs
+    mov es:[di].os_gate_flags,0
     add di,16
     loop init_osgate_loop
 ;
@@ -153,10 +146,10 @@ register_gate   PROC far
     mov ds,ax
     pop ax
     shl bx,4
-    mov [bx].gate_sel,ax
-    mov [bx].gate_offset,esi
-    mov [bx].gate_name_sel,es
-    mov [bx].gate_name_offset,edi
+    mov [bx].os_gate_sel,ax
+    mov [bx].os_gate_offset,esi
+    mov [bx].os_gate_name_sel,es
+    mov [bx].os_gate_name_offset,edi
 ;
     pop bx
     pop gs
@@ -187,7 +180,7 @@ is_valid_osgate PROC far
     mov ax,osgate_sel
     mov ds,ax
     shl bx,4
-    mov ax,[bx].gate_sel
+    mov ax,[bx].os_gate_sel
     or ax,ax
     clc
     jnz is_valid_gate_done
@@ -228,9 +221,9 @@ do_oscall   Proc near
     mov ax,osgate_sel
     mov es,ax
 ;
-    mov eax,es:[edi].gate_offset
+    mov eax,es:[edi].os_gate_offset
     mov [bp+4],eax
-    movzx eax,es:[edi].gate_sel
+    movzx eax,es:[edi].os_gate_sel
     mov [bp+8],eax
 ;
     push ebx
@@ -241,10 +234,10 @@ do_oscall   Proc near
     mov ax,flat_sel
     mov ds,ax
 ;
-    mov eax,es:[edi].gate_offset
+    mov eax,es:[edi].os_gate_offset
     xchg eax,ds:[ebx+3]
 ;
-    mov ax,es:[edi].gate_sel
+    mov ax,es:[edi].os_gate_sel
     xchg ax,ds:[ebx+7]
 ;    
     mov al,90h
