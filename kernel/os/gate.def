@@ -51,5 +51,6 @@ user_gate_entry_sel32        DW ?
 user_gate_sel16              DW ?
 user_gate_sel32              DW ?
 user_gate_syscall_offset     DD ?
+user_gate_syscall_index      DD ?
 user_gate_transfer           DW ?
 user_gate_entry      ENDS

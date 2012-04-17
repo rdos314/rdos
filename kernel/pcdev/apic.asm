@@ -1642,6 +1642,10 @@ DelayMs Endp
 
 test_gate_name    DB 'Test Gate',0
 
+test_near   Proc near
+    ret
+test_near   Endp
+
 test_gate_pr    Proc far
     retf32
 test_gate_pr    Endp
@@ -3546,10 +3550,11 @@ init    PROC far
     mov es,ax
 ;
     mov esi,OFFSET test_gate_pr
+    mov ebp,OFFSET test_near
     mov edi,OFFSET test_gate_name
     xor dx,dx
     mov ax,test_gate_nr
-    RegisterBimodalUserGate
+    RegisterBimodalSyscall
 ;
     mov esi,OFFSET start_core
     mov edi,OFFSET start_core_name

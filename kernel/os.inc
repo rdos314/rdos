@@ -195,6 +195,25 @@ RegisterUserGate32      MACRO
     OsGate register_usergate32_nr
                         ENDM
 
+;       AX      Gate number
+;       DX      Segment transfer
+;       DS:ESI  Far call address
+;       DS:EBP  Near call address
+;       ES:EDI  Gate name
+RegisterBimodalSyscall MACRO
+    OsGate register_bimodal_syscall_nr
+                        ENDM
+
+;       AX      Gate number
+;       DX      Segment transfer
+;       DS:EBX  16-bit far call address
+;       DS:ESI  32-bit far call address
+;       DS:EBP  32-bit near call address
+;       ES:EDI  Gate name
+RegisterSyscall    MACRO
+    OsGate register_syscall_nr
+                        ENDM
+
 ;       AL          Exception #
 EmulateOpcode   MACRO
     OsGate emulate_opcode_nr

@@ -86,6 +86,7 @@ init_usergate_loop:
     mov es:[di].user_gate_entry_sel16,cs
     mov es:[di].user_gate_entry_offset32,OFFSET illegal_gate32
     mov es:[di].user_gate_entry_sel32,cs     
+    mov es:[di].user_gate_syscall_offset,-1
     add di,32
     loop init_usergate_loop
 ;
@@ -115,6 +116,18 @@ init_usergate_loop:
     mov edi,OFFSET register_usergate32_name
     xor cl,cl
     mov ax,register_usergate32_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET register_bimodal_syscall
+    mov edi,OFFSET register_bimodal_syscall_name
+    xor cl,cl
+    mov ax,register_bimodal_syscall_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET register_syscall
+    mov edi,OFFSET register_syscall_name
+    xor cl,cl
+    mov ax,register_syscall_nr
     RegisterOsGate
 ;
     mov esi,OFFSET is_valid_usergate
@@ -280,6 +293,103 @@ register_user_done:
     pop fs
     retf32
 register_usergate       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           REGISTER_BIMODAL_SYSCALL
+;
+;           DESCRIPTION:    Register bimodal 16- & 32-bit gate + syscall
+;
+;           PARAMETERS:     AX       Gate number
+;                           DX       Segment transfer
+;                           DS:ESI   16 and 32-bit far call address
+;                           DS:EBP   32-bit near call address
+;                           ES:EDI   GATE NAME ADDRESS
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+register_bimodal_syscall_name  DB 'Register Bimodal Syscall',0
+
+register_bimodal_syscall       PROC far
+    push fs
+    push bx
+    push dx
+;
+    mov bx,usergate_sel
+    mov fs,bx
+    mov bx,ax
+    shl bx,5
+    mov fs:[bx].user_gate_name_offset,edi
+    mov fs:[bx].user_gate_name_sel,es
+    mov fs:[bx].user_gate_entry_offset16,esi
+    mov fs:[bx].user_gate_entry_sel16,ds
+    mov fs:[bx].user_gate_entry_offset32,esi
+    mov fs:[bx].user_gate_entry_sel32,ds
+    mov fs:[bx].user_gate_syscall_offset,ebp
+    xchg dx,fs:[bx].user_gate_transfer
+    or dx,dx
+    jz register_bimodal_syscall_done
+;
+    xchg dx,fs:[bx].user_gate_transfer
+    
+register_bimodal_syscall_done:
+    pop dx
+    pop bx
+    pop fs
+    retf32
+register_bimodal_syscall       ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           REGISTER_SYSCALL
+;
+;           DESCRIPTION:    Register 16- & 32-bit gate + syscall
+;
+;           PARAMETERS:     AX       Gate number
+;                           DX       Segment transfer
+;                           DS:EBX   16-bit far call address
+;                           DS:ESI   32-bit far call address
+;                           DS:EBP   32-bit near call address
+;                           ES:EDI   Gate name address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+register_syscall_name  DB 'Register Syscall',0
+
+register_syscall       PROC far
+    push fs
+    push bx
+    push ecx
+    push dx
+;
+    mov ecx,ebx
+    mov bx,usergate_sel
+    mov fs,bx
+    mov bx,ax
+    shl bx,5
+    mov fs:[bx].user_gate_name_offset,edi
+    mov fs:[bx].user_gate_name_sel,es
+    mov fs:[bx].user_gate_entry_offset16,ecx
+    mov fs:[bx].user_gate_entry_sel16,ds
+    mov fs:[bx].user_gate_entry_offset32,esi
+    mov fs:[bx].user_gate_entry_sel32,ds
+    mov fs:[bx].user_gate_syscall_offset,ebp
+    xchg dx,fs:[bx].user_gate_transfer
+    or dx,dx
+    jz register_syscall_done
+;
+    xchg dx,fs:[bx].user_gate_transfer
+    
+register_syscall_done:
+    pop dx
+    pop ecx
+    pop bx
+    pop fs
+    retf32
+register_syscall       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -646,6 +756,13 @@ do_usergate32   Proc near
     mov ax,usergate_sel
     mov es,ax
 ;
+    mov eax,es:[edi].user_gate_syscall_offset
+    cmp eax,-1
+    je do_usergate_not_syscall
+;
+    int 3
+
+do_usergate_not_syscall:    
     push ebx
     mov bx,ds
     call local_get_selector_base_size
