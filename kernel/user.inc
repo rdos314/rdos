@@ -281,8 +281,18 @@ GetRawSwitchAds	MACRO
 ; IN  (E)BX		New (E)SP
 ; IN  SI		New CS
 ; IN  (E)DI		New (E)IP
-RawSwitch       MACRO
-	UserGate raw_switch_nr
+RawSwitchPm       MACRO
+	UserGate raw_switch_pm_nr
+						ENDM
+
+; IN  AX		New DS
+; IN  CX		New ES
+; IN  DX		New SS
+; IN  (E)BX		New (E)SP
+; IN  SI		New CS
+; IN  (E)DI		New (E)IP
+RawSwitchVm       MACRO
+	UserGate raw_switch_vm_nr
 						ENDM
 
 ; IN  AL        Exception #

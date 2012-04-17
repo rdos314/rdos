@@ -136,6 +136,35 @@ test_thread:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           init_process
+;
+;           DESCRIPTION:    Init process
+;
+;       RETURN VALUE:
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_process    PROC far
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,process_page_sel
+    mov es,ax
+    mov ecx,STUB_PAGES
+    mov edx,STUB_LINEAR SHR 10
+    mov edi,OFFSET process_page_arr
+
+setup_page_loop:
+    mov eax,ds:[edi]
+    mov es:[edx],eax
+    add edx,4
+    add edi,4
+    loop setup_page_loop        
+    ret
+init_process    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           init_module
 ;
 ;           DESCRIPTION:    Init module
@@ -208,6 +237,9 @@ alloc_page_loop:
 ;
     mov edi,OFFSET init_module
     HookInitTasking
+;
+    mov edi,OFFSET init_process
+    HookCreateProcess    
     ret
 init    ENDP
 

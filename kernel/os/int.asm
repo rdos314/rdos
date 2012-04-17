@@ -370,14 +370,14 @@ init_exc_loop:
     mov si,OFFSET raw_switch16
     mov di,OFFSET raw_switch_name
     xor dx,dx
-    mov ax,raw_switch_nr
+    mov ax,raw_switch_pm_nr
     RegisterUserGate16
 ;
     mov si,OFFSET raw_switch_v86
     mov di,OFFSET raw_switch_name
     xor dx,dx
-    mov ax,raw_switch_nr
-    RegisterUserGateV86
+    mov ax,raw_switch_vm_nr
+    RegisterUserGate16
 ;
     mov si,OFFSET get_raw_switch_ads
     mov di,OFFSET get_raw_switch_name
@@ -2240,12 +2240,12 @@ raw_switch16_v86:
 get_raw_switch_name     DB 'Get Raw Switch Adress',0
 
 raw_switch_prot_begin:
-    RawSwitch
+    RawSwitchPm
 
 raw_switch_prot_end:
 
 raw_switch_v86_begin:
-    RawSwitch
+    RawSwitchVm
 raw_switch_v86_end:
 
 get_raw_switch_ads      PROC far

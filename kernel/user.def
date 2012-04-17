@@ -14,7 +14,7 @@ set_flat_linear_read_nr		= 10
 set_flat_linear_readwrite_nr = 11
 
 get_raw_switch_ads_nr		= 12
-raw_switch_nr				= 13
+raw_switch_pm_nr			= 13
 get_exception_nr			= 14
 set_exception_nr			= 15
 get_pm_int_nr				= 16
@@ -33,6 +33,7 @@ wait_until_nr				= 27
 create_thread_nr			= 28
 terminate_thread_nr			= 29
 get_thread_nr				= 30
+raw_switch_vm_nr			= 31
 
 create_user_section_nr		= 32
 create_blocked_user_section_nr = 33
