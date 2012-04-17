@@ -35,6 +35,7 @@ INCLUDE int.def
 INCLUDE exec.def
 INCLUDE system.def
 INCLUDE system.inc
+INCLUDE gate.def
 
 STUB_LINEAR     = 80000h
 STUB_PAGES      = 4
@@ -103,6 +104,8 @@ CreateAppStub   Proc near
     rep movs byte ptr es:[edi],cs:[esi]
     mov ds:stub_start,edi
 ;
+    add edx,OFFSET app_stub - OFFSET app_stub_start    
+;
     pop edi
     pop esi
     pop ecx    
@@ -119,15 +122,44 @@ CreateAppStub   Endp
 ;
 ;       DESCRIPTION:    Patch callback
 ;
-;       PARAMETERS:     EBX      Patch linar address
+;       PARAMETERS:     EBX     Patch linear address
+;                       ES:EDI  Gate entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 syscall_patch_name  DB 'Syscall Patch', 0
 
 syscall_patch   Proc far
-    int 3
-    stc
+    push ds
+    push edx
+;    
+    mov edx,es:[edi].user_gate_syscall_index
+    cmp edx,-1
+    jne patch_stub_ok
+;
+    mov eax,edi
+    call CreateAppStub
+    mov es:[edi].user_gate_syscall_index,edx
+
+patch_stub_ok:
+    mov ax,flat_sel
+    mov ds,ax
+    sub edx,ebx
+    sub edx,6
+    xchg edx,ds:[ebx+2]
+;
+    mov ax,9090h
+    xchg ax,ds:[ebx+6]
+;
+    mov al,0E8h
+    xchg al,ds:[ebx+1]
+;    
+    mov al,90h
+    xchg al,ds:[ebx]
+    clc
+;
+    pop edx
+    pop ds
     ret
 syscall_patch   Endp
 

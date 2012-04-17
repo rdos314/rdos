@@ -214,7 +214,8 @@ RegisterSyscall    MACRO
     OsGate register_syscall_nr
                         ENDM
 
-;       DS:EBX      Patch position
+;       EBX     Patch linear address
+;       ES:EDI  Gate entry
 SyscallPatch   MACRO
     OsGate syscall_patch_nr
                     ENDM

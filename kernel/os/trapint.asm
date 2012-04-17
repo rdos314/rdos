@@ -301,6 +301,7 @@ igt02   DW OFFSET dummy_gate
 igt03   DW OFFSET do_usergate32
 
 int9A:
+intE8:
     sub sp,8
     push ebp
     mov bp,sp
@@ -1968,6 +1969,7 @@ ri17    DW      3Fh,    OFFSET default_int2,    kernel_code,    0
 rg66    DW      66h,    OFFSET int66,           kernel_code,    3
 rg67    DW      67h,    OFFSET int67,           kernel_code,    3
 rg9A    DW      9Ah,    OFFSET int9A,           kernel_code,    3
+rgE8    DW      0E8h,   OFFSET intE8,           kernel_code,    3
 pg7_end DW      0FFFFh
 
     public init_pretask_traps

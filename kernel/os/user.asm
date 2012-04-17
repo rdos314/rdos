@@ -87,6 +87,7 @@ init_usergate_loop:
     mov es:[di].user_gate_entry_offset32,OFFSET illegal_gate32
     mov es:[di].user_gate_entry_sel32,cs     
     mov es:[di].user_gate_syscall_offset,-1
+    mov es:[di].user_gate_syscall_index,-1
     add di,32
     loop init_usergate_loop
 ;
