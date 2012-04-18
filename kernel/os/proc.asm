@@ -1243,12 +1243,14 @@ init_default_tss    PROC near
     push bx
     push ecx
     mov eax,stack0_size
-    AllocateSmallLinear
+    AllocateBigLinear
     AllocateGdt
     mov ecx,eax
     CreateDataSelector16
     mov ds:p_tss_esp0,stack0_size
     mov ds:p_tss_ess0,bx
+    mov es,bx
+    mov es:[0],bx
     pop ecx
     pop bx
     pop eax
