@@ -771,7 +771,7 @@ prot_init:
     CreateCodeSelector32
 ;    
     mov bx,syscall_data_sel
-    CreateCodeSelector32    
+    CreateDataSelector32    
 ;
     call init_first_process
     jmp init_first_thread

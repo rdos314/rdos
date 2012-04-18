@@ -58,6 +58,8 @@ stub_start          DD ?
 
 process_page_arr    DD STUB_PAGES DUP (?)
 
+gate_index_arr      DD usergate_entries DUP (?)
+
 data    ENDS
 
 code    SEGMENT byte public 'CODE'
@@ -79,17 +81,14 @@ code    SEGMENT byte public 'CODE'
 
 app_stub_start:
 
-app_gate_ind    DD ?
-
 app_stub Proc near
-    push eax
     push ecx
     push edx
 ;
     mov ecx,esp
 
 ap1:    
-    mov edx,OFFSET app_leave
+    mov edx,0           ; patched to gate #
 ;        
     db 0Fh
     db 34h
@@ -97,7 +96,6 @@ ap1:
 app_leave:
     pop edx
     pop ecx
-    pop eax
     ret
 app_stub Endp
 
@@ -106,6 +104,7 @@ app_stub_end:
 CreateAppStub   Proc near
     push ds
     push es
+    push ebx
     push ecx
     push esi
     push edi
@@ -116,30 +115,21 @@ CreateAppStub   Proc near
     mov es,dx
     mov edi,ds:stub_start
     mov edx,edi
-    mov esi,OFFSET app_gate_ind + 4
-;
-    push edx
-    mov bx,usergate_sel
-    GetSelectorBaseSize
-    add eax,edx
-    pop edx
-    stosd
-;    
-    mov ecx,OFFSET app_stub_end - OFFSET app_stub_start - 4
+    mov esi,OFFSET app_stub_start    
+    mov ecx,OFFSET app_stub_end - OFFSET app_stub_start
     rep movs byte ptr es:[edi],cs:[esi]
     mov ds:stub_start,edi
 ;
     mov edi,OFFSET ap1 - OFFSET app_stub_start + 1
     add edi,edx
-    mov eax,OFFSET app_leave - OFFSET app_stub_start
-    add eax,edx
-    mov es:[edi],eax    
+    mov es:[edi],eax
 ;
-    add edx,OFFSET app_stub - OFFSET app_stub_start    
+    add edx,OFFSET app_leave - OFFSET app_stub_start    
 ;
     pop edi
     pop esi
     pop ecx    
+    pop ebx
     pop es
     pop ds
     ret
@@ -163,20 +153,33 @@ syscall_patch_name  DB 'Syscall Patch', 0
 syscall_patch   Proc far
     push ds
     push edx
+    push edi
 ;    
-    mov edx,es:[edi].user_gate_syscall_index
+    mov edx,es:[edi].user_gate_near_ret
+    cmp edx,-1
+    stc
+    je patch_done
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov eax,edi
+;    
+    shr edi,USER_GATE_SHIFT
+    shl edi,2
+    mov edx,ds:[edi].gate_index_arr
     cmp edx,-1
     jne patch_stub_ok
 ;
-    mov eax,edi
+    shr eax,USER_GATE_SHIFT
     call CreateAppStub
-    mov es:[edi].user_gate_syscall_index,edx
+    mov ds:[edi].gate_index_arr,edx
 
 patch_stub_ok:
     mov ax,flat_sel
     mov ds,ax
     sub edx,ebx
     sub edx,6
+    sub edx,OFFSET app_leave - OFFSET app_stub
     xchg edx,ds:[ebx+2]
 ;
     mov ax,9090h
@@ -188,7 +191,9 @@ patch_stub_ok:
     mov al,90h
     xchg al,ds:[ebx]
     clc
-;
+
+patch_done:
+    pop edi
     pop edx
     pop ds
     ret
@@ -207,34 +212,42 @@ syscall_patch   Endp
 
 start_syscall_name  DB 'Start Syscall', 0
 
-app_gate_nr = OFFSET app_gate_ind - OFFSET app_leave
-
-app_eax     = 8
-app_ecx     = 4
-app_edx     = 0
+app_leave_rel = OFFSET app_leave - OFFSET app_stub_start
 
 syscall_start:
 
 syscall_entry   Proc far
 sp1:
-    mov eax,0                   ; patched to linear address of processor block
-    mov ss,cs:[eax].ps_syscall_ss
+    mov ss,dword ptr cs:[0]     ; patch to linear address of thread SS0 stack 
     mov esp,stack0_size
-;   mov esp,cs:[eax].ps_esp0
     sti
-    int 3
-    push edx
+;    
+    push ecx
+    cmp edx,usergate_entries
+    jae syscall_fail
+
+sp2:
+    mov ecx,cs:[4*edx-1]  ; patched to contain address of gate table    
     push ecx
 ;
-    mov eax,ds:[edx].app_gate_nr
-;   push cs:[eax].
-    push dword ptr cs:[eax].user_gate_entry_sel32
-    push cs:[eax].user_gate_syscall_offset
-    mov eax,ds:[ecx].app_eax
-    mov edx,ds:[ecx].app_edx
-    mov ecx,ds:[ecx].app_ecx
+    shl edx,USER_GATE_SHIFT
+
+sp3:    
+    add edx,1234h           ; patched to contain base of user-gate selector
+    push cs:[edx].user_gate_near_ret
+    push dword ptr cs:[edx].user_gate_entry_sel32
+    push cs:[edx].user_gate_near_call
+;
+;    mov edx,usergate_sel
+;    mov gs,edx
+;    
+    mov edx,ds:[ecx].syscall_edx
+    mov ecx,ds:[ecx].syscall_ecx
     ret
 syscall_entry   Endp
+
+syscall_fail:
+    int 3
 
 syscall_end:
 
@@ -247,6 +260,14 @@ start_syscall   Proc far
     mov edx,fs:ps_syscall_eip
     or edx,edx
     jnz start_syscall_load_msr
+;    
+    mov bx,usergate_sel
+    GetSelectorBaseSize
+    push edx
+;    
+    mov bx,SEG data
+    GetSelectorBaseSize
+    push edx
 ;    
     mov bx,fs:ps_sel
     GetSelectorBaseSize
@@ -261,9 +282,19 @@ start_syscall   Proc far
     mov ecx,eax
     rep movs byte ptr es:[edi],cs:[esi]
 ;
-    mov edi,OFFSET sp1 - OFFSET syscall_start + 1
     pop eax
-    mov es:[edx+edi],eax    
+    add eax,OFFSET ps_syscall_ss
+    mov edi,OFFSET sp1 - OFFSET syscall_start + 3
+    mov es:[edx+edi],eax
+;
+    pop eax
+    add eax,OFFSET gate_index_arr
+    mov edi,OFFSET sp2 - OFFSET syscall_start + 4
+    mov es:[edx+edi],eax
+;    
+    pop eax
+    mov edi,OFFSET sp3 - OFFSET syscall_start + 2
+    mov es:[edx+edi],eax
 ;
     add edx,OFFSET syscall_entry - OFFSET syscall_start
     mov fs:ps_syscall_eip,edx
@@ -410,6 +441,15 @@ alloc_page_loop:
     add edi,4
     loop alloc_page_loop        
 ;
+    mov ecx,usergate_entries
+    mov edi,OFFSET gate_index_arr
+    mov eax,-1
+
+init_index_loop:
+    mov ds:[edi],eax
+    add edi,4
+    loop init_index_loop  
+;         
     mov ax,flat_sel
     mov es,ax
     mov edi,STUB_LINEAR    

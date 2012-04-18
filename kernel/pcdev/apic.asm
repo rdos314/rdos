@@ -3520,6 +3520,10 @@ init_task   Endp
 apic_tab    DB 'APIC'
 hpet_tab    DB 'HPET'
 
+
+sys_leave:
+    SysLeave
+    
 init    PROC far
     mov ax,SEG data
     mov ds,ax
@@ -3780,6 +3784,10 @@ init_hpet_done:
     call StartupApCores
 
 init_apic_gates_ok:     
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET sys_leave
+    SetupSysleave
     ret
 init    ENDP
 

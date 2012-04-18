@@ -71,11 +71,11 @@ init_usergate   PROC near
     pusha
 ;    
     mov bx,usergate_sel
-    mov eax,usergate_entries SHL 5
+    mov eax,usergate_entries SHL USER_GATE_SHIFT
     call local_allocate_fixed_system_mem
     xor al,al
     xor di,di
-    mov cx,usergate_entries SHL 5
+    mov cx,usergate_entries SHL USER_GATE_SHIFT
     rep stosb
     xor di,di
     mov cx,usergate_entries
@@ -86,9 +86,9 @@ init_usergate_loop:
     mov es:[di].user_gate_entry_sel16,cs
     mov es:[di].user_gate_entry_offset32,OFFSET illegal_gate32
     mov es:[di].user_gate_entry_sel32,cs     
-    mov es:[di].user_gate_syscall_offset,-1
-    mov es:[di].user_gate_syscall_index,-1
-    add di,32
+    mov es:[di].user_gate_near_call,-1
+    mov es:[di].user_gate_near_ret,-1
+    add di,1 SHL USER_GATE_SHIFT
     loop init_usergate_loop
 ;
     mov ax,cs
@@ -129,6 +129,12 @@ init_usergate_loop:
     mov edi,OFFSET register_syscall_name
     xor cl,cl
     mov ax,register_syscall_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET setup_sysleave
+    mov edi,OFFSET setup_sysleave_name
+    xor cl,cl
+    mov ax,setup_sysleave_nr
     RegisterOsGate
 ;
     mov esi,OFFSET is_valid_usergate
@@ -186,7 +192,7 @@ is_valid_usergate       PROC far
     mov bx,ax
     mov ax,usergate_sel
     mov ds,ax
-    shl bx,5
+    shl bx,USER_GATE_SHIFT
     mov ax,[bx].user_gate_entry_sel32
     or ax,ax
     clc
@@ -226,7 +232,7 @@ register_bimodal_usergate       PROC far
     mov bx,usergate_sel
     mov fs,bx
     mov bx,ax
-    shl bx,5
+    shl bx,USER_GATE_SHIFT
     mov fs:[bx].user_gate_name_offset,edi
     mov fs:[bx].user_gate_name_sel,es
     mov fs:[bx].user_gate_entry_offset16,esi
@@ -274,7 +280,7 @@ register_usergate       PROC far
     mov bx,usergate_sel
     mov fs,bx
     mov bx,ax
-    shl bx,5
+    shl bx,USER_GATE_SHIFT
     mov fs:[bx].user_gate_name_offset,edi
     mov fs:[bx].user_gate_name_sel,es
     mov fs:[bx].user_gate_entry_offset16,ecx
@@ -320,14 +326,14 @@ register_bimodal_syscall       PROC far
     mov bx,usergate_sel
     mov fs,bx
     mov bx,ax
-    shl bx,5
+    shl bx,USER_GATE_SHIFT
     mov fs:[bx].user_gate_name_offset,edi
     mov fs:[bx].user_gate_name_sel,es
     mov fs:[bx].user_gate_entry_offset16,esi
     mov fs:[bx].user_gate_entry_sel16,ds
     mov fs:[bx].user_gate_entry_offset32,esi
     mov fs:[bx].user_gate_entry_sel32,ds
-    mov fs:[bx].user_gate_syscall_offset,ebp
+    mov fs:[bx].user_gate_near_call,ebp
     xchg dx,fs:[bx].user_gate_transfer
     or dx,dx
     jz register_bimodal_syscall_done
@@ -370,14 +376,14 @@ register_syscall       PROC far
     mov bx,usergate_sel
     mov fs,bx
     mov bx,ax
-    shl bx,5
+    shl bx,USER_GATE_SHIFT
     mov fs:[bx].user_gate_name_offset,edi
     mov fs:[bx].user_gate_name_sel,es
     mov fs:[bx].user_gate_entry_offset16,ecx
     mov fs:[bx].user_gate_entry_sel16,ds
     mov fs:[bx].user_gate_entry_offset32,esi
     mov fs:[bx].user_gate_entry_sel32,ds
-    mov fs:[bx].user_gate_syscall_offset,ebp
+    mov fs:[bx].user_gate_near_call,ebp
     xchg dx,fs:[bx].user_gate_transfer
     or dx,dx
     jz register_syscall_done
@@ -391,6 +397,49 @@ register_syscall_done:
     pop fs
     retf32
 register_syscall       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupSysleave
+;
+;           DESCRIPTION:    Setup leave-entry point for fast syscalls
+;
+;           PARAMETERS:     ES      Target CS
+;                           EDI     Leave entry-point
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_sysleave_name  DB 'Setup Sysleave',0
+
+setup_sysleave       PROC far
+    push ds
+    push ax
+    push bx
+    push cx
+;
+    mov bx,usergate_sel
+    mov ds,bx
+    mov cx,usergate_entries
+    xor bx,bx
+    mov ax,es
+
+setup_leave_loop:
+    cmp ax,ds:[bx].user_gate_entry_sel32
+    jne setup_leave_next
+;
+    mov ds:[bx].user_gate_near_ret,edi
+
+setup_leave_next:
+    add bx,1 SHL USER_GATE_SHIFT
+    loop setup_leave_loop
+;
+    pop cx
+    pop bx
+    pop ax
+    pop ds
+    retf32
+setup_sysleave  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -416,7 +465,7 @@ register_usergate16     PROC far
     mov bx,usergate_sel
     mov fs,bx
     mov bx,ax
-    shl bx,5
+    shl bx,USER_GATE_SHIFT
     mov fs:[bx].user_gate_name_offset,edi
     mov fs:[bx].user_gate_name_sel,es
     mov fs:[bx].user_gate_entry_offset16,esi
@@ -457,7 +506,7 @@ register_usergate32     PROC far
     mov bx,usergate_sel
     mov fs,bx
     mov bx,ax
-    shl bx,5
+    shl bx,USER_GATE_SHIFT
     mov fs:[bx].user_gate_name_offset,edi
     mov fs:[bx].user_gate_name_sel,es
     mov fs:[bx].user_gate_entry_offset32,esi
@@ -576,7 +625,7 @@ translate_selectors     ENDP
 
 do_usergate_vm  PROC near
     mov bx,ds:[ebx+1]
-    shl bx,5
+    shl bx,USER_GATE_SHIFT
     mov ax,usergate_sel
     mov ds,ax
 ;
@@ -658,7 +707,7 @@ do_usercall16   Proc near
     pop dword ptr [bp+12]
 ;   
     mov edi,ds:[ebx+3]
-    shl edi,5
+    shl edi,USER_GATE_SHIFT
     mov ax,usergate_sel
     mov es,ax
 ;
@@ -709,7 +758,7 @@ do_usercall32   Proc near
     pop dword ptr [bp+12]
 ;   
     mov edi,ds:[ebx+3]
-    shl edi,5
+    shl edi,USER_GATE_SHIFT
     mov ax,usergate_sel
     mov es,ax
 ;
@@ -753,11 +802,11 @@ do_usercall32  Endp
 
 do_usergate32   Proc near
     mov edi,ds:[ebx+2]
-    shl edi,5
+    shl edi,USER_GATE_SHIFT
     mov ax,usergate_sel
     mov es,ax
 ;
-    mov eax,es:[edi].user_gate_syscall_offset
+    mov eax,es:[edi].user_gate_near_call
     cmp eax,-1
     je do_usergate_not_syscall
 ;

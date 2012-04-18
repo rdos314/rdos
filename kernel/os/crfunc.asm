@@ -308,7 +308,7 @@ LocalUserGate:
     mov [bp+6],eax          ; old eip
 ;
     mov edi,ds:[ebx+3]
-    shl edi,5
+    shl edi,USER_GATE_SHIFT
     mov ax,usergate_sel
     mov es,ax
 ;

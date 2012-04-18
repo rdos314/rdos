@@ -148,6 +148,37 @@ ELSE
 ENDIF
             ENDM
 
+syscall_ecx     = 4
+syscall_edx     = 0
+
+SysLeave16  MACRO
+    xchg ecx,ss:[esp+6]
+    mov ds:[ecx].syscall_edx,edx
+    mov edx,ss:[esp+6]
+    mov ds:[ecx].syscall_ecx,eax
+    mov edx,ss:[esp+2]
+    db 0Fh
+    db 35h
+            ENDM
+
+SysLeave32  MACRO
+    xchg ecx,ss:[esp+4]
+    mov ds:[ecx].syscall_edx,edx
+    mov edx,ss:[esp+4]
+    mov ds:[ecx].syscall_ecx,edx
+    mov edx,ss:[esp]
+    db 0Fh
+    db 35h
+            ENDM
+                
+SysLeave  MACRO gate_nr
+IF (size $) EQ 0FF02h
+    SysLeave16
+ELSE
+    SysLeave32
+ENDIF
+            ENDM
+
 ;;;;;;;;;; REGISTRATION / HOOKS ;;;;;;;;;;;
 
 ;       AX          GATE NUMBER
@@ -213,6 +244,12 @@ RegisterBimodalSyscall MACRO
 RegisterSyscall    MACRO
     OsGate register_syscall_nr
                         ENDM
+
+;       ES      Selector
+;       EDI     Near ret address
+SetupSysLeave   MACRO
+    OsGate setup_sysleave_nr
+                    ENDM
 
 ;       EBX     Patch linear address
 ;       ES:EDI  Gate entry

@@ -288,7 +288,7 @@ get_usercall_not_entry32:
     cmp dx,ds:[si].user_gate_sel32
     je get_usercall_found
 ;
-    add si,32
+    add si,1 SHL USER_GATE_SHIFT
     loop get_usercall_scan_loop
 ;
     pop cx

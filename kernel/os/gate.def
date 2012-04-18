@@ -41,6 +41,8 @@ os_gate_entry      ENDS
 ; this structure cannot be more than 32 bytes long!
 ;
 
+USER_GATE_SHIFT = 5
+
 user_gate_entry      STRUC
 user_gate_name_offset        DD ?
 user_gate_name_sel           DW ?
@@ -50,7 +52,7 @@ user_gate_entry_offset32     DD ?
 user_gate_entry_sel32        DW ?
 user_gate_sel16              DW ?
 user_gate_sel32              DW ?
-user_gate_syscall_offset     DD ?
-user_gate_syscall_index      DD ?
+user_gate_near_call          DD ?
+user_gate_near_ret           DD ?
 user_gate_transfer           DW ?
 user_gate_entry      ENDS
