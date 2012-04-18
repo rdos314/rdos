@@ -1235,19 +1235,26 @@ init_virt_thread    ENDP
 
 init_default_tss    PROC near
     mov ds:p_tss_back_link,0
-    mov ds:p_tss_esp0,stack0_size
     mov ds:p_tss_t,0
     mov ds:p_tss_bitmap,OFFSET p_tss_io_bitmap
 ;       
     push es
     push eax
+    push bx
+    push ecx
     mov eax,stack0_size
-    AllocateSmallGlobalMem
-    mov dx,es
+    AllocateSmallLinear
+    AllocateGdt
+    mov ecx,eax
+    CreateDataSelector16
+    mov ds:p_tss_esp0,stack0_size
+    mov ds:p_tss_ess0,bx
+    pop ecx
+    pop bx
     pop eax
     pop es
-    mov ds:p_tss_ess0,dx
 ;
+    xor edx,edx
     mov ds:p_tss_esp1,edx
     mov ds:p_tss_ess1,dx
     mov ds:p_tss_esp2,edx

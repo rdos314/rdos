@@ -218,9 +218,9 @@ syscall_start:
 
 syscall_entry   Proc far
 sp1:
-    mov ss,dword ptr cs:[0]     ; patch to linear address of thread SS0 stack 
-    mov esp,stack0_size
-    sti
+;    mov ss,dword ptr cs:[0]     ; patch to linear address of thread SS0 stack 
+;    mov esp,stack0_size
+;    sti
 ;    
     push ecx
     cmp edx,usergate_entries
@@ -243,6 +243,19 @@ sp3:
 ;    
     mov edx,ds:[ecx].syscall_edx
     mov ecx,ds:[ecx].syscall_ecx
+;
+;
+;
+    add esp,12
+    xchg ecx,ss:[esp+4]
+    mov ds:[ecx].syscall_edx,edx
+    mov edx,ss:[esp+4]
+    mov ds:[ecx].syscall_ecx,eax
+    mov edx,ss:[esp]
+    sti
+    db 0Fh
+    db 35h
+    
     ret
 syscall_entry   Endp
 
@@ -284,8 +297,8 @@ start_syscall   Proc far
 ;
     pop eax
     add eax,OFFSET ps_syscall_ss
-    mov edi,OFFSET sp1 - OFFSET syscall_start + 3
-    mov es:[edx+edi],eax
+;    mov edi,OFFSET sp1 - OFFSET syscall_start + 3
+;    mov es:[edx+edi],eax
 ;
     pop eax
     add eax,OFFSET gate_index_arr

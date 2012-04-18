@@ -157,6 +157,7 @@ SysLeave16  MACRO
     mov edx,ss:[esp+6]
     mov ds:[ecx].syscall_ecx,eax
     mov edx,ss:[esp+2]
+    sti
     db 0Fh
     db 35h
             ENDM
