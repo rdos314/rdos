@@ -1192,58 +1192,6 @@ break_exception16       ENDP
 default_exception16:
     mov al,[ebx+3]
     push ax
-    mov [bp+2].vm_err,al
-;
-    mov ds,[bp].vm_ss
-    mov bx,[bp].vm_esp
-    add bx,6
-;
-    mov ax,[bx]
-    mov [bp].vm_eip,ax
-    add bx,2
-;
-    mov ax,[bx]
-    mov [bp].vm_cs,ax
-    add bx,2
-;
-    mov ax,[bx]
-    push ds
-    push bx
-    call set_flags
-    pop bx
-    pop ds
-    mov [bp].vm_eflags,ax
-    add bx,2
-;
-    mov ax,[bx]
-    mov [bp].vm_esp,ax
-    mov ax,[bx+2]
-    mov [bp].vm_ss,ax
-    pop ax
-
-run_default_exception:
-    mov bx,def_exception_sel
-    mov ds,bx
-    movzx bx,al
-    shl bx,3
-    jmp fword ptr [bx]
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           NEW_DEFAULT_EXCEPTION16
-;
-;           DESCRIPTION:    Default exception handler
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public new_default_exception16
-
-new_default_exception16:
-    mov al,[ebx+3]
-    push ax
     mov [ebp+2].trap_err,al
 ;
     mov ds,[ebp].trap_ss
@@ -1273,8 +1221,8 @@ new_default_exception16:
     mov [ebp].trap_ss,ax
     pop ax
 
-new_run_default_exception:
-    mov bx,new_def_exception_sel
+run_default_exception:
+    mov bx,def_exception_sel
     mov ds,bx
     movzx bx,al
     shl bx,3
@@ -1294,7 +1242,7 @@ new_run_default_exception:
     public prot_exception16
 
 prot_exception16    PROC near
-    mov bx,[bp].vm_cs
+    mov bx,[ebp].trap_cs
     and bl,3
     cmp bl,3
     jne run_default_exception
@@ -1318,7 +1266,7 @@ prot_exception16    PROC near
     mov ds,bx
 ;
     push ax
-    mov ax,[bp].vm_ss
+    mov ax,[ebp].trap_ss
     cmp ax,bx
     je prot_exc16_same_stack
 ;
@@ -1326,111 +1274,9 @@ prot_exception16    PROC near
     jmp prot_exc16_stack_ok
 
 prot_exc16_same_stack:
-    mov bx,[bp].vm_esp
-    
-prot_exc16_stack_ok:
-    mov [bx-2],ax
-    mov ax,[bp].vm_esp
-    mov [bx-4],ax
-    sub bx,4
-    pop ax
-;
-    cmp al,1
-    mov ax,[bp].vm_eflags
-    jne prot_exc16_step_ok
-;
-    push ax
-    and ax,NOT 100h
-    mov [bp].vm_eflags,ax
-    pop ax
-
-prot_exc16_step_ok:
-    push ds
-    push bx
-    call get_flags
-    pop bx
-    pop ds
-    sub bx,2
-    mov [bx],ax
-;
-    sub bx,2
-    mov ax,[bp].vm_cs
-    mov [bx],ax
-;
-    sub bx,2
-    mov ax,[bp].vm_eip
-    mov [bx],ax
-;
-    sub bx,2
-    mov ax,[bp].vm_err
-    mov [bx],ax
-;
-    sub bx,2
-    mov word ptr [bx], callb_exc16_sel
-;
-    sub bx,2
-    pop ax
-    movzx ax,al
-    shl ax,3
-    mov [bx],ax
-;
-    mov [bp].vm_esp,bx
-    mov [bp].vm_ss,ds
-    pop word ptr [bp].vm_eip
-    pop word ptr [bp].vm_cs 
-prot_exception_do:
-    ret
-prot_exception16    ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           NEW_PROT_EXCEPTION16
-;
-;           DESCRIPTION:    Exception handler
-;
-;           PARAMETERS:         AL          Int #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public new_prot_exception16
-
-new_prot_exception16    PROC near
-    mov bx,[ebp].trap_cs
-    and bl,3
-    cmp bl,3
-    jne new_run_default_exception
-;
-    push ax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    pop ax
-    movzx bx,al
-;
-    shl bx,3
-    cmp word ptr ds:[bx+4].app_pm_exc,callb_exc16_sel
-    je new_run_default_exception
-;
-    push word ptr ds:[bx+4].app_pm_exc
-    push word ptr ds:[bx].app_pm_exc
-    push ax
-;
-    GetExceptionStack16
-    mov ds,bx
-;
-    push ax
-    mov ax,[ebp].trap_ss
-    cmp ax,bx
-    je new_prot_exc16_same_stack
-;
-    mov bx,800h
-    jmp new_prot_exc16_stack_ok
-
-new_prot_exc16_same_stack:
     mov bx,[ebp].trap_esp
     
-new_prot_exc16_stack_ok:
+prot_exc16_stack_ok:
     mov [bx-2],ax
     mov ax,[ebp].trap_esp
     mov [bx-4],ax
@@ -1439,14 +1285,14 @@ new_prot_exc16_stack_ok:
 ;
     cmp al,1
     mov ax,[ebp].trap_eflags
-    jne new_prot_exc16_step_ok
+    jne prot_exc16_step_ok
 ;
     push ax
     and ax,NOT 100h
     mov [ebp].trap_eflags,ax
     pop ax
 
-new_prot_exc16_step_ok:
+prot_exc16_step_ok:
     push ds
     push bx
     call get_flags
@@ -1480,9 +1326,9 @@ new_prot_exc16_step_ok:
     mov [ebp].trap_ss,ds
     pop word ptr [ebp].trap_eip
     pop word ptr [ebp].trap_cs 
-new_prot_exception_do:
+prot_exception_do:
     ret
-new_prot_exception16    ENDP
+prot_exception16    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

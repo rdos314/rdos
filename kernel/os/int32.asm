@@ -1183,141 +1183,6 @@ break_exception32       ENDP
 default_exception32:
     mov al,[ebx+3]
     push ax
-    mov [bp+2].vm_err,al
-;
-    mov ds,[bp].vm_ss
-    mov ebx,[bp].vm_esp
-    add ebx,12
-;
-    mov eax,[ebx]
-    mov [bp].vm_eip,eax
-    add ebx,4
-;
-    mov ax,[ebx]
-    mov [bp].vm_cs,ax
-    add ebx,4
-;
-    mov eax,[ebx]
-    push ds
-    push bx
-    call set_flags
-    pop bx
-    pop ds
-    mov [bp].vm_eflags,ax
-    add ebx,4
-;
-    add ebx,8
-    mov [bp].vm_esp,ebx
-    pop ax
-
-run_default_exception:
-    mov bx,def_exception_sel
-    mov ds,bx
-    movzx bx,al
-    shl bx,3
-    jmp fword ptr [bx]
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           PROT_EXCEPTION32
-;
-;           DESCRIPTION:    Exception handler
-;
-;           PARAMETERS:         AL          INT NUMMER
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public prot_exception32
-
-prot_exception32    PROC near
-    mov bx,[bp].vm_cs
-    and bl,3
-    cmp bl,3
-    jne run_default_exception
-    push ax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    pop ax
-    movzx bx,al
-    shl bx,3
-    cmp word ptr ds:[bx+4].app_pm_exc,callb_exc32_sel
-    je run_default_exception
-;
-    push word ptr ds:[bx+4].app_pm_exc
-    push ds:[bx].app_pm_exc
-    push ax
-;    
-    mov ds,[bp].vm_ss
-    mov ebx,[bp].vm_esp
-;
-    mov [ebx-4],ds
-    mov [ebx-8],ebx
-    sub ebx,8
-;
-    cmp al,1
-    mov eax,[bp].vm_eflags
-    jne prot_exc32_step_ok
-;
-    push ax
-    and ax,NOT 100h
-    mov [bp].vm_eflags,ax
-    pop ax
-
-prot_exc32_step_ok:
-    push ds
-    push bx
-    call get_flags
-    pop bx
-    pop ds
-    sub ebx,4
-    mov [ebx],eax
-;
-    sub ebx,4
-    mov ax,[bp].vm_cs
-    mov [ebx],ax
-;
-    sub ebx,4
-    mov eax,[bp].vm_eip
-    mov [ebx],eax
-;
-    sub ebx,4
-    mov eax,[bp].vm_err
-    mov [ebx],eax
-;
-    sub ebx,4
-    mov word ptr [ebx],callb_exc32_sel
-;
-    sub ebx,4
-    pop ax
-    movzx eax,al
-    shl eax,3
-    mov [ebx],eax
-;
-    mov [bp].vm_esp,ebx
-    pop dword ptr [bp].vm_eip
-    pop word ptr [bp].vm_cs 
-prot_exception_do:
-    ret
-prot_exception32    ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           NEW_DEFAULT_EXCEPTION32
-;
-;           DESCRIPTION:    Default exception handler
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public new_default_exception32
-
-new_default_exception32:
-    mov al,[ebx+3]
-    push ax
     mov [ebp+2].trap_err,al
 ;
     mov ds,[ebp].trap_ss
@@ -1345,8 +1210,8 @@ new_default_exception32:
     mov [ebp].trap_esp,ebx
     pop ax
 
-new_run_default_exception:
-    mov bx,new_def_exception_sel
+run_default_exception:
+    mov bx,def_exception_sel
     mov ds,bx
     movzx bx,al
     shl bx,3
@@ -1355,7 +1220,7 @@ new_run_default_exception:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           NEW_PROT_EXCEPTION32
+;           NAME:           PROT_EXCEPTION32
 ;
 ;           DESCRIPTION:    Exception handler
 ;
@@ -1363,13 +1228,13 @@ new_run_default_exception:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public new_prot_exception32
+    public prot_exception32
 
-new_prot_exception32    PROC near
+prot_exception32    PROC near
     mov bx,[ebp].trap_cs
     and bl,3
     cmp bl,3
-    jne new_run_default_exception
+    jne run_default_exception
     push ax
     GetThread
     mov ds,ax
@@ -1378,7 +1243,7 @@ new_prot_exception32    PROC near
     movzx bx,al
     shl bx,3
     cmp word ptr ds:[bx+4].app_pm_exc,callb_exc32_sel
-    je new_run_default_exception
+    je run_default_exception
 ;
     push word ptr ds:[bx+4].app_pm_exc
     push ds:[bx].app_pm_exc
@@ -1393,14 +1258,14 @@ new_prot_exception32    PROC near
 ;
     cmp al,1
     mov eax,[ebp].trap_eflags
-    jne new_prot_exc32_step_ok
+    jne prot_exc32_step_ok
 ;
     push ax
     and ax,NOT 100h
     mov [ebp].trap_eflags,ax
     pop ax
 
-new_prot_exc32_step_ok:
+prot_exc32_step_ok:
     push ds
     push bx
     call get_flags
@@ -1433,9 +1298,9 @@ new_prot_exc32_step_ok:
     mov [ebp].trap_esp,ebx
     pop dword ptr [ebp].trap_eip
     pop word ptr [ebp].trap_cs 
-new_prot_exception_do:
+prot_exception_do:
     ret
-new_prot_exception32    ENDP
+prot_exception32    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

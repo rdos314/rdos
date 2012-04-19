@@ -108,7 +108,6 @@ virt_tss			EQU 180h
 kernel_stack		EQU 188h
 ;
 env_proc_sel        EQU 190h
-new_def_exception_sel	EQU 198h
 ;
 syscall_code_sel    EQU 1A0h
 syscall_data_sel    EQU 1A8h

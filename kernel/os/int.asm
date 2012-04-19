@@ -43,8 +43,8 @@ INCLUDE int.def
     extrn translate_segment:near
     extrn translate_selector:near
 
-    extrn new_prot_exception16:near
-    extrn new_prot_exception32:near
+    extrn prot_exception16:near
+    extrn prot_exception32:near
 
     extrn set_flags:near
     extrn get_flags:near
@@ -100,7 +100,7 @@ init_int    PROC near
     AllocateFixedSystemMem
 ;
     mov eax,100h
-    mov bx,new_def_exception_sel
+    mov bx,def_exception_sel
     AllocateFixedSystemMem
 ;
     mov eax,400h
@@ -258,17 +258,6 @@ init_exc_loop:
     mov [bx+4],cs
     add bx,8
     loop init_exc_loop
-;
-    mov cx,20h
-    mov ax,new_def_exception_sel
-    mov ds,ax
-    xor bx,bx
-    mov edx,OFFSET new_pm_exception_handler
-new_init_exc_loop:
-    mov [bx],edx
-    mov [bx+4],cs
-    add bx,8
-    loop new_init_exc_loop
 ;
     mov eax,OFFSET raw_switch_v86_end - OFFSET raw_switch_v86_begin
     mov ecx,eax
@@ -889,22 +878,6 @@ restore_context ENDP
     public pm_exception_handler
 
 pm_exception_handler:
-    DebugException
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           NEW_PM_EXCEPTION_HANDLER
-;
-;           DESCRIPTION:    Protected mode exception handler
-;
-;           PARAMETERS:         AL          Exception #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public new_pm_exception_handler
-
-new_pm_exception_handler:
     DebugException
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2067,7 +2040,7 @@ prot_exception:
     cmp bl,3
     je prot_exception_user
 ;
-    mov bx,new_def_exception_sel
+    mov bx,def_exception_sel
     mov ds,bx
     movzx bx,al
     shl bx,3
@@ -2080,8 +2053,8 @@ prot_exception_user:
     mov ds,ds:p_app_sel
     pop ax
     test ds:app_bitness,1
-    jz new_prot_exception16
-    jmp new_prot_exception32
+    jz prot_exception16
+    jmp prot_exception32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
