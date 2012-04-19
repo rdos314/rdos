@@ -129,8 +129,8 @@ code    SEGMENT byte use16 public 'CODE'
 
     extrn get_thread:near
 
-    extrn new_prot_exception:near
-    extrn new_virt_exception:near
+    extrn prot_exception:near
+    extrn virt_exception:near
 
     extrn do_oscall:near
     extrn do_usercall16:near
@@ -156,11 +156,11 @@ emulate_exception:
     pop ax
     jnz em_vm
 ;
-    call new_prot_exception
+    call prot_exception
     ret
 
 em_vm:
-    call new_virt_exception
+    call virt_exception
     ret
 emulate ENDP
 
@@ -461,12 +461,12 @@ trap_1:
     jnz t1_vm
 ;
     mov al,1
-    call new_prot_exception
+    call prot_exception
     jmp t1_ret
 
 t1_vm:
     mov al,1
-    call new_virt_exception
+    call virt_exception
     
 t1_ret:
     pop ds
@@ -508,10 +508,10 @@ trap_2:
     mov al,2
     test byte ptr [ebp+2].trap_eflags,2
     jnz t2_vm
-    call new_prot_exception
+    call prot_exception
     jmp t2_ret
 t2_vm:
-    call new_virt_exception
+    call virt_exception
 t2_ret:
     pop ds
     pop ebx
@@ -553,11 +553,11 @@ trap_3:
     jnz t3_vm
 ;
     mov al,3
-    call new_prot_exception
+    call prot_exception
     jmp t3_ret
 t3_vm:
     mov al,3
-    call new_virt_exception
+    call virt_exception
 t3_ret:
     pop ds
     pop ebx
@@ -1265,7 +1265,7 @@ trap_10:
     jnz t10_vm
 ;
     mov al,10
-    call new_prot_exception
+    call prot_exception
     jmp t10_ret
 
 t10_vm:
@@ -1316,7 +1316,7 @@ trap_11:
     jnc t11_ret
 ;
     mov al,11
-    call new_prot_exception
+    call prot_exception
     jmp t11_ret
 
 t11_vm:
@@ -1377,7 +1377,7 @@ t12_thread:
     jnz t11_vm
 ;
     mov al,12
-    call new_prot_exception
+    call prot_exception
     jmp t12_ret
 
 t12_vm:

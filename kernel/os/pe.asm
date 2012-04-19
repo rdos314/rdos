@@ -3818,35 +3818,39 @@ notify_pe_exception     Proc far
     pop dx
     pop ds
 ;
-    sub sp,8
-    push bp
-    mov bp,sp
+    sub esp,8
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
     push es
 ;
+    mov ax,ss
+    cmp ax,syscall_data_sel
+    je pe_ebp_ok
+;
+    movzx ebp,bp    
+
+pe_ebp_ok:    
     mov ebx,fs:pvModuleHandle
     DerefModuleHandle
     mov ds,bx
     call ExceptionEvent
 ;
-    mov ds,[bp].vm_ss
-    mov ebx,[bp].vm_esp
+    mov ds,[ebp].trap_ss
+    mov ebx,[ebp].trap_esp
 ;
     mov eax,[ebx]
-    mov [bp].vm_eax,eax
+    mov [ebp].trap_eax,eax
     add ebx,4
 ;
     mov ax,[ebx]
-    mov [bp].pm_ds,ax
+    mov [ebp].trap_pds,ax
     add ebx,4
 ;
-    push bp
-    mov ebp,[ebx]
-    pop bp
-    mov ax,[ebx]
-    mov [bp].vm_bp,ax
+    mov eax,[ebx]
+    mov [ebp].trap_ebp,eax
     add ebx,4
 ;
     mov ax,[ebx]
@@ -3855,20 +3859,20 @@ notify_pe_exception     Proc far
 ;
     add ebx,12
     mov eax,[ebx]
-    mov [bp].vm_eip,eax
+    mov [ebp].trap_eip,eax
     add ebx,4
 ;
     mov ax,[ebx]
-    mov [bp].vm_cs,ax
+    mov [ebp].trap_cs,ax
     add ebx,4
 ;
     mov eax,[ebx]
     SetFlags
-    mov [bp].vm_eflags,eax  
+    mov [ebp].trap_eflags,eax  
     add ebx,4
 ;
     add ebx,8
-    mov [bp].vm_esp,ebx
+    mov [ebp].trap_esp,ebx
 ;
     GetThread
     push es

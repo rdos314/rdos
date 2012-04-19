@@ -43,9 +43,6 @@ INCLUDE int.def
     extrn translate_segment:near
     extrn translate_selector:near
 
-    extrn prot_exception16:near
-    extrn prot_exception32:near
-
     extrn new_prot_exception16:near
     extrn new_prot_exception32:near
 
@@ -924,24 +921,24 @@ new_pm_exception_handler:
     public vm_exception_handler
 
 vm_exception_handler    PROC far
-    mov al,[bp+2].vm_err
-    cmp byte ptr [bp].vm_err,0
+    mov al,[ebp+2].trap_err
+    cmp byte ptr [ebp].trap_err,0
     je vm_except_do
 ;
     mov bx,flat_sel
     mov ds,bx
-    movzx ebx,word ptr [bp].vm_ss
+    movzx ebx,word ptr [ebp].trap_ss
     shl ebx,4
-    movzx eax,word ptr [bp].vm_esp
+    movzx eax,word ptr [ebp].trap_esp
     add ebx,eax
     mov ax,[ebx]
-    mov [bp].vm_eip,ax
+    mov [ebp].trap_eip,ax
     mov ax,[ebx+2]
-    mov [bp].vm_cs,ax
-    add word ptr [bp].vm_esp,6
+    mov [ebp].trap_cs,ax
+    add word ptr [ebp].trap_esp,6
 
 vm_except_do:
-    DebugException
+    NewDebugException
     retf32
 vm_exception_handler    ENDP
 
@@ -959,25 +956,25 @@ vm_exception_handler    ENDP
 translate_segments      PROC near
     test al,virt_es_in
     jz translate_not_es_in
-    mov bx,[bp].vm_es
+    mov bx,[ebp].trap_es
     call translate_segment
     mov es,bx
 translate_not_es_in:
     test al,virt_fs_in
     jz translate_not_fs_in
-    mov bx,[bp].vm_fs
+    mov bx,[ebp].trap_fs
     call translate_segment
     mov fs,bx
 translate_not_fs_in:
     test al,virt_gs_in
     jz translate_not_gs_in
-    mov bx,[bp].vm_gs
+    mov bx,[ebp].trap_gs
     call translate_segment
     mov gs,bx
 translate_not_gs_in:
     test al,virt_ds_in
     jz translate_not_ds_in
-    mov bx,[bp].vm_ds
+    mov bx,[ebp].trap_ds
     call translate_segment
     mov ds,bx
     jmp translate_seg_end
@@ -1007,7 +1004,7 @@ translate_selectors     PROC near
     mov ds,ax
     call translate_selector
     jc translate_out_ds_done
-    mov [bp].vm_ds,bx
+    mov [ebp].trap_ds,bx
 translate_out_ds_done:
     mov bx,es
     or bx,bx
@@ -1016,7 +1013,7 @@ translate_out_ds_done:
     mov es,ax
     call translate_selector
     jc translate_out_es_done
-    mov [bp].vm_es,bx
+    mov [ebp].trap_es,bx
 translate_out_es_done:
     mov bx,fs
     or bx,bx
@@ -1025,7 +1022,7 @@ translate_out_es_done:
     mov fs,ax
     call translate_selector
     jc translate_out_fs_done
-    mov [bp].vm_fs,bx
+    mov [ebp].trap_fs,bx
 translate_out_fs_done:
     mov bx,gs
     or bx,bx
@@ -1034,7 +1031,7 @@ translate_out_fs_done:
     mov gs,ax
     call translate_selector
     jc translate_out_gs_done
-    mov [bp].vm_gs,bx
+    mov [ebp].trap_gs,bx
 translate_out_gs_done:
     ret
 translate_selectors     ENDP
@@ -1064,9 +1061,9 @@ call_vm Proc far
     push es
     push fs
     push gs
-    push bp
-    mov bp,sp
-    push dword ptr [bp+18]
+    push ebp
+    mov ebp,esp
+    push dword ptr [ebp+18]
 ;
     push ds
     push es
@@ -1076,6 +1073,13 @@ call_vm Proc far
     push si
     push di
 ;
+    mov ax,ss
+    cmp ax,syscall_data_sel
+    je call_vm_ebp_ok
+;
+    movzx ebp,bp
+
+call_vm_ebp_ok:    
     GetThread
     mov ds,ax
     mov bx,ds:p_int_locked_stack
@@ -1646,7 +1650,7 @@ call_pm32       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 reflect_to_pm:
-    mov [bp+2].vm_err,al
+    mov [ebp+2].trap_err,al
     mov bx,int_data_sel
     mov ds,bx
     movzx bx,al
@@ -1662,33 +1666,33 @@ reflect_to_pm:
     mov ds,ax
 
 reflect_do:
-    mov eax,[bp].vm_eax
-    mov ebx,[bp].vm_ebx
+    mov eax,[ebp].trap_eax
+    mov ebx,[ebp].trap_ebx
     retf32
 
 reflect_to_pm_done:
-    mov [bp].vm_eax,eax
-    mov [bp].vm_ebx,ebx
-    mov al,[bp+1].vm_err
+    mov [ebp].trap_eax,eax
+    mov [ebp].trap_ebx,ebx
+    mov al,[ebp+1].trap_err
     or al,al
     jz reflect_leave
     call translate_selectors
 reflect_leave:
-    mov al,[bp+2].vm_err
-    cmp byte ptr [bp].vm_err,0
+    mov al,[ebp+2].trap_err
+    cmp byte ptr [ebp].trap_err,0
     je no_sim_iret
 ;
     mov bx,flat_sel
     mov ds,bx
-    movzx ebx,word ptr [bp].vm_ss
+    movzx ebx,word ptr [ebp].trap_ss
     shl ebx,4
-    movzx eax,word ptr [bp].vm_esp
+    movzx eax,word ptr [ebp].trap_esp
     add ebx,eax
     mov ax,[ebx]
-    mov [bp].vm_eip,ax
+    mov [ebp].trap_eip,ax
     mov ax,[ebx+2]
-    mov [bp].vm_cs,ax
-    add word ptr [bp].vm_esp,6
+    mov [ebp].trap_cs,ax
+    add word ptr [ebp].vm_esp,8
     retf32
 no_sim_iret:
     retf32
@@ -1720,8 +1724,8 @@ reflect_end     PROC near
     mov ax,ss
     mov es,ax
     mov di,bp
-    add di,vm_eip
-    mov cx,vm_ss - vm_eip + 4
+    add di,trap_eip
+    mov cx,trap_ss - trap_eip + 4
     rep movsb
 ;       
     GetThread
@@ -1750,26 +1754,26 @@ reflect_end     ENDP
 reflect_pm_to_vm_name   DB 'Reflect PM to VM',0
 
 reflect_pm_to_vm    PROC far
-    test byte ptr [bp+2].vm_eflags,2
+    test byte ptr [ebp+2].trap_eflags,2
     jnz reflect_from_vm
     push ds
     push es
     push fs
     push gs
-    push bp
+    push ebp
 ;
     xor bx,bx
-    mov ax,[bp].vm_bp
+    mov ax,[ebp].trap_ebp
     mov ss:[bx],ax
     mov ss:[bx+2],cx
     mov ss:[bx+4],si
     mov ss:[bx+6],di
-    mov eax,[bp].vm_eax
+    mov eax,[ebp].trap_eax
     mov ss:[bx+8],eax
-    mov eax,[bp].vm_ebx
+    mov eax,[ebp].trap_ebx
     mov ss:[bx+12],eax
     mov ss:[bx+16],edx
-    mov eax,[bp].vm_eflags
+    mov eax,[ebp].trap_eflags
     mov ss:[bx+20],eax
 ;
     GetThread
@@ -1781,26 +1785,26 @@ reflect_pm_to_vm    PROC far
 reflect_pm_locked_move:
     mov es,bx
     xor bx,bx
-    mov di,es:[bx]
+    movzx edi,word ptr es:[bx]
     mov ax,ss
     mov ds,ax
-    mov bx,[bp+2].vm_err
+    mov bx,[ebp+2].trap_err
     mov es:[di-2],bx
-    mov si,sp
-    mov cx,stack0_size
-    sub cx,si
-    sub di,cx
-    sub di,4
+    mov esi,esp
+    mov ecx,stack0_size
+    sub ecx,esi
+    sub edi,ecx
+    sub edi,4
     push bx
     xor bx,bx
     mov es:[bx],di
     pop bx
     mov ax,cx
-    stosw
-    rep movsb
+    stos word ptr es:[edi]
+    rep movs byte ptr es:[edi],ds:[esi]
 ;
-    mov sp,stack0_size
-    xor si,si
+    mov esp,stack0_size
+    xor esi,esi
     mov eax,0F000h
     push eax
     push eax
@@ -1833,7 +1837,7 @@ refl_pm_to_vm_stack_ok:
     add edx,eax
     push ds
     push bx
-    mov ax,ss:[si+20]
+    mov ax,ss:[esi+20]
     call get_flags
     pop bx
     pop ds
@@ -1842,7 +1846,7 @@ refl_pm_to_vm_stack_ok:
     mov [edx+2],ax
     mov word ptr [edx],0
 ;
-    mov eax,ss:[si+20]
+    mov eax,ss:[esi+20]
     push ds
     push bx
     and ax,NOT 300h
@@ -1862,47 +1866,47 @@ refl_pm_to_vm_stack_ok:
     movzx eax,bx
     push eax
 ;
-    mov eax,ss:[si+8]
-    mov ebx,ss:[si+12]
-    mov cx,ss:[si+2]
-    mov edx,ss:[si+16]
-    mov di,ss:[si+6]
-    mov bp,ss:[si]
-    mov si,ss:[si+4]
+    mov eax,ss:[esi+8]
+    mov ebx,ss:[esi+12]
+    mov cx,ss:[esi+2]
+    mov edx,ss:[esi+16]
+    mov di,ss:[esi+6]
+    mov ebp,ss:[esi]
+    mov si,ss:[esi+4]
     iretd
 
 reflect_from_vm:
-    mov [bp].vm_eax,eax
-    mov [bp].vm_ebx,ebx
+    mov [ebp].trap_eax,eax
+    mov [ebp].trap_ebx,ebx
     xor bl,bl
-    xchg bl,[bp].vm_err
+    xchg bl,[ebp].trap_err
     cmp bl,1
     jne reflect_vm_done
     mov bx,flat_sel
     mov ds,bx
-    movzx ebx,word ptr [bp].vm_ss
+    movzx ebx,word ptr [ebp].trap_ss
     shl ebx,4
-    movzx eax,word ptr [bp].vm_esp
+    movzx eax,word ptr [ebp].trap_esp
     add ebx,eax
     mov ax,[ebx]
-    mov [bp].vm_eip,ax
+    mov [ebp].trap_eip,ax
     mov ax,[ebx+2]
-    mov [bp].vm_cs,ax
+    mov [ebp].trap_cs,ax
     mov ax,[ebx+4]
     call set_flags
     and ax,NOT 4000h
     push ax
     popf
-    mov [bp].vm_eflags,ax
-    add word ptr [bp].vm_esp,6
+    mov [ebp].trap_eflags,ax
+    add word ptr [ebp].trap_esp,8
 reflect_vm_done:
-    mov ax,bp
-    add ax,vm_ebx
-    mov sp,ax
+    mov eax,ebp
+    add eax,trap_ebx
+    mov esp,eax
     pop ebx
     pop eax
-    pop bp
-    add sp,4
+    pop ebp
+    add esp,4
     iretd
 reflect_pm_to_vm    ENDP
 
@@ -1922,17 +1926,17 @@ reflect_pm_to_vm    ENDP
 reflect_pm_to_vm_done   PROC far
     cld
     xor bx,bx
-    mov ax,[bp].vm_bp
+    mov eax,[ebp].trap_ebp
     mov ss:[bx],ax
     mov ss:[bx+2],cx
     mov ss:[bx+4],si
     mov ss:[bx+6],di
-    mov eax,[bp].vm_eax
+    mov eax,[ebp].trap_eax
     mov ss:[bx+8],eax
-    mov eax,[bp].vm_ebx
+    mov eax,[ebp].trap_ebx
     mov ss:[bx+12],eax
     mov ss:[bx+16],edx
-    mov eax,[bp].vm_eflags
+    mov eax,[ebp].trap_eflags
     mov ss:[bx+20],eax
 ;
     GetThread
@@ -1999,112 +2003,10 @@ virt_exception  PROC near
     pop ds
     cmp bx,ds:vm_reflect_seg
     jne simulate_exception
-    mov word ptr [bp].vm_err,0
-    jmp reflect_to_pm
-simulate_exception:
-    mov byte ptr [bp].vm_err,1
-    push edx
-    mov bx,vm_int_sel
-    mov ds,bx
-    xor ebx,ebx
-    mov bl,al
-    shl ebx,2
-    mov dx,[ebx]
-    xchg dx,[bp].vm_eip
-    mov ax,[ebx+2]
-    xchg ax,[bp].vm_cs
-    push ax
-    push dx
-    movzx edx,word ptr [bp].vm_esp
-    mov bx,flat_sel
-    mov ds,bx
-    movzx ebx,word ptr [bp].vm_ss
-    shl ebx,4
-    sub dx,6
-    mov [bp].vm_esp,dx
-    add ebx,edx
-    pop ax
-    mov [ebx],ax
-    pop ax
-    mov [ebx+2],ax
-    mov ax,[bp].vm_eflags
-    push bx
-    call get_flags
-    mov bx,flat_sel
-    mov ds,bx
-    pop bx
-    mov [ebx+4],ax  
-    and ax,NOT 300h
-    call set_flags
-    mov [bp].vm_eflags,ax
-    pop edx
-    ret
-virt_exception  ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           PROT_EXCEPTION
-;
-;           DESCRIPTION:    Protected mode exception
-;
-;           PARAMETERS:         AL          Exception #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public prot_exception
-
-prot_exception:
-    cld
-    mov [bp+2].vm_err,al
-    mov bx,[bp].vm_cs
-    and bl,3
-    cmp bl,3
-    je prot_exception_user
-    mov bx,def_exception_sel
-    mov ds,bx
-    movzx bx,al
-    shl bx,3
-    jmp fword ptr [bx]
-prot_exception_user:
-    push ax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    pop ax
-    test ds:app_bitness,1
-    jz prot_exception16
-    jmp prot_exception32
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           NEW_VIRT_EXCEPTION
-;
-;           DESCRIPTION:    V86 mode exception
-;
-;           PARAMETERS:         AL          Exception #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public new_virt_exception
-
-new_virt_exception  PROC near
-    mov bx,vm_int_sel
-    mov ds,bx
-    movzx bx,al
-    shl bx,2
-    cmp bx,[bx]
-    jne simulate_exception
-    mov bx,[bx+2]
-    push int_data_sel
-    pop ds
-    cmp bx,ds:vm_reflect_seg
-    jne new_simulate_exception
     mov word ptr [ebp].trap_err,0
     jmp reflect_to_pm
 
-new_simulate_exception:
+simulate_exception:
     mov byte ptr [ebp].trap_err,1
     push edx
     mov bx,vm_int_sel
@@ -2142,12 +2044,12 @@ new_simulate_exception:
     mov [ebp].trap_eflags,ax
     pop edx
     ret
-new_virt_exception  ENDP
+virt_exception  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           NEW_PROT_EXCEPTION
+;           NAME:           PROT_EXCEPTION
 ;
 ;           DESCRIPTION:    Protected mode exception
 ;
@@ -2155,15 +2057,15 @@ new_virt_exception  ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public new_prot_exception
+    public prot_exception
 
-new_prot_exception:
+prot_exception:
     cld
     mov [ebp+2].trap_err,al
     mov ebx,[ebp].trap_cs
     and bl,3
     cmp bl,3
-    je new_prot_exception_user
+    je prot_exception_user
 ;
     mov bx,new_def_exception_sel
     mov ds,bx
@@ -2171,7 +2073,7 @@ new_prot_exception:
     shl bx,3
     jmp fword ptr [bx]
     
-new_prot_exception_user:
+prot_exception_user:
     push ax
     GetThread
     mov ds,ax
@@ -2195,10 +2097,10 @@ new_prot_exception_user:
 reflect_exception_name  DB 'Reflect Exception', 0
 
 reflect_exception:
-    test byte ptr [bp+2].vm_eflags,2
+    test byte ptr [ebp+2].trap_eflags,2
     jnz reflect_exc_break
 ;
-    mov bx,[bp].vm_cs
+    mov bx,[ebp].trap_cs
     and bl,3
     cmp bl,3
     jne reflect_exc_break
@@ -2207,16 +2109,16 @@ reflect_exception:
     je reflect_exc_break
 ;
     call prot_exception
-    mov ds,[bp].pm_ds
-    mov eax,[bp].vm_eax
-    mov ebx,[bp].vm_ebx
-    mov sp,bp
-    pop bp
-    add sp,4
+    mov ds,[ebp].trap_pds
+    mov eax,[ebp].trap_eax
+    mov ebx,[ebp].trap_ebx
+    mov esp,ebp
+    pop ebp
+    add esp,4
     iretd
 
 reflect_exc_break:
-    DebugException
+    NewDebugException
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2234,14 +2136,14 @@ reflect_exc_break:
 translate_vm_reflect:
     sub ebx,2
     mov al,[ebx+3]
-    mov word ptr [bp].vm_err,1
+    mov word ptr [ebp].trap_err,1
     push ax
-    movzx ebx,word ptr [bp].vm_ss
+    movzx ebx,word ptr [ebp].trap_ss
     shl ebx,4
-    movzx eax,word ptr [bp].vm_esp
+    movzx eax,word ptr [ebp].trap_esp
     mov ax,[eax+ebx+4]
     SetFlags
-    mov [bp].vm_eflags,ax
+    mov [ebp].trap_eflags,ax
     pop ax
     jmp reflect_to_pm
 
@@ -2478,7 +2380,7 @@ hook_exception  ENDP
     extrn default_exception32:near
 
 default_exception:
-    mov ax,[bp].vm_cs
+    mov ax,[ebp].trap_cs
     cmp ax,callb_exc16_sel
     je default_exception16
     jmp default_exception32
@@ -2500,7 +2402,7 @@ default_exception:
     extrn break_exception32:near
 
 break_exception:
-    mov ax,[bp].vm_cs
+    mov ax,[ebp].trap_cs
     cmp ax,callb_exc16_sel
     je break_exception16
     jmp break_exception32

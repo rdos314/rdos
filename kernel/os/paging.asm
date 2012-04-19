@@ -804,7 +804,7 @@ process_dir_fault_local Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 process_dir_fault       Proc near
-    mov ax,[bp].vm_eflags
+    mov ax,[ebp].trap_eflags
     and ax,NOT 4500h
     push ax
     mov eax,cr2
@@ -846,7 +846,7 @@ pm_ecx  EQU -16
 pm_di   EQU -18
 
 page_fault_user PROC near
-    mov ax,[bp].vm_eflags
+    mov ax,[ebp].trap_eflags
     and ax,NOT 4500h
     push ax
     mov eax,cr2
@@ -906,8 +906,8 @@ page_fault_user_valid:
     pop ds
     pop ebx 
     pop eax
-    and byte ptr [bp+2].vm_eflags, NOT 1
-    pop bp
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
     add sp,4
     iretd
 
@@ -949,7 +949,7 @@ page_fault_user ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 page_fault_global       PROC near
-    mov ax,[bp].vm_eflags
+    mov ax,[ebp].trap_eflags
     and ax,NOT 4500h
     push ax
     mov eax,cr2
@@ -987,7 +987,7 @@ page_fault_global       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 page_fault_system       PROC near
-    mov ax,[bp].vm_eflags
+    mov ax,[ebp].trap_eflags
     and ax,NOT 4500h
     push ax
     mov eax,cr2
@@ -1052,7 +1052,7 @@ page_fault      Proc near
     cmp eax,sys_page_linear
     jne page_fault_system
 ;
-    mov ax,[bp].vm_eflags
+    mov ax,[ebp].trap_eflags
     and ax,NOT 4500h
     push ax
     mov eax,cr2
@@ -1084,11 +1084,11 @@ page_fault_error2:
     pop ds
     pop ebx
     pop eax
-    pop bp
+    pop ebp
     add sp,12
 ;       mov al,14
-    mov byte ptr [bp].vm_err+2,14
-    DebugException
+    mov byte ptr [ebp].trap_err+2,14
+    NewDebugException
 
 page_fault_error:
     pop ax
@@ -1103,8 +1103,8 @@ page_fault_error:
     pop ds
     pop ebx 
     pop eax
-    and byte ptr [bp+2].vm_eflags, NOT 1
-    pop bp
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
     add sp,4
     iretd
 
@@ -1121,8 +1121,8 @@ page_fault_error:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 pagefault_trap:
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
@@ -1130,7 +1130,15 @@ pagefault_trap:
     push ecx
     push edx
     push edi
-    mov eax,[bp].vm_err
+;
+    mov ax,ss
+    cmp ax,syscall_data_sel
+    je ptcont
+;
+    movzx ebp,bp
+
+ptcont:        
+    mov eax,[ebp].trap_err
     test ax,1
     jz trap_not_present
 ;
@@ -1151,8 +1159,8 @@ trap_14_done:
     pop ds
     pop ebx 
     pop eax
-    and byte ptr [bp+2].vm_eflags, NOT 1
-    pop bp
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
     add sp,4
     iretd
 

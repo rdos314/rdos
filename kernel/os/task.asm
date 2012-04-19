@@ -2618,15 +2618,15 @@ GetNextThread   Endp
     
 thread_suspend:
     push dword ptr 0
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
 ;
-    mov eax,[bp].vm_eflags
+    mov eax,[ebp].trap_eflags
     or eax,10100h
-    mov [bp].vm_eflags,eax
+    mov [ebp].trap_eflags,eax
     test eax,20000h
     jnz tsVm
 ;
@@ -2642,7 +2642,7 @@ tsRet:
     pop ds
     pop ebx
     pop eax
-    pop bp
+    pop ebp
     add sp,4
     iretd
 
