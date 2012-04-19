@@ -55,22 +55,6 @@ ELSE
     .386p
 ENDIF
 
-StopSys   Macro
-    local done
-
-    push ax    
-    mov ax,ss
-    cmp ax,syscall_data_sel
-    pop ax
-    jne done
-;
-    mov ss,si
-    mov sp,1000h
-;    CrashGate
-
-done:
-         Endm
-
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
@@ -1224,33 +1208,36 @@ DoFunc   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 cint0:
-    sub esp,4
+    push dword ptr 0
     push ebp
     mov ebp,esp
     push eax
     push ebx
+    mov ax,0
+    push ax
     push ds
-    mov al,0
     ShutDownPreTask
 
 cint4:
-    sub esp,4
+    push dword ptr 0
     push ebp
     mov ebp,esp
     push eax
     push ebx
+    mov ax,4
+    push ax
     push ds
-    mov al,4
     ShutDownPreTask
 
 cint5:
-    sub esp,4
+    push dword ptr 0
     push ebp
     mov ebp,esp
     push eax
     push ebx
+    mov ax,5
+    push ax
     push ds
-    mov al,5
     ShutDownPreTask
 
 cint6:
@@ -1259,18 +1246,20 @@ cint6:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,6
+    push ax
     push ds
-    mov al,6
     ShutDownPreTask
 
 cint7:
-    sub esp,4
+    push dword ptr 0
     push ebp
     mov ebp,esp
     push eax
     push ebx
+    mov ax,7
+    push ax
     push ds
-    mov al,7
     ShutDownPreTask
 
 cint8:
@@ -1278,18 +1267,20 @@ cint8:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,8
+    push ax
     push ds
-    mov al,8
     ShutDownPreTask
 
 cint9:
-    sub esp,4
+    push dword ptr 0
     push ebp
     mov ebp,esp
     push eax
     push ebx
+    mov ax,9
+    push ax
     push ds
-    mov al,9
     ShutDownPreTask
 
 cint10:
@@ -1298,7 +1289,9 @@ cint10:
     push eax
     push ebx
     push ds
-    mov al,10
+    mov ax,10
+    push ax
+    push ds
     ShutDownPreTask
 
 cint11:
@@ -1306,18 +1299,20 @@ cint11:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,11
+    push ax
     push ds
-    mov al,11
     ShutDownPreTask
 
 cint12:
-    sub esp,4
+    push dword ptr 0
     push ebp
     mov ebp,esp
     push eax
     push ebx
+    mov ax,12
+    push ax
     push ds
-    mov al,12
     ShutDownPreTask
 
 cint13:
@@ -1325,6 +1320,8 @@ cint13:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,13
+    push ax
     push ds
 ;
     test byte ptr [ebp+2].trap_eflags,2
@@ -1361,7 +1358,8 @@ c13_default:
     ShutDownPreTask
 
 c13_retry:
-    pop ds
+    pop eax
+    mov ds,ax
     pop ebx
     pop eax
     and byte ptr [ebp+2].trap_eflags, NOT 1
@@ -1374,8 +1372,9 @@ cint16:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,16
+    push ax
     push ds
-    mov al,16
     ShutDownPreTask
 
 crash_int_tab:

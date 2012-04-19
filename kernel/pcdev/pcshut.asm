@@ -615,7 +615,7 @@ word_reg_tab:
     DW OFFSET p_tss_gs
     DB 0
 
-pm_es   EQU -12
+pm_es   EQU -16
 
 abort_pretask:
     cli
@@ -637,31 +637,31 @@ abort_pretask_do:
 ;
     mov ax,system_data_sel
     mov es,ax
-    mov eax,[bp].vm_eip
+    mov eax,[ebp].trap_eip
     mov es:p_tss_eip,eax
-    mov eax,[bp].vm_eflags
+    mov eax,[ebp].trap_eflags
     mov es:p_tss_eflags,eax
-    mov eax,[bp].vm_eax
+    mov eax,[ebp].trap_eax
     mov es:p_tss_eax,eax
     mov es:p_tss_ecx,ecx
     mov es:p_tss_edx,edx
-    mov eax,[bp].vm_ebx
+    mov eax,[ebp].trap_ebx
     mov es:p_tss_ebx,eax
-    movzx eax,bp
+    mov eax,ebp
     add eax,18
     mov es:p_tss_esp,eax
     mov es:p_tss_esi,esi
     mov es:p_tss_edi,edi
-    mov ax,[bp].vm_cs
+    mov ax,[ebp].trap_cs
     mov es:p_tss_cs,ax
     mov es:p_tss_ss,ss
-    mov ax,[bp].pm_ds
+    mov ax,[ebp].trap_pds
     mov es:p_tss_ds,ax
-    mov ax,[bp].pm_es
+    mov ax,[ebp].pm_es
     mov es:p_tss_es,ax
     mov es:p_tss_fs,fs
     mov es:p_tss_gs,gs
-    mov bp,[bp].vm_bp
+    mov ebp,[ebp].trap_ebp
     mov es:p_tss_ebp,ebp
     sldt ax
     mov es:p_tss_ldt,ax       

@@ -903,7 +903,8 @@ page_fault_user_valid:
     mov al,0Eh
     EmulateOpcode
     pop ax
-    pop ds
+    pop eax
+    mov ds,ax
     pop ebx 
     pop eax
     and byte ptr [ebp+2].trap_eflags, NOT 1
@@ -1081,7 +1082,8 @@ page_fault_error2:
     pop edx
     pop ecx
     pop es
-    pop ds
+    pop eax
+    mov ds,ax
     pop ebx
     pop eax
     pop ebp
@@ -1100,7 +1102,8 @@ page_fault_error:
     pop es
     mov al,14
     call prot_exception
-    pop ds
+    pop eax
+    mov ds,ax
     pop ebx 
     pop eax
     and byte ptr [ebp+2].trap_eflags, NOT 1
@@ -1125,6 +1128,8 @@ pagefault_trap:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,14
+    push ax
     push ds
     push es
     push ecx
@@ -1156,7 +1161,8 @@ trap_14_done:
     pop edx
     pop ecx
     pop es
-    pop ds
+    pop eax
+    mov ds,ax
     pop ebx 
     pop eax
     and byte ptr [ebp+2].trap_eflags, NOT 1

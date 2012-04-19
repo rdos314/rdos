@@ -59,8 +59,9 @@ trap_err    EQU 4
 trap_ebp    EQU 0
 trap_eax    EQU -4
 trap_ebx    EQU -8
-trap_pds    EQU -10
-trap_call   EQU -12
+trap_exc_nr EQU -10
+trap_pds    EQU -12
+trap_call   EQU -14
 
 spinlock_typ    STRUC
 sl_value    DW ?

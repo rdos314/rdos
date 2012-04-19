@@ -2616,7 +2616,8 @@ thread_suspend:
     mov ebp,esp
     push eax
     push ebx
-    push ds
+    mov eax,ds
+    push eax
 ;
     mov eax,[ebp].trap_eflags
     or eax,10100h
@@ -2633,7 +2634,8 @@ tsVm:
     call virt_exception
 
 tsRet:
-    pop ds
+    pop eax
+    mov ds,ax
     pop ebx
     pop eax
     pop ebp

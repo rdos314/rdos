@@ -400,6 +400,8 @@ trap_0:
     sti
     push eax
     push ebx
+    mov ax,0
+    push ax
     push ds
 ;
     FixupEbp
@@ -411,7 +413,8 @@ trap_0:
     mov ds,ax
     mov al,0
     call emulate
-    pop ds
+    pop eax
+    mov ds,ax
     pop ebx
     pop eax
     and byte ptr [ebp+2].trap_eflags, NOT 1
@@ -436,6 +439,8 @@ trap_1:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,1
+    push ax
     push ds
 ;
     FixupEbp
@@ -469,7 +474,8 @@ t1_vm:
     call virt_exception
     
 t1_ret:
-    pop ds
+    pop eax
+    mov ds,ax
     pop ebx
     pop eax
     cli
@@ -496,6 +502,8 @@ trap_2:
     sti
     push eax
     push ebx
+    mov ax,2
+    push ax
     push ds
 ;
     FixupEbp    
@@ -513,7 +521,8 @@ trap_2:
 t2_vm:
     call virt_exception
 t2_ret:
-    pop ds
+    pop eax
+    mov ds,ax
     pop ebx
     pop eax
     and byte ptr [ebp+2].trap_eflags, NOT 1
@@ -539,6 +548,8 @@ trap_3:
     sti
     push eax
     push ebx
+    mov ax,3
+    push ax
     push ds
 ;
     FixupEbp    
@@ -559,7 +570,8 @@ t3_vm:
     mov al,3
     call virt_exception
 t3_ret:
-    pop ds
+    pop eax
+    mov ds,ax
     pop ebx
     pop eax
     and byte ptr [ebp+2].trap_eflags, NOT 1
@@ -585,6 +597,8 @@ trap_4:
     sti
     push eax
     push ebx
+    mov ax,4
+    push ax
     push ds
 ;
     FixupEbp    
@@ -595,7 +609,8 @@ trap_4:
     mov al,4
     call emulate
 ;    
-    pop ds
+    pop eax
+    mov ds,ax
     pop ebx
     pop eax
     and byte ptr [ebp+2].trap_eflags, NOT 1
@@ -623,6 +638,8 @@ trap_5:
     sti
     push eax
     push ebx
+    mov ax,5
+    push ax
     push ds
 ;
     FixupEbp    
@@ -633,7 +650,8 @@ trap_5:
     mov al,5
     call emulate
 ;    
-    pop ds
+    pop eax
+    mov ds,ax
     pop ebx
     pop eax
     and byte ptr [ebp+2].trap_eflags, NOT 1
@@ -1082,6 +1100,8 @@ trap_6:
     cld
     push eax
     push ebx
+    mov ax,6
+    push ax
     push ds
 ;
     FixupEbp    
@@ -1128,7 +1148,8 @@ t6_vm:
     movzx eax,byte ptr [ebx]
     call word ptr cs:[eax*2].vm_call_tab
 t6_ret:
-    pop ds
+    pop eax
+    mov ds,ax
     pop ebx
     pop eax
     and byte ptr [ebp+2].trap_eflags, NOT 1
@@ -1155,6 +1176,8 @@ trap_7:
     sti
     push eax
     push ebx
+    mov ax,7
+    push ax
     push ds
 ;
     FixupEbp    
@@ -1186,7 +1209,8 @@ math_real_fpu:
     lock or ds:ps_flags,PS_FLAG_FPU
 
 math_done:
-    pop ds
+    pop eax
+    mov ds,ax
     pop ebx
     pop eax
     cli
@@ -1213,6 +1237,8 @@ trap_9:
     sti
     push eax
     push ebx
+    mov ax,9
+    push ax
     push ds
 ;
     FixupEbp    
@@ -1224,7 +1250,8 @@ trap_9:
     mov ds,ax
     mov al,9
     call emulate
-    pop ds
+    pop eax
+    mov ds,ax
     pop ebx
     pop eax
     and byte ptr [ebp+2].trap_eflags, NOT 1
@@ -1250,6 +1277,8 @@ trap_10:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,10
+    push ax
     push ds
 ;
     FixupEbp    
@@ -1273,7 +1302,8 @@ t10_vm:
     call emulate
 
 t10_ret:
-    pop ds
+    pop eax
+    mov ds,ax
     pop ebx
     pop eax
     and byte ptr [ebp+2].trap_eflags, NOT 1
@@ -1299,6 +1329,8 @@ trap_11:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,11
+    push ax
     push ds
 ;
     FixupEbp    
@@ -1324,7 +1356,8 @@ t11_vm:
     call emulate
 
 t11_ret:
-    pop ds
+    pop eax
+    mov ds,ax
     pop ebx
     pop eax
     and byte ptr [ebp+2].trap_eflags, NOT 1
@@ -1356,6 +1389,8 @@ trap_12:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,12
+    push ax
     push ds
 ;
     FixupEbp    
@@ -1385,7 +1420,8 @@ t12_vm:
     call emulate
 
 t12_ret:
-    pop ds
+    pop eax
+    mov ds,ax
     pop ebx
     pop eax
     and byte ptr [ebp+2].trap_eflags, NOT 1
@@ -1409,6 +1445,8 @@ trap_13:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,13
+    push ax
     push ds
 ;
     FixupEbp
@@ -1572,7 +1610,8 @@ t13_retry:
     call ds:leave_patch_proc
 
 t13_end:
-    pop ds
+    pop eax
+    mov ds,ax
     pop ebx
     pop eax
     and byte ptr [ebp+2].trap_eflags, NOT 1
@@ -1598,6 +1637,8 @@ trap_16:
     sti
     push eax
     push ebx
+    mov ax,16
+    push ax
     push ds
 ;
     FixupEbp    
@@ -1609,7 +1650,8 @@ trap_16:
     mov ds,ax
     mov al,16
     call emulate
-    pop ds
+    pop eax
+    mov ds,ax
     pop ebx
     pop eax
     and byte ptr [ebp+2].trap_eflags, NOT 1
@@ -1753,9 +1795,10 @@ pretask0:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,0
+    push ax
     push ds
     FixupEbp
-    mov al,0
     ShutDownPreTask
 
 pretask1:
@@ -1764,9 +1807,10 @@ pretask1:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,1
+    push ax
     push ds
     FixupEbp
-    mov al,1
     ShutDownPreTask
 
 pretask2:
@@ -1775,9 +1819,10 @@ pretask2:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,2
+    push ax
     push ds
     FixupEbp
-    mov al,2
     ShutDownPreTask
 
 pretask3:
@@ -1786,9 +1831,10 @@ pretask3:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,3
+    push ax
     push ds
     FixupEbp
-    mov al,3
     ShutDownPreTask
 
 pretask4:
@@ -1797,9 +1843,10 @@ pretask4:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,4
+    push ax
     push ds
     FixupEbp
-    mov al,4
     ShutDownPreTask
 
 pretask5:
@@ -1808,9 +1855,10 @@ pretask5:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,5
+    push ax
     push ds
     FixupEbp
-    mov al,5
     ShutDownPreTask
 
 pretask6:
@@ -1819,9 +1867,10 @@ pretask6:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,6
+    push ax
     push ds
     FixupEbp
-    mov al,6
     ShutDownPreTask
 
 pretask7:
@@ -1830,9 +1879,10 @@ pretask7:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,7
+    push ax
     push ds
     FixupEbp
-    mov al,7
     ShutDownPreTask
 
 pretask8:
@@ -1840,9 +1890,10 @@ pretask8:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,8
+    push ax
     push ds
     FixupEbp
-    mov al,8
     ShutDownPreTask
 
 pretask9:
@@ -1851,9 +1902,10 @@ pretask9:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,9
+    push ax
     push ds
     FixupEbp
-    mov al,9
     ShutDownPreTask
 
 pretask10:
@@ -1861,9 +1913,10 @@ pretask10:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,10
+    push ax
     push ds
     FixupEbp
-    mov al,10
     ShutDownPreTask
 
 pretask11:
@@ -1871,9 +1924,10 @@ pretask11:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,11
+    push ax
     push ds
     FixupEbp
-    mov al,11
     ShutDownPreTask
 
 pretask12:
@@ -1882,9 +1936,10 @@ pretask12:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,12
+    push ax
     push ds
     FixupEbp
-    mov al,12
     ShutDownPreTask
 
 pretask13:
@@ -1892,6 +1947,8 @@ pretask13:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,13
+    push ax
     push ds
 ;    
     FixupEbp
@@ -1986,7 +2043,8 @@ pretask_gpf_default:
     ShutDownPreTask
 
 pretask_gpf_reexec:
-    pop ds
+    pop eax
+    mov ds,ax
     pop ebx
     pop eax
     and byte ptr [ebp+2].trap_eflags, NOT 1
@@ -1999,9 +2057,10 @@ prepaging14:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,14
+    push ax
     push ds
     FixupEbp
-    mov al,14
     ShutDownPreTask
 
 pretask16:
@@ -2009,9 +2068,10 @@ pretask16:
     mov ebp,esp
     push eax
     push ebx
+    mov ax,16
+    push ax
     push ds
     FixupEbp
-    mov al,16
     ShutDownPreTask
 
 pretask_int_tab:
