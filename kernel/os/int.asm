@@ -905,7 +905,7 @@ pm_exception_handler:
     public new_pm_exception_handler
 
 new_pm_exception_handler:
-    NewDebugException
+    DebugException
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -938,7 +938,7 @@ vm_exception_handler    PROC far
     add word ptr [ebp].trap_esp,6
 
 vm_except_do:
-    NewDebugException
+    DebugException
     retf32
 vm_exception_handler    ENDP
 
@@ -2118,7 +2118,7 @@ reflect_exception:
     iretd
 
 reflect_exc_break:
-    NewDebugException
+    DebugException
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

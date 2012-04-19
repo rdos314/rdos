@@ -1088,7 +1088,7 @@ page_fault_error2:
     add sp,12
 ;       mov al,14
     mov byte ptr [ebp].trap_err+2,14
-    NewDebugException
+    DebugException
 
 page_fault_error:
     pop ax

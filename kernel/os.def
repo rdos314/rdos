@@ -393,7 +393,6 @@ clone_app_nr                = 356
 get_apic_id_nr              = 357
 
 debug_exception_nr          = 360
-new_debug_exception_nr      = 361
 
 create_core_nr              = 362
 get_core_num_nr             = 363

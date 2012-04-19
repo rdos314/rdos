@@ -1147,17 +1147,12 @@ CrashTss    MACRO
 
 ;;;;;;;;;;; Debugger ;;;;;;;;;;;;;;;;
 
-;   SS:BP     Exception stack
+;   SS:EBP     Exception stack
 DebugException    MACRO
     OsGate debug_exception_nr
                         ENDM
 
 ;   SS:EBP     Exception stack
-NewDebugException    MACRO
-    OsGate new_debug_exception_nr
-                        ENDM
-
-;   SS:BP     Exception stack
 LockedDebugException    MACRO
     OsGate locked_debug_exception_nr
                         ENDM

@@ -847,12 +847,6 @@ timer_free_list_create:
     mov ax,debug_exception_nr
     RegisterOsGate
 ;
-    mov si,OFFSET new_debug_exception
-    mov di,OFFSET new_debug_exception_name
-    xor cl,cl
-    mov ax,new_debug_exception_nr
-    RegisterOsGate
-;
     mov si,OFFSET locked_debug_exception
     mov di,OFFSET locked_debug_exception_name
     xor cl,cl
@@ -3995,7 +3989,7 @@ WakeThread      ENDP
 ;
 ;           DESCRIPTION:    Save current state from stack + local registers
 ;
-;       PARAMETERS:     SS:BP       Exception stack
+;       PARAMETERS:     SS:EBP       Exception stack
 ;                       AL      Fault vector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4034,50 +4028,48 @@ debug_normal:
 ;    mov ds:p_fault_vector,al
 ;    mov ds:p_fault_code,0
 ;
-    mov eax,[bp].vm_eax
+    mov eax,[ebp].trap_eax
     mov ds:p_tss_eax,eax
-    mov eax,[bp].vm_ebx
+    mov eax,[ebp].trap_ebx
     mov ds:p_tss_ebx,eax
     mov ds:p_tss_ecx,ecx
     mov ds:p_tss_edx,edx
     mov ds:p_tss_esi,esi
     mov ds:p_tss_edi,edi
-    mov eax,ebp
-    mov ax,[bp]
+    mov eax,[ebp].trap_ebp
     mov ds:p_tss_ebp,eax
 ;       
-    mov eax,[bp].vm_eflags
+    mov eax,[ebp].trap_eflags
     mov ds:p_tss_eflags,eax
-    mov ax,[bp].vm_cs
+    mov ax,[ebp].trap_cs
     mov ds:p_tss_cs,ax
-    mov eax,[bp].vm_eip
+    mov eax,[ebp].trap_eip
     mov ds:p_tss_eip,eax
 ;       
     pop si
-    test dword ptr [bp].vm_eflags,20000h
+    test dword ptr [ebp].trap_eflags,20000h
     jnz debug_vm
 
 debug_pm:
-    mov al,[bp].vm_cs
+    mov al,[ebp].trap_cs
     test al,3
     jz debug_kernel
 ;
-    mov ax,[bp].vm_ss
+    mov ax,[ebp].trap_ss
     mov ds:p_tss_ss,ax
-    mov eax,[bp].vm_esp
+    mov eax,[ebp].trap_esp
     mov ds:p_tss_esp,eax
     jmp debug_pm_common
     
 debug_kernel:
     mov ax,ss
     mov ds:p_tss_ss,ax
-    mov ax,bp
-    add ax,vm_esp
-    movzx eax,ax
+    mov eax,ebp
+    add eax,trap_esp
     mov ds:p_tss_esp,eax
     
 debug_pm_common:
-    mov ax,[bp].pm_ds
+    mov ax,[ebp].trap_pds
     mov ds:p_tss_ds,ax
     mov ax,es
     mov ds:p_tss_es,ax
@@ -4087,17 +4079,17 @@ debug_pm_common:
     jmp debug_save_ok
 
 debug_vm:
-    mov ax,[bp].vm_gs
+    mov ax,[ebp].trap_gs
     mov ds:p_tss_gs,ax
-    mov ax,[bp].vm_fs
+    mov ax,[ebp].trap_fs
     mov ds:p_tss_fs,ax
-    mov ax,[bp].vm_ds
+    mov ax,[ebp].trap_ds
     mov ds:p_tss_ds,ax
-    mov ax,[bp].vm_es
+    mov ax,[ebp].trap_es
     mov ds:p_tss_es,ax
-    mov ax,[bp].vm_ss
+    mov ax,[ebp].trap_ss
     mov ds:p_tss_ss,ax
-    mov eax,[bp].vm_esp
+    mov eax,[ebp].trap_esp
     mov ds:p_tss_esp,eax
 
 debug_save_ok:
@@ -4122,152 +4114,6 @@ debug_block:
     call es:p_debug_proc
 
 debug_block_do:
-    mov fs:ps_curr_thread,0
-;    
-    mov ax,system_data_sel
-    mov ds,ax
-    mov edi,OFFSET debug_list       
-;
-    call cs:lock_list_proc
-    call InsertBlock32
-    call cs:unlock_list_proc
-;
-    mov es:p_sleep_sel,ds
-    mov es:p_sleep_offset,edi
-    jmp LoadThread        
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           NewDebugException / NewLockedDebugException
-;
-;           DESCRIPTION:    Save current state from stack + local registers
-;
-;       PARAMETERS:     SS:EBP       Exception stack
-;                       AL      Fault vector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-new_debug_exception_name        DB 'Debug Exception', 0
-new_locked_debug_exception_name     DB 'Locked Debug Exception', 0
-
-new_locked_debug_exception:
-    movzx ax,al
-    push fs
-    push ax
-    mov ax,core_data_sel
-    mov fs,ax
-    mov fs,fs:ps_sel
-    pop ax
-    jmp new_debug_normal
-
-new_debug_exception:
-    movzx ax,al
-    push fs
-    call TryLockCore
-    jc new_debug_normal
-
-new_debug_fault:
-    movzx eax,al
-    CrashFault
-   
-new_debug_normal:       
-    push ax
-    mov ax,fs:ps_curr_thread 
-    or ax,ax
-    pop ax
-    jz new_debug_fault
-;    
-    mov ds,fs:ps_curr_thread 
-;    mov ds:p_fault_vector,al
-;    mov ds:p_fault_code,0
-;
-    mov eax,[ebp].trap_eax
-    mov ds:p_tss_eax,eax
-    mov eax,[ebp].trap_ebx
-    mov ds:p_tss_ebx,eax
-    mov ds:p_tss_ecx,ecx
-    mov ds:p_tss_edx,edx
-    mov ds:p_tss_esi,esi
-    mov ds:p_tss_edi,edi
-    mov eax,[ebp].trap_ebp
-    mov ds:p_tss_ebp,eax
-;       
-    mov eax,[ebp].trap_eflags
-    mov ds:p_tss_eflags,eax
-    mov ax,[ebp].trap_cs
-    mov ds:p_tss_cs,ax
-    mov eax,[ebp].trap_eip
-    mov ds:p_tss_eip,eax
-;       
-    pop si
-    test dword ptr [ebp].trap_eflags,20000h
-    jnz new_debug_vm
-
-new_debug_pm:
-    mov al,[ebp].trap_cs
-    test al,3
-    jz new_debug_kernel
-;
-    mov ax,[ebp].trap_ss
-    mov ds:p_tss_ss,ax
-    mov eax,[ebp].trap_esp
-    mov ds:p_tss_esp,eax
-    jmp new_debug_pm_common
-    
-new_debug_kernel:
-    mov ax,ss
-    mov ds:p_tss_ss,ax
-    mov eax,ebp
-    add eax,trap_esp
-    mov ds:p_tss_esp,eax
-    
-new_debug_pm_common:
-    mov ax,[ebp].trap_pds
-    mov ds:p_tss_ds,ax
-    mov ax,es
-    mov ds:p_tss_es,ax
-    mov ds:p_tss_fs,si
-    mov ax,gs
-    mov ds:p_tss_gs,ax
-    jmp new_debug_save_ok
-
-new_debug_vm:
-    mov ax,[ebp].trap_gs
-    mov ds:p_tss_gs,ax
-    mov ax,[ebp].trap_fs
-    mov ds:p_tss_fs,ax
-    mov ax,[ebp].trap_ds
-    mov ds:p_tss_ds,ax
-    mov ax,[ebp].trap_es
-    mov ds:p_tss_es,ax
-    mov ax,[ebp].trap_ss
-    mov ds:p_tss_ss,ax
-    mov eax,[ebp].trap_esp
-    mov ds:p_tss_esp,eax
-
-new_debug_save_ok:
-    mov ss,fs:ps_ss
-    mov sp,fs:ps_sp
-;
-    xor ax,ax
-    mov ds,ax
-    mov es,ax
-    mov gs,ax    
-;
-    mov ax,fs:ps_curr_thread
-    cmp ax,fs:ps_null_thread
-    je new_debug_fault
-    
-new_debug_block:
-    mov es,fs:ps_curr_thread
-    mov eax,es:p_debug_proc
-    or eax,eax
-    jz new_debug_block_do
-;
-    call es:p_debug_proc
-
-new_debug_block_do:
     mov fs:ps_curr_thread,0
 ;    
     mov ax,system_data_sel
