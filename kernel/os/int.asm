@@ -46,6 +46,9 @@ INCLUDE int.def
     extrn prot_exception16:near
     extrn prot_exception32:near
 
+    extrn new_prot_exception16:near
+    extrn new_prot_exception32:near
+
     extrn set_flags:near
     extrn get_flags:near
 
@@ -97,6 +100,10 @@ init_int    PROC near
 ;
     mov eax,100h
     mov bx,def_exception_sel
+    AllocateFixedSystemMem
+;
+    mov eax,100h
+    mov bx,new_def_exception_sel
     AllocateFixedSystemMem
 ;
     mov eax,400h
@@ -254,6 +261,17 @@ init_exc_loop:
     mov [bx+4],cs
     add bx,8
     loop init_exc_loop
+;
+    mov cx,20h
+    mov ax,new_def_exception_sel
+    mov ds,ax
+    xor bx,bx
+    mov edx,OFFSET new_pm_exception_handler
+new_init_exc_loop:
+    mov [bx],edx
+    mov [bx+4],cs
+    add bx,8
+    loop new_init_exc_loop
 ;
     mov eax,OFFSET raw_switch_v86_end - OFFSET raw_switch_v86_begin
     mov ecx,eax
@@ -875,6 +893,22 @@ restore_context ENDP
 
 pm_exception_handler:
     DebugException
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           NEW_PM_EXCEPTION_HANDLER
+;
+;           DESCRIPTION:    Protected mode exception handler
+;
+;           PARAMETERS:         AL          Exception #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public new_pm_exception_handler
+
+new_pm_exception_handler:
+    NewDebugException
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2041,6 +2075,111 @@ prot_exception_user:
     test ds:app_bitness,1
     jz prot_exception16
     jmp prot_exception32
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           NEW_VIRT_EXCEPTION
+;
+;           DESCRIPTION:    V86 mode exception
+;
+;           PARAMETERS:         AL          Exception #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public new_virt_exception
+
+new_virt_exception  PROC near
+    mov bx,vm_int_sel
+    mov ds,bx
+    movzx bx,al
+    shl bx,2
+    cmp bx,[bx]
+    jne simulate_exception
+    mov bx,[bx+2]
+    push int_data_sel
+    pop ds
+    cmp bx,ds:vm_reflect_seg
+    jne new_simulate_exception
+    mov word ptr [ebp].trap_err,0
+    jmp reflect_to_pm
+
+new_simulate_exception:
+    mov byte ptr [ebp].trap_err,1
+    push edx
+    mov bx,vm_int_sel
+    mov ds,bx
+    xor ebx,ebx
+    mov bl,al
+    shl ebx,2
+    mov dx,[ebx]
+    xchg dx,[ebp].trap_eip
+    mov ax,[ebx+2]
+    xchg ax,[ebp].trap_cs
+    push ax
+    push dx
+    movzx edx,word ptr [ebp].trap_esp
+    mov bx,flat_sel
+    mov ds,bx
+    movzx ebx,word ptr [ebp].trap_ss
+    shl ebx,4
+    sub dx,6
+    mov [ebp].trap_esp,dx
+    add ebx,edx
+    pop ax
+    mov [ebx],ax
+    pop ax
+    mov [ebx+2],ax
+    mov ax,[ebp].trap_eflags
+    push bx
+    call get_flags
+    mov bx,flat_sel
+    mov ds,bx
+    pop bx
+    mov [ebx+4],ax  
+    and ax,NOT 300h
+    call set_flags
+    mov [ebp].trap_eflags,ax
+    pop edx
+    ret
+new_virt_exception  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           NEW_PROT_EXCEPTION
+;
+;           DESCRIPTION:    Protected mode exception
+;
+;           PARAMETERS:         AL          Exception #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public new_prot_exception
+
+new_prot_exception:
+    cld
+    mov [ebp+2].trap_err,al
+    mov ebx,[ebp].trap_cs
+    and bl,3
+    cmp bl,3
+    je new_prot_exception_user
+;
+    mov bx,new_def_exception_sel
+    mov ds,bx
+    movzx bx,al
+    shl bx,3
+    jmp fword ptr [bx]
+    
+new_prot_exception_user:
+    push ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    pop ax
+    test ds:app_bitness,1
+    jz new_prot_exception16
+    jmp new_prot_exception32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

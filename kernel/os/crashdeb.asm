@@ -55,6 +55,22 @@ ELSE
     .386p
 ENDIF
 
+StopSys   Macro
+    local done
+
+    push ax    
+    mov ax,ss
+    cmp ax,syscall_data_sel
+    pop ax
+    jne done
+;
+    mov ss,si
+    mov sp,1000h
+;    CrashGate
+
+done:
+         Endm
+
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
@@ -1208,9 +1224,9 @@ DoFunc   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 cint0:
-    sub sp,4
-    push bp
-    mov bp,sp
+    sub esp,4
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
@@ -1218,9 +1234,9 @@ cint0:
     ShutDownPreTask
 
 cint4:
-    sub sp,4
-    push bp
-    mov bp,sp
+    sub esp,4
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
@@ -1228,9 +1244,9 @@ cint4:
     ShutDownPreTask
 
 cint5:
-    sub sp,4
-    push bp
-    mov bp,sp
+    sub esp,4
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
@@ -1239,8 +1255,8 @@ cint5:
 
 cint6:
     push dword ptr 0
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
@@ -1248,9 +1264,9 @@ cint6:
     ShutDownPreTask
 
 cint7:
-    sub sp,4
-    push bp
-    mov bp,sp
+    sub esp,4
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
@@ -1258,8 +1274,8 @@ cint7:
     ShutDownPreTask
 
 cint8:
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
@@ -1267,9 +1283,9 @@ cint8:
     ShutDownPreTask
 
 cint9:
-    sub sp,4
-    push bp
-    mov bp,sp
+    sub esp,4
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
@@ -1277,8 +1293,8 @@ cint9:
     ShutDownPreTask
 
 cint10:
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
@@ -1286,8 +1302,8 @@ cint10:
     ShutDownPreTask
 
 cint11:
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
@@ -1295,9 +1311,9 @@ cint11:
     ShutDownPreTask
 
 cint12:
-    sub sp,4
-    push bp
-    mov bp,sp
+    sub esp,4
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
@@ -1305,17 +1321,17 @@ cint12:
     ShutDownPreTask
 
 cint13:
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
 ;
-    test byte ptr [bp+2].vm_eflags,2
+    test byte ptr [ebp+2].trap_eflags,2
     jnz c13_default
 ;
-    mov ds,[bp].vm_cs
-    mov ebx,[bp].vm_eip
+    mov ds,[ebp].trap_cs
+    mov ebx,[ebp].trap_eip
     mov al,[ebx]
 ;
     cmp al,67h
@@ -1348,14 +1364,14 @@ c13_retry:
     pop ds
     pop ebx
     pop eax
-    and byte ptr [bp+2].vm_eflags, NOT 1
-    pop bp
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
     add sp,4
     iretd
 
 cint16:
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
@@ -1435,8 +1451,15 @@ nmi_handler:
     push eax
     push ebx
     push ebp
-    mov bp,sp
-; 
+    mov ebp,esp
+;
+    mov ax,ss
+    cmp ax,syscall_data_sel
+    je nmi_bp_ok
+;
+    movzx ebp,bp
+
+nmi_bp_ok: 
     GetCore
     test fs:ps_flags,PS_FLAG_NMI
     jnz nmi_ret
@@ -1449,54 +1472,54 @@ nmi_handler:
     mov gs:cs_fault,-1
     mov gs:cs_irq,0
 ;    
-    mov eax,[bp].nmi_ebp
+    mov eax,[ebp].nmi_ebp
     mov gs:cs_ebp,eax
-    mov eax,[bp].nmi_ebx
+    mov eax,[ebp].nmi_ebx
     mov gs:cs_ebx,eax
-    mov eax,[bp].nmi_eax
+    mov eax,[ebp].nmi_eax
     mov gs:cs_eax,eax
-    mov eax,[bp].nmi_eip
+    mov eax,[ebp].nmi_eip
     mov gs:cs_eip,eax
-    mov ax,[bp].nmi_cs
+    mov ax,[ebp].nmi_cs
     mov gs:cs_cs,ax
-    mov ebx,[bp].nmi_efl
+    mov ebx,[ebp].nmi_efl
     mov gs:cs_eflags,ebx
     test ebx,20000h
     jnz nmi_v86
 ;    
-    mov bx,[bp].nmi_sfs
+    mov bx,[ebp].nmi_sfs
     mov gs:cs_fs,bx
-    mov bx,[bp].nmi_sgs
+    mov bx,[ebp].nmi_sgs
     mov gs:cs_gs,bx
 ;    
     and al,3
     or al,al
     jz nmi_kernel
 ;
-    mov eax,[bp].nmi_esp
+    mov eax,[ebp].nmi_esp
     mov gs:cs_esp,eax
-    mov ax,[bp].nmi_ss
+    mov ax,[ebp].nmi_ss
     mov gs:cs_ss,ax
     jmp nmi_block
 
 nmi_kernel:
-    movzx eax,bp
-    add ax,nmi_esp
+    mov eax,ebp
+    add eax,nmi_esp
     mov gs:cs_esp,eax
     jmp nmi_block
 
 nmi_v86:
-    mov eax,[bp].nmi_esp
+    mov eax,[ebp].nmi_esp
     mov gs:cs_esp,eax
-    mov ax,[bp].nmi_ss
+    mov ax,[ebp].nmi_ss
     mov gs:cs_ss,ax
-    mov ax,[bp].nmi_ds
+    mov ax,[ebp].nmi_ds
     mov gs:cs_ds,ax
-    mov ax,[bp].nmi_es
+    mov ax,[ebp].nmi_es
     mov gs:cs_es,ax
-    mov ax,[bp].nmi_fs
+    mov ax,[ebp].nmi_fs
     mov gs:cs_fs,ax
-    mov ax,[bp].nmi_gs
+    mov ax,[ebp].nmi_gs
     mov gs:cs_gs,ax
 
 nmi_block:
@@ -2008,7 +2031,7 @@ crash_gate_chain:
 ;
 ;           DESCRIPTION:    Crash with a fault stack
 ;
-;           PARAMETERS:     SS:BP       Fault context
+;           PARAMETERS:     SS:EBP      Fault context
 ;                           EAX         Fault ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2029,67 +2052,65 @@ crash_fault:
     pop eax    
     mov fs:cs_fault,eax
 ;
-    mov ax,[bp].pm_ds
+    mov ax,[ebp].trap_pds
     mov fs:cs_ds,ax
 ;    
-    mov eax,[bp].vm_eax
+    mov eax,[ebp].trap_eax
     mov fs:cs_eax,eax
 ;    
-    mov eax,[bp].vm_ebx
+    mov eax,[ebp].trap_ebx
     mov fs:cs_ebx,eax
 ;
-    mov eax,ebp
-    mov ax,[bp]
+    mov eax,[ebp].trap_ebp
     mov fs:cs_ebp,eax
 ;    
-    mov eax,[bp].vm_eflags
+    mov eax,[ebp].trap_eflags
     mov fs:cs_eflags,eax
 ;
-    mov ax,[bp].vm_cs
+    mov ax,[ebp].trap_cs
     mov fs:cs_cs,ax
 ;    
-    mov eax,[bp].vm_eip
+    mov eax,[ebp].trap_eip
     mov fs:cs_eip,eax
 ;
-    test dword ptr [bp].vm_eflags,20000h
+    test dword ptr [ebp].trap_eflags,20000h
     jnz crash_fault_vm
 
 crash_fault_pm:
-    mov al,[bp].vm_cs
+    mov al,[ebp].trap_cs
     test al,3
     jz crash_fault_kernel
 ;
-    mov ax,[bp].vm_ss
+    mov ax,[ebp].trap_ss
     mov fs:cs_ss,ax
 ;    
-    mov eax,[bp].vm_esp
+    mov eax,[ebp].trap_esp
     mov fs:cs_esp,eax
     jmp CrashHandler
     
 crash_fault_kernel:
-    mov ax,bp
-    add ax,vm_esp
-    movzx eax,ax
+    mov eax,ebp
+    add eax,trap_esp
     mov fs:cs_esp,eax
     jmp CrashHandler
 
 crash_fault_vm:
-    mov ax,[bp].vm_gs
+    mov ax,[ebp].trap_gs
     mov fs:cs_gs,ax
 ;
-    mov ax,[bp].vm_fs
+    mov ax,[ebp].trap_fs
     mov fs:cs_fs,ax
 ;
-    mov ax,[bp].vm_ds
+    mov ax,[ebp].trap_ds
     mov fs:cs_ds,ax
 ;    
-    mov ax,[bp].vm_es
+    mov ax,[ebp].trap_es
     mov fs:cs_es,ax
 ;    
-    mov ax,[bp].vm_ss
+    mov ax,[ebp].trap_ss
     mov fs:cs_ss,ax
 ;    
-    mov eax,[bp].vm_esp
+    mov eax,[ebp].trap_esp
     mov fs:cs_esp,eax
     jmp CrashHandler
 
@@ -2101,67 +2122,65 @@ crash_fault_chain:
     pop eax    
     mov fs:cs_fault,eax
 ;
-    mov ax,[bp].pm_ds
+    mov ax,[ebp].trap_pds
     mov fs:cs_ds,ax
 ;    
-    mov eax,[bp].vm_eax
+    mov eax,[ebp].trap_eax
     mov fs:cs_eax,eax
 ;    
-    mov eax,[bp].vm_ebx
+    mov eax,[ebp].trap_ebx
     mov fs:cs_ebx,eax
 ;
-    mov eax,ebp
-    mov ax,[bp]
+    mov eax,[ebp].trap_ebp
     mov fs:cs_ebp,eax
 ;    
-    mov eax,[bp].vm_eflags
+    mov eax,[ebp].trap_eflags
     mov fs:cs_eflags,eax
 ;
-    mov ax,[bp].vm_cs
+    mov ax,[ebp].trap_cs
     mov fs:cs_cs,ax
 ;    
-    mov eax,[bp].vm_eip
+    mov eax,[ebp].trap_eip
     mov fs:cs_eip,eax
 ;
-    test dword ptr [bp].vm_eflags,20000h
+    test dword ptr [ebp].trap_eflags,20000h
     jnz crash_fault_chain_vm
 
 crash_fault_chain_pm:
-    mov al,[bp].vm_cs
+    mov al,[ebp].trap_cs
     test al,3
     jz crash_fault_chain_kernel
 ;
-    mov ax,[bp].vm_ss
+    mov ax,[ebp].trap_ss
     mov fs:cs_ss,ax
 ;    
-    mov eax,[bp].vm_esp
+    mov eax,[ebp].trap_esp
     mov fs:cs_esp,eax
     jmp nmi_block
     
 crash_fault_chain_kernel:
-    mov ax,bp
-    add ax,vm_esp
-    movzx eax,ax
+    mov eax,ebp
+    add eax,trap_esp
     mov fs:cs_esp,eax
     jmp nmi_block
 
 crash_fault_chain_vm:
-    mov ax,[bp].vm_gs
+    mov ax,[ebp].trap_gs
     mov fs:cs_gs,ax
 ;
-    mov ax,[bp].vm_fs
+    mov ax,[ebp].trap_fs
     mov fs:cs_fs,ax
 ;
-    mov ax,[bp].vm_ds
+    mov ax,[ebp].trap_ds
     mov fs:cs_ds,ax
 ;    
-    mov ax,[bp].vm_es
+    mov ax,[ebp].trap_es
     mov fs:cs_es,ax
 ;    
-    mov ax,[bp].vm_ss
+    mov ax,[ebp].trap_ss
     mov fs:cs_ss,ax
 ;    
-    mov eax,[bp].vm_esp
+    mov eax,[ebp].trap_esp
     mov fs:cs_esp,eax
     jmp nmi_block
 

@@ -25,7 +25,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; offsets in trapgate, vmode
+; offsets in 16-bit trapgates, vmode
 ;
 vm_gs       EQU 38
 vm_fs       EQU 34
@@ -42,6 +42,25 @@ vm_eax      EQU -4
 vm_ebx      EQU -8
 pm_ds       EQU -10
 pm_call     EQU -12
+
+;
+; offsets in 32-bit trapgates, vmode
+;
+trap_gs     EQU 40
+trap_fs     EQU 36
+trap_ds     EQU 32
+trap_es     EQU 28
+trap_ss     EQU 24
+trap_esp    EQU 20
+trap_eflags EQU 16
+trap_cs     EQU 12
+trap_eip    EQU 8
+trap_err    EQU 4
+trap_ebp    EQU 0
+trap_eax    EQU -4
+trap_ebx    EQU -8
+trap_pds    EQU -10
+trap_call   EQU -12
 
 spinlock_typ    STRUC
 sl_value    DW ?
@@ -1116,7 +1135,7 @@ CrashGate       MACRO
     OsGate crash_gate_nr
                     ENDM
 
-;   SS:BP       Fault stack
+;   SS:EBP       Fault stack
 CrashFault      MACRO
     OsGate crash_fault_nr
                     ENDM
@@ -1131,6 +1150,11 @@ CrashTss    MACRO
 ;   SS:BP     Exception stack
 DebugException    MACRO
     OsGate debug_exception_nr
+                        ENDM
+
+;   SS:EBP     Exception stack
+NewDebugException    MACRO
+    OsGate new_debug_exception_nr
                         ENDM
 
 ;   SS:BP     Exception stack

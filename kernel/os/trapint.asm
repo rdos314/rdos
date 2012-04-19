@@ -76,12 +76,48 @@ CheckIt MACRO
 trap_no_stop:
         ENDM
 
+FixupEbp Macro
+    local done
+
+    push ax
+    mov ax,ss
+    cmp ax,syscall_data_sel
+    pop ax
+    je done
+;
+    movzx ebp,bp
+
+done:
+        ENDM    
+    
+
 IFDEF __WASM__
     .686p
     .xmm2
 ELSE
     .386p
 ENDIF
+
+StopSys   Macro
+    local done
+    
+    push ax
+    mov ax,ss
+    cmp ax,syscall_data_sel
+    jne done
+;    
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:patch_spinlock,0
+    pop ax
+;
+    mov ss,si
+    mov sp,stack0_size
+    CrashGate
+
+done:
+    pop ax
+         Endm
 
 code    SEGMENT byte use16 public 'CODE'
 
@@ -92,8 +128,9 @@ code    SEGMENT byte use16 public 'CODE'
     extrn get_task_lock:near
 
     extrn get_thread:near
-    extrn prot_exception:near
-    extrn virt_exception:near
+
+    extrn new_prot_exception:near
+    extrn new_virt_exception:near
 
     extrn do_oscall:near
     extrn do_usercall16:near
@@ -114,16 +151,16 @@ emulate PROC near
 
 emulate_exception:
     push ax
-    mov eax,[bp].vm_eflags
+    mov eax,[ebp].trap_eflags
     test eax,20000h
     pop ax
     jnz em_vm
 ;
-    call prot_exception
+    call new_prot_exception
     ret
 
 em_vm:
-    call virt_exception
+    call new_virt_exception
     ret
 emulate ENDP
 
@@ -236,17 +273,18 @@ int66:
 int67:
     sub sp,8
     push ebp
-    mov bp,sp
+    mov ebp,esp
     push ds
     push es
     pushad
 ;
+    FixupEbp
     mov ax,system_data_sel
     mov ds,ax
     call ds:enter_patch_proc
 ;
-    mov ds,[bp+16]
-    mov ebx,[bp+12]
+    mov ds,[ebp+16]
+    mov ebx,[ebp+12]
     sub ebx,2
     mov al,ds:[ebx]
     cmp al,0CDh
@@ -276,7 +314,7 @@ int_retry:
     mov ax,system_data_sel
     mov ds,ax
     call ds:leave_patch_proc
-    mov [bp+12],ebx
+    mov [ebp+12],ebx
 ;    
     popad
     pop es
@@ -304,19 +342,20 @@ int9A:
 intE8:
     sub sp,8
     push ebp
-    mov bp,sp
+    mov ebp,esp
     push ds
     push es
     pushad
 ;
+    FixupEbp
     mov ax,system_data_sel
     mov ds,ax
     EnterSection ds:patch_section
 ;
-    mov ds,[bp+16]
-    mov ebx,[bp+12]
+    mov ds,[ebp+16]
+    mov ebx,[ebp+12]
     sub ebx,2
-    mov [bp+12],ebx
+    mov [ebp+12],ebx
     mov al,ds:[ebx]
     cmp al,0CDh
     jne intg_retry    
@@ -356,12 +395,14 @@ intg_retry:
 
 trap_0:
     push dword ptr 0
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     sti
     push eax
     push ebx
     push ds
+;
+    FixupEbp
     GetThread
     mov ds,ax
     mov ds:p_fault_vector,0
@@ -373,8 +414,8 @@ trap_0:
     pop ds
     pop ebx
     pop eax
-    and byte ptr [bp+2].vm_eflags, NOT 1
-    pop bp
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
     add sp,4
     iretd
 
@@ -391,12 +432,13 @@ trap_0:
 
 trap_1:
     push dword ptr 0
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
 ;
+    FixupEbp
     call get_task_lock
     add ax,1
     jnc t1_ret
@@ -412,27 +454,27 @@ trap_1:
 ;
     xor ax,ax
     mov ds,ax
-    mov eax,[bp].vm_eflags
+    mov eax,[ebp].trap_eflags
     or eax,10100h
-    mov [bp].vm_eflags,eax
+    mov [ebp].trap_eflags,eax
     test eax,20000h
     jnz t1_vm
 ;
     mov al,1
-    call prot_exception
+    call new_prot_exception
     jmp t1_ret
 
 t1_vm:
     mov al,1
-    call virt_exception
+    call new_virt_exception
     
 t1_ret:
     pop ds
     pop ebx
     pop eax
     cli
-    and byte ptr [bp+2].vm_eflags, NOT 1
-    pop bp
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
     add sp,4
     iretd
 
@@ -449,12 +491,14 @@ t1_ret:
 
 trap_2:
     push dword ptr 0
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     sti
     push eax
     push ebx
     push ds
+;
+    FixupEbp    
     GetThread
     mov ds,ax
     mov ds:p_fault_vector,2
@@ -462,18 +506,18 @@ trap_2:
     xor ax,ax
     mov ds,ax
     mov al,2
-    test byte ptr [bp+2].vm_eflags,2
+    test byte ptr [ebp+2].trap_eflags,2
     jnz t2_vm
-    call prot_exception
+    call new_prot_exception
     jmp t2_ret
 t2_vm:
-    call virt_exception
+    call new_virt_exception
 t2_ret:
     pop ds
     pop ebx
     pop eax
-    and byte ptr [bp+2].vm_eflags, NOT 1
-    pop bp
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
     add sp,4
     iretd
 
@@ -490,34 +534,36 @@ t2_ret:
 
 trap_3:
     push dword ptr 0
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     sti
     push eax
     push ebx
     push ds
+;
+    FixupEbp    
     GetThread
     mov ds,ax
     mov ds:p_fault_vector,3
     mov ds:p_fault_code,0
     xor ax,ax
     mov ds,ax
-    mov eax,[bp].vm_eflags
+    mov eax,[ebp].trap_eflags
     test eax,20000h
     jnz t3_vm
 ;
     mov al,3
-    call prot_exception
+    call new_prot_exception
     jmp t3_ret
 t3_vm:
     mov al,3
-    call virt_exception
+    call new_virt_exception
 t3_ret:
     pop ds
     pop ebx
     pop eax
-    and byte ptr [bp+2].vm_eflags, NOT 1
-    pop bp
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
     add sp,4
     iretd
 
@@ -534,23 +580,26 @@ t3_ret:
 
 trap_4:
     push dword ptr 0
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     sti
     push eax
     push ebx
     push ds
+;
+    FixupEbp    
     GetThread
     mov ds,ax
     mov ds:p_fault_vector,4
     mov ds:p_fault_code,0
     mov al,4
     call emulate
+;    
     pop ds
     pop ebx
     pop eax
-    and byte ptr [bp+2].vm_eflags, NOT 1
-    pop bp
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
     add sp,4
     iretd
 
@@ -569,23 +618,26 @@ trap_4:
 
 trap_5:
     push dword ptr 0
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     sti
     push eax
     push ebx
     push ds
+;
+    FixupEbp    
     GetThread
     mov ds,ax
     mov ds:p_fault_vector,5
     mov ds:p_fault_code,0
     mov al,5
     call emulate
+;    
     pop ds
     pop ebx
     pop eax
-    and byte ptr [bp+2].vm_eflags, NOT 1
-    pop bp
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
     add sp,4
     iretd
 
@@ -1024,13 +1076,15 @@ pm32_FE DW OFFSET emulate_6,            OFFSET emulate_6
 
 trap_6:
     push dword ptr 0
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     sti
     cld
     push eax
     push ebx
     push ds
+;
+    FixupEbp    
     GetThread
     mov ds,ax
     mov ds:p_fault_vector,6
@@ -1038,10 +1092,10 @@ trap_6:
 ;
     xor ax,ax
     mov ds,ax
-    test byte ptr [bp+2].vm_eflags,2
+    test byte ptr [ebp+2].trap_eflags,2
     jnz t6_vm
-    mov ds,[bp].vm_cs
-    mov ebx,[bp].vm_eip
+    mov ds,[ebp].trap_cs
+    mov ebx,[ebp].trap_eip
     mov ax,[ebx]
     cmp ax,00B0Fh
     jne emulate_62
@@ -1061,9 +1115,9 @@ emulate_62:
     jmp t6_ret
 t6_vm:
     xor ebx,ebx
-    mov bx,[bp].vm_cs
+    mov bx,[ebp].trap_cs
     shl ebx,4
-    add ebx,[bp].vm_eip
+    add ebx,[ebp].trap_eip
     mov ax,flat_sel
     mov ds,ax
     mov ax,[ebx]
@@ -1077,8 +1131,8 @@ t6_ret:
     pop ds
     pop ebx
     pop eax
-    and byte ptr [bp+2].vm_eflags, NOT 1
-    pop bp
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
     add sp,4
     iretd
 
@@ -1096,12 +1150,14 @@ t6_ret:
 
 trap_7:
     push dword ptr 0
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     sti
     push eax
     push ebx
     push ds
+;
+    FixupEbp    
     GetThread
     mov ds,ax
     mov ds:p_fault_vector,7
@@ -1134,8 +1190,8 @@ math_done:
     pop ebx
     pop eax
     cli
-    and byte ptr [bp+2].vm_eflags, NOT 1
-    pop bp
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
     add sp,4
     iretd
 
@@ -1152,12 +1208,14 @@ math_done:
 
 trap_9:
     push dword ptr 0
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     sti
     push eax
     push ebx
     push ds
+;
+    FixupEbp    
     GetThread
     mov ds,ax
     mov ds:p_fault_vector,7
@@ -1169,8 +1227,8 @@ trap_9:
     pop ds
     pop ebx
     pop eax
-    and byte ptr [bp+2].vm_eflags, NOT 1
-    pop bp
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
     add sp,4
     iretd
 
@@ -1188,24 +1246,26 @@ trap_9:
 
 trap_10:
     sti
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
+;
+    FixupEbp    
     GetThread
     mov ds,ax
     mov ds:p_fault_vector,10
-    mov eax,[bp].vm_err
+    mov eax,[ebp].trap_err
     mov ds:p_fault_code,eax
     xor ax,ax
     mov ds,ax
     mov al,10
-    test byte ptr [bp+2].vm_eflags,2
+    test byte ptr [ebp+2].trap_eflags,2
     jnz t10_vm
 ;
     mov al,10
-    call prot_exception
+    call new_prot_exception
     jmp t10_ret
 
 t10_vm:
@@ -1216,8 +1276,8 @@ t10_ret:
     pop ds
     pop ebx
     pop eax
-    and byte ptr [bp+2].vm_eflags, NOT 1
-    pop bp
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
     add sp,4
     iretd
 
@@ -1235,26 +1295,28 @@ t10_ret:
 
 trap_11:
     sti
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
+;
+    FixupEbp    
     GetThread
     mov ds,ax
     mov ds:p_fault_vector,11
-    mov eax,[bp].vm_err
+    mov eax,[ebp].trap_err
     mov ds:p_fault_code,eax
     xor ax,ax
     mov ds,ax
     mov al,11
-    test byte ptr [bp+2].vm_eflags,2
+    test byte ptr [ebp+2].trap_eflags,2
     jnz t11_vm
     SegmentNotPresent
     jnc t11_ret
 ;
     mov al,11
-    call prot_exception
+    call new_prot_exception
     jmp t11_ret
 
 t11_vm:
@@ -1265,8 +1327,8 @@ t11_ret:
     pop ds
     pop ebx
     pop eax
-    and byte ptr [bp+2].vm_eflags, NOT 1
-    pop bp
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
     add sp,4
     iretd
 
@@ -1290,11 +1352,13 @@ segment_not_present     ENDP
 
 trap_12:
     sti
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
+;
+    FixupEbp    
     GetThread
     or ax,ax
     jnz t12_thread
@@ -1304,16 +1368,16 @@ trap_12:
 t12_thread:
     mov ds,ax
     mov ds:p_fault_vector,12
-    mov eax,[bp].vm_err
+    mov eax,[ebp].trap_err
     mov ds:p_fault_code,eax
     xor ax,ax
     mov ds,ax
     mov al,11
-    test byte ptr [bp+2].vm_eflags,2
+    test byte ptr [ebp+2].trap_eflags,2
     jnz t11_vm
 ;
     mov al,12
-    call prot_exception
+    call new_prot_exception
     jmp t12_ret
 
 t12_vm:
@@ -1324,8 +1388,8 @@ t12_ret:
     pop ds
     pop ebx
     pop eax
-    and byte ptr [bp+2].vm_eflags, NOT 1
-    pop bp
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
     add sp,4
     iretd
 
@@ -1341,21 +1405,22 @@ t12_ret:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 trap_13:
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
 ;
+    FixupEbp
     mov ax,system_data_sel
     mov ds,ax
     call ds:enter_patch_proc
 ;
-    test byte ptr [bp+2].vm_eflags,2
+    test byte ptr [ebp+2].trap_eflags,2
     jnz t13_default
 ;    
-    mov ds,[bp].vm_cs
-    mov ebx,[bp].vm_eip
+    mov ds,[ebp].trap_cs
+    mov ebx,[ebp].trap_eip
     mov al,[ebx]
 ;
     cmp al,0CDh
@@ -1492,7 +1557,7 @@ t13_default:
     GetThread
     mov ds,ax
     mov ds:p_fault_vector,13
-    mov eax,[bp].vm_err
+    mov eax,[ebp].trap_err
     mov ds:p_fault_code,eax
     xor ax,ax
     mov ds,ax
@@ -1510,8 +1575,8 @@ t13_end:
     pop ds
     pop ebx
     pop eax
-    and byte ptr [bp+2].vm_eflags, NOT 1
-    pop bp
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
     add sp,4
     iretd
 
@@ -1528,12 +1593,14 @@ t13_end:
 
 trap_16:
     push dword ptr 0
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     sti
     push eax
     push ebx
     push ds
+;
+    FixupEbp    
     GetThread
     mov ds,ax
     mov ds:p_fault_vector,16
@@ -1545,8 +1612,8 @@ trap_16:
     pop ds
     pop ebx
     pop eax
-    and byte ptr [bp+2].vm_eflags, NOT 1
-    pop bp
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
     add sp,4
     iretd
 
@@ -1681,144 +1748,158 @@ init_trap_gates ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 pretask0:
-    sub sp,4
-    push bp
-    mov bp,sp
+    sub esp,4
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
+    FixupEbp
     mov al,0
     ShutDownPreTask
 
 pretask1:
-    sub sp,4
-    push bp
-    mov bp,sp
+    sub esp,4
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
+    FixupEbp
     mov al,1
     ShutDownPreTask
 
 pretask2:
-    sub sp,4
-    push bp
-    mov bp,sp
+    sub esp,4
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
+    FixupEbp
     mov al,2
     ShutDownPreTask
 
 pretask3:
-    sub sp,4
-    push bp
-    mov bp,sp
+    sub esp,4
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
+    FixupEbp
     mov al,3
     ShutDownPreTask
 
 pretask4:
-    sub sp,4
-    push bp
-    mov bp,sp
+    sub esp,4
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
+    FixupEbp
     mov al,4
     ShutDownPreTask
 
 pretask5:
-    sub sp,4
-    push bp
-    mov bp,sp
+    sub esp,4
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
+    FixupEbp
     mov al,5
     ShutDownPreTask
 
 pretask6:
     push dword ptr 0
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
+    FixupEbp
     mov al,6
     ShutDownPreTask
 
 pretask7:
-    sub sp,4
-    push bp
-    mov bp,sp
+    sub esp,4
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
+    FixupEbp
     mov al,7
     ShutDownPreTask
 
 pretask8:
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
+    FixupEbp
     mov al,8
     ShutDownPreTask
 
 pretask9:
-    sub sp,4
-    push bp
-    mov bp,sp
+    sub esp,4
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
+    FixupEbp
     mov al,9
     ShutDownPreTask
 
 pretask10:
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
+    FixupEbp
     mov al,10
     ShutDownPreTask
 
 pretask11:
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
+    FixupEbp
     mov al,11
     ShutDownPreTask
 
 pretask12:
-    sub sp,4
-    push bp
-    mov bp,sp
+    sub esp,4
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
+    FixupEbp
     mov al,12
     ShutDownPreTask
 
 pretask13:
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
 ;    
-    test byte ptr [bp+2].vm_eflags,2
+    FixupEbp
+    test byte ptr [ebp+2].trap_eflags,2
     jnz pretask_gpf_default
 ;
-    mov ds,[bp].vm_cs
-    mov ebx,[bp].vm_eip
+    mov ds,[ebp].trap_cs
+    mov ebx,[ebp].trap_eip
     mov al,[ebx]
 ;
     cmp al,0CDh
@@ -1908,26 +1989,28 @@ pretask_gpf_reexec:
     pop ds
     pop ebx
     pop eax
-    and byte ptr [bp+2].vm_eflags, NOT 1
-    pop bp
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
     add sp,4
     iretd
 
 prepaging14:
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
+    FixupEbp
     mov al,14
     ShutDownPreTask
 
 pretask16:
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
     push ds
+    FixupEbp
     mov al,16
     ShutDownPreTask
 

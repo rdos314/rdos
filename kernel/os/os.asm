@@ -202,19 +202,19 @@ is_valid_osgate ENDP
 ;           DESCRIPTION:    do oscall
 ;
 ;           PARAMETERS:     DS:EBX      Instruction
-;                           SS:BP       Stack frame
+;                           SS:EBP       Stack frame
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public do_oscall
 
 do_oscall   Proc near
-    push dword ptr [bp+20]
-    mov [bp+20],ds    
+    push dword ptr [ebp+20]
+    mov [ebp+20],ds    
     mov eax,ebx
     add eax,9
-    mov [bp+16],eax
-    pop dword ptr [bp+12]
+    mov [ebp+16],eax
+    pop dword ptr [ebp+12]
 ;   
     mov edi,ds:[ebx+3]
     shl edi,4
@@ -222,9 +222,9 @@ do_oscall   Proc near
     mov es,ax
 ;
     mov eax,es:[edi].os_gate_offset
-    mov [bp+4],eax
+    mov [ebp+4],eax
     movzx eax,es:[edi].os_gate_sel
-    mov [bp+8],eax
+    mov [ebp+8],eax
 ;
     push ebx
     mov bx,ds
