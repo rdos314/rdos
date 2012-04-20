@@ -1016,7 +1016,7 @@ bios_pci_int_name DB 'BIOS PCI int',0
 
 pci_error       Proc near
     int 3
-    or byte ptr [bp].vm_eflags,1
+    or byte ptr [ebp].trap_eflags,1
     ret
 pci_error       Endp
 
@@ -1025,10 +1025,10 @@ pci_inst_check  Proc near
     xor edi,edi
     call GetPciBusCount
     mov cl,al
-    mov eax,[bp].vm_eax
+    mov eax,[ebp].trap_eax
     xor ax,ax
-    mov word ptr [bp].vm_ebx,210h
-    and byte ptr [bp].vm_eflags,NOT 1
+    mov word ptr [ebp].trap_ebx,210h
+    and byte ptr [ebp].trap_eflags,NOT 1
     ret
 pci_inst_check  Endp
 
@@ -1039,12 +1039,12 @@ pci_find_device Proc near
 ;
     shl bl,3
     xor ax,ax
-    mov [bp].vm_ebx,bx
-    and byte ptr [bp].vm_eflags,NOT 1
+    mov [ebp].trap_ebx,bx
+    and byte ptr [ebp].trap_eflags,NOT 1
     ret
 
 pci_find_device_fail:
-    or byte ptr [bp].vm_eflags,1    
+    or byte ptr [ebp].trap_eflags,1    
     mov ax,8600h
     ret
 pci_find_device Endp
@@ -1061,91 +1061,91 @@ pci_find_class  Proc near
 ;
     shl bl,3
     xor ax,ax
-    mov [bp].vm_ebx,bx
-    and byte ptr [bp].vm_eflags,NOT 1
+    mov [ebp].trap_ebx,bx
+    and byte ptr [ebp].trap_eflags,NOT 1
     ret
 
 pci_find_fail:
-    or byte ptr [bp].vm_eflags,1    
+    or byte ptr [ebp].trap_eflags,1    
     mov ax,8600h
     ret
 pci_find_class  Endp
 
 pci_read_byte   Proc near
     mov cx,di
-    mov bx,[bp].vm_ebx
+    mov bx,[ebp].trap_ebx
     mov ch,bl
     and ch,7
     shr bl,3
     ReadPciByte
     mov cl,al
     xor ax,ax
-    and byte ptr [bp].vm_eflags,NOT 1
+    and byte ptr [ebp].trap_eflags,NOT 1
     ret
 pci_read_byte   Endp
 
 pci_write_byte  Proc near
     mov al,cl
     mov cx,di
-    mov bx,[bp].vm_ebx
+    mov bx,[ebp].trap_ebx
     mov ch,bl
     and ch,7
     shr bl,3
     WritePciByte
     xor ax,ax
-    and byte ptr [bp].vm_eflags,NOT 1
+    and byte ptr [ebp].trap_eflags,NOT 1
     ret
 pci_write_byte  Endp
 
 pci_read_word   Proc near
     mov cx,di
-    mov bx,[bp].vm_ebx
+    mov bx,[ebp].trap_ebx
     mov ch,bl
     and ch,7
     shr bl,3
     ReadPciWord
     mov cx,ax
     xor ax,ax
-    and byte ptr [bp].vm_eflags,NOT 1
+    and byte ptr [ebp].trap_eflags,NOT 1
     ret
 pci_read_word   Endp
 
 pci_write_word  Proc near
     mov ax,cx
     mov cx,di
-    mov bx,[bp].vm_ebx
+    mov bx,[ebp].trap_ebx
     mov ch,bl
     and ch,7
     shr bl,3
     WritePciWord
     xor ax,ax
-    and byte ptr [bp].vm_eflags,NOT 1
+    and byte ptr [ebp].trap_eflags,NOT 1
     ret
 pci_write_word  Endp
 
 pci_read_dword  Proc near
     mov cx,di
-    mov bx,[bp].vm_ebx
+    mov bx,[ebp].trap_ebx
     mov ch,bl
     and ch,7
     shr bl,3
     ReadPciDword
     mov ecx,eax
     xor ax,ax
-    and byte ptr [bp].vm_eflags,NOT 1
+    and byte ptr [ebp].trap_eflags,NOT 1
     ret
 pci_read_dword  Endp
 
 pci_write_dword Proc near
     mov eax,ecx
     mov cx,di
-    mov bx,[bp].vm_ebx
+    mov bx,[ebp].trap_ebx
     mov ch,bl
     and ch,7
     shr bl,3
     WritePciDword
     xor ax,ax
-    and byte ptr [bp].vm_eflags,NOT 1
+    and byte ptr [ebp].trap_eflags,NOT 1
     ret
 pci_write_dword Endp
 
@@ -1177,7 +1177,7 @@ bios_pci_int    Proc far
     retf32
 
 bios_pci_failed:
-    or byte ptr [bp].vm_eflags,1
+    or byte ptr [ebp].trap_eflags,1
     retf32
 bios_pci_int    Endp    
 

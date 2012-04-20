@@ -2553,7 +2553,7 @@ write_ch_attr   PROC far
     pop ax
     mov dx,ds:p_row
     mov cx,ds:p_col
-    mov bx,[bp].vm_ebx
+    mov bx,[ebp].trap_ebx
     mov bh,bl
     shr bh,4
     and bl,0Fh
@@ -2654,7 +2654,7 @@ scroll_video_up PROC far
     movzx di,dh
     movzx dx,ch
     movzx cx,cl
-    mov bh,[bp].vm_ebx+1
+    mov bh,[ebp].trap_ebx+1
     mov bl,bh
     and bl,0Fh
     shr bh,4
@@ -2701,7 +2701,7 @@ scroll_video_down       PROC far
     movzx di,dh
     movzx dx,ch
     movzx cx,cl
-    mov bh,[bp].vm_ebx+1
+    mov bh,[ebp].trap_ebx+1
     mov bl,bh
     and bl,0Fh
     shr bh,4
@@ -2795,7 +2795,7 @@ write_char_nm_loop:
     dec si
     mov al,fs:[ebx]
     inc ebx
-    mov ah,[bp].vm_ebx
+    mov ah,[ebp].trap_ebx
     call write_stg_one
     jmp write_char_nm_loop
 
@@ -2811,7 +2811,7 @@ write_char_m_loop:
     dec si
     mov al,fs:[ebx]
     inc ebx
-    mov ah,[bp].vm_ebx
+    mov ah,[ebp].trap_ebx
     call write_stg_one
     jmp write_char_m_loop
 
@@ -2876,7 +2876,7 @@ write_stg       PROC far
     pusha
 ;
     HideMouse
-    mov al,[bp+2].vm_eflags
+    mov al,[ebp+2].trap_eflags
     test al,2
     jz write_stg_pm
 ;
@@ -2884,15 +2884,15 @@ write_stg       PROC far
     mov fs,ax
     xor eax,eax
     xor ebx,ebx
-    mov ax,[bp].vm_es
+    mov ax,[ebp].trap_es
     shl eax,4
-    mov bx,[bp].vm_bp
+    mov bx,[ebp].trap_ebp
     add ebx,eax
     jmp write_stg_do
 
 write_stg_pm:
     xor ebx,ebx
-    mov bx,[bp].vm_bp
+    mov bx,[ebp].trap_ebp
     mov ax,es
     mov fs,ax
 
@@ -2903,7 +2903,7 @@ write_stg_do:
     movzx cx,dl
     movzx dx,dh
 ;
-    movzx di,byte ptr [bp].vm_eax
+    movzx di,byte ptr [ebp].trap_eax
     call cs:word ptr [di].write_stg_tab
     ShowMouse
 ;
@@ -3021,7 +3021,7 @@ int10:
     mov bx,40
 video_call_do:
     push word ptr cs:[bx].video_tab
-    mov bx,[bp].vm_ebx
+    mov bx,[ebp].trap_ebx
     retn
 
 
