@@ -530,25 +530,25 @@ register_usergate32     ENDP
 translate_segments      PROC near
     test al,virt_es_in
     jz translate_not_es_in
-    mov bx,[bp].vm_es
+    mov bx,[ebp].trap_es
     call translate_segment
     mov es,bx
 translate_not_es_in:
     test al,virt_fs_in
     jz translate_not_fs_in
-    mov bx,[bp].vm_fs
+    mov bx,[ebp].trap_fs
     call translate_segment
     mov fs,bx
 translate_not_fs_in:
     test al,virt_gs_in
     jz translate_not_gs_in
-    mov bx,[bp].vm_gs
+    mov bx,[ebp].trap_gs
     call translate_segment
     mov gs,bx
 translate_not_gs_in:
     test al,virt_ds_in
     jz translate_not_ds_in
-    mov bx,[bp].vm_ds
+    mov bx,[ebp].trap_ds
     call translate_segment
     mov ds,bx
     jmp translate_seg_end
@@ -577,7 +577,7 @@ translate_selectors     PROC near
     mov ds,ax
     call translate_selector
     jc translate_out_ds_done
-    mov [bp].vm_ds,bx
+    mov [ebp].trap_ds,bx
 translate_out_ds_done:
     mov bx,es
     or bx,bx
@@ -586,7 +586,7 @@ translate_out_ds_done:
     mov es,ax
     call translate_selector
     jc translate_out_es_done
-    mov [bp].vm_es,bx
+    mov [ebp].trap_es,bx
 translate_out_es_done:
     mov bx,fs
     or bx,bx
@@ -595,7 +595,7 @@ translate_out_es_done:
     mov fs,ax
     call translate_selector
     jc translate_out_fs_done
-    mov [bp].vm_fs,bx
+    mov [ebp].trap_fs,bx
 translate_out_fs_done:
     mov bx,gs
     or bx,bx
@@ -604,7 +604,7 @@ translate_out_fs_done:
     mov gs,ax
     call translate_selector
     jc translate_out_gs_done
-    mov [bp].vm_gs,bx
+    mov [ebp].trap_gs,bx
 translate_out_gs_done:
     ret
 translate_selectors     ENDP
@@ -629,10 +629,10 @@ do_usergate_vm  PROC near
     mov ax,usergate_sel
     mov ds,ax
 ;
-    add word ptr [bp].vm_eip,8
-    mov ax,[bp+2].vm_eflags
+    add word ptr [ebp].trap_eip,8
+    mov ax,[ebp+2].trap_eflags
     and ax,NOT 1
-    mov [bp+2].vm_eflags,ax
+    mov [ebp+2].trap_eflags,ax
     mov ax,ds:[bx].user_gate_transfer
 ;
     push ax
@@ -642,7 +642,7 @@ do_usergate_vm  PROC near
     push cs
     push 0
     push OFFSET gate_return
-    mov ax,[bp].vm_eflags
+    mov ax,[ebp].trap_eflags
     and ax,03FFFh
     push ax
     push ds:[bx].user_gate_entry_sel16
@@ -661,19 +661,19 @@ do_no_translate_seg:
     mov ds,ax
 
 do_virt_func:
-    mov eax,[bp].vm_eax
-    mov ebx,[bp].vm_ebx
-    mov bp,[bp].vm_bp
+    mov eax,[ebp].trap_eax
+    mov ebx,[ebp].trap_ebx
+    mov bp,[ebp].trap_ebp
     iret
 
 gate_return:
     pop bp
-    mov [bp].vm_eax,eax
-    mov [bp].vm_ebx,ebx
+    mov [ebp].trap_eax,eax
+    mov [ebp].trap_ebx,ebx
     pushf
     pop ax
     and ax,NOT 7000h
-    mov [bp].vm_eflags,ax
+    mov [ebp].trap_eflags,ax
     pop ax
     or al,al
     jz gate_exit

@@ -588,8 +588,8 @@ show    PROC far
     call hide_marker
     inc ds:m_cursor_flag
     call show_marker
-    mov ax,[bp].vm_eax
-    mov ds,[bp].pm_ds
+    mov ax,[ebp].trap_eax
+    mov ds,[ebp].trap_pds
     retf32
 show    ENDP
 
@@ -599,8 +599,8 @@ hide    PROC far
     call hide_marker
     dec ds:m_cursor_flag
     call show_marker
-    mov ax,[bp].vm_eax
-    mov ds,[bp].pm_ds
+    mov ax,[ebp].trap_eax
+    mov ds,[ebp].trap_pds
     retf32
 hide    ENDP
 
@@ -610,8 +610,8 @@ get_position    PROC far
     mov bx,ds:m_botton_status
     mov cx,ds:m_horiz_pos
     mov dx,ds:m_vert_pos    
-    mov ax,[bp].vm_eax
-    mov ds,[bp].pm_ds
+    mov ax,[ebp].trap_eax
+    mov ds,[ebp].trap_pds
     retf32
 get_position    ENDP
 
@@ -624,8 +624,8 @@ set_position    PROC far
     call check_horiz_position
     call check_vert_position
     call show_marker
-    mov ax,[bp].vm_eax
-    mov ds,[bp].pm_ds
+    mov ax,[ebp].trap_eax
+    mov ds,[ebp].trap_pds
     retf32
 set_position    ENDP
 
@@ -684,8 +684,8 @@ set_horiz_noswap:
 set_horiz_test_pos:
     call check_horiz_position
     call show_marker
-    mov ax,[bp].vm_eax
-    mov ds,[bp].pm_ds
+    mov ax,[ebp].trap_eax
+    mov ds,[ebp].trap_pds
     retf32
 set_horiz_area  ENDP
 
@@ -704,8 +704,8 @@ set_vert_noswap:
 set_vert_test_pos:
     call check_vert_position
     call show_marker
-    mov ax,[bp].vm_eax
-    mov ds,[bp].pm_ds
+    mov ax,[ebp].trap_eax
+    mov ds,[ebp].trap_pds
     retf32
 set_vert_area   ENDP
 
@@ -717,7 +717,7 @@ set_cursor_type PROC far
     mov ax,mouse_local_sel
     mov ds,ax
     call hide_marker
-    mov ax,[bp].vm_ebx
+    mov ax,[ebp].trap_ebx
     or ax,ax
     jnz set_cursor_not_supported
     mov ds:m_cursor_type,ax
@@ -725,8 +725,8 @@ set_cursor_type PROC far
     mov ds:m_cursor_mask,dx
 set_cursor_not_supported:
     call show_marker
-    mov ax,[bp].vm_eax
-    mov ds,[bp].pm_ds
+    mov ax,[ebp].trap_eax
+    mov ds,[ebp].trap_pds
     retf32
 set_cursor_type ENDP
 
@@ -737,8 +737,8 @@ read_motion_counter     PROC far
     xchg cx,ds:m_horiz_motion
     xor dx,dx
     xchg dx,ds:m_vert_motion
-    mov ax,[bp].vm_eax
-    mov ds,[bp].pm_ds
+    mov ax,[ebp].trap_eax
+    mov ds,[ebp].trap_pds
     retf32
 read_motion_counter     ENDP
 
@@ -747,8 +747,8 @@ set_mickey      PROC far
     mov ds,ax
     mov ds:m_horiz_mickey,cx
     mov ds:m_vert_mickey,dx
-    mov ax,[bp].vm_eax
-    mov ds,[bp].pm_ds
+    mov ax,[ebp].trap_eax
+    mov ds,[ebp].trap_pds
     retf32
 set_mickey      ENDP
 
@@ -796,7 +796,7 @@ int33:
     mov bx,40h
 mouse_call_do:
     push word ptr cs:[bx].mouse_tab
-    mov bx,[bp].vm_ebx
+    mov bx,[ebp].trap_ebx
     retn
 
 
