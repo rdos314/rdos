@@ -40,6 +40,10 @@ INCLUDE ..\handle.inc
 INCLUDE ..\apicheck.inc
 
 
+MSR_SYSENTER_CS  = 174h
+MSR_SYSENTER_ESP = 175h
+MSR_SYSENTER_EIP = 176h
+
 MAX_CORES   = 64
 
 TLB_FIXED_SIZE          = 64
@@ -3076,8 +3080,10 @@ load_relock:
     jmp load_retry
         
 load_regs:
-    mov ax,ds:p_tss_ess0
-    mov fs:ps_syscall_ss,ax
+    mov eax,ds:p_stack0_top
+    xor edx,edx
+    mov ecx,MSR_SYSENTER_ESP
+    wrmsr
 ;    
     mov fs:ps_curr_thread,es
     mov fs:ps_last_thread,es
@@ -3304,7 +3310,7 @@ SaveCurrentThread       Proc near
     mov edx,ds:p_tss_edx
 ;    
     mov ss,fs:ps_ss
-    mov sp,fs:ps_sp
+    mov esp,fs:ps_esp
     push bp
 ;
     xor bp,bp
@@ -3372,7 +3378,7 @@ SaveLockedThread    Proc near
     mov edx,ds:p_tss_edx
 ;    
     mov ss,fs:ps_ss
-    mov sp,fs:ps_sp
+    mov esp,fs:ps_esp
     push bp
 ;
     xor bp,bp
@@ -3439,7 +3445,7 @@ SaveLockedThreadKeepEs    Proc near
     mov edx,ds:p_tss_edx
 ;    
     mov ss,fs:ps_ss
-    mov sp,fs:ps_sp
+    mov esp,fs:ps_esp
     push bp
 ;
     xor bp,bp
@@ -3479,7 +3485,7 @@ SkipCurrentThread       Proc near
     pop bp
 ;    
     mov ss,fs:ps_ss
-    mov sp,fs:ps_sp
+    mov esp,fs:ps_esp
     push bp
 ;
     xor bp,bp
@@ -4098,7 +4104,7 @@ debug_vm:
 
 debug_save_ok:
     mov ss,fs:ps_ss
-    mov sp,fs:ps_sp
+    mov esp,fs:ps_esp
 ;
     xor ax,ax
     mov ds,ax
@@ -4213,7 +4219,7 @@ debug_break_common:
     mov ds:p_tss_gs,ax
 ;
     mov ss,fs:ps_ss
-    mov sp,fs:ps_sp
+    mov esp,fs:ps_esp
 ;
     xor ax,ax
     mov ds,ax
@@ -4272,7 +4278,7 @@ double_fault:
     
 double_fault_lock_ok:    
     mov ss,fs:ps_ss
-    mov sp,fs:ps_sp
+    mov esp,fs:ps_esp
 ;
     xor ax,ax
     mov es,ax
@@ -4336,10 +4342,10 @@ create_core_name   DB 'Create Core',0
 
 create_core    Proc far
     push ds
-    push bx
-    push cx
+    push ebx
+    push ecx
     push edx
-    push si
+    push esi
     push edi
 ;   
     mov ax,flat_sel
@@ -4361,13 +4367,15 @@ create_core    Proc far
     rep stosb
     mov es:ps_sel,es
 ;
-    push es
-    mov eax,200h    
-    AllocateSmallGlobalMem
-    mov ax,es
-    pop es
-    mov es:ps_ss,ax
-    mov es:ps_sp,200h
+    mov eax,1000h
+    AllocateBigLinear
+    AllocateGdt
+    mov ecx,eax
+    CreateDataSelector32
+    mov es:ps_ss,bx
+    mov es:ps_esp,1000h
+    mov ds,bx
+    mov ds:[0],bx
 ;
     mov ax,kernel_patch_sel
     mov ds,ax
@@ -4430,10 +4438,10 @@ core_timer_list_create:
     mov ax,es:ps_id     
 ;
     pop edi
-    pop si
+    pop esi
     pop edx
-    pop cx
-    pop bx
+    pop ecx
+    pop ebx
     pop ds      
     retf32
 create_core    Endp

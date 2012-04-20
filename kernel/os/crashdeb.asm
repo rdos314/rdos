@@ -1699,9 +1699,9 @@ SaveCore Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CrashHandler:
-;    call SetupBiosPic
-;    call SetupBiosPit
-;    call InitVideo
+    call SetupBiosPic
+    call SetupBiosPit
+    call InitVideo
     call InitCrashShow
     call InitCrashKeyboard
 ;
@@ -2283,6 +2283,9 @@ crash_tss:
 ;
     mov eax,ds:c_tss_ebp    
     mov fs:cs_ebp,eax
+;
+    mov eax,ds:c_tss_eip    
+    mov fs:cs_eip,eax
 ;    
     mov eax,ds:c_tss_esi
     mov fs:cs_esi,eax

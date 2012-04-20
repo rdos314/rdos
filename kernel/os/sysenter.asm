@@ -217,10 +217,7 @@ app_leave_rel = OFFSET app_leave - OFFSET app_stub_start
 syscall_start:
 
 syscall_entry   Proc far
-sp1:
-;    mov ss,dword ptr cs:[0]     ; patch to linear address of thread SS0 stack 
-;    mov esp,stack0_size
-;    sti
+    sti
 ;    
     push ecx
     cmp edx,usergate_entries
@@ -241,21 +238,10 @@ sp3:
 ;    mov edx,usergate_sel
 ;    mov gs,edx
 ;    
+    mov ecx,ss:[esp+16]
     mov edx,ds:[ecx].syscall_edx
     mov ecx,ds:[ecx].syscall_ecx
 ;
-;
-;
-    add esp,12
-    xchg ecx,ss:[esp+4]
-    mov ds:[ecx].syscall_edx,edx
-    mov edx,ss:[esp+4]
-    mov ds:[ecx].syscall_ecx,eax
-    mov edx,ss:[esp]
-    sti
-    db 0Fh
-    db 35h
-    
     ret
 syscall_entry   Endp
 
@@ -281,10 +267,6 @@ start_syscall   Proc far
     mov bx,SEG data
     GetSelectorBaseSize
     push edx
-;    
-    mov bx,fs:ps_sel
-    GetSelectorBaseSize
-    push edx
 ;        
     mov ax,flat_sel
     mov es,ax
@@ -294,11 +276,6 @@ start_syscall   Proc far
     mov esi,OFFSET syscall_start
     mov ecx,eax
     rep movs byte ptr es:[edi],cs:[esi]
-;
-    pop eax
-    add eax,OFFSET ps_syscall_ss
-;    mov edi,OFFSET sp1 - OFFSET syscall_start + 3
-;    mov es:[edx+edi],eax
 ;
     pop eax
     add eax,OFFSET gate_index_arr
@@ -320,15 +297,6 @@ start_syscall_load_msr:
 ;
     mov eax,syscall_code_sel
     mov ecx,MSR_SYSENTER_CS
-    wrmsr
-;
-    mov bx,fs:ps_ss
-    GetSelectorBaseSize
-    mov eax,edx
-    movzx ecx,fs:ps_sp
-    add eax,ecx
-    xor edx,edx
-    mov ecx,MSR_SYSENTER_ESP
     wrmsr
 ;
     popad

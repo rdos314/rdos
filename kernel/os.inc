@@ -176,9 +176,8 @@ SysLeave16  MACRO
     xchg ecx,ss:[esp+6]
     mov ds:[ecx].syscall_edx,edx
     mov edx,ss:[esp+6]
-    mov ds:[ecx].syscall_ecx,eax
+    mov ds:[ecx].syscall_ecx,edx
     mov edx,ss:[esp+2]
-    sti
     db 0Fh
     db 35h
             ENDM

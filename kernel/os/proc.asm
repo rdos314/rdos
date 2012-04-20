@@ -1258,6 +1258,9 @@ init_default_tss    PROC near
     pop eax
     pop es
 ;
+    add edx,stack0_size
+    mov ds:p_stack0_top,edx
+;    
     xor edx,edx
     mov ds:p_tss_esp1,edx
     mov ds:p_tss_ess1,dx

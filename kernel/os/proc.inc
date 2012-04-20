@@ -61,7 +61,7 @@ ps_id               DW ?
 ps_sel              DW ?
 
 ps_ss               DW ?
-ps_sp               DW ?
+ps_esp              DD ?
 
 ps_nesting          DW ?
 ps_curr_thread      DW ?
@@ -96,7 +96,7 @@ ps_curr_post        DB ?
 ps_system_time      DD ?,?
 
 ps_syscall_eip      DD ?
-ps_syscall_ss       DW ?
+ps_syscall_esp      DD ?
 
 ps_timer_spinlock   DW ?
 ps_timer_head		DW ?

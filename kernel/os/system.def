@@ -333,6 +333,8 @@ p_int_prot16_stack	DW ?
 p_int_prot32_stack	DW ?
 p_int_real_stack	DD ?
 
+p_stack0_top        DD ?
+
 p_fault_vector      DB ?
 p_fault_space       DB ?
 p_fault_code        DD ?
