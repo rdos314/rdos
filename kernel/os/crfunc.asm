@@ -208,28 +208,10 @@ LocalSetPhysicalPage Endp
     public LocalOsGate
 
 LocalOsGate:
-    sub sp,8
-;
     push es
     push ecx
     push edx
     push edi
-;
-    mov ax,[bp].vm_bp
-    mov [bp-12],ax          ; save org bp to pm_call
-;
-    mov eax,[bp].vm_eax
-    mov [bp-16],eax         ; save org eax
-;    
-    mov eax,[bp].vm_eflags
-    push eax
-    mov eax,[bp].vm_cs
-    mov [bp+14],eax         ; old eflags
-    mov eax,[bp].vm_eip
-    add eax,9
-    mov [bp+10],eax         ; old cs
-    pop eax
-    mov [bp+6],eax          ; old eip
 ;    
     mov edi,ds:[ebx+3]
     shl edi,4
@@ -244,31 +226,29 @@ LocalOsGate:
     mov ax,flat_sel
     mov ds,ax
 ;
-    mov ax,es:[edi].os_gate_sel
-    mov [bp+2],ax           ; old err
-    mov eax,es:[edi].os_gate_offset
-    mov [bp-2],eax
-;
     mov eax,es:[edi].os_gate_offset
     xchg eax,ds:[ebx+3]
+;
     mov ax,es:[edi].os_gate_sel
     xchg ax,ds:[ebx+7]
+;    
     mov al,90h
-    xchg al,ds:[ebx]        
+    xchg al,ds:[ebx]
 ;
     pop edi
     pop edx
     pop ecx
     pop es
 ;
-    mov ds,[bp].pm_ds
-    mov eax,[bp-16]
-    mov ebx,[bp].vm_ebx
-    sub bp,12
-    mov sp,bp
-    pop bp
-    add sp,8
+    pop eax
+    mov ds,ax
+    pop ebx
+    pop eax
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
+    add esp,4
     iretd
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -284,28 +264,10 @@ LocalOsGate:
     public LocalUserGate
 
 LocalUserGate:
-    sub sp,8
-;
     push es
     push ecx
     push edx
     push edi
-;
-    mov ax,[bp].vm_bp
-    mov [bp-12],ax          ; save org bp to pm_call
-;
-    mov eax,[bp].vm_eax
-    mov [bp-16],eax         ; save org eax
-;    
-    mov eax,[bp].vm_eflags
-    push eax
-    mov eax,[bp].vm_cs
-    mov [bp+14],eax         ; old eflags
-    mov eax,[bp].vm_eip
-    add eax,9
-    mov [bp+10],eax         ; old cs
-    pop eax
-    mov [bp+6],eax          ; old eip
 ;
     mov edi,ds:[ebx+3]
     shl edi,USER_GATE_SHIFT
@@ -316,35 +278,33 @@ LocalUserGate:
     mov bx,ds
     call LocalGetSelectorBaseSize
     pop ebx
-    add     ebx,edx
+    add ebx,edx
     mov ax,flat_sel
     mov ds,ax
 ;
-    mov ax,es:[edi].user_gate_entry_sel32
-    mov [bp+2],ax           ; old err
-    mov eax,es:[edi].user_gate_entry_offset32
-    mov [bp-2],eax
-;
-    mov eax,es:[edi].user_gate_entry_offset32
+    mov eax,es:[edi].user_gate_entry_offset16
     xchg eax,ds:[ebx+3]
-    mov ax,es:[edi].user_gate_entry_sel32
+;
+    mov ax,es:[edi].user_gate_entry_sel16
     xchg ax,ds:[ebx+7]
+;    
     mov al,90h
-    xchg al,ds:[ebx]        
+    xchg al,ds:[ebx]
 ;
     pop edi
     pop edx
     pop ecx
     pop es
 ;
-    mov ds,[bp].pm_ds
-    mov eax,[bp-16]
-    mov ebx,[bp].vm_ebx
-    sub bp,12
-    mov sp,bp
-    pop bp
-    add sp,8
+    pop eax
+    mov ds,ax
+    pop ebx
+    pop eax
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
+    add esp,4
     iretd
+
 
 code    ENDS
 

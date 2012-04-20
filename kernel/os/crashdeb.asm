@@ -55,6 +55,13 @@ ELSE
     .386p
 ENDIF
 
+StopSys Macro
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
+    ShutDownTask
+        Endm
+
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
@@ -1216,6 +1223,9 @@ cint0:
     mov ax,0
     push ax
     push ds
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
     ShutDownPreTask
 
 cint4:
@@ -1227,6 +1237,9 @@ cint4:
     mov ax,4
     push ax
     push ds
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
     ShutDownPreTask
 
 cint5:
@@ -1238,6 +1251,9 @@ cint5:
     mov ax,5
     push ax
     push ds
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
     ShutDownPreTask
 
 cint6:
@@ -1249,6 +1265,9 @@ cint6:
     mov ax,6
     push ax
     push ds
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
     ShutDownPreTask
 
 cint7:
@@ -1260,6 +1279,9 @@ cint7:
     mov ax,7
     push ax
     push ds
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
     ShutDownPreTask
 
 cint8:
@@ -1270,6 +1292,9 @@ cint8:
     mov ax,8
     push ax
     push ds
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
     ShutDownPreTask
 
 cint9:
@@ -1281,6 +1306,9 @@ cint9:
     mov ax,9
     push ax
     push ds
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
     ShutDownPreTask
 
 cint10:
@@ -1292,6 +1320,9 @@ cint10:
     mov ax,10
     push ax
     push ds
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
     ShutDownPreTask
 
 cint11:
@@ -1302,6 +1333,9 @@ cint11:
     mov ax,11
     push ax
     push ds
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
     ShutDownPreTask
 
 cint12:
@@ -1312,6 +1346,9 @@ cint12:
     mov ax,12
     push ax
     push ds
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
     ShutDownPreTask
 
 cint13:
@@ -1353,7 +1390,9 @@ c13_os:
     jmp LocalOsGate
 
 c13_default:
-    mov al,13
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
     ShutDownPreTask
 
 c13_retry:
@@ -1363,7 +1402,7 @@ c13_retry:
     pop eax
     and byte ptr [ebp+2].trap_eflags, NOT 1
     pop ebp
-    add sp,4
+    add esp,4
     iretd
 
 cint16:
@@ -1375,7 +1414,13 @@ cint16:
     mov ax,16
     push ax
     push ds
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
     ShutDownPreTask
+
+hwint:
+    iretd
 
 crash_int_tab:
 ;
@@ -1393,6 +1438,11 @@ ci11    DW      11,         OFFSET cint11
 ci12    DW      12,         OFFSET cint12
 ci13    DW      13,         OFFSET cint13
 ci16    DW      16,         OFFSET cint16
+ci40    DW      40h,        OFFSET hwint
+ci80    DW      80h,        OFFSET hwint
+ci81    DW      81h,        OFFSET hwint
+ci82    DW      82h,        OFFSET hwint
+ci83    DW      83h,        OFFSET hwint
 ci_end  DW      0FFFFh
 
 SetupFaultHandlers      PROC near
