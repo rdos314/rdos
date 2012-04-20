@@ -421,13 +421,7 @@ trap_1:
     or ax,ax
     jz t1_ret
 ;    
-    mov ds,ax
-    mov ds:p_fault_vector,1
-    mov ds:p_fault_code,0
     sti
-;
-    xor ax,ax
-    mov ds,ax
     mov eax,[ebp].trap_eflags
     or eax,10100h
     mov [ebp].trap_eflags,eax
@@ -1290,19 +1284,6 @@ trap_12:
     push ds
 ;
     FixupEbp    
-    GetThread
-    or ax,ax
-    jnz t12_thread
-;
-    CrashFault
-
-t12_thread:
-    mov ds,ax
-    mov ds:p_fault_vector,12
-    mov eax,[ebp].trap_err
-    mov ds:p_fault_code,eax
-    xor ax,ax
-    mov ds,ax
     test byte ptr [ebp+2].trap_eflags,2
     jnz t12_vm
 ;
