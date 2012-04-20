@@ -3183,7 +3183,7 @@ start_thread    PROC far
     push es
     pushad
 ;
-    or bp,bp
+    or ebp,ebp
     je start_thread_done
 ;    
     GetThread
@@ -3197,11 +3197,11 @@ start_thread    PROC far
     cmp ax,word ptr ds:app_loader_name+2
     jne start_thread_done
 ;
-    mov ax,[bp].vm_cs
+    mov ax,[ebp].trap_cs
     cmp ax,flat_code_sel
     jnz start_thread_done
 ;
-    mov edx,[bp].vm_eip
+    mov edx,[ebp].trap_eip
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel

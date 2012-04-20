@@ -607,10 +607,11 @@ init_thread     ENDP
 
 thread_create:
     push dword ptr 0
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
+    push word ptr 0
     push ds
     push es
 ;
@@ -619,10 +620,11 @@ thread_create:
 ;
     pop es
     pop ds
+    pop ax
     pop ebx
     pop eax
-    pop bp
-    add sp,4
+    pop ebp
+    add esp,4
     iretd    
 
 trap_create_thread      PROC near
@@ -1246,7 +1248,7 @@ init_default_tss    PROC near
     AllocateBigLinear
     AllocateGdt
     mov ecx,eax
-    CreateDataSelector16
+    CreateDataSelector32
     mov ds:p_tss_esp0,stack0_size
     mov ds:p_tss_ess0,bx
     mov es,bx

@@ -2676,11 +2676,11 @@ AddCallback Proc near
 
 acKernel:
     mov si,ss
-    mov di,sp
+    mov edi,esp
 ;    
     mov dx,ds:p_tss_ss
     mov ss,dx
-    mov sp,word ptr ds:p_tss_esp
+    mov esp,ds:p_tss_esp
 ;
     xor dx,dx
     push ds:p_tss_eflags
@@ -2689,18 +2689,18 @@ acKernel:
     push ds:p_tss_eip
 ;
     mov ds:p_tss_ss,ss
-    mov word ptr ds:p_tss_esp,sp
+    mov ds:p_tss_esp,esp
     mov ss,si
-    mov sp,di
+    mov esp,edi
     jmp acDone
 
 acPm:
     mov si,ss
-    mov di,sp
+    mov edi,esp
 ;    
     mov dx,ds:p_tss_ess0
     mov ss,dx
-    mov sp,word ptr ds:p_tss_esp0
+    mov esp,ds:p_tss_esp0
 ;
     xor dx,dx
     push dx
@@ -2712,18 +2712,18 @@ acPm:
     push ds:p_tss_eip
 ;
     mov ds:p_tss_ss,ss
-    mov word ptr ds:p_tss_esp,sp
+    mov ds:p_tss_esp,esp
     mov ss,si
-    mov sp,di
+    mov esp,edi
     jmp acDone
 
 acVm:
     mov si,ss
-    mov di,sp
+    mov edi,esp
 ;    
     mov dx,ds:p_tss_ess0
     mov ss,dx
-    mov sp,word ptr ds:p_tss_esp0
+    mov esp,ds:p_tss_esp0
 ;
     xor dx,dx
     push dx
@@ -2743,10 +2743,10 @@ acVm:
     push ds:p_tss_eip
 ;
     mov ds:p_tss_ss,ss
-    mov word ptr ds:p_tss_esp,sp
+    mov ds:p_tss_esp,esp
     and ds:p_tss_eflags,NOT 20000h
     mov ss,si
-    mov sp,di
+    mov esp,edi
 
 acDone:   
     mov ds:p_tss_cs,cs
@@ -7320,7 +7320,7 @@ wait_for_signal PROC far
 ;
     push OFFSET wait_for_signal_done
     call SaveLockedThreadKeepEs
-õ    call cs:unlock_sti_thread_proc    
+    call cs:unlock_sti_thread_proc    
     xor ax,ax
     mov es,ax
     mov fs:ps_curr_thread,ax
