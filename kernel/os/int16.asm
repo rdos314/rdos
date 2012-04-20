@@ -1192,7 +1192,7 @@ break_exception16       ENDP
 default_exception16:
     mov al,[ebx+3]
     push ax
-    mov [ebp+2].trap_err,al
+    mov [ebp].trap_state,al
 ;
     mov ds,[ebp].trap_ss
     mov bx,[ebp].trap_esp

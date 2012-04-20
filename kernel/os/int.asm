@@ -878,7 +878,7 @@ restore_context ENDP
     public pm_exception_handler
 
 pm_exception_handler:
-    mov ax,[ebp+2].trap_exc_nr
+    movzx ax,byte ptr [ebp+2].trap_exc_nr
     DebugException
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -895,7 +895,7 @@ pm_exception_handler:
     public vm_exception_handler
 
 vm_exception_handler    PROC far
-    cmp byte ptr [ebp].trap_err,0
+    cmp byte ptr [ebp].trap_state,0
     je vm_except_do
 ;
     mov bx,flat_sel
@@ -911,7 +911,7 @@ vm_exception_handler    PROC far
     add word ptr [ebp].trap_esp,6
 
 vm_except_do:
-    mov ax,[ebp+2].trap_exc_nr
+    movzx ax,byte ptr [ebp].trap_exc_nr
     DebugException
     retf32
 vm_exception_handler    ENDP
@@ -1624,7 +1624,6 @@ call_pm32       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 reflect_to_pm:
-    mov [ebp+2].trap_err,al
     mov bx,int_data_sel
     mov ds,bx
     movzx bx,al
@@ -1647,13 +1646,13 @@ reflect_do:
 reflect_to_pm_done:
     mov [ebp].trap_eax,eax
     mov [ebp].trap_ebx,ebx
-    mov al,[ebp+1].trap_err
-    or al,al
+    mov al,[ebp].trap_state
+    test al,2
     jz reflect_leave
     call translate_selectors
 reflect_leave:
-    mov al,[ebp+2].trap_err
-    cmp byte ptr [ebp].trap_err,0
+    mov al,[ebp].trap_exc_nr
+    cmp byte ptr [ebp].trap_state,0
     je no_sim_iret
 ;
     mov bx,flat_sel
@@ -1853,7 +1852,7 @@ reflect_from_vm:
     mov [ebp].trap_eax,eax
     mov [ebp].trap_ebx,ebx
     xor bl,bl
-    xchg bl,[ebp].trap_err
+    xchg bl,[ebp].trap_state
     cmp bl,1
     jne reflect_vm_done
     mov bx,flat_sel
@@ -1966,7 +1965,7 @@ reflect_pm_to_vm_done   ENDP
 virt_exception  PROC near
     mov bx,vm_int_sel
     mov ds,bx
-    mov ax,[ebp].trap_exc_nr
+    movzx ax,byte ptr [ebp].trap_exc_nr
     mov bx,ax
     shl bx,2
     cmp bx,[bx]
@@ -1976,11 +1975,11 @@ virt_exception  PROC near
     pop ds
     cmp bx,ds:vm_reflect_seg
     jne simulate_exception
-    mov word ptr [ebp].trap_err,0
+    mov word ptr [ebp].trap_state,0
     jmp reflect_to_pm
 
 simulate_exception:
-    mov byte ptr [ebp].trap_err,1
+    mov byte ptr [ebp].trap_state,1
     push edx
     mov bx,vm_int_sel
     mov ds,bx
@@ -2032,8 +2031,7 @@ virt_exception  ENDP
 
 prot_exception:
     cld
-    mov ax,[ebp].trap_exc_nr
-    mov [ebp+2].trap_err,al
+    movzx ax,byte ptr [ebp].trap_exc_nr
     mov ebx,[ebp].trap_cs
     and bl,3
     cmp bl,3
@@ -2108,7 +2106,7 @@ reflect_exc_break:
 translate_vm_reflect:
     sub ebx,2
     mov al,[ebx+3]
-    mov word ptr [ebp].trap_err,1
+    mov word ptr [ebp].trap_state,1
     push ax
     movzx ebx,word ptr [ebp].trap_ss
     shl ebx,4
