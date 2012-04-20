@@ -878,6 +878,7 @@ restore_context ENDP
     public pm_exception_handler
 
 pm_exception_handler:
+    mov ax,[ebp+2].trap_exc_nr
     DebugException
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -894,7 +895,6 @@ pm_exception_handler:
     public vm_exception_handler
 
 vm_exception_handler    PROC far
-    mov al,[ebp+2].trap_err
     cmp byte ptr [ebp].trap_err,0
     je vm_except_do
 ;
@@ -911,6 +911,7 @@ vm_exception_handler    PROC far
     add word ptr [ebp].trap_esp,6
 
 vm_except_do:
+    mov ax,[ebp+2].trap_exc_nr
     DebugException
     retf32
 vm_exception_handler    ENDP
@@ -1958,8 +1959,6 @@ reflect_pm_to_vm_done   ENDP
 ;
 ;           DESCRIPTION:    V86 mode exception
 ;
-;           PARAMETERS:         AL          Exception #
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public virt_exception
@@ -1967,7 +1966,8 @@ reflect_pm_to_vm_done   ENDP
 virt_exception  PROC near
     mov bx,vm_int_sel
     mov ds,bx
-    movzx bx,al
+    mov ax,[ebp].trap_exc_nr
+    mov bx,ax
     shl bx,2
     cmp bx,[bx]
     jne simulate_exception
@@ -2026,14 +2026,13 @@ virt_exception  ENDP
 ;
 ;           DESCRIPTION:    Protected mode exception
 ;
-;           PARAMETERS:         AL          Exception #
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public prot_exception
 
 prot_exception:
     cld
+    mov ax,[ebp].trap_exc_nr
     mov [ebp+2].trap_err,al
     mov ebx,[ebp].trap_cs
     and bl,3

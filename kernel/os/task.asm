@@ -4027,8 +4027,10 @@ debug_normal:
     jz debug_fault
 ;    
     mov ds,fs:ps_curr_thread 
-;    mov ds:p_fault_vector,al
-;    mov ds:p_fault_code,0
+    mov al,[ebp].trap_exc_nr
+    mov ds:p_fault_vector,al
+    mov eax,[ebp].trap_err
+    mov ds:p_fault_code,eax
 ;
     mov eax,[ebp].trap_eax
     mov ds:p_tss_eax,eax

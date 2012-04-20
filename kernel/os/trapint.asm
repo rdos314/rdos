@@ -132,12 +132,10 @@ emulate_exception:
     test eax,20000h
     jnz em_vm
 ;
-    mov al,[ebp].trap_exc_nr
     call prot_exception
     ret
 
 em_vm:
-    mov al,[ebp].trap_exc_nr
     call virt_exception
     ret
 emulate ENDP
@@ -2519,6 +2517,8 @@ init_avail_irq_loop:
     mov al,12
     HookVMInt
     mov al,13
+    HookVMInt
+    mov al,14
     HookVMInt
 ;
     mov edi,OFFSET pm_exception_handler

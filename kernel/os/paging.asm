@@ -41,6 +41,7 @@ INCLUDE system.inc
     extrn local_free_physical:near
     extrn AllocateRam:near
     extrn prot_exception:near
+    extrn virt_exception:near
 
     extrn local_flush_process_tlb:near
     
@@ -1100,8 +1101,18 @@ page_fault_error:
     pop edx
     pop ecx
     pop es
-    mov al,14
+;    
+    mov eax,[ebp].trap_eflags
+    test eax,20000h
+    jnz pgf_vm
+;
     call prot_exception
+    jmp pgf_ret
+
+pgf_vm:
+    call virt_exception
+
+pgf_ret:    
     pop eax
     mov ds,ax
     pop ebx 
