@@ -37,7 +37,9 @@ INCLUDE system.inc
 ; offsets in trapgate, vmode
 ;
 
-vm_edx      EQU -12
+call_eax      EQU -4
+call_ebx      EQU -8
+call_edx      EQU -12
 
 data    SEGMENT byte public 'DATA'
 
@@ -1400,7 +1402,7 @@ WriteCpu    ENDP
 
 interact_set    PROC near
     call interact_set_value
-    inc word ptr [bp].vm_edx
+    inc word ptr [bp].call_edx
     ret
 interact_set    ENDP
 
@@ -1597,7 +1599,7 @@ toggle_nt       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 mem_do  PROC near
-    mov cl,[bp].vm_edx
+    mov cl,[bp].call_edx
     sub cl,cs:[bx+debug_col]
     mov bx,gs
 mem_do_next:
@@ -1618,7 +1620,7 @@ mem_do_free:
     pop cx
     or cl,cl
     jnz mem_do_end
-    inc byte ptr [bp].vm_edx
+    inc byte ptr [bp].call_edx
 mem_do_end:     
     ret
 mem_do  ENDP
@@ -1676,7 +1678,7 @@ change_pm_sel_ret:
     pop cx
     or cl,cl
     jnz change_pm_sel_error
-    inc byte ptr [bp].vm_edx
+    inc byte ptr [bp].call_edx
 change_pm_sel_error:
     pop word ptr gs:p_tss_eflags+2
     ret
@@ -1695,7 +1697,7 @@ change_pm_offs_ret:
     pop cx
     or cl,cl
     jnz change_pm_offs_error
-    inc byte ptr [bp].vm_edx
+    inc byte ptr [bp].call_edx
 change_pm_offs_error:
     pop word ptr gs:p_tss_eflags+2
     ret
@@ -1727,7 +1729,7 @@ change_vm_sel_ret:
     pop cx
     or cl,cl
     jnz change_vm_sel_error
-    inc byte ptr [bp].vm_edx
+    inc byte ptr [bp].call_edx
 change_vm_sel_error:
     pop word ptr gs:p_tss_eflags+2
     ret
@@ -1746,7 +1748,7 @@ change_vm_offs_ret:
     pop cx
     or cl,cl
     jnz change_vm_offs_error
-    inc byte ptr [bp].vm_edx
+    inc byte ptr [bp].call_edx
 change_vm_offs_error:
     pop word ptr gs:p_tss_eflags+2
     ret
@@ -1830,7 +1832,7 @@ debug_call      EQU 6
 debug_size      EQU 8
 
 debug_call_do   PROC near
-    mov ax,[bp].vm_edx
+    mov ax,[bp].call_edx
     mov bx,OFFSET debug_table
 d_c_loop:
     mov cl,cs:[bx+debug_row]
@@ -1844,7 +1846,7 @@ d_c_loop:
     jnc not_this_entry
     xor cl,7
     and cl,7
-    mov ax,[bp].vm_eax
+    mov ax,[bp].call_eax
     call word ptr cs:[bx+debug_call]
     jmp d_c_end
 not_this_entry:
@@ -2011,7 +2013,7 @@ error_sw    ENDP
     
 virt_sw_run     PROC near
     xor edx,edx
-    mov dx,[bp].vm_edx
+    mov dx,[bp].call_edx
     shl edx,4
     push ds
     mov ax,gdt_sel
@@ -2024,7 +2026,7 @@ virt_sw_run     PROC near
     xor dl,dl
     mov [bx+6],dx   
     pop ds
-    mov ax,[bp].vm_ebx
+    mov ax,[bp].call_ebx
     xchg ax,word ptr ds:p_tss_eip
     xchg bx,ds:p_tss_cs
     push es
@@ -2320,7 +2322,7 @@ debug_call_pr   PROC near
     push ebx
     push edx
 ;
-    mov ax,[bp].vm_eax
+    mov ax,[bp].call_eax
     cmp al,'r'
     jz wait_regs
     cmp al,'R'
@@ -2338,9 +2340,9 @@ no_wait_debug:
     or ax,ax
     jnz debug_do
 ;    
-    mov ax,[bp].vm_eax
+    mov ax,[bp].call_eax
     mov al,'R'
-    mov [bp].vm_eax,ax
+    mov [bp].call_eax,ax
     jmp debug_end
 
 debug_do:
@@ -2348,7 +2350,7 @@ debug_do:
     mov gs,ax
 
 debug_next:
-    mov ax,[bp].vm_eax
+    mov ax,[bp].call_eax
     mov bl,al
     xor bh,bh
     add bx,bx

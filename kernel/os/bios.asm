@@ -49,7 +49,7 @@ real_int15:
     ReflectPmToVm
 
 bios_error      PROC far
-    or byte ptr [bp].vm_eflags,1
+    or byte ptr [ebp].trap_eflags,1
     retf32
 bios_error      ENDP
 
@@ -74,11 +74,11 @@ disc_wait_loop:
 disc_busy_ok:
     sti
     mov al,90h
-    mov [bp].vm_eax,al
-    and byte ptr [bp].vm_eflags,NOT 1
-    mov ax,[bp].vm_eax
-    mov bx,[bp].vm_ebx
-    mov ds,[bp].pm_ds
+    mov [ebp].trap_eax,al
+    and byte ptr [ebp].trap_eflags,NOT 1
+    mov ax,[ebp].trap_eax
+    mov bx,[ebp].trap_ebx
+    mov ds,[ebp].trap_pds
     retf32
 not_disc_busy:
     jmp real_int15
@@ -353,7 +353,7 @@ int15:
     xor bh,bh
     add bx,bx
     push word ptr cs:[bx].int15_tab
-    mov bx,[bp].vm_ebx
+    mov bx,[ebp].trap_ebx
     retn
 
 
@@ -846,7 +846,7 @@ int2F_vm:
     xor bh,bh
     add bx,bx
     push word ptr cs:[bx].vm_int2F_tab
-    mov bx,[bp].vm_ebx
+    mov bx,[ebp].trap_ebx
     retn
 
 pm_int2F_tab:
@@ -1112,7 +1112,7 @@ int2F_pm:
     xor bh,bh
     add bx,bx
     push word ptr cs:[bx].pm_int2F_tab
-    mov bx,[bp].vm_ebx
+    mov bx,[ebp].trap_ebx
     retn
 
 
