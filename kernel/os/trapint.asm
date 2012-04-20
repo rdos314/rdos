@@ -381,12 +381,6 @@ trap_0:
     push ds
 ;
     FixupEbp
-    GetThread
-    mov ds,ax
-    mov ds:p_fault_vector,0
-    mov ds:p_fault_code,0
-    xor ax,ax
-    mov ds,ax
     call emulate
     pop eax
     mov ds,ax
@@ -480,12 +474,6 @@ trap_2:
     push ds
 ;
     FixupEbp    
-    GetThread
-    mov ds,ax
-    mov ds:p_fault_vector,2
-    mov ds:p_fault_code,0
-    xor ax,ax
-    mov ds,ax
     test byte ptr [ebp+2].trap_eflags,2
     jnz t2_vm
     call prot_exception
@@ -525,12 +513,6 @@ trap_3:
     push ds
 ;
     FixupEbp    
-    GetThread
-    mov ds,ax
-    mov ds:p_fault_vector,3
-    mov ds:p_fault_code,0
-    xor ax,ax
-    mov ds,ax
     mov eax,[ebp].trap_eflags
     test eax,20000h
     jnz t3_vm
@@ -572,10 +554,6 @@ trap_4:
     push ds
 ;
     FixupEbp    
-    GetThread
-    mov ds,ax
-    mov ds:p_fault_vector,4
-    mov ds:p_fault_code,0
     call emulate
 ;    
     pop eax
@@ -612,10 +590,6 @@ trap_5:
     push ds
 ;
     FixupEbp    
-    GetThread
-    mov ds,ax
-    mov ds:p_fault_vector,5
-    mov ds:p_fault_code,0
     call emulate
 ;    
     pop eax
@@ -1069,13 +1043,6 @@ trap_6:
     push ds
 ;
     FixupEbp    
-    GetThread
-    mov ds,ax
-    mov ds:p_fault_vector,6
-    mov ds:p_fault_code,0
-;
-    xor ax,ax
-    mov ds,ax
     test byte ptr [ebp+2].trap_eflags,2
     jnz t6_vm
     mov ds,[ebp].trap_cs
@@ -1144,12 +1111,6 @@ trap_7:
     push ds
 ;
     FixupEbp    
-    GetThread
-    mov ds,ax
-    mov ds:p_fault_vector,7
-    mov ds:p_fault_code,0
-    xor ax,ax
-    mov ds,ax
     mov eax,cr0
     test al,4
     jz math_real_fpu
@@ -1204,12 +1165,6 @@ trap_9:
     push ds
 ;
     FixupEbp    
-    GetThread
-    mov ds,ax
-    mov ds:p_fault_vector,7
-    mov ds:p_fault_code,0
-    xor ax,ax
-    mov ds,ax
     call emulate
     pop eax
     mov ds,ax
@@ -1243,13 +1198,6 @@ trap_10:
     push ds
 ;
     FixupEbp    
-    GetThread
-    mov ds,ax
-    mov ds:p_fault_vector,10
-    mov eax,[ebp].trap_err
-    mov ds:p_fault_code,eax
-    xor ax,ax
-    mov ds,ax
     test byte ptr [ebp+2].trap_eflags,2
     jnz t10_vm
 ;
@@ -1292,13 +1240,6 @@ trap_11:
     push ds
 ;
     FixupEbp    
-    GetThread
-    mov ds,ax
-    mov ds:p_fault_vector,11
-    mov eax,[ebp].trap_err
-    mov ds:p_fault_code,eax
-    xor ax,ax
-    mov ds,ax
     test byte ptr [ebp+2].trap_eflags,2
     jnz t11_vm
     SegmentNotPresent
@@ -1544,14 +1485,6 @@ t13_default:
     mov ds,ax
     call ds:leave_patch_proc
 ;
-    GetThread
-    mov ds,ax
-    mov ds:p_fault_vector,13
-    mov eax,[ebp].trap_err
-    mov ds:p_fault_code,eax
-    xor ax,ax
-    mov ds,ax
-;
     call emulate
     jmp t13_end
 
@@ -1593,12 +1526,6 @@ trap_16:
     push ds
 ;
     FixupEbp    
-    GetThread
-    mov ds,ax
-    mov ds:p_fault_vector,16
-    mov ds:p_fault_code,0
-    xor ax,ax
-    mov ds,ax
     call emulate
     pop eax
     mov ds,ax
