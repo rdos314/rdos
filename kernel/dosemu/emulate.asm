@@ -1006,31 +1006,30 @@ emtFE   DW OFFSET EmFE,                                 OFFSET EmFF
 emulate_name DB 'Emulate OpCode',0
 
 emulate PROC far
-        mov [bp+2].vm_err,al
-        test byte ptr [bp+2].vm_eflags,2
+        mov [ebp].trap_state,al
+        test byte ptr [ebp+2].trap_eflags,2
         jnz emulate_vm
 
 emulate_pm:
-        test byte ptr [bp].vm_cs,3
+        test byte ptr [ebp].trap_cs,3
         jz emulate_kernel
 ;
         push gs
         push fs
-        push word ptr [bp].pm_ds
+        push word ptr [ebp].trap_pds
         push es
-        push word ptr [bp].vm_ss
-        push dword ptr [bp].vm_esp
-        push dword ptr [bp].vm_eflags
-        push word ptr [bp].vm_cs
-        push dword ptr [bp].vm_eip
-        push dword ptr [bp].vm_eax
-        push dword ptr [bp].vm_ebx
+        push word ptr [ebp].trap_ss
+        push dword ptr [ebp].trap_esp
+        push dword ptr [ebp].trap_eflags
+        push word ptr [ebp].trap_cs
+        push dword ptr [ebp].trap_eip
+        push dword ptr [ebp].trap_eax
+        push dword ptr [ebp].trap_ebx
         push ecx
         push edx
         push esi
         push edi
-        mov eax,ebp
-        mov ax,[bp].vm_bp
+        mov eax,[ebp].trap_ebp
         push eax
         push bp
         mov bp,sp
@@ -1045,26 +1044,25 @@ emulate_pm:
         call word ptr cs:[bx].EmulateTab
 ;
         add sp,2
-        pop bx
-        pop ebp
-        xchg bx,bp
-        mov [bp].vm_bp,bx
+        pop bp
+        pop eax
+        mov [ebp].trap_ebp,eax
         pop edi
         pop esi
         pop edx
         pop ecx
-        pop dword ptr [bp].vm_ebx
-        pop dword ptr [bp].vm_eax
-        pop dword ptr [bp].vm_eip
-        pop word ptr [bp].vm_cs
-        pop dword ptr [bp].vm_eflags
-        pop dword ptr [bp].vm_esp
-        pop word ptr [bp].vm_ss
+        pop dword ptr [ebp].trap_ebx
+        pop dword ptr [ebp].trap_eax
+        pop dword ptr [ebp].trap_eip
+        pop word ptr [ebp].trap_cs
+        pop dword ptr [ebp].trap_eflags
+        pop dword ptr [ebp].trap_esp
+        pop word ptr [ebp].trap_ss
         pop es
-        pop word ptr [bp].pm_ds
+        pop word ptr [ebp].trap_pds
         pop fs
         pop gs
-        test word ptr [bp].vm_eflags,100h
+        test word ptr [ebp].trap_eflags,100h
         jz emulate_pm_done
 ;
         mov ax,1
@@ -1076,21 +1074,20 @@ emulate_pm_done:
 emulate_kernel:
         push gs
         push fs
-        push word ptr [bp].pm_ds
+        push word ptr [ebp].trap_pds
         push es
         push ss
         push ebp
-        push dword ptr [bp].vm_eflags
-        push word ptr [bp].vm_cs
-        push dword ptr [bp].vm_eip
-        push dword ptr [bp].vm_eax
-        push dword ptr [bp].vm_ebx
+        push dword ptr [ebp].trap_eflags
+        push word ptr [ebp].trap_cs
+        push dword ptr [ebp].trap_eip
+        push dword ptr [ebp].trap_eax
+        push dword ptr [ebp].trap_ebx
         push ecx
         push edx
         push esi
         push edi
-        mov eax,ebp
-        mov ax,[bp].vm_bp
+        mov eax,[ebp].trap_ebp
         push eax
         push bp
         mov bp,sp
@@ -1133,26 +1130,25 @@ emulate_kernel_stack_pushed:
 
 emulate_kernel_stack_ok:
         add sp,2
-        pop bx
-        pop ebp
-        xchg bx,bp
-        mov [bp].vm_bp,bx
+        pop bp
+        pop eax
+        mov [ebp].trap_ebp,eax
 ;
         pop edi
         pop esi
         pop edx
         pop ecx
-        pop dword ptr [bp].vm_ebx
-        pop dword ptr [bp].vm_eax
-        pop dword ptr [bp].vm_eip
-        pop word ptr [bp].vm_cs
-        pop dword ptr [bp].vm_eflags
+        pop dword ptr [ebp].trap_ebx
+        pop dword ptr [ebp].trap_eax
+        pop dword ptr [ebp].trap_eip
+        pop word ptr [ebp].trap_cs
+        pop dword ptr [ebp].trap_eflags
         add sp,6
         pop es
-        pop word ptr [bp].pm_ds
+        pop word ptr [ebp].trap_pds
         pop fs
         pop gs
-        test word ptr [bp].vm_eflags,100h
+        test word ptr [ebp].trap_eflags,100h
         jz emulate_kernel_done
 ;
         mov ax,1
@@ -1162,23 +1158,22 @@ emulate_kernel_done:
         retf32
 
 emulate_vm:
-        push word ptr [bp].vm_gs
-        push word ptr [bp].vm_fs
-        push word ptr [bp].vm_ds
-        push word ptr [bp].vm_es
-        push word ptr [bp].vm_ss
-        push dword ptr [bp].vm_esp
-        push dword ptr [bp].vm_eflags
-        push word ptr [bp].vm_cs
-        push dword ptr [bp].vm_eip
-        push dword ptr [bp].vm_eax
-        push dword ptr [bp].vm_ebx
+        push word ptr [ebp].trap_gs
+        push word ptr [ebp].trap_fs
+        push word ptr [ebp].trap_ds
+        push word ptr [ebp].trap_es
+        push word ptr [ebp].trap_ss
+        push dword ptr [ebp].trap_esp
+        push dword ptr [ebp].trap_eflags
+        push word ptr [ebp].trap_cs
+        push dword ptr [ebp].trap_eip
+        push dword ptr [ebp].trap_eax
+        push dword ptr [ebp].trap_ebx
         push ecx
         push edx
         push esi
         push edi
-        mov eax,ebp
-        mov ax,[bp].vm_bp
+        mov eax,[ebp].trap_ebp
         push eax
         push bp
         mov bp,sp
@@ -1194,29 +1189,28 @@ emulate_vm:
         call word ptr cs:[bx].EmulateTab
 ;
         add sp,2
-        pop bx
-        pop ebp
-        xchg bx,bp
-        mov [bp].vm_bp,bx
+        pop bp
+        pop eax
+        mov [ebp].trap_ebp,eax
         pop edi
         pop esi
         pop edx
         pop ecx
-        pop dword ptr [bp].vm_ebx
-        pop dword ptr [bp].vm_eax
-        pop word ptr [bp].vm_eip
+        pop dword ptr [ebp].trap_ebx
+        pop dword ptr [ebp].trap_eax
+        pop word ptr [ebp].trap_eip
         add sp,2
-        pop word ptr [bp].vm_cs
-        pop word ptr [bp].vm_eflags
+        pop word ptr [ebp].trap_cs
+        pop word ptr [ebp].trap_eflags
         add sp,2
-        pop word ptr [bp].vm_esp
+        pop word ptr [ebp].trap_esp
         add sp,2
-        pop word ptr [bp].vm_ss
-        pop word ptr [bp].vm_es
-        pop word ptr [bp].vm_ds
-        pop word ptr [bp].vm_fs
-        pop word ptr [bp].vm_gs
-        test word ptr [bp].vm_eflags,100h
+        pop word ptr [ebp].trap_ss
+        pop word ptr [ebp].trap_es
+        pop word ptr [ebp].trap_ds
+        pop word ptr [ebp].trap_fs
+        pop word ptr [ebp].trap_gs
+        test word ptr [ebp].trap_eflags,100h
         jz emulate_vm_done
 ;
         mov ax,1
