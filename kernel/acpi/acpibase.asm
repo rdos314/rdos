@@ -559,7 +559,7 @@ get_acpi_device_irq  Proc far
     sub esp,4
     mov ecx,ss
     mov es,ecx
-    movzx edi,sp
+    mov edi,esp
     call GetAcpiDeviceIrqBase
     or eax,eax
     jz gadiFail
@@ -605,7 +605,7 @@ get_acpi_device_io  Proc far
     sub esp,4
     mov ecx,ss
     mov es,ecx
-    movzx edi,sp
+    mov edi,esp
     call GetAcpiDeviceIoBase
     or eax,eax
     jz gadioFail
@@ -650,7 +650,7 @@ get_acpi_device_mem  Proc far
     sub esp,8
     mov ecx,ss
     mov es,ecx
-    movzx edi,sp
+    mov edi,esp
     call GetAcpiDeviceMemBase
     or eax,eax
     jz gadmemFail
@@ -695,7 +695,7 @@ get_pci_device_info  Proc far
     sub esp,4
     mov ebx,ss
     mov es,ebx
-    movzx edi,sp
+    mov edi,esp
     call GetPciDeviceBase
     or eax,eax
     jz gpdiFail

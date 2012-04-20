@@ -2619,13 +2619,6 @@ thread_suspend:
     mov eax,ds
     push eax
 ;
-    mov ax,ss
-    cmp ax,syscall_data_sel
-    je ts_ebp_ok
-;
-    movzx ebp,bp    
-
-ts_ebp_ok:    
     mov eax,[ebp].trap_eflags
     or eax,10100h
     mov [ebp].trap_eflags,eax

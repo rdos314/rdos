@@ -1145,13 +1145,6 @@ pagefault_trap:
     push edx
     push edi
 ;
-    mov ax,ss
-    cmp ax,syscall_data_sel
-    je ptcont
-;
-    movzx ebp,bp
-
-ptcont:        
     mov eax,[ebp].trap_err
     test ax,1
     jz trap_not_present

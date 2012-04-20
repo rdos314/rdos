@@ -63,21 +63,6 @@ irq_bitmask         DB 32 DUP(?)
 
 irq_data_seg     ENDS
 
-FixupEbp Macro
-    local done
-
-    push ax
-    mov ax,ss
-    cmp ax,syscall_data_sel
-    pop ax
-    je done
-;
-    movzx ebp,bp
-
-done:
-        ENDM    
-    
-
 IFDEF __WASM__
     .686p
     .xmm2
@@ -241,7 +226,6 @@ int67:
     push es
     pushad
 ;
-    FixupEbp
     mov ax,system_data_sel
     mov ds,ax
     call ds:enter_patch_proc
@@ -310,7 +294,6 @@ intE8:
     push es
     pushad
 ;
-    FixupEbp
     mov ax,system_data_sel
     mov ds,ax
     EnterSection ds:patch_section
@@ -367,7 +350,6 @@ trap_0:
     push ax
     push ds
 ;
-    FixupEbp
     call emulate
     pop eax
     mov ds,ax
@@ -399,7 +381,6 @@ trap_1:
     push ax
     push ds
 ;
-    FixupEbp
     call get_task_lock
     add ax,1
     jnc t1_ret
@@ -454,7 +435,6 @@ trap_2:
     push ax
     push ds
 ;
-    FixupEbp    
     test byte ptr [ebp+2].trap_eflags,2
     jnz t2_vm
     call prot_exception
@@ -493,7 +473,6 @@ trap_3:
     push ax
     push ds
 ;
-    FixupEbp    
     mov eax,[ebp].trap_eflags
     test eax,20000h
     jnz t3_vm
@@ -534,7 +513,6 @@ trap_4:
     push ax
     push ds
 ;
-    FixupEbp    
     call emulate
 ;    
     pop eax
@@ -570,7 +548,6 @@ trap_5:
     push ax
     push ds
 ;
-    FixupEbp    
     call emulate
 ;    
     pop eax
@@ -1023,7 +1000,6 @@ trap_6:
     push ax
     push ds
 ;
-    FixupEbp    
     test byte ptr [ebp+2].trap_eflags,2
     jnz t6_vm
     mov ds,[ebp].trap_cs
@@ -1091,7 +1067,6 @@ trap_7:
     push ax
     push ds
 ;
-    FixupEbp    
     mov eax,cr0
     test al,4
     jz math_real_fpu
@@ -1145,7 +1120,6 @@ trap_9:
     push ax
     push ds
 ;
-    FixupEbp    
     call emulate
     pop eax
     mov ds,ax
@@ -1178,7 +1152,6 @@ trap_10:
     push ax
     push ds
 ;
-    FixupEbp    
     test byte ptr [ebp+2].trap_eflags,2
     jnz t10_vm
 ;
@@ -1220,7 +1193,6 @@ trap_11:
     push ax
     push ds
 ;
-    FixupEbp    
     test byte ptr [ebp+2].trap_eflags,2
     jnz t11_vm
     SegmentNotPresent
@@ -1270,7 +1242,6 @@ trap_12:
     push ax
     push ds
 ;
-    FixupEbp    
     test byte ptr [ebp+2].trap_eflags,2
     jnz t12_vm
 ;
@@ -1310,7 +1281,6 @@ trap_13:
     push ax
     push ds
 ;
-    FixupEbp
     mov ax,system_data_sel
     mov ds,ax
     call ds:enter_patch_proc
@@ -1493,7 +1463,6 @@ trap_16:
     push ax
     push ds
 ;
-    FixupEbp    
     call emulate
     pop eax
     mov ds,ax
@@ -1643,7 +1612,6 @@ pretask0:
     mov ax,0
     push ax
     push ds
-    FixupEbp
     ShutDownPreTask
 
 pretask1:
@@ -1655,7 +1623,6 @@ pretask1:
     mov ax,1
     push ax
     push ds
-    FixupEbp
     ShutDownPreTask
 
 pretask2:
@@ -1667,7 +1634,6 @@ pretask2:
     mov ax,2
     push ax
     push ds
-    FixupEbp
     ShutDownPreTask
 
 pretask3:
@@ -1679,7 +1645,6 @@ pretask3:
     mov ax,3
     push ax
     push ds
-    FixupEbp
     ShutDownPreTask
 
 pretask4:
@@ -1691,7 +1656,6 @@ pretask4:
     mov ax,4
     push ax
     push ds
-    FixupEbp
     ShutDownPreTask
 
 pretask5:
@@ -1703,7 +1667,6 @@ pretask5:
     mov ax,5
     push ax
     push ds
-    FixupEbp
     ShutDownPreTask
 
 pretask6:
@@ -1715,7 +1678,6 @@ pretask6:
     mov ax,6
     push ax
     push ds
-    FixupEbp
     ShutDownPreTask
 
 pretask7:
@@ -1727,7 +1689,6 @@ pretask7:
     mov ax,7
     push ax
     push ds
-    FixupEbp
     ShutDownPreTask
 
 pretask8:
@@ -1738,7 +1699,6 @@ pretask8:
     mov ax,8
     push ax
     push ds
-    FixupEbp
     ShutDownPreTask
 
 pretask9:
@@ -1750,7 +1710,6 @@ pretask9:
     mov ax,9
     push ax
     push ds
-    FixupEbp
     ShutDownPreTask
 
 pretask10:
@@ -1761,7 +1720,6 @@ pretask10:
     mov ax,10
     push ax
     push ds
-    FixupEbp
     ShutDownPreTask
 
 pretask11:
@@ -1772,7 +1730,6 @@ pretask11:
     mov ax,11
     push ax
     push ds
-    FixupEbp
     ShutDownPreTask
 
 pretask12:
@@ -1783,7 +1740,6 @@ pretask12:
     mov ax,12
     push ax
     push ds
-    FixupEbp
     ShutDownPreTask
 
 pretask13:
@@ -1795,7 +1751,6 @@ pretask13:
     push ax
     push ds
 ;    
-    FixupEbp
     test byte ptr [ebp+2].trap_eflags,2
     jnz pretask_gpf_default
 ;
@@ -1903,7 +1858,6 @@ prepaging14:
     mov ax,14
     push ax
     push ds
-    FixupEbp
     ShutDownPreTask
 
 pretask16:
@@ -1915,7 +1869,6 @@ pretask16:
     mov ax,16
     push ax
     push ds
-    FixupEbp
     ShutDownPreTask
 
 pretask_int_tab:

@@ -3870,13 +3870,6 @@ find_exc_next:
     push ds
     push es
 ;
-    mov bx,ss
-    cmp bx,syscall_data_sel
-    je pe_ebp_ok
-;
-    movzx ebp,bp    
-
-pe_ebp_ok:    
     mov ebx,fs:pvModuleHandle
     DerefModuleHandle
     mov ds,bx

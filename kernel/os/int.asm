@@ -1047,13 +1047,6 @@ call_vm Proc far
     push si
     push di
 ;
-    mov ax,ss
-    cmp ax,syscall_data_sel
-    je call_vm_ebp_ok
-;
-    movzx ebp,bp
-
-call_vm_ebp_ok:
     GetThread
     mov ds,ax
     mov bx,ds:p_int_locked_stack

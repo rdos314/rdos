@@ -1502,13 +1502,6 @@ nmi_handler:
     push ebp
     mov ebp,esp
 ;
-    mov ax,ss
-    cmp ax,syscall_data_sel
-    je nmi_bp_ok
-;
-    movzx ebp,bp
-
-nmi_bp_ok: 
     GetCore
     test fs:ps_flags,PS_FLAG_NMI
     jnz nmi_ret
