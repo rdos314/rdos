@@ -63,19 +63,6 @@ irq_bitmask         DB 32 DUP(?)
 
 irq_data_seg     ENDS
 
-CheckIt MACRO
-    local trap_no_stop
-
-;       mov al,[bp].vm_eflags+2
-;       test al,2
-;       jz trap_no_stop
-;       mov ax,[bp].vm_eflags
-;       test ax,200h
-;       jnz trap_no_stop
-;       int 3
-trap_no_stop:
-        ENDM
-
 FixupEbp Macro
     local done
 

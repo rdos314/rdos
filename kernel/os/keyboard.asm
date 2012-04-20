@@ -246,8 +246,8 @@ keyb_io_get_ch:
 kr_no_circ_buff:
     mov ds:key_buffer_head,bx
     LeaveSection ds:key_section
-    mov bx,[bp].vm_ebx
-    mov ds,[bp].pm_ds
+    mov bx,[ebp].trap_ebx
+    mov ds,[ebp].trap_pds
     retf32
 keyb_io_read    ENDP
 
@@ -258,18 +258,18 @@ keyb_io_poll    PROC far
     cmp bx,ds:key_buffer_tail
     je keyb_p_empty
 ;
-    and word ptr [bp].vm_eflags,NOT 40h
+    and word ptr [ebp].trap_eflags,NOT 40h
     mov ax,[bx]
     LeaveSection ds:key_section
-    mov bx,[bp].vm_ebx
-    mov ds,[bp].pm_ds
+    mov bx,[ebp].trap_ebx
+    mov ds,[ebp].trap_pds
     retf32
     
 keyb_p_empty:
     LeaveSection ds:key_section
-    or word ptr [bp].vm_eflags,40h
-    mov bx,[bp].vm_ebx
-    mov ds,[bp].pm_ds
+    or word ptr [ebp].trap_eflags,40h
+    mov bx,[ebp].trap_ebx
+    mov ds,[ebp].trap_pds
     retf32
 keyb_io_poll    ENDP
 
@@ -324,7 +324,7 @@ int16:
     mov bx,26h
 key_call_do:
     push word ptr cs:[bx].keyb_io_tab
-    mov bx,[bp].vm_ebx
+    mov bx,[ebp].trap_ebx
     retn
 
 
@@ -1006,18 +1006,18 @@ key_emul_no_circ:
 
 key_emul_start:
     int 3
-    mov [bp].vm_cs,ax
+    mov [ebp].trap_cs,ax
     mov ax,ds:key_int_offs
-    mov [bp].vm_eip,ax
+    mov [ebp].trap_eip,ax
 ;
     mov ax,flat_sel
     mov ds,ax
-    movzx edx,word ptr [bp].vm_ss
+    movzx edx,word ptr [ebp].trap_ss
     shl edx,4
     mov word ptr [edx+0FAh],8*4
     mov word ptr [edx+0FCh],0E000h
     mov word ptr [edx+0FEh],200h
-    mov word ptr [bp].vm_esp,0FAh
+    mov word ptr [ebp].trap_esp,0FAh
     add sp,6
     pop ds
     pop ebx
