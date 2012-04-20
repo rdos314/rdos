@@ -274,8 +274,8 @@ NotifyKernelDebug   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ExceptionEvent Proc near
-    push bp
-    mov bp,[bp]
+    push ebp
+    mov ebp,[ebp]
     push eax
     push di
 ;
@@ -303,7 +303,7 @@ ExceptionEvent Proc near
 ;
     pop di
     pop eax
-    pop bp
+    pop ebp
     ret
 ExceptionEvent Endp
                       
@@ -3794,10 +3794,28 @@ continue_debug_event Endp
 ;
 ;           DESCRIPTION:    Notify of a exception
 ;
-;           PARAMETERS:         EBP         Exception frame
+;           PARAMETERS:     EBP         Exception frame
 ;                           EAX         Exception code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+exc_tab:
+e00 DD 0C000008Eh
+e01 DD 080000004h
+e02 DD 0
+e03 DD 080000003h
+e04 DD 0C0000095h
+e05 DD 0C000008Ch
+e06 DD 0C000001Dh
+e07 DD 0
+e08 DD 0
+e09 DD 0
+e0A DD 0
+e0B DD 0
+e0C DD 0C00000FDh
+e0D DD 0C0000096h
+e0E DD 0C0000005h
+e0F DD 0
 
 notify_pe_exception_name DB 'Notify Pe Exception',0
 
@@ -3818,16 +3836,42 @@ notify_pe_exception     Proc far
     pop dx
     pop ds
 ;
-    sub esp,8
+    sub esp,4
+    push dword ptr 0
     push ebp
     mov ebp,esp
     push eax
     push ebx
+;
+    push cx
+    push dx
+;    
+    mov bx,OFFSET exc_tab
+    mov cx,10h
+    mov dl,14h
+    mov dh,0
+
+find_exc_loop:    
+    cmp eax,cs:[bx]
+    jne find_exc_next
+;
+    mov dl,dh
+
+find_exc_next:
+    add bx,4
+    inc dh
+    loop find_exc_loop
+;
+    movzx bx,dl 
+    pop dx
+    pop cx   
+;    
+    push bx
     push ds
     push es
 ;
-    mov ax,ss
-    cmp ax,syscall_data_sel
+    mov bx,ss
+    cmp bx,syscall_data_sel
     je pe_ebp_ok
 ;
     movzx ebp,bp    
