@@ -633,7 +633,7 @@ abort_pretask_block:
 
 abort_pretask_do:    
     push es
-    movzx bx,al
+    mov bx,[ebp].trap_exc_nr
 ;
     mov ax,system_data_sel
     mov es,ax

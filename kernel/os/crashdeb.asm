@@ -1305,7 +1305,6 @@ cint11:
     ShutDownPreTask
 
 cint12:
-    push dword ptr 0
     push ebp
     mov ebp,esp
     push eax
@@ -1368,6 +1367,7 @@ c13_retry:
     iretd
 
 cint16:
+    push dword ptr 0
     push ebp
     mov ebp,esp
     push eax

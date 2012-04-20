@@ -98,27 +98,6 @@ ELSE
     .386p
 ENDIF
 
-StopSys   Macro
-    local done
-    
-    push ax
-    mov ax,ss
-    cmp ax,syscall_data_sel
-    jne done
-;    
-    mov ax,system_data_sel
-    mov ds,ax
-    mov ds:patch_spinlock,0
-    pop ax
-;
-    mov ss,si
-    mov sp,stack0_size
-    CrashGate
-
-done:
-    pop ax
-         Endm
-
 code    SEGMENT byte use16 public 'CODE'
 
     extrn local_create_int_gate_sel:near
@@ -140,26 +119,25 @@ code    SEGMENT byte use16 public 'CODE'
     assume cs:code
 
 emulate PROC near
-    push ax
     mov ax,emulate_opcode_nr
     IsValidOsGate
-    pop ax
     jc emulate_exception
 ;
+    mov al,[ebp].trap_exc_nr
     EmulateOpcode
     ret
 
 emulate_exception:
-    push ax
     mov eax,[ebp].trap_eflags
     test eax,20000h
-    pop ax
     jnz em_vm
 ;
+    mov al,[ebp].trap_exc_nr
     call prot_exception
     ret
 
 em_vm:
+    mov al,[ebp].trap_exc_nr
     call virt_exception
     ret
 emulate ENDP
@@ -411,7 +389,6 @@ trap_0:
     mov ds:p_fault_code,0
     xor ax,ax
     mov ds,ax
-    mov al,0
     call emulate
     pop eax
     mov ds,ax
@@ -465,12 +442,10 @@ trap_1:
     test eax,20000h
     jnz t1_vm
 ;
-    mov al,1
     call prot_exception
     jmp t1_ret
 
 t1_vm:
-    mov al,1
     call virt_exception
     
 t1_ret:
@@ -513,7 +488,6 @@ trap_2:
     mov ds:p_fault_code,0
     xor ax,ax
     mov ds,ax
-    mov al,2
     test byte ptr [ebp+2].trap_eflags,2
     jnz t2_vm
     call prot_exception
@@ -563,11 +537,9 @@ trap_3:
     test eax,20000h
     jnz t3_vm
 ;
-    mov al,3
     call prot_exception
     jmp t3_ret
 t3_vm:
-    mov al,3
     call virt_exception
 t3_ret:
     pop eax
@@ -606,7 +578,6 @@ trap_4:
     mov ds,ax
     mov ds:p_fault_vector,4
     mov ds:p_fault_code,0
-    mov al,4
     call emulate
 ;    
     pop eax
@@ -647,7 +618,6 @@ trap_5:
     mov ds,ax
     mov ds:p_fault_vector,5
     mov ds:p_fault_code,0
-    mov al,5
     call emulate
 ;    
     pop eax
@@ -693,404 +663,400 @@ trap_5:
     extrn call_pm16_ret:near
     extrn call_pm32_ret:near
 
-emulate_6:
-    mov al,6
-    jmp emulate
-
 enter_dpmi      PROC near
     EnterDpmi
     ret
 enter_dpmi      ENDP
 
 vm_call_tab:
-vm_00   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_02   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_04   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_06   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_08   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_0A   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_0C   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_0E   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_10   DW OFFSET reflect_end,          OFFSET sim16_end
-vm_12   DW OFFSET sim32_end,            OFFSET vm_callback16
-vm_14   DW OFFSET vm_callback32,        OFFSET reflect_pm_to_vm_done
-vm_16   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_18   DW OFFSET irq_vm,                   OFFSET emulate_6
-vm_1A   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_1C   DW OFFSET call_vm_ret,          OFFSET emulate_6
-vm_1E   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_20   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_22   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_24   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_26   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_28   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_2A   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_2C   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_2E   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_30   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_32   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_34   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_36   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_38   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_3A   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_3C   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_3E   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_40   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_42   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_44   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_46   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_48   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_4A   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_4C   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_4E   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_50   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_52   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_54   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_56   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_58   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_5A   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_5C   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_5E   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_60   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_62   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_64   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_66   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_68   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_6A   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_6C   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_6E   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_70   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_72   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_74   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_76   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_78   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_7A   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_7C   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_7E   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_80   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_82   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_84   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_86   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_88   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_8A   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_8C   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_8E   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_90   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_92   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_94   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_96   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_98   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_9A   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_9C   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_9E   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_A0   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_A2   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_A4   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_A6   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_A8   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_AA   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_AC   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_AE   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_B0   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_B2   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_B4   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_B6   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_B8   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_BA   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_BC   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_BE   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_C0   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_C2   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_C4   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_C6   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_C8   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_CA   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_CC   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_CE   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_D0   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_D2   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_D4   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_D6   DW OFFSET do_usergate_vm,       OFFSET emulate_6
-vm_D8   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_DA   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_DC   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_DE   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_E0   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_E2   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_E4   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_E6   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_E8   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_EA   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_EC   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_EE   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_F0   DW OFFSET emulate_6,            OFFSET translate_vm_reflect
-vm_F2   DW OFFSET emulate_6,        OFFSET emulate_6
-vm_F4   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_F6   DW OFFSET emulate_6,            OFFSET enter_dpmi
-vm_F8   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_FA   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_FC   DW OFFSET emulate_6,            OFFSET emulate_6
-vm_FE   DW OFFSET emulate_6,            OFFSET emulate_6
+vm_00   DW OFFSET emulate,            OFFSET emulate
+vm_02   DW OFFSET emulate,            OFFSET emulate
+vm_04   DW OFFSET emulate,            OFFSET emulate
+vm_06   DW OFFSET emulate,            OFFSET emulate
+vm_08   DW OFFSET emulate,            OFFSET emulate
+vm_0A   DW OFFSET emulate,            OFFSET emulate
+vm_0C   DW OFFSET emulate,            OFFSET emulate
+vm_0E   DW OFFSET emulate,            OFFSET emulate
+vm_10   DW OFFSET reflect_end,        OFFSET sim16_end
+vm_12   DW OFFSET sim32_end,          OFFSET vm_callback16
+vm_14   DW OFFSET vm_callback32,      OFFSET reflect_pm_to_vm_done
+vm_16   DW OFFSET emulate,            OFFSET emulate
+vm_18   DW OFFSET irq_vm,             OFFSET emulate
+vm_1A   DW OFFSET emulate,            OFFSET emulate
+vm_1C   DW OFFSET call_vm_ret,        OFFSET emulate
+vm_1E   DW OFFSET emulate,            OFFSET emulate
+vm_20   DW OFFSET emulate,            OFFSET emulate
+vm_22   DW OFFSET emulate,            OFFSET emulate
+vm_24   DW OFFSET emulate,            OFFSET emulate
+vm_26   DW OFFSET emulate,            OFFSET emulate
+vm_28   DW OFFSET emulate,            OFFSET emulate
+vm_2A   DW OFFSET emulate,            OFFSET emulate
+vm_2C   DW OFFSET emulate,            OFFSET emulate
+vm_2E   DW OFFSET emulate,            OFFSET emulate
+vm_30   DW OFFSET emulate,            OFFSET emulate
+vm_32   DW OFFSET emulate,            OFFSET emulate
+vm_34   DW OFFSET emulate,            OFFSET emulate
+vm_36   DW OFFSET emulate,            OFFSET emulate
+vm_38   DW OFFSET emulate,            OFFSET emulate
+vm_3A   DW OFFSET emulate,            OFFSET emulate
+vm_3C   DW OFFSET emulate,            OFFSET emulate
+vm_3E   DW OFFSET emulate,            OFFSET emulate
+vm_40   DW OFFSET emulate,            OFFSET emulate
+vm_42   DW OFFSET emulate,            OFFSET emulate
+vm_44   DW OFFSET emulate,            OFFSET emulate
+vm_46   DW OFFSET emulate,            OFFSET emulate
+vm_48   DW OFFSET emulate,            OFFSET emulate
+vm_4A   DW OFFSET emulate,            OFFSET emulate
+vm_4C   DW OFFSET emulate,            OFFSET emulate
+vm_4E   DW OFFSET emulate,            OFFSET emulate
+vm_50   DW OFFSET emulate,            OFFSET emulate
+vm_52   DW OFFSET emulate,            OFFSET emulate
+vm_54   DW OFFSET emulate,            OFFSET emulate
+vm_56   DW OFFSET emulate,            OFFSET emulate
+vm_58   DW OFFSET emulate,            OFFSET emulate
+vm_5A   DW OFFSET emulate,            OFFSET emulate
+vm_5C   DW OFFSET emulate,            OFFSET emulate
+vm_5E   DW OFFSET emulate,            OFFSET emulate
+vm_60   DW OFFSET emulate,            OFFSET emulate
+vm_62   DW OFFSET emulate,            OFFSET emulate
+vm_64   DW OFFSET emulate,            OFFSET emulate
+vm_66   DW OFFSET emulate,            OFFSET emulate
+vm_68   DW OFFSET emulate,            OFFSET emulate
+vm_6A   DW OFFSET emulate,            OFFSET emulate
+vm_6C   DW OFFSET emulate,            OFFSET emulate
+vm_6E   DW OFFSET emulate,            OFFSET emulate
+vm_70   DW OFFSET emulate,            OFFSET emulate
+vm_72   DW OFFSET emulate,            OFFSET emulate
+vm_74   DW OFFSET emulate,            OFFSET emulate
+vm_76   DW OFFSET emulate,            OFFSET emulate
+vm_78   DW OFFSET emulate,            OFFSET emulate
+vm_7A   DW OFFSET emulate,            OFFSET emulate
+vm_7C   DW OFFSET emulate,            OFFSET emulate
+vm_7E   DW OFFSET emulate,            OFFSET emulate
+vm_80   DW OFFSET emulate,            OFFSET emulate
+vm_82   DW OFFSET emulate,            OFFSET emulate
+vm_84   DW OFFSET emulate,            OFFSET emulate
+vm_86   DW OFFSET emulate,            OFFSET emulate
+vm_88   DW OFFSET emulate,            OFFSET emulate
+vm_8A   DW OFFSET emulate,            OFFSET emulate
+vm_8C   DW OFFSET emulate,            OFFSET emulate
+vm_8E   DW OFFSET emulate,            OFFSET emulate
+vm_90   DW OFFSET emulate,            OFFSET emulate
+vm_92   DW OFFSET emulate,            OFFSET emulate
+vm_94   DW OFFSET emulate,            OFFSET emulate
+vm_96   DW OFFSET emulate,            OFFSET emulate
+vm_98   DW OFFSET emulate,            OFFSET emulate
+vm_9A   DW OFFSET emulate,            OFFSET emulate
+vm_9C   DW OFFSET emulate,            OFFSET emulate
+vm_9E   DW OFFSET emulate,            OFFSET emulate
+vm_A0   DW OFFSET emulate,            OFFSET emulate
+vm_A2   DW OFFSET emulate,            OFFSET emulate
+vm_A4   DW OFFSET emulate,            OFFSET emulate
+vm_A6   DW OFFSET emulate,            OFFSET emulate
+vm_A8   DW OFFSET emulate,            OFFSET emulate
+vm_AA   DW OFFSET emulate,            OFFSET emulate
+vm_AC   DW OFFSET emulate,            OFFSET emulate
+vm_AE   DW OFFSET emulate,            OFFSET emulate
+vm_B0   DW OFFSET emulate,            OFFSET emulate
+vm_B2   DW OFFSET emulate,            OFFSET emulate
+vm_B4   DW OFFSET emulate,            OFFSET emulate
+vm_B6   DW OFFSET emulate,            OFFSET emulate
+vm_B8   DW OFFSET emulate,            OFFSET emulate
+vm_BA   DW OFFSET emulate,            OFFSET emulate
+vm_BC   DW OFFSET emulate,            OFFSET emulate
+vm_BE   DW OFFSET emulate,            OFFSET emulate
+vm_C0   DW OFFSET emulate,            OFFSET emulate
+vm_C2   DW OFFSET emulate,            OFFSET emulate
+vm_C4   DW OFFSET emulate,            OFFSET emulate
+vm_C6   DW OFFSET emulate,            OFFSET emulate
+vm_C8   DW OFFSET emulate,            OFFSET emulate
+vm_CA   DW OFFSET emulate,            OFFSET emulate
+vm_CC   DW OFFSET emulate,            OFFSET emulate
+vm_CE   DW OFFSET emulate,            OFFSET emulate
+vm_D0   DW OFFSET emulate,            OFFSET emulate
+vm_D2   DW OFFSET emulate,            OFFSET emulate
+vm_D4   DW OFFSET emulate,            OFFSET emulate
+vm_D6   DW OFFSET do_usergate_vm,     OFFSET emulate
+vm_D8   DW OFFSET emulate,            OFFSET emulate
+vm_DA   DW OFFSET emulate,            OFFSET emulate
+vm_DC   DW OFFSET emulate,            OFFSET emulate
+vm_DE   DW OFFSET emulate,            OFFSET emulate
+vm_E0   DW OFFSET emulate,            OFFSET emulate
+vm_E2   DW OFFSET emulate,            OFFSET emulate
+vm_E4   DW OFFSET emulate,            OFFSET emulate
+vm_E6   DW OFFSET emulate,            OFFSET emulate
+vm_E8   DW OFFSET emulate,            OFFSET emulate
+vm_EA   DW OFFSET emulate,            OFFSET emulate
+vm_EC   DW OFFSET emulate,            OFFSET emulate
+vm_EE   DW OFFSET emulate,            OFFSET emulate
+vm_F0   DW OFFSET emulate,            OFFSET translate_vm_reflect
+vm_F2   DW OFFSET emulate,            OFFSET emulate
+vm_F4   DW OFFSET emulate,            OFFSET emulate
+vm_F6   DW OFFSET emulate,            OFFSET enter_dpmi
+vm_F8   DW OFFSET emulate,            OFFSET emulate
+vm_FA   DW OFFSET emulate,            OFFSET emulate
+vm_FC   DW OFFSET emulate,            OFFSET emulate
+vm_FE   DW OFFSET emulate,            OFFSET emulate
 
 pm16_call_tab:
-pm16_00 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_02 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_04 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_06 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_08 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_0A DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_0C DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_0E DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_10 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_12 DW OFFSET emulate_6,            OFFSET pm_callback16
-pm16_14 DW OFFSET pm_callback32,        OFFSET emulate_6
+pm16_00 DW OFFSET emulate,            OFFSET emulate
+pm16_02 DW OFFSET emulate,            OFFSET emulate
+pm16_04 DW OFFSET emulate,            OFFSET emulate
+pm16_06 DW OFFSET emulate,            OFFSET emulate
+pm16_08 DW OFFSET emulate,            OFFSET emulate
+pm16_0A DW OFFSET emulate,            OFFSET emulate
+pm16_0C DW OFFSET emulate,            OFFSET emulate
+pm16_0E DW OFFSET emulate,            OFFSET emulate
+pm16_10 DW OFFSET emulate,            OFFSET emulate
+pm16_12 DW OFFSET emulate,            OFFSET pm_callback16
+pm16_14 DW OFFSET pm_callback32,      OFFSET emulate
 pm16_16 DW OFFSET translate_pm16_reflect,OFFSET translate_pm32_reflect
-pm16_18 DW OFFSET emulate_6,            OFFSET irq_pm16
-pm16_1A DW OFFSET irq_pm32,                 OFFSET emulate_6
-pm16_1C DW OFFSET call_pm16_ret,        OFFSET call_pm32_ret
-pm16_1E DW OFFSET default_exception16,  OFFSET break_exception16
-pm16_20 DW OFFSET default_exception32,  OFFSET break_exception32
-pm16_22 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_24 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_26 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_28 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_2A DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_2C DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_2E DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_30 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_32 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_34 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_36 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_38 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_3A DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_3C DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_3E DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_40 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_42 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_44 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_46 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_48 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_4A DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_4C DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_4E DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_50 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_52 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_54 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_56 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_58 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_5A DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_5C DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_5E DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_60 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_62 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_64 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_66 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_68 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_6A DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_6C DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_6E DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_70 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_72 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_74 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_76 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_78 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_7A DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_7C DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_7E DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_80 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_82 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_84 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_86 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_88 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_8A DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_8C DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_8E DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_90 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_92 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_94 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_96 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_98 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_9A DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_9C DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_9E DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_A0 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_A2 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_A4 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_A6 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_A8 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_AA DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_AC DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_AE DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_B0 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_B2 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_B4 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_B6 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_B8 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_BA DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_BC DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_BE DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_C0 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_C2 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_C4 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_C6 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_C8 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_CA DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_CC DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_CE DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_D0 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_D2 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_D4 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_D6 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_D8 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_DA DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_DC DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_DE DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_E0 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_E2 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_E4 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_E6 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_E8 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_EA DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_EC DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_EE DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_F0 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_F2 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_F4 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_F6 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_F8 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_FA DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_FC DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_FE DW OFFSET emulate_6,            OFFSET emulate_6
+pm16_18 DW OFFSET emulate,            OFFSET irq_pm16
+pm16_1A DW OFFSET irq_pm32,           OFFSET emulate
+pm16_1C DW OFFSET call_pm16_ret,      OFFSET call_pm32_ret
+pm16_1E DW OFFSET default_exception16,OFFSET break_exception16
+pm16_20 DW OFFSET default_exception32,OFFSET break_exception32
+pm16_22 DW OFFSET emulate,            OFFSET emulate
+pm16_24 DW OFFSET emulate,            OFFSET emulate
+pm16_26 DW OFFSET emulate,            OFFSET emulate
+pm16_28 DW OFFSET emulate,            OFFSET emulate
+pm16_2A DW OFFSET emulate,            OFFSET emulate
+pm16_2C DW OFFSET emulate,            OFFSET emulate
+pm16_2E DW OFFSET emulate,            OFFSET emulate
+pm16_30 DW OFFSET emulate,            OFFSET emulate
+pm16_32 DW OFFSET emulate,            OFFSET emulate
+pm16_34 DW OFFSET emulate,            OFFSET emulate
+pm16_36 DW OFFSET emulate,            OFFSET emulate
+pm16_38 DW OFFSET emulate,            OFFSET emulate
+pm16_3A DW OFFSET emulate,            OFFSET emulate
+pm16_3C DW OFFSET emulate,            OFFSET emulate
+pm16_3E DW OFFSET emulate,            OFFSET emulate
+pm16_40 DW OFFSET emulate,            OFFSET emulate
+pm16_42 DW OFFSET emulate,            OFFSET emulate
+pm16_44 DW OFFSET emulate,            OFFSET emulate
+pm16_46 DW OFFSET emulate,            OFFSET emulate
+pm16_48 DW OFFSET emulate,            OFFSET emulate
+pm16_4A DW OFFSET emulate,            OFFSET emulate
+pm16_4C DW OFFSET emulate,            OFFSET emulate
+pm16_4E DW OFFSET emulate,            OFFSET emulate
+pm16_50 DW OFFSET emulate,            OFFSET emulate
+pm16_52 DW OFFSET emulate,            OFFSET emulate
+pm16_54 DW OFFSET emulate,            OFFSET emulate
+pm16_56 DW OFFSET emulate,            OFFSET emulate
+pm16_58 DW OFFSET emulate,            OFFSET emulate
+pm16_5A DW OFFSET emulate,            OFFSET emulate
+pm16_5C DW OFFSET emulate,            OFFSET emulate
+pm16_5E DW OFFSET emulate,            OFFSET emulate
+pm16_60 DW OFFSET emulate,            OFFSET emulate
+pm16_62 DW OFFSET emulate,            OFFSET emulate
+pm16_64 DW OFFSET emulate,            OFFSET emulate
+pm16_66 DW OFFSET emulate,            OFFSET emulate
+pm16_68 DW OFFSET emulate,            OFFSET emulate
+pm16_6A DW OFFSET emulate,            OFFSET emulate
+pm16_6C DW OFFSET emulate,            OFFSET emulate
+pm16_6E DW OFFSET emulate,            OFFSET emulate
+pm16_70 DW OFFSET emulate,            OFFSET emulate
+pm16_72 DW OFFSET emulate,            OFFSET emulate
+pm16_74 DW OFFSET emulate,            OFFSET emulate
+pm16_76 DW OFFSET emulate,            OFFSET emulate
+pm16_78 DW OFFSET emulate,            OFFSET emulate
+pm16_7A DW OFFSET emulate,            OFFSET emulate
+pm16_7C DW OFFSET emulate,            OFFSET emulate
+pm16_7E DW OFFSET emulate,            OFFSET emulate
+pm16_80 DW OFFSET emulate,            OFFSET emulate
+pm16_82 DW OFFSET emulate,            OFFSET emulate
+pm16_84 DW OFFSET emulate,            OFFSET emulate
+pm16_86 DW OFFSET emulate,            OFFSET emulate
+pm16_88 DW OFFSET emulate,            OFFSET emulate
+pm16_8A DW OFFSET emulate,            OFFSET emulate
+pm16_8C DW OFFSET emulate,            OFFSET emulate
+pm16_8E DW OFFSET emulate,            OFFSET emulate
+pm16_90 DW OFFSET emulate,            OFFSET emulate
+pm16_92 DW OFFSET emulate,            OFFSET emulate
+pm16_94 DW OFFSET emulate,            OFFSET emulate
+pm16_96 DW OFFSET emulate,            OFFSET emulate
+pm16_98 DW OFFSET emulate,            OFFSET emulate
+pm16_9A DW OFFSET emulate,            OFFSET emulate
+pm16_9C DW OFFSET emulate,            OFFSET emulate
+pm16_9E DW OFFSET emulate,            OFFSET emulate
+pm16_A0 DW OFFSET emulate,            OFFSET emulate
+pm16_A2 DW OFFSET emulate,            OFFSET emulate
+pm16_A4 DW OFFSET emulate,            OFFSET emulate
+pm16_A6 DW OFFSET emulate,            OFFSET emulate
+pm16_A8 DW OFFSET emulate,            OFFSET emulate
+pm16_AA DW OFFSET emulate,            OFFSET emulate
+pm16_AC DW OFFSET emulate,            OFFSET emulate
+pm16_AE DW OFFSET emulate,            OFFSET emulate
+pm16_B0 DW OFFSET emulate,            OFFSET emulate
+pm16_B2 DW OFFSET emulate,            OFFSET emulate
+pm16_B4 DW OFFSET emulate,            OFFSET emulate
+pm16_B6 DW OFFSET emulate,            OFFSET emulate
+pm16_B8 DW OFFSET emulate,            OFFSET emulate
+pm16_BA DW OFFSET emulate,            OFFSET emulate
+pm16_BC DW OFFSET emulate,            OFFSET emulate
+pm16_BE DW OFFSET emulate,            OFFSET emulate
+pm16_C0 DW OFFSET emulate,            OFFSET emulate
+pm16_C2 DW OFFSET emulate,            OFFSET emulate
+pm16_C4 DW OFFSET emulate,            OFFSET emulate
+pm16_C6 DW OFFSET emulate,            OFFSET emulate
+pm16_C8 DW OFFSET emulate,            OFFSET emulate
+pm16_CA DW OFFSET emulate,            OFFSET emulate
+pm16_CC DW OFFSET emulate,            OFFSET emulate
+pm16_CE DW OFFSET emulate,            OFFSET emulate
+pm16_D0 DW OFFSET emulate,            OFFSET emulate
+pm16_D2 DW OFFSET emulate,            OFFSET emulate
+pm16_D4 DW OFFSET emulate,            OFFSET emulate
+pm16_D6 DW OFFSET emulate,            OFFSET emulate
+pm16_D8 DW OFFSET emulate,            OFFSET emulate
+pm16_DA DW OFFSET emulate,            OFFSET emulate
+pm16_DC DW OFFSET emulate,            OFFSET emulate
+pm16_DE DW OFFSET emulate,            OFFSET emulate
+pm16_E0 DW OFFSET emulate,            OFFSET emulate
+pm16_E2 DW OFFSET emulate,            OFFSET emulate
+pm16_E4 DW OFFSET emulate,            OFFSET emulate
+pm16_E6 DW OFFSET emulate,            OFFSET emulate
+pm16_E8 DW OFFSET emulate,            OFFSET emulate
+pm16_EA DW OFFSET emulate,            OFFSET emulate
+pm16_EC DW OFFSET emulate,            OFFSET emulate
+pm16_EE DW OFFSET emulate,            OFFSET emulate
+pm16_F0 DW OFFSET emulate,            OFFSET emulate
+pm16_F2 DW OFFSET emulate,            OFFSET emulate
+pm16_F4 DW OFFSET emulate,            OFFSET emulate
+pm16_F6 DW OFFSET emulate,            OFFSET emulate
+pm16_F8 DW OFFSET emulate,            OFFSET emulate
+pm16_FA DW OFFSET emulate,            OFFSET emulate
+pm16_FC DW OFFSET emulate,            OFFSET emulate
+pm16_FE DW OFFSET emulate,            OFFSET emulate
 
 pm32_call_tab:
-pm32_00 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_02 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_04 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_06 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_08 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_0A DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_0C DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_0E DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_10 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_12 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_14 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_16 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_18 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_1A DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_1C DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_1E DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_20 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_22 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_24 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_26 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_28 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_2A DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_2C DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_2E DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_30 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_32 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_34 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_36 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_38 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_3A DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_3C DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_3E DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_40 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_42 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_44 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_46 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_48 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_4A DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_4C DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_4E DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_50 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_52 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_54 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_56 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_58 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_5A DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_5C DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_5E DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_60 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_62 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_64 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_66 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_68 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_6A DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_6C DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_6E DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_70 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_72 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_74 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_76 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_78 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_7A DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_7C DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_7E DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_80 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_82 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_84 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_86 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_88 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_8A DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_8C DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_8E DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_90 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_92 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_94 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_96 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_98 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_9A DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_9C DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_9E DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_A0 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_A2 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_A4 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_A6 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_A8 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_AA DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_AC DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_AE DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_B0 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_B2 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_B4 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_B6 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_B8 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_BA DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_BC DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_BE DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_C0 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_C2 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_C4 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_C6 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_C8 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_CA DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_CC DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_CE DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_D0 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_D2 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_D4 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_D6 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_D8 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_DA DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_DC DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_DE DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_E0 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_E2 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_E4 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_E6 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_E8 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_EA DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_EC DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_EE DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_F0 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_F2 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_F4 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_F6 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_F8 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_FA DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_FC DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_FE DW OFFSET emulate_6,            OFFSET emulate_6
+pm32_00 DW OFFSET emulate,            OFFSET emulate
+pm32_02 DW OFFSET emulate,            OFFSET emulate
+pm32_04 DW OFFSET emulate,            OFFSET emulate
+pm32_06 DW OFFSET emulate,            OFFSET emulate
+pm32_08 DW OFFSET emulate,            OFFSET emulate
+pm32_0A DW OFFSET emulate,            OFFSET emulate
+pm32_0C DW OFFSET emulate,            OFFSET emulate
+pm32_0E DW OFFSET emulate,            OFFSET emulate
+pm32_10 DW OFFSET emulate,            OFFSET emulate
+pm32_12 DW OFFSET emulate,            OFFSET emulate
+pm32_14 DW OFFSET emulate,            OFFSET emulate
+pm32_16 DW OFFSET emulate,            OFFSET emulate
+pm32_18 DW OFFSET emulate,            OFFSET emulate
+pm32_1A DW OFFSET emulate,            OFFSET emulate
+pm32_1C DW OFFSET emulate,            OFFSET emulate
+pm32_1E DW OFFSET emulate,            OFFSET emulate
+pm32_20 DW OFFSET emulate,            OFFSET emulate
+pm32_22 DW OFFSET emulate,            OFFSET emulate
+pm32_24 DW OFFSET emulate,            OFFSET emulate
+pm32_26 DW OFFSET emulate,            OFFSET emulate
+pm32_28 DW OFFSET emulate,            OFFSET emulate
+pm32_2A DW OFFSET emulate,            OFFSET emulate
+pm32_2C DW OFFSET emulate,            OFFSET emulate
+pm32_2E DW OFFSET emulate,            OFFSET emulate
+pm32_30 DW OFFSET emulate,            OFFSET emulate
+pm32_32 DW OFFSET emulate,            OFFSET emulate
+pm32_34 DW OFFSET emulate,            OFFSET emulate
+pm32_36 DW OFFSET emulate,            OFFSET emulate
+pm32_38 DW OFFSET emulate,            OFFSET emulate
+pm32_3A DW OFFSET emulate,            OFFSET emulate
+pm32_3C DW OFFSET emulate,            OFFSET emulate
+pm32_3E DW OFFSET emulate,            OFFSET emulate
+pm32_40 DW OFFSET emulate,            OFFSET emulate
+pm32_42 DW OFFSET emulate,            OFFSET emulate
+pm32_44 DW OFFSET emulate,            OFFSET emulate
+pm32_46 DW OFFSET emulate,            OFFSET emulate
+pm32_48 DW OFFSET emulate,            OFFSET emulate
+pm32_4A DW OFFSET emulate,            OFFSET emulate
+pm32_4C DW OFFSET emulate,            OFFSET emulate
+pm32_4E DW OFFSET emulate,            OFFSET emulate
+pm32_50 DW OFFSET emulate,            OFFSET emulate
+pm32_52 DW OFFSET emulate,            OFFSET emulate
+pm32_54 DW OFFSET emulate,            OFFSET emulate
+pm32_56 DW OFFSET emulate,            OFFSET emulate
+pm32_58 DW OFFSET emulate,            OFFSET emulate
+pm32_5A DW OFFSET emulate,            OFFSET emulate
+pm32_5C DW OFFSET emulate,            OFFSET emulate
+pm32_5E DW OFFSET emulate,            OFFSET emulate
+pm32_60 DW OFFSET emulate,            OFFSET emulate
+pm32_62 DW OFFSET emulate,            OFFSET emulate
+pm32_64 DW OFFSET emulate,            OFFSET emulate
+pm32_66 DW OFFSET emulate,            OFFSET emulate
+pm32_68 DW OFFSET emulate,            OFFSET emulate
+pm32_6A DW OFFSET emulate,            OFFSET emulate
+pm32_6C DW OFFSET emulate,            OFFSET emulate
+pm32_6E DW OFFSET emulate,            OFFSET emulate
+pm32_70 DW OFFSET emulate,            OFFSET emulate
+pm32_72 DW OFFSET emulate,            OFFSET emulate
+pm32_74 DW OFFSET emulate,            OFFSET emulate
+pm32_76 DW OFFSET emulate,            OFFSET emulate
+pm32_78 DW OFFSET emulate,            OFFSET emulate
+pm32_7A DW OFFSET emulate,            OFFSET emulate
+pm32_7C DW OFFSET emulate,            OFFSET emulate
+pm32_7E DW OFFSET emulate,            OFFSET emulate
+pm32_80 DW OFFSET emulate,            OFFSET emulate
+pm32_82 DW OFFSET emulate,            OFFSET emulate
+pm32_84 DW OFFSET emulate,            OFFSET emulate
+pm32_86 DW OFFSET emulate,            OFFSET emulate
+pm32_88 DW OFFSET emulate,            OFFSET emulate
+pm32_8A DW OFFSET emulate,            OFFSET emulate
+pm32_8C DW OFFSET emulate,            OFFSET emulate
+pm32_8E DW OFFSET emulate,            OFFSET emulate
+pm32_90 DW OFFSET emulate,            OFFSET emulate
+pm32_92 DW OFFSET emulate,            OFFSET emulate
+pm32_94 DW OFFSET emulate,            OFFSET emulate
+pm32_96 DW OFFSET emulate,            OFFSET emulate
+pm32_98 DW OFFSET emulate,            OFFSET emulate
+pm32_9A DW OFFSET emulate,            OFFSET emulate
+pm32_9C DW OFFSET emulate,            OFFSET emulate
+pm32_9E DW OFFSET emulate,            OFFSET emulate
+pm32_A0 DW OFFSET emulate,            OFFSET emulate
+pm32_A2 DW OFFSET emulate,            OFFSET emulate
+pm32_A4 DW OFFSET emulate,            OFFSET emulate
+pm32_A6 DW OFFSET emulate,            OFFSET emulate
+pm32_A8 DW OFFSET emulate,            OFFSET emulate
+pm32_AA DW OFFSET emulate,            OFFSET emulate
+pm32_AC DW OFFSET emulate,            OFFSET emulate
+pm32_AE DW OFFSET emulate,            OFFSET emulate
+pm32_B0 DW OFFSET emulate,            OFFSET emulate
+pm32_B2 DW OFFSET emulate,            OFFSET emulate
+pm32_B4 DW OFFSET emulate,            OFFSET emulate
+pm32_B6 DW OFFSET emulate,            OFFSET emulate
+pm32_B8 DW OFFSET emulate,            OFFSET emulate
+pm32_BA DW OFFSET emulate,            OFFSET emulate
+pm32_BC DW OFFSET emulate,            OFFSET emulate
+pm32_BE DW OFFSET emulate,            OFFSET emulate
+pm32_C0 DW OFFSET emulate,            OFFSET emulate
+pm32_C2 DW OFFSET emulate,            OFFSET emulate
+pm32_C4 DW OFFSET emulate,            OFFSET emulate
+pm32_C6 DW OFFSET emulate,            OFFSET emulate
+pm32_C8 DW OFFSET emulate,            OFFSET emulate
+pm32_CA DW OFFSET emulate,            OFFSET emulate
+pm32_CC DW OFFSET emulate,            OFFSET emulate
+pm32_CE DW OFFSET emulate,            OFFSET emulate
+pm32_D0 DW OFFSET emulate,            OFFSET emulate
+pm32_D2 DW OFFSET emulate,            OFFSET emulate
+pm32_D4 DW OFFSET emulate,            OFFSET emulate
+pm32_D6 DW OFFSET emulate,            OFFSET emulate
+pm32_D8 DW OFFSET emulate,            OFFSET emulate
+pm32_DA DW OFFSET emulate,            OFFSET emulate
+pm32_DC DW OFFSET emulate,            OFFSET emulate
+pm32_DE DW OFFSET emulate,            OFFSET emulate
+pm32_E0 DW OFFSET emulate,            OFFSET emulate
+pm32_E2 DW OFFSET emulate,            OFFSET emulate
+pm32_E4 DW OFFSET emulate,            OFFSET emulate
+pm32_E6 DW OFFSET emulate,            OFFSET emulate
+pm32_E8 DW OFFSET emulate,            OFFSET emulate
+pm32_EA DW OFFSET emulate,            OFFSET emulate
+pm32_EC DW OFFSET emulate,            OFFSET emulate
+pm32_EE DW OFFSET emulate,            OFFSET emulate
+pm32_F0 DW OFFSET emulate,            OFFSET emulate
+pm32_F2 DW OFFSET emulate,            OFFSET emulate
+pm32_F4 DW OFFSET emulate,            OFFSET emulate
+pm32_F6 DW OFFSET emulate,            OFFSET emulate
+pm32_F8 DW OFFSET emulate,            OFFSET emulate
+pm32_FA DW OFFSET emulate,            OFFSET emulate
+pm32_FC DW OFFSET emulate,            OFFSET emulate
+pm32_FE DW OFFSET emulate,            OFFSET emulate
 
 trap_6:
     push dword ptr 0
@@ -1130,7 +1096,6 @@ t6_pm32:
     call word ptr cs:[eax*2].pm32_call_tab
     jmp t6_ret
 emulate_62:
-    mov al,6
     call emulate
     jmp t6_ret
 t6_vm:
@@ -1142,7 +1107,7 @@ t6_vm:
     mov ds,ax
     mov ax,[ebx]
     cmp ax,00B0Fh
-    jne emulate_6
+    jne emulate
     add ebx,2
     sti
     movzx eax,byte ptr [ebx]
@@ -1192,7 +1157,6 @@ trap_7:
     jz math_real_fpu
 
 math_emulate_fpu:
-    mov al,7
     call emulate
     jmp math_done
 
@@ -1248,7 +1212,6 @@ trap_9:
     mov ds:p_fault_code,0
     xor ax,ax
     mov ds,ax
-    mov al,9
     call emulate
     pop eax
     mov ds,ax
@@ -1289,16 +1252,13 @@ trap_10:
     mov ds:p_fault_code,eax
     xor ax,ax
     mov ds,ax
-    mov al,10
     test byte ptr [ebp+2].trap_eflags,2
     jnz t10_vm
 ;
-    mov al,10
     call prot_exception
     jmp t10_ret
 
 t10_vm:
-    mov al,10
     call emulate
 
 t10_ret:
@@ -1341,18 +1301,15 @@ trap_11:
     mov ds:p_fault_code,eax
     xor ax,ax
     mov ds,ax
-    mov al,11
     test byte ptr [ebp+2].trap_eflags,2
     jnz t11_vm
     SegmentNotPresent
     jnc t11_ret
 ;
-    mov al,11
     call prot_exception
     jmp t11_ret
 
 t11_vm:
-    mov al,11
     call emulate
 
 t11_ret:
@@ -1407,16 +1364,13 @@ t12_thread:
     mov ds:p_fault_code,eax
     xor ax,ax
     mov ds,ax
-    mov al,11
     test byte ptr [ebp+2].trap_eflags,2
-    jnz t11_vm
+    jnz t12_vm
 ;
-    mov al,12
     call prot_exception
     jmp t12_ret
 
 t12_vm:
-    mov al,12
     call emulate
 
 t12_ret:
@@ -1600,7 +1554,6 @@ t13_default:
     xor ax,ax
     mov ds,ax
 ;
-    mov al,13
     call emulate
     jmp t13_end
 
@@ -1648,7 +1601,6 @@ trap_16:
     mov ds:p_fault_code,0
     xor ax,ax
     mov ds,ax
-    mov al,16
     call emulate
     pop eax
     mov ds,ax
@@ -1790,7 +1742,7 @@ init_trap_gates ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 pretask0:
-    sub esp,4
+    push dword ptr 0
     push ebp
     mov ebp,esp
     push eax
@@ -1802,7 +1754,7 @@ pretask0:
     ShutDownPreTask
 
 pretask1:
-    sub esp,4
+    push dword ptr 0
     push ebp
     mov ebp,esp
     push eax
@@ -1814,7 +1766,7 @@ pretask1:
     ShutDownPreTask
 
 pretask2:
-    sub esp,4
+    push dword ptr 0
     push ebp
     mov ebp,esp
     push eax
@@ -1826,7 +1778,7 @@ pretask2:
     ShutDownPreTask
 
 pretask3:
-    sub esp,4
+    push dword ptr 0
     push ebp
     mov ebp,esp
     push eax
@@ -1838,7 +1790,7 @@ pretask3:
     ShutDownPreTask
 
 pretask4:
-    sub esp,4
+    push dword ptr 0
     push ebp
     mov ebp,esp
     push eax
@@ -1850,7 +1802,7 @@ pretask4:
     ShutDownPreTask
 
 pretask5:
-    sub esp,4
+    push dword ptr 0
     push ebp
     mov ebp,esp
     push eax
@@ -1874,7 +1826,7 @@ pretask6:
     ShutDownPreTask
 
 pretask7:
-    sub esp,4
+    push dword ptr 0
     push ebp
     mov ebp,esp
     push eax
@@ -1897,7 +1849,7 @@ pretask8:
     ShutDownPreTask
 
 pretask9:
-    sub esp,4
+    push dword ptr 0
     push ebp
     mov ebp,esp
     push eax
@@ -1931,7 +1883,6 @@ pretask11:
     ShutDownPreTask
 
 pretask12:
-    sub esp,4
     push ebp
     mov ebp,esp
     push eax
@@ -2039,7 +1990,6 @@ pretask_kernel_gate32:
     jmp pretask_gpf_reexec
 
 pretask_gpf_default:
-    mov al,13
     ShutDownPreTask
 
 pretask_gpf_reexec:
@@ -2064,6 +2014,7 @@ prepaging14:
     ShutDownPreTask
 
 pretask16:
+    push dword ptr 0
     push ebp
     mov ebp,esp
     push eax
