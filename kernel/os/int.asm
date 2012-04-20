@@ -1025,7 +1025,7 @@ call_vm_name    DB 'Call VM',0
 
 call_vm_bp          EQU 16
 call_vm_seg         EQU 14
-call_vm_offs    EQU 12
+call_vm_offs        EQU 12
 call_vm_eax         EQU 8
 call_vm_ebx         EQU 4
 call_vm_edx         EQU 0
@@ -1037,7 +1037,7 @@ call_vm Proc far
     push gs
     push ebp
     mov ebp,esp
-    push dword ptr [ebp+18]
+    push dword ptr [ebp+20]
 ;
     push ds
     push es
@@ -1053,13 +1053,14 @@ call_vm Proc far
 ;
     movzx ebp,bp
 
-call_vm_ebp_ok:    
+call_vm_ebp_ok:
     GetThread
     mov ds,ax
     mov bx,ds:p_int_locked_stack
     or bx,bx
     jnz call_vm_save_context
     call allocate_switch_stack
+
 call_vm_save_context:
     mov cx,stack0_size-14
     sub cx,sp
@@ -1162,15 +1163,15 @@ call_vm_real_stack_ok:
 call_vm_ret:
     cli
     xor bx,bx
-    mov ax,[bp].vm_ds
+    mov ax,[ebp].trap_ds
     mov ss:[bx+2],ax
-    mov ax,[bp].vm_es
+    mov ax,[ebp].trap_es
     mov ss:[bx+4],ax
-    mov eax,[bp].vm_eax
+    mov eax,[ebp].trap_eax
     mov ss:[bx+6],ax
-    mov ax,[bp].vm_ebx
+    mov ax,[ebp].trap_ebx
     mov ss:[bx+8],ax
-    mov ebx,[bp].vm_ebx
+    mov ebx,[ebp].trap_ebx
 ;
     GetThread
     mov ds,ax
@@ -1209,7 +1210,7 @@ call_vm_ret:
     mov bx,ss:[bx+8]
 ;
     add sp,12
-    pop bp
+    pop ebp
     pop gs
     pop fs
     pop es
