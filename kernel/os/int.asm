@@ -1373,13 +1373,13 @@ call_pm16_save_context:
 
 call_pm16_ret:
     xor bx,bx
-    mov ax,[bp].pm_ds
+    mov ax,[ebp].trap_pds
     mov ss:[bx],ax
-    mov eax,[bp].vm_eax
+    mov eax,[ebp].trap_eax
     mov ss:[bx+2],ax
-    mov ax,[bp].vm_ebx
+    mov ax,[ebp].trap_ebx
     mov ss:[bx+4],ax
-    mov ebx,[bp].vm_ebx
+    mov ebx,[ebp].trap_ebx
 ;
     GetThread
     mov ds,ax
@@ -1549,16 +1549,16 @@ call_pm32_save_context:
 
 call_pm32_ret:
     xor bx,bx
-    mov ax,[bp].pm_ds
+    mov ax,[ebp].trap_pds
     mov ss:[bx],ax
-    mov eax,[bp].vm_eax
+    mov eax,[ebp].trap_eax
     mov ss:[bx+2],ax
-    mov ax,[bp].vm_ebx
+    mov ax,[ebp].trap_ebx
     mov ss:[bx+4],ax
-    mov ebx,[bp].vm_ebx
+    mov ebx,[ebp].trap_ebx
 ;
     push ecx
-    mov edx,[bp].vm_esp
+    mov edx,[ebp].trap_esp
     and dx,0F000h
     mov ecx,1000h
     mov ax,system_data_sel
