@@ -297,10 +297,11 @@ timer_pr:
     push 0
 ;
     sub sp,4
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
+    push word ptr 0
     push ds
     sub sp,10
     
@@ -327,23 +328,24 @@ timer_wait_loop:
     mov ax,ds:timer_int_seg
     cmp ax,0E000h
     jz timer_tics
-    mov [bp].vm_cs,ax
+    mov [ebp].trap_cs,ax
     mov ax,ds:timer_int_offs
-    mov [bp].vm_eip,ax
+    mov [ebp].trap_eip,ax
 ;
     mov ax,flat_sel
     mov ds,ax
-    movzx edx,word ptr [bp].vm_ss
+    movzx edx,word ptr [ebp].trap_ss
     shl edx,4
     mov word ptr [edx+0FAh],8*4
     mov word ptr [edx+0FCh],0E000h
     mov word ptr [edx+0FEh],200h
-    mov word ptr [bp].vm_esp,0FAh
+    mov word ptr [ebp].trap_esp,0FAh
     add sp,10
     pop ds
+    pop ax
     pop ebx
     pop eax
-    pop bp
+    pop ebp
     add sp,4
     iretd
 
@@ -360,23 +362,24 @@ timer_tics:
     cmp ax,0E000h
     jz timer_wait_loop
 ;
-    mov [bp].vm_cs,ax
+    mov [ebp].trap_cs,ax
     mov ax,ds:timer_tics_offs
-    mov [bp].vm_eip,ax
+    mov [ebp].trap_eip,ax
 ;
     mov ax,flat_sel
     mov ds,ax
-    movzx edx,word ptr [bp].vm_ss
+    movzx edx,word ptr [ebp].trap_ss
     shl edx,4
     mov word ptr [edx+0FAh],1Ch*4
     mov word ptr [edx+0FCh],0E000h
     mov word ptr [edx+0FEh],200h
-    mov word ptr [bp].vm_esp,0FAh
+    mov word ptr [ebp].trap_esp,0FAh
     add sp,10
     pop ds
+    pop ax
     pop ebx
     pop eax
-    pop bp
+    pop ebp
     add sp,4
     iretd
 ;
@@ -478,12 +481,13 @@ timer16_pr:
     push 0
 ;
     sub sp,4
-    push bp
-    mov bp,sp
+    push ebp
+    mov ebp,esp
     push eax
     push ebx
+    push word ptr 0
     push ds
-    sub sp,6
+    sub sp,10
 timer_tics16_entry:
     mov ax,pcbios_proc_sel
     mov ds,ax
@@ -506,18 +510,19 @@ timer_wait16_loop:
     mov ax,ds:timer_int16_sel
     cmp ax,callb_int16_sel
     jz timer_tics16
-    mov [bp].vm_cs,ax
+    mov [ebp].trap_cs,ax
     mov ax,ds:timer_int16_offs
-    mov [bp].vm_eip,ax
+    mov [ebp].trap_eip,ax
 ;
-    mov ds,[bp].vm_ss
+    mov ds,[ebp].trap_ss
     xor bx,bx
     mov word ptr [bx+0FAh],8*4
     mov word ptr [bx+0FCh],callb_int16_sel
     mov word ptr [bx+0FEh],200h
-    mov word ptr [bp].vm_esp,0FAh
-    add sp,6
+    mov word ptr [ebp].trap_esp,0FAh
+    add sp,10
     pop ds
+    pop ax
     pop ebx
     pop eax
     pop bp
@@ -535,18 +540,19 @@ timer_tics16:
     mov ax,ds:timer_tics16_sel
     cmp ax,callb_int16_sel
     jz timer_wait16_loop
-    mov [bp].vm_cs,ax
+    mov [ebp].trap_cs,ax
     mov ax,ds:timer_tics16_offs
-    mov [bp].vm_eip,ax
+    mov [ebp].trap_eip,ax
 ;
-    mov ds,[bp].vm_ss
+    mov ds,[ebp].trap_ss
     xor bx,bx
     mov word ptr [bx+0FAh],1Ch*4
     mov word ptr [bx+0FCh],callb_int16_sel
     mov word ptr [bx+0FEh],200h
-    mov word ptr [bp].vm_esp,0FAh
-    add sp,6
+    mov word ptr [ebp].trap_esp,0FAh
+    add sp,10
     pop ds
+    pop ax
     pop ebx
     pop eax
     pop bp
