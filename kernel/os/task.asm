@@ -3080,11 +3080,26 @@ load_relock:
     jmp load_retry
         
 load_regs:
+    test fs:ps_flags,PS_FLAG_QUERY_SYS OR PS_FLAG_HAS_SYS
+    jz load_no_syscall
+;
+    test fs:ps_flags,PS_FLAG_HAS_SYS
+    jnz load_msr
+;
+    lock and fs:ps_flags,NOT PS_FLAG_QUERY_SYS
+    mov ax,syscall_patch_nr
+    IsValidOsGate
+    jc load_no_syscall
+;
+    lock or fs:ps_flags,PS_FLAG_HAS_SYS 
+
+load_msr:    
     mov eax,ds:p_stack0_top
     xor edx,edx
     mov ecx,MSR_SYSENTER_ESP
     wrmsr
-;    
+
+load_no_syscall:    
     mov fs:ps_curr_thread,es
     mov fs:ps_last_thread,es
     lock and fs:ps_flags,NOT PS_FLAG_LOADING
@@ -4401,7 +4416,7 @@ ptab_init:
     mov es:ps_nesting,-1
     mov es:ps_curr_thread,0
     mov es:ps_last_thread,-1
-    mov es:ps_flags,PS_FLAG_INIT_CLOCK
+    mov es:ps_flags,PS_FLAG_INIT_CLOCK OR PS_FLAG_QUERY_SYS
     mov es:ps_null_thread,0
     mov es:ps_math_thread,0
     mov es:ps_apic,-1

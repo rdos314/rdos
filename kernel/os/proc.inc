@@ -36,6 +36,8 @@ PS_FLAG_LOADING     = 80h
 PS_FLAG_FPU         = 100h
 PS_FLAG_P_STATE     = 200h
 PS_FLAG_SHUTDOWN    = 400h
+PS_FLAG_QUERY_SYS   = 800h
+PS_FLAG_HAS_SYS     = 1000h
 
 timer_struc	STRUC
 

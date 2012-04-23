@@ -748,7 +748,7 @@ trap_create_process_done:
     pop si
     pop cx
 ;
-    xor bp,bp
+    xor ebp,ebp
     push cs
     call trap_create_thread
     ret
@@ -1165,7 +1165,7 @@ init_process_block      ENDP
 
 init_prot_thread    PROC near
     push ds
-    lds esi,[bp].cr_name
+    lds esi,[ebp].cr_name
     mov di,OFFSET thread_name
     mov cx,30
 pm_move_thread_name:
@@ -1198,9 +1198,9 @@ init_prot_thread    ENDP
 init_virt_thread    PROC near
     push ds
     xor eax,eax
-    mov ax,[bp].cr_name
+    mov ax,[ebp].cr_name
     xor edx,edx
-    mov dx,[bp+4].cr_name
+    mov dx,[ebp+4].cr_name
     shl edx,4
     add edx,eax
     mov ax,flat_sel
@@ -1271,31 +1271,31 @@ init_default_tss    PROC near
     mov es:p_cr3,edx
     mov ds:p_tss_cr3,edx
 ;
-    mov edx,[bp].cr_offs
+    mov edx,[ebp].cr_offs
     mov ds:p_tss_eip,edx
 ;
-    mov edx,[bp].cr_eax
+    mov edx,[ebp].cr_eax
     mov ds:p_tss_eax,edx
 ;
-    mov edx,[bp].cr_ecx
+    mov edx,[ebp].cr_ecx
     mov ds:p_tss_ecx,edx
 ;
-    mov edx,[bp].cr_edx
+    mov edx,[ebp].cr_edx
     mov ds:p_tss_edx,edx
 ;    
-    mov edx,[bp].cr_ebx
+    mov edx,[ebp].cr_ebx
     mov ds:p_tss_ebx,edx
 ;
-    mov edx,[bp].cr_ebp
+    mov edx,[ebp].cr_ebp
     mov ds:p_tss_ebp,edx
 ;
-    mov edx,[bp].cr_esi
+    mov edx,[ebp].cr_esi
     mov ds:p_tss_esi,edx
 ;    
-    mov edx,[bp].cr_edi
+    mov edx,[ebp].cr_edi
     mov ds:p_tss_edi,edx
 ;    
-    mov dx,[bp].cr_seg
+    mov dx,[ebp].cr_seg
     mov ds:p_tss_cs,dx
 ;    
     sldt dx
@@ -1365,14 +1365,14 @@ init_prot_tss   PROC near
     mov fs,ax
     mov fs,fs:p_app_sel
 ;
-    mov dx,[bp].cr_flags
+    mov dx,[ebp].cr_flags
     or dx,200h
     and dx,NOT 7000h
     movzx edx,dx
     mov ds:p_tss_eflags,edx
 ;
     mov es:p_free_proc,0
-    mov ax,[bp].cr_seg
+    mov ax,[ebp].cr_seg
     test ax,3
     jz init_kernel_tss
 ;
@@ -1383,7 +1383,7 @@ init_prot_tss   PROC near
     mov eax,fs:app_free_thread_proc
     mov es:p_free_proc,eax
 ;
-    mov eax,[bp].cr_stack
+    mov eax,[ebp].cr_stack
     mov es:p_stack_sel,0
     call fs:app_init_thread_proc
     pop fs
@@ -1391,7 +1391,7 @@ init_prot_tss   PROC near
 
 init_prot_tss_default:
     push es
-    mov eax,[bp].cr_stack
+    mov eax,[ebp].cr_stack
     AllocateLocalMem
     sub eax,6
     mov ds:p_tss_esp,eax
@@ -1418,16 +1418,16 @@ init_kernel_tss:
     mov es:p_stack_sel,0
 
 init_prot_tss_com:
-    mov ax,[bp].cr_es
+    mov ax,[ebp].cr_es
     mov ds:p_tss_es,ax
 ;
-    mov ax,[bp].cr_ds
+    mov ax,[ebp].cr_ds
     mov ds:p_tss_ds,ax
 ;    
-    mov ax,[bp].cr_fs
+    mov ax,[ebp].cr_fs
     mov ds:p_tss_fs,ax
 ;    
-    mov ax,[bp].cr_gs
+    mov ax,[ebp].cr_gs
     mov ds:p_tss_gs,ax    
     pop fs
     ret
@@ -1448,7 +1448,7 @@ init_prot_tss   ENDP
 init_virt_tss   PROC near
     push es
     xor eax,eax
-    mov ax,[bp].cr_stack
+    mov ax,[ebp].cr_stack
     AllocateDosMem
     push eax
     mov ax,es
@@ -1457,7 +1457,7 @@ init_virt_tss   PROC near
     pop eax
     sub eax,6
     mov ds:p_tss_esp,eax
-    mov dx,[bp].cr_flags
+    mov dx,[ebp].cr_flags
     movzx edx,dx 
     or edx,20200h
     and dx,NOT 7000h
@@ -1471,19 +1471,19 @@ init_virt_tss   PROC near
     pop es
     mov es:p_stack_sel,ax
 ;
-    mov ax,[bp].cr_es
+    mov ax,[ebp].cr_es
     SelectorToSegment
     mov ds:p_tss_es,ax
 ;
-    mov ax,[bp].cr_ds
+    mov ax,[ebp].cr_ds
     SelectorToSegment
     mov ds:p_tss_ds,ax
 ;
-    mov ax,[bp].cr_fs
+    mov ax,[ebp].cr_fs
     SelectorToSegment
     mov ds:p_tss_fs,ax
 ;
-    mov ax,[bp].cr_gs
+    mov ax,[ebp].cr_gs
     SelectorToSegment
     mov ds:p_tss_gs,ax
     ret
@@ -1508,9 +1508,9 @@ init_virt_tss   ENDP
 create_thread_name      DB 'Create Thread',0
 
 create_thread   PROC near
-    sub sp,30
-    push bp
-    mov bp,sp
+    sub esp,30
+    push ebp
+    mov ebp,esp
     pushf
     push ds
     push es
@@ -1522,23 +1522,23 @@ create_thread   PROC near
     push edx
     push esi
     push edi
-    mov [bp].cr_seg,ds
-    mov [bp].cr_offs,esi
+    mov [ebp].cr_seg,ds
+    mov [ebp].cr_offs,esi
     xor dx,dx
     mov dl,al       
-    mov [bp].cr_prio,dx
-    mov [bp].cr_stack,ecx
+    mov [ebp].cr_prio,dx
+    mov [ebp].cr_stack,ecx
     mov dl,ah
-    mov [bp].cr_mode,dx
-    mov [bp].cr_name,edi
-    mov [bp+4].cr_name,es
+    mov [ebp].cr_mode,dx
+    mov [ebp].cr_name,edi
+    mov [ebp+4].cr_name,es
     call allocate_thread_block
-    mov dx,[bp].cr_prio
+    mov dx,[ebp].cr_prio
     call init_thread_block
     mov ax,es
     mov ds,ax
     call init_default_tss
-    mov ax,[bp].cr_mode
+    mov ax,[ebp].cr_mode
     test ax,1
     jz create_prot
     call init_virt_thread
@@ -1586,8 +1586,8 @@ crp_zero_es:
 crp_zero_ds:
     mov ds,ax
     popf
-    pop bp
-    add sp,30
+    pop ebp
+    add esp,30
     ret
 create_thread   ENDP
 
@@ -1724,10 +1724,10 @@ init_process_tss    PROC near
     mov eax,stack0_size
     mov ds:p_tss_esp,eax
 ;
-    mov ax,[bp].cr_mode
+    mov ax,[ebp].cr_mode
     test ax,1
     jz init_tss_prot_iopl
-    mov ax,[bp].cr_flags
+    mov ax,[ebp].cr_flags
     or dx,200h
     and dx,NOT 7000h
     movzx edx,dx
@@ -1735,7 +1735,7 @@ init_process_tss    PROC near
     jmp init_tss_iopl_done
 
 init_tss_prot_iopl:
-    mov ax,[bp].cr_flags
+    mov ax,[ebp].cr_flags
     or ax,200h
     and ax,NOT 7000h
     movzx eax,ax
@@ -1768,30 +1768,30 @@ init_process_callback   PROC near
     AllocateGlobalMem
     mov ds:p_tss_ds,es
 ;
-    mov ax,[bp].cr_mode
+    mov ax,[ebp].cr_mode
     mov es:cm_mode,ax
-    mov eax,[bp].cr_stack
+    mov eax,[ebp].cr_stack
     mov es:cm_stack,eax
     mov es:cm_process,fs
-    mov ax,[bp].cr_flags
+    mov ax,[ebp].cr_flags
     mov es:cm_flags,ax
-    mov ax,[bp].cr_seg
+    mov ax,[ebp].cr_seg
     mov es:cm_cs,ax
-    mov eax,[bp].cr_offs
+    mov eax,[ebp].cr_offs
     mov es:cm_eip,eax
-    mov eax,[bp].cr_eax
+    mov eax,[ebp].cr_eax
     mov es:cm_eax,eax
-    mov eax,[bp].cr_ebx
+    mov eax,[ebp].cr_ebx
     mov es:cm_ebx,eax
-    mov eax,[bp].cr_ecx
+    mov eax,[ebp].cr_ecx
     mov es:cm_ecx,eax
-    mov eax,[bp].cr_edx
+    mov eax,[ebp].cr_edx
     mov es:cm_edx,eax
-    mov eax,[bp].cr_esi
+    mov eax,[ebp].cr_esi
     mov es:cm_esi,eax
-    mov eax,[bp].cr_edi
+    mov eax,[ebp].cr_edi
     mov es:cm_edi,eax
-    mov eax,[bp].cr_ebp
+    mov eax,[ebp].cr_ebp
     mov es:cm_ebp,eax
     pop es
     ret
@@ -1886,9 +1886,9 @@ create_enviroment       ENDP
 create_process_name     DB 'Create Process',0
 
 create_process  PROC far
-    sub sp,30
-    push bp
-    mov bp,sp
+    sub esp,30
+    push ebp
+    mov ebp,esp
     pushf
     push ds
     push es
@@ -1902,21 +1902,21 @@ create_process  PROC far
     push edi
     movzx esi,si
     movzx edi,di
-    mov [bp].cr_seg,ds
-    mov [bp].cr_offs,esi
+    mov [ebp].cr_seg,ds
+    mov [ebp].cr_offs,esi
     xor dx,dx
     mov dl,al       
-    mov [bp].cr_prio,dx
-    mov [bp].cr_stack,ecx
+    mov [ebp].cr_prio,dx
+    mov [ebp].cr_stack,ecx
     mov dl,ah
-    mov [bp].cr_mode,dx
-    mov [bp].cr_name,edi
-    mov [bp+4].cr_name,es
+    mov [ebp].cr_mode,dx
+    mov [ebp].cr_name,edi
+    mov [ebp+4].cr_name,es
     xor ax,ax
     mov fs,ax
     mov gs,ax
     call allocate_thread_block
-    mov dx,[bp].cr_prio
+    mov dx,[ebp].cr_prio
     call init_thread_block
     mov es:p_debug_proc,0
     call init_process_block
@@ -1924,7 +1924,7 @@ create_process  PROC far
     mov ds,ax
     call init_default_tss
     call create_enviroment
-    mov ax,[bp].cr_mode
+    mov ax,[ebp].cr_mode
     test ax,1
     jz create_mod_prot
     call init_virt_thread
@@ -1971,8 +1971,8 @@ crm_zero_es:
 crm_zero_ds:
     mov ds,ax
     popf
-    pop bp
-    add sp,30
+    pop ebp
+    add esp,30
     retf32
 create_process  ENDP
 
