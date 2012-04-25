@@ -2501,7 +2501,7 @@ read_hid_get_data:
     mov ax,cx
     pop cx
     pop es
-    jc read_hid_done
+    jc read_hid_fail
 ;
     cmp ax,8
     stc

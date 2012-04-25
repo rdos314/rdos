@@ -99,7 +99,7 @@ int main()
     long double azimuth;
     TDateTime currtime;
     
-    RdosWaitMilli(1000);
+    RdosWaitMilli(2500);
 
     Store = new TDataStore;
 
