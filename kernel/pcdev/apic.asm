@@ -3553,12 +3553,12 @@ init    PROC far
     mov ds,ax
     mov es,ax
 ;
-    mov esi,OFFSET test_gate_pr
-    mov ebp,OFFSET test_near
-    mov edi,OFFSET test_gate_name
-    xor dx,dx
-    mov ax,test_gate_nr
-    RegisterBimodalSyscall
+;    mov esi,OFFSET test_gate_pr
+;    mov ebp,OFFSET test_near
+;    mov edi,OFFSET test_gate_name
+;    xor dx,dx
+;    mov ax,test_gate_nr
+;    RegisterBimodalSyscall
 ;
     mov esi,OFFSET start_core
     mov edi,OFFSET start_core_name

@@ -307,14 +307,6 @@ char TempResourceBuf[0x4000];
 
 void __far ImplTestGate(const char *msg)
 {
-    int i;
-    int StateId = (int)ReadMsr(INTEL_PERF_STATUS) & 0xFFFF;
-
-    PowerState = 0;
-
-    for (i = 0; i < PowerStateCount; i++)
-        if (StateId == PowerStateArr[i]->Status)
-            PowerState = i;
 }
     
 /*##########################################################################

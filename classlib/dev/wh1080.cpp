@@ -842,16 +842,30 @@ void TWh1080Device::ReadWhole()
     char Buffer[32];
     int Offset;
     int pos;
+    unsigned char ch0, ch1;
 
     ok = ReadBlock(0, Buffer);
     if (ok)
-        pos = *(unsigned short int *)(Buffer + 30);
+    {
+        ch0 = (unsigned char)Buffer[0];
+        ch1 = (unsigned char)Buffer[1];
+
+        if (ch0 == 0x55 && ch1 == 0xAA)
+            ok = TRUE;
+        else
+            ok = FALSE;
+
+        if (ok)
+            pos = *(unsigned short int *)(Buffer + 30);
+        else
+            Read(Buffer, 8, 2500);
+    }
 
     for (Offset = 0x20; ok && Offset < 0x100; Offset += 0x20)
         ok = ReadBlock(Offset, Buffer);
 
     if (ok)
-        ReadBlock(pos, Buffer);
+        ok = ReadBlock(pos, Buffer);
 }
 
 /*##########################################################################
@@ -871,11 +885,22 @@ void TWh1080Device::ReadCurr()
     char Buffer[32];
     int Offset;
     int pos;
+    unsigned char ch0, ch1;
 
     ok = ReadBlock(0, Buffer);
     if (ok)
     {
-        pos = *(unsigned short int *)(Buffer + 30);
+        ch0 = (unsigned char)Buffer[0];
+        ch1 = (unsigned char)Buffer[1];
+        
+        if (ch0 == 0x55 && ch1 == 0xAA)
+            ok = TRUE;
+        else
+            ok = FALSE;
+
+        if (ok)
+            pos = *(unsigned short int *)(Buffer + 30);
+    }
 
 // The Windows application always read the two last records, but this 
 // is a questionable approach given that the first 100h bytes are
@@ -885,6 +910,8 @@ void TWh1080Device::ReadCurr()
 // as the weather station seems to hangup when alternative approaches
 // to read-out data are used.
 
+    if (ok)
+    {
         pos -= 0x20;
         if (pos < 0x100)
             pos += 0xFF00;
