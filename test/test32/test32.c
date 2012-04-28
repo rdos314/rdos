@@ -14,13 +14,13 @@ void main()
     int handle;
     char test_str[] = "ÅÄÖ Sæt Główne ᎰᎲᎣ";
 
+    RdosTestGate();
+
     bpp = 24;
     width = 640;
     height = 640;
   
     vbe = RdosSetVideoMode(&bpp, &width, &height, &rowsize, &linear);
-
-    RdosTestGate(vbe);
 
     handle = RdosOpenFont(0, 48);
     RdosSetFont(vbe, handle);

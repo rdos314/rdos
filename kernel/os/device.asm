@@ -511,6 +511,13 @@ not_install_dev16:
     cmp ax,RdosDevice32
     jne not_install_dev32
 ;       
+    push edx
+    add edx,SIZE rdos_header
+    mov dx,[edx].dev32_code_sel
+    cmp dx,debug_dev32_code_sel
+    pop edx
+    je install_adapter_next
+;    
     call install_device32
     jmp install_adapter_next
 
@@ -873,6 +880,77 @@ get_device_info16  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           start_dev32
+;
+;           DESCRIPTION:    Start 32-bit device from application
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_dev32_name    DB 'Start Dev32', 0
+
+start_dev32 Proc far
+    push ds
+    push es
+    pushad
+;    
+    mov ax,system_data_sel
+    mov ds,ax
+    mov cx,ds:rom_modules
+    mov bx,OFFSET rom_adapters
+
+start_dev32_loop:
+    mov edx,[bx].adapter_base
+;
+    push ds
+    push bx
+    push cx
+    push edx    
+;    
+    mov ax,flat_sel
+    mov ds,ax
+
+start_dev32_adapter_loop:
+    mov ax,[edx].typ
+;    
+    cmp ax,RdosEnd
+    je start_dev32_adapter_done
+;
+    cmp ax,RdosDevice32
+    jne start_dev32_adapter_next
+;       
+    push edx
+    add edx,SIZE rdos_header
+    mov dx,[edx].dev32_code_sel
+    cmp dx,debug_dev32_code_sel
+    pop edx
+    jne start_dev32_adapter_next
+;    
+    call install_device32
+
+start_dev32_adapter_next:
+    add edx,[edx].len
+    jmp start_dev32_adapter_loop
+
+start_dev32_adapter_done:
+    pop edx
+    pop cx
+    pop bx
+    pop ds
+;    
+    add bx,SIZE adapter_typ
+    loop start_dev32_loop   
+;
+    popad
+    pop es
+    pop ds
+    retf32  
+start_dev32 Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           init_device
 ;
 ;           DESCRIPTION:    Init module (devices)
@@ -891,6 +969,12 @@ init_device     PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET start_dev32
+    mov edi,OFFSET start_dev32_name
+    xor dx,dx
+    mov ax,start_dev32_nr
+    RegisterBimodalUserGate
 ;
     mov ebx,OFFSET get_image_header16
     mov esi,OFFSET get_image_header32

@@ -871,6 +871,30 @@ ReqShutdown_    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetExtFeatureFlags
+;
+;           DESCRIPTION:    Req extended feature flags
+;
+;           RETURNS:        EAX     Extended feature flags
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetExtFeatureFlags_
+
+GetExtFeatureFlags_    Proc near
+    push ds
+;    
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:cpu_ext_flags
+;
+    pop ds    
+    ret
+GetExtFeatureFlags_    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitAcpiTables
 ;
 ;           DESCRIPTION:    Initialize ACPI tables

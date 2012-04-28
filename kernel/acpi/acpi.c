@@ -49,12 +49,16 @@ extern void ReqPStateUpdate(int Count);
 extern void ReqShutdown(int Core);
 #pragma aux ReqShutdown parm routine [eax]
 
+extern int GetExtFeatureFlags();
+#pragma aux GetExtFeatureFlags value [eax]
+
 #define MAX_DEVICE_COUNT        1024
 #define MAX_PCI_ROOT_COUNT      8
 #define MAX_PCI_IRQ_COUNT       256
 #define MAX_PCI_DEV_COUNT       256
 #define MAX_PROCESSOR_COUNT     32
 #define MAX_PROCESSOR_PSTATES   32
+#define MAX_PROCESSOR_TSTATES   32
 
 #define AMD8_PERF_STATUS     0xC0010042
 #define AMD8_PERF_CTL        0xC0010041
@@ -219,7 +223,7 @@ struct TDeviceEntry
     struct TResourceFixedIo *FixedIoResourceList;
     struct TResourceMemory24 *Memory24ResourceList;
     struct TResourceMemory32 *Memory32ResourceList;
-    struct TResourceMemoryFixed32 *FixedMemory32ResourceList;
+    struct TResourceFixedMemory32 *FixedMemory32ResourceList;
     struct TResourceAddress16 *Address16ResourceList;
     struct TResourceAddress32 *Address32ResourceList;
 
@@ -231,8 +235,17 @@ struct TProcessorState
     int Power;
     int Latency;
     int BusLatency;
-    int Control;
-    int Status;
+    UINT32 Control;
+    UINT32 Status;
+};
+
+struct TThrottlingState
+{
+    int Percent;
+    int Power;
+    int Latency;
+    UINT32 Control;
+    UINT32 Status;
 };
 
 struct TProcessorEntry
@@ -267,13 +280,20 @@ int ActiveProcessors = 1;
 int ProcessorCount = 0;
 struct TProcessorEntry *ProcessorArr[MAX_PROCESSOR_COUNT];
 
-AML_RESOURCE_GENERIC_REGISTER *PowerControl = 0;
-AML_RESOURCE_GENERIC_REGISTER *PowerStatus = 0;
+ACPI_GENERIC_ADDRESS *PowerControl = 0;
+ACPI_GENERIC_ADDRESS *PowerStatus = 0;
 
 int PowerStateCount;
 struct TProcessorState *PowerStateArr[MAX_PROCESSOR_PSTATES];
 
+ACPI_GENERIC_ADDRESS *ThrottlingControl = 0;
+ACPI_GENERIC_ADDRESS *ThrottlingStatus = 0;
+
+int ThrottlingStateCount = 0;
+struct TThrottlingState *ThrottlingStateArr[MAX_PROCESSOR_TSTATES];
+
 int PowerState;
+int ThrottleState;
 
 int CpuVer;
 char CpuVendor[40];
@@ -303,10 +323,124 @@ power_update_callback *power_update_proc;
 
 char TempResourceBuf[0x4000];
 
+
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
+}
+    
+/*##########################################################################
+#
+#   Name       : ReadReg
+#
+##########################################################################*/
+UINT32 ReadReg(ACPI_GENERIC_ADDRESS *Reg)
+{
+    ACPI_STATUS             Status;
+    int                     Width;
+    UINT32                  Value = 0;
+
+    Width = Reg->BitWidth;
+
+    if (Width <= 8)
+        Width = 8;
+    else
+    {
+        if (Width <= 16)
+            Width = 16;
+        else
+        {        
+            if (Width < 32)
+                Width = 32;
+        }
+    }
+
+    switch (Reg->SpaceId)
+    {
+        case ACPI_ADR_SPACE_SYSTEM_MEMORY:
+            Status = AcpiOsReadMemory ((ACPI_PHYSICAL_ADDRESS)Reg->Address, &Value, Width);
+            break;            
+
+        case ACPI_ADR_SPACE_SYSTEM_IO:
+            Status = AcpiOsReadPort((ACPI_IO_ADDRESS)Reg->Address, &Value, Width);
+            break;
+    }
+
+    Value = Value >> Reg->BitOffset;
+    
+    return Value;
+}
+    
+/*##########################################################################
+#
+#   Name       : WriteReg
+#
+##########################################################################*/
+void WriteReg(ACPI_GENERIC_ADDRESS *Reg, UINT32 Value)
+{
+    ACPI_STATUS             Status;
+    int                     Width;
+
+    Value = Value << Reg->BitOffset;
+
+    Width = Reg->BitWidth;
+
+    if (Width <= 8)
+        Width = 8;
+    else
+    {
+        if (Width <= 16)
+            Width = 16;
+        else
+        {        
+            if (Width < 32)
+                Width = 32;
+        }
+    }
+
+    switch (Reg->SpaceId)
+    {
+        case ACPI_ADR_SPACE_SYSTEM_MEMORY:
+            Status = AcpiOsWriteMemory ((ACPI_PHYSICAL_ADDRESS)Reg->Address, Value, Width);
+            break;            
+
+        case ACPI_ADR_SPACE_SYSTEM_IO:
+            Status = AcpiOsWritePort((ACPI_IO_ADDRESS)Reg->Address, Value, Width);
+            break;
+    }
+}
+    
+/*##########################################################################
+#
+#   Name       : InitThrottle
+#
+##########################################################################*/
+void InitThrottle()
+{
+    ThrottleState = 0;
+}
+    
+/*##########################################################################
+#
+#   Name       : UpdateThrottle
+#
+##########################################################################*/
+void UpdateThrottle(int diff)
+{
+    int NewState = ThrottleState + diff;
+
+    if (NewState < 0)
+        NewState = 0;
+
+    if (NewState >= ThrottlingStateCount)
+        NewState = ThrottlingStateCount - 1;
+
+    if (ThrottleState != NewState)
+    {
+        ThrottleState = NewState;
+        WriteReg(ThrottlingControl, ThrottlingStateArr[ThrottleState]->Control);
+    }        
 }
     
 /*##########################################################################
@@ -468,7 +602,6 @@ void UpdateAmdK10(int diff)
 {
     long long VidState;
     int NewState = PowerState + diff;
-    int Control;
 
     if (NewState < 0)
         NewState = 0;
@@ -479,7 +612,6 @@ void UpdateAmdK10(int diff)
     if (PowerState != NewState)
         PowerState = NewState;
 
-    Control = PowerStateArr[PowerState];
     ReqPStateUpdate(ActiveProcessors);
 }
     
@@ -619,7 +751,12 @@ int GetCpuFreq()
     if (PowerStateCount)
         return PowerStateArr[PowerState]->CoreFreq;
     else
-        return BaseFreq;
+    {
+        if (ThrottlingStateCount)
+            return BaseFreq * ThrottlingStateArr[ThrottleState]->Percent / 100;
+        else
+            return BaseFreq;
+    }
 }
 
 /*##########################################################################
@@ -921,7 +1058,7 @@ int GetAcpiDeviceMemBase(int DevNr, int Index, struct TMemBase *Mem)
     struct TResourceMemory32 *Mem32Entry;
     struct TResourceFixedMemory32 *FixedMem32Entry;
     struct TDeviceEntry *DevEntry;
-    
+
     if (DevNr < HardwareCount)
     {
         DevEntry = HardwareArr[DevNr];
@@ -2081,6 +2218,72 @@ void GetIrqRouting()
 
 /*##########################################################################
 #
+#   Name       : AmlToAdr
+#
+#   Purpose....: Convert AML generic register to generic address
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+ACPI_GENERIC_ADDRESS *AmlToAdr(AML_RESOURCE_GENERIC_REGISTER *GenReg)
+{
+    ACPI_GENERIC_ADDRESS *GenAdr;
+    
+    GenAdr = (ACPI_GENERIC_ADDRESS *)AcpiOsAllocate(sizeof(ACPI_GENERIC_ADDRESS));
+    GenAdr->SpaceId = GenReg->AddressSpaceId;
+    GenAdr->BitWidth = GenReg->BitWidth;
+    GenAdr->BitOffset = GenReg->BitOffset;
+    GenAdr->AccessWidth = GenReg->AccessSize;
+    GenAdr->Address = GenReg->Address;
+
+    return GenAdr;
+}    
+
+/*##########################################################################
+#
+#   Name       : GetPtc
+#
+#   Purpose....: Get PTC resource
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GetPtc()
+{
+    ACPI_STATUS Status;
+    ACPI_BUFFER Buffer;
+    ACPI_OBJECT *Ptc;
+    ACPI_OBJECT *Package;
+    AML_RESOURCE_GENERIC_REGISTER *GenReg;
+
+    Buffer.Length = 0x4000;
+    Buffer.Pointer = TempResourceBuf;
+    Status = AcpiEvaluateObject(ProcessorArr[3]->Handle, "_PTC", NULL, &Buffer);
+
+    if (Status == AE_OK)
+    {
+        Ptc = (ACPI_OBJECT *)TempResourceBuf;
+        if (Ptc->Type == ACPI_TYPE_PACKAGE)
+        {
+            Package = &Ptc->Package.Elements[0];
+            GenReg = (AML_RESOURCE_GENERIC_REGISTER *)Package->Buffer.Pointer;
+            if (GenReg->DescriptorType == ACPI_RESOURCE_NAME_GENERIC_REGISTER)
+                ThrottlingControl = AmlToAdr(GenReg);
+
+            Package = &Ptc->Package.Elements[1];
+            GenReg = (AML_RESOURCE_GENERIC_REGISTER *)Package->Buffer.Pointer;
+            if (GenReg->DescriptorType == ACPI_RESOURCE_NAME_GENERIC_REGISTER)
+                ThrottlingStatus = AmlToAdr(GenReg);
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : GetPct
 #
 #   Purpose....: Get PCT resource
@@ -2110,18 +2313,12 @@ void GetPct()
             Package = &Pct->Package.Elements[0];
             GenReg = (AML_RESOURCE_GENERIC_REGISTER *)Package->Buffer.Pointer;
             if (GenReg->DescriptorType == ACPI_RESOURCE_NAME_GENERIC_REGISTER)
-            {
-                PowerControl = (AML_RESOURCE_GENERIC_REGISTER *)AcpiOsAllocate(sizeof(AML_RESOURCE_GENERIC_REGISTER));
-                memcpy(PowerControl, GenReg, sizeof(AML_RESOURCE_GENERIC_REGISTER));
-            }
+                PowerControl = AmlToAdr(GenReg);
 
             Package = &Pct->Package.Elements[1];
             GenReg = (AML_RESOURCE_GENERIC_REGISTER *)Package->Buffer.Pointer;
             if (GenReg->DescriptorType == ACPI_RESOURCE_NAME_GENERIC_REGISTER)
-            {
-                PowerStatus = (AML_RESOURCE_GENERIC_REGISTER *)AcpiOsAllocate(sizeof(AML_RESOURCE_GENERIC_REGISTER));
-                memcpy(PowerStatus, GenReg, sizeof(AML_RESOURCE_GENERIC_REGISTER));
-            }
+                PowerStatus = AmlToAdr(GenReg);
         }
     }
 }
@@ -2224,6 +2421,98 @@ void GetPss()
 
 /*##########################################################################
 #
+#   Name       : GetTss
+#
+#   Purpose....: Get TSS resource
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GetTss()
+{
+    struct TThrottlingState *State;
+    ACPI_STATUS Status;
+    ACPI_BUFFER Buffer;
+    ACPI_OBJECT *Tss;
+    ACPI_OBJECT *Package;
+    ACPI_OBJECT *Value;
+    int Count;
+    int j;
+    int k;
+    int ok;
+
+    Buffer.Length = 0x4000;
+    Buffer.Pointer = TempResourceBuf;
+    Status = AcpiEvaluateObject(ProcessorArr[0]->Handle, "_TSS", NULL, &Buffer);
+
+    if (Status == AE_OK)
+    {
+        Tss = (ACPI_OBJECT *)TempResourceBuf;
+        if (Tss->Type == ACPI_TYPE_PACKAGE)
+        {
+            Count = Tss->Package.Count;
+
+            if (Count > MAX_PROCESSOR_TSTATES)
+                Count = MAX_PROCESSOR_TSTATES;
+                
+            ok = TRUE;
+
+            for (j = 0; j < Count && ok; j++)
+            {
+                Package = &Tss->Package.Elements[j];
+                ok = (Package->Type == ACPI_TYPE_PACKAGE);
+                if (ok)                    
+                    ok = (Package->Package.Count == 5);
+
+                if (ok)
+                {
+                    State = (struct TThrottlingState *)AcpiOsAllocate(sizeof(struct TThrottlingState));
+                
+                    for (k = 0; k < 5 && ok; k++)
+                    {
+                        Value = &Package->Package.Elements[k];
+                        ok = (Value->Type == ACPI_TYPE_INTEGER);
+                        if (ok)
+                        {
+                            switch (k)
+                            {
+                                case 0:
+                                    State->Percent = Value->Integer.Value;
+                                    break;
+
+                                case 1:
+                                    State->Power = Value->Integer.Value;
+                                    break;
+
+                                case 2:
+                                    State->Latency = Value->Integer.Value;
+                                    break;
+
+                                case 3:
+                                    State->Control = Value->Integer.Value;
+                                    break;
+
+                                case 4:
+                                    State->Status = Value->Integer.Value;
+                                    break;
+                            }
+                        }
+                    }
+                    if (ok)
+                        ThrottlingStateArr[j] = State;
+                }
+            }
+
+            if (ok)
+                ThrottlingStateCount = Count;
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : Load
 #
 #   Purpose....: Make sure tables are loaded & initialized
@@ -2264,7 +2553,9 @@ void Load()
         GetPciDevices();
         GetIrqRouting();        
         GetPct();
+        GetPtc();
         GetPss();
+        GetTss();
     }
 }
 
@@ -2299,6 +2590,15 @@ void __far InitTasking()
             power_update_proc = UpdateAmdK10;
         }
     }    
+
+    if (!power_init_proc)
+    {
+        if (ThrottlingStateCount)
+        {
+            power_init_proc = InitThrottle;
+            power_update_proc = UpdateThrottle;
+        }
+    }
 
     if (power_init_proc || RdosGetCoreCount() > 1)
         RdosCreateKernelThread(5, 0x1000, &PowerThread, "ACPI Power", 0);
@@ -2343,5 +2643,5 @@ int main()
     RdosRegisterUserGate(usergate_get_acpi_device, &ImplGetAcpiDevice16, &ImplGetAcpiDevice32, "Get ACPI Device");
     RdosRegisterBimodalUserGate(usergate_get_cpu_temperature, &ImplGetCpuTemperature, "Get CPU Temperature");
 
-//    RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate"); 
+    RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate"); 
 }

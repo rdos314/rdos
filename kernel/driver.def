@@ -435,6 +435,8 @@ ser_print_data_sel  EQU 0AD8h
 acpi_code_sel       EQU 0B00h
 ;acpi_data_sel      EQU 0B08h
 
+debug_dev32_code_sel    EQU 0EF0h
+debug_dev32_data_sel    EQU 0EF8h
 
 video_page0_sel		EQU 0F00h
 video_page1_sel		EQU 0F08h

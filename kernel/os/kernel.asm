@@ -607,6 +607,7 @@ init_no_bda:
     mov eax,1
     cpuid
     mov ds:cpu_feature_flags,edx
+    mov ds:cpu_ext_flags,ecx
     shr eax,8
     mov cl,al
     and cl,0Fh

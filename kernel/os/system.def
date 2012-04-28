@@ -140,6 +140,7 @@ check_point			DW ?
 cpu_type            DB ?
 cpu_vendor          DB 13 DUP(?)
 cpu_feature_flags   DD ?
+cpu_ext_flags       DD ?
 max_cpuid           DD ?
 
 last_time           DD ?,?

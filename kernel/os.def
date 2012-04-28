@@ -496,4 +496,6 @@ syscall_patch_nr            = 426
 start_syscall_nr            = 427
 setup_sysleave_nr           = 428
 
+start_dev32_nr              = 429
+
 osgate_entries				= 440

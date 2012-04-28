@@ -288,6 +288,10 @@ EmulateOpcode   MACRO
     OsGate emulate_opcode_nr
                     ENDM
 
+StartDev32   MACRO
+    OsGate start_dev32_nr
+                    ENDM
+
 ;;;;;;;; DESCRIPTORS ;;;;;;;;;;;;
 
 ;  OUT  CX      Size of GDT
