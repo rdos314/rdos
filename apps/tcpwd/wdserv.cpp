@@ -154,14 +154,7 @@ void x86_mad_registers::Init()
     fpu.ip_err.segment = 0;
     fpu.op_err.offset = 0;
     fpu.op_err.segment = 0;
-
-//    for (i = 0; i < 8; i++)
-//        fpu.reg[i] = 0.0;    
-
-    for (i = 0; i < 8; i++)
-        for (j = 0; j < 10; j++)
-            fpu.reg[i].b[j] = 0;    
-
+    
     for (i = 0; i < 8; i++)
         for (j = 0; j < 16; j++)
             xmm.xmm[i][j] = 0;

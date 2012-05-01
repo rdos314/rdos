@@ -12,15 +12,11 @@ extern "C" {
 
 #ifdef __WATCOMC__
 
+#include "machtype.h"
 #include "rdu.h"
 #define RDOSAPI
 
-typedef struct real_math_struc
-{
-    char b[10];
-} real_math_struc;
-
-#define real_math   struct real_math_struc
+#define real_math   xreal
 
 #else
 
