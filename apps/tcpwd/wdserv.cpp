@@ -90,7 +90,7 @@ struct x86_fpu
          long           tag;
          fpu_ptr        ip_err;
          fpu_ptr        op_err;
-         long double    reg[8];
+         real_math      reg[8];
 };
 
 struct x86_xmm
@@ -155,8 +155,12 @@ void x86_mad_registers::Init()
     fpu.op_err.offset = 0;
     fpu.op_err.segment = 0;
 
+//    for (i = 0; i < 8; i++)
+//        fpu.reg[i] = 0.0;    
+
     for (i = 0; i < 8; i++)
-        fpu.reg[i] = 0.0;    
+        for (j = 0; j < 10; j++)
+            fpu.reg[i].b[j] = 0;    
 
     for (i = 0; i < 8; i++)
         for (j = 0; j < 16; j++)

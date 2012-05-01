@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <math.h>
+
 #include <rdos.h>
 
 void main()
@@ -13,6 +15,11 @@ void main()
     void *linear;
     int handle;
     char test_str[] = "ÅÄÖ Sæt Główne ᎰᎲᎣ";
+    long double x, y;
+
+    x = 1.0;
+    y = 3.1456;
+    x = sin(x) * y;
 
     RdosTestGate();
 

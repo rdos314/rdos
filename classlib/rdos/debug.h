@@ -32,6 +32,7 @@
 #include "str.h"
 #include "sigdev.h"
 #include "file.h"
+#include "rdos.h"
 
 #define DEBUG_MEMORY_MODEL_FLAT     1
 #define DEBUG_MEMORY_MODEL_16       2
@@ -174,7 +175,7 @@ public:
     short int MathCs;
     long MathDataOffs;
     short int MathDataSel;
-    long double St[8];
+    real_math St[8];
 
     TDebugThread *Next;
 

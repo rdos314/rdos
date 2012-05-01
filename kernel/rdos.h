@@ -15,9 +15,17 @@ extern "C" {
 #include "rdu.h"
 #define RDOSAPI
 
+typedef struct real_math_struc
+{
+    char b[10];
+} real_math_struc;
+
+#define real_math   struct real_math_struc
+
 #else
 
 #define RDOSAPI __stdcall
+#define real_math   long double
 
 #endif
 
@@ -86,7 +94,7 @@ typedef struct Tss
     short int MathCs;
     long MathDataOffs;
     short int MathDataSel;
-    long double st[8];
+    real_math st[8];
     char WcSpace[16];
 } Tss;
 
