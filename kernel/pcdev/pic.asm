@@ -587,7 +587,7 @@ setup_irq_detect    Endp
 ;
 ;           description:    Poll detected IRQs
 ;
-;       RETURNS:    EAX      Detected IRQs
+;       RETURNS:    EDX:EAX      Detected IRQs
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -599,6 +599,7 @@ poll_irq_detect Proc far
     mov ax,SEG data
     mov ds,ax
     movzx eax,ds:detected_irqs
+    xor edx,edx
 ;
     pop ds
     retf32

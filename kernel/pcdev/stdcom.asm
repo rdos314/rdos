@@ -1166,7 +1166,9 @@ DetectIrq   Proc near
     mov ax,1
     WaitMilliSec
 ;
+    push edx
     PollIrqDetect
+    pop edx
     or eax,eax
     stc
     jz diDone
@@ -1197,7 +1199,9 @@ DetectIrq   Proc near
     mov ax,1
     WaitMilliSec
 ;
+    push edx
     PollIrqDetect
+    pop edx
 ;
     not eax
     and eax,ebp

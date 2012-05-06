@@ -634,6 +634,11 @@ ihDone:
     add dx,REG_PHYAR
     mov eax,80001240h
     out dx,eax
+;
+    mov dx,ds:IoBase
+    add dx,REG_TPPoll
+    mov al,1
+    out dx,al    
     ret
 InitHardware    Endp
 
@@ -709,6 +714,96 @@ niDone:
     out dx,ax
     retf32
 NetInt  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           NetTimeout
+;
+;           DESCRIPTION:    Network card timeout (used with IRQ malfunctions)
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NetTimeout  Proc far
+    push eax
+    push cx
+    push edx
+;    
+    mov ds,cx
+    mov dx,ds:IoBase
+    add dx,REG_IMR
+    xor ax,ax
+    out dx,ax
+
+ntLoop:
+    mov dx,ds:IoBase
+    add dx,REG_ISR
+    in ax,dx
+    or ax,ax
+    jz ntDone
+;
+    mov si,1
+    or ds:Isr,ax
+    out dx,ax
+    test ax,IR_ROK OR IR_RDU OR IR_FOVW OR IR_SER
+    jz ntNotRx
+;
+    mov bx,ds:Handle
+    or bx,bx
+    jz ntNotRx
+;
+    NetReceived
+    jmp ntLoop
+
+ntNotRx:
+    test ax,IR_TOK OR IR_TER
+    jz ntNotTx
+;
+    mov bx,ds:TxThread
+    or bx,bx
+    jz ntNotTx
+;
+    Signal
+    jmp ntLoop
+
+ntNotTx:
+    test ax,IR_LinkChg
+    jz ntDone
+;
+    mov dx,ds:IoBase
+    add dx,REG_PHYStatus
+    in al,dx
+    test al,2
+    jnz ntDone
+;
+    mov dx,ds:IoBase
+    add dx,REG_PHYAR
+    mov eax,80001240h
+    out dx,eax
+        
+ntDone:
+    mov dx,ds:IoBase
+    add dx,REG_IMR
+    mov ax,IR_MASK
+    out dx,ax
+;
+    pop edx
+    pop cx
+    pop eax
+;    
+    add eax,1193
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET NetTimeout
+    mov bx,cx
+    StartTimer
+    retf32
+NetTimeout  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1301,7 +1396,27 @@ init_pci1_found:
 ;    
     call SetupInts
     call InitHardware
+;
+    mov ax,1
+    WaitMilliSec
 ;    
+    mov dx,ds:IoBase
+    add dx,REG_ISR
+    in eax,dx
+    test eax,IR_SWInt
+    jz init_pci1_int_ok
+;
+    GetSystemTime    
+    add eax,1193
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET NetTimeout
+    mov bx,ds
+    mov cx,bx
+    StartTimer
+
+init_pci1_int_ok:    
     push ds
     mov ax,cs
     mov ds,ax
@@ -1350,7 +1465,27 @@ init_pci2_found:
 ;
     call SetupInts
     call InitHardware
+;
+    mov ax,1
+    WaitMilliSec
 ;    
+    mov dx,ds:IoBase
+    add dx,REG_ISR
+    in eax,dx
+    test eax,IR_SWInt
+    jz init_pci2_int_ok
+;
+    GetSystemTime    
+    add eax,1193
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET NetTimeout
+    mov bx,ds
+    mov cx,bx
+    StartTimer
+
+init_pci2_int_ok:        
     push ds
     mov ax,cs
     mov ds,ax

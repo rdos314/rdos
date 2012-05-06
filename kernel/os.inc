@@ -1391,7 +1391,7 @@ SetupIrqDetect  MACRO
     OsGate setup_irq_detect_nr
                     ENDM
 
-;   AX      Detected IRQs
+;   EDX:EAX      Detected IRQs
 PollIrqDetect   MACRO
     OsGate poll_irq_detect_nr
                     ENDM

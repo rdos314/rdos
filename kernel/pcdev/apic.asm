@@ -182,7 +182,7 @@ hpet_sel            DW ?
 hpet_factor         DD ?
 hpet_counters       DW ?
 
-detected_irqs       DD ?
+detected_irqs       DD ?,?
 
 ioapic_count        DW ?
 ioapic_arr          DW 16 DUP(?)
@@ -500,7 +500,7 @@ IsaIrqDetect:
     UnlockIoApic
 ;
     movzx dx,cs:isa_irq_detect_nr
-    cmp dx,24
+    cmp dx,64
     jae IsaIrqDetectDone
 ;    
     mov bx,OFFSET detected_irqs
@@ -910,7 +910,7 @@ PciIrqDetect:
     mov ax,SEG data
     mov ds,ax
     movzx dx,cs:pci_irq_detect_nr
-    cmp dx,24
+    cmp dx,64
     jae PciIrqExit
 ;    
     mov bx,OFFSET detected_irqs
@@ -1802,7 +1802,7 @@ EnableDetect  Proc near
 ;    
     mov ax,SEG data
     mov ds,ax
-    mov cx,10h
+    mov cx,64
     mov si,OFFSET global_int_arr
 
 edLoop:
@@ -1879,6 +1879,7 @@ setup_irq_detect    Proc far
     WaitMilliSec
 ;
     mov ds:detected_irqs,0       
+    mov ds:detected_irqs+4,0       
 ;
     pop ax
     pop ds
@@ -1904,6 +1905,7 @@ poll_irq_detect Proc far
     mov ax,SEG data
     mov ds,ax
     mov eax,ds:detected_irqs
+    mov edx,ds:detected_irqs+4
 ;
     pop ds
     retf32
@@ -1944,7 +1946,7 @@ daiApicLoop:
     push cx
     mov ds,ds:[si]
 ;    
-    mov cx,24       
+    mov cx,24
     mov bl,10h
 
 daiLoop:   
@@ -2808,7 +2810,7 @@ CreateIrqHandlers    Proc near
     mov ax,SEG data
     mov ds,ax
     mov bx,OFFSET global_int_arr
-    mov cx,18h
+    mov cx,64
     xor dl,dl
 
 create_irq_loop:
@@ -3553,12 +3555,12 @@ init    PROC far
     mov ds,ax
     mov es,ax
 ;
-;    mov esi,OFFSET test_gate_pr
-;    mov ebp,OFFSET test_near
-;    mov edi,OFFSET test_gate_name
-;    xor dx,dx
-;    mov ax,test_gate_nr
-;    RegisterBimodalSyscall
+    mov esi,OFFSET test_gate_pr
+    mov ebp,OFFSET test_near
+    mov edi,OFFSET test_gate_name
+    xor dx,dx
+    mov ax,test_gate_nr
+    RegisterBimodalSyscall
 ;
     mov esi,OFFSET start_core
     mov edi,OFFSET start_core_name
