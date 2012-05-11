@@ -2775,7 +2775,7 @@ init_file       PROC near
     RegisterHandle
 ;
     mov edi,OFFSET swap_proc
-;    RegisterSwapProc
+    RegisterSwapProc
 ;
     mov esi,OFFSET get_file_list_entry
     mov edi,OFFSET get_file_list_entry_name

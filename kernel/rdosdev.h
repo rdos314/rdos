@@ -10,6 +10,50 @@ extern "C" {
 
 #include "rdk.h"
 
+#define GATE_DS_IN      1
+#define GATE_ES_IN      2
+#define GATE_FS_IN      4
+#define GATE_GS_IN      8
+
+#define GATE_DS_OUT     0x10
+#define GATE_ES_OUT     0x20
+#define GATE_FS_OUT     0x40
+#define GATE_GS_OUT     0x80
+
+// handle signatures
+
+#define ADC_HANDLE         0x15FC 
+#define FM_INSTR_HANDLE    0x17DE
+#define DLL_HANDLE16       0x26CF
+#define DLL_HANDLE32       0x26DF
+#define SPRITE_HANDLE      0x2CF5
+#define CRC_HANDLE         0x367A
+#define FILE_HANDLE 	   0x3AB6
+#define PROCESS_HANDLE     0x43AF
+#define SERIAL_HANDLE      0x5A45
+#define ENV_HANDLE         0x5FAE
+#define RW_SECTION_HANDLE  0x67AF
+#define WAIT_HANDLE        0x6AFE
+#define USB_REQ_HANDLE     0x6B8E
+#define SYSLOG_HANDLE      0x703A
+#define SECTION_HANDLE     0x7A87
+#define IPC_HANDLE  	   0x7B5A
+#define TCP_LISTEN_HANDLE  0x7FAE
+#define TCP_SOCKET_HANDLE  0x847F
+#define FONT_HANDLE 	   0x9AF4
+#define DIR_HANDLE  	   0xA765
+#define XMS_HANDLE  	   0xA560
+#define SIGNAL_HANDLE      0xADEF
+#define PRINTER_HANDLE     0xB63A
+#define MEMMAP_HANDLE 	   0xBA54
+#define FM_HANDLE          0xBCAF
+#define MODULE_HANDLE      0xC3AF
+#define AUDIO_OUT_HANDLE   0xCEDA
+#define HID_HANDLE         0xD736
+#define BITMAP_HANDLE 	   0xDB57
+#define INI_HANDLE 	       0xEAF3
+#define USB_PIPE_HANDLE    0xFA3E
+
 // special user-mode gates
 
 #define UserGate_free_mem 0x3e 0x67 0x9a 2 0 0 0 3 0
@@ -462,7 +506,9 @@ void RdosCrashGate();
 int RdosIsValidOsGate(int gate);
 void RdosRegisterOsGate(int gate, __rdos_gate_callback *callb_proc, const char *name);
 void RdosRegisterBimodalUserGate(int gate, __rdos_gate_callback *callb_proc, const char *name);
+void RdosRegisterSegBimodalUserGate(int gate, int transfer, __rdos_gate_callback *callb_proc, const char *name);
 void RdosRegisterUserGate(int gate, __rdos_gate_callback *callb_proc16, __rdos_gate_callback *callb_proc32, const char *name);
+void RdosRegisterSegUserGate(int gate, int transfer, __rdos_gate_callback *callb_proc16, __rdos_gate_callback *callb_proc32, const char *name);
 
 void RdosReturnOk();
 void RdosReturnFail();
@@ -854,6 +900,14 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     "pop ds" \
     parm [eax] [esi] [es edi];
 
+#pragma aux RdosRegisterSegBimodalUserGate = \
+    "push ds" \
+    "push cs" \
+    "pop ds" \
+    OsGate_register_bimodal_usergate  \
+    "pop ds" \
+    parm [eax] [edx] [esi] [es edi];
+
 #pragma aux RdosRegisterUserGate = \
     "push ds" \
     "push cs" \
@@ -862,6 +916,14 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     OsGate_register_usergate  \
     "pop ds" \
     parm [eax] [ebx] [esi] [es edi];
+
+#pragma aux RdosRegisterSegUserGate = \
+    "push ds" \
+    "push cs" \
+    "pop ds" \
+    OsGate_register_usergate  \
+    "pop ds" \
+    parm [eax] [edx] [ebx] [esi] [es edi];
 
 #pragma aux RdosReturnOk = \
     "clc" ;

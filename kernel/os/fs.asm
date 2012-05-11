@@ -76,7 +76,6 @@ code    SEGMENT byte public 'CODE'
     extrn init_memmap:near
     extrn init_dir_process:near
     extrn init_memmap_process:near
-    extrn init_inifile:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -846,7 +845,6 @@ init    PROC far
     call init_dir
     call init_file
     call init_memmap
-    call init_inifile
     clc
     ret
 init    ENDP

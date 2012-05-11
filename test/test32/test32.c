@@ -21,7 +21,8 @@ void main()
     y = 3.1456;
     x = sin(x) * y;
 
-    RdosTestGate();
+    handle = RdosOpenSysIni();
+    RdosCloseIni(handle);
 
     bpp = 24;
     width = 640;

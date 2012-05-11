@@ -593,7 +593,7 @@ void TMp3Player::Start()
     if (!FThreadRunning)
         {
                 FThreadRunning = TRUE;
-                RdosCreatePrioThread(ThreadStartup, 4, "MP3", this, 0x1000);
+                RdosCreatePrioThread(ThreadStartup, 4, "MP3", this, 0x4000);
         }
 }
 
