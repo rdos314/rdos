@@ -498,4 +498,6 @@ setup_sysleave_nr           = 428
 
 start_dev32_nr              = 429
 
+get_ioapic_state_nr         = 430
+
 osgate_entries				= 440

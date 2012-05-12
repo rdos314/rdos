@@ -423,6 +423,63 @@ UnlockIoApic    MACRO
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;               NAME:           Get IOAPIC state
+;
+;               DESCRIPTION:    Get state for IOAPIC int
+;
+;               PARAMETERS:     AL      Global int #
+;
+;               RETURNS:        EDX:EAX IOAPIC entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_ioapic_state_name   DB 'Get IO-APIC State',0
+
+get_ioapic_state    Proc far
+    push ds
+    push fs
+    push bx
+;    
+    mov bx,apic_mem_sel
+    mov ds,bx
+    mov bx,APIC_ISR + 50h
+    mov edx,ds:[bx]
+;
+    mov bx,APIC_IRR + 50h
+    mov edx,ds:[bx]        
+;    
+    mov bx,SEG data
+    mov ds,bx
+;
+    movzx bx,al
+    shl bx,3    
+    add bx,OFFSET global_int_arr
+;    
+    mov al,ds:[bx].gi_ioapic_id
+    mov fs,ds:[bx].gi_ioapic_sel
+;       
+    mov bl,10h
+    add bl,al
+    add bl,al
+;
+    LockIoApic   
+    mov fs:ioapic_regsel,bl
+    mov eax,fs:ioapic_window
+;
+    inc bl
+    mov fs:ioapic_regsel,bl
+    mov edx,fs:ioapic_window
+    UnlockIoApic
+;    
+    pop bx
+    pop fs
+    pop ds
+    retf32
+get_ioapic_state    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;               NAME:           ISA IRQ handler
 ;
 ;               DESCRIPTION:    Code for patching into ISA (edge mode) IRQ handler
@@ -3127,6 +3184,7 @@ start_core   Endp
 shutdown_core_name DB 'Shutdown Core', 0
 
 shutdown_core:
+    cli
     call SetupLocalApic
 ;
     GetCore
@@ -3561,6 +3619,12 @@ init    PROC far
     xor dx,dx
     mov ax,test_gate_nr
     RegisterBimodalSyscall
+;
+    mov esi,OFFSET get_ioapic_state
+    mov edi,OFFSET get_ioapic_state_name
+    xor cl,cl
+    mov ax,get_ioapic_state_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET start_core
     mov edi,OFFSET start_core_name

@@ -880,17 +880,17 @@ get_device_info16  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           start_dev32
+;           NAME:           load_device32
 ;
-;           DESCRIPTION:    Start 32-bit device from application
+;           DESCRIPTION:    Load 32-bit device from application
 ;
 ;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_dev32_name    DB 'Start Dev32', 0
+load_device32_name    DB 'Load Dev32', 0
 
-start_dev32 Proc far
+load_device32 Proc far
     push ds
     push es
     pushad
@@ -946,7 +946,7 @@ start_dev32_adapter_done:
     pop es
     pop ds
     retf32  
-start_dev32 Endp    
+load_device32 Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -970,10 +970,10 @@ init_device     PROC near
     mov ds,ax
     mov es,ax
 ;
-    mov esi,OFFSET start_dev32
-    mov edi,OFFSET start_dev32_name
+    mov esi,OFFSET load_device32
+    mov edi,OFFSET load_device32_name
     xor dx,dx
-    mov ax,start_dev32_nr
+    mov ax,load_device32_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET get_image_header16

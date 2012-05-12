@@ -706,6 +706,12 @@ StopTimer       MACRO
 
 ;;;;;;;;;;; Processor ;;;;;;;;;;;;;;;;
 
+;   IN  AL      Global int #
+;   OUT EDX:EAX IO-APIC state
+GetIoApicState    MACRO
+    OsGate get_ioapic_state_nr
+                        ENDM
+
 ;   OUT EDX     APIC ID
 GetApicId    MACRO
     OsGate get_apic_id_nr
