@@ -2783,7 +2783,8 @@ init_ioapic_isa_trigger_mode:
     mov cx,256-16
 
 init_ioapic_pci_trigger_mode:
-    mov [di].gi_trigger_mode,0A9h
+;    mov [di].gi_trigger_mode,0A9h  ; lowest priority delivery doesn't work on some processors (Intel Core Duo)
+    mov [di].gi_trigger_mode,0A0h
     add di,8
     loop init_ioapic_pci_trigger_mode
 ;        

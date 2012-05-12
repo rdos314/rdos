@@ -1406,6 +1406,8 @@ init_pci1_found:
     test eax,IR_SWInt
     jz init_pci1_int_ok
 ;
+    int 3
+;    
     GetSystemTime    
     add eax,1193
     adc edx,0
