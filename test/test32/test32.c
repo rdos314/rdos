@@ -27,10 +27,9 @@ void main()
     handle = RdosOpenSysIni();
     ok = RdosGotoIniSection(handle, "BUTTONS");
     if (ok)
-    {
-        ok = RdosDeleteIni(handle, "Button1");
-        size = RdosReadIni(handle, "Button1", test_str, 100);
-    }
+        ok = RdosWriteIni(handle, "Button1", "ABC-def");
+    if (ok)
+        ok = RdosReadIni(handle, "Button1", test_str, 100);
     RdosCloseIni(handle);
 
     bpp = 24;

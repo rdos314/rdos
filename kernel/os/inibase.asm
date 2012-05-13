@@ -60,6 +60,7 @@ read_ini_var_name    DB 'Read Ini Var',0
     extrn ReadIniVar:near
 
 read_ini_var16  Proc far
+    push fs
     push ecx
     push esi
     push edi
@@ -68,6 +69,7 @@ read_ini_var16  Proc far
     movzx esi,si
     movzx edi,di
     mov eax,ds
+    mov fs,eax
 ;    
     call ReadIniVar    
 ;
@@ -84,11 +86,15 @@ read_ini16_done:
     pop edi
     pop esi
     pop ecx           
+    push fs
     ret
 read_ini_var16 Endp
 
 read_ini_var32  Proc far
+    push fs
+;    
     mov eax,ds    
+    mov fs,eax
     call ReadIniVar    
 ;
     or eax,eax
@@ -101,6 +107,7 @@ read_ini32_failed:
     stc
 
 read_ini32_done:
+    pop fs
     ret
 read_ini_var32 Endp
    
@@ -114,7 +121,6 @@ read_ini_var32 Endp
 ;       PARAMETERS:     EBX     Handle
 ;                       DS:ESI  Variable
 ;                       ES:EDI  Buffer
-;                       ECX     Size
 ;
 ;       RETURNS:        NC   OK
 ;
@@ -125,15 +131,15 @@ write_ini_var_name    DB 'Write Ini Var',0
     extrn WriteIniVar:near
 
 write_ini_var16  Proc far
+    push fs
     push eax
-    push ecx
     push esi
     push edi
 ;
-    movzx ecx,cx
     movzx esi,si
     movzx edi,di
     mov eax,ds
+    mov fs,eax
 ;    
     call WriteIniVar    
 ;
@@ -149,15 +155,17 @@ write_ini16_failed:
 write_ini16_done:
     pop edi
     pop esi
-    pop ecx           
     pop eax
+    pop fs
     ret
 write_ini_var16 Endp
 
 write_ini_var32  Proc far
+    push fs
     push eax
 ;    
     mov eax,ds    
+    mov fs,eax
     call WriteIniVar    
 ;
     or eax,eax
@@ -171,6 +179,7 @@ write_ini32_failed:
 
 write_ini32_done:
     pop eax
+    pop fs
     ret
 write_ini_var32 Endp
    
@@ -193,11 +202,13 @@ delete_ini_var_name    DB 'Delete Ini Var',0
     extrn DeleteIniVar:near
 
 delete_ini_var16  Proc far
+    push fs
     push eax
     push esi
 ;
     movzx esi,si
     mov eax,ds
+    mov fs,eax
 ;    
     call DeleteIniVar    
 ;
@@ -213,13 +224,16 @@ delete_ini16_failed:
 delete_ini16_done:
     pop esi
     pop eax
+    pop fs
     ret
 delete_ini_var16 Endp
 
 delete_ini_var32  Proc far
+    push fs
     push eax
 ;    
     mov eax,ds    
+    mov fs,eax
     call DeleteIniVar    
 ;
     or eax,eax
@@ -233,6 +247,7 @@ delete_ini32_failed:
 
 delete_ini32_done:
     pop eax
+    pop fs
     ret
 delete_ini_var32 Endp
 
