@@ -14,14 +14,23 @@ void main()
     int rowsize;
     void *linear;
     int handle;
-    char test_str[] = "ÅÄÖ Sæt Główne ᎰᎲᎣ";
+    char test_str[100];
     long double x, y;
+    int ok;
+    int size;
+    
 
     x = 1.0;
     y = 3.1456;
     x = sin(x) * y;
 
     handle = RdosOpenSysIni();
+    ok = RdosGotoIniSection(handle, "BUTTONS");
+    if (ok)
+    {
+        ok = RdosDeleteIni(handle, "Button1");
+        size = RdosReadIni(handle, "Button1", test_str, 100);
+    }
     RdosCloseIni(handle);
 
     bpp = 24;

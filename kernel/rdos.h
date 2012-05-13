@@ -609,7 +609,7 @@ int RDOSAPI RdosOpenSysIni();
 int RDOSAPI RdosOpenIni(const char *filename);
 void RDOSAPI RdosCloseIni(int handle);
 int RDOSAPI RdosGotoIniSection(int handle, const char *name);
-int RDOSAPI RdosRemoveIniSection(int handle);
+int RDOSAPI RdosRemoveIniSection(int handle, const char *name);
 int RDOSAPI RdosReadIni(int handle, const char *var, char *str, int maxsize);
 int RDOSAPI RdosWriteIni(int handle, const char *var, const char *str);
 int RDOSAPI RdosDeleteIni(int handle, const char *var);
@@ -2853,7 +2853,7 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosRemoveIniSection = \
     CallGate_remove_ini_section \
     CarryToBool \
-    parm [ebx] \
+    parm [ebx] [edi] \
     value [eax];
 
 #pragma aux RdosReadIni = \
@@ -4960,7 +4960,7 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosRemoveIniSection = \
     CallGate_remove_ini_section \
     CarryToBool \
-    parm [ebx] \
+    parm [ebx] [es edi] \
     value [eax];
 
 #pragma aux RdosReadIni = \
@@ -4982,9 +4982,12 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     value [eax];
 
 #pragma aux RdosDeleteIni = \
+    "push ds" \
+    "mov ds,edx" \
     CallGate_delete_ini \
     CarryToBool \
-    parm [ebx] [es esi] \
+    "pop ds" \
+    parm [ebx] [edx esi] \
     value [eax];
 
 #pragma aux RdosEnableStatusLED = \

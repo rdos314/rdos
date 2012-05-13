@@ -36,8 +36,8 @@ public:
     ~TIniFile();
 
     int GotoSection(const char *name);
+    int DeleteSection(const char *name);
 
-    int DeleteSection();
     int ReadVar(const char *var, char *str, int maxsize);
     int WriteVar(const char *var, const char *str);
     int DeleteVar(const char *var);

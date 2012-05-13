@@ -513,6 +513,7 @@ void RdosRegisterSegUserGate(int gate, int transfer, __rdos_gate_callback *callb
 void RdosReturnOk();
 void RdosReturnFail();
 
+void RdosReloadSelector(int sel);
 void *RdosSelectorToPointer(int sel);
 void *RdosSelectorOffsetToPointer(int sel, long offset);
 void *RdosLinearToPointer(int linear);
@@ -930,6 +931,30 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
 
 #pragma aux RdosReturnFail = \
     "stc" ;
+
+#pragma aux RdosReloadSelector = \
+    "mov eax,ds" \
+    "cmp eax,ebx" \
+    "jne NoReloadDs" \
+    "mov ds,eax" \
+    "NoReloadDs: "\
+    "mov eax,es" \
+    "cmp eax,ebx" \
+    "jne NoReloadEs" \
+    "mov es,eax" \
+    "NoReloadEs: "\
+    "mov eax,fs" \
+    "cmp eax,ebx" \
+    "jne NoReloadFs" \
+    "mov fs,eax" \
+    "NoReloadFs: "\
+    "mov eax,gs" \
+    "cmp eax,ebx" \
+    "jne NoReloadGs" \
+    "mov gs,eax" \
+    "NoReloadGs: "\     
+    parm [ebx] \
+    modify [eax];
 
 #pragma aux RdosSelectorToPointer = \
     "mov dx,bx" \
@@ -1533,7 +1558,7 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
 
 #pragma aux RdosDerefHandle = \
     "push ds" \
-    OsGate_allocate_handle \
+    OsGate_deref_handle \
     "mov dx,ds" \
     "pop ds" \
     parm [ax] [ebx] \

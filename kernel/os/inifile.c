@@ -30,11 +30,15 @@
 #include "rdos.h"
 #include "rdosdev.h"
 
+extern void InitGates();
+
 #define FALSE   0
 #define TRUE    !FALSE
 
 struct TIniVar
 {
+    int Index;
+    int Deleted;
     char *Name;
     char *Val;
 
@@ -43,27 +47,566 @@ struct TIniVar
 
 struct TIniSection
 {
-   struct TIniVar *FVarList;
-   struct TIniSection *FNextSection;
+    int Index;
+    int Id;
+    int Deleted;
+    char *Name;
+    struct TIniVar *FVarList;
+    struct TIniSection *FNextSection;
 };
 
 struct TIni
 {
     int Users;
-    struct TKernelSection FSection;
+    int BaseSize;
+    int BufSize;
+    int SectionCount;
+    int VarCount;
+    int MaxBufSize;
+    int MaxSectionCount;
+    int MaxVarCount;
+    int NextId;
     struct TIniSection *FSectionList;
-    char Buffer[1];
+    char *Data;
+    char Name[1];
 };
 
 struct TIniHandle
 {
     struct THandleHeader Header;
-    int IniSel;
-    long SectionLinear;
+    struct TIni *Ini;
+    int CurrSectionId;
 };
 
 static int SysIniRead = FALSE;
 static char SysIniName[256];
+struct TKernelSection FSection;
+static int OldSel;
+
+/*##########################################################################
+#
+#   Name       : GrowIni
+#
+#   Purpose....: Grow ini file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GrowIni(struct TIni *Ini, int BufSize, int SectionCount, int VarCount)
+{
+    long OldBase;
+    long NewBase;
+    long limit;
+    int OldSize;
+    int NewSize;
+    int i;
+    int j;
+    int offset;
+    long Pos;
+    int SrcBaseSize;
+    int DestBaseSize;
+    long SrcVarPos;
+    long DestVarPos;
+    struct TIni *SrcIni;
+    struct TIni *DestIni;
+    struct TIniSection *SrcSect;
+    struct TIniSection *DestSect;
+    struct TIniSection *sect;
+    struct TIniVar *var;
+    struct TIniVar *SrcVar;
+    struct TIniVar *DestVar;
+    int sel = RdosPointerToSelector(Ini);
+
+    SrcBaseSize = Ini->BaseSize + Ini->MaxBufSize;
+
+    RdosGetSelectorBaseSize(sel, &OldBase, &limit);
+
+    OldSize = limit + 1;
+
+    DestBaseSize = Ini->BaseSize + BufSize;
+
+    NewSize = DestBaseSize + SectionCount * sizeof(struct TIniSection);
+    NewSize += VarCount * sizeof(struct TIniVar);
+
+    NewBase = RdosAllocateSmallGlobalLinear(NewSize);
+
+    RdosCreateDataSelector32(sel, NewBase, NewSize);    
+    RdosCreateDataSelector32(OldSel, OldBase, OldSize);    
+    RdosReloadSelector(sel);
+
+    SrcIni = (struct TIni*)RdosSelectorToPointer(OldSel);
+    DestIni = (struct TIni*)RdosSelectorToPointer(sel);
+
+    memcpy(DestIni, SrcIni, SrcBaseSize);
+
+    DestIni->MaxBufSize = BufSize;
+    DestIni->MaxSectionCount = SectionCount;
+    DestIni->MaxVarCount = VarCount;
+
+    SrcVarPos = SrcBaseSize + SrcIni->MaxSectionCount * sizeof(struct TIniSection);
+    DestVarPos = DestBaseSize + SectionCount * sizeof(struct TIniSection);
+
+    if (SrcIni->FSectionList)
+    {
+        offset = RdosPointerToOffset(SrcIni->FSectionList);
+        sect = (struct TIniSection*)RdosSelectorOffsetToPointer(OldSel, offset);            
+        j = sect->Index;
+
+        Pos = DestBaseSize + j * sizeof(struct TIniSection); 
+        sect = (struct TIniSection*)RdosSelectorOffsetToPointer(sel, Pos);
+        DestIni->FSectionList = sect;
+    }            
+
+    for (i = 0; i < SrcIni->SectionCount; i++)
+    {
+        Pos = SrcBaseSize + i * sizeof(struct TIniSection); 
+        SrcSect = (struct TIniSection*)RdosSelectorOffsetToPointer(OldSel, Pos);
+
+        Pos = DestBaseSize + i * sizeof(struct TIniSection); 
+        DestSect = (struct TIniSection*)RdosSelectorOffsetToPointer(sel, Pos);
+        *DestSect = *SrcSect;
+
+        if (SrcSect->FNextSection)
+        {
+            offset = RdosPointerToOffset(SrcSect->FNextSection);
+            sect = (struct TIniSection*)RdosSelectorOffsetToPointer(OldSel, offset);            
+            j = sect->Index;
+
+            Pos = DestBaseSize + j * sizeof(struct TIniSection); 
+            sect = (struct TIniSection*)RdosSelectorOffsetToPointer(sel, Pos);
+            DestSect->FNextSection = sect;
+        }            
+
+        if (SrcSect->FVarList)
+        {
+            offset = RdosPointerToOffset(SrcSect->FVarList);
+            var = (struct TIniVar*)RdosSelectorOffsetToPointer(OldSel, offset);            
+            j = var->Index;
+
+            Pos = j * sizeof(struct TIniVar); 
+            var = (struct TIniVar*)RdosSelectorOffsetToPointer(sel, DestVarPos + Pos);
+            DestSect->FVarList = var;
+        }            
+    }
+    
+    for (i = 0; i < SrcIni->VarCount; i++)
+    {
+        Pos = i * sizeof(struct TIniVar); 
+        SrcVar = (struct TIniVar*)RdosSelectorOffsetToPointer(OldSel, SrcVarPos + Pos);
+        DestVar = (struct TIniVar*)RdosSelectorOffsetToPointer(sel, DestVarPos + Pos);
+        *DestVar = *SrcVar;
+
+        if (SrcVar->FNextVar)
+        {
+            offset = RdosPointerToOffset(SrcVar->FNextVar);
+            var = (struct TIniVar*)RdosSelectorOffsetToPointer(OldSel, offset);
+            j = var->Index;
+
+            Pos = j * sizeof(struct TIniVar); 
+            var = (struct TIniVar*)RdosSelectorOffsetToPointer(sel, DestVarPos + Pos);
+            DestVar->FNextVar = var;
+        }            
+    }
+    RdosFreeLinear(OldBase, OldSize);
+}
+
+/*##########################################################################
+#
+#   Name       : CheckDelim
+#
+#   Purpose....: Check if character is a delimiter
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int CheckDelim(char ch)
+{
+    switch (ch)
+    {
+        case 0xd:
+        case 0xa:
+        case ' ':
+        case 0x9:
+            return TRUE;
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : Trim
+#
+#   Purpose....: Left and right trim string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *Trim(char *str)
+{
+    int len;
+    char *ptr;
+
+    while (*str == ' ' || *str == 0x9)
+        str++;
+
+    ptr = str;
+    len = strlen(ptr);
+
+    while (len)
+    {
+        len--;
+        if (CheckDelim(ptr[len]))
+            ptr[len] = 0;
+        else
+            break;
+    }        
+
+    return str;
+}
+
+/*##########################################################################
+#
+#   Name       : AddVar
+#
+#   Purpose....: Add single variable
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddVar(struct TIni *Ini, struct TIniSection *IniSect, char *name, char *val)
+{
+    int pos;
+    char *base;
+    struct TIniVar *IniVar;
+    struct TIniVar *var;
+
+    if (Ini->VarCount == Ini->MaxVarCount)
+        GrowIni(Ini, Ini->MaxBufSize, Ini->MaxSectionCount, 3 * (Ini->VarCount + 1) / 2); 
+
+    pos = Ini->BaseSize + Ini->MaxBufSize;
+    pos += Ini->MaxSectionCount * sizeof(struct TIniSection);
+    pos += Ini->VarCount * sizeof(struct TIniVar);
+    base = (char *)Ini;
+    
+    IniVar = (struct TIniVar *)(base + pos);
+    IniVar->Index = Ini->VarCount;
+    IniVar->Deleted = FALSE;
+    IniVar->Name = name;
+    IniVar->Val = val;
+    IniVar->FNextVar = 0;
+    
+    Ini->VarCount++;
+
+    if (IniSect->FVarList)
+    {
+        var = IniSect->FVarList;
+
+        while (var->FNextVar)
+            var = var->FNextVar;
+
+        var->FNextVar = IniVar;
+    }
+    else
+        IniSect->FVarList = IniVar;    
+}
+
+/*##########################################################################
+#
+#   Name       : FindStartOfLine
+#
+#   Purpose....: Find start of line
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *FindStartOfLine(char *ptr)
+{
+    while (*ptr && *ptr != 0xd && *ptr != 0xa)
+        ptr++;
+
+    while (*ptr == 0xd || *ptr == 0xa)
+        ptr++;
+
+    if (*ptr)
+        return ptr;
+    else
+        return 0;    
+}
+
+/*##########################################################################
+#
+#   Name       : DecodeLine
+#
+#   Purpose....: Decode a single line
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void DecodeLine(struct TIni *Ini, struct TIniSection *IniSect, char *ptr)
+{
+    char *name = ptr;
+
+    while (*ptr && *ptr != '=')
+        ptr++;
+
+    if (*ptr == '=')
+    {
+        *ptr = 0;
+        ptr++;
+
+        name = Trim(name);
+        ptr = Trim(ptr);
+
+        AddVar(Ini, IniSect, name, ptr);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : ParseSection
+#
+#   Purpose....: Parse ini section
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void ParseSection(struct TIni *Ini, struct TIniSection *IniSect, char *ptr)
+{
+    char *prev_line = 0;
+    char *curr_line = 0;
+
+    while (ptr)
+    {
+        curr_line = FindStartOfLine(ptr);
+
+        if (curr_line)
+        {
+            curr_line--;
+            *curr_line = 0;
+            curr_line++;
+
+            if (prev_line)
+                DecodeLine(Ini, IniSect, prev_line);
+
+            prev_line = curr_line;
+            ptr = curr_line;
+        }
+        else
+        {
+            if (prev_line)
+                DecodeLine(Ini, IniSect, prev_line);
+
+            ptr = 0;
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : FindSection
+#
+#   Purpose....: Find first section in string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *FindSection(char *ptr)
+{
+    while (*ptr)
+    {
+        while (*ptr == 0xd || *ptr == 0xa)
+            ptr++;
+            
+        if (*ptr == '[')
+            return ptr;
+        else
+        {
+            while (*ptr && *ptr != 0xd && *ptr != 0xa)
+                ptr++;
+        }
+    }
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : AddSection
+#
+#   Purpose....: Add a single section
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddSection(struct TIni *Ini, char *name, char *ptr)
+{
+    int pos;
+    char *base;
+    struct TIniSection *IniSect;
+    struct TIniSection *sect;
+
+    if (Ini->SectionCount == Ini->MaxSectionCount)
+        GrowIni(Ini, Ini->MaxBufSize, 3 * (Ini->SectionCount + 1) / 2, Ini->MaxVarCount); 
+
+    pos = Ini->BaseSize + Ini->MaxBufSize;
+    pos += Ini->SectionCount * sizeof(struct TIniSection);
+    base = (char *)Ini;
+    
+    IniSect = (struct TIniSection *)(base + pos);
+
+    IniSect->Index = Ini->SectionCount;
+    IniSect->Id = Ini->NextId;
+    IniSect->Deleted = FALSE;
+    IniSect->FVarList = 0;
+    IniSect->FNextSection = 0;
+    IniSect->Name = name;
+
+    if (Ini->FSectionList)
+    {
+        sect = Ini->FSectionList;
+
+        while (sect->FNextSection)
+            sect = sect->FNextSection;
+
+        sect->FNextSection = IniSect;
+    }
+    else
+        Ini->FSectionList = IniSect;    
+   
+    Ini->SectionCount++;
+    Ini->NextId++;
+
+    ParseSection(Ini, IniSect, ptr);
+}    
+
+/*##########################################################################
+#
+#   Name       : DecodeSection
+#
+#   Purpose....: Decode a single section
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void DecodeSection(struct TIni *Ini, char *ptr)
+{
+    char *name = ptr;
+    
+    while (*ptr)
+    {
+        if (*ptr == 0 || *ptr == 0xd || *ptr == 0xa)
+            break;
+
+        if (*ptr == ']')
+            break;
+
+        ptr++;
+    }
+
+    if (*ptr == ']')
+    {
+        *ptr = 0;
+        ptr++;
+
+        AddSection(Ini, name, ptr);
+    }    
+}
+
+/*##########################################################################
+#
+#   Name       : ParseIni
+#
+#   Purpose....: Parse ini file into components
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void ParseIni(struct TIni *Ini)
+{
+    char *prev_sec = 0;
+    char *curr_sec = 0;
+    char *ptr = Ini->Data;
+
+    while (ptr)
+    {
+        curr_sec = FindSection(ptr);
+
+        if (curr_sec)
+        {
+            *curr_sec = 0;
+            curr_sec++;
+
+            if (prev_sec)
+                DecodeSection(Ini, prev_sec);
+
+            prev_sec = curr_sec;
+            ptr = curr_sec;
+        }
+        else
+        {
+            if (prev_sec)
+                DecodeSection(Ini, prev_sec);
+
+            ptr = 0;
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : AddString
+#
+#   Purpose....: Add string to data region
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *AddString(struct TIni *Ini, char *str)
+{
+    int StrSize;
+    int NewSize;
+    int GrowSize;
+    char *DestStr;
+
+    StrSize = strlen(str) + 1;
+    NewSize = Ini->BufSize + StrSize;
+
+    if (NewSize > Ini->MaxBufSize)
+    {
+        GrowSize = 3 * (NewSize + 1) / 2;
+        GrowIni(Ini, GrowSize, Ini->MaxSectionCount, Ini->MaxVarCount); 
+    }
+
+    DestStr = (char *)Ini;
+    DestStr += Ini->BaseSize + Ini->BufSize;
+    strcpy(DestStr, str);
+    Ini->BufSize += StrSize;
+
+    return DestStr;    
+}    
 
 /*##########################################################################
 #
@@ -76,10 +619,12 @@ static char SysIniName[256];
 #   Returns....: *
 #
 ##########################################################################*/
-int CreateIniSel(char *FileName)
+struct TIni *CreateIniSel(char *FileName)
 {
     struct TIni *Ini;
     int sel;
+    int NameSize;
+    int BaseSize = 0;
     long FileSize = 0;
     int Size;
     int FileHandle = RdosOpenFile(FileName, 0);
@@ -87,23 +632,38 @@ int CreateIniSel(char *FileName)
     if (FileHandle)
         FileSize = RdosGetFileSize(FileHandle);
 
-    Size = FileSize + sizeof(struct TIni);
+    NameSize = strlen(FileName) + 1;
+    BaseSize = NameSize + sizeof(struct TIni) - 1;
+
+    Size = FileSize + BaseSize + 1;
     
     sel = RdosAllocateSmallGlobalSelector(Size);
     Ini = (struct TIni*)RdosSelectorToPointer(sel);
+    strcpy(Ini->Name, FileName);
 
+    Ini->Data = &Ini->Name[NameSize];
     if (FileSize)
-        RdosReadFile(FileHandle, Ini->Buffer, FileSize);
-    Ini->Buffer[FileSize] = 0;
+        RdosReadFile(FileHandle, Ini->Data, FileSize);
+        
+    Ini->Data[FileSize] = 0;
 
     if (FileHandle)
         RdosCloseFile(FileHandle);    
 
     Ini->Users = 1;
-    RdosInitKernelSection(&Ini->FSection);
     Ini->FSectionList = 0;
+    Ini->BaseSize = BaseSize;
+    Ini->BufSize = FileSize + 1;
+    Ini->SectionCount = 0;
+    Ini->VarCount = 0;
+    Ini->MaxBufSize = FileSize + 1;
+    Ini->MaxSectionCount = 0;
+    Ini->MaxVarCount = 0;
+    Ini->NextId = 1;
 
-    return sel;
+    ParseIni(Ini);
+
+    return Ini;
 }
 
 /*##########################################################################
@@ -117,14 +677,14 @@ int CreateIniSel(char *FileName)
 #   Returns....: *
 #
 ##########################################################################*/
-struct TIniHandle *CreateHandle(int Sel)
+struct TIniHandle *CreateHandle(struct TIni *Ini)
 {
-    struct TIniHandle *Ini = (struct TIniHandle *)RdosAllocateHandle(INI_HANDLE, sizeof(struct TIniHandle));
-    Ini->Header.sign = INI_HANDLE;
-    Ini->IniSel = Sel;
-    Ini->SectionLinear = 0;
+    struct TIniHandle *IniHandle = (struct TIniHandle *)RdosAllocateHandle(INI_HANDLE, sizeof(struct TIniHandle));
+    IniHandle->Header.sign = INI_HANDLE;
+    IniHandle->Ini = Ini;
+    IniHandle->CurrSectionId = 0;
 
-    return Ini;
+    return IniHandle;
 }
 
 /*##########################################################################
@@ -140,9 +700,6 @@ struct TIniHandle *CreateHandle(int Sel)
 ##########################################################################*/
 void FreeHandle(struct TIniHandle *Ini)
 {
-    if (Ini->SectionLinear)
-        RdosFreeLinear(Ini->SectionLinear, 0);
-
     RdosFreeHandle((struct THandleHeader *)Ini);
 }
 
@@ -159,13 +716,13 @@ void FreeHandle(struct TIniHandle *Ini)
 ##########################################################################*/
 int OpenIni(char *FileName)
 {
-    int Sel;
-    struct TIniHandle* Ini;
+    struct TIni *Ini;
+    struct TIniHandle* IniHandle;
 
-    Sel = CreateIniSel(FileName);
-    Ini = CreateHandle(Sel);
+    Ini = CreateIniSel(FileName);
+    IniHandle = CreateHandle(Ini);
 
-    return Ini->Header.handle;
+    return IniHandle->Header.handle;
 }
 
 /*##########################################################################
@@ -212,7 +769,33 @@ void CloseIni(int Handle)
 ##########################################################################*/
 int GotoIniSection(int Handle, char *SectionName)
 {
-    return 0;
+    struct TIniHandle *IniHandle = (struct TIniHandle *)RdosDerefHandle(INI_HANDLE, Handle);
+    struct TIniSection *sect;
+    int found = FALSE;
+
+    if (IniHandle)
+    {
+        IniHandle->CurrSectionId = 0;
+        
+        sect = IniHandle->Ini->FSectionList;
+
+        while (sect && !found)
+        {
+            if (sect->Deleted)
+                sect = sect->FNextSection;
+            else
+            {
+                if (strcmp(sect->Name, SectionName) == 0)
+                {
+                    IniHandle->CurrSectionId = sect->Id;
+                    found = TRUE;
+                }
+                else
+                    sect = sect->FNextSection;                    
+            }
+        }
+    }    
+    return found;
 }
 
 /*##########################################################################
@@ -228,7 +811,31 @@ int GotoIniSection(int Handle, char *SectionName)
 ##########################################################################*/
 int RemoveIniSection(int Handle, char *SectionName)
 {
-    return 0;
+    struct TIniHandle *IniHandle = (struct TIniHandle *)RdosDerefHandle(INI_HANDLE, Handle);
+    struct TIniSection *sect;
+    int found = FALSE;
+
+    if (IniHandle)
+    {
+        sect = IniHandle->Ini->FSectionList;
+
+        while (sect && !found)
+        {
+            if (sect->Deleted)
+                sect = sect->FNextSection;
+            else
+            {
+                if (strcmp(sect->Name, SectionName) == 0)
+                {
+                    sect->Deleted = TRUE;
+                    found = TRUE;
+                }
+                else
+                    sect = sect->FNextSection;                    
+            }
+        }
+    }    
+    return found;
 }
 
 /*##########################################################################
@@ -242,9 +849,63 @@ int RemoveIniSection(int Handle, char *SectionName)
 #   Returns....: *
 #
 ##########################################################################*/
+#pragma aux ReadIniVar "*" rdosdev parm routine [ebx] [eax esi] [es edi] [ecx] value [eax]
 int ReadIniVar(int Handle, char *VarName, char *Buf, int MaxSize)
 {
-    return 0;
+    struct TIniHandle *IniHandle = (struct TIniHandle *)RdosDerefHandle(INI_HANDLE, Handle);
+    struct TIniSection *sect;
+    struct TIniVar *var;
+    int found = FALSE;
+    int size = 0;
+
+    if (IniHandle && MaxSize)
+    {
+        sect = IniHandle->Ini->FSectionList;
+
+        while (sect && !found)
+        {
+            if (sect->Deleted)
+                sect = sect->FNextSection;
+            else
+            {
+                if (IniHandle->CurrSectionId == sect->Id)
+                    found = TRUE;
+                else
+                    sect = sect->FNextSection;                    
+            }
+        }
+
+        if (found)
+        {
+            found = FALSE;
+
+            var = sect->FVarList;
+
+            while (var && !found)
+            {
+                if (var->Deleted)
+                    var = var->FNextVar;                    
+                else
+                {
+                    if (strcmp(var->Name, VarName) == 0)
+                        found = TRUE;
+                    else
+                        var = var->FNextVar;                    
+                }
+            }            
+        }
+
+        if (found)
+        {
+            size = strlen(var->Val);
+            if (size >= MaxSize)
+                size = MaxSize - 1;
+
+            strncpy(Buf, var->Val, size);
+            Buf[size - 1] = 0;
+        }
+    }    
+    return size;
 }
 
 /*##########################################################################
@@ -258,6 +919,7 @@ int ReadIniVar(int Handle, char *VarName, char *Buf, int MaxSize)
 #   Returns....: *
 #
 ##########################################################################*/
+#pragma aux WriteIniVar "*" rdosdev parm routine [ebx] [eax esi] [es edi] [ecx] value [eax]
 int WriteIniVar(int Handle, char *VarName, char *Buf, int Size)
 {
     return 0;
@@ -274,9 +936,55 @@ int WriteIniVar(int Handle, char *VarName, char *Buf, int Size)
 #   Returns....: *
 #
 ##########################################################################*/
+#pragma aux DeleteIniVar "*" rdosdev parm routine [ebx] [eax esi] value [eax]
 int DeleteIniVar(int Handle, char *VarName)
 {
-    return 0;
+    struct TIniHandle *IniHandle = (struct TIniHandle *)RdosDerefHandle(INI_HANDLE, Handle);
+    struct TIniSection *sect;
+    struct TIniVar *var;
+    int found = FALSE;
+
+    if (IniHandle)
+    {
+        sect = IniHandle->Ini->FSectionList;
+
+        while (sect && !found)
+        {
+            if (sect->Deleted)
+                sect = sect->FNextSection;
+            else
+            {
+                if (IniHandle->CurrSectionId == sect->Id)
+                    found = TRUE;
+                else
+                    sect = sect->FNextSection;                    
+            }
+        }
+
+        if (found)
+        {
+            found = FALSE;
+
+            var = sect->FVarList;
+
+            while (var && !found)
+            {
+                if (var->Deleted)
+                    var = var->FNextVar;                    
+                else
+                {
+                    if (strcmp(var->Name, VarName) == 0)
+                    {
+                        var->Deleted = TRUE;
+                        found = TRUE;
+                    }
+                    else
+                        var = var->FNextVar;                    
+                }
+            }            
+        }
+    }    
+    return found;
 }
 
 /*##########################################################################
@@ -489,168 +1197,6 @@ void __far ImplRemoveIniSection32(int Handle, char *SectionName)
 
 /*##########################################################################
 #
-#   Name       : ImplReadIniVar16
-#
-#   Purpose....: Read ini var, 16-bit version
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-#pragma aux ImplReadIniVar16 "*" rdosdev parm routine [ebx] [esi] [es edi] [ecx] value [eax]
-int __far ImplReadIniVar16(int Handle, long Offset, char *Buf, int MaxSize)
-{
-    char *VarName;
-    int Size;
-
-    RdosExtendCx();
-    RdosExtendSi();
-    RdosExtendDi();
-
-    VarName = RdosSelectorOffsetToPointer(RdosGetGateDs(), Offset);
-
-    Size = ReadIniVar(Handle, VarName, Buf, MaxSize);
-
-    if (Size)
-        RdosSetSuccess();
-    else
-        RdosSetFailure();
-
-    return Size;
-}
-
-/*##########################################################################
-#
-#   Name       : ImplReadIniVar32
-#
-#   Purpose....: Read ini var, 32-bit version
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-#pragma aux ImplReadIniVar32 "*" rdosdev parm routine [ebx] [esi] [es edi] [ecx] value [eax]
-int __far ImplReadIniVar32(int Handle, long Offset, char *Buf, int MaxSize)
-{
-    char *VarName = RdosSelectorOffsetToPointer(RdosGetGateDs(), Offset);
-    int Size;
-
-    Size = ReadIniVar(Handle, VarName, Buf, MaxSize);
-
-    if (Size)
-        RdosSetSuccess();
-    else
-        RdosSetFailure();
-
-    return Size;
-}
-
-/*##########################################################################
-#
-#   Name       : ImplWriteIniVar16
-#
-#   Purpose....: Write ini var, 16-bit version
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-#pragma aux ImplWriteIniVar16 "*" rdosdev parm routine [ebx] [esi] [es edi] [ecx]
-void __far ImplWriteIniVar16(int Handle, long Offset, char *Buf, int Size)
-{
-    char *VarName;
-
-    RdosExtendCx();
-    RdosExtendSi();
-    RdosExtendDi();
-
-    VarName = RdosSelectorOffsetToPointer(RdosGetGateDs(), Offset);
-
-    if (WriteIniVar(Handle, VarName, Buf, Size))
-        RdosSetSuccess();
-    else
-        RdosSetFailure();
-}
-
-/*##########################################################################
-#
-#   Name       : ImplWriteIniVar32
-#
-#   Purpose....: Write ini var, 32-bit version
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-#pragma aux ImplWriteIniVar32 "*" rdosdev parm routine [ebx] [esi] [es edi] [ecx]
-void __far ImplWriteIniVar32(int Handle, long Offset, char *Buf, int Size)
-{
-    char *VarName;
-
-    VarName = RdosSelectorOffsetToPointer(RdosGetGateDs(), Offset);
-
-    if (WriteIniVar(Handle, VarName, Buf, Size))
-        RdosSetSuccess();
-    else
-        RdosSetFailure();
-}
-
-/*##########################################################################
-#
-#   Name       : ImplDeleteIniVar16
-#
-#   Purpose....: Delete ini var, 16-bit version
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-#pragma aux ImplDeleteIniVar16 "*" rdosdev parm routine [ebx] [esi]
-void __far ImplDeleteIniVar16(int Handle, long Offset)
-{
-    char *VarName;
-
-    RdosExtendSi();
-
-    VarName = RdosSelectorOffsetToPointer(RdosGetGateDs(), Offset);
-
-    if (DeleteIniVar(Handle, VarName))
-        RdosSetSuccess();
-    else
-        RdosSetFailure();
-}
-
-/*##########################################################################
-#
-#   Name       : ImplDeleteIniVar32
-#
-#   Purpose....: Delete ini var, 32-bit version
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-#pragma aux ImplDeleteIniVar32 "*" rdosdev parm routine [ebx] [esi]
-void __far ImplDeleteIniVar32(int Handle, long Offset)
-{
-    char *VarName;
-
-    VarName = RdosSelectorOffsetToPointer(RdosGetGateDs(), Offset);
-
-    if (DeleteIniVar(Handle, VarName))
-        RdosSetSuccess();
-    else
-        RdosSetFailure();
-}
-
-/*##########################################################################
-#
 #   Name       : ImplDeleteHandle
 #
 #   Purpose....: Delete handles when process terminates
@@ -679,13 +1225,16 @@ void __far ImplDeleteHandle(int handle)
 ##########################################################################*/
 int main()
 {
+    OldSel = RdosAllocateGdt();
+    
+    RdosInitKernelSection(&FSection);
+
+    InitGates();
+
     RdosRegisterBimodalUserGate(usergate_open_sys_ini, &ImplOpenSysIni, "Open Sys Ini");
     RdosRegisterSegUserGate(usergate_open_ini, GATE_ES_IN, &ImplOpenIni16, &ImplOpenIni32, "Open Ini");
     RdosRegisterBimodalUserGate(usergate_close_ini, &ImplCloseIni, "Close Ini");
     RdosRegisterSegUserGate(usergate_goto_ini_section, GATE_ES_IN, &ImplGotoIniSection16, &ImplGotoIniSection32, "Goto Ini Section");
     RdosRegisterSegUserGate(usergate_remove_ini_section, GATE_ES_IN, &ImplRemoveIniSection16, &ImplRemoveIniSection32, "Remove Ini Section");
-    RdosRegisterSegUserGate(usergate_read_ini, GATE_DS_IN | GATE_ES_IN, &ImplReadIniVar16, &ImplReadIniVar32, "Read Ini");
-    RdosRegisterSegUserGate(usergate_write_ini, GATE_DS_IN | GATE_ES_IN, &ImplWriteIniVar16, &ImplWriteIniVar32, "Write Ini");
-    RdosRegisterSegUserGate(usergate_delete_ini, GATE_DS_IN, &ImplDeleteIniVar16, &ImplDeleteIniVar32, "Delete Ini");
     RdosRegisterHandle(INI_HANDLE, &ImplDeleteHandle);    
 }

@@ -108,9 +108,9 @@ int TIniFile::GotoSection(const char *name)
 #   Returns....: *
 #
 ##########################################################################*/
-int TIniFile::DeleteSection()
+int TIniFile::DeleteSection(const char *name)
 {
-    return RdosRemoveIniSection(FHandle);
+    return RdosRemoveIniSection(FHandle, name);
 }
 
 /*##########################################################################
