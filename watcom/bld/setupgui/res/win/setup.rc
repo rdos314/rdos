@@ -1,9 +1,0 @@
-
-#include <windows.h>
-#include "resource.h"
-
-ApplIcon    ICON     PRELOAD FIXED setup.ico
-
-#include "splash.rc"
-
-#include "gui.rc"

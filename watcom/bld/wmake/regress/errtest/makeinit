@@ -1,3 +1,0 @@
-mkerr=..\cmds\mkerr
-envarg=..\cmds\envarg
-ERRORFILE = ..\ERROR.OUT

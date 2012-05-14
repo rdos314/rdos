@@ -1,8 +1,0 @@
-#!include <"hello tmp.tmp">
-#!include <hello tmp.tmp>
-#!include "hello tmp.tmp"
-#!include hello tmp.tmp
-
-"hello tmp.tmp": hello.h
-      echo hello
-      cat "hello tmp.tmp"

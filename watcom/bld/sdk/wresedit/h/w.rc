@@ -1,5 +1,0 @@
-/* private clipboard format bitmap */
-"PrivateFmt"    BITMAP "clip.bmp"
-
-#include "rename.dlg"
-

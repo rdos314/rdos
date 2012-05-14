@@ -1,8 +1,0 @@
-#
-#   companion file to err40.bat
-#
-#   could not touch target
-#
-err40.tst :
-    echo HELLO 
-

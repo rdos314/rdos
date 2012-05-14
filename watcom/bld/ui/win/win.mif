@@ -1,4 +1,0 @@
-
-extra_c_flags += -zu
-
-!include ../../ui.mif

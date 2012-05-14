@@ -1,2 +1,0 @@
-[ DEFAULT ]
-type="e" dir="binw"	usr="bpatch.exe" rel="." where="c jc f77 jf77 ac"	desc="Patch utility"	old="binb"
