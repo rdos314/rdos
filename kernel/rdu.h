@@ -14,7 +14,7 @@
 #define usergate_set_flat_linear_readwrite 11
 
 #define usergate_get_raw_switch_ads 12
-#define usergate_raw_switch 13
+#define usergate_raw_switch_pm 13
 #define usergate_get_exception 14
 #define usergate_set_exception 15
 #define usergate_get_pm_int 16
@@ -33,6 +33,7 @@
 #define usergate_create_thread 28
 #define usergate_terminate_thread 29
 #define usergate_get_thread 30
+#define usergate_raw_switch_vm 31
 
 #define usergate_create_user_section 32
 #define usergate_create_blocked_user_section 33
@@ -604,7 +605,7 @@
 #define CallGate_set_flat_linear_readwrite 0x67 0x9a 11 0 0 0 3 0
 
 #define CallGate_get_raw_switch_ads 0x67 0x9a 12 0 0 0 3 0
-#define CallGate_raw_switch 0x67 0x9a 13 0 0 0 3 0
+#define CallGate_raw_switch_pm 0x67 0x9a 13 0 0 0 3 0
 #define CallGate_get_exception 0x67 0x9a 14 0 0 0 3 0
 #define CallGate_set_exception 0x67 0x9a 15 0 0 0 3 0
 #define CallGate_get_pm_int 0x67 0x9a 16 0 0 0 3 0
@@ -623,6 +624,7 @@
 #define CallGate_create_thread 0x67 0x9a 28 0 0 0 3 0
 #define CallGate_terminate_thread 0x67 0x9a 29 0 0 0 3 0
 #define CallGate_get_thread 0x67 0x9a 30 0 0 0 3 0
+#define CallGate_raw_switch_vm 0x67 0x9a 31 0 0 0 3 0
 
 #define CallGate_create_user_section 0x67 0x9a 32 0 0 0 3 0
 #define CallGate_create_blocked_user_section 0x67 0x9a 33 0 0 0 3 0
@@ -1192,7 +1194,7 @@
 #define CallGate_set_flat_linear_readwrite 0x3e 0x67 0x9a 11 0 0 0 3 0
 
 #define CallGate_get_raw_switch_ads 0x3e 0x67 0x9a 12 0 0 0 3 0
-#define CallGate_raw_switch 0x3e 0x67 0x9a 13 0 0 0 3 0
+#define CallGate_raw_switch_pm 0x3e 0x67 0x9a 13 0 0 0 3 0
 #define CallGate_get_exception 0x3e 0x67 0x9a 14 0 0 0 3 0
 #define CallGate_set_exception 0x3e 0x67 0x9a 15 0 0 0 3 0
 #define CallGate_get_pm_int 0x3e 0x67 0x9a 16 0 0 0 3 0
@@ -1211,6 +1213,7 @@
 #define CallGate_create_thread 0x3e 0x67 0x9a 28 0 0 0 3 0
 #define CallGate_terminate_thread 0x3e 0x67 0x9a 29 0 0 0 3 0
 #define CallGate_get_thread 0x3e 0x67 0x9a 30 0 0 0 3 0
+#define CallGate_raw_switch_vm 0x3e 0x67 0x9a 31 0 0 0 3 0
 
 #define CallGate_create_user_section 0x3e 0x67 0x9a 32 0 0 0 3 0
 #define CallGate_create_blocked_user_section 0x3e 0x67 0x9a 33 0 0 0 3 0

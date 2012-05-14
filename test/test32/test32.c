@@ -25,11 +25,14 @@ void main()
     x = sin(x) * y;
 
     handle = RdosOpenSysIni();
-    ok = RdosGotoIniSection(handle, "BUTTONS");
+    ok = RdosGotoIniSection(handle, "R1");
+//    ok = RdosRemoveIniSection(handle, "R1");
+ //   if (ok)
+ //       ok = RdosDeleteIni(handle, "Seq");
+ //   if (ok)
+ //       ok = RdosWriteIni(handle, "Seq", "99");
     if (ok)
-        ok = RdosWriteIni(handle, "Button1", "ABC-def");
-    if (ok)
-        ok = RdosReadIni(handle, "Button1", test_str, 100);
+        ok = RdosReadIni(handle, "Seq", test_str, 100);
     RdosCloseIni(handle);
 
     bpp = 24;

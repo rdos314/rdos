@@ -756,6 +756,9 @@ void RdosInsertFileEntry(int dir_sel, int file_entry);
 int RdosGetFileInfo(int handle, char *access, char *drive, int *file_sel);
 int RdosDuplFileInfo(char access, char drive, int file_sel);
 
+void RdosLockFile(int file_sel);
+void RdosUnlockFile(int file_sel);
+
 char RdosReadPciByte(char bus, char dev, char func, char reg);
 short int RdosReadPciWord(char bus, char dev, char func, char reg);
 long RdosReadPciDword(char bus, char dev, char func, char reg);
@@ -1933,12 +1936,14 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
 
 #pragma aux RdosGetFileInfo = \
     OsGate_get_file_info \
+    "push eax" \
     CarryToBool \
     "mov es:[edi],cl" \
     "mov fs:[esi],ch" \
-    "movzx eax,ax" \
-    "mov gs:[ebx],eax" \
-    parm [ebx] [es edi] [fs esi] [gs ebx] \
+    "pop ecx" \
+    "movzx ecx,cx" \
+    "mov gs:[edx],ecx" \
+    parm [ebx] [es edi] [fs esi] [gs edx] \
     value [eax] \
     modify [ecx];
 
@@ -1946,6 +1951,18 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     OsGate_dupl_file_info \
     parm [cl] [ch] [eax] \
     value [ebx];
+
+#pragma aux RdosLockFile = \
+    OsGate_lock_file \
+    CarryToBool \
+    parm [eax] \
+    value [eax];
+
+#pragma aux RdosUnlockFile = \
+    OsGate_unlock_file \
+    CarryToBool \
+    parm [eax] \
+    value [eax];
 
 #pragma aux RdosReadPciByte = \
     OsGate_read_pci_byte \

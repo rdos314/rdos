@@ -1604,6 +1604,64 @@ dupl_file_info  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           LockFile
+;
+;           DESCRIPTION:    Lock file using file-info
+;
+;           PARAMETERS:     AX              FILE SYSTEM HANDLE
+;
+;           RETURNS:        NC              SUCCESS
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+lock_file_name     DB 'Lock File',0
+
+lock_file  PROC far
+    push ds
+    push ax
+    mov ds,ax
+    inc ds:file_usage
+    pop ax
+    clc
+    pop ds
+    retf32
+lock_file  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockFile
+;
+;           DESCRIPTION:    Unlock file using file-info
+;
+;           PARAMETERS:     AX              FILE SYSTEM HANDLE
+;
+;           RETURNS:        NC              SUCCESS
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unlock_file_name     DB 'Unlock File',0
+
+unlock_file  PROC far
+    push ds
+    push ax
+;    
+    mov ds,ax
+    sub ds:file_usage,1
+    jnz unlock_file_done
+;
+    call FreeFileSel
+
+unlock_file_done:    
+    clc
+    pop ax
+    pop ds
+    retf32
+unlock_file  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CLOSE_FILE
 ;
 ;           DESCRIPTION:    Close file
@@ -2799,6 +2857,18 @@ init_file       PROC near
     mov edi,OFFSET dupl_file_info_name
     xor cl,cl
     mov ax,dupl_file_info_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET lock_file
+    mov edi,OFFSET lock_file_name
+    xor cl,cl
+    mov ax,lock_file_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET unlock_file
+    mov edi,OFFSET unlock_file_name
+    xor cl,cl
+    mov ax,unlock_file_nr
     RegisterOsGate
 ;
     mov esi,OFFSET close_file

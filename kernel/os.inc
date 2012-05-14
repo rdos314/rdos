@@ -2343,6 +2343,16 @@ DuplFileInfo    MACRO
     OsGate dupl_file_info_nr
                     ENDM
 
+;  IN   AX          File selector
+LockFile     MACRO
+    OsGate lock_file_nr
+                    ENDM
+
+;  IN   AX          File selector
+UnlockFile     MACRO
+    OsGate unlock_file_nr
+                    ENDM
+
 ;;;;;;;;;;;; VIDEO ;;;;;;;;;;;
 
 ;  IN   ES:EDI      UTF-8 string
