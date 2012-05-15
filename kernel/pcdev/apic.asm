@@ -3546,8 +3546,17 @@ test_thread_name    DB 'APIC Test',0
 
 test_thread:
     int 3
-    GetApicId
-    retf
+    mov eax,1000h
+    AllocateBigLinear
+    mov ecx,eax
+    AllocateGdt
+    CreateDownSelector32
+    mov es,bx
+    mov esi,ecx
+    not esi
+    mov al,es:[esi]
+    GetSelectorBaseSize
+    
 
 init_task   Proc far
     push ds

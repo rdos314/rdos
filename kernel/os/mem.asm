@@ -3268,7 +3268,12 @@ validate_descriptor_down:
     or dx,0FFFh
 validate_descriptor_byte_down:
     cmp esi,edx
-    jc validate_descriptor_done
+    ja validate_descriptor_down_valid
+;
+    stc
+    jmp validate_descriptor_done
+
+validate_descriptor_down_valid:
     mov edx,[bx+2]
     rol edx,8
     mov dl,[bx+7]

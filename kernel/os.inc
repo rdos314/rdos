@@ -350,6 +350,13 @@ CreateDataSelector32    MACRO
 ;       BX          DESCRIPTOR
 ;       EDX         BASE
 ;       ECX         LIMIT
+CreateDownSelector32    MACRO
+    OsGate create_down_sel32_nr
+                    ENDM
+
+;       BX          DESCRIPTOR
+;       EDX         BASE
+;       ECX         LIMIT
 CreateAliasSelector16   MACRO
     OsGate create_alias_sel16_nr
                     ENDM

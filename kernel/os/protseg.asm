@@ -49,7 +49,7 @@ code    SEGMENT byte use16 public 'CODE'
 ;           PARAMETERS:     BX              Selector
 ;
 ;           RETURNS:        EDX             Base
-;                           ECX             Limit
+;                           ECX             Size
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -101,6 +101,14 @@ get_selector_small:
     rol edx,8
     mov dl,[bx+7]
     ror edx,8
+;
+    test al,4
+    jz get_selector_dir_ok
+;
+    neg ecx
+    sub edx,ecx
+
+get_selector_dir_ok:    
     clc
     jmp get_selector_done
 
@@ -301,6 +309,68 @@ create_data32_done:
     pop ds
     retf32
 create_data_sel32       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateDownSelector32
+;
+;           DESCRIPTION:    Create 32-bit expand-down data selector
+;
+;           PARAMETERS:     BX              DESCRIPTOR
+;                           EDX             BASE
+;                           ECX             SIZE
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_down_sel32_name DB 'Create 32-bit Expand Down Selector',0
+
+create_down_sel32       PROC far
+    push ds
+    push ax
+    push bx
+    push ecx
+    push edx
+;
+    test bx,4
+    jz create_down32_gdt
+
+create_down32_ldt:
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_ldt_sel
+    jmp create_down32_dt_ok
+
+create_down32_gdt:
+    mov ax,gdt_sel
+    mov ds,ax
+
+create_down32_dt_ok:
+    mov al,bl
+    and bx,0FFF8h
+;
+    add edx,ecx
+    not ecx
+    shr ecx,12
+    mov [bx],cx
+    mov [bx+2],edx
+    shl al,5
+    or al,96h
+    xchg al,[bx+5]
+    shr ecx,16
+    and cx,0Fh
+    or ch,al
+    or cl,0C0h
+    mov [bx+6],cx
+
+create_down32_done:
+    pop edx
+    pop ecx
+    pop bx
+    pop ax
+    pop ds
+    retf32
+create_down_sel32       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1160,6 +1230,12 @@ init_os_protseg PROC near
     mov edi,OFFSET create_data_sel32_name
     xor cl,cl
     mov ax,create_data_sel32_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET create_down_sel32
+    mov edi,OFFSET create_down_sel32_name
+    xor cl,cl
+    mov ax,create_down_sel32_nr
     RegisterOsGate
 ;
     mov esi,OFFSET create_code_sel16

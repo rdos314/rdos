@@ -62,12 +62,12 @@ EmulateError    Proc near
         pop bx
         pop ebp
         xchg bx,bp
-        mov [bp].vm_bp,bx
+        mov [ebp].trap_ebp,bx
         pop edi
         pop esi
         pop edx
         pop ecx
-        movzx ax, byte ptr [bp+2].vm_err
+        movzx ax,byte ptr [ebp].trap_exc_nr
         ReflectException
         ret
 
@@ -79,7 +79,7 @@ emulate_ret_pm:
         pop bx
         pop ebp
         xchg bx,bp
-        mov [bp].vm_bp,bx
+        mov [ebp].trap_ebp,bx
         pop edi
         pop esi
         pop edx
@@ -90,7 +90,7 @@ emulate_ret_pm:
         pop fs
         pop gs
         xor dx,dx
-        movzx ax, byte ptr [bp+2].vm_err
+        movzx ax,byte ptr [ebp].trap_exc_nr
         ReflectException
         ret
 
@@ -121,17 +121,18 @@ emulate_ret_kernel_stack_ok:
         pop bx
         pop ebp
         xchg bx,bp
-        mov [bp].vm_bp,bx
+        mov [ebp].trap_ebp,bx
         pop edi
         pop esi
         pop edx
         pop ecx
         add sp,24
         pop es
-        pop word ptr [bp].pm_ds
+        pop word ptr [ebp].trap_pds
         pop fs
         pop gs
-    DebugException
+        movzx ax,byte ptr [ebp].trap_exc_nr
+        DebugException
         ret
 EmulateError    Endp
         

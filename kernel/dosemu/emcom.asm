@@ -191,6 +191,14 @@ read_segment_to_linear_check_selector:
     or cx,0FFFh
 
 read_segment_to_linear_small:
+    mov al,[si+5]
+    test al,4
+    jz read_segment_up
+
+read_segment_down:
+    jmp EmulateError
+
+read_segment_up:    
     sub ecx,ebx
     jc EmulateError
 ;
@@ -286,6 +294,14 @@ write_segment_to_linear_check_selector:
     or cx,0FFFh
 
 write_segment_to_linear_small:
+    mov al,[si+5]
+    test al,4
+    jz write_segment_up
+
+write_segment_down:
+    jmp EmulateError
+
+write_segment_up:    
     sub ecx,ebx
     jc EmulateError
 ;

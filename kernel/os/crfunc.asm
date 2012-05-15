@@ -154,6 +154,14 @@ get_selector_small:
     rol edx,8
     mov dl,[ebx+7]
     ror edx,8
+;
+    test al,4
+    jz get_selector_dir_ok
+;
+    neg ecx
+    sub edx,ecx
+
+get_selector_dir_ok:    
     clc
     jmp get_selector_done
 
