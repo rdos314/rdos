@@ -1031,9 +1031,9 @@ emulate_pm:
         push edi
         mov eax,[ebp].trap_ebp
         push eax
-        push bp
-        mov bp,sp
-        sub sp,2
+        push ebp
+        mov ebp,esp
+        sub esp,2
         mov byte ptr [bp].em_sreg,seg_def
         mov byte ptr [bp].em_flags,0
         call GetCsBitness
@@ -1043,8 +1043,8 @@ emulate_pm:
         add bx,bx
         call word ptr cs:[bx].EmulateTab
 ;
-        add sp,2
-        pop bp
+        add esp,2
+        pop ebp
         pop eax
         mov [ebp].trap_ebp,eax
         pop edi
@@ -1072,6 +1072,7 @@ emulate_pm_done:
         retf32
 
 emulate_kernel:
+        int 3
         push gs
         push fs
         push word ptr [ebp].trap_pds
@@ -1089,9 +1090,9 @@ emulate_kernel:
         push edi
         mov eax,[ebp].trap_ebp
         push eax
-        push bp
-        mov bp,sp
-        sub sp,2
+        push ebp
+        mov ebp,esp
+        sub esp,2
         mov byte ptr [bp].em_sreg,seg_def
         mov byte ptr [bp].em_flags,0
         call GetCsBitness
@@ -1101,36 +1102,36 @@ emulate_kernel:
         add bx,bx
         call word ptr cs:[bx].EmulateTab
 ;
-        mov ax,word ptr [bp].reg_esp
-        sub ax,[bp].reg_old_bp
+        mov eax,[bp].reg_esp
+        sub eax,[bp].reg_old_ebp
         je emulate_kernel_stack_ok
         jc emulate_kernel_stack_pushed
 ;
-        mov si,[bp].reg_old_bp
-        mov di,word ptr [bp].reg_esp
+        mov esi,[bp].reg_old_ebp
+        mov edi,[bp].reg_esp
         mov cx,ss
         mov es,cx
-        add si,16
-        add di,16
-        mov cx,si
-        sub cx,sp
-        shr cx,1
-        inc cx
+        add esi,16
+        add edi,16
+        mov ecx,esi
+        sub ecx,esp
+        shr ecx,1
+        inc ecx
         std
-        rep movs word ptr es:[di],es:[si]
+        rep movs word ptr es:[edi],es:[esi]
         cld
-        add sp,ax
-        add bp,ax
-        add word ptr [bp].reg_old_bp,ax
+        add esp,eax
+        add ebp,eax
+        add [ebp].reg_old_ebp,eax
         jmp emulate_kernel_stack_ok
 
 emulate_kernel_stack_pushed:
-        mov ax,word ptr [bp].reg_esp
-        mov [bp].reg_old_bp,ax
+        mov eax,[bp].reg_esp
+        mov [bp].reg_old_ebp,eax
 
 emulate_kernel_stack_ok:
-        add sp,2
-        pop bp
+        add esp,2
+        pop ebp
         pop eax
         mov [ebp].trap_ebp,eax
 ;
@@ -1143,7 +1144,7 @@ emulate_kernel_stack_ok:
         pop dword ptr [ebp].trap_eip
         pop word ptr [ebp].trap_cs
         pop dword ptr [ebp].trap_eflags
-        add sp,6
+        add esp,6
         pop es
         pop word ptr [ebp].trap_pds
         pop fs
@@ -1175,9 +1176,9 @@ emulate_vm:
         push edi
         mov eax,[ebp].trap_ebp
         push eax
-        push bp
-        mov bp,sp
-        sub sp,2
+        push ebp
+        mov ebp,esp
+        sub esp,2
 ;
         mov byte ptr [bp].em_sreg,seg_def
         mov byte ptr [bp].em_flags,0
@@ -1188,8 +1189,8 @@ emulate_vm:
         add bx,bx
         call word ptr cs:[bx].EmulateTab
 ;
-        add sp,2
-        pop bp
+        add esp,2
+        pop ebp
         pop eax
         mov [ebp].trap_ebp,eax
         pop edi
@@ -1199,12 +1200,12 @@ emulate_vm:
         pop dword ptr [ebp].trap_ebx
         pop dword ptr [ebp].trap_eax
         pop word ptr [ebp].trap_eip
-        add sp,2
+        add esp,2
         pop word ptr [ebp].trap_cs
         pop word ptr [ebp].trap_eflags
-        add sp,2
+        add esp,2
         pop word ptr [ebp].trap_esp
-        add sp,2
+        add esp,2
         pop word ptr [ebp].trap_ss
         pop word ptr [ebp].trap_es
         pop word ptr [ebp].trap_ds

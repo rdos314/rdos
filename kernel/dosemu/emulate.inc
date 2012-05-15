@@ -60,7 +60,7 @@ seg_def = 7
 
 em_struc	STRUC
 
-reg_old_bp	DW ?
+reg_old_ebp	DD ?
 reg_ebp		DD ?
 reg_edi		DD ?
 reg_esi		DD ?

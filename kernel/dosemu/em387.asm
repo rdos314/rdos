@@ -97,8 +97,8 @@ SaveFp  MACRO
         mov word ptr fs:p_math_prev_op,dx
         and al,7
         mov fs:p_math_op,al
-        mov bx,[bp].reg_old_bp
-        mov eax,ss:[bx].vm_eip
+        mov ebx,[bp].reg_old_ebp
+        mov eax,ss:[ebx].trap_eip
         mov fs:p_math_eip,eax
         mov ax,[bp].reg_cs
         mov fs:p_math_cs,ax

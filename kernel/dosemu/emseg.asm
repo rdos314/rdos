@@ -58,11 +58,11 @@ EmulateError    Proc near
         test byte ptr [bp+2].reg_eflags,2
         jz emulate_ret_pm
 ;
-        mov sp,bp
-        pop bx
+        mov esp,ebp
+        pop ebx
         pop ebp
-        xchg bx,bp
-        mov [ebp].trap_ebp,bx
+        xchg ebx,ebp
+        mov [ebp].trap_ebp,ebx
         pop edi
         pop esi
         pop edx
@@ -75,18 +75,18 @@ emulate_ret_pm:
         test byte ptr [bp].reg_cs,3
         jz emulate_ret_kernel
 ;
-        mov sp,bp
-        pop bx
+        mov esp,ebp
+        pop ebx
         pop ebp
-        xchg bx,bp
-        mov [ebp].trap_ebp,bx
+        xchg ebx,ebp
+        mov [ebp].trap_ebp,ebx
         pop edi
         pop esi
         pop edx
         pop ecx
-        add sp,24
+        add esp,24
         pop es
-        add sp,2
+        add esp,2
         pop fs
         pop gs
         xor dx,dx
@@ -95,38 +95,38 @@ emulate_ret_pm:
         ret
 
 emulate_ret_kernel:
-        mov ax,[bp].reg_old_bp
-        sub ax,word ptr [bp].reg_esp
+        mov eax,[bp].reg_old_ebp
+        sub eax,[bp].reg_esp
         je emulate_ret_kernel_stack_ok
         jc emulate_ret_kernel_stack_ok
 ;
-        mov si,word ptr [bp].reg_esp
-        mov di,[bp].reg_old_bp
+        mov esi,[bp].reg_esp
+        mov edi,[bp].reg_old_ebp
         mov cx,ss
         mov es,cx
-        add si,16
-        add di,16
-        mov cx,si
-        sub cx,sp
-        shr cx,1
-        inc cx
+        add esi,16
+        add edi,16
+        mov ecx,esi
+        sub ecx,esp
+        shr ecx,1
+        inc ecx
         std
-        rep movs word ptr es:[di],es:[si]
+        rep movs word ptr es:[edi],es:[esi]
         cld
-        sub sp,ax
-        sub bp,ax
+        sub esp,eax
+        sub ebp,eax
 
 emulate_ret_kernel_stack_ok:
-        mov sp,bp
-        pop bx
+        mov esp,ebp
+        pop ebx
         pop ebp
-        xchg bx,bp
-        mov [ebp].trap_ebp,bx
+        xchg ebx,ebp
+        mov [ebp].trap_ebp,ebx
         pop edi
         pop esi
         pop edx
         pop ecx
-        add sp,24
+        add esp,24
         pop es
         pop word ptr [ebp].trap_pds
         pop fs

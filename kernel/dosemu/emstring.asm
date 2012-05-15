@@ -379,8 +379,8 @@ RepLodsbDo:
         ret
 
 RepLodsbMore:
-        mov bx,[bp].reg_old_bp
-        mov eax,ss:[bx].vm_eip
+        mov ebx,[bp].reg_old_ebp
+        mov eax,ss:[ebx].trap_eip
         mov [bp].reg_eip,eax
         ret
 EmLodsb Endp
@@ -443,8 +443,8 @@ RepLodsd:
         ret
 
 RepLodswMore:
-        mov bx,[bp].reg_old_bp
-        mov eax,ss:[bx].vm_eip
+        mov ebx,[bp].reg_old_ebp
+        mov eax,ss:[ebx].trap_eip
         mov [bp].reg_eip,eax
         ret
 EmLodsw Endp
@@ -485,8 +485,8 @@ RepStosbDo:
         ret
 
 RepStosbMore:
-        mov bx,[bp].reg_old_bp
-        mov eax,ss:[bx].vm_eip
+        mov ebx,[bp].reg_old_ebp
+        mov eax,ss:[ebx].trap_eip
         mov [bp].reg_eip,eax
         ret
 EmStosb Endp
@@ -549,8 +549,8 @@ RepStosd:
         ret
 
 RepStoswMore:
-        mov bx,[bp].reg_old_bp
-        mov eax,ss:[bx].vm_eip
+        mov ebx,[bp].reg_old_ebp
+        mov eax,ss:[ebx].trap_eip
         mov [bp].reg_eip,eax
         ret
 EmStosw Endp
@@ -599,8 +599,8 @@ RepMovsbDo:
         ret
 
 RepMovsbMore:
-        mov bx,[bp].reg_old_bp
-        mov eax,ss:[bx].vm_eip
+        mov ebx,[bp].reg_old_ebp
+        mov eax,ss:[ebx].trap_eip
         mov [bp].reg_eip,eax
         ret
 EmMovsb Endp
@@ -679,8 +679,8 @@ RepMovsd:
         ret
 
 RepMovswMore:
-        mov bx,[bp].reg_old_bp
-        mov eax,ss:[bx].vm_eip
+        mov ebx,[bp].reg_old_ebp
+        mov eax,ss:[ebx].trap_eip
         mov [bp].reg_eip,eax
         ret
 EmMovsw Endp
@@ -734,8 +734,8 @@ RepScasbNotDone:
         ret
 
 RepScasbMore:
-        mov bx,[bp].reg_old_bp
-        mov eax,ss:[bx].vm_eip
+        mov ebx,[bp].reg_old_ebp
+        mov eax,ss:[ebx].trap_eip
         mov [bp].reg_eip,eax
         ret
 EmScasb Endp
@@ -823,8 +823,8 @@ RepScaswNotDone:
         ret
 
 RepScaswMore:
-        mov bx,[bp].reg_old_bp
-        mov eax,ss:[bx].vm_eip
+        mov ebx,[bp].reg_old_ebp
+        mov eax,ss:[ebx].trap_eip
         mov [bp].reg_eip,eax
         ret
 EmScasw Endp
@@ -888,8 +888,8 @@ RepCmpsbNotDone:
         ret
 
 RepCmpsbMore:
-        mov bx,[bp].reg_old_bp
-        mov eax,ss:[bx].vm_eip
+        mov ebx,[bp].reg_old_ebp
+        mov eax,ss:[ebx].trap_eip
         mov [bp].reg_eip,eax
         ret
 EmCmpsb Endp
@@ -997,8 +997,8 @@ RepCmpswNotDone:
         ret
 
 RepCmpswMore:
-        mov bx,[bp].reg_old_bp
-        mov eax,ss:[bx].vm_eip
+        mov ebx,[bp].reg_old_ebp
+        mov eax,ss:[ebx].trap_eip
         mov [bp].reg_eip,eax
         ret
 EmCmpsw Endp
@@ -1045,8 +1045,8 @@ RepInsbDo:
         ret
 
 RepInsbMore:
-        mov bx,[bp].reg_old_bp
-        mov eax,ss:[bx].vm_eip
+        mov ebx,[bp].reg_old_ebp
+        mov eax,ss:[ebx].trap_eip
         mov [bp].reg_eip,eax
         ret
 EmInsb  Endp
@@ -1121,8 +1121,8 @@ RepInsd:
         ret
 
 RepInswMore:
-        mov bx,[bp].reg_old_bp
-        mov eax,ss:[bx].vm_eip
+        mov ebx,[bp].reg_old_ebp
+        mov eax,ss:[ebx].trap_eip
         mov [bp].reg_eip,eax
         ret
 EmInsw  Endp
@@ -1165,8 +1165,8 @@ RepOutsbDo:
         ret
 
 RepOutsbMore:
-        mov bx,[bp].reg_old_bp
-        mov eax,ss:[bx].vm_eip
+        mov ebx,[bp].reg_old_ebp
+        mov eax,ss:[ebx].trap_eip
         mov [bp].reg_eip,eax
         ret
 EmOutsb Endp
@@ -1233,8 +1233,8 @@ RepOutsd:
         ret
 
 RepOutswMore:
-        mov bx,[bp].reg_old_bp
-        mov eax,ss:[bx].vm_eip
+        mov ebx,[bp].reg_old_ebp
+        mov eax,ss:[ebx].trap_eip
         mov [bp].reg_eip,eax
         ret
 EmOutsw Endp
