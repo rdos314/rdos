@@ -1006,7 +1006,7 @@ int GotoIniSection(int Handle, char *SectionName)
             RdosFreeMem(sel);
         }
 
-        sel = RdosAllocateSmallLocalSelector(size);        
+        sel = RdosAllocateSmallLocalSelector(size + 1);        
         IniHandle->SectionName = RdosSelectorToPointer(sel);
 
         strcpy(IniHandle->SectionName, SectionName);

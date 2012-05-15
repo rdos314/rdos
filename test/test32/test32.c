@@ -25,12 +25,12 @@ void main()
     x = sin(x) * y;
 
     handle = RdosOpenSysIni();
-    ok = RdosGotoIniSection(handle, "R1");
-//    ok = RdosRemoveIniSection(handle, "R1");
- //   if (ok)
- //       ok = RdosDeleteIni(handle, "Seq");
- //   if (ok)
- //       ok = RdosWriteIni(handle, "Seq", "99");
+    RdosGotoIniSection(handle, "R2");
+//    ok = RdosRemoveIniSection(handle, "R2");
+//    if (ok)
+//        ok = RdosDeleteIni(handle, "Seq");
+//    if (ok)
+        ok = RdosWriteIni(handle, "Seq", "99");
     if (ok)
         ok = RdosReadIni(handle, "Seq", test_str, 100);
     RdosCloseIni(handle);
