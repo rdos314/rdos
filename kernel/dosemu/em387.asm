@@ -97,10 +97,10 @@ SaveFp  MACRO
         mov word ptr fs:p_math_prev_op,dx
         and al,7
         mov fs:p_math_op,al
-        mov ebx,[bp].reg_old_ebp
+        mov ebx,[ebp].reg_old_ebp
         mov eax,ss:[ebx].trap_eip
         mov fs:p_math_eip,eax
-        mov ax,[bp].reg_cs
+        mov ax,[ebp].reg_cs
         mov fs:p_math_cs,ax
         mov fs:p_math_data_offs,0
         mov fs:p_math_data_sel,0
@@ -1191,7 +1191,7 @@ EmFstsw Endp
 
 EmFstswAx       Proc near
         mov ax,fs:p_math_status
-        mov word ptr [bp].reg_eax,ax
+        mov word ptr [ebp].reg_eax,ax
         ret
 EmFstswAx       Endp
         
@@ -1519,18 +1519,18 @@ EmFldenv        Proc near
         and bh,7
         shl bh,1
         or bl,bh
-        test byte ptr [bp].em_flags,a32
+        test byte ptr [ebp].em_flags,a32
         jz EmFldenvA16
         or bl,40h       
 EmFldenvA16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
 ;
-        test byte ptr [bp].reg_eflags+2,2
+        test byte ptr [ebp].reg_eflags+2,2
         jnz EmFlenvRm
 
 EmFldenvPm:
-        test byte ptr [bp].em_flags,d32
+        test byte ptr [ebp].em_flags,d32
         jnz EmFldenvPm32
 
 EmFldenvPm16:
@@ -1542,7 +1542,7 @@ EmFldenvPm32:
         jmp EmFldenvDone
 
 EmFlenvRm:
-        test byte ptr [bp].em_flags,d32
+        test byte ptr [ebp].em_flags,d32
         jnz EmulateError
 
 EmFldenvRm16:
@@ -1574,18 +1574,18 @@ EmFstenv        Proc near
         and bh,7
         shl bh,1
         or bl,bh
-        test byte ptr [bp].em_flags,a32
+        test byte ptr [ebp].em_flags,a32
         jz EmFstenvA16
         or bl,40h       
 EmFstenvA16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
 ;
-        test byte ptr [bp].reg_eflags+2,2
+        test byte ptr [ebp].reg_eflags+2,2
         jnz EmFstenvRm
 
 EmFstenvPm:
-        test byte ptr [bp].em_flags,d32
+        test byte ptr [ebp].em_flags,d32
         jnz EmFstenvPm32
 
 EmFstenvPm16:
@@ -1597,7 +1597,7 @@ EmFstenvPm32:
         jmp EmFstenvDone
 
 EmFstenvRm:
-        test byte ptr [bp].em_flags,d32
+        test byte ptr [ebp].em_flags,d32
         jnz EmulateError
 
 EmFstenvRm16:
@@ -1626,18 +1626,18 @@ EmFRstor        Proc near
         and bh,7
         shl bh,1
         or bl,bh
-        test byte ptr [bp].em_flags,a32
+        test byte ptr [ebp].em_flags,a32
         jz EmFrstorA16
         or bl,40h       
 EmFrstorA16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
 ;
-        test byte ptr [bp].reg_eflags+2,2
+        test byte ptr [ebp].reg_eflags+2,2
         jnz EmFrstorRm
 
 EmFrstorPm:
-        test byte ptr [bp].em_flags,d32
+        test byte ptr [ebp].em_flags,d32
         jnz EmFrstorPm32
 
 EmFrstorPm16:
@@ -1649,7 +1649,7 @@ EmFrstorPm32:
         jmp EmFrstorSt
 
 EmFrstorRm:
-        test byte ptr [bp].em_flags,d32
+        test byte ptr [ebp].em_flags,d32
         jnz EmulateError
 
 EmFrstorRm16:
@@ -1695,18 +1695,18 @@ EmFSave Proc near
         and bh,7
         shl bh,1
         or bl,bh
-        test byte ptr [bp].em_flags,a32
+        test byte ptr [ebp].em_flags,a32
         jz EmFsaveA16
         or bl,40h       
 EmFsaveA16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
 ;
-        test byte ptr [bp].reg_eflags+2,2
+        test byte ptr [ebp].reg_eflags+2,2
         jnz EmFsaveRm
 
 EmFsavePm:
-        test byte ptr [bp].em_flags,d32
+        test byte ptr [ebp].em_flags,d32
         jnz EmFsavePm32
 
 EmFsavePm16:
@@ -1718,7 +1718,7 @@ EmFsavePm32:
         jmp EmFsaveSt
 
 EmFsaveRm:
-        test byte ptr [bp].em_flags,d32
+        test byte ptr [ebp].em_flags,d32
         jnz EmulateError
 
 EmFsaveRm16:

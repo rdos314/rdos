@@ -55,8 +55,8 @@ code    SEGMENT byte public use16 'CODE'
     public GetCsBitness
     
 GetCsBitness    PROC near
-    mov bx,[bp].reg_cs
-    test byte ptr [bp+2].reg_eflags,2
+    mov bx,[ebp].reg_cs
+    test byte ptr [ebp+2].reg_eflags,2
     clc
     jnz get_cs_bitness_done
 
@@ -79,7 +79,7 @@ get_cs_bitness_test:
     mov bl,[bx+6]
     test bl,40h
     jz get_cs_bitness_done
-    or byte ptr [bp].em_flags,cs32 OR d32 OR a32
+    or byte ptr [ebp].em_flags,cs32 OR d32 OR a32
 
 get_cs_bitness_done:
     ret     
@@ -97,8 +97,8 @@ GetCsBitness    ENDP
     public GetSsBitness
     
 GetSsBitness    PROC near
-    mov bx,[bp].reg_ss
-    test byte ptr [bp+2].reg_eflags,2
+    mov bx,[ebp].reg_ss
+    test byte ptr [ebp+2].reg_eflags,2
     clc
     jnz get_ss_bitness_done
 
@@ -121,7 +121,7 @@ get_ss_bitness_test:
     mov bl,[bx+6]
     test bl,40h
     jz get_ss_bitness_done
-    or byte ptr [bp].em_flags,ss32
+    or byte ptr [ebp].em_flags,ss32
 
 get_ss_bitness_done:
     ret     
@@ -144,8 +144,9 @@ GetSsBitness    ENDP
     public ReadSegmentToLinear
 
 ReadSegmentToLinear     PROC near
-    mov si,[bp+si]
-    test byte ptr [bp+2].reg_eflags,2
+    movzx esi,si
+    mov si,[ebp+esi]
+    test byte ptr [ebp+2].reg_eflags,2
     jnz read_segment_to_linear_vm
 
 read_segment_to_linear_pm:
@@ -174,7 +175,7 @@ read_segment_to_linear_check_selector:
 ;
     shr al,5
     and al,3
-    mov ah,byte ptr [bp].reg_cs
+    mov ah,byte ptr [ebp].reg_cs
     and ah,3
     cmp al,ah
     jc EmulateError
@@ -241,8 +242,9 @@ ReadSegmentToLinear     ENDP
     public WriteSegmentToLinear
 
 WriteSegmentToLinear    PROC near
-    mov si,[bp+si]
-    test byte ptr [bp+2].reg_eflags,2
+    movzx esi,si
+    mov si,[ebp+esi]
+    test byte ptr [ebp+2].reg_eflags,2
     jnz write_segment_to_linear_vm
 
 write_segment_to_linear_pm:
@@ -277,7 +279,7 @@ write_segment_to_linear_check_selector:
 ;
     shr al,5
     and al,3
-    mov ah,byte ptr [bp].reg_cs
+    mov ah,byte ptr [ebp].reg_cs
     and ah,3
     cmp al,ah
     jc EmulateError
@@ -363,7 +365,7 @@ check_read_page_loop:
     test dl,4
     jnz check_read_page_check_dir
 ;
-    mov dl,byte ptr [bp].reg_cs
+    mov dl,byte ptr [ebp].reg_cs
     and dl,3
     cmp dl,3
     je EmulateError
@@ -378,7 +380,7 @@ check_read_page_check_dir:
     test dl,4
     jnz check_read_page_next
 ;
-    mov dl,byte ptr [bp].reg_cs
+    mov dl,byte ptr [ebp].reg_cs
     and dl,3
     cmp dl,3
     je EmulateError
@@ -453,7 +455,7 @@ check_write_page_loop:
     test dl,4
     jnz check_write_page_check_dir
 ;
-    mov dl,byte ptr [bp].reg_cs
+    mov dl,byte ptr [ebp].reg_cs
     and dl,3
     cmp dl,3
     je EmulateError
@@ -472,7 +474,7 @@ check_write_page_check_dir:
     test dl,4
     jnz check_write_page_next
 ;
-    mov dl,byte ptr [bp].reg_cs
+    mov dl,byte ptr [ebp].reg_cs
     and dl,3
     cmp dl,3
     je EmulateError
@@ -1404,10 +1406,10 @@ WriteTbyte      Endp
     public PushWord
 
 PushWord    Proc near
-    test byte ptr [bp].reg_eflags+2,2
+    test byte ptr [ebp].reg_eflags+2,2
     jnz push_word_normal
 ;
-    test byte ptr [bp].reg_cs,3
+    test byte ptr [ebp].reg_cs,3
     jnz push_word_normal
 
 push_word_kernel:
@@ -1420,7 +1422,7 @@ push_word_kernel:
     mov si,sp
     sub sp,2
     mov     di,sp
-    mov cx,word ptr [bp].reg_esp
+    mov cx,word ptr [ebp].reg_esp
     add cx,18
     sub cx,si
     shr cx,1
@@ -1429,28 +1431,28 @@ push_word_kernel:
     pop di
     pop si
     pop cx
-    sub bp,2
-    sub word ptr [bp].reg_esp,2
+    sub ebp,2
+    sub word ptr [ebp].reg_esp,2
     ret
 
 push_word_normal:
     push si
     push ebx
     mov si,OFFSET reg_ss
-    test byte ptr [bp].em_flags,ss32
+    test byte ptr [ebp].em_flags,ss32
     jz push_word16
 
 push_word32:
-    sub dword ptr [bp].reg_esp,2
-    mov ebx,[bp].reg_esp
+    sub dword ptr [ebp].reg_esp,2
+    mov ebx,[ebp].reg_esp
     call WriteWord
     pop ebx
     pop si
     ret
 
 push_word16:
-    sub word ptr [bp].reg_esp,2
-    movzx ebx,word ptr [bp].reg_esp
+    sub word ptr [ebp].reg_esp,2
+    movzx ebx,word ptr [ebp].reg_esp
     call WriteWord
     pop ebx
     pop si
@@ -1471,9 +1473,9 @@ PushWord    Endp
     public PushDword
 
 PushDword       Proc near
-    test byte ptr [bp].reg_eflags+2,2
+    test byte ptr [ebp].reg_eflags+2,2
     jnz push_dword_normal
-    test byte ptr [bp].reg_cs,3
+    test byte ptr [ebp].reg_cs,3
     jnz push_dword_normal
 
 push_dword_kernel:
@@ -1486,7 +1488,7 @@ push_dword_kernel:
     mov si,sp
     sub sp,4
     mov     di,sp
-    mov cx,word ptr [bp].reg_esp
+    mov cx,word ptr [ebp].reg_esp
     add cx,18
     sub cx,si
     shr cx,1
@@ -1495,27 +1497,27 @@ push_dword_kernel:
     pop di
     pop si
     pop cx
-    sub bp,4
-    sub word ptr [bp].reg_esp,4
+    sub ebp,4
+    sub word ptr [ebp].reg_esp,4
 
 push_dword_normal:
     push si
     push ebx
     mov si,OFFSET reg_ss
-    test byte ptr [bp].em_flags,ss32
+    test byte ptr [ebp].em_flags,ss32
     jz push_dword16
 
 push_dword32:
-    sub dword ptr [bp].reg_esp,4
-    mov ebx,[bp].reg_esp
+    sub dword ptr [ebp].reg_esp,4
+    mov ebx,[ebp].reg_esp
     call WriteDword
     pop ebx
     pop si
     ret
 
 push_dword16:
-    sub word ptr [bp].reg_esp,4
-    movzx ebx,word ptr [bp].reg_esp
+    sub word ptr [ebp].reg_esp,4
+    movzx ebx,word ptr [ebp].reg_esp
     call WriteDword
     pop ebx
     pop si
@@ -1536,38 +1538,38 @@ PushDword       Endp
     public PopWord
 
 PopWord Proc near
-    test byte ptr [bp].reg_eflags+2,2
+    test byte ptr [ebp].reg_eflags+2,2
     jnz pop_word_normal
-    test byte ptr [bp].reg_cs,3
+    test byte ptr [ebp].reg_cs,3
     jnz pop_word_normal
 
 pop_word_kernel:
-    push bx
-    mov bx,word ptr [bp].reg_esp
-    mov ax,ss:[bx+18]
-    add word ptr [bp].reg_esp,2
-    pop bx
+    push ebx
+    mov ebx,[ebp].reg_esp
+    mov ax,ss:[ebx+18]
+    add [ebp].reg_esp,2
+    pop ebx
     ret
 
 pop_word_normal:
     push si
     push ebx
     mov si,OFFSET reg_ss
-    test byte ptr [bp].em_flags,ss32
+    test byte ptr [ebp].em_flags,ss32
     jz pop_word16
 
 pop_word32:
-    mov ebx,[bp].reg_esp
+    mov ebx,[ebp].reg_esp
     call ReadWord
-    add dword ptr [bp].reg_esp,2
+    add dword ptr [ebp].reg_esp,2
     pop ebx
     pop si
     ret
 
 pop_word16:
-    movzx ebx,word ptr [bp].reg_esp
+    movzx ebx,word ptr [ebp].reg_esp
     call ReadWord
-    add word ptr [bp].reg_esp,2
+    add word ptr [ebp].reg_esp,2
     pop ebx
     pop si
     ret
@@ -1587,38 +1589,38 @@ PopWord Endp
     public PopDword
 
 PopDword    Proc near
-    test byte ptr [bp].reg_eflags+2,2
+    test byte ptr [ebp].reg_eflags+2,2
     jnz pop_dword_normal
-    test byte ptr [bp].reg_cs,3
+    test byte ptr [ebp].reg_cs,3
     jnz pop_dword_normal
 
 pop_dword_kernel:
-    push bx
-    mov bx,word ptr [bp].reg_esp
-    mov eax,ss:[bx+18]
-    add word ptr [bp].reg_esp,4
-    pop bx
+    push ebx
+    mov ebx,[ebp].reg_esp
+    mov eax,ss:[ebx+18]
+    add [ebp].reg_esp,4
+    pop ebx
     ret
 
 pop_dword_normal:
     push si
     push ebx
     mov si,OFFSET reg_ss
-    test byte ptr [bp].em_flags,ss32
+    test byte ptr [ebp].em_flags,ss32
     jz pop_dword16
 
 pop_dword32:
-    mov ebx,[bp].reg_esp
+    mov ebx,[ebp].reg_esp
     call ReadDword
-    add dword ptr [bp].reg_esp,4
+    add dword ptr [ebp].reg_esp,4
     pop ebx
     pop si
     ret
 
 pop_dword16:
-    movzx ebx,word ptr [bp].reg_esp
+    movzx ebx,word ptr [ebp].reg_esp
     call ReadDword
-    add word ptr [bp].reg_esp,4
+    add word ptr [ebp].reg_esp,4
     pop ebx
     pop si
     ret
@@ -1638,25 +1640,25 @@ PopDword    Endp
     public AddToStack
 
 AddToStack      Proc near
-    test byte ptr [bp].reg_eflags+2,2
+    test byte ptr [ebp].reg_eflags+2,2
     jnz add_to_stack_normal
-    test byte ptr [bp].reg_cs,3
+    test byte ptr [ebp].reg_cs,3
     jnz add_to_stack_normal
 
 add_to_stack_kernel:
-    add word ptr [bp].reg_esp,ax
+    add word ptr [ebp].reg_esp,ax
     ret
 
 add_to_stack_normal:
-    test byte ptr [bp].em_flags,ss32
+    test byte ptr [ebp].em_flags,ss32
     jz add_to_stack16
 
 add_to_stack32:
-    add dword ptr [bp].reg_esp,eax
+    add dword ptr [ebp].reg_esp,eax
     ret
 
 add_to_stack16:
-    add word ptr [bp].reg_esp,ax
+    add word ptr [ebp].reg_esp,ax
     ret
 AddToStack      Endp
 
@@ -1674,10 +1676,10 @@ AddToStack      Endp
     public SubFromStack
 
 SubFromStack    Proc near
-    test byte ptr [bp].reg_eflags+2,2
+    test byte ptr [ebp].reg_eflags+2,2
     jnz sub_from_stack_normal
 ;
-    test byte ptr [bp].reg_cs,3
+    test byte ptr [ebp].reg_cs,3
     jnz sub_from_stack_normal
 
 sub_from_stack_kernel:
@@ -1687,31 +1689,31 @@ sub_from_stack_kernel:
     push di
     mov cx,ss
     mov es,cx
-    mov si,sp
-    sub sp,ax
-    mov     di,sp
-    mov cx,word ptr [bp].reg_esp
-    add cx,18
-    sub cx,si
-    shr cx,1
-    rep movs word ptr es:[di],es:[si]
-    pop di
-    pop si
-    pop cx
-    sub bp,ax
-    sub word ptr [bp].reg_esp,ax
+    mov esi,esp
+    sub esp,eax
+    mov di,sp
+    mov ecx,[ebp].reg_esp
+    add ecx,18
+    sub ecx,esi
+    shr ecx,1
+    rep movs word ptr es:[edi],es:[esi]
+    pop edi
+    pop esi
+    pop ecx
+    sub ebp,eax
+    sub [ebp].reg_esp,eax
     ret
 
 sub_from_stack_normal:
-    test byte ptr [bp].em_flags,ss32
+    test byte ptr [ebp].em_flags,ss32
     jz sub_from_stack16
 
 sub_from_stack32:
-    sub dword ptr [bp].reg_esp,eax
+    sub dword ptr [ebp].reg_esp,eax
     ret
 
 sub_from_stack16:
-    sub word ptr [bp].reg_esp,ax
+    sub word ptr [ebp].reg_esp,ax
     ret
 SubFromStack    Endp
 
@@ -1730,25 +1732,25 @@ SubFromStack    Endp
 
 ReadCodeByte    Proc near
     mov si,OFFSET reg_cs
-    test word ptr [bp].em_flags,cs32
+    test word ptr [ebp].em_flags,cs32
     jz read_code_byte16
 
 read_code_byte32:
-    mov ebx,[bp].reg_eip
+    mov ebx,[ebp].reg_eip
     push ebx
     call ReadByte
     pop ebx
     inc ebx
-    mov [bp].reg_eip,ebx
+    mov [ebp].reg_eip,ebx
     ret
 
 read_code_byte16:
-    movzx ebx,word ptr [bp].reg_eip
+    movzx ebx,word ptr [ebp].reg_eip
     push bx
     call ReadByte
     pop bx
     inc bx
-    mov word ptr [bp].reg_eip,bx
+    mov word ptr [ebp].reg_eip,bx
     ret
 ReadCodeByte    Endp
 
@@ -1767,25 +1769,25 @@ ReadCodeByte    Endp
 
 ReadCodeWord    Proc near
     mov si,OFFSET reg_cs
-    test word ptr [bp].em_flags,cs32
+    test word ptr [ebp].em_flags,cs32
     jz read_code_word16
 
 read_code_word32:
-    mov ebx,[bp].reg_eip
+    mov ebx,[ebp].reg_eip
     push ebx
     call ReadWord
     pop ebx
     add ebx,2
-    mov [bp].reg_eip,ebx
+    mov [ebp].reg_eip,ebx
     ret
 
 read_code_word16:
-    movzx ebx,word ptr [bp].reg_eip
+    movzx ebx,word ptr [ebp].reg_eip
     push bx
     call ReadWord
     pop bx
     add bx,2
-    mov word ptr [bp].reg_eip,bx
+    mov word ptr [ebp].reg_eip,bx
     ret
 ReadCodeWord    Endp
 
@@ -1804,25 +1806,25 @@ ReadCodeWord    Endp
 
 ReadCodeDword   Proc near
     mov si,OFFSET reg_cs
-    test word ptr [bp].em_flags,cs32
+    test word ptr [ebp].em_flags,cs32
     jz read_code_dword16
 
 read_code_dword32:
-    mov ebx,[bp].reg_eip
+    mov ebx,[ebp].reg_eip
     push ebx
     call ReadDword
     pop ebx
     add ebx,4
-    mov [bp].reg_eip,ebx
+    mov [ebp].reg_eip,ebx
     ret
 
 read_code_dword16:
-    movzx ebx,word ptr [bp].reg_eip
+    movzx ebx,word ptr [ebp].reg_eip
     push bx
     call ReadDword
     pop bx
     add bx,4
-    mov word ptr [bp].reg_eip,bx
+    mov word ptr [ebp].reg_eip,bx
     ret
 ReadCodeDword   Endp
 
@@ -1841,25 +1843,25 @@ ReadCodeDword   Endp
 
 ReadCodeFword   Proc near
     mov si,OFFSET reg_cs
-    test word ptr [bp].em_flags,cs32
+    test word ptr [ebp].em_flags,cs32
     jz read_code_fword16
 
 read_code_fword32:
-    mov ebx,[bp].reg_eip
+    mov ebx,[ebp].reg_eip
     push ebx
     call ReadFword
     pop ebx
     add ebx,6
-    mov [bp].reg_eip,ebx
+    mov [ebp].reg_eip,ebx
     ret
 
 read_code_fword16:
-    movzx ebx,word ptr [bp].reg_eip
+    movzx ebx,word ptr [ebp].reg_eip
     push bx
     call ReadFword
     pop bx
     add bx,6
-    mov word ptr [bp].reg_eip,bx
+    mov word ptr [ebp].reg_eip,bx
     ret
 ReadCodeFword   Endp
 
@@ -1870,7 +1872,7 @@ ReadCodeFword   Endp
 ;
 ;           description:    read a byte from I/O port
 ;
-;           PARAMETERS:         SS:BP       CPU
+;           PARAMETERS:         SS:ebp       CPU
 ;                           DX              IO PORT
 ;
 ;           RETURNS:        AL              DATA
@@ -1917,7 +1919,7 @@ InByte  Endp
 ;
 ;           description:    read a word from I/O port
 ;
-;           PARAMETERS:         SS:BP       CPU
+;           PARAMETERS:         SS:ebp       CPU
 ;                           DX              IO PORT
 ;
 ;           RETURNS:        AX              DATA
@@ -1997,7 +1999,7 @@ InWord  Endp
 ;
 ;           description:    read a dword from I/O port
 ;
-;           PARAMETERS:         SS:BP       CPU
+;           PARAMETERS:         SS:ebp       CPU
 ;                           DX              IO PORT
 ;
 ;           RETURNS:        EAX             DATA
@@ -2121,7 +2123,7 @@ InDword Endp
 ;
 ;           description:    write a byte to I/O port
 ;
-;           PARAMETERS:         SS:BP       CPU
+;           PARAMETERS:         SS:ebp       CPU
 ;                           DX              IO PORT
 ;                           AL              DATA
 ;
@@ -2167,7 +2169,7 @@ OutByte Endp
 ;
 ;           description:    write a word to I/O port
 ;
-;           PARAMETERS:         SS:BP       CPU
+;           PARAMETERS:         SS:ebp       CPU
 ;                           DX              IO PORT
 ;                           AX              DATA
 ;
@@ -2241,7 +2243,7 @@ OutWord Endp
 ;
 ;           description:    write a dword to I/O port
 ;
-;           PARAMETERS:         SS:BP       CPU
+;           PARAMETERS:         SS:ebp       CPU
 ;                           DX              IO PORT
 ;                           EAX             DATA
 ;

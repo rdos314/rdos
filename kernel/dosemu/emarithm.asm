@@ -47,11 +47,11 @@ Em&op&ByteRegMem	Proc near
 	call LoadByteMemReg
 	mov bl,al
 	pop ax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op al,bl
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	pop bx
 	call SaveByteReg
 	ret
@@ -63,7 +63,7 @@ WordRegMem	Macro op
 	public Em&op&WordRegMem
 
 Em&op&WordRegMem	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz Em&op&DwordRegMem
 ;
 	call ReadCodeByte
@@ -76,11 +76,11 @@ Em&op&WordRegMem	Proc near
 	call LoadWordMemReg
 	mov dx,ax
 	pop bx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op bx,dx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	mov ax,bx
 	pop bx
 	call SaveWordReg
@@ -98,11 +98,11 @@ Em&op&DwordRegMem	Proc near
 	call LoadDwordMemReg
 	mov edx,eax
 	pop ebx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op ebx,edx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	mov eax,ebx
 	pop bx
 	call SaveDwordReg
@@ -129,7 +129,7 @@ Em&op&ByteMemReg	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&ByteMemReg16
 	or bl,40h	
 Em&op&ByteMemReg16:
@@ -145,11 +145,11 @@ Em&op&ByteMemReg16:
 	call LoadByteReg
 	mov bl,al
 	pop ax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op al,bl
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	pop ebx
 	pop si
 	call WriteByte
@@ -159,21 +159,21 @@ Em&op&ByteMemRegReg:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].ByteRegTab
-	mov al,[bp+si]
+	movzx esi,word ptr cs:[si].ByteRegTab
+	mov al,[ebp+esi]
 	pop bx
-	push si
+	push esi
 	push ax
 	call LoadByteReg
 	mov bl,al
 	pop ax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op al,bl
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	pop si
-	mov [bp+si],al
+	mov byte ptr [ebp].reg_eflags,ah
+	pop esi
+	mov [ebp+esi],al
 	ret
 Em&op&ByteMemReg	Endp
 			Endm
@@ -183,7 +183,7 @@ WordMemReg	Macro op
 	public Em&op&WordMemReg
 
 Em&op&WordMemReg	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz Em&op&DwordMemReg
 ;
 	call ReadCodeByte
@@ -198,7 +198,7 @@ Em&op&WordMemReg	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&WordMemReg16
 	or bl,40h	
 Em&op&WordMemReg16:
@@ -214,11 +214,11 @@ Em&op&WordMemReg16:
 	call LoadWordReg
 	mov dx,ax
 	pop bx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op bx,dx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	mov ax,bx
 	pop ebx
 	pop si
@@ -229,21 +229,21 @@ Em&op&WordMemRegReg:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].WordRegTab
-	mov ax,[bp+si]
+	movzx esi,word ptr cs:[si].WordRegTab
+	mov ax,[ebp+esi]
 	pop bx
-	push si
+	push esi
 	push ax
 	call LoadWordReg
 	mov dx,ax
 	pop bx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op bx,dx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	pop si
-	mov [bp+si],bx
+	mov byte ptr [ebp].reg_eflags,ah
+	pop esi
+	mov [ebp+esi],bx
 	ret
 Em&op&WordMemReg	Endp
 
@@ -260,7 +260,7 @@ Em&op&DwordMemReg	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&DwordMemReg16
 	or bl,40h	
 Em&op&DwordMemReg16:
@@ -276,11 +276,11 @@ Em&op&DwordMemReg16:
 	call LoadDwordReg
 	mov edx,eax
 	pop ebx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op ebx,edx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	mov eax,ebx
 	pop ebx
 	pop si
@@ -291,21 +291,21 @@ Em&op&DwordMemRegReg:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].DwordRegTab
-	mov eax,[bp+si]
+	movzx esi,word ptr cs:[si].DwordRegTab
+	mov eax,[ebp+esi]
 	pop bx
-	push si
+	push esi
 	push eax
 	call LoadDwordReg
 	mov edx,eax
 	pop ebx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op ebx,edx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	pop si
-	mov [bp+si],ebx
+	mov byte ptr [ebp].reg_eflags,ah
+	pop esi
+	mov [ebp+esi],ebx
 	ret
 Em&op&DwordMemReg	Endp
 
@@ -326,7 +326,7 @@ Em&op&ByteMem	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&ByteMem16
 	or bl,40h	
 Em&op&ByteMem16:
@@ -335,11 +335,11 @@ Em&op&ByteMem16:
 	push si
 	push ebx
 	call ReadByte
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op al
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	pop ebx
 	pop si
 	call WriteByte
@@ -349,12 +349,12 @@ Em&op&ByteMemReg:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].ByteRegTab
-	mov ah,byte ptr [bp].reg_eflags
+	movzx esi,word ptr cs:[si].ByteRegTab
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	&op byte ptr [bp+si]
+	&op byte ptr [ebp+esi]
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&ByteMem	Endp
 
@@ -365,7 +365,7 @@ WordMem	Macro op
 	public Em&op&WordMem
 
 Em&op&WordMem	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz Em&op&DwordMem
 ;
 	mov bl,al
@@ -378,7 +378,7 @@ Em&op&WordMem	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&WordMem16
 	or bl,40h	
 Em&op&WordMem16:
@@ -388,11 +388,11 @@ Em&op&WordMem16:
 	push ebx
 	call ReadWord
 	mov dx,ax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op dx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	mov ax,dx
 	pop ebx
 	pop si
@@ -403,12 +403,12 @@ Em&op&WordMemReg:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].WordRegTab
-	mov ah,byte ptr [bp].reg_eflags
+	movzx esi,word ptr cs:[si].WordRegTab
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	&op word ptr [bp+si]
+	&op word ptr [ebp+esi]
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&WordMem	Endp
 
@@ -423,7 +423,7 @@ Em&op&DwordMem	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&DwordMem16
 	or bl,40h	
 Em&op&DwordMem16:
@@ -433,11 +433,11 @@ Em&op&DwordMem16:
 	push ebx
 	call ReadDword
 	mov edx,eax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op edx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	mov eax,edx
 	pop ebx
 	pop si
@@ -448,12 +448,12 @@ Em&op&DwordMemReg:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].DwordRegTab
-	mov ah,byte ptr [bp].reg_eflags
+	movzx esi,word ptr cs:[si].DwordRegTab
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	&op dword ptr [bp+si]
+	&op dword ptr [ebp+esi]
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&DwordMem	Endp
 
@@ -474,7 +474,7 @@ Em&op&ByteImMem	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&ByteImMem16
 	or bl,40h	
 Em&op&ByteImMem16:
@@ -487,11 +487,11 @@ Em&op&ByteImMem16:
 	call ReadCodeByte
 	mov bl,al
 	pop ax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op al,bl
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	pop ebx
 	pop si
 	call WriteByte
@@ -501,20 +501,20 @@ Em&op&ByteImMemReg:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].ByteRegTab
-	mov al,[bp+si]
-	push si
+	movzx esi,word ptr cs:[si].ByteRegTab
+	mov al,[ebp+esi]
+	push esi
 	push ax
 	call ReadCodeByte
 	mov bl,al
 	pop ax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op al,bl
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	pop si
-	mov [bp+si],al
+	mov byte ptr [ebp].reg_eflags,ah
+	pop esi
+	mov [ebp+esi],al
 	ret
 Em&op&ByteImMem	Endp
 			Endm
@@ -524,7 +524,7 @@ WordImMem	Macro op
 	public Em&op&WordImMem
 
 Em&op&WordImMem	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz Em&op&DwordImMem
 ;
 	mov bl,al
@@ -537,7 +537,7 @@ Em&op&WordImMem	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&WordImMem16
 	or bl,40h	
 Em&op&WordImMem16:
@@ -550,11 +550,11 @@ Em&op&WordImMem16:
 	call ReadCodeWord
 	mov dx,ax
 	pop bx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op bx,dx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	mov ax,bx
 	pop ebx
 	pop si
@@ -565,20 +565,20 @@ Em&op&WordImMemReg:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].WordRegTab
-	mov ax,[bp+si]
-	push si
+	movzx esi,word ptr cs:[si].WordRegTab
+	mov ax,[ebp+esi]
+	push esi
 	push ax
 	call ReadCodeWord
 	mov dx,ax
 	pop bx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op bx,dx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	pop si
-	mov [bp+si],bx
+	mov byte ptr [ebp].reg_eflags,ah
+	pop esi
+	mov [ebp+esi],bx
 	ret
 Em&op&WordImMem	Endp
 
@@ -593,7 +593,7 @@ Em&op&DwordImMem	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&DwordImMem16
 	or bl,40h	
 Em&op&DwordImMem16:
@@ -606,11 +606,11 @@ Em&op&DwordImMem16:
 	call ReadCodeDword
 	mov edx,eax
 	pop ebx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op ebx,edx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	mov eax,ebx
 	pop ebx
 	pop si
@@ -621,20 +621,20 @@ Em&op&DwordImMemReg:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].DwordRegTab
-	mov eax,[bp+si]
-	push si
+	movzx esi,word ptr cs:[si].DwordRegTab
+	mov eax,[ebp+esi]
+	push esi
 	push eax
 	call ReadCodeDword
 	mov edx,eax
 	pop ebx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op ebx,edx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	pop si
-	mov [bp+si],ebx
+	mov byte ptr [ebp].reg_eflags,ah
+	pop esi
+	mov [ebp+esi],ebx
 	ret
 Em&op&DwordImMem	Endp
 
@@ -646,13 +646,13 @@ ByteImAcc	Macro op
 
 Em&op&ByteImAcc	Proc near
 	call ReadCodeByte
-	mov bl,byte ptr [bp].reg_eax
-	mov ah,byte ptr [bp].reg_eflags
+	mov bl,byte ptr [ebp].reg_eax
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op bl,al
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov byte ptr [bp].reg_eax,bl
+	mov byte ptr [ebp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eax,bl
 	ret
 Em&op&ByteImAcc	Endp
 			Endm
@@ -662,31 +662,31 @@ WordImAcc	Macro op
 	public Em&op&WordImAcc
 
 Em&op&WordImAcc	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz Em&op&DwordImAcc
 ;
 	call ReadCodeWord
 	mov dx,ax
-	mov bx,word ptr [bp].reg_eax
-	mov ah,byte ptr [bp].reg_eflags
+	mov bx,word ptr [ebp].reg_eax
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op bx,dx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov word ptr [bp].reg_eax,bx
+	mov byte ptr [ebp].reg_eflags,ah
+	mov word ptr [ebp].reg_eax,bx
 	ret
 Em&op&WordImAcc	Endp
 
 Em&op&DwordImAcc	Proc near
 	call ReadCodeDword
 	mov edx,eax
-	mov ebx,[bp].reg_eax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ebx,[ebp].reg_eax
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op ebx,edx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov [bp].reg_eax,ebx
+	mov byte ptr [ebp].reg_eflags,ah
+	mov [ebp].reg_eax,ebx
 	ret
 Em&op&DwordImAcc	Endp
 
@@ -697,7 +697,7 @@ WordImsxMem	Macro op
 	public Em&op&WordImsxMem
 
 Em&op&WordImsxMem	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz Em&op&DwordImsxMem
 ;
 	mov bl,al
@@ -710,7 +710,7 @@ Em&op&WordImsxMem	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&WordImsxMem16
 	or bl,40h	
 Em&op&WordImsxMem16:
@@ -723,11 +723,11 @@ Em&op&WordImsxMem16:
 	call ReadCodeByte
 	movsx dx,al
 	pop bx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op bx,dx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	mov ax,bx
 	pop ebx
 	pop si
@@ -738,20 +738,20 @@ Em&op&WordImsxMemReg:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].WordRegTab
-	mov ax,[bp+si]
-	push si
+	movzx esi,word ptr cs:[si].WordRegTab
+	mov ax,[ebp+esi]
+	push esi
 	push ax
 	call ReadCodeByte
 	movsx dx,al
 	pop bx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op bx,dx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	pop si
-	mov [bp+si],bx
+	mov byte ptr [ebp].reg_eflags,ah
+	pop esi
+	mov [ebp+esi],bx
 	ret
 Em&op&WordImsxMem	Endp
 
@@ -766,7 +766,7 @@ Em&op&DwordImsxMem	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&DwordImsxMem16
 	or bl,40h	
 Em&op&DwordImsxMem16:
@@ -779,11 +779,11 @@ Em&op&DwordImsxMem16:
 	call ReadCodeByte
 	movsx edx,al
 	pop ebx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op ebx,edx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	mov eax,ebx
 	pop ebx
 	pop si
@@ -794,20 +794,20 @@ Em&op&DwordImsxMemReg:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].DwordRegTab
-	mov eax,[bp+si]
-	push si
+	movzx esi,word ptr cs:[si].DwordRegTab
+	mov eax,[ebp+esi]
+	push esi
 	push eax
 	call ReadCodeByte
 	movsx edx,al
 	pop ebx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op ebx,edx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	pop si
-	mov [bp+si],ebx
+	mov byte ptr [ebp].reg_eflags,ah
+	pop esi
+	mov [ebp+esi],ebx
 	ret
 Em&op&DwordImsxMem	Endp
 
@@ -826,11 +826,11 @@ Em&op&ByteMemReg	Proc near
 	push ax
 	call LoadByteMemReg
 	pop bx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op al,bl
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&ByteMemReg	Endp
 
@@ -841,7 +841,7 @@ CheckWordMemReg	Macro op
 	public Em&op&WordMemReg
 
 Em&op&WordMemReg	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz Em&op&DwordMemReg
 ;
 	call ReadCodeByte
@@ -853,11 +853,11 @@ Em&op&WordMemReg	Proc near
 	call LoadWordMemReg
 	pop bx
 	mov dx,ax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op dx,bx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&WordMemReg	Endp
 
@@ -871,11 +871,11 @@ Em&op&DwordMemReg	Proc near
 	call LoadDwordMemReg
 	pop ebx
 	mov edx,eax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op edx,ebx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&DwordMemReg	Endp
 
@@ -894,11 +894,11 @@ Em&op&ByteRegMem	Proc near
 	push ax
 	call LoadByteMemReg
 	pop bx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op bl,al
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&ByteRegMem	Endp
 
@@ -909,7 +909,7 @@ CheckWordRegMem	Macro op
 	public Em&op&WordRegMem
 
 Em&op&WordRegMem	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz Em&op&DwordRegMem
 ;
 	call ReadCodeByte
@@ -921,11 +921,11 @@ Em&op&WordRegMem	Proc near
 	call LoadWordMemReg
 	pop bx
 	mov dx,ax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op bx,dx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&WordRegMem	Endp
 
@@ -939,11 +939,11 @@ Em&op&DwordRegMem	Proc near
 	call LoadDwordMemReg
 	pop ebx
 	mov edx,eax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op ebx,edx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&DwordRegMem	Endp
 
@@ -959,11 +959,11 @@ Em&op&ByteImMem	Proc near
 	push ax
 	call ReadCodeByte
 	pop bx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op bl,al
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&ByteImMem	Endp
 
@@ -975,7 +975,7 @@ CheckWordImMem	Macro op
 	public Em&op&WordImMem
 
 Em&op&WordImMem	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz Em&op&DwordImMem
 ;
 	mov bl,al
@@ -984,11 +984,11 @@ Em&op&WordImMem	Proc near
 	call ReadCodeWord
 	mov dx,ax
 	pop bx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op bx,dx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&WordImMem	Endp
 
@@ -999,11 +999,11 @@ Em&op&DwordImMem	Proc near
 	call ReadCodeDword
 	mov edx,eax
 	pop ebx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op ebx,edx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&DwordImMem	Endp
 
@@ -1015,12 +1015,12 @@ CheckByteImAcc	Macro op
 
 Em&op&ByteImAcc	Proc near
 	call ReadCodeByte
-	mov bl,byte ptr [bp].reg_eax
-	mov ah,byte ptr [bp].reg_eflags
+	mov bl,byte ptr [ebp].reg_eax
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op bl,al
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&ByteImAcc	Endp
 
@@ -1031,29 +1031,29 @@ CheckWordImAcc	Macro op
 	public Em&op&WordImAcc
 
 Em&op&WordImAcc	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz Em&op&DwordImAcc
 ;
 	call ReadCodeWord
 	mov dx,ax
-	mov bx,word ptr [bp].reg_eax
-	mov ah,byte ptr [bp].reg_eflags
+	mov bx,word ptr [ebp].reg_eax
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op bx,dx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&WordImAcc	Endp
 
 Em&op&DwordImAcc	Proc near
 	call ReadCodeDword
 	mov edx,eax
-	mov ebx,[bp].reg_eax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ebx,[ebp].reg_eax
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op ebx,edx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&DwordImAcc	Endp
 
@@ -1064,7 +1064,7 @@ CheckWordImsxMem	Macro op
 	public Em&op&WordImsxMem
 
 Em&op&WordImsxMem	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz Em&op&DwordImsxMem
 ;
 	mov bl,al
@@ -1073,11 +1073,11 @@ Em&op&WordImsxMem	Proc near
 	call ReadCodeByte
 	movsx dx,al
 	pop bx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op bx,dx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&WordImsxMem	Endp
 
@@ -1088,11 +1088,11 @@ Em&op&DwordImsxMem	Proc near
 	call ReadCodeByte
 	movsx edx,al
 	pop ebx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op ebx,edx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&DwordImsxMem	Endp
 
@@ -1114,7 +1114,7 @@ Em&op&ByteMem1	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&ByteMem116
 	or bl,40h	
 Em&op&ByteMem116:
@@ -1123,11 +1123,11 @@ Em&op&ByteMem116:
 	push si
 	push ebx
 	call ReadByte
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op al,1
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	pop ebx
 	pop si
 	call WriteByte
@@ -1137,12 +1137,12 @@ Em&op&ByteMemReg1:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].ByteRegTab
-	mov ah,byte ptr [bp].reg_eflags
+	movzx esi,word ptr cs:[si].ByteRegTab
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	&op byte ptr [bp+si], 1
+	&op byte ptr [ebp+esi], 1
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&ByteMem1	Endp
 			Endm
@@ -1152,7 +1152,7 @@ RotateWordMem1	Macro op
 	public Em&op&WordMem1
 
 Em&op&WordMem1	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz Em&op&DwordMem1
 ;
 	mov bl,al
@@ -1165,7 +1165,7 @@ Em&op&WordMem1	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&WordMem116
 	or bl,40h	
 Em&op&WordMem116:
@@ -1175,11 +1175,11 @@ Em&op&WordMem116:
 	push ebx
 	call ReadWord
 	mov bx,ax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op bx,1
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	mov ax,bx
 	pop ebx
 	pop si
@@ -1190,12 +1190,12 @@ Em&op&WordMemReg1:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].WordRegTab
-	mov ah,byte ptr [bp].reg_eflags
+	movzx esi,word ptr cs:[si].WordRegTab
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	&op word ptr [bp+si], 1
+	&op word ptr [ebp+esi], 1
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&WordMem1	Endp
 
@@ -1210,7 +1210,7 @@ Em&op&DwordMem1	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&DwordMem116
 	or bl,40h	
 Em&op&DwordMem116:
@@ -1220,11 +1220,11 @@ Em&op&DwordMem116:
 	push ebx
 	call ReadDword
 	mov ebx,eax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op ebx,1
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	mov eax,ebx
 	pop ebx
 	pop si
@@ -1235,12 +1235,12 @@ Em&op&DwordMemReg1:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].DwordRegTab
-	mov ah,byte ptr [bp].reg_eflags
+	movzx esi,word ptr cs:[si].DwordRegTab
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	&op dword ptr [bp+si], 1
+	&op dword ptr [ebp+esi], 1
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&DwordMem1	Endp
 
@@ -1262,7 +1262,7 @@ Em&op&ByteMemCl	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&ByteMemCl16
 	or bl,40h	
 Em&op&ByteMemCl16:
@@ -1271,12 +1271,12 @@ Em&op&ByteMemCl16:
 	push si
 	push ebx
 	call ReadByte
-	mov cl,byte ptr [bp].reg_ecx
-	mov ah,byte ptr [bp].reg_eflags
+	mov cl,byte ptr [ebp].reg_ecx
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op al,cl
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	pop ebx
 	pop si
 	call WriteByte
@@ -1286,13 +1286,13 @@ Em&op&ByteMemRegCl:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].ByteRegTab
-	mov ah,byte ptr [bp].reg_eflags
-	mov cl,byte ptr [bp].reg_ecx
+	movzx esi,word ptr cs:[si].ByteRegTab
+	mov ah,byte ptr [ebp].reg_eflags
+	mov cl,byte ptr [ebp].reg_ecx
 	sahf
-	&op byte ptr [bp+si], cl
+	&op byte ptr [ebp+esi], cl
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&ByteMemCl	Endp
 			Endm
@@ -1302,7 +1302,7 @@ RotateWordMemCl	Macro op
 	public Em&op&WordMemCl
 
 Em&op&WordMemCl	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz Em&op&DwordMemCl
 ;
 	mov bl,al
@@ -1315,7 +1315,7 @@ Em&op&WordMemCl	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&WordMemCl16
 	or bl,40h	
 Em&op&WordMemCl16:
@@ -1325,12 +1325,12 @@ Em&op&WordMemCl16:
 	push ebx
 	call ReadWord
 	mov bx,ax
-	mov ah,byte ptr [bp].reg_eflags
-	mov cl,byte ptr [bp].reg_ecx
+	mov ah,byte ptr [ebp].reg_eflags
+	mov cl,byte ptr [ebp].reg_ecx
 	sahf
 	&op bx,cl
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	mov ax,bx
 	pop ebx
 	pop si
@@ -1341,13 +1341,13 @@ Em&op&WordMemRegCl:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].WordRegTab
-	mov ah,byte ptr [bp].reg_eflags
-	mov cl,byte ptr [bp].reg_ecx
+	movzx esi,word ptr cs:[si].WordRegTab
+	mov ah,byte ptr [ebp].reg_eflags
+	mov cl,byte ptr [ebp].reg_ecx
 	sahf
-	&op word ptr [bp+si], cl
+	&op word ptr [ebp+esi], cl
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&WordMemCl	Endp
 
@@ -1362,7 +1362,7 @@ Em&op&DwordMemCl	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&DwordMemCl16
 	or bl,40h	
 Em&op&DwordMemCl16:
@@ -1372,12 +1372,12 @@ Em&op&DwordMemCl16:
 	push ebx
 	call ReadDword
 	mov ebx,eax
-	mov ah,byte ptr [bp].reg_eflags
-	mov cl,byte ptr [bp].reg_ecx
+	mov ah,byte ptr [ebp].reg_eflags
+	mov cl,byte ptr [ebp].reg_ecx
 	sahf
 	&op ebx,cl
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	mov eax,ebx
 	pop ebx
 	pop si
@@ -1388,13 +1388,13 @@ Em&op&DwordMemRegCl:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].DwordRegTab
-	mov ah,byte ptr [bp].reg_eflags
-	mov cl,byte ptr [bp].reg_ecx
+	movzx esi,word ptr cs:[si].DwordRegTab
+	mov ah,byte ptr [ebp].reg_eflags
+	mov cl,byte ptr [ebp].reg_ecx
 	sahf
-	&op dword ptr [bp+si], cl
+	&op dword ptr [ebp+esi], cl
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&DwordMemCl	Endp
 
@@ -1416,7 +1416,7 @@ Em&op&ByteMemIm	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&ByteMemIm16
 	or bl,40h	
 Em&op&ByteMemIm16:
@@ -1429,11 +1429,11 @@ Em&op&ByteMemIm16:
 	call ReadCodeByte
 	mov cl,al
 	pop ax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op al,cl
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	pop ebx
 	pop si
 	call WriteByte
@@ -1447,12 +1447,12 @@ Em&op&ByteMemRegIm:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].ByteRegTab
-	mov ah,byte ptr [bp].reg_eflags
+	movzx esi,word ptr cs:[si].ByteRegTab
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	&op byte ptr [bp+si], cl
+	&op byte ptr [ebp+esi], cl
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&ByteMemIm	Endp
 			Endm
@@ -1462,7 +1462,7 @@ RotateWordMemIm	Macro op
 	public Em&op&WordMemIm
 
 Em&op&WordMemIm	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz Em&op&DwordMemIm
 ;
 	mov bl,al
@@ -1475,7 +1475,7 @@ Em&op&WordMemIm	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&WordMemIm16
 	or bl,40h	
 Em&op&WordMemIm16:
@@ -1488,11 +1488,11 @@ Em&op&WordMemIm16:
 	call ReadCodeByte
 	mov cl,al
 	pop bx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op bx,cl
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	mov ax,bx
 	pop ebx
 	pop si
@@ -1507,12 +1507,12 @@ Em&op&WordMemRegIm:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].WordRegTab
-	mov ah,byte ptr [bp].reg_eflags
+	movzx esi,word ptr cs:[si].WordRegTab
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	&op word ptr [bp+si],cl
+	&op word ptr [ebp+esi],cl
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&WordMemIm	Endp
 
@@ -1527,7 +1527,7 @@ Em&op&DwordMemIm	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&DwordMemIm16
 	or bl,40h	
 Em&op&DwordMemIm16:
@@ -1540,11 +1540,11 @@ Em&op&DwordMemIm16:
 	call ReadCodeByte
 	mov cl,al
 	pop ebx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op ebx,cl
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	mov eax,ebx
 	pop ebx
 	pop si
@@ -1559,12 +1559,12 @@ Em&op&DwordMemRegIm:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].DwordRegTab
-	mov ah,byte ptr [bp].reg_eflags
+	movzx esi,word ptr cs:[si].DwordRegTab
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	&op dword ptr [bp+si],cl
+	&op dword ptr [ebp+esi],cl
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 	ret
 Em&op&DwordMemIm	Endp
 
@@ -1575,26 +1575,26 @@ FlagsRegOne	MACRO op, reg, name
 	public Em&op&name
 
 Em&op&name	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz Em&op&E&reg
 ;
-	mov dx,word ptr [bp].reg_e&reg
-	mov ah,byte ptr [bp].reg_eflags
+	mov dx,word ptr [ebp].reg_e&reg
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op dx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov word ptr [bp].reg_e&reg,dx
+	mov byte ptr [ebp].reg_eflags,ah
+	mov word ptr [ebp].reg_e&reg,dx
 	ret
 
 Em&op&E&reg:
-	mov edx,[bp].reg_e&reg
-	mov ah,byte ptr [bp].reg_eflags
+	mov edx,[ebp].reg_e&reg
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op edx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov [bp].reg_e&reg,edx
+	mov byte ptr [ebp].reg_eflags,ah
+	mov [ebp].reg_e&reg,edx
 	ret
 Em&op&name	Endp
 
@@ -1628,7 +1628,7 @@ Em&op&ByteMem	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&ByteMem16
 	or bl,40h	
 Em&op&ByteMem16:
@@ -1636,30 +1636,30 @@ Em&op&ByteMem16:
 	call word ptr cs:[bx].MemTab
 	call ReadByte
 	mov dl,al
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	mov al,byte ptr [bp].reg_eax
+	mov al,byte ptr [ebp].reg_eax
 	&op dl
 	mov cx,ax
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov word ptr [bp].reg_eax,cx
+	mov byte ptr [ebp].reg_eflags,ah
+	mov word ptr [ebp].reg_eax,cx
 	ret
 
 Em&op&ByteMemReg:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].ByteRegTab
-	mov dl,[bp+si]
-	mov ah,byte ptr [bp].reg_eflags
+	movzx esi,word ptr cs:[si].ByteRegTab
+	mov dl,[ebp+esi]
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	mov al,byte ptr [bp].reg_eax
+	mov al,byte ptr [ebp].reg_eax
 	&op dl
 	mov cx,ax
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov word ptr [bp].reg_eax,cx
+	mov byte ptr [ebp].reg_eflags,ah
+	mov word ptr [ebp].reg_eax,cx
 	ret
 Em&op&ByteMem	Endp
 			Endm
@@ -1669,28 +1669,28 @@ ExtWordMem	Macro op
 	public Em&op&WordMem
 
 Em&op&WordMem	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz Em&op&DwordMem
 ;
 	mov bl,al
 	call LoadWordReg
 	mov dx,ax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	mov ax,word ptr [bp].reg_eax
+	mov ax,word ptr [ebp].reg_eax
 	&op dx
 	mov cx,ax
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov word ptr [bp].reg_eax,cx
-	mov word ptr [bp].reg_edx,dx
+	mov byte ptr [ebp].reg_eflags,ah
+	mov word ptr [ebp].reg_eax,cx
+	mov word ptr [ebp].reg_edx,dx
 	ret
 Em&op&WordMem	Endp
 
 	public Em&op&WordMemReg
 
 Em&op&WordMemReg	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz Em&op&DwordMemReg
 ;
 	mov bl,al
@@ -1704,7 +1704,7 @@ Em&op&WordMemReg	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&WordMemReg16
 	or bl,40h	
 Em&op&WordMemReg16:
@@ -1712,30 +1712,30 @@ Em&op&WordMemReg16:
 	call word ptr cs:[bx].MemTab
 	call ReadWord
 	mov dx,ax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	mov ax,word ptr [bp].reg_eax
+	mov ax,word ptr [ebp].reg_eax
 	&op dx
 	mov cx,ax
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov word ptr [bp].reg_eax,cx
-	mov word ptr [bp].reg_edx,dx
+	mov byte ptr [ebp].reg_eflags,ah
+	mov word ptr [ebp].reg_eax,cx
+	mov word ptr [ebp].reg_edx,dx
 	ret
 
 Em&op&WordMemRegReg:
 	mov bl,al
 	call LoadWordReg
 	mov dx,ax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	mov ax,word ptr [bp].reg_eax
+	mov ax,word ptr [ebp].reg_eax
 	&op dx
 	mov cx,ax
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov word ptr [bp].reg_eax,cx
-	mov word ptr [bp].reg_edx,dx
+	mov byte ptr [ebp].reg_eflags,ah
+	mov word ptr [ebp].reg_eax,cx
+	mov word ptr [ebp].reg_edx,dx
 	ret
 Em&op&WordMemReg	Endp
 
@@ -1743,15 +1743,15 @@ Em&op&DwordMem	Proc near
 	mov bl,al
 	call LoadDwordReg
 	mov edx,eax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	mov eax,[bp].reg_eax
+	mov eax,[ebp].reg_eax
 	&op edx
 	mov ecx,eax
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov [bp].reg_eax,ecx
-	mov [bp].reg_edx,edx
+	mov byte ptr [ebp].reg_eflags,ah
+	mov [ebp].reg_eax,ecx
+	mov [ebp].reg_edx,edx
 	ret
 Em&op&DwordMem	Endp
 
@@ -1768,7 +1768,7 @@ Em&op&DwordMemReg	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&DwordMemReg16
 	or bl,40h	
 Em&op&DwordMemReg16:
@@ -1776,30 +1776,30 @@ Em&op&DwordMemReg16:
 	call word ptr cs:[bx].MemTab
 	call ReadDword
 	mov edx,eax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	mov eax,[bp].reg_eax
+	mov eax,[ebp].reg_eax
 	&op edx
 	mov ecx,eax
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov [bp].reg_eax,ecx
-	mov [bp].reg_edx,edx
+	mov byte ptr [ebp].reg_eflags,ah
+	mov [ebp].reg_eax,ecx
+	mov [ebp].reg_edx,edx
 	ret
 
 Em&op&DwordMemRegReg:
 	mov bl,al
 	call LoadDwordReg
 	mov edx,eax
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	mov eax,[bp].reg_eax
+	mov eax,[ebp].reg_eax
 	&op edx
 	mov ecx,eax
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov [bp].reg_eax,ecx
-	mov [bp].reg_edx,edx
+	mov byte ptr [ebp].reg_eflags,ah
+	mov [ebp].reg_eax,ecx
+	mov [ebp].reg_edx,edx
 	ret
 Em&op&DwordMemReg	Endp
 
@@ -1810,14 +1810,14 @@ Adjust	Macro op
 	public Em&op
 
 Em&op	Proc near
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	mov ax,word ptr [bp].reg_eax
+	mov ax,word ptr [ebp].reg_eax
 	&op
 	mov cx,ax
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov word ptr [bp].reg_eax,cx
+	mov byte ptr [ebp].reg_eflags,ah
+	mov word ptr [ebp].reg_eax,cx
 	ret
 Em&op	Endp
 
@@ -1830,7 +1830,7 @@ Setcc	Macro op
 Em&op	Proc near
 	call ReadCodeByte
 	mov bl,al
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op al
 	call SaveByteMem
@@ -1846,7 +1846,7 @@ Em&op&MemReg	Proc near
 	call ReadCodeByte
 	mov bl,al
 ;
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz Em&op&DwordMemReg
 
 Em&op&WordMemReg:
@@ -1873,7 +1873,7 @@ Em&op&MemRegDo:
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&MemReg16
 	or bl,40h	
 Em&op&MemReg16:
@@ -1891,11 +1891,11 @@ Em&op&MemReg16:
 	call ReadByte
 	pop cx
 ;
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op ax,cx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 ;	
 	pop si
 	pop ebx
@@ -1907,15 +1907,15 @@ Em&op&MemRegReg:
 	shl bh,1
 	pop ecx
 	movzx si,bh
-	mov si,word ptr cs:[si].DwordRegTab
-	mov eax,[bp+si]
-	mov ah,byte ptr [bp].reg_eflags
+	movzx esi,word ptr cs:[si].DwordRegTab
+	mov eax,[ebp+esi]
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	mov ax,word ptr [bp].reg_eax
+	mov ax,word ptr [ebp].reg_eax
 	&op ax,cx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov [bp+si],eax	
+	mov byte ptr [ebp].reg_eflags,ah
+	mov [ebp+esi],eax	
 	ret
 Em&op&MemReg	Endp
 
@@ -1942,7 +1942,7 @@ Em&op&ImMem	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz Em&op&ImMem16
 	or bl,40h	
 Em&op&ImMem16:
@@ -1960,11 +1960,11 @@ Em&op&ImMem16:
 	call ReadByte
 	pop cx
 ;
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op ax,cx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
+	mov byte ptr [ebp].reg_eflags,ah
 ;	
 	pop si
 	pop ebx
@@ -1976,15 +1976,15 @@ Em&op&ImMemReg:
 	shl bh,1
 	pop ecx
 	movzx si,bh
-	mov si,word ptr cs:[si].DwordRegTab
-	mov eax,[bp+si]
-	mov ah,byte ptr [bp].reg_eflags
+	movzx esi,word ptr cs:[si].DwordRegTab
+	mov eax,[ebp+esi]
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	mov ax,word ptr [bp].reg_eax
+	mov ax,word ptr [ebp].reg_eax
 	&op ax,cx
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov [bp+si],eax	
+	mov byte ptr [ebp].reg_eflags,ah
+	mov [ebp+esi],eax	
 	ret
 Em&op&ImMem	Endp
 
@@ -2299,18 +2299,18 @@ code	SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DivByte	Proc near
-	mov ax,word ptr [bp].reg_eax
+	mov ax,word ptr [ebp].reg_eax
 	cmp ah,bl
 	jae EmulateError
 ;
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	mov ax,word ptr [bp].reg_eax
+	mov ax,word ptr [ebp].reg_eax
 	div bl
 	mov cx,ax
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov word ptr [bp].reg_eax,cx
+	mov byte ptr [ebp].reg_eflags,ah
+	mov word ptr [ebp].reg_eax,cx
 	ret
 DivByte	Endp
 	
@@ -2326,19 +2326,19 @@ DivByte	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DivWord	Proc near
-	mov dx,word ptr [bp].reg_edx
+	mov dx,word ptr [ebp].reg_edx
 	cmp dx,bx
 	jae EmulateError
 ;
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	mov ax,word ptr [bp].reg_eax
+	mov ax,word ptr [ebp].reg_eax
 	div bx
 	mov cx,ax
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov word ptr [bp].reg_eax,cx
-	mov word ptr [bp].reg_edx,dx
+	mov byte ptr [ebp].reg_eflags,ah
+	mov word ptr [ebp].reg_eax,cx
+	mov word ptr [ebp].reg_edx,dx
 	ret
 DivWord	Endp
 	
@@ -2354,19 +2354,19 @@ DivWord	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DivDword	Proc near
-	mov edx,[bp].reg_edx
+	mov edx,[ebp].reg_edx
 	cmp edx,ebx
 	jae EmulateError
 ;
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	mov eax,[bp].reg_eax
+	mov eax,[ebp].reg_eax
 	div ebx
 	mov ecx,eax
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov [bp].reg_eax,ecx
-	mov [bp].reg_edx,edx
+	mov byte ptr [ebp].reg_eflags,ah
+	mov [ebp].reg_eax,ecx
+	mov [ebp].reg_edx,edx
 	ret
 DivDword	Endp
 	
@@ -2392,7 +2392,7 @@ EmDivByteMem	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz EmDivByteMem16
 	or bl,40h	
 EmDivByteMem16:
@@ -2407,8 +2407,8 @@ EmDivByteMemReg:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].ByteRegTab
-	mov bl,[bp+si]
+	movzx esi,word ptr cs:[si].ByteRegTab
+	mov bl,[ebp+esi]
 	call DivByte
 	ret
 EmDivByteMem	Endp
@@ -2416,7 +2416,7 @@ EmDivByteMem	Endp
 	public EmDivWordMem
 
 EmDivWordMem	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz EmDivDwordMem
 ;
 	mov bl,al
@@ -2429,7 +2429,7 @@ EmDivWordMem	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz EmDivWordMem16
 	or bl,40h	
 EmDivWordMem16:
@@ -2444,8 +2444,8 @@ EmDivWordMemReg:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].WordRegTab
-	mov bx,[bp+si]
+	movzx esi,word ptr cs:[si].WordRegTab
+	mov bx,[ebp+esi]
 	call DivWord
 	ret
 EmDivWordMem	Endp
@@ -2461,7 +2461,7 @@ EmDivDwordMem	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz EmDivDwordMem16
 	or bl,40h	
 EmDivDwordMem16:
@@ -2476,8 +2476,8 @@ EmDivDwordMemReg:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].DwordRegTab
-	mov ebx,[bp+si]
+	movzx esi,word ptr cs:[si].DwordRegTab
+	mov ebx,[ebp+esi]
 	call DivDword
 	ret
 EmDivDwordMem	Endp
@@ -2495,7 +2495,7 @@ EmDivDwordMem	Endp
 
 IdivByte	Proc near
 	push bx
-	mov ah,byte ptr [bp+1].reg_eax
+	mov ah,byte ptr [ebp+1].reg_eax
 	test ah,80h
 	jz idiv_byte_ah_pos
 ;
@@ -2512,14 +2512,14 @@ idiv_byte_bl_pos:
 	jae EmulateError
 ;
 	pop bx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	mov ax,word ptr [bp].reg_eax
+	mov ax,word ptr [ebp].reg_eax
 	idiv bl
 	mov cx,ax
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov word ptr [bp].reg_eax,cx
+	mov byte ptr [ebp].reg_eflags,ah
+	mov word ptr [ebp].reg_eax,cx
 	ret
 IdivByte	Endp
 	
@@ -2536,7 +2536,7 @@ IdivByte	Endp
 
 IdivWord	Proc near
 	push bx
-	mov dx,word ptr [bp].reg_edx
+	mov dx,word ptr [ebp].reg_edx
 	test dh,80h
 	jz idiv_word_dx_pos
 ;
@@ -2553,16 +2553,16 @@ idiv_word_bx_pos:
 	jae EmulateError
 ;
 	pop bx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	mov ax,word ptr [bp].reg_eax
-	mov dx,word ptr [bp].reg_edx
+	mov ax,word ptr [ebp].reg_eax
+	mov dx,word ptr [ebp].reg_edx
 	div bx
 	mov cx,ax
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov word ptr [bp].reg_eax,cx
-	mov word ptr [bp].reg_edx,dx
+	mov byte ptr [ebp].reg_eflags,ah
+	mov word ptr [ebp].reg_eax,cx
+	mov word ptr [ebp].reg_edx,dx
 	ret
 IdivWord	Endp
 	
@@ -2579,7 +2579,7 @@ IdivWord	Endp
 
 IdivDword	Proc near
 	push ebx
-	mov edx,[bp].reg_edx
+	mov edx,[ebp].reg_edx
 	test edx,80000000h
 	jz idiv_dword_edx_pos
 ;
@@ -2596,16 +2596,16 @@ idiv_dword_ebx_pos:
 	jae EmulateError
 ;
 	pop ebx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	mov eax,[bp].reg_eax
-	mov edx,[bp].reg_edx
+	mov eax,[ebp].reg_eax
+	mov edx,[ebp].reg_edx
 	div ebx
 	mov ecx,eax
 	lahf
-	mov byte ptr [bp].reg_eflags,ah
-	mov [bp].reg_eax,ecx
-	mov [bp].reg_edx,edx
+	mov byte ptr [ebp].reg_eflags,ah
+	mov [ebp].reg_eax,ecx
+	mov [ebp].reg_edx,edx
 	ret
 IdivDword	Endp
 	
@@ -2631,7 +2631,7 @@ EmIdivByteMem	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz EmIdivByteMem16
 	or bl,40h	
 EmIdivByteMem16:
@@ -2646,8 +2646,8 @@ EmIdivByteMemReg:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].ByteRegTab
-	mov bl,[bp+si]
+	movzx esi,word ptr cs:[si].ByteRegTab
+	mov bl,[ebp+esi]
 	call IdivByte
 	ret
 EmIdivByteMem	Endp
@@ -2655,7 +2655,7 @@ EmIdivByteMem	Endp
 	public EmIdivWordMem
 
 EmIdivWordMem	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz EmIdivDwordMem
 ;
 	mov bl,al
@@ -2668,7 +2668,7 @@ EmIdivWordMem	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz EmIdivWordMem16
 	or bl,40h	
 EmIdivWordMem16:
@@ -2683,8 +2683,8 @@ EmIdivWordMemReg:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].WordRegTab
-	mov bx,[bp+si]
+	movzx esi,word ptr cs:[si].WordRegTab
+	mov bx,[ebp+esi]
 	call IdivWord
 	ret
 EmIdivWordMem	Endp
@@ -2700,7 +2700,7 @@ EmIdivDwordMem	Proc near
 	and bh,7
 	shl bh,1
 	or bl,bh
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jz EmIdivDwordMem16
 	or bl,40h	
 EmIdivDwordMem16:
@@ -2715,8 +2715,8 @@ EmIdivDwordMemReg:
 	and bh,7
 	shl bh,1
 	movzx si,bh
-	mov si,word ptr cs:[si].DwordRegTab
-	mov ebx,[bp+si]
+	movzx esi,word ptr cs:[si].DwordRegTab
+	mov ebx,[ebp+esi]
 	call IdivDword
 	ret
 EmIdivDwordMem	Endp
@@ -2885,9 +2885,9 @@ EmIdivDwordMem	Endp
 	public EmCbw
 
 EmCbw	Proc near
-	mov al,byte ptr [bp].reg_eax
+	mov al,byte ptr [ebp].reg_eax
 	cbw
-	mov word ptr [bp].reg_eax,ax
+	mov word ptr [ebp].reg_eax,ax
 	ret
 EmCbw	Endp
 	
@@ -2903,20 +2903,20 @@ EmCbw	Endp
 	public EmCwd
 
 EmCwd	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz EmCdq
 ;
-	mov ax,word ptr [bp].reg_eax
+	mov ax,word ptr [ebp].reg_eax
 	cwd
-	mov word ptr [bp].reg_eax,ax
-	mov word ptr [bp].reg_edx,dx
+	mov word ptr [ebp].reg_eax,ax
+	mov word ptr [ebp].reg_edx,dx
 	ret
 
 EmCdq:
-	mov eax,[bp].reg_eax
+	mov eax,[ebp].reg_eax
 	cdq
-	mov [bp].reg_eax,eax
-	mov [bp].reg_edx,edx
+	mov [ebp].reg_eax,eax
+	mov [ebp].reg_edx,edx
 	ret
 EmCwd	Endp
 

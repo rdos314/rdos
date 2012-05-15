@@ -88,7 +88,7 @@ EmHlt   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EmOverrideData:
-        xor byte ptr [bp].em_flags,d32
+        xor byte ptr [ebp].em_flags,d32
         call ReadCodeByte
         movzx bx,al
         add bx,bx
@@ -104,7 +104,7 @@ EmOverrideData:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EmOverrideAdr:
-        xor byte ptr [bp].em_flags,a32
+        xor byte ptr [ebp].em_flags,a32
         call ReadCodeByte
         movzx bx,al
         add bx,bx
@@ -120,7 +120,7 @@ EmOverrideAdr:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EmOverrideCs:
-        mov byte ptr [bp].em_sreg,seg_cs
+        mov byte ptr [ebp].em_sreg,seg_cs
         call ReadCodeByte
         movzx bx,al
         add bx,bx
@@ -136,7 +136,7 @@ EmOverrideCs:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EmOverrideSs:
-        mov byte ptr [bp].em_sreg,seg_ss
+        mov byte ptr [ebp].em_sreg,seg_ss
         call ReadCodeByte
         movzx bx,al
         add bx,bx
@@ -152,7 +152,7 @@ EmOverrideSs:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EmOverrideDs:
-        mov byte ptr [bp].em_sreg,seg_ds
+        mov byte ptr [ebp].em_sreg,seg_ds
         call ReadCodeByte
         movzx bx,al
         add bx,bx
@@ -168,7 +168,7 @@ EmOverrideDs:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EmOverrideEs:
-        mov byte ptr [bp].em_sreg,seg_es
+        mov byte ptr [ebp].em_sreg,seg_es
         call ReadCodeByte
         movzx bx,al
         add bx,bx
@@ -184,7 +184,7 @@ EmOverrideEs:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EmOverrideFs:
-        mov byte ptr [bp].em_sreg,seg_fs
+        mov byte ptr [ebp].em_sreg,seg_fs
         call ReadCodeByte
         movzx bx,al
         add bx,bx
@@ -200,7 +200,7 @@ EmOverrideFs:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EmOverrideGs:
-        mov byte ptr [bp].em_sreg,seg_gs
+        mov byte ptr [ebp].em_sreg,seg_gs
         call ReadCodeByte
         movzx bx,al
         add bx,bx
@@ -216,7 +216,7 @@ EmOverrideGs:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EmRepe:
-        or byte ptr [bp].em_flags,rep_z
+        or byte ptr [ebp].em_flags,rep_z
         call ReadCodeByte
         movzx bx,al
         add bx,bx
@@ -232,7 +232,7 @@ EmRepe:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EmRepne:
-        or byte ptr [bp].em_flags,rep_nz
+        or byte ptr [ebp].em_flags,rep_nz
         call ReadCodeByte
         movzx bx,al
         add bx,bx
@@ -858,7 +858,7 @@ EmFF:
 ;
 ;               description:    emulate instruction
 ;
-;               PARAMETERS:             SS:BP           CPU
+;               PARAMETERS:             SS:ebp           CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1034,8 +1034,8 @@ emulate_pm:
         push ebp
         mov ebp,esp
         sub esp,2
-        mov byte ptr [bp].em_sreg,seg_def
-        mov byte ptr [bp].em_flags,0
+        mov byte ptr [ebp].em_sreg,seg_def
+        mov byte ptr [ebp].em_flags,0
         call GetCsBitness
         call GetSsBitness
         call ReadCodeByte
@@ -1072,7 +1072,6 @@ emulate_pm_done:
         retf32
 
 emulate_kernel:
-        int 3
         push gs
         push fs
         push word ptr [ebp].trap_pds
@@ -1093,8 +1092,8 @@ emulate_kernel:
         push ebp
         mov ebp,esp
         sub esp,2
-        mov byte ptr [bp].em_sreg,seg_def
-        mov byte ptr [bp].em_flags,0
+        mov byte ptr [ebp].em_sreg,seg_def
+        mov byte ptr [ebp].em_flags,0
         call GetCsBitness
         call GetSsBitness
         call ReadCodeByte
@@ -1102,13 +1101,13 @@ emulate_kernel:
         add bx,bx
         call word ptr cs:[bx].EmulateTab
 ;
-        mov eax,[bp].reg_esp
-        sub eax,[bp].reg_old_ebp
+        mov eax,[ebp].reg_esp
+        sub eax,[ebp].reg_old_ebp
         je emulate_kernel_stack_ok
         jc emulate_kernel_stack_pushed
 ;
-        mov esi,[bp].reg_old_ebp
-        mov edi,[bp].reg_esp
+        mov esi,[ebp].reg_old_ebp
+        mov edi,[ebp].reg_esp
         mov cx,ss
         mov es,cx
         add esi,16
@@ -1126,8 +1125,8 @@ emulate_kernel:
         jmp emulate_kernel_stack_ok
 
 emulate_kernel_stack_pushed:
-        mov eax,[bp].reg_esp
-        mov [bp].reg_old_ebp,eax
+        mov eax,[ebp].reg_esp
+        mov [ebp].reg_old_ebp,eax
 
 emulate_kernel_stack_ok:
         add esp,2
@@ -1180,8 +1179,8 @@ emulate_vm:
         mov ebp,esp
         sub esp,2
 ;
-        mov byte ptr [bp].em_sreg,seg_def
-        mov byte ptr [bp].em_flags,0
+        mov byte ptr [ebp].em_sreg,seg_def
+        mov byte ptr [ebp].em_flags,0
         call GetCsBitness
         call GetSsBitness
         call ReadCodeByte

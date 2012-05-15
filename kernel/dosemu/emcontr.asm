@@ -41,7 +41,7 @@ JccShort	Macro op
 	public Em&op&Short
 
 Em&op&Short	Proc near
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op Em&op&ShortJump
 	call ReadCodeByte
@@ -49,13 +49,13 @@ Em&op&Short	Proc near
 
 Em&op&ShortJump:
 	call ReadCodeByte
-	test byte ptr [bp].em_flags,cs32
+	test byte ptr [ebp].em_flags,cs32
 	jz Em&op&ShortJump16
 
 Em&op&ShortJump32:
 	movsx eax,al
-	add eax,[bp].reg_eip
-	mov [bp].reg_eip,eax
+	add eax,[ebp].reg_eip
+	mov [ebp].reg_eip,eax
 	mov ebx,eax
 	mov si,OFFSET reg_cs
 	call ReadByte
@@ -63,8 +63,8 @@ Em&op&ShortJump32:
 
 Em&op&ShortJump16:
 	movsx ax,al
-	add ax,word ptr [bp].reg_eip
-	mov word ptr [bp].reg_eip,ax
+	add ax,word ptr [ebp].reg_eip
+	mov word ptr [ebp].reg_eip,ax
 	movzx ebx,ax
 	mov si,OFFSET reg_cs
 	call ReadByte
@@ -78,38 +78,38 @@ JecxShort	Macro op
 	public Em&op&Short
 
 Em&op&Short	Proc near
-	test byte ptr [bp].em_flags,a32
+	test byte ptr [ebp].em_flags,a32
 	jnz Em&op&Short32
 
 Em&op&Short16:
-	mov ecx,[bp].reg_ecx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ecx,[ebp].reg_ecx
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op Em&op&ShortJump
-	mov [bp].reg_ecx,ecx
+	mov [ebp].reg_ecx,ecx
 	call ReadCodeByte
 	ret
 
 Em&op&Short32:
-	mov ecx,[bp].reg_ecx
-	mov ah,byte ptr [bp].reg_eflags
+	mov ecx,[ebp].reg_ecx
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	db 67h
 	&op Em&op&ShortJump
-	mov [bp].reg_ecx,ecx
+	mov [ebp].reg_ecx,ecx
 	call ReadCodeByte
 	ret
 
 Em&op&ShortJump:
 	call ReadCodeByte
-	mov [bp].reg_ecx,ecx
-	test byte ptr [bp].em_flags,cs32
+	mov [ebp].reg_ecx,ecx
+	test byte ptr [ebp].em_flags,cs32
 	jz Em&op&ShortJump16
 
 Em&op&ShortJump32:
 	movsx eax,al
-	add eax,[bp].reg_eip
-	mov [bp].reg_eip,eax
+	add eax,[ebp].reg_eip
+	mov [ebp].reg_eip,eax
 	mov ebx,eax
 	mov si,OFFSET reg_cs
 	call ReadByte
@@ -117,8 +117,8 @@ Em&op&ShortJump32:
 
 Em&op&ShortJump16:
 	movsx ax,al
-	add ax,word ptr [bp].reg_eip
-	mov word ptr [bp].reg_eip,ax
+	add ax,word ptr [ebp].reg_eip
+	mov word ptr [ebp].reg_eip,ax
 	movzx ebx,ax
 	mov si,OFFSET reg_cs
 	call ReadByte
@@ -132,10 +132,10 @@ JccNear	Macro op
 	public Em&op&Near
 
 Em&op&Near	Proc near
-	mov ah,byte ptr [bp].reg_eflags
+	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op Em&op&NearJump
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jz Em&op&NearSkip16
 
 Em&op&NearSkip32:
@@ -147,7 +147,7 @@ Em&op&NearSkip16:
 	ret
 
 Em&op&NearJump:
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jz Em&op&Near16
 
 Em&op&Near32:
@@ -159,20 +159,20 @@ Em&op&Near16:
 	movzx eax,ax
 
 Em&op&NearEip:
-	test byte ptr [bp].em_flags,cs32
+	test byte ptr [ebp].em_flags,cs32
 	jz Em&op&NearEip16
 
 Em&op&NearEip32:
-	add eax,[bp].reg_eip
-	mov [bp].reg_eip,eax
+	add eax,[ebp].reg_eip
+	mov [ebp].reg_eip,eax
 	mov ebx,eax
 	mov si,OFFSET reg_cs
 	call ReadByte
 	ret
 
 Em&op&NearEip16:
-	add ax,word ptr [bp].reg_eip
-	mov word ptr [bp].reg_eip,ax
+	add ax,word ptr [ebp].reg_eip
+	mov word ptr [ebp].reg_eip,ax
 	movzx ebx,ax
 	mov si,OFFSET reg_cs
 	call ReadByte
@@ -193,7 +193,7 @@ Em&op&Near	Endp
 	public EmCli
 
 EmCli	proc near
-	and word ptr [bp].reg_eflags,NOT 200h
+	and word ptr [ebp].reg_eflags,NOT 200h
 	ret
 EmCli	endp
 	
@@ -209,7 +209,7 @@ EmCli	endp
 	public EmSti
 
 EmSti	proc near
-	or word ptr [bp].reg_eflags,200h
+	or word ptr [ebp].reg_eflags,200h
 	ret
 EmSti	endp
 	
@@ -283,13 +283,13 @@ EmSti	endp
 	public EmJmpNearMem
 
 EmJmpNearMem	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jz EmJmpNearMem16
 
 EmJmpNearMem32:
 	mov bl,al
 	call LoadDwordMemReg
-	mov [bp].reg_eip,eax
+	mov [ebp].reg_eip,eax
 	mov si,OFFSET reg_cs
 	mov ebx,eax
 	call ReadByte
@@ -298,7 +298,7 @@ EmJmpNearMem32:
 EmJmpNearMem16:
 	mov bl,al
 	call LoadWordMemReg
-	mov word ptr [bp].reg_eip,ax
+	mov word ptr [ebp].reg_eip,ax
 	mov si,OFFSET reg_cs
 	movzx ebx,ax
 	call ReadByte
@@ -317,26 +317,26 @@ EmJmpNearMem	Endp
 	public EmCallNear
 
 EmCallNear	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jz EmCallNear16
 
 EmCallNear32:
 	call ReadCodeDword
-	add eax,[bp].reg_eip
-	xchg eax,[bp].reg_eip
+	add eax,[ebp].reg_eip
+	xchg eax,[ebp].reg_eip
 	call PushDword
 	mov si,OFFSET reg_cs
-	mov ebx,[bp].reg_eip
+	mov ebx,[ebp].reg_eip
 	call ReadByte
 	ret
 
 EmCallNear16:
 	call ReadCodeWord
-	add ax,word ptr [bp].reg_eip
-	xchg ax,word ptr [bp].reg_eip
+	add ax,word ptr [ebp].reg_eip
+	xchg ax,word ptr [ebp].reg_eip
 	call PushWord
 	mov si,OFFSET reg_cs
-	movzx ebx,word ptr [bp].reg_eip
+	movzx ebx,word ptr [ebp].reg_eip
 	call ReadByte	
 	ret
 EmCallNear	Endp
@@ -353,16 +353,16 @@ EmCallNear	Endp
 	public EmCallNearMem
 
 EmCallNearMem	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jz EmCallNearMem16
 
 EmCallNearMem32:
 	mov bl,al
 	call LoadDwordMemReg
-	xchg eax,[bp].reg_eip
+	xchg eax,[ebp].reg_eip
 	call PushDword
 	mov si,OFFSET reg_cs
-	mov ebx,[bp].reg_eip
+	mov ebx,[ebp].reg_eip
 	call ReadByte
 	ret
 
@@ -370,10 +370,10 @@ EmCallNearMem16:
 	mov bl,al
 	call LoadWordMemReg
 	movzx eax,ax
-	xchg ax,word ptr [bp].reg_eip
+	xchg ax,word ptr [ebp].reg_eip
 	call PushWord
 	mov si,OFFSET reg_cs
-	movzx ebx,word ptr [bp].reg_eip
+	movzx ebx,word ptr [ebp].reg_eip
 	call ReadByte	
 	ret
 EmCallNearMem	Endp
@@ -390,13 +390,13 @@ EmCallNearMem	Endp
 	public EmRetNear
 
 EmRetNear	proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz EmRetNear32
 
 EmRetNear16:
 	call PopWord
 	movzx eax,ax
-	mov word ptr [bp].reg_eip,ax
+	mov word ptr [ebp].reg_eip,ax
 	mov si,OFFSET reg_cs
 	movzx ebx,ax
 	call ReadByte
@@ -404,7 +404,7 @@ EmRetNear16:
 
 EmRetNear32:
 	call PopDword
-	mov [bp].reg_eip,eax
+	mov [ebp].reg_eip,eax
 	mov si,OFFSET reg_cs
 	mov ebx,eax
 	call ReadByte
@@ -439,7 +439,7 @@ EmRetNearN	endp
 	public EmJmpFar
 
 EmJmpFar	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jz EmJmpFar16
 
 EmJmpFar32:
@@ -470,7 +470,7 @@ EmJmpFar	Endp
 	public EmJmpFarMem
 
 EmJmpFarMem	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jz EmJmpFarMem16
 
 EmJmpFarMem32:
@@ -503,7 +503,7 @@ EmJmpFarMem	Endp
 	public EmCallFar
 
 EmCallFar	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jz EmCallFar16
 
 EmCallFar32:
@@ -534,7 +534,7 @@ EmCallFar	Endp
 	public EmCallFarMem
 
 EmCallFarMem	Proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jz EmCallFarMem16
 
 EmCallFarMem32:
@@ -567,7 +567,7 @@ EmCallFarMem	Endp
 	public EmRetFar
 
 EmRetFar	proc near
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz EmRetFar32
 
 EmRetFar16:
@@ -619,17 +619,17 @@ EmInt	Endp
 	public EmIret
 
 EmIret	proc near
-	test byte ptr [bp].reg_eflags+2,2
+	test byte ptr [ebp].reg_eflags+2,2
 	jnz EmIretNotTss
 ;
-	test [bp].reg_eflags,EFLAGS_NT
+	test [ebp].reg_eflags,EFLAGS_NT
 	jz EmIretNotTss
 ;
 	call IretTss
 	ret
 
 EmIretNotTss:
-	test byte ptr [bp].em_flags,d32
+	test byte ptr [ebp].em_flags,d32
 	jnz EmIret32
 
 EmIret16:
