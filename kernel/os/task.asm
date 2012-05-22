@@ -54,7 +54,7 @@ TLB_LINEAR_SIZE         = 100000h
 SLEEP_SEL_WAIT  = 1
 SLEEP_SEL_SIGNAL = 2
 
-DEFAULT_GLOBAL  = 35        ; 35% of wakeup-entries are put into global ready-queue
+DEFAULT_GLOBAL  = 3        ; 3% of wakeup-entries are put into global ready-queue
 
 section_handle_seg          STRUC
 

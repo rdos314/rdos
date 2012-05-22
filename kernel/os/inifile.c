@@ -817,7 +817,7 @@ void WriteIni(struct TIni *Ini)
     if (Ini->FileSel)
         handle = RdosDuplFileInfo(Ini->Access, Ini->Drive, Ini->FileSel);
     else
-        handle = RdosCreateFile(Ini->Name, FILE_ATTRIBUTE_NORMAL);
+        handle = RdosCreateFile(Ini->Name, 0);
 
     if (handle)
     {

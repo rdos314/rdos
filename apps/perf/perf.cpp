@@ -8,6 +8,7 @@
 #include "chart.h"
 #include "timeaxis.h"
 #include "linyaxis.h"
+#include "png.h"
 
 #define MAX_CORES   6
 #define MAX_SAMPLES 2 * 60
@@ -35,6 +36,11 @@ int main(int argc, char **argv)
     long double YVal;
     unsigned long Msb, Lsb;
     int Count = 0;
+    TBitmapGraphicDevice *bitmap;
+    TPngBitmapDevice *png;
+    int Handle;
+    int Index;
+    char FileName[255];
 
     width = 640;
     height = 480;
@@ -90,7 +96,32 @@ int main(int argc, char **argv)
         }
         if (Count < MAX_SAMPLES)
             Count++;
+
+        if (RdosPollKeyboard())
+        {
+            RdosReadKeyboard();
+
+            for (Index = 0; Index < 1000; Index++)
+            {
+                sprintf(FileName, "%d.png", Index);
+                Handle = RdosOpenFile(FileName, 0);
+                if (Handle)
+                    RdosCloseFile(Handle);
+                else
+                    break;
+            }
+
+            bitmap = new TBitmapGraphicDevice(vbe->GetBpp(), vbe->GetWidth(), vbe->GetHeight());
+            bitmap->Blit(vbe, 0, 0, 0, 0, vbe->GetWidth(), vbe->GetHeight());
+            png = new TPngBitmapDevice(24, bitmap->GetWidth(), bitmap->GetHeight());
+            png->Blit(bitmap, 0, 0, 0, 0, bitmap->GetWidth(), bitmap->GetHeight());
+            png->Save(FileName);
+            delete bitmap;
+            delete png;
+        }   
+
     }
+
 
     return 0;
 }
