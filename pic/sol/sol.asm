@@ -3,12 +3,10 @@
 #DEFINE PAGE0   BCF 3,5
 #DEFINE PAGE1   BSF 3,5
 
-FLAG_WIND_U_INCREASE        EQU 0
-FLAG_WIND_POWER_INCREASE    EQU 1
-FLAG_WIND_WAIT_LOAD			EQU 2
-FLAG_WIND_WAIT_UNLOAD		EQU 3
-FLAG_SOLAR_U_INCREASE       EQU 4
-FLAG_SOLAR_POWER_INCREASE   EQU 5
+FLAG_SOLAR12_U_INCREASE       EQU 0
+FLAG_SOLAR12_POWER_INCREASE   EQU 1
+FLAG_SOLAR24_U_INCREASE       EQU 2
+FLAG_SOLAR24_POWER_INCREASE   EQU 3
 
 temp0	EQU 0x0
 temp1   EQU 0x1
@@ -23,94 +21,92 @@ ad_valh	EQU 0x7
 
 ad_cur	EQU 0x8
 
-wind_low_lsb    EQU 0x9
-wind_low_msb    EQU 0xA
-wind_high_lsb   EQU 0xB
-wind_high_msb   EQU 0xC
+solar12_low_lsb     EQU 0x9
+solar12_low_msb     EQU 0xa
+solar12_high_lsb    EQU 0xb
+solar12_high_msb    EQU 0xc
 
-wind_u_lsb		EQU 0xD
-wind_u_msb		EQU 0xE
+solar12_u_lsb	    EQU 0xd
+solar12_u_msb		EQU 0xe
 
-wind_i_lsb		EQU 0xF
-wind_i_msb		EQU 0x10
+solar12_i_lsb		EQU 0xf
+solar12_i_msb		EQU 0x10
 
-solar_low_lsb   EQU 0x11
-solar_low_msb   EQU 0x12
-solar_high_lsb  EQU 0x13
-solar_high_msb  EQU 0x14
+solar24_low_lsb     EQU 0x11
+solar24_low_msb     EQU 0x12
+solar24_high_lsb    EQU 0x13
+solar24_high_msb    EQU 0x14
 
-solar_u_lsb		EQU 0x15
-solar_u_msb		EQU 0x16
+solar24_u_lsb		EQU 0x15
+solar24_u_msb		EQU 0x16
 
-solar_i_lsb		EQU 0x17
-solar_i_msb		EQU 0x18
+solar24_i_lsb		EQU 0x17
+solar24_i_msb		EQU 0x18
 
-wind_p0			EQU 0x19
-wind_p1			EQU 0x1A
-wind_p2			EQU 0x1B
-wind_p3			EQU 0x1C
-wind_p4			EQU 0x1D
+flags			    EQU 0x19
 
-wind_ref_lsb	EQU 0x1E
-wind_ref_msb	EQU 0x1F
+solar12_ref_lsb	    EQU 0x1a
+solar12_ref_msb	    EQU 0x1b
 
-wind_yloop      EQU 0x20
-wind_iloop      EQU 0x21
+solar12_cp_0        EQU 0x1c
+solar12_cp_1        EQU 0x1d
+solar12_cp_2        EQU 0x1e
 
-flags			EQU 0x22
+solar12_yloop       EQU 0x1f
+solar12_iloop       EQU 0x20
 
-wind_pp0        EQU 0x23
-wind_pp1        EQU 0x24
-wind_pp2        EQU 0x25
-wind_pp3		EQU 0x26
-wind_pp4		EQU 0x27
+solar12_p0		    EQU 0x21
+solar12_p1		    EQU 0x22
+solar12_p2		    EQU 0x23
+solar12_p3		    EQU 0x24
 
-wind_cp_0       EQU 0x28
-wind_cp_1       EQU 0x29
-wind_cp_2       EQU 0x2A
+solar12_pp0         EQU 0x25
+solar12_pp1         EQU 0x26
+solar12_pp2         EQU 0x27
+solar12_pp3         EQU 0x28
 
-load_delay_lsb	EQU 0x2B
-load_delay_msb	EQU 0x2C
+solar24_ref_lsb	    EQU 0x29
+solar24_ref_msb	    EQU 0x2a
 
-solar_ref_lsb	EQU 0x2D
-solar_ref_msb	EQU 0x2E
+solar24_cp_0        EQU 0x2b
+solar24_cp_1        EQU 0x2c
+solar24_cp_2        EQU 0x2d
 
-solar_cp_0      EQU 0x2F
-solar_cp_1      EQU 0x30
-solar_cp_2      EQU 0x31
+solar24_yloop       EQU 0x2e
+solar24_iloop       EQU 0x2f
 
-solar_yloop     EQU 0x32
-solar_iloop     EQU 0x33
+solar24_p0		    EQU 0x30
+solar24_p1		    EQU 0x31
+solar24_p2		    EQU 0x32
+solar24_p3		    EQU 0x33
 
-solar_p0		EQU 0x34
-solar_p1		EQU 0x35
-solar_p2		EQU 0x36
-solar_p3		EQU 0x37
+solar24_pp0         EQU 0x34
+solar24_pp1         EQU 0x35
+solar24_pp2         EQU 0x36
+solar24_pp3         EQU 0x37
 
-solar_pp0       EQU 0x38
-solar_pp1       EQU 0x39
-solar_pp2       EQU 0x3A
-solar_pp3       EQU 0x3B
+solar12_ps0         EQU 0x38
+solar12_ps1         EQU 0x39
+solar12_ps2         EQU 0x3a
+solar12_ps3         EQU 0x3b
 
-wind_ps0        EQU 0x3C
-wind_ps1        EQU 0x3D
-wind_ps2        EQU 0x3E
-wind_ps3		EQU 0x3F
+solar24_ps0         EQU 0x3c
+solar24_ps1         EQU 0x3d
+solar24_ps2         EQU 0x3e
+solar24_ps3         EQU 0x3f
 
-solar_ps0       EQU 0x40
-solar_ps1       EQU 0x41
-solar_ps2       EQU 0x42
-solar_ps3       EQU 0x43
+bat_u_lsb           EQU 0x40
+bat_u_msb           EQU 0x41
 
-sec_lsb         EQU 0x46
-sec_msb         EQU 0x47
+sec_lsb             EQU 0x42
+sec_msb             EQU 0x43
 
-val0			EQU 0x48
-val1			EQU 0x49
-val2			EQU 0x4A
-val3			EQU 0x4B
+val0			    EQU 0x44
+val1			    EQU 0x45
+val2			    EQU 0x46
+val3			    EQU 0x47
 
-tx_count		EQU 0x4C
+tx_count		    EQU 0x48
 
 ; serial buffer page (1)
 
@@ -187,25 +183,25 @@ h0:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ResetStart:
-    movlw b'00000001'
+    movlw b'00000000'
     movwf PORTA
     movwf LATA
 ;
-    movlw b'11111110'
+    movlw b'11111111'
     movwf TRISA
 ;
-	movlw b'00001100'
+	movlw b'00000000'
     movwf PORTB
     movwf LATB
 ;
-    movlw b'11100000'
+    movlw b'0001000'
     movwf TRISB
 ;
-    movlw b'10100111'
+    movlw b'10100101'
     movwf PORTC
     movwf LATC
 ;
-    movlw b'11010000'
+    movlw b'10011000'
     movwf TRISC
 ;
     movlw b'10000111'
@@ -232,26 +228,25 @@ ResetStart:
     clrf TBLPTRH
     clrf TBLPTRU
 ;
-	clrf wind_p0
-    clrf wind_p1
-    clrf wind_p2
-    clrf wind_p3
-    clrf wind_p4
+	clrf solar12_p0
+    clrf solar12_p1
+    clrf solar12_p2
+    clrf solar12_p3
 ;
-	clrf solar_p0
-    clrf solar_p1
-    clrf solar_p2
-    clrf solar_p3
+	clrf solar24_p0
+    clrf solar24_p1
+    clrf solar24_p2
+    clrf solar24_p3
 ;
-	clrf wind_ps0
-    clrf wind_ps1
-    clrf wind_ps2
-    clrf wind_ps3
+	clrf solar12_ps0
+    clrf solar12_ps1
+    clrf solar12_ps2
+    clrf solar12_ps3
 ;
-	clrf solar_ps0
-    clrf solar_ps1
-    clrf solar_ps2
-    clrf solar_ps3
+	clrf solar24_ps0
+    clrf solar24_ps1
+    clrf solar24_ps2
+    clrf solar24_ps3
 ;
 	movlw 6
     movwf tx_count
@@ -264,223 +259,198 @@ ResetStart:
     clrf INDF2
 ;
     movlw 0x0
-    movwf wind_ref_lsb
-    movlw 0x5
-    movwf wind_ref_msb
-    call SetupWind
-    bsf flags,FLAG_WIND_U_INCREASE
+    movwf solar12_ref_lsb
+    movlw 0x2
+    movwf solar12_ref_msb
+    call SetupSolar12
+    bsf flags,FLAG_SOLAR12_U_INCREASE
 ;
     movlw 0x0
-    movwf solar_ref_lsb
+    movwf solar24_ref_lsb
     movlw 0x2
-    movwf solar_ref_msb
-    call SetupSolar
-    bsf flags,FLAG_SOLAR_U_INCREASE
+    movwf solar24_ref_msb
+    call SetupSolar24
+    bsf flags,FLAG_SOLAR24_U_INCREASE
    
 HandleLoop:
-    bsf LATA,0
     call WaitForSample
 	call Sample
-	call PollWind
-    call PollSolar
+    call PollSolar12
+    call PollSolar24
     call PollStat
     goto HandleLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; PollWind
+; PollSolar12
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PollWind:
-    call UpdateWindDump
-    btfss flags,FLAG_WIND_WAIT_LOAD
-    goto PollWindNotLoad
-
-PollWindLoad:
-    btfsc LATB,0
-    goto PollWindClearLoad
+PollSolar12:
+    call UpdateSolarCharger12
+    call CalcSolarPower12
+    call UpdateSolarPower12
 ;
-    decfsz load_delay_lsb,F
+    decfsz solar12_iloop,F
     return
 ;
     movlw 0x80
-    movwf load_delay_lsb
+    movwf solar12_iloop
 ;
-    decfsz load_delay_msb,F
-    return
-    goto PollWindReport
-
-PollWindClearLoad:
-    bsf flags,FLAG_WIND_WAIT_UNLOAD
-    bcf flags,FLAG_WIND_WAIT_LOAD
-    
-PollWindNotLoad:
-    btfss flags,FLAG_WIND_WAIT_UNLOAD
-    goto PollWindNotUnload
-
-PollWindUnload:
-    btfsc LATB,0
+    decfsz solar12_yloop,F
     return
 ;
-    bcf flags,FLAG_WIND_WAIT_UNLOAD
-    movlw 0x80
-    movwf wind_yloop
-;
-    movlw 0x80
-    movwf wind_iloop
-
-PollWindNotUnload:
-    call CalcWindPower
-    call UpdateWindPower
-;
-    decfsz wind_iloop,F
-    return
-;
-    movlw 0x80
-    movwf wind_iloop
-;
-    decfsz wind_yloop,F
-    return
-
-PollWindReport:
-    call WindPowerCompare
-    call WindControl
-    call SetupWind
+    call SolarPowerCompare12
+    call SolarControl12
+    call SetupSolar12
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; CalcWindPower
+; CalcSolarPower12
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CalcWindPower:
-    clrf wind_cp_0
-    clrf wind_cp_1
-    clrf wind_cp_2
+CalcSolarPower12:
+    clrf solar12_cp_0
+    clrf solar12_cp_1
+    clrf solar12_cp_2
 ;   
-    btfsc wind_u_msb,7
+    btfsc solar12_u_msb,7
     return
 ;
-	btfsc wind_i_msb,7
+	btfsc solar12_i_msb,7
     return
 ;
-    movf wind_u_lsb,W
-    mulwf wind_i_lsb
+    movf solar12_u_lsb,W
+    mulwf solar12_i_lsb
     movf PRODL,W
-    addwf wind_cp_0,F
+    addwf solar12_cp_0,F
     movf PRODH,W
-    addwfc wind_cp_1,F
+    addwfc solar12_cp_1,F
 ;
-    movf wind_u_lsb,W
-    mulwf wind_i_msb
+    movf solar12_u_lsb,W
+    mulwf solar12_i_msb
     movf PRODL,W
-    addwf wind_cp_1,F
+    addwf solar12_cp_1,F
     movf PRODH,W
-    addwfc wind_cp_2,F
+    addwfc solar12_cp_2,F
 ;    
-    movf wind_u_msb,W
-    mulwf wind_i_lsb
+    movf solar12_u_msb,W
+    mulwf solar12_i_lsb
     movf PRODL,W
-    addwf wind_cp_1,F
+    addwf solar12_cp_1,F
     movf PRODH,W
-    addwfc wind_cp_2,F
+    addwfc solar12_cp_2,F
 ;
-    movf wind_u_msb,W
-    mulwf wind_i_msb
+    movf solar12_u_msb,W
+    mulwf solar12_i_msb
     movf PRODL,W
-    addwf wind_cp_2,F
+    addwf solar12_cp_2,F
     return            
-         
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; WindPowerCompare
+; UpdateSolarPower12
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WindPowerCompare:
-    movf wind_p4,W
-    cpfseq wind_pp4
-    goto WindPower4Ne
-	goto WindPower4Eq
+UpdateSolarPower12:
+    movf solar12_cp_0,W
+    addwf solar12_p0,F
+;
+    movf solar12_cp_1,W
+    addwfc solar12_p1,F
+;
+    movf solar12_cp_2,W
+    addwfc solar12_p2,F
+;    
+    movlw 0
+    addwfc solar12_p3,F
+;    
+    movf solar12_cp_0,W
+    addwf solar12_ps0,F
+;
+    movf solar12_cp_1,W
+    addwfc solar12_ps1,F
+;
+    movf solar12_cp_2,W
+    addwfc solar12_ps2,F
+;    
+    movlw 0
+    addwfc solar12_ps3,F
+	return
+         
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; SolarPowerCompare12
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WindPower4Ne:
-    cpfsgt wind_pp4
-    goto WindNewLarger
-    goto WindOldLarger
+SolarPowerCompare12:
+    movf solar12_p3,W
+    cpfseq solar12_pp3
+    goto Solar12Power3Ne
+	goto Solar12Power3Eq
 
-WindPower4Eq:
-    movf wind_p3,W
-    cpfseq wind_pp3
-    goto WindPower3Ne
-	goto WindPower3Eq
+Solar12Power3Ne:
+    cpfsgt solar12_pp3
+    goto Solar12NewLarger
+    goto Solar12OldLarger
 
-WindPower3Ne:
-    cpfsgt wind_pp3
-    goto WindNewLarger
-    goto WindOldLarger
+Solar12Power3Eq:
+    movf solar12_p2,W
+    cpfseq solar12_pp2
+    goto Solar12Power2Ne
+	goto Solar12Power2Eq
 
-WindPower3Eq:
-    movf wind_p2,W
-    cpfseq wind_pp2
-    goto WindPower2Ne
-	goto WindPower2Eq
+Solar12Power2Ne:
+    cpfsgt solar12_pp2
+    goto Solar12NewLarger
+    goto Solar12OldLarger
 
-WindPower2Ne:
-    cpfsgt wind_pp2
-    goto WindNewLarger
-    goto WindOldLarger
+Solar12Power2Eq:
+    movf solar12_p1,W
+    cpfseq solar12_pp1
+    goto Solar12Power1Ne
+    goto Solar12Power1Eq
 
-WindPower2Eq:
-    movf wind_p1,W
-    cpfseq wind_pp1
-    goto WindPower1Ne
-    goto WindPower1Eq
+Solar12Power1Ne:
+    cpfsgt solar12_pp1
+    goto Solar12NewLarger
+    goto Solar12OldLarger
 
-WindPower1Ne:
-    cpfsgt wind_pp1
-    goto WindNewLarger
-    goto WindOldLarger
+Solar12Power1Eq:
+    movf solar12_p0,W
+    cpfslt solar12_pp0
+    goto Solar12OldLarger
 
-WindPower1Eq:
-    movf wind_p0,W
-    cpfslt wind_pp0
-    goto WindOldLarger
-
-WindNewLarger:
-    bsf flags,FLAG_WIND_POWER_INCREASE
+Solar12NewLarger:
+    bsf flags,FLAG_SOLAR12_POWER_INCREASE
     return
 
-WindOldLarger:
-    bcf flags,FLAG_WIND_POWER_INCREASE
+Solar12OldLarger:
+    bcf flags,FLAG_SOLAR12_POWER_INCREASE
     return
          
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; WindControl
+; SolarControl12
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WindControl:
-    movlw 6
-    cpfslt wind_p4
-    goto WindControlDecrease
+SolarControl12:
+    btfsc flags,FLAG_SOLAR12_POWER_INCREASE
+    goto Solar12ControlMorePower
 ;
-    btfsc flags,FLAG_WIND_POWER_INCREASE
-    goto WindControlMorePower
-;
-    movf wind_p0,W
-    iorwf wind_p1,W
-    iorwf wind_p2,W
-    iorwf wind_p3,W
-    iorwf wind_p4,W
+    movf solar12_p0,W
+    iorwf solar12_p1,W
+    iorwf solar12_p2,W
+    iorwf solar12_p3,W
     btfss STATUS,Z
-    goto WindControlLessPower
+    goto Solar12ControlLessPower
 
-WindControlNoPower:
-    movf wind_ref_lsb,W
-    iorwf wind_ref_msb,W
+Solar12ControlNoPower:
+    movf solar12_ref_lsb,W
+    iorwf solar12_ref_msb,W
     btfsc STATUS,Z
-    goto WindControlIncrease
+    goto Solar12ControlIncrease
 ;
-    movf wind_u_lsb,W
-    movwf wind_ref_lsb
+    movf solar12_u_lsb,W
+    movwf solar12_ref_lsb
     movwf temp0
-    movf wind_u_msb,W
-    movwf wind_ref_msb
+    movf solar12_u_msb,W
+    movwf solar12_ref_msb
     movwf temp1
 ;
     bcf STATUS,C
@@ -494,464 +464,71 @@ WindControlNoPower:
 ;
     movf temp0,W
     bsf STATUS,C
-    addwfc wind_ref_lsb,F
+    addwfc solar12_ref_lsb,F
     movf temp1,W
-    addwfc wind_ref_msb,F    
-    bcf flags,FLAG_WIND_U_INCREASE
+    addwfc solar12_ref_msb,F    
+    bcf flags,FLAG_SOLAR12_U_INCREASE
     return
 
-WindControlMorePower:
-    btfss flags,FLAG_WIND_U_INCREASE
-    goto WindControlDecrease
+Solar12ControlMorePower:
+    btfss flags,FLAG_SOLAR12_U_INCREASE
+    goto Solar12ControlDecrease
 
-WindControlIncrease:
-    movlw 7
-    subwf wind_ref_msb,W
-    btfsc STATUS,Z
-    return
-;
+Solar12ControlIncrease:
 	movlw 0x14
-    addwf wind_ref_lsb,F
+    addwf solar12_ref_lsb,F
     movlw 0
-    addwfc wind_ref_msb,F
-    bsf flags,FLAG_WIND_U_INCREASE
+    addwfc solar12_ref_msb,F
+    bsf flags,FLAG_SOLAR12_U_INCREASE
     return
 
-WindControlLessPower:
-    btfss flags,FLAG_WIND_U_INCREASE
-    goto WindControlIncrease
+Solar12ControlLessPower:
+    btfss flags,FLAG_SOLAR12_U_INCREASE
+    goto Solar12ControlIncrease
     
-WindControlDecrease:
-    bcf flags,FLAG_WIND_U_INCREASE
+Solar12ControlDecrease:
 	movlw 0xEC
-    addwf wind_ref_lsb,F
+    addwf solar12_ref_lsb,F
     movlw 0xFF
-    addwfc wind_ref_msb,F
+    addwfc solar12_ref_msb,F
+    bcf flags,FLAG_SOLAR12_U_INCREASE
 ;
     btfss STATUS,C
-    goto WindControlZero
+    goto Solar12ControlZero
 ;
     return
 
-WindControlZero:
-    clrf wind_ref_lsb
-    clrf wind_ref_msb
-    bcf flags,FLAG_WIND_U_INCREASE
-    return
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; SetupWind
-; wind_ref voltage reference
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupWind:
-	movf wind_ref_msb,W
-    btfss STATUS,Z
-    goto SetupWindInRange
-;
-    movlw 0
-    movwf wind_ref_lsb
-    movlw 1
-    movwf wind_ref_msb
-
-SetupWindInRange:
-    movf wind_ref_lsb,W
-    movwf temp0
-    movwf wind_low_lsb
-    movwf wind_high_lsb
-;
-    movf wind_ref_msb,W
-    movwf temp1
-    movwf wind_low_msb
-    movwf wind_high_msb
-;
-    movlw 4
-    movwf temp2
-
-swRotateLoop:
-    bcf STATUS,C
-    rrcf temp1,F
-    rrcf temp0,F
-    decfsz temp2,F
-    goto swRotateLoop
-;
-    movlw 1
-    addwf temp0,F
-    movlw 0
-    addwfc temp1,F
-;    
-    movf temp0,W
-    addwf wind_high_lsb,F
-    movf temp1,W
-    addwfc wind_high_msb,F
-;     
-    comf temp0,F
-    comf temp1,F
-    movlw 1
-    addwf temp0,F
-    movlw 0
-    addwfc temp1,F
-;    
-    movf temp0,W
-    addwf wind_low_lsb,F
-    movf temp1,W
-    addwfc wind_low_msb,F
-;
-    movf wind_p0,W
-    movwf wind_pp0
-    movf wind_p1,W
-    movwf wind_pp1
-    movf wind_p2,W
-    movwf wind_pp2
-    movf wind_p3,W
-    movwf wind_pp3
-    movf wind_p4,W
-    movwf wind_pp4
-;
-	clrf wind_p0
-    clrf wind_p1
-    clrf wind_p2
-    clrf wind_p3
-    clrf wind_p4
-;
-    bsf flags,FLAG_WIND_WAIT_LOAD
-;
-    movlw 0x80
-    movwf load_delay_msb
-    movwf load_delay_lsb
-    return
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; UpdateWindDump
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateWindDump:
-    btfss LATB,0
-    goto UpdateWindDumpOff
-
-UpdateWindDumpOn:
-    bcf LATA,0
-    btfsc wind_u_msb,7
-    goto UpdateWindDumpTurnOff
-;
-    movf wind_low_msb,W
-    cpfseq wind_u_msb
-    goto UpdateWindDumpOnNotEq
-;
-    movf wind_low_lsb,W
-    cpfslt wind_u_lsb
-    return
-    goto UpdateWindDumpTurnOff
-
-UpdateWindDumpOnNotEq:
-    cpfslt wind_u_msb
-    return
-
-UpdateWindDumpTurnOff:
-    bcf LATB,0
-    return
-    
-UpdateWindDumpOff:
-    btfsc wind_u_msb,7
-    return
-;
-    movf wind_high_msb,W
-    cpfseq wind_u_msb
-    goto UpdateWindDumpOffNotEq
-;
-    movf wind_high_lsb,W
-    cpfsgt wind_u_lsb
-    return
-    goto UpdateWindDumpTurnOn
-
-UpdateWindDumpOffNotEq:
-    cpfsgt wind_u_msb
-    return
-
-UpdateWindDumpTurnOn:
-    bsf LATB,0
-    return
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; UpdateWindPower
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateWindPower:
-    movf wind_cp_0,W
-    addwf wind_p0,F
-;
-    movf wind_cp_1,W
-    addwfc wind_p1,F
-;
-    movf wind_cp_2,W
-    addwfc wind_p2,F
-;
-    movlw 0
-    addwfc wind_p3,F
-    addwfc wind_p4,F
-;    
-    movf wind_cp_0,W
-    addwf wind_ps0,F
-;
-    movf wind_cp_1,W
-    addwfc wind_ps1,F
-;
-    movf wind_cp_2,W
-    addwfc wind_ps2,F
-;
-    movlw 0
-    addwfc wind_ps3,F
-	return
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; PollSolar
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PollSolar:
-    call UpdateSolarCharger
-    call CalcSolarPower
-    call UpdateSolarPower
-;
-    decfsz solar_iloop,F
-    return
-;
-    movlw 0x80
-    movwf solar_iloop
-;
-    decfsz solar_yloop,F
-    return
-;
-    call SolarPowerCompare
-    call SolarControl
-    call SetupSolar    
-    return
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; CalcSolarPower
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CalcSolarPower:
-    clrf solar_cp_0
-    clrf solar_cp_1
-    clrf solar_cp_2
-;   
-    btfsc solar_u_msb,7
-    return
-;
-	btfsc solar_i_msb,7
-    return
-;
-    movf solar_u_lsb,W
-    mulwf solar_i_lsb
-    movf PRODL,W
-    addwf solar_cp_0,F
-    movf PRODH,W
-    addwfc solar_cp_1,F
-;
-    movf solar_u_lsb,W
-    mulwf solar_i_msb
-    movf PRODL,W
-    addwf solar_cp_1,F
-    movf PRODH,W
-    addwfc solar_cp_2,F
-;    
-    movf solar_u_msb,W
-    mulwf solar_i_lsb
-    movf PRODL,W
-    addwf solar_cp_1,F
-    movf PRODH,W
-    addwfc solar_cp_2,F
-;
-    movf solar_u_msb,W
-    mulwf solar_i_msb
-    movf PRODL,W
-    addwf solar_cp_2,F
-    return            
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; UpdateSolarPower
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateSolarPower:
-    movf solar_cp_0,W
-    addwf solar_p0,F
-;
-    movf solar_cp_1,W
-    addwfc solar_p1,F
-;
-    movf solar_cp_2,W
-    addwfc solar_p2,F
-;    
-    movlw 0
-    addwfc solar_p3,F
-;    
-    movf solar_cp_0,W
-    addwf solar_ps0,F
-;
-    movf solar_cp_1,W
-    addwfc solar_ps1,F
-;
-    movf solar_cp_2,W
-    addwfc solar_ps2,F
-;    
-    movlw 0
-    addwfc solar_ps3,F
-	return
-         
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; SolarPowerCompare
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SolarPowerCompare:
-    movf solar_p3,W
-    cpfseq solar_pp3
-    goto SolarPower3Ne
-	goto SolarPower3Eq
-
-SolarPower3Ne:
-    cpfsgt solar_pp3
-    goto SolarNewLarger
-    goto SolarOldLarger
-
-SolarPower3Eq:
-    movf solar_p2,W
-    cpfseq solar_pp2
-    goto SolarPower2Ne
-	goto SolarPower2Eq
-
-SolarPower2Ne:
-    cpfsgt solar_pp2
-    goto SolarNewLarger
-    goto SolarOldLarger
-
-SolarPower2Eq:
-    movf solar_p1,W
-    cpfseq solar_pp1
-    goto SolarPower1Ne
-    goto SolarPower1Eq
-
-SolarPower1Ne:
-    cpfsgt solar_pp1
-    goto SolarNewLarger
-    goto SolarOldLarger
-
-SolarPower1Eq:
-    movf solar_p0,W
-    cpfslt solar_pp0
-    goto SolarOldLarger
-
-SolarNewLarger:
-    bsf flags,FLAG_SOLAR_POWER_INCREASE
-    return
-
-SolarOldLarger:
-    bcf flags,FLAG_SOLAR_POWER_INCREASE
-    return
-         
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; SolarControl
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SolarControl:
-    btfsc flags,FLAG_SOLAR_POWER_INCREASE
-    goto SolarControlMorePower
-;
-    movf solar_p0,W
-    iorwf solar_p1,W
-    iorwf solar_p2,W
-    iorwf solar_p3,W
-    btfss STATUS,Z
-    goto SolarControlLessPower
-
-SolarControlNoPower:
-    movf solar_ref_lsb,W
-    iorwf solar_ref_msb,W
-    btfsc STATUS,Z
-    goto SolarControlIncrease
-;
-    movf solar_u_lsb,W
-    movwf solar_ref_lsb
-    movwf temp0
-    movf solar_u_msb,W
-    movwf solar_ref_msb
-    movwf temp1
-;
-    bcf STATUS,C
-    rrcf temp1,F
-    rrcf temp0,F
-    bcf STATUS,C
-    rrcf temp1,F
-    rrcf temp0,F
-    comf temp1,F
-    comf temp0,F
-;
-    movf temp0,W
-    bsf STATUS,C
-    addwfc solar_ref_lsb,F
-    movf temp1,W
-    addwfc solar_ref_msb,F    
-    bcf flags,FLAG_SOLAR_U_INCREASE
-    return
-
-SolarControlMorePower:
-    btfss flags,FLAG_SOLAR_U_INCREASE
-    goto SolarControlDecrease
-
-SolarControlIncrease:
-	movlw 0x14
-    addwf solar_ref_lsb,F
-    movlw 0
-    addwfc solar_ref_msb,F
-    bsf flags,FLAG_SOLAR_U_INCREASE
-    return
-
-SolarControlLessPower:
-    btfss flags,FLAG_SOLAR_U_INCREASE
-    goto SolarControlIncrease
-    
-SolarControlDecrease:
-	movlw 0xEC
-    addwf solar_ref_lsb,F
-    movlw 0xFF
-    addwfc solar_ref_msb,F
-    bcf flags,FLAG_SOLAR_U_INCREASE
-;
-    btfss STATUS,C
-    goto SolarControlZero
-;
-    return
-
-SolarControlZero:
-    clrf solar_ref_lsb
-    clrf solar_ref_msb
-    bcf flags,FLAG_SOLAR_U_INCREASE
+Solar12ControlZero:
+    clrf solar12_ref_lsb
+    clrf solar12_ref_msb
+    bcf flags,FLAG_SOLAR12_U_INCREASE
     return
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; SetupSolar
+; SetupSolar12
 ; solar_ref voltage reference
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupSolar:
-    movf solar_ref_lsb,W
+SetupSolar12:
+    movf solar12_ref_lsb,W
     movwf temp0
-    movwf solar_low_lsb
-    movwf solar_high_lsb
+    movwf solar12_low_lsb
+    movwf solar12_high_lsb
 ;
-    movf solar_ref_msb,W
+    movf solar12_ref_msb,W
     movwf temp1
-    movwf solar_low_msb
-    movwf solar_high_msb
+    movwf solar12_low_msb
+    movwf solar12_high_msb
 ;
     movlw 4
     movwf temp2
 
-ssRotateLoop:
+ssRotateLoop12:
     bcf STATUS,C
     rrcf temp1,F
     rrcf temp0,F
     decfsz temp2,F
-    goto ssRotateLoop
+    goto ssRotateLoop12
 ;
     movlw 1
     addwf temp0,F
@@ -959,9 +536,9 @@ ssRotateLoop:
     addwfc temp1,F
 ;    
     movf temp0,W
-    addwf solar_high_lsb,F
+    addwf solar12_high_lsb,F
     movf temp1,W
-    addwfc solar_high_msb,F
+    addwfc solar12_high_msb,F
 ;     
     comf temp0,F
     comf temp1,F
@@ -971,79 +548,422 @@ ssRotateLoop:
     addwfc temp1,F
 ;    
     movf temp0,W
-    addwf solar_low_lsb,F
+    addwf solar12_low_lsb,F
     movf temp1,W
-    addwfc solar_low_msb,F
+    addwfc solar12_low_msb,F
 ;
-    movf solar_p0,W
-    movwf solar_pp0
-    movf solar_p1,W
-    movwf solar_pp1
-    movf solar_p2,W
-    movwf solar_pp2
-    movf solar_p3,W
-    movwf solar_pp3
+    movf solar12_p0,W
+    movwf solar12_pp0
+    movf solar12_p1,W
+    movwf solar12_pp1
+    movf solar12_p2,W
+    movwf solar12_pp2
+    movf solar12_p3,W
+    movwf solar12_pp3
 ;
-	clrf solar_p0
-    clrf solar_p1
-    clrf solar_p2
-    clrf solar_p3
-;
-    movlw 0x80
-    movwf solar_yloop
+	clrf solar12_p0
+    clrf solar12_p1
+    clrf solar12_p2
+    clrf solar12_p3
 ;
     movlw 0x80
-    movwf solar_iloop        
+    movwf solar12_yloop
+;
+    movlw 0x80
+    movwf solar12_iloop        
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; UpdateSolarCharger
+; UpdateSolarCharger12
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UpdateSolarCharger:
-    btfsc LATB,3
-    goto UpdateSolarChargerOff
+UpdateSolarCharger12:
+    btfsc LATB,2
+    goto UpdateSolar12ChargerOff
 
-UpdateSolarChargerOn:
-    btfsc solar_u_msb,7
-    goto UpdateSolarChargerTurnOff
+UpdateSolar12ChargerOn:
+    btfsc solar12_u_msb,7
+    goto UpdateSolar12ChargerTurnOff
 ;
-    movf solar_low_msb,W
-    cpfseq solar_u_msb
-    goto UpdateSolarChargerOnNotEq
+    movf solar12_low_msb,W
+    cpfseq solar12_u_msb
+    goto UpdateSolar12ChargerOnNotEq
 ;
-    movf solar_low_lsb,W
-    cpfslt solar_u_lsb
+    movf solar12_low_lsb,W
+    cpfslt solar12_u_lsb
     return
-    goto UpdateSolarChargerTurnOff
+    goto UpdateSolar12ChargerTurnOff
 
-UpdateSolarChargerOnNotEq:
-    cpfslt solar_u_msb
+UpdateSolar12ChargerOnNotEq:
+    cpfslt solar12_u_msb
     return
 
-UpdateSolarChargerTurnOff:
-    bsf LATB,3
+UpdateSolar12ChargerTurnOff:
+    bsf LATB,2
     return
     
-UpdateSolarChargerOff:
-    btfsc solar_u_msb,7
+UpdateSolar12ChargerOff:
+    btfsc solar12_u_msb,7
     return
 ;
-    movf solar_high_msb,W
-    cpfseq solar_u_msb
-    goto UpdateSolarChargerOffNotEq
+    movf solar12_high_msb,W
+    cpfseq solar12_u_msb
+    goto UpdateSolar12ChargerOffNotEq
 ;
-    movf solar_high_lsb,W
-    cpfsgt solar_u_lsb
+    movf solar12_high_lsb,W
+    cpfsgt solar12_u_lsb
     return
-    goto UpdateSolarChargerTurnOn
+    goto UpdateSolar12ChargerTurnOn
 
-UpdateSolarChargerOffNotEq:
-    cpfsgt solar_u_msb
+UpdateSolar12ChargerOffNotEq:
+    cpfsgt solar12_u_msb
     return
 
-UpdateSolarChargerTurnOn:
-    bcf LATB,3
+UpdateSolar12ChargerTurnOn:
+    bcf LATB,2
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; PollSolar24
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PollSolar24:
+    call UpdateSolarCharger24
+    call CalcSolarPower24
+    call UpdateSolarPower24
+;
+    decfsz solar24_iloop,F
+    return
+;
+    movlw 0x80
+    movwf solar24_iloop
+;
+    decfsz solar24_yloop,F
+    return
+;
+    call SolarPowerCompare24
+    call SolarControl24
+    call SetupSolar24
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; CalcSolarPower24
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CalcSolarPower24:
+    clrf solar24_cp_0
+    clrf solar24_cp_1
+    clrf solar24_cp_2
+;   
+    btfsc solar24_u_msb,7
+    return
+;
+	btfsc solar24_i_msb,7
+    return
+;
+    movf solar24_u_lsb,W
+    mulwf solar24_i_lsb
+    movf PRODL,W
+    addwf solar24_cp_0,F
+    movf PRODH,W
+    addwfc solar24_cp_1,F
+;
+    movf solar24_u_lsb,W
+    mulwf solar24_i_msb
+    movf PRODL,W
+    addwf solar24_cp_1,F
+    movf PRODH,W
+    addwfc solar24_cp_2,F
+;    
+    movf solar24_u_msb,W
+    mulwf solar24_i_lsb
+    movf PRODL,W
+    addwf solar24_cp_1,F
+    movf PRODH,W
+    addwfc solar24_cp_2,F
+;
+    movf solar24_u_msb,W
+    mulwf solar24_i_msb
+    movf PRODL,W
+    addwf solar24_cp_2,F
+    return            
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UpdateSolarPower24
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateSolarPower24:
+    movf solar24_cp_0,W
+    addwf solar24_p0,F
+;
+    movf solar24_cp_1,W
+    addwfc solar24_p1,F
+;
+    movf solar24_cp_2,W
+    addwfc solar24_p2,F
+;    
+    movlw 0
+    addwfc solar24_p3,F
+;    
+    movf solar24_cp_0,W
+    addwf solar24_ps0,F
+;
+    movf solar24_cp_1,W
+    addwfc solar24_ps1,F
+;
+    movf solar24_cp_2,W
+    addwfc solar24_ps2,F
+;    
+    movlw 0
+    addwfc solar24_ps3,F
+	return
+         
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; SolarPowerCompare24
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SolarPowerCompare24:
+    movf solar24_p3,W
+    cpfseq solar24_pp3
+    goto Solar24Power3Ne
+	goto Solar24Power3Eq
+
+Solar24Power3Ne:
+    cpfsgt solar24_pp3
+    goto Solar24NewLarger
+    goto Solar24OldLarger
+
+Solar24Power3Eq:
+    movf solar24_p2,W
+    cpfseq solar24_pp2
+    goto Solar24Power2Ne
+	goto Solar24Power2Eq
+
+Solar24Power2Ne:
+    cpfsgt solar24_pp2
+    goto Solar24NewLarger
+    goto Solar24OldLarger
+
+Solar24Power2Eq:
+    movf solar24_p1,W
+    cpfseq solar24_pp1
+    goto Solar24Power1Ne
+    goto Solar24Power1Eq
+
+Solar24Power1Ne:
+    cpfsgt solar24_pp1
+    goto Solar24NewLarger
+    goto Solar24OldLarger
+
+Solar24Power1Eq:
+    movf solar24_p0,W
+    cpfslt solar24_pp0
+    goto Solar24OldLarger
+
+Solar24NewLarger:
+    bsf flags,FLAG_SOLAR24_POWER_INCREASE
+    return
+
+Solar24OldLarger:
+    bcf flags,FLAG_SOLAR24_POWER_INCREASE
+    return
+         
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; SolarControl24
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SolarControl24:
+    btfsc flags,FLAG_SOLAR24_POWER_INCREASE
+    goto Solar24ControlMorePower
+;
+    movf solar24_p0,W
+    iorwf solar24_p1,W
+    iorwf solar24_p2,W
+    iorwf solar24_p3,W
+    btfss STATUS,Z
+    goto Solar24ControlLessPower
+
+Solar24ControlNoPower:
+    movf solar24_ref_lsb,W
+    iorwf solar24_ref_msb,W
+    btfsc STATUS,Z
+    goto Solar24ControlIncrease
+;
+    movf solar24_u_lsb,W
+    movwf solar24_ref_lsb
+    movwf temp0
+    movf solar24_u_msb,W
+    movwf solar24_ref_msb
+    movwf temp1
+;
+    bcf STATUS,C
+    rrcf temp1,F
+    rrcf temp0,F
+    bcf STATUS,C
+    rrcf temp1,F
+    rrcf temp0,F
+    comf temp1,F
+    comf temp0,F
+;
+    movf temp0,W
+    bsf STATUS,C
+    addwfc solar24_ref_lsb,F
+    movf temp1,W
+    addwfc solar24_ref_msb,F    
+    bcf flags,FLAG_SOLAR24_U_INCREASE
+    return
+
+Solar24ControlMorePower:
+    btfss flags,FLAG_SOLAR24_U_INCREASE
+    goto Solar24ControlDecrease
+
+Solar24ControlIncrease:
+	movlw 0x14
+    addwf solar24_ref_lsb,F
+    movlw 0
+    addwfc solar24_ref_msb,F
+    bsf flags,FLAG_SOLAR24_U_INCREASE
+    return
+
+Solar24ControlLessPower:
+    btfss flags,FLAG_SOLAR24_U_INCREASE
+    goto Solar24ControlIncrease
+    
+Solar24ControlDecrease:
+	movlw 0xEC
+    addwf solar24_ref_lsb,F
+    movlw 0xFF
+    addwfc solar24_ref_msb,F
+    bcf flags,FLAG_SOLAR24_U_INCREASE
+;
+    btfss STATUS,C
+    goto Solar24ControlZero
+;
+    return
+
+Solar24ControlZero:
+    clrf solar24_ref_lsb
+    clrf solar24_ref_msb
+    bcf flags,FLAG_SOLAR24_U_INCREASE
+    return
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; SetupSolar24
+; solar_ref voltage reference
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupSolar24:
+    movf solar24_ref_lsb,W
+    movwf temp0
+    movwf solar24_low_lsb
+    movwf solar24_high_lsb
+;
+    movf solar24_ref_msb,W
+    movwf temp1
+    movwf solar24_low_msb
+    movwf solar24_high_msb
+;
+    movlw 4
+    movwf temp2
+
+ssRotateLoop24:
+    bcf STATUS,C
+    rrcf temp1,F
+    rrcf temp0,F
+    decfsz temp2,F
+    goto ssRotateLoop24
+;
+    movlw 1
+    addwf temp0,F
+    movlw 0
+    addwfc temp1,F
+;    
+    movf temp0,W
+    addwf solar24_high_lsb,F
+    movf temp1,W
+    addwfc solar24_high_msb,F
+;     
+    comf temp0,F
+    comf temp1,F
+    movlw 1
+    addwf temp0,F
+    movlw 0
+    addwfc temp1,F
+;    
+    movf temp0,W
+    addwf solar24_low_lsb,F
+    movf temp1,W
+    addwfc solar24_low_msb,F
+;
+    movf solar24_p0,W
+    movwf solar24_pp0
+    movf solar24_p1,W
+    movwf solar24_pp1
+    movf solar24_p2,W
+    movwf solar24_pp2
+    movf solar24_p3,W
+    movwf solar24_pp3
+;
+	clrf solar24_p0
+    clrf solar24_p1
+    clrf solar24_p2
+    clrf solar24_p3
+;
+    movlw 0x80
+    movwf solar24_yloop
+;
+    movlw 0x80
+    movwf solar24_iloop        
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UpdateSolarCharger24
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateSolarCharger24:
+    btfss LATB,1
+    goto UpdateSolar24ChargerOff
+
+UpdateSolar24ChargerOn:
+    btfsc solar24_u_msb,7
+    goto UpdateSolar24ChargerTurnOff
+;
+    movf solar24_low_msb,W
+    cpfseq solar24_u_msb
+    goto UpdateSolar24ChargerOnNotEq
+;
+    movf solar24_low_lsb,W
+    cpfslt solar24_u_lsb
+    return
+    goto UpdateSolar24ChargerTurnOff
+
+UpdateSolar24ChargerOnNotEq:
+    cpfslt solar24_u_msb
+    return
+
+UpdateSolar24ChargerTurnOff:
+    bcf LATB,1
+    return
+    
+UpdateSolar24ChargerOff:
+    btfsc solar24_u_msb,7
+    return
+;
+    movf solar24_high_msb,W
+    cpfseq solar24_u_msb
+    goto UpdateSolar24ChargerOffNotEq
+;
+    movf solar24_high_lsb,W
+    cpfsgt solar24_u_lsb
+    return
+    goto UpdateSolar24ChargerTurnOn
+
+UpdateSolar24ChargerOffNotEq:
+    cpfsgt solar24_u_msb
+    return
+
+UpdateSolar24ChargerTurnOn:
+    bsf LATB,1
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1307,67 +1227,11 @@ ConvRaw:
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; ConvTemp
-;    FSR0:  2 byte temperature
-;    FSR1:  Buffer in/out
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ConvTemp:
-    movf INDF0,W
-    movwf val0
-    incf FSR0L,F
-;
-    movf INDF0,W
-    movwf val1
-    incf FSR0L,F
-;
-    btfss val1,7
-    goto ConvTempPos
-
-ConvTempNeg:     
-    movlw '-'
-    movwf INDF1
-    incf FSR1L,F
-;
-    comf val0,F
-    comf val1,F
-    movlw 1
-    addwf val0,F
-    movlw 0
-    addwfc val1,F
-    goto ConvTempDo
-
-ConvTempPos:        
-    movlw '+'
-    movwf INDF1
-    incf FSR1L,F
-
-ConvTempDo:
-    movlw t1
-    movwf TBLPTRL
-    call Conv2One
-;
-    incf FSR1L,F
-    movlw t0
-    movwf TBLPTRL
-    call Conv2One
-;
-    incf FSR1L,F
-    movlw '.'
-    movwf INDF1
-;
-    incf FSR1L,F
-    movlw tm0
-    movwf TBLPTRL
-    call Conv2One
-    return
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; CreateStat
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateStat:
-    lfsr 0,wind_ps0
+    lfsr 0,solar12_ps0
     lfsr 1,ser_buf
     call ConvPower
 ;
@@ -1376,7 +1240,7 @@ CreateStat:
     movwf INDF1
     incf FSR1L,F
 ;
-    lfsr 0,solar_ps0
+    lfsr 0,solar24_ps0
     call ConvPower
 ;
     incf FSR1L,F
@@ -1384,7 +1248,7 @@ CreateStat:
     movwf INDF1
     incf FSR1L,F
 ;
-    lfsr 0,wind_ref_lsb
+    lfsr 0,solar12_ref_lsb
     call ConvUI
 ;
     incf FSR1L,F
@@ -1392,47 +1256,48 @@ CreateStat:
     movwf INDF1
     incf FSR1L,F
 ;
-    lfsr 0,solar_ref_lsb
+    lfsr 0,solar24_ref_lsb
     call ConvUI
 ;
-    movlw 0x30
-    bcf LATC,1
-    call SampleOne
-    bsf LATC,1
+    incf FSR1L,F
+    movlw ' '
+    movwf INDF1
+    incf FSR1L,F
+;
+    lfsr 0,solar12_u_lsb
+    call ConvUI
 ;
     incf FSR1L,F
     movlw ' '
     movwf INDF1
     incf FSR1L,F
 ;
-    lfsr 0,ad_vall
-    call ConvRaw
-;
-    movlw 0x50
-    bcf LATC,1
-    call SampleOne
-    bsf LATC,1
+    lfsr 0,solar24_u_lsb
+    call ConvUI
 ;
     incf FSR1L,F
     movlw ' '
     movwf INDF1
     incf FSR1L,F
 ;
-    lfsr 0,ad_vall
-    call ConvRaw
-;
-    movlw 0x30
-    bcf LATC,0
-    call SampleOne
-    bsf LATC,0
+    lfsr 0,bat_u_lsb
+    call ConvUI
 ;
     incf FSR1L,F
     movlw ' '
     movwf INDF1
     incf FSR1L,F
 ;
-    lfsr 0,ad_vall
-    call ConvRaw
+    lfsr 0,solar12_i_lsb
+    call ConvUI
+;
+    incf FSR1L,F
+    movlw ' '
+    movwf INDF1
+    incf FSR1L,F
+;
+    lfsr 0,solar24_i_lsb
+    call ConvUI
 ;
     incf FSR1L,F
     movlw 0xD
@@ -1461,15 +1326,15 @@ PollStat:
     movwf sec_msb
     call CreateStat
 ;
-	clrf wind_ps0
-    clrf wind_ps1
-    clrf wind_ps2
-    clrf wind_ps3
+	clrf solar12_ps0
+    clrf solar12_ps1
+    clrf solar12_ps2
+    clrf solar12_ps3
 ;
-	clrf solar_ps0
-    clrf solar_ps1
-    clrf solar_ps2
-    clrf solar_ps3
+	clrf solar24_ps0
+    clrf solar24_ps1
+    clrf solar24_ps2
+    clrf solar24_ps3
 ;
     lfsr 2,ser_buf
     return
@@ -1508,6 +1373,7 @@ WaitForSampleLoop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SampleOne:
+    bcf LATC,0
     movwf ad_conf
 ;
     movlw 4
@@ -1515,11 +1381,11 @@ SampleOne:
     goto sample_one_loop1
 
 sample_one_set0:
-    bcf LATC,5
+    bcf LATC,2
     goto sample_one_clk0
 
 sample_one_loop0:
-    bsf LATC,3
+    bsf LATC,1
     rlcf ad_conf,F
 
 sample_one_a_bit0:
@@ -1527,18 +1393,18 @@ sample_one_a_bit0:
     goto sample_one_set1
 
 sample_one_clk0:
-    bcf LATC,3
+    bcf LATC,1
     decfsz temp0,F
     bra sample_one_loop0
 ;
     goto sample_one_setup_ok
 
 sample_one_set1:
-    bsf LATC,5
+    bsf LATC,2
     goto sample_one_clk1
 
 sample_one_loop1:
-    bsf LATC,3
+    bsf LATC,1
     rlcf ad_conf,F
 
 sample_one_bit1:
@@ -1546,36 +1412,36 @@ sample_one_bit1:
     goto sample_one_set0
 
 sample_one_clk1:
-    bcf LATC,3
+    bcf LATC,1
     decfsz temp0,F
     bra sample_one_loop1
 
 sample_one_setup_ok:
-    bsf LATC,3
+    bsf LATC,1
     nop
 ;
-    bcf LATC,3
+    bcf LATC,1
     nop
 ;
-    bsf LATC,3
+    bsf LATC,1
     clrf ad_vall
     clrf ad_valh
     movlw 0xE
     movwf temp0
-    bsf LATC,5
+    bsf LATC,2
 ;
-    bcf LATC,3
+    bcf LATC,1
 
 sample_one_loop:
     bcf STATUS,C
     rlcf ad_vall,F
     rlcf ad_valh,F
-    bsf LATC,3
+    bsf LATC,1
     nop
     nop
-    btfsc PORTC,4
+    btfsc PORTC,3
     bsf ad_vall,0
-    bcf LATC,3
+    bcf LATC,1
     decfsz temp0,F
     bra sample_one_loop
 ;
@@ -1584,6 +1450,8 @@ sample_one_loop:
     movlw 0xE0
     btfsc ad_valh,4
     iorwf ad_valh,F
+;    
+    bsf LATC,0
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1591,49 +1459,50 @@ sample_one_loop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Sample:
-    movlw 0x30
-    bcf LATC,0
+    movlw 0x10
     call SampleOne
-    bsf LATC,0
 ;
     movf ad_vall,W
-    movwf wind_u_lsb
+    movwf solar12_i_lsb
 ;
     movf ad_valh,W
-    movwf wind_u_msb
+    movwf solar12_i_msb
+;    
+    movlw 0x30
+    call SampleOne
+;
+    movf ad_vall,W
+    movwf solar12_u_lsb
+;
+    movf ad_valh,W
+    movwf solar12_u_msb
 ;    
     movlw 0x50
-    bcf LATC,0
     call SampleOne
-    bsf LATC,0
 ;
     movf ad_vall,W
-    movwf solar_u_lsb
+    movwf solar24_i_lsb
 ;
     movf ad_valh,W
-    movwf solar_u_msb
+    movwf solar24_i_msb
 ;    
-    movlw 0x80
-    bcf LATC,1
+    movlw 0xE0
     call SampleOne
-    bsf LATC,1
 ;
     movf ad_vall,W
-    movwf wind_i_lsb
+    movwf solar24_u_lsb
 ;
     movf ad_valh,W
-    movwf wind_i_msb
+    movwf solar24_u_msb
 ;    
-    movlw 0x60
-    bcf LATC,0
+    movlw 0xF0
     call SampleOne
-    bsf LATC,0
 ;
     movf ad_vall,W
-    movwf solar_i_lsb
+    movwf bat_u_lsb
 ;
     movf ad_valh,W
-    movwf solar_i_msb
+    movwf bat_u_msb
     return
  
     end
