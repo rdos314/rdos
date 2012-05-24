@@ -142,26 +142,53 @@ mw0:
     DW 0x0667
     DW 0
 
-ui2:
+u12_2:
+    DW 0x4E20
+
+u12_1:
+    DW 0x7D0
+
+u12_0:
+    DW 0xC8
+
+mu12_2:
+    DW 0x14
+
+u24_2:
+    DW 0x2710
+
+u24_1:
+    DW 0x3E8
+
+u24_0:
+    DW 0x64
+
+mu24_2:
+    DW 0xA
+
+i24_2:
+    DW 0x2710
+
+i24_1:
+    DW 0x3E8
+
+i24_0:
+    DW 0x64
+
+mi24_2:
+    DW 0xA
+
+i12_1:
     DW 0xFA0
 
-ui1:
+i12_0:
     DW 0x190
 
-ui0:
+mi12_2:
     DW 0x28
 
-mui2:
+mi12_1:
     DW 0x4
-
-tm0:
-    DW 0x4
-
-t0:
-    DW 0x28
-
-t1:
-    DW 0x190
 
 h4:
     DW 0x2710
@@ -260,14 +287,14 @@ ResetStart:
 ;
     movlw 0x0
     movwf solar12_ref_lsb
-    movlw 0x2
+    movlw 0xa
     movwf solar12_ref_msb
     call SetupSolar12
     bsf flags,FLAG_SOLAR12_U_INCREASE
 ;
     movlw 0x0
     movwf solar24_ref_lsb
-    movlw 0x2
+    movlw 0xa
     movwf solar24_ref_msb
     call SetupSolar24
     bsf flags,FLAG_SOLAR24_U_INCREASE
@@ -1125,12 +1152,12 @@ ConvPower:
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; ConvUI
+; ConvU12
 ;    FSR0:  2 byte voltage / current
 ;    FSR1:  Buffer in/out
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ConvUI:
+ConvU12:
     movf INDF0,W
     movwf val0
     incf FSR0L,F
@@ -1140,9 +1167,9 @@ ConvUI:
     incf FSR0L,F
 ;
     btfss val1,7
-    goto ConvUIPos
+    goto ConvU12Pos
 
-ConvUINeg:     
+ConvU12Neg:     
     movlw '-'
     movwf INDF1
     incf FSR1L,F
@@ -1153,25 +1180,25 @@ ConvUINeg:
     addwf val0,F
     movlw 0
     addwfc val1,F
-    goto ConvUIDo
+    goto ConvU12Do
 
-ConvUIPos:        
+ConvU12Pos:        
     movlw '+'
     movwf INDF1
     incf FSR1L,F
 
-ConvUIDo:
-    movlw ui2
+ConvU12Do:
+    movlw u12_2
     movwf TBLPTRL
     call Conv2One
 ;
     incf FSR1L,F
-    movlw ui1
+    movlw u12_1
     movwf TBLPTRL
     call Conv2One
 ;
     incf FSR1L,F
-    movlw ui0
+    movlw u12_0
     movwf TBLPTRL
     call Conv2One
 ;
@@ -1180,11 +1207,193 @@ ConvUIDo:
     movwf INDF1
 ;
     incf FSR1L,F
-    movlw mui2
+    movlw mu12_2
     movwf TBLPTRL
     call Conv2One
     return
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; ConvU24
+;    FSR0:  2 byte voltage / current
+;    FSR1:  Buffer in/out
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConvU24:
+    movf INDF0,W
+    movwf val0
+    incf FSR0L,F
+;
+    movf INDF0,W
+    movwf val1
+    incf FSR0L,F
+;
+    btfss val1,7
+    goto ConvU24Pos
+
+ConvU24Neg:     
+    movlw '-'
+    movwf INDF1
+    incf FSR1L,F
+;
+    comf val0,F
+    comf val1,F
+    movlw 1
+    addwf val0,F
+    movlw 0
+    addwfc val1,F
+    goto ConvU24Do
+
+ConvU24Pos:        
+    movlw '+'
+    movwf INDF1
+    incf FSR1L,F
+
+ConvU24Do:
+    movlw u24_2
+    movwf TBLPTRL
+    call Conv2One
+;
+    incf FSR1L,F
+    movlw u24_1
+    movwf TBLPTRL
+    call Conv2One
+;
+    incf FSR1L,F
+    movlw u24_0
+    movwf TBLPTRL
+    call Conv2One
+;
+    incf FSR1L,F
+    movlw '.'
+    movwf INDF1
+;
+    incf FSR1L,F
+    movlw mu24_2
+    movwf TBLPTRL
+    call Conv2One
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; ConvI24
+;    FSR0:  2 byte current
+;    FSR1:  Buffer in/out
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConvI24:
+    movf INDF0,W
+    movwf val0
+    incf FSR0L,F
+;
+    movf INDF0,W
+    movwf val1
+    incf FSR0L,F
+;
+    btfss val1,7
+    goto ConvI24Pos
+
+ConvI24Neg:     
+    movlw '-'
+    movwf INDF1
+    incf FSR1L,F
+;
+    comf val0,F
+    comf val1,F
+    movlw 1
+    addwf val0,F
+    movlw 0
+    addwfc val1,F
+    goto ConvI24Do
+
+ConvI24Pos:        
+    movlw '+'
+    movwf INDF1
+    incf FSR1L,F
+
+ConvI24Do:
+    movlw i24_2
+    movwf TBLPTRL
+    call Conv2One
+;
+    incf FSR1L,F
+    movlw i24_1
+    movwf TBLPTRL
+    call Conv2One
+;
+    incf FSR1L,F
+    movlw i24_0
+    movwf TBLPTRL
+    call Conv2One
+;
+    incf FSR1L,F
+    movlw '.'
+    movwf INDF1
+;
+    incf FSR1L,F
+    movlw mi24_2
+    movwf TBLPTRL
+    call Conv2One
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; ConvI12
+;    FSR0:  2 byte current
+;    FSR1:  Buffer in/out
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConvI12:
+    movf INDF0,W
+    movwf val0
+    incf FSR0L,F
+;
+    movf INDF0,W
+    movwf val1
+    incf FSR0L,F
+;
+    btfss val1,7
+    goto ConvI12Pos
+
+ConvI12Neg:     
+    movlw '-'
+    movwf INDF1
+    incf FSR1L,F
+;
+    comf val0,F
+    comf val1,F
+    movlw 1
+    addwf val0,F
+    movlw 0
+    addwfc val1,F
+    goto ConvI12Do
+
+ConvI12Pos:        
+    movlw '+'
+    movwf INDF1
+    incf FSR1L,F
+
+ConvI12Do:
+    movlw i12_1
+    movwf TBLPTRL
+    call Conv2One
+;
+    incf FSR1L,F
+    movlw i12_0
+    movwf TBLPTRL
+    call Conv2One
+;
+    incf FSR1L,F
+    movlw '.'
+    movwf INDF1
+;
+    incf FSR1L,F
+    movlw mi12_2
+    movwf TBLPTRL
+    call Conv2One
+;
+    incf FSR1L,F
+    movlw mi12_1
+    movwf TBLPTRL
+    call Conv2One
+    return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; ConvRaw
@@ -1249,7 +1458,7 @@ CreateStat:
     incf FSR1L,F
 ;
     lfsr 0,solar12_ref_lsb
-    call ConvUI
+    call ConvU12
 ;
     incf FSR1L,F
     movlw ' '
@@ -1257,7 +1466,7 @@ CreateStat:
     incf FSR1L,F
 ;
     lfsr 0,solar24_ref_lsb
-    call ConvUI
+    call ConvU24
 ;
     incf FSR1L,F
     movlw ' '
@@ -1265,7 +1474,7 @@ CreateStat:
     incf FSR1L,F
 ;
     lfsr 0,solar12_u_lsb
-    call ConvUI
+    call ConvU12
 ;
     incf FSR1L,F
     movlw ' '
@@ -1273,7 +1482,7 @@ CreateStat:
     incf FSR1L,F
 ;
     lfsr 0,solar24_u_lsb
-    call ConvUI
+    call ConvU24
 ;
     incf FSR1L,F
     movlw ' '
@@ -1281,7 +1490,7 @@ CreateStat:
     incf FSR1L,F
 ;
     lfsr 0,bat_u_lsb
-    call ConvUI
+    call ConvU24
 ;
     incf FSR1L,F
     movlw ' '
@@ -1289,7 +1498,7 @@ CreateStat:
     incf FSR1L,F
 ;
     lfsr 0,solar12_i_lsb
-    call ConvUI
+    call ConvI12
 ;
     incf FSR1L,F
     movlw ' '
@@ -1297,7 +1506,7 @@ CreateStat:
     incf FSR1L,F
 ;
     lfsr 0,solar24_i_lsb
-    call ConvUI
+    call ConvI24
 ;
     incf FSR1L,F
     movlw 0xD

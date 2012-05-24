@@ -2040,20 +2040,24 @@ disable_all_irq Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           GetMsiParam
+;       NAME:           RegisterMsi
 ;
-;       DESCRIPTION:    Get MSI parameters
+;       DESCRIPTION:    Register MSI and return parameters
 ;
 ;       PARAMETERS:     AL      Int base
+;                       BH      Bus
+;                       BL      Device
+;                       CH      Function
+;                       CL      MSI address register
 ;
 ;       RETURNS:        EDX     MSI address
 ;                       AX      MSI data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_msi_param_name    DB 'Get MSI Param',0
+register_msi_name    DB 'Register MSI',0
 
-get_msi_param  Proc far
+register_msi  Proc far
     mov ah,1
     mov edx,0FEEFF000h
 ;    push ds
@@ -2065,7 +2069,7 @@ get_msi_param  Proc far
 ;    or edx,0FEE00008h
 ;    pop ds
     retf32
-get_msi_param  Endp
+register_msi  Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3743,10 +3747,10 @@ init    PROC far
     mov ax,request_pci_irq_handler_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET get_msi_param
-    mov edi,OFFSET get_msi_param_name
+    mov esi,OFFSET register_msi
+    mov edi,OFFSET register_msi_name
     xor cl,cl
-    mov ax,get_msi_param_nr
+    mov ax,register_msi_nr
     RegisterOsGate
 ;
     mov esi,OFFSET request_msi_handler

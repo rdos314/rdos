@@ -1373,10 +1373,14 @@ DisableAllIrq   MACRO
                     ENDM
 
 ; IN  AL        Int base
+; IN  BH        Bus
+; IN  BL        Device
+; IN  CH        Function
+; IN  CL        MSI address register
 ; OUT EDX       MSI address
 ; OUT AX        MSI data
-GetMsiParam    MACRO
-    OsGate get_msi_param_nr
+RegisterMsi    MACRO
+    OsGate register_msi_nr
                     ENDM
 
 ; IN  AL        Int base

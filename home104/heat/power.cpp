@@ -78,7 +78,7 @@ void BatteryThread(void *Param)
             {
                 fval = (long double)bat_sum / 2500.0;
                 sprintf(str, "%5.1Lf", fval);            
-                Table->SetText(2, 3, str);
+                Table->SetText(2, 5, str);
 
                 bat_count = 0;
                 bat_sum = 0;
@@ -171,10 +171,15 @@ void TPower::Execute()
     int i;
     int ok;
 
-    long double wind_power;
-    long double solar_power;
-    long double wind_u;
-    long double solar_u;
+    long double solar12_power;
+    long double solar24_power;
+    long double solar12_ref;
+    long double solar24_ref;
+    long double solar12_u;
+    long double solar24_u;
+    long double solar12_i;
+    long double solar24_i;
+    long double bat_u;
     
     TLabelFactory CommentLabelFactory;
     TLabelFactory ValueLabelFactory;
@@ -207,7 +212,7 @@ void TPower::Execute()
     Label->SetText("Energi");
     Label->Show();
 
-    Table = new TTableControl(FControl, 50, 50, 500, 300);
+    Table = new TTableControl(FControl, 50, 50, 750, 300);
     Table->SetRowSpacing(5);
     Table->SetColSpacing(8);
     Table->SetSpacingTransparent();
@@ -217,22 +222,26 @@ void TPower::Execute()
     Table->AddLabelColumn(&UnitLabelFactory, 70);
     Table->AddLabelColumn(&ValueLabelFactory, 100);
     Table->AddLabelColumn(&UnitLabelFactory, 70);
+    Table->AddLabelColumn(&ValueLabelFactory, 100);
+    Table->AddLabelColumn(&UnitLabelFactory, 70);
 
     Table->AddRow(24, 45);
     Table->AddRow(24, 45);
     Table->AddRow(24, 45);
 
-    Table->SetText(0, 0, "Vind");
+    Table->SetText(0, 0, "Sol 12");
     Table->SetText(0, 2, "W");
     Table->SetText(0, 4, "volt");
+    Table->SetText(0, 6, "ampere");
 
-    Table->SetText(1, 0, "Sol");
+    Table->SetText(1, 0, "Sol 24");
     Table->SetText(1, 2, "W");
     Table->SetText(1, 4, "volt");
+    Table->SetText(1, 6, "ampere");
 
     Table->SetText(2, 0, "Batteri");
-    Table->SetText(1, 2, "W");
-    Table->SetText(2, 4, "volt");
+    Table->SetText(1, 4, "volt");
+    Table->SetText(2, 6, "volt");
 
     serial.Open();
 
@@ -252,28 +261,31 @@ void TPower::Execute()
             }
             str[i] = 0;
 
-            if (i == 47)
+            if (i > 47)
             {
-                count = sscanf(str, "%Lf %Lf %Lf %Lf", &wind_power, &solar_power, &wind_u, &solar_u);
-                if (count == 4)
+                count = sscanf(str, "%Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf", &solar12_power, &solar24_power, &solar12_ref, &solar24_ref, &solar12_u, &solar24_u, &bat_u, &solar12_i, &solar24_i);
+                if (count == 9)
                 {
-                    if (wind_u < 0.0)
-                        wind_u = 0.0;
-
-                    if (solar_u < 0.0)
-                        solar_u = 0.0;
-                        
-                    sprintf(str, "%6.3Lf", wind_power);
+                    sprintf(str, "%6.3Lf", solar12_power);
                     Table->SetText(0, 1, str);
 
-                    sprintf(str, "%5.1Lf", wind_u);
+                    sprintf(str, "%5.1Lf", solar12_u);
                     Table->SetText(0, 3, str);
 
-                    sprintf(str, "%6.3Lf", solar_power);
+                    sprintf(str, "%5.2Lf", solar12_i);
+                    Table->SetText(0, 5, str);
+
+                    sprintf(str, "%6.3Lf", solar24_power);
                     Table->SetText(1, 1, str);
 
-                    sprintf(str, "%5.1Lf", solar_u);
+                    sprintf(str, "%5.1Lf", solar24_u);
                     Table->SetText(1, 3, str);
+
+                    sprintf(str, "%5.1Lf", solar24_i);
+                    Table->SetText(1, 5, str);
+
+                    sprintf(str, "%5.1Lf", bat_u);
+                    Table->SetText(2, 3, str);
                 }
             }         
         }

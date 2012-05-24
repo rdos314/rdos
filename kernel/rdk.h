@@ -468,7 +468,7 @@
 
 #define osgate_hook_init_pci 408
 
-#define osgate_get_msi_param 409
+#define osgate_register_msi 409
 
 #define osgate_allocate_ints 410
 #define osgate_free_int 411
@@ -503,6 +503,8 @@
 
 #define osgate_lock_file 431
 #define osgate_unlock_file 432
+
+#define osgate_setup_timer_core 433
 
 
 
@@ -976,7 +978,7 @@
 
 #define OsGate_hook_init_pci 0x3E 0x67 0x9a 152 1 0 0 2 0
 
-#define OsGate_get_msi_param 0x3E 0x67 0x9a 153 1 0 0 2 0
+#define OsGate_register_msi 0x3E 0x67 0x9a 153 1 0 0 2 0
 
 #define OsGate_allocate_ints 0x3E 0x67 0x9a 154 1 0 0 2 0
 #define OsGate_free_int 0x3E 0x67 0x9a 155 1 0 0 2 0
@@ -1011,4 +1013,6 @@
 
 #define OsGate_lock_file 0x3E 0x67 0x9a 175 1 0 0 2 0
 #define OsGate_unlock_file 0x3E 0x67 0x9a 176 1 0 0 2 0
+
+#define OsGate_setup_timer_core 0x3E 0x67 0x9a 177 1 0 0 2 0
 

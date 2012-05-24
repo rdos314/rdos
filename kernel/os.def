@@ -468,7 +468,7 @@ end_disc_handler_nr         = 407
 
 hook_init_pci_nr            = 408
 
-get_msi_param_nr            = 409
+register_msi_nr             = 409
 
 allocate_ints_nr            = 410
 free_int_nr                 = 411
