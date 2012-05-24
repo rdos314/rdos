@@ -52,6 +52,9 @@ extern void ReqShutdown(int Core);
 extern int GetExtFeatureFlags();
 #pragma aux GetExtFeatureFlags value [eax]
 
+extern void SetTimerCore(int Core);
+#pragma aux SetTimerCore parm routine [eax]
+
 #define MAX_DEVICE_COUNT        1024
 #define MAX_PCI_ROOT_COUNT      8
 #define MAX_PCI_IRQ_COUNT       256
@@ -300,6 +303,7 @@ char CpuVendor[40];
 int FeatureFlags;
 int BaseFreq;
 int MaxCpuLoad;
+int MinCpuLoad;
 
 int Irt;
 int Rvo;
@@ -642,6 +646,7 @@ void StopCore()
 /*
     if (ActiveProcessors > 1 && RdosHasGlobalTimer())
     {
+        SetTimerCore(0);
         ActiveProcessors--;
         ReqShutdown(ActiveProcessors);
     }
@@ -662,6 +667,7 @@ void __far PowerThread(void *param)
     long long NullDiff;
     int Core;
     int CpuLoad;
+    int MinLoadCore;
 
     ProcessorCount = RdosGetCoreCount();
 
@@ -675,7 +681,9 @@ void __far PowerThread(void *param)
     {
         RdosWaitMilli(250);
 
+        MinCpuLoad = 110;
         MaxCpuLoad = 0;
+        MinLoadCore = 0;
         for (Core = 0; Core < ProcessorCount; Core++)
         {
             RdosGetCoreLoad(Core, &NullTics, &CoreTics);
@@ -689,8 +697,16 @@ void __far PowerThread(void *param)
                 CpuLoad = 100 - (int)(100 * NullDiff / CoreDiff);
                 if (CpuLoad > MaxCpuLoad)
                     MaxCpuLoad = CpuLoad;
+
+                if (CpuLoad < MinCpuLoad)
+                {
+                    MinCpuLoad = CpuLoad;
+                    MinLoadCore = Core;
+                }
             }
         }
+
+        SetTimerCore(MinLoadCore);
 
         if (MaxCpuLoad > 60)
         {

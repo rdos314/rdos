@@ -24,16 +24,7 @@ void main()
     y = 3.1456;
     x = sin(x) * y;
 
-    handle = RdosOpenSysIni();
-    RdosGotoIniSection(handle, "R2");
-//    ok = RdosRemoveIniSection(handle, "R2");
-//    if (ok)
-//        ok = RdosDeleteIni(handle, "Seq");
-//    if (ok)
-        ok = RdosWriteIni(handle, "Seq", "99");
-    if (ok)
-        ok = RdosReadIni(handle, "Seq", test_str, 100);
-    RdosCloseIni(handle);
+    RdosTestGate();
 
     bpp = 24;
     width = 640;

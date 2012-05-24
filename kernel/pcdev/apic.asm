@@ -2219,6 +2219,47 @@ start_hpet_timer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           SetupTimerCore
+;
+;           DESCRIPTION:    Setup active core for HPET
+;
+;           PARAMETERS:     FS  Core sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_hpet_core_name    DB 'Setup HPET Core', 0
+
+setup_hpet_core    Proc far
+    push ds
+    push es
+    push eax
+    push bx
+    push edx
+;
+    mov ax,SEG data
+    mov ds,ax
+;    
+    mov es,ds:hpet_sel
+    mov bx,OFFSET hpet_counter_arr    
+;    
+    mov eax,40h
+    mov edx,fs:ps_apic
+    shl edx,12
+    or edx,0FEE00000h
+    mov es:[bx].hpetc_msi_ads,edx
+    mov es:[bx].hpetc_msi_data,eax
+;
+    pop edx
+    pop bx
+    pop eax
+    pop es
+    pop ds
+    retf32
+setup_hpet_core    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           ReloadSysTimer
 ;
 ;           DESCRIPTION:    Reload HPET timer
@@ -3628,7 +3669,7 @@ init    PROC far
     mov edi,OFFSET test_gate_name
     xor dx,dx
     mov ax,test_gate_nr
-    RegisterBimodalSyscall
+;    RegisterBimodalSyscall
 ;
     mov esi,OFFSET get_ioapic_state
     mov edi,OFFSET get_ioapic_state_name
@@ -3836,6 +3877,12 @@ init_hpet_loop:
     mov edi,OFFSET reload_hpet_timer_name
     xor cl,cl
     mov ax,reload_sys_timer_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET setup_hpet_core
+    mov edi,OFFSET setup_hpet_core_name
+    xor cl,cl
+    mov ax,setup_timer_core_nr
     RegisterOsGate
 ;
     mov si,OFFSET has_global_timer

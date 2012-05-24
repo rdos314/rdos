@@ -751,6 +751,11 @@ RunApCore    MACRO
     OsGate run_ap_core_nr
                         ENDM
 
+;   IN  FS      Processor selector to interrupt
+SetupTimerCore    MACRO
+    OsGate setup_timer_core_nr
+                        ENDM
+
 TimerExpired    MACRO
     OsGate timer_expired_nr
                         ENDM

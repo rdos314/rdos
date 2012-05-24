@@ -871,6 +871,36 @@ ReqShutdown_    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetTimerCore
+;
+;           DESCRIPTION:    Set core that should receive timeout events
+;
+;           PARAMETERS:     EAX     Core #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public SetTimerCore_
+
+SetTimerCore_    Proc near
+    push fs
+;    
+    push eax
+    mov ax,setup_timer_core_nr
+    IsValidOsGate
+    pop eax
+    jc stcDone
+;
+    GetCoreNumber
+    SetupTimerCore
+
+stcDone:
+    pop fs                
+    ret
+SetTimerCore_    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetExtFeatureFlags
 ;
 ;           DESCRIPTION:    Req extended feature flags
