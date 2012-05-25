@@ -118,28 +118,48 @@ ser_buf         EQU 0x100
 ; Tables (first 255 words)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-w2:
+w12_1:
     DW 0
-    DW 0x9C4
+    DW 0x2710
 
-w1:
+w12_0:
     DW 0
-    DW 0xFA
+    DW 0x3E8
 
-w0:
+mw12_2:
     DW 0
-    DW 0x19
+    DW 0x64
 
-mw2:
+mw12_1:
+    DW 0
+    DW 0xA
+
+mw12_0:    
+    DW 0
+    DW 1
+
+w24_2:
+    DW 0
+    DW 0x30D4
+
+w24_1:
+    DW 0
+    DW 0x4E2
+
+w24_0:
+    DW 0
+    DW 0x7D
+
+mw24_2:
     DW 0x8000
-    DW 2 
+    DW 0xC
 
-mw1:
-    DW 0x4000
-    DW 0
+mw24_1:
+    DW 0x2000
+    DW 1
 
-mw0:    
-    DW 0x0667
+mw24_0:    
+    DW 0x2000
     DW 0
 
 u12_2:
@@ -1096,12 +1116,12 @@ Conv4OneRevert:
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; ConvPower
+; ConvPower12
 ;    FSR0:  4 byte power
 ;    FSR1:  Buffer in/out
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ConvPower:
+ConvPower12:
     movf INDF0,W
     movwf val0
     incf FSR0L,F
@@ -1117,17 +1137,13 @@ ConvPower:
     movf INDF0,W
     movwf val3
 ;
-    movlw w2
+  
+    movlw w12_1
     movwf TBLPTRL
     call Conv4One
 ;
     incf FSR1L,F
-    movlw w1
-    movwf TBLPTRL
-    call Conv4One
-;
-    incf FSR1L,F
-    movlw w0
+    movlw w12_0
     movwf TBLPTRL
     call Conv4One
 ;
@@ -1136,17 +1152,73 @@ ConvPower:
     movwf INDF1
 ;
     incf FSR1L,F
-    movlw mw2
+    movlw mw12_2
     movwf TBLPTRL
     call Conv4One
 ;
     incf FSR1L,F
-    movlw mw1
+    movlw mw12_1
     movwf TBLPTRL
     call Conv4One
 ;
     incf FSR1L,F
-    movlw mw0
+    movlw mw12_0
+    movwf TBLPTRL
+    call Conv4One    
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; ConvPower24
+;    FSR0:  4 byte power
+;    FSR1:  Buffer in/out
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConvPower24:
+    movf INDF0,W
+    movwf val0
+    incf FSR0L,F
+;
+    movf INDF0,W
+    movwf val1
+    incf FSR0L,F
+;
+    movf INDF0,W
+    movwf val2
+    incf FSR0L,F
+;
+    movf INDF0,W
+    movwf val3
+;
+    movlw w24_2
+    movwf TBLPTRL
+    call Conv4One
+;
+    incf FSR1L,F
+    movlw w24_1
+    movwf TBLPTRL
+    call Conv4One
+;
+    incf FSR1L,F
+    movlw w24_0
+    movwf TBLPTRL
+    call Conv4One
+;
+    incf FSR1L,F
+    movlw '.'
+    movwf INDF1
+;
+    incf FSR1L,F
+    movlw mw24_2
+    movwf TBLPTRL
+    call Conv4One
+;
+    incf FSR1L,F
+    movlw mw24_1
+    movwf TBLPTRL
+    call Conv4One
+;
+    incf FSR1L,F
+    movlw mw24_0
     movwf TBLPTRL
     call Conv4One    
     return
@@ -1442,7 +1514,7 @@ ConvRaw:
 CreateStat:
     lfsr 0,solar12_ps0
     lfsr 1,ser_buf
-    call ConvPower
+    call ConvPower12
 ;
     incf FSR1L,F
     movlw ' '
@@ -1450,7 +1522,7 @@ CreateStat:
     incf FSR1L,F
 ;
     lfsr 0,solar24_ps0
-    call ConvPower
+    call ConvPower24
 ;
     incf FSR1L,F
     movlw ' '
