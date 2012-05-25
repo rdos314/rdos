@@ -504,6 +504,7 @@ get_ioapic_state_nr         = 430
 lock_file_nr                = 431
 unlock_file_nr              = 432
 
-setup_timer_core_nr         = 433
+switch_one_core_irq_nr      = 433
+switch_all_core_irqs_nr     = 434
 
 osgate_entries				= 440

@@ -213,6 +213,7 @@ hpet_counters       DW ?
 detected_irqs       DD ?,?
 
 core_irq_count      DW ?
+core_irq_curr       DW ?
 
 ioapic_count        DW ?
 ioapic_arr          DW 16 DUP(?)
@@ -535,6 +536,122 @@ get_ioapic_state    Proc far
     pop ds
     retf32
 get_ioapic_state    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SwitchOneCoreIrq
+;
+;           DESCRIPTION:    Switch one core IRQ
+;
+;           PARAMETERS:     FS  Core sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+switch_one_core_irq_name    DB 'Switch One Core IRQ', 0
+
+switch_one_core_irq    Proc far
+    push ds
+    push es
+    push eax
+    push bx
+    push edx
+;
+    mov ax,SEG data
+    mov ds,ax
+;    
+    mov bx,ds:core_irq_count
+    or bx,bx
+    jz switch_one_irq_done
+;   
+    mov bx,ds:core_irq_curr
+    add bx,bx
+    add bx,OFFSET core_irq_arr
+;
+    push ds
+    push bx
+    push cx
+;    
+    mov ds,ds:[bx]
+    call ds:ci_proc
+;
+    pop cx
+    pop bx    
+    pop ds
+;
+    mov bx,ds:core_irq_curr
+    inc bx
+    cmp bx,ds:core_irq_count
+    jb switch_one_irq_save
+;
+    xor bx,bx
+
+switch_one_irq_save:
+    mov ds:core_irq_curr,bx    
+
+switch_one_irq_done:
+    pop edx
+    pop bx
+    pop eax
+    pop es
+    pop ds
+    retf32
+switch_one_core_irq    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SwitchAllCoreIrqs
+;
+;           DESCRIPTION:    Switch all core IRQs
+;
+;           PARAMETERS:     FS  Core sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+switch_all_core_irqs_name    DB 'Switch All Core IRQs', 0
+
+switch_all_core_irqs    Proc far
+    push ds
+    push es
+    push eax
+    push bx
+    push cx
+    push edx
+;
+    mov ax,SEG data
+    mov ds,ax
+;    
+    mov cx,ds:core_irq_count
+    or cx,cx
+    jz switch_all_irq_done
+;   
+    mov bx,OFFSET core_irq_arr
+
+switch_all_irq_loop:
+    push ds
+    push bx
+    push cx
+;    
+    mov ds,ds:[bx]
+    call ds:ci_proc
+;
+    pop cx
+    pop bx    
+    pop ds
+;
+    add bx,2    
+    loop switch_all_irq_loop
+
+switch_all_irq_done:   
+    pop edx
+    pop cx
+    pop bx
+    pop eax
+    pop es
+    pop ds
+    retf32
+switch_all_core_irqs    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2387,59 +2504,6 @@ start_hpet_timer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           SetupTimerCore
-;
-;           DESCRIPTION:    Setup active core for HPET
-;
-;           PARAMETERS:     FS  Core sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-setup_hpet_core_name    DB 'Setup HPET Core', 0
-
-setup_hpet_core    Proc far
-    push ds
-    push es
-    push eax
-    push bx
-    push edx
-;
-    mov ax,SEG data
-    mov ds,ax
-;    
-    mov cx,ds:core_irq_count
-    or cx,cx
-    jz switch_irq_done
-;   
-    mov bx,OFFSET core_irq_arr
-
-switch_irq_loop:
-    push ds
-    push bx
-    push cx
-;    
-    mov ds,ds:[bx]
-    call ds:ci_proc
-;
-    pop cx
-    pop bx    
-    pop ds
-;
-    add bx,2    
-    loop switch_irq_loop
-
-switch_irq_done:   
-    pop edx
-    pop bx
-    pop eax
-    pop es
-    pop ds
-    retf32
-setup_hpet_core    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           ReloadSysTimer
 ;
 ;           DESCRIPTION:    Reload HPET timer
@@ -2999,6 +3063,7 @@ InitIoApic    Proc near
     mov ds,ax
     mov ds:ioapic_count,0
     mov ds:core_irq_count,0
+    mov ds:core_irq_curr,0
 ;
     push es
     mov ax,SEG data
@@ -3865,6 +3930,18 @@ init    PROC far
     mov ax,test_gate_nr
 ;    RegisterBimodalSyscall
 ;
+    mov esi,OFFSET switch_one_core_irq
+    mov edi,OFFSET switch_one_core_irq_name
+    xor cl,cl
+    mov ax,switch_one_core_irq_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET switch_all_core_irqs
+    mov edi,OFFSET switch_all_core_irqs_name
+    xor cl,cl
+    mov ax,switch_all_core_irqs_nr
+    RegisterOsGate
+;
     mov esi,OFFSET get_ioapic_state
     mov edi,OFFSET get_ioapic_state_name
     xor cl,cl
@@ -4071,12 +4148,6 @@ init_hpet_loop:
     mov edi,OFFSET reload_hpet_timer_name
     xor cl,cl
     mov ax,reload_sys_timer_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET setup_hpet_core
-    mov edi,OFFSET setup_hpet_core_name
-    xor cl,cl
-    mov ax,setup_timer_core_nr
     RegisterOsGate
 ;
     mov si,OFFSET has_global_timer

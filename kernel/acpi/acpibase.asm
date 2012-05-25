@@ -871,32 +871,62 @@ ReqShutdown_    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetTimerCore
+;           NAME:           SwitchOneIrq
 ;
-;           DESCRIPTION:    Set core that should receive timeout events
+;           DESCRIPTION:    Switch core for one IRQ
 ;
 ;           PARAMETERS:     EAX     Core #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public SetTimerCore_
+    public SwitchOneIrq_
 
-SetTimerCore_    Proc near
+SwitchOneIrq_    Proc near
     push fs
 ;    
     push eax
-    mov ax,setup_timer_core_nr
+    mov ax,switch_one_core_irq_nr
     IsValidOsGate
     pop eax
-    jc stcDone
+    jc soiDone
 ;
     GetCoreNumber
-    SetupTimerCore
+    SwitchOneCoreIrq
 
-stcDone:
+soiDone:
     pop fs                
     ret
-SetTimerCore_    Endp
+SwitchOneIrq_    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SwitchAllIrqs
+;
+;           DESCRIPTION:    Switch core for all IRQs
+;
+;           PARAMETERS:     EAX     Core #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public SwitchAllIrqs_
+
+SwitchAllIrqs_    Proc near
+    push fs
+;    
+    push eax
+    mov ax,switch_all_core_irqs_nr
+    IsValidOsGate
+    pop eax
+    jc saiDone
+;
+    GetCoreNumber
+    SwitchAllCoreIrqs
+
+saiDone:
+    pop fs                
+    ret
+SwitchAllIrqs_    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

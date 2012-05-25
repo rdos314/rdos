@@ -752,8 +752,13 @@ RunApCore    MACRO
                         ENDM
 
 ;   IN  FS      Processor selector to interrupt
-SetupTimerCore    MACRO
-    OsGate setup_timer_core_nr
+SwitchOneCoreIrq    MACRO
+    OsGate switch_one_core_irq_nr
+                        ENDM
+
+;   IN  FS      Processor selector to interrupt
+SwitchAllCoreIrqs    MACRO
+    OsGate switch_all_core_irqs_nr
                         ENDM
 
 TimerExpired    MACRO

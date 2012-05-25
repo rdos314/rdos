@@ -52,8 +52,11 @@ extern void ReqShutdown(int Core);
 extern int GetExtFeatureFlags();
 #pragma aux GetExtFeatureFlags value [eax]
 
-extern void SetTimerCore(int Core);
-#pragma aux SetTimerCore parm routine [eax]
+extern void SwitchOneIrq(int Core);
+#pragma aux SwitchOneIrq parm routine [eax]
+
+extern void SwitchAllIrqs(int Core);
+#pragma aux SwitchAllIrqs parm routine [eax]
 
 #define MAX_DEVICE_COUNT        1024
 #define MAX_PCI_ROOT_COUNT      8
@@ -646,7 +649,7 @@ void StopCore()
 /*
     if (ActiveProcessors > 1 && RdosHasGlobalTimer())
     {
-        SetTimerCore(0);
+        SwitchAllIrqs(0);
         ActiveProcessors--;
         ReqShutdown(ActiveProcessors);
     }
@@ -706,7 +709,7 @@ void __far PowerThread(void *param)
             }
         }
 
-        SetTimerCore(MinLoadCore);
+        SwitchOneIrq(MinLoadCore);
 
         if (MaxCpuLoad > 60)
         {
