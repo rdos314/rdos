@@ -1724,7 +1724,7 @@ SetupLocalApic    Proc near
     mov eax,10000000h    
     mov es:APIC_LOG_DEST,eax
 ;
-    mov eax,0FFh
+    xor eax,eax
     mov es:APIC_TPR,eax
 ;
     pop bx
@@ -1732,32 +1732,6 @@ SetupLocalApic    Proc near
     pop es    
     ret
 SetupLocalApic    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;               NAME:           EnableTpr
-;
-;               DESCRIPTION:    Set TPR to allow "lowest priority ints"
-;
-;               PARAMETERS:             
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EnableTpr    Proc near
-    push es
-    push eax
-;    
-    mov ax,apic_mem_sel
-    mov es,ax
-;
-    xor eax,eax
-    mov es:APIC_TPR,eax
-;
-    pop eax
-    pop es    
-    ret
-EnableTpr    Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2129,7 +2103,6 @@ daiLoop:
     loop daiApicLoop    
 ;
     call SetupLocalApic
-    call EnableTpr
 ;
     mov ax,apic_mem_sel
     mov ds,ax
@@ -3489,7 +3462,6 @@ sdcCombined:
     StartSysPreemptTimer
 
 sdcDone:
-    call EnableTpr
     RunApCore
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4122,7 +4094,6 @@ init_hpet_done:
     call CreateIrqHandlers
     call ProcessApicTable
     call SetupLocalApic
-    call EnableTpr
     call EnableDetect
 ;    
     call InitApicTimer
