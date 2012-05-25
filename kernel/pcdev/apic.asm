@@ -160,6 +160,34 @@ hpet_counter_arr    DB 32 * SIZE hpet_counter_struc DUP(?)
 
 hpet_struc      ENDS
 
+core_irq_struc  STRUC
+
+;  DS       This struct
+;  FS       New core
+ci_proc         DW ?
+
+core_irq_struc  ENDS
+
+msi_core_irq_struc  STRUC
+
+msi_base        core_irq_struc <>
+
+msi_bus         DB ?
+msi_device      DB ?
+msi_function    DB ?
+msi_reg         DB ?
+
+msi_core_irq_struc  ENDS
+
+ioapic_core_irq_struc   STRUC
+
+ioapic_base     core_irq_struc <>
+
+ioapic_sel      DW ?
+ioapic_num      DB ?
+
+ioapic_core_irq_struc   ENDS
+
         
 data    SEGMENT byte public 'DATA'
 
@@ -184,12 +212,16 @@ hpet_counters       DW ?
 
 detected_irqs       DD ?,?
 
+core_irq_count      DW ?
+
 ioapic_count        DW ?
 ioapic_arr          DW 16 DUP(?)
 
 redir_arr           DB 16 DUP(?)
 
 global_int_arr      DD 256 DUP(?,?)
+
+core_irq_arr        DW 256 DUP(?)
 
 data    ENDS
 
@@ -423,6 +455,33 @@ UnlockIoApic    MACRO
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;               NAME:           InsertCoreIrq
+;
+;               DESCRIPTION:    Insert new redirectable IRQ handler
+;
+;               PARAMETERS:     DS      data segment
+;                               ES      IRQ selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertCoreIrq   Proc near
+    push ax
+    push bx
+;
+    mov bx,ds:core_irq_count
+    add bx,bx
+    add bx,OFFSET core_irq_arr
+    mov ds:[bx],es
+    inc ds:core_irq_count
+;    
+    pop bx
+    pop ax
+    ret
+InsertCoreIrq   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;               NAME:           Get IOAPIC state
 ;
 ;               DESCRIPTION:    Get state for IOAPIC int
@@ -476,6 +535,80 @@ get_ioapic_state    Proc far
     pop ds
     retf32
 get_ioapic_state    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CoreIoApicHandler
+;
+;       DESCRIPTION:    Callback to move IO-APIC entry
+;
+;       PARAMETERS:     DS      IOAPIC structure
+;                       FS      New core to serve IRQ
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CoreIoApicHandler Proc near
+    push ds
+    push es
+    push eax
+    push bx
+;    
+    mov al,ds:ioapic_num
+    mov es,ds:ioapic_sel
+;
+    mov ax,SEG data
+    mov ds,ax    
+;       
+    mov bl,11h
+    add bl,al
+    add bl,al
+;
+    LockIoApic
+;
+    mov es:ioapic_regsel,bl
+    mov eax,fs:ps_apic
+    shl eax,24
+    mov es:ioapic_window,eax
+;
+    UnlockIoApic
+;    
+    pop bx
+    pop eax
+    pop es
+    pop ds
+    ret
+CoreIoApicHandler Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddIoApicHandler
+;
+;       DESCRIPTION:    Add core mover for IO-APIC
+;
+;       PARAMETERS:     AL      IO-APIC entry
+;                       FS      IO-APIC selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddIoApicHandler    Proc near
+    push es
+;    
+    push eax
+    mov eax,SIZE ioapic_core_irq_struc
+    AllocateSmallGlobalMem
+    pop eax
+;    
+    mov es:ioapic_sel,fs
+    mov es:ioapic_num,al
+    mov es:ci_proc,OFFSET CoreIoApicHandler
+;
+    call InsertCoreIrq
+;
+    pop es
+    ret
+AddIoApicHandler    Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -830,6 +963,7 @@ rihPrioOk:
     movzx edx,fs:[bx].gi_int_num
     mov dh,fs:[bx].gi_trigger_mode
     mov fs,fs:[bx].gi_ioapic_sel
+    call AddIoApicHandler
 ;       
     mov bl,10h
     add bl,al
@@ -842,18 +976,8 @@ rihPrioOk:
     inc bl
     mov fs:ioapic_regsel,bl
 ;
-    test dh,1
-    jnz rihLowestPrio
-
-rihBsp:
     mov edx,ds:bsp_id
     shl edx,24
-    jmp rihDeliveryOk
-
-rihLowestPrio:
-    mov edx,0FF000000h
-
-rihDeliveryOk:
     mov fs:ioapic_window,edx
     UnlockIoApic
     pop ds
@@ -1387,6 +1511,7 @@ rpihPrioOk:
     movzx edx,fs:[bx].gi_int_num
     mov dh,fs:[bx].gi_trigger_mode
     mov fs,fs:[bx].gi_ioapic_sel
+    call AddIoApicHandler
 ;       
     mov bl,10h
     add bl,al
@@ -1399,18 +1524,8 @@ rpihPrioOk:
     inc bl
     mov fs:ioapic_regsel,bl
 ;
-    test dh,1
-    jnz rpihLowestPrio
-
-rpihBsp:
     mov edx,ds:bsp_id
     shl edx,24
-    jmp rpihDeliveryOk
-
-rpihLowestPrio:
-    mov edx,0FF000000h
-
-rpihDeliveryOk:
     mov fs:ioapic_window,edx
     UnlockIoApic
     pop ds
@@ -1887,18 +2002,8 @@ edLoop:
     inc bl
     mov es:ioapic_regsel,bl
 ;
-    test dh,1
-    jnz edLowestPrio
-
-edBsp:
     mov edx,ds:bsp_id
     shl edx,24
-    jmp edDeliveryOk
-
-edLowestPrio:
-    mov edx,0FF000000h
-
-edDeliveryOk:
     mov es:ioapic_window,edx
     UnlockIoApic
 
@@ -2040,6 +2145,38 @@ disable_all_irq Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CoreMsiHandler
+;
+;       DESCRIPTION:    Callback to move MSI handler
+;
+;       PARAMETERS:     DS      MSI structure
+;                       FS      New core to serve IRQ
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CoreMsiHandler  Proc near
+    push eax
+    push bx
+    push cx
+;    
+    mov eax,fs:ps_apic
+    shl eax,12
+    or eax,0FEE00000h
+    mov bh,ds:msi_bus
+    mov bl,ds:msi_device
+    mov ch,ds:msi_function
+    mov cl,ds:msi_reg
+    WritePciDword
+;
+    pop cx
+    pop bx
+    pop eax
+    ret
+CoreMsiHandler  Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           RegisterMsi
 ;
 ;       DESCRIPTION:    Register MSI and return parameters
@@ -2058,16 +2195,29 @@ disable_all_irq Endp
 register_msi_name    DB 'Register MSI',0
 
 register_msi  Proc far
-    mov ah,1
-    mov edx,0FEEFF000h
-;    push ds
-;    mov dx,SEG data
-;    mov ds,dx
-;    xor ah,ah
-;    mov edx,ds:bsp_id
-;    shl edx,12
-;    or edx,0FEE00008h
-;    pop ds
+    push ds
+;
+    mov dx,SEG data
+    mov ds,dx
+;
+    push es
+    push eax
+    mov eax,SIZE msi_core_irq_struc
+    AllocateSmallGlobalMem
+    mov es:msi_bus,bh
+    mov es:msi_device,bl
+    mov es:msi_function,ch
+    mov es:msi_reg,cl
+    mov es:ci_proc,OFFSET CoreMsiHandler
+    call InsertCoreIrq
+    pop eax
+    pop es
+;    
+    xor ah,ah
+    mov edx,ds:bsp_id
+    shl edx,12
+    or edx,0FEE00000h
+    pop ds
     retf32
 register_msi  Endp
    
@@ -2172,6 +2322,39 @@ reload_sys_preempt_timer  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CoreHpetHandler
+;
+;       DESCRIPTION:    Callback to move HPET handler
+;
+;       PARAMETERS:     DS      MSI structure
+;                       FS      New core to serve IRQ
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CoreHpetHandler Proc near
+    push es
+    push eax
+    push bx
+;    
+    mov ax,SEG data
+    mov es,ax
+    mov es,es:hpet_sel
+    mov bx,OFFSET hpet_counter_arr    
+;    
+    mov eax,fs:ps_apic
+    shl eax,12
+    or eax,0FEE00000h
+    mov es:[bx].hpetc_msi_ads,eax
+;
+    pop bx
+    pop eax
+    pop es
+    ret
+CoreHpetHandler Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           StartSysTimer
 ;
 ;           DESCRIPTION:    Start HPET sys timer
@@ -2200,8 +2383,11 @@ start_hpet_timer    Proc far
     jmp start_hpet_done
 
 start_hpet_msi: 
-    mov ax,140h
-    mov edx,0FEEFF000h
+    mov eax,40h
+    mov edx,ds:bsp_id
+    shl edx,12
+    or edx,0FEE00000h
+;
     mov es:[bx].hpetc_msi_data,eax
     mov es:[bx].hpetc_msi_ads,edx
 ;
@@ -2209,6 +2395,11 @@ start_hpet_msi:
     and ax,NOT 0Ah
     or ax,4104h 
     mov es:[bx].hpetc_config,eax
+;
+    mov eax,SIZE core_irq_struc
+    AllocateSmallGlobalMem
+    mov es:ci_proc,OFFSET CoreHpetHandler
+    call InsertCoreIrq
 
 start_hpet_done:
     xor eax,eax
@@ -2243,16 +2434,28 @@ setup_hpet_core    Proc far
     mov ax,SEG data
     mov ds,ax
 ;    
-    mov es,ds:hpet_sel
-    mov bx,OFFSET hpet_counter_arr    
+    mov cx,ds:core_irq_count
+    or cx,cx
+    jz switch_irq_done
+;   
+    mov bx,OFFSET core_irq_arr
+
+switch_irq_loop:
+    push ds
+    push bx
+    push cx
 ;    
-    mov eax,40h
-    mov edx,fs:ps_apic
-    shl edx,12
-    or edx,0FEE00000h
-    mov es:[bx].hpetc_msi_ads,edx
-    mov es:[bx].hpetc_msi_data,eax
+    mov ds,ds:[bx]
+    call ds:ci_proc
 ;
+    pop cx
+    pop bx    
+    pop ds
+;
+    add bx,2    
+    loop switch_irq_loop
+
+switch_irq_done:   
     pop edx
     pop bx
     pop eax
@@ -2822,6 +3025,7 @@ InitIoApic    Proc near
     mov ax,SEG data
     mov ds,ax
     mov ds:ioapic_count,0
+    mov ds:core_irq_count,0
 ;
     push es
     mov ax,SEG data
@@ -2843,7 +3047,6 @@ init_ioapic_isa_trigger_mode:
     mov cx,256-16
 
 init_ioapic_pci_trigger_mode:
-;    mov [di].gi_trigger_mode,0A9h  ; lowest priority delivery doesn't work on some processors (Intel Core Duo)
     mov [di].gi_trigger_mode,0A0h
     add di,8
     loop init_ioapic_pci_trigger_mode
