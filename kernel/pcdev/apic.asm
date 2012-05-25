@@ -2441,9 +2441,9 @@ get_pit_time  Endp
 get_hpet_time_name    DB 'Get System Time', 0
 
 get_hpet_time  Proc far
+    push ecx
     push ds
     push es
-    push ecx
 ;
     mov ax,SEG data
     mov ds,ax
@@ -2485,9 +2485,24 @@ ghtGet:
     mov ds:time_spinlock,0
     sti
 ;
+    pop cx
+    verr cx
+    jz hpet_es_ok
+;
+    xor cx,cx
+    
+hpet_es_ok:
+    mov es,cx
+;
+    pop cx
+    verr cx
+    jz hpet_ds_ok
+;
+    xor cx,cx
+    
+hpet_ds_ok:
+    mov ds,cx
     pop ecx
-    pop es
-    pop ds
     retf32
 get_hpet_time  Endp
     

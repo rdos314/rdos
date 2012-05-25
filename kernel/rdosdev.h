@@ -1562,7 +1562,13 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
 #pragma aux RdosDerefHandle = \
     "push ds" \
     OsGate_deref_handle \
+    "jnc ok" \
+    "xor edx,edx" \
+    "xor ebx,ebx" \
+    "jmp done" \
+    "ok: "\
     "mov dx,ds" \
+    "done: "\    
     "pop ds" \
     parm [ax] [ebx] \
     value [dx ebx];

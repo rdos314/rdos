@@ -740,7 +740,12 @@ struct TIni *CreateIniSel(char *FileName)
     else
         Ini = FindIniName(FileName);
 
-    if (!Ini)
+    if (Ini)
+    {
+        if (FileHandle)
+            RdosCloseFile(FileHandle);
+    }
+    else
     {
         if (FileSel)
             FileSize = RdosGetFileSize(FileHandle);
