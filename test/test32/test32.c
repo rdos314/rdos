@@ -18,7 +18,9 @@ void main()
     long double x, y;
     int ok;
     int size;
-    
+
+    for (;;)
+        ;    
 
     x = 1.0;
     y = 3.1456;

@@ -54,7 +54,7 @@ TLB_LINEAR_SIZE         = 100000h
 SLEEP_SEL_WAIT  = 1
 SLEEP_SEL_SIGNAL = 2
 
-DEFAULT_GLOBAL  = 3        ; 3% of wakeup-entries are put into global ready-queue
+DEFAULT_GLOBAL  = 25        ; 25% of wakeup-entries are put into global ready-queue
 
 section_handle_seg          STRUC
 
@@ -2374,6 +2374,13 @@ HandleGlobal    Proc near
     cmp si,fs:ps_prio_act
     jbe hgDone
 ;
+    test fs:ps_flags,PS_FLAG_MOVE
+    jz hgTake
+;
+    lock and fs:ps_flags,NOT PS_FLAG_MOVE
+    jmp hgDone
+
+hgTake:
     call cs:lock_ready_proc
     mov si,ds:global_prio_act
     cmp si,fs:ps_prio_act

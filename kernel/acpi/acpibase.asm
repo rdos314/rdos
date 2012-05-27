@@ -931,6 +931,29 @@ SwitchAllIrqs_    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           MoveOneTask
+;
+;           DESCRIPTION:    Move one task from core
+;
+;           PARAMETERS:     EAX     Core #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public MoveOneTask_
+
+MoveOneTask_    Proc near
+    push fs
+;
+    GetCoreNumber
+    lock or fs:ps_flags,PS_FLAG_MOVE
+;    
+    pop fs                
+    ret
+MoveOneTask_    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetExtFeatureFlags
 ;
 ;           DESCRIPTION:    Req extended feature flags

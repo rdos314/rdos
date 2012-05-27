@@ -58,6 +58,9 @@ extern void SwitchOneIrq(int Core);
 extern void SwitchAllIrqs(int Core);
 #pragma aux SwitchAllIrqs parm routine [eax]
 
+extern void MoveOneTask(int Core);
+#pragma aux MoveOneTask parm routine [eax]
+
 #define MAX_DEVICE_COUNT        1024
 #define MAX_PCI_ROOT_COUNT      8
 #define MAX_PCI_IRQ_COUNT       256
@@ -671,6 +674,8 @@ void __far PowerThread(void *param)
     int Core;
     int CpuLoad;
     int MinLoadCore;
+    int HighCount;
+    int HighArr[MAX_PROCESSOR_COUNT];
 
     ProcessorCount = RdosGetCoreCount();
 
@@ -687,6 +692,8 @@ void __far PowerThread(void *param)
         MinCpuLoad = 110;
         MaxCpuLoad = 0;
         MinLoadCore = 0;
+        HighCount = 0;
+
         for (Core = 0; Core < ProcessorCount; Core++)
         {
             RdosGetCoreLoad(Core, &NullTics, &CoreTics);
@@ -698,8 +705,19 @@ void __far PowerThread(void *param)
             if (CoreDiff)
             {
                 CpuLoad = 100 - (int)(100 * NullDiff / CoreDiff);
+
+                if (CpuLoad == MaxCpuLoad)
+                {
+                    HighArr[HighCount] = Core;
+                    HighCount++;
+                }
+                
                 if (CpuLoad > MaxCpuLoad)
+                {
                     MaxCpuLoad = CpuLoad;
+                    HighArr[0] = Core;
+                    HighCount = 1;
+                }
 
                 if (CpuLoad < MinCpuLoad)
                 {
@@ -710,6 +728,13 @@ void __far PowerThread(void *param)
         }
 
         SwitchOneIrq(MinLoadCore);
+
+        if (HighCount > 1)
+            Core = HighArr[RdosGetRandom(HighCount)];
+        else
+            Core = HighArr[0];
+            
+        MoveOneTask(Core);
 
         if (MaxCpuLoad > 60)
         {
