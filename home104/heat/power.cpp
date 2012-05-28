@@ -165,7 +165,7 @@ void TPower::DeviceName(char *Name, int Size) const
 void TPower::Execute()
 {
     int count;
-    TSerialDevice serial(4, 2400, 'N', 8, 1);
+    TSerialDevice serial(1, 2400, 'N', 8, 1);
     char str[256];
     char ch;
     int i;
@@ -244,6 +244,7 @@ void TPower::Execute()
     Table->SetText(2, 6, "volt");
 
     serial.Open();
+    serial.EnableAutoRts();
 
     while (FInstalled)
     {        
