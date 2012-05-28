@@ -96,6 +96,8 @@ public:
     TUsbPipe(int Controller, int Device, int Pipe);
     ~TUsbPipe();
 
+    void Reset();
+
 	virtual void DeviceName(char *Name, int MaxLen) const;
 
 protected:

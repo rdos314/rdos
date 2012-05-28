@@ -119,6 +119,22 @@ void TUsbPipe::Add(TWait *Wait)
 
 /*##########################################################################
 #
+#   Name       : TUsbPipe::Reset
+#
+#   Purpose....: Reset pipe / device
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbPipe::Reset()
+{
+    RdosResetUsbPipe(FHandle);
+}
+
+/*##########################################################################
+#
 #   Name       : TUsbPipe::SignalNewData
 #
 #   Purpose....: Signal new data is available

@@ -55,6 +55,8 @@ protected:
         void ShowInterface(TUsbInterface *descr);
         void ShowEndpoint(TUsbEndpoint *descr);
         void ShowDescr(TUsbDescr *descr);
+        void Show();
+        void Reset();
 
 };
 

@@ -2271,6 +2271,27 @@ IsConnected   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ResetPipe   Proc far
+    push es
+    push ax
+    push dx
+    push si
+;    
+    mov es,fs:usbp_function_sel
+    movzx si,es:usbf_port
+;    
+    mov dx,ds:uhc_io_base
+    add dx,PortscReg1
+    add dx,si
+    add dx,si
+;
+    in ax,dx
+    or ax,200h
+    out dx,ax
+; 
+    pop si
+    pop dx
+    pop ax
+    pop es
     ret
 ResetPipe   Endp
 
@@ -2301,8 +2322,17 @@ UpdatePort   Proc near
     add dx,si
     in ax,dx
     test al,1
-    stc
     jz upDetach
+;
+    test ax,200h
+    jz upAttach
+;    
+    mov bx,ds:[si].usb_port_sel_arr
+    or bx,bx
+    jz upDone
+;    
+    mov al,cl
+    NotifyUsbDetach
     
 upAttach:
     mov bx,ds:[si].usb_port_sel_arr

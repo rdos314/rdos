@@ -353,32 +353,29 @@ void TUsbCommand::ShowDescr(TUsbDescr *descr)
 
 /*##########################################################################
 #
-#   Name       : TUsbCommand::Run
+#   Name       : TUsbCommand::Show
 #
-#   Purpose....: Run command
+#   Purpose....: Show status
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TUsbCommand::Execute(char *param)
+void TUsbCommand::Show()
 {
     int contr;
     int device;
     int config;
-        char *buf;
-        char *ptr;
+    char *buf;
+    char *ptr;
     int pos;
     int size;
     TUsbDevice UsbDevice;
-        TUsbConfig *UsbConfig;
-        TUsbDescr *descr;
+    TUsbConfig *UsbConfig;
+    TUsbDescr *descr;
 
-        if (LeadOptions(&param, 0) != E_None)
-                return 1;
-
-        buf = new char[4096];
+    buf = new char[4096];
     
     for (contr = 0; contr < 256; contr++)
     {
@@ -391,58 +388,102 @@ int TUsbCommand::Execute(char *param)
 
                 for (config = 0; config < UsbDevice.configs; config++)
                 {
-                                        size = RdosGetUsbConfig(contr, device, config, buf, 4096);
-                                        if (size >= sizeof(TUsbConfig))
-                                        {
-                                                UsbConfig = (TUsbConfig *)buf;
-                                                ShowConfig(config, UsbConfig);
+                    size = RdosGetUsbConfig(contr, device, config, buf, 4096);
+                    if (size >= sizeof(TUsbConfig))
+                    {
+                        UsbConfig = (TUsbConfig *)buf;
+                        ShowConfig(config, UsbConfig);
 
-                                                pos = 0;
-                                                ptr = buf;
-                                                descr = (TUsbDescr *)ptr;
-                                                ptr += descr->len;
-                                                pos += descr->len;
+                        pos = 0;
+                        ptr = buf;
+                        descr = (TUsbDescr *)ptr;
+                        ptr += descr->len;
+                        pos += descr->len;
 
-                                                while (pos < size)
-                                                {
-                                                        descr = (TUsbDescr *)ptr;
-                                                        ShowDescr(descr);
-                                                        ptr += descr->len;
-                                                        pos += descr->len;
-                                                }
-                                        }
-                                }
-
-                                RdosWaitMilli(250);
-
-/*                                Write("Start read\r\n");
-
-                                char buf[256];
-                                int ok;
-                                int size;
-                                TUsbControlPipe *pipe = new TUsbControlPipe(contr, device, 0);
-                                TUsbControlMsg msg;
-                                msg.type = 0x80;
-                                msg.req = 6;
-                                msg.val = 0x200;
-                                msg.index = 0;
-                                ok = pipe->Read(&msg, buf, 8, 2000);
-                                if (ok)
-                                {
-                                        Write("First ok\r\n");
-                                        size = 0;
-                                        memcpy(&size, &buf[2], 2);
-                                        ok = pipe->Read(&msg, buf, size, 2000);
-                                        if (ok)
-                                                Write("Second ok\r\n");
-                                }
-
-                                delete pipe; */
+                        while (pos < size)
+                        {
+                            descr = (TUsbDescr *)ptr;
+                            ShowDescr(descr);
+                            ptr += descr->len;
+                            pos += descr->len;
                         }
+                    }
                 }
+
+                RdosWaitMilli(250);
+
+            }
         }
+    }
 
-        delete buf;
+    delete buf;
+}
 
-        return 0;
+/*##########################################################################
+#
+#   Name       : TUsbCommand::Reset
+#
+#   Purpose....: Reset all ports
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbCommand::Reset()
+{
+    int contr;
+    int device;
+    int config;
+    int size;
+    TUsbDevice UsbDevice;
+    TUsbControlPipe *pipe;
+    
+    for (contr = 0; contr < 256; contr++)
+    {
+        for (device = 1; device < 128; device++)
+        {
+            size = RdosGetUsbDevice(contr, device, &UsbDevice, sizeof(TUsbDevice));
+            pipe = new TUsbControlPipe(contr, device, 0);
+            pipe->Reset();
+            delete pipe;
+        }
+   }
+}
+
+/*##########################################################################
+#
+#   Name       : TUsbCommand::Run
+#
+#   Purpose....: Run command
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUsbCommand::Execute(char *param)
+{
+    TArg *arg;
+
+    if (!ScanCmdLine(param, 0))
+        return 1;
+
+    arg = FArgList;
+
+    if (LeadOptions(&param, 0) != E_None)
+        return 1;
+
+    if (arg)
+    {
+        strupr((char *)arg->FName.GetData());
+        if (!strcmp(arg->FName.GetData(), "RESET"))
+            Reset();
+        else
+            return 1;
+    }
+    else
+        Show();
+
+    return 0;
 }
