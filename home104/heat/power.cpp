@@ -154,6 +154,78 @@ void TPower::DeviceName(char *Name, int Size) const
 
 /*##########################################################################
 #
+#   Name       : TPower::HasPower
+#
+#   Purpose....: Check for valid power
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPower::HasPower()
+{
+    return FHasPower;
+}
+
+/*##########################################################################
+#
+#   Name       : TPower::GetSolar12Power
+#
+#   Purpose....: Get current solar12 power value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double TPower::GetSolar12Power()
+{
+    long double val = 0;
+
+    FSection.Enter();
+
+    if (FPower12Count)
+        val = FPower12Sum / FPower12Count;
+
+    FPower12Count = 0;
+    FPower12Sum = 0;
+
+    FSection.Leave();
+    
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : TPower::GetSolar24Power
+#
+#   Purpose....: Get current solar24 power value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double TPower::GetSolar24Power()
+{
+    long double val = 0;
+
+    FSection.Enter();
+
+    if (FPower24Count)
+        val = FPower24Sum / FPower24Count;
+
+    FPower24Count = 0;
+    FPower24Sum = 0;
+
+    FSection.Leave();
+    
+    return val;
+}
+
+/*##########################################################################
+#
 #   Name       : TPower::Execute
 #
 #   Purpose....: Handler thread
@@ -171,6 +243,11 @@ void TPower::Execute()
     int i;
     int ok;
 
+    int min, sec;
+    int ms, us;
+    unsigned long msb, lsb;
+    int LastMin;
+
     long double solar12_power;
     long double solar24_power;
     long double solar12_ref;
@@ -180,7 +257,7 @@ void TPower::Execute()
     long double solar12_i;
     long double solar24_i;
     long double bat_u;
-    
+
     TLabelFactory CommentLabelFactory;
     TLabelFactory ValueLabelFactory;
     TLabelFactory UnitLabelFactory;
@@ -246,6 +323,8 @@ void TPower::Execute()
     serial.Open();
     serial.EnableAutoRts();
 
+    FHasPower = FALSE;
+
     while (FInstalled)
     {        
         if (serial.WaitForChar(10000))
@@ -267,6 +346,19 @@ void TPower::Execute()
                 count = sscanf(str, "%Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf", &solar12_power, &solar24_power, &solar12_ref, &solar24_ref, &solar12_u, &solar24_u, &bat_u, &solar12_i, &solar24_i);
                 if (count == 9)
                 {
+                    FSection.Enter();
+                    
+                    FPower12Count++;
+                    FPower12Sum += solar12_power;
+                    
+                    FPower24Count++;
+                    FPower24Sum += solar24_power;
+
+                    FHasPower = TRUE;
+
+                    FSection.Leave();
+                    
+                
                     sprintf(str, "%6.3Lf", solar12_power);
                     Table->SetText(0, 1, str);
 

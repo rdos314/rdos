@@ -33,16 +33,29 @@
 class TPower : public TDevice
 {
 public:
-	TPower(TControlThread *control);
-	~TPower();
+        TPower(TControlThread *control);
+        ~TPower();
 
-	void DeviceName(char *Name, int Size) const;
+        void DeviceName(char *Name, int Size) const;
+
+    int HasPower();
+        long double GetSolar12Power();
+        long double GetSolar24Power();
 
 protected:
-	virtual void Execute();
+        virtual void Execute();
 
     TControlThread *FControl;
-	TSection FSection;
+
+        int FHasPower;
+
+    int FPower12Count;
+    long double FPower12Sum;
+
+    int FPower24Count;
+    long double FPower24Sum;
+
+        TSection FSection;
 };
 
 #endif

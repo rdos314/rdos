@@ -77,6 +77,34 @@ void HandleRealData(TDeviceMsg *doc)
 
         printf("%04d-%02d-%02d %02d.%02d", year, month, day, hour, min);
 
+	    tag = doc->GetTag(LOG_TAG_SOLAR24);
+
+        if (tag)
+        {
+            var = tag->GetVar(LOG_VAR_P);
+            if (var)
+          	{
+                ival = var->GetFloat3();
+                val = (long double)ival;
+                val = val / 1000.0;
+                printf("%8.3LfW", val);
+       	    }
+       	}
+
+	    tag = doc->GetTag(LOG_TAG_SOLAR12);
+
+        if (tag)
+        {
+            var = tag->GetVar(LOG_VAR_P);
+            if (var)
+          	{
+                ival = var->GetFloat3();
+                val = (long double)ival;
+                val = val / 1000.0;
+                printf("%8.3LfW", val);
+       	    }
+       	}
+
 	    tag = doc->GetTag(LOG_TAG_OUTDOOR);
 
         if (tag)
@@ -90,7 +118,7 @@ void HandleRealData(TDeviceMsg *doc)
 		        {
                     val = (long double)ival;
                     val = val / 10.0;
-                    printf(", %5.1LfC ", val);
+                    printf("%6.1LfC", val);
                 }
        	    }
     
@@ -102,7 +130,7 @@ void HandleRealData(TDeviceMsg *doc)
         		if (ival <= 100 && ival >= 0)
 		        {
                     val = (long double)ival;
-                    printf(", %3.0Lf%% ", val);
+                    printf("%4.0Lf%%", val);
         	    }
 	        }
 
@@ -115,7 +143,7 @@ void HandleRealData(TDeviceMsg *doc)
 		        {
 				    val = (long double)ival;
 				    val = val / 10.0;
-                    printf(", %4.1Lfm/s ", val);
+                    printf("%5.1Lfm/s", val);
         		 }
 	        }
 
@@ -128,7 +156,7 @@ void HandleRealData(TDeviceMsg *doc)
 		        {
                     val = (long double)ival;
                     val = val / 10.0;
-                    printf(", %6.1Lfhpa ", val);
+                    printf("%7.1Lfhpa", val);
         	    }
 	        }
     
@@ -141,7 +169,7 @@ void HandleRealData(TDeviceMsg *doc)
 		        {
                     val = (long double)ival;
 	                val = val / 10.0;
-                    printf(", %5.1Lfmm ", val);
+                    printf("%6.1Lfmm", val);
         	    }
         	}
         }

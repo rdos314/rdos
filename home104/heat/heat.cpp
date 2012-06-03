@@ -177,6 +177,7 @@ int main()
     Store->Add(Climate);
 
     Power = new TPower(control);
+    Store->Add(Power);
 
     for (;;)
     {

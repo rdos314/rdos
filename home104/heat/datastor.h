@@ -34,6 +34,7 @@
 #include "circ.h"
 #include "vp.h"
 #include "climate.h"
+#include "power.h"
 #include "heatdata.h"
 #include "realserv.h"
 
@@ -46,7 +47,8 @@ public:
     void Add(TRad *rad);
     void Add(TCirc *circ);
     void Add(TVp *vp);
-    void Add(TClimate *climat);
+    void Add(TClimate *climate);
+    void Add(TPower *power);
     
 protected:
     void GetCurrRad(TRad *rad, TRadData *data);
@@ -66,6 +68,7 @@ protected:
     TCirc *FCirc;
     TVp *FVp;
     TClimate *FClimate;
+    TPower *FPower;
 };
 
 

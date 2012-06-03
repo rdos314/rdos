@@ -57,6 +57,10 @@ struct THeatData
 	 long double AirPressure;
 	 long double Rain;
 
+     char HasSolar;
+	 long double Solar12P;
+	 long double Solar24P;
+
 	 char HasCirc;
 	 long double CircSpeed;
 

@@ -157,6 +157,22 @@ void TDataStore::Add(TClimate *climate)
 
 /*##########################################################################
 #
+#   Name       : TDataStore::Add
+#
+#   Purpose....: Add power
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDataStore::Add(TPower *power)
+{
+    FPower = power;
+}
+
+/*##########################################################################
+#
 #   Name       : TDataStore::GetCurrRad
 #
 #   Purpose....: Get current rad data
@@ -201,6 +217,7 @@ void TDataStore::GetCurrData(THeatData *data)
         data->HasWs = FALSE;
         data->HasVp = FALSE;
         data->HasCirc = FALSE;
+        data->HasSolar = FALSE;
         data->HasTankTemp = FALSE;
         data->HasTankP = FALSE;
         data->HasHeatTemp = FALSE;
@@ -253,6 +270,16 @@ void TDataStore::GetCurrData(THeatData *data)
                 data->WindDir = FClimate->GetWindDir();
                 data->AirPressure = FClimate->GetPressure();
                 data->Rain = FClimate->GetRain();
+            }
+         }
+
+         if (FPower)
+         {
+            if (FPower->HasPower())
+            {
+                data->HasSolar = TRUE;
+                data->Solar12P = FPower->GetSolar12Power();
+                data->Solar24P = FPower->GetSolar24Power();
             }
          }
 

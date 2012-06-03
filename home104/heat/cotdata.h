@@ -40,6 +40,8 @@
 #define LOG_TAG_VP          56
 #define LOG_TAG_TANK        57
 #define LOG_TAG_HEAT        58
+#define LOG_TAG_SOLAR12     59
+#define LOG_TAG_SOLAR24     60
 
 #define LOG_VAR_Address     100
 #define LOG_VAR_MsbTime     101

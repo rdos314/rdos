@@ -198,6 +198,17 @@ TDeviceMsg *TCotexSocketServer::ConvToCotex(THeatData *data)
         }
     }
 
+	if (data->HasSolar)
+	{
+	    tag = doc->AddTag(LOG_TAG_SOLAR12);
+		ival = 1000.0 * data->Solar12P;
+		tag->AddFloat3(LOG_VAR_P, ival);
+
+	    tag = doc->AddTag(LOG_TAG_SOLAR24);
+		ival = 1000.0 * data->Solar24P;
+		tag->AddFloat3(LOG_VAR_P, ival);
+    }
+
     for (i = 0; i < RAD_COUNT; i++)
         if (data->Rad[i].HasData)
             AddRadData(&data->Rad[i], doc);
