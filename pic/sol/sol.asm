@@ -7,6 +7,7 @@ FLAG_SOLAR12_U_INCREASE       EQU 0
 FLAG_SOLAR12_POWER_INCREASE   EQU 1
 FLAG_SOLAR24_U_INCREASE       EQU 2
 FLAG_SOLAR24_POWER_INCREASE   EQU 3
+FLAG_SOLAR24_CHARGE           EQU 4
 
 temp0	EQU 0x0
 temp1   EQU 0x1
@@ -314,7 +315,7 @@ ResetStart:
 ;
     movlw 0x0
     movwf solar24_ref_lsb
-    movlw 0xa
+    movlw 0xc
     movwf solar24_ref_msb
     call SetupSolar24
     bsf flags,FLAG_SOLAR24_U_INCREASE
@@ -346,7 +347,7 @@ PollSolar12:
     return
 ;
     call SolarPowerCompare12
-    call SolarControl12
+;    call SolarControl12
     call SetupSolar12
     return
 
@@ -647,7 +648,7 @@ UpdateSolar12ChargerOnNotEq:
 
 UpdateSolar12ChargerTurnOff:
     bsf LATB,2
-    return
+    return    
     
 UpdateSolar12ChargerOff:
     btfsc solar12_u_msb,7
@@ -689,7 +690,7 @@ PollSolar24:
     return
 ;
     call SolarPowerCompare24
-    call SolarControl24
+;    call SolarControl24
     call SetupSolar24
     return
 
@@ -972,6 +973,9 @@ UpdateSolarCharger24:
     goto UpdateSolar24ChargerOff
 
 UpdateSolar24ChargerOn:
+    btfsc flags,FLAG_SOLAR24_CHARGE    
+    goto UpdateSolar24ChargerTurnOff
+;
     btfsc solar24_u_msb,7
     goto UpdateSolar24ChargerTurnOff
 ;
@@ -993,6 +997,9 @@ UpdateSolar24ChargerTurnOff:
     return
     
 UpdateSolar24ChargerOff:
+    btfsc flags,FLAG_SOLAR24_CHARGE    
+    return
+;
     btfsc solar24_u_msb,7
     return
 ;
@@ -1784,6 +1791,29 @@ Sample:
 ;
     movf ad_valh,W
     movwf bat_u_msb
+;
+    movlw 0xB
+    cpfseq bat_u_msb
+    goto bat_check_msb
+
+bat_check_lsb:
+    movlw 0x40
+    cpfsgt bat_u_lsb
+    goto bat_charge_on
+    goto bat_charge_off
+
+bat_check_msb:
+    cpfsgt bat_u_msb
+    goto bat_charge_on
+
+bat_charge_off:    
+    bcf flags,FLAG_SOLAR24_CHARGE
+    bcf LATB,0
+    return
+
+bat_charge_on:        
+    bsf flags,FLAG_SOLAR24_CHARGE
+    bsf LATB,0
     return
  
     end
