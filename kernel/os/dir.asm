@@ -812,9 +812,9 @@ ParseEnd    Proc near
 ;    
     RequestSpinlock ds:fs_access_spinlock
     mov ds:fs_access_parse,0
-    ReleaseSpinlockNoSti ds:fs_access_spinlock
-;       
+    ReleaseSpinlockNoSti ds:fs_access_spinlock       
     LeaveReadSection ds:fs_access_section
+    sti
 ;
     pop si
     pop ax
@@ -1217,9 +1217,9 @@ get_cur_dir_ok:
 ;    
     RequestSpinlock ds:fs_access_spinlock
     mov ds:fs_access_parse,0
-    ReleaseSpinlockNoSti ds:fs_access_spinlock
-;    
+    ReleaseSpinlockNoSti ds:fs_access_spinlock    
     LeaveReadSection ds:fs_access_section
+    sti
     clc
 
 get_cur_dir_done:
@@ -2870,6 +2870,7 @@ stop_file_system    Proc far
 stop_file_enter:
     ReleaseSpinlockNoSti ds:fs_access_spinlock
     EnterWriteSection ds:fs_access_section
+    sti
 ;
     CallFileSystem fs_flush_proc
     jc stop_leave_done

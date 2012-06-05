@@ -59,12 +59,17 @@ signal_handle_seg           STRUC
 sig_handle_base handle_header <>
 
 sig_wait_obj        DW ?
+sig_spinlock        spinlock_typ <>
 sig_state           DB ?
 
 signal_handle_seg           ENDS
 
-
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
     .386p
+ENDIF
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -865,10 +870,11 @@ create_signal   Proc far
     mov ax,SIGNAL_HANDLE
     mov cx,SIZE signal_handle_seg
     AllocateHandle
-    mov [ebx].sig_wait_obj,0
-    mov [ebx].sig_state,0
-    mov [ebx].hh_sign,SIGNAL_HANDLE
-    mov bx,[ebx].hh_handle
+    InitSpinlock ds:[ebx].sig_spinlock
+    mov ds:[ebx].sig_wait_obj,0
+    mov ds:[ebx].sig_state,0
+    mov ds:[ebx].hh_sign,SIGNAL_HANDLE
+    mov bx,ds:[ebx].hh_handle
 ;
     pop cx
     pop ax
@@ -1011,18 +1017,23 @@ set_signal   Proc far
     DerefHandle
     jc set_sig_done
 ;
-    cli
+    RequestSpinlock ds:[ebx].sig_spinlock
     mov ds:[ebx].sig_state,1
     mov ax,ds:[ebx].sig_wait_obj
     or ax,ax
-    jz set_sig_done
+    jz set_sig_release
 ;
+    ReleaseSpinlockNoSti ds:[ebx].sig_spinlock 
     mov es,ax
     SignalWait
     mov ds:[ebx].sig_wait_obj,0
+    sti
+    jmp set_sig_done
+
+set_sig_release:
+    ReleaseSpinlock ds:[ebx].sig_spinlock 
 
 set_sig_done:
-    sti
     pop ebx
     pop ax
     pop es
@@ -1105,19 +1116,22 @@ start_wait_for_signal   PROC far
     DerefHandle
     jc start_wait_for_done
 ;
-    cli
+    RequestSpinlock ds:[ebx].sig_spinlock
     mov ds:[ebx].sig_wait_obj,es
     mov al,ds:[ebx].sig_state
     or al,al
-    je start_wait_for_done
+    je start_wait_for_release
 ;
     mov ds:[ebx].sig_state,0
     mov ds:[ebx].sig_wait_obj,0
-    sti
+    ReleaseSpinlock ds:[ebx].sig_spinlock
     SignalWait
+    jmp start_wait_for_done
+
+start_wait_for_release:    
+    ReleaseSpinlock ds:[ebx].sig_spinlock
 
 start_wait_for_done:
-    sti
     pop ebx
     pop ax
     pop ds

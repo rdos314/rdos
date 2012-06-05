@@ -3985,6 +3985,7 @@ delete_tcp_connection   Proc far
 ;    
     ReleaseSpinlockNoSti es:ConnSpinlock
     EnterSection ds:tcp_section
+    sti
 ;
     call DeleteConnection
     jmp delete_tcp_handle
