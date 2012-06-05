@@ -68,12 +68,13 @@ listen_handle_seg           ENDS
 
 data    SEGMENT byte public 'DATA'
 
-ListSection             section_typ <>
+ConnSpinlock        spinlock_typ <>
+ListSection         section_typ <>
 Handle              DW ?
 ConnectionList      DW ?
 ConnectionCount     DW ?
-ListenList              DW ?
-TcpThread               DW ?
+ListenList          DW ?
+TcpThread           DW ?
 LastPort            DW ?
 PortMap             DB 2000h DUP(?)
 
@@ -82,7 +83,12 @@ data    ENDS
 
 code    SEGMENT byte public 'CODE'
 
-.386p
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
+    .386p
+ENDIF
     
     assume cs:code
 
@@ -766,7 +772,7 @@ DeleteConnection    Proc near
     push ecx
     push edx
     push esi
-;       
+;    
     mov si,ds:tcp_port
     call FreePort
 ;
@@ -811,7 +817,11 @@ delete_connect_loop:
     dec ds:ConnectionCount
 
 delete_connect_unlinked:
-    call CheckConnectionList
+    mov ax,SEG data
+    mov ds,ax
+    RequestSpinlock ds:ConnSpinlock
+    ReleaseSpinlock ds:ConnSpinlock
+    call CheckConnectionList       
     FreeMem
 ;
     pop esi
@@ -3690,12 +3700,16 @@ open_tcp_fail:
     LeaveSection ds:tcp_section
 
 open_tcp_arp_fail:
+    mov ax,SEG data
+    mov es,ax
+    RequestSpinlock es:ConnSpinlock
+;    
     or ds:tcp_pending,FLAG_DELETE_NET
-    cli
     or ds:tcp_pending,FLAG_DELETE_USER
     xor ax,ax
     mov ds,ax
-    sti
+;
+    ReleaseSpinlock es:ConnSpinlock    
     stc
 
 open_tcp_done:
@@ -3948,8 +3962,12 @@ delete_tcp_connection   Proc far
     ApiSaveEdi
 
     push ds
+    push es
     push ax
     push ebx
+;
+    mov ax,SEG data
+    mov es,ax
 ;
     mov ax,TCP_SOCKET_HANDLE
     DerefHandle
@@ -3960,13 +3978,14 @@ delete_tcp_connection   Proc far
     or ax,ax
     jz delete_tcp_handle
 ;
-    cli
+    RequestSpinlock es:ConnSpinlock    
     mov ds,ax
     test ds:tcp_pending,FLAG_UNLINKED
     jz delete_tcp_mark
 ;    
+    ReleaseSpinlockNoSti es:ConnSpinlock
     EnterSection ds:tcp_section
-    sti
+;
     call DeleteConnection
     jmp delete_tcp_handle
 
@@ -3974,7 +3993,7 @@ delete_tcp_mark:
     or ds:tcp_pending,FLAG_DELETE_USER
     xor ax,ax
     mov ds,ax
-    sti
+    ReleaseSpinlock es:ConnSpinlock
 
 delete_tcp_handle:
     FreeHandle
@@ -3983,6 +4002,7 @@ delete_tcp_handle:
 delete_tcp_done:
     pop ebx
     pop ax
+    pop es
     pop ds
 
     ApiCheckEdi
@@ -5591,6 +5611,7 @@ init_task_tcp    PROC near
     mov ax,es
     mov ds,ax
     InitSection ds:ListSection
+    InitSpinlock ds:ConnSpinlock
 ;       
     mov cx,1F00h
     mov di,OFFSET PortMap
