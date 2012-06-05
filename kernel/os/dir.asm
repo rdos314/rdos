@@ -64,7 +64,12 @@ CallFileSystem  MACRO   call_proc
     pop ds
                 ENDM
 
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
     .386p
+ENDIF
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -638,7 +643,10 @@ parse_dir_buffered:
     LeaveSection ds:fs_list_section
 
 parse_dir_start:
+    RequestSpinlock ds:fs_access_spinlock
     mov ds:fs_access_parse,1
+    ReleaseSpinlock ds:fs_access_spinlock
+;
     mov ds,bx
     mov bx,flat_sel
     mov fs,bx
@@ -801,8 +809,11 @@ ParseEnd    Proc near
     mov ax,fs_sys_data_sel
     mov ds,ax
     mov ds,ds:[si].fs_sel
-    cli
+;    
+    RequestSpinlock ds:fs_access_spinlock
     mov ds:fs_access_parse,0
+    ReleaseSpinlockNoSti ds:fs_access_spinlock
+;       
     LeaveReadSection ds:fs_access_section
 ;
     pop si
@@ -1112,7 +1123,10 @@ GetCurDirBase   Proc near
     add bx,bx
     mov ds,ds:[bx].fs_sel
     EnterReadSection ds:fs_access_section
+    RequestSpinlock ds:fs_access_spinlock
     mov ds:fs_access_parse,1
+    ReleaseSpinlock ds:fs_access_spinlock
+;    
     mov edx,ds:fs_mount_id
 ;
     mov si,fs_process_sel
@@ -1200,8 +1214,11 @@ get_cur_dir_ok:
     movzx bx,al
     add bx,bx
     mov ds,ds:[bx].fs_sel
-    cli
+;    
+    RequestSpinlock ds:fs_access_spinlock
     mov ds:fs_access_parse,0
+    ReleaseSpinlockNoSti ds:fs_access_spinlock
+;    
     LeaveReadSection ds:fs_access_section
     clc
 
@@ -2840,16 +2857,18 @@ stop_file_system    Proc far
     mov ds,bx
     mov bx,flat_sel
     mov es,bx
-    cli
+;
+    RequestSpinlock ds:fs_access_spinlock
     mov al,ds:fs_access_parse
     or al,al
     jz stop_file_enter
 ;
-    sti
+    ReleaseSpinlock ds:fs_access_spinlock
     stc
     jmp stop_done
 
 stop_file_enter:
+    ReleaseSpinlockNoSti ds:fs_access_spinlock
     EnterWriteSection ds:fs_access_section
 ;
     CallFileSystem fs_flush_proc
