@@ -49,9 +49,10 @@ key_buf_struc   ENDS
 key_proc_seg    STRUC
 
 key_proc_wait       DW ?
-extend_key              DB ?
+extend_key          DB ?
 
-key_section     section_typ <>
+key_spinlock        spinlock_typ <>
+key_section         section_typ <>
 
 key_buffer_head     DW ?
 key_buffer_tail     DW ?
@@ -82,7 +83,12 @@ has_focus   DB ?
 
 data    ENDS
 
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
     .386p
+ENDIF
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -1029,13 +1035,16 @@ key_emul_start:
     jmp key_emul_loop
 
 check_key_state PROC near
-    cli
+    RequestSpinlock ds:key_spinlock
     cmp ds:key_int_seg,0E000h
-    je check_key_done
+    je check_key_release
+;    
     cmp ds:key_emul_thread,0
-    jne check_key_done
-    sti
+    jne check_key_release
+;
     dec ds:key_emul_thread
+    ReleaseSpinlock ds:key_spinlock    
+;    
     push ds
     push es
     pusha
@@ -1049,9 +1058,13 @@ check_key_state PROC near
     CreateThread
     popa
     pop es
-    pop ds
+    pop ds  
+    jmp check_key_done
+
+check_key_release:
+    ReleaseSpinlock ds:key_spinlock    
+    
 check_key_done:
-    sti
     ret
 check_key_state ENDP
 
@@ -1236,6 +1249,7 @@ init_local_sel  PROC far
     mov ax,key_local_sel
     mov ds,ax
     InitSection ds:key_section
+    InitSpinlock ds:key_spinlock
     mov ax,OFFSET key_buffer_start
     mov ds:key_buffer_head,ax
     mov ds:key_buffer_tail,ax
