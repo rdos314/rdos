@@ -40,6 +40,7 @@ fs_table            DD ?,?
 fs_drive_param      DD ?,?
 fs_root_dir_sel		DW ?
 fs_mount_id			DD ?
+fs_access_spinlock	spinlock_typ <>
 fs_list_section		section_typ <>
 fs_access_section	read_write_section_typ <>
 fs_access_parse		DB ?
