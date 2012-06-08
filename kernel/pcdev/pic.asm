@@ -87,10 +87,10 @@ IrqStart1:
 irq_handler1     irq_handler_struc <>
 
 IrqEntry1:
+    pushad
     push ds
     push es
     push fs
-    pushad
 ;
     EnterInt
     sti
@@ -108,10 +108,34 @@ IrqExit1:
     out INT0_CONTROL,al
     LeaveInt
 ;
+    pop ax
+    verr ax
+    jz IrqExitFs1
+;    
+    xor ax,ax
+
+IrqExitFs1:
+    mov fs,ax
+;
+    pop ax
+    verr ax
+    jz IrqExitEs1
+;    
+    xor ax,ax
+
+IrqExitEs1:
+    mov es,ax
+;
+    pop ax
+    verr ax
+    jz IrqExitDs1
+;    
+    xor ax,ax
+
+IrqExitDs1:
+    mov ds,ax
+;
     popad
-    pop fs
-    pop es
-    pop ds
     iretd
 
 IrqDetect1:
@@ -136,10 +160,10 @@ IrqStart2:
 irq_handler2     irq_handler_struc <>
 
 IrqEntry2:
+    pushad
     push ds
     push es
     push fs
-    pushad
 ;
     EnterInt
     sti
@@ -161,10 +185,34 @@ IrqExit2:
     out INT1_CONTROL,al
     LeaveInt
 ;
+    pop ax
+    verr ax
+    jz IrqExitFs2
+;    
+    xor ax,ax
+
+IrqExitFs2:
+    mov fs,ax
+;
+    pop ax
+    verr ax
+    jz IrqExitEs2
+;    
+    xor ax,ax
+
+IrqExitEs2:
+    mov es,ax
+;
+    pop ax
+    verr ax
+    jz IrqExitDs2
+;    
+    xor ax,ax
+
+IrqExitDs2:
+    mov ds,ax
+;
     popad
-    pop fs
-    pop es
-    pop ds
     iretd
 
 IrqDetect2:
