@@ -834,20 +834,44 @@ set_system_time ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 timer_int:
+    pushad
     push ds
     push es
     push fs
-    pushad
 ;
     mov al,20h
     out INT0_CONTROL,al
 ;
     PreemptTimerExpired
 ;
+    pop ax
+    verr ax
+    jz timer_fs_ok
+;
+    xor ax,ax
+
+timer_fs_ok:
+    mov fs,ax
+;    
+    pop ax
+    verr ax
+    jz timer_es_ok
+;
+    xor ax,ax
+
+timer_es_ok:
+    mov es,ax
+;    
+    pop ax
+    verr ax
+    jz timer_ds_ok
+;
+    xor ax,ax
+
+timer_ds_ok:
+    mov ds,ax
+;    
     popad
-    pop fs
-    pop es
-    pop ds
     iretd
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
