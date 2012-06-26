@@ -54,7 +54,7 @@ TLB_LINEAR_SIZE         = 100000h
 SLEEP_SEL_WAIT  = 1
 SLEEP_SEL_SIGNAL = 2
 
-DEFAULT_GLOBAL  = 3        ; 3% of wakeup-entries are put into global ready-queue
+DEFAULT_GLOBAL  = 25        ; 25% of wakeup-entries are put into global ready-queue
 
 section_handle_seg          STRUC
 
@@ -165,8 +165,6 @@ flush_process_tlb_proc      DW OFFSET FlushTlb386
 
 free_global_tlb_proc        DW OFFSET FreeGlobalTlbSingle
 free_process_tlb_proc       DW OFFSET FreeProcessTlbSingle
-
-tpr_proc                    DW OFFSET NoTpr
 
 preempt_reload_proc         DW OFFSET TimerPreemptReload
 
@@ -2376,6 +2374,13 @@ HandleGlobal    Proc near
     cmp si,fs:ps_prio_act
     jbe hgDone
 ;
+    test fs:ps_flags,PS_FLAG_MOVE
+    jz hgTake
+;
+    lock and fs:ps_flags,NOT PS_FLAG_MOVE
+    jmp hgDone
+
+hgTake:
     call cs:lock_ready_proc
     mov si,ds:global_prio_act
     cmp si,fs:ps_prio_act
@@ -2970,8 +2975,6 @@ load_retry_do:
     jmp load_thread_loop
 
 load_a_task:
-    call cs:tpr_proc
-;    
     lock or fs:ps_flags,PS_FLAG_LOADING
     mov ax,gdt_sel
     mov ds,ax
@@ -3748,49 +3751,6 @@ stThreadOk:
     call DeleteProcess
     jmp stThreadLoop
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           NoTpr
-;
-;           DESCRIPTION:    Dummy task priority loader
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-NoTpr   Proc near
-    ret
-NoTpr   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ApicMemTpr
-;
-;           DESCRIPTION:    Set APIC memory-mapped TPR
-;
-;           PARAMETERS:     ES      thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ApicMemTpr   Proc near
-    mov ax,es:p_prio
-    shr ax,1
-    cmp ax,3
-    jbe amemSet
-;
-    mov ax,3
-
-amemSet:
-    shl ax,4
-    movzx eax,ax
-    mov bx,apic_mem_sel
-    mov ds,bx
-    mov ds:APIC_TPR,eax
-    ret
-ApicMemTpr   Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3836,7 +3796,6 @@ start_processor_null_threads    Proc near
     mov ds:flush_process_tlb_proc,OFFSET FlushProcessTlbMultiple
     mov ds:free_global_tlb_proc,OFFSET FreeGlobalTlbMultiple
     mov ds:free_process_tlb_proc,OFFSET FreeProcessTlbMultiple
-    mov ds:tpr_proc,OFFSET ApicMemTpr        
 
 start_locks_ok:
     mov ecx,stack0_size
