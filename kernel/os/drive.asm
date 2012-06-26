@@ -66,7 +66,6 @@ disc_handle_list        DD ?
 disc_readahead          DD ?
 disc_free                   DD ?
 disc_section            section_typ <>
-disc_spinlock           spinlock_typ <>
 disc_pend_list          DD ?
 disc_pend_first         DD ?
 disc_awrite_list        DD ?
@@ -156,12 +155,7 @@ disc_start_thread   DW ?
 
 data    ENDS
 
-IFDEF __WASM__
-    .686p
-    .xmm2
-ELSE
     .386p
-ENDIF
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -1260,10 +1254,7 @@ flush_async_write       ENDP
 
 async_write_timeout     Proc far
     mov ds,cx
-    RequestSpinlock ds:disc_spinlock
     mov ds:disc_awrite_timer,0
-    ReleaseSpinlock ds:disc_spinlock
-;
     mov bx,ds:disc_thread
     Signal
     retf32
@@ -1282,18 +1273,17 @@ async_write_timeout     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 update_async_timer      Proc near
-    RequestSpinlock ds:disc_spinlock
+    cli
     mov ax,ds:disc_awrite_timer
     or ax,ax
-    jnz update_async_timer_release
+    jnz update_async_timer_done
 ;
+    sti
     mov edi,ds:disc_awrite_list
     or edi,edi
-    jz update_async_timer_release
+    jz update_async_timer_done
 ;
     mov ds:disc_awrite_timer,1
-    ReleaseSpinlock ds:disc_spinlock
-;
     GetSystemTime
     add eax,POLL_TIMEOUT
     adc edx,0
@@ -1306,12 +1296,9 @@ update_async_timer      Proc near
     mov edi,OFFSET async_write_timeout
     StartTimer
     pop es
-    jmp update_async_timer_done
-
-update_async_timer_release:
-    ReleaseSpinlock ds:disc_spinlock
 
 update_async_timer_done:
+    sti
     ret
 update_async_timer      Endp
 
@@ -1912,12 +1899,11 @@ wait_for_disc_req_loop:
     call update_async_timer
     LeaveSection ds:disc_section
 ;
-    RequestSpinlock ds:disc_spinlock
+    cli
     mov ebx,ds:disc_pend_list
     or ebx,ebx
     jnz wait_for_disc_req_done
 ;
-    ReleaseSpinlock ds:disc_spinlock
     sti
     WaitForSignal
     mov ds:disc_thread,0
@@ -1925,7 +1911,7 @@ wait_for_disc_req_loop:
         
 wait_for_disc_req_done:
     mov ds:disc_thread,0
-    ReleaseSpinlock ds:disc_spinlock
+    sti
 ;
     popad
     pop es
@@ -2591,7 +2577,6 @@ install_disc_loop:
     pop cx
     mov ds:disc_readahead,ecx
     InitSection ds:disc_section
-    InitSpinlock ds:disc_spinlock
     mov ds:disc_pend_count,0
     mov ds:disc_io_count,0
     mov bx,ds

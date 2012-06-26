@@ -948,11 +948,10 @@ spmAllocDone:
 
 spm32:
     mov al,dh
-    add cl,2
-;
-    RegisterMsi
+    GetMsiParam
     push ax
 ; 
+    add cl,2
     mov eax,edx
     WritePciDword
 ;
@@ -963,11 +962,10 @@ spm32:
 
 spm64:
     mov al,dh
-    add cl,2
-;    
-    RegisterMsi
+    GetMsiParam
     push ax
 ;
+    add cl,2
     mov eax,edx
     WritePciDword
 ;
@@ -982,11 +980,10 @@ spm64:
 
 spmVector:
     mov al,dh
-    add cl,2
-;    
-    RegisterMsi
+    GetMsiParam
     push ax
 ;
+    add cl,2
     mov eax,edx
     WritePciDword
 ;

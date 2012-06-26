@@ -54,7 +54,6 @@ data    SEGMENT byte public 'DATA'
 curr_port           DW ?
 query_free          DW ?
 query_head          DW ?
-udp_spinlock        spinlock_typ <>
 udp_section         section_typ <>
 listen_list         DW ?
 udp_queries         DB UDP_QUERY_ENTRIES * SIZE udp_query DUP(?)
@@ -64,12 +63,7 @@ data    ENDS
 
 code    SEGMENT byte public 'CODE'
 
-IFDEF __WASM__
-    .686p
-    .xmm2
-ELSE
-    .386p
-ENDIF
+.386p
     
     assume cs:code
 
@@ -137,15 +131,16 @@ CalcChecksum    Endp
 
 AllocateQuery   Proc near
     push si
-    RequestSpinlock ds:udp_spinlock
+    cli
     mov bx,ds:query_free
     mov si,ds:[bx].udp_query_next
     mov ds:query_free,si
-    ReleaseSpinlock ds:udp_spinlock
+    sti
     pop si
     ret
 AllocateQuery   Endp
 
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;       Name:           FreeQuery
@@ -158,11 +153,11 @@ AllocateQuery   Endp
 
 FreeQuery       Proc near
     push si
-    RequestSpinlock ds:udp_spinlock
+    cli
     mov si,ds:query_free
     mov ds:[bx].udp_query_next,si
     mov ds:query_free,bx
-    ReleaseSpinlock ds:udp_spinlock
+    sti
     pop si
     ret
 FreeQuery       Endp
@@ -180,11 +175,11 @@ FreeQuery       Endp
 
 InsertQuery     Proc near
     push si
-    RequestSpinlock ds:udp_spinlock
+    cli
     mov si,ds:query_head
     mov ds:[bx].udp_query_next,si
     mov ds:query_head,bx
-    ReleaseSpinlock ds:udp_spinlock
+    sti
     pop si
     ret
 InsertQuery     Endp
@@ -204,39 +199,28 @@ InsertQuery     Endp
 
 RemoveQuery     Proc near
     push si
-    push di
 ;
     mov bx,OFFSET query_head
-    mov di,cx
-    mov cx,UDP_QUERY_ENTRIES
-    RequestSpinlock ds:udp_spinlock
-
+    cli
 remove_next:
     mov si,bx
     mov bx,ds:[bx].udp_query_next
     or bx,bx
     je remove_fail
-;    
-    cmp di,ds:[bx].udp_query_port
-    je remove_this
-;
-    loop remove_next    
-;
-    jmp remove_fail
-    
+    cmp cx,ds:[bx].udp_query_port
+    jne remove_next
 remove_this:
     mov ax,ds:[bx].udp_query_next
     mov ds:[si].udp_query_next,ax
-    ReleaseSpinlock ds:udp_spinlock
+    sti
     clc
     jmp remove_done
 
 remove_fail:
-    ReleaseSpinlock ds:udp_spinlock
+    sti
     stc
 
 remove_done:
-    pop di
     pop si
     ret
 RemoveQuery     Endp
@@ -374,19 +358,15 @@ query_udp       Proc far
     xchg dl,dh
     mov es:[edi].udp_dest,dx
     push cx
-;
-    RequestSpinlock ds:udp_spinlock    
+    cli
     mov cx,ds:curr_port
     inc cx
     or cx,cx
     jnz udp_query_port_ok
-;    
     mov cx,8000h
-
 udp_query_port_ok:
     mov ds:curr_port,cx
-    ReleaseSpinlock ds:udp_spinlock
-;        
+    sti
     mov ds:[bx].udp_query_port,cx
     xchg cl,ch
     mov es:[edi].udp_source,cx
@@ -781,7 +761,6 @@ init_task_udp    PROC near
     mov es,bx
 ;
     InitSection ds:udp_section
-    InitSpinlock ds:udp_spinlock
     mov ds:listen_list,0
     mov cx,UDP_QUERY_ENTRIES - 1
     mov bx,OFFSET udp_queries

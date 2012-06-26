@@ -418,7 +418,6 @@ init_file_old_freed:
     mov dword ptr ds:fs_drive_param+4,0
     InitSection ds:fs_list_section
     InitReadWriteSection ds:fs_access_section
-    InitSpinlock ds:fs_access_spinlock
 ;       EnterWriteSection ds:fs_access_section
     mov ds:fs_access_parse,0
     mov ds:fs_root_dir_sel,0

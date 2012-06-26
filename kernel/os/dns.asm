@@ -51,21 +51,15 @@ Reverse MACRO
 
 data    SEGMENT byte public 'DATA'
 
-dns1            DD ?
-dns2            DD ?
-dns_curr_id     DW ?
-dns_spinlock    spinlock_typ <>
+dns1                DD ?
+dns2                DD ?
+dns_curr_id             DW ?
 
 data    ENDS
 
 code    SEGMENT byte public 'CODE'
 
-IFDEF __WASM__
-    .686p
-    .xmm2
-ELSE
-    .386p
-ENDIF
+.386p
     
     assume cs:code
 
@@ -281,12 +275,10 @@ name_to_ip_move_part:
     stosb
     mov ax,SEG data
     mov ds,ax
-;    
-    RequestSpinlock ds:dns_spinlock
+    cli
     mov ax,ds:dns_curr_id
     inc ds:dns_curr_id
-    ReleaseSpinlock ds:dns_spinlock
-;    
+    sti
     mov es:dns_id,ax
     mov es:dns_op,1
     mov es:dns_qdcount,100h     ; = 1
@@ -711,12 +703,10 @@ ip_to_name_lookup:
 ;
     mov ax,SEG data
     mov ds,ax
-;    
-    RequestSpinlock ds:dns_spinlock
+    cli
     mov ax,ds:dns_curr_id
     inc ds:dns_curr_id
-    ReleaseSpinlock ds:dns_spinlock
-;
+    sti
     mov es:dns_id,ax
     mov es:dns_op,1
     mov es:dns_qdcount,100h     ; = 1
@@ -916,7 +906,6 @@ init_task_dns    PROC near
     mov ax,SEG data
     mov ds,ax
     mov ds:dns_curr_id,1
-    InitSpinlock ds:dns_spinlock
 ;
     mov ax,cs
     mov es,ax
