@@ -92,6 +92,11 @@ IrqEntry1:
     push es
     push fs
 ;
+    xor ax,ax
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
+;
     EnterInt
     sti
 ;       
@@ -164,6 +169,11 @@ IrqEntry2:
     push ds
     push es
     push fs
+;
+    xor ax,ax
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
 ;
     EnterInt
     sti
@@ -886,6 +896,11 @@ timer_int:
     push ds
     push es
     push fs
+;
+    xor ax,ax
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
 ;
     mov al,20h
     out INT0_CONTROL,al

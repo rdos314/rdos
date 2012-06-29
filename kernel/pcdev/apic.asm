@@ -754,10 +754,15 @@ IsaIrqStart:
 isa_irq_handler     isa_irq_handler_struc <>
 
 IsaIrqEntry:
+    pushad
     push ds
     push es
     push fs
-    pushad
+;
+    xor ax,ax
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
 ;
     EnterInt
     sti
@@ -776,10 +781,34 @@ IsaIrqExit:
     mov ds:APIC_EOI,eax
     LeaveInt
 ;
+    pop ax
+    verr ax
+    jz IrqExitFs
+;    
+    xor ax,ax
+
+IrqExitFs:
+    mov fs,ax
+;
+    pop ax
+    verr ax
+    jz IrqExitEs
+;    
+    xor ax,ax
+
+IrqExitEs:
+    mov es,ax
+;
+    pop ax
+    verr ax
+    jz IrqExitDs
+;    
+    xor ax,ax
+
+IrqExitDs:
+    mov ds,ax
+;
     popad
-    pop fs
-    pop es
-    pop ds
     iretd
 
 IsaIrqDetect:
@@ -1136,10 +1165,15 @@ PciIrqStart:
 pci_irq_handler     pci_irq_handler_struc <>
 
 PciIrqEntry:
+    pushad
     push ds
     push es
     push fs
-    pushad
+;
+    xor ax,ax
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
 ;
     EnterInt
     sti
@@ -1218,10 +1252,34 @@ PciIrqExit:
     cli
     LeaveInt
 ;
+    pop ax
+    verr ax
+    jz PciExitFs
+;    
+    xor ax,ax
+
+PciExitFs:
+    mov fs,ax
+;
+    pop ax
+    verr ax
+    jz PciExitEs
+;    
+    xor ax,ax
+
+PciExitEs:
+    mov es,ax
+;
+    pop ax
+    verr ax
+    jz PciExitDs
+;    
+    xor ax,ax
+
+PciExitDs:
+    mov ds,ax
+;
     popad
-    pop fs
-    pop es
-    pop ds
     iretd
 
 PciIrqEnd:
@@ -1677,10 +1735,15 @@ MsiStart:
 msi_handler     msi_handler_struc <>
 
 MsiEntry:
+    pushad
     push ds
     push es
     push fs
-    pushad
+;
+    xor ax,ax
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
 ;
     EnterInt
     mov ax,apic_mem_sel
@@ -1695,10 +1758,34 @@ MsiEntry:
     cli    
     LeaveInt
 ;
+    pop ax
+    verr ax
+    jz MsiExitFs
+;    
+    xor ax,ax
+
+MsiExitFs:
+    mov fs,ax
+;
+    pop ax
+    verr ax
+    jz MsiExitEs
+;    
+    xor ax,ax
+
+MsiExitEs:
+    mov es,ax
+;
+    pop ax
+    verr ax
+    jz MsiExitDs
+;    
+    xor ax,ax
+
+MsiExitDs:
+    mov ds,ax
+;
     popad
-    pop fs
-    pop es
-    pop ds
     iretd
     
 MsiDefault:
@@ -2727,20 +2814,20 @@ ghtGet:
 ;
     pop cx
     verr cx
-    jz hpet_es_ok
+    jz hpet_time_es_ok
 ;
     xor cx,cx
     
-hpet_es_ok:
+hpet_time_es_ok:
     mov es,cx
 ;
     pop cx
     verr cx
-    jz hpet_ds_ok
+    jz hpet_time_ds_ok
 ;
     xor cx,cx
     
-hpet_ds_ok:
+hpet_time_ds_ok:
     mov ds,cx
     pop ecx
     retf32
@@ -2850,10 +2937,14 @@ nmi_int:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 timer_int:
+    pushad
     push ds
     push es
     push fs
-    pushad
+;
+    xor ax,ax
+    mov es,ax
+    mov fs,ax
 ;    
     mov ax,apic_mem_sel
     mov ds,ax
@@ -2862,10 +2953,34 @@ timer_int:
 ;    
     TimerExpired
 ;
+    pop ax
+    verr ax
+    jz timer_fs_ok
+;
+    xor ax,ax
+
+timer_fs_ok:
+    mov fs,ax
+;    
+    pop ax
+    verr ax
+    jz timer_es_ok
+;
+    xor ax,ax
+
+timer_es_ok:
+    mov es,ax
+;    
+    pop ax
+    verr ax
+    jz timer_ds_ok
+;
+    xor ax,ax
+
+timer_ds_ok:
+    mov ds,ax
+;    
     popad
-    pop fs
-    pop es
-    pop ds
     iretd
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2880,10 +2995,14 @@ timer_int:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hpet_int:
+    pushad
     push ds
     push es
     push fs
-    pushad
+;
+    xor ax,ax
+    mov es,ax
+    mov fs,ax
 ;    
     mov ax,SEG data
     mov ds,ax
@@ -2899,10 +3018,34 @@ hpet_int:
     TimerExpired
 
 hpet_int_done:
+    pop ax
+    verr ax
+    jz hpet_fs_ok
+;
+    xor ax,ax
+
+hpet_fs_ok:
+    mov fs,ax
+;    
+    pop ax
+    verr ax
+    jz hpet_es_ok
+;
+    xor ax,ax
+
+hpet_es_ok:
+    mov es,ax
+;    
+    pop ax
+    verr ax
+    jz hpet_ds_ok
+;
+    xor ax,ax
+
+hpet_ds_ok:
+    mov ds,ax
+;    
     popad
-    pop fs
-    pop es
-    pop ds
     iretd
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2917,10 +3060,14 @@ hpet_int_done:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 preempt_int:
+    pushad
     push ds
     push es
     push fs
-    pushad
+;
+    xor ax,ax
+    mov es,ax
+    mov fs,ax
 ;    
     mov ax,apic_mem_sel
     mov ds,ax
@@ -2929,10 +3076,34 @@ preempt_int:
 ;    
     PreemptExpired
 ;
+    pop ax
+    verr ax
+    jz preempt_fs_ok
+;
+    xor ax,ax
+
+preempt_fs_ok:
+    mov fs,ax
+;    
+    pop ax
+    verr ax
+    jz preempt_es_ok
+;
+    xor ax,ax
+
+preempt_es_ok:
+    mov es,ax
+;    
+    pop ax
+    verr ax
+    jz preempt_ds_ok
+;
+    xor ax,ax
+
+preempt_ds_ok:
+    mov ds,ax
+;    
     popad
-    pop fs
-    pop es
-    pop ds
     iretd
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2947,10 +3118,14 @@ preempt_int:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 mixed_int:
+    pushad
     push ds
     push es
     push fs
-    pushad
+;
+    xor ax,ax
+    mov es,ax
+    mov fs,ax
 ;    
     mov ax,apic_mem_sel
     mov ds,ax
@@ -2958,11 +3133,35 @@ mixed_int:
     mov ds:APIC_EOI,eax
 ;    
     PreemptTimerExpired
+;
+    pop ax
+    verr ax
+    jz mixed_fs_ok
+;
+    xor ax,ax
+
+mixed_fs_ok:
+    mov fs,ax
+;    
+    pop ax
+    verr ax
+    jz mixed_es_ok
+;
+    xor ax,ax
+
+mixed_es_ok:
+    mov es,ax
+;    
+    pop ax
+    verr ax
+    jz mixed_ds_ok
+;
+    xor ax,ax
+
+mixed_ds_ok:
+    mov ds,ax
 ;    
     popad
-    pop fs
-    pop es
-    pop ds
     iretd
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
