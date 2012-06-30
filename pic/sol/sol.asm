@@ -8,6 +8,7 @@ FLAG_SOLAR12_POWER_INCREASE   EQU 1
 FLAG_SOLAR24_U_INCREASE       EQU 2
 FLAG_SOLAR24_POWER_INCREASE   EQU 3
 FLAG_SOLAR24_CHARGE           EQU 4
+FLAG_LED					  EQU 5
 
 temp0	EQU 0x0
 temp1   EQU 0x1
@@ -347,7 +348,6 @@ PollSolar12:
     return
 ;
     call SolarPowerCompare12
-;    call SolarControl12
     call SetupSolar12
     return
 
@@ -474,82 +474,57 @@ Solar12OldLarger:
     return
          
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; SolarControl12
+; SetupLed
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SolarControl12:
-    btfsc flags,FLAG_SOLAR12_POWER_INCREASE
-    goto Solar12ControlMorePower
-;
-    movf solar12_p0,W
-    iorwf solar12_p1,W
-    iorwf solar12_p2,W
-    iorwf solar12_p3,W
-    btfss STATUS,Z
-    goto Solar12ControlLessPower
-
-Solar12ControlNoPower:
-    movf solar12_ref_lsb,W
-    iorwf solar12_ref_msb,W
-    btfsc STATUS,Z
-    goto Solar12ControlIncrease
-;
+SetupLed:
     movf solar12_u_lsb,W
-    movwf solar12_ref_lsb
-    movwf temp0
-    movf solar12_u_msb,W
-    movwf solar12_ref_msb
-    movwf temp1
-;
-    bcf STATUS,C
-    rrcf temp1,F
-    rrcf temp0,F
-    bcf STATUS,C
-    rrcf temp1,F
-    rrcf temp0,F
-    comf temp1,F
-    comf temp0,F
-;
-    movf temp0,W
-    bsf STATUS,C
-    addwfc solar12_ref_lsb,F
-    movf temp1,W
-    addwfc solar12_ref_msb,F    
-    bcf flags,FLAG_SOLAR12_U_INCREASE
+    iorwf solar12_u_msb,W
+    btfss STATUS,Z
+    goto LedOff
+
+LedOn:
+    btfsc flags,FLAG_LED
+    goto LedSwitch
+;    
+    bsf flags,FLAG_LED
+    bsf LATB,7
     return
 
-Solar12ControlMorePower:
-    btfss flags,FLAG_SOLAR12_U_INCREASE
-    goto Solar12ControlDecrease
-
-Solar12ControlIncrease:
-	movlw 0x14
-    addwf solar12_ref_lsb,F
-    movlw 0
-    addwfc solar12_ref_msb,F
-    bsf flags,FLAG_SOLAR12_U_INCREASE
+LedSwitch:
+    btfss LATB,7
+    goto Led6
+;
+    bcf LATB,7
+    bsf LATB,6
     return
 
-Solar12ControlLessPower:
-    btfss flags,FLAG_SOLAR12_U_INCREASE
-    goto Solar12ControlIncrease
-    
-Solar12ControlDecrease:
-	movlw 0xEC
-    addwf solar12_ref_lsb,F
-    movlw 0xFF
-    addwfc solar12_ref_msb,F
-    bcf flags,FLAG_SOLAR12_U_INCREASE
+Led6:
+    btfss LATB,6
+    goto Led5
 ;
-    btfss STATUS,C
-    goto Solar12ControlZero
-;
+    bcf LATB,6
+    bsf LATB,5
     return
 
-Solar12ControlZero:
-    clrf solar12_ref_lsb
-    clrf solar12_ref_msb
-    bcf flags,FLAG_SOLAR12_U_INCREASE
+Led5:
+    btfss LATB,5
+    goto Led4
+;
+    bcf LATB,5
+    bsf LATB,4
+    return
+
+Led4:
+    bcf LATB,4
+    bsf LATB,7
+    return
+
+LedOff:
+    bcf flags,FLAG_LED
+    movf LATB,W
+    andlw 0xF       
+    movwf LATB
     return
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -690,7 +665,6 @@ PollSolar24:
     return
 ;
     call SolarPowerCompare24
-;    call SolarControl24
     call SetupSolar24
     return
 
@@ -814,85 +788,6 @@ Solar24NewLarger:
 
 Solar24OldLarger:
     bcf flags,FLAG_SOLAR24_POWER_INCREASE
-    return
-         
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; SolarControl24
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SolarControl24:
-    btfsc flags,FLAG_SOLAR24_POWER_INCREASE
-    goto Solar24ControlMorePower
-;
-    movf solar24_p0,W
-    iorwf solar24_p1,W
-    iorwf solar24_p2,W
-    iorwf solar24_p3,W
-    btfss STATUS,Z
-    goto Solar24ControlLessPower
-
-Solar24ControlNoPower:
-    movf solar24_ref_lsb,W
-    iorwf solar24_ref_msb,W
-    btfsc STATUS,Z
-    goto Solar24ControlIncrease
-;
-    movf solar24_u_lsb,W
-    movwf solar24_ref_lsb
-    movwf temp0
-    movf solar24_u_msb,W
-    movwf solar24_ref_msb
-    movwf temp1
-;
-    bcf STATUS,C
-    rrcf temp1,F
-    rrcf temp0,F
-    bcf STATUS,C
-    rrcf temp1,F
-    rrcf temp0,F
-    comf temp1,F
-    comf temp0,F
-;
-    movf temp0,W
-    bsf STATUS,C
-    addwfc solar24_ref_lsb,F
-    movf temp1,W
-    addwfc solar24_ref_msb,F    
-    bcf flags,FLAG_SOLAR24_U_INCREASE
-    return
-
-Solar24ControlMorePower:
-    btfss flags,FLAG_SOLAR24_U_INCREASE
-    goto Solar24ControlDecrease
-
-Solar24ControlIncrease:
-	movlw 0x14
-    addwf solar24_ref_lsb,F
-    movlw 0
-    addwfc solar24_ref_msb,F
-    bsf flags,FLAG_SOLAR24_U_INCREASE
-    return
-
-Solar24ControlLessPower:
-    btfss flags,FLAG_SOLAR24_U_INCREASE
-    goto Solar24ControlIncrease
-    
-Solar24ControlDecrease:
-	movlw 0xEC
-    addwf solar24_ref_lsb,F
-    movlw 0xFF
-    addwfc solar24_ref_msb,F
-    bcf flags,FLAG_SOLAR24_U_INCREASE
-;
-    btfss STATUS,C
-    goto Solar24ControlZero
-;
-    return
-
-Solar24ControlZero:
-    clrf solar24_ref_lsb
-    clrf solar24_ref_msb
-    bcf flags,FLAG_SOLAR24_U_INCREASE
     return
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1612,6 +1507,8 @@ PollStat:
 ;
     movlw 4
     movwf sec_msb
+;
+    call SetupLed
     call CreateStat
 ;
 	clrf solar12_ps0
