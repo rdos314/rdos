@@ -478,8 +478,10 @@ Solar12OldLarger:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupLed:
-    movf solar12_u_lsb,W
-    iorwf solar12_u_msb,W
+    movf solar12_pp0,W
+    iorwf solar12_pp1,W
+    iorwf solar12_pp2,W
+    iorwf solar12_pp3,W
     btfss STATUS,Z
     goto LedOff
 
