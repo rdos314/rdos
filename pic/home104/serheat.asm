@@ -4,6 +4,8 @@
 
 #define PAGE0   BCF 3,5
 #define PAGE1   BSF 3,5
+#define PAGEL   BCF 3,6
+#define PAGEH   BSF 3,6
 
 ; Page 0
 
@@ -34,10 +36,13 @@ Val:        EQU 0x26
 
 Reset:
 	PAGE1
+;
+    PAGEH
+	clrf EECON1
+    PAGEL
+;	
 	movlw b'00000110'
 	movwf ADCON1
-;
-	clrf EECON1
 ;
     movlw b'11110011'
 	movwf TRISA
@@ -183,11 +188,13 @@ update_key_done:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadEe:		
+    PAGEH
     clrf EEADR
     PAGE1
     bsf EECON1,RD
     PAGE0
     movf EEDATA,W
+    PAGEL
 	movwf PORTC
 	return
 
@@ -198,13 +205,16 @@ ReadEe:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteEe:	
+    PAGEH
     clrf EEADR
 	PAGE1
 	bsf EECON1,WREN
 	PAGE0
+	PAGEL
     movf PORTC,W
+    PAGEH
 	movwf EEDATA
-
+;
     PAGE1
     movlw 0x55
 	movwf EECON2
@@ -213,11 +223,12 @@ WriteEe:
     bsf EECON1,WR
 
 ChkWrt:		
-    btfss EECON1,WR
+    btfsc EECON1,WR
 	goto ChkWrt
 
     bcf EECON1,WREN 
  	PAGE0
+ 	PAGEL
     return
 
     end
