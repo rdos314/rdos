@@ -312,12 +312,8 @@ int readbyte(__G)   /* refill inbuf and return a byte if available, else EOF */
               (uch *)LoadFarString(ReadError),
               (ulg)strlen(LoadFarString(ReadError)), 0x401);
             echon();
-#ifdef WINDLL
-            longjmp(dll_error_return, 1);
-#else
             DESTROYGLOBALS();
             EXIT(PK_BADERR);    /* totally bailing; better than lock-up */
-#endif
         }
         G.cur_zipfile_bufstart += INBUFSIZ; /* always starts on block bndry */
         G.inptr = G.inbuf;
@@ -344,10 +340,6 @@ int readbyte(__G)   /* refill inbuf and return a byte if available, else EOF */
 } /* end function readbyte() */
 
 
-
-
-
-#if defined(USE_ZLIB) || defined(USE_BZIP2)
 
 /************************/
 /* Function fillinbuf() */
@@ -376,9 +368,6 @@ int fillinbuf(__G) /* like readbyte() except returns number of bytes in inbuf */
     return G.incnt;
 
 } /* end function fillinbuf() */
-
-#endif /* USE_ZLIB || USE_BZIP2 */
-
 
 
 
@@ -446,50 +435,15 @@ int seek_zipf(zoff_t abs_offset)
 
 
 
-
-#ifndef VMS  /* for VMS use code in vms.c */
-
 /********************/
 /* Function flush() */   /* returns PK error codes: */
 /********************/   /* if tflag => always 0; PK_DISK if write error */
 
 int flush(uch *rawbuf, ulg size, int unshrink)
-#if (defined(USE_DEFLATE64) && defined(__16BIT__))
-{
-    int ret;
-
-    /* On 16-bit systems (MSDOS, OS/2 1.x), the standard C library functions
-     * cannot handle writes of 64k blocks at once.  For these systems, the
-     * blocks to flush are split into pieces of 32k or less.
-     */
-    while (size > 0x8000L) {
-        ret = partflush(__G__ rawbuf, 0x8000L, unshrink);
-        if (ret != PK_OK)
-            return ret;
-        size -= 0x8000L;
-        rawbuf += (extent)0x8000;
-    }
-    return partflush(__G__ rawbuf, size, unshrink);
-} /* end function flush() */
-
-
-/************************/
-/* Function partflush() */  /* returns PK error codes: */
-/************************/  /* if tflag => always 0; PK_DISK if write error */
-
-static int partflush(__G__ rawbuf, size, unshrink)
-    __GDEF
-    uch *rawbuf;        /* cannot be ZCONST, gets passed to (*G.message)() */
-    ulg size;
-    int unshrink;
-#endif /* USE_DEFLATE64 && __16BIT__ */
 {
     register uch *p;
     register uch *q;
     uch *transbuf;
-#if (defined(SMALL_MEM) || defined(MED_MEM) || defined(VMS_TEXT_CONV))
-    ulg transbufsiz;
-#endif
     /* static int didCRlast = FALSE;    moved to globals.h */
 
 
@@ -499,11 +453,6 @@ static int partflush(__G__ rawbuf, size, unshrink)
 
     G.crc32val = crc32(G.crc32val, rawbuf, (extent)size);
 
-#ifdef DLL
-    if ((G.statreportcb != NULL) &&
-        (*G.statreportcb)(__G__ UZ_ST_IN_PROGRESS, G.zipfn, G.filename, NULL))
-        return IZ_CTRLC;        /* cancel operation by user request */
-#endif
 
     if (uO.tflag || size == 0L)  /* testing or nothing to write:  all done */
         return PK_OK;
@@ -528,15 +477,6 @@ static int partflush(__G__ rawbuf, size, unshrink)
          * at least MSC 5.1 has a lousy implementation of fwrite() (as does
          * DEC Ultrix cc), write() is used anyway.
          */
-#ifdef DLL
-        if (G.redirect_data) {
-#ifdef NO_SLIDE_REDIR
-            if (writeToMemory(__G__ rawbuf, (extent)size)) return PK_ERR;
-#else
-            writeToMemory(__G__ rawbuf, (extent)size);
-#endif
-        } else
-#endif
         if (!uO.cflag && RdosWriteFile(G.outfile, rawbuf, size))
             return disk_error(__G);
         else if (uO.cflag && (*G.message)((zvoid *)&G, rawbuf, size, 0))
@@ -545,129 +485,15 @@ static int partflush(__G__ rawbuf, size, unshrink)
         if (unshrink) {
             /* rawbuf = outbuf */
             transbuf = G.outbuf2;
-#if (defined(SMALL_MEM) || defined(MED_MEM) || defined(VMS_TEXT_CONV))
-            transbufsiz = TRANSBUFSIZ;
-#endif
         } else {
             /* rawbuf = slide */
             transbuf = G.outbuf;
-#if (defined(SMALL_MEM) || defined(MED_MEM) || defined(VMS_TEXT_CONV))
-            transbufsiz = OUTBUFSIZ;
-            Trace((stderr, "\ntransbufsiz = OUTBUFSIZ = %u\n",
-                   (unsigned)OUTBUFSIZ));
-#endif
         }
         if (G.newfile) {
-#ifdef VMS_TEXT_CONV
-            if (G.pInfo->hostnum == VMS_ && G.extra_field &&
-                is_vms_varlen_txt(__G__ G.extra_field,
-                                  G.lrec.extra_field_length))
-                G.VMS_line_state = 0;    /* 0: ready to read line length */
-            else
-                G.VMS_line_state = -1;   /* -1: don't treat as VMS text */
-#endif
             G.didCRlast = FALSE;         /* no previous buffers written */
             G.newfile = FALSE;
         }
 
-#ifdef VMS_TEXT_CONV
-        if (G.VMS_line_state >= 0)
-        {
-            p = rawbuf;
-            q = transbuf;
-            while ((extent)(p-rawbuf) < (extent)size) {
-                switch (G.VMS_line_state) {
-
-                    /* 0: ready to read line length */
-                    case 0:
-                        G.VMS_line_length = 0;
-                        if ((extent)(p-rawbuf) == (extent)size-1) {
-                            /* last char */
-                            G.VMS_line_length = (unsigned)(*p++);
-                            G.VMS_line_state = 1;
-                        } else {
-                            G.VMS_line_length = makeword(p);
-                            p += 2;
-                            G.VMS_line_state = 2;
-                        }
-                        G.VMS_line_pad =
-                               ((G.VMS_line_length & 1) != 0); /* odd */
-                        break;
-
-                    /* 1: read one byte of length, need second */
-                    case 1:
-                        G.VMS_line_length += ((unsigned)(*p++) << 8);
-                        G.VMS_line_state = 2;
-                        break;
-
-                    /* 2: ready to read VMS_line_length chars */
-                    case 2:
-                        {
-                            extent remaining = (extent)size+(rawbuf-p);
-                            extent outroom;
-
-                            if (G.VMS_line_length < remaining) {
-                                remaining = G.VMS_line_length;
-                                G.VMS_line_state = 3;
-                            }
-
-                            outroom = transbuf+(extent)transbufsiz-q;
-                            if (remaining >= outroom) {
-                                remaining -= outroom;
-                                for (;outroom > 0; p++, outroom--)
-                                    *q++ = native(*p);
-#ifdef DLL
-                                if (G.redirect_data) {
-                                    if (writeToMemory(__G__ transbuf,
-                                          (extent)(q-transbuf))) return PK_ERR;
-                                } else
-#endif
-                                if (!uO.cflag && RdosWriteFile(G.outfile, transbuf,
-                                    (extent)(q-transbuf)))
-                                    return disk_error(__G);
-                                else if (uO.cflag && (*G.message)((zvoid *)&G,
-                                         transbuf, (ulg)(q-transbuf), 0))
-                                    return PK_OK;
-                                q = transbuf;
-                                /* fall through to normal case */
-                            }
-                            G.VMS_line_length -= remaining;
-                            for (;remaining > 0; p++, remaining--)
-                                *q++ = native(*p);
-                        }
-                        break;
-
-                    /* 3: ready to PutNativeEOL */
-                    case 3:
-                        if (q > transbuf+(extent)transbufsiz-lenEOL) {
-#ifdef DLL
-                            if (G.redirect_data) {
-                                if (writeToMemory(__G__ transbuf,
-                                      (extent)(q-transbuf))) return PK_ERR;
-                            } else
-#endif
-                            if (!uO.cflag &&
-                                RdosWriteFile(G.outfile, transbuf, (extent)(q-transbuf)))
-                                return disk_error(__G);
-                            else if (uO.cflag && (*G.message)((zvoid *)&G,
-                                     transbuf, (ulg)(q-transbuf), 0))
-                                return PK_OK;
-                            q = transbuf;
-                        }
-                        PutNativeEOL
-                        G.VMS_line_state = G.VMS_line_pad ? 4 : 0;
-                        break;
-
-                    /* 4: ready to read pad byte */
-                    case 4:
-                        ++p;
-                        G.VMS_line_state = 0;
-                        break;
-                }
-            } /* end while */
-
-        } else
-#endif /* VMS_TEXT_CONV */
 
     /*-----------------------------------------------------------------------
         Algorithm:  CR/LF => native; lone CR => native; lone LF => native.
@@ -894,8 +720,6 @@ static int disk_error(__G)
     return PK_DISK;
 
 } /* end function disk_error() */
-
-#endif /* !VMS */
 
 
 
