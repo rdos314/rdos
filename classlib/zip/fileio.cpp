@@ -517,30 +517,9 @@ int flush(uch *rawbuf, ulg size, int unshrink)
                 } else if (*p == LF)      /* lone LF */
                     PutNativeEOL
                 else
-#ifndef DOS_FLX_OS2_W32
                 if (*p != CTRLZ)          /* lose all ^Z's */
-#endif
                     *q++ = native(*p);
 
-#if (defined(SMALL_MEM) || defined(MED_MEM))
-# if (lenEOL == 1)   /* don't check unshrink:  both buffers small but equal */
-                if (!unshrink)
-# endif
-                    /* check for danger of buffer overflow and flush */
-                    if (q > transbuf+(extent)transbufsiz-lenEOL) {
-                        Trace((stderr,
-                          "p - rawbuf = %u   q-transbuf = %u   size = %lu\n",
-                          (unsigned)(p-rawbuf), (unsigned)(q-transbuf), size));
-                        if (!uO.cflag && RdosWriteFile(G.outfile, transbuf,
-                            (extent)(q-transbuf)))
-                            return disk_error(__G);
-                        else if (uO.cflag && (*G.message)((zvoid *)&G,
-                                 transbuf, (ulg)(q-transbuf), 0))
-                            return PK_OK;
-                        q = transbuf;
-                        continue;
-                    }
-#endif /* SMALL_MEM || MED_MEM */
             }
         }
 
@@ -551,12 +530,6 @@ int flush(uch *rawbuf, ulg size, int unshrink)
         Trace((stderr, "p - rawbuf = %u   q-transbuf = %u   size = %lu\n",
           (unsigned)(p-rawbuf), (unsigned)(q-transbuf), size));
         if (q > transbuf) {
-#ifdef DLL
-            if (G.redirect_data) {
-                if (writeToMemory(__G__ transbuf, (extent)(q-transbuf)))
-                    return PK_ERR;
-            } else
-#endif
             if (!uO.cflag && RdosWriteFile(G.outfile, transbuf, (extent)(q-transbuf)))
                 return disk_error(__G);
             else if (uO.cflag && (*G.message)((zvoid *)&G, transbuf,
