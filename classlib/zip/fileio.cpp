@@ -75,9 +75,6 @@
 #endif
 #include "ebcdic.h"   /* definition/initialization of ebcdic[] */
 
-#    define WriteError(buf,len,strm) \
-     ((extent)RdosWriteFile(1,(char *)(buf),(extent)(len)) != (extent)(len))
-
 /*
    2005-09-16 SMS.
    On VMS, when output is redirected to a file, as in a command like
@@ -99,7 +96,6 @@
    out a record (only) when it sees a newline.
 */
 
-#  define WriteTxtErr(buf,len,strm)  WriteError(buf,len,strm)
 static int disk_error OF((__GPRO));
 
 
@@ -541,7 +537,7 @@ static int partflush(__G__ rawbuf, size, unshrink)
 #endif
         } else
 #endif
-        if (!uO.cflag && WriteError(rawbuf, size, G.outfile))
+        if (!uO.cflag && RdosWriteFile(G.outfile, rawbuf, size))
             return disk_error(__G);
         else if (uO.cflag && (*G.message)((zvoid *)&G, rawbuf, size, 0))
             return PK_OK;
@@ -626,8 +622,8 @@ static int partflush(__G__ rawbuf, size, unshrink)
                                           (extent)(q-transbuf))) return PK_ERR;
                                 } else
 #endif
-                                if (!uO.cflag && WriteError(transbuf,
-                                    (extent)(q-transbuf), G.outfile))
+                                if (!uO.cflag && RdosWriteFile(G.outfile, transbuf,
+                                    (extent)(q-transbuf)))
                                     return disk_error(__G);
                                 else if (uO.cflag && (*G.message)((zvoid *)&G,
                                          transbuf, (ulg)(q-transbuf), 0))
@@ -651,8 +647,7 @@ static int partflush(__G__ rawbuf, size, unshrink)
                             } else
 #endif
                             if (!uO.cflag &&
-                                WriteError(transbuf, (extent)(q-transbuf),
-                                  G.outfile))
+                                RdosWriteFile(G.outfile, transbuf, (extent)(q-transbuf)))
                                 return disk_error(__G);
                             else if (uO.cflag && (*G.message)((zvoid *)&G,
                                      transbuf, (ulg)(q-transbuf), 0))
@@ -710,8 +705,8 @@ static int partflush(__G__ rawbuf, size, unshrink)
                         Trace((stderr,
                           "p - rawbuf = %u   q-transbuf = %u   size = %lu\n",
                           (unsigned)(p-rawbuf), (unsigned)(q-transbuf), size));
-                        if (!uO.cflag && WriteError(transbuf,
-                            (extent)(q-transbuf), G.outfile))
+                        if (!uO.cflag && RdosWriteFile(G.outfile, transbuf,
+                            (extent)(q-transbuf)))
                             return disk_error(__G);
                         else if (uO.cflag && (*G.message)((zvoid *)&G,
                                  transbuf, (ulg)(q-transbuf), 0))
@@ -736,8 +731,7 @@ static int partflush(__G__ rawbuf, size, unshrink)
                     return PK_ERR;
             } else
 #endif
-            if (!uO.cflag && WriteError(transbuf, (extent)(q-transbuf),
-                G.outfile))
+            if (!uO.cflag && RdosWriteFile(G.outfile, transbuf, (extent)(q-transbuf)))
                 return disk_error(__G);
             else if (uO.cflag && (*G.message)((zvoid *)&G, transbuf,
                 (ulg)(q-transbuf), 0))
@@ -928,7 +922,6 @@ int UZ_EXP UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
     int islinefeed = FALSE;
 #endif
 #endif
-    FILE *outfp;
 
 
 /*---------------------------------------------------------------------------
@@ -964,10 +957,6 @@ int UZ_EXP UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
         return 0;
 #endif
 
-    if (MSG_STDERR(flag) && !((Uz_Globs *)pG)->UzO.tflag)
-        outfp = (FILE *)stderr;
-    else
-        outfp = (FILE *)stdout;
 
 #ifdef QUERY_TRNEWLN
     /* some systems require termination of query prompts with '\n' to force
@@ -1010,8 +999,7 @@ int UZ_EXP UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
 #ifdef OS2DLL
         if (!((Uz_Globs *)pG)->redirect_text) {
 #endif
-            putc('\n', outfp);
-            fflush(outfp);
+            RdosWriteChar('\n');
 #ifdef MORE
             if (((Uz_Globs *)pG)->M_flag)
             {
@@ -1076,9 +1064,7 @@ int UZ_EXP UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
                 ++((Uz_Globs *)pG)->lines;
                 if (((Uz_Globs *)pG)->lines >= ((Uz_Globs *)pG)->height)
                 {
-                    if ((error = WriteTxtErr(q, p-q+1, outfp)) != 0)
-                        return error;
-                    fflush(outfp);
+                    RdosWriteSizeString((char *)q, p-q+1);
                     ((Uz_Globs *)pG)->sol = TRUE;
                     q = p + 1;
                     (*((Uz_Globs *)pG)->mpause)((zvoid *)pG,
@@ -1095,19 +1081,7 @@ int UZ_EXP UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
 #ifdef OS2DLL
         if (!((Uz_Globs *)pG)->redirect_text) {
 #endif
-            if ((error = WriteTxtErr(q, size, outfp)) != 0)
-                return error;
-#ifndef VMS     /* 2005-09-16 SMS.  See note at "WriteTxtErr()", above. */
-            fflush(outfp);
-#endif
-            if (MSG_STDERR(flag) && ((Uz_Globs *)pG)->UzO.tflag &&
-                !isatty(1) && isatty(2))
-            {
-                /* error output from testing redirected:  also send to stderr */
-                if ((error = WriteTxtErr(q, size, stderr)) != 0)
-                    return error;
-                fflush(stderr);
-            }
+            RdosWriteSizeString((char *)q, size);
 #ifdef OS2DLL
         } else {                /* GRR:  this is ugly:  hide with macro */
             if ((error = REDIRECTPRINT(q, size)) != 0)
