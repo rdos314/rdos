@@ -27,6 +27,12 @@ Cmd         EQU 0x2B
 Chan        EQU 0x2C
 Attent      EQU 0x2D
 
+Contr       EQU 0x2E
+Da0         EQU 0x2F
+Da1         EQU 0x30
+Bit         EQU 0x31
+DaVal       EQU 0x32
+
 ; common area
 
 	org 0
@@ -71,7 +77,7 @@ Reset:
 	PAGE0
 	clrf PORTA
 ;
-	movlw b'11111111'
+	movlw b'00111111'
 	movwf PORTB
 ;
     call ReadEe	
@@ -100,6 +106,14 @@ Reset:
     clrf CurrKeys
     movf PORTD,W
     movwf KeyState
+;
+    movlw 0x7F
+    movwf Da0
+    call LoadDa0
+;
+    movlw 0xFF
+    movwf Da1    
+    call LoadDa1
 ;
     movlw 0x32    
     movwf StableCnt
@@ -538,6 +552,79 @@ update_key_done:
     movf KeyState,W
     movwf CurrKeys    
     return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; LoadDa0/1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadDa0:	
+	movlw b'00001001'
+	movwf Contr
+	movf Da0,W
+	movwf DaVal
+	goto LoadDa
+
+LoadDa1:	
+	movlw b'00001010'
+	movwf Contr
+	movf Da1,W
+	movwf DaVal
+
+LoadDa:	
+	bcf PORTB,7
+	call PollHw
+	bcf PORTB,5
+;
+	movlw 8
+	movwf Bit
+
+LoadDaContrLoop:
+	btfss Contr,7
+	goto LoadDaContrRes
+
+LoadDaContrSet:
+	bsf PORTB,6
+	goto LoadDaContrNext
+
+LoadDaContrRes:
+	bcf PORTB,6
+
+LoadDaContrNext:
+	rlf Contr,F
+	bsf PORTB,7
+	call PollHw
+	bcf PORTB,7
+;
+	decfsz Bit,F
+	goto LoadDaContrLoop
+;
+	movlw 8
+	movwf Bit
+
+LoadDaDataLoop:
+	btfss DaVal,7
+	goto LoadDaDataRes
+
+LoadDaDataSet:
+	bsf PORTB,6
+	goto LoadDaDataNext
+
+LoadDaDataRes:
+	bcf PORTB,6
+
+LoadDaDataNext:
+	rlf DaVal,F
+	bsf PORTB,7
+	call PollHw
+	bcf PORTB,7
+;
+	decfsz Bit,F
+	goto LoadDaDataLoop
+;
+	bsf PORTB,5
+	return
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
