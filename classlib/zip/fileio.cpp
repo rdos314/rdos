@@ -545,132 +545,6 @@ int flush(uch *rawbuf, ulg size, int unshrink)
 
 
 
-
-#ifdef VMS_TEXT_CONV
-
-/********************************/
-/* Function is_vms_varlen_txt() */
-/********************************/
-
-static int is_vms_varlen_txt(uch *ef_buf, unsigned ef_len)
-{
-    unsigned eb_id;
-    unsigned eb_len;
-    uch *eb_data;
-    unsigned eb_datlen;
-#define VMSREC_C_UNDEF  0
-#define VMSREC_C_VAR    2
-    uch vms_rectype = VMSREC_C_UNDEF;
- /* uch vms_fileorg = 0; */ /* currently, fileorg is not used... */
-
-#define VMSPK_ITEMID            0
-#define VMSPK_ITEMLEN           2
-#define VMSPK_ITEMHEADSZ        4
-
-#define VMSATR_C_RECATTR        4
-#define VMS_FABSIG              0x42414656      /* "VFAB" */
-/* offsets of interesting fields in VMS fabdef structure */
-#define VMSFAB_B_RFM            31      /* record format byte */
-#define VMSFAB_B_ORG            29      /* file organization byte */
-
-    if (ef_len == 0 || ef_buf == NULL)
-        return FALSE;
-
-    while (ef_len >= EB_HEADSIZE) {
-        eb_id = makeword(EB_ID + ef_buf);
-        eb_len = makeword(EB_LEN + ef_buf);
-
-        if (eb_len > (ef_len - EB_HEADSIZE)) {
-            /* discovered some extra field inconsistency! */
-            Trace((stderr,
-              "is_vms_varlen_txt: block length %u > rest ef_size %u\n", eb_len,
-              ef_len - EB_HEADSIZE));
-            break;
-        }
-
-        switch (eb_id) {
-          case EF_PKVMS:
-            /* The PKVMS e.f. raw data part consists of:
-             * a) 4 bytes CRC checksum
-             * b) list of uncompressed variable-length data items
-             * Each data item is introduced by a fixed header
-             *  - 2 bytes data type ID
-             *  - 2 bytes <size> of data
-             *  - <size> bytes of actual attribute data
-             */
-
-            /* get pointer to start of data and its total length */
-            eb_data = ef_buf+(EB_HEADSIZE+4);
-            eb_datlen = eb_len-4;
-
-            /* test the CRC checksum */
-            if (makelong(ef_buf+EB_HEADSIZE) !=
-                crc32(CRCVAL_INITIAL, eb_data, (extent)eb_datlen))
-            {
-                Info(slide, 1, ((char *)slide,
-                  "[Warning: CRC error, discarding PKWARE extra field]\n"));
-                /* skip over the data analysis code */
-                break;
-            }
-
-            /* scan through the attribute data items */
-            while (eb_datlen > 4)
-            {
-                unsigned fldsize = makeword(&eb_data[VMSPK_ITEMLEN]);
-
-                /* check the item type word */
-                switch (makeword(&eb_data[VMSPK_ITEMID])) {
-                  case VMSATR_C_RECATTR:
-                    /* we have found the (currently only) interesting
-                     * data item */
-                    if (fldsize >= 1) {
-                        vms_rectype = eb_data[VMSPK_ITEMHEADSZ] & 15;
-                     /* vms_fileorg = eb_data[VMSPK_ITEMHEADSZ] >> 4; */
-                    }
-                    break;
-                  default:
-                    break;
-                }
-                /* skip to next data item */
-                eb_datlen -= fldsize + VMSPK_ITEMHEADSZ;
-                eb_data += fldsize + VMSPK_ITEMHEADSZ;
-            }
-            break;
-
-          case EF_IZVMS:
-            if (makelong(ef_buf+EB_HEADSIZE) == VMS_FABSIG) {
-                if ((eb_data = extract_izvms_block(__G__
-                                                   ef_buf+EB_HEADSIZE, eb_len,
-                                                   &eb_datlen, NULL, 0))
-                    != NULL)
-                {
-                    if (eb_datlen >= VMSFAB_B_RFM+1) {
-                        vms_rectype = eb_data[VMSFAB_B_RFM] & 15;
-                     /* vms_fileorg = eb_data[VMSFAB_B_ORG] >> 4; */
-                    }
-                    free(eb_data);
-                }
-            }
-            break;
-
-          default:
-            break;
-        }
-
-        /* Skip this extra field block */
-        ef_buf += (eb_len + EB_HEADSIZE);
-        ef_len -= (eb_len + EB_HEADSIZE);
-    }
-
-    return (vms_rectype == VMSREC_C_VAR);
-
-} /* end function is_vms_varlen_txtfile() */
-
-#endif /* VMS_TEXT_CONV */
-
-
-
-
 /*************************/
 /* Function disk_error() */
 /*************************/
@@ -682,12 +556,10 @@ static int disk_error(__G)
     Info(slide, 0x4a1, ((char *)slide, LoadFarString(DiskFullQuery),
       FnFilter1(G.filename)));
 
-#ifndef WINDLL
     fgets(G.answerbuf, sizeof(G.answerbuf), stdin);
     if (*G.answerbuf == 'y')   /* stop writing to this file */
         G.disk_full = 1;       /*  (outfile bad?), but new OK */
     else
-#endif
         G.disk_full = 2;       /* no:  exit program */
 
     return PK_DISK;
@@ -713,11 +585,9 @@ int UZ_EXP UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
      */
     int error;
     uch *q=buf, *endbuf=buf+(unsigned)size;
-#ifdef MORE
     uch *p=buf;
 #if (defined(SCREENWIDTH) && defined(SCREENLWRAP))
     int islinefeed = FALSE;
-#endif
 #endif
 
 
@@ -730,50 +600,17 @@ int UZ_EXP UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
     of this one.
   ---------------------------------------------------------------------------*/
 
-#if (defined(OS2) && defined(DLL))
-    if (MSG_NO_DLL2(flag))  /* if OS/2 DLL bit is set, do NOT print this msg */
-        return 0;
-#endif
-#ifdef WINDLL
-    if (MSG_NO_WDLL(flag))
-        return 0;
-#endif
-#ifdef WINDLL
-    if (MSG_NO_WGUI(flag))
-        return 0;
-#endif
-/*
-#ifdef ACORN_GUI
-    if (MSG_NO_AGUI(flag))
-        return 0;
-#endif
- */
-#ifdef DLL                 /* don't display message if data is redirected */
-    if (((Uz_Globs *)pG)->redirect_data &&
-        !((Uz_Globs *)pG)->redirect_text)
-        return 0;
-#endif
-
-
-#ifdef QUERY_TRNEWLN
-    /* some systems require termination of query prompts with '\n' to force
-     * immediate display */
-    if (MSG_MNEWLN(flag)) {   /* assumes writable buffer (e.g., slide[]) */
-        *endbuf++ = '\n';     /*  with room for one more char at end of buf */
-        ++size;               /*  (safe assumption:  only used for four */
-    }                         /*  short queries in extract.c and fileio.c) */
-#endif
 
     if (MSG_TNEWLN(flag)) {   /* again assumes writable buffer:  fragile... */
         if ((!size && !((Uz_Globs *)pG)->sol) ||
             (size && (endbuf[-1] != '\n')))
         {
+            *endbuf++ = '\r';
             *endbuf++ = '\n';
             ++size;
         }
     }
 
-#ifdef MORE
 # ifdef SCREENSIZE
     /* room for --More-- and one line of overlap: */
 #  if (defined(SCREENWIDTH) && defined(SCREENLWRAP))
@@ -789,15 +626,10 @@ int UZ_EXP UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
     ((Uz_Globs *)pG)->width = SCREENWIDTH;
 #  endif
 # endif
-#endif /* MORE */
 
     if (MSG_LNEWLN(flag) && !((Uz_Globs *)pG)->sol) {
         /* not at start of line:  want newline */
-#ifdef OS2DLL
-        if (!((Uz_Globs *)pG)->redirect_text) {
-#endif
             RdosWriteChar('\n');
-#ifdef MORE
             if (((Uz_Globs *)pG)->M_flag)
             {
 #if (defined(SCREENWIDTH) && defined(SCREENLWRAP))
@@ -809,7 +641,6 @@ int UZ_EXP UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
                     (*((Uz_Globs *)pG)->mpause)((zvoid *)pG,
                       LoadFarString(MorePrompt), 1);
             }
-#endif /* MORE */
             if (MSG_STDERR(flag) && ((Uz_Globs *)pG)->UzO.tflag &&
                 !isatty(1) && isatty(2))
             {
@@ -817,21 +648,12 @@ int UZ_EXP UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
                 putc('\n', stderr);
                 fflush(stderr);
             }
-#ifdef OS2DLL
-        } else
-           REDIRECTC('\n');
-#endif
         ((Uz_Globs *)pG)->sol = TRUE;
     }
 
     /* put zipfile name, filename and/or error/warning keywords here */
 
-#ifdef MORE
-    if (((Uz_Globs *)pG)->M_flag
-#ifdef OS2DLL
-         && !((Uz_Globs *)pG)->redirect_text
-#endif
-                                                 )
+    if (((Uz_Globs *)pG)->M_flag)
     {
         while (p < endbuf) {
             if (*p == '\n') {
@@ -872,46 +694,15 @@ int UZ_EXP UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
         } /* end while */
         size = (ulg)(p - q);   /* remaining text */
     }
-#endif /* MORE */
 
     if (size) {
-#ifdef OS2DLL
-        if (!((Uz_Globs *)pG)->redirect_text) {
-#endif
             RdosWriteSizeString((char *)q, size);
-#ifdef OS2DLL
-        } else {                /* GRR:  this is ugly:  hide with macro */
-            if ((error = REDIRECTPRINT(q, size)) != 0)
-                return error;
-        }
-#endif /* OS2DLL */
         ((Uz_Globs *)pG)->sol = (endbuf[-1] == '\n');
     }
     return 0;
 
 } /* end function UzpMessagePrnt() */
 
-
-
-
-
-#ifdef DLL
-
-/*****************************/
-/* Function UzpMessageNull() */  /* convenience routine for no output at all */
-/*****************************/
-
-int UZ_EXP UzpMessageNull(pG, buf, size, flag)
-    zvoid *pG;    /* globals struct:  always passed */
-    uch *buf;     /* preformatted string to be printed */
-    ulg size;     /* length of string (may include nulls) */
-    int flag;     /* flag bits */
-{
-    return 0;
-
-} /* end function UzpMessageNull() */
-
-#endif /* DLL */
 
 
 
