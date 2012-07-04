@@ -430,7 +430,7 @@
 #  define EBCDIC              /* set EBCDIC conversion on */
 #  define NO_STRNICMP         /* unzip's is as good the one in MTS */
 #  define USE_FWRITE
-#  define close_outfile()  fclose(G.outfile)   /* can't set time on files */
+#  define close_outfile()  RdosCloseFile(G.outfile)   /* can't set time on files */
 #  define umask(n)            /* don't have umask() on MTS */
 #  define FOPWT         "w"   /* open file for writing in TEXT mode */
 #  ifndef DATE_FORMAT

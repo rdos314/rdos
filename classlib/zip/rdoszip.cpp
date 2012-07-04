@@ -26,6 +26,7 @@ static int renamed_fullpath;   /* ditto */
 
 void close_outfile()
 {
+    RdosCloseFile(G.outfile);
     return;
 
 } /* end function close_outfile() */

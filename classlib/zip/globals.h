@@ -276,7 +276,7 @@ typedef struct Globals {
     int      dne;                  /* true if stat() says file doesn't exist */
 #endif
 
-    FILE     *outfile;
+    int      outfile;
     uch      *outbuf;
     uch      *realbuf;
 

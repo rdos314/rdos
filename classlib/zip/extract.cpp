@@ -1634,45 +1634,11 @@ static int extract_or_test_member(__G)    /* return PK-type error code */
         if (uO.cflag)
 #endif
         {
-#if (defined(OS2) && defined(__IBMC__) && (__IBMC__ >= 200))
-            G.outfile = freopen("", "wb", stdout);   /* VAC++ ignores setmode */
-#else
-            G.outfile = stdout;
-#endif
-#ifdef DOS_FLX_NLM_OS2_W32
-#if (defined(__HIGHC__) && !defined(FLEXOS))
-            setmode(G.outfile, _BINARY);
-#else /* !(defined(__HIGHC__) && !defined(FLEXOS)) */
-            setmode(fileno(G.outfile), O_BINARY);
-#endif /* ?(defined(__HIGHC__) && !defined(FLEXOS)) */
+            G.outfile = 0;
+            
 #           define NEWLINE "\r\n"
-#else /* !DOS_FLX_NLM_OS2_W32 */
-#           define NEWLINE "\n"
-#endif /* ?DOS_FLX_NLM_OS2_W32 */
-#ifdef VMS
-            /* VMS:  required even for stdout! */
-            if ((r = open_outfile(__G)) != 0)
-                switch (r) {
-                  case OPENOUT_SKIPOK:
-                    return PK_OK;
-                  case OPENOUT_SKIPWARN:
-                    return PK_WARN;
-                  default:
-                    return PK_DISK;
-                }
-        } else if ((r = open_outfile(__G)) != 0)
-            switch (r) {
-              case OPENOUT_SKIPOK:
-                return PK_OK;
-              case OPENOUT_SKIPWARN:
-                return PK_WARN;
-              default:
-                return PK_DISK;
-            }
-#else /* !VMS */
         } else if (open_outfile(__G))
             return PK_DISK;
-#endif /* ?VMS */
     }
 
 /*---------------------------------------------------------------------------
@@ -1902,22 +1868,7 @@ static int extract_or_test_member(__G)    /* return PK-type error code */
     machines (redundant on 32-bit machines).
   ---------------------------------------------------------------------------*/
 
-#ifdef VMS                  /* VMS:  required even for stdout! (final flush) */
-    if (!uO.tflag)           /* don't close NULL file */
-        close_outfile(__G);
-#else
-#ifdef DLL
-    if (!uO.tflag && (!uO.cflag || G.redirect_data)) {
-        if (G.redirect_data)
-            FINISH_REDIRECT();
-        else
-            close_outfile(__G);
-    }
-#else
-    if (!uO.tflag && !uO.cflag)   /* don't close NULL file or stdout */
-        close_outfile(__G);
-#endif
-#endif /* VMS */
+    RdosCloseFile(G.outfile);
 
             /* GRR: CONVERT close_outfile() TO NON-VOID:  CHECK FOR ERRORS! */
 
@@ -2444,63 +2395,6 @@ static void decompress_bits(uch *outptr, unsigned needlen, ZCONST uch *bitptr)
 #endif /* VMS || VMS_TEXT_CONV */
 
 
-
-
-
-#ifdef SYMLINKS
-/***********************************/
-/* Function set_deferred_symlink() */
-/***********************************/
-
-static void set_deferred_symlink(__G__ slnk_entry)
-    __GDEF
-    slinkentry *slnk_entry;
-{
-    extent ucsize = slnk_entry->targetlen;
-    char *linkfname = slnk_entry->fname;
-    char *linktarget = (char *)malloc(ucsize+1);
-
-    if (!linktarget) {
-        Info(slide, 0x201, ((char *)slide,
-          LoadFarString(SymLnkWarnNoMem), FnFilter1(linkfname)));
-        return;
-    }
-    linktarget[ucsize] = '\0';
-    G.outfile = zfopen(linkfname, FOPR); /* open link placeholder for reading */
-    /* Check that the following conditions are all fulfilled:
-     * a) the placeholder file exists,
-     * b) the placeholder file contains exactly "ucsize" bytes
-     *    (read the expected placeholder content length + 1 extra byte, this
-     *    should return the expected content length),
-     * c) the placeholder content matches the link target specification as
-     *    stored in the symlink control structure.
-     */
-    if (!G.outfile ||
-        fread(linktarget, 1, ucsize+1, G.outfile) != ucsize ||
-        strcmp(slnk_entry->target, linktarget))
-    {
-        Info(slide, 0x201, ((char *)slide,
-          LoadFarString(SymLnkWarnInvalid), FnFilter1(linkfname)));
-        free(linktarget);
-        if (G.outfile)
-            fclose(G.outfile);
-        return;
-    }
-    fclose(G.outfile);                  /* close "data" file for good... */
-    unlink(linkfname);                  /* ...and delete it */
-    if (QCOND2)
-        Info(slide, 0, ((char *)slide, LoadFarString(SymLnkFinish),
-          FnFilter1(linkfname), FnFilter2(linktarget)));
-    if (symlink(linktarget, linkfname))  /* create the real link */
-        perror("symlink error");
-    free(linktarget);
-#ifdef SET_SYMLINK_ATTRIBS
-    set_symlnk_attribs(__G__ slnk_entry);
-#endif
-    return;                             /* can't set time on symlinks */
-
-} /* end function set_deferred_symlink() */
-#endif /* SYMLINKS */
 
 
 
