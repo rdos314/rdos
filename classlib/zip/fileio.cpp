@@ -60,14 +60,6 @@
 #define __FILEIO_C      /* identifies this source module */
 #define UNZIP_INTERNAL
 #include "unzip.h"
-#ifdef WINDLL
-#  ifdef POCKET_UNZIP
-#    include "wince/intrface.h"
-#  else
-#    include "windll/windll.h"
-#  endif
-#  include <setjmp.h>
-#endif
 #include "crc32.h"
 #include "crypt.h"
 #include "ttyio.h"
@@ -83,26 +75,8 @@
 #endif
 #include "ebcdic.h"   /* definition/initialization of ebcdic[] */
 
-
-/*
-   Note: Under Windows, the maximum size of the buffer that can be used
-   with any of the *printf calls is 16,384, so win_fprintf was used to
-   feed the fprintf clone no more than 16K chunks at a time. This should
-   be valid for anything up to 64K (and probably beyond, assuming your
-   buffers are that big).
-*/
-#ifdef WINDLL
-#  define WriteError(buf,len,strm) \
-   (win_fprintf(pG, strm, (extent)len, (char far *)buf) != (int)(len))
-#else /* !WINDLL */
-#  ifdef USE_FWRITE
-#    define WriteError(buf,len,strm) \
-     ((extent)fwrite((char *)(buf),1,(extent)(len),strm) != (extent)(len))
-#  else
 #    define WriteError(buf,len,strm) \
      ((extent)write(fileno(strm),(char *)(buf),(extent)(len)) != (extent)(len))
-#  endif
-#endif /* ?WINDLL */
 
 /*
    2005-09-16 SMS.
@@ -124,19 +98,8 @@
    buffer."  Apparently fprintf() buffers the stuff somewhere, and puts
    out a record (only) when it sees a newline.
 */
-#ifdef VMS
-#  define WriteTxtErr(buf,len,strm) \
-   ((extent)fprintf(strm, "%.*s", len, buf) != (extent)(len))
-#else
-#  define WriteTxtErr(buf,len,strm)  WriteError(buf,len,strm)
-#endif
 
-#if (defined(USE_DEFLATE64) && defined(__16BIT__))
-static int partflush OF((__GPRO__ uch *rawbuf, ulg size, int unshrink));
-#endif
-#ifdef VMS_TEXT_CONV
-static int is_vms_varlen_txt OF((__GPRO__ uch *ef_buf, unsigned ef_len));
-#endif
+#  define WriteTxtErr(buf,len,strm)  WriteError(buf,len,strm)
 static int disk_error OF((__GPRO));
 
 
@@ -147,66 +110,30 @@ static int disk_error OF((__GPRO));
 static ZCONST char Far CannotOpenZipfile[] =
   "error:  cannot open zipfile [ %s ]\n        %s\n";
 
-#if (!defined(VMS) && !defined(AOS_VS) && !defined(CMS_MVS) && !defined(MACOS))
-#if (!defined(TANDEM))
-#if (defined(ATH_BEO_THS_UNX) || defined(DOS_FLX_NLM_OS2_W32))
-   static ZCONST char Far CannotDeleteOldFile[] =
-     "error:  cannot delete old %s\n        %s\n";
-#ifdef UNIXBACKUP
-   static ZCONST char Far CannotRenameOldFile[] =
-     "error:  cannot rename old %s\n        %s\n";
-   static ZCONST char Far BackupSuffix[] = "~";
-#endif
-#endif /* ATH_BEO_THS_UNX || DOS_FLX_NLM_OS2_W32 */
-#ifdef NOVELL_BUG_FAILSAFE
-   static ZCONST char Far NovellBug[] =
-     "error:  %s: stat() says does not exist, but fopen() found anyway\n";
-#endif
-   static ZCONST char Far CannotCreateFile[] =
-     "error:  cannot create %s\n        %s\n";
-#endif /* !TANDEM */
-#endif /* !VMS && !AOS_VS && !CMS_MVS && !MACOS */
+static ZCONST char Far CannotCreateFile[] =
+  "error:  cannot create %s\n        %s\n";
 
 static ZCONST char Far ReadError[] = "error:  zipfile read error\n";
 static ZCONST char Far FilenameTooLongTrunc[] =
   "warning:  filename too long--truncating.\n";
-#ifdef UNICODE_SUPPORT
-   static ZCONST char Far UFilenameTooLongTrunc[] =
-     "warning:  Converted unicode filename too long--truncating.\n";
-#endif
+
 static ZCONST char Far ExtraFieldTooLong[] =
   "warning:  extra field too long (%d).  Ignoring...\n";
 
-#ifdef WINDLL
-   static ZCONST char Far DiskFullQuery[] =
-     "%s:  write error (disk full?).\n";
-#else
    static ZCONST char Far DiskFullQuery[] =
      "%s:  write error (disk full?).  Continue? (y/n/^C) ";
    static ZCONST char Far ZipfileCorrupt[] =
      "error:  zipfile probably corrupt (%s)\n";
-#  ifdef SYMLINKS
-     static ZCONST char Far FileIsSymLink[] =
-       "%s exists and is a symbolic link%s.\n";
-#  endif
-#  ifdef MORE
-     static ZCONST char Far MorePrompt[] = "--More--(%lu)";
-#  endif
+   static ZCONST char Far MorePrompt[] = "--More--(%lu)";
    static ZCONST char Far QuitPrompt[] =
      "--- Press `Q' to quit, or any other key to continue ---";
    static ZCONST char Far HidePrompt[] = /* "\r                       \r"; */
      "\r                                                         \r";
 #  if CRYPT
-#    ifdef MACOS
-       /* SPC: are names on MacOS REALLY so much longer than elsewhere ??? */
-       static ZCONST char Far PasswPrompt[] = "[%s]\n %s password: ";
-#    else
-       static ZCONST char Far PasswPrompt[] = "[%s] %s password: ";
-#    endif
+     static ZCONST char Far PasswPrompt[] = "[%s] %s password: ";
      static ZCONST char Far PasswPrompt2[] = "Enter password: ";
      static ZCONST char Far PasswRetry[] = "password incorrect--reenter: ";
 #  endif /* CRYPT */
-#endif /* !WINDLL */
 
 
 
@@ -224,30 +151,9 @@ int open_input_file(__G)    /* return 1 if open failed */
      *  translation, which would corrupt the bitstreams
      */
 
-#ifdef VMS
-    G.zipfd = open(G.zipfn, O_RDONLY, 0, OPNZIP_RMS_ARGS);
-#else /* !VMS */
-#ifdef MACOS
-    G.zipfd = open(G.zipfn, 0);
-#else /* !MACOS */
-#ifdef CMS_MVS
-    G.zipfd = vmmvs_open_infile(__G);
-#else /* !CMS_MVS */
-#ifdef USE_STRM_INPUT
-    G.zipfd = fopen(G.zipfn, FOPR);
-#else /* !USE_STRM_INPUT */
-    G.zipfd = open(G.zipfn, O_RDONLY | O_BINARY);
-#endif /* ?USE_STRM_INPUT */
-#endif /* ?CMS_MVS */
-#endif /* ?MACOS */
-#endif /* ?VMS */
+    G.zipfd = RdosOpenFile(G.zipfn, 0);
 
-#ifdef USE_STRM_INPUT
-    if (G.zipfd == NULL)
-#else
-    /* if (G.zipfd < 0) */  /* no good for Windows CE port */
-    if (G.zipfd == -1)
-#endif
+    if (!G.zipfd)
     {
         Info(slide, 0x401, ((char *)slide, LoadFarString(CannotOpenZipfile),
           G.zipfn, strerror(errno)));
@@ -578,7 +484,7 @@ unsigned readbuf(char *buf, register unsigned size)   /* return number of bytes 
     n = size;
     while (size) {
         if (G.incnt <= 0) {
-            if ((G.incnt = read(G.zipfd, (char *)G.inbuf, INBUFSIZ)) == 0)
+            if ((G.incnt = RdosReadFile(G.zipfd, (char *)G.inbuf, INBUFSIZ)) == 0)
                 return (n-size);
             else if (G.incnt < 0) {
                 /* another hack, but no real harm copying same thing twice */
@@ -621,7 +527,7 @@ int readbyte(__G)   /* refill inbuf and return a byte if available, else EOF */
         return EOF;
     }
     if (G.incnt <= 0) {
-        if ((G.incnt = read(G.zipfd, (char *)G.inbuf, INBUFSIZ)) == 0) {
+        if ((G.incnt = RdosReadFile(G.zipfd, (char *)G.inbuf, INBUFSIZ)) == 0) {
             return EOF;
         } else if (G.incnt < 0) {  /* "fail" (abort, retry, ...) returns this */
             /* another hack, but no real harm copying same thing twice */
@@ -674,7 +580,7 @@ int fillinbuf(__G) /* like readbyte() except returns number of bytes in inbuf */
     __GDEF
 {
     if (G.mem_mode ||
-                  (G.incnt = read(G.zipfd, (char *)G.inbuf, INBUFSIZ)) <= 0)
+                  (G.incnt = RdosReadFile(G.zipfd, (char *)G.inbuf, INBUFSIZ)) <= 0)
         return 0;
     G.cur_zipfile_bufstart += INBUFSIZ;  /* always starts on a block boundary */
     G.inptr = G.inbuf;
@@ -738,12 +644,9 @@ int seek_zipf(zoff_t abs_offset)
           "fpos_zip: abs_offset = %s, G.extra_bytes = %s\n",
           FmZofft(abs_offset, NULL, NULL),
           FmZofft(G.extra_bytes, NULL, NULL)));
-#ifdef USE_STRM_INPUT
-        zfseeko(G.zipfd, bufstart, SEEK_SET);
-        G.cur_zipfile_bufstart = zftello(G.zipfd);
-#else /* !USE_STRM_INPUT */
-        G.cur_zipfile_bufstart = zlseek(G.zipfd, bufstart, SEEK_SET);
-#endif /* ?USE_STRM_INPUT */
+
+        RdosSetFilePos(G.zipfd, bufstart);
+        G.cur_zipfile_bufstart = RdosGetFilePos(G.zipfd);
         Trace((stderr,
           "       request = %s, (abs+extra) = %s, inbuf_offset = %s\n",
           FmZofft(request, NULL, NULL),
@@ -752,7 +655,7 @@ int seek_zipf(zoff_t abs_offset)
         Trace((stderr, "       bufstart = %s, cur_zipfile_bufstart = %s\n",
           FmZofft(bufstart, NULL, NULL),
           FmZofft(G.cur_zipfile_bufstart, NULL, NULL)));
-        if ((G.incnt = read(G.zipfd, (char *)G.inbuf, INBUFSIZ)) <= 0)
+        if ((G.incnt = RdosReadFile(G.zipfd, (char *)G.inbuf, INBUFSIZ)) <= 0)
             return(PK_EOF);
         G.incnt -= (int)inbuf_offset;
         G.inptr = G.inbuf + (int)inbuf_offset;

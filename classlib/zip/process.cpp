@@ -730,7 +730,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
 #ifdef DO_SAFECHECK_2GB
     /* Need more care: Do not trust the size returned by stat() but
        determine it by reading beyond the end of the file. */
-    G.ziplen = file_size(G.zipfd);
+    G.ziplen = RdosGetFileSize(G.zipfd);
 
     if (G.ziplen == EOF) {
         Info(slide, 0x401, ((char *)slide, LoadFarString(ZipfileTooBig)));
@@ -1125,13 +1125,9 @@ static int rec_find(zoff_t searchlen, char* signature, int rec_size)
   ---------------------------------------------------------------------------*/
 
     if ((tail_len = G.ziplen % INBUFSIZ) > rec_size) {
-#ifdef USE_STRM_INPUT
-        zfseeko(G.zipfd, G.ziplen-tail_len, SEEK_SET);
-        G.cur_zipfile_bufstart = zftello(G.zipfd);
-#else /* !USE_STRM_INPUT */
-        G.cur_zipfile_bufstart = zlseek(G.zipfd, G.ziplen-tail_len, SEEK_SET);
-#endif /* ?USE_STRM_INPUT */
-        if ((G.incnt = read(G.zipfd, (char *)G.inbuf,
+        RdosSetFilePos(G.zipfd, G.ziplen-tail_len);
+        G.cur_zipfile_bufstart = RdosGetFilePos(G.zipfd);
+        if ((G.incnt = RdosReadFile(G.zipfd, (char *)G.inbuf,
             (unsigned int)tail_len)) != (int)tail_len)
             return 2;      /* it's expedient... */
 
@@ -1162,12 +1158,8 @@ static int rec_find(zoff_t searchlen, char* signature, int rec_size)
 
     for (i = 1;  !found && (i <= numblks);  ++i) {
         G.cur_zipfile_bufstart -= INBUFSIZ;
-#ifdef USE_STRM_INPUT
-        zfseeko(G.zipfd, G.cur_zipfile_bufstart, SEEK_SET);
-#else /* !USE_STRM_INPUT */
-        zlseek(G.zipfd, G.cur_zipfile_bufstart, SEEK_SET);
-#endif /* ?USE_STRM_INPUT */
-        if ((G.incnt = read(G.zipfd,(char *)G.inbuf,INBUFSIZ))
+        RdosSetFilePos(G.zipfd, G.cur_zipfile_bufstart);
+        if ((G.incnt = RdosReadFile(G.zipfd,(char *)G.inbuf,INBUFSIZ))
             != INBUFSIZ)
             return 2;          /* read error is fatal failure */
 
@@ -1183,26 +1175,6 @@ static int rec_find(zoff_t searchlen, char* signature, int rec_size)
     }
     return (found ? 0 : 1);
 } /* end function rec_find() */
-
-
-
-
-#if 0
-/********************************/
-/* Function check_ecrec_zip64() */
-/********************************/
-
-static int check_ecrec_zip64(__G)
-    __GDEF
-{
-    return G.ecrec.offset_start_central_directory  == 0xFFFFFFFFL
-        || G.ecrec.size_central_directory          == 0xFFFFFFFFL
-        || G.ecrec.total_entries_central_dir       == 0xFFFF
-        || G.ecrec.num_entries_centrl_dir_ths_disk == 0xFFFF
-        || G.ecrec.num_disk_start_cdir             == 0xFFFF
-        || G.ecrec.number_this_disk                == 0xFFFF;
-} /* end function check_ecrec_zip64() */
-#endif /* never */
 
 
 
@@ -1233,14 +1205,10 @@ static int find_ecrec64(zoff_t searchlen)         /* return PK-class error */
       /* Seeking would go past beginning, so probably empty archive */
       return PK_COOL;
 
-#ifdef USE_STRM_INPUT
-    zfseeko(G.zipfd, ecloc64_start_offset, SEEK_SET);
-    G.cur_zipfile_bufstart = zftello(G.zipfd);
-#else /* !USE_STRM_INPUT */
-    G.cur_zipfile_bufstart = zlseek(G.zipfd, ecloc64_start_offset, SEEK_SET);
-#endif /* ?USE_STRM_INPUT */
+    RdosSetFilePos(G.zipfd, ecloc64_start_offset);
+    G.cur_zipfile_bufstart = RdosGetFilePos(G.zipfd);
 
-    if ((G.incnt = read(G.zipfd, (char *)byterecL, ECLOC64_SIZE+4))
+    if ((G.incnt = RdosReadFile(G.zipfd, (char *)byterecL, ECLOC64_SIZE+4))
         != (ECLOC64_SIZE+4)) {
       if (uO.qflag || uO.zipinfo_mode)
           Info(slide, 0x401, ((char *)slide, "[%s]\n", G.zipfn));
@@ -1300,14 +1268,11 @@ static int find_ecrec64(zoff_t searchlen)         /* return PK-class error */
       return PK_ERR;
     }
 
-#ifdef USE_STRM_INPUT
-    zfseeko(G.zipfd, ecrec64_start_offset, SEEK_SET);
-    G.cur_zipfile_bufstart = zftello(G.zipfd);
-#else /* !USE_STRM_INPUT */
-    G.cur_zipfile_bufstart = zlseek(G.zipfd, ecrec64_start_offset, SEEK_SET);
-#endif /* ?USE_STRM_INPUT */
 
-    if ((G.incnt = read(G.zipfd, (char *)byterec, ECREC64_SIZE+4))
+    RdosSetFilePos(G.zipfd, ecrec64_start_offset);
+    G.cur_zipfile_bufstart = RdosGetFilePos(G.zipfd);
+
+    if ((G.incnt = RdosReadFile(G.zipfd, (char *)byterec, ECREC64_SIZE+4))
         != (ECREC64_SIZE+4)) {
       if (uO.qflag || uO.zipinfo_mode)
           Info(slide, 0x401, ((char *)slide, "[%s]\n", G.zipfn));
@@ -1325,14 +1290,10 @@ static int find_ecrec64(zoff_t searchlen)         /* return PK-class error */
       /* Make a guess as to where the Zip64 EOCD Record might be */
       ecrec64_start_offset = ecloc64_start_offset - ECREC64_SIZE - 4;
 
-#ifdef USE_STRM_INPUT
-      zfseeko(G.zipfd, ecrec64_start_offset, SEEK_SET);
-      G.cur_zipfile_bufstart = zftello(G.zipfd);
-#else /* !USE_STRM_INPUT */
-      G.cur_zipfile_bufstart = zlseek(G.zipfd, ecrec64_start_offset, SEEK_SET);
-#endif /* ?USE_STRM_INPUT */
+      RdosSetFilePos(G.zipfd, ecrec64_start_offset);
+      G.cur_zipfile_bufstart = RdosGetFilePos(G.zipfd);
 
-      if ((G.incnt = read(G.zipfd, (char *)byterec, ECREC64_SIZE+4))
+      if ((G.incnt = RdosReadFile(G.zipfd, (char *)byterec, ECREC64_SIZE+4))
           != (ECREC64_SIZE+4)) {
         if (uO.qflag || uO.zipinfo_mode)
             Info(slide, 0x401, ((char *)slide, "[%s]\n", G.zipfn));
@@ -1446,12 +1407,8 @@ static int find_ecrec(zoff_t searchlen)          /* return PK-class error */
   ---------------------------------------------------------------------------*/
 
     if (G.ziplen <= INBUFSIZ) {
-#ifdef USE_STRM_INPUT
-        zfseeko(G.zipfd, 0L, SEEK_SET);
-#else /* !USE_STRM_INPUT */
-        zlseek(G.zipfd, 0L, SEEK_SET);
-#endif /* ?USE_STRM_INPUT */
-        if ((G.incnt = read(G.zipfd,(char *)G.inbuf,(unsigned int)G.ziplen))
+        RdosSetFilePos(G.zipfd, 0L);
+        if ((G.incnt = RdosReadFile(G.zipfd,(char *)G.inbuf,(unsigned int)G.ziplen))
             == (int)G.ziplen)
 
             /* 'P' must be at least (ECREC_SIZE+4) bytes from end of zipfile */

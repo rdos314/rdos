@@ -74,16 +74,6 @@
 #  undef USE_BZIP2
 #endif
 
-#if (defined(NO_VMS_TEXT_CONV) || defined(VMS))
-#  ifdef VMS_TEXT_CONV
-#    undef VMS_TEXT_CONV
-#  endif
-#else
-#  if (!defined(VMS_TEXT_CONV) && !defined(SFX))
-#    define VMS_TEXT_CONV
-#  endif
-#endif
-
 /* Enable -B option per default on specific systems, to allow backing up
  * files that would be overwritten.
  * (This list of systems must be kept in sync with the list of systems
@@ -770,7 +760,7 @@
 #  define DATE_SEPCHAR  '-'
 #endif
 #ifndef CLOSE_INFILE
-#  define CLOSE_INFILE()  close(G.zipfd)
+#  define CLOSE_INFILE()  RdosCloseFile(G.zipfd)
 #endif
 #ifndef RETURN
 #  define RETURN        return  /* only used in main() */
