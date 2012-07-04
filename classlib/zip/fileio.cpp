@@ -725,9 +725,6 @@ int UZ_EXP UzpInput(zvoid *pG, uch *buf, int *size, int flag)
 
 
 
-
-#if (!defined(WINDLL) && !defined(MACOS))
-
 /***************************/
 /* Function UzpMorePause() */
 /***************************/
@@ -750,9 +747,6 @@ void UZ_EXP UzpMorePause(zvoid *pG, ZCONST char *prompt, int flag)
         do {
             c = (uch)FGETCH(0);
         } while (
-#ifdef THEOS
-                 c != 17 &&     /* standard QUIT key */
-#endif
                  c != '\r' && c != '\n' && c != ' ' && c != 'q' && c != 'Q');
     } else
         c = (uch)FGETCH(0);
@@ -762,9 +756,6 @@ void UZ_EXP UzpMorePause(zvoid *pG, ZCONST char *prompt, int flag)
     fflush(stderr);
 
     if (
-#ifdef THEOS
-        (c == 17) ||            /* standard QUIT key */
-#endif
         (ToLower(c) == 'q')) {
         DESTROYGLOBALS();
         EXIT(PK_COOL);
@@ -772,20 +763,12 @@ void UZ_EXP UzpMorePause(zvoid *pG, ZCONST char *prompt, int flag)
 
     ((Uz_Globs *)pG)->sol = TRUE;
 
-#ifdef MORE
     /* space for another screen, enter for another line. */
     if ((flag & 1) && c == ' ')
         ((Uz_Globs *)pG)->lines = 0;
-#endif /* MORE */
 
 } /* end function UzpMorePause() */
 
-#endif /* !WINDLL && !MACOS */
-
-
-
-
-#ifndef WINDLL
 
 /**************************/
 /* Function UzpPassword() */
@@ -850,49 +833,14 @@ void handler(int signal)   /* upon interrupt, turn on echo and exit cleanly */
 {
     GETGLOBALS();
 
-#if !(defined(SIGBUS) || defined(SIGSEGV))      /* add a newline if not at */
     (*G.message)((zvoid *)&G, slide, 0L, 0x41); /*  start of line (to stderr; */
-#endif                                          /*  slide[] should be safe) */
 
     echon();
 
-#ifdef SIGBUS
-    if (signal == SIGBUS) {
-        Info(slide, 0x421, ((char *)slide, LoadFarString(ZipfileCorrupt),
-          "bus error"));
-        DESTROYGLOBALS();
-        EXIT(PK_BADERR);
-    }
-#endif /* SIGBUS */
-
-#ifdef SIGILL
-    if (signal == SIGILL) {
-        Info(slide, 0x421, ((char *)slide, LoadFarString(ZipfileCorrupt),
-          "illegal instruction"));
-        DESTROYGLOBALS();
-        EXIT(PK_BADERR);
-    }
-#endif /* SIGILL */
-
-#ifdef SIGSEGV
-    if (signal == SIGSEGV) {
-        Info(slide, 0x421, ((char *)slide, LoadFarString(ZipfileCorrupt),
-          "segmentation violation"));
-        DESTROYGLOBALS();
-        EXIT(PK_BADERR);
-    }
-#endif /* SIGSEGV */
-
     /* probably ctrl-C */
     DESTROYGLOBALS();
-#if defined(AMIGA) && defined(__SASC)
-    _abort();
-#endif
     EXIT(IZ_CTRLC);       /* was EXIT(0), then EXIT(PK_ERR) */
 }
-
-#endif /* !WINDLL */
-
 
 
 
@@ -1216,9 +1164,6 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
     unsigned comment_bytes_left;
     unsigned int block_len;
     int error=PK_OK;
-#ifdef AMIGA
-    char tmp_fnote[2 * AMIGA_FILENOTELEN];   /* extra room for squozen chars */
-#endif
 
 
 /*---------------------------------------------------------------------------
@@ -1242,56 +1187,6 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
         return PK_COOL;
 
     switch (option) {
-
-#if (defined(SFX) && defined(CHEAP_SFX_AUTORUN))
-    /*
-     * Special case: See if the comment begins with an autorun command line.
-     * Save that and display (or skip) the remainder.
-     */
-
-    case CHECK_AUTORUN:
-    case CHECK_AUTORUN_Q:
-        comment_bytes_left = length;
-        if (length >= 10)
-        {
-            block_len = readbuf(__G__ (char *)G.outbuf, 10);
-            if (block_len == 0)
-                return PK_EOF;
-            comment_bytes_left -= block_len;
-            G.outbuf[block_len] = '\0';
-            if (!strcmp((char *)G.outbuf, "$AUTORUN$>")) {
-                char *eol;
-                length -= 10;
-                block_len = readbuf(__G__ G.autorun_command,
-                                    MIN(length, sizeof(G.autorun_command)-1));
-                if (block_len == 0)
-                    return PK_EOF;
-                comment_bytes_left -= block_len;
-                G.autorun_command[block_len] = '\0';
-                A_TO_N(G.autorun_command);
-                eol = strchr(G.autorun_command, '\n');
-                if (!eol)
-                    eol = G.autorun_command + strlen(G.autorun_command) - 1;
-                length -= eol + 1 - G.autorun_command;
-                while (eol >= G.autorun_command && isspace(*eol))
-                    *eol-- = '\0';
-#if (defined(WIN32) && !defined(_WIN32_WCE))
-                /* Win9x console always uses OEM character coding, and
-                   WinNT console is set to OEM charset by default, too */
-                INTERN_TO_OEM(G.autorun_command, G.autorun_command);
-#endif /* (WIN32 && !_WIN32_WCE) */
-            }
-        }
-        if (option == CHECK_AUTORUN_Q)  /* don't display the remainder */
-            length = 0;
-        /* seek to beginning of remaining part of comment -- rewind if */
-        /* displaying entire comment, or skip to end if discarding it  */
-        seek_zipf(__G__ G.cur_zipfile_bufstart - G.extra_bytes +
-                  (G.inptr - G.inbuf) + comment_bytes_left - length);
-        if (!length)
-            break;
-        /*  FALL THROUGH...  */
-#endif /* SFX && CHEAP_SFX_AUTORUN */
 
     /*
      * First normal case:  print string on standard output.  First set loop
@@ -1339,57 +1234,11 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
                 Ext_ASCII_TO_Native((char *)G.outbuf, G.pInfo->hostnum,
                                     G.pInfo->hostver, G.pInfo->HasUxAtt,
                                     FALSE);
-#ifdef WINDLL
-                /* translate to ANSI (RTL internal codepage may be OEM) */
-                INTERN_TO_ISO((char *)G.outbuf, (char *)G.outbuf);
-#else /* !WINDLL */
-#if (defined(WIN32) && !defined(_WIN32_WCE))
-                /* Win9x console always uses OEM character coding, and
-                   WinNT console is set to OEM charset by default, too */
-                INTERN_TO_OEM((char *)G.outbuf, (char *)G.outbuf);
-#endif /* (WIN32 && !_WIN32_WCE) */
-#endif /* ?WINDLL */
             } else {
                 A_TO_N(G.outbuf);   /* translate string to native */
             }
 
-#ifdef WINDLL
-            /* ran out of local mem -- had to cheat */
-            win_fprintf((zvoid *)&G, stdout, (extent)(q-G.outbuf),
-                        (char *)G.outbuf);
-            win_fprintf((zvoid *)&G, stdout, 2, (char *)"\n\n");
-#else /* !WINDLL */
-#ifdef NOANSIFILT       /* GRR:  can ANSI be used with EBCDIC? */
             (*G.message)((zvoid *)&G, G.outbuf, (ulg)(q-G.outbuf), 0);
-#else /* ASCII, filter out ANSI escape sequences and handle ^S (pause) */
-            p = G.outbuf - 1;
-            q = slide;
-            while (*++p) {
-                int pause = FALSE;
-
-                if (*p == 0x1B) {          /* ASCII escape char */
-                    *q++ = '^';
-                    *q++ = '[';
-                } else if (*p == 0x13) {   /* ASCII ^S (pause) */
-                    pause = TRUE;
-                    if (p[1] == LF)        /* ASCII LF */
-                        *q++ = *++p;
-                    else if (p[1] == CR && p[2] == LF) {  /* ASCII CR LF */
-                        *q++ = *++p;
-                        *q++ = *++p;
-                    }
-                } else
-                    *q++ = *p;
-                if ((unsigned)(q-slide) > WSIZE-3 || pause) {   /* flush */
-                    (*G.message)((zvoid *)&G, slide, (ulg)(q-slide), 0);
-                    q = slide;
-                    if (pause && G.extract_flag) /* don't pause for list/test */
-                        (*G.mpause)((zvoid *)&G, LoadFarString(QuitPrompt), 0);
-                }
-            }
-            (*G.message)((zvoid *)&G, slide, (ulg)(q-slide), 0);
-#endif /* ?NOANSIFILT */
-#endif /* ?WINDLL */
         }
         /* add '\n' if not at start of line */
         (*G.message)((zvoid *)&G, slide, 0L, 0x40);
@@ -1403,36 +1252,6 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
 
     case DS_FN:
     case DS_FN_L:
-#ifdef UNICODE_SUPPORT
-        /* get the whole filename as need it for Unicode checksum */
-        if (G.fnfull_bufsize <= length) {
-            extent fnbufsiz = FILNAMSIZ;
-
-            if (fnbufsiz <= length)
-                fnbufsiz = length + 1;
-            if (G.filename_full)
-                free(G.filename_full);
-            G.filename_full = malloc(fnbufsiz);
-            if (G.filename_full == NULL)
-                return PK_MEM;
-            G.fnfull_bufsize = fnbufsiz;
-        }
-        if (readbuf(__G__ G.filename_full, length) == 0)
-            return PK_EOF;
-        G.filename_full[length] = '\0';      /* terminate w/zero:  ASCIIZ */
-
-        /* if needed, chop off end so standard filename is a valid length */
-        if (length >= FILNAMSIZ) {
-            Info(slide, 0x401, ((char *)slide,
-              LoadFarString(FilenameTooLongTrunc)));
-            error = PK_WARN;
-            length = FILNAMSIZ - 1;
-        }
-        /* no excess size */
-        block_len = 0;
-        strncpy(G.filename, G.filename_full, length);
-        G.filename[length] = '\0';      /* terminate w/zero:  ASCIIZ */
-#else /* !UNICODE_SUPPORT */
         if (length >= FILNAMSIZ) {
             Info(slide, 0x401, ((char *)slide,
               LoadFarString(FilenameTooLongTrunc)));
@@ -1446,7 +1265,6 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
         if (readbuf(__G__ G.filename, length) == 0)
             return PK_EOF;
         G.filename[length] = '\0';      /* terminate w/zero:  ASCIIZ */
-#endif /* ?UNICODE_SUPPORT */
 
         /* translate the Zip entry filename coded in host-dependent "extended
            ASCII" into the compiler's (system's) internal text code page */
@@ -1506,104 +1324,9 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
                 return PK_EOF;
             /* Looks like here is where extra fields are read */
             getZip64Data(__G__ G.extra_field, length);
-#ifdef UNICODE_SUPPORT
-            G.unipath_filename = NULL;
-            if (G.UzO.U_flag < 2) {
-              /* check if GPB11 (General Purpuse Bit 11) is set indicating
-                 the standard path and comment are UTF-8 */
-              if (G.pInfo->GPFIsUTF8) {
-                /* if GPB11 set then filename_full is untruncated UTF-8 */
-                G.unipath_filename = G.filename_full;
-              } else {
-                /* Get the Unicode fields if exist */
-                getUnicodeData(__G__ G.extra_field, length);
-                if (G.unipath_filename && strlen(G.unipath_filename) == 0) {
-                  /* the standard filename field is UTF-8 */
-                  free(G.unipath_filename);
-                  G.unipath_filename = G.filename_full;
-                }
-              }
-              if (G.unipath_filename) {
-# ifdef UTF8_MAYBE_NATIVE
-                if (G.native_is_utf8
-#  ifdef UNICODE_WCHAR
-                    && (!G.unicode_escape_all)
-#  endif
-                   ) {
-                  strncpy(G.filename, G.unipath_filename, FILNAMSIZ - 1);
-                  /* make sure filename is short enough */
-                  if (strlen(G.unipath_filename) >= FILNAMSIZ) {
-                    G.filename[FILNAMSIZ - 1] = '\0';
-                    Info(slide, 0x401, ((char *)slide,
-                      LoadFarString(UFilenameTooLongTrunc)));
-                    error = PK_WARN;
-                  }
-                }
-#  ifdef UNICODE_WCHAR
-                else
-#  endif
-# endif /* UTF8_MAYBE_NATIVE */
-# ifdef UNICODE_WCHAR
-                {
-                  char *fn;
-
-                  /* convert UTF-8 to local character set */
-                  fn = utf8_to_local_string(G.unipath_filename,
-                                            G.unicode_escape_all);
-                  /* make sure filename is short enough */
-                  if (strlen(fn) >= FILNAMSIZ) {
-                    fn[FILNAMSIZ - 1] = '\0';
-                    Info(slide, 0x401, ((char *)slide,
-                      LoadFarString(UFilenameTooLongTrunc)));
-                    error = PK_WARN;
-                  }
-                  /* replace filename with converted UTF-8 */
-                  strcpy(G.filename, fn);
-                  free(fn);
-                }
-# endif /* UNICODE_WCHAR */
-                if (G.unipath_filename != G.filename_full)
-                  free(G.unipath_filename);
-                G.unipath_filename = NULL;
-              }
-            }
-#endif /* UNICODE_SUPPORT */
         }
         break;
 
-#ifdef AMIGA
-    /*
-     * Fifth case, for the Amiga only:  take the comment that would ordinarily
-     * be skipped over, and turn it into a 79 character string that will be
-     * attached to the file as a "filenote" after it is extracted.
-     */
-
-    case FILENOTE:
-        if ((block_len = readbuf(__G__ tmp_fnote, (unsigned)
-                                 MIN(length, 2 * AMIGA_FILENOTELEN - 1))) == 0)
-            return PK_EOF;
-        if ((length -= block_len) > 0)  /* treat remainder as in case SKIP: */
-            seek_zipf(__G__ G.cur_zipfile_bufstart - G.extra_bytes
-                      + (G.inptr - G.inbuf) + length);
-        /* convert multi-line text into single line with no ctl-chars: */
-        tmp_fnote[block_len] = '\0';
-        while ((short int) --block_len >= 0)
-            if ((unsigned) tmp_fnote[block_len] < ' ')
-                if (tmp_fnote[block_len+1] == ' ')     /* no excess */
-                    strcpy(tmp_fnote+block_len, tmp_fnote+block_len+1);
-                else
-                    tmp_fnote[block_len] = ' ';
-        tmp_fnote[AMIGA_FILENOTELEN - 1] = '\0';
-        if (G.filenotes[G.filenote_slot])
-            free(G.filenotes[G.filenote_slot]);     /* should not happen */
-        G.filenotes[G.filenote_slot] = NULL;
-        if (tmp_fnote[0]) {
-            if (!(G.filenotes[G.filenote_slot] = malloc(strlen(tmp_fnote)+1)))
-                return PK_MEM;
-            strcpy(G.filenotes[G.filenote_slot], tmp_fnote);
-        }
-        break;
-#endif /* AMIGA */
 
     } /* end switch (option) */
 
@@ -1793,264 +1516,3 @@ char *str2oem(char *dst, register ZCONST char *src)
 #endif /* CRYPT */
 
 
-#ifdef ZMEM  /* memset/memcmp/memcpy for systems without either them or */
-             /* bzero/bcmp/bcopy */
-             /* (no known systems as of 960211) */
-
-/*********************/
-/* Function memset() */
-/*********************/
-
-zvoid *memset(buf, init, len)
-    register zvoid *buf;        /* buffer location */
-    register int init;          /* initializer character */
-    register unsigned int len;  /* length of the buffer */
-{
-    zvoid *start;
-
-    start = buf;
-    while (len--)
-        *((char *)buf++) = (char)init;
-    return start;
-}
-
-
-
-/*********************/
-/* Function memcmp() */
-/*********************/
-
-int memcmp(b1, b2, len)
-    register ZCONST zvoid *b1;
-    register ZCONST zvoid *b2;
-    register unsigned int len;
-{
-    register int c;
-
-    if (len > 0) do {
-        if ((c = (int)(*((ZCONST unsigned char *)b1)++) -
-                 (int)(*((ZCONST unsigned char *)b2)++)) != 0)
-           return c;
-    } while (--len > 0)
-    return 0;
-}
-
-
-
-/*********************/
-/* Function memcpy() */
-/*********************/
-
-zvoid *memcpy(dst, src, len)
-    register zvoid *dst;
-    register ZCONST zvoid *src;
-    register unsigned int len;
-{
-    zvoid *start;
-
-    start = dst;
-    while (len-- > 0)
-        *((char *)dst)++ = *((ZCONST char *)src)++;
-    return start;
-}
-
-#endif /* ZMEM */
-
-
-
-
-#ifdef NO_STRNICMP
-
-/************************/
-/* Function zstrnicmp() */
-/************************/
-
-int zstrnicmp(s1, s2, n)
-    register ZCONST char *s1, *s2;
-    register unsigned n;
-{
-    for (; n > 0;  --n, ++s1, ++s2) {
-
-        if (ToLower(*s1) != ToLower(*s2))
-            /* test includes early termination of one string */
-            return ((uch)ToLower(*s1) < (uch)ToLower(*s2))? -1 : 1;
-
-        if (*s1 == '\0')   /* both strings terminate early */
-            return 0;
-    }
-    return 0;
-}
-
-#endif /* NO_STRNICMP */
-
-
-
-
-#ifdef REGULUS  /* returns the inode number on success(!)...argh argh argh */
-#  undef stat
-
-/********************/
-/* Function zstat() */
-/********************/
-
-int zstat(p, s)
-    ZCONST char *p;
-    struct stat *s;
-{
-    return (stat((char *)p,s) >= 0? 0 : (-1));
-}
-
-#endif /* REGULUS */
-
-
-
-
-#ifdef _MBCS
-
-/* DBCS support for Info-ZIP's zip  (mainly for japanese (-: )
- * by Yoshioka Tsuneo (QWF00133@nifty.ne.jp,tsuneo-y@is.aist-nara.ac.jp)
- * This code is public domain!   Date: 1998/12/20
- */
-
-/************************/
-/* Function plastchar() */
-/************************/
-
-char *plastchar(ptr, len)
-    ZCONST char *ptr;
-    extent len;
-{
-    unsigned clen;
-    ZCONST char *oldptr = ptr;
-    while(*ptr != '\0' && len > 0){
-        oldptr = ptr;
-        clen = CLEN(ptr);
-        ptr += clen;
-        len -= clen;
-    }
-    return (char *)oldptr;
-}
-
-
-#ifdef NEED_UZMBCLEN
-/***********************/
-/* Function uzmbclen() */
-/***********************/
-
-extent uzmbclen(ptr)
-    ZCONST unsigned char *ptr;
-{
-    int mbl;
-
-    mbl = mblen((ZCONST char *)ptr, MB_CUR_MAX);
-    /* For use in code scanning through MBCS strings, we need a strictly
-       positive "MB char bytes count".  For our scanning purpose, it is not
-       not relevant whether the MB character is valid or not. And, the NUL
-       char '\0' has a byte count of 1, but mblen() returns 0. So, we make
-       sure that the uzmbclen() return value is not less than 1.
-     */
-    return (extent)(mbl > 0 ? mbl : 1);
-}
-#endif /* NEED_UZMBCLEN */
-
-
-#ifdef NEED_UZMBSCHR
-/***********************/
-/* Function uzmbschr() */
-/***********************/
-
-unsigned char *uzmbschr(str, c)
-    ZCONST unsigned char *str;
-    unsigned int c;
-{
-    while(*str != '\0'){
-        if (*str == c) {return (unsigned char *)str;}
-        INCSTR(str);
-    }
-    return NULL;
-}
-#endif /* NEED_UZMBSCHR */
-
-
-#ifdef NEED_UZMBSRCHR
-/************************/
-/* Function uzmbsrchr() */
-/************************/
-
-unsigned char *uzmbsrchr(str, c)
-    ZCONST unsigned char *str;
-    unsigned int c;
-{
-    unsigned char *match = NULL;
-    while(*str != '\0'){
-        if (*str == c) {match = (unsigned char *)str;}
-        INCSTR(str);
-    }
-    return match;
-}
-#endif /* NEED_UZMBSRCHR */
-#endif /* _MBCS */
-
-
-
-
-
-#ifdef SMALL_MEM
-
-/*******************************/
-/*  Function fLoadFarString()  */   /* (and friends...) */
-/*******************************/
-
-char *fLoadFarString(__GPRO__ const char Far *sz)
-{
-    (void)zfstrcpy(G.rgchBigBuffer, sz);
-    return G.rgchBigBuffer;
-}
-
-char *fLoadFarStringSmall(__GPRO__ const char Far *sz)
-{
-    (void)zfstrcpy(G.rgchSmallBuffer, sz);
-    return G.rgchSmallBuffer;
-}
-
-char *fLoadFarStringSmall2(__GPRO__ const char Far *sz)
-{
-    (void)zfstrcpy(G.rgchSmallBuffer2, sz);
-    return G.rgchSmallBuffer2;
-}
-
-
-
-
-#if (!defined(_MSC_VER) || (_MSC_VER < 600))
-/*************************/
-/*  Function zfstrcpy()  */   /* portable clone of _fstrcpy() */
-/*************************/
-
-char Far * Far zfstrcpy(char Far *s1, const char Far *s2)
-{
-    char Far *p = s1;
-
-    while ((*s1++ = *s2++) != '\0');
-    return p;
-}
-
-#if (!(defined(SFX) || defined(FUNZIP)))
-/*************************/
-/*  Function zfstrcmp()  */   /* portable clone of _fstrcmp() */
-/*************************/
-
-int Far zfstrcmp(const char Far *s1, const char Far *s2)
-{
-    int ret;
-
-    while ((ret = (int)(uch)*s1 - (int)(uch)*s2) == 0
-           && *s2 != '\0') {
-        ++s2; ++s1;
-    }
-    return ret;
-}
-#endif /* !(SFX || FUNZIP) */
-#endif /* !_MSC_VER || (_MSC_VER < 600) */
-
-#endif /* SMALL_MEM */
