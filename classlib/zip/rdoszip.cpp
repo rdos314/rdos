@@ -20,6 +20,29 @@
 static int created_dir;        /* used by mapname(), checkdir() */
 static int renamed_fullpath;   /* ditto */
 
+int defer_dir_attribs(direntry **pd)
+{
+    struct dirent *d_entry;
+
+    d_entry = (struct dirent *)malloc(sizeof(struct dirent));
+    strcpy(d_entry->d_name, G.filename);
+    return PK_OK;
+} /* end function defer_dir_attribs() */
+
+
+int set_direc_attribs(direntry *d)
+{
+    int errval;
+
+    errval = PK_OK;
+
+    /* Skip restoring directory time stamps on user' request. */
+    if (uO.D_flag <= 0) {
+    }
+
+    return errval;
+} /* end function set_direc_attribs() */
+
 /****************************/
 /* Function close_outfile() */
 /****************************/

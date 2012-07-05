@@ -569,6 +569,26 @@ static int disk_error(__G)
 
 
 
+/*****************************/
+/* Functiln WriteScreen */
+/*****************************/
+
+void WriteScreen(char *buf, int size)
+{
+    int i;
+
+    for (i = 0; i < size; i++)
+    {
+        if (buf[i] == 0xA)
+        {
+            RdosWriteChar(0xD);
+            RdosWriteChar(0xA);
+        }
+        else
+            RdosWriteChar(buf[i]);
+    }
+}
+
 
 /*****************************/
 /* Function UzpMessagePrnt() */
@@ -629,7 +649,8 @@ int UZ_EXP UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
 
     if (MSG_LNEWLN(flag) && !((Uz_Globs *)pG)->sol) {
         /* not at start of line:  want newline */
-            RdosWriteChar('\n');
+            RdosWriteChar(0xd);
+            RdosWriteChar(0xa);
             if (((Uz_Globs *)pG)->M_flag)
             {
 #if (defined(SCREENWIDTH) && defined(SCREENLWRAP))
@@ -683,7 +704,7 @@ int UZ_EXP UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
                 ++((Uz_Globs *)pG)->lines;
                 if (((Uz_Globs *)pG)->lines >= ((Uz_Globs *)pG)->height)
                 {
-                    RdosWriteSizeString((char *)q, p-q+1);
+                    WriteScreen((char *)q, p-q+1);
                     ((Uz_Globs *)pG)->sol = TRUE;
                     q = p + 1;
                     (*((Uz_Globs *)pG)->mpause)((zvoid *)pG,
@@ -696,7 +717,7 @@ int UZ_EXP UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
     }
 
     if (size) {
-            RdosWriteSizeString((char *)q, size);
+            WriteScreen((char *)q, size);
         ((Uz_Globs *)pG)->sol = (endbuf[-1] == '\n');
     }
     return 0;
