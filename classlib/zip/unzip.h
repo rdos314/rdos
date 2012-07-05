@@ -399,6 +399,7 @@ int      UZ_EXP UzpPassword      OF((zvoid *pG, int *rcnt, char *pwbuf,
   ---------------------------------------------------------------------------*/
 
 #ifdef UNZIP_INTERNAL
+
 #  include "unzpriv.h"
 #endif
 

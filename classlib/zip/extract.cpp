@@ -85,16 +85,10 @@
 }
 
 static int store_info OF((__GPRO));
-#ifdef SET_DIR_ATTRIB
 static int extract_or_test_entrylist OF((__GPRO__ unsigned numchunk,
                 ulg *pfilnum, ulg *pnum_bad_pwd, zoff_t *pold_extra_bytes,
                 unsigned *pnum_dirs, direntry **pdirlist,
                 int error_in_archive));
-#else
-static int extract_or_test_entrylist OF((__GPRO__ unsigned numchunk,
-                ulg *pfilnum, ulg *pnum_bad_pwd, zoff_t *pold_extra_bytes,
-                int error_in_archive));
-#endif
 static int extract_or_test_member OF((__GPRO));
 #ifndef SFX
    static int TestExtraField OF((__GPRO__ uch *ef, unsigned ef_len));
@@ -110,9 +104,7 @@ static int extract_or_test_member OF((__GPRO));
 #ifdef SYMLINKS
    static void set_deferred_symlink OF((__GPRO__ slinkentry *slnk_entry));
 #endif
-#ifdef SET_DIR_ATTRIB
    static int Cdecl dircomp OF((ZCONST zvoid *a, ZCONST zvoid *b));
-#endif
 
 
 
@@ -196,7 +188,6 @@ static ZCONST char Far AbsolutePathWarning[] =
 static ZCONST char Far SkipVolumeLabel[] =
   "   skipping: %-22s  %svolume label\n";
 
-#ifdef SET_DIR_ATTRIB   /* messages of code for setting directory attributes */
    static ZCONST char Far DirlistEntryNoMem[] =
      "warning:  cannot alloc memory for dir times/permissions/UID/GID\n";
    static ZCONST char Far DirlistSortNoMem[] =
@@ -205,7 +196,6 @@ static ZCONST char Far SkipVolumeLabel[] =
      "warning:  set times/attribs failed for %s\n";
    static ZCONST char Far DirlistFailAttrSum[] =
      "     failed setting times/attribs for %lu dir entries";
-#endif
 
 #ifdef SYMLINKS         /* messages of the deferred symlinks handler */
    static ZCONST char Far SymLnkWarnNoMem[] =
@@ -345,10 +335,9 @@ int extract_or_test_files(__G)    /* return PK-type error code */
     zucn_t members_processed;
     ulg num_skipped=0L, num_bad_pwd=0L;
     zoff_t old_extra_bytes = 0L;
-#ifdef SET_DIR_ATTRIB
     unsigned num_dirs=0;
-    direntry *dirlist=(direntry *)NULL, **sorted_dirlist=(direntry **)NULL;
-#endif
+    direntry *dirlist=(direntry *)NULL;
+    direntry **sorted_dirlist=(direntry **)NULL;
 
     /*
      * First, two general initializations are applied. These have been moved
@@ -583,9 +572,7 @@ int extract_or_test_files(__G)    /* return PK-type error code */
 
         error = extract_or_test_entrylist(__G__ j,
                         &filnum, &num_bad_pwd, &old_extra_bytes,
-#ifdef SET_DIR_ATTRIB
                         &num_dirs, &dirlist,
-#endif
                         error_in_archive);
         if (error != PK_COOL) {
             if (error > error_in_archive)
@@ -647,7 +634,6 @@ int extract_or_test_files(__G)    /* return PK-type error code */
     and GIDs from the deepest level on up.
   ---------------------------------------------------------------------------*/
 
-#ifdef SET_DIR_ATTRIB
     if (num_dirs > 0) {
         sorted_dirlist = (direntry **)malloc(num_dirs*sizeof(direntry *));
         if (sorted_dirlist == (direntry **)NULL) {
@@ -695,7 +681,6 @@ int extract_or_test_files(__G)    /* return PK-type error code */
             }
         }
     }
-#endif /* SET_DIR_ATTRIB */
 
 /*---------------------------------------------------------------------------
     Check for unmatched filespecs on command line and print warning if any
@@ -1010,9 +995,7 @@ unsigned find_compr_idx(unsigned compr_methodnum)
 
 static int extract_or_test_entrylist(unsigned numchunk,
                 ulg *pfilnum, ulg *pnum_bad_pwd, zoff_t *pold_extra_bytes,
-#ifdef SET_DIR_ATTRIB
                 unsigned *pnum_dirs, direntry **pdirlist,
-#endif
                 int error_in_archive)    /* return PK-type error code */
 {
     unsigned i;
@@ -1334,7 +1317,6 @@ startover:
                 error_in_archive = errcode;
             if ((errcode = error & MPN_MASK) > MPN_INF_TRUNC) {
                 if (errcode == MPN_CREATED_DIR) {
-#ifdef SET_DIR_ATTRIB
                     direntry *d_entry;
 
                     error = defer_dir_attribs(__G__ &d_entry);
@@ -1355,7 +1337,6 @@ startover:
                         (*pdirlist) = d_entry;
                         ++(*pnum_dirs);
                     }
-#endif /* SET_DIR_ATTRIB */
                 } else if (errcode == MPN_VOL_LABEL) {
 #ifdef DOS_OS2_W32
                     Info(slide, 0x401, ((char *)slide,
@@ -2519,7 +2500,6 @@ char *fnfilter(ZCONST char *raw, uch *space, extent size)   /* convert name to s
 
 
 
-#ifdef SET_DIR_ATTRIB
 /* must sort saved directories so can set perms from bottom up */
 
 /************************/
@@ -2532,8 +2512,6 @@ static int Cdecl dircomp(ZCONST zvoid *a, ZCONST zvoid *b)  /* used by qsort(); 
     return strcmp((*(direntry **)b)->fn, (*(direntry **)a)->fn);
  /* return namecmp((*(direntry **)b)->fn, (*(direntry **)a)->fn); */
 }
-
-#endif /* SET_DIR_ATTRIB */
 
 
 #ifdef USE_BZIP2
