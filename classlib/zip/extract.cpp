@@ -2526,8 +2526,7 @@ char *fnfilter(ZCONST char *raw, uch *space, extent size)   /* convert name to s
 /*  Function dircomp()  */
 /************************/
 
-static int Cdecl dircomp(a, b)  /* used by qsort(); swiped from Zip */
-    ZCONST zvoid *a, *b;
+static int Cdecl dircomp(ZCONST zvoid *a, ZCONST zvoid *b)  /* used by qsort(); swiped from Zip */
 {
     /* order is significant:  this sorts in reverse order (deepest first) */
     return strcmp((*(direntry **)b)->fn, (*(direntry **)a)->fn);

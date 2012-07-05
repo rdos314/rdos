@@ -26,6 +26,7 @@
 
 #define GOT_UTIMBUF
 #define USE_ZLIB
+#define SET_DIR_ATTRIB
 
 #ifndef Cdecl
 #  define Cdecl __cdecl
