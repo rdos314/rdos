@@ -203,7 +203,7 @@ long double TCirc::ReadCircValve()
 {
     int Valve;
 
-    RdosReadSerialVal(2, 2, &Valve);
+    RdosReadSerialVal(1, 0, &Valve);
         return (long double)Valve / 0x7FFFFFFF * 10.0;
 }
 
@@ -225,7 +225,7 @@ void TCirc::WriteCircValve(long double value)
         if (temp < 0)
                 temp = 0x7FFFFFFF;
 
-        RdosWriteSerialVal(2, 2, temp);
+        RdosWriteSerialVal(1, 0, temp);
 }
 
 /*##########################################################################
