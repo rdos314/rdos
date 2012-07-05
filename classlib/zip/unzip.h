@@ -82,129 +82,6 @@ freely, subject to the above disclaimer and the following restrictions:
     Predefined, machine-specific macros.
   ---------------------------------------------------------------------------*/
 
-#ifdef __GO32__                 /* MS-DOS extender:  NOT Unix */
-#  ifdef unix
-#    undef unix
-#  endif
-#  ifdef _unix
-#    undef _unix
-#  endif
-#  ifdef __unix
-#    undef __unix
-#  endif
-#  ifdef __unix__
-#    undef __unix__
-#  endif
-#endif
-
-#if ((defined(__convex__) || defined(__convexc__)) && !defined(CONVEX))
-#  define CONVEX
-#endif
-
-#if (defined(unix) || defined(_unix) || defined(__unix) || defined(__unix__))
-#  ifndef UNIX
-#    define UNIX
-#  endif
-#endif /* unix || _unix || __unix || __unix__ */
-#if (defined(M_XENIX) || defined(COHERENT) || defined(__hpux))
-#  ifndef UNIX
-#    define UNIX
-#  endif
-#endif /* M_XENIX || COHERENT || __hpux */
-#if (defined(__NetBSD__) || defined(__FreeBSD__))
-#  ifndef UNIX
-#    define UNIX
-#  endif
-#endif /* __NetBSD__ || __FreeBSD__ */
-#if (defined(CONVEX) || defined(MINIX) || defined(_AIX) || defined(__QNX__))
-#  ifndef UNIX
-#    define UNIX
-#  endif
-#endif /* CONVEX || MINIX || _AIX || __QNX__ */
-
-#if (defined(VM_CMS) || defined(MVS))
-#  define CMS_MVS
-#endif
-
-#if (defined(__OS2__) && !defined(OS2))
-#  define OS2
-#endif
-
-#if (defined(__TANDEM) && !defined(TANDEM))
-#  define TANDEM
-#endif
-
-#if (defined(__VMS) && !defined(VMS))
-#  define VMS
-#endif
-
-#if ((defined(__WIN32__) || defined(_WIN32)) && !defined(WIN32))
-#  define WIN32
-#endif
-#if ((defined(__WINNT__) || defined(__WINNT)) && !defined(WIN32))
-#  define WIN32
-#endif
-
-#if defined(_WIN32_WCE)
-#  ifndef WIN32         /* WinCE is treated as a variant of the Win32 API */
-#    define WIN32
-#  endif
-#  ifndef UNICODE       /* WinCE requires UNICODE wide character support */
-#    define UNICODE
-#  endif
-#endif
-
-#ifdef __COMPILER_KCC__
-#  include <c-env.h>
-#  ifdef SYS_T20
-#    define TOPS20
-#  endif
-#endif /* __COMPILER_KCC__ */
-
-/* Borland C does not define __TURBOC__ if compiling for a 32-bit platform */
-#ifdef __BORLANDC__
-#  ifndef __TURBOC__
-#    define __TURBOC__
-#  endif
-#  if (!defined(__MSDOS__) && !defined(OS2) && !defined(WIN32))
-#    define __MSDOS__
-#  endif
-#endif
-
-/* define MSDOS for Turbo C (unless OS/2) and Power C as well as Microsoft C */
-#ifdef __POWERC
-#  define __TURBOC__
-#  define MSDOS
-#endif /* __POWERC */
-
-#if (defined(__MSDOS__) && !defined(MSDOS))   /* just to make sure */
-#  define MSDOS
-#endif
-
-/* RSXNTDJ (at least up to v1.3) compiles for WIN32 (RSXNT) using a derivate
-   of the EMX environment, but defines MSDOS and __GO32__. ARG !!! */
-#if (defined(MSDOS) && defined(WIN32))
-#  undef MSDOS                  /* WIN32 is >>>not<<< MSDOS */
-#endif
-#if (defined(__GO32__) && defined(__EMX__) && defined(__RSXNT__))
-#  undef __GO32__
-#endif
-
-#if (defined(linux) && !defined(LINUX))
-#  define LINUX
-#endif
-
-#ifdef __riscos
-#  define RISCOS
-#endif
-
-#if (defined(THINK_C) || defined(MPW))
-#  define MACOS
-#endif
-#if (defined(__MWERKS__) && defined(macintosh))
-#  define MACOS
-#endif
-
 /* use prototypes and ANSI libraries if __STDC__, or MS-DOS, or OS/2, or Win32,
  * or IBM C Set/2, or Borland C, or Watcom C, or GNU gcc (emx or Cygwin),
  * or Macintosh, or Sequent, or Atari, or IBM RS/6000, or Silicon Graphics,
@@ -222,46 +99,6 @@ freely, subject to the above disclaimer and the following restrictions:
 #  ifndef PROTO
 #    define PROTO
 #  endif
-#  ifndef MODERN
-#    define MODERN
-#  endif
-#endif
-#if (defined(__EMX__) || defined(__CYGWIN__))
-#  ifndef PROTO
-#    define PROTO
-#  endif
-#  ifndef MODERN
-#    define MODERN
-#  endif
-#endif
-#if (defined(MACOS) || defined(ATARI_ST) || defined(RISCOS) || defined(THEOS))
-#  ifndef PROTO
-#    define PROTO
-#  endif
-#  ifndef MODERN
-#    define MODERN
-#  endif
-#endif
-/* Sequent running Dynix/ptx:  non-modern compiler */
-#if (defined(_AIX) || defined(sgi) || (defined(_SEQUENT_) && !defined(PTX)))
-#  ifndef PROTO
-#    define PROTO
-#  endif
-#  ifndef MODERN
-#    define MODERN
-#  endif
-#endif
-#if (defined(CMS_MVS) || defined(__ATHEOS__) || defined(__BEOS__))
-/* || defined(CONVEX) ? */
-#  ifndef PROTO
-#    define PROTO
-#  endif
-#  ifndef MODERN
-#    define MODERN
-#  endif
-#endif
-/* Bundled C compiler on HP-UX needs this.  Others shouldn't care. */
-#if (defined(__hpux))
 #  ifndef MODERN
 #    define MODERN
 #  endif
@@ -290,82 +127,9 @@ freely, subject to the above disclaimer and the following restrictions:
 #  define ZCONST
 #endif
 
-/* Tell Microsoft Visual C++ 2005 (and newer) to leave us alone
- * and let us use standard C functions the way we're supposed to.
- * (These preprocessor symbols must appear before the first system
- *  header include. They are located here, because for WINDLL the
- *  first system header includes follow just below.)
- */
-#if defined(_MSC_VER) && (_MSC_VER >= 1400)
-#  ifndef _CRT_SECURE_NO_WARNINGS
-#    define _CRT_SECURE_NO_WARNINGS
-#  endif
-#  ifndef _CRT_NONSTDC_NO_WARNINGS
-#    define _CRT_NONSTDC_NO_WARNINGS
-#  endif
-#  if defined(POCKET_UNZIP) && !defined(_CRT_NON_CONFORMING_SWPRINTFS)
-#    define _CRT_NON_CONFORMING_SWPRINTFS
-#  endif
-#endif
-
-/* NO_UNIXBACKUP overrides UNIXBACKUP */
-#if defined(NO_UNIXBACKUP) && defined(UNIXBACKUP)
-#  undef UNIXBACKUP
-#endif
-
-/*---------------------------------------------------------------------------
-    Grab system-specific public include headers.
-  ---------------------------------------------------------------------------*/
-
-#ifdef POCKET_UNZIP             /* WinCE port */
-#  include "wince/punzip.h"     /* must appear before windows.h */
-#endif
-
-#ifdef WINDLL
-   /* for UnZip, the "basic" part of the win32 api is sufficient */
-#  ifndef WIN32_LEAN_AND_MEAN
-#    define WIN32_LEAN_AND_MEAN
-#    define IZ_HASDEFINED_WIN32LEAN
-#  endif
-#  include <windows.h>
-#  include "windll/structs.h"
-#  ifdef IZ_HASDEFINED_WIN32LEAN
-#    undef WIN32_LEAN_AND_MEAN
-#    undef IZ_HASDEFINED_WIN32LEAN
-#  endif
-#endif
-
 /*---------------------------------------------------------------------------
     Grab system-dependent definition of EXPENTRY for prototypes below.
   ---------------------------------------------------------------------------*/
-
-#if 0
-#if (defined(OS2) && !defined(FUNZIP))
-#  ifdef UNZIP_INTERNAL
-#    define INCL_NOPM
-#    define INCL_DOSNLS
-#    define INCL_DOSPROCESS
-#    define INCL_DOSDEVICES
-#    define INCL_DOSDEVIOCTL
-#    define INCL_DOSERRORS
-#    define INCL_DOSMISC
-#    ifdef OS2DLL
-#      define INCL_REXXSAA
-#      include <rexxsaa.h>
-#    endif
-#  endif /* UNZIP_INTERNAL */
-#  include <os2.h>
-#  define UZ_EXP EXPENTRY
-#endif /* OS2 && !FUNZIP */
-#endif /* 0 */
-
-#if (defined(OS2) && !defined(FUNZIP))
-#  if (defined(__IBMC__) || defined(__WATCOMC__))
-#    define UZ_EXP  _System    /* compiler keyword */
-#  else
-#    define UZ_EXP
-#  endif
-#endif /* OS2 && !FUNZIP */
 
 #if (defined(WINDLL) || defined(USE_UNZIP_LIB))
 #  ifndef EXPENTRY
@@ -464,101 +228,27 @@ typedef struct _UzpOpts {
     char *pwdarg;       /* pointer to command-line password (-P option) */
     int zipinfo_mode;   /* behave like ZipInfo or like normal UnZip? */
     int aflag;          /* -a: do ASCII-EBCDIC and/or end-of-line translation */
-#ifdef VMS
-    int bflag;          /* -b: force fixed record format for binary files */
-#endif
-#ifdef TANDEM
-    int bflag;          /* -b: create text files in 'C' format (180)*/
-#endif
-#if defined(UNIX) || defined(OS2) || defined(WIN32)
-    int B_flag;         /* -B: back up existing files by renaming to *~##### */
-#else
-#ifdef UNIXBACKUP
-    int B_flag;         /* -B: back up existing files by renaming to *~##### */
-#endif
-#endif
     int cflag;          /* -c: output to stdout */
     int C_flag;         /* -C: match filenames case-insensitively */
     int D_flag;         /* -D: don't restore directory (-DD: any) timestamps */
-#ifdef MACOS
-    int E_flag;         /* -E: [MacOS] show Mac extra field during restoring */
-#endif
     int fflag;          /* -f: "freshen" (extract only newer files) */
-#if (defined(RISCOS) || defined(ACORN_FTYPE_NFS))
-    int acorn_nfs_ext;  /* -F: RISC OS types & NFS filetype extensions */
-#endif
     int hflag;          /* -h: header line (zipinfo) */
-#ifdef MACOS
-    int i_flag;         /* -i: [MacOS] ignore filenames stored in Mac e.f. */
-#endif
-#ifdef RISCOS
-    int scanimage;      /* -I: scan image files */
-#endif
     int jflag;          /* -j: junk pathnames (unzip) */
-#if (defined(__ATHEOS__) || defined(__BEOS__) || defined(MACOS))
-    int J_flag;         /* -J: ignore AtheOS/BeOS/MacOS e. f. info (unzip) */
-#endif
-#if (defined(__ATHEOS__) || defined(__BEOS__) || defined(UNIX))
-    int K_flag;         /* -K: keep setuid/setgid/tacky permissions */
-#endif
     int lflag;          /* -12slmv: listing format (zipinfo) */
     int L_flag;         /* -L: convert filenames from some OSes to lowercase */
     int overwrite_none; /* -n: never overwrite files (no prompting) */
-#ifdef AMIGA
-    int N_flag;         /* -N: restore comments as AmigaDOS filenotes */
-#endif
     int overwrite_all;  /* -o: OK to overwrite files without prompting */
 #endif /* !FUNZIP */
     int qflag;          /* -q: produce a lot less output */
-#ifdef TANDEM
-    int rflag;          /* -r: remove file extensions */
-#endif
 #ifndef FUNZIP
-#if (defined(MSDOS) || defined(FLEXOS) || defined(OS2) || defined(WIN32))
-    int sflag;          /* -s: convert spaces in filenames to underscores */
-#endif
-#if (defined(NLM))
-    int sflag;          /* -s: convert spaces in filenames to underscores */
-#endif
-#ifdef VMS
-    int S_flag;         /* -S: use Stream_LF for text files (-a[a]) */
-#endif
-#if (defined(MSDOS) || defined(__human68k__) || defined(OS2) || defined(WIN32))
-    int volflag;        /* -$: extract volume labels */
-#endif
     int tflag;          /* -t: test (unzip) or totals line (zipinfo) */
     int T_flag;         /* -T: timestamps (unzip) or dec. time fmt (zipinfo) */
     int uflag;          /* -u: "update" (extract only newer/brand-new files) */
-#if defined(UNIX) || defined(VMS) || defined(WIN32)
-    int U_flag;         /* -U: escape non-ASCII, -UU No Unicode paths */
-#endif
     int vflag;          /* -v: (verbosely) list directory */
     int V_flag;         /* -V: don't strip VMS version numbers */
     int W_flag;         /* -W: wildcard '*' won't match '/' dir separator */
-#if (defined (__ATHEOS__) || defined(__BEOS__) || defined(UNIX))
-    int X_flag;         /* -X: restore owner/protection or UID/GID or ACLs */
-#else
-#if (defined(TANDEM) || defined(THEOS))
-    int X_flag;         /* -X: restore owner/protection or UID/GID or ACLs */
-#else
-#if (defined(OS2) || defined(VMS) || defined(WIN32))
-    int X_flag;         /* -X: restore owner/protection or UID/GID or ACLs */
-#endif
-#endif
-#endif
-#ifdef VMS
-    int Y_flag;         /* -Y: treat ".nnn" as ";nnn" version */
-#endif
     int zflag;          /* -z: display the zipfile comment (only, for unzip) */
-#ifdef VMS
-    int ods2_flag;      /* -2: force names to conform to ODS2 */
-#endif
-#if (!defined(RISCOS) && !defined(CMS_MVS) && !defined(TANDEM))
     int ddotflag;       /* -:: don't skip over "../" path elements */
-#endif
-#ifdef UNIX
-    int cflxflag;       /* -^: allow control chars in extracted filenames */
-#endif
 #endif /* !FUNZIP */
 } UzpOpts;
 
@@ -679,17 +369,11 @@ int      UZ_EXP UzpMain            OF((int argc, char **argv));
 int      UZ_EXP UzpAltMain         OF((int argc, char **argv, UzpInit *init));
 ZCONST UzpVer * UZ_EXP UzpVersion  OF((void));
 void     UZ_EXP UzpFreeMemBuffer   OF((UzpBuffer *retstr));
-#ifndef WINDLL
 int      UZ_EXP UzpUnzipToMemory   OF((char *zip, char *file, UzpOpts *optflgs,
                                        UzpCB *UsrFunc, UzpBuffer *retstr));
 int      UZ_EXP UzpGrep            OF((char *archive, char *file,
                                        char *pattern, int cmd, int SkipBin,
                                        UzpCB *UsrFunc));
-#endif
-#ifdef OS2
-int      UZ_EXP UzpFileTree        OF((char *name, cbList(callBack),
-                                       char *cpInclude[], char *cpExclude[]));
-#endif
 
 unsigned UZ_EXP UzpVersion2        OF((UzpVer2 *version));
 int      UZ_EXP UzpValidate        OF((char *archive, int AllCodes));
