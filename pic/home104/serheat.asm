@@ -33,6 +33,19 @@ Da1         EQU 0x30
 Bit         EQU 0x31
 DaVal       EQU 0x32
 
+T0:		    EQU 0x33
+T1:		    EQU 0x34
+T2:		    EQU 0x35
+
+Val0:	    EQU 0x36
+Val1:	    EQU 0x37
+Val2:	    EQU 0x38
+Val3:	    EQU 0x39
+Val4:	    EQU 0x3A
+Val5:	    EQU 0x3B
+Val6:	    EQU 0x3C
+Val7:	    EQU 0x3D
+
 ; common area
 
 	org 0
@@ -43,6 +56,32 @@ DaVal       EQU 0x32
 ; position dependent code starts here
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+Dummy:
+    return
+
+HandleCmd:
+	movf Cmd,W
+	addwf PCL,F
+	goto Dummy          ; 0
+	goto Dummy          ; 1
+	goto ReadVal        ; 2
+	goto WriteVal       ; 3
+	goto ToggleCmd      ; 4
+	goto ReadCmd        ; 5
+	goto Dummy          ; 6
+	goto Dummy          ; 7
+
+WriteDa:
+	movf Chan,W
+	addwf PCL,F
+	goto LoadDa0        ; 0
+	goto LoadDa1        ; 1
+	goto Dummy          ; 2
+	goto Dummy          ; 3
+	goto Dummy          ; 4
+	goto Dummy          ; 5
+	goto Dummy          ; 6
+	goto Dummy          ; 7
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; position dependent code ends here
@@ -108,11 +147,11 @@ Reset:
     movwf KeyState
 ;
     movlw 0x7F
-    movwf Da0
+    movwf Val
     call LoadDa0
 ;
-    movlw 0xFF
-    movwf Da1    
+    movlw 0
+    movwf Val
     call LoadDa1
 ;
     movlw 0x32    
@@ -338,6 +377,245 @@ ReadCrcNext:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; ReadVal
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadVal:
+    movlw 0x18
+	movwf Count
+;
+	movf Chan,W
+    addlw Val0
+	movwf FSR
+	movf INDF,W
+	movwf T2
+	clrf T1
+	clrf T0
+
+	bcf STATUS,C
+	rrf T2,F
+	rrf T1,F
+	rrf T0,F
+
+	clrf Crc
+
+ReadRawValLoop:
+    movf T0,W
+	call UpdateCrc
+;
+	rrf T2,F
+	rrf T1,F
+	rrf T0,F
+	btfss STATUS,C
+	goto ReadRawValReset
+
+ReadRawValSet:
+    bsf PORTA,2
+    goto ReadRawValNext
+
+ReadRawValReset:
+    bcf PORTA,2
+
+ReadRawValNext:
+    call WaitClk
+	btfsc PORTA,1
+	return
+
+ReadRawValCont:
+    decfsz Count,F
+    goto ReadRawValLoop
+;
+	movlw 8
+	movwf Count
+;
+	movlw 0xA5
+	xorwf Crc,F
+
+ReadRawValCrcLoop:
+    movf Crc,W
+	rrf Crc,F
+	btfss STATUS,C
+	goto ReadRawValCrcReset
+
+ReadRawValCrcSet:
+    bsf PORTA,2
+    goto ReadRawValCrcNext
+
+ReadRawValCrcReset:
+    bcf PORTA,2
+
+ReadRawValCrcNext:
+    call WaitClk
+;
+	btfsc PORTA,1
+	return
+
+ReadRawValCrcCont:
+	decfsz Count,F
+	goto ReadRawValCrcLoop
+	return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; UpdateRawVal
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateRawVal:
+    movf PORTA,W
+    movwf Temp
+;
+	btfsc Temp,1
+	goto UpdateRawValSet
+
+UpdateRawValReset:
+    bcf STATUS,C
+    goto UpdateRawValDo
+
+UpdateRawValSet:    
+	bsf STATUS,C
+
+UpdateRawValDo:	
+	rrf T2,F
+	rrf T1,F
+	rrf T0,F
+	rrf Temp,W
+	return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; WriteVal
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteVal:
+    clrf T0
+	clrf T1
+	clrf T2
+	clrf Crc
+;
+	movlw 6
+	movwf Count
+
+WriteRawValLoop1:
+    call WaitClk
+    call UpdateRawVal
+    call UpdateCrc
+;
+	decfsz Count,F
+    goto WriteRawValLoop1
+;
+	call WaitClk
+;
+	btfsc PORTA,1
+	return
+
+WriteRawNext1:
+    movlw 6
+	movwf Count
+
+WriteRawValLoop2:
+    call WaitClk
+    call UpdateRawVal
+    call UpdateCrc
+;
+	decfsz Count,F
+	goto WriteRawValLoop2
+;
+    call WaitClk
+;
+	btfsc PORTA,1
+	return
+
+WriteRawNext2:
+	movlw 6
+	movwf Count
+
+WriteRawValLoop3:
+    call WaitClk
+    call UpdateRawVal
+    call UpdateCrc
+;
+	decfsz Count,F
+	goto WriteRawValLoop3
+;
+    call WaitClk
+;
+	btfsc PORTA,1
+	return
+
+WriteRawNext3:
+	movlw 6
+	movwf Count
+
+WriteRawValLoop4:
+    call WaitClk
+    call UpdateRawVal
+    call UpdateCrc
+;
+	decfsz Count,F
+	goto WriteRawValLoop4
+;
+    call WaitClk
+;
+	btfsc PORTA,1
+	return
+
+WriteRawNext4:
+	movlw 6
+	movwf Count
+	clrf Val
+
+WriteRawCrcLoop:
+    call WaitClk
+    call UpdateVal
+;
+	decfsz Count,F
+	goto WriteRawCrcLoop
+
+WriteRawCrcDone:
+    call WaitClk
+;
+	btfsc PORTA,1
+	return
+	
+WriteRawCrcCont:
+    bcf STATUS,C
+	rrf Val,F
+	rrf Val,F
+	movf Crc,W
+	andlw 0x3F
+	xorwf Val,W
+    btfss STATUS,Z
+	return
+
+WriteRawCrcOk:	
+    movf Chan,W
+	addlw Val0
+	movwf FSR
+;
+	bcf STATUS,C
+	rlf T0,F
+	rlf T1,F
+	rlf T2,F
+	btfss STATUS,C
+	goto WriteRawPosVal
+;
+	clrf INDF
+	clrf Val
+	goto WriteRawValOk
+
+WriteRawPosVal:
+    movf T2,W
+	movwf INDF
+	movwf Val
+
+WriteRawValOk:
+    goto WriteDa
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; PollControl
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -484,15 +762,7 @@ DevCrcDone:
 	goto WaitHi
 
 DevDone:	
-    movlw 4
-	xorwf Cmd,W
-	btfsc STATUS,Z
-	call ToggleCmd
-;
-    movlw 5
-	xorwf Cmd,W
-	btfsc STATUS,Z
-	call ReadCmd
+    call HandleCmd
 
 WaitDone:
     call PollHw
@@ -562,14 +832,14 @@ update_key_done:
 LoadDa0:	
 	movlw b'00001001'
 	movwf Contr
-	movf Da0,W
+	movf Val,W
 	movwf DaVal
 	goto LoadDa
 
 LoadDa1:	
 	movlw b'00001010'
 	movwf Contr
-	movf Da1,W
+	movf Val,W
 	movwf DaVal
 
 LoadDa:	
