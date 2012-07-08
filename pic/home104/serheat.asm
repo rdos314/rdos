@@ -33,18 +33,17 @@ Da1         EQU 0x30
 Bit         EQU 0x31
 DaVal       EQU 0x32
 
-T0:		    EQU 0x33
-T1:		    EQU 0x34
-T2:		    EQU 0x35
+Adl         EQU 0x33
+Adh         EQU 0x34
+AdConf      EQU 0x35
+AdTemp      EQU 0x36
 
-Val0:	    EQU 0x36
-Val1:	    EQU 0x37
-Val2:	    EQU 0x38
-Val3:	    EQU 0x39
-Val4:	    EQU 0x3A
-Val5:	    EQU 0x3B
-Val6:	    EQU 0x3C
-Val7:	    EQU 0x3D
+T0:		    EQU 0x36
+T1:		    EQU 0x37
+T2:		    EQU 0x38
+
+DaVal0      EQU 0x39
+DaVal1:	    EQU 0x3A
 
 ; common area
 
@@ -64,18 +63,30 @@ HandleCmd:
 	addwf PCL,F
 	goto Dummy          ; 0
 	goto Dummy          ; 1
-	goto ReadVal        ; 2
+	goto HandleRead     ; 2
 	goto WriteVal       ; 3
 	goto ToggleCmd      ; 4
 	goto ReadCmd        ; 5
 	goto Dummy          ; 6
 	goto Dummy          ; 7
 
-WriteDa:
+HandleWrite:
 	movf Chan,W
 	addwf PCL,F
-	goto LoadDa0        ; 0
-	goto LoadDa1        ; 1
+	goto WriteDa0       ; 0
+	goto WriteDa1       ; 1
+	goto Dummy          ; 2
+	goto Dummy          ; 3
+	goto Dummy          ; 4
+	goto Dummy          ; 5
+	goto Dummy          ; 6
+	goto Dummy          ; 7
+
+HandleRead:
+	movf Chan,W
+	addwf PCL,F
+	goto ReadDa0        ; 0
+	goto ReadDa1        ; 1
 	goto Dummy          ; 2
 	goto Dummy          ; 3
 	goto Dummy          ; 4
@@ -146,13 +157,15 @@ Reset:
     movf PORTD,W
     movwf KeyState
 ;
-    movlw 0x7F
-    movwf Val
-    call LoadDa0
+    clrf T0
+    clrf T1
+    clrf T2
+    call WriteDa0
 ;
-    movlw 0
-    movwf Val
-    call LoadDa1
+    clrf T0
+    clrf T1
+    clrf T2
+    call WriteDa1
 ;
     movlw 0x32    
     movwf StableCnt
@@ -377,18 +390,12 @@ ReadCrcNext:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; ReadVal
+; ReadDa0/ReadDa1
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadVal:
-    movlw 0x18
-	movwf Count
-;
-	movf Chan,W
-    addlw Val0
-	movwf FSR
-	movf INDF,W
+ReadDa0:
+	movf DaVal0,W
 	movwf T2
 	clrf T1
 	clrf T0
@@ -397,7 +404,29 @@ ReadVal:
 	rrf T2,F
 	rrf T1,F
 	rrf T0,F
+	goto ReadValTransfer
 
+ReadDa1:
+	movf DaVal1,W
+	movwf T2
+	clrf T1
+	clrf T0
+
+	bcf STATUS,C
+	rrf T2,F
+	rrf T1,F
+	rrf T0,F
+	goto ReadValTransfer
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ReadValTransfer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadValTransfer:
+    movlw 0x18
+	movwf Count
 	clrf Crc
 
 ReadRawValLoop:
@@ -591,28 +620,7 @@ WriteRawCrcCont:
 	return
 
 WriteRawCrcOk:	
-    movf Chan,W
-	addlw Val0
-	movwf FSR
-;
-	bcf STATUS,C
-	rlf T0,F
-	rlf T1,F
-	rlf T2,F
-	btfss STATUS,C
-	goto WriteRawPosVal
-;
-	clrf INDF
-	clrf Val
-	goto WriteRawValOk
-
-WriteRawPosVal:
-    movf T2,W
-	movwf INDF
-	movwf Val
-
-WriteRawValOk:
-    goto WriteDa
+    goto HandleWrite
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -825,22 +833,50 @@ update_key_done:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; LoadDa0/1
+; WriteDa0/1
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LoadDa0:	
+WriteDa0:	
 	movlw b'00001001'
 	movwf Contr
-	movf Val,W
-	movwf DaVal
+;
+	bcf STATUS,C
+	rlf T0,F
+	rlf T1,F
+	rlf T2,F
+	btfss STATUS,C
+	goto LoadDaPos0
+;
+	clrf DaVal
+	clrf DaVal0
 	goto LoadDa
 
-LoadDa1:	
+LoadDaPos0:
+    movf T2,W
+	movwf DaVal
+	movwf DaVal0
+	goto LoadDa
+
+WriteDa1:	
 	movlw b'00001010'
 	movwf Contr
-	movf Val,W
+;
+	bcf STATUS,C
+	rlf T0,F
+	rlf T1,F
+	rlf T2,F
+	btfss STATUS,C
+	goto LoadDaPos1
+;
+	clrf DaVal
+	clrf DaVal1
+	goto LoadDa
+
+LoadDaPos1:
+    movf T2,W
 	movwf DaVal
+	movwf DaVal1
 
 LoadDa:	
 	bcf PORTB,7
@@ -895,6 +931,94 @@ LoadDaDataNext:
 ;
 	bsf PORTB,5
 	return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; SampleOne
+; IN   W   config word
+; OUT  adl, adh
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SampleOne:
+    bcf PORTB,3
+    movwf AdConf
+;
+    movlw 4
+    movwf AdTemp
+    goto sample_one_loop1
+
+sample_one_set0:
+    bcf PORTB,0
+    goto sample_one_clk0
+
+sample_one_loop0:
+    bsf PORTB,1
+    rlf AdConf,F
+
+sample_one_a_bit0:
+    btfsc STATUS,C
+    goto sample_one_set1
+
+sample_one_clk0:
+    bcf PORTB,1
+    decfsz AdTemp,F
+    goto sample_one_loop0
+;
+    goto sample_one_setup_ok
+
+sample_one_set1:
+    bsf PORTB,0
+    goto sample_one_clk1
+
+sample_one_loop1:
+    bsf PORTB,1
+    rlf AdConf,F
+
+sample_one_bit1:
+    btfss STATUS,C
+    goto sample_one_set0
+
+sample_one_clk1:
+    bcf PORTB,1
+    decfsz AdTemp,F
+    goto sample_one_loop1
+
+sample_one_setup_ok:
+    bsf PORTB,1
+    nop
+;
+    bcf PORTB,1
+    nop
+;
+    bsf PORTB,1
+    clrf Adl
+    clrf Adh
+    movlw 0xE
+    movwf AdTemp
+    bsf PORTB,0
+;
+    bcf PORTB,1
+
+sample_one_loop:
+    bcf STATUS,C
+    rlf Adl,F
+    rlf Adh,F
+    bsf PORTB,1
+    nop
+    nop
+    btfsc PORTB,2
+    bsf Adl,0
+    bcf PORTB,1
+    decfsz AdTemp,F
+    goto sample_one_loop
+;
+    movlw 0x1F
+    andwf Adh,F
+    movlw 0xE0
+    btfsc Adh,4
+    iorwf Adh,F
+;    
+    bsf PORTB,3
+    return
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
