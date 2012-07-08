@@ -9,11 +9,13 @@
 
 NODEID      EQU 1
 
+FLAG_SERIAL_BIT EQU 0
+
 ; Page 0
 
 CurrTmr1    EQU 0x20
 SubMs       EQU 0x21
-TenMs       EQU 0x22
+PollId      EQU 0x22
 KeyState    EQU 0x23
 StableCnt   EQU 0x24
 CurrKeys    EQU 0x25
@@ -38,12 +40,29 @@ Adh         EQU 0x34
 AdConf      EQU 0x35
 AdTemp      EQU 0x36
 
-T0:		    EQU 0x36
-T1:		    EQU 0x37
-T2:		    EQU 0x38
+T0		    EQU 0x36
+T1		    EQU 0x37
+T2		    EQU 0x38
 
 DaVal0      EQU 0x39
-DaVal1:	    EQU 0x3A
+DaVal1	    EQU 0x3A
+
+BatIl       EQU 0x3B
+BatIh       EQU 0x3C
+
+ChargeIl    EQU 0x3D
+ChargeIh    EQU 0x3E
+
+BatUl       EQU 0x3F
+BatUh       EQU 0x40
+
+AdVal0l     EQU 0x41
+AdVal0h     EQU 0x42
+
+AdVal1l     EQU 0x43
+AdVal1h     EQU 0x44
+
+Flags       EQU 0x45
 
 ; common area
 
@@ -87,9 +106,23 @@ HandleRead:
 	addwf PCL,F
 	goto ReadDa0        ; 0
 	goto ReadDa1        ; 1
-	goto Dummy          ; 2
-	goto Dummy          ; 3
-	goto Dummy          ; 4
+	goto ReadBatI       ; 2
+	goto ReadChargeI    ; 3
+	goto ReadBatU       ; 4
+	goto ReadAd0        ; 5
+	goto ReadAd1        ; 6
+	goto Dummy          ; 7
+
+HandlePollAd:
+    incf PollId,W
+    andlw 0x7
+    movwf PollId
+    addwf PCL,F
+	goto GetBatI        ; 0
+	goto GetChargeI     ; 1
+	goto GetBatU        ; 2
+	goto GetAd0         ; 3
+	goto GetAd1         ; 4
 	goto Dummy          ; 5
 	goto Dummy          ; 6
 	goto Dummy          ; 7
@@ -150,8 +183,8 @@ Reset:
     movlw 0x32
     movwf SubMs	
 ;
-    movlw 0x64
-    movwf TenMs
+    clrf PollId
+    clrf Flags
 ;
     clrf CurrKeys
     movf PORTD,W
@@ -166,6 +199,12 @@ Reset:
     clrf T1
     clrf T2
     call WriteDa1
+;
+    call GetBatI
+    call GetChargeI
+    call GetBatU
+    call GetAd0
+    call GetAd1
 ;
     movlw 0x32    
     movwf StableCnt
@@ -200,7 +239,7 @@ PollHw:
     goto DebounceOk
 ;
     call UpdateKeyboard    
-    goto DebounceOk
+    return
 
 ReBounce:
     movf PORTD,W
@@ -210,14 +249,16 @@ ReBounce:
     movwf StableCnt
     
 DebounceOk:
+    btfsc Flags,FLAG_SERIAL_BIT
+    return
+;
     decf SubMs,F
     btfss STATUS,Z
     return
 ;
     movlw 0x32
-    movwf SubMs
-;        
-    goto UpdateTenMs
+    movwf SubMs        
+    goto HandlePollAd
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -417,6 +458,106 @@ ReadDa1:
 	rrf T1,F
 	rrf T0,F
 	goto ReadValTransfer
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ReadBatI
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadBatI:
+	movf BatIl,W
+	movwf T0
+	movf BatIh,W
+	movwf T1
+	clrf T2
+;
+    btfss T1,7
+    goto ReadValTransfer
+;
+    movlw 0xFF
+    movwf T2
+    goto ReadValTransfer
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ReadChargeI
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadChargeI:
+	movf ChargeIl,W
+	movwf T0
+	movf ChargeIh,W
+	movwf T1
+	clrf T2
+;
+    btfss T1,7
+    goto ReadValTransfer
+;
+    movlw 0xFF
+    movwf T2    	
+    goto ReadValTransfer
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ReadBatU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadBatU:
+	movf BatUl,W
+	movwf T0
+	movf BatUh,W
+	movwf T1
+	clrf T2
+;
+    btfss T1,7
+    goto ReadValTransfer
+;
+    movlw 0xFF
+    movwf T2
+    goto ReadValTransfer
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ReadAd0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadAd0:
+	movf AdVal0l,W
+	movwf T0
+	movf AdVal0h,W
+	movwf T1
+	clrf T2
+;
+    btfss T1,7
+    goto ReadValTransfer
+;
+    movlw 0xFF
+    movwf T2
+    goto ReadValTransfer
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ReadAd1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadAd1:
+	movf AdVal1l,W
+	movwf T0
+	movf AdVal1h,W
+	movwf T1
+	clrf T2
+;
+    btfss T1,7
+    goto ReadValTransfer
+;
+    movlw 0xFF
+    movwf T2
+    goto ReadValTransfer
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -632,6 +773,7 @@ PollControl:
     btfss PORTA,0
     return
 ;
+    bsf Flags,FLAG_SERIAL_BIT
 	clrf PORTA
 ;
 	movlw 7
@@ -639,13 +781,13 @@ PollControl:
 
 Preamp:
     btfss PORTA,1
-    return
+    goto WaitHi
 ;    
 	call WaitClk
 ;			
 	decfsz Count,F
 	goto Preamp
-
+	
 WaitSt:
     btfss PORTA,1
     goto StartId	
@@ -773,41 +915,19 @@ DevDone:
     call HandleCmd
 
 WaitDone:
+    bcf Flags,FLAG_SERIAL_BIT
     call PollHw
 	btfsc PORTA,0
 	goto WaitDone
 
 WaitHi:
+    bcf Flags,FLAG_SERIAL_BIT
     clrf PORTA
 
 WaitLoopHi:
     call PollHw
 	btfsc PORTA,0
 	goto WaitLoopHi
-	return
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; UpdateTenMs
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateTenMs:		
-    decf TenMs,F
-    btfss STATUS,Z
-    return
-;
-    movlw 0x64
-    movwf TenMs
-    goto UpdateSec
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; UpdateSec
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateSec:		
 	return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -947,11 +1067,11 @@ SampleOne:
     goto sample_one_loop1
 
 sample_one_set0:
-    bcf PORTB,0
+    bcf PORTB,2
     goto sample_one_clk0
 
 sample_one_loop0:
-    bsf PORTB,1
+    bsf PORTB,0
     rlf AdConf,F
 
 sample_one_a_bit0:
@@ -959,18 +1079,18 @@ sample_one_a_bit0:
     goto sample_one_set1
 
 sample_one_clk0:
-    bcf PORTB,1
+    bcf PORTB,0
     decfsz AdTemp,F
     goto sample_one_loop0
 ;
     goto sample_one_setup_ok
 
 sample_one_set1:
-    bsf PORTB,0
+    bsf PORTB,2
     goto sample_one_clk1
 
 sample_one_loop1:
-    bsf PORTB,1
+    bsf PORTB,0
     rlf AdConf,F
 
 sample_one_bit1:
@@ -978,36 +1098,36 @@ sample_one_bit1:
     goto sample_one_set0
 
 sample_one_clk1:
-    bcf PORTB,1
+    bcf PORTB,0
     decfsz AdTemp,F
     goto sample_one_loop1
 
 sample_one_setup_ok:
-    bsf PORTB,1
+    bsf PORTB,0
     nop
 ;
-    bcf PORTB,1
+    bcf PORTB,0
     nop
 ;
-    bsf PORTB,1
+    bsf PORTB,0
     clrf Adl
     clrf Adh
     movlw 0xE
     movwf AdTemp
-    bsf PORTB,0
+    bsf PORTB,2
 ;
-    bcf PORTB,1
+    bcf PORTB,0
 
 sample_one_loop:
     bcf STATUS,C
     rlf Adl,F
     rlf Adh,F
-    bsf PORTB,1
+    bsf PORTB,0
     nop
     nop
-    btfsc PORTB,2
+    btfsc PORTB,1
     bsf Adl,0
-    bcf PORTB,1
+    bcf PORTB,0
     decfsz AdTemp,F
     goto sample_one_loop
 ;
@@ -1018,6 +1138,96 @@ sample_one_loop:
     iorwf Adh,F
 ;    
     bsf PORTB,3
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; GetBatI
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetBatI:
+    movlw 0x10
+    call SampleOne
+;
+    movf Adl,W
+    movwf BatIl
+;
+    movf Adh,W
+    movwf BatIh
+;
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; GetChargeI
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetChargeI:
+    movlw 0xA0
+    call SampleOne
+;
+    movf Adl,W
+    movwf ChargeIl
+;
+    movf Adh,W
+    movwf ChargeIh
+;
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; GetBatU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetBatU:
+    movlw 0xB0
+    call SampleOne
+;
+    movf Adl,W
+    movwf BatUl
+;
+    movf Adh,W
+    movwf BatUh
+;
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; GetAd0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetAd0:
+    movlw 0x50
+    call SampleOne
+;
+    movf Adl,W
+    movwf AdVal0l
+;
+    movf Adh,W
+    movwf AdVal0h
+;
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; GetAd1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetAd1:
+    movlw 0x70
+    call SampleOne
+;
+    movf Adl,W
+    movwf AdVal1l
+;
+    movf Adh,W
+    movwf AdVal1h
+;
     return
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

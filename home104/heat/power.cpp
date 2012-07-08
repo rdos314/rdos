@@ -57,46 +57,64 @@ void BatteryThread(void *Param)
 {
     int ival;
     long double fval;
-    int bat_sum;
-    int bat_count;
-    int diostat;
     char str[256];
-
-    bat_count = 0;
-    bat_sum = 0;
+    int BatISum = 0;
+    int BatICount = 0;
+    int ChargeISum = 0;
+    int ChargeICount = 0;
+    int BatUSum = 0;
+    int BatUCount = 0;    
 
     for (;;)
     {
-        RdosWaitMilli(1000);
+        RdosWaitMilli(100);
 
-        if (RdosReadSerialRaw(0x40, 2, &ival))
+        if (RdosReadSerialRaw(1, 2, &ival))
         {
-            bat_count++;
-            bat_sum += ival;
+            BatISum += ival;
+            BatICount++;
 
-            if (bat_count >= 25)
+            if (BatICount == 10)
             {
-                fval = (long double)bat_sum / 2500.0;
-                sprintf(str, "%5.1Lf", fval);            
-                Table->SetText(2, 5, str);
+                fval = (long double)BatISum / 1000.0;
+                sprintf(str, "%5.2Lf", fval);            
+                Table->SetText(3, 5, str);            
 
-                bat_count = 0;
-                bat_sum = 0;
-
-                if (RdosReadSerialLines(1, &diostat))
-                {
-                    if ((diostat & 2) == 0)
-                    {
-                        if (fval < 23.0)
-                            RdosToggleSerialLine(1, 1);     // turn on charger
-                    }
-                    else                            
-                    {
-                        if (fval > 26.0)
-                            RdosToggleSerialLine(1, 1);     // turn off charger
-                    }
-                }
+                BatISum = 0;
+                BatICount = 0;
             }
+        }
+
+        if (RdosReadSerialRaw(1, 3, &ival))
+        {
+            ChargeISum += ival;
+            ChargeICount++;
+
+            if (ChargeICount == 10)
+            {            
+                fval = (long double)ChargeISum / 1000.0;
+                sprintf(str, "%5.2Lf", fval);            
+                Table->SetText(2, 5, str);            
+
+                ChargeISum = 0;
+                ChargeICount = 0;
+            }
+        }
+
+        if (RdosReadSerialRaw(1, 4, &ival))
+        {
+            BatUSum += ival;
+            BatUCount++;
+
+            if (BatUCount == 10)
+            {
+                fval = (long double)BatUSum / 1000.0;
+                sprintf(str, "%5.1Lf", fval);            
+                Table->SetText(3, 3, str);           
+
+                BatUSum = 0;
+                BatUCount = 0;
+            } 
         }
     }
 }
@@ -305,6 +323,7 @@ void TPower::Execute()
     Table->AddRow(24, 45);
     Table->AddRow(24, 45);
     Table->AddRow(24, 45);
+    Table->AddRow(24, 45);
 
     Table->SetText(0, 0, "Sol 12");
     Table->SetText(0, 2, "W");
@@ -317,8 +336,12 @@ void TPower::Execute()
     Table->SetText(1, 6, "ampere");
 
     Table->SetText(2, 0, "Batteri");
-    Table->SetText(1, 4, "volt");
-    Table->SetText(2, 6, "volt");
+    Table->SetText(2, 4, "volt");
+    Table->SetText(2, 6, "ampere");
+
+    Table->SetText(3, 0, "Load");
+    Table->SetText(3, 4, "volt");
+    Table->SetText(3, 6, "ampere");
 
     serial.Open();
     serial.EnableAutoRts();

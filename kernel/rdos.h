@@ -2771,8 +2771,17 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosReadSerialRaw = \
     "mov dh,cl" \
     CallGate_read_serial_val  \
+    "jc readfailed" \
+    "test eax,800000h" \
+    "jz readsignok" \
+    "or eax,0FF000000h" \
+    "readsignok:" \
     "mov [esi],eax" \
-    CarryToBool \
+    "mov eax,1" \
+    "jmp readdone" \
+    "readfailed:" \
+    "xor eax,eax" \
+    "readdone:" \    
     parm [ecx] [edx] [esi] \
     value [eax] \
     modify [dh];
