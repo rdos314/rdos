@@ -41,6 +41,8 @@
 #define TRUE !FALSE
 
 TTableControl *Table;
+long double bat_u = 0;
+int charger = FALSE;
 
 /*##########################################################################
 #
@@ -114,6 +116,22 @@ void BatteryThread(void *Param)
 
                 BatUSum = 0;
                 BatUCount = 0;
+
+                if (charger)
+                {
+                    if (bat_u <= 24.5)
+                        charger = TRUE;
+                }
+                else
+                {
+                    if (bat_u >= 25.0)
+                        charger = FALSE;
+                }
+
+                if (charger)
+                    RdosWriteSerialRaw(1, 3, 1);
+                else
+                    RdosWriteSerialRaw(1, 3, 0);
             } 
         }
     }
@@ -274,7 +292,6 @@ void TPower::Execute()
     long double solar24_u;
     long double solar12_i;
     long double solar24_i;
-    long double bat_u;
 
     TLabelFactory CommentLabelFactory;
     TLabelFactory ValueLabelFactory;

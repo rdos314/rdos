@@ -95,7 +95,7 @@ HandleWrite:
 	goto WriteDa0       ; 0
 	goto WriteDa1       ; 1
 	goto Dummy          ; 2
-	goto Dummy          ; 3
+	goto WriteCharge    ; 3
 	goto Dummy          ; 4
 	goto Dummy          ; 5
 	goto Dummy          ; 6
@@ -1051,6 +1051,25 @@ LoadDaDataNext:
 ;
 	bsf PORTB,5
 	return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; WriteCharge
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteCharge:	
+	movf T0,W
+	btfsc STATUS,Z
+    goto WriteChargeOff
+
+WriteChargeOn:
+    bcf PORTE,1
+    return
+
+WriteChargeOff:
+    bsf PORTE,1
+    return    	
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; SampleOne
