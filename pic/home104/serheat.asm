@@ -1059,7 +1059,8 @@ LoadDaDataNext:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteCharge:	
-	movf T0,W
+	movf T2,W
+	iorwf T0,W
 	btfsc STATUS,Z
     goto WriteChargeOff
 

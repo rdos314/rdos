@@ -119,17 +119,17 @@ void BatteryThread(void *Param)
 
                 if (charger)
                 {
-                    if (bat_u <= 24.5)
-                        charger = TRUE;
-                }
-                else
-                {
                     if (bat_u >= 25.0)
                         charger = FALSE;
                 }
+                else
+                {
+                    if (bat_u <= 24.5)
+                        charger = TRUE;
+                }
 
                 if (charger)
-                    RdosWriteSerialRaw(1, 3, 1);
+                    RdosWriteSerialRaw(1, 3, 0xFF);
                 else
                     RdosWriteSerialRaw(1, 3, 0);
             } 
