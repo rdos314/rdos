@@ -824,10 +824,6 @@ void handler(int signal)   /* upon interrupt, turn on echo and exit cleanly */
 }
 
 
-
-#if (!defined(VMS) && !defined(CMS_MVS))
-#if (!defined(OS2) || defined(TIMESTAMP))
-
 #if (!defined(HAVE_MKTIME) || defined(WIN32))
 /* also used in amiga/filedate.c and win32/win32.c */
 ZCONST ush ydays[] =
@@ -888,42 +884,15 @@ time_t dos_to_unix_time(ulg dosdatetime)
     Adjust for local standard timezone offset.
   ---------------------------------------------------------------------------*/
 
-#if (!defined(MACOS) && !defined(RISCOS) && !defined(QDOS) && !defined(TANDEM))
-#ifdef WIN32
-    /* account for timezone differences */
-    res = GetTimeZoneInformation(&tzinfo);
-    if (res != TIME_ZONE_ID_INVALID)
-    {
-    m_time += 60*(tzinfo.Bias);
-#else /* !WIN32 */
-#if (defined(BSD) || defined(MTS) || defined(__GO32__))
-#ifdef BSD4_4
-    if ( (dosdatetime >= DOSTIME_2038_01_18) &&
-         (m_time < (time_t)0x70000000L) )
-        m_time = U_TIME_T_MAX;  /* saturate in case of (unsigned) overflow */
-    if (m_time < (time_t)0L)    /* a converted DOS time cannot be negative */
-        m_time = S_TIME_T_MAX;  /*  -> saturate at max signed time_t value */
-    if ((tm = localtime(&m_time)) != (struct tm *)NULL)
-        m_time -= tm->tm_gmtoff;                /* sec. EAST of GMT: subtr. */
-#else /* !(BSD4_4 */
-    ftime(&tbp);                                /* get `timezone' */
-    m_time += tbp.timezone * 60L;               /* seconds WEST of GMT:  add */
-#endif /* ?(BSD4_4 || __EMX__) */
-#else /* !(BSD || MTS || __GO32__) */
     /* tzset was already called at start of process_zipfiles() */
     /* tzset(); */              /* set `timezone' variable */
-#ifndef __BEOS__                /* BeOS DR8 has no timezones... */
     m_time += timezone;         /* seconds WEST of GMT:  add */
-#endif
-#endif /* ?(BSD || MTS || __GO32__) */
-#endif /* ?WIN32 */
     TTrace((stderr, "  m_time after timezone =  %lu\n", (ulg)m_time));
 
 /*---------------------------------------------------------------------------
     Adjust for local daylight savings (summer) time.
   ---------------------------------------------------------------------------*/
 
-#ifndef BSD4_4  /* (DST already added to tm_gmtoff, so skip tm_isdst) */
     if ( (dosdatetime >= DOSTIME_2038_01_18) &&
          (m_time < (time_t)0x70000000L) )
         m_time = U_TIME_T_MAX;  /* saturate in case of (unsigned) overflow */
@@ -931,20 +900,9 @@ time_t dos_to_unix_time(ulg dosdatetime)
         m_time = S_TIME_T_MAX;  /*  -> saturate at max signed time_t value */
     TIMET_TO_NATIVE(m_time)     /* NOP unless MSC 7.0 or Macintosh */
     if (((tm = localtime((time_t *)&m_time)) != NULL) && tm->tm_isdst)
-#ifdef WIN32
-        m_time += 60L * tzinfo.DaylightBias;    /* adjust with DST bias */
-    else
-        m_time += 60L * tzinfo.StandardBias;    /* add StdBias (normally 0) */
-#else
         m_time -= 60L * 60L;    /* adjust for daylight savings time */
-#endif
     NATIVE_TO_TIMET(m_time)     /* NOP unless MSC 7.0 or Macintosh */
     TTrace((stderr, "  m_time after DST =       %lu\n", (ulg)m_time));
-#endif /* !BSD4_4 */
-#ifdef WIN32
-    }
-#endif
-#endif /* !MACOS && !RISCOS && !QDOS && !TANDEM */
 
     if ( (dosdatetime >= DOSTIME_2038_01_18) &&
          (m_time < (time_t)0x70000000L) )
@@ -955,10 +913,6 @@ time_t dos_to_unix_time(ulg dosdatetime)
     return m_time;
 
 } /* end function dos_to_unix_time() */
-
-#endif /* !OS2 || TIMESTAMP */
-#endif /* !VMS && !CMS_MVS */
-
 
 
 #if (!defined(VMS) && !defined(OS2) && !defined(CMS_MVS))
