@@ -70,8 +70,6 @@
 #include "unzip.h"
 
 
-#ifndef LZW_CLEAN
-
 static void  partial_clear  OF((__GPRO__ int lastcodeused));
 
 #ifdef DEBUG
@@ -107,15 +105,7 @@ int unshrink(__G)
     shrint code, oldcode, curcode;
     shrint lastfreecode;
     unsigned int outbufsiz;
-#if (defined(DLL) && !defined(NO_SLIDE_REDIR))
-    /* Normally realbuf and outbuf will be the same.  However, if the data
-     * are redirected to a large memory buffer, realbuf will point to the
-     * new location while outbuf will remain pointing to the malloc'd
-     * memory buffer. */
-    uch *realbuf = G.outbuf;
-#else
 #   define realbuf G.outbuf
-#endif
 
 
 /*---------------------------------------------------------------------------
@@ -124,15 +114,11 @@ int unshrink(__G)
 
     lastfreecode = BOGUSCODE;
 
-#ifndef VMS     /* VMS uses its own buffer scheme for textmode flush(). */
-#ifndef SMALL_MEM
     /* non-memory-limited machines:  allocate second (large) buffer for
      * textmode conversion in flush(), but only if needed */
     if (G.pInfo->textmode && !G.outbuf2 &&
         (G.outbuf2 = (uch *)malloc(TRANSBUFSIZ)) == (uch *)NULL)
         return PK_MEM3;
-#endif
-#endif /* !VMS */
 
     for (code = 0;  code < BOGUSCODE;  ++code) {
         Value[code] = (uch)code;
@@ -141,17 +127,7 @@ int unshrink(__G)
     for (code = BOGUSCODE+1;  code < HSIZE;  ++code)
         parent[code] = FREE_CODE;
 
-#if (defined(DLL) && !defined(NO_SLIDE_REDIR))
-    if (G.redirect_slide) { /* use normal outbuf unless we're a DLL routine */
-        realbuf = G.redirect_buffer;
-        outbufsiz = (unsigned)G.redirect_size;
-    } else
-#endif
-#ifdef DLL
-    if (G.pInfo->textmode && !G.redirect_data)
-#else
     if (G.pInfo->textmode)
-#endif
         outbufsiz = RAWBUFSIZ;
     else
         outbufsiz = OUTBUFSIZ;
@@ -330,5 +306,3 @@ static void partial_clear(int lastcodeused)
 
     return;
 }
-
-#endif /* !LZW_CLEAN */
