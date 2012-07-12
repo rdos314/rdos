@@ -29,81 +29,12 @@
 #include "zip.h"
 #include "crypt.h"
 
-#if (CRYPT || (defined(UNZIP) && !defined(FUNZIP)))
 /* Non-echo console/keyboard input is needed for (en/de)cryption's password
  * entry, and for UnZip(SFX)'s MORE and Pause features.
  * (The corresponding #endif is found at the end of this module.)
  */
 
 #include "ttyio.h"
-
-#ifdef ZIP
-#  ifdef GLOBAL          /* used in Amiga system headers, maybe others too */
-#    undef GLOBAL
-#  endif
-#  define GLOBAL(g) g
-#else
-#  define GLOBAL(g) G.g
-#endif
-
-#ifdef UNZIP            /* Zip handles this with the unix/configure script */
-#  ifndef _POSIX_VERSION
-#    if (defined(SYSV) || defined(CRAY)) &&  !defined(__MINT__)
-#      ifndef USE_SYSV_TERMIO
-#        define USE_SYSV_TERMIO
-#      endif
-#      ifdef COHERENT
-#        ifndef HAVE_TERMIO_H
-#          define HAVE_TERMIO_H
-#        endif
-#        ifdef HAVE_SYS_TERMIO_H
-#          undef HAVE_SYS_TERMIO_H
-#        endif
-#      else /* !COHERENT */
-#        ifdef HAVE_TERMIO_H
-#          undef HAVE_TERMIO_H
-#        endif
-#        ifndef HAVE_SYS_TERMIO_H
-#           define HAVE_SYS_TERMIO_H
-#        endif
-#      endif /* ?COHERENT */
-#    endif /* (SYSV || CRAY) && !__MINT__ */
-#  endif /* !_POSIX_VERSION */
-#  if !(defined(BSD4_4) || defined(SYSV) || defined(__convexc__))
-#    ifndef NO_FCNTL_H
-#      define NO_FCNTL_H
-#    endif
-#  endif /* !(BSD4_4 || SYSV || __convexc__) */
-#endif /* UNZIP */
-
-#ifdef HAVE_TERMIOS_H
-#  ifndef USE_POSIX_TERMIOS
-#    define USE_POSIX_TERMIOS
-#  endif
-#endif
-
-#if (defined(HAVE_TERMIO_H) || defined(HAVE_SYS_TERMIO_H))
-#  ifndef USE_SYSV_TERMIO
-#    define USE_SYSV_TERMIO
-#  endif
-#endif
-
-#if (defined(UNZIP) && !defined(FUNZIP) && defined(UNIX) && defined(MORE))
-#  include <sys/ioctl.h>
-#  define GOT_IOCTL_H
-   /* int ioctl OF((int, int, zvoid *));   GRR: may need for some systems */
-#endif
-
-
-#if CRYPT                       /* getp() is only used with full encryption */
-
-/*
- * Simple compile-time check for source compatibility between
- * zcrypt and ttyio:
- */
-#if (!defined(CR_MAJORVER) || (CR_MAJORVER < 2) || (CR_MINORVER < 7))
-   error:  This Info-ZIP tool requires zcrypt 2.7 or later.
-#endif
 
 /*
  * Get a password of length n-1 or less into *p using the prompt *m.
@@ -157,6 +88,3 @@ char *getp(ZCONST char *m, char *p, int n)
     return p;                   /* return pointer to password */
 
 } /* end function getp() */
-
-#endif /* CRYPT */
-#endif /* CRYPT || (UNZIP && !FUNZIP) */
