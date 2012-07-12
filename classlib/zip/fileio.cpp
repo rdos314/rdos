@@ -477,7 +477,7 @@ int flush(uch *rawbuf, ulg size, int unshrink)
          * at least MSC 5.1 has a lousy implementation of fwrite() (as does
          * DEC Ultrix cc), write() is used anyway.
          */
-        if (!uO.cflag && RdosWriteFile(G.outfile, rawbuf, size))
+        if (!uO.cflag && !RdosWriteFile(G.outfile, rawbuf, size))
             return disk_error(__G);
         else if (uO.cflag && (*G.message)((zvoid *)&G, rawbuf, size, 0))
             return PK_OK;
@@ -530,7 +530,7 @@ int flush(uch *rawbuf, ulg size, int unshrink)
         Trace((stderr, "p - rawbuf = %u   q-transbuf = %u   size = %lu\n",
           (unsigned)(p-rawbuf), (unsigned)(q-transbuf), size));
         if (q > transbuf) {
-            if (!uO.cflag && RdosWriteFile(G.outfile, transbuf, (extent)(q-transbuf)))
+            if (!uO.cflag && !RdosWriteFile(G.outfile, transbuf, (extent)(q-transbuf)))
                 return disk_error(__G);
             else if (uO.cflag && (*G.message)((zvoid *)&G, transbuf,
                 (ulg)(q-transbuf), 0))

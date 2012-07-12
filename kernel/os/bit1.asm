@@ -148,7 +148,7 @@ draw_unblock:
     ret
 DrawDone    Endp
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           SpriteDone
@@ -2531,6 +2531,8 @@ set_native      Proc far
     push es
     push fs
     pushad
+    mov bp,sp
+    sub sp,10
 ;
     push ax
     mov ax,es
@@ -2574,6 +2576,7 @@ set_native_do:
     call DrawDone
 
 set_native_done:
+    add sp,10
     popad
     pop fs
     pop es
@@ -2602,6 +2605,8 @@ set_rgb Proc far
     push es
     push fs
     pushad
+    mov bp,sp
+    sub sp,10
 ;
     push ax
     mov ax,es
@@ -2653,6 +2658,7 @@ set_rgb_do:
     call DrawDone
 
 set_rgb_done:
+    add sp,10
     popad
     pop fs
     pop es
