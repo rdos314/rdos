@@ -1426,43 +1426,12 @@ char *fzofft(zoff_t val, ZCONST char *pre, ZCONST char *post)
 
 
 
-
-#ifdef NEED_STR2ISO
-/**********************/
-/* Function str2iso() */
-/**********************/
-
-char *str2iso(dst, src)
-    char *dst;                          /* destination buffer */
-    register ZCONST char *src;          /* source string */
-{
-#ifdef INTERN_TO_ISO
-    INTERN_TO_ISO(src, dst);
-#else
-    register uch c;
-    register char *dstp = dst;
-
-    do {
-        c = (uch)foreign(*src++);
-        *dstp++ = (char)ASCII2ISO(c);
-    } while (c != '\0');
-#endif
-
-    return dst;
-}
-#endif /* NEED_STR2ISO */
-
-
-#ifdef NEED_STR2OEM
 /**********************/
 /* Function str2oem() */
 /**********************/
 
 char *str2oem(char *dst, register ZCONST char *src)
 {
-#ifdef INTERN_TO_OEM
-    INTERN_TO_OEM(src, dst);
-#else
     register uch c;
     register char *dstp = dst;
 
@@ -1470,10 +1439,7 @@ char *str2oem(char *dst, register ZCONST char *src)
         c = (uch)foreign(*src++);
         *dstp++ = (char)ASCII2OEM(c);
     } while (c != '\0');
-#endif
 
     return dst;
 }
-#endif /* NEED_STR2OEM */
-
 
