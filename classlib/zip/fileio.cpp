@@ -65,14 +65,12 @@
 #include "ttyio.h"
 
 /* setup of codepage conversion for decryption passwords */
-#if CRYPT
 #  if (defined(CRYP_USES_ISO2OEM) && !defined(IZ_ISO2OEM_ARRAY))
 #    define IZ_ISO2OEM_ARRAY            /* pull in iso2oem[] table */
 #  endif
 #  if (defined(CRYP_USES_OEM2ISO) && !defined(IZ_OEM2ISO_ARRAY))
 #    define IZ_OEM2ISO_ARRAY            /* pull in oem2iso[] table */
 #  endif
-#endif
 #include "ebcdic.h"   /* definition/initialization of ebcdic[] */
 
 /*
@@ -125,11 +123,9 @@ static ZCONST char Far ExtraFieldTooLong[] =
      "--- Press `Q' to quit, or any other key to continue ---";
    static ZCONST char Far HidePrompt[] = /* "\r                       \r"; */
      "\r                                                         \r";
-#  if CRYPT
      static ZCONST char Far PasswPrompt[] = "[%s] %s password: ";
      static ZCONST char Far PasswPrompt2[] = "Enter password: ";
      static ZCONST char Far PasswRetry[] = "password incorrect--reenter: ";
-#  endif /* CRYPT */
 
 
 
@@ -320,7 +316,6 @@ int readbyte(__G)   /* refill inbuf and return a byte if available, else EOF */
         defer_leftover_input(__G);           /* decrements G.csize */
     }
 
-#if CRYPT
     if (G.pInfo->encrypted) {
         uch *p;
         int n;
@@ -332,7 +327,6 @@ int readbyte(__G)   /* refill inbuf and return a byte if available, else EOF */
         for (n = G.incnt, p = G.inptr;  n--;  p++)
             zdecode(*p);
     }
-#endif /* CRYPT */
 
     --G.incnt;
     return *G.inptr++;
@@ -355,7 +349,6 @@ int fillinbuf(__G) /* like readbyte() except returns number of bytes in inbuf */
     G.inptr = G.inbuf;
     defer_leftover_input(__G);           /* decrements G.csize */
 
-#if CRYPT
     if (G.pInfo->encrypted) {
         uch *p;
         int n;
@@ -363,7 +356,6 @@ int fillinbuf(__G) /* like readbyte() except returns number of bytes in inbuf */
         for (n = G.incnt, p = G.inptr;  n--;  p++)
             zdecode(*p);
     }
-#endif /* CRYPT */
 
     return G.incnt;
 
@@ -606,9 +598,7 @@ int UZ_EXP UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
     int error;
     uch *q=buf, *endbuf=buf+(unsigned)size;
     uch *p=buf;
-#if (defined(SCREENWIDTH) && defined(SCREENLWRAP))
     int islinefeed = FALSE;
-#endif
 
 
 /*---------------------------------------------------------------------------
@@ -631,21 +621,9 @@ int UZ_EXP UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
         }
     }
 
-# ifdef SCREENSIZE
     /* room for --More-- and one line of overlap: */
-#  if (defined(SCREENWIDTH) && defined(SCREENLWRAP))
     SCREENSIZE(&((Uz_Globs *)pG)->height, &((Uz_Globs *)pG)->width);
-#  else
-    SCREENSIZE(&((Uz_Globs *)pG)->height, (int *)NULL);
-#  endif
     ((Uz_Globs *)pG)->height -= 2;
-# else
-    /* room for --More-- and one line of overlap: */
-    ((Uz_Globs *)pG)->height = SCREENLINES - 2;
-#  if (defined(SCREENWIDTH) && defined(SCREENLWRAP))
-    ((Uz_Globs *)pG)->width = SCREENWIDTH;
-#  endif
-# endif
 
     if (MSG_LNEWLN(flag) && !((Uz_Globs *)pG)->sol) {
         /* not at start of line:  want newline */
@@ -653,9 +631,7 @@ int UZ_EXP UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
             RdosWriteChar(0xa);
             if (((Uz_Globs *)pG)->M_flag)
             {
-#if (defined(SCREENWIDTH) && defined(SCREENLWRAP))
                 ((Uz_Globs *)pG)->chars = 0;
-#endif
                 ++((Uz_Globs *)pG)->numlines;
                 ++((Uz_Globs *)pG)->lines;
                 if (((Uz_Globs *)pG)->lines >= ((Uz_Globs *)pG)->height)
@@ -678,18 +654,15 @@ int UZ_EXP UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
     {
         while (p < endbuf) {
             if (*p == '\n') {
-#if (defined(SCREENWIDTH) && defined(SCREENLWRAP))
                 islinefeed = TRUE;
             } else if (SCREENLWRAP) {
                 if (*p == '\r') {
                     ((Uz_Globs *)pG)->chars = 0;
                 } else {
-#  ifdef TABSIZE
                     if (*p == '\t')
                         ((Uz_Globs *)pG)->chars +=
                             (TABSIZE - (((Uz_Globs *)pG)->chars % TABSIZE));
                     else
-#  endif
                         ++((Uz_Globs *)pG)->chars;
 
                     if (((Uz_Globs *)pG)->chars >= ((Uz_Globs *)pG)->width)
@@ -699,7 +672,6 @@ int UZ_EXP UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
             if (islinefeed) {
                 islinefeed = FALSE;
                 ((Uz_Globs *)pG)->chars = 0;
-#endif /* (SCREENWIDTH && SCREEN_LWRAP) */
                 ++((Uz_Globs *)pG)->numlines;
                 ++((Uz_Globs *)pG)->lines;
                 if (((Uz_Globs *)pG)->lines >= ((Uz_Globs *)pG)->height)
@@ -797,15 +769,9 @@ void UZ_EXP UzpMorePause(zvoid *pG, ZCONST char *prompt, int flag)
 
 int UZ_EXP UzpPassword (zvoid *pG, int *rcnt, char *pwbuf, int size, ZCONST char *zfn, ZCONST char *efn)
 {
-#if CRYPT
     int r = IZ_PW_ENTERED;
     char *m;
     char *prompt;
-
-#ifndef REENTRANT
-    /* tell picky compilers to shut up about "unused variable" warnings */
-    pG = pG;
-#endif
 
     if (*rcnt == 0) {           /* First call for current entry */
         *rcnt = 2;
@@ -833,12 +799,6 @@ int UZ_EXP UzpPassword (zvoid *pG, int *rcnt, char *pwbuf, int size, ZCONST char
     }
     return r;
 
-#else /* !CRYPT */
-    /* tell picky compilers to shut up about "unused variable" warnings */
-    pG = pG; rcnt = rcnt; pwbuf = pwbuf; size = size; zfn = zfn; efn = efn;
-
-    return IZ_PW_ERROR;  /* internal error; function should never get called */
-#endif /* ?CRYPT */
 
 } /* end function UzpPassword() */
 
@@ -1402,21 +1362,6 @@ ulg makelong(ZCONST uch *sig)
 
 zusz_t makeint64(ZCONST uch *sig)
 {
-#ifdef LARGE_FILE_SUPPORT
-    /*
-     * Convert intel style 'int64' variable to non-Intel non-16-bit
-     * host format.  This routine also takes care of byte-ordering.
-     */
-    return (((zusz_t)sig[7]) << 56)
-        + (((zusz_t)sig[6]) << 48)
-        + (((zusz_t)sig[4]) << 32)
-        + (zusz_t)((((ulg)sig[3]) << 24)
-                 + (((ulg)sig[2]) << 16)
-                 + (((unsigned)sig[1]) << 8)
-                 + (sig[0]));
-
-#else /* !LARGE_FILE_SUPPORT */
-
     if ((sig[7] | sig[6] | sig[5] | sig[4]) != 0)
         return (zusz_t)0xffffffffL;
     else
@@ -1425,7 +1370,6 @@ zusz_t makeint64(ZCONST uch *sig)
                       + (((unsigned)sig[1]) << 8)
                       + (sig[0]));
 
-#endif /* ?LARGE_FILE_SUPPORT */
 }
 
 
@@ -1483,8 +1427,6 @@ char *fzofft(zoff_t val, ZCONST char *pre, ZCONST char *post)
 
 
 
-#if CRYPT
-
 #ifdef NEED_STR2ISO
 /**********************/
 /* Function str2iso() */
@@ -1533,7 +1475,5 @@ char *str2oem(char *dst, register ZCONST char *src)
     return dst;
 }
 #endif /* NEED_STR2OEM */
-
-#endif /* CRYPT */
 
 
