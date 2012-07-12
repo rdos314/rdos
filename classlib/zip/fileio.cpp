@@ -841,59 +841,14 @@ ZCONST ush ydays[] =
 time_t dos_to_unix_time(ulg dosdatetime)
 {
     time_t m_time;
-
-#ifdef HAVE_MKTIME
-
-    ZCONST time_t now = time(NULL);
-    struct tm *tm;
-#   define YRBASE  1900
-
-    tm = localtime(&now);
-    tm->tm_isdst = -1;          /* let mktime determine if DST is in effect */
-
-    /* dissect date */
-    tm->tm_year = ((int)(dosdatetime >> 25) & 0x7f) + (1980 - YRBASE);
-    tm->tm_mon  = ((int)(dosdatetime >> 21) & 0x0f) - 1;
-    tm->tm_mday = ((int)(dosdatetime >> 16) & 0x1f);
-
-    /* dissect time */
-    tm->tm_hour = (int)((unsigned)dosdatetime >> 11) & 0x1f;
-    tm->tm_min  = (int)((unsigned)dosdatetime >> 5) & 0x3f;
-    tm->tm_sec  = (int)((unsigned)dosdatetime << 1) & 0x3e;
-
-    m_time = mktime(tm);
-    NATIVE_TO_TIMET(m_time)     /* NOP unless MSC 7.0 or Macintosh */
-    TTrace((stderr, "  final m_time  =       %lu\n", (ulg)m_time));
-
-#else /* !HAVE_MKTIME */
-
     int yr, mo, dy, hh, mm, ss;
-#ifdef TOPS20
-#   define YRBASE  1900
-    struct tmx *tmx;
-    char temp[20];
-#else /* !TOPS20 */
 #   define YRBASE  1970
     int leap;
     unsigned days;
     struct tm *tm;
-#if (!defined(MACOS) && !defined(RISCOS) && !defined(QDOS) && !defined(TANDEM))
-#ifdef WIN32
-    TIME_ZONE_INFORMATION tzinfo;
-    DWORD res;
-#else /* ! WIN32 */
-#ifndef BSD4_4   /* GRR:  change to !defined(MODERN) ? */
-#if (defined(BSD) || defined(MTS) || defined(__GO32__))
-    struct timeb tbp;
-#else /* !(BSD || MTS || __GO32__) */
 #ifdef DECLARE_TIMEZONE
     extern time_t timezone;
 #endif
-#endif /* ?(BSD || MTS || __GO32__) */
-#endif /* !BSD4_4 */
-#endif /* ?WIN32 */
-#endif /* !MACOS && !RISCOS && !QDOS && !TANDEM */
-#endif /* ?TOPS20 */
 
 
     /* dissect date */
@@ -906,14 +861,6 @@ time_t dos_to_unix_time(ulg dosdatetime)
     mm = (int)((unsigned)dosdatetime >> 5) & 0x3f;
     ss = (int)((unsigned)dosdatetime & 0x1f) * 2;
 
-#ifdef TOPS20
-    tmx = (struct tmx *)malloc(sizeof(struct tmx));
-    sprintf (temp, "%02d/%02d/%02d %02d:%02d:%02d", mo+1, dy+1, yr, hh, mm, ss);
-    time_parse(temp, tmx, (char *)0);
-    m_time = time_make(tmx);
-    free(tmx);
-
-#else /* !TOPS20 */
 
 /*---------------------------------------------------------------------------
     Calculate the number of seconds since the epoch, usually 1 January 1970.
@@ -998,9 +945,6 @@ time_t dos_to_unix_time(ulg dosdatetime)
     }
 #endif
 #endif /* !MACOS && !RISCOS && !QDOS && !TANDEM */
-#endif /* ?TOPS20 */
-
-#endif /* ?HAVE_MKTIME */
 
     if ( (dosdatetime >= DOSTIME_2038_01_18) &&
          (m_time < (time_t)0x70000000L) )
