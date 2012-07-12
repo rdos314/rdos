@@ -1806,7 +1806,7 @@ int      zipinfo                 OF((__GPRO));
 int      list_files              OF((__GPRO));
 #ifdef TIMESTAMP
    int   get_time_stamp          OF((__GPRO__  time_t *last_modtime,
-                                     ulg *nmember));
+                                    ulg *nmember));
 #endif
 int      ratio                   OF((zusz_t uc, zusz_t c));
 void     fnprint                 OF((__GPRO));

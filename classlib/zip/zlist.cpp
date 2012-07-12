@@ -652,7 +652,7 @@ int get_time_stamp(__G__ last_modtime, nmember)  /* return PK-type error code */
                 (ef_scan_for_izux(G.extra_field, G.crec.extra_field_length, 1,
                                   G.crec.last_mod_dos_datetime, &z_utime, NULL)
                  & EB_UT_FL_MTIME))
-            {
+        {
                 if (*last_modtime < z_utime.mtime)
                     *last_modtime = z_utime.mtime;
             } else

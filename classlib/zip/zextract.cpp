@@ -1849,6 +1849,15 @@ static int extract_or_test_member(__G)    /* return PK-type error code */
     machines (redundant on 32-bit machines).
   ---------------------------------------------------------------------------*/
 
+    unsigned long msb, lsb;
+    unsigned short dos_date, dos_time;
+
+    dos_date = (unsigned short)(G.lrec.last_mod_dos_datetime >> 16);
+    dos_time = (unsigned short)(G.lrec.last_mod_dos_datetime & 0xFFFFL);
+
+    RdosDosTimeDateToTics(dos_date, dos_time, &msb, &lsb);
+    RdosSetFileTime(G.outfile, msb, lsb);
+
     RdosCloseFile(G.outfile);
 
             /* GRR: CONVERT close_outfile() TO NON-VOID:  CHECK FOR ERRORS! */
