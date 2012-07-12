@@ -35,13 +35,6 @@
 #define __EXTRACT_C     /* identifies this source module */
 #define UNZIP_INTERNAL
 #include "unzip.h"
-#ifdef WINDLL
-#  ifdef POCKET_UNZIP
-#    include "wince/intrface.h"
-#  else
-#    include "windll/windll.h"
-#  endif
-#endif
 #include "crc32.h"
 #include "crypt.h"
 
@@ -95,13 +88,6 @@ static int extract_or_test_member OF((__GPRO));
         unsigned compr_offset,
         int (*test_uc_ebdata)(__GPRO__ uch *eb, unsigned eb_size,
                               uch *eb_ucptr, ulg eb_ucsize)));
-#if (defined(VMS) || defined(VMS_TEXT_CONV))
-   static void decompress_bits OF((uch *outptr, unsigned needlen,
-                                   ZCONST uch *bitptr));
-#endif
-#ifdef SYMLINKS
-   static void set_deferred_symlink OF((__GPRO__ slinkentry *slnk_entry));
-#endif
    static int Cdecl dircomp OF((ZCONST zvoid *a, ZCONST zvoid *b));
 
 
@@ -181,44 +167,22 @@ static ZCONST char Far SkipVolumeLabel[] =
    static ZCONST char Far DirlistFailAttrSum[] =
      "     failed setting times/attribs for %lu dir entries";
 
-#ifdef SYMLINKS         /* messages of the deferred symlinks handler */
-   static ZCONST char Far SymLnkWarnNoMem[] =
-     "warning:  deferred symlink (%s) failed:\n\
-          out of memory\n";
-   static ZCONST char Far SymLnkWarnInvalid[] =
-     "warning:  deferred symlink (%s) failed:\n\
-          invalid placeholder file\n";
-   static ZCONST char Far SymLnkDeferred[] =
-     "finishing deferred symbolic links:\n";
-   static ZCONST char Far SymLnkFinish[] =
-     "  %-22s -> %s\n";
-#endif
-
-#ifndef WINDLL
    static ZCONST char Far ReplaceQuery[] =
-# ifdef VMS
-     "new version of %s? [y]es, [n]o, [A]ll, [N]one, [r]ename: ";
-# else
      "replace %s? [y]es, [n]o, [A]ll, [N]one, [r]ename: ";
-# endif
    static ZCONST char Far AssumeNone[] =
      " NULL\n(EOF or read error, treating as \"[N]one\" ...)\n";
    static ZCONST char Far NewNameQuery[] = "new name: ";
    static ZCONST char Far InvalidResponse[] =
      "error:  invalid response [%s]\n";
-#endif /* !WINDLL */
 
 static ZCONST char Far ErrorInArchive[] =
   "At least one %serror was detected in %s.\n";
 static ZCONST char Far ZeroFilesTested[] =
   "Caution:  zero files tested in %s.\n";
 
-#ifndef VMS
    static ZCONST char Far VMSFormatQuery[] =
      "\n%s:  stored in VMS format.  Extract anyway? (y/n) ";
-#endif
 
-#if CRYPT
    static ZCONST char Far SkipCannotGetPasswd[] =
      "   skipping: %-22s  unable to get password\n";
    static ZCONST char Far SkipIncorrectPasswd[] =
@@ -227,10 +191,6 @@ static ZCONST char Far ZeroFilesTested[] =
      "%lu file%s skipped because of incorrect password.\n";
    static ZCONST char Far MaybeBadPasswd[] =
      "    (may instead be incorrect password)\n";
-#else
-   static ZCONST char Far SkipEncrypted[] =
-     "   skipping: %-22s  encrypted (not supported)\n";
-#endif
 
 static ZCONST char Far NoErrInCompData[] =
   "No errors detected in compressed data of %s.\n";
@@ -244,14 +204,9 @@ static ZCONST char Far ErrUnzipNoFile[] = "\n  error:  %s%s\n";
 static ZCONST char Far NotEnoughMem[] = "not enough memory to ";
 static ZCONST char Far InvalidComprData[] = "invalid compressed data to ";
 static ZCONST char Far Inflate[] = "inflate";
-#ifdef USE_BZIP2
-  static ZCONST char Far BUnzip[] = "bunzip";
-#endif
 
    static ZCONST char Far Explode[] = "explode";
-#ifndef LZW_CLEAN
    static ZCONST char Far Unshrink[] = "unshrink";
-#endif
 
 #if (!defined(DELETE_IF_FULL) || !defined(HAVE_UNLINK))
    static ZCONST char Far FileTruncated[] =
@@ -271,10 +226,6 @@ char ZCONST Far TruncNTSD[] =
      EF block length (%u bytes) exceeds remaining EF data (%u bytes)\n";
    static ZCONST char Far InvalidComprDataEAs[] =
      " invalid compressed data for EAs\n";
-#  if (defined(WIN32) && defined(NTSD_EAS))
-     static ZCONST char Far InvalidSecurityEAs[] =
-       " EAs fail security check\n";
-#  endif
    static ZCONST char Far UnsuppNTSDVersEAs[] =
      " unsupported NTSD EAs version %d\n";
    static ZCONST char Far BadCRC_EAs[] = " bad CRC for extended attributes\n";
@@ -360,9 +311,7 @@ int extract_or_test_files(__G)    /* return PK-type error code */
 
     G.pInfo = G.info;
 
-#if CRYPT
     G.newzip = TRUE;
-#endif
     G.reported_backslash = FALSE;
 
     /* malloc space for check on unmatched filespecs (OK if one or both NULL) */
@@ -389,9 +338,6 @@ int extract_or_test_files(__G)    /* return PK-type error code */
     reached_end = FALSE;
     while (!reached_end) {
         j = 0;
-#ifdef AMIGA
-        memzero(G.filenotes, DIR_BLKSIZ * sizeof(char *));
-#endif
 
         /*
          * Loop through files in central directory, storing offsets, file
@@ -470,14 +416,8 @@ int extract_or_test_files(__G)    /* return PK-type error code */
                     break;
                 }
             }
-#ifdef AMIGA
-            G.filenote_slot = j;
-            if ((error = do_string(__G__ G.crec.file_comment_length,
-                                   uO.N_flag ? FILENOTE : SKIP)) != PK_COOL)
-#else
             if ((error = do_string(__G__ G.crec.file_comment_length, SKIP))
                 != PK_COOL)
-#endif
             {
                 if (error > error_in_archive)
                     error_in_archive = error;
@@ -580,26 +520,6 @@ int extract_or_test_files(__G)    /* return PK-type error code */
     } /* end while-loop (blocks of files in central directory) */
 
 /*---------------------------------------------------------------------------
-    Process the list of deferred symlink extractions and finish up
-    the symbolic links.
-  ---------------------------------------------------------------------------*/
-
-#ifdef SYMLINKS
-    if (G.slink_last != NULL) {
-        if (QCOND2)
-            Info(slide, 0, ((char *)slide, LoadFarString(SymLnkDeferred)));
-        while (G.slink_head != NULL) {
-           set_deferred_symlink(__G__ G.slink_head);
-           /* remove the processed entry from the chain and free its memory */
-           G.slink_last = G.slink_head;
-           G.slink_head = G.slink_last->next;
-           free(G.slink_last);
-       }
-       G.slink_last = NULL;
-    }
-#endif /* SYMLINKS */
-
-/*---------------------------------------------------------------------------
     Go back through saved list of directories, sort and set times/perms/UIDs
     and GIDs from the deepest level on up.
   ---------------------------------------------------------------------------*/
@@ -661,16 +581,8 @@ int extract_or_test_files(__G)    /* return PK-type error code */
     if (fn_matched) {
         if (reached_end) for (i = 0;  i < G.filespecs;  ++i)
             if (!fn_matched[i]) {
-#ifdef DLL
-                if (!G.redirect_data && !G.redirect_text)
-                    Info(slide, 0x401, ((char *)slide,
-                      LoadFarString(FilenameNotMatched), G.pfnames[i]));
-                else
-                    setFileNotFound(__G);
-#else
                 Info(slide, 1, ((char *)slide,
                   LoadFarString(FilenameNotMatched), G.pfnames[i]));
-#endif
                 if (error_in_archive <= PK_WARN)
                     error_in_archive = PK_FIND;   /* some files not found */
             }
@@ -725,11 +637,9 @@ int extract_or_test_files(__G)    /* return PK-type error code */
             if (num_skipped > 0L)
                 Info(slide, 0, ((char *)slide, LoadFarString(FilesSkipped),
                   num_skipped, (num_skipped==1L)? "":"s"));
-#if CRYPT
             if (num_bad_pwd > 0L)
                 Info(slide, 0, ((char *)slide, LoadFarString(FilesSkipBadPasswd)
                   , num_bad_pwd, (num_bad_pwd==1L)? "":"s"));
-#endif /* CRYPT */
         }
     }
 
@@ -742,16 +652,12 @@ int extract_or_test_files(__G)    /* return PK-type error code */
         else
             error_in_archive = PK_FIND;  /* no files found at all */
     }
-#if CRYPT
     else if ((filnum == num_bad_pwd) && error_in_archive <= PK_WARN)
         error_in_archive = IZ_BADPWD;    /* bad passwd => all files skipped */
-#endif
     else if ((num_skipped > 0L) && error_in_archive <= PK_WARN)
         error_in_archive = IZ_UNSUP;     /* was PK_WARN; Jean-loup complained */
-#if CRYPT
     else if ((num_bad_pwd > 0L) && !error_in_archive)
         error_in_archive = PK_WARN;
-#endif
 
     return error_in_archive;
 
@@ -868,7 +774,6 @@ static int store_info(__G)   /* return 0 if skipping, 1 if OK */
                   VMS_UNZIP_VERSION / 10, VMS_UNZIP_VERSION % 10));
             return 0;
         }
-#ifndef VMS   /* won't be able to use extra field, but still have data */
         else if (!uO.tflag && !IS_OVERWRT_ALL) { /* if -o, extract anyway */
             Info(slide, 0x481, ((char *)slide, LoadFarString(VMSFormatQuery),
               FnFilter1(G.filename)));
@@ -876,7 +781,6 @@ static int store_info(__G)   /* return 0 if skipping, 1 if OK */
             if ((*G.answerbuf != 'y') && (*G.answerbuf != 'Y'))
                 return 0;
         }
-#endif /* !VMS */
     /* usual file type:  don't need VMS to extract */
     } else if (G.crec.version_needed_to_extract[0] > UNZVERS_SUPPORT) {
         if (!((uO.tflag && uO.qflag) || (!uO.tflag && !QCOND2)))
@@ -904,14 +808,6 @@ static int store_info(__G)   /* return 0 if skipping, 1 if OK */
         }
         return 0;
     }
-#if (!CRYPT)
-    if (G.pInfo->encrypted) {
-        if (!((uO.tflag && uO.qflag) || (!uO.tflag && !QCOND2)))
-            Info(slide, 0x401, ((char *)slide, LoadFarString(SkipEncrypted),
-              FnFilter1(G.filename)));
-        return 0;
-    }
-#endif /* !CRYPT */
 
     /* store a copy of the central header filename for later comparison */
     if ((G.pInfo->cfilname = (char *)zfmalloc(strlen(G.filename) + 1)) == NULL) {
@@ -979,9 +875,6 @@ static int extract_or_test_entrylist(unsigned numchunk,
     for (i = 0; i < numchunk; ++i) {
         (*pfilnum)++;   /* *pfilnum = i + blknum*DIR_BLKSIZ + 1; */
         G.pInfo = &G.info[i];
-#ifdef NOVELL_BUG_FAILSAFE
-        G.dne = FALSE;  /* assume file exists until stat() says otherwise */
-#endif
 
         /* if the target position is not within the current input buffer
          * (either haven't yet read far enough, or (maybe) skipping back-
@@ -1131,14 +1024,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
          */
         if (G.pInfo->cfilname != (char Far *)NULL) {
             if (zfstrcmp(G.pInfo->cfilname, G.filename) != 0) {
-#  ifdef SMALL_MEM
-                char *temp_cfilnam = slide + (7 * (WSIZE>>3));
-
-                zfstrcpy((char Far *)temp_cfilnam, G.pInfo->cfilname);
-#    define  cFile_PrintBuf  temp_cfilnam
-#  else
 #    define  cFile_PrintBuf  G.pInfo->cfilname
-#  endif
                 Info(slide, 0x401, ((char *)slide,
                   LoadFarStringSmall2(LvsCFNamMsg),
                   FnFilter2(cFile_PrintBuf), FnFilter1(G.filename)));
@@ -1171,7 +1057,6 @@ static int extract_or_test_entrylist(unsigned numchunk,
             }
         }
 
-#if CRYPT
         if (G.pInfo->encrypted &&
             (error = decrypt(__G__ uO.pwdarg)) != PK_COOL) {
             if (error == PK_WARN) {
@@ -1189,7 +1074,6 @@ static int extract_or_test_entrylist(unsigned numchunk,
             }
             continue;   /* go on to next file */
         }
-#endif /* CRYPT */
 
         /*
          * just about to extract file:  if extracting to disk, check if
@@ -1198,11 +1082,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
          * loop because we don't store the possibly renamed filename[] in
          * info[])
          */
-#ifdef DLL
-        if (!uO.tflag && !uO.cflag && !G.redirect_data)
-#else
         if (!uO.tflag && !uO.cflag)
-#endif
         {
             renamed = FALSE;   /* user hasn't renamed output file yet */
 
@@ -1275,16 +1155,9 @@ startover:
                         ++(*pnum_dirs);
                     }
                 } else if (errcode == MPN_VOL_LABEL) {
-#ifdef DOS_OS2_W32
-                    Info(slide, 0x401, ((char *)slide,
-                      LoadFarString(SkipVolumeLabel),
-                      FnFilter1(G.filename),
-                      uO.volflag? "hard disk " : ""));
-#else
                     Info(slide, 1, ((char *)slide,
                       LoadFarString(SkipVolumeLabel),
                       FnFilter1(G.filename), ""));
-#endif
                 } else if (errcode > MPN_INF_SKIP &&
                            error_in_archive < PK_ERR)
                     error_in_archive = PK_ERR;
@@ -1293,22 +1166,13 @@ startover:
                 continue;   /* go on to next file */
             }
 
-#ifdef QDOS
-            QFilename(__G__ G.filename);
-#endif
             switch (check_for_newer(__G__ G.filename)) {
                 case DOES_NOT_EXIST:
-#ifdef NOVELL_BUG_FAILSAFE
-                    G.dne = TRUE;   /* stat() says file DOES NOT EXIST */
-#endif
                     /* freshen (no new files): skip unless just renamed */
                     if (uO.fflag && !renamed)
                         skip_entry = SKIP_Y_NONEXIST;
                     break;
                 case EXISTS_AND_OLDER:
-#ifdef UNIXBACKUP
-                    if (!uO.B_flag)
-#endif
                     {
                         if (IS_OVERWRT_NONE)
                             /* never overwrite:  skip file */
@@ -1318,67 +1182,17 @@ startover:
                     }
                     break;
                 case EXISTS_AND_NEWER:             /* (or equal) */
-#ifdef UNIXBACKUP
-                    if ((!uO.B_flag && IS_OVERWRT_NONE) ||
-#else
                     if (IS_OVERWRT_NONE ||
-#endif
                         (uO.uflag && !renamed)) {
                         /* skip if update/freshen & orig name */
                         skip_entry = SKIP_Y_EXISTING;
                     } else {
-#ifdef UNIXBACKUP
-                        if (!IS_OVERWRT_ALL && !uO.B_flag)
-#else
                         if (!IS_OVERWRT_ALL)
-#endif
                             query = TRUE;
                     }
                     break;
             }
-#ifdef VMS
-            /* 2008-07-24 SMS.
-             * On VMS, if the file name includes a version number,
-             * and "-V" ("retain VMS version numbers", V_flag) is in
-             * effect, then the VMS-specific code will handle any
-             * conflicts with an existing file, making this query
-             * redundant.  (Implicit "y" response here.)
-             */
-            if (query && uO.V_flag) {
-                /* Not discarding file versions.  Look for one. */
-                int cndx = strlen(G.filename) - 1;
-
-                while ((cndx > 0) && (isdigit(G.filename[cndx])))
-                    cndx--;
-                if (G.filename[cndx] == ';')
-                    /* File version found; skip the generic query,
-                     * proceeding with its default response "y".
-                     */
-                    query = FALSE;
-            }
-#endif /* VMS */
             if (query) {
-#ifdef WINDLL
-                switch (G.lpUserFunctions->replace != NULL ?
-                        (*G.lpUserFunctions->replace)(G.filename, FILNAMSIZ) :
-                        IDM_REPLACE_NONE) {
-                    case IDM_REPLACE_RENAME:
-                        _ISO_INTERN(G.filename);
-                        renamed = TRUE;
-                        goto startover;
-                    case IDM_REPLACE_ALL:
-                        G.overwrite_mode = OVERWRT_ALWAYS;
-                        /* FALL THROUGH, extract */
-                    case IDM_REPLACE_YES:
-                        break;
-                    case IDM_REPLACE_NONE:
-                        G.overwrite_mode = OVERWRT_NEVER;
-                        /* FALL THROUGH, skip */
-                    case IDM_REPLACE_NO:
-                        skip_entry = SKIP_Y_EXISTING;
-                        break;
-                }
-#else /* !WINDLL */
                 extent fnlen;
 reprompt:
                 Info(slide, 0x81, ((char *)slide,
@@ -1404,9 +1218,6 @@ reprompt:
                             if (lastchar(G.filename, fnlen) == '\n')
                                 G.filename[--fnlen] = '\0';
                         } while (fnlen == 0);
-#ifdef WIN32  /* WIN32 fgets( ... , stdin) returns OEM coded strings */
-                        _OEM_INTERN(G.filename);
-#endif
                         renamed = TRUE;
                         goto startover;   /* sorry for a goto */
                     case 'A':   /* dangerous option:  force caps */
@@ -1440,58 +1251,20 @@ reprompt:
                           LoadFarString(InvalidResponse), G.answerbuf));
                         goto reprompt;   /* yet another goto? */
                 } /* end switch (*answerbuf) */
-#endif /* ?WINDLL */
             } /* end if (query) */
             if (skip_entry != SKIP_NO) {
-#ifdef WINDLL
-                if (skip_entry == SKIP_Y_EXISTING) {
-                    /* report skipping of an existing entry */
-                    Info(slide, 0, ((char *)slide,
-                      ((IS_OVERWRT_NONE || !uO.uflag || renamed) ?
-                       "Target file exists.  Skipping %s\n" :
-                       "Target file newer.  Skipping %s\n"),
-                      FnFilter1(G.filename)));
-                }
-#endif /* WINDLL */
                 continue;
             }
         } /* end if (extracting to disk) */
 
-#ifdef DLL
-        if ((G.statreportcb != NULL) &&
-            (*G.statreportcb)(__G__ UZ_ST_START_EXTRACT, G.zipfn,
-                              G.filename, NULL)) {
-            return IZ_CTRLC;        /* cancel operation by user request */
-        }
-#endif
-#ifdef MACOS  /* MacOS is no preemptive OS, thus call event-handling by hand */
-        UserStop();
-#endif
-#ifdef AMIGA
-        G.filenote_slot = i;
-#endif
         G.disk_full = 0;
         if ((error = extract_or_test_member(__G)) != PK_COOL) {
             if (error > error_in_archive)
                 error_in_archive = error;       /* ...and keep going */
-#ifdef DLL
-            if (G.disk_full > 1 || error_in_archive == IZ_CTRLC) {
-#else
             if (G.disk_full > 1) {
-#endif
                 return error_in_archive;        /* (unless disk full) */
             }
         }
-#ifdef DLL
-        if ((G.statreportcb != NULL) &&
-            (*G.statreportcb)(__G__ UZ_ST_FINISH_MEMBER, G.zipfn,
-                              G.filename, (zvoid *)&G.lrec.ucsize)) {
-            return IZ_CTRLC;        /* cancel operation by user request */
-        }
-#endif
-#ifdef MACOS  /* MacOS is no preemptive OS, thus call event-handling by hand */
-        UserStop();
-#endif
     } /* end for-loop (i:  files in current block) */
 
     return error_in_archive;
