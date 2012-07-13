@@ -75,14 +75,6 @@
 #define UNZIP_INTERNAL
 #include "unzip.h"
 
-#ifndef THEOS   /* the Theos port defines its own variant of match() */
-
-#if 0  /* this is not useful until it matches Amiga names insensitively */
-#ifdef AMIGA        /* some other platforms might also want to use this */
-#  define ANSI_CHARSET       /* MOVE INTO UNZIP.H EVENTUALLY */
-#endif
-#endif /* 0 */
-
 #ifdef ANSI_CHARSET
 #  ifdef ToLower
 #    undef ToLower
@@ -93,27 +85,10 @@
 #endif
 #define Case(x)  (ic? ToLower(x) : (x))
 
-#ifdef VMSWILD
-#  define WILDCHAR   '%'
-#  define BEG_RANGE  '('
-#  define END_RANGE  ')'
-#else
 #  define WILDCHAR   '?'
 #  define BEG_RANGE  '['
 #  define END_RANGE  ']'
-#endif
 
-#if 0                /* GRR:  add this to unzip.h someday... */
-#if !(defined(MSDOS) && defined(DOSWILD))
-#ifdef WILD_STOP_AT_DIR
-#define match(s,p,ic,sc) (recmatch((ZCONST uch *)p,(ZCONST uch *)s,ic,sc) == 1)
-#else
-#define match(s,p,ic)    (recmatch((ZCONST uch *)p,(ZCONST uch *)s,ic) == 1)
-#endif
-int recmatch OF((ZCONST uch *pattern, ZCONST uch *string,
-                 int ignore_case __WDLPRO));
-#endif
-#endif /* 0 */
 static int recmatch OF((ZCONST uch *pattern, ZCONST uch *string,
                         int ignore_case __WDLPRO));
 static char *isshexp OF((ZCONST char *p));
@@ -124,38 +99,6 @@ static int namecmp OF((ZCONST char *s1, ZCONST char *s2));
 
 int match(ZCONST char *string, ZCONST char *pattern, int ignore_case)
 {
-#if (defined(MSDOS) && defined(DOSWILD))
-    char *dospattern;
-    int j = strlen(pattern);
-
-/*---------------------------------------------------------------------------
-    Optional MS-DOS preprocessing section:  compare last three chars of the
-    wildcard to "*.*" and translate to "*" if found; else compare the last
-    two characters to "*." and, if found, scan the non-wild string for dots.
-    If in the latter case a dot is found, return failure; else translate the
-    "*." to "*".  In either case, continue with the normal (Unix-like) match
-    procedure after translation.  (If not enough memory, default to normal
-    match.)  This causes "a*.*" and "a*." to behave as MS-DOS users expect.
-  ---------------------------------------------------------------------------*/
-
-    if ((dospattern = (char *)malloc(j+1)) != NULL) {
-        strcpy(dospattern, pattern);
-        if (!strcmp(dospattern+j-3, "*.*")) {
-            dospattern[j-2] = '\0';                    /* nuke the ".*" */
-        } else if (!strcmp(dospattern+j-2, "*.")) {
-            char *p = MBSCHR(string, '.');
-
-            if (p) {   /* found a dot:  match fails */
-                free(dospattern);
-                return 0;
-            }
-            dospattern[j-1] = '\0';                    /* nuke the end "." */
-        }
-        j = recmatch((uch *)dospattern, (uch *)string, ignore_case __WDL);
-        free(dospattern);
-        return j == 1;
-    } else
-#endif /* MSDOS && DOSWILD */
     return recmatch((uch *)pattern, (uch *)string, ignore_case __WDL) == 1;
 }
 
@@ -187,21 +130,11 @@ static int recmatch(ZCONST uch *p, ZCONST uch *s, int ic)
 #endif
 
     /* '*' matches any number of characters, including zero */
-#ifdef AMIGA
-    if (c == '#' && *p == '?')     /* "#?" is Amiga-ese for "*" */
-        c = '*', p++;
-#endif /* AMIGA */
     if (c == '*') {
 #ifdef WILD_STOP_AT_DIR
         if (sepc) {
           /* check for single "*" or double "**" */
-#  ifdef AMIGA
-          if ((c = p[0]) == '#' && p[1] == '?') /* "#?" is Amiga-ese for "*" */
-            c = '*', p++;
-          if (c != '*') {
-#  else /* !AMIGA */
           if (*p != '*') {
-#  endif /* ?AMIGA */
             /* single "*": this doesn't match the dirsep character */
             for (; *s && *s != (uch)sepc; INCSTR(s))
                 if ((c = recmatch(p, s, ic, sepc)) != 0)
@@ -238,36 +171,10 @@ static int recmatch(ZCONST uch *p, ZCONST uch *s, int ic)
               /* compare the remaining literal pattern string with the last
                * bytes of the test string to check for a match
                */
-#ifdef _MBCS
-            {
-                ZCONST uch *q = s;
-
-                /* MBCS-aware code must not scan backwards into a string from
-                 * the end.
-                 * So, we have to move forward by character from our well-known
-                 * character position s in the test string until we have
-                 * advanced to the srest position.
-                 */
-                while (q < srest)
-                  INCSTR(q);
-                /* In case the byte *srest is a trailing byte of a multibyte
-                 * character in the test string s, we have actually advanced
-                 * past the position (srest).
-                 * For this case, the match has failed!
-                 */
-                if (q != srest)
-                    return 0;
-                return ((ic
-                         ? namecmp((ZCONST char *)p, (ZCONST char *)q)
-                         : strcmp((ZCONST char *)p, (ZCONST char *)q)
-                        ) == 0);
-            }
-#else /* !_MBCS */
                 return ((ic
                          ? namecmp((ZCONST char *)p, (ZCONST char *)srest)
                          : strcmp((ZCONST char *)p, (ZCONST char *)srest)
                         ) == 0);
-#endif /* ?_MBCS */
         } else {
             /* pattern contains more wildcards, continue with recursion... */
             for (; *s; INCSTR(s))
@@ -321,13 +228,8 @@ static int recmatch(ZCONST uch *p, ZCONST uch *s, int ic)
         return 0;
 
     /* just a character--compare it */
-#ifdef QDOS
-    return QMatch(Case((uch)c), Case(*s)) ?
-           recmatch(p, s + CLEN(s), ic __WDL) : 0;
-#else
     return Case((uch)c) == Case(*s) ?
            recmatch(p, s + CLEN(s), ic __WDL) : 0;
-#endif
 
 } /* end function recmatch() */
 
@@ -363,9 +265,6 @@ static int namecmp(ZCONST char *s1, ZCONST char *s2)
     }
 } /* end function namecmp() */
 
-#endif /* !THEOS */
-
-
 
 
 int iswild(ZCONST char *p)        /* originally only used for stat()-bug workaround in */
@@ -373,60 +272,10 @@ int iswild(ZCONST char *p)        /* originally only used for stat()-bug workaro
     for (; *p; INCSTR(p))
         if (*p == '\\' && *(p+1))
             ++p;
-#ifdef THEOS
-        else if (*p == '?' || *p == '*' || *p=='#'|| *p == '@')
-#else /* !THEOS */
-#ifdef VMS
-        else if (*p == '%' || *p == '*')
-#else /* !VMS */
-#ifdef AMIGA
-        else if (*p == '?' || *p == '*' || (*p=='#' && p[1]=='?') || *p == '[')
-#else /* !AMIGA */
         else if (*p == '?' || *p == '*' || *p == '[')
-#endif /* ?AMIGA */
-#endif /* ?VMS */
-#endif /* ?THEOS */
-#ifdef QDOS
-            return (int)p;
-#else
             return TRUE;
-#endif
 
     return FALSE;
 
 } /* end function iswild() */
 
-
-
-
-
-#ifdef TEST_MATCH
-
-#define put(s) {fputs(s,stdout); fflush(stdout);}
-#ifdef main
-#  undef main
-#endif
-
-int main(int argc, char **argv)
-{
-    char pat[256], str[256];
-
-    for (;;) {
-        put("Pattern (return to exit): ");
-        gets(pat);
-        if (!pat[0])
-            break;
-        for (;;) {
-            put("String (return for new pattern): ");
-            gets(str);
-            if (!str[0])
-                break;
-            printf("Case sensitive: %s  insensitive: %s\n",
-              match(str, pat, 0) ? "YES" : "NO",
-              match(str, pat, 1) ? "YES" : "NO");
-        }
-    }
-    EXIT(0);
-}
-
-#endif /* TEST_MATCH */
