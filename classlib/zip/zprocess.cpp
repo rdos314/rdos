@@ -100,11 +100,7 @@ static ZCONST char Far CannotAllocateBuffers[] =
 # endif /* ?VMS */
 # endif /* ?UNIX */
    extern ZCONST char Far Zipnfo[];       /* in unzip.c */
-#ifndef WINDLL
-   static ZCONST char Far Unzip[] = "unzip";
-#else
    static ZCONST char Far Unzip[] = "UnZip DLL";
-#endif
 #ifdef DO_SAFECHECK_2GB
    static ZCONST char Far ZipfileTooBig[] =
      "Trying to read large file (> 2 GiB) without large file support\n";
@@ -191,12 +187,6 @@ static ZCONST char Far ZipfileCommTrunc1[] =
    static ZCONST char Far ZipfileCommTrunc2[] =
      "\n  The zipfile comment is truncated.\n";
 #endif /* !NO_ZIPINFO */
-#ifdef UNICODE_SUPPORT
-   static ZCONST char Far UnicodeVersionError[] =
-     "\nwarning:  Unicode Path version > 1\n";
-   static ZCONST char Far UnicodeMismatchError[] =
-     "\nwarning:  Unicode Path checksum invalid\n";
-#endif
 
 
 
@@ -256,12 +246,6 @@ int process_zipfiles(__G)    /* return PK-type error code */
     of whether the function does anything, should be removed from the ifdefs.
   ---------------------------------------------------------------------------*/
 
-#if (defined(WIN32) && defined(USE_EF_UT_TIME))
-    /* For the Win32 environment, we may have to "prepare" the environment
-       prior to the tzset() call, to work around tzset() implementation bugs.
-     */
-    iz_w32_prepareTZenv();
-#endif
 
 #if (defined(IZ_CHECK_TZ) && defined(USE_EF_UT_TIME))
 #  ifndef VALID_TIMEZONE
@@ -341,12 +325,6 @@ int process_zipfiles(__G)    /* return PK-type error code */
         Trace((stderr, "do_seekable(0) returns %d\n", error));
         if (error != IZ_DIR && error > error_in_archive)
             error_in_archive = error;
-#ifdef WINDLL
-        if (error == IZ_CTRLC) {
-            free_G_buffers(__G);
-            return error;
-        }
-#endif
 
     } /* end while-loop (wildcard zipfiles) */
 
@@ -429,12 +407,6 @@ int process_zipfiles(__G)    /* return PK-type error code */
 
             if (error > error_in_archive)
                 error_in_archive = error;
-#ifdef WINDLL
-            if (error == IZ_CTRLC) {
-                free_G_buffers(__G);
-                return error;
-            }
-#endif
         }
     }
 
@@ -536,14 +508,6 @@ void free_G_buffers(__G)     /* releases all memory allocated in global vars */
     if (G.inbuf)
         free(G.inbuf);
     G.inbuf = G.outbuf = (uch *)NULL;
-
-#ifdef UNICODE_SUPPORT
-    if (G.filename_full) {
-        free(G.filename_full);
-        G.filename_full = (char *)NULL;
-        G.fnfull_bufsize = 0;
-    }
-#endif /* UNICODE_SUPPORT */
 
     for (i = 0; i < DIR_BLKSIZ; i++) {
         if (G.info[i].cfilname != (char Far *)NULL) {
@@ -670,8 +634,6 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
     G.cur_zipfile_bufstart = 0;
     G.inptr = G.inbuf;
 
-#if ((!defined(WINDLL) && !defined(SFX)) || !defined(NO_ZIPINFO))
-# if (!defined(WINDLL) && !defined(SFX))
     if ( (!uO.zipinfo_mode && !uO.qflag
 #  ifdef TIMESTAMP
           && !uO.T_flag
@@ -681,16 +643,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
          || (uO.zipinfo_mode && uO.hflag)
 #  endif
        )
-# else /* not (!WINDLL && !SFX) ==> !NO_ZIPINFO !! */
-    if (uO.zipinfo_mode && uO.hflag)
-# endif /* if..else..: (!WINDLL && !SFX) */
-# ifdef WIN32   /* Win32 console may require codepage conversion for G.zipfn */
-        Info(slide, 0, ((char *)slide, LoadFarString(LogInitline),
-          FnFilter1(G.zipfn)));
-# else
         Info(slide, 0, ((char *)slide, LoadFarString(LogInitline), G.zipfn));
-# endif
-#endif /* (!WINDLL && !SFX) || !NO_ZIPINFO */
 
     if ( (error_in_archive = find_ecrec(__G__
 #ifndef NO_ZIPINFO
@@ -858,17 +811,6 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
         Trace((stderr, "about to extract/list files (error = %d)\n",
           error_in_archive));
 
-#ifdef DLL
-        /* G.fValidate is used only to look at an archive to see if
-           it appears to be a valid archive.  There is no interest
-           in what the archive contains, nor in validating that the
-           entries in the archive are in good condition.  This is
-           currently used only in the Windows DLLs for purposes of
-           checking archives within an archive to determine whether
-           or not to display the inner archives.
-         */
-        if (!G.fValidate)
-#endif
         {
 #ifndef NO_ZIPINFO
             if (uO.zipinfo_mode)
@@ -897,11 +839,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
 
 #ifdef TIMESTAMP
     if (uO.T_flag && !uO.zipinfo_mode && (nmember > 0L)) {
-# ifdef WIN32
-        if (stamp_file(__G__ G.zipfn, uxstamp)) {       /* TIME-STAMP 'EM */
-# else
         if (stamp_file(G.zipfn, uxstamp)) {             /* TIME-STAMP 'EM */
-# endif
             if (uO.qflag < 3)
                 Info(slide, 0x201, ((char *)slide,
                   LoadFarString(ZipTimeStampFailed), G.zipfn));
@@ -1441,12 +1379,6 @@ static int process_zip_cmmnt(__G)       /* return PK-type error code */
     Get the zipfile comment (up to 64KB long), if any, and print it out.
   ---------------------------------------------------------------------------*/
 
-#ifdef WINDLL
-    /* for comment button: */
-    if ((!G.fValidate) && (G.lpUserFunctions != NULL))
-       G.lpUserFunctions->cchComment = G.ecrec.zipfile_comment_length;
-#endif /* WINDLL */
-
 #ifndef NO_ZIPINFO
     /* ZipInfo, verbose format */
     if (uO.zipinfo_mode && uO.lflag > 9) {
@@ -1483,7 +1415,6 @@ static int process_zip_cmmnt(__G)       /* return PK-type error code */
 #endif /* !NO_ZIPINFO */
     if ( G.ecrec.zipfile_comment_length &&
          (uO.zflag > 0
-#ifndef WINDLL
           || (uO.zflag == 0
 # ifndef NO_ZIPINFO
               && !uO.zipinfo_mode
@@ -1492,7 +1423,6 @@ static int process_zip_cmmnt(__G)       /* return PK-type error code */
               && !uO.T_flag
 # endif
               && !uO.qflag)
-#endif /* !WINDLL */
          ) )
     {
         if (do_string(__G__ G.ecrec.zipfile_comment_length,
@@ -1589,13 +1519,6 @@ int process_cdir_file_hdr(__G)    /* return PK-type error code */
        deciding which kind of codepage conversion has to be applied to
        strings (see do_string() function in fileio.c) */
     G.pInfo->HasUxAtt = (G.crec.external_file_attributes & 0xffff0000L) != 0L;
-
-#ifdef UNICODE_SUPPORT
-    /* remember the state of GPB11 (General Purpuse Bit 11) which indicates
-       that the standard path and comment are UTF-8. */
-    G.pInfo->GPFIsUTF8
-        = (G.crec.general_purpose_bit_flag & (1 << 11)) == (1 << 11);
-#endif
 
     return PK_COOL;
 
@@ -1779,697 +1702,6 @@ int getZip64Data(ZCONST uch *ef_buf, unsigned ef_len)
 
     return PK_COOL;
 } /* end function getZip64Data() */
-
-
-#ifdef UNICODE_SUPPORT
-
-/*******************************/
-/* Function getUnicodeData() */
-/*******************************/
-
-int getUnicodeData(__G__ ef_buf, ef_len)
-    __GDEF
-    ZCONST uch *ef_buf; /* buffer containing extra field */
-    unsigned ef_len;    /* total length of extra field */
-{
-    unsigned eb_id;
-    unsigned eb_len;
-
-/*---------------------------------------------------------------------------
-    This function scans the extra field for Unicode information, ie UTF-8
-    path extra fields.
-
-    On return, G.unipath_filename =
-        NULL, if no Unicode path extra field or error
-        "", if the standard path is UTF-8 (free when done)
-        null-terminated UTF-8 path (free when done)
-    Return PK_COOL if no error.
-  ---------------------------------------------------------------------------*/
-
-    G.unipath_filename = NULL;
-
-    if (ef_len == 0 || ef_buf == NULL)
-        return PK_COOL;
-
-    Trace((stderr,"\ngetUnicodeData: scanning extra field of length %u\n",
-      ef_len));
-
-    while (ef_len >= EB_HEADSIZE) {
-        eb_id = makeword(EB_ID + ef_buf);
-        eb_len = makeword(EB_LEN + ef_buf);
-
-        if (eb_len > (ef_len - EB_HEADSIZE)) {
-            /* discovered some extra field inconsistency! */
-            Trace((stderr,
-              "getUnicodeData: block length %u > rest ef_size %u\n", eb_len,
-              ef_len - EB_HEADSIZE));
-            break;
-        }
-        if (eb_id == EF_UNIPATH) {
-
-          int offset = EB_HEADSIZE;
-          ush ULen = eb_len - 5;
-          ulg chksum = CRCVAL_INITIAL;
-
-          /* version */
-          G.unipath_version = (uch) *(offset + ef_buf);
-          offset += 1;
-          if (G.unipath_version > 1) {
-            /* can do only version 1 */
-            Info(slide, 0x401, ((char *)slide,
-              LoadFarString(UnicodeVersionError)));
-            return PK_ERR;
-          }
-
-          /* filename CRC */
-          G.unipath_checksum = makelong(offset + ef_buf);
-          offset += 4;
-
-          /*
-           * Compute 32-bit crc
-           */
-
-          chksum = crc32(chksum, (uch *)(G.filename_full),
-                         strlen(G.filename_full));
-
-          /* If the checksums's don't match then likely filename has been
-           * modified and the Unicode Path is no longer valid.
-           */
-          if (chksum != G.unipath_checksum) {
-            Info(slide, 0x401, ((char *)slide,
-              LoadFarString(UnicodeMismatchError)));
-            if (G.unicode_mismatch == 1) {
-              /* warn and continue */
-            } else if (G.unicode_mismatch == 2) {
-              /* ignore and continue */
-            } else if (G.unicode_mismatch == 0) {
-            }
-            return PK_ERR;
-          }
-
-          /* UTF-8 Path */
-          if ((G.unipath_filename = malloc(ULen + 1)) == NULL) {
-            return PK_ERR;
-          }
-          if (ULen == 0) {
-            /* standard path is UTF-8 so use that */
-            G.unipath_filename[0] = '\0';
-          } else {
-            /* UTF-8 path */
-            strncpy(G.unipath_filename,
-                    (ZCONST char *)(offset + ef_buf), ULen);
-            G.unipath_filename[ULen] = '\0';
-          }
-        }
-
-        /* Skip this extra field block */
-        ef_buf += (eb_len + EB_HEADSIZE);
-        ef_len -= (eb_len + EB_HEADSIZE);
-    }
-
-    return PK_COOL;
-} /* end function getUnicodeData() */
-
-
-
-
-#ifdef UNICODE_WCHAR
-  /*---------------------------------------------
- * Unicode conversion functions
- *
- * Based on functions provided by Paul Kienitz
- *
- *---------------------------------------------
- */
-
-/*
-   NOTES APPLICABLE TO ALL STRING FUNCTIONS:
-
-   All of the x_to_y functions take parameters for an output buffer and
-   its available length, and return an int.  The value returned is the
-   length of the string that the input produces, which may be larger than
-   the provided buffer length.  If the returned value is less than the
-   buffer length, then the contents of the buffer will be null-terminated;
-   otherwise, it will not be terminated and may be invalid, possibly
-   stopping in the middle of a multibyte sequence.
-
-   In all cases you may pass NULL as the buffer and/or 0 as the length, if
-   you just want to learn how much space the string is going to require.
-
-   The functions will return -1 if the input is invalid UTF-8 or cannot be
-   encoded as UTF-8.
-*/
-
-static int utf8_char_bytes OF((ZCONST char *utf8));
-static ulg ucs4_char_from_utf8 OF((ZCONST char **utf8));
-static int utf8_to_ucs4_string OF((ZCONST char *utf8, ulg *ucs4buf,
-                                   int buflen));
-
-/* utility functions for managing UTF-8 and UCS-4 strings */
-
-
-/* utf8_char_bytes
- *
- * Returns the number of bytes used by the first character in a UTF-8
- * string, or -1 if the UTF-8 is invalid or null.
- */
-static int utf8_char_bytes(utf8)
-  ZCONST char *utf8;
-{
-  int      t, r;
-  unsigned lead;
-
-  if (!utf8)
-    return -1;          /* no input */
-  lead = (unsigned char) *utf8;
-  if (lead < 0x80)
-    r = 1;              /* an ascii-7 character */
-  else if (lead < 0xC0)
-    return -1;          /* error: trailing byte without lead byte */
-  else if (lead < 0xE0)
-    r = 2;              /* an 11 bit character */
-  else if (lead < 0xF0)
-    r = 3;              /* a 16 bit character */
-  else if (lead < 0xF8)
-    r = 4;              /* a 21 bit character (the most currently used) */
-  else if (lead < 0xFC)
-    r = 5;              /* a 26 bit character (shouldn't happen) */
-  else if (lead < 0xFE)
-    r = 6;              /* a 31 bit character (shouldn't happen) */
-  else
-    return -1;          /* error: invalid lead byte */
-  for (t = 1; t < r; t++)
-    if ((unsigned char) utf8[t] < 0x80 || (unsigned char) utf8[t] >= 0xC0)
-      return -1;        /* error: not enough valid trailing bytes */
-  return r;
-}
-
-
-/* ucs4_char_from_utf8
- *
- * Given a reference to a pointer into a UTF-8 string, returns the next
- * UCS-4 character and advances the pointer to the next character sequence.
- * Returns ~0 (= -1 in twos-complement notation) and does not advance the
- * pointer when input is ill-formed.
- */
-static ulg ucs4_char_from_utf8(utf8)
-  ZCONST char **utf8;
-{
-  ulg  ret;
-  int  t, bytes;
-
-  if (!utf8)
-    return ~0L;                         /* no input */
-  bytes = utf8_char_bytes(*utf8);
-  if (bytes <= 0)
-    return ~0L;                         /* invalid input */
-  if (bytes == 1)
-    ret = **utf8;                       /* ascii-7 */
-  else
-    ret = **utf8 & (0x7F >> bytes);     /* lead byte of a multibyte sequence */
-  (*utf8)++;
-  for (t = 1; t < bytes; t++)           /* consume trailing bytes */
-    ret = (ret << 6) | (*((*utf8)++) & 0x3F);
-  return (zwchar) ret;
-}
-
-
-#if 0 /* currently unused */
-/* utf8_from_ucs4_char - Convert UCS char to UTF-8
- *
- * Returns the number of bytes put into utf8buf to represent ch, from 1 to 6,
- * or -1 if ch is too large to represent.  utf8buf must have room for 6 bytes.
- */
-static int utf8_from_ucs4_char(utf8buf, ch)
-  char *utf8buf;
-  ulg ch;
-{
-  int trailing = 0;
-  int leadmask = 0x80;
-  int leadbits = 0x3F;
-  int tch = ch;
-  int ret;
-
-  if (ch > 0x7FFFFFFFL)
-    return -1;                /* UTF-8 can represent 31 bits */
-  if (ch < 0x7F)
-  {
-    *utf8buf++ = (char) ch;   /* ascii-7 */
-    return 1;
-  }
-  do {
-    trailing++;
-    leadmask = (leadmask >> 1) | 0x80;
-    leadbits >>= 1;
-    tch >>= 6;
-  } while (tch & ~leadbits);
-  ret = trailing + 1;
-  /* produce lead byte */
-  *utf8buf++ = (char) (leadmask | (ch >> (6 * trailing)));
-  while (--trailing >= 0)
-    /* produce trailing bytes */
-    *utf8buf++ = (char) (0x80 | ((ch >> (6 * trailing)) & 0x3F));
-  return ret;
-}
-#endif /* unused */
-
-
-/*===================================================================*/
-
-/* utf8_to_ucs4_string - convert UTF-8 string to UCS string
- *
- * Return UCS count.  Now returns int so can return -1.
- */
-static int utf8_to_ucs4_string(utf8, ucs4buf, buflen)
-  ZCONST char *utf8;
-  ulg *ucs4buf;
-  int buflen;
-{
-  int count = 0;
-
-  for (;;)
-  {
-    ulg ch = ucs4_char_from_utf8(&utf8);
-    if (ch == ~0L)
-      return -1;
-    else
-    {
-      if (ucs4buf && count < buflen)
-        ucs4buf[count] = ch;
-      if (ch == 0)
-        return count;
-      count++;
-    }
-  }
-}
-
-
-#if 0 /* currently unused */
-/* ucs4_string_to_utf8
- *
- *
- */
-static int ucs4_string_to_utf8(ucs4, utf8buf, buflen)
-  ZCONST ulg *ucs4;
-  char *utf8buf;
-  int buflen;
-{
-  char mb[6];
-  int  count = 0;
-
-  if (!ucs4)
-    return -1;
-  for (;;)
-  {
-    int mbl = utf8_from_ucs4_char(mb, *ucs4++);
-    int c;
-    if (mbl <= 0)
-      return -1;
-    /* We could optimize this a bit by passing utf8buf + count */
-    /* directly to utf8_from_ucs4_char when buflen >= count + 6... */
-    c = buflen - count;
-    if (mbl < c)
-      c = mbl;
-    if (utf8buf && count < buflen)
-      strncpy(utf8buf + count, mb, c);
-    if (mbl == 1 && !mb[0])
-      return count;           /* terminating nul */
-    count += mbl;
-  }
-}
-
-
-/* utf8_chars
- *
- * Wrapper: counts the actual unicode characters in a UTF-8 string.
- */
-static int utf8_chars(utf8)
-  ZCONST char *utf8;
-{
-  return utf8_to_ucs4_string(utf8, NULL, 0);
-}
-#endif /* unused */
-
-/* --------------------------------------------------- */
-/* Unicode Support
- *
- * These functions common for all Unicode ports.
- *
- * These functions should allocate and return strings that can be
- * freed with free().
- *
- * 8/27/05 EG
- *
- * Use zwchar for wide char which is unsigned long
- * in zip.h and 32 bits.  This avoids problems with
- * different sizes of wchar_t.
- */
-
-#if 0 /* currently unused */
-/* is_ascii_string
- * Checks if a string is all ascii
- */
-int is_ascii_string(mbstring)
-  ZCONST char *mbstring;
-{
-  char *p;
-  uch c;
-
-  for (p = mbstring; c = (uch)*p; p++) {
-    if (c > 0x7F) {
-      return 0;
-    }
-  }
-  return 1;
-}
-
-/* local to UTF-8 */
-char *local_to_utf8_string(local_string)
-  ZCONST char *local_string;
-{
-  return wide_to_utf8_string(local_to_wide_string(local_string));
-}
-# endif /* unused */
-
-/* wide_to_escape_string
-   provides a string that represents a wide char not in local char set
-
-   An initial try at an algorithm.  Suggestions welcome.
-
-   According to the standard, Unicode character points are restricted to
-   the number range from 0 to 0x10FFFF, respective 21 bits.
-   For a hexadecimal notation, 2 octets are sufficient for the mostly
-   used characters from the "Basic Multilingual Plane", all other
-   Unicode characters can be represented by 3 octets (= 6 hex digits).
-   The Unicode standard suggests to write Unicode character points
-   as 4 resp. 6 hex digits, preprended by "U+".
-   (e.g.: U+10FFFF for the highest character point, or U+0030 for the ASCII
-   digit "0")
-
-   However, for the purpose of escaping non-ASCII chars in an ASCII character
-   stream, the "U" is not a very good escape initializer. Therefore, we
-   use the following convention within our Info-ZIP code:
-
-   If not an ASCII char probably need 2 bytes at least.  So if
-   a 2-byte wide encode it as 4 hex digits with a leading #U.  If
-   needs 3 bytes then prefix the string with #L.  So
-   #U1234
-   is a 2-byte wide character with bytes 0x12 and 0x34 while
-   #L123456
-   is a 3-byte wide character with bytes 0x12, 0x34, 0x56.
-   On Windows, wide that need two wide characters need to be converted
-   to a single number.
-  */
-
- /* set this to the max bytes an escape can be */
-#define MAX_ESCAPE_BYTES 8
-
-char *wide_to_escape_string(wide_char)
-  zwchar wide_char;
-{
-  int i;
-  zwchar w = wide_char;
-  uch b[sizeof(zwchar)];
-  char d[3];
-  char e[11];
-  int len;
-  char *r;
-
-  /* fill byte array with zeros */
-  memzero(b, sizeof(zwchar));
-  /* get bytes in right to left order */
-  for (len = 0; w; len++) {
-    b[len] = (char)(w % 0x100);
-    w /= 0x100;
-  }
-  strcpy(e, "#");
-  /* either 2 bytes or 3 bytes */
-  if (len <= 2) {
-    len = 2;
-    strcat(e, "U");
-  } else {
-    strcat(e, "L");
-  }
-  for (i = len - 1; i >= 0; i--) {
-    sprintf(d, "%02x", b[i]);
-    strcat(e, d);
-  }
-  if ((r = malloc(strlen(e) + 1)) == NULL) {
-    return NULL;
-  }
-  strcpy(r, e);
-  return r;
-}
-
-#if 0 /* currently unused */
-/* returns the wide character represented by the escape string */
-zwchar escape_string_to_wide(escape_string)
-  ZCONST char *escape_string;
-{
-  int i;
-  zwchar w;
-  char c;
-  int len;
-  ZCONST char *e = escape_string;
-
-  if (e == NULL) {
-    return 0;
-  }
-  if (e[0] != '#') {
-    /* no leading # */
-    return 0;
-  }
-  len = strlen(e);
-  /* either #U1234 or #L123456 format */
-  if (len != 6 && len != 8) {
-    return 0;
-  }
-  w = 0;
-  if (e[1] == 'L') {
-    if (len != 8) {
-      return 0;
-    }
-    /* 3 bytes */
-    for (i = 2; i < 8; i++) {
-      c = e[i];
-      if (c < '0' || c > '9') {
-        return 0;
-      }
-      w = w * 0x10 + (zwchar)(c - '0');
-    }
-  } else if (e[1] == 'U') {
-    /* 2 bytes */
-    for (i = 2; i < 6; i++) {
-      c = e[i];
-      if (c < '0' || c > '9') {
-        return 0;
-      }
-      w = w * 0x10 + (zwchar)(c - '0');
-    }
-  }
-  return w;
-}
-#endif /* unused */
-
-#ifndef WIN32  /* WIN32 supplies a special variant of this function */
-/* convert wide character string to multi-byte character string */
-char *wide_to_local_string(wide_string, escape_all)
-  ZCONST zwchar *wide_string;
-  int escape_all;
-{
-  int i;
-  wchar_t wc;
-  int b;
-  int state_dependent;
-  int wsize = 0;
-  int max_bytes = MB_CUR_MAX;
-  char buf[9];
-  char *buffer = NULL;
-  char *local_string = NULL;
-
-  for (wsize = 0; wide_string[wsize]; wsize++) ;
-
-  if (max_bytes < MAX_ESCAPE_BYTES)
-    max_bytes = MAX_ESCAPE_BYTES;
-
-  if ((buffer = (char *)malloc(wsize * max_bytes + 1)) == NULL) {
-    return NULL;
-  }
-
-  /* convert it */
-  buffer[0] = '\0';
-  /* set initial state if state-dependent encoding */
-  wc = (wchar_t)'a';
-  b = wctomb(NULL, wc);
-  if (b == 0)
-    state_dependent = 0;
-  else
-    state_dependent = 1;
-  for (i = 0; i < wsize; i++) {
-    if (sizeof(wchar_t) < 4 && wide_string[i] > 0xFFFF) {
-      /* wchar_t probably 2 bytes */
-      /* could do surrogates if state_dependent and wctomb can do */
-      wc = zwchar_to_wchar_t_default_char;
-    } else {
-      wc = (wchar_t)wide_string[i];
-    }
-    b = wctomb(buf, wc);
-    if (escape_all) {
-      if (b == 1 && (uch)buf[0] <= 0x7f) {
-        /* ASCII */
-        strncat(buffer, buf, b);
-      } else {
-        /* use escape for wide character */
-        char *escape_string = wide_to_escape_string(wide_string[i]);
-        strcat(buffer, escape_string);
-        free(escape_string);
-      }
-    } else if (b > 0) {
-      /* multi-byte char */
-      strncat(buffer, buf, b);
-    } else {
-      /* no MB for this wide */
-        /* use escape for wide character */
-        char *escape_string = wide_to_escape_string(wide_string[i]);
-        strcat(buffer, escape_string);
-        free(escape_string);
-    }
-  }
-  if ((local_string = (char *)malloc(strlen(buffer) + 1)) != NULL) {
-    strcpy(local_string, buffer);
-  }
-  free(buffer);
-
-  return local_string;
-}
-#endif /* !WIN32 */
-
-#if 0 /* currently unused */
-/* convert local string to display character set string */
-char *local_to_display_string(local_string)
-  ZCONST char *local_string;
-{
-  char *display_string;
-
-  /* For Windows, OEM string should never be bigger than ANSI string, says
-     CharToOem description.
-     For all other ports, just make a copy of local_string.
-  */
-  if ((display_string = (char *)malloc(strlen(local_string) + 1)) == NULL) {
-    return NULL;
-  }
-
-  strcpy(display_string, local_string);
-
-#ifdef EBCDIC
-  {
-    char *ebc;
-
-    if ((ebc = malloc(strlen(display_string) + 1)) ==  NULL) {
-      return NULL;
-    }
-    strtoebc(ebc, display_string);
-    free(display_string);
-    display_string = ebc;
-  }
-#endif
-
-  return display_string;
-}
-#endif /* unused */
-
-/* UTF-8 to local */
-char *utf8_to_local_string(utf8_string, escape_all)
-  ZCONST char *utf8_string;
-  int escape_all;
-{
-  zwchar *wide = utf8_to_wide_string(utf8_string);
-  char *loc = wide_to_local_string(wide, escape_all);
-  free(wide);
-  return loc;
-}
-
-#if 0 /* currently unused */
-/* convert multi-byte character string to wide character string */
-zwchar *local_to_wide_string(local_string)
-  ZCONST char *local_string;
-{
-  int wsize;
-  wchar_t *wc_string;
-  zwchar *wide_string;
-
-  /* for now try to convert as string - fails if a bad char in string */
-  wsize = mbstowcs(NULL, local_string, strlen(local_string) + 1);
-  if (wsize == (size_t)-1) {
-    /* could not convert */
-    return NULL;
-  }
-
-  /* convert it */
-  if ((wc_string = (wchar_t *)malloc((wsize + 1) * sizeof(wchar_t))) == NULL) {
-    return NULL;
-  }
-  wsize = mbstowcs(wc_string, local_string, strlen(local_string) + 1);
-  wc_string[wsize] = (wchar_t) 0;
-
-  /* in case wchar_t is not zwchar */
-  if ((wide_string = (zwchar *)malloc((wsize + 1) * sizeof(zwchar))) == NULL) {
-    return NULL;
-  }
-  for (wsize = 0; wide_string[wsize] = (zwchar)wc_string[wsize]; wsize++) ;
-  wide_string[wsize] = (zwchar) 0;
-  free(wc_string);
-
-  return wide_string;
-}
-
-
-/* convert wide string to UTF-8 */
-char *wide_to_utf8_string(wide_string)
-  ZCONST zwchar *wide_string;
-{
-  int mbcount;
-  char *utf8_string;
-
-  /* get size of utf8 string */
-  mbcount = ucs4_string_to_utf8(wide_string, NULL, 0);
-  if (mbcount == -1)
-    return NULL;
-  if ((utf8_string = (char *) malloc(mbcount + 1)) == NULL) {
-    return NULL;
-  }
-  mbcount = ucs4_string_to_utf8(wide_string, utf8_string, mbcount + 1);
-  if (mbcount == -1)
-    return NULL;
-
-  return utf8_string;
-}
-#endif /* unused */
-
-/* convert UTF-8 string to wide string */
-zwchar *utf8_to_wide_string(utf8_string)
-  ZCONST char *utf8_string;
-{
-  int wcount;
-  zwchar *wide_string;
-
-  wcount = utf8_to_ucs4_string(utf8_string, NULL, 0);
-  if (wcount == -1)
-    return NULL;
-  if ((wide_string = (zwchar *) malloc((wcount + 1) * sizeof(zwchar)))
-      == NULL) {
-    return NULL;
-  }
-  wcount = utf8_to_ucs4_string(utf8_string, wide_string, wcount + 1);
-
-  return wide_string;
-}
-
-#endif /* UNICODE_WCHAR */
-#endif /* UNICODE_SUPPORT */
-
-
-
 
 
 #ifdef USE_EF_UT_TIME
