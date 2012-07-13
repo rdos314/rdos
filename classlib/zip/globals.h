@@ -226,7 +226,7 @@ typedef struct Globals {
 #if (!defined(USE_ZLIB) || defined(USE_OWN_CRCTAB))
     ZCONST ulg near *crc_32_tab;
 #else
-    ZCONST ulg Far *crc_32_tab;
+    ZCONST unsigned *crc_32_tab;
 #endif
     ulg       crc32val;             /* CRC shift reg. (was static in funzip) */
 

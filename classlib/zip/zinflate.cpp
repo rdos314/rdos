@@ -369,18 +369,13 @@ static unsigned zlib_inCB OF((void FAR *pG, unsigned char FAR * FAR * pInbuf));
 static int zlib_outCB OF((void FAR *pG, unsigned char FAR *outbuf,
                           unsigned outcnt));
 
-static unsigned zlib_inCB(pG, pInbuf)
-    void FAR *pG;
-    unsigned char FAR * FAR * pInbuf;
+static unsigned zlib_inCB(void *pG, unsigned char ** pInbuf)
 {
     *pInbuf = G.inbuf;
     return fillinbuf(__G);
 }
 
-static int zlib_outCB(pG, outbuf, outcnt)
-    void FAR *pG;
-    unsigned char FAR *outbuf;
-    unsigned outcnt;
+static int zlib_outCB(void *pG, unsigned char *outbuf, unsigned outcnt)
 {
 #ifdef FUNZIP
     return flush(__G__ (ulg)(outcnt));
