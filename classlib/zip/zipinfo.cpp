@@ -26,8 +26,6 @@
 #include "unzip.h"
 
 
-#ifndef NO_ZIPINFO  /* strings use up too much space in small-memory systems */
-
 /* Define OS-specific attributes for use on ALL platforms--the S_xxxx
  * versions of these are defined differently (or not defined) by different
  * compilers and operating systems. */
@@ -103,10 +101,6 @@
 #define THS_IROTH   0x0004         /* read permission: other */
 #define THS_IWOTH   0x0002         /* write permission: other */
 #define THS_IXOTH   0x0001         /* execute permission: other */
-
-#ifdef OLD_THEOS_EXTRA
-#  include "theos/oldstat.h"
-#endif
 
 #ifndef NSK_UNSTRUCTURED
 # define NSK_UNSTRUCTURED   0
@@ -189,10 +183,6 @@ static ZCONST char Far OS_BeOS[] = "BeOS";
 static ZCONST char Far OS_Tandem[] = "Tandem NSK";
 static ZCONST char Far OS_Theos[] = "Theos";
 static ZCONST char Far OS_MacDarwin[] = "Mac OS/X (Darwin)";
-#ifdef OLD_THEOS_EXTRA
-  static ZCONST char Far OS_TheosOld[] = "Theos (Old)";
-#endif /* OLD_THEOS_EXTRA */
-
 static ZCONST char Far MthdNone[] = "none (stored)";
 static ZCONST char Far MthdShrunk[] = "shrunk";
 static ZCONST char Far MthdRedF1[] = "reduced (factor 1)";
@@ -221,14 +211,9 @@ static ZCONST char Far ExtraBytesPreceding[] =
 
 static ZCONST char Far UnknownNo[] = "unknown (%d)";
 
-#ifdef ZIP64_SUPPORT
-  static ZCONST char Far LocalHeaderOffset[] =
-    "\n  offset of local header from start of archive:   %s\n\
-                                                  (%sh) bytes\n";
-#else
-  static ZCONST char Far LocalHeaderOffset[] =
+static ZCONST char Far LocalHeaderOffset[] =
     "\n  offset of local header from start of archive:   %s (%sh) bytes\n";
-#endif
+
 static ZCONST char Far HostOS[] =
   "  file system or operating system of origin:      %s\n";
 static ZCONST char Far EncodeSWVer[] =
@@ -251,14 +236,6 @@ static ZCONST char Far ExtendedLocalHdr[] =
   "  extended local header:                          %s\n";
 static ZCONST char Far FileModDate[] =
   "  file last modified on (DOS date/time):          %s\n";
-#ifdef USE_EF_UT_TIME
-  static ZCONST char Far UT_FileModDate[] =
-    "  file last modified on (UT extra field modtime): %s %s\n";
-  static ZCONST char Far LocalTime[] = "local";
-#ifndef NO_GMTIME
-  static ZCONST char Far GMTime[] = "UTC";
-#endif
-#endif /* USE_EF_UT_TIME */
 static ZCONST char Far CRC32Value[] =
   "  32-bit CRC value (hex):                         %.8lx\n";
 static ZCONST char Far CompressedFileSize[] =
@@ -403,11 +380,6 @@ static ZCONST char Far Tandemdata[] = ".\n\
     The file was originally a Tandem %s file, with file code %u";
 static ZCONST char Far MD5data[] = ".\n\
     The 128-bit MD5 signature is %s";
-#ifdef CMS_MVS
-   static ZCONST char Far VmMvsExtraField[] = ".\n\
-    The stored file open mode (FLDATA TYPE) is \"%s\"";
-   static ZCONST char Far VmMvsInvalid[] = "[invalid]";
-#endif /* CMS_MVS */
 
 static ZCONST char Far First20[] = ".  The first\n    20 are:  ";
 static ZCONST char Far ColonIndent[] = ":\n   ";
@@ -432,15 +404,7 @@ static ZCONST char Far BogusFmt[] = "%03d";
 static ZCONST char Far shtYMDHMTime[] = "%02u-%s-%02u %02u:%02u";
 static ZCONST char Far lngYMDHMSTime[] = "%u %s %u %02u:%02u:%02u";
 static ZCONST char Far DecimalTime[] = "%04u%02u%02u.%02u%02u%02u";
-#ifdef USE_EF_UT_TIME
-  static ZCONST char Far lngYMDHMSTimeError[] = "???? ??? ?? ??:??:??";
-#endif
 
-
-
-
-
-#ifndef WINDLL
 
 /************************/
 /*  Function zi_opts()  */
@@ -455,9 +419,6 @@ int zi_opts(int *pargc, char ***pargv)
     int    explicit_h=FALSE, explicit_t=FALSE;
 
 
-#ifdef MACOS
-    uO.lflag = LFLAG;         /* reset default on each call */
-#endif
     G.extract_flag = FALSE;   /* zipinfo does not extract to disk */
     argc = *pargc;
     argv = *pargv;
@@ -481,14 +442,12 @@ int zi_opts(int *pargc, char ***pargv)
                     else
                         uO.lflag = 2;
                     break;
-#ifndef CMS_MVS
                 case ('C'):    /* -C:  match filenames case-insensitively */
                     if (negative)
                         uO.C_flag = FALSE, negative = 0;
                     else
                         uO.C_flag = TRUE;
                     break;
-#endif /* !CMS_MVS */
                 case 'h':      /* header line */
                     if (negative)
                         hflag_2 = hflag_slmv = FALSE, negative = 0;
@@ -539,29 +498,12 @@ int zi_opts(int *pargc, char ***pargv)
                     else
                         uO.T_flag = TRUE;
                     break;
-#ifdef UNICODE_SUPPORT
-                case ('U'):    /* escape UTF-8, or disable UTF-8 support */
-                    if (negative) {
-                        uO.U_flag = MAX(uO.U_flag-negative,0);
-                        negative = 0;
-                    } else
-                        uO.U_flag++;
-                    break;
-#endif /* UNICODE_SUPPORT */
                 case 'v':      /* turbo-verbose listing */
                     if (negative)
                         uO.lflag = -2, negative = 0;
                     else
                         uO.lflag = 10;
                     break;
-#ifdef WILD_STOP_AT_DIR
-                case ('W'):    /* Wildcard interpretation (stop at '/'?) */
-                    if (negative)
-                        uO.W_flag = FALSE, negative = 0;
-                    else
-                        uO.W_flag = TRUE;
-                    break;
-#endif /* WILD_STOP_AT_DIR */
                 case 'z':      /* print zipfile comment */
                     if (negative)
                         uO.zflag = negative = 0;
@@ -621,10 +563,6 @@ int zi_opts(int *pargc, char ***pargv)
     return 0;
 
 } /* end function zi_opts() */
-
-#endif /* !WINDLL */
-
-
 
 
 
@@ -879,18 +817,6 @@ int zipinfo(__G)   /* return PK-type error code */
                 tot_csize -= 12;   /* don't count encryption header */
             ++members;
 
-#ifdef DLL
-            if ((G.statreportcb != NULL) &&
-                (*G.statreportcb)(__G__ UZ_ST_FINISH_MEMBER, G.zipfn,
-                                  G.filename, (zvoid *)&G.crec.ucsize)) {
-                /* cancel operation by user request */
-                error_in_archive = IZ_CTRLC;
-                break;
-            }
-#endif
-#ifdef MACOS  /* MacOS is no preemptive OS, thus call event-handling by hand */
-            UserStop();
-#endif
 
         } else {        /* not listing this file */
             SKIP_(G.crec.extra_field_length)
@@ -983,9 +909,6 @@ int zipinfo(__G)   /* return PK-type error code */
 
 static int zi_long(zusz_t *pEndprev, int error_in_archive)
 {
-#ifdef USE_EF_UT_TIME
-    iztimes z_utime;
-#endif
     int  error;
     unsigned  hostnum, hostver, extnum, extver, methid, methnum, xattr;
     char workspace[12], attribs[22];
@@ -1053,12 +976,6 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
         varmsg_str = unkn;
     } else {
         varmsg_str = LoadFarStringSmall(os[hostnum]);
-#ifdef OLD_THEOS_EXTRA
-        if (hostnum == FS_VFAT_ && hostver == 20) {
-            /* entry made by old non-official THEOS port zip archive */
-            varmsg_str = LoadFarStringSmall(OS_TheosOld);
-        }
-#endif /* OLD_THEOS_EXTRA */
     }
     Info(slide, 0, ((char *)slide, LoadFarString(HostOS), varmsg_str));
     Info(slide, 0, ((char *)slide, LoadFarString(EncodeSWVer), hostver/10,
@@ -1108,29 +1025,6 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
 
     zi_time(__G__ &G.crec.last_mod_dos_datetime, NULL, d_t_buf);
     Info(slide, 0, ((char *)slide, LoadFarString(FileModDate), d_t_buf));
-#ifdef USE_EF_UT_TIME
-    if (G.extra_field &&
-#ifdef IZ_CHECK_TZ
-        G.tz_is_valid &&
-#endif
-        (ef_scan_for_izux(G.extra_field, G.crec.extra_field_length, 1,
-                          G.crec.last_mod_dos_datetime, &z_utime, NULL)
-         & EB_UT_FL_MTIME))
-    {
-        TIMET_TO_NATIVE(z_utime.mtime)   /* NOP unless MSC 7.0 or Macintosh */
-        d_t_buf[0] = (char)0;               /* signal "show local time" */
-        zi_time(__G__ &G.crec.last_mod_dos_datetime, &(z_utime.mtime), d_t_buf);
-        Info(slide, 0, ((char *)slide, LoadFarString(UT_FileModDate),
-          d_t_buf, LoadFarStringSmall(LocalTime)));
-#ifndef NO_GMTIME
-        d_t_buf[0] = (char)1;           /* signal "show UTC (GMT) time" */
-        zi_time(__G__ &G.crec.last_mod_dos_datetime, &(z_utime.mtime), d_t_buf);
-        Info(slide, 0, ((char *)slide, LoadFarString(UT_FileModDate),
-          d_t_buf, LoadFarStringSmall(GMTime)));
-#endif /* !NO_GMTIME */
-    }
-#endif /* USE_EF_UT_TIME */
-
     Info(slide, 0, ((char *)slide, LoadFarString(CRC32Value), G.crec.crc32));
     Info(slide, 0, ((char *)slide, LoadFarString(CompressedFileSize),
       FmZofft(G.crec.csize, NULL, "u")));
@@ -1148,10 +1042,6 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
       (G.crec.internal_file_attributes & 1)? "text"
          : (G.crec.internal_file_attributes & 2)? "ebcdic"
               : "binary"));             /* changed to accept EBCDIC */
-#ifdef ATARI
-    printf("  external file attributes (hex):                   %.8lx\n",
-      G.crec.external_file_attributes);
-#endif
     xattr = (unsigned)((G.crec.external_file_attributes >> 16) & 0xFFFF);
     if (hostnum == VMS_) {
         char   *p=attribs, *q=attribs+1;
@@ -1245,36 +1135,6 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
         Info(slide, 0, ((char *)slide, LoadFarString(TheosFileAttributes),
           xattr, attribs));
 
-#ifdef OLD_THEOS_EXTRA
-    } else if (hostnum == FS_VFAT_ && hostver == 20) {
-        /* process old non-official THEOS port zip archive */
-        ZCONST char Far *fpFtyp;
-
-        switch (xattr & _THS_IFMT) {
-            case _THS_IFLIB:  fpFtyp = TheosFTypLib;  break;
-            case _THS_IFDIR:  fpFtyp = TheosFTypDir;  break;
-            case _THS_IFREG:  fpFtyp = TheosFTypReg;  break;
-            case _THS_IODRC:  fpFtyp = TheosFTypRel;  break;
-            case _THS_IOKEY:  fpFtyp = TheosFTypKey;  break;
-            case _THS_IOIND:  fpFtyp = TheosFTypInd;  break;
-            case _THS_IOPRG:  fpFtyp = TheosFTypR16;  break;
-            case _THS_IO286:  fpFtyp = TheosFTypP16;  break;
-            case _THS_IO386:  fpFtyp = TheosFTypP32;  break;
-            default:         fpFtyp = TheosFTypUkn;  break;
-        }
-        strcpy(attribs, LoadFarStringSmall(fpFtyp));
-        attribs[12] = (xattr & _THS_HIDDN) ? 'H' : '.';
-        attribs[13] = (xattr & _THS_IXOTH) ? '.' : 'X';
-        attribs[14] = (xattr & _THS_IWOTH) ? '.' : 'W';
-        attribs[15] = (xattr & _THS_IROTH) ? '.' : 'R';
-        attribs[16] = (xattr & _THS_IEUSR) ? '.' : 'E';
-        attribs[17] = (xattr & _THS_IXUSR) ? '.' : 'X';
-        attribs[18] = (xattr & _THS_IWUSR) ? '.' : 'W';
-        attribs[19] = (xattr & _THS_IRUSR) ? '.' : 'R';
-        attribs[20] = 0;
-        Info(slide, 0, ((char *)slide, LoadFarString(TheosFileAttributes),
-          xattr, attribs));
-#endif /* OLD_THEOS_EXTRA */
 
     } else if ((hostnum != FS_FAT_) && (hostnum != FS_HPFS_) &&
                (hostnum != FS_NTFS_) && (hostnum != FS_VFAT_) &&
@@ -1419,10 +1279,6 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                     break;
                 case EF_IZUNIX3:
                     ef_fieldname = efIZUnix3;
-#if 0
-                    if (*pEndprev > 0L)
-                        *pEndprev += 4L;  /* 4 byte UID/GID in local copy */
-#endif
                     break;
                 case EF_TIME:
                     ef_fieldname = efTime;
@@ -1479,9 +1335,6 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                     ef_fieldname = efSmartZip;
                     break;
                 case EF_THEOS:
-#ifdef OLD_THEOS_EXTRA
-                case EF_THEOSO:
-#endif
                     ef_fieldname = efTheos;
                     break;
                 default:
@@ -1705,20 +1558,6 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                         goto ef_default_display;
                     }
                     break;
-#ifdef CMS_MVS
-                case EF_VMCMS:
-                case EF_MVS:
-                    {
-                        char type[100];
-
-                        Info(slide, 0, ((char *)slide,
-                             LoadFarString(VmMvsExtraField),
-                             (getVMMVSexfield(type, ef_ptr-EB_HEADSIZE,
-                             (unsigned)eb_datalen) > 0)?
-                             type : LoadFarStringSmall(VmMvsInvalid)));
-                    }
-                    break;
-#endif /* CMS_MVS */
                 case EF_ATHEOS:
                 case EF_BEOS:
                     if (eb_datalen >= EB_BEOS_HLEN) {
@@ -1868,10 +1707,6 @@ ef_default_display:
 static int zi_short(__G)   /* return PK-type error code */
     __GDEF
 {
-#ifdef USE_EF_UT_TIME
-    iztimes     z_utime;
-    time_t      *z_modtim;
-#endif
     int         k, error, error_in_archive=PK_COOL;
     unsigned    hostnum, hostver, methid, methnum, xattr;
     char        *p, workspace[12], attribs[16];
@@ -1883,9 +1718,6 @@ static int zi_short(__G)   /* return PK-type error code */
         "ths", "osx", "???", "???", "???", "???", "???", "???", "???",
         "???", "???", "???", "ath", "???"
     };
-#ifdef OLD_THEOS_EXTRA
-    static ZCONST char Far os_TheosOld[] = "tho";
-#endif
     static ZCONST char Far method[NUM_METHODS+1][5] = {
         "stor", "shrk", "re:1", "re:2", "re:3", "re:4", "i#:#", "tokn",
         "def#", "d64#", "dcli", "bzp2", "lzma", "ters", "lz77", "wavp",
@@ -2009,34 +1841,6 @@ static int zi_short(__G)   /* return PK-type error code */
             break;
 
         case FS_VFAT_:
-#ifdef OLD_THEOS_EXTRA
-            if (hostver == 20) {
-                switch (xattr & _THS_IFMT) {
-                    case _THS_IFLIB: *attribs = 'L'; break;
-                    case _THS_IFDIR: *attribs = 'd'; break;
-                    case _THS_IFCHR: *attribs = 'c'; break;
-                    case _THS_IFREG: *attribs = 'S'; break;
-                    case _THS_IODRC: *attribs = 'D'; break;
-                    case _THS_IOKEY: *attribs = 'K'; break;
-                    case _THS_IOIND: *attribs = 'I'; break;
-                    case _THS_IOPRG: *attribs = 'P'; break;
-                    case _THS_IO286: *attribs = '2'; break;
-                    case _THS_IO386: *attribs = '3'; break;
-                    default:         *attribs = '?'; break;
-                }
-                attribs[1] = (xattr & _THS_HIDDN) ? 'H' : '.';
-                attribs[2] = (xattr & _THS_IXOTH) ? '.' : 'X';
-                attribs[3] = (xattr & _THS_IWOTH) ? '.' : 'W';
-                attribs[4] = (xattr & _THS_IROTH) ? '.' : 'R';
-                attribs[5] = (xattr & _THS_IEUSR) ? '.' : 'E';
-                attribs[6] = (xattr & _THS_IXUSR) ? '.' : 'X';
-                attribs[7] = (xattr & _THS_IWUSR) ? '.' : 'W';
-                attribs[8] = (xattr & _THS_IRUSR) ? '.' : 'R';
-                sprintf(&attribs[12], "%u.%u", hostver/10, hostver%10);
-                break;
-            } /* else: fall through! */
-#endif /* OLD_THEOS_EXTRA */
-
         case FS_FAT_:
         case FS_HPFS_:
         case FS_NTFS_:
@@ -2112,17 +1916,9 @@ static int zi_short(__G)   /* return PK-type error code */
 
     } /* end switch (hostnum: external attributes format) */
 
-#ifdef OLD_THEOS_EXTRA
-    Info(slide, 0, ((char *)slide, "%s %s %s ", attribs,
-      LoadFarStringSmall(((hostnum == FS_VFAT_ && hostver == 20) ?
-                          os_TheosOld :
-                          os[hostnum])),
-      FmZofft(G.crec.ucsize, "8", "u")));
-#else
     Info(slide, 0, ((char *)slide, "%s %s %s ", attribs,
       LoadFarStringSmall(os[hostnum]),
       FmZofft(G.crec.ucsize, "8", "u")));
-#endif
     Info(slide, 0, ((char *)slide, "%c",
       (G.crec.general_purpose_bit_flag & 1)?
       ((G.crec.internal_file_attributes & 1)? 'T' : 'B') :  /* encrypted */
@@ -2152,20 +1948,7 @@ static int zi_short(__G)   /* return PK-type error code */
      * content is no longer needed.
      */
 #   define d_t_buf attribs
-#ifdef USE_EF_UT_TIME
-    z_modtim = G.extra_field &&
-#ifdef IZ_CHECK_TZ
-               G.tz_is_valid &&
-#endif
-               (ef_scan_for_izux(G.extra_field, G.crec.extra_field_length, 1,
-                                 G.crec.last_mod_dos_datetime, &z_utime, NULL)
-                & EB_UT_FL_MTIME)
-              ? &z_utime.mtime : NULL;
-    TIMET_TO_NATIVE(z_utime.mtime)     /* NOP unless MSC 7.0 or Macintosh */
-    d_t_buf[0] = (char)0;              /* signal "show local time" */
-#else
 #   define z_modtim NULL
-#endif
     Info(slide, 0, ((char *)slide, " %s %s ", methbuf,
       zi_time(__G__ &G.crec.last_mod_dos_datetime, z_modtim, d_t_buf)));
     fnprint(__G);
@@ -2231,10 +2014,6 @@ static char *zi_time(ZCONST ulg *datetimez, ZCONST time_t *modtimez, char *d_t_s
         "Jan", "Feb", "Mar", "Apr", "May", "Jun",
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     };
-#ifdef USE_EF_UT_TIME
-    struct tm *t;
-#endif
-
 
 
 /*---------------------------------------------------------------------------
@@ -2244,31 +2023,6 @@ static char *zi_time(ZCONST ulg *datetimez, ZCONST time_t *modtimez, char *d_t_s
     to local time or not, depending on value of first character in d_t_str[].
   ---------------------------------------------------------------------------*/
 
-#ifdef USE_EF_UT_TIME
-    if (modtimez != NULL) {
-#ifndef NO_GMTIME
-        /* check for our secret message from above... */
-        t = (d_t_str[0] == (char)1)? gmtime(modtimez) : localtime(modtimez);
-#else
-        t = localtime(modtimez);
-#endif
-        if (uO.lflag > 9 && t == (struct tm *)NULL)
-            /* time conversion error in verbose listing format,
-             * return string with '?' instead of data
-             */
-            return (strcpy(d_t_str, LoadFarString(lngYMDHMSTimeError)));
-    } else
-        t = (struct tm *)NULL;
-    if (t != (struct tm *)NULL) {
-        mo = (unsigned)(t->tm_mon + 1);
-        dy = (unsigned)(t->tm_mday);
-        yr = (unsigned)(t->tm_year);
-
-        hh = (unsigned)(t->tm_hour);
-        mm = (unsigned)(t->tm_min);
-        ss = (unsigned)(t->tm_sec);
-    } else
-#endif /* USE_EF_UT_TIME */
     {
         yr = ((unsigned)(*datetimez >> 25) & 0x7f) + 80;
         mo = ((unsigned)(*datetimez >> 21) & 0x0f);
@@ -2298,5 +2052,3 @@ static char *zi_time(ZCONST ulg *datetimez, ZCONST time_t *modtimez, char *d_t_s
     return d_t_str;
 
 } /* end function zi_time() */
-
-#endif /* !NO_ZIPINFO */
