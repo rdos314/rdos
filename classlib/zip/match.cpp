@@ -75,14 +75,6 @@
 #define UNZIP_INTERNAL
 #include "unzip.h"
 
-#ifdef ANSI_CHARSET
-#  ifdef ToLower
-#    undef ToLower
-#  endif
-   /* uppercase letters are values 41 thru 5A, C0 thru D6, and D8 thru DE */
-#  define IsUpper(c) (c>=0xC0 ? c<=0xDE && c!=0xD7 : c>=0x41 && c<=0x5A)
-#  define ToLower(c) (IsUpper((uch) c) ? (unsigned) c | 0x20 : (unsigned) c)
-#endif
 #define Case(x)  (ic? ToLower(x) : (x))
 
 #  define WILDCHAR   '?'
@@ -121,36 +113,10 @@ static int recmatch(ZCONST uch *p, ZCONST uch *s, int ic)
 
     /* '?' (or '%') matches any character (but not an empty string). */
     if (c == WILDCHAR)
-#ifdef WILD_STOP_AT_DIR
-        /* If uO.W_flag is non-zero, it won't match '/' */
-        return (*s && (!sepc || *s != (uch)sepc))
-               ? recmatch(p, s + CLEN(s), ic, sepc) : 0;
-#else
         return *s ? recmatch(p, s + CLEN(s), ic) : 0;
-#endif
 
     /* '*' matches any number of characters, including zero */
     if (c == '*') {
-#ifdef WILD_STOP_AT_DIR
-        if (sepc) {
-          /* check for single "*" or double "**" */
-          if (*p != '*') {
-            /* single "*": this doesn't match the dirsep character */
-            for (; *s && *s != (uch)sepc; INCSTR(s))
-                if ((c = recmatch(p, s, ic, sepc)) != 0)
-                    return (int)c;
-            /* end of pattern: matched if at end of string, else continue */
-            if (*p == '\0')
-                return (*s == 0);
-            /* continue to match if at sepc in pattern, else give up */
-            return (*p == (uch)sepc || (*p == '\\' && p[1] == (uch)sepc))
-                   ? recmatch(p, s, ic, sepc) : 2;
-          }
-          /* "**": this matches slashes */
-          ++p;        /* move p behind the second '*' */
-          /* and continue with the non-W_flag code variant */
-        }
-#endif /* WILD_STOP_AT_DIR */
         if (*p == 0)
             return 1;
         if (isshexp((ZCONST char *)p) == NULL) {
