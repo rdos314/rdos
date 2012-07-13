@@ -102,15 +102,9 @@
 #define THS_IWOTH   0x0002         /* write permission: other */
 #define THS_IXOTH   0x0001         /* execute permission: other */
 
-#ifndef NSK_UNSTRUCTURED
 # define NSK_UNSTRUCTURED   0
-#endif
-#ifndef NSK_OBJECTFILECODE
 # define NSK_OBJECTFILECODE 100
-#endif
-#ifndef NSK_EDITFILECODE
 # define NSK_EDITFILECODE   101
-#endif
 
 #define LFLAG  3   /* short "ls -l" type listing */
 
@@ -469,14 +463,12 @@ int zi_opts(int *pargc, char ***pargv)
                     else
                         uO.lflag = 4;
                     break;
-#ifdef MORE
                 case 'M':      /* send output through built-in "more" */
                     if (negative)
                         G.M_flag = FALSE, negative = 0;
                     else
                         G.M_flag = TRUE;
                     break;
-#endif
                 case 's':      /* default:  shorter "ls -l" type listing */
                     if (negative)
                         uO.lflag = -2, negative = 0;
@@ -524,10 +516,8 @@ int zi_opts(int *pargc, char ***pargv)
         return USAGE(error);
     }
 
-#ifdef MORE
     if (G.M_flag && !isatty(1))  /* stdout redirected: "more" func useless */
         G.M_flag = 0;
-#endif
 
     /* if no listing options given (or all negated), or if only -h/-t given
      * with individual files specified, use default listing format */
