@@ -32,37 +32,19 @@
 
 #define UNZIP_INTERNAL
 #include "unzip.h"
-#if defined(DYNALLOC_CRCTAB) || defined(UNICODE_SUPPORT)
-#  include "crc32.h"
-#endif
 
 static int    do_seekable        OF((__GPRO__ int lastchance));
-#ifdef DO_SAFECHECK_2GB
-# ifdef USE_STRM_INPUT
-static zoff_t file_size          OF((FILE *file));
-# else
-static zoff_t file_size          OF((int fh));
-# endif
-#endif /* DO_SAFECHECK_2GB */
 static int    rec_find           OF((__GPRO__ zoff_t, char *, int));
 static int    find_ecrec64       OF((__GPRO__ zoff_t searchlen));
 static int    find_ecrec         OF((__GPRO__ zoff_t searchlen));
 static int    process_zip_cmmnt  OF((__GPRO));
 static int    get_cdir_ent       OF((__GPRO));
-#ifdef IZ_HAVE_UXUIDGID
-static int    read_ux3_value     OF((ZCONST uch *dbuf, unsigned uidgid_sz,
-                                     ulg *p_uidgid));
-#endif /* IZ_HAVE_UXUIDGID */
 
 
 static ZCONST char Far CannotAllocateBuffers[] =
   "error:  cannot allocate unzip buffers\n";
 
    /* process_zipfiles() strings */
-# if (defined(IZ_CHECK_TZ) && defined(USE_EF_UT_TIME))
-     static ZCONST char Far WarnInvalidTZ[] =
-       "Warning: TZ environment variable not found, cannot use UTC times!!\n";
-# endif
    static ZCONST char Far CannotFindWildcardMatch[] =
      "%s:  cannot find any matches for wildcard specification \"%s\".\n";
    static ZCONST char Far FilesProcessOK[] =
@@ -86,10 +68,6 @@ static ZCONST char Far CannotAllocateBuffers[] =
      "%s:  cannot find either %s or %s.\n";
    extern ZCONST char Far Zipnfo[];       /* in unzip.c */
    static ZCONST char Far Unzip[] = "UnZip DLL";
-#ifdef DO_SAFECHECK_2GB
-   static ZCONST char Far ZipfileTooBig[] =
-     "Trying to read large file (> 2 GiB) without large file support\n";
-#endif /* DO_SAFECHECK_2GB */
    static ZCONST char Far MaybeExe[] =
      "note:  %s may be a plain executable, not an archive\n";
    static ZCONST char Far CentDirNotInZipMsg[] = "\n\
@@ -100,25 +78,11 @@ static ZCONST char Far CannotAllocateBuffers[] =
      "\nwarning [%s]:  end-of-central-directory record claims this\n\
   is disk %lu but that the central directory starts on disk %lu; this is a\n\
   contradiction.  Attempting to process anyway.\n";
-# ifdef NO_MULTIPART
-   static ZCONST char Far NoMultiDiskArcSupport[] =
-     "\nerror [%s]:  zipfile is part of multi-disk archive\n\
-  (sorry, not yet supported).\n";
-   static ZCONST char Far MaybePakBug[] = "warning [%s]:\
-  zipfile claims to be 2nd disk of a 2-part archive;\n\
-  attempting to process anyway.  If no further errors occur, this archive\n\
-  was probably created by PAK v2.51 or earlier.  This bug was reported to\n\
-  NoGate in March 1991 and was supposed to have been fixed by mid-1991; as\n\
-  of mid-1992 it still hadn't been.  (If further errors do occur, archive\n\
-  was probably created by PKZIP 2.04c or later; UnZip does not yet support\n\
-  multi-part archives.)\n";
-# else
    static ZCONST char Far MaybePakBug[] = "warning [%s]:\
   zipfile claims to be last disk of a multi-part archive;\n\
   attempting to process anyway, assuming all parts have been concatenated\n\
   together in order.  Expect \"errors\" and warnings...true multi-part support\
 \n  doesn't exist yet (coming soon).\n";
-# endif
    static ZCONST char Far ExtraBytesAtStart[] =
      "warning [%s]:  %s extra byte%s at beginning or within zipfile\n\
   (attempting to process anyway)\n";
@@ -152,7 +116,6 @@ static ZCONST char Far Cent64EndSigSearchOff[] =
   the last disk(s) of this archive.\n";
 static ZCONST char Far ZipfileCommTrunc1[] =
   "\ncaution:  zipfile comment truncated\n";
-#ifndef NO_ZIPINFO
    static ZCONST char Far NoZipfileComment[] =
      "There is no zipfile comment.\n";
    static ZCONST char Far ZipfileCommentDesc[] =
@@ -165,8 +128,6 @@ static ZCONST char Far ZipfileCommTrunc1[] =
  ===========================\n";
    static ZCONST char Far ZipfileCommTrunc2[] =
      "\n  The zipfile comment is truncated.\n";
-#endif /* !NO_ZIPINFO */
-
 
 
 
@@ -198,11 +159,6 @@ int process_zipfiles(__G)    /* return PK-type error code */
     }
     G.hold = G.inbuf + INBUFSIZ;     /* to check for boundary-spanning sigs */
 
-#if 0 /* CRC_32_TAB has been NULLified by CONSTRUCTGLOBALS !!!! */
-    /* allocate the CRC table later when we know we can read zipfile data */
-    CRC_32_TAB = NULL;
-#endif /* 0 */
-
     /* finish up initialization of magic signature strings */
     local_hdr_sig[0]  /* = extd_local_sig[0] */ =       /* ASCII 'P', */
       central_hdr_sig[0] = end_central_sig[0] =         /* not EBCDIC */
@@ -221,31 +177,10 @@ int process_zipfiles(__G)    /* return PK-type error code */
   ---------------------------------------------------------------------------*/
 
 
-#if (defined(IZ_CHECK_TZ) && defined(USE_EF_UT_TIME))
-#  ifndef VALID_TIMEZONE
-#     define VALID_TIMEZONE(tmp) \
-             (((tmp = getenv("TZ")) != NULL) && (*tmp != '\0'))
-#  endif
-    {
-        char *p;
-        G.tz_is_valid = VALID_TIMEZONE(p);
-        if (!G.tz_is_valid) {
-            Info(slide, 0x401, ((char *)slide, LoadFarString(WarnInvalidTZ)));
-            error_in_archive = error = PK_WARN;
-        }
-    }
-#endif /* IZ_CHECK_TZ && USE_EF_UT_TIME */
-
 /* For systems that do not have tzset() but supply this function using another
    name (_tzset() or something similar), an appropiate "#define tzset ..."
    should be added to the system specifc configuration section.  */
     tzset();
-
-/* Initialize UnZip's built-in pseudo hard-coded "ISO <--> OEM" translation,
-   depending on the detected codepage setup.  */
-#ifdef NEED_ISO_OEM_INIT
-    prepare_ISO_OEM_translat(__G);
-#endif
 
 /*---------------------------------------------------------------------------
     Initialize the internal flag holding the mode of processing "overwrite
@@ -411,19 +346,8 @@ void free_G_buffers(__G)     /* releases all memory allocated in global vars */
 {
     unsigned i;
 
-#ifdef SYSTEM_SPECIFIC_DTOR
-    SYSTEM_SPECIFIC_DTOR(__G);
-#endif
-
     inflate_free(__G);
     checkdir(__G__ (char *)NULL, END);
-
-#ifdef DYNALLOC_CRCTAB
-    if (CRC_32_TAB) {
-        free_crc_table();
-        CRC_32_TAB = NULL;
-    }
-#endif
 
    if (G.key != (char *)NULL) {
         free(G.key);
@@ -453,14 +377,6 @@ void free_G_buffers(__G)     /* releases all memory allocated in global vars */
             G.info[i].cfilname = (char Far *)NULL;
         }
     }
-
-#ifdef MALLOC_WORK
-    if (G.area.Slide) {
-        free(G.area.Slide);
-        G.area.Slide = (uch *)NULL;
-    }
-#endif
-
 } /* end function free_G_buffers() */
 
 
@@ -485,9 +401,6 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
   ---------------------------------------------------------------------------*/
 
     if (SSTAT(G.zipfn, &G.statbuf) ||
-#ifdef THEOS
-        (error = S_ISLIB(G.statbuf.st_mode)) != 0 ||
-#endif
         (error = S_ISDIR(G.statbuf.st_mode)) != 0)
     {
         if (lastchance && (uO.qflag < 3)) {
@@ -509,21 +422,6 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
     if (open_input_file(__G))   /* this should never happen, given */
         return PK_NOZIP;        /*  the stat() test above, but... */
 
-#ifdef DO_SAFECHECK_2GB
-    /* Need more care: Do not trust the size returned by stat() but
-       determine it by reading beyond the end of the file. */
-    G.ziplen = RdosGetFileSize(G.zipfd);
-
-    if (G.ziplen == EOF) {
-        Info(slide, 0x401, ((char *)slide, LoadFarString(ZipfileTooBig)));
-        /*
-        printf(
-" We need a better error message for: 64-bit file, 32-bit program.\n");
-        */
-        CLOSE_INFILE();
-        return IZ_ERRBF;
-    }
-#endif /* DO_SAFECHECK_2GB */
 
 /*---------------------------------------------------------------------------
     Find and process the end-of-central-directory header.  UnZip need only
@@ -538,16 +436,10 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
 
     if ( (!uO.zipinfo_mode && !uO.qflag
          )
-#  ifndef NO_ZIPINFO
-         || (uO.zipinfo_mode && uO.hflag)
-#  endif
        )
         Info(slide, 0, ((char *)slide, LoadFarString(LogInitline), G.zipfn));
 
     if ( (error_in_archive = find_ecrec(__G__
-#ifndef NO_ZIPINFO
-                                        uO.zipinfo_mode ? G.ziplen :
-#endif
                                         MIN(G.ziplen, 66000L)))
          > PK_WARN )
     {
@@ -574,12 +466,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
     archives) or inconsistencies (missing or extra bytes in zipfile).
   ---------------------------------------------------------------------------*/
 
-#ifdef NO_MULTIPART
-    error = !uO.zipinfo_mode && (G.ecrec.number_this_disk == 1) &&
-            (G.ecrec.num_disk_start_cdir == 1);
-#else
     error = !uO.zipinfo_mode && (G.ecrec.number_this_disk != 0);
-#endif
 
     if (uO.zipinfo_mode &&
         G.ecrec.number_this_disk != G.ecrec.num_disk_start_cdir)
@@ -598,13 +485,6 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
               (ulg)G.ecrec.num_disk_start_cdir));
             error_in_archive = PK_WARN;
         }
-#ifdef NO_MULTIPART   /* concatenation of multiple parts works in some cases */
-    } else if (!uO.zipinfo_mode && !error && G.ecrec.number_this_disk != 0) {
-        Info(slide, 0x401, ((char *)slide, LoadFarString(NoMultiDiskArcSupport),
-          G.zipfn));
-        error_in_archive = PK_FIND;
-        too_weird_to_continue = TRUE;
-#endif
     }
 
     if (!too_weird_to_continue) {  /* (relatively) normal zipfile:  go for it */
@@ -665,16 +545,8 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
             CLOSE_INFILE();
             return PK_BADERR;
         }
-#ifdef OLD_SEEK_TEST
-        if (error != PK_OK || readbuf(__G__ G.sig, 4) == 0) {
-            CLOSE_INFILE();
-            return PK_ERR;  /* file may be locked, or possibly disk error(?) */
-        }
-        if (memcmp(G.sig, central_hdr_sig, 4))
-#else
         if ((error != PK_OK) || (readbuf(__G__ G.sig, 4) == 0) ||
             memcmp(G.sig, central_hdr_sig, 4))
-#endif
         {
             zoff_t tmp = G.extra_bytes;
 
@@ -711,11 +583,9 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
           error_in_archive));
 
         {
-#ifndef NO_ZIPINFO
             if (uO.zipinfo_mode)
                 error = zipinfo(__G);                 /* ZIPINFO 'EM */
             else
-#endif
             if (uO.vflag && !uO.tflag && !uO.cflag)
                 error = list_files(__G);              /* LIST 'EM */
             else
@@ -734,92 +604,6 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
 
 } /* end function do_seekable() */
 
-
-
-
-#ifdef DO_SAFECHECK_2GB
-/************************/
-/* Function file_size() */
-/************************/
-/* File size determination which does not mislead for large files in a
-   small-file program.  Probably should be somewhere else.
-   The file has to be opened previously
-*/
-#ifdef USE_STRM_INPUT
-static zoff_t file_size(file)
-    FILE *file;
-{
-    int sts;
-    size_t siz;
-#else /* !USE_STRM_INPUT */
-static zoff_t file_size(fh)
-    int fh;
-{
-    int siz;
-#endif /* ?USE_STRM_INPUT */
-    zoff_t ofs;
-    char waste[4];
-
-#ifdef USE_STRM_INPUT
-    /* Seek to actual EOF. */
-    sts = zfseeko(file, 0, SEEK_END);
-    if (sts != 0) {
-        /* fseeko() failed.  (Unlikely.) */
-        ofs = EOF;
-    } else {
-        /* Get apparent offset at EOF. */
-        ofs = zftello(file);
-        if (ofs < 0) {
-            /* Offset negative (overflow).  File too big. */
-            ofs = EOF;
-        } else {
-            /* Seek to apparent EOF offset.
-               Won't be at actual EOF if offset was truncated.
-            */
-            sts = zfseeko(file, ofs, SEEK_SET);
-            if (sts != 0) {
-                /* fseeko() failed.  (Unlikely.) */
-                ofs = EOF;
-            } else {
-                /* Read a byte at apparent EOF.  Should set EOF flag. */
-                siz = fread(waste, 1, 1, file);
-                if (feof(file) == 0) {
-                    /* Not at EOF, but should be.  File too big. */
-                    ofs = EOF;
-                }
-            }
-        }
-    }
-#else /* !USE_STRM_INPUT */
-    /* Seek to actual EOF. */
-    ofs = zlseek(fh, 0, SEEK_END);
-    if (ofs == (zoff_t) -1) {
-        /* zlseek() failed.  (Unlikely.) */
-        ofs = EOF;
-    } else if (ofs < 0) {
-        /* Offset negative (overflow).  File too big. */
-        ofs = EOF;
-    } else {
-        /* Seek to apparent EOF offset.
-           Won't be at actual EOF if offset was truncated.
-        */
-        ofs = zlseek(fh, ofs, SEEK_SET);
-        if (ofs == (zoff_t) -1) {
-            /* zlseek() failed.  (Unlikely.) */
-            ofs = EOF;
-        } else {
-            /* Read a byte at apparent EOF.  Should set EOF flag. */
-            siz = read(fh, waste, 1);
-            if (siz != 0) {
-                /* Not at EOF, but should be.  File too big. */
-                ofs = EOF;
-            }
-        }
-    }
-#endif /* ?USE_STRM_INPUT */
-    return ofs;
-} /* end function file_size() */
-#endif /* DO_SAFECHECK_2GB */
 
 
 
@@ -1226,14 +1010,12 @@ static int find_ecrec(zoff_t searchlen)          /* return PK-class error */
     G.expect_ecrec_offset = G.ecrec.offset_start_central_directory +
                             G.ecrec.size_central_directory;
 
-#ifndef NO_ZIPINFO
     if (uO.zipinfo_mode) {
         /* In ZipInfo mode, additional info about the data found in the
            end-of-central-directory areas is printed out.
          */
         zi_end_central(__G);
     }
-#endif
 
     return error_in_archive;
 
@@ -1257,7 +1039,6 @@ static int process_zip_cmmnt(__G)       /* return PK-type error code */
     Get the zipfile comment (up to 64KB long), if any, and print it out.
   ---------------------------------------------------------------------------*/
 
-#ifndef NO_ZIPINFO
     /* ZipInfo, verbose format */
     if (uO.zipinfo_mode && uO.lflag > 9) {
         /*-------------------------------------------------------------------
@@ -1290,26 +1071,15 @@ static int process_zip_cmmnt(__G)       /* return PK-type error code */
             error = PK_WARN;
         }
     } else
-#endif /* !NO_ZIPINFO */
     if ( G.ecrec.zipfile_comment_length &&
          (uO.zflag > 0
           || (uO.zflag == 0
-# ifndef NO_ZIPINFO
               && !uO.zipinfo_mode
-# endif
               && !uO.qflag)
          ) )
     {
         if (do_string(__G__ G.ecrec.zipfile_comment_length,
-#if (defined(SFX) && defined(CHEAP_SFX_AUTORUN))
-# ifndef NO_ZIPINFO
-                      (oU.zipinfo_mode ? DISPLAY : CHECK_AUTORUN)
-# else
-                      CHECK_AUTORUN
-# endif
-#else
                       DISPLAY
-#endif
                      ))
         {
             Info(slide, 0x401, ((char *)slide,
@@ -1317,16 +1087,6 @@ static int process_zip_cmmnt(__G)       /* return PK-type error code */
             error = PK_WARN;
         }
     }
-#if (defined(SFX) && defined(CHEAP_SFX_AUTORUN))
-    else if (G.ecrec.zipfile_comment_length) {
-        if (do_string(__G__ G.ecrec.zipfile_comment_length, CHECK_AUTORUN_Q))
-        {
-            Info(slide, 0x401, ((char *)slide,
-              LoadFarString(ZipfileCommTrunc1)));
-            error = PK_WARN;
-        }
-    }
-#endif
     return error;
 
 } /* end function process_zip_cmmnt() */
