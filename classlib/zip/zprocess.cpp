@@ -32,13 +32,6 @@
 
 #define UNZIP_INTERNAL
 #include "unzip.h"
-#ifdef WINDLL
-#  ifdef POCKET_UNZIP
-#    include "wince/intrface.h"
-#  else
-#    include "windll/windll.h"
-#  endif
-#endif
 #if defined(DYNALLOC_CRCTAB) || defined(UNICODE_SUPPORT)
 #  include "crc32.h"
 #endif
@@ -65,17 +58,6 @@ static int    read_ux3_value     OF((ZCONST uch *dbuf, unsigned uidgid_sz,
 static ZCONST char Far CannotAllocateBuffers[] =
   "error:  cannot allocate unzip buffers\n";
 
-#ifdef SFX
-   static ZCONST char Far CannotFindMyself[] =
-     "unzipsfx:  cannot find myself! [%s]\n";
-# ifdef CHEAP_SFX_AUTORUN
-   static ZCONST char Far AutorunPrompt[] =
-     "\nAuto-run command: %s\nExecute this command? [y/n] ";
-   static ZCONST char Far NotAutoRunning[] =
-     "Not executing auto-run command.";
-# endif
-
-#else /* !SFX */
    /* process_zipfiles() strings */
 # if (defined(IZ_CHECK_TZ) && defined(USE_EF_UT_TIME))
      static ZCONST char Far WarnInvalidTZ[] =
@@ -159,11 +141,8 @@ static ZCONST char Far CannotAllocateBuffers[] =
    static ZCONST char Far ExtraBytesAtStart[] =
      "warning [%s]:  %s extra byte%s at beginning or within zipfile\n\
   (attempting to process anyway)\n";
-#endif /* ?SFX */
 
-#if ((!defined(WINDLL) && !defined(SFX)) || !defined(NO_ZIPINFO))
    static ZCONST char Far LogInitline[] = "Archive:  %s\n";
-#endif
 
 static ZCONST char Far MissingBytes[] =
   "error [%s]:  missing %s bytes in zipfile\n\
@@ -181,7 +160,6 @@ static ZCONST char Far Cent64EndSigSearchErr[] =
 static ZCONST char Far Cent64EndSigSearchOff[] =
   "error: End-of-centdir-64 signature not where expected (prepended bytes?)\n\
   (attempting to process anyway)\n";
-#ifndef SFX
    static ZCONST char Far CentDirTooLong[] =
      "error [%s]:  reported length of central directory is\n\
   %s bytes too long (Atari STZip zipfile?  J.H.Holm ZIPSPLIT 1.1\n\
@@ -191,10 +169,6 @@ static ZCONST char Far Cent64EndSigSearchOff[] =
   a zipfile, or it constitutes one disk of a multi-part archive.  In the\n\
   latter case the central directory and zipfile comment will be found on\n\
   the last disk(s) of this archive.\n";
-#else /* SFX */
-   static ZCONST char Far CentDirEndSigNotFound[] =
-     "  End-of-central-directory signature not found.\n";
-#endif /* ?SFX */
 #ifdef TIMESTAMP
    static ZCONST char Far ZipTimeStampFailed[] =
      "warning:  cannot set time for %s\n";
@@ -234,11 +208,9 @@ static ZCONST char Far ZipfileCommTrunc1[] =
 int process_zipfiles(__G)    /* return PK-type error code */
     __GDEF
 {
-#ifndef SFX
     char *lastzipfn = (char *)NULL;
     int NumWinFiles, NumLoseFiles, NumWarnFiles;
     int NumMissDirs, NumMissFiles;
-#endif
     int error=0, error_in_archive=0;
 
 
@@ -299,12 +271,10 @@ int process_zipfiles(__G)    /* return PK-type error code */
     {
         char *p;
         G.tz_is_valid = VALID_TIMEZONE(p);
-#  ifndef SFX
         if (!G.tz_is_valid) {
             Info(slide, 0x401, ((char *)slide, LoadFarString(WarnInvalidTZ)));
             error_in_archive = error = PK_WARN;
         }
-#  endif /* !SFX */
     }
 #endif /* IZ_CHECK_TZ && USE_EF_UT_TIME */
 
@@ -341,47 +311,6 @@ int process_zipfiles(__G)    /* return PK-type error code */
     suffix.  If still no luck, give up.
   ---------------------------------------------------------------------------*/
 
-#ifdef SFX
-    if ((error = do_seekable(__G__ 0)) == PK_NOZIP) {
-#ifdef EXE_EXTENSION
-        int len=strlen(G.argv0);
-
-        /* append .exe if appropriate; also .sfx? */
-        if ( (G.zipfn = (char *)malloc(len+sizeof(EXE_EXTENSION))) !=
-             (char *)NULL ) {
-            strcpy(G.zipfn, G.argv0);
-            strcpy(G.zipfn+len, EXE_EXTENSION);
-            error = do_seekable(__G__ 0);
-            free(G.zipfn);
-            G.zipfn = G.argv0;  /* for "cannot find myself" message only */
-        }
-#endif /* EXE_EXTENSION */
-#ifdef WIN32
-        G.zipfn = G.argv0;  /* for "cannot find myself" message only */
-#endif
-    }
-    if (error) {
-        if (error == IZ_DIR)
-            error_in_archive = PK_NOZIP;
-        else
-            error_in_archive = error;
-        if (error == PK_NOZIP)
-            Info(slide, 1, ((char *)slide, LoadFarString(CannotFindMyself),
-              G.zipfn));
-    }
-#ifdef CHEAP_SFX_AUTORUN
-    if (G.autorun_command[0] && !uO.qflag) { /* NO autorun without prompt! */
-        Info(slide, 0x81, ((char *)slide, LoadFarString(AutorunPrompt),
-                      FnFilter1(G.autorun_command)));
-        if (fgets(G.answerbuf, 9, stdin) != (char *)NULL
-            && toupper(*G.answerbuf) == 'Y')
-            system(G.autorun_command);
-        else
-            Info(slide, 1, ((char *)slide, LoadFarString(NotAutoRunning)));
-    }
-#endif /* CHEAP_SFX_AUTORUN */
-
-#else /* !SFX */
     NumWinFiles = NumLoseFiles = NumWarnFiles = 0;
     NumMissDirs = NumMissFiles = 0;
 
@@ -508,14 +437,12 @@ int process_zipfiles(__G)    /* return PK-type error code */
 #endif
         }
     }
-#endif /* ?SFX */
 
 /*---------------------------------------------------------------------------
     Print summary of all zipfiles, assuming zipfile spec was a wildcard (no
     need for a summary if just one zipfile).
   ---------------------------------------------------------------------------*/
 
-#ifndef SFX
     if (iswild(G.wildzipfn) && uO.qflag < 3
 #ifdef TIMESTAMP
         && !(uO.T_flag && !uO.zipinfo_mode && uO.qflag > 1)
@@ -551,7 +478,6 @@ int process_zipfiles(__G)    /* return PK-type error code */
         if (NumWinFiles + NumLoseFiles + NumWarnFiles == 0)
             Info(slide, 0x401, ((char *)slide, LoadFarString(NoZipfileFound)));
     }
-#endif /* !SFX */
 
     /* free allocated memory */
     free_G_buffers(__G);
@@ -571,9 +497,7 @@ int process_zipfiles(__G)    /* return PK-type error code */
 void free_G_buffers(__G)     /* releases all memory allocated in global vars */
     __GDEF
 {
-#ifndef SFX
     unsigned i;
-#endif
 
 #ifdef SYSTEM_SPECIFIC_DTOR
     SYSTEM_SPECIFIC_DTOR(__G);
@@ -621,14 +545,12 @@ void free_G_buffers(__G)     /* releases all memory allocated in global vars */
     }
 #endif /* UNICODE_SUPPORT */
 
-#ifndef SFX
     for (i = 0; i < DIR_BLKSIZ; i++) {
         if (G.info[i].cfilname != (char Far *)NULL) {
             zffree(G.info[i].cfilname);
             G.info[i].cfilname = (char Far *)NULL;
         }
     }
-#endif
 
 #ifdef MALLOC_WORK
     if (G.area.Slide) {
@@ -649,14 +571,12 @@ void free_G_buffers(__G)     /* releases all memory allocated in global vars */
 
 static int do_seekable(int lastchance)        /* return PK-type error code */
 {
-#ifndef SFX
     /* static int no_ecrec = FALSE;  SKM: moved to globals.h */
     int maybe_exe=FALSE;
     int too_weird_to_continue=FALSE;
 #ifdef TIMESTAMP
     time_t uxstamp;
     ulg nmember = 0L;
-#endif
 #endif
     int error=0, error_in_archive;
 
@@ -672,7 +592,6 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
 #endif
         (error = S_ISDIR(G.statbuf.st_mode)) != 0)
     {
-#ifndef SFX
         if (lastchance && (uO.qflag < 3)) {
 #if defined(UNIX) || defined(QDOS)
             if (G.no_ecrec)
@@ -707,17 +626,14 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
 #endif /* ?VMS */
 #endif /* ?(UNIX || QDOS) */
         }
-#endif /* !SFX */
         return error? IZ_DIR : PK_NOZIP;
     }
     G.ziplen = G.statbuf.st_size;
 
-#ifndef SFX
 #if defined(UNIX) || defined(DOS_OS2_W32) || defined(THEOS)
     if (G.statbuf.st_mode & S_IEXEC)   /* no extension on Unix exes:  might */
         maybe_exe = TRUE;               /*  find unzip, not unzip.zip; etc. */
 #endif
-#endif /* !SFX */
 
 #ifdef VMS
     if (check_format(__G))              /* check for variable-length format */
@@ -785,10 +701,6 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
     {
         CLOSE_INFILE();
 
-#ifdef SFX
-        ++lastchance;   /* avoid picky compiler warnings */
-        return error_in_archive;
-#else
         if (maybe_exe)
             Info(slide, 0x401, ((char *)slide, LoadFarString(MaybeExe),
             G.zipfn));
@@ -798,7 +710,6 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
             G.no_ecrec = TRUE;    /* assume we found wrong file:  e.g., */
             return PK_NOZIP;       /*  unzip instead of unzip.zip */
         }
-#endif /* ?SFX */
     }
 
     if ((uO.zflag > 0) && !uO.zipinfo_mode) { /* unzip: zflag = comment ONLY */
@@ -818,7 +729,6 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
     error = !uO.zipinfo_mode && (G.ecrec.number_this_disk != 0);
 #endif
 
-#ifndef SFX
     if (uO.zipinfo_mode &&
         G.ecrec.number_this_disk != G.ecrec.num_disk_start_cdir)
     {
@@ -851,7 +761,6 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
               G.zipfn));
             error_in_archive = PK_WARN;
         }
-#endif /* !SFX */
         if ((G.extra_bytes = G.real_ecrec_offset-G.expect_ecrec_offset) <
             (zoff_t)0)
         {
@@ -868,7 +777,6 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
                 G.extra_bytes = 0;
                 error_in_archive = PK_ERR;
             }
-#ifndef SFX
             else {
                 Info(slide, 0x401, ((char *)slide,
                   LoadFarString(ExtraBytesAtStart), G.zipfn,
@@ -876,7 +784,6 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
                   (G.extra_bytes == 1)? "":"s"));
                 error_in_archive = PK_WARN;
             }
-#endif /* !SFX */
         }
 
     /*-----------------------------------------------------------------------
@@ -917,9 +824,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
             memcmp(G.sig, central_hdr_sig, 4))
 #endif
         {
-#ifndef SFX
             zoff_t tmp = G.extra_bytes;
-#endif
 
             G.extra_bytes = 0;
             error = seek_zipf(__G__ G.ecrec.offset_start_central_directory);
@@ -933,10 +838,8 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
                 CLOSE_INFILE();
                 return (error != PK_OK ? error : PK_BADERR);
             }
-#ifndef SFX
             Info(slide, 0x401, ((char *)slide, LoadFarString(CentDirTooLong),
               G.zipfn, FmZofft((-tmp), NULL, NULL)));
-#endif
             error_in_archive = PK_ERR;
         }
 
@@ -972,7 +875,6 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
                 error = zipinfo(__G);                 /* ZIPINFO 'EM */
             else
 #endif
-#ifndef SFX
 #ifdef TIMESTAMP
             if (uO.T_flag)
                 error = get_time_stamp(__G__ &uxstamp, &nmember);
@@ -981,7 +883,6 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
             if (uO.vflag && !uO.tflag && !uO.cflag)
                 error = list_files(__G);              /* LIST 'EM */
             else
-#endif /* !SFX */
                 error = extract_or_test_files(__G);   /* EXTRACT OR TEST 'EM */
 
             Trace((stderr, "done with extract/list files (error = %d)\n",
@@ -990,9 +891,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
 
         if (error > error_in_archive)   /* don't overwrite stronger error */
             error_in_archive = error;   /*  with (for example) a warning */
-#ifndef SFX
     } /* end if (!too_weird_to_continue) */
-#endif
 
     CLOSE_INFILE();
 
