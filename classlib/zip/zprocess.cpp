@@ -150,12 +150,6 @@ static ZCONST char Far Cent64EndSigSearchOff[] =
   a zipfile, or it constitutes one disk of a multi-part archive.  In the\n\
   latter case the central directory and zipfile comment will be found on\n\
   the last disk(s) of this archive.\n";
-#ifdef TIMESTAMP
-   static ZCONST char Far ZipTimeStampFailed[] =
-     "warning:  cannot set time for %s\n";
-   static ZCONST char Far ZipTimeStampSuccess[] =
-     "Updated time stamp for %s.\n";
-#endif
 static ZCONST char Far ZipfileCommTrunc1[] =
   "\ncaution:  zipfile comment truncated\n";
 #ifndef NO_ZIPINFO
@@ -281,9 +275,6 @@ int process_zipfiles(__G)    /* return PK-type error code */
 
         /* print a blank line between the output of different zipfiles */
         if (!uO.qflag  &&  error != PK_NOZIP  &&  error != IZ_DIR
-#ifdef TIMESTAMP
-            && (!uO.T_flag || uO.zipinfo_mode)
-#endif
             && (NumWinFiles+NumLoseFiles+NumWarnFiles+NumMissFiles) > 0)
             (*G.message)((zvoid *)&G, (uch *)"\n", 1L, 0);
 
@@ -371,16 +362,9 @@ int process_zipfiles(__G)    /* return PK-type error code */
     need for a summary if just one zipfile).
   ---------------------------------------------------------------------------*/
 
-    if (iswild(G.wildzipfn) && uO.qflag < 3
-#ifdef TIMESTAMP
-        && !(uO.T_flag && !uO.zipinfo_mode && uO.qflag > 1)
-#endif
-                                                    )
+    if (iswild(G.wildzipfn) && uO.qflag < 3)
     {
         if ((NumMissFiles + NumLoseFiles + NumWarnFiles > 0 || NumWinFiles != 1)
-#ifdef TIMESTAMP
-            && !(uO.T_flag && !uO.zipinfo_mode && uO.qflag)
-#endif
             && !(uO.tflag && uO.qflag > 1))
             (*G.message)((zvoid *)&G, (uch *)"\n", 1L, 0x401);
         if ((NumWinFiles > 1) ||
@@ -492,10 +476,6 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
     /* static int no_ecrec = FALSE;  SKM: moved to globals.h */
     int maybe_exe=FALSE;
     int too_weird_to_continue=FALSE;
-#ifdef TIMESTAMP
-    time_t uxstamp;
-    ulg nmember = 0L;
-#endif
     int error=0, error_in_archive;
 
 
@@ -557,9 +537,6 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
     G.inptr = G.inbuf;
 
     if ( (!uO.zipinfo_mode && !uO.qflag
-#  ifdef TIMESTAMP
-          && !uO.T_flag
-#  endif
          )
 #  ifndef NO_ZIPINFO
          || (uO.zipinfo_mode && uO.hflag)
@@ -739,11 +716,6 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
                 error = zipinfo(__G);                 /* ZIPINFO 'EM */
             else
 #endif
-#ifdef TIMESTAMP
-            if (uO.T_flag)
-                error = get_time_stamp(__G__ &uxstamp, &nmember);
-            else
-#endif
             if (uO.vflag && !uO.tflag && !uO.cflag)
                 error = list_files(__G);              /* LIST 'EM */
             else
@@ -758,22 +730,6 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
     } /* end if (!too_weird_to_continue) */
 
     CLOSE_INFILE();
-
-#ifdef TIMESTAMP
-    if (uO.T_flag && !uO.zipinfo_mode && (nmember > 0L)) {
-        if (stamp_file(G.zipfn, uxstamp)) {             /* TIME-STAMP 'EM */
-            if (uO.qflag < 3)
-                Info(slide, 0x201, ((char *)slide,
-                  LoadFarString(ZipTimeStampFailed), G.zipfn));
-            if (error_in_archive < PK_WARN)
-                error_in_archive = PK_WARN;
-        } else {
-            if (!uO.qflag)
-                Info(slide, 0, ((char *)slide,
-                  LoadFarString(ZipTimeStampSuccess), G.zipfn));
-        }
-    }
-#endif
     return error_in_archive;
 
 } /* end function do_seekable() */
@@ -1340,9 +1296,6 @@ static int process_zip_cmmnt(__G)       /* return PK-type error code */
           || (uO.zflag == 0
 # ifndef NO_ZIPINFO
               && !uO.zipinfo_mode
-# endif
-# ifdef TIMESTAMP
-              && !uO.T_flag
 # endif
               && !uO.qflag)
          ) )
