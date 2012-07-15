@@ -205,17 +205,11 @@ int main()
 
             if (altitude < -5.0)
             {
-                if ((diostat & 1) == 0)
-                    RdosToggleSerialLine(1, 0);
-
                 if ((diostat & 0x80) == 0)
                     RdosToggleSerialLine(1, 7);
             }
             else
             {
-                if (diostat & 1)
-                    RdosToggleSerialLine(1, 0);
-
                 if (diostat & 0x80)
                     RdosToggleSerialLine(1, 7);
             }

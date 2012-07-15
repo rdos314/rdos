@@ -42,6 +42,7 @@
 
 TTableControl *Table;
 long double bat_u = 0;
+long double curr_power = 0;
 int charger = FALSE;
 
 /*##########################################################################
@@ -92,9 +93,9 @@ void BatteryThread(void *Param)
             ChargeISum += ival;
             ChargeICount++;
 
-            if (ChargeICount == 10)
+            if (ChargeICount == 100)
             {            
-                fval = (long double)ChargeISum / 1000.0;
+                fval = (long double)ChargeISum / 10000.0;
                 sprintf(str, "%5.2Lf", fval);            
                 Table->SetText(2, 5, str);            
 
@@ -119,12 +120,12 @@ void BatteryThread(void *Param)
 
                 if (charger)
                 {
-                    if (bat_u >= 25.0)
+                    if (bat_u >= 25.0 && curr_power > 25.0)
                         charger = FALSE;
                 }
                 else
                 {
-                    if (bat_u <= 24.5)
+                    if (bat_u <= 24.5 && curr_power < 25.0)
                         charger = TRUE;
                 }
 
@@ -419,6 +420,8 @@ void TPower::Execute()
 
                     sprintf(str, "%5.1Lf", bat_u);
                     Table->SetText(2, 3, str);
+
+                    curr_power = solar12_power + solar24_power;
                 }
             }         
         }
