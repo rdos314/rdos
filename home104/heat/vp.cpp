@@ -448,12 +448,12 @@ void TVp::Execute()
 
         while (FInstalled)
         {
-                if (RdosReadSerialRaw(0x40, 0, &ival))
+                if (RdosReadSerialRaw(1, 5, &ival))
                 {
                          FTankSum += ival;
             FTankCount++;
 
-            if (FTankCount >= 50)
+            if (FTankCount >= 5)
             {
                                 FTankTemp = FTankSum / FTankCount;
 
@@ -468,12 +468,12 @@ void TVp::Execute()
                         }
                 }
 
-                if (RdosReadSerialRaw(0x40, 1, &ival))
+                if (RdosReadSerialRaw(1, 6, &ival))
                 {
                         FHeatSum += ival;
                         FHeatCount++;
 
-                        if (FHeatCount >= 50)
+                        if (FHeatCount >= 5)
                         {
                                 FHeatTemp = FHeatSum / FHeatCount;
 
