@@ -88,7 +88,7 @@ static int extract_or_test_member OF((__GPRO));
         unsigned compr_offset,
         int (*test_uc_ebdata)(__GPRO__ uch *eb, unsigned eb_size,
                               uch *eb_ucptr, ulg eb_ucsize)));
-   static int Cdecl dircomp OF((const zvoid *a, const zvoid *b));
+   static int Cdecl dircomp OF((const void *a, const void *b));
 
 
 
@@ -584,14 +584,14 @@ int extract_or_test_files(__G)    /* return PK-type error code */
                 if (error_in_archive <= PK_WARN)
                     error_in_archive = PK_FIND;   /* some files not found */
             }
-        free((zvoid *)fn_matched);
+        free((void *)fn_matched);
     }
     if (xn_matched) {
         if (reached_end) for (i = 0;  i < G.xfilespecs;  ++i)
             if (!xn_matched[i])
                 Info(slide, 0x401, ((char *)slide,
                   LoadFarString(ExclFilenameNotMatched), G.pxnames[i]));
-        free((zvoid *)xn_matched);
+        free((void *)xn_matched);
     }
 
 /*---------------------------------------------------------------------------
@@ -1880,7 +1880,7 @@ char *fnfilter(const char *raw, uch *space, extent size)   /* convert name to sa
 /*  Function dircomp()  */
 /************************/
 
-static int Cdecl dircomp(const zvoid *a, const zvoid *b)  /* used by qsort(); swiped from Zip */
+static int Cdecl dircomp(const void *a, const void *b)  /* used by qsort(); swiped from Zip */
 {
     /* order is significant:  this sorts in reverse order (deepest first) */
     return strcmp((*(direntry **)b)->fn, (*(direntry **)a)->fn);

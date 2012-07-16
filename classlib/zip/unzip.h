@@ -104,16 +104,6 @@ extern "C" {
   ---------------------------------------------------------------------------*/
 
 #ifndef _IZ_TYPES_DEFINED
-#ifdef MODERN
-   typedef void zvoid;
-#else /* !MODERN */
-#  ifndef AOS_VS         /* mostly modern? */
-#    ifndef VAXC         /* not fully modern, but has knows 'void' */
-#      define void int
-#    endif /* !VAXC */
-#  endif /* !AOS_VS */
-   typedef char zvoid;
-#endif /* ?MODERN */
 typedef unsigned char   uch;    /* code assumes unsigned bytes; these type-  */
 typedef unsigned short  ush;    /*  defs replace byte/UWORD/ULONG (which are */
 typedef unsigned long   ulg;    /*  predefined on some systems) & match zip  */
@@ -122,14 +112,14 @@ typedef unsigned long   ulg;    /*  predefined on some systems) & match zip  */
 
 /* InputFn is not yet used and is likely to change: */
 #ifdef PROTO
-   typedef int   ( MsgFn)     (zvoid *pG, uch *buf, ulg size, int flag);
-   typedef int   ( InputFn)   (zvoid *pG, uch *buf, int *size, int flag);
-   typedef void  ( PauseFn)   (zvoid *pG, const char *prompt, int flag);
-   typedef int   ( PasswdFn)  (zvoid *pG, int *rcnt, char *pwbuf,
+   typedef int   ( MsgFn)     (void *pG, uch *buf, ulg size, int flag);
+   typedef int   ( InputFn)   (void *pG, uch *buf, int *size, int flag);
+   typedef void  ( PauseFn)   (void *pG, const char *prompt, int flag);
+   typedef int   ( PasswdFn)  (void *pG, int *rcnt, char *pwbuf,
                                      int size, const char *zfn,
                                      const char *efn);
-   typedef int   ( StatCBFn)  (zvoid *pG, int fnflag, const char *zfn,
-                                     const char *efn, const zvoid *details);
+   typedef int   ( StatCBFn)  (void *pG, int fnflag, const char *zfn,
+                                     const char *efn, const void *details);
    typedef void  ( UsrIniFn)  (void);
 #else /* !PROTO */
    typedef int   ( MsgFn)     ();
@@ -407,11 +397,11 @@ int       UzpValidate        (char *archive, int AllCodes);
 
 /* default I/O functions (can be swapped out via UzpAltMain() entry point): */
 
-int       UzpMessagePrnt   (zvoid *pG, uch *buf, ulg size, int flag);
-int       UzpMessageNull   (zvoid *pG, uch *buf, ulg size, int flag);
-int       UzpInput         (zvoid *pG, uch *buf, int *size, int flag);
-void      UzpMorePause     (zvoid *pG, const char *prompt, int flag);
-int       UzpPassword      (zvoid *pG, int *rcnt, char *pwbuf,
+int       UzpMessagePrnt   (void *pG, uch *buf, ulg size, int flag);
+int       UzpMessageNull   (void *pG, uch *buf, ulg size, int flag);
+int       UzpInput         (void *pG, uch *buf, int *size, int flag);
+void      UzpMorePause     (void *pG, const char *prompt, int flag);
+int       UzpPassword      (void *pG, int *rcnt, char *pwbuf,
                                      int size, const char *zfn,
                                      const char *efn);
 
