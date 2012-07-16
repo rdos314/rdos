@@ -65,12 +65,7 @@
 #include "ttyio.h"
 
 /* setup of codepage conversion for decryption passwords */
-#  if (defined(CRYP_USES_ISO2OEM) && !defined(IZ_ISO2OEM_ARRAY))
 #    define IZ_ISO2OEM_ARRAY            /* pull in iso2oem[] table */
-#  endif
-#  if (defined(CRYP_USES_OEM2ISO) && !defined(IZ_OEM2ISO_ARRAY))
-#    define IZ_OEM2ISO_ARRAY            /* pull in oem2iso[] table */
-#  endif
 #include "ebcdic.h"   /* definition/initialization of ebcdic[] */
 
 /*
