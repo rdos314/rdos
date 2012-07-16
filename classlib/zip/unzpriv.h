@@ -42,15 +42,7 @@
  * that add the B_flag to the UzpOpts structure, see unzip.h.)
  */
 
-#if (!defined(DYNAMIC_CRC_TABLE) && !defined(FUNZIP))
 #  define DYNAMIC_CRC_TABLE
-#endif
-
-#if (defined(DYNAMIC_CRC_TABLE) && !defined(REENTRANT))
-#  ifndef DYNALLOC_CRCTAB
-#    define DYNALLOC_CRCTAB
-#  endif
-#endif
 
 /*---------------------------------------------------------------------------
     OS-dependent configuration for UnZip internals
