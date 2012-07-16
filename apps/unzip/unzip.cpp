@@ -69,33 +69,12 @@
 #include "crypt.h"
 #include "unzvers.h"
 
-#ifndef WINDLL          /* The WINDLL port uses windll/windll.c instead... */
-
-/***************************/
-/* Local type declarations */
-/***************************/
-
-#if (defined(REENTRANT) && !defined(NO_EXCEPT_SIGNALS))
-typedef struct _sign_info
-    {
-        struct _sign_info *previous;
-        void (*sighandler)(int);
-        int sigtype;
-    } savsigs_info;
-#endif
-
 /*******************/
 /* Local Functions */
 /*******************/
 
-#if (defined(REENTRANT) && !defined(NO_EXCEPT_SIGNALS))
-static int setsignalhandler OF((__GPRO__ savsigs_info **p_savedhandler_chain,
-                                int signal_type, void (*newhandler)(int)));
-#endif
-#ifndef SFX
 static void  help_extended      OF((__GPRO));
 static void  show_version_info  OF((__GPRO));
-#endif
 
 
 /*************/
@@ -107,203 +86,43 @@ static void  show_version_info  OF((__GPRO));
 #include "consts.h"
 
 
-#ifndef SFX
-#ifndef _WIN32_WCE /* Win CE does not support environment variables */
    static ZCONST char Far EnvUnZip[] = ENV_UNZIP;
    static ZCONST char Far EnvUnZip2[] = ENV_UNZIP2;
    static ZCONST char Far EnvZipInfo[] = ENV_ZIPINFO;
    static ZCONST char Far EnvZipInfo2[] = ENV_ZIPINFO2;
-#ifdef RISCOS
-   static ZCONST char Far EnvUnZipExts[] = ENV_UNZIPEXTS;
-#endif /* RISCOS */
   static ZCONST char Far NoMemEnvArguments[] =
     "envargs:  cannot get memory for arguments";
-#endif /* !_WIN32_WCE */
   static ZCONST char Far CmdLineParamTooLong[] =
     "error:  command line parameter #%d exceeds internal size limit\n";
-#endif /* !SFX */
 
-#if (defined(REENTRANT) && !defined(NO_EXCEPT_SIGNALS))
-  static ZCONST char Far CantSaveSigHandler[] =
-    "error:  cannot save signal handler settings\n";
-#endif
-
-#if (!defined(SFX) || defined(SFX_EXDIR))
    static ZCONST char Far NotExtracting[] =
      "caution:  not extracting; -d ignored\n";
    static ZCONST char Far MustGiveExdir[] =
      "error:  must specify directory to which to extract with -d option\n";
    static ZCONST char Far OnlyOneExdir[] =
      "error:  -d option used more than once (only one exdir allowed)\n";
-#endif
-#if (defined(UNICODE_SUPPORT) && !defined(UNICODE_WCHAR))
-  static ZCONST char Far UTF8EscapeUnSupp[] =
-    "warning:  -U \"escape all non-ASCII UTF-8 chars\" is not supported\n";
-#endif
 
-#if CRYPT
    static ZCONST char Far MustGivePasswd[] =
      "error:  must give decryption password with -P option\n";
-#endif
 
-#ifndef SFX
    static ZCONST char Far Zfirst[] =
    "error:  -Z must be first option for ZipInfo mode (check UNZIP variable?)\n";
-#endif
 static ZCONST char Far InvalidOptionsMsg[] = "error:\
   -fn or any combination of -c, -l, -p, -t, -u and -v options invalid\n";
 static ZCONST char Far IgnoreOOptionMsg[] =
   "caution:  both -n and -o specified; ignoring -o\n";
 
 /* usage() strings */
-#ifndef SFX
-#ifdef VMS
-   static ZCONST char Far Example3[] = "vms.c";
-   static ZCONST char Far Example2[] = "  unzip \"-V\" foo \"Bar\"\
- (Quote names to preserve case, unless SET PROC/PARS=EXT)\n";
-#else /* !VMS */
    static ZCONST char Far Example3[] = "ReadMe";
-#ifdef RISCOS
-   static ZCONST char Far Example2[] =
-"  unzip foo -d RAM:$   => extract all files from foo into RAMDisc\n";
-#else /* !RISCOS */
-#if (defined(OS2) || (defined(DOS_FLX_OS2_W32) && defined(MORE)))
-   static ZCONST char Far Example2[] =
-     "";                /* no room:  too many local3[] items */
-#else /* !OS2 */
-#ifdef MACOS
-   static ZCONST char Far Example2[] = ""; /* not needed */
-#else /* !MACOS */
    static ZCONST char Far Example2[] = " \
  unzip -p foo | more  => send contents of foo.zip via pipe into program more\n";
-#endif /* ?MACOS */
-#endif /* ?OS2 */
-#endif /* ?RISCOS */
-#endif /* ?VMS */
 
 /* local1[]:  command options */
-#if defined(TIMESTAMP)
-   static ZCONST char Far local1[] =
-     "  -T  timestamp archive to latest";
-#else /* !TIMESTAMP */
    static ZCONST char Far local1[] = "";
-#endif /* ?TIMESTAMP */
 
 /* local2[] and local3[]:  modifier options */
-#ifdef DOS_FLX_H68_OS2_W32
-#ifdef FLEXOS
-   static ZCONST char Far local2[] = "";
-#else
-   static ZCONST char Far local2[] =
-     " -$  label removables (-$$ => fixed disks)";
-#endif
-#ifdef OS2
-#ifdef MORE
-   static ZCONST char Far local3[] = "\
-  -X  restore ACLs if supported              -s  spaces in filenames => '_'\n\
-                                             -M  pipe through \"more\" pager\n";
-#else
-   static ZCONST char Far local3[] = " \
- -X  restore ACLs if supported              -s  spaces in filenames => '_'\n\n";
-#endif /* ?MORE */
-#else /* !OS2 */
-#ifdef WIN32
-#ifdef NTSD_EAS
-#ifdef MORE
-   static ZCONST char Far local3[] = "\
-  -X  restore ACLs (-XX => use privileges)   -s  spaces in filenames => '_'\n\
-                                             -M  pipe through \"more\" pager\n";
-#else
-   static ZCONST char Far local3[] = " \
- -X  restore ACLs (-XX => use privileges)   -s  spaces in filenames => '_'\n\n";
-#endif /* ?MORE */
-#else /* !NTSD_EAS */
-#ifdef MORE
-   static ZCONST char Far local3[] = "\
-  -M  pipe through \"more\" pager            \
-  -s  spaces in filenames => '_'\n\n";
-#else
-   static ZCONST char Far local3[] = " \
-                                            -s  spaces in filenames => '_'\n\n";
-#endif /* ?MORE */
-#endif /* ?NTSD_EAS */
-#else /* !WIN32 */
-#ifdef MORE
-   static ZCONST char Far local3[] = "  -\
-M  pipe through \"more\" pager              -s  spaces in filenames => '_'\n\n";
-#else
-   static ZCONST char Far local3[] = "\
-                                             -s  spaces in filenames => '_'\n";
-#endif
-#endif /* ?WIN32 */
-#endif /* ?OS2 || ?WIN32 */
-#else /* !DOS_FLX_OS2_W32 */
-#ifdef VMS
-   static ZCONST char Far local2[] = " -X  restore owner/ACL protection info";
-#ifdef MORE
-   static ZCONST char Far local3[] = "\
-  -Y  treat \".nnn\" as \";nnn\" version         -2  force ODS2 names\n\
-  --D restore dir (-D: no) timestamps        -M  pipe through \"more\" pager\n\
-  (Must quote upper-case options, like \"-V\", unless SET PROC/PARSE=EXTEND.)\
-\n\n";
-#else
-   static ZCONST char Far local3[] = "\n\
-  -Y  treat \".nnn\" as \";nnn\" version         -2  force ODS2 names\n\
-  --D restore dir (-D: no) timestamps\n\
-  (Must quote upper-case options, like \"-V\", unless SET PROC/PARSE=EXTEND.)\
-\n\n";
-#endif
-#else /* !VMS */
-#ifdef ATH_BEO_UNX
-   static ZCONST char Far local2[] = " -X  restore UID/GID info";
-#ifdef MORE
-   static ZCONST char Far local3[] = "\
-  -K  keep setuid/setgid/tacky permissions   -M  pipe through \"more\" pager\n";
-#else
-   static ZCONST char Far local3[] = "\
-  -K  keep setuid/setgid/tacky permissions\n";
-#endif
-#else /* !ATH_BEO_UNX */
-#ifdef TANDEM
-   static ZCONST char Far local2[] = "\
- -X  restore Tandem User ID                 -r  remove file extensions\n\
-  -b  create 'C' (180) text files          ";
-#ifdef MORE
-   static ZCONST char Far local3[] = " \
-                                            -M  pipe through \"more\" pager\n";
-#else
-   static ZCONST char Far local3[] = "\n";
-#endif
-#else /* !TANDEM */
-#ifdef AMIGA
-   static ZCONST char Far local2[] = " -N  restore comments as filenotes";
-#ifdef MORE
-   static ZCONST char Far local3[] = " \
-                                            -M  pipe through \"more\" pager\n";
-#else
-   static ZCONST char Far local3[] = "\n";
-#endif
-#else /* !AMIGA */
-#ifdef MACOS
-   static ZCONST char Far local2[] = " -E  show Mac info during extraction";
-   static ZCONST char Far local3[] = " \
- -i  ignore filenames in mac extra info     -J  junk (ignore) Mac extra info\n\
-\n";
-#else /* !MACOS */
-#ifdef MORE
    static ZCONST char Far local2[] = " -M  pipe through \"more\" pager";
    static ZCONST char Far local3[] = "\n";
-#else
-   static ZCONST char Far local2[] = "";   /* Atari, Mac, CMS/MVS etc. */
-   static ZCONST char Far local3[] = "";
-#endif
-#endif /* ?MACOS */
-#endif /* ?AMIGA */
-#endif /* ?TANDEM */
-#endif /* ?ATH_BEO_UNX */
-#endif /* ?VMS */
-#endif /* ?DOS_FLX_OS2_W32 */
-#endif /* !SFX */
 
 #ifndef NO_ZIPINFO
 #ifdef VMS
@@ -2642,4 +2461,3 @@ static void show_version_info(__G)
 } /* end function show_version() */
 
 #endif /* !SFX */
-#endif /* !WINDLL */
