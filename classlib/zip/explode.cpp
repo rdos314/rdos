@@ -36,7 +36,7 @@
                                     applications.
     c6   31 May 92  M. Adler        added typecasts to eliminate some warnings
     c7   27 Jun 92  G. Roelofs      added more typecasts.
-    c8   17 Oct 92  G. Roelofs      changed ULONG/UWORD/byte to ulg/unsigned short/unsigned char.
+    c8   17 Oct 92  G. Roelofs      changed ULONG/UWORD/byte to unsigned long/unsigned short/unsigned char.
     c9   19 Jul 93  J. Bush         added more typecasts (to return values);
                                     made l[256] array static for Amiga.
     c10   8 Oct 93  G. Roelofs      added used_csize for diagnostics; added
@@ -50,7 +50,7 @@
                                     to avoid bug in Encore compiler.
     c13  25 Aug 94  M. Adler        fixed distance-length comment (orig c9 fix)
     c14  22 Nov 95  S. Maxwell      removed unnecessary "static" on auto array
-    c15   6 Jul 96  W. Haidinger    added ulg typecasts to flush() calls.
+    c15   6 Jul 96  W. Haidinger    added unsigned long typecasts to flush() calls.
     c16   8 Feb 98  C. Spieler      added const modifiers to const tables
                                     and #ifdef DEBUG around debugging code.
     c16b 25 Mar 98  C. Spieler      modified DLL code for slide redirection.
@@ -190,7 +190,7 @@ static const unsigned short cpdist8[] =
    variables for speed.
  */
 
-#define NEEDBITS(n) {while(k<(n)){b|=((ulg)NEXTBYTE)<<k;k+=8;}}
+#define NEEDBITS(n) {while(k<(n)){b|=((unsigned long)NEXTBYTE)<<k;k+=8;}}
 #define DUMPBITS(n) {b>>=(n);k-=(n);}
 
 #define DECODEHUFT(htab, bits, mask) {\
@@ -246,7 +246,7 @@ static int explode_lit(struct huft *tb, struct huft *tl, struct huft *td, unsign
   struct huft *t;       /* pointer to table entry */
   unsigned mb, ml, md;  /* masks for bb, bl, and bd bits */
   unsigned mdl;         /* mask for bdl (distance lower) bits */
-  register ulg b;       /* bit buffer */
+  register unsigned long b;       /* bit buffer */
   register unsigned k;  /* number of bits in bit buffer */
   unsigned u;           /* true if unflushed */
   int retval = 0;       /* error code returned: initialized to "no error" */
@@ -271,7 +271,7 @@ static int explode_lit(struct huft *tb, struct huft *tl, struct huft *td, unsign
       redirSlide[w++] = (unsigned char)t->v.n;
       if (w == wszimpl)
       {
-        if ((retval = flush(__G__ redirSlide, (ulg)w, 0)) != 0)
+        if ((retval = flush(__G__ redirSlide, (unsigned long)w, 0)) != 0)
           return retval;
         w = u = 0;
       }
@@ -318,7 +318,7 @@ static int explode_lit(struct huft *tb, struct huft *tl, struct huft *td, unsign
             } while (--e);
         if (w == wszimpl)
         {
-          if ((retval = flush(__G__ redirSlide, (ulg)w, 0)) != 0)
+          if ((retval = flush(__G__ redirSlide, (unsigned long)w, 0)) != 0)
             return retval;
           w = u = 0;
         }
@@ -327,7 +327,7 @@ static int explode_lit(struct huft *tb, struct huft *tl, struct huft *td, unsign
   }
 
   /* flush out redirSlide */
-  if ((retval = flush(__G__ redirSlide, (ulg)w, 0)) != 0)
+  if ((retval = flush(__G__ redirSlide, (unsigned long)w, 0)) != 0)
     return retval;
   if (G.csize + G.incnt + (k >> 3))   /* should have read csize bytes, but */
   {                        /* sometimes read one too many:  k>>3 compensates */
@@ -350,7 +350,7 @@ static int explode_nolit(struct huft *tl, struct huft *td, unsigned bl, unsigned
   struct huft *t;       /* pointer to table entry */
   unsigned ml, md;      /* masks for bl and bd bits */
   unsigned mdl;         /* mask for bdl (distance lower) bits */
-  register ulg b;       /* bit buffer */
+  register unsigned long b;       /* bit buffer */
   register unsigned k;  /* number of bits in bit buffer */
   unsigned u;           /* true if unflushed */
   int retval = 0;       /* error code returned: initialized to "no error" */
@@ -374,7 +374,7 @@ static int explode_nolit(struct huft *tl, struct huft *td, unsigned bl, unsigned
       redirSlide[w++] = (unsigned char)b;
       if (w == wszimpl)
       {
-        if ((retval = flush(__G__ redirSlide, (ulg)w, 0)) != 0)
+        if ((retval = flush(__G__ redirSlide, (unsigned long)w, 0)) != 0)
           return retval;
         w = u = 0;
       }
@@ -422,7 +422,7 @@ static int explode_nolit(struct huft *tl, struct huft *td, unsigned bl, unsigned
             } while (--e);
         if (w == wszimpl)
         {
-          if ((retval = flush(__G__ redirSlide, (ulg)w, 0)) != 0)
+          if ((retval = flush(__G__ redirSlide, (unsigned long)w, 0)) != 0)
             return retval;
           w = u = 0;
         }
@@ -431,7 +431,7 @@ static int explode_nolit(struct huft *tl, struct huft *td, unsigned bl, unsigned
   }
 
   /* flush out redirSlide */
-  if ((retval = flush(__G__ redirSlide, (ulg)w, 0)) != 0)
+  if ((retval = flush(__G__ redirSlide, (unsigned long)w, 0)) != 0)
     return retval;
   if (G.csize + G.incnt + (k >> 3))   /* should have read csize bytes, but */
   {                        /* sometimes read one too many:  k>>3 compensates */

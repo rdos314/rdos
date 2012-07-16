@@ -112,7 +112,7 @@ static int   zi_long   OF((__GPRO__ zusz_t *pEndprev, int error_in_archive));
 static int   zi_short  OF((__GPRO));
 static void  zi_showMacTypeCreator
                        OF((__GPRO__ unsigned char *ebfield));
-static char *zi_time   OF((__GPRO__ const ulg *datetimez,
+static char *zi_time   OF((__GPRO__ const unsigned long *datetimez,
                            const time_t *modtimez, char *d_t_str));
 
 
@@ -594,8 +594,8 @@ void zi_end_central(__G)
                       FZOFFT_HEX_DOT_WID, "X")));
         } else {
             Info(slide, 0, ((char *)slide, LoadFarString(MultiPartArchive1),
-              (ulg)(G.ecrec.number_this_disk + 1),
-              (ulg)(G.ecrec.num_disk_start_cdir + 1)));
+              (unsigned long)(G.ecrec.number_this_disk + 1),
+              (unsigned long)(G.ecrec.num_disk_start_cdir + 1)));
             Info(slide, 0, ((char *)slide, LoadFarString(MultiPartArchive2),
               FmZofft(G.ecrec.offset_start_central_directory, NULL, "u"),
               FmZofft(G.ecrec.offset_start_central_directory,
@@ -632,7 +632,7 @@ int zipinfo(__G)   /* return PK-type error code */
 {
     int do_this_file=FALSE, error, error_in_archive=PK_COOL;
     int *fn_matched=NULL, *xn_matched=NULL;
-    ulg j, members=0L;
+    unsigned long j, members=0L;
     zusz_t tot_csize=0L, tot_ucsize=0L;
     zusz_t endprev;   /* buffers end of previous entry for zi_long()'s check
                        *  of extra bytes */
@@ -684,8 +684,8 @@ int zipinfo(__G)   /* return PK-type error code */
              *    number of entries as stored in the end_central record?
              */
             if (((j - 1) &
-                 (ulg)(G.ecrec.have_ecr64 ? MASK_ZUCN64 : MASK_ZUCN16))
-                == (ulg)G.ecrec.total_entries_central_dir)
+                 (unsigned long)(G.ecrec.have_ecr64 ? MASK_ZUCN64 : MASK_ZUCN16))
+                == (unsigned long)G.ecrec.total_entries_central_dir)
             {
                 /* "j modulus 4T/64k" matches the reported 64/16-bit-unsigned
                  * number of directory entries -> probably, the regular
@@ -1027,7 +1027,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
     Info(slide, 0, ((char *)slide, LoadFarString(FileCommentLength),
       G.crec.file_comment_length));
     Info(slide, 0, ((char *)slide, LoadFarString(FileDiskNum),
-      (ulg)(G.crec.disk_number_start + 1)));
+      (unsigned long)(G.crec.disk_number_start + 1)));
     Info(slide, 0, ((char *)slide, LoadFarString(ApparentFileType),
       (G.crec.internal_file_attributes & 1)? "text"
          : (G.crec.internal_file_attributes & 2)? "ebcdic"
@@ -1445,7 +1445,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                 case EF_UNICOMNT:
                     if (eb_datalen >= 5) {
                         unsigned i, n;
-                        ulg name_crc = makelong(ef_ptr+1);
+                        unsigned long name_crc = makelong(ef_ptr+1);
 
                         if (eb_datalen <= 29) {
                             Info(slide, 0, ((char *)slide,
@@ -1467,7 +1467,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                     break;
                 case EF_MAC3:
                     if (eb_datalen >= EB_MAC3_HLEN) {
-                        ulg eb_uc = makelong(ef_ptr);
+                        unsigned long eb_uc = makelong(ef_ptr);
                         unsigned mac3_flgs = makeword(ef_ptr+EB_FLGS_OFFS);
                         unsigned eb_is_uc = mac3_flgs & EB_M3_FL_UNCMPR;
 
@@ -1551,7 +1551,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                 case EF_ATHEOS:
                 case EF_BEOS:
                     if (eb_datalen >= EB_BEOS_HLEN) {
-                        ulg eb_uc = makelong(ef_ptr);
+                        unsigned long eb_uc = makelong(ef_ptr);
                         unsigned eb_is_uc =
                           *(ef_ptr+EB_FLGS_OFFS) & EB_BE_FL_UNCMPR;
 
@@ -1660,7 +1660,7 @@ ef_default_display:
               "is", EF_IZUNIX, LoadFarStringSmall(efIZUnix),
               (unsigned)(xattr&12), (xattr&4)? efIZuid : efIZnouid));
             if (*pEndprev > 0L)
-                *pEndprev += (ulg)(xattr&12);
+                *pEndprev += (unsigned long)(xattr&12);
         }
         else if (hostnum == FS_FAT_ && !(xattr&4))
             Info(slide, 0, ((char *)slide, LoadFarString(lExtraFieldType),
@@ -1976,14 +1976,14 @@ static void zi_showMacTypeCreator(unsigned char *ebfield)
             native(ebfield[6]), native(ebfield[7])));
     } else {
        Info(slide, 0, ((char *)slide, LoadFarString(MacOSdata1),
-            (((ulg)ebfield[0]) << 24) +
-            (((ulg)ebfield[1]) << 16) +
-            (((ulg)ebfield[2]) << 8)  +
-            ((ulg)ebfield[3]),
-            (((ulg)ebfield[4]) << 24) +
-            (((ulg)ebfield[5]) << 16) +
-            (((ulg)ebfield[6]) << 8)  +
-            ((ulg)ebfield[7])));
+            (((unsigned long)ebfield[0]) << 24) +
+            (((unsigned long)ebfield[1]) << 16) +
+            (((unsigned long)ebfield[2]) << 8)  +
+            ((unsigned long)ebfield[3]),
+            (((unsigned long)ebfield[4]) << 24) +
+            (((unsigned long)ebfield[5]) << 16) +
+            (((unsigned long)ebfield[6]) << 8)  +
+            ((unsigned long)ebfield[7])));
     }
 } /* end function zi_showMacTypeCreator() */
 
@@ -1995,7 +1995,7 @@ static void zi_showMacTypeCreator(unsigned char *ebfield)
 /*  Function zi_time()  */
 /************************/
 
-static char *zi_time(const ulg *datetimez, const time_t *modtimez, char *d_t_str)
+static char *zi_time(const unsigned long *datetimez, const time_t *modtimez, char *d_t_str)
 {
     unsigned yr, mo, dy, hh, mm, ss;
     char monthbuf[4];

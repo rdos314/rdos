@@ -474,15 +474,15 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
         if (G.ecrec.number_this_disk > G.ecrec.num_disk_start_cdir) {
             Info(slide, 0x401, ((char *)slide,
               LoadFarString(CentDirNotInZipMsg), G.zipfn,
-              (ulg)G.ecrec.number_this_disk,
-              (ulg)G.ecrec.num_disk_start_cdir));
+              (unsigned long)G.ecrec.number_this_disk,
+              (unsigned long)G.ecrec.num_disk_start_cdir));
             error_in_archive = PK_FIND;
             too_weird_to_continue = TRUE;
         } else {
             Info(slide, 0x401, ((char *)slide,
               LoadFarString(EndCentDirBogus), G.zipfn,
-              (ulg)G.ecrec.number_this_disk,
-              (ulg)G.ecrec.num_disk_start_cdir));
+              (unsigned long)G.ecrec.number_this_disk,
+              (unsigned long)G.ecrec.num_disk_start_cdir));
             error_in_archive = PK_WARN;
         }
     }

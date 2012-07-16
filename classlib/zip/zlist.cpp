@@ -102,7 +102,7 @@ int list_files(__G)    /* return PK-type error code */
 #endif
     int date_format;
     char dt_sepchar;
-    ulg members=0L;
+    unsigned long members=0L;
     zusz_t j;
     unsigned methnum;
 #ifdef USE_EF_UT_TIME
@@ -112,8 +112,8 @@ int list_files(__G)    /* return PK-type error code */
     unsigned yr, mo, dy, hh, mm;
     zusz_t csiz, tot_csize=0L, tot_ucsize=0L;
 #ifdef OS2_EAS
-    ulg ea_size, tot_easize=0L, tot_eafiles=0L;
-    ulg acl_size, tot_aclsize=0L, tot_aclfiles=0L;
+    unsigned long ea_size, tot_easize=0L, tot_eafiles=0L;
+    unsigned long acl_size, tot_aclsize=0L, tot_aclfiles=0L;
 #endif
     min_info info;
     char methbuf[8];
@@ -169,8 +169,8 @@ int list_files(__G)    /* return PK-type error code */
              *    number of entries as stored in the end_central record?
              */
             if (((j - 1) &
-                 (ulg)(G.ecrec.have_ecr64 ? MASK_ZUCN64 : MASK_ZUCN16))
-                == (ulg)G.ecrec.total_entries_central_dir)
+                 (unsigned long)(G.ecrec.have_ecr64 ? MASK_ZUCN64 : MASK_ZUCN16))
+                == (unsigned long)G.ecrec.total_entries_central_dir)
             {
                 /* "j modulus 4T/64k" matches the reported 64/16-bit-unsigned
                  * number of directory entries -> probably, the regular
@@ -455,7 +455,7 @@ int list_files(__G)    /* return PK-type error code */
         /* pass the totals back to the calling application */
         G.lpUserFunctions->TotalSizeComp = tot_csize;
         G.lpUserFunctions->TotalSize = tot_ucsize;
-        G.lpUserFunctions->CompFactor = (ulg)cfactor;
+        G.lpUserFunctions->CompFactor = (unsigned long)cfactor;
         G.lpUserFunctions->NumMembers = members;
 
 #else /* !WINDLL */
@@ -554,10 +554,10 @@ static int fn_is_dir(__G)    /* returns TRUE if G.filename is directory */
 int get_time_stamp(__G__ last_modtime, nmember)  /* return PK-type error code */
     __GDEF
     time_t *last_modtime;
-    ulg *nmember;
+    unsigned long *nmember;
 {
     int do_this_file=FALSE, error, error_in_archive=PK_COOL;
-    ulg j;
+    unsigned long j;
 #ifdef USE_EF_UT_TIME
     iztimes z_utime;
 #endif
@@ -726,7 +726,7 @@ void fnprint(__G)    /* print filename (after filtering) and newline */
 {
     char *name = fnfilter(G.filename, slide, (extent)(WSIZE>>1));
 
-    (*G.message)((void *)&G, (unsigned char *)name, (ulg)strlen(name), 0);
+    (*G.message)((void *)&G, (unsigned char *)name, (unsigned long)strlen(name), 0);
     (*G.message)((void *)&G, (unsigned char *)"\n", 1L, 0);
 
 } /* end function fnprint() */

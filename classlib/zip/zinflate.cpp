@@ -57,7 +57,7 @@
     c7   27 Jun 92  G. Roelofs      added some more typecasts (444:  MSC bug).
     c8    5 Oct 92  J-l. Gailly     added ifdef'd code to deal with PKZIP bug.
     c9    9 Oct 92  M. Adler        removed a memory error message (~line 416).
-    c10  17 Oct 92  G. Roelofs      changed ULONG/UWORD/byte to ulg/unsigned short/unsigned char,
+    c10  17 Oct 92  G. Roelofs      changed ULONG/UWORD/byte to unsigned long/unsigned short/unsigned char,
                                     removed old inflate, renamed inflate_entry
                                     to inflate, added Mark's fix to a comment.
    c10.5 14 Dec 92  M. Adler        fix up error messages for incomplete trees.
@@ -260,7 +260,7 @@
 
         typedef unsigned char unsigned char;
         typedef unsigned short unsigned short;
-        typedef unsigned long ulg;
+        typedef unsigned long unsigned long;
 
     This module uses the external functions malloc() and free() (and
     probably memset() or bzero() in the memzero() macro).  Their
@@ -332,8 +332,8 @@ static unsigned zlib_inCB(void *pG, unsigned char ** pInbuf)
 
 static int zlib_outCB(void *pG, unsigned char *outbuf, unsigned outcnt)
 {
-    return ((G.mem_mode) ? memflush(__G__ outbuf, (ulg)(outcnt))
-                         : flush(__G__ outbuf, (ulg)(outcnt), 0));
+    return ((G.mem_mode) ? memflush(__G__ outbuf, (unsigned long)(outcnt))
+                         : flush(__G__ outbuf, (unsigned long)(outcnt), 0));
 }
 
 
@@ -452,7 +452,7 @@ int UZinflate(int is_defl64)
  */
 
 
-/* If BMAX needs to be larger than 16, then h and x[] should be ulg. */
+/* If BMAX needs to be larger than 16, then h and x[] should be unsigned long. */
 #define BMAX 16         /* maximum bit length of any code (16 for explode) */
 #define N_MAX 288       /* maximum number of codes in any set */
 

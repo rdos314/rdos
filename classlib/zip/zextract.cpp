@@ -79,7 +79,7 @@
 
 static int store_info OF((__GPRO));
 static int extract_or_test_entrylist OF((__GPRO__ unsigned numchunk,
-                ulg *pfilnum, ulg *pnum_bad_pwd, zoff_t *pold_extra_bytes,
+                unsigned long *pfilnum, unsigned long *pnum_bad_pwd, zoff_t *pold_extra_bytes,
                 unsigned *pnum_dirs, direntry **pdirlist,
                 int error_in_archive));
 static int extract_or_test_member OF((__GPRO));
@@ -87,7 +87,7 @@ static int extract_or_test_member OF((__GPRO));
    static int test_compr_eb OF((__GPRO__ unsigned char *eb, unsigned eb_size,
         unsigned compr_offset,
         int (*test_uc_ebdata)(__GPRO__ unsigned char *eb, unsigned eb_size,
-                              unsigned char *eb_ucptr, ulg eb_ucsize)));
+                              unsigned char *eb_ucptr, unsigned long eb_ucsize)));
    static int Cdecl dircomp OF((const void *a, const void *b));
 
 
@@ -254,13 +254,13 @@ int extract_or_test_files(__G)    /* return PK-type error code */
     zoff_t cd_bufstart;
     unsigned char *cd_inptr;
     int cd_incnt;
-    ulg filnum=0L, blknum=0L;
+    unsigned long filnum=0L, blknum=0L;
     int reached_end;
     int no_endsig_found;
     int error, error_in_archive=PK_COOL;
     int *fn_matched=NULL, *xn_matched=NULL;
     zucn_t members_processed;
-    ulg num_skipped=0L, num_bad_pwd=0L;
+    unsigned long num_skipped=0L, num_bad_pwd=0L;
     zoff_t old_extra_bytes = 0L;
     unsigned num_dirs=0;
     direntry *dirlist=(direntry *)NULL;
@@ -534,7 +534,7 @@ int extract_or_test_files(__G)    /* return PK-type error code */
                 free(d);
             }
         } else {
-            ulg ndirs_fail = 0;
+            unsigned long ndirs_fail = 0;
 
             if (num_dirs == 1)
                 sorted_dirlist[0] = dirlist;
@@ -617,7 +617,7 @@ int extract_or_test_files(__G)    /* return PK-type error code */
             error_in_archive = PK_WARN;
     }
     if (uO.tflag) {
-        ulg num = filnum - num_bad_pwd;
+        unsigned long num = filnum - num_bad_pwd;
 
         if (uO.qflag < 2) {        /* GRR 930710:  was (uO.qflag == 1) */
             if (error_in_archive)
@@ -813,7 +813,7 @@ unsigned find_compr_idx(unsigned compr_methodnum)
 /******************************************/
 
 static int extract_or_test_entrylist(unsigned numchunk,
-                ulg *pfilnum, ulg *pnum_bad_pwd, zoff_t *pold_extra_bytes,
+                unsigned long *pfilnum, unsigned long *pnum_bad_pwd, zoff_t *pold_extra_bytes,
                 unsigned *pnum_dirs, direntry **pdirlist,
                 int error_in_archive)    /* return PK-type error code */
 {
@@ -1684,9 +1684,9 @@ static int test_compr_eb(
     unsigned eb_size,
     unsigned compr_offset,
     int (*test_uc_ebdata)(__GPRO__ unsigned char *eb, unsigned eb_size,
-                          unsigned char *eb_ucptr, ulg eb_ucsize))
+                          unsigned char *eb_ucptr, unsigned long eb_ucsize))
 {
-    ulg eb_ucsize;
+    unsigned long eb_ucsize;
     unsigned char *eb_ucptr;
     int r;
 
@@ -1704,7 +1704,7 @@ static int test_compr_eb(
 
     r = memextract(__G__ eb_ucptr, eb_ucsize,
                    eb + (EB_HEADSIZE + compr_offset),
-                   (ulg)(eb_size - compr_offset));
+                   (unsigned long)(eb_size - compr_offset));
 
     if (r == PK_OK && test_uc_ebdata != NULL)
         r = (*test_uc_ebdata)(__G__ eb, eb_size, eb_ucptr, eb_ucsize);
@@ -1721,14 +1721,14 @@ static int test_compr_eb(
 /*  Function memextract()  */
 /***************************/
 
-int memextract(unsigned char *tgt, ulg tgtsize, const unsigned char *src, ulg srcsize)
+int memextract(unsigned char *tgt, unsigned long tgtsize, const unsigned char *src, unsigned long srcsize)
 {
     zoff_t old_csize=G.csize;
     unsigned char   *old_inptr=G.inptr;
     int    old_incnt=G.incnt;
     int    r, error=PK_OK;
     unsigned short    method;
-    ulg    extra_field_crc;
+    unsigned long    extra_field_crc;
 
 
     method = makeword(src);
@@ -1744,7 +1744,7 @@ int memextract(unsigned char *tgt, ulg tgtsize, const unsigned char *src, ulg sr
     switch (method) {
         case STORED:
             memcpy((char *)tgt, (char *)G.inptr, (extent)G.incnt);
-            G.outcnt = (ulg)G.csize;    /* for CRC calculation */
+            G.outcnt = (unsigned long)G.csize;    /* for CRC calculation */
             break;
         case DEFLATED:
             G.outcnt = 0L;
@@ -1777,7 +1777,7 @@ int memextract(unsigned char *tgt, ulg tgtsize, const unsigned char *src, ulg sr
     G.mem_mode = FALSE;
 
     if (!error) {
-        register ulg crcval = crc32(CRCVAL_INITIAL, tgt, (extent)G.outcnt);
+        register unsigned long crcval = crc32(CRCVAL_INITIAL, tgt, (extent)G.outcnt);
 
         if (crcval != extra_field_crc) {
             if (uO.tflag)
@@ -1802,7 +1802,7 @@ int memextract(unsigned char *tgt, ulg tgtsize, const unsigned char *src, ulg sr
 /*  Function memflush()  */
 /*************************/
 
-int memflush(const unsigned char *rawbuf, ulg size)
+int memflush(const unsigned char *rawbuf, unsigned long size)
 {
     if (size > G.outsize)
         /* Here, PK_DISK is a bit off-topic, but in the sense of marking

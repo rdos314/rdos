@@ -104,13 +104,12 @@ extern "C" {
   ---------------------------------------------------------------------------*/
 
 #ifndef _IZ_TYPES_DEFINED
-typedef unsigned long   ulg;    /*  predefined on some systems) & match zip  */
 #define _IZ_TYPES_DEFINED
 #endif /* !_IZ_TYPES_DEFINED */
 
 /* InputFn is not yet used and is likely to change: */
 #ifdef PROTO
-   typedef int   ( MsgFn)     (void *pG, unsigned char *buf, ulg size, int flag);
+   typedef int   ( MsgFn)     (void *pG, unsigned char *buf, unsigned long size, int flag);
    typedef int   ( InputFn)   (void *pG, unsigned char *buf, int *size, int flag);
    typedef void  ( PauseFn)   (void *pG, const char *prompt, int flag);
    typedef int   ( PasswdFn)  (void *pG, int *rcnt, char *pwbuf,
@@ -129,12 +128,12 @@ typedef unsigned long   ulg;    /*  predefined on some systems) & match zip  */
 #endif /* ?PROTO */
 
 typedef struct _UzpBuffer {    /* rxstr */
-    ulg   strlength;           /* length of string */
+    unsigned long   strlength;           /* length of string */
     char  *strptr;             /* pointer to string */
 } UzpBuffer;
 
 typedef struct _UzpInit {
-    ulg structlen;             /* length of the struct being passed */
+    unsigned long structlen;             /* length of the struct being passed */
 
     /* GRR: can we assume that each of these is a 32-bit pointer?  if not,
      * does it matter? add "far" keyword to make sure? */
@@ -151,7 +150,7 @@ typedef struct _UzpInit {
 } UzpInit;
 
 typedef struct _UzpCB {
-    ulg structlen;             /* length of the struct being passed */
+    unsigned long structlen;             /* length of the struct being passed */
     /* GRR: can we assume that each of these is a 32-bit pointer?  if not,
      * does it matter? add "far" keyword to make sure? */
     MsgFn *msgfn;
@@ -275,8 +274,8 @@ typedef struct _ver {
 } _version_type;
 
 typedef struct _UzpVer {
-    ulg structlen;            /* length of the struct being passed */
-    ulg flag;                 /* bit 0: is_beta   bit 1: uses_zlib */
+    unsigned long structlen;            /* length of the struct being passed */
+    unsigned long flag;                 /* bit 0: is_beta   bit 1: uses_zlib */
     const char *betalevel;   /* e.g. "g BETA" or "" */
     const char *date;        /* e.g. "9 Oct 08" (beta) or "9 October 2008" */
     const char *zlib_version;/* e.g. "1.2.3" or NULL */
@@ -289,8 +288,8 @@ typedef struct _UzpVer {
 
 /* for Visual BASIC access to Windows DLLs: */
 typedef struct _UzpVer2 {
-    ulg structlen;            /* length of the struct being passed */
-    ulg flag;                 /* bit 0: is_beta   bit 1: uses_zlib */
+    unsigned long structlen;            /* length of the struct being passed */
+    unsigned long flag;                 /* bit 0: is_beta   bit 1: uses_zlib */
     char betalevel[10];       /* e.g. "g BETA" or "" */
     char date[20];            /* e.g. "9 Oct 08" (beta) or "9 October 2008" */
     char zlib_version[10];    /* e.g. "1.2.3" or NULL */
@@ -312,8 +311,8 @@ typedef struct _Uzp_cdir_Rec {
     unsigned char version_needed_to_extract[2];
     unsigned short general_purpose_bit_flag;
     unsigned short compression_method;
-    ulg last_mod_dos_datetime;
-    ulg crc32;
+    unsigned long last_mod_dos_datetime;
+    unsigned long crc32;
     Uzp_Siz64 csize;
     Uzp_Siz64 ucsize;
     unsigned short filename_length;
@@ -321,7 +320,7 @@ typedef struct _Uzp_cdir_Rec {
     unsigned short file_comment_length;
     unsigned short disk_number_start;
     unsigned short internal_file_attributes;
-    ulg external_file_attributes;
+    unsigned long external_file_attributes;
     Uzp_Siz64 relative_offset_local_header;
 } Uzp_cdir_Rec;
 
@@ -395,8 +394,8 @@ int       UzpValidate        (char *archive, int AllCodes);
 
 /* default I/O functions (can be swapped out via UzpAltMain() entry point): */
 
-int       UzpMessagePrnt   (void *pG, unsigned char *buf, ulg size, int flag);
-int       UzpMessageNull   (void *pG, unsigned char *buf, ulg size, int flag);
+int       UzpMessagePrnt   (void *pG, unsigned char *buf, unsigned long size, int flag);
+int       UzpMessageNull   (void *pG, unsigned char *buf, unsigned long size, int flag);
 int       UzpInput         (void *pG, unsigned char *buf, int *size, int flag);
 void      UzpMorePause     (void *pG, const char *prompt, int flag);
 int       UzpPassword      (void *pG, int *rcnt, char *pwbuf,

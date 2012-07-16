@@ -1084,19 +1084,19 @@
 #endif
 
 #ifndef S_TIME_T_MAX            /* max value of signed (>= 32-bit) time_t */
-#  define S_TIME_T_MAX  ((time_t)(ulg)0x7fffffffL)
+#  define S_TIME_T_MAX  ((time_t)(unsigned long)0x7fffffffL)
 #endif
 #ifndef U_TIME_T_MAX            /* max value of unsigned (>= 32-bit) time_t */
-#  define U_TIME_T_MAX  ((time_t)(ulg)0xffffffffL)
+#  define U_TIME_T_MAX  ((time_t)(unsigned long)0xffffffffL)
 #endif
 #ifdef DOSTIME_MINIMUM          /* min DOSTIME value (1980-01-01) */
 #  undef DOSTIME_MINIMUM
 #endif
-#define DOSTIME_MINIMUM ((ulg)0x00210000L)
+#define DOSTIME_MINIMUM ((unsigned long)0x00210000L)
 #ifdef DOSTIME_2038_01_18       /* approximate DOSTIME equivalent of */
 #  undef DOSTIME_2038_01_18     /*  the signed-32-bit time_t limit */
 #endif
-#define DOSTIME_2038_01_18 ((ulg)0x74320000L)
+#define DOSTIME_2038_01_18 ((unsigned long)0x74320000L)
 
 #ifdef QDOS
 #  define ZSUFX         "_zip"
@@ -1445,7 +1445,7 @@
 # endif /* MODERN && !NO_LIMITS_H */
 #endif /* !Z_UINT4_DEFINED */
 #ifndef Z_UINT4_DEFINED
-  typedef ulg                   z_uint4;
+  typedef unsigned long                   z_uint4;
 # define Z_UINT4_DEFINED
 #endif
 
@@ -1472,7 +1472,7 @@
    for the 64-bit mask.
  */
 #else
-  typedef  ulg                  zusz_t;     /* zipentry sizes & offsets */
+  typedef  unsigned long                  zusz_t;     /* zipentry sizes & offsets */
   typedef  unsigned int         zucn_t;     /* archive entry counts */
   typedef  unsigned short       zuvl_t;     /* multivolume numbers */
 # define MASK_ZUCN64            (~(zucn_t)0)
@@ -1527,7 +1527,7 @@ typedef struct min_info {
     zoff_t offset;
     zusz_t compr_size;       /* compressed size (needed if extended header) */
     zusz_t uncompr_size;     /* uncompressed size (needed if extended header) */
-    ulg crc;                 /* crc (needed if extended header) */
+    unsigned long crc;                 /* crc (needed if extended header) */
     zuvl_t diskstart;        /* no of volume where this entry starts */
     unsigned char hostver;
     unsigned char hostnum;
@@ -1662,8 +1662,8 @@ typedef struct VMStimbuf {
    typedef struct local_file_header {                 /* LOCAL */
        zusz_t csize;
        zusz_t ucsize;
-       ulg last_mod_dos_datetime;
-       ulg crc32;
+       unsigned long last_mod_dos_datetime;
+       unsigned long crc32;
        unsigned char version_needed_to_extract[2];
        unsigned short general_purpose_bit_flag;
        unsigned short compression_method;
@@ -1675,9 +1675,9 @@ typedef struct VMStimbuf {
        zusz_t csize;
        zusz_t ucsize;
        zusz_t relative_offset_local_header;
-       ulg last_mod_dos_datetime;
-       ulg crc32;
-       ulg external_file_attributes;
+       unsigned long last_mod_dos_datetime;
+       unsigned long crc32;
+       unsigned long external_file_attributes;
        zuvl_t disk_number_start;
        unsigned short internal_file_attributes;
        unsigned char version_made_by[2];
@@ -1775,8 +1775,8 @@ int      getZip64Data            OF((__GPRO__ const unsigned char *ef_buf,
                                      unsigned ef_len));
 #endif
 unsigned ef_scan_for_izux        OF((const unsigned char *ef_buf, unsigned ef_len,
-                                     int ef_is_c, ulg dos_mdatetime,
-                                     iztimes *z_utim, ulg *z_uidgid));
+                                     int ef_is_c, unsigned long dos_mdatetime,
+                                     iztimes *z_utim, unsigned long *z_uidgid));
 #if (defined(RISCOS) || defined(ACORN_FTYPE_NFS))
    void *getRISCOSexfield       OF((const unsigned char *ef_buf, unsigned ef_len));
 #endif
@@ -1795,7 +1795,7 @@ void     zi_end_central          OF((__GPRO));
 int      zipinfo                 OF((__GPRO));
 /* static int      zi_long       OF((__GPRO__ zusz_t *pEndprev)); */
 /* static int      zi_short      OF((__GPRO)); */
-/* static char    *zi_time       OF((__GPRO__ const ulg *datetimez,
+/* static char    *zi_time       OF((__GPRO__ const unsigned long *datetimez,
                                      const time_t *modtimez, char *d_t_str));*/
 #endif /* !NO_ZIPINFO */
 
@@ -1806,7 +1806,7 @@ int      zipinfo                 OF((__GPRO));
 int      list_files              OF((__GPRO));
 #ifdef TIMESTAMP
    int   get_time_stamp          OF((__GPRO__  time_t *last_modtime,
-                                    ulg *nmember));
+                                    unsigned long *nmember));
 #endif
 int      ratio                   OF((zusz_t uc, zusz_t c));
 void     fnprint                 OF((__GPRO));
@@ -1826,17 +1826,17 @@ int      readbyte             OF((__GPRO));
 int      fillinbuf            OF((__GPRO));
 int      seek_zipf            OF((__GPRO__ zoff_t abs_offset));
 #ifdef FUNZIP
-   int   flush                OF((__GPRO__ ulg size));  /* actually funzip.c */
+   int   flush                OF((__GPRO__ unsigned long size));  /* actually funzip.c */
 #else
-   int   flush                OF((__GPRO__ unsigned char *buf, ulg size, int unshrink));
+   int   flush                OF((__GPRO__ unsigned char *buf, unsigned long size, int unshrink));
 #endif
 /* static int  disk_error     OF((__GPRO)); */
 void     handler              OF((int signal));
-time_t   dos_to_unix_time     OF((ulg dos_datetime));
+time_t   dos_to_unix_time     OF((unsigned long dos_datetime));
 int      check_for_newer      OF((__GPRO__ char *filename)); /* os2,vmcms,vms */
 int      do_string            OF((__GPRO__ unsigned int length, int option));
 unsigned short      makeword             OF((const unsigned char *b));
-ulg      makelong             OF((const unsigned char *sig));
+unsigned long      makelong             OF((const unsigned char *sig));
 zusz_t   makeint64            OF((const unsigned char *sig));
 char    *fzofft               OF((__GPRO__ zoff_t val,
                                   const char *pre, const char *post));
@@ -1896,9 +1896,9 @@ int    extract_or_test_files     OF((__GPRO));
 #ifndef SFX
   unsigned find_compr_idx        OF((unsigned compr_methodnum));
 #endif
-int    memextract                OF((__GPRO__ unsigned char *tgt, ulg tgtsize,
-                                     const unsigned char *src, ulg srcsize));
-int    memflush                  OF((__GPRO__ const unsigned char *rawbuf, ulg size));
+int    memextract                OF((__GPRO__ unsigned char *tgt, unsigned long tgtsize,
+                                     const unsigned char *src, unsigned long srcsize));
+int    memflush                  OF((__GPRO__ const unsigned char *rawbuf, unsigned long size));
 #if (defined(VMS) || defined(VMS_TEXT_CONV))
    unsigned char   *extract_izvms_block    OF((__GPRO__ const unsigned char *ebdata,
                                      unsigned size, unsigned *retlen,
@@ -1956,7 +1956,7 @@ int    huft_build                OF((__GPRO__ const unsigned *b, unsigned n,
    /* this obsolescent entry point kept for compatibility: */
    int      UzpUnzip              OF((int argc, char **argv));/* use UzpMain */
 #ifdef OS2DLL
-   int      varmessage            OF((__GPRO__ const unsigned char *buf, ulg size));
+   int      varmessage            OF((__GPRO__ const unsigned char *buf, unsigned long size));
    int      varputchar            OF((__GPRO__ int c));         /* rexxapi.c */
    int      finish_REXX_redirect  OF((__GPRO));                 /* rexxapi.c */
 #endif
@@ -1991,7 +1991,7 @@ int    huft_build                OF((__GPRO__ const unsigned *b, unsigned n,
 
 #ifdef OS2   /* GetFileTime conflicts with something in Win32 header files */
 #if (defined(REENTRANT) && defined(USETHREADID))
-   ulg   GetThreadId          OF((void));
+   unsigned long   GetThreadId          OF((void));
 #endif
    int   GetCountryInfo       OF((void));                           /* os2.c */
    long  GetFileTime          OF((const char *name));              /* os2.c */
@@ -2057,7 +2057,7 @@ int    huft_build                OF((__GPRO__ const unsigned *b, unsigned n,
    void   return_VMS          OF((int zip_error));                  /* vms.c */
 #endif
 #ifdef VMSCLI
-   ulg    vms_unzip_cmdline   OF((int *, char ***));            /* cmdline.c */
+   unsigned long    vms_unzip_cmdline   OF((int *, char ***));            /* cmdline.c */
    int    VMSCLI_usage        OF((__GPRO__ int error));         /* cmdline.c */
 #endif
 #endif
@@ -2071,7 +2071,7 @@ int    huft_build                OF((__GPRO__ const unsigned *b, unsigned n,
 #ifdef NTSD_EAS
    void  process_defer_NT     OF((__GPRO));                       /* win32.c */
    int   test_NTSD      OF((__GPRO__ unsigned char *eb, unsigned eb_size,
-                            unsigned char *eb_ucptr, ulg eb_ucsize));       /* win32.c */
+                            unsigned char *eb_ucptr, unsigned long eb_ucsize));       /* win32.c */
 #  define TEST_NTSD     test_NTSD
 #endif
 #ifdef W32_STAT_BANDAID
@@ -2219,11 +2219,11 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
 #  else
 #    ifdef INT_SPRINTF  /* optimized version for "int sprintf()" flavour */
 #      define Info(buf,flag,sprf_arg) \
-       (*G.message)((void *)&G, (unsigned char *)(buf), (ulg)sprintf sprf_arg, (flag))
+       (*G.message)((void *)&G, (unsigned char *)(buf), (unsigned long)sprintf sprf_arg, (flag))
 #    else          /* generic version, does not use sprintf() return value */
 #      define Info(buf,flag,sprf_arg) \
        (*G.message)((void *)&G, (unsigned char *)(buf), \
-                     (ulg)(sprintf sprf_arg, strlen((char *)(buf))), (flag))
+                     (unsigned long)(sprintf sprf_arg, strlen((char *)(buf))), (flag))
 #    endif
 #  endif
 #endif /* !Info */
@@ -2287,31 +2287,31 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
 
 
 #ifdef FUNZIP
-#  define FLUSH(w)  flush(__G__ (ulg)(w))
+#  define FLUSH(w)  flush(__G__ (unsigned long)(w))
 #  define NEXTBYTE  getc(G.in)   /* redefined in crypt.h if full version */
 #else
-#  define FLUSH(w)  ((G.mem_mode) ? memflush(__G__ redirSlide,(ulg)(w)) \
-                                  : flush(__G__ redirSlide,(ulg)(w),0))
+#  define FLUSH(w)  ((G.mem_mode) ? memflush(__G__ redirSlide,(unsigned long)(w)) \
+                                  : flush(__G__ redirSlide,(unsigned long)(w),0))
 #  define NEXTBYTE  (G.incnt-- > 0 ? (int)(*G.inptr++) : readbyte(__G))
 #endif
 
 
 #define READBITS(nbits,zdest) {if(nbits>G.bits_left) {int temp; G.zipeof=1;\
   while (G.bits_left<=8*(int)(sizeof(G.bitbuf)-1) && (temp=NEXTBYTE)!=EOF) {\
-  G.bitbuf|=(ulg)temp<<G.bits_left; G.bits_left+=8; G.zipeof=0;}}\
+  G.bitbuf|=(unsigned long)temp<<G.bits_left; G.bits_left+=8; G.zipeof=0;}}\
   zdest=(shrint)((unsigned)G.bitbuf&mask_bits[nbits]);G.bitbuf>>=nbits;\
   G.bits_left-=nbits;}
 
 /*
  * macro READBITS(nbits,zdest)    * only used by unreduce and unshrink *
  *  {
- *      if (nbits > G.bits_left) {  * fill G.bitbuf, 8*sizeof(ulg) bits *
+ *      if (nbits > G.bits_left) {  * fill G.bitbuf, 8*sizeof(unsigned long) bits *
  *          int temp;
  *
  *          G.zipeof = 1;
  *          while (G.bits_left <= 8*(int)(sizeof(G.bitbuf)-1) &&
  *                 (temp = NEXTBYTE) != EOF) {
- *              G.bitbuf |= (ulg)temp << G.bits_left;
+ *              G.bitbuf |= (unsigned long)temp << G.bits_left;
  *              G.bits_left += 8;
  *              G.zipeof = 0;
  *          }

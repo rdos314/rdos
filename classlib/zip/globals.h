@@ -81,7 +81,7 @@
     int memextract(__G__ tgt, tgtsize, src, srcsize)
         __GDEF
         unsigned char *tgt, *src;
-        ulg tgtsize, srcsize;
+        unsigned long tgtsize, srcsize;
     {
       ... stuff ...
     }
@@ -198,12 +198,12 @@ typedef struct Globals {
 # ifndef NO_SLIDE_REDIR
      int redirect_slide;  /* redirect decompression area to mem buffer */
 #  if (defined(USE_DEFLATE64) && defined(INT_16BIT))
-     ulg _wsize;          /* size of sliding window exceeds "unsigned" range */
+     unsigned long _wsize;          /* size of sliding window exceeds "unsigned" range */
 #  else
      unsigned _wsize;     /* sliding window size can be hold in unsigned */
 #  endif
 # endif
-     ulg redirect_size;            /* size of redirected output buffer */
+     unsigned long redirect_size;            /* size of redirected output buffer */
      unsigned char *redirect_buffer;         /* pointer to head of allocated buffer */
      unsigned char *redirect_pointer;        /* pointer past end of written data */
 # ifndef NO_SLIDE_REDIR
@@ -224,11 +224,11 @@ typedef struct Globals {
     union work area;                /* see unzpriv.h for definition of work */
 
 #if (!defined(USE_ZLIB) || defined(USE_OWN_CRCTAB))
-    const ulg near *crc_32_tab;
+    const unsigned long near *crc_32_tab;
 #else
     const unsigned *crc_32_tab;
 #endif
-    ulg       crc32val;             /* CRC shift reg. (was static in funzip) */
+    unsigned long       crc32val;             /* CRC shift reg. (was static in funzip) */
 
 #ifdef FUNZIP
     FILE      *in;                  /* file descriptor of compressed stream */
@@ -238,7 +238,7 @@ typedef struct Globals {
     int       incnt;
 
 #ifndef FUNZIP
-    ulg       bitbuf;
+    unsigned long       bitbuf;
     int       bits_left;            /* unreduce and unshrink only */
     int       zipeof;
     char      *argv0;               /* used for NT and EXE_EXTENSION */
@@ -258,13 +258,13 @@ typedef struct Globals {
 
     int      mem_mode;
     unsigned char      *outbufptr;           /* extract.c static */
-    ulg      outsize;              /* extract.c static */
+    unsigned long      outsize;              /* extract.c static */
     int      reported_backslash;   /* extract.c static */
     int      disk_full;
     int      newfile;
 
     int      didCRlast;            /* fileio static */
-    ulg      numlines;             /* fileio static: number of lines printed */
+    unsigned long      numlines;             /* fileio static: number of lines printed */
     int      sol;                  /* fileio static: at start of line */
     int      no_ecrec;             /* process static */
 #ifdef SYMLINKS
@@ -285,7 +285,7 @@ typedef struct Globals {
 #endif                             /*  else malloc'd ONLY if unshrink and -a */
 #endif /* !FUNZIP */
     unsigned char      *outptr;
-    ulg      outcnt;               /* number of chars stored in outbuf */
+    unsigned long      outcnt;               /* number of chars stored in outbuf */
 #ifndef FUNZIP
     char     filename[FILNAMSIZ];  /* also used by NT for temporary SFX path */
 #ifdef UNICODE_SUPPORT
@@ -298,7 +298,7 @@ typedef struct Globals {
 #endif
 
     int      unipath_version;      /* version of Unicode field */
-    ulg      unipath_checksum;     /* Unicode field checksum */
+    unsigned long      unipath_checksum;     /* Unicode field checksum */
     char     *unipath_filename;    /* UTF-8 path */
 #endif /* UNICODE_SUPPORT */
 
@@ -338,7 +338,7 @@ typedef struct Globals {
     const unsigned char *cpdext;                 /* inflate static */
 #endif
     unsigned wp;              /* inflate static: current position in slide */
-    ulg bb;                   /* inflate static: bit buffer */
+    unsigned long bb;                   /* inflate static: bit buffer */
     unsigned bk;              /* inflate static: bits count in bit buffer */
 #endif /* ?USE_ZLIB */
 

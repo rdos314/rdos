@@ -258,7 +258,7 @@ unsigned readbuf(char *buf, register unsigned size)   /* return number of bytes 
                 /* another hack, but no real harm copying same thing twice */
                 (*G.message)((void *)&G,
                   (unsigned char *)LoadFarString(ReadError),  /* CANNOT use slide */
-                  (ulg)strlen(LoadFarString(ReadError)), 0x401);
+                  (unsigned long)strlen(LoadFarString(ReadError)), 0x401);
                 return 0;  /* discarding some data; better than lock-up */
             }
             /* buffer ALWAYS starts on a block boundary:  */
@@ -301,7 +301,7 @@ int readbyte(__G)   /* refill inbuf and return a byte if available, else EOF */
             /* another hack, but no real harm copying same thing twice */
             (*G.message)((void *)&G,
               (unsigned char *)LoadFarString(ReadError),
-              (ulg)strlen(LoadFarString(ReadError)), 0x401);
+              (unsigned long)strlen(LoadFarString(ReadError)), 0x401);
             echon();
             DESTROYGLOBALS();
             EXIT(PK_BADERR);    /* totally bailing; better than lock-up */
@@ -426,7 +426,7 @@ int seek_zipf(zoff_t abs_offset)
 /* Function flush() */   /* returns PK error codes: */
 /********************/   /* if tflag => always 0; PK_DISK if write error */
 
-int flush(unsigned char *rawbuf, ulg size, int unshrink)
+int flush(unsigned char *rawbuf, unsigned long size, int unshrink)
 {
     register unsigned char *p;
     register unsigned char *q;
@@ -520,7 +520,7 @@ int flush(unsigned char *rawbuf, ulg size, int unshrink)
             if (!uO.cflag && !RdosWriteFile(G.outfile, transbuf, (extent)(q-transbuf)))
                 return disk_error(__G);
             else if (uO.cflag && (*G.message)((void *)&G, transbuf,
-                (ulg)(q-transbuf), 0))
+                (unsigned long)(q-transbuf), 0))
                 return PK_OK;
         }
     }
@@ -581,7 +581,7 @@ void WriteScreen(char *buf, int size)
 /* Function UzpMessagePrnt() */
 /*****************************/
 
-int  UzpMessagePrnt(void *pG, unsigned char *buf, ulg size, int flag)
+int  UzpMessagePrnt(void *pG, unsigned char *buf, unsigned long size, int flag)
 {
     /* IMPORTANT NOTE:
      *    The name of the first parameter of UzpMessagePrnt(), which passes
@@ -680,7 +680,7 @@ int  UzpMessagePrnt(void *pG, unsigned char *buf, ulg size, int flag)
             }
             INCSTR(p);
         } /* end while */
-        size = (ulg)(p - q);   /* remaining text */
+        size = (unsigned long)(p - q);   /* remaining text */
     }
 
     if (size) {
@@ -827,7 +827,7 @@ ZCONST unsigned short ydays[] =
 /* Function dos_to_unix_time() */ /* used for freshening/updating/timestamps */
 /*******************************/
 
-time_t dos_to_unix_time(ulg dosdatetime)
+time_t dos_to_unix_time(unsigned long dosdatetime)
 {
     time_t m_time;
     int yr, mo, dy, hh, mm, ss;
@@ -867,7 +867,7 @@ time_t dos_to_unix_time(ulg dosdatetime)
                       (unsigned long)(mm * 60 + ss));
       /* - 1;   MS-DOS times always rounded up to nearest even second */
     TTrace((stderr, "dos_to_unix_time:\n"));
-    TTrace((stderr, "  m_time before timezone = %lu\n", (ulg)m_time));
+    TTrace((stderr, "  m_time before timezone = %lu\n", (unsigned long)m_time));
 
 /*---------------------------------------------------------------------------
     Adjust for local standard timezone offset.
@@ -876,7 +876,7 @@ time_t dos_to_unix_time(ulg dosdatetime)
     /* tzset was already called at start of process_zipfiles() */
     /* tzset(); */              /* set `timezone' variable */
     m_time += timezone;         /* seconds WEST of GMT:  add */
-    TTrace((stderr, "  m_time after timezone =  %lu\n", (ulg)m_time));
+    TTrace((stderr, "  m_time after timezone =  %lu\n", (unsigned long)m_time));
 
 /*---------------------------------------------------------------------------
     Adjust for local daylight savings (summer) time.
@@ -891,7 +891,7 @@ time_t dos_to_unix_time(ulg dosdatetime)
     if (((tm = localtime((time_t *)&m_time)) != NULL) && tm->tm_isdst)
         m_time -= 60L * 60L;    /* adjust for daylight savings time */
     NATIVE_TO_TIMET(m_time)     /* NOP unless MSC 7.0 or Macintosh */
-    TTrace((stderr, "  m_time after DST =       %lu\n", (ulg)m_time));
+    TTrace((stderr, "  m_time after DST =       %lu\n", (unsigned long)m_time));
 
     if ( (dosdatetime >= DOSTIME_2038_01_18) &&
          (m_time < (time_t)0x70000000L) )
@@ -934,7 +934,7 @@ int check_for_newer(char *filename)  /* return 1 if existing file is newer */
     archive  = dos_to_unix_time(G.lrec.last_mod_dos_datetime);
 
     TTrace((stderr, "check_for_newer:  existing %lu, archive %lu, e-a %ld\n",
-      (ulg)existing, (ulg)archive, (long)(existing-archive)));
+      (unsigned long)existing, (unsigned long)archive, (long)(existing-archive)));
 
     return (existing >= archive);
 
@@ -1024,7 +1024,7 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
                 A_TO_N(G.outbuf);   /* translate string to native */
             }
 
-            (*G.message)((void *)&G, G.outbuf, (ulg)(q-G.outbuf), 0);
+            (*G.message)((void *)&G, G.outbuf, (unsigned long)(q-G.outbuf), 0);
         }
         /* add '\n' if not at start of line */
         (*G.message)((void *)&G, slide, 0L, 0x40);
@@ -1145,15 +1145,15 @@ unsigned short makeword(ZCONST unsigned char *b)
 /* Function makelong() */
 /***********************/
 
-ulg makelong(ZCONST unsigned char *sig)
+unsigned long makelong(ZCONST unsigned char *sig)
 {
     /*
      * Convert intel style 'long' variable to non-Intel non-16-bit
      * host format.  This routine also takes care of byte-ordering.
      */
-    return (((ulg)sig[3]) << 24)
-         + (((ulg)sig[2]) << 16)
-         + (ulg)((((unsigned)sig[1]) << 8)
+    return (((unsigned long)sig[3]) << 24)
+         + (((unsigned long)sig[2]) << 16)
+         + (unsigned long)((((unsigned)sig[1]) << 8)
                + ((unsigned)sig[0]));
 }
 
@@ -1170,8 +1170,8 @@ zusz_t makeint64(ZCONST unsigned char *sig)
     if ((sig[7] | sig[6] | sig[5] | sig[4]) != 0)
         return (zusz_t)0xffffffffL;
     else
-        return (zusz_t)((((ulg)sig[3]) << 24)
-                      + (((ulg)sig[2]) << 16)
+        return (zusz_t)((((unsigned long)sig[3]) << 24)
+                      + (((unsigned long)sig[2]) << 16)
                       + (((unsigned)sig[1]) << 8)
                       + (sig[0]));
 
