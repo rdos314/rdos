@@ -775,7 +775,7 @@ static int store_info(__G)   /* return 0 if skipping, 1 if OK */
         Info(slide, 0x401, ((char *)slide, LoadFarString(WarnNoMemCFName),
           FnFilter1(G.filename)));
     } else
-        zfstrcpy(G.pInfo->cfilname, G.filename);
+        strcpy(G.pInfo->cfilname, G.filename);
 
     /* map whatever file attributes we have into the local format */
     mapattr(__G);   /* GRR:  worry about return value later */
@@ -990,7 +990,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
                   LoadFarStringSmall2(LvsCFNamMsg),
                   FnFilter2(cFile_PrintBuf), FnFilter1(G.filename)));
 #  undef    cFile_PrintBuf
-                zfstrcpy(G.filename, G.pInfo->cfilname);
+                strcpy(G.filename, G.pInfo->cfilname);
                 if (error_in_archive < PK_WARN)
                     error_in_archive = PK_WARN;
             }
