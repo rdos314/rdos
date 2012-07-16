@@ -1018,12 +1018,8 @@ unsigned long      makelong             OF((const unsigned char *sig));
 zusz_t   makeint64            OF((const unsigned char *sig));
 char    *fzofft               OF((__GPRO__ zoff_t val,
                                   const char *pre, const char *post));
-#if (!defined(STR_TO_ISO) || defined(NEED_STR2ISO))
    char *str2iso              OF((char *dst, const char *src));
-#endif
-#if (!defined(STR_TO_OEM) || defined(NEED_STR2OEM))
    char *str2oem              OF((char *dst, const char *src));
-#endif
 #ifdef NO_STRNICMP
    int   zstrnicmp            OF((register const char *s1,
                                   register const char *s2,
@@ -1610,24 +1606,9 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
 #endif
 
 /* codepage conversion setup for testp() in crypt.c */
-#ifdef CRTL_CP_IS_ISO
 #  ifndef STR_TO_CP2
 #    define STR_TO_CP2  STR_TO_OEM
 #  endif
-#else
-#  ifdef CRTL_CP_IS_OEM
-#    ifndef STR_TO_CP2
-#      define STR_TO_CP2  STR_TO_ISO
-#    endif
-#  else /* native internal CP is neither ISO nor OEM */
-#    ifndef STR_TO_CP1
-#      define STR_TO_CP1  STR_TO_ISO
-#    endif
-#    ifndef STR_TO_CP2
-#      define STR_TO_CP2  STR_TO_OEM
-#    endif
-#  endif
-#endif
 
 
 /* Convert filename (and file comment string) into "internal" charset.
