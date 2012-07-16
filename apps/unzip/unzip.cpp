@@ -86,47 +86,47 @@ static void  show_version_info  OF((__GPRO));
 #include "consts.h"
 
 
-   static const char Far EnvUnZip[] = ENV_UNZIP;
-   static const char Far EnvUnZip2[] = ENV_UNZIP2;
-   static const char Far EnvZipInfo[] = ENV_ZIPINFO;
-   static const char Far EnvZipInfo2[] = ENV_ZIPINFO2;
-  static const char Far NoMemEnvArguments[] =
+   static const char EnvUnZip[] = ENV_UNZIP;
+   static const char EnvUnZip2[] = ENV_UNZIP2;
+   static const char EnvZipInfo[] = ENV_ZIPINFO;
+   static const char EnvZipInfo2[] = ENV_ZIPINFO2;
+  static const char NoMemEnvArguments[] =
     "envargs:  cannot get memory for arguments";
-  static const char Far CmdLineParamTooLong[] =
+  static const char CmdLineParamTooLong[] =
     "error:  command line parameter #%d exceeds internal size limit\n";
 
-   static const char Far NotExtracting[] =
+   static const char NotExtracting[] =
      "caution:  not extracting; -d ignored\n";
-   static const char Far MustGiveExdir[] =
+   static const char MustGiveExdir[] =
      "error:  must specify directory to which to extract with -d option\n";
-   static const char Far OnlyOneExdir[] =
+   static const char OnlyOneExdir[] =
      "error:  -d option used more than once (only one exdir allowed)\n";
 
-   static const char Far MustGivePasswd[] =
+   static const char MustGivePasswd[] =
      "error:  must give decryption password with -P option\n";
 
-   static const char Far Zfirst[] =
+   static const char Zfirst[] =
    "error:  -Z must be first option for ZipInfo mode (check UNZIP variable?)\n";
-static const char Far InvalidOptionsMsg[] = "error:\
+static const char InvalidOptionsMsg[] = "error:\
   -fn or any combination of -c, -l, -p, -t, -u and -v options invalid\n";
-static const char Far IgnoreOOptionMsg[] =
+static const char IgnoreOOptionMsg[] =
   "caution:  both -n and -o specified; ignoring -o\n";
 
 /* usage() strings */
-   static const char Far Example3[] = "ReadMe";
-   static const char Far Example2[] = " \
+   static const char Example3[] = "ReadMe";
+   static const char Example2[] = " \
  unzip -p foo | more  => send contents of foo.zip via pipe into program more\n";
 
 /* local1[]:  command options */
-   static const char Far local1[] = "";
+   static const char local1[] = "";
 
 /* local2[] and local3[]:  modifier options */
-   static const char Far local2[] = " -M  pipe through \"more\" pager";
-   static const char Far local3[] = "\n";
+   static const char local2[] = " -M  pipe through \"more\" pager";
+   static const char local3[] = "\n";
 
-   static const char Far ZipInfoExample[] = "*, ?, [] (e.g., \"[a-j]*.zip\")";
+   static const char ZipInfoExample[] = "*, ?, [] (e.g., \"[a-j]*.zip\")";
 
-static const char Far ZipInfoUsageLine1[] = "\
+static const char ZipInfoUsageLine1[] = "\
 ZipInfo %d.%d%d%s of %s, by Greg Roelofs and the Info-ZIP group.\n\
 \n\
 List name, date/time, attribute, size, compression method, etc., about files\n\
@@ -135,63 +135,63 @@ in list (excluding those in xlist) contained in the specified .zip archive(s).\
    usage:  zipinfo [-12smlvChMtTz] file[.zip] [list...] [-x xlist...]\n\
       or:  unzip %s-Z%s [-12smlvChMtTz] file[.zip] [list...] [-x xlist...]\n";
 
-static const char Far ZipInfoUsageLine2[] = "\nmain\
+static const char ZipInfoUsageLine2[] = "\nmain\
  listing-format options:             -s  short Unix \"ls -l\" format (def.)\n\
   -1  filenames ONLY, one per line       -m  medium Unix \"ls -l\" format\n\
   -2  just filenames but allow -h/-t/-z  -l  long Unix \"ls -l\" format\n\
                                          -v  verbose, multi-page format\n";
 
-static const char Far ZipInfoUsageLine3[] = "miscellaneous options:\n\
+static const char ZipInfoUsageLine3[] = "miscellaneous options:\n\
   -h  print header line       -t  print totals for listed files or for all\n\
   -z  print zipfile comment   -T  print file times in sortable decimal format\
 \n  -C  be case-insensitive   %s\
   -x  exclude filenames that follow from listing\n";
-   static const char Far ZipInfoUsageLine4[] =
+   static const char ZipInfoUsageLine4[] =
      "  -M  page output through built-in \"more\"\n";
 
-   static const char Far CompileOptions[] =
+   static const char CompileOptions[] =
      "UnZip special compilation options:\n";
-   static const char Far CompileOptFormat[] = "        %s\n";
-   static const char Far EnvOptions[] =
+   static const char CompileOptFormat[] = "        %s\n";
+   static const char EnvOptions[] =
      "\nUnZip and ZipInfo environment options:\n";
-   static const char Far EnvOptFormat[] = "%16s:  %.1024s\n";
-   static const char Far None[] = "[none]";
-     static const char Far Copyright_Clean[] =
+   static const char EnvOptFormat[] = "%16s:  %.1024s\n";
+   static const char None[] = "[none]";
+     static const char Copyright_Clean[] =
      "COPYRIGHT_CLEAN (PKZIP 0.9x unreducing method not supported)";
 #  ifdef DEBUG
-     static const char Far UDebug[] = "DEBUG";
+     static const char UDebug[] = "DEBUG";
 #  endif
-     static const char Far SetDirAttrib[] = "SET_DIR_ATTRIB";
-     static const char Far Use_Unshrink[] =
+     static const char SetDirAttrib[] = "SET_DIR_ATTRIB";
+     static const char Use_Unshrink[] =
      "USE_UNSHRINK (PKZIP/Zip 1.x unshrinking method supported)";
-     static const char Far UseZlib[] =
+     static const char UseZlib[] =
      "USE_ZLIB (compiled with version %s; using version %s)";
-     static const char Far Decryption[] =
+     static const char Decryption[] =
        "        [decryption, version %d.%d%s of %s]\n";
-     static const char Far CryptDate[] = CR_VERSION_DATE;
+     static const char CryptDate[] = CR_VERSION_DATE;
 
-   static const char Far UnzipUsageLine1[] = "\
+   static const char UnzipUsageLine1[] = "\
 UnZip %d.%d%d%s of %s, by Info-ZIP.  Maintained by C. Spieler.  Send\n\
 bug reports using http://www.info-zip.org/zip-bug.html; see README for details.\
 \n\n";
 
 # define UnzipUsageLine1v       UnzipUsageLine1
 
-static const char Far UnzipUsageLine2v[] = "\
+static const char UnzipUsageLine2v[] = "\
 Latest sources and executables are at ftp://ftp.info-zip.org/pub/infozip/ ;\
 \nsee ftp://ftp.info-zip.org/pub/infozip/UnZip.html for other sites.\
 \n\n";
 
-static const char Far UnzipUsageLine2[] = "\
+static const char UnzipUsageLine2[] = "\
 Usage: unzip %s[-opts[modifiers]] file[.zip] [list] [-x xlist] [-d exdir]\n \
  Default action is to extract files in list, except those in xlist, to exdir;\n\
   file[.zip] may be a wildcard.  %s\n";
 
 #  define ZIPINFO_MODE_OPTION  "[-Z] "
-   static const char Far ZipInfoMode[] =
+   static const char ZipInfoMode[] =
      "-Z => ZipInfo mode (\"unzip -Z\" for usage).";
 
-static const char Far UnzipUsageLine3[] = "\n\
+static const char UnzipUsageLine3[] = "\n\
   -p  extract files to pipe, no messages     -l  list files (short format)\n\
   -f  freshen existing files, create none    -t  test compressed archive data\n\
   -u  update files, create if necessary      -z  display archive comment only\n\
@@ -206,7 +206,7 @@ static const char Far UnzipUsageLine3[] = "\n\
  * Likely, other advanced options should be moved to an extended help page and
  * the option to list that page put here.  [E. Gordon, 2008-3-16]
  */
-static const char Far UnzipUsageLine4[] = "\
+static const char UnzipUsageLine4[] = "\
 modifiers:\n\
   -n  never overwrite existing files         -q  quiet mode (-qq => quieter)\n\
   -o  overwrite files WITHOUT prompting      -a  auto-convert any text files\n\
@@ -214,7 +214,7 @@ modifiers:\n\
   -C  match filenames case-insensitively     -L  make (some) names \
 lowercase\n %-42s  -V  retain VMS version numbers\n%s";
 
-static const char Far UnzipUsageLine5[] = "\
+static const char UnzipUsageLine5[] = "\
 See \"unzip -hh\" or unzip.txt for more help.  Examples:\n\
   unzip data1 -x joe   => extract all files except joe from zipfile data1.zip\n\
 %s\

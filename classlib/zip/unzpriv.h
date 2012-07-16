@@ -192,19 +192,6 @@ typedef size_t extent;
 #  endif
 #endif
 
-#if (defined(INT_16BIT) && (defined(USE_DEFLATE64) || lenEOL > 1))
-   /* For environments using 16-bit integers OUTBUFSIZ must be limited to
-    * less than 64k (do_string() uses "unsigned" in calculations involving
-    * OUTBUFSIZ).  This is achieved by defining MED_MEM when WSIZE = 64k (aka
-    * Deflate64 support enabled) or EOL markers contain multiple characters.
-    * (The rule gets applied AFTER the default rule for INBUFSIZ because it
-    * is not neccessary to reduce INBUFSIZE in this case.)
-    */
-#  if (!defined(SMALL_MEM) && !defined(MED_MEM))
-#    define MED_MEM
-#  endif
-#endif
-
 /* Logic for case of small memory, length of EOL > 1:  if OUTBUFSIZ == 2048,
  * OUTBUFSIZ>>1 == 1024 and OUTBUFSIZ>>7 == 16; therefore rawbuf is 1008 bytes
  * and transbuf 1040 bytes.  Have room for 32 extra EOL chars; 1008/32 == 31.5
@@ -216,15 +203,9 @@ typedef size_t extent;
 #  define zfstrcmp(s1, s2)          strcmp((s1), (s2))
 #  define zfmalloc                  malloc
 #  define zffree(x)                 free(x)
-#  ifdef QDOS
-#    define LoadFarString(x)        Qstrfix(x)   /* fix up _ for '.' */
-#    define LoadFarStringSmall(x)   Qstrfix(x)
-#    define LoadFarStringSmall2(x)  Qstrfix(x)
-#  else
 #    define LoadFarString(x)        (char *)(x)
 #    define LoadFarStringSmall(x)   (char *)(x)
 #    define LoadFarStringSmall2(x)  (char *)(x)
-#  endif
 #  ifdef MED_MEM
 #    define OUTBUFSIZ 0xFF80         /* can't malloc arrays of 0xFFE8 or more */
 #    define TRANSBUFSIZ 0xFF80
@@ -232,17 +213,9 @@ typedef size_t extent;
 #  else
 #    define OUTBUFSIZ (lenEOL*WSIZE) /* more efficient text conversion */
 #    define TRANSBUFSIZ (lenEOL*OUTBUFSIZ)
-#    ifdef AMIGA
-       typedef short shrint;
-#    else
        typedef int  shrint;          /* for efficiency/speed, we hope... */
-#    endif
 #  endif /* ?MED_MEM */
 #  define RAWBUFSIZ OUTBUFSIZ
-
-#ifndef Far
-#  define Far
-#endif
 
 #ifndef Cdecl
 #  define Cdecl
@@ -485,7 +458,7 @@ typedef size_t extent;
    /* Any system without a special calloc function */
 # ifndef zcalloc
 #  define zcalloc(items, size) \
-          (void far *)calloc((unsigned)(items), (unsigned)(size))
+          (void *)calloc((unsigned)(items), (unsigned)(size))
 # endif
 # ifndef zcfree
 #  define zcfree    free
@@ -807,7 +780,7 @@ typedef size_t extent;
 #  else
 #    define ZSUFX       ".zip"
 #  endif
-#  define ALT_ZSUFX     ".ZIP"   /* Unix-only so far (only case-sensitive fs) */
+#  define ALT_ZSUFX     ".ZIP"   /* Unix-only so (only case-sensitive fs) */
 #endif
 
 #define CENTRAL_HDR_SIG   "\001\002"   /* the infamous "PK" signature bytes, */
@@ -1246,7 +1219,7 @@ typedef struct min_info {
     unsigned GPFIsUTF8: 1;   /* crec gen_purpose_flag UTF-8 bit 11 is set */
 #endif
 #ifndef SFX
-    char Far *cfilname;      /* central header version of filename */
+    char *cfilname;      /* central header version of filename */
 #endif
 } min_info;
 
@@ -1571,14 +1544,14 @@ char    *fzofft               OF((__GPRO__ zoff_t val,
    unsigned char *uzmbsrchr OF((const unsigned char *str, unsigned int c));
 #endif
 #ifdef SMALL_MEM
-   char *fLoadFarString       OF((__GPRO__ const char Far *sz));
-   char *fLoadFarStringSmall  OF((__GPRO__ const char Far *sz));
-   char *fLoadFarStringSmall2 OF((__GPRO__ const char Far *sz));
+   char *fLoadFarString       OF((__GPRO__ const char *sz));
+   char *fLoadFarStringSmall  OF((__GPRO__ const char *sz));
+   char *fLoadFarStringSmall2 OF((__GPRO__ const char *sz));
    #ifndef zfstrcpy
-     char Far * Far zfstrcpy  OF((char Far *s1, const char Far *s2));
+     char * zfstrcpy  OF((char *s1, const char *s2));
    #endif
    #if (!defined(SFX) && !defined(zfstrcmp))
-     int Far zfstrcmp         OF((const char Far *s1, const char Far *s2));
+     int zfstrcmp         OF((const char *s1, const char *s2));
    #endif
 #endif
 
@@ -1839,8 +1812,8 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
    void  prepare_ISO_OEM_translat   OF((__GPRO));                   /* local */
 #endif
 #if (defined(MALLOC_WORK) && defined(MY_ZCALLOC))
-   void far *zcalloc    OF((unsigned int, unsigned int));
-   void zcfree          OF((void far *));
+   void *zcalloc    OF((unsigned int, unsigned int));
+   void zcfree          OF((void *));
 #endif /* MALLOC_WORK && MY_ZCALLOC */
 #ifdef SYSTEM_SPECIFIC_CTOR
    void  SYSTEM_SPECIFIC_CTOR   OF((__GPRO));                       /* local */
@@ -2054,7 +2027,7 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
  *  NOTE:  Using the "native" macro means that is it the only part of unzip
  *    which knows which translation table (if any) is actually in use to
  *    produce the native character set.  This makes adding new character set
- *    translation tables easy, insofar as all that is needed is an appropriate
+ *    translation tables easy, insoas all that is needed is an appropriate
  *    "native" macro definition and the translation table itself.  Currently,
  *    the only non-ASCII native character set implemented is EBCDIC, but this
  *    may not always be so.
@@ -2206,24 +2179,24 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
    extern const unsigned char ebcdic[];
 #endif
 #ifdef IZ_ISO2OEM_ARRAY
-   extern const unsigned char Far *iso2oem;
-   extern const unsigned char Far iso2oem_850[];
+   extern const unsigned char *iso2oem;
+   extern const unsigned char iso2oem_850[];
 #endif
 #ifdef IZ_OEM2ISO_ARRAY
-   extern const unsigned char Far *oem2iso;
-   extern const unsigned char Far oem2iso_850[];
+   extern const unsigned char *oem2iso;
+   extern const unsigned char oem2iso_850[];
 #endif
 
-   extern const char Far  VersionDate[];
-   extern const char Far  CentSigMsg[];
-   extern const char Far  EndSigMsg[];
-   extern const char Far  SeekMsg[];
-   extern const char Far  FilenameNotMatched[];
-   extern const char Far  ExclFilenameNotMatched[];
-   extern const char Far  ReportMsg[];
+   extern const char  VersionDate[];
+   extern const char  CentSigMsg[];
+   extern const char  EndSigMsg[];
+   extern const char  SeekMsg[];
+   extern const char  FilenameNotMatched[];
+   extern const char  ExclFilenameNotMatched[];
+   extern const char  ReportMsg[];
 
-   extern const char Far  Zipnfo[];
-   extern const char Far  CompiledWith[];
+   extern const char  Zipnfo[];
+   extern const char  CompiledWith[];
 
 
 

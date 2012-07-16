@@ -96,31 +96,31 @@ static int disk_error OF((__GPRO));
 /* Strings used in fileio.c */
 /****************************/
 
-static const char Far CannotOpenZipfile[] =
+static const char CannotOpenZipfile[] =
   "error:  cannot open zipfile [ %s ]\n        %s\n";
 
-static const char Far CannotCreateFile[] =
+static const char CannotCreateFile[] =
   "error:  cannot create %s\n        %s\n";
 
-static const char Far ReadError[] = "error:  zipfile read error\n";
-static const char Far FilenameTooLongTrunc[] =
+static const char ReadError[] = "error:  zipfile read error\n";
+static const char FilenameTooLongTrunc[] =
   "warning:  filename too long--truncating.\n";
 
-static const char Far ExtraFieldTooLong[] =
+static const char ExtraFieldTooLong[] =
   "warning:  extra field too long (%d).  Ignoring...\n";
 
-   static const char Far DiskFullQuery[] =
+   static const char DiskFullQuery[] =
      "%s:  write error (disk full?).  Continue? (y/n/^C) ";
-   static const char Far ZipfileCorrupt[] =
+   static const char ZipfileCorrupt[] =
      "error:  zipfile probably corrupt (%s)\n";
-   static const char Far MorePrompt[] = "--More--(%lu)";
-   static const char Far QuitPrompt[] =
+   static const char MorePrompt[] = "--More--(%lu)";
+   static const char QuitPrompt[] =
      "--- Press `Q' to quit, or any other key to continue ---";
-   static const char Far HidePrompt[] = /* "\r                       \r"; */
+   static const char HidePrompt[] = /* "\r                       \r"; */
      "\r                                                         \r";
-     static const char Far PasswPrompt[] = "[%s] %s password: ";
-     static const char Far PasswPrompt2[] = "Enter password: ";
-     static const char Far PasswRetry[] = "password incorrect--reenter: ";
+     static const char PasswPrompt[] = "[%s] %s password: ";
+     static const char PasswPrompt2[] = "Enter password: ";
+     static const char PasswRetry[] = "password incorrect--reenter: ";
 
 
 

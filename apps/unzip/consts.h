@@ -23,32 +23,32 @@ const unsigned near mask_bits[17] = {
     0x01ff, 0x03ff, 0x07ff, 0x0fff, 0x1fff, 0x3fff, 0x7fff, 0xffff
 };
 
-const char Far VersionDate[] = UZ_VERSION_DATE; /* now defined in unzvers.h */
+const char VersionDate[] = UZ_VERSION_DATE; /* now defined in unzvers.h */
 
 #ifndef SFX
-   const char Far EndSigMsg[] =
+   const char EndSigMsg[] =
    "\nnote:  didn't find end-of-central-dir signature at end of central dir.\n";
 #endif
 
-const char Far CentSigMsg[] =
+const char CentSigMsg[] =
   "error:  expected central file header signature not found (file #%lu).\n";
-const char Far SeekMsg[] =
+const char SeekMsg[] =
   "error [%s]:  attempt to seek before beginning of zipfile\n%s";
-const char Far FilenameNotMatched[] = "caution: filename not matched:  %s\n";
-const char Far ExclFilenameNotMatched[] =
+const char FilenameNotMatched[] = "caution: filename not matched:  %s\n";
+const char ExclFilenameNotMatched[] =
   "caution: excluded filename not matched:  %s\n";
 
 #ifdef VMS
-  const char Far ReportMsg[] = "\
+  const char ReportMsg[] = "\
   (please check that you have transferred or created the zipfile in the\n\
   appropriate BINARY mode--this includes ftp, Kermit, AND unzip'd zipfiles)\n";
 #else
-  const char Far ReportMsg[] = "\
+  const char ReportMsg[] = "\
   (please check that you have transferred or created the zipfile in the\n\
   appropriate BINARY mode and that you have compiled UnZip properly)\n";
 #endif
 
 #ifndef SFX
-  const char Far Zipnfo[] = "zipinfo";
-  const char Far CompiledWith[] = "Compiled with %s%s for %s%s%s%s.\n\n";
+  const char Zipnfo[] = "zipinfo";
+  const char CompiledWith[] = "Compiled with %s%s for %s%s%s%s.\n\n";
 #endif
