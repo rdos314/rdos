@@ -60,49 +60,16 @@
    reading the "standard" include headers.
  */
 
-#ifndef Z_STAT_DEFINED
-   typedef struct stat z_stat;
-#  define Z_STAT_DEFINED
-#endif
-
-#ifndef MINIX            /* Minix needs it after all the other includes (?) */
-#  include <stdio.h>
-#endif
-
+#include <stdio.h>
 #include <ctype.h>       /* skip for VMS, to use tolower() function? */
 #include <errno.h>       /* used in mapname() */
-#ifdef USE_STRINGS_H
-#  include <strings.h>   /* strcpy, strcmp, memcpy, index/rindex, etc. */
-#else
-#  include <string.h>    /* strcpy, strcmp, memcpy, strchr/strrchr, etc. */
-#endif
-#if (defined(MODERN) && !defined(NO_LIMITS_H))
-#  include <limits.h>    /* MAX/MIN constant symbols for system types... */
-#endif
+#include <string.h>    /* strcpy, strcmp, memcpy, strchr/strrchr, etc. */
+#include <limits.h>    /* MAX/MIN constant symbols for system types... */
 
-/* this include must be down here for SysV.4, for some reason... */
-#include <signal.h>      /* used in unzip.c, fileio.c */
+#include <stddef.h>
+#include <stdlib.h>  /* standard library prototypes, malloc(), etc. */
 
-
-#ifdef MODERN
-#  ifndef NO_STDDEF_H
-#    include <stddef.h>
-#  endif
-#  ifndef NO_STDLIB_H
-#    include <stdlib.h>  /* standard library prototypes, malloc(), etc. */
-#  endif
-   typedef size_t extent;
-#else /* !MODERN */
-#  ifndef AOS_VS         /* mostly modern? */
-     long lseek();
-#    ifdef VAXC          /* not fully modern, but has stdlib.h and void */
-#      include <stdlib.h>
-#    else
-       char *malloc();
-#    endif /* ?VAXC */
-#  endif /* !AOS_VS */
-   typedef unsigned int extent;
-#endif /* ?MODERN */
+typedef size_t extent;
 
 
 
