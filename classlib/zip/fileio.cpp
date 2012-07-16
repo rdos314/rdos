@@ -256,7 +256,7 @@ unsigned readbuf(char *buf, register unsigned size)   /* return number of bytes 
                 return (n-size);
             else if (G.incnt < 0) {
                 /* another hack, but no real harm copying same thing twice */
-                (*G.message)((zvoid *)&G,
+                (*G.message)((void *)&G,
                   (uch *)LoadFarString(ReadError),  /* CANNOT use slide */
                   (ulg)strlen(LoadFarString(ReadError)), 0x401);
                 return 0;  /* discarding some data; better than lock-up */
@@ -299,7 +299,7 @@ int readbyte(__G)   /* refill inbuf and return a byte if available, else EOF */
             return EOF;
         } else if (G.incnt < 0) {  /* "fail" (abort, retry, ...) returns this */
             /* another hack, but no real harm copying same thing twice */
-            (*G.message)((zvoid *)&G,
+            (*G.message)((void *)&G,
               (uch *)LoadFarString(ReadError),
               (ulg)strlen(LoadFarString(ReadError)), 0x401);
             echon();
@@ -466,7 +466,7 @@ int flush(uch *rawbuf, ulg size, int unshrink)
          */
         if (!uO.cflag && !RdosWriteFile(G.outfile, rawbuf, size))
             return disk_error(__G);
-        else if (uO.cflag && (*G.message)((zvoid *)&G, rawbuf, size, 0))
+        else if (uO.cflag && (*G.message)((void *)&G, rawbuf, size, 0))
             return PK_OK;
     } else {   /* textmode:  aflag is true */
         if (unshrink) {
@@ -519,7 +519,7 @@ int flush(uch *rawbuf, ulg size, int unshrink)
         if (q > transbuf) {
             if (!uO.cflag && !RdosWriteFile(G.outfile, transbuf, (extent)(q-transbuf)))
                 return disk_error(__G);
-            else if (uO.cflag && (*G.message)((zvoid *)&G, transbuf,
+            else if (uO.cflag && (*G.message)((void *)&G, transbuf,
                 (ulg)(q-transbuf), 0))
                 return PK_OK;
         }
@@ -581,7 +581,7 @@ void WriteScreen(char *buf, int size)
 /* Function UzpMessagePrnt() */
 /*****************************/
 
-int  UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
+int  UzpMessagePrnt(void *pG, uch *buf, ulg size, int flag)
 {
     /* IMPORTANT NOTE:
      *    The name of the first parameter of UzpMessagePrnt(), which passes
@@ -630,7 +630,7 @@ int  UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
                 ++((Uz_Globs *)pG)->numlines;
                 ++((Uz_Globs *)pG)->lines;
                 if (((Uz_Globs *)pG)->lines >= ((Uz_Globs *)pG)->height)
-                    (*((Uz_Globs *)pG)->mpause)((zvoid *)pG,
+                    (*((Uz_Globs *)pG)->mpause)((void *)pG,
                       LoadFarString(MorePrompt), 1);
             }
             if (MSG_STDERR(flag) && ((Uz_Globs *)pG)->UzO.tflag &&
@@ -674,7 +674,7 @@ int  UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
                     WriteScreen((char *)q, p-q+1);
                     ((Uz_Globs *)pG)->sol = TRUE;
                     q = p + 1;
-                    (*((Uz_Globs *)pG)->mpause)((zvoid *)pG,
+                    (*((Uz_Globs *)pG)->mpause)((void *)pG,
                       LoadFarString(MorePrompt), 1);
                 }
             }
@@ -700,7 +700,7 @@ int  UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
 /* Function UzpInput() */   /* GRR:  this is a placeholder for now */
 /***********************/
 
-int  UzpInput(zvoid *pG, uch *buf, int *size, int flag)
+int  UzpInput(void *pG, uch *buf, int *size, int flag)
 {
     /* tell picky compilers to shut up about "unused variable" warnings */
     pG = pG; buf = buf; flag = flag;
@@ -717,7 +717,7 @@ int  UzpInput(zvoid *pG, uch *buf, int *size, int flag)
 /* Function UzpMorePause() */
 /***************************/
 
-void  UzpMorePause(zvoid *pG, ZCONST char *prompt, int flag)
+void  UzpMorePause(void *pG, ZCONST char *prompt, int flag)
 {
     uch c;
 
@@ -762,7 +762,7 @@ void  UzpMorePause(zvoid *pG, ZCONST char *prompt, int flag)
 /* Function UzpPassword() */
 /**************************/
 
-int  UzpPassword (zvoid *pG, int *rcnt, char *pwbuf, int size, ZCONST char *zfn, ZCONST char *efn)
+int  UzpPassword (void *pG, int *rcnt, char *pwbuf, int size, ZCONST char *zfn, ZCONST char *efn)
 {
     int r = IZ_PW_ENTERED;
     char *m;
@@ -809,7 +809,7 @@ void handler(int signal)   /* upon interrupt, turn on echo and exit cleanly */
 {
     GETGLOBALS();
 
-    (*G.message)((zvoid *)&G, slide, 0L, 0x41); /*  start of line (to stderr; */
+    (*G.message)((void *)&G, slide, 0L, 0x41); /*  start of line (to stderr; */
 
     echon();
 
@@ -1024,10 +1024,10 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
                 A_TO_N(G.outbuf);   /* translate string to native */
             }
 
-            (*G.message)((zvoid *)&G, G.outbuf, (ulg)(q-G.outbuf), 0);
+            (*G.message)((void *)&G, G.outbuf, (ulg)(q-G.outbuf), 0);
         }
         /* add '\n' if not at start of line */
-        (*G.message)((zvoid *)&G, slide, 0L, 0x40);
+        (*G.message)((void *)&G, slide, 0L, 0x40);
         break;
 
     /*
