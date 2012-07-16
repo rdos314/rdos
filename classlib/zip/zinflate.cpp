@@ -57,7 +57,7 @@
     c7   27 Jun 92  G. Roelofs      added some more typecasts (444:  MSC bug).
     c8    5 Oct 92  J-l. Gailly     added ifdef'd code to deal with PKZIP bug.
     c9    9 Oct 92  M. Adler        removed a memory error message (~line 416).
-    c10  17 Oct 92  G. Roelofs      changed ULONG/UWORD/byte to ulg/ush/uch,
+    c10  17 Oct 92  G. Roelofs      changed ULONG/UWORD/byte to ulg/ush/unsigned char,
                                     removed old inflate, renamed inflate_entry
                                     to inflate, added Mark's fix to a comment.
    c10.5 14 Dec 92  M. Adler        fix up error messages for incomplete trees.
@@ -116,7 +116,7 @@
    c17a  04 Feb 01  C. Spieler      complete integration of Deflate64 support
    c17b  16 Feb 02  C. Spieler      changed type of "extra bits" arrays and
                                     corresponding huft_build() parameter e from
-                                    ush into uch, to save space
+                                    ush into unsigned char, to save space
    c17c   9 Mar 02  C. Spieler      fixed NEEDBITS() "read beyond EOF" problem
                                     with CHECK_EOF enabled
    c17d  23 Jul 05  C. Spieler      fixed memory leaks in inflate_dynamic()
@@ -248,7 +248,7 @@
 #define PKZIP_BUG_WORKAROUND    /* PKZIP 1.93a problem--live with it */
 
 /*
-    inflate.h must supply the uch slide[WSIZE] array, the void typedef
+    inflate.h must supply the unsigned char slide[WSIZE] array, the void typedef
     (void if (void *) is accepted, else char) and the NEXTBYTE,
     FLUSH() and memzero macros.  If the window size is not 32K, it
     should also define WSIZE.  If INFMOD is defined, it can include
@@ -258,7 +258,7 @@
     also want FLUSH() to compute a crc on the data.  inflate.h also
     needs to provide these typedefs:
 
-        typedef unsigned char uch;
+        typedef unsigned char unsigned char;
         typedef unsigned short ush;
         typedef unsigned long ulg;
 
@@ -429,7 +429,7 @@ int UZinflate(int is_defl64)
             }
         }
         if (G.dstrm.next_in != NULL) {
-            G.inptr = (uch *)G.dstrm.next_in;
+            G.inptr = (unsigned char *)G.dstrm.next_in;
             G.incnt = G.dstrm.avail_in;
         }
 
@@ -457,7 +457,7 @@ int UZinflate(int is_defl64)
 #define N_MAX 288       /* maximum number of codes in any set */
 
 
-int huft_build(const unsigned *b, unsigned n, unsigned s, const ush *d, const uch *e, struct huft **t, unsigned *m)
+int huft_build(const unsigned *b, unsigned n, unsigned s, const ush *d, const unsigned char *e, struct huft **t, unsigned *m)
 /* Given a list of code lengths and a maximum table size, make a set of
    tables to decode that set of codes.  Return zero on success, one if
    the given code set is incomplete (the tables are still built in this
@@ -605,8 +605,8 @@ int huft_build(const unsigned *b, unsigned n, unsigned s, const ush *d, const uc
         if (h)
         {
           x[h] = i;             /* save pattern for backing up */
-          r.b = (uch)l[h-1];    /* bits to dump before this table */
-          r.e = (uch)(32 + j);  /* bits in this table */
+          r.b = (unsigned char)l[h-1];    /* bits to dump before this table */
+          r.e = (unsigned char)(32 + j);  /* bits in this table */
           r.v.t = q;            /* pointer to this table */
           j = (i & ((1 << w) - 1)) >> (w - l[h-1]);
           u[h-1][j] = r;        /* connect to last table */
@@ -614,12 +614,12 @@ int huft_build(const unsigned *b, unsigned n, unsigned s, const ush *d, const uc
       }
 
       /* set up table entry in r */
-      r.b = (uch)(k - w);
+      r.b = (unsigned char)(k - w);
       if (p >= v + n)
         r.e = INVALID_CODE;     /* out of values--invalid code */
       else if (*p < s)
       {
-        r.e = (uch)(*p < 256 ? 32 : 31);  /* 256 is end-of-block code */
+        r.e = (unsigned char)(*p < 256 ? 32 : 31);  /* 256 is end-of-block code */
         r.v.n = (ush)*p++;                /* simple code is just the value */
       }
       else

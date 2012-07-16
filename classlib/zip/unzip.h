@@ -58,16 +58,16 @@ freely, subject to the above disclaimer and the following restrictions:
     3. Altered versions--including, but not limited to, ports to new operating
        systems, existing ports with new graphical interfaces, versions with
        modified or added functionality, and dynamic, shared, or static library
-       versions not from Info-ZIP--must be plainly marked as such and must not
+       versions not from Info-ZIP--must be plainly marked as sunsigned char and must not
        be misrepresented as being the original source or, if binaries,
-       compiled from the original source.  Such altered versions also must not
+       compiled from the original source.  Sunsigned char altered versions also must not
        be misrepresented as being Info-ZIP releases--including, but not
        limited to, labeling of the altered versions with the names "Info-ZIP"
        (or any variation thereof, including, but not limited to, different
        capitalizations), "Pocket UnZip," "WiZ" or "MacZip" without the
-       explicit permission of Info-ZIP.  Such altered versions are further
+       explicit permission of Info-ZIP.  Sunsigned char altered versions are further
        prohibited from misrepresentative use of the Zip-Bugs or Info-ZIP
-       e-mail addresses or the Info-ZIP URL(s), such as to imply Info-ZIP
+       e-mail addresses or the Info-ZIP URL(s), sunsigned char as to imply Info-ZIP
        will provide support for the altered versions.
 
     4. Info-ZIP retains the right to use the names "Info-ZIP," "Zip," "UnZip,"
@@ -104,7 +104,6 @@ extern "C" {
   ---------------------------------------------------------------------------*/
 
 #ifndef _IZ_TYPES_DEFINED
-typedef unsigned char   uch;    /* code assumes unsigned bytes; these type-  */
 typedef unsigned short  ush;    /*  defs replace byte/UWORD/ULONG (which are */
 typedef unsigned long   ulg;    /*  predefined on some systems) & match zip  */
 #define _IZ_TYPES_DEFINED
@@ -112,8 +111,8 @@ typedef unsigned long   ulg;    /*  predefined on some systems) & match zip  */
 
 /* InputFn is not yet used and is likely to change: */
 #ifdef PROTO
-   typedef int   ( MsgFn)     (void *pG, uch *buf, ulg size, int flag);
-   typedef int   ( InputFn)   (void *pG, uch *buf, int *size, int flag);
+   typedef int   ( MsgFn)     (void *pG, unsigned char *buf, ulg size, int flag);
+   typedef int   ( InputFn)   (void *pG, unsigned char *buf, int *size, int flag);
    typedef void  ( PauseFn)   (void *pG, const char *prompt, int flag);
    typedef int   ( PasswdFn)  (void *pG, int *rcnt, char *pwbuf,
                                      int size, const char *zfn,
@@ -270,10 +269,10 @@ typedef struct _UzpOpts {
 
 /* intended to be a private struct: */
 typedef struct _ver {
-    uch major;              /* e.g., integer 5 */
-    uch minor;              /* e.g., 2 */
-    uch patchlevel;         /* e.g., 0 */
-    uch not_used;
+    unsigned char major;              /* e.g., integer 5 */
+    unsigned char minor;              /* e.g., 2 */
+    unsigned char patchlevel;         /* e.g., 0 */
+    unsigned char not_used;
 } _version_type;
 
 typedef struct _UzpVer {
@@ -310,8 +309,8 @@ typedef struct _Uzp_Siz64 {
 } Uzp_Siz64;
 
 typedef struct _Uzp_cdir_Rec {
-    uch version_made_by[2];
-    uch version_needed_to_extract[2];
+    unsigned char version_made_by[2];
+    unsigned char version_needed_to_extract[2];
     ush general_purpose_bit_flag;
     ush compression_method;
     ulg last_mod_dos_datetime;
@@ -397,9 +396,9 @@ int       UzpValidate        (char *archive, int AllCodes);
 
 /* default I/O functions (can be swapped out via UzpAltMain() entry point): */
 
-int       UzpMessagePrnt   (void *pG, uch *buf, ulg size, int flag);
-int       UzpMessageNull   (void *pG, uch *buf, ulg size, int flag);
-int       UzpInput         (void *pG, uch *buf, int *size, int flag);
+int       UzpMessagePrnt   (void *pG, unsigned char *buf, ulg size, int flag);
+int       UzpMessageNull   (void *pG, unsigned char *buf, ulg size, int flag);
+int       UzpInput         (void *pG, unsigned char *buf, int *size, int flag);
 void      UzpMorePause     (void *pG, const char *prompt, int flag);
 int       UzpPassword      (void *pG, int *rcnt, char *pwbuf,
                                      int size, const char *zfn,

@@ -38,8 +38,8 @@
 
 #define GLOBAL(g) G.g
 
-local int testp OF((__GPRO__ ZCONST uch *h));
-local int testkey OF((__GPRO__ ZCONST uch *h, ZCONST char *key));
+local int testp OF((__GPRO__ ZCONST unsigned char *h));
+local int testkey OF((__GPRO__ ZCONST unsigned char *h, ZCONST char *key));
 
 local int keys[3];       /* keys defining the pseudo-random sequence */
 
@@ -106,7 +106,7 @@ int decrypt(ZCONST char *passwrd)
 {
     ush b;
     int n, r;
-    uch h[RAND_HEAD_LEN];
+    unsigned char h[RAND_HEAD_LEN];
 
     Trace((stdout, "\n[incnt = %d]: ", GLOBAL(incnt)));
 
@@ -116,7 +116,7 @@ int decrypt(ZCONST char *passwrd)
     defer_leftover_input(__G);
     for (n = 0; n < RAND_HEAD_LEN; n++) {
         b = NEXTBYTE;
-        h[n] = (uch)b;
+        h[n] = (unsigned char)b;
         Trace((stdout, " (%02x)", h[n]));
     }
     undefer_input(__G);
@@ -176,7 +176,7 @@ int decrypt(ZCONST char *passwrd)
 /***********************************************************************
  * Test the password.  Return -1 if bad, 0 if OK.
  */
-local int testp(ZCONST uch *h)
+local int testp(ZCONST unsigned char *h)
 {
     int r;
     char *key_translated;
@@ -202,12 +202,12 @@ local int testp(ZCONST uch *h)
 } /* end function testp() */
 
 
-local int testkey(ZCONST uch *h, ZCONST char *key)
+local int testkey(ZCONST unsigned char *h, ZCONST char *key)
 {
     ush b;
     int n;
-    uch *p;
-    uch hh[RAND_HEAD_LEN]; /* decrypted header */
+    unsigned char *p;
+    unsigned char hh[RAND_HEAD_LEN]; /* decrypted header */
 
     /* set keys and save the encrypted header */
     init_keys(__G__ key);

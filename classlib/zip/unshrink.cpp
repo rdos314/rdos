@@ -48,7 +48,7 @@
   called slide[]).  For machines with a 64KB data space this is a problem,
   particularly when text conversion is required and line endings have more
   than one character.  UnZip's solution is to use two roughly equal halves
-  of outbuf for the ASCII conversion in such a case; the "unshrink" argument
+  of outbuf for the ASCII conversion in sunsigned char a case; the "unshrink" argument
   to flush() signals that this is the case.
 
   For large-memory machines, a second outbuf is allocated for translations,
@@ -98,9 +98,9 @@ static void  partial_clear  OF((__GPRO__ int lastcodeused));
 int unshrink(__G)
      __GDEF
 {
-    uch *stacktop = stack + (HSIZE - 1);
-    register uch *newstr;
-    uch finalval;
+    unsigned char *stacktop = stack + (HSIZE - 1);
+    register unsigned char *newstr;
+    unsigned char finalval;
     int codesize=9, len, error;
     shrint code, oldcode, curcode;
     shrint lastfreecode;
@@ -117,11 +117,11 @@ int unshrink(__G)
     /* non-memory-limited machines:  allocate second (large) buffer for
      * textmode conversion in flush(), but only if needed */
     if (G.pInfo->textmode && !G.outbuf2 &&
-        (G.outbuf2 = (uch *)malloc(TRANSBUFSIZ)) == (uch *)NULL)
+        (G.outbuf2 = (unsigned char *)malloc(TRANSBUFSIZ)) == (unsigned char *)NULL)
         return PK_MEM3;
 
     for (code = 0;  code < BOGUSCODE;  ++code) {
-        Value[code] = (uch)code;
+        Value[code] = (unsigned char)code;
         parent[code] = BOGUSCODE;
     }
     for (code = BOGUSCODE+1;  code < HSIZE;  ++code)
@@ -142,7 +142,7 @@ int unshrink(__G)
     if (G.zipeof)
         return PK_OK;
 
-    finalval = (uch)oldcode;
+    finalval = (unsigned char)oldcode;
     OUTDBG(finalval)
     *G.outptr++ = finalval;
     ++G.outcnt;
@@ -215,7 +215,7 @@ int unshrink(__G)
           len));
 
         {
-            register uch *p;
+            register unsigned char *p;
 
             for (p = newstr;  p < newstr+len;  ++p) {
                 *G.outptr++ = *p;

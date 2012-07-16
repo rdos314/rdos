@@ -81,7 +81,7 @@
    According to the C RTL manual, "The write and decc$record_write
    functions always generate at least one record."  Also, "[T]he fwrite
    function always generates at least <number_items> records."  So,
-   "fwrite(buf, len, 1, strm)" is much better ("1" record) than
+   "fwrite(buf, len, 1, strm)" is munsigned char better ("1" record) than
    "fwrite(buf, 1, len, strm)" ("len" (1-character) records, _really_
    ugly), but neither is better than write().  Similarly, "The fflush
    function always generates a record if there is unwritten data in the
@@ -202,7 +202,7 @@ void undefer_input(__G)
     if (G.incnt_leftover > 0) {
         /* We know that "(G.csize < MAXINT)" so we can cast G.csize to int:
          * This condition was checked when G.incnt_leftover was set > 0 in
-         * defer_leftover_input(), and it is NOT allowed to touch G.csize
+         * defer_leftover_input(), and it is NOT allowed to tounsigned char G.csize
          * before calling undefer_input() when (G.incnt_leftover > 0)
          * (single exception: see read_byte()'s  "G.csize <= 0" handling) !!
          */
@@ -257,7 +257,7 @@ unsigned readbuf(char *buf, register unsigned size)   /* return number of bytes 
             else if (G.incnt < 0) {
                 /* another hack, but no real harm copying same thing twice */
                 (*G.message)((void *)&G,
-                  (uch *)LoadFarString(ReadError),  /* CANNOT use slide */
+                  (unsigned char *)LoadFarString(ReadError),  /* CANNOT use slide */
                   (ulg)strlen(LoadFarString(ReadError)), 0x401);
                 return 0;  /* discarding some data; better than lock-up */
             }
@@ -300,7 +300,7 @@ int readbyte(__G)   /* refill inbuf and return a byte if available, else EOF */
         } else if (G.incnt < 0) {  /* "fail" (abort, retry, ...) returns this */
             /* another hack, but no real harm copying same thing twice */
             (*G.message)((void *)&G,
-              (uch *)LoadFarString(ReadError),
+              (unsigned char *)LoadFarString(ReadError),
               (ulg)strlen(LoadFarString(ReadError)), 0x401);
             echon();
             DESTROYGLOBALS();
@@ -312,7 +312,7 @@ int readbyte(__G)   /* refill inbuf and return a byte if available, else EOF */
     }
 
     if (G.pInfo->encrypted) {
-        uch *p;
+        unsigned char *p;
         int n;
 
         /* This was previously set to decrypt one byte beyond G.csize, when
@@ -345,7 +345,7 @@ int fillinbuf(__G) /* like readbyte() except returns number of bytes in inbuf */
     defer_leftover_input(__G);           /* decrements G.csize */
 
     if (G.pInfo->encrypted) {
-        uch *p;
+        unsigned char *p;
         int n;
 
         for (n = G.incnt, p = G.inptr;  n--;  p++)
@@ -426,11 +426,11 @@ int seek_zipf(zoff_t abs_offset)
 /* Function flush() */   /* returns PK error codes: */
 /********************/   /* if tflag => always 0; PK_DISK if write error */
 
-int flush(uch *rawbuf, ulg size, int unshrink)
+int flush(unsigned char *rawbuf, ulg size, int unshrink)
 {
-    register uch *p;
-    register uch *q;
-    uch *transbuf;
+    register unsigned char *p;
+    register unsigned char *q;
+    unsigned char *transbuf;
     /* static int didCRlast = FALSE;    moved to globals.h */
 
 
@@ -581,7 +581,7 @@ void WriteScreen(char *buf, int size)
 /* Function UzpMessagePrnt() */
 /*****************************/
 
-int  UzpMessagePrnt(void *pG, uch *buf, ulg size, int flag)
+int  UzpMessagePrnt(void *pG, unsigned char *buf, ulg size, int flag)
 {
     /* IMPORTANT NOTE:
      *    The name of the first parameter of UzpMessagePrnt(), which passes
@@ -591,8 +591,8 @@ int  UzpMessagePrnt(void *pG, uch *buf, ulg size, int flag)
      *    (in the SMALL_MEM case) !!!
      */
     int error;
-    uch *q=buf, *endbuf=buf+(unsigned)size;
-    uch *p=buf;
+    unsigned char *q=buf, *endbuf=buf+(unsigned)size;
+    unsigned char *p=buf;
     int islinefeed = FALSE;
 
 
@@ -700,7 +700,7 @@ int  UzpMessagePrnt(void *pG, uch *buf, ulg size, int flag)
 /* Function UzpInput() */   /* GRR:  this is a placeholder for now */
 /***********************/
 
-int  UzpInput(void *pG, uch *buf, int *size, int flag)
+int  UzpInput(void *pG, unsigned char *buf, int *size, int flag)
 {
     /* tell picky compilers to shut up about "unused variable" warnings */
     pG = pG; buf = buf; flag = flag;
@@ -719,7 +719,7 @@ int  UzpInput(void *pG, uch *buf, int *size, int flag)
 
 void  UzpMorePause(void *pG, ZCONST char *prompt, int flag)
 {
-    uch c;
+    unsigned char c;
 
 /*---------------------------------------------------------------------------
     Print a prompt and wait for the user to press a key, then erase prompt
@@ -733,11 +733,11 @@ void  UzpMorePause(void *pG, ZCONST char *prompt, int flag)
     fflush(stderr);
     if (flag & 1) {
         do {
-            c = (uch)FGETCH(0);
+            c = (unsigned char)FGETCH(0);
         } while (
                  c != '\r' && c != '\n' && c != ' ' && c != 'q' && c != 'Q');
     } else
-        c = (uch)FGETCH(0);
+        c = (unsigned char)FGETCH(0);
 
     /* newline was not echoed, so cover up prompt line */
     fprintf(stderr, LoadFarString(HidePrompt));
@@ -990,8 +990,8 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
         comment_bytes_left = length;
         block_len = OUTBUFSIZ;       /* for the while statement, first time */
         while (comment_bytes_left > 0 && block_len > 0) {
-            register uch *p = G.outbuf;
-            register uch *q = G.outbuf;
+            register unsigned char *p = G.outbuf;
+            register unsigned char *q = G.outbuf;
 
             if ((block_len = readbuf(__G__ (char *)G.outbuf,
                    MIN((unsigned)OUTBUFSIZ, comment_bytes_left))) == 0)
@@ -1096,9 +1096,9 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
      */
 
     case EXTRA_FIELD:
-        if (G.extra_field != (uch *)NULL)
+        if (G.extra_field != (unsigned char *)NULL)
             free(G.extra_field);
-        if ((G.extra_field = (uch *)malloc(length)) == (uch *)NULL) {
+        if ((G.extra_field = (unsigned char *)malloc(length)) == (unsigned char *)NULL) {
             Info(slide, 0x401, ((char *)slide, LoadFarString(ExtraFieldTooLong),
               length));
             /* cur_zipfile_bufstart already takes account of extra_bytes,
@@ -1128,7 +1128,7 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
 /* Function makeword() */
 /***********************/
 
-ush makeword(ZCONST uch *b)
+ush makeword(ZCONST unsigned char *b)
 {
     /*
      * Convert Intel style 'short' integer to non-Intel non-16-bit
@@ -1145,7 +1145,7 @@ ush makeword(ZCONST uch *b)
 /* Function makelong() */
 /***********************/
 
-ulg makelong(ZCONST uch *sig)
+ulg makelong(ZCONST unsigned char *sig)
 {
     /*
      * Convert intel style 'long' variable to non-Intel non-16-bit
@@ -1165,7 +1165,7 @@ ulg makelong(ZCONST uch *sig)
 /* Function makeint64() */
 /************************/
 
-zusz_t makeint64(ZCONST uch *sig)
+zusz_t makeint64(ZCONST unsigned char *sig)
 {
     if ((sig[7] | sig[6] | sig[5] | sig[4]) != 0)
         return (zusz_t)0xffffffffL;
@@ -1237,11 +1237,11 @@ char *fzofft(zoff_t val, ZCONST char *pre, ZCONST char *post)
 
 char *str2oem(char *dst, register ZCONST char *src)
 {
-    register uch c;
+    register unsigned char c;
     register char *dstp = dst;
 
     do {
-        c = (uch)foreign(*src++);
+        c = (unsigned char)foreign(*src++);
         *dstp++ = (char)ASCII2OEM(c);
     } while (c != '\0');
 

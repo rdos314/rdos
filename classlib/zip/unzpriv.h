@@ -679,7 +679,7 @@
 
 /* 2008-07-22 SMS.
  * Unfortunately, on VMS, <limits.h> exists, and is included by <stdlib.h>
- * (so it's pretty much unavoidable), and it defines PATH_MAX to a fixed
+ * (so it's pretty munsigned char unavoidable), and it defines PATH_MAX to a fixed
  * short value (256, correct only for older systems without ODS-5 support),
  * rather than one based on the real RMS NAM[L] situation.  So, we
  * artificially undefine it here, to allow our better-defined _MAX_PATH
@@ -1359,8 +1359,8 @@
 #define CTRLZ  26        /* DOS & OS/2 EOF marker (used in fileio.c, vms.c) */
 
 #ifdef EBCDIC
-#  define foreign(c)    ascii[(uch)(c)]
-#  define native(c)     ebcdic[(uch)(c)]
+#  define foreign(c)    ascii[(unsigned char)(c)]
+#  define native(c)     ebcdic[(unsigned char)(c)]
 #  define NATIVE        "EBCDIC"
 #  define NOANSIFILT
 #endif
@@ -1529,8 +1529,8 @@ typedef struct min_info {
     zusz_t uncompr_size;     /* uncompressed size (needed if extended header) */
     ulg crc;                 /* crc (needed if extended header) */
     zuvl_t diskstart;        /* no of volume where this entry starts */
-    uch hostver;
-    uch hostnum;
+    unsigned char hostver;
+    unsigned char hostnum;
     unsigned file_attr;      /* local flavor, as used by creat(), chmod()... */
     unsigned encrypted : 1;  /* file encrypted: decrypt before uncompressing */
     unsigned ExtLocHdr : 1;  /* use time instead of CRC for decrypt check */
@@ -1563,19 +1563,19 @@ typedef struct VMStimbuf {
    union work {
      struct {                 /* unshrink(): */
        shrint *Parent;          /* pointer to (8192 * sizeof(shrint)) */
-       uch *value;              /* pointer to 8KB char buffer */
-       uch *Stack;              /* pointer to another 8KB char buffer */
+       unsigned char *value;              /* pointer to 8KB char buffer */
+       unsigned char *Stack;              /* pointer to another 8KB char buffer */
      } shrink;
-     uch *Slide;              /* explode(), inflate(), unreduce() */
+     unsigned char *Slide;              /* explode(), inflate(), unreduce() */
    };
 #else /* !MALLOC_WORK */
    union work {
      struct {                 /* unshrink(): */
        shrint Parent[HSIZE];    /* (8192 * sizeof(shrint)) == 16KB minimum */
-       uch value[HSIZE];        /* 8KB */
-       uch Stack[HSIZE];        /* 8KB */
+       unsigned char value[HSIZE];        /* 8KB */
+       unsigned char Stack[HSIZE];        /* 8KB */
      } shrink;                  /* total = 32KB minimum; 80KB on Cray/Alpha */
-     uch Slide[WSIZE];        /* explode(), inflate(), unreduce() */
+     unsigned char Slide[WSIZE];        /* explode(), inflate(), unreduce() */
    };
 #endif /* ?MALLOC_WORK */
 
@@ -1592,7 +1592,7 @@ typedef struct VMStimbuf {
     xxREC_SIZE defines (above) change with them!
   ---------------------------------------------------------------------------*/
 
-   typedef uch   local_byte_hdr[ LREC_SIZE ];
+   typedef unsigned char   local_byte_hdr[ LREC_SIZE ];
 #      define L_VERSION_NEEDED_TO_EXTRACT_0     0
 #      define L_VERSION_NEEDED_TO_EXTRACT_1     1
 #      define L_GENERAL_PURPOSE_BIT_FLAG        2
@@ -1604,7 +1604,7 @@ typedef struct VMStimbuf {
 #      define L_FILENAME_LENGTH                 22
 #      define L_EXTRA_FIELD_LENGTH              24
 
-   typedef uch   cdir_byte_hdr[ CREC_SIZE ];
+   typedef unsigned char   cdir_byte_hdr[ CREC_SIZE ];
 #      define C_VERSION_MADE_BY_0               0
 #      define C_VERSION_MADE_BY_1               1
 #      define C_VERSION_NEEDED_TO_EXTRACT_0     2
@@ -1623,7 +1623,7 @@ typedef struct VMStimbuf {
 #      define C_EXTERNAL_FILE_ATTRIBUTES        34
 #      define C_RELATIVE_OFFSET_LOCAL_HEADER    38
 
-   typedef uch   ec_byte_rec[ ECREC_SIZE+4 ];
+   typedef unsigned char   ec_byte_rec[ ECREC_SIZE+4 ];
 /*     define SIGNATURE                         0   space-holder only */
 #      define NUMBER_THIS_DISK                  4
 #      define NUM_DISK_WITH_START_CEN_DIR       6
@@ -1633,12 +1633,12 @@ typedef struct VMStimbuf {
 #      define OFFSET_START_CENTRAL_DIRECTORY    16
 #      define ZIPFILE_COMMENT_LENGTH            20
 
-   typedef uch   ec_byte_loc64[ ECLOC64_SIZE+4 ];
+   typedef unsigned char   ec_byte_loc64[ ECLOC64_SIZE+4 ];
 #      define NUM_DISK_START_EOCDR64            4
 #      define OFFSET_START_EOCDR64              8
 #      define NUM_THIS_DISK_LOC64               16
 
-   typedef uch   ec_byte_rec64[ ECREC64_SIZE+4 ];
+   typedef unsigned char   ec_byte_rec64[ ECREC64_SIZE+4 ];
 #      define ECREC64_LENGTH                    4
 #      define EC_VERSION_MADE_BY_0              12
 #      define EC_VERSION_NEEDED_0               14
@@ -1664,7 +1664,7 @@ typedef struct VMStimbuf {
        zusz_t ucsize;
        ulg last_mod_dos_datetime;
        ulg crc32;
-       uch version_needed_to_extract[2];
+       unsigned char version_needed_to_extract[2];
        ush general_purpose_bit_flag;
        ush compression_method;
        ush filename_length;
@@ -1680,8 +1680,8 @@ typedef struct VMStimbuf {
        ulg external_file_attributes;
        zuvl_t disk_number_start;
        ush internal_file_attributes;
-       uch version_made_by[2];
-       uch version_needed_to_extract[2];
+       unsigned char version_made_by[2];
+       unsigned char version_needed_to_extract[2];
        ush general_purpose_bit_flag;
        ush compression_method;
        ush filename_length;
@@ -1711,8 +1711,8 @@ typedef struct VMStimbuf {
    error in the data. */
 
 struct huft {
-    uch e;                /* number of extra bits or operation */
-    uch b;                /* number of bits in this code or subcode */
+    unsigned char e;                /* number of extra bits or operation */
+    unsigned char b;                /* number of bits in this code or subcode */
     union {
         ush n;            /* literal, length base, or distance base */
         struct huft *t;   /* pointer to next level of table */
@@ -1768,17 +1768,17 @@ void     free_G_buffers          OF((__GPRO));
 /* static int    process_central_comment OF((__GPRO)); */
 int      process_cdir_file_hdr   OF((__GPRO));
 int      process_local_file_hdr  OF((__GPRO));
-int      getZip64Data            OF((__GPRO__ const uch *ef_buf,
+int      getZip64Data            OF((__GPRO__ const unsigned char *ef_buf,
                                      unsigned ef_len));
 #ifdef UNICODE_SUPPORT
-  int    getUnicodeData          OF((__GPRO__ const uch *ef_buf,
+  int    getUnicodeData          OF((__GPRO__ const unsigned char *ef_buf,
                                      unsigned ef_len));
 #endif
-unsigned ef_scan_for_izux        OF((const uch *ef_buf, unsigned ef_len,
+unsigned ef_scan_for_izux        OF((const unsigned char *ef_buf, unsigned ef_len,
                                      int ef_is_c, ulg dos_mdatetime,
                                      iztimes *z_utim, ulg *z_uidgid));
 #if (defined(RISCOS) || defined(ACORN_FTYPE_NFS))
-   void *getRISCOSexfield       OF((const uch *ef_buf, unsigned ef_len));
+   void *getRISCOSexfield       OF((const unsigned char *ef_buf, unsigned ef_len));
 #endif
 
 #ifndef SFX
@@ -1828,16 +1828,16 @@ int      seek_zipf            OF((__GPRO__ zoff_t abs_offset));
 #ifdef FUNZIP
    int   flush                OF((__GPRO__ ulg size));  /* actually funzip.c */
 #else
-   int   flush                OF((__GPRO__ uch *buf, ulg size, int unshrink));
+   int   flush                OF((__GPRO__ unsigned char *buf, ulg size, int unshrink));
 #endif
 /* static int  disk_error     OF((__GPRO)); */
 void     handler              OF((int signal));
 time_t   dos_to_unix_time     OF((ulg dos_datetime));
 int      check_for_newer      OF((__GPRO__ char *filename)); /* os2,vmcms,vms */
 int      do_string            OF((__GPRO__ unsigned int length, int option));
-ush      makeword             OF((const uch *b));
-ulg      makelong             OF((const uch *sig));
-zusz_t   makeint64            OF((const uch *sig));
+ush      makeword             OF((const unsigned char *b));
+ulg      makelong             OF((const unsigned char *sig));
+zusz_t   makeint64            OF((const unsigned char *sig));
 char    *fzofft               OF((__GPRO__ zoff_t val,
                                   const char *pre, const char *post));
 #if (!defined(STR_TO_ISO) || defined(NEED_STR2ISO))
@@ -1890,21 +1890,21 @@ char    *fzofft               OF((__GPRO__ zoff_t val,
 int    extract_or_test_files     OF((__GPRO));
 /* static int   store_info          OF((void)); */
 /* static int   extract_or_test_member   OF((__GPRO)); */
-/* static int   TestExtraField   OF((__GPRO__ uch *ef, unsigned ef_len)); */
-/* static int   test_OS2         OF((__GPRO__ uch *eb, unsigned eb_size)); */
-/* static int   test_NT          OF((__GPRO__ uch *eb, unsigned eb_size)); */
+/* static int   TestExtraField   OF((__GPRO__ unsigned char *ef, unsigned ef_len)); */
+/* static int   test_OS2         OF((__GPRO__ unsigned char *eb, unsigned eb_size)); */
+/* static int   test_NT          OF((__GPRO__ unsigned char *eb, unsigned eb_size)); */
 #ifndef SFX
   unsigned find_compr_idx        OF((unsigned compr_methodnum));
 #endif
-int    memextract                OF((__GPRO__ uch *tgt, ulg tgtsize,
-                                     const uch *src, ulg srcsize));
-int    memflush                  OF((__GPRO__ const uch *rawbuf, ulg size));
+int    memextract                OF((__GPRO__ unsigned char *tgt, ulg tgtsize,
+                                     const unsigned char *src, ulg srcsize));
+int    memflush                  OF((__GPRO__ const unsigned char *rawbuf, ulg size));
 #if (defined(VMS) || defined(VMS_TEXT_CONV))
-   uch   *extract_izvms_block    OF((__GPRO__ const uch *ebdata,
+   unsigned char   *extract_izvms_block    OF((__GPRO__ const unsigned char *ebdata,
                                      unsigned size, unsigned *retlen,
-                                     const uch *init, unsigned needlen));
+                                     const unsigned char *init, unsigned needlen));
 #endif
-char  *fnfilter                  OF((const char *raw, uch *space,
+char  *fnfilter                  OF((const char *raw, unsigned char *space,
                                      extent size));
 
 /*---------------------------------------------------------------------------
@@ -1916,7 +1916,7 @@ int    explode                   OF((__GPRO));                  /* explode.c */
 #endif
 int    huft_free                 OF((struct huft *t));          /* inflate.c */
 int    huft_build                OF((__GPRO__ const unsigned *b, unsigned n,
-                                     unsigned s, const ush *d, const uch *e,
+                                     unsigned s, const ush *d, const unsigned char *e,
                                      struct huft **t, unsigned *m));
 #ifdef USE_ZLIB
    int    UZinflate              OF((__GPRO__ int is_defl64));  /* inflate.c */
@@ -1928,7 +1928,7 @@ int    huft_build                OF((__GPRO__ const unsigned *b, unsigned n,
 #if (!defined(SFX) && !defined(FUNZIP))
 #ifndef COPYRIGHT_CLEAN
    int    unreduce               OF((__GPRO));                 /* unreduce.c */
-/* static void  LoadFollowers    OF((__GPRO__ f_array *follower, uch *Slen));
+/* static void  LoadFollowers    OF((__GPRO__ f_array *follower, unsigned char *Slen));
                                                                 * unreduce.c */
 #endif /* !COPYRIGHT_CLEAN */
 #ifndef LZW_CLEAN
@@ -1950,13 +1950,13 @@ int    huft_build                OF((__GPRO__ const unsigned *b, unsigned n,
    int      unzipToMemory         OF((__GPRO__ char *zip, char *file,
                                       UzpBuffer *retstr));          /* api.c */
    int      redirect_outfile      OF((__GPRO));                     /* api.c */
-   int      writeToMemory         OF((__GPRO__ const uch *rawbuf,
+   int      writeToMemory         OF((__GPRO__ const unsigned char *rawbuf,
                                       extent size));                /* api.c */
    int      close_redirect        OF((__GPRO));                     /* api.c */
    /* this obsolescent entry point kept for compatibility: */
    int      UzpUnzip              OF((int argc, char **argv));/* use UzpMain */
 #ifdef OS2DLL
-   int      varmessage            OF((__GPRO__ const uch *buf, ulg size));
+   int      varmessage            OF((__GPRO__ const unsigned char *buf, ulg size));
    int      varputchar            OF((__GPRO__ int c));         /* rexxapi.c */
    int      finish_REXX_redirect  OF((__GPRO));                 /* rexxapi.c */
 #endif
@@ -2014,7 +2014,7 @@ int    huft_build                OF((__GPRO__ const unsigned *b, unsigned n,
   ---------------------------------------------------------------------------*/
 
 #ifdef QDOS
-   int    QMatch              (uch, uch);
+   int    QMatch              (unsigned char, unsigned char);
    void   QFilename           (__GPRO__ char *);
    char  *Qstrfix             (char *);
    int    QReturn             (int zip_error);
@@ -2036,7 +2036,7 @@ int    huft_build                OF((__GPRO__ const unsigned *b, unsigned n,
   ---------------------------------------------------------------------------*/
 
 #ifdef CMS_MVS
-   extent getVMMVSexfield     OF((char *type, uch *ef_block, unsigned datalen));
+   extent getVMMVSexfield     OF((char *type, unsigned char *ef_block, unsigned datalen));
    FILE  *vmmvs_open_infile   OF((__GPRO));                       /* vmmvs.c */
    void   close_infile        OF((__GPRO));                       /* vmmvs.c */
 #endif
@@ -2048,7 +2048,7 @@ int    huft_build                OF((__GPRO__ const unsigned *b, unsigned n,
 #ifdef VMS
    int    check_format        OF((__GPRO));                         /* vms.c */
 /* int    open_outfile        OF((__GPRO));           * (see fileio.c) vms.c */
-/* int    flush               OF((__GPRO__ uch *rawbuf, unsigned size,
+/* int    flush               OF((__GPRO__ unsigned char *rawbuf, unsigned size,
                                   int final_flag));   * (see fileio.c) vms.c */
    char  *vms_msg_text        OF((void));                           /* vms.c */
 #ifdef RETURN_CODES
@@ -2070,8 +2070,8 @@ int    huft_build                OF((__GPRO__ const unsigned *b, unsigned n,
    int   IsWinNT        OF((void));                               /* win32.c */
 #ifdef NTSD_EAS
    void  process_defer_NT     OF((__GPRO));                       /* win32.c */
-   int   test_NTSD      OF((__GPRO__ uch *eb, unsigned eb_size,
-                            uch *eb_ucptr, ulg eb_ucsize));       /* win32.c */
+   int   test_NTSD      OF((__GPRO__ unsigned char *eb, unsigned eb_size,
+                            unsigned char *eb_ucptr, ulg eb_ucsize));       /* win32.c */
 #  define TEST_NTSD     test_NTSD
 #endif
 #ifdef W32_STAT_BANDAID
@@ -2219,10 +2219,10 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
 #  else
 #    ifdef INT_SPRINTF  /* optimized version for "int sprintf()" flavour */
 #      define Info(buf,flag,sprf_arg) \
-       (*G.message)((void *)&G, (uch *)(buf), (ulg)sprintf sprf_arg, (flag))
+       (*G.message)((void *)&G, (unsigned char *)(buf), (ulg)sprintf sprf_arg, (flag))
 #    else          /* generic version, does not use sprintf() return value */
 #      define Info(buf,flag,sprf_arg) \
-       (*G.message)((void *)&G, (uch *)(buf), \
+       (*G.message)((void *)&G, (unsigned char *)(buf), \
                      (ulg)(sprintf sprf_arg, strlen((char *)(buf))), (flag))
 #    endif
 #  endif
@@ -2379,8 +2379,8 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
 #  ifndef NATIVE
 #    define NATIVE     "native chars"
 #  endif
-#  define A_TO_N(str1) {register uch *p;\
-     for (p=(uch *)(str1); *p; p++) *p=native(*p);}
+#  define A_TO_N(str1) {register unsigned char *p;\
+     for (p=(unsigned char *)(str1); *p; p++) *p=native(*p);}
 #endif
 /*
  *  Translate the zero-terminated string in str1 from ASCII to the native
@@ -2412,8 +2412,8 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
 #    ifndef IZ_ISO2OEM_ARRAY
 #      define IZ_ISO2OEM_ARRAY
 #    endif
-#    define _ISO_INTERN(str1) if (iso2oem) {register uch *p;\
-       for (p=(uch *)(str1); *p; p++)\
+#    define _ISO_INTERN(str1) if (iso2oem) {register unsigned char *p;\
+       for (p=(unsigned char *)(str1); *p; p++)\
          *p = native((*p & 0x80) ? iso2oem[*p & 0x7f] : *p);}
 #  else
 #    define _ISO_INTERN(str1)   A_TO_N(str1)
@@ -2427,8 +2427,8 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
 #    ifndef IZ_OEM2ISO_ARRAY
 #      define IZ_OEM2ISO_ARRAY
 #    endif
-#    define _OEM_INTERN(str1) if (oem2iso) {register uch *p;\
-       for (p=(uch *)(str1); *p; p++)\
+#    define _OEM_INTERN(str1) if (oem2iso) {register unsigned char *p;\
+       for (p=(unsigned char *)(str1); *p; p++)\
          *p = native((*p & 0x80) ? oem2iso[*p & 0x7f] : *p);}
 #  endif
 #endif
@@ -2539,15 +2539,15 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
    extern const char *fnames[2];
 
 #ifdef EBCDIC
-   extern const uch ebcdic[];
+   extern const unsigned char ebcdic[];
 #endif
 #ifdef IZ_ISO2OEM_ARRAY
-   extern const uch Far *iso2oem;
-   extern const uch Far iso2oem_850[];
+   extern const unsigned char Far *iso2oem;
+   extern const unsigned char Far iso2oem_850[];
 #endif
 #ifdef IZ_OEM2ISO_ARRAY
-   extern const uch Far *oem2iso;
-   extern const uch Far oem2iso_850[];
+   extern const unsigned char Far *oem2iso;
+   extern const unsigned char Far oem2iso_850[];
 #endif
 
    extern const char Far  VersionDate[];

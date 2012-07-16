@@ -263,17 +263,17 @@ int unzip(int argc, char *argv[])
        (For better readability, some subexpressions are encapsulated
        in temporarly defined macros.)
      */
-#   define UZ_SLIDE_CHUNK (sizeof(shrint)+sizeof(uch)+sizeof(uch))
+#   define UZ_SLIDE_CHUNK (sizeof(shrint)+sizeof(unsigned char)+sizeof(unsigned char))
 #   define UZ_NUMOF_CHUNKS \
       (unsigned)(((WSIZE+UZ_SLIDE_CHUNK-1)/UZ_SLIDE_CHUNK > HSIZE) ? \
                  (WSIZE+UZ_SLIDE_CHUNK-1)/UZ_SLIDE_CHUNK : HSIZE)
-    G.area.Slide = (uch *)zcalloc(UZ_NUMOF_CHUNKS, UZ_SLIDE_CHUNK);
+    G.area.Slide = (unsigned char *)zcalloc(UZ_NUMOF_CHUNKS, UZ_SLIDE_CHUNK);
 #   undef UZ_SLIDE_CHUNK
 #   undef UZ_NUMOF_CHUNKS
     G.area.shrink.Parent = (shrint *)G.area.Slide;
     G.area.shrink.value = G.area.Slide + (sizeof(shrint)*(HSIZE));
     G.area.shrink.Stack = G.area.Slide +
-                           (sizeof(shrint) + sizeof(uch))*(HSIZE);
+                           (sizeof(shrint) + sizeof(unsigned char))*(HSIZE);
 
 /*---------------------------------------------------------------------------
     Sanity checks.  Commentary by Otis B. Driftwood and Fiorello:
@@ -292,7 +292,7 @@ int unzip(int argc, char *argv[])
     */
     {
         int test_char;
-        static uch test_buf[2] = { 'a', 'b' };
+        static unsigned char test_buf[2] = { 'a', 'b' };
 
         G.inptr = test_buf;
         G.incnt = 1;
@@ -473,9 +473,9 @@ int unzip(int argc, char *argv[])
     retcode = process_zipfiles(__G);
 
 cleanup_and_exit:
-    if (G.area.Slide != (uch *)NULL) {
+    if (G.area.Slide != (unsigned char *)NULL) {
         free(G.area.Slide);
-        G.area.Slide = (uch *)NULL;
+        G.area.Slide = (unsigned char *)NULL;
     }
     return(retcode);
 

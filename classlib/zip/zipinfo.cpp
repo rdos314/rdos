@@ -111,7 +111,7 @@
 static int   zi_long   OF((__GPRO__ zusz_t *pEndprev, int error_in_archive));
 static int   zi_short  OF((__GPRO));
 static void  zi_showMacTypeCreator
-                       OF((__GPRO__ uch *ebfield));
+                       OF((__GPRO__ unsigned char *ebfield));
 static char *zi_time   OF((__GPRO__ const ulg *datetimez,
                            const time_t *modtimez, char *d_t_str));
 
@@ -882,7 +882,7 @@ int zipinfo(__G)   /* return PK-type error code */
             error_in_archive = PK_FIND;
 
         if (uO.lflag >= 10)
-            (*G.message)((void *)&G, (uch *)"\n", 1L, 0);
+            (*G.message)((void *)&G, (unsigned char *)"\n", 1L, 0);
     }
 
     return error_in_archive;
@@ -954,7 +954,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
     methid = (unsigned)G.crec.compression_method;
     methnum = find_compr_idx(G.crec.compression_method);
 
-    (*G.message)((void *)&G, (uch *)"  ", 2L, 0);  fnprint(__G);
+    (*G.message)((void *)&G, (unsigned char *)"  ", 2L, 0);  fnprint(__G);
 
     Info(slide, 0, ((char *)slide, LoadFarString(LocalHeaderOffset),
       FmZofft(G.crec.relative_offset_local_header, NULL, "u"),
@@ -1196,7 +1196,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
   ---------------------------------------------------------------------------*/
 
     if (G.crec.extra_field_length > 0) {
-        uch *ef_ptr = G.extra_field;
+        unsigned char *ef_ptr = G.extra_field;
         ush ef_len = G.crec.extra_field_length;
         ush eb_id, eb_datalen;
         const char Far *ef_fieldname;
@@ -1204,7 +1204,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
         if (error_in_archive > PK_WARN)   /* fatal:  can't continue */
             /* delayed "fatal error" return from extra field reading */
             return error_in_archive;
-        if (G.extra_field == (uch *)NULL)
+        if (G.extra_field == (unsigned char *)NULL)
             return PK_ERR;   /* not consistent with crec length */
 
         Info(slide, 0, ((char *)slide, LoadFarString(ExtraFields)));
@@ -1507,7 +1507,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                         unsigned fnlen = ef_ptr[4];
 
                         if ((unsigned)eb_datalen >= fnlen + (5 + 8)) {
-                            uch nullchar = ef_ptr[fnlen+5];
+                            unsigned char nullchar = ef_ptr[fnlen+5];
 
                             ef_ptr[fnlen+5] = '\0'; /* terminate filename */
                             A_TO_N(ef_ptr+5);
@@ -1583,7 +1583,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                 case EF_AOSVS:
                     if (eb_datalen >= 5) {
                         Info(slide, 0, ((char *)slide, LoadFarString(AOSVSdata),
-                          ((int)(uch)ef_ptr[4])/10, ((int)(uch)ef_ptr[4])%10));
+                          ((int)(unsigned char)ef_ptr[4])/10, ((int)(unsigned char)ef_ptr[4])%10));
                     } else {
                         goto ef_default_display;
                     }
@@ -1642,12 +1642,12 @@ ef_default_display:
                     }
                     break;
             }
-            (*G.message)((void *)&G, (uch *)".", 1L, 0);
+            (*G.message)((void *)&G, (unsigned char *)".", 1L, 0);
 
             ef_ptr += eb_datalen;
             ef_len -= eb_datalen;
         }
-        (*G.message)((void *)&G, (uch *)"\n", 1L, 0);
+        (*G.message)((void *)&G, (unsigned char *)"\n", 1L, 0);
     }
 
     /* high bit == Unix/OS2/NT GMT times (mtime, atime); next bit == UID/GID */
@@ -1962,7 +1962,7 @@ static int zi_short(__G)   /* return PK-type error code */
 /*  Function zi_showMacTypeCreator()  */
 /**************************************/
 
-static void zi_showMacTypeCreator(uch *ebfield)
+static void zi_showMacTypeCreator(unsigned char *ebfield)
 {
     /* not every Type / Creator character is printable */
     if (isprint(native(ebfield[0])) && isprint(native(ebfield[1])) &&

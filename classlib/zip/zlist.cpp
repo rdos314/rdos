@@ -207,9 +207,9 @@ int list_files(__G)    /* return PK-type error code */
             if (error > PK_WARN)   /* fatal:  can't continue */
                 return error;
         }
-        if (G.extra_field != (uch *)NULL) {
+        if (G.extra_field != (unsigned char *)NULL) {
             free(G.extra_field);
-            G.extra_field = (uch *)NULL;
+            G.extra_field = (unsigned char *)NULL;
         }
         if ((error = do_string(__G__ G.crec.extra_field_length, EXTRA_FIELD))
             != 0)
@@ -258,7 +258,7 @@ int list_files(__G)    /* return PK-type error code */
 #endif
 #ifdef OS2_EAS
             {
-                uch *ef_ptr = G.extra_field;
+                unsigned char *ef_ptr = G.extra_field;
                 int ef_size, ef_len = G.crec.extra_field_length;
                 ea_size = acl_size = 0;
 
@@ -604,9 +604,9 @@ int get_time_stamp(__G__ last_modtime, nmember)  /* return PK-type error code */
             if (error > PK_WARN)   /* fatal:  can't continue */
                 return error;
         }
-        if (G.extra_field != (uch *)NULL) {
+        if (G.extra_field != (unsigned char *)NULL) {
             free(G.extra_field);
-            G.extra_field = (uch *)NULL;
+            G.extra_field = (unsigned char *)NULL;
         }
         if ((error = do_string(__G__ G.crec.extra_field_length, EXTRA_FIELD))
             != 0)
@@ -726,7 +726,7 @@ void fnprint(__G)    /* print filename (after filtering) and newline */
 {
     char *name = fnfilter(G.filename, slide, (extent)(WSIZE>>1));
 
-    (*G.message)((void *)&G, (uch *)name, (ulg)strlen(name), 0);
-    (*G.message)((void *)&G, (uch *)"\n", 1L, 0);
+    (*G.message)((void *)&G, (unsigned char *)name, (ulg)strlen(name), 0);
+    (*G.message)((void *)&G, (unsigned char *)"\n", 1L, 0);
 
 } /* end function fnprint() */

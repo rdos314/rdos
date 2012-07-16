@@ -31,7 +31,7 @@
 
   The DESTROYGLOBALS(); statement should be inserted before EVERY "EXIT(n)".
   Naturally, it also needs to be put before any API returns as well.
-  In fact, it's much more important in API functions since the process
+  In fact, it's munsigned char more important in API functions since the process
   will NOT end, and therefore the memory WON'T automatically be freed
   by the operating system.
 
@@ -80,7 +80,7 @@
 
     int memextract(__G__ tgt, tgtsize, src, srcsize)
         __GDEF
-        uch *tgt, *src;
+        unsigned char *tgt, *src;
         ulg tgtsize, srcsize;
     {
       ... stuff ...
@@ -204,10 +204,10 @@ typedef struct Globals {
 #  endif
 # endif
      ulg redirect_size;            /* size of redirected output buffer */
-     uch *redirect_buffer;         /* pointer to head of allocated buffer */
-     uch *redirect_pointer;        /* pointer past end of written data */
+     unsigned char *redirect_buffer;         /* pointer to head of allocated buffer */
+     unsigned char *redirect_pointer;        /* pointer past end of written data */
 # ifndef NO_SLIDE_REDIR
-     uch *redirect_sldptr;         /* head of decompression slide buffer */
+     unsigned char *redirect_sldptr;         /* head of decompression slide buffer */
 # endif
 # ifdef OS2DLL
      cbList(processExternally);    /* call-back list */
@@ -233,8 +233,8 @@ typedef struct Globals {
 #ifdef FUNZIP
     FILE      *in;                  /* file descriptor of compressed stream */
 #endif
-    uch       *inbuf;               /* input buffer (any size is OK) */
-    uch       *inptr;               /* pointer into input buffer */
+    unsigned char       *inbuf;               /* input buffer (any size is OK) */
+    unsigned char       *inptr;               /* pointer into input buffer */
     int       incnt;
 
 #ifndef FUNZIP
@@ -248,8 +248,8 @@ typedef struct Globals {
     zoff_t    ziplen;
     zoff_t    cur_zipfile_bufstart; /* extract_or_test, readbuf, ReadByte */
     zoff_t    extra_bytes;          /* used in unzip.c, misc.c */
-    uch       *extra_field;         /* Unix, VMS, Mac, OS/2, Acorn, ... */
-    uch       *hold;
+    unsigned char       *extra_field;         /* Unix, VMS, Mac, OS/2, Acorn, ... */
+    unsigned char       *hold;
 
     local_file_hdr  lrec;          /* used in unzip.c, extract.c */
     cdir_file_hdr   crec;          /* used in unzip.c, extract.c, misc.c */
@@ -257,7 +257,7 @@ typedef struct Globals {
     z_stat   statbuf;              /* used by main, mapname, check_for_newer */
 
     int      mem_mode;
-    uch      *outbufptr;           /* extract.c static */
+    unsigned char      *outbufptr;           /* extract.c static */
     ulg      outsize;              /* extract.c static */
     int      reported_backslash;   /* extract.c static */
     int      disk_full;
@@ -277,14 +277,14 @@ typedef struct Globals {
 #endif
 
     int      outfile;
-    uch      *outbuf;
-    uch      *realbuf;
+    unsigned char      *outbuf;
+    unsigned char      *realbuf;
 
 #ifndef VMS                        /* if SMALL_MEM, outbuf2 is initialized in */
-    uch      *outbuf2;             /*  process_zipfiles() (never changes); */
+    unsigned char      *outbuf2;             /*  process_zipfiles() (never changes); */
 #endif                             /*  else malloc'd ONLY if unshrink and -a */
 #endif /* !FUNZIP */
-    uch      *outptr;
+    unsigned char      *outptr;
     ulg      outcnt;               /* number of chars stored in outbuf */
 #ifndef FUNZIP
     char     filename[FILNAMSIZ];  /* also used by NT for temporary SFX path */
@@ -334,8 +334,8 @@ typedef struct Globals {
     struct huft *fixed_td32;            /* inflate static */
     unsigned fixed_bl32, fixed_bd32;    /* inflate static */
     const ush *cplens;                 /* inflate static */
-    const uch *cplext;                 /* inflate static */
-    const uch *cpdext;                 /* inflate static */
+    const unsigned char *cplext;                 /* inflate static */
+    const unsigned char *cpdext;                 /* inflate static */
 #endif
     unsigned wp;              /* inflate static: current position in slide */
     ulg bb;                   /* inflate static: bit buffer */
@@ -363,7 +363,7 @@ typedef struct Globals {
 #endif
 
     int incnt_leftover;       /* so improved NEXTBYTE does not waste input */
-    uch *inptr_leftover;
+    unsigned char *inptr_leftover;
 
 #ifdef VMS_TEXT_CONV
     unsigned VMS_line_length; /* so native VMS variable-length text files */

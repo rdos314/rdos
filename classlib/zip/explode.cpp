@@ -36,7 +36,7 @@
                                     applications.
     c6   31 May 92  M. Adler        added typecasts to eliminate some warnings
     c7   27 Jun 92  G. Roelofs      added more typecasts.
-    c8   17 Oct 92  G. Roelofs      changed ULONG/UWORD/byte to ulg/ush/uch.
+    c8   17 Oct 92  G. Roelofs      changed ULONG/UWORD/byte to ulg/ush/unsigned char.
     c9   19 Jul 93  J. Bush         added more typecasts (to return values);
                                     made l[256] array static for Amiga.
     c10   8 Oct 93  G. Roelofs      added used_csize for diagnostics; added
@@ -63,7 +63,7 @@
                                     leaks (huft tables were not free'd when
                                     get_tree() failed).
     c17b 16 Feb 02  C. Spieler      changed type of the "extra lengths" array
-                                    "extra" from ush into uch (to save space)
+                                    "extra" from ush into unsigned char (to save space)
     c17c 10 Aug 04  NN              file sizes use zoff_t.
     c17d 01 Dec 07  C. Spieler      type for file sizes changed from zoff_t
                                     into zusz_t.
@@ -72,7 +72,7 @@
 
 /*
    Explode imploded (PKZIP method 6 compressed) data.  This compression
-   method searches for as much of the current string of bytes (up to a length
+   method searches for as munsigned char of the current string of bytes (up to a length
    of ~320) in the previous 4K or 8K bytes.  If it doesn't find any matches
    (of at least length 2 or 3), it codes the next byte.  Otherwise, it codes
    the length of the matched string and its distance backwards from the
@@ -93,7 +93,7 @@
    first and is either the low six (4K) or low seven (8K) bits of the
    distance (uncoded), followed by the high six bits of the distance coded.
    Then the length is six bits coded (0..63 + min match length), and if the
-   maximum such length is coded, then it's followed by another eight bits
+   maximum sunsigned char length is coded, then it's followed by another eight bits
    (uncoded) to be added to the coded length.  This gives a match length
    range of 2..320 or 3..321 bytes.
 
@@ -115,7 +115,7 @@
 
 #define __EXPLODE_C     /* identifies this source module */
 #define UNZIP_INTERNAL
-#include "unzip.h"      /* must supply slide[] (uch) array and NEXTBYTE macro */
+#include "unzip.h"      /* must supply slide[] (unsigned char) array and NEXTBYTE macro */
 
 #define wszimpl WSIZE
 
@@ -136,8 +136,8 @@ int explode OF((__GPRO));
    buffer of inflate is used, and it works just as well to always have
    a 32K circular buffer, so the index is anded with 0x7fff.  This is
    done to allow the window to also be used as the output buffer. */
-/* This must be supplied in an external module useable like "uch slide[8192];"
-   or "uch *slide;", where the latter would be malloc'ed.  In unzip, slide[]
+/* This must be supplied in an external module useable like "unsigned char slide[8192];"
+   or "unsigned char *slide;", where the latter would be malloc'ed.  In unzip, slide[]
    is actually a 32K area for use by inflate, which uses a 32K sliding window.
  */
 
@@ -156,7 +156,7 @@ static const ush cplen3[] =
         19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
         36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52,
         53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66};
-static const uch extra[] =
+static const unsigned char extra[] =
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -268,7 +268,7 @@ static int explode_lit(struct huft *tb, struct huft *tl, struct huft *td, unsign
       DUMPBITS(1)
       s--;
       DECODEHUFT(tb, bb, mb)    /* get coded literal */
-      redirSlide[w++] = (uch)t->v.n;
+      redirSlide[w++] = (unsigned char)t->v.n;
       if (w == wszimpl)
       {
         if ((retval = flush(__G__ redirSlide, (ulg)w, 0)) != 0)
@@ -371,7 +371,7 @@ static int explode_nolit(struct huft *tl, struct huft *td, unsigned bl, unsigned
       DUMPBITS(1)
       s--;
       NEEDBITS(8)
-      redirSlide[w++] = (uch)b;
+      redirSlide[w++] = (unsigned char)b;
       if (w == wszimpl)
       {
         if ((retval = flush(__G__ redirSlide, (ulg)w, 0)) != 0)

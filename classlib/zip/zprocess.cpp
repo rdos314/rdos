@@ -149,10 +149,10 @@ int process_zipfiles(__G)    /* return PK-type error code */
     strings.
   ---------------------------------------------------------------------------*/
 
-    G.inbuf = (uch *)malloc(INBUFSIZ + 4);    /* 4 extra for hold[] (below) */
-    G.outbuf = (uch *)malloc(OUTBUFSIZ + 1);  /* 1 extra for string term. */
+    G.inbuf = (unsigned char *)malloc(INBUFSIZ + 4);    /* 4 extra for hold[] (below) */
+    G.outbuf = (unsigned char *)malloc(OUTBUFSIZ + 1);  /* 1 extra for string term. */
 
-    if ((G.inbuf == (uch *)NULL) || (G.outbuf == (uch *)NULL)) {
+    if ((G.inbuf == (unsigned char *)NULL) || (G.outbuf == (unsigned char *)NULL)) {
         Info(slide, 0x401, ((char *)slide,
           LoadFarString(CannotAllocateBuffers)));
         return(PK_MEM);
@@ -211,7 +211,7 @@ int process_zipfiles(__G)    /* return PK-type error code */
         /* print a blank line between the output of different zipfiles */
         if (!uO.qflag  &&  error != PK_NOZIP  &&  error != IZ_DIR
             && (NumWinFiles+NumLoseFiles+NumWarnFiles+NumMissFiles) > 0)
-            (*G.message)((void *)&G, (uch *)"\n", 1L, 0);
+            (*G.message)((void *)&G, (unsigned char *)"\n", 1L, 0);
 
         if ((error = do_seekable(__G__ 0)) == PK_WARN)
             ++NumWarnFiles;
@@ -301,7 +301,7 @@ int process_zipfiles(__G)    /* return PK-type error code */
     {
         if ((NumMissFiles + NumLoseFiles + NumWarnFiles > 0 || NumWinFiles != 1)
             && !(uO.tflag && uO.qflag > 1))
-            (*G.message)((void *)&G, (uch *)"\n", 1L, 0x401);
+            (*G.message)((void *)&G, (unsigned char *)"\n", 1L, 0x401);
         if ((NumWinFiles > 1) ||
             (NumWinFiles == 1 &&
              NumMissDirs + NumMissFiles + NumLoseFiles + NumWarnFiles > 0))
@@ -354,22 +354,22 @@ void free_G_buffers(__G)     /* releases all memory allocated in global vars */
         G.key = (char *)NULL;
    }
 
-   if (G.extra_field != (uch *)NULL) {
+   if (G.extra_field != (unsigned char *)NULL) {
         free(G.extra_field);
-        G.extra_field = (uch *)NULL;
+        G.extra_field = (unsigned char *)NULL;
    }
 
     /* VMS uses its own buffer scheme for textmode flush() */
     if (G.outbuf2) {
         free(G.outbuf2);   /* malloc'd ONLY if unshrink and -a */
-        G.outbuf2 = (uch *)NULL;
+        G.outbuf2 = (unsigned char *)NULL;
     }
 
     if (G.outbuf)
         free(G.outbuf);
     if (G.inbuf)
         free(G.inbuf);
-    G.inbuf = G.outbuf = (uch *)NULL;
+    G.inbuf = G.outbuf = (unsigned char *)NULL;
 
     for (i = 0; i < DIR_BLKSIZ; i++) {
         if (G.info[i].cfilname != (char Far *)NULL) {
@@ -634,7 +634,7 @@ static int rec_find(zoff_t searchlen, char* signature, int rec_size)
         for (G.inptr = G.inbuf+(int)tail_len-(rec_size+4);
              G.inptr >= G.inbuf;
              --G.inptr) {
-            if ( (*G.inptr == (uch)0x50) &&         /* ASCII 'P' */
+            if ( (*G.inptr == (unsigned char)0x50) &&         /* ASCII 'P' */
                  !memcmp((char *)G.inptr, signature, 4) ) {
                 G.incnt -= (int)(G.inptr - G.inbuf);
                 found = TRUE;
@@ -663,7 +663,7 @@ static int rec_find(zoff_t searchlen, char* signature, int rec_size)
             return 2;          /* read error is fatal failure */
 
         for (G.inptr = G.inbuf+INBUFSIZ-1;  G.inptr >= G.inbuf; --G.inptr)
-            if ( (*G.inptr == (uch)0x50) &&         /* ASCII 'P' */
+            if ( (*G.inptr == (unsigned char)0x50) &&         /* ASCII 'P' */
                  !memcmp((char *)G.inptr, signature, 4) ) {
                 G.incnt -= (int)(G.inptr - G.inbuf);
                 found = TRUE;
@@ -914,7 +914,7 @@ static int find_ecrec(zoff_t searchlen)          /* return PK-class error */
             for (G.inptr = G.inbuf+(int)G.ziplen-(ECREC_SIZE+4);
                  G.inptr >= G.inbuf;
                  --G.inptr) {
-                if ( (*G.inptr == (uch)0x50) &&         /* ASCII 'P' */
+                if ( (*G.inptr == (unsigned char)0x50) &&         /* ASCII 'P' */
                      !memcmp((char *)G.inptr, end_central_sig, 4)) {
                     G.incnt -= (int)(G.inptr - G.inbuf);
                     found = TRUE;
@@ -1278,7 +1278,7 @@ int process_local_file_hdr(__G)    /* return PK-type error code */
 /* Function getZip64Data() */
 /*******************************/
 
-int getZip64Data(const uch *ef_buf, unsigned ef_len)
+int getZip64Data(const unsigned char *ef_buf, unsigned ef_len)
 {
     unsigned eb_id;
     unsigned eb_len;

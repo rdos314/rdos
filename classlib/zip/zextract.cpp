@@ -44,7 +44,7 @@
     for (j = 0;  j < (len)/16;  ++j) { \
         printf("        "); \
         for (i = 0;  i < 16;  ++i) \
-            printf("%02x ", (uch)(buf)[i+(j<<4)]); \
+            printf("%02x ", (unsigned char)(buf)[i+(j<<4)]); \
         printf("\n        "); \
         for (i = 0;  i < 16;  ++i) { \
             char c = (char)(buf)[i+(j<<4)]; \
@@ -61,7 +61,7 @@
     if ((len) % 16) { \
         printf("        "); \
         for (i = j<<4;  i < (len);  ++i) \
-            printf("%02x ", (uch)(buf)[i]); \
+            printf("%02x ", (unsigned char)(buf)[i]); \
         printf("\n        "); \
         for (i = j<<4;  i < (len);  ++i) { \
             char c = (char)(buf)[i]; \
@@ -83,11 +83,11 @@ static int extract_or_test_entrylist OF((__GPRO__ unsigned numchunk,
                 unsigned *pnum_dirs, direntry **pdirlist,
                 int error_in_archive));
 static int extract_or_test_member OF((__GPRO));
-   static int TestExtraField OF((__GPRO__ uch *ef, unsigned ef_len));
-   static int test_compr_eb OF((__GPRO__ uch *eb, unsigned eb_size,
+   static int TestExtraField OF((__GPRO__ unsigned char *ef, unsigned ef_len));
+   static int test_compr_eb OF((__GPRO__ unsigned char *eb, unsigned eb_size,
         unsigned compr_offset,
-        int (*test_uc_ebdata)(__GPRO__ uch *eb, unsigned eb_size,
-                              uch *eb_ucptr, ulg eb_ucsize)));
+        int (*test_uc_ebdata)(__GPRO__ unsigned char *eb, unsigned eb_size,
+                              unsigned char *eb_ucptr, ulg eb_ucsize)));
    static int Cdecl dircomp OF((const void *a, const void *b));
 
 
@@ -252,7 +252,7 @@ int extract_or_test_files(__G)    /* return PK-type error code */
 {
     unsigned i, j;
     zoff_t cd_bufstart;
-    uch *cd_inptr;
+    unsigned char *cd_inptr;
     int cd_incnt;
     ulg filnum=0L, blknum=0L;
     int reached_end;
@@ -963,9 +963,9 @@ static int extract_or_test_entrylist(unsigned numchunk,
                 continue;   /* go on to next one */
             }
         }
-        if (G.extra_field != (uch *)NULL) {
+        if (G.extra_field != (unsigned char *)NULL) {
             free(G.extra_field);
-            G.extra_field = (uch *)NULL;
+            G.extra_field = (unsigned char *)NULL;
         }
         if ((error =
              do_string(__G__ G.lrec.extra_field_length, EXTRA_FIELD)) != 0)
@@ -1293,7 +1293,7 @@ static int extract_or_test_member(__G)    /* return PK-type error code */
             G.outptr = redirSlide;
             G.outcnt = 0L;
             while ((b = NEXTBYTE) != EOF) {
-                *G.outptr++ = (uch)b;
+                *G.outptr++ = (unsigned char)b;
                 if (++G.outcnt == wsize) {
                     error = flush(__G__ redirSlide, G.outcnt, 0);
                     G.outptr = redirSlide;
@@ -1496,7 +1496,7 @@ static int extract_or_test_member(__G)    /* return PK-type error code */
 /*  Function TestExtraField()  */
 /*******************************/
 
-static int TestExtraField(uch *ef, unsigned ef_len)
+static int TestExtraField(unsigned char *ef, unsigned ef_len)
 {
     ush ebID;
     unsigned ebLen;
@@ -1680,14 +1680,14 @@ static int TestExtraField(uch *ef, unsigned ef_len)
 
 static int test_compr_eb(
     __GPRO__
-    uch *eb,
+    unsigned char *eb,
     unsigned eb_size,
     unsigned compr_offset,
-    int (*test_uc_ebdata)(__GPRO__ uch *eb, unsigned eb_size,
-                          uch *eb_ucptr, ulg eb_ucsize))
+    int (*test_uc_ebdata)(__GPRO__ unsigned char *eb, unsigned eb_size,
+                          unsigned char *eb_ucptr, ulg eb_ucsize))
 {
     ulg eb_ucsize;
-    uch *eb_ucptr;
+    unsigned char *eb_ucptr;
     int r;
 
     if (compr_offset < 4)                /* field is not compressed: */
@@ -1699,7 +1699,7 @@ static int test_compr_eb(
         return IZ_EF_TRUNC;               /* no compressed data! */
 
     if (
-        (eb_ucptr = (uch *)malloc((extent)eb_ucsize)) == (uch *)NULL)
+        (eb_ucptr = (unsigned char *)malloc((extent)eb_ucsize)) == (unsigned char *)NULL)
         return PK_MEM4;
 
     r = memextract(__G__ eb_ucptr, eb_ucsize,
@@ -1721,10 +1721,10 @@ static int test_compr_eb(
 /*  Function memextract()  */
 /***************************/
 
-int memextract(uch *tgt, ulg tgtsize, const uch *src, ulg srcsize)
+int memextract(unsigned char *tgt, ulg tgtsize, const unsigned char *src, ulg srcsize)
 {
     zoff_t old_csize=G.csize;
-    uch   *old_inptr=G.inptr;
+    unsigned char   *old_inptr=G.inptr;
     int    old_incnt=G.incnt;
     int    r, error=PK_OK;
     ush    method;
@@ -1735,7 +1735,7 @@ int memextract(uch *tgt, ulg tgtsize, const uch *src, ulg srcsize)
     extra_field_crc = makelong(src+2);
 
     /* compressed extra field exists completely in memory at this location: */
-    G.inptr = (uch *)src + (2 + 4);     /* method and extra_field_crc */
+    G.inptr = (unsigned char *)src + (2 + 4);     /* method and extra_field_crc */
     G.incnt = (int)(G.csize = (long)(srcsize - (2 + 4)));
     G.mem_mode = TRUE;
     G.outbufptr = tgt;
@@ -1802,7 +1802,7 @@ int memextract(uch *tgt, ulg tgtsize, const uch *src, ulg srcsize)
 /*  Function memflush()  */
 /*************************/
 
-int memflush(const uch *rawbuf, ulg size)
+int memflush(const unsigned char *rawbuf, ulg size)
 {
     if (size > G.outsize)
         /* Here, PK_DISK is a bit off-topic, but in the sense of marking
@@ -1829,12 +1829,12 @@ int memflush(const uch *rawbuf, ulg size)
 /*  Function fnfilter()  */        /* here instead of in list.c for SFX */
 /*************************/
 
-char *fnfilter(const char *raw, uch *space, extent size)   /* convert name to safely printable form */
+char *fnfilter(const char *raw, unsigned char *space, extent size)   /* convert name to safely printable form */
 {
-    const uch *r=(const uch *)raw;
-    uch *s=space;
-    uch *slim=NULL;
-    uch *se=NULL;
+    const unsigned char *r=(const unsigned char *)raw;
+    unsigned char *s=space;
+    unsigned char *slim=NULL;
+    unsigned char *se=NULL;
     int have_overflow = FALSE;
 
     if (size > 0) {
@@ -1851,7 +1851,7 @@ char *fnfilter(const char *raw, uch *space, extent size)   /* convert name to sa
                 have_overflow = TRUE;
                 break;
             }
-            *s++ = '^', *s++ = (uch)(64 + *r++);
+            *s++ = '^', *s++ = (unsigned char)(64 + *r++);
         } else {
             if (se != NULL && (s > (space + (size-3)))) {
                 have_overflow = TRUE;

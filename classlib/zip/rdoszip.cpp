@@ -260,7 +260,7 @@ int mapname(int renamed)
             pathcomp[0] = '/';  /* copy the '/' and terminate */
             pathcomp[1] = '\0';
             ++cp;
-        } else if (isalpha((uch)G.filename[0]) && G.filename[1] == ':') {
+        } else if (isalpha((unsigned char)G.filename[0]) && G.filename[1] == ':') {
             renamed_fullpath = TRUE;
             pp = pathcomp;
             *pp++ = *cp++;      /* copy the "d:" (+ '/', possibly) */
@@ -290,7 +290,7 @@ int mapname(int renamed)
     Begin main loop through characters in filename.
   ---------------------------------------------------------------------------*/
 
-    while ((workch = (uch)*cp++) != 0) {
+    while ((workch = (unsigned char)*cp++) != 0) {
 
         switch (workch) {
             case '/':             /* can assume -j flag not given */
@@ -378,7 +378,7 @@ int mapname(int renamed)
     /* if not saving them, remove VMS version numbers (appended ";###") */
     if (!uO.V_flag && lastsemi) {
         pp = lastsemi + 1;
-        while (isdigit((uch)(*pp)))
+        while (isdigit((unsigned char)(*pp)))
             ++pp;
         if (*pp == '\0')          /* only digits between ';' and end:  nuke */
             *lastsemi = '\0';
@@ -587,7 +587,7 @@ int checkdir(char *pathcomp, int flag)
                 return MPN_NOMEM;
             }
             strcpy(tmproot, pathcomp);
-            if (isalpha((uch)tmproot[0]) && tmproot[1] == ':')
+            if (isalpha((unsigned char)tmproot[0]) && tmproot[1] == ':')
                 has_drive = TRUE;   /* drive designator */
             if (tmproot[rootlen-1] == '/' || tmproot[rootlen-1] == '\\') {
                 tmproot[--rootlen] = '\0';

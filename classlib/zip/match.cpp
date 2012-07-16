@@ -17,7 +17,7 @@
   mixed) of the string alone, but converts any uppercase characters in the
   pattern to lowercase if indicated by the global var pInfo->lcflag (which
   is to say, string is assumed to have been converted to lowercase already,
-  if such was necessary).
+  if sunsigned char was necessary).
 
   GRR:  reversed order of text, pattern in matche() (now same as match());
         added ignore_case/ic flags, Case() macro.
@@ -81,7 +81,7 @@
 #  define BEG_RANGE  '['
 #  define END_RANGE  ']'
 
-static int recmatch OF((const uch *pattern, const uch *string,
+static int recmatch OF((const unsigned char *pattern, const unsigned char *string,
                         int ignore_case __WDLPRO));
 static char *isshexp OF((const char *p));
 static int namecmp OF((const char *s1, const char *s2));
@@ -91,12 +91,12 @@ static int namecmp OF((const char *s1, const char *s2));
 
 int match(const char *string, const char *pattern, int ignore_case)
 {
-    return recmatch((uch *)pattern, (uch *)string, ignore_case __WDL) == 1;
+    return recmatch((unsigned char *)pattern, (unsigned char *)string, ignore_case __WDL) == 1;
 }
 
 
 
-static int recmatch(const uch *p, const uch *s, int ic)
+static int recmatch(const unsigned char *p, const unsigned char *s, int ic)
 /* Recursively compare the sh pattern p with the string s and return 1 if
  * they match, and 0 or 2 if they don't or if there is a syntax error in the
  * pattern.  This routine recurses on itself no more deeply than the number
@@ -125,7 +125,7 @@ static int recmatch(const uch *p, const uch *s, int ic)
              * of the pattern behind the multi-char wildcard, then just
              * compare the literal string tail.
              */
-            const uch *srest;
+            const unsigned char *srest;
 
             srest = s + (strlen((const char *)s) - strlen((const char *)p));
             if (srest - s < 0)
@@ -153,7 +153,7 @@ static int recmatch(const uch *p, const uch *s, int ic)
     /* Parse and process the list of characters and ranges in brackets */
     if (c == BEG_RANGE) {
         int e;          /* flag true if next char to be taken literally */
-        const uch *q;  /* pointer to end of [-] group */
+        const unsigned char *q;  /* pointer to end of [-] group */
         int r;          /* flag true to match anything but the range */
 
         if (*s == 0)                            /* need a character to match */
@@ -194,7 +194,7 @@ static int recmatch(const uch *p, const uch *s, int ic)
         return 0;
 
     /* just a character--compare it */
-    return Case((uch)c) == Case(*s) ?
+    return Case((unsigned char)c) == Case(*s) ?
            recmatch(p, s + CLEN(s), ic __WDL) : 0;
 
 } /* end function recmatch() */
@@ -220,8 +220,8 @@ static int namecmp(const char *s1, const char *s2)
     int d;
 
     for (;;) {
-        d = (int)ToLower((uch)*s1)
-          - (int)ToLower((uch)*s2);
+        d = (int)ToLower((unsigned char)*s1)
+          - (int)ToLower((unsigned char)*s2);
 
         if (d || *s1 == 0 || *s2 == 0)
             return d;
