@@ -88,7 +88,7 @@ static int extract_or_test_member OF((__GPRO));
         unsigned compr_offset,
         int (*test_uc_ebdata)(__GPRO__ uch *eb, unsigned eb_size,
                               uch *eb_ucptr, ulg eb_ucsize)));
-   static int Cdecl dircomp OF((ZCONST zvoid *a, ZCONST zvoid *b));
+   static int Cdecl dircomp OF((const zvoid *a, const zvoid *b));
 
 
 
@@ -96,147 +96,147 @@ static int extract_or_test_member OF((__GPRO));
 /*  Strings used in extract.c  */
 /*******************************/
 
-static ZCONST char Far VersionMsg[] =
+static const char Far VersionMsg[] =
   "   skipping: %-22s  need %s compat. v%u.%u (can do v%u.%u)\n";
-static ZCONST char Far ComprMsgNum[] =
+static const char Far ComprMsgNum[] =
   "   skipping: %-22s  unsupported compression method %u\n";
-   static ZCONST char Far ComprMsgName[] =
+   static const char Far ComprMsgName[] =
      "   skipping: %-22s  `%s' method not supported\n";
-   static ZCONST char Far CmprNone[]       = "store";
-   static ZCONST char Far CmprShrink[]     = "shrink";
-   static ZCONST char Far CmprReduce[]     = "reduce";
-   static ZCONST char Far CmprImplode[]    = "implode";
-   static ZCONST char Far CmprTokenize[]   = "tokenize";
-   static ZCONST char Far CmprDeflate[]    = "deflate";
-   static ZCONST char Far CmprDeflat64[]   = "deflate64";
-   static ZCONST char Far CmprDCLImplode[] = "DCL implode";
-   static ZCONST char Far CmprBzip[]       = "bzip2";
-   static ZCONST char Far CmprLZMA[]       = "LZMA";
-   static ZCONST char Far CmprIBMTerse[]   = "IBM/Terse";
-   static ZCONST char Far CmprIBMLZ77[]    = "IBM LZ77";
-   static ZCONST char Far CmprWavPack[]    = "WavPack";
-   static ZCONST char Far CmprPPMd[]       = "PPMd";
-   static ZCONST char Far *ComprNames[NUM_METHODS] = {
+   static const char Far CmprNone[]       = "store";
+   static const char Far CmprShrink[]     = "shrink";
+   static const char Far CmprReduce[]     = "reduce";
+   static const char Far CmprImplode[]    = "implode";
+   static const char Far CmprTokenize[]   = "tokenize";
+   static const char Far CmprDeflate[]    = "deflate";
+   static const char Far CmprDeflat64[]   = "deflate64";
+   static const char Far CmprDCLImplode[] = "DCL implode";
+   static const char Far CmprBzip[]       = "bzip2";
+   static const char Far CmprLZMA[]       = "LZMA";
+   static const char Far CmprIBMTerse[]   = "IBM/Terse";
+   static const char Far CmprIBMLZ77[]    = "IBM LZ77";
+   static const char Far CmprWavPack[]    = "WavPack";
+   static const char Far CmprPPMd[]       = "PPMd";
+   static const char Far *ComprNames[NUM_METHODS] = {
      CmprNone, CmprShrink, CmprReduce, CmprReduce, CmprReduce, CmprReduce,
      CmprImplode, CmprTokenize, CmprDeflate, CmprDeflat64, CmprDCLImplode,
      CmprBzip, CmprLZMA, CmprIBMTerse, CmprIBMLZ77, CmprWavPack, CmprPPMd
    };
-   static ZCONST unsigned ComprIDs[NUM_METHODS] = {
+   static const unsigned ComprIDs[NUM_METHODS] = {
      STORED, SHRUNK, REDUCED1, REDUCED2, REDUCED3, REDUCED4,
      IMPLODED, TOKENIZED, DEFLATED, ENHDEFLATED, DCLIMPLODED,
      BZIPPED, LZMAED, IBMTERSED, IBMLZ77ED, WAVPACKED, PPMDED
    };
-static ZCONST char Far FilNamMsg[] =
+static const char Far FilNamMsg[] =
   "%s:  bad filename length (%s)\n";
-   static ZCONST char Far WarnNoMemCFName[] =
+   static const char Far WarnNoMemCFName[] =
      "%s:  warning, no memory for comparison with local header\n";
-   static ZCONST char Far LvsCFNamMsg[] =
+   static const char Far LvsCFNamMsg[] =
      "%s:  mismatching \"local\" filename (%s),\n\
          continuing with \"central\" filename version\n";
-static ZCONST char Far WrnStorUCSizCSizDiff[] =
+static const char Far WrnStorUCSizCSizDiff[] =
   "%s:  ucsize %s <> csize %s for STORED entry\n\
          continuing with \"compressed\" size value\n";
-static ZCONST char Far ExtFieldMsg[] =
+static const char Far ExtFieldMsg[] =
   "%s:  bad extra field length (%s)\n";
-static ZCONST char Far OffsetMsg[] =
+static const char Far OffsetMsg[] =
   "file #%lu:  bad zipfile offset (%s):  %ld\n";
-static ZCONST char Far ExtractMsg[] =
+static const char Far ExtractMsg[] =
   "%8sing: %-22s  %s%s";
-   static ZCONST char Far LengthMsg[] =
+   static const char Far LengthMsg[] =
      "%s  %s:  %s bytes required to uncompress to %s bytes;\n    %s\
       supposed to require %s bytes%s%s%s\n";
 
-static ZCONST char Far BadFileCommLength[] = "%s:  bad file comment length\n";
-static ZCONST char Far LocalHdrSig[] = "local header sig";
-static ZCONST char Far BadLocalHdr[] = "file #%lu:  bad local header\n";
-static ZCONST char Far AttemptRecompensate[] =
+static const char Far BadFileCommLength[] = "%s:  bad file comment length\n";
+static const char Far LocalHdrSig[] = "local header sig";
+static const char Far BadLocalHdr[] = "file #%lu:  bad local header\n";
+static const char Far AttemptRecompensate[] =
   "  (attempting to re-compensate)\n";
-   static ZCONST char Far BackslashPathSep[] =
+   static const char Far BackslashPathSep[] =
      "warning:  %s appears to use backslashes as path separators\n";
-static ZCONST char Far AbsolutePathWarning[] =
+static const char Far AbsolutePathWarning[] =
   "warning:  stripped absolute path spec from %s\n";
-static ZCONST char Far SkipVolumeLabel[] =
+static const char Far SkipVolumeLabel[] =
   "   skipping: %-22s  %svolume label\n";
 
-   static ZCONST char Far DirlistEntryNoMem[] =
+   static const char Far DirlistEntryNoMem[] =
      "warning:  cannot alloc memory for dir times/permissions/UID/GID\n";
-   static ZCONST char Far DirlistSortNoMem[] =
+   static const char Far DirlistSortNoMem[] =
      "warning:  cannot alloc memory to sort dir times/perms/etc.\n";
-   static ZCONST char Far DirlistSetAttrFailed[] =
+   static const char Far DirlistSetAttrFailed[] =
      "warning:  set times/attribs failed for %s\n";
-   static ZCONST char Far DirlistFailAttrSum[] =
+   static const char Far DirlistFailAttrSum[] =
      "     failed setting times/attribs for %lu dir entries";
 
-   static ZCONST char Far ReplaceQuery[] =
+   static const char Far ReplaceQuery[] =
      "replace %s? [y]es, [n]o, [A]ll, [N]one, [r]ename: ";
-   static ZCONST char Far AssumeNone[] =
+   static const char Far AssumeNone[] =
      " NULL\n(EOF or read error, treating as \"[N]one\" ...)\n";
-   static ZCONST char Far NewNameQuery[] = "new name: ";
-   static ZCONST char Far InvalidResponse[] =
+   static const char Far NewNameQuery[] = "new name: ";
+   static const char Far InvalidResponse[] =
      "error:  invalid response [%s]\n";
 
-static ZCONST char Far ErrorInArchive[] =
+static const char Far ErrorInArchive[] =
   "At least one %serror was detected in %s.\n";
-static ZCONST char Far ZeroFilesTested[] =
+static const char Far ZeroFilesTested[] =
   "Caution:  zero files tested in %s.\n";
 
-   static ZCONST char Far VMSFormatQuery[] =
+   static const char Far VMSFormatQuery[] =
      "\n%s:  stored in VMS format.  Extract anyway? (y/n) ";
 
-   static ZCONST char Far SkipCannotGetPasswd[] =
+   static const char Far SkipCannotGetPasswd[] =
      "   skipping: %-22s  unable to get password\n";
-   static ZCONST char Far SkipIncorrectPasswd[] =
+   static const char Far SkipIncorrectPasswd[] =
      "   skipping: %-22s  incorrect password\n";
-   static ZCONST char Far FilesSkipBadPasswd[] =
+   static const char Far FilesSkipBadPasswd[] =
      "%lu file%s skipped because of incorrect password.\n";
-   static ZCONST char Far MaybeBadPasswd[] =
+   static const char Far MaybeBadPasswd[] =
      "    (may instead be incorrect password)\n";
 
-static ZCONST char Far NoErrInCompData[] =
+static const char Far NoErrInCompData[] =
   "No errors detected in compressed data of %s.\n";
-static ZCONST char Far NoErrInTestedFiles[] =
+static const char Far NoErrInTestedFiles[] =
   "No errors detected in %s for the %lu file%s tested.\n";
-static ZCONST char Far FilesSkipped[] =
+static const char Far FilesSkipped[] =
   "%lu file%s skipped because of unsupported compression or encoding.\n";
 
-static ZCONST char Far ErrUnzipFile[] = "  error:  %s%s %s\n";
-static ZCONST char Far ErrUnzipNoFile[] = "\n  error:  %s%s\n";
-static ZCONST char Far NotEnoughMem[] = "not enough memory to ";
-static ZCONST char Far InvalidComprData[] = "invalid compressed data to ";
-static ZCONST char Far Inflate[] = "inflate";
+static const char Far ErrUnzipFile[] = "  error:  %s%s %s\n";
+static const char Far ErrUnzipNoFile[] = "\n  error:  %s%s\n";
+static const char Far NotEnoughMem[] = "not enough memory to ";
+static const char Far InvalidComprData[] = "invalid compressed data to ";
+static const char Far Inflate[] = "inflate";
 
-   static ZCONST char Far Explode[] = "explode";
-   static ZCONST char Far Unshrink[] = "unshrink";
+   static const char Far Explode[] = "explode";
+   static const char Far Unshrink[] = "unshrink";
 
-   static ZCONST char Far FileTruncated[] =
+   static const char Far FileTruncated[] =
      "warning:  %s is probably truncated\n";
 
-static ZCONST char Far FileUnknownCompMethod[] =
+static const char Far FileUnknownCompMethod[] =
   "%s:  unknown compression method\n";
-static ZCONST char Far BadCRC[] = " bad CRC %08lx  (should be %08lx)\n";
+static const char Far BadCRC[] = " bad CRC %08lx  (should be %08lx)\n";
 
       /* TruncEAs[] also used in OS/2 mapname(), close_outfile() */
-char ZCONST Far TruncEAs[] = " compressed EA data missing (%d bytes)%s";
-char ZCONST Far TruncNTSD[] =
+char const Far TruncEAs[] = " compressed EA data missing (%d bytes)%s";
+char const Far TruncNTSD[] =
   " compressed WinNT security data missing (%d bytes)%s";
 
-   static ZCONST char Far InconsistEFlength[] = "bad extra-field entry:\n \
+   static const char Far InconsistEFlength[] = "bad extra-field entry:\n \
      EF block length (%u bytes) exceeds remaining EF data (%u bytes)\n";
-   static ZCONST char Far InvalidComprDataEAs[] =
+   static const char Far InvalidComprDataEAs[] =
      " invalid compressed data for EAs\n";
-   static ZCONST char Far UnsuppNTSDVersEAs[] =
+   static const char Far UnsuppNTSDVersEAs[] =
      " unsupported NTSD EAs version %d\n";
-   static ZCONST char Far BadCRC_EAs[] = " bad CRC for extended attributes\n";
-   static ZCONST char Far UnknComprMethodEAs[] =
+   static const char Far BadCRC_EAs[] = " bad CRC for extended attributes\n";
+   static const char Far UnknComprMethodEAs[] =
      " unknown compression method for EAs (%u)\n";
-   static ZCONST char Far NotEnoughMemEAs[] =
+   static const char Far NotEnoughMemEAs[] =
      " out of memory while inflating EAs\n";
-   static ZCONST char Far UnknErrorEAs[] =
+   static const char Far UnknErrorEAs[] =
      " unknown error on extended attributes\n";
 
-static ZCONST char Far UnsupportedExtraField[] =
+static const char Far UnsupportedExtraField[] =
   "\nerror:  unsupported extra-field compression type (%u)--skipping\n";
-static ZCONST char Far BadExtraFieldCRC[] =
+static const char Far BadExtraFieldCRC[] =
   "error [%s]:  bad extra-field CRC %08lx (should be %08lx)\n";
 
 
@@ -1721,7 +1721,7 @@ static int test_compr_eb(
 /*  Function memextract()  */
 /***************************/
 
-int memextract(uch *tgt, ulg tgtsize, ZCONST uch *src, ulg srcsize)
+int memextract(uch *tgt, ulg tgtsize, const uch *src, ulg srcsize)
 {
     zoff_t old_csize=G.csize;
     uch   *old_inptr=G.inptr;
@@ -1802,7 +1802,7 @@ int memextract(uch *tgt, ulg tgtsize, ZCONST uch *src, ulg srcsize)
 /*  Function memflush()  */
 /*************************/
 
-int memflush(ZCONST uch *rawbuf, ulg size)
+int memflush(const uch *rawbuf, ulg size)
 {
     if (size > G.outsize)
         /* Here, PK_DISK is a bit off-topic, but in the sense of marking
@@ -1829,9 +1829,9 @@ int memflush(ZCONST uch *rawbuf, ulg size)
 /*  Function fnfilter()  */        /* here instead of in list.c for SFX */
 /*************************/
 
-char *fnfilter(ZCONST char *raw, uch *space, extent size)   /* convert name to safely printable form */
+char *fnfilter(const char *raw, uch *space, extent size)   /* convert name to safely printable form */
 {
-    ZCONST uch *r=(ZCONST uch *)raw;
+    const uch *r=(const uch *)raw;
     uch *s=space;
     uch *slim=NULL;
     uch *se=NULL;
@@ -1880,7 +1880,7 @@ char *fnfilter(ZCONST char *raw, uch *space, extent size)   /* convert name to s
 /*  Function dircomp()  */
 /************************/
 
-static int Cdecl dircomp(ZCONST zvoid *a, ZCONST zvoid *b)  /* used by qsort(); swiped from Zip */
+static int Cdecl dircomp(const zvoid *a, const zvoid *b)  /* used by qsort(); swiped from Zip */
 {
     /* order is significant:  this sorts in reverse order (deepest first) */
     return strcmp((*(direntry **)b)->fn, (*(direntry **)a)->fn);

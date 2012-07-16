@@ -357,7 +357,7 @@ int UZinflate(int is_defl64)
 
     if (!G.inflInit) {
         /* local buffer for efficiency */
-        ZCONST char *zlib_RtVersion = zlibVersion();
+        const char *zlib_RtVersion = zlibVersion();
 
         /* only need to test this stuff once */
         if ((zlib_RtVersion[0] != ZLIB_VERSION[0]) ||
@@ -457,7 +457,7 @@ int UZinflate(int is_defl64)
 #define N_MAX 288       /* maximum number of codes in any set */
 
 
-int huft_build(ZCONST unsigned *b, unsigned n, unsigned s, ZCONST ush *d, ZCONST uch *e, struct huft **t, unsigned *m)
+int huft_build(const unsigned *b, unsigned n, unsigned s, const ush *d, const uch *e, struct huft **t, unsigned *m)
 /* Given a list of code lengths and a maximum table size, make a set of
    tables to decode that set of codes.  Return zero on success, one if
    the given code set is incomplete (the tables are still built in this

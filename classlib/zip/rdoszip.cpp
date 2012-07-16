@@ -60,10 +60,10 @@ void close_outfile()
 /*  Function do_wild()  */   /* identical to OS/2 version */
 /************************/
 
-char *do_wild(ZCONST char *wildspec)
+char *do_wild(const char *wildspec)
 {
     static zDIR *wild_dir = (zDIR *)NULL;
-    static ZCONST char *wildname;
+    static const char *wildname;
     static char *dirname, matchname[FILNAMSIZ];
     static int notfirstcall=FALSE, have_dirname, dirnamelen;
     char *fnamestart;
@@ -85,8 +85,8 @@ char *do_wild(ZCONST char *wildspec)
         }
 
         /* break the wildspec into a directory part and a wildcard filename */
-        if ((wildname = strrchr(wildspec, '/')) == (ZCONST char *)NULL &&
-            (wildname = strrchr(wildspec, ':')) == (ZCONST char *)NULL) {
+        if ((wildname = strrchr(wildspec, '/')) == (const char *)NULL &&
+            (wildname = strrchr(wildspec, ':')) == (const char *)NULL) {
             dirname = ".";
             dirnamelen = 1;
             have_dirname = FALSE;

@@ -81,22 +81,22 @@
 #  define BEG_RANGE  '['
 #  define END_RANGE  ']'
 
-static int recmatch OF((ZCONST uch *pattern, ZCONST uch *string,
+static int recmatch OF((const uch *pattern, const uch *string,
                         int ignore_case __WDLPRO));
-static char *isshexp OF((ZCONST char *p));
-static int namecmp OF((ZCONST char *s1, ZCONST char *s2));
+static char *isshexp OF((const char *p));
+static int namecmp OF((const char *s1, const char *s2));
 
 
 /* match() is a shell to recmatch() to return only Boolean values. */
 
-int match(ZCONST char *string, ZCONST char *pattern, int ignore_case)
+int match(const char *string, const char *pattern, int ignore_case)
 {
     return recmatch((uch *)pattern, (uch *)string, ignore_case __WDL) == 1;
 }
 
 
 
-static int recmatch(ZCONST uch *p, ZCONST uch *s, int ic)
+static int recmatch(const uch *p, const uch *s, int ic)
 /* Recursively compare the sh pattern p with the string s and return 1 if
  * they match, and 0 or 2 if they don't or if there is a syntax error in the
  * pattern.  This routine recurses on itself no more deeply than the number
@@ -119,15 +119,15 @@ static int recmatch(ZCONST uch *p, ZCONST uch *s, int ic)
     if (c == '*') {
         if (*p == 0)
             return 1;
-        if (isshexp((ZCONST char *)p) == NULL) {
+        if (isshexp((const char *)p) == NULL) {
             /* Optimization for rest of pattern being a literal string:
              * If there are no other shell expression chars in the rest
              * of the pattern behind the multi-char wildcard, then just
              * compare the literal string tail.
              */
-            ZCONST uch *srest;
+            const uch *srest;
 
-            srest = s + (strlen((ZCONST char *)s) - strlen((ZCONST char *)p));
+            srest = s + (strlen((const char *)s) - strlen((const char *)p));
             if (srest - s < 0)
                 /* remaining literal string from pattern is longer than rest
                  * of test string, there can't be a match
@@ -138,8 +138,8 @@ static int recmatch(ZCONST uch *p, ZCONST uch *s, int ic)
                * bytes of the test string to check for a match
                */
                 return ((ic
-                         ? namecmp((ZCONST char *)p, (ZCONST char *)srest)
-                         : strcmp((ZCONST char *)p, (ZCONST char *)srest)
+                         ? namecmp((const char *)p, (const char *)srest)
+                         : strcmp((const char *)p, (const char *)srest)
                         ) == 0);
         } else {
             /* pattern contains more wildcards, continue with recursion... */
@@ -153,7 +153,7 @@ static int recmatch(ZCONST uch *p, ZCONST uch *s, int ic)
     /* Parse and process the list of characters and ranges in brackets */
     if (c == BEG_RANGE) {
         int e;          /* flag true if next char to be taken literally */
-        ZCONST uch *q;  /* pointer to end of [-] group */
+        const uch *q;  /* pointer to end of [-] group */
         int r;          /* flag true to match anything but the range */
 
         if (*s == 0)                            /* need a character to match */
@@ -201,7 +201,7 @@ static int recmatch(ZCONST uch *p, ZCONST uch *s, int ic)
 
 
 
-static char *isshexp(ZCONST char *p)
+static char *isshexp(const char *p)
 /* If p is a sh expression, a pointer to the first special character is
    returned.  Otherwise, NULL is returned. */
 {
@@ -215,7 +215,7 @@ static char *isshexp(ZCONST char *p)
 
 
 
-static int namecmp(ZCONST char *s1, ZCONST char *s2)
+static int namecmp(const char *s1, const char *s2)
 {
     int d;
 
@@ -233,7 +233,7 @@ static int namecmp(ZCONST char *s1, ZCONST char *s2)
 
 
 
-int iswild(ZCONST char *p)        /* originally only used for stat()-bug workaround in */
+int iswild(const char *p)        /* originally only used for stat()-bug workaround in */
 {                    /*  now used in process_zipfiles() as well */
     for (; *p; INCSTR(p))
         if (*p == '\\' && *(p+1))
