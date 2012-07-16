@@ -124,12 +124,7 @@ static ZCONST char Far IgnoreOOptionMsg[] =
    static ZCONST char Far local2[] = " -M  pipe through \"more\" pager";
    static ZCONST char Far local3[] = "\n";
 
-#ifndef NO_ZIPINFO
-#ifdef VMS
-   static ZCONST char Far ZipInfoExample[] = "* or % (e.g., \"*font-%.zip\")";
-#else
    static ZCONST char Far ZipInfoExample[] = "*, ?, [] (e.g., \"[a-j]*.zip\")";
-#endif
 
 static ZCONST char Far ZipInfoUsageLine1[] = "\
 ZipInfo %d.%d%d%s of %s, by Greg Roelofs and the Info-ZIP group.\n\
@@ -151,13 +146,8 @@ static ZCONST char Far ZipInfoUsageLine3[] = "miscellaneous options:\n\
   -z  print zipfile comment   -T  print file times in sortable decimal format\
 \n  -C  be case-insensitive   %s\
   -x  exclude filenames that follow from listing\n";
-#ifdef MORE
    static ZCONST char Far ZipInfoUsageLine4[] =
      "  -M  page output through built-in \"more\"\n";
-#else /* !MORE */
-   static ZCONST char Far ZipInfoUsageLine4[] = "";
-#endif /* ?MORE */
-#endif /* !NO_ZIPINFO */
 
 #ifdef BETA
 #  ifdef VMSCLI
