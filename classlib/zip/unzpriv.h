@@ -1945,22 +1945,9 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
         fnfilter((fname), slide + (extent)((WSIZE>>1) + (WSIZE>>2)),\
                  (extent)(WSIZE>>2))
 
-#ifndef FUNZIP   /* used only in inflate.c */
 #  define MESSAGE(str,len,flag)  (*G.message)((void *)&G,(str),(len),(flag))
-#endif
 
-#if 0            /* Optimization: use the (const) result of crc32(0L,NULL,0) */
-#  define CRCVAL_INITIAL  crc32(0L, NULL, 0)
-#else
 #  define CRCVAL_INITIAL  0L
-#endif
-
-#ifdef SYMLINKS
-   /* This macro defines the Zip "made by" hosts that are considered
-      to support storing symbolic link entries. */
-#  define SYMLINK_HOST(hn) ((hn) == UNIX_ || (hn) == ATARI_ || \
-      (hn) == ATHEOS_ || (hn) == BEOS_ || (hn) == VMS_)
-#endif
 
 #ifndef TEST_NTSD               /* "NTSD valid?" checking function */
 #  define TEST_NTSD     NULL    /*   ... is not available */
@@ -1986,14 +1973,9 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
  */
 
 
-#ifdef FUNZIP
-#  define FLUSH(w)  flush(__G__ (unsigned long)(w))
-#  define NEXTBYTE  getc(G.in)   /* redefined in crypt.h if full version */
-#else
 #  define FLUSH(w)  ((G.mem_mode) ? memflush(__G__ redirSlide,(unsigned long)(w)) \
                                   : flush(__G__ redirSlide,(unsigned long)(w),0))
 #  define NEXTBYTE  (G.incnt-- > 0 ? (int)(*G.inptr++) : readbyte(__G))
-#endif
 
 
 #define READBITS(nbits,zdest) {if(nbits>G.bits_left) {int temp; G.zipeof=1;\
@@ -2031,23 +2013,6 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
  *  uppercase letters to lowercase as we go.  str2 gets zero-terminated
  *  as well, of course.  str1 and str2 may be the same character array.
  */
-#ifdef _MBCS
-#  define STRLOWER(str1, str2) \
-   { \
-       char  *p, *q, c; unsigned i; \
-       p = (char *)(str1); \
-       q = (char *)(str2); \
-       while ((c = *p) != '\0') { \
-           if ((i = CLEN(p)) > 1) { \
-               while (i--) *q++ = *p++; \
-           } else { \
-               *q++ = (char)(isupper((int)(c))? tolower((int)(c)) : c); \
-               p++; \
-           } \
-       } \
-       *q = '\0'; \
-   }
-#else
 #  define STRLOWER(str1, str2) \
    { \
        char  *p, *q; \
@@ -2057,7 +2022,6 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
            *q++ = (char)(isupper((int)(*p))? tolower((int)(*p)) : *p); \
        *q = '\0'; \
    }
-#endif
 /*
  *  NOTES:  This macro makes no assumptions about the characteristics of
  *    the tolower() function or macro (beyond its existence), nor does it
@@ -2252,18 +2216,14 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
 
    extern const char Far  VersionDate[];
    extern const char Far  CentSigMsg[];
-#ifndef SFX
    extern const char Far  EndSigMsg[];
-#endif
    extern const char Far  SeekMsg[];
    extern const char Far  FilenameNotMatched[];
    extern const char Far  ExclFilenameNotMatched[];
    extern const char Far  ReportMsg[];
 
-#ifndef SFX
    extern const char Far  Zipnfo[];
    extern const char Far  CompiledWith[];
-#endif /* !SFX */
 
 
 
@@ -2274,64 +2234,5 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
 #ifdef DECLARE_ERRNO
    extern int             errno;
 #endif
-
-/*---------------------------------------------------------------------
-    Unicode Support
-    28 August 2005
-  ---------------------------------------------------------------------*/
-#if (defined(UNICODE_SUPPORT) && defined(UNICODE_WCHAR))
-
-  /* Default character when a zwchar too big for wchar_t */
-# define zwchar_to_wchar_t_default_char '_'
-
-  /* Default character string when wchar_t does not convert to mb */
-# define wide_to_mb_default_string "_"
-
-  /* wide character type */
-  typedef unsigned long zwchar;
-
-  /* UTF-8 related conversion functions, currently found in process.c */
-
-# if 0 /* currently unused */
-  /* check if string is all ASCII */
-  int is_ascii_string OF((const char *mbstring));
-# endif /* unused */
-
-  /* convert UTF-8 string to multi-byte string */
-  char *utf8_to_local_string OF((const char *utf8_string, int escape_all));
-
-  /* convert UTF-8 string to wide string */
-  zwchar *utf8_to_wide_string OF((const char *utf8_string));
-
-  /* convert wide string to multi-byte string */
-  char *wide_to_local_string OF((const zwchar *wide_string, int escape_all));
-
-# if 0 /* currently unused */
-  /* convert local string to multi-byte display string */
-  char *local_to_display_string OF((const char *local_string));
-# endif /* unused */
-
-  /* convert wide character to escape string */
-  char *wide_to_escape_string OF((unsigned long));
-
-# define utf8_to_escaped_string(utf8_string) \
-         utf8_to_local_string(utf8_string, TRUE)
-
-# if 0 /* currently unused */
-  /* convert escape string to wide character */
-  unsigned long escape_string_to_wide OF((const char *escape_string));
-
-  /* convert local to UTF-8 */
-  char *local_to_utf8_string OF ((const char *local_string));
-
-  /* convert local to wide string */
-  zwchar *local_to_wide_string OF ((const char *local_string));
-
-  /* convert wide string to UTF-8 */
-  char *wide_to_utf8_string OF((const zwchar *wide_string));
-# endif /* unused */
-
-#endif /* UNICODE_SUPPORT && UNICODE_WCHAR */
-
 
 #endif /* !__unzpriv_h */
