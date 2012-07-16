@@ -41,19 +41,10 @@
 local int testp OF((__GPRO__ ZCONST uch *h));
 local int testkey OF((__GPRO__ ZCONST uch *h, ZCONST char *key));
 
-#  ifndef Z_UINT4_DEFINED
-     typedef ulg                z_uint4;
-#    define Z_UINT4_DEFINED
-#  endif
-
-local z_uint4 keys[3];       /* keys defining the pseudo-random sequence */
+local int keys[3];       /* keys defining the pseudo-random sequence */
 
 #ifndef Trace
-#  ifdef CRYPT_DEBUG
-#    define Trace(x) fprintf x
-#  else
 #    define Trace(x)
-#  endif
 #endif
 
 #include "crc32.h"
