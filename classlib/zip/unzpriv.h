@@ -210,14 +210,6 @@ typedef size_t extent;
 #  endif /* ?MED_MEM */
 #  define RAWBUFSIZ OUTBUFSIZ
 
-#ifndef Cdecl
-#  define Cdecl
-#endif
-
-#ifndef MAIN
-#  define MAIN  main
-#endif
-
 #ifdef SFX      /* disable some unused features for SFX executables */
 #  ifndef NO_ZIPINFO
 #    define NO_ZIPINFO
