@@ -329,8 +329,8 @@ int unzip(int argc, char *argv[])
             break;
     }
     ++p;
-    if (STRNICMP(p, Zipnfo, 7) == 0 ||
-        STRNICMP(p, "ii", 2) == 0 ||
+    if (strnicmp(p, Zipnfo, 7) == 0 ||
+        strnicmp(p, "ii", 2) == 0 ||
         (argc > 1 && strncmp(argv[1], "-Z", 2) == 0))
     {
         uO.zipinfo_mode = TRUE;

@@ -1859,11 +1859,11 @@ static int zi_short(__G)   /* return PK-type error code */
                     attribs[0] = 'V';
                 else if ((p = MBSRCHR(G.filename, '.')) != (char *)NULL) {
                     ++p;
-                    if (STRNICMP(p, "com", 3) == 0 ||
-                        STRNICMP(p, "exe", 3) == 0 ||
-                        STRNICMP(p, "btm", 3) == 0 ||
-                        STRNICMP(p, "cmd", 3) == 0 ||
-                        STRNICMP(p, "bat", 3) == 0)
+                    if (strnicmp(p, "com", 3) == 0 ||
+                        strnicmp(p, "exe", 3) == 0 ||
+                        strnicmp(p, "btm", 3) == 0 ||
+                        strnicmp(p, "cmd", 3) == 0 ||
+                        strnicmp(p, "bat", 3) == 0)
                         attribs[3] = 'x';
                 }
                 break;

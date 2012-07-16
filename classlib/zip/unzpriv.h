@@ -105,13 +105,6 @@ typedef size_t extent;
 #  define TIMET_TO_NATIVE(x)
 #  define NATIVE_TO_TIMET(x)
 #endif
-#ifndef STRNICMP
-#  ifdef NO_STRNICMP
-#    define STRNICMP zstrnicmp
-#  else
-#    define STRNICMP strnicmp
-#  endif
-#endif
 
 
 /* defaults that we hope will take care of most machines in the future */
