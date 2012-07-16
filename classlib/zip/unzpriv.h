@@ -1539,10 +1539,7 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
  */
 
 
-/* default setup for internal codepage: assume ISO 8859-1 compatibility!! */
-#if (!defined(NATIVE) && !defined(CRTL_CP_IS_ISO) && !defined(CRTL_CP_IS_OEM))
 #  define CRTL_CP_IS_ISO
-#endif
 
 
 /*  Translate "extended ASCII" chars (OEM coding for DOS and OS/2; else
