@@ -146,18 +146,16 @@ int list_files(__G)    /* return PK-type error code */
     date_format = DATE_FORMAT;
     dt_sepchar = DATE_SEPCHAR;
 
-#ifndef WINDLL
     if (uO.qflag < 2) {
         if (uO.L_flag)
-            Info(slide, 0, ((char *)slide, LoadFarString(CaseConversion),
-              LoadFarStringSmall(Headers[longhdr][0]),
-              LoadFarStringSmall2(Headers[longhdr][1])));
+            Info(slide, 0, ((char *)slide, CaseConversion,
+              Headers[longhdr][0],
+              Headers[longhdr][1]));
         else
             Info(slide, 0, ((char *)slide, "%s\n%s\n",
-               LoadFarString(Headers[longhdr][0]),
-               LoadFarStringSmall(Headers[longhdr][1])));
+               Headers[longhdr][0],
+               Headers[longhdr][1]));
     }
-#endif /* !WINDLL */
 
     for (j = 1L;;j++) {
 
@@ -179,9 +177,9 @@ int list_files(__G)    /* return PK-type error code */
                 break;
             } else {
                 Info(slide, 0x401,
-                     ((char *)slide, LoadFarString(CentSigMsg), j));
+                     ((char *)slide, CentSigMsg, j));
                 Info(slide, 0x401,
-                     ((char *)slide, LoadFarString(ReportMsg)));
+                     ((char *)slide, ReportMsg));
                 return PK_BADERR;   /* sig not found */
             }
         }
@@ -378,23 +376,23 @@ int list_files(__G)    /* return PK-type error code */
             }
 #else /* !WINDLL */
             if (cfactor == 100)
-                sprintf(cfactorstr, LoadFarString(CompFactor100));
+                sprintf(cfactorstr, CompFactor100);
             else
-                sprintf(cfactorstr, LoadFarString(CompFactorStr), sgn, cfactor);
+                sprintf(cfactorstr, CompFactorStr, sgn, cfactor);
             if (longhdr)
-                Info(slide, 0, ((char *)slide, LoadFarString(LongHdrStats),
+                Info(slide, 0, ((char *)slide, LongHdrStats,
                   FmZofft(G.crec.ucsize, "8", "u"), methbuf,
                   FmZofft(csiz, "8", "u"), cfactorstr,
                   mo, dt_sepchar, dy, dt_sepchar, yr, hh, mm,
                   G.crec.crc32, (G.pInfo->lcflag? '^':' ')));
             else
 #ifdef OS2_EAS
-                Info(slide, 0, ((char *)slide, LoadFarString(ShortHdrStats),
+                Info(slide, 0, ((char *)slide, ShortHdrStats,
                   FmZofft(G.crec.ucsize, "9", "u"), ea_size, acl_size,
                   mo, dt_sepchar, dy, dt_sepchar, yr, hh, mm,
                   (G.pInfo->lcflag? '^':' ')));
 #else
-                Info(slide, 0, ((char *)slide, LoadFarString(ShortHdrStats),
+                Info(slide, 0, ((char *)slide, ShortHdrStats,
                   FmZofft(G.crec.ucsize, "9", "u"),
                   mo, dt_sepchar, dy, dt_sepchar, yr, hh, mm,
                   (G.pInfo->lcflag? '^':' ')));
@@ -460,33 +458,33 @@ int list_files(__G)    /* return PK-type error code */
 
 #else /* !WINDLL */
         if (cfactor == 100)
-            sprintf(cfactorstr, LoadFarString(CompFactor100));
+            sprintf(cfactorstr, CompFactor100);
         else
-            sprintf(cfactorstr, LoadFarString(CompFactorStr), sgn, cfactor);
+            sprintf(cfactorstr, CompFactorStr, sgn, cfactor);
         if (longhdr) {
-            Info(slide, 0, ((char *)slide, LoadFarString(LongFileTrailer),
+            Info(slide, 0, ((char *)slide, LongFileTrailer,
               FmZofft(tot_ucsize, "8", "u"), FmZofft(tot_csize, "8", "u"),
               cfactorstr, members, members==1? "":"s"));
 #ifdef OS2_EAS
             if (tot_easize || tot_aclsize)
                 Info(slide, 0, ((char *)slide, "\n"));
             if (tot_eafiles && tot_easize)
-                Info(slide, 0, ((char *)slide, LoadFarString(OS2ExtAttrTrailer),
+                Info(slide, 0, ((char *)slide, OS2ExtAttrTrailer,
                   tot_eafiles, tot_eafiles == 1? " has" : "s have a total of",
                   tot_easize));
             if (tot_aclfiles && tot_aclsize)
-                Info(slide, 0, ((char *)slide, LoadFarString(OS2ACLTrailer),
+                Info(slide, 0, ((char *)slide, OS2ACLTrailer,
                   tot_aclfiles,
                   tot_aclfiles == 1 ? " has" : "s have a total of",
                   tot_aclsize));
 #endif /* OS2_EAS */
         } else
 #ifdef OS2_EAS
-            Info(slide, 0, ((char *)slide, LoadFarString(ShortFileTrailer),
+            Info(slide, 0, ((char *)slide, ShortFileTrailer,
               FmZofft(tot_ucsize, "9", "u"), tot_easize, tot_aclsize,
               members, members == 1 ? "" : "s"));
 #else
-            Info(slide, 0, ((char *)slide, LoadFarString(ShortFileTrailer),
+            Info(slide, 0, ((char *)slide, ShortFileTrailer,
               FmZofft(tot_ucsize, "9", "u"),
               members, members == 1 ? "" : "s"));
 #endif /* OS2_EAS */
@@ -507,7 +505,7 @@ int list_files(__G)    /* return PK-type error code */
             && (!G.ecrec.is_zip64_archive)
             && (memcmp(G.sig, end_central_sig, 4) != 0)
            ) {          /* just to make sure again */
-            Info(slide, 0x401, ((char *)slide, LoadFarString(EndSigMsg)));
+            Info(slide, 0x401, ((char *)slide, EndSigMsg));
             error_in_archive = PK_WARN;   /* didn't find sig */
         }
 
@@ -589,9 +587,9 @@ int get_time_stamp(__G__ last_modtime, nmember)  /* return PK-type error code */
                 break;
             } else {
                 Info(slide, 0x401,
-                     ((char *)slide, LoadFarString(CentSigMsg), j));
+                     ((char *)slide, CentSigMsg, j));
                 Info(slide, 0x401,
-                     ((char *)slide, LoadFarString(ReportMsg)));
+                     ((char *)slide, ReportMsg));
                 return PK_BADERR;   /* sig not found */
             }
         }
@@ -674,7 +672,7 @@ int get_time_stamp(__G__ last_modtime, nmember)  /* return PK-type error code */
   ---------------------------------------------------------------------------*/
 
     if (memcmp(G.sig, end_central_sig, 4)) {    /* just to make sure again */
-        Info(slide, 0x401, ((char *)slide, LoadFarString(EndSigMsg)));
+        Info(slide, 0x401, ((char *)slide, EndSigMsg));
         error_in_archive = PK_WARN;
     }
     if (*nmember == 0L && error_in_archive <= PK_WARN)

@@ -329,20 +329,20 @@ int unzip(int argc, char *argv[])
             break;
     }
     ++p;
-    if (STRNICMP(p, LoadFarStringSmall(Zipnfo), 7) == 0 ||
+    if (STRNICMP(p, Zipnfo, 7) == 0 ||
         STRNICMP(p, "ii", 2) == 0 ||
         (argc > 1 && strncmp(argv[1], "-Z", 2) == 0))
     {
         uO.zipinfo_mode = TRUE;
-        if ((error = envargs(&argc, &argv, LoadFarStringSmall(EnvZipInfo),
-                             LoadFarStringSmall2(EnvZipInfo2))) != PK_OK)
-            perror(LoadFarString(NoMemEnvArguments));
+        if ((error = envargs(&argc, &argv, EnvZipInfo,
+                             EnvZipInfo2)) != PK_OK)
+            perror(NoMemEnvArguments);
     } else
     {
         uO.zipinfo_mode = FALSE;
-        if ((error = envargs(&argc, &argv, LoadFarStringSmall(EnvUnZip),
-                             LoadFarStringSmall2(EnvUnZip2))) != PK_OK)
-            perror(LoadFarString(NoMemEnvArguments));
+        if ((error = envargs(&argc, &argv, EnvUnZip,
+                             EnvUnZip2)) != PK_OK)
+            perror(NoMemEnvArguments);
     }
 
     if (!error) {
@@ -356,7 +356,7 @@ int unzip(int argc, char *argv[])
         for (i = 1 ; i < argc; i++) {
            if (strlen(argv[i]) > ((WSIZE>>2) - 160)) {
                Info(slide, 0x401, ((char *)slide,
-                 LoadFarString(CmdLineParamTooLong), i));
+                 CmdLineParamTooLong, i));
                retcode = PK_PARAM;
                goto cleanup_and_exit;
            }
@@ -425,7 +425,7 @@ int unzip(int argc, char *argv[])
                         uO.exdir = *pp;
                     else {
                         Info(slide, 0x401, ((char *)slide,
-                          LoadFarString(MustGiveExdir)));
+                          MustGiveExdir));
                         /* don't extract here by accident */
                         retcode = PK_PARAM;
                         goto cleanup_and_exit;
@@ -463,7 +463,7 @@ int unzip(int argc, char *argv[])
         G.process_all_files = TRUE;      /* for speed */
 
     if (uO.exdir != (char *)NULL && !G.extract_flag)    /* -d ignored */
-        Info(slide, 0x401, ((char *)slide, LoadFarString(NotExtracting)));
+        Info(slide, 0x401, ((char *)slide, NotExtracting));
 
 
 /*---------------------------------------------------------------------------
@@ -542,12 +542,12 @@ int uz_opts(int *pargc, char ***pargv)
                 case ('d'):
                     if (negative) {   /* negative not allowed with -d exdir */
                         Info(slide, 0x401, ((char *)slide,
-                          LoadFarString(MustGiveExdir)));
+                          MustGiveExdir));
                         return(PK_PARAM);  /* don't extract here by accident */
                     }
                     if (uO.exdir != (char *)NULL) {
                         Info(slide, 0x401, ((char *)slide,
-                          LoadFarString(OnlyOneExdir)));
+                          OnlyOneExdir));
                         return(PK_PARAM);    /* GRR:  stupid restriction? */
                     } else {
                         /* first check for "-dexdir", then for "-d exdir" */
@@ -558,13 +558,13 @@ int uz_opts(int *pargc, char ***pargv)
                                 uO.exdir = *++argv;
                                 if (*uO.exdir == '-') {
                                     Info(slide, 0x401, ((char *)slide,
-                                      LoadFarString(MustGiveExdir)));
+                                      MustGiveExdir));
                                     return(PK_PARAM);
                                 }
                                 /* else uO.exdir points at extraction dir */
                             } else {
                                 Info(slide, 0x401, ((char *)slide,
-                                  LoadFarString(MustGiveExdir)));
+                                  MustGiveExdir));
                                 return(PK_PARAM);
                             }
                         }
@@ -650,14 +650,14 @@ int uz_opts(int *pargc, char ***pargv)
                 case ('P'):
                     if (negative) {   /* negative not allowed with -P passwd */
                         Info(slide, 0x401, ((char *)slide,
-                          LoadFarString(MustGivePasswd)));
+                          MustGivePasswd));
                         return(PK_PARAM);  /* don't extract here by accident */
                     }
                     if (uO.pwdarg != (char *)NULL) {
 /*
                         GRR:  eventually support multiple passwords?
                         Info(slide, 0x401, ((char *)slide,
-                          LoadFarString(OnlyOnePasswd)));
+                          OnlyOnePasswd));
                         return(PK_PARAM);
  */
                     } else {
@@ -669,13 +669,13 @@ int uz_opts(int *pargc, char ***pargv)
                                 uO.pwdarg = *++argv;
                                 if (*uO.pwdarg == '-') {
                                     Info(slide, 0x401, ((char *)slide,
-                                      LoadFarString(MustGivePasswd)));
+                                      MustGivePasswd));
                                     return(PK_PARAM);
                                 }
                                 /* else pwdarg points at decryption password */
                             } else {
                                 Info(slide, 0x401, ((char *)slide,
-                                  LoadFarString(MustGivePasswd)));
+                                  MustGivePasswd));
                                 return(PK_PARAM);
                             }
                         }
@@ -738,7 +738,7 @@ int uz_opts(int *pargc, char ***pargv)
                         ++uO.zflag;
                     break;
                 case ('Z'):    /* should have been first option (ZipInfo) */
-                    Info(slide, 0x401, ((char *)slide, LoadFarString(Zfirst)));
+                    Info(slide, 0x401, ((char *)slide, Zfirst));
                     error = TRUE;
                     break;
                 case (':'):    /* allow "parent dir" path components */
@@ -774,13 +774,13 @@ int uz_opts(int *pargc, char ***pargv)
     if ((uO.cflag && (uO.tflag || uO.uflag)) ||
         (uO.tflag && uO.uflag) || (uO.fflag && uO.overwrite_none))
     {
-        Info(slide, 0x401, ((char *)slide, LoadFarString(InvalidOptionsMsg)));
+        Info(slide, 0x401, ((char *)slide, InvalidOptionsMsg));
         error = TRUE;
     }
     if (uO.aflag > 2)
         uO.aflag = 2;
     if (uO.overwrite_all && uO.overwrite_none) {
-        Info(slide, 0x401, ((char *)slide, LoadFarString(IgnoreOOptionMsg)));
+        Info(slide, 0x401, ((char *)slide, IgnoreOOptionMsg));
         uO.overwrite_all = FALSE;
     }
     if (G.M_flag && !isatty(1))  /* stdout redirected: "more" func. useless */
@@ -833,35 +833,32 @@ int usage(int error)   /* return PK-type error code */
 
     if (uO.zipinfo_mode) {
 
-        Info(slide, flag, ((char *)slide, LoadFarString(ZipInfoUsageLine1),
+        Info(slide, flag, ((char *)slide, ZipInfoUsageLine1,
           ZI_MAJORVER, ZI_MINORVER, UZ_PATCHLEVEL, UZ_BETALEVEL,
-          LoadFarStringSmall(VersionDate),
-          LoadFarStringSmall2(ZipInfoExample), QUOTS,QUOTS));
-        Info(slide, flag, ((char *)slide, LoadFarString(ZipInfoUsageLine2)));
-        Info(slide, flag, ((char *)slide, LoadFarString(ZipInfoUsageLine3),
-          LoadFarStringSmall(ZipInfoUsageLine4)));
+          VersionDate,
+          ZipInfoExample, QUOTS,QUOTS));
+        Info(slide, flag, ((char *)slide, ZipInfoUsageLine2));
+        Info(slide, flag, ((char *)slide, ZipInfoUsageLine3,
+          ZipInfoUsageLine4));
 
     } else {   /* UnZip mode */
 
-        Info(slide, flag, ((char *)slide, LoadFarString(UnzipUsageLine1),
+        Info(slide, flag, ((char *)slide, UnzipUsageLine1,
           UZ_MAJORVER, UZ_MINORVER, UZ_PATCHLEVEL, UZ_BETALEVEL,
-          LoadFarStringSmall(VersionDate)));
+          VersionDate));
 
-        Info(slide, flag, ((char *)slide, LoadFarString(UnzipUsageLine2),
-          ZIPINFO_MODE_OPTION, LoadFarStringSmall(ZipInfoMode)));
+        Info(slide, flag, ((char *)slide, UnzipUsageLine2,
+          ZIPINFO_MODE_OPTION, ZipInfoMode));
 
-        Info(slide, flag, ((char *)slide, LoadFarString(UnzipUsageLine3),
-          LoadFarStringSmall(local1)));
+        Info(slide, flag, ((char *)slide, UnzipUsageLine3,
+          local1));
 
-        Info(slide, flag, ((char *)slide, LoadFarString(UnzipUsageLine4),
-          LoadFarStringSmall(local2), LoadFarStringSmall2(local3)));
+        Info(slide, flag, ((char *)slide, UnzipUsageLine4,
+          local2, local3));
 
-        /* This is extra work for SMALL_MEM, but it will work since
-         * LoadFarStringSmall2 uses the same buffer.  Remember, this
-         * is a hack. */
-        Info(slide, flag, ((char *)slide, LoadFarString(UnzipUsageLine5),
-          LoadFarStringSmall(Example2), LoadFarStringSmall2(Example3),
-          LoadFarStringSmall2(Example3)));
+        Info(slide, flag, ((char *)slide, UnzipUsageLine5,
+          Example2, Example3,
+          Example3));
 
     } /* end if (uO.zipinfo_mode) */
 
@@ -1126,61 +1123,61 @@ static void show_version_info(__G)
         char *envptr;
         int numopts = 0;
 
-        Info(slide, 0, ((char *)slide, LoadFarString(UnzipUsageLine1v),
+        Info(slide, 0, ((char *)slide, UnzipUsageLine1v,
           UZ_MAJORVER, UZ_MINORVER, UZ_PATCHLEVEL, UZ_BETALEVEL,
-          LoadFarStringSmall(VersionDate)));
+          VersionDate));
         Info(slide, 0, ((char *)slide,
-          LoadFarString(UnzipUsageLine2v)));
+          UnzipUsageLine2v));
         version(__G);
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptions)));
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(Copyright_Clean)));
+        Info(slide, 0, ((char *)slide, CompileOptions));
+        Info(slide, 0, ((char *)slide, CompileOptFormat,
+          Copyright_Clean));
         ++numopts;
 #ifdef DEBUG
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(UDebug)));
+        Info(slide, 0, ((char *)slide, CompileOptFormat,
+          UDebug));
         ++numopts;
 #endif
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(SetDirAttrib)));
+        Info(slide, 0, ((char *)slide, CompileOptFormat,
+          SetDirAttrib));
         ++numopts;
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(Use_Unshrink)));
+        Info(slide, 0, ((char *)slide, CompileOptFormat,
+          Use_Unshrink));
         ++numopts;
-        sprintf((char *)(slide+256), LoadFarStringSmall(UseZlib),
+        sprintf((char *)(slide+256), UseZlib,
           ZLIB_VERSION, zlibVersion());
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
+        Info(slide, 0, ((char *)slide, CompileOptFormat,
           (char *)(slide+256)));
         ++numopts;
-        Info(slide, 0, ((char *)slide, LoadFarString(Decryption),
+        Info(slide, 0, ((char *)slide, Decryption,
           CR_MAJORVER, CR_MINORVER, CR_BETA_VER,
-          LoadFarStringSmall(CryptDate)));
+          CryptDate));
         ++numopts;
         if (numopts == 0)
             Info(slide, 0, ((char *)slide,
-              LoadFarString(CompileOptFormat),
-              LoadFarStringSmall(None)));
+              CompileOptFormat,
+              None));
 
-        Info(slide, 0, ((char *)slide, LoadFarString(EnvOptions)));
-        envptr = getenv(LoadFarStringSmall(EnvUnZip));
-        Info(slide, 0, ((char *)slide, LoadFarString(EnvOptFormat),
-          LoadFarStringSmall(EnvUnZip),
+        Info(slide, 0, ((char *)slide, EnvOptions));
+        envptr = getenv(EnvUnZip);
+        Info(slide, 0, ((char *)slide, EnvOptFormat,
+          EnvUnZip,
           (envptr == (char *)NULL || *envptr == 0)?
-          LoadFarStringSmall2(None) : envptr));
-        envptr = getenv(LoadFarStringSmall(EnvUnZip2));
-        Info(slide, 0, ((char *)slide, LoadFarString(EnvOptFormat),
-          LoadFarStringSmall(EnvUnZip2),
+          None : envptr));
+        envptr = getenv(EnvUnZip2);
+        Info(slide, 0, ((char *)slide, EnvOptFormat,
+          EnvUnZip2,
           (envptr == (char *)NULL || *envptr == 0)?
-          LoadFarStringSmall2(None) : envptr));
-        envptr = getenv(LoadFarStringSmall(EnvZipInfo));
-        Info(slide, 0, ((char *)slide, LoadFarString(EnvOptFormat),
-          LoadFarStringSmall(EnvZipInfo),
+          None : envptr));
+        envptr = getenv(EnvZipInfo);
+        Info(slide, 0, ((char *)slide, EnvOptFormat,
+          EnvZipInfo,
           (envptr == (char *)NULL || *envptr == 0)?
-          LoadFarStringSmall2(None) : envptr));
-        envptr = getenv(LoadFarStringSmall(EnvZipInfo2));
-        Info(slide, 0, ((char *)slide, LoadFarString(EnvOptFormat),
-          LoadFarStringSmall(EnvZipInfo2),
+          None : envptr));
+        envptr = getenv(EnvZipInfo2);
+        Info(slide, 0, ((char *)slide, EnvOptFormat,
+          EnvZipInfo2,
           (envptr == (char *)NULL || *envptr == 0)?
-          LoadFarStringSmall2(None) : envptr));
+          None : envptr));
     }
 } /* end function show_version() */

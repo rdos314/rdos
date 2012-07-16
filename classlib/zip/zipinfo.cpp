@@ -569,41 +569,41 @@ void zi_end_central(__G)
 
     if (uO.lflag > 9) {
         /* verbose format */
-        Info(slide, 0, ((char *)slide, LoadFarString(EndCentDirRec)));
-        Info(slide, 0, ((char *)slide, LoadFarString(LineSeparators)));
+        Info(slide, 0, ((char *)slide, EndCentDirRec));
+        Info(slide, 0, ((char *)slide, LineSeparators));
 
-        Info(slide, 0, ((char *)slide, LoadFarString(ZipFSizeVerbose),
+        Info(slide, 0, ((char *)slide, ZipFSizeVerbose,
           FmZofft(G.ziplen, "11", NULL),
           FmZofft(G.ziplen, FZOFFT_HEX_DOT_WID, "X")));
-        Info(slide, 0, ((char *)slide, LoadFarString(ActOffsetCentDir),
+        Info(slide, 0, ((char *)slide, ActOffsetCentDir,
           FmZofft(G.real_ecrec_offset, "11", "u"),
           FmZofft(G.real_ecrec_offset, FZOFFT_HEX_DOT_WID, "X"),
           FmZofft(G.expect_ecrec_offset, "11", "u"),
           FmZofft(G.expect_ecrec_offset, FZOFFT_HEX_DOT_WID, "X")));
 
         if (G.ecrec.number_this_disk == 0) {
-            Info(slide, 0, ((char *)slide, LoadFarString(SinglePartArchive1),
+            Info(slide, 0, ((char *)slide, SinglePartArchive1,
               FmZofft(G.ecrec.total_entries_central_dir, NULL, "u"),
               (G.ecrec.total_entries_central_dir == 1)? "entry" : "entries",
               FmZofft(G.ecrec.size_central_directory, NULL, "u"),
               FmZofft(G.ecrec.size_central_directory,
                       FZOFFT_HEX_DOT_WID, "X")));
-            Info(slide, 0, ((char *)slide, LoadFarString(SinglePartArchive2),
+            Info(slide, 0, ((char *)slide, SinglePartArchive2,
               FmZofft(G.ecrec.offset_start_central_directory, NULL, "u"),
               FmZofft(G.ecrec.offset_start_central_directory,
                       FZOFFT_HEX_DOT_WID, "X")));
         } else {
-            Info(slide, 0, ((char *)slide, LoadFarString(MultiPartArchive1),
+            Info(slide, 0, ((char *)slide, MultiPartArchive1,
               (unsigned long)(G.ecrec.number_this_disk + 1),
               (unsigned long)(G.ecrec.num_disk_start_cdir + 1)));
-            Info(slide, 0, ((char *)slide, LoadFarString(MultiPartArchive2),
+            Info(slide, 0, ((char *)slide, MultiPartArchive2,
               FmZofft(G.ecrec.offset_start_central_directory, NULL, "u"),
               FmZofft(G.ecrec.offset_start_central_directory,
                       FZOFFT_HEX_DOT_WID, "X"),
               FmZofft(G.ecrec.size_central_directory, NULL, "u"),
               FmZofft(G.ecrec.size_central_directory,
                       FZOFFT_HEX_DOT_WID, "X")));
-            Info(slide, 0, ((char *)slide, LoadFarString(MultiPartArchive3),
+            Info(slide, 0, ((char *)slide, MultiPartArchive3,
               FmZofft(G.ecrec.num_entries_centrl_dir_ths_disk, NULL, "u"),
               (G.ecrec.num_entries_centrl_dir_ths_disk == 1)? "is" : "are",
               FmZofft(G.ecrec.total_entries_central_dir, NULL, "u"),
@@ -612,7 +612,7 @@ void zi_end_central(__G)
     }
     else if (uO.hflag) {
         /* print zip file size and number of contained entries: */
-        Info(slide, 0, ((char *)slide, LoadFarString(ZipInfHeader2),
+        Info(slide, 0, ((char *)slide, ZipInfHeader2,
           FmZofft(G.ziplen, NULL, NULL),
           FmZofft(G.ecrec.total_entries_central_dir, NULL, "u")));
     }
@@ -694,9 +694,9 @@ int zipinfo(__G)   /* return PK-type error code */
                 break;
             } else {
                 Info(slide, 0x401,
-                     ((char *)slide, LoadFarString(CentSigMsg), j));
+                     ((char *)slide, CentSigMsg, j));
                 Info(slide, 0x401,
-                     ((char *)slide, LoadFarString(ReportMsg)));
+                     ((char *)slide, ReportMsg));
                 error_in_archive = PK_BADERR;   /* sig not found */
                 break;
             }
@@ -786,7 +786,7 @@ int zipinfo(__G)   /* return PK-type error code */
 
                 case 10:
                     Info(slide, 0, ((char *)slide,
-                      LoadFarString(CentralDirEntry), j));
+                      CentralDirEntry, j));
                     if ((error = zi_long(__G__ &endprev,
                                          error_in_archive)) != PK_COOL) {
                         error_in_archive = error;   /* might be warning */
@@ -829,7 +829,7 @@ int zipinfo(__G)   /* return PK-type error code */
             sgn = "-";
             cfactor = -cfactor;
         }
-        Info(slide, 0, ((char *)slide, LoadFarString(ZipfileStats),
+        Info(slide, 0, ((char *)slide, ZipfileStats,
           members, (members==1L)? nullStr:PlurSufx,
           FmZofft(tot_ucsize, NULL, "u"),
           FmZofft(tot_csize, NULL, "u"),
@@ -846,7 +846,7 @@ int zipinfo(__G)   /* return PK-type error code */
             for (j = 0;  j < G.filespecs;  ++j)
                 if (!fn_matched[j])
                     Info(slide, 0x401, ((char *)slide,
-                      LoadFarString(FilenameNotMatched), G.pfnames[j]));
+                      FilenameNotMatched, G.pfnames[j]));
         free((void *)fn_matched);
     }
     if (xn_matched) {
@@ -854,7 +854,7 @@ int zipinfo(__G)   /* return PK-type error code */
             for (j = 0;  j < G.xfilespecs;  ++j)
                 if (!xn_matched[j])
                     Info(slide, 0x401, ((char *)slide,
-                      LoadFarString(ExclFilenameNotMatched), G.pxnames[j]));
+                      ExclFilenameNotMatched, G.pxnames[j]));
         free((void *)xn_matched);
     }
 
@@ -873,7 +873,7 @@ int zipinfo(__G)   /* return PK-type error code */
             && (!G.ecrec.is_zip64_archive)
             && (memcmp(G.sig, end_central_sig, 4) != 0)
            ) {          /* just to make sure again */
-            Info(slide, 0x401, ((char *)slide, LoadFarString(EndSigMsg)));
+            Info(slide, 0x401, ((char *)slide, EndSigMsg));
             error_in_archive = PK_WARN;   /* didn't find sig */
         }
 
@@ -933,7 +933,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
           "  [crec.relative_offset_local_header = %lu, endprev = %lu]\n",
           G.crec.relative_offset_local_header, *pEndprev));
          */
-        Info(slide, 0, ((char *)slide, LoadFarString(ExtraBytesPreceding),
+        Info(slide, 0, ((char *)slide, ExtraBytesPreceding,
           FmZofft((G.crec.relative_offset_local_header - (*pEndprev)),
           NULL, NULL)));
     }
@@ -956,54 +956,54 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
 
     (*G.message)((void *)&G, (unsigned char *)"  ", 2L, 0);  fnprint(__G);
 
-    Info(slide, 0, ((char *)slide, LoadFarString(LocalHeaderOffset),
+    Info(slide, 0, ((char *)slide, LocalHeaderOffset,
       FmZofft(G.crec.relative_offset_local_header, NULL, "u"),
       FmZofft(G.crec.relative_offset_local_header, FZOFFT_HEX_DOT_WID, "X")));
 
     if (hostnum >= NUM_HOSTS) {
-        sprintf(unkn, LoadFarString(UnknownNo),
+        sprintf(unkn, UnknownNo,
                 (int)G.crec.version_made_by[1]);
         varmsg_str = unkn;
     } else {
-        varmsg_str = LoadFarStringSmall(os[hostnum]);
+        varmsg_str = os[hostnum];
     }
-    Info(slide, 0, ((char *)slide, LoadFarString(HostOS), varmsg_str));
-    Info(slide, 0, ((char *)slide, LoadFarString(EncodeSWVer), hostver/10,
+    Info(slide, 0, ((char *)slide, HostOS, varmsg_str));
+    Info(slide, 0, ((char *)slide, EncodeSWVer, hostver/10,
       hostver%10));
 
     if ((extnum >= NUM_HOSTS) || (os[extnum] == NULL)) {
-        sprintf(unkn, LoadFarString(UnknownNo),
+        sprintf(unkn, UnknownNo,
                 (int)G.crec.version_needed_to_extract[1]);
         varmsg_str = unkn;
     } else {
-        varmsg_str = LoadFarStringSmall(os[extnum]);
+        varmsg_str = os[extnum];
     }
-    Info(slide, 0, ((char *)slide, LoadFarString(MinOSCompReq), varmsg_str));
-    Info(slide, 0, ((char *)slide, LoadFarString(MinSWVerReq), extver/10,
+    Info(slide, 0, ((char *)slide, MinOSCompReq, varmsg_str));
+    Info(slide, 0, ((char *)slide, MinSWVerReq, extver/10,
       extver%10));
 
     if (methnum >= NUM_METHODS) {
-        sprintf(unkn, LoadFarString(UnknownNo), G.crec.compression_method);
+        sprintf(unkn, UnknownNo, G.crec.compression_method);
         varmsg_str = unkn;
     } else {
-        varmsg_str = LoadFarStringSmall(method[methnum]);
+        varmsg_str = method[methnum];
     }
-    Info(slide, 0, ((char *)slide, LoadFarString(CompressMethod), varmsg_str));
+    Info(slide, 0, ((char *)slide, CompressMethod, varmsg_str));
     if (methid == IMPLODED) {
-        Info(slide, 0, ((char *)slide, LoadFarString(SlideWindowSizeImplode),
+        Info(slide, 0, ((char *)slide, SlideWindowSizeImplode,
           (G.crec.general_purpose_bit_flag & 2)? '8' : '4'));
-        Info(slide, 0, ((char *)slide, LoadFarString(ShannonFanoTrees),
+        Info(slide, 0, ((char *)slide, ShannonFanoTrees,
           (G.crec.general_purpose_bit_flag & 4)? '3' : '2'));
     } else if (methid == DEFLATED || methid == ENHDEFLATED) {
         unsigned short  dnum=(unsigned short)((G.crec.general_purpose_bit_flag>>1) & 3);
 
-        Info(slide, 0, ((char *)slide, LoadFarString(CompressSubtype),
-          LoadFarStringSmall(dtypelng[dnum])));
+        Info(slide, 0, ((char *)slide, CompressSubtype,
+          dtypelng[dnum]));
     }
 
-    Info(slide, 0, ((char *)slide, LoadFarString(FileSecurity),
+    Info(slide, 0, ((char *)slide, FileSecurity,
       (G.crec.general_purpose_bit_flag & 1) ? nullStr : "not "));
-    Info(slide, 0, ((char *)slide, LoadFarString(ExtendedLocalHdr),
+    Info(slide, 0, ((char *)slide, ExtendedLocalHdr,
       (G.crec.general_purpose_bit_flag & 8) ? "yes" : "no"));
     /* print upper 3 bits for amusement? */
 
@@ -1014,21 +1014,21 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
 #   define d_t_buf attribs
 
     zi_time(__G__ &G.crec.last_mod_dos_datetime, NULL, d_t_buf);
-    Info(slide, 0, ((char *)slide, LoadFarString(FileModDate), d_t_buf));
-    Info(slide, 0, ((char *)slide, LoadFarString(CRC32Value), G.crec.crc32));
-    Info(slide, 0, ((char *)slide, LoadFarString(CompressedFileSize),
+    Info(slide, 0, ((char *)slide, FileModDate, d_t_buf));
+    Info(slide, 0, ((char *)slide, CRC32Value, G.crec.crc32));
+    Info(slide, 0, ((char *)slide, CompressedFileSize,
       FmZofft(G.crec.csize, NULL, "u")));
-    Info(slide, 0, ((char *)slide, LoadFarString(UncompressedFileSize),
+    Info(slide, 0, ((char *)slide, UncompressedFileSize,
       FmZofft(G.crec.ucsize, NULL, "u")));
-    Info(slide, 0, ((char *)slide, LoadFarString(FilenameLength),
+    Info(slide, 0, ((char *)slide, FilenameLength,
       G.crec.filename_length));
-    Info(slide, 0, ((char *)slide, LoadFarString(ExtraFieldLength),
+    Info(slide, 0, ((char *)slide, ExtraFieldLength,
       G.crec.extra_field_length));
-    Info(slide, 0, ((char *)slide, LoadFarString(FileCommentLength),
+    Info(slide, 0, ((char *)slide, FileCommentLength,
       G.crec.file_comment_length));
-    Info(slide, 0, ((char *)slide, LoadFarString(FileDiskNum),
+    Info(slide, 0, ((char *)slide, FileDiskNum,
       (unsigned long)(G.crec.disk_number_start + 1)));
-    Info(slide, 0, ((char *)slide, LoadFarString(ApparentFileType),
+    Info(slide, 0, ((char *)slide, ApparentFileType,
       (G.crec.internal_file_attributes & 1)? "text"
          : (G.crec.internal_file_attributes & 2)? "ebcdic"
               : "binary"));             /* changed to accept EBCDIC */
@@ -1076,7 +1076,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
         }
         *p-- = '\0';
         *p = ')';   /* overwrite last comma */
-        Info(slide, 0, ((char *)slide, LoadFarString(VMSFileAttributes), xattr,
+        Info(slide, 0, ((char *)slide, VMSFileAttributes, xattr,
           attribs));
 
     } else if (hostnum == AMIGA_) {
@@ -1094,7 +1094,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
         attribs[7] = (xattr & AMI_IEXECUTE)?  'e' : '-';
         attribs[8] = (xattr & AMI_IDELETE)?   'd' : '-';
         attribs[9] = 0;   /* better dlm the string */
-        Info(slide, 0, ((char *)slide, LoadFarString(AmigaFileAttributes),
+        Info(slide, 0, ((char *)slide, AmigaFileAttributes,
           xattr, attribs));
 
     } else if (hostnum == THEOS_) {
@@ -1112,7 +1112,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
             case THS_IFP32:  fpFtyp = TheosFTypP32;  break;
             default:         fpFtyp = TheosFTypUkn;  break;
         }
-        strcpy(attribs, LoadFarStringSmall(fpFtyp));
+        strcpy(attribs, fpFtyp);
         attribs[12] = (xattr & THS_INHID) ? '.' : 'H';
         attribs[13] = (xattr & THS_IMODF) ? '.' : 'M';
         attribs[14] = (xattr & THS_IWOTH) ? '.' : 'W';
@@ -1122,7 +1122,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
         attribs[18] = (xattr & THS_IWUSR) ? '.' : 'W';
         attribs[19] = (xattr & THS_IRUSR) ? '.' : 'R';
         attribs[20] = 0;
-        Info(slide, 0, ((char *)slide, LoadFarString(TheosFileAttributes),
+        Info(slide, 0, ((char *)slide, TheosFileAttributes,
           xattr, attribs));
 
 
@@ -1163,23 +1163,23 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
             attribs[9] = (xattr & UNX_ISVTX)? 'T' : '-';   /* T = undefined */
         attribs[10] = 0;
 
-        Info(slide, 0, ((char *)slide, LoadFarString(UnixFileAttributes), xattr,
+        Info(slide, 0, ((char *)slide, UnixFileAttributes, xattr,
           attribs));
 
     } else {
-        Info(slide, 0, ((char *)slide, LoadFarString(NonMSDOSFileAttributes),
+        Info(slide, 0, ((char *)slide, NonMSDOSFileAttributes,
             G.crec.external_file_attributes >> 8));
 
     } /* endif (hostnum: external attributes format) */
 
     if ((xattr=(unsigned)(G.crec.external_file_attributes & 0xFF)) == 0)
-        Info(slide, 0, ((char *)slide, LoadFarString(MSDOSFileAttributes),
+        Info(slide, 0, ((char *)slide, MSDOSFileAttributes,
           xattr));
     else if (xattr == 1)
-        Info(slide, 0, ((char *)slide, LoadFarString(MSDOSFileAttributesRO),
+        Info(slide, 0, ((char *)slide, MSDOSFileAttributesRO,
           xattr));
     else
-        Info(slide, 0, ((char *)slide, LoadFarString(MSDOSFileAttributesAlpha),
+        Info(slide, 0, ((char *)slide, MSDOSFileAttributesAlpha,
           xattr, (xattr&1)? "rdo " : nullStr,
           (xattr&2)? "hid " : nullStr,
           (xattr&4)? "sys " : nullStr,
@@ -1207,7 +1207,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
         if (G.extra_field == (unsigned char *)NULL)
             return PK_ERR;   /* not consistent with crec length */
 
-        Info(slide, 0, ((char *)slide, LoadFarString(ExtraFields)));
+        Info(slide, 0, ((char *)slide, ExtraFields));
 
         while (ef_len >= EB_HEADSIZE) {
             eb_id = makeword(&ef_ptr[EB_ID]);
@@ -1217,7 +1217,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
 
             if (eb_datalen > (unsigned short)ef_len) {
                 Info(slide, 0x421, ((char *)slide,
-                  LoadFarString(ExtraFieldTrunc), eb_id, eb_datalen, ef_len));
+                  ExtraFieldTrunc, eb_id, eb_datalen, ef_len));
                 eb_datalen = ef_len;
             }
 
@@ -1331,8 +1331,8 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                     ef_fieldname = efUnknown;
                     break;
             }
-            Info(slide, 0, ((char *)slide, LoadFarString(ExtraFieldType),
-                 eb_id, LoadFarStringSmall(ef_fieldname), eb_datalen));
+            Info(slide, 0, ((char *)slide, ExtraFieldType,
+                 eb_id, ef_fieldname, eb_datalen));
 
             /* additional, field-specific information: */
             switch (eb_id) {
@@ -1344,7 +1344,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                         else
                             ef_fieldname = ACLdata;
                         Info(slide, 0, ((char *)slide,
-                          LoadFarString(ef_fieldname), makelong(ef_ptr)));
+                          ef_fieldname, makelong(ef_ptr)));
                         *pEndprev = 0L;   /* no clue about csize of local */
                     } else {
                         goto ef_default_display;
@@ -1352,7 +1352,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                     break;
                 case EF_NTSD:
                     if (eb_datalen >= EB_NTSD_C_LEN) {
-                        Info(slide, 0, ((char *)slide, LoadFarString(NTSDData),
+                        Info(slide, 0, ((char *)slide, NTSDData,
                           makelong(ef_ptr)));
                         *pEndprev = 0L;   /* no clue about csize of local */
                     } else {
@@ -1400,8 +1400,8 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                                 p = "unknown";
                         }
                         Info(slide, 0, ((char *)slide,
-                          LoadFarString(izVMSdata),
-                          LoadFarStringSmall(izVMScomp[compr]),
+                          izVMSdata,
+                          izVMScomp[compr],
                           makeword(ef_ptr+EB_IZVMS_UCSIZ), p, q));
                     } else {
                         goto ef_default_display;
@@ -1414,14 +1414,14 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
 
                         *types = '\0';
                         if (*ef_ptr & 1) {
-                            strcpy(types, LoadFarString(UTmodification));
+                            strcpy(types, UTmodification);
                             ++num;
                         }
                         if (*ef_ptr & 2) {
                             len = strlen(types);
                             if (num)
                                 types[len++] = '/';
-                            strcpy(types+len, LoadFarString(UTaccess));
+                            strcpy(types+len, UTaccess);
                             ++num;
                             if (*pEndprev > 0L)
                                 *pEndprev += 4L;
@@ -1430,14 +1430,14 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                             len = strlen(types);
                             if (num)
                                 types[len++] = '/';
-                            strcpy(types+len, LoadFarString(UTcreation));
+                            strcpy(types+len, UTcreation);
                             ++num;
                             if (*pEndprev > 0L)
                                 *pEndprev += 4L;
                         }
                         if (num > 0)
                             Info(slide, 0, ((char *)slide,
-                              LoadFarString(UTdata), types,
+                              UTdata, types,
                               num == 1? nullStr : PlurSufx));
                     }
                     break;
@@ -1449,18 +1449,18 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
 
                         if (eb_datalen <= 29) {
                             Info(slide, 0, ((char *)slide,
-                                 LoadFarString(U8PthCmnComplete),
+                                 U8PthCmnComplete,
                                  (unsigned)ef_ptr[0], name_crc));
                             n = eb_datalen;
                         } else {
                             Info(slide, 0, ((char *)slide,
-                                 LoadFarString(U8PthCmnF24),
+                                 U8PthCmnF24,
                                  (unsigned)ef_ptr[0], name_crc));
                             n = 29;
                         }
                         for (i = 5;  i < n;  ++i)
                             Info(slide, 0, ((char *)slide,
-                                 LoadFarString(efFormat), ef_ptr[i]));
+                                 efFormat, ef_ptr[i]));
                     } else {
                         goto ef_default_display;
                     }
@@ -1471,7 +1471,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                         unsigned mac3_flgs = makeword(ef_ptr+EB_FLGS_OFFS);
                         unsigned eb_is_uc = mac3_flgs & EB_M3_FL_UNCMPR;
 
-                        Info(slide, 0, ((char *)slide, LoadFarString(Mac3data),
+                        Info(slide, 0, ((char *)slide, Mac3data,
                           eb_uc, eb_is_uc ? "un" : nullStr));
                         if (eb_is_uc) {
                             if (*pEndprev > 0L)
@@ -1481,9 +1481,9 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                         }
 
                         Info(slide, 0, ((char *)slide,
-                          LoadFarString(MacOSMAC3flags),
-                          LoadFarStringSmall(mac3_flgs & EB_M3_FL_DATFRK ?
-                                             MacOS_DF : MacOS_RF),
+                          MacOSMAC3flags,
+                          mac3_flgs & EB_M3_FL_DATFRK ?
+                                             MacOS_DF : MacOS_RF,
                           (mac3_flgs & EB_M3_FL_TIME64 ? 64 : 32)));
                         zi_showMacTypeCreator(__G__ &ef_ptr[6]);
                     } else {
@@ -1512,7 +1512,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                             ef_ptr[fnlen+5] = '\0'; /* terminate filename */
                             A_TO_N(ef_ptr+5);
                             Info(slide, 0, ((char *)slide,
-                              LoadFarString(ZipItFname), (char *)ef_ptr+5));
+                              ZipItFname, (char *)ef_ptr+5));
                             ef_ptr[fnlen+5] = nullchar;
                             zi_showMacTypeCreator(__G__ &ef_ptr[fnlen+5]);
                         }
@@ -1527,9 +1527,9 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                         zi_showMacTypeCreator(__G__ &ef_ptr[4]);
 
                         Info(slide, 0, ((char *)slide,
-                          LoadFarString(MacOSJLEEflags),
-                          LoadFarStringSmall(ef_ptr[31] & 1 ?
-                                             MacOS_DF : MacOS_RF)));
+                          MacOSJLEEflags,
+                          ef_ptr[31] & 1 ?
+                                             MacOS_DF : MacOS_RF));
                     } else {
                         goto ef_default_display;
                     }
@@ -1543,7 +1543,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                         filenameBuf[ef_ptr[32]] = '\0';
                         A_TO_N(filenameBuf);
                         Info(slide, 0, ((char *)slide,
-                             LoadFarString(ZipItFname), filenameBuf));
+                             ZipItFname, filenameBuf));
                     } else {
                         goto ef_default_display;
                     }
@@ -1560,7 +1560,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                         else
                             ef_fieldname = BeOSdata;
                         Info(slide, 0, ((char *)slide,
-                          LoadFarString(ef_fieldname),
+                          ef_fieldname,
                           eb_uc, eb_is_uc ? "un" : nullStr));
                         if (eb_is_uc) {
                             if (*pEndprev > 0L)
@@ -1574,7 +1574,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                     break;
                 case EF_QDOS:
                     if (eb_datalen >= 4) {
-                        Info(slide, 0, ((char *)slide, LoadFarString(QDOSdata),
+                        Info(slide, 0, ((char *)slide, QDOSdata,
                           ef_ptr[0], ef_ptr[1], ef_ptr[2], ef_ptr[3]));
                     } else {
                         goto ef_default_display;
@@ -1582,7 +1582,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                     break;
                 case EF_AOSVS:
                     if (eb_datalen >= 5) {
-                        Info(slide, 0, ((char *)slide, LoadFarString(AOSVSdata),
+                        Info(slide, 0, ((char *)slide, AOSVSdata,
                           ((int)(unsigned char)ef_ptr[4])/10, ((int)(unsigned char)ef_ptr[4])%10));
                     } else {
                         goto ef_default_display;
@@ -1603,8 +1603,8 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                                 type = 5;
                         }
                         Info(slide, 0, ((char *)slide,
-                          LoadFarString(Tandemdata),
-                          LoadFarStringSmall(TandemFileformat[type]),
+                          Tandemdata,
+                          TandemFileformat[type],
                           code));
                     } else {
                         goto ef_default_display;
@@ -1618,7 +1618,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                         for (i = 0;  i < 16;  ++i)
                             sprintf(&md5[i<<1], "%02x", ef_ptr[15-i]);
                         md5[32] = '\0';
-                        Info(slide, 0, ((char *)slide, LoadFarString(MD5data),
+                        Info(slide, 0, ((char *)slide, MD5data,
                           md5));
                         break;
                     }   /* else: fall through !! */
@@ -1629,16 +1629,16 @@ ef_default_display:
 
                         if (eb_datalen <= 24) {
                             Info(slide, 0, ((char *)slide,
-                                 LoadFarString(ColonIndent)));
+                                 ColonIndent));
                             n = eb_datalen;
                         } else {
                             Info(slide, 0, ((char *)slide,
-                                 LoadFarString(First20)));
+                                  First20));
                             n = 20;
                         }
                         for (i = 0;  i < n;  ++i)
                             Info(slide, 0, ((char *)slide,
-                                 LoadFarString(efFormat), ef_ptr[i]));
+                                 efFormat, ef_ptr[i]));
                     }
                     break;
             }
@@ -1656,22 +1656,22 @@ ef_default_display:
     {
         if (hostnum == UNIX_ || hostnum == FS_HPFS_ || hostnum == FS_NTFS_)
         {
-            Info(slide, 0, ((char *)slide, LoadFarString(lExtraFieldType),
-              "is", EF_IZUNIX, LoadFarStringSmall(efIZUnix),
+            Info(slide, 0, ((char *)slide, lExtraFieldType,
+              "is", EF_IZUNIX, efIZUnix,
               (unsigned)(xattr&12), (xattr&4)? efIZuid : efIZnouid));
             if (*pEndprev > 0L)
                 *pEndprev += (unsigned long)(xattr&12);
         }
         else if (hostnum == FS_FAT_ && !(xattr&4))
-            Info(slide, 0, ((char *)slide, LoadFarString(lExtraFieldType),
-              "may be", EF_IZUNIX, LoadFarStringSmall(efIZUnix), 8,
+            Info(slide, 0, ((char *)slide, lExtraFieldType,
+              "may be", EF_IZUNIX, efIZUnix, 8,
               efIZnouid));
     }
 
     if (!G.crec.file_comment_length)
-        Info(slide, 0, ((char *)slide, LoadFarString(NoFileComment)));
+        Info(slide, 0, ((char *)slide, NoFileComment));
     else {
-        Info(slide, 0, ((char *)slide, LoadFarString(FileCommBegin)));
+        Info(slide, 0, ((char *)slide, FileCommBegin));
         if ((error = do_string(__G__ G.crec.file_comment_length, DISPL_8)) !=
             PK_COOL)
         {
@@ -1679,7 +1679,7 @@ ef_default_display:
             if (error > PK_WARN)   /* fatal */
                 return error;
         }
-        Info(slide, 0, ((char *)slide, LoadFarString(FileCommEnd)));
+        Info(slide, 0, ((char *)slide, FileCommEnd));
     }
 
     return error_in_archive;
@@ -1907,7 +1907,7 @@ static int zi_short(__G)   /* return PK-type error code */
     } /* end switch (hostnum: external attributes format) */
 
     Info(slide, 0, ((char *)slide, "%s %s %s ", attribs,
-      LoadFarStringSmall(os[hostnum]),
+      os[hostnum],
       FmZofft(G.crec.ucsize, "8", "u")));
     Info(slide, 0, ((char *)slide, "%c",
       (G.crec.general_purpose_bit_flag & 1)?
@@ -1969,13 +1969,13 @@ static void zi_showMacTypeCreator(unsigned char *ebfield)
         isprint(native(ebfield[2])) && isprint(native(ebfield[3])) &&
         isprint(native(ebfield[4])) && isprint(native(ebfield[5])) &&
         isprint(native(ebfield[6])) && isprint(native(ebfield[7]))) {
-       Info(slide, 0, ((char *)slide, LoadFarString(MacOSdata),
+       Info(slide, 0, ((char *)slide, MacOSdata,
             native(ebfield[0]), native(ebfield[1]),
             native(ebfield[2]), native(ebfield[3]),
             native(ebfield[4]), native(ebfield[5]),
             native(ebfield[6]), native(ebfield[7])));
     } else {
-       Info(slide, 0, ((char *)slide, LoadFarString(MacOSdata1),
+       Info(slide, 0, ((char *)slide, MacOSdata1,
             (((unsigned long)ebfield[0]) << 24) +
             (((unsigned long)ebfield[1]) << 16) +
             (((unsigned long)ebfield[2]) << 8)  +
@@ -2024,19 +2024,19 @@ static char *zi_time(const unsigned long *datetimez, const time_t *modtimez, cha
     }
 
     if (mo == 0 || mo > 12) {
-        sprintf(monthbuf, LoadFarString(BogusFmt), mo);
+        sprintf(monthbuf, BogusFmt, mo);
         monthstr = monthbuf;
     } else
-        monthstr = LoadFarStringSmall(month[mo-1]);
+        monthstr = month[mo-1];
 
     if (uO.lflag > 9)   /* verbose listing format */
-        sprintf(d_t_str, LoadFarString(lngYMDHMSTime), yr+1900, monthstr, dy,
+        sprintf(d_t_str, lngYMDHMSTime, yr+1900, monthstr, dy,
           hh, mm, ss);
     else if (uO.T_flag)
-        sprintf(d_t_str, LoadFarString(DecimalTime), yr+1900, mo, dy,
+        sprintf(d_t_str, DecimalTime, yr+1900, mo, dy,
           hh, mm, ss);
     else   /* was:  if ((uO.lflag >= 3) && (uO.lflag <= 5)) */
-        sprintf(d_t_str, LoadFarString(shtYMDHMTime), yr%100, monthstr, dy,
+        sprintf(d_t_str, shtYMDHMTime, yr%100, monthstr, dy,
           hh, mm);
 
     return d_t_str;

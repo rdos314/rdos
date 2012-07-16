@@ -142,7 +142,7 @@ int open_input_file(__G)    /* return 1 if open failed */
 
     if (!G.zipfd)
     {
-        Info(slide, 0x401, ((char *)slide, LoadFarString(CannotOpenZipfile),
+        Info(slide, 0x401, ((char *)slide, CannotOpenZipfile,
           G.zipfn, strerror(errno)));
         return 1;
     }
@@ -165,7 +165,7 @@ int open_outfile(__G)           /* return 1 if fail */
         G.outfile = RdosCreateFile(G.filename, 0);
     }
     if (!G.outfile) {
-        Info(slide, 0x401, ((char *)slide, LoadFarString(CannotCreateFile),
+        Info(slide, 0x401, ((char *)slide, CannotCreateFile,
           FnFilter1(G.filename), strerror(errno)));
         return 1;
     }
@@ -257,8 +257,8 @@ unsigned readbuf(char *buf, register unsigned size)   /* return number of bytes 
             else if (G.incnt < 0) {
                 /* another hack, but no real harm copying same thing twice */
                 (*G.message)((void *)&G,
-                  (unsigned char *)LoadFarString(ReadError),  /* CANNOT use slide */
-                  (unsigned long)strlen(LoadFarString(ReadError)), 0x401);
+                  (unsigned char *)ReadError,  /* CANNOT use slide */
+                  (unsigned long)strlen(ReadError), 0x401);
                 return 0;  /* discarding some data; better than lock-up */
             }
             /* buffer ALWAYS starts on a block boundary:  */
@@ -300,8 +300,8 @@ int readbyte(__G)   /* refill inbuf and return a byte if available, else EOF */
         } else if (G.incnt < 0) {  /* "fail" (abort, retry, ...) returns this */
             /* another hack, but no real harm copying same thing twice */
             (*G.message)((void *)&G,
-              (unsigned char *)LoadFarString(ReadError),
-              (unsigned long)strlen(LoadFarString(ReadError)), 0x401);
+              (unsigned char *)ReadError,
+              (unsigned long)strlen(ReadError), 0x401);
             echon();
             DESTROYGLOBALS();
             exit(PK_BADERR);    /* totally bailing; better than lock-up */
@@ -389,8 +389,8 @@ int seek_zipf(zoff_t abs_offset)
     zoff_t bufstart = request - inbuf_offset;
 
     if (request < 0) {
-        Info(slide, 1, ((char *)slide, LoadFarStringSmall(SeekMsg),
-             G.zipfn, LoadFarString(ReportMsg)));
+        Info(slide, 1, ((char *)slide, SeekMsg,
+             G.zipfn, ReportMsg));
         return(PK_BADERR);
     } else if (bufstart != G.cur_zipfile_bufstart) {
         Trace((stderr,
@@ -540,7 +540,7 @@ static int disk_error(__G)
     __GDEF
 {
     /* OK to use slide[] here because this file is finished regardless */
-    Info(slide, 0x4a1, ((char *)slide, LoadFarString(DiskFullQuery),
+    Info(slide, 0x4a1, ((char *)slide, DiskFullQuery,
       FnFilter1(G.filename)));
 
     fgets(G.answerbuf, sizeof(G.answerbuf), stdin);
@@ -631,7 +631,7 @@ int  UzpMessagePrnt(void *pG, unsigned char *buf, unsigned long size, int flag)
                 ++((Uz_Globs *)pG)->lines;
                 if (((Uz_Globs *)pG)->lines >= ((Uz_Globs *)pG)->height)
                     (*((Uz_Globs *)pG)->mpause)((void *)pG,
-                      LoadFarString(MorePrompt), 1);
+                      MorePrompt, 1);
             }
             if (MSG_STDERR(flag) && ((Uz_Globs *)pG)->UzO.tflag &&
                 !isatty(1) && isatty(2))
@@ -675,7 +675,7 @@ int  UzpMessagePrnt(void *pG, unsigned char *buf, unsigned long size, int flag)
                     ((Uz_Globs *)pG)->sol = TRUE;
                     q = p + 1;
                     (*((Uz_Globs *)pG)->mpause)((void *)pG,
-                      LoadFarString(MorePrompt), 1);
+                      MorePrompt, 1);
                 }
             }
             INCSTR(p);
@@ -740,7 +740,7 @@ void  UzpMorePause(void *pG, const char *prompt, int flag)
         c = (unsigned char)FGETCH(0);
 
     /* newline was not echoed, so cover up prompt line */
-    fprintf(stderr, LoadFarString(HidePrompt));
+    fprintf(stderr, HidePrompt);
     fflush(stderr);
 
     if (
@@ -771,15 +771,15 @@ int  UzpPassword (void *pG, int *rcnt, char *pwbuf, int size, const char *zfn, c
     if (*rcnt == 0) {           /* First call for current entry */
         *rcnt = 2;
         if ((prompt = (char *)malloc(2*FILNAMSIZ + 15)) != (char *)NULL) {
-            sprintf(prompt, LoadFarString(PasswPrompt),
+            sprintf(prompt, PasswPrompt,
                     FnFilter1(zfn), FnFilter2(efn));
             m = prompt;
         } else
-            m = (char *)LoadFarString(PasswPrompt2);
+            m = (char *)PasswPrompt;
     } else {                    /* Retry call, previous password was wrong */
         (*rcnt)--;
         prompt = NULL;
-        m = (char *)LoadFarString(PasswRetry);
+        m = (char *)PasswRetry;
     }
 
     m = getp(__G__ m, pwbuf, size);
@@ -1040,7 +1040,7 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
     case DS_FN_L:
         if (length >= FILNAMSIZ) {
             Info(slide, 0x401, ((char *)slide,
-              LoadFarString(FilenameTooLongTrunc)));
+              FilenameTooLongTrunc));
             error = PK_WARN;
             /* remember excess length in block_len */
             block_len = length - (FILNAMSIZ - 1);
@@ -1099,7 +1099,7 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
         if (G.extra_field != (unsigned char *)NULL)
             free(G.extra_field);
         if ((G.extra_field = (unsigned char *)malloc(length)) == (unsigned char *)NULL) {
-            Info(slide, 0x401, ((char *)slide, LoadFarString(ExtraFieldTooLong),
+            Info(slide, 0x401, ((char *)slide, ExtraFieldTooLong,
               length));
             /* cur_zipfile_bufstart already takes account of extra_bytes,
              * so don't correct for it twice: */

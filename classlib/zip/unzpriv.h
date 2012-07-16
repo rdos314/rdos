@@ -199,9 +199,6 @@ typedef size_t extent;
  * and normal text.  Hence difference is sufficient for most "average" files.
  * (Argument scales for larger OUTBUFSIZ.)
  */
-#    define LoadFarString(x)        (char *)(x)
-#    define LoadFarStringSmall(x)   (char *)(x)
-#    define LoadFarStringSmall2(x)  (char *)(x)
 #  ifdef MED_MEM
 #    define OUTBUFSIZ 0xFF80         /* can't malloc arrays of 0xFFE8 or more */
 #    define TRANSBUFSIZ 0xFF80
