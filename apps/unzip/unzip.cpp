@@ -841,75 +841,8 @@ int uz_opts(int *pargc, char ***pargv)
 /* Function usage() */
 /********************/
 
-#ifdef SFX
-#  ifdef VMS
-#    define LOCAL "X.\n\
-(Must quote upper-case options, like \"-V\", unless SET PROC/PARSE=EXTEND.)"
-#  endif
-#  ifdef UNIX
-#    define LOCAL "X"
-#  endif
-#  ifdef DOS_OS2_W32
-#    define LOCAL "s$"
-#  endif
-#  if (defined(FLEXOS) || defined(NLM))
-#    define LOCAL "s"
-#  endif
-#  ifdef AMIGA
-#    define LOCAL "N"
-#  endif
-   /* Default for all other systems: */
-#  ifndef LOCAL
-#    define LOCAL ""
-#  endif
-
-#  ifndef NO_TIMESTAMP
-#    ifdef MORE
-#      define SFXOPT1 "DM"
-#    else
-#      define SFXOPT1 "D"
-#    endif
-#  else
-#    ifdef MORE
-#      define SFXOPT1 "M"
-#    else
-#      define SFXOPT1 ""
-#    endif
-#  endif
-
-int usage(__G__ error)   /* return PK-type error code */
-    __GDEF
-    int error;
-{
-    Info(slide, error? 1 : 0, ((char *)slide, LoadFarString(UnzipSFXBanner),
-      UZ_MAJORVER, UZ_MINORVER, UZ_PATCHLEVEL, UZ_BETALEVEL,
-      LoadFarStringSmall(VersionDate)));
-    Info(slide, error? 1 : 0, ((char *)slide, LoadFarString(UnzipSFXOpts),
-      SFXOPT1, LOCAL));
-#ifdef BETA
-    Info(slide, error? 1 : 0, ((char *)slide, LoadFarString(BetaVersion), "\n",
-      "SFX"));
-#endif
-
-    if (error)
-        return PK_PARAM;
-    else
-        return PK_COOL;     /* just wanted usage screen: no error */
-
-} /* end function usage() */
-
-
-
-
-
-#else /* !SFX */
-#  ifdef VMS
-#    define QUOT '\"'
-#    define QUOTS "\""
-#  else
 #    define QUOT ' '
 #    define QUOTS ""
-#  endif
 
 int usage(int error)   /* return PK-type error code */
 {
@@ -923,8 +856,6 @@ int usage(int error)   /* return PK-type error code */
 
     if (uO.zipinfo_mode) {
 
-#ifndef NO_ZIPINFO
-
         Info(slide, flag, ((char *)slide, LoadFarString(ZipInfoUsageLine1),
           ZI_MAJORVER, ZI_MINORVER, UZ_PATCHLEVEL, UZ_BETALEVEL,
           LoadFarStringSmall(VersionDate),
@@ -932,29 +863,15 @@ int usage(int error)   /* return PK-type error code */
         Info(slide, flag, ((char *)slide, LoadFarString(ZipInfoUsageLine2)));
         Info(slide, flag, ((char *)slide, LoadFarString(ZipInfoUsageLine3),
           LoadFarStringSmall(ZipInfoUsageLine4)));
-#ifdef VMS
-        Info(slide, flag, ((char *)slide, "\n\
-You must quote non-lowercase options and filespecs, unless SET PROC/PARSE=EXT.\
-\n"));
-#endif
-
-#endif /* !NO_ZIPINFO */
 
     } else {   /* UnZip mode */
 
         Info(slide, flag, ((char *)slide, LoadFarString(UnzipUsageLine1),
           UZ_MAJORVER, UZ_MINORVER, UZ_PATCHLEVEL, UZ_BETALEVEL,
           LoadFarStringSmall(VersionDate)));
-#ifdef BETA
-        Info(slide, flag, ((char *)slide, LoadFarString(BetaVersion), "", ""));
-#endif
 
         Info(slide, flag, ((char *)slide, LoadFarString(UnzipUsageLine2),
           ZIPINFO_MODE_OPTION, LoadFarStringSmall(ZipInfoMode)));
-#ifdef VMS
-        if (!error)  /* maybe no command-line tail found; show extra help */
-            Info(slide, flag, ((char *)slide, LoadFarString(VMSusageLine2b)));
-#endif
 
         Info(slide, flag, ((char *)slide, LoadFarString(UnzipUsageLine3),
           LoadFarStringSmall(local1)));
@@ -978,12 +895,7 @@ You must quote non-lowercase options and filespecs, unless SET PROC/PARSE=EXT.\
 
 } /* end function usage() */
 
-#endif /* ?SFX */
 
-
-
-
-#ifndef SFX
 
 /* Print extended help to stdout. */
 static void help_extended(__G)
@@ -1223,15 +1135,6 @@ static void help_extended(__G)
 } /* end function help_extended() */
 
 
-
-
-#ifndef _WIN32_WCE /* Win CE does not support environment variables */
-#if (!defined(MODERN) || defined(NO_STDLIB_H))
-/* Declare getenv() to be sure (might be missing in some environments) */
-extern char *getenv();
-#endif
-#endif
-
 /********************************/
 /* Function show_version_info() */
 /********************************/
@@ -1243,9 +1146,7 @@ static void show_version_info(__G)
         Info(slide, 0, ((char *)slide, "%d\n",
           (UZ_MAJORVER*100 + UZ_MINORVER*10 + UZ_PATCHLEVEL)));
     else {
-#ifndef _WIN32_WCE /* Win CE does not support environment variables */
         char *envptr;
-#endif
         int numopts = 0;
 
         Info(slide, 0, ((char *)slide, LoadFarString(UnzipUsageLine1v),
@@ -1255,44 +1156,17 @@ static void show_version_info(__G)
           LoadFarString(UnzipUsageLine2v)));
         version(__G);
         Info(slide, 0, ((char *)slide, LoadFarString(CompileOptions)));
-#ifdef ACORN_FTYPE_NFS
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(AcornFtypeNFS)));
-        ++numopts;
-#endif
-#ifdef ASM_CRC
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(AsmCRC)));
-        ++numopts;
-#endif
-#ifdef ASM_INFLATECODES
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(AsmInflateCodes)));
-        ++numopts;
-#endif
 #ifdef CHECK_VERSIONS
         Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
           LoadFarStringSmall(Check_Versions)));
         ++numopts;
 #endif
-#ifdef COPYRIGHT_CLEAN
         Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
           LoadFarStringSmall(Copyright_Clean)));
         ++numopts;
-#endif
 #ifdef DEBUG
         Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
           LoadFarStringSmall(UDebug)));
-        ++numopts;
-#endif
-#ifdef DEBUG_TIME
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(DebugTime)));
-        ++numopts;
-#endif
-#ifdef DLL
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(Dll)));
         ++numopts;
 #endif
 #ifdef DOSWILD
@@ -1303,46 +1177,6 @@ static void show_version_info(__G)
 #ifdef LZW_CLEAN
         Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
           LoadFarStringSmall(LZW_Clean)));
-        ++numopts;
-#endif
-#ifndef MORE
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(No_More)));
-        ++numopts;
-#endif
-#ifdef NO_ZIPINFO
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(No_ZipInfo)));
-        ++numopts;
-#endif
-#ifdef NTSD_EAS
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(NTSDExtAttrib)));
-        ++numopts;
-#endif
-#if defined(WIN32) && defined(NO_W32TIMES_IZFIX)
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(W32NoIZTimeFix)));
-        ++numopts;
-#endif
-#ifdef OLD_THEOS_EXTRA
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(OldTheosExtra)));
-        ++numopts;
-#endif
-#ifdef OS2_EAS
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(OS2ExtAttrib)));
-        ++numopts;
-#endif
-#ifdef QLZIP
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(SMSExFldOnUnix)));
-        ++numopts;
-#endif
-#ifdef REENTRANT
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(Reentrant)));
         ++numopts;
 #endif
 #ifdef REGARGS
@@ -1360,127 +1194,26 @@ static void show_version_info(__G)
           LoadFarStringSmall(SetDirAttrib)));
         ++numopts;
 #endif
-#ifdef SYMLINKS
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(SymLinkSupport)));
-        ++numopts;
-#endif
-#ifdef TIMESTAMP
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(TimeStamp)));
-        ++numopts;
-#endif
-#ifdef UNIXBACKUP
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(UnixBackup)));
-        ++numopts;
-#endif
-#ifdef USE_EF_UT_TIME
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(Use_EF_UT_time)));
-        ++numopts;
-#endif
-#ifndef COPYRIGHT_CLEAN
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(Use_Smith_Code)));
-        ++numopts;
-#endif
 #ifndef LZW_CLEAN
         Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
           LoadFarStringSmall(Use_Unshrink)));
         ++numopts;
 #endif
-#ifdef USE_DEFLATE64
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(Use_Deflate64)));
-        ++numopts;
-#endif
-#ifdef UNICODE_SUPPORT
-# ifdef UTF8_MAYBE_NATIVE
-        sprintf((char *)(slide+256), LoadFarStringSmall(Use_Unicode),
-          LoadFarStringSmall2(G.native_is_utf8 ? SysChUTF8 : SysChOther));
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          (char *)(slide+256)));
-# else
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(Use_Unicode)));
-# endif
-        ++numopts;
-#endif
-#ifdef _MBCS
-        sprintf((char *)(slide+256), LoadFarStringSmall(Have_MBCS_Support),
-          (unsigned int)MB_CUR_MAX);
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          (char *)(slide+256)));
-        ++numopts;
-#endif
-#ifdef MULT_VOLUME
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(Use_MultiVol)));
-        ++numopts;
-#endif
-#ifdef LARGE_FILE_SUPPORT
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(Use_LFS)));
-        ++numopts;
-#endif
-#ifdef ZIP64_SUPPORT
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(Use_Zip64)));
-        ++numopts;
-#endif
-#if (defined(__DJGPP__) && (__DJGPP__ >= 2))
-#  ifdef USE_DJGPP_ENV
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(Use_DJGPP_Env)));
-        ++numopts;
-#  endif
-#  ifdef USE_DJGPP_GLOB
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(Use_DJGPP_Glob)));
-        ++numopts;
-#  endif
-#endif /* __DJGPP__ && (__DJGPP__ >= 2) */
 #ifdef USE_VFAT
         Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
           LoadFarStringSmall(Use_VFAT_support)));
         ++numopts;
 #endif
-#ifdef USE_ZLIB
         sprintf((char *)(slide+256), LoadFarStringSmall(UseZlib),
           ZLIB_VERSION, zlibVersion());
         Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
           (char *)(slide+256)));
         ++numopts;
-#endif
-#ifdef USE_BZIP2
-        sprintf((char *)(slide+256), LoadFarStringSmall(UseBZip2),
-          BZ2_bzlibVersion());
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          (char *)(slide+256)));
-        ++numopts;
-#endif
-#ifdef VMS_TEXT_CONV
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(VmsTextConv)));
-        ++numopts;
-#endif
-#ifdef VMSCLI
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(VmsCLI)));
-        ++numopts;
-#endif
-#ifdef VMSWILD
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(VmsWild)));
-        ++numopts;
-#endif
 #ifdef WILD_STOP_AT_DIR
         Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
           LoadFarStringSmall(WildStopAtDir)));
         ++numopts;
 #endif
-#if CRYPT
 # ifdef PASSWD_FROM_STDIN
         Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
           LoadFarStringSmall(PasswdStdin)));
@@ -1489,13 +1222,11 @@ static void show_version_info(__G)
           CR_MAJORVER, CR_MINORVER, CR_BETA_VER,
           LoadFarStringSmall(CryptDate)));
         ++numopts;
-#endif /* CRYPT */
         if (numopts == 0)
             Info(slide, 0, ((char *)slide,
               LoadFarString(CompileOptFormat),
               LoadFarStringSmall(None)));
 
-#ifndef _WIN32_WCE /* Win CE does not support environment variables */
         Info(slide, 0, ((char *)slide, LoadFarString(EnvOptions)));
         envptr = getenv(LoadFarStringSmall(EnvUnZip));
         Info(slide, 0, ((char *)slide, LoadFarString(EnvOptFormat),
@@ -1517,41 +1248,5 @@ static void show_version_info(__G)
           LoadFarStringSmall(EnvZipInfo2),
           (envptr == (char *)NULL || *envptr == 0)?
           LoadFarStringSmall2(None) : envptr));
-#ifndef __RSXNT__
-#ifdef __EMX__
-        envptr = getenv(LoadFarStringSmall(EnvEMX));
-        Info(slide, 0, ((char *)slide, LoadFarString(EnvOptFormat),
-          LoadFarStringSmall(EnvEMX),
-          (envptr == (char *)NULL || *envptr == 0)?
-          LoadFarStringSmall2(None) : envptr));
-        envptr = getenv(LoadFarStringSmall(EnvEMXOPT));
-        Info(slide, 0, ((char *)slide, LoadFarString(EnvOptFormat),
-          LoadFarStringSmall(EnvEMXOPT),
-          (envptr == (char *)NULL || *envptr == 0)?
-          LoadFarStringSmall2(None) : envptr));
-#endif /* __EMX__ */
-#if (defined(__GO32__) && (!defined(__DJGPP__) || (__DJGPP__ < 2)))
-        envptr = getenv(LoadFarStringSmall(EnvGO32));
-        Info(slide, 0, ((char *)slide, LoadFarString(EnvOptFormat),
-          LoadFarStringSmall(EnvGO32),
-          (envptr == (char *)NULL || *envptr == 0)?
-          LoadFarStringSmall2(None) : envptr));
-        envptr = getenv(LoadFarStringSmall(EnvGO32TMP));
-        Info(slide, 0, ((char *)slide, LoadFarString(EnvOptFormat),
-          LoadFarStringSmall(EnvGO32TMP),
-          (envptr == (char *)NULL || *envptr == 0)?
-          LoadFarStringSmall2(None) : envptr));
-#endif /* __GO32__ && !(__DJGPP__ >= 2) */
-#endif /* !__RSXNT__ */
-#ifdef RISCOS
-        envptr = getenv(LoadFarStringSmall(EnvUnZipExts));
-        Info(slide, 0, ((char *)slide, LoadFarString(EnvOptFormat),
-          LoadFarStringSmall(EnvUnZipExts),
-          (envptr == (char *)NULL || *envptr == 0)?
-          LoadFarStringSmall2(None) : envptr));
-#endif /* RISCOS */
-#endif /* !_WIN32_WCE */
     }
 } /* end function show_version() */
-
-#endif /* !SFX */
