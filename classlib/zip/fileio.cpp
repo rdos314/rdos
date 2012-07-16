@@ -581,7 +581,7 @@ void WriteScreen(char *buf, int size)
 /* Function UzpMessagePrnt() */
 /*****************************/
 
-int UZ_EXP UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
+int  UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
 {
     /* IMPORTANT NOTE:
      *    The name of the first parameter of UzpMessagePrnt(), which passes
@@ -700,7 +700,7 @@ int UZ_EXP UzpMessagePrnt(zvoid *pG, uch *buf, ulg size, int flag)
 /* Function UzpInput() */   /* GRR:  this is a placeholder for now */
 /***********************/
 
-int UZ_EXP UzpInput(zvoid *pG, uch *buf, int *size, int flag)
+int  UzpInput(zvoid *pG, uch *buf, int *size, int flag)
 {
     /* tell picky compilers to shut up about "unused variable" warnings */
     pG = pG; buf = buf; flag = flag;
@@ -717,7 +717,7 @@ int UZ_EXP UzpInput(zvoid *pG, uch *buf, int *size, int flag)
 /* Function UzpMorePause() */
 /***************************/
 
-void UZ_EXP UzpMorePause(zvoid *pG, ZCONST char *prompt, int flag)
+void  UzpMorePause(zvoid *pG, ZCONST char *prompt, int flag)
 {
     uch c;
 
@@ -762,7 +762,7 @@ void UZ_EXP UzpMorePause(zvoid *pG, ZCONST char *prompt, int flag)
 /* Function UzpPassword() */
 /**************************/
 
-int UZ_EXP UzpPassword (zvoid *pG, int *rcnt, char *pwbuf, int size, ZCONST char *zfn, ZCONST char *efn)
+int  UzpPassword (zvoid *pG, int *rcnt, char *pwbuf, int size, ZCONST char *zfn, ZCONST char *efn)
 {
     int r = IZ_PW_ENTERED;
     char *m;

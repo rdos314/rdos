@@ -91,94 +91,9 @@ freely, subject to the above disclaimer and the following restrictions:
 #    define PROTO
 #    define MODERN
 
-/* Tell Microsoft Visual C++ 2005 (and newer) to leave us alone
- * and let us use standard C functions the way we're supposed to.
- * (These preprocessor symbols must appear before the first system
- *  header include. They are located here, because for WINDLL the
- *  first system header includes follow just below.)
- */
-#if defined(_MSC_VER) && (_MSC_VER >= 1400)
-#  ifndef _CRT_SECURE_NO_WARNINGS
-#    define _CRT_SECURE_NO_WARNINGS
-#  endif
-#  ifndef _CRT_NONSTDC_NO_WARNINGS
-#    define _CRT_NONSTDC_NO_WARNINGS
-#  endif
-#  if defined(POCKET_UNZIP) && !defined(_CRT_NON_CONFORMING_SWPRINTFS)
-#    define _CRT_NON_CONFORMING_SWPRINTFS
-#  endif
-#endif
-
-/* NO_UNIXBACKUP overrides UNIXBACKUP */
-#if defined(NO_UNIXBACKUP) && defined(UNIXBACKUP)
-#  undef UNIXBACKUP
-#endif
-
-/*---------------------------------------------------------------------------
-    Grab system-specific public include headers.
-  ---------------------------------------------------------------------------*/
-
-#ifdef POCKET_UNZIP             /* WinCE port */
-#  include "wince/punzip.h"     /* must appear before windows.h */
-#endif
-
-#ifdef WINDLL
-   /* for UnZip, the "basic" part of the win32 api is sufficient */
-#  ifndef WIN32_LEAN_AND_MEAN
-#    define WIN32_LEAN_AND_MEAN
-#    define IZ_HASDEFINED_WIN32LEAN
-#  endif
-#  include <windows.h>
-#  include "windll/structs.h"
-#  ifdef IZ_HASDEFINED_WIN32LEAN
-#    undef WIN32_LEAN_AND_MEAN
-#    undef IZ_HASDEFINED_WIN32LEAN
-#  endif
-#endif
-
 /*---------------------------------------------------------------------------
     Grab system-dependent definition of EXPENTRY for prototypes below.
   ---------------------------------------------------------------------------*/
-
-#if 0
-#if (defined(OS2) && !defined(FUNZIP))
-#  ifdef UNZIP_INTERNAL
-#    define INCL_NOPM
-#    define INCL_DOSNLS
-#    define INCL_DOSPROCESS
-#    define INCL_DOSDEVICES
-#    define INCL_DOSDEVIOCTL
-#    define INCL_DOSERRORS
-#    define INCL_DOSMISC
-#    ifdef OS2DLL
-#      define INCL_REXXSAA
-#      include <rexxsaa.h>
-#    endif
-#  endif /* UNZIP_INTERNAL */
-#  include <os2.h>
-#  define UZ_EXP EXPENTRY
-#endif /* OS2 && !FUNZIP */
-#endif /* 0 */
-
-#if (defined(OS2) && !defined(FUNZIP))
-#  if (defined(__IBMC__) || defined(__WATCOMC__))
-#    define UZ_EXP  _System    /* compiler keyword */
-#  else
-#    define UZ_EXP
-#  endif
-#endif /* OS2 && !FUNZIP */
-
-#if (defined(WINDLL) || defined(USE_UNZIP_LIB))
-#  ifndef EXPENTRY
-#    define UZ_EXP WINAPI
-#  else
-#    define UZ_EXP EXPENTRY
-#  endif
-#endif
-
-#ifndef UZ_EXP
-#  define UZ_EXP
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -207,22 +122,22 @@ typedef unsigned long   ulg;    /*  predefined on some systems) & match zip  */
 
 /* InputFn is not yet used and is likely to change: */
 #ifdef PROTO
-   typedef int   (UZ_EXP MsgFn)     (zvoid *pG, uch *buf, ulg size, int flag);
-   typedef int   (UZ_EXP InputFn)   (zvoid *pG, uch *buf, int *size, int flag);
-   typedef void  (UZ_EXP PauseFn)   (zvoid *pG, const char *prompt, int flag);
-   typedef int   (UZ_EXP PasswdFn)  (zvoid *pG, int *rcnt, char *pwbuf,
+   typedef int   ( MsgFn)     (zvoid *pG, uch *buf, ulg size, int flag);
+   typedef int   ( InputFn)   (zvoid *pG, uch *buf, int *size, int flag);
+   typedef void  ( PauseFn)   (zvoid *pG, const char *prompt, int flag);
+   typedef int   ( PasswdFn)  (zvoid *pG, int *rcnt, char *pwbuf,
                                      int size, const char *zfn,
                                      const char *efn);
-   typedef int   (UZ_EXP StatCBFn)  (zvoid *pG, int fnflag, const char *zfn,
+   typedef int   ( StatCBFn)  (zvoid *pG, int fnflag, const char *zfn,
                                      const char *efn, const zvoid *details);
-   typedef void  (UZ_EXP UsrIniFn)  (void);
+   typedef void  ( UsrIniFn)  (void);
 #else /* !PROTO */
-   typedef int   (UZ_EXP MsgFn)     ();
-   typedef int   (UZ_EXP InputFn)   ();
-   typedef void  (UZ_EXP PauseFn)   ();
-   typedef int   (UZ_EXP PasswdFn)  ();
-   typedef int   (UZ_EXP StatCBFn)  ();
-   typedef void  (UZ_EXP UsrIniFn)  ();
+   typedef int   ( MsgFn)     ();
+   typedef int   ( InputFn)   ();
+   typedef void  ( PauseFn)   ();
+   typedef int   ( PasswdFn)  ();
+   typedef int   ( StatCBFn)  ();
+   typedef void  ( UsrIniFn)  ();
 #endif /* ?PROTO */
 
 typedef struct _UzpBuffer {    /* rxstr */
@@ -425,7 +340,7 @@ typedef struct _Uzp_cdir_Rec {
 
 #define UZPINIT_LEN   sizeof(UzpInit)
 #define UZPVER_LEN    sizeof(UzpVer)
-#define cbList(func)  int (* UZ_EXP func)(char *filename, Uzp_cdir_Rec *crec)
+#define cbList(func)  int (*  func)(char *filename, Uzp_cdir_Rec *crec)
 
 
 /*---------------------------------------------------------------------------
@@ -476,27 +391,27 @@ typedef struct _Uzp_cdir_Rec {
 
 #define  UzpMatch match
 
-int      UZ_EXP UzpMain            (int argc, char **argv);
-int      UZ_EXP UzpAltMain         (int argc, char **argv, UzpInit *init);
-const UzpVer * UZ_EXP UzpVersion  (void);
-void     UZ_EXP UzpFreeMemBuffer   (UzpBuffer *retstr);
-int      UZ_EXP UzpUnzipToMemory   (char *zip, char *file, UzpOpts *optflgs,
+int       UzpMain            (int argc, char **argv);
+int       UzpAltMain         (int argc, char **argv, UzpInit *init);
+const UzpVer *  UzpVersion  (void);
+void      UzpFreeMemBuffer   (UzpBuffer *retstr);
+int       UzpUnzipToMemory   (char *zip, char *file, UzpOpts *optflgs,
                                        UzpCB *UsrFunc, UzpBuffer *retstr);
-int      UZ_EXP UzpGrep            (char *archive, char *file,
+int       UzpGrep            (char *archive, char *file,
                                        char *pattern, int cmd, int SkipBin,
                                        UzpCB *UsrFunc);
 
-unsigned UZ_EXP UzpVersion2        (UzpVer2 *version);
-int      UZ_EXP UzpValidate        (char *archive, int AllCodes);
+unsigned  UzpVersion2        (UzpVer2 *version);
+int       UzpValidate        (char *archive, int AllCodes);
 
 
 /* default I/O functions (can be swapped out via UzpAltMain() entry point): */
 
-int      UZ_EXP UzpMessagePrnt   (zvoid *pG, uch *buf, ulg size, int flag);
-int      UZ_EXP UzpMessageNull   (zvoid *pG, uch *buf, ulg size, int flag);
-int      UZ_EXP UzpInput         (zvoid *pG, uch *buf, int *size, int flag);
-void     UZ_EXP UzpMorePause     (zvoid *pG, const char *prompt, int flag);
-int      UZ_EXP UzpPassword      (zvoid *pG, int *rcnt, char *pwbuf,
+int       UzpMessagePrnt   (zvoid *pG, uch *buf, ulg size, int flag);
+int       UzpMessageNull   (zvoid *pG, uch *buf, ulg size, int flag);
+int       UzpInput         (zvoid *pG, uch *buf, int *size, int flag);
+void      UzpMorePause     (zvoid *pG, const char *prompt, int flag);
+int       UzpPassword      (zvoid *pG, int *rcnt, char *pwbuf,
                                      int size, const char *zfn,
                                      const char *efn);
 
