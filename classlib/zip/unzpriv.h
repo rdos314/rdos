@@ -60,12 +60,6 @@
    reading the "standard" include headers.
  */
 
-#  define Z_OFF_T long
-
-#ifndef ZOFF_T_DEFINED
-   typedef Z_OFF_T zoff_t;
-#  define ZOFF_T_DEFINED
-#endif
 #ifndef Z_STAT_DEFINED
    typedef struct stat z_stat;
 #  define Z_STAT_DEFINED
@@ -100,7 +94,7 @@
    typedef size_t extent;
 #else /* !MODERN */
 #  ifndef AOS_VS         /* mostly modern? */
-     Z_OFF_T lseek();
+     long lseek();
 #    ifdef VAXC          /* not fully modern, but has stdlib.h and void */
 #      include <stdlib.h>
 #    else
