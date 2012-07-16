@@ -443,7 +443,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
                                         MIN(G.ziplen, 66000L)))
          > PK_WARN )
     {
-        CLOSE_INFILE();
+        RdosCloseFile(G.zipfd);
 
         if (maybe_exe)
             Info(slide, 0x401, ((char *)slide, MaybeExe,
@@ -457,7 +457,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
     }
 
     if ((uO.zflag > 0) && !uO.zipinfo_mode) { /* unzip: zflag = comment ONLY */
-        CLOSE_INFILE();
+        RdosCloseFile(G.zipfd);
         return error_in_archive;
     }
 
@@ -529,7 +529,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
             else
                 Info(slide, 0x401, ((char *)slide, ZipfileEmpty,
                                     G.zipfn));
-            CLOSE_INFILE();
+            RdosCloseFile(G.zipfd);
             return (error_in_archive > PK_WARN)? error_in_archive : PK_WARN;
         }
 
@@ -542,7 +542,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
 
         error = seek_zipf(__G__ G.ecrec.offset_start_central_directory);
         if (error == PK_BADERR) {
-            CLOSE_INFILE();
+            RdosCloseFile(G.zipfd);
             return PK_BADERR;
         }
         if ((error != PK_OK) || (readbuf(__G__ G.sig, 4) == 0) ||
@@ -559,7 +559,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
                   Info(slide, 0x401, ((char *)slide,
                     CentDirStartNotFound, G.zipfn,
                     ReportMsg));
-                CLOSE_INFILE();
+                RdosCloseFile(G.zipfd);
                 return (error != PK_OK ? error : PK_BADERR);
             }
             Info(slide, 0x401, ((char *)slide, CentDirTooLong,
@@ -575,7 +575,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
 
         error = seek_zipf(__G__ G.ecrec.offset_start_central_directory);
         if (error != PK_OK) {
-            CLOSE_INFILE();
+            RdosCloseFile(G.zipfd);
             return error;
         }
 
@@ -599,7 +599,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
             error_in_archive = error;   /*  with (for example) a warning */
     } /* end if (!too_weird_to_continue) */
 
-    CLOSE_INFILE();
+    RdosCloseFile(G.zipfd);
     return error_in_archive;
 
 } /* end function do_seekable() */

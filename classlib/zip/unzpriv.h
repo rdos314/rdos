@@ -96,7 +96,6 @@ typedef size_t extent;
 #ifndef DATE_SEPCHAR
 #  define DATE_SEPCHAR  '-'
 #endif
-#  define CLOSE_INFILE()  RdosCloseFile(G.zipfd)
 
 #ifndef USAGE
 #  define USAGE(ret)    usage(__G__ (ret))    /* used in unzip.c, zipinfo.c */
