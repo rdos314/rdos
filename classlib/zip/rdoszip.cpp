@@ -569,7 +569,6 @@ int checkdir(char *pathcomp, int flag)
     hibited (e.g., freshening).
   ---------------------------------------------------------------------------*/
 
-#if (!defined(SFX) || defined(SFX_EXDIR))
     if (FUNCTION == ROOT) {
         Trace((stderr, "initializing root path to [%s]\n",
           FnFilter1(pathcomp)));
@@ -634,7 +633,6 @@ int checkdir(char *pathcomp, int flag)
         }
         return MPN_OK;
     }
-#endif /* !SFX || SFX_EXDIR */
 
 /*---------------------------------------------------------------------------
     END:  free rootpath, immediately prior to program exit.
