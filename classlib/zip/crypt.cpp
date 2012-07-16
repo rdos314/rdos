@@ -104,7 +104,7 @@ void init_keys(ZCONST char *passwd)
  */
 int decrypt(ZCONST char *passwrd)
 {
-    ush b;
+    unsigned short b;
     int n, r;
     unsigned char h[RAND_HEAD_LEN];
 
@@ -204,7 +204,7 @@ local int testp(ZCONST unsigned char *h)
 
 local int testkey(ZCONST unsigned char *h, ZCONST char *key)
 {
-    ush b;
+    unsigned short b;
     int n;
     unsigned char *p;
     unsigned char hh[RAND_HEAD_LEN]; /* decrypted header */
@@ -231,11 +231,11 @@ local int testkey(ZCONST unsigned char *h, ZCONST char *key)
 
     b = hh[RAND_HEAD_LEN-1];
     Trace((stdout, "  b = %02x  (crc >> 24) = %02x  (lrec.time >> 8) = %02x\n",
-      b, (ush)(GLOBAL(lrec.crc32) >> 24),
-      ((ush)GLOBAL(lrec.last_mod_dos_datetime) >> 8) & 0xff));
+      b, (unsigned short)(GLOBAL(lrec.crc32) >> 24),
+      ((unsigned short)GLOBAL(lrec.last_mod_dos_datetime) >> 8) & 0xff));
     if (b != (GLOBAL(pInfo->ExtLocHdr) ?
-        ((ush)GLOBAL(lrec.last_mod_dos_datetime) >> 8) & 0xff :
-        (ush)(GLOBAL(lrec.crc32) >> 24)))
+        ((unsigned short)GLOBAL(lrec.last_mod_dos_datetime) >> 8) & 0xff :
+        (unsigned short)(GLOBAL(lrec.crc32) >> 24)))
         return -1;  /* bad */
 
     /* password OK:  decrypt current buffer contents before leaving */

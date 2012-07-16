@@ -104,7 +104,6 @@ extern "C" {
   ---------------------------------------------------------------------------*/
 
 #ifndef _IZ_TYPES_DEFINED
-typedef unsigned short  ush;    /*  defs replace byte/UWORD/ULONG (which are */
 typedef unsigned long   ulg;    /*  predefined on some systems) & match zip  */
 #define _IZ_TYPES_DEFINED
 #endif /* !_IZ_TYPES_DEFINED */
@@ -311,17 +310,17 @@ typedef struct _Uzp_Siz64 {
 typedef struct _Uzp_cdir_Rec {
     unsigned char version_made_by[2];
     unsigned char version_needed_to_extract[2];
-    ush general_purpose_bit_flag;
-    ush compression_method;
+    unsigned short general_purpose_bit_flag;
+    unsigned short compression_method;
     ulg last_mod_dos_datetime;
     ulg crc32;
     Uzp_Siz64 csize;
     Uzp_Siz64 ucsize;
-    ush filename_length;
-    ush extra_field_length;
-    ush file_comment_length;
-    ush disk_number_start;
-    ush internal_file_attributes;
+    unsigned short filename_length;
+    unsigned short extra_field_length;
+    unsigned short file_comment_length;
+    unsigned short disk_number_start;
+    unsigned short internal_file_attributes;
     ulg external_file_attributes;
     Uzp_Siz64 relative_offset_local_header;
 } Uzp_cdir_Rec;

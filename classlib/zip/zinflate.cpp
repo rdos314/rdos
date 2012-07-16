@@ -57,7 +57,7 @@
     c7   27 Jun 92  G. Roelofs      added some more typecasts (444:  MSC bug).
     c8    5 Oct 92  J-l. Gailly     added ifdef'd code to deal with PKZIP bug.
     c9    9 Oct 92  M. Adler        removed a memory error message (~line 416).
-    c10  17 Oct 92  G. Roelofs      changed ULONG/UWORD/byte to ulg/ush/unsigned char,
+    c10  17 Oct 92  G. Roelofs      changed ULONG/UWORD/byte to ulg/unsigned short/unsigned char,
                                     removed old inflate, renamed inflate_entry
                                     to inflate, added Mark's fix to a comment.
    c10.5 14 Dec 92  M. Adler        fix up error messages for incomplete trees.
@@ -116,7 +116,7 @@
    c17a  04 Feb 01  C. Spieler      complete integration of Deflate64 support
    c17b  16 Feb 02  C. Spieler      changed type of "extra bits" arrays and
                                     corresponding huft_build() parameter e from
-                                    ush into unsigned char, to save space
+                                    unsigned short into unsigned char, to save space
    c17c   9 Mar 02  C. Spieler      fixed NEEDBITS() "read beyond EOF" problem
                                     with CHECK_EOF enabled
    c17d  23 Jul 05  C. Spieler      fixed memory leaks in inflate_dynamic()
@@ -259,7 +259,7 @@
     needs to provide these typedefs:
 
         typedef unsigned char unsigned char;
-        typedef unsigned short ush;
+        typedef unsigned short unsigned short;
         typedef unsigned long ulg;
 
     This module uses the external functions malloc() and free() (and
@@ -457,7 +457,7 @@ int UZinflate(int is_defl64)
 #define N_MAX 288       /* maximum number of codes in any set */
 
 
-int huft_build(const unsigned *b, unsigned n, unsigned s, const ush *d, const unsigned char *e, struct huft **t, unsigned *m)
+int huft_build(const unsigned *b, unsigned n, unsigned s, const unsigned short *d, const unsigned char *e, struct huft **t, unsigned *m)
 /* Given a list of code lengths and a maximum table size, make a set of
    tables to decode that set of codes.  Return zero on success, one if
    the given code set is incomplete (the tables are still built in this
@@ -620,7 +620,7 @@ int huft_build(const unsigned *b, unsigned n, unsigned s, const ush *d, const un
       else if (*p < s)
       {
         r.e = (unsigned char)(*p < 256 ? 32 : 31);  /* 256 is end-of-block code */
-        r.v.n = (ush)*p++;                /* simple code is just the value */
+        r.v.n = (unsigned short)*p++;                /* simple code is just the value */
       }
       else
       {

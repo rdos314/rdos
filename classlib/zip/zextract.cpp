@@ -1498,7 +1498,7 @@ static int extract_or_test_member(__G)    /* return PK-type error code */
 
 static int TestExtraField(unsigned char *ef, unsigned ef_len)
 {
-    ush ebID;
+    unsigned short ebID;
     unsigned ebLen;
     unsigned eb_cmpr_offs = 0;
     int r;
@@ -1575,7 +1575,7 @@ static int TestExtraField(unsigned char *ef, unsigned ef_len)
                                 Info(slide, 1, ((char *)slide,
                                   LoadFarString(UnknErrorEAs)));
                             else {
-                                ush m = (ush)(r >> 8);
+                                unsigned short m = (unsigned short)(r >> 8);
                                 if (m == DEFLATED)            /* GRR KLUDGE! */
                                     Info(slide, 1, ((char *)slide,
                                       LoadFarString(BadCRC_EAs)));
@@ -1625,7 +1625,7 @@ static int TestExtraField(unsigned char *ef, unsigned ef_len)
                                 Info(slide, 1, ((char *)slide,
                                   LoadFarString(UnknErrorEAs)));
                             else {
-                                ush m = (ush)(r >> 8);
+                                unsigned short m = (unsigned short)(r >> 8);
                                 if (m == DEFLATED)            /* GRR KLUDGE! */
                                     Info(slide, 1, ((char *)slide,
                                       LoadFarString(BadCRC_EAs)));
@@ -1727,7 +1727,7 @@ int memextract(unsigned char *tgt, ulg tgtsize, const unsigned char *src, ulg sr
     unsigned char   *old_inptr=G.inptr;
     int    old_incnt=G.incnt;
     int    r, error=PK_OK;
-    ush    method;
+    unsigned short    method;
     ulg    extra_field_crc;
 
 

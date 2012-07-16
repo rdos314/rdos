@@ -820,7 +820,7 @@ void handler(int signal)   /* upon interrupt, turn on echo and exit cleanly */
 
 
 /* also used in amiga/filedate.c and win32/win32.c */
-ZCONST ush ydays[] =
+ZCONST unsigned short ydays[] =
     { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
 
 /*******************************/
@@ -1128,13 +1128,13 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
 /* Function makeword() */
 /***********************/
 
-ush makeword(ZCONST unsigned char *b)
+unsigned short makeword(ZCONST unsigned char *b)
 {
     /*
      * Convert Intel style 'short' integer to non-Intel non-16-bit
      * host format.  This routine also takes care of byte-ordering.
      */
-    return (ush)((b[1] << 8) | b[0]);
+    return (unsigned short)((b[1] << 8) | b[0]);
 }
 
 

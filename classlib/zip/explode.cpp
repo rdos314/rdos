@@ -36,7 +36,7 @@
                                     applications.
     c6   31 May 92  M. Adler        added typecasts to eliminate some warnings
     c7   27 Jun 92  G. Roelofs      added more typecasts.
-    c8   17 Oct 92  G. Roelofs      changed ULONG/UWORD/byte to ulg/ush/unsigned char.
+    c8   17 Oct 92  G. Roelofs      changed ULONG/UWORD/byte to ulg/unsigned short/unsigned char.
     c9   19 Jul 93  J. Bush         added more typecasts (to return values);
                                     made l[256] array static for Amiga.
     c10   8 Oct 93  G. Roelofs      added used_csize for diagnostics; added
@@ -63,7 +63,7 @@
                                     leaks (huft tables were not free'd when
                                     get_tree() failed).
     c17b 16 Feb 02  C. Spieler      changed type of the "extra lengths" array
-                                    "extra" from ush into unsigned char (to save space)
+                                    "extra" from unsigned short into unsigned char (to save space)
     c17c 10 Aug 04  NN              file sizes use zoff_t.
     c17d 01 Dec 07  C. Spieler      type for file sizes changed from zoff_t
                                     into zusz_t.
@@ -146,12 +146,12 @@ int explode OF((__GPRO));
 #define IS_INVALID_CODE(c)  ((c) == INVALID_CODE)
 
 /* Tables for length and distance */
-static const ush cplen2[] =
+static const unsigned short cplen2[] =
         {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
         18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,
         35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51,
         52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65};
-static const ush cplen3[] =
+static const unsigned short cplen3[] =
         {3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
         19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
         36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52,
@@ -161,14 +161,14 @@ static const unsigned char extra[] =
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         8};
-static const ush cpdist4[] =
+static const unsigned short cpdist4[] =
         {1, 65, 129, 193, 257, 321, 385, 449, 513, 577, 641, 705,
         769, 833, 897, 961, 1025, 1089, 1153, 1217, 1281, 1345, 1409, 1473,
         1537, 1601, 1665, 1729, 1793, 1857, 1921, 1985, 2049, 2113, 2177,
         2241, 2305, 2369, 2433, 2497, 2561, 2625, 2689, 2753, 2817, 2881,
         2945, 3009, 3073, 3137, 3201, 3265, 3329, 3393, 3457, 3521, 3585,
         3649, 3713, 3777, 3841, 3905, 3969, 4033};
-static const ush cpdist8[] =
+static const unsigned short cpdist8[] =
         {1, 129, 257, 385, 513, 641, 769, 897, 1025, 1153, 1281,
         1409, 1537, 1665, 1793, 1921, 2049, 2177, 2305, 2433, 2561, 2689,
         2817, 2945, 3073, 3201, 3329, 3457, 3585, 3713, 3841, 3969, 4097,

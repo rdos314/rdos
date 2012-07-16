@@ -1665,10 +1665,10 @@ typedef struct VMStimbuf {
        ulg last_mod_dos_datetime;
        ulg crc32;
        unsigned char version_needed_to_extract[2];
-       ush general_purpose_bit_flag;
-       ush compression_method;
-       ush filename_length;
-       ush extra_field_length;
+       unsigned short general_purpose_bit_flag;
+       unsigned short compression_method;
+       unsigned short filename_length;
+       unsigned short extra_field_length;
    } local_file_hdr;
 
    typedef struct central_directory_file_header {     /* CENTRAL */
@@ -1679,14 +1679,14 @@ typedef struct VMStimbuf {
        ulg crc32;
        ulg external_file_attributes;
        zuvl_t disk_number_start;
-       ush internal_file_attributes;
+       unsigned short internal_file_attributes;
        unsigned char version_made_by[2];
        unsigned char version_needed_to_extract[2];
-       ush general_purpose_bit_flag;
-       ush compression_method;
-       ush filename_length;
-       ush extra_field_length;
-       ush file_comment_length;
+       unsigned short general_purpose_bit_flag;
+       unsigned short compression_method;
+       unsigned short filename_length;
+       unsigned short extra_field_length;
+       unsigned short file_comment_length;
    } cdir_file_hdr;
 
    typedef struct end_central_dir_record {            /* END CENTRAL */
@@ -1698,7 +1698,7 @@ typedef struct VMStimbuf {
        zuvl_t num_disk_start_cdir;
        int have_ecr64;                  /* valid Zip64 ecdir-record exists */
        int is_zip64_archive;            /* Zip64 ecdir-record is mandatory */
-       ush zipfile_comment_length;
+       unsigned short zipfile_comment_length;
    } ecdir_rec;
 
 
@@ -1714,7 +1714,7 @@ struct huft {
     unsigned char e;                /* number of extra bits or operation */
     unsigned char b;                /* number of bits in this code or subcode */
     union {
-        ush n;            /* literal, length base, or distance base */
+        unsigned short n;            /* literal, length base, or distance base */
         struct huft *t;   /* pointer to next level of table */
     } v;
 };
@@ -1835,7 +1835,7 @@ void     handler              OF((int signal));
 time_t   dos_to_unix_time     OF((ulg dos_datetime));
 int      check_for_newer      OF((__GPRO__ char *filename)); /* os2,vmcms,vms */
 int      do_string            OF((__GPRO__ unsigned int length, int option));
-ush      makeword             OF((const unsigned char *b));
+unsigned short      makeword             OF((const unsigned char *b));
 ulg      makelong             OF((const unsigned char *sig));
 zusz_t   makeint64            OF((const unsigned char *sig));
 char    *fzofft               OF((__GPRO__ zoff_t val,
@@ -1916,7 +1916,7 @@ int    explode                   OF((__GPRO));                  /* explode.c */
 #endif
 int    huft_free                 OF((struct huft *t));          /* inflate.c */
 int    huft_build                OF((__GPRO__ const unsigned *b, unsigned n,
-                                     unsigned s, const ush *d, const unsigned char *e,
+                                     unsigned s, const unsigned short *d, const unsigned char *e,
                                      struct huft **t, unsigned *m));
 #ifdef USE_ZLIB
    int    UZinflate              OF((__GPRO__ int is_defl64));  /* inflate.c */

@@ -995,7 +995,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
         Info(slide, 0, ((char *)slide, LoadFarString(ShannonFanoTrees),
           (G.crec.general_purpose_bit_flag & 4)? '3' : '2'));
     } else if (methid == DEFLATED || methid == ENHDEFLATED) {
-        ush  dnum=(ush)((G.crec.general_purpose_bit_flag>>1) & 3);
+        unsigned short  dnum=(unsigned short)((G.crec.general_purpose_bit_flag>>1) & 3);
 
         Info(slide, 0, ((char *)slide, LoadFarString(CompressSubtype),
           LoadFarStringSmall(dtypelng[dnum])));
@@ -1197,8 +1197,8 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
 
     if (G.crec.extra_field_length > 0) {
         unsigned char *ef_ptr = G.extra_field;
-        ush ef_len = G.crec.extra_field_length;
-        ush eb_id, eb_datalen;
+        unsigned short ef_len = G.crec.extra_field_length;
+        unsigned short eb_id, eb_datalen;
         const char Far *ef_fieldname;
 
         if (error_in_archive > PK_WARN)   /* fatal:  can't continue */
@@ -1215,7 +1215,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
             ef_ptr += EB_HEADSIZE;
             ef_len -= EB_HEADSIZE;
 
-            if (eb_datalen > (ush)ef_len) {
+            if (eb_datalen > (unsigned short)ef_len) {
                 Info(slide, 0x421, ((char *)slide,
                   LoadFarString(ExtraFieldTrunc), eb_id, eb_datalen, ef_len));
                 eb_datalen = ef_len;
@@ -1733,7 +1733,7 @@ static int zi_short(__G)   /* return PK-type error code */
         methbuf[1] = (char)((G.crec.general_purpose_bit_flag & 2)? '8' : '4');
         methbuf[3] = (char)((G.crec.general_purpose_bit_flag & 4)? '3' : '2');
     } else if (methid == DEFLATED || methid == ENHDEFLATED) {
-        ush  dnum=(ush)((G.crec.general_purpose_bit_flag>>1) & 3);
+        unsigned short  dnum=(unsigned short)((G.crec.general_purpose_bit_flag>>1) & 3);
         methbuf[3] = dtype[dnum];
     } else if (methnum >= NUM_METHODS) {   /* unknown */
         sprintf(&methbuf[1], "%03u", G.crec.compression_method);
