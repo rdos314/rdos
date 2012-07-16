@@ -339,9 +339,7 @@ int unzip(int argc, char *argv[])
 
     for (p = argv[0] + strlen(argv[0]); p >= argv[0]; --p) {
         if (*p == DIR_END
-#ifdef DIR_END2
             || *p == DIR_END2
-#endif
            )
             break;
     }
@@ -518,26 +516,11 @@ int uz_opts(int *pargc, char ***pargv)
     while (++argv, (--argc > 0 && *argv != NULL && **argv == '-')) {
         s = *argv + 1;
         while ((c = *s++) != 0) {    /* "!= 0":  prevent Turbo C warning */
-#ifdef CMS_MVS
-            switch (tolower(c))
-#else
             switch (c)
-#endif
             {
                 case ('-'):
                     ++negative;
                     break;
-#ifdef RISCOS
-                case ('/'):
-                    if (negative) {   /* negative not allowed with -/ swap */
-                        Info(slide, 0x401, ((char *)slide,
-                          "error:  must give extensions list"));
-                        return(PK_PARAM);  /* don't extract here by accident */
-                    }
-                    exts2swap = s; /* override Unzip$Exts */
-                    s += strlen(s);
-                    break;
-#endif
                 case ('a'):
                     if (negative) {
                         uO.aflag = MAX(uO.aflag-negative,0);
@@ -545,37 +528,13 @@ int uz_opts(int *pargc, char ***pargv)
                     } else
                         ++uO.aflag;
                     break;
-#if (defined(DLL) && defined(API_DOC))
-                case ('A'):    /* extended help for API */
-                    APIhelp(__G__ argc, argv);
-                    *pargc = -1;  /* signal to exit successfully */
-                    return 0;
-#endif
                 case ('b'):
                     if (negative) {
-#if (defined(TANDEM) || defined(VMS))
-                        uO.bflag = MAX(uO.bflag-negative,0);
-#endif
                         negative = 0;   /* do nothing:  "-b" is default */
                     } else {
-#ifdef VMS
-                        if (uO.aflag == 0)
-                           ++uO.bflag;
-#endif
-#ifdef TANDEM
-                        ++uO.bflag;
-#endif
                         uO.aflag = 0;
                     }
                     break;
-#ifdef UNIXBACKUP
-                case ('B'): /* -B: back up existing files */
-                    if (negative)
-                        uO.B_flag = FALSE, negative = 0;
-                    else
-                        uO.B_flag = TRUE;
-                    break;
-#endif
                 case ('c'):
                     if (negative) {
                         uO.cflag = FALSE, negative = 0;
@@ -587,21 +546,14 @@ int uz_opts(int *pargc, char ***pargv)
 #ifdef NATIVE
                         uO.aflag = 2;   /* so you can read it on the screen */
 #endif
-#ifdef DLL
-                        if (G.redirect_text)
-                            G.redirect_data = 2;
-#endif
                     }
                     break;
-#ifndef CMS_MVS
                 case ('C'):    /* -C:  match filenames case-insensitively */
                     if (negative)
                         uO.C_flag = FALSE, negative = 0;
                     else
                         uO.C_flag = TRUE;
                     break;
-#endif /* !CMS_MVS */
-#if (!defined(SFX) || defined(SFX_EXDIR))
                 case ('d'):
                     if (negative) {   /* negative not allowed with -d exdir */
                         Info(slide, 0x401, ((char *)slide,
@@ -640,87 +592,30 @@ int uz_opts(int *pargc, char ***pargv)
                                 ;
                     }
                     break;
-#endif /* !SFX || SFX_EXDIR */
-#if (!defined(NO_TIMESTAMPS))
-                case ('D'):    /* -D: Skip restoring dir (or any) timestamp. */
-                    if (negative) {
-                        uO.D_flag = MAX(uO.D_flag-negative,0);
-                        negative = 0;
-                    } else
-                        uO.D_flag++;
-                    break;
-#endif /* (!NO_TIMESTAMPS) */
                 case ('e'):    /* just ignore -e, -x options (extract) */
                     break;
-#ifdef MACOS
-                case ('E'): /* -E [MacOS] display Mac e.f. when restoring */
-                    if( negative ) {
-                        uO.E_flag = FALSE, negative = 0;
-                    } else {
-                        uO.E_flag = TRUE;
-                    }
-                    break;
-#endif /* MACOS */
                 case ('f'):    /* "freshen" (extract only newer files) */
                     if (negative)
                         uO.fflag = uO.uflag = FALSE, negative = 0;
                     else
                         uO.fflag = uO.uflag = TRUE;
                     break;
-#if (defined(RISCOS) || defined(ACORN_FTYPE_NFS))
-                case ('F'):    /* Acorn filetype & NFS extension handling */
-                    if (negative)
-                        uO.acorn_nfs_ext = FALSE, negative = 0;
-                    else
-                        uO.acorn_nfs_ext = TRUE;
-                    break;
-#endif /* RISCOS || ACORN_FTYPE_NFS */
                 case ('h'):    /* just print help message and quit */
                     if (showhelp == 0) {
-#ifndef SFX
                         if (*s == 'h')
                             showhelp = 2;
                         else
-#endif /* !SFX */
                         {
                             showhelp = 1;
                         }
                     }
                     break;
-#ifdef MACOS
-                case ('i'): /* -i [MacOS] ignore filenames stored in Mac ef */
-                    if( negative ) {
-                        uO.i_flag = FALSE, negative = 0;
-                    } else {
-                        uO.i_flag = TRUE;
-                    }
-                    break;
-#endif  /* MACOS */
                 case ('j'):    /* junk pathnames/directory structure */
                     if (negative)
                         uO.jflag = FALSE, negative = 0;
                     else
                         uO.jflag = TRUE;
                     break;
-#if (defined(ATH_BEO) || defined(MACOS))
-                case ('J'):    /* Junk AtheOS, BeOS or MacOS file attributes */
-                    if( negative ) {
-                        uO.J_flag = FALSE, negative = 0;
-                    } else {
-                        uO.J_flag = TRUE;
-                    }
-                    break;
-#endif /* ATH_BEO || MACOS */
-#ifdef ATH_BEO_UNX
-                case ('K'):
-                    if (negative) {
-                        uO.K_flag = FALSE, negative = 0;
-                    } else {
-                        uO.K_flag = TRUE;
-                    }
-                    break;
-#endif /* ATH_BEO_UNX */
-#ifndef SFX
                 case ('l'):
                     if (negative) {
                         uO.vflag = MAX(uO.vflag-negative,0);
@@ -728,8 +623,6 @@ int uz_opts(int *pargc, char ***pargv)
                     } else
                         ++uO.vflag;
                     break;
-#endif /* !SFX */
-#ifndef CMS_MVS
                 case ('L'):    /* convert (some) filenames to lowercase */
                     if (negative) {
                         uO.L_flag = MAX(uO.L_flag-negative,0);
@@ -737,11 +630,6 @@ int uz_opts(int *pargc, char ***pargv)
                     } else
                         ++uO.L_flag;
                     break;
-#endif /* !CMS_MVS */
-#ifdef MORE
-#ifdef CMS_MVS
-                case ('m'):
-#endif
                 case ('M'):    /* send all screen output through "more" fn. */
 /* GRR:  eventually check for numerical argument => height */
                     if (negative)
@@ -749,21 +637,12 @@ int uz_opts(int *pargc, char ***pargv)
                     else
                         G.M_flag = TRUE;
                     break;
-#endif /* MORE */
                 case ('n'):    /* don't overwrite any files */
                     if (negative)
                         uO.overwrite_none = FALSE, negative = 0;
                     else
                         uO.overwrite_none = TRUE;
                     break;
-#ifdef AMIGA
-                case ('N'):    /* restore comments as filenotes */
-                    if (negative)
-                        uO.N_flag = FALSE, negative = 0;
-                    else
-                        uO.N_flag = TRUE;
-                    break;
-#endif /* AMIGA */
                 case ('o'):    /* OK to overwrite files without prompting */
                     if (negative) {
                         uO.overwrite_all = MAX(uO.overwrite_all-negative,0);
@@ -781,7 +660,6 @@ int uz_opts(int *pargc, char ***pargv)
                         uO.qflag += 999;
                     }
                     break;
-#if CRYPT
                 /* GRR:  yes, this is highly insecure, but dozens of people
                  * have pestered us for this, so here we go... */
                 case ('P'):
@@ -825,7 +703,6 @@ int uz_opts(int *pargc, char ***pargv)
                                 ;
                     }
                     break;
-#endif /* CRYPT */
                 case ('q'):    /* quiet:  fewer comments/messages */
                     if (negative) {
                         uO.qflag = MAX(uO.qflag-negative,0);
@@ -833,75 +710,24 @@ int uz_opts(int *pargc, char ***pargv)
                     } else
                         ++uO.qflag;
                     break;
-#ifdef QDOS
-                case ('Q'):   /* QDOS flags */
-                    qlflag ^= strtol(s, &s, 10);
-                    break;    /* we XOR this as we can config qlflags */
-#endif
-#ifdef TANDEM
-                case ('r'):    /* remove file extensions */
-                    if (negative)
-                        uO.rflag = FALSE, negative = 0;
-                    else
-                        uO.rflag = TRUE;
-                    break;
-#endif /* TANDEM */
-#ifdef DOS_FLX_NLM_OS2_W32
-                case ('s'):    /* spaces in filenames:  allow by default */
-                    if (negative)
-                        uO.sflag = FALSE, negative = 0;
-                    else
-                        uO.sflag = TRUE;
-                    break;
-#endif /* DOS_FLX_NLM_OS2_W32 */
-#ifdef VMS
-                /* VMS:  extract "text" files in Stream_LF format (-a[a]) */
-                case ('S'):
-                    if (negative)
-                        uO.S_flag = FALSE, negative = 0;
-                    else
-                        uO.S_flag = TRUE;
-                    break;
-#endif /* VMS */
                 case ('t'):
                     if (negative)
                         uO.tflag = FALSE, negative = 0;
                     else
                         uO.tflag = TRUE;
                     break;
-#ifdef TIMESTAMP
-                case ('T'):
-                    if (negative)
-                        uO.T_flag = FALSE, negative = 0;
-                    else
-                        uO.T_flag = TRUE;
-                    break;
-#endif
                 case ('u'):    /* update (extract only new and newer files) */
                     if (negative)
                         uO.uflag = FALSE, negative = 0;
                     else
                         uO.uflag = TRUE;
                     break;
-#ifdef UNICODE_SUPPORT
-                case ('U'):    /* escape UTF-8, or disable UTF-8 support */
-                    if (negative) {
-                        uO.U_flag = MAX(uO.U_flag-negative,0);
-                        negative = 0;
-                    } else
-                        uO.U_flag++;
-                    break;
-#else /* !UNICODE_SUPPORT */
-#ifndef CMS_MVS
                 case ('U'):    /* obsolete; to be removed in version 6.0 */
                     if (negative)
                         uO.L_flag = TRUE, negative = 0;
                     else
                         uO.L_flag = FALSE;
                     break;
-#endif /* !CMS_MVS */
-#endif /* ?UNICODE_SUPPORT */
-#ifndef SFX
                 case ('v'):    /* verbose */
                     if (negative) {
                         uO.vflag = MAX(uO.vflag-negative,0);
@@ -911,15 +737,12 @@ int uz_opts(int *pargc, char ***pargv)
                     else
                         uO.vflag = 2;
                     break;
-#endif /* !SFX */
-#ifndef CMS_MVS
                 case ('V'):    /* Version (retain VMS/DEC-20 file versions) */
                     if (negative)
                         uO.V_flag = FALSE, negative = 0;
                     else
                         uO.V_flag = TRUE;
                     break;
-#endif /* !CMS_MVS */
 #ifdef WILD_STOP_AT_DIR
                 case ('W'):    /* Wildcard interpretation (stop at '/'?) */
                     if (negative)
@@ -929,37 +752,7 @@ int uz_opts(int *pargc, char ***pargv)
                     break;
 #endif /* WILD_STOP_AT_DIR */
                 case ('x'):    /* extract:  default */
-#ifdef SFX
-                    /* when 'x' is the only option in this argument, and the
-                     * next arg is not an option, assume this initiates an
-                     * exclusion list (-x xlist):  terminate option-scanning
-                     * and leave uz_opts with argv still pointing to "-x";
-                     * the xlist is processed later
-                     */
-                    if (s - argv[0] == 2 && *s == '\0' &&
-                        argc > 1 && argv[1][0] != '-') {
-                        /* break out of nested loops without "++argv;--argc" */
-                        goto opts_done;
-                    }
-#endif /* SFX */
                     break;
-#if (defined(RESTORE_UIDGID) || defined(RESTORE_ACL))
-                case ('X'):   /* restore owner/protection info (need privs?) */
-                    if (negative) {
-                        uO.X_flag = MAX(uO.X_flag-negative,0);
-                        negative = 0;
-                    } else
-                        ++uO.X_flag;
-                    break;
-#endif /* RESTORE_UIDGID || RESTORE_ACL */
-#ifdef VMS
-                case ('Y'):    /* Treat ".nnn" as ";nnn" version. */
-                    if (negative)
-                        uO.Y_flag = FALSE, negative = 0;
-                    else
-                        uO.Y_flag = TRUE;
-                    break;
-#endif /* VMS */
                 case ('z'):    /* display only the archive comment */
                     if (negative) {
                         uO.zflag = MAX(uO.zflag-negative,0);
@@ -967,30 +760,10 @@ int uz_opts(int *pargc, char ***pargv)
                     } else
                         ++uO.zflag;
                     break;
-#ifndef SFX
                 case ('Z'):    /* should have been first option (ZipInfo) */
                     Info(slide, 0x401, ((char *)slide, LoadFarString(Zfirst)));
                     error = TRUE;
                     break;
-#endif /* !SFX */
-#ifdef VMS
-                case ('2'):    /* Force ODS2-compliant names. */
-                    if (negative)
-                        uO.ods2_flag = FALSE, negative = 0;
-                    else
-                        uO.ods2_flag = TRUE;
-                    break;
-#endif /* VMS */
-#ifdef DOS_H68_OS2_W32
-                case ('$'):
-                    if (negative) {
-                        uO.volflag = MAX(uO.volflag-negative,0);
-                        negative = 0;
-                    } else
-                        ++uO.volflag;
-                    break;
-#endif /* DOS_H68_OS2_W32 */
-#if (!defined(RISCOS) && !defined(CMS_MVS) && !defined(TANDEM))
                 case (':'):    /* allow "parent dir" path components */
                     if (negative) {
                         uO.ddotflag = MAX(uO.ddotflag-negative,0);
@@ -998,16 +771,6 @@ int uz_opts(int *pargc, char ***pargv)
                     } else
                         ++uO.ddotflag;
                     break;
-#endif /* !RISCOS && !CMS_MVS && !TANDEM */
-#ifdef UNIX
-                case ('^'):    /* allow control chars in filenames */
-                    if (negative) {
-                        uO.cflxflag = MAX(uO.cflxflag-negative,0);
-                        negative = 0;
-                    } else
-                        ++uO.cflxflag;
-                    break;
-#endif /* UNIX */
                 default:
                     error = TRUE;
                     break;
@@ -1020,18 +783,12 @@ int uz_opts(int *pargc, char ***pargv)
     Check for nonsensical combinations of options.
   ---------------------------------------------------------------------------*/
 
-#ifdef SFX
-opts_done:  /* yes, very ugly...but only used by UnZipSFX with -x xlist */
-#endif
-
     if (showhelp > 0) {         /* just print help message and quit */
         *pargc = -1;
-#ifndef SFX
         if (showhelp == 2) {
             help_extended(__G);
             return PK_OK;
         } else
-#endif /* !SFX */
         {
             return USAGE(PK_OK);
         }
@@ -1045,58 +802,27 @@ opts_done:  /* yes, very ugly...but only used by UnZipSFX with -x xlist */
     }
     if (uO.aflag > 2)
         uO.aflag = 2;
-#ifdef VMS
-    if (uO.bflag > 2)
-        uO.bflag = 2;
-    /* Clear -s flag when converting text files. */
-    if (uO.aflag <= 0)
-        uO.S_flag = 0;
-#endif /* VMS */
     if (uO.overwrite_all && uO.overwrite_none) {
         Info(slide, 0x401, ((char *)slide, LoadFarString(IgnoreOOptionMsg)));
         uO.overwrite_all = FALSE;
     }
-#ifdef MORE
     if (G.M_flag && !isatty(1))  /* stdout redirected: "more" func. useless */
         G.M_flag = 0;
-#endif
 
-#ifdef SFX
-    if (error)
-#else
     if ((argc-- == 0) || error)
-#endif
     {
         *pargc = argc;
         *pargv = argv;
-#ifndef SFX
         if (uO.vflag >= 2 && argc == -1) {              /* "unzip -v" */
             show_version_info(__G);
             return PK_OK;
         }
         if (!G.noargs && !error)
             error = TRUE;       /* had options (not -h or -v) but no zipfile */
-#endif /* !SFX */
         return USAGE(error);
     }
 
-#ifdef SFX
-    /* print our banner unless we're being fairly quiet */
-    if (uO.qflag < 2)
-        Info(slide, error? 1 : 0, ((char *)slide, LoadFarString(UnzipSFXBanner),
-          UZ_MAJORVER, UZ_MINORVER, UZ_PATCHLEVEL, UZ_BETALEVEL,
-          LoadFarStringSmall(VersionDate)));
-#ifdef BETA
-    /* always print the beta warning:  no unauthorized distribution!! */
-    Info(slide, error? 1 : 0, ((char *)slide, LoadFarString(BetaVersion), "\n",
-      "SFX"));
-#endif
-#endif /* SFX */
-
     if (uO.cflag || uO.tflag || uO.vflag || uO.zflag
-#ifdef TIMESTAMP
-                                                     || uO.T_flag
-#endif
                                                                  )
         G.extract_flag = FALSE;
     else
