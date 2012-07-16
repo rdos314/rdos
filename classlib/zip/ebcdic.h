@@ -43,14 +43,10 @@
 #define __ebcdic_h
 
 
-#ifndef ZCONST
-#  define ZCONST const
-#endif
-
 #ifdef EBCDIC
 #ifndef MTS             /* MTS uses a slightly "special" EBCDIC code page */
 
-ZCONST unsigned char ebcdic[] = {
+const unsigned char ebcdic[] = {
     0x00, 0x01, 0x02, 0x03, 0x37, 0x2D, 0x2E, 0x2F,  /* 00 - 07 */
 #ifdef OS390
     0x16, 0x05, 0x15, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,  /* 08 - 0F */
@@ -94,7 +90,7 @@ ZCONST unsigned char ebcdic[] = {
 };
 
 #if (defined(ZIP) || CRYPT)
-ZCONST unsigned char ascii[] = {
+const unsigned char ascii[] = {
     0x00, 0x01, 0x02, 0x03, 0x9C, 0x09, 0x86, 0x7F,  /* 00 - 07 */
     0x97, 0x8D, 0x8E, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,  /* 08 - 0F */
 #ifdef OS390
@@ -145,7 +141,7 @@ ZCONST unsigned char ascii[] = {
  * translation from ISO 8859/1 8-bit ASCII to IBM Code Page 37 EBCDIC.
  */
 
-ZCONST unsigned char ebcdic[] = {
+const unsigned char ebcdic[] = {
     0x00, 0x01, 0x02, 0x03, 0x37, 0x2D, 0x2E, 0x2F,  /* 00 - 07 */
     0x16, 0x05, 0x25, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,  /* 08 - 0F */
     0x10, 0x11, 0x12, 0x13, 0x3C, 0x3D, 0x32, 0x26,  /* 10 - 17 */
@@ -181,7 +177,7 @@ ZCONST unsigned char ebcdic[] = {
 };
 
 #if (defined(ZIP) || CRYPT)
-ZCONST unsigned char ascii[] = {
+const unsigned char ascii[] = {
     0x00, 0x01, 0x02, 0x03, 0x9C, 0x09, 0x86, 0x7F,  /* 00 - 07 */
     0x97, 0x8D, 0x8E, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,  /* 08 - 0F */
     0x10, 0x11, 0x12, 0x13, 0x9D, 0x85, 0x08, 0x87,  /* 10 - 17 */
@@ -236,7 +232,7 @@ ZCONST unsigned char ascii[] = {
   ---------------------------------------------------------------------------*/
 
 #ifdef IZ_ISO2OEM_ARRAY
-ZCONST unsigned char Far iso2oem_850[] = {
+const unsigned char Far iso2oem_850[] = {
     0x3F, 0x3F, 0x27, 0x9F, 0x22, 0x2E, 0xC5, 0xCE,  /* 80 - 87 */
     0x5E, 0x25, 0x53, 0x3C, 0x4F, 0x3F, 0x3F, 0x3F,  /* 88 - 8F */
     0x3F, 0x27, 0x27, 0x22, 0x22, 0x07, 0x2D, 0x2D,  /* 90 - 97 */
@@ -257,7 +253,7 @@ ZCONST unsigned char Far iso2oem_850[] = {
 #endif /* IZ_ISO2OEM_ARRAY */
 
 #ifdef IZ_OEM2ISO_ARRAY
-ZCONST unsigned char Far oem2iso_850[] = {
+const unsigned char Far oem2iso_850[] = {
     0xC7, 0xFC, 0xE9, 0xE2, 0xE4, 0xE0, 0xE5, 0xE7,  /* 80 - 87 */
     0xEA, 0xEB, 0xE8, 0xEF, 0xEE, 0xEC, 0xC4, 0xC5,  /* 88 - 8F */
     0xC9, 0xE6, 0xC6, 0xF4, 0xF6, 0xF2, 0xFB, 0xF9,  /* 90 - 97 */
@@ -288,10 +284,10 @@ ZCONST unsigned char Far oem2iso_850[] = {
    pointers should get moved into UnZip's thread-safe global data structure.
  */
 #ifdef IZ_ISO2OEM_ARRAY
-ZCONST unsigned char Far *iso2oem = iso2oem_850;  /* backward compatibility default */
+const unsigned char Far *iso2oem = iso2oem_850;  /* backward compatibility default */
 #endif /* IZ_ISO2OEM_ARRAY */
 #ifdef IZ_OEM2ISO_ARRAY
-ZCONST unsigned char Far *oem2iso = oem2iso_850;  /* backward compatibility default */
+const unsigned char Far *oem2iso = oem2iso_850;  /* backward compatibility default */
 #endif /* IZ_OEM2ISO_ARRAY */
 
 #if defined(THEOS) || defined(THEOS_SUPPORT)

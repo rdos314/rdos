@@ -38,8 +38,8 @@
 
 #define GLOBAL(g) G.g
 
-local int testp OF((__GPRO__ ZCONST unsigned char *h));
-local int testkey OF((__GPRO__ ZCONST unsigned char *h, ZCONST char *key));
+local int testp OF((__GPRO__ const unsigned char *h));
+local int testkey OF((__GPRO__ const unsigned char *h, const char *key));
 
 local int keys[3];       /* keys defining the pseudo-random sequence */
 
@@ -87,7 +87,7 @@ int update_keys(int c)
  * Initialize the encryption keys and the random header according to
  * the given password.
  */
-void init_keys(ZCONST char *passwd)
+void init_keys(const char *passwd)
 {
     GLOBAL(keys[0]) = 305419896L;
     GLOBAL(keys[1]) = 591751049L;
@@ -102,7 +102,7 @@ void init_keys(ZCONST char *passwd)
  * Get the password and set up keys for current zipfile member.
  * Return PK_ class error.
  */
-int decrypt(ZCONST char *passwrd)
+int decrypt(const char *passwrd)
 {
     unsigned short b;
     int n, r;
@@ -176,7 +176,7 @@ int decrypt(ZCONST char *passwrd)
 /***********************************************************************
  * Test the password.  Return -1 if bad, 0 if OK.
  */
-local int testp(ZCONST unsigned char *h)
+local int testp(const unsigned char *h)
 {
     int r;
     char *key_translated;
@@ -202,7 +202,7 @@ local int testp(ZCONST unsigned char *h)
 } /* end function testp() */
 
 
-local int testkey(ZCONST unsigned char *h, ZCONST char *key)
+local int testkey(const unsigned char *h, const char *key)
 {
     unsigned short b;
     int n;

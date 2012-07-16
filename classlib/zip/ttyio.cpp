@@ -59,7 +59,7 @@
 /* This is the getp() function for all systems (with TTY type user interface)
  * that supply a working `non-echo' getch() function for "raw" console input.
  */
-char *getp(ZCONST char *m, char *p, int n)
+char *getp(const char *m, char *p, int n)
 {
     char c;                     /* one-byte buffer for read() to use */
     int i;                      /* number of characters input */

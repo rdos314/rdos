@@ -96,31 +96,31 @@ static int disk_error OF((__GPRO));
 /* Strings used in fileio.c */
 /****************************/
 
-static ZCONST char Far CannotOpenZipfile[] =
+static const char Far CannotOpenZipfile[] =
   "error:  cannot open zipfile [ %s ]\n        %s\n";
 
-static ZCONST char Far CannotCreateFile[] =
+static const char Far CannotCreateFile[] =
   "error:  cannot create %s\n        %s\n";
 
-static ZCONST char Far ReadError[] = "error:  zipfile read error\n";
-static ZCONST char Far FilenameTooLongTrunc[] =
+static const char Far ReadError[] = "error:  zipfile read error\n";
+static const char Far FilenameTooLongTrunc[] =
   "warning:  filename too long--truncating.\n";
 
-static ZCONST char Far ExtraFieldTooLong[] =
+static const char Far ExtraFieldTooLong[] =
   "warning:  extra field too long (%d).  Ignoring...\n";
 
-   static ZCONST char Far DiskFullQuery[] =
+   static const char Far DiskFullQuery[] =
      "%s:  write error (disk full?).  Continue? (y/n/^C) ";
-   static ZCONST char Far ZipfileCorrupt[] =
+   static const char Far ZipfileCorrupt[] =
      "error:  zipfile probably corrupt (%s)\n";
-   static ZCONST char Far MorePrompt[] = "--More--(%lu)";
-   static ZCONST char Far QuitPrompt[] =
+   static const char Far MorePrompt[] = "--More--(%lu)";
+   static const char Far QuitPrompt[] =
      "--- Press `Q' to quit, or any other key to continue ---";
-   static ZCONST char Far HidePrompt[] = /* "\r                       \r"; */
+   static const char Far HidePrompt[] = /* "\r                       \r"; */
      "\r                                                         \r";
-     static ZCONST char Far PasswPrompt[] = "[%s] %s password: ";
-     static ZCONST char Far PasswPrompt2[] = "Enter password: ";
-     static ZCONST char Far PasswRetry[] = "password incorrect--reenter: ";
+     static const char Far PasswPrompt[] = "[%s] %s password: ";
+     static const char Far PasswPrompt2[] = "Enter password: ";
+     static const char Far PasswRetry[] = "password incorrect--reenter: ";
 
 
 
@@ -717,7 +717,7 @@ int  UzpInput(void *pG, unsigned char *buf, int *size, int flag)
 /* Function UzpMorePause() */
 /***************************/
 
-void  UzpMorePause(void *pG, ZCONST char *prompt, int flag)
+void  UzpMorePause(void *pG, const char *prompt, int flag)
 {
     unsigned char c;
 
@@ -762,7 +762,7 @@ void  UzpMorePause(void *pG, ZCONST char *prompt, int flag)
 /* Function UzpPassword() */
 /**************************/
 
-int  UzpPassword (void *pG, int *rcnt, char *pwbuf, int size, ZCONST char *zfn, ZCONST char *efn)
+int  UzpPassword (void *pG, int *rcnt, char *pwbuf, int size, const char *zfn, const char *efn)
 {
     int r = IZ_PW_ENTERED;
     char *m;
@@ -820,7 +820,7 @@ void handler(int signal)   /* upon interrupt, turn on echo and exit cleanly */
 
 
 /* also used in amiga/filedate.c and win32/win32.c */
-ZCONST unsigned short ydays[] =
+const unsigned short ydays[] =
     { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
 
 /*******************************/
@@ -1128,7 +1128,7 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
 /* Function makeword() */
 /***********************/
 
-unsigned short makeword(ZCONST unsigned char *b)
+unsigned short makeword(const unsigned char *b)
 {
     /*
      * Convert Intel style 'short' integer to non-Intel non-16-bit
@@ -1145,7 +1145,7 @@ unsigned short makeword(ZCONST unsigned char *b)
 /* Function makelong() */
 /***********************/
 
-unsigned long makelong(ZCONST unsigned char *sig)
+unsigned long makelong(const unsigned char *sig)
 {
     /*
      * Convert intel style 'long' variable to non-Intel non-16-bit
@@ -1165,7 +1165,7 @@ unsigned long makelong(ZCONST unsigned char *sig)
 /* Function makeint64() */
 /************************/
 
-zusz_t makeint64(ZCONST unsigned char *sig)
+zusz_t makeint64(const unsigned char *sig)
 {
     if ((sig[7] | sig[6] | sig[5] | sig[4]) != 0)
         return (zusz_t)0xffffffffL;
@@ -1186,7 +1186,7 @@ zusz_t makeint64(ZCONST unsigned char *sig)
 /*********************/
 
 /* Format a zoff_t value in a cylindrical buffer set. */
-char *fzofft(zoff_t val, ZCONST char *pre, ZCONST char *post)
+char *fzofft(zoff_t val, const char *pre, const char *post)
 {
     /* Storage cylinder. (now in globals.h) */
     /*static char fzofft_buf[FZOFFT_NUM][FZOFFT_LEN];*/
@@ -1235,7 +1235,7 @@ char *fzofft(zoff_t val, ZCONST char *pre, ZCONST char *post)
 /* Function str2oem() */
 /**********************/
 
-char *str2oem(char *dst, register ZCONST char *src)
+char *str2oem(char *dst, register const char *src)
 {
     register unsigned char c;
     register char *dstp = dst;
