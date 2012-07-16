@@ -771,7 +771,7 @@ static int store_info(__G)   /* return 0 if skipping, 1 if OK */
     }
 
     /* store a copy of the central header filename for later comparison */
-    if ((G.pInfo->cfilname = (char *)zfmalloc(strlen(G.filename) + 1)) == NULL) {
+    if ((G.pInfo->cfilname = (char *)malloc(strlen(G.filename) + 1)) == NULL) {
         Info(slide, 0x401, ((char *)slide, LoadFarString(WarnNoMemCFName),
           FnFilter1(G.filename)));
     } else
@@ -994,7 +994,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
                 if (error_in_archive < PK_WARN)
                     error_in_archive = PK_WARN;
             }
-            zffree(G.pInfo->cfilname);
+            free(G.pInfo->cfilname);
             G.pInfo->cfilname = (char *)NULL;
         }
         /* Size consistency checks must come after reading in the local extra
