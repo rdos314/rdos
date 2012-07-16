@@ -269,7 +269,6 @@ int unzip(int argc, char *argv[])
     /* initialize international char support to the current environment */
     SETLOCALE(LC_CTYPE, "");
 
-#ifdef MALLOC_WORK
     /* The following (rather complex) expression determines the allocation
        size of the decompression work area.  It simulates what the
        combined "union" and "struct" declaration of the "static" work
@@ -290,7 +289,6 @@ int unzip(int argc, char *argv[])
     G.area.shrink.value = G.area.Slide + (sizeof(shrint)*(HSIZE));
     G.area.shrink.Stack = G.area.Slide +
                            (sizeof(shrint) + sizeof(uch))*(HSIZE);
-#endif
 
 /*---------------------------------------------------------------------------
     Sanity checks.  Commentary by Otis B. Driftwood and Fiorello:
@@ -396,20 +394,11 @@ int unzip(int argc, char *argv[])
     maining options and file specifications.
   ---------------------------------------------------------------------------*/
 
-#ifdef DOS_FLX_H68_NLM_OS2_W32
     /* convert MSDOS-style 'backward slash' directory separators to Unix-style
      * 'forward slashes' for user's convenience (include zipfile name itself)
      */
-#ifdef SFX
-    for (G.pfnames = argv, i = argc;  i > 0;  --i) {
-#else
     /* argc does not include the zipfile specification */
     for (G.pfnames = argv, i = argc+1;  i > 0;  --i) {
-#endif
-#ifdef __human68k__
-        extern char *_toslash(char *);
-        _toslash(*G.pfnames);
-#else /* !__human68k__ */
         char *q = *G.pfnames;
 
         while (*q != '\0') {
@@ -417,42 +406,11 @@ int unzip(int argc, char *argv[])
                 *q = '/';
             INCSTR(q);
         }
-#endif /* ?__human68k__ */
         ++G.pfnames;
     }
-#endif /* DOS_FLX_H68_NLM_OS2_W32 */
 
-#ifndef SFX
     G.wildzipfn = *argv++;
-#endif
 
-#if (defined(SFX) && !defined(SFX_EXDIR)) /* only check for -x */
-
-    G.filespecs = argc;
-    G.xfilespecs = 0;
-
-    if (argc > 0) {
-        char **pp = argv-1;
-
-        G.pfnames = argv;
-        while (*++pp)
-            if (strcmp(*pp, "-x") == 0) {
-                if (pp > argv) {
-                    *pp = 0;              /* terminate G.pfnames */
-                    G.filespecs = pp - G.pfnames;
-                } else {
-                    G.pfnames = (char **)fnames;  /* defaults */
-                    G.filespecs = 0;
-                }
-                G.pxnames = pp + 1;      /* excluded-names ptr: _after_ -x */
-                G.xfilespecs = argc - G.filespecs - 1;
-                break;                    /* skip rest of args */
-            }
-        G.process_all_files = FALSE;
-    } else
-        G.process_all_files = TRUE;      /* for speed */
-
-#else /* !SFX || SFX_EXDIR */             /* check for -x or -d */
 
     G.filespecs = argc;
     G.xfilespecs = 0;
@@ -465,11 +423,7 @@ int unzip(int argc, char *argv[])
         G.pfnames = argv;
         while (*++pp) {
             Trace((stderr, "pp - argv = %d\n", pp-argv));
-#ifdef CMS_MVS
-            if (!uO.exdir && STRNICMP(*pp, "-d", 2) == 0) {
-#else
             if (!uO.exdir && strncmp(*pp, "-d", 2) == 0) {
-#endif
                 int firstarg = (pp == argv);
 
                 uO.exdir = (*pp) + 2;
@@ -527,17 +481,6 @@ int unzip(int argc, char *argv[])
 
     if (uO.exdir != (char *)NULL && !G.extract_flag)    /* -d ignored */
         Info(slide, 0x401, ((char *)slide, LoadFarString(NotExtracting)));
-#endif /* ?(SFX && !SFX_EXDIR) */
-
-#ifdef UNICODE_SUPPORT
-    /* set Unicode-escape-all if option -U used */
-    if (uO.U_flag == 1)
-# ifdef UNICODE_WCHAR
-        G.unicode_escape_all = TRUE;
-# else
-        Info(slide, 0x401, ((char *)slide, LoadFarString(UTF8EscapeUnSupp)));
-# endif
-#endif
 
 
 /*---------------------------------------------------------------------------
@@ -547,16 +490,10 @@ int unzip(int argc, char *argv[])
     retcode = process_zipfiles(__G);
 
 cleanup_and_exit:
-#if (defined(MALLOC_WORK) && !defined(REENTRANT))
     if (G.area.Slide != (uch *)NULL) {
         free(G.area.Slide);
         G.area.Slide = (uch *)NULL;
     }
-#endif
-#if (defined(MSDOS) && !defined(SFX) && !defined(WINDLL))
-    if (retcode != PK_OK)
-        check_for_windows("UnZip");
-#endif
     return(retcode);
 
 } /* end main()/unzip() */

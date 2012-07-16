@@ -35,6 +35,7 @@
 
 #define DIR_END       '\\'      /* OS uses '\\' as directory separator */
 #define DIR_END2      '/'       /* also check for '/' (RTL may convert) */
+#define MALLOC_WORK
 #ifdef DATE_FORMAT
 #  undef DATE_FORMAT
 #endif
