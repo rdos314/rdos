@@ -304,7 +304,7 @@ int readbyte(__G)   /* refill inbuf and return a byte if available, else EOF */
               (unsigned long)strlen(LoadFarString(ReadError)), 0x401);
             echon();
             DESTROYGLOBALS();
-            EXIT(PK_BADERR);    /* totally bailing; better than lock-up */
+            exit(PK_BADERR);    /* totally bailing; better than lock-up */
         }
         G.cur_zipfile_bufstart += INBUFSIZ; /* always starts on block bndry */
         G.inptr = G.inbuf;
@@ -746,7 +746,7 @@ void  UzpMorePause(void *pG, const char *prompt, int flag)
     if (
         (ToLower(c) == 'q')) {
         DESTROYGLOBALS();
-        EXIT(PK_COOL);
+        exit(PK_COOL);
     }
 
     ((Uz_Globs *)pG)->sol = TRUE;
@@ -815,7 +815,7 @@ void handler(int signal)   /* upon interrupt, turn on echo and exit cleanly */
 
     /* probably ctrl-C */
     DESTROYGLOBALS();
-    EXIT(IZ_CTRLC);       /* was EXIT(0), then EXIT(PK_ERR) */
+    exit(IZ_CTRLC);       /* was EXIT(0), then EXIT(PK_ERR) */
 }
 
 

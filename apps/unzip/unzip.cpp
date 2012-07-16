@@ -235,7 +235,7 @@ int main(int argc, char *argv[])   /* return PK-type error code (except under VM
     CONSTRUCTGLOBALS();
     r = unzip(__G__ argc, argv);
     DESTROYGLOBALS();
-    RETURN(r);
+    return(r);
 }
 
 

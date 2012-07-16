@@ -79,81 +79,8 @@ typedef size_t extent;
 /*************/
 
 #define UNZIP_BZ2VERS   46
-#ifdef ZIP64_SUPPORT
-# ifdef USE_BZIP2
-#  define UNZIP_VERSION   UNZIP_BZ2VERS
-# else
-#  define UNZIP_VERSION   45
-# endif
-#else
-#ifdef USE_DEFLATE64
-#  define UNZIP_VERSION   21   /* compatible with PKUNZIP 4.0 */
-#else
-#  define UNZIP_VERSION   20   /* compatible with PKUNZIP 2.0 */
-#endif
-#endif
+#define UNZIP_VERSION   20   /* compatible with PKUNZIP 2.0 */
 #define VMS_UNZIP_VERSION 42   /* if OS-needed-to-extract is VMS:  can do */
-
-#if (defined(MSDOS) || defined(OS2))
-#  define DOS_OS2
-#endif
-
-#if (defined(OS2) || defined(WIN32))
-#  define OS2_W32
-#endif
-
-#if (defined(DOS_OS2) || defined(WIN32))
-#  define DOS_OS2_W32
-#  define DOS_W32_OS2          /* historical:  don't use */
-#endif
-
-#if (defined(DOS_OS2_W32) || defined(__human68k__))
-#  define DOS_H68_OS2_W32
-#endif
-
-#if (defined(DOS_OS2) || defined(FLEXOS))
-#  define DOS_FLX_OS2
-#endif
-
-#if (defined(DOS_OS2_W32) || defined(FLEXOS))
-#  define DOS_FLX_OS2_W32
-#endif
-
-#if (defined(DOS_H68_OS2_W32) || defined(FLEXOS))
-#  define DOS_FLX_H68_OS2_W32
-#endif
-
-#if (defined(DOS_FLX_OS2) || defined(NLM))
-#  define DOS_FLX_NLM_OS2
-#endif
-
-#if (defined(DOS_FLX_OS2_W32) || defined(NLM))
-#  define DOS_FLX_NLM_OS2_W32
-#endif
-
-#if (defined(DOS_FLX_H68_OS2_W32) || defined(NLM))
-#  define DOS_FLX_H68_NLM_OS2_W32
-#endif
-
-#if (defined(TOPS20) || defined(VMS))
-#  define T20_VMS
-#endif
-
-#if (defined(MSDOS) || defined(T20_VMS))
-#  define DOS_T20_VMS
-#endif
-
-#if (defined(__ATHEOS__) || defined(__BEOS__))
-#  define ATH_BEO
-#endif
-
-#if (defined(ATH_BEO) || defined(UNIX))
-#  define ATH_BEO_UNX
-#endif
-
-#if (defined(ATH_BEO_UNX) || defined(THEOS))
-#  define ATH_BEO_THS_UNX
-#endif
 
 /* clean up with a few defaults */
 #ifndef DIR_END
@@ -169,15 +96,8 @@ typedef size_t extent;
 #ifndef DATE_SEPCHAR
 #  define DATE_SEPCHAR  '-'
 #endif
-#ifndef CLOSE_INFILE
 #  define CLOSE_INFILE()  RdosCloseFile(G.zipfd)
-#endif
-#ifndef RETURN
-#  define RETURN        return  /* only used in main() */
-#endif
-#ifndef EXIT
-#  define EXIT          exit
-#endif
+
 #ifndef USAGE
 #  define USAGE(ret)    usage(__G__ (ret))    /* used in unzip.c, zipinfo.c */
 #endif
@@ -194,52 +114,9 @@ typedef size_t extent;
 #endif
 
 
-#if (defined(DOS_FLX_NLM_OS2_W32) || defined(ATH_BEO_UNX) || defined(RISCOS))
-#  ifndef HAVE_UNLINK
-#    define HAVE_UNLINK
-#  endif
-#endif
-#if (defined(AOS_VS) || defined(ATARI)) /* GRR: others? */
-#  ifndef HAVE_UNLINK
-#    define HAVE_UNLINK
-#  endif
-#endif
-
-/* OS-specific exceptions to the "ANSI <--> INT_SPRINTF" rule */
-
-#if (!defined(PCHAR_SPRINTF) && !defined(INT_SPRINTF))
-#  if (defined(SYSV) || defined(CONVEX) || defined(NeXT) || defined(BSD4_4))
-#    define INT_SPRINTF      /* sprintf() returns int:  SysVish/Posix */
-#  endif
-#  if (defined(DOS_FLX_NLM_OS2_W32) || defined(VMS) || defined(AMIGA))
-#    define INT_SPRINTF      /* sprintf() returns int:  ANSI */
-#  endif
-#  if (defined(ultrix) || defined(__ultrix)) /* Ultrix 4.3 and newer */
-#    if (defined(POSIX) || defined(__POSIX))
-#      define INT_SPRINTF    /* sprintf() returns int:  ANSI/Posix */
-#    endif
-#    ifdef __GNUC__
-#      define PCHAR_SPRINTF  /* undetermined actual return value */
-#    endif
-#  endif
-#  if (defined(__osf__) || defined(_AIX) || defined(CMS_MVS) || defined(THEOS))
-#    define INT_SPRINTF      /* sprintf() returns int:  ANSI/Posix */
-#  endif
-#  if defined(sun)
-#    define PCHAR_SPRINTF    /* sprintf() returns char *:  SunOS cc *and* gcc */
-#  endif
-#endif
-
 /* defaults that we hope will take care of most machines in the future */
 
-#if (!defined(PCHAR_SPRINTF) && !defined(INT_SPRINTF))
-#  ifdef __STDC__
-#    define INT_SPRINTF      /* sprintf() returns int:  ANSI */
-#  endif
-#  ifndef INT_SPRINTF
-#    define PCHAR_SPRINTF    /* sprintf() returns char *:  BSDish */
-#  endif
-#endif
+#define INT_SPRINTF      /* sprintf() returns int:  ANSI */
 
 #define MSG_STDERR(f)  (f & 1)        /* bit 0:  0 = stdout, 1 = stderr */
 #define MSG_INFO(f)    ((f & 6) == 0) /* bits 1 and 2:  0 = info */
@@ -258,30 +135,7 @@ typedef size_t extent;
 #define MSG_NO_NDLL(f) (f & 0x0800)   /* bit 11:  1 = skip if WIN32 DLL */
 #define MSG_NO_WDLL(f) (f & 0x1000)   /* bit 12:  1 = skip if Windows DLL */
 
-#if (defined(MORE) && !defined(SCREENLINES))
-#  ifdef DOS_FLX_NLM_OS2_W32
-#    define SCREENLINES 25  /* can be (should be) a function instead */
-#  else
-#    define SCREENLINES 24  /* VT-100s are assumed to be minimal hardware */
-#  endif
-#endif
-#if (defined(MORE) && !defined(SCREENSIZE))
-#  ifndef SCREENWIDTH
-#    define SCREENSIZE(scrrows, scrcols) { \
-          if ((scrrows) != NULL) *(scrrows) = SCREENLINES; }
-#  else
-#    define SCREENSIZE(scrrows, scrcols) { \
-          if ((scrrows) != NULL) *(scrrows) = SCREENLINES; \
-          if ((scrcols) != NULL) *(scrcols) = SCREENWIDTH; }
-#  endif
-#endif
-
-#if (defined(__16BIT__) || defined(MED_MEM) || defined(SMALL_MEM))
-# define DIR_BLKSIZ  64     /* number of directory entries per block
-                             *  (should fit in 4096 bytes, usually) */
-#else
 # define DIR_BLKSIZ 16384   /* use more memory, to reduce long-range seeks */
-#endif
 
 #ifndef WSIZE
 #  ifdef USE_DEFLATE64
@@ -291,11 +145,6 @@ typedef size_t extent;
 #  endif                    /*  at least 32K for zip's deflate method */
 #endif
 
-#ifdef __16BIT__
-#  ifndef INT_16BIT
-#    define INT_16BIT       /* on 16-bit systems int size is 16 bits */
-#  endif
-#else
 #  define nearmalloc  malloc
 #  define nearfree    free
 #  if (!defined(__IBMC__) || !defined(OS2))
@@ -306,7 +155,6 @@ typedef size_t extent;
 #      define far
 #    endif
 #  endif
-#endif
 
 #if (defined(DYNALLOC_CRCTAB) && !defined(DYNAMIC_CRC_TABLE))
 #  undef DYNALLOC_CRCTAB
@@ -320,10 +168,6 @@ typedef size_t extent;
 #  ifdef DYNALLOC_CRCTAB
 #    undef DYNALLOC_CRCTAB
 #  endif
-#endif
-
-#if (defined(USE_ZLIB) && defined(ASM_CRC))
-#  undef ASM_CRC
 #endif
 
 #ifdef USE_ZLIB
@@ -368,37 +212,6 @@ typedef size_t extent;
  * and normal text.  Hence difference is sufficient for most "average" files.
  * (Argument scales for larger OUTBUFSIZ.)
  */
-#ifdef SMALL_MEM          /* i.e., 16-bit OSes:  MS-DOS, OS/2 1.x, etc. */
-#  define LoadFarString(x)       fLoadFarString(__G__ (x))
-#  define LoadFarStringSmall(x)  fLoadFarStringSmall(__G__ (x))
-#  define LoadFarStringSmall2(x) fLoadFarStringSmall2(__G__ (x))
-#  if (defined(_MSC_VER) && (_MSC_VER >= 600))
-#    define zfstrcpy(dest, src)  _fstrcpy((dest), (src))
-#    define zfstrcmp(s1, s2)     _fstrcmp((s1), (s2))
-#  endif
-#  if !(defined(SFX) || defined(FUNZIP))
-#    if (defined(_MSC_VER))
-#      define zfmalloc(sz)       _fmalloc((sz))
-#      define zffree(x)          _ffree(x)
-#    endif
-#    if (defined(__TURBOC__))
-#      include <alloc.h>
-#      define zfmalloc(sz)       farmalloc((unsigned long)(sz))
-#      define zffree(x)          farfree(x)
-#    endif
-#  endif /* !(SFX || FUNZIP) */
-#  ifndef Far
-#    define Far far  /* __far only works for MSC 6.00, not 6.0a or Borland */
-#  endif
-#  define OUTBUFSIZ INBUFSIZ
-#  if (lenEOL == 1)
-#    define RAWBUFSIZ (OUTBUFSIZ>>1)
-#  else
-#    define RAWBUFSIZ ((OUTBUFSIZ>>1) - (OUTBUFSIZ>>7))
-#  endif
-#  define TRANSBUFSIZ (OUTBUFSIZ-RAWBUFSIZ)
-   typedef short  shrint;            /* short/int or "shrink int" (unshrink) */
-#else
 #  define zfstrcpy(dest, src)       strcpy((dest), (src))
 #  define zfstrcmp(s1, s2)          strcmp((s1), (s2))
 #  define zfmalloc                  malloc
@@ -426,7 +239,6 @@ typedef size_t extent;
 #    endif
 #  endif /* ?MED_MEM */
 #  define RAWBUFSIZ OUTBUFSIZ
-#endif /* ?SMALL_MEM */
 
 #ifndef Far
 #  define Far
