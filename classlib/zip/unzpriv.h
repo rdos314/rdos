@@ -30,42 +30,17 @@
 /* GRR 960204:  MORE defined here in preparation for removal altogether */
 #  define MORE
 
-#if (defined(USE_ZLIB) && !defined(HAVE_ZL_INFLAT64) && !defined(NO_DEFLATE64))
-   /* zlib does not (yet?) provide Deflate64(tm) support */
 #  define NO_DEFLATE64
-#endif
 
-#ifdef NO_DEFLATE64
-   /* disable support for Deflate64(tm) */
 #  ifdef USE_DEFLATE64
 #    undef USE_DEFLATE64
 #  endif
-#else
-   /* enable Deflate64(tm) support unless compiling for SFX stub */
-#  if (!defined(USE_DEFLATE64) && !defined(SFX))
-#    define USE_DEFLATE64
-#  endif
-#endif
-
-/* disable bzip2 support for SFX stub, unless explicitly requested */
-#if (defined(SFX) && !defined(BZIP2_SFX) && defined(USE_BZIP2))
-#  undef USE_BZIP2
-#endif
 
 /* Enable -B option per default on specific systems, to allow backing up
  * files that would be overwritten.
  * (This list of systems must be kept in sync with the list of systems
  * that add the B_flag to the UzpOpts structure, see unzip.h.)
  */
-#if (!defined(NO_UNIXBACKUP) && !defined(UNIXBACKUP))
-#  if defined(UNIX) || defined(OS2) || defined(WIN32)
-#    define UNIXBACKUP
-#  endif
-#endif
-
-#if (defined(DLL) && !defined(REENTRANT))
-#  define REENTRANT
-#endif
 
 #if (!defined(DYNAMIC_CRC_TABLE) && !defined(FUNZIP))
 #  define DYNAMIC_CRC_TABLE
