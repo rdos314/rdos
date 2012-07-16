@@ -44,16 +44,6 @@
 
 #  define DYNAMIC_CRC_TABLE
 
-/*---------------------------------------------------------------------------
-    OS-dependent configuration for UnZip internals
-  ---------------------------------------------------------------------------*/
-
-
-/*---------------------------------------------------------------------------
-    OS-dependent includes
-  ---------------------------------------------------------------------------*/
-
-
 
 /* ----------------------------------------------------------------------------
    MUST BE AFTER LARGE FILE INCLUDES
@@ -70,15 +60,7 @@
    reading the "standard" include headers.
  */
 
-#ifdef EFT
-#  define Z_OFF_T off_t  /* Amdahl UTS nonsense ("extended file types") */
-#else
-#if (defined(UNIX) && defined(_FILE_OFFSET_BITS) && (_FILE_OFFSET_BITS == 64))
-#  define Z_OFF_T off_t /* 64bit offsets to support 2GB < zipfile size < 4GB */
-#else
 #  define Z_OFF_T long
-#endif
-#endif
 
 #ifndef ZOFF_T_DEFINED
    typedef Z_OFF_T zoff_t;
