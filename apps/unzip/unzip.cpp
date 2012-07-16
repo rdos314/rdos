@@ -173,45 +173,23 @@ static ZCONST char Far ZipInfoUsageLine3[] = "miscellaneous options:\n\
 #  ifdef RETURN_CODES
      static ZCONST char Far Return_Codes[] = "RETURN_CODES";
 #  endif
-#  ifdef SET_DIR_ATTRIB
      static ZCONST char Far SetDirAttrib[] = "SET_DIR_ATTRIB";
-#  endif
-#  ifndef LZW_CLEAN
      static ZCONST char Far Use_Unshrink[] =
      "USE_UNSHRINK (PKZIP/Zip 1.x unshrinking method supported)";
-#  endif
-#  ifndef COPYRIGHT_CLEAN
-     static ZCONST char Far Use_Smith_Code[] =
-     "USE_SMITH_CODE (PKZIP 0.9x unreducing method supported)";
-#  endif
-#  ifdef USE_VFAT
-     static ZCONST char Far Use_VFAT_support[] = "USE_VFAT";
-#  endif
      static ZCONST char Far UseZlib[] =
      "USE_ZLIB (compiled with version %s; using version %s)";
-#  ifdef WILD_STOP_AT_DIR
-     static ZCONST char Far WildStopAtDir[] = "WILD_STOP_AT_DIR";
-#  endif
 #    ifdef PASSWD_FROM_STDIN
        static ZCONST char Far PasswdStdin[] = "PASSWD_FROM_STDIN";
 #    endif
      static ZCONST char Far Decryption[] =
        "        [decryption, version %d.%d%s of %s]\n";
      static ZCONST char Far CryptDate[] = CR_VERSION_DATE;
-#  ifndef __RSXNT__
-#  endif /* !__RSXNT__ */
 
-# ifdef COPYRIGHT_CLEAN
    static ZCONST char Far UnzipUsageLine1[] = "\
 UnZip %d.%d%d%s of %s, by Info-ZIP.  Maintained by C. Spieler.  Send\n\
 bug reports using http://www.info-zip.org/zip-bug.html; see README for details.\
 \n\n";
-# else
-   static ZCONST char Far UnzipUsageLine1[] = "\
-UnZip %d.%d%d%s of %s, by Info-ZIP.  UnReduce (c) 1989 by S. H. Smith.\n\
-Send bug reports using //www.info-zip.org/zip-bug.html; see README for details.\
-\n\n";
-# endif /* ?COPYRIGHT_CLEAN */
+
 # define UnzipUsageLine1v       UnzipUsageLine1
 
 static ZCONST char Far UnzipUsageLine2v[] = "\
@@ -284,79 +262,12 @@ int main(int argc, char *argv[])   /* return PK-type error code (except under VM
 
 int unzip(int argc, char *argv[])
 {
-#ifndef NO_ZIPINFO
     char *p;
-#endif
-#if (defined(DOS_FLX_H68_NLM_OS2_W32) || !defined(SFX))
     int i;
-#endif
     int retcode, error=FALSE;
-#ifndef NO_EXCEPT_SIGNALS
-#ifdef REENTRANT
-    savsigs_info *oldsighandlers = NULL;
-#   define SET_SIGHANDLER(sigtype, newsighandler) \
-      if ((retcode = setsignalhandler(__G__ &oldsighandlers, (sigtype), \
-                                      (newsighandler))) > PK_WARN) \
-          goto cleanup_and_exit
-#else
-#   define SET_SIGHANDLER(sigtype, newsighandler) \
-      signal((sigtype), (newsighandler))
-#endif
-#endif /* NO_EXCEPT_SIGNALS */
 
     /* initialize international char support to the current environment */
     SETLOCALE(LC_CTYPE, "");
-
-#ifdef UNICODE_SUPPORT
-    /* see if can use UTF-8 Unicode locale */
-# ifdef UTF8_MAYBE_NATIVE
-    {
-        char *codeset;
-#  if !(defined(NO_NL_LANGINFO) || defined(NO_LANGINFO_H))
-        /* get the codeset (character set encoding) currently used */
-#       include <langinfo.h>
-
-        codeset = nl_langinfo(CODESET);
-#  else /* NO_NL_LANGINFO || NO_LANGINFO_H */
-        /* query the current locale setting for character classification */
-        codeset = setlocale(LC_CTYPE, NULL);
-        if (codeset != NULL) {
-            /* extract the codeset portion of the locale name */
-            codeset = strchr(codeset, '.');
-            if (codeset != NULL) ++codeset;
-        }
-#  endif /* ?(NO_NL_LANGINFO || NO_LANGINFO_H) */
-        /* is the current codeset UTF-8 ? */
-        if ((codeset != NULL) && (strcmp(codeset, "UTF-8") == 0)) {
-            /* successfully found UTF-8 char coding */
-            G.native_is_utf8 = TRUE;
-        } else {
-            /* Current codeset is not UTF-8 or cannot be determined. */
-            G.native_is_utf8 = FALSE;
-        }
-        /* Note: At least for UnZip, trying to change the process codeset to
-         *       UTF-8 does not work.  For the example Linux setup of the
-         *       UnZip maintainer, a successful switch to "en-US.UTF-8"
-         *       resulted in garbage display of all non-basic ASCII characters.
-         */
-    }
-# endif /* UTF8_MAYBE_NATIVE */
-
-    /* initialize Unicode */
-    G.unicode_escape_all = 0;
-    G.unicode_mismatch = 0;
-
-    G.unipath_version = 0;
-    G.unipath_checksum = 0;
-    G.unipath_filename = NULL;
-#endif /* UNICODE_SUPPORT */
-
-
-#if (defined(__IBMC__) && defined(__DEBUG_ALLOC__))
-    extern void DebugMalloc(void);
-
-    atexit(DebugMalloc);
-#endif
 
 #ifdef MALLOC_WORK
     /* The following (rather complex) expression determines the allocation
@@ -382,85 +293,6 @@ int unzip(int argc, char *argv[])
 #endif
 
 /*---------------------------------------------------------------------------
-    Set signal handler for restoring echo, warn of zipfile corruption, etc.
-  ---------------------------------------------------------------------------*/
-#ifndef NO_EXCEPT_SIGNALS
-#ifdef SIGINT
-    SET_SIGHANDLER(SIGINT, handler);
-#endif
-#ifdef SIGTERM                 /* some systems really have no SIGTERM */
-    SET_SIGHANDLER(SIGTERM, handler);
-#endif
-#if defined(SIGABRT) && !(defined(AMIGA) && defined(__SASC))
-    SET_SIGHANDLER(SIGABRT, handler);
-#endif
-#ifdef SIGBREAK
-    SET_SIGHANDLER(SIGBREAK, handler);
-#endif
-#ifdef SIGBUS
-    SET_SIGHANDLER(SIGBUS, handler);
-#endif
-#ifdef SIGILL
-    SET_SIGHANDLER(SIGILL, handler);
-#endif
-#ifdef SIGSEGV
-    SET_SIGHANDLER(SIGSEGV, handler);
-#endif
-#endif /* NO_EXCEPT_SIGNALS */
-
-#if (defined(WIN32) && defined(__RSXNT__))
-    for (i = 0 ; i < argc; i++) {
-        _ISO_INTERN(argv[i]);
-    }
-#endif
-
-/*---------------------------------------------------------------------------
-    Macintosh initialization code.
-  ---------------------------------------------------------------------------*/
-
-#ifdef MACOS
-    {
-        int a;
-
-        for (a = 0;  a < 4;  ++a)
-            G.rghCursor[a] = GetCursor(a+128);
-        G.giCursor = 0;
-    }
-#endif
-
-/*---------------------------------------------------------------------------
-    NetWare initialization code.
-  ---------------------------------------------------------------------------*/
-
-#ifdef NLM
-    InitUnZipConsole();
-#endif
-
-/*---------------------------------------------------------------------------
-    Acorn RISC OS initialization code.
-  ---------------------------------------------------------------------------*/
-
-#ifdef RISCOS
-    set_prefix();
-#endif
-
-/*---------------------------------------------------------------------------
-    Theos initialization code.
-  ---------------------------------------------------------------------------*/
-
-#ifdef THEOS
-    /* The easiest way found to force creation of libraries when selected
-     * members are to be unzipped. Explicitly add libraries names to the
-     * arguments list before the first member of the library.
-     */
-    if (! _setargv(&argc, &argv)) {
-        Info(slide, 0x401, ((char *)slide, "cannot process argv\n"));
-        retcode = PK_MEM;
-        goto cleanup_and_exit;
-    }
-#endif
-
-/*---------------------------------------------------------------------------
     Sanity checks.  Commentary by Otis B. Driftwood and Fiorello:
 
     D:  It's all right.  That's in every contract.  That's what they
@@ -471,36 +303,6 @@ int unzip(int argc, char *argv[])
   ---------------------------------------------------------------------------*/
 
 #ifdef DEBUG
-# ifdef LARGE_FILE_SUPPORT
-  /* test if we can support large files - 10/6/04 EG */
-    if (sizeof(zoff_t) < 8) {
-        Info(slide, 0x401, ((char *)slide, "LARGE_FILE_SUPPORT set but not supported\n"));
-        retcode = PK_BADERR;
-        goto cleanup_and_exit;
-    }
-    /* test if we can show 64-bit values */
-    {
-        zoff_t z = ~(zoff_t)0;  /* z should be all 1s now */
-        char *sz;
-
-        sz = FmZofft(z, FZOFFT_HEX_DOT_WID, "X");
-        if ((sz[0] != 'F') || (strlen(sz) != 16))
-        {
-            z = 0;
-        }
-
-        /* shift z so only MSB is set */
-        z <<= 63;
-        sz = FmZofft(z, FZOFFT_HEX_DOT_WID, "X");
-        if ((sz[0] != '8') || (strlen(sz) != 16))
-        {
-            Info(slide, 0x401, ((char *)slide,
-              "Can't show 64-bit values correctly\n"));
-            retcode = PK_BADERR;
-            goto cleanup_and_exit;
-        }
-    }
-# endif /* LARGE_FILE_SUPPORT */
 
     /* 2004-11-30 SMS.
        Test the NEXTBYTE macro for proper operation.
@@ -534,52 +336,9 @@ int unzip(int argc, char *argv[])
     through any command-line options lurking about...
   ---------------------------------------------------------------------------*/
 
-#ifdef SFX
-    G.argv0 = argv[0];
-#if (defined(OS2) || defined(WIN32))
-    G.zipfn = GetLoadPath(__G);/* non-MSC NT puts path into G.filename[] */
-#else
-    G.zipfn = G.argv0;
-#endif
-
-#ifdef VMSCLI
-    {
-        ulg status = vms_unzip_cmdline(&argc, &argv);
-        if (!(status & 1)) {
-            retcode = (int)status;
-            goto cleanup_and_exit;
-        }
-    }
-#endif /* VMSCLI */
-
-    uO.zipinfo_mode = FALSE;
-    error = uz_opts(__G__ &argc, &argv);   /* UnZipSFX call only */
-
-#else /* !SFX */
-
-#ifdef RISCOS
-    /* get the extensions to swap from environment */
-    getRISCOSexts(ENV_UNZIPEXTS);
-#endif
-
-#ifdef MSDOS
-    /* extract MKS extended argument list from environment (before envargs!) */
-    mksargs(&argc, &argv);
-#endif
-
-#ifdef VMSCLI
-    {
-        ulg status = vms_unzip_cmdline(&argc, &argv);
-        if (!(status & 1)) {
-            retcode = (int)status;
-            goto cleanup_and_exit;
-        }
-    }
-#endif /* VMSCLI */
 
     G.noargs = (argc == 1);   /* no options, no zipfile, no anything */
 
-#ifndef NO_ZIPINFO
     for (p = argv[0] + strlen(argv[0]); p >= argv[0]; --p) {
         if (*p == DIR_END
 #ifdef DIR_END2
@@ -589,31 +348,20 @@ int unzip(int argc, char *argv[])
             break;
     }
     ++p;
-
-#ifdef THEOS
-    if (strncmp(p, "ZIPINFO.",8) == 0 || strstr(p, ".ZIPINFO:") != NULL ||
-        strncmp(p, "II.",3) == 0 || strstr(p, ".II:") != NULL ||
-#else
     if (STRNICMP(p, LoadFarStringSmall(Zipnfo), 7) == 0 ||
         STRNICMP(p, "ii", 2) == 0 ||
-#endif
         (argc > 1 && strncmp(argv[1], "-Z", 2) == 0))
     {
         uO.zipinfo_mode = TRUE;
-#ifndef _WIN32_WCE /* Win CE does not support environment variables */
         if ((error = envargs(&argc, &argv, LoadFarStringSmall(EnvZipInfo),
                              LoadFarStringSmall2(EnvZipInfo2))) != PK_OK)
             perror(LoadFarString(NoMemEnvArguments));
-#endif
     } else
-#endif /* !NO_ZIPINFO */
     {
         uO.zipinfo_mode = FALSE;
-#ifndef _WIN32_WCE /* Win CE does not support environment variables */
         if ((error = envargs(&argc, &argv, LoadFarStringSmall(EnvUnZip),
                              LoadFarStringSmall2(EnvUnZip2))) != PK_OK)
             perror(LoadFarString(NoMemEnvArguments));
-#endif
     }
 
     if (!error) {
@@ -632,15 +380,11 @@ int unzip(int argc, char *argv[])
                goto cleanup_and_exit;
            }
         }
-#ifndef NO_ZIPINFO
         if (uO.zipinfo_mode)
             error = zi_opts(__G__ &argc, &argv);
         else
-#endif /* !NO_ZIPINFO */
             error = uz_opts(__G__ &argc, &argv);
     }
-
-#endif /* ?SFX */
 
     if ((argc < 0) || error) {
         retcode = error;
@@ -803,16 +547,6 @@ int unzip(int argc, char *argv[])
     retcode = process_zipfiles(__G);
 
 cleanup_and_exit:
-#if (defined(REENTRANT) && !defined(NO_EXCEPT_SIGNALS))
-    /* restore all signal handlers back to their state at function entry */
-    while (oldsighandlers != NULL) {
-        savsigs_info *thissigsav = oldsighandlers;
-
-        signal(thissigsav->sigtype, thissigsav->sighandler);
-        oldsighandlers = thissigsav->previous;
-        free(thissigsav);
-    }
-#endif
 #if (defined(MALLOC_WORK) && !defined(REENTRANT))
     if (G.area.Slide != (uch *)NULL) {
         free(G.area.Slide);
@@ -826,44 +560,6 @@ cleanup_and_exit:
     return(retcode);
 
 } /* end main()/unzip() */
-
-
-
-
-
-#if (defined(REENTRANT) && !defined(NO_EXCEPT_SIGNALS))
-/*******************************/
-/* Function setsignalhandler() */
-/*******************************/
-
-static int setsignalhandler(__G__ p_savedhandler_chain, signal_type,
-                            newhandler)
-    __GDEF
-    savsigs_info **p_savedhandler_chain;
-    int signal_type;
-    void (*newhandler)(int);
-{
-    savsigs_info *savsig;
-
-    savsig = malloc(sizeof(savsigs_info));
-    if (savsig == NULL) {
-        /* error message and break */
-        Info(slide, 0x401, ((char *)slide, LoadFarString(CantSaveSigHandler)));
-        return PK_MEM;
-    }
-    savsig->sigtype = signal_type;
-    savsig->sighandler = signal(SIGINT, newhandler);
-    if (savsig->sighandler == SIG_ERR) {
-        free(savsig);
-    } else {
-        savsig->previous = *p_savedhandler_chain;
-        *p_savedhandler_chain = savsig;
-    }
-    return PK_OK;
-
-} /* end function setsignalhandler() */
-
-#endif /* REENTRANT && !NO_EXCEPT_SIGNALS */
 
 
 
