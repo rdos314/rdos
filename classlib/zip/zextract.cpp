@@ -984,7 +984,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
          * been processed.
          */
         if (G.pInfo->cfilname != (char *)NULL) {
-            if (zfstrcmp(G.pInfo->cfilname, G.filename) != 0) {
+            if (strcmp(G.pInfo->cfilname, G.filename) != 0) {
 #    define  cFile_PrintBuf  G.pInfo->cfilname
                 Info(slide, 0x401, ((char *)slide,
                   LoadFarStringSmall2(LvsCFNamMsg),
