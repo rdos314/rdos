@@ -137,17 +137,6 @@ typedef size_t extent;
 #  endif                    /*  at least 32K for zip's deflate method */
 #endif
 
-#  define nearmalloc  malloc
-#  define nearfree    free
-#  if (!defined(__IBMC__) || !defined(OS2))
-#    ifndef near
-#      define near
-#    endif
-#    ifndef far
-#      define far
-#    endif
-#  endif
-
 #if (defined(DYNALLOC_CRCTAB) && !defined(DYNAMIC_CRC_TABLE))
 #  undef DYNALLOC_CRCTAB
 #endif
