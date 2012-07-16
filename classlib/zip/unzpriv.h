@@ -25,32 +25,10 @@
 #define __unzpriv_h
 
 /* First thing: Signal all following code that we compile UnZip utilities! */
-#ifndef UNZIP
 #  define UNZIP
-#endif
 
 /* GRR 960204:  MORE defined here in preparation for removal altogether */
-#ifndef MORE
-# ifndef RISCOS
 #  define MORE
-# endif
-#endif
-
-/* fUnZip should never need to be reentrant */
-#ifdef FUNZIP
-#  ifdef REENTRANT
-#    undef REENTRANT
-#  endif
-#  ifdef DLL
-#    undef DLL
-#  endif
-#  ifdef SFX            /* fUnZip is NOT the sfx stub! */
-#    undef SFX
-#  endif
-#  ifdef USE_BZIP2      /* fUnZip does not support bzip2 decompression */
-#    undef USE_BZIP2
-#  endif
-#endif
 
 #if (defined(USE_ZLIB) && !defined(HAVE_ZL_INFLAT64) && !defined(NO_DEFLATE64))
    /* zlib does not (yet?) provide Deflate64(tm) support */
