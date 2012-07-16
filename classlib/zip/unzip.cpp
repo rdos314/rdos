@@ -124,12 +124,7 @@ static ZCONST char Far IgnoreOOptionMsg[] =
    static ZCONST char Far local2[] = " -M  pipe through \"more\" pager";
    static ZCONST char Far local3[] = "\n";
 
-#ifndef NO_ZIPINFO
-#ifdef VMS
-   static ZCONST char Far ZipInfoExample[] = "* or % (e.g., \"*font-%.zip\")";
-#else
    static ZCONST char Far ZipInfoExample[] = "*, ?, [] (e.g., \"[a-j]*.zip\")";
-#endif
 
 static ZCONST char Far ZipInfoUsageLine1[] = "\
 ZipInfo %d.%d%d%s of %s, by Greg Roelofs and the Info-ZIP group.\n\
@@ -151,319 +146,55 @@ static ZCONST char Far ZipInfoUsageLine3[] = "miscellaneous options:\n\
   -z  print zipfile comment   -T  print file times in sortable decimal format\
 \n  -C  be case-insensitive   %s\
   -x  exclude filenames that follow from listing\n";
-#ifdef MORE
    static ZCONST char Far ZipInfoUsageLine4[] =
      "  -M  page output through built-in \"more\"\n";
-#else /* !MORE */
-   static ZCONST char Far ZipInfoUsageLine4[] = "";
-#endif /* ?MORE */
-#endif /* !NO_ZIPINFO */
 
-#ifdef BETA
-#  ifdef VMSCLI
-   /* BetaVersion[] is also used in vms/cmdline.c:  do not make it static */
-     ZCONST char Far BetaVersion[] = "%s\
-        THIS IS STILL A BETA VERSION OF UNZIP%s -- DO NOT DISTRIBUTE.\n\n";
-#  else
-     static ZCONST char Far BetaVersion[] = "%s\
-        THIS IS STILL A BETA VERSION OF UNZIP%s -- DO NOT DISTRIBUTE.\n\n";
-#  endif
-#endif
-
-#ifdef SFX
-#  ifdef VMSCLI
-   /* UnzipSFXBanner[] is also used in vms/cmdline.c:  do not make it static */
-     ZCONST char Far UnzipSFXBanner[] =
-#  else
-     static ZCONST char Far UnzipSFXBanner[] =
-#  endif
-     "UnZipSFX %d.%d%d%s of %s, by Info-ZIP (http://www.info-zip.org).\n";
-#  ifdef SFX_EXDIR
-     static ZCONST char Far UnzipSFXOpts[] =
-    "Valid options are -tfupcz and -d <exdir>; modifiers are -abjnoqCL%sV%s.\n";
-#  else
-     static ZCONST char Far UnzipSFXOpts[] =
-       "Valid options are -tfupcz; modifiers are -abjnoqCL%sV%s.\n";
-#  endif
-#else /* !SFX */
    static ZCONST char Far CompileOptions[] =
      "UnZip special compilation options:\n";
    static ZCONST char Far CompileOptFormat[] = "        %s\n";
-#ifndef _WIN32_WCE /* Win CE does not support environment variables */
    static ZCONST char Far EnvOptions[] =
      "\nUnZip and ZipInfo environment options:\n";
    static ZCONST char Far EnvOptFormat[] = "%16s:  %.1024s\n";
-#endif
    static ZCONST char Far None[] = "[none]";
-#  ifdef ACORN_FTYPE_NFS
-     static ZCONST char Far AcornFtypeNFS[] = "ACORN_FTYPE_NFS";
-#  endif
-#  ifdef ASM_CRC
-     static ZCONST char Far AsmCRC[] = "ASM_CRC";
-#  endif
-#  ifdef ASM_INFLATECODES
-     static ZCONST char Far AsmInflateCodes[] = "ASM_INFLATECODES";
-#  endif
-#  ifdef CHECK_VERSIONS
      static ZCONST char Far Check_Versions[] = "CHECK_VERSIONS";
-#  endif
-#  ifdef COPYRIGHT_CLEAN
      static ZCONST char Far Copyright_Clean[] =
      "COPYRIGHT_CLEAN (PKZIP 0.9x unreducing method not supported)";
-#  endif
 #  ifdef DEBUG
      static ZCONST char Far UDebug[] = "DEBUG";
 #  endif
-#  ifdef DEBUG_TIME
-     static ZCONST char Far DebugTime[] = "DEBUG_TIME";
-#  endif
-#  ifdef DLL
-     static ZCONST char Far Dll[] = "DLL";
-#  endif
-#  ifdef DOSWILD
      static ZCONST char Far DosWild[] = "DOSWILD";
-#  endif
-#  ifdef LZW_CLEAN
-     static ZCONST char Far LZW_Clean[] =
-     "LZW_CLEAN (PKZIP/Zip 1.x unshrinking method not supported)";
-#  endif
-#  ifndef MORE
-     static ZCONST char Far No_More[] = "NO_MORE";
-#  endif
-#  ifdef NO_ZIPINFO
-     static ZCONST char Far No_ZipInfo[] = "NO_ZIPINFO";
-#  endif
-#  ifdef NTSD_EAS
-     static ZCONST char Far NTSDExtAttrib[] = "NTSD_EAS";
-#  endif
-#  if defined(WIN32) && defined(NO_W32TIMES_IZFIX)
-     static ZCONST char Far W32NoIZTimeFix[] = "NO_W32TIMES_IZFIX";
-#  endif
-#  ifdef OLD_THEOS_EXTRA
-     static ZCONST char Far OldTheosExtra[] =
-     "OLD_THEOS_EXTRA (handle also old Theos port extra field)";
-#  endif
-#  ifdef OS2_EAS
-     static ZCONST char Far OS2ExtAttrib[] = "OS2_EAS";
-#  endif
-#  ifdef QLZIP
-     static ZCONST char Far SMSExFldOnUnix[] = "QLZIP";
-#  endif
-#  ifdef REENTRANT
-     static ZCONST char Far Reentrant[] = "REENTRANT";
-#  endif
-#  ifdef REGARGS
-     static ZCONST char Far RegArgs[] = "REGARGS";
-#  endif
-#  ifdef RETURN_CODES
-     static ZCONST char Far Return_Codes[] = "RETURN_CODES";
-#  endif
-#  ifdef SET_DIR_ATTRIB
      static ZCONST char Far SetDirAttrib[] = "SET_DIR_ATTRIB";
-#  endif
-#  ifdef SYMLINKS
-     static ZCONST char Far SymLinkSupport[] =
-     "SYMLINKS (symbolic links supported, if RTL and file system permit)";
-#  endif
-#  ifdef TIMESTAMP
-     static ZCONST char Far TimeStamp[] = "TIMESTAMP";
-#  endif
-#  ifdef UNIXBACKUP
-     static ZCONST char Far UnixBackup[] = "UNIXBACKUP";
-#  endif
-#  ifdef USE_EF_UT_TIME
-     static ZCONST char Far Use_EF_UT_time[] = "USE_EF_UT_TIME";
-#  endif
-#  ifndef LZW_CLEAN
-     static ZCONST char Far Use_Unshrink[] =
-     "USE_UNSHRINK (PKZIP/Zip 1.x unshrinking method supported)";
-#  endif
-#  ifndef COPYRIGHT_CLEAN
      static ZCONST char Far Use_Smith_Code[] =
      "USE_SMITH_CODE (PKZIP 0.9x unreducing method supported)";
-#  endif
-#  ifdef USE_DEFLATE64
-     static ZCONST char Far Use_Deflate64[] =
-     "USE_DEFLATE64 (PKZIP 4.x Deflate64(tm) supported)";
-#  endif
-#  ifdef UNICODE_SUPPORT
-#   ifdef UTF8_MAYBE_NATIVE
-#    ifdef UNICODE_WCHAR
-       /* direct native UTF-8 check AND charset transform via wchar_t */
-       static ZCONST char Far Use_Unicode[] =
-       "UNICODE_SUPPORT [wide-chars, char coding: %s] (handle UTF-8 paths)";
-#    else
-       /* direct native UTF-8 check, only */
-       static ZCONST char Far Use_Unicode[] =
-       "UNICODE_SUPPORT [char coding: %s] (handle UTF-8 paths)";
-#    endif
-       static ZCONST char Far SysChUTF8[] = "UTF-8";
-       static ZCONST char Far SysChOther[] = "other";
-#   else /* !UTF8_MAYBE_NATIVE */
-       /* charset transform via wchar_t, no native UTF-8 support */
-       static ZCONST char Far Use_Unicode[] =
-       "UNICODE_SUPPORT [wide-chars] (handle UTF-8 paths)";
-#   endif /* ?UTF8_MAYBE_NATIVE */
-#  endif /* UNICODE_SUPPORT */
-#  ifdef _MBCS
-     static ZCONST char Far Have_MBCS_Support[] =
-     "MBCS-support (multibyte character support, MB_CUR_MAX = %u)";
-#  endif
-#  ifdef MULT_VOLUME
-     static ZCONST char Far Use_MultiVol[] =
-     "MULT_VOLUME (multi-volume archives supported)";
-#  endif
-#  ifdef LARGE_FILE_SUPPORT
-     static ZCONST char Far Use_LFS[] =
-     "LARGE_FILE_SUPPORT (large files over 2 GiB supported)";
-#  endif
-#  ifdef ZIP64_SUPPORT
-     static ZCONST char Far Use_Zip64[] =
-     "ZIP64_SUPPORT (archives using Zip64 for large files supported)";
-#  endif
-#  if (defined(__DJGPP__) && (__DJGPP__ >= 2))
-#    ifdef USE_DJGPP_ENV
-       static ZCONST char Far Use_DJGPP_Env[] = "USE_DJGPP_ENV";
-#    endif
-#    ifdef USE_DJGPP_GLOB
-       static ZCONST char Far Use_DJGPP_Glob[] = "USE_DJGPP_GLOB";
-#    endif
-#  endif /* __DJGPP__ && (__DJGPP__ >= 2) */
-#  ifdef USE_VFAT
-     static ZCONST char Far Use_VFAT_support[] = "USE_VFAT";
-#  endif
-#  ifdef USE_ZLIB
      static ZCONST char Far UseZlib[] =
      "USE_ZLIB (compiled with version %s; using version %s)";
-#  endif
-#  ifdef USE_BZIP2
-     static ZCONST char Far UseBZip2[] =
-     "USE_BZIP2 (PKZIP 4.6+, using bzip2 lib version %s)";
-#  endif
-#  ifdef VMS_TEXT_CONV
-     static ZCONST char Far VmsTextConv[] = "VMS_TEXT_CONV";
-#  endif
-#  ifdef VMSCLI
-     static ZCONST char Far VmsCLI[] = "VMSCLI";
-#  endif
-#  ifdef VMSWILD
-     static ZCONST char Far VmsWild[] = "VMSWILD";
-#  endif
-#  ifdef WILD_STOP_AT_DIR
-     static ZCONST char Far WildStopAtDir[] = "WILD_STOP_AT_DIR";
-#  endif
-#  if CRYPT
-#    ifdef PASSWD_FROM_STDIN
        static ZCONST char Far PasswdStdin[] = "PASSWD_FROM_STDIN";
-#    endif
      static ZCONST char Far Decryption[] =
        "        [decryption, version %d.%d%s of %s]\n";
      static ZCONST char Far CryptDate[] = CR_VERSION_DATE;
-#  endif
-#  ifndef __RSXNT__
-#    ifdef __EMX__
-       static ZCONST char Far EnvEMX[] = "EMX";
-       static ZCONST char Far EnvEMXOPT[] = "EMXOPT";
-#    endif
-#    if (defined(__GO32__) && (!defined(__DJGPP__) || (__DJGPP__ < 2)))
-       static ZCONST char Far EnvGO32[] = "GO32";
-       static ZCONST char Far EnvGO32TMP[] = "GO32TMP";
-#    endif
-#  endif /* !__RSXNT__ */
 
-#ifdef VMS
-/* UnzipUsageLine1[] is also used in vms/cmdline.c:  do not make it static */
-   ZCONST char Far UnzipUsageLine1[] = "\
-UnZip %d.%d%d%s of %s, by Info-ZIP.  For more details see: unzip -v.\n\n";
-# ifdef COPYRIGHT_CLEAN
-   static ZCONST char Far UnzipUsageLine1v[] = "\
-UnZip %d.%d%d%s of %s, by Info-ZIP.  Maintained by C. Spieler.  Send\n\
-bug reports using http://www.info-zip.org/zip-bug.html; see README for details.\
-\n\n";
-# else
-   static ZCONST char Far UnzipUsageLine1v[] = "\
-UnZip %d.%d%d%s of %s, by Info-ZIP.  UnReduce (c) 1989 by S. H. Smith.\n\
-Send bug reports using //www.info-zip.org/zip-bug.html; see README for details.\
-\n\n";
-# endif /* ?COPYRIGHT_CLEAN */
-#else /* !VMS */
-# ifdef COPYRIGHT_CLEAN
-   static ZCONST char Far UnzipUsageLine1[] = "\
-UnZip %d.%d%d%s of %s, by Info-ZIP.  Maintained by C. Spieler.  Send\n\
-bug reports using http://www.info-zip.org/zip-bug.html; see README for details.\
-\n\n";
-# else
-   static ZCONST char Far UnzipUsageLine1[] = "\
-UnZip %d.%d%d%s of %s, by Info-ZIP.  UnReduce (c) 1989 by S. H. Smith.\n\
-Send bug reports using //www.info-zip.org/zip-bug.html; see README for details.\
-\n\n";
-# endif /* ?COPYRIGHT_CLEAN */
 # define UnzipUsageLine1v       UnzipUsageLine1
-#endif /* ?VMS */
 
 static ZCONST char Far UnzipUsageLine2v[] = "\
 Latest sources and executables are at ftp://ftp.info-zip.org/pub/infozip/ ;\
 \nsee ftp://ftp.info-zip.org/pub/infozip/UnZip.html for other sites.\
 \n\n";
 
-#ifdef MACOS
-static ZCONST char Far UnzipUsageLine2[] = "\
-Usage: unzip %s[-opts[modifiers]] file[.zip] [list] [-d exdir]\n \
- Default action is to extract files in list, to exdir;\n\
-  file[.zip] may be a wildcard.  %s\n";
-#else /* !MACOS */
-#ifdef VM_CMS
-static ZCONST char Far UnzipUsageLine2[] = "\
-Usage: unzip %s[-opts[modifiers]] file[.zip] [list] [-x xlist] [-d fm]\n \
- Default action is to extract files in list, except those in xlist, to disk fm;\
-\n  file[.zip] may be a wildcard.  %s\n";
-#else /* !VM_CMS */
 static ZCONST char Far UnzipUsageLine2[] = "\
 Usage: unzip %s[-opts[modifiers]] file[.zip] [list] [-x xlist] [-d exdir]\n \
  Default action is to extract files in list, except those in xlist, to exdir;\n\
   file[.zip] may be a wildcard.  %s\n";
-#endif /* ?VM_CMS */
-#endif /* ?MACOS */
 
-#ifdef NO_ZIPINFO
-#  define ZIPINFO_MODE_OPTION  ""
-   static ZCONST char Far ZipInfoMode[] =
-     "(ZipInfo mode is disabled in this version.)";
-#else
 #  define ZIPINFO_MODE_OPTION  "[-Z] "
    static ZCONST char Far ZipInfoMode[] =
      "-Z => ZipInfo mode (\"unzip -Z\" for usage).";
-#endif /* ?NO_ZIPINFO */
 
-#ifdef VMS
-   static ZCONST char Far VMSusageLine2b[] = "\
-=> define foreign command symbol in LOGIN.COM:  $ unzip :== $dev:[dir]unzip.exe\
-\n";
-#endif
-
-#ifdef MACOS
-static ZCONST char Far UnzipUsageLine3[] = "\n\
-  -d  extract files into exdir               -l  list files (short format)\n\
-  -f  freshen existing files, create none    -t  test compressed archive data\n\
-  -u  update files, create if necessary      -z  display archive comment only\n\
-  -v  list verbosely/show version info     %s\n";
-#else /* !MACOS */
-#ifdef VM_CMS
-static ZCONST char Far UnzipUsageLine3[] = "\n\
-  -p  extract files to pipe, no messages     -l  list files (short format)\n\
-  -f  freshen existing files, create none    -t  test compressed archive data\n\
-  -u  update files, create if necessary      -z  display archive comment only\n\
-  -v  list verbosely/show version info     %s\n\
-  -x  exclude files that follow (in xlist)   -d  extract files onto disk fm\n";
-#else /* !VM_CMS */
 static ZCONST char Far UnzipUsageLine3[] = "\n\
   -p  extract files to pipe, no messages     -l  list files (short format)\n\
   -f  freshen existing files, create none    -t  test compressed archive data\n\
   -u  update files, create if necessary      -z  display archive comment only\n\
   -v  list verbosely/show version info     %s\n\
   -x  exclude files that follow (in xlist)   -d  extract files into exdir\n";
-#endif /* ?VM_CMS */
-#endif /* ?MACOS */
 
 /* There is not enough space on a standard 80x25 Windows console screen for
  * the additional line advertising the UTF-8 debugging options. This may
@@ -473,38 +204,6 @@ static ZCONST char Far UnzipUsageLine3[] = "\n\
  * Likely, other advanced options should be moved to an extended help page and
  * the option to list that page put here.  [E. Gordon, 2008-3-16]
  */
-#if (defined(UNICODE_SUPPORT) && !defined(WIN32))
-#ifdef VMS
-static ZCONST char Far UnzipUsageLine4[] = "\
-modifiers:\n\
-  -n  never overwrite or make a new version of an existing file\n\
-  -o  always make a new version (-oo: overwrite original) of an existing file\n\
-  -q  quiet mode (-qq => quieter)            -a  auto-convert any text files\n\
-  -j  junk paths (do not make directories)   -aa treat ALL files as text\n\
-  -U  use escapes for all non-ASCII Unicode  -UU ignore any Unicode fields\n\
-  -C  match filenames case-insensitively     -L  make (some) names \
-lowercase\n %-42s  -V  retain VMS version numbers\n%s";
-#else /* !VMS */
-static ZCONST char Far UnzipUsageLine4[] = "\
-modifiers:\n\
-  -n  never overwrite existing files         -q  quiet mode (-qq => quieter)\n\
-  -o  overwrite files WITHOUT prompting      -a  auto-convert any text files\n\
-  -j  junk paths (do not make directories)   -aa treat ALL files as text\n\
-  -U  use escapes for all non-ASCII Unicode  -UU ignore any Unicode fields\n\
-  -C  match filenames case-insensitively     -L  make (some) names \
-lowercase\n %-42s  -V  retain VMS version numbers\n%s";
-#endif /* ?VMS */
-#else /* !UNICODE_SUPPORT */
-#ifdef VMS
-static ZCONST char Far UnzipUsageLine4[] = "\
-modifiers:\n\
-  -n  never overwrite or make a new version of an existing file\n\
-  -o  always make a new version (-oo: overwrite original) of an existing file\n\
-  -q  quiet mode (-qq => quieter)            -a  auto-convert any text files\n\
-  -j  junk paths (do not make directories)   -aa treat ALL files as text\n\
-  -C  match filenames case-insensitively     -L  make (some) names \
-lowercase\n %-42s  -V  retain VMS version numbers\n%s";
-#else /* !VMS */
 static ZCONST char Far UnzipUsageLine4[] = "\
 modifiers:\n\
   -n  never overwrite existing files         -q  quiet mode (-qq => quieter)\n\
@@ -512,15 +211,12 @@ modifiers:\n\
   -j  junk paths (do not make directories)   -aa treat ALL files as text\n\
   -C  match filenames case-insensitively     -L  make (some) names \
 lowercase\n %-42s  -V  retain VMS version numbers\n%s";
-#endif /* ?VMS */
-#endif /* ?UNICODE_SUPPORT */
 
 static ZCONST char Far UnzipUsageLine5[] = "\
 See \"unzip -hh\" or unzip.txt for more help.  Examples:\n\
   unzip data1 -x joe   => extract all files except joe from zipfile data1.zip\n\
 %s\
   unzip -fo foo %-6s => quietly replace existing %s if archive file newer\n";
-#endif /* ?SFX */
 
 
 
