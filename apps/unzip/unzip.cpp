@@ -156,31 +156,16 @@ static ZCONST char Far ZipInfoUsageLine3[] = "miscellaneous options:\n\
      "\nUnZip and ZipInfo environment options:\n";
    static ZCONST char Far EnvOptFormat[] = "%16s:  %.1024s\n";
    static ZCONST char Far None[] = "[none]";
-#  ifdef CHECK_VERSIONS
-     static ZCONST char Far Check_Versions[] = "CHECK_VERSIONS";
-#  endif
      static ZCONST char Far Copyright_Clean[] =
      "COPYRIGHT_CLEAN (PKZIP 0.9x unreducing method not supported)";
 #  ifdef DEBUG
      static ZCONST char Far UDebug[] = "DEBUG";
-#  endif
-#  ifdef DOSWILD
-     static ZCONST char Far DosWild[] = "DOSWILD";
-#  endif
-#  ifdef REGARGS
-     static ZCONST char Far RegArgs[] = "REGARGS";
-#  endif
-#  ifdef RETURN_CODES
-     static ZCONST char Far Return_Codes[] = "RETURN_CODES";
 #  endif
      static ZCONST char Far SetDirAttrib[] = "SET_DIR_ATTRIB";
      static ZCONST char Far Use_Unshrink[] =
      "USE_UNSHRINK (PKZIP/Zip 1.x unshrinking method supported)";
      static ZCONST char Far UseZlib[] =
      "USE_ZLIB (compiled with version %s; using version %s)";
-#    ifdef PASSWD_FROM_STDIN
-       static ZCONST char Far PasswdStdin[] = "PASSWD_FROM_STDIN";
-#    endif
      static ZCONST char Far Decryption[] =
        "        [decryption, version %d.%d%s of %s]\n";
      static ZCONST char Far CryptDate[] = CR_VERSION_DATE;
@@ -743,14 +728,6 @@ int uz_opts(int *pargc, char ***pargv)
                     else
                         uO.V_flag = TRUE;
                     break;
-#ifdef WILD_STOP_AT_DIR
-                case ('W'):    /* Wildcard interpretation (stop at '/'?) */
-                    if (negative)
-                        uO.W_flag = FALSE, negative = 0;
-                    else
-                        uO.W_flag = TRUE;
-                    break;
-#endif /* WILD_STOP_AT_DIR */
                 case ('x'):    /* extract:  default */
                     break;
                 case ('z'):    /* display only the archive comment */
@@ -1156,11 +1133,6 @@ static void show_version_info(__G)
           LoadFarString(UnzipUsageLine2v)));
         version(__G);
         Info(slide, 0, ((char *)slide, LoadFarString(CompileOptions)));
-#ifdef CHECK_VERSIONS
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(Check_Versions)));
-        ++numopts;
-#endif
         Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
           LoadFarStringSmall(Copyright_Clean)));
         ++numopts;
@@ -1169,55 +1141,17 @@ static void show_version_info(__G)
           LoadFarStringSmall(UDebug)));
         ++numopts;
 #endif
-#ifdef DOSWILD
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(DosWild)));
-        ++numopts;
-#endif
-#ifdef LZW_CLEAN
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(LZW_Clean)));
-        ++numopts;
-#endif
-#ifdef REGARGS
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(RegArgs)));
-        ++numopts;
-#endif
-#ifdef RETURN_CODES
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(Return_Codes)));
-        ++numopts;
-#endif
-#ifdef SET_DIR_ATTRIB
         Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
           LoadFarStringSmall(SetDirAttrib)));
         ++numopts;
-#endif
-#ifndef LZW_CLEAN
         Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
           LoadFarStringSmall(Use_Unshrink)));
         ++numopts;
-#endif
-#ifdef USE_VFAT
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(Use_VFAT_support)));
-        ++numopts;
-#endif
         sprintf((char *)(slide+256), LoadFarStringSmall(UseZlib),
           ZLIB_VERSION, zlibVersion());
         Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
           (char *)(slide+256)));
         ++numopts;
-#ifdef WILD_STOP_AT_DIR
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(WildStopAtDir)));
-        ++numopts;
-#endif
-# ifdef PASSWD_FROM_STDIN
-        Info(slide, 0, ((char *)slide, LoadFarString(CompileOptFormat),
-          LoadFarStringSmall(PasswdStdin)));
-# endif
         Info(slide, 0, ((char *)slide, LoadFarString(Decryption),
           CR_MAJORVER, CR_MINORVER, CR_BETA_VER,
           LoadFarStringSmall(CryptDate)));
