@@ -1575,15 +1575,6 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
 #  endif
 #endif
 
-#ifndef STR_TO_ISO
-#  ifdef CRTL_CP_IS_ISO
-#    define STR_TO_ISO          strcpy
-#  else
-#    define STR_TO_ISO          str2iso
-#    define NEED_STR2ISO
-#  endif
-#endif
-
 #ifndef STR_TO_OEM
 #  ifdef CRTL_CP_IS_OEM
 #    define STR_TO_OEM          strcpy

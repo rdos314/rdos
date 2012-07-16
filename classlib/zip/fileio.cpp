@@ -38,7 +38,6 @@
              makelong()
              makeint64()
              fzofft()
-             str2iso()                (CRYPT && NEED_STR2ISO, only)
              str2oem()                (CRYPT && NEED_STR2OEM, only)
              memset()                 (ZMEM only)
              memcpy()                 (ZMEM only)
