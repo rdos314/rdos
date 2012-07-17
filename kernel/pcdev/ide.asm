@@ -34,6 +34,9 @@ INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
 INCLUDE pci.inc
 
+LBA_MODE        = 1
+LBA_48          = 2
+
 part_struc      STRUC
 
 part_status         DB ?
@@ -49,7 +52,7 @@ part_struc      ENDS
 
 drive_data      STRUC
 
-drive_lba_mode          DB ?
+drive_lba_flags         DB ?
 drive_precomp           DB ?
 drive_sectors_per_cyl       DW ?
 drive_heads             DW ?
@@ -423,6 +426,10 @@ SetupLbaNotBusy:
     pop dx
     jc SetupLbaTaskDone
 ;
+    test fs:drive_lba_flags,LBA_48
+    jnz SetupLba48
+
+SetupLba24:
     push edx
     mov dx,fs:disc_io_base
     inc dx
@@ -468,6 +475,63 @@ SetupLbaNotBusy:
 ;
     sub dx,7
     call WaitReady
+    jmp SetupLbaTaskDone
+
+SetupLba48:
+    push edx
+;
+    mov dx,fs:disc_io_base
+    add dx,6
+;
+    mov al,fs:disc_sub_unit
+    shl al,4
+    or al,40h
+    out dx,al
+;
+    mov dx,fs:disc_io_base
+    add dx,2
+;
+    mov al,ch
+    out dx,al
+    inc dx
+;
+    pop eax
+    rol eax,8
+;    
+    jmp short $+2
+    out dx,al
+    inc dx
+;
+    jmp short $+2
+    xor al,al
+    out dx,al
+    inc dx
+;
+    jmp short $+2
+    xor al,al
+    out dx,al
+;
+    sub dx,3
+    jmp short $+2
+    mov al,cl
+    out dx,al
+    inc dx
+;
+    ror eax,8
+    jmp short $+2
+    out dx,al
+    inc dx
+;
+    ror eax,8
+    jmp short $+2
+    out dx,al
+    inc dx
+;
+    ror eax,8
+    jmp short $+2
+    out dx,al
+    inc dx
+    clc
     
 SetupLbaTaskDone:
     pop dx
@@ -596,7 +660,7 @@ ReadDrive       Proc near
     mov ax,fs:disc_io_base
     mov ds:IdeIoBase,ax
     pop bx
-    cmp fs:drive_lba_mode,0
+    test fs:drive_lba_flags,LBA_MODE
     jz ReadDriveIde
 
 ReadDriveLba:
@@ -627,6 +691,12 @@ ReadDriveStart:
 ;
     push dx     
     mov al,20h
+    test fs:drive_lba_flags,LBA_48
+    jz ReadDriveLbaOk
+;
+    or al,4
+
+ReadDriveLbaOk:    
     mov dx,fs:disc_io_base
     call ReadTaskFile
     pop dx
@@ -664,8 +734,9 @@ WriteDrive      Proc near
     mov ax,fs:disc_io_base
     mov ds:IdeIoBase,ax
     pop bx
-    cmp fs:drive_lba_mode,0
+    test fs:drive_lba_flags,LBA_MODE
     jz WriteDriveIde
+
 WriteDriveLba:
     push edx
     movzx eax,fs:drive_sectors_per_unit
@@ -694,6 +765,12 @@ WriteDriveStart:
 ;
     push dx     
     mov al,30h
+    test fs:drive_lba_flags,LBA_48
+    jz WriteDriveLbaOk
+;
+    or al,4
+
+WriteDriveLbaOk:    
     mov dx,fs:disc_io_base
     call WriteTaskFile
     pop dx
@@ -730,6 +807,7 @@ GetDriveParams  Proc near
     AllocateSmallLinear
     mov edi,edx
 ;
+    mov fs:drive_lba_flags,0
     mov fs:drive_precomp,0FFh
     xor dx,dx
     xor bx,bx
@@ -743,7 +821,29 @@ GetDriveParams  Proc near
     call ReadTaskFile
     jc get_drive_param_done
 ;
+    mov ax,es:[edi+166]
+    test ax,4000h
+    jz get_drive_param24
+
+get_drive_param48:
+    mov edx,es:[edi+204]
+    mov eax,es:[edi+200]
+    or edx,edx
+    jz get_drive_param_save48
+;
+    mov eax,0FFFFFFFFh
+
+get_drive_param_save48:
+    cmp eax,es:[edi+120]
+    jb get_drive_param24
+;    
+    or fs:drive_lba_flags,LBA_48
+    jmp get_drive_param_sectors_ok
+
+get_drive_param24:
     mov eax,es:[edi+120]
+
+get_drive_param_sectors_ok:
     mov fs:drive_lba_sectors,eax
     mov ax,word ptr es:[edi+2]
     mov fs:drive_cyls,ax
@@ -756,7 +856,7 @@ GetDriveParams  Proc near
     test ax,200h
     jz get_drive_param_done
 ;    
-    mov fs:drive_lba_mode,1
+    or fs:drive_lba_flags,LBA_MODE
     mov cx,1
     mov ah,fs:drive_precomp
     xor edx,edx
@@ -764,11 +864,17 @@ GetDriveParams  Proc near
     jc get_drive_param_done
 ;
     mov al,20h
+    test fs:drive_lba_flags,LBA_48
+    jz get_drive_param_check
+;
+    or al,4
+
+get_drive_param_check:    
     mov dx,fs:disc_io_base
     call ReadTaskFile       
     jnc get_drive_param_done
 ;
-    mov fs:drive_lba_mode,0
+    mov fs:drive_lba_flags,0
     mov bh,0
     mov bl,1
     mov cx,1
@@ -818,8 +924,7 @@ CalcParam       Proc near
     mul edi
     mov edi,eax
 ;
-    mov cl,fs:drive_lba_mode
-    or cl,cl
+    test fs:drive_lba_flags,LBA_MODE
     jz calc_param_chs
 ;
     cmp edi,fs:drive_lba_sectors
@@ -1360,7 +1465,7 @@ read_drive_retry_loop:
     mov ax,fs:disc_io_base
     mov ds:IdeIoBase,ax
 ;
-    cmp fs:drive_lba_mode,0
+    test fs:drive_lba_flags,LBA_MODE
     jz read_drive_ide
 
 read_drive_lba:
@@ -1388,6 +1493,12 @@ read_drive_start:
     jc read_drive_fail
 ;
     mov al,20h
+    test fs:drive_lba_flags,LBA_48
+    jz read_drive_lba_ok
+;
+    or al,4
+
+read_drive_lba_ok:    
     mov dx,fs:disc_io_base
     add dx,7
     out dx,al
@@ -1490,7 +1601,7 @@ write_drive_retry_loop:
     mov ax,fs:disc_io_base
     mov ds:IdeIoBase,ax
 ;
-    cmp fs:drive_lba_mode,0
+    test fs:drive_lba_flags,LBA_MODE
     jz write_drive_ide
 
 write_drive_lba:
@@ -1518,6 +1629,12 @@ write_drive_start:
     jc write_drive_retry
 ;
     mov al,30h
+    test fs:drive_lba_flags,LBA_48
+    jz write_drive_lba_ok
+;
+    or al,4
+
+write_drive_lba_ok:    
     mov dx,fs:disc_io_base
     add dx,7
     out dx,al
