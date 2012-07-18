@@ -18,13 +18,6 @@
  * (the latter with UNZIP_INTERNAL defined...).
  */
 
-#ifndef OF
-#  define OF(a) a
-#endif
-#ifndef const
-#  define const const
-#endif
-
 #ifndef CRC_32_TAB
 #  define CRC_32_TAB     crc_32_tab
 #endif
