@@ -141,17 +141,6 @@ typedef size_t extent;
 
 /* Default fzofft() format selection. */
 
-#ifndef FZOFFT_FMT
-
-#  ifdef LARGE_FILE_SUPPORT
-#    define FZOFFT_FMT "ll"
-#    define FZOFFT_HEX_WID_VALUE "16"
-#  else /* def LARGE_FILE_SUPPORT */
-#    define FZOFFT_FMT "l"
-#    define FZOFFT_HEX_WID_VALUE "8"
-#  endif /* def LARGE_FILE_SUPPORT */
-
-#endif /* ndef FZOFFT_FMT */
 
 #define FZOFFT_HEX_WID ((char *) -1)
 #define FZOFFT_HEX_DOT_WID ((char *) -2)
@@ -159,23 +148,11 @@ typedef size_t extent;
 #define FZOFFT_NUM 4            /* Number of chambers. */
 #define FZOFFT_LEN 24           /* Number of characters/chamber. */
 
-#ifndef S_TIME_T_MAX            /* max value of signed (>= 32-bit) time_t */
-#  define S_TIME_T_MAX  ((time_t)(unsigned long)0x7fffffffL)
-#endif
-#ifndef U_TIME_T_MAX            /* max value of unsigned (>= 32-bit) time_t */
-#  define U_TIME_T_MAX  ((time_t)(unsigned long)0xffffffffL)
-#endif
-#ifdef DOSTIME_MINIMUM          /* min DOSTIME value (1980-01-01) */
-#  undef DOSTIME_MINIMUM
-#endif
-#define DOSTIME_MINIMUM ((unsigned long)0x00210000L)
-#ifdef DOSTIME_2038_01_18       /* approximate DOSTIME equivalent of */
-#  undef DOSTIME_2038_01_18     /*  the signed-32-bit time_t limit */
-#endif
+#define S_TIME_T_MAX  ((time_t)(unsigned long)0x7fffffffL)
+#define U_TIME_T_MAX  ((time_t)(unsigned long)0xffffffffL)
 #define DOSTIME_2038_01_18 ((unsigned long)0x74320000L)
 
-#    define ZSUFX       ".zip"
-#  define ALT_ZSUFX     ".ZIP"   /* Unix-only so (only case-sensitive fs) */
+#define ZSUFX       ".zip"
 
 #define CENTRAL_HDR_SIG   "\001\002"   /* the infamous "PK" signature bytes, */
 #define LOCAL_HDR_SIG     "\003\004"   /*  w/o "PK" (so unzip executable not */
