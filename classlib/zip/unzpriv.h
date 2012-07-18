@@ -112,13 +112,7 @@ typedef size_t extent;
 
 # define DIR_BLKSIZ 16384   /* use more memory, to reduce long-range seeks */
 
-#ifndef WSIZE
-#  ifdef USE_DEFLATE64
-#    define WSIZE   65536L  /* window size--must be a power of two, and */
-#  else                     /*  at least 64K for PKZip's deflate64 method */
-#    define WSIZE   0x8000  /* window size--must be a power of two, and */
-#  endif                    /*  at least 32K for zip's deflate method */
-#endif
+#define WSIZE   0x8000  /* window size--must be a power of two, and */
 
 #if (defined(DYNALLOC_CRCTAB) && !defined(DYNAMIC_CRC_TABLE))
 #  undef DYNALLOC_CRCTAB

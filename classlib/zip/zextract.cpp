@@ -1236,9 +1236,6 @@ reprompt:
 
 
 
-/* wsize is used in extract_or_test_member() and UZbunzip2() */
-#  define wsize WSIZE       /* wsize is a constant */
-
 /***************************************/
 /*  Function extract_or_test_member()  */
 /***************************************/
@@ -1294,7 +1291,7 @@ static int extract_or_test_member(__G)    /* return PK-type error code */
             G.outcnt = 0L;
             while ((b = NEXTBYTE) != EOF) {
                 *G.outptr++ = (unsigned char)b;
-                if (++G.outcnt == wsize) {
+                if (++G.outcnt == WSIZE) {
                     error = flush(__G__ redirSlide, G.outcnt, 0);
                     G.outptr = redirSlide;
                     G.outcnt = 0L;

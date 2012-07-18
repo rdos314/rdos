@@ -117,8 +117,6 @@
 #define UNZIP_INTERNAL
 #include "unzip.h"      /* must supply slide[] (unsigned char) array and NEXTBYTE macro */
 
-#define wszimpl WSIZE
-
 /* routines here */
 static int get_tree OF((__GPRO__ unsigned *l, unsigned n));
 static int explode_lit OF((__GPRO__ struct huft *tb, struct huft *tl,
@@ -269,7 +267,7 @@ static int explode_lit(struct huft *tb, struct huft *tl, struct huft *td, unsign
       s--;
       DECODEHUFT(tb, bb, mb)    /* get coded literal */
       redirSlide[w++] = (unsigned char)t->v.n;
-      if (w == wszimpl)
+      if (w == WSIZE)
       {
         if ((retval = flush(__G__ redirSlide, (unsigned long)w, 0)) != 0)
           return retval;
@@ -296,7 +294,7 @@ static int explode_lit(struct huft *tb, struct huft *tl, struct huft *td, unsign
       /* do the copy */
       s = (s > (zusz_t)n ? s - (zusz_t)n : 0);
       do {
-          e = wszimpl - ((d &= wszimpl-1) > w ? d : w);
+          e = WSIZE - ((d &= WSIZE-1) > w ? d : w);
         if (e > n) e = n;
         n -= e;
         if (u && w <= d)
@@ -316,7 +314,7 @@ static int explode_lit(struct huft *tb, struct huft *tl, struct huft *td, unsign
             do {
               redirSlide[w++] = redirSlide[d++];
             } while (--e);
-        if (w == wszimpl)
+        if (w == WSIZE)
         {
           if ((retval = flush(__G__ redirSlide, (unsigned long)w, 0)) != 0)
             return retval;
@@ -372,7 +370,7 @@ static int explode_nolit(struct huft *tl, struct huft *td, unsigned bl, unsigned
       s--;
       NEEDBITS(8)
       redirSlide[w++] = (unsigned char)b;
-      if (w == wszimpl)
+      if (w == WSIZE)
       {
         if ((retval = flush(__G__ redirSlide, (unsigned long)w, 0)) != 0)
           return retval;
@@ -400,7 +398,7 @@ static int explode_nolit(struct huft *tl, struct huft *td, unsigned bl, unsigned
       /* do the copy */
       s = (s > (zusz_t)n ? s - (zusz_t)n : 0);
       do {
-          e = wszimpl - ((d &= wszimpl-1) > w ? d : w);
+          e = WSIZE - ((d &= WSIZE-1) > w ? d : w);
         if (e > n) e = n;
         n -= e;
         if (u && w <= d)
@@ -420,7 +418,7 @@ static int explode_nolit(struct huft *tl, struct huft *td, unsigned bl, unsigned
             do {
               redirSlide[w++] = redirSlide[d++];
             } while (--e);
-        if (w == wszimpl)
+        if (w == WSIZE)
         {
           if ((retval = flush(__G__ redirSlide, (unsigned long)w, 0)) != 0)
             return retval;

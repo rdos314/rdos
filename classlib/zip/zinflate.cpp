@@ -278,11 +278,6 @@
 #define INVALID_CODE 99
 #define IS_INVALID_CODE(c)  ((c) == INVALID_CODE)
 
-#ifndef WSIZE               /* default is 32K resp. 64K */
-#    define WSIZE   0x8000  /* window size--must be a power of two, and */
-#endif
-
-#  define wsize WSIZE       /* wsize is a constant */
 #ifndef NEXTBYTE        /* default is to simply get a byte from stdin */
 #  define NEXTBYTE getchar()
 #endif
@@ -384,8 +379,8 @@ int UZinflate(int is_defl64)
         {
             unsigned i;
             int windowBits;
-            /* windowBits = log2(wsize) */
-            for (i = (unsigned)wsize, windowBits = 0;
+            /* windowBits = log2(WSIZE) */
+            for (i = (unsigned)WSIZE, windowBits = 0;
                  !(i & 1);  i >>= 1, ++windowBits);
             if ((unsigned)windowBits > (unsigned)15)
                 windowBits = 15;
