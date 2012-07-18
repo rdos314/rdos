@@ -1084,10 +1084,6 @@ void     close_outfile   OF((__GPRO));                              /* local */
    extern const unsigned near mask_bits[17];
    extern const char *fnames[2];
 
-#ifdef IZ_ISO2OEM_ARRAY
-   extern const unsigned char *iso2oem;
-   extern const unsigned char iso2oem_850[];
-#endif
 #ifdef IZ_OEM2ISO_ARRAY
    extern const unsigned char *oem2iso;
    extern const unsigned char oem2iso_850[];
