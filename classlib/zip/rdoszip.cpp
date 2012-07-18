@@ -19,6 +19,21 @@
 static int created_dir;        /* used by mapname(), checkdir() */
 static int renamed_fullpath;   /* ditto */
 
+/*
+ *  Copy the zero-terminated string in str1 into str2, converting any
+ *  uppercase letters to lowercase as we go.  str2 gets zero-terminated
+ *  as well, of course.  str1 and str2 may be the same character array.
+ */
+void strtolower(char *str1, char *str2)
+{
+   char  *p, *q;
+   p = (char *)(str1) - 1;
+   q = (char *)(str2);
+   while (*++p)
+       *q++ = (char)(isupper((int)(*p))? tolower((int)(*p)) : *p);
+   *q = '\0';
+}
+
 int defer_dir_attribs(direntry **pd)
 {
     struct dirent *d_entry;

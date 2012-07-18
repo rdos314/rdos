@@ -1104,7 +1104,7 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
                             G.pInfo->HasUxAtt, (option == DS_FN_L));
 
         if (G.pInfo->lcflag)      /* replace with lowercase filename */
-            STRLOWER(G.filename, G.filename);
+            strtolower(G.filename, G.filename);
 
         if (G.pInfo->vollabel && length > 8 && G.filename[8] == '.') {
             char *p = G.filename+8;

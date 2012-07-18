@@ -820,7 +820,7 @@ void     close_outfile   OF((__GPRO));                              /* local */
 #endif
 
 void Ext_ASCII_TO_Native(char *string, int hostnum, int hostver, int isuxatt, int islochdr);
-
+void strtolower(char *str1, char *str2);
 
 #ifdef SYSTEM_SPECIFIC_CTOR
    void  SYSTEM_SPECIFIC_CTOR   OF((__GPRO));                       /* local */
@@ -955,23 +955,6 @@ void Ext_ASCII_TO_Native(char *string, int hostnum, int hostver, int isuxatt, in
  *
  */
 
-
-/* GRR:  should use StringLower for STRLOWER macro if possible */
-
-/*
- *  Copy the zero-terminated string in str1 into str2, converting any
- *  uppercase letters to lowercase as we go.  str2 gets zero-terminated
- *  as well, of course.  str1 and str2 may be the same character array.
- */
-#  define STRLOWER(str1, str2) \
-   { \
-       char  *p, *q; \
-       p = (char *)(str1) - 1; \
-       q = (char *)(str2); \
-       while (*++p) \
-           *q++ = (char)(isupper((int)(*p))? tolower((int)(*p)) : *p); \
-       *q = '\0'; \
-   }
 /*
  *  NOTES:  This macro makes no assumptions about the characteristics of
  *    the tolower() function or macro (beyond its existence), nor does it
@@ -1034,11 +1017,6 @@ void Ext_ASCII_TO_Native(char *string, int hostnum, int hostver, int isuxatt, in
 #      define CRYP_USES_ISO2OEM
 #    endif
 #endif
-
-/* codepage conversion setup for testp() in crypt.c */
-#  ifndef STR_TO_CP2
-#    define STR_TO_CP2  STR_TO_OEM
-#  endif
 
 
 /* Convert filename (and file comment string) into "internal" charset.
