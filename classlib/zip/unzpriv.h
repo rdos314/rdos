@@ -43,10 +43,6 @@
 #define USE_ZLIB
 #define SET_DIR_ATTRIB
 
-#ifndef Cdecl
-#  define Cdecl __cdecl
-#endif
-
 
 #define DIR_END       '\\'      /* OS uses '\\' as directory separator */
 #define DIR_END2      '/'       /* also check for '/' (RTL may convert) */

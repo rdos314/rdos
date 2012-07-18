@@ -88,7 +88,7 @@ static int extract_or_test_member OF((__GPRO));
         unsigned compr_offset,
         int (*test_uc_ebdata)(__GPRO__ unsigned char *eb, unsigned eb_size,
                               unsigned char *eb_ucptr, unsigned long eb_ucsize)));
-   static int Cdecl dircomp OF((const void *a, const void *b));
+   static int dircomp OF((const void *a, const void *b));
 
 
 
@@ -1877,7 +1877,7 @@ char *fnfilter(const char *raw, unsigned char *space, extent size)   /* convert 
 /*  Function dircomp()  */
 /************************/
 
-static int Cdecl dircomp(const void *a, const void *b)  /* used by qsort(); swiped from Zip */
+static int dircomp(const void *a, const void *b)  /* used by qsort(); swiped from Zip */
 {
     /* order is significant:  this sorts in reverse order (deepest first) */
     return strcmp((*(direntry **)b)->fn, (*(direntry **)a)->fn);
