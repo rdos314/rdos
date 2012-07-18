@@ -250,7 +250,7 @@ typedef struct Globals {
     local_file_hdr  lrec;          /* used in unzip.c, extract.c */
     cdir_file_hdr   crec;          /* used in unzip.c, extract.c, misc.c */
     ecdir_rec       ecrec;         /* used in unzip.c, extract.c */
-    z_stat   statbuf;              /* used by main, mapname, check_for_newer */
+    struct stat   statbuf;              /* used by main, mapname, check_for_newer */
 
     int      mem_mode;
     unsigned char      *outbufptr;           /* extract.c static */

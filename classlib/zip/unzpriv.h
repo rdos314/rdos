@@ -66,8 +66,6 @@ int screensize(int *tt_rows, int *tt_cols);
 #define TABSIZE 4
 
   /* stat struct */
-typedef struct stat z_stat;
-# define Z_STAT_DEFINED
 
 #  define FZOFFT_FMT "l"
 #  define FZOFFT_HEX_WID_VALUE "8"
