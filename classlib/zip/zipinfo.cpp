@@ -513,7 +513,7 @@ int zi_opts(int *pargc, char ***pargv)
     if ((argc-- == 0) || error) {
         *pargc = argc;
         *pargv = argv;
-        return USAGE(error);
+        return usage(error);
     }
 
     if (G.M_flag && !isatty(1))  /* stdout redirected: "more" func useless */

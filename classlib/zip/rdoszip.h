@@ -36,14 +36,6 @@
 #define DIR_END       '\\'      /* OS uses '\\' as directory separator */
 #define DIR_END2      '/'       /* also check for '/' (RTL may convert) */
 #define MALLOC_WORK
-#ifdef DATE_FORMAT
-#  undef DATE_FORMAT
-#endif
-#define DATE_FORMAT   dateformat()
-#ifdef DATE_SEPCHAR
-#  undef DATE_SEPCHAR
-#endif
-#define DATE_SEPCHAR  dateseparator()
 #define lenEOL        2
 #define PutNativeEOL  {*q++ = native(CR); *q++ = native(LF);}
 

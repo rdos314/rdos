@@ -86,25 +86,8 @@ typedef size_t extent;
 #ifndef DIR_END
 #  define DIR_END       '/'     /* last char before program name or filename */
 #endif
-#ifndef DATE_FORMAT
-# ifdef DATEFMT_ISO_DEFAULT
 #  define DATE_FORMAT   DF_YMD  /* defaults to invariant ISO-style */
-# else
-#  define DATE_FORMAT   DF_MDY  /* defaults to US convention */
-# endif
-#endif
-#ifndef DATE_SEPCHAR
 #  define DATE_SEPCHAR  '-'
-#endif
-
-#ifndef USAGE
-#  define USAGE(ret)    usage(__G__ (ret))    /* used in unzip.c, zipinfo.c */
-#endif
-#ifndef TIMET_TO_NATIVE         /* everybody but MSC 7.0 and Macintosh */
-#  define TIMET_TO_NATIVE(x)
-#  define NATIVE_TO_TIMET(x)
-#endif
-
 
 /* defaults that we hope will take care of most machines in the future */
 
@@ -1272,8 +1255,6 @@ int      iswild          OF((const char *p));                    /* match.c */
 /* declarations of public CRC-32 functions have been moved into crc32.h
    (free_crc_table(), get_crc_table(), crc32())                      crc32.c */
 
-int      dateformat      OF((void));                                /* local */
-char     dateseparator   OF((void));                                /* local */
 #ifndef WINDLL
    void  version         OF((__GPRO));                              /* local */
 #endif

@@ -767,7 +767,7 @@ int uz_opts(int *pargc, char ***pargv)
             return PK_OK;
         } else
         {
-            return USAGE(PK_OK);
+            return usage(PK_OK);
         }
     }
 
@@ -796,7 +796,7 @@ int uz_opts(int *pargc, char ***pargv)
         }
         if (!G.noargs && !error)
             error = TRUE;       /* had options (not -h or -v) but no zipfile */
-        return USAGE(error);
+        return usage(error);
     }
 
     if (uO.cflag || uO.tflag || uO.vflag || uO.zflag

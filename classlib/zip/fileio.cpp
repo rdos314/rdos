@@ -886,10 +886,8 @@ time_t dos_to_unix_time(unsigned long dosdatetime)
         m_time = U_TIME_T_MAX;  /* saturate in case of (unsigned) overflow */
     if (m_time < (time_t)0L)    /* a converted DOS time cannot be negative */
         m_time = S_TIME_T_MAX;  /*  -> saturate at max signed time_t value */
-    TIMET_TO_NATIVE(m_time)     /* NOP unless MSC 7.0 or Macintosh */
     if (((tm = localtime((time_t *)&m_time)) != NULL) && tm->tm_isdst)
         m_time -= 60L * 60L;    /* adjust for daylight savings time */
-    NATIVE_TO_TIMET(m_time)     /* NOP unless MSC 7.0 or Macintosh */
     TTrace((stderr, "  m_time after DST =       %lu\n", (unsigned long)m_time));
 
     if ( (dosdatetime >= DOSTIME_2038_01_18) &&
@@ -921,8 +919,6 @@ int check_for_newer(char *filename)  /* return 1 if existing file is newer */
     Trace((stderr, "check_for_newer:  stat(%s) returns 0:  file exists\n",
       FnFilter1(filename)));
 
-
-    NATIVE_TO_TIMET(G.statbuf.st_mtime)   /* NOP unless MSC 7.0 or Macintosh */
 
     /* round up existing filetime to nearest 2 seconds for comparison,
      * but saturate in case of arithmetic overflow

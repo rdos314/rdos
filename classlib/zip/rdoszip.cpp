@@ -402,25 +402,6 @@ int mapname(int renamed)
 
 
 
-/*************************/
-/* Function dateformat() */
-/*************************/
-
-int dateformat()
-{
-  return DF_YMD;
-}
-
-
-/****************************/
-/* Function dateseparator() */
-/****************************/
-
-char dateseparator()
-{
-    return '-';
-}
-
 
 /************************/
 /*  Function version()  */
