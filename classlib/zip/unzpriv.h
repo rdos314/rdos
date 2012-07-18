@@ -882,10 +882,6 @@ void strtolower(char *str1, char *str2);
 #define Info(buf,flag,sprf_arg) \
        (*G.message)((void *)&G, (unsigned char *)(buf), (unsigned long)sprintf sprf_arg, (flag))
 
-/*  This wrapper macro around fzofft() is just defined to "hide" the
- *  argument needed to reference the global storage buffers.
- */
-#define FmZofft(val, pre, post) fzofft(__G__ val, pre, post)
 
 /*  The following macro wrappers around the fnfilter function are used many
  *  times to prepare archive entry names or name components for displaying

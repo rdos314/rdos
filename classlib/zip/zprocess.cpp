@@ -496,7 +496,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
             (long)0)
         {
             Info(slide, 0x401, ((char *)slide, MissingBytes,
-              G.zipfn, FmZofft((-G.extra_bytes), NULL, NULL)));
+              G.zipfn, fzofft((-G.extra_bytes), NULL, NULL)));
             error_in_archive = PK_ERR;
         } else if (G.extra_bytes > 0) {
             if ((G.ecrec.offset_start_central_directory == 0) &&
@@ -511,7 +511,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
             else {
                 Info(slide, 0x401, ((char *)slide,
                   ExtraBytesAtStart, G.zipfn,
-                  FmZofft(G.extra_bytes, NULL, NULL),
+                  fzofft(G.extra_bytes, NULL, NULL),
                   (G.extra_bytes == 1)? "":"s"));
                 error_in_archive = PK_WARN;
             }
@@ -562,7 +562,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
                 return (error != PK_OK ? error : PK_BADERR);
             }
             Info(slide, 0x401, ((char *)slide, CentDirTooLong,
-              G.zipfn, FmZofft((-tmp), NULL, NULL)));
+              G.zipfn, fzofft((-tmp), NULL, NULL)));
             error_in_archive = PK_ERR;
         }
 

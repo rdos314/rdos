@@ -572,48 +572,48 @@ void zi_end_central(__G)
         Info(slide, 0, ((char *)slide, LineSeparators));
 
         Info(slide, 0, ((char *)slide, ZipFSizeVerbose,
-          FmZofft(G.ziplen, "11", NULL),
-          FmZofft(G.ziplen, FZOFFT_HEX_DOT_WID, "X")));
+          fzofft(G.ziplen, "11", NULL),
+          fzofft(G.ziplen, FZOFFT_HEX_DOT_WID, "X")));
         Info(slide, 0, ((char *)slide, ActOffsetCentDir,
-          FmZofft(G.real_ecrec_offset, "11", "u"),
-          FmZofft(G.real_ecrec_offset, FZOFFT_HEX_DOT_WID, "X"),
-          FmZofft(G.expect_ecrec_offset, "11", "u"),
-          FmZofft(G.expect_ecrec_offset, FZOFFT_HEX_DOT_WID, "X")));
+          fzofft(G.real_ecrec_offset, "11", "u"),
+          fzofft(G.real_ecrec_offset, FZOFFT_HEX_DOT_WID, "X"),
+          fzofft(G.expect_ecrec_offset, "11", "u"),
+          fzofft(G.expect_ecrec_offset, FZOFFT_HEX_DOT_WID, "X")));
 
         if (G.ecrec.number_this_disk == 0) {
             Info(slide, 0, ((char *)slide, SinglePartArchive1,
-              FmZofft(G.ecrec.total_entries_central_dir, NULL, "u"),
+              fzofft(G.ecrec.total_entries_central_dir, NULL, "u"),
               (G.ecrec.total_entries_central_dir == 1)? "entry" : "entries",
-              FmZofft(G.ecrec.size_central_directory, NULL, "u"),
-              FmZofft(G.ecrec.size_central_directory,
+              fzofft(G.ecrec.size_central_directory, NULL, "u"),
+              fzofft(G.ecrec.size_central_directory,
                       FZOFFT_HEX_DOT_WID, "X")));
             Info(slide, 0, ((char *)slide, SinglePartArchive2,
-              FmZofft(G.ecrec.offset_start_central_directory, NULL, "u"),
-              FmZofft(G.ecrec.offset_start_central_directory,
+              fzofft(G.ecrec.offset_start_central_directory, NULL, "u"),
+              fzofft(G.ecrec.offset_start_central_directory,
                       FZOFFT_HEX_DOT_WID, "X")));
         } else {
             Info(slide, 0, ((char *)slide, MultiPartArchive1,
               (unsigned long)(G.ecrec.number_this_disk + 1),
               (unsigned long)(G.ecrec.num_disk_start_cdir + 1)));
             Info(slide, 0, ((char *)slide, MultiPartArchive2,
-              FmZofft(G.ecrec.offset_start_central_directory, NULL, "u"),
-              FmZofft(G.ecrec.offset_start_central_directory,
+              fzofft(G.ecrec.offset_start_central_directory, NULL, "u"),
+              fzofft(G.ecrec.offset_start_central_directory,
                       FZOFFT_HEX_DOT_WID, "X"),
-              FmZofft(G.ecrec.size_central_directory, NULL, "u"),
-              FmZofft(G.ecrec.size_central_directory,
+              fzofft(G.ecrec.size_central_directory, NULL, "u"),
+              fzofft(G.ecrec.size_central_directory,
                       FZOFFT_HEX_DOT_WID, "X")));
             Info(slide, 0, ((char *)slide, MultiPartArchive3,
-              FmZofft(G.ecrec.num_entries_centrl_dir_ths_disk, NULL, "u"),
+              fzofft(G.ecrec.num_entries_centrl_dir_ths_disk, NULL, "u"),
               (G.ecrec.num_entries_centrl_dir_ths_disk == 1)? "is" : "are",
-              FmZofft(G.ecrec.total_entries_central_dir, NULL, "u"),
+              fzofft(G.ecrec.total_entries_central_dir, NULL, "u"),
               (G.ecrec.total_entries_central_dir == 1) ? "entry" : "entries"));
         }
     }
     else if (uO.hflag) {
         /* print zip file size and number of contained entries: */
         Info(slide, 0, ((char *)slide, ZipInfHeader2,
-          FmZofft(G.ziplen, NULL, NULL),
-          FmZofft(G.ecrec.total_entries_central_dir, NULL, "u")));
+          fzofft(G.ziplen, NULL, NULL),
+          fzofft(G.ecrec.total_entries_central_dir, NULL, "u")));
     }
 
 } /* end function zi_end_central() */
@@ -830,8 +830,8 @@ int zipinfo(__G)   /* return PK-type error code */
         }
         Info(slide, 0, ((char *)slide, ZipfileStats,
           members, (members==1L)? nullStr:PlurSufx,
-          FmZofft(tot_ucsize, NULL, "u"),
-          FmZofft(tot_csize, NULL, "u"),
+          fzofft(tot_ucsize, NULL, "u"),
+          fzofft(tot_csize, NULL, "u"),
           sgn, cfactor/10, cfactor%10));
     }
 
@@ -933,7 +933,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
           G.crec.relative_offset_local_header, *pEndprev));
          */
         Info(slide, 0, ((char *)slide, ExtraBytesPreceding,
-          FmZofft((G.crec.relative_offset_local_header - (*pEndprev)),
+          fzofft((G.crec.relative_offset_local_header - (*pEndprev)),
           NULL, NULL)));
     }
 
@@ -956,8 +956,8 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
     (*G.message)((void *)&G, (unsigned char *)"  ", 2L, 0);  fnprint(__G);
 
     Info(slide, 0, ((char *)slide, LocalHeaderOffset,
-      FmZofft(G.crec.relative_offset_local_header, NULL, "u"),
-      FmZofft(G.crec.relative_offset_local_header, FZOFFT_HEX_DOT_WID, "X")));
+      fzofft(G.crec.relative_offset_local_header, NULL, "u"),
+      fzofft(G.crec.relative_offset_local_header, FZOFFT_HEX_DOT_WID, "X")));
 
     if (hostnum >= NUM_HOSTS) {
         sprintf(unkn, UnknownNo,
@@ -1016,9 +1016,9 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
     Info(slide, 0, ((char *)slide, FileModDate, d_t_buf));
     Info(slide, 0, ((char *)slide, CRC32Value, G.crec.crc32));
     Info(slide, 0, ((char *)slide, CompressedFileSize,
-      FmZofft(G.crec.csize, NULL, "u")));
+      fzofft(G.crec.csize, NULL, "u")));
     Info(slide, 0, ((char *)slide, UncompressedFileSize,
-      FmZofft(G.crec.ucsize, NULL, "u")));
+      fzofft(G.crec.ucsize, NULL, "u")));
     Info(slide, 0, ((char *)slide, FilenameLength,
       G.crec.filename_length));
     Info(slide, 0, ((char *)slide, ExtraFieldLength,
@@ -1904,7 +1904,7 @@ static int zi_short(__G)   /* return PK-type error code */
 
     Info(slide, 0, ((char *)slide, "%s %s %s ", attribs,
       os[hostnum],
-      FmZofft(G.crec.ucsize, "8", "u")));
+      fzofft(G.crec.ucsize, "8", "u")));
     Info(slide, 0, ((char *)slide, "%c",
       (G.crec.general_purpose_bit_flag & 1)?
       ((G.crec.internal_file_attributes & 1)? 'T' : 'B') :  /* encrypted */
@@ -1927,7 +1927,7 @@ static int zi_short(__G)   /* return PK-type error code */
           (ratio(G.crec.ucsize,csiz)+5)/10));
     } else if (uO.lflag == 5)
         Info(slide, 0, ((char *)slide, " %s",
-          FmZofft(G.crec.csize, "8", "u")));
+          fzofft(G.crec.csize, "8", "u")));
 
     /* For printing of date & time, a "char d_t_buf[16]" is required.
      * To save stack space, we reuse the "char attribs[16]" buffer whose

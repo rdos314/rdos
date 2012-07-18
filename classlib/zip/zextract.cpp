@@ -1009,8 +1009,8 @@ static int extract_or_test_entrylist(unsigned numchunk,
                 Info(slide, 0x401, ((char *)slide,
                   WrnStorUCSizCSizDiff,
                   FnFilter1(G.filename),
-                  FmZofft(G.lrec.ucsize, NULL, "u"),
-                  FmZofft(csiz_decrypted, NULL, "u")));
+                  fzofft(G.lrec.ucsize, NULL, "u"),
+                  fzofft(csiz_decrypted, NULL, "u")));
                 G.lrec.ucsize = csiz_decrypted;
                 if (error_in_archive < PK_WARN)
                     error_in_archive = PK_WARN;
@@ -1345,19 +1345,19 @@ static int extract_or_test_member(__G)    /* return PK-type error code */
                         Info(slide, 0x401, ((char *)slide,
                           LengthMsg,
                           "", warning ? "warning" : "error",
-                          FmZofft(G.used_csize, NULL, NULL),
-                          FmZofft(G.lrec.ucsize, NULL, "u"),
+                          fzofft(G.used_csize, NULL, NULL),
+                          fzofft(G.lrec.ucsize, NULL, "u"),
                           warning ? "  " : "",
-                          FmZofft(G.lrec.csize, NULL, "u"),
+                          fzofft(G.lrec.csize, NULL, "u"),
                           " [", FnFilter1(G.filename), "]"));
                     else
                         Info(slide, 0x401, ((char *)slide,
                           LengthMsg,
                           "\n", warning ? "warning" : "error",
-                          FmZofft(G.used_csize, NULL, NULL),
-                          FmZofft(G.lrec.ucsize, NULL, "u"),
+                          fzofft(G.used_csize, NULL, NULL),
+                          fzofft(G.lrec.ucsize, NULL, "u"),
                           warning ? "  " : "",
-                          FmZofft(G.lrec.csize, NULL, "u"),
+                          fzofft(G.lrec.csize, NULL, "u"),
                           "", "", "."));
                     error = warning ? PK_WARN : PK_ERR;
                 } else if (r < PK_DISK) {
