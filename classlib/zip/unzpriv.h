@@ -400,25 +400,10 @@ typedef size_t extent;
 #define CR     13        /* '\r' on ASCII machines; must be 13 due to EBCDIC */
 #define CTRLZ  26        /* DOS & OS/2 EOF marker (used in fileio.c, vms.c) */
 
-#ifndef ENV_UNZIP
-#  define ENV_UNZIP       "UNZIP"          /* the standard names */
-#  define ENV_ZIPINFO     "ZIPINFO"
-#endif
-#define ENV_UNZIP2        "UNZIPOPT"     /* alternate names, for zip compat. */
-#define ENV_ZIPINFO2      "ZIPINFOOPT"
-
-#ifdef WILD_STOP_AT_DIR
-#  define __WDLPRO  , int sepc
-#  define __WDL     , sepc
-#  define __WDLDEF  int sepc;
-#  define WISEP     , (uO.W_flag ? '/' : '\0')
-#else
-#  define __WDLPRO
-#  define __WDL
-#  define __WDLDEF
-#  define WISEP
-#endif
-
+#define ENV_UNZIP       "UNZIP"          /* the standard names */
+#define ENV_ZIPINFO     "ZIPINFO"
+#define ENV_UNZIP2      "UNZIPOPT"     /* alternate names, for zip compat. */
+#define ENV_ZIPINFO2    "ZIPINFOOPT"
 
 
 
@@ -426,16 +411,6 @@ typedef size_t extent;
 /*  Typedefs  */
 /**************/
 
-#ifdef ZIP64_SUPPORT
-# ifndef Z_UINT8_DEFINED
-#   if (defined(__GNUC__) || defined(__hpux) || defined(__SUNPRO_C))
-  typedef unsigned long long    z_uint8;
-#   else
-  typedef unsigned __int64      z_uint8;
-#   endif
-#   define Z_UINT8_DEFINED
-# endif
-#endif
 #ifndef Z_UINT4_DEFINED
 # if (defined(MODERN) && !defined(NO_LIMITS_H))
 #  if (defined(UINT_MAX) && (UINT_MAX == 0xffffffffUL))
@@ -471,22 +446,11 @@ typedef size_t extent;
    c) enumeration and counts of zipfile volumes of multivolume archives
       (2 bytes / 4 bytes)
  */
-#ifdef ZIP64_SUPPORT
-  typedef  z_uint8              zusz_t;     /* zipentry sizes & offsets */
-  typedef  z_uint8              zucn_t;     /* archive entry counts */
-  typedef  z_uint4              zuvl_t;     /* multivolume numbers */
-# define MASK_ZUCN64            (~(zucn_t)0)
-/* In case we ever get to support an environment where z_uint8 may be WIDER
-   than 64 bit wide, we will have to apply a construct similar to
-     #define MASK_ZUCN64        (~(zucn_t)0 & (zucn_t)0xffffffffffffffffULL)
-   for the 64-bit mask.
- */
-#else
   typedef  unsigned long                  zusz_t;     /* zipentry sizes & offsets */
   typedef  unsigned int         zucn_t;     /* archive entry counts */
   typedef  unsigned short       zuvl_t;     /* multivolume numbers */
-# define MASK_ZUCN64            (~(zucn_t)0)
-#endif
+
+#define MASK_ZUCN64            (~(zucn_t)0)
 #define MASK_ZUCN16             ((zucn_t)0xFFFF)
 
 #ifdef NO_UID_GID
@@ -737,17 +701,13 @@ unsigned ef_scan_for_izux        OF((const unsigned char *ef_buf, unsigned ef_le
     Functions in zipinfo.c (`zipinfo-style' listing routines):
   ---------------------------------------------------------------------------*/
 
-#ifndef NO_ZIPINFO
-#ifndef WINDLL
-   int   zi_opts                 OF((__GPRO__ int *pargc, char ***pargv));
-#endif
+int   zi_opts                    OF((__GPRO__ int *pargc, char ***pargv));
 void     zi_end_central          OF((__GPRO));
 int      zipinfo                 OF((__GPRO));
 /* static int      zi_long       OF((__GPRO__ zusz_t *pEndprev)); */
 /* static int      zi_short      OF((__GPRO)); */
 /* static char    *zi_time       OF((__GPRO__ const unsigned long *datetimez,
                                      const time_t *modtimez, char *d_t_str));*/
-#endif /* !NO_ZIPINFO */
 
 /*---------------------------------------------------------------------------
     Functions in list.c (generic zipfile-listing routines):
@@ -782,14 +742,6 @@ char    *fzofft               OF((__GPRO__ long val,
                                   const char *pre, const char *post));
    char *str2iso              OF((char *dst, const char *src));
    char *str2oem              OF((char *dst, const char *src));
-#ifdef NO_STRNICMP
-   int   zstrnicmp            OF((register const char *s1,
-                                  register const char *s2,
-                                  register unsigned n));
-#endif
-#ifdef REGULUS
-   int   zstat                OF((const char *p, struct stat *s));
-#endif
 #ifdef ZMEM   /* MUST be ifdef'd because of conflicts with the standard def. */
    void *memset OF((register void *, register int, register unsigned int));
    int    memcmp OF((register const void*, register const void *,
@@ -797,27 +749,6 @@ char    *fzofft               OF((__GPRO__ long val,
    void *memcpy OF((register void *, register const void *,
                      register unsigned int));
 #endif
-#ifdef NEED_UZMBCLEN
-   extent uzmbclen          OF((const unsigned char *ptr));
-#endif
-#ifdef NEED_UZMBSCHR
-   unsigned char *uzmbschr  OF((const unsigned char *str, unsigned int c));
-#endif
-#ifdef NEED_UZMBSRCHR
-   unsigned char *uzmbsrchr OF((const unsigned char *str, unsigned int c));
-#endif
-#ifdef SMALL_MEM
-   char *fLoadFarString       OF((__GPRO__ const char *sz));
-   char *fLoadFarStringSmall  OF((__GPRO__ const char *sz));
-   char *fLoadFarStringSmall2 OF((__GPRO__ const char *sz));
-   #ifndef zfstrcpy
-     char * zfstrcpy  OF((char *s1, const char *s2));
-   #endif
-   #if (!defined(SFX) && !defined(zfstrcmp))
-     int zfstrcmp         OF((const char *s1, const char *s2));
-   #endif
-#endif
-
 
 /*---------------------------------------------------------------------------
     Functions in extract.c:
@@ -829,17 +760,10 @@ int    extract_or_test_files     OF((__GPRO));
 /* static int   TestExtraField   OF((__GPRO__ unsigned char *ef, unsigned ef_len)); */
 /* static int   test_OS2         OF((__GPRO__ unsigned char *eb, unsigned eb_size)); */
 /* static int   test_NT          OF((__GPRO__ unsigned char *eb, unsigned eb_size)); */
-#ifndef SFX
-  unsigned find_compr_idx        OF((unsigned compr_methodnum));
-#endif
+unsigned find_compr_idx          OF((unsigned compr_methodnum));
 int    memextract                OF((__GPRO__ unsigned char *tgt, unsigned long tgtsize,
                                      const unsigned char *src, unsigned long srcsize));
 int    memflush                  OF((__GPRO__ const unsigned char *rawbuf, unsigned long size));
-#if (defined(VMS) || defined(VMS_TEXT_CONV))
-   unsigned char   *extract_izvms_block    OF((__GPRO__ const unsigned char *ebdata,
-                                     unsigned size, unsigned *retlen,
-                                     const unsigned char *init, unsigned needlen));
-#endif
 char  *fnfilter                  OF((const char *raw, unsigned char *space,
                                      extent size));
 
@@ -847,16 +771,13 @@ char  *fnfilter                  OF((const char *raw, unsigned char *space,
     Decompression functions:
   ---------------------------------------------------------------------------*/
 
-#if (!defined(SFX) && !defined(FUNZIP))
 int    explode                   OF((__GPRO));                  /* explode.c */
-#endif
 int    huft_free                 OF((struct huft *t));          /* inflate.c */
 int    huft_build                OF((__GPRO__ const unsigned *b, unsigned n,
                                      unsigned s, const unsigned short *d, const unsigned char *e,
                                      struct huft **t, unsigned *m));
    int    UZinflate              OF((__GPRO__ int is_defl64));  /* inflate.c */
 #  define inflate_free(x)        inflateEnd(&((Uz_Globs *)(&G))->dstrm)
-#if (!defined(SFX) && !defined(FUNZIP))
 #ifndef COPYRIGHT_CLEAN
    int    unreduce               OF((__GPRO));                 /* unreduce.c */
 /* static void  LoadFollowers    OF((__GPRO__ f_array *follower, unsigned char *Slen));
@@ -866,150 +787,6 @@ int    huft_build                OF((__GPRO__ const unsigned *b, unsigned n,
    int    unshrink               OF((__GPRO));                 /* unshrink.c */
 /* static void  partial_clear    OF((__GPRO));                  * unshrink.c */
 #endif /* !LZW_CLEAN */
-#endif /* !SFX && !FUNZIP */
-#ifdef USE_BZIP2
-   int    UZbunzip2              OF((__GPRO));                  /* extract.c */
-   void   bz_internal_error      OF((int bzerrcode));           /* ubz2err.c */
-#endif
-
-/*---------------------------------------------------------------------------
-    Internal API functions (only included in DLL versions):
-  ---------------------------------------------------------------------------*/
-
-#ifdef DLL
-   void     setFileNotFound       OF((__GPRO));                     /* api.c */
-   int      unzipToMemory         OF((__GPRO__ char *zip, char *file,
-                                      UzpBuffer *retstr));          /* api.c */
-   int      redirect_outfile      OF((__GPRO));                     /* api.c */
-   int      writeToMemory         OF((__GPRO__ const unsigned char *rawbuf,
-                                      extent size));                /* api.c */
-   int      close_redirect        OF((__GPRO));                     /* api.c */
-   /* this obsolescent entry point kept for compatibility: */
-   int      UzpUnzip              OF((int argc, char **argv));/* use UzpMain */
-#ifdef OS2DLL
-   int      varmessage            OF((__GPRO__ const unsigned char *buf, unsigned long size));
-   int      varputchar            OF((__GPRO__ int c));         /* rexxapi.c */
-   int      finish_REXX_redirect  OF((__GPRO));                 /* rexxapi.c */
-#endif
-#ifdef API_DOC
-   void     APIhelp               OF((__GPRO__ int argc, char **argv));
-#endif                                                          /* apihelp.c */
-#endif /* DLL */
-
-/*---------------------------------------------------------------------------
-    MSDOS-only functions:
-  ---------------------------------------------------------------------------*/
-
-#ifdef MSDOS
-#if (!defined(FUNZIP) && !defined(SFX) && !defined(WINDLL))
-   void     check_for_windows     OF((const char *app));         /* msdos.c */
-#endif
-#if (defined(__GO32__) || defined(__EMX__))
-   unsigned _dos_getcountryinfo(void *);                          /* msdos.c */
-#if (!defined(__DJGPP__) || (__DJGPP__ < 2))
-   unsigned _dos_setftime(int, unsigned, unsigned);               /* msdos.c */
-   unsigned _dos_setfileattr(const char *, unsigned);             /* msdos.c */
-   unsigned _dos_creat(const char *, unsigned, int *);            /* msdos.c */
-   void _dos_getdrive(unsigned *);                                /* msdos.c */
-   unsigned _dos_close(int);                                      /* msdos.c */
-#endif /* !__DJGPP__ || (__DJGPP__ < 2) */
-#endif /* __GO32__ || __EMX__ */
-#endif
-
-/*---------------------------------------------------------------------------
-    OS/2-only functions:
-  ---------------------------------------------------------------------------*/
-
-#ifdef OS2   /* GetFileTime conflicts with something in Win32 header files */
-#if (defined(REENTRANT) && defined(USETHREADID))
-   unsigned long   GetThreadId          OF((void));
-#endif
-   int   GetCountryInfo       OF((void));                           /* os2.c */
-   long  GetFileTime          OF((const char *name));              /* os2.c */
-/* static void  SetPathAttrTimes OF((__GPRO__ int flags, int dir));    os2.c */
-/* static int   SetEAs        OF((__GPRO__ const char *path,
-                                  void *eablock));                     os2.c */
-/* static int   SetACL        OF((__GPRO__ const char *path,
-                                  void *eablock));                     os2.c */
-/* static int   IsFileNameValid OF((const char *name));                os2.c */
-/* static void  map2fat       OF((char *pathcomp, char **pEndFAT));    os2.c */
-/* static int   SetLongNameEA OF((char *name, char *longname));        os2.c */
-/* static void  InitNLS       OF((void));                              os2.c */
-   int   IsUpperNLS           OF((int nChr));                       /* os2.c */
-   int   ToLowerNLS           OF((int nChr));                       /* os2.c */
-   void  DebugMalloc          OF((void));                           /* os2.c */
-#endif
-
-/*---------------------------------------------------------------------------
-    QDOS-only functions:
-  ---------------------------------------------------------------------------*/
-
-#ifdef QDOS
-   int    QMatch              (unsigned char, unsigned char);
-   void   QFilename           (__GPRO__ char *);
-   char  *Qstrfix             (char *);
-   int    QReturn             (int zip_error);
-#endif
-
-/*---------------------------------------------------------------------------
-    TOPS20-only functions:
-  ---------------------------------------------------------------------------*/
-
-#ifdef TOPS20
-   int    upper               OF((char *s));                     /* tops20.c */
-   int    enquote             OF((char *s));                     /* tops20.c */
-   int    dequote             OF((char *s));                     /* tops20.c */
-   int    fnlegal             OF(()); /* error if prototyped? */ /* tops20.c */
-#endif
-
-/*---------------------------------------------------------------------------
-    VM/CMS- and MVS-only functions:
-  ---------------------------------------------------------------------------*/
-
-#ifdef CMS_MVS
-   extent getVMMVSexfield     OF((char *type, unsigned char *ef_block, unsigned datalen));
-   FILE  *vmmvs_open_infile   OF((__GPRO));                       /* vmmvs.c */
-   void   close_infile        OF((__GPRO));                       /* vmmvs.c */
-#endif
-
-/*---------------------------------------------------------------------------
-    VMS-only functions:
-  ---------------------------------------------------------------------------*/
-
-#ifdef VMS
-   int    check_format        OF((__GPRO));                         /* vms.c */
-/* int    open_outfile        OF((__GPRO));           * (see fileio.c) vms.c */
-/* int    flush               OF((__GPRO__ unsigned char *rawbuf, unsigned size,
-                                  int final_flag));   * (see fileio.c) vms.c */
-   char  *vms_msg_text        OF((void));                           /* vms.c */
-#ifdef RETURN_CODES
-   void   return_VMS          OF((__GPRO__ int zip_error));         /* vms.c */
-#else
-   void   return_VMS          OF((int zip_error));                  /* vms.c */
-#endif
-#ifdef VMSCLI
-   unsigned long    vms_unzip_cmdline   OF((int *, char ***));            /* cmdline.c */
-   int    VMSCLI_usage        OF((__GPRO__ int error));         /* cmdline.c */
-#endif
-#endif
-
-/*---------------------------------------------------------------------------
-    WIN32-only functions:
-  ---------------------------------------------------------------------------*/
-
-#ifdef WIN32
-   int   IsWinNT        OF((void));                               /* win32.c */
-#ifdef NTSD_EAS
-   void  process_defer_NT     OF((__GPRO));                       /* win32.c */
-   int   test_NTSD      OF((__GPRO__ unsigned char *eb, unsigned eb_size,
-                            unsigned char *eb_ucptr, unsigned long eb_ucsize));       /* win32.c */
-#  define TEST_NTSD     test_NTSD
-#endif
-#ifdef W32_STAT_BANDAID
-   int   zstat_win32    OF((__W32STAT_GLOBALS__
-                            const char *path, z_stat *buf));      /* win32.c */
-#endif
-#endif
 
 /*---------------------------------------------------------------------------
     Miscellaneous/shared functions:
@@ -1023,29 +800,19 @@ int      envargs         OF((int *Pargc, char ***Pargv,
 void     mksargs         OF((int *argcp, char ***argvp));       /* envargs.c */
 
 int      match           OF((const char *s, const char *p,
-                             int ic __WDLPRO));                   /* match.c */
+                             int ic));                   /* match.c */
 int      iswild          OF((const char *p));                    /* match.c */
 
 /* declarations of public CRC-32 functions have been moved into crc32.h
    (free_crc_table(), get_crc_table(), crc32())                      crc32.c */
 
-#ifndef WINDLL
-   void  version         OF((__GPRO));                              /* local */
-#endif
+void     version         OF((__GPRO));                              /* local */
 int      mapattr         OF((__GPRO));                              /* local */
 int      mapname         OF((__GPRO__ int renamed));                /* local */
 int      checkdir        OF((__GPRO__ char *pathcomp, int flag));   /* local */
 char    *do_wild         OF((__GPRO__ const char *wildzipfn));     /* local */
 char    *GetLoadPath     OF((__GPRO));                              /* local */
-#ifdef OS2_W32
-   int   SetFileSize     OF((FILE *file, zusz_t filesize));         /* local */
-#endif
-#ifndef MTS /* macro in MTS */
-   void  close_outfile   OF((__GPRO));                              /* local */
-#endif
-#ifdef SET_SYMLINK_ATTRIBS
-   int  set_symlnk_attribs  OF((__GPRO__ slinkentry *slnk_entry));  /* local */
-#endif
+void     close_outfile   OF((__GPRO));                              /* local */
    int   defer_dir_attribs  OF((__GPRO__ direntry **pd));           /* local */
    int   set_direc_attribs  OF((__GPRO__ direntry *d));             /* local */
 #ifdef NEED_ISO_OEM_INIT
@@ -1084,23 +851,10 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
 #  define Trace(x)
 #endif
 
-#ifdef DEBUG_TIME
-#  define TTrace(x)  fprintf x
-#else
+#define MTrace(x)  Trace(x)
 #  define TTrace(x)
-#endif
 
-#ifdef NO_DEBUG_IN_MACROS
-#  define MTrace(x)
-#else
-#  define MTrace(x)  Trace(x)
-#endif
-
-#if (defined(UNIX) || defined(T20_VMS)) /* generally old systems */
-#  define ToLower(x)   ((char)(isupper((int)x)? tolower((int)x) : x))
-#else
-#  define ToLower      tolower          /* assumed "smart"; used in match() */
-#endif
+#define ToLower      tolower          /* assumed "smart"; used in match() */
 
 #ifdef USE_STRM_INPUT
    /* ``Replace'' the unbuffered UNIX style I/O function with similar
@@ -1121,15 +875,8 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
  *      (fputs((char *)(sprintf sprf_arg, (buf)), \
  *             (flag)&1? stderr : stdout) < 0)
  */
-#ifndef Info   /* may already have been defined for redirection */
-#  ifdef FUNZIP
-#    define Info(buf,flag,sprf_arg) \
-     fputs((char *)(sprintf sprf_arg, (buf)), (flag)&1? stderr : stdout)
-#  else
-#      define Info(buf,flag,sprf_arg) \
+#define Info(buf,flag,sprf_arg) \
        (*G.message)((void *)&G, (unsigned char *)(buf), (unsigned long)sprintf sprf_arg, (flag))
-#  endif
-#endif /* !Info */
 
 /*  This wrapper macro around fzofft() is just defined to "hide" the
  *  argument needed to reference the global storage buffers.
@@ -1151,10 +898,6 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
 #  define MESSAGE(str,len,flag)  (*G.message)((void *)&G,(str),(len),(flag))
 
 #  define CRCVAL_INITIAL  0L
-
-#ifndef TEST_NTSD               /* "NTSD valid?" checking function */
-#  define TEST_NTSD     NULL    /*   ... is not available */
-#endif
 
 #define SKIP_(length) if(length&&((error=do_string(__G__ length,SKIP))!=0))\
   {error_in_archive=error; if(error>1) return error;}

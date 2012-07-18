@@ -119,7 +119,7 @@ char *do_wild(const char *wildspec)
                 if (strrchr(fnamestart, '.') == (char *)NULL)
                     strcat(fnamestart, ".");
                 /* 1 == ignore case (for case-insensitive DOS-FS) */
-                if (match(fnamestart, wildname, 1 WISEP) &&
+                if (match(fnamestart, wildname, 1) &&
                     /* skip "." and ".." directory entries */
                     strcmp(fnamestart, ".") && strcmp(fnamestart, "..")) {
                     Trace((stderr, "do_wild:  match() succeeds\n"));
@@ -171,7 +171,7 @@ char *do_wild(const char *wildspec)
         strcpy(fnamestart, file->d_name);
         if (strrchr(fnamestart, '.') == (char *)NULL)
             strcat(fnamestart, ".");
-        if (match(fnamestart, wildname, 1 WISEP)) { /* 1 == ignore case */
+        if (match(fnamestart, wildname, 1)) { /* 1 == ignore case */
             Trace((stderr, "do_wild:  match() succeeds\n"));
             /* remove trailing dot */
             fnamestart += strlen(fnamestart) - 1;

@@ -81,7 +81,7 @@
 #  define END_RANGE  ']'
 
 static int recmatch OF((const unsigned char *pattern, const unsigned char *string,
-                        int ignore_case __WDLPRO));
+                        int ignore_case));
 static char *isshexp OF((const char *p));
 static int namecmp OF((const char *s1, const char *s2));
 
@@ -90,7 +90,7 @@ static int namecmp OF((const char *s1, const char *s2));
 
 int match(const char *string, const char *pattern, int ignore_case)
 {
-    return recmatch((unsigned char *)pattern, (unsigned char *)string, ignore_case __WDL) == 1;
+    return recmatch((unsigned char *)pattern, (unsigned char *)string, ignore_case) == 1;
 }
 
 
@@ -143,7 +143,7 @@ static int recmatch(const unsigned char *p, const unsigned char *s, int ic)
         } else {
             /* pattern contains more wildcards, continue with recursion... */
             for (; *s; s++)
-                if ((c = recmatch(p, s, ic __WDL)) != 0)
+                if ((c = recmatch(p, s, ic)) != 0)
                     return (int)c;
             return 2;  /* 2 means give up--match will return false */
         }
@@ -180,11 +180,11 @@ static int recmatch(const unsigned char *p, const unsigned char *s, int ic)
                 if (*(p+1) != '-')
                     for (c = c ? c : *p; c <= *p; c++)  /* compare range */
                         if ((unsigned)Case(c) == cc) /* typecast for MSC bug */
-                            return r ? 0 : recmatch(q + 1, s + 1, ic __WDL);
+                            return r ? 0 : recmatch(q + 1, s + 1, ic);
                 c = e = 0;   /* clear range, escape flags */
             }
         }
-        return r ? recmatch(q + 1, s + 1, ic __WDL) : 0;
+        return r ? recmatch(q + 1, s + 1, ic) : 0;
                                         /* bracket match failed */
     }
 
@@ -194,7 +194,7 @@ static int recmatch(const unsigned char *p, const unsigned char *s, int ic)
 
     /* just a character--compare it */
     return Case((unsigned char)c) == Case(*s) ?
-           recmatch(p, s + 1, ic __WDL) : 0;
+           recmatch(p, s + 1, ic) : 0;
 
 } /* end function recmatch() */
 

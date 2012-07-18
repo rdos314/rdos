@@ -439,7 +439,7 @@ int extract_or_test_files(__G)    /* return PK-type error code */
                 else {  /* check if this entry matches an `include' argument */
                     do_this_file = FALSE;
                     for (i = 0; i < G.filespecs; i++)
-                        if (match(G.filename, G.pfnames[i], uO.C_flag WISEP)) {
+                        if (match(G.filename, G.pfnames[i], uO.C_flag)) {
                             do_this_file = TRUE;  /* ^-- ignore case or not? */
                             if (fn_matched)
                                 fn_matched[i] = TRUE;
@@ -448,7 +448,7 @@ int extract_or_test_files(__G)    /* return PK-type error code */
                 }
                 if (do_this_file) {  /* check if this is an excluded file */
                     for (i = 0; i < G.xfilespecs; i++)
-                        if (match(G.filename, G.pxnames[i], uO.C_flag WISEP)) {
+                        if (match(G.filename, G.pxnames[i], uO.C_flag)) {
                             do_this_file = FALSE; /* ^-- ignore case or not? */
                             if (xn_matched)
                                 xn_matched[i] = TRUE;
@@ -1590,7 +1590,7 @@ static int TestExtraField(unsigned char *ef, unsigned ef_len)
                 r = ebLen < EB_NTSD_L_LEN ? IZ_EF_TRUNC :
                     ((ef[EB_HEADSIZE+EB_NTSD_VERSION] > EB_NTSD_MAX_VER) ?
                      (PK_WARN | 0x4000) :
-                     test_compr_eb(__G__ ef, ebLen, EB_NTSD_L_LEN, TEST_NTSD));
+                     test_compr_eb(__G__ ef, ebLen, EB_NTSD_L_LEN, NULL));
                 if (r != PK_OK) {
                     if (uO.qflag)
                         Info(slide, 1, ((char *)slide, "%-22s ",
