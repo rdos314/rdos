@@ -928,13 +928,6 @@ void strtolower(char *str1, char *str2);
 #  define NEXTBYTE  (G.incnt-- > 0 ? (int)(*G.inptr++) : readbyte(__G))
 
 
-#define READBITS(nbits,zdest) {if(nbits>G.bits_left) {int temp; G.zipeof=1;\
-  while (G.bits_left<=8*(int)(sizeof(G.bitbuf)-1) && (temp=NEXTBYTE)!=EOF) {\
-  G.bitbuf|=(unsigned long)temp<<G.bits_left; G.bits_left+=8; G.zipeof=0;}}\
-  zdest=(int)((unsigned)G.bitbuf&mask_bits[nbits]);G.bitbuf>>=nbits;\
-  G.bits_left-=nbits;}
-
-
 /*
  *  Translate the zero-terminated string in str1 from ASCII to the native
  *  character set. The translation is performed in-place and uses the
