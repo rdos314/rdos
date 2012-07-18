@@ -57,31 +57,6 @@
  * for the 32-bit optimized CRC-32 C code by default.
  */
 
-#ifdef __WATCOMC__
-#  ifdef __386__
-#    ifndef WATCOMC_386
-#      define WATCOMC_386
-#    endif
-#    define __32BIT__
-#    undef far
-#    define far
-#    undef near
-#    define near
-#    undef Cdecl
-#    define Cdecl
-
-/* gaah -- Watcom's docs claim that _get_osfhandle exists, but it doesn't.  */
-#    define _get_osfhandle _os_handle
-
-/* Get asm routines to link properly without using "__cdecl": */
-#    ifndef USE_ZLIB
-#      pragma aux crc32         "_*" parm caller [] value [eax] modify [eax]
-#      pragma aux get_crc_table "_*" parm caller [] value [eax] \
-                                      modify [eax ecx edx]
-#    endif /* !USE_ZLIB */
-#  endif /* __386__ */
-#endif /* __WATCOMC__ */
-
 #define SCREENWIDTH 80
 #define SCREENSIZE(scrrows, scrcols)  screensize(scrrows, scrcols)
 int screensize(int *tt_rows, int *tt_cols);
