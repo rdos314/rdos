@@ -34,9 +34,9 @@
 #include "unzip.h"
 
 static int    do_seekable        OF((__GPRO__ int lastchance));
-static int    rec_find           OF((__GPRO__ zoff_t, char *, int));
-static int    find_ecrec64       OF((__GPRO__ zoff_t searchlen));
-static int    find_ecrec         OF((__GPRO__ zoff_t searchlen));
+static int    rec_find           OF((__GPRO__ long, char *, int));
+static int    find_ecrec64       OF((__GPRO__ long searchlen));
+static int    find_ecrec         OF((__GPRO__ long searchlen));
 static int    process_zip_cmmnt  OF((__GPRO));
 static int    get_cdir_ent       OF((__GPRO));
 
@@ -494,7 +494,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
             error_in_archive = PK_WARN;
         }
         if ((G.extra_bytes = G.real_ecrec_offset-G.expect_ecrec_offset) <
-            (zoff_t)0)
+            (long)0)
         {
             Info(slide, 0x401, ((char *)slide, MissingBytes,
               G.zipfn, FmZofft((-G.extra_bytes), NULL, NULL)));
@@ -548,7 +548,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
         if ((error != PK_OK) || (readbuf(__G__ G.sig, 4) == 0) ||
             memcmp(G.sig, central_hdr_sig, 4))
         {
-            zoff_t tmp = G.extra_bytes;
+            long tmp = G.extra_bytes;
 
             G.extra_bytes = 0;
             error = seek_zipf(__G__ G.ecrec.offset_start_central_directory);
@@ -612,11 +612,11 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
 /* Function rec_find() */
 /***********************/
 
-static int rec_find(zoff_t searchlen, char* signature, int rec_size)
+static int rec_find(long searchlen, char* signature, int rec_size)
     /* return 0 when rec found, 1 when not found, 2 in case of read error */
 {
     int i, numblks, found=FALSE;
-    zoff_t tail_len;
+    long tail_len;
 
 /*---------------------------------------------------------------------------
     Zipfile is longer than INBUFSIZ:  may need to loop.  Start with short
@@ -681,11 +681,11 @@ static int rec_find(zoff_t searchlen, char* signature, int rec_size)
 /* Function find_ecrec64() */
 /***************************/
 
-static int find_ecrec64(zoff_t searchlen)         /* return PK-class error */
+static int find_ecrec64(long searchlen)         /* return PK-class error */
 {
     ec_byte_rec64 byterec;          /* buf for ecrec64 */
     ec_byte_loc64 byterecL;         /* buf for ecrec64 locator */
-    zoff_t ecloc64_start_offset;    /* start offset of ecrec64 locator */
+    long ecloc64_start_offset;      /* start offset of ecrec64 locator */
     zusz_t ecrec64_start_offset;    /* start offset of ecrec64 */
     zuvl_t ecrec64_start_disk;      /* start disk of ecrec64 */
     zuvl_t ecloc64_total_disks;     /* total disks */
@@ -894,7 +894,7 @@ static int find_ecrec64(zoff_t searchlen)         /* return PK-class error */
 /* Function find_ecrec() */
 /*************************/
 
-static int find_ecrec(zoff_t searchlen)          /* return PK-class error */
+static int find_ecrec(long searchlen)          /* return PK-class error */
 {
     int found = FALSE;
     int error_in_archive;

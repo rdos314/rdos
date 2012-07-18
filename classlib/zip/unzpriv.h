@@ -63,11 +63,7 @@ int screensize(int *tt_rows, int *tt_cols);
 
 /* on the DOS or NT console screen, line-wraps are always enabled */
 #define SCREENLWRAP 1
-#define TABSIZE 8
-
-/* base type for file offsets and file sizes */
-typedef long zoff_t;
-# define ZOFF_T_DEFINED
+#define TABSIZE 4
 
   /* stat struct */
 typedef struct stat z_stat;
@@ -562,7 +558,7 @@ typedef struct iztimes {
 #endif /* SET_DIR_ATTRIB */
 
 typedef struct min_info {
-    zoff_t offset;
+    long offset;
     zusz_t compr_size;       /* compressed size (needed if extended header) */
     zusz_t uncompr_size;     /* uncompressed size (needed if extended header) */
     unsigned long crc;                 /* crc (needed if extended header) */
@@ -818,7 +814,7 @@ void     defer_leftover_input OF((__GPRO));
 unsigned readbuf              OF((__GPRO__ char *buf, register unsigned len));
 int      readbyte             OF((__GPRO));
 int      fillinbuf            OF((__GPRO));
-int      seek_zipf            OF((__GPRO__ zoff_t abs_offset));
+int      seek_zipf            OF((__GPRO__ long abs_offset));
    int   flush                OF((__GPRO__ unsigned char *buf, unsigned long size, int unshrink));
 /* static int  disk_error     OF((__GPRO)); */
 void     handler              OF((int signal));
@@ -828,7 +824,7 @@ int      do_string            OF((__GPRO__ unsigned int length, int option));
 unsigned short      makeword             OF((const unsigned char *b));
 unsigned long      makelong             OF((const unsigned char *sig));
 zusz_t   makeint64            OF((const unsigned char *sig));
-char    *fzofft               OF((__GPRO__ zoff_t val,
+char    *fzofft               OF((__GPRO__ long val,
                                   const char *pre, const char *post));
    char *str2iso              OF((char *dst, const char *src));
    char *str2oem              OF((char *dst, const char *src));

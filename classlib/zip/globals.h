@@ -185,10 +185,10 @@ typedef struct Globals {
     int create_dirs;      /* used by main(), mapname(), checkdir() */
     int extract_flag;
     int newzip;           /* reset in extract.c; used in crypt.c */
-    zoff_t   real_ecrec_offset;
-    zoff_t   expect_ecrec_offset;
-    zoff_t   csize;       /* used by decompr. (NEXTBYTE): must be signed */
-    zoff_t   used_csize;  /* used by extract_or_test_member(), explode() */
+    long   real_ecrec_offset;
+    long   expect_ecrec_offset;
+    long   csize;       /* used by decompr. (NEXTBYTE): must be signed */
+    long   used_csize;  /* used by extract_or_test_member(), explode() */
 
 #ifdef DLL
      int fValidate;       /* true if only validating an archive */
@@ -241,9 +241,9 @@ typedef struct Globals {
     char      *wildzipfn;
     char      *zipfn;    /* GRR:  WINDLL:  must nuke any malloc'd zipfn... */
     int       zipfd;                /* zipfile file handle */
-    zoff_t    ziplen;
-    zoff_t    cur_zipfile_bufstart; /* extract_or_test, readbuf, ReadByte */
-    zoff_t    extra_bytes;          /* used in unzip.c, misc.c */
+    long      ziplen;
+    long      cur_zipfile_bufstart; /* extract_or_test, readbuf, ReadByte */
+    long      extra_bytes;          /* used in unzip.c, misc.c */
     unsigned char       *extra_field;         /* Unix, VMS, Mac, OS/2, Acorn, ... */
     unsigned char       *hold;
 

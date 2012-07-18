@@ -222,7 +222,7 @@ void undefer_input(__G)
 void defer_leftover_input(__G)
     __GDEF
 {
-    if ((zoff_t)G.incnt > G.csize) {
+    if ((long)G.incnt > G.csize) {
         /* (G.csize < MAXINT), we can safely cast it to int !! */
         if (G.csize < 0L)
             G.csize = 0L;
@@ -361,7 +361,7 @@ int fillinbuf(__G) /* like readbyte() except returns number of bytes in inbuf */
 /* Function seek_zipf() */
 /************************/
 
-int seek_zipf(zoff_t abs_offset)
+int seek_zipf(long abs_offset)
 {
 /*
  *  Seek to the block boundary of the block which includes abs_offset,
@@ -382,9 +382,9 @@ int seek_zipf(zoff_t abs_offset)
  *  PK_EOF if seeking past end of zipfile
  *  PK_OK when seek was successful
  */
-    zoff_t request = abs_offset + G.extra_bytes;
-    zoff_t inbuf_offset = request % INBUFSIZ;
-    zoff_t bufstart = request - inbuf_offset;
+    long request = abs_offset + G.extra_bytes;
+    long inbuf_offset = request % INBUFSIZ;
+    long bufstart = request - inbuf_offset;
 
     if (request < 0) {
         Info(slide, 1, ((char *)slide, SeekMsg,
@@ -1180,7 +1180,7 @@ zusz_t makeint64(const unsigned char *sig)
 /*********************/
 
 /* Format a zoff_t value in a cylindrical buffer set. */
-char *fzofft(zoff_t val, const char *pre, const char *post)
+char *fzofft(long val, const char *pre, const char *post)
 {
     /* Storage cylinder. (now in globals.h) */
     /*static char fzofft_buf[FZOFFT_NUM][FZOFFT_LEN];*/

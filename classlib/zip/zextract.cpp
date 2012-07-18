@@ -79,7 +79,7 @@
 
 static int store_info OF((__GPRO));
 static int extract_or_test_entrylist OF((__GPRO__ unsigned numchunk,
-                unsigned long *pfilnum, unsigned long *pnum_bad_pwd, zoff_t *pold_extra_bytes,
+                unsigned long *pfilnum, unsigned long *pnum_bad_pwd, long *pold_extra_bytes,
                 unsigned *pnum_dirs, direntry **pdirlist,
                 int error_in_archive));
 static int extract_or_test_member OF((__GPRO));
@@ -251,7 +251,7 @@ int extract_or_test_files(__G)    /* return PK-type error code */
      __GDEF
 {
     unsigned i, j;
-    zoff_t cd_bufstart;
+    long cd_bufstart;
     unsigned char *cd_inptr;
     int cd_incnt;
     unsigned long filnum=0L, blknum=0L;
@@ -261,7 +261,7 @@ int extract_or_test_files(__G)    /* return PK-type error code */
     int *fn_matched=NULL, *xn_matched=NULL;
     zucn_t members_processed;
     unsigned long num_skipped=0L, num_bad_pwd=0L;
-    zoff_t old_extra_bytes = 0L;
+    long old_extra_bytes = 0L;
     unsigned num_dirs=0;
     direntry *dirlist=(direntry *)NULL;
     direntry **sorted_dirlist=(direntry **)NULL;
@@ -781,7 +781,7 @@ static int store_info(__G)   /* return 0 if skipping, 1 if OK */
     mapattr(__G);   /* GRR:  worry about return value later */
 
     G.pInfo->diskstart = G.crec.disk_number_start;
-    G.pInfo->offset = (zoff_t)G.crec.relative_offset_local_header;
+    G.pInfo->offset = (long)G.crec.relative_offset_local_header;
     return 1;
 
 } /* end function store_info() */
@@ -813,14 +813,14 @@ unsigned find_compr_idx(unsigned compr_methodnum)
 /******************************************/
 
 static int extract_or_test_entrylist(unsigned numchunk,
-                unsigned long *pfilnum, unsigned long *pnum_bad_pwd, zoff_t *pold_extra_bytes,
+                unsigned long *pfilnum, unsigned long *pnum_bad_pwd, long *pold_extra_bytes,
                 unsigned *pnum_dirs, direntry **pdirlist,
                 int error_in_archive)    /* return PK-type error code */
 {
     unsigned i;
     int renamed, query;
     int skip_entry;
-    zoff_t bufstart, inbuf_offset, request;
+    long bufstart, inbuf_offset, request;
     int error, errcode;
 
 /* possible values for local skip_entry flag: */
@@ -1720,7 +1720,7 @@ static int test_compr_eb(
 
 int memextract(unsigned char *tgt, unsigned long tgtsize, const unsigned char *src, unsigned long srcsize)
 {
-    zoff_t old_csize=G.csize;
+    long old_csize=G.csize;
     unsigned char   *old_inptr=G.inptr;
     int    old_incnt=G.incnt;
     int    r, error=PK_OK;
