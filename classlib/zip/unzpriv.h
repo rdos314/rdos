@@ -117,16 +117,6 @@ typedef size_t extent;
 #  define TRUE      1   /* sort of obvious */
 #  define FALSE     0
 
-#ifndef SEEK_SET
-#  define SEEK_SET  0
-#  define SEEK_CUR  1
-#  define SEEK_END  2
-#endif
-
-#if (!defined(S_IEXEC) && defined(S_IXUSR))
-#  define S_IEXEC   S_IXUSR
-#endif
-
 #ifndef S_ISDIR
 #  ifdef CMS_MVS
 #    define S_ISDIR(m)  (FALSE)
