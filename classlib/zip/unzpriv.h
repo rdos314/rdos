@@ -114,21 +114,6 @@ typedef size_t extent;
  */
 #define FILNAMSIZ  PATH_MAX
 
-/* DBCS support for Info-ZIP  (mainly for japanese (-: )
- * by Yoshioka Tsuneo (QWF00133@nifty.ne.jp,tsuneo-y@is.aist-nara.ac.jp)
- */
-
-#if (!defined(MY_ZCALLOC))
-   /* Any system without a special calloc function */
-# ifndef zcalloc
-#  define zcalloc(items, size) \
-          (void *)calloc((unsigned)(items), (unsigned)(size))
-# endif
-# ifndef zcfree
-#  define zcfree    free
-# endif
-#endif /* !MY_ZCALLOC */
-
 #ifdef ZMEM
 #  undef ZMEM
 #  define memcmp(b1,b2,len)      bcmp(b2,b1,len)
@@ -1179,10 +1164,6 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
 #ifdef NEED_ISO_OEM_INIT
    void  prepare_ISO_OEM_translat   OF((__GPRO));                   /* local */
 #endif
-#if (defined(MY_ZCALLOC))
-   void *zcalloc    OF((unsigned int, unsigned int));
-   void zcfree          OF((void *));
-#endif /* MY_ZCALLOC */
 #ifdef SYSTEM_SPECIFIC_CTOR
    void  SYSTEM_SPECIFIC_CTOR   OF((__GPRO));                       /* local */
 #endif

@@ -264,7 +264,7 @@ int unzip(int argc, char *argv[])
 #   define UZ_NUMOF_CHUNKS \
       (unsigned)(((WSIZE+UZ_SLIDE_CHUNK-1)/UZ_SLIDE_CHUNK > HSIZE) ? \
                  (WSIZE+UZ_SLIDE_CHUNK-1)/UZ_SLIDE_CHUNK : HSIZE)
-    G.area.Slide = (unsigned char *)zcalloc(UZ_NUMOF_CHUNKS, UZ_SLIDE_CHUNK);
+    G.area.Slide = (unsigned char *)malloc(UZ_NUMOF_CHUNKS * UZ_SLIDE_CHUNK);
 #   undef UZ_SLIDE_CHUNK
 #   undef UZ_NUMOF_CHUNKS
     G.area.shrink.Parent = (int *)G.area.Slide;
