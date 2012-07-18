@@ -85,18 +85,18 @@ int envargs(int *Pargc, char ***Pargv, const char *envstr, const char *envstr2)
         if (*bufptr == '"') {
             *(argv++) = ++bufptr;
             while ((ch = *bufptr) != '\0' && ch != '\"')
-                INCSTR(bufptr);
+                bufptr++;
             if (ch != '\0')
                 *(bufptr++) = '\0';
         } else {
             *(argv++) = bufptr;
             while ((ch = *bufptr) != '\0' && !ISspace(ch))
-                INCSTR(bufptr);
+                bufptr++;
             if (ch != '\0')
                 *(bufptr++) = '\0';
         }
         while ((ch = *bufptr) != '\0' && ISspace(ch))
-            INCSTR(bufptr);
+            bufptr++;
     } while (ch);
 
     /* now save old argc and copy in the old args */
@@ -127,14 +127,14 @@ static int count_args(const char *s)
         if (*s == '\"') {
             ++s;                /* leading quote */
             while ((ch = *s) != '\0' && ch != '\"')
-                INCSTR(s);
+                s++;
             if (*s)
                 ++s;        /* trailing quote */
         } else
         while ((ch = *s) != '\0' && !ISspace(ch))  /* note else-clauses above */
-            INCSTR(s);
+            s++;
         while ((ch = *s) != '\0' && ISspace(ch))
-            INCSTR(s);
+            s++;
     } while (ch);
 
     return count;

@@ -387,7 +387,7 @@ int unzip(int argc, char *argv[])
         while (*q != '\0') {
             if (*q == '\\')
                 *q = '/';
-            INCSTR(q);
+            q++;
         }
         ++G.pfnames;
     }

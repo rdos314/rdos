@@ -1068,7 +1068,7 @@ startover:
                         }
                         *p = '/';
                     }
-                } while (*PREINCSTR(p));
+                } while (*(++p));
             }
 
             if (!renamed) {

@@ -105,7 +105,6 @@ typedef size_t extent;
 #define RAWBUFSIZ OUTBUFSIZ
 
 #define COPYRIGHT_CLEAN
-#define USE_UNSHRINK
 
 /* File operations--use "b" for binary if allowed or fixed length 512 on VMS */
 
@@ -118,7 +117,6 @@ typedef size_t extent;
 /* DBCS support for Info-ZIP  (mainly for japanese (-: )
  * by Yoshioka Tsuneo (QWF00133@nifty.ne.jp,tsuneo-y@is.aist-nara.ac.jp)
  */
-#  define PREINCSTR(ptr) (++(ptr))
 #  define POSTINCSTR(ptr) ((ptr)++)
 #  define plastchar(ptr, len) (&ptr[(len)-1])
 #  define lastchar(ptr, len) (ptr[(len)-1])
@@ -127,8 +125,6 @@ typedef size_t extent;
 #  ifndef SETLOCALE
 #    define SETLOCALE(category, locale)
 #  endif
-
-#define INCSTR(ptr) PREINCSTR(ptr)
 
 
 #if (defined(MALLOC_WORK) && !defined(MY_ZCALLOC))

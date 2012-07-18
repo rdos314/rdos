@@ -677,7 +677,7 @@ int  UzpMessagePrnt(void *pG, unsigned char *buf, unsigned long size, int flag)
                       MorePrompt, 1);
                 }
             }
-            INCSTR(p);
+            p++;
         } /* end while */
         size = (unsigned long)(p - q);   /* remaining text */
     }

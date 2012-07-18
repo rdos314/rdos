@@ -105,7 +105,7 @@ static int recmatch(const unsigned char *p, const unsigned char *s, int ic)
     unsigned int c;       /* pattern char or start of range in [-] loop */
 
     /* Get first character, the pattern for new recmatch calls follows */
-    c = *p; INCSTR(p);
+    c = *p; p++;
 
     /* If that was the end of the pattern, match if string empty too */
     if (c == 0)
@@ -143,7 +143,7 @@ static int recmatch(const unsigned char *p, const unsigned char *s, int ic)
                         ) == 0);
         } else {
             /* pattern contains more wildcards, continue with recursion... */
-            for (; *s; INCSTR(s))
+            for (; *s; s++)
                 if ((c = recmatch(p, s, ic __WDL)) != 0)
                     return (int)c;
             return 2;  /* 2 means give up--match will return false */
@@ -159,7 +159,7 @@ static int recmatch(const unsigned char *p, const unsigned char *s, int ic)
         if (*s == 0)                            /* need a character to match */
             return 0;
         p += (r = (*p == '!' || *p == '^'));    /* see if reverse */
-        for (q = p, e = 0; *q; INCSTR(q))       /* find closing bracket */
+        for (q = p, e = 0; *q; q++)       /* find closing bracket */
             if (e)
                 e = 0;
             else
@@ -169,7 +169,7 @@ static int recmatch(const unsigned char *p, const unsigned char *s, int ic)
                     break;
         if (*q != END_RANGE)         /* nothing matches if bad syntax */
             return 0;
-        for (c = 0, e = (*p == '-'); p < q; INCSTR(p)) {
+        for (c = 0, e = (*p == '-'); p < q; p++) {
             /* go through the list */
             if (!e && *p == '\\')               /* set escape flag if \ */
                 e = 1;
@@ -205,7 +205,7 @@ static char *isshexp(const char *p)
 /* If p is a sh expression, a pointer to the first special character is
    returned.  Otherwise, NULL is returned. */
 {
-    for (; *p; INCSTR(p))
+    for (; *p; p++)
         if (*p == '\\' && *(p+1))
             p++;
         else if (*p == WILDCHAR || *p == '*' || *p == BEG_RANGE)
@@ -235,7 +235,7 @@ static int namecmp(const char *s1, const char *s2)
 
 int iswild(const char *p)        /* originally only used for stat()-bug workaround in */
 {                    /*  now used in process_zipfiles() as well */
-    for (; *p; INCSTR(p))
+    for (; *p; p++)
         if (*p == '\\' && *(p+1))
             ++p;
         else if (*p == '?' || *p == '*' || *p == '[')
