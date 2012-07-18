@@ -43,7 +43,7 @@ Uz_Globs *globalsCtor()
 {
     /* for REENTRANT version, G is defined as (*pG) */
 
-    memzero(&G, sizeof(Uz_Globs));
+    memset(&G, 0, sizeof(Uz_Globs));
 
     uO.lflag=(-1);
     G.wildzipfn = "";

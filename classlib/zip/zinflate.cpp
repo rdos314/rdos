@@ -487,7 +487,7 @@ int huft_build(const unsigned *b, unsigned n, unsigned s, const unsigned short *
 
   /* Generate counts for each bit length */
   el = n > 256 ? b[256] : BMAX; /* set length of EOB code, if any */
-  memzero((char *)c, sizeof(c));
+  memset((char *)c, 0, sizeof(c));
   p = (unsigned *)b;  i = n;
   do {
     c[*p]++; p++;               /* assume all entries <= BMAX */
@@ -533,7 +533,7 @@ int huft_build(const unsigned *b, unsigned n, unsigned s, const unsigned short *
 
 
   /* Make a table of values in order of bit lengths */
-  memzero((char *)v, sizeof(v));
+  memset((char *)v, 0, sizeof(v));
   p = (unsigned *)b;  i = 0;
   do {
     if ((j = *p++) != 0)

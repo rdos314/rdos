@@ -299,7 +299,7 @@ static int explode_lit(struct huft *tb, struct huft *tl, struct huft *td, unsign
         n -= e;
         if (u && w <= d)
         {
-          memzero(redirSlide + w, e);
+          memset(redirSlide + w, 0, e);
           w += e;
           d += e;
         }
@@ -403,7 +403,7 @@ static int explode_nolit(struct huft *tl, struct huft *td, unsigned bl, unsigned
         n -= e;
         if (u && w <= d)
         {
-          memzero(redirSlide + w, e);
+          memset(redirSlide + w, 0, e);
           w += e;
           d += e;
         }

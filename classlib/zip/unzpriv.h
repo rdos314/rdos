@@ -114,15 +114,6 @@ typedef size_t extent;
  */
 #define FILNAMSIZ  PATH_MAX
 
-#ifdef ZMEM
-#  undef ZMEM
-#  define memcmp(b1,b2,len)      bcmp(b2,b1,len)
-#  define memcpy(dest,src,len)   bcopy(src,dest,len)
-#  define memzero                bzero
-#else
-#  define memzero(dest,len)      memset(dest,0,len)
-#endif
-
 #  define TRUE      1   /* sort of obvious */
 #  define FALSE     0
 
