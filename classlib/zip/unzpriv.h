@@ -89,15 +89,8 @@ typedef size_t extent;
 #define MSG_NO_NDLL(f) (f & 0x0800)   /* bit 11:  1 = skip if WIN32 DLL */
 #define MSG_NO_WDLL(f) (f & 0x1000)   /* bit 12:  1 = skip if Windows DLL */
 
-# define DIR_BLKSIZ 16384   /* use more memory, to reduce long-range seeks */
-
+#define DIR_BLKSIZ 16384   /* use more memory, to reduce long-range seeks */
 #define WSIZE   0x8000  /* window size--must be a power of two, and */
-
-
-#  ifdef IZ_CRCOPTIM_UNFOLDTBL
-#    undef IZ_CRCOPTIM_UNFOLDTBL
-#  endif
-
 #define INBUFSIZ  8192  /* larger buffers for real OSes */
 
 /* Logic for case of small memory, length of EOL > 1:  if OUTBUFSIZ == 2048,
@@ -107,13 +100,12 @@ typedef size_t extent;
  * and normal text.  Hence difference is sufficient for most "average" files.
  * (Argument scales for larger OUTBUFSIZ.)
  */
-#    define OUTBUFSIZ (lenEOL*WSIZE) /* more efficient text conversion */
-#    define TRANSBUFSIZ (lenEOL*OUTBUFSIZ)
-       typedef int  shrint;          /* for efficiency/speed, we hope... */
-#  define RAWBUFSIZ OUTBUFSIZ
+#define OUTBUFSIZ (lenEOL*WSIZE) /* more efficient text conversion */
+#define TRANSBUFSIZ (lenEOL*OUTBUFSIZ)
+#define RAWBUFSIZ OUTBUFSIZ
 
-#  define COPYRIGHT_CLEAN
-#  define USE_UNSHRINK
+#define COPYRIGHT_CLEAN
+#define USE_UNSHRINK
 
 #ifndef O_BINARY
 #  define O_BINARY  0
@@ -702,7 +694,7 @@ typedef struct VMStimbuf {
 #ifdef MALLOC_WORK
    union work {
      struct {                 /* unshrink(): */
-       shrint *Parent;          /* pointer to (8192 * sizeof(shrint)) */
+       int *Parent;          /* pointer to (8192 * sizeof(int)) */
        unsigned char *value;              /* pointer to 8KB char buffer */
        unsigned char *Stack;              /* pointer to another 8KB char buffer */
      } shrink;
@@ -711,7 +703,7 @@ typedef struct VMStimbuf {
 #else /* !MALLOC_WORK */
    union work {
      struct {                 /* unshrink(): */
-       shrint Parent[HSIZE];    /* (8192 * sizeof(shrint)) == 16KB minimum */
+       int Parent[HSIZE];    /* (8192 * sizeof(int)) == 16KB minimum */
        unsigned char value[HSIZE];        /* 8KB */
        unsigned char Stack[HSIZE];        /* 8KB */
      } shrink;                  /* total = 32KB minimum; 80KB on Cray/Alpha */
@@ -1380,7 +1372,7 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
 #define READBITS(nbits,zdest) {if(nbits>G.bits_left) {int temp; G.zipeof=1;\
   while (G.bits_left<=8*(int)(sizeof(G.bitbuf)-1) && (temp=NEXTBYTE)!=EOF) {\
   G.bitbuf|=(unsigned long)temp<<G.bits_left; G.bits_left+=8; G.zipeof=0;}}\
-  zdest=(shrint)((unsigned)G.bitbuf&mask_bits[nbits]);G.bitbuf>>=nbits;\
+  zdest=(int)((unsigned)G.bitbuf&mask_bits[nbits]);G.bitbuf>>=nbits;\
   G.bits_left-=nbits;}
 
 /*
@@ -1397,7 +1389,7 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
  *              G.zipeof = 0;
  *          }
  *      }
- *      zdest = (shrint)((unsigned)G.bitbuf & mask_bits[nbits]);
+ *      zdest = (int)((unsigned)G.bitbuf & mask_bits[nbits]);
  *      G.bitbuf >>= nbits;
  *      G.bits_left -= nbits;
  *  }

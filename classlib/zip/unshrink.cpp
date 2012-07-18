@@ -102,8 +102,8 @@ int unshrink(__G)
     register unsigned char *newstr;
     unsigned char finalval;
     int codesize=9, len, error;
-    shrint code, oldcode, curcode;
-    shrint lastfreecode;
+    int code, oldcode, curcode;
+    int lastfreecode;
     unsigned int outbufsiz;
 #   define realbuf G.outbuf
 
@@ -198,7 +198,7 @@ int unshrink(__G)
                 code = oldcode;
             } else {
                 *newstr-- = Value[code];
-                code = (shrint)(parent[code] & CODE_MASK);
+                code = (int)(parent[code] & CODE_MASK);
             }
         }
 
@@ -239,7 +239,7 @@ int unshrink(__G)
       -----------------------------------------------------------------------*/
 
         /* search for freecode */
-        code = (shrint)(lastfreecode + 1);
+        code = (int)(lastfreecode + 1);
         /* add if-test before loop for speed? */
         while ((code < HSIZE) && (parent[code] != FREE_CODE))
             ++code;
@@ -282,13 +282,13 @@ int unshrink(__G)
 
 static void partial_clear(int lastcodeused)
 {
-    register shrint code;
+    register int code;
 
     /* clear all nodes which have no children (i.e., leaf nodes only) */
 
     /* first loop:  mark each parent as such */
     for (code = BOGUSCODE+1;  code <= lastcodeused;  ++code) {
-        register shrint cparent = (shrint)(parent[code] & CODE_MASK);
+        register int cparent = (int)(parent[code] & CODE_MASK);
 
         if (cparent > BOGUSCODE)
             FLAG_BITS[cparent] |= HAS_CHILD;   /* set parent's child-bit */
