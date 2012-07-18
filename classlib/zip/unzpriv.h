@@ -17,35 +17,17 @@
 
   ---------------------------------------------------------------------------*/
 
-#ifdef __RDOS__
-#include "rdoszip.h"
-#endif
-
 #ifndef __unzpriv_h   /* prevent multiple inclusions */
 #define __unzpriv_h
 
-/* First thing: Signal all following code that we compile UnZip utilities! */
-#  define UNZIP
+#include "rdos.h"
 
-/* GRR 960204:  MORE defined here in preparation for removal altogether */
-#  define MORE
-
-
-/* ----------------------------------------------------------------------------
-   MUST BE AFTER LARGE FILE INCLUDES
-   ---------------------------------------------------------------------------- */
-/* This stuff calls in types and messes up large file includes.  It needs to
-   go after large file defines in local includes.
-   I am guessing that moving them here probably broke some ports, but hey.
-   10/31/2004 EG */
-/* ----------------------------------------------------------------------------
-   Common includes
-   ---------------------------------------------------------------------------- */
-
-/* Some ports apply specific adjustments which must be in effect before
-   reading the "standard" include headers.
- */
-
+#include <sys/types.h>          /* off_t, time_t, dev_t, ... */
+#include <sys/stat.h>
+#include <io.h>                 /* read(), open(), etc. */
+#include <time.h>
+#include <memory.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <ctype.h>       /* skip for VMS, to use tolower() function? */
 #include <errno.h>       /* used in mapname() */
@@ -55,9 +37,85 @@
 #include <stddef.h>
 #include <stdlib.h>  /* standard library prototypes, malloc(), etc. */
 
+#include "zlib.h"
+
+#define GOT_UTIMBUF
+#define USE_ZLIB
+#define SET_DIR_ATTRIB
+
+#ifndef Cdecl
+#  define Cdecl __cdecl
+#endif
+
+
+#define DIR_END       '\\'      /* OS uses '\\' as directory separator */
+#define DIR_END2      '/'       /* also check for '/' (RTL may convert) */
+#define lenEOL        2
+#define PutNativeEOL  {*q++ = native(CR); *q++ = native(LF);}
+
+/* The following compiler systems provide or use a runtime library with a
+ * locale-aware isprint() implementation.  For these systems, the "enhanced"
+ * unprintable charcode detection in fnfilter() gets enabled.
+ */
+/* RDOS runs solely on little-endian processors; enable support
+ * for the 32-bit optimized CRC-32 C code by default.
+ */
+
+#ifdef __WATCOMC__
+#  ifdef __386__
+#    ifndef WATCOMC_386
+#      define WATCOMC_386
+#    endif
+#    define __32BIT__
+#    undef far
+#    define far
+#    undef near
+#    define near
+#    undef Cdecl
+#    define Cdecl
+
+/* gaah -- Watcom's docs claim that _get_osfhandle exists, but it doesn't.  */
+#    define _get_osfhandle _os_handle
+
+/* Get asm routines to link properly without using "__cdecl": */
+#    ifndef USE_ZLIB
+#      pragma aux crc32         "_*" parm caller [] value [eax] modify [eax]
+#      pragma aux get_crc_table "_*" parm caller [] value [eax] \
+                                      modify [eax ecx edx]
+#    endif /* !USE_ZLIB */
+#  endif /* __386__ */
+#endif /* __WATCOMC__ */
+
+#define SCREENWIDTH 80
+#define SCREENSIZE(scrrows, scrcols)  screensize(scrrows, scrcols)
+int screensize(int *tt_rows, int *tt_cols);
+
+/* on the DOS or NT console screen, line-wraps are always enabled */
+#define SCREENLWRAP 1
+#define TABSIZE 8
+
+/* base type for file offsets and file sizes */
+typedef long zoff_t;
+# define ZOFF_T_DEFINED
+
+  /* stat struct */
+typedef struct stat z_stat;
+# define Z_STAT_DEFINED
+
+#  define FZOFFT_FMT "l"
+#  define FZOFFT_HEX_WID_VALUE "8"
+
+
+#  define SHORTHDRSTATS "%9lu  %02u%c%02u%c%02u %02u:%02u  %c"
+#  define SHORTFILETRAILER " --------                   -------\n%9lu                   %9lu file%s\n"
+
+/* First thing: Signal all following code that we compile UnZip utilities! */
+#  define UNZIP
+
+/* GRR 960204:  MORE defined here in preparation for removal altogether */
+#  define MORE
+
 typedef size_t extent;
-
-
 
 
 /*************/
