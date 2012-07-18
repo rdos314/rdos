@@ -70,9 +70,6 @@ int screensize(int *tt_rows, int *tt_cols);
 #  define SHORTFILETRAILER " --------                   -------\n%9lu                   %9lu file%s\n"
 
 
-/* GRR 960204:  MORE defined here in preparation for removal altogether */
-#  define MORE
-
 typedef size_t extent;
 
 
@@ -1063,12 +1060,6 @@ int      mapname         OF((__GPRO__ int renamed));                /* local */
 int      checkdir        OF((__GPRO__ char *pathcomp, int flag));   /* local */
 char    *do_wild         OF((__GPRO__ const char *wildzipfn));     /* local */
 char    *GetLoadPath     OF((__GPRO));                              /* local */
-#if (defined(MORE) && (defined(ATH_BEO_UNX) || defined(QDOS) || defined(VMS)))
-   int screensize        OF((int *tt_rows, int *tt_cols));          /* local */
-# if defined(VMS)
-   int screenlinewrap    OF((void));                                /* local */
-# endif
-#endif /* MORE && (ATH_BEO_UNX || QDOS || VMS) */
 #ifdef OS2_W32
    int   SetFileSize     OF((FILE *file, zusz_t filesize));         /* local */
 #endif
