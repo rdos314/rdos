@@ -42,7 +42,7 @@
 #define DIR_END       '\\'      /* OS uses '\\' as directory separator */
 #define DIR_END2      '/'       /* also check for '/' (RTL may convert) */
 #define lenEOL        2
-#define PutNativeEOL  {*q++ = native(CR); *q++ = native(LF);}
+#define PutNativeEOL  {*q++ = CR; *q++ = LF;}
 
 /* The following compiler systems provide or use a runtime library with a
  * locale-aware isprint() implementation.  For these systems, the "enhanced"
@@ -969,16 +969,6 @@ void strtolower(char *str1, char *str2);
 #  define foreign(c)  (c)
 #endif
 
-#ifndef native
-#  define native(c)   (c)
-#  define A_TO_N(str1)
-#else
-#  ifndef NATIVE
-#    define NATIVE     "native chars"
-#  endif
-#  define A_TO_N(str1) {register unsigned char *p;\
-     for (p=(unsigned char *)(str1); *p; p++) *p=native(*p);}
-#endif
 /*
  *  Translate the zero-terminated string in str1 from ASCII to the native
  *  character set. The translation is performed in-place and uses the

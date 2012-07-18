@@ -111,9 +111,8 @@ void Ext_ASCII_TO_Native(char *string, int hostnum, int hostver, int isuxatt, in
         ((hostnum) == FS_NTFS_ && (hostver) == 50)) {
        if (oem2iso) {register unsigned char *p;
            for (p=(unsigned char *)(string); *p; p++)
-             *p = native((*p & 0x80) ? oem2iso[*p & 0x7f] : *p);}
-    } else { 
-        A_TO_N(string);
+             *p = (*p & 0x80) ? oem2iso[*p & 0x7f] : *p;
+       }
     }
 }
 
@@ -555,7 +554,7 @@ int flush(unsigned char *rawbuf, unsigned long size, int unshrink)
                     PutNativeEOL
                 else
                 if (*p != CTRLZ)          /* lose all ^Z's */
-                    *q++ = native(*p);
+                    *q++ = *p;
 
             }
         }
@@ -1066,8 +1065,6 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
                 Ext_ASCII_TO_Native((char *)G.outbuf, G.pInfo->hostnum,
                                     G.pInfo->hostver, G.pInfo->HasUxAtt,
                                     FALSE);
-            } else {
-                A_TO_N(G.outbuf);   /* translate string to native */
             }
 
             (*G.message)((void *)&G, G.outbuf, (unsigned long)(q-G.outbuf), 0);

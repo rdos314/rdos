@@ -1391,7 +1391,6 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                                     q[1] = '(';
                                     strncpy(q+2,
                                             (char *)ef_ptr+EB_IZVMS_HLEN, 4);
-                                    A_TO_N(q+2);
                                     q[6] = ')';
                                 }
                                 break;
@@ -1509,7 +1508,6 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                             unsigned char nullchar = ef_ptr[fnlen+5];
 
                             ef_ptr[fnlen+5] = '\0'; /* terminate filename */
-                            A_TO_N(ef_ptr+5);
                             Info(slide, 0, ((char *)slide,
                               ZipItFname, (char *)ef_ptr+5));
                             ef_ptr[fnlen+5] = nullchar;
@@ -1540,7 +1538,6 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                         zi_showMacTypeCreator(__G__ &ef_ptr[4]);
                         memcpy(filenameBuf, &ef_ptr[33], 31);
                         filenameBuf[ef_ptr[32]] = '\0';
-                        A_TO_N(filenameBuf);
                         Info(slide, 0, ((char *)slide,
                              ZipItFname, filenameBuf));
                     } else {
@@ -1964,15 +1961,15 @@ static int zi_short(__G)   /* return PK-type error code */
 static void zi_showMacTypeCreator(unsigned char *ebfield)
 {
     /* not every Type / Creator character is printable */
-    if (isprint(native(ebfield[0])) && isprint(native(ebfield[1])) &&
-        isprint(native(ebfield[2])) && isprint(native(ebfield[3])) &&
-        isprint(native(ebfield[4])) && isprint(native(ebfield[5])) &&
-        isprint(native(ebfield[6])) && isprint(native(ebfield[7]))) {
+    if (isprint(ebfield[0]) && isprint(ebfield[1]) &&
+        isprint(ebfield[2]) && isprint(ebfield[3]) &&
+        isprint(ebfield[4]) && isprint(ebfield[5]) &&
+        isprint(ebfield[6]) && isprint(ebfield[7])) {
        Info(slide, 0, ((char *)slide, MacOSdata,
-            native(ebfield[0]), native(ebfield[1]),
-            native(ebfield[2]), native(ebfield[3]),
-            native(ebfield[4]), native(ebfield[5]),
-            native(ebfield[6]), native(ebfield[7])));
+            ebfield[0], ebfield[1],
+            ebfield[2], ebfield[3],
+            ebfield[4], ebfield[5],
+            ebfield[6], ebfield[7]));
     } else {
        Info(slide, 0, ((char *)slide, MacOSdata1,
             (((unsigned long)ebfield[0]) << 24) +
