@@ -1014,18 +1014,10 @@ void     close_outfile   OF((__GPRO));                              /* local */
  *  ISO-8859-1 [ISO Latin 1, Win Ansi,...]) into the internal "native"
  *  code page.  As with A_TO_N(), conversion is done in place.
  */
-#ifndef _ISO_INTERN
-#    define _ISO_INTERN(str1)   A_TO_N(str1)
-#endif
 
-#ifndef _OEM_INTERN
 #    ifndef IZ_OEM2ISO_ARRAY
 #      define IZ_OEM2ISO_ARRAY
 #    endif
-#    define _OEM_INTERN(str1) if (oem2iso) {register unsigned char *p;\
-       for (p=(unsigned char *)(str1); *p; p++)\
-         *p = native((*p & 0x80) ? oem2iso[*p & 0x7f] : *p);}
-#endif
 
 #ifndef STR_TO_OEM
 #    define STR_TO_OEM          str2oem
@@ -1075,9 +1067,11 @@ void     close_outfile   OF((__GPRO));                              /* local */
            ((hostver) == 25 || (hostver) == 26 || (hostver) == 40))) || \
         (hostnum) == FS_HPFS_ || \
         ((hostnum) == FS_NTFS_ && (hostver) == 50)) { \
-        _OEM_INTERN((string)); \
+       if (oem2iso) {register unsigned char *p; \
+           for (p=(unsigned char *)(string); *p; p++)\
+             *p = native((*p & 0x80) ? oem2iso[*p & 0x7f] : *p);} \
     } else { \
-        _ISO_INTERN((string)); \
+        A_TO_N(string); \
     }
 #endif
 
