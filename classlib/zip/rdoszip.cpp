@@ -340,7 +340,7 @@ int mapname(int renamed)
     } /* end while loop */
 
     /* Show warning when stripping insecure "parent dir" path components */
-    if (killed_ddot && QCOND2) {
+    if (killed_ddot && !uO.qflag) {
         if (!(error & ~MPN_MASK))
             error = (error & MPN_MASK) | PK_WARN;
     }
@@ -354,7 +354,7 @@ int mapname(int renamed)
     if (G.filename[strlen(G.filename) - 1] == '/') {
         checkdir(__G__ G.filename, GETPATH);
         if (created_dir) {
-            if (QCOND2) {
+            if (!uO.qflag) {
             }
 
             /* set file attributes: */

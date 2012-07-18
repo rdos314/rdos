@@ -561,7 +561,7 @@ int extract_or_test_files(__G)    /* return PK-type error code */
                 free(d);
             }
             free(sorted_dirlist);
-            if (!uO.tflag && QCOND2) {
+            if (!uO.tflag && !uO.qflag) {
                 if (ndirs_fail > 0)
                     Info(slide, 0, ((char *)slide,
                       DirlistFailAttrSum, ndirs_fail));
@@ -726,7 +726,7 @@ static int store_info(__G)   /* return 0 if skipping, 1 if OK */
 
     if (G.crec.version_needed_to_extract[1] == VMS_) {
         if (G.crec.version_needed_to_extract[0] > VMS_UNZIP_VERSION) {
-            if (!((uO.tflag && uO.qflag) || (!uO.tflag && !QCOND2)))
+            if (!((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag)))
                 Info(slide, 0x401, ((char *)slide, VersionMsg,
                   FnFilter1(G.filename), "VMS",
                   G.crec.version_needed_to_extract[0] / 10,
@@ -743,7 +743,7 @@ static int store_info(__G)   /* return 0 if skipping, 1 if OK */
         }
     /* usual file type:  don't need VMS to extract */
     } else if (G.crec.version_needed_to_extract[0] > UNZVERS_SUPPORT) {
-        if (!((uO.tflag && uO.qflag) || (!uO.tflag && !QCOND2)))
+        if (!((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag)))
             Info(slide, 0x401, ((char *)slide, VersionMsg,
               FnFilter1(G.filename), "PK",
               G.crec.version_needed_to_extract[0] / 10,
@@ -753,7 +753,7 @@ static int store_info(__G)   /* return 0 if skipping, 1 if OK */
     }
 
     if (UNKN_COMPR) {
-        if (!((uO.tflag && uO.qflag) || (!uO.tflag && !QCOND2))) {
+        if (!((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag))) {
             unsigned cmpridx;
 
             if ((cmpridx = find_compr_idx(G.crec.compression_method))
@@ -1020,7 +1020,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
         if (G.pInfo->encrypted &&
             (error = decrypt(__G__ uO.pwdarg)) != PK_COOL) {
             if (error == PK_WARN) {
-                if (!((uO.tflag && uO.qflag) || (!uO.tflag && !QCOND2)))
+                if (!((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag)))
                     Info(slide, 0x401, ((char *)slide,
                       SkipIncorrectPasswd,
                       FnFilter1(G.filename)));
@@ -1279,7 +1279,7 @@ static int extract_or_test_member(__G)    /* return PK-type error code */
     defer_leftover_input(__G);    /* so NEXTBYTE bounds check will work */
     switch (G.lrec.compression_method) {
         case STORED:
-            if (!uO.tflag && QCOND2) {
+            if (!uO.tflag && !uO.qflag) {
                 Info(slide, 0, ((char *)slide, ExtractMsg,
                   "extract", FnFilter1(G.filename),
                   (uO.aflag != 1 /* && G.pInfo->textfile==G.pInfo->textmode */)?
@@ -1304,7 +1304,7 @@ static int extract_or_test_member(__G)    /* return PK-type error code */
             break;
 
         case SHRUNK:
-            if (!uO.tflag && QCOND2) {
+            if (!uO.tflag && !uO.qflag) {
                 Info(slide, 0, ((char *)slide, ExtractMsg,
                   Unshrink, FnFilter1(G.filename),
                   (uO.aflag != 1 /* && G.pInfo->textfile==G.pInfo->textmode */)?
@@ -1312,7 +1312,7 @@ static int extract_or_test_member(__G)    /* return PK-type error code */
             }
             if ((r = unshrink(__G)) != PK_COOL) {
                 if (r < PK_DISK) {
-                    if ((uO.tflag && uO.qflag) || (!uO.tflag && !QCOND2))
+                    if ((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag))
                         Info(slide, 0x401, ((char *)slide,
                           ErrUnzipFile, r == PK_MEM3 ?
                           NotEnoughMem :
@@ -1331,7 +1331,7 @@ static int extract_or_test_member(__G)    /* return PK-type error code */
             break;
 
         case IMPLODED:
-            if (!uO.tflag && QCOND2) {
+            if (!uO.tflag && !uO.qflag) {
                 Info(slide, 0, ((char *)slide, ExtractMsg,
                   "explod", FnFilter1(G.filename),
                   (uO.aflag != 1 /* && G.pInfo->textfile==G.pInfo->textmode */)?
@@ -1341,7 +1341,7 @@ static int extract_or_test_member(__G)    /* return PK-type error code */
                 if (r == 5) { /* treat 5 specially */
                     int warning = ((zusz_t)G.used_csize <= G.lrec.csize);
 
-                    if ((uO.tflag && uO.qflag) || (!uO.tflag && !QCOND2))
+                    if ((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag))
                         Info(slide, 0x401, ((char *)slide,
                           LengthMsg,
                           "", warning ? "warning" : "error",
@@ -1361,7 +1361,7 @@ static int extract_or_test_member(__G)    /* return PK-type error code */
                           "", "", "."));
                     error = warning ? PK_WARN : PK_ERR;
                 } else if (r < PK_DISK) {
-                    if ((uO.tflag && uO.qflag) || (!uO.tflag && !QCOND2))
+                    if ((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag))
                         Info(slide, 0x401, ((char *)slide,
                           ErrUnzipFile, r == 3?
                           NotEnoughMem :
@@ -1382,7 +1382,7 @@ static int extract_or_test_member(__G)    /* return PK-type error code */
             break;
 
         case DEFLATED:
-            if (!uO.tflag && QCOND2) {
+            if (!uO.tflag && !uO.qflag) {
                 Info(slide, 0, ((char *)slide, ExtractMsg,
                   "inflat", FnFilter1(G.filename),
                   (uO.aflag != 1 /* && G.pInfo->textfile==G.pInfo->textmode */)?
@@ -1392,7 +1392,7 @@ static int extract_or_test_member(__G)    /* return PK-type error code */
                                (G.lrec.compression_method == ENHDEFLATED)))
                 != 0) {
                 if (r < PK_DISK) {
-                    if ((uO.tflag && uO.qflag) || (!uO.tflag && !QCOND2))
+                    if ((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag))
                         Info(slide, 0x401, ((char *)slide,
                           ErrUnzipFile, r == 3?
                           NotEnoughMem :
@@ -1458,7 +1458,7 @@ static int extract_or_test_member(__G)    /* return PK-type error code */
     }
     if (G.crc32val != G.lrec.crc32) {
         /* if quiet enough, we haven't output the filename yet:  do it */
-        if ((uO.tflag && uO.qflag) || (!uO.tflag && !QCOND2))
+        if ((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag))
             Info(slide, 0x401, ((char *)slide, "%-22s ",
               FnFilter1(G.filename)));
         Info(slide, 0x401, ((char *)slide, BadCRC, G.crc32val,
@@ -1475,7 +1475,7 @@ static int extract_or_test_member(__G)    /* return PK-type error code */
         if (!uO.qflag)
             Info(slide, 0, ((char *)slide, " OK\n"));
     } else {
-        if (QCOND2 && !error)   /* GRR:  is stdout reset to text mode yet? */
+        if (!uO.qflag && !error)   /* GRR:  is stdout reset to text mode yet? */
             Info(slide, 0, ((char *)slide, "\n"));
     }
 
