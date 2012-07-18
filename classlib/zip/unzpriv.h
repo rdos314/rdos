@@ -818,6 +818,10 @@ void     close_outfile   OF((__GPRO));                              /* local */
 #ifdef NEED_ISO_OEM_INIT
    void  prepare_ISO_OEM_translat   OF((__GPRO));                   /* local */
 #endif
+
+void Ext_ASCII_TO_Native(char *string, int hostnum, int hostver, int isuxatt, int islochdr);
+
+
 #ifdef SYSTEM_SPECIFIC_CTOR
    void  SYSTEM_SPECIFIC_CTOR   OF((__GPRO));                       /* local */
 #endif
@@ -1015,10 +1019,6 @@ void     close_outfile   OF((__GPRO));                              /* local */
  *  code page.  As with A_TO_N(), conversion is done in place.
  */
 
-#    ifndef IZ_OEM2ISO_ARRAY
-#      define IZ_OEM2ISO_ARRAY
-#    endif
-
 #ifndef STR_TO_OEM
 #    define STR_TO_OEM          str2oem
 #    define NEED_STR2OEM
@@ -1060,21 +1060,6 @@ void     close_outfile   OF((__GPRO));                              /* local */
  *
  * All other ports are assumed to code zip entry filenames in ISO 8859-1.
  */
-#ifndef Ext_ASCII_TO_Native
-#  define Ext_ASCII_TO_Native(string, hostnum, hostver, isuxatt, islochdr) \
-    if (((hostnum) == FS_FAT_ && \
-         !(((islochdr) || (isuxatt)) && \
-           ((hostver) == 25 || (hostver) == 26 || (hostver) == 40))) || \
-        (hostnum) == FS_HPFS_ || \
-        ((hostnum) == FS_NTFS_ && (hostver) == 50)) { \
-       if (oem2iso) {register unsigned char *p; \
-           for (p=(unsigned char *)(string); *p; p++)\
-             *p = native((*p & 0x80) ? oem2iso[*p & 0x7f] : *p);} \
-    } else { \
-        A_TO_N(string); \
-    }
-#endif
-
 
 
 /**********************/
@@ -1083,11 +1068,6 @@ void     close_outfile   OF((__GPRO));                              /* local */
 
    extern const unsigned near mask_bits[17];
    extern const char *fnames[2];
-
-#ifdef IZ_OEM2ISO_ARRAY
-   extern const unsigned char *oem2iso;
-   extern const unsigned char oem2iso_850[];
-#endif
 
    extern const char  VersionDate[];
    extern const char  CentSigMsg[];
