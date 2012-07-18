@@ -64,20 +64,13 @@ typedef size_t extent;
 /*  Defines  */
 /*************/
 
-#define UNZIP_BZ2VERS   46
 #define UNZIP_VERSION   20   /* compatible with PKUNZIP 2.0 */
 #define VMS_UNZIP_VERSION 42   /* if OS-needed-to-extract is VMS:  can do */
 
-/* clean up with a few defaults */
-#ifndef DIR_END
-#  define DIR_END       '/'     /* last char before program name or filename */
-#endif
-#  define DATE_FORMAT   DF_YMD  /* defaults to invariant ISO-style */
-#  define DATE_SEPCHAR  '-'
+#define DATE_FORMAT   DF_YMD  /* defaults to invariant ISO-style */
+#define DATE_SEPCHAR  '-'
 
 /* defaults that we hope will take care of most machines in the future */
-
-#define INT_SPRINTF      /* sprintf() returns int:  ANSI */
 
 #define MSG_STDERR(f)  (f & 1)        /* bit 0:  0 = stdout, 1 = stderr */
 #define MSG_INFO(f)    ((f & 6) == 0) /* bits 1 and 2:  0 = info */
@@ -1339,14 +1332,8 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
 #    define Info(buf,flag,sprf_arg) \
      fputs((char *)(sprintf sprf_arg, (buf)), (flag)&1? stderr : stdout)
 #  else
-#    ifdef INT_SPRINTF  /* optimized version for "int sprintf()" flavour */
 #      define Info(buf,flag,sprf_arg) \
        (*G.message)((void *)&G, (unsigned char *)(buf), (unsigned long)sprintf sprf_arg, (flag))
-#    else          /* generic version, does not use sprintf() return value */
-#      define Info(buf,flag,sprf_arg) \
-       (*G.message)((void *)&G, (unsigned char *)(buf), \
-                     (unsigned long)(sprintf sprf_arg, strlen((char *)(buf))), (flag))
-#    endif
 #  endif
 #endif /* !Info */
 
