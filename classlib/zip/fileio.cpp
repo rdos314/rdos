@@ -909,7 +909,7 @@ int check_for_newer(char *filename)  /* return 1 if existing file is newer */
     time_t existing, archive;
 
     Trace((stderr, "check_for_newer:  doing stat(%s)\n", FnFilter1(filename)));
-    if (SSTAT(filename, &G.statbuf)) {
+    if (stat(filename, &G.statbuf)) {
         Trace((stderr,
           "check_for_newer:  stat(%s) returns %d:  file does not exist\n",
           FnFilter1(filename), SSTAT(filename, &G.statbuf)));

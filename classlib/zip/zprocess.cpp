@@ -400,7 +400,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
     which would corrupt the bit streams.
   ---------------------------------------------------------------------------*/
 
-    if (SSTAT(G.zipfn, &G.statbuf) ||
+    if (stat(G.zipfn, &G.statbuf) ||
         (error = S_ISDIR(G.statbuf.st_mode)) != 0)
     {
         if (lastchance && (uO.qflag < 3)) {

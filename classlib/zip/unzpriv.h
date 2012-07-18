@@ -114,20 +114,11 @@ typedef size_t extent;
  */
 #define FILNAMSIZ  PATH_MAX
 
-#  define TRUE      1   /* sort of obvious */
-#  define FALSE     0
+#define TRUE      1   /* sort of obvious */
+#define FALSE     0
 
-#ifndef S_ISDIR
-#  ifdef CMS_MVS
-#    define S_ISDIR(m)  (FALSE)
-#  else
-#    define S_ISDIR(m)  (((m) & S_IFMT) == S_IFDIR)
-# endif
-#endif
-
-#ifndef IS_VOLID
-#  define IS_VOLID(m)  ((m) & 0x08)
-#endif
+#define S_ISDIR(m)  (((m) & S_IFMT) == S_IFDIR)
+#define IS_VOLID(m)  ((m) & 0x08)
 
 /***********************************/
 /*  LARGE_FILE_SUPPORT             */
@@ -147,26 +138,6 @@ typedef size_t extent;
  * Lifted and placed here 6/7/2004 - Myles Bennett
  */
   /* No Large File Support */
-
-# ifndef REGULUS  /* returns the inode number on success(!)...argh argh argh */
-#   define zstat stat
-# endif
-# define zfstat fstat
-# define zlseek lseek
-# define zfseeko fseek
-# define zftello ftell
-# define zfopen fopen
-# define zfdopen fdopen
-
-
-#ifndef SSTAT
-#  ifdef WILD_STAT_BUG
-#    define SSTAT(path,pbuf) (iswild(path) || zstat(path,pbuf))
-#  else
-#    define SSTAT    zstat
-#  endif
-#endif
-
 
 /* Default fzofft() format selection. */
 
