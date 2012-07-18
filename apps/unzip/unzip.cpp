@@ -73,8 +73,8 @@
 /* Local Functions */
 /*******************/
 
-static void  help_extended      OF((__GPRO));
-static void  show_version_info  OF((__GPRO));
+static void  help_extended      OF(());
+static void  show_version_info  OF(());
 
 
 /*************/
@@ -233,7 +233,7 @@ int main(int argc, char *argv[])   /* return PK-type error code (except under VM
     int r;
 
     globalsCtor();
-    r = unzip(__G__ argc, argv);
+    r = unzip(argc, argv);
     return(r);
 }
 
@@ -358,9 +358,9 @@ int unzip(int argc, char *argv[])
            }
         }
         if (uO.zipinfo_mode)
-            error = zi_opts(__G__ &argc, &argv);
+            error = zi_opts(&argc, &argv);
         else
-            error = uz_opts(__G__ &argc, &argv);
+            error = uz_opts(&argc, &argv);
     }
 
     if ((argc < 0) || error) {
@@ -466,7 +466,7 @@ int unzip(int argc, char *argv[])
     Okey dokey, we have everything we need to get started.  Let's roll.
   ---------------------------------------------------------------------------*/
 
-    retcode = process_zipfiles(__G);
+    retcode = process_zipfiles();
 
 cleanup_and_exit:
     if (G.area.Slide != (unsigned char *)NULL) {
@@ -759,7 +759,7 @@ int uz_opts(int *pargc, char ***pargv)
     if (showhelp > 0) {         /* just print help message and quit */
         *pargc = -1;
         if (showhelp == 2) {
-            help_extended(__G);
+            help_extended();
             return PK_OK;
         } else
         {
@@ -787,7 +787,7 @@ int uz_opts(int *pargc, char ***pargv)
         *pargc = argc;
         *pargv = argv;
         if (uO.vflag >= 2 && argc == -1) {              /* "unzip -v" */
-            show_version_info(__G);
+            show_version_info();
             return PK_OK;
         }
         if (!G.noargs && !error)
@@ -868,8 +868,7 @@ int usage(int error)   /* return PK-type error code */
 
 
 /* Print extended help to stdout. */
-static void help_extended(__G)
-    __GDEF
+static void help_extended()
 {
     extent i;             /* counter for help array */
 
@@ -1109,8 +1108,7 @@ static void help_extended(__G)
 /* Function show_version_info() */
 /********************************/
 
-static void show_version_info(__G)
-    __GDEF
+static void show_version_info()
 {
     if (uO.qflag > 3)                           /* "unzip -vqqqq" */
         Info(slide, 0, ((char *)slide, "%d\n",
@@ -1124,7 +1122,7 @@ static void show_version_info(__G)
           VersionDate));
         Info(slide, 0, ((char *)slide,
           UnzipUsageLine2v));
-        version(__G);
+        version();
         Info(slide, 0, ((char *)slide, CompileOptions));
         Info(slide, 0, ((char *)slide, CompileOptFormat,
           Copyright_Clean));
