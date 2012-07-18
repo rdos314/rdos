@@ -271,10 +271,7 @@ extern char end_central64_sig[4];
 extern char end_centloc64_sig[4];
 /* extern char extd_local_sig[4];  NOT USED YET */
 
-   extern Uz_Globs            G;
-
-#  define __GPRO              void
-#  define CONSTRUCTGLOBALS()  globalsCtor()
+extern Uz_Globs            G;
 
 #define uO              G.UzO
 

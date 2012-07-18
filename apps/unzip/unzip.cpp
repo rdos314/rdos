@@ -232,7 +232,7 @@ int main(int argc, char *argv[])   /* return PK-type error code (except under VM
 {
     int r;
 
-    CONSTRUCTGLOBALS();
+    globalsCtor();
     r = unzip(__G__ argc, argv);
     return(r);
 }
