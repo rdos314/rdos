@@ -117,8 +117,6 @@ typedef size_t extent;
 #define TRANSBUFSIZ (lenEOL*OUTBUFSIZ)
 #define RAWBUFSIZ OUTBUFSIZ
 
-#define COPYRIGHT_CLEAN
-
 /* File operations--use "b" for binary if allowed or fixed length 512 on VMS */
 
 /*
@@ -778,15 +776,8 @@ int    huft_build                OF((__GPRO__ const unsigned *b, unsigned n,
                                      struct huft **t, unsigned *m));
    int    UZinflate              OF((__GPRO__ int is_defl64));  /* inflate.c */
 #  define inflate_free(x)        inflateEnd(&((Uz_Globs *)(&G))->dstrm)
-#ifndef COPYRIGHT_CLEAN
-   int    unreduce               OF((__GPRO));                 /* unreduce.c */
-/* static void  LoadFollowers    OF((__GPRO__ f_array *follower, unsigned char *Slen));
-                                                                * unreduce.c */
-#endif /* !COPYRIGHT_CLEAN */
-#ifndef LZW_CLEAN
    int    unshrink               OF((__GPRO));                 /* unshrink.c */
 /* static void  partial_clear    OF((__GPRO));                  * unshrink.c */
-#endif /* !LZW_CLEAN */
 
 /*---------------------------------------------------------------------------
     Miscellaneous/shared functions:
@@ -813,11 +804,8 @@ int      checkdir        OF((__GPRO__ char *pathcomp, int flag));   /* local */
 char    *do_wild         OF((__GPRO__ const char *wildzipfn));     /* local */
 char    *GetLoadPath     OF((__GPRO));                              /* local */
 void     close_outfile   OF((__GPRO));                              /* local */
-   int   defer_dir_attribs  OF((__GPRO__ direntry **pd));           /* local */
-   int   set_direc_attribs  OF((__GPRO__ direntry *d));             /* local */
-#ifdef NEED_ISO_OEM_INIT
-   void  prepare_ISO_OEM_translat   OF((__GPRO));                   /* local */
-#endif
+int   defer_dir_attribs  OF((__GPRO__ direntry **pd));           /* local */
+int   set_direc_attribs  OF((__GPRO__ direntry *d));             /* local */
 
 void Ext_ASCII_TO_Native(char *string, int hostnum, int hostver, int isuxatt, int islochdr);
 void strtolower(char *str1, char *str2);
