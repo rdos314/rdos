@@ -934,40 +934,6 @@ void strtolower(char *str1, char *str2);
   zdest=(int)((unsigned)G.bitbuf&mask_bits[nbits]);G.bitbuf>>=nbits;\
   G.bits_left-=nbits;}
 
-/*
- * macro READBITS(nbits,zdest)    * only used by unreduce and unshrink *
- *  {
- *      if (nbits > G.bits_left) {  * fill G.bitbuf, 8*sizeof(unsigned long) bits *
- *          int temp;
- *
- *          G.zipeof = 1;
- *          while (G.bits_left <= 8*(int)(sizeof(G.bitbuf)-1) &&
- *                 (temp = NEXTBYTE) != EOF) {
- *              G.bitbuf |= (unsigned long)temp << G.bits_left;
- *              G.bits_left += 8;
- *              G.zipeof = 0;
- *          }
- *      }
- *      zdest = (int)((unsigned)G.bitbuf & mask_bits[nbits]);
- *      G.bitbuf >>= nbits;
- *      G.bits_left -= nbits;
- *  }
- *
- */
-
-/*
- *  NOTES:  This macro makes no assumptions about the characteristics of
- *    the tolower() function or macro (beyond its existence), nor does it
- *    make assumptions about the structure of the character set (i.e., it
- *    should work on EBCDIC machines, too).  The fact that either or both
- *    of isupper() and tolower() may be macros has been taken into account;
- *    watch out for "side effects" (in the C sense) when modifying this
- *    macro.
- */
-
-#ifndef foreign
-#  define foreign(c)  (c)
-#endif
 
 /*
  *  Translate the zero-terminated string in str1 from ASCII to the native

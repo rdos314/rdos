@@ -1284,7 +1284,7 @@ char *str2oem(char *dst, register const char *src)
     register char *dstp = dst;
 
     do {
-        c = (unsigned char)foreign(*src++);
+        c = (unsigned char)(*src++);
         *dstp++ = (char)ASCII2OEM(c);
     } while (c != '\0');
 
