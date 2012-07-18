@@ -140,19 +140,12 @@
 #    undef zlib_version         /*  and must not be defined as a macro. */
 #  endif
 
-#ifdef USE_BZIP2
-#  include "bzlib.h"
-#endif
-
 
 /*************/
 /*  Globals  */
 /*************/
 
 typedef struct Globals {
-#ifdef DLL
-    zvoid *callerglobs; /* pointer to structure of pass-through global vars */
-#endif
 
     /* command options of general use */
     UzpOpts UzO;        /* command options of general use */
@@ -163,13 +156,8 @@ typedef struct Globals {
     /* internal flags and general globals */
     int height;           /* check for SIGWINCH, etc., eventually... */
     int lines;            /* count of lines displayed on current screen */
-# if (defined(SCREENWIDTH) && defined(SCREENLWRAP))
     int width;
     int chars;            /* count of screen characters in current line */
-# endif
-#if (defined(IZ_CHECK_TZ) && defined(USE_EF_UT_TIME))
-    int tz_is_valid;      /* indicates that timezone info can be used */
-#endif
     int noargs;           /* did true command line have *any* arguments? */
     unsigned filespecs;   /* number of real file specifications to be matched */
     unsigned xfilespecs;  /* number of excluded filespecs to be matched */
@@ -182,26 +170,6 @@ typedef struct Globals {
     long   expect_ecrec_offset;
     long   csize;       /* used by decompr. (NEXTBYTE): must be signed */
     long   used_csize;  /* used by extract_or_test_member(), explode() */
-
-#ifdef DLL
-     int fValidate;       /* true if only validating an archive */
-     int filenotfound;
-     int redirect_data;   /* redirect data to memory buffer */
-     int redirect_text;   /* redirect text output to buffer */
-# ifndef NO_SLIDE_REDIR
-     int redirect_slide;  /* redirect decompression area to mem buffer */
-     unsigned _wsize;     /* sliding window size can be hold in unsigned */
-# endif
-     unsigned long redirect_size;            /* size of redirected output buffer */
-     unsigned char *redirect_buffer;         /* pointer to head of allocated buffer */
-     unsigned char *redirect_pointer;        /* pointer past end of written data */
-# ifndef NO_SLIDE_REDIR
-     unsigned char *redirect_sldptr;         /* head of decompression slide buffer */
-# endif
-# ifdef OS2DLL
-     cbList(processExternally);    /* call-back list */
-# endif
-#endif /* DLL */
 
     char **pfnames;
     char **pxnames;
@@ -247,48 +215,21 @@ typedef struct Globals {
     unsigned long      numlines;             /* fileio static: number of lines printed */
     int      sol;                  /* fileio static: at start of line */
     int      no_ecrec;             /* process static */
-#ifdef SYMLINKS
-    int      symlnk;
-    slinkentry *slink_head;        /* pointer to head of symlinks list */
-    slinkentry *slink_last;        /* pointer to last entry in symlinks list */
-#endif
-#ifdef NOVELL_BUG_FAILSAFE
-    int      dne;                  /* true if stat() says file doesn't exist */
-#endif
 
     int      outfile;
     unsigned char      *outbuf;
     unsigned char      *realbuf;
 
-#ifndef VMS                        /* if SMALL_MEM, outbuf2 is initialized in */
     unsigned char      *outbuf2;             /*  process_zipfiles() (never changes); */
-#endif                             /*  else malloc'd ONLY if unshrink and -a */
     unsigned char      *outptr;
     unsigned long      outcnt;               /* number of chars stored in outbuf */
     char     filename[FILNAMSIZ];  /* also used by NT for temporary SFX path */
-#ifdef UNICODE_SUPPORT
-    char     *filename_full;       /* the full path so Unicode checks work */
-    extent   fnfull_bufsize;       /* size of allocated filename buffer */
-    int      unicode_escape_all;
-    int      unicode_mismatch;
-    int      unipath_version;      /* version of Unicode field */
-    unsigned long      unipath_checksum;     /* Unicode field checksum */
-    char     *unipath_filename;    /* UTF-8 path */
-#endif /* UNICODE_SUPPORT */
-
-#ifdef CMS_MVS
-    char     *tempfn;              /* temp file used; erase on close */
-#endif
 
     char *key;         /* crypt static: decryption password or NULL */
     int nopwd;         /* crypt static */
     unsigned int keys[3];   /* crypt static: keys defining pseudo-random sequence */
 
-#if (!defined(DOS_FLX_H68_NLM_OS2_W32) && !defined(AMIGA) && !defined(RISCOS))
-#if (!defined(MACOS) && !defined(ATARI) && !defined(VMS))
     int echofd;        /* ttyio static: file descriptor whose echo is off */
-#endif /* !(MACOS || ATARI || VMS) */
-#endif /* !(DOS_FLX_H68_NLM_OS2_W32 || AMIGA || RISCOS) */
 
     unsigned hufts;    /* track memory usage */
 
@@ -299,33 +240,14 @@ typedef struct Globals {
     char fzofft_buf[FZOFFT_NUM][FZOFFT_LEN];
     int fzofft_index;
 
-#ifdef SMALL_MEM
-    char rgchBigBuffer[512];
-    char rgchSmallBuffer[96];
-    char rgchSmallBuffer2[160];  /* boosted to 160 for local3[] in unzip.c */
-#endif
-
     MsgFn *message;
     InputFn *input;
     PauseFn *mpause;
     PasswdFn *decr_passwd;
     StatCBFn *statreportcb;
-#ifdef WINDLL
-    LPUSERFUNCTIONS lpUserFunctions;
-#endif
 
     int incnt_leftover;       /* so improved NEXTBYTE does not waste input */
     unsigned char *inptr_leftover;
-
-#ifdef VMS_TEXT_CONV
-    unsigned VMS_line_length; /* so native VMS variable-length text files */
-    int      VMS_line_state;  /*  are readable on other platforms */
-    int      VMS_line_pad;
-#endif
-
-#if (defined(SFX) && defined(CHEAP_SFX_AUTORUN))
-    char autorun_command[FILNAMSIZ];
-#endif
 
 } Uz_Globs;  /* end of struct Globals */
 
