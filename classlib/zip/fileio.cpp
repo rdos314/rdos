@@ -1285,7 +1285,8 @@ char *str2oem(char *dst, register const char *src)
 
     do {
         c = (unsigned char)(*src++);
-        *dstp++ = (char)ASCII2OEM(c);
+        *dstp++ = (char)(((c & 0x80) && iso2oem) ? iso2oem[c & 0x7f] : c);
+
     } while (c != '\0');
 
     return dst;

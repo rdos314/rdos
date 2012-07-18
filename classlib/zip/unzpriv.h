@@ -942,39 +942,6 @@ void strtolower(char *str1, char *str2);
 #  define CRTL_CP_IS_ISO
 
 
-/*  Translate "extended ASCII" chars (OEM coding for DOS and OS/2; else
- *  ISO-8859-1 [ISO Latin 1, Win Ansi,...]) into the internal "native"
- *  code page.  As with A_TO_N(), conversion is done in place.
- */
-
-/* assume: "ASCII" is "ISO-ANSI" */
-#define ASCII2ISO(c) (c)
-
-/* assume: "ASCII" is "ISO-ANSI" */
-#define ASCII2OEM(c) \
-       ((((c) & 0x80) && iso2oem) ? iso2oem[(c) & 0x7f] : (c))
-
-#define CRYP_USES_ISO2OEM
-
-
-/* Convert filename (and file comment string) into "internal" charset.
- * This macro assumes that Zip entry filenames are coded in OEM (IBM DOS)
- * codepage when made on
- *  -> DOS (this includes 16-bit Windows 3.1)  (FS_FAT_)
- *  -> OS/2                                    (FS_HPFS_)
- *  -> Win95/WinNT with Nico Mak's WinZip      (FS_NTFS_ && hostver == "5.0")
- * EXCEPTIONS:
- *  PKZIP for Windows 2.5, 2.6, and 4.0 flag their entries as "FS_FAT_", but
- *  the filename stored in the local header is coded in Windows ANSI (CP 1252
- *  resp. ISO 8859-1 on US and western Europe locale settings).
- *  Likewise, PKZIP for UNIX 2.51 flags its entries as "FS_FAT_", but the
- *  filenames stored in BOTH the local and the central header are coded
- *  in the local system's codepage (usually ANSI codings like ISO 8859-1).
- *
- * All other ports are assumed to code zip entry filenames in ISO 8859-1.
- */
-
-
 /**********************/
 /*  Global constants  */
 /**********************/
