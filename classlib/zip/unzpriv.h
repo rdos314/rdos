@@ -31,15 +31,6 @@
 #  define MORE
 
 
-/* Enable -B option per default on specific systems, to allow backing up
- * files that would be overwritten.
- * (This list of systems must be kept in sync with the list of systems
- * that add the B_flag to the UzpOpts structure, see unzip.h.)
- */
-
-#  define DYNAMIC_CRC_TABLE
-
-
 /* ----------------------------------------------------------------------------
    MUST BE AFTER LARGE FILE INCLUDES
    ---------------------------------------------------------------------------- */
@@ -109,19 +100,6 @@ typedef size_t extent;
 
 #define WSIZE   0x8000  /* window size--must be a power of two, and */
 
-#if (defined(DYNALLOC_CRCTAB) && !defined(DYNAMIC_CRC_TABLE))
-#  undef DYNALLOC_CRCTAB
-#endif
-
-#if (defined(DYNALLOC_CRCTAB) && defined(REENTRANT))
-#  undef DYNALLOC_CRCTAB   /* not safe with reentrant code */
-#endif
-
-#if (defined(USE_ZLIB) && !defined(USE_OWN_CRCTAB))
-#  ifdef DYNALLOC_CRCTAB
-#    undef DYNALLOC_CRCTAB
-#  endif
-#endif
 
 #ifdef USE_ZLIB
 #  ifdef IZ_CRC_BE_OPTIMIZ
