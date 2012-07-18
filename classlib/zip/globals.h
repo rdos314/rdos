@@ -197,11 +197,7 @@ typedef struct Globals {
      int redirect_text;   /* redirect text output to buffer */
 # ifndef NO_SLIDE_REDIR
      int redirect_slide;  /* redirect decompression area to mem buffer */
-#  if (defined(USE_DEFLATE64) && defined(INT_16BIT))
-     unsigned long _wsize;          /* size of sliding window exceeds "unsigned" range */
-#  else
      unsigned _wsize;     /* sliding window size can be hold in unsigned */
-#  endif
 # endif
      unsigned long redirect_size;            /* size of redirected output buffer */
      unsigned char *redirect_buffer;         /* pointer to head of allocated buffer */
@@ -326,17 +322,6 @@ typedef struct Globals {
     struct huft *fixed_tl;              /* inflate static */
     struct huft *fixed_td;              /* inflate static */
     unsigned fixed_bl, fixed_bd;        /* inflate static */
-#ifdef USE_DEFLATE64
-    struct huft *fixed_tl64;            /* inflate static */
-    struct huft *fixed_td64;            /* inflate static */
-    unsigned fixed_bl64, fixed_bd64;    /* inflate static */
-    struct huft *fixed_tl32;            /* inflate static */
-    struct huft *fixed_td32;            /* inflate static */
-    unsigned fixed_bl32, fixed_bd32;    /* inflate static */
-    const ush *cplens;                 /* inflate static */
-    const unsigned char *cplext;                 /* inflate static */
-    const unsigned char *cpdext;                 /* inflate static */
-#endif
     unsigned wp;              /* inflate static: current position in slide */
     unsigned long bb;                   /* inflate static: bit buffer */
     unsigned bk;              /* inflate static: bits count in bit buffer */

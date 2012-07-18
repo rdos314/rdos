@@ -30,11 +30,6 @@
 /* GRR 960204:  MORE defined here in preparation for removal altogether */
 #  define MORE
 
-#  define NO_DEFLATE64
-
-#  ifdef USE_DEFLATE64
-#    undef USE_DEFLATE64
-#  endif
 
 /* Enable -B option per default on specific systems, to allow backing up
  * files that would be overwritten.
