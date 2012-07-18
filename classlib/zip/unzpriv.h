@@ -39,7 +39,6 @@
 
 #include "zlib.h"
 
-#define GOT_UTIMBUF
 #define USE_ZLIB
 #define SET_DIR_ATTRIB
 
@@ -530,15 +529,6 @@ typedef size_t extent;
      typedef unsigned int    uid_t;    /* SCO Xenix */
      typedef unsigned int    gid_t;
 #  endif
-#endif
-
-#if (defined(GOT_UTIMBUF) || defined(sgi) || defined(ATARI))
-   typedef struct utimbuf ztimbuf;
-#else
-   typedef struct ztimbuf {
-       time_t actime;        /* new access time */
-       time_t modtime;       /* new modification time */
-   } ztimbuf;
 #endif
 
 typedef struct iztimes {
