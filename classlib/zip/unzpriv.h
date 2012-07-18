@@ -400,13 +400,6 @@ typedef size_t extent;
 #define CR     13        /* '\r' on ASCII machines; must be 13 due to EBCDIC */
 #define CTRLZ  26        /* DOS & OS/2 EOF marker (used in fileio.c, vms.c) */
 
-#ifdef EBCDIC
-#  define foreign(c)    ascii[(unsigned char)(c)]
-#  define native(c)     ebcdic[(unsigned char)(c)]
-#  define NATIVE        "EBCDIC"
-#  define NOANSIFILT
-#endif
-
 #ifndef ENV_UNZIP
 #  define ENV_UNZIP       "UNZIP"          /* the standard names */
 #  define ENV_ZIPINFO     "ZIPINFO"
@@ -1401,9 +1394,6 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
    extern const unsigned near mask_bits[17];
    extern const char *fnames[2];
 
-#ifdef EBCDIC
-   extern const unsigned char ebcdic[];
-#endif
 #ifdef IZ_ISO2OEM_ARRAY
    extern const unsigned char *iso2oem;
    extern const unsigned char iso2oem_850[];
