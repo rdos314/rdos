@@ -117,12 +117,8 @@ typedef size_t extent;
 /* DBCS support for Info-ZIP  (mainly for japanese (-: )
  * by Yoshioka Tsuneo (QWF00133@nifty.ne.jp,tsuneo-y@is.aist-nara.ac.jp)
  */
-#  ifndef SETLOCALE
-#    define SETLOCALE(category, locale)
-#  endif
 
-
-#if (defined(MALLOC_WORK) && !defined(MY_ZCALLOC))
+#if (!defined(MY_ZCALLOC))
    /* Any system without a special calloc function */
 # ifndef zcalloc
 #  define zcalloc(items, size) \
@@ -131,7 +127,7 @@ typedef size_t extent;
 # ifndef zcfree
 #  define zcfree    free
 # endif
-#endif /* MALLOC_WORK && !MY_ZCALLOC */
+#endif /* !MY_ZCALLOC */
 
 #ifdef ZMEM
 #  undef ZMEM
@@ -650,7 +646,6 @@ typedef struct VMStimbuf {
     Zipfile work area declarations.
   ---------------------------------------------------------------------------*/
 
-#ifdef MALLOC_WORK
    union work {
      struct {                 /* unshrink(): */
        int *Parent;          /* pointer to (8192 * sizeof(int)) */
@@ -659,16 +654,6 @@ typedef struct VMStimbuf {
      } shrink;
      unsigned char *Slide;              /* explode(), inflate(), unreduce() */
    };
-#else /* !MALLOC_WORK */
-   union work {
-     struct {                 /* unshrink(): */
-       int Parent[HSIZE];    /* (8192 * sizeof(int)) == 16KB minimum */
-       unsigned char value[HSIZE];        /* 8KB */
-       unsigned char Stack[HSIZE];        /* 8KB */
-     } shrink;                  /* total = 32KB minimum; 80KB on Cray/Alpha */
-     unsigned char Slide[WSIZE];        /* explode(), inflate(), unreduce() */
-   };
-#endif /* ?MALLOC_WORK */
 
 #define slide  G.area.Slide
 
@@ -1194,10 +1179,10 @@ char    *GetLoadPath     OF((__GPRO));                              /* local */
 #ifdef NEED_ISO_OEM_INIT
    void  prepare_ISO_OEM_translat   OF((__GPRO));                   /* local */
 #endif
-#if (defined(MALLOC_WORK) && defined(MY_ZCALLOC))
+#if (defined(MY_ZCALLOC))
    void *zcalloc    OF((unsigned int, unsigned int));
    void zcfree          OF((void *));
-#endif /* MALLOC_WORK && MY_ZCALLOC */
+#endif /* MY_ZCALLOC */
 #ifdef SYSTEM_SPECIFIC_CTOR
    void  SYSTEM_SPECIFIC_CTOR   OF((__GPRO));                       /* local */
 #endif

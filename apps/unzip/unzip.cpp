@@ -251,9 +251,6 @@ int unzip(int argc, char *argv[])
     int i;
     int retcode, error=FALSE;
 
-    /* initialize international char support to the current environment */
-    SETLOCALE(LC_CTYPE, "");
-
     /* The following (rather complex) expression determines the allocation
        size of the decompression work area.  It simulates what the
        combined "union" and "struct" declaration of the "static" work

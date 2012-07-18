@@ -35,7 +35,6 @@
 
 #define DIR_END       '\\'      /* OS uses '\\' as directory separator */
 #define DIR_END2      '/'       /* also check for '/' (RTL may convert) */
-#define MALLOC_WORK
 #define lenEOL        2
 #define PutNativeEOL  {*q++ = native(CR); *q++ = native(LF);}
 
