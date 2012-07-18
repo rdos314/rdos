@@ -69,8 +69,6 @@ int screensize(int *tt_rows, int *tt_cols);
 #  define SHORTHDRSTATS "%9lu  %02u%c%02u%c%02u %02u:%02u  %c"
 #  define SHORTFILETRAILER " --------                   -------\n%9lu                   %9lu file%s\n"
 
-/* First thing: Signal all following code that we compile UnZip utilities! */
-#  define UNZIP
 
 /* GRR 960204:  MORE defined here in preparation for removal altogether */
 #  define MORE

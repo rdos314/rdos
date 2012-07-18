@@ -157,7 +157,6 @@ typedef struct Globals {
     /* command options of general use */
     UzpOpts UzO;        /* command options of general use */
 
-#ifndef FUNZIP
     /* command options specific to the high level command line interface */
 #ifdef MORE
     int M_flag;         /* -M: built-in "more" function */
@@ -214,20 +213,15 @@ typedef struct Globals {
     char answerbuf[10];
     min_info info[DIR_BLKSIZ];
     min_info *pInfo;
-#endif /* !FUNZIP */
     union work area;                /* see unzpriv.h for definition of work */
 
     const unsigned *crc_32_tab;
     unsigned long       crc32val;             /* CRC shift reg. (was static in funzip) */
 
-#ifdef FUNZIP
-    FILE      *in;                  /* file descriptor of compressed stream */
-#endif
     unsigned char       *inbuf;               /* input buffer (any size is OK) */
     unsigned char       *inptr;               /* pointer into input buffer */
     int       incnt;
 
-#ifndef FUNZIP
     unsigned long       bitbuf;
     int       bits_left;            /* unreduce and unshrink only */
     int       zipeof;
@@ -273,10 +267,8 @@ typedef struct Globals {
 #ifndef VMS                        /* if SMALL_MEM, outbuf2 is initialized in */
     unsigned char      *outbuf2;             /*  process_zipfiles() (never changes); */
 #endif                             /*  else malloc'd ONLY if unshrink and -a */
-#endif /* !FUNZIP */
     unsigned char      *outptr;
     unsigned long      outcnt;               /* number of chars stored in outbuf */
-#ifndef FUNZIP
     char     filename[FILNAMSIZ];  /* also used by NT for temporary SFX path */
 #ifdef UNICODE_SUPPORT
     char     *filename_full;       /* the full path so Unicode checks work */
@@ -298,7 +290,6 @@ typedef struct Globals {
 
     char *key;         /* crypt static: decryption password or NULL */
     int nopwd;         /* crypt static */
-#endif /* !FUNZIP */
     z_uint4 keys[3];   /* crypt static: keys defining pseudo-random sequence */
 
 #if (!defined(DOS_FLX_H68_NLM_OS2_W32) && !defined(AMIGA) && !defined(RISCOS))
@@ -312,7 +303,6 @@ typedef struct Globals {
     int inflInit;             /* inflate static: zlib inflate() initialized */
     z_stream dstrm;           /* inflate global: decompression stream */
 
-#ifndef FUNZIP
     /* cylindric buffer space for formatting zoff_t values (fileio static) */
     char fzofft_buf[FZOFFT_NUM][FZOFFT_LEN];
     int fzofft_index;
@@ -344,7 +334,6 @@ typedef struct Globals {
 #if (defined(SFX) && defined(CHEAP_SFX_AUTORUN))
     char autorun_command[FILNAMSIZ];
 #endif
-#endif /* !FUNZIP */
 
 #ifdef SYSTEM_SPECIFIC_GLOBALS
     SYSTEM_SPECIFIC_GLOBALS

@@ -17,7 +17,6 @@
 #  include "crypt.h"  /* ensure that encryption header file has been seen */
 #endif
 
-#if (CRYPT || (defined(UNZIP) && !defined(FUNZIP)))
 /*
  * Non-echo keyboard/console input support is needed and enabled.
  */
@@ -202,7 +201,6 @@
 #endif
 
 /* this stuff is used by MORE and also now by the ctrl-S code; fileio.c only */
-#if (defined(UNZIP) && !defined(FUNZIP))
 #  ifdef HAVE_WORKING_GETCH
 #    define FGETCH(f)  getch()
 #  endif
@@ -211,20 +209,9 @@
      int zgetch OF((__GPRO__ int f));
 #    define FGETCH(f)  zgetch(__G__ f)
 #  endif
-#endif /* UNZIP && !FUNZIP */
 
 #if (CRYPT && !defined(WINDLL))
    char *getp OF((__GPRO__ const char *m, char *p, int n));
 #endif
-
-#else /* !(CRYPT || (UNZIP && !FUNZIP)) */
-
-/*
- * No need for non-echo keyboard/console input; provide dummy definitions.
- */
-#define echoff(f)
-#define echon()
-
-#endif /* ?(CRYPT || (UNZIP && !FUNZIP)) */
 
 #endif /* !__ttyio_h */

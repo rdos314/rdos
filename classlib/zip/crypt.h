@@ -144,18 +144,7 @@ void init_keys OF((__GPRO__ const char *passwd));
 #  endif
 #endif /* ZIP */
 
-#if (defined(UNZIP) && !defined(FUNZIP))
    int  decrypt OF((__GPRO__ const char *passwrd));
-#endif
-
-#ifdef FUNZIP
-   extern int encrypted;
-#  ifdef NEXTBYTE
-#    undef NEXTBYTE
-#  endif
-#  define NEXTBYTE \
-   (encrypted? update_keys(__G__ getc(G.in)^decrypt_byte(__G)) : getc(G.in))
-#endif /* FUNZIP */
 
 #else /* !CRYPT */
 /* dummy version */
