@@ -947,21 +947,14 @@ void strtolower(char *str1, char *str2);
  *  code page.  As with A_TO_N(), conversion is done in place.
  */
 
-#define NEED_STR2OEM
+/* assume: "ASCII" is "ISO-ANSI" */
+#define ASCII2ISO(c) (c)
 
-#if (!defined(INTERN_TO_ISO) && !defined(ASCII2ISO))
-     /* assume: "ASCII" is "ISO-ANSI" */
-#    define ASCII2ISO(c) (c)
-#endif
-
-#if (!defined(INTERN_TO_OEM) && !defined(ASCII2OEM))
-     /* assume: "ASCII" is "ISO-ANSI" */
-#    define ASCII2OEM(c) \
+/* assume: "ASCII" is "ISO-ANSI" */
+#define ASCII2OEM(c) \
        ((((c) & 0x80) && iso2oem) ? iso2oem[(c) & 0x7f] : (c))
-#    if (defined(NEED_STR2OEM) && !defined(CRYP_USES_ISO2OEM))
-#      define CRYP_USES_ISO2OEM
-#    endif
-#endif
+
+#define CRYP_USES_ISO2OEM
 
 
 /* Convert filename (and file comment string) into "internal" charset.
