@@ -327,10 +327,6 @@ typedef struct Globals {
     char autorun_command[FILNAMSIZ];
 #endif
 
-#ifdef SYSTEM_SPECIFIC_GLOBALS
-    SYSTEM_SPECIFIC_GLOBALS
-#endif
-
 } Uz_Globs;  /* end of struct Globals */
 
 

@@ -822,16 +822,6 @@ void     close_outfile   OF((__GPRO));                              /* local */
 void Ext_ASCII_TO_Native(char *string, int hostnum, int hostver, int isuxatt, int islochdr);
 void strtolower(char *str1, char *str2);
 
-#ifdef SYSTEM_SPECIFIC_CTOR
-   void  SYSTEM_SPECIFIC_CTOR   OF((__GPRO));                       /* local */
-#endif
-#ifdef SYSTEM_SPECIFIC_DTOR
-   void  SYSTEM_SPECIFIC_DTOR   OF((__GPRO));                       /* local */
-#endif
-
-
-
-
 
 /************/
 /*  Macros  */
@@ -841,12 +831,7 @@ void strtolower(char *str1, char *str2);
 #define MIN(a,b)   ((a) < (b) ? (a) : (b))
 
 #ifdef DEBUG
-#  if (defined(THEOS) && defined(NO_BOGUS_SPC))
-#    define NO_DEBUG_IN_MACROS
-#    define Trace(x)   _fprintf x
-#  else
 #    define Trace(x)   fprintf x
-#  endif
 #else
 #  define Trace(x)
 #endif
