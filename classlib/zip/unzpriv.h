@@ -409,29 +409,6 @@ typedef size_t extent;
 /*  Typedefs  */
 /**************/
 
-#ifndef Z_UINT4_DEFINED
-# if (defined(MODERN) && !defined(NO_LIMITS_H))
-#  if (defined(UINT_MAX) && (UINT_MAX == 0xffffffffUL))
-     typedef unsigned int       z_uint4;
-#    define Z_UINT4_DEFINED
-#  else
-#  if (defined(ULONG_MAX) && (ULONG_MAX == 0xffffffffUL))
-     typedef unsigned long      z_uint4;
-#    define Z_UINT4_DEFINED
-#  else
-#  if (defined(USHRT_MAX) && (USHRT_MAX == 0xffffffffUL))
-     typedef unsigned short     z_uint4;
-#    define Z_UINT4_DEFINED
-#  endif
-#  endif
-#  endif
-# endif /* MODERN && !NO_LIMITS_H */
-#endif /* !Z_UINT4_DEFINED */
-#ifndef Z_UINT4_DEFINED
-  typedef unsigned long                   z_uint4;
-# define Z_UINT4_DEFINED
-#endif
-
 /* The following three user-defined unsigned integer types are used for
    holding zipfile entities (required widths without / with Zip64 support):
    a) sizes and offset of zipfile entries
@@ -444,7 +421,7 @@ typedef size_t extent;
    c) enumeration and counts of zipfile volumes of multivolume archives
       (2 bytes / 4 bytes)
  */
-  typedef  unsigned long                  zusz_t;     /* zipentry sizes & offsets */
+  typedef  unsigned long        zusz_t;     /* zipentry sizes & offsets */
   typedef  unsigned int         zucn_t;     /* archive entry counts */
   typedef  unsigned short       zuvl_t;     /* multivolume numbers */
 

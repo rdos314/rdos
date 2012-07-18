@@ -282,7 +282,7 @@ typedef struct Globals {
 
     char *key;         /* crypt static: decryption password or NULL */
     int nopwd;         /* crypt static */
-    z_uint4 keys[3];   /* crypt static: keys defining pseudo-random sequence */
+    unsigned int keys[3];   /* crypt static: keys defining pseudo-random sequence */
 
 #if (!defined(DOS_FLX_H68_NLM_OS2_W32) && !defined(AMIGA) && !defined(RISCOS))
 #if (!defined(MACOS) && !defined(ATARI) && !defined(VMS))
