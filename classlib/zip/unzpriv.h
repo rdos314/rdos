@@ -837,12 +837,8 @@ void strtolower(char *str1, char *str2);
 /*  Macros  */
 /************/
 
-#ifndef MAX
-#  define MAX(a,b)   ((a) > (b) ? (a) : (b))
-#endif
-#ifndef MIN
-#  define MIN(a,b)   ((a) < (b) ? (a) : (b))
-#endif
+#define MAX(a,b)   ((a) > (b) ? (a) : (b))
+#define MIN(a,b)   ((a) < (b) ? (a) : (b))
 
 #ifdef DEBUG
 #  if (defined(THEOS) && defined(NO_BOGUS_SPC))
