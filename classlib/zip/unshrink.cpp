@@ -66,7 +66,6 @@
 
 
 #define __UNSHRINK_C    /* identifies this source module */
-#define UNZIP_INTERNAL
 #include "unzip.h"
 
 

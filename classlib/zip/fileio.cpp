@@ -56,7 +56,6 @@
 
 
 #define __FILEIO_C      /* identifies this source module */
-#define UNZIP_INTERNAL
 #include "unzip.h"
 #include "crc32.h"
 #include "crypt.h"

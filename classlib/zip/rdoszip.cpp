@@ -7,7 +7,6 @@
   also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
 */
 
-#define UNZIP_INTERNAL
 #include "unzip.h"
 
 #    include <direct.h>         /* use readdir() */

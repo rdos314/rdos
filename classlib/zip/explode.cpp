@@ -114,7 +114,6 @@
  */
 
 #define __EXPLODE_C     /* identifies this source module */
-#define UNZIP_INTERNAL
 #include "unzip.h"      /* must supply slide[] (unsigned char) array and NEXTBYTE macro */
 
 /* routines here */

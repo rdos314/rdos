@@ -30,7 +30,6 @@
   ---------------------------------------------------------------------------*/
 
 
-#define UNZIP_INTERNAL
 #include "unzip.h"
 
 static int    do_seekable        OF((__GPRO__ int lastchance));

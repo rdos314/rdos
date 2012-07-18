@@ -320,9 +320,7 @@ int       UzpPassword      (void *pG, int *rcnt, char *pwbuf,
     Remaining private stuff for UnZip compilation.
   ---------------------------------------------------------------------------*/
 
-#ifdef UNZIP_INTERNAL
-#  include "unzpriv.h"
-#endif
+#include "unzpriv.h"
 
 
 #endif /* !__unzip_h */

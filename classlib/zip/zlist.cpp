@@ -20,7 +20,6 @@
   ---------------------------------------------------------------------------*/
 
 
-#define UNZIP_INTERNAL
 #include "unzip.h"
 
    static const char CompFactorStr[] = "%c%d%%";
