@@ -48,9 +48,6 @@
 /* RDOS runs solely on little-endian processors; enable support
  * for the 32-bit optimized CRC-32 C code by default.
  */
-#ifdef IZ_CRC_BE_OPTIMIZ
-#  undef IZ_CRC_BE_OPTIMIZ
-#endif
 #if !defined(IZ_CRC_LE_OPTIMIZ) && !defined(NO_CRC_OPTIMIZ)
 #  define IZ_CRC_LE_OPTIMIZ
 #endif
