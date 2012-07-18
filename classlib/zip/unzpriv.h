@@ -858,20 +858,6 @@ void strtolower(char *str1, char *str2);
 #define MTrace(x)  Trace(x)
 #  define TTrace(x)
 
-#define ToLower      tolower          /* assumed "smart"; used in match() */
-
-#ifdef USE_STRM_INPUT
-   /* ``Replace'' the unbuffered UNIX style I/O function with similar
-    * standard C functions from <stdio.h>.
-    */
-#  define read(fd,buf,n) fread((buf),1,(n),(FILE *)(fd))
-#  ifdef zlseek
-#    undef zlseek
-#  endif
-#  define zlseek(fd,o,w) zfseeko((FILE *)(fd),(o),(w))
-#  define close(fd) fclose((FILE *)(fd))
-#endif /* USE_STRM_INPUT */
-
 /* The return value of the Info() "macro function" is never checked in
  * UnZip. Otherwise, to get the same behaviour as for (*G.message)(), the
  * Info() definition for "FUNZIP" would have to be corrected:
@@ -922,24 +908,6 @@ void strtolower(char *str1, char *str2);
 #  define FLUSH(w)  ((G.mem_mode) ? memflush(__G__ redirSlide,(unsigned long)(w)) \
                                   : flush(__G__ redirSlide,(unsigned long)(w),0))
 #  define NEXTBYTE  (G.incnt-- > 0 ? (int)(*G.inptr++) : readbyte(__G))
-
-
-/*
- *  Translate the zero-terminated string in str1 from ASCII to the native
- *  character set. The translation is performed in-place and uses the
- *  "native" macro to translate each character.
- *
- *  NOTE:  Using the "native" macro means that is it the only part of unzip
- *    which knows which translation table (if any) is actually in use to
- *    produce the native character set.  This makes adding new character set
- *    translation tables easy, insoas all that is needed is an appropriate
- *    "native" macro definition and the translation table itself.  Currently,
- *    the only non-ASCII native character set implemented is EBCDIC, but this
- *    may not always be so.
- */
-
-
-#  define CRTL_CP_IS_ISO
 
 
 /**********************/

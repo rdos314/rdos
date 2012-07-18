@@ -793,7 +793,7 @@ void  UzpMorePause(void *pG, const char *prompt, int flag)
     fflush(stderr);
 
     if (
-        (ToLower(c) == 'q')) {
+        (tolower(c) == 'q')) {
         DESTROYGLOBALS();
         exit(PK_COOL);
     }

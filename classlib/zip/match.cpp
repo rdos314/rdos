@@ -74,7 +74,7 @@
  * isupper()); otherwise just use tolower() */
 #include "unzip.h"
 
-#define Case(x)  (ic? ToLower(x) : (x))
+#define Case(x)  (ic? tolower(x) : (x))
 
 #  define WILDCHAR   '?'
 #  define BEG_RANGE  '['
@@ -219,8 +219,8 @@ static int namecmp(const char *s1, const char *s2)
     int d;
 
     for (;;) {
-        d = (int)ToLower((unsigned char)*s1)
-          - (int)ToLower((unsigned char)*s2);
+        d = (int)tolower((unsigned char)*s1)
+          - (int)tolower((unsigned char)*s2);
 
         if (d || *s1 == 0 || *s2 == 0)
             return d;
