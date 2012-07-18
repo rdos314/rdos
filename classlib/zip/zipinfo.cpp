@@ -1857,7 +1857,7 @@ static int zi_short(__G)   /* return PK-type error code */
                     attribs[0] = '-';
                 if (IS_VOLID(xattr))
                     attribs[0] = 'V';
-                else if ((p = MBSRCHR(G.filename, '.')) != (char *)NULL) {
+                else if ((p = strchr(G.filename, '.')) != (char *)NULL) {
                     ++p;
                     if (strnicmp(p, "com", 3) == 0 ||
                         strnicmp(p, "exe", 3) == 0 ||

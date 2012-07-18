@@ -1054,7 +1054,7 @@ startover:
              *  of slash as directory separator (bug in some zipper(s); so
              *  far, not a problem in HPFS, NTFS or VFAT systems)
              */
-            if (G.pInfo->hostnum == FS_FAT_ && !MBSCHR(G.filename, '/')) {
+            if (G.pInfo->hostnum == FS_FAT_ && !strchr(G.filename, '/')) {
                 char *p=G.filename;
 
                 if (*p) do {
