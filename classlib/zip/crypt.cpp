@@ -193,7 +193,7 @@ local int testp(const unsigned char *h)
         if ((key_translated = (char *)malloc(strlen(GLOBAL(key)) + 1)) == (char *)NULL)
             return -1;
         /* second try, password translated to alternate ("standard") charset */
-        r = testkey(__G__ h, STR_TO_CP2(key_translated, GLOBAL(key)));
+        r = testkey(__G__ h, str2oem(key_translated, GLOBAL(key)));
         free(key_translated);
     }
 

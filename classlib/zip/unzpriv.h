@@ -1019,10 +1019,7 @@ void Ext_ASCII_TO_Native(char *string, int hostnum, int hostver, int isuxatt, in
  *  code page.  As with A_TO_N(), conversion is done in place.
  */
 
-#ifndef STR_TO_OEM
-#    define STR_TO_OEM          str2oem
-#    define NEED_STR2OEM
-#endif
+#define NEED_STR2OEM
 
 #if (!defined(INTERN_TO_ISO) && !defined(ASCII2ISO))
      /* assume: "ASCII" is "ISO-ANSI" */
