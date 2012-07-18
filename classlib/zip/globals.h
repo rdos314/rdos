@@ -271,37 +271,10 @@ extern char end_central64_sig[4];
 extern char end_centloc64_sig[4];
 /* extern char extd_local_sig[4];  NOT USED YET */
 
-#ifdef REENTRANT
-#  define G                   (*(Uz_Globs *)pG)
-#  define __G                 pG
-#  define __G__               pG,
-#  define __GPRO              Uz_Globs *pG
-#  define __GPRO__            Uz_Globs *pG,
-#  define __GDEF              Uz_Globs *pG;
-#  ifdef  USETHREADID
-     extern int               lastScan;
-     void deregisterGlobalPointer OF((__GPRO));
-     Uz_Globs *getGlobalPointer   OF((void));
-#    define GETGLOBALS()      Uz_Globs *pG = getGlobalPointer()
-#    define DESTROYGLOBALS()  do {free_G_buffers(pG); \
-                                  deregisterGlobalPointer(pG);} while (0)
-#  else
-     extern Uz_Globs          *GG;
-#    define GETGLOBALS()      Uz_Globs *pG = GG
-#    define DESTROYGLOBALS()  do {free_G_buffers(pG); free(pG);} while (0)
-#  endif /* ?USETHREADID */
-#  define CONSTRUCTGLOBALS()  Uz_Globs *pG = globalsCtor()
-#else /* !REENTRANT */
    extern Uz_Globs            G;
-#  define __G
-#  define __G__
+
 #  define __GPRO              void
-#  define __GPRO__
-#  define __GDEF
-#  define GETGLOBALS()
 #  define CONSTRUCTGLOBALS()  globalsCtor()
-#  define DESTROYGLOBALS()
-#endif /* ?REENTRANT */
 
 #define uO              G.UzO
 

@@ -76,7 +76,7 @@
   G.bits_left-=nbits;}
 
 
-static void  partial_clear  OF((__GPRO__ int lastcodeused));
+static void  partial_clear  OF((int lastcodeused));
 
 #ifdef DEBUG
 #  define OUTDBG(c) \
@@ -101,8 +101,7 @@ static void  partial_clear  OF((__GPRO__ int lastcodeused));
 /* Function unshrink() */
 /***********************/
 
-int unshrink(__G)
-     __GDEF
+int unshrink()
 {
     unsigned char *stacktop = stack + (HSIZE - 1);
     register unsigned char *newstr;
@@ -168,7 +167,7 @@ int unshrink(__G)
             } else if (code == 2) {
                 Trace((stderr, " (partial clear code)\n"));
                 /* clear leafs (nodes with no children) */
-                partial_clear(__G__ lastfreecode);
+                partial_clear(lastfreecode);
                 Trace((stderr, " (done with partial clear)\n"));
                 lastfreecode = BOGUSCODE; /* reset start of free-node search */
             }
@@ -228,7 +227,7 @@ int unshrink(__G)
                 OUTDBG(*p)
                 if (++G.outcnt == outbufsiz) {
                     Trace((stderr, "doing flush(), outcnt = %lu\n", G.outcnt));
-                    if ((error = flush(__G__ realbuf, G.outcnt, TRUE)) != 0) {
+                    if ((error = flush(realbuf, G.outcnt, TRUE)) != 0) {
                         Trace((stderr, "unshrink:  flush() error (%d)\n",
                           error));
                         return error;
@@ -267,7 +266,7 @@ int unshrink(__G)
 
     if (G.outcnt > 0L) {
         Trace((stderr, "doing final flush(), outcnt = %lu\n", G.outcnt));
-        if ((error = flush(__G__ realbuf, G.outcnt, TRUE)) != 0) {
+        if ((error = flush(realbuf, G.outcnt, TRUE)) != 0) {
             Trace((stderr, "unshrink:  flush() error (%d)\n", error));
             return error;
         }

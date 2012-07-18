@@ -117,13 +117,13 @@
 #include "unzip.h"      /* must supply slide[] (unsigned char) array and NEXTBYTE macro */
 
 /* routines here */
-static int get_tree OF((__GPRO__ unsigned *l, unsigned n));
-static int explode_lit OF((__GPRO__ struct huft *tb, struct huft *tl,
+static int get_tree OF((unsigned *l, unsigned n));
+static int explode_lit OF((struct huft *tb, struct huft *tl,
                            struct huft *td, unsigned bb, unsigned bl,
                            unsigned bd, unsigned bdl));
-static int explode_nolit OF((__GPRO__ struct huft *tl, struct huft *td,
+static int explode_nolit OF((struct huft *tl, struct huft *td,
                              unsigned bl, unsigned bd, unsigned bdl));
-int explode OF((__GPRO));
+int explode OF(());
 
 
 /* The implode algorithm uses a sliding 4K or 8K byte window on the
@@ -268,7 +268,7 @@ static int explode_lit(struct huft *tb, struct huft *tl, struct huft *td, unsign
       redirSlide[w++] = (unsigned char)t->v.n;
       if (w == WSIZE)
       {
-        if ((retval = flush(__G__ redirSlide, (unsigned long)w, 0)) != 0)
+        if ((retval = flush(redirSlide, (unsigned long)w, 0)) != 0)
           return retval;
         w = u = 0;
       }
@@ -315,7 +315,7 @@ static int explode_lit(struct huft *tb, struct huft *tl, struct huft *td, unsign
             } while (--e);
         if (w == WSIZE)
         {
-          if ((retval = flush(__G__ redirSlide, (unsigned long)w, 0)) != 0)
+          if ((retval = flush(redirSlide, (unsigned long)w, 0)) != 0)
             return retval;
           w = u = 0;
         }
@@ -324,7 +324,7 @@ static int explode_lit(struct huft *tb, struct huft *tl, struct huft *td, unsign
   }
 
   /* flush out redirSlide */
-  if ((retval = flush(__G__ redirSlide, (unsigned long)w, 0)) != 0)
+  if ((retval = flush(redirSlide, (unsigned long)w, 0)) != 0)
     return retval;
   if (G.csize + G.incnt + (k >> 3))   /* should have read csize bytes, but */
   {                        /* sometimes read one too many:  k>>3 compensates */
@@ -371,7 +371,7 @@ static int explode_nolit(struct huft *tl, struct huft *td, unsigned bl, unsigned
       redirSlide[w++] = (unsigned char)b;
       if (w == WSIZE)
       {
-        if ((retval = flush(__G__ redirSlide, (unsigned long)w, 0)) != 0)
+        if ((retval = flush(redirSlide, (unsigned long)w, 0)) != 0)
           return retval;
         w = u = 0;
       }
@@ -419,7 +419,7 @@ static int explode_nolit(struct huft *tl, struct huft *td, unsigned bl, unsigned
             } while (--e);
         if (w == WSIZE)
         {
-          if ((retval = flush(__G__ redirSlide, (unsigned long)w, 0)) != 0)
+          if ((retval = flush(redirSlide, (unsigned long)w, 0)) != 0)
             return retval;
           w = u = 0;
         }
@@ -428,7 +428,7 @@ static int explode_nolit(struct huft *tl, struct huft *td, unsigned bl, unsigned
   }
 
   /* flush out redirSlide */
-  if ((retval = flush(__G__ redirSlide, (unsigned long)w, 0)) != 0)
+  if ((retval = flush(redirSlide, (unsigned long)w, 0)) != 0)
     return retval;
   if (G.csize + G.incnt + (k >> 3))   /* should have read csize bytes, but */
   {                        /* sometimes read one too many:  k>>3 compensates */
@@ -440,8 +440,7 @@ static int explode_nolit(struct huft *tl, struct huft *td, unsigned bl, unsigned
 
 
 
-int explode(__G)
-     __GDEF
+int explode()
 /* Explode an imploded compressed stream.  Based on the general purpose
    bit flag, decide on coded or uncoded literals, and an 8K or 4K sliding
    window.  Construct the literal (if any), length, and distance codes and
@@ -477,19 +476,19 @@ int explode(__G)
   /* With literal tree--minimum match length is 3 */
   {
     bb = 9;                     /* base table size for literals */
-    if ((r = get_tree(__G__ l, 256)) != 0)
+    if ((r = get_tree(l, 256)) != 0)
       return (int)r;
-    if ((r = huft_build(__G__ l, 256, 256, NULL, NULL, &tb, &bb)) != 0)
+    if ((r = huft_build(l, 256, 256, NULL, NULL, &tb, &bb)) != 0)
     {
       if (r == 1)
         huft_free(tb);
       return (int)r;
     }
-    if ((r = get_tree(__G__ l, 64)) != 0) {
+    if ((r = get_tree(l, 64)) != 0) {
       huft_free(tb);
       return (int)r;
     }
-    if ((r = huft_build(__G__ l, 64, 0, cplen3, extra, &tl, &bl)) != 0)
+    if ((r = huft_build(l, 64, 0, cplen3, extra, &tl, &bl)) != 0)
     {
       if (r == 1)
         huft_free(tl);
@@ -501,9 +500,9 @@ int explode(__G)
   /* No literal tree--minimum match length is 2 */
   {
     tb = (struct huft *)NULL;
-    if ((r = get_tree(__G__ l, 64)) != 0)
+    if ((r = get_tree(l, 64)) != 0)
       return (int)r;
-    if ((r = huft_build(__G__ l, 64, 0, cplen2, extra, &tl, &bl)) != 0)
+    if ((r = huft_build(l, 64, 0, cplen2, extra, &tl, &bl)) != 0)
     {
       if (r == 1)
         huft_free(tl);
@@ -511,7 +510,7 @@ int explode(__G)
     }
   }
 
-  if ((r = get_tree(__G__ l, 64)) != 0) {
+  if ((r = get_tree(l, 64)) != 0) {
     huft_free(tl);
     if (tb != (struct huft *)NULL) huft_free(tb);
     return (int)r;
@@ -519,12 +518,12 @@ int explode(__G)
   if (G.lrec.general_purpose_bit_flag & 2)      /* true if 8K */
   {
     bdl = 7;
-    r = huft_build(__G__ l, 64, 0, cpdist8, extra, &td, &bd);
+    r = huft_build(l, 64, 0, cpdist8, extra, &td, &bd);
   }
   else                                          /* else 4K */
   {
     bdl = 6;
-    r = huft_build(__G__ l, 64, 0, cpdist4, extra, &td, &bd);
+    r = huft_build(l, 64, 0, cpdist4, extra, &td, &bd);
   }
   if (r != 0)
   {
@@ -536,10 +535,10 @@ int explode(__G)
   }
 
   if (tb != NULL) {
-    r = explode_lit(__G__ tb, tl, td, bb, bl, bd, bdl);
+    r = explode_lit(tb, tl, td, bb, bl, bd, bdl);
     huft_free(tb);
   } else {
-    r = explode_nolit(__G__ tl, td, bl, bd, bdl);
+    r = explode_nolit(tl, td, bl, bd, bdl);
   }
 
   huft_free(td);

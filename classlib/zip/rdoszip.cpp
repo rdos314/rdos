@@ -319,7 +319,7 @@ int mapname(int renamed)
                 }
                 /* when path component is not empty, append it now */
                 if (*pathcomp != '\0' &&
-                    ((error = checkdir(__G__ pathcomp, APPEND_DIR))
+                    ((error = checkdir(pathcomp, APPEND_DIR))
                      & MPN_MASK) > MPN_INF_TRUNC)
                     return error;
                 pp = pathcomp;    /* reset conversion buffer for next piece */
@@ -367,7 +367,7 @@ int mapname(int renamed)
   ---------------------------------------------------------------------------*/
 
     if (G.filename[strlen(G.filename) - 1] == '/') {
-        checkdir(__G__ G.filename, GETPATH);
+        checkdir(G.filename, GETPATH);
         if (created_dir) {
             if (!uO.qflag) {
             }
@@ -407,8 +407,8 @@ int mapname(int renamed)
         return (error & ~MPN_MASK) | MPN_ERR_SKIP;
     }
 
-    checkdir(__G__ pathcomp, APPEND_NAME);  /* returns 1 if truncated: care? */
-    checkdir(__G__ G.filename, GETPATH);
+    checkdir(pathcomp, APPEND_NAME);  /* returns 1 if truncated: care? */
+    checkdir(G.filename, GETPATH);
 
     return error;
 

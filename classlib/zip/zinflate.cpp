@@ -101,7 +101,7 @@
                                     and huft_free() to end of file
    c14u   1 Oct 95  G. Roelofs      moved G into definition of MESSAGE macro
    c14v   8 Nov 95  P. Kienitz      changed ASM_INFLATECODES to use a regular
-                                    call with __G__ instead of a macro
+                                    call with instead of a macro
     c15   3 Aug 96  M. Adler        fixed bomb-bug on random input data (Adobe)
    c15b  24 Aug 96  M. Adler        more fixes for random input data
    c15c  28 Mar 97  G. Roelofs      changed USE_ZLIB fatal exit code from
@@ -322,13 +322,13 @@ static int zlib_outCB OF((void FAR *pG, unsigned char FAR *outbuf,
 static unsigned zlib_inCB(void *pG, unsigned char ** pInbuf)
 {
     *pInbuf = G.inbuf;
-    return fillinbuf(__G);
+    return fillinbuf();
 }
 
 static int zlib_outCB(void *pG, unsigned char *outbuf, unsigned outcnt)
 {
-    return ((G.mem_mode) ? memflush(__G__ outbuf, (unsigned long)(outcnt))
-                         : flush(__G__ outbuf, (unsigned long)(outcnt), 0));
+    return ((G.mem_mode) ? memflush(outbuf, (unsigned long)(outcnt))
+                         : flush(outbuf, (unsigned long)(outcnt), 0));
 }
 
 

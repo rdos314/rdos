@@ -352,7 +352,6 @@ int readbyte(__G)   /* refill inbuf and return a byte if available, else EOF */
               (unsigned char *)ReadError,
               (unsigned long)strlen(ReadError), 0x401);
             echon();
-            DESTROYGLOBALS();
             exit(PK_BADERR);    /* totally bailing; better than lock-up */
         }
         G.cur_zipfile_bufstart += INBUFSIZ; /* always starts on block bndry */
@@ -794,7 +793,6 @@ void  UzpMorePause(void *pG, const char *prompt, int flag)
 
     if (
         (tolower(c) == 'q')) {
-        DESTROYGLOBALS();
         exit(PK_COOL);
     }
 
@@ -856,14 +854,11 @@ int  UzpPassword (void *pG, int *rcnt, char *pwbuf, int size, const char *zfn, c
 
 void handler(int signal)   /* upon interrupt, turn on echo and exit cleanly */
 {
-    GETGLOBALS();
-
     (*G.message)((void *)&G, slide, 0L, 0x41); /*  start of line (to stderr; */
 
     echon();
 
     /* probably ctrl-C */
-    DESTROYGLOBALS();
     exit(IZ_CTRLC);       /* was EXIT(0), then EXIT(PK_ERR) */
 }
 

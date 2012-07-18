@@ -107,11 +107,11 @@
 
 #define LFLAG  3   /* short "ls -l" type listing */
 
-static int   zi_long   OF((__GPRO__ zusz_t *pEndprev, int error_in_archive));
-static int   zi_short  OF((__GPRO));
+static int   zi_long   OF((zusz_t *pEndprev, int error_in_archive));
+static int   zi_short  OF(());
 static void  zi_showMacTypeCreator
-                       OF((__GPRO__ unsigned char *ebfield));
-static char *zi_time   OF((__GPRO__ const unsigned long *datetimez,
+                       OF((unsigned char *ebfield));
+static char *zi_time   OF((const unsigned long *datetimez,
                            const time_t *modtimez, char *d_t_str));
 
 
@@ -559,8 +559,7 @@ int zi_opts(int *pargc, char ***pargv)
 /*  Function zi_end_central()  */
 /*******************************/
 
-void zi_end_central(__G)
-    __GDEF
+void zi_end_central()
 {
 /*---------------------------------------------------------------------------
     Print out various interesting things about the zipfile.
@@ -626,8 +625,7 @@ void zi_end_central(__G)
 /*  Function zipinfo()  */
 /************************/
 
-int zipinfo(__G)   /* return PK-type error code */
-    __GDEF
+int zipinfo()   /* return PK-type error code */
 {
     int do_this_file=FALSE, error, error_in_archive=PK_COOL;
     int *fn_matched=NULL, *xn_matched=NULL;
@@ -673,7 +671,7 @@ int zipinfo(__G)   /* return PK-type error code */
 
 
     for (j = 1L;; j++) {
-        if (readbuf(__G__ G.sig, 4) == 0) {
+        if (readbuf(G.sig, 4) == 0) {
             error_in_archive = PK_EOF;
             break;
         }
@@ -701,12 +699,12 @@ int zipinfo(__G)   /* return PK-type error code */
             }
         }
         /* process_cdir_file_hdr() sets pInfo->hostnum, pInfo->lcflag, ...: */
-        if ((error = process_cdir_file_hdr(__G)) != PK_COOL) {
+        if ((error = process_cdir_file_hdr()) != PK_COOL) {
             error_in_archive = error;   /* only PK_EOF defined */
             break;
         }
 
-        if ((error = do_string(__G__ G.crec.filename_length, DS_FN)) !=
+        if ((error = do_string(G.crec.filename_length, DS_FN)) !=
              PK_COOL)
         {
           if (error > error_in_archive)
@@ -753,7 +751,7 @@ int zipinfo(__G)   /* return PK-type error code */
              * for resolving the Zip64 sizes/offsets and may be used in more
              * analysis of the entry below.
              */
-            if ((error = do_string(__G__ G.crec.extra_field_length,
+            if ((error = do_string(G.crec.extra_field_length,
                                    EXTRA_FIELD)) != 0)
             {
                 if (G.extra_field != NULL) {
@@ -771,14 +769,14 @@ int zipinfo(__G)   /* return PK-type error code */
             switch (uO.lflag) {
                 case 1:
                 case 2:
-                    fnprint(__G);
+                    fnprint();
                     SKIP_(G.crec.file_comment_length)
                     break;
 
                 case 3:
                 case 4:
                 case 5:
-                    if ((error = zi_short(__G)) != PK_COOL) {
+                    if ((error = zi_short()) != PK_COOL) {
                         error_in_archive = error;   /* might be warning */
                     }
                     break;
@@ -786,7 +784,7 @@ int zipinfo(__G)   /* return PK-type error code */
                 case 10:
                     Info(slide, 0, ((char *)slide,
                       CentralDirEntry, j));
-                    if ((error = zi_long(__G__ &endprev,
+                    if ((error = zi_long(&endprev,
                                          error_in_archive)) != PK_COOL) {
                         error_in_archive = error;   /* might be warning */
                     }
@@ -953,7 +951,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
     methid = (unsigned)G.crec.compression_method;
     methnum = find_compr_idx(G.crec.compression_method);
 
-    (*G.message)((void *)&G, (unsigned char *)"  ", 2L, 0);  fnprint(__G);
+    (*G.message)((void *)&G, (unsigned char *)"  ", 2L, 0);  fnprint();
 
     Info(slide, 0, ((char *)slide, LocalHeaderOffset,
       fzofft(G.crec.relative_offset_local_header, NULL, "u"),
@@ -1012,7 +1010,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
      */
 #   define d_t_buf attribs
 
-    zi_time(__G__ &G.crec.last_mod_dos_datetime, NULL, d_t_buf);
+    zi_time(&G.crec.last_mod_dos_datetime, NULL, d_t_buf);
     Info(slide, 0, ((char *)slide, FileModDate, d_t_buf));
     Info(slide, 0, ((char *)slide, CRC32Value, G.crec.crc32));
     Info(slide, 0, ((char *)slide, CompressedFileSize,
@@ -1483,7 +1481,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                           mac3_flgs & EB_M3_FL_DATFRK ?
                                              MacOS_DF : MacOS_RF,
                           (mac3_flgs & EB_M3_FL_TIME64 ? 64 : 32)));
-                        zi_showMacTypeCreator(__G__ &ef_ptr[6]);
+                        zi_showMacTypeCreator(&ef_ptr[6]);
                     } else {
                         goto ef_default_display;
                     }
@@ -1493,7 +1491,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                         makelong(ef_ptr) == 0x5449505A /* "ZPIT" */) {
 
                         if (eb_datalen >= 12) {
-                            zi_showMacTypeCreator(__G__ &ef_ptr[4]);
+                            zi_showMacTypeCreator(&ef_ptr[4]);
                         }
                     } else {
                         goto ef_default_display;
@@ -1511,7 +1509,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                             Info(slide, 0, ((char *)slide,
                               ZipItFname, (char *)ef_ptr+5));
                             ef_ptr[fnlen+5] = nullchar;
-                            zi_showMacTypeCreator(__G__ &ef_ptr[fnlen+5]);
+                            zi_showMacTypeCreator(&ef_ptr[fnlen+5]);
                         }
                     } else {
                         goto ef_default_display;
@@ -1521,7 +1519,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                     if (eb_datalen >= 40 &&
                         makelong(ef_ptr) == 0x45454C4A /* "JLEE" */)
                     {
-                        zi_showMacTypeCreator(__G__ &ef_ptr[4]);
+                        zi_showMacTypeCreator(&ef_ptr[4]);
 
                         Info(slide, 0, ((char *)slide,
                           MacOSJLEEflags,
@@ -1535,7 +1533,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
                     if ((eb_datalen == EB_SMARTZIP_HLEN) &&
                         makelong(ef_ptr) == 0x70695A64 /* "dZip" */) {
                         char filenameBuf[32];
-                        zi_showMacTypeCreator(__G__ &ef_ptr[4]);
+                        zi_showMacTypeCreator(&ef_ptr[4]);
                         memcpy(filenameBuf, &ef_ptr[33], 31);
                         filenameBuf[ef_ptr[32]] = '\0';
                         Info(slide, 0, ((char *)slide,
@@ -1668,7 +1666,7 @@ ef_default_display:
         Info(slide, 0, ((char *)slide, NoFileComment));
     else {
         Info(slide, 0, ((char *)slide, FileCommBegin));
-        if ((error = do_string(__G__ G.crec.file_comment_length, DISPL_8)) !=
+        if ((error = do_string(G.crec.file_comment_length, DISPL_8)) !=
             PK_COOL)
         {
             error_in_archive = error;   /* might be warning */
@@ -1690,8 +1688,7 @@ ef_default_display:
 /*  Function zi_short()  */
 /*************************/
 
-static int zi_short(__G)   /* return PK-type error code */
-    __GDEF
+static int zi_short()   /* return PK-type error code */
 {
     int         k, error, error_in_archive=PK_COOL;
     unsigned    hostnum, hostver, methid, methnum, xattr;
@@ -1936,8 +1933,8 @@ static int zi_short(__G)   /* return PK-type error code */
 #   define d_t_buf attribs
 #   define z_modtim NULL
     Info(slide, 0, ((char *)slide, " %s %s ", methbuf,
-      zi_time(__G__ &G.crec.last_mod_dos_datetime, z_modtim, d_t_buf)));
-    fnprint(__G);
+      zi_time(&G.crec.last_mod_dos_datetime, z_modtim, d_t_buf)));
+    fnprint();
 
 /*---------------------------------------------------------------------------
     Skip the file comment, if any (the filename has already been printed,

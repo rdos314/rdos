@@ -58,8 +58,7 @@
 /* Function list_files() */
 /*************************/
 
-int list_files(__G)    /* return PK-type error code */
-    __GDEF
+int list_files()    /* return PK-type error code */
 {
     int do_this_file=FALSE, cfactor, error, error_in_archive=PK_COOL;
     char sgn, cfactorstr[10];
@@ -115,7 +114,7 @@ int list_files(__G)    /* return PK-type error code */
 
     for (j = 1L;;j++) {
 
-        if (readbuf(__G__ G.sig, 4) == 0)
+        if (readbuf(G.sig, 4) == 0)
             return PK_EOF;
         if (memcmp(G.sig, central_hdr_sig, 4)) {  /* is it a CentDir entry? */
             /* no new central directory entry
@@ -140,7 +139,7 @@ int list_files(__G)    /* return PK-type error code */
             }
         }
         /* process_cdir_file_hdr() sets pInfo->hostnum, pInfo->lcflag, ...: */
-        if ((error = process_cdir_file_hdr(__G)) != PK_COOL)
+        if ((error = process_cdir_file_hdr()) != PK_COOL)
             return error;       /* only PK_EOF defined */
 
         /*
@@ -154,7 +153,7 @@ int list_files(__G)    /* return PK-type error code */
          * note of it if it is.
          */
 
-        if ((error = do_string(__G__ G.crec.filename_length, DS_FN)) !=
+        if ((error = do_string(G.crec.filename_length, DS_FN)) !=
              PK_COOL)   /*  ^--(uses pInfo->lcflag) */
         {
             error_in_archive = error;
@@ -165,7 +164,7 @@ int list_files(__G)    /* return PK-type error code */
             free(G.extra_field);
             G.extra_field = (unsigned char *)NULL;
         }
-        if ((error = do_string(__G__ G.crec.extra_field_length, EXTRA_FIELD))
+        if ((error = do_string(G.crec.extra_field_length, EXTRA_FIELD))
             != 0)
         {
             error_in_archive = error;
@@ -256,9 +255,9 @@ int list_files(__G)    /* return PK-type error code */
                   fzofft(G.crec.ucsize, "9", "u"),
                   mo, dt_sepchar, dy, dt_sepchar, yr, hh, mm,
                   (G.pInfo->lcflag? '^':' ')));
-            fnprint(__G);
+            fnprint();
 
-            if ((error = do_string(__G__ G.crec.file_comment_length,
+            if ((error = do_string(G.crec.file_comment_length,
                                    (!uO.qflag) ? DISPL_8 : SKIP)) != 0)
             {
                 error_in_archive = error;  /* might be just warning */
@@ -363,8 +362,7 @@ int ratio(zusz_t uc, zusz_t c)
 /*  Function fnprint()  */    /* also used by ZipInfo routines */
 /************************/
 
-void fnprint(__G)    /* print filename (after filtering) and newline */
-    __GDEF
+void fnprint()    /* print filename (after filtering) and newline */
 {
     char *name = fnfilter(G.filename, slide, (extent)(WSIZE>>1));
 
