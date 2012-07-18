@@ -25,10 +25,6 @@
 #  define const const
 #endif
 
-#ifndef USE_ZLIB
-   const ulg near *get_crc_table  OF((void));
-#endif
-
 #ifndef CRC_32_TAB
 #  define CRC_32_TAB     crc_32_tab
 #endif

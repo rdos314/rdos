@@ -39,7 +39,6 @@
 
 #include "zlib.h"
 
-#define USE_ZLIB
 #define SET_DIR_ATTRIB
 
 
@@ -888,13 +887,8 @@ int    huft_free                 OF((struct huft *t));          /* inflate.c */
 int    huft_build                OF((__GPRO__ const unsigned *b, unsigned n,
                                      unsigned s, const unsigned short *d, const unsigned char *e,
                                      struct huft **t, unsigned *m));
-#ifdef USE_ZLIB
    int    UZinflate              OF((__GPRO__ int is_defl64));  /* inflate.c */
 #  define inflate_free(x)        inflateEnd(&((Uz_Globs *)(&G))->dstrm)
-#else
-   int    inflate                OF((__GPRO__ int is_defl64));  /* inflate.c */
-   int    inflate_free           OF((__GPRO));                  /* inflate.c */
-#endif /* ?USE_ZLIB */
 #if (!defined(SFX) && !defined(FUNZIP))
 #ifndef COPYRIGHT_CLEAN
    int    unreduce               OF((__GPRO));                 /* unreduce.c */

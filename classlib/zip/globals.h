@@ -135,12 +135,10 @@
 #ifndef __globals_h
 #define __globals_h
 
-#ifdef USE_ZLIB
 #  include "zlib.h"
 #  ifdef zlib_version           /* This name is used internally in unzip */
 #    undef zlib_version         /*  and must not be defined as a macro. */
 #  endif
-#endif
 
 #ifdef USE_BZIP2
 #  include "bzlib.h"
@@ -219,11 +217,7 @@ typedef struct Globals {
 #endif /* !FUNZIP */
     union work area;                /* see unzpriv.h for definition of work */
 
-#if (!defined(USE_ZLIB) || defined(USE_OWN_CRCTAB))
-    const unsigned long near *crc_32_tab;
-#else
     const unsigned *crc_32_tab;
-#endif
     unsigned long       crc32val;             /* CRC shift reg. (was static in funzip) */
 
 #ifdef FUNZIP
@@ -315,17 +309,8 @@ typedef struct Globals {
 
     unsigned hufts;    /* track memory usage */
 
-#ifdef USE_ZLIB
     int inflInit;             /* inflate static: zlib inflate() initialized */
     z_stream dstrm;           /* inflate global: decompression stream */
-#else
-    struct huft *fixed_tl;              /* inflate static */
-    struct huft *fixed_td;              /* inflate static */
-    unsigned fixed_bl, fixed_bd;        /* inflate static */
-    unsigned wp;              /* inflate static: current position in slide */
-    unsigned long bb;                   /* inflate static: bit buffer */
-    unsigned bk;              /* inflate static: bits count in bit buffer */
-#endif /* ?USE_ZLIB */
 
 #ifndef FUNZIP
     /* cylindric buffer space for formatting zoff_t values (fileio static) */
