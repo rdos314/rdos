@@ -1015,66 +1015,35 @@ void     close_outfile   OF((__GPRO));                              /* local */
  *  code page.  As with A_TO_N(), conversion is done in place.
  */
 #ifndef _ISO_INTERN
-#  ifdef CRTL_CP_IS_OEM
-#    ifndef IZ_ISO2OEM_ARRAY
-#      define IZ_ISO2OEM_ARRAY
-#    endif
-#    define _ISO_INTERN(str1) if (iso2oem) {register unsigned char *p;\
-       for (p=(unsigned char *)(str1); *p; p++)\
-         *p = native((*p & 0x80) ? iso2oem[*p & 0x7f] : *p);}
-#  else
 #    define _ISO_INTERN(str1)   A_TO_N(str1)
-#  endif
 #endif
 
 #ifndef _OEM_INTERN
-#  ifdef CRTL_CP_IS_OEM
-#    define _OEM_INTERN(str1)   A_TO_N(str1)
-#  else
 #    ifndef IZ_OEM2ISO_ARRAY
 #      define IZ_OEM2ISO_ARRAY
 #    endif
 #    define _OEM_INTERN(str1) if (oem2iso) {register unsigned char *p;\
        for (p=(unsigned char *)(str1); *p; p++)\
          *p = native((*p & 0x80) ? oem2iso[*p & 0x7f] : *p);}
-#  endif
 #endif
 
 #ifndef STR_TO_OEM
-#  ifdef CRTL_CP_IS_OEM
-#    define STR_TO_OEM          strcpy
-#  else
 #    define STR_TO_OEM          str2oem
 #    define NEED_STR2OEM
-#  endif
 #endif
 
 #if (!defined(INTERN_TO_ISO) && !defined(ASCII2ISO))
-#  ifdef CRTL_CP_IS_OEM
-     /* know: "ASCII" is "OEM" */
-#    define ASCII2ISO(c) \
-       ((((c) & 0x80) && oem2iso) ? oem2iso[(c) & 0x7f] : (c))
-#    if (defined(NEED_STR2ISO) && !defined(CRYP_USES_OEM2ISO))
-#      define CRYP_USES_OEM2ISO
-#    endif
-#  else
      /* assume: "ASCII" is "ISO-ANSI" */
 #    define ASCII2ISO(c) (c)
-#  endif
 #endif
 
 #if (!defined(INTERN_TO_OEM) && !defined(ASCII2OEM))
-#  ifdef CRTL_CP_IS_OEM
-     /* know: "ASCII" is "OEM" */
-#    define ASCII2OEM(c) (c)
-#  else
      /* assume: "ASCII" is "ISO-ANSI" */
 #    define ASCII2OEM(c) \
        ((((c) & 0x80) && iso2oem) ? iso2oem[(c) & 0x7f] : (c))
 #    if (defined(NEED_STR2OEM) && !defined(CRYP_USES_ISO2OEM))
 #      define CRYP_USES_ISO2OEM
 #    endif
-#  endif
 #endif
 
 /* codepage conversion setup for testp() in crypt.c */
@@ -1142,13 +1111,5 @@ void     close_outfile   OF((__GPRO));                              /* local */
    extern const char  CompiledWith[];
 
 
-
-/***********************************/
-/*  Global (shared?) RTL variables */
-/***********************************/
-
-#ifdef DECLARE_ERRNO
-   extern int             errno;
-#endif
 
 #endif /* !__unzpriv_h */
