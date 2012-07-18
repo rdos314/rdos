@@ -117,9 +117,6 @@ typedef size_t extent;
 /* DBCS support for Info-ZIP  (mainly for japanese (-: )
  * by Yoshioka Tsuneo (QWF00133@nifty.ne.jp,tsuneo-y@is.aist-nara.ac.jp)
  */
-#  define POSTINCSTR(ptr) ((ptr)++)
-#  define plastchar(ptr, len) (&ptr[(len)-1])
-#  define lastchar(ptr, len) (ptr[(len)-1])
 #  define MBSCHR(str, c) strchr(str, c)
 #  define MBSRCHR(str, c) strrchr(str, c)
 #  ifndef SETLOCALE

@@ -1176,7 +1176,7 @@ reprompt:
                             fgets(G.filename, FILNAMSIZ, stdin);
                             /* usually get \n here:  better check for it */
                             fnlen = strlen(G.filename);
-                            if (lastchar(G.filename, fnlen) == '\n')
+                            if (G.filename[fnlen-1] == '\n')
                                 G.filename[--fnlen] = '\0';
                         } while (fnlen == 0);
                         renamed = TRUE;
@@ -1206,7 +1206,7 @@ reprompt:
                            (fnlen can be re-used here, we are outside the
                            "enter new filename" loop) */
                         fnlen = strlen(G.answerbuf);
-                        if (lastchar(G.answerbuf, fnlen) == '\n')
+                        if (G.answerbuf[fnlen-1] == '\n')
                             G.answerbuf[--fnlen] = '\0';
                         Info(slide, 1, ((char *)slide,
                           InvalidResponse, G.answerbuf));

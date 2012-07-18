@@ -43,7 +43,6 @@
              memcpy()                 (ZMEM only)
              zstrnicmp()              (NO_STRNICMP only)
              zstat()                  (REGULUS only)
-             plastchar()              (_MBCS only)
              uzmbclen()               (_MBCS && NEED_UZMBCLEN, only)
              uzmbschr()               (_MBCS && NEED_UZMBSCHR, only)
              uzmbsrchr()              (_MBCS && NEED_UZMBSRCHR, only)
