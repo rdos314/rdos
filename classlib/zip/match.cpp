@@ -113,7 +113,7 @@ static int recmatch(const unsigned char *p, const unsigned char *s, int ic)
 
     /* '?' (or '%') matches any character (but not an empty string). */
     if (c == WILDCHAR)
-        return *s ? recmatch(p, s + CLEN(s), ic) : 0;
+        return *s ? recmatch(p, s + 1, ic) : 0;
 
     /* '*' matches any number of characters, including zero */
     if (c == '*') {
@@ -185,7 +185,7 @@ static int recmatch(const unsigned char *p, const unsigned char *s, int ic)
                 c = e = 0;   /* clear range, escape flags */
             }
         }
-        return r ? recmatch(q + CLEN(q), s + CLEN(s), ic __WDL) : 0;
+        return r ? recmatch(q + 1, s + 1, ic __WDL) : 0;
                                         /* bracket match failed */
     }
 
@@ -195,7 +195,7 @@ static int recmatch(const unsigned char *p, const unsigned char *s, int ic)
 
     /* just a character--compare it */
     return Case((unsigned char)c) == Case(*s) ?
-           recmatch(p, s + CLEN(s), ic __WDL) : 0;
+           recmatch(p, s + 1, ic __WDL) : 0;
 
 } /* end function recmatch() */
 

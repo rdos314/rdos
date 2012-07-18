@@ -107,36 +107,7 @@ typedef size_t extent;
 #define COPYRIGHT_CLEAN
 #define USE_UNSHRINK
 
-#ifndef O_BINARY
-#  define O_BINARY  0
-#endif
-
-#ifndef PIPE_ERROR
-#  ifndef EPIPE
-#    define EPIPE -1
-#  endif
-#  define PIPE_ERROR (errno == EPIPE)
-#endif
-
 /* File operations--use "b" for binary if allowed or fixed length 512 on VMS */
-
-/* Defaults when nothing special has been defined previously. */
-#  ifndef FOPR
-#    define FOPR "rb"
-#  endif
-#  ifndef FOPM
-#    define FOPM "r+b"
-#  endif
-#  ifndef FOPW
-#    define FOPW "wb"
-#  endif
-#  ifndef FOPWT
-#    define FOPWT "wt"
-#  endif
-#  ifndef FOPWR
-#    define FOPWR "w+b"
-#  endif
-
 
 /*
  * buffer size required to hold the longest legal local filepath
@@ -147,9 +118,6 @@ typedef size_t extent;
 /* DBCS support for Info-ZIP  (mainly for japanese (-: )
  * by Yoshioka Tsuneo (QWF00133@nifty.ne.jp,tsuneo-y@is.aist-nara.ac.jp)
  */
-#  define ___MBS_TMP_DEF
-#  define ___TMP_PTR
-#  define CLEN(ptr) 1
 #  define PREINCSTR(ptr) (++(ptr))
 #  define POSTINCSTR(ptr) ((ptr)++)
 #  define plastchar(ptr, len) (&ptr[(len)-1])
