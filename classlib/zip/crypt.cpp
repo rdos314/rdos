@@ -30,7 +30,7 @@
  */
 
 #define ZCRYPT_INTERNAL
-#include "zip.h"
+#include "unzip.h"
 
 #define FALSE 0
 
@@ -39,10 +39,10 @@
 
 #define GLOBAL(g) G.g
 
-local int testp OF((const unsigned char *h));
-local int testkey OF((const unsigned char *h, const char *key));
+static int testp OF((const unsigned char *h));
+static int testkey OF((const unsigned char *h, const char *key));
 
-local int keys[3];       /* keys defining the pseudo-random sequence */
+static int keys[3];       /* keys defining the pseudo-random sequence */
 
 #ifndef Trace
 #    define Trace(x)
@@ -173,7 +173,7 @@ int decrypt(const char *passwrd)
 /***********************************************************************
  * Test the password.  Return -1 if bad, 0 if OK.
  */
-local int testp(const unsigned char *h)
+static int testp(const unsigned char *h)
 {
     int r;
     char *key_translated;
@@ -199,7 +199,7 @@ local int testp(const unsigned char *h)
 } /* end function testp() */
 
 
-local int testkey(const unsigned char *h, const char *key)
+static int testkey(const unsigned char *h, const char *key)
 {
     unsigned short b;
     int n;

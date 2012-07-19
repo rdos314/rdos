@@ -26,7 +26,7 @@
 
 #define __TTYIO_C       /* identifies this source module */
 
-#include "zip.h"
+#include "unzip.h"
 
 /*
  * Get a password of length n-1 or less into *p using the prompt *m.
