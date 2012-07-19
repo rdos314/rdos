@@ -49,8 +49,6 @@ local int keys[3];       /* keys defining the pseudo-random sequence */
 
 #include "crc32.h"
 
-#define CRY_CRC_TAB  CRC_32_TAB
-
 /***********************************************************************
  * Return the next byte in the pseudo-random sequence
  */
@@ -71,13 +69,13 @@ int decrypt_byte(__G)
 int update_keys(int c)
     __GDEF
 {
-    GLOBAL(keys[0]) = CRC32(GLOBAL(keys[0]), c, CRY_CRC_TAB);
+    GLOBAL(keys[0]) = CRC32(GLOBAL(keys[0]), c, G.crc_32_tab);
     GLOBAL(keys[1]) = (GLOBAL(keys[1])
                        + (GLOBAL(keys[0]) & 0xff))
                       * 134775813L + 1;
     {
       register int keyshift = (int)(GLOBAL(keys[1]) >> 24);
-      GLOBAL(keys[2]) = CRC32(GLOBAL(keys[2]), keyshift, CRY_CRC_TAB);
+      GLOBAL(keys[2]) = CRC32(GLOBAL(keys[2]), keyshift, G.crc_32_tab);
     }
     return c;
 }

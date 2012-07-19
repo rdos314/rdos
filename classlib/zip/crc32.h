@@ -18,10 +18,6 @@
  * (the latter with UNZIP_INTERNAL defined...).
  */
 
-#ifndef CRC_32_TAB
-#  define CRC_32_TAB     crc_32_tab
-#endif
-
 #ifdef CRC32
 #  undef CRC32
 #endif

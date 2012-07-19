@@ -271,8 +271,8 @@ int extract_or_test_files()    /* return PK-type error code */
      */
 
     /* a) initialize the CRC table pointer (once) */
-    if (CRC_32_TAB == NULL) {
-        if ((CRC_32_TAB = get_crc_table()) == NULL) {
+    if (G.crc_32_tab == NULL) {
+        if ((G.crc_32_tab = get_crc_table()) == NULL) {
             return PK_MEM;
         }
     }

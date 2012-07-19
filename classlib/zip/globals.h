@@ -255,9 +255,6 @@ typedef struct Globals {
 /***************************************************************************/
 
 
-#define CRC_32_TAB      G.crc_32_tab
-
-
 Uz_Globs *globalsCtor   OF((void));
 
 /* pseudo constant sigs; they are initialized at runtime so unzip executable
