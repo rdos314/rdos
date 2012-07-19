@@ -135,11 +135,12 @@
 #ifndef __globals_h
 #define __globals_h
 
+#include "unzip.h"
+
 #  include "zlib.h"
 #  ifdef zlib_version           /* This name is used internally in unzip */
 #    undef zlib_version         /*  and must not be defined as a macro. */
 #  endif
-
 
 /*************/
 /*  Globals  */
@@ -269,6 +270,7 @@ extern char end_centloc64_sig[4];
 /* extern char extd_local_sig[4];  NOT USED YET */
 
 extern Uz_Globs            G;
+extern TUnzip              UnzipClass;
 
 #define uO              G.UzO
 

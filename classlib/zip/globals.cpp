@@ -37,6 +37,8 @@ const char *fnames[2] = {"*", NULL};   /* default filenames vector */
 
    Uz_Globs G;
 
+TUnzip UnzipClass;
+
 
 Uz_Globs *globalsCtor()
 {
