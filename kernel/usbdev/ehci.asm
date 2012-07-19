@@ -79,6 +79,10 @@ ehc_map_linear      DD ?
 ehc_linear      DD ?
 ehc_phys        DD ?
 
+ehc_bus         DB ?
+ehc_device      DB ?
+ehc_function    DB ?
+
 ehc_op_offs     DB ?
 ehc_flags       DW ?
 ehc_ports       DB ?
@@ -97,11 +101,12 @@ ehci_func_sel    ENDS
 ehci_pipe   STRUC
 
 esp_pipe_base   usb_pipe_struc <>
-esp_qh      DD ?
-esp_prev    DW ?
-esp_next    DW ?
+esp_qh          DD ?
+esp_prev        DW ?
+esp_next        DW ?
 
 esp_pending     DD ?
+esp_first       DD ?
 
 ehci_pipe   ENDS
 
@@ -610,10 +615,8 @@ AddControlQh  ENDP
 
 AllocateFillQtd PROC near
     push es
-    push eax
     push ebx
     push ecx
-    push edx
     push esi
     push edi
 ;   
@@ -665,12 +668,13 @@ afqLoop:
     jmp afqLoop    
 
 afqDone:    
+    mov edx,esi
+    mov eax,es:[edx].qtd_my_phys
+;    
     pop edi
     pop esi
-    pop edx
     pop ecx
     pop ebx
-    pop eax   
     pop es
     ret
 AllocateFillQtd   Endp
@@ -713,6 +717,8 @@ InsertQtd       PROC near
     jmp iqLinked
 
 iqEmpty:
+    mov ebx,es:[edx].qtd_my_phys
+    mov fs:esp_first,ebx
     mov es:[edx].qtd_next_va,0
     mov es:[edx].qtd_next,1
 
@@ -895,7 +901,19 @@ AddStatusOut    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddStatusIn    Proc far
-    int 3
+    push eax
+    push cx
+    push edx
+;    
+    xor cx,cx
+    call AllocateFillQtd
+;
+    mov al,1   
+    call InsertQtd
+;
+    pop edx
+    pop cx
+    pop eax
     ret
 AddStatusIn    Endp
 
@@ -914,6 +932,20 @@ AddStatusIn    Endp
 
 IssueTransfer    Proc far
     int 3
+    push es
+    push eax
+    push edx
+;    
+    mov ax,flat_sel
+    mov es,ax
+;    
+    mov eax,fs:esp_first
+    mov edx,fs:esp_qh
+    mov es:[edx].qh_next_qtd,eax
+;
+    pop edx
+    pop eax
+    pop es    
     ret
 IssueTransfer    Endp
 
@@ -1109,9 +1141,6 @@ UpdatePort   Proc near
 ;    
     mov es,ds:ehc_reg_sel
     mov eax,es:[si].HcPortSc
-    test al,2
-    jz upDone
-;
     mov es:[si].HcPortSc,eax    ; reset change bit!    
 ; 
     test al,1
@@ -1192,6 +1221,7 @@ upNotify:
     mov ax,200
     WaitMilliSec
 ;    
+    int 3
     xor ah,ah
     mov al,cl
     NotifyUsbAttach
@@ -1277,25 +1307,7 @@ uuLoop:
 ;    
     mov ds,ds:[si]
     mov es,ds:ehc_reg_sel
-    mov eax,es:HcStatus
-    and al,7
-    mov es:HcStatus,eax
 ;
-    test al,1
-    jz uuIocDone
-;
-    int 3
-
-uuIocDone:
-    test al,2
-    jz uuErrorDone
-;
-    int 3
-
-uuErrorDone:
-    test al,4 
-    jz uuNext
-;       
     call UpdateAllPorts
 
 uuNext:    
@@ -1362,6 +1374,7 @@ etDone:
     pop eax   
     pop edx
 ;    
+    GetSystemTime
     add eax,1193
     adc edx,0
     mov bx,cs
@@ -1402,6 +1415,11 @@ et14 DW OFFSET WaitForCompletion,   SEG code
 et15 DW OFFSET ChangeAddress,       SEG code
 et16 DW OFFSET IsConnected,     SEG code
 et17 DW OFFSET ResetPipe,       SEG code
+;
+;           PARAMETERS:         BH          Bus
+;                           BL          Device
+;                           CH          Function
+;               AL      Capability
 
 InitFunction    Proc near
     push es
@@ -1424,16 +1442,36 @@ ifTabLoop:
     InitUsbDevice
     InitSection ds:ehc_section
 ;
+    mov bh,ds:ehc_bus
+    mov bl,ds:ehc_device
+    mov ch,ds:ehc_function
+    mov al,1
+    FindPciCapability
+    jc ifHandoverOk
+;    
+    mov cl,al
+    ReadPciDword
+    add cl,4
+    ReadPciDword
+    
+ifHandoverOk: 
     mov fs,ds:ehc_reg_sel
     mov fs:HcSegmentSelector,0
 ;
     mov eax,fs:HcCommand
-    or al,80h
+    and al,NOT 1
+    mov fs:HcCommand,eax
+;    
+    mov ax,25
+    WaitMilliSec
+;
+    mov eax,fs:HcCommand
+    or al,2
     mov fs:HcCommand,eax
 
 ifWaitReset:
     mov eax,fs:HcCommand
-    test al,80h
+    test al,2
     jz ifResetDone
 ;
     mov ax,10
@@ -1498,6 +1536,9 @@ AddFunction  Proc near
     push di
     push bp
 ;    
+    push bx
+    push cx
+;
     push eax
     mov eax,1000h
     AllocateBigLinear
@@ -1524,6 +1565,13 @@ AddFunction  Proc near
     xor eax,eax
     mov cx,400h
     rep stosd
+;
+    pop cx
+    pop bx
+;
+    mov ds:ehc_bus,bh
+    mov ds:ehc_device,bl
+    mov ds:ehc_function,ch    
 ;
     mov ds:ehc_reg_sel,bp
     mov ds:ehc_linear,edx
@@ -1701,7 +1749,11 @@ etInitLoop:
     WaitMilliSec
 
 ehci_thread_loop:
-    WaitForSignal
+    GetSystemTime
+    add eax,119300
+    adc edx,0
+    WaitForSignalWithTimeout
+;
     call UpdateUsb
     jmp ehci_thread_loop
 

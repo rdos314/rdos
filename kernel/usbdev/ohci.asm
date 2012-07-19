@@ -2563,6 +2563,7 @@ otDone:
     pop eax   
     pop edx
 ;    
+    GetSystemTime
     add eax,1193
     adc edx,0
     mov bx,cs
