@@ -137,7 +137,7 @@ void Ext_ASCII_TO_Native(char *string, int hostnum, int hostver, int isuxatt, in
    out a record (only) when it sees a newline.
 */
 
-static int disk_error OF((__GPRO));
+static int disk_error OF(());
 
 
 /****************************/
@@ -178,8 +178,7 @@ static const char ExtraFieldTooLong[] =
 /* Function open_input_file() */
 /******************************/
 
-int open_input_file(__G)    /* return 1 if open failed */
-    __GDEF
+int open_input_file()    /* return 1 if open failed */
 {
     /*
      *  open the zipfile for reading and in BINARY mode to prevent cr/lf
@@ -204,8 +203,7 @@ int open_input_file(__G)    /* return 1 if open failed */
 /* Function open_outfile() */
 /***************************/
 
-int open_outfile(__G)           /* return 1 if fail */
-    __GDEF
+int open_outfile()           /* return 1 if fail */
 {
     Trace((stderr, "open_outfile:  doing fopen(%s) for writing\n",
       FnFilter1(G.filename)));
@@ -242,8 +240,7 @@ int open_outfile(__G)           /* return 1 if fail */
 /* function undefer_input() */
 /****************************/
 
-void undefer_input(__G)
-    __GDEF
+void undefer_input()
 {
     if (G.incnt > 0)
         G.csize += G.incnt;
@@ -269,8 +266,7 @@ void undefer_input(__G)
 /* function defer_leftover_input() */
 /***********************************/
 
-void defer_leftover_input(__G)
-    __GDEF
+void defer_leftover_input()
 {
     if ((long)G.incnt > G.csize) {
         /* (G.csize < MAXINT), we can safely cast it to int !! */
@@ -332,8 +328,7 @@ unsigned readbuf(char *buf, register unsigned size)   /* return number of bytes 
 /* Function readbyte() */
 /***********************/
 
-int readbyte(__G)   /* refill inbuf and return a byte if available, else EOF */
-    __GDEF
+int readbyte()   /* refill inbuf and return a byte if available, else EOF */
 {
     if (G.mem_mode)
         return EOF;
@@ -355,7 +350,7 @@ int readbyte(__G)   /* refill inbuf and return a byte if available, else EOF */
         }
         G.cur_zipfile_bufstart += INBUFSIZ; /* always starts on block bndry */
         G.inptr = G.inbuf;
-        defer_leftover_input(__G);           /* decrements G.csize */
+        defer_leftover_input();           /* decrements G.csize */
     }
 
     if (G.pInfo->encrypted) {
@@ -381,15 +376,14 @@ int readbyte(__G)   /* refill inbuf and return a byte if available, else EOF */
 /* Function fillinbuf() */
 /************************/
 
-int fillinbuf(__G) /* like readbyte() except returns number of bytes in inbuf */
-    __GDEF
+int fillinbuf() /* like readbyte() except returns number of bytes in inbuf */
 {
     if (G.mem_mode ||
                   (G.incnt = RdosReadFile(G.zipfd, (char *)G.inbuf, INBUFSIZ)) <= 0)
         return 0;
     G.cur_zipfile_bufstart += INBUFSIZ;  /* always starts on a block boundary */
     G.inptr = G.inbuf;
-    defer_leftover_input(__G);           /* decrements G.csize */
+    defer_leftover_input();           /* decrements G.csize */
 
     if (G.pInfo->encrypted) {
         unsigned char *p;
@@ -512,7 +506,7 @@ int flush(unsigned char *rawbuf, unsigned long size, int unshrink)
          * DEC Ultrix cc), write() is used anyway.
          */
         if (!uO.cflag && !RdosWriteFile(G.outfile, rawbuf, size))
-            return disk_error(__G);
+            return disk_error();
         else if (uO.cflag && (*G.message)((void *)&G, rawbuf, size, 0))
             return PK_OK;
     } else {   /* textmode:  aflag is true */
@@ -565,7 +559,7 @@ int flush(unsigned char *rawbuf, unsigned long size, int unshrink)
           (unsigned)(p-rawbuf), (unsigned)(q-transbuf), size));
         if (q > transbuf) {
             if (!uO.cflag && !RdosWriteFile(G.outfile, transbuf, (extent)(q-transbuf)))
-                return disk_error(__G);
+                return disk_error();
             else if (uO.cflag && (*G.message)((void *)&G, transbuf,
                 (unsigned long)(q-transbuf), 0))
                 return PK_OK;
@@ -583,8 +577,7 @@ int flush(unsigned char *rawbuf, unsigned long size, int unshrink)
 /* Function disk_error() */
 /*************************/
 
-static int disk_error(__G)
-    __GDEF
+static int disk_error()
 {
     /* OK to use slide[] here because this file is finished regardless */
     Info(slide, 0x4a1, ((char *)slide, DiskFullQuery,
@@ -828,7 +821,7 @@ int  UzpPassword (void *pG, int *rcnt, char *pwbuf, int size, const char *zfn, c
         m = (char *)PasswRetry;
     }
 
-    m = getp(__G__ m, pwbuf, size);
+    m = getp(m, pwbuf, size);
     if (prompt != (char *)NULL) {
         free(prompt);
     }
@@ -1032,7 +1025,7 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
             register unsigned char *p = G.outbuf;
             register unsigned char *q = G.outbuf;
 
-            if ((block_len = readbuf(__G__ (char *)G.outbuf,
+            if ((block_len = readbuf((char *)G.outbuf,
                    MIN((unsigned)OUTBUFSIZ, comment_bytes_left))) == 0)
                 return PK_EOF;
             comment_bytes_left -= block_len;
@@ -1085,7 +1078,7 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
         } else
             /* no excess size */
             block_len = 0;
-        if (readbuf(__G__ G.filename, length) == 0)
+        if (readbuf(G.filename, length) == 0)
             return PK_EOF;
         G.filename[length] = '\0';      /* terminate w/zero:  ASCIIZ */
 
@@ -1123,7 +1116,7 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
     case SKIP:
         /* cur_zipfile_bufstart already takes account of extra_bytes, so don't
          * correct for it twice: */
-        seek_zipf(__G__ G.cur_zipfile_bufstart - G.extra_bytes +
+        seek_zipf(G.cur_zipfile_bufstart - G.extra_bytes +
                   (G.inptr-G.inbuf) + length);
         break;
 
@@ -1140,13 +1133,13 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
               length));
             /* cur_zipfile_bufstart already takes account of extra_bytes,
              * so don't correct for it twice: */
-            seek_zipf(__G__ G.cur_zipfile_bufstart - G.extra_bytes +
+            seek_zipf(G.cur_zipfile_bufstart - G.extra_bytes +
                       (G.inptr-G.inbuf) + length);
         } else {
-            if (readbuf(__G__ (char *)G.extra_field, length) == 0)
+            if (readbuf((char *)G.extra_field, length) == 0)
                 return PK_EOF;
             /* Looks like here is where extra fields are read */
-            getZip64Data(__G__ G.extra_field, length);
+            getZip64Data(G.extra_field, length);
         }
         break;
 
