@@ -586,46 +586,6 @@ static int disk_error()
 
 
 
-/*****************************/
-/* Functiln WriteScreen */
-/*****************************/
-
-void WriteScreen(char *buf, int size)
-{
-    int i;
-
-    for (i = 0; i < size; i++)
-    {
-        if (buf[i] == 0xA)
-        {
-            RdosWriteChar(0xD);
-            RdosWriteChar(0xA);
-        }
-        else
-            RdosWriteChar(buf[i]);
-    }
-}
-
-
-
-
-
-/***********************/
-/* Function UzpInput() */   /* GRR:  this is a placeholder for now */
-/***********************/
-
-int  UzpInput(void *pG, unsigned char *buf, int *size, int flag)
-{
-    /* tell picky compilers to shut up about "unused variable" warnings */
-    pG = pG; buf = buf; flag = flag;
-
-    *size = 0;
-    return 0;
-
-} /* end function UzpInput() */
-
-
-
 
 /***************************/
 /* Function UzpMorePause() */
