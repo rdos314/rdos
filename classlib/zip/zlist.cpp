@@ -103,13 +103,13 @@ int list_files()    /* return PK-type error code */
 
     if (uO.qflag < 2) {
         if (uO.L_flag)
-            Info(slide, 0, ((char *)slide, CaseConversion,
+            Info(0, CaseConversion,
               Headers[longhdr][0],
-              Headers[longhdr][1]));
+              Headers[longhdr][1]);
         else
-            Info(slide, 0, ((char *)slide, "%s\n%s\n",
+            Info(0, "%s\n%s\n",
                Headers[longhdr][0],
-               Headers[longhdr][1]));
+               Headers[longhdr][1]);
     }
 
     for (j = 1L;;j++) {
@@ -131,10 +131,8 @@ int list_files()    /* return PK-type error code */
                  */
                 break;
             } else {
-                Info(slide, 0x401,
-                     ((char *)slide, CentSigMsg, j));
-                Info(slide, 0x401,
-                     ((char *)slide, ReportMsg));
+                Info(0x401, CentSigMsg, j);
+                Info(0x401, ReportMsg);
                 return PK_BADERR;   /* sig not found */
             }
         }
@@ -245,16 +243,16 @@ int list_files()    /* return PK-type error code */
             else
                 sprintf(cfactorstr, CompFactorStr, sgn, cfactor);
             if (longhdr)
-                Info(slide, 0, ((char *)slide, LongHdrStats,
+                Info(0, LongHdrStats,
                   fzofft(G.crec.ucsize, "8", "u"), methbuf,
                   fzofft(csiz, "8", "u"), cfactorstr,
                   mo, dt_sepchar, dy, dt_sepchar, yr, hh, mm,
-                  G.crec.crc32, (G.pInfo->lcflag? '^':' ')));
+                  G.crec.crc32, (G.pInfo->lcflag? '^':' '));
             else
-                Info(slide, 0, ((char *)slide, ShortHdrStats,
+                Info(0, ShortHdrStats,
                   fzofft(G.crec.ucsize, "9", "u"),
                   mo, dt_sepchar, dy, dt_sepchar, yr, hh, mm,
-                  (G.pInfo->lcflag? '^':' ')));
+                  (G.pInfo->lcflag? '^':' '));
             fnprint();
 
             if ((error = do_string(G.crec.file_comment_length,
@@ -291,13 +289,13 @@ int list_files()    /* return PK-type error code */
         else
             sprintf(cfactorstr, CompFactorStr, sgn, cfactor);
         if (longhdr) {
-            Info(slide, 0, ((char *)slide, LongFileTrailer,
+            Info(0, LongFileTrailer,
               fzofft(tot_ucsize, "8", "u"), fzofft(tot_csize, "8", "u"),
-              cfactorstr, members, members==1? "":"s"));
+              cfactorstr, members, members==1? "":"s");
         } else
-            Info(slide, 0, ((char *)slide, ShortFileTrailer,
+            Info(0, ShortFileTrailer,
               fzofft(tot_ucsize, "9", "u"),
-              members, members == 1 ? "" : "s"));
+              members, members == 1 ? "" : "s");
     }
 
     /* Skip the following checks in case of a premature listing break. */
@@ -314,7 +312,7 @@ int list_files()    /* return PK-type error code */
             && (!G.ecrec.is_zip64_archive)
             && (memcmp(G.sig, end_central_sig, 4) != 0)
            ) {          /* just to make sure again */
-            Info(slide, 0x401, ((char *)slide, EndSigMsg));
+            Info(0x401, EndSigMsg);
             error_in_archive = PK_WARN;   /* didn't find sig */
         }
 

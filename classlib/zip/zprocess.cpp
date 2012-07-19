@@ -151,8 +151,7 @@ int process_zipfiles()    /* return PK-type error code */
     G.outbuf = (unsigned char *)malloc(OUTBUFSIZ + 1);  /* 1 extra for string term. */
 
     if ((G.inbuf == (unsigned char *)NULL) || (G.outbuf == (unsigned char *)NULL)) {
-        Info(slide, 0x401, ((char *)slide,
-          CannotAllocateBuffers));
+        Info(0x401, CannotAllocateBuffers);
         return(PK_MEM);
     }
     G.hold = G.inbuf + INBUFSIZ;     /* to check for boundary-spanning sigs */
@@ -236,10 +235,9 @@ int process_zipfiles()    /* return PK-type error code */
                 NumMissDirs = NumMissFiles = 0;
                 error_in_archive = PK_COOL;
                 if (uO.qflag < 3)
-                    Info(slide, 0x401, ((char *)slide,
-                      CannotFindWildcardMatch,
+                    Info(0x401, CannotFindWildcardMatch,
                       (uO.zipinfo_mode ? Zipnfo : Unzip),
-                      G.wildzipfn));
+                      G.wildzipfn);
             }
         } else
         {
@@ -303,25 +301,23 @@ int process_zipfiles()    /* return PK-type error code */
         if ((NumWinFiles > 1) ||
             (NumWinFiles == 1 &&
              NumMissDirs + NumMissFiles + NumLoseFiles + NumWarnFiles > 0))
-            Info(slide, 0x401, ((char *)slide, FilesProcessOK,
-              NumWinFiles, (NumWinFiles == 1)? " was" : "s were"));
+            Info(0x401, FilesProcessOK,
+              NumWinFiles, (NumWinFiles == 1)? " was" : "s were");
         if (NumWarnFiles > 0)
-            Info(slide, 0x401, ((char *)slide, ArchiveWarning,
-              NumWarnFiles, (NumWarnFiles == 1)? "" : "s"));
+            Info(0x401, ArchiveWarning,
+              NumWarnFiles, (NumWarnFiles == 1)? "" : "s");
         if (NumLoseFiles > 0)
-            Info(slide, 0x401, ((char *)slide, ArchiveFatalError,
-              NumLoseFiles, (NumLoseFiles == 1)? "" : "s"));
+            Info(0x401, ArchiveFatalError,
+              NumLoseFiles, (NumLoseFiles == 1)? "" : "s");
         if (NumMissFiles > 0)
-            Info(slide, 0x401, ((char *)slide,
-              FileHadNoZipfileDir, NumMissFiles,
-              (NumMissFiles == 1)? "" : "s"));
+            Info(0x401, FileHadNoZipfileDir, NumMissFiles,
+              (NumMissFiles == 1)? "" : "s");
         if (NumMissDirs == 1)
-            Info(slide, 0x401, ((char *)slide, ZipfileWasDir));
+            Info(0x401, ZipfileWasDir);
         else if (NumMissDirs > 0)
-            Info(slide, 0x401, ((char *)slide,
-              ManyZipfilesWereDir, NumMissDirs));
+            Info(0x401, ManyZipfilesWereDir, NumMissDirs);
         if (NumWinFiles + NumLoseFiles + NumWarnFiles == 0)
-            Info(slide, 0x401, ((char *)slide, NoZipfileFound));
+            Info(0x401, NoZipfileFound);
     }
 
     /* free allocated memory */
@@ -402,15 +398,13 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
     {
         if (lastchance && (uO.qflag < 3)) {
             if (G.no_ecrec)
-                Info(slide, 0x401, ((char *)slide,
-                  CannotFindZipfileDirMsg,
+                Info(0x401, CannotFindZipfileDirMsg,
                   (uO.zipinfo_mode ? Zipnfo : Unzip),
-                  G.wildzipfn, uO.zipinfo_mode? "  " : "", G.zipfn));
+                  G.wildzipfn, uO.zipinfo_mode? "  " : "", G.zipfn);
             else
-                Info(slide, 0x401, ((char *)slide,
-                  CannotFindEitherZipfile,
+                Info(0x401, CannotFindEitherZipfile,
                   (uO.zipinfo_mode ? Zipnfo : Unzip),
-                  G.wildzipfn, G.zipfn));
+                  G.wildzipfn, G.zipfn);
         }
         return error? IZ_DIR : PK_NOZIP;
     }
@@ -434,7 +428,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
     if ( (!uO.zipinfo_mode && !uO.qflag
          )
        )
-        Info(slide, 0, ((char *)slide, LogInitline, G.zipfn));
+        Info(0, LogInitline, G.zipfn);
 
     if ( (error_in_archive = find_ecrec(MIN(G.ziplen, 66000L)))
          > PK_WARN )
@@ -442,8 +436,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
         RdosCloseFile(G.zipfd);
 
         if (maybe_exe)
-            Info(slide, 0x401, ((char *)slide, MaybeExe,
-            G.zipfn));
+            Info(0x401, MaybeExe, G.zipfn);
         if (lastchance)
             return error_in_archive;
         else {
@@ -468,48 +461,43 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
         G.ecrec.number_this_disk != G.ecrec.num_disk_start_cdir)
     {
         if (G.ecrec.number_this_disk > G.ecrec.num_disk_start_cdir) {
-            Info(slide, 0x401, ((char *)slide,
-              CentDirNotInZipMsg, G.zipfn,
+            Info(0x401, CentDirNotInZipMsg, G.zipfn,
               (unsigned long)G.ecrec.number_this_disk,
-              (unsigned long)G.ecrec.num_disk_start_cdir));
+              (unsigned long)G.ecrec.num_disk_start_cdir);
             error_in_archive = PK_FIND;
             too_weird_to_continue = TRUE;
         } else {
-            Info(slide, 0x401, ((char *)slide,
-              EndCentDirBogus, G.zipfn,
+            Info(0x401, EndCentDirBogus, G.zipfn,
               (unsigned long)G.ecrec.number_this_disk,
-              (unsigned long)G.ecrec.num_disk_start_cdir));
+              (unsigned long)G.ecrec.num_disk_start_cdir);
             error_in_archive = PK_WARN;
         }
     }
 
     if (!too_weird_to_continue) {  /* (relatively) normal zipfile:  go for it */
         if (error) {
-            Info(slide, 0x401, ((char *)slide, MaybePakBug,
-              G.zipfn));
+            Info(0x401, MaybePakBug, G.zipfn);
             error_in_archive = PK_WARN;
         }
         if ((G.extra_bytes = G.real_ecrec_offset-G.expect_ecrec_offset) <
             (long)0)
         {
-            Info(slide, 0x401, ((char *)slide, MissingBytes,
-              G.zipfn, fzofft((-G.extra_bytes), NULL, NULL)));
+            Info(0x401, MissingBytes,
+              G.zipfn, fzofft((-G.extra_bytes), NULL, NULL));
             error_in_archive = PK_ERR;
         } else if (G.extra_bytes > 0) {
             if ((G.ecrec.offset_start_central_directory == 0) &&
                 (G.ecrec.size_central_directory != 0))   /* zip 1.5 -go bug */
             {
-                Info(slide, 0x401, ((char *)slide,
-                  NullCentDirOffset, G.zipfn));
+                Info(0x401, NullCentDirOffset, G.zipfn);
                 G.ecrec.offset_start_central_directory = G.extra_bytes;
                 G.extra_bytes = 0;
                 error_in_archive = PK_ERR;
             }
             else {
-                Info(slide, 0x401, ((char *)slide,
-                  ExtraBytesAtStart, G.zipfn,
+                Info(0x401, ExtraBytesAtStart, G.zipfn,
                   fzofft(G.extra_bytes, NULL, NULL),
-                  (G.extra_bytes == 1)? "":"s"));
+                  (G.extra_bytes == 1)? "":"s");
                 error_in_archive = PK_WARN;
             }
         }
@@ -520,11 +508,10 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
 
         if (G.expect_ecrec_offset==0L && G.ecrec.size_central_directory==0) {
             if (uO.zipinfo_mode)
-                Info(slide, 0, ((char *)slide, "%sEmpty zipfile.\n",
-                  uO.lflag>9? "\n  " : ""));
+                Info(0, "%sEmpty zipfile.\n",
+                  uO.lflag>9? "\n  " : "");
             else
-                Info(slide, 0x401, ((char *)slide, ZipfileEmpty,
-                                    G.zipfn));
+                Info(0x401, ZipfileEmpty, G.zipfn);
             RdosCloseFile(G.zipfd);
             return (error_in_archive > PK_WARN)? error_in_archive : PK_WARN;
         }
@@ -552,14 +539,12 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
                 memcmp(G.sig, central_hdr_sig, 4))
             {
                 if (error != PK_BADERR)
-                  Info(slide, 0x401, ((char *)slide,
-                    CentDirStartNotFound, G.zipfn,
-                    ReportMsg));
+                  Info(0x401, CentDirStartNotFound, G.zipfn, ReportMsg);
                 RdosCloseFile(G.zipfd);
                 return (error != PK_OK ? error : PK_BADERR);
             }
-            Info(slide, 0x401, ((char *)slide, CentDirTooLong,
-              G.zipfn, fzofft((-tmp), NULL, NULL)));
+            Info(0x401, CentDirTooLong,
+              G.zipfn, fzofft((-tmp), NULL, NULL));
             error_in_archive = PK_ERR;
         }
 
@@ -706,9 +691,8 @@ static int find_ecrec64(long searchlen)         /* return PK-class error */
     if ((G.incnt = RdosReadFile(G.zipfd, (char *)byterecL, ECLOC64_SIZE+4))
         != (ECLOC64_SIZE+4)) {
       if (uO.qflag || uO.zipinfo_mode)
-          Info(slide, 0x401, ((char *)slide, "[%s]\n", G.zipfn));
-      Info(slide, 0x401, ((char *)slide,
-        Cent64EndSigSearchErr));
+          Info(0x401, "[%s]\n", G.zipfn);
+      Info(0x401, Cent64EndSigSearchErr);
       return PK_ERR;
     }
 
@@ -756,9 +740,8 @@ static int find_ecrec64(long searchlen)         /* return PK-class error */
     if (ecrec64_start_offset > (zusz_t)ecloc64_start_offset) {
       /* ecrec64 has to be before ecrec64 locator */
       if (uO.qflag || uO.zipinfo_mode)
-          Info(slide, 0x401, ((char *)slide, "[%s]\n", G.zipfn));
-      Info(slide, 0x401, ((char *)slide,
-        Cent64EndSigSearchErr));
+          Info(0x401, "[%s]\n", G.zipfn);
+      Info(0x401, Cent64EndSigSearchErr);
       return PK_ERR;
     }
 
@@ -769,9 +752,8 @@ static int find_ecrec64(long searchlen)         /* return PK-class error */
     if ((G.incnt = RdosReadFile(G.zipfd, (char *)byterec, ECREC64_SIZE+4))
         != (ECREC64_SIZE+4)) {
       if (uO.qflag || uO.zipinfo_mode)
-          Info(slide, 0x401, ((char *)slide, "[%s]\n", G.zipfn));
-      Info(slide, 0x401, ((char *)slide,
-        Cent64EndSigSearchErr));
+          Info(0x401, "[%s]\n", G.zipfn);
+      Info(0x401, Cent64EndSigSearchErr);
       return PK_ERR;
     }
 
@@ -790,9 +772,8 @@ static int find_ecrec64(long searchlen)         /* return PK-class error */
       if ((G.incnt = RdosReadFile(G.zipfd, (char *)byterec, ECREC64_SIZE+4))
           != (ECREC64_SIZE+4)) {
         if (uO.qflag || uO.zipinfo_mode)
-            Info(slide, 0x401, ((char *)slide, "[%s]\n", G.zipfn));
-        Info(slide, 0x401, ((char *)slide,
-          Cent64EndSigSearchErr));
+            Info(0x401, "[%s]\n", G.zipfn);
+        Info(0x401, Cent64EndSigSearchErr);
         return PK_ERR;
       }
 
@@ -800,16 +781,14 @@ static int find_ecrec64(long searchlen)         /* return PK-class error */
         /* Zip64 EOCD Record not found */
         /* Probably something not so easy to handle so exit */
         if (uO.qflag || uO.zipinfo_mode)
-            Info(slide, 0x401, ((char *)slide, "[%s]\n", G.zipfn));
-        Info(slide, 0x401, ((char *)slide,
-          Cent64EndSigSearchErr));
+            Info(0x401, "[%s]\n", G.zipfn);
+        Info(0x401, Cent64EndSigSearchErr);
         return PK_ERR;
       }
 
       if (uO.qflag || uO.zipinfo_mode)
-          Info(slide, 0x401, ((char *)slide, "[%s]\n", G.zipfn));
-      Info(slide, 0x401, ((char *)slide,
-        Cent64EndSigSearchOff));
+          Info(0x401, "[%s]\n", G.zipfn);
+      Info(0x401, Cent64EndSigSearchOff);
     }
 
     /* Check consistency of found ecrec64 with ecloc64 (and ecrec): */
@@ -938,9 +917,8 @@ static int find_ecrec(long searchlen)          /* return PK-class error */
 
     if (!found) {
         if (uO.qflag || uO.zipinfo_mode)
-            Info(slide, 0x401, ((char *)slide, "[%s]\n", G.zipfn));
-        Info(slide, 0x401, ((char *)slide,
-          CentDirEndSigNotFound));
+            Info(0x401, "[%s]\n", G.zipfn);
+        Info(0x401, CentDirEndSigNotFound);
         return PK_ERR;   /* failed */
     }
 
@@ -1043,25 +1021,23 @@ static int process_zip_cmmnt()       /* return PK-type error code */
           -------------------------------------------------------------------*/
 
         if (!G.ecrec.zipfile_comment_length)
-            Info(slide, 0, ((char *)slide, NoZipfileComment));
+            Info(0, NoZipfileComment);
         else {
-            Info(slide, 0, ((char *)slide, ZipfileCommentDesc,
-              G.ecrec.zipfile_comment_length));
-            Info(slide, 0, ((char *)slide, ZipfileCommBegin));
+            Info(0, ZipfileCommentDesc,
+              G.ecrec.zipfile_comment_length);
+            Info(0, ZipfileCommBegin);
             if (do_string(G.ecrec.zipfile_comment_length, DISPLAY))
                 error = PK_WARN;
-            Info(slide, 0, ((char *)slide, ZipfileCommEnd));
+            Info(0, ZipfileCommEnd);
             if (error)
-                Info(slide, 0, ((char *)slide,
-                  ZipfileCommTrunc2));
+                Info(0, ZipfileCommTrunc2);
         } /* endif (comment exists) */
 
     /* ZipInfo, non-verbose mode:  print zipfile comment only if requested */
     } else if (G.ecrec.zipfile_comment_length &&
                (uO.zflag > 0) && uO.zipinfo_mode) {
         if (do_string(G.ecrec.zipfile_comment_length, DISPLAY)) {
-            Info(slide, 0x401, ((char *)slide,
-              ZipfileCommTrunc1));
+            Info(0x401, ZipfileCommTrunc1);
             error = PK_WARN;
         }
     } else
@@ -1076,8 +1052,7 @@ static int process_zip_cmmnt()       /* return PK-type error code */
                       DISPLAY
                      ))
         {
-            Info(slide, 0x401, ((char *)slide,
-              ZipfileCommTrunc1));
+            Info(0x401, ZipfileCommTrunc1);
             error = PK_WARN;
         }
     }

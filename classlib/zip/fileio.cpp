@@ -187,8 +187,8 @@ int open_input_file()    /* return 1 if open failed */
 
     if (!G.zipfd)
     {
-        Info(slide, 0x401, ((char *)slide, CannotOpenZipfile,
-          G.zipfn, strerror(errno)));
+        Info(0x401, CannotOpenZipfile,
+          G.zipfn, strerror(errno));
         return 1;
     }
     return 0;
@@ -209,8 +209,8 @@ int open_outfile()           /* return 1 if fail */
         G.outfile = RdosCreateFile(G.filename, 0);
     }
     if (!G.outfile) {
-        Info(slide, 0x401, ((char *)slide, CannotCreateFile,
-          FnFilter1(G.filename), strerror(errno)));
+        Info(0x401, CannotCreateFile,
+          FnFilter1(G.filename), strerror(errno));
         return 1;
     }
     Trace("open_outfile:  fopen(%s) for writing succeeded\n",
@@ -427,8 +427,8 @@ int seek_zipf(long abs_offset)
     long bufstart = request - inbuf_offset;
 
     if (request < 0) {
-        Info(slide, 1, ((char *)slide, SeekMsg,
-             G.zipfn, ReportMsg));
+        Info(1, SeekMsg,
+             G.zipfn, ReportMsg);
         return(PK_BADERR);
     } else if (bufstart != G.cur_zipfile_bufstart) {
         Trace("fpos_zip: abs_offset = %s, G.extra_bytes = %s\n",
@@ -575,8 +575,8 @@ int flush(unsigned char *rawbuf, unsigned long size, int unshrink)
 static int disk_error()
 {
     /* OK to use slide[] here because this file is finished regardless */
-    Info(slide, 0x4a1, ((char *)slide, DiskFullQuery,
-      FnFilter1(G.filename)));
+    Info(0x4a1, DiskFullQuery,
+      FnFilter1(G.filename));
 
     fgets(G.answerbuf, sizeof(G.answerbuf), stdin);
     if (*G.answerbuf == 'y')   /* stop writing to this file */
@@ -1061,8 +1061,8 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
     case DS_FN:
     case DS_FN_L:
         if (length >= FILNAMSIZ) {
-            Info(slide, 0x401, ((char *)slide,
-              FilenameTooLongTrunc));
+            Info(0x401,
+              FilenameTooLongTrunc);
             error = PK_WARN;
             /* remember excess length in block_len */
             block_len = length - (FILNAMSIZ - 1);
@@ -1095,7 +1095,7 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
          * We truncated the filename, so print what's left and then fall
          * through to the SKIP routine.
          */
-        Info(slide, 0x401, ((char *)slide, "[ %s ]\n", FnFilter1(G.filename)));
+        Info(0x401, "[ %s ]\n", FnFilter1(G.filename));
         length = block_len;     /* SKIP the excess bytes... */
         /*  FALL THROUGH...  */
 
@@ -1121,8 +1121,8 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
         if (G.extra_field != (unsigned char *)NULL)
             free(G.extra_field);
         if ((G.extra_field = (unsigned char *)malloc(length)) == (unsigned char *)NULL) {
-            Info(slide, 0x401, ((char *)slide, ExtraFieldTooLong,
-              length));
+            Info(0x401, ExtraFieldTooLong,
+              length);
             /* cur_zipfile_bufstart already takes account of extra_bytes,
              * so don't correct for it twice: */
             seek_zipf(G.cur_zipfile_bufstart - G.extra_bytes +

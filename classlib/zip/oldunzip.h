@@ -83,6 +83,12 @@ freely, subject to the above disclaimer and the following restrictions:
 extern TUnzip UnzipClass;
 
 #define Trace  UnzipClass.Trace
+#define Info   UnzipClass.Info
+
+/*
+#define Info(buf,flag,sprf_arg) \
+      (*G.message)((void *)&G, (unsigned char *)(buf), (unsigned long)sprintf sprf_arg, (flag))
+*/
 
 /*---------------------------------------------------------------------------
     Predefined, machine-specific macros.
@@ -1111,17 +1117,6 @@ int  decrypt OF((const char *passwrd));
 
 #define MTrace(x)  Trace(x)
 #  define TTrace(x)
-
-/* The return value of the Info() "macro function" is never checked in
- * UnZip. Otherwise, to get the same behaviour as for (*G.message)(), the
- * Info() definition for "FUNZIP" would have to be corrected:
- * #define Info(buf,flag,sprf_arg) \
- *      (fputs((char *)(sprintf sprf_arg, (buf)), \
- *             (flag)&1? stderr : stdout) < 0)
- */
-#define Info(buf,flag,sprf_arg) \
-       (*G.message)((void *)&G, (unsigned char *)(buf), (unsigned long)sprintf sprf_arg, (flag))
-
 
 /*  The following macro wrappers around the fnfilter function are used many
  *  times to prepare archive entry names or name components for displaying

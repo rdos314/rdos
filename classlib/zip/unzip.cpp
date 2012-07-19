@@ -128,6 +128,7 @@ TUnzip::~TUnzip()
 void TUnzip::Init()
 {
     OnTrace = 0;
+    OnInfo = 0;
 }
 
 /*##########################################################################
@@ -154,5 +155,32 @@ void TUnzip::Trace(const char *format, ...)
         len = __prtf(FLogBuf, format, ap, string_putc );
         FLogBuf[len] = 0;
         (*OnTrace)(this, FLogBuf);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TUnzip::Info
+#
+#   Purpose....: Info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUnzip::Info(int code, const char *format, ...)
+{
+    va_list ap;
+    slib_callback_t *tmp;
+    int len;
+
+    va_start(ap, format);
+
+    if (OnInfo)
+    {
+        len = __prtf(FLogBuf, format, ap, string_putc );
+        FLogBuf[len] = 0;
+        (*OnInfo)(this, code, FLogBuf);
     }
 }

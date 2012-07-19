@@ -40,8 +40,10 @@ public:
     ~TUnzip();
 
     void Trace(const char *format, ...);
+    void Info(int code, const char *format, ...);
 
     void (*OnTrace)(TUnzip *unzip, const char *msg);
+    void (*OnInfo)(TUnzip *unzip, int code, const char *msg);
 
 protected:
 

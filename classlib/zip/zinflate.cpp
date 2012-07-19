@@ -356,14 +356,12 @@ int UZinflate(int is_defl64)
         /* only need to test this stuff once */
         if ((zlib_RtVersion[0] != ZLIB_VERSION[0]) ||
             (zlib_RtVersion[2] != ZLIB_VERSION[2])) {
-            Info(slide, 0x21, ((char *)slide,
-              "error:  incompatible zlib version (expected %s, found %s)\n",
-              ZLIB_VERSION, zlib_RtVersion));
+            Info(0x21, "error:  incompatible zlib version (expected %s, found %s)\n",
+              ZLIB_VERSION, zlib_RtVersion);
             return 3;
         } else if (strcmp(zlib_RtVersion, ZLIB_VERSION) != 0)
-            Info(slide, 0x21, ((char *)slide,
-              "warning:  different zlib version (expected %s, using %s)\n",
-              ZLIB_VERSION, zlib_RtVersion));
+            Info(0x21, "warning:  different zlib version (expected %s, using %s)\n",
+              ZLIB_VERSION, zlib_RtVersion);
 
         G.dstrm.zalloc = (alloc_func)Z_NULL;
         G.dstrm.zfree = (free_func)Z_NULL;
