@@ -298,9 +298,7 @@ unsigned readbuf(char *buf, register unsigned size)   /* return number of bytes 
                 return (n-size);
             else if (G.incnt < 0) {
                 /* another hack, but no real harm copying same thing twice */
-                (*G.message)((void *)&G,
-                  (unsigned char *)ReadError,  /* CANNOT use slide */
-                  (unsigned long)strlen(ReadError), 0x401);
+                Info(0x401, ReadError);
                 return 0;  /* discarding some data; better than lock-up */
             }
             /* buffer ALWAYS starts on a block boundary:  */
@@ -340,9 +338,7 @@ int readbyte()   /* refill inbuf and return a byte if available, else EOF */
             return EOF;
         } else if (G.incnt < 0) {  /* "fail" (abort, retry, ...) returns this */
             /* another hack, but no real harm copying same thing twice */
-            (*G.message)((void *)&G,
-              (unsigned char *)ReadError,
-              (unsigned long)strlen(ReadError), 0x401);
+            Info(0x401, ReadError);
             exit(PK_BADERR);    /* totally bailing; better than lock-up */
         }
         G.cur_zipfile_bufstart += INBUFSIZ; /* always starts on block bndry */
@@ -502,7 +498,7 @@ int flush(unsigned char *rawbuf, unsigned long size, int unshrink)
          */
         if (!uO.cflag && !RdosWriteFile(G.outfile, rawbuf, size))
             return disk_error();
-        else if (uO.cflag && (*G.message)((void *)&G, rawbuf, size, 0))
+        else if (uO.cflag)
             return PK_OK;
     } else {   /* textmode:  aflag is true */
         if (unshrink) {
@@ -555,8 +551,7 @@ int flush(unsigned char *rawbuf, unsigned long size, int unshrink)
         if (q > transbuf) {
             if (!uO.cflag && !RdosWriteFile(G.outfile, transbuf, (extent)(q-transbuf)))
                 return disk_error();
-            else if (uO.cflag && (*G.message)((void *)&G, transbuf,
-                (unsigned long)(q-transbuf), 0))
+            else if (uO.cflag)
                 return PK_OK;
         }
     }
@@ -841,8 +836,6 @@ int  UzpPassword (void *pG, int *rcnt, char *pwbuf, int size, const char *zfn, c
 
 void handler(int signal)   /* upon interrupt, turn on echo and exit cleanly */
 {
-    (*G.message)((void *)&G, slide, 0L, 0x41); /*  start of line (to stderr; */
-
     /* probably ctrl-C */
     exit(IZ_CTRLC);       /* was EXIT(0), then EXIT(PK_ERR) */
 }
@@ -1046,10 +1039,10 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
                                     FALSE);
             }
 
-            (*G.message)((void *)&G, G.outbuf, (unsigned long)(q-G.outbuf), 0);
+            Info(0, (char *)G.outbuf);
         }
         /* add '\n' if not at start of line */
-        (*G.message)((void *)&G, slide, 0L, 0x40);
+        Info(0, "\n");
         break;
 
     /*

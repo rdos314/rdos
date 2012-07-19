@@ -874,7 +874,7 @@ int zipinfo()   /* return PK-type error code */
             error_in_archive = PK_FIND;
 
         if (uO.lflag >= 10)
-            (*G.message)((void *)&G, (unsigned char *)"\n", 1L, 0);
+            Info(0, "\n");
     }
 
     return error_in_archive;
@@ -945,7 +945,8 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
     methid = (unsigned)G.crec.compression_method;
     methnum = find_compr_idx(G.crec.compression_method);
 
-    (*G.message)((void *)&G, (unsigned char *)"  ", 2L, 0);  fnprint();
+    Info(0, "  ");  
+    fnprint();
 
     Info(0, LocalHeaderOffset,
       fzofft(G.crec.relative_offset_local_header, NULL, "u"),
@@ -1599,12 +1600,12 @@ ef_default_display:
                     }
                     break;
             }
-            (*G.message)((void *)&G, (unsigned char *)".", 1L, 0);
+            Info(0, ".");
 
             ef_ptr += eb_datalen;
             ef_len -= eb_datalen;
         }
-        (*G.message)((void *)&G, (unsigned char *)"\n", 1L, 0);
+        Info(0, "\n");
     }
 
     /* high bit == Unix/OS2/NT GMT times (mtime, atime); next bit == UID/GID */

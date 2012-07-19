@@ -364,7 +364,7 @@ void fnprint()    /* print filename (after filtering) and newline */
 {
     char *name = fnfilter(G.filename, slide, (extent)(WSIZE>>1));
 
-    (*G.message)((void *)&G, (unsigned char *)name, (unsigned long)strlen(name), 0);
-    (*G.message)((void *)&G, (unsigned char *)"\n", 1L, 0);
+    Info(0, name);
+    Info(0, "\n");
 
 } /* end function fnprint() */
