@@ -30,7 +30,7 @@
   ---------------------------------------------------------------------------*/
 
 
-#include "unzip.h"
+#include "oldunzip.h"
 
 static int    do_seekable        OF((int lastchance));
 static int    rec_find           OF((long, char *, int));

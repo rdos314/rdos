@@ -7,7 +7,7 @@
   also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
 */
 
-#include "unzip.h"
+#include "oldunzip.h"
 
 #    include <direct.h>         /* use readdir() */
 #    define zdirent  dirent

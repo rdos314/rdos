@@ -30,7 +30,7 @@
  */
 
 #define ZCRYPT_INTERNAL
-#include "unzip.h"
+#include "oldunzip.h"
 
 #define FALSE 0
 

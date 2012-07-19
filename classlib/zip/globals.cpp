@@ -20,7 +20,7 @@
   ---------------------------------------------------------------------------*/
 
 
-#include "unzip.h"
+#include "oldunzip.h"
 
 /* initialization of sigs is completed at runtime so unzip(sfx) executable
  * won't look like a zipfile

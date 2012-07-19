@@ -72,7 +72,7 @@
 
 /* define ToLower() in here (for Unix, define ToLower to be macro (using
  * isupper()); otherwise just use tolower() */
-#include "unzip.h"
+#include "oldunzip.h"
 
 #define Case(x)  (ic? tolower(x) : (x))
 

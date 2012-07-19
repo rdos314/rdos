@@ -66,7 +66,7 @@
 
 
 #define __UNSHRINK_C    /* identifies this source module */
-#include "unzip.h"
+#include "oldunzip.h"
 
 
 #define READBITS(nbits,zdest) {if(nbits>G.bits_left) {int temp; G.zipeof=1;\

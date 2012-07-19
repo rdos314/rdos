@@ -29,7 +29,7 @@
 
 
 #define __ENVARGS_C     /* identifies this source module */
-#include "unzip.h"
+#include "oldunzip.h"
 
 #  define ISspace(c) isspace((unsigned)c)
 

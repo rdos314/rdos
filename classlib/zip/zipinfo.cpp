@@ -22,7 +22,7 @@
   ---------------------------------------------------------------------------*/
 
 
-#include "unzip.h"
+#include "oldunzip.h"
 
 
 /* Define OS-specific attributes for use on ALL platforms--the S_xxxx

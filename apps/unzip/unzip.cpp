@@ -65,7 +65,7 @@
 
 #define __UNZIP_C       /* identifies this source module */
 #define UNZIP_INTERNAL
-#include "unzip.h"      /* includes, typedefs, macros, prototypes, etc. */
+#include "oldunzip.h"      /* includes, typedefs, macros, prototypes, etc. */
 #include "unzvers.h"
 
 /*******************/

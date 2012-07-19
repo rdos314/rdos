@@ -114,7 +114,7 @@
  */
 
 #define __EXPLODE_C     /* identifies this source module */
-#include "unzip.h"      /* must supply slide[] (unsigned char) array and NEXTBYTE macro */
+#include "oldunzip.h"      /* must supply slide[] (unsigned char) array and NEXTBYTE macro */
 
 /* routines here */
 static int get_tree OF((unsigned *l, unsigned n));

@@ -270,7 +270,7 @@
 #define __INFLATE_C     /* identifies this source module */
 
 /* #define DEBUG */
-#include "unzip.h"
+#include "oldunzip.h"
 
 
 /* marker for "unused" huft code, and corresponding check macro */

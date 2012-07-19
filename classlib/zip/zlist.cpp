@@ -20,7 +20,7 @@
   ---------------------------------------------------------------------------*/
 
 
-#include "unzip.h"
+#include "oldunzip.h"
 
    static const char CompFactorStr[] = "%c%d%%";
    static const char CompFactor100[] = "100%%";
