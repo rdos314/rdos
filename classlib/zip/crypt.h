@@ -37,8 +37,6 @@
    NO_CRYPT takes precedence over USE_CRYPT
  */
 
-#define CRYPT  1  /* full version */
-
 #define CR_MAJORVER        2
 #define CR_MINORVER        11
 
