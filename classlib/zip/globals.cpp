@@ -66,7 +66,6 @@ Uz_Globs *globalsCtor()
     G.pInfo = G.info;
     G.sol = TRUE;          /* at start of line */
 
-    G.mpause = UzpMorePause;
     G.decr_passwd = UzpPassword;
 
     G.echofd = -1;

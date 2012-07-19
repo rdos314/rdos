@@ -114,3 +114,49 @@ int  UzpMessagePrnt(void *pG, unsigned char *buf, unsigned long size, int flag)
 } /* end function UzpMessagePrnt() */
 
 
+
+
+
+/***************************/
+/* Function UzpMorePause() */
+/***************************/
+
+void  UzpMorePause(void *pG, const char *prompt, int flag)
+{
+    unsigned char c;
+
+/*---------------------------------------------------------------------------
+    Print a prompt and wait for the user to press a key, then erase prompt
+    if possible.
+  ---------------------------------------------------------------------------*/
+
+    if (!((Uz_Globs *)pG)->sol)
+        fprintf(stderr, "\n");
+    /* numlines may or may not be used: */
+    fprintf(stderr, prompt, ((Uz_Globs *)pG)->numlines);
+    fflush(stderr);
+    if (flag & 1) {
+        do {
+            c = (unsigned char)RdosReadKeyboard();
+        } while (
+                 c != '\r' && c != '\n' && c != ' ' && c != 'q' && c != 'Q');
+    } else
+        c = (unsigned char)RdosReadKeyboard();
+
+    /* newline was not echoed, so cover up prompt line */
+    fprintf(stderr, HidePrompt);
+    fflush(stderr);
+
+    if (
+        (tolower(c) == 'q')) {
+        exit(PK_COOL);
+    }
+
+    ((Uz_Globs *)pG)->sol = TRUE;
+
+    /* space for another screen, enter for another line. */
+    if ((flag & 1) && c == ' ')
+        ((Uz_Globs *)pG)->lines = 0;
+
+} /* end function UzpMorePause() */
+
