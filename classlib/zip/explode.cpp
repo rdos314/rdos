@@ -543,6 +543,6 @@ int explode()
 
   huft_free(td);
   huft_free(tl);
-  Trace((stderr, "<%u > ", G.hufts));
+  Trace("<%u > ", G.hufts);
   return (int)r;
 }

@@ -400,7 +400,7 @@ int unzip(int argc, char *argv[])
         G.process_all_files = FALSE;
         G.pfnames = argv;
         while (*++pp) {
-            Trace((stderr, "pp - argv = %d\n", pp-argv));
+            Trace("pp - argv = %d\n", pp-argv);
             if (!uO.exdir && strncmp(*pp, "-d", 2) == 0) {
                 int firstarg = (pp == argv);
 

@@ -202,7 +202,7 @@ int process_zipfiles()    /* return PK-type error code */
     NumMissDirs = NumMissFiles = 0;
 
     while ((G.zipfn = do_wild(G.wildzipfn)) != (char *)NULL) {
-        Trace((stderr, "do_wild( %s ) returns %s\n", G.wildzipfn, G.zipfn));
+        Trace("do_wild( %s ) returns %s\n", G.wildzipfn, G.zipfn);
 
         lastzipfn = G.zipfn;
 
@@ -222,7 +222,7 @@ int process_zipfiles()    /* return PK-type error code */
         else
             ++NumWinFiles;
 
-        Trace((stderr, "do_seekable(0) returns %d\n", error));
+        Trace("do_seekable(0) returns %d\n", error);
         if (error != IZ_DIR && error > error_in_archive)
             error_in_archive = error;
 
@@ -263,7 +263,7 @@ int process_zipfiles()    /* return PK-type error code */
             error_in_archive = PK_COOL;
 
             error = do_seekable(1);
-            Trace((stderr, "do_seekable(1) returns %d\n", error));
+            Trace("do_seekable(1) returns %d\n", error);
             switch (error) {
               case PK_WARN:
                 ++NumWarnFiles;
@@ -575,8 +575,8 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
             return error;
         }
 
-        Trace((stderr, "about to extract/list files (error = %d)\n",
-          error_in_archive));
+        Trace("about to extract/list files (error = %d)\n",
+          error_in_archive);
 
         {
             if (uO.zipinfo_mode)
@@ -587,8 +587,8 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
             else
                 error = extract_or_test_files();   /* EXTRACT OR TEST 'EM */
 
-            Trace((stderr, "done with extract/list files (error = %d)\n",
-                   error));
+            Trace("done with extract/list files (error = %d)\n",
+                   error);
         }
 
         if (error > error_in_archive)   /* don't overwrite stronger error */
@@ -738,9 +738,8 @@ static int find_ecrec64(long searchlen)         /* return PK-class error */
          When this is not the case, the found ecrec64 locator cannot be valid.
          -> This is not a Zip64 archive.
        */
-      Trace((stderr,
-             "\ninvalid ECLOC64, differing disk# (ECR %u, ECL64 %lu)\n",
-             G.ecrec.number_this_disk, ecloc64_total_disks - 1));
+      Trace("\ninvalid ECLOC64, differing disk# (ECR %u, ECL64 %lu)\n",
+             G.ecrec.number_this_disk, ecloc64_total_disks - 1);
       return PK_COOL;
     }
 
@@ -1286,8 +1285,8 @@ int getZip64Data(const unsigned char *ef_buf, unsigned ef_len)
     if (ef_len == 0 || ef_buf == NULL)
         return PK_COOL;
 
-    Trace((stderr,"\ngetZip64Data: scanning extra field of length %u\n",
-      ef_len));
+    Trace("\ngetZip64Data: scanning extra field of length %u\n",
+      ef_len);
 
     while (ef_len >= EB_HEADSIZE) {
         eb_id = makeword(EB_ID + ef_buf);
@@ -1295,9 +1294,8 @@ int getZip64Data(const unsigned char *ef_buf, unsigned ef_len)
 
         if (eb_len > (ef_len - EB_HEADSIZE)) {
             /* discovered some extra field inconsistency! */
-            Trace((stderr,
-              "getZip64Data: block length %u > rest ef_size %u\n", eb_len,
-              ef_len - EB_HEADSIZE));
+            Trace("getZip64Data: block length %u > rest ef_size %u\n", eb_len,
+              ef_len - EB_HEADSIZE);
             break;
         }
         if (eb_id == EF_PKSZ64) {

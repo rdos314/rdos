@@ -119,7 +119,7 @@ char *do_wild(const char *wildspec)
             dirname[dirnamelen] = '\0';   /* terminate for strcpy below */
             have_dirname = TRUE;
         }
-        Trace((stderr, "do_wild:  dirname = [%s]\n", FnFilter1(dirname)));
+        Trace("do_wild:  dirname = [%s]\n", FnFilter1(dirname));
 
         if ((wild_dir = Opendir(dirname)) != (zDIR *)NULL) {
             if (have_dirname) {
@@ -128,8 +128,8 @@ char *do_wild(const char *wildspec)
             } else
                 fnamestart = matchname;
             while ((file = Readdir(wild_dir)) != (struct zdirent *)NULL) {
-                Trace((stderr, "do_wild:  readdir returns %s\n",
-                  FnFilter1(file->d_name)));
+                Trace("do_wild:  readdir returns %s\n",
+                  FnFilter1(file->d_name));
                 strcpy(fnamestart, file->d_name);
                 if (strrchr(fnamestart, '.') == (char *)NULL)
                     strcat(fnamestart, ".");
@@ -137,7 +137,7 @@ char *do_wild(const char *wildspec)
                 if (match(fnamestart, wildname, 1) &&
                     /* skip "." and ".." directory entries */
                     strcmp(fnamestart, ".") && strcmp(fnamestart, "..")) {
-                    Trace((stderr, "do_wild:  match() succeeds\n"));
+                    Trace("do_wild:  match() succeeds\n");
                     /* remove trailing dot */
                     fnamestart += strlen(fnamestart) - 1;
                     if (*fnamestart == '.')
@@ -181,13 +181,13 @@ char *do_wild(const char *wildspec)
     } else
         fnamestart = matchname;
     while ((file = Readdir(wild_dir)) != (struct zdirent *)NULL) {
-        Trace((stderr, "do_wild:  readdir returns %s\n",
-          FnFilter1(file->d_name)));
+        Trace("do_wild:  readdir returns %s\n",
+          FnFilter1(file->d_name));
         strcpy(fnamestart, file->d_name);
         if (strrchr(fnamestart, '.') == (char *)NULL)
             strcat(fnamestart, ".");
         if (match(fnamestart, wildname, 1)) { /* 1 == ignore case */
-            Trace((stderr, "do_wild:  match() succeeds\n"));
+            Trace("do_wild:  match() succeeds\n");
             /* remove trailing dot */
             fnamestart += strlen(fnamestart) - 1;
             if (*fnamestart == '.')
@@ -488,7 +488,7 @@ int checkdir(char *pathcomp, int flag)
         }
         *end++ = '/';
         *end = '\0';
-        Trace((stderr, "buildpath now = [%s]\n", FnFilter1(buildpath)));
+        Trace("buildpath now = [%s]\n", FnFilter1(buildpath));
         return MPN_OK;
 
     } /* end if (FUNCTION == APPEND_DIR) */
@@ -500,8 +500,8 @@ int checkdir(char *pathcomp, int flag)
 
     if (FUNCTION == GETPATH) {
         strcpy(pathcomp, buildpath);
-        Trace((stderr, "getting and freeing path [%s]\n",
-          FnFilter1(pathcomp)));
+        Trace("getting and freeing path [%s]\n",
+          FnFilter1(pathcomp));
         free(buildpath);
         buildpath = end = (char *)NULL;
         return MPN_OK;
@@ -513,7 +513,7 @@ int checkdir(char *pathcomp, int flag)
   ---------------------------------------------------------------------------*/
 
     if (FUNCTION == APPEND_NAME) {
-        Trace((stderr, "appending filename [%s]\n", FnFilter1(pathcomp)));
+        Trace("appending filename [%s]\n", FnFilter1(pathcomp));
         while ((*end = *pathcomp++) != '\0') {
             ++end;
             if ((end-buildpath) >= FILNAMSIZ) {
@@ -521,7 +521,7 @@ int checkdir(char *pathcomp, int flag)
                 return MPN_INF_TRUNC;   /* filename truncated */
             }
         }
-        Trace((stderr, "buildpath now = [%s]\n", FnFilter1(buildpath)));
+        Trace("buildpath now = [%s]\n", FnFilter1(buildpath));
         /* could check for existence here, prompt for new name... */
         return MPN_OK;
     }
@@ -533,7 +533,7 @@ int checkdir(char *pathcomp, int flag)
   ---------------------------------------------------------------------------*/
 
     if (FUNCTION == INIT) {
-        Trace((stderr, "initializing buildpath to "));
+        Trace("initializing buildpath to ");
         /* allocate space for full filename, root path, and maybe "./" */
         if ((buildpath = (char *)malloc(strlen(G.filename)+rootlen+3)) ==
             (char *)NULL)
@@ -549,7 +549,7 @@ int checkdir(char *pathcomp, int flag)
             *buildpath = '\0';
             end = buildpath;
         }
-        Trace((stderr, "[%s]\n", FnFilter1(buildpath)));
+        Trace("[%s]\n", FnFilter1(buildpath));
         return MPN_OK;
     }
 
@@ -565,8 +565,8 @@ int checkdir(char *pathcomp, int flag)
   ---------------------------------------------------------------------------*/
 
     if (FUNCTION == ROOT) {
-        Trace((stderr, "initializing root path to [%s]\n",
-          FnFilter1(pathcomp)));
+        Trace("initializing root path to [%s]\n",
+          FnFilter1(pathcomp));
         if (pathcomp == (char *)NULL) {
             rootlen = 0;
             return MPN_OK;
@@ -624,7 +624,7 @@ int checkdir(char *pathcomp, int flag)
                 rootlen = 0;
                 return MPN_NOMEM;
             }
-            Trace((stderr, "rootpath now = [%s]\n", FnFilter1(rootpath)));
+            Trace("rootpath now = [%s]\n", FnFilter1(rootpath));
         }
         return MPN_OK;
     }
@@ -634,7 +634,7 @@ int checkdir(char *pathcomp, int flag)
   ---------------------------------------------------------------------------*/
 
     if (FUNCTION == END) {
-        Trace((stderr, "freeing rootpath\n"));
+        Trace("freeing rootpath\n");
         if (rootlen > 0) {
             free(rootpath);
             rootlen = 0;

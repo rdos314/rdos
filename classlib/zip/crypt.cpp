@@ -105,7 +105,7 @@ int decrypt(const char *passwrd)
     int n, r;
     unsigned char h[RAND_HEAD_LEN];
 
-    Trace((stdout, "\n[incnt = %d]: ", GLOBAL(incnt)));
+    Trace("\n[incnt = %d]: ", GLOBAL(incnt));
 
     /* get header once (turn off "encrypted" flag temporarily so we don't
      * try to decrypt the same data twice) */
@@ -114,7 +114,7 @@ int decrypt(const char *passwrd)
     for (n = 0; n < RAND_HEAD_LEN; n++) {
         b = NEXTBYTE;
         h[n] = (unsigned char)b;
-        Trace((stdout, " (%02x)", h[n]));
+        Trace(" (%02x)", h[n]);
     }
     undefer_input();
     GLOBAL(pInfo->encrypted) = TRUE;
@@ -213,23 +213,22 @@ static int testkey(const unsigned char *h, const char *key)
     /* check password */
     for (n = 0; n < RAND_HEAD_LEN; n++) {
         zdecode(hh[n]);
-        Trace((stdout, " %02x", hh[n]));
+        Trace(" %02x", hh[n]);
     }
 
-    Trace((stdout,
-      "\n  lrec.crc= %08lx  crec.crc= %08lx  pInfo->ExtLocHdr= %s\n",
+    Trace("\n  lrec.crc= %08lx  crec.crc= %08lx  pInfo->ExtLocHdr= %s\n",
       GLOBAL(lrec.crc32), GLOBAL(pInfo->crc),
-      GLOBAL(pInfo->ExtLocHdr) ? "true":"false"));
-    Trace((stdout, "  incnt = %d  unzip offset into zipfile = %ld\n",
+      GLOBAL(pInfo->ExtLocHdr) ? "true":"false");
+    Trace("  incnt = %d  unzip offset into zipfile = %ld\n",
       GLOBAL(incnt),
-      GLOBAL(cur_zipfile_bufstart)+(GLOBAL(inptr)-GLOBAL(inbuf))));
+      GLOBAL(cur_zipfile_bufstart)+(GLOBAL(inptr)-GLOBAL(inbuf)));
 
     /* same test as in zipbare(): */
 
     b = hh[RAND_HEAD_LEN-1];
-    Trace((stdout, "  b = %02x  (crc >> 24) = %02x  (lrec.time >> 8) = %02x\n",
+    Trace("  b = %02x  (crc >> 24) = %02x  (lrec.time >> 8) = %02x\n",
       b, (unsigned short)(GLOBAL(lrec.crc32) >> 24),
-      ((unsigned short)GLOBAL(lrec.last_mod_dos_datetime) >> 8) & 0xff));
+      ((unsigned short)GLOBAL(lrec.last_mod_dos_datetime) >> 8) & 0xff);
     if (b != (GLOBAL(pInfo->ExtLocHdr) ?
         ((unsigned short)GLOBAL(lrec.last_mod_dos_datetime) >> 8) & 0xff :
         (unsigned short)(GLOBAL(lrec.crc32) >> 24)))

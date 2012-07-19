@@ -39,10 +39,14 @@ public:
 	TUnzip();
     ~TUnzip();
 
+    void Trace(const char *format, ...);
+
 protected:
 
 private:
     void Init();
+
+    char FLogBuf[512];
 };
 
 #endif

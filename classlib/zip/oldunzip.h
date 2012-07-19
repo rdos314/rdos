@@ -78,6 +78,12 @@ freely, subject to the above disclaimer and the following restrictions:
 #ifndef __unzip_h   /* prevent multiple inclusions */
 #define __unzip_h
 
+#include "unzip.h"
+
+extern TUnzip UnzipClass;
+
+#define Trace  UnzipClass.Trace
+
 /*---------------------------------------------------------------------------
     Predefined, machine-specific macros.
   ---------------------------------------------------------------------------*/
@@ -1102,12 +1108,6 @@ int  decrypt OF((const char *passwrd));
 
 #define MAX(a,b)   ((a) > (b) ? (a) : (b))
 #define MIN(a,b)   ((a) < (b) ? (a) : (b))
-
-#ifdef DEBUG
-#    define Trace(x)   fprintf x
-#else
-#  define Trace(x)
-#endif
 
 #define MTrace(x)  Trace(x)
 #  define TTrace(x)

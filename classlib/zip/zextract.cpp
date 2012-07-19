@@ -543,11 +543,11 @@ int extract_or_test_files()    /* return PK-type error code */
                   dircomp);
             }
 
-            Trace((stderr, "setting directory times/perms/attributes\n"));
+            Trace("setting directory times/perms/attributes\n");
             for (i = 0;  i < num_dirs;  ++i) {
                 direntry *d = sorted_dirlist[i];
 
-                Trace((stderr, "dir = %s\n", d->fn));
+                Trace("dir = %s\n", d->fn);
                 if ((error = set_direc_attribs(d)) != PK_OK) {
                     ndirs_fail++;
                     Info(slide, 0x201, ((char *)slide,
@@ -841,11 +841,10 @@ static int extract_or_test_entrylist(unsigned numchunk,
         inbuf_offset = request % INBUFSIZ;
         bufstart = request - inbuf_offset;
 
-        Trace((stderr, "\ndebug: request = %ld, inbuf_offset = %ld\n",
-          (long)request, (long)inbuf_offset));
-        Trace((stderr,
-          "debug: bufstart = %ld, cur_zipfile_bufstart = %ld\n",
-          (long)bufstart, (long)G.cur_zipfile_bufstart));
+        Trace("\ndebug: request = %ld, inbuf_offset = %ld\n",
+          (long)request, (long)inbuf_offset);
+        Trace("debug: bufstart = %ld, cur_zipfile_bufstart = %ld\n",
+          (long)bufstart, (long)G.cur_zipfile_bufstart);
         if (request < 0) {
             Info(slide, 0x401, ((char *)slide, SeekMsg,
               G.zipfn, ReportMsg));
@@ -858,15 +857,13 @@ static int extract_or_test_entrylist(unsigned numchunk,
                 request = G.pInfo->offset;  /* could also check if != 0 */
                 inbuf_offset = request % INBUFSIZ;
                 bufstart = request - inbuf_offset;
-                Trace((stderr, "debug: request = %ld, inbuf_offset = %ld\n",
-                  (long)request, (long)inbuf_offset));
-                Trace((stderr,
-                  "debug: bufstart = %ld, cur_zipfile_bufstart = %ld\n",
-                  (long)bufstart, (long)G.cur_zipfile_bufstart));
+                Trace("debug: request = %ld, inbuf_offset = %ld\n",
+                  (long)request, (long)inbuf_offset);
+                Trace("debug: bufstart = %ld, cur_zipfile_bufstart = %ld\n",
+                  (long)bufstart, (long)G.cur_zipfile_bufstart);
                 /* try again */
                 if (request < 0) {
-                    Trace((stderr,
-                      "debug: recompensated request still < 0\n"));
+                    Trace("debug: recompensated request still < 0\n");
                     Info(slide, 0x401, ((char *)slide,
                       SeekMsg,
                       G.zipfn, ReportMsg));
@@ -880,7 +877,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
         }
 
         if (bufstart != G.cur_zipfile_bufstart) {
-            Trace((stderr, "debug: bufstart != cur_zipfile_bufstart\n"));
+            Trace("debug: bufstart != cur_zipfile_bufstart\n");
 
             RdosSetFilePos(G.zipfd, bufstart);
             G.cur_zipfile_bufstart = RdosGetFilePos(G.zipfd);
@@ -1117,8 +1114,8 @@ startover:
                 } else if (errcode > MPN_INF_SKIP &&
                            error_in_archive < PK_ERR)
                     error_in_archive = PK_ERR;
-                Trace((stderr, "mapname(%s) returns error code = %d\n",
-                  FnFilter1(G.filename), error));
+                Trace("mapname(%s) returns error code = %d\n",
+                  FnFilter1(G.filename), error);
                 continue;   /* go on to next file */
             }
 
@@ -1580,7 +1577,7 @@ static int TestExtraField(unsigned char *ef, unsigned ef_len)
                 break;
 
             case EF_NTSD:
-                Trace((stderr, "ebID: %i / ebLen: %u\n", ebID, ebLen));
+                Trace("ebID: %i / ebLen: %u\n", ebID, ebLen);
                 r = ebLen < EB_NTSD_L_LEN ? IZ_EF_TRUNC :
                     ((ef[EB_HEADSIZE+EB_NTSD_VERSION] > EB_NTSD_MAX_VER) ?
                      (PK_WARN | 0x4000) :

@@ -30,10 +30,59 @@
 #
 ########################################################################*/
 
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+
 #include "unzip.h"
 
-#define     FALSE	0
-#define     TRUE	!FALSE
+#define     FALSE       0
+#define     TRUE        !FALSE
+
+typedef struct
+{
+    char           *_dest;
+    short           _flags;         // flags (see below)
+    short           _version;       // structure version # (2.0 --> 200)
+    int             _fld_width;     // field width
+    int             _prec;          // precision
+    int             _output_count;  // # of characters outputted for %n
+    int             _n0;            // number of chars to deliver first
+    int             _nz0;           // number of zeros to deliver next
+    int             _n1;            // number of chars to deliver next
+    int             _nz1;           // number of zeros to deliver next
+    int             _n2;            // number of chars to deliver next
+    int             _nz2;           // number of zeros to deliver next
+    char            _character;     // format character
+    char            _pad_char;
+    char            _padding[2];    // to keep struct aligned
+} _SPECS;
+
+typedef void (slib_callback_t)(_SPECS *, int);
+
+extern "C" int 
+            __prtf( void  *dest,                 /* parm for use by out_putc */
+            const char *format,          /* pointer to format string */
+            va_list args,                /* pointer to pointer to args*/
+            slib_callback_t *out_putc ); /* char output routine */
+
+
+/*##########################################################################
+#
+#   Name       : string_putc
+#
+#   Purpose....: __prtf callback
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void string_putc( _SPECS *specs, int op_char )
+{
+    *( specs->_dest++ ) = op_char;
+    specs->_output_count++;
+}
 
 /*##########################################################################
 #
@@ -80,3 +129,29 @@ TUnzip::~TUnzip()
 void TUnzip::Init()
 {
 }
+
+/*##########################################################################
+#
+#   Name       : TUnzip::Trace
+#
+#   Purpose....: Trace
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUnzip::Trace(const char *format, ...)
+{
+    va_list ap;
+    slib_callback_t *tmp;
+    int len;
+
+    va_start(ap, format);
+
+    len = __prtf(FLogBuf, format, ap, string_putc );
+    FLogBuf[len] = 0;
+    
+    printf(FLogBuf);
+}
+

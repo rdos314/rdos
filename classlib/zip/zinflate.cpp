@@ -386,13 +386,13 @@ int UZinflate(int is_defl64)
             else if (windowBits < 8)
                 windowBits = 8;
 
-            Trace((stderr, "initializing inflate()\n"));
+            Trace("initializing inflate()\n");
             err = inflateBackInit(&G.dstrm, windowBits, redirSlide);
 
             if (err == Z_MEM_ERROR)
                 return 3;
             else if (err != Z_OK) {
-                Trace((stderr, "oops!  (inflateBackInit() err = %d)\n", err));
+                Trace("oops!  (inflateBackInit() err = %d)\n", err);
                 return 2;
             }
         }
@@ -403,22 +403,22 @@ int UZinflate(int is_defl64)
         err = inflateBack(&G.dstrm, zlib_inCB, &G, zlib_outCB, &G);
         if (err != Z_STREAM_END) {
             if (err == Z_DATA_ERROR || err == Z_STREAM_ERROR) {
-                Trace((stderr, "oops!  (inflateBack() err = %d)\n", err));
+                Trace("oops!  (inflateBack() err = %d)\n", err);
                 retval = 2;
             } else if (err == Z_MEM_ERROR) {
                 retval = 3;
             } else if (err == Z_BUF_ERROR) {
-                Trace((stderr, "oops!  (inflateBack() err = %d)\n", err));
+                Trace("oops!  (inflateBack() err = %d)\n", err);
                 if (G.dstrm.next_in == Z_NULL) {
                     /* input failure */
-                    Trace((stderr, "  inflateBack() input failure\n"));
+                    Trace("  inflateBack() input failure\n");
                     retval = 2;
                 } else {
                     /* output write failure */
                     retval = (G.disk_full != 0 ? PK_DISK : IZ_CTRLC);
                 }
             } else {
-                Trace((stderr, "oops!  (inflateBack() err = %d)\n", err));
+                Trace("oops!  (inflateBack() err = %d)\n", err);
                 retval = 2;
             }
         }
@@ -429,7 +429,7 @@ int UZinflate(int is_defl64)
 
         err = inflateBackEnd(&G.dstrm);
         if (err != Z_OK) {
-            Trace((stderr, "oops!  (inflateBackEnd() err = %d)\n", err));
+            Trace("oops!  (inflateBackEnd() err = %d)\n", err);
             if (retval == 0)
                 retval = 2;
         }

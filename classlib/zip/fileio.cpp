@@ -203,8 +203,8 @@ int open_input_file()    /* return 1 if open failed */
 
 int open_outfile()           /* return 1 if fail */
 {
-    Trace((stderr, "open_outfile:  doing fopen(%s) for writing\n",
-      FnFilter1(G.filename)));
+    Trace("open_outfile:  doing fopen(%s) for writing\n",
+      FnFilter1(G.filename));
     {
         G.outfile = RdosCreateFile(G.filename, 0);
     }
@@ -213,8 +213,8 @@ int open_outfile()           /* return 1 if fail */
           FnFilter1(G.filename), strerror(errno)));
         return 1;
     }
-    Trace((stderr, "open_outfile:  fopen(%s) for writing succeeded\n",
-      FnFilter1(G.filename)));
+    Trace("open_outfile:  fopen(%s) for writing succeeded\n",
+      FnFilter1(G.filename));
 
     return 0;
 
@@ -431,21 +431,19 @@ int seek_zipf(long abs_offset)
              G.zipfn, ReportMsg));
         return(PK_BADERR);
     } else if (bufstart != G.cur_zipfile_bufstart) {
-        Trace((stderr,
-          "fpos_zip: abs_offset = %s, G.extra_bytes = %s\n",
-          FmZofft(abs_offset, NULL, NULL),
-          FmZofft(G.extra_bytes, NULL, NULL)));
+        Trace("fpos_zip: abs_offset = %s, G.extra_bytes = %s\n",
+          fzofft(abs_offset, NULL, NULL),
+          fzofft(G.extra_bytes, NULL, NULL));
 
         RdosSetFilePos(G.zipfd, bufstart);
         G.cur_zipfile_bufstart = RdosGetFilePos(G.zipfd);
-        Trace((stderr,
-          "       request = %s, (abs+extra) = %s, inbuf_offset = %s\n",
-          FmZofft(request, NULL, NULL),
-          FmZofft((abs_offset+G.extra_bytes), NULL, NULL),
-          FmZofft(inbuf_offset, NULL, NULL)));
-        Trace((stderr, "       bufstart = %s, cur_zipfile_bufstart = %s\n",
-          FmZofft(bufstart, NULL, NULL),
-          FmZofft(G.cur_zipfile_bufstart, NULL, NULL)));
+        Trace("       request = %s, (abs+extra) = %s, inbuf_offset = %s\n",
+          fzofft(request, NULL, NULL),
+          fzofft((abs_offset+G.extra_bytes), NULL, NULL),
+          fzofft(inbuf_offset, NULL, NULL));
+        Trace("       bufstart = %s, cur_zipfile_bufstart = %s\n",
+          fzofft(bufstart, NULL, NULL),
+          fzofft(G.cur_zipfile_bufstart, NULL, NULL));
         if ((G.incnt = RdosReadFile(G.zipfd, (char *)G.inbuf, INBUFSIZ)) <= 0)
             return(PK_EOF);
         G.incnt -= (int)inbuf_offset;
@@ -552,8 +550,8 @@ int flush(unsigned char *rawbuf, unsigned long size, int unshrink)
         Done translating:  write whatever we've got to file (or screen).
       -----------------------------------------------------------------------*/
 
-        Trace((stderr, "p - rawbuf = %u   q-transbuf = %u   size = %lu\n",
-          (unsigned)(p-rawbuf), (unsigned)(q-transbuf), size));
+        Trace("p - rawbuf = %u   q-transbuf = %u   size = %lu\n",
+          (unsigned)(p-rawbuf), (unsigned)(q-transbuf), size);
         if (q > transbuf) {
             if (!uO.cflag && !RdosWriteFile(G.outfile, transbuf, (extent)(q-transbuf)))
                 return disk_error();
@@ -941,15 +939,14 @@ int check_for_newer(char *filename)  /* return 1 if existing file is newer */
 {
     time_t existing, archive;
 
-    Trace((stderr, "check_for_newer:  doing stat(%s)\n", FnFilter1(filename)));
+    Trace("check_for_newer:  doing stat(%s)\n", FnFilter1(filename));
     if (stat(filename, &G.statbuf)) {
-        Trace((stderr,
-          "check_for_newer:  stat(%s) returns %d:  file does not exist\n",
-          FnFilter1(filename), SSTAT(filename, &G.statbuf)));
+        Trace("check_for_newer:  stat(%s) returns %d:  file does not exist\n",
+          FnFilter1(filename), stat(filename, &G.statbuf));
         return DOES_NOT_EXIST;
     }
-    Trace((stderr, "check_for_newer:  stat(%s) returns 0:  file exists\n",
-      FnFilter1(filename)));
+    Trace("check_for_newer:  stat(%s) returns 0:  file exists\n",
+      FnFilter1(filename));
 
 
     /* round up existing filetime to nearest 2 seconds for comparison,

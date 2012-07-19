@@ -162,13 +162,13 @@ int unshrink()
                 break;
             if (code == 1) {
                 ++codesize;
-                Trace((stderr, " (codesize now %d bits)\n", codesize));
+                Trace(" (codesize now %d bits)\n", codesize);
                 if (codesize > MAX_BITS) return PK_ERR;
             } else if (code == 2) {
-                Trace((stderr, " (partial clear code)\n"));
+                Trace(" (partial clear code)\n");
                 /* clear leafs (nodes with no children) */
                 partial_clear(lastfreecode);
-                Trace((stderr, " (done with partial clear)\n"));
+                Trace(" (done with partial clear)\n");
                 lastfreecode = BOGUSCODE; /* reset start of free-node search */
             }
             continue;
@@ -183,8 +183,8 @@ int unshrink()
 
         if (parent[code] == FREE_CODE) {
             /* or (FLAG_BITS[code] & FREE_CODE)? */
-            Trace((stderr, " (found a KwKwK code %d; oldcode = %d)\n", code,
-              oldcode));
+            Trace(" (found a KwKwK code %d; oldcode = %d)\n", code,
+              oldcode);
             *newstr-- = finalval;
             code = oldcode;
         }
@@ -192,13 +192,13 @@ int unshrink()
         while (code != BOGUSCODE) {
             if (newstr < stack) {
                 /* Bogus compression stream caused buffer underflow! */
-                Trace((stderr, "unshrink stack overflow!\n"));
+                Trace("unshrink stack overflow!\n");
                 return PK_ERR;
             }
             if (parent[code] == FREE_CODE) {
                 /* or (FLAG_BITS[code] & FREE_CODE)? */
-                Trace((stderr, " (found a KwKwK code %d; oldcode = %d)\n",
-                  code, oldcode));
+                Trace(" (found a KwKwK code %d; oldcode = %d)\n",
+                  code, oldcode);
                 *newstr-- = finalval;
                 code = oldcode;
             } else {
@@ -214,10 +214,9 @@ int unshrink()
         Write expanded string in reverse order to output buffer.
       -----------------------------------------------------------------------*/
 
-        Trace((stderr,
-          "code %4d; oldcode %4d; char %3d (%c); len %d; string [", curcode,
+        Trace("code %4d; oldcode %4d; char %3d (%c); len %d; string [", curcode,
           oldcode, (int)(*newstr), (*newstr<32 || *newstr>=127)? ' ':*newstr,
-          len));
+          len);
 
         {
             register unsigned char *p;
@@ -226,15 +225,15 @@ int unshrink()
                 *G.outptr++ = *p;
                 OUTDBG(*p)
                 if (++G.outcnt == outbufsiz) {
-                    Trace((stderr, "doing flush(), outcnt = %lu\n", G.outcnt));
+                    Trace("doing flush(), outcnt = %lu\n", G.outcnt);
                     if ((error = flush(realbuf, G.outcnt, TRUE)) != 0) {
-                        Trace((stderr, "unshrink:  flush() error (%d)\n",
-                          error));
+                        Trace("unshrink:  flush() error (%d)\n",
+                          error);
                         return error;
                     }
                     G.outptr = realbuf;
                     G.outcnt = 0L;
-                    Trace((stderr, "done with flush()\n"));
+                    Trace("done with flush()\n");
                 }
             }
         }
@@ -249,7 +248,7 @@ int unshrink()
         while ((code < HSIZE) && (parent[code] != FREE_CODE))
             ++code;
         lastfreecode = code;
-        Trace((stderr, "]; newcode %d\n", code));
+        Trace("]; newcode %d\n", code);
         if (code >= HSIZE)
             /* invalid compressed data caused max-code overflow! */
             return PK_ERR;
@@ -265,12 +264,12 @@ int unshrink()
   ---------------------------------------------------------------------------*/
 
     if (G.outcnt > 0L) {
-        Trace((stderr, "doing final flush(), outcnt = %lu\n", G.outcnt));
+        Trace("doing final flush(), outcnt = %lu\n", G.outcnt);
         if ((error = flush(realbuf, G.outcnt, TRUE)) != 0) {
-            Trace((stderr, "unshrink:  flush() error (%d)\n", error));
+            Trace("unshrink:  flush() error (%d)\n", error);
             return error;
         }
-        Trace((stderr, "done with flush()\n"));
+        Trace("done with flush()\n");
     }
 
     return PK_OK;
@@ -304,7 +303,7 @@ static void partial_clear(int lastcodeused)
         if (FLAG_BITS[code] & HAS_CHILD)    /* just clear child-bit */
             FLAG_BITS[code] &= ~HAS_CHILD;
         else {                              /* leaf:  lose it */
-            Trace((stderr, "%d\n", code));
+            Trace("%d\n", code);
             parent[code] = FREE_CODE;
         }
     }
