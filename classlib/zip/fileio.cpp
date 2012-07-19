@@ -58,7 +58,6 @@
 #define __FILEIO_C      /* identifies this source module */
 #include "unzip.h"
 #include "crypt.h"
-#include "ttyio.h"
 
 const unsigned char iso2oem_850[] = {
     0x3F, 0x3F, 0x27, 0x9F, 0x22, 0x2E, 0xC5, 0xCE,  /* 80 - 87 */
@@ -345,7 +344,6 @@ int readbyte()   /* refill inbuf and return a byte if available, else EOF */
             (*G.message)((void *)&G,
               (unsigned char *)ReadError,
               (unsigned long)strlen(ReadError), 0x401);
-            echon();
             exit(PK_BADERR);    /* totally bailing; better than lock-up */
         }
         G.cur_zipfile_bufstart += INBUFSIZ; /* always starts on block bndry */
@@ -773,11 +771,11 @@ void  UzpMorePause(void *pG, const char *prompt, int flag)
     fflush(stderr);
     if (flag & 1) {
         do {
-            c = (unsigned char)FGETCH(0);
+            c = (unsigned char)RdosReadKeyboard();
         } while (
                  c != '\r' && c != '\n' && c != ' ' && c != 'q' && c != 'Q');
     } else
-        c = (unsigned char)FGETCH(0);
+        c = (unsigned char)RdosReadKeyboard();
 
     /* newline was not echoed, so cover up prompt line */
     fprintf(stderr, HidePrompt);
@@ -847,8 +845,6 @@ int  UzpPassword (void *pG, int *rcnt, char *pwbuf, int size, const char *zfn, c
 void handler(int signal)   /* upon interrupt, turn on echo and exit cleanly */
 {
     (*G.message)((void *)&G, slide, 0L, 0x41); /*  start of line (to stderr; */
-
-    echon();
 
     /* probably ctrl-C */
     exit(IZ_CTRLC);       /* was EXIT(0), then EXIT(PK_ERR) */

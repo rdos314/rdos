@@ -29,13 +29,6 @@
 #include "zip.h"
 #include "crypt.h"
 
-/* Non-echo console/keyboard input is needed for (en/de)cryption's password
- * entry, and for UnZip(SFX)'s MORE and Pause features.
- * (The corresponding #endif is found at the end of this module.)
- */
-
-#include "ttyio.h"
-
 /*
  * Get a password of length n-1 or less into *p using the prompt *m.
  * The entered password is not echoed.
@@ -72,7 +65,7 @@ char *getp(const char *m, char *p, int n)
         RdosWriteString(m);
         i = 0;
         do {                    /* read line, keeping first n characters */
-            if ((c = (char)getch()) == '\r')
+            if ((c = (char)RdosReadKeyboard()) == '\r')
                 c = '\n';       /* until user hits CR */
             if (c == 8 || c == 127) {
                 if (i > 0) i--; /* the `backspace' and `del' keys works */

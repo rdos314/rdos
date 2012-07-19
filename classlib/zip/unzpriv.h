@@ -786,7 +786,7 @@ int   set_direc_attribs  OF((direntry *d));             /* local */
 
 void Ext_ASCII_TO_Native(char *string, int hostnum, int hostver, int isuxatt, int islochdr);
 void strtolower(char *str1, char *str2);
-
+char *getp(const char *m, char *p, int n);
 
 /************/
 /*  Macros  */

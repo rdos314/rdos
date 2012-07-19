@@ -32,7 +32,6 @@
 #define ZCRYPT_INTERNAL
 #include "zip.h"
 #include "crypt.h"
-#include "ttyio.h"
 
 # define FALSE 0
 
