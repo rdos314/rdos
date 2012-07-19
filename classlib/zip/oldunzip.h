@@ -315,7 +315,6 @@ int       UzpValidate        (char *archive, int AllCodes);
 
 /* default I/O functions (can be swapped out via UzpAltMain() entry point): */
 
-int       UzpMessagePrnt   (void *pG, unsigned char *buf, unsigned long size, int flag);
 int       UzpMessageNull   (void *pG, unsigned char *buf, unsigned long size, int flag);
 int       UzpInput         (void *pG, unsigned char *buf, int *size, int flag);
 void      UzpMorePause     (void *pG, const char *prompt, int flag);

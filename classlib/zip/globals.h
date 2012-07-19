@@ -241,7 +241,6 @@ typedef struct Globals {
     char fzofft_buf[FZOFFT_NUM][FZOFFT_LEN];
     int fzofft_index;
 
-    MsgFn *message;
     InputFn *input;
     PauseFn *mpause;
     PasswdFn *decr_passwd;
