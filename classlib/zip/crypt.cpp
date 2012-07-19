@@ -31,9 +31,11 @@
 
 #define ZCRYPT_INTERNAL
 #include "zip.h"
-#include "crypt.h"
 
-# define FALSE 0
+#define FALSE 0
+
+#define IZ_PWLEN  80    /* input buffer size for reading encryption key */
+#define RAND_HEAD_LEN  12       /* length of encryption random header */
 
 #define GLOBAL(g) G.g
 

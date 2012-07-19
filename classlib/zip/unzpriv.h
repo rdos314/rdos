@@ -788,6 +788,14 @@ void Ext_ASCII_TO_Native(char *string, int hostnum, int hostver, int isuxatt, in
 void strtolower(char *str1, char *str2);
 char *getp(const char *m, char *p, int n);
 
+#define zdecode(c)   update_keys(c ^= decrypt_byte())
+
+int  decrypt_byte OF(());
+int  update_keys OF((int c));
+void init_keys OF((const char *passwd));
+
+int  decrypt OF((const char *passwrd));
+
 /************/
 /*  Macros  */
 /************/

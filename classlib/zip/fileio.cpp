@@ -57,7 +57,6 @@
 
 #define __FILEIO_C      /* identifies this source module */
 #include "unzip.h"
-#include "crypt.h"
 
 const unsigned char iso2oem_850[] = {
     0x3F, 0x3F, 0x27, 0x9F, 0x22, 0x2E, 0xC5, 0xCE,  /* 80 - 87 */

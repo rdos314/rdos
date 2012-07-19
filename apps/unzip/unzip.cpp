@@ -66,7 +66,6 @@
 #define __UNZIP_C       /* identifies this source module */
 #define UNZIP_INTERNAL
 #include "unzip.h"      /* includes, typedefs, macros, prototypes, etc. */
-#include "crypt.h"
 #include "unzvers.h"
 
 /*******************/
@@ -168,7 +167,7 @@ static const char ZipInfoUsageLine3[] = "miscellaneous options:\n\
      "USE_ZLIB (compiled with version %s; using version %s)";
      static const char Decryption[] =
        "        [decryption, version %d.%d%s of %s]\n";
-     static const char CryptDate[] = CR_VERSION_DATE;
+     static const char CryptDate[] = "2012";
 
    static const char UnzipUsageLine1[] = "\
 UnZip %d.%d%d%s of %s, by Info-ZIP.  Maintained by C. Spieler.  Send\n\
@@ -1144,7 +1143,7 @@ static void show_version_info()
           (char *)(slide+256)));
         ++numopts;
         Info(slide, 0, ((char *)slide, Decryption,
-          CR_MAJORVER, CR_MINORVER, CR_BETA_VER,
+          1, 0, 0,
           CryptDate));
         ++numopts;
         if (numopts == 0)
