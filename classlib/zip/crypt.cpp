@@ -47,7 +47,7 @@ local int keys[3];       /* keys defining the pseudo-random sequence */
 #    define Trace(x)
 #endif
 
-#include "crc32.h"
+#define CRC32(c, b, crctab) (crctab[((int)(c) ^ (b)) & 0xff] ^ ((c) >> 8))
 
 /***********************************************************************
  * Return the next byte in the pseudo-random sequence

@@ -34,7 +34,6 @@
 
 #define __EXTRACT_C     /* identifies this source module */
 #include "unzip.h"
-#include "crc32.h"
 #include "crypt.h"
 
 #define GRRDUMP(buf,len) { \
