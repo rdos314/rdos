@@ -61,11 +61,10 @@ typedef struct
 typedef void (slib_callback_t)(_SPECS *, int);
 
 extern "C" int 
-            __prtf( void  *dest,                 /* parm for use by out_putc */
+            __prtf( void  *dest,         /* parm for use by out_putc */
             const char *format,          /* pointer to format string */
             va_list args,                /* pointer to pointer to args*/
             slib_callback_t *out_putc ); /* char output routine */
-
 
 /*##########################################################################
 #
@@ -128,6 +127,7 @@ TUnzip::~TUnzip()
 ##########################################################################*/
 void TUnzip::Init()
 {
+    OnTrace = 0;
 }
 
 /*##########################################################################
@@ -149,9 +149,10 @@ void TUnzip::Trace(const char *format, ...)
 
     va_start(ap, format);
 
-    len = __prtf(FLogBuf, format, ap, string_putc );
-    FLogBuf[len] = 0;
-    
-    printf(FLogBuf);
+    if (OnTrace)
+    {
+        len = __prtf(FLogBuf, format, ap, string_putc );
+        FLogBuf[len] = 0;
+        (*OnTrace)(this, FLogBuf);
+    }
 }
-

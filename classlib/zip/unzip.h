@@ -41,6 +41,8 @@ public:
 
     void Trace(const char *format, ...);
 
+    void (*OnTrace)(TUnzip *unzip, const char *msg);
+
 protected:
 
 private:

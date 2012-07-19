@@ -39,6 +39,10 @@ const char *fnames[2] = {"*", NULL};   /* default filenames vector */
 
 TUnzip UnzipClass;
 
+void TraceCallback(TUnzip *unzip, const char *msg)
+{
+    printf(msg);
+}
 
 Uz_Globs *globalsCtor()
 {
@@ -59,6 +63,8 @@ Uz_Globs *globalsCtor()
     G.decr_passwd = UzpPassword;
 
     G.echofd = -1;
+
+    UnzipClass.OnTrace = TraceCallback;
 
     return &G;
 }
