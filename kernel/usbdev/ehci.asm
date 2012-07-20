@@ -942,7 +942,6 @@ AddStatusIn    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IssueTransfer    Proc far
-    int 3
     push es
     push eax
     push edx
@@ -981,7 +980,6 @@ IssueTransfer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IsTransferDone   Proc far
-    int 3
     push es
     push eax
     push edx
@@ -991,10 +989,6 @@ IsTransferDone   Proc far
 ;    
     call IsConnected
     jc itdOk
-;    
-    mov bx,fs:esp_signal
-    or bx,bx
-    jnz itdFail
 ;    
     mov ax,flat_sel
     mov es,ax
@@ -1035,7 +1029,6 @@ IsTransferDone   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForCompletion   Proc far
-    int 3
     push eax
 ;
     test fs:esp_flags, ESP_FLAG_TRANSFER_PENDING
@@ -1158,8 +1151,26 @@ ChangeAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IsConnected   Proc far
-    int 3
+    push es
+    push eax
+    push si
+;    
+    mov es,fs:usbp_function_sel
+    movzx si,es:usbf_port
+;    
+    shl si,2
+    mov es,ds:ehc_reg_sel
+    mov eax,es:[si].HcPortSc
+    test al,1
+    clc
+    jnz icDone
+;    
     stc
+
+icDone:
+    pop si
+    pop eax
+    pop es
     ret
 IsConnected Endp
 
