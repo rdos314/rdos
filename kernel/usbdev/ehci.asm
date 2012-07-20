@@ -430,7 +430,7 @@ InitQh  ENDP
 InitQtd PROC near
     mov es:[edx].qtd_next,1
     mov es:[edx].qtd_alt,1
-    mov es:[edx].qtd_status,0
+    mov es:[edx].qtd_status,80h
     mov es:[edx].qtd_flags,0Fh
     mov es:[edx].qtd_size,0
     mov es:[edx].qtd_page0,0
@@ -704,16 +704,16 @@ InsertQtd       PROC near
 ;    
     and al,3
     or al,0Ch
-    mov es:[edx].qtd_flags,cl
+    mov es:[edx].qtd_flags,al
 ;
     mov ebx,fs:esp_pending
     mov fs:esp_pending,edx
     or ebx,ebx
     jz iqEmpty
 ;    
-    mov es:[edx].qtd_next_va,ebx
-    mov ebx,es:[ebx].qtd_my_phys
-    mov es:[edx].qtd_next,ebx
+    mov es:[ebx].qtd_next_va,edx
+    mov edx,es:[edx].qtd_my_phys
+    mov es:[ebx].qtd_next,edx
     jmp iqLinked
 
 iqEmpty:
@@ -819,7 +819,7 @@ CreateIntr  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddSetup    Proc far
-    int 3
+    push es
     push eax
     push edx
 ;    
@@ -828,8 +828,14 @@ AddSetup    Proc far
     mov al,2    
     call InsertQtd
 ;
+    mov ax,flat_sel
+    mov es,ax
+    mov edx,fs:esp_qh
+    mov es:[edx].qh_size,0
+;
     pop edx
     pop eax
+    pop es
     ret
 AddSetup    Endp
 
@@ -1232,6 +1238,7 @@ upDetach:
     or bx,bx
     jz upDone
 ;    
+    int 3
     mov al,cl
     NotifyUsbDetach
             
