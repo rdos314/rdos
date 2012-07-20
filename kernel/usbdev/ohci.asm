@@ -144,6 +144,7 @@ ohc_reclaim_list    DD ?
 
 ohc_spinlock        spinlock_typ <>
 
+ohc_root_ports      DW ?
 ohc_reset           DW ?
 
 ohc_section     section_typ <>
@@ -2304,29 +2305,22 @@ UpdateQueue   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           UpdatePort
+;   NAME:           UpdateReclaim
 ;
-;           DESCRIPTION:    Update root-hub port status
+;   DESCRIPTION:    Update reclaim
 ;
-;       PARAMETERS:     DS      Function selector
-;               CL      Port # (0,1)
+;   PARAMETERS:     DS      Function selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UpdatePort   Proc near
-    push es
-    push ax
-    push bx
-    push cx
-    push dx
-    push si
-    push di
-;    
+UpdateReclaim   Proc near
     mov eax,ds:ohc_reclaim_list
     or eax,eax
     jz upNoReclaim
 ;
+    push es
     push gs
+    push bx
     push ecx
     push edx
     mov ax,flat_sel
@@ -2365,9 +2359,35 @@ UpdatePort   Proc near
 upReclaimOk:
     pop edx
     pop ecx
+    pop bx
     pop gs
+    pop es
 
 upNoReclaim:    
+    ret
+UpdateReclaim   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UpdatePort
+;
+;           DESCRIPTION:    Update root-hub port status
+;
+;       PARAMETERS:     DS      Function selector
+;               CL      Port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdatePort   Proc near
+    push es
+    push ax
+    push bx
+    push cx
+    push dx
+    push si
+    push di
+;    
     movzx si,cl
     shl si,2
     movzx di,cl
@@ -2474,7 +2494,7 @@ UpdateUsb  Proc near
     mov cx,ds:OhciFuncCount
     or cx,cx
     jz uuDone
-;
+;    
     mov si,OFFSET OhciFuncArr
 
 uuLoop:    
@@ -2483,12 +2503,15 @@ uuLoop:
     push si
 ;    
     mov ds,ds:[si]
+    call UpdateReclaim
 ;    
-    xor cl,cl    
+    xor cx,cx
+
+uuPortLoop:    
     call UpdatePort
-;
-    mov cl,1
-    call UpdatePort
+    inc cx
+    cmp cx,ds:ohc_root_ports
+    jb uuPortLoop   
 ;
     pop si
     pop cx
@@ -2684,6 +2707,16 @@ ifOperational:
     and ax,0F83Fh
     or al,0BCh
     mov fs:HcControl,eax
+;
+    mov eax,fs:HcRhDescriptorA
+    movzx ax,al
+    or ax,ax
+    jnz ifPortsOk
+;
+    inc ax
+
+ifPortsOk:    
+    mov ds:ohc_root_ports,ax
 ;
     popad
     pop es
