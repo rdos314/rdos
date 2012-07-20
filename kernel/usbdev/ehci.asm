@@ -98,6 +98,9 @@ ehc_spinlock        spinlock_typ <>
 
 ehci_func_sel    ENDS
 
+ESP_FLAG_TRANSFER_PENDING   = 1
+ESP_FLAG_TRANSFER_OK    = 2
+
 ehci_pipe   STRUC
 
 esp_pipe_base   usb_pipe_struc <>
@@ -107,6 +110,8 @@ esp_next        DW ?
 
 esp_pending     DD ?
 esp_first       DD ?
+esp_signal      DW ?
+esp_flags       DB ?
 
 ehci_pipe   ENDS
 
@@ -945,6 +950,12 @@ IssueTransfer    Proc far
     mov ax,flat_sel
     mov es,ax
 ;    
+    ClearSignal
+    GetThread
+    mov fs:esp_signal,ax
+    and fs:esp_flags, NOT ESP_FLAG_TRANSFER_OK
+    or fs:esp_flags, ESP_FLAG_TRANSFER_PENDING
+;    
     mov eax,fs:esp_first
     mov edx,fs:esp_qh
     mov es:[edx].qh_next_qtd,eax
@@ -971,7 +982,43 @@ IssueTransfer    Endp
 
 IsTransferDone   Proc far
     int 3
+    push es
+    push eax
+    push edx
+;
+    test fs:esp_flags, ESP_FLAG_TRANSFER_PENDING
+    jz itdOk
+;    
+    call IsConnected
+    jc itdOk
+;    
+    mov bx,fs:esp_signal
+    or bx,bx
+    jnz itdFail
+;    
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov edx,fs:esp_qh
+    mov eax,es:[edx].qh_next_qtd
+    test al,1
+    jnz itdOk
+;
+    mov al,es:[edx].qh_status
+    test al,40h
+    jnz itdOk
+
+itdFail:
     stc
+    jmp itdEnd   
+
+itdOk:
+    clc
+
+itdEnd:    
+    pop edx
+    pop eax
+    pop es
     ret
 IsTransferDone   Endp
 
@@ -989,7 +1036,22 @@ IsTransferDone   Endp
 
 WaitForCompletion   Proc far
     int 3
-    stc
+    push eax
+;
+    test fs:esp_flags, ESP_FLAG_TRANSFER_PENDING
+    jz wfcDone
+
+wfcWait:
+    call IsTransferDone
+    jnc wfcDone
+;
+    WaitForSignal
+    jmp wfcWait
+
+wfcDone:
+    call EndTransfer
+;    
+    pop eax
     ret
 WaitForCompletion   Endp
 
@@ -1227,7 +1289,6 @@ upNotify:
     mov ax,200
     WaitMilliSec
 ;    
-    int 3
     xor ah,ah
     mov al,cl
     NotifyUsbAttach
