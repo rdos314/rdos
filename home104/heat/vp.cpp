@@ -395,11 +395,11 @@ void TVp::Execute()
     Label->SetText("Värme");
     Label->Show();
 
-        Table = new TTableControl(FControl, 850, 530, 400, 300);
-        Table->SetRowSpacing(5);
-        Table->SetColSpacing(8);
-        Table->SetSpacingTransparent();
-        Table->SetBackColor(0, 20, 50);
+    Table = new TTableControl(FControl, 850, 530, 400, 300);
+    Table->SetBackColor(0, 20, 50);
+    Table->SetRowSpacing(5);
+    Table->SetColSpacing(8);
+        Table->SetSpacingColor(0, 20, 50);
         Table->AddLabelColumn(&CommentLabelFactory, 220);
         Table->AddLabelColumn(&ValueLabelFactory, 80);
         Table->AddLabelColumn(&UnitLabelFactory, 70);

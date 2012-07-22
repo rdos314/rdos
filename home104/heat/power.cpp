@@ -41,9 +41,57 @@
 #define TRUE !FALSE
 
 TTableControl *Table;
+TTableControl *EnergyTable;
 long double bat_u = 0;
+long double bat_i = 0;
+long double charge_i = 0;
 long double curr_power = 0;
 int charger = FALSE;
+
+/*##########################################################################
+#
+#   Name       : EnergyThread
+#
+#   Purpose....: Energy thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void EnergyThread(void *Param)
+{
+    char str[40];
+    long double solarp = 0;
+    long double chargep = 0;
+    long double loadp = 0;
+
+    RdosWaitMilli(5000);
+
+    for (;;)
+    {
+        sprintf(str, "%7.3Lf", solarp);            
+        EnergyTable->SetText(0, 1, str);            
+
+        sprintf(str, "%7.3Lf", chargep);            
+        EnergyTable->SetText(1, 1, str);            
+
+        sprintf(str, "%7.3Lf", loadp);            
+        EnergyTable->SetText(2, 1, str);            
+
+        RdosWaitMilli(1000);
+
+        solarp += curr_power / 3600000.0;
+
+        if (charge_i > 1.0)
+        {
+            chargep += charge_i * bat_u / 3600000.0;
+            loadp += charge_i * bat_u / 3600000.0;
+        }
+        else
+            loadp += bat_u * bat_i / 3600000.0;            
+    }
+}        
 
 /*##########################################################################
 #
@@ -66,7 +114,9 @@ void BatteryThread(void *Param)
     int ChargeISum = 0;
     int ChargeICount = 0;
     int BatUSum = 0;
-    int BatUCount = 0;    
+    int BatUCount = 0;
+
+    RdosWaitMilli(5000);
 
     for (;;)
     {
@@ -79,8 +129,12 @@ void BatteryThread(void *Param)
 
             if (BatICount == 10)
             {
-                fval = (long double)BatISum / 1000.0;
-                sprintf(str, "%5.2Lf", fval);            
+                bat_i = (long double)BatISum / 1000.0;
+
+                sprintf(str, "%5.2Lf", bat_u * bat_i);            
+                Table->SetText(3, 1, str);            
+
+                sprintf(str, "%5.2Lf", bat_i);            
                 Table->SetText(3, 5, str);            
 
                 BatISum = 0;
@@ -95,8 +149,12 @@ void BatteryThread(void *Param)
 
             if (ChargeICount == 100)
             {            
-                fval = (long double)ChargeISum / 10000.0;
-                sprintf(str, "%5.2Lf", fval);            
+                charge_i = (long double)ChargeISum / 10000.0;
+
+                sprintf(str, "%5.2Lf", bat_u * charge_i);            
+                Table->SetText(2, 1, str);            
+
+                sprintf(str, "%5.2Lf", charge_i);            
                 Table->SetText(2, 5, str);            
 
                 ChargeISum = 0;
@@ -125,7 +183,7 @@ void BatteryThread(void *Param)
                 }
                 else
                 {
-                    if (bat_u <= 24.5 && curr_power < 25.0)
+                    if (bat_u <= 24.2 && curr_power < 25.0)
                         charger = TRUE;
                 }
 
@@ -156,6 +214,7 @@ TPower::TPower(TControlThread *control)
     Start("Power", 0x2000);
 
     RdosCreateThread(BatteryThread, "Battery", 0, 0x4000);
+    RdosCreateThread(EnergyThread, "Energy", 0, 0x4000);
 }
 
 /*##########################################################################
@@ -325,11 +384,11 @@ void TPower::Execute()
     Label->SetText("Energi");
     Label->Show();
 
-    Table = new TTableControl(FControl, 50, 50, 750, 300);
+    Table = new TTableControl(FControl, 50, 50, 750, 150);
+    Table->SetBackColor(0, 20, 50);
+    Table->SetSpacingColor(0, 20, 50);
     Table->SetRowSpacing(5);
     Table->SetColSpacing(8);
-    Table->SetSpacingTransparent();
-    Table->SetBackTransparent();
     Table->AddLabelColumn(&CommentLabelFactory, 100);
     Table->AddLabelColumn(&ValueLabelFactory, 100);
     Table->AddLabelColumn(&UnitLabelFactory, 70);
@@ -354,12 +413,36 @@ void TPower::Execute()
     Table->SetText(1, 6, "ampere");
 
     Table->SetText(2, 0, "Batteri");
+    Table->SetText(2, 2, "W");
     Table->SetText(2, 4, "volt");
     Table->SetText(2, 6, "ampere");
 
     Table->SetText(3, 0, "Load");
+    Table->SetText(3, 2, "W");
     Table->SetText(3, 4, "volt");
     Table->SetText(3, 6, "ampere");
+
+    EnergyTable = new TTableControl(FControl, 50, 250, 300, 150);
+    EnergyTable->SetBackColor(0, 20, 50);
+    EnergyTable->SetSpacingColor(0, 20, 50);
+    EnergyTable->SetRowSpacing(5);
+    EnergyTable->SetColSpacing(8);
+    EnergyTable->AddLabelColumn(&CommentLabelFactory, 100);
+    EnergyTable->AddLabelColumn(&ValueLabelFactory, 100);
+    EnergyTable->AddLabelColumn(&UnitLabelFactory, 70);
+
+    EnergyTable->AddRow(24, 45);
+    EnergyTable->AddRow(24, 45);
+    EnergyTable->AddRow(24, 45);
+
+    EnergyTable->SetText(0, 0, "Solar");
+    EnergyTable->SetText(0, 2, "kWh");
+
+    EnergyTable->SetText(1, 0, "Charger");
+    EnergyTable->SetText(1, 2, "kWh");
+
+    EnergyTable->SetText(2, 0, "Load");
+    EnergyTable->SetText(2, 2, "kWh");
 
     serial.Open();
     serial.EnableAutoRts();

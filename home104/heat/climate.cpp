@@ -84,8 +84,8 @@ TClimate::TClimate(TControlThread *control)
 
     Table.SetRowSpacing(5);
     Table.SetColSpacing(8);
-    Table.SetSpacingTransparent();
     Table.SetBackColor(0, 20, 50);
+    Table.SetSpacingColor(0, 20, 50);
     Table.AddLabelColumn(&CommentLabelFactory, 220);
     Table.AddLabelColumn(&ValueLabelFactory, 80);
     Table.AddLabelColumn(&UnitLabelFactory, 70);
