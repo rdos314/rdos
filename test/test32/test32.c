@@ -5,6 +5,8 @@
 
 #include <rdos.h>
 
+extern void CreateSection();
+
 void main()
 {
     int bpp;
@@ -17,7 +19,16 @@ void main()
     char test_str[100];
     long double x, y;
     int ok;
-    int size;
+    int size;        
+    void *sec_handle;
+
+//    CreateSection();
+
+    sec_handle = RdosNewCreateSection();
+    RdosNewEnterSection(sec_handle);
+    RdosNewLeaveSection(sec_handle);
+    RdosNewDeleteSection(sec_handle);
+    
 
     for (;;)
         ;    

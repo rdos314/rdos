@@ -505,6 +505,32 @@ LeaveUserWriteSection	MACRO
 	UserGate leave_user_write_section_nr
 					ENDM
 
+; OUT BX		Section handle
+CreateSectionHandle	MACRO
+	UserGate create_section_handle_nr
+					ENDM
+
+; OUT ES:EBX		Section data structure
+NewCreateSection	MACRO
+	UserGate new_create_section_nr
+					ENDM
+
+
+; IN  ES:EBX		Section data structure
+NewDeleteSection	MACRO
+	UserGate new_delete_section_nr
+					ENDM
+
+; IN  ES:EBX		Section data structure
+NewEnterSection	MACRO
+	UserGate new_enter_section_nr
+					ENDM
+
+; IN  ES:EBX		Section data structure
+NewLeaveSection	MACRO
+	UserGate new_leave_section_nr
+					ENDM
+
 ;;;;;;;;; WAITABLE OBJECTS ;;;;;;;;;;;;
 
 ; OUT BX		Wait handle

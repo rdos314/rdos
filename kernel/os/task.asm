@@ -1071,6 +1071,12 @@ timer_free_list_create:
     mov ax,leave_user_section_nr
     RegisterBimodalUserGate
 ;
+    mov si,OFFSET new_create_section
+    mov di,OFFSET new_create_section_name
+    xor dx,dx
+    mov ax,new_create_section_nr
+    RegisterBimodalUserGate
+;
     mov si,OFFSET get_debug_thread
     mov di,OFFSET get_debug_thread_name
     xor dx,dx
@@ -7727,6 +7733,69 @@ cecsFs:
     pop eax
     retf32
 cond_enter_section   ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           new_create_section
+;
+;           DESCRIPTION:    New create section
+;
+;           RETURNS:        BX          Section handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+new_create_section_name    DB 'Create User Section',0
+
+create_linear_start:
+    db 50h
+    db 52h
+    UserGate32 create_section_handle_nr
+    db 0B8h
+    dd 10h
+    UserGate32 allocate_app_mem_nr
+    db 33h
+    db 0C0h
+    db 89h
+    db 1Ah
+    db 89h
+    db 42h
+    db 4
+    db 89h
+    db 42h
+    db 8
+    db 89h
+    db 42h
+    db 12
+    db 58h
+    db 10h
+    db 5Ah
+    db 58h
+    db 0C3h
+
+create_linear_end:        
+
+new_create_section     PROC far
+    push es
+;    
+    int 3
+    mov si,OFFSET create_linear_start
+    movzx esi,si
+    mov ax,OFFSET create_linear_end
+    movzx eax,ax
+    sub eax,esi
+    mov ecx,eax
+    AllocateFixedVMLinear
+    mov edi,edx
+;
+    mov ax,flat_sel
+    mov es,ax
+    rep movs byte ptr es:[edi],cs:[esi]
+;
+    pop es    
+    retf32
+new_create_section     ENDP
+
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
