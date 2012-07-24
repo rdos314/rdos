@@ -134,6 +134,13 @@ UserGateForce32 MACRO gate_nr
     dw 3
 			ENDM
 
+UserGateApp	MACRO gate_nr
+    db 67h
+    db 9Ah
+    dd gate_nr
+    dw 3
+			ENDM
+
 UserGate        MACRO gate_nr
 IF (size $) EQ 0FF02h
     UserGate16 gate_nr
@@ -449,6 +456,26 @@ HasGlobalTimer       MACRO
 						ENDM
 
 ;;;;;;;;; CRITICAL SECTIONS ;;;;;;;;;;;;
+
+; OUT BX		Futex handle
+CreateFutex	MACRO
+	UserGate create_futex_nr
+					ENDM
+
+; IN  BX		Futex handle
+DeleteFutex	MACRO
+	UserGate delete_futex_nr
+					ENDM
+
+; IN  BX		Futex handle
+AcquireFutex	MACRO
+	UserGate acquire_futex_nr
+					ENDM
+
+; IN  BX		Futex handle
+ReleaseFutex	MACRO
+	UserGate release_futex_nr
+					ENDM
 
 ; OUT BX		Section handle
 CreateUserSection	MACRO

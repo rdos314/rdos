@@ -591,6 +591,9 @@ new_delete_section_nr           = 472
 new_enter_section_nr            = 473
 new_leave_section_nr            = 474
 
-create_section_handle_nr        = 475
+create_futex_nr                 = 475
+delete_futex_nr                 = 476
+acquire_futex_nr                = 477
+release_futex_nr                = 478
 
 usergate_entries			    = 512

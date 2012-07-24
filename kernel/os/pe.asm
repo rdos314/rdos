@@ -294,28 +294,109 @@ load_object     Endp
 
 new_create_section_name    DB 'Create User Section',0
 
-create_linear_start:
+section_start:
 
-create_linear   Proc near
-    push edi
-    lea edi,[edi].uss_val
-;   CreateFutex
-    pop edi
-    mov [edi].uss_handle,ebx
-    mov [edi].uss_val,-1
-    mov [edi].uss_counter,0
-    mov [edi].uss_owner,0
+create_us_section   Proc near
+    push eax
+    push edx
+;    
+    mov eax,SIZE user_sect_struc
+    UserGateApp allocate_app_mem_nr
+;    
+    lea ebx,[edx].uss_val
+    UserGateApp create_futex_nr
+    mov [edx].uss_handle,ebx
+    mov [edx].uss_val,-1
+    mov [edx].uss_counter,0
+    mov [edx].uss_owner,0
+    mov ebx,edx
+;
+    pop edx
+    pop eax    
     ret
-create_linear   Endp
+create_us_section   Endp
 
-create_linear_end:        
+free_us_section   Proc near
+    push edx
+;    
+    mov edx,ebx
+    mov ebx,[edx].uss_handle
+    UserGateApp delete_futex_nr
+    UserGateApp free_app_mem_nr
+    xor ebx,ebx
+;
+    pop edx
+    ret
+free_us_section   Endp
+
+enter_us_section    Proc near
+    push eax
+;    
+    str ax
+    cmp ax,[ebx].uss_owner
+    jne eusLock
+;
+    inc [ebx].uss_counter
+    ret
+
+eusLock:
+    lock add [ebx].uss_val,1
+    jc eusTake
+
+eusRetry:
+    mov eax,1
+    xchg ax,[ebx].uss_val
+    cmp ax,-1
+    je eusTake
+;
+    push ebx
+    mov ebx,[ebx].uss_handle
+    UserGateApp acquire_futex_nr
+    pop ebx
+    jmp eusRetry
+
+eusTake:
+    str ax
+    mov [ebx].uss_owner,ax
+    mov [ebx].uss_counter,1
+;
+    pop eax    
+    ret
+enter_us_section   Endp
+
+leave_us_section    Proc near
+    push eax
+;
+    str ax
+    cmp ax,[ebx].uss_owner
+    jne uusDone
+;
+    sub [ebx].uss_counter,1
+    jnz uusDone
+;
+    mov [ebx].uss_owner,0
+    lock sub [ebx].uss_val,1
+    jc uusDone
+;
+    mov [ebx].uss_val,-1
+    push ebx
+    mov ebx,[ebx].uss_handle
+    UserGateApp release_futex_nr
+    pop ebx        
+
+uusDone:
+    pop eax
+    ret
+leave_us_section    Endp
+
+section_end:        
 
 new_create_section     PROC far
     push es
 ;    
     int 3
-    mov esi,OFFSET create_linear_start
-    mov eax,OFFSET create_linear_end
+    mov esi,OFFSET section_start
+    mov eax,OFFSET section_end
     sub eax,esi
     mov ecx,eax
     AllocateAppMem
