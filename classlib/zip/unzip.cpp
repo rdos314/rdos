@@ -629,3 +629,59 @@ int TUnzip::FillInbuf() /* like readbyte() except returns number of bytes in inb
     return FInCount;
 
 } /* end function fillinbuf() */
+
+
+/*##########################################################################
+#
+#   Name       : TUnzip::Seek
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::Seek(long abs_offset)
+{
+/*
+ *  Seek to the block boundary of the block which includes abs_offset,
+ *  then read block into input buffer and set pointers appropriately.
+ *  If block is already in the buffer, just set the pointers.  This function
+ *  is used by do_seekable (process.c), extract_or_test_entrylist (extract.c)
+ *  and do_string (fileio.c).  Also, a slightly modified version is embedded
+ *  within extract_or_test_entrylist (extract.c).  readbyte() and readbuf()
+ *  (fileio.c) are compatible.  NOTE THAT abs_offset is intended to be the
+ *  "proper offset" (i.e., if there were no extra bytes prepended);
+ *  cur_zipfile_bufstart contains the corrected offset.
+ *
+ *  Since seek_zipf() is never used during decompression, it is safe to
+ *  use the slide[] buffer for the error message.
+ *
+ * returns PK error codes:
+ *  PK_BADERR if effective offset in zipfile is negative
+ *  PK_EOF if seeking past end of zipfile
+ *  PK_OK when seek was successful
+ */
+    long request = abs_offset + FExtraBytes;
+    long inbuf_offset = request % INBUFSIZ;
+    long bufstart = request - inbuf_offset;
+
+    if (request < 0)
+        return(PK_BADERR);
+    
+    if (bufstart != FBufStart) {
+        RdosSetFilePos(FInputHandle, bufstart);
+        FBufStart = RdosGetFilePos(FInputHandle);
+        FInCount = RdosReadFile(FInputHandle, FInBuf, INBUFSIZ);
+        if (FInCount <= 0)
+            return(PK_EOF);
+        FInCount -= (int)inbuf_offset;
+        FInPtr = FInBuf + (int)inbuf_offset;
+    } else {
+        FInCount += (FInPtr-FInBuf) - (int)inbuf_offset;
+        FInPtr = FInBuf + (int)inbuf_offset;
+    }
+    return(PK_OK);
+} /* end function seek_zipf() */
+

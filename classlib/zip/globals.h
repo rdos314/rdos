@@ -187,7 +187,6 @@ typedef struct Globals {
     char      *argv0;               /* used for NT and EXE_EXTENSION */
     char      *wildzipfn;
     long      ziplen;
-    long      extra_bytes;          /* used in unzip.c, misc.c */
     unsigned char       *extra_field;         /* Unix, VMS, Mac, OS/2, Acorn, ... */
     unsigned char       *hold;
 

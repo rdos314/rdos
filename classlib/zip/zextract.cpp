@@ -808,7 +808,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
          * ward), skip to the target position and reset readbuf(). */
 
         /* seek_zipf(pInfo->offset);  */
-        request = G.pInfo->offset + G.extra_bytes;
+        request = G.pInfo->offset + UnzipClass.FExtraBytes;
         inbuf_offset = request % INBUFSIZ;
         bufstart = request - inbuf_offset;
 
@@ -820,10 +820,10 @@ static int extract_or_test_entrylist(unsigned numchunk,
             Info(0x401, SeekMsg,
               UnzipClass.FInputFileName.GetData(), ReportMsg);
             error_in_archive = PK_ERR;
-            if (*pfilnum == 1 && G.extra_bytes != 0L) {
+            if (*pfilnum == 1 && UnzipClass.FExtraBytes != 0L) {
                 Info(0x401, AttemptRecompensate);
-                *pold_extra_bytes = G.extra_bytes;
-                G.extra_bytes = 0L;
+                *pold_extra_bytes =  UnzipClass.FExtraBytes;
+                 UnzipClass.FExtraBytes = 0L;
                 request = G.pInfo->offset;  /* could also check if != 0 */
                 inbuf_offset = request % INBUFSIZ;
                 bufstart = request - inbuf_offset;
@@ -879,15 +879,15 @@ static int extract_or_test_entrylist(unsigned numchunk,
                 GRRDUMP(local_hdr_sig, 4)
              */
             error_in_archive = PK_ERR;
-            if ((*pfilnum == 1 && G.extra_bytes != 0L) ||
-                (G.extra_bytes == 0L && *pold_extra_bytes != 0L)) {
+            if ((*pfilnum == 1 &&  UnzipClass.FExtraBytes != 0L) ||
+                ( UnzipClass.FExtraBytes == 0L && *pold_extra_bytes != 0L)) {
                 Info(0x401, AttemptRecompensate);
-                if (G.extra_bytes) {
-                    *pold_extra_bytes = G.extra_bytes;
-                    G.extra_bytes = 0L;
+                if (UnzipClass.FExtraBytes) {
+                    *pold_extra_bytes = UnzipClass.FExtraBytes;
+                    UnzipClass.FExtraBytes = 0L;
                 } else
-                    G.extra_bytes = *pold_extra_bytes; /* third attempt */
-                if (((error = seek_zipf(G.pInfo->offset)) != PK_OK) ||
+                    UnzipClass.FExtraBytes = *pold_extra_bytes; /* third attempt */
+                if (((error = UnzipClass.Seek(G.pInfo->offset)) != PK_OK) ||
                     (UnzipClass.ReadBuf(G.sig, 4) == 0)) {  /* bad offset */
                     if (error != PK_BADERR)
                       Info(0x401, OffsetMsg, *pfilnum, "EOF",

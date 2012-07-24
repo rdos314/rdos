@@ -187,67 +187,6 @@ int open_outfile()           /* return 1 if fail */
 
 
 
-/************************/
-/* Function seek_zipf() */
-/************************/
-
-int seek_zipf(long abs_offset)
-{
-/*
- *  Seek to the block boundary of the block which includes abs_offset,
- *  then read block into input buffer and set pointers appropriately.
- *  If block is already in the buffer, just set the pointers.  This function
- *  is used by do_seekable (process.c), extract_or_test_entrylist (extract.c)
- *  and do_string (fileio.c).  Also, a slightly modified version is embedded
- *  within extract_or_test_entrylist (extract.c).  readbyte() and readbuf()
- *  (fileio.c) are compatible.  NOTE THAT abs_offset is intended to be the
- *  "proper offset" (i.e., if there were no extra bytes prepended);
- *  cur_zipfile_bufstart contains the corrected offset.
- *
- *  Since seek_zipf() is never used during decompression, it is safe to
- *  use the slide[] buffer for the error message.
- *
- * returns PK error codes:
- *  PK_BADERR if effective offset in zipfile is negative
- *  PK_EOF if seeking past end of zipfile
- *  PK_OK when seek was successful
- */
-    long request = abs_offset + G.extra_bytes;
-    long inbuf_offset = request % INBUFSIZ;
-    long bufstart = request - inbuf_offset;
-
-    if (request < 0) {
-        Info(1, SeekMsg,
-             UnzipClass.FInputFileName.GetData(), ReportMsg);
-        return(PK_BADERR);
-    } else if (bufstart != UnzipClass.FBufStart) {
-        Trace("fpos_zip: abs_offset = %s, G.extra_bytes = %s\n",
-          fzofft(abs_offset, NULL, NULL),
-          fzofft(G.extra_bytes, NULL, NULL));
-
-        RdosSetFilePos(UnzipClass.FInputHandle, bufstart);
-        UnzipClass.FBufStart = RdosGetFilePos(UnzipClass.FInputHandle);
-        Trace("       request = %s, (abs+extra) = %s, inbuf_offset = %s\n",
-          fzofft(request, NULL, NULL),
-          fzofft((abs_offset+G.extra_bytes), NULL, NULL),
-          fzofft(inbuf_offset, NULL, NULL));
-        Trace("       bufstart = %s, cur_zipfile_bufstart = %s\n",
-          fzofft(bufstart, NULL, NULL),
-          fzofft(UnzipClass.FBufStart, NULL, NULL));
-        if ((UnzipClass.FInCount = RdosReadFile(UnzipClass.FInputHandle, UnzipClass.FInBuf, INBUFSIZ)) <= 0)
-            return(PK_EOF);
-        UnzipClass.FInCount -= (int)inbuf_offset;
-        UnzipClass.FInPtr = UnzipClass.FInBuf + (int)inbuf_offset;
-    } else {
-        UnzipClass.FInCount += (UnzipClass.FInPtr-UnzipClass.FInBuf) - (int)inbuf_offset;
-        UnzipClass.FInPtr = UnzipClass.FInBuf + (int)inbuf_offset;
-    }
-    return(PK_OK);
-} /* end function seek_zipf() */
-
-
-
-
 /********************/
 /* Function flush() */   /* returns PK error codes: */
 /********************/   /* if tflag => always 0; PK_DISK if write error */
@@ -693,7 +632,7 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
     case SKIP:
         /* cur_zipfile_bufstart already takes account of extra_bytes, so don't
          * correct for it twice: */
-        seek_zipf(UnzipClass.FBufStart - G.extra_bytes +
+        UnzipClass.Seek(UnzipClass.FBufStart - UnzipClass.FExtraBytes +
                   (UnzipClass.FInPtr-UnzipClass.FInBuf) + length);
         break;
 
@@ -710,7 +649,7 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
               length);
             /* cur_zipfile_bufstart already takes account of extra_bytes,
              * so don't correct for it twice: */
-            seek_zipf(UnzipClass.FBufStart - G.extra_bytes +
+            UnzipClass.Seek(UnzipClass.FBufStart - UnzipClass.FExtraBytes +
                       (UnzipClass.FInPtr-UnzipClass.FInBuf) + length);
         } else {
             if (UnzipClass.ReadBuf((char *)G.extra_field, length) == 0)
