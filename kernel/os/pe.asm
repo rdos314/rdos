@@ -679,36 +679,36 @@ InsertApp       Proc near
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov word ptr ds:app_get_env_proc,OFFSET get_env
-    mov word ptr ds:app_get_env_proc+2,cs 
-    mov word ptr ds:app_get_exe_proc,OFFSET get_exe_name
-    mov word ptr ds:app_get_exe_proc+2,cs 
-    mov word ptr ds:app_get_cmd_line_proc,OFFSET get_cmd_line
-    mov word ptr ds:app_get_cmd_line_proc+2,cs 
-    mov word ptr ds:app_get_options_proc,OFFSET get_options
-    mov word ptr ds:app_get_options_proc+2,cs 
-    mov word ptr ds:app_set_options_proc,OFFSET set_options
-    mov word ptr ds:app_set_options_proc+2,cs 
-    mov word ptr ds:app_allocate_mem_proc,OFFSET allocate_mem
-    mov word ptr ds:app_allocate_mem_proc+2,cs 
-    mov word ptr ds:app_free_mem_proc,OFFSET free_mem
-    mov word ptr ds:app_free_mem_proc+2,cs 
-    mov word ptr ds:app_debug_allocate_mem_proc,OFFSET debug_allocate_mem
-    mov word ptr ds:app_debug_allocate_mem_proc+2,cs 
-    mov word ptr ds:app_debug_free_mem_proc,OFFSET debug_free_mem
-    mov word ptr ds:app_debug_free_mem_proc+2,cs 
-    mov word ptr ds:app_init_thread_proc,OFFSET init_thread
-    mov word ptr ds:app_init_thread_proc+2,cs
-    mov word ptr ds:app_free_thread_proc,OFFSET free_thread
-    mov word ptr ds:app_free_thread_proc+2,cs
-    mov word ptr ds:app_spawn_proc,OFFSET spawn_proc
-    mov word ptr ds:app_spawn_proc+2,cs
-    mov word ptr ds:app_clone_proc,OFFSET clone_proc
-    mov word ptr ds:app_clone_proc+2,cs
-    mov word ptr ds:app_close_proc,OFFSET close_proc
-    mov word ptr ds:app_close_proc+2,cs
-    mov word ptr ds:app_load_dll_proc,OFFSET load_dll
-    mov word ptr ds:app_load_dll_proc+2,cs
+    mov ds:app_get_env_proc,OFFSET get_env
+    mov ds:app_get_env_proc+4,cs 
+    mov ds:app_get_exe_proc,OFFSET get_exe_name
+    mov ds:app_get_exe_proc+4,cs 
+    mov ds:app_get_cmd_line_proc,OFFSET get_cmd_line
+    mov ds:app_get_cmd_line_proc+4,cs 
+    mov ds:app_get_options_proc,OFFSET get_options
+    mov ds:app_get_options_proc+4,cs 
+    mov ds:app_set_options_proc,OFFSET set_options
+    mov ds:app_set_options_proc+4,cs 
+    mov ds:app_allocate_mem_proc,OFFSET allocate_mem
+    mov ds:app_allocate_mem_proc+4,cs 
+    mov ds:app_free_mem_proc,OFFSET free_mem
+    mov ds:app_free_mem_proc+4,cs 
+    mov ds:app_debug_allocate_mem_proc,OFFSET debug_allocate_mem
+    mov ds:app_debug_allocate_mem_proc+4,cs 
+    mov ds:app_debug_free_mem_proc,OFFSET debug_free_mem
+    mov ds:app_debug_free_mem_proc+4,cs 
+    mov ds:app_init_thread_proc,OFFSET init_thread
+    mov ds:app_init_thread_proc+4,cs
+    mov ds:app_free_thread_proc,OFFSET free_thread
+    mov ds:app_free_thread_proc+4,cs
+    mov ds:app_spawn_proc,OFFSET spawn_proc
+    mov ds:app_spawn_proc+4,cs
+    mov ds:app_clone_proc,OFFSET clone_proc
+    mov ds:app_clone_proc+4,cs
+    mov ds:app_close_proc,OFFSET close_proc
+    mov ds:app_close_proc+4,cs
+    mov ds:app_load_dll_proc,OFFSET load_dll
+    mov ds:app_load_dll_proc+4,cs
     mov word ptr ds:app_loader_name,OFFSET pe_loader_name
     mov word ptr ds:app_loader_name+2,cs
 ;
@@ -3165,7 +3165,7 @@ init_thread_no_tls:
     pop eax
     pop fs
     pop es
-    ret
+    retf32
 init_thread     Endp
 
                        
@@ -3290,7 +3290,7 @@ free_thread_no_tls:
     xor ax,ax
     mov fs,ax
     FreeMem
-    ret
+    retf32
 free_thread     Endp
 
                        
@@ -3388,7 +3388,7 @@ spawn_wd_debug:
     pop es
 
 spawn_no_debug:
-    ret
+    retf32
 spawn_proc      Endp
 
                        
@@ -3420,7 +3420,7 @@ clone_proc      Proc far
 ;
     popad
     pop ds    
-    ret
+    retf32
 clone_proc  Endp
 
                        
@@ -3459,7 +3459,7 @@ close_proc      Proc far
     call SendEvent
 
 free_process_no_debug:
-    ret
+    retf32
 close_proc      Endp
 
                        
@@ -4041,7 +4041,7 @@ alloc_ins_done:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 allocate_mem    ENDP
 
 
@@ -4128,7 +4128,7 @@ free_mem_done:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 free_mem    ENDP
 
 
@@ -4223,7 +4223,7 @@ debug_alloc_ins_done:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 debug_allocate_mem      ENDP
 
 
@@ -4336,7 +4336,7 @@ debug_free_mem_done:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 debug_free_mem  ENDP
 
 
@@ -4476,7 +4476,7 @@ load_dll_pr_done:
     pop fs
     pop es
     pop ds
-    ret
+    retf32
 load_dll    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4967,7 +4967,7 @@ get_exe_done:
     pop ebx
     pop eax
     pop ds
-    ret
+    retf32
 get_exe_name    Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5027,7 +5027,7 @@ get_env_done:
     pop ebx
     pop eax
     pop ds
-    ret
+    retf32
 get_env Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5051,7 +5051,7 @@ get_cmd_line    Proc far
     clc
     pop ax
     pop ds
-    ret
+    retf32
 get_cmd_line    Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5103,7 +5103,7 @@ set_opt_size:
     popa
     pop es
     pop ds
-    ret
+    retf32
 set_options     Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5127,7 +5127,7 @@ get_options     Proc far
 ;
     pop ax      
     pop ds
-    ret
+    retf32
 get_options     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

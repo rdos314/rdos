@@ -400,20 +400,35 @@ run_open_hooks  Proc near
     mov ds:app_fork_id,0
     mov ds:app_handle,0
     mov ds:app_get_exe_proc,0
+    mov ds:app_get_exe_proc+4,0
     mov ds:app_get_cmd_line_proc,0
+    mov ds:app_get_cmd_line_proc+4,0
     mov ds:app_get_env_proc,0
+    mov ds:app_get_env_proc+4,0
     mov ds:app_get_options_proc,0
+    mov ds:app_get_options_proc+4,0
     mov ds:app_set_options_proc,0
+    mov ds:app_set_options_proc+4,0
     mov ds:app_allocate_mem_proc,0
+    mov ds:app_allocate_mem_proc+4,0
     mov ds:app_free_mem_proc,0
+    mov ds:app_free_mem_proc+4,0
     mov ds:app_debug_allocate_mem_proc,0
+    mov ds:app_debug_allocate_mem_proc+4,0
     mov ds:app_debug_free_mem_proc,0
+    mov ds:app_debug_free_mem_proc+4,0
     mov ds:app_init_thread_proc,0
+    mov ds:app_init_thread_proc+4,0
     mov ds:app_free_thread_proc,0
+    mov ds:app_free_thread_proc+4,0
     mov ds:app_spawn_proc,0
+    mov ds:app_spawn_proc+4,0
     mov ds:app_clone_proc,0
+    mov ds:app_clone_proc+4,0
     mov ds:app_close_proc,0
+    mov ds:app_close_proc+4,0
     mov ds:app_load_dll_proc,0
+    mov ds:app_load_dll_proc+4,0
 ;
     InitSection ds:app_lib_section
     mov ds:app_env,0
@@ -531,10 +546,10 @@ close_app       PROC far
     mov ds,ax
     mov ds,ds:p_app_sel
     mov eax,ds:app_close_proc
-    or eax,eax
+    or eax,ds:app_close_proc+4
     jz close_proc_handled
 ;
-    call ds:app_close_proc
+    call fword ptr ds:app_close_proc
 
 close_proc_handled:
     mov ax,app_data_sel
@@ -879,12 +894,12 @@ get_exe_name    PROC far
     mov ds,ax
     mov ds,ds:p_app_sel
     mov eax,ds:app_get_exe_proc
-    or eax,eax
+    or eax,ds:app_get_exe_proc+4
     pop eax
     stc
     jz get_exe_name_done
 ;
-    call ds:app_get_exe_proc
+    call fword ptr ds:app_get_exe_proc
 
 get_exe_name_done:
     pop ds
@@ -913,12 +928,12 @@ get_cmd_line    PROC far
     mov ds,ax
     mov ds,ds:p_app_sel
     mov eax,ds:app_get_cmd_line_proc
-    or eax,eax
+    or eax,ds:app_get_cmd_line_proc+4
     pop eax
     stc
     jz get_cmd_line_done
 ;
-    call ds:app_get_cmd_line_proc
+    call fword ptr ds:app_get_cmd_line_proc
 
 get_cmd_line_done:
     pop ds
@@ -947,12 +962,12 @@ get_env PROC far
     mov ds,ax
     mov ds,ds:p_app_sel
     mov eax,ds:app_get_env_proc
-    or eax,eax
+    or eax,ds:app_get_env_proc+4
     pop eax
     stc
     jz get_env_done
 ;
-    call ds:app_get_env_proc
+    call fword ptr ds:app_get_env_proc
 
 get_env_done:
     pop ds
@@ -981,12 +996,12 @@ set_options     PROC far
     mov ds,ax
     mov ds,ds:p_app_sel
     mov eax,ds:app_set_options_proc
-    or eax,eax
+    or eax,ds:app_set_options_proc+4
     pop eax
     stc
     jz set_options_done
 ;
-    call ds:app_set_options_proc
+    call fword ptr ds:app_set_options_proc
 
 set_options_done:
     pop ds
@@ -1015,12 +1030,12 @@ get_options     PROC far
     mov ds,ax
     mov ds,ds:p_app_sel
     mov eax,ds:app_get_options_proc
-    or eax,eax
+    or eax,ds:app_get_options_proc+4
     pop eax
     stc
     jz get_options_done
 ;
-    call ds:app_get_options_proc
+    call fword ptr ds:app_get_options_proc
 
 get_options_done:
     pop ds
@@ -1051,11 +1066,11 @@ allocate_app_mem    PROC far
     mov ds,ax
     mov ds,ds:p_app_sel
     mov eax,ds:app_allocate_mem_proc
-    or eax,eax
+    or eax,ds:app_allocate_mem_proc+4
     pop eax
     jz allocate_mem_default
 ;
-    call ds:app_allocate_mem_proc
+    call fword ptr ds:app_allocate_mem_proc
     jmp allocate_mem_done
 
 allocate_mem_default:
@@ -1088,11 +1103,11 @@ free_app_mem    PROC far
     mov ds,ax
     mov ds,ds:p_app_sel
     mov eax,ds:app_free_mem_proc
-    or eax,eax
+    or eax,ds:app_free_mem_proc+4
     pop eax
     jz free_mem_default
 ;
-    call ds:app_free_mem_proc
+    call fword ptr ds:app_free_mem_proc
     jmp free_mem_done
 
 free_mem_default:
@@ -1127,21 +1142,21 @@ allocate_debug_app_mem  PROC far
     mov ds,ax
     mov ds,ds:p_app_sel
     mov eax,ds:app_debug_allocate_mem_proc
-    or eax,eax
+    or eax,ds:app_debug_allocate_mem_proc+4
     pop eax
     jz allocate_debug_mem_norm
 ;
-    call ds:app_debug_allocate_mem_proc
+    call fword ptr ds:app_debug_allocate_mem_proc
     jmp allocate_debug_mem_done
 
 allocate_debug_mem_norm:
     push eax
     mov eax,ds:app_allocate_mem_proc
-    or eax,eax
+    or eax,ds:app_allocate_mem_proc+4
     pop eax
     jz allocate_debug_mem_default
 ;
-    call ds:app_allocate_mem_proc
+    call fword ptr ds:app_allocate_mem_proc
     jmp allocate_debug_mem_done
 
 allocate_debug_mem_default:
@@ -1174,21 +1189,21 @@ free_debug_app_mem      PROC far
     mov ds,ax
     mov ds,ds:p_app_sel
     mov eax,ds:app_debug_free_mem_proc
-    or eax,eax
+    or eax,ds:app_debug_free_mem_proc+4
     pop eax
     jz free_debug_mem_norm
 ;
-    call ds:app_debug_free_mem_proc
+    call fword ptr ds:app_debug_free_mem_proc
     jmp free_debug_mem_done
 
 free_debug_mem_norm:
     push eax
     mov eax,ds:app_free_mem_proc
-    or eax,eax
+    or eax,ds:app_free_mem_proc+4
     pop eax
     jz free_debug_mem_default
 ;
-    call ds:app_free_mem_proc
+    call fword ptr ds:app_free_mem_proc
     jmp free_debug_mem_done
 
 free_debug_mem_default:
@@ -1221,11 +1236,11 @@ clone_app       PROC far
     mov ds,ax
     mov ds,ds:p_app_sel
     mov eax,ds:app_clone_proc
-    or eax,eax
+    or eax,ds:app_clone_proc+4
     stc
     jz caDone
 ;
-    call ds:app_clone_proc
+    call fword ptr ds:app_clone_proc
 
 caDone:
     pop eax
@@ -1328,11 +1343,11 @@ load_dll32  Proc far
     mov ds,ax
     mov ds,ds:p_app_sel
     mov eax,ds:app_load_dll_proc
-    or eax,eax
+    or eax,ds:app_load_dll_proc+4
     stc
     jz load_dll32_done
 ;
-    call ds:app_load_dll_proc
+    call fword ptr ds:app_load_dll_proc
     jc load_dll32_done
 ;
     push es
@@ -1356,11 +1371,11 @@ load_dll16  Proc far
     mov ds,ax
     mov ds,ds:p_app_sel
     mov eax,ds:app_load_dll_proc
-    or eax,eax
+    or eax,ds:app_load_dll_proc+4
     stc
     jz load_dll16_done
 ;
-    call ds:app_load_dll_proc
+    call fword ptr ds:app_load_dll_proc
     jc load_dll16_done
 ;
     push es

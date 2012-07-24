@@ -1372,20 +1372,23 @@ init_prot_tss   PROC near
     mov ds:p_tss_eflags,edx
 ;
     mov es:p_free_proc,0
+    mov es:p_free_proc+4,0
     mov ax,[ebp].cr_seg
     test ax,3
     jz init_kernel_tss
 ;
     mov eax,fs:app_init_thread_proc
-    or eax,eax
+    or eax,fs:app_init_thread_proc+4
     jz init_prot_tss_default
 ;
     mov eax,fs:app_free_thread_proc
     mov es:p_free_proc,eax
+    mov eax,fs:app_free_thread_proc+4
+    mov es:p_free_proc+4,eax
 ;
     mov eax,[ebp].cr_stack
     mov es:p_stack_sel,0
-    call fs:app_init_thread_proc
+    call fword ptr fs:app_init_thread_proc
     pop fs
     ret
 
@@ -1655,10 +1658,10 @@ no_free_ss:
     GetThread
     mov ds,ax
     mov eax,ds:p_free_proc
-    or eax,eax
+    or eax,ds:p_free_proc+4
     jz terminate_app_handled
 ;
-    call ds:p_free_proc
+    call fword ptr ds:p_free_proc
 
 terminate_app_handled:
     call trap_terminate_thread

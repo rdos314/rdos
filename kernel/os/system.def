@@ -172,21 +172,21 @@ app_seg	STRUC
 
 app_next			        DW ?
 
-app_get_cmd_line_proc	    DD ?
-app_get_exe_proc		    DD ?
-app_get_env_proc		    DD ?
-app_set_options_proc        DD ?
-app_get_options_proc        DD ?
-app_allocate_mem_proc	    DD ?
-app_free_mem_proc		    DD ?
-app_debug_allocate_mem_proc	DD ?
-app_debug_free_mem_proc		DD ?
-app_init_thread_proc	    DD ?
-app_free_thread_proc	    DD ?
-app_spawn_proc			    DD ?
-app_clone_proc	            DD ?
-app_close_proc			    DD ?
-app_load_dll_proc           DD ?
+app_get_cmd_line_proc	    DD ?,?
+app_get_exe_proc		    DD ?,?
+app_get_env_proc		    DD ?,?
+app_set_options_proc        DD ?,?
+app_get_options_proc        DD ?,?
+app_allocate_mem_proc	    DD ?,?
+app_free_mem_proc		    DD ?,?
+app_debug_allocate_mem_proc	DD ?,?
+app_debug_free_mem_proc		DD ?,?
+app_init_thread_proc	    DD ?,?
+app_free_thread_proc	    DD ?,?
+app_spawn_proc			    DD ?,?
+app_clone_proc	            DD ?,?
+app_close_proc			    DD ?,?
+app_load_dll_proc           DD ?,?
 app_loader_name			    DD ?
 
 app_exit_code			    DW ?
@@ -307,7 +307,7 @@ p_tss_sel           DW ?
 p_app_sel		    DW ?
 p_cli_spinlock      DW ?
 p_sti_spinlock      DW ?
-p_free_proc		    DD ?
+p_free_proc		    DD ?,?
 p_cr3			    DD ?
 p_vm_deb_sel	    DW ?
 p_vm_deb_offs	    DD ?

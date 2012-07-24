@@ -1522,10 +1522,10 @@ spCopyExeLoop:
     mov ds,ax
     mov ds,ds:p_app_sel
     mov eax,ds:app_spawn_proc
-    or eax,eax
+    or eax,ds:app_spawn_proc+4
     jz spNotifyDone
 ;
-    call ds:app_spawn_proc
+    call fword ptr ds:app_spawn_proc
 
 spNotifyDone:
     call FreeSpawn
