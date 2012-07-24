@@ -105,7 +105,7 @@ int decrypt(const char *passwrd)
     int n, r;
     unsigned char h[RAND_HEAD_LEN];
 
-    Trace("\n[incnt = %d]: ", GLOBAL(incnt));
+    Trace("\n[incnt = %d]: ", UnzipClass.FInCount);
 
     /* get header once (turn off "encrypted" flag temporarily so we don't
      * try to decrypt the same data twice) */
@@ -220,8 +220,8 @@ static int testkey(const unsigned char *h, const char *key)
       GLOBAL(lrec.crc32), GLOBAL(pInfo->crc),
       GLOBAL(pInfo->ExtLocHdr) ? "true":"false");
     Trace("  incnt = %d  unzip offset into zipfile = %ld\n",
-      GLOBAL(incnt),
-      GLOBAL(cur_zipfile_bufstart)+(GLOBAL(inptr)-GLOBAL(inbuf)));
+      UnzipClass.FInCount,
+      UnzipClass.FBufStart+(UnzipClass.FInPtr-UnzipClass.FInBuf));
 
     /* same test as in zipbare(): */
 
@@ -235,9 +235,9 @@ static int testkey(const unsigned char *h, const char *key)
         return -1;  /* bad */
 
     /* password OK:  decrypt current buffer contents before leaving */
-    for (n = (long)GLOBAL(incnt) > GLOBAL(csize) ?
-             (int)GLOBAL(csize) : GLOBAL(incnt),
-         p = GLOBAL(inptr); n--; p++)
+    for (n = (long)UnzipClass.FInCount > GLOBAL(csize) ?
+             (int)GLOBAL(csize) : UnzipClass.FInCount,
+         p = (unsigned char *)UnzipClass.FInPtr; n--; p++)
         zdecode(*p);
     return 0;       /* OK */
 

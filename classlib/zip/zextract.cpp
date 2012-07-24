@@ -342,7 +342,7 @@ int extract_or_test_files()    /* return PK-type error code */
         while ((j < DIR_BLKSIZ)) {
             G.pInfo = &G.info[j];
 
-            if (readbuf(G.sig, 4) == 0) {
+            if (UnzipClass.ReadBuf(G.sig, 4) == 0) {
                 error_in_archive = PK_EOF;
                 reached_end = TRUE;     /* ...so no more left to do */
                 break;
@@ -463,9 +463,9 @@ int extract_or_test_files()    /* return PK-type error code */
         } /* end while-loop (adding files to current block) */
 
         /* save position in central directory so can come back later */
-        cd_bufstart = G.cur_zipfile_bufstart;
-        cd_inptr = G.inptr;
-        cd_incnt = G.incnt;
+        cd_bufstart = UnzipClass.FBufStart;
+        cd_inptr = (unsigned char *)UnzipClass.FInPtr;
+        cd_incnt = UnzipClass.FInCount;
 
     /*-----------------------------------------------------------------------
         Second loop:  process files in current block, extracting or testing
@@ -495,19 +495,11 @@ int extract_or_test_files()    /* return PK-type error code */
          */
 
         RdosSetFilePos(UnzipClass.FInputHandle, cd_bufstart);
-        G.cur_zipfile_bufstart = RdosGetFilePos(UnzipClass.FInputHandle);
-        RdosReadFile(UnzipClass.FInputHandle, (char *)G.inbuf, INBUFSIZ);  /* been here before... */
-        G.inptr = cd_inptr;
-        G.incnt = cd_incnt;
+        UnzipClass.FBufStart = RdosGetFilePos(UnzipClass.FInputHandle);
+        RdosReadFile(UnzipClass.FInputHandle, UnzipClass.FInBuf, INBUFSIZ);  /* been here before... */
+        UnzipClass.FInPtr = (char *)cd_inptr;
+        UnzipClass.FInCount = cd_incnt;
         ++blknum;
-
-#ifdef TEST
-        printf("\ncd_bufstart = %ld (%.8lXh)\n", cd_bufstart, cd_bufstart);
-        printf("cur_zipfile_bufstart = %ld (%.8lXh)\n", cur_zipfile_bufstart,
-          cur_zipfile_bufstart);
-        printf("inptr-inbuf = %d\n", G.inptr-G.inbuf);
-        printf("incnt = %d\n\n", G.incnt);
-#endif
 
     } /* end while-loop (blocks of files in central directory) */
 
@@ -830,7 +822,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
         Trace("\ndebug: request = %ld, inbuf_offset = %ld\n",
           (long)request, (long)inbuf_offset);
         Trace("debug: bufstart = %ld, cur_zipfile_bufstart = %ld\n",
-          (long)bufstart, (long)G.cur_zipfile_bufstart);
+          (long)bufstart, (long)UnzipClass.FBufStart);
         if (request < 0) {
             Info(0x401, SeekMsg,
               UnzipClass.FInputFileName.GetData(), ReportMsg);
@@ -845,7 +837,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
                 Trace("debug: request = %ld, inbuf_offset = %ld\n",
                   (long)request, (long)inbuf_offset);
                 Trace("debug: bufstart = %ld, cur_zipfile_bufstart = %ld\n",
-                  (long)bufstart, (long)G.cur_zipfile_bufstart);
+                  (long)bufstart, (long)UnzipClass.FBufStart);
                 /* try again */
                 if (request < 0) {
                     Trace("debug: recompensated request still < 0\n");
@@ -860,27 +852,27 @@ static int extract_or_test_entrylist(unsigned numchunk,
             }
         }
 
-        if (bufstart != G.cur_zipfile_bufstart) {
+        if (bufstart != UnzipClass.FBufStart) {
             Trace("debug: bufstart != cur_zipfile_bufstart\n");
 
             RdosSetFilePos(UnzipClass.FInputHandle, bufstart);
-            G.cur_zipfile_bufstart = RdosGetFilePos(UnzipClass.FInputHandle);
-            if ((G.incnt = RdosReadFile(UnzipClass.FInputHandle, (char *)G.inbuf, INBUFSIZ)) <= 0)
+            UnzipClass.FBufStart = RdosGetFilePos(UnzipClass.FInputHandle);
+            if ((UnzipClass.FInCount = RdosReadFile(UnzipClass.FInputHandle, UnzipClass.FInBuf, INBUFSIZ)) <= 0)
             {
                 Info(0x401, OffsetMsg,
                   *pfilnum, "lseek", (long)bufstart);
                 error_in_archive = PK_BADERR;
                 continue;   /* can still do next file */
             }
-            G.inptr = G.inbuf + (int)inbuf_offset;
-            G.incnt -= (int)inbuf_offset;
+            UnzipClass.FInPtr = UnzipClass.FInBuf + (int)inbuf_offset;
+            UnzipClass.FInCount -= (int)inbuf_offset;
         } else {
-            G.incnt += (int)(G.inptr-G.inbuf) - (int)inbuf_offset;
-            G.inptr = G.inbuf + (int)inbuf_offset;
+            UnzipClass.FInCount += (int)(UnzipClass.FInPtr-UnzipClass.FInBuf) - (int)inbuf_offset;
+            UnzipClass.FInPtr = UnzipClass.FInBuf + (int)inbuf_offset;
         }
 
         /* should be in proper position now, so check for sig */
-        if (readbuf(G.sig, 4) == 0) {  /* bad offset */
+        if (UnzipClass.ReadBuf(G.sig, 4) == 0) {  /* bad offset */
             Info(0x401, OffsetMsg,
               *pfilnum, "EOF", (long)request);
             error_in_archive = PK_BADERR;
@@ -903,7 +895,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
                 } else
                     G.extra_bytes = *pold_extra_bytes; /* third attempt */
                 if (((error = seek_zipf(G.pInfo->offset)) != PK_OK) ||
-                    (readbuf(G.sig, 4) == 0)) {  /* bad offset */
+                    (UnzipClass.ReadBuf(G.sig, 4) == 0)) {  /* bad offset */
                     if (error != PK_BADERR)
                       Info(0x401, OffsetMsg, *pfilnum, "EOF",
                         (long)request);
@@ -1654,8 +1646,8 @@ static int test_compr_eb(
 int memextract(unsigned char *tgt, unsigned long tgtsize, const unsigned char *src, unsigned long srcsize)
 {
     long old_csize=G.csize;
-    unsigned char   *old_inptr=G.inptr;
-    int    old_incnt=G.incnt;
+    char   *old_inptr=UnzipClass.FInPtr;
+    int    old_incnt=UnzipClass.FInCount;
     int    r, error=PK_OK;
     unsigned short    method;
     unsigned long    extra_field_crc;
@@ -1665,15 +1657,15 @@ int memextract(unsigned char *tgt, unsigned long tgtsize, const unsigned char *s
     extra_field_crc = makelong(src+2);
 
     /* compressed extra field exists completely in memory at this location: */
-    G.inptr = (unsigned char *)src + (2 + 4);     /* method and extra_field_crc */
-    G.incnt = (int)(G.csize = (long)(srcsize - (2 + 4)));
+    UnzipClass.FInPtr = (char *)src + (2 + 4);     /* method and extra_field_crc */
+    UnzipClass.FInCount = (int)(G.csize = (long)(srcsize - (2 + 4)));
     G.mem_mode = TRUE;
     G.outbufptr = tgt;
     G.outsize = tgtsize;
 
     switch (method) {
         case STORED:
-            memcpy((char *)tgt, (char *)G.inptr, (extent)G.incnt);
+            memcpy((char *)tgt, (char *)UnzipClass.FInPtr, (extent)UnzipClass.FInCount);
             G.outcnt = (unsigned long)G.csize;    /* for CRC calculation */
             break;
         case DEFLATED:
@@ -1699,8 +1691,8 @@ int memextract(unsigned char *tgt, unsigned long tgtsize, const unsigned char *s
             break;
     }
 
-    G.inptr = old_inptr;
-    G.incnt = old_incnt;
+    UnzipClass.FInPtr = old_inptr;
+    UnzipClass.FInCount = old_incnt;
     G.csize = old_csize;
     G.mem_mode = FALSE;
 

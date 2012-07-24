@@ -320,7 +320,7 @@ static int zlib_outCB OF((void FAR *pG, unsigned char FAR *outbuf,
 
 static unsigned zlib_inCB(void *pG, unsigned char ** pInbuf)
 {
-    *pInbuf = G.inbuf;
+    *pInbuf = (unsigned char *)UnzipClass.FInBuf;
     return fillinbuf();
 }
 
@@ -395,8 +395,8 @@ int UZinflate(int is_defl64)
             }
         }
 
-        G.dstrm.next_in = G.inptr;
-        G.dstrm.avail_in = G.incnt;
+        G.dstrm.next_in = (unsigned char *)UnzipClass.FInPtr;
+        G.dstrm.avail_in = UnzipClass.FInCount;
 
         err = inflateBack(&G.dstrm, zlib_inCB, &G, zlib_outCB, &G);
         if (err != Z_STREAM_END) {
@@ -421,8 +421,8 @@ int UZinflate(int is_defl64)
             }
         }
         if (G.dstrm.next_in != NULL) {
-            G.inptr = (unsigned char *)G.dstrm.next_in;
-            G.incnt = G.dstrm.avail_in;
+            UnzipClass.FInPtr = (char *)G.dstrm.next_in;
+            UnzipClass.FInCount = G.dstrm.avail_in;
         }
 
         err = inflateBackEnd(&G.dstrm);

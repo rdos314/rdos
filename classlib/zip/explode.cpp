@@ -326,9 +326,9 @@ static int explode_lit(struct huft *tb, struct huft *tl, struct huft *td, unsign
   /* flush out redirSlide */
   if ((retval = flush(redirSlide, (unsigned long)w, 0)) != 0)
     return retval;
-  if (G.csize + G.incnt + (k >> 3))   /* should have read csize bytes, but */
+  if (G.csize + UnzipClass.FInCount + (k >> 3))   /* should have read csize bytes, but */
   {                        /* sometimes read one too many:  k>>3 compensates */
-    G.used_csize = G.lrec.csize - G.csize - G.incnt - (k >> 3);
+    G.used_csize = G.lrec.csize - G.csize - UnzipClass.FInCount - (k >> 3);
     return 5;
   }
   return 0;
@@ -430,9 +430,9 @@ static int explode_nolit(struct huft *tl, struct huft *td, unsigned bl, unsigned
   /* flush out redirSlide */
   if ((retval = flush(redirSlide, (unsigned long)w, 0)) != 0)
     return retval;
-  if (G.csize + G.incnt + (k >> 3))   /* should have read csize bytes, but */
+  if (G.csize + UnzipClass.FInCount + (k >> 3))   /* should have read csize bytes, but */
   {                        /* sometimes read one too many:  k>>3 compensates */
-    G.used_csize = G.lrec.csize - G.csize - G.incnt - (k >> 3);
+    G.used_csize = G.lrec.csize - G.csize - UnzipClass.FInCount - (k >> 3);
     return 5;
   }
   return 0;
@@ -466,7 +466,7 @@ int explode()
      7, 7, and 9 worked best over a very wide range of sizes, except that
      bd = 8 worked marginally better for large compressed sizes. */
   bl = 7;
-  bd = (G.csize + G.incnt) > 200000L ? 8 : 7;
+  bd = (G.csize + UnzipClass.FInCount) > 200000L ? 8 : 7;
 
 #ifdef DEBUG
   G.hufts = 0;                    /* initialize huft's malloc'ed */

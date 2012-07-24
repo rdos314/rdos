@@ -671,7 +671,7 @@ int zipinfo()   /* return PK-type error code */
 
 
     for (j = 1L;; j++) {
-        if (readbuf(G.sig, 4) == 0) {
+        if (UnzipClass.ReadBuf(G.sig, 4) == 0) {
             error_in_archive = PK_EOF;
             break;
         }

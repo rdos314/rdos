@@ -49,9 +49,16 @@ public:
 
     void SetInputFile(const char *name);
     int OpenInputFile();
+    unsigned ReadBuf(char *buf, register unsigned size);
 
     TString FInputFileName;
     int FInputHandle;
+
+    char *FInBuf;
+    char *FInPtr;
+    int FInCount;
+    int FBufStart;
+    
 
 protected:
 

@@ -190,8 +190,8 @@ int open_outfile()           /* return 1 if fail */
 
 void undefer_input()
 {
-    if (G.incnt > 0)
-        G.csize += G.incnt;
+    if (UnzipClass.FInCount > 0)
+        G.csize += UnzipClass.FInCount;
     if (G.incnt_leftover > 0) {
         /* We know that "(G.csize < MAXINT)" so we can cast G.csize to int:
          * This condition was checked when G.incnt_leftover was set > 0 in
@@ -199,11 +199,11 @@ void undefer_input()
          * before calling undefer_input() when (G.incnt_leftover > 0)
          * (single exception: see read_byte()'s  "G.csize <= 0" handling) !!
          */
-        G.incnt = G.incnt_leftover + (int)G.csize;
-        G.inptr = G.inptr_leftover - (int)G.csize;
+        UnzipClass.FInCount = G.incnt_leftover + (int)G.csize;
+        UnzipClass.FInPtr = (char *)G.inptr_leftover - (int)G.csize;
         G.incnt_leftover = 0;
-    } else if (G.incnt < 0)
-        G.incnt = 0;
+    } else if (UnzipClass.FInCount < 0)
+        UnzipClass.FInCount = 0;
 } /* end function undefer_input() */
 
 
@@ -216,55 +216,18 @@ void undefer_input()
 
 void defer_leftover_input()
 {
-    if ((long)G.incnt > G.csize) {
+    if ((long)UnzipClass.FInCount > G.csize) {
         /* (G.csize < MAXINT), we can safely cast it to int !! */
         if (G.csize < 0L)
             G.csize = 0L;
-        G.inptr_leftover = G.inptr + (int)G.csize;
-        G.incnt_leftover = G.incnt - (int)G.csize;
-        G.incnt = (int)G.csize;
+        G.inptr_leftover = (unsigned char *)UnzipClass.FInPtr + (int)G.csize;
+        G.incnt_leftover = UnzipClass.FInCount - (int)G.csize;
+        UnzipClass.FInCount = (int)G.csize;
     } else
         G.incnt_leftover = 0;
-    G.csize -= G.incnt;
+    G.csize -= UnzipClass.FInCount;
 } /* end function defer_leftover_input() */
 
-
-
-
-
-/**********************/
-/* Function readbuf() */
-/**********************/
-
-unsigned readbuf(char *buf, register unsigned size)   /* return number of bytes read into buf */
-{
-    register unsigned count;
-    unsigned n;
-
-    n = size;
-    while (size) {
-        if (G.incnt <= 0) {
-            if ((G.incnt = RdosReadFile(UnzipClass.FInputHandle, (char *)G.inbuf, INBUFSIZ)) == 0)
-                return (n-size);
-            else if (G.incnt < 0) {
-                /* another hack, but no real harm copying same thing twice */
-                Info(0x401, ReadError);
-                return 0;  /* discarding some data; better than lock-up */
-            }
-            /* buffer ALWAYS starts on a block boundary:  */
-            G.cur_zipfile_bufstart += INBUFSIZ;
-            G.inptr = G.inbuf;
-        }
-        count = MIN(size, (unsigned)G.incnt);
-        memcpy(buf, G.inptr, count);
-        buf += count;
-        G.inptr += count;
-        G.incnt -= count;
-        size -= count;
-    }
-    return n;
-
-} /* end function readbuf() */
 
 
 
@@ -280,19 +243,19 @@ int readbyte()   /* refill inbuf and return a byte if available, else EOF */
         return EOF;
     if (G.csize <= 0) {
         G.csize--;             /* for tests done after exploding */
-        G.incnt = 0;
+        UnzipClass.FInCount = 0;
         return EOF;
     }
-    if (G.incnt <= 0) {
-        if ((G.incnt = RdosReadFile(UnzipClass.FInputHandle, (char *)G.inbuf, INBUFSIZ)) == 0) {
+    if (UnzipClass.FInCount <= 0) {
+        if ((UnzipClass.FInCount = RdosReadFile(UnzipClass.FInputHandle, UnzipClass.FInBuf, INBUFSIZ)) == 0) {
             return EOF;
-        } else if (G.incnt < 0) {  /* "fail" (abort, retry, ...) returns this */
+        } else if (UnzipClass.FInCount < 0) {  /* "fail" (abort, retry, ...) returns this */
             /* another hack, but no real harm copying same thing twice */
             Info(0x401, ReadError);
             exit(PK_BADERR);    /* totally bailing; better than lock-up */
         }
-        G.cur_zipfile_bufstart += INBUFSIZ; /* always starts on block bndry */
-        G.inptr = G.inbuf;
+        UnzipClass.FBufStart += INBUFSIZ; /* always starts on block bndry */
+        UnzipClass.FInPtr = UnzipClass.FInBuf;
         defer_leftover_input();           /* decrements G.csize */
     }
 
@@ -304,12 +267,12 @@ int readbyte()   /* refill inbuf and return a byte if available, else EOF */
          * incnt reached that far.  GRR said, "but it's required:  why?"  This
          * was a bug in fillinbuf() -- was it also a bug here?
          */
-        for (n = G.incnt, p = G.inptr;  n--;  p++)
+        for (n = UnzipClass.FInCount, p = (unsigned char *)UnzipClass.FInPtr;  n--;  p++)
             zdecode(*p);
     }
 
-    --G.incnt;
-    return *G.inptr++;
+    --UnzipClass.FInCount;
+    return *UnzipClass.FInPtr++;
 
 } /* end function readbyte() */
 
@@ -322,21 +285,21 @@ int readbyte()   /* refill inbuf and return a byte if available, else EOF */
 int fillinbuf() /* like readbyte() except returns number of bytes in inbuf */
 {
     if (G.mem_mode ||
-                  (G.incnt = RdosReadFile(UnzipClass.FInputHandle, (char *)G.inbuf, INBUFSIZ)) <= 0)
+                  (UnzipClass.FInCount = RdosReadFile(UnzipClass.FInputHandle, (char *)UnzipClass.FInBuf, INBUFSIZ)) <= 0)
         return 0;
-    G.cur_zipfile_bufstart += INBUFSIZ;  /* always starts on a block boundary */
-    G.inptr = G.inbuf;
+    UnzipClass.FBufStart += INBUFSIZ;  /* always starts on a block boundary */
+    UnzipClass.FInPtr = UnzipClass.FInBuf;
     defer_leftover_input();           /* decrements G.csize */
 
     if (G.pInfo->encrypted) {
         unsigned char *p;
         int n;
 
-        for (n = G.incnt, p = G.inptr;  n--;  p++)
+        for (n = UnzipClass.FInCount, p = (unsigned char *)UnzipClass.FInPtr;  n--;  p++)
             zdecode(*p);
     }
 
-    return G.incnt;
+    return UnzipClass.FInCount;
 
 } /* end function fillinbuf() */
 
@@ -376,27 +339,27 @@ int seek_zipf(long abs_offset)
         Info(1, SeekMsg,
              UnzipClass.FInputFileName.GetData(), ReportMsg);
         return(PK_BADERR);
-    } else if (bufstart != G.cur_zipfile_bufstart) {
+    } else if (bufstart != UnzipClass.FBufStart) {
         Trace("fpos_zip: abs_offset = %s, G.extra_bytes = %s\n",
           fzofft(abs_offset, NULL, NULL),
           fzofft(G.extra_bytes, NULL, NULL));
 
         RdosSetFilePos(UnzipClass.FInputHandle, bufstart);
-        G.cur_zipfile_bufstart = RdosGetFilePos(UnzipClass.FInputHandle);
+        UnzipClass.FBufStart = RdosGetFilePos(UnzipClass.FInputHandle);
         Trace("       request = %s, (abs+extra) = %s, inbuf_offset = %s\n",
           fzofft(request, NULL, NULL),
           fzofft((abs_offset+G.extra_bytes), NULL, NULL),
           fzofft(inbuf_offset, NULL, NULL));
         Trace("       bufstart = %s, cur_zipfile_bufstart = %s\n",
           fzofft(bufstart, NULL, NULL),
-          fzofft(G.cur_zipfile_bufstart, NULL, NULL));
-        if ((G.incnt = RdosReadFile(UnzipClass.FInputHandle, (char *)G.inbuf, INBUFSIZ)) <= 0)
+          fzofft(UnzipClass.FBufStart, NULL, NULL));
+        if ((UnzipClass.FInCount = RdosReadFile(UnzipClass.FInputHandle, UnzipClass.FInBuf, INBUFSIZ)) <= 0)
             return(PK_EOF);
-        G.incnt -= (int)inbuf_offset;
-        G.inptr = G.inbuf + (int)inbuf_offset;
+        UnzipClass.FInCount -= (int)inbuf_offset;
+        UnzipClass.FInPtr = UnzipClass.FInBuf + (int)inbuf_offset;
     } else {
-        G.incnt += (G.inptr-G.inbuf) - (int)inbuf_offset;
-        G.inptr = G.inbuf + (int)inbuf_offset;
+        UnzipClass.FInCount += (UnzipClass.FInPtr-UnzipClass.FInBuf) - (int)inbuf_offset;
+        UnzipClass.FInPtr = UnzipClass.FInBuf + (int)inbuf_offset;
     }
     return(PK_OK);
 } /* end function seek_zipf() */
@@ -758,7 +721,7 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
             register unsigned char *p = G.outbuf;
             register unsigned char *q = G.outbuf;
 
-            if ((block_len = readbuf((char *)G.outbuf,
+            if ((block_len = UnzipClass.ReadBuf((char *)G.outbuf,
                    MIN((unsigned)OUTBUFSIZ, comment_bytes_left))) == 0)
                 return PK_EOF;
             comment_bytes_left -= block_len;
@@ -811,7 +774,7 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
         } else
             /* no excess size */
             block_len = 0;
-        if (readbuf(G.filename, length) == 0)
+        if (UnzipClass.ReadBuf(G.filename, length) == 0)
             return PK_EOF;
         G.filename[length] = '\0';      /* terminate w/zero:  ASCIIZ */
 
@@ -849,8 +812,8 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
     case SKIP:
         /* cur_zipfile_bufstart already takes account of extra_bytes, so don't
          * correct for it twice: */
-        seek_zipf(G.cur_zipfile_bufstart - G.extra_bytes +
-                  (G.inptr-G.inbuf) + length);
+        seek_zipf(UnzipClass.FBufStart - G.extra_bytes +
+                  (UnzipClass.FInPtr-UnzipClass.FInBuf) + length);
         break;
 
     /*
@@ -866,10 +829,10 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
               length);
             /* cur_zipfile_bufstart already takes account of extra_bytes,
              * so don't correct for it twice: */
-            seek_zipf(G.cur_zipfile_bufstart - G.extra_bytes +
-                      (G.inptr-G.inbuf) + length);
+            seek_zipf(UnzipClass.FBufStart - G.extra_bytes +
+                      (UnzipClass.FInPtr-UnzipClass.FInBuf) + length);
         } else {
-            if (readbuf((char *)G.extra_field, length) == 0)
+            if (UnzipClass.ReadBuf((char *)G.extra_field, length) == 0)
                 return PK_EOF;
             /* Looks like here is where extra fields are read */
             getZip64Data(G.extra_field, length);

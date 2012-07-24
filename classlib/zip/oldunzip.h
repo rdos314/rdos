@@ -1008,7 +1008,6 @@ void     fnprint                 OF(());
 int      open_outfile         OF(());                    /* also vms.c */
 void     undefer_input        OF(());
 void     defer_leftover_input OF(());
-unsigned readbuf              OF((char *buf, register unsigned len));
 int      readbyte             OF(());
 int      fillinbuf            OF(());
 int      seek_zipf            OF((long abs_offset));
@@ -1151,7 +1150,7 @@ int  decrypt OF((const char *passwrd));
 
 #  define FLUSH(w)  ((G.mem_mode) ? memflush(__G__ redirSlide,(unsigned long)(w)) \
                                   : flush(__G__ redirSlide,(unsigned long)(w),0))
-#  define NEXTBYTE  (G.incnt-- > 0 ? (int)(*G.inptr++) : readbyte())
+#  define NEXTBYTE  (UnzipClass.FInCount-- > 0 ? (int)(*UnzipClass.FInPtr++) : readbyte())
 
 
 /**********************/

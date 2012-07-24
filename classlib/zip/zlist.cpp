@@ -114,7 +114,7 @@ int list_files()    /* return PK-type error code */
 
     for (j = 1L;;j++) {
 
-        if (readbuf(G.sig, 4) == 0)
+        if (UnzipClass.ReadBuf(G.sig, 4) == 0)
             return PK_EOF;
         if (memcmp(G.sig, central_hdr_sig, 4)) {  /* is it a CentDir entry? */
             /* no new central directory entry

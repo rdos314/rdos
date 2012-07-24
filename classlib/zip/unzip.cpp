@@ -40,6 +40,11 @@
 #define     FALSE       0
 #define     TRUE        !FALSE
 
+#define INBUFSIZ  8192
+
+#define MAX(a,b)   ((a) > (b) ? (a) : (b))
+#define MIN(a,b)   ((a) < (b) ? (a) : (b))
+
 typedef struct
 {
     char           *_dest;
@@ -227,6 +232,7 @@ TUnzip::TUnzip()
 ##########################################################################*/
 TUnzip::~TUnzip()
 {
+    delete FInBuf;
 }
 
 /*##########################################################################
@@ -244,6 +250,8 @@ void TUnzip::Init()
 {
     OnTrace = 0;
     OnInfo = 0;
+
+    FInBuf = new char[INBUFSIZ + 4];    /* 4 extra for hold[] (below) */
 }
 
 /*##########################################################################
@@ -345,3 +353,44 @@ int TUnzip::OpenInputFile()    /* return 1 if open failed */
     return 0;
 
 }
+
+
+/*##########################################################################
+#
+#   Name       : TUnzip::ReadBuf
+#
+#   Purpose....: Read from input file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned TUnzip::ReadBuf(char *buf, register unsigned size)   /* return number of bytes read into buf */
+{
+    register unsigned count;
+    unsigned n;
+
+    n = size;
+    while (size) {
+        if (FInCount <= 0) {
+            FInCount = RdosReadFile(FInputHandle, FInBuf, INBUFSIZ);
+            if (FInCount == 0)
+                return (n-size);
+
+            /* buffer ALWAYS starts on a block boundary:  */
+            FBufStart += INBUFSIZ;
+            FInPtr = FInBuf;
+        }
+        count = MIN(size, (unsigned)FInCount);
+        memcpy(buf, FInPtr, count);
+        buf += count;
+        FInPtr += count;
+        FInCount -= count;
+        size -= count;
+    }
+    return n;
+
+} /* end function readbuf() */
+
+

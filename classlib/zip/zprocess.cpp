@@ -147,14 +147,13 @@ int process_zipfiles()    /* return PK-type error code */
     strings.
   ---------------------------------------------------------------------------*/
 
-    G.inbuf = (unsigned char *)malloc(INBUFSIZ + 4);    /* 4 extra for hold[] (below) */
     G.outbuf = (unsigned char *)malloc(OUTBUFSIZ + 1);  /* 1 extra for string term. */
 
-    if ((G.inbuf == (unsigned char *)NULL) || (G.outbuf == (unsigned char *)NULL)) {
+    if ((UnzipClass.FInBuf == (char *)NULL) || (G.outbuf == (unsigned char *)NULL)) {
         Info(0x401, CannotAllocateBuffers);
         return(PK_MEM);
     }
-    G.hold = G.inbuf + INBUFSIZ;     /* to check for boundary-spanning sigs */
+    G.hold = (unsigned char *)UnzipClass.FInBuf + INBUFSIZ;     /* to check for boundary-spanning sigs */
 
     /* finish up initialization of magic signature strings */
     local_hdr_sig[0]  /* = extd_local_sig[0] */ =       /* ASCII 'P', */
@@ -363,9 +362,7 @@ void free_G_buffers()     /* releases all memory allocated in global vars */
 
     if (G.outbuf)
         free(G.outbuf);
-    if (G.inbuf)
-        free(G.inbuf);
-    G.inbuf = G.outbuf = (unsigned char *)NULL;
+    G.outbuf = (unsigned char *)NULL;
 
     for (i = 0; i < DIR_BLKSIZ; i++) {
         if (G.info[i].cfilname != (char *)NULL) {
@@ -425,8 +422,8 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
     a debugging tool, search the whole zipfile if zipinfo_mode is true.
   ---------------------------------------------------------------------------*/
 
-    G.cur_zipfile_bufstart = 0;
-    G.inptr = G.inbuf;
+    UnzipClass.FBufStart = 0;
+    UnzipClass.FInPtr = UnzipClass.FInBuf;
 
     if ( (!uO.zipinfo_mode && !uO.qflag
          )
@@ -531,14 +528,14 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
             RdosCloseFile(UnzipClass.FInputHandle);
             return PK_BADERR;
         }
-        if ((error != PK_OK) || (readbuf(G.sig, 4) == 0) ||
+        if ((error != PK_OK) || (UnzipClass.ReadBuf(G.sig, 4) == 0) ||
             memcmp(G.sig, central_hdr_sig, 4))
         {
             long tmp = G.extra_bytes;
 
             G.extra_bytes = 0;
             error = seek_zipf(G.ecrec.offset_start_central_directory);
-            if ((error != PK_OK) || (readbuf(G.sig, 4) == 0) ||
+            if ((error != PK_OK) || (UnzipClass.ReadBuf(G.sig, 4) == 0) ||
                 memcmp(G.sig, central_hdr_sig, 4))
             {
                 if (error != PK_BADERR)
@@ -609,26 +606,26 @@ static int rec_find(long searchlen, char* signature, int rec_size)
 
     if ((tail_len = G.ziplen % INBUFSIZ) > rec_size) {
         RdosSetFilePos(UnzipClass.FInputHandle, G.ziplen-tail_len);
-        G.cur_zipfile_bufstart = RdosGetFilePos(UnzipClass.FInputHandle);
-        if ((G.incnt = RdosReadFile(UnzipClass.FInputHandle, (char *)G.inbuf,
+        UnzipClass.FBufStart = RdosGetFilePos(UnzipClass.FInputHandle);
+        if ((UnzipClass.FInCount = RdosReadFile(UnzipClass.FInputHandle, (char *)UnzipClass.FInBuf,
             (unsigned int)tail_len)) != (int)tail_len)
             return 2;      /* it's expedient... */
 
         /* 'P' must be at least (rec_size+4) bytes from end of zipfile */
-        for (G.inptr = G.inbuf+(int)tail_len-(rec_size+4);
-             G.inptr >= G.inbuf;
-             --G.inptr) {
-            if ( (*G.inptr == (unsigned char)0x50) &&         /* ASCII 'P' */
-                 !memcmp((char *)G.inptr, signature, 4) ) {
-                G.incnt -= (int)(G.inptr - G.inbuf);
+        for (UnzipClass.FInPtr = UnzipClass.FInBuf+(int)tail_len-(rec_size+4);
+             UnzipClass.FInPtr >= UnzipClass.FInBuf;
+             --UnzipClass.FInPtr) {
+            if ( (*UnzipClass.FInPtr == (unsigned char)0x50) &&         /* ASCII 'P' */
+                 !memcmp(UnzipClass.FInPtr, signature, 4) ) {
+                UnzipClass.FInCount -= (int)(UnzipClass.FInPtr - UnzipClass.FInBuf);
                 found = TRUE;
                 break;
             }
         }
         /* sig may span block boundary: */
-        memcpy((char *)G.hold, (char *)G.inbuf, 3);
+        memcpy((char *)G.hold, (char *)UnzipClass.FInBuf, 3);
     } else
-        G.cur_zipfile_bufstart = G.ziplen - tail_len;
+        UnzipClass.FBufStart = G.ziplen - tail_len;
 
 /*-----------------------------------------------------------------------
     Loop through blocks of zipfile data, starting at the end and going
@@ -640,21 +637,21 @@ static int rec_find(long searchlen, char* signature, int rec_size)
     /*               ==amount=   ==done==   ==rounding==    =blksiz=  */
 
     for (i = 1;  !found && (i <= numblks);  ++i) {
-        G.cur_zipfile_bufstart -= INBUFSIZ;
-        RdosSetFilePos(UnzipClass.FInputHandle, G.cur_zipfile_bufstart);
-        if ((G.incnt = RdosReadFile(UnzipClass.FInputHandle,(char *)G.inbuf,INBUFSIZ))
+        UnzipClass.FBufStart -= INBUFSIZ;
+        RdosSetFilePos(UnzipClass.FInputHandle, UnzipClass.FBufStart);
+        if ((UnzipClass.FInCount = RdosReadFile(UnzipClass.FInputHandle,UnzipClass.FInBuf,INBUFSIZ))
             != INBUFSIZ)
             return 2;          /* read error is fatal failure */
 
-        for (G.inptr = G.inbuf+INBUFSIZ-1;  G.inptr >= G.inbuf; --G.inptr)
-            if ( (*G.inptr == (unsigned char)0x50) &&         /* ASCII 'P' */
-                 !memcmp((char *)G.inptr, signature, 4) ) {
-                G.incnt -= (int)(G.inptr - G.inbuf);
+        for (UnzipClass.FInPtr = UnzipClass.FInBuf+INBUFSIZ-1;  UnzipClass.FInPtr >= UnzipClass.FInBuf; --UnzipClass.FInPtr)
+            if ( (*UnzipClass.FInPtr == (unsigned char)0x50) &&         /* ASCII 'P' */
+                 !memcmp(UnzipClass.FInPtr, signature, 4) ) {
+                UnzipClass.FInCount -= (int)(UnzipClass.FInPtr - UnzipClass.FInBuf);
                 found = TRUE;
                 break;
             }
         /* sig may span block boundary: */
-        memcpy((char *)G.hold, (char *)G.inbuf, 3);
+        memcpy((char *)G.hold, (char *)UnzipClass.FInBuf, 3);
     }
     return (found ? 0 : 1);
 } /* end function rec_find() */
@@ -689,9 +686,9 @@ static int find_ecrec64(long searchlen)         /* return PK-class error */
       return PK_COOL;
 
     RdosSetFilePos(UnzipClass.FInputHandle, ecloc64_start_offset);
-    G.cur_zipfile_bufstart = RdosGetFilePos(UnzipClass.FInputHandle);
+    UnzipClass.FBufStart = RdosGetFilePos(UnzipClass.FInputHandle);
 
-    if ((G.incnt = RdosReadFile(UnzipClass.FInputHandle, (char *)byterecL, ECLOC64_SIZE+4))
+    if ((UnzipClass.FInCount = RdosReadFile(UnzipClass.FInputHandle, (char *)byterecL, ECLOC64_SIZE+4))
         != (ECLOC64_SIZE+4)) {
       if (uO.qflag || uO.zipinfo_mode)
           Info(0x401, "[%s]\n", UnzipClass.FInputFileName.GetData());
@@ -750,9 +747,9 @@ static int find_ecrec64(long searchlen)         /* return PK-class error */
 
 
     RdosSetFilePos(UnzipClass.FInputHandle, ecrec64_start_offset);
-    G.cur_zipfile_bufstart = RdosGetFilePos(UnzipClass.FInputHandle);
+    UnzipClass.FBufStart = RdosGetFilePos(UnzipClass.FInputHandle);
 
-    if ((G.incnt = RdosReadFile(UnzipClass.FInputHandle, (char *)byterec, ECREC64_SIZE+4))
+    if ((UnzipClass.FInCount = RdosReadFile(UnzipClass.FInputHandle, (char *)byterec, ECREC64_SIZE+4))
         != (ECREC64_SIZE+4)) {
       if (uO.qflag || uO.zipinfo_mode)
           Info(0x401, "[%s]\n", UnzipClass.FInputFileName.GetData());
@@ -770,9 +767,9 @@ static int find_ecrec64(long searchlen)         /* return PK-class error */
       ecrec64_start_offset = ecloc64_start_offset - ECREC64_SIZE - 4;
 
       RdosSetFilePos(UnzipClass.FInputHandle, ecrec64_start_offset);
-      G.cur_zipfile_bufstart = RdosGetFilePos(UnzipClass.FInputHandle);
+      UnzipClass.FBufStart = RdosGetFilePos(UnzipClass.FInputHandle);
 
-      if ((G.incnt = RdosReadFile(UnzipClass.FInputHandle, (char *)byterec, ECREC64_SIZE+4))
+      if ((UnzipClass.FInCount = RdosReadFile(UnzipClass.FInputHandle, (char *)byterec, ECREC64_SIZE+4))
           != (ECREC64_SIZE+4)) {
         if (uO.qflag || uO.zipinfo_mode)
             Info(0x401, "[%s]\n", UnzipClass.FInputFileName.GetData());
@@ -884,16 +881,16 @@ static int find_ecrec(long searchlen)          /* return PK-class error */
 
     if (G.ziplen <= INBUFSIZ) {
         RdosSetFilePos(UnzipClass.FInputHandle, 0L);
-        if ((G.incnt = RdosReadFile(UnzipClass.FInputHandle,(char *)G.inbuf,(unsigned int)G.ziplen))
+        if ((UnzipClass.FInCount = RdosReadFile(UnzipClass.FInputHandle,(char *)UnzipClass.FInBuf,(unsigned int)G.ziplen))
             == (int)G.ziplen)
 
             /* 'P' must be at least (ECREC_SIZE+4) bytes from end of zipfile */
-            for (G.inptr = G.inbuf+(int)G.ziplen-(ECREC_SIZE+4);
-                 G.inptr >= G.inbuf;
-                 --G.inptr) {
-                if ( (*G.inptr == (unsigned char)0x50) &&         /* ASCII 'P' */
-                     !memcmp((char *)G.inptr, end_central_sig, 4)) {
-                    G.incnt -= (int)(G.inptr - G.inbuf);
+            for (UnzipClass.FInPtr = UnzipClass.FInBuf+(int)G.ziplen-(ECREC_SIZE+4);
+                 UnzipClass.FInPtr >= UnzipClass.FInBuf;
+                 --UnzipClass.FInPtr) {
+                if ( (*UnzipClass.FInPtr == (unsigned char)0x50) &&         /* ASCII 'P' */
+                     !memcmp(UnzipClass.FInPtr, end_central_sig, 4)) {
+                    UnzipClass.FInCount -= (int)(UnzipClass.FInPtr - UnzipClass.FInBuf);
                     found = TRUE;
                     break;
                 }
@@ -931,16 +928,9 @@ static int find_ecrec(long searchlen)          /* return PK-class error */
     compensation) by reading data into character array and copying to struct.
   ---------------------------------------------------------------------------*/
 
-    G.real_ecrec_offset = G.cur_zipfile_bufstart + (G.inptr-G.inbuf);
-#ifdef TEST
-    printf("\n  found end-of-central-dir signature at offset %s (%sh)\n",
-      FmZofft(G.real_ecrec_offset, NULL, NULL),
-      FmZofft(G.real_ecrec_offset, FZOFFT_HEX_DOT_WID, "X"));
-    printf("    from beginning of file; offset %d (%.4Xh) within block\n",
-      G.inptr-G.inbuf, G.inptr-G.inbuf);
-#endif
+    G.real_ecrec_offset = UnzipClass.FBufStart + (UnzipClass.FInPtr-UnzipClass.FInBuf);
 
-    if (readbuf((char *)byterec, ECREC_SIZE+4) == 0)
+    if (UnzipClass.ReadBuf((char *)byterec, ECREC_SIZE+4) == 0)
         return PK_EOF;
 
     G.ecrec.number_this_disk =
@@ -1150,7 +1140,7 @@ static int get_cdir_ent()    /* return PK-type error code */
     usable struct (crec)).
   ---------------------------------------------------------------------------*/
 
-    if (readbuf((char *)byterec, CREC_SIZE) == 0)
+    if (UnzipClass.ReadBuf((char *)byterec, CREC_SIZE) == 0)
         return PK_EOF;
 
     G.crec.version_made_by[0] = byterec[C_VERSION_MADE_BY_0];
@@ -1211,7 +1201,7 @@ int process_local_file_hdr()    /* return PK-type error code */
     usable struct (lrec)).
   ---------------------------------------------------------------------------*/
 
-    if (readbuf((char *)byterec, LREC_SIZE) == 0)
+    if (UnzipClass.ReadBuf((char *)byterec, LREC_SIZE) == 0)
         return PK_EOF;
 
     G.lrec.version_needed_to_extract[0] =
