@@ -48,9 +48,287 @@ ELSE
     .386p
 ENDIF
 
+user_sect_struc STRUC
+
+uss_handle       DD ?
+uss_counter      DD ?
+uss_val          DW ?
+uss_owner        DW ?
+
+user_sect_struc ENDS
+
 code    SEGMENT byte public 'CODE'
     
     assume cs:code
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           NotifyKernelDebug
+;
+;           DESCRIPTION:    Notify kernel debug event. Called on scheduler locked stack
+;
+;       PARAMETERS:     ES      Thread sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyKernelDebug   Proc far
+    push ds
+    push es
+    push ax
+    push dx
+    push di
+;    
+    movzx dx,es:p_fault_vector
+    mov ax,es:p_app_sel
+    verr ax
+    jnz nkeDone
+;    
+    mov ds,ax
+    mov ax,ds:app_mod_sel
+    verr ax
+    jnz nkeDone
+;
+    mov ds,ax
+;
+    mov ax,es:p_debug_event
+    or ax,ax
+    jz nkeDone
+;
+    mov es,ax    
+    mov di,SIZE event_struc
+    mov es:[di].kexcVector,dx
+    xor ax,ax
+    xchg ax,ds:lib_suppress
+    or ax,ax
+    jnz nkeDone
+;    
+    mov ax,ds:lib_events
+    or ax,ax
+    je nkeEmpty
+;
+    push ds
+    push si
+    mov ds,ax
+    mov si,ds:event_prev
+    mov ds:event_prev,es
+    mov ds,si
+    mov ds:event_next,es
+    mov es:event_next,ax
+    mov es:event_prev,si
+    pop si
+    pop ds
+    jmp nkeInsDone
+
+nkeEmpty:
+    mov es:event_next,es
+    mov es:event_prev,es
+
+nkeInsDone:
+    mov ds:lib_events,es
+    xor ax,ax
+    mov es,ax
+;
+    mov ax,ds:lib_debug_obj
+    or ax,ax
+    jz nkeDone
+;       
+    mov es,ax
+    SignalWait
+
+nkeDone:
+    pop di
+    pop dx
+    pop ax
+    pop es
+    pop ds
+    retf16
+NotifyKernelDebug   Endp
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           load_object
+;
+;           DESCRIPTION:    Demand load object
+;
+;           PARAMETERS:     EDX         LINEAR ADDRESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_object     Proc far
+    push ds
+    push es
+    pushad
+;       
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ecx,ds:flat_base
+    sub edx,ecx
+    mov ax,flat_data_sel
+    mov ds,ax
+    and dx,0F000h
+;
+    call FindLib
+    jc load_object_done
+;
+    call FindObject
+    jc load_object_done
+;
+    push ds
+    mov ax,es
+    mov ds,ax
+    EnterSection ds:mod_section
+;
+    mov ax,process_page_sel
+    mov ds,ax
+    mov eax,edx
+    add eax,ecx
+    shr eax,10
+    mov eax,[eax]
+    pop ds
+    test al,1
+    jnz load_object_leave
+;
+    xor eax,eax
+    mov ebp,edx
+;    
+    mov ebx,es:lib_header
+    cmp edi,[ebx].peh_image_base
+    je load_object_size_ok
+
+load_object_get_size:
+    call CheckReloc
+    jnc load_object_size_ok
+;
+    add eax,1000h
+    add ebp,1000h
+    jmp load_object_get_size
+
+load_object_size_ok:
+    mov ebp,edx
+    add eax,1000h
+    AllocateLocalLinear
+    push edx    
+    push eax
+;
+    sub edx,ecx
+;
+    push eax
+    push edx
+    push ebp
+
+load_object_load_loop:
+    call LoadPage
+    jc load_object_load_done
+;
+    sub eax,1000h
+    jz load_object_load_done
+;    
+    add edx,1000h
+    add ebp,1000h
+    jmp load_object_load_loop
+
+load_object_load_done:
+    call MapFromImage
+    mov ebx,eax
+;
+    pop ebp
+    pop edx
+    pop eax
+;    
+    sub eax,ebx
+;
+    push eax
+    push edx
+    push ebp    
+;
+    mov ebx,es:lib_header
+    cmp edi,[ebx].peh_image_base
+    je load_object_map
+
+load_object_reloc_loop:
+    call RelocPage
+;
+    sub eax,1000h
+    jz load_object_map
+;    
+    add edx,1000h
+    add ebp,1000h
+    jmp load_object_reloc_loop
+
+load_object_map:
+    pop ebp
+    pop edx
+    pop eax
+;
+    pop ebx
+    call MapToImage
+;
+    mov ecx,ebx
+    pop edx
+    FreeLinear
+
+load_object_leave:
+    mov ax,es
+    mov ds,ax
+    LeaveSection ds:mod_section
+    
+load_object_done:
+    popad
+    pop es
+    pop ds
+    retf16
+load_object     Endp 
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           new_create_section
+;
+;           DESCRIPTION:    New create section
+;
+;           RETURNS:        BX          Section handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+new_create_section_name    DB 'Create User Section',0
+
+create_linear_start:
+
+create_linear   Proc near
+    push edi
+    lea edi,[edi].uss_val
+;   CreateFutex
+    pop edi
+    mov [edi].uss_handle,ebx
+    mov [edi].uss_val,-1
+    mov [edi].uss_counter,0
+    mov [edi].uss_owner,0
+    ret
+create_linear   Endp
+
+create_linear_end:        
+
+new_create_section     PROC far
+    push es
+;    
+    int 3
+    mov esi,OFFSET create_linear_start
+    mov eax,OFFSET create_linear_end
+    sub eax,esi
+    mov ecx,eax
+    AllocateAppMem
+    mov edi,edx
+;
+    mov ax,flat_data_sel
+    mov es,ax
+    rep movs byte ptr es:[edi],cs:[esi]
+;
+    pop es    
+    ret
+new_create_section     ENDP
+
                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -173,90 +451,6 @@ AllocateKernelEvent   Proc near
     pop ds   
     ret
 AllocateKernelEvent   Endp
-                      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           NotifyKernelDebug
-;
-;           DESCRIPTION:    Notify kernel debug event. Called on scheduler locked stack
-;
-;       PARAMETERS:     ES      Thread sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-NotifyKernelDebug   Proc far
-    push ds
-    push es
-    push ax
-    push dx
-    push di
-;    
-    movzx dx,es:p_fault_vector
-    mov ax,es:p_app_sel
-    verr ax
-    jnz nkeDone
-;    
-    mov ds,ax
-    mov ax,ds:app_mod_sel
-    verr ax
-    jnz nkeDone
-;
-    mov ds,ax
-;
-    mov ax,es:p_debug_event
-    or ax,ax
-    jz nkeDone
-;
-    mov es,ax    
-    mov di,SIZE event_struc
-    mov es:[di].kexcVector,dx
-    xor ax,ax
-    xchg ax,ds:lib_suppress
-    or ax,ax
-    jnz nkeDone
-;    
-    mov ax,ds:lib_events
-    or ax,ax
-    je nkeEmpty
-;
-    push ds
-    push si
-    mov ds,ax
-    mov si,ds:event_prev
-    mov ds:event_prev,es
-    mov ds,si
-    mov ds:event_next,es
-    mov es:event_next,ax
-    mov es:event_prev,si
-    pop si
-    pop ds
-    jmp nkeInsDone
-
-nkeEmpty:
-    mov es:event_next,es
-    mov es:event_prev,es
-
-nkeInsDone:
-    mov ds:lib_events,es
-    xor ax,ax
-    mov es,ax
-;
-    mov ax,ds:lib_debug_obj
-    or ax,ax
-    jz nkeDone
-;       
-    mov es,ax
-    SignalWait
-
-nkeDone:
-    pop di
-    pop dx
-    pop ax
-    pop es
-    pop ds
-    retf16
-NotifyKernelDebug   Endp
                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -995,17 +1189,17 @@ OpenDll Proc near
     LockProcEnv
     mov ds,bx
     mov ebx,esi
-    xor si,si
+    xor esi,esi
     mov ax,cs
     mov es,ax
-    mov di,OFFSET PathName
+    mov edi,OFFSET PathName
 find_path_loop:
     cmpsb
     jnz find_path_next
-    mov al,es:[di]
+    mov al,es:[edi]
     or al,al
     jnz find_path_loop
-    mov al,[si]
+    mov al,[esi]
     cmp al,'='
     je find_path_found
 
@@ -1013,7 +1207,7 @@ find_path_next:
     lodsb
     or al,al
     jnz find_path_next
-    mov al,[si]
+    mov al,[esi]
     or al,al
     mov di,OFFSET PathName
     jne find_path_loop
@@ -1023,8 +1217,8 @@ find_path_found:
     mov eax,1000h
     AllocateBigMem
 ;
-    xor di,di
-    inc si
+    xor edi,edi
+    inc esi
 find_path_move_loop:
     lodsb
     or al,al
@@ -1035,10 +1229,10 @@ find_path_move_loop:
     jmp find_path_move_loop 
 
 find_path_move_ok:
-    or di,di
+    or edi,edi
     jz find_path_add_file
 ;    
-    mov al,es:[di-1]
+    mov al,es:[edi-1]
     cmp al,'\'
     je find_path_add_file
 ;
@@ -1062,13 +1256,13 @@ find_path_name_loop:
     pop ebx
 ;
     push bx
-    xor di,di
+    xor edi,edi
     xor cl,cl
     OpenFile
     jnc find_path_file_ok
 ;
     pop bx
-    mov al,[si-1]
+    mov al,[esi-1]
     or al,al
     jnz find_path_move_loop
 ;
@@ -1115,10 +1309,10 @@ OpenDll Endp
 
 FindObject      Proc near
     push eax
-    push cx
+    push ecx
 ;
     mov esi,es:lib_header
-    mov cx,[esi].peh_objects
+    movzx ecx,[esi].peh_objects
     mov esi,es:lib_objects
 find_object_loop:
     mov eax,edx
@@ -1138,7 +1332,7 @@ find_object_ok:
     clc
 
 find_object_done:
-    pop cx
+    pop ecx
     pop eax
     ret
 FindObject      Endp
@@ -2340,142 +2534,6 @@ MapToImage  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           load_object
-;
-;           DESCRIPTION:    Demand load object
-;
-;           PARAMETERS:     EDX         LINEAR ADDRESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-load_object     Proc far
-    push ds
-    push es
-    pushad
-;       
-    mov ax,system_data_sel
-    mov ds,ax
-    mov ecx,ds:flat_base
-    sub edx,ecx
-    mov ax,flat_data_sel
-    mov ds,ax
-    and dx,0F000h
-;
-    call FindLib
-    jc load_object_done
-;
-    call FindObject
-    jc load_object_done
-;
-    push ds
-    mov ax,es
-    mov ds,ax
-    EnterSection ds:mod_section
-;
-    mov ax,process_page_sel
-    mov ds,ax
-    mov eax,edx
-    add eax,ecx
-    shr eax,10
-    mov eax,[eax]
-    pop ds
-    test al,1
-    jnz load_object_leave
-;
-    xor eax,eax
-    mov ebp,edx
-;    
-    mov ebx,es:lib_header
-    cmp edi,[ebx].peh_image_base
-    je load_object_size_ok
-
-load_object_get_size:
-    call CheckReloc
-    jnc load_object_size_ok
-;
-    add eax,1000h
-    add ebp,1000h
-    jmp load_object_get_size
-
-load_object_size_ok:
-    mov ebp,edx
-    add eax,1000h
-    AllocateLocalLinear
-    push edx    
-    push eax
-;
-    sub edx,ecx
-;
-    push eax
-    push edx
-    push ebp
-
-load_object_load_loop:
-    call LoadPage
-    jc load_object_load_done
-;
-    sub eax,1000h
-    jz load_object_load_done
-;    
-    add edx,1000h
-    add ebp,1000h
-    jmp load_object_load_loop
-
-load_object_load_done:
-    call MapFromImage
-    mov ebx,eax
-;
-    pop ebp
-    pop edx
-    pop eax
-;    
-    sub eax,ebx
-;
-    push eax
-    push edx
-    push ebp    
-;
-    mov ebx,es:lib_header
-    cmp edi,[ebx].peh_image_base
-    je load_object_map
-
-load_object_reloc_loop:
-    call RelocPage
-;
-    sub eax,1000h
-    jz load_object_map
-;    
-    add edx,1000h
-    add ebp,1000h
-    jmp load_object_reloc_loop
-
-load_object_map:
-    pop ebp
-    pop edx
-    pop eax
-;
-    pop ebx
-    call MapToImage
-;
-    mov ecx,ebx
-    pop edx
-    FreeLinear
-
-load_object_leave:
-    mov ax,es
-    mov ds,ax
-    LeaveSection ds:mod_section
-    
-load_object_done:
-    popad
-    pop es
-    pop ds
-    retf16
-load_object     Endp 
-                      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           CreateImage
 ;
 ;           DESCRIPTION:    Create memory image of header
@@ -2565,7 +2623,7 @@ create_image_alloced:
     pop es
 ;
     mov esi,es:lib_header
-    mov cx,[esi].peh_objects
+    movzx ecx,[esi].peh_objects
     mov esi,es:lib_objects
 ;
     push es
@@ -2644,7 +2702,7 @@ Preload Proc near
     push esi
 ;
     mov esi,es:lib_header
-    mov cx,[esi].peh_objects
+    movzx ecx,[esi].peh_objects
     mov esi,es:lib_objects
 PreloadAllLoop:
     mov edx,[esi].o_va
@@ -3847,7 +3905,7 @@ notify_pe_exception     Proc far
     push dx
 ;    
     mov bx,OFFSET exc_tab
-    mov cx,10h
+    mov ecx,10h
     mov dl,14h
     mov dh,0
 
@@ -4614,13 +4672,13 @@ get_module_name Proc far
     push ds
     push ebx
     push ecx
-    push si
+    push esi
     push edi
 ;
     xor eax,eax
     mov ds,bx
     xor ebx,ebx
-    mov si,OFFSET lib_name
+    mov esi,OFFSET lib_name
 get_name_loop:
     lodsb
     stos byte ptr es:[edi]
@@ -4636,7 +4694,7 @@ get_name_ok:
     mov eax,ebx
 ;       
     pop edi
-    pop si
+    pop esi
     pop ecx
     pop ebx
     pop ds
@@ -4940,16 +4998,15 @@ get_exe_name    Proc far
     or edi,edi
     jnz get_exe_done
 ;       
-    mov si,OFFSET app_exe_name
+    mov esi,OFFSET app_exe_name
 
 get_exe_size_loop:
     lodsb
     or al,al
     jnz get_exe_size_loop
 ;
-    mov ax,si
-    sub ax,OFFSET app_exe_name
-    movzx eax,ax
+    mov eax,esi
+    sub eax,OFFSET app_exe_name
     mov ecx,eax
     AllocateAppMem
     mov edi,edx
@@ -4996,7 +5053,7 @@ get_env Proc far
 ;       
     LockProcEnv
     mov ds,bx
-    xor si,si
+    xor esi,esi
 
 get_env_size_loop:
     lodsb
@@ -5007,7 +5064,7 @@ get_env_size_loop:
     or al,al
     jnz get_env_size_loop
 ;
-    movzx ecx,si
+    mov ecx,esi
     mov eax,ecx
     AllocateAppMem
     mov edi,edx
@@ -5072,17 +5129,17 @@ set_options     Proc far
 ;
     mov ax,es
     mov ds,ax
-    xor si,si
-    xor cx,cx
+    xor esi,esi
+    xor ecx,ecx
 
 set_opt_size:
     lodsb
-    inc cx
+    inc ecx
     or al,al
     jnz set_opt_size
 ;
     lodsb
-    inc cx
+    inc ecx
     or al,al
     jnz set_opt_size
 ;
@@ -5179,6 +5236,12 @@ init    PROC far
     xor dx,dx
     mov ax,show_exception_text_nr
     RegisterUserGate32
+;
+    mov esi,OFFSET new_create_section
+    mov edi,OFFSET new_create_section_name
+    xor dx,dx
+    mov ax,new_create_section_nr
+    RegisterBimodalUserGate
     clc
     ret
 init    ENDP
