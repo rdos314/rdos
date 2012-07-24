@@ -917,61 +917,6 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
 
 
 
-/***********************/
-/* Function makeword() */
-/***********************/
-
-unsigned short makeword(const unsigned char *b)
-{
-    /*
-     * Convert Intel style 'short' integer to non-Intel non-16-bit
-     * host format.  This routine also takes care of byte-ordering.
-     */
-    return (unsigned short)((b[1] << 8) | b[0]);
-}
-
-
-
-
-
-/***********************/
-/* Function makelong() */
-/***********************/
-
-unsigned long makelong(const unsigned char *sig)
-{
-    /*
-     * Convert intel style 'long' variable to non-Intel non-16-bit
-     * host format.  This routine also takes care of byte-ordering.
-     */
-    return (((unsigned long)sig[3]) << 24)
-         + (((unsigned long)sig[2]) << 16)
-         + (unsigned long)((((unsigned)sig[1]) << 8)
-               + ((unsigned)sig[0]));
-}
-
-
-
-
-
-/************************/
-/* Function makeint64() */
-/************************/
-
-zusz_t makeint64(const unsigned char *sig)
-{
-    if ((sig[7] | sig[6] | sig[5] | sig[4]) != 0)
-        return (zusz_t)0xffffffffL;
-    else
-        return (zusz_t)((((unsigned long)sig[3]) << 24)
-                      + (((unsigned long)sig[2]) << 16)
-                      + (((unsigned)sig[1]) << 8)
-                      + (sig[0]));
-
-}
-
-
-
 
 
 /*********************/

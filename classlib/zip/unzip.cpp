@@ -111,6 +111,75 @@ char *str2oem(char *dst, register const char *src)
     return dst;
 }
 
+
+/*##########################################################################
+#
+#   Name       : makeword
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned short makeword(const unsigned char *b)
+{
+    /*
+     * Convert Intel style 'short' integer to non-Intel non-16-bit
+     * host format.  This routine also takes care of byte-ordering.
+     */
+    return (unsigned short)((b[1] << 8) | b[0]);
+}
+
+
+/*##########################################################################
+#
+#   Name       : makelong
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned long makelong(const unsigned char *sig)
+{
+    /*
+     * Convert intel style 'long' variable to non-Intel non-16-bit
+     * host format.  This routine also takes care of byte-ordering.
+     */
+    return (((unsigned long)sig[3]) << 24)
+         + (((unsigned long)sig[2]) << 16)
+         + (unsigned long)((((unsigned)sig[1]) << 8)
+               + ((unsigned)sig[0]));
+}
+
+
+/*##########################################################################
+#
+#   Name       : makeint64
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned long makeint64(const unsigned char *sig)
+{
+    if ((sig[7] | sig[6] | sig[5] | sig[4]) != 0)
+        return (unsigned long)0xffffffffL;
+    else
+        return (unsigned long)((((unsigned long)sig[3]) << 24)
+                      + (((unsigned long)sig[2]) << 16)
+                      + (((unsigned)sig[1]) << 8)
+                      + (sig[0]));
+
+}
+
 /*##########################################################################
 #
 #   Name       : string_putc
