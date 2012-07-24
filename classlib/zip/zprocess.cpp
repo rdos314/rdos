@@ -1226,7 +1226,7 @@ int process_local_file_hdr()    /* return PK-type error code */
         G.lrec.ucsize = G.pInfo->uncompr_size;
     }
 
-    G.csize = G.lrec.csize;
+    UnzipClass.FDecompSize = G.lrec.csize;
 
     return PK_COOL;
 
@@ -1275,7 +1275,7 @@ int getZip64Data(const unsigned char *ef_buf, unsigned ef_len)
             offset += sizeof(G.crec.ucsize);
           }
           if (G.crec.csize == 0xffffffff || G.lrec.csize == 0xffffffff){
-            G.csize = G.lrec.csize = G.crec.csize = makeint64(offset + ef_buf);
+            UnzipClass.FDecompSize = G.lrec.csize = G.crec.csize = makeint64(offset + ef_buf);
             offset += sizeof(G.crec.csize);
           }
           if (G.crec.relative_offset_local_header == 0xffffffff){

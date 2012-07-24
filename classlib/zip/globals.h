@@ -169,7 +169,6 @@ typedef struct Globals {
     int newzip;           /* reset in extract.c; used in crypt.c */
     long   real_ecrec_offset;
     long   expect_ecrec_offset;
-    long   csize;       /* used by decompr. (NEXTBYTE): must be signed */
     long   used_csize;  /* used by extract_or_test_member(), explode() */
 
     char **pfnames;
@@ -198,7 +197,6 @@ typedef struct Globals {
     ecdir_rec       ecrec;         /* used in unzip.c, extract.c */
     struct stat   statbuf;              /* used by main, mapname, check_for_newer */
 
-    int      mem_mode;
     unsigned char      *outbufptr;           /* extract.c static */
     unsigned long      outsize;              /* extract.c static */
     int      reported_backslash;   /* extract.c static */

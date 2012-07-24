@@ -1240,7 +1240,7 @@ static int extract_or_test_member()    /* return PK-type error code */
             }
             G.outptr = redirSlide;
             G.outcnt = 0L;
-            while ((b = NEXTBYTE) != EOF) {
+            while ((b = UnzipClass.GetNextByte()) != EOF) {
                 *G.outptr++ = (unsigned char)b;
                 if (++G.outcnt == WSIZE) {
                     error = flush(redirSlide, G.outcnt, 0);
@@ -1645,7 +1645,7 @@ static int test_compr_eb(
 
 int memextract(unsigned char *tgt, unsigned long tgtsize, const unsigned char *src, unsigned long srcsize)
 {
-    long old_csize=G.csize;
+    long old_csize=UnzipClass.FDecompSize;
     char   *old_inptr=UnzipClass.FInPtr;
     int    old_incnt=UnzipClass.FInCount;
     int    r, error=PK_OK;
@@ -1658,15 +1658,15 @@ int memextract(unsigned char *tgt, unsigned long tgtsize, const unsigned char *s
 
     /* compressed extra field exists completely in memory at this location: */
     UnzipClass.FInPtr = (char *)src + (2 + 4);     /* method and extra_field_crc */
-    UnzipClass.FInCount = (int)(G.csize = (long)(srcsize - (2 + 4)));
-    G.mem_mode = TRUE;
+    UnzipClass.FInCount = (int)(UnzipClass.FDecompSize = (long)(srcsize - (2 + 4)));
+    UnzipClass.FMemMode = TRUE;
     G.outbufptr = tgt;
     G.outsize = tgtsize;
 
     switch (method) {
         case STORED:
             memcpy((char *)tgt, (char *)UnzipClass.FInPtr, (extent)UnzipClass.FInCount);
-            G.outcnt = (unsigned long)G.csize;    /* for CRC calculation */
+            G.outcnt = (unsigned long)UnzipClass.FDecompSize;    /* for CRC calculation */
             break;
         case DEFLATED:
             G.outcnt = 0L;
@@ -1693,8 +1693,8 @@ int memextract(unsigned char *tgt, unsigned long tgtsize, const unsigned char *s
 
     UnzipClass.FInPtr = old_inptr;
     UnzipClass.FInCount = old_incnt;
-    G.csize = old_csize;
-    G.mem_mode = FALSE;
+    UnzipClass.FDecompSize = old_csize;
+    UnzipClass.FMemMode = FALSE;
 
     if (!error) {
         register unsigned long crcval = crc32(CRCVAL_INITIAL, tgt, (extent)G.outcnt);

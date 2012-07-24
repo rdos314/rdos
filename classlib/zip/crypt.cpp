@@ -112,7 +112,7 @@ int decrypt(const char *passwrd)
     GLOBAL(pInfo->encrypted) = FALSE;
     defer_leftover_input();
     for (n = 0; n < RAND_HEAD_LEN; n++) {
-        b = NEXTBYTE;
+        b = UnzipClass.GetNextByte();
         h[n] = (unsigned char)b;
         Trace(" (%02x)", h[n]);
     }
@@ -235,8 +235,8 @@ static int testkey(const unsigned char *h, const char *key)
         return -1;  /* bad */
 
     /* password OK:  decrypt current buffer contents before leaving */
-    for (n = (long)UnzipClass.FInCount > GLOBAL(csize) ?
-             (int)GLOBAL(csize) : UnzipClass.FInCount,
+    for (n = (long)UnzipClass.FInCount > UnzipClass.FDecompSize ?
+             (int)UnzipClass.FDecompSize : UnzipClass.FInCount,
          p = (unsigned char *)UnzipClass.FInPtr; n--; p++)
         zdecode(*p);
     return 0;       /* OK */

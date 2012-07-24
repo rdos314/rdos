@@ -50,6 +50,8 @@ public:
     void SetInputFile(const char *name);
     int OpenInputFile();
     unsigned ReadBuf(char *buf, register unsigned size);
+    int ReadByte();
+    int GetNextByte();
 
     TString FInputFileName;
     int FInputHandle;
@@ -58,8 +60,9 @@ public:
     char *FInPtr;
     int FInCount;
     int FBufStart;
+    int FMemMode;
+    long FDecompSize;
     
-
 protected:
 
 private:

@@ -187,7 +187,7 @@ static const unsigned short cpdist8[] =
    variables for speed.
  */
 
-#define NEEDBITS(n) {while(k<(n)){b|=((unsigned long)NEXTBYTE)<<k;k+=8;}}
+#define NEEDBITS(n) {while(k<(n)){b|=((unsigned long)UnzipClass.GetNextByte())<<k;k+=8;}}
 #define DUMPBITS(n) {b>>=(n);k-=(n);}
 
 #define DECODEHUFT(htab, bits, mask) {\
@@ -216,10 +216,10 @@ static int get_tree(unsigned *l, unsigned n)
 
 
   /* get bit lengths */
-  i = NEXTBYTE + 1;                     /* length/count pairs to read */
+  i = UnzipClass.GetNextByte() + 1;                     /* length/count pairs to read */
   k = 0;                                /* next code */
   do {
-    b = ((j = NEXTBYTE) & 0xf) + 1;     /* bits in code (1..16) */
+    b = ((j = UnzipClass.GetNextByte()) & 0xf) + 1;     /* bits in code (1..16) */
     j = ((j & 0xf0) >> 4) + 1;          /* codes with those bits (1..16) */
     if (k + j > n)
       return 4;                         /* don't overflow l[] */
@@ -326,9 +326,9 @@ static int explode_lit(struct huft *tb, struct huft *tl, struct huft *td, unsign
   /* flush out redirSlide */
   if ((retval = flush(redirSlide, (unsigned long)w, 0)) != 0)
     return retval;
-  if (G.csize + UnzipClass.FInCount + (k >> 3))   /* should have read csize bytes, but */
+  if (UnzipClass.FDecompSize + UnzipClass.FInCount + (k >> 3))   /* should have read csize bytes, but */
   {                        /* sometimes read one too many:  k>>3 compensates */
-    G.used_csize = G.lrec.csize - G.csize - UnzipClass.FInCount - (k >> 3);
+    G.used_csize = G.lrec.csize - UnzipClass.FDecompSize - UnzipClass.FInCount - (k >> 3);
     return 5;
   }
   return 0;
@@ -430,9 +430,9 @@ static int explode_nolit(struct huft *tl, struct huft *td, unsigned bl, unsigned
   /* flush out redirSlide */
   if ((retval = flush(redirSlide, (unsigned long)w, 0)) != 0)
     return retval;
-  if (G.csize + UnzipClass.FInCount + (k >> 3))   /* should have read csize bytes, but */
+  if (UnzipClass.FDecompSize + UnzipClass.FInCount + (k >> 3))   /* should have read csize bytes, but */
   {                        /* sometimes read one too many:  k>>3 compensates */
-    G.used_csize = G.lrec.csize - G.csize - UnzipClass.FInCount - (k >> 3);
+    G.used_csize = G.lrec.csize - UnzipClass.FDecompSize - UnzipClass.FInCount - (k >> 3);
     return 5;
   }
   return 0;
@@ -466,7 +466,7 @@ int explode()
      7, 7, and 9 worked best over a very wide range of sizes, except that
      bd = 8 worked marginally better for large compressed sizes. */
   bl = 7;
-  bd = (G.csize + UnzipClass.FInCount) > 200000L ? 8 : 7;
+  bd = (UnzipClass.FDecompSize + UnzipClass.FInCount) > 200000L ? 8 : 7;
 
 #ifdef DEBUG
   G.hufts = 0;                    /* initialize huft's malloc'ed */

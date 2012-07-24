@@ -191,7 +191,7 @@ int open_outfile()           /* return 1 if fail */
 void undefer_input()
 {
     if (UnzipClass.FInCount > 0)
-        G.csize += UnzipClass.FInCount;
+        UnzipClass.FDecompSize += UnzipClass.FInCount;
     if (G.incnt_leftover > 0) {
         /* We know that "(G.csize < MAXINT)" so we can cast G.csize to int:
          * This condition was checked when G.incnt_leftover was set > 0 in
@@ -199,8 +199,8 @@ void undefer_input()
          * before calling undefer_input() when (G.incnt_leftover > 0)
          * (single exception: see read_byte()'s  "G.csize <= 0" handling) !!
          */
-        UnzipClass.FInCount = G.incnt_leftover + (int)G.csize;
-        UnzipClass.FInPtr = (char *)G.inptr_leftover - (int)G.csize;
+        UnzipClass.FInCount = G.incnt_leftover + (int)UnzipClass.FDecompSize;
+        UnzipClass.FInPtr = (char *)G.inptr_leftover - (int)UnzipClass.FDecompSize;
         G.incnt_leftover = 0;
     } else if (UnzipClass.FInCount < 0)
         UnzipClass.FInCount = 0;
@@ -216,65 +216,18 @@ void undefer_input()
 
 void defer_leftover_input()
 {
-    if ((long)UnzipClass.FInCount > G.csize) {
+    if ((long)UnzipClass.FInCount > UnzipClass.FDecompSize) {
         /* (G.csize < MAXINT), we can safely cast it to int !! */
-        if (G.csize < 0L)
-            G.csize = 0L;
-        G.inptr_leftover = (unsigned char *)UnzipClass.FInPtr + (int)G.csize;
-        G.incnt_leftover = UnzipClass.FInCount - (int)G.csize;
-        UnzipClass.FInCount = (int)G.csize;
+        if (UnzipClass.FDecompSize < 0L)
+            UnzipClass.FDecompSize = 0L;
+        G.inptr_leftover = (unsigned char *)UnzipClass.FInPtr + (int)UnzipClass.FDecompSize;
+        G.incnt_leftover = UnzipClass.FInCount - (int)UnzipClass.FDecompSize;
+        UnzipClass.FInCount = (int)UnzipClass.FDecompSize;
     } else
         G.incnt_leftover = 0;
-    G.csize -= UnzipClass.FInCount;
+    UnzipClass.FDecompSize -= UnzipClass.FInCount;
 } /* end function defer_leftover_input() */
 
-
-
-
-
-
-/***********************/
-/* Function readbyte() */
-/***********************/
-
-int readbyte()   /* refill inbuf and return a byte if available, else EOF */
-{
-    if (G.mem_mode)
-        return EOF;
-    if (G.csize <= 0) {
-        G.csize--;             /* for tests done after exploding */
-        UnzipClass.FInCount = 0;
-        return EOF;
-    }
-    if (UnzipClass.FInCount <= 0) {
-        if ((UnzipClass.FInCount = RdosReadFile(UnzipClass.FInputHandle, UnzipClass.FInBuf, INBUFSIZ)) == 0) {
-            return EOF;
-        } else if (UnzipClass.FInCount < 0) {  /* "fail" (abort, retry, ...) returns this */
-            /* another hack, but no real harm copying same thing twice */
-            Info(0x401, ReadError);
-            exit(PK_BADERR);    /* totally bailing; better than lock-up */
-        }
-        UnzipClass.FBufStart += INBUFSIZ; /* always starts on block bndry */
-        UnzipClass.FInPtr = UnzipClass.FInBuf;
-        defer_leftover_input();           /* decrements G.csize */
-    }
-
-    if (G.pInfo->encrypted) {
-        unsigned char *p;
-        int n;
-
-        /* This was previously set to decrypt one byte beyond G.csize, when
-         * incnt reached that far.  GRR said, "but it's required:  why?"  This
-         * was a bug in fillinbuf() -- was it also a bug here?
-         */
-        for (n = UnzipClass.FInCount, p = (unsigned char *)UnzipClass.FInPtr;  n--;  p++)
-            zdecode(*p);
-    }
-
-    --UnzipClass.FInCount;
-    return *UnzipClass.FInPtr++;
-
-} /* end function readbyte() */
 
 
 
@@ -284,7 +237,7 @@ int readbyte()   /* refill inbuf and return a byte if available, else EOF */
 
 int fillinbuf() /* like readbyte() except returns number of bytes in inbuf */
 {
-    if (G.mem_mode ||
+    if (UnzipClass.FMemMode ||
                   (UnzipClass.FInCount = RdosReadFile(UnzipClass.FInputHandle, (char *)UnzipClass.FInBuf, INBUFSIZ)) <= 0)
         return 0;
     UnzipClass.FBufStart += INBUFSIZ;  /* always starts on a block boundary */

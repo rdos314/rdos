@@ -45,6 +45,8 @@
 #define MAX(a,b)   ((a) > (b) ? (a) : (b))
 #define MIN(a,b)   ((a) < (b) ? (a) : (b))
 
+void     defer_leftover_input();
+
 typedef struct
 {
     char           *_dest;
@@ -393,4 +395,68 @@ unsigned TUnzip::ReadBuf(char *buf, register unsigned size)   /* return number o
 
 } /* end function readbuf() */
 
+/*##########################################################################
+#
+#   Name       : TUnzip::ReadByte
+#
+#   Purpose....: Read byte input file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::ReadByte()   /* refill inbuf and return a byte if available, else EOF */
+{
+    if (FMemMode)
+        return EOF;
+
+    if (FDecompSize <= 0) {
+        FDecompSize--;             /* for tests done after exploding */
+        FInCount = 0;
+        return EOF;
+    }
+    if (FInCount <= 0) {
+        FInCount = RdosReadFile(FInputHandle, FInBuf, INBUFSIZ);
+        if (FInCount == 0)
+            return EOF;
+
+        FBufStart += INBUFSIZ; /* always starts on block bndry */
+        FInPtr = FInBuf;
+        defer_leftover_input();           /* decrements G.csize */
+    }
+
+//    if (G.pInfo->encrypted) {
+//        char *p;
+//        int n;
+
+        /* This was previously set to decrypt one byte beyond G.csize, when
+         * incnt reached that far.  GRR said, "but it's required:  why?"  This
+         * was a bug in fillinbuf() -- was it also a bug here?
+         */
+//        for (n = FInCount, p = FInPtr;  n--;  p++)
+//            zdecode(*p);
+//    }
+
+    --FInCount;
+    return *FInPtr++;
+
+} /* end function readbyte() */
+
+
+/*##########################################################################
+#
+#   Name       : TUnzip::GetNextByte
+#
+#   Purpose....: Get next byte from input file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::GetNextByte()
+{
+    return (FInCount-- > 0 ? (int)(*FInPtr++) : ReadByte());
+}
 
