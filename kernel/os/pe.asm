@@ -147,7 +147,7 @@ SendEvent Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateKernelEvent   Proc far
+AllocateKernelEvent   Proc near
     push ds
     push es
     push eax
@@ -622,35 +622,35 @@ create_lib_size_ok:
 ;
     mov es:mod_free_dll_proc,0
 ;
-    mov word ptr es:mod_get_proc_proc,OFFSET get_module_proc
-    mov word ptr es:mod_get_proc_proc+2,cs
+    mov es:mod_get_proc_proc,OFFSET get_module_proc
+    mov es:mod_get_proc_proc+4,cs
 ;
-    mov word ptr es:mod_get_resource_proc,OFFSET get_resource
-    mov word ptr es:mod_get_resource_proc+2,cs
+    mov es:mod_get_resource_proc,OFFSET get_resource
+    mov es:mod_get_resource_proc+4,cs
 ;
-    mov word ptr es:mod_get_name_proc,OFFSET get_module_name
-    mov word ptr es:mod_get_name_proc+2,cs
+    mov es:mod_get_name_proc,OFFSET get_module_name
+    mov es:mod_get_name_proc+4,cs
 ;
-    mov word ptr es:mod_start_wait_for_debug_event_proc,OFFSET start_wait_for_debug_event
-    mov word ptr es:mod_start_wait_for_debug_event_proc+2,cs
+    mov es:mod_start_wait_for_debug_event_proc,OFFSET start_wait_for_debug_event
+    mov es:mod_start_wait_for_debug_event_proc+4,cs
 ;
-    mov word ptr es:mod_stop_wait_for_debug_event_proc,OFFSET stop_wait_for_debug_event
-    mov word ptr es:mod_stop_wait_for_debug_event_proc+2,cs
+    mov es:mod_stop_wait_for_debug_event_proc,OFFSET stop_wait_for_debug_event
+    mov es:mod_stop_wait_for_debug_event_proc+4,cs
 ;
-    mov word ptr es:mod_is_debug_event_idle_proc,OFFSET is_debug_event_idle
-    mov word ptr es:mod_is_debug_event_idle_proc+2,cs
+    mov es:mod_is_debug_event_idle_proc,OFFSET is_debug_event_idle
+    mov es:mod_is_debug_event_idle_proc+4,cs
 ;
-    mov word ptr es:mod_get_debug_event_proc,OFFSET get_debug_event
-    mov word ptr es:mod_get_debug_event_proc+2,cs
+    mov es:mod_get_debug_event_proc,OFFSET get_debug_event
+    mov es:mod_get_debug_event_proc+4,cs
 ;
-    mov word ptr es:mod_get_debug_event_data_proc,OFFSET get_debug_event_data
-    mov word ptr es:mod_get_debug_event_data_proc+2,cs
+    mov es:mod_get_debug_event_data_proc,OFFSET get_debug_event_data
+    mov es:mod_get_debug_event_data_proc+4,cs
 ;
-    mov word ptr es:mod_clear_debug_event_proc,OFFSET clear_debug_event
-    mov word ptr es:mod_clear_debug_event_proc+2,cs
+    mov es:mod_clear_debug_event_proc,OFFSET clear_debug_event
+    mov es:mod_clear_debug_event_proc+4,cs
 ;
-    mov word ptr es:mod_continue_debug_event_proc,OFFSET continue_debug_event
-    mov word ptr es:mod_continue_debug_event_proc+2,cs
+    mov es:mod_continue_debug_event_proc,OFFSET continue_debug_event
+    mov es:mod_continue_debug_event_proc+4,cs
 ;
     pop edi
     pop esi
@@ -3493,7 +3493,7 @@ start_wait_for_debug_event Proc far
 start_wait_done:    
     pop ax
     pop ds  
-    ret
+    retf32
 start_wait_for_debug_event Endp
 
                        
@@ -3516,7 +3516,7 @@ stop_wait_for_debug_event Proc far
     mov ds:lib_debug_obj,0
 ;       
     pop ds  
-    ret
+    retf32
 stop_wait_for_debug_event Endp
 
                        
@@ -3547,7 +3547,7 @@ is_debug_event_idle Proc far
 is_idle_done:
     pop ax
     pop ds  
-    ret
+    retf32
 is_debug_event_idle Endp
 
                        
@@ -3610,7 +3610,7 @@ gdeDone:
     pop si
     pop es
     pop ds  
-    ret
+    retf32
 get_debug_event Endp
 
                        
@@ -3678,7 +3678,7 @@ gdedDone:
     pop ebx
     pop eax
     pop ds  
-    ret
+    retf32
 get_debug_event_data Endp
 
                        
@@ -3716,7 +3716,7 @@ clear_debug_done:
     pop bx
     pop es
     pop ds
-    ret
+    retf32
 clear_debug_event Endp
 
                        
@@ -3783,7 +3783,7 @@ continue_debug_done:
     pop cx
     pop bx
     pop es
-    ret
+    retf32
 continue_debug_event Endp
 
                        
@@ -4643,7 +4643,7 @@ get_name_ok:
     clc
 
 get_name_done:
-    ret
+    retf32
 get_module_name Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4819,7 +4819,7 @@ get_resource_done:
     pop edx
     pop ebx
     pop eax
-    ret
+    retf32
 get_resource    Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

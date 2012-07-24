@@ -1405,11 +1405,11 @@ free_dll  Proc far
 ;
     mov es,bx
     mov eax,es:mod_free_dll_proc
-    or eax,eax
+    or eax,es:mod_free_dll_proc+4
     stc
     jz free_dll_done
 ;    
-    call es:mod_free_dll_proc    
+    call fword ptr es:mod_free_dll_proc    
 
 free_dll_done:
     pop ebx
@@ -1488,11 +1488,11 @@ get_module_proc32  Proc far
 ;
     mov ds,bx
     mov eax,ds:mod_get_proc_proc
-    or eax,eax
+    or eax,ds:mod_get_proc_proc+4
     stc
     jz get_module_proc_done32
 ;    
-    call ds:mod_get_proc_proc
+    call fword ptr ds:mod_get_proc_proc
 
 get_module_proc_done32:
     pop ebx
@@ -1517,11 +1517,11 @@ get_module_proc16  Proc far
 ;
     mov ds,bx
     mov eax,ds:mod_get_proc_proc
-    or eax,eax
+    or eax,ds:mod_get_proc_proc+4
     stc
     jz get_module_proc_done16
 ;
-    call ds:mod_get_proc_proc
+    call fword ptr ds:mod_get_proc_proc
 
 get_module_proc_done16:
     pop edi
@@ -1564,11 +1564,11 @@ get_module_resource  Proc far
 ;
     mov ds,bx
     mov ecx,ds:mod_get_resource_proc
-    or ecx,ecx
+    or ecx,ds:mod_get_resource_proc+4
     stc
     jz get_resource_done
 ;    
-    call ds:mod_get_resource_proc
+    call fword ptr ds:mod_get_resource_proc
 
 get_resource_done:
     pop ebx
@@ -1607,10 +1607,11 @@ get_module_name32  Proc far
 ;
     mov ds,bx
     mov eax,ds:mod_get_name_proc
+    or eax,ds:mod_get_name_proc+4
     stc
     jz get_module_name_done32
 ;    
-    call ds:mod_get_name_proc
+    call fword ptr ds:mod_get_name_proc
 
 get_module_name_done32:
     pop ebx
@@ -1635,11 +1636,11 @@ get_module_name16  Proc far
 ;
     mov ds,bx
     mov eax,ds:mod_get_name_proc
-    or eax,eax
+    or eax,ds:mod_get_name_proc+4
     stc
     jz get_module_name_done16
 ;    
-    call ds:mod_get_name_proc
+    call fword ptr ds:mod_get_name_proc
 
 get_module_name_done16:
     pop edi
@@ -1667,11 +1668,11 @@ start_wait_for_debug_event      PROC far
     mov bx,es:dew_lib_sel
     mov ds,bx
     mov eax,ds:mod_start_wait_for_debug_event_proc
-    or eax,eax
+    or eax,ds:mod_start_wait_for_debug_event_proc
     stc
     jz start_wait_for_done
 ;    
-    call ds:mod_start_wait_for_debug_event_proc
+    call fword ptr ds:mod_start_wait_for_debug_event_proc
 
 start_wait_for_done:
     pop bx
@@ -1699,11 +1700,11 @@ stop_wait_for_debug_event       PROC far
     mov bx,es:dew_lib_sel
     mov ds,bx
     mov eax,ds:mod_stop_wait_for_debug_event_proc
-    or eax,eax
+    or eax,ds:mod_stop_wait_for_debug_event_proc
     stc
     jz stop_wait_for_done
 ;    
-    call ds:mod_stop_wait_for_debug_event_proc
+    call fword ptr ds:mod_stop_wait_for_debug_event_proc
 
 stop_wait_for_done:
     pop bx
@@ -1748,11 +1749,11 @@ is_debug_event_idle     PROC far
     mov bx,es:dew_lib_sel
     mov ds,bx
     mov eax,ds:mod_is_debug_event_idle_proc
-    or eax,eax
+    or eax,ds:mod_is_debug_event_idle_proc+4
     stc
     jz is_idle_done
 ;    
-    call ds:mod_is_debug_event_idle_proc
+    call fword ptr ds:mod_is_debug_event_idle_proc
 
 is_idle_done:
     pop bx
@@ -1843,11 +1844,11 @@ get_debug_event  Proc far
     mov bx,ax
     mov ds,ax
     mov ecx,ds:mod_get_debug_event_proc
-    or ecx,ecx
+    or ecx,ds:mod_get_debug_event_proc+4
     stc
     jz get_debug_event_done
 ;    
-    call ds:mod_get_debug_event_proc
+    call fword ptr ds:mod_get_debug_event_proc
 
 get_debug_event_done:
     pop dx
@@ -1882,11 +1883,11 @@ get_debug_event_data32  Proc far
     mov ds,ax
     mov bx,ax
     mov eax,ds:mod_get_debug_event_data_proc
-    or eax,eax
+    or eax,ds:mod_get_debug_event_data_proc+4
     stc
     jz get_debug_event_data_done32
 ;    
-    call ds:mod_get_debug_event_data_proc
+    call fword ptr ds:mod_get_debug_event_data_proc
 
 get_debug_event_data_done32:
     pop dx
@@ -1909,11 +1910,11 @@ get_debug_event_data16  Proc far
     mov bx,ax
     mov ds,ax
     mov eax,ds:mod_get_debug_event_data_proc
-    or eax,eax
+    or eax,ds:mod_get_debug_event_data_proc+4
     stc
     jz get_debug_event_data_done16
 ;    
-    call ds:mod_get_debug_event_data_proc
+    call fword ptr ds:mod_get_debug_event_data_proc
 
 get_debug_event_data_done16:
     pop edi
@@ -1950,11 +1951,11 @@ clear_debug_event  Proc far
     mov bx,ax
     mov ds,ax
     mov ecx,ds:mod_clear_debug_event_proc
-    or ecx,ecx
+    or ecx,ds:mod_clear_debug_event_proc+4
     stc
     jz clear_debug_event_done
 ;    
-    call ds:mod_clear_debug_event_proc
+    call fword ptr ds:mod_clear_debug_event_proc
 
 clear_debug_event_done:
     pop dx
@@ -1994,11 +1995,11 @@ continue_debug_event  Proc far
     mov ds,ax
     mov eax,esi
     mov ecx,ds:mod_continue_debug_event_proc
-    or ecx,ecx
+    or ecx,ds:mod_continue_debug_event_proc+4
     stc
     jz continue_debug_event_done
 ;    
-    call ds:mod_continue_debug_event_proc
+    call fword ptr ds:mod_continue_debug_event_proc
 
 continue_debug_event_done:
     pop esi
