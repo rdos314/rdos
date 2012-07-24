@@ -69,7 +69,6 @@ public:
     long FDecompSize;
 
     int FEncrypted;
-    unsigned int FKeys[3]; 
     
 protected:
 
@@ -83,6 +82,8 @@ private:
 
     int FLeftoverCount;
     char *FLeftoverPtr;
+
+    unsigned int FKeys[3]; 
 };
 
 #endif
