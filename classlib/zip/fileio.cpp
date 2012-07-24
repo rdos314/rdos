@@ -203,7 +203,7 @@ int fillinbuf() /* like readbyte() except returns number of bytes in inbuf */
         int n;
 
         for (n = UnzipClass.FInCount, p = (unsigned char *)UnzipClass.FInPtr;  n--;  p++)
-            zdecode(*p);
+            *p = UnzipClass.ZDecode(*p);
     }
 
     return UnzipClass.FInCount;

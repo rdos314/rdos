@@ -48,53 +48,6 @@ static int keys[3];       /* keys defining the pseudo-random sequence */
 #    define Trace(x)
 #endif
 
-#define CRC32(c, b, crctab) (crctab[((int)(c) ^ (b)) & 0xff] ^ ((c) >> 8))
-
-/***********************************************************************
- * Return the next byte in the pseudo-random sequence
- */
-int decrypt_byte()
-{
-    unsigned temp;  /* POTENTIAL BUG:  temp*(temp^1) may overflow in an
-                     * unpredictable manner on 16-bit systems; not a problem
-                     * with any known compiler so far, though */
-
-    temp = ((unsigned)GLOBAL(keys[2]) & 0xffff) | 2;
-    return (int)(((temp * (temp ^ 1)) >> 8) & 0xff);
-}
-
-/***********************************************************************
- * Update the encryption keys with the next byte of plain text
- */
-int update_keys(int c)
-{
-    GLOBAL(keys[0]) = CRC32(GLOBAL(keys[0]), c, G.crc_32_tab);
-    GLOBAL(keys[1]) = (GLOBAL(keys[1])
-                       + (GLOBAL(keys[0]) & 0xff))
-                      * 134775813L + 1;
-    {
-      register int keyshift = (int)(GLOBAL(keys[1]) >> 24);
-      GLOBAL(keys[2]) = CRC32(GLOBAL(keys[2]), keyshift, G.crc_32_tab);
-    }
-    return c;
-}
-
-
-/***********************************************************************
- * Initialize the encryption keys and the random header according to
- * the given password.
- */
-void init_keys(const char *passwd)
-{
-    GLOBAL(keys[0]) = 305419896L;
-    GLOBAL(keys[1]) = 591751049L;
-    GLOBAL(keys[2]) = 878082192L;
-    while (*passwd != '\0') {
-        update_keys((int)*passwd);
-        passwd++;
-    }
-}
-
 /***********************************************************************
  * Get the password and set up keys for current zipfile member.
  * Return PK_ class error.
@@ -207,12 +160,12 @@ static int testkey(const unsigned char *h, const char *key)
     unsigned char hh[RAND_HEAD_LEN]; /* decrypted header */
 
     /* set keys and save the encrypted header */
-    init_keys(key);
+    UnzipClass.SetupEncryption(key);
     memcpy(hh, h, RAND_HEAD_LEN);
 
     /* check password */
     for (n = 0; n < RAND_HEAD_LEN; n++) {
-        zdecode(hh[n]);
+        hh[n] = UnzipClass.ZDecode(hh[n]);
         Trace(" %02x", hh[n]);
     }
 
@@ -238,7 +191,7 @@ static int testkey(const unsigned char *h, const char *key)
     for (n = (long)UnzipClass.FInCount > UnzipClass.FDecompSize ?
              (int)UnzipClass.FDecompSize : UnzipClass.FInCount,
          p = (unsigned char *)UnzipClass.FInPtr; n--; p++)
-        zdecode(*p);
+        *p = UnzipClass.ZDecode(*p);
     return 0;       /* OK */
 
 } /* end function testkey() */

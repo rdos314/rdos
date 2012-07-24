@@ -179,7 +179,6 @@ typedef struct Globals {
     min_info *pInfo;
     union work area;                /* see unzpriv.h for definition of work */
 
-    const unsigned *crc_32_tab;
     unsigned long       crc32val;             /* CRC shift reg. (was static in funzip) */
 
     unsigned long       bitbuf;
@@ -219,7 +218,6 @@ typedef struct Globals {
 
     char *key;         /* crypt static: decryption password or NULL */
     int nopwd;         /* crypt static */
-    unsigned int keys[3];   /* crypt static: keys defining pseudo-random sequence */
 
     int echofd;        /* ttyio static: file descriptor whose echo is off */
 

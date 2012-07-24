@@ -268,13 +268,6 @@ int extract_or_test_files()    /* return PK-type error code */
      * and/or extracting the data content of the zip archive.
      */
 
-    /* a) initialize the CRC table pointer (once) */
-    if (G.crc_32_tab == NULL) {
-        if ((G.crc_32_tab = get_crc_table()) == NULL) {
-            return PK_MEM;
-        }
-    }
-
     /* b) check out if specified extraction root directory exists */
     if (uO.exdir != (char *)NULL && G.extract_flag) {
         G.create_dirs = !uO.fflag;

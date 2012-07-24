@@ -48,12 +48,15 @@ public:
     void (*OnInfo)(TUnzip *unzip, int code, const char *msg);
 
     void SetInputFile(const char *name);
+    void SetupEncryption(const char *password);
     int OpenInputFile();
     unsigned ReadBuf(char *buf, register unsigned size);
     void UndeferInput();
     void DeferInput();
     int ReadByte();
     int GetNextByte();
+
+    int ZDecode(int c);
 
     TString FInputFileName;
     int FInputHandle;
@@ -66,11 +69,15 @@ public:
     long FDecompSize;
 
     int FEncrypted;
+    unsigned int FKeys[3]; 
     
 protected:
 
 private:
     void Init();
+
+    int DecryptByte();
+    int UpdateKeys(int c);
 
     char FLogBuf[512];
 

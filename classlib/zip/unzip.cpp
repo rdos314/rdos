@@ -36,6 +36,7 @@
 
 #include "rdos.h"
 #include "unzip.h"
+#include "zlib.h"
 
 #define     FALSE       0
 #define     TRUE        !FALSE
@@ -45,10 +46,7 @@
 #define MAX(a,b)   ((a) > (b) ? (a) : (b))
 #define MIN(a,b)   ((a) < (b) ? (a) : (b))
 
-int  decrypt_byte();
-int  update_keys(int c);
-
-#define zdecode(c)   update_keys(c ^= decrypt_byte())
+const unsigned *crctab = get_crc_table();
 
 typedef struct
 {
@@ -313,6 +311,29 @@ void TUnzip::Info(int code, const char *format, ...)
     }
 }
 
+
+/*##########################################################################
+#
+#   Name       : TUnzip::SetupEncryption
+#
+#   Purpose....: Set encryption keys
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUnzip::SetupEncryption(const char *password)
+{
+    FKeys[0] = 305419896L;
+    FKeys[1] = 591751049L;
+    FKeys[2] = 878082192L;
+    while (*password) {
+        UpdateKeys((int)*password);
+        password++;
+    }
+}
+
 /*##########################################################################
 #
 #   Name       : TUnzip::SetInputFile
@@ -421,7 +442,6 @@ void TUnzip::UndeferInput()
         FInCount = 0;
 } /* end function undefer_input() */
 
-
 /*##########################################################################
 #
 #   Name       : TUnzip::DeferInput
@@ -446,6 +466,67 @@ void TUnzip::DeferInput()
     FDecompSize -= FInCount;
 } /* end function defer_input() */
 
+/*##########################################################################
+#
+#   Name       : TUnzip::DecryptByte
+#
+#   Purpose....: Return the next byte in the pseudo-random sequence
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::DecryptByte()
+{
+    unsigned temp;  /* POTENTIAL BUG:  temp*(temp^1) may overflow in an
+                     * unpredictable manner on 16-bit systems; not a problem
+                     * with any known compiler so far, though */
+
+    temp = ((unsigned)FKeys[2] & 0xffff) | 2;
+    return (int)(((temp * (temp ^ 1)) >> 8) & 0xff);
+}
+
+/*##########################################################################
+#
+#   Name       : TUnzip::UpdateKeys
+#
+#   Purpose....: Update the encryption keys with the next byte of plain text
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::UpdateKeys(int c)
+{
+   int keyshift;
+
+    FKeys[0] = crctab[(int)(FKeys[0] ^ c) & 0xff] ^ (c >> 8);
+    FKeys[1] = (FKeys[1] + FKeys[0] & 0xff) * 134775813L + 1;
+
+    keyshift = FKeys[1] >> 24;
+    FKeys[2] = crctab[(int)(FKeys[2] ^ keyshift) & 0xff] ^ (keyshift >> 8);
+
+    return c;
+}
+
+/*##########################################################################
+#
+#   Name       : TUnzip::ZDecode
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::ZDecode(int c)
+{
+    c ^= DecryptByte();
+    return UpdateKeys(c);
+}
 
 /*##########################################################################
 #
@@ -487,7 +568,7 @@ int TUnzip::ReadByte()   /* refill inbuf and return a byte if available, else EO
          * was a bug in fillinbuf() -- was it also a bug here?
          */
         for (n = FInCount, p = FInPtr;  n--;  p++)
-            zdecode(*p);
+            *p = ZDecode(*p);
     }
 
     --FInCount;
