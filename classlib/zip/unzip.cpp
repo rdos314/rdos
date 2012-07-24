@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "rdos.h"
 #include "unzip.h"
 
 #define     FALSE       0
@@ -297,4 +298,50 @@ void TUnzip::Info(int code, const char *format, ...)
         FLogBuf[len] = 0;
         (*OnInfo)(this, code, FLogBuf);
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TUnzip::SetInputFile
+#
+#   Purpose....: Set input file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUnzip::SetInputFile(const char *filename)
+{
+    FInputFileName = filename;
+}
+
+/*##########################################################################
+#
+#   Name       : TUnzip::OpenInputFile
+#
+#   Purpose....: Open input file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::OpenInputFile()    /* return 1 if open failed */
+{
+    /*
+     *  open the zipfile for reading and in BINARY mode to prevent cr/lf
+     *  translation, which would corrupt the bitstreams
+     */
+
+    FInputHandle = RdosOpenFile(FInputFileName.GetData(), 0);
+
+    if (!FInputHandle)
+    {
+        Info(0x401, "error:  cannot open zipfile [ %s ]\n",
+          FInputFileName.GetData());
+        return 1;
+    }
+    return 0;
+
 }

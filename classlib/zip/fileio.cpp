@@ -122,9 +122,6 @@ static int disk_error OF(());
 /* Strings used in fileio.c */
 /****************************/
 
-static const char CannotOpenZipfile[] =
-  "error:  cannot open zipfile [ %s ]\n        %s\n";
-
 static const char CannotCreateFile[] =
   "error:  cannot create %s\n        %s\n";
 
@@ -147,33 +144,6 @@ static const char ExtraFieldTooLong[] =
      static const char PasswPrompt[] = "[%s] %s password: ";
      static const char PasswPrompt2[] = "Enter password: ";
      static const char PasswRetry[] = "password incorrect--reenter: ";
-
-
-
-
-
-/******************************/
-/* Function open_input_file() */
-/******************************/
-
-int open_input_file()    /* return 1 if open failed */
-{
-    /*
-     *  open the zipfile for reading and in BINARY mode to prevent cr/lf
-     *  translation, which would corrupt the bitstreams
-     */
-
-    G.zipfd = RdosOpenFile(G.zipfn, 0);
-
-    if (!G.zipfd)
-    {
-        Info(0x401, CannotOpenZipfile,
-          G.zipfn, strerror(errno));
-        return 1;
-    }
-    return 0;
-
-} /* end function open_input_file() */
 
 
 
@@ -274,7 +244,7 @@ unsigned readbuf(char *buf, register unsigned size)   /* return number of bytes 
     n = size;
     while (size) {
         if (G.incnt <= 0) {
-            if ((G.incnt = RdosReadFile(G.zipfd, (char *)G.inbuf, INBUFSIZ)) == 0)
+            if ((G.incnt = RdosReadFile(UnzipClass.FInputHandle, (char *)G.inbuf, INBUFSIZ)) == 0)
                 return (n-size);
             else if (G.incnt < 0) {
                 /* another hack, but no real harm copying same thing twice */
@@ -314,7 +284,7 @@ int readbyte()   /* refill inbuf and return a byte if available, else EOF */
         return EOF;
     }
     if (G.incnt <= 0) {
-        if ((G.incnt = RdosReadFile(G.zipfd, (char *)G.inbuf, INBUFSIZ)) == 0) {
+        if ((G.incnt = RdosReadFile(UnzipClass.FInputHandle, (char *)G.inbuf, INBUFSIZ)) == 0) {
             return EOF;
         } else if (G.incnt < 0) {  /* "fail" (abort, retry, ...) returns this */
             /* another hack, but no real harm copying same thing twice */
@@ -352,7 +322,7 @@ int readbyte()   /* refill inbuf and return a byte if available, else EOF */
 int fillinbuf() /* like readbyte() except returns number of bytes in inbuf */
 {
     if (G.mem_mode ||
-                  (G.incnt = RdosReadFile(G.zipfd, (char *)G.inbuf, INBUFSIZ)) <= 0)
+                  (G.incnt = RdosReadFile(UnzipClass.FInputHandle, (char *)G.inbuf, INBUFSIZ)) <= 0)
         return 0;
     G.cur_zipfile_bufstart += INBUFSIZ;  /* always starts on a block boundary */
     G.inptr = G.inbuf;
@@ -404,15 +374,15 @@ int seek_zipf(long abs_offset)
 
     if (request < 0) {
         Info(1, SeekMsg,
-             G.zipfn, ReportMsg);
+             UnzipClass.FInputFileName.GetData(), ReportMsg);
         return(PK_BADERR);
     } else if (bufstart != G.cur_zipfile_bufstart) {
         Trace("fpos_zip: abs_offset = %s, G.extra_bytes = %s\n",
           fzofft(abs_offset, NULL, NULL),
           fzofft(G.extra_bytes, NULL, NULL));
 
-        RdosSetFilePos(G.zipfd, bufstart);
-        G.cur_zipfile_bufstart = RdosGetFilePos(G.zipfd);
+        RdosSetFilePos(UnzipClass.FInputHandle, bufstart);
+        G.cur_zipfile_bufstart = RdosGetFilePos(UnzipClass.FInputHandle);
         Trace("       request = %s, (abs+extra) = %s, inbuf_offset = %s\n",
           fzofft(request, NULL, NULL),
           fzofft((abs_offset+G.extra_bytes), NULL, NULL),
@@ -420,7 +390,7 @@ int seek_zipf(long abs_offset)
         Trace("       bufstart = %s, cur_zipfile_bufstart = %s\n",
           fzofft(bufstart, NULL, NULL),
           fzofft(G.cur_zipfile_bufstart, NULL, NULL));
-        if ((G.incnt = RdosReadFile(G.zipfd, (char *)G.inbuf, INBUFSIZ)) <= 0)
+        if ((G.incnt = RdosReadFile(UnzipClass.FInputHandle, (char *)G.inbuf, INBUFSIZ)) <= 0)
             return(PK_EOF);
         G.incnt -= (int)inbuf_offset;
         G.inptr = G.inbuf + (int)inbuf_offset;

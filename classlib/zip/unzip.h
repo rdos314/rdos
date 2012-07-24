@@ -33,6 +33,8 @@
 #ifndef _UNZIP_H
 #define _UNZIP_H
 
+#include "str.h"
+
 class TUnzip
 {
 public:
@@ -44,6 +46,12 @@ public:
 
     void (*OnTrace)(TUnzip *unzip, const char *msg);
     void (*OnInfo)(TUnzip *unzip, int code, const char *msg);
+
+    void SetInputFile(const char *name);
+    int OpenInputFile();
+
+    TString FInputFileName;
+    int FInputHandle;
 
 protected:
 

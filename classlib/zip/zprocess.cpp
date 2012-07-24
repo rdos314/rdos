@@ -200,10 +200,13 @@ int process_zipfiles()    /* return PK-type error code */
     NumWinFiles = NumLoseFiles = NumWarnFiles = 0;
     NumMissDirs = NumMissFiles = 0;
 
-    while ((G.zipfn = do_wild(G.wildzipfn)) != (char *)NULL) {
-        Trace("do_wild( %s ) returns %s\n", G.wildzipfn, G.zipfn);
+    char *inputfn;
 
-        lastzipfn = G.zipfn;
+    while ((inputfn = do_wild(G.wildzipfn)) != 0) {
+        UnzipClass.SetInputFile(inputfn);
+        Trace("do_wild( %s ) returns %s\n", G.wildzipfn, inputfn);
+
+        lastzipfn = inputfn;
 
         /* print a blank line between the output of different zipfiles */
         if (!uO.qflag  &&  error != PK_NOZIP  &&  error != IZ_DIR
@@ -255,7 +258,7 @@ int process_zipfiles()    /* return PK-type error code */
              */
               strcpy(lastzipfn + strlen(lastzipfn), ZSUFX);
 
-            G.zipfn = lastzipfn;
+            UnzipClass.SetInputFile(lastzipfn);
 
             NumMissDirs = NumMissFiles = 0;
             error_in_archive = PK_COOL;
@@ -393,24 +396,24 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
     which would corrupt the bit streams.
   ---------------------------------------------------------------------------*/
 
-    if (stat(G.zipfn, &G.statbuf) ||
+    if (stat(UnzipClass.FInputFileName.GetData(), &G.statbuf) ||
         (error = S_ISDIR(G.statbuf.st_mode)) != 0)
     {
         if (lastchance && (uO.qflag < 3)) {
             if (G.no_ecrec)
                 Info(0x401, CannotFindZipfileDirMsg,
                   (uO.zipinfo_mode ? Zipnfo : Unzip),
-                  G.wildzipfn, uO.zipinfo_mode? "  " : "", G.zipfn);
+                  G.wildzipfn, uO.zipinfo_mode? "  " : "", UnzipClass.FInputFileName.GetData());
             else
                 Info(0x401, CannotFindEitherZipfile,
                   (uO.zipinfo_mode ? Zipnfo : Unzip),
-                  G.wildzipfn, G.zipfn);
+                  G.wildzipfn, UnzipClass.FInputFileName.GetData());
         }
         return error? IZ_DIR : PK_NOZIP;
     }
     G.ziplen = G.statbuf.st_size;
 
-    if (open_input_file())   /* this should never happen, given */
+    if (UnzipClass.OpenInputFile())   /* this should never happen, given */
         return PK_NOZIP;        /*  the stat() test above, but... */
 
 
@@ -428,15 +431,15 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
     if ( (!uO.zipinfo_mode && !uO.qflag
          )
        )
-        Info(0, LogInitline, G.zipfn);
+        Info(0, LogInitline, UnzipClass.FInputFileName.GetData());
 
     if ( (error_in_archive = find_ecrec(MIN(G.ziplen, 66000L)))
          > PK_WARN )
     {
-        RdosCloseFile(G.zipfd);
+        RdosCloseFile(UnzipClass.FInputHandle);
 
         if (maybe_exe)
-            Info(0x401, MaybeExe, G.zipfn);
+            Info(0x401, MaybeExe, UnzipClass.FInputFileName.GetData());
         if (lastchance)
             return error_in_archive;
         else {
@@ -446,7 +449,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
     }
 
     if ((uO.zflag > 0) && !uO.zipinfo_mode) { /* unzip: zflag = comment ONLY */
-        RdosCloseFile(G.zipfd);
+        RdosCloseFile(UnzipClass.FInputHandle);
         return error_in_archive;
     }
 
@@ -461,13 +464,13 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
         G.ecrec.number_this_disk != G.ecrec.num_disk_start_cdir)
     {
         if (G.ecrec.number_this_disk > G.ecrec.num_disk_start_cdir) {
-            Info(0x401, CentDirNotInZipMsg, G.zipfn,
+            Info(0x401, CentDirNotInZipMsg, UnzipClass.FInputFileName.GetData(),
               (unsigned long)G.ecrec.number_this_disk,
               (unsigned long)G.ecrec.num_disk_start_cdir);
             error_in_archive = PK_FIND;
             too_weird_to_continue = TRUE;
         } else {
-            Info(0x401, EndCentDirBogus, G.zipfn,
+            Info(0x401, EndCentDirBogus, UnzipClass.FInputFileName.GetData(),
               (unsigned long)G.ecrec.number_this_disk,
               (unsigned long)G.ecrec.num_disk_start_cdir);
             error_in_archive = PK_WARN;
@@ -476,26 +479,26 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
 
     if (!too_weird_to_continue) {  /* (relatively) normal zipfile:  go for it */
         if (error) {
-            Info(0x401, MaybePakBug, G.zipfn);
+            Info(0x401, MaybePakBug, UnzipClass.FInputFileName.GetData());
             error_in_archive = PK_WARN;
         }
         if ((G.extra_bytes = G.real_ecrec_offset-G.expect_ecrec_offset) <
             (long)0)
         {
             Info(0x401, MissingBytes,
-              G.zipfn, fzofft((-G.extra_bytes), NULL, NULL));
+              UnzipClass.FInputFileName.GetData(), fzofft((-G.extra_bytes), NULL, NULL));
             error_in_archive = PK_ERR;
         } else if (G.extra_bytes > 0) {
             if ((G.ecrec.offset_start_central_directory == 0) &&
                 (G.ecrec.size_central_directory != 0))   /* zip 1.5 -go bug */
             {
-                Info(0x401, NullCentDirOffset, G.zipfn);
+                Info(0x401, NullCentDirOffset, UnzipClass.FInputFileName.GetData());
                 G.ecrec.offset_start_central_directory = G.extra_bytes;
                 G.extra_bytes = 0;
                 error_in_archive = PK_ERR;
             }
             else {
-                Info(0x401, ExtraBytesAtStart, G.zipfn,
+                Info(0x401, ExtraBytesAtStart, UnzipClass.FInputFileName.GetData(),
                   fzofft(G.extra_bytes, NULL, NULL),
                   (G.extra_bytes == 1)? "":"s");
                 error_in_archive = PK_WARN;
@@ -511,8 +514,8 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
                 Info(0, "%sEmpty zipfile.\n",
                   uO.lflag>9? "\n  " : "");
             else
-                Info(0x401, ZipfileEmpty, G.zipfn);
-            RdosCloseFile(G.zipfd);
+                Info(0x401, ZipfileEmpty, UnzipClass.FInputFileName.GetData());
+            RdosCloseFile(UnzipClass.FInputHandle);
             return (error_in_archive > PK_WARN)? error_in_archive : PK_WARN;
         }
 
@@ -525,7 +528,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
 
         error = seek_zipf(G.ecrec.offset_start_central_directory);
         if (error == PK_BADERR) {
-            RdosCloseFile(G.zipfd);
+            RdosCloseFile(UnzipClass.FInputHandle);
             return PK_BADERR;
         }
         if ((error != PK_OK) || (readbuf(G.sig, 4) == 0) ||
@@ -539,12 +542,12 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
                 memcmp(G.sig, central_hdr_sig, 4))
             {
                 if (error != PK_BADERR)
-                  Info(0x401, CentDirStartNotFound, G.zipfn, ReportMsg);
-                RdosCloseFile(G.zipfd);
+                  Info(0x401, CentDirStartNotFound, UnzipClass.FInputFileName.GetData(), ReportMsg);
+                RdosCloseFile(UnzipClass.FInputHandle);
                 return (error != PK_OK ? error : PK_BADERR);
             }
             Info(0x401, CentDirTooLong,
-              G.zipfn, fzofft((-tmp), NULL, NULL));
+              UnzipClass.FInputFileName.GetData(), fzofft((-tmp), NULL, NULL));
             error_in_archive = PK_ERR;
         }
 
@@ -556,7 +559,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
 
         error = seek_zipf(G.ecrec.offset_start_central_directory);
         if (error != PK_OK) {
-            RdosCloseFile(G.zipfd);
+            RdosCloseFile(UnzipClass.FInputHandle);
             return error;
         }
 
@@ -580,7 +583,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
             error_in_archive = error;   /*  with (for example) a warning */
     } /* end if (!too_weird_to_continue) */
 
-    RdosCloseFile(G.zipfd);
+    RdosCloseFile(UnzipClass.FInputHandle);
     return error_in_archive;
 
 } /* end function do_seekable() */
@@ -605,9 +608,9 @@ static int rec_find(long searchlen, char* signature, int rec_size)
   ---------------------------------------------------------------------------*/
 
     if ((tail_len = G.ziplen % INBUFSIZ) > rec_size) {
-        RdosSetFilePos(G.zipfd, G.ziplen-tail_len);
-        G.cur_zipfile_bufstart = RdosGetFilePos(G.zipfd);
-        if ((G.incnt = RdosReadFile(G.zipfd, (char *)G.inbuf,
+        RdosSetFilePos(UnzipClass.FInputHandle, G.ziplen-tail_len);
+        G.cur_zipfile_bufstart = RdosGetFilePos(UnzipClass.FInputHandle);
+        if ((G.incnt = RdosReadFile(UnzipClass.FInputHandle, (char *)G.inbuf,
             (unsigned int)tail_len)) != (int)tail_len)
             return 2;      /* it's expedient... */
 
@@ -638,8 +641,8 @@ static int rec_find(long searchlen, char* signature, int rec_size)
 
     for (i = 1;  !found && (i <= numblks);  ++i) {
         G.cur_zipfile_bufstart -= INBUFSIZ;
-        RdosSetFilePos(G.zipfd, G.cur_zipfile_bufstart);
-        if ((G.incnt = RdosReadFile(G.zipfd,(char *)G.inbuf,INBUFSIZ))
+        RdosSetFilePos(UnzipClass.FInputHandle, G.cur_zipfile_bufstart);
+        if ((G.incnt = RdosReadFile(UnzipClass.FInputHandle,(char *)G.inbuf,INBUFSIZ))
             != INBUFSIZ)
             return 2;          /* read error is fatal failure */
 
@@ -685,13 +688,13 @@ static int find_ecrec64(long searchlen)         /* return PK-class error */
       /* Seeking would go past beginning, so probably empty archive */
       return PK_COOL;
 
-    RdosSetFilePos(G.zipfd, ecloc64_start_offset);
-    G.cur_zipfile_bufstart = RdosGetFilePos(G.zipfd);
+    RdosSetFilePos(UnzipClass.FInputHandle, ecloc64_start_offset);
+    G.cur_zipfile_bufstart = RdosGetFilePos(UnzipClass.FInputHandle);
 
-    if ((G.incnt = RdosReadFile(G.zipfd, (char *)byterecL, ECLOC64_SIZE+4))
+    if ((G.incnt = RdosReadFile(UnzipClass.FInputHandle, (char *)byterecL, ECLOC64_SIZE+4))
         != (ECLOC64_SIZE+4)) {
       if (uO.qflag || uO.zipinfo_mode)
-          Info(0x401, "[%s]\n", G.zipfn);
+          Info(0x401, "[%s]\n", UnzipClass.FInputFileName.GetData());
       Info(0x401, Cent64EndSigSearchErr);
       return PK_ERR;
     }
@@ -740,19 +743,19 @@ static int find_ecrec64(long searchlen)         /* return PK-class error */
     if (ecrec64_start_offset > (zusz_t)ecloc64_start_offset) {
       /* ecrec64 has to be before ecrec64 locator */
       if (uO.qflag || uO.zipinfo_mode)
-          Info(0x401, "[%s]\n", G.zipfn);
+          Info(0x401, "[%s]\n", UnzipClass.FInputFileName.GetData());
       Info(0x401, Cent64EndSigSearchErr);
       return PK_ERR;
     }
 
 
-    RdosSetFilePos(G.zipfd, ecrec64_start_offset);
-    G.cur_zipfile_bufstart = RdosGetFilePos(G.zipfd);
+    RdosSetFilePos(UnzipClass.FInputHandle, ecrec64_start_offset);
+    G.cur_zipfile_bufstart = RdosGetFilePos(UnzipClass.FInputHandle);
 
-    if ((G.incnt = RdosReadFile(G.zipfd, (char *)byterec, ECREC64_SIZE+4))
+    if ((G.incnt = RdosReadFile(UnzipClass.FInputHandle, (char *)byterec, ECREC64_SIZE+4))
         != (ECREC64_SIZE+4)) {
       if (uO.qflag || uO.zipinfo_mode)
-          Info(0x401, "[%s]\n", G.zipfn);
+          Info(0x401, "[%s]\n", UnzipClass.FInputFileName.GetData());
       Info(0x401, Cent64EndSigSearchErr);
       return PK_ERR;
     }
@@ -766,13 +769,13 @@ static int find_ecrec64(long searchlen)         /* return PK-class error */
       /* Make a guess as to where the Zip64 EOCD Record might be */
       ecrec64_start_offset = ecloc64_start_offset - ECREC64_SIZE - 4;
 
-      RdosSetFilePos(G.zipfd, ecrec64_start_offset);
-      G.cur_zipfile_bufstart = RdosGetFilePos(G.zipfd);
+      RdosSetFilePos(UnzipClass.FInputHandle, ecrec64_start_offset);
+      G.cur_zipfile_bufstart = RdosGetFilePos(UnzipClass.FInputHandle);
 
-      if ((G.incnt = RdosReadFile(G.zipfd, (char *)byterec, ECREC64_SIZE+4))
+      if ((G.incnt = RdosReadFile(UnzipClass.FInputHandle, (char *)byterec, ECREC64_SIZE+4))
           != (ECREC64_SIZE+4)) {
         if (uO.qflag || uO.zipinfo_mode)
-            Info(0x401, "[%s]\n", G.zipfn);
+            Info(0x401, "[%s]\n", UnzipClass.FInputFileName.GetData());
         Info(0x401, Cent64EndSigSearchErr);
         return PK_ERR;
       }
@@ -781,13 +784,13 @@ static int find_ecrec64(long searchlen)         /* return PK-class error */
         /* Zip64 EOCD Record not found */
         /* Probably something not so easy to handle so exit */
         if (uO.qflag || uO.zipinfo_mode)
-            Info(0x401, "[%s]\n", G.zipfn);
+            Info(0x401, "[%s]\n", UnzipClass.FInputFileName.GetData());
         Info(0x401, Cent64EndSigSearchErr);
         return PK_ERR;
       }
 
       if (uO.qflag || uO.zipinfo_mode)
-          Info(0x401, "[%s]\n", G.zipfn);
+          Info(0x401, "[%s]\n", UnzipClass.FInputFileName.GetData());
       Info(0x401, Cent64EndSigSearchOff);
     }
 
@@ -880,8 +883,8 @@ static int find_ecrec(long searchlen)          /* return PK-class error */
   ---------------------------------------------------------------------------*/
 
     if (G.ziplen <= INBUFSIZ) {
-        RdosSetFilePos(G.zipfd, 0L);
-        if ((G.incnt = RdosReadFile(G.zipfd,(char *)G.inbuf,(unsigned int)G.ziplen))
+        RdosSetFilePos(UnzipClass.FInputHandle, 0L);
+        if ((G.incnt = RdosReadFile(UnzipClass.FInputHandle,(char *)G.inbuf,(unsigned int)G.ziplen))
             == (int)G.ziplen)
 
             /* 'P' must be at least (ECREC_SIZE+4) bytes from end of zipfile */
@@ -917,7 +920,7 @@ static int find_ecrec(long searchlen)          /* return PK-class error */
 
     if (!found) {
         if (uO.qflag || uO.zipinfo_mode)
-            Info(0x401, "[%s]\n", G.zipfn);
+            Info(0x401, "[%s]\n", UnzipClass.FInputFileName.GetData());
         Info(0x401, CentDirEndSigNotFound);
         return PK_ERR;   /* failed */
     }

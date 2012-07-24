@@ -1005,7 +1005,6 @@ void     fnprint                 OF(());
     Functions in fileio.c:
   ---------------------------------------------------------------------------*/
 
-int      open_input_file      OF(());
 int      open_outfile         OF(());                    /* also vms.c */
 void     undefer_input        OF(());
 void     defer_leftover_input OF(());

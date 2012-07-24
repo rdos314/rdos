@@ -494,9 +494,9 @@ int extract_or_test_files()    /* return PK-type error code */
          * the next batch of files.
          */
 
-        RdosSetFilePos(G.zipfd, cd_bufstart);
-        G.cur_zipfile_bufstart = RdosGetFilePos(G.zipfd);
-        RdosReadFile(G.zipfd, (char *)G.inbuf, INBUFSIZ);  /* been here before... */
+        RdosSetFilePos(UnzipClass.FInputHandle, cd_bufstart);
+        G.cur_zipfile_bufstart = RdosGetFilePos(UnzipClass.FInputHandle);
+        RdosReadFile(UnzipClass.FInputHandle, (char *)G.inbuf, INBUFSIZ);  /* been here before... */
         G.inptr = cd_inptr;
         G.incnt = cd_incnt;
         ++blknum;
@@ -611,13 +611,13 @@ int extract_or_test_files()    /* return PK-type error code */
         if (uO.qflag < 2) {        /* GRR 930710:  was (uO.qflag == 1) */
             if (error_in_archive)
                 Info(0, ErrorInArchive,
-                  (error_in_archive == PK_WARN)? "warning-" : "", G.zipfn);
+                  (error_in_archive == PK_WARN)? "warning-" : "", UnzipClass.FInputFileName.GetData());
             else if (num == 0L)
-                Info(0, ZeroFilesTested, G.zipfn);
+                Info(0, ZeroFilesTested, UnzipClass.FInputFileName.GetData());
             else if (G.process_all_files && (num_skipped+num_bad_pwd == 0L))
-                Info(0, NoErrInCompData, G.zipfn);
+                Info(0, NoErrInCompData, UnzipClass.FInputFileName.GetData());
             else
-                Info(0, NoErrInTestedFiles, G.zipfn, num, (num==1L)? "":"s");
+                Info(0, NoErrInTestedFiles, UnzipClass.FInputFileName.GetData(), num, (num==1L)? "":"s");
             if (num_skipped > 0L)
                 Info(0, FilesSkipped, num_skipped, (num_skipped==1L)? "":"s");
             if (num_bad_pwd > 0L)
@@ -833,7 +833,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
           (long)bufstart, (long)G.cur_zipfile_bufstart);
         if (request < 0) {
             Info(0x401, SeekMsg,
-              G.zipfn, ReportMsg);
+              UnzipClass.FInputFileName.GetData(), ReportMsg);
             error_in_archive = PK_ERR;
             if (*pfilnum == 1 && G.extra_bytes != 0L) {
                 Info(0x401, AttemptRecompensate);
@@ -850,7 +850,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
                 if (request < 0) {
                     Trace("debug: recompensated request still < 0\n");
                     Info(0x401, SeekMsg,
-                      G.zipfn, ReportMsg);
+                      UnzipClass.FInputFileName.GetData(), ReportMsg);
                     error_in_archive = PK_BADERR;
                     continue;
                 }
@@ -863,9 +863,9 @@ static int extract_or_test_entrylist(unsigned numchunk,
         if (bufstart != G.cur_zipfile_bufstart) {
             Trace("debug: bufstart != cur_zipfile_bufstart\n");
 
-            RdosSetFilePos(G.zipfd, bufstart);
-            G.cur_zipfile_bufstart = RdosGetFilePos(G.zipfd);
-            if ((G.incnt = RdosReadFile(G.zipfd, (char *)G.inbuf, INBUFSIZ)) <= 0)
+            RdosSetFilePos(UnzipClass.FInputHandle, bufstart);
+            G.cur_zipfile_bufstart = RdosGetFilePos(UnzipClass.FInputHandle);
+            if ((G.incnt = RdosReadFile(UnzipClass.FInputHandle, (char *)G.inbuf, INBUFSIZ)) <= 0)
             {
                 Info(0x401, OffsetMsg,
                   *pfilnum, "lseek", (long)bufstart);
@@ -1028,7 +1028,7 @@ startover:
                 if (*p) do {
                     if (*p == '\\') {
                         if (!G.reported_backslash) {
-                            Info(0x21, BackslashPathSep, G.zipfn);
+                            Info(0x21, BackslashPathSep, UnzipClass.FInputFileName.GetData());
                             G.reported_backslash = TRUE;
                             if (!error_in_archive)
                                 error_in_archive = PK_WARN;
@@ -1711,7 +1711,7 @@ int memextract(unsigned char *tgt, unsigned long tgtsize, const unsigned char *s
             if (uO.tflag)
                 error = PK_ERR | (DEFLATED << 8);  /* kludge for now */
             else {
-                Info(0x401, BadExtraFieldCRC, G.zipfn, crcval,
+                Info(0x401, BadExtraFieldCRC, UnzipClass.FInputFileName.GetData(), crcval,
                   extra_field_crc);
                 error = PK_ERR;
             }
