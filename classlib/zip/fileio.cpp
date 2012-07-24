@@ -198,7 +198,7 @@ int fillinbuf() /* like readbyte() except returns number of bytes in inbuf */
     UnzipClass.FInPtr = UnzipClass.FInBuf;
     UnzipClass.DeferInput();           /* decrements G.csize */
 
-    if (G.pInfo->encrypted) {
+    if (UnzipClass.FEncrypted) {
         unsigned char *p;
         int n;
 

@@ -64,8 +64,8 @@ public:
     int FBufStart;
     int FMemMode;
     long FDecompSize;
-    int FLeftoverCount;
-    char *FLeftoverPtr;
+
+    int FEncrypted;
     
 protected:
 
@@ -73,6 +73,9 @@ private:
     void Init();
 
     char FLogBuf[512];
+
+    int FLeftoverCount;
+    char *FLeftoverPtr;
 };
 
 #endif

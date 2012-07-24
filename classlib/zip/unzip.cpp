@@ -45,6 +45,11 @@
 #define MAX(a,b)   ((a) > (b) ? (a) : (b))
 #define MIN(a,b)   ((a) < (b) ? (a) : (b))
 
+int  decrypt_byte();
+int  update_keys(int c);
+
+#define zdecode(c)   update_keys(c ^= decrypt_byte())
+
 typedef struct
 {
     char           *_dest;
@@ -473,17 +478,17 @@ int TUnzip::ReadByte()   /* refill inbuf and return a byte if available, else EO
         DeferInput();           /* decrements G.csize */
     }
 
-//    if (G.pInfo->encrypted) {
-//        char *p;
-//        int n;
+    if (FEncrypted) {
+        char *p;
+        int n;
 
         /* This was previously set to decrypt one byte beyond G.csize, when
          * incnt reached that far.  GRR said, "but it's required:  why?"  This
          * was a bug in fillinbuf() -- was it also a bug here?
          */
-//        for (n = FInCount, p = FInPtr;  n--;  p++)
-//            zdecode(*p);
-//    }
+        for (n = FInCount, p = FInPtr;  n--;  p++)
+            zdecode(*p);
+    }
 
     --FInCount;
     return *FInPtr++;

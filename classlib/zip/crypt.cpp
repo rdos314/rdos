@@ -109,7 +109,7 @@ int decrypt(const char *passwrd)
 
     /* get header once (turn off "encrypted" flag temporarily so we don't
      * try to decrypt the same data twice) */
-    GLOBAL(pInfo->encrypted) = FALSE;
+    UnzipClass.FEncrypted = FALSE;
     UnzipClass.DeferInput();
     for (n = 0; n < RAND_HEAD_LEN; n++) {
         b = UnzipClass.GetNextByte();
@@ -117,7 +117,7 @@ int decrypt(const char *passwrd)
         Trace(" (%02x)", h[n]);
     }
     UnzipClass.UndeferInput();
-    GLOBAL(pInfo->encrypted) = TRUE;
+    UnzipClass.FEncrypted = TRUE;
 
     if (GLOBAL(newzip)) { /* this is first encrypted member in this zipfile */
         GLOBAL(newzip) = FALSE;

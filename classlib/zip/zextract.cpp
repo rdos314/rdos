@@ -681,7 +681,7 @@ static int store_info()   /* return 0 if skipping, 1 if OK */
     Check central directory info for version/compatibility requirements.
   ---------------------------------------------------------------------------*/
 
-    G.pInfo->encrypted = G.crec.general_purpose_bit_flag & 1;   /* bit field */
+    UnzipClass.FEncrypted = G.crec.general_purpose_bit_flag & 1;   /* bit field */
     G.pInfo->ExtLocHdr = (G.crec.general_purpose_bit_flag & 8) == 8;  /* bit */
     G.pInfo->textfile = G.crec.internal_file_attributes & 1;    /* bit field */
     G.pInfo->crc = G.crec.crc32;
@@ -967,7 +967,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
         if (G.lrec.compression_method == STORED) {
             zusz_t csiz_decrypted = G.lrec.csize;
 
-            if (G.pInfo->encrypted)
+            if (UnzipClass.FEncrypted)
                 csiz_decrypted -= 12;
             if (G.lrec.ucsize != csiz_decrypted) {
                 Info(0x401, WrnStorUCSizCSizDiff,
@@ -980,7 +980,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
             }
         }
 
-        if (G.pInfo->encrypted &&
+        if (UnzipClass.FEncrypted &&
             (error = decrypt(uO.pwdarg)) != PK_COOL) {
             if (error == PK_WARN) {
                 if (!((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag)))
@@ -1404,7 +1404,7 @@ static int extract_or_test_member()    /* return PK-type error code */
               FnFilter1(G.filename));
         Info(0x401, BadCRC, G.crc32val,
           G.lrec.crc32);
-        if (G.pInfo->encrypted)
+        if (UnzipClass.FEncrypted)
             Info(0x401, MaybeBadPasswd);
         error = PK_ERR;
     } else if (uO.tflag) {
