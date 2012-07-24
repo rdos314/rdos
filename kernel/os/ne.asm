@@ -1004,18 +1004,28 @@ create_lib	Proc near
 	call null_terminate_table
 ;
     mov es:mod_free_dll_proc,0
+    mov es:mod_free_dll_proc+4,0
     mov es:mod_get_proc_proc,0
+    mov es:mod_get_proc_proc+4,0
     mov es:mod_get_name_proc,0
+    mov es:mod_get_name_proc+4,0
     mov es:mod_start_wait_for_debug_event_proc,0
+    mov es:mod_start_wait_for_debug_event_proc+4,0
     mov es:mod_stop_wait_for_debug_event_proc,0
+    mov es:mod_stop_wait_for_debug_event_proc+4,0
     mov es:mod_is_debug_event_idle_proc,0
+    mov es:mod_is_debug_event_idle_proc+4,0
     mov es:mod_get_debug_event_proc,0
+    mov es:mod_get_debug_event_proc+4,0
     mov es:mod_get_debug_event_data_proc,0
+    mov es:mod_get_debug_event_data_proc+4,0
     mov es:mod_clear_debug_event_proc,0
+    mov es:mod_clear_debug_event_proc+4,0
     mov es:mod_continue_debug_event_proc,0
+    mov es:mod_continue_debug_event_proc+4,0
 ;
-    mov word ptr es:mod_get_resource_proc,OFFSET get_resource
-    mov word ptr es:mod_get_resource_proc+2,cs
+    mov es:mod_get_resource_proc,OFFSET get_resource
+    mov es:mod_get_resource_proc+4,cs
 	clc
 
 create_lib_done:
@@ -1823,7 +1833,7 @@ get_resource_done:
 	pop ebx
 	pop eax
 	pop es
-	ret
+	retf32
 get_resource	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
