@@ -185,32 +185,6 @@ int open_outfile()           /* return 1 if fail */
  */
 
 
-/************************/
-/* Function fillinbuf() */
-/************************/
-
-int fillinbuf() /* like readbyte() except returns number of bytes in inbuf */
-{
-    if (UnzipClass.FMemMode ||
-                  (UnzipClass.FInCount = RdosReadFile(UnzipClass.FInputHandle, (char *)UnzipClass.FInBuf, INBUFSIZ)) <= 0)
-        return 0;
-    UnzipClass.FBufStart += INBUFSIZ;  /* always starts on a block boundary */
-    UnzipClass.FInPtr = UnzipClass.FInBuf;
-    UnzipClass.DeferInput();           /* decrements G.csize */
-
-    if (UnzipClass.FEncrypted) {
-        unsigned char *p;
-        int n;
-
-        for (n = UnzipClass.FInCount, p = (unsigned char *)UnzipClass.FInPtr;  n--;  p++)
-            *p = UnzipClass.ZDecode(*p);
-    }
-
-    return UnzipClass.FInCount;
-
-} /* end function fillinbuf() */
-
-
 
 
 /************************/

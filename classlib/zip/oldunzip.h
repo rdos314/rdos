@@ -1005,7 +1005,6 @@ void     fnprint                 OF(());
   ---------------------------------------------------------------------------*/
 
 int      open_outfile         OF(());                    /* also vms.c */
-int      fillinbuf            OF(());
 int      seek_zipf            OF((long abs_offset));
    int   flush                OF((unsigned char *buf, unsigned long size, int unshrink));
 /* static int  disk_error     OF(()); */

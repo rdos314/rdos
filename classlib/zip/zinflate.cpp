@@ -321,7 +321,7 @@ static int zlib_outCB OF((void FAR *pG, unsigned char FAR *outbuf,
 static unsigned zlib_inCB(void *pG, unsigned char ** pInbuf)
 {
     *pInbuf = (unsigned char *)UnzipClass.FInBuf;
-    return fillinbuf();
+    return UnzipClass.FillInbuf();
 }
 
 static int zlib_outCB(void *pG, unsigned char *outbuf, unsigned outcnt)

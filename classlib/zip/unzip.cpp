@@ -593,3 +593,39 @@ int TUnzip::GetNextByte()
     return (FInCount-- > 0 ? (int)(*FInPtr++) : ReadByte());
 }
 
+
+/*##########################################################################
+#
+#   Name       : TUnzip::FillInbuf
+#
+#   Purpose....: Function fillinbuf()
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::FillInbuf() /* like readbyte() except returns number of bytes in inbuf */
+{
+    if (FMemMode)
+        return 0;
+
+    FInCount = RdosReadFile(FInputHandle, FInBuf, INBUFSIZ);
+    if (FInCount <= 0)
+        return 0;
+
+    FBufStart += INBUFSIZ;  /* always starts on a block boundary */
+    FInPtr = FInBuf;
+    DeferInput();           /* decrements G.csize */
+
+    if (FEncrypted) {
+        char *p;
+        int n;
+
+        for (n = FInCount, p = FInPtr;  n--;  p++)
+            *p = ZDecode(*p);
+    }
+
+    return FInCount;
+
+} /* end function fillinbuf() */

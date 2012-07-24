@@ -55,6 +55,7 @@ public:
     void DeferInput();
     int ReadByte();
     int GetNextByte();
+    int FillInbuf();
 
     int ZDecode(int c);
 
