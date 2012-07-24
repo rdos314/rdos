@@ -184,52 +184,6 @@ int open_outfile()           /* return 1 if fail */
  * file while using NEXTBYTE, check (G.csize + G.incnt), not G.csize.
  */
 
-/****************************/
-/* function undefer_input() */
-/****************************/
-
-void undefer_input()
-{
-    if (UnzipClass.FInCount > 0)
-        UnzipClass.FDecompSize += UnzipClass.FInCount;
-    if (G.incnt_leftover > 0) {
-        /* We know that "(G.csize < MAXINT)" so we can cast G.csize to int:
-         * This condition was checked when G.incnt_leftover was set > 0 in
-         * defer_leftover_input(), and it is NOT allowed to tounsigned char G.csize
-         * before calling undefer_input() when (G.incnt_leftover > 0)
-         * (single exception: see read_byte()'s  "G.csize <= 0" handling) !!
-         */
-        UnzipClass.FInCount = G.incnt_leftover + (int)UnzipClass.FDecompSize;
-        UnzipClass.FInPtr = (char *)G.inptr_leftover - (int)UnzipClass.FDecompSize;
-        G.incnt_leftover = 0;
-    } else if (UnzipClass.FInCount < 0)
-        UnzipClass.FInCount = 0;
-} /* end function undefer_input() */
-
-
-
-
-
-/***********************************/
-/* function defer_leftover_input() */
-/***********************************/
-
-void defer_leftover_input()
-{
-    if ((long)UnzipClass.FInCount > UnzipClass.FDecompSize) {
-        /* (G.csize < MAXINT), we can safely cast it to int !! */
-        if (UnzipClass.FDecompSize < 0L)
-            UnzipClass.FDecompSize = 0L;
-        G.inptr_leftover = (unsigned char *)UnzipClass.FInPtr + (int)UnzipClass.FDecompSize;
-        G.incnt_leftover = UnzipClass.FInCount - (int)UnzipClass.FDecompSize;
-        UnzipClass.FInCount = (int)UnzipClass.FDecompSize;
-    } else
-        G.incnt_leftover = 0;
-    UnzipClass.FDecompSize -= UnzipClass.FInCount;
-} /* end function defer_leftover_input() */
-
-
-
 
 /************************/
 /* Function fillinbuf() */
@@ -242,7 +196,7 @@ int fillinbuf() /* like readbyte() except returns number of bytes in inbuf */
         return 0;
     UnzipClass.FBufStart += INBUFSIZ;  /* always starts on a block boundary */
     UnzipClass.FInPtr = UnzipClass.FInBuf;
-    defer_leftover_input();           /* decrements G.csize */
+    UnzipClass.DeferInput();           /* decrements G.csize */
 
     if (G.pInfo->encrypted) {
         unsigned char *p;

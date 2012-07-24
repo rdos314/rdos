@@ -235,9 +235,6 @@ typedef struct Globals {
     PasswdFn *decr_passwd;
     StatCBFn *statreportcb;
 
-    int incnt_leftover;       /* so improved NEXTBYTE does not waste input */
-    unsigned char *inptr_leftover;
-
 } Uz_Globs;  /* end of struct Globals */
 
 

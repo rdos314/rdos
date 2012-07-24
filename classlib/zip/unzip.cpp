@@ -45,8 +45,6 @@
 #define MAX(a,b)   ((a) > (b) ? (a) : (b))
 #define MIN(a,b)   ((a) < (b) ? (a) : (b))
 
-void     defer_leftover_input();
-
 typedef struct
 {
     char           *_dest;
@@ -397,6 +395,55 @@ unsigned TUnzip::ReadBuf(char *buf, register unsigned size)   /* return number o
 
 /*##########################################################################
 #
+#   Name       : TUnzip::UndeferInput
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUnzip::UndeferInput()
+{
+    if (FInCount > 0)
+        FDecompSize += FInCount;
+    if (FLeftoverCount > 0) {
+        FInCount = FLeftoverCount + FDecompSize;
+        FInPtr = FLeftoverPtr - FDecompSize;
+        FLeftoverCount = 0;
+    } else if (FInCount < 0)
+        FInCount = 0;
+} /* end function undefer_input() */
+
+
+/*##########################################################################
+#
+#   Name       : TUnzip::DeferInput
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUnzip::DeferInput()
+{
+    if (FInCount > FDecompSize) {
+        if (FDecompSize < 0L)
+            FDecompSize = 0L;
+        FLeftoverPtr = FInPtr + FDecompSize;
+        FLeftoverCount = FInCount - FDecompSize;
+        FInCount = FDecompSize;
+    } else
+        FLeftoverCount = 0;
+    FDecompSize -= FInCount;
+} /* end function defer_input() */
+
+
+/*##########################################################################
+#
 #   Name       : TUnzip::ReadByte
 #
 #   Purpose....: Read byte input file
@@ -423,7 +470,7 @@ int TUnzip::ReadByte()   /* refill inbuf and return a byte if available, else EO
 
         FBufStart += INBUFSIZ; /* always starts on block bndry */
         FInPtr = FInBuf;
-        defer_leftover_input();           /* decrements G.csize */
+        DeferInput();           /* decrements G.csize */
     }
 
 //    if (G.pInfo->encrypted) {

@@ -1228,7 +1228,7 @@ static int extract_or_test_member()    /* return PK-type error code */
     Unpack the file.
   ---------------------------------------------------------------------------*/
 
-    defer_leftover_input();    /* so NEXTBYTE bounds check will work */
+    UnzipClass.DeferInput();    /* so NEXTBYTE bounds check will work */
     switch (G.lrec.compression_method) {
         case STORED:
             if (!uO.tflag && !uO.qflag) {
@@ -1357,7 +1357,7 @@ static int extract_or_test_member()    /* return PK-type error code */
         default:   /* should never get to this point */
             Info(0x401, FileUnknownCompMethod, FnFilter1(G.filename));
             /* close and delete file before return? */
-            undefer_input();
+            UnzipClass.UndeferInput();
             return PK_WARN;
 
     } /* end switch (compression method) */
@@ -1394,7 +1394,7 @@ static int extract_or_test_member()    /* return PK-type error code */
     }
 
     if (error > PK_WARN) {/* don't print redundant CRC error if error already */
-        undefer_input();
+        UnzipClass.UndeferInput();
         return error;
     }
     if (G.crc32val != G.lrec.crc32) {
@@ -1420,7 +1420,7 @@ static int extract_or_test_member()    /* return PK-type error code */
             Info(0, "\n");
     }
 
-    undefer_input();
+    UnzipClass.UndeferInput();
     return error;
 
 } /* end function extract_or_test_member() */

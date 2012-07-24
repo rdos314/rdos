@@ -1006,9 +1006,6 @@ void     fnprint                 OF(());
   ---------------------------------------------------------------------------*/
 
 int      open_outfile         OF(());                    /* also vms.c */
-void     undefer_input        OF(());
-void     defer_leftover_input OF(());
-int      readbyte             OF(());
 int      fillinbuf            OF(());
 int      seek_zipf            OF((long abs_offset));
    int   flush                OF((unsigned char *buf, unsigned long size, int unshrink));
