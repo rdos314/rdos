@@ -1016,7 +1016,6 @@ int      seek_zipf            OF((long abs_offset));
    int   flush                OF((unsigned char *buf, unsigned long size, int unshrink));
 /* static int  disk_error     OF(()); */
 void     handler              OF((int signal));
-time_t   dos_to_unix_time     OF((unsigned long dos_datetime));
 int      check_for_newer      OF((char *filename)); /* os2,vmcms,vms */
 int      do_string            OF((unsigned int length, int option));
 unsigned short      makeword             OF((const unsigned char *b));
