@@ -41,14 +41,14 @@ INCLUDE ..\debevent.inc
 
 SYS_BASE EQU 0DE000000h
 
-code    SEGMENT byte public 'CODE'
-
 IFDEF __WASM__
     .686p
     .xmm2
 ELSE
     .386p
 ENDIF
+
+code    SEGMENT byte public 'CODE'
     
     assume cs:code
                       
@@ -255,7 +255,7 @@ nkeDone:
     pop ax
     pop es
     pop ds
-    ret
+    retf16
 NotifyKernelDebug   Endp
                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -989,7 +989,7 @@ OpenDll Proc near
     mov edi,esi
 ;
     xor cl,cl
-    UserGateForce32 open_file_nr
+    OpenFile
     jnc open_dll_done
 ;
     LockProcEnv
@@ -1981,8 +1981,8 @@ load_dll_do:
 ;
     FreeMem
     call CreateLib
-    mov word ptr es:mod_free_dll_proc,OFFSET free_dll   
-    mov word ptr es:mod_free_dll_proc+2,cs
+    mov es:mod_free_dll_proc,OFFSET free_dll   
+    mov es:mod_free_dll_proc+4,cs
     CreateModule
 ;       
     call CreateImage
@@ -2196,7 +2196,7 @@ load_page_size_ok:
     mov ax,ds
     mov es,ax
     mov edi,edx
-    UserGateForce32 read_file_nr
+    ReadFile
     add edi,eax
     mov ecx,1000h
     sub ecx,eax
@@ -2470,7 +2470,7 @@ load_object_done:
     popad
     pop es
     pop ds
-    ret
+    retf16
 load_object     Endp 
                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2561,7 +2561,7 @@ create_image_alloced:
     mov ax,ds
     mov es,ax
     mov edi,edx
-    UserGateForce32 read_file_nr
+    ReadFile
     pop es
 ;
     mov esi,es:lib_header
@@ -2611,7 +2611,7 @@ hook_object_do:
     UnhookPage
     mov ax,ds
     mov es,ax
-    UserGateForce32 read_file_nr
+    ReadFile
     pop edi
     pop es
 
@@ -2967,7 +2967,7 @@ load_pe_name_size:
 ;
     mov eax,ecx
     add eax,ebx
-    UserGateForce32 allocate_app_mem_nr     
+    AllocateAppMem
     mov fs:app_cmd_line,edx
     mov fs:app_options,0
 ;
@@ -3006,7 +3006,7 @@ load_pe_done:
     pop fs
     pop es
     pop ds
-    retf32
+    ret
 load_pe Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3165,7 +3165,7 @@ init_thread_no_tls:
     pop eax
     pop fs
     pop es
-    retf32
+    ret
 init_thread     Endp
 
                        
@@ -3218,7 +3218,7 @@ start_thread_done:
     popad
     pop es
     pop ds
-    retf32
+    ret
 start_thread    Endp
 
                        
@@ -3290,7 +3290,7 @@ free_thread_no_tls:
     xor ax,ax
     mov fs,ax
     FreeMem
-    retf32
+    ret
 free_thread     Endp
 
                        
@@ -3363,11 +3363,11 @@ spawn_param_ok:
     mov ax,cs
     mov es,ax
     mov edi,OFFSET kernel_dll
-    UserGateForce32 get_module_nr
+    GetModule
     jc spawn_wd_debug
 ;
     mov edi,OFFSET debug_startup
-    UserGateForce32 get_module_proc_nr
+    GetModuleProc
     jc spawn_wd_debug
 ;
     xchg esi,[bp].load_eip
@@ -3388,7 +3388,7 @@ spawn_wd_debug:
     pop es
 
 spawn_no_debug:
-    retf32
+    ret
 spawn_proc      Endp
 
                        
@@ -3420,7 +3420,7 @@ clone_proc      Proc far
 ;
     popad
     pop ds    
-    retf32
+    ret
 clone_proc  Endp
 
                        
@@ -3459,7 +3459,7 @@ close_proc      Proc far
     call SendEvent
 
 free_process_no_debug:
-    retf32
+    ret
 close_proc      Endp
 
                        
@@ -3493,7 +3493,7 @@ start_wait_for_debug_event Proc far
 start_wait_done:    
     pop ax
     pop ds  
-    retf32
+    ret
 start_wait_for_debug_event Endp
 
                        
@@ -3516,7 +3516,7 @@ stop_wait_for_debug_event Proc far
     mov ds:lib_debug_obj,0
 ;       
     pop ds  
-    retf32
+    ret
 stop_wait_for_debug_event Endp
 
                        
@@ -3547,7 +3547,7 @@ is_debug_event_idle Proc far
 is_idle_done:
     pop ax
     pop ds  
-    retf32
+    ret
 is_debug_event_idle Endp
 
                        
@@ -3610,7 +3610,7 @@ gdeDone:
     pop si
     pop es
     pop ds  
-    retf32
+    ret
 get_debug_event Endp
 
                        
@@ -3678,7 +3678,7 @@ gdedDone:
     pop ebx
     pop eax
     pop ds  
-    retf32
+    ret
 get_debug_event_data Endp
 
                        
@@ -3716,7 +3716,7 @@ clear_debug_done:
     pop bx
     pop es
     pop ds
-    retf32
+    ret
 clear_debug_event Endp
 
                        
@@ -3783,7 +3783,7 @@ continue_debug_done:
     pop cx
     pop bx
     pop es
-    retf32
+    ret
 continue_debug_event Endp
 
                        
@@ -3968,7 +3968,7 @@ neSignalDone:
 neDone:
     pop dx
     pop ds
-    retf32
+    ret
 notify_pe_exception Endp
 
 
@@ -4041,7 +4041,7 @@ alloc_ins_done:
     pop eax
     pop es
     pop ds
-    retf32
+    ret
 allocate_mem    ENDP
 
 
@@ -4128,7 +4128,7 @@ free_mem_done:
     pop eax
     pop es
     pop ds
-    retf32
+    ret
 free_mem    ENDP
 
 
@@ -4223,7 +4223,7 @@ debug_alloc_ins_done:
     pop eax
     pop es
     pop ds
-    retf32
+    ret
 debug_allocate_mem      ENDP
 
 
@@ -4336,7 +4336,7 @@ debug_free_mem_done:
     pop eax
     pop es
     pop ds
-    retf32
+    ret
 debug_free_mem  ENDP
 
 
@@ -4380,7 +4380,7 @@ reserve_pe_mem  PROC far
 reserve_pe_mem_done:
     pop edx
     pop eax
-    retf32
+    ret
 reserve_pe_mem  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4423,7 +4423,7 @@ setStop:
 setDone:
     pop ebx
     pop es    
-    retf32
+    ret
 show_exception_text     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4476,7 +4476,7 @@ load_dll_pr_done:
     pop fs
     pop es
     pop ds
-    retf32
+    ret
 load_dll    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4643,7 +4643,7 @@ get_name_ok:
     clc
 
 get_name_done:
-    retf32
+    ret
 get_module_name Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4683,7 +4683,7 @@ get_dll_handle_done:
     pop esi
     pop fs
     pop es
-    retf32
+    ret
 get_dll_handle  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4819,7 +4819,7 @@ get_resource_done:
     pop edx
     pop ebx
     pop eax
-    retf32
+    ret
 get_resource    Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4838,7 +4838,7 @@ open_app    Proc far
     mov ds,ds:p_app_sel
     mov ds:app_mem_blocks,0
     pop ds
-    retf32
+    ret
 open_app    Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4870,7 +4870,7 @@ close_app       Proc far
     xor edx,edx
     mov eax,-1
     mov bx,es
-    UserGateForce32 free_app_mem_nr
+    FreeAppMem
     mov edi,es:lib_base
     push es
     call FreeImportedDlls
@@ -4912,7 +4912,7 @@ unload_no_tls:
     FreeMem
 
 close_app_done:
-    retf32
+    ret
 close_app       Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4951,7 +4951,7 @@ get_exe_size_loop:
     sub ax,OFFSET app_exe_name
     movzx eax,ax
     mov ecx,eax
-    UserGateForce32 allocate_app_mem_nr
+    AllocateAppMem
     mov edi,edx
     mov esi,OFFSET app_exe_name
     rep movs byte ptr es:[edi],ds:[esi]
@@ -4967,7 +4967,7 @@ get_exe_done:
     pop ebx
     pop eax
     pop ds
-    retf32
+    ret
 get_exe_name    Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5009,7 +5009,7 @@ get_env_size_loop:
 ;
     movzx ecx,si
     mov eax,ecx
-    UserGateForce32 allocate_app_mem_nr
+    AllocateAppMem
     mov edi,edx
     xor esi,esi
     rep movs byte ptr es:[edi],ds:[esi]
@@ -5027,7 +5027,7 @@ get_env_done:
     pop ebx
     pop eax
     pop ds
-    retf32
+    ret
 get_env Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5051,7 +5051,7 @@ get_cmd_line    Proc far
     clc
     pop ax
     pop ds
-    retf32
+    ret
 get_cmd_line    Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5087,7 +5087,7 @@ set_opt_size:
     jnz set_opt_size
 ;
     mov eax,ecx
-    UserGateForce32 allocate_app_mem_nr
+    AllocateAppMem
     mov edi,edx
     xor esi,esi
     mov ax,flat_data_sel
@@ -5103,7 +5103,7 @@ set_opt_size:
     popa
     pop es
     pop ds
-    retf32
+    ret
 set_options     Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5127,7 +5127,7 @@ get_options     Proc far
 ;
     pop ax      
     pop ds
-    retf32
+    ret
 get_options     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
