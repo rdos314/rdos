@@ -187,6 +187,7 @@ app_spawn_proc			    DD ?,?
 app_clone_proc	            DD ?,?
 app_close_proc			    DD ?,?
 app_load_dll_proc           DD ?,?
+app_patch_proc              DD ?,?
 app_loader_name			    DD ?
 
 app_create_section_proc     DD ?,?

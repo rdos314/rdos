@@ -176,6 +176,12 @@ init_app    PROC near
     mov ax,set_options_nr
     RegisterOsGate
 ;
+    mov si,OFFSET app_patch
+    mov di,OFFSET app_patch_name
+    xor cl,cl
+    mov ax,app_patch_nr
+    RegisterOsGate
+;
     mov si,OFFSET get_exe_name
     mov di,OFFSET get_exe_name_name
     mov dx,virt_es_in
@@ -429,6 +435,8 @@ run_open_hooks  Proc near
     mov ds:app_close_proc+4,0
     mov ds:app_load_dll_proc,0
     mov ds:app_load_dll_proc+4,0
+    mov ds:app_patch_proc,0
+    mov ds:app_patch_proc+4,0
 ;
     InitSection ds:app_lib_section
     mov ds:app_env,0
@@ -2024,6 +2032,44 @@ continue_debug_event_done:
     pop ds
     retf32
 continue_debug_event  Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AppPatch
+;
+;       DESCRIPTION:    App specific usergate patching
+;
+;       PARAMETERS:     DS:EBX      Instruction to patch
+;                       EAX         Gate #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+app_patch_name DB 'App Patch',0
+
+app_patch      PROC far
+    push ds
+    push eax
+    push edx
+;
+    mov edx,eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov eax,ds:app_patch_proc
+    or eax,ds:app_patch_proc+4
+    stc
+    jz app_patch_done
+;    
+    call fword ptr ds:app_patch_proc
+
+app_patch_done:
+    pop edx
+    pop eax
+    pop ds
+    retf32
+app_patch      ENDP
 
 code    ENDS
 

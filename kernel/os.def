@@ -507,4 +507,6 @@ unlock_file_nr              = 432
 switch_one_core_irq_nr      = 433
 switch_all_core_irqs_nr     = 434
 
+app_patch_nr                = 435
+
 osgate_entries				= 440

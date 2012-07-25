@@ -801,6 +801,11 @@ do_usercall32  Endp
     public do_usergate32
 
 do_usergate32   Proc near
+    mov eax,ds:[ebx+2]
+    AppPatch
+    jnc do_usergate32_done
+
+do_usergate32_norm:    
     mov edi,ds:[ebx+2]
     shl edi,USER_GATE_SHIFT
     mov ax,usergate_sel

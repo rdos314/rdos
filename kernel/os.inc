@@ -283,6 +283,12 @@ StartSyscall   MACRO
     OsGate start_syscall_nr
                     ENDM
 
+;       DS:EBX  Patch address
+;       EAX     Gate #
+AppPatch   MACRO
+    OsGate app_patch_nr
+                    ENDM
+
 ;       AL          Exception #
 EmulateOpcode   MACRO
     OsGate emulate_opcode_nr
