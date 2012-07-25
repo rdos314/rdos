@@ -449,7 +449,7 @@ int UZinflate(int is_defl64)
 #define N_MAX 288       /* maximum number of codes in any set */
 
 
-int huft_build(const unsigned *b, unsigned n, unsigned s, const unsigned short *d, const unsigned char *e, struct huft **t, unsigned *m)
+int huft_build(const unsigned *b, unsigned n, unsigned s, const unsigned short *d, const unsigned char *e, TUnzipHuft **t, unsigned *m)
 /* Given a list of code lengths and a maximum table size, make a set of
    tables to decode that set of codes.  Return zero on success, one if
    the given code set is incomplete (the tables are still built in this
@@ -471,9 +471,9 @@ int huft_build(const unsigned *b, unsigned n, unsigned s, const unsigned short *
   int lx[BMAX+1];               /* memory for l[-1..BMAX-1] */
   int *l = lx+1;                /* stack of bits per table */
   register unsigned *p;         /* pointer into c[], b[], or v[] */
-  register struct huft *q;      /* points to current table */
-  struct huft r;                /* table entry for structure assignment */
-  struct huft *u[BMAX];         /* table stack */
+  register TUnzipHuft *q;      /* points to current table */
+  struct TUnzipHuft r;                /* table entry for structure assignment */
+  struct TUnzipHuft *u[BMAX];         /* table stack */
   unsigned v[N_MAX];            /* values in order of bit length */
   register int w;               /* bits before this table == (l * h) */
   unsigned x[BMAX+1];           /* bit offsets, then code stack */
@@ -491,7 +491,7 @@ int huft_build(const unsigned *b, unsigned n, unsigned s, const unsigned short *
   } while (--i);
   if (c[0] == n)                /* null input--all zero length codes */
   {
-    *t = (struct huft *)NULL;
+    *t = 0;
     *m = 0;
     return 0;
   }
@@ -544,8 +544,8 @@ int huft_build(const unsigned *b, unsigned n, unsigned s, const unsigned short *
   p = v;                        /* grab values in bit order */
   h = -1;                       /* no tables yet--level -1 */
   w = l[-1] = 0;                /* no bits decoded yet */
-  u[0] = (struct huft *)NULL;   /* just to keep compilers happy */
-  q = (struct huft *)NULL;      /* ditto */
+  u[0] = 0;                     /* just to keep compilers happy */
+  q = 0;                        /* ditto */
   z = 0;                        /* ditto */
 
   /* go through the bit lengths (k already is bits in shortest code) */
@@ -579,8 +579,7 @@ int huft_build(const unsigned *b, unsigned n, unsigned s, const unsigned short *
         l[h] = j;               /* set table size in stack */
 
         /* allocate and link in new table */
-        if ((q = (struct huft *)malloc((z + 1)*sizeof(struct huft))) ==
-            (struct huft *)NULL)
+        if ((q = (struct TUnzipHuft *)malloc((z + 1)*sizeof(struct TUnzipHuft))) == 0)
         {
           if (h)
             huft_free(u[0]);
@@ -590,7 +589,7 @@ int huft_build(const unsigned *b, unsigned n, unsigned s, const unsigned short *
         G.hufts += z + 1;         /* track memory usage */
 #endif
         *t = q + 1;             /* link to list for huft_free() */
-        *(t = &(q->v.t)) = (struct huft *)NULL;
+        *(t = &(q->v.t)) = 0;
         u[h] = ++q;             /* table starts after link */
 
         /* connect to last table, if there is one */
@@ -647,17 +646,17 @@ int huft_build(const unsigned *b, unsigned n, unsigned s, const unsigned short *
 
 
 
-int huft_free(struct huft *t)
+int huft_free(struct TUnzipHuft *t)
 /* Free the malloc'ed tables built by huft_build(), which makes a linked
    list of the tables it made, with the links in a dummy first entry of
    each table. */
 {
-  register struct huft *p, *q;
+  register struct TUnzipHuft *p, *q;
 
 
   /* Go through linked list, freeing from the malloced (t[-1]) address. */
   p = t;
-  while (p != (struct huft *)NULL)
+  while (p != 0)
   {
     q = (--p)->v.t;
     free((void *)p);

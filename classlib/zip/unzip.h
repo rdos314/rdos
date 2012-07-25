@@ -54,6 +54,23 @@
 
 #define FILE_NAME_SIZE        513
 
+/* Huffman code lookup table entry--this entry is four bytes for machines
+   that have 16-bit pointers (e.g. PC's in the small or medium model).
+   Valid extra bits are 0..16.  e == 31 is EOB (end of block), e == 32
+   means that v is a literal, 32 < e < 64 means that v is a pointer to
+   the next table, which codes (e & 31)  bits, and lastly e == 99 indicates
+   an unused code.  If a code with e == 99 is looked up, this implies an
+   error in the data. */
+
+struct TUnzipHuft {
+    unsigned char e;                /* number of extra bits or operation */
+    unsigned char b;                /* number of bits in this code or subcode */
+    union {
+        unsigned short n;            /* literal, length base, or distance base */
+        struct TUnzipHuft *t;        /* pointer to next level of table */
+    } v;
+};
+
 class TUnzip
 {
 public:

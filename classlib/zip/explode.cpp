@@ -117,10 +117,10 @@
 #include "oldunzip.h"      /* must supply slide[] (unsigned char) array and NEXTBYTE macro */
 
 /* routines here */
-static int explode_lit OF((struct huft *tb, struct huft *tl,
-                           struct huft *td, unsigned bb, unsigned bl,
+static int explode_lit OF((struct TUnzipHuft *tb, struct TUnzipHuft *tl,
+                           struct TUnzipHuft *td, unsigned bb, unsigned bl,
                            unsigned bd, unsigned bdl));
-static int explode_nolit OF((struct huft *tl, struct huft *td,
+static int explode_nolit OF((struct TUnzipHuft *tl, struct TUnzipHuft *td,
                              unsigned bl, unsigned bd, unsigned bdl));
 int explode OF(());
 
@@ -204,7 +204,7 @@ static const unsigned short cpdist8[] =
 
 
 
-static int explode_lit(struct huft *tb, struct huft *tl, struct huft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl)
+static int explode_lit(struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl)
 /* Decompress the imploded data using coded literals and a sliding
    window (of size 2^(6+bdl) bytes). */
 {
@@ -212,7 +212,7 @@ static int explode_lit(struct huft *tb, struct huft *tl, struct huft *td, unsign
   register unsigned e;  /* table entry flag/number of extra bits */
   unsigned n, d;        /* length and index for copy */
   unsigned w;           /* current window position */
-  struct huft *t;       /* pointer to table entry */
+  struct TUnzipHuft *t;       /* pointer to table entry */
   unsigned mb, ml, md;  /* masks for bb, bl, and bd bits */
   unsigned mdl;         /* mask for bdl (distance lower) bits */
   register unsigned long b;       /* bit buffer */
@@ -308,7 +308,7 @@ static int explode_lit(struct huft *tb, struct huft *tl, struct huft *td, unsign
 
 
 
-static int explode_nolit(struct huft *tl, struct huft *td, unsigned bl, unsigned bd, unsigned bdl)
+static int explode_nolit(struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bl, unsigned bd, unsigned bdl)
 /* Decompress the imploded data using uncoded literals and a sliding
    window (of size 2^(6+bdl) bytes). */
 {
@@ -316,7 +316,7 @@ static int explode_nolit(struct huft *tl, struct huft *td, unsigned bl, unsigned
   register unsigned e;  /* table entry flag/number of extra bits */
   unsigned n, d;        /* length and index for copy */
   unsigned w;           /* current window position */
-  struct huft *t;       /* pointer to table entry */
+  struct TUnzipHuft *t; /* pointer to table entry */
   unsigned ml, md;      /* masks for bl and bd bits */
   unsigned mdl;         /* mask for bdl (distance lower) bits */
   register unsigned long b;       /* bit buffer */
@@ -423,9 +423,9 @@ int explode()
    bits are read in, uncoded, for the low distance bits. */
 {
   unsigned r;           /* return codes */
-  struct huft *tb;      /* literal code table */
-  struct huft *tl;      /* length code table */
-  struct huft *td;      /* distance code table */
+  struct TUnzipHuft *tb;      /* literal code table */
+  struct TUnzipHuft *tl;      /* length code table */
+  struct TUnzipHuft *td;      /* distance code table */
   unsigned bb;          /* bits for tb */
   unsigned bl;          /* bits for tl */
   unsigned bd;          /* bits for td */
@@ -471,7 +471,7 @@ int explode()
   else
   /* No literal tree--minimum match length is 2 */
   {
-    tb = (struct huft *)NULL;
+    tb = 0;
     if ((r = UnzipClass.ExplodeGetTree(l, 64)) != 0)
       return (int)r;
     if ((r = huft_build(l, 64, 0, cplen2, extra, &tl, &bl)) != 0)
@@ -484,7 +484,7 @@ int explode()
 
   if ((r = UnzipClass.ExplodeGetTree(l, 64)) != 0) {
     huft_free(tl);
-    if (tb != (struct huft *)NULL) huft_free(tb);
+    if (tb != 0) huft_free(tb);
     return (int)r;
   }
   if (G.lrec.general_purpose_bit_flag & 2)      /* true if 8K */
@@ -502,7 +502,7 @@ int explode()
     if (r == 1)
       huft_free(td);
     huft_free(tl);
-    if (tb != (struct huft *)NULL) huft_free(tb);
+    if (tb != 0) huft_free(tb);
     return (int)r;
   }
 
