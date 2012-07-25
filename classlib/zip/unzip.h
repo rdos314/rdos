@@ -96,6 +96,9 @@ public:
 
     int ZDecode(int c);
 
+    int BuildHuft(const unsigned *b, unsigned n, unsigned s, const unsigned short *d, const unsigned char *e, TUnzipHuft **t, unsigned *m);
+    void FreeHuft(struct TUnzipHuft *t);
+
     int OpenOutputFile();
     void CloseOutputFile();
     void CloseAndSetTime(unsigned long dos_datetime);

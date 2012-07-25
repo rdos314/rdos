@@ -450,21 +450,21 @@ int explode()
     bb = 9;                     /* base table size for literals */
     if ((r = UnzipClass.ExplodeGetTree(l, 256)) != 0)
       return (int)r;
-    if ((r = huft_build(l, 256, 256, NULL, NULL, &tb, &bb)) != 0)
+    if ((r = UnzipClass.BuildHuft(l, 256, 256, NULL, NULL, &tb, &bb)) != 0)
     {
       if (r == 1)
-        huft_free(tb);
+        UnzipClass.FreeHuft(tb);
       return (int)r;
     }
     if ((r = UnzipClass.ExplodeGetTree(l, 64)) != 0) {
-      huft_free(tb);
+      UnzipClass.FreeHuft(tb);
       return (int)r;
     }
-    if ((r = huft_build(l, 64, 0, cplen3, extra, &tl, &bl)) != 0)
+    if ((r = UnzipClass.BuildHuft(l, 64, 0, cplen3, extra, &tl, &bl)) != 0)
     {
       if (r == 1)
-        huft_free(tl);
-      huft_free(tb);
+        UnzipClass.FreeHuft(tl);
+      UnzipClass.FreeHuft(tb);
       return (int)r;
     }
   }
@@ -474,47 +474,47 @@ int explode()
     tb = 0;
     if ((r = UnzipClass.ExplodeGetTree(l, 64)) != 0)
       return (int)r;
-    if ((r = huft_build(l, 64, 0, cplen2, extra, &tl, &bl)) != 0)
+    if ((r = UnzipClass.BuildHuft(l, 64, 0, cplen2, extra, &tl, &bl)) != 0)
     {
       if (r == 1)
-        huft_free(tl);
+        UnzipClass.FreeHuft(tl);
       return (int)r;
     }
   }
 
   if ((r = UnzipClass.ExplodeGetTree(l, 64)) != 0) {
-    huft_free(tl);
-    if (tb != 0) huft_free(tb);
+    UnzipClass.FreeHuft(tl);
+    if (tb != 0) UnzipClass.FreeHuft(tb);
     return (int)r;
   }
   if (G.lrec.general_purpose_bit_flag & 2)      /* true if 8K */
   {
     bdl = 7;
-    r = huft_build(l, 64, 0, cpdist8, extra, &td, &bd);
+    r = UnzipClass.BuildHuft(l, 64, 0, cpdist8, extra, &td, &bd);
   }
   else                                          /* else 4K */
   {
     bdl = 6;
-    r = huft_build(l, 64, 0, cpdist4, extra, &td, &bd);
+    r = UnzipClass.BuildHuft(l, 64, 0, cpdist4, extra, &td, &bd);
   }
   if (r != 0)
   {
     if (r == 1)
-      huft_free(td);
-    huft_free(tl);
-    if (tb != 0) huft_free(tb);
+      UnzipClass.FreeHuft(td);
+    UnzipClass.FreeHuft(tl);
+    if (tb != 0) UnzipClass.FreeHuft(tb);
     return (int)r;
   }
 
   if (tb != NULL) {
     r = explode_lit(tb, tl, td, bb, bl, bd, bdl);
-    huft_free(tb);
+    UnzipClass.FreeHuft(tb);
   } else {
     r = explode_nolit(tl, td, bl, bd, bdl);
   }
 
-  huft_free(td);
-  huft_free(tl);
+  UnzipClass.FreeHuft(td);
+  UnzipClass.FreeHuft(tl);
   Trace("<%u > ", G.hufts);
   return (int)r;
 }

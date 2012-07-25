@@ -1008,10 +1008,6 @@ char  *fnfilter                  OF((const char *raw, unsigned char *space,
   ---------------------------------------------------------------------------*/
 
 int    explode                   OF(());                  /* explode.c */
-int    huft_free                 OF((struct TUnzipHuft *t));          /* inflate.c */
-int    huft_build                OF((const unsigned *b, unsigned n,
-                                     unsigned s, const unsigned short *d, const unsigned char *e,
-                                     struct  TUnzipHuft  **t, unsigned *m));
    int    UZinflate              OF((int is_defl64));  /* inflate.c */
 #  define inflate_free(x)        inflateEnd(&((Uz_Globs *)(&G))->dstrm)
    int    unshrink               OF(());                 /* unshrink.c */

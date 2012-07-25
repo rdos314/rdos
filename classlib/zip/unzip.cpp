@@ -48,6 +48,12 @@
 #define INBUFSIZ  8192
 #define TMPOUTSIZ 0x10000
 
+/* If BMAX needs to be larger than 16, then h and x[] should be unsigned long. */
+#define BMAX 16         /* maximum bit length of any code (16 for explode) */
+#define N_MAX 288       /* maximum number of codes in any set */
+
+#define INVALID_CODE 99
+
 #define MAX(a,b)   ((a) > (b) ? (a) : (b))
 #define MIN(a,b)   ((a) < (b) ? (a) : (b))
 
@@ -925,3 +931,238 @@ int TUnzip::ExplodeGetTree(unsigned *l, unsigned n)
   return k != n ? 4 : 0;                /* should have read n of them */
 }
 
+/*##########################################################################
+#
+#   Name       : TUnzip::BuildHuft
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::BuildHuft(const unsigned *b, unsigned n, unsigned s, const unsigned short *d, const unsigned char *e, TUnzipHuft **t, unsigned *m)
+/* Given a list of code lengths and a maximum table size, make a set of
+   tables to decode that set of codes.  Return zero on success, one if
+   the given code set is incomplete (the tables are still built in this
+   case), two if the input is invalid (all zero length codes or an
+   oversubscribed set of lengths), and three if not enough memory.
+   The code with value 256 is special, and the tables are constructed
+   so that no bits beyond that code are fetched when that code is
+   decoded. */
+{
+  unsigned a;                   /* counter for codes of length k */
+  unsigned c[BMAX+1];           /* bit length count table */
+  unsigned el;                  /* length of EOB code (value 256) */
+  unsigned f;                   /* i repeats in table every f entries */
+  int g;                        /* maximum code length */
+  int h;                        /* table level */
+  register unsigned i;          /* counter, current code */
+  register unsigned j;          /* counter */
+  register int k;               /* number of bits in current code */
+  int lx[BMAX+1];               /* memory for l[-1..BMAX-1] */
+  int *l = lx+1;                /* stack of bits per table */
+  register unsigned *p;         /* pointer into c[], b[], or v[] */
+  register TUnzipHuft *q;      /* points to current table */
+  struct TUnzipHuft r;                /* table entry for structure assignment */
+  struct TUnzipHuft *u[BMAX];         /* table stack */
+  unsigned v[N_MAX];            /* values in order of bit length */
+  register int w;               /* bits before this table == (l * h) */
+  unsigned x[BMAX+1];           /* bit offsets, then code stack */
+  unsigned *xp;                 /* pointer into x */
+  int y;                        /* number of dummy codes added */
+  unsigned z;                   /* number of entries in current table */
+
+
+  /* Generate counts for each bit length */
+  el = n > 256 ? b[256] : BMAX; /* set length of EOB code, if any */
+  memset((char *)c, 0, sizeof(c));
+  p = (unsigned *)b;  i = n;
+  do {
+    c[*p]++; p++;               /* assume all entries <= BMAX */
+  } while (--i);
+  if (c[0] == n)                /* null input--all zero length codes */
+  {
+    *t = 0;
+    *m = 0;
+    return 0;
+  }
+
+
+  /* Find minimum and maximum length, bound *m by those */
+  for (j = 1; j <= BMAX; j++)
+    if (c[j])
+      break;
+  k = j;                        /* minimum code length */
+  if (*m < j)
+    *m = j;
+  for (i = BMAX; i; i--)
+    if (c[i])
+      break;
+  g = i;                        /* maximum code length */
+  if (*m > i)
+    *m = i;
+
+
+  /* Adjust last length count to fill out codes, if needed */
+  for (y = 1 << j; j < i; j++, y <<= 1)
+    if ((y -= c[j]) < 0)
+      return 2;                 /* bad input: more codes than bits */
+  if ((y -= c[i]) < 0)
+    return 2;
+  c[i] += y;
+
+
+  /* Generate starting offsets into the value table for each length */
+  x[1] = j = 0;
+  p = c + 1;  xp = x + 2;
+  while (--i) {                 /* note that i == g from above */
+    *xp++ = (j += *p++);
+  }
+
+
+  /* Make a table of values in order of bit lengths */
+  memset((char *)v, 0, sizeof(v));
+  p = (unsigned *)b;  i = 0;
+  do {
+    if ((j = *p++) != 0)
+      v[x[j]++] = i;
+  } while (++i < n);
+  n = x[g];                     /* set n to length of v */
+
+
+  /* Generate the Huffman codes and for each, make the table entries */
+  x[0] = i = 0;                 /* first Huffman code is zero */
+  p = v;                        /* grab values in bit order */
+  h = -1;                       /* no tables yet--level -1 */
+  w = l[-1] = 0;                /* no bits decoded yet */
+  u[0] = 0;                     /* just to keep compilers happy */
+  q = 0;                        /* ditto */
+  z = 0;                        /* ditto */
+
+  /* go through the bit lengths (k already is bits in shortest code) */
+  for (; k <= g; k++)
+  {
+    a = c[k];
+    while (a--)
+    {
+      /* here i is the Huffman code of length k bits for value *p */
+      /* make tables up to required level */
+      while (k > w + l[h])
+      {
+        w += l[h++];            /* add bits already decoded */
+
+        /* compute minimum size table less than or equal to *m bits */
+        z = (z = g - w) > *m ? *m : z;                  /* upper limit */
+        if ((f = 1 << (j = k - w)) > a + 1)     /* try a k-w bit table */
+        {                       /* too few codes for k-w bit table */
+          f -= a + 1;           /* deduct codes from patterns left */
+          xp = c + k;
+          while (++j < z)       /* try smaller tables up to z bits */
+          {
+            if ((f <<= 1) <= *++xp)
+              break;            /* enough codes to use up j bits */
+            f -= *xp;           /* else deduct codes from patterns */
+          }
+        }
+        if ((unsigned)w + j > el && (unsigned)w < el)
+          j = el - w;           /* make EOB code end at table */
+        z = 1 << j;             /* table entries for j-bit table */
+        l[h] = j;               /* set table size in stack */
+
+        /* allocate and link in new table */
+        q = new struct TUnzipHuft[z + 1];
+//        q = (struct TUnzipHuft *)malloc((z + 1)*sizeof(struct TUnzipHuft));
+        if (q == 0)
+        {
+          if (h)
+            FreeHuft(u[0]);
+          return 3;             /* not enough memory */
+        }
+
+        *t = q + 1;             /* link to list for huft_free() */
+        *(t = &(q->v.t)) = 0;
+        u[h] = ++q;             /* table starts after link */
+
+        /* connect to last table, if there is one */
+        if (h)
+        {
+          x[h] = i;             /* save pattern for backing up */
+          r.b = (unsigned char)l[h-1];    /* bits to dump before this table */
+          r.e = (unsigned char)(32 + j);  /* bits in this table */
+          r.v.t = q;            /* pointer to this table */
+          j = (i & ((1 << w) - 1)) >> (w - l[h-1]);
+          u[h-1][j] = r;        /* connect to last table */
+        }
+      }
+
+      /* set up table entry in r */
+      r.b = (unsigned char)(k - w);
+      if (p >= v + n)
+        r.e = INVALID_CODE;     /* out of values--invalid code */
+      else if (*p < s)
+      {
+        r.e = (unsigned char)(*p < 256 ? 32 : 31);  /* 256 is end-of-block code */
+        r.v.n = (unsigned short)*p++;                /* simple code is just the value */
+      }
+      else
+      {
+        r.e = e[*p - s];        /* non-simple--look up in lists */
+        r.v.n = d[*p++ - s];
+      }
+
+      /* fill code-like entries with r */
+      f = 1 << (k - w);
+      for (j = i >> w; j < z; j += f)
+        q[j] = r;
+
+      /* backwards increment the k-bit code i */
+      for (j = 1 << (k - 1); i & j; j >>= 1)
+        i ^= j;
+      i ^= j;
+
+      /* backup over finished tables */
+      while ((i & ((1 << w) - 1)) != x[h])
+        w -= l[--h];            /* don't need to update q */
+    }
+  }
+
+
+  /* return actual size of base table */
+  *m = l[0];
+
+
+  /* Return true (1) if we were given an incomplete table */
+  return y != 0 && g != 1;
+}
+
+
+/*##########################################################################
+#
+#   Name       : TUnzip::FreeHuft
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUnzip::FreeHuft(struct TUnzipHuft *t)
+/* Free the malloc'ed tables built by huft_build(), which makes a linked
+   list of the tables it made, with the links in a dummy first entry of
+   each table. */
+{
+  register struct TUnzipHuft *p, *q;
+
+
+  /* Go through linked list, freeing from the malloced (t[-1]) address. */
+  p = t;
+  while (p != 0)
+  {
+    q = (--p)->v.t;
+    delete p;
+    p = q;
+  }
+}
