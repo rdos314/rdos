@@ -986,7 +986,6 @@ void     fnprint                 OF(());
     Functions in fileio.c:
   ---------------------------------------------------------------------------*/
 
-int      open_outfile         OF(());                    /* also vms.c */
    int   flush                OF((unsigned char *buf, unsigned long size, int unshrink));
 /* static int  disk_error     OF(()); */
 void     handler              OF((int signal));

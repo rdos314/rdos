@@ -77,6 +77,8 @@ public:
     int FillInbuf();
     int Seek(long abs_offset);
 
+    int OpenOutputFile();
+
     int ZDecode(int c);
 
     TString FInputFileName;
@@ -94,6 +96,7 @@ public:
     int FExtraBytes;
 
     char FCurrFileName[FILE_NAME_SIZE];
+    int FOutputHandle;
     
 protected:
 

@@ -685,3 +685,26 @@ int TUnzip::Seek(long abs_offset)
     return(PK_OK);
 } /* end function seek_zipf() */
 
+
+/*##########################################################################
+#
+#   Name       : TUnzip::OpenOutputFile
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::OpenOutputFile()           /* return 1 if fail */
+{
+    FOutputHandle = RdosCreateFile(FCurrFileName, 0);
+    if (!FOutputHandle) {
+        Info(0x401, "error:  cannot create %s\n", FCurrFileName);
+        return 1;
+    }
+    return 0;
+
+} /* end function open_outfile() */
+

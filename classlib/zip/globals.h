@@ -206,7 +206,6 @@ typedef struct Globals {
     int      sol;                  /* fileio static: at start of line */
     int      no_ecrec;             /* process static */
 
-    int      outfile;
     unsigned char      *outbuf;
     unsigned char      *realbuf;
 

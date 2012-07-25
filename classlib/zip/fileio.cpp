@@ -122,9 +122,6 @@ static int disk_error OF(());
 /* Strings used in fileio.c */
 /****************************/
 
-static const char CannotCreateFile[] =
-  "error:  cannot create %s\n        %s\n";
-
 static const char ReadError[] = "error:  zipfile read error\n";
 static const char FilenameTooLongTrunc[] =
   "warning:  filename too long--truncating.\n";
@@ -145,30 +142,6 @@ static const char ExtraFieldTooLong[] =
      static const char PasswPrompt2[] = "Enter password: ";
      static const char PasswRetry[] = "password incorrect--reenter: ";
 
-
-
-/***************************/
-/* Function open_outfile() */
-/***************************/
-
-int open_outfile()           /* return 1 if fail */
-{
-    Trace("open_outfile:  doing fopen(%s) for writing\n",
-      FnFilter1(UnzipClass.FCurrFileName));
-    {
-        G.outfile = RdosCreateFile(UnzipClass.FCurrFileName, 0);
-    }
-    if (!G.outfile) {
-        Info(0x401, CannotCreateFile,
-          FnFilter1(UnzipClass.FCurrFileName), strerror(errno));
-        return 1;
-    }
-    Trace("open_outfile:  fopen(%s) for writing succeeded\n",
-      FnFilter1(UnzipClass.FCurrFileName));
-
-    return 0;
-
-} /* end function open_outfile() */
 
 
 
@@ -229,7 +202,7 @@ int flush(unsigned char *rawbuf, unsigned long size, int unshrink)
          * at least MSC 5.1 has a lousy implementation of fwrite() (as does
          * DEC Ultrix cc), write() is used anyway.
          */
-        if (!uO.cflag && !RdosWriteFile(G.outfile, rawbuf, size))
+        if (!uO.cflag && !RdosWriteFile(UnzipClass.FOutputHandle, rawbuf, size))
             return disk_error();
         else if (uO.cflag)
             return PK_OK;
@@ -282,7 +255,7 @@ int flush(unsigned char *rawbuf, unsigned long size, int unshrink)
         Trace("p - rawbuf = %u   q-transbuf = %u   size = %lu\n",
           (unsigned)(p-rawbuf), (unsigned)(q-transbuf), size);
         if (q > transbuf) {
-            if (!uO.cflag && !RdosWriteFile(G.outfile, transbuf, (extent)(q-transbuf)))
+            if (!uO.cflag && !RdosWriteFile(UnzipClass.FOutputHandle, transbuf, (extent)(q-transbuf)))
                 return disk_error();
             else if (uO.cflag)
                 return PK_OK;

@@ -63,7 +63,7 @@ int set_direc_attribs(direntry *d)
 
 void close_outfile()
 {
-    RdosCloseFile(G.outfile);
+    RdosCloseFile(UnzipClass.FOutputHandle);
     return;
 
 } /* end function close_outfile() */

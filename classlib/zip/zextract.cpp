@@ -1210,10 +1210,10 @@ static int extract_or_test_member()    /* return PK-type error code */
     } else {
         if (uO.cflag)
         {
-            G.outfile = 0;
+            UnzipClass.FOutputHandle = 0;
             
 #           define NEWLINE "\r\n"
-        } else if (open_outfile())
+        } else if (UnzipClass.OpenOutputFile())
             return PK_DISK;
     }
 
@@ -1368,9 +1368,9 @@ static int extract_or_test_member()    /* return PK-type error code */
     dos_time = (unsigned short)(G.lrec.last_mod_dos_datetime & 0xFFFFL);
 
     RdosDosTimeDateToTics(dos_date, dos_time, &msb, &lsb);
-    RdosSetFileTime(G.outfile, msb, lsb);
+    RdosSetFileTime(UnzipClass.FOutputHandle, msb, lsb);
 
-    RdosCloseFile(G.outfile);
+    RdosCloseFile(UnzipClass.FOutputHandle);
 
             /* GRR: CONVERT close_outfile() TO NON-VOID:  CHECK FOR ERRORS! */
 
