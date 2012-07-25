@@ -1112,10 +1112,6 @@ int  decrypt OF((const char *passwrd));
  */
 
 
-#  define FLUSH(w)  ((G.mem_mode) ? memflush(__G__ redirSlide,(unsigned long)(w)) \
-                                  : flush(__G__ redirSlide,(unsigned long)(w),0))
-
-
 /**********************/
 /*  Global constants  */
 /**********************/
