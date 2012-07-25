@@ -719,7 +719,7 @@ int zipinfo()   /* return PK-type error code */
             else {  /* check if this entry matches an `include' argument */
                 do_this_file = FALSE;
                 for (i = 0; i < G.filespecs; i++)
-                    if (match(G.filename, G.pfnames[i], uO.C_flag)) {
+                    if (match(UnzipClass.FCurrFileName, G.pfnames[i], uO.C_flag)) {
                         do_this_file = TRUE;
                         if (fn_matched)
                             fn_matched[i] = TRUE;
@@ -728,7 +728,7 @@ int zipinfo()   /* return PK-type error code */
             }
             if (do_this_file) {  /* check if this is an excluded file */
                 for (i = 0; i < G.xfilespecs; i++)
-                    if (match(G.filename, G.pxnames[i], uO.C_flag)) {
+                    if (match(UnzipClass.FCurrFileName, G.pxnames[i], uO.C_flag)) {
                         do_this_file = FALSE;  /* ^-- ignore case in match */
                         if (xn_matched)
                             xn_matched[i] = TRUE;
@@ -1814,7 +1814,7 @@ static int zi_short()   /* return PK-type error code */
                     attribs[0] = '-';
                 if (IS_VOLID(xattr))
                     attribs[0] = 'V';
-                else if ((p = strchr(G.filename, '.')) != (char *)NULL) {
+                else if ((p = strchr(UnzipClass.FCurrFileName, '.')) != (char *)NULL) {
                     ++p;
                     if (strnicmp(p, "com", 3) == 0 ||
                         strnicmp(p, "exe", 3) == 0 ||

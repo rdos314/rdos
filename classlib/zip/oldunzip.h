@@ -415,7 +415,6 @@ typedef size_t extent;
  * buffer size required to hold the longest legal local filepath
  * (including the trailing '\0')
  */
-#define FILNAMSIZ  PATH_MAX
 
 #define TRUE      1   /* sort of obvious */
 #define FALSE     0

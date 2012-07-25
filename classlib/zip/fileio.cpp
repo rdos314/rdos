@@ -154,17 +154,17 @@ static const char ExtraFieldTooLong[] =
 int open_outfile()           /* return 1 if fail */
 {
     Trace("open_outfile:  doing fopen(%s) for writing\n",
-      FnFilter1(G.filename));
+      FnFilter1(UnzipClass.FCurrFileName));
     {
-        G.outfile = RdosCreateFile(G.filename, 0);
+        G.outfile = RdosCreateFile(UnzipClass.FCurrFileName, 0);
     }
     if (!G.outfile) {
         Info(0x401, CannotCreateFile,
-          FnFilter1(G.filename), strerror(errno));
+          FnFilter1(UnzipClass.FCurrFileName), strerror(errno));
         return 1;
     }
     Trace("open_outfile:  fopen(%s) for writing succeeded\n",
-      FnFilter1(G.filename));
+      FnFilter1(UnzipClass.FCurrFileName));
 
     return 0;
 
@@ -304,7 +304,7 @@ static int disk_error()
 {
     /* OK to use slide[] here because this file is finished regardless */
     Info(0x4a1, DiskFullQuery,
-      FnFilter1(G.filename));
+      FnFilter1(UnzipClass.FCurrFileName));
 
     fgets(G.answerbuf, sizeof(G.answerbuf), stdin);
     if (*G.answerbuf == 'y')   /* stop writing to this file */
@@ -330,7 +330,7 @@ int  UzpPassword (void *pG, int *rcnt, char *pwbuf, int size, const char *zfn, c
 
     if (*rcnt == 0) {           /* First call for current entry */
         *rcnt = 2;
-        if ((prompt = (char *)malloc(2*FILNAMSIZ + 15)) != (char *)NULL) {
+        if ((prompt = (char *)malloc(2*FILE_NAME_SIZE + 15)) != (char *)NULL) {
             sprintf(prompt, PasswPrompt,
                     FnFilter1(zfn), FnFilter2(efn));
             m = prompt;
@@ -584,30 +584,30 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
 
     case DS_FN:
     case DS_FN_L:
-        if (length >= FILNAMSIZ) {
+        if (length >= FILE_NAME_SIZE) {
             Info(0x401,
               FilenameTooLongTrunc);
             error = PK_WARN;
             /* remember excess length in block_len */
-            block_len = length - (FILNAMSIZ - 1);
-            length = FILNAMSIZ - 1;
+            block_len = length - (FILE_NAME_SIZE - 1);
+            length = FILE_NAME_SIZE - 1;
         } else
             /* no excess size */
             block_len = 0;
-        if (UnzipClass.ReadBuf(G.filename, length) == 0)
+        if (UnzipClass.ReadBuf(UnzipClass.FCurrFileName, length) == 0)
             return PK_EOF;
-        G.filename[length] = '\0';      /* terminate w/zero:  ASCIIZ */
+        UnzipClass.FCurrFileName[length] = '\0';      /* terminate w/zero:  ASCIIZ */
 
         /* translate the Zip entry filename coded in host-dependent "extended
            ASCII" into the compiler's (system's) internal text code page */
-        Ext_ASCII_TO_Native(G.filename, G.pInfo->hostnum, G.pInfo->hostver,
+        Ext_ASCII_TO_Native(UnzipClass.FCurrFileName, G.pInfo->hostnum, G.pInfo->hostver,
                             G.pInfo->HasUxAtt, (option == DS_FN_L));
 
         if (G.pInfo->lcflag)      /* replace with lowercase filename */
-            strtolower(G.filename, G.filename);
+            strtolower(UnzipClass.FCurrFileName, UnzipClass.FCurrFileName);
 
-        if (G.pInfo->vollabel && length > 8 && G.filename[8] == '.') {
-            char *p = G.filename+8;
+        if (G.pInfo->vollabel && length > 8 && UnzipClass.FCurrFileName[8] == '.') {
+            char *p = UnzipClass.FCurrFileName+8;
             while (*p++)
                 p[-1] = *p;  /* disk label, and 8th char is dot:  remove dot */
         }
@@ -619,7 +619,7 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
          * We truncated the filename, so print what's left and then fall
          * through to the SKIP routine.
          */
-        Info(0x401, "[ %s ]\n", FnFilter1(G.filename));
+        Info(0x401, "[ %s ]\n", FnFilter1(UnzipClass.FCurrFileName));
         length = block_len;     /* SKIP the excess bytes... */
         /*  FALL THROUGH...  */
 

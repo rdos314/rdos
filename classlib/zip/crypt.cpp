@@ -101,7 +101,7 @@ int decrypt(const char *passwrd)
     n = 0;
     do {
         r = (*G.decr_passwd)((void *)&G, &n, GLOBAL(key), IZ_PWLEN+1,
-                             UnzipClass.FInputFileName.GetData(), GLOBAL(filename));
+                             UnzipClass.FInputFileName.GetData(), UnzipClass.FCurrFileName);
         if (r == IZ_PW_ERROR) {         /* internal error in fetch of PW */
             free (GLOBAL(key));
             GLOBAL(key) = NULL;

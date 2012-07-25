@@ -1470,22 +1470,22 @@ reloc_highadj   Proc near
 reloc_highadj   Endp
 
 reloc_tab:
-rt0     DW OFFSET reloc_nop
-rt1     DW OFFSET reloc_high
-rt2     DW OFFSET reloc_low
-rt3     DW OFFSET reloc_highlow
-rt4     DW OFFSET reloc_highadj
-rt5     DW OFFSET reloc_nop
-rt6     DW OFFSET reloc_nop
-rt7     DW OFFSET reloc_nop
-rt8     DW OFFSET reloc_nop
-rt9     DW OFFSET reloc_nop
-rtA     DW OFFSET reloc_nop
-rtB     DW OFFSET reloc_nop
-rtC     DW OFFSET reloc_nop
-rtD     DW OFFSET reloc_nop
-rtE     DW OFFSET reloc_nop
-rtF     DW OFFSET reloc_nop
+rt0     DD OFFSET reloc_nop
+rt1     DD OFFSET reloc_high
+rt2     DD OFFSET reloc_low
+rt3     DD OFFSET reloc_highlow
+rt4     DD OFFSET reloc_highadj
+rt5     DD OFFSET reloc_nop
+rt6     DD OFFSET reloc_nop
+rt7     DD OFFSET reloc_nop
+rt8     DD OFFSET reloc_nop
+rt9     DD OFFSET reloc_nop
+rtA     DD OFFSET reloc_nop
+rtB     DD OFFSET reloc_nop
+rtC     DD OFFSET reloc_nop
+rtD     DD OFFSET reloc_nop
+rtE     DD OFFSET reloc_nop
+rtF     DD OFFSET reloc_nop
 
 RelocPage       Proc near
     push eax
@@ -1533,8 +1533,8 @@ reloc_object_reloc_loop:
     sub ecx,2
     movzx bx,ah
     shr bx,4
-    shl bx,1
-    call word ptr cs:[bx].reloc_tab
+    shl bx,2
+    call dword ptr cs:[bx].reloc_tab
     or ecx,ecx
     jnz reloc_object_reloc_loop
 

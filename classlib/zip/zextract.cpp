@@ -383,7 +383,7 @@ int extract_or_test_files()    /* return PK-type error code */
                 if (error > PK_WARN) {  /* fatal:  no more left to do */
                     Info(0x401,
                       FilNamMsg,
-                      FnFilter1(G.filename), "central");
+                      FnFilter1(UnzipClass.FCurrFileName), "central");
                     reached_end = TRUE;
                     break;
                 }
@@ -396,7 +396,7 @@ int extract_or_test_files()    /* return PK-type error code */
                 if (error > PK_WARN) {  /* fatal */
                     Info(0x401,
                       ExtFieldMsg,
-                      FnFilter1(G.filename), "central");
+                      FnFilter1(UnzipClass.FCurrFileName), "central");
                     reached_end = TRUE;
                     break;
                 }
@@ -409,7 +409,7 @@ int extract_or_test_files()    /* return PK-type error code */
                 if (error > PK_WARN) {  /* fatal */
                     Info(0x421, 
                       BadFileCommLength,
-                      FnFilter1(G.filename));
+                      FnFilter1(UnzipClass.FCurrFileName));
                     reached_end = TRUE;
                     break;
                 }
@@ -427,7 +427,7 @@ int extract_or_test_files()    /* return PK-type error code */
                 else {  /* check if this entry matches an `include' argument */
                     do_this_file = FALSE;
                     for (i = 0; i < G.filespecs; i++)
-                        if (match(G.filename, G.pfnames[i], uO.C_flag)) {
+                        if (match(UnzipClass.FCurrFileName, G.pfnames[i], uO.C_flag)) {
                             do_this_file = TRUE;  /* ^-- ignore case or not? */
                             if (fn_matched)
                                 fn_matched[i] = TRUE;
@@ -436,7 +436,7 @@ int extract_or_test_files()    /* return PK-type error code */
                 }
                 if (do_this_file) {  /* check if this is an excluded file */
                     for (i = 0; i < G.xfilespecs; i++)
-                        if (match(G.filename, G.pxnames[i], uO.C_flag)) {
+                        if (match(UnzipClass.FCurrFileName, G.pxnames[i], uO.C_flag)) {
                             do_this_file = FALSE; /* ^-- ignore case or not? */
                             if (xn_matched)
                                 xn_matched[i] = TRUE;
@@ -697,14 +697,14 @@ static int store_info()   /* return 0 if skipping, 1 if OK */
         if (G.crec.version_needed_to_extract[0] > VMS_UNZIP_VERSION) {
             if (!((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag)))
                 Info(0x401, VersionMsg,
-                  FnFilter1(G.filename), "VMS",
+                  FnFilter1(UnzipClass.FCurrFileName), "VMS",
                   G.crec.version_needed_to_extract[0] / 10,
                   G.crec.version_needed_to_extract[0] % 10,
                   VMS_UNZIP_VERSION / 10, VMS_UNZIP_VERSION % 10);
             return 0;
         }
         else if (!uO.tflag && !IS_OVERWRT_ALL) { /* if -o, extract anyway */
-            Info(0x481, VMSFormatQuery, FnFilter1(G.filename));
+            Info(0x481, VMSFormatQuery, FnFilter1(UnzipClass.FCurrFileName));
             fgets(G.answerbuf, sizeof(G.answerbuf), stdin);
             if ((*G.answerbuf != 'y') && (*G.answerbuf != 'Y'))
                 return 0;
@@ -713,7 +713,7 @@ static int store_info()   /* return 0 if skipping, 1 if OK */
     } else if (G.crec.version_needed_to_extract[0] > UNZVERS_SUPPORT) {
         if (!((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag)))
             Info(0x401, VersionMsg,
-              FnFilter1(G.filename), "PK",
+              FnFilter1(UnzipClass.FCurrFileName), "PK",
               G.crec.version_needed_to_extract[0] / 10,
               G.crec.version_needed_to_extract[0] % 10,
               UNZVERS_SUPPORT / 10, UNZVERS_SUPPORT % 10);
@@ -727,21 +727,21 @@ static int store_info()   /* return 0 if skipping, 1 if OK */
             if ((cmpridx = find_compr_idx(G.crec.compression_method))
                 < NUM_METHODS)
                 Info(0x401, ComprMsgName,
-                  FnFilter1(G.filename),
+                  FnFilter1(UnzipClass.FCurrFileName),
                   ComprNames[cmpridx]);
             else
                 Info(0x401, ComprMsgNum,
-                  FnFilter1(G.filename),
+                  FnFilter1(UnzipClass.FCurrFileName),
                   G.crec.compression_method);
         }
         return 0;
     }
 
     /* store a copy of the central header filename for later comparison */
-    if ((G.pInfo->cfilname = (char *)malloc(strlen(G.filename) + 1)) == NULL) {
-        Info(0x401, WarnNoMemCFName, FnFilter1(G.filename));
+    if ((G.pInfo->cfilname = (char *)malloc(strlen(UnzipClass.FCurrFileName) + 1)) == NULL) {
+        Info(0x401, WarnNoMemCFName, FnFilter1(UnzipClass.FCurrFileName));
     } else
-        strcpy(G.pInfo->cfilname, G.filename);
+        strcpy(G.pInfo->cfilname, UnzipClass.FCurrFileName);
 
     /* map whatever file attributes we have into the local format */
     mapattr();   /* GRR:  worry about return value later */
@@ -917,7 +917,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
                 error_in_archive = error;
             if (error > PK_WARN) {
                 Info(0x401, FilNamMsg,
-                  FnFilter1(G.filename), "local");
+                  FnFilter1(UnzipClass.FCurrFileName), "local");
                 continue;   /* go on to next one */
             }
         }
@@ -932,7 +932,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
                 error_in_archive = error;
             if (error > PK_WARN) {
                 Info(0x401, ExtFieldMsg,
-                  FnFilter1(G.filename), "local");
+                  FnFilter1(UnzipClass.FCurrFileName), "local");
                 continue;   /* go on */
             }
         }
@@ -941,12 +941,12 @@ static int extract_or_test_entrylist(unsigned numchunk,
          * been processed.
          */
         if (G.pInfo->cfilname != (char *)NULL) {
-            if (strcmp(G.pInfo->cfilname, G.filename) != 0) {
+            if (strcmp(G.pInfo->cfilname, UnzipClass.FCurrFileName) != 0) {
 #    define  cFile_PrintBuf  G.pInfo->cfilname
                 Info(0x401, LvsCFNamMsg,
-                  FnFilter2(cFile_PrintBuf), FnFilter1(G.filename));
+                  FnFilter2(cFile_PrintBuf), FnFilter1(UnzipClass.FCurrFileName));
 #  undef    cFile_PrintBuf
-                strcpy(G.filename, G.pInfo->cfilname);
+                strcpy(UnzipClass.FCurrFileName, G.pInfo->cfilname);
                 if (error_in_archive < PK_WARN)
                     error_in_archive = PK_WARN;
             }
@@ -964,7 +964,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
                 csiz_decrypted -= 12;
             if (G.lrec.ucsize != csiz_decrypted) {
                 Info(0x401, WrnStorUCSizCSizDiff,
-                  FnFilter1(G.filename),
+                  FnFilter1(UnzipClass.FCurrFileName),
                   fzofft(G.lrec.ucsize, NULL, "u"),
                   fzofft(csiz_decrypted, NULL, "u"));
                 G.lrec.ucsize = csiz_decrypted;
@@ -978,13 +978,13 @@ static int extract_or_test_entrylist(unsigned numchunk,
             if (error == PK_WARN) {
                 if (!((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag)))
                     Info(0x401, SkipIncorrectPasswd,
-                      FnFilter1(G.filename));
+                      FnFilter1(UnzipClass.FCurrFileName));
                 ++(*pnum_bad_pwd);
             } else {  /* (error > PK_WARN) */
                 if (error > error_in_archive)
                     error_in_archive = error;
                 Info(0x401, SkipCannotGetPasswd,
-                  FnFilter1(G.filename));
+                  FnFilter1(UnzipClass.FCurrFileName));
             }
             continue;   /* go on to next file */
         }
@@ -1007,8 +1007,8 @@ startover:
              *  of slash as directory separator (bug in some zipper(s); so
              *  far, not a problem in HPFS, NTFS or VFAT systems)
              */
-            if (G.pInfo->hostnum == FS_FAT_ && !strchr(G.filename, '/')) {
-                char *p=G.filename;
+            if (G.pInfo->hostnum == FS_FAT_ && !strchr(UnzipClass.FCurrFileName, '/')) {
+                char *p=UnzipClass.FCurrFileName;
 
                 if (*p) do {
                     if (*p == '\\') {
@@ -1025,17 +1025,17 @@ startover:
 
             if (!renamed) {
                /* remove absolute path specs */
-               if (G.filename[0] == '/') {
+               if (UnzipClass.FCurrFileName[0] == '/') {
                    Info(0x401, AbsolutePathWarning,
-                        FnFilter1(G.filename));
+                        FnFilter1(UnzipClass.FCurrFileName));
                    if (!error_in_archive)
                        error_in_archive = PK_WARN;
                    do {
-                       char *p = G.filename + 1;
+                       char *p = UnzipClass.FCurrFileName + 1;
                        do {
                            *(p-1) = *p;
                        } while (*p++ != '\0');
-                   } while (G.filename[0] == '/');
+                   } while (UnzipClass.FCurrFileName[0] == '/');
                }
             }
 
@@ -1067,16 +1067,16 @@ startover:
                     }
                 } else if (errcode == MPN_VOL_LABEL) {
                     Info(1, SkipVolumeLabel,
-                      FnFilter1(G.filename), "");
+                      FnFilter1(UnzipClass.FCurrFileName), "");
                 } else if (errcode > MPN_INF_SKIP &&
                            error_in_archive < PK_ERR)
                     error_in_archive = PK_ERR;
                 Trace("mapname(%s) returns error code = %d\n",
-                  FnFilter1(G.filename), error);
+                  FnFilter1(UnzipClass.FCurrFileName), error);
                 continue;   /* go on to next file */
             }
 
-            switch (check_for_newer(G.filename)) {
+            switch (check_for_newer(UnzipClass.FCurrFileName)) {
                 case DOES_NOT_EXIST:
                     /* freshen (no new files): skip unless just renamed */
                     if (uO.fflag && !renamed)
@@ -1106,7 +1106,7 @@ startover:
                 extent fnlen;
 reprompt:
                 Info(0x81, ReplaceQuery,
-                  FnFilter1(G.filename));
+                  FnFilter1(UnzipClass.FCurrFileName));
                 if (fgets(G.answerbuf, sizeof(G.answerbuf), stdin)
                     == (char *)NULL) {
                     Info(1, AssumeNone);
@@ -1119,11 +1119,11 @@ reprompt:
                     case 'R':
                         do {
                             Info(0x81, NewNameQuery);
-                            fgets(G.filename, FILNAMSIZ, stdin);
+                            fgets(UnzipClass.FCurrFileName, FILE_NAME_SIZE, stdin);
                             /* usually get \n here:  better check for it */
-                            fnlen = strlen(G.filename);
-                            if (G.filename[fnlen-1] == '\n')
-                                G.filename[--fnlen] = '\0';
+                            fnlen = strlen(UnzipClass.FCurrFileName);
+                            if (UnzipClass.FCurrFileName[fnlen-1] == '\n')
+                                UnzipClass.FCurrFileName[--fnlen] = '\0';
                         } while (fnlen == 0);
                         renamed = TRUE;
                         goto startover;   /* sorry for a goto */
@@ -1206,7 +1206,7 @@ static int extract_or_test_member()    /* return PK-type error code */
     if (uO.tflag) {
         if (!uO.qflag)
             Info(0, ExtractMsg, "test",
-              FnFilter1(G.filename), "", "");
+              FnFilter1(UnzipClass.FCurrFileName), "", "");
     } else {
         if (uO.cflag)
         {
@@ -1226,7 +1226,7 @@ static int extract_or_test_member()    /* return PK-type error code */
         case STORED:
             if (!uO.tflag && !uO.qflag) {
                 Info(0, ExtractMsg,
-                  "extract", FnFilter1(G.filename),
+                  "extract", FnFilter1(UnzipClass.FCurrFileName),
                   (uO.aflag != 1 /* && G.pInfo->textfile==G.pInfo->textmode */)?
                   "" : (G.lrec.ucsize == 0L? nul : (G.pInfo->textfile? txt :
                   bin)), uO.cflag? NEWLINE : "");
@@ -1251,7 +1251,7 @@ static int extract_or_test_member()    /* return PK-type error code */
         case SHRUNK:
             if (!uO.tflag && !uO.qflag) {
                 Info(0, ExtractMsg,
-                  Unshrink, FnFilter1(G.filename),
+                  Unshrink, FnFilter1(UnzipClass.FCurrFileName),
                   (uO.aflag != 1 /* && G.pInfo->textfile==G.pInfo->textmode */)?
                   "" : (G.pInfo->textfile? txt : bin), uO.cflag? NEWLINE : "");
             }
@@ -1262,7 +1262,7 @@ static int extract_or_test_member()    /* return PK-type error code */
                           NotEnoughMem :
                           InvalidComprData,
                           Unshrink,
-                          FnFilter1(G.filename));
+                          FnFilter1(UnzipClass.FCurrFileName));
                     else
                         Info(0x401, ErrUnzipNoFile, r == PK_MEM3 ?
                           NotEnoughMem :
@@ -1276,7 +1276,7 @@ static int extract_or_test_member()    /* return PK-type error code */
         case IMPLODED:
             if (!uO.tflag && !uO.qflag) {
                 Info(0, ExtractMsg,
-                  "explod", FnFilter1(G.filename),
+                  "explod", FnFilter1(UnzipClass.FCurrFileName),
                   (uO.aflag != 1 /* && G.pInfo->textfile==G.pInfo->textmode */)?
                   "" : (G.pInfo->textfile? txt : bin), uO.cflag? NEWLINE : "");
             }
@@ -1291,7 +1291,7 @@ static int extract_or_test_member()    /* return PK-type error code */
                           fzofft(G.lrec.ucsize, NULL, "u"),
                           warning ? "  " : "",
                           fzofft(G.lrec.csize, NULL, "u"),
-                          " [", FnFilter1(G.filename), "]");
+                          " [", FnFilter1(UnzipClass.FCurrFileName), "]");
                     else
                         Info(0x401, LengthMsg,
                           "\n", warning ? "warning" : "error",
@@ -1307,7 +1307,7 @@ static int extract_or_test_member()    /* return PK-type error code */
                           NotEnoughMem :
                           InvalidComprData,
                           Explode,
-                          FnFilter1(G.filename));
+                          FnFilter1(UnzipClass.FCurrFileName));
                     else
                         Info(0x401, ErrUnzipNoFile, r == 3?
                           NotEnoughMem :
@@ -1322,7 +1322,7 @@ static int extract_or_test_member()    /* return PK-type error code */
 
         case DEFLATED:
             if (!uO.tflag && !uO.qflag) {
-                Info(0, ExtractMsg, "inflat", FnFilter1(G.filename),
+                Info(0, ExtractMsg, "inflat", FnFilter1(UnzipClass.FCurrFileName),
                   (uO.aflag != 1 /* && G.pInfo->textfile==G.pInfo->textmode */)?
                   "" : (G.pInfo->textfile? txt : bin), uO.cflag? NEWLINE : "");
             }
@@ -1334,7 +1334,7 @@ static int extract_or_test_member()    /* return PK-type error code */
                           NotEnoughMem :
                           InvalidComprData,
                           Inflate,
-                          FnFilter1(G.filename));
+                          FnFilter1(UnzipClass.FCurrFileName));
                     else
                         Info(0x401, ErrUnzipNoFile, r == 3?
                           NotEnoughMem :
@@ -1348,7 +1348,7 @@ static int extract_or_test_member()    /* return PK-type error code */
             break;
 
         default:   /* should never get to this point */
-            Info(0x401, FileUnknownCompMethod, FnFilter1(G.filename));
+            Info(0x401, FileUnknownCompMethod, FnFilter1(UnzipClass.FCurrFileName));
             /* close and delete file before return? */
             UnzipClass.UndeferInput();
             return PK_WARN;
@@ -1379,7 +1379,7 @@ static int extract_or_test_member()    /* return PK-type error code */
         if (G.disk_full > 1) {
             /* warn user about the incomplete file */
             Info(0x421, FileTruncated,
-              FnFilter1(G.filename));
+              FnFilter1(UnzipClass.FCurrFileName));
             error = PK_DISK;
         } else {
             error = PK_WARN;
@@ -1394,7 +1394,7 @@ static int extract_or_test_member()    /* return PK-type error code */
         /* if quiet enough, we haven't output the filename yet:  do it */
         if ((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag))
             Info(0x401, "%-22s ",
-              FnFilter1(G.filename));
+              FnFilter1(UnzipClass.FCurrFileName));
         Info(0x401, BadCRC, G.crc32val,
           G.lrec.crc32);
         if (UnzipClass.FEncrypted)
@@ -1444,7 +1444,7 @@ static int TestExtraField(unsigned char *ef, unsigned ef_len)
            /* Discovered some extra field inconsistency! */
             if (uO.qflag)
                 Info(1, "%-22s ",
-                  FnFilter1(G.filename));
+                  FnFilter1(UnzipClass.FCurrFileName));
             Info(1, InconsistEFlength,
               ebLen, (ef_len - EB_HEADSIZE));
             return PK_ERR;
@@ -1484,7 +1484,7 @@ static int TestExtraField(unsigned char *ef, unsigned ef_len)
                     != PK_OK) {
                     if (uO.qflag)
                         Info(1, "%-22s ",
-                          FnFilter1(G.filename));
+                          FnFilter1(UnzipClass.FCurrFileName));
                     switch (r) {
                         case IZ_EF_TRUNC:
                             Info(1, TruncEAs,
@@ -1522,7 +1522,7 @@ static int TestExtraField(unsigned char *ef, unsigned ef_len)
                 if (r != PK_OK) {
                     if (uO.qflag)
                         Info(1, "%-22s ",
-                          FnFilter1(G.filename));
+                          FnFilter1(UnzipClass.FCurrFileName));
                     switch (r) {
                         case IZ_EF_TRUNC:
                             Info(1, TruncNTSD,

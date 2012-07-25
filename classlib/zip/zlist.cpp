@@ -177,14 +177,14 @@ int list_files()    /* return PK-type error code */
             else {  /* check if this entry matches an `include' argument */
                 do_this_file = FALSE;
                 for (i = 0; i < G.filespecs; i++)
-                    if (match(G.filename, G.pfnames[i], uO.C_flag)) {
+                    if (match(UnzipClass.FCurrFileName, G.pfnames[i], uO.C_flag)) {
                         do_this_file = TRUE;
                         break;       /* found match, so stop looping */
                     }
             }
             if (do_this_file) {  /* check if this is an excluded file */
                 for (i = 0; i < G.xfilespecs; i++)
-                    if (match(G.filename, G.pxnames[i], uO.C_flag)) {
+                    if (match(UnzipClass.FCurrFileName, G.pxnames[i], uO.C_flag)) {
                         do_this_file = FALSE;  /* ^-- ignore case in match */
                         break;
                     }
@@ -362,7 +362,7 @@ int ratio(zusz_t uc, zusz_t c)
 
 void fnprint()    /* print filename (after filtering) and newline */
 {
-    char *name = fnfilter(G.filename, slide, (extent)(WSIZE>>1));
+    char *name = fnfilter(UnzipClass.FCurrFileName, slide, (extent)(WSIZE>>1));
 
     Info(0, name);
     Info(0, "\n");

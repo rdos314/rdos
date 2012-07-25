@@ -213,7 +213,6 @@ typedef struct Globals {
     unsigned char      *outbuf2;             /*  process_zipfiles() (never changes); */
     unsigned char      *outptr;
     unsigned long      outcnt;               /* number of chars stored in outbuf */
-    char     filename[FILNAMSIZ];  /* also used by NT for temporary SFX path */
 
     char *key;         /* crypt static: decryption password or NULL */
     int nopwd;         /* crypt static */

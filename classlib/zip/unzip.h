@@ -52,6 +52,8 @@
 #define PK_DISK           50   /* disk full */
 #define PK_EOF            51   /* unexpected EOF */
 
+#define FILE_NAME_SIZE        513
+
 class TUnzip
 {
 public:
@@ -90,6 +92,8 @@ public:
     int FEncrypted;
 
     int FExtraBytes;
+
+    char FCurrFileName[FILE_NAME_SIZE];
     
 protected:
 
