@@ -1198,10 +1198,6 @@ static int extract_or_test_member()    /* return PK-type error code */
     Initialize variables, buffers, etc.
   ---------------------------------------------------------------------------*/
 
-    G.bits_left = 0;
-    G.bitbuf = 0L;       /* unreduce and unshrink only */
-    G.zipeof = 0;
-
     if (uO.tflag) {
         if (!uO.qflag)
             Info(0, ExtractMsg, "test",
@@ -1251,7 +1247,7 @@ static int extract_or_test_member()    /* return PK-type error code */
                   (uO.aflag != 1 /* && G.pInfo->textfile==G.pInfo->textmode */)?
                   "" : (G.pInfo->textfile? txt : bin), uO.cflag? NEWLINE : "");
             }
-            if ((r = unshrink()) != PK_COOL) {
+            if ((r = UnzipClass.Unshrink()) != PK_COOL) {
                 if (r < PK_DISK) {
                     if ((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag))
                         Info(0x401, ErrUnzipFile, r == PK_MEM3 ?

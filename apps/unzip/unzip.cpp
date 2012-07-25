@@ -258,6 +258,7 @@ int unzip(int argc, char *argv[])
        (For better readability, some subexpressions are encapsulated
        in temporarly defined macros.)
      */
+#   define HSIZE 0x8000
 #   define UZ_SLIDE_CHUNK (sizeof(int)+sizeof(unsigned char)+sizeof(unsigned char))
 #   define UZ_NUMOF_CHUNKS \
       (unsigned)(((WSIZE+UZ_SLIDE_CHUNK-1)/UZ_SLIDE_CHUNK > HSIZE) ? \
@@ -265,10 +266,6 @@ int unzip(int argc, char *argv[])
     G.area.Slide = (unsigned char *)malloc(UZ_NUMOF_CHUNKS * UZ_SLIDE_CHUNK);
 #   undef UZ_SLIDE_CHUNK
 #   undef UZ_NUMOF_CHUNKS
-    G.area.shrink.Parent = (int *)G.area.Slide;
-    G.area.shrink.value = G.area.Slide + (sizeof(int)*(HSIZE));
-    G.area.shrink.Stack = G.area.Slide +
-                           (sizeof(int) + sizeof(unsigned char))*(HSIZE);
 
 /*---------------------------------------------------------------------------
     Sanity checks.  Commentary by Otis B. Driftwood and Fiorello:

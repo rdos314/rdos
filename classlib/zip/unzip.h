@@ -119,6 +119,7 @@ public:
 
     int ZDecode(int c);
     int Explode();
+    int Unshrink();
 
     int BuildHuft(const unsigned *b, unsigned n, unsigned s, const unsigned short *d, const unsigned char *e, TUnzipHuft **t, unsigned *m);
     void FreeHuft(struct TUnzipHuft *t);
@@ -167,7 +168,18 @@ private:
     int ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl);
     int ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bl, unsigned bd, unsigned bdl);
 
+    void UnshrinkPartialClear(int lastcodeused);
+
     char *FOutBuf;
+    char *FOutPtr;
+    int FOutCount;
+
+    int *FShrinkParent;          /* pointer to (8192 * sizeof(int)) */
+    unsigned char *FShrinkValue;              /* pointer to 8KB char buffer */
+    unsigned char *FShrinkStack;              /* pointer to another 8KB char buffer */
+    int FZipeof;
+    int FBitsLeft;
+    unsigned long FBitBuf;
 
     char FLogBuf[512];
 

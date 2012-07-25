@@ -682,9 +682,6 @@ typedef size_t extent;
 #define ECLOC64_SIZE 16   /*  and zip64 end-of-central-dir record,  */
 #define ECREC64_SIZE 52   /*  respectively                          */
 
-#define MAX_BITS    13                 /* used in unshrink() */
-#define HSIZE       (1 << MAX_BITS)    /* size of global work area */
-
 #define LF     10        /* '\n' on ASCII machines; must be 10 due to EBCDIC */
 #define CR     13        /* '\r' on ASCII machines; must be 13 due to EBCDIC */
 #define CTRLZ  26        /* DOS & OS/2 EOF marker (used in fileio.c, vms.c) */
@@ -768,11 +765,6 @@ typedef struct VMStimbuf {
   ---------------------------------------------------------------------------*/
 
    union work {
-     struct {                 /* unshrink(): */
-       int *Parent;          /* pointer to (8192 * sizeof(int)) */
-       unsigned char *value;              /* pointer to 8KB char buffer */
-       unsigned char *Stack;              /* pointer to another 8KB char buffer */
-     } shrink;
      unsigned char *Slide;              /* explode(), inflate(), unreduce() */
    };
 
@@ -988,7 +980,6 @@ char  *fnfilter                  OF((const char *raw, unsigned char *space,
 
    int    UZinflate              OF((int is_defl64));  /* inflate.c */
 #  define inflate_free(x)        inflateEnd(&((Uz_Globs *)(&G))->dstrm)
-   int    unshrink               OF(());                 /* unshrink.c */
 /* static void  partial_clear    OF(());                  * unshrink.c */
 
 /*---------------------------------------------------------------------------

@@ -179,9 +179,6 @@ typedef struct Globals {
     union work area;                /* see unzpriv.h for definition of work */
 
 
-    unsigned long       bitbuf;
-    int       bits_left;            /* unreduce and unshrink only */
-    int       zipeof;
     char      *argv0;               /* used for NT and EXE_EXTENSION */
     char      *wildzipfn;
     long      ziplen;

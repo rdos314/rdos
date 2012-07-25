@@ -55,6 +55,15 @@
 
 #define INVALID_CODE 99
 
+#define MAX_BITS    13                 /* used in unshrink() */
+#define HSIZE       (1 << MAX_BITS)    /* size of global work area */
+
+/* HSIZE is defined as 2^13 (8192) in unzip.h (resp. unzpriv.h */
+#define BOGUSCODE  256
+#define CODE_MASK  (HSIZE - 1)   /* 0x1fff (lower bits are parent's index) */
+#define FREE_CODE  HSIZE         /* 0x2000 (code is unused or was cleared) */
+#define HAS_CHILD  (HSIZE << 1)  /* 0x4000 (code has a child--do not clear) */
+
 #define MAX(a,b)   ((a) > (b) ? (a) : (b))
 #define MIN(a,b)   ((a) < (b) ? (a) : (b))
 
@@ -1571,3 +1580,214 @@ int TUnzip::Explode()
   FreeHuft(tl);
   return (int)r;
 }
+
+/*##########################################################################
+#
+#   Unshrink macros that cannot be integrated!
+#
+##########################################################################*/
+
+#define READBITS(nbits,zdest) {if(nbits>FBitsLeft) {int temp; FZipeof=1;\
+  while (FBitsLeft<=8*(int)(sizeof(FBitBuf)-1) && (temp=GetNextByte())!=EOF) {\
+  FBitBuf|=(unsigned long)temp<<FBitsLeft; FBitsLeft+=8; FZipeof=0;}}\
+  zdest=(int)((unsigned)FBitBuf&mask_bits[nbits]);FBitBuf>>=nbits;\
+  FBitsLeft-=nbits;}
+
+/*##########################################################################
+#
+#   Name       : TUnzip::UnshrinkPartialClear
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUnzip::UnshrinkPartialClear(int lastcodeused)
+{
+    register int code;
+
+    /* clear all nodes which have no children (i.e., leaf nodes only) */
+
+    /* first loop:  mark each parent as such */
+    for (code = BOGUSCODE+1;  code <= lastcodeused;  ++code) {
+        register int cparent = (int)(FShrinkParent[code] & CODE_MASK);
+
+        if (cparent > BOGUSCODE)
+            FShrinkParent[cparent] |= HAS_CHILD;   /* set parent's child-bit */
+    }
+
+    /* second loop:  clear all nodes *not* marked as parents; reset flag bits */
+    for (code = BOGUSCODE+1;  code <= lastcodeused;  ++code) {
+        if (FShrinkParent[code] & HAS_CHILD)    /* just clear child-bit */
+            FShrinkParent[code] &= ~HAS_CHILD;
+        else {                              /* leaf:  lose it */
+            FShrinkParent[code] = FREE_CODE;
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TUnzip::Unshrink
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::Unshrink()
+{
+    unsigned char *stacktop;
+    register unsigned char *newstr;
+    unsigned char finalval;
+    int codesize=9, len, error;
+    int code, oldcode, curcode;
+    int lastfreecode;
+    unsigned char *p;
+
+    FZipeof = 0;
+    FBitsLeft = 0;
+    FBitBuf = 0;
+
+/*---------------------------------------------------------------------------
+    Initialize various variables.
+  ---------------------------------------------------------------------------*/
+
+    lastfreecode = BOGUSCODE;
+
+    FShrinkParent = new int[HSIZE];
+    FShrinkValue = new unsigned char[HSIZE];
+    FShrinkStack = new unsigned char[HSIZE];
+
+    stacktop = FShrinkStack + (HSIZE - 1);
+    
+    for (code = 0;  code < BOGUSCODE;  ++code) {
+        FShrinkValue[code] = (unsigned char)code;
+        FShrinkParent[code] = BOGUSCODE;
+    }
+    for (code = BOGUSCODE+1;  code < HSIZE;  ++code)
+        FShrinkParent[code] = FREE_CODE;
+
+    FOutPtr = FOutBuf;
+    FOutCount = 0;
+
+/*---------------------------------------------------------------------------
+    Get and output first code, then loop over remaining ones.
+  ---------------------------------------------------------------------------*/
+
+    READBITS(codesize, oldcode)
+    if (FZipeof)
+        return PK_OK;
+
+    finalval = (unsigned char)oldcode;
+    *FOutPtr++ = finalval;
+    ++FOutCount;
+
+    while (TRUE) {
+        READBITS(codesize, code)
+        if (FZipeof)
+            break;
+        if (code == BOGUSCODE) {   /* possible to have consecutive escapes? */
+            READBITS(codesize, code)
+            if (FZipeof)
+                break;
+            if (code == 1) {
+                ++codesize;
+                if (codesize > MAX_BITS) return PK_ERR;
+            } else if (code == 2) {
+                /* clear leafs (nodes with no children) */
+                UnshrinkPartialClear(lastfreecode);
+                lastfreecode = BOGUSCODE; /* reset start of free-node search */
+            }
+            continue;
+        }
+
+    /*-----------------------------------------------------------------------
+        Translate code:  traverse tree from leaf back to root.
+      -----------------------------------------------------------------------*/
+
+        newstr = stacktop;
+        curcode = code;
+
+        if (FShrinkParent[code] == FREE_CODE) {
+            /* or (FLAG_BITS[code] & FREE_CODE)? */
+            *newstr-- = finalval;
+            code = oldcode;
+        }
+
+        while (code != BOGUSCODE) {
+            if (newstr < FShrinkStack) {
+                /* Bogus compression stream caused buffer underflow! */
+                return PK_ERR;
+            }
+            if (FShrinkParent[code] == FREE_CODE) {
+                /* or (FLAG_BITS[code] & FREE_CODE)? */
+                *newstr-- = finalval;
+                code = oldcode;
+            } else {
+                *newstr-- = FShrinkValue[code];
+                code = (int)(FShrinkParent[code] & CODE_MASK);
+            }
+        }
+
+        len = (int)(stacktop - newstr++);
+        finalval = *newstr;
+
+    /*-----------------------------------------------------------------------
+        Write expanded string in reverse order to output buffer.
+      -----------------------------------------------------------------------*/
+
+        for (p = newstr;  p < newstr+len;  ++p) {
+            *FOutPtr++ = *p;
+            if (++FOutCount == WSIZE) {
+                if ((error = Flush(FOutBuf, FOutCount)) != 0) {
+                    return error;
+                }
+                FOutPtr = FOutBuf;
+                FOutCount = 0;
+            }
+        }
+
+    /*-----------------------------------------------------------------------
+        Add new leaf (first character of newstr) to tree as child of oldcode.
+      -----------------------------------------------------------------------*/
+
+        /* search for freecode */
+        code = (int)(lastfreecode + 1);
+        /* add if-test before loop for speed? */
+        while ((code < HSIZE) && (FShrinkParent[code] != FREE_CODE))
+            ++code;
+        lastfreecode = code;
+        if (code >= HSIZE)
+            /* invalid compressed data caused max-code overflow! */
+            return PK_ERR;
+
+        FShrinkValue[code] = finalval;
+        FShrinkParent[code] = oldcode;
+        oldcode = curcode;
+
+    }
+
+/*---------------------------------------------------------------------------
+    Flush any remaining data and return to sender...
+  ---------------------------------------------------------------------------*/
+
+    if (FOutCount > 0) {
+        if ((error = Flush(FOutBuf, FOutCount)) != 0) {
+            return error;
+        }
+    }
+
+    delete FShrinkParent;
+    delete FShrinkValue;
+    delete FShrinkStack;
+
+    return PK_OK;
+
+} /* end function unshrink() */
+
+
