@@ -327,7 +327,7 @@ static unsigned zlib_inCB(void *pG, unsigned char ** pInbuf)
 static int zlib_outCB(void *pG, unsigned char *outbuf, unsigned outcnt)
 {
     return ((UnzipClass.FMemMode) ? memflush(outbuf, (unsigned long)(outcnt))
-                         : flush(outbuf, (unsigned long)(outcnt), 0));
+                         : UnzipClass.Flush((char *)outbuf, outcnt, !uO.tflag));
 }
 
 
@@ -413,7 +413,7 @@ int UZinflate(int is_defl64)
                     retval = 2;
                 } else {
                     /* output write failure */
-                    retval = (G.disk_full != 0 ? PK_DISK : IZ_CTRLC);
+                    retval = (UnzipClass.FDiskFull != 0 ? PK_DISK : IZ_CTRLC);
                 }
             } else {
                 Trace("oops!  (inflateBack() err = %d)\n", err);

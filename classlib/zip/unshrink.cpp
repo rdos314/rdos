@@ -121,7 +121,7 @@ int unshrink()
 
     /* non-memory-limited machines:  allocate second (large) buffer for
      * textmode conversion in flush(), but only if needed */
-    if (G.pInfo->textmode && !G.outbuf2 &&
+    if (UnzipClass.FTextMode && !G.outbuf2 &&
         (G.outbuf2 = (unsigned char *)malloc(TRANSBUFSIZ)) == (unsigned char *)NULL)
         return PK_MEM3;
 
@@ -132,7 +132,7 @@ int unshrink()
     for (code = BOGUSCODE+1;  code < HSIZE;  ++code)
         parent[code] = FREE_CODE;
 
-    if (G.pInfo->textmode)
+    if (UnzipClass.FTextMode)
         outbufsiz = RAWBUFSIZ;
     else
         outbufsiz = OUTBUFSIZ;
@@ -226,7 +226,7 @@ int unshrink()
                 OUTDBG(*p)
                 if (++G.outcnt == outbufsiz) {
                     Trace("doing flush(), outcnt = %lu\n", G.outcnt);
-                    if ((error = flush(realbuf, G.outcnt, TRUE)) != 0) {
+                    if ((error = UnzipClass.Flush((char *)realbuf, G.outcnt, !uO.tflag)) != 0) {
                         Trace("unshrink:  flush() error (%d)\n",
                           error);
                         return error;
@@ -265,7 +265,7 @@ int unshrink()
 
     if (G.outcnt > 0L) {
         Trace("doing final flush(), outcnt = %lu\n", G.outcnt);
-        if ((error = flush(realbuf, G.outcnt, TRUE)) != 0) {
+        if ((error = UnzipClass.Flush((char *)realbuf, G.outcnt, !uO.tflag)) != 0) {
             Trace("unshrink:  flush() error (%d)\n", error);
             return error;
         }

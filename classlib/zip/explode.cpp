@@ -268,7 +268,7 @@ static int explode_lit(struct huft *tb, struct huft *tl, struct huft *td, unsign
       redirSlide[w++] = (unsigned char)t->v.n;
       if (w == WSIZE)
       {
-        if ((retval = flush(redirSlide, (unsigned long)w, 0)) != 0)
+        if ((retval = UnzipClass.Flush((char *)redirSlide, w, !uO.tflag)) != 0)
           return retval;
         w = u = 0;
       }
@@ -315,7 +315,7 @@ static int explode_lit(struct huft *tb, struct huft *tl, struct huft *td, unsign
             } while (--e);
         if (w == WSIZE)
         {
-          if ((retval = flush(redirSlide, (unsigned long)w, 0)) != 0)
+          if ((retval = UnzipClass.Flush((char *)redirSlide, w, !uO.tflag)) != 0)
             return retval;
           w = u = 0;
         }
@@ -324,7 +324,7 @@ static int explode_lit(struct huft *tb, struct huft *tl, struct huft *td, unsign
   }
 
   /* flush out redirSlide */
-  if ((retval = flush(redirSlide, (unsigned long)w, 0)) != 0)
+  if ((retval = UnzipClass.Flush((char *)redirSlide, w, !uO.tflag)) != 0)
     return retval;
   if (UnzipClass.FDecompSize + UnzipClass.FInCount + (k >> 3))   /* should have read csize bytes, but */
   {                        /* sometimes read one too many:  k>>3 compensates */
@@ -371,7 +371,7 @@ static int explode_nolit(struct huft *tl, struct huft *td, unsigned bl, unsigned
       redirSlide[w++] = (unsigned char)b;
       if (w == WSIZE)
       {
-        if ((retval = flush(redirSlide, (unsigned long)w, 0)) != 0)
+        if ((retval = UnzipClass.Flush((char *)redirSlide, w, !uO.tflag)) != 0)
           return retval;
         w = u = 0;
       }
@@ -419,7 +419,7 @@ static int explode_nolit(struct huft *tl, struct huft *td, unsigned bl, unsigned
             } while (--e);
         if (w == WSIZE)
         {
-          if ((retval = flush(redirSlide, (unsigned long)w, 0)) != 0)
+          if ((retval = UnzipClass.Flush((char *)redirSlide, w, !uO.tflag)) != 0)
             return retval;
           w = u = 0;
         }
@@ -428,7 +428,7 @@ static int explode_nolit(struct huft *tl, struct huft *td, unsigned bl, unsigned
   }
 
   /* flush out redirSlide */
-  if ((retval = flush(redirSlide, (unsigned long)w, 0)) != 0)
+  if ((retval = UnzipClass.Flush((char *)redirSlide, w, !uO.tflag)) != 0)
     return retval;
   if (UnzipClass.FDecompSize + UnzipClass.FInCount + (k >> 3))   /* should have read csize bytes, but */
   {                        /* sometimes read one too many:  k>>3 compensates */

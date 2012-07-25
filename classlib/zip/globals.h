@@ -179,7 +179,6 @@ typedef struct Globals {
     min_info *pInfo;
     union work area;                /* see unzpriv.h for definition of work */
 
-    unsigned long       crc32val;             /* CRC shift reg. (was static in funzip) */
 
     unsigned long       bitbuf;
     int       bits_left;            /* unreduce and unshrink only */
@@ -198,10 +197,7 @@ typedef struct Globals {
     unsigned char      *outbufptr;           /* extract.c static */
     unsigned long      outsize;              /* extract.c static */
     int      reported_backslash;   /* extract.c static */
-    int      disk_full;
-    int      newfile;
 
-    int      didCRlast;            /* fileio static */
     unsigned long      numlines;             /* fileio static: number of lines printed */
     int      sol;                  /* fileio static: at start of line */
     int      no_ecrec;             /* process static */

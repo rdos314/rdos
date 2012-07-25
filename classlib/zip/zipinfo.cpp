@@ -664,7 +664,7 @@ int zipinfo()   /* return PK-type error code */
 
     uO.L_flag = FALSE;      /* zipinfo mode: never convert name to lowercase */
     G.pInfo = G.info;       /* (re-)initialize, (just to make sure) */
-    G.pInfo->textmode = 0;  /* so one can read on screen (is this ever used?) */
+    UnzipClass.FTextMode = 0;  /* so one can read on screen (is this ever used?) */
 
     /* reset endprev for new zipfile; account for multi-part archives (?) */
     endprev = (G.crec.relative_offset_local_header == 4L)? 4L : 0L;

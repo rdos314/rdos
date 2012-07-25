@@ -77,9 +77,11 @@ public:
     int FillInbuf();
     int Seek(long abs_offset);
 
-    int OpenOutputFile();
-
     int ZDecode(int c);
+
+    int OpenOutputFile();
+    int DiskError();
+    int Flush(char *rawbuf, int size, int output);
 
     TString FInputFileName;
     int FInputHandle;
@@ -97,8 +99,13 @@ public:
 
     char FCurrFileName[FILE_NAME_SIZE];
     int FOutputHandle;
+    int FTextMode;
+    int FDiskFull;
+    unsigned long FCurrCrcVal;
     
 protected:
+    char *FTmpOutBuf;
+    int FCrLast;
 
 private:
     void Init();

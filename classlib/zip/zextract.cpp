@@ -473,7 +473,7 @@ int extract_or_test_files()    /* return PK-type error code */
             if (error > error_in_archive)
                 error_in_archive = error;
             /* ...and keep going (unless disk full or user break) */
-            if (G.disk_full > 1 || error_in_archive == IZ_CTRLC) {
+            if (UnzipClass.FDiskFull > 1 || error_in_archive == IZ_CTRLC) {
                 /* clear reached_end to signal premature stop ... */
                 reached_end = FALSE;
                 /* ... and cancel scanning the central directory */
@@ -683,13 +683,13 @@ static int store_info()   /* return 0 if skipping, 1 if OK */
 
     switch (uO.aflag) {
         case 0:
-            G.pInfo->textmode = FALSE;   /* bit field */
+            UnzipClass.FTextMode = FALSE;   /* bit field */
             break;
         case 1:
-            G.pInfo->textmode = G.pInfo->textfile;   /* auto-convert mode */
+            UnzipClass.FTextMode = G.pInfo->textfile;   /* auto-convert mode */
             break;
         default:  /* case 2: */
-            G.pInfo->textmode = TRUE;
+            UnzipClass.FTextMode = TRUE;
             break;
     }
 
@@ -1163,11 +1163,11 @@ reprompt:
             }
         } /* end if (extracting to disk) */
 
-        G.disk_full = 0;
+        UnzipClass.FDiskFull = 0;
         if ((error = extract_or_test_member()) != PK_COOL) {
             if (error > error_in_archive)
                 error_in_archive = error;       /* ...and keep going */
-            if (G.disk_full > 1) {
+            if (UnzipClass.FDiskFull > 1) {
                 return error_in_archive;        /* (unless disk full) */
             }
         }
@@ -1199,9 +1199,6 @@ static int extract_or_test_member()    /* return PK-type error code */
     G.bits_left = 0;
     G.bitbuf = 0L;       /* unreduce and unshrink only */
     G.zipeof = 0;
-    G.newfile = TRUE;
-    G.crc32val = CRCVAL_INITIAL;
-
 
     if (uO.tflag) {
         if (!uO.qflag)
@@ -1236,14 +1233,14 @@ static int extract_or_test_member()    /* return PK-type error code */
             while ((b = UnzipClass.GetNextByte()) != EOF) {
                 *G.outptr++ = (unsigned char)b;
                 if (++G.outcnt == WSIZE) {
-                    error = flush(redirSlide, G.outcnt, 0);
+                    error = UnzipClass.Flush((char *)redirSlide, G.outcnt, !uO.tflag);
                     G.outptr = redirSlide;
                     G.outcnt = 0L;
-                    if (error != PK_COOL || G.disk_full) break;
+                    if (error != PK_COOL || UnzipClass.FDiskFull) break;
                 }
             }
             if (G.outcnt) {        /* flush final (partial) buffer */
-                r = flush(redirSlide, G.outcnt, 0);
+                r = UnzipClass.Flush((char *)redirSlide, G.outcnt, !uO.tflag);
                 if (error < r) error = r;
             }
             break;
@@ -1375,8 +1372,8 @@ static int extract_or_test_member()    /* return PK-type error code */
             /* GRR: CONVERT close_outfile() TO NON-VOID:  CHECK FOR ERRORS! */
 
 
-    if (G.disk_full) {            /* set by flush() */
-        if (G.disk_full > 1) {
+    if (UnzipClass.FDiskFull) {            /* set by flush() */
+        if (UnzipClass.FDiskFull > 1) {
             /* warn user about the incomplete file */
             Info(0x421, FileTruncated,
               FnFilter1(UnzipClass.FCurrFileName));
@@ -1390,12 +1387,12 @@ static int extract_or_test_member()    /* return PK-type error code */
         UnzipClass.UndeferInput();
         return error;
     }
-    if (G.crc32val != G.lrec.crc32) {
+    if (UnzipClass.FCurrCrcVal != G.lrec.crc32) {
         /* if quiet enough, we haven't output the filename yet:  do it */
         if ((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag))
             Info(0x401, "%-22s ",
               FnFilter1(UnzipClass.FCurrFileName));
-        Info(0x401, BadCRC, G.crc32val,
+        Info(0x401, BadCRC, UnzipClass.FCurrCrcVal,
           G.lrec.crc32);
         if (UnzipClass.FEncrypted)
             Info(0x401, MaybeBadPasswd);
@@ -1557,7 +1554,7 @@ static int TestExtraField(unsigned char *ef, unsigned ef_len)
                 break;
             case EF_PKVMS:
                 if (makelong(ef+EB_HEADSIZE) !=
-                    crc32(CRCVAL_INITIAL, ef+(EB_HEADSIZE+4),
+                    crc32(0, ef+(EB_HEADSIZE+4),
                           (extent)(ebLen-4)))
                     Info(1, BadCRC_EAs);
                 break;
@@ -1690,7 +1687,7 @@ int memextract(unsigned char *tgt, unsigned long tgtsize, const unsigned char *s
     UnzipClass.FMemMode = FALSE;
 
     if (!error) {
-        register unsigned long crcval = crc32(CRCVAL_INITIAL, tgt, (extent)G.outcnt);
+        register unsigned long crcval = crc32(0, tgt, (extent)G.outcnt);
 
         if (crcval != extra_field_crc) {
             if (uO.tflag)

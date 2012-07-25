@@ -752,7 +752,6 @@ typedef struct min_info {
     unsigned file_attr;      /* local flavor, as used by creat(), chmod()... */
     unsigned ExtLocHdr : 1;  /* use time instead of CRC for decrypt check */
     unsigned textfile : 1;   /* file is text (according to zip) */
-    unsigned textmode : 1;   /* file is to be extracted as text */
     unsigned lcflag : 1;     /* convert filename to lowercase */
     unsigned vollabel : 1;   /* "file" is an MS-DOS volume (disk) label */
     unsigned HasUxAtt : 1;   /* crec ext_file_attr has Unix style mode bits */
@@ -986,7 +985,6 @@ void     fnprint                 OF(());
     Functions in fileio.c:
   ---------------------------------------------------------------------------*/
 
-   int   flush                OF((unsigned char *buf, unsigned long size, int unshrink));
 /* static int  disk_error     OF(()); */
 void     handler              OF((int signal));
 int      check_for_newer      OF((char *filename)); /* os2,vmcms,vms */
@@ -1094,8 +1092,6 @@ int  decrypt OF((const char *passwrd));
                  (extent)(WSIZE>>2))
 
 #  define MESSAGE(str,len,flag)  (*G.message)((void *)&G,(str),(len),(flag))
-
-#  define CRCVAL_INITIAL  0L
 
 #define SKIP_(length) if(length&&((error=do_string(length,SKIP))!=0))\
   {error_in_archive=error; if(error>1) return error;}

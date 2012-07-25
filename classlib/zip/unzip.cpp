@@ -41,7 +41,12 @@
 #define     FALSE       0
 #define     TRUE        !FALSE
 
+#define LF     10        /* '\n' on ASCII machines; must be 10 due to EBCDIC */
+#define CR     13        /* '\r' on ASCII machines; must be 13 due to EBCDIC */
+#define CTRLZ  26        /* DOS & OS/2 EOF marker (used in fileio.c, vms.c) */
+
 #define INBUFSIZ  8192
+#define TMPOUTSIZ 0x10000
 
 #define MAX(a,b)   ((a) > (b) ? (a) : (b))
 #define MIN(a,b)   ((a) < (b) ? (a) : (b))
@@ -236,6 +241,7 @@ TUnzip::TUnzip()
 TUnzip::~TUnzip()
 {
     delete FInBuf;
+    delete FTmpOutBuf;
 }
 
 /*##########################################################################
@@ -255,6 +261,7 @@ void TUnzip::Init()
     OnInfo = 0;
 
     FInBuf = new char[INBUFSIZ + 4];    /* 4 extra for hold[] (below) */
+    FTmpOutBuf = new char[TMPOUTSIZ];
 }
 
 /*##########################################################################
@@ -699,6 +706,9 @@ int TUnzip::Seek(long abs_offset)
 ##########################################################################*/
 int TUnzip::OpenOutputFile()           /* return 1 if fail */
 {
+    FCurrCrcVal = 0;
+    FCrLast = FALSE;
+
     FOutputHandle = RdosCreateFile(FCurrFileName, 0);
     if (!FOutputHandle) {
         Info(0x401, "error:  cannot create %s\n", FCurrFileName);
@@ -707,4 +717,131 @@ int TUnzip::OpenOutputFile()           /* return 1 if fail */
     return 0;
 
 } /* end function open_outfile() */
+
+
+/*##########################################################################
+#
+#   Name       : TUnzip::DiskError
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::DiskError()
+{
+/*    Info(0x4a1, DiskFullQuery,
+      FnFilter1(UnzipClass.FCurrFileName));
+
+    fgets(G.answerbuf, sizeof(G.answerbuf), stdin);
+    if (*G.answerbuf == 'y')
+        G.disk_full = 1;    
+    else
+        G.disk_full = 2;    
+*/
+
+    FDiskFull = 1;
+
+    return PK_DISK;
+} /* end function disk_error() */
+
+
+
+/*##########################################################################
+#
+#   Name       : TUnzip::Flush
+#
+#   Purpose....: returns PK error codes:
+#                 if tflag => always 0; PK_DISK if write error
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::Flush(char *rawbuf, int size, int output)
+{
+    char *p;
+    char *q;
+
+/*---------------------------------------------------------------------------
+    Compute the CRC first; if testing or if disk is full, that's it.
+  ---------------------------------------------------------------------------*/
+
+    FCurrCrcVal = crc32(FCurrCrcVal, (unsigned char *)rawbuf, size);
+
+    if (!output || size == 0L)  /* testing or nothing to write:  all done */
+        return PK_OK;
+
+    if (FDiskFull)
+        return PK_DISK;         /* disk already full:  ignore rest of file */
+
+/*---------------------------------------------------------------------------
+    Write the bytes rawbuf[0..size-1] to the output device, first converting
+    end-of-lines and ASCII/EBCDIC as needed.  If SMALL_MEM or MED_MEM are NOT
+    defined, outbuf is assumed to be at least as large as rawbuf and is not
+    necessarily checked for overflow.
+  ---------------------------------------------------------------------------*/
+
+    if (FTextMode) {
+
+    /*-----------------------------------------------------------------------
+        Algorithm:  CR/LF => native; lone CR => native; lone LF => native.
+        This routine is only for non-raw-VMS, non-raw-VM/CMS files (i.e.,
+        stream-oriented files, not record-oriented).
+      -----------------------------------------------------------------------*/
+
+        p = rawbuf;
+        if (*p == LF && FCrLast)
+            ++p;
+        FCrLast = FALSE;
+        for (q = FTmpOutBuf;  (p-rawbuf) < size;  ++p) {
+            if (*p == CR) {           /* lone CR or CR/LF: treat as EOL  */
+                *q++ = CR; 
+                *q++ = LF;
+                if (p-rawbuf == size-1)
+                    /* last char in buffer */
+                    FCrLast = TRUE;
+                else if (p[1] == LF)  /* get rid of accompanying LF */
+                    ++p;
+            } else if (*p == LF)      /* lone LF */
+            {
+                *q++ = CR; 
+                *q++ = LF;
+            }
+            else
+            if (*p != CTRLZ)          /* lose all ^Z's */
+                *q++ = *p;
+
+        }
+
+    /*-----------------------------------------------------------------------
+        Done translating:  write whatever we've got to file (or screen).
+      -----------------------------------------------------------------------*/
+
+        if (q > FTmpOutBuf) {
+            if (!RdosWriteFile(FOutputHandle, FTmpOutBuf, q-FTmpOutBuf))
+                return DiskError();
+        }
+    } else {   /* binary mode:  aflag is false */
+
+        /* write raw binary data */
+        /* GRR:  note that for standard MS-DOS compilers, size argument to
+         * fwrite() can never be more than 65534, so WriteError macro will
+         * have to be rewritten if size can ever be that large.  For now,
+         * never more than 32K.  Also note that write() returns an int, which
+         * doesn't necessarily limit size to 32767 bytes if write() is used
+         * on 16-bit systems but does make it more of a pain; however, because
+         * at least MSC 5.1 has a lousy implementation of fwrite() (as does
+         * DEC Ultrix cc), write() is used anyway.
+         */
+        if (!RdosWriteFile(FOutputHandle, rawbuf, size))
+            return DiskError();
+    }
+
+    return PK_OK;
+
+} /* end function flush() [resp. partflush() for 16-bit Deflate64 support] */
 
