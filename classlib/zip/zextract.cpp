@@ -35,6 +35,8 @@
 #define __EXTRACT_C     /* identifies this source module */
 #include "oldunzip.h"
 
+#define NEWLINE "\r\n"
+
 #define GRRDUMP(buf,len) { \
     int i, j; \
  \
@@ -1207,9 +1209,6 @@ static int extract_or_test_member()    /* return PK-type error code */
     } else {
         if (uO.cflag)
         {
-            UnzipClass.FOutputHandle = 0;
-            
-#           define NEWLINE "\r\n"
         } else if (UnzipClass.OpenOutputFile())
             return PK_DISK;
     }
@@ -1358,19 +1357,7 @@ static int extract_or_test_member()    /* return PK-type error code */
     machines (redundant on 32-bit machines).
   ---------------------------------------------------------------------------*/
 
-    unsigned long msb, lsb;
-    unsigned short dos_date, dos_time;
-
-    dos_date = (unsigned short)(G.lrec.last_mod_dos_datetime >> 16);
-    dos_time = (unsigned short)(G.lrec.last_mod_dos_datetime & 0xFFFFL);
-
-    RdosDosTimeDateToTics(dos_date, dos_time, &msb, &lsb);
-    RdosSetFileTime(UnzipClass.FOutputHandle, msb, lsb);
-
-    RdosCloseFile(UnzipClass.FOutputHandle);
-
-            /* GRR: CONVERT close_outfile() TO NON-VOID:  CHECK FOR ERRORS! */
-
+    UnzipClass.CloseAndSetTime(G.lrec.last_mod_dos_datetime);
 
     if (UnzipClass.FDiskFull) {            /* set by flush() */
         if (UnzipClass.FDiskFull > 1) {

@@ -80,6 +80,8 @@ public:
     int ZDecode(int c);
 
     int OpenOutputFile();
+    void CloseOutputFile();
+    void CloseAndSetTime(unsigned long dos_datetime);
     int DiskError();
     int Flush(char *rawbuf, int size, int output);
 
@@ -98,12 +100,12 @@ public:
     int FExtraBytes;
 
     char FCurrFileName[FILE_NAME_SIZE];
-    int FOutputHandle;
     int FTextMode;
     int FDiskFull;
     unsigned long FCurrCrcVal;
     
 protected:
+    int FOutputHandle;
     char *FTmpOutBuf;
     int FCrLast;
 

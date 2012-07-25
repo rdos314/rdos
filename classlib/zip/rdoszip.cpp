@@ -57,18 +57,6 @@ int set_direc_attribs(direntry *d)
     return errval;
 } /* end function set_direc_attribs() */
 
-/****************************/
-/* Function close_outfile() */
-/****************************/
-
-void close_outfile()
-{
-    RdosCloseFile(UnzipClass.FOutputHandle);
-    return;
-
-} /* end function close_outfile() */
-
-
 
 /************************/
 /*  Function do_wild()  */   /* identical to OS/2 version */

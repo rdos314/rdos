@@ -1059,7 +1059,6 @@ int      mapname         OF((int renamed));                /* local */
 int      checkdir        OF((char *pathcomp, int flag));   /* local */
 char    *do_wild         OF((const char *wildzipfn));     /* local */
 char    *GetLoadPath     OF(());                              /* local */
-void     close_outfile   OF(());                              /* local */
 int   defer_dir_attribs  OF((direntry **pd));           /* local */
 int   set_direc_attribs  OF((direntry *d));             /* local */
 

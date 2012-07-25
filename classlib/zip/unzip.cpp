@@ -718,6 +718,48 @@ int TUnzip::OpenOutputFile()           /* return 1 if fail */
 
 } /* end function open_outfile() */
 
+/*##########################################################################
+#
+#   Name       : TUnzip::CloseOutputFile
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUnzip::CloseOutputFile()
+{
+    RdosCloseFile(FOutputHandle);
+
+} /* end function close_outfile() */
+
+
+/*##########################################################################
+#
+#   Name       : TUnzip::CloseAndSetTime
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUnzip::CloseAndSetTime(unsigned long dos_datetime)
+{
+    unsigned long msb, lsb;
+    unsigned short dos_date, dos_time;
+
+    dos_date = (unsigned short)(dos_datetime >> 16);
+    dos_time = (unsigned short)(dos_datetime & 0xFFFFL);
+
+    RdosDosTimeDateToTics(dos_date, dos_time, &msb, &lsb);
+    RdosSetFileTime(FOutputHandle, msb, lsb);
+
+    RdosCloseFile(FOutputHandle);
+}
 
 /*##########################################################################
 #
