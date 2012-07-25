@@ -284,7 +284,7 @@ load_object     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           new_create_section
+;           NAME:           CreateSections
 ;
 ;           DESCRIPTION:    New create section
 ;
@@ -293,6 +293,26 @@ load_object     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 new_create_section_name    DB 'Create User Section',0
+
+new_create_section     PROC far
+    int 3
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov edi,ds:app_create_section_proc
+    ret
+new_create_section  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CreateSections
+;
+;           DESCRIPTION:    New create section
+;
+;           PARAMS:         FS      App selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 section_start:
 
@@ -391,10 +411,14 @@ leave_us_section    Endp
 
 section_end:        
 
-new_create_section     PROC far
+CreateSections  Proc near
     push es
-;    
-    int 3
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
     mov esi,OFFSET section_start
     mov eax,OFFSET section_end
     sub eax,esi
@@ -406,10 +430,36 @@ new_create_section     PROC far
     mov es,ax
     rep movs byte ptr es:[edi],cs:[esi]
 ;
+    sub edx,OFFSET section_start
+;    
+    mov edi,edx
+    add edi,OFFSET create_us_section
+    mov fs:app_create_section_proc,edi
+    mov fs:app_create_section_proc+4,es
+;    
+    mov edi,edx
+    add edi,OFFSET free_us_section
+    mov fs:app_delete_section_proc,edi
+    mov fs:app_delete_section_proc+4,es
+;    
+    mov edi,edx
+    add edi,OFFSET enter_us_section
+    mov fs:app_enter_section_proc,edi
+    mov fs:app_enter_section_proc+4,es
+;    
+    mov edi,edx
+    add edi,OFFSET leave_us_section
+    mov fs:app_leave_section_proc,edi
+    mov fs:app_leave_section_proc+4,es
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax    
     pop es    
     ret
-new_create_section     ENDP
-
+CreateSections     ENDP
                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3109,6 +3159,8 @@ load_pe_name_size:
     AllocateAppMem
     mov fs:app_cmd_line,edx
     mov fs:app_options,0
+;
+    call CreateSections
 ;
     push es
     push ecx
