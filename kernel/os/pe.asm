@@ -2227,8 +2227,8 @@ load_dll_do:
 ;
     mov eax,40h
     AllocateSmallGlobalMem
-    mov cx,ax
-    xor di,di
+    mov ecx,eax
+    xor edi,edi
     ReadFile
     jc load_dll_fail
     cmp ax,40h
@@ -2242,7 +2242,7 @@ load_dll_do:
     mov ax,es:[3Ch]
     movzx eax,ax
     SetFilePos
-    mov cx,40h
+    mov ecx,40h
     ReadFile   
     jc load_dll_fail
     mov ax,es:[0]
@@ -2647,8 +2647,8 @@ CreateImage     Proc near
     push es
     mov eax,SIZE pe_header
     AllocateLocalMem
-    mov cx,ax
-    xor di,di
+    mov ecx,eax
+    xor edi,edi
     ReadFile   
     mov ecx,es:peh_image_size
     mov edx,es:peh_image_base
@@ -3022,8 +3022,8 @@ load_pe Proc far
     SetFilePos
     mov eax,40h
     AllocateSmallGlobalMem
-    mov cx,ax
-    xor di,di
+    mov ecx,eax
+    xor edi,edi
     ReadFile
     jc load_pe_fail
     cmp ax,40h
@@ -3037,7 +3037,7 @@ load_pe Proc far
     mov ax,es:[3Ch]
     movzx eax,ax
     SetFilePos
-    mov cx,40h
+    mov ecx,40h
     ReadFile   
     jc load_pe_fail
     mov ax,es:[0]
