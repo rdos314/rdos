@@ -226,7 +226,7 @@ int unshrink()
                 OUTDBG(*p)
                 if (++G.outcnt == outbufsiz) {
                     Trace("doing flush(), outcnt = %lu\n", G.outcnt);
-                    if ((error = UnzipClass.Flush((char *)realbuf, G.outcnt, !uO.tflag)) != 0) {
+                    if ((error = UnzipClass.Flush((char *)realbuf, G.outcnt)) != 0) {
                         Trace("unshrink:  flush() error (%d)\n",
                           error);
                         return error;
@@ -265,7 +265,7 @@ int unshrink()
 
     if (G.outcnt > 0L) {
         Trace("doing final flush(), outcnt = %lu\n", G.outcnt);
-        if ((error = UnzipClass.Flush((char *)realbuf, G.outcnt, !uO.tflag)) != 0) {
+        if ((error = UnzipClass.Flush((char *)realbuf, G.outcnt)) != 0) {
             Trace("unshrink:  flush() error (%d)\n", error);
             return error;
         }

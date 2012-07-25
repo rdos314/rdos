@@ -843,27 +843,6 @@ typedef struct VMStimbuf {
 #      define OFFSET_START_CENTRAL_DIRECT64     48
 
 
-/* The following structs are used to hold all header data of a zip entry.
-   Traditionally, the structs' layouts followed the data layout of the
-   corresponding zipfile header structures.  However, the zipfile header
-   layouts were designed in the old ages of 16-bit CPUs, they are subject
-   to structure padding and/or alignment issues on newer systems with a
-   "natural word width" of more than 2 bytes.
-   Please note that the structure members are now reordered by size
-   (top-down), to prevent internal padding and optimize memory usage!
- */
-   typedef struct local_file_header {                 /* LOCAL */
-       zusz_t csize;
-       zusz_t ucsize;
-       unsigned long last_mod_dos_datetime;
-       unsigned long crc32;
-       unsigned char version_needed_to_extract[2];
-       unsigned short general_purpose_bit_flag;
-       unsigned short compression_method;
-       unsigned short filename_length;
-       unsigned short extra_field_length;
-   } local_file_hdr;
-
    typedef struct central_directory_file_header {     /* CENTRAL */
        zusz_t csize;
        zusz_t ucsize;
@@ -1007,7 +986,6 @@ char  *fnfilter                  OF((const char *raw, unsigned char *space,
     Decompression functions:
   ---------------------------------------------------------------------------*/
 
-int    explode                   OF(());                  /* explode.c */
    int    UZinflate              OF((int is_defl64));  /* inflate.c */
 #  define inflate_free(x)        inflateEnd(&((Uz_Globs *)(&G))->dstrm)
    int    unshrink               OF(());                 /* unshrink.c */

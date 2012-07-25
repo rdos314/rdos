@@ -1204,29 +1204,29 @@ int process_local_file_hdr()    /* return PK-type error code */
     if (UnzipClass.ReadBuf((char *)byterec, LREC_SIZE) == 0)
         return PK_EOF;
 
-    G.lrec.version_needed_to_extract[0] =
+    UnzipClass.FCurrFile.version_needed_to_extract[0] =
       byterec[L_VERSION_NEEDED_TO_EXTRACT_0];
-    G.lrec.version_needed_to_extract[1] =
+    UnzipClass.FCurrFile.version_needed_to_extract[1] =
       byterec[L_VERSION_NEEDED_TO_EXTRACT_1];
 
-    G.lrec.general_purpose_bit_flag =
+    UnzipClass.FCurrFile.general_purpose_bit_flag =
       makeword(&byterec[L_GENERAL_PURPOSE_BIT_FLAG]);
-    G.lrec.compression_method = makeword(&byterec[L_COMPRESSION_METHOD]);
-    G.lrec.last_mod_dos_datetime = makelong(&byterec[L_LAST_MOD_DOS_DATETIME]);
-    G.lrec.crc32 = makelong(&byterec[L_CRC32]);
-    G.lrec.csize = makelong(&byterec[L_COMPRESSED_SIZE]);
-    G.lrec.ucsize = makelong(&byterec[L_UNCOMPRESSED_SIZE]);
-    G.lrec.filename_length = makeword(&byterec[L_FILENAME_LENGTH]);
-    G.lrec.extra_field_length = makeword(&byterec[L_EXTRA_FIELD_LENGTH]);
+    UnzipClass.FCurrFile.compression_method = makeword(&byterec[L_COMPRESSION_METHOD]);
+    UnzipClass.FCurrFile.last_mod_dos_datetime = makelong(&byterec[L_LAST_MOD_DOS_DATETIME]);
+    UnzipClass.FCurrFile.crc32 = makelong(&byterec[L_CRC32]);
+    UnzipClass.FCurrFile.csize = makelong(&byterec[L_COMPRESSED_SIZE]);
+    UnzipClass.FCurrFile.ucsize = makelong(&byterec[L_UNCOMPRESSED_SIZE]);
+    UnzipClass.FCurrFile.filename_length = makeword(&byterec[L_FILENAME_LENGTH]);
+    UnzipClass.FCurrFile.extra_field_length = makeword(&byterec[L_EXTRA_FIELD_LENGTH]);
 
-    if ((G.lrec.general_purpose_bit_flag & 8) != 0) {
+    if ((UnzipClass.FCurrFile.general_purpose_bit_flag & 8) != 0) {
         /* can't trust local header, use central directory: */
-        G.lrec.crc32 = G.pInfo->crc;
-        G.lrec.csize = G.pInfo->compr_size;
-        G.lrec.ucsize = G.pInfo->uncompr_size;
+        UnzipClass.FCurrFile.crc32 = G.pInfo->crc;
+        UnzipClass.FCurrFile.csize = G.pInfo->compr_size;
+        UnzipClass.FCurrFile.ucsize = G.pInfo->uncompr_size;
     }
 
-    UnzipClass.FDecompSize = G.lrec.csize;
+    UnzipClass.FDecompSize = UnzipClass.FCurrFile.csize;
 
     return PK_COOL;
 
@@ -1270,12 +1270,12 @@ int getZip64Data(const unsigned char *ef_buf, unsigned ef_len)
 
           int offset = EB_HEADSIZE;
 
-          if (G.crec.ucsize == 0xffffffff || G.lrec.ucsize == 0xffffffff){
-            G.lrec.ucsize = G.crec.ucsize = makeint64(offset + ef_buf);
+          if (G.crec.ucsize == 0xffffffff || UnzipClass.FCurrFile.ucsize == 0xffffffff){
+            UnzipClass.FCurrFile.ucsize = G.crec.ucsize = makeint64(offset + ef_buf);
             offset += sizeof(G.crec.ucsize);
           }
-          if (G.crec.csize == 0xffffffff || G.lrec.csize == 0xffffffff){
-            UnzipClass.FDecompSize = G.lrec.csize = G.crec.csize = makeint64(offset + ef_buf);
+          if (G.crec.csize == 0xffffffff || UnzipClass.FCurrFile.csize == 0xffffffff){
+            UnzipClass.FDecompSize = UnzipClass.FCurrFile.csize = G.crec.csize = makeint64(offset + ef_buf);
             offset += sizeof(G.crec.csize);
           }
           if (G.crec.relative_offset_local_header == 0xffffffff){

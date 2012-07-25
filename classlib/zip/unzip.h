@@ -71,6 +71,29 @@ struct TUnzipHuft {
     } v;
 };
 
+/* The following structs are used to hold all header data of a zip entry.
+   Traditionally, the structs' layouts followed the data layout of the
+   corresponding zipfile header structures.  However, the zipfile header
+   layouts were designed in the old ages of 16-bit CPUs, they are subject
+   to structure padding and/or alignment issues on newer systems with a
+   "natural word width" of more than 2 bytes.
+   Please note that the structure members are now reordered by size
+   (top-down), to prevent internal padding and optimize memory usage!
+ */
+
+struct TUnzipFile
+{
+    unsigned long csize;
+    unsigned long ucsize;
+    unsigned long last_mod_dos_datetime;
+    unsigned long crc32;
+    unsigned char version_needed_to_extract[2];
+    unsigned short general_purpose_bit_flag;
+    unsigned short compression_method;
+    unsigned short filename_length;
+    unsigned short extra_field_length;
+};
+
 class TUnzip
 {
 public:
@@ -95,6 +118,7 @@ public:
     int Seek(long abs_offset);
 
     int ZDecode(int c);
+    int Explode();
 
     int BuildHuft(const unsigned *b, unsigned n, unsigned s, const unsigned short *d, const unsigned char *e, TUnzipHuft **t, unsigned *m);
     void FreeHuft(struct TUnzipHuft *t);
@@ -103,7 +127,7 @@ public:
     void CloseOutputFile();
     void CloseAndSetTime(unsigned long dos_datetime);
     int DiskError();
-    int Flush(char *rawbuf, int size, int output);
+    int Flush(char *rawbuf, int size);
 
     int ExplodeGetTree(unsigned *l, unsigned n);
 
@@ -125,6 +149,9 @@ public:
     int FTextMode;
     int FDiskFull;
     unsigned long FCurrCrcVal;
+    int FUsedCSize;
+
+    struct TUnzipFile FCurrFile;
     
 protected:
     int FOutputHandle;
@@ -136,6 +163,11 @@ private:
 
     int DecryptByte();
     int UpdateKeys(int c);
+
+    int ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl);
+    int ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bl, unsigned bd, unsigned bdl);
+
+    char *FOutBuf;
 
     char FLogBuf[512];
 

@@ -47,6 +47,7 @@
 
 #define INBUFSIZ  8192
 #define TMPOUTSIZ 0x10000
+#define WSIZE   0x8000  /* window size--must be a power of two, and */
 
 /* If BMAX needs to be larger than 16, then h and x[] should be unsigned long. */
 #define BMAX 16         /* maximum bit length of any code (16 for explode) */
@@ -105,6 +106,44 @@ const unsigned char iso2oem[] = {
     0xD0, 0xA4, 0x95, 0xA2, 0x93, 0xE4, 0x94, 0xF6,  /* F0 - F7 */
     0x9B, 0x97, 0xA3, 0x96, 0x81, 0xEC, 0xE7, 0x98   /* F8 - FF */
 };
+
+/* And'ing with mask_bits[n] masks the lower n bits */
+const unsigned near mask_bits[17] = {
+    0x0000,
+    0x0001, 0x0003, 0x0007, 0x000f, 0x001f, 0x003f, 0x007f, 0x00ff,
+    0x01ff, 0x03ff, 0x07ff, 0x0fff, 0x1fff, 0x3fff, 0x7fff, 0xffff
+};
+
+/* Tables for length and distance */
+static const unsigned short cplen2[] =
+        {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+        18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,
+        35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51,
+        52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65};
+static const unsigned short cplen3[] =
+        {3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+        19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
+        36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52,
+        53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66};
+static const unsigned char extra[] =
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        8};
+static const unsigned short cpdist4[] =
+        {1, 65, 129, 193, 257, 321, 385, 449, 513, 577, 641, 705,
+        769, 833, 897, 961, 1025, 1089, 1153, 1217, 1281, 1345, 1409, 1473,
+        1537, 1601, 1665, 1729, 1793, 1857, 1921, 1985, 2049, 2113, 2177,
+        2241, 2305, 2369, 2433, 2497, 2561, 2625, 2689, 2753, 2817, 2881,
+        2945, 3009, 3073, 3137, 3201, 3265, 3329, 3393, 3457, 3521, 3585,
+        3649, 3713, 3777, 3841, 3905, 3969, 4033};
+static const unsigned short cpdist8[] =
+        {1, 129, 257, 385, 513, 641, 769, 897, 1025, 1153, 1281,
+        1409, 1537, 1665, 1793, 1921, 2049, 2177, 2305, 2433, 2561, 2689,
+        2817, 2945, 3073, 3201, 3329, 3457, 3585, 3713, 3841, 3969, 4097,
+        4225, 4353, 4481, 4609, 4737, 4865, 4993, 5121, 5249, 5377, 5505,
+        5633, 5761, 5889, 6017, 6145, 6273, 6401, 6529, 6657, 6785, 6913,
+        7041, 7169, 7297, 7425, 7553, 7681, 7809, 7937, 8065};
 
 /*##########################################################################
 #
@@ -248,6 +287,7 @@ TUnzip::~TUnzip()
 {
     delete FInBuf;
     delete FTmpOutBuf;
+    delete FOutBuf;
 }
 
 /*##########################################################################
@@ -266,8 +306,11 @@ void TUnzip::Init()
     OnTrace = 0;
     OnInfo = 0;
 
+    FOutputHandle = 0;
+
     FInBuf = new char[INBUFSIZ + 4];    /* 4 extra for hold[] (below) */
     FTmpOutBuf = new char[TMPOUTSIZ];
+    FOutBuf = new char[WSIZE];
 }
 
 /*##########################################################################
@@ -738,6 +781,7 @@ int TUnzip::OpenOutputFile()           /* return 1 if fail */
 void TUnzip::CloseOutputFile()
 {
     RdosCloseFile(FOutputHandle);
+    FOutputHandle = 0;
 
 } /* end function close_outfile() */
 
@@ -809,7 +853,7 @@ int TUnzip::DiskError()
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::Flush(char *rawbuf, int size, int output)
+int TUnzip::Flush(char *rawbuf, int size)
 {
     char *p;
     char *q;
@@ -820,7 +864,7 @@ int TUnzip::Flush(char *rawbuf, int size, int output)
 
     FCurrCrcVal = crc32(FCurrCrcVal, (unsigned char *)rawbuf, size);
 
-    if (!output || size == 0L)  /* testing or nothing to write:  all done */
+    if (!FOutputHandle || size == 0L)  /* testing or nothing to write:  all done */
         return PK_OK;
 
     if (FDiskFull)
@@ -1073,7 +1117,6 @@ int TUnzip::BuildHuft(const unsigned *b, unsigned n, unsigned s, const unsigned 
 
         /* allocate and link in new table */
         q = new struct TUnzipHuft[z + 1];
-//        q = (struct TUnzipHuft *)malloc((z + 1)*sizeof(struct TUnzipHuft));
         if (q == 0)
         {
           if (h)
@@ -1165,4 +1208,366 @@ void TUnzip::FreeHuft(struct TUnzipHuft *t)
     delete p;
     p = q;
   }
+}
+
+/*##########################################################################
+#
+#   Explode macros that cannot be integrated!
+#
+##########################################################################*/
+
+#define GETBITS(n) {while(k<(n)){b|=((unsigned long)GetNextByte())<<k;k+=8;}}
+#define ADVANCEBITS(n) {b>>=(n);k-=(n);}
+
+#define DECODEHUFT(htab, bits, mask) {\
+  GETBITS((unsigned)(bits))\
+  t = (htab) + ((~(unsigned)b)&(mask));\
+  while (1) {\
+    ADVANCEBITS(t->b)\
+    if ((e=t->e) <= 32) break;\
+    if (e == INVALID_CODE) return 1;\
+    e &= 31;\
+    GETBITS(e)\
+    t = t->v.t + ((~(unsigned)b)&mask_bits[e]);\
+  }\
+}
+
+/*##########################################################################
+#
+#   Name       : TUnzip::ExplodeLit
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl)
+/* Decompress the imploded data using coded literals and a sliding
+   window (of size 2^(6+bdl) bytes). */
+{
+  unsigned long s;      /* bytes to decompress */
+  register unsigned e;  /* table entry flag/number of extra bits */
+  unsigned n, d;        /* length and index for copy */
+  unsigned w;           /* current window position */
+  struct TUnzipHuft *t;       /* pointer to table entry */
+  unsigned mb, ml, md;  /* masks for bb, bl, and bd bits */
+  unsigned mdl;         /* mask for bdl (distance lower) bits */
+  register unsigned long b;       /* bit buffer */
+  register unsigned k;  /* number of bits in bit buffer */
+  unsigned u;           /* true if unflushed */
+  int retval = 0;       /* error code returned: initialized to "no error" */
+
+
+  /* explode the coded data */
+  b = k = w = 0;                /* initialize bit buffer, window */
+  u = 1;                        /* buffer unflushed */
+  mb = mask_bits[bb];           /* precompute masks for speed */
+  ml = mask_bits[bl];
+  md = mask_bits[bd];
+  mdl = mask_bits[bdl];
+  s = FCurrFile.ucsize;
+  while (s > 0)                 /* do until ucsize bytes uncompressed */
+  {
+    GETBITS(1)
+    if (b & 1)                  /* then literal--decode it */
+    {
+      ADVANCEBITS(1)
+      s--;
+      DECODEHUFT(tb, bb, mb)    /* get coded literal */
+      FOutBuf[w++] = (unsigned char)t->v.n;
+      if (w == WSIZE)
+      {
+        if ((retval = Flush(FOutBuf, w)) != 0)
+          return retval;
+        w = u = 0;
+      }
+    }
+    else                        /* else distance/length */
+    {
+      ADVANCEBITS(1)
+      GETBITS(bdl)             /* get distance low bits */
+      d = (unsigned)b & mdl;
+      ADVANCEBITS(bdl)
+      DECODEHUFT(td, bd, md)    /* get coded distance high bits */
+      d = w - d - t->v.n;       /* construct offset */
+      DECODEHUFT(tl, bl, ml)    /* get coded length */
+      n = t->v.n;
+      if (e)                    /* get length extra bits */
+      {
+        GETBITS(8)
+        n += (unsigned)b & 0xff;
+        ADVANCEBITS(8)
+      }
+
+      /* do the copy */
+      s = (s > (unsigned long)n ? s - (unsigned long)n : 0);
+      do {
+          e = WSIZE - ((d &= WSIZE-1) > w ? d : w);
+        if (e > n) e = n;
+        n -= e;
+        if (u && w <= d)
+        {
+          memset(FOutBuf + w, 0, e);
+          w += e;
+          d += e;
+        }
+        else
+          if (w - d >= e)       /* (this test assumes unsigned comparison) */
+          {
+            memcpy(FOutBuf + w, FOutBuf + d, e);
+            w += e;
+            d += e;
+          }
+          else                  /* do it slow to avoid memcpy() overlap */
+            do {
+              FOutBuf[w++] = FOutBuf[d++];
+            } while (--e);
+        if (w == WSIZE)
+        {
+          if ((retval = Flush(FOutBuf, w)) != 0)
+            return retval;
+          w = u = 0;
+        }
+      } while (n);
+    }
+  }
+
+  /* flush out redirSlide */
+  if ((retval = Flush(FOutBuf, w)) != 0)
+    return retval;
+  if (FDecompSize + FInCount + (k >> 3))   /* should have read csize bytes, but */
+  {                        /* sometimes read one too many:  k>>3 compensates */
+    FUsedCSize = FCurrFile.csize - FDecompSize - FInCount - (k >> 3);
+    return 5;
+  }
+  return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TUnzip::ExplodeNolit
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bl, unsigned bd, unsigned bdl)
+/* Decompress the imploded data using uncoded literals and a sliding
+   window (of size 2^(6+bdl) bytes). */
+{
+  unsigned long s;      /* bytes to decompress */
+  register unsigned e;  /* table entry flag/number of extra bits */
+  unsigned n, d;        /* length and index for copy */
+  unsigned w;           /* current window position */
+  struct TUnzipHuft *t; /* pointer to table entry */
+  unsigned ml, md;      /* masks for bl and bd bits */
+  unsigned mdl;         /* mask for bdl (distance lower) bits */
+  register unsigned long b;       /* bit buffer */
+  register unsigned k;  /* number of bits in bit buffer */
+  unsigned u;           /* true if unflushed */
+  int retval = 0;       /* error code returned: initialized to "no error" */
+
+
+  /* explode the coded data */
+  b = k = w = 0;                /* initialize bit buffer, window */
+  u = 1;                        /* buffer unflushed */
+  ml = mask_bits[bl];           /* precompute masks for speed */
+  md = mask_bits[bd];
+  mdl = mask_bits[bdl];
+  s = FCurrFile.ucsize;
+  while (s > 0)                 /* do until ucsize bytes uncompressed */
+  {
+    GETBITS(1)
+    if (b & 1)                  /* then literal--get eight bits */
+    {
+      ADVANCEBITS(1)
+      s--;
+      GETBITS(8)
+      FOutBuf[w++] = (char)b;
+      if (w == WSIZE)
+      {
+        if ((retval = Flush(FOutBuf, w)) != 0)
+          return retval;
+        w = u = 0;
+      }
+      ADVANCEBITS(8)
+    }
+    else                        /* else distance/length */
+    {
+      ADVANCEBITS(1)
+      GETBITS(bdl)             /* get distance low bits */
+      d = (unsigned)b & mdl;
+      ADVANCEBITS(bdl)
+      DECODEHUFT(td, bd, md)    /* get coded distance high bits */
+      d = w - d - t->v.n;       /* construct offset */
+      DECODEHUFT(tl, bl, ml)    /* get coded length */
+      n = t->v.n;
+      if (e)                    /* get length extra bits */
+      {
+        GETBITS(8)
+        n += (unsigned)b & 0xff;
+        ADVANCEBITS(8)
+      }
+
+      /* do the copy */
+      s = (s > (unsigned long)n ? s - (unsigned long)n : 0);
+      do {
+          e = WSIZE - ((d &= WSIZE-1) > w ? d : w);
+        if (e > n) e = n;
+        n -= e;
+        if (u && w <= d)
+        {
+          memset(FOutBuf + w, 0, e);
+          w += e;
+          d += e;
+        }
+        else
+          if (w - d >= e)       /* (this test assumes unsigned comparison) */
+          {
+            memcpy(FOutBuf + w, FOutBuf + d, e);
+            w += e;
+            d += e;
+          }
+          else                  /* do it slow to avoid memcpy() overlap */
+            do {
+              FOutBuf[w++] = FOutBuf[d++];
+            } while (--e);
+        if (w == WSIZE)
+        {
+          if ((retval = Flush(FOutBuf, w)) != 0)
+            return retval;
+          w = u = 0;
+        }
+      } while (n);
+    }
+  }
+
+  /* flush out redirSlide */
+  if ((retval = Flush(FOutBuf, w)) != 0)
+    return retval;
+  if (FDecompSize + FInCount + (k >> 3))   /* should have read csize bytes, but */
+  {                        /* sometimes read one too many:  k>>3 compensates */
+    FUsedCSize = FCurrFile.csize - FDecompSize - FInCount - (k >> 3);
+    return 5;
+  }
+  return 0;
+}
+
+
+/*##########################################################################
+#
+#   Name       : TUnzip::Explode
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::Explode()
+/* Explode an imploded compressed stream.  Based on the general purpose
+   bit flag, decide on coded or uncoded literals, and an 8K or 4K sliding
+   window.  Construct the literal (if any), length, and distance codes and
+   the tables needed to decode them (using huft_build() from inflate.c),
+   and call the appropriate routine for the type of data in the remainder
+   of the stream.  The four routines are nearly identical, differing only
+   in whether the literal is decoded or simply read in, and in how many
+   bits are read in, uncoded, for the low distance bits. */
+{
+  unsigned r;           /* return codes */
+  struct TUnzipHuft *tb;      /* literal code table */
+  struct TUnzipHuft *tl;      /* length code table */
+  struct TUnzipHuft *td;      /* distance code table */
+  unsigned bb;          /* bits for tb */
+  unsigned bl;          /* bits for tl */
+  unsigned bd;          /* bits for td */
+  unsigned bdl;         /* number of uncoded lower distance bits */
+  unsigned l[256];      /* bit lengths for codes */
+
+  /* Tune base table sizes.  Note: I thought that to truly optimize speed,
+     I would have to select different bl, bd, and bb values for different
+     compressed file sizes.  I was surprised to find out that the values of
+     7, 7, and 9 worked best over a very wide range of sizes, except that
+     bd = 8 worked marginally better for large compressed sizes. */
+  bl = 7;
+  bd = (FDecompSize + FInCount) > 200000L ? 8 : 7;
+
+  if (FCurrFile.general_purpose_bit_flag & 4)
+  /* With literal tree--minimum match length is 3 */
+  {
+    bb = 9;                     /* base table size for literals */
+    if ((r = ExplodeGetTree(l, 256)) != 0)
+      return (int)r;
+    if ((r = BuildHuft(l, 256, 256, NULL, NULL, &tb, &bb)) != 0)
+    {
+      if (r == 1)
+        FreeHuft(tb);
+      return (int)r;
+    }
+    if ((r = ExplodeGetTree(l, 64)) != 0) {
+      FreeHuft(tb);
+      return (int)r;
+    }
+    if ((r = BuildHuft(l, 64, 0, cplen3, extra, &tl, &bl)) != 0)
+    {
+      if (r == 1)
+        FreeHuft(tl);
+      FreeHuft(tb);
+      return (int)r;
+    }
+  }
+  else
+  /* No literal tree--minimum match length is 2 */
+  {
+    tb = 0;
+    if ((r = ExplodeGetTree(l, 64)) != 0)
+      return (int)r;
+    if ((r = BuildHuft(l, 64, 0, cplen2, extra, &tl, &bl)) != 0)
+    {
+      if (r == 1)
+        FreeHuft(tl);
+      return (int)r;
+    }
+  }
+
+  if ((r = ExplodeGetTree(l, 64)) != 0) {
+    FreeHuft(tl);
+    if (tb != 0) FreeHuft(tb);
+    return (int)r;
+  }
+  if (FCurrFile.general_purpose_bit_flag & 2)      /* true if 8K */
+  {
+    bdl = 7;
+    r = BuildHuft(l, 64, 0, cpdist8, extra, &td, &bd);
+  }
+  else                                          /* else 4K */
+  {
+    bdl = 6;
+    r = BuildHuft(l, 64, 0, cpdist4, extra, &td, &bd);
+  }
+  if (r != 0)
+  {
+    if (r == 1)
+      FreeHuft(td);
+    FreeHuft(tl);
+    if (tb != 0) FreeHuft(tb);
+    return (int)r;
+  }
+
+  if (tb != NULL) {
+    r = ExplodeLit(tb, tl, td, bb, bl, bd, bdl);
+    FreeHuft(tb);
+  } else {
+    r = ExplodeNolit(tl, td, bl, bd, bdl);
+  }
+
+  FreeHuft(td);
+  FreeHuft(tl);
+  return (int)r;
 }

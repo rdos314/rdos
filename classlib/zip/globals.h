@@ -169,7 +169,6 @@ typedef struct Globals {
     int newzip;           /* reset in extract.c; used in crypt.c */
     long   real_ecrec_offset;
     long   expect_ecrec_offset;
-    long   used_csize;  /* used by extract_or_test_member(), explode() */
 
     char **pfnames;
     char **pxnames;
@@ -189,7 +188,6 @@ typedef struct Globals {
     unsigned char       *extra_field;         /* Unix, VMS, Mac, OS/2, Acorn, ... */
     unsigned char       *hold;
 
-    local_file_hdr  lrec;          /* used in unzip.c, extract.c */
     cdir_file_hdr   crec;          /* used in unzip.c, extract.c, misc.c */
     ecdir_rec       ecrec;         /* used in unzip.c, extract.c */
     struct stat   statbuf;              /* used by main, mapname, check_for_newer */

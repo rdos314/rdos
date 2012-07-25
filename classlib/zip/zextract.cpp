@@ -912,7 +912,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
             error_in_archive = error;   /* only PK_EOF defined */
             continue;   /* can still try next one */
         }
-        if ((error = do_string(G.lrec.filename_length, DS_FN_L)) !=
+        if ((error = do_string(UnzipClass.FCurrFile.filename_length, DS_FN_L)) !=
              PK_COOL)
         {
             if (error > error_in_archive)
@@ -928,7 +928,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
             G.extra_field = (unsigned char *)NULL;
         }
         if ((error =
-             do_string(G.lrec.extra_field_length, EXTRA_FIELD)) != 0)
+             do_string(UnzipClass.FCurrFile.extra_field_length, EXTRA_FIELD)) != 0)
         {
             if (error > error_in_archive)
                 error_in_archive = error;
@@ -959,17 +959,17 @@ static int extract_or_test_entrylist(unsigned numchunk,
          * field, so that any Zip64 extension local e.f. block has already
          * been processed.
          */
-        if (G.lrec.compression_method == STORED) {
-            zusz_t csiz_decrypted = G.lrec.csize;
+        if (UnzipClass.FCurrFile.compression_method == STORED) {
+            zusz_t csiz_decrypted = UnzipClass.FCurrFile.csize;
 
             if (UnzipClass.FEncrypted)
                 csiz_decrypted -= 12;
-            if (G.lrec.ucsize != csiz_decrypted) {
+            if (UnzipClass.FCurrFile.ucsize != csiz_decrypted) {
                 Info(0x401, WrnStorUCSizCSizDiff,
                   FnFilter1(UnzipClass.FCurrFileName),
-                  fzofft(G.lrec.ucsize, NULL, "u"),
+                  fzofft(UnzipClass.FCurrFile.ucsize, NULL, "u"),
                   fzofft(csiz_decrypted, NULL, "u"));
-                G.lrec.ucsize = csiz_decrypted;
+                UnzipClass.FCurrFile.ucsize = csiz_decrypted;
                 if (error_in_archive < PK_WARN)
                     error_in_archive = PK_WARN;
             }
@@ -1218,13 +1218,13 @@ static int extract_or_test_member()    /* return PK-type error code */
   ---------------------------------------------------------------------------*/
 
     UnzipClass.DeferInput();    /* so NEXTBYTE bounds check will work */
-    switch (G.lrec.compression_method) {
+    switch (UnzipClass.FCurrFile.compression_method) {
         case STORED:
             if (!uO.tflag && !uO.qflag) {
                 Info(0, ExtractMsg,
                   "extract", FnFilter1(UnzipClass.FCurrFileName),
                   (uO.aflag != 1 /* && G.pInfo->textfile==G.pInfo->textmode */)?
-                  "" : (G.lrec.ucsize == 0L? nul : (G.pInfo->textfile? txt :
+                  "" : (UnzipClass.FCurrFile.ucsize == 0L? nul : (G.pInfo->textfile? txt :
                   bin)), uO.cflag? NEWLINE : "");
             }
             G.outptr = redirSlide;
@@ -1232,14 +1232,14 @@ static int extract_or_test_member()    /* return PK-type error code */
             while ((b = UnzipClass.GetNextByte()) != EOF) {
                 *G.outptr++ = (unsigned char)b;
                 if (++G.outcnt == WSIZE) {
-                    error = UnzipClass.Flush((char *)redirSlide, G.outcnt, !uO.tflag);
+                    error = UnzipClass.Flush((char *)redirSlide, G.outcnt);
                     G.outptr = redirSlide;
                     G.outcnt = 0L;
                     if (error != PK_COOL || UnzipClass.FDiskFull) break;
                 }
             }
             if (G.outcnt) {        /* flush final (partial) buffer */
-                r = UnzipClass.Flush((char *)redirSlide, G.outcnt, !uO.tflag);
+                r = UnzipClass.Flush((char *)redirSlide, G.outcnt);
                 if (error < r) error = r;
             }
             break;
@@ -1276,25 +1276,25 @@ static int extract_or_test_member()    /* return PK-type error code */
                   (uO.aflag != 1 /* && G.pInfo->textfile==G.pInfo->textmode */)?
                   "" : (G.pInfo->textfile? txt : bin), uO.cflag? NEWLINE : "");
             }
-            if ((r = explode()) != 0) {
+            if ((r = UnzipClass.Explode()) != 0) {
                 if (r == 5) { /* treat 5 specially */
-                    int warning = ((zusz_t)G.used_csize <= G.lrec.csize);
+                    int warning = ((zusz_t)UnzipClass.FUsedCSize <= UnzipClass.FCurrFile.csize);
 
                     if ((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag))
                         Info(0x401, LengthMsg,
                           "", warning ? "warning" : "error",
-                          fzofft(G.used_csize, NULL, NULL),
-                          fzofft(G.lrec.ucsize, NULL, "u"),
+                          fzofft(UnzipClass.FUsedCSize, NULL, NULL),
+                          fzofft(UnzipClass.FCurrFile.ucsize, NULL, "u"),
                           warning ? "  " : "",
-                          fzofft(G.lrec.csize, NULL, "u"),
+                          fzofft(UnzipClass.FCurrFile.csize, NULL, "u"),
                           " [", FnFilter1(UnzipClass.FCurrFileName), "]");
                     else
                         Info(0x401, LengthMsg,
                           "\n", warning ? "warning" : "error",
-                          fzofft(G.used_csize, NULL, NULL),
-                          fzofft(G.lrec.ucsize, NULL, "u"),
+                          fzofft(UnzipClass.FUsedCSize, NULL, NULL),
+                          fzofft(UnzipClass.FCurrFile.ucsize, NULL, "u"),
                           warning ? "  " : "",
-                          fzofft(G.lrec.csize, NULL, "u"),
+                          fzofft(UnzipClass.FCurrFile.csize, NULL, "u"),
                           "", "", ".");
                     error = warning ? PK_WARN : PK_ERR;
                 } else if (r < PK_DISK) {
@@ -1322,7 +1322,7 @@ static int extract_or_test_member()    /* return PK-type error code */
                   (uO.aflag != 1 /* && G.pInfo->textfile==G.pInfo->textmode */)?
                   "" : (G.pInfo->textfile? txt : bin), uO.cflag? NEWLINE : "");
             }
-            if ((r = UZinflate((G.lrec.compression_method == ENHDEFLATED)))
+            if ((r = UZinflate((UnzipClass.FCurrFile.compression_method == ENHDEFLATED)))
                 != 0) {
                 if (r < PK_DISK) {
                     if ((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag))
@@ -1357,7 +1357,7 @@ static int extract_or_test_member()    /* return PK-type error code */
     machines (redundant on 32-bit machines).
   ---------------------------------------------------------------------------*/
 
-    UnzipClass.CloseAndSetTime(G.lrec.last_mod_dos_datetime);
+    UnzipClass.CloseAndSetTime(UnzipClass.FCurrFile.last_mod_dos_datetime);
 
     if (UnzipClass.FDiskFull) {            /* set by flush() */
         if (UnzipClass.FDiskFull > 1) {
@@ -1374,20 +1374,20 @@ static int extract_or_test_member()    /* return PK-type error code */
         UnzipClass.UndeferInput();
         return error;
     }
-    if (UnzipClass.FCurrCrcVal != G.lrec.crc32) {
+    if (UnzipClass.FCurrCrcVal != UnzipClass.FCurrFile.crc32) {
         /* if quiet enough, we haven't output the filename yet:  do it */
         if ((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag))
             Info(0x401, "%-22s ",
               FnFilter1(UnzipClass.FCurrFileName));
         Info(0x401, BadCRC, UnzipClass.FCurrCrcVal,
-          G.lrec.crc32);
+          UnzipClass.FCurrFile.crc32);
         if (UnzipClass.FEncrypted)
             Info(0x401, MaybeBadPasswd);
         error = PK_ERR;
     } else if (uO.tflag) {
         if (G.extra_field) {
             if ((r = TestExtraField(G.extra_field,
-                                    G.lrec.extra_field_length)) > error)
+                                    UnzipClass.FCurrFile.extra_field_length)) > error)
                 error = r;
         } else
         if (!uO.qflag)

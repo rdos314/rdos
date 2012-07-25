@@ -170,7 +170,7 @@ static int testkey(const unsigned char *h, const char *key)
     }
 
     Trace("\n  lrec.crc= %08lx  crec.crc= %08lx  pInfo->ExtLocHdr= %s\n",
-      GLOBAL(lrec.crc32), GLOBAL(pInfo->crc),
+      UnzipClass.FCurrFile.crc32, GLOBAL(pInfo->crc),
       GLOBAL(pInfo->ExtLocHdr) ? "true":"false");
     Trace("  incnt = %d  unzip offset into zipfile = %ld\n",
       UnzipClass.FInCount,
@@ -180,11 +180,11 @@ static int testkey(const unsigned char *h, const char *key)
 
     b = hh[RAND_HEAD_LEN-1];
     Trace("  b = %02x  (crc >> 24) = %02x  (lrec.time >> 8) = %02x\n",
-      b, (unsigned short)(GLOBAL(lrec.crc32) >> 24),
-      ((unsigned short)GLOBAL(lrec.last_mod_dos_datetime) >> 8) & 0xff);
+      b, (unsigned short)(UnzipClass.FCurrFile.crc32 >> 24),
+      ((unsigned short)UnzipClass.FCurrFile.last_mod_dos_datetime >> 8) & 0xff);
     if (b != (GLOBAL(pInfo->ExtLocHdr) ?
-        ((unsigned short)GLOBAL(lrec.last_mod_dos_datetime) >> 8) & 0xff :
-        (unsigned short)(GLOBAL(lrec.crc32) >> 24)))
+        ((unsigned short)UnzipClass.FCurrFile.last_mod_dos_datetime >> 8) & 0xff :
+        (unsigned short)(UnzipClass.FCurrFile.crc32 >> 24)))
         return -1;  /* bad */
 
     /* password OK:  decrypt current buffer contents before leaving */
