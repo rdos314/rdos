@@ -2049,25 +2049,22 @@ continue_debug_event  Endp
 app_patch_name DB 'App Patch',0
 
 app_patch      PROC far
-    push ds
+    push es
     push eax
-    push edx
 ;
-    mov edx,eax
     GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov eax,ds:app_patch_proc
-    or eax,ds:app_patch_proc+4
+    mov es,ax
+    mov es,es:p_app_sel
+    mov eax,es:app_patch_proc
+    or eax,es:app_patch_proc+4
     stc
     jz app_patch_done
 ;    
-    call fword ptr ds:app_patch_proc
+    call fword ptr es:app_patch_proc
 
 app_patch_done:
-    pop edx
     pop eax
-    pop ds
+    pop es
     retf32
 app_patch      ENDP
 

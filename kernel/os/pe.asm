@@ -460,6 +460,186 @@ CreateSections  Proc near
     pop es    
     ret
 CreateSections     ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SectionPatch
+;
+;           DESCRIPTION:    Patch sections to local calls
+;
+;           PARAMS:         DS:EBX      Instruction buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+section_patch     PROC far
+    mov ax,ds
+    cmp ax,flat_code_sel
+    jne spFail
+;    
+    mov ax,ds:[ebx+2]
+    cmp ax,new_create_section_nr
+    je spCreate
+;    
+    cmp ax,new_delete_section_nr
+    je spDelete
+;    
+    cmp ax,new_enter_section_nr
+    je spEnter
+;    
+    cmp ax,new_leave_section_nr
+    je spLeave
+;
+    jmp spFail    
+
+spCreate:
+    push es
+    push edx
+    push ecx
+    push esi
+;
+    mov esi,ebx
+    push ebx
+    mov bx,ds
+    GetSelectorBaseSize
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax    
+;
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+    mov eax,es:app_create_section_proc    
+    sub eax,esi
+    sub eax,6
+    xchg eax,ds:[ebx+2]
+;
+    mov ax,9090h
+    xchg ax,ds:[ebx+6]
+;
+    mov ax,0E890h    
+    xchg ax,ds:[ebx]
+    clc
+;
+    pop esi
+    pop ecx
+    pop edx
+    pop es
+    ret
+
+spDelete:
+    push es
+    push edx
+    push ecx
+    push esi
+;
+    mov esi,ebx
+    push ebx
+    mov bx,ds
+    GetSelectorBaseSize
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax    
+;
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+    mov eax,es:app_delete_section_proc    
+    sub eax,esi
+    sub eax,6
+    xchg eax,ds:[ebx+2]
+;
+    mov ax,9090h
+    xchg ax,ds:[ebx+6]
+;
+    mov ax,0E890h    
+    xchg ax,ds:[ebx]
+    clc
+;
+    pop esi
+    pop ecx
+    pop edx
+    pop es
+    ret
+
+spEnter:
+    push es
+    push edx
+    push ecx
+    push esi
+;
+    mov esi,ebx
+    push ebx
+    mov bx,ds
+    GetSelectorBaseSize
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax    
+;
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+    mov eax,es:app_enter_section_proc    
+    sub eax,esi
+    sub eax,6
+    xchg eax,ds:[ebx+2]
+;
+    mov ax,9090h
+    xchg ax,ds:[ebx+6]
+;
+    mov ax,0E890h    
+    xchg ax,ds:[ebx]
+    clc
+;
+    pop esi
+    pop ecx
+    pop edx
+    pop es
+    ret
+
+spLeave:
+    push es
+    push edx
+    push ecx
+    push esi
+;
+    mov esi,ebx
+    push ebx
+    mov bx,ds
+    GetSelectorBaseSize
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax    
+;
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+    mov eax,es:app_leave_section_proc    
+    sub eax,esi
+    sub eax,6
+    xchg eax,ds:[ebx+2]
+;
+    mov ax,9090h
+    xchg ax,ds:[ebx+6]
+;
+    mov ax,0E890h    
+    xchg ax,ds:[ebx]
+    clc
+;
+    pop esi
+    pop ecx
+    pop edx
+    pop es
+    ret
+
+spFail:
+    stc
+    ret
+section_patch  Endp
                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1034,6 +1214,8 @@ InsertApp       Proc near
     mov ds:app_close_proc+4,cs
     mov ds:app_load_dll_proc,OFFSET load_dll
     mov ds:app_load_dll_proc+4,cs
+    mov ds:app_patch_proc,OFFSET section_patch
+    mov ds:app_patch_proc+4,cs 
     mov word ptr ds:app_loader_name,OFFSET pe_loader_name
     mov word ptr ds:app_loader_name+2,cs
 ;

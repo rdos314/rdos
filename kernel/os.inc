@@ -284,7 +284,6 @@ StartSyscall   MACRO
                     ENDM
 
 ;       DS:EBX  Patch address
-;       EAX     Gate #
 AppPatch   MACRO
     OsGate app_patch_nr
                     ENDM
