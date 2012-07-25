@@ -887,3 +887,41 @@ int TUnzip::Flush(char *rawbuf, int size, int output)
 
 } /* end function flush() [resp. partflush() for 16-bit Deflate64 support] */
 
+
+/*##########################################################################
+#
+#   Name       : TUnzip::ExplodeGetTree
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::ExplodeGetTree(unsigned *l, unsigned n)
+/* Get the bit lengths for a code representation from the compressed
+   stream.  If get_tree() returns 4, then there is an error in the data.
+   Otherwise zero is returned. */
+{
+  unsigned i;           /* bytes remaining in list */
+  unsigned k;           /* lengths entered */
+  unsigned j;           /* number of codes */
+  unsigned b;           /* bit length for those codes */
+
+
+  /* get bit lengths */
+  i = GetNextByte() + 1;                     /* length/count pairs to read */
+  k = 0;                                /* next code */
+  do {
+    b = ((j = GetNextByte()) & 0xf) + 1;     /* bits in code (1..16) */
+    j = ((j & 0xf0) >> 4) + 1;          /* codes with those bits (1..16) */
+    if (k + j > n)
+      return 4;                         /* don't overflow l[] */
+    do {
+      l[k++] = b;
+    } while (--j);
+  } while (--i);
+  return k != n ? 4 : 0;                /* should have read n of them */
+}
+

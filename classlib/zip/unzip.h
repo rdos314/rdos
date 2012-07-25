@@ -85,6 +85,8 @@ public:
     int DiskError();
     int Flush(char *rawbuf, int size, int output);
 
+    int ExplodeGetTree(unsigned *l, unsigned n);
+
     TString FInputFileName;
     int FInputHandle;
 

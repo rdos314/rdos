@@ -117,7 +117,6 @@
 #include "oldunzip.h"      /* must supply slide[] (unsigned char) array and NEXTBYTE macro */
 
 /* routines here */
-static int get_tree OF((unsigned *l, unsigned n));
 static int explode_lit OF((struct huft *tb, struct huft *tl,
                            struct huft *td, unsigned bb, unsigned bl,
                            unsigned bd, unsigned bdl));
@@ -201,33 +200,6 @@ static const unsigned short cpdist8[] =
     NEEDBITS(e)\
     t = t->v.t + ((~(unsigned)b)&mask_bits[e]);\
   }\
-}
-
-
-static int get_tree(unsigned *l, unsigned n)
-/* Get the bit lengths for a code representation from the compressed
-   stream.  If get_tree() returns 4, then there is an error in the data.
-   Otherwise zero is returned. */
-{
-  unsigned i;           /* bytes remaining in list */
-  unsigned k;           /* lengths entered */
-  unsigned j;           /* number of codes */
-  unsigned b;           /* bit length for those codes */
-
-
-  /* get bit lengths */
-  i = UnzipClass.GetNextByte() + 1;                     /* length/count pairs to read */
-  k = 0;                                /* next code */
-  do {
-    b = ((j = UnzipClass.GetNextByte()) & 0xf) + 1;     /* bits in code (1..16) */
-    j = ((j & 0xf0) >> 4) + 1;          /* codes with those bits (1..16) */
-    if (k + j > n)
-      return 4;                         /* don't overflow l[] */
-    do {
-      l[k++] = b;
-    } while (--j);
-  } while (--i);
-  return k != n ? 4 : 0;                /* should have read n of them */
 }
 
 
@@ -476,7 +448,7 @@ int explode()
   /* With literal tree--minimum match length is 3 */
   {
     bb = 9;                     /* base table size for literals */
-    if ((r = get_tree(l, 256)) != 0)
+    if ((r = UnzipClass.ExplodeGetTree(l, 256)) != 0)
       return (int)r;
     if ((r = huft_build(l, 256, 256, NULL, NULL, &tb, &bb)) != 0)
     {
@@ -484,7 +456,7 @@ int explode()
         huft_free(tb);
       return (int)r;
     }
-    if ((r = get_tree(l, 64)) != 0) {
+    if ((r = UnzipClass.ExplodeGetTree(l, 64)) != 0) {
       huft_free(tb);
       return (int)r;
     }
@@ -500,7 +472,7 @@ int explode()
   /* No literal tree--minimum match length is 2 */
   {
     tb = (struct huft *)NULL;
-    if ((r = get_tree(l, 64)) != 0)
+    if ((r = UnzipClass.ExplodeGetTree(l, 64)) != 0)
       return (int)r;
     if ((r = huft_build(l, 64, 0, cplen2, extra, &tl, &bl)) != 0)
     {
@@ -510,7 +482,7 @@ int explode()
     }
   }
 
-  if ((r = get_tree(l, 64)) != 0) {
+  if ((r = UnzipClass.ExplodeGetTree(l, 64)) != 0) {
     huft_free(tl);
     if (tb != (struct huft *)NULL) huft_free(tb);
     return (int)r;
