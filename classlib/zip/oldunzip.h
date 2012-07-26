@@ -768,18 +768,6 @@ typedef struct VMStimbuf {
     xxREC_SIZE defines (above) change with them!
   ---------------------------------------------------------------------------*/
 
-   typedef unsigned char   local_byte_hdr[ LREC_SIZE ];
-#      define L_VERSION_NEEDED_TO_EXTRACT_0     0
-#      define L_VERSION_NEEDED_TO_EXTRACT_1     1
-#      define L_GENERAL_PURPOSE_BIT_FLAG        2
-#      define L_COMPRESSION_METHOD              4
-#      define L_LAST_MOD_DOS_DATETIME           6
-#      define L_CRC32                           10
-#      define L_COMPRESSED_SIZE                 14
-#      define L_UNCOMPRESSED_SIZE               18
-#      define L_FILENAME_LENGTH                 22
-#      define L_EXTRA_FIELD_LENGTH              24
-
    typedef unsigned char   cdir_byte_hdr[ CREC_SIZE ];
 #      define C_VERSION_MADE_BY_0               0
 #      define C_VERSION_MADE_BY_1               1
@@ -898,7 +886,6 @@ void     free_G_buffers          OF(());
 /* static int    find_ecrec      OF((long searchlen)); */
 /* static int    process_central_comment OF(()); */
 int      process_cdir_file_hdr   OF(());
-int      process_local_file_hdr  OF(());
 unsigned ef_scan_for_izux        OF((const unsigned char *ef_buf, unsigned ef_len,
                                      int ef_is_c, unsigned long dos_mdatetime,
                                      iztimes *z_utim, unsigned long *z_uidgid));

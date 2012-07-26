@@ -130,6 +130,8 @@ public:
     int FillInbuf();
     int Flush(char *rawbuf, int size);
 
+    int GetFileHeader();
+
     TString FInputFileName;
     int FInputHandle;
 

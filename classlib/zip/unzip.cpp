@@ -65,6 +65,19 @@
 #define PPMDED           98
 #define NUM_METHODS      17     /* number of known method IDs */
 
+#define LREC_SIZE    26   /* lengths of local file headers, central */
+
+#define L_VERSION_NEEDED_TO_EXTRACT_0     0
+#define L_VERSION_NEEDED_TO_EXTRACT_1     1
+#define L_GENERAL_PURPOSE_BIT_FLAG        2
+#define L_COMPRESSION_METHOD              4
+#define L_LAST_MOD_DOS_DATETIME           6
+#define L_CRC32                           10
+#define L_COMPRESSED_SIZE                 14
+#define L_UNCOMPRESSED_SIZE               18
+#define L_FILENAME_LENGTH                 22
+#define L_EXTRA_FIELD_LENGTH              24
+
 #define INBUFSIZ  8192
 #define TMPOUTSIZ 0x10000
 #define WSIZE   0x8000  /* window size--must be a power of two, and */
@@ -961,6 +974,56 @@ int TUnzip::Seek(long abs_offset)
     return(PK_OK);
 } /* end function seek_zipf() */
 
+
+/*##########################################################################
+#
+#   Name       : TUnzip::GetFileHeader
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::GetFileHeader()    /* return PK-type error code */
+{
+    unsigned char byterec[ LREC_SIZE ];
+
+/*---------------------------------------------------------------------------
+    Read the next local file header and do any necessary machine-type con-
+    versions (byte ordering, structure padding compensation--do so by copy-
+    ing the data from the array into which it was read (byterec) to the
+    usable struct (lrec)).
+  ---------------------------------------------------------------------------*/
+
+    if (ReadBuf((char *)byterec, LREC_SIZE) == 0)
+        return PK_EOF;
+
+    FCurrFile.version_needed_to_extract[0] = byterec[L_VERSION_NEEDED_TO_EXTRACT_0];
+    FCurrFile.version_needed_to_extract[1] = byterec[L_VERSION_NEEDED_TO_EXTRACT_1];
+
+    FCurrFile.general_purpose_bit_flag = makeword(&byterec[L_GENERAL_PURPOSE_BIT_FLAG]);
+    FCurrFile.compression_method = makeword(&byterec[L_COMPRESSION_METHOD]);
+    FCurrFile.last_mod_dos_datetime = makelong(&byterec[L_LAST_MOD_DOS_DATETIME]);
+    FCurrFile.crc32 = makelong(&byterec[L_CRC32]);
+    FCurrFile.csize = makelong(&byterec[L_COMPRESSED_SIZE]);
+    FCurrFile.ucsize = makelong(&byterec[L_UNCOMPRESSED_SIZE]);
+    FCurrFile.filename_length = makeword(&byterec[L_FILENAME_LENGTH]);
+    FCurrFile.extra_field_length = makeword(&byterec[L_EXTRA_FIELD_LENGTH]);
+
+    if ((FCurrFile.general_purpose_bit_flag & 8) != 0) {
+        /* can't trust local header, use central directory: */
+/*       FCurrFile.crc32 = G.pInfo->crc;
+        FCurrFile.csize = G.pInfo->compr_size;
+        FCurrFile.ucsize = G.pInfo->uncompr_size; */
+    }
+
+    FDecompSize = FCurrFile.csize;
+
+    return PK_COOL;
+
+} /* end function process_local_file_hdr() */
 
 /*##########################################################################
 #

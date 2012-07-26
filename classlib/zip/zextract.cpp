@@ -879,7 +879,8 @@ static int extract_or_test_entrylist(unsigned numchunk,
             } else
                 continue;  /* this one hosed; try next */
         }
-        if ((error = process_local_file_hdr()) != PK_COOL) {
+        error = UnzipClass.GetFileHeader();
+        if (error != PK_COOL) {
             Info(0x421, BadLocalHdr, *pfilnum);
             error_in_archive = error;   /* only PK_EOF defined */
             continue;   /* can still try next one */
