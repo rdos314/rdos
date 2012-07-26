@@ -1084,7 +1084,7 @@ int TUnzip::GetDirEntry()    /* return PK-type error code */
 
 /*##########################################################################
 #
-#   Name       : TUnzip::GetFileRec
+#   Name       : TUnzip::GetFileHeader
 #
 #   Purpose....: 
 #
@@ -1093,7 +1093,7 @@ int TUnzip::GetDirEntry()    /* return PK-type error code */
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::GetFileRec()    /* return PK-type error code */
+int TUnzip::GetFileHeader()    /* return PK-type error code */
 {
     int error;
     unsigned char byterec[ LREC_SIZE ];
@@ -1108,34 +1108,28 @@ int TUnzip::GetFileRec()    /* return PK-type error code */
     if (ReadBuf((char *)byterec, LREC_SIZE) == 0)
         return PK_EOF;
 
-    FCurrFile.version_needed_to_extract[0] = byterec[L_VERSION_NEEDED_TO_EXTRACT_0];
-    FCurrFile.version_needed_to_extract[1] = byterec[L_VERSION_NEEDED_TO_EXTRACT_1];
+    FCurrFileHeader.version_needed_to_extract[0] = byterec[L_VERSION_NEEDED_TO_EXTRACT_0];
+    FCurrFileHeader.version_needed_to_extract[1] = byterec[L_VERSION_NEEDED_TO_EXTRACT_1];
 
-    FCurrFile.general_purpose_bit_flag = makeword(&byterec[L_GENERAL_PURPOSE_BIT_FLAG]);
-    FCurrFile.compression_method = makeword(&byterec[L_COMPRESSION_METHOD]);
-    FCurrFile.last_mod_dos_datetime = makelong(&byterec[L_LAST_MOD_DOS_DATETIME]);
-    FCurrFile.crc32 = makelong(&byterec[L_CRC32]);
-    FCurrFile.csize = makelong(&byterec[L_COMPRESSED_SIZE]);
-    FCurrFile.ucsize = makelong(&byterec[L_UNCOMPRESSED_SIZE]);
-    FCurrFile.filename_length = makeword(&byterec[L_FILENAME_LENGTH]);
-    FCurrFile.extra_field_length = makeword(&byterec[L_EXTRA_FIELD_LENGTH]);
+    FCurrFileHeader.general_purpose_bit_flag = makeword(&byterec[L_GENERAL_PURPOSE_BIT_FLAG]);
+    FCurrFileHeader.compression_method = makeword(&byterec[L_COMPRESSION_METHOD]);
+    FCurrFileHeader.last_mod_dos_datetime = makelong(&byterec[L_LAST_MOD_DOS_DATETIME]);
+    FCurrFileHeader.crc32 = makelong(&byterec[L_CRC32]);
+    FCurrFileHeader.csize = makelong(&byterec[L_COMPRESSED_SIZE]);
+    FCurrFileHeader.ucsize = makelong(&byterec[L_UNCOMPRESSED_SIZE]);
+    FCurrFileHeader.filename_length = makeword(&byterec[L_FILENAME_LENGTH]);
+    FCurrFileHeader.extra_field_length = makeword(&byterec[L_EXTRA_FIELD_LENGTH]);
 
-    if ((FCurrFile.general_purpose_bit_flag & 8) != 0) {
+    if ((FCurrFileHeader.general_purpose_bit_flag & 8) != 0) {
         /* can't trust local header, use central directory: */
 /*       FCurrFile.crc32 = G.pInfo->crc;
         FCurrFile.csize = G.pInfo->compr_size;
         FCurrFile.ucsize = G.pInfo->uncompr_size; */
     }
 
-    FDecompSize = FCurrFile.csize;
+    FDecompSize = FCurrFileHeader.csize;
 
-    error = GetFileName(FCurrFile.filename_length);
-
-    if (error == PK_COOL)
-        strcpy(FCurrFile.filename, FCurrFileName);
-
-    return error;
-        
+    return PK_COOL;
 } /* end function process_local_file_hdr() */
 
 /*##########################################################################
@@ -1663,7 +1657,7 @@ int TUnzip::ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnz
   ml = mask_bits[bl];
   md = mask_bits[bd];
   mdl = mask_bits[bdl];
-  s = FCurrFile.ucsize;
+  s = FCurrFileHeader.ucsize;
   while (s > 0)                 /* do until ucsize bytes uncompressed */
   {
     GETBITS(1)
@@ -1735,7 +1729,7 @@ int TUnzip::ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnz
     return retval;
   if (FDecompSize + FInCount + (k >> 3))   /* should have read csize bytes, but */
   {                        /* sometimes read one too many:  k>>3 compensates */
-    FUsedCSize = FCurrFile.csize - FDecompSize - FInCount - (k >> 3);
+    FUsedCSize = FCurrFileHeader.csize - FDecompSize - FInCount - (k >> 3);
     return 5;
   }
   return 0;
@@ -1775,7 +1769,7 @@ int TUnzip::ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned 
   ml = mask_bits[bl];           /* precompute masks for speed */
   md = mask_bits[bd];
   mdl = mask_bits[bdl];
-  s = FCurrFile.ucsize;
+  s = FCurrFileHeader.ucsize;
   while (s > 0)                 /* do until ucsize bytes uncompressed */
   {
     GETBITS(1)
@@ -1848,7 +1842,7 @@ int TUnzip::ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned 
     return retval;
   if (FDecompSize + FInCount + (k >> 3))   /* should have read csize bytes, but */
   {                        /* sometimes read one too many:  k>>3 compensates */
-    FUsedCSize = FCurrFile.csize - FDecompSize - FInCount - (k >> 3);
+    FUsedCSize = FCurrFileHeader.csize - FDecompSize - FInCount - (k >> 3);
     return 5;
   }
   return 0;
@@ -1894,7 +1888,7 @@ int TUnzip::Explode()
   bl = 7;
   bd = (FDecompSize + FInCount) > 200000L ? 8 : 7;
 
-  if (FCurrFile.general_purpose_bit_flag & 4)
+  if (FCurrFileHeader.general_purpose_bit_flag & 4)
   /* With literal tree--minimum match length is 3 */
   {
     bb = 9;                     /* base table size for literals */
@@ -1937,7 +1931,7 @@ int TUnzip::Explode()
     if (tb != 0) FreeHuft(tb);
     return (int)r;
   }
-  if (FCurrFile.general_purpose_bit_flag & 2)      /* true if 8K */
+  if (FCurrFileHeader.general_purpose_bit_flag & 2)      /* true if 8K */
   {
     bdl = 7;
     r = BuildHuft(l, 64, 0, cpdist8, extra, &td, &bd);
@@ -2343,7 +2337,7 @@ int TUnzip::Extract()
   ---------------------------------------------------------------------------*/
 
     DeferInput();    /* so NEXTBYTE bounds check will work */
-    switch (FCurrFile.compression_method) {
+    switch (FCurrFileHeader.compression_method) {
         case STORED:
             Info(0, extract_msg, "extract", FCurrFileName);
             error = Store();
@@ -2359,7 +2353,7 @@ int TUnzip::Extract()
 
             error = Explode();
             if (error == 5) { /* treat 5 specially */
-                int warning = FUsedCSize <= FCurrFile.csize;
+                int warning = FUsedCSize <= FCurrFileHeader.csize;
                 error = warning ? PK_WARN : PK_ERR;
             }
             break;
@@ -2382,7 +2376,7 @@ int TUnzip::Extract()
     machines (redundant on 32-bit machines).
   ---------------------------------------------------------------------------*/
 
-    CloseAndSetTime(FCurrFile.last_mod_dos_datetime);
+    CloseAndSetTime(FCurrFileHeader.last_mod_dos_datetime);
 
     if (FDiskFull) {            /* set by flush() */
         if (FDiskFull > 1) {
@@ -2399,10 +2393,10 @@ int TUnzip::Extract()
         return error;
     }
 
-    if (FCurrCrcVal != FCurrFile.crc32) {
+    if (FCurrCrcVal != FCurrFileHeader.crc32) {
         /* if quiet enough, we haven't output the filename yet:  do it */
         Info(0x401, "%-22s ", FCurrFileName);
-        Info(0x401, " bad CRC %08lx  (should be %08lx)\n", FCurrCrcVal, FCurrFile.crc32);
+        Info(0x401, " bad CRC %08lx  (should be %08lx)\n", FCurrCrcVal, FCurrFileHeader.crc32);
         if (FEncrypted)
             Info(0x401, "   (may instead be incorrect password)\n");
         error = PK_ERR;

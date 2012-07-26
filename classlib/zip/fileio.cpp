@@ -286,7 +286,7 @@ int check_for_newer(char *filename)  /* return 1 if existing file is newer */
     existing = ((G.statbuf.st_mtime & 1) &&
                 (G.statbuf.st_mtime + 1 > G.statbuf.st_mtime)) ?
                G.statbuf.st_mtime + 1 : G.statbuf.st_mtime;
-    archive  = dos_to_unix_time(UnzipClass.FCurrFile.last_mod_dos_datetime);
+    archive  = dos_to_unix_time(UnzipClass.FCurrFileHeader.last_mod_dos_datetime);
 
     TTrace((stderr, "check_for_newer:  existing %lu, archive %lu, e-a %ld\n",
       (unsigned long)existing, (unsigned long)archive, (long)(existing-archive)));

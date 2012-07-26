@@ -879,13 +879,15 @@ static int extract_or_test_entrylist(unsigned numchunk,
             } else
                 continue;  /* this one hosed; try next */
         }
-        error = UnzipClass.GetFileRec();
+        error = UnzipClass.GetFileHeader();
+        if (error == PK_COOL)
+            error = UnzipClass.GetFileName(UnzipClass.FCurrFileHeader.filename_length);
         if (error != PK_COOL) {
             Info(0x421, BadLocalHdr, *pfilnum);
             error_in_archive = error;   /* only PK_EOF defined */
             continue;   /* can still try next one */
         }
-        UnzipClass.SkipHeaderString(UnzipClass.FCurrFile.extra_field_length);
+        UnzipClass.SkipHeaderString(UnzipClass.FCurrFileHeader.extra_field_length);
         /* Filename consistency checks must come after reading in the local
          * extra field, so that a UTF-8 entry name e.f. block has already
          * been processed.
@@ -907,17 +909,17 @@ static int extract_or_test_entrylist(unsigned numchunk,
          * field, so that any Zip64 extension local e.f. block has already
          * been processed.
          */
-        if (UnzipClass.FCurrFile.compression_method == STORED) {
-            zusz_t csiz_decrypted = UnzipClass.FCurrFile.csize;
+        if (UnzipClass.FCurrFileHeader.compression_method == STORED) {
+            zusz_t csiz_decrypted = UnzipClass.FCurrFileHeader.csize;
 
             if (UnzipClass.FEncrypted)
                 csiz_decrypted -= 12;
-            if (UnzipClass.FCurrFile.ucsize != csiz_decrypted) {
+            if (UnzipClass.FCurrFileHeader.ucsize != csiz_decrypted) {
                 Info(0x401, WrnStorUCSizCSizDiff,
                   FnFilter1(UnzipClass.FCurrFileName),
-                  fzofft(UnzipClass.FCurrFile.ucsize, NULL, "u"),
+                  fzofft(UnzipClass.FCurrFileHeader.ucsize, NULL, "u"),
                   fzofft(csiz_decrypted, NULL, "u"));
-                UnzipClass.FCurrFile.ucsize = csiz_decrypted;
+                UnzipClass.FCurrFileHeader.ucsize = csiz_decrypted;
                 if (error_in_archive < PK_WARN)
                     error_in_archive = PK_WARN;
             }

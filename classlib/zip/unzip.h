@@ -100,7 +100,7 @@ struct TUnzipDirEntry
     unsigned short file_comment_length;
 };
 
-struct TUnzipFile
+struct TUnzipFileHeader
 {
     unsigned long csize;
     unsigned long ucsize;
@@ -111,7 +111,6 @@ struct TUnzipFile
     unsigned short compression_method;
     unsigned short filename_length;
     unsigned short extra_field_length;
-    char filename[FILE_NAME_SIZE+1];
 };
 
 class TUnzip
@@ -152,7 +151,7 @@ public:
     int Flush(char *rawbuf, int size);
 
     int Decrypt();
-    int GetFileRec();
+    int GetFileHeader();
 
     TString FInputFileName;
     int FInputHandle;
@@ -171,7 +170,7 @@ public:
     int FTextMode;
     int FDiskFull;
 
-    struct TUnzipFile FCurrFile;
+    struct TUnzipFileHeader FCurrFileHeader;
     struct TUnzipDirEntry FCurrDirEntry;
     
 protected:
