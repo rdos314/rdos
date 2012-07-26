@@ -879,22 +879,11 @@ static int extract_or_test_entrylist(unsigned numchunk,
             } else
                 continue;  /* this one hosed; try next */
         }
-        error = UnzipClass.GetFileHeader();
+        error = UnzipClass.GetFileRec();
         if (error != PK_COOL) {
             Info(0x421, BadLocalHdr, *pfilnum);
             error_in_archive = error;   /* only PK_EOF defined */
             continue;   /* can still try next one */
-        }
-        error = UnzipClass.GetFileName(UnzipClass.FCurrFile.filename_length);
-        if (error != PK_COOL)
-        {
-            if (error > error_in_archive)
-                error_in_archive = error;
-            if (error > PK_WARN) {
-                Info(0x401, FilNamMsg,
-                  FnFilter1(UnzipClass.FCurrFileName), "local");
-                continue;   /* go on to next one */
-            }
         }
         UnzipClass.SkipHeaderString(UnzipClass.FCurrFile.extra_field_length);
         /* Filename consistency checks must come after reading in the local

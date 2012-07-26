@@ -1014,7 +1014,7 @@ int TUnzip::Seek(long abs_offset)
 
 /*##########################################################################
 #
-#   Name       : TUnzip::GetFileHeader
+#   Name       : TUnzip::GetFileRec
 #
 #   Purpose....: 
 #
@@ -1023,8 +1023,9 @@ int TUnzip::Seek(long abs_offset)
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::GetFileHeader()    /* return PK-type error code */
+int TUnzip::GetFileRec()    /* return PK-type error code */
 {
+    int error;
     unsigned char byterec[ LREC_SIZE ];
 
 /*---------------------------------------------------------------------------
@@ -1058,8 +1059,13 @@ int TUnzip::GetFileHeader()    /* return PK-type error code */
 
     FDecompSize = FCurrFile.csize;
 
-    return PK_COOL;
+    error = GetFileName(FCurrFile.filename_length);
 
+    if (error == PK_COOL)
+        strcpy(FCurrFile.filename, FCurrFileName);
+
+    return error;
+        
 } /* end function process_local_file_hdr() */
 
 /*##########################################################################

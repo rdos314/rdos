@@ -92,6 +92,7 @@ struct TUnzipFile
     unsigned short compression_method;
     unsigned short filename_length;
     unsigned short extra_field_length;
+    char filename[FILE_NAME_SIZE+1];
 };
 
 class TUnzip
@@ -131,7 +132,7 @@ public:
     int Flush(char *rawbuf, int size);
 
     int Decrypt();
-    int GetFileHeader();
+    int GetFileRec();
 
     TString FInputFileName;
     int FInputHandle;
