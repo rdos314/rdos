@@ -33,6 +33,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h> 
 
 #include "rdos.h"
 #include "unzip.h"
@@ -198,6 +199,26 @@ char *str2oem(char *dst, register const char *src)
     return dst;
 }
 
+/*##########################################################################
+#
+#   Name       : strtolower
+#
+#   Purpose....: convert string to lower-case
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void strtolower(char *str1, char *str2)
+{
+   char  *p, *q;
+   p = (char *)(str1) - 1;
+   q = (char *)(str2);
+   while (*++p)
+       *q++ = (char)(isupper((int)(*p))? tolower((int)(*p)) : *p);
+   *q = 0;
+}
 
 /*##########################################################################
 #
@@ -488,6 +509,54 @@ void TUnzip::SkipHeaderString(int length)
         /* cur_zipfile_bufstart already takes account of extra_bytes, so don't
          * correct for it twice: */
     Seek(FBufStart - FExtraBytes + (FInPtr-FInBuf) + length);
+}
+
+/*##########################################################################
+#
+#   Name       : TUnzip::GetFileName
+#
+#   Purpose....: Get filename from header
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::GetFileName(int length)
+{
+    int block_len;
+    int error = PK_OK;
+
+    if (length >= FILE_NAME_SIZE) {
+        Info(0x401, "warning:  filename too long--truncating.\n");
+
+        error = PK_WARN;
+        /* remember excess length in block_len */
+        block_len = length - (FILE_NAME_SIZE - 1);
+        length = FILE_NAME_SIZE - 1;
+    } 
+    else
+        /* no excess size */
+        block_len = 0;
+
+    if (ReadBuf(FCurrFileName, length) == 0)
+        return PK_EOF;
+
+    FCurrFileName[length] = '\0';      /* terminate w/zero:  ASCIIZ */
+
+    /* translate the Zip entry filename coded in host-dependent "extended
+           ASCII" into the compiler's (system's) internal text code page */
+    AsciiToNative(FCurrFileName);
+
+    strtolower(FCurrFileName, FCurrFileName);
+
+    if (block_len)         /* no overflow, we're done here */
+    {
+        Info(0x401, "[ %s ]\n", FCurrFileName);
+        SkipHeaderString(block_len);
+    }
+
+     return PK_OK;
 }
 
 /*##########################################################################

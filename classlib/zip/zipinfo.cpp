@@ -702,8 +702,8 @@ int zipinfo()   /* return PK-type error code */
             break;
         }
 
-        if ((error = do_string(G.crec.filename_length, DS_FN)) !=
-             PK_COOL)
+        error = UnzipClass.GetFileName(G.crec.filename_length);
+        if (error != PK_COOL)
         {
           if (error > error_in_archive)
               error_in_archive = error;

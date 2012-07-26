@@ -478,10 +478,6 @@ typedef size_t extent;
 /* error code for extracting/testing extra field blocks */
 #define IZ_EF_TRUNC       79   /* local extra field truncated (PKZIP'd) */
 
-/* choice of activities for do_string() */
-#define DS_FN             2             /* read filename (ext. ASCII, chead) */
-#define DS_FN_C           2             /* read filename from central header */
-#define DS_FN_L           6             /* read filename from local header */
 
 #define DOES_NOT_EXIST    -1   /* return values for check_for_newer() */
 #define EXISTS_AND_OLDER  0
@@ -934,7 +930,6 @@ void     fnprint                 OF(());
 /* static int  disk_error     OF(()); */
 void     handler              OF((int signal));
 int      check_for_newer      OF((char *filename)); /* os2,vmcms,vms */
-int      do_string            OF((unsigned int length, int option));
 unsigned short      makeword             OF((const unsigned char *b));
 unsigned long      makelong             OF((const unsigned char *sig));
 zusz_t   makeint64            OF((const unsigned char *sig));
@@ -994,7 +989,6 @@ char    *GetLoadPath     OF(());                              /* local */
 int   defer_dir_attribs  OF((direntry **pd));           /* local */
 int   set_direc_attribs  OF((direntry *d));             /* local */
 
-void strtolower(char *str1, char *str2);
 char *getp(const char *m, char *p, int n);
 
 int  decrypt OF((const char *passwrd));

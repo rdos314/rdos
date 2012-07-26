@@ -373,8 +373,8 @@ int extract_or_test_files()    /* return PK-type error code */
                 reached_end = TRUE;     /* ...so no more left to do */
                 break;
             }
-            if ((error = do_string(G.crec.filename_length, DS_FN)) !=
-                 PK_COOL)
+            error = UnzipClass.GetFileName(G.crec.filename_length);
+            if (error != PK_COOL)
             {
                 if (error > error_in_archive)
                     error_in_archive = error;
@@ -884,8 +884,8 @@ static int extract_or_test_entrylist(unsigned numchunk,
             error_in_archive = error;   /* only PK_EOF defined */
             continue;   /* can still try next one */
         }
-        if ((error = do_string(UnzipClass.FCurrFile.filename_length, DS_FN_L)) !=
-             PK_COOL)
+        error = UnzipClass.GetFileName(UnzipClass.FCurrFile.filename_length);
+        if (error != PK_COOL)
         {
             if (error > error_in_archive)
                 error_in_archive = error;

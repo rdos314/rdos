@@ -120,6 +120,7 @@ public:
 
     void DisplayHeaderString(int lenght, int oemconvert);
     void SkipHeaderString(int length);
+    int GetFileName(int length);
 
     int Explode();
     int Unshrink();
