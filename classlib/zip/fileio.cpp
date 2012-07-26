@@ -58,42 +58,6 @@
 #define __FILEIO_C      /* identifies this source module */
 #include "oldunzip.h"
 
-const unsigned char oem2iso_850[] = {
-    0xC7, 0xFC, 0xE9, 0xE2, 0xE4, 0xE0, 0xE5, 0xE7,  /* 80 - 87 */
-    0xEA, 0xEB, 0xE8, 0xEF, 0xEE, 0xEC, 0xC4, 0xC5,  /* 88 - 8F */
-    0xC9, 0xE6, 0xC6, 0xF4, 0xF6, 0xF2, 0xFB, 0xF9,  /* 90 - 97 */
-    0xFF, 0xD6, 0xDC, 0xF8, 0xA3, 0xD8, 0xD7, 0x83,  /* 98 - 9F */
-    0xE1, 0xED, 0xF3, 0xFA, 0xF1, 0xD1, 0xAA, 0xBA,  /* A0 - A7 */
-    0xBF, 0xAE, 0xAC, 0xBD, 0xBC, 0xA1, 0xAB, 0xBB,  /* A8 - AF */
-    0xA6, 0xA6, 0xA6, 0xA6, 0xA6, 0xC1, 0xC2, 0xC0,  /* B0 - B7 */
-    0xA9, 0xA6, 0xA6, 0x2B, 0x2B, 0xA2, 0xA5, 0x2B,  /* B8 - BF */
-    0x2B, 0x2D, 0x2D, 0x2B, 0x2D, 0x2B, 0xE3, 0xC3,  /* C0 - C7 */
-    0x2B, 0x2B, 0x2D, 0x2D, 0xA6, 0x2D, 0x2B, 0xA4,  /* C8 - CF */
-    0xF0, 0xD0, 0xCA, 0xCB, 0xC8, 0x69, 0xCD, 0xCE,  /* D0 - D7 */
-    0xCF, 0x2B, 0x2B, 0xA6, 0x5F, 0xA6, 0xCC, 0xAF,  /* D8 - DF */
-    0xD3, 0xDF, 0xD4, 0xD2, 0xF5, 0xD5, 0xB5, 0xFE,  /* E0 - E7 */
-    0xDE, 0xDA, 0xDB, 0xD9, 0xFD, 0xDD, 0xAF, 0xB4,  /* E8 - EF */
-    0xAD, 0xB1, 0x3D, 0xBE, 0xB6, 0xA7, 0xF7, 0xB8,  /* F0 - F7 */
-    0xB0, 0xA8, 0xB7, 0xB9, 0xB3, 0xB2, 0xA6, 0xA0   /* F8 - FF */
-};
-
-const unsigned char *oem2iso = oem2iso_850;  /* backward compatibility default */
-
-void Ext_ASCII_TO_Native(char *string, int hostnum, int hostver, int isuxatt, int islochdr)
-{
-    if (((hostnum) == FS_FAT_ &&
-         !(((islochdr) || (isuxatt)) &&
-           ((hostver) == 25 || (hostver) == 26 || (hostver) == 40))) ||
-        (hostnum) == FS_HPFS_ ||
-        ((hostnum) == FS_NTFS_ && (hostver) == 50)) {
-       if (oem2iso) {register unsigned char *p;
-           for (p=(unsigned char *)(string); *p; p++)
-             *p = (*p & 0x80) ? oem2iso[*p & 0x7f] : *p;
-       }
-    }
-}
-
-
 /*
    2005-09-16 SMS.
    On VMS, when output is redirected to a file, as in a command like
@@ -114,6 +78,8 @@ void Ext_ASCII_TO_Native(char *string, int hostnum, int hostver, int isuxatt, in
    buffer."  Apparently fprintf() buffers the stuff somewhere, and puts
    out a record (only) when it sees a newline.
 */
+
+void AsciiToNative(char *str);
 
 /****************************/
 /* Strings used in fileio.c */
@@ -374,48 +340,6 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
      * cessing).
      */
 
-    case DISPLAY:
-    case DISPL_8:
-        comment_bytes_left = length;
-        block_len = OUTBUFSIZ;       /* for the while statement, first time */
-        while (comment_bytes_left > 0 && block_len > 0) {
-            register unsigned char *p = G.outbuf;
-            register unsigned char *q = G.outbuf;
-
-            if ((block_len = UnzipClass.ReadBuf((char *)G.outbuf,
-                   MIN((unsigned)OUTBUFSIZ, comment_bytes_left))) == 0)
-                return PK_EOF;
-            comment_bytes_left -= block_len;
-
-            /* this is why we allocated an extra byte for outbuf:  terminate
-             *  with zero (ASCIIZ) */
-            G.outbuf[block_len] = '\0';
-
-            /* remove all ASCII carriage returns from comment before printing
-             * (since used before A_TO_N(), check for CR instead of '\r')
-             */
-            while (*p) {
-                while (*p == CR)
-                    ++p;
-                *q++ = *p++;
-            }
-            /* could check whether (p - outbuf) == block_len here */
-            *q = '\0';
-
-            if (option == DISPL_8) {
-                /* translate the text coded in the entry's host-dependent
-                   "extended ASCII" charset into the compiler's (system's)
-                   internal text code page */
-                Ext_ASCII_TO_Native((char *)G.outbuf, G.pInfo->hostnum,
-                                    G.pInfo->hostver, G.pInfo->HasUxAtt,
-                                    FALSE);
-            }
-
-            Info(0, (char *)G.outbuf);
-        }
-        /* add '\n' if not at start of line */
-        Info(0, "\n");
-        break;
 
     /*
      * Second case:  read string into filename[] array.  The filename should
@@ -441,8 +365,7 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
 
         /* translate the Zip entry filename coded in host-dependent "extended
            ASCII" into the compiler's (system's) internal text code page */
-        Ext_ASCII_TO_Native(UnzipClass.FCurrFileName, G.pInfo->hostnum, G.pInfo->hostver,
-                            G.pInfo->HasUxAtt, (option == DS_FN_L));
+        AsciiToNative(UnzipClass.FCurrFileName);
 
         if (G.pInfo->lcflag)      /* replace with lowercase filename */
             strtolower(UnzipClass.FCurrFileName, UnzipClass.FCurrFileName);

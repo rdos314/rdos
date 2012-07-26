@@ -255,13 +255,11 @@ int list_files()    /* return PK-type error code */
                   (G.pInfo->lcflag? '^':' '));
             fnprint();
 
-            if ((error = do_string(G.crec.file_comment_length,
-                                   (!uO.qflag) ? DISPL_8 : SKIP)) != 0)
-            {
-                error_in_archive = error;  /* might be just warning */
-                if (error > PK_WARN)       /* fatal */
-                    return error;
-            }
+            if (uO.qflag)
+                do_string(G.crec.file_comment_length, SKIP);
+            else
+                UnzipClass.DisplayZipInfo(G.crec.file_comment_length, TRUE);
+
             tot_ucsize += G.crec.ucsize;
             tot_csize += csiz;
             ++members;

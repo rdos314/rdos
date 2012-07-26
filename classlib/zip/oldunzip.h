@@ -480,8 +480,6 @@ typedef size_t extent;
 
 /* choice of activities for do_string() */
 #define SKIP              0             /* skip header block */
-#define DISPLAY           1             /* display archive comment (ASCII) */
-#define DISPL_8           5             /* display file comment (ext. ASCII) */
 #define DS_FN             2             /* read filename (ext. ASCII, chead) */
 #define DS_FN_C           2             /* read filename from central header */
 #define DS_FN_L           6             /* read filename from local header */
@@ -1001,7 +999,6 @@ char    *GetLoadPath     OF(());                              /* local */
 int   defer_dir_attribs  OF((direntry **pd));           /* local */
 int   set_direc_attribs  OF((direntry *d));             /* local */
 
-void Ext_ASCII_TO_Native(char *string, int hostnum, int hostver, int isuxatt, int islochdr);
 void strtolower(char *str1, char *str2);
 char *getp(const char *m, char *p, int n);
 

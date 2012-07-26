@@ -1630,13 +1630,7 @@ ef_default_display:
         Info(0, NoFileComment);
     else {
         Info(0, FileCommBegin);
-        if ((error = do_string(G.crec.file_comment_length, DISPL_8)) !=
-            PK_COOL)
-        {
-            error_in_archive = error;   /* might be warning */
-            if (error > PK_WARN)   /* fatal */
-                return error;
-        }
+        UnzipClass.DisplayZipInfo(G.crec.file_comment_length, TRUE);
         Info(0, FileCommEnd);
     }
 

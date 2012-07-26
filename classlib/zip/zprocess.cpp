@@ -1018,8 +1018,7 @@ static int process_zip_cmmnt()       /* return PK-type error code */
             Info(0, ZipfileCommentDesc,
               G.ecrec.zipfile_comment_length);
             Info(0, ZipfileCommBegin);
-            if (do_string(G.ecrec.zipfile_comment_length, DISPLAY))
-                error = PK_WARN;
+            UnzipClass.DisplayZipInfo(G.ecrec.zipfile_comment_length, FALSE);
             Info(0, ZipfileCommEnd);
             if (error)
                 Info(0, ZipfileCommTrunc2);
@@ -1028,10 +1027,7 @@ static int process_zip_cmmnt()       /* return PK-type error code */
     /* ZipInfo, non-verbose mode:  print zipfile comment only if requested */
     } else if (G.ecrec.zipfile_comment_length &&
                (uO.zflag > 0) && uO.zipinfo_mode) {
-        if (do_string(G.ecrec.zipfile_comment_length, DISPLAY)) {
-            Info(0x401, ZipfileCommTrunc1);
-            error = PK_WARN;
-        }
+        UnzipClass.DisplayZipInfo(G.ecrec.zipfile_comment_length, FALSE);
     } else
     if ( G.ecrec.zipfile_comment_length &&
          (uO.zflag > 0
@@ -1040,13 +1036,7 @@ static int process_zip_cmmnt()       /* return PK-type error code */
               && !uO.qflag)
          ) )
     {
-        if (do_string(G.ecrec.zipfile_comment_length,
-                      DISPLAY
-                     ))
-        {
-            Info(0x401, ZipfileCommTrunc1);
-            error = PK_WARN;
-        }
+        UnzipClass.DisplayZipInfo(G.ecrec.zipfile_comment_length, FALSE);
     }
     return error;
 
