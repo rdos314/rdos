@@ -147,12 +147,6 @@ int process_zipfiles()    /* return PK-type error code */
     strings.
   ---------------------------------------------------------------------------*/
 
-    G.outbuf = (unsigned char *)malloc(OUTBUFSIZ + 1);  /* 1 extra for string term. */
-
-    if ((UnzipClass.FInBuf == (char *)NULL) || (G.outbuf == (unsigned char *)NULL)) {
-        Info(0x401, CannotAllocateBuffers);
-        return(PK_MEM);
-    }
     G.hold = (unsigned char *)UnzipClass.FInBuf + INBUFSIZ;     /* to check for boundary-spanning sigs */
 
     /* finish up initialization of magic signature strings */
@@ -347,16 +341,6 @@ void free_G_buffers()     /* releases all memory allocated in global vars */
         free(G.key);
         G.key = (char *)NULL;
    }
-
-    /* VMS uses its own buffer scheme for textmode flush() */
-    if (G.outbuf2) {
-        free(G.outbuf2);   /* malloc'd ONLY if unshrink and -a */
-        G.outbuf2 = (unsigned char *)NULL;
-    }
-
-    if (G.outbuf)
-        free(G.outbuf);
-    G.outbuf = (unsigned char *)NULL;
 
     for (i = 0; i < DIR_BLKSIZ; i++) {
         if (G.info[i].cfilname != (char *)NULL) {

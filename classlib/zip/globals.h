@@ -188,20 +188,11 @@ typedef struct Globals {
     ecdir_rec       ecrec;         /* used in unzip.c, extract.c */
     struct stat   statbuf;              /* used by main, mapname, check_for_newer */
 
-    unsigned char      *outbufptr;           /* extract.c static */
-    unsigned long      outsize;              /* extract.c static */
     int      reported_backslash;   /* extract.c static */
 
     unsigned long      numlines;             /* fileio static: number of lines printed */
     int      sol;                  /* fileio static: at start of line */
     int      no_ecrec;             /* process static */
-
-    unsigned char      *outbuf;
-    unsigned char      *realbuf;
-
-    unsigned char      *outbuf2;             /*  process_zipfiles() (never changes); */
-    unsigned char      *outptr;
-    unsigned long      outcnt;               /* number of chars stored in outbuf */
 
     char *key;         /* crypt static: decryption password or NULL */
     int nopwd;         /* crypt static */
