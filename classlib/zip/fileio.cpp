@@ -399,9 +399,10 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
      */
 
     case EXTRA_FIELD:
-        if (G.extra_field != (unsigned char *)NULL)
-            free(G.extra_field);
-        if ((G.extra_field = (unsigned char *)malloc(length)) == (unsigned char *)NULL) {
+        if (UnzipClass.FExtraField != 0)
+            delete UnzipClass.FExtraField;
+        UnzipClass.FExtraField = new char[length];
+        if (UnzipClass.FExtraField == 0) {
             Info(0x401, ExtraFieldTooLong,
               length);
             /* cur_zipfile_bufstart already takes account of extra_bytes,
@@ -409,10 +410,10 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
             UnzipClass.Seek(UnzipClass.FBufStart - UnzipClass.FExtraBytes +
                       (UnzipClass.FInPtr-UnzipClass.FInBuf) + length);
         } else {
-            if (UnzipClass.ReadBuf((char *)G.extra_field, length) == 0)
+            if (UnzipClass.ReadBuf(UnzipClass.FExtraField, length) == 0)
                 return PK_EOF;
             /* Looks like here is where extra fields are read */
-            getZip64Data(G.extra_field, length);
+            getZip64Data((unsigned char *)UnzipClass.FExtraField, length);
         }
         break;
 

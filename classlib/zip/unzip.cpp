@@ -354,6 +354,7 @@ void TUnzip::Init()
     OnInfo = 0;
 
     FOutputHandle = 0;
+    FExtraField = 0;
 
     FInBuf = new char[INBUFSIZ + 4];    /* 4 extra for hold[] (below) */
     FTmpOutBuf = new char[TMPOUTSIZ];

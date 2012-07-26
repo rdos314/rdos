@@ -752,9 +752,9 @@ int zipinfo()   /* return PK-type error code */
             if ((error = do_string(G.crec.extra_field_length,
                                    EXTRA_FIELD)) != 0)
             {
-                if (G.extra_field != NULL) {
-                    free(G.extra_field);
-                    G.extra_field = NULL;
+                if (UnzipClass.FExtraField != 0) {
+                    delete UnzipClass.FExtraField;
+                    UnzipClass.FExtraField = 0;
                 }
                 error_in_archive = error;
                 /* The premature return in case of a "fatal" error (PK_EOF) is
@@ -1178,7 +1178,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
   ---------------------------------------------------------------------------*/
 
     if (G.crec.extra_field_length > 0) {
-        unsigned char *ef_ptr = G.extra_field;
+        unsigned char *ef_ptr = (unsigned char *)UnzipClass.FExtraField;
         unsigned short ef_len = G.crec.extra_field_length;
         unsigned short eb_id, eb_datalen;
         const char *ef_fieldname;
@@ -1186,7 +1186,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
         if (error_in_archive > PK_WARN)   /* fatal:  can't continue */
             /* delayed "fatal error" return from extra field reading */
             return error_in_archive;
-        if (G.extra_field == (unsigned char *)NULL)
+        if (UnzipClass.FExtraField == 0)
             return PK_ERR;   /* not consistent with crec length */
 
         Info(0, ExtraFields);

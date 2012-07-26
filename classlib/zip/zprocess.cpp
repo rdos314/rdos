@@ -348,9 +348,9 @@ void free_G_buffers()     /* releases all memory allocated in global vars */
         G.key = (char *)NULL;
    }
 
-   if (G.extra_field != (unsigned char *)NULL) {
-        free(G.extra_field);
-        G.extra_field = (unsigned char *)NULL;
+   if (UnzipClass.FExtraField != 0) {
+        delete UnzipClass.FExtraField;
+        UnzipClass.FExtraField = 0;
    }
 
     /* VMS uses its own buffer scheme for textmode flush() */

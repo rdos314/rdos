@@ -162,6 +162,8 @@ public:
     int FUsedCSize;
 
     struct TUnzipFile FCurrFile;
+
+    char *FExtraField;
     
 protected:
     int FOutputHandle;

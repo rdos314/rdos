@@ -907,9 +907,9 @@ static int extract_or_test_entrylist(unsigned numchunk,
                 continue;   /* go on to next one */
             }
         }
-        if (G.extra_field != (unsigned char *)NULL) {
-            free(G.extra_field);
-            G.extra_field = (unsigned char *)NULL;
+        if (UnzipClass.FExtraField != 0) {
+            delete UnzipClass.FExtraField;
+            UnzipClass.FExtraField = 0;
         }
         if ((error =
              do_string(UnzipClass.FCurrFile.extra_field_length, EXTRA_FIELD)) != 0)

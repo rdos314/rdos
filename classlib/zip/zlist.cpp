@@ -158,9 +158,9 @@ int list_files()    /* return PK-type error code */
             if (error > PK_WARN)   /* fatal:  can't continue */
                 return error;
         }
-        if (G.extra_field != (unsigned char *)NULL) {
-            free(G.extra_field);
-            G.extra_field = (unsigned char *)NULL;
+        if (UnzipClass.FExtraField != 0) {
+            delete UnzipClass.FExtraField;
+            UnzipClass.FExtraField = 0;
         }
         if ((error = do_string(G.crec.extra_field_length, EXTRA_FIELD))
             != 0)
