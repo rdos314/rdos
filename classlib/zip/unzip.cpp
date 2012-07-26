@@ -606,9 +606,6 @@ int TUnzip::ZDecode(int c)
 ##########################################################################*/
 int TUnzip::ReadByte()   /* refill inbuf and return a byte if available, else EOF */
 {
-    if (FMemMode)
-        return EOF;
-
     if (FDecompSize <= 0) {
         FDecompSize--;             /* for tests done after exploding */
         FInCount = 0;
@@ -672,9 +669,6 @@ int TUnzip::GetNextByte()
 ##########################################################################*/
 int TUnzip::FillInbuf() /* like readbyte() except returns number of bytes in inbuf */
 {
-    if (FMemMode)
-        return 0;
-
     FInCount = RdosReadFile(FInputHandle, FInBuf, INBUFSIZ);
     if (FInCount <= 0)
         return 0;

@@ -139,7 +139,6 @@ public:
     char *FInPtr;
     int FInCount;
     int FBufStart;
-    int FMemMode;
     long FDecompSize;
 
     int FEncrypted;

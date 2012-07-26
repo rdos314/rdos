@@ -326,8 +326,7 @@ static unsigned zlib_inCB(void *pG, unsigned char ** pInbuf)
 
 static int zlib_outCB(void *pG, unsigned char *outbuf, unsigned outcnt)
 {
-    return ((UnzipClass.FMemMode) ? memflush(outbuf, (unsigned long)(outcnt))
-                         : UnzipClass.Flush((char *)outbuf, outcnt));
+    return UnzipClass.Flush((char *)outbuf, outcnt);
 }
 
 
