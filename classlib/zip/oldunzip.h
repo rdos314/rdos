@@ -482,8 +482,6 @@ typedef size_t extent;
 #define DS_FN             2             /* read filename (ext. ASCII, chead) */
 #define DS_FN_C           2             /* read filename from central header */
 #define DS_FN_L           6             /* read filename from local header */
-#define EXTRA_FIELD       3             /* copy extra field into buffer */
-#define DS_EF             3
 
 #define DOES_NOT_EXIST    -1   /* return values for check_for_newer() */
 #define EXISTS_AND_OLDER  0

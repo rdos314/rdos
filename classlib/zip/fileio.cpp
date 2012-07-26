@@ -387,6 +387,8 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
         length = block_len;     /* SKIP the excess bytes... */
         /*  FALL THROUGH...  */
 
+        UnzipClass.SkipHeaderString(length);
+
     /*
      * Third case:  skip string, adjusting readbuf's internal variables
      * as necessary (and possibly skipping to and reading a new block of
@@ -398,21 +400,6 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
      * storage for it and read data into the allocated space.
      */
 
-    case EXTRA_FIELD:
-        if (UnzipClass.FExtraField != 0)
-            delete UnzipClass.FExtraField;
-        UnzipClass.FExtraField = new char[length];
-        if (UnzipClass.FExtraField == 0) {
-            Info(0x401, ExtraFieldTooLong,
-              length);
-            /* cur_zipfile_bufstart already takes account of extra_bytes,
-             * so don't correct for it twice: */
-            UnzipClass.Seek(UnzipClass.FBufStart - UnzipClass.FExtraBytes +
-                      (UnzipClass.FInPtr-UnzipClass.FInBuf) + length);
-        } else {
-            if (UnzipClass.ReadBuf(UnzipClass.FExtraField, length) == 0)
-                return PK_EOF;
-        }
         break;
 
 

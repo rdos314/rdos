@@ -386,19 +386,7 @@ int extract_or_test_files()    /* return PK-type error code */
                     break;
                 }
             }
-            if ((error = do_string(G.crec.extra_field_length,
-                EXTRA_FIELD)) != 0)
-            {
-                if (error > error_in_archive)
-                    error_in_archive = error;
-                if (error > PK_WARN) {  /* fatal */
-                    Info(0x401,
-                      ExtFieldMsg,
-                      FnFilter1(UnzipClass.FCurrFileName), "central");
-                    reached_end = TRUE;
-                    break;
-                }
-            }
+            UnzipClass.SkipHeaderString(G.crec.extra_field_length);
             UnzipClass.SkipHeaderString(G.crec.file_comment_length);
             if (G.process_all_files) {
                 if (store_info())
@@ -907,21 +895,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
                 continue;   /* go on to next one */
             }
         }
-        if (UnzipClass.FExtraField != 0) {
-            delete UnzipClass.FExtraField;
-            UnzipClass.FExtraField = 0;
-        }
-        if ((error =
-             do_string(UnzipClass.FCurrFile.extra_field_length, EXTRA_FIELD)) != 0)
-        {
-            if (error > error_in_archive)
-                error_in_archive = error;
-            if (error > PK_WARN) {
-                Info(0x401, ExtFieldMsg,
-                  FnFilter1(UnzipClass.FCurrFileName), "local");
-                continue;   /* go on */
-            }
-        }
+        UnzipClass.SkipHeaderString(UnzipClass.FCurrFile.extra_field_length);
         /* Filename consistency checks must come after reading in the local
          * extra field, so that a UTF-8 entry name e.f. block has already
          * been processed.
