@@ -457,25 +457,20 @@ HasGlobalTimer       MACRO
 
 ;;;;;;;;; CRITICAL SECTIONS ;;;;;;;;;;;;
 
-; 
-; OUT BX		Futex handle
-CreateFutex	MACRO
-	UserGate create_futex_nr
-					ENDM
 
-; IN  BX		Futex handle
-DeleteFutex	MACRO
-	UserGate delete_futex_nr
-					ENDM
-
-; IN  BX		Futex handle
+; IN  ES:EBX		Futex structure
 AcquireFutex	MACRO
 	UserGate acquire_futex_nr
 					ENDM
 
-; IN  BX		Futex handle
+; IN  ES:EBX		Futex structure
 ReleaseFutex	MACRO
 	UserGate release_futex_nr
+					ENDM
+
+; IN  ES:EBX		Futex structure
+CleanupFutex	MACRO
+	UserGate cleanup_futex_nr
 					ENDM
 
 ; OUT BX		Section handle

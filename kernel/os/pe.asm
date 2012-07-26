@@ -50,15 +50,6 @@ ENDIF
 
 MAX_SECTIONS EQU 1024
 
-user_sect_struc STRUC
-
-uss_handle       DD ?
-uss_counter      DD ?
-uss_val          DW ?
-uss_owner        DW ?
-
-user_sect_struc ENDS
-
 code    SEGMENT byte public 'CODE'
     
     assume cs:code
@@ -349,10 +340,10 @@ p2:
     add edx,12345678h    
     mov [edi],edx
 ;    
-    mov [edx].uss_handle,0
-    mov [edx].uss_val,-1
-    mov [edx].uss_counter,0
-    mov [edx].uss_owner,0
+    mov [edx].fs_handle,0
+    mov [edx].fs_val,-1
+    mov [edx].fs_counter,0
+    mov [edx].fs_owner,0
 ;
     pop ebx
     clc
@@ -368,10 +359,30 @@ create_us_section   Endp
 free_us_section   Proc near
     push edx
 ;    
-    mov edx,ebx
-    mov ebx,[edx].uss_handle
-    UserGateApp delete_futex_nr
-    UserGateApp free_app_mem_nr
+    or ebx,ebx
+    jz fusDone
+;
+    dec ebx
+    cmp ebx,MAX_SECTIONS
+    jae fusDone
+;
+    shl ebx,2
+    
+p3:
+    add ebx,12345678h
+    xor eax,eax
+    xchg eax,[ebx]
+    or eax,eax
+    jz fusDone
+;    
+    mov ebx,eax
+    mov eax,[ebx].fs_handle
+    or eax,eax
+    jz fusDone
+;    
+    UserGateApp cleanup_futex_nr
+
+fusDone:
     xor ebx,ebx
 ;
     pop edx
@@ -391,39 +402,36 @@ enter_us_section    Proc near
 ;
     shl ebx,2
     
-p3:
+p4:
     add ebx,12345678h
     mov ebx,[ebx]
     or ebx,ebx
     jz eusDone
 ;            
     str ax
-    cmp ax,[ebx].uss_owner
+    cmp ax,[ebx].fs_owner
     jne eusLock
 ;
-    inc [ebx].uss_counter
+    inc [ebx].fs_counter
     ret
 
 eusLock:
-    lock add [ebx].uss_val,1
+    lock add [ebx].fs_val,1
     jc eusTake
 
 eusRetry:
     mov eax,1
-    xchg ax,[ebx].uss_val
+    xchg ax,[ebx].fs_val
     cmp ax,-1
     je eusTake
 ;
-    push ebx
-    mov ebx,[ebx].uss_handle
     UserGateApp acquire_futex_nr
-    pop ebx
     jmp eusRetry
 
 eusTake:
     str ax
-    mov [ebx].uss_owner,ax
-    mov [ebx].uss_counter,1
+    mov [ebx].fs_owner,ax
+    mov [ebx].fs_counter,1
 
 eusDone:
     pop ebx
@@ -444,28 +452,25 @@ leave_us_section    Proc near
 ;
     shl ebx,2
     
-p4:
+p5:
     add ebx,12345678h
     mov ebx,[ebx]
     or ebx,ebx
     jz lusDone
 ;
     str ax
-    cmp ax,[ebx].uss_owner
+    cmp ax,[ebx].fs_owner
     jne lusDone
 ;
-    sub [ebx].uss_counter,1
+    sub [ebx].fs_counter,1
     jnz lusDone
 ;
-    mov [ebx].uss_owner,0
-    lock sub [ebx].uss_val,1
+    mov [ebx].fs_owner,0
+    lock sub [ebx].fs_val,1
     jc lusDone
 ;
-    mov [ebx].uss_val,-1
-    push ebx
-    mov ebx,[ebx].uss_handle
+    mov [ebx].fs_val,-1
     UserGateApp release_futex_nr
-    pop ebx        
 
 lusDone:
     pop ebx
@@ -539,6 +544,10 @@ CreateSections  Proc near
 ;
     mov edi,esi
     add edi,OFFSET p4 + 2
+    mov es:[edi],edx
+;
+    mov edi,esi
+    add edi,OFFSET p5 + 2
     mov es:[edi],edx
 ;
     pop edi

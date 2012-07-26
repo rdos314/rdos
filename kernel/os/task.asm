@@ -1080,12 +1080,6 @@ timer_free_list_create:
     mov ax,leave_user_section_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET create_futex
-    mov di,OFFSET create_futex_name
-    xor dx,dx
-    mov ax,create_futex_nr
-    RegisterBimodalUserGate
-;
     mov si,OFFSET get_debug_thread
     mov di,OFFSET get_debug_thread_name
     xor dx,dx

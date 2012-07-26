@@ -241,6 +241,14 @@ block_seg	STRUC
 	b_prev			DW ?
 block_seg	ENDS
 
+futex_struc STRUC
+
+fs_handle       DD ?
+fs_counter      DD ?
+fs_val          DW ?
+fs_owner        DW ?
+
+futex_struc ENDS
 
 THREAD_FLAG_CREATE  = 1
 THREAD_FLAG_BP      = 2
