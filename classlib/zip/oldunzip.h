@@ -768,25 +768,6 @@ typedef struct VMStimbuf {
     xxREC_SIZE defines (above) change with them!
   ---------------------------------------------------------------------------*/
 
-   typedef unsigned char   cdir_byte_hdr[ CREC_SIZE ];
-#      define C_VERSION_MADE_BY_0               0
-#      define C_VERSION_MADE_BY_1               1
-#      define C_VERSION_NEEDED_TO_EXTRACT_0     2
-#      define C_VERSION_NEEDED_TO_EXTRACT_1     3
-#      define C_GENERAL_PURPOSE_BIT_FLAG        4
-#      define C_COMPRESSION_METHOD              6
-#      define C_LAST_MOD_DOS_DATETIME           8
-#      define C_CRC32                           12
-#      define C_COMPRESSED_SIZE                 16
-#      define C_UNCOMPRESSED_SIZE               20
-#      define C_FILENAME_LENGTH                 24
-#      define C_EXTRA_FIELD_LENGTH              26
-#      define C_FILE_COMMENT_LENGTH             28
-#      define C_DISK_NUMBER_START               30
-#      define C_INTERNAL_FILE_ATTRIBUTES        32
-#      define C_EXTERNAL_FILE_ATTRIBUTES        34
-#      define C_RELATIVE_OFFSET_LOCAL_HEADER    38
-
    typedef unsigned char   ec_byte_rec[ ECREC_SIZE+4 ];
 /*     define SIGNATURE                         0   space-holder only */
 #      define NUMBER_THIS_DISK                  4
@@ -813,24 +794,6 @@ typedef struct VMStimbuf {
 #      define SIZE_CENTRAL_DIRECTORY64          40
 #      define OFFSET_START_CENTRAL_DIRECT64     48
 
-
-   typedef struct central_directory_file_header {     /* CENTRAL */
-       zusz_t csize;
-       zusz_t ucsize;
-       zusz_t relative_offset_local_header;
-       unsigned long last_mod_dos_datetime;
-       unsigned long crc32;
-       unsigned long external_file_attributes;
-       zuvl_t disk_number_start;
-       unsigned short internal_file_attributes;
-       unsigned char version_made_by[2];
-       unsigned char version_needed_to_extract[2];
-       unsigned short general_purpose_bit_flag;
-       unsigned short compression_method;
-       unsigned short filename_length;
-       unsigned short extra_field_length;
-       unsigned short file_comment_length;
-   } cdir_file_hdr;
 
    typedef struct end_central_dir_record {            /* END CENTRAL */
        zusz_t size_central_directory;

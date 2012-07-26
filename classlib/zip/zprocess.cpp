@@ -37,7 +37,6 @@ static int    rec_find           OF((long, char *, int));
 static int    find_ecrec64       OF((long searchlen));
 static int    find_ecrec         OF((long searchlen));
 static int    process_zip_cmmnt  OF(());
-static int    get_cdir_ent       OF(());
 
 
 static const char CannotAllocateBuffers[] =
@@ -1040,11 +1039,12 @@ int process_cdir_file_hdr()    /* return PK-type error code */
     file is coming.
   ---------------------------------------------------------------------------*/
 
-    if ((error = get_cdir_ent()) != 0)
+    error = UnzipClass.GetDirEntry();
+    if (error != 0)
         return error;
 
-    G.pInfo->hostver = G.crec.version_made_by[0];
-    G.pInfo->hostnum = MIN(G.crec.version_made_by[1], NUM_HOSTS);
+    G.pInfo->hostver = UnzipClass.FCurrDirEntry.version_made_by[0];
+    G.pInfo->hostnum = MIN(UnzipClass.FCurrDirEntry.version_made_by[1], NUM_HOSTS);
 /*  extnum = MIN(crec.version_needed_to_extract[1], NUM_HOSTS); */
 
     G.pInfo->lcflag = 0;
@@ -1070,7 +1070,7 @@ int process_cdir_file_hdr()    /* return PK-type error code */
         G.pInfo->lcflag = 1;
 
     /* do Amigas (AMIGA_) also have volume labels? */
-    if (IS_VOLID(G.crec.external_file_attributes) &&
+    if (IS_VOLID(UnzipClass.FCurrDirEntry.external_file_attributes) &&
         (G.pInfo->hostnum == FS_FAT_ || G.pInfo->hostnum == FS_HPFS_ ||
          G.pInfo->hostnum == FS_NTFS_ || G.pInfo->hostnum == ATARI_))
     {
@@ -1082,73 +1082,11 @@ int process_cdir_file_hdr()    /* return PK-type error code */
     /* this flag is needed to detect archives made by "PKZIP for Unix" when
        deciding which kind of codepage conversion has to be applied to
        strings (see do_string() function in fileio.c) */
-    G.pInfo->HasUxAtt = (G.crec.external_file_attributes & 0xffff0000L) != 0L;
+    G.pInfo->HasUxAtt = (UnzipClass.FCurrDirEntry.external_file_attributes & 0xffff0000L) != 0L;
 
     return PK_COOL;
 
 } /* end function process_cdir_file_hdr() */
-
-
-
-
-
-/***************************/
-/* Function get_cdir_ent() */
-/***************************/
-
-static int get_cdir_ent()    /* return PK-type error code */
-{
-    cdir_byte_hdr byterec;
-
-
-/*---------------------------------------------------------------------------
-    Read the next central directory entry and do any necessary machine-type
-    conversions (byte ordering, structure padding compensation--do so by
-    copying the data from the array into which it was read (byterec) to the
-    usable struct (crec)).
-  ---------------------------------------------------------------------------*/
-
-    if (UnzipClass.ReadBuf((char *)byterec, CREC_SIZE) == 0)
-        return PK_EOF;
-
-    G.crec.version_made_by[0] = byterec[C_VERSION_MADE_BY_0];
-    G.crec.version_made_by[1] = byterec[C_VERSION_MADE_BY_1];
-    G.crec.version_needed_to_extract[0] =
-      byterec[C_VERSION_NEEDED_TO_EXTRACT_0];
-    G.crec.version_needed_to_extract[1] =
-      byterec[C_VERSION_NEEDED_TO_EXTRACT_1];
-
-    G.crec.general_purpose_bit_flag =
-      makeword(&byterec[C_GENERAL_PURPOSE_BIT_FLAG]);
-    G.crec.compression_method =
-      makeword(&byterec[C_COMPRESSION_METHOD]);
-    G.crec.last_mod_dos_datetime =
-      makelong(&byterec[C_LAST_MOD_DOS_DATETIME]);
-    G.crec.crc32 =
-      makelong(&byterec[C_CRC32]);
-    G.crec.csize =
-      makelong(&byterec[C_COMPRESSED_SIZE]);
-    G.crec.ucsize =
-      makelong(&byterec[C_UNCOMPRESSED_SIZE]);
-    G.crec.filename_length =
-      makeword(&byterec[C_FILENAME_LENGTH]);
-    G.crec.extra_field_length =
-      makeword(&byterec[C_EXTRA_FIELD_LENGTH]);
-    G.crec.file_comment_length =
-      makeword(&byterec[C_FILE_COMMENT_LENGTH]);
-    G.crec.disk_number_start =
-      makeword(&byterec[C_DISK_NUMBER_START]);
-    G.crec.internal_file_attributes =
-      makeword(&byterec[C_INTERNAL_FILE_ATTRIBUTES]);
-    G.crec.external_file_attributes =
-      makelong(&byterec[C_EXTERNAL_FILE_ATTRIBUTES]);  /* LONG, not word! */
-    G.crec.relative_offset_local_header =
-      makelong(&byterec[C_RELATIVE_OFFSET_LOCAL_HEADER]);
-
-    return PK_COOL;
-
-} /* end function get_cdir_ent() */
-
 
 
 

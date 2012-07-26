@@ -667,7 +667,7 @@ int zipinfo()   /* return PK-type error code */
     UnzipClass.FTextMode = 0;  /* so one can read on screen (is this ever used?) */
 
     /* reset endprev for new zipfile; account for multi-part archives (?) */
-    endprev = (G.crec.relative_offset_local_header == 4L)? 4L : 0L;
+    endprev = (UnzipClass.FCurrDirEntry.relative_offset_local_header == 4L)? 4L : 0L;
 
 
     for (j = 1L;; j++) {
@@ -702,7 +702,7 @@ int zipinfo()   /* return PK-type error code */
             break;
         }
 
-        error = UnzipClass.GetFileName(G.crec.filename_length);
+        error = UnzipClass.GetFileName(UnzipClass.FCurrDirEntry.filename_length);
         if (error != PK_COOL)
         {
           if (error > error_in_archive)
@@ -745,13 +745,13 @@ int zipinfo()   /* return PK-type error code */
 
         if (G.process_all_files || do_this_file) {
 
-            UnzipClass.SkipHeaderString(G.crec.extra_field_length);
+            UnzipClass.SkipHeaderString(UnzipClass.FCurrDirEntry.extra_field_length);
 
             switch (uO.lflag) {
                 case 1:
                 case 2:
                     fnprint();
-                    UnzipClass.SkipHeaderString(G.crec.file_comment_length);
+                    UnzipClass.SkipHeaderString(UnzipClass.FCurrDirEntry.file_comment_length);
                     break;
 
                 case 3:
@@ -771,23 +771,23 @@ int zipinfo()   /* return PK-type error code */
                     break;
 
                 default:
-                    UnzipClass.SkipHeaderString(G.crec.file_comment_length);
+                    UnzipClass.SkipHeaderString(UnzipClass.FCurrDirEntry.file_comment_length);
                     break;
 
             } /* end switch (lflag) */
             if (error > PK_WARN)        /* fatal */
                 break;
 
-            tot_csize += G.crec.csize;
-            tot_ucsize += G.crec.ucsize;
-            if (G.crec.general_purpose_bit_flag & 1)
+            tot_csize += UnzipClass.FCurrDirEntry.csize;
+            tot_ucsize += UnzipClass.FCurrDirEntry.ucsize;
+            if (UnzipClass.FCurrDirEntry.general_purpose_bit_flag & 1)
                 tot_csize -= 12;   /* don't count encryption header */
             ++members;
 
 
         } else {        /* not listing this file */
-            UnzipClass.SkipHeaderString(G.crec.extra_field_length);
-            UnzipClass.SkipHeaderString(G.crec.file_comment_length);
+            UnzipClass.SkipHeaderString(UnzipClass.FCurrDirEntry.extra_field_length);
+            UnzipClass.SkipHeaderString(UnzipClass.FCurrDirEntry.file_comment_length);
             if (endprev != 0) endprev = 0;
 
         } /* end if (list member?) */
@@ -902,20 +902,20 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
     unknown compressed size).  We won't worry about prepended junk here...
   ---------------------------------------------------------------------------*/
 
-    if (G.crec.relative_offset_local_header != *pEndprev && *pEndprev > 0L) {
+    if (UnzipClass.FCurrDirEntry.relative_offset_local_header != *pEndprev && *pEndprev > 0L) {
         /*  GRR DEBUG
         Info(0, "  [crec.relative_offset_local_header = %lu, endprev = %lu]\n",
           G.crec.relative_offset_local_header, *pEndprev);
          */
         Info(0, ExtraBytesPreceding,
-          fzofft((G.crec.relative_offset_local_header - (*pEndprev)),
+          fzofft((UnzipClass.FCurrDirEntry.relative_offset_local_header - (*pEndprev)),
           NULL, NULL));
     }
 
     /* calculate endprev for next time around (problem:  extra fields may
      * differ in length between local and central-directory records) */
-    *pEndprev = G.crec.relative_offset_local_header + (4L + LREC_SIZE) +
-      G.crec.filename_length + G.crec.extra_field_length + G.crec.csize;
+    *pEndprev = UnzipClass.FCurrDirEntry.relative_offset_local_header + (4L + LREC_SIZE) +
+      UnzipClass.FCurrDirEntry.filename_length + UnzipClass.FCurrDirEntry.extra_field_length + UnzipClass.FCurrDirEntry.csize;
 
 /*---------------------------------------------------------------------------
     Print out various interesting things about the compressed file.
@@ -923,21 +923,21 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
 
     hostnum = (unsigned)(G.pInfo->hostnum);
     hostver = (unsigned)(G.pInfo->hostver);
-    extnum = (unsigned)MIN(G.crec.version_needed_to_extract[1], NUM_HOSTS);
-    extver = (unsigned)G.crec.version_needed_to_extract[0];
-    methid = (unsigned)G.crec.compression_method;
-    methnum = find_compr_idx(G.crec.compression_method);
+    extnum = (unsigned)MIN(UnzipClass.FCurrDirEntry.version_needed_to_extract[1], NUM_HOSTS);
+    extver = (unsigned)UnzipClass.FCurrDirEntry.version_needed_to_extract[0];
+    methid = (unsigned)UnzipClass.FCurrDirEntry.compression_method;
+    methnum = find_compr_idx(UnzipClass.FCurrDirEntry.compression_method);
 
     Info(0, "  ");  
     fnprint();
 
     Info(0, LocalHeaderOffset,
-      fzofft(G.crec.relative_offset_local_header, NULL, "u"),
-      fzofft(G.crec.relative_offset_local_header, FZOFFT_HEX_DOT_WID, "X"));
+      fzofft(UnzipClass.FCurrDirEntry.relative_offset_local_header, NULL, "u"),
+      fzofft(UnzipClass.FCurrDirEntry.relative_offset_local_header, FZOFFT_HEX_DOT_WID, "X"));
 
     if (hostnum >= NUM_HOSTS) {
         sprintf(unkn, UnknownNo,
-                (int)G.crec.version_made_by[1]);
+                (int)UnzipClass.FCurrDirEntry.version_made_by[1]);
         varmsg_str = unkn;
     } else {
         varmsg_str = os[hostnum];
@@ -947,7 +947,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
 
     if ((extnum >= NUM_HOSTS) || (os[extnum] == NULL)) {
         sprintf(unkn, UnknownNo,
-                (int)G.crec.version_needed_to_extract[1]);
+                (int)UnzipClass.FCurrDirEntry.version_needed_to_extract[1]);
         varmsg_str = unkn;
     } else {
         varmsg_str = os[extnum];
@@ -956,7 +956,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
     Info(0, MinSWVerReq, extver/10, extver%10);
 
     if (methnum >= NUM_METHODS) {
-        sprintf(unkn, UnknownNo, G.crec.compression_method);
+        sprintf(unkn, UnknownNo, UnzipClass.FCurrDirEntry.compression_method);
         varmsg_str = unkn;
     } else {
         varmsg_str = method[methnum];
@@ -964,19 +964,19 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
     Info(0, CompressMethod, varmsg_str);
     if (methid == IMPLODED) {
         Info(0, SlideWindowSizeImplode,
-          (G.crec.general_purpose_bit_flag & 2)? '8' : '4');
+          (UnzipClass.FCurrDirEntry.general_purpose_bit_flag & 2)? '8' : '4');
         Info(0, ShannonFanoTrees,
-          (G.crec.general_purpose_bit_flag & 4)? '3' : '2');
+          (UnzipClass.FCurrDirEntry.general_purpose_bit_flag & 4)? '3' : '2');
     } else if (methid == DEFLATED || methid == ENHDEFLATED) {
-        unsigned short  dnum=(unsigned short)((G.crec.general_purpose_bit_flag>>1) & 3);
+        unsigned short  dnum=(unsigned short)((UnzipClass.FCurrDirEntry.general_purpose_bit_flag>>1) & 3);
 
         Info(0, CompressSubtype, dtypelng[dnum]);
     }
 
     Info(0, FileSecurity,
-      (G.crec.general_purpose_bit_flag & 1) ? nullStr : "not ");
+      (UnzipClass.FCurrDirEntry.general_purpose_bit_flag & 1) ? nullStr : "not ");
     Info(0, ExtendedLocalHdr,
-      (G.crec.general_purpose_bit_flag & 8) ? "yes" : "no");
+      (UnzipClass.FCurrDirEntry.general_purpose_bit_flag & 8) ? "yes" : "no");
     /* print upper 3 bits for amusement? */
 
     /* For printing of date & time, a "char d_t_buf[21]" is required.
@@ -985,26 +985,26 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
      */
 #   define d_t_buf attribs
 
-    zi_time(&G.crec.last_mod_dos_datetime, NULL, d_t_buf);
+    zi_time(&UnzipClass.FCurrDirEntry.last_mod_dos_datetime, NULL, d_t_buf);
     Info(0, FileModDate, d_t_buf);
-    Info(0, CRC32Value, G.crec.crc32);
+    Info(0, CRC32Value, UnzipClass.FCurrDirEntry.crc32);
     Info(0, CompressedFileSize,
-      fzofft(G.crec.csize, NULL, "u"));
+      fzofft(UnzipClass.FCurrDirEntry.csize, NULL, "u"));
     Info(0, UncompressedFileSize,
-      fzofft(G.crec.ucsize, NULL, "u"));
+      fzofft(UnzipClass.FCurrDirEntry.ucsize, NULL, "u"));
     Info(0, FilenameLength,
-      G.crec.filename_length);
+      UnzipClass.FCurrDirEntry.filename_length);
     Info(0, ExtraFieldLength,
-      G.crec.extra_field_length);
+      UnzipClass.FCurrDirEntry.extra_field_length);
     Info(0, FileCommentLength,
-      G.crec.file_comment_length);
+      UnzipClass.FCurrDirEntry.file_comment_length);
     Info(0, FileDiskNum,
-      (unsigned long)(G.crec.disk_number_start + 1));
+      (unsigned long)(UnzipClass.FCurrDirEntry.disk_number_start + 1));
     Info(0, ApparentFileType,
-      (G.crec.internal_file_attributes & 1)? "text"
-         : (G.crec.internal_file_attributes & 2)? "ebcdic"
+      (UnzipClass.FCurrDirEntry.internal_file_attributes & 1)? "text"
+         : (UnzipClass.FCurrDirEntry.internal_file_attributes & 2)? "ebcdic"
               : "binary");             /* changed to accept EBCDIC */
-    xattr = (unsigned)((G.crec.external_file_attributes >> 16) & 0xFFFF);
+    xattr = (unsigned)((UnzipClass.FCurrDirEntry.external_file_attributes >> 16) & 0xFFFF);
     if (hostnum == VMS_) {
         char   *p=attribs, *q=attribs+1;
         int    i, j, k;
@@ -1135,11 +1135,11 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
         Info(0, UnixFileAttributes, xattr, attribs);
 
     } else {
-        Info(0, NonMSDOSFileAttributes, G.crec.external_file_attributes >> 8);
+        Info(0, NonMSDOSFileAttributes, UnzipClass.FCurrDirEntry.external_file_attributes >> 8);
 
     } /* endif (hostnum: external attributes format) */
 
-    if ((xattr=(unsigned)(G.crec.external_file_attributes & 0xFF)) == 0)
+    if ((xattr=(unsigned)(UnzipClass.FCurrDirEntry.external_file_attributes & 0xFF)) == 0)
         Info(0, MSDOSFileAttributes, xattr);
     else if (xattr == 1)
         Info(0, MSDOSFileAttributesRO, xattr);
@@ -1161,11 +1161,11 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
   ---------------------------------------------------------------------------*/
 
 
-    if (!G.crec.file_comment_length)
+    if (!UnzipClass.FCurrDirEntry.file_comment_length)
         Info(0, NoFileComment);
     else {
         Info(0, FileCommBegin);
-        UnzipClass.DisplayHeaderString(G.crec.file_comment_length, TRUE);
+        UnzipClass.DisplayHeaderString(UnzipClass.FCurrDirEntry.file_comment_length, TRUE);
         Info(0, FileCommEnd);
     }
 
@@ -1205,8 +1205,8 @@ static int zi_short()   /* return PK-type error code */
     Print out various interesting things about the compressed file.
   ---------------------------------------------------------------------------*/
 
-    methid = (unsigned)(G.crec.compression_method);
-    methnum = find_compr_idx(G.crec.compression_method);
+    methid = (unsigned)(UnzipClass.FCurrDirEntry.compression_method);
+    methnum = find_compr_idx(UnzipClass.FCurrDirEntry.compression_method);
     hostnum = (unsigned)(G.pInfo->hostnum);
     hostver = (unsigned)(G.pInfo->hostver);
 /*
@@ -1216,20 +1216,20 @@ static int zi_short()   /* return PK-type error code */
 
     strcpy(methbuf, method[methnum]);
     if (methid == IMPLODED) {
-        methbuf[1] = (char)((G.crec.general_purpose_bit_flag & 2)? '8' : '4');
-        methbuf[3] = (char)((G.crec.general_purpose_bit_flag & 4)? '3' : '2');
+        methbuf[1] = (char)((UnzipClass.FCurrDirEntry.general_purpose_bit_flag & 2)? '8' : '4');
+        methbuf[3] = (char)((UnzipClass.FCurrDirEntry.general_purpose_bit_flag & 4)? '3' : '2');
     } else if (methid == DEFLATED || methid == ENHDEFLATED) {
-        unsigned short  dnum=(unsigned short)((G.crec.general_purpose_bit_flag>>1) & 3);
+        unsigned short  dnum=(unsigned short)((UnzipClass.FCurrDirEntry.general_purpose_bit_flag>>1) & 3);
         methbuf[3] = dtype[dnum];
     } else if (methnum >= NUM_METHODS) {   /* unknown */
-        sprintf(&methbuf[1], "%03u", G.crec.compression_method);
+        sprintf(&methbuf[1], "%03u", UnzipClass.FCurrDirEntry.compression_method);
     }
 
     for (k = 0;  k < 15;  ++k)
         attribs[k] = ' ';
     attribs[15] = 0;
 
-    xattr = (unsigned)((G.crec.external_file_attributes >> 16) & 0xFFFF);
+    xattr = (unsigned)((UnzipClass.FCurrDirEntry.external_file_attributes >> 16) & 0xFFFF);
     switch (hostnum) {
         case VMS_:
             {   int    i, j;
@@ -1326,11 +1326,11 @@ static int zi_short()   /* return PK-type error code */
             if (hostnum != FS_FAT_ ||
                 (unsigned)(xattr & 0700) !=
                  ((unsigned)0400 |
-                  ((unsigned)!(G.crec.external_file_attributes & 1) << 7) |
-                  ((unsigned)(G.crec.external_file_attributes & 0x10) << 2))
+                  ((unsigned)!(UnzipClass.FCurrDirEntry.external_file_attributes & 1) << 7) |
+                  ((unsigned)(UnzipClass.FCurrDirEntry.external_file_attributes & 0x10) << 2))
                )
             {
-                xattr = (unsigned)(G.crec.external_file_attributes & 0xFF);
+                xattr = (unsigned)(UnzipClass.FCurrDirEntry.external_file_attributes & 0xFF);
                 sprintf(attribs, ".r.-...     %u.%u", hostver/10, hostver%10);
                 attribs[2] = (xattr & 0x01)? '-' : 'w';
                 attribs[5] = (xattr & 0x02)? 'h' : '-';
@@ -1394,29 +1394,29 @@ static int zi_short()   /* return PK-type error code */
 
     Info(0, "%s %s %s ", attribs,
       os[hostnum],
-      fzofft(G.crec.ucsize, "8", "u"));
+      fzofft(UnzipClass.FCurrDirEntry.ucsize, "8", "u"));
     Info(0, "%c",
-      (G.crec.general_purpose_bit_flag & 1)?
-      ((G.crec.internal_file_attributes & 1)? 'T' : 'B') :  /* encrypted */
-      ((G.crec.internal_file_attributes & 1)? 't' : 'b')); /* plaintext */
-    k = (G.crec.extra_field_length ||
+      (UnzipClass.FCurrDirEntry.general_purpose_bit_flag & 1)?
+      ((UnzipClass.FCurrDirEntry.internal_file_attributes & 1)? 'T' : 'B') :  /* encrypted */
+      ((UnzipClass.FCurrDirEntry.internal_file_attributes & 1)? 't' : 'b')); /* plaintext */
+    k = (UnzipClass.FCurrDirEntry.extra_field_length ||
          /* a local-only "UX" (old Unix/OS2/NT GMT times "IZUNIX") e.f.? */
-         ((G.crec.external_file_attributes & 0x8000) &&
+         ((UnzipClass.FCurrDirEntry.external_file_attributes & 0x8000) &&
           (hostnum == UNIX_ || hostnum == FS_HPFS_ || hostnum == FS_NTFS_)));
     Info(0, "%c", k?
-      ((G.crec.general_purpose_bit_flag & 8)? 'X' : 'x') :  /* extra field */
-      ((G.crec.general_purpose_bit_flag & 8)? 'l' : '-')); /* no extra field */
+      ((UnzipClass.FCurrDirEntry.general_purpose_bit_flag & 8)? 'X' : 'x') :  /* extra field */
+      ((UnzipClass.FCurrDirEntry.general_purpose_bit_flag & 8)? 'l' : '-')); /* no extra field */
       /* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ extended local header or not */
 
     if (uO.lflag == 4) {
-        zusz_t csiz = G.crec.csize;
+        zusz_t csiz = UnzipClass.FCurrDirEntry.csize;
 
-        if (G.crec.general_purpose_bit_flag & 1)
+        if (UnzipClass.FCurrDirEntry.general_purpose_bit_flag & 1)
             csiz -= 12;    /* if encrypted, don't count encryption header */
-        Info(0, "%3d%%", (ratio(G.crec.ucsize,csiz)+5)/10);
+        Info(0, "%3d%%", (ratio(UnzipClass.FCurrDirEntry.ucsize,csiz)+5)/10);
     } else if (uO.lflag == 5)
         Info(0, " %s",
-          fzofft(G.crec.csize, "8", "u"));
+          fzofft(UnzipClass.FCurrDirEntry.csize, "8", "u"));
 
     /* For printing of date & time, a "char d_t_buf[16]" is required.
      * To save stack space, we reuse the "char attribs[16]" buffer whose
@@ -1425,7 +1425,7 @@ static int zi_short()   /* return PK-type error code */
 #   define d_t_buf attribs
 #   define z_modtim NULL
     Info(0, " %s %s ", methbuf,
-      zi_time(&G.crec.last_mod_dos_datetime, z_modtim, d_t_buf));
+      zi_time(&UnzipClass.FCurrDirEntry.last_mod_dos_datetime, z_modtim, d_t_buf));
     fnprint();
 
 /*---------------------------------------------------------------------------
@@ -1433,7 +1433,7 @@ static int zi_short()   /* return PK-type error code */
     above).  That finishes up this file entry...
   ---------------------------------------------------------------------------*/
 
-    UnzipClass.SkipHeaderString(G.crec.file_comment_length);
+    UnzipClass.SkipHeaderString(UnzipClass.FCurrDirEntry.file_comment_length);
 
     return error_in_archive;
 

@@ -197,8 +197,8 @@ char *do_wild(const char *wildspec)
 int mapattr()
 {
     /* set archive bit for file entries (file is not backed up): */
-    G.pInfo->file_attr = ((unsigned)G.crec.external_file_attributes |
-      (G.crec.external_file_attributes & FILE_ATTRIBUTE_DIRECTORY ?
+    G.pInfo->file_attr = ((unsigned)UnzipClass.FCurrDirEntry.external_file_attributes |
+      (UnzipClass.FCurrDirEntry.external_file_attributes & FILE_ATTRIBUTE_DIRECTORY ?
        0 : FILE_ATTRIBUTE_ARCHIVE)) & 0xff;
     return 0;
 

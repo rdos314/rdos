@@ -65,6 +65,26 @@
 #define PPMDED           98
 #define NUM_METHODS      17     /* number of known method IDs */
 
+#define CREC_SIZE    42   /*  directory headers, end-of-central-dir */
+
+#define C_VERSION_MADE_BY_0               0
+#define C_VERSION_MADE_BY_1               1
+#define C_VERSION_NEEDED_TO_EXTRACT_0     2
+#define C_VERSION_NEEDED_TO_EXTRACT_1     3
+#define C_GENERAL_PURPOSE_BIT_FLAG        4
+#define C_COMPRESSION_METHOD              6
+#define C_LAST_MOD_DOS_DATETIME           8
+#define C_CRC32                           12
+#define C_COMPRESSED_SIZE                 16
+#define C_UNCOMPRESSED_SIZE               20
+#define C_FILENAME_LENGTH                 24
+#define C_EXTRA_FIELD_LENGTH              26
+#define C_FILE_COMMENT_LENGTH             28
+#define C_DISK_NUMBER_START               30
+#define C_INTERNAL_FILE_ATTRIBUTES        32
+#define C_EXTERNAL_FILE_ATTRIBUTES        34
+#define C_RELATIVE_OFFSET_LOCAL_HEADER    38
+
 #define LREC_SIZE    26   /* lengths of local file headers, central */
 
 #define L_VERSION_NEEDED_TO_EXTRACT_0     0
@@ -1010,6 +1030,56 @@ int TUnzip::Seek(long abs_offset)
     }
     return(PK_OK);
 } /* end function seek_zipf() */
+
+
+/*##########################################################################
+#
+#   Name       : TUnzip::GetDirEntry
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::GetDirEntry()    /* return PK-type error code */
+{
+    unsigned char byterec[ CREC_SIZE ];
+
+
+/*---------------------------------------------------------------------------
+    Read the next central directory entry and do any necessary machine-type
+    conversions (byte ordering, structure padding compensation--do so by
+    copying the data from the array into which it was read (byterec) to the
+    usable struct (crec)).
+  ---------------------------------------------------------------------------*/
+
+    if (ReadBuf((char *)byterec, CREC_SIZE) == 0)
+        return PK_EOF;
+
+    FCurrDirEntry.version_made_by[0] = byterec[C_VERSION_MADE_BY_0];
+    FCurrDirEntry.version_made_by[1] = byterec[C_VERSION_MADE_BY_1];
+    FCurrDirEntry.version_needed_to_extract[0] = byterec[C_VERSION_NEEDED_TO_EXTRACT_0];
+    FCurrDirEntry.version_needed_to_extract[1] = byterec[C_VERSION_NEEDED_TO_EXTRACT_1];
+
+    FCurrDirEntry.general_purpose_bit_flag = makeword(&byterec[C_GENERAL_PURPOSE_BIT_FLAG]);
+    FCurrDirEntry.compression_method = makeword(&byterec[C_COMPRESSION_METHOD]);
+    FCurrDirEntry.last_mod_dos_datetime = makelong(&byterec[C_LAST_MOD_DOS_DATETIME]);
+    FCurrDirEntry.crc32 = makelong(&byterec[C_CRC32]);
+    FCurrDirEntry.csize = makelong(&byterec[C_COMPRESSED_SIZE]);
+    FCurrDirEntry.ucsize = makelong(&byterec[C_UNCOMPRESSED_SIZE]);
+    FCurrDirEntry.filename_length = makeword(&byterec[C_FILENAME_LENGTH]);
+    FCurrDirEntry.extra_field_length = makeword(&byterec[C_EXTRA_FIELD_LENGTH]);
+    FCurrDirEntry.file_comment_length = makeword(&byterec[C_FILE_COMMENT_LENGTH]);
+    FCurrDirEntry.disk_number_start = makeword(&byterec[C_DISK_NUMBER_START]);
+    FCurrDirEntry.internal_file_attributes = makeword(&byterec[C_INTERNAL_FILE_ATTRIBUTES]);
+    FCurrDirEntry.external_file_attributes = makelong(&byterec[C_EXTERNAL_FILE_ATTRIBUTES]);  /* LONG, not word! */
+    FCurrDirEntry.relative_offset_local_header = makelong(&byterec[C_RELATIVE_OFFSET_LOCAL_HEADER]);
+
+    return PK_COOL;
+
+} /* end function get_cdir_ent() */
 
 
 /*##########################################################################

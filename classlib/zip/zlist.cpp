@@ -151,14 +151,14 @@ int list_files()    /* return PK-type error code */
          * note of it if it is.
          */
 
-        error = UnzipClass.GetFileName(G.crec.filename_length);
+        error = UnzipClass.GetFileName(UnzipClass.FCurrDirEntry.filename_length);
         if (error != PK_COOL)   /*  ^--(uses pInfo->lcflag) */
         {
             error_in_archive = error;
             if (error > PK_WARN)   /* fatal:  can't continue */
                 return error;
         }
-        UnzipClass.SkipHeaderString(G.crec.extra_field_length);
+        UnzipClass.SkipHeaderString(UnzipClass.FCurrDirEntry.extra_field_length);
         if (!G.process_all_files) {   /* check if specified on command line */
             unsigned i;
 
@@ -189,12 +189,12 @@ int list_files()    /* return PK-type error code */
         if (G.process_all_files || do_this_file) {
 
             {
-                yr = ((((unsigned)(G.crec.last_mod_dos_datetime >> 25) & 0x7f)
+                yr = ((((unsigned)(UnzipClass.FCurrDirEntry.last_mod_dos_datetime >> 25) & 0x7f)
                        + 1980));
-                mo = ((unsigned)(G.crec.last_mod_dos_datetime >> 21) & 0x0f);
-                dy = ((unsigned)(G.crec.last_mod_dos_datetime >> 16) & 0x1f);
-                hh = (((unsigned)G.crec.last_mod_dos_datetime >> 11) & 0x1f);
-                mm = (((unsigned)G.crec.last_mod_dos_datetime >> 5) & 0x3f);
+                mo = ((unsigned)(UnzipClass.FCurrDirEntry.last_mod_dos_datetime >> 21) & 0x0f);
+                dy = ((unsigned)(UnzipClass.FCurrDirEntry.last_mod_dos_datetime >> 16) & 0x1f);
+                hh = (((unsigned)UnzipClass.FCurrDirEntry.last_mod_dos_datetime >> 11) & 0x1f);
+                mm = (((unsigned)UnzipClass.FCurrDirEntry.last_mod_dos_datetime >> 5) & 0x3f);
             }
             /* permute date so it displays according to nat'l convention
              * ('methnum' is not yet set, it is used as temporary buffer) */
@@ -208,10 +208,10 @@ int list_files()    /* return PK-type error code */
                     mo = dy; dy = methnum;
             }
 
-            csiz = G.crec.csize;
-            if (G.crec.general_purpose_bit_flag & 1)
+            csiz = UnzipClass.FCurrDirEntry.csize;
+            if (UnzipClass.FCurrDirEntry.general_purpose_bit_flag & 1)
                 csiz -= 12;   /* if encrypted, don't count encryption header */
-            if ((cfactor = ratio(G.crec.ucsize, csiz)) < 0) {
+            if ((cfactor = ratio(UnzipClass.FCurrDirEntry.ucsize, csiz)) < 0) {
                 sgn = '-';
                 cfactor = (-cfactor + 5) / 10;
             } else {
@@ -219,13 +219,13 @@ int list_files()    /* return PK-type error code */
                 cfactor = (cfactor + 5) / 10;
             }
 
-            methnum = find_compr_idx(G.crec.compression_method);
+            methnum = find_compr_idx(UnzipClass.FCurrDirEntry.compression_method);
             strcpy(methbuf, method[methnum]);
-            if (G.crec.compression_method == DEFLATED ||
-                G.crec.compression_method == ENHDEFLATED) {
-                methbuf[5] = dtype[(G.crec.general_purpose_bit_flag>>1) & 3];
+            if (UnzipClass.FCurrDirEntry.compression_method == DEFLATED ||
+                UnzipClass.FCurrDirEntry.compression_method == ENHDEFLATED) {
+                methbuf[5] = dtype[(UnzipClass.FCurrDirEntry.general_purpose_bit_flag>>1) & 3];
             } else if (methnum >= NUM_METHODS) {
-                sprintf(&methbuf[4], "%03u", G.crec.compression_method);
+                sprintf(&methbuf[4], "%03u", UnzipClass.FCurrDirEntry.compression_method);
             }
 
             if (cfactor == 100)
@@ -234,27 +234,27 @@ int list_files()    /* return PK-type error code */
                 sprintf(cfactorstr, CompFactorStr, sgn, cfactor);
             if (longhdr)
                 Info(0, LongHdrStats,
-                  fzofft(G.crec.ucsize, "8", "u"), methbuf,
+                  fzofft(UnzipClass.FCurrDirEntry.ucsize, "8", "u"), methbuf,
                   fzofft(csiz, "8", "u"), cfactorstr,
                   mo, dt_sepchar, dy, dt_sepchar, yr, hh, mm,
-                  G.crec.crc32, (G.pInfo->lcflag? '^':' '));
+                  UnzipClass.FCurrDirEntry.crc32, (G.pInfo->lcflag? '^':' '));
             else
                 Info(0, ShortHdrStats,
-                  fzofft(G.crec.ucsize, "9", "u"),
+                  fzofft(UnzipClass.FCurrDirEntry.ucsize, "9", "u"),
                   mo, dt_sepchar, dy, dt_sepchar, yr, hh, mm,
                   (G.pInfo->lcflag? '^':' '));
             fnprint();
 
             if (uO.qflag)
-                UnzipClass.SkipHeaderString(G.crec.file_comment_length);
+                UnzipClass.SkipHeaderString(UnzipClass.FCurrDirEntry.file_comment_length);
             else
-                UnzipClass.DisplayHeaderString(G.crec.file_comment_length, TRUE);
+                UnzipClass.DisplayHeaderString(UnzipClass.FCurrDirEntry.file_comment_length, TRUE);
 
-            tot_ucsize += G.crec.ucsize;
+            tot_ucsize += UnzipClass.FCurrDirEntry.ucsize;
             tot_csize += csiz;
             ++members;
         } else {        /* not listing this file */
-            UnzipClass.SkipHeaderString(G.crec.file_comment_length);
+            UnzipClass.SkipHeaderString(UnzipClass.FCurrDirEntry.file_comment_length);
         }
     } /* end for-loop (j: files in central directory) */
 

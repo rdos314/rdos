@@ -373,7 +373,7 @@ int extract_or_test_files()    /* return PK-type error code */
                 reached_end = TRUE;     /* ...so no more left to do */
                 break;
             }
-            error = UnzipClass.GetFileName(G.crec.filename_length);
+            error = UnzipClass.GetFileName(UnzipClass.FCurrDirEntry.filename_length);
             if (error != PK_COOL)
             {
                 if (error > error_in_archive)
@@ -386,8 +386,8 @@ int extract_or_test_files()    /* return PK-type error code */
                     break;
                 }
             }
-            UnzipClass.SkipHeaderString(G.crec.extra_field_length);
-            UnzipClass.SkipHeaderString(G.crec.file_comment_length);
+            UnzipClass.SkipHeaderString(UnzipClass.FCurrDirEntry.extra_field_length);
+            UnzipClass.SkipHeaderString(UnzipClass.FCurrDirEntry.file_comment_length);
             if (G.process_all_files) {
                 if (store_info())
                     ++j;  /* file is OK; info[] stored; continue with next */
@@ -617,29 +617,29 @@ static int store_info()   /* return 0 if skipping, 1 if OK */
 #  define UNKN_BZ2 TRUE       /* bzip2 unknown */
 
 #ifdef USE_LZMA
-#  define UNKN_LZMA (G.crec.compression_method!=LZMAED)
+#  define UNKN_LZMA (UnzipClass.FCurrDirEntry.compression_method!=LZMAED)
 #else
 #  define UNKN_LZMA TRUE      /* LZMA unknown */
 #endif
 
 #ifdef USE_WAVP
-#  define UNKN_WAVP (G.crec.compression_method!=WAVPACKED)
+#  define UNKN_WAVP (UnzipClass.FCurrDirEntry.compression_method!=WAVPACKED)
 #else
 #  define UNKN_WAVP TRUE      /* WavPack unknown */
 #endif
 
 #ifdef USE_PPMD
-#  define UNKN_PPMD (G.crec.compression_method!=PPMDED)
+#  define UNKN_PPMD (UnzipClass.FCurrDirEntry.compression_method!=PPMDED)
 #else
 #  define UNKN_PPMD TRUE      /* PPMd unknown */
 #endif
 
-#    define UNKN_RED (G.crec.compression_method >= REDUCED1 && \
-                      G.crec.compression_method <= REDUCED4)
+#    define UNKN_RED (UnzipClass.FCurrDirEntry.compression_method >= REDUCED1 && \
+                      UnzipClass.FCurrDirEntry.compression_method <= REDUCED4)
 #    define UNKN_SHR  FALSE  /* unshrinking not unknown */
 #    define UNKN_COMPR (UNKN_RED || UNKN_SHR || \
-     G.crec.compression_method==TOKENIZED || \
-     (G.crec.compression_method>DEFLATED && UNKN_BZ2 && UNKN_LZMA \
+     UnzipClass.FCurrDirEntry.compression_method==TOKENIZED || \
+     (UnzipClass.FCurrDirEntry.compression_method>DEFLATED && UNKN_BZ2 && UNKN_LZMA \
       && UNKN_WAVP && UNKN_PPMD))
 
 #   define UNZVERS_SUPPORT  UNZIP_VERSION
@@ -648,12 +648,12 @@ static int store_info()   /* return 0 if skipping, 1 if OK */
     Check central directory info for version/compatibility requirements.
   ---------------------------------------------------------------------------*/
 
-    UnzipClass.FEncrypted = G.crec.general_purpose_bit_flag & 1;   /* bit field */
-    G.pInfo->ExtLocHdr = (G.crec.general_purpose_bit_flag & 8) == 8;  /* bit */
-    G.pInfo->textfile = G.crec.internal_file_attributes & 1;    /* bit field */
-    G.pInfo->crc = G.crec.crc32;
-    G.pInfo->compr_size = G.crec.csize;
-    G.pInfo->uncompr_size = G.crec.ucsize;
+    UnzipClass.FEncrypted = UnzipClass.FCurrDirEntry.general_purpose_bit_flag & 1;   /* bit field */
+    G.pInfo->ExtLocHdr = (UnzipClass.FCurrDirEntry.general_purpose_bit_flag & 8) == 8;  /* bit */
+    G.pInfo->textfile = UnzipClass.FCurrDirEntry.internal_file_attributes & 1;    /* bit field */
+    G.pInfo->crc = UnzipClass.FCurrDirEntry.crc32;
+    G.pInfo->compr_size = UnzipClass.FCurrDirEntry.csize;
+    G.pInfo->uncompr_size = UnzipClass.FCurrDirEntry.ucsize;
 
     switch (uO.aflag) {
         case 0:
@@ -667,13 +667,13 @@ static int store_info()   /* return 0 if skipping, 1 if OK */
             break;
     }
 
-    if (G.crec.version_needed_to_extract[1] == VMS_) {
-        if (G.crec.version_needed_to_extract[0] > VMS_UNZIP_VERSION) {
+    if (UnzipClass.FCurrDirEntry.version_needed_to_extract[1] == VMS_) {
+        if (UnzipClass.FCurrDirEntry.version_needed_to_extract[0] > VMS_UNZIP_VERSION) {
             if (!((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag)))
                 Info(0x401, VersionMsg,
                   FnFilter1(UnzipClass.FCurrFileName), "VMS",
-                  G.crec.version_needed_to_extract[0] / 10,
-                  G.crec.version_needed_to_extract[0] % 10,
+                  UnzipClass.FCurrDirEntry.version_needed_to_extract[0] / 10,
+                  UnzipClass.FCurrDirEntry.version_needed_to_extract[0] % 10,
                   VMS_UNZIP_VERSION / 10, VMS_UNZIP_VERSION % 10);
             return 0;
         }
@@ -684,12 +684,12 @@ static int store_info()   /* return 0 if skipping, 1 if OK */
                 return 0;
         }
     /* usual file type:  don't need VMS to extract */
-    } else if (G.crec.version_needed_to_extract[0] > UNZVERS_SUPPORT) {
+    } else if (UnzipClass.FCurrDirEntry.version_needed_to_extract[0] > UNZVERS_SUPPORT) {
         if (!((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag)))
             Info(0x401, VersionMsg,
               FnFilter1(UnzipClass.FCurrFileName), "PK",
-              G.crec.version_needed_to_extract[0] / 10,
-              G.crec.version_needed_to_extract[0] % 10,
+              UnzipClass.FCurrDirEntry.version_needed_to_extract[0] / 10,
+              UnzipClass.FCurrDirEntry.version_needed_to_extract[0] % 10,
               UNZVERS_SUPPORT / 10, UNZVERS_SUPPORT % 10);
         return 0;
     }
@@ -698,7 +698,7 @@ static int store_info()   /* return 0 if skipping, 1 if OK */
         if (!((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag))) {
             unsigned cmpridx;
 
-            if ((cmpridx = find_compr_idx(G.crec.compression_method))
+            if ((cmpridx = find_compr_idx(UnzipClass.FCurrDirEntry.compression_method))
                 < NUM_METHODS)
                 Info(0x401, ComprMsgName,
                   FnFilter1(UnzipClass.FCurrFileName),
@@ -706,7 +706,7 @@ static int store_info()   /* return 0 if skipping, 1 if OK */
             else
                 Info(0x401, ComprMsgNum,
                   FnFilter1(UnzipClass.FCurrFileName),
-                  G.crec.compression_method);
+                  UnzipClass.FCurrDirEntry.compression_method);
         }
         return 0;
     }
@@ -720,8 +720,8 @@ static int store_info()   /* return 0 if skipping, 1 if OK */
     /* map whatever file attributes we have into the local format */
     mapattr();   /* GRR:  worry about return value later */
 
-    G.pInfo->diskstart = G.crec.disk_number_start;
-    G.pInfo->offset = (long)G.crec.relative_offset_local_header;
+    G.pInfo->diskstart = UnzipClass.FCurrDirEntry.disk_number_start;
+    G.pInfo->offset = (long)UnzipClass.FCurrDirEntry.relative_offset_local_header;
     return 1;
 
 } /* end function store_info() */

@@ -184,7 +184,6 @@ typedef struct Globals {
     long      ziplen;
     unsigned char       *hold;
 
-    cdir_file_hdr   crec;          /* used in unzip.c, extract.c, misc.c */
     ecdir_rec       ecrec;         /* used in unzip.c, extract.c */
     struct stat   statbuf;              /* used by main, mapname, check_for_newer */
 
