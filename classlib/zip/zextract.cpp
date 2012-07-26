@@ -1124,7 +1124,9 @@ reprompt:
         } /* end if (extracting to disk) */
 
         UnzipClass.FDiskFull = 0;
-        if ((error = extract_or_test_member()) != PK_COOL) {
+
+        error = UnzipClass.Extract();
+        if (error != PK_COOL) {
             if (error > error_in_archive)
                 error_in_archive = error;       /* ...and keep going */
             if (UnzipClass.FDiskFull > 1) {
@@ -1136,26 +1138,6 @@ reprompt:
     return error_in_archive;
 
 } /* end function extract_or_test_entrylist() */
-
-
-
-
-
-/***************************************/
-/*  Function extract_or_test_member()  */
-/***************************************/
-
-static int extract_or_test_member()    /* return PK-type error code */
-{
-    char *nul="[empty] ", *txt="[text]  ", *bin="[binary]";
-    register int b;
-    int r, error=PK_COOL;
-
-    return UnzipClass.Extract();
-
-} /* end function extract_or_test_member() */
-
-
 
 
 
