@@ -979,7 +979,6 @@ char  *fnfilter                  OF((const char *raw, unsigned char *space,
   ---------------------------------------------------------------------------*/
 
    int    UZinflate              OF((int is_defl64));  /* inflate.c */
-#  define inflate_free(x)        inflateEnd(&((Uz_Globs *)(&G))->dstrm)
 /* static void  partial_clear    OF(());                  * unshrink.c */
 
 /*---------------------------------------------------------------------------

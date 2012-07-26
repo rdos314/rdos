@@ -341,7 +341,6 @@ void free_G_buffers()     /* releases all memory allocated in global vars */
 {
     unsigned i;
 
-    inflate_free(__G);
     checkdir((char *)NULL, END);
 
    if (G.key != (char *)NULL) {

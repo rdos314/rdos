@@ -348,25 +348,10 @@ int UZinflate(int is_defl64)
     int retval = 0;     /* return code: 0 = "no error" */
     int err=Z_OK;
 
-    if (!G.inflInit) {
-        /* local buffer for efficiency */
-        const char *zlib_RtVersion = zlibVersion();
+    z_stream dstrm;           /* inflate decompression stream */
 
-        /* only need to test this stuff once */
-        if ((zlib_RtVersion[0] != ZLIB_VERSION[0]) ||
-            (zlib_RtVersion[2] != ZLIB_VERSION[2])) {
-            Info(0x21, "error:  incompatible zlib version (expected %s, found %s)\n",
-              ZLIB_VERSION, zlib_RtVersion);
-            return 3;
-        } else if (strcmp(zlib_RtVersion, ZLIB_VERSION) != 0)
-            Info(0x21, "warning:  different zlib version (expected %s, using %s)\n",
-              ZLIB_VERSION, zlib_RtVersion);
-
-        G.dstrm.zalloc = (alloc_func)Z_NULL;
-        G.dstrm.zfree = (free_func)Z_NULL;
-
-        G.inflInit = 1;
-    }
+    dstrm.zalloc = (alloc_func)Z_NULL;
+    dstrm.zfree = (free_func)Z_NULL;
 
     {
         /* For the callback interface, inflate initialization has to
@@ -384,7 +369,7 @@ int UZinflate(int is_defl64)
                 windowBits = 8;
 
             Trace("initializing inflate()\n");
-            err = inflateBackInit(&G.dstrm, windowBits, redirSlide);
+            err = inflateBackInit(&dstrm, windowBits, redirSlide);
 
             if (err == Z_MEM_ERROR)
                 return 3;
@@ -394,10 +379,10 @@ int UZinflate(int is_defl64)
             }
         }
 
-        G.dstrm.next_in = (unsigned char *)UnzipClass.FInPtr;
-        G.dstrm.avail_in = UnzipClass.FInCount;
+        dstrm.next_in = (unsigned char *)UnzipClass.FInPtr;
+        dstrm.avail_in = UnzipClass.FInCount;
 
-        err = inflateBack(&G.dstrm, zlib_inCB, &G, zlib_outCB, &G);
+        err = inflateBack(&dstrm, zlib_inCB, &G, zlib_outCB, &G);
         if (err != Z_STREAM_END) {
             if (err == Z_DATA_ERROR || err == Z_STREAM_ERROR) {
                 Trace("oops!  (inflateBack() err = %d)\n", err);
@@ -406,7 +391,7 @@ int UZinflate(int is_defl64)
                 retval = 3;
             } else if (err == Z_BUF_ERROR) {
                 Trace("oops!  (inflateBack() err = %d)\n", err);
-                if (G.dstrm.next_in == Z_NULL) {
+                if (dstrm.next_in == Z_NULL) {
                     /* input failure */
                     Trace("  inflateBack() input failure\n");
                     retval = 2;
@@ -419,18 +404,20 @@ int UZinflate(int is_defl64)
                 retval = 2;
             }
         }
-        if (G.dstrm.next_in != NULL) {
-            UnzipClass.FInPtr = (char *)G.dstrm.next_in;
-            UnzipClass.FInCount = G.dstrm.avail_in;
+        if (dstrm.next_in != NULL) {
+            UnzipClass.FInPtr = (char *)dstrm.next_in;
+            UnzipClass.FInCount = dstrm.avail_in;
         }
 
-        err = inflateBackEnd(&G.dstrm);
+        err = inflateBackEnd(&dstrm);
         if (err != Z_OK) {
             Trace("oops!  (inflateBackEnd() err = %d)\n", err);
             if (retval == 0)
                 retval = 2;
         }
     }
+
+    inflateEnd(&dstrm);
 
     return retval;
 }

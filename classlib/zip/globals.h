@@ -211,9 +211,6 @@ typedef struct Globals {
 
     unsigned hufts;    /* track memory usage */
 
-    int inflInit;             /* inflate static: zlib inflate() initialized */
-    z_stream dstrm;           /* inflate global: decompression stream */
-
     /* cylindric buffer space for formatting zoff_t values (fileio static) */
     char fzofft_buf[FZOFFT_NUM][FZOFFT_LEN];
     int fzofft_index;
