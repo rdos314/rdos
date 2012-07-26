@@ -25,6 +25,7 @@ void main()
 //    CreateSection();
 
     sec_handle = RdosNewCreateSection();
+    sec_handle = RdosNewCreateSection();
     RdosNewEnterSection(sec_handle);
     RdosNewLeaveSection(sec_handle);
     RdosNewDeleteSection(sec_handle);

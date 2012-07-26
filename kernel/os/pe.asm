@@ -48,6 +48,8 @@ ELSE
     .386p
 ENDIF
 
+MAX_SECTIONS EQU 1024
+
 user_sect_struc STRUC
 
 uss_handle       DD ?
@@ -318,20 +320,47 @@ section_start:
 
 create_us_section   Proc near
     push eax
+    push ecx
     push edx
+    push edi
+    
+p1:
+    mov edx,12345678h
+    mov edi,edx
+    mov ecx,MAX_SECTIONS
+    xor eax,eax
+    repnz scasd
+;
+    stc
+    jnz csDone
+;
+    mov ebx,MAX_SECTIONS
+    sub ebx,ecx
+    push ebx
+;
+    dec ebx
+    sub edi,4
+    mov eax,12
+    mul ebx
+    add eax,4 * MAX_SECTIONS
+    mov edx,eax
+
+p2:    
+    add edx,12345678h    
+    mov [edi],edx
 ;    
-    mov eax,SIZE user_sect_struc
-    UserGateApp allocate_app_mem_nr
-;    
-    lea ebx,[edx].uss_val
-    UserGateApp create_futex_nr
-    mov [edx].uss_handle,ebx
+    mov [edx].uss_handle,0
     mov [edx].uss_val,-1
     mov [edx].uss_counter,0
     mov [edx].uss_owner,0
-    mov ebx,edx
 ;
+    pop ebx
+    clc
+
+csDone:
+    pop edi
     pop edx
+    pop ecx
     pop eax    
     ret
 create_us_section   Endp
@@ -351,7 +380,23 @@ free_us_section   Endp
 
 enter_us_section    Proc near
     push eax
+    push ebx
 ;    
+    or ebx,ebx
+    jz eusDone
+;
+    dec ebx
+    cmp ebx,MAX_SECTIONS
+    jae eusDone
+;
+    shl ebx,2
+    
+p3:
+    add ebx,12345678h
+    mov ebx,[ebx]
+    or ebx,ebx
+    jz eusDone
+;            
     str ax
     cmp ax,[ebx].uss_owner
     jne eusLock
@@ -379,24 +424,42 @@ eusTake:
     str ax
     mov [ebx].uss_owner,ax
     mov [ebx].uss_counter,1
-;
+
+eusDone:
+    pop ebx
     pop eax    
     ret
 enter_us_section   Endp
 
 leave_us_section    Proc near
     push eax
+    push ebx
+;    
+    or ebx,ebx
+    jz lusDone
+;
+    dec ebx
+    cmp ebx,MAX_SECTIONS
+    jae lusDone
+;
+    shl ebx,2
+    
+p4:
+    add ebx,12345678h
+    mov ebx,[ebx]
+    or ebx,ebx
+    jz lusDone
 ;
     str ax
     cmp ax,[ebx].uss_owner
-    jne uusDone
+    jne lusDone
 ;
     sub [ebx].uss_counter,1
-    jnz uusDone
+    jnz lusDone
 ;
     mov [ebx].uss_owner,0
     lock sub [ebx].uss_val,1
-    jc uusDone
+    jc lusDone
 ;
     mov [ebx].uss_val,-1
     push ebx
@@ -404,7 +467,8 @@ leave_us_section    Proc near
     UserGateApp release_futex_nr
     pop ebx        
 
-uusDone:
+lusDone:
+    pop ebx
     pop eax
     ret
 leave_us_section    Endp
@@ -451,6 +515,31 @@ CreateSections  Proc near
     add edi,OFFSET leave_us_section
     mov fs:app_leave_section_proc,edi
     mov fs:app_leave_section_proc+4,es
+;
+    mov esi,edx
+    mov eax,MAX_SECTIONS * 16  ; 4 bytes for index + 12 bytes for data
+    AllocateAppMem
+    mov edi,edx
+;
+    mov ecx,MAX_SECTIONS  ; only initialize indexes
+    xor eax,eax
+    rep stosd
+;
+    mov edi,esi
+    add edi,OFFSET p1 + 1
+    mov es:[edi],edx
+;
+    mov edi,esi
+    add edi,OFFSET p2 + 2
+    mov es:[edi],edx
+;
+    mov edi,esi
+    add edi,OFFSET p3 + 2
+    mov es:[edi],edx
+;
+    mov edi,esi
+    add edi,OFFSET p4 + 2
+    mov es:[edi],edx
 ;
     pop edi
     pop esi

@@ -457,6 +457,7 @@ HasGlobalTimer       MACRO
 
 ;;;;;;;;; CRITICAL SECTIONS ;;;;;;;;;;;;
 
+; 
 ; OUT BX		Futex handle
 CreateFutex	MACRO
 	UserGate create_futex_nr

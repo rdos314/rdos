@@ -68,6 +68,15 @@ us_lock     DW ?
 
 section_handle_seg          ENDS
 
+futex_handle_seg          STRUC
+
+fh_base     handle_header <>
+
+fh_ads      DD ?,?
+fh_list     DW ?
+
+futex_handle_seg          ENDS
+
 tlb_struc   STRUC
 
 th_next             DD ?
@@ -1069,6 +1078,12 @@ timer_free_list_create:
     mov di,OFFSET leave_user_section_name
     xor dx,dx
     mov ax,leave_user_section_nr
+    RegisterBimodalUserGate
+;
+    mov si,OFFSET create_futex
+    mov di,OFFSET create_futex_name
+    xor dx,dx
+    mov ax,create_futex_nr
     RegisterBimodalUserGate
 ;
     mov si,OFFSET get_debug_thread
@@ -8060,6 +8075,42 @@ lusDs:
     ApiCheckEax
     retf32
 leave_user_section      ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           create_futex
+;
+;           DESCRIPTION:    Create futex
+;
+;           PARAMS:         ES:EBX      address to value
+;
+;           RETURNS:        BX          futex handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_futex_name    DB 'Create Futex',0
+
+create_futex     PROC far
+    push ds
+    push eax
+    push cx
+;
+    mov eax,ebx
+    mov cx,SIZE futex_handle_seg
+    AllocateHandle
+    mov ds:[ebx].fh_ads,eax
+    mov ds:[ebx].fh_ads+4,es
+    mov ds:[ebx].fh_list,0
+    mov [ebx].hh_sign,FUTEX_HANDLE
+    mov bx,[ebx].hh_handle
+    clc
+;
+    pop cx
+    pop eax
+    pop ds
+    retf32
+create_futex     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

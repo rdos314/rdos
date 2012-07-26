@@ -94,6 +94,12 @@ typedef struct Tss
     char WcSpace[16];
 } Tss;
 
+#define uss_handle  0
+#define uss_counter 4
+#define uss_val 8
+#define uss_owner 10
+#define uss_size 12
+
 // Exception handling prototypes 
 
 #define STATUS_BREAKPOINT               0x80000003L
@@ -2029,8 +2035,7 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     parm [ebx];
 
 #pragma aux RdosNewCreateSection = \
-    CallGate_new_create_section  \
-    ValidateHandle  \
+    CallGate_new_create_section \
     value [ebx];
 
 #pragma aux RdosNewDeleteSection = \
