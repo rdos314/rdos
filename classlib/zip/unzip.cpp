@@ -46,6 +46,25 @@
 #define CR     13        /* '\r' on ASCII machines; must be 13 due to EBCDIC */
 #define CTRLZ  26        /* DOS & OS/2 EOF marker (used in fileio.c, vms.c) */
 
+#define STORED            0    /* compression methods */
+#define SHRUNK            1
+#define REDUCED1          2
+#define REDUCED2          3
+#define REDUCED3          4
+#define REDUCED4          5
+#define IMPLODED          6
+#define TOKENIZED         7
+#define DEFLATED          8
+#define ENHDEFLATED       9
+#define DCLIMPLODED      10
+#define BZIPPED          12
+#define LZMAED           14
+#define IBMTERSED        18
+#define IBMLZ77ED        19
+#define WAVPACKED        97
+#define PPMDED           98
+#define NUM_METHODS      17     /* number of known method IDs */
+
 #define INBUFSIZ  8192
 #define TMPOUTSIZ 0x10000
 #define WSIZE   0x8000  /* window size--must be a power of two, and */
@@ -2123,3 +2142,99 @@ int TUnzip::Store()
 
     return error;
 }
+
+/*##########################################################################
+#
+#   Name       : TUnzip::Extract
+#
+#   Purpose....: Extract current file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::Extract()
+{
+    char *extract_msg = "%8sing: %s";
+    int error;
+
+    if (OpenOutputFile())
+        return PK_DISK;
+
+/*---------------------------------------------------------------------------
+    Unpack the file.
+  ---------------------------------------------------------------------------*/
+
+    DeferInput();    /* so NEXTBYTE bounds check will work */
+    switch (FCurrFile.compression_method) {
+        case STORED:
+            Info(0, extract_msg, "extract", FCurrFileName);
+            error = Store();
+            break;
+
+        case SHRUNK:
+            Info(0, extract_msg, "unshrink", FCurrFileName);
+            error = Unshrink();
+            break;
+
+        case IMPLODED:
+            Info(0, extract_msg, "explod", FCurrFileName);
+
+            error = Explode();
+            if (error == 5) { /* treat 5 specially */
+                int warning = FUsedCSize <= FCurrFile.csize;
+                error = warning ? PK_WARN : PK_ERR;
+            }
+            break;
+
+        case DEFLATED:
+            Info(0, extract_msg, "inflat", FCurrFileName);
+            error = Deflate();
+            break;
+
+        default:   /* should never get to this point */
+            Info(0x401, "%s:  unknown compression method\n", FCurrFileName);
+            UndeferInput();
+            return PK_WARN;
+
+    } /* end switch (compression method) */
+
+/*---------------------------------------------------------------------------
+    Close the file and set its date and time (not necessarily in that order),
+    and make sure the CRC checked out OK.  Logical-AND the CRC for 64-bit
+    machines (redundant on 32-bit machines).
+  ---------------------------------------------------------------------------*/
+
+    CloseAndSetTime(FCurrFile.last_mod_dos_datetime);
+
+    if (FDiskFull) {            /* set by flush() */
+        if (FDiskFull > 1) {
+            /* warn user about the incomplete file */
+            Info(0x421, "warning:  %s is probably truncated\n", FCurrFileName);
+            error = PK_DISK;
+        } else {
+            error = PK_WARN;
+        }
+    }
+
+    if (error > PK_WARN) {/* don't print redundant CRC error if error already */
+        UndeferInput();
+        return error;
+    }
+
+    if (FCurrCrcVal != FCurrFile.crc32) {
+        /* if quiet enough, we haven't output the filename yet:  do it */
+        Info(0x401, "%-22s ", FCurrFileName);
+        Info(0x401, " bad CRC %08lx  (should be %08lx)\n", FCurrCrcVal, FCurrFile.crc32);
+        if (FEncrypted)
+            Info(0x401, "   (may instead be incorrect password)\n");
+        error = PK_ERR;
+    } else
+        Info(0, "\n");
+
+    UndeferInput();
+
+    return error;
+}
+

@@ -122,13 +122,10 @@ public:
     void SkipHeaderString(int length);
     int GetFileName(int length);
 
-    int Explode();
-    int Unshrink();
-    int Deflate();
-    int Store();
-
     int BuildHuft(const unsigned *b, unsigned n, unsigned s, const unsigned short *d, const unsigned char *e, TUnzipHuft **t, unsigned *m);
     void FreeHuft(struct TUnzipHuft *t);
+
+    int Extract();
 
     int OpenOutputFile();
     void CloseOutputFile();
@@ -179,6 +176,11 @@ private:
     int ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bl, unsigned bd, unsigned bdl);
 
     void UnshrinkPartialClear(int lastcodeused);
+
+    int Explode();
+    int Unshrink();
+    int Deflate();
+    int Store();
 
     char *FOutBuf;
     char *FOutPtr;
