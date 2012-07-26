@@ -117,9 +117,11 @@ public:
     int Seek(long abs_offset);
 
     int ZDecode(int c);
+
     int Explode();
     int Unshrink();
     int Deflate();
+    int Store();
 
     int BuildHuft(const unsigned *b, unsigned n, unsigned s, const unsigned short *d, const unsigned char *e, TUnzipHuft **t, unsigned *m);
     void FreeHuft(struct TUnzipHuft *t);

@@ -1905,3 +1905,39 @@ int TUnzip::Deflate()
     return retval;
 }
 
+/*##########################################################################
+#
+#   Name       : TUnzip::Store
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::Store()
+{
+    int b;
+    int r, error=PK_COOL;
+    
+    FOutPtr = FOutBuf;
+    FOutCount = 0;
+
+    while ((b = GetNextByte()) != EOF) {
+        *FOutPtr++ = b;
+        if (++FOutCount == WSIZE) {
+            error = Flush(FOutBuf, FOutCount);
+            FOutPtr = FOutBuf;
+            FOutCount = 0;
+            if (error != PK_COOL || FDiskFull) break;
+        }
+    }
+
+    if (FOutCount) {        /* flush final (partial) buffer */
+        r = Flush(FOutBuf, FOutCount);
+        if (error < r) error = r;
+    }
+
+    return error;
+}

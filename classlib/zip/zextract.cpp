@@ -1219,21 +1219,8 @@ static int extract_or_test_member()    /* return PK-type error code */
                   "" : (UnzipClass.FCurrFile.ucsize == 0L? nul : (G.pInfo->textfile? txt :
                   bin)), uO.cflag? NEWLINE : "");
             }
-            G.outptr = redirSlide;
-            G.outcnt = 0L;
-            while ((b = UnzipClass.GetNextByte()) != EOF) {
-                *G.outptr++ = (unsigned char)b;
-                if (++G.outcnt == WSIZE) {
-                    error = UnzipClass.Flush((char *)redirSlide, G.outcnt);
-                    G.outptr = redirSlide;
-                    G.outcnt = 0L;
-                    if (error != PK_COOL || UnzipClass.FDiskFull) break;
-                }
-            }
-            if (G.outcnt) {        /* flush final (partial) buffer */
-                r = UnzipClass.Flush((char *)redirSlide, G.outcnt);
-                if (error < r) error = r;
-            }
+
+            error = UnzipClass.Store();
             break;
 
         case SHRUNK:
