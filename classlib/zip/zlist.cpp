@@ -256,15 +256,15 @@ int list_files()    /* return PK-type error code */
             fnprint();
 
             if (uO.qflag)
-                do_string(G.crec.file_comment_length, SKIP);
+                UnzipClass.SkipHeaderString(G.crec.file_comment_length);
             else
-                UnzipClass.DisplayZipInfo(G.crec.file_comment_length, TRUE);
+                UnzipClass.DisplayHeaderString(G.crec.file_comment_length, TRUE);
 
             tot_ucsize += G.crec.ucsize;
             tot_csize += csiz;
             ++members;
         } else {        /* not listing this file */
-            SKIP_(G.crec.file_comment_length)
+            UnzipClass.SkipHeaderString(G.crec.file_comment_length);
         }
     } /* end for-loop (j: files in central directory) */
 

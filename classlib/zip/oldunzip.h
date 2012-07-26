@@ -479,7 +479,6 @@ typedef size_t extent;
 #define IZ_EF_TRUNC       79   /* local extra field truncated (PKZIP'd) */
 
 /* choice of activities for do_string() */
-#define SKIP              0             /* skip header block */
 #define DS_FN             2             /* read filename (ext. ASCII, chead) */
 #define DS_FN_C           2             /* read filename from central header */
 #define DS_FN_L           6             /* read filename from local header */

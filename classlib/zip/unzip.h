@@ -118,7 +118,8 @@ public:
 
     int ZDecode(int c);
 
-    void DisplayZipInfo(int lenght, int oemconvert);
+    void DisplayHeaderString(int lenght, int oemconvert);
+    void SkipHeaderString(int length);
 
     int Explode();
     int Unshrink();

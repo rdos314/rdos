@@ -399,19 +399,7 @@ int extract_or_test_files()    /* return PK-type error code */
                     break;
                 }
             }
-            if ((error = do_string(G.crec.file_comment_length, SKIP))
-                != PK_COOL)
-            {
-                if (error > error_in_archive)
-                    error_in_archive = error;
-                if (error > PK_WARN) {  /* fatal */
-                    Info(0x421, 
-                      BadFileCommLength,
-                      FnFilter1(UnzipClass.FCurrFileName));
-                    reached_end = TRUE;
-                    break;
-                }
-            }
+            UnzipClass.SkipHeaderString(G.crec.file_comment_length);
             if (G.process_all_files) {
                 if (store_info())
                     ++j;  /* file is OK; info[] stored; continue with next */

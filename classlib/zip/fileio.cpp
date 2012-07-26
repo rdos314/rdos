@@ -393,13 +393,6 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
      * data).
      */
 
-    case SKIP:
-        /* cur_zipfile_bufstart already takes account of extra_bytes, so don't
-         * correct for it twice: */
-        UnzipClass.Seek(UnzipClass.FBufStart - UnzipClass.FExtraBytes +
-                  (UnzipClass.FInPtr-UnzipClass.FInBuf) + length);
-        break;
-
     /*
      * Fourth case:  assume we're at the start of an "extra field"; malloc
      * storage for it and read data into the allocated space.

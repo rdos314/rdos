@@ -768,7 +768,7 @@ int zipinfo()   /* return PK-type error code */
                 case 1:
                 case 2:
                     fnprint();
-                    SKIP_(G.crec.file_comment_length)
+                    UnzipClass.SkipHeaderString(G.crec.file_comment_length);
                     break;
 
                 case 3:
@@ -788,7 +788,7 @@ int zipinfo()   /* return PK-type error code */
                     break;
 
                 default:
-                    SKIP_(G.crec.file_comment_length)
+                    UnzipClass.SkipHeaderString(G.crec.file_comment_length);
                     break;
 
             } /* end switch (lflag) */
@@ -803,8 +803,8 @@ int zipinfo()   /* return PK-type error code */
 
 
         } else {        /* not listing this file */
-            SKIP_(G.crec.extra_field_length)
-            SKIP_(G.crec.file_comment_length)
+            UnzipClass.SkipHeaderString(G.crec.extra_field_length);
+            UnzipClass.SkipHeaderString(G.crec.file_comment_length);
             if (endprev != 0) endprev = 0;
 
         } /* end if (list member?) */
@@ -1630,7 +1630,7 @@ ef_default_display:
         Info(0, NoFileComment);
     else {
         Info(0, FileCommBegin);
-        UnzipClass.DisplayZipInfo(G.crec.file_comment_length, TRUE);
+        UnzipClass.DisplayHeaderString(G.crec.file_comment_length, TRUE);
         Info(0, FileCommEnd);
     }
 
@@ -1898,7 +1898,7 @@ static int zi_short()   /* return PK-type error code */
     above).  That finishes up this file entry...
   ---------------------------------------------------------------------------*/
 
-    SKIP_(G.crec.file_comment_length)
+    UnzipClass.SkipHeaderString(G.crec.file_comment_length);
 
     return error_in_archive;
 

@@ -416,7 +416,7 @@ void TUnzip::Info(int code, const char *format, ...)
 
 /*##########################################################################
 #
-#   Name       : TUnzip::DisplayZipInfo
+#   Name       : TUnzip::DisplayHeaderString
 #
 #   Purpose....: Display info from zip-file at current position
 #
@@ -425,7 +425,7 @@ void TUnzip::Info(int code, const char *format, ...)
 #   Returns....: *
 #
 ##########################################################################*/
-void TUnzip::DisplayZipInfo(int length, int oemconvert)
+void TUnzip::DisplayHeaderString(int length, int oemconvert)
 {
     unsigned comment_bytes_left;
     unsigned int block_len;
@@ -470,6 +470,24 @@ void TUnzip::DisplayZipInfo(int length, int oemconvert)
     }
     /* add '\n' if not at start of line */
     Info(0, "\n");
+}
+
+/*##########################################################################
+#
+#   Name       : TUnzip::SkipHeaderString
+#
+#   Purpose....: Skip over header string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUnzip::SkipHeaderString(int length)
+{
+        /* cur_zipfile_bufstart already takes account of extra_bytes, so don't
+         * correct for it twice: */
+    Seek(FBufStart - FExtraBytes + (FInPtr-FInBuf) + length);
 }
 
 /*##########################################################################
