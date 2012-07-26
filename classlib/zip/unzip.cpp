@@ -78,6 +78,8 @@
 #define L_FILENAME_LENGTH                 22
 #define L_EXTRA_FIELD_LENGTH              24
 
+#define RAND_HEAD_LEN  12       /* length of encryption random header */
+
 #define INBUFSIZ  8192
 #define TMPOUTSIZ 0x10000
 #define WSIZE   0x8000  /* window size--must be a power of two, and */
@@ -607,6 +609,7 @@ void TUnzip::SetupEncryption(const char *password)
     FKeys[0] = 305419896L;
     FKeys[1] = 591751049L;
     FKeys[2] = 878082192L;
+    
     while (*password) {
         UpdateKeys((int)*password);
         password++;
@@ -765,6 +768,40 @@ int TUnzip::DecryptByte()
     temp = ((unsigned)FKeys[2] & 0xffff) | 2;
     return (int)(((temp * (temp ^ 1)) >> 8) & 0xff);
 }
+
+/*##########################################################################
+#
+#   Name       : TUnzip::Decrypt
+#
+#   Purpose....: Decrypt
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::Decrypt()
+{
+    unsigned short b;
+    int n, r;
+    unsigned char h[RAND_HEAD_LEN];
+
+    /* get header once (turn off "encrypted" flag temporarily so we don't
+     * try to decrypt the same data twice) */
+    FEncrypted = FALSE;
+    DeferInput();
+    
+    for (n = 0; n < RAND_HEAD_LEN; n++) {
+        b = GetNextByte();
+        h[n] = (unsigned char)b;
+    }
+    UndeferInput();
+    FEncrypted = TRUE;
+
+    return PK_WARN;
+
+} /* end function decrypt() */
+
 
 /*##########################################################################
 #

@@ -978,8 +978,6 @@ int   set_direc_attribs  OF((direntry *d));             /* local */
 
 char *getp(const char *m, char *p, int n);
 
-int  decrypt OF((const char *passwrd));
-
 /************/
 /*  Macros  */
 /************/

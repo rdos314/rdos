@@ -130,6 +130,7 @@ public:
     int FillInbuf();
     int Flush(char *rawbuf, int size);
 
+    int Decrypt();
     int GetFileHeader();
 
     TString FInputFileName;

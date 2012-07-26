@@ -934,18 +934,20 @@ static int extract_or_test_entrylist(unsigned numchunk,
             }
         }
 
-        if (UnzipClass.FEncrypted &&
-            (error = decrypt(uO.pwdarg)) != PK_COOL) {
-            if (error == PK_WARN) {
-                if (!((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag)))
-                    Info(0x401, SkipIncorrectPasswd,
+        if (UnzipClass.FEncrypted) {
+            error = UnzipClass.Decrypt();
+            if (error != PK_COOL) {
+                if (error == PK_WARN) {
+                    if (!((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag)))
+                        Info(0x401, SkipIncorrectPasswd,
+                          FnFilter1(UnzipClass.FCurrFileName));
+                    ++(*pnum_bad_pwd);
+                } else {  /* (error > PK_WARN) */
+                    if (error > error_in_archive)
+                        error_in_archive = error;
+                    Info(0x401, SkipCannotGetPasswd,
                       FnFilter1(UnzipClass.FCurrFileName));
-                ++(*pnum_bad_pwd);
-            } else {  /* (error > PK_WARN) */
-                if (error > error_in_archive)
-                    error_in_archive = error;
-                Info(0x401, SkipCannotGetPasswd,
-                  FnFilter1(UnzipClass.FCurrFileName));
+                }
             }
             continue;   /* go on to next file */
         }
