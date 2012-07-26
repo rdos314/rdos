@@ -658,6 +658,22 @@ int TUnzip::GetNextByte()
 
 /*##########################################################################
 #
+#   Name       : TUnzip::GetInbuf
+#
+#   Purpose....: Function get inbuf()
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *TUnzip::GetInbuf()
+{
+    return FInBuf;
+}
+
+/*##########################################################################
+#
 #   Name       : TUnzip::FillInbuf
 #
 #   Purpose....: Function fillinbuf()
@@ -1784,4 +1800,108 @@ int TUnzip::Unshrink()
 
 } /* end function unshrink() */
 
+
+/*##########################################################################
+#
+#  zlib callback interface for inflate
+#
+###########################################################################*/
+static unsigned zlib_inCB(void *pG, unsigned char ** pInbuf)
+{
+    TUnzip *unzip = (TUnzip *)pG;
+    
+    *pInbuf = (unsigned char *)unzip->GetInbuf();
+    return unzip->FillInbuf();
+}
+
+static int zlib_outCB(void *pG, unsigned char *outbuf, unsigned outcnt)
+{
+    TUnzip *unzip = (TUnzip *)pG;
+    
+    return unzip->Flush((char *)outbuf, outcnt);
+}
+
+
+/*##########################################################################
+#
+#   Name       : TUnzip::Deflate
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::Deflate()
+/* decompress an inflated entry using the zlib routines */
+{
+    int retval = 0;     /* return code: 0 = "no error" */
+    int err=Z_OK;
+    z_stream dstrm;           /* inflate decompression stream */
+
+    dstrm.zalloc = (alloc_func)Z_NULL;
+    dstrm.zfree = (free_func)Z_NULL;
+
+    {
+        /* For the callback interface, inflate initialization has to
+           be called before each decompression call.
+         */
+        {
+            unsigned i;
+            int windowBits;
+            /* windowBits = log2(WSIZE) */
+            for (i = (unsigned)WSIZE, windowBits = 0;
+                 !(i & 1);  i >>= 1, ++windowBits);
+            if ((unsigned)windowBits > (unsigned)15)
+                windowBits = 15;
+            else if (windowBits < 8)
+                windowBits = 8;
+
+            err = inflateBackInit(&dstrm, windowBits, (unsigned char *)FOutBuf);
+
+            if (err == Z_MEM_ERROR)
+                return 3;
+            else if (err != Z_OK) {
+                return 2;
+            }
+        }
+
+        dstrm.next_in = (unsigned char *)FInPtr;
+        dstrm.avail_in = FInCount;
+
+        err = inflateBack(&dstrm, zlib_inCB, this, zlib_outCB, this);
+        if (err != Z_STREAM_END) {
+            if (err == Z_DATA_ERROR || err == Z_STREAM_ERROR) {
+                retval = 2;
+            } else if (err == Z_MEM_ERROR) {
+                retval = 3;
+            } else if (err == Z_BUF_ERROR) {
+                if (dstrm.next_in == Z_NULL) {
+                    /* input failure */
+                    retval = 2;
+                } else {
+                    /* output write failure */
+                    retval = PK_DISK;
+                }
+            } else {
+                retval = 2;
+            }
+        }
+        if (dstrm.next_in != NULL) {
+            FInPtr = (char *)dstrm.next_in;
+            FInCount = dstrm.avail_in;
+        }
+
+        err = inflateBackEnd(&dstrm);
+        if (err != Z_OK) {
+            if (retval == 0)
+                retval = 2;
+        }
+    }
+
+    inflateEnd(&dstrm);
+
+    return retval;
+}
 

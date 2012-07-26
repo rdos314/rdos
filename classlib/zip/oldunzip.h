@@ -975,13 +975,6 @@ char  *fnfilter                  OF((const char *raw, unsigned char *space,
                                      extent size));
 
 /*---------------------------------------------------------------------------
-    Decompression functions:
-  ---------------------------------------------------------------------------*/
-
-   int    UZinflate              OF((int is_defl64));  /* inflate.c */
-/* static void  partial_clear    OF(());                  * unshrink.c */
-
-/*---------------------------------------------------------------------------
     Miscellaneous/shared functions:
   ---------------------------------------------------------------------------*/
 

@@ -114,12 +114,12 @@ public:
     void DeferInput();
     int ReadByte();
     int GetNextByte();
-    int FillInbuf();
     int Seek(long abs_offset);
 
     int ZDecode(int c);
     int Explode();
     int Unshrink();
+    int Deflate();
 
     int BuildHuft(const unsigned *b, unsigned n, unsigned s, const unsigned short *d, const unsigned char *e, TUnzipHuft **t, unsigned *m);
     void FreeHuft(struct TUnzipHuft *t);
@@ -128,9 +128,14 @@ public:
     void CloseOutputFile();
     void CloseAndSetTime(unsigned long dos_datetime);
     int DiskError();
-    int Flush(char *rawbuf, int size);
 
     int ExplodeGetTree(unsigned *l, unsigned n);
+
+// these must be global due to callback interface
+
+    char *GetInbuf();
+    int FillInbuf();
+    int Flush(char *rawbuf, int size);
 
     TString FInputFileName;
     int FInputHandle;

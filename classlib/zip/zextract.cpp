@@ -1314,7 +1314,7 @@ static int extract_or_test_member()    /* return PK-type error code */
                   (uO.aflag != 1 /* && G.pInfo->textfile==G.pInfo->textmode */)?
                   "" : (G.pInfo->textfile? txt : bin), uO.cflag? NEWLINE : "");
             }
-            if ((r = UZinflate((UnzipClass.FCurrFile.compression_method == ENHDEFLATED)))
+            if ((r = UnzipClass.Deflate())
                 != 0) {
                 if (r < PK_DISK) {
                     if ((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag))
