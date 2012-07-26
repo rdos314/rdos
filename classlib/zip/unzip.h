@@ -146,8 +146,6 @@ public:
     char FCurrFileName[FILE_NAME_SIZE];
     int FTextMode;
     int FDiskFull;
-    unsigned long FCurrCrcVal;
-    int FUsedCSize;
 
     struct TUnzipFile FCurrFile;
     
@@ -197,6 +195,9 @@ private:
 
     int FLeftoverCount;
     char *FLeftoverPtr;
+
+    unsigned long FCurrCrcVal;
+    int FUsedCSize;
 
     unsigned int FKeys[3]; 
 };
