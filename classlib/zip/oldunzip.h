@@ -905,8 +905,6 @@ void     free_G_buffers          OF(());
 /* static int    process_central_comment OF(()); */
 int      process_cdir_file_hdr   OF(());
 int      process_local_file_hdr  OF(());
-int      getZip64Data            OF((const unsigned char *ef_buf,
-                                     unsigned ef_len));
 unsigned ef_scan_for_izux        OF((const unsigned char *ef_buf, unsigned ef_len,
                                      int ef_is_c, unsigned long dos_mdatetime,
                                      iztimes *z_utim, unsigned long *z_uidgid));

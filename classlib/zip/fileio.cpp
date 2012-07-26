@@ -412,8 +412,6 @@ int do_string(unsigned int length, int option)   /* return PK-type error code */
         } else {
             if (UnzipClass.ReadBuf(UnzipClass.FExtraField, length) == 0)
                 return PK_EOF;
-            /* Looks like here is where extra fields are read */
-            getZip64Data((unsigned char *)UnzipClass.FExtraField, length);
         }
         break;
 
