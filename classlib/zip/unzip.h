@@ -124,11 +124,6 @@ public:
 
     int Extract();
 
-    int OpenOutputFile();
-    void CloseOutputFile();
-    void CloseAndSetTime(unsigned long dos_datetime);
-    int DiskError();
-
 // these must be global due to callback interface
 
     char *GetInbuf();
@@ -166,6 +161,11 @@ private:
 
     int DecryptByte();
     int UpdateKeys(int c);
+
+    int OpenOutputFile();
+    void CloseOutputFile();
+    void CloseAndSetTime(unsigned long dos_datetime);
+    int DiskError();
 
     int ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl);
     int ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bl, unsigned bd, unsigned bdl);
