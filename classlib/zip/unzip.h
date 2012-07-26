@@ -122,17 +122,12 @@ public:
     void SkipHeaderString(int length);
     int GetFileName(int length);
 
-    int BuildHuft(const unsigned *b, unsigned n, unsigned s, const unsigned short *d, const unsigned char *e, TUnzipHuft **t, unsigned *m);
-    void FreeHuft(struct TUnzipHuft *t);
-
     int Extract();
 
     int OpenOutputFile();
     void CloseOutputFile();
     void CloseAndSetTime(unsigned long dos_datetime);
     int DiskError();
-
-    int ExplodeGetTree(unsigned *l, unsigned n);
 
 // these must be global due to callback interface
 
@@ -176,6 +171,11 @@ private:
     int ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bl, unsigned bd, unsigned bdl);
 
     void UnshrinkPartialClear(int lastcodeused);
+
+    int BuildHuft(const unsigned *b, unsigned n, unsigned s, const unsigned short *d, const unsigned char *e, TUnzipHuft **t, unsigned *m);
+    void FreeHuft(struct TUnzipHuft *t);
+
+    int ExplodeGetTree(unsigned *l, unsigned n);
 
     int Explode();
     int Unshrink();
