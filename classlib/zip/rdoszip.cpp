@@ -25,6 +25,8 @@
 static int created_dir;        /* used by mapname(), checkdir() */
 static int renamed_fullpath;   /* ditto */
 
+static int count_args OF((const char *));
+
 /*
  *  Copy the zero-terminated string in str1 into str2, converting any
  *  uppercase letters to lowercase as we go.  str2 gets zero-terminated
@@ -911,3 +913,107 @@ char *fzofft(long val, const char *pre, const char *post)
     /* Return a pointer to this chamber. */
     return G.fzofft_buf[G.fzofft_index];
 }
+
+/* envargs() returns PK-style error code */
+
+int envargs(int *Pargc, char ***Pargv, const char *envstr, const char *envstr2)
+{
+    char *envptr;       /* value returned by getenv */
+    char *bufptr;       /* copy of env info */
+    int argc = 0;       /* internal arg count */
+    register int ch;    /* spare temp value */
+    char **argv;        /* internal arg vector */
+    char **argvect;     /* copy of vector address */
+
+    /* see if anything in the environment */
+    if ((envptr = getenv(envstr)) != (char *)NULL)        /* usual var */
+        while (isspace(*envptr))        /* must discard leading spaces */
+            envptr++;
+    if (envptr == (char *)NULL || *envptr == '\0')
+        if ((envptr = getenv(envstr2)) != (char *)NULL)   /* alternate var */
+            while (isspace(*envptr))
+                envptr++;
+    if (envptr == (char *)NULL || *envptr == '\0')
+        return PK_OK;
+
+    bufptr = (char *)malloc(1 + strlen(envptr));
+    if (bufptr == (char *)NULL)
+        return PK_MEM;
+    strcpy(bufptr, envptr);
+
+    /* count the args so we can allocate room for them */
+    argc = count_args(bufptr);
+    /* allocate a vector large enough for all args */
+    argv = (char **)malloc((argc + *Pargc + 1) * sizeof(char *));
+    if (argv == (char **)NULL) {
+        free(bufptr);
+        return PK_MEM;
+    }
+    argvect = argv;
+
+    /* copy the program name first, that's always true */
+    *(argv++) = *((*Pargv)++);
+
+    /* copy the environment args next, may be changed */
+    do {
+        /* we do not support backslash-quoting of quotes in quoted
+         * strings under DOS_FLX_NLM_OS2_W32, because backslashes are
+         * directory separators and double quotes are illegal in filenames */
+        if (*bufptr == '"') {
+            *(argv++) = ++bufptr;
+            while ((ch = *bufptr) != '\0' && ch != '\"')
+                bufptr++;
+            if (ch != '\0')
+                *(bufptr++) = '\0';
+        } else {
+            *(argv++) = bufptr;
+            while ((ch = *bufptr) != '\0' && !isspace(ch))
+                bufptr++;
+            if (ch != '\0')
+                *(bufptr++) = '\0';
+        }
+        while ((ch = *bufptr) != '\0' && isspace(ch))
+            bufptr++;
+    } while (ch);
+
+    /* now save old argc and copy in the old args */
+    argc += *Pargc;
+    while (--(*Pargc))
+        *(argv++) = *((*Pargv)++);
+
+    /* finally, add a NULL after the last arg, like Unix */
+    *argv = (char *)NULL;
+
+    /* save the values and return, indicating succes */
+    *Pargv = argvect;
+    *Pargc = argc;
+
+    return PK_OK;
+}
+
+
+
+static int count_args(const char *s)
+{
+    int count = 0;
+    char ch;
+
+    do {
+        /* count and skip args */
+        ++count;
+        if (*s == '\"') {
+            ++s;                /* leading quote */
+            while ((ch = *s) != '\0' && ch != '\"')
+                s++;
+            if (*s)
+                ++s;        /* trailing quote */
+        } else
+        while ((ch = *s) != '\0' && !isspace(ch))  /* note else-clauses above */
+            s++;
+        while ((ch = *s) != '\0' && isspace(ch))
+            s++;
+    } while (ch);
+
+    return count;
+}
+
