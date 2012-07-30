@@ -111,8 +111,7 @@ static int   zi_long   OF((zusz_t *pEndprev, int error_in_archive));
 static int   zi_short  OF(());
 static void  zi_showMacTypeCreator
                        OF((unsigned char *ebfield));
-static char *zi_time   OF((const unsigned long *datetimez,
-                           const time_t *modtimez, char *d_t_str));
+static char *zi_time   OF((unsigned long msb, unsigned long lsb, char *d_t_str));
 
 
 /**********************************************/
@@ -985,7 +984,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
      */
 #   define d_t_buf attribs
 
-    zi_time(&UnzipClass.FCurrDirEntry.last_mod_dos_datetime, NULL, d_t_buf);
+    zi_time(UnzipClass.FCurrDirEntry.rdos_msb_time, UnzipClass.FCurrDirEntry.rdos_lsb_time, d_t_buf);
     Info(0, FileModDate, d_t_buf);
     Info(0, CRC32Value, UnzipClass.FCurrDirEntry.crc32);
     Info(0, CompressedFileSize,
@@ -1423,9 +1422,8 @@ static int zi_short()   /* return PK-type error code */
      * content is no longer needed.
      */
 #   define d_t_buf attribs
-#   define z_modtim NULL
     Info(0, " %s %s ", methbuf,
-      zi_time(&UnzipClass.FCurrDirEntry.last_mod_dos_datetime, z_modtim, d_t_buf));
+      zi_time(UnzipClass.FCurrDirEntry.rdos_msb_time, UnzipClass.FCurrDirEntry.rdos_lsb_time, d_t_buf));
     fnprint();
 
 /*---------------------------------------------------------------------------
@@ -1480,9 +1478,9 @@ static void zi_showMacTypeCreator(unsigned char *ebfield)
 /*  Function zi_time()  */
 /************************/
 
-static char *zi_time(const unsigned long *datetimez, const time_t *modtimez, char *d_t_str)
+static char *zi_time(unsigned long msb, unsigned long lsb, char *d_t_str)
 {
-    unsigned yr, mo, dy, hh, mm, ss;
+    int yr, mo, dy, hh, mm, ss, ms, us;
     char monthbuf[4];
     const char *monthstr;
     static const char month[12][4] = {
@@ -1498,21 +1496,8 @@ static char *zi_time(const unsigned long *datetimez, const time_t *modtimez, cha
     to local time or not, depending on value of first character in d_t_str[].
   ---------------------------------------------------------------------------*/
 
-    {
-        yr = ((unsigned)(*datetimez >> 25) & 0x7f) + 80;
-        mo = ((unsigned)(*datetimez >> 21) & 0x0f);
-        dy = ((unsigned)(*datetimez >> 16) & 0x1f);
-
-        hh = (((unsigned)*datetimez >> 11) & 0x1f);
-        mm = (((unsigned)*datetimez >> 5) & 0x3f);
-        ss = (((unsigned)*datetimez << 1) & 0x3e);
-    }
-
-    if (mo == 0 || mo > 12) {
-        sprintf(monthbuf, BogusFmt, mo);
-        monthstr = monthbuf;
-    } else
-        monthstr = month[mo-1];
+    RdosDecodeMsbTics(msb, &yr, &mo, &dy, &hh);
+    RdosDecodeLsbTics(lsb, &mm, &ss, &ms, &us); 
 
     if (uO.lflag > 9)   /* verbose listing format */
         sprintf(d_t_str, lngYMDHMSTime, yr+1900, monthstr, dy,

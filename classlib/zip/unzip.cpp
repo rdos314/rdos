@@ -1068,6 +1068,7 @@ int TUnzip::Seek(long abs_offset)
 ##########################################################################*/
 int TUnzip::GetDirEntry()    /* return PK-type error code */
 {
+    unsigned long dos_datetime;
     unsigned char byterec[ CREC_SIZE ];
 
 
@@ -1088,7 +1089,10 @@ int TUnzip::GetDirEntry()    /* return PK-type error code */
 
     FCurrDirEntry.general_purpose_bit_flag = makeword(&byterec[C_GENERAL_PURPOSE_BIT_FLAG]);
     FCurrDirEntry.compression_method = makeword(&byterec[C_COMPRESSION_METHOD]);
-    FCurrDirEntry.last_mod_dos_datetime = makelong(&byterec[C_LAST_MOD_DOS_DATETIME]);
+
+    dos_datetime = makelong(&byterec[C_LAST_MOD_DOS_DATETIME]);
+    DosToRdosTime(&FCurrDirEntry.rdos_msb_time, &FCurrDirEntry.rdos_lsb_time, dos_datetime);
+
     FCurrDirEntry.crc32 = makelong(&byterec[C_CRC32]);
     FCurrDirEntry.csize = makelong(&byterec[C_COMPRESSED_SIZE]);
     FCurrDirEntry.ucsize = makelong(&byterec[C_UNCOMPRESSED_SIZE]);
@@ -1119,6 +1123,7 @@ int TUnzip::GetDirEntry()    /* return PK-type error code */
 int TUnzip::GetFileHeader()    /* return PK-type error code */
 {
     int error;
+    unsigned long dos_datetime;
     unsigned char byterec[ LREC_SIZE ];
 
 /*---------------------------------------------------------------------------
@@ -1136,7 +1141,10 @@ int TUnzip::GetFileHeader()    /* return PK-type error code */
 
     FCurrFileHeader.general_purpose_bit_flag = makeword(&byterec[L_GENERAL_PURPOSE_BIT_FLAG]);
     FCurrFileHeader.compression_method = makeword(&byterec[L_COMPRESSION_METHOD]);
-    FCurrFileHeader.last_mod_dos_datetime = makelong(&byterec[L_LAST_MOD_DOS_DATETIME]);
+
+    dos_datetime = makelong(&byterec[L_LAST_MOD_DOS_DATETIME]);
+    DosToRdosTime(&FCurrFileHeader.rdos_msb_time, &FCurrFileHeader.rdos_lsb_time, dos_datetime);
+
     FCurrFileHeader.crc32 = makelong(&byterec[L_CRC32]);
     FCurrFileHeader.csize = makelong(&byterec[L_COMPRESSED_SIZE]);
     FCurrFileHeader.ucsize = makelong(&byterec[L_UNCOMPRESSED_SIZE]);
@@ -1210,14 +1218,9 @@ void TUnzip::CloseOutputFile()
 #   Returns....: *
 #
 ##########################################################################*/
-void TUnzip::CloseAndSetTime(unsigned long dos_datetime)
+void TUnzip::CloseAndSetTime()
 {
-    unsigned long msb, lsb;
-
-    DosToRdosTime(&msb, &lsb, dos_datetime);
-
-    RdosSetFileTime(FOutputHandle, msb, lsb);
-
+    RdosSetFileTime(FOutputHandle, FCurrFileHeader.rdos_msb_time, FCurrFileHeader.rdos_lsb_time);
     RdosCloseFile(FOutputHandle);
 }
 
@@ -2396,8 +2399,6 @@ int TUnzip::Extract()
     machines (redundant on 32-bit machines).
   ---------------------------------------------------------------------------*/
 
-    CloseAndSetTime(FCurrFileHeader.last_mod_dos_datetime);
-
     if (FDiskFull) {            /* set by flush() */
         if (FDiskFull > 1) {
             /* warn user about the incomplete file */
@@ -2442,24 +2443,21 @@ int TUnzip::Extract()
 ##########################################################################*/
 int TUnzip::CheckForNewer(const char *filename)
 {
-    unsigned long old_msb, old_lsb;
-    unsigned long new_msb, new_lsb;
+    unsigned long msb, lsb;
     int handle;
 
     handle = RdosOpenFile(filename, 0);
 
     if (handle)
     {
-        RdosGetFileTime(handle, &old_msb, &old_lsb);
-        RdosAddSec(&old_msb, &old_lsb, 2);
+        RdosGetFileTime(handle, &msb, &lsb);
+        RdosAddSec(&msb, &lsb, 2);
         RdosCloseFile(handle);
-        
-        DosToRdosTime(&new_msb, &new_lsb, FCurrFileHeader.last_mod_dos_datetime);
 
-        if (old_msb == new_msb)
-            return old_lsb >= new_lsb;
+        if (msb == FCurrFileHeader.rdos_msb_time)
+            return lsb >= FCurrFileHeader.rdos_msb_time;
         else
-            return old_msb >= new_msb;
+            return msb >= FCurrFileHeader.rdos_lsb_time;
     }
     else
         return DOES_NOT_EXIST;

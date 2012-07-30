@@ -94,7 +94,8 @@ struct TUnzipDirEntry
     unsigned long csize;
     unsigned long ucsize;
     unsigned long relative_offset_local_header;
-    unsigned long last_mod_dos_datetime;
+    unsigned long rdos_msb_time;
+    unsigned long rdos_lsb_time;
     unsigned long crc32;
     unsigned long external_file_attributes;
     unsigned short disk_number_start;
@@ -112,7 +113,8 @@ struct TUnzipFileHeader
 {
     unsigned long csize;
     unsigned long ucsize;
-    unsigned long last_mod_dos_datetime;
+    unsigned long rdos_msb_time;
+    unsigned long rdos_lsb_time;
     unsigned long crc32;
     unsigned char version_needed_to_extract[2];
     unsigned short general_purpose_bit_flag;
@@ -217,7 +219,7 @@ private:
 
     int OpenOutputFile();
     void CloseOutputFile();
-    void CloseAndSetTime(unsigned long dos_datetime);
+    void CloseAndSetTime();
     int DiskError();
 
     int ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl);
