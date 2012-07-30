@@ -135,6 +135,9 @@ struct TUnzipFile
     unsigned char hostnum;
     unsigned long rdos_msb_time;
     unsigned long rdos_lsb_time;
+    unsigned char version_made_by[2];
+    unsigned char version_needed_to_extract[2];
+    unsigned short compression_method;
     unsigned ExtLocHdr : 1;  /* use time instead of CRC for decrypt check */
     unsigned textfile : 1;   /* file is text (according to zip) */
     unsigned lcflag : 1;     /* convert filename to lowercase */

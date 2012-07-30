@@ -2701,6 +2701,11 @@ int TUnzip::DirEntryToFile(struct TUnzipFile *file, struct TUnzipDirEntry *dir, 
     file->rdos_lsb_time = dir->rdos_lsb_time;
     file->compr_size = dir->csize;
     file->uncompr_size = dir->ucsize;
+    file->version_made_by[0] = dir->version_made_by[0];
+    file->version_made_by[1] = dir->version_made_by[1];
+    file->version_needed_to_extract[0] = dir->version_needed_to_extract[0];
+    file->version_needed_to_extract[1] = dir->version_needed_to_extract[1];
+    file->compression_method = dir->compression_method;
 
     if (dir->version_needed_to_extract[0] > UNZIP_VERSION) {
         Info(0x401, "   skipping: %-22s  need %s compat. v%u.%u (can do v%u.%u)\n",
@@ -2801,22 +2806,22 @@ void TUnzip::ShowVerbose(struct TUnzipFile *file, struct TUnzipDirEntry *dir)
 
     hostnum = (unsigned)(file->hostnum);
     hostver = (unsigned)(file->hostver);
-    extnum = (unsigned)MIN(dir->version_needed_to_extract[1], NUM_HOSTS);
-    extver = (unsigned)dir->version_needed_to_extract[0];
-    methid = (unsigned)dir->compression_method;
-    methnum = FindCompressMethod(dir->compression_method);
+    extnum = (unsigned)MIN(file->version_needed_to_extract[1], NUM_HOSTS);
+    extver = (unsigned)file->version_needed_to_extract[0];
+    methid = (unsigned)file->compression_method;
+    methnum = FindCompressMethod(file->compression_method);
 
     Info(0, "  ");  
-    Info(0, FCurrFileName);
+    Info(0, file->cfilname);
     Info(0, "\n");
 
     Info(0, "\n  offset of local header from start of archive:   %u (%Xh) bytes\n",
-      dir->relative_offset_local_header,
-      dir->relative_offset_local_header);
+      file->offset,
+      file->offset);
 
     if (hostnum >= NUM_HOSTS) {
         sprintf(unkn, "unknown (%d)",
-                (int)dir->version_made_by[1]);
+                (int)file->version_made_by[1]);
         varmsg_str = unkn;
     } else {
         varmsg_str = os[hostnum];
@@ -2826,7 +2831,7 @@ void TUnzip::ShowVerbose(struct TUnzipFile *file, struct TUnzipDirEntry *dir)
 
     if ((extnum >= NUM_HOSTS) || (os[extnum] == NULL)) {
         sprintf(unkn, "unknown (%d)",
-                (int)dir->version_needed_to_extract[1]);
+                (int)file->version_needed_to_extract[1]);
         varmsg_str = unkn;
     } else {
         varmsg_str = os[extnum];
@@ -2835,7 +2840,7 @@ void TUnzip::ShowVerbose(struct TUnzipFile *file, struct TUnzipDirEntry *dir)
     Info(0, "  minimum software version required to extract:   %u.%u\n", extver/10, extver%10);
 
     if (methnum >= NUM_METHODS) {
-        sprintf(unkn, "unknown (%d)", dir->compression_method);
+        sprintf(unkn, "unknown (%d)", file->compression_method);
         varmsg_str = unkn;
     } else {
         varmsg_str = method[methnum];
@@ -2868,19 +2873,11 @@ void TUnzip::ShowVerbose(struct TUnzipFile *file, struct TUnzipDirEntry *dir)
       attribs);
     
     Info(0, "  32-bit CRC value (hex):                         %.8lx\n", 
-      dir->crc32);
+      file->crc);
     Info(0, "  compressed size:                                %u bytes\n",
-      dir->csize);
+      file->compr_size);
     Info(0, "  uncompressed size:                              %u bytes\n",
-      dir->ucsize);
-    Info(0, "  length of filename:                             %u characters\n",
-      dir->filename_length);
-    Info(0, "  length of extra field:                          %u bytes\n",
-      dir->extra_field_length);
-    Info(0, "  length of file comment:                         %u characters\n",
-      dir->file_comment_length);
-    Info(0, "  disk number on which file begins:               disk %lu\n",
-      (unsigned long)(dir->disk_number_start + 1));
+      file->uncompr_size);
     Info(0, "  apparent file type:                             %s\n",
       (dir->internal_file_attributes & 1)? "text"
          : (dir->internal_file_attributes & 2)? "ebcdic"
@@ -3207,7 +3204,7 @@ void TUnzip::ShowCompact(struct TUnzipFile *file, struct TUnzipDirEntry *dir)
                     attribs[0] = '-';
                 if (xattr & 0x8)
                     attribs[0] = 'V';
-                else if ((p = strchr(FCurrFileName, '.')) != (char *)NULL) {
+                else if ((p = strchr(file->cfilname, '.')) != (char *)NULL) {
                     ++p;
                     if (strnicmp(p, "com", 3) == 0 ||
                         strnicmp(p, "exe", 3) == 0 ||
@@ -3280,7 +3277,7 @@ void TUnzip::ShowCompact(struct TUnzipFile *file, struct TUnzipDirEntry *dir)
     CreateTimeStr(file, attribs);
     Info(0, " %s %s ", methbuf, attribs); 
 
-    Info(0, FCurrFileName);
+    Info(0, file->cfilname);
     Info(0, "\n");
 
 } /* end function zi_short() */
