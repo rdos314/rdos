@@ -849,22 +849,11 @@ void     fnprint                 OF(());
     Functions in fileio.c:
   ---------------------------------------------------------------------------*/
 
-/* static int  disk_error     OF(()); */
-void     handler              OF((int signal));
 unsigned short      makeword             OF((const unsigned char *b));
 unsigned long      makelong             OF((const unsigned char *sig));
 zusz_t   makeint64            OF((const unsigned char *sig));
 char    *fzofft               OF((long val,
                                   const char *pre, const char *post));
-   char *str2iso              OF((char *dst, const char *src));
-   char *str2oem              OF((char *dst, const char *src));
-#ifdef ZMEM   /* MUST be ifdef'd because of conflicts with the standard def. */
-   void *memset OF((register void *, register int, register unsigned int));
-   int    memcmp OF((register const void*, register const void *,
-                     register unsigned int));
-   void *memcpy OF((register void *, register const void *,
-                     register unsigned int));
-#endif
 
 /*---------------------------------------------------------------------------
     Functions in extract.c:
