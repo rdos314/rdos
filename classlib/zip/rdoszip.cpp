@@ -783,3 +783,36 @@ int ratio(zusz_t uc, zusz_t c)
           -((int) ((1000L*(c-uc) + (denom>>1)) / denom)));
     }                            /* ^^^^^^^^ rounding */
 }
+
+/* This is the getp() function for all systems (with TTY type user interface)
+ * that supply a working `non-echo' getch() function for "raw" console input.
+ */
+char *getp(const char *m, char *p, int n)
+{
+    char c;                     /* one-byte buffer for read() to use */
+    int i;                      /* number of characters input */
+    char *w;                    /* warning on retry */
+
+    /* get password */
+    w = "";
+    do {
+        RdosWriteString(w);
+        RdosWriteString(m);
+        i = 0;
+        do {                    /* read line, keeping first n characters */
+            if ((c = (char)RdosReadKeyboard()) == '\r')
+                c = '\n';       /* until user hits CR */
+            if (c == 8 || c == 127) {
+                if (i > 0) i--; /* the `backspace' and `del' keys works */
+            }
+            else if (i < n)
+                p[i++] = c;     /* truncate past n */
+        } while (c != '\n');
+        RdosWriteString("\r\n");
+        w = "(line too long--try again)\r\n";
+    } while (p[i-1] != '\n');
+    p[i-1] = 0;                 /* terminate at newline */
+
+    return p;                   /* return pointer to password */
+
+} /* end function getp() */
