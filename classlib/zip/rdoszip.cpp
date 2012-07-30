@@ -760,3 +760,26 @@ int zi_opts(int *pargc, char ***pargv)
 
 } /* end function zi_opts() */
 
+
+/********************/
+/* Function ratio() */    /* also used by ZipInfo routines */
+/********************/
+
+int ratio(zusz_t uc, zusz_t c)
+{
+    zusz_t denom;
+
+    if (uc == 0)
+        return 0;
+    if (uc > 2000000L) {    /* risk signed overflow if multiply numerator */
+        denom = uc / 1000L;
+        return ((uc >= c) ?
+            (int) ((uc-c + (denom>>1)) / denom) :
+          -((int) ((c-uc + (denom>>1)) / denom)));
+    } else {             /* ^^^^^^^^ rounding */
+        denom = uc;
+        return ((uc >= c) ?
+            (int) ((1000L*(uc-c) + (denom>>1)) / denom) :
+          -((int) ((1000L*(c-uc) + (denom>>1)) / denom)));
+    }                            /* ^^^^^^^^ rounding */
+}
