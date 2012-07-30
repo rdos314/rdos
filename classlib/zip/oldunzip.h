@@ -479,10 +479,6 @@ typedef size_t extent;
 #define IZ_EF_TRUNC       79   /* local extra field truncated (PKZIP'd) */
 
 
-#define DOES_NOT_EXIST    -1   /* return values for check_for_newer() */
-#define EXISTS_AND_OLDER  0
-#define EXISTS_AND_NEWER  1
-
 #define OVERWRT_QUERY     0    /* status values for G.overwrite_mode */
 #define OVERWRT_ALWAYS    1
 #define OVERWRT_NEVER     2
@@ -862,7 +858,6 @@ void     fnprint                 OF(());
 
 /* static int  disk_error     OF(()); */
 void     handler              OF((int signal));
-int      check_for_newer      OF((char *filename)); /* os2,vmcms,vms */
 unsigned short      makeword             OF((const unsigned char *b));
 unsigned long      makelong             OF((const unsigned char *sig));
 zusz_t   makeint64            OF((const unsigned char *sig));

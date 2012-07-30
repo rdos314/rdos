@@ -1027,7 +1027,7 @@ startover:
                 continue;   /* go on to next file */
             }
 
-            switch (check_for_newer(UnzipClass.FCurrFileName)) {
+            switch (UnzipClass.CheckForNewer(UnzipClass.FCurrFileName)) {
                 case DOES_NOT_EXIST:
                     /* freshen (no new files): skip unless just renamed */
                     if (uO.fflag && !renamed)

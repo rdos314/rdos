@@ -52,6 +52,12 @@
 #define PK_DISK           50   /* disk full */
 #define PK_EOF            51   /* unexpected EOF */
 
+// these should be private!
+
+#define DOES_NOT_EXIST    -1   /* return values for CheckForNewer() */
+#define EXISTS_AND_OLDER  0
+#define EXISTS_AND_NEWER  1
+
 #define FILE_NAME_SIZE        513
 
 #define DIR_BLKSIZ 16384   /* use more memory, to reduce long-range seeks */
@@ -163,6 +169,8 @@ public:
     int GetDirEntry();
 
     int Extract();
+
+    int CheckForNewer(const char *filename);
 
 // these must be global due to callback interface
 

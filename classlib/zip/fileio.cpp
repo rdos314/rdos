@@ -262,41 +262,6 @@ time_t dos_to_unix_time(unsigned long dosdatetime)
 } /* end function dos_to_unix_time() */
 
 
-/******************************/
-/* Function check_for_newer() */  /* used for overwriting/freshening/updating */
-/******************************/
-
-int check_for_newer(char *filename)  /* return 1 if existing file is newer */
-{
-    time_t existing, archive;
-
-    Trace("check_for_newer:  doing stat(%s)\n", FnFilter1(filename));
-    if (stat(filename, &G.statbuf)) {
-        Trace("check_for_newer:  stat(%s) returns %d:  file does not exist\n",
-          FnFilter1(filename), stat(filename, &G.statbuf));
-        return DOES_NOT_EXIST;
-    }
-    Trace("check_for_newer:  stat(%s) returns 0:  file exists\n",
-      FnFilter1(filename));
-
-
-    /* round up existing filetime to nearest 2 seconds for comparison,
-     * but saturate in case of arithmetic overflow
-     */
-    existing = ((G.statbuf.st_mtime & 1) &&
-                (G.statbuf.st_mtime + 1 > G.statbuf.st_mtime)) ?
-               G.statbuf.st_mtime + 1 : G.statbuf.st_mtime;
-    archive  = dos_to_unix_time(UnzipClass.FCurrFileHeader.last_mod_dos_datetime);
-
-    TTrace((stderr, "check_for_newer:  existing %lu, archive %lu, e-a %ld\n",
-      (unsigned long)existing, (unsigned long)archive, (long)(existing-archive)));
-
-    return (existing >= archive);
-
-} /* end function check_for_newer() */
-
-
-
 
 
 /*********************/

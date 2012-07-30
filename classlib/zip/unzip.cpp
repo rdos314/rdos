@@ -380,6 +380,27 @@ void AsciiToNative(char *string)
 
 /*##########################################################################
 #
+#   Name       : DosToRdosTime
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void DosToRdosTime(unsigned long *msb, unsigned long *lsb, unsigned long dos_datetime)
+{
+    unsigned short dos_date, dos_time;
+
+    dos_date = (unsigned short)(dos_datetime >> 16);
+    dos_time = (unsigned short)(dos_datetime & 0xFFFFL);
+
+    RdosDosTimeDateToTics(dos_date, dos_time, msb, lsb);
+}
+
+/*##########################################################################
+#
 #   Name       : TUnzip::TUnzip
 #
 #   Purpose....: Constructor for unzip
@@ -1192,12 +1213,9 @@ void TUnzip::CloseOutputFile()
 void TUnzip::CloseAndSetTime(unsigned long dos_datetime)
 {
     unsigned long msb, lsb;
-    unsigned short dos_date, dos_time;
 
-    dos_date = (unsigned short)(dos_datetime >> 16);
-    dos_time = (unsigned short)(dos_datetime & 0xFFFFL);
+    DosToRdosTime(&msb, &lsb, dos_datetime);
 
-    RdosDosTimeDateToTics(dos_date, dos_time, &msb, &lsb);
     RdosSetFileTime(FOutputHandle, msb, lsb);
 
     RdosCloseFile(FOutputHandle);
@@ -2409,4 +2427,42 @@ int TUnzip::Extract()
 
     return error;
 }
+
+
+/*##########################################################################
+#
+#   Name       : TUnzip::CheckForNewer
+#
+#   Purpose....: Check if file is newer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::CheckForNewer(const char *filename)
+{
+    unsigned long old_msb, old_lsb;
+    unsigned long new_msb, new_lsb;
+    int handle;
+
+    handle = RdosOpenFile(filename, 0);
+
+    if (handle)
+    {
+        RdosGetFileTime(handle, &old_msb, &old_lsb);
+        RdosAddSec(&old_msb, &old_lsb, 2);
+        RdosCloseFile(handle);
+        
+        DosToRdosTime(&new_msb, &new_lsb, FCurrFileHeader.last_mod_dos_datetime);
+
+        if (old_msb == new_msb)
+            return old_lsb >= new_lsb;
+        else
+            return old_msb >= new_msb;
+    }
+    else
+        return DOES_NOT_EXIST;
+
+} /* end function check_for_newer() */
 
