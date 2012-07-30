@@ -174,8 +174,6 @@ typedef struct Globals {
     char **pxnames;
     char sig[4];
     char answerbuf[10];
-    min_info info[DIR_BLKSIZ];
-    min_info *pInfo;
     union work area;                /* see unzpriv.h for definition of work */
 
 

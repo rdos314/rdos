@@ -197,7 +197,7 @@ char *do_wild(const char *wildspec)
 int mapattr()
 {
     /* set archive bit for file entries (file is not backed up): */
-    G.pInfo->file_attr = ((unsigned)UnzipClass.FCurrDirEntry.external_file_attributes |
+    UnzipClass.FCurrFile->file_attr = ((unsigned)UnzipClass.FCurrDirEntry.external_file_attributes |
       (UnzipClass.FCurrDirEntry.external_file_attributes & FILE_ATTRIBUTE_DIRECTORY ?
        0 : FILE_ATTRIBUTE_ARCHIVE)) & 0xff;
     return 0;
@@ -352,7 +352,7 @@ int mapname(int renamed)
             }
 
             /* set file attributes: */
-            RdosSetFileAttribute(UnzipClass.FCurrFileName, G.pInfo->file_attr);
+            RdosSetFileAttribute(UnzipClass.FCurrFileName, UnzipClass.FCurrFile->file_attr);
 
             /* set dir time (note trailing '/') */
             return (error & ~MPN_MASK) | MPN_CREATED_DIR;
@@ -360,7 +360,7 @@ int mapname(int renamed)
             /* overwrite attributes of existing directory on user's request */
 
             /* set file attributes: */
-            RdosSetFileAttribute(UnzipClass.FCurrFileName, G.pInfo->file_attr);
+            RdosSetFileAttribute(UnzipClass.FCurrFileName, UnzipClass.FCurrFile->file_attr);
         }
         /* dir existed already; don't look for data to extract */
         return (error & ~MPN_MASK) | MPN_INF_SKIP;
@@ -377,7 +377,7 @@ int mapname(int renamed)
             *lastsemi = '\0';
     }
 
-    if (G.pInfo->vollabel) {
+    if (UnzipClass.FCurrFile->vollabel) {
         if (strlen(pathcomp) > 11)
             pathcomp[11] = '\0';
     }

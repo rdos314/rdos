@@ -63,7 +63,6 @@ Uz_Globs *globalsCtor()
     G.wildzipfn = "";
     G.pfnames = (char **)fnames;
     G.pxnames = (char **)&fnames[1];
-    G.pInfo = G.info;
     G.sol = TRUE;          /* at start of line */
 
     G.decr_passwd = UzpPassword;

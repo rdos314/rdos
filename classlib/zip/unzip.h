@@ -54,6 +54,8 @@
 
 #define FILE_NAME_SIZE        513
 
+#define DIR_BLKSIZ 16384   /* use more memory, to reduce long-range seeks */
+
 /* Huffman code lookup table entry--this entry is four bytes for machines
    that have 16-bit pointers (e.g. PC's in the small or medium model).
    Valid extra bits are 0..16.  e == 31 is EOB (end of block), e == 32
@@ -111,6 +113,24 @@ struct TUnzipFileHeader
     unsigned short compression_method;
     unsigned short filename_length;
     unsigned short extra_field_length;
+};
+
+struct TUnzipFile
+{
+    long offset;
+    unsigned long compr_size;       /* compressed size (needed if extended header) */
+    unsigned long uncompr_size;     /* uncompressed size (needed if extended header) */
+    unsigned long crc;              /* crc (needed if extended header) */
+    unsigned short diskstart;       /* no of volume where this entry starts */
+    unsigned char hostver;
+    unsigned char hostnum;
+    unsigned file_attr;      /* local flavor, as used by creat(), chmod()... */
+    unsigned ExtLocHdr : 1;  /* use time instead of CRC for decrypt check */
+    unsigned textfile : 1;   /* file is text (according to zip) */
+    unsigned lcflag : 1;     /* convert filename to lowercase */
+    unsigned vollabel : 1;   /* "file" is an MS-DOS volume (disk) label */
+    unsigned HasUxAtt : 1;   /* crec ext_file_attr has Unix style mode bits */
+    char *cfilname;          /* central header version of filename */
 };
 
 class TUnzip
@@ -172,6 +192,9 @@ public:
 
     struct TUnzipFileHeader FCurrFileHeader;
     struct TUnzipDirEntry FCurrDirEntry;
+
+    struct TUnzipFile FFileArr[DIR_BLKSIZ];
+    struct TUnzipFile *FCurrFile;
     
 protected:
     int FOutputHandle;

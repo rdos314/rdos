@@ -294,7 +294,7 @@ int extract_or_test_files()    /* return PK-type error code */
     since we know the offset of each from the beginning of the zipfile.
   ---------------------------------------------------------------------------*/
 
-    G.pInfo = G.info;
+    UnzipClass.FCurrFile = &UnzipClass.FFileArr[0];
 
     G.newzip = TRUE;
     G.reported_backslash = FALSE;
@@ -331,7 +331,7 @@ int extract_or_test_files()    /* return PK-type error code */
          */
 
         while ((j < DIR_BLKSIZ)) {
-            G.pInfo = &G.info[j];
+            UnzipClass.FCurrFile = &UnzipClass.FFileArr[j];
 
             if (UnzipClass.ReadBuf(G.sig, 4) == 0) {
                 error_in_archive = PK_EOF;
@@ -649,18 +649,18 @@ static int store_info()   /* return 0 if skipping, 1 if OK */
   ---------------------------------------------------------------------------*/
 
     UnzipClass.FEncrypted = UnzipClass.FCurrDirEntry.general_purpose_bit_flag & 1;   /* bit field */
-    G.pInfo->ExtLocHdr = (UnzipClass.FCurrDirEntry.general_purpose_bit_flag & 8) == 8;  /* bit */
-    G.pInfo->textfile = UnzipClass.FCurrDirEntry.internal_file_attributes & 1;    /* bit field */
-    G.pInfo->crc = UnzipClass.FCurrDirEntry.crc32;
-    G.pInfo->compr_size = UnzipClass.FCurrDirEntry.csize;
-    G.pInfo->uncompr_size = UnzipClass.FCurrDirEntry.ucsize;
+    UnzipClass.FCurrFile->ExtLocHdr = (UnzipClass.FCurrDirEntry.general_purpose_bit_flag & 8) == 8;  /* bit */
+    UnzipClass.FCurrFile->textfile = UnzipClass.FCurrDirEntry.internal_file_attributes & 1;    /* bit field */
+    UnzipClass.FCurrFile->crc = UnzipClass.FCurrDirEntry.crc32;
+    UnzipClass.FCurrFile->compr_size = UnzipClass.FCurrDirEntry.csize;
+    UnzipClass.FCurrFile->uncompr_size = UnzipClass.FCurrDirEntry.ucsize;
 
     switch (uO.aflag) {
         case 0:
             UnzipClass.FTextMode = FALSE;   /* bit field */
             break;
         case 1:
-            UnzipClass.FTextMode = G.pInfo->textfile;   /* auto-convert mode */
+            UnzipClass.FTextMode = UnzipClass.FCurrFile->textfile;   /* auto-convert mode */
             break;
         default:  /* case 2: */
             UnzipClass.FTextMode = TRUE;
@@ -712,16 +712,17 @@ static int store_info()   /* return 0 if skipping, 1 if OK */
     }
 
     /* store a copy of the central header filename for later comparison */
-    if ((G.pInfo->cfilname = (char *)malloc(strlen(UnzipClass.FCurrFileName) + 1)) == NULL) {
+    UnzipClass.FCurrFile->cfilname = new char[strlen(UnzipClass.FCurrFileName) + 1];
+    if (UnzipClass.FCurrFile->cfilname == 0) {
         Info(0x401, WarnNoMemCFName, FnFilter1(UnzipClass.FCurrFileName));
     } else
-        strcpy(G.pInfo->cfilname, UnzipClass.FCurrFileName);
+        strcpy(UnzipClass.FCurrFile->cfilname, UnzipClass.FCurrFileName);
 
     /* map whatever file attributes we have into the local format */
     mapattr();   /* GRR:  worry about return value later */
 
-    G.pInfo->diskstart = UnzipClass.FCurrDirEntry.disk_number_start;
-    G.pInfo->offset = (long)UnzipClass.FCurrDirEntry.relative_offset_local_header;
+    UnzipClass.FCurrFile->diskstart = UnzipClass.FCurrDirEntry.disk_number_start;
+    UnzipClass.FCurrFile->offset = (long)UnzipClass.FCurrDirEntry.relative_offset_local_header;
     return 1;
 
 } /* end function store_info() */
@@ -775,14 +776,14 @@ static int extract_or_test_entrylist(unsigned numchunk,
 
     for (i = 0; i < numchunk; ++i) {
         (*pfilnum)++;   /* *pfilnum = i + blknum*DIR_BLKSIZ + 1; */
-        G.pInfo = &G.info[i];
+        UnzipClass.FCurrFile = &UnzipClass.FFileArr[i];
 
         /* if the target position is not within the current input buffer
          * (either haven't yet read enough, or (maybe) skipping back-
          * ward), skip to the target position and reset readbuf(). */
 
         /* seek_zipf(pInfo->offset);  */
-        request = G.pInfo->offset + UnzipClass.FExtraBytes;
+        request = UnzipClass.FCurrFile->offset + UnzipClass.FExtraBytes;
         inbuf_offset = request % INBUFSIZ;
         bufstart = request - inbuf_offset;
 
@@ -798,7 +799,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
                 Info(0x401, AttemptRecompensate);
                 *pold_extra_bytes =  UnzipClass.FExtraBytes;
                  UnzipClass.FExtraBytes = 0L;
-                request = G.pInfo->offset;  /* could also check if != 0 */
+                request = UnzipClass.FCurrFile->offset;  /* could also check if != 0 */
                 inbuf_offset = request % INBUFSIZ;
                 bufstart = request - inbuf_offset;
                 Trace("debug: request = %ld, inbuf_offset = %ld\n",
@@ -861,7 +862,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
                     UnzipClass.FExtraBytes = 0L;
                 } else
                     UnzipClass.FExtraBytes = *pold_extra_bytes; /* third attempt */
-                if (((error = UnzipClass.Seek(G.pInfo->offset)) != PK_OK) ||
+                if (((error = UnzipClass.Seek(UnzipClass.FCurrFile->offset)) != PK_OK) ||
                     (UnzipClass.ReadBuf(G.sig, 4) == 0)) {  /* bad offset */
                     if (error != PK_BADERR)
                       Info(0x401, OffsetMsg, *pfilnum, "EOF",
@@ -892,18 +893,14 @@ static int extract_or_test_entrylist(unsigned numchunk,
          * extra field, so that a UTF-8 entry name e.f. block has already
          * been processed.
          */
-        if (G.pInfo->cfilname != (char *)NULL) {
-            if (strcmp(G.pInfo->cfilname, UnzipClass.FCurrFileName) != 0) {
-#    define  cFile_PrintBuf  G.pInfo->cfilname
+        if (UnzipClass.FCurrFile->cfilname != 0) {
+            if (strcmp(UnzipClass.FCurrFile->cfilname, UnzipClass.FCurrFileName) != 0) {
                 Info(0x401, LvsCFNamMsg,
-                  FnFilter2(cFile_PrintBuf), FnFilter1(UnzipClass.FCurrFileName));
-#  undef    cFile_PrintBuf
-                strcpy(UnzipClass.FCurrFileName, G.pInfo->cfilname);
+                  FnFilter2(UnzipClass.FCurrFile->cfilname), FnFilter1(UnzipClass.FCurrFileName));
+                strcpy(UnzipClass.FCurrFileName, UnzipClass.FCurrFile->cfilname);
                 if (error_in_archive < PK_WARN)
                     error_in_archive = PK_WARN;
             }
-            free(G.pInfo->cfilname);
-            G.pInfo->cfilname = (char *)NULL;
         }
         /* Size consistency checks must come after reading in the local extra
          * field, so that any Zip64 extension local e.f. block has already
@@ -961,7 +958,7 @@ startover:
              *  of slash as directory separator (bug in some zipper(s); so
              *  far, not a problem in HPFS, NTFS or VFAT systems)
              */
-            if (G.pInfo->hostnum == FS_FAT_ && !strchr(UnzipClass.FCurrFileName, '/')) {
+            if (UnzipClass.FCurrFile->hostnum == FS_FAT_ && !strchr(UnzipClass.FCurrFileName, '/')) {
                 char *p=UnzipClass.FCurrFileName;
 
                 if (*p) do {

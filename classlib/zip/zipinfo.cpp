@@ -663,7 +663,7 @@ int zipinfo()   /* return PK-type error code */
   ---------------------------------------------------------------------------*/
 
     uO.L_flag = FALSE;      /* zipinfo mode: never convert name to lowercase */
-    G.pInfo = G.info;       /* (re-)initialize, (just to make sure) */
+    UnzipClass.FCurrFile = &UnzipClass.FFileArr[0];       /* (re-)initialize, (just to make sure) */
     UnzipClass.FTextMode = 0;  /* so one can read on screen (is this ever used?) */
 
     /* reset endprev for new zipfile; account for multi-part archives (?) */
@@ -921,8 +921,8 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
     Print out various interesting things about the compressed file.
   ---------------------------------------------------------------------------*/
 
-    hostnum = (unsigned)(G.pInfo->hostnum);
-    hostver = (unsigned)(G.pInfo->hostver);
+    hostnum = (unsigned)(UnzipClass.FCurrFile->hostnum);
+    hostver = (unsigned)(UnzipClass.FCurrFile->hostver);
     extnum = (unsigned)MIN(UnzipClass.FCurrDirEntry.version_needed_to_extract[1], NUM_HOSTS);
     extver = (unsigned)UnzipClass.FCurrDirEntry.version_needed_to_extract[0];
     methid = (unsigned)UnzipClass.FCurrDirEntry.compression_method;
@@ -1207,8 +1207,8 @@ static int zi_short()   /* return PK-type error code */
 
     methid = (unsigned)(UnzipClass.FCurrDirEntry.compression_method);
     methnum = find_compr_idx(UnzipClass.FCurrDirEntry.compression_method);
-    hostnum = (unsigned)(G.pInfo->hostnum);
-    hostver = (unsigned)(G.pInfo->hostver);
+    hostnum = (unsigned)(UnzipClass.FCurrFile->hostnum);
+    hostver = (unsigned)(UnzipClass.FCurrFile->hostver);
 /*
     extnum = (unsigned)MIN(G.crec.version_needed_to_extract[1], NUM_HOSTS);
     extver = (unsigned)G.crec.version_needed_to_extract[0];

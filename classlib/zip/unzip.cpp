@@ -433,6 +433,8 @@ void TUnzip::Init()
     FInBuf = new char[INBUFSIZ + 4];    /* 4 extra for hold[] (below) */
     FTmpOutBuf = new char[TMPOUTSIZ];
     FOutBuf = new char[WSIZE + 1];
+
+    FCurrFile = &FFileArr[0];
 }
 
 /*##########################################################################

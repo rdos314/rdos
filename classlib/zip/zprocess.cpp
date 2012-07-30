@@ -342,9 +342,9 @@ void free_G_buffers()     /* releases all memory allocated in global vars */
    }
 
     for (i = 0; i < DIR_BLKSIZ; i++) {
-        if (G.info[i].cfilname != (char *)NULL) {
-            free(G.info[i].cfilname);
-            G.info[i].cfilname = (char *)NULL;
+        if (UnzipClass.FFileArr[i].cfilname != 0) {
+            delete UnzipClass.FFileArr[i].cfilname;
+            UnzipClass.FFileArr[i].cfilname = 0;
         }
     }
 } /* end function free_G_buffers() */
@@ -543,9 +543,6 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
         {
             if (uO.zipinfo_mode)
                 error = zipinfo();                 /* ZIPINFO 'EM */
-            else
-            if (uO.vflag && !uO.tflag && !uO.cflag)
-                error = list_files();              /* LIST 'EM */
             else
                 error = extract_or_test_files();   /* EXTRACT OR TEST 'EM */
 
@@ -1043,13 +1040,13 @@ int process_cdir_file_hdr()    /* return PK-type error code */
     if (error != 0)
         return error;
 
-    G.pInfo->hostver = UnzipClass.FCurrDirEntry.version_made_by[0];
-    G.pInfo->hostnum = MIN(UnzipClass.FCurrDirEntry.version_made_by[1], NUM_HOSTS);
+    UnzipClass.FCurrFile->hostver = UnzipClass.FCurrDirEntry.version_made_by[0];
+    UnzipClass.FCurrFile->hostnum = MIN(UnzipClass.FCurrDirEntry.version_made_by[1], NUM_HOSTS);
 /*  extnum = MIN(crec.version_needed_to_extract[1], NUM_HOSTS); */
 
-    G.pInfo->lcflag = 0;
+    UnzipClass.FCurrFile->lcflag = 0;
     if (uO.L_flag == 1)       /* name conversion for monocase systems */
-        switch (G.pInfo->hostnum) {
+        switch (UnzipClass.FCurrFile->hostnum) {
             case FS_FAT_:     /* PKZIP and zip -k store in uppercase */
             case CPM_:        /* like MS-DOS, right? */
             case VM_CMS_:     /* all caps? */
@@ -1059,7 +1056,7 @@ int process_cdir_file_hdr()    /* return PK-type error code */
             case VMS_:        /* our Zip uses lowercase, but ASi's doesn't */
         /*  case Z_SYSTEM_:   ? */
         /*  case QDOS_:       ? */
-                G.pInfo->lcflag = 1;   /* convert filename to lowercase */
+                UnzipClass.FCurrFile->lcflag = 1;   /* convert filename to lowercase */
                 break;
 
             default:     /* AMIGA_, FS_HPFS_, FS_NTFS_, MAC_, UNIX_, ATARI_, */
@@ -1067,22 +1064,22 @@ int process_cdir_file_hdr()    /* return PK-type error code */
                          /*  no conversion */
         }
     else if (uO.L_flag > 1)   /* let -LL force lower case for all names */
-        G.pInfo->lcflag = 1;
+        UnzipClass.FCurrFile->lcflag = 1;
 
     /* do Amigas (AMIGA_) also have volume labels? */
     if (IS_VOLID(UnzipClass.FCurrDirEntry.external_file_attributes) &&
-        (G.pInfo->hostnum == FS_FAT_ || G.pInfo->hostnum == FS_HPFS_ ||
-         G.pInfo->hostnum == FS_NTFS_ || G.pInfo->hostnum == ATARI_))
+        (UnzipClass.FCurrFile->hostnum == FS_FAT_ || UnzipClass.FCurrFile->hostnum == FS_HPFS_ ||
+         UnzipClass.FCurrFile->hostnum == FS_NTFS_ || UnzipClass.FCurrFile->hostnum == ATARI_))
     {
-        G.pInfo->vollabel = TRUE;
-        G.pInfo->lcflag = 0;        /* preserve case of volume labels */
+        UnzipClass.FCurrFile->vollabel = TRUE;
+        UnzipClass.FCurrFile->lcflag = 0;        /* preserve case of volume labels */
     } else
-        G.pInfo->vollabel = FALSE;
+        UnzipClass.FCurrFile->vollabel = FALSE;
 
     /* this flag is needed to detect archives made by "PKZIP for Unix" when
        deciding which kind of codepage conversion has to be applied to
        strings (see do_string() function in fileio.c) */
-    G.pInfo->HasUxAtt = (UnzipClass.FCurrDirEntry.external_file_attributes & 0xffff0000L) != 0L;
+    UnzipClass.FCurrFile->HasUxAtt = (UnzipClass.FCurrDirEntry.external_file_attributes & 0xffff0000L) != 0L;
 
     return PK_COOL;
 

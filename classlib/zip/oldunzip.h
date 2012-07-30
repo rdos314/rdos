@@ -1,3 +1,4 @@
+#define DIR_BLKSIZ 16384   /* use more memory, to reduce long-range seeks */
 /*---------------------------------------------------------------------------
 
   unzip.h (new)
@@ -394,7 +395,6 @@ typedef size_t extent;
 #define MSG_NO_NDLL(f) (f & 0x0800)   /* bit 11:  1 = skip if WIN32 DLL */
 #define MSG_NO_WDLL(f) (f & 0x1000)   /* bit 12:  1 = skip if Windows DLL */
 
-#define DIR_BLKSIZ 16384   /* use more memory, to reduce long-range seeks */
 #define WSIZE   0x8000  /* window size--must be a power of two, and */
 #define INBUFSIZ  8192  /* larger buffers for real OSes */
 
@@ -729,22 +729,6 @@ typedef struct iztimes {
        char buf[1];             /* start of system-specific internal data */
    } direntry;
 
-typedef struct min_info {
-    long offset;
-    zusz_t compr_size;       /* compressed size (needed if extended header) */
-    zusz_t uncompr_size;     /* uncompressed size (needed if extended header) */
-    unsigned long crc;                 /* crc (needed if extended header) */
-    zuvl_t diskstart;        /* no of volume where this entry starts */
-    unsigned char hostver;
-    unsigned char hostnum;
-    unsigned file_attr;      /* local flavor, as used by creat(), chmod()... */
-    unsigned ExtLocHdr : 1;  /* use time instead of CRC for decrypt check */
-    unsigned textfile : 1;   /* file is text (according to zip) */
-    unsigned lcflag : 1;     /* convert filename to lowercase */
-    unsigned vollabel : 1;   /* "file" is an MS-DOS volume (disk) label */
-    unsigned HasUxAtt : 1;   /* crec ext_file_attr has Unix style mode bits */
-    char *cfilname;      /* central header version of filename */
-} min_info;
 
 typedef struct VMStimbuf {
     char *revdate;    /* (both roughly correspond to Unix modtime/st_mtime) */
@@ -869,7 +853,6 @@ int      zipinfo                 OF(());
     Functions in list.c (generic zipfile-listing routines):
   ---------------------------------------------------------------------------*/
 
-int      list_files              OF(());
 int      ratio                   OF((zusz_t uc, zusz_t c));
 void     fnprint                 OF(());
 
