@@ -909,7 +909,6 @@ int      iswild          OF((const char *p));                    /* match.c */
    (free_crc_table(), get_crc_table(), crc32())                      crc32.c */
 
 void     version         OF(());                              /* local */
-int      mapattr         OF(());                              /* local */
 int      mapname         OF((int renamed));                /* local */
 int      checkdir        OF((char *pathcomp, int flag));   /* local */
 char    *do_wild         OF((const char *wildzipfn));     /* local */

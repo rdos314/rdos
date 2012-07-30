@@ -132,7 +132,6 @@ struct TUnzipFile
     unsigned short diskstart;       /* no of volume where this entry starts */
     unsigned char hostver;
     unsigned char hostnum;
-    unsigned file_attr;      /* local flavor, as used by creat(), chmod()... */
     unsigned ExtLocHdr : 1;  /* use time instead of CRC for decrypt check */
     unsigned textfile : 1;   /* file is text (according to zip) */
     unsigned lcflag : 1;     /* convert filename to lowercase */
@@ -257,6 +256,7 @@ private:
     int FUsedCSize;
 
     unsigned int FKeys[3]; 
+
 };
 
 #endif

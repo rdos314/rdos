@@ -718,9 +718,6 @@ static int store_info()   /* return 0 if skipping, 1 if OK */
     } else
         strcpy(UnzipClass.FCurrFile->cfilname, UnzipClass.FCurrFileName);
 
-    /* map whatever file attributes we have into the local format */
-    mapattr();   /* GRR:  worry about return value later */
-
     UnzipClass.FCurrFile->diskstart = UnzipClass.FCurrDirEntry.disk_number_start;
     UnzipClass.FCurrFile->offset = (long)UnzipClass.FCurrDirEntry.relative_offset_local_header;
     return 1;
