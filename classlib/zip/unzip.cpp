@@ -2609,6 +2609,8 @@ int TUnzip::Extract()
     machines (redundant on 32-bit machines).
   ---------------------------------------------------------------------------*/
 
+    CloseAndSetTime();
+
     if (FDiskFull) {            /* set by flush() */
         if (FDiskFull > 1) {
             /* warn user about the incomplete file */
