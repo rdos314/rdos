@@ -18,6 +18,10 @@
 
 #define LFLAG  3   /* short "ls -l" type listing */
 
+#  define WILDCHAR   '?'
+#  define BEG_RANGE  '['
+#  define END_RANGE  ']'
+
      static const char PasswPrompt[] = "[%s] %s password: ";
      static const char PasswPrompt2[] = "Enter password: ";
      static const char PasswRetry[] = "password incorrect--reenter: ";
@@ -1015,5 +1019,165 @@ static int count_args(const char *s)
     } while (ch);
 
     return count;
+}
+
+
+
+static char *isshexp(const char *p)
+/* If p is a sh expression, a pointer to the first special character is
+   returned.  Otherwise, NULL is returned. */
+{
+    for (; *p; p++)
+        if (*p == '\\' && *(p+1))
+            p++;
+        else if (*p == WILDCHAR || *p == '*' || *p == BEG_RANGE)
+            return (char *)p;
+    return NULL;
+} /* end function isshexp() */
+
+
+
+static int namecmp(const char *s1, const char *s2)
+{
+    int d;
+
+    for (;;) {
+        d = (int)tolower((unsigned char)*s1)
+          - (int)tolower((unsigned char)*s2);
+
+        if (d || *s1 == 0 || *s2 == 0)
+            return d;
+
+        s1++;
+        s2++;
+    }
+} /* end function namecmp() */
+
+
+
+int iswild(const char *p)        /* originally only used for stat()-bug workaround in */
+{                    /*  now used in process_zipfiles() as well */
+    for (; *p; p++)
+        if (*p == '\\' && *(p+1))
+            ++p;
+        else if (*p == '?' || *p == '*' || *p == '[')
+            return TRUE;
+
+    return FALSE;
+
+} /* end function iswild() */
+
+#define Case(x)  (ic? tolower(x) : (x))
+
+
+static int recmatch(const unsigned char *p, const unsigned char *s, int ic)
+/* Recursively compare the sh pattern p with the string s and return 1 if
+ * they match, and 0 or 2 if they don't or if there is a syntax error in the
+ * pattern.  This routine recurses on itself no more deeply than the number
+ * of characters in the pattern. */
+{
+    unsigned int c;       /* pattern char or start of range in [-] loop */
+
+    /* Get first character, the pattern for new recmatch calls follows */
+    c = *p; p++;
+
+    /* If that was the end of the pattern, match if string empty too */
+    if (c == 0)
+        return *s == 0;
+
+    /* '?' (or '%') matches any character (but not an empty string). */
+    if (c == WILDCHAR)
+        return *s ? recmatch(p, s + 1, ic) : 0;
+
+    /* '*' matches any number of characters, including zero */
+    if (c == '*') {
+        if (*p == 0)
+            return 1;
+        if (isshexp((const char *)p) == NULL) {
+            /* Optimization for rest of pattern being a literal string:
+             * If there are no other shell expression chars in the rest
+             * of the pattern behind the multi-char wildcard, then just
+             * compare the literal string tail.
+             */
+            const unsigned char *srest;
+
+            srest = s + (strlen((const char *)s) - strlen((const char *)p));
+            if (srest - s < 0)
+                /* remaining literal string from pattern is longer than rest
+                 * of test string, there can't be a match
+                 */
+                return 0;
+            else
+              /* compare the remaining literal pattern string with the last
+               * bytes of the test string to check for a match
+               */
+                return ((ic
+                         ? namecmp((const char *)p, (const char *)srest)
+                         : strcmp((const char *)p, (const char *)srest)
+                        ) == 0);
+        } else {
+            /* pattern contains more wildcards, continue with recursion... */
+            for (; *s; s++)
+                if ((c = recmatch(p, s, ic)) != 0)
+                    return (int)c;
+            return 2;  /* 2 means give up--match will return false */
+        }
+    }
+
+    /* Parse and process the list of characters and ranges in brackets */
+    if (c == BEG_RANGE) {
+        int e;          /* flag true if next char to be taken literally */
+        const unsigned char *q;  /* pointer to end of [-] group */
+        int r;          /* flag true to match anything but the range */
+
+        if (*s == 0)                            /* need a character to match */
+            return 0;
+        p += (r = (*p == '!' || *p == '^'));    /* see if reverse */
+        for (q = p, e = 0; *q; q++)       /* find closing bracket */
+            if (e)
+                e = 0;
+            else
+                if (*q == '\\')      /* GRR:  change to ^ for MS-DOS, OS/2? */
+                    e = 1;
+                else if (*q == END_RANGE)
+                    break;
+        if (*q != END_RANGE)         /* nothing matches if bad syntax */
+            return 0;
+        for (c = 0, e = (*p == '-'); p < q; p++) {
+            /* go through the list */
+            if (!e && *p == '\\')               /* set escape flag if \ */
+                e = 1;
+            else if (!e && *p == '-')           /* set start of range if - */
+                c = *(p-1);
+            else {
+                unsigned int cc = Case(*s);
+
+                if (*(p+1) != '-')
+                    for (c = c ? c : *p; c <= *p; c++)  /* compare range */
+                        if ((unsigned)Case(c) == cc) /* typecast for MSC bug */
+                            return r ? 0 : recmatch(q + 1, s + 1, ic);
+                c = e = 0;   /* clear range, escape flags */
+            }
+        }
+        return r ? recmatch(q + 1, s + 1, ic) : 0;
+                                        /* bracket match failed */
+    }
+
+    /* if escape ('\\'), just compare next character */
+    if (c == '\\' && (c = *p++) == 0)     /* if \ at end, then syntax error */
+        return 0;
+
+    /* just a character--compare it */
+    return Case((unsigned char)c) == Case(*s) ?
+           recmatch(p, s + 1, ic) : 0;
+
+} /* end function recmatch() */
+
+
+/* match() is a shell to recmatch() to return only Boolean values. */
+
+int match(const char *string, const char *pattern, int ignore_case)
+{
+    return recmatch((unsigned char *)pattern, (unsigned char *)string, ignore_case) == 1;
 }
 
