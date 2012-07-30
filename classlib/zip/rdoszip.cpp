@@ -18,6 +18,10 @@
 
 #define LFLAG  3   /* short "ls -l" type listing */
 
+     static const char PasswPrompt[] = "[%s] %s password: ";
+     static const char PasswPrompt2[] = "Enter password: ";
+     static const char PasswRetry[] = "password incorrect--reenter: ";
+
 static int created_dir;        /* used by mapname(), checkdir() */
 static int renamed_fullpath;   /* ditto */
 
@@ -816,3 +820,94 @@ char *getp(const char *m, char *p, int n)
     return p;                   /* return pointer to password */
 
 } /* end function getp() */
+
+
+/**************************/
+/* Function UzpPassword() */
+/**************************/
+
+int  UzpPassword (void *pG, int *rcnt, char *pwbuf, int size, const char *zfn, const char *efn)
+{
+    int r = IZ_PW_ENTERED;
+    char *m;
+    char *prompt;
+
+    if (*rcnt == 0) {           /* First call for current entry */
+        *rcnt = 2;
+        if ((prompt = (char *)malloc(2*FILE_NAME_SIZE + 15)) != (char *)NULL) {
+            sprintf(prompt, PasswPrompt,
+                    FnFilter1(zfn), FnFilter2(efn));
+            m = prompt;
+        } else
+            m = (char *)PasswPrompt;
+    } else {                    /* Retry call, previous password was wrong */
+        (*rcnt)--;
+        prompt = NULL;
+        m = (char *)PasswRetry;
+    }
+
+    m = getp(m, pwbuf, size);
+    if (prompt != (char *)NULL) {
+        free(prompt);
+    }
+    if (m == (char *)NULL) {
+        r = IZ_PW_ERROR;
+    }
+    else if (*pwbuf == '\0') {
+        r = IZ_PW_CANCELALL;
+    }
+    return r;
+
+
+} /* end function UzpPassword() */
+
+
+
+
+/*********************/
+/* Function fzofft() */
+/*********************/
+
+/* Format a zoff_t value in a cylindrical buffer set. */
+char *fzofft(long val, const char *pre, const char *post)
+{
+    /* Storage cylinder. (now in globals.h) */
+    /*static char fzofft_buf[FZOFFT_NUM][FZOFFT_LEN];*/
+    /*static int fzofft_index = 0;*/
+
+    /* Temporary format string storage. */
+    char fmt[16];
+
+    /* Assemble the format string. */
+    fmt[0] = '%';
+    fmt[1] = '\0';             /* Start after initial "%". */
+    if (pre == FZOFFT_HEX_WID)  /* Special hex width. */
+    {
+        strcat(fmt, FZOFFT_HEX_WID_VALUE);
+    }
+    else if (pre == FZOFFT_HEX_DOT_WID) /* Special hex ".width". */
+    {
+        strcat(fmt, ".");
+        strcat(fmt, FZOFFT_HEX_WID_VALUE);
+    }
+    else if (pre != NULL)       /* Caller's prefix (width). */
+    {
+        strcat(fmt, pre);
+    }
+
+    strcat(fmt, FZOFFT_FMT);   /* Long or long-long or whatever. */
+
+    if (post == NULL)
+        strcat(fmt, "d");      /* Default radix = decimal. */
+    else
+        strcat(fmt, post);     /* Caller's radix. */
+
+    /* Advance the cylinder. */
+    G.fzofft_index = (G.fzofft_index + 1) % FZOFFT_NUM;
+
+    /* Write into the current chamber. */
+    sprintf(G.fzofft_buf[G.fzofft_index], fmt, val);
+
+    /* Return a pointer to this chamber. */
+    return G.fzofft_buf[G.fzofft_index];
+}
