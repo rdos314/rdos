@@ -24,6 +24,9 @@
 
 #include "oldunzip.h"
 
+#define NUM_METHODS      17     /* number of known method IDs */
+
+unsigned FindCompressMethod(unsigned compr_methodnum);
 
 /* Define OS-specific attributes for use on ALL platforms--the S_xxxx
  * versions of these are defined differently (or not defined) by different
@@ -663,7 +666,6 @@ int zipinfo()   /* return PK-type error code */
 
     uO.L_flag = FALSE;      /* zipinfo mode: never convert name to lowercase */
     UnzipClass.FCurrFile = &UnzipClass.FFileArr[0];       /* (re-)initialize, (just to make sure) */
-    UnzipClass.FTextMode = 0;  /* so one can read on screen (is this ever used?) */
 
     /* reset endprev for new zipfile; account for multi-part archives (?) */
     endprev = (UnzipClass.FCurrDirEntry.relative_offset_local_header == 4L)? 4L : 0L;
@@ -925,7 +927,7 @@ static int zi_long(zusz_t *pEndprev, int error_in_archive)
     extnum = (unsigned)MIN(UnzipClass.FCurrDirEntry.version_needed_to_extract[1], NUM_HOSTS);
     extver = (unsigned)UnzipClass.FCurrDirEntry.version_needed_to_extract[0];
     methid = (unsigned)UnzipClass.FCurrDirEntry.compression_method;
-    methnum = find_compr_idx(UnzipClass.FCurrDirEntry.compression_method);
+    methnum = FindCompressMethod(UnzipClass.FCurrDirEntry.compression_method);
 
     Info(0, "  ");  
     fnprint();
@@ -1205,7 +1207,7 @@ static int zi_short()   /* return PK-type error code */
   ---------------------------------------------------------------------------*/
 
     methid = (unsigned)(UnzipClass.FCurrDirEntry.compression_method);
-    methnum = find_compr_idx(UnzipClass.FCurrDirEntry.compression_method);
+    methnum = FindCompressMethod(UnzipClass.FCurrDirEntry.compression_method);
     hostnum = (unsigned)(UnzipClass.FCurrFile->hostnum);
     hostver = (unsigned)(UnzipClass.FCurrFile->hostver);
 /*

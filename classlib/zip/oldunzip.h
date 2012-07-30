@@ -536,7 +536,6 @@ typedef size_t extent;
 #define IBMLZ77ED        19
 #define WAVPACKED        97
 #define PPMDED           98
-#define NUM_METHODS      17     /* number of known method IDs */
 /* don't forget to update list.c (list_files()), extract.c and zipinfo.c
  * appropriately if NUM_METHODS changes */
 
@@ -883,7 +882,6 @@ int    extract_or_test_files     OF(());
 /* static int   TestExtraField   OF((unsigned char *ef, unsigned ef_len)); */
 /* static int   test_OS2         OF((unsigned char *eb, unsigned eb_size)); */
 /* static int   test_NT          OF((unsigned char *eb, unsigned eb_size)); */
-unsigned find_compr_idx          OF((unsigned compr_methodnum));
 int    memextract                OF((unsigned char *tgt, unsigned long tgtsize,
                                      const unsigned char *src, unsigned long srcsize));
 int    memflush                  OF((const unsigned char *rawbuf, unsigned long size));

@@ -42,6 +42,8 @@
 #define     FALSE       0
 #define     TRUE        !FALSE
 
+#define UNZIP_VERSION   20
+
 #define LF     10        /* '\n' on ASCII machines; must be 10 due to EBCDIC */
 #define CR     13        /* '\r' on ASCII machines; must be 13 due to EBCDIC */
 #define CTRLZ  26        /* DOS & OS/2 EOF marker (used in fileio.c, vms.c) */
@@ -228,6 +230,35 @@ static const unsigned short cpdist8[] =
         5633, 5761, 5889, 6017, 6145, 6273, 6401, 6529, 6657, 6785, 6913,
         7041, 7169, 7297, 7425, 7553, 7681, 7809, 7937, 8065};
 
+#define NUM_METHODS      17     /* number of known method IDs */
+
+static const unsigned ComprIDs[NUM_METHODS] = {
+     STORED, SHRUNK, REDUCED1, REDUCED2, REDUCED3, REDUCED4,
+     IMPLODED, TOKENIZED, DEFLATED, ENHDEFLATED, DCLIMPLODED,
+     BZIPPED, LZMAED, IBMTERSED, IBMLZ77ED, WAVPACKED, PPMDED
+   };
+
+static const char CmprNone[]       = "store";
+static const char CmprShrink[]     = "shrink";
+static const char CmprReduce[]     = "reduce";
+static const char CmprImplode[]    = "implode";
+static const char CmprTokenize[]   = "tokenize";
+static const char CmprDeflate[]    = "deflate";
+static const char CmprDeflat64[]   = "deflate64";
+static const char CmprDCLImplode[] = "DCL implode";
+static const char CmprBzip[]       = "bzip2";
+static const char CmprLZMA[]       = "LZMA";
+static const char CmprIBMTerse[]   = "IBM/Terse";
+static const char CmprIBMLZ77[]    = "IBM LZ77";
+static const char CmprWavPack[]    = "WavPack";
+static const char CmprPPMd[]       = "PPMd";
+
+static const char *ComprNames[NUM_METHODS] = {
+     CmprNone, CmprShrink, CmprReduce, CmprReduce, CmprReduce, CmprReduce,
+     CmprImplode, CmprTokenize, CmprDeflate, CmprDeflat64, CmprDCLImplode,
+     CmprBzip, CmprLZMA, CmprIBMTerse, CmprIBMLZ77, CmprWavPack, CmprPPMd
+   };
+
 /*##########################################################################
 #
 #   Name       : str2oem
@@ -397,6 +428,27 @@ void DosToRdosTime(unsigned long *msb, unsigned long *lsb, unsigned long dos_dat
     dos_time = (unsigned short)(dos_datetime & 0xFFFFL);
 
     RdosDosTimeDateToTics(dos_date, dos_time, msb, lsb);
+}
+
+/*##########################################################################
+#
+#   Name       : FindCompressMethod
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned FindCompressMethod(unsigned compr_methodnum)
+{
+    unsigned i;
+
+    for (i = 0; i < NUM_METHODS; i++) {
+        if (ComprIDs[i] == compr_methodnum) break;
+    }
+    return i;
 }
 
 /*##########################################################################
@@ -831,7 +883,7 @@ int TUnzip::Decrypt()
 
     /* get header once (turn off "encrypted" flag temporarily so we don't
      * try to decrypt the same data twice) */
-    FEncrypted = FALSE;
+    FCurrFile->encrypted = FALSE;
     DeferInput();
     
     for (n = 0; n < RAND_HEAD_LEN; n++) {
@@ -839,7 +891,7 @@ int TUnzip::Decrypt()
         h[n] = (unsigned char)b;
     }
     UndeferInput();
-    FEncrypted = TRUE;
+    FCurrFile->encrypted = TRUE;
 
     return PK_WARN;
 
@@ -915,7 +967,7 @@ int TUnzip::ReadByte()   /* refill inbuf and return a byte if available, else EO
         DeferInput();           /* decrements G.csize */
     }
 
-    if (FEncrypted) {
+    if (FCurrFile && FCurrFile->encrypted) {
         char *p;
         int n;
 
@@ -987,7 +1039,7 @@ int TUnzip::FillInbuf() /* like readbyte() except returns number of bytes in inb
     FInPtr = FInBuf;
     DeferInput();           /* decrements G.csize */
 
-    if (FEncrypted) {
+    if (FCurrFile && FCurrFile->encrypted) {
         char *p;
         int n;
 
@@ -1290,7 +1342,7 @@ int TUnzip::Flush(char *rawbuf, int size)
     necessarily checked for overflow.
   ---------------------------------------------------------------------------*/
 
-    if (FTextMode) {
+    if (FCurrFile && FCurrFile->textfile) {
 
     /*-----------------------------------------------------------------------
         Algorithm:  CR/LF => native; lone CR => native; lone LF => native.
@@ -2418,7 +2470,7 @@ int TUnzip::Extract()
         /* if quiet enough, we haven't output the filename yet:  do it */
         Info(0x401, "%-22s ", FCurrFileName);
         Info(0x401, " bad CRC %08lx  (should be %08lx)\n", FCurrCrcVal, FCurrFileHeader.crc32);
-        if (FEncrypted)
+        if (FCurrFile && FCurrFile->encrypted)
             Info(0x401, "   (may instead be incorrect password)\n");
         error = PK_ERR;
     } else
@@ -2463,4 +2515,70 @@ int TUnzip::CheckForNewer(const char *filename)
         return DOES_NOT_EXIST;
 
 } /* end function check_for_newer() */
+
+/*##########################################################################
+#
+#   Name       : TUnzip::DirEntryToFile
+#
+#   Purpose....: Convert dir-entry to file entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::DirEntryToFile(struct TUnzipFile *file, struct TUnzipDirEntry *dir, const char *filename)
+{
+     unsigned cmpridx;
+
+/*---------------------------------------------------------------------------
+    Check central directory info for version/compatibility requirements.
+  ---------------------------------------------------------------------------*/
+
+    file->encrypted = dir->general_purpose_bit_flag & 1;   /* bit field */
+    file->ExtLocHdr = (dir->general_purpose_bit_flag & 8) == 8;  /* bit */
+    file->textfile = dir->internal_file_attributes & 1;    /* bit field */
+    file->crc = dir->crc32;
+    file->compr_size = dir->csize;
+    file->uncompr_size = dir->ucsize;
+
+    if (dir->version_needed_to_extract[0] > UNZIP_VERSION) {
+        Info(0x401, "   skipping: %-22s  need %s compat. v%u.%u (can do v%u.%u)\n",
+              filename, "PK",
+              dir->version_needed_to_extract[0] / 10,
+              dir->version_needed_to_extract[0] % 10,
+              UNZIP_VERSION / 10, UNZIP_VERSION % 10);
+        return 0;
+    }
+
+    if ((dir->compression_method >= REDUCED1 && dir->compression_method <= REDUCED4) ||
+        dir->compression_method==TOKENIZED ||
+        (dir->compression_method>DEFLATED))
+    {
+        cmpridx = FindCompressMethod(dir->compression_method);
+        if (cmpridx < NUM_METHODS)
+            Info(0x401, "   skipping: %-22s  `%s' method not supported\n",
+              filename,
+              ComprNames[cmpridx]);
+        else
+            Info(0x401, "   skipping: %-22s  unsupported compression method %u\n",
+              filename,
+              dir->compression_method);
+        return 0;
+    }
+
+    /* store a copy of the central header filename for later comparison */
+    file->cfilname = new char[strlen(filename) + 1];
+    if (file->cfilname == 0) {
+        Info(0x401, "%s:  warning, no memory for comparison with local header\n", filename);
+    } else
+        strcpy(file->cfilname, filename);
+
+    file->diskstart = dir->disk_number_start;
+    file->offset = (long)dir->relative_offset_local_header;
+    return 1;
+
+} /* end function store_info() */
+
+
 

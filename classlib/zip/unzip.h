@@ -130,6 +130,7 @@ struct TUnzipFile
     unsigned long uncompr_size;     /* uncompressed size (needed if extended header) */
     unsigned long crc;              /* crc (needed if extended header) */
     unsigned short diskstart;       /* no of volume where this entry starts */
+    int encrypted;                  /* is encrypted */
     unsigned char hostver;
     unsigned char hostnum;
     unsigned ExtLocHdr : 1;  /* use time instead of CRC for decrypt check */
@@ -172,6 +173,7 @@ public:
     int Extract();
 
     int CheckForNewer(const char *filename);
+    int DirEntryToFile(struct TUnzipFile *file, struct TUnzipDirEntry *entry, const char *filename);
 
 // these must be global due to callback interface
 
@@ -191,12 +193,9 @@ public:
     int FBufStart;
     long FDecompSize;
 
-    int FEncrypted;
-
     int FExtraBytes;
 
     char FCurrFileName[FILE_NAME_SIZE];
-    int FTextMode;
     int FDiskFull;
 
     struct TUnzipFileHeader FCurrFileHeader;

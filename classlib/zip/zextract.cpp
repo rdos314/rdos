@@ -73,7 +73,6 @@
     } \
 }
 
-static int store_info OF(());
 static int extract_or_test_entrylist OF((unsigned numchunk,
                 unsigned long *pfilnum, unsigned long *pnum_bad_pwd, long *pold_extra_bytes,
                 unsigned *pnum_dirs, direntry **pdirlist,
@@ -97,30 +96,6 @@ static const char ComprMsgNum[] =
   "   skipping: %-22s  unsupported compression method %u\n";
    static const char ComprMsgName[] =
      "   skipping: %-22s  `%s' method not supported\n";
-   static const char CmprNone[]       = "store";
-   static const char CmprShrink[]     = "shrink";
-   static const char CmprReduce[]     = "reduce";
-   static const char CmprImplode[]    = "implode";
-   static const char CmprTokenize[]   = "tokenize";
-   static const char CmprDeflate[]    = "deflate";
-   static const char CmprDeflat64[]   = "deflate64";
-   static const char CmprDCLImplode[] = "DCL implode";
-   static const char CmprBzip[]       = "bzip2";
-   static const char CmprLZMA[]       = "LZMA";
-   static const char CmprIBMTerse[]   = "IBM/Terse";
-   static const char CmprIBMLZ77[]    = "IBM LZ77";
-   static const char CmprWavPack[]    = "WavPack";
-   static const char CmprPPMd[]       = "PPMd";
-   static const char *ComprNames[NUM_METHODS] = {
-     CmprNone, CmprShrink, CmprReduce, CmprReduce, CmprReduce, CmprReduce,
-     CmprImplode, CmprTokenize, CmprDeflate, CmprDeflat64, CmprDCLImplode,
-     CmprBzip, CmprLZMA, CmprIBMTerse, CmprIBMLZ77, CmprWavPack, CmprPPMd
-   };
-   static const unsigned ComprIDs[NUM_METHODS] = {
-     STORED, SHRUNK, REDUCED1, REDUCED2, REDUCED3, REDUCED4,
-     IMPLODED, TOKENIZED, DEFLATED, ENHDEFLATED, DCLIMPLODED,
-     BZIPPED, LZMAED, IBMTERSED, IBMLZ77ED, WAVPACKED, PPMDED
-   };
 static const char FilNamMsg[] =
   "%s:  bad filename length (%s)\n";
    static const char WarnNoMemCFName[] =
@@ -389,7 +364,7 @@ int extract_or_test_files()    /* return PK-type error code */
             UnzipClass.SkipHeaderString(UnzipClass.FCurrDirEntry.extra_field_length);
             UnzipClass.SkipHeaderString(UnzipClass.FCurrDirEntry.file_comment_length);
             if (G.process_all_files) {
-                if (store_info())
+                if (UnzipClass.DirEntryToFile(UnzipClass.FCurrFile, &UnzipClass.FCurrDirEntry, UnzipClass.FCurrFileName))
                     ++j;  /* file is OK; info[] stored; continue with next */
                 else
                     ++num_skipped;
@@ -418,7 +393,7 @@ int extract_or_test_files()    /* return PK-type error code */
                         }
                 }
                 if (do_this_file) {
-                    if (store_info())
+                    if (UnzipClass.DirEntryToFile(UnzipClass.FCurrFile, &UnzipClass.FCurrDirEntry, UnzipClass.FCurrFileName))
                         ++j;            /* file is OK */
                     else
                         ++num_skipped;  /* unsupp. compression or encryption */
@@ -608,142 +583,6 @@ int extract_or_test_files()    /* return PK-type error code */
 
 
 
-/***************************/
-/*  Function store_info()  */
-/***************************/
-
-static int store_info()   /* return 0 if skipping, 1 if OK */
-{
-#  define UNKN_BZ2 TRUE       /* bzip2 unknown */
-
-#ifdef USE_LZMA
-#  define UNKN_LZMA (UnzipClass.FCurrDirEntry.compression_method!=LZMAED)
-#else
-#  define UNKN_LZMA TRUE      /* LZMA unknown */
-#endif
-
-#ifdef USE_WAVP
-#  define UNKN_WAVP (UnzipClass.FCurrDirEntry.compression_method!=WAVPACKED)
-#else
-#  define UNKN_WAVP TRUE      /* WavPack unknown */
-#endif
-
-#ifdef USE_PPMD
-#  define UNKN_PPMD (UnzipClass.FCurrDirEntry.compression_method!=PPMDED)
-#else
-#  define UNKN_PPMD TRUE      /* PPMd unknown */
-#endif
-
-#    define UNKN_RED (UnzipClass.FCurrDirEntry.compression_method >= REDUCED1 && \
-                      UnzipClass.FCurrDirEntry.compression_method <= REDUCED4)
-#    define UNKN_SHR  FALSE  /* unshrinking not unknown */
-#    define UNKN_COMPR (UNKN_RED || UNKN_SHR || \
-     UnzipClass.FCurrDirEntry.compression_method==TOKENIZED || \
-     (UnzipClass.FCurrDirEntry.compression_method>DEFLATED && UNKN_BZ2 && UNKN_LZMA \
-      && UNKN_WAVP && UNKN_PPMD))
-
-#   define UNZVERS_SUPPORT  UNZIP_VERSION
-
-/*---------------------------------------------------------------------------
-    Check central directory info for version/compatibility requirements.
-  ---------------------------------------------------------------------------*/
-
-    UnzipClass.FEncrypted = UnzipClass.FCurrDirEntry.general_purpose_bit_flag & 1;   /* bit field */
-    UnzipClass.FCurrFile->ExtLocHdr = (UnzipClass.FCurrDirEntry.general_purpose_bit_flag & 8) == 8;  /* bit */
-    UnzipClass.FCurrFile->textfile = UnzipClass.FCurrDirEntry.internal_file_attributes & 1;    /* bit field */
-    UnzipClass.FCurrFile->crc = UnzipClass.FCurrDirEntry.crc32;
-    UnzipClass.FCurrFile->compr_size = UnzipClass.FCurrDirEntry.csize;
-    UnzipClass.FCurrFile->uncompr_size = UnzipClass.FCurrDirEntry.ucsize;
-
-    switch (uO.aflag) {
-        case 0:
-            UnzipClass.FTextMode = FALSE;   /* bit field */
-            break;
-        case 1:
-            UnzipClass.FTextMode = UnzipClass.FCurrFile->textfile;   /* auto-convert mode */
-            break;
-        default:  /* case 2: */
-            UnzipClass.FTextMode = TRUE;
-            break;
-    }
-
-    if (UnzipClass.FCurrDirEntry.version_needed_to_extract[1] == VMS_) {
-        if (UnzipClass.FCurrDirEntry.version_needed_to_extract[0] > VMS_UNZIP_VERSION) {
-            if (!((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag)))
-                Info(0x401, VersionMsg,
-                  FnFilter1(UnzipClass.FCurrFileName), "VMS",
-                  UnzipClass.FCurrDirEntry.version_needed_to_extract[0] / 10,
-                  UnzipClass.FCurrDirEntry.version_needed_to_extract[0] % 10,
-                  VMS_UNZIP_VERSION / 10, VMS_UNZIP_VERSION % 10);
-            return 0;
-        }
-        else if (!uO.tflag && !IS_OVERWRT_ALL) { /* if -o, extract anyway */
-            Info(0x481, VMSFormatQuery, FnFilter1(UnzipClass.FCurrFileName));
-            fgets(G.answerbuf, sizeof(G.answerbuf), stdin);
-            if ((*G.answerbuf != 'y') && (*G.answerbuf != 'Y'))
-                return 0;
-        }
-    /* usual file type:  don't need VMS to extract */
-    } else if (UnzipClass.FCurrDirEntry.version_needed_to_extract[0] > UNZVERS_SUPPORT) {
-        if (!((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag)))
-            Info(0x401, VersionMsg,
-              FnFilter1(UnzipClass.FCurrFileName), "PK",
-              UnzipClass.FCurrDirEntry.version_needed_to_extract[0] / 10,
-              UnzipClass.FCurrDirEntry.version_needed_to_extract[0] % 10,
-              UNZVERS_SUPPORT / 10, UNZVERS_SUPPORT % 10);
-        return 0;
-    }
-
-    if (UNKN_COMPR) {
-        if (!((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag))) {
-            unsigned cmpridx;
-
-            if ((cmpridx = find_compr_idx(UnzipClass.FCurrDirEntry.compression_method))
-                < NUM_METHODS)
-                Info(0x401, ComprMsgName,
-                  FnFilter1(UnzipClass.FCurrFileName),
-                  ComprNames[cmpridx]);
-            else
-                Info(0x401, ComprMsgNum,
-                  FnFilter1(UnzipClass.FCurrFileName),
-                  UnzipClass.FCurrDirEntry.compression_method);
-        }
-        return 0;
-    }
-
-    /* store a copy of the central header filename for later comparison */
-    UnzipClass.FCurrFile->cfilname = new char[strlen(UnzipClass.FCurrFileName) + 1];
-    if (UnzipClass.FCurrFile->cfilname == 0) {
-        Info(0x401, WarnNoMemCFName, FnFilter1(UnzipClass.FCurrFileName));
-    } else
-        strcpy(UnzipClass.FCurrFile->cfilname, UnzipClass.FCurrFileName);
-
-    UnzipClass.FCurrFile->diskstart = UnzipClass.FCurrDirEntry.disk_number_start;
-    UnzipClass.FCurrFile->offset = (long)UnzipClass.FCurrDirEntry.relative_offset_local_header;
-    return 1;
-
-} /* end function store_info() */
-
-
-
-
-
-/*******************************/
-/*  Function find_compr_idx()  */
-/*******************************/
-
-unsigned find_compr_idx(unsigned compr_methodnum)
-{
-    unsigned i;
-
-    for (i = 0; i < NUM_METHODS; i++) {
-        if (ComprIDs[i] == compr_methodnum) break;
-    }
-    return i;
-}
-
-
-
 
 
 /******************************************/
@@ -906,7 +745,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
         if (UnzipClass.FCurrFileHeader.compression_method == STORED) {
             zusz_t csiz_decrypted = UnzipClass.FCurrFileHeader.csize;
 
-            if (UnzipClass.FEncrypted)
+            if (UnzipClass.FCurrFile->encrypted)
                 csiz_decrypted -= 12;
             if (UnzipClass.FCurrFileHeader.ucsize != csiz_decrypted) {
                 Info(0x401, WrnStorUCSizCSizDiff,
@@ -919,7 +758,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
             }
         }
 
-        if (UnzipClass.FEncrypted) {
+        if (UnzipClass.FCurrFile->encrypted) {
             error = UnzipClass.Decrypt();
             if (error != PK_COOL) {
                 if (error == PK_WARN) {
