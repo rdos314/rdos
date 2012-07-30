@@ -16,6 +16,8 @@
 #    define Readdir  readdir
 #    define Closedir closedir
 
+#define LFLAG  3   /* short "ls -l" type listing */
+
 static int created_dir;        /* used by mapname(), checkdir() */
 static int renamed_fullpath;   /* ditto */
 
@@ -603,3 +605,158 @@ int checkdir(char *pathcomp, int flag)
     return MPN_INVALID; /* should never reach */
 
 } /* end function checkdir() */
+
+/************************/
+/*  Function zi_opts()  */
+/************************/
+
+int zi_opts(int *pargc, char ***pargv)
+{
+    char   **argv, *s;
+    int    argc, c, error=FALSE, negative=0;
+    int    hflag_slmv=TRUE, hflag_2=FALSE;  /* diff options => diff defaults */
+    int    tflag_slm=TRUE, tflag_2v=FALSE;
+    int    explicit_h=FALSE, explicit_t=FALSE;
+
+
+    G.extract_flag = FALSE;   /* zipinfo does not extract to disk */
+    argc = *pargc;
+    argv = *pargv;
+
+    while (--argc > 0 && (*++argv)[0] == '-') {
+        s = argv[0] + 1;
+        while ((c = *s++) != 0) {    /* "!= 0":  prevent Turbo C warning */
+            switch (c) {
+                case '-':
+                    ++negative;
+                    break;
+                case '1':      /* shortest listing:  JUST filenames */
+                    if (negative)
+                        uO.lflag = -2, negative = 0;
+                    else
+                        uO.lflag = 1;
+                    break;
+                case '2':      /* just filenames, plus headers if specified */
+                    if (negative)
+                        uO.lflag = -2, negative = 0;
+                    else
+                        uO.lflag = 2;
+                    break;
+                case ('C'):    /* -C:  match filenames case-insensitively */
+                    if (negative)
+                        uO.C_flag = FALSE, negative = 0;
+                    else
+                        uO.C_flag = TRUE;
+                    break;
+                case 'h':      /* header line */
+                    if (negative)
+                        hflag_2 = hflag_slmv = FALSE, negative = 0;
+                    else {
+                        hflag_2 = hflag_slmv = explicit_h = TRUE;
+                        if (uO.lflag == -1)
+                            uO.lflag = 0;
+                    }
+                    break;
+                case 'l':      /* longer form of "ls -l" type listing */
+                    if (negative)
+                        uO.lflag = -2, negative = 0;
+                    else
+                        uO.lflag = 5;
+                    break;
+                case 'm':      /* medium form of "ls -l" type listing */
+                    if (negative)
+                        uO.lflag = -2, negative = 0;
+                    else
+                        uO.lflag = 4;
+                    break;
+                case 'M':      /* send output through built-in "more" */
+                    if (negative)
+                        G.M_flag = FALSE, negative = 0;
+                    else
+                        G.M_flag = TRUE;
+                    break;
+                case 's':      /* default:  shorter "ls -l" type listing */
+                    if (negative)
+                        uO.lflag = -2, negative = 0;
+                    else
+                        uO.lflag = 3;
+                    break;
+                case 't':      /* totals line */
+                    if (negative)
+                        tflag_2v = tflag_slm = FALSE, negative = 0;
+                    else {
+                        tflag_2v = tflag_slm = explicit_t = TRUE;
+                        if (uO.lflag == -1)
+                            uO.lflag = 0;
+                    }
+                    break;
+                case ('T'):    /* use (sortable) decimal time format */
+                    if (negative)
+                        uO.T_flag = FALSE, negative = 0;
+                    else
+                        uO.T_flag = TRUE;
+                    break;
+                case 'v':      /* turbo-verbose listing */
+                    if (negative)
+                        uO.lflag = -2, negative = 0;
+                    else
+                        uO.lflag = 10;
+                    break;
+                case 'z':      /* print zipfile comment */
+                    if (negative)
+                        uO.zflag = negative = 0;
+                    else
+                        uO.zflag = 1;
+                    break;
+                case 'Z':      /* ZipInfo mode:  ignore */
+                    break;
+                default:
+                    error = TRUE;
+                    break;
+            }
+        }
+    }
+    if ((argc-- == 0) || error) {
+        *pargc = argc;
+        *pargv = argv;
+        return usage(error);
+    }
+
+    if (G.M_flag && !isatty(1))  /* stdout redirected: "more" func useless */
+        G.M_flag = 0;
+
+    /* if no listing options given (or all negated), or if only -h/-t given
+     * with individual files specified, use default listing format */
+    if ((uO.lflag < 0) || ((argc > 0) && (uO.lflag == 0)))
+        uO.lflag = LFLAG;
+
+    /* set header and totals flags to default or specified values */
+    switch (uO.lflag) {
+        case 0:   /* 0:  can only occur if either -t or -h explicitly given; */
+        case 2:   /*  therefore set both flags equal to normally false value */
+            uO.hflag = hflag_2;
+            uO.tflag = tflag_2v;
+            break;
+        case 1:   /* only filenames, *always* */
+            uO.hflag = FALSE;
+            uO.tflag = FALSE;
+            uO.zflag = FALSE;
+            break;
+        case 3:
+        case 4:
+        case 5:
+            uO.hflag = ((argc > 0) && !explicit_h)? FALSE : hflag_slmv;
+            uO.tflag = ((argc > 0) && !explicit_t)? FALSE : tflag_slm;
+            break;
+        case 10:
+            uO.hflag = hflag_slmv;
+            uO.tflag = tflag_2v;
+            break;
+    }
+
+    *pargc = argc;
+    *pargv = argv;
+    return 0;
+
+} /* end function zi_opts() */
+
