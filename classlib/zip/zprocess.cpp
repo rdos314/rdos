@@ -541,10 +541,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
           error_in_archive);
 
         {
-            if (uO.zipinfo_mode)
-                error = zipinfo();                 /* ZIPINFO 'EM */
-            else
-                error = extract_or_test_files();   /* EXTRACT OR TEST 'EM */
+            error = extract_or_test_files();   /* EXTRACT OR TEST 'EM */
 
             Trace("done with extract/list files (error = %d)\n",
                    error);
@@ -949,13 +946,6 @@ static int find_ecrec(long searchlen)          /* return PK-class error */
 
     G.expect_ecrec_offset = G.ecrec.offset_start_central_directory +
                             G.ecrec.size_central_directory;
-
-    if (uO.zipinfo_mode) {
-        /* In ZipInfo mode, additional info about the data found in the
-           end-of-central-directory areas is printed out.
-         */
-        zi_end_central();
-    }
 
     return error_in_archive;
 

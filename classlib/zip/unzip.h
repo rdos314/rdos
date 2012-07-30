@@ -175,6 +175,10 @@ public:
     int CheckForNewer(const char *filename);
     int DirEntryToFile(struct TUnzipFile *file, struct TUnzipDirEntry *entry, const char *filename);
 
+    void CreateTimeStr(struct TUnzipDirEntry *dir, char *str);
+    void ShowVerbose(struct TUnzipFile *file, struct TUnzipDirEntry *dir);
+    void ShowCompact(struct TUnzipFile *file, struct TUnzipDirEntry *dir);
+
 // these must be global due to callback interface
 
     char *GetInbuf();

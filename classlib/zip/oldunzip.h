@@ -837,12 +837,6 @@ unsigned ef_scan_for_izux        OF((const unsigned char *ef_buf, unsigned ef_le
   ---------------------------------------------------------------------------*/
 
 int   zi_opts                    OF((int *pargc, char ***pargv));
-void     zi_end_central          OF(());
-int      zipinfo                 OF(());
-/* static int      zi_long       OF((zusz_t *pEndprev)); */
-/* static int      zi_short      OF(()); */
-/* static char    *zi_time       OF((const unsigned long *datetimez,
-                                     const time_t *modtimez, char *d_t_str));*/
 
 /*---------------------------------------------------------------------------
     Functions in list.c (generic zipfile-listing routines):
