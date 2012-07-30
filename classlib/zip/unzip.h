@@ -133,6 +133,8 @@ struct TUnzipFile
     int encrypted;                  /* is encrypted */
     unsigned char hostver;
     unsigned char hostnum;
+    unsigned long rdos_msb_time;
+    unsigned long rdos_lsb_time;
     unsigned ExtLocHdr : 1;  /* use time instead of CRC for decrypt check */
     unsigned textfile : 1;   /* file is text (according to zip) */
     unsigned lcflag : 1;     /* convert filename to lowercase */
@@ -175,7 +177,7 @@ public:
     int CheckForNewer(const char *filename);
     int DirEntryToFile(struct TUnzipFile *file, struct TUnzipDirEntry *entry, const char *filename);
 
-    void CreateTimeStr(struct TUnzipDirEntry *dir, char *str);
+    void CreateTimeStr(struct TUnzipFile *file, char *str);
     void ShowVerbose(struct TUnzipFile *file, struct TUnzipDirEntry *dir);
     void ShowCompact(struct TUnzipFile *file, struct TUnzipDirEntry *dir);
 

@@ -2697,6 +2697,8 @@ int TUnzip::DirEntryToFile(struct TUnzipFile *file, struct TUnzipDirEntry *dir, 
     file->ExtLocHdr = (dir->general_purpose_bit_flag & 8) == 8;  /* bit */
     file->textfile = dir->internal_file_attributes & 1;    /* bit field */
     file->crc = dir->crc32;
+    file->rdos_msb_time = dir->rdos_msb_time;
+    file->rdos_lsb_time = dir->rdos_lsb_time;
     file->compr_size = dir->csize;
     file->uncompr_size = dir->ucsize;
 
@@ -2749,12 +2751,12 @@ int TUnzip::DirEntryToFile(struct TUnzipFile *file, struct TUnzipDirEntry *dir, 
 #   Returns....: *
 #
 ##########################################################################*/
-void TUnzip::CreateTimeStr(struct TUnzipDirEntry *dir, char *str)
+void TUnzip::CreateTimeStr(struct TUnzipFile *file, char *str)
 {
     int yr, mo, dy, hh, mm, ss, ms, us;
 
-    RdosDecodeMsbTics(dir->rdos_msb_time, &yr, &mo, &dy, &hh);
-    RdosDecodeLsbTics(dir->rdos_lsb_time, &mm, &ss, &ms, &us); 
+    RdosDecodeMsbTics(file->rdos_msb_time, &yr, &mo, &dy, &hh);
+    RdosDecodeLsbTics(file->rdos_lsb_time, &mm, &ss, &ms, &us); 
 
     sprintf(str, "%04u-%02u-%02u %02u:%02u", yr, mo, dy, hh, mm);
 }
@@ -2861,7 +2863,7 @@ void TUnzip::ShowVerbose(struct TUnzipFile *file, struct TUnzipDirEntry *dir)
      * is not used yet.
      */
 
-    CreateTimeStr(dir, attribs);
+    CreateTimeStr(file, attribs);
     Info(0, "  file last modified on (DOS date/time):          %s\n", 
       attribs);
     
@@ -3275,7 +3277,7 @@ void TUnzip::ShowCompact(struct TUnzipFile *file, struct TUnzipDirEntry *dir)
      * To save stack space, we reuse the "char attribs[16]" buffer whose
      * content is no longer needed.
      */
-    CreateTimeStr(dir, attribs);
+    CreateTimeStr(file, attribs);
     Info(0, " %s %s ", methbuf, attribs); 
 
     Info(0, FCurrFileName);
