@@ -250,11 +250,6 @@ private:
 
     unsigned int FKeys[3]; 
 
-// remove later!
-    unsigned short filename_length;
-    unsigned short extra_field_length;
-    unsigned short file_comment_length;
-
 };
 
 #endif

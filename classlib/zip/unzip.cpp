@@ -1219,185 +1219,6 @@ int TUnzip::Seek(long abs_offset)
 
 /*##########################################################################
 #
-#   Name       : TUnzip::GetDirEntry
-#
-#   Purpose....: 
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TUnzip::GetDirEntry(struct TUnzipFile *file)    /* return PK-type error code */
-{
-    unsigned long dos_datetime;
-    unsigned char byterec[ CREC_SIZE ];
-
-
-/*---------------------------------------------------------------------------
-    Read the next central directory entry and do any necessary machine-type
-    conversions (byte ordering, structure padding compensation--do so by
-    copying the data from the array into which it was read (byterec) to the
-    usable struct (crec)).
-  ---------------------------------------------------------------------------*/
-
-    if (ReadBuf((char *)byterec, CREC_SIZE) == 0)
-        return PK_EOF;
-
-    file->hostver = byterec[C_VERSION_MADE_BY_0];
-    file->hostnum = MIN(byterec[C_VERSION_MADE_BY_1], NUM_HOSTS);
-
-    file->version_needed_to_extract[0] = byterec[C_VERSION_NEEDED_TO_EXTRACT_0];
-    file->version_needed_to_extract[1] = byterec[C_VERSION_NEEDED_TO_EXTRACT_1];
-
-    file->general_purpose_bit_flag = makeword(&byterec[C_GENERAL_PURPOSE_BIT_FLAG]);
-    file->encrypted = file->general_purpose_bit_flag & 1;   /* bit field */
-    file->ExtLocHdr = (file->general_purpose_bit_flag & 8) == 8;  /* bit */
-
-    dos_datetime = makelong(&byterec[C_LAST_MOD_DOS_DATETIME]);
-    DosToRdosTime(&file->rdos_msb_time, &file->rdos_lsb_time, dos_datetime);
-
-    file->crc = makelong(&byterec[C_CRC32]);
-    file->compr_size = makelong(&byterec[C_COMPRESSED_SIZE]);
-    file->uncompr_size = makelong(&byterec[C_UNCOMPRESSED_SIZE]);
-
-    filename_length = makeword(&byterec[C_FILENAME_LENGTH]);
-    extra_field_length = makeword(&byterec[C_EXTRA_FIELD_LENGTH]);
-    file_comment_length = makeword(&byterec[C_FILE_COMMENT_LENGTH]);
-
-    file->diskstart = makeword(&byterec[C_DISK_NUMBER_START]);
-
-    file->internal_file_attributes = makeword(&byterec[C_INTERNAL_FILE_ATTRIBUTES]);
-    file->external_file_attributes = makelong(&byterec[C_EXTERNAL_FILE_ATTRIBUTES]);  /* LONG, not word! */
-    file->textfile = file->internal_file_attributes & 1;    /* bit field */
-
-    file->offset = makelong(&byterec[C_RELATIVE_OFFSET_LOCAL_HEADER]);
-    
-
-    return PK_COOL;
-
-} /* end function get_cdir_ent() */
-
-
-/*##########################################################################
-#
-#   Name       : TUnzip::ProcessDirEntry
-#
-#   Purpose....: 
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TUnzip::ProcessDirEntry(struct TUnzipFile *file)    /* return PK-type error code */
-{
-    int error;
-
-
-/*---------------------------------------------------------------------------
-    Get central directory info, save host and method numbers, and set flag
-    for lowercase conversion of filename, depending on the OS from which the
-    file is coming.
-  ---------------------------------------------------------------------------*/
-
-/*  extnum = MIN(crec.version_needed_to_extract[1], NUM_HOSTS); */
-
-    switch (file->hostnum) {
-        case FS_FAT_:     /* PKZIP and zip -k store in uppercase */
-        case CPM_:        /* like MS-DOS, right? */
-        case VM_CMS_:     /* all caps? */
-        case MVS_:        /* all caps? */
-        case TANDEM_:
-        case TOPS20_:
-        case VMS_:        /* our Zip uses lowercase, but ASi's doesn't */
-        /*  case Z_SYSTEM_:   ? */
-        /*  case QDOS_:       ? */
-            file->lcflag = 1;   /* convert filename to lowercase */
-            break;
-
-        default:     /* AMIGA_, FS_HPFS_, FS_NTFS_, MAC_, UNIX_, ATARI_, */
-            file->lcflag = 0;
-            break;   /*  FS_VFAT_, ATHEOS_, BEOS_ (Z_SYSTEM_), THEOS_: */
-                         /*  no conversion */
-    }
-
-    /* do Amigas (AMIGA_) also have volume labels? */
-    if ((file->external_file_attributes & 0x8) &&
-        (file->hostnum == FS_FAT_ || file->hostnum == FS_HPFS_ ||
-         file->hostnum == FS_NTFS_ || file->hostnum == ATARI_))
-    {
-        file->vollabel = TRUE;
-        file->lcflag = 0;        /* preserve case of volume labels */
-    } else
-        file->vollabel = FALSE;
-
-    /* this flag is needed to detect archives made by "PKZIP for Unix" when
-       deciding which kind of codepage conversion has to be applied to
-       strings (see do_string() function in fileio.c) */
-    file->HasUxAtt = (file->external_file_attributes & 0xffff0000L) != 0L;
-
-    return PK_COOL;
-
-} /* end function process_cdir_file_hdr() */
-
-
-/*##########################################################################
-#
-#   Name       : TUnzip::GetFileHeader
-#
-#   Purpose....: 
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TUnzip::GetFileHeader()    /* return PK-type error code */
-{
-    int error;
-    unsigned long dos_datetime;
-    unsigned char byterec[ LREC_SIZE ];
-
-/*---------------------------------------------------------------------------
-    Read the next local file header and do any necessary machine-type con-
-    versions (byte ordering, structure padding compensation--do so by copy-
-    ing the data from the array into which it was read (byterec) to the
-    usable struct (lrec)).
-  ---------------------------------------------------------------------------*/
-
-    if (ReadBuf((char *)byterec, LREC_SIZE) == 0)
-        return PK_EOF;
-
-    FCurrFileHeader.version_needed_to_extract[0] = byterec[L_VERSION_NEEDED_TO_EXTRACT_0];
-    FCurrFileHeader.version_needed_to_extract[1] = byterec[L_VERSION_NEEDED_TO_EXTRACT_1];
-
-    FCurrFileHeader.general_purpose_bit_flag = makeword(&byterec[L_GENERAL_PURPOSE_BIT_FLAG]);
-    FCurrFileHeader.compression_method = makeword(&byterec[L_COMPRESSION_METHOD]);
-
-    dos_datetime = makelong(&byterec[L_LAST_MOD_DOS_DATETIME]);
-    DosToRdosTime(&FCurrFileHeader.rdos_msb_time, &FCurrFileHeader.rdos_lsb_time, dos_datetime);
-
-    FCurrFileHeader.crc32 = makelong(&byterec[L_CRC32]);
-    FCurrFileHeader.csize = makelong(&byterec[L_COMPRESSED_SIZE]);
-    FCurrFileHeader.ucsize = makelong(&byterec[L_UNCOMPRESSED_SIZE]);
-    FCurrFileHeader.filename_length = makeword(&byterec[L_FILENAME_LENGTH]);
-    FCurrFileHeader.extra_field_length = makeword(&byterec[L_EXTRA_FIELD_LENGTH]);
-
-    if ((FCurrFileHeader.general_purpose_bit_flag & 8) != 0) {
-        /* can't trust local header, use central directory: */
-/*       FCurrFile.crc32 = G.pInfo->crc;
-        FCurrFile.csize = G.pInfo->compr_size;
-        FCurrFile.ucsize = G.pInfo->uncompr_size; */
-    }
-
-    FDecompSize = FCurrFileHeader.csize;
-
-    return PK_COOL;
-} /* end function process_local_file_hdr() */
-
-/*##########################################################################
-#
 #   Name       : TUnzip::GetFileName
 #
 #   Purpose....: Get filename from header
@@ -1513,15 +1334,91 @@ int TUnzip::DirEntryToFile(struct TUnzipFile *file, const char *filename)
 int TUnzip::AddFile()    /* return PK-type error code */
 {
     int error;
-       
-    error = GetDirEntry(FCurrFile);
-    if (error != 0)
-        return error;
+    unsigned short filename_length;
+    unsigned short extra_field_length;
+    unsigned short file_comment_length;
+    unsigned long dos_datetime;
+    unsigned char byterec[ CREC_SIZE ];
+    struct TUnzipFile *file = FCurrFile;
 
-    /* process_cdir_file_hdr() sets pInfo->hostnum, pInfo->lcflag */
-    error = ProcessDirEntry(FCurrFile);
-    if (error != PK_COOL)
-        return error;
+/*---------------------------------------------------------------------------
+    Read the next central directory entry and do any necessary machine-type
+    conversions (byte ordering, structure padding compensation--do so by
+    copying the data from the array into which it was read (byterec) to the
+    usable struct (crec)).
+  ---------------------------------------------------------------------------*/
+
+    if (ReadBuf((char *)byterec, CREC_SIZE) == 0)
+        return PK_EOF;
+
+    file->hostver = byterec[C_VERSION_MADE_BY_0];
+    file->hostnum = MIN(byterec[C_VERSION_MADE_BY_1], NUM_HOSTS);
+
+    file->version_needed_to_extract[0] = byterec[C_VERSION_NEEDED_TO_EXTRACT_0];
+    file->version_needed_to_extract[1] = byterec[C_VERSION_NEEDED_TO_EXTRACT_1];
+
+    file->general_purpose_bit_flag = makeword(&byterec[C_GENERAL_PURPOSE_BIT_FLAG]);
+    file->encrypted = file->general_purpose_bit_flag & 1;   /* bit field */
+    file->ExtLocHdr = (file->general_purpose_bit_flag & 8) == 8;  /* bit */
+
+    dos_datetime = makelong(&byterec[C_LAST_MOD_DOS_DATETIME]);
+    DosToRdosTime(&file->rdos_msb_time, &file->rdos_lsb_time, dos_datetime);
+
+    file->crc = makelong(&byterec[C_CRC32]);
+    file->compr_size = makelong(&byterec[C_COMPRESSED_SIZE]);
+    file->uncompr_size = makelong(&byterec[C_UNCOMPRESSED_SIZE]);
+
+    filename_length = makeword(&byterec[C_FILENAME_LENGTH]);
+    extra_field_length = makeword(&byterec[C_EXTRA_FIELD_LENGTH]);
+    file_comment_length = makeword(&byterec[C_FILE_COMMENT_LENGTH]);
+
+    file->diskstart = makeword(&byterec[C_DISK_NUMBER_START]);
+
+    file->internal_file_attributes = makeword(&byterec[C_INTERNAL_FILE_ATTRIBUTES]);
+    file->external_file_attributes = makelong(&byterec[C_EXTERNAL_FILE_ATTRIBUTES]);  /* LONG, not word! */
+    file->textfile = file->internal_file_attributes & 1;    /* bit field */
+
+    file->offset = makelong(&byterec[C_RELATIVE_OFFSET_LOCAL_HEADER]);
+
+/*---------------------------------------------------------------------------
+    Get central directory info, save host and method numbers, and set flag
+    for lowercase conversion of filename, depending on the OS from which the
+    file is coming.
+  ---------------------------------------------------------------------------*/
+
+    switch (file->hostnum) {
+        case FS_FAT_:     /* PKZIP and zip -k store in uppercase */
+        case CPM_:        /* like MS-DOS, right? */
+        case VM_CMS_:     /* all caps? */
+        case MVS_:        /* all caps? */
+        case TANDEM_:
+        case TOPS20_:
+        case VMS_:        /* our Zip uses lowercase, but ASi's doesn't */
+        /*  case Z_SYSTEM_:   ? */
+        /*  case QDOS_:       ? */
+            file->lcflag = 1;   /* convert filename to lowercase */
+            break;
+
+        default:     /* AMIGA_, FS_HPFS_, FS_NTFS_, MAC_, UNIX_, ATARI_, */
+            file->lcflag = 0;
+            break;   /*  FS_VFAT_, ATHEOS_, BEOS_ (Z_SYSTEM_), THEOS_: */
+                         /*  no conversion */
+    }
+
+    /* do Amigas (AMIGA_) also have volume labels? */
+    if ((file->external_file_attributes & 0x8) &&
+        (file->hostnum == FS_FAT_ || file->hostnum == FS_HPFS_ ||
+         file->hostnum == FS_NTFS_ || file->hostnum == ATARI_))
+    {
+        file->vollabel = TRUE;
+        file->lcflag = 0;        /* preserve case of volume labels */
+    } else
+        file->vollabel = FALSE;
+
+    /* this flag is needed to detect archives made by "PKZIP for Unix" when
+       deciding which kind of codepage conversion has to be applied to
+       strings (see do_string() function in fileio.c) */
+    file->HasUxAtt = (file->external_file_attributes & 0xffff0000L) != 0L;
 
     error = GetFileName(filename_length);
     if (error != PK_COOL)
@@ -1537,10 +1434,64 @@ int TUnzip::AddFile()    /* return PK-type error code */
     SkipHeaderString(extra_field_length);
     SkipHeaderString(file_comment_length);
 
-    error = DirEntryToFile(FCurrFile, FCurrFileName);
+    error = DirEntryToFile(file, FCurrFileName);
 
     return error;
 }
+
+/*##########################################################################
+#
+#   Name       : TUnzip::GetFileHeader
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::GetFileHeader()    /* return PK-type error code */
+{
+    int error;
+    unsigned long dos_datetime;
+    unsigned char byterec[ LREC_SIZE ];
+
+/*---------------------------------------------------------------------------
+    Read the next local file header and do any necessary machine-type con-
+    versions (byte ordering, structure padding compensation--do so by copy-
+    ing the data from the array into which it was read (byterec) to the
+    usable struct (lrec)).
+  ---------------------------------------------------------------------------*/
+
+    if (ReadBuf((char *)byterec, LREC_SIZE) == 0)
+        return PK_EOF;
+
+    FCurrFileHeader.version_needed_to_extract[0] = byterec[L_VERSION_NEEDED_TO_EXTRACT_0];
+    FCurrFileHeader.version_needed_to_extract[1] = byterec[L_VERSION_NEEDED_TO_EXTRACT_1];
+
+    FCurrFileHeader.general_purpose_bit_flag = makeword(&byterec[L_GENERAL_PURPOSE_BIT_FLAG]);
+    FCurrFileHeader.compression_method = makeword(&byterec[L_COMPRESSION_METHOD]);
+
+    dos_datetime = makelong(&byterec[L_LAST_MOD_DOS_DATETIME]);
+    DosToRdosTime(&FCurrFileHeader.rdos_msb_time, &FCurrFileHeader.rdos_lsb_time, dos_datetime);
+
+    FCurrFileHeader.crc32 = makelong(&byterec[L_CRC32]);
+    FCurrFileHeader.csize = makelong(&byterec[L_COMPRESSED_SIZE]);
+    FCurrFileHeader.ucsize = makelong(&byterec[L_UNCOMPRESSED_SIZE]);
+    FCurrFileHeader.filename_length = makeword(&byterec[L_FILENAME_LENGTH]);
+    FCurrFileHeader.extra_field_length = makeword(&byterec[L_EXTRA_FIELD_LENGTH]);
+
+    if ((FCurrFileHeader.general_purpose_bit_flag & 8) != 0) {
+        /* can't trust local header, use central directory: */
+/*       FCurrFile.crc32 = G.pInfo->crc;
+        FCurrFile.csize = G.pInfo->compr_size;
+        FCurrFile.ucsize = G.pInfo->uncompr_size; */
+    }
+
+    FDecompSize = FCurrFileHeader.csize;
+
+    return PK_COOL;
+} /* end function process_local_file_hdr() */
 
 /*##########################################################################
 #
