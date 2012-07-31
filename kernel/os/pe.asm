@@ -281,28 +281,6 @@ load_object     Endp
 ;
 ;           DESCRIPTION:    New create section
 ;
-;           RETURNS:        BX          Section handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-new_create_section_name    DB 'Create User Section',0
-
-new_create_section     PROC far
-    int 3
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov edi,ds:app_create_section_proc
-    ret
-new_create_section  Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           CreateSections
-;
-;           DESCRIPTION:    New create section
-;
 ;           PARAMS:         FS      App selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -576,16 +554,16 @@ section_patch     PROC far
     jne spFail
 ;    
     mov ax,ds:[ebx+2]
-    cmp ax,new_create_section_nr
+    cmp ax,create_user_section_nr
     je spCreate
 ;    
-    cmp ax,new_delete_section_nr
+    cmp ax,delete_user_section_nr
     je spDelete
 ;    
-    cmp ax,new_enter_section_nr
+    cmp ax,enter_user_section_nr
     je spEnter
 ;    
-    cmp ax,new_leave_section_nr
+    cmp ax,leave_user_section_nr
     je spLeave
 ;
     jmp spFail    
@@ -5649,12 +5627,6 @@ init    PROC far
     xor dx,dx
     mov ax,show_exception_text_nr
     RegisterUserGate32
-;
-    mov esi,OFFSET new_create_section
-    mov edi,OFFSET new_create_section_name
-    xor dx,dx
-    mov ax,new_create_section_nr
-    RegisterBimodalUserGate
     clc
     ret
 init    ENDP

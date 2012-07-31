@@ -7,7 +7,7 @@
 
 char ch;
 
-void *sec_handle;
+int sec_handle;
 
 void TestThread(void *param)
 {
@@ -15,9 +15,9 @@ void TestThread(void *param)
 
     for (;;)
     {
-        RdosNewEnterSection(sec_handle);
+        RdosEnterSection(sec_handle);
         RdosWriteChar(mych);
-        RdosNewLeaveSection(sec_handle);
+        RdosLeaveSection(sec_handle);
     }
 }
     
@@ -38,10 +38,7 @@ void main()
 
     int i;
 
-//    CreateSection();
-
-    sec_handle = RdosNewCreateSection();
-    sec_handle = RdosNewCreateSection();
+    sec_handle = RdosCreateSection();
     ch = '1';
 
     for (i = 0; i < 2; i++)
@@ -53,12 +50,12 @@ void main()
 
     for (;;)
     {
-        RdosNewEnterSection(sec_handle);
+        RdosEnterSection(sec_handle);
         RdosWriteChar('0');
-        RdosNewLeaveSection(sec_handle);
+        RdosLeaveSection(sec_handle);
     }
     
-    RdosNewDeleteSection(sec_handle);
+    RdosDeleteSection(sec_handle);
     
 
     for (;;)
