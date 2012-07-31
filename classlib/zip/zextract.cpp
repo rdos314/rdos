@@ -74,7 +74,7 @@
 }
 
 static int extract_or_test_entrylist OF((unsigned numchunk,
-                unsigned long *pfilnum, unsigned long *pnum_bad_pwd, long *pold_extra_bytes,
+                unsigned long *pfilnum, unsigned long *pnum_bad_pwd, 
                 unsigned *pnum_dirs, direntry **pdirlist,
                 int error_in_archive));
 static int extract_or_test_member OF(());
@@ -230,11 +230,11 @@ int extract_or_test_files()    /* return PK-type error code */
     int *fn_matched=NULL, *xn_matched=NULL;
     zucn_t members_processed;
     unsigned long num_skipped=0L, num_bad_pwd=0L;
-    long old_extra_bytes = 0L;
     unsigned num_dirs=0;
     direntry *dirlist=(direntry *)NULL;
     direntry **sorted_dirlist=(direntry **)NULL;
 
+    UnzipClass.FOldExtraBytes = 0;
     /*
      * First, two general initializations are applied. These have been moved
      * here from process_zipfiles() because they are only needed for accessing
@@ -393,7 +393,7 @@ int extract_or_test_files()    /* return PK-type error code */
       -----------------------------------------------------------------------*/
 
         error = extract_or_test_entrylist(j,
-                        &filnum, &num_bad_pwd, &old_extra_bytes,
+                        &filnum, &num_bad_pwd,
                         &num_dirs, &dirlist,
                         error_in_archive);
         if (error != PK_COOL) {
@@ -568,7 +568,7 @@ int extract_or_test_files()    /* return PK-type error code */
 /******************************************/
 
 static int extract_or_test_entrylist(unsigned numchunk,
-                unsigned long *pfilnum, unsigned long *pnum_bad_pwd, long *pold_extra_bytes,
+                unsigned long *pfilnum, unsigned long *pnum_bad_pwd,
                 unsigned *pnum_dirs, direntry **pdirlist,
                 int error_in_archive)    /* return PK-type error code */
 {
@@ -611,7 +611,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
             error_in_archive = PK_ERR;
             if (*pfilnum == 1 && UnzipClass.FExtraBytes != 0L) {
                 Info(0x401, AttemptRecompensate);
-                *pold_extra_bytes =  UnzipClass.FExtraBytes;
+                UnzipClass.FOldExtraBytes =  UnzipClass.FExtraBytes;
                  UnzipClass.FExtraBytes = 0L;
                 request = UnzipClass.FCurrFile->offset;  /* could also check if != 0 */
                 inbuf_offset = request % INBUFSIZ;
@@ -669,13 +669,13 @@ static int extract_or_test_entrylist(unsigned numchunk,
              */
             error_in_archive = PK_ERR;
             if ((*pfilnum == 1 &&  UnzipClass.FExtraBytes != 0L) ||
-                ( UnzipClass.FExtraBytes == 0L && *pold_extra_bytes != 0L)) {
+                ( UnzipClass.FExtraBytes == 0L && UnzipClass.FOldExtraBytes != 0L)) {
                 Info(0x401, AttemptRecompensate);
                 if (UnzipClass.FExtraBytes) {
-                    *pold_extra_bytes = UnzipClass.FExtraBytes;
+                    UnzipClass.FOldExtraBytes = UnzipClass.FExtraBytes;
                     UnzipClass.FExtraBytes = 0L;
                 } else
-                    UnzipClass.FExtraBytes = *pold_extra_bytes; /* third attempt */
+                    UnzipClass.FExtraBytes = UnzipClass.FOldExtraBytes; /* third attempt */
                 if (((error = UnzipClass.Seek(UnzipClass.FCurrFile->offset)) != PK_OK) ||
                     (UnzipClass.ReadBuf(G.sig, 4) == 0)) {  /* bad offset */
                     if (error != PK_BADERR)

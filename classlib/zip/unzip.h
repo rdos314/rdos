@@ -185,6 +185,7 @@ public:
     long FDecompSize;
 
     int FExtraBytes;
+    int FOldExtraBytes;
 
     char FCurrFileName[FILE_NAME_SIZE];
     int FDiskFull;
