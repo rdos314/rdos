@@ -347,6 +347,10 @@ int extract_or_test_files()    /* return PK-type error code */
             if (error != PK_COOL)
                 break;
 
+            error = UnzipClass.ProcessFile();
+            if (error != PK_COOL)
+                break;
+
             if (G.process_all_files) {
                 ++j;  /* file is OK; info[] stored; continue with next */
             } else {
@@ -590,11 +594,6 @@ static int extract_or_test_entrylist(unsigned numchunk,
     for (i = 0; i < numchunk; ++i) {
         (*pfilnum)++;   /* *pfilnum = i + blknum*DIR_BLKSIZ + 1; */
         UnzipClass.FCurrFile = &UnzipClass.FFileArr[i];
-
-        error = UnzipClass.ProcessFile();
-        if (error != PK_COOL)
-            continue;
-
 
         UnzipClass.FDecompSize = UnzipClass.FCurrFile->compr_size;
 
