@@ -1584,8 +1584,6 @@ int TUnzip::GetFileHeader()    /* return PK-type error code */
         FCurrFile.ucsize = G.pInfo->uncompr_size; */
     }
 
-    FDecompSize = FCurrFileHeader.csize;
-
     return PK_COOL;
 } /* end function process_local_file_hdr() */
 

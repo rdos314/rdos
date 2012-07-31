@@ -595,6 +595,9 @@ static int extract_or_test_entrylist(unsigned numchunk,
         if (error != PK_COOL)
             continue;
 
+
+        UnzipClass.FDecompSize = UnzipClass.FCurrFile->compr_size;
+
         UnzipClass.Seek(UnzipClass.FCurrFile->file_data_offset);
 
         /* Size consistency checks must come after reading in the local extra
