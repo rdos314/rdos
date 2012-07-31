@@ -2809,8 +2809,6 @@ int TUnzip::DirEntryToFile(struct TUnzipFile *file, struct TUnzipDirEntry *dir, 
     file->rdos_lsb_time = dir->rdos_lsb_time;
     file->compr_size = dir->csize;
     file->uncompr_size = dir->ucsize;
-    file->version_made_by[0] = dir->version_made_by[0];
-    file->version_made_by[1] = dir->version_made_by[1];
     file->version_needed_to_extract[0] = dir->version_needed_to_extract[0];
     file->version_needed_to_extract[1] = dir->version_needed_to_extract[1];
     file->compression_method = dir->compression_method;
@@ -2932,7 +2930,7 @@ void TUnzip::ShowVerbose(struct TUnzipFile *file)
 
     if (hostnum >= NUM_HOSTS) {
         sprintf(unkn, "unknown (%d)",
-                (int)file->version_made_by[1]);
+                (int)file->hostnum);
         varmsg_str = unkn;
     } else {
         varmsg_str = os[hostnum];

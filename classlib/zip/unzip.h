@@ -135,7 +135,6 @@ struct TUnzipFile
     unsigned char hostnum;
     unsigned long rdos_msb_time;
     unsigned long rdos_lsb_time;
-    unsigned char version_made_by[2];
     unsigned char version_needed_to_extract[2];
     unsigned short compression_method;
     unsigned short internal_file_attributes;
