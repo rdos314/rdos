@@ -357,7 +357,7 @@ int extract_or_test_files()    /* return PK-type error code */
                 else {  /* check if this entry matches an `include' argument */
                     do_this_file = FALSE;
                     for (i = 0; i < G.filespecs; i++)
-                        if (match(UnzipClass.FCurrFileName, G.pfnames[i], uO.C_flag)) {
+                        if (match(UnzipClass.FCurrFile->cfilname, G.pfnames[i], uO.C_flag)) {
                             do_this_file = TRUE;  /* ^-- ignore case or not? */
                             if (fn_matched)
                                 fn_matched[i] = TRUE;
@@ -366,7 +366,7 @@ int extract_or_test_files()    /* return PK-type error code */
                 }
                 if (do_this_file) {  /* check if this is an excluded file */
                     for (i = 0; i < G.xfilespecs; i++)
-                        if (match(UnzipClass.FCurrFileName, G.pxnames[i], uO.C_flag)) {
+                        if (match(UnzipClass.FCurrFile->cfilname, G.pxnames[i], uO.C_flag)) {
                             do_this_file = FALSE; /* ^-- ignore case or not? */
                             if (xn_matched)
                                 xn_matched[i] = TRUE;
@@ -703,19 +703,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
             continue;   /* can still try next one */
         }
         UnzipClass.SkipHeaderString(UnzipClass.FCurrFileHeader.extra_field_length);
-        /* Filename consistency checks must come after reading in the local
-         * extra field, so that a UTF-8 entry name e.f. block has already
-         * been processed.
-         */
-        if (UnzipClass.FCurrFile->cfilname != 0) {
-            if (strcmp(UnzipClass.FCurrFile->cfilname, UnzipClass.FCurrFileName) != 0) {
-                Info(0x401, LvsCFNamMsg,
-                  FnFilter2(UnzipClass.FCurrFile->cfilname), FnFilter1(UnzipClass.FCurrFileName));
-                strcpy(UnzipClass.FCurrFileName, UnzipClass.FCurrFile->cfilname);
-                if (error_in_archive < PK_WARN)
-                    error_in_archive = PK_WARN;
-            }
-        }
+
         /* Size consistency checks must come after reading in the local extra
          * field, so that any Zip64 extension local e.f. block has already
          * been processed.
@@ -727,7 +715,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
                 csiz_decrypted -= 12;
             if (UnzipClass.FCurrFileHeader.ucsize != csiz_decrypted) {
                 Info(0x401, WrnStorUCSizCSizDiff,
-                  FnFilter1(UnzipClass.FCurrFileName),
+                  FnFilter1(UnzipClass.FCurrFile->cfilname),
                   fzofft(UnzipClass.FCurrFileHeader.ucsize, NULL, "u"),
                   fzofft(csiz_decrypted, NULL, "u"));
                 UnzipClass.FCurrFileHeader.ucsize = csiz_decrypted;
@@ -742,13 +730,13 @@ static int extract_or_test_entrylist(unsigned numchunk,
                 if (error == PK_WARN) {
                     if (!((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag)))
                         Info(0x401, SkipIncorrectPasswd,
-                          FnFilter1(UnzipClass.FCurrFileName));
+                          FnFilter1(UnzipClass.FCurrFile->cfilname));
                     ++(*pnum_bad_pwd);
                 } else {  /* (error > PK_WARN) */
                     if (error > error_in_archive)
                         error_in_archive = error;
                     Info(0x401, SkipCannotGetPasswd,
-                      FnFilter1(UnzipClass.FCurrFileName));
+                      FnFilter1(UnzipClass.FCurrFile->cfilname));
                 }
             }
             continue;   /* go on to next file */
@@ -772,8 +760,8 @@ startover:
              *  of slash as directory separator (bug in some zipper(s); so
              *  far, not a problem in HPFS, NTFS or VFAT systems)
              */
-            if (UnzipClass.FCurrFile->hostnum == FS_FAT_ && !strchr(UnzipClass.FCurrFileName, '/')) {
-                char *p=UnzipClass.FCurrFileName;
+            if (UnzipClass.FCurrFile->hostnum == FS_FAT_ && !strchr(UnzipClass.FCurrFile->cfilname, '/')) {
+                char *p=UnzipClass.FCurrFile->cfilname;
 
                 if (*p) do {
                     if (*p == '\\') {
@@ -790,17 +778,17 @@ startover:
 
             if (!renamed) {
                /* remove absolute path specs */
-               if (UnzipClass.FCurrFileName[0] == '/') {
+               if (UnzipClass.FCurrFile->cfilname[0] == '/') {
                    Info(0x401, AbsolutePathWarning,
-                        FnFilter1(UnzipClass.FCurrFileName));
+                        FnFilter1(UnzipClass.FCurrFile->cfilname));
                    if (!error_in_archive)
                        error_in_archive = PK_WARN;
                    do {
-                       char *p = UnzipClass.FCurrFileName + 1;
+                       char *p = UnzipClass.FCurrFile->cfilname + 1;
                        do {
                            *(p-1) = *p;
                        } while (*p++ != '\0');
-                   } while (UnzipClass.FCurrFileName[0] == '/');
+                   } while (UnzipClass.FCurrFile->cfilname[0] == '/');
                }
             }
 
@@ -832,16 +820,16 @@ startover:
                     }
                 } else if (errcode == MPN_VOL_LABEL) {
                     Info(1, SkipVolumeLabel,
-                      FnFilter1(UnzipClass.FCurrFileName), "");
+                      FnFilter1(UnzipClass.FCurrFile->cfilname), "");
                 } else if (errcode > MPN_INF_SKIP &&
                            error_in_archive < PK_ERR)
                     error_in_archive = PK_ERR;
                 Trace("mapname(%s) returns error code = %d\n",
-                  FnFilter1(UnzipClass.FCurrFileName), error);
+                  FnFilter1(UnzipClass.FCurrFile->cfilname), error);
                 continue;   /* go on to next file */
             }
 
-            switch (UnzipClass.CheckForNewer(UnzipClass.FCurrFileName)) {
+            switch (UnzipClass.CheckForNewer(UnzipClass.FCurrFile->cfilname)) {
                 case DOES_NOT_EXIST:
                     /* freshen (no new files): skip unless just renamed */
                     if (uO.fflag && !renamed)
@@ -871,7 +859,7 @@ startover:
                 extent fnlen;
 reprompt:
                 Info(0x81, ReplaceQuery,
-                  FnFilter1(UnzipClass.FCurrFileName));
+                  FnFilter1(UnzipClass.FCurrFile->cfilname));
                 if (fgets(G.answerbuf, sizeof(G.answerbuf), stdin)
                     == (char *)NULL) {
                     Info(1, AssumeNone);
@@ -884,11 +872,11 @@ reprompt:
                     case 'R':
                         do {
                             Info(0x81, NewNameQuery);
-                            fgets(UnzipClass.FCurrFileName, FILE_NAME_SIZE, stdin);
+                            fgets(UnzipClass.FCurrFile->cfilname, FILE_NAME_SIZE, stdin);
                             /* usually get \n here:  better check for it */
-                            fnlen = strlen(UnzipClass.FCurrFileName);
-                            if (UnzipClass.FCurrFileName[fnlen-1] == '\n')
-                                UnzipClass.FCurrFileName[--fnlen] = '\0';
+                            fnlen = strlen(UnzipClass.FCurrFile->cfilname);
+                            if (UnzipClass.FCurrFile->cfilname[fnlen-1] == '\n')
+                                UnzipClass.FCurrFile->cfilname[--fnlen] = '\0';
                         } while (fnlen == 0);
                         renamed = TRUE;
                         goto startover;   /* sorry for a goto */
