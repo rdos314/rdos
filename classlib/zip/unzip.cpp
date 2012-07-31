@@ -1290,7 +1290,7 @@ int TUnzip::GetDirEntry(struct TUnzipFile *file)    /* return PK-type error code
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::ProcessDirEntry()    /* return PK-type error code */
+int TUnzip::ProcessDirEntry(struct TUnzipFile *file)    /* return PK-type error code */
 {
     int error;
 
@@ -1303,7 +1303,7 @@ int TUnzip::ProcessDirEntry()    /* return PK-type error code */
 
 /*  extnum = MIN(crec.version_needed_to_extract[1], NUM_HOSTS); */
 
-    switch (FCurrFile->hostnum) {
+    switch (file->hostnum) {
         case FS_FAT_:     /* PKZIP and zip -k store in uppercase */
         case CPM_:        /* like MS-DOS, right? */
         case VM_CMS_:     /* all caps? */
@@ -1313,29 +1313,29 @@ int TUnzip::ProcessDirEntry()    /* return PK-type error code */
         case VMS_:        /* our Zip uses lowercase, but ASi's doesn't */
         /*  case Z_SYSTEM_:   ? */
         /*  case QDOS_:       ? */
-            FCurrFile->lcflag = 1;   /* convert filename to lowercase */
+            file->lcflag = 1;   /* convert filename to lowercase */
             break;
 
         default:     /* AMIGA_, FS_HPFS_, FS_NTFS_, MAC_, UNIX_, ATARI_, */
-            FCurrFile->lcflag = 0;
+            file->lcflag = 0;
             break;   /*  FS_VFAT_, ATHEOS_, BEOS_ (Z_SYSTEM_), THEOS_: */
                          /*  no conversion */
     }
 
     /* do Amigas (AMIGA_) also have volume labels? */
-    if ((FCurrDirEntry.external_file_attributes & 0x8) &&
-        (FCurrFile->hostnum == FS_FAT_ || FCurrFile->hostnum == FS_HPFS_ ||
-         FCurrFile->hostnum == FS_NTFS_ || FCurrFile->hostnum == ATARI_))
+    if ((file->external_file_attributes & 0x8) &&
+        (file->hostnum == FS_FAT_ || file->hostnum == FS_HPFS_ ||
+         file->hostnum == FS_NTFS_ || file->hostnum == ATARI_))
     {
-        FCurrFile->vollabel = TRUE;
-        FCurrFile->lcflag = 0;        /* preserve case of volume labels */
+        file->vollabel = TRUE;
+        file->lcflag = 0;        /* preserve case of volume labels */
     } else
-        FCurrFile->vollabel = FALSE;
+        file->vollabel = FALSE;
 
     /* this flag is needed to detect archives made by "PKZIP for Unix" when
        deciding which kind of codepage conversion has to be applied to
        strings (see do_string() function in fileio.c) */
-    FCurrFile->HasUxAtt = (FCurrDirEntry.external_file_attributes & 0xffff0000L) != 0L;
+    file->HasUxAtt = (file->external_file_attributes & 0xffff0000L) != 0L;
 
     return PK_COOL;
 
@@ -1519,7 +1519,7 @@ int TUnzip::AddFile()    /* return PK-type error code */
         return error;
 
     /* process_cdir_file_hdr() sets pInfo->hostnum, pInfo->lcflag */
-    error = ProcessDirEntry();
+    error = ProcessDirEntry(FCurrFile);
     if (error != PK_COOL)
         return error;
 
