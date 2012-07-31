@@ -1600,11 +1600,10 @@ int TUnzip::ProcessFile()
             filename_length = makeword(&byterec[L_FILENAME_LENGTH]);
             extra_field_length = makeword(&byterec[L_EXTRA_FIELD_LENGTH]);
 
-            if ((general_purpose_bit_flag & 8) != 0) {
-                /* can't trust local header, use central directory: */
-        /*       FCurrFile.crc32 = G.pInfo->crc;
-                FCurrFile.csize = G.pInfo->compr_size;
-                FCurrFile.ucsize = G.pInfo->uncompr_size; */
+            if ((general_purpose_bit_flag & 8) == 0) {
+                FCurrFile->crc = crc32;
+                FCurrFile->compr_size = csize;
+                FCurrFile->uncompr_size = ucsize;
             }
         }
     }
