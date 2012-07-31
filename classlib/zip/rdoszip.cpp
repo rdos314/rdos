@@ -42,7 +42,7 @@ int defer_dir_attribs(direntry **pd)
     struct dirent *d_entry;
 
     d_entry = (struct dirent *)malloc(sizeof(struct dirent));
-    strcpy(d_entry->d_name, UnzipClass.FCurrFileName);
+    strcpy(d_entry->d_name, UnzipClass.FCurrFile->cfilname);
     return PK_OK;
 } /* end function defer_dir_attribs() */
 
@@ -233,18 +233,18 @@ int mapname(int renamed)
     renamed_fullpath = FALSE;
 
     if (renamed) {
-        cp = UnzipClass.FCurrFileName - 1;    /* point to beginning of renamed name... */
+        cp = UnzipClass.FCurrFile->cfilname - 1;    /* point to beginning of renamed name... */
         while (*++cp)
             if (*cp == '\\')    /* convert backslashes to forward */
                 *cp = '/';
-        cp = UnzipClass.FCurrFileName;
+        cp = UnzipClass.FCurrFile->cfilname;
         /* use temporary rootpath if user gave full pathname */
-        if (UnzipClass.FCurrFileName[0] == '/') {
+        if (UnzipClass.FCurrFile->cfilname[0] == '/') {
             renamed_fullpath = TRUE;
             pathcomp[0] = '/';  /* copy the '/' and terminate */
             pathcomp[1] = '\0';
             ++cp;
-        } else if (isalpha((unsigned char)UnzipClass.FCurrFileName[0]) && UnzipClass.FCurrFileName[1] == ':') {
+        } else if (isalpha((unsigned char)UnzipClass.FCurrFile->cfilname[0]) && UnzipClass.FCurrFile->cfilname[1] == ':') {
             renamed_fullpath = TRUE;
             pp = pathcomp;
             *pp++ = *cp++;      /* copy the "d:" (+ '/', possibly) */
@@ -263,9 +263,9 @@ int mapname(int renamed)
     pp = pathcomp;              /* point to translation buffer */
     if (!renamed) {             /* cp already set if renamed */
         if (uO.jflag)           /* junking directories */
-            cp = (char *)strrchr(UnzipClass.FCurrFileName, '/');
+            cp = (char *)strrchr(UnzipClass.FCurrFile->cfilname, '/');
         if (cp == (char *)NULL) /* no '/' or not junking dirs */
-            cp = UnzipClass.FCurrFileName;    /* point to internal zipfile-member pathname */
+            cp = UnzipClass.FCurrFile->cfilname;    /* point to internal zipfile-member pathname */
         else
             ++cp;               /* point to start of last component of path */
     }
@@ -336,14 +336,14 @@ int mapname(int renamed)
     fore exiting.
   ---------------------------------------------------------------------------*/
 
-    if (UnzipClass.FCurrFileName[strlen(UnzipClass.FCurrFileName) - 1] == '/') {
-        checkdir(UnzipClass.FCurrFileName, GETPATH);
+    if (UnzipClass.FCurrFile->cfilname[strlen(UnzipClass.FCurrFile->cfilname) - 1] == '/') {
+        checkdir(UnzipClass.FCurrFile->cfilname, GETPATH);
         if (created_dir) {
             if (!uO.qflag) {
             }
 
             /* set file attributes: */
-//            RdosSetFileAttribute(UnzipClass.FCurrFileName, UnzipClass.FCurrFile->file_attr);
+//            RdosSetFileAttribute(UnzipClass.FCurrFile->cfilname, UnzipClass.FCurrFile->file_attr);
 
             /* set dir time (note trailing '/') */
             return (error & ~MPN_MASK) | MPN_CREATED_DIR;
@@ -351,7 +351,7 @@ int mapname(int renamed)
             /* overwrite attributes of existing directory on user's request */
 
             /* set file attributes: */
-//            RdosSetFileAttribute(UnzipClass.FCurrFileName, UnzipClass.FCurrFile->file_attr);
+//            RdosSetFileAttribute(UnzipClass.FCurrFile->cfilname, UnzipClass.FCurrFile->file_attr);
         }
         /* dir existed already; don't look for data to extract */
         return (error & ~MPN_MASK) | MPN_INF_SKIP;
@@ -378,7 +378,7 @@ int mapname(int renamed)
     }
 
     checkdir(pathcomp, APPEND_NAME);  /* returns 1 if truncated: care? */
-    checkdir(UnzipClass.FCurrFileName, GETPATH);
+    checkdir(UnzipClass.FCurrFile->cfilname, GETPATH);
 
     return error;
 
@@ -505,7 +505,7 @@ int checkdir(char *pathcomp, int flag)
     if (FUNCTION == INIT) {
         Trace("initializing buildpath to ");
         /* allocate space for full filename, root path, and maybe "./" */
-        if ((buildpath = (char *)malloc(strlen(UnzipClass.FCurrFileName)+rootlen+3)) ==
+        if ((buildpath = (char *)malloc(strlen(UnzipClass.FCurrFile->cfilname)+rootlen+3)) ==
             (char *)NULL)
             return MPN_NOMEM;
         if (renamed_fullpath) {   /* pathcomp = valid data */
