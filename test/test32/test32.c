@@ -5,7 +5,16 @@
 
 #include <rdos.h>
 
-extern void CreateSection();
+void *sec_handle;
+
+void TestThread(void *param)
+{
+    RdosNewEnterSection(sec_handle);
+
+    for (;;)
+        RdosWaitMilli(500);
+}
+    
 
 void main()
 {
@@ -20,13 +29,15 @@ void main()
     long double x, y;
     int ok;
     int size;        
-    void *sec_handle;
 
 //    CreateSection();
 
     sec_handle = RdosNewCreateSection();
     sec_handle = RdosNewCreateSection();
     RdosNewEnterSection(sec_handle);
+
+    RdosCreateThread(TestThread, "Sect Test", 0, 0x8000);
+    
     RdosNewLeaveSection(sec_handle);
     RdosNewDeleteSection(sec_handle);
     

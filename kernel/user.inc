@@ -458,17 +458,17 @@ HasGlobalTimer       MACRO
 ;;;;;;;;; CRITICAL SECTIONS ;;;;;;;;;;;;
 
 
-; IN  ES:EBX		Futex structure
+; IN  ES:(E)BX		Futex structure
 AcquireFutex	MACRO
 	UserGate acquire_futex_nr
 					ENDM
 
-; IN  ES:EBX		Futex structure
+; IN  ES:(E)BX		Futex structure
 ReleaseFutex	MACRO
 	UserGate release_futex_nr
 					ENDM
 
-; IN  ES:EBX		Futex structure
+; IN  ES:(E)BX		Futex structure
 CleanupFutex	MACRO
 	UserGate cleanup_futex_nr
 					ENDM

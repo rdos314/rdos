@@ -74,6 +74,7 @@ fh_base     handle_header <>
 
 fh_ads      DD ?,?
 fh_list     DW ?
+fh_lock     DW ?
 
 futex_handle_seg          ENDS
 
@@ -117,6 +118,8 @@ tlb_block_spinlock  DW ?
 tlb_block_list      DD ?
 tlb_curr_linear     DD ?
 tlb_remain_linear   DD ?
+
+futex_section       section_typ <>
 
 timer_spinlock      DW ?
 timer_head          DW ?
@@ -168,6 +171,9 @@ unlock_kernel_section_proc  DW OFFSET UnlockKernelSectionSingle
 
 lock_user_section_proc      DW OFFSET LockUserSectionSingle
 unlock_user_section_proc    DW OFFSET UnlockUserSectionSingle
+
+lock_futex_proc             DW OFFSET LockFutexSingle
+unlock_futex_proc           DW OFFSET UnlockFutexSingle
 
 flush_global_tlb_proc       DW OFFSET FlushTlb386
 flush_process_tlb_proc      DW OFFSET FlushTlb386
@@ -744,6 +750,7 @@ init_task       PROC near
     mov ds:tlb_curr_linear,edx    
     mov ds:tlb_remain_linear,eax
 ;
+    InitSection ds:futex_section
     mov ds:global_spinlock,0
     xor ax,ax
     mov bx,OFFSET global_ptab
@@ -1148,6 +1155,27 @@ timer_free_list_create:
     xor cl,cl
     mov ax,update_time_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET acquire_futex16
+    mov esi,OFFSET acquire_futex32
+    mov edi,OFFSET acquire_futex_name
+    mov dx,virt_es_in
+    mov ax,acquire_futex_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET release_futex16
+    mov esi,OFFSET release_futex32
+    mov edi,OFFSET release_futex_name
+    mov dx,virt_es_in
+    mov ax,release_futex_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET cleanup_futex16
+    mov esi,OFFSET cleanup_futex32
+    mov edi,OFFSET cleanup_futex_name
+    mov dx,virt_es_in
+    mov ax,cleanup_futex_nr
+    RegisterUserGate
 ;
     mov edi,OFFSET check_list
     HookState
@@ -3801,6 +3829,8 @@ start_processor_null_threads    Proc near
     mov ds:unlock_kernel_section_proc,OFFSET UnlockKernelSectionMultiple
     mov ds:lock_user_section_proc,OFFSET LockUserSectionMultiple
     mov ds:unlock_user_section_proc,OFFSET UnlockUserSectionMultiple
+    mov ds:lock_futex_proc,OFFSET LockFutexMultiple
+    mov ds:unlock_futex_proc,OFFSET UnlockFutexMultiple
     mov ds:flush_global_tlb_proc,OFFSET FlushGlobalTlbMultiple
     mov ds:flush_process_tlb_proc,OFFSET FlushProcessTlbMultiple
     mov ds:free_global_tlb_proc,OFFSET FreeGlobalTlbMultiple
@@ -4714,6 +4744,36 @@ UnlockUserSectionSingle    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           LockFutexSingle
+;
+;           DESCRIPTION:    Lock futex, single processor version
+;
+;           PARAMETERS:     DS:EBX      Futex handle data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockFutexSingle  Proc near
+    ret
+LockFutexSingle  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockFutexSingle
+;
+;           DESCRIPTION:    Unlock futex, single processor version
+;
+;           PARAMETERS:     DS:EBX      Futex handle data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockFutexSingle    Proc near
+    ret
+UnlockFutexSingle    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           LockListMultiple
 ;
 ;           DESCRIPTION:    Lock list, multiple processor version
@@ -5057,6 +5117,58 @@ UnlockUserSectionMultiple    Proc near
     sti
     ret
 UnlockUserSectionMultiple    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LockFutexMultiple
+;
+;           DESCRIPTION:    Lock futex, multiple processor version
+;
+;           PARAMETERS:     DS:EBX      Futex handle data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockFutexMultiple  Proc near
+    push ax
+
+lfSpinLock:    
+    mov ax,ds:[ebx].fh_lock
+    or ax,ax
+    je lfGet
+;
+    pause
+    jmp lfSpinLock
+
+lfGet:
+    inc ax
+    xchg ax,ds:[ebx].fh_lock
+    or ax,ax
+    je lfDone
+;
+    jmp lfSpinLock
+
+lfDone:
+    pop ax    
+    ret
+LockFutexMultiple  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockFutexMultiple
+;
+;           DESCRIPTION:    Unlock futex, multiple processor version
+;
+;           PARAMETERS:     DS:EBX      Futex handle data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockFutexMultiple    Proc near
+    mov ds:[ebx].fh_lock,0
+    sti
+    ret
+UnlockFutexMultiple    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -8073,38 +8185,238 @@ leave_user_section      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           create_futex
+;           NAME:           acquire_futex
 ;
-;           DESCRIPTION:    Create futex
+;           DESCRIPTION:    Acquire futex
 ;
-;           PARAMS:         ES:EBX      address to value
-;
-;           RETURNS:        BX          futex handle
+;           PARAMS:         ES:(E)BX    address to futex struct
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_futex_name    DB 'Create Futex',0
+acquire_futex_name    DB 'Acquire Futex',0
 
-create_futex     PROC far
+acquire_futex   Proc near
     push ds
+    push fs
     push eax
+    push ebx
     push cx
+    push esi
+;    
+    mov esi,ebx
 ;
-    mov eax,ebx
+    mov ebx,es:[esi].fs_handle
+    mov ax,FUTEX_HANDLE
+    DerefHandle
+    jnc acquire_no_sect
+;    
+    mov ax,task_sel
+    mov ds,ax
+    EnterSection ds:futex_section
+;
+    mov ebx,es:[esi].fs_handle
+    mov ax,FUTEX_HANDLE
+    DerefHandle
+    jnc acquire_take
+;
     mov cx,SIZE futex_handle_seg
     AllocateHandle
-    mov ds:[ebx].fh_ads,eax
+    mov ds:[ebx].fh_ads,esi
     mov ds:[ebx].fh_ads+4,es
     mov ds:[ebx].fh_list,0
+    mov ds:[ebx].fh_lock,0
     mov [ebx].hh_sign,FUTEX_HANDLE
-    mov bx,[ebx].hh_handle
-    clc
 ;
-    pop cx
-    pop eax
+    movzx eax,[ebx].hh_handle
+    mov es:[esi].fs_handle,eax
+
+acquire_take:
+    push ds
+    mov ax,task_sel
+    mov ds,ax
+    LeaveSection ds:futex_section
     pop ds
+
+acquire_no_sect:
+    call LockCore
+    call cs:lock_futex_proc    
+    mov ax,es:[esi].fs_val
+    cmp ax,-1
+    jne acquire_block
+;
+    mov ax,ds:[ebx].fh_list
+    or ax,ax
+    jz acquire_unlock
+;    
+    push es
+    push esi
+    push di
+;    
+    lea esi,ds:[ebx].fh_list
+    call RemoveBlock32
+    mov es:p_data,0
+;
+    cli
+    mov di,OFFSET ps_wakeup_list
+    call InsertCoreBlock
+    sti
+;
+    pop di
+    pop esi
+    pop es
+
+acquire_block:
+    mov ax,ds
+    push OFFSET acquire_done
+    call SaveLockedThread
+;
+    mov ds,ax
+    lea edi,[ebx].fh_list     
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    call InsertBlock32
+    call cs:unlock_futex_proc
+;
+    mov es:p_sleep_sel,ds
+    mov es:p_sleep_offset,edi    
+    jmp LoadThread
+
+acquire_unlock:
+    call cs:unlock_futex_proc
+    call UnlockCore
+    
+acquire_done:
+    pop esi
+    pop cx
+    pop ebx
+    pop eax
+    pop fs
+    pop ds    
+    ret
+acquire_futex   Endp
+
+acquire_futex16 Proc far
+    push ebx
+    movzx ebx,bx
+    call acquire_futex
+    pop ebx
     retf32
-create_futex     ENDP
+acquire_futex16 Endp
+
+acquire_futex32 Proc far
+    call acquire_futex
+    retf32
+acquire_futex32 Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           release_futex
+;
+;           DESCRIPTION:    Release futex
+;
+;           PARAMS:         ES:(E)BX    address to futex struct
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+release_futex_name    DB 'Release Futex',0
+
+release_futex   Proc near
+    push ds
+    push fs
+    push eax
+    push ebx
+    push cx
+;
+    mov ebx,es:[ebx].fs_handle
+    mov ax,FUTEX_HANDLE
+    DerefHandle
+    jc release_done
+;
+    call LockCore
+    call cs:lock_futex_proc    
+;    
+    mov ax,ds:[ebx].fh_list
+    or ax,ax
+    jz release_unlock
+;    
+    push es
+    push esi
+    push di
+;    
+    lea esi,ds:[ebx].fh_list
+    call RemoveBlock32
+    mov es:p_data,0
+    call cs:unlock_futex_proc    
+;
+    cli
+    mov di,OFFSET ps_wakeup_list
+    call InsertCoreBlock
+    sti
+;
+    pop di
+    pop esi
+    pop es
+;
+    call UnlockCore
+    jmp release_done
+
+release_unlock:
+    call cs:unlock_futex_proc
+    call UnlockCore
+    
+release_done:
+    pop cx
+    pop ebx
+    pop eax
+    pop fs
+    pop ds    
+    ret
+release_futex   Endp
+
+release_futex16 Proc far
+    push ebx
+    movzx ebx,bx
+    call release_futex
+    pop ebx
+    retf32
+release_futex16 Endp
+
+release_futex32 Proc far
+    call release_futex
+    retf32
+release_futex32 Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           cleanup_futex
+;
+;           DESCRIPTION:    Cleanup futex
+;
+;           PARAMS:         ES:(E)BX    address to futex struct
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cleanup_futex_name    DB 'Cleanup Futex',0
+
+cleanup_futex   Proc near
+    ret
+cleanup_futex   Endp
+
+cleanup_futex16 Proc far
+    push ebx
+    movzx ebx,bx
+    call cleanup_futex
+    pop ebx
+    retf32
+cleanup_futex16 Endp
+
+cleanup_futex32 Proc far
+    call cleanup_futex
+    retf32
+cleanup_futex32 Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
