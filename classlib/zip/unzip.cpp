@@ -1441,6 +1441,101 @@ int TUnzip::AddFile()    /* return PK-type error code */
 
 /*##########################################################################
 #
+#   Name       : TUnzip::SeekFile
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::SeekFile(struct TUnzipFile *file)    /* return PK-type error code */
+{
+    long bufstart, inbuf_offset, request;
+    int error;
+    char sig[4];
+    static const char SeekMsg[] =  "error [%s]:  attempt to seek before beginning of zipfile\n";
+    static const char OffsetMsg[] = "bad zipfile offset (%s):  %ld\n";
+    static char local_hdr_sig[4]     = {0x50, 0x4B, 0x03, 0x04};
+
+    /* if the target position is not within the current input buffer
+     * (either haven't yet read enough, or (maybe) skipping back-
+     * ward), skip to the target position and reset readbuf(). */
+
+    /* seek_zipf(pInfo->offset);  */
+    request = file->offset + FExtraBytes;
+    inbuf_offset = request % INBUFSIZ;
+    bufstart = request - inbuf_offset;
+
+    if (request < 0) {
+        Info(0x401, SeekMsg, FInputFileName.GetData());
+        if (file == &FFileArr[0] && FExtraBytes != 0L) {
+            FOldExtraBytes =  FExtraBytes;
+            FExtraBytes = 0L;
+            request = file->offset;  /* could also check if != 0 */
+            inbuf_offset = request % INBUFSIZ;
+            bufstart = request - inbuf_offset;
+            /* try again */
+            if (request < 0) {
+                Info(0x401, SeekMsg, FInputFileName.GetData());
+                return PK_BADERR;
+            }
+        } else {
+            return PK_BADERR;
+        }
+    }
+
+    if (bufstart != FBufStart) {
+        RdosSetFilePos(FInputHandle, bufstart);
+        FBufStart = RdosGetFilePos(FInputHandle);
+        FInCount = RdosReadFile(FInputHandle, FInBuf, INBUFSIZ);
+        if (FInCount <= 0)
+        {
+            Info(0x401, OffsetMsg, "lseek", bufstart);
+            return PK_BADERR;
+        }
+        FInPtr = FInBuf + (int)inbuf_offset;
+        FInCount -= (int)inbuf_offset;
+    } else {
+        FInCount += (int)(FInPtr-FInBuf) - (int)inbuf_offset;
+        FInPtr = FInBuf + (int)inbuf_offset;
+    }
+
+    /* should be in proper position now, so check for sig */
+    if (ReadBuf(sig, 4) == 0) {  /* bad offset */
+        Info(0x401, OffsetMsg, "EOF", request);
+        return PK_BADERR;
+    }
+
+    if (memcmp(sig, local_hdr_sig, 4)) {
+        Info(0x401, OffsetMsg, "signature", request);
+        if ((file == &FFileArr[0] &&  FExtraBytes != 0L) ||
+                ( FExtraBytes == 0L && FOldExtraBytes != 0L)) {
+            if (FExtraBytes) {
+                FOldExtraBytes = FExtraBytes;
+                FExtraBytes = 0L;
+            } else
+                FExtraBytes = FOldExtraBytes; /* third attempt */
+
+            error = Seek(file->offset);
+            if ((error != PK_OK) || (ReadBuf(sig, 4) == 0)) {  /* bad offset */
+                if (error != PK_BADERR)
+                    Info(0x401, OffsetMsg, "EOF", request);
+                return PK_BADERR;
+            }
+            if (memcmp(sig, local_hdr_sig, 4)) {
+                Info(0x401, OffsetMsg, "signature", request);
+                return PK_BADERR;
+            }
+        } else
+            return PK_ERR;
+    }
+    return PK_COOL;
+}
+
+/*##########################################################################
+#
 #   Name       : TUnzip::GetFileHeader
 #
 #   Purpose....: 

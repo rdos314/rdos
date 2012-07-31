@@ -152,6 +152,7 @@ public:
 
     int GetFileName(int length);
     int AddFile();
+    int SeekFile(struct TUnzipFile *file);
 
     int ZDecode(int c);
 

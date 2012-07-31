@@ -575,7 +575,6 @@ static int extract_or_test_entrylist(unsigned numchunk,
     unsigned i;
     int renamed, query;
     int skip_entry;
-    long bufstart, inbuf_offset, request;
     int error, errcode;
 
 /* possible values for local skip_entry flag: */
@@ -592,108 +591,10 @@ static int extract_or_test_entrylist(unsigned numchunk,
         (*pfilnum)++;   /* *pfilnum = i + blknum*DIR_BLKSIZ + 1; */
         UnzipClass.FCurrFile = &UnzipClass.FFileArr[i];
 
-        /* if the target position is not within the current input buffer
-         * (either haven't yet read enough, or (maybe) skipping back-
-         * ward), skip to the target position and reset readbuf(). */
-
-        /* seek_zipf(pInfo->offset);  */
-        request = UnzipClass.FCurrFile->offset + UnzipClass.FExtraBytes;
-        inbuf_offset = request % INBUFSIZ;
-        bufstart = request - inbuf_offset;
-
-        Trace("\ndebug: request = %ld, inbuf_offset = %ld\n",
-          (long)request, (long)inbuf_offset);
-        Trace("debug: bufstart = %ld, cur_zipfile_bufstart = %ld\n",
-          (long)bufstart, (long)UnzipClass.FBufStart);
-        if (request < 0) {
-            Info(0x401, SeekMsg,
-              UnzipClass.FInputFileName.GetData(), ReportMsg);
-            error_in_archive = PK_ERR;
-            if (*pfilnum == 1 && UnzipClass.FExtraBytes != 0L) {
-                Info(0x401, AttemptRecompensate);
-                UnzipClass.FOldExtraBytes =  UnzipClass.FExtraBytes;
-                 UnzipClass.FExtraBytes = 0L;
-                request = UnzipClass.FCurrFile->offset;  /* could also check if != 0 */
-                inbuf_offset = request % INBUFSIZ;
-                bufstart = request - inbuf_offset;
-                Trace("debug: request = %ld, inbuf_offset = %ld\n",
-                  (long)request, (long)inbuf_offset);
-                Trace("debug: bufstart = %ld, cur_zipfile_bufstart = %ld\n",
-                  (long)bufstart, (long)UnzipClass.FBufStart);
-                /* try again */
-                if (request < 0) {
-                    Trace("debug: recompensated request still < 0\n");
-                    Info(0x401, SeekMsg,
-                      UnzipClass.FInputFileName.GetData(), ReportMsg);
-                    error_in_archive = PK_BADERR;
-                    continue;
-                }
-            } else {
-                error_in_archive = PK_BADERR;
-                continue;  /* this one hosed; try next */
-            }
-        }
-
-        if (bufstart != UnzipClass.FBufStart) {
-            Trace("debug: bufstart != cur_zipfile_bufstart\n");
-
-            RdosSetFilePos(UnzipClass.FInputHandle, bufstart);
-            UnzipClass.FBufStart = RdosGetFilePos(UnzipClass.FInputHandle);
-            if ((UnzipClass.FInCount = RdosReadFile(UnzipClass.FInputHandle, UnzipClass.FInBuf, INBUFSIZ)) <= 0)
-            {
-                Info(0x401, OffsetMsg,
-                  *pfilnum, "lseek", (long)bufstart);
-                error_in_archive = PK_BADERR;
-                continue;   /* can still do next file */
-            }
-            UnzipClass.FInPtr = UnzipClass.FInBuf + (int)inbuf_offset;
-            UnzipClass.FInCount -= (int)inbuf_offset;
-        } else {
-            UnzipClass.FInCount += (int)(UnzipClass.FInPtr-UnzipClass.FInBuf) - (int)inbuf_offset;
-            UnzipClass.FInPtr = UnzipClass.FInBuf + (int)inbuf_offset;
-        }
-
-        /* should be in proper position now, so check for sig */
-        if (UnzipClass.ReadBuf(G.sig, 4) == 0) {  /* bad offset */
-            Info(0x401, OffsetMsg,
-              *pfilnum, "EOF", (long)request);
-            error_in_archive = PK_BADERR;
-            continue;   /* but can still try next one */
-        }
-        if (memcmp(G.sig, local_hdr_sig, 4)) {
-            Info(0x401, OffsetMsg,
-              *pfilnum, LocalHdrSig, (long)request);
-            /*
-                GRRDUMP(G.sig, 4)
-                GRRDUMP(local_hdr_sig, 4)
-             */
-            error_in_archive = PK_ERR;
-            if ((*pfilnum == 1 &&  UnzipClass.FExtraBytes != 0L) ||
-                ( UnzipClass.FExtraBytes == 0L && UnzipClass.FOldExtraBytes != 0L)) {
-                Info(0x401, AttemptRecompensate);
-                if (UnzipClass.FExtraBytes) {
-                    UnzipClass.FOldExtraBytes = UnzipClass.FExtraBytes;
-                    UnzipClass.FExtraBytes = 0L;
-                } else
-                    UnzipClass.FExtraBytes = UnzipClass.FOldExtraBytes; /* third attempt */
-                if (((error = UnzipClass.Seek(UnzipClass.FCurrFile->offset)) != PK_OK) ||
-                    (UnzipClass.ReadBuf(G.sig, 4) == 0)) {  /* bad offset */
-                    if (error != PK_BADERR)
-                      Info(0x401, OffsetMsg, *pfilnum, "EOF",
-                        (long)request);
-                    error_in_archive = PK_BADERR;
-                    continue;   /* but can still try next one */
-                }
-                if (memcmp(G.sig, local_hdr_sig, 4)) {
-                    Info(0x401,
-                      OffsetMsg, *pfilnum,
-                      LocalHdrSig, (long)request);
-                    error_in_archive = PK_BADERR;
-                    continue;
-                }
-            } else
-                continue;  /* this one hosed; try next */
-        }
+       error_in_archive = UnzipClass.SeekFile(UnzipClass.FCurrFile);
+        if (error_in_archive != PK_COOL)
+            continue;
+                    
         error = UnzipClass.GetFileHeader();
         if (error == PK_COOL)
             error = UnzipClass.GetFileName(UnzipClass.FCurrFileHeader.filename_length);
