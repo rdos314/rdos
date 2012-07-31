@@ -1440,6 +1440,78 @@ int TUnzip::GetFileName(int length)
 
 /*##########################################################################
 #
+#   Name       : TUnzip::DirEntryToFile
+#
+#   Purpose....: Convert dir-entry to file entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::DirEntryToFile(struct TUnzipFile *file, struct TUnzipDirEntry *dir, const char *filename)
+{
+     unsigned cmpridx;
+
+/*---------------------------------------------------------------------------
+    Check central directory info for version/compatibility requirements.
+  ---------------------------------------------------------------------------*/
+
+    file->encrypted = dir->general_purpose_bit_flag & 1;   /* bit field */
+    file->ExtLocHdr = (dir->general_purpose_bit_flag & 8) == 8;  /* bit */
+    file->textfile = dir->internal_file_attributes & 1;    /* bit field */
+    file->crc = dir->crc32;
+    file->rdos_msb_time = dir->rdos_msb_time;
+    file->rdos_lsb_time = dir->rdos_lsb_time;
+    file->compr_size = dir->csize;
+    file->uncompr_size = dir->ucsize;
+    file->version_needed_to_extract[0] = dir->version_needed_to_extract[0];
+    file->version_needed_to_extract[1] = dir->version_needed_to_extract[1];
+    file->compression_method = dir->compression_method;
+    file->internal_file_attributes = dir->internal_file_attributes;
+    file->external_file_attributes = dir->external_file_attributes;
+    file->general_purpose_bit_flag = dir->general_purpose_bit_flag;
+
+    if (dir->version_needed_to_extract[0] > UNZIP_VERSION) {
+        Info(0x401, "   skipping: %-22s  need %s compat. v%u.%u (can do v%u.%u)\n",
+              filename, "PK",
+              dir->version_needed_to_extract[0] / 10,
+              dir->version_needed_to_extract[0] % 10,
+              UNZIP_VERSION / 10, UNZIP_VERSION % 10);
+        return PK_WARN;
+    }
+
+    if ((dir->compression_method >= REDUCED1 && dir->compression_method <= REDUCED4) ||
+        dir->compression_method==TOKENIZED ||
+        (dir->compression_method>DEFLATED))
+    {
+        cmpridx = FindCompressMethod(dir->compression_method);
+        if (cmpridx < NUM_METHODS)
+            Info(0x401, "   skipping: %-22s  `%s' method not supported\n",
+              filename,
+              ComprNames[cmpridx]);
+        else
+            Info(0x401, "   skipping: %-22s  unsupported compression method %u\n",
+              filename,
+              dir->compression_method);
+        return PK_WARN;
+    }
+
+    /* store a copy of the central header filename for later comparison */
+    file->cfilname = new char[strlen(filename) + 1];
+    if (file->cfilname == 0) {
+        Info(0x401, "%s:  warning, no memory for comparison with local header\n", filename);
+    } else
+        strcpy(file->cfilname, filename);
+
+    file->diskstart = dir->disk_number_start;
+    file->offset = (long)dir->relative_offset_local_header;
+    return PK_COOL;
+
+} /* end function store_info() */
+
+/*##########################################################################
+#
 #   Name       : TUnzip::AddFile
 #
 #   Purpose....: 
@@ -1476,7 +1548,9 @@ int TUnzip::AddFile()    /* return PK-type error code */
     SkipHeaderString(FCurrDirEntry.extra_field_length);
     SkipHeaderString(FCurrDirEntry.file_comment_length);
 
-    return PK_COOL;
+    error = DirEntryToFile(FCurrFile, &FCurrDirEntry, FCurrFileName);
+
+    return error;
 }
 
 /*##########################################################################
@@ -2781,78 +2855,6 @@ int TUnzip::CheckForNewer(const char *filename)
         return DOES_NOT_EXIST;
 
 } /* end function check_for_newer() */
-
-/*##########################################################################
-#
-#   Name       : TUnzip::DirEntryToFile
-#
-#   Purpose....: Convert dir-entry to file entry
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TUnzip::DirEntryToFile(struct TUnzipFile *file, struct TUnzipDirEntry *dir, const char *filename)
-{
-     unsigned cmpridx;
-
-/*---------------------------------------------------------------------------
-    Check central directory info for version/compatibility requirements.
-  ---------------------------------------------------------------------------*/
-
-    file->encrypted = dir->general_purpose_bit_flag & 1;   /* bit field */
-    file->ExtLocHdr = (dir->general_purpose_bit_flag & 8) == 8;  /* bit */
-    file->textfile = dir->internal_file_attributes & 1;    /* bit field */
-    file->crc = dir->crc32;
-    file->rdos_msb_time = dir->rdos_msb_time;
-    file->rdos_lsb_time = dir->rdos_lsb_time;
-    file->compr_size = dir->csize;
-    file->uncompr_size = dir->ucsize;
-    file->version_needed_to_extract[0] = dir->version_needed_to_extract[0];
-    file->version_needed_to_extract[1] = dir->version_needed_to_extract[1];
-    file->compression_method = dir->compression_method;
-    file->internal_file_attributes = dir->internal_file_attributes;
-    file->external_file_attributes = dir->external_file_attributes;
-    file->general_purpose_bit_flag = dir->general_purpose_bit_flag;
-
-    if (dir->version_needed_to_extract[0] > UNZIP_VERSION) {
-        Info(0x401, "   skipping: %-22s  need %s compat. v%u.%u (can do v%u.%u)\n",
-              filename, "PK",
-              dir->version_needed_to_extract[0] / 10,
-              dir->version_needed_to_extract[0] % 10,
-              UNZIP_VERSION / 10, UNZIP_VERSION % 10);
-        return 0;
-    }
-
-    if ((dir->compression_method >= REDUCED1 && dir->compression_method <= REDUCED4) ||
-        dir->compression_method==TOKENIZED ||
-        (dir->compression_method>DEFLATED))
-    {
-        cmpridx = FindCompressMethod(dir->compression_method);
-        if (cmpridx < NUM_METHODS)
-            Info(0x401, "   skipping: %-22s  `%s' method not supported\n",
-              filename,
-              ComprNames[cmpridx]);
-        else
-            Info(0x401, "   skipping: %-22s  unsupported compression method %u\n",
-              filename,
-              dir->compression_method);
-        return 0;
-    }
-
-    /* store a copy of the central header filename for later comparison */
-    file->cfilname = new char[strlen(filename) + 1];
-    if (file->cfilname == 0) {
-        Info(0x401, "%s:  warning, no memory for comparison with local header\n", filename);
-    } else
-        strcpy(file->cfilname, filename);
-
-    file->diskstart = dir->disk_number_start;
-    file->offset = (long)dir->relative_offset_local_header;
-    return 1;
-
-} /* end function store_info() */
 
 /*##########################################################################
 #

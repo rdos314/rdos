@@ -348,10 +348,7 @@ int extract_or_test_files()    /* return PK-type error code */
                 break;
 
             if (G.process_all_files) {
-                if (UnzipClass.DirEntryToFile(UnzipClass.FCurrFile, &UnzipClass.FCurrDirEntry, UnzipClass.FCurrFileName))
-                    ++j;  /* file is OK; info[] stored; continue with next */
-                else
-                    ++num_skipped;
+                ++j;  /* file is OK; info[] stored; continue with next */
             } else {
                 int   do_this_file;
 
@@ -377,10 +374,7 @@ int extract_or_test_files()    /* return PK-type error code */
                         }
                 }
                 if (do_this_file) {
-                    if (UnzipClass.DirEntryToFile(UnzipClass.FCurrFile, &UnzipClass.FCurrDirEntry, UnzipClass.FCurrFileName))
-                        ++j;            /* file is OK */
-                    else
-                        ++num_skipped;  /* unsupp. compression or encryption */
+                    ++j;            /* file is OK */
                 }
             } /* end if (process_all_files) */
 

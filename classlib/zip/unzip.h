@@ -181,7 +181,6 @@ public:
     int Extract();
 
     int CheckForNewer(const char *filename);
-    int DirEntryToFile(struct TUnzipFile *file, struct TUnzipDirEntry *entry, const char *filename);
 
     void CreateTimeStr(struct TUnzipFile *file, char *str);
     void ShowVerbose(struct TUnzipFile *file);
@@ -229,6 +228,7 @@ private:
 
     int GetDirEntry();
     int ProcessDirEntry();
+    int DirEntryToFile(struct TUnzipFile *file, struct TUnzipDirEntry *entry, const char *filename);
 
     int OpenOutputFile();
     void CloseOutputFile();
