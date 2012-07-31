@@ -171,13 +171,13 @@ public:
     int GetNextByte();
     int Seek(long abs_offset);
 
+    int GetFileName(int length);
+    int AddFile();
+
     int ZDecode(int c);
 
     void DisplayHeaderString(int lenght, int oemconvert);
     void SkipHeaderString(int length);
-    int GetFileName(int length);
-    int GetDirEntry();
-    int ProcessDirEntry();
 
     int Extract();
 
@@ -227,6 +227,9 @@ private:
 
     int DecryptByte();
     int UpdateKeys(int c);
+
+    int GetDirEntry();
+    int ProcessDirEntry();
 
     int OpenOutputFile();
     void CloseOutputFile();

@@ -342,28 +342,11 @@ int extract_or_test_files()    /* return PK-type error code */
                 reached_end = TRUE;     /* ...so no more left to do */
                 break;
             }
-            /* process_cdir_file_hdr() sets pInfo->hostnum, pInfo->lcflag */
-            error = UnzipClass.ProcessDirEntry();
-            if (error != PK_COOL) {
-                error_in_archive = error;   /* only PK_EOF defined */
-                reached_end = TRUE;     /* ...so no more left to do */
-                break;
-            }
-            error = UnzipClass.GetFileName(UnzipClass.FCurrDirEntry.filename_length);
+
+            error = UnzipClass.AddFile();
             if (error != PK_COOL)
-            {
-                if (error > error_in_archive)
-                    error_in_archive = error;
-                if (error > PK_WARN) {  /* fatal:  no more left to do */
-                    Info(0x401,
-                      FilNamMsg,
-                      FnFilter1(UnzipClass.FCurrFileName), "central");
-                    reached_end = TRUE;
-                    break;
-                }
-            }
-            UnzipClass.SkipHeaderString(UnzipClass.FCurrDirEntry.extra_field_length);
-            UnzipClass.SkipHeaderString(UnzipClass.FCurrDirEntry.file_comment_length);
+                break;
+
             if (G.process_all_files) {
                 if (UnzipClass.DirEntryToFile(UnzipClass.FCurrFile, &UnzipClass.FCurrDirEntry, UnzipClass.FCurrFileName))
                     ++j;  /* file is OK; info[] stored; continue with next */

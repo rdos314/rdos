@@ -800,54 +800,6 @@ void TUnzip::SkipHeaderString(int length)
 
 /*##########################################################################
 #
-#   Name       : TUnzip::GetFileName
-#
-#   Purpose....: Get filename from header
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TUnzip::GetFileName(int length)
-{
-    int block_len;
-    int error = PK_OK;
-
-    if (length >= FILE_NAME_SIZE) {
-        Info(0x401, "warning:  filename too long--truncating.\n");
-
-        error = PK_WARN;
-        /* remember excess length in block_len */
-        block_len = length - (FILE_NAME_SIZE - 1);
-        length = FILE_NAME_SIZE - 1;
-    } 
-    else
-        /* no excess size */
-        block_len = 0;
-
-    if (ReadBuf(FCurrFileName, length) == 0)
-        return PK_EOF;
-
-    FCurrFileName[length] = '\0';      /* terminate w/zero:  ASCIIZ */
-
-    /* translate the Zip entry filename coded in host-dependent "extended
-           ASCII" into the compiler's (system's) internal text code page */
-    AsciiToNative(FCurrFileName);
-
-    strtolower(FCurrFileName, FCurrFileName);
-
-    if (block_len)         /* no overflow, we're done here */
-    {
-        Info(0x401, "[ %s ]\n", FCurrFileName);
-        SkipHeaderString(block_len);
-    }
-
-     return PK_OK;
-}
-
-/*##########################################################################
-#
 #   Name       : TUnzip::SetupEncryption
 #
 #   Purpose....: Set encryption keys
@@ -1341,10 +1293,6 @@ int TUnzip::ProcessDirEntry()    /* return PK-type error code */
     file is coming.
   ---------------------------------------------------------------------------*/
 
-    error = GetDirEntry();
-    if (error != 0)
-        return error;
-
     FCurrFile->hostver = FCurrDirEntry.version_made_by[0];
     FCurrFile->hostnum = MIN(FCurrDirEntry.version_made_by[1], NUM_HOSTS);
 /*  extnum = MIN(crec.version_needed_to_extract[1], NUM_HOSTS); */
@@ -1441,6 +1389,95 @@ int TUnzip::GetFileHeader()    /* return PK-type error code */
 
     return PK_COOL;
 } /* end function process_local_file_hdr() */
+
+/*##########################################################################
+#
+#   Name       : TUnzip::GetFileName
+#
+#   Purpose....: Get filename from header
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::GetFileName(int length)
+{
+    int block_len;
+    int error = PK_OK;
+
+    if (length >= FILE_NAME_SIZE) {
+        Info(0x401, "warning:  filename too long--truncating.\n");
+
+        error = PK_WARN;
+        /* remember excess length in block_len */
+        block_len = length - (FILE_NAME_SIZE - 1);
+        length = FILE_NAME_SIZE - 1;
+    } 
+    else
+        /* no excess size */
+        block_len = 0;
+
+    if (ReadBuf(FCurrFileName, length) == 0)
+        return PK_EOF;
+
+    FCurrFileName[length] = '\0';      /* terminate w/zero:  ASCIIZ */
+
+    /* translate the Zip entry filename coded in host-dependent "extended
+           ASCII" into the compiler's (system's) internal text code page */
+    AsciiToNative(FCurrFileName);
+
+    strtolower(FCurrFileName, FCurrFileName);
+
+    if (block_len)         /* no overflow, we're done here */
+    {
+        Info(0x401, "[ %s ]\n", FCurrFileName);
+        SkipHeaderString(block_len);
+    }
+
+     return PK_OK;
+}
+
+/*##########################################################################
+#
+#   Name       : TUnzip::AddFile
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::AddFile()    /* return PK-type error code */
+{
+    int error;
+       
+    error = GetDirEntry();
+    if (error != 0)
+        return error;
+
+    /* process_cdir_file_hdr() sets pInfo->hostnum, pInfo->lcflag */
+    error = ProcessDirEntry();
+    if (error != PK_COOL)
+        return error;
+
+    error = GetFileName(FCurrDirEntry.filename_length);
+    if (error != PK_COOL)
+    {
+        if (error > PK_WARN) {  /* fatal:  no more left to do */
+            Info(0x401,
+              "%s:  bad filename length (%s)\n",
+              FCurrFileName, "central");
+        }
+        return error;
+    }
+
+    SkipHeaderString(FCurrDirEntry.extra_field_length);
+    SkipHeaderString(FCurrDirEntry.file_comment_length);
+
+    return PK_COOL;
+}
 
 /*##########################################################################
 #
