@@ -1450,7 +1450,7 @@ ctF8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
 FindDll Proc near
     push ds
     push ax
-    push bx
+    push ebx
     push dx
 ;
     GetThread
@@ -1468,15 +1468,15 @@ FindDll Proc near
 
 find_dll_check_dll:
     mov es,ax
-    mov di,OFFSET lib_name
+    mov edi,OFFSET lib_name
     push esi
 find_dll_check_name:
-    mov al,es:[di]
-    movzx bx,al
-    mov al,byte ptr cs:[bx].UCaseTab
+    mov al,es:[edi]
+    movzx ebx,al
+    mov al,byte ptr cs:[ebx].UCaseTab
     mov ah,fs:[esi]
-    movzx bx,ah
-    mov ah,byte ptr cs:[bx].UCaseTab
+    movzx ebx,ah
+    mov ah,byte ptr cs:[ebx].UCaseTab
     cmp al,ah
     jne find_dll_next
 ;       
@@ -1484,7 +1484,7 @@ find_dll_check_name:
     je find_dll_ok
 ;
     inc esi
-    inc di
+    inc edi
     jmp find_dll_check_name
 
 find_dll_next:
@@ -1506,7 +1506,7 @@ find_dll_ok:
 
 find_dll_end:
     pop dx
-    pop bx
+    pop ebx
     pop ax
     pop ds
     ret
@@ -1515,7 +1515,7 @@ FindDll Endp
 FindApp Proc near
     push ds
     push ax
-    push bx
+    push ebx
     push dx
 ;
     GetThread
@@ -1526,23 +1526,23 @@ FindApp Proc near
     jc find_app_fail
 ;
     mov es,bx
-    mov di,OFFSET lib_name
+    mov edi,OFFSET lib_name
     push esi
 
 find_app_check_name:
-    mov al,es:[di]
-    inc di
-    movzx bx,al
-    mov al,byte ptr cs:[bx].UCaseTab
+    mov al,es:[edi]
+    inc edi
+    movzx ebx,al
+    mov al,byte ptr cs:[ebx].UCaseTab
     mov ah,fs:[esi]
-    movzx bx,ah
-    mov ah,byte ptr cs:[bx].UCaseTab
+    movzx ebx,ah
+    mov ah,byte ptr cs:[ebx].UCaseTab
     cmp al,ah
     jne find_app_pop
     or al,al
     je find_app_ok
     inc esi
-    inc di
+    inc edi
     jmp find_app_check_name
 
 find_app_pop:
@@ -1559,7 +1559,7 @@ find_app_ok:
 
 find_app_end:
     pop dx
-    pop bx
+    pop ebx
     pop ax
     pop ds
     ret
@@ -1620,7 +1620,7 @@ find_path_next:
     jnz find_path_next
     mov al,[esi]
     or al,al
-    mov di,OFFSET PathName
+    mov edi,OFFSET PathName
     jne find_path_loop
     jmp find_path_failed
 
@@ -4317,19 +4317,19 @@ notify_pe_exception     Proc far
     push ecx
     push dx
 ;    
-    mov bx,OFFSET exc_tab
+    mov ebx,OFFSET exc_tab
     mov ecx,10h
     mov dl,14h
     mov dh,0
 
 find_exc_loop:    
-    cmp eax,cs:[bx]
+    cmp eax,cs:[ebx]
     jne find_exc_next
 ;
     mov dl,dh
 
 find_exc_next:
-    add bx,4
+    add ebx,4
     inc dh
     loop find_exc_loop
 ;
