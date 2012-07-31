@@ -601,17 +601,17 @@ static int extract_or_test_entrylist(unsigned numchunk,
          * field, so that any Zip64 extension local e.f. block has already
          * been processed.
          */
-        if (UnzipClass.FCurrFileHeader.compression_method == STORED) {
-            zusz_t csiz_decrypted = UnzipClass.FCurrFileHeader.csize;
+        if (UnzipClass.FCurrFile->compression_method == STORED) {
+            zusz_t csiz_decrypted = UnzipClass.FCurrFile->compr_size;
 
             if (UnzipClass.FCurrFile->encrypted)
                 csiz_decrypted -= 12;
-            if (UnzipClass.FCurrFileHeader.ucsize != csiz_decrypted) {
+            if (UnzipClass.FCurrFile->uncompr_size != csiz_decrypted) {
                 Info(0x401, WrnStorUCSizCSizDiff,
                   FnFilter1(UnzipClass.FCurrFile->cfilname),
-                  fzofft(UnzipClass.FCurrFileHeader.ucsize, NULL, "u"),
+                  fzofft(UnzipClass.FCurrFile->uncompr_size, NULL, "u"),
                   fzofft(csiz_decrypted, NULL, "u"));
-                UnzipClass.FCurrFileHeader.ucsize = csiz_decrypted;
+                UnzipClass.FCurrFile->uncompr_size = csiz_decrypted;
                 if (error_in_archive < PK_WARN)
                     error_in_archive = PK_WARN;
             }

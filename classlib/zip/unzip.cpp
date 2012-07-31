@@ -1367,6 +1367,7 @@ int TUnzip::AddFile()    /* return PK-type error code */
     file->crc = makelong(&byterec[C_CRC32]);
     file->compr_size = makelong(&byterec[C_COMPRESSED_SIZE]);
     file->uncompr_size = makelong(&byterec[C_UNCOMPRESSED_SIZE]);
+    file->compression_method = makeword(&byterec[C_COMPRESSION_METHOD]);
 
     filename_length = makeword(&byterec[C_FILENAME_LENGTH]);
     extra_field_length = makeword(&byterec[C_EXTRA_FIELD_LENGTH]);
