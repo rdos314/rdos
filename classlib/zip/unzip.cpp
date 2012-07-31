@@ -1695,7 +1695,7 @@ void TUnzip::CloseOutputFile()
 ##########################################################################*/
 void TUnzip::CloseAndSetTime()
 {
-    RdosSetFileTime(FOutputHandle, FCurrFileHeader.rdos_msb_time, FCurrFileHeader.rdos_lsb_time);
+    RdosSetFileTime(FOutputHandle, FCurrFile->rdos_msb_time, FCurrFile->rdos_lsb_time);
     RdosCloseFile(FOutputHandle);
 }
 
@@ -2155,7 +2155,7 @@ int TUnzip::ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnz
   ml = mask_bits[bl];
   md = mask_bits[bd];
   mdl = mask_bits[bdl];
-  s = FCurrFileHeader.ucsize;
+  s = FCurrFile->uncompr_size;
   while (s > 0)                 /* do until ucsize bytes uncompressed */
   {
     GETBITS(1)
@@ -2227,7 +2227,7 @@ int TUnzip::ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnz
     return retval;
   if (FDecompSize + FInCount + (k >> 3))   /* should have read csize bytes, but */
   {                        /* sometimes read one too many:  k>>3 compensates */
-    FUsedCSize = FCurrFileHeader.csize - FDecompSize - FInCount - (k >> 3);
+    FUsedCSize = FCurrFile->compr_size - FDecompSize - FInCount - (k >> 3);
     return 5;
   }
   return 0;
@@ -2267,7 +2267,7 @@ int TUnzip::ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned 
   ml = mask_bits[bl];           /* precompute masks for speed */
   md = mask_bits[bd];
   mdl = mask_bits[bdl];
-  s = FCurrFileHeader.ucsize;
+  s = FCurrFile->uncompr_size;
   while (s > 0)                 /* do until ucsize bytes uncompressed */
   {
     GETBITS(1)
@@ -2340,7 +2340,7 @@ int TUnzip::ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned 
     return retval;
   if (FDecompSize + FInCount + (k >> 3))   /* should have read csize bytes, but */
   {                        /* sometimes read one too many:  k>>3 compensates */
-    FUsedCSize = FCurrFileHeader.csize - FDecompSize - FInCount - (k >> 3);
+    FUsedCSize = FCurrFile->compr_size - FDecompSize - FInCount - (k >> 3);
     return 5;
   }
   return 0;
@@ -2386,7 +2386,7 @@ int TUnzip::Explode()
   bl = 7;
   bd = (FDecompSize + FInCount) > 200000L ? 8 : 7;
 
-  if (FCurrFileHeader.general_purpose_bit_flag & 4)
+  if (FCurrFile->general_purpose_bit_flag & 4)
   /* With literal tree--minimum match length is 3 */
   {
     bb = 9;                     /* base table size for literals */
@@ -2429,7 +2429,7 @@ int TUnzip::Explode()
     if (tb != 0) FreeHuft(tb);
     return (int)r;
   }
-  if (FCurrFileHeader.general_purpose_bit_flag & 2)      /* true if 8K */
+  if (FCurrFile->general_purpose_bit_flag & 2)      /* true if 8K */
   {
     bdl = 7;
     r = BuildHuft(l, 64, 0, cpdist8, extra, &td, &bd);
@@ -2835,7 +2835,7 @@ int TUnzip::Extract()
   ---------------------------------------------------------------------------*/
 
     DeferInput();    /* so NEXTBYTE bounds check will work */
-    switch (FCurrFileHeader.compression_method) {
+    switch (FCurrFile->compression_method) {
         case STORED:
             Info(0, extract_msg, "extract", FCurrFile->cfilname);
             error = Store();
@@ -2851,7 +2851,7 @@ int TUnzip::Extract()
 
             error = Explode();
             if (error == 5) { /* treat 5 specially */
-                int warning = FUsedCSize <= FCurrFileHeader.csize;
+                int warning = FUsedCSize <= FCurrFile->compr_size;
                 error = warning ? PK_WARN : PK_ERR;
             }
             break;
@@ -2891,10 +2891,10 @@ int TUnzip::Extract()
         return error;
     }
 
-    if (FCurrCrcVal != FCurrFileHeader.crc32) {
+    if (FCurrCrcVal != FCurrFile->crc) {
         /* if quiet enough, we haven't output the filename yet:  do it */
         Info(0x401, "%-22s ", FCurrFile->cfilname);
-        Info(0x401, " bad CRC %08lx  (should be %08lx)\n", FCurrCrcVal, FCurrFileHeader.crc32);
+        Info(0x401, " bad CRC %08lx  (should be %08lx)\n", FCurrCrcVal, FCurrFile->crc);
         if (FCurrFile && FCurrFile->encrypted)
             Info(0x401, "   (may instead be incorrect password)\n");
         error = PK_ERR;
@@ -2931,10 +2931,10 @@ int TUnzip::CheckForNewer(const char *filename)
         RdosAddSec(&msb, &lsb, 2);
         RdosCloseFile(handle);
 
-        if (msb == FCurrFileHeader.rdos_msb_time)
-            return lsb >= FCurrFileHeader.rdos_msb_time;
+        if (msb == FCurrFile->rdos_msb_time)
+            return lsb >= FCurrFile->rdos_msb_time;
         else
-            return msb >= FCurrFileHeader.rdos_lsb_time;
+            return msb >= FCurrFile->rdos_lsb_time;
     }
     else
         return DOES_NOT_EXIST;
