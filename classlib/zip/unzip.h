@@ -104,9 +104,6 @@ struct TUnzipDirEntry
     unsigned char version_needed_to_extract[2];
     unsigned short general_purpose_bit_flag;
     unsigned short compression_method;
-    unsigned short filename_length;
-    unsigned short extra_field_length;
-    unsigned short file_comment_length;
 };
 
 struct TUnzipFileHeader
@@ -226,9 +223,9 @@ private:
     int DecryptByte();
     int UpdateKeys(int c);
 
-    int GetDirEntry();
+    int GetDirEntry(struct TUnzipFile *file);
     int ProcessDirEntry();
-    int DirEntryToFile(struct TUnzipFile *file, struct TUnzipDirEntry *entry, const char *filename);
+    int DirEntryToFile(struct TUnzipFile *file, const char *filename);
 
     int OpenOutputFile();
     void CloseOutputFile();
@@ -270,6 +267,11 @@ private:
     int FUsedCSize;
 
     unsigned int FKeys[3]; 
+
+// remove later!
+    unsigned short filename_length;
+    unsigned short extra_field_length;
+    unsigned short file_comment_length;
 
 };
 

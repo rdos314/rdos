@@ -1228,7 +1228,7 @@ int TUnzip::Seek(long abs_offset)
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::GetDirEntry()    /* return PK-type error code */
+int TUnzip::GetDirEntry(struct TUnzipFile *file)    /* return PK-type error code */
 {
     unsigned long dos_datetime;
     unsigned char byterec[ CREC_SIZE ];
@@ -1244,27 +1244,35 @@ int TUnzip::GetDirEntry()    /* return PK-type error code */
     if (ReadBuf((char *)byterec, CREC_SIZE) == 0)
         return PK_EOF;
 
-    FCurrDirEntry.version_made_by[0] = byterec[C_VERSION_MADE_BY_0];
-    FCurrDirEntry.version_made_by[1] = byterec[C_VERSION_MADE_BY_1];
-    FCurrDirEntry.version_needed_to_extract[0] = byterec[C_VERSION_NEEDED_TO_EXTRACT_0];
-    FCurrDirEntry.version_needed_to_extract[1] = byterec[C_VERSION_NEEDED_TO_EXTRACT_1];
+    file->hostver = byterec[C_VERSION_MADE_BY_0];
+    file->hostnum = MIN(byterec[C_VERSION_MADE_BY_1], NUM_HOSTS);
 
-    FCurrDirEntry.general_purpose_bit_flag = makeword(&byterec[C_GENERAL_PURPOSE_BIT_FLAG]);
-    FCurrDirEntry.compression_method = makeword(&byterec[C_COMPRESSION_METHOD]);
+    file->version_needed_to_extract[0] = byterec[C_VERSION_NEEDED_TO_EXTRACT_0];
+    file->version_needed_to_extract[1] = byterec[C_VERSION_NEEDED_TO_EXTRACT_1];
+
+    file->general_purpose_bit_flag = makeword(&byterec[C_GENERAL_PURPOSE_BIT_FLAG]);
+    file->encrypted = file->general_purpose_bit_flag & 1;   /* bit field */
+    file->ExtLocHdr = (file->general_purpose_bit_flag & 8) == 8;  /* bit */
 
     dos_datetime = makelong(&byterec[C_LAST_MOD_DOS_DATETIME]);
-    DosToRdosTime(&FCurrDirEntry.rdos_msb_time, &FCurrDirEntry.rdos_lsb_time, dos_datetime);
+    DosToRdosTime(&file->rdos_msb_time, &file->rdos_lsb_time, dos_datetime);
 
-    FCurrDirEntry.crc32 = makelong(&byterec[C_CRC32]);
-    FCurrDirEntry.csize = makelong(&byterec[C_COMPRESSED_SIZE]);
-    FCurrDirEntry.ucsize = makelong(&byterec[C_UNCOMPRESSED_SIZE]);
-    FCurrDirEntry.filename_length = makeword(&byterec[C_FILENAME_LENGTH]);
-    FCurrDirEntry.extra_field_length = makeword(&byterec[C_EXTRA_FIELD_LENGTH]);
-    FCurrDirEntry.file_comment_length = makeword(&byterec[C_FILE_COMMENT_LENGTH]);
-    FCurrDirEntry.disk_number_start = makeword(&byterec[C_DISK_NUMBER_START]);
-    FCurrDirEntry.internal_file_attributes = makeword(&byterec[C_INTERNAL_FILE_ATTRIBUTES]);
-    FCurrDirEntry.external_file_attributes = makelong(&byterec[C_EXTERNAL_FILE_ATTRIBUTES]);  /* LONG, not word! */
-    FCurrDirEntry.relative_offset_local_header = makelong(&byterec[C_RELATIVE_OFFSET_LOCAL_HEADER]);
+    file->crc = makelong(&byterec[C_CRC32]);
+    file->compr_size = makelong(&byterec[C_COMPRESSED_SIZE]);
+    file->uncompr_size = makelong(&byterec[C_UNCOMPRESSED_SIZE]);
+
+    filename_length = makeword(&byterec[C_FILENAME_LENGTH]);
+    extra_field_length = makeword(&byterec[C_EXTRA_FIELD_LENGTH]);
+    file_comment_length = makeword(&byterec[C_FILE_COMMENT_LENGTH]);
+
+    file->diskstart = makeword(&byterec[C_DISK_NUMBER_START]);
+
+    file->internal_file_attributes = makeword(&byterec[C_INTERNAL_FILE_ATTRIBUTES]);
+    file->external_file_attributes = makelong(&byterec[C_EXTERNAL_FILE_ATTRIBUTES]);  /* LONG, not word! */
+    file->textfile = file->internal_file_attributes & 1;    /* bit field */
+
+    file->offset = makelong(&byterec[C_RELATIVE_OFFSET_LOCAL_HEADER]);
+    
 
     return PK_COOL;
 
@@ -1293,8 +1301,6 @@ int TUnzip::ProcessDirEntry()    /* return PK-type error code */
     file is coming.
   ---------------------------------------------------------------------------*/
 
-    FCurrFile->hostver = FCurrDirEntry.version_made_by[0];
-    FCurrFile->hostnum = MIN(FCurrDirEntry.version_made_by[1], NUM_HOSTS);
 /*  extnum = MIN(crec.version_needed_to_extract[1], NUM_HOSTS); */
 
     switch (FCurrFile->hostnum) {
@@ -1449,7 +1455,7 @@ int TUnzip::GetFileName(int length)
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::DirEntryToFile(struct TUnzipFile *file, struct TUnzipDirEntry *dir, const char *filename)
+int TUnzip::DirEntryToFile(struct TUnzipFile *file, const char *filename)
 {
      unsigned cmpridx;
 
@@ -1457,35 +1463,20 @@ int TUnzip::DirEntryToFile(struct TUnzipFile *file, struct TUnzipDirEntry *dir, 
     Check central directory info for version/compatibility requirements.
   ---------------------------------------------------------------------------*/
 
-    file->encrypted = dir->general_purpose_bit_flag & 1;   /* bit field */
-    file->ExtLocHdr = (dir->general_purpose_bit_flag & 8) == 8;  /* bit */
-    file->textfile = dir->internal_file_attributes & 1;    /* bit field */
-    file->crc = dir->crc32;
-    file->rdos_msb_time = dir->rdos_msb_time;
-    file->rdos_lsb_time = dir->rdos_lsb_time;
-    file->compr_size = dir->csize;
-    file->uncompr_size = dir->ucsize;
-    file->version_needed_to_extract[0] = dir->version_needed_to_extract[0];
-    file->version_needed_to_extract[1] = dir->version_needed_to_extract[1];
-    file->compression_method = dir->compression_method;
-    file->internal_file_attributes = dir->internal_file_attributes;
-    file->external_file_attributes = dir->external_file_attributes;
-    file->general_purpose_bit_flag = dir->general_purpose_bit_flag;
-
-    if (dir->version_needed_to_extract[0] > UNZIP_VERSION) {
+    if (file->version_needed_to_extract[0] > UNZIP_VERSION) {
         Info(0x401, "   skipping: %-22s  need %s compat. v%u.%u (can do v%u.%u)\n",
               filename, "PK",
-              dir->version_needed_to_extract[0] / 10,
-              dir->version_needed_to_extract[0] % 10,
+              file->version_needed_to_extract[0] / 10,
+              file->version_needed_to_extract[0] % 10,
               UNZIP_VERSION / 10, UNZIP_VERSION % 10);
         return PK_WARN;
     }
 
-    if ((dir->compression_method >= REDUCED1 && dir->compression_method <= REDUCED4) ||
-        dir->compression_method==TOKENIZED ||
-        (dir->compression_method>DEFLATED))
+    if ((file->compression_method >= REDUCED1 && file->compression_method <= REDUCED4) ||
+        file->compression_method==TOKENIZED ||
+        (file->compression_method>DEFLATED))
     {
-        cmpridx = FindCompressMethod(dir->compression_method);
+        cmpridx = FindCompressMethod(file->compression_method);
         if (cmpridx < NUM_METHODS)
             Info(0x401, "   skipping: %-22s  `%s' method not supported\n",
               filename,
@@ -1493,7 +1484,7 @@ int TUnzip::DirEntryToFile(struct TUnzipFile *file, struct TUnzipDirEntry *dir, 
         else
             Info(0x401, "   skipping: %-22s  unsupported compression method %u\n",
               filename,
-              dir->compression_method);
+              file->compression_method);
         return PK_WARN;
     }
 
@@ -1504,8 +1495,6 @@ int TUnzip::DirEntryToFile(struct TUnzipFile *file, struct TUnzipDirEntry *dir, 
     } else
         strcpy(file->cfilname, filename);
 
-    file->diskstart = dir->disk_number_start;
-    file->offset = (long)dir->relative_offset_local_header;
     return PK_COOL;
 
 } /* end function store_info() */
@@ -1525,7 +1514,7 @@ int TUnzip::AddFile()    /* return PK-type error code */
 {
     int error;
        
-    error = GetDirEntry();
+    error = GetDirEntry(FCurrFile);
     if (error != 0)
         return error;
 
@@ -1534,7 +1523,7 @@ int TUnzip::AddFile()    /* return PK-type error code */
     if (error != PK_COOL)
         return error;
 
-    error = GetFileName(FCurrDirEntry.filename_length);
+    error = GetFileName(filename_length);
     if (error != PK_COOL)
     {
         if (error > PK_WARN) {  /* fatal:  no more left to do */
@@ -1545,10 +1534,10 @@ int TUnzip::AddFile()    /* return PK-type error code */
         return error;
     }
 
-    SkipHeaderString(FCurrDirEntry.extra_field_length);
-    SkipHeaderString(FCurrDirEntry.file_comment_length);
+    SkipHeaderString(extra_field_length);
+    SkipHeaderString(file_comment_length);
 
-    error = DirEntryToFile(FCurrFile, &FCurrDirEntry, FCurrFileName);
+    error = DirEntryToFile(FCurrFile, FCurrFileName);
 
     return error;
 }
