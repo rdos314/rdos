@@ -4314,7 +4314,7 @@ notify_pe_exception     Proc far
     push eax
     push ebx
 ;
-    push cx
+    push ecx
     push dx
 ;    
     mov bx,OFFSET exc_tab
@@ -4335,7 +4335,7 @@ find_exc_next:
 ;
     movzx bx,dl 
     pop dx
-    pop cx   
+    pop ecx   
 ;    
     push bx
     push ds
