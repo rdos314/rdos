@@ -89,20 +89,6 @@ struct TUnzipHuft {
    (top-down), to prevent internal padding and optimize memory usage!
  */
 
-struct TUnzipFileHeader
-{
-    unsigned long csize;
-    unsigned long ucsize;
-    unsigned long rdos_msb_time;
-    unsigned long rdos_lsb_time;
-    unsigned long crc32;
-    unsigned char version_needed_to_extract[2];
-    unsigned short general_purpose_bit_flag;
-    unsigned short compression_method;
-    unsigned short filename_length;
-    unsigned short extra_field_length;
-};
-
 struct TUnzipFile
 {
     long offset;
@@ -190,8 +176,6 @@ public:
 
     char FCurrFileName[FILE_NAME_SIZE];
     int FDiskFull;
-
-    struct TUnzipFileHeader FCurrFileHeader;
 
     struct TUnzipFile FFileArr[DIR_BLKSIZ];
     struct TUnzipFile *FCurrFile;

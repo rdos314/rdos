@@ -1554,6 +1554,16 @@ int TUnzip::ProcessFile()
     long bufstart;
     char *inptr;
     int incnt;
+    unsigned long csize;
+    unsigned long ucsize;
+    unsigned long rdos_msb_time;
+    unsigned long rdos_lsb_time;
+    unsigned long crc32;
+    unsigned char version_needed_to_extract[2];
+    unsigned short general_purpose_bit_flag;
+    unsigned short compression_method;
+    unsigned short filename_length;
+    unsigned short extra_field_length;
 
     bufstart = FBufStart;
     inptr = FInPtr;
@@ -1575,22 +1585,22 @@ int TUnzip::ProcessFile()
             error = PK_EOF;
         else
         {
-            FCurrFileHeader.version_needed_to_extract[0] = byterec[L_VERSION_NEEDED_TO_EXTRACT_0];
-            FCurrFileHeader.version_needed_to_extract[1] = byterec[L_VERSION_NEEDED_TO_EXTRACT_1];
+            version_needed_to_extract[0] = byterec[L_VERSION_NEEDED_TO_EXTRACT_0];
+            version_needed_to_extract[1] = byterec[L_VERSION_NEEDED_TO_EXTRACT_1];
 
-            FCurrFileHeader.general_purpose_bit_flag = makeword(&byterec[L_GENERAL_PURPOSE_BIT_FLAG]);
-            FCurrFileHeader.compression_method = makeword(&byterec[L_COMPRESSION_METHOD]);
+            general_purpose_bit_flag = makeword(&byterec[L_GENERAL_PURPOSE_BIT_FLAG]);
+            compression_method = makeword(&byterec[L_COMPRESSION_METHOD]);
 
             dos_datetime = makelong(&byterec[L_LAST_MOD_DOS_DATETIME]);
-            DosToRdosTime(&FCurrFileHeader.rdos_msb_time, &FCurrFileHeader.rdos_lsb_time, dos_datetime);
+            DosToRdosTime(&rdos_msb_time, &rdos_lsb_time, dos_datetime);
 
-            FCurrFileHeader.crc32 = makelong(&byterec[L_CRC32]);
-            FCurrFileHeader.csize = makelong(&byterec[L_COMPRESSED_SIZE]);
-            FCurrFileHeader.ucsize = makelong(&byterec[L_UNCOMPRESSED_SIZE]);
-            FCurrFileHeader.filename_length = makeword(&byterec[L_FILENAME_LENGTH]);
-            FCurrFileHeader.extra_field_length = makeword(&byterec[L_EXTRA_FIELD_LENGTH]);
+            crc32 = makelong(&byterec[L_CRC32]);
+            csize = makelong(&byterec[L_COMPRESSED_SIZE]);
+            ucsize = makelong(&byterec[L_UNCOMPRESSED_SIZE]);
+            filename_length = makeword(&byterec[L_FILENAME_LENGTH]);
+            extra_field_length = makeword(&byterec[L_EXTRA_FIELD_LENGTH]);
 
-            if ((FCurrFileHeader.general_purpose_bit_flag & 8) != 0) {
+            if ((general_purpose_bit_flag & 8) != 0) {
                 /* can't trust local header, use central directory: */
         /*       FCurrFile.crc32 = G.pInfo->crc;
                 FCurrFile.csize = G.pInfo->compr_size;
@@ -1600,14 +1610,14 @@ int TUnzip::ProcessFile()
     }
 
     if (error == PK_COOL)
-        error = GetFileName(FCurrFileHeader.filename_length);
+        error = GetFileName(filename_length);
 
     if (error != PK_COOL)
         Info(0x421, "bad local header\n");
 
     if (error == PK_COOL)
     {
-        SkipHeaderString(FCurrFileHeader.extra_field_length);
+        SkipHeaderString(extra_field_length);
         FCurrFile->file_data_offset = FBufStart - FExtraBytes + (FInPtr-FInBuf);
     }
 
