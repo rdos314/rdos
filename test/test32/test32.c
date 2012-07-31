@@ -5,14 +5,18 @@
 
 #include <rdos.h>
 
+char ch;
+
 void *sec_handle;
 
 void TestThread(void *param)
 {
+    char mych = ch;
+
     for (;;)
     {
         RdosNewEnterSection(sec_handle);
-        RdosWriteChar('1');
+        RdosWriteChar(mych);
         RdosNewLeaveSection(sec_handle);
     }
 }
@@ -32,12 +36,20 @@ void main()
     int ok;
     int size;        
 
+    int i;
+
 //    CreateSection();
 
     sec_handle = RdosNewCreateSection();
     sec_handle = RdosNewCreateSection();
+    ch = '1';
 
-    RdosCreateThread(TestThread, "Sect Test", 0, 0x8000);
+    for (i = 0; i < 2; i++)
+    {
+        RdosCreateThread(TestThread, "Sect Test", 0, 0x8000);
+        RdosWaitMilli(100);
+        ch++;
+    }
 
     for (;;)
     {
