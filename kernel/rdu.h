@@ -586,12 +586,9 @@
 
 #define usergate_get_printer_name 470
 
-#define usergate_new_create_section 471
-#define usergate_new_delete_section 472
-#define usergate_new_enter_section 473
-#define usergate_new_leave_section 474
-
-#define usergate_create_section_handle 475
+#define usergate_acquire_futex 471
+#define usergate_release_futex 472
+#define usergate_cleanup_futex 473
 
 
 
@@ -1184,12 +1181,9 @@
 
 #define CallGate_get_printer_name 0x67 0x9a 214 1 0 0 3 0
 
-#define CallGate_new_create_section 0x67 0x9a 215 1 0 0 3 0
-#define CallGate_new_delete_section 0x67 0x9a 216 1 0 0 3 0
-#define CallGate_new_enter_section 0x67 0x9a 217 1 0 0 3 0
-#define CallGate_new_leave_section 0x67 0x9a 218 1 0 0 3 0
-
-#define CallGate_create_section_handle 0x67 0x9a 219 1 0 0 3 0
+#define CallGate_acquire_futex 0x67 0x9a 215 1 0 0 3 0
+#define CallGate_release_futex 0x67 0x9a 216 1 0 0 3 0
+#define CallGate_cleanup_futex 0x67 0x9a 217 1 0 0 3 0
 
 #else
 
@@ -1780,11 +1774,8 @@
 
 #define CallGate_get_printer_name 0x3e 0x67 0x9a 214 1 0 0 3 0
 
-#define CallGate_new_create_section 0x3e 0x67 0x9a 215 1 0 0 3 0
-#define CallGate_new_delete_section 0x3e 0x67 0x9a 216 1 0 0 3 0
-#define CallGate_new_enter_section 0x3e 0x67 0x9a 217 1 0 0 3 0
-#define CallGate_new_leave_section 0x3e 0x67 0x9a 218 1 0 0 3 0
-
-#define CallGate_create_section_handle 0x3e 0x67 0x9a 219 1 0 0 3 0
+#define CallGate_acquire_futex 0x3e 0x67 0x9a 215 1 0 0 3 0
+#define CallGate_release_futex 0x3e 0x67 0x9a 216 1 0 0 3 0
+#define CallGate_cleanup_futex 0x3e 0x67 0x9a 217 1 0 0 3 0
 
 #endif

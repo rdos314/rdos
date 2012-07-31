@@ -586,13 +586,8 @@ utf8_to_ansi_nr                 = 469
 
 get_printer_name_nr             = 470
 
-new_create_section_nr           = 471
-new_delete_section_nr           = 472
-new_enter_section_nr            = 473
-new_leave_section_nr            = 474
-
-acquire_futex_nr                = 475
-release_futex_nr                = 476
-cleanup_futex_nr                = 477
+acquire_futex_nr                = 471
+release_futex_nr                = 472
+cleanup_futex_nr                = 473
 
 usergate_entries			    = 512

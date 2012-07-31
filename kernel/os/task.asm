@@ -8359,10 +8359,8 @@ release_futex   Proc near
     pop esi
     pop es
 ;    
-    lock or fs:ps_flags,PS_FLAG_PREEMPT
-    push OFFSET release_done
-    call SaveLockedThread
-    jmp ContinueCurrentThread
+    call UnlockCore
+    jmp release_done
 
 release_unlock:
     call cs:unlock_futex_proc

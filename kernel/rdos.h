@@ -442,11 +442,6 @@ void RDOSAPI RdosDeleteSection(int Handle);
 void RDOSAPI RdosEnterSection(int Handle);
 void RDOSAPI RdosLeaveSection(int Handle);
 
-void *RDOSAPI RdosNewCreateSection();
-void RDOSAPI RdosNewDeleteSection(void *Handle);
-void RDOSAPI RdosNewEnterSection(void *Handle);
-void RDOSAPI RdosNewLeaveSection(void *Handle);
-
 int RDOSAPI RdosCreateWait();
 void RDOSAPI RdosCloseWait(int Handle);
 void * RDOSAPI RdosCheckWait(int Handle);
@@ -2032,22 +2027,6 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosLeaveSection = \
     CallGate_leave_user_section  \
-    parm [ebx];
-
-#pragma aux RdosNewCreateSection = \
-    CallGate_new_create_section \
-    value [ebx];
-
-#pragma aux RdosNewDeleteSection = \
-    CallGate_new_delete_section  \
-    parm [ebx];
-
-#pragma aux RdosNewEnterSection = \
-    CallGate_new_enter_section  \
-    parm [ebx];
-
-#pragma aux RdosNewLeaveSection = \
-    CallGate_new_leave_section  \
     parm [ebx];
 
 #pragma aux RdosGetFreeHandles = \

@@ -6,6 +6,7 @@
 #include <rdos.h>
 
 char ch;
+char tval;
 
 int sec_handle;
 
@@ -16,7 +17,11 @@ void TestThread(void *param)
     for (;;)
     {
         RdosEnterSection(sec_handle);
+        tval = mych;
         RdosWriteChar(mych);
+        if (tval != mych)
+            for (;;)
+                ;
         RdosLeaveSection(sec_handle);
     }
 }
