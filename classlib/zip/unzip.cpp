@@ -2708,6 +2708,9 @@ int TUnzip::DirEntryToFile(struct TUnzipFile *file, struct TUnzipDirEntry *dir, 
     file->version_needed_to_extract[0] = dir->version_needed_to_extract[0];
     file->version_needed_to_extract[1] = dir->version_needed_to_extract[1];
     file->compression_method = dir->compression_method;
+    file->internal_file_attributes = dir->internal_file_attributes;
+    file->external_file_attributes = dir->external_file_attributes;
+    file->general_purpose_bit_flag = dir->general_purpose_bit_flag;
 
     if (dir->version_needed_to_extract[0] > UNZIP_VERSION) {
         Info(0x401, "   skipping: %-22s  need %s compat. v%u.%u (can do v%u.%u)\n",
@@ -2779,7 +2782,7 @@ void TUnzip::CreateTimeStr(struct TUnzipFile *file, char *str)
 #   Returns....: *
 #
 ##########################################################################*/
-void TUnzip::ShowVerbose(struct TUnzipFile *file, struct TUnzipDirEntry *dir)
+void TUnzip::ShowVerbose(struct TUnzipFile *file)
 {
     int  error;
     unsigned  hostnum, hostver, extnum, extver, methid, methnum, xattr;
@@ -2850,19 +2853,19 @@ void TUnzip::ShowVerbose(struct TUnzipFile *file, struct TUnzipDirEntry *dir)
     Info(0, "  compression method:                             %s\n", varmsg_str);
     if (methid == IMPLODED) {
         Info(0, "  size of sliding dictionary (implosion):         %cK\n",
-          (dir->general_purpose_bit_flag & 2)? '8' : '4');
+          (file->general_purpose_bit_flag & 2)? '8' : '4');
         Info(0, "  number of Shannon-Fano trees (implosion):       %c\n",
-          (dir->general_purpose_bit_flag & 4)? '3' : '2');
+          (file->general_purpose_bit_flag & 4)? '3' : '2');
     } else if (methid == DEFLATED || methid == ENHDEFLATED) {
-        unsigned short  dnum=(unsigned short)((dir->general_purpose_bit_flag>>1) & 3);
+        unsigned short  dnum=(unsigned short)((file->general_purpose_bit_flag>>1) & 3);
 
         Info(0, "  compression sub-type (deflation):               %s\n", dtypelng[dnum]);
     }
 
     Info(0, "  file security status:                           %sencrypted\n",
-      (dir->general_purpose_bit_flag & 1) ? "" : "not ");
+      (file->general_purpose_bit_flag & 1) ? "" : "not ");
     Info(0, "  extended local header:                          %s\n",
-      (dir->general_purpose_bit_flag & 8) ? "yes" : "no");
+      (file->general_purpose_bit_flag & 8) ? "yes" : "no");
     /* print upper 3 bits for amusement? */
 
     /* For printing of date & time, a "char d_t_buf[21]" is required.
@@ -2881,10 +2884,10 @@ void TUnzip::ShowVerbose(struct TUnzipFile *file, struct TUnzipDirEntry *dir)
     Info(0, "  uncompressed size:                              %u bytes\n",
       file->uncompr_size);
     Info(0, "  apparent file type:                             %s\n",
-      (dir->internal_file_attributes & 1)? "text"
-         : (dir->internal_file_attributes & 2)? "ebcdic"
+      (file->internal_file_attributes & 1)? "text"
+         : (file->internal_file_attributes & 2)? "ebcdic"
               : "binary");             /* changed to accept EBCDIC */
-    xattr = (unsigned)((dir->external_file_attributes >> 16) & 0xFFFF);
+    xattr = (unsigned)((file->external_file_attributes >> 16) & 0xFFFF);
     if (hostnum == VMS_) {
         char   *p=attribs, *q=attribs+1;
         int    i, j, k;
@@ -3015,11 +3018,11 @@ void TUnzip::ShowVerbose(struct TUnzipFile *file, struct TUnzipDirEntry *dir)
         Info(0, "  Unix file attributes (%06o octal):            %s\n", xattr, attribs);
 
     } else {
-        Info(0, "  non-MSDOS external file attributes:             %06lX hex\n", dir->external_file_attributes >> 8);
+        Info(0, "  non-MSDOS external file attributes:             %06lX hex\n", file->external_file_attributes >> 8);
 
     } /* endif (hostnum: external attributes format) */
 
-    if ((xattr=(unsigned)(dir->external_file_attributes & 0xFF)) == 0)
+    if ((xattr=(unsigned)(file->external_file_attributes & 0xFF)) == 0)
         Info(0, "  MS-DOS file attributes (%02X hex):                none\n", xattr);
     else if (xattr == 1)
         Info(0, "  MS-DOS file attributes (%02X hex):                read-only\n", xattr);
@@ -3048,7 +3051,7 @@ void TUnzip::ShowVerbose(struct TUnzipFile *file, struct TUnzipDirEntry *dir)
 #   Returns....: *
 #
 ##########################################################################*/
-void TUnzip::ShowCompact(struct TUnzipFile *file, struct TUnzipDirEntry *dir)
+void TUnzip::ShowCompact(struct TUnzipFile *file)
 {
     int         k, error, error_in_archive=PK_COOL;
     unsigned    hostnum, hostver, methid, methnum, xattr;
@@ -3072,27 +3075,27 @@ void TUnzip::ShowCompact(struct TUnzipFile *file, struct TUnzipDirEntry *dir)
     Print out various interesting things about the compressed file.
   ---------------------------------------------------------------------------*/
 
-    methid = (unsigned)(dir->compression_method);
-    methnum = FindCompressMethod(dir->compression_method);
+    methid = (unsigned)(file->compression_method);
+    methnum = FindCompressMethod(file->compression_method);
     hostnum = (unsigned)(file->hostnum);
     hostver = (unsigned)(file->hostver);
 
     strcpy(methbuf, method[methnum]);
     if (methid == IMPLODED) {
-        methbuf[1] = (char)((dir->general_purpose_bit_flag & 2)? '8' : '4');
-        methbuf[3] = (char)((dir->general_purpose_bit_flag & 4)? '3' : '2');
+        methbuf[1] = (char)((file->general_purpose_bit_flag & 2)? '8' : '4');
+        methbuf[3] = (char)((file->general_purpose_bit_flag & 4)? '3' : '2');
     } else if (methid == DEFLATED || methid == ENHDEFLATED) {
-        unsigned short  dnum=(unsigned short)((dir->general_purpose_bit_flag>>1) & 3);
+        unsigned short  dnum=(unsigned short)((file->general_purpose_bit_flag>>1) & 3);
         methbuf[3] = dtype[dnum];
     } else if (methnum >= NUM_METHODS) {   /* unknown */
-        sprintf(&methbuf[1], "%03u", dir->compression_method);
+        sprintf(&methbuf[1], "%03u", file->compression_method);
     }
 
     for (k = 0;  k < 15;  ++k)
         attribs[k] = ' ';
     attribs[15] = 0;
 
-    xattr = (unsigned)((dir->external_file_attributes >> 16) & 0xFFFF);
+    xattr = (unsigned)((file->external_file_attributes >> 16) & 0xFFFF);
     switch (hostnum) {
         case VMS_:
             {   int    i, j;
@@ -3189,11 +3192,11 @@ void TUnzip::ShowCompact(struct TUnzipFile *file, struct TUnzipDirEntry *dir)
             if (hostnum != FS_FAT_ ||
                 (unsigned)(xattr & 0700) !=
                  ((unsigned)0400 |
-                  ((unsigned)!(dir->external_file_attributes & 1) << 7) |
-                  ((unsigned)(dir->external_file_attributes & 0x10) << 2))
+                  ((unsigned)!(file->external_file_attributes & 1) << 7) |
+                  ((unsigned)(file->external_file_attributes & 0x10) << 2))
                )
             {
-                xattr = (unsigned)(dir->external_file_attributes & 0xFF);
+                xattr = (unsigned)(file->external_file_attributes & 0xFF);
                 sprintf(attribs, ".r.-...     %u.%u", hostver/10, hostver%10);
                 attribs[2] = (xattr & 0x01)? '-' : 'w';
                 attribs[5] = (xattr & 0x02)? 'h' : '-';
@@ -3257,20 +3260,11 @@ void TUnzip::ShowCompact(struct TUnzipFile *file, struct TUnzipDirEntry *dir)
 
     Info(0, "%s %s %u ", attribs,
       os[hostnum],
-      dir->ucsize);
+      file->uncompr_size);
     Info(0, "%c",
-      (dir->general_purpose_bit_flag & 1)?
-      ((dir->internal_file_attributes & 1)? 'T' : 'B') :  /* encrypted */
-      ((dir->internal_file_attributes & 1)? 't' : 'b')); /* plaintext */
-    k = (dir->extra_field_length ||
-         /* a local-only "UX" (old Unix/OS2/NT GMT times "IZUNIX") e.f.? */
-         ((dir->external_file_attributes & 0x8000) &&
-          (hostnum == UNIX_ || hostnum == FS_HPFS_ || hostnum == FS_NTFS_)));
-    Info(0, "%c", k?
-      ((dir->general_purpose_bit_flag & 8)? 'X' : 'x') :  /* extra field */
-      ((dir->general_purpose_bit_flag & 8)? 'l' : '-')); /* no extra field */
-      /* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ extended local header or not */
-
+      (file->general_purpose_bit_flag & 1)?
+      ((file->internal_file_attributes & 1)? 'T' : 'B') :  /* encrypted */
+      ((file->internal_file_attributes & 1)? 't' : 'b')); /* plaintext */
 
     /* For printing of date & time, a "char d_t_buf[16]" is required.
      * To save stack space, we reuse the "char attribs[16]" buffer whose

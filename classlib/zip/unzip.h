@@ -138,6 +138,9 @@ struct TUnzipFile
     unsigned char version_made_by[2];
     unsigned char version_needed_to_extract[2];
     unsigned short compression_method;
+    unsigned short internal_file_attributes;
+    unsigned long external_file_attributes;
+    unsigned short general_purpose_bit_flag;
     unsigned ExtLocHdr : 1;  /* use time instead of CRC for decrypt check */
     unsigned textfile : 1;   /* file is text (according to zip) */
     unsigned lcflag : 1;     /* convert filename to lowercase */
@@ -181,8 +184,8 @@ public:
     int DirEntryToFile(struct TUnzipFile *file, struct TUnzipDirEntry *entry, const char *filename);
 
     void CreateTimeStr(struct TUnzipFile *file, char *str);
-    void ShowVerbose(struct TUnzipFile *file, struct TUnzipDirEntry *dir);
-    void ShowCompact(struct TUnzipFile *file, struct TUnzipDirEntry *dir);
+    void ShowVerbose(struct TUnzipFile *file);
+    void ShowCompact(struct TUnzipFile *file);
 
 // these must be global due to callback interface
 
