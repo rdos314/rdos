@@ -591,19 +591,9 @@ static int extract_or_test_entrylist(unsigned numchunk,
         (*pfilnum)++;   /* *pfilnum = i + blknum*DIR_BLKSIZ + 1; */
         UnzipClass.FCurrFile = &UnzipClass.FFileArr[i];
 
-       error_in_archive = UnzipClass.SeekFile(UnzipClass.FCurrFile);
+        error_in_archive = UnzipClass.ProcessFile();
         if (error_in_archive != PK_COOL)
             continue;
-                    
-        error = UnzipClass.GetFileHeader();
-        if (error == PK_COOL)
-            error = UnzipClass.GetFileName(UnzipClass.FCurrFileHeader.filename_length);
-        if (error != PK_COOL) {
-            Info(0x421, BadLocalHdr, *pfilnum);
-            error_in_archive = error;   /* only PK_EOF defined */
-            continue;   /* can still try next one */
-        }
-        UnzipClass.SkipHeaderString(UnzipClass.FCurrFileHeader.extra_field_length);
 
         /* Size consistency checks must come after reading in the local extra
          * field, so that any Zip64 extension local e.f. block has already

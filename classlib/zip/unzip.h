@@ -111,6 +111,7 @@ struct TUnzipFile
     unsigned long crc;              /* crc (needed if extended header) */
     unsigned short diskstart;       /* no of volume where this entry starts */
     int encrypted;                  /* is encrypted */
+    unsigned long file_data_offset;
     unsigned char hostver;
     unsigned char hostnum;
     unsigned long rdos_msb_time;
@@ -152,7 +153,7 @@ public:
 
     int GetFileName(int length);
     int AddFile();
-    int SeekFile(struct TUnzipFile *file);
+    int ProcessFile();
 
     int ZDecode(int c);
 
@@ -210,6 +211,7 @@ private:
     int GetDirEntry(struct TUnzipFile *file);
     int ProcessDirEntry(struct TUnzipFile *file);
     int DirEntryToFile(struct TUnzipFile *file, const char *filename);
+    int SeekFile(struct TUnzipFile *file);
 
     int OpenOutputFile();
     void CloseOutputFile();

@@ -1590,6 +1590,39 @@ int TUnzip::GetFileHeader()    /* return PK-type error code */
 
 /*##########################################################################
 #
+#   Name       : TUnzip::ProcessFile
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::ProcessFile()
+{
+    int error;
+    
+    error = SeekFile(FCurrFile);
+    if (error != PK_COOL)
+        return error;
+                    
+    error = GetFileHeader();
+    if (error == PK_COOL)
+        error = GetFileName(FCurrFileHeader.filename_length);
+    if (error != PK_COOL) {
+        Info(0x421, "bad local header\n");
+        return error;
+    }
+    SkipHeaderString(FCurrFileHeader.extra_field_length);
+
+    FCurrFile->file_data_offset = RdosGetFilePos(FInputHandle);
+
+    return PK_COOL;
+}
+
+/*##########################################################################
+#
 #   Name       : TUnzip::OpenOutputFile
 #
 #   Purpose....: 
