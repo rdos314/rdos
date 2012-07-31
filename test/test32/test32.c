@@ -9,10 +9,12 @@ void *sec_handle;
 
 void TestThread(void *param)
 {
-    RdosNewEnterSection(sec_handle);
-
     for (;;)
-        RdosWaitMilli(500);
+    {
+        RdosNewEnterSection(sec_handle);
+        RdosWriteChar('1');
+        RdosNewLeaveSection(sec_handle);
+    }
 }
     
 
@@ -34,11 +36,16 @@ void main()
 
     sec_handle = RdosNewCreateSection();
     sec_handle = RdosNewCreateSection();
-    RdosNewEnterSection(sec_handle);
 
     RdosCreateThread(TestThread, "Sect Test", 0, 0x8000);
+
+    for (;;)
+    {
+        RdosNewEnterSection(sec_handle);
+        RdosWriteChar('0');
+        RdosNewLeaveSection(sec_handle);
+    }
     
-    RdosNewLeaveSection(sec_handle);
     RdosNewDeleteSection(sec_handle);
     
 

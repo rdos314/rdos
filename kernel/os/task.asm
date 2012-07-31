@@ -8241,8 +8241,8 @@ acquire_no_sect:
     call LockCore
     call cs:lock_futex_proc    
     mov ax,es:[esi].fs_val
-    cmp ax,-1
-    jne acquire_block
+    cmp ax,1
+    je acquire_block
 ;
     mov ax,ds:[ebx].fh_list
     or ax,ax
@@ -8402,6 +8402,21 @@ release_futex32 Endp
 cleanup_futex_name    DB 'Cleanup Futex',0
 
 cleanup_futex   Proc near
+    push ds
+    push eax
+    push ebx
+;
+    mov ebx,es:[ebx].fs_handle
+    mov ax,FUTEX_HANDLE
+    DerefHandle
+    jc cleanup_done
+;
+    FreeHandle
+
+cleanup_done:
+    pop ebx
+    pop eax
+    pop ds
     ret
 cleanup_futex   Endp
 
