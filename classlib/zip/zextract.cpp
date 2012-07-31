@@ -591,9 +591,11 @@ static int extract_or_test_entrylist(unsigned numchunk,
         (*pfilnum)++;   /* *pfilnum = i + blknum*DIR_BLKSIZ + 1; */
         UnzipClass.FCurrFile = &UnzipClass.FFileArr[i];
 
-        error_in_archive = UnzipClass.ProcessFile();
-        if (error_in_archive != PK_COOL)
+        error = UnzipClass.ProcessFile();
+        if (error != PK_COOL)
             continue;
+
+        UnzipClass.Seek(UnzipClass.FCurrFile->file_data_offset);
 
         /* Size consistency checks must come after reading in the local extra
          * field, so that any Zip64 extension local e.f. block has already

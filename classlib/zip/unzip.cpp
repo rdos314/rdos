@@ -1602,23 +1602,39 @@ int TUnzip::GetFileHeader()    /* return PK-type error code */
 int TUnzip::ProcessFile()
 {
     int error;
+    long bufstart;
+    char *inptr;
+    int incnt;
+
+    bufstart = FBufStart;
+    inptr = FInPtr;
+    incnt = FInCount;
     
     error = SeekFile(FCurrFile);
-    if (error != PK_COOL)
-        return error;
-                    
-    error = GetFileHeader();
+
     if (error == PK_COOL)
-        error = GetFileName(FCurrFileHeader.filename_length);
-    if (error != PK_COOL) {
-        Info(0x421, "bad local header\n");
-        return error;
+    {
+        error = GetFileHeader();
+        if (error == PK_COOL)
+            error = GetFileName(FCurrFileHeader.filename_length);
+        if (error != PK_COOL) {
+            Info(0x421, "bad local header\n");
+        }
     }
-    SkipHeaderString(FCurrFileHeader.extra_field_length);
 
-    FCurrFile->file_data_offset = RdosGetFilePos(FInputHandle);
+    if (error == PK_COOL)
+    {
+        SkipHeaderString(FCurrFileHeader.extra_field_length);
+        FCurrFile->file_data_offset = FBufStart - FExtraBytes + (FInPtr-FInBuf);
+    }
 
-    return PK_COOL;
+    RdosSetFilePos(FInputHandle, bufstart);
+    FBufStart = RdosGetFilePos(FInputHandle);
+    RdosReadFile(FInputHandle, FInBuf, INBUFSIZ);  /* been here before... */
+    FInPtr = inptr;
+    FInCount = incnt;
+
+    return error;
 }
 
 /*##########################################################################
