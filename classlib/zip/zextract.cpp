@@ -343,7 +343,8 @@ int extract_or_test_files()    /* return PK-type error code */
                 break;
             }
             /* process_cdir_file_hdr() sets pInfo->hostnum, pInfo->lcflag */
-            if ((error = process_cdir_file_hdr()) != PK_COOL) {
+            error = UnzipClass.ProcessDirEntry();
+            if (error != PK_COOL) {
                 error_in_archive = error;   /* only PK_EOF defined */
                 reached_end = TRUE;     /* ...so no more left to do */
                 break;

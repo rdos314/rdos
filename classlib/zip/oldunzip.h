@@ -827,7 +827,6 @@ void     free_G_buffers          OF(());
 /* static int    do_seekable     OF((int lastchance)); */
 /* static int    find_ecrec      OF((long searchlen)); */
 /* static int    process_central_comment OF(()); */
-int      process_cdir_file_hdr   OF(());
 unsigned ef_scan_for_izux        OF((const unsigned char *ef_buf, unsigned ef_len,
                                      int ef_is_c, unsigned long dos_mdatetime,
                                      iztimes *z_utim, unsigned long *z_uidgid));

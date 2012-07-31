@@ -177,6 +177,7 @@ public:
     void SkipHeaderString(int length);
     int GetFileName(int length);
     int GetDirEntry();
+    int ProcessDirEntry();
 
     int Extract();
 
