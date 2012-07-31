@@ -1537,58 +1537,6 @@ int TUnzip::SeekFile(struct TUnzipFile *file)    /* return PK-type error code */
 
 /*##########################################################################
 #
-#   Name       : TUnzip::GetFileHeader
-#
-#   Purpose....: 
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TUnzip::GetFileHeader()    /* return PK-type error code */
-{
-    int error;
-    unsigned long dos_datetime;
-    unsigned char byterec[ LREC_SIZE ];
-
-/*---------------------------------------------------------------------------
-    Read the next local file header and do any necessary machine-type con-
-    versions (byte ordering, structure padding compensation--do so by copy-
-    ing the data from the array into which it was read (byterec) to the
-    usable struct (lrec)).
-  ---------------------------------------------------------------------------*/
-
-    if (ReadBuf((char *)byterec, LREC_SIZE) == 0)
-        return PK_EOF;
-
-    FCurrFileHeader.version_needed_to_extract[0] = byterec[L_VERSION_NEEDED_TO_EXTRACT_0];
-    FCurrFileHeader.version_needed_to_extract[1] = byterec[L_VERSION_NEEDED_TO_EXTRACT_1];
-
-    FCurrFileHeader.general_purpose_bit_flag = makeword(&byterec[L_GENERAL_PURPOSE_BIT_FLAG]);
-    FCurrFileHeader.compression_method = makeword(&byterec[L_COMPRESSION_METHOD]);
-
-    dos_datetime = makelong(&byterec[L_LAST_MOD_DOS_DATETIME]);
-    DosToRdosTime(&FCurrFileHeader.rdos_msb_time, &FCurrFileHeader.rdos_lsb_time, dos_datetime);
-
-    FCurrFileHeader.crc32 = makelong(&byterec[L_CRC32]);
-    FCurrFileHeader.csize = makelong(&byterec[L_COMPRESSED_SIZE]);
-    FCurrFileHeader.ucsize = makelong(&byterec[L_UNCOMPRESSED_SIZE]);
-    FCurrFileHeader.filename_length = makeword(&byterec[L_FILENAME_LENGTH]);
-    FCurrFileHeader.extra_field_length = makeword(&byterec[L_EXTRA_FIELD_LENGTH]);
-
-    if ((FCurrFileHeader.general_purpose_bit_flag & 8) != 0) {
-        /* can't trust local header, use central directory: */
-/*       FCurrFile.crc32 = G.pInfo->crc;
-        FCurrFile.csize = G.pInfo->compr_size;
-        FCurrFile.ucsize = G.pInfo->uncompr_size; */
-    }
-
-    return PK_COOL;
-} /* end function process_local_file_hdr() */
-
-/*##########################################################################
-#
 #   Name       : TUnzip::ProcessFile
 #
 #   Purpose....: 
@@ -1600,6 +1548,8 @@ int TUnzip::GetFileHeader()    /* return PK-type error code */
 ##########################################################################*/
 int TUnzip::ProcessFile()
 {
+    unsigned long dos_datetime;
+    unsigned char byterec[ LREC_SIZE ];
     int error;
     long bufstart;
     char *inptr;
@@ -1613,13 +1563,47 @@ int TUnzip::ProcessFile()
 
     if (error == PK_COOL)
     {
-        error = GetFileHeader();
-        if (error == PK_COOL)
-            error = GetFileName(FCurrFileHeader.filename_length);
-        if (error != PK_COOL) {
-            Info(0x421, "bad local header\n");
+
+/*---------------------------------------------------------------------------
+    Read the next local file header and do any necessary machine-type con-
+    versions (byte ordering, structure padding compensation--do so by copy-
+    ing the data from the array into which it was read (byterec) to the
+    usable struct (lrec)).
+  ---------------------------------------------------------------------------*/
+
+        if (ReadBuf((char *)byterec, LREC_SIZE) == 0)
+            error = PK_EOF;
+        else
+        {
+            FCurrFileHeader.version_needed_to_extract[0] = byterec[L_VERSION_NEEDED_TO_EXTRACT_0];
+            FCurrFileHeader.version_needed_to_extract[1] = byterec[L_VERSION_NEEDED_TO_EXTRACT_1];
+
+            FCurrFileHeader.general_purpose_bit_flag = makeword(&byterec[L_GENERAL_PURPOSE_BIT_FLAG]);
+            FCurrFileHeader.compression_method = makeword(&byterec[L_COMPRESSION_METHOD]);
+
+            dos_datetime = makelong(&byterec[L_LAST_MOD_DOS_DATETIME]);
+            DosToRdosTime(&FCurrFileHeader.rdos_msb_time, &FCurrFileHeader.rdos_lsb_time, dos_datetime);
+
+            FCurrFileHeader.crc32 = makelong(&byterec[L_CRC32]);
+            FCurrFileHeader.csize = makelong(&byterec[L_COMPRESSED_SIZE]);
+            FCurrFileHeader.ucsize = makelong(&byterec[L_UNCOMPRESSED_SIZE]);
+            FCurrFileHeader.filename_length = makeword(&byterec[L_FILENAME_LENGTH]);
+            FCurrFileHeader.extra_field_length = makeword(&byterec[L_EXTRA_FIELD_LENGTH]);
+
+            if ((FCurrFileHeader.general_purpose_bit_flag & 8) != 0) {
+                /* can't trust local header, use central directory: */
+        /*       FCurrFile.crc32 = G.pInfo->crc;
+                FCurrFile.csize = G.pInfo->compr_size;
+                FCurrFile.ucsize = G.pInfo->uncompr_size; */
+            }
         }
     }
+
+    if (error == PK_COOL)
+        error = GetFileName(FCurrFileHeader.filename_length);
+
+    if (error != PK_COOL)
+        Info(0x421, "bad local header\n");
 
     if (error == PK_COOL)
     {
