@@ -1509,9 +1509,9 @@ int TUnzip::OpenOutputFile()           /* return 1 if fail */
     FCurrCrcVal = 0;
     FCrLast = FALSE;
 
-    FOutputHandle = RdosCreateFile(FCurrFileName, 0);
+    FOutputHandle = RdosCreateFile(FCurrFile->cfilname, 0);
     if (!FOutputHandle) {
-        Info(0x401, "error:  cannot create %s\n", FCurrFileName);
+        Info(0x401, "error:  cannot create %s\n", FCurrFile->cfilname);
         return 1;
     }
     return 0;
@@ -1568,7 +1568,7 @@ void TUnzip::CloseAndSetTime()
 int TUnzip::DiskError()
 {
 /*    Info(0x4a1, DiskFullQuery,
-      FnFilter1(UnzipClass.FCurrFileName));
+      FnFilter1(UnzipClass.FCurrFile->cfilname));
 
     fgets(G.answerbuf, sizeof(G.answerbuf), stdin);
     if (*G.answerbuf == 'y')
@@ -2692,17 +2692,17 @@ int TUnzip::Extract()
     DeferInput();    /* so NEXTBYTE bounds check will work */
     switch (FCurrFileHeader.compression_method) {
         case STORED:
-            Info(0, extract_msg, "extract", FCurrFileName);
+            Info(0, extract_msg, "extract", FCurrFile->cfilname);
             error = Store();
             break;
 
         case SHRUNK:
-            Info(0, extract_msg, "unshrink", FCurrFileName);
+            Info(0, extract_msg, "unshrink", FCurrFile->cfilname);
             error = Unshrink();
             break;
 
         case IMPLODED:
-            Info(0, extract_msg, "explod", FCurrFileName);
+            Info(0, extract_msg, "explod", FCurrFile->cfilname);
 
             error = Explode();
             if (error == 5) { /* treat 5 specially */
@@ -2712,12 +2712,12 @@ int TUnzip::Extract()
             break;
 
         case DEFLATED:
-            Info(0, extract_msg, "inflat", FCurrFileName);
+            Info(0, extract_msg, "inflat", FCurrFile->cfilname);
             error = Deflate();
             break;
 
         default:   /* should never get to this point */
-            Info(0x401, "%s:  unknown compression method\n", FCurrFileName);
+            Info(0x401, "%s:  unknown compression method\n", FCurrFile->cfilname);
             UndeferInput();
             return PK_WARN;
 
@@ -2734,7 +2734,7 @@ int TUnzip::Extract()
     if (FDiskFull) {            /* set by flush() */
         if (FDiskFull > 1) {
             /* warn user about the incomplete file */
-            Info(0x421, "warning:  %s is probably truncated\n", FCurrFileName);
+            Info(0x421, "warning:  %s is probably truncated\n", FCurrFile->cfilname);
             error = PK_DISK;
         } else {
             error = PK_WARN;
@@ -2748,7 +2748,7 @@ int TUnzip::Extract()
 
     if (FCurrCrcVal != FCurrFileHeader.crc32) {
         /* if quiet enough, we haven't output the filename yet:  do it */
-        Info(0x401, "%-22s ", FCurrFileName);
+        Info(0x401, "%-22s ", FCurrFile->cfilname);
         Info(0x401, " bad CRC %08lx  (should be %08lx)\n", FCurrCrcVal, FCurrFileHeader.crc32);
         if (FCurrFile && FCurrFile->encrypted)
             Info(0x401, "   (may instead be incorrect password)\n");
