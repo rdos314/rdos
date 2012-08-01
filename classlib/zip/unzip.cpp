@@ -684,42 +684,6 @@ void TUnzipFile::CloseAndSetTime()
 
 /*##########################################################################
 #
-#   Name       : TUnzipFile::Decrypt
-#
-#   Purpose....: Setup decrypt
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TUnzipFile::Decrypt()
-{
-    unsigned short b;
-    int n, r;
-    unsigned char h[RAND_HEAD_LEN];
-
-    /* get header once (turn off "encrypted" flag temporarily so we don't
-     * try to decrypt the same data twice) */
-
-    FUnzip->FDoDecrypt = FALSE;
-
-    FUnzip->DeferInput();
-    
-    for (n = 0; n < RAND_HEAD_LEN; n++) {
-        b = FUnzip->GetNextByte();
-        h[n] = (unsigned char)b;
-    }
-    FUnzip->UndeferInput();
-
-    FUnzip->FDoDecrypt = TRUE;
-
-    return PK_WARN;
-
-} /* end function decrypt() */
-
-/*##########################################################################
-#
 #   Name       : TUnzipFile::Store
 #
 #   Purpose....: 
@@ -1841,7 +1805,7 @@ int TUnzipFile::Extract()
     }
 
     if (encrypted) {
-        error = Decrypt();
+        error = FUnzip->Decrypt();
         if (error != PK_COOL) {
             if (error == PK_WARN) {
                 FUnzip->Info(0x401, "   skipping: %-22s  incorrect password\n", cfilname);
@@ -2359,6 +2323,42 @@ int TUnzip::ZDecode(int c)
     c ^= DecryptByte();
     return UpdateKeys(c);
 }
+
+/*##########################################################################
+#
+#   Name       : TUnzip::Decrypt
+#
+#   Purpose....: Setup decrypt
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::Decrypt()
+{
+    unsigned short b;
+    int n, r;
+    unsigned char h[RAND_HEAD_LEN];
+
+    /* get header once (turn off "encrypted" flag temporarily so we don't
+     * try to decrypt the same data twice) */
+
+    FDoDecrypt = FALSE;
+
+    DeferInput();
+    
+    for (n = 0; n < RAND_HEAD_LEN; n++) {
+        b = GetNextByte();
+        h[n] = (unsigned char)b;
+    }
+    UndeferInput();
+
+    FDoDecrypt = TRUE;
+
+    return PK_WARN;
+
+} /* end function decrypt() */
 
 /*##########################################################################
 #

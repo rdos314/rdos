@@ -131,8 +131,6 @@ protected:
     int OpenOutputFile(const char *filename);
     void CloseAndSetTime();
 
-    int Decrypt();
-
     int Store();
     void UnshrinkPartialClear(int lastcodeused);
     int Unshrink();
@@ -238,6 +236,7 @@ private:
     int DecryptByte();
     int UpdateKeys(int c);
     int ZDecode(int c);
+    int Decrypt();
 
     int GetFileName(int length);
     int GetDirEntry(TUnzipFile *file);
