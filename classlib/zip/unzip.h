@@ -130,6 +130,7 @@ protected:
     int Store();
     void UnshrinkPartialClear(int lastcodeused);
     int Unshrink();
+    int Deflate();
 
     int *FShrinkParent;          /* pointer to (8192 * sizeof(int)) */
     unsigned char *FShrinkValue;              /* pointer to 8KB char buffer */
@@ -229,7 +230,6 @@ private:
     int ExplodeGetTree(unsigned *l, unsigned n);
 
     int Explode(TUnzipFile *file);
-    int Deflate();
 
     char *FOutBuf;
     char *FOutPtr;
