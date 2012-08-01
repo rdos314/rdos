@@ -985,7 +985,7 @@ int TUnzip::DecryptByte()
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::Decrypt()
+int TUnzip::Decrypt(struct TUnzipFile *file)
 {
     unsigned short b;
     int n, r;
@@ -993,7 +993,7 @@ int TUnzip::Decrypt()
 
     /* get header once (turn off "encrypted" flag temporarily so we don't
      * try to decrypt the same data twice) */
-    FCurrFile->encrypted = FALSE;
+    file->encrypted = FALSE;
     DeferInput();
     
     for (n = 0; n < RAND_HEAD_LEN; n++) {
@@ -1001,7 +1001,7 @@ int TUnzip::Decrypt()
         h[n] = (unsigned char)b;
     }
     UndeferInput();
-    FCurrFile->encrypted = TRUE;
+    file->encrypted = TRUE;
 
     return PK_WARN;
 
@@ -2866,7 +2866,7 @@ int TUnzip::Extract(struct TUnzipFile *file)
     }
 
     if (file->encrypted) {
-        error = Decrypt();
+        error = Decrypt(file);
         if (error != PK_COOL) {
             if (error == PK_WARN) {
                 Info(0x401, "   skipping: %-22s  incorrect password\n", file->cfilname);

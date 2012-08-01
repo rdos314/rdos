@@ -150,8 +150,6 @@ public:
     int FillInbuf();
     int Flush(char *rawbuf, int size);
 
-    int Decrypt();
-
     TString FInputFileName;
     int FInputHandle;
 
@@ -170,9 +168,6 @@ public:
     struct TUnzipFile *FCurrFile;
     
 protected:
-    int FOutputHandle;
-    char *FTmpOutBuf;
-    int FCrLast;
 
 private:
     void Init();
@@ -187,6 +182,7 @@ private:
     int DecryptByte();
     int UpdateKeys(int c);
     int ZDecode(int c);
+    int Decrypt(struct TUnzipFile *file);
 
     int GetFileName(int length);
     int GetDirEntry(struct TUnzipFile *file);
@@ -237,6 +233,10 @@ private:
     int FUsedCSize;
 
     unsigned int FKeys[3]; 
+
+    int FOutputHandle;
+    char *FTmpOutBuf;
+    int FCrLast;
 
 };
 
