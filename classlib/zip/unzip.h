@@ -239,6 +239,7 @@ private:
     int FCrLast;
 
     int FDoDecrypt;
+    int FDoText;
 
 };
 

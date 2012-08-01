@@ -1785,7 +1785,7 @@ int TUnzip::Flush(char *rawbuf, int size)
     necessarily checked for overflow.
   ---------------------------------------------------------------------------*/
 
-    if (FCurrFile && FCurrFile->textfile) {
+    if (FDoText) {
 
     /*-----------------------------------------------------------------------
         Algorithm:  CR/LF => native; lone CR => native; lone LF => native.
@@ -2848,6 +2848,7 @@ int TUnzip::Extract(struct TUnzipFile *file)
     int error;
 
     FDoDecrypt = FALSE;
+    FDoText = file->textfile;
 
     if (OpenOutputFile(file->cfilname))
         return PK_DISK;
