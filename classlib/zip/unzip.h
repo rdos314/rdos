@@ -127,6 +127,8 @@ protected:
     int OpenOutputFile(const char *filename);
     void CloseAndSetTime();
 
+    int Store();
+
     TUnzip *FUnzip;
     
 };
@@ -222,7 +224,6 @@ private:
     int Explode(TUnzipFile *file);
     int Unshrink();
     int Deflate();
-    int Store();
 
     char *FOutBuf;
     char *FOutPtr;

@@ -684,6 +684,43 @@ void TUnzipFile::CloseAndSetTime()
 
 /*##########################################################################
 #
+#   Name       : TUnzipFile::Store
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzipFile::Store()
+{
+    int b;
+    int r, error=PK_COOL;
+    
+    FUnzip->FOutPtr = FUnzip->FOutBuf;
+    FUnzip->FOutCount = 0;
+
+    while ((b = FUnzip->GetNextByte()) != EOF) {
+        *FUnzip->FOutPtr++ = b;
+        if (++FUnzip->FOutCount == WSIZE) {
+            error = FUnzip->Flush(FUnzip->FOutBuf, FUnzip->FOutCount);
+            FUnzip->FOutPtr = FUnzip->FOutBuf;
+            FUnzip->FOutCount = 0;
+            if (error != PK_COOL || FUnzip->FDiskFull) break;
+        }
+    }
+
+    if (FUnzip->FOutCount) {        /* flush final (partial) buffer */
+        r = FUnzip->Flush(FUnzip->FOutBuf, FUnzip->FOutCount);
+        if (error < r) error = r;
+    }
+
+    return error;
+}
+
+/*##########################################################################
+#
 #   Name       : TUnzipFile::Extract
 #
 #   Purpose....: Extract file
@@ -749,7 +786,7 @@ int TUnzipFile::Extract()
     switch (compression_method) {
         case STORED:
             FUnzip->Info(0, extract_msg, "extract", cfilname);
-            error = FUnzip->Store();
+            error = Store();
             break;
 
         case SHRUNK:
@@ -3068,43 +3105,6 @@ int TUnzip::Deflate()
     inflateEnd(&dstrm);
 
     return retval;
-}
-
-/*##########################################################################
-#
-#   Name       : TUnzip::Store
-#
-#   Purpose....: 
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TUnzip::Store()
-{
-    int b;
-    int r, error=PK_COOL;
-    
-    FOutPtr = FOutBuf;
-    FOutCount = 0;
-
-    while ((b = GetNextByte()) != EOF) {
-        *FOutPtr++ = b;
-        if (++FOutCount == WSIZE) {
-            error = Flush(FOutBuf, FOutCount);
-            FOutPtr = FOutBuf;
-            FOutCount = 0;
-            if (error != PK_COOL || FDiskFull) break;
-        }
-    }
-
-    if (FOutCount) {        /* flush final (partial) buffer */
-        r = Flush(FOutBuf, FOutCount);
-        if (error < r) error = r;
-    }
-
-    return error;
 }
 
 /*##########################################################################
