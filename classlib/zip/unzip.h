@@ -136,6 +136,7 @@ public:
 protected:
     int OpenOutputFile(const char *filename);
     void CloseAndSetTime();
+    int DiskError();
 
     int Store();
     void UnshrinkPartialClear(int lastcodeused);
@@ -181,7 +182,7 @@ class TUnzip
 {
 friend class TUnzipFile;
 public:
-        TUnzip();
+    TUnzip();
     ~TUnzip();
 
     void Trace(const char *format, ...);
@@ -245,8 +246,6 @@ private:
     int SeekFile(TUnzipFile *file);
     int ProcessFileHeader(TUnzipFile *file);
     TUnzipFile *ProcessNextFile();
-
-    int DiskError();
 
     char FLogBuf[512];
 

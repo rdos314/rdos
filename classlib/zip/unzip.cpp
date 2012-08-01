@@ -684,6 +684,35 @@ void TUnzipFile::CloseAndSetTime()
 
 /*##########################################################################
 #
+#   Name       : TUnzipFile::DiskError
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzipFile::DiskError()
+{
+/*    Info(0x4a1, DiskFullQuery,
+      FnFilter1(UnzipClass.FCurrFile->cfilname));
+
+    fgets(G.answerbuf, sizeof(G.answerbuf), stdin);
+    if (*G.answerbuf == 'y')
+        G.disk_full = 1;    
+    else
+        G.disk_full = 2;    
+*/
+
+    FUnzip->FDiskFull = 1;
+
+    return PK_DISK;
+} /* end function disk_error() */
+
+
+/*##########################################################################
+#
 #   Name       : TUnzipFile::Store
 #
 #   Purpose....: 
@@ -1003,7 +1032,7 @@ int TUnzipFile::Flush(char *rawbuf, int size)
 
         if (q > FTmpOutBuf) {
             if (!RdosWriteFile(FOutputHandle, FTmpOutBuf, q-FTmpOutBuf))
-                return FUnzip->DiskError();
+                return DiskError();
         }
     } else {   /* binary mode:  aflag is false */
 
@@ -1018,7 +1047,7 @@ int TUnzipFile::Flush(char *rawbuf, int size)
          * DEC Ultrix cc), write() is used anyway.
          */
         if (!RdosWriteFile(FOutputHandle, rawbuf, size))
-            return FUnzip->DiskError();
+            return DiskError();
     }
 
     return PK_OK;
@@ -3640,32 +3669,3 @@ void TUnzip::ProcessFiles()
             break;
     }
 }
-
-/*##########################################################################
-#
-#   Name       : TUnzip::DiskError
-#
-#   Purpose....: 
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TUnzip::DiskError()
-{
-/*    Info(0x4a1, DiskFullQuery,
-      FnFilter1(UnzipClass.FCurrFile->cfilname));
-
-    fgets(G.answerbuf, sizeof(G.answerbuf), stdin);
-    if (*G.answerbuf == 'y')
-        G.disk_full = 1;    
-    else
-        G.disk_full = 2;    
-*/
-
-    FDiskFull = 1;
-
-    return PK_DISK;
-} /* end function disk_error() */
-
