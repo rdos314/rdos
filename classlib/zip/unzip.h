@@ -97,6 +97,7 @@ struct TUnzipFile
     unsigned long crc;              /* crc (needed if extended header) */
     unsigned short diskstart;       /* no of volume where this entry starts */
     int encrypted;                  /* is encrypted */
+    int error;
     unsigned long file_data_offset;
     unsigned char hostver;
     unsigned char hostnum;

@@ -235,7 +235,6 @@ int extract_or_test_files()    /* return PK-type error code */
     direntry **sorted_dirlist=(direntry **)NULL;
     struct TUnzipFile *file;
 
-    UnzipClass.FOldExtraBytes = 0;
     /*
      * First, two general initializations are applied. These have been moved
      * here from process_zipfiles() because they are only needed for accessing
@@ -292,6 +291,16 @@ int extract_or_test_files()    /* return PK-type error code */
     disk in the archive, but we'll add multi-disk support soon.
   ---------------------------------------------------------------------------*/
 
+    j = 0;
+    
+    while (j < DIR_BLKSIZ) {
+        file = UnzipClass.GetFile(j);
+        if (UnzipClass.AddFile(file) != PK_COOL)
+            break;
+
+        j++;
+    }
+    
     members_processed = 0;
     no_endsig_found = FALSE;
     reached_end = FALSE;
@@ -307,44 +316,11 @@ int extract_or_test_files()    /* return PK-type error code */
         while ((j < DIR_BLKSIZ)) {
             file = UnzipClass.GetFile(j);
 
-            if (UnzipClass.ReadBuf(G.sig, 4) == 0) {
-                error_in_archive = PK_EOF;
-                reached_end = TRUE;     /* ...so no more left to do */
+            if (file->error != PK_COOL)
+            {
+                reached_end = TRUE;
                 break;
             }
-            if (memcmp(G.sig, central_hdr_sig, 4)) {  /* is it a new entry? */
-                /* no new central directory entry
-                 * -> is the number of processed entries compatible with the
-                 *    number of entries as stored in the end_central record?
-                 */
-                if ((members_processed
-                     & (G.ecrec.have_ecr64 ? MASK_ZUCN64 : MASK_ZUCN16))
-                    == G.ecrec.total_entries_central_dir) {
-                    /* yes, so look if we ARE back at the end_central record
-                     */
-                    no_endsig_found =
-                      ( (memcmp(G.sig,
-                                (G.ecrec.have_ecr64 ?
-                                 end_central64_sig : end_central_sig),
-                                4) != 0)
-                       && (!G.ecrec.is_zip64_archive)
-                       && (memcmp(G.sig, end_central_sig, 4) != 0)
-                      );
-                } else {
-                    /* no; we have found an error in the central directory
-                     * -> report it and stop searching for more Zip entries
-                     */
-                    Info(0x401, CentSigMsg, j + blknum*DIR_BLKSIZ + 1);
-                    Info(0x401, ReportMsg);
-                    error_in_archive = PK_BADERR;
-                }
-                reached_end = TRUE;     /* ...so no more left to do */
-                break;
-            }
-
-            error = UnzipClass.AddFile(file);
-            if (error != PK_COOL)
-                break;
 
             if (G.process_all_files) {
                 ++j;  /* file is OK; info[] stored; continue with next */

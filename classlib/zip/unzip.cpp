@@ -1672,16 +1672,57 @@ int TUnzip::ProcessFileHeader(struct TUnzipFile *file)
 ##########################################################################*/
 int TUnzip::AddFile(struct TUnzipFile *file)    /* return PK-type error code */
 {
-    int error;
+    char sig[4];
+    static char central_hdr_sig[4]     = {0x50, 0x4B, 0x01, 0x02};
 
     FDoDecrypt = FALSE;
+    FOldExtraBytes = 0;
 
-    error = ProcessDirEntry(file);
+    if (ReadBuf(sig, 4) == 0)
+    {
+        file->error = PK_EOF;
+        return PK_EOF;
+    }
 
-    if (error == PK_COOL)
-        error = ProcessFileHeader(file);
+    if (memcmp(sig, central_hdr_sig, 4)) {  /* is it a new entry? */
+    {
+        file->error = PK_EOF;
+        return PK_EOF;
+    }
 
-    return error;
+       /* no new central directory entry
+        * -> is the number of processed entries compatible with the
+        *    number of entries as stored in the end_central record?
+        */
+//        if ((members_processed
+//            & (G.ecrec.have_ecr64 ? MASK_ZUCN64 : MASK_ZUCN16))
+//            == G.ecrec.total_entries_central_dir) {
+            /* yes, so look if we ARE back at the end_central record
+             */
+//                no_endsig_found =
+//                      ( (memcmp(G.sig,
+//                      (G.ecrec.have_ecr64 ?
+//                      end_central64_sig : end_central_sig),
+//                      4) != 0)
+//                      && (!G.ecrec.is_zip64_archive)
+//                       && (memcmp(G.sig, end_central_sig, 4) != 0)
+//               );
+//        } else {
+            /* no; we have found an error in the central directory
+             * -> report it and stop searching for more Zip entries
+             */
+//            Info(0x401, CentSigMsg, j + blknum*DIR_BLKSIZ + 1);
+//            Info(0x401, ReportMsg);
+//            return PK_BADERR;
+//        }
+    }
+
+    file->error = ProcessDirEntry(file);
+
+    if (file->error == PK_COOL)
+        file->error = ProcessFileHeader(file);
+
+    return file->error;
 }
 
 /*##########################################################################
