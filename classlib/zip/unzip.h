@@ -123,14 +123,42 @@ public:
     unsigned HasUxAtt : 1;   /* crec ext_file_attr has Unix style mode bits */
     char *cfilname;          /* central header version of filename */
 
+// must be global due to callbacks
+
+    int Flush(char *rawbuf, int size);
+
 protected:
     int OpenOutputFile(const char *filename);
     void CloseAndSetTime();
+
+    int Decrypt();
 
     int Store();
     void UnshrinkPartialClear(int lastcodeused);
     int Unshrink();
     int Deflate();
+
+    int ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl);
+    int ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bl, unsigned bd, unsigned bdl);
+
+    int BuildHuft(const unsigned *b, unsigned n, unsigned s, const unsigned short *d, const unsigned char *e, TUnzipHuft **t, unsigned *m);
+    void FreeHuft(struct TUnzipHuft *t);
+
+    int ExplodeGetTree(unsigned *l, unsigned n);
+
+    int Explode();
+
+    char *FOutBuf;
+    char *FOutPtr;
+    int FOutCount;
+
+    int FOutputHandle;
+    char *FTmpOutBuf;
+    int FCrLast;
+
+    int FDoText;
+
+    unsigned long FCurrCrcVal;
 
     int *FShrinkParent;          /* pointer to (8192 * sizeof(int)) */
     unsigned char *FShrinkValue;              /* pointer to 8KB char buffer */
@@ -138,6 +166,8 @@ protected:
     int FZipeof;
     int FBitsLeft;
     unsigned long FBitBuf;
+
+    int FUsedCSize;
 
     TUnzip *FUnzip;
     
@@ -178,7 +208,6 @@ public:
 
     char *GetInbuf();
     int FillInbuf();
-    int Flush(char *rawbuf, int size);
 
     TString FInputFileName;
     int FInputHandle;
@@ -209,7 +238,6 @@ private:
     int DecryptByte();
     int UpdateKeys(int c);
     int ZDecode(int c);
-    int Decrypt(TUnzipFile *file);
 
     int GetFileName(int length);
     int GetDirEntry(TUnzipFile *file);
@@ -221,38 +249,15 @@ private:
 
     int DiskError();
 
-    int ExplodeLit(TUnzipFile *file, struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl);
-    int ExplodeNolit(TUnzipFile *file, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bl, unsigned bd, unsigned bdl);
-
-    int BuildHuft(const unsigned *b, unsigned n, unsigned s, const unsigned short *d, const unsigned char *e, TUnzipHuft **t, unsigned *m);
-    void FreeHuft(struct TUnzipHuft *t);
-
-    int ExplodeGetTree(unsigned *l, unsigned n);
-
-    int Explode(TUnzipFile *file);
-
-    char *FOutBuf;
-    char *FOutPtr;
-    int FOutCount;
-
-    long FDecompSize;
-
     char FLogBuf[512];
 
     int FLeftoverCount;
     char *FLeftoverPtr;
 
-    unsigned long FCurrCrcVal;
-    int FUsedCSize;
+    int FDoDecrypt;
+    long FDecompSize;
 
     unsigned int FKeys[3]; 
-
-    int FOutputHandle;
-    char *FTmpOutBuf;
-    int FCrLast;
-
-    int FDoDecrypt;
-    int FDoText;
 
     int FFileSize;
     int FFileCount;
