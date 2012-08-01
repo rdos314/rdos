@@ -2151,7 +2151,7 @@ void TUnzip::FreeHuft(struct TUnzipHuft *t)
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl)
+int TUnzip::ExplodeLit(struct TUnzipFile *file, struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl)
 /* Decompress the imploded data using coded literals and a sliding
    window (of size 2^(6+bdl) bytes). */
 {
@@ -2175,7 +2175,7 @@ int TUnzip::ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnz
   ml = mask_bits[bl];
   md = mask_bits[bd];
   mdl = mask_bits[bdl];
-  s = FCurrFile->uncompr_size;
+  s = file->uncompr_size;
   while (s > 0)                 /* do until ucsize bytes uncompressed */
   {
     GETBITS(1)
@@ -2247,7 +2247,7 @@ int TUnzip::ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnz
     return retval;
   if (FDecompSize + FInCount + (k >> 3))   /* should have read csize bytes, but */
   {                        /* sometimes read one too many:  k>>3 compensates */
-    FUsedCSize = FCurrFile->compr_size - FDecompSize - FInCount - (k >> 3);
+    FUsedCSize = file->compr_size - FDecompSize - FInCount - (k >> 3);
     return 5;
   }
   return 0;
@@ -2264,7 +2264,7 @@ int TUnzip::ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnz
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bl, unsigned bd, unsigned bdl)
+int TUnzip::ExplodeNolit(struct TUnzipFile *file, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bl, unsigned bd, unsigned bdl)
 /* Decompress the imploded data using uncoded literals and a sliding
    window (of size 2^(6+bdl) bytes). */
 {
@@ -2287,7 +2287,7 @@ int TUnzip::ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned 
   ml = mask_bits[bl];           /* precompute masks for speed */
   md = mask_bits[bd];
   mdl = mask_bits[bdl];
-  s = FCurrFile->uncompr_size;
+  s = file->uncompr_size;
   while (s > 0)                 /* do until ucsize bytes uncompressed */
   {
     GETBITS(1)
@@ -2360,7 +2360,7 @@ int TUnzip::ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned 
     return retval;
   if (FDecompSize + FInCount + (k >> 3))   /* should have read csize bytes, but */
   {                        /* sometimes read one too many:  k>>3 compensates */
-    FUsedCSize = FCurrFile->compr_size - FDecompSize - FInCount - (k >> 3);
+    FUsedCSize = file->compr_size - FDecompSize - FInCount - (k >> 3);
     return 5;
   }
   return 0;
@@ -2378,7 +2378,7 @@ int TUnzip::ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned 
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::Explode()
+int TUnzip::Explode(struct TUnzipFile *file)
 /* Explode an imploded compressed stream.  Based on the general purpose
    bit flag, decide on coded or uncoded literals, and an 8K or 4K sliding
    window.  Construct the literal (if any), length, and distance codes and
@@ -2406,7 +2406,7 @@ int TUnzip::Explode()
   bl = 7;
   bd = (FDecompSize + FInCount) > 200000L ? 8 : 7;
 
-  if (FCurrFile->general_purpose_bit_flag & 4)
+  if (file->general_purpose_bit_flag & 4)
   /* With literal tree--minimum match length is 3 */
   {
     bb = 9;                     /* base table size for literals */
@@ -2449,7 +2449,7 @@ int TUnzip::Explode()
     if (tb != 0) FreeHuft(tb);
     return (int)r;
   }
-  if (FCurrFile->general_purpose_bit_flag & 2)      /* true if 8K */
+  if (file->general_purpose_bit_flag & 2)      /* true if 8K */
   {
     bdl = 7;
     r = BuildHuft(l, 64, 0, cpdist8, extra, &td, &bd);
@@ -2469,10 +2469,10 @@ int TUnzip::Explode()
   }
 
   if (tb != NULL) {
-    r = ExplodeLit(tb, tl, td, bb, bl, bd, bdl);
+    r = ExplodeLit(file, tb, tl, td, bb, bl, bd, bdl);
     FreeHuft(tb);
   } else {
-    r = ExplodeNolit(tl, td, bl, bd, bdl);
+    r = ExplodeNolit(file, tl, td, bl, bd, bdl);
   }
 
   FreeHuft(td);
@@ -2909,7 +2909,7 @@ int TUnzip::Extract(struct TUnzipFile *file)
         case IMPLODED:
             Info(0, extract_msg, "explod", file->cfilname);
 
-            error = Explode();
+            error = Explode(file);
             if (error == 5) { /* treat 5 specially */
                 int warning = FUsedCSize <= file->compr_size;
                 error = warning ? PK_WARN : PK_ERR;

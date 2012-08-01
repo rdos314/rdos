@@ -196,8 +196,8 @@ private:
     void CloseAndSetTime(struct TUnzipFile *file);
     int DiskError();
 
-    int ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl);
-    int ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bl, unsigned bd, unsigned bdl);
+    int ExplodeLit(struct TUnzipFile *file, struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl);
+    int ExplodeNolit(struct TUnzipFile *file, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bl, unsigned bd, unsigned bdl);
 
     void UnshrinkPartialClear(int lastcodeused);
 
@@ -206,7 +206,7 @@ private:
 
     int ExplodeGetTree(unsigned *l, unsigned n);
 
-    int Explode();
+    int Explode(struct TUnzipFile *file);
     int Unshrink();
     int Deflate();
     int Store();
