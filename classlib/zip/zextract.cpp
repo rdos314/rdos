@@ -503,7 +503,7 @@ reprompt:
 
         UnzipClass.FDiskFull = 0;
 
-        error = UnzipClass.Extract(file);
+        error = file->Extract();
         if (error != PK_COOL) {
             if (error > error_in_archive)
                 error_in_archive = error;       /* ...and keep going */

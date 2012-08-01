@@ -642,6 +642,142 @@ TUnzipFile::~TUnzipFile()
 
 /*##########################################################################
 #
+#   Name       : TUnzipFile::Extract
+#
+#   Purpose....: Extract file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzipFile::Extract()
+{
+    char *extract_msg = "%8sing: %s";
+    int error;
+
+    FUnzip->FDoDecrypt = FALSE;
+    FUnzip->FDoText = textfile;
+
+    if (FUnzip->OpenOutputFile(cfilname))
+        return PK_DISK;
+
+    FUnzip->Seek(file_data_offset);
+
+    /* Size consistency checks must come after reading in the local extra
+     * field, so that any Zip64 extension local e.f. block has already
+     * been processed.
+     */
+    if (compression_method == STORED) {
+        unsigned long csiz_decrypted = compr_size;
+
+        if (encrypted)
+            csiz_decrypted -= 12;
+        if (uncompr_size != csiz_decrypted) {
+            FUnzip->Info(0x401, "%s:  ucsize %u <> csize %u for STORED entry\n",
+               cfilname,
+               uncompr_size,
+               csiz_decrypted);
+               
+            uncompr_size = csiz_decrypted;
+        }
+    }
+
+    if (encrypted) {
+        error = FUnzip->Decrypt(this);
+        if (error != PK_COOL) {
+            if (error == PK_WARN) {
+                FUnzip->Info(0x401, "   skipping: %-22s  incorrect password\n", cfilname);
+            } else {  /* (error > PK_WARN) */
+                FUnzip->Info(0x401, "   skipping: %-22s  unable to get password\n", cfilname);
+            }
+        }
+        if (error != PK_COOL)
+            return error;
+    }
+
+
+/*---------------------------------------------------------------------------
+    Unpack the file.
+  ---------------------------------------------------------------------------*/
+
+    FUnzip->FDecompSize = compr_size;
+
+    FUnzip->DeferInput();    /* so NEXTBYTE bounds check will work */
+    switch (compression_method) {
+        case STORED:
+            FUnzip->Info(0, extract_msg, "extract", cfilname);
+            error = FUnzip->Store();
+            break;
+
+        case SHRUNK:
+            FUnzip->Info(0, extract_msg, "unshrink", cfilname);
+            error = FUnzip->Unshrink();
+            break;
+
+        case IMPLODED:
+            FUnzip->Info(0, extract_msg, "explod", cfilname);
+
+            error = FUnzip->Explode(this);
+            if (error == 5) { /* treat 5 specially */
+                int warning = FUnzip->FUsedCSize <= compr_size;
+                error = warning ? PK_WARN : PK_ERR;
+            }
+            break;
+
+        case DEFLATED:
+            FUnzip->Info(0, extract_msg, "inflat", cfilname);
+            error = FUnzip->Deflate();
+            break;
+
+        default:   /* should never get to this point */
+            FUnzip->Info(0x401, "%s:  unknown compression method\n", cfilname);
+            FUnzip->UndeferInput();
+            return PK_WARN;
+
+    } /* end switch (compression method) */
+
+/*---------------------------------------------------------------------------
+    Close the file and set its date and time (not necessarily in that order),
+    and make sure the CRC checked out OK.  Logical-AND the CRC for 64-bit
+    machines (redundant on 32-bit machines).
+  ---------------------------------------------------------------------------*/
+
+    FUnzip->CloseAndSetTime(this);
+
+    if (FUnzip->FDiskFull) {            /* set by flush() */
+        if (FUnzip->FDiskFull > 1) {
+            /* warn user about the incomplete file */
+            FUnzip->Info(0x421, "warning:  %s is probably truncated\n", cfilname);
+            error = PK_DISK;
+        } else {
+            error = PK_WARN;
+        }
+    }
+
+    if (error > PK_WARN) {/* don't print redundant CRC error if error already */
+        FUnzip->UndeferInput();
+        return error;
+    }
+
+    if (FUnzip->FCurrCrcVal != crc) {
+        /* if quiet enough, we haven't output the filename yet:  do it */
+        FUnzip->Info(0x401, "%-22s ", cfilname);
+        FUnzip->Info(0x401, " bad CRC %08lx  (should be %08lx)\n", FUnzip->FCurrCrcVal, crc);
+        if (encrypted)
+            FUnzip->Info(0x401, "   (may instead be incorrect password)\n");
+        error = PK_ERR;
+    } else
+        FUnzip->Info(0, "\n");
+
+    FUnzip->UndeferInput();
+
+    return error;
+}
+
+
+/*##########################################################################
+#
 #   Name       : TUnzip::TUnzip
 #
 #   Purpose....: Constructor for unzip
@@ -2989,142 +3125,6 @@ int TUnzip::Store()
 
     return error;
 }
-
-/*##########################################################################
-#
-#   Name       : TUnzip::Extract
-#
-#   Purpose....: Extract current file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TUnzip::Extract(TUnzipFile *file)
-{
-    char *extract_msg = "%8sing: %s";
-    int error;
-
-    FDoDecrypt = FALSE;
-    FDoText = file->textfile;
-
-    if (OpenOutputFile(file->cfilname))
-        return PK_DISK;
-
-    Seek(file->file_data_offset);
-
-    /* Size consistency checks must come after reading in the local extra
-     * field, so that any Zip64 extension local e.f. block has already
-     * been processed.
-     */
-    if (file->compression_method == STORED) {
-        unsigned long csiz_decrypted = file->compr_size;
-
-        if (file->encrypted)
-            csiz_decrypted -= 12;
-        if (file->uncompr_size != csiz_decrypted) {
-            Info(0x401, "%s:  ucsize %u <> csize %u for STORED entry\n",
-               file->cfilname,
-               file->uncompr_size,
-               csiz_decrypted);
-               
-            file->uncompr_size = csiz_decrypted;
-        }
-    }
-
-    if (file->encrypted) {
-        error = Decrypt(file);
-        if (error != PK_COOL) {
-            if (error == PK_WARN) {
-                Info(0x401, "   skipping: %-22s  incorrect password\n", file->cfilname);
-            } else {  /* (error > PK_WARN) */
-                Info(0x401, "   skipping: %-22s  unable to get password\n", file->cfilname);
-            }
-        }
-        if (error != PK_COOL)
-            return error;
-    }
-
-
-/*---------------------------------------------------------------------------
-    Unpack the file.
-  ---------------------------------------------------------------------------*/
-
-    FDecompSize = file->compr_size;
-
-    DeferInput();    /* so NEXTBYTE bounds check will work */
-    switch (file->compression_method) {
-        case STORED:
-            Info(0, extract_msg, "extract", file->cfilname);
-            error = Store();
-            break;
-
-        case SHRUNK:
-            Info(0, extract_msg, "unshrink", file->cfilname);
-            error = Unshrink();
-            break;
-
-        case IMPLODED:
-            Info(0, extract_msg, "explod", file->cfilname);
-
-            error = Explode(file);
-            if (error == 5) { /* treat 5 specially */
-                int warning = FUsedCSize <= file->compr_size;
-                error = warning ? PK_WARN : PK_ERR;
-            }
-            break;
-
-        case DEFLATED:
-            Info(0, extract_msg, "inflat", file->cfilname);
-            error = Deflate();
-            break;
-
-        default:   /* should never get to this point */
-            Info(0x401, "%s:  unknown compression method\n", file->cfilname);
-            UndeferInput();
-            return PK_WARN;
-
-    } /* end switch (compression method) */
-
-/*---------------------------------------------------------------------------
-    Close the file and set its date and time (not necessarily in that order),
-    and make sure the CRC checked out OK.  Logical-AND the CRC for 64-bit
-    machines (redundant on 32-bit machines).
-  ---------------------------------------------------------------------------*/
-
-    CloseAndSetTime(file);
-
-    if (FDiskFull) {            /* set by flush() */
-        if (FDiskFull > 1) {
-            /* warn user about the incomplete file */
-            Info(0x421, "warning:  %s is probably truncated\n", file->cfilname);
-            error = PK_DISK;
-        } else {
-            error = PK_WARN;
-        }
-    }
-
-    if (error > PK_WARN) {/* don't print redundant CRC error if error already */
-        UndeferInput();
-        return error;
-    }
-
-    if (FCurrCrcVal != file->crc) {
-        /* if quiet enough, we haven't output the filename yet:  do it */
-        Info(0x401, "%-22s ", file->cfilname);
-        Info(0x401, " bad CRC %08lx  (should be %08lx)\n", FCurrCrcVal, file->crc);
-        if (file && file->encrypted)
-            Info(0x401, "   (may instead be incorrect password)\n");
-        error = PK_ERR;
-    } else
-        Info(0, "\n");
-
-    UndeferInput();
-
-    return error;
-}
-
 
 /*##########################################################################
 #

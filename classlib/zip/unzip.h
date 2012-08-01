@@ -92,10 +92,13 @@ class TUnzip;
 
 class TUnzipFile
 {
+friend class TUnzip;
 public:
     TUnzipFile(TUnzip *unzip);
     ~TUnzipFile();
     
+    int Extract();
+
     long offset;
     unsigned long compr_size;       /* compressed size (needed if extended header) */
     unsigned long uncompr_size;     /* uncompressed size (needed if extended header) */
@@ -127,6 +130,7 @@ protected:
 
 class TUnzip
 {
+friend class TUnzipFile;
 public:
         TUnzip();
     ~TUnzip();
@@ -148,8 +152,6 @@ public:
 
     TUnzipFile *GetFile(int index);
     int GetFileCount();
-
-    int Extract(TUnzipFile *file);
 
     int CheckForNewer(TUnzipFile *file, const char *filename);
 
