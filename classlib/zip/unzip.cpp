@@ -1713,9 +1713,9 @@ void TUnzip::CloseOutputFile()
 #   Returns....: *
 #
 ##########################################################################*/
-void TUnzip::CloseAndSetTime()
+void TUnzip::CloseAndSetTime(struct TUnzipFile *file)
 {
-    RdosSetFileTime(FOutputHandle, FCurrFile->rdos_msb_time, FCurrFile->rdos_lsb_time);
+    RdosSetFileTime(FOutputHandle, file->rdos_msb_time, file->rdos_lsb_time);
     RdosCloseFile(FOutputHandle);
 }
 
@@ -2933,7 +2933,7 @@ int TUnzip::Extract(struct TUnzipFile *file)
     machines (redundant on 32-bit machines).
   ---------------------------------------------------------------------------*/
 
-    CloseAndSetTime();
+    CloseAndSetTime(file);
 
     if (FDiskFull) {            /* set by flush() */
         if (FDiskFull > 1) {
