@@ -611,6 +611,37 @@ unsigned FindCompressMethod(unsigned compr_methodnum)
 
 /*##########################################################################
 #
+#   Name       : TUnzipFile::TUnzipFile
+#
+#   Purpose....: Constructor for unzipfile
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TUnzipFile::TUnzipFile(TUnzip *unzip)
+{
+    FUnzip = unzip;
+}
+
+/*##########################################################################
+#
+#   Name       : TUnzipFile::~TUnzipFile
+#
+#   Purpose....: Destructor for unzipfile
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TUnzipFile::~TUnzipFile()
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TUnzip::TUnzip
 #
 #   Purpose....: Constructor for unzip
@@ -998,7 +1029,7 @@ int TUnzip::DecryptByte()
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::Decrypt(struct TUnzipFile *file)
+int TUnzip::Decrypt(TUnzipFile *file)
 {
     unsigned short b;
     int n, r;
@@ -1243,7 +1274,7 @@ int TUnzip::Seek(long abs_offset)
 #   Returns....: *
 #
 ##########################################################################*/
-struct TUnzipFile *TUnzip::GetFile(int id)
+TUnzipFile *TUnzip::GetFile(int id)
 {
     return FFileArr[id];
 }
@@ -1323,7 +1354,7 @@ int TUnzip::GetFileName(int length)
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::DirEntryToFile(struct TUnzipFile *file, const char *filename)
+int TUnzip::DirEntryToFile(TUnzipFile *file, const char *filename)
 {
      unsigned cmpridx;
 
@@ -1497,7 +1528,7 @@ int TUnzip::ProcessDirEntry(TUnzipFile *file)    /* return PK-type error code */
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::SeekFile(struct TUnzipFile *file)    /* return PK-type error code */
+int TUnzip::SeekFile(TUnzipFile *file)    /* return PK-type error code */
 {
     long bufstart, inbuf_offset, request;
     int error;
@@ -1592,7 +1623,7 @@ int TUnzip::SeekFile(struct TUnzipFile *file)    /* return PK-type error code */
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::ProcessFileHeader(struct TUnzipFile *file)
+int TUnzip::ProcessFileHeader(TUnzipFile *file)
 {
     unsigned long dos_datetime;
     unsigned char byterec[ LREC_SIZE ];
@@ -1686,10 +1717,10 @@ int TUnzip::ProcessFileHeader(struct TUnzipFile *file)
 #   Returns....: *
 #
 ##########################################################################*/
-struct TUnzipFile *TUnzip::ProcessNextFile()
+TUnzipFile *TUnzip::ProcessNextFile()
 {
     char sig[4];
-    struct TUnzipFile *file;
+    TUnzipFile *file;
     static char central_hdr_sig[4]     = {0x50, 0x4B, 0x01, 0x02};
     
     FDoDecrypt = FALSE;
@@ -1728,7 +1759,7 @@ struct TUnzipFile *TUnzip::ProcessNextFile()
 //        }
     }
 
-    file = new TUnzipFile;
+    file = new TUnzipFile(this);
 
     file->error = ProcessDirEntry(file);
 
@@ -1752,8 +1783,8 @@ struct TUnzipFile *TUnzip::ProcessNextFile()
 void TUnzip::ProcessFiles()
 {
     int i;
-    struct TUnzipFile **newarr;
-    struct TUnzipFile *file;
+    TUnzipFile **newarr;
+    TUnzipFile *file;
 
     for (;;)
     {
@@ -1764,7 +1795,7 @@ void TUnzip::ProcessFiles()
             if (FFileSize == FFileCount)
             {
                 FFileSize = 3 * FFileSize / 2 + 1;
-                newarr = new struct TUnzipFile *[FFileSize];
+                newarr = new TUnzipFile *[FFileSize];
 
                 for (i = 0; i < FFileCount; i++)
                     newarr[i] = FFileArr[i];
@@ -1841,7 +1872,7 @@ void TUnzip::CloseOutputFile()
 #   Returns....: *
 #
 ##########################################################################*/
-void TUnzip::CloseAndSetTime(struct TUnzipFile *file)
+void TUnzip::CloseAndSetTime(TUnzipFile *file)
 {
     RdosSetFileTime(FOutputHandle, file->rdos_msb_time, file->rdos_lsb_time);
     RdosCloseFile(FOutputHandle);
@@ -2279,7 +2310,7 @@ void TUnzip::FreeHuft(struct TUnzipHuft *t)
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::ExplodeLit(struct TUnzipFile *file, struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl)
+int TUnzip::ExplodeLit(TUnzipFile *file, struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl)
 /* Decompress the imploded data using coded literals and a sliding
    window (of size 2^(6+bdl) bytes). */
 {
@@ -2392,7 +2423,7 @@ int TUnzip::ExplodeLit(struct TUnzipFile *file, struct TUnzipHuft *tb, struct TU
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::ExplodeNolit(struct TUnzipFile *file, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bl, unsigned bd, unsigned bdl)
+int TUnzip::ExplodeNolit(TUnzipFile *file, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bl, unsigned bd, unsigned bdl)
 /* Decompress the imploded data using uncoded literals and a sliding
    window (of size 2^(6+bdl) bytes). */
 {
@@ -2506,7 +2537,7 @@ int TUnzip::ExplodeNolit(struct TUnzipFile *file, struct TUnzipHuft *tl, struct 
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::Explode(struct TUnzipFile *file)
+int TUnzip::Explode(TUnzipFile *file)
 /* Explode an imploded compressed stream.  Based on the general purpose
    bit flag, decide on coded or uncoded literals, and an 8K or 4K sliding
    window.  Construct the literal (if any), length, and distance codes and
@@ -2970,7 +3001,7 @@ int TUnzip::Store()
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::Extract(struct TUnzipFile *file)
+int TUnzip::Extract(TUnzipFile *file)
 {
     char *extract_msg = "%8sing: %s";
     int error;
@@ -3106,7 +3137,7 @@ int TUnzip::Extract(struct TUnzipFile *file)
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::CheckForNewer(struct TUnzipFile *file, const char *filename)
+int TUnzip::CheckForNewer(TUnzipFile *file, const char *filename)
 {
     unsigned long msb, lsb;
     int handle;
@@ -3140,7 +3171,7 @@ int TUnzip::CheckForNewer(struct TUnzipFile *file, const char *filename)
 #   Returns....: *
 #
 ##########################################################################*/
-void TUnzip::CreateTimeStr(struct TUnzipFile *file, char *str)
+void TUnzip::CreateTimeStr(TUnzipFile *file, char *str)
 {
     int yr, mo, dy, hh, mm, ss, ms, us;
 
@@ -3161,7 +3192,7 @@ void TUnzip::CreateTimeStr(struct TUnzipFile *file, char *str)
 #   Returns....: *
 #
 ##########################################################################*/
-void TUnzip::ShowVerbose(struct TUnzipFile *file)
+void TUnzip::ShowVerbose(TUnzipFile *file)
 {
     int  error;
     unsigned  hostnum, hostver, extnum, extver, methid, methnum, xattr;
@@ -3430,7 +3461,7 @@ void TUnzip::ShowVerbose(struct TUnzipFile *file)
 #   Returns....: *
 #
 ##########################################################################*/
-void TUnzip::ShowCompact(struct TUnzipFile *file)
+void TUnzip::ShowCompact(TUnzipFile *file)
 {
     int         k, error, error_in_archive=PK_COOL;
     unsigned    hostnum, hostver, methid, methnum, xattr;

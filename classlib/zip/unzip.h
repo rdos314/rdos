@@ -88,8 +88,14 @@ struct TUnzipHuft {
    (top-down), to prevent internal padding and optimize memory usage!
  */
 
-struct TUnzipFile
+class TUnzip;
+
+class TUnzipFile
 {
+public:
+    TUnzipFile(TUnzip *unzip);
+    ~TUnzipFile();
+    
     long offset;
     unsigned long compr_size;       /* compressed size (needed if extended header) */
     unsigned long uncompr_size;     /* uncompressed size (needed if extended header) */
@@ -113,12 +119,16 @@ struct TUnzipFile
     unsigned vollabel : 1;   /* "file" is an MS-DOS volume (disk) label */
     unsigned HasUxAtt : 1;   /* crec ext_file_attr has Unix style mode bits */
     char *cfilname;          /* central header version of filename */
+
+protected:
+    TUnzip *FUnzip;
+    
 };
 
 class TUnzip
 {
 public:
-	TUnzip();
+        TUnzip();
     ~TUnzip();
 
     void Trace(const char *format, ...);
@@ -136,16 +146,16 @@ public:
 
     void ProcessFiles();
 
-    struct TUnzipFile *GetFile(int index);
+    TUnzipFile *GetFile(int index);
     int GetFileCount();
 
-    int Extract(struct TUnzipFile *file);
+    int Extract(TUnzipFile *file);
 
-    int CheckForNewer(struct TUnzipFile *file, const char *filename);
+    int CheckForNewer(TUnzipFile *file, const char *filename);
 
-    void CreateTimeStr(struct TUnzipFile *file, char *str);
-    void ShowVerbose(struct TUnzipFile *file);
-    void ShowCompact(struct TUnzipFile *file);
+    void CreateTimeStr(TUnzipFile *file, char *str);
+    void ShowVerbose(TUnzipFile *file);
+    void ShowCompact(TUnzipFile *file);
 
 // these must be global due to callback interface
 
@@ -182,23 +192,23 @@ private:
     int DecryptByte();
     int UpdateKeys(int c);
     int ZDecode(int c);
-    int Decrypt(struct TUnzipFile *file);
+    int Decrypt(TUnzipFile *file);
 
     int GetFileName(int length);
-    int GetDirEntry(struct TUnzipFile *file);
-    int ProcessDirEntry(struct TUnzipFile *file);
-    int DirEntryToFile(struct TUnzipFile *file, const char *filename);
-    int SeekFile(struct TUnzipFile *file);
-    int ProcessFileHeader(struct TUnzipFile *file);
-    struct TUnzipFile *ProcessNextFile();
+    int GetDirEntry(TUnzipFile *file);
+    int ProcessDirEntry(TUnzipFile *file);
+    int DirEntryToFile(TUnzipFile *file, const char *filename);
+    int SeekFile(TUnzipFile *file);
+    int ProcessFileHeader(TUnzipFile *file);
+    TUnzipFile *ProcessNextFile();
 
     int OpenOutputFile(const char *filename);
     void CloseOutputFile();
-    void CloseAndSetTime(struct TUnzipFile *file);
+    void CloseAndSetTime(TUnzipFile *file);
     int DiskError();
 
-    int ExplodeLit(struct TUnzipFile *file, struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl);
-    int ExplodeNolit(struct TUnzipFile *file, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bl, unsigned bd, unsigned bdl);
+    int ExplodeLit(TUnzipFile *file, struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl);
+    int ExplodeNolit(TUnzipFile *file, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bl, unsigned bd, unsigned bdl);
 
     void UnshrinkPartialClear(int lastcodeused);
 
@@ -207,7 +217,7 @@ private:
 
     int ExplodeGetTree(unsigned *l, unsigned n);
 
-    int Explode(struct TUnzipFile *file);
+    int Explode(TUnzipFile *file);
     int Unshrink();
     int Deflate();
     int Store();
@@ -244,7 +254,7 @@ private:
 
     int FFileSize;
     int FFileCount;
-    struct TUnzipFile **FFileArr;
+    TUnzipFile **FFileArr;
 
 };
 

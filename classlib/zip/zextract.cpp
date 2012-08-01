@@ -230,7 +230,7 @@ int extract_or_test_files()    /* return PK-type error code */
     unsigned num_dirs=0;
     direntry *dirlist=(direntry *)NULL;
     direntry **sorted_dirlist=(direntry **)NULL;
-    struct TUnzipFile *file;
+    TUnzipFile *file;
     int renamed, query;
     int skip_entry;
     int errcode;

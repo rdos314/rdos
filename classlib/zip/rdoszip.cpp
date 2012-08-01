@@ -37,7 +37,7 @@ static int count_args OF((const char *));
  *  as well, of course.  str1 and str2 may be the same character array.
  */
 
-int defer_dir_attribs(struct TUnzipFile *file, direntry **pd)
+int defer_dir_attribs(TUnzipFile *file, direntry **pd)
 {
     struct dirent *d_entry;
 
@@ -202,7 +202,7 @@ char *do_wild(const char *wildspec)
 /*  Function mapname()  */
 /************************/
 
-int mapname(struct TUnzipFile *file, int renamed)
+int mapname(TUnzipFile *file, int renamed)
 /*
  * returns:
  *  MPN_OK          - no problem detected
@@ -407,7 +407,7 @@ int screensize(int *tt_rows, int *tt_cols)
 /* Function checkdir() */
 /***********************/
 
-int checkdir(struct TUnzipFile *file, char *pathcomp, int flag)
+int checkdir(TUnzipFile *file, char *pathcomp, int flag)
 /*
  * returns:
  *  MPN_OK          - no problem detected

@@ -889,11 +889,11 @@ int      iswild          OF((const char *p));                    /* match.c */
    (free_crc_table(), get_crc_table(), crc32())                      crc32.c */
 
 void     version         OF(());                              /* local */
-int      mapname         OF((struct TUnzipFile *file, int renamed));                /* local */
-int      checkdir        OF((struct TUnzipFile *file, char *pathcomp, int flag));   /* local */
+int      mapname         OF((TUnzipFile *file, int renamed));                /* local */
+int      checkdir        OF((TUnzipFile *file, char *pathcomp, int flag));   /* local */
 char    *do_wild         OF((const char *wildzipfn));     /* local */
 char    *GetLoadPath     OF(());                              /* local */
-int   defer_dir_attribs  OF((struct TUnzipFile *file, direntry **pd));           /* local */
+int   defer_dir_attribs  OF((TUnzipFile *file, direntry **pd));           /* local */
 int   set_direc_attribs  OF((direntry *d));             /* local */
 
 char *getp(const char *m, char *p, int n);
