@@ -2978,7 +2978,7 @@ int TUnzip::Extract(struct TUnzipFile *file)
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::CheckForNewer(const char *filename)
+int TUnzip::CheckForNewer(struct TUnzipFile *file, const char *filename)
 {
     unsigned long msb, lsb;
     int handle;
@@ -2991,10 +2991,10 @@ int TUnzip::CheckForNewer(const char *filename)
         RdosAddSec(&msb, &lsb, 2);
         RdosCloseFile(handle);
 
-        if (msb == FCurrFile->rdos_msb_time)
-            return lsb >= FCurrFile->rdos_msb_time;
+        if (msb == file->rdos_msb_time)
+            return lsb >= file->rdos_msb_time;
         else
-            return msb >= FCurrFile->rdos_lsb_time;
+            return msb >= file->rdos_lsb_time;
     }
     else
         return DOES_NOT_EXIST;

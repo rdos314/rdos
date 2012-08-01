@@ -678,7 +678,7 @@ startover:
                 continue;   /* go on to next file */
             }
 
-            switch (UnzipClass.CheckForNewer(UnzipClass.FCurrFile->cfilname)) {
+            switch (UnzipClass.CheckForNewer(UnzipClass.FCurrFile, UnzipClass.FCurrFile->cfilname)) {
                 case DOES_NOT_EXIST:
                     /* freshen (no new files): skip unless just renamed */
                     if (uO.fflag && !renamed)

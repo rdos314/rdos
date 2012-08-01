@@ -138,7 +138,7 @@ public:
 
     int Extract(struct TUnzipFile *file);
 
-    int CheckForNewer(const char *filename);
+    int CheckForNewer(struct TUnzipFile *file, const char *filename);
 
     void CreateTimeStr(struct TUnzipFile *file, char *str);
     void ShowVerbose(struct TUnzipFile *file);
