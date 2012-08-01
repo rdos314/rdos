@@ -1669,14 +1669,14 @@ int TUnzip::AddFile()    /* return PK-type error code */
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::OpenOutputFile()           /* return 1 if fail */
+int TUnzip::OpenOutputFile(const char *filename)           /* return 1 if fail */
 {
     FCurrCrcVal = 0;
     FCrLast = FALSE;
 
-    FOutputHandle = RdosCreateFile(FCurrFile->cfilname, 0);
+    FOutputHandle = RdosCreateFile(filename, 0);
     if (!FOutputHandle) {
-        Info(0x401, "error:  cannot create %s\n", FCurrFile->cfilname);
+        Info(0x401, "error:  cannot create %s\n", filename);
         return 1;
     }
     return 0;
@@ -2849,7 +2849,7 @@ int TUnzip::Extract(struct TUnzipFile *file)
 
     FDoDecrypt = FALSE;
 
-    if (OpenOutputFile())
+    if (OpenOutputFile(file->cfilname))
         return PK_DISK;
 
     Seek(file->file_data_offset);

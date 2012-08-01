@@ -191,7 +191,7 @@ private:
     int SeekFile(struct TUnzipFile *file);
     int ProcessFileHeader(struct TUnzipFile *file);
 
-    int OpenOutputFile();
+    int OpenOutputFile(const char *filename);
     void CloseOutputFile();
     void CloseAndSetTime();
     int DiskError();
