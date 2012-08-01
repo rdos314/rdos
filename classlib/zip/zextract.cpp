@@ -307,8 +307,11 @@ int extract_or_test_files()    /* return PK-type error code */
     {
         file = UnzipClass.GetFile(j);
 
-        if (file->error != PK_COOL)
+        if (file == 0)
             break;
+
+        if (file->error != PK_COOL)
+            continue;
 
         if (!G.process_all_files) {
             int   do_this_file;
@@ -350,6 +353,9 @@ int extract_or_test_files()    /* return PK-type error code */
     for (;;)
     {
         file = UnzipClass.GetFile(i);
+
+        if (file == 0)
+            break;
 
         if (file->error == PK_EOF)
             break;

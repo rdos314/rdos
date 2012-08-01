@@ -191,7 +191,7 @@ private:
     int DirEntryToFile(struct TUnzipFile *file, const char *filename);
     int SeekFile(struct TUnzipFile *file);
     int ProcessFileHeader(struct TUnzipFile *file);
-    int AddFile(struct TUnzipFile *file);
+    struct TUnzipFile *ProcessNextFile();
 
     int OpenOutputFile(const char *filename);
     void CloseOutputFile();
@@ -245,9 +245,7 @@ private:
 
     int FFileSize;
     int FFileCount;
-    struct TUnzipFile **FFileA;
-
-    struct TUnzipFile FFileArr[DIR_BLKSIZ];
+    struct TUnzipFile **FFileArr;
 
 };
 

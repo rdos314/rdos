@@ -647,9 +647,9 @@ TUnzip::~TUnzip()
     if (FFileSize)
     {
         for (i = 0; i < FFileCount; i++)
-            delete FFileA[i];
+            delete FFileArr[i];
 
-        delete FFileA;
+        delete FFileArr;
     }
 }
 
@@ -669,7 +669,7 @@ void TUnzip::Init()
     OnTrace = 0;
     OnInfo = 0;
 
-    FFileA = 0;
+    FFileArr = 0;
     FFileSize = 0;
     FFileCount = 0;
 
@@ -1245,7 +1245,7 @@ int TUnzip::Seek(long abs_offset)
 ##########################################################################*/
 struct TUnzipFile *TUnzip::GetFile(int id)
 {
-    return &FFileArr[id];
+    return FFileArr[id];
 }
 
 /*##########################################################################
@@ -1501,7 +1501,7 @@ int TUnzip::SeekFile(struct TUnzipFile *file)    /* return PK-type error code */
 
     if (request < 0) {
         Info(0x401, SeekMsg, FInputFileName.GetData());
-        if (file == &FFileArr[0] && FExtraBytes != 0L) {
+        if (file == FFileArr[0] && FExtraBytes != 0L) {
             FOldExtraBytes =  FExtraBytes;
             FExtraBytes = 0L;
             request = file->offset;  /* could also check if != 0 */
@@ -1541,7 +1541,7 @@ int TUnzip::SeekFile(struct TUnzipFile *file)    /* return PK-type error code */
 
     if (memcmp(sig, local_hdr_sig, 4)) {
         Info(0x401, OffsetMsg, "signature", request);
-        if ((file == &FFileArr[0] &&  FExtraBytes != 0L) ||
+        if ((file == FFileArr[0] &&  FExtraBytes != 0L) ||
                 ( FExtraBytes == 0L && FOldExtraBytes != 0L)) {
             if (FExtraBytes) {
                 FOldExtraBytes = FExtraBytes;
@@ -1661,7 +1661,7 @@ int TUnzip::ProcessFileHeader(struct TUnzipFile *file)
 
 /*##########################################################################
 #
-#   Name       : TUnzip::AddFile
+#   Name       : TUnzip::ProcessNextFile
 #
 #   Purpose....: 
 #
@@ -1670,25 +1670,20 @@ int TUnzip::ProcessFileHeader(struct TUnzipFile *file)
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::AddFile(struct TUnzipFile *file)    /* return PK-type error code */
+struct TUnzipFile *TUnzip::ProcessNextFile()
 {
     char sig[4];
+    struct TUnzipFile *file;
     static char central_hdr_sig[4]     = {0x50, 0x4B, 0x01, 0x02};
-
+    
     FDoDecrypt = FALSE;
     FOldExtraBytes = 0;
 
     if (ReadBuf(sig, 4) == 0)
-    {
-        file->error = PK_EOF;
-        return PK_EOF;
-    }
+        return 0;
 
     if (memcmp(sig, central_hdr_sig, 4)) {  /* is it a new entry? */
-    {
-        file->error = PK_EOF;
-        return PK_EOF;
-    }
+        return 0;
 
        /* no new central directory entry
         * -> is the number of processed entries compatible with the
@@ -1717,12 +1712,14 @@ int TUnzip::AddFile(struct TUnzipFile *file)    /* return PK-type error code */
 //        }
     }
 
+    file = new TUnzipFile;
+
     file->error = ProcessDirEntry(file);
 
     if (file->error == PK_COOL)
         file->error = ProcessFileHeader(file);
 
-    return file->error;
+    return file;
 }
 
 /*##########################################################################
@@ -1739,17 +1736,37 @@ int TUnzip::AddFile(struct TUnzipFile *file)    /* return PK-type error code */
 void TUnzip::ProcessFiles()
 {
     int i;
+    struct TUnzipFile **newarr;
     struct TUnzipFile *file;
-    
-    i = 0;
-    
-    while (i < DIR_BLKSIZ)
-    {
-        file = GetFile(i);
-        if (AddFile(file) != PK_COOL)
-            break;
 
-        i++;
+    for (;;)
+    {
+        file = ProcessNextFile();
+
+        if (file)
+        {
+            if (FFileSize == FFileCount)
+            {
+                FFileSize = 3 * FFileSize / 2 + 1;
+                newarr = new struct TUnzipFile *[FFileSize];
+
+                for (i = 0; i < FFileCount; i++)
+                    newarr[i] = FFileArr[i];
+
+                for (i = FFileCount; i < FFileSize; i++)
+                    newarr[i] = 0;
+
+                if (FFileArr)
+                    delete FFileArr;
+
+                FFileArr = newarr;                
+            }
+
+            FFileArr[FFileCount] = file;
+            FFileCount++;
+        }
+        else
+            break;
     }
 }
 
