@@ -334,8 +334,6 @@ void free_G_buffers()     /* releases all memory allocated in global vars */
 {
     unsigned i;
 
-    checkdir((char *)NULL, END);
-
    if (G.key != (char *)NULL) {
         free(G.key);
         G.key = (char *)NULL;

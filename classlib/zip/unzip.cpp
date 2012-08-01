@@ -665,8 +665,6 @@ void TUnzip::Init()
     FInBuf = new char[INBUFSIZ + 4];    /* 4 extra for hold[] (below) */
     FTmpOutBuf = new char[TMPOUTSIZ];
     FOutBuf = new char[WSIZE + 1];
-
-    FCurrFile = &FFileArr[0];
 }
 
 /*##########################################################################
@@ -1643,10 +1641,9 @@ int TUnzip::ProcessFileHeader(struct TUnzipFile *file)
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::AddFile()    /* return PK-type error code */
+int TUnzip::AddFile(struct TUnzipFile *file)    /* return PK-type error code */
 {
     int error;
-    struct TUnzipFile *file = FCurrFile;
 
     FDoDecrypt = FALSE;
 

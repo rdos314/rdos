@@ -245,7 +245,7 @@ int extract_or_test_files()    /* return PK-type error code */
     /* b) check out if specified extraction root directory exists */
     if (uO.exdir != (char *)NULL && G.extract_flag) {
         G.create_dirs = !uO.fflag;
-        if ((error = checkdir(uO.exdir, ROOT)) > MPN_INF_SKIP) {
+        if ((error = checkdir(file, uO.exdir, ROOT)) > MPN_INF_SKIP) {
             /* out of memory, or file in way */
             return (error == MPN_NOMEM ? PK_MEM : PK_ERR);
         }
@@ -271,9 +271,7 @@ int extract_or_test_files()    /* return PK-type error code */
   ---------------------------------------------------------------------------*/
 
     file = &UnzipClass.FFileArr[0];
-    UnzipClass.FCurrFile = file;
-    
-
+ 
     G.newzip = TRUE;
     G.reported_backslash = FALSE;
 
@@ -310,7 +308,6 @@ int extract_or_test_files()    /* return PK-type error code */
 
         while ((j < DIR_BLKSIZ)) {
             file = &UnzipClass.FFileArr[j];
-            UnzipClass.FCurrFile = file;
 
             if (UnzipClass.ReadBuf(G.sig, 4) == 0) {
                 error_in_archive = PK_EOF;
@@ -347,7 +344,7 @@ int extract_or_test_files()    /* return PK-type error code */
                 break;
             }
 
-            error = UnzipClass.AddFile();
+            error = UnzipClass.AddFile(file);
             if (error != PK_COOL)
                 break;
 
@@ -595,7 +592,6 @@ static int extract_or_test_entrylist(unsigned numchunk,
     for (i = 0; i < numchunk; ++i) {
         (*pfilnum)++;   /* *pfilnum = i + blknum*DIR_BLKSIZ + 1; */
         file = &UnzipClass.FFileArr[i];
-        UnzipClass.FCurrFile = file;
 
         /*
          * just about to extract file:  if extracting to disk, check if
@@ -648,7 +644,7 @@ startover:
             }
 
             /* mapname can create dirs if not freshening or if renamed */
-            error = mapname(renamed);
+            error = mapname(file, renamed);
             if ((errcode = error & ~MPN_MASK) != PK_OK &&
                 error_in_archive < errcode)
                 error_in_archive = errcode;
@@ -656,7 +652,7 @@ startover:
                 if (errcode == MPN_CREATED_DIR) {
                     direntry *d_entry;
 
-                    error = defer_dir_attribs(&d_entry);
+                    error = defer_dir_attribs(file, &d_entry);
                     if (d_entry == (direntry *)NULL) {
                         /* There may be no dir_attribs info available, or
                          * we have encountered a mem allocation error.

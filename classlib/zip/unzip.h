@@ -134,7 +134,7 @@ public:
     int Seek(long abs_offset);
     void DisplayHeaderString(int lenght, int oemconvert);
 
-    int AddFile();
+    int AddFile(struct TUnzipFile *file);
 
     int Extract(struct TUnzipFile *file);
 
@@ -165,7 +165,6 @@ public:
     int FDiskFull;
 
     struct TUnzipFile FFileArr[DIR_BLKSIZ];
-    struct TUnzipFile *FCurrFile;
     
 protected:
 
