@@ -1908,6 +1908,566 @@ int TUnzipFile::Extract()
 
 /*##########################################################################
 #
+#   Name       : TUnzipFile::CheckForNewer
+#
+#   Purpose....: Check if file is newer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzipFile::CheckForNewer(const char *filename)
+{
+    unsigned long msb, lsb;
+    int handle;
+
+    handle = RdosOpenFile(filename, 0);
+
+    if (handle)
+    {
+        RdosGetFileTime(handle, &msb, &lsb);
+        RdosAddSec(&msb, &lsb, 2);
+        RdosCloseFile(handle);
+
+        if (msb == rdos_msb_time)
+            return lsb >= rdos_msb_time;
+        else
+            return msb >= rdos_lsb_time;
+    }
+    else
+        return DOES_NOT_EXIST;
+
+} /* end function check_for_newer() */
+
+/*##########################################################################
+#
+#   Name       : TUnzipFile::CreateTimeStr
+#
+#   Purpose....: Create time string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUnzipFile::CreateTimeStr(char *str)
+{
+    int yr, mo, dy, hh, mm, ss, ms, us;
+
+    RdosDecodeMsbTics(rdos_msb_time, &yr, &mo, &dy, &hh);
+    RdosDecodeLsbTics(rdos_lsb_time, &mm, &ss, &ms, &us); 
+
+    sprintf(str, "%04u-%02u-%02u %02u:%02u", yr, mo, dy, hh, mm);
+}
+
+/*##########################################################################
+#
+#   Name       : TUnzipFile::ShowVerbose
+#
+#   Purpose....: Show verbose info about file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUnzipFile::ShowVerbose()
+{
+    int  error;
+    unsigned  extnum, extver, methid, methnum, xattr;
+    char workspace[12], attribs[22];
+    const char *varmsg_str;
+    char unkn[16];
+    static const char *os[NUM_HOSTS] = {
+        OS_FAT, OS_Amiga, OS_VMS, OS_Unix, OS_VMCMS, OS_AtariST, OS_HPFS,
+        OS_Macintosh, OS_ZSystem, OS_CPM, OS_TOPS20, OS_NTFS, OS_QDOS,
+        OS_Acorn, OS_VFAT, OS_MVS, OS_BeOS, OS_Tandem, OS_Theos, OS_MacDarwin,
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+        OS_AtheOS
+    };
+    static const char *method[NUM_METHODS] = {
+        MthdNone, MthdShrunk, MthdRedF1, MthdRedF2, MthdRedF3, MthdRedF4,
+        MthdImplode, MthdToken, MthdDeflate, MthdDeflat64, MthdDCLImplode,
+        MthdBZip2, MthdLZMA, MthdTerse, MthdLZ77, MthdWavPack, MthdPPMd
+    };
+    static const char *dtypelng[4] = {
+        DeflNorm, DeflMax, DeflFast, DeflSFast
+    };
+
+/*---------------------------------------------------------------------------
+    Print out various interesting things about the compressed file.
+  ---------------------------------------------------------------------------*/
+
+    extnum = (unsigned)MIN(version_needed_to_extract[1], NUM_HOSTS);
+    extver = (unsigned)version_needed_to_extract[0];
+    methid = (unsigned)compression_method;
+    methnum = FindCompressMethod(compression_method);
+
+    FUnzip->Info(0, "  ");  
+    FUnzip->Info(0, cfilname);
+    FUnzip->Info(0, "\n");
+
+    FUnzip->Info(0, "\n  offset of local header from start of archive:   %u (%Xh) bytes\n",
+      offset,
+      offset);
+
+    if (hostnum >= NUM_HOSTS) {
+        sprintf(unkn, "unknown (%d)",
+                (int)hostnum);
+        varmsg_str = unkn;
+    } else {
+        varmsg_str = os[hostnum];
+    }
+    FUnzip->Info(0, "  file system or operating system of origin:      %s\n", varmsg_str);
+    FUnzip->Info(0, "  version of encoding software:                   %u.%u\n", hostver/10, hostver%10);
+
+    if ((extnum >= NUM_HOSTS) || (os[extnum] == NULL)) {
+        sprintf(unkn, "unknown (%d)",
+                (int)version_needed_to_extract[1]);
+        varmsg_str = unkn;
+    } else {
+        varmsg_str = os[extnum];
+    }
+    FUnzip->Info(0, "  minimum file system compatibility required:     %s\n", varmsg_str);
+    FUnzip->Info(0, "  minimum software version required to extract:   %u.%u\n", extver/10, extver%10);
+
+    if (methnum >= NUM_METHODS) {
+        sprintf(unkn, "unknown (%d)", compression_method);
+        varmsg_str = unkn;
+    } else {
+        varmsg_str = method[methnum];
+    }
+    FUnzip->Info(0, "  compression method:                             %s\n", varmsg_str);
+    if (methid == IMPLODED) {
+        FUnzip->Info(0, "  size of sliding dictionary (implosion):         %cK\n",
+          (general_purpose_bit_flag & 2)? '8' : '4');
+        FUnzip->Info(0, "  number of Shannon-Fano trees (implosion):       %c\n",
+          (general_purpose_bit_flag & 4)? '3' : '2');
+    } else if (methid == DEFLATED || methid == ENHDEFLATED) {
+        unsigned short  dnum=(unsigned short)((general_purpose_bit_flag>>1) & 3);
+
+        FUnzip->Info(0, "  compression sub-type (deflation):               %s\n", dtypelng[dnum]);
+    }
+
+    FUnzip->Info(0, "  file security status:                           %sencrypted\n",
+      (general_purpose_bit_flag & 1) ? "" : "not ");
+    FUnzip->Info(0, "  extended local header:                          %s\n",
+      (general_purpose_bit_flag & 8) ? "yes" : "no");
+    /* print upper 3 bits for amusement? */
+
+    /* For printing of date & time, a "char d_t_buf[21]" is required.
+     * To save stack space, we reuse the "char attribs[22]" buffer which
+     * is not used yet.
+     */
+
+    CreateTimeStr(attribs);
+    FUnzip->Info(0, "  file last modified on (DOS date/time):          %s\n", 
+      attribs);
+    
+    FUnzip->Info(0, "  32-bit CRC value (hex):                         %.8lx\n", 
+      crc);
+    FUnzip->Info(0, "  compressed size:                                %u bytes\n",
+      compr_size);
+    FUnzip->Info(0, "  uncompressed size:                              %u bytes\n",
+      uncompr_size);
+    FUnzip->Info(0, "  apparent file type:                             %s\n",
+      (internal_file_attributes & 1)? "text"
+         : (internal_file_attributes & 2)? "ebcdic"
+              : "binary");             /* changed to accept EBCDIC */
+    xattr = (unsigned)((external_file_attributes >> 16) & 0xFFFF);
+    if (hostnum == VMS_) {
+        char   *p=attribs, *q=attribs+1;
+        int    i, j, k;
+
+        for (k = 0;  k < 12;  ++k)
+            workspace[k] = 0;
+        if (xattr & VMS_IRUSR)
+            workspace[0] = 'R';
+        if (xattr & VMS_IWUSR) {
+            workspace[1] = 'W';
+            workspace[3] = 'D';
+        }
+        if (xattr & VMS_IXUSR)
+            workspace[2] = 'E';
+        if (xattr & VMS_IRGRP)
+            workspace[4] = 'R';
+        if (xattr & VMS_IWGRP) {
+            workspace[5] = 'W';
+            workspace[7] = 'D';
+        }
+        if (xattr & VMS_IXGRP)
+            workspace[6] = 'E';
+        if (xattr & VMS_IROTH)
+            workspace[8] = 'R';
+        if (xattr & VMS_IWOTH) {
+            workspace[9] = 'W';
+            workspace[11] = 'D';
+        }
+        if (xattr & VMS_IXOTH)
+            workspace[10] = 'E';
+
+        *p++ = '(';
+        for (k = j = 0;  j < 3;  ++j) {    /* loop over groups of permissions */
+            for (i = 0;  i < 4;  ++i, ++k)  /* loop over perms within a group */
+                if (workspace[k])
+                    *p++ = workspace[k];
+            *p++ = ',';                       /* group separator */
+            if (j == 0)
+                while ((*p++ = *q++) != ',')
+                    ;                         /* system, owner perms are same */
+        }
+        *p-- = '\0';
+        *p = ')';   /* overwrite last comma */
+        FUnzip->Info(0, "  VMS file attributes (%06o octal):             %s\n", xattr, attribs);
+
+    } else if (hostnum == AMIGA_) {
+        switch (xattr & AMI_IFMT) {
+            case AMI_IFDIR:  attribs[0] = 'd';  break;
+            case AMI_IFREG:  attribs[0] = '-';  break;
+            default:         attribs[0] = '?';  break;
+        }
+        attribs[1] = (xattr & AMI_IHIDDEN)?   'h' : '-';
+        attribs[2] = (xattr & AMI_ISCRIPT)?   's' : '-';
+        attribs[3] = (xattr & AMI_IPURE)?     'p' : '-';
+        attribs[4] = (xattr & AMI_IARCHIVE)?  'a' : '-';
+        attribs[5] = (xattr & AMI_IREAD)?     'r' : '-';
+        attribs[6] = (xattr & AMI_IWRITE)?    'w' : '-';
+        attribs[7] = (xattr & AMI_IEXECUTE)?  'e' : '-';
+        attribs[8] = (xattr & AMI_IDELETE)?   'd' : '-';
+        attribs[9] = 0;   /* better dlm the string */
+        FUnzip->Info(0, "  Amiga file attributes (%06o octal):           %s\n", xattr, attribs);
+
+    } else if (hostnum == THEOS_) {
+        const char *fpFtyp;
+
+        switch (xattr & THS_IFMT) {
+            case THS_IFLIB:  fpFtyp = TheosFTypLib;  break;
+            case THS_IFDIR:  fpFtyp = TheosFTypDir;  break;
+            case THS_IFREG:  fpFtyp = TheosFTypReg;  break;
+            case THS_IFREL:  fpFtyp = TheosFTypRel;  break;
+            case THS_IFKEY:  fpFtyp = TheosFTypKey;  break;
+            case THS_IFIND:  fpFtyp = TheosFTypInd;  break;
+            case THS_IFR16:  fpFtyp = TheosFTypR16;  break;
+            case THS_IFP16:  fpFtyp = TheosFTypP16;  break;
+            case THS_IFP32:  fpFtyp = TheosFTypP32;  break;
+            default:         fpFtyp = TheosFTypUkn;  break;
+        }
+        strcpy(attribs, fpFtyp);
+        attribs[12] = (xattr & THS_INHID) ? '.' : 'H';
+        attribs[13] = (xattr & THS_IMODF) ? '.' : 'M';
+        attribs[14] = (xattr & THS_IWOTH) ? '.' : 'W';
+        attribs[15] = (xattr & THS_IROTH) ? '.' : 'R';
+        attribs[16] = (xattr & THS_IEUSR) ? '.' : 'E';
+        attribs[17] = (xattr & THS_IXUSR) ? '.' : 'X';
+        attribs[18] = (xattr & THS_IWUSR) ? '.' : 'W';
+        attribs[19] = (xattr & THS_IRUSR) ? '.' : 'R';
+        attribs[20] = 0;
+        FUnzip->Info(0, "  Theos file attributes (%04X hex):               %s\n", xattr, attribs);
+
+
+    } else if ((hostnum != FS_FAT_) && (hostnum != FS_HPFS_) &&
+               (hostnum != FS_NTFS_) && (hostnum != FS_VFAT_) &&
+               (hostnum != ACORN_) &&
+               (hostnum != VM_CMS_) && (hostnum != MVS_))
+    {                                 /* assume Unix-like */
+        switch ((unsigned)(xattr & UNX_IFMT)) {
+            case (unsigned)UNX_IFDIR:   attribs[0] = 'd';  break;
+            case (unsigned)UNX_IFREG:   attribs[0] = '-';  break;
+            case (unsigned)UNX_IFLNK:   attribs[0] = 'l';  break;
+            case (unsigned)UNX_IFBLK:   attribs[0] = 'b';  break;
+            case (unsigned)UNX_IFCHR:   attribs[0] = 'c';  break;
+            case (unsigned)UNX_IFIFO:   attribs[0] = 'p';  break;
+            case (unsigned)UNX_IFSOCK:  attribs[0] = 's';  break;
+            default:          attribs[0] = '?';  break;
+        }
+        attribs[1] = (xattr & UNX_IRUSR)? 'r' : '-';
+        attribs[4] = (xattr & UNX_IRGRP)? 'r' : '-';
+        attribs[7] = (xattr & UNX_IROTH)? 'r' : '-';
+
+        attribs[2] = (xattr & UNX_IWUSR)? 'w' : '-';
+        attribs[5] = (xattr & UNX_IWGRP)? 'w' : '-';
+        attribs[8] = (xattr & UNX_IWOTH)? 'w' : '-';
+
+        if (xattr & UNX_IXUSR)
+            attribs[3] = (xattr & UNX_ISUID)? 's' : 'x';
+        else
+            attribs[3] = (xattr & UNX_ISUID)? 'S' : '-';   /* S = undefined */
+        if (xattr & UNX_IXGRP)
+            attribs[6] = (xattr & UNX_ISGID)? 's' : 'x';   /* == UNX_ENFMT */
+        else
+            attribs[6] = (xattr & UNX_ISGID)? 'l' : '-';
+        if (xattr & UNX_IXOTH)
+            attribs[9] = (xattr & UNX_ISVTX)? 't' : 'x';   /* "sticky bit" */
+        else
+            attribs[9] = (xattr & UNX_ISVTX)? 'T' : '-';   /* T = undefined */
+        attribs[10] = 0;
+
+        FUnzip->Info(0, "  Unix file attributes (%06o octal):            %s\n", xattr, attribs);
+
+    } else {
+        FUnzip->Info(0, "  non-MSDOS external file attributes:             %06lX hex\n", external_file_attributes >> 8);
+
+    } /* endif (hostnum: external attributes format) */
+
+    if ((xattr=(unsigned)(external_file_attributes & 0xFF)) == 0)
+        FUnzip->Info(0, "  MS-DOS file attributes (%02X hex):                none\n", xattr);
+    else if (xattr == 1)
+        FUnzip->Info(0, "  MS-DOS file attributes (%02X hex):                read-only\n", xattr);
+    else
+        FUnzip->Info(0, "  MS-DOS file attributes (%02X hex):                %s%s%s%s%s%s%s%s\n",
+          xattr, (xattr&1)? "rdo " : "",
+          (xattr&2)? "hid " : "",
+          (xattr&4)? "sys " : "",
+          (xattr&8)? "lab " : "",
+          (xattr&16)? "dir " : "",
+          (xattr&32)? "arc " : "",
+          (xattr&64)? "lnk " : "",
+          (xattr&128)? "exe" : "");
+
+} /* end function zi_long() */
+
+
+/*##########################################################################
+#
+#   Name       : TUnzipFile::ShowCompact
+#
+#   Purpose....: Show compact info about file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUnzipFile::ShowCompact()
+{
+    int         k, error, error_in_archive=PK_COOL;
+    unsigned    methid, methnum, xattr;
+    char        *p, workspace[12], attribs[16];
+    char        methbuf[5];
+    static const char dtype[5]="NXFS"; /* normal, maximum, fast, superfast */
+    static const char os[NUM_HOSTS+1][4] = {
+        "fat", "ami", "vms", "unx", "cms", "atr", "hpf", "mac", "zzz",
+        "cpm", "t20", "ntf", "qds", "aco", "vft", "mvs", "be ", "nsk",
+        "ths", "osx", "???", "???", "???", "???", "???", "???", "???",
+        "???", "???", "???", "ath", "???"
+    };
+    static const char method[NUM_METHODS+1][5] = {
+        "stor", "shrk", "re:1", "re:2", "re:3", "re:4", "i#:#", "tokn",
+        "def#", "d64#", "dcli", "bzp2", "lzma", "ters", "lz77", "wavp",
+        "ppmd", "u###"
+    };
+
+
+/*---------------------------------------------------------------------------
+    Print out various interesting things about the compressed file.
+  ---------------------------------------------------------------------------*/
+
+    methid = (unsigned)(compression_method);
+    methnum = FindCompressMethod(compression_method);
+
+    strcpy(methbuf, method[methnum]);
+    if (methid == IMPLODED) {
+        methbuf[1] = (char)((general_purpose_bit_flag & 2)? '8' : '4');
+        methbuf[3] = (char)((general_purpose_bit_flag & 4)? '3' : '2');
+    } else if (methid == DEFLATED || methid == ENHDEFLATED) {
+        unsigned short  dnum=(unsigned short)((general_purpose_bit_flag>>1) & 3);
+        methbuf[3] = dtype[dnum];
+    } else if (methnum >= NUM_METHODS) {   /* unknown */
+        sprintf(&methbuf[1], "%03u", compression_method);
+    }
+
+    for (k = 0;  k < 15;  ++k)
+        attribs[k] = ' ';
+    attribs[15] = 0;
+
+    xattr = (unsigned)((external_file_attributes >> 16) & 0xFFFF);
+    switch (hostnum) {
+        case VMS_:
+            {   int    i, j;
+
+                for (k = 0;  k < 12;  ++k)
+                    workspace[k] = 0;
+                if (xattr & VMS_IRUSR)
+                    workspace[0] = 'R';
+                if (xattr & VMS_IWUSR) {
+                    workspace[1] = 'W';
+                    workspace[3] = 'D';
+                }
+                if (xattr & VMS_IXUSR)
+                    workspace[2] = 'E';
+                if (xattr & VMS_IRGRP)
+                    workspace[4] = 'R';
+                if (xattr & VMS_IWGRP) {
+                    workspace[5] = 'W';
+                    workspace[7] = 'D';
+                }
+                if (xattr & VMS_IXGRP)
+                  workspace[6] = 'E';
+                if (xattr & VMS_IROTH)
+                    workspace[8] = 'R';
+                if (xattr & VMS_IWOTH) {
+                    workspace[9] = 'W';
+                    workspace[11] = 'D';
+                }
+                if (xattr & VMS_IXOTH)
+                    workspace[10] = 'E';
+
+                p = attribs;
+                for (k = j = 0;  j < 3;  ++j) {     /* groups of permissions */
+                    for (i = 0;  i < 4;  ++i, ++k)  /* perms within a group */
+                        if (workspace[k])
+                            *p++ = workspace[k];
+                    *p++ = ',';                     /* group separator */
+                }
+                *--p = ' ';   /* overwrite last comma */
+                if ((p - attribs) < 12)
+                    sprintf(&attribs[12], "%u.%u", hostver/10, hostver%10);
+            }
+            break;
+
+        case AMIGA_:
+            switch (xattr & AMI_IFMT) {
+                case AMI_IFDIR:  attribs[0] = 'd';  break;
+                case AMI_IFREG:  attribs[0] = '-';  break;
+                default:         attribs[0] = '?';  break;
+            }
+            attribs[1] = (xattr & AMI_IHIDDEN)?   'h' : '-';
+            attribs[2] = (xattr & AMI_ISCRIPT)?   's' : '-';
+            attribs[3] = (xattr & AMI_IPURE)?     'p' : '-';
+            attribs[4] = (xattr & AMI_IARCHIVE)?  'a' : '-';
+            attribs[5] = (xattr & AMI_IREAD)?     'r' : '-';
+            attribs[6] = (xattr & AMI_IWRITE)?    'w' : '-';
+            attribs[7] = (xattr & AMI_IEXECUTE)?  'e' : '-';
+            attribs[8] = (xattr & AMI_IDELETE)?   'd' : '-';
+            sprintf(&attribs[12], "%u.%u", hostver/10, hostver%10);
+            break;
+
+        case THEOS_:
+            switch (xattr & THS_IFMT) {
+                case THS_IFLIB: *attribs = 'L'; break;
+                case THS_IFDIR: *attribs = 'D'; break;
+                case THS_IFCHR: *attribs = 'C'; break;
+                case THS_IFREG: *attribs = 'S'; break;
+                case THS_IFREL: *attribs = 'R'; break;
+                case THS_IFKEY: *attribs = 'K'; break;
+                case THS_IFIND: *attribs = 'I'; break;
+                case THS_IFR16: *attribs = 'P'; break;
+                case THS_IFP16: *attribs = '2'; break;
+                case THS_IFP32: *attribs = '3'; break;
+                default:        *attribs = '?'; break;
+            }
+            attribs[1] = (xattr & THS_INHID) ? '.' : 'H';
+            attribs[2] = (xattr & THS_IMODF) ? '.' : 'M';
+            attribs[3] = (xattr & THS_IWOTH) ? '.' : 'W';
+            attribs[4] = (xattr & THS_IROTH) ? '.' : 'R';
+            attribs[5] = (xattr & THS_IEUSR) ? '.' : 'E';
+            attribs[6] = (xattr & THS_IXUSR) ? '.' : 'X';
+            attribs[7] = (xattr & THS_IWUSR) ? '.' : 'W';
+            attribs[8] = (xattr & THS_IRUSR) ? '.' : 'R';
+            sprintf(&attribs[12], "%u.%u", hostver/10, hostver%10);
+            break;
+
+        case FS_VFAT_:
+        case FS_FAT_:
+        case FS_HPFS_:
+        case FS_NTFS_:
+        case VM_CMS_:
+        case MVS_:
+        case ACORN_:
+            if (hostnum != FS_FAT_ ||
+                (unsigned)(xattr & 0700) !=
+                 ((unsigned)0400 |
+                  ((unsigned)!(external_file_attributes & 1) << 7) |
+                  ((unsigned)(external_file_attributes & 0x10) << 2))
+               )
+            {
+                xattr = (unsigned)(external_file_attributes & 0xFF);
+                sprintf(attribs, ".r.-...     %u.%u", hostver/10, hostver%10);
+                attribs[2] = (xattr & 0x01)? '-' : 'w';
+                attribs[5] = (xattr & 0x02)? 'h' : '-';
+                attribs[6] = (xattr & 0x04)? 's' : '-';
+                attribs[4] = (xattr & 0x20)? 'a' : '-';
+                if (xattr & 0x10) {
+                    attribs[0] = 'd';
+                    attribs[3] = 'x';
+                } else
+                    attribs[0] = '-';
+                if (xattr & 0x8)
+                    attribs[0] = 'V';
+                else if ((p = strchr(cfilname, '.')) != (char *)NULL) {
+                    ++p;
+                    if (strnicmp(p, "com", 3) == 0 ||
+                        strnicmp(p, "exe", 3) == 0 ||
+                        strnicmp(p, "btm", 3) == 0 ||
+                        strnicmp(p, "cmd", 3) == 0 ||
+                        strnicmp(p, "bat", 3) == 0)
+                        attribs[3] = 'x';
+                }
+                break;
+            } /* else: fall through! */
+
+        default:   /* assume Unix-like */
+            switch ((unsigned)(xattr & UNX_IFMT)) {
+                case (unsigned)UNX_IFDIR:   attribs[0] = 'd';  break;
+                case (unsigned)UNX_IFREG:   attribs[0] = '-';  break;
+                case (unsigned)UNX_IFLNK:   attribs[0] = 'l';  break;
+                case (unsigned)UNX_IFBLK:   attribs[0] = 'b';  break;
+                case (unsigned)UNX_IFCHR:   attribs[0] = 'c';  break;
+                case (unsigned)UNX_IFIFO:   attribs[0] = 'p';  break;
+                case (unsigned)UNX_IFSOCK:  attribs[0] = 's';  break;
+                default:          attribs[0] = '?';  break;
+            }
+            attribs[1] = (xattr & UNX_IRUSR)? 'r' : '-';
+            attribs[4] = (xattr & UNX_IRGRP)? 'r' : '-';
+            attribs[7] = (xattr & UNX_IROTH)? 'r' : '-';
+            attribs[2] = (xattr & UNX_IWUSR)? 'w' : '-';
+            attribs[5] = (xattr & UNX_IWGRP)? 'w' : '-';
+            attribs[8] = (xattr & UNX_IWOTH)? 'w' : '-';
+
+            if (xattr & UNX_IXUSR)
+                attribs[3] = (xattr & UNX_ISUID)? 's' : 'x';
+            else
+                attribs[3] = (xattr & UNX_ISUID)? 'S' : '-';  /* S==undefined */
+            if (xattr & UNX_IXGRP)
+                attribs[6] = (xattr & UNX_ISGID)? 's' : 'x';  /* == UNX_ENFMT */
+            else
+                /* attribs[6] = (xattr & UNX_ISGID)? 'l' : '-';  real 4.3BSD */
+                attribs[6] = (xattr & UNX_ISGID)? 'S' : '-';  /* SunOS 4.1.x */
+            if (xattr & UNX_IXOTH)
+                attribs[9] = (xattr & UNX_ISVTX)? 't' : 'x';  /* "sticky bit" */
+            else
+                attribs[9] = (xattr & UNX_ISVTX)? 'T' : '-';  /* T==undefined */
+
+            sprintf(&attribs[12], "%u.%u", hostver/10, hostver%10);
+            break;
+
+    } /* end switch (hostnum: external attributes format) */
+
+    FUnzip->Info(0, "%s %s %u ", attribs,
+      os[hostnum],
+      uncompr_size);
+    FUnzip->Info(0, "%c",
+      (general_purpose_bit_flag & 1)?
+      ((internal_file_attributes & 1)? 'T' : 'B') :  /* encrypted */
+      ((internal_file_attributes & 1)? 't' : 'b')); /* plaintext */
+
+    /* For printing of date & time, a "char d_t_buf[16]" is required.
+     * To save stack space, we reuse the "char attribs[16]" buffer whose
+     * content is no longer needed.
+     */
+    CreateTimeStr(attribs);
+    FUnzip->Info(0, " %s %s ", methbuf, attribs); 
+
+    FUnzip->Info(0, cfilname);
+    FUnzip->Info(0, "\n");
+
+} /* end function zi_short() */
+
+
+
+/*##########################################################################
+#
 #   Name       : TUnzip::TUnzip
 #
 #   Purpose....: Constructor for unzip
@@ -3108,568 +3668,4 @@ int TUnzip::DiskError()
 
     return PK_DISK;
 } /* end function disk_error() */
-
-
-/*##########################################################################
-#
-#   Name       : TUnzip::CheckForNewer
-#
-#   Purpose....: Check if file is newer
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TUnzip::CheckForNewer(TUnzipFile *file, const char *filename)
-{
-    unsigned long msb, lsb;
-    int handle;
-
-    handle = RdosOpenFile(filename, 0);
-
-    if (handle)
-    {
-        RdosGetFileTime(handle, &msb, &lsb);
-        RdosAddSec(&msb, &lsb, 2);
-        RdosCloseFile(handle);
-
-        if (msb == file->rdos_msb_time)
-            return lsb >= file->rdos_msb_time;
-        else
-            return msb >= file->rdos_lsb_time;
-    }
-    else
-        return DOES_NOT_EXIST;
-
-} /* end function check_for_newer() */
-
-/*##########################################################################
-#
-#   Name       : TUnzip::CreateTimeStr
-#
-#   Purpose....: Create time string
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TUnzip::CreateTimeStr(TUnzipFile *file, char *str)
-{
-    int yr, mo, dy, hh, mm, ss, ms, us;
-
-    RdosDecodeMsbTics(file->rdos_msb_time, &yr, &mo, &dy, &hh);
-    RdosDecodeLsbTics(file->rdos_lsb_time, &mm, &ss, &ms, &us); 
-
-    sprintf(str, "%04u-%02u-%02u %02u:%02u", yr, mo, dy, hh, mm);
-}
-
-/*##########################################################################
-#
-#   Name       : TUnzip::ShowVerbose
-#
-#   Purpose....: Show verbose info about file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TUnzip::ShowVerbose(TUnzipFile *file)
-{
-    int  error;
-    unsigned  hostnum, hostver, extnum, extver, methid, methnum, xattr;
-    char workspace[12], attribs[22];
-    const char *varmsg_str;
-    char unkn[16];
-    static const char *os[NUM_HOSTS] = {
-        OS_FAT, OS_Amiga, OS_VMS, OS_Unix, OS_VMCMS, OS_AtariST, OS_HPFS,
-        OS_Macintosh, OS_ZSystem, OS_CPM, OS_TOPS20, OS_NTFS, OS_QDOS,
-        OS_Acorn, OS_VFAT, OS_MVS, OS_BeOS, OS_Tandem, OS_Theos, OS_MacDarwin,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        OS_AtheOS
-    };
-    static const char *method[NUM_METHODS] = {
-        MthdNone, MthdShrunk, MthdRedF1, MthdRedF2, MthdRedF3, MthdRedF4,
-        MthdImplode, MthdToken, MthdDeflate, MthdDeflat64, MthdDCLImplode,
-        MthdBZip2, MthdLZMA, MthdTerse, MthdLZ77, MthdWavPack, MthdPPMd
-    };
-    static const char *dtypelng[4] = {
-        DeflNorm, DeflMax, DeflFast, DeflSFast
-    };
-
-/*---------------------------------------------------------------------------
-    Print out various interesting things about the compressed file.
-  ---------------------------------------------------------------------------*/
-
-    hostnum = (unsigned)(file->hostnum);
-    hostver = (unsigned)(file->hostver);
-    extnum = (unsigned)MIN(file->version_needed_to_extract[1], NUM_HOSTS);
-    extver = (unsigned)file->version_needed_to_extract[0];
-    methid = (unsigned)file->compression_method;
-    methnum = FindCompressMethod(file->compression_method);
-
-    Info(0, "  ");  
-    Info(0, file->cfilname);
-    Info(0, "\n");
-
-    Info(0, "\n  offset of local header from start of archive:   %u (%Xh) bytes\n",
-      file->offset,
-      file->offset);
-
-    if (hostnum >= NUM_HOSTS) {
-        sprintf(unkn, "unknown (%d)",
-                (int)file->hostnum);
-        varmsg_str = unkn;
-    } else {
-        varmsg_str = os[hostnum];
-    }
-    Info(0, "  file system or operating system of origin:      %s\n", varmsg_str);
-    Info(0, "  version of encoding software:                   %u.%u\n", hostver/10, hostver%10);
-
-    if ((extnum >= NUM_HOSTS) || (os[extnum] == NULL)) {
-        sprintf(unkn, "unknown (%d)",
-                (int)file->version_needed_to_extract[1]);
-        varmsg_str = unkn;
-    } else {
-        varmsg_str = os[extnum];
-    }
-    Info(0, "  minimum file system compatibility required:     %s\n", varmsg_str);
-    Info(0, "  minimum software version required to extract:   %u.%u\n", extver/10, extver%10);
-
-    if (methnum >= NUM_METHODS) {
-        sprintf(unkn, "unknown (%d)", file->compression_method);
-        varmsg_str = unkn;
-    } else {
-        varmsg_str = method[methnum];
-    }
-    Info(0, "  compression method:                             %s\n", varmsg_str);
-    if (methid == IMPLODED) {
-        Info(0, "  size of sliding dictionary (implosion):         %cK\n",
-          (file->general_purpose_bit_flag & 2)? '8' : '4');
-        Info(0, "  number of Shannon-Fano trees (implosion):       %c\n",
-          (file->general_purpose_bit_flag & 4)? '3' : '2');
-    } else if (methid == DEFLATED || methid == ENHDEFLATED) {
-        unsigned short  dnum=(unsigned short)((file->general_purpose_bit_flag>>1) & 3);
-
-        Info(0, "  compression sub-type (deflation):               %s\n", dtypelng[dnum]);
-    }
-
-    Info(0, "  file security status:                           %sencrypted\n",
-      (file->general_purpose_bit_flag & 1) ? "" : "not ");
-    Info(0, "  extended local header:                          %s\n",
-      (file->general_purpose_bit_flag & 8) ? "yes" : "no");
-    /* print upper 3 bits for amusement? */
-
-    /* For printing of date & time, a "char d_t_buf[21]" is required.
-     * To save stack space, we reuse the "char attribs[22]" buffer which
-     * is not used yet.
-     */
-
-    CreateTimeStr(file, attribs);
-    Info(0, "  file last modified on (DOS date/time):          %s\n", 
-      attribs);
-    
-    Info(0, "  32-bit CRC value (hex):                         %.8lx\n", 
-      file->crc);
-    Info(0, "  compressed size:                                %u bytes\n",
-      file->compr_size);
-    Info(0, "  uncompressed size:                              %u bytes\n",
-      file->uncompr_size);
-    Info(0, "  apparent file type:                             %s\n",
-      (file->internal_file_attributes & 1)? "text"
-         : (file->internal_file_attributes & 2)? "ebcdic"
-              : "binary");             /* changed to accept EBCDIC */
-    xattr = (unsigned)((file->external_file_attributes >> 16) & 0xFFFF);
-    if (hostnum == VMS_) {
-        char   *p=attribs, *q=attribs+1;
-        int    i, j, k;
-
-        for (k = 0;  k < 12;  ++k)
-            workspace[k] = 0;
-        if (xattr & VMS_IRUSR)
-            workspace[0] = 'R';
-        if (xattr & VMS_IWUSR) {
-            workspace[1] = 'W';
-            workspace[3] = 'D';
-        }
-        if (xattr & VMS_IXUSR)
-            workspace[2] = 'E';
-        if (xattr & VMS_IRGRP)
-            workspace[4] = 'R';
-        if (xattr & VMS_IWGRP) {
-            workspace[5] = 'W';
-            workspace[7] = 'D';
-        }
-        if (xattr & VMS_IXGRP)
-            workspace[6] = 'E';
-        if (xattr & VMS_IROTH)
-            workspace[8] = 'R';
-        if (xattr & VMS_IWOTH) {
-            workspace[9] = 'W';
-            workspace[11] = 'D';
-        }
-        if (xattr & VMS_IXOTH)
-            workspace[10] = 'E';
-
-        *p++ = '(';
-        for (k = j = 0;  j < 3;  ++j) {    /* loop over groups of permissions */
-            for (i = 0;  i < 4;  ++i, ++k)  /* loop over perms within a group */
-                if (workspace[k])
-                    *p++ = workspace[k];
-            *p++ = ',';                       /* group separator */
-            if (j == 0)
-                while ((*p++ = *q++) != ',')
-                    ;                         /* system, owner perms are same */
-        }
-        *p-- = '\0';
-        *p = ')';   /* overwrite last comma */
-        Info(0, "  VMS file attributes (%06o octal):             %s\n", xattr, attribs);
-
-    } else if (hostnum == AMIGA_) {
-        switch (xattr & AMI_IFMT) {
-            case AMI_IFDIR:  attribs[0] = 'd';  break;
-            case AMI_IFREG:  attribs[0] = '-';  break;
-            default:         attribs[0] = '?';  break;
-        }
-        attribs[1] = (xattr & AMI_IHIDDEN)?   'h' : '-';
-        attribs[2] = (xattr & AMI_ISCRIPT)?   's' : '-';
-        attribs[3] = (xattr & AMI_IPURE)?     'p' : '-';
-        attribs[4] = (xattr & AMI_IARCHIVE)?  'a' : '-';
-        attribs[5] = (xattr & AMI_IREAD)?     'r' : '-';
-        attribs[6] = (xattr & AMI_IWRITE)?    'w' : '-';
-        attribs[7] = (xattr & AMI_IEXECUTE)?  'e' : '-';
-        attribs[8] = (xattr & AMI_IDELETE)?   'd' : '-';
-        attribs[9] = 0;   /* better dlm the string */
-        Info(0, "  Amiga file attributes (%06o octal):           %s\n", xattr, attribs);
-
-    } else if (hostnum == THEOS_) {
-        const char *fpFtyp;
-
-        switch (xattr & THS_IFMT) {
-            case THS_IFLIB:  fpFtyp = TheosFTypLib;  break;
-            case THS_IFDIR:  fpFtyp = TheosFTypDir;  break;
-            case THS_IFREG:  fpFtyp = TheosFTypReg;  break;
-            case THS_IFREL:  fpFtyp = TheosFTypRel;  break;
-            case THS_IFKEY:  fpFtyp = TheosFTypKey;  break;
-            case THS_IFIND:  fpFtyp = TheosFTypInd;  break;
-            case THS_IFR16:  fpFtyp = TheosFTypR16;  break;
-            case THS_IFP16:  fpFtyp = TheosFTypP16;  break;
-            case THS_IFP32:  fpFtyp = TheosFTypP32;  break;
-            default:         fpFtyp = TheosFTypUkn;  break;
-        }
-        strcpy(attribs, fpFtyp);
-        attribs[12] = (xattr & THS_INHID) ? '.' : 'H';
-        attribs[13] = (xattr & THS_IMODF) ? '.' : 'M';
-        attribs[14] = (xattr & THS_IWOTH) ? '.' : 'W';
-        attribs[15] = (xattr & THS_IROTH) ? '.' : 'R';
-        attribs[16] = (xattr & THS_IEUSR) ? '.' : 'E';
-        attribs[17] = (xattr & THS_IXUSR) ? '.' : 'X';
-        attribs[18] = (xattr & THS_IWUSR) ? '.' : 'W';
-        attribs[19] = (xattr & THS_IRUSR) ? '.' : 'R';
-        attribs[20] = 0;
-        Info(0, "  Theos file attributes (%04X hex):               %s\n", xattr, attribs);
-
-
-    } else if ((hostnum != FS_FAT_) && (hostnum != FS_HPFS_) &&
-               (hostnum != FS_NTFS_) && (hostnum != FS_VFAT_) &&
-               (hostnum != ACORN_) &&
-               (hostnum != VM_CMS_) && (hostnum != MVS_))
-    {                                 /* assume Unix-like */
-        switch ((unsigned)(xattr & UNX_IFMT)) {
-            case (unsigned)UNX_IFDIR:   attribs[0] = 'd';  break;
-            case (unsigned)UNX_IFREG:   attribs[0] = '-';  break;
-            case (unsigned)UNX_IFLNK:   attribs[0] = 'l';  break;
-            case (unsigned)UNX_IFBLK:   attribs[0] = 'b';  break;
-            case (unsigned)UNX_IFCHR:   attribs[0] = 'c';  break;
-            case (unsigned)UNX_IFIFO:   attribs[0] = 'p';  break;
-            case (unsigned)UNX_IFSOCK:  attribs[0] = 's';  break;
-            default:          attribs[0] = '?';  break;
-        }
-        attribs[1] = (xattr & UNX_IRUSR)? 'r' : '-';
-        attribs[4] = (xattr & UNX_IRGRP)? 'r' : '-';
-        attribs[7] = (xattr & UNX_IROTH)? 'r' : '-';
-
-        attribs[2] = (xattr & UNX_IWUSR)? 'w' : '-';
-        attribs[5] = (xattr & UNX_IWGRP)? 'w' : '-';
-        attribs[8] = (xattr & UNX_IWOTH)? 'w' : '-';
-
-        if (xattr & UNX_IXUSR)
-            attribs[3] = (xattr & UNX_ISUID)? 's' : 'x';
-        else
-            attribs[3] = (xattr & UNX_ISUID)? 'S' : '-';   /* S = undefined */
-        if (xattr & UNX_IXGRP)
-            attribs[6] = (xattr & UNX_ISGID)? 's' : 'x';   /* == UNX_ENFMT */
-        else
-            attribs[6] = (xattr & UNX_ISGID)? 'l' : '-';
-        if (xattr & UNX_IXOTH)
-            attribs[9] = (xattr & UNX_ISVTX)? 't' : 'x';   /* "sticky bit" */
-        else
-            attribs[9] = (xattr & UNX_ISVTX)? 'T' : '-';   /* T = undefined */
-        attribs[10] = 0;
-
-        Info(0, "  Unix file attributes (%06o octal):            %s\n", xattr, attribs);
-
-    } else {
-        Info(0, "  non-MSDOS external file attributes:             %06lX hex\n", file->external_file_attributes >> 8);
-
-    } /* endif (hostnum: external attributes format) */
-
-    if ((xattr=(unsigned)(file->external_file_attributes & 0xFF)) == 0)
-        Info(0, "  MS-DOS file attributes (%02X hex):                none\n", xattr);
-    else if (xattr == 1)
-        Info(0, "  MS-DOS file attributes (%02X hex):                read-only\n", xattr);
-    else
-        Info(0, "  MS-DOS file attributes (%02X hex):                %s%s%s%s%s%s%s%s\n",
-          xattr, (xattr&1)? "rdo " : "",
-          (xattr&2)? "hid " : "",
-          (xattr&4)? "sys " : "",
-          (xattr&8)? "lab " : "",
-          (xattr&16)? "dir " : "",
-          (xattr&32)? "arc " : "",
-          (xattr&64)? "lnk " : "",
-          (xattr&128)? "exe" : "");
-
-} /* end function zi_long() */
-
-
-/*##########################################################################
-#
-#   Name       : TUnzip::ShowCompact
-#
-#   Purpose....: Show compact info about file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TUnzip::ShowCompact(TUnzipFile *file)
-{
-    int         k, error, error_in_archive=PK_COOL;
-    unsigned    hostnum, hostver, methid, methnum, xattr;
-    char        *p, workspace[12], attribs[16];
-    char        methbuf[5];
-    static const char dtype[5]="NXFS"; /* normal, maximum, fast, superfast */
-    static const char os[NUM_HOSTS+1][4] = {
-        "fat", "ami", "vms", "unx", "cms", "atr", "hpf", "mac", "zzz",
-        "cpm", "t20", "ntf", "qds", "aco", "vft", "mvs", "be ", "nsk",
-        "ths", "osx", "???", "???", "???", "???", "???", "???", "???",
-        "???", "???", "???", "ath", "???"
-    };
-    static const char method[NUM_METHODS+1][5] = {
-        "stor", "shrk", "re:1", "re:2", "re:3", "re:4", "i#:#", "tokn",
-        "def#", "d64#", "dcli", "bzp2", "lzma", "ters", "lz77", "wavp",
-        "ppmd", "u###"
-    };
-
-
-/*---------------------------------------------------------------------------
-    Print out various interesting things about the compressed file.
-  ---------------------------------------------------------------------------*/
-
-    methid = (unsigned)(file->compression_method);
-    methnum = FindCompressMethod(file->compression_method);
-    hostnum = (unsigned)(file->hostnum);
-    hostver = (unsigned)(file->hostver);
-
-    strcpy(methbuf, method[methnum]);
-    if (methid == IMPLODED) {
-        methbuf[1] = (char)((file->general_purpose_bit_flag & 2)? '8' : '4');
-        methbuf[3] = (char)((file->general_purpose_bit_flag & 4)? '3' : '2');
-    } else if (methid == DEFLATED || methid == ENHDEFLATED) {
-        unsigned short  dnum=(unsigned short)((file->general_purpose_bit_flag>>1) & 3);
-        methbuf[3] = dtype[dnum];
-    } else if (methnum >= NUM_METHODS) {   /* unknown */
-        sprintf(&methbuf[1], "%03u", file->compression_method);
-    }
-
-    for (k = 0;  k < 15;  ++k)
-        attribs[k] = ' ';
-    attribs[15] = 0;
-
-    xattr = (unsigned)((file->external_file_attributes >> 16) & 0xFFFF);
-    switch (hostnum) {
-        case VMS_:
-            {   int    i, j;
-
-                for (k = 0;  k < 12;  ++k)
-                    workspace[k] = 0;
-                if (xattr & VMS_IRUSR)
-                    workspace[0] = 'R';
-                if (xattr & VMS_IWUSR) {
-                    workspace[1] = 'W';
-                    workspace[3] = 'D';
-                }
-                if (xattr & VMS_IXUSR)
-                    workspace[2] = 'E';
-                if (xattr & VMS_IRGRP)
-                    workspace[4] = 'R';
-                if (xattr & VMS_IWGRP) {
-                    workspace[5] = 'W';
-                    workspace[7] = 'D';
-                }
-                if (xattr & VMS_IXGRP)
-                  workspace[6] = 'E';
-                if (xattr & VMS_IROTH)
-                    workspace[8] = 'R';
-                if (xattr & VMS_IWOTH) {
-                    workspace[9] = 'W';
-                    workspace[11] = 'D';
-                }
-                if (xattr & VMS_IXOTH)
-                    workspace[10] = 'E';
-
-                p = attribs;
-                for (k = j = 0;  j < 3;  ++j) {     /* groups of permissions */
-                    for (i = 0;  i < 4;  ++i, ++k)  /* perms within a group */
-                        if (workspace[k])
-                            *p++ = workspace[k];
-                    *p++ = ',';                     /* group separator */
-                }
-                *--p = ' ';   /* overwrite last comma */
-                if ((p - attribs) < 12)
-                    sprintf(&attribs[12], "%u.%u", hostver/10, hostver%10);
-            }
-            break;
-
-        case AMIGA_:
-            switch (xattr & AMI_IFMT) {
-                case AMI_IFDIR:  attribs[0] = 'd';  break;
-                case AMI_IFREG:  attribs[0] = '-';  break;
-                default:         attribs[0] = '?';  break;
-            }
-            attribs[1] = (xattr & AMI_IHIDDEN)?   'h' : '-';
-            attribs[2] = (xattr & AMI_ISCRIPT)?   's' : '-';
-            attribs[3] = (xattr & AMI_IPURE)?     'p' : '-';
-            attribs[4] = (xattr & AMI_IARCHIVE)?  'a' : '-';
-            attribs[5] = (xattr & AMI_IREAD)?     'r' : '-';
-            attribs[6] = (xattr & AMI_IWRITE)?    'w' : '-';
-            attribs[7] = (xattr & AMI_IEXECUTE)?  'e' : '-';
-            attribs[8] = (xattr & AMI_IDELETE)?   'd' : '-';
-            sprintf(&attribs[12], "%u.%u", hostver/10, hostver%10);
-            break;
-
-        case THEOS_:
-            switch (xattr & THS_IFMT) {
-                case THS_IFLIB: *attribs = 'L'; break;
-                case THS_IFDIR: *attribs = 'D'; break;
-                case THS_IFCHR: *attribs = 'C'; break;
-                case THS_IFREG: *attribs = 'S'; break;
-                case THS_IFREL: *attribs = 'R'; break;
-                case THS_IFKEY: *attribs = 'K'; break;
-                case THS_IFIND: *attribs = 'I'; break;
-                case THS_IFR16: *attribs = 'P'; break;
-                case THS_IFP16: *attribs = '2'; break;
-                case THS_IFP32: *attribs = '3'; break;
-                default:        *attribs = '?'; break;
-            }
-            attribs[1] = (xattr & THS_INHID) ? '.' : 'H';
-            attribs[2] = (xattr & THS_IMODF) ? '.' : 'M';
-            attribs[3] = (xattr & THS_IWOTH) ? '.' : 'W';
-            attribs[4] = (xattr & THS_IROTH) ? '.' : 'R';
-            attribs[5] = (xattr & THS_IEUSR) ? '.' : 'E';
-            attribs[6] = (xattr & THS_IXUSR) ? '.' : 'X';
-            attribs[7] = (xattr & THS_IWUSR) ? '.' : 'W';
-            attribs[8] = (xattr & THS_IRUSR) ? '.' : 'R';
-            sprintf(&attribs[12], "%u.%u", hostver/10, hostver%10);
-            break;
-
-        case FS_VFAT_:
-        case FS_FAT_:
-        case FS_HPFS_:
-        case FS_NTFS_:
-        case VM_CMS_:
-        case MVS_:
-        case ACORN_:
-            if (hostnum != FS_FAT_ ||
-                (unsigned)(xattr & 0700) !=
-                 ((unsigned)0400 |
-                  ((unsigned)!(file->external_file_attributes & 1) << 7) |
-                  ((unsigned)(file->external_file_attributes & 0x10) << 2))
-               )
-            {
-                xattr = (unsigned)(file->external_file_attributes & 0xFF);
-                sprintf(attribs, ".r.-...     %u.%u", hostver/10, hostver%10);
-                attribs[2] = (xattr & 0x01)? '-' : 'w';
-                attribs[5] = (xattr & 0x02)? 'h' : '-';
-                attribs[6] = (xattr & 0x04)? 's' : '-';
-                attribs[4] = (xattr & 0x20)? 'a' : '-';
-                if (xattr & 0x10) {
-                    attribs[0] = 'd';
-                    attribs[3] = 'x';
-                } else
-                    attribs[0] = '-';
-                if (xattr & 0x8)
-                    attribs[0] = 'V';
-                else if ((p = strchr(file->cfilname, '.')) != (char *)NULL) {
-                    ++p;
-                    if (strnicmp(p, "com", 3) == 0 ||
-                        strnicmp(p, "exe", 3) == 0 ||
-                        strnicmp(p, "btm", 3) == 0 ||
-                        strnicmp(p, "cmd", 3) == 0 ||
-                        strnicmp(p, "bat", 3) == 0)
-                        attribs[3] = 'x';
-                }
-                break;
-            } /* else: fall through! */
-
-        default:   /* assume Unix-like */
-            switch ((unsigned)(xattr & UNX_IFMT)) {
-                case (unsigned)UNX_IFDIR:   attribs[0] = 'd';  break;
-                case (unsigned)UNX_IFREG:   attribs[0] = '-';  break;
-                case (unsigned)UNX_IFLNK:   attribs[0] = 'l';  break;
-                case (unsigned)UNX_IFBLK:   attribs[0] = 'b';  break;
-                case (unsigned)UNX_IFCHR:   attribs[0] = 'c';  break;
-                case (unsigned)UNX_IFIFO:   attribs[0] = 'p';  break;
-                case (unsigned)UNX_IFSOCK:  attribs[0] = 's';  break;
-                default:          attribs[0] = '?';  break;
-            }
-            attribs[1] = (xattr & UNX_IRUSR)? 'r' : '-';
-            attribs[4] = (xattr & UNX_IRGRP)? 'r' : '-';
-            attribs[7] = (xattr & UNX_IROTH)? 'r' : '-';
-            attribs[2] = (xattr & UNX_IWUSR)? 'w' : '-';
-            attribs[5] = (xattr & UNX_IWGRP)? 'w' : '-';
-            attribs[8] = (xattr & UNX_IWOTH)? 'w' : '-';
-
-            if (xattr & UNX_IXUSR)
-                attribs[3] = (xattr & UNX_ISUID)? 's' : 'x';
-            else
-                attribs[3] = (xattr & UNX_ISUID)? 'S' : '-';  /* S==undefined */
-            if (xattr & UNX_IXGRP)
-                attribs[6] = (xattr & UNX_ISGID)? 's' : 'x';  /* == UNX_ENFMT */
-            else
-                /* attribs[6] = (xattr & UNX_ISGID)? 'l' : '-';  real 4.3BSD */
-                attribs[6] = (xattr & UNX_ISGID)? 'S' : '-';  /* SunOS 4.1.x */
-            if (xattr & UNX_IXOTH)
-                attribs[9] = (xattr & UNX_ISVTX)? 't' : 'x';  /* "sticky bit" */
-            else
-                attribs[9] = (xattr & UNX_ISVTX)? 'T' : '-';  /* T==undefined */
-
-            sprintf(&attribs[12], "%u.%u", hostver/10, hostver%10);
-            break;
-
-    } /* end switch (hostnum: external attributes format) */
-
-    Info(0, "%s %s %u ", attribs,
-      os[hostnum],
-      file->uncompr_size);
-    Info(0, "%c",
-      (file->general_purpose_bit_flag & 1)?
-      ((file->internal_file_attributes & 1)? 'T' : 'B') :  /* encrypted */
-      ((file->internal_file_attributes & 1)? 't' : 'b')); /* plaintext */
-
-    /* For printing of date & time, a "char d_t_buf[16]" is required.
-     * To save stack space, we reuse the "char attribs[16]" buffer whose
-     * content is no longer needed.
-     */
-    CreateTimeStr(file, attribs);
-    Info(0, " %s %s ", methbuf, attribs); 
-
-    Info(0, file->cfilname);
-    Info(0, "\n");
-
-} /* end function zi_short() */
-
 

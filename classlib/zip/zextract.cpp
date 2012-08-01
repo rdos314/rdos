@@ -414,7 +414,7 @@ startover:
                 error_in_archive < errcode)
                 error_in_archive = errcode;
 
-            switch (UnzipClass.CheckForNewer(file, file->cfilname)) {
+            switch (file->CheckForNewer(file->cfilname)) {
                 case DOES_NOT_EXIST:
                     /* freshen (no new files): skip unless just renamed */
                     if (uO.fflag && !renamed)

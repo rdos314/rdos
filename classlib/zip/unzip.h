@@ -99,6 +99,12 @@ public:
     
     int Extract();
 
+    int CheckForNewer(const char *filename);
+
+    void CreateTimeStr(char *str);
+    void ShowVerbose();
+    void ShowCompact();
+
     long offset;
     unsigned long compr_size;       /* compressed size (needed if extended header) */
     unsigned long uncompr_size;     /* uncompressed size (needed if extended header) */
@@ -195,12 +201,6 @@ public:
 
     TUnzipFile *GetFile(int index);
     int GetFileCount();
-
-    int CheckForNewer(TUnzipFile *file, const char *filename);
-
-    void CreateTimeStr(TUnzipFile *file, char *str);
-    void ShowVerbose(TUnzipFile *file);
-    void ShowCompact(TUnzipFile *file);
 
 // these must be global due to callback interface
 
