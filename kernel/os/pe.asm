@@ -391,7 +391,7 @@ p4:
     jne eusLock
 ;
     inc [ebx].fs_counter
-    ret
+    jmp eusDone
 
 eusLock:
     lock add [ebx].fs_val,1
