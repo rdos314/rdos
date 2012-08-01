@@ -131,21 +131,12 @@ public:
     void SetupEncryption(const char *password);
     int OpenInputFile();
     unsigned ReadBuf(char *buf, register unsigned size);
-    void UndeferInput();
-    void DeferInput();
-    int ReadByte();
-    int GetNextByte();
     int Seek(long abs_offset);
+    void DisplayHeaderString(int lenght, int oemconvert);
 
-    int GetFileName(int length);
     int AddFile();
 
-    int ZDecode(int c);
-
-    void DisplayHeaderString(int lenght, int oemconvert);
-    void SkipHeaderString(int length);
-
-    int Extract();
+    int Extract(struct TUnzipFile *file);
 
     int CheckForNewer(const char *filename);
 
@@ -168,7 +159,6 @@ public:
     char *FInPtr;
     int FInCount;
     int FBufStart;
-    long FDecompSize;
 
     int FExtraBytes;
     int FOldExtraBytes;
@@ -187,9 +177,18 @@ protected:
 private:
     void Init();
 
+    void DeferInput();
+    void UndeferInput();
+    int ReadByte();
+    int GetNextByte();
+
+    void SkipHeaderString(int length);
+
     int DecryptByte();
     int UpdateKeys(int c);
+    int ZDecode(int c);
 
+    int GetFileName(int length);
     int GetDirEntry(struct TUnzipFile *file);
     int ProcessDirEntry(struct TUnzipFile *file);
     int DirEntryToFile(struct TUnzipFile *file, const char *filename);
@@ -219,6 +218,8 @@ private:
     char *FOutBuf;
     char *FOutPtr;
     int FOutCount;
+
+    long FDecompSize;
 
     int *FShrinkParent;          /* pointer to (8192 * sizeof(int)) */
     unsigned char *FShrinkValue;              /* pointer to 8KB char buffer */

@@ -591,8 +591,6 @@ static int extract_or_test_entrylist(unsigned numchunk,
         (*pfilnum)++;   /* *pfilnum = i + blknum*DIR_BLKSIZ + 1; */
         UnzipClass.FCurrFile = &UnzipClass.FFileArr[i];
 
-        UnzipClass.FDecompSize = UnzipClass.FCurrFile->compr_size;
-
         UnzipClass.Seek(UnzipClass.FCurrFile->file_data_offset);
 
         /* Size consistency checks must come after reading in the local extra
@@ -809,7 +807,7 @@ reprompt:
 
         UnzipClass.FDiskFull = 0;
 
-        error = UnzipClass.Extract();
+        error = UnzipClass.Extract(UnzipClass.FCurrFile);
         if (error != PK_COOL) {
             if (error > error_in_archive)
                 error_in_archive = error;       /* ...and keep going */
