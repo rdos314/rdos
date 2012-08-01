@@ -291,15 +291,7 @@ int extract_or_test_files()    /* return PK-type error code */
     disk in the archive, but we'll add multi-disk support soon.
   ---------------------------------------------------------------------------*/
 
-    j = 0;
-    
-    while (j < DIR_BLKSIZ) {
-        file = UnzipClass.GetFile(j);
-        if (UnzipClass.AddFile(file) != PK_COOL)
-            break;
-
-        j++;
-    }
+    UnzipClass.ProcessFiles();
     
     members_processed = 0;
     no_endsig_found = FALSE;

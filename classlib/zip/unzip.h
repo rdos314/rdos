@@ -49,6 +49,7 @@
 #define PK_NOZIP           9   /* zipfile not found */
 #define PK_PARAM          10   /* bad or illegal parameters specified */
 #define PK_FIND           11   /* no files found */
+#define PK_SKIP           12   /* don't extract */
 #define PK_DISK           50   /* disk full */
 #define PK_EOF            51   /* unexpected EOF */
 
@@ -135,7 +136,7 @@ public:
     int Seek(long abs_offset);
     void DisplayHeaderString(int lenght, int oemconvert);
 
-    int AddFile(struct TUnzipFile *file);
+    void ProcessFiles();
 
     struct TUnzipFile *GetFile(int index);
 
@@ -190,6 +191,7 @@ private:
     int DirEntryToFile(struct TUnzipFile *file, const char *filename);
     int SeekFile(struct TUnzipFile *file);
     int ProcessFileHeader(struct TUnzipFile *file);
+    int AddFile(struct TUnzipFile *file);
 
     int OpenOutputFile(const char *filename);
     void CloseOutputFile();

@@ -1727,6 +1727,34 @@ int TUnzip::AddFile(struct TUnzipFile *file)    /* return PK-type error code */
 
 /*##########################################################################
 #
+#   Name       : TUnzip::ProcessFiles
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUnzip::ProcessFiles()
+{
+    int i;
+    struct TUnzipFile *file;
+    
+    i = 0;
+    
+    while (i < DIR_BLKSIZ)
+    {
+        file = GetFile(i);
+        if (AddFile(file) != PK_COOL)
+            break;
+
+        i++;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TUnzip::OpenOutputFile
 #
 #   Purpose....: 
