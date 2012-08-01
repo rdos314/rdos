@@ -347,10 +347,6 @@ int extract_or_test_files()    /* return PK-type error code */
             if (error != PK_COOL)
                 break;
 
-            error = UnzipClass.ProcessFile();
-            if (error != PK_COOL)
-                break;
-
             if (G.process_all_files) {
                 ++j;  /* file is OK; info[] stored; continue with next */
             } else {

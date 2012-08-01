@@ -139,7 +139,6 @@ public:
 
     int GetFileName(int length);
     int AddFile();
-    int ProcessFile();
 
     int ZDecode(int c);
 
@@ -195,6 +194,7 @@ private:
     int ProcessDirEntry(struct TUnzipFile *file);
     int DirEntryToFile(struct TUnzipFile *file, const char *filename);
     int SeekFile(struct TUnzipFile *file);
+    int ProcessFileHeader(struct TUnzipFile *file);
 
     int OpenOutputFile();
     void CloseOutputFile();

@@ -1322,7 +1322,7 @@ int TUnzip::DirEntryToFile(struct TUnzipFile *file, const char *filename)
 
 /*##########################################################################
 #
-#   Name       : TUnzip::AddFile
+#   Name       : TUnzip::ProcessDirEntry
 #
 #   Purpose....: 
 #
@@ -1331,7 +1331,7 @@ int TUnzip::DirEntryToFile(struct TUnzipFile *file, const char *filename)
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::AddFile()    /* return PK-type error code */
+int TUnzip::ProcessDirEntry(TUnzipFile *file)    /* return PK-type error code */
 {
     int error;
     unsigned short filename_length;
@@ -1339,7 +1339,6 @@ int TUnzip::AddFile()    /* return PK-type error code */
     unsigned short file_comment_length;
     unsigned long dos_datetime;
     unsigned char byterec[ CREC_SIZE ];
-    struct TUnzipFile *file = FCurrFile;
 
 /*---------------------------------------------------------------------------
     Read the next central directory entry and do any necessary machine-type
@@ -1537,7 +1536,7 @@ int TUnzip::SeekFile(struct TUnzipFile *file)    /* return PK-type error code */
 
 /*##########################################################################
 #
-#   Name       : TUnzip::ProcessFile
+#   Name       : TUnzip::ProcessFileHeader
 #
 #   Purpose....: 
 #
@@ -1546,7 +1545,7 @@ int TUnzip::SeekFile(struct TUnzipFile *file)    /* return PK-type error code */
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::ProcessFile()
+int TUnzip::ProcessFileHeader(struct TUnzipFile *file)
 {
     unsigned long dos_datetime;
     unsigned char byterec[ LREC_SIZE ];
@@ -1569,7 +1568,7 @@ int TUnzip::ProcessFile()
     inptr = FInPtr;
     incnt = FInCount;
     
-    error = SeekFile(FCurrFile);
+    error = SeekFile(file);
 
     if (error == PK_COOL)
     {
@@ -1601,9 +1600,9 @@ int TUnzip::ProcessFile()
             extra_field_length = makeword(&byterec[L_EXTRA_FIELD_LENGTH]);
 
             if ((general_purpose_bit_flag & 8) == 0) {
-                FCurrFile->crc = crc32;
-                FCurrFile->compr_size = csize;
-                FCurrFile->uncompr_size = ucsize;
+                file->crc = crc32;
+                file->compr_size = csize;
+                file->uncompr_size = ucsize;
             }
         }
     }
@@ -1617,7 +1616,7 @@ int TUnzip::ProcessFile()
     if (error == PK_COOL)
     {
         SkipHeaderString(extra_field_length);
-        FCurrFile->file_data_offset = FBufStart - FExtraBytes + (FInPtr-FInBuf);
+        file->file_data_offset = FBufStart - FExtraBytes + (FInPtr-FInBuf);
     }
 
     RdosSetFilePos(FInputHandle, bufstart);
@@ -1625,6 +1624,30 @@ int TUnzip::ProcessFile()
     RdosReadFile(FInputHandle, FInBuf, INBUFSIZ);  /* been here before... */
     FInPtr = inptr;
     FInCount = incnt;
+
+    return error;
+}
+
+/*##########################################################################
+#
+#   Name       : TUnzip::AddFile
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::AddFile()    /* return PK-type error code */
+{
+    int error;
+    struct TUnzipFile *file = FCurrFile;
+
+    error = ProcessDirEntry(file);
+
+    if (error == PK_COOL)
+        error = ProcessFileHeader(file);
 
     return error;
 }
