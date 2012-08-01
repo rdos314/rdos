@@ -220,9 +220,6 @@ static const char BadExtraFieldCRC[] =
 int extract_or_test_files()    /* return PK-type error code */
 {
     unsigned i, j;
-    long cd_bufstart;
-    unsigned char *cd_inptr;
-    int cd_incnt;
     unsigned long filnum=0L, blknum=0L;
     int reached_end;
     int no_endsig_found;
@@ -234,7 +231,14 @@ int extract_or_test_files()    /* return PK-type error code */
     direntry *dirlist=(direntry *)NULL;
     direntry **sorted_dirlist=(direntry **)NULL;
     struct TUnzipFile *file;
+    int renamed, query;
+    int skip_entry;
+    int errcode;
 
+/* possible values for local skip_entry flag: */
+#define SKIP_NO         0       /* do not skip this entry */
+#define SKIP_Y_EXISTING 1       /* skip this entry, do not overwrite file */
+#define SKIP_Y_NONEXIST 2       /* skip this entry, do not create new file */
     /*
      * First, two general initializations are applied. These have been moved
      * here from process_zipfiles() because they are only needed for accessing
@@ -296,268 +300,62 @@ int extract_or_test_files()    /* return PK-type error code */
     members_processed = 0;
     no_endsig_found = FALSE;
     reached_end = FALSE;
-    while (!reached_end) {
-        j = 0;
 
-        /*
-         * Loop through files in central directory, storing offsets, file
-         * attributes, case-conversion and text-conversion flags until block
-         * size is reached.
-         */
+    j = 0;
 
-        while ((j < DIR_BLKSIZ)) {
-            file = UnzipClass.GetFile(j);
+    for (;;)
+    {
+        file = UnzipClass.GetFile(j);
 
-            if (file->error != PK_COOL)
-            {
-                reached_end = TRUE;
-                break;
+        if (file->error != PK_COOL)
+            break;
+
+        if (!G.process_all_files) {
+            int   do_this_file;
+
+            if (G.filespecs == 0)
+                do_this_file = TRUE;
+            else {  /* check if this entry matches an `include' argument */
+                do_this_file = FALSE;
+                for (i = 0; i < G.filespecs; i++)
+                    if (match(file->cfilname, G.pfnames[i], uO.C_flag)) {
+                        do_this_file = TRUE;  /* ^-- ignore case or not? */
+                        if (fn_matched)
+                            fn_matched[i] = TRUE;
+                        break;       /* found match, so stop looping */
+                    }
             }
-
-            if (G.process_all_files) {
-                ++j;  /* file is OK; info[] stored; continue with next */
-            } else {
-                int   do_this_file;
-
-                if (G.filespecs == 0)
-                    do_this_file = TRUE;
-                else {  /* check if this entry matches an `include' argument */
-                    do_this_file = FALSE;
-                    for (i = 0; i < G.filespecs; i++)
-                        if (match(file->cfilname, G.pfnames[i], uO.C_flag)) {
-                            do_this_file = TRUE;  /* ^-- ignore case or not? */
-                            if (fn_matched)
-                                fn_matched[i] = TRUE;
-                            break;       /* found match, so stop looping */
-                        }
-                }
-                if (do_this_file) {  /* check if this is an excluded file */
-                    for (i = 0; i < G.xfilespecs; i++)
-                        if (match(file->cfilname, G.pxnames[i], uO.C_flag)) {
-                            do_this_file = FALSE; /* ^-- ignore case or not? */
-                            if (xn_matched)
-                                xn_matched[i] = TRUE;
-                            break;
-                        }
-                }
-                if (do_this_file) {
-                    ++j;            /* file is OK */
-                }
-            } /* end if (process_all_files) */
-
-            members_processed++;
-
-        } /* end while-loop (adding files to current block) */
-
-        /* save position in central directory so can come back later */
-        cd_bufstart = UnzipClass.FBufStart;
-        cd_inptr = (unsigned char *)UnzipClass.FInPtr;
-        cd_incnt = UnzipClass.FInCount;
+            if (do_this_file) {  /* check if this is an excluded file */
+                for (i = 0; i < G.xfilespecs; i++)
+                    if (match(file->cfilname, G.pxnames[i], uO.C_flag)) {
+                        do_this_file = FALSE; /* ^-- ignore case or not? */
+                        if (xn_matched)
+                            xn_matched[i] = TRUE;
+                        break;
+                    }
+            }
+            if (!do_this_file) 
+                file->error = PK_SKIP;
+        } /* end if (process_all_files) */
+        j++;
+    }
 
     /*-----------------------------------------------------------------------
         Second loop:  process files in current block, extracting or testing
         each one.
       -----------------------------------------------------------------------*/
 
-        error = extract_or_test_entrylist(j,
-                        &filnum, &num_bad_pwd,
-                        &num_dirs, &dirlist,
-                        error_in_archive);
-        if (error != PK_COOL) {
-            if (error > error_in_archive)
-                error_in_archive = error;
-            /* ...and keep going (unless disk full or user break) */
-            if (UnzipClass.FDiskFull > 1 || error_in_archive == IZ_CTRLC) {
-                /* clear reached_end to signal premature stop ... */
-                reached_end = FALSE;
-                /* ... and cancel scanning the central directory */
-                break;
-            }
-        }
+    i = 0;
 
-
-        /*
-         * Jump back to where we were in the central directory, then go and do
-         * the next batch of files.
-         */
-
-        RdosSetFilePos(UnzipClass.FInputHandle, cd_bufstart);
-        UnzipClass.FBufStart = RdosGetFilePos(UnzipClass.FInputHandle);
-        RdosReadFile(UnzipClass.FInputHandle, UnzipClass.FInBuf, INBUFSIZ);  /* been here before... */
-        UnzipClass.FInPtr = (char *)cd_inptr;
-        UnzipClass.FInCount = cd_incnt;
-        ++blknum;
-
-    } /* end while-loop (blocks of files in central directory) */
-
-/*---------------------------------------------------------------------------
-    Go back through saved list of directories, sort and set times/perms/UIDs
-    and GIDs from the deepest level on up.
-  ---------------------------------------------------------------------------*/
-
-    if (num_dirs > 0) {
-        sorted_dirlist = (direntry **)malloc(num_dirs*sizeof(direntry *));
-        if (sorted_dirlist == (direntry **)NULL) {
-            Info(0x401, DirlistSortNoMem);
-            while (dirlist != (direntry *)NULL) {
-                direntry *d = dirlist;
-
-                dirlist = dirlist->next;
-                free(d);
-            }
-        } else {
-            unsigned long ndirs_fail = 0;
-
-            if (num_dirs == 1)
-                sorted_dirlist[0] = dirlist;
-            else {
-                for (i = 0;  i < num_dirs;  ++i) {
-                    sorted_dirlist[i] = dirlist;
-                    dirlist = dirlist->next;
-                }
-                qsort((char *)sorted_dirlist, num_dirs, sizeof(direntry *),
-                  dircomp);
-            }
-
-            Trace("setting directory times/perms/attributes\n");
-            for (i = 0;  i < num_dirs;  ++i) {
-                direntry *d = sorted_dirlist[i];
-
-                Trace("dir = %s\n", d->fn);
-                if ((error = set_direc_attribs(d)) != PK_OK) {
-                    ndirs_fail++;
-                    Info(0x201,DirlistSetAttrFailed, d->fn);
-                    if (!error_in_archive)
-                        error_in_archive = error;
-                }
-                free(d);
-            }
-            free(sorted_dirlist);
-            if (!uO.tflag && !uO.qflag) {
-                if (ndirs_fail > 0)
-                    Info(0, DirlistFailAttrSum, ndirs_fail);
-            }
-        }
-    }
-
-/*---------------------------------------------------------------------------
-    Check for unmatched filespecs on command line and print warning if any
-    found.  Free allocated memory.  (But suppress check when central dir
-    scan was interrupted prematurely.)
-  ---------------------------------------------------------------------------*/
-
-    if (fn_matched) {
-        if (reached_end) for (i = 0;  i < G.filespecs;  ++i)
-            if (!fn_matched[i]) {
-                Info(1, FilenameNotMatched, G.pfnames[i]);
-                if (error_in_archive <= PK_WARN)
-                    error_in_archive = PK_FIND;   /* some files not found */
-            }
-        free((void *)fn_matched);
-    }
-    if (xn_matched) {
-        if (reached_end) for (i = 0;  i < G.xfilespecs;  ++i)
-            if (!xn_matched[i])
-                Info(0x401, ExclFilenameNotMatched, G.pxnames[i]);
-        free((void *)xn_matched);
-    }
-
-/*---------------------------------------------------------------------------
-    Now, all locally allocated memory has been released.  When the central
-    directory processing has been interrupted prematurely, it is safe to
-    return immediately.  All completeness checks and summary messages are
-    skipped in this case.
-  ---------------------------------------------------------------------------*/
-    if (!reached_end)
-        return error_in_archive;
-
-/*---------------------------------------------------------------------------
-    Double-check that we're back at the end-of-central-directory record, and
-    print quick summary of results, if we were just testing the archive.  We
-    send the summary to stdout so that people doing the testing in the back-
-    ground and redirecting to a file can just do a "tail" on the output file.
-  ---------------------------------------------------------------------------*/
-
-    if (no_endsig_found) {                      /* just to make sure */
-        Info(0x401, EndSigMsg);
-        Info(0x401, ReportMsg);
-        if (!error_in_archive)       /* don't overwrite stronger error */
-            error_in_archive = PK_WARN;
-    }
-    if (uO.tflag) {
-        unsigned long num = filnum - num_bad_pwd;
-
-        if (uO.qflag < 2) {        /* GRR 930710:  was (uO.qflag == 1) */
-            if (error_in_archive)
-                Info(0, ErrorInArchive,
-                  (error_in_archive == PK_WARN)? "warning-" : "", UnzipClass.FInputFileName.GetData());
-            else if (num == 0L)
-                Info(0, ZeroFilesTested, UnzipClass.FInputFileName.GetData());
-            else if (G.process_all_files && (num_skipped+num_bad_pwd == 0L))
-                Info(0, NoErrInCompData, UnzipClass.FInputFileName.GetData());
-            else
-                Info(0, NoErrInTestedFiles, UnzipClass.FInputFileName.GetData(), num, (num==1L)? "":"s");
-            if (num_skipped > 0L)
-                Info(0, FilesSkipped, num_skipped, (num_skipped==1L)? "":"s");
-            if (num_bad_pwd > 0L)
-                Info(0, FilesSkipBadPasswd, num_bad_pwd, (num_bad_pwd==1L)? "":"s");
-        }
-    }
-
-    /* give warning if files not tested or extracted (first condition can still
-     * happen if zipfile is empty and no files specified on command line) */
-
-    if ((filnum == 0) && error_in_archive <= PK_WARN) {
-        if (num_skipped > 0L)
-            error_in_archive = IZ_UNSUP; /* unsupport. compression/encryption */
-        else
-            error_in_archive = PK_FIND;  /* no files found at all */
-    }
-    else if ((filnum == num_bad_pwd) && error_in_archive <= PK_WARN)
-        error_in_archive = IZ_BADPWD;    /* bad passwd => all files skipped */
-    else if ((num_skipped > 0L) && error_in_archive <= PK_WARN)
-        error_in_archive = IZ_UNSUP;     /* was PK_WARN; Jean-loup complained */
-    else if ((num_bad_pwd > 0L) && !error_in_archive)
-        error_in_archive = PK_WARN;
-
-    return error_in_archive;
-
-} /* end function extract_or_test_files() */
-
-
-
-
-
-
-
-/******************************************/
-/*  Function extract_or_test_entrylist()  */
-/******************************************/
-
-static int extract_or_test_entrylist(unsigned numchunk,
-                unsigned long *pfilnum, unsigned long *pnum_bad_pwd,
-                unsigned *pnum_dirs, direntry **pdirlist,
-                int error_in_archive)    /* return PK-type error code */
-{
-    unsigned i;
-    int renamed, query;
-    int skip_entry;
-    int error, errcode;
-    struct TUnzipFile *file;
-
-/* possible values for local skip_entry flag: */
-#define SKIP_NO         0       /* do not skip this entry */
-#define SKIP_Y_EXISTING 1       /* skip this entry, do not overwrite file */
-#define SKIP_Y_NONEXIST 2       /* skip this entry, do not create new file */
-
-    /*-----------------------------------------------------------------------
-        Second loop:  process files in current block, extracting or testing
-        each one.
-      -----------------------------------------------------------------------*/
-
-    for (i = 0; i < numchunk; ++i) {
-        (*pfilnum)++;   /* *pfilnum = i + blknum*DIR_BLKSIZ + 1; */
+    for (;;)
+    {
         file = UnzipClass.GetFile(i);
+
+        if (file->error == PK_EOF)
+            break;
+
+        if (file->error != PK_COOL)
+            continue;
 
         /*
          * just about to extract file:  if extracting to disk, check if
@@ -614,37 +412,6 @@ startover:
             if ((errcode = error & ~MPN_MASK) != PK_OK &&
                 error_in_archive < errcode)
                 error_in_archive = errcode;
-            if ((errcode = error & MPN_MASK) > MPN_INF_TRUNC) {
-                if (errcode == MPN_CREATED_DIR) {
-                    direntry *d_entry;
-
-                    error = defer_dir_attribs(file, &d_entry);
-                    if (d_entry == (direntry *)NULL) {
-                        /* There may be no dir_attribs info available, or
-                         * we have encountered a mem allocation error.
-                         * In case of an error, report it and set program
-                         * error state to warning level.
-                         */
-                        if (error) {
-                            Info(0x401, DirlistEntryNoMem);
-                            if (!error_in_archive)
-                                error_in_archive = PK_WARN;
-                        }
-                    } else {
-                        d_entry->next = (*pdirlist);
-                        (*pdirlist) = d_entry;
-                        ++(*pnum_dirs);
-                    }
-                } else if (errcode == MPN_VOL_LABEL) {
-                    Info(1, SkipVolumeLabel,
-                      FnFilter1(file->cfilname), "");
-                } else if (errcode > MPN_INF_SKIP &&
-                           error_in_archive < PK_ERR)
-                    error_in_archive = PK_ERR;
-                Trace("mapname(%s) returns error code = %d\n",
-                  FnFilter1(file->cfilname), error);
-                continue;   /* go on to next file */
-            }
 
             switch (UnzipClass.CheckForNewer(file, file->cfilname)) {
                 case DOES_NOT_EXIST:
@@ -743,11 +510,12 @@ reprompt:
                 return error_in_archive;        /* (unless disk full) */
             }
         }
+        i++;
     } /* end for-loop (i:  files in current block) */
 
-    return error_in_archive;
+    return PK_OK;
 
-} /* end function extract_or_test_entrylist() */
+} /* end function extract_or_test_files() */
 
 
 
