@@ -238,6 +238,8 @@ private:
     char *FTmpOutBuf;
     int FCrLast;
 
+    int FDoDecrypt;
+
 };
 
 #endif

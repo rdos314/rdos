@@ -660,6 +660,7 @@ void TUnzip::Init()
     OnInfo = 0;
 
     FOutputHandle = 0;
+    FDoDecrypt = FALSE;
 
     FInBuf = new char[INBUFSIZ + 4];    /* 4 extra for hold[] (below) */
     FTmpOutBuf = new char[TMPOUTSIZ];
@@ -993,7 +994,9 @@ int TUnzip::Decrypt(struct TUnzipFile *file)
 
     /* get header once (turn off "encrypted" flag temporarily so we don't
      * try to decrypt the same data twice) */
-    file->encrypted = FALSE;
+
+    FDoDecrypt = FALSE;
+
     DeferInput();
     
     for (n = 0; n < RAND_HEAD_LEN; n++) {
@@ -1001,7 +1004,8 @@ int TUnzip::Decrypt(struct TUnzipFile *file)
         h[n] = (unsigned char)b;
     }
     UndeferInput();
-    file->encrypted = TRUE;
+
+    FDoDecrypt = TRUE;
 
     return PK_WARN;
 
@@ -1077,7 +1081,7 @@ int TUnzip::ReadByte()   /* refill inbuf and return a byte if available, else EO
         DeferInput();           /* decrements G.csize */
     }
 
-    if (FCurrFile && FCurrFile->encrypted) {
+    if (FDoDecrypt) {
         char *p;
         int n;
 
@@ -1149,7 +1153,7 @@ int TUnzip::FillInbuf() /* like readbyte() except returns number of bytes in inb
     FInPtr = FInBuf;
     DeferInput();           /* decrements G.csize */
 
-    if (FCurrFile && FCurrFile->encrypted) {
+    if (FDoDecrypt) {
         char *p;
         int n;
 
@@ -1643,6 +1647,8 @@ int TUnzip::AddFile()    /* return PK-type error code */
 {
     int error;
     struct TUnzipFile *file = FCurrFile;
+
+    FDoDecrypt = FALSE;
 
     error = ProcessDirEntry(file);
 
@@ -2840,6 +2846,8 @@ int TUnzip::Extract(struct TUnzipFile *file)
 {
     char *extract_msg = "%8sing: %s";
     int error;
+
+    FDoDecrypt = FALSE;
 
     if (OpenOutputFile())
         return PK_DISK;
