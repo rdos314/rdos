@@ -338,13 +338,6 @@ void free_G_buffers()     /* releases all memory allocated in global vars */
         free(G.key);
         G.key = (char *)NULL;
    }
-
-    for (i = 0; i < DIR_BLKSIZ; i++) {
-        if (UnzipClass.FFileArr[i].cfilname != 0) {
-            delete UnzipClass.FFileArr[i].cfilname;
-            UnzipClass.FFileArr[i].cfilname = 0;
-        }
-    }
 } /* end function free_G_buffers() */
 
 

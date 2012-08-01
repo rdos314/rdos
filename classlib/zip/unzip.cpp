@@ -1218,6 +1218,21 @@ int TUnzip::Seek(long abs_offset)
     return(PK_OK);
 } /* end function seek_zipf() */
 
+/*##########################################################################
+#
+#   Name       : TUnzip::GetFile
+#
+#   Purpose....: Get file class
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+struct TUnzipFile *TUnzip::GetFile(int id)
+{
+    return &FFileArr[id];
+}
 
 /*##########################################################################
 #

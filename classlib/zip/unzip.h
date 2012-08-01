@@ -136,6 +136,8 @@ public:
 
     int AddFile(struct TUnzipFile *file);
 
+    struct TUnzipFile *GetFile(int index);
+
     int Extract(struct TUnzipFile *file);
 
     int CheckForNewer(struct TUnzipFile *file, const char *filename);
@@ -163,8 +165,6 @@ public:
 
     char FCurrFileName[FILE_NAME_SIZE];
     int FDiskFull;
-
-    struct TUnzipFile FFileArr[DIR_BLKSIZ];
     
 protected:
 
@@ -239,6 +239,8 @@ private:
 
     int FDoDecrypt;
     int FDoText;
+
+    struct TUnzipFile FFileArr[DIR_BLKSIZ];
 
 };
 

@@ -270,8 +270,6 @@ int extract_or_test_files()    /* return PK-type error code */
     since we know the offset of each from the beginning of the zipfile.
   ---------------------------------------------------------------------------*/
 
-    file = &UnzipClass.FFileArr[0];
- 
     G.newzip = TRUE;
     G.reported_backslash = FALSE;
 
@@ -307,7 +305,7 @@ int extract_or_test_files()    /* return PK-type error code */
          */
 
         while ((j < DIR_BLKSIZ)) {
-            file = &UnzipClass.FFileArr[j];
+            file = UnzipClass.GetFile(j);
 
             if (UnzipClass.ReadBuf(G.sig, 4) == 0) {
                 error_in_archive = PK_EOF;
@@ -591,7 +589,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
 
     for (i = 0; i < numchunk; ++i) {
         (*pfilnum)++;   /* *pfilnum = i + blknum*DIR_BLKSIZ + 1; */
-        file = &UnzipClass.FFileArr[i];
+        file = UnzipClass.GetFile(i);
 
         /*
          * just about to extract file:  if extracting to disk, check if
