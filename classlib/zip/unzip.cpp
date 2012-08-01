@@ -1250,6 +1250,22 @@ struct TUnzipFile *TUnzip::GetFile(int id)
 
 /*##########################################################################
 #
+#   Name       : TUnzip::GetFileCount
+#
+#   Purpose....: Get file count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::GetFileCount()
+{
+    return FFileCount;
+}
+
+/*##########################################################################
+#
 #   Name       : TUnzip::GetFileName
 #
 #   Purpose....: Get filename from header

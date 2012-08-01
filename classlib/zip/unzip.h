@@ -61,8 +61,6 @@
 
 #define FILE_NAME_SIZE        513
 
-#define DIR_BLKSIZ 16384   /* use more memory, to reduce long-range seeks */
-
 /* Huffman code lookup table entry--this entry is four bytes for machines
    that have 16-bit pointers (e.g. PC's in the small or medium model).
    Valid extra bits are 0..16.  e == 31 is EOB (end of block), e == 32
@@ -139,6 +137,7 @@ public:
     void ProcessFiles();
 
     struct TUnzipFile *GetFile(int index);
+    int GetFileCount();
 
     int Extract(struct TUnzipFile *file);
 

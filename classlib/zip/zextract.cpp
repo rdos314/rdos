@@ -301,11 +301,9 @@ int extract_or_test_files()    /* return PK-type error code */
     no_endsig_found = FALSE;
     reached_end = FALSE;
 
-    j = 0;
-
-    for (;;)
+    for (i = 0; i < UnzipClass.GetFileCount(); i++)
     {
-        file = UnzipClass.GetFile(j);
+        file = UnzipClass.GetFile(i);
 
         if (file == 0)
             break;
@@ -320,27 +318,26 @@ int extract_or_test_files()    /* return PK-type error code */
                 do_this_file = TRUE;
             else {  /* check if this entry matches an `include' argument */
                 do_this_file = FALSE;
-                for (i = 0; i < G.filespecs; i++)
-                    if (match(file->cfilname, G.pfnames[i], uO.C_flag)) {
+                for (j = 0; j < G.filespecs; j++)
+                    if (match(file->cfilname, G.pfnames[j], uO.C_flag)) {
                         do_this_file = TRUE;  /* ^-- ignore case or not? */
                         if (fn_matched)
-                            fn_matched[i] = TRUE;
+                            fn_matched[j] = TRUE;
                         break;       /* found match, so stop looping */
                     }
             }
             if (do_this_file) {  /* check if this is an excluded file */
-                for (i = 0; i < G.xfilespecs; i++)
-                    if (match(file->cfilname, G.pxnames[i], uO.C_flag)) {
+                for (j = 0; j < G.xfilespecs; j++)
+                    if (match(file->cfilname, G.pxnames[j], uO.C_flag)) {
                         do_this_file = FALSE; /* ^-- ignore case or not? */
                         if (xn_matched)
-                            xn_matched[i] = TRUE;
+                            xn_matched[j] = TRUE;
                         break;
                     }
             }
             if (!do_this_file) 
                 file->error = PK_SKIP;
         } /* end if (process_all_files) */
-        j++;
     }
 
     /*-----------------------------------------------------------------------
@@ -348,9 +345,7 @@ int extract_or_test_files()    /* return PK-type error code */
         each one.
       -----------------------------------------------------------------------*/
 
-    i = 0;
-
-    for (;;)
+    for (i = 0; i < UnzipClass.GetFileCount(); i++)
     {
         file = UnzipClass.GetFile(i);
 
@@ -516,7 +511,6 @@ reprompt:
                 return error_in_archive;        /* (unless disk full) */
             }
         }
-        i++;
     } /* end for-loop (i:  files in current block) */
 
     return PK_OK;
