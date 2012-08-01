@@ -128,6 +128,15 @@ protected:
     void CloseAndSetTime();
 
     int Store();
+    void UnshrinkPartialClear(int lastcodeused);
+    int Unshrink();
+
+    int *FShrinkParent;          /* pointer to (8192 * sizeof(int)) */
+    unsigned char *FShrinkValue;              /* pointer to 8KB char buffer */
+    unsigned char *FShrinkStack;              /* pointer to another 8KB char buffer */
+    int FZipeof;
+    int FBitsLeft;
+    unsigned long FBitBuf;
 
     TUnzip *FUnzip;
     
@@ -214,15 +223,12 @@ private:
     int ExplodeLit(TUnzipFile *file, struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl);
     int ExplodeNolit(TUnzipFile *file, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bl, unsigned bd, unsigned bdl);
 
-    void UnshrinkPartialClear(int lastcodeused);
-
     int BuildHuft(const unsigned *b, unsigned n, unsigned s, const unsigned short *d, const unsigned char *e, TUnzipHuft **t, unsigned *m);
     void FreeHuft(struct TUnzipHuft *t);
 
     int ExplodeGetTree(unsigned *l, unsigned n);
 
     int Explode(TUnzipFile *file);
-    int Unshrink();
     int Deflate();
 
     char *FOutBuf;
@@ -230,13 +236,6 @@ private:
     int FOutCount;
 
     long FDecompSize;
-
-    int *FShrinkParent;          /* pointer to (8192 * sizeof(int)) */
-    unsigned char *FShrinkValue;              /* pointer to 8KB char buffer */
-    unsigned char *FShrinkStack;              /* pointer to another 8KB char buffer */
-    int FZipeof;
-    int FBitsLeft;
-    unsigned long FBitBuf;
 
     char FLogBuf[512];
 
