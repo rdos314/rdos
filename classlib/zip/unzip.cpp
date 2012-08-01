@@ -2844,6 +2844,41 @@ int TUnzip::Extract(struct TUnzipFile *file)
     if (OpenOutputFile())
         return PK_DISK;
 
+    Seek(file->file_data_offset);
+
+    /* Size consistency checks must come after reading in the local extra
+     * field, so that any Zip64 extension local e.f. block has already
+     * been processed.
+     */
+    if (file->compression_method == STORED) {
+        unsigned long csiz_decrypted = file->compr_size;
+
+        if (file->encrypted)
+            csiz_decrypted -= 12;
+        if (file->uncompr_size != csiz_decrypted) {
+            Info(0x401, "%s:  ucsize %u <> csize %u for STORED entry\n",
+               file->cfilname,
+               file->uncompr_size,
+               csiz_decrypted);
+               
+            file->uncompr_size = csiz_decrypted;
+        }
+    }
+
+    if (file->encrypted) {
+        error = Decrypt();
+        if (error != PK_COOL) {
+            if (error == PK_WARN) {
+                Info(0x401, "   skipping: %-22s  incorrect password\n", file->cfilname);
+            } else {  /* (error > PK_WARN) */
+                Info(0x401, "   skipping: %-22s  unable to get password\n", file->cfilname);
+            }
+        }
+        if (error != PK_COOL)
+            return error;
+    }
+
+
 /*---------------------------------------------------------------------------
     Unpack the file.
   ---------------------------------------------------------------------------*/

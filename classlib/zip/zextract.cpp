@@ -591,46 +591,6 @@ static int extract_or_test_entrylist(unsigned numchunk,
         (*pfilnum)++;   /* *pfilnum = i + blknum*DIR_BLKSIZ + 1; */
         UnzipClass.FCurrFile = &UnzipClass.FFileArr[i];
 
-        UnzipClass.Seek(UnzipClass.FCurrFile->file_data_offset);
-
-        /* Size consistency checks must come after reading in the local extra
-         * field, so that any Zip64 extension local e.f. block has already
-         * been processed.
-         */
-        if (UnzipClass.FCurrFile->compression_method == STORED) {
-            zusz_t csiz_decrypted = UnzipClass.FCurrFile->compr_size;
-
-            if (UnzipClass.FCurrFile->encrypted)
-                csiz_decrypted -= 12;
-            if (UnzipClass.FCurrFile->uncompr_size != csiz_decrypted) {
-                Info(0x401, WrnStorUCSizCSizDiff,
-                  FnFilter1(UnzipClass.FCurrFile->cfilname),
-                  fzofft(UnzipClass.FCurrFile->uncompr_size, NULL, "u"),
-                  fzofft(csiz_decrypted, NULL, "u"));
-                UnzipClass.FCurrFile->uncompr_size = csiz_decrypted;
-                if (error_in_archive < PK_WARN)
-                    error_in_archive = PK_WARN;
-            }
-        }
-
-        if (UnzipClass.FCurrFile->encrypted) {
-            error = UnzipClass.Decrypt();
-            if (error != PK_COOL) {
-                if (error == PK_WARN) {
-                    if (!((uO.tflag && uO.qflag) || (!uO.tflag && uO.qflag)))
-                        Info(0x401, SkipIncorrectPasswd,
-                          FnFilter1(UnzipClass.FCurrFile->cfilname));
-                    ++(*pnum_bad_pwd);
-                } else {  /* (error > PK_WARN) */
-                    if (error > error_in_archive)
-                        error_in_archive = error;
-                    Info(0x401, SkipCannotGetPasswd,
-                      FnFilter1(UnzipClass.FCurrFile->cfilname));
-                }
-            }
-            continue;   /* go on to next file */
-        }
-
         /*
          * just about to extract file:  if extracting to disk, check if
          * already exists, and if so, take appropriate action according to
