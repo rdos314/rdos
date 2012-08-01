@@ -233,6 +233,7 @@ int extract_or_test_files()    /* return PK-type error code */
     unsigned num_dirs=0;
     direntry *dirlist=(direntry *)NULL;
     direntry **sorted_dirlist=(direntry **)NULL;
+    struct TUnzipFile *file;
 
     UnzipClass.FOldExtraBytes = 0;
     /*
@@ -269,7 +270,9 @@ int extract_or_test_files()    /* return PK-type error code */
     since we know the offset of each from the beginning of the zipfile.
   ---------------------------------------------------------------------------*/
 
-    UnzipClass.FCurrFile = &UnzipClass.FFileArr[0];
+    file = &UnzipClass.FFileArr[0];
+    UnzipClass.FCurrFile = file;
+    
 
     G.newzip = TRUE;
     G.reported_backslash = FALSE;
@@ -306,7 +309,8 @@ int extract_or_test_files()    /* return PK-type error code */
          */
 
         while ((j < DIR_BLKSIZ)) {
-            UnzipClass.FCurrFile = &UnzipClass.FFileArr[j];
+            file = &UnzipClass.FFileArr[j];
+            UnzipClass.FCurrFile = file;
 
             if (UnzipClass.ReadBuf(G.sig, 4) == 0) {
                 error_in_archive = PK_EOF;
@@ -357,7 +361,7 @@ int extract_or_test_files()    /* return PK-type error code */
                 else {  /* check if this entry matches an `include' argument */
                     do_this_file = FALSE;
                     for (i = 0; i < G.filespecs; i++)
-                        if (match(UnzipClass.FCurrFile->cfilname, G.pfnames[i], uO.C_flag)) {
+                        if (match(file->cfilname, G.pfnames[i], uO.C_flag)) {
                             do_this_file = TRUE;  /* ^-- ignore case or not? */
                             if (fn_matched)
                                 fn_matched[i] = TRUE;
@@ -366,7 +370,7 @@ int extract_or_test_files()    /* return PK-type error code */
                 }
                 if (do_this_file) {  /* check if this is an excluded file */
                     for (i = 0; i < G.xfilespecs; i++)
-                        if (match(UnzipClass.FCurrFile->cfilname, G.pxnames[i], uO.C_flag)) {
+                        if (match(file->cfilname, G.pxnames[i], uO.C_flag)) {
                             do_this_file = FALSE; /* ^-- ignore case or not? */
                             if (xn_matched)
                                 xn_matched[i] = TRUE;
@@ -576,6 +580,7 @@ static int extract_or_test_entrylist(unsigned numchunk,
     int renamed, query;
     int skip_entry;
     int error, errcode;
+    struct TUnzipFile *file;
 
 /* possible values for local skip_entry flag: */
 #define SKIP_NO         0       /* do not skip this entry */
@@ -589,7 +594,8 @@ static int extract_or_test_entrylist(unsigned numchunk,
 
     for (i = 0; i < numchunk; ++i) {
         (*pfilnum)++;   /* *pfilnum = i + blknum*DIR_BLKSIZ + 1; */
-        UnzipClass.FCurrFile = &UnzipClass.FFileArr[i];
+        file = &UnzipClass.FFileArr[i];
+        UnzipClass.FCurrFile = file;
 
         /*
          * just about to extract file:  if extracting to disk, check if
@@ -609,8 +615,8 @@ startover:
              *  of slash as directory separator (bug in some zipper(s); so
              *  far, not a problem in HPFS, NTFS or VFAT systems)
              */
-            if (UnzipClass.FCurrFile->hostnum == FS_FAT_ && !strchr(UnzipClass.FCurrFile->cfilname, '/')) {
-                char *p=UnzipClass.FCurrFile->cfilname;
+            if (file->hostnum == FS_FAT_ && !strchr(file->cfilname, '/')) {
+                char *p=file->cfilname;
 
                 if (*p) do {
                     if (*p == '\\') {
@@ -627,17 +633,17 @@ startover:
 
             if (!renamed) {
                /* remove absolute path specs */
-               if (UnzipClass.FCurrFile->cfilname[0] == '/') {
+               if (file->cfilname[0] == '/') {
                    Info(0x401, AbsolutePathWarning,
-                        FnFilter1(UnzipClass.FCurrFile->cfilname));
+                        FnFilter1(file->cfilname));
                    if (!error_in_archive)
                        error_in_archive = PK_WARN;
                    do {
-                       char *p = UnzipClass.FCurrFile->cfilname + 1;
+                       char *p = file->cfilname + 1;
                        do {
                            *(p-1) = *p;
                        } while (*p++ != '\0');
-                   } while (UnzipClass.FCurrFile->cfilname[0] == '/');
+                   } while (file->cfilname[0] == '/');
                }
             }
 
@@ -669,16 +675,16 @@ startover:
                     }
                 } else if (errcode == MPN_VOL_LABEL) {
                     Info(1, SkipVolumeLabel,
-                      FnFilter1(UnzipClass.FCurrFile->cfilname), "");
+                      FnFilter1(file->cfilname), "");
                 } else if (errcode > MPN_INF_SKIP &&
                            error_in_archive < PK_ERR)
                     error_in_archive = PK_ERR;
                 Trace("mapname(%s) returns error code = %d\n",
-                  FnFilter1(UnzipClass.FCurrFile->cfilname), error);
+                  FnFilter1(file->cfilname), error);
                 continue;   /* go on to next file */
             }
 
-            switch (UnzipClass.CheckForNewer(UnzipClass.FCurrFile, UnzipClass.FCurrFile->cfilname)) {
+            switch (UnzipClass.CheckForNewer(file, file->cfilname)) {
                 case DOES_NOT_EXIST:
                     /* freshen (no new files): skip unless just renamed */
                     if (uO.fflag && !renamed)
@@ -708,7 +714,7 @@ startover:
                 extent fnlen;
 reprompt:
                 Info(0x81, ReplaceQuery,
-                  FnFilter1(UnzipClass.FCurrFile->cfilname));
+                  FnFilter1(file->cfilname));
                 if (fgets(G.answerbuf, sizeof(G.answerbuf), stdin)
                     == (char *)NULL) {
                     Info(1, AssumeNone);
@@ -721,11 +727,11 @@ reprompt:
                     case 'R':
                         do {
                             Info(0x81, NewNameQuery);
-                            fgets(UnzipClass.FCurrFile->cfilname, FILE_NAME_SIZE, stdin);
+                            fgets(file->cfilname, FILE_NAME_SIZE, stdin);
                             /* usually get \n here:  better check for it */
-                            fnlen = strlen(UnzipClass.FCurrFile->cfilname);
-                            if (UnzipClass.FCurrFile->cfilname[fnlen-1] == '\n')
-                                UnzipClass.FCurrFile->cfilname[--fnlen] = '\0';
+                            fnlen = strlen(file->cfilname);
+                            if (file->cfilname[fnlen-1] == '\n')
+                                file->cfilname[--fnlen] = '\0';
                         } while (fnlen == 0);
                         renamed = TRUE;
                         goto startover;   /* sorry for a goto */
@@ -767,7 +773,7 @@ reprompt:
 
         UnzipClass.FDiskFull = 0;
 
-        error = UnzipClass.Extract(UnzipClass.FCurrFile);
+        error = UnzipClass.Extract(file);
         if (error != PK_COOL) {
             if (error > error_in_archive)
                 error_in_archive = error;       /* ...and keep going */
