@@ -124,6 +124,9 @@ public:
     char *cfilname;          /* central header version of filename */
 
 protected:
+    int OpenOutputFile(const char *filename);
+    void CloseAndSetTime();
+
     TUnzip *FUnzip;
     
 };
@@ -204,9 +207,6 @@ private:
     int ProcessFileHeader(TUnzipFile *file);
     TUnzipFile *ProcessNextFile();
 
-    int OpenOutputFile(const char *filename);
-    void CloseOutputFile();
-    void CloseAndSetTime(TUnzipFile *file);
     int DiskError();
 
     int ExplodeLit(TUnzipFile *file, struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl);

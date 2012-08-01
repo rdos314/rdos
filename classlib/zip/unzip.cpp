@@ -642,6 +642,48 @@ TUnzipFile::~TUnzipFile()
 
 /*##########################################################################
 #
+#   Name       : TUnzipFile::OpenOutputFile
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzipFile::OpenOutputFile(const char *filename)           /* return 1 if fail */
+{
+    FUnzip->FCurrCrcVal = 0;
+    FUnzip->FCrLast = FALSE;
+
+    FUnzip->FOutputHandle = RdosCreateFile(filename, 0);
+    if (!FUnzip->FOutputHandle) {
+        FUnzip->Info(0x401, "error:  cannot create %s\n", filename);
+        return 1;
+    }
+    return 0;
+
+} /* end function open_outfile() */
+
+/*##########################################################################
+#
+#   Name       : TUnzipFile::CloseAndSetTime
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUnzipFile::CloseAndSetTime()
+{
+    RdosSetFileTime(FUnzip->FOutputHandle, rdos_msb_time, rdos_lsb_time);
+    RdosCloseFile(FUnzip->FOutputHandle);
+}
+
+/*##########################################################################
+#
 #   Name       : TUnzipFile::Extract
 #
 #   Purpose....: Extract file
@@ -659,7 +701,7 @@ int TUnzipFile::Extract()
     FUnzip->FDoDecrypt = FALSE;
     FUnzip->FDoText = textfile;
 
-    if (FUnzip->OpenOutputFile(cfilname))
+    if (OpenOutputFile(cfilname))
         return PK_DISK;
 
     FUnzip->Seek(file_data_offset);
@@ -743,7 +785,7 @@ int TUnzipFile::Extract()
     machines (redundant on 32-bit machines).
   ---------------------------------------------------------------------------*/
 
-    FUnzip->CloseAndSetTime(this);
+    CloseAndSetTime();
 
     if (FUnzip->FDiskFull) {            /* set by flush() */
         if (FUnzip->FDiskFull > 1) {
@@ -1951,67 +1993,6 @@ void TUnzip::ProcessFiles()
         else
             break;
     }
-}
-
-/*##########################################################################
-#
-#   Name       : TUnzip::OpenOutputFile
-#
-#   Purpose....: 
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TUnzip::OpenOutputFile(const char *filename)           /* return 1 if fail */
-{
-    FCurrCrcVal = 0;
-    FCrLast = FALSE;
-
-    FOutputHandle = RdosCreateFile(filename, 0);
-    if (!FOutputHandle) {
-        Info(0x401, "error:  cannot create %s\n", filename);
-        return 1;
-    }
-    return 0;
-
-} /* end function open_outfile() */
-
-/*##########################################################################
-#
-#   Name       : TUnzip::CloseOutputFile
-#
-#   Purpose....: 
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TUnzip::CloseOutputFile()
-{
-    RdosCloseFile(FOutputHandle);
-    FOutputHandle = 0;
-
-} /* end function close_outfile() */
-
-
-/*##########################################################################
-#
-#   Name       : TUnzip::CloseAndSetTime
-#
-#   Purpose....: 
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TUnzip::CloseAndSetTime(TUnzipFile *file)
-{
-    RdosSetFileTime(FOutputHandle, file->rdos_msb_time, file->rdos_lsb_time);
-    RdosCloseFile(FOutputHandle);
 }
 
 /*##########################################################################
