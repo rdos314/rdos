@@ -240,6 +240,10 @@ private:
     int FDoDecrypt;
     int FDoText;
 
+    int FFileSize;
+    int FFileCount;
+    struct TUnzipFile **FFileA;
+
     struct TUnzipFile FFileArr[DIR_BLKSIZ];
 
 };

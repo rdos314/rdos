@@ -638,9 +638,19 @@ TUnzip::TUnzip()
 ##########################################################################*/
 TUnzip::~TUnzip()
 {
+    int i;
+    
     delete FInBuf;
     delete FTmpOutBuf;
     delete FOutBuf;
+
+    if (FFileSize)
+    {
+        for (i = 0; i < FFileCount; i++)
+            delete FFileA[i];
+
+        delete FFileA;
+    }
 }
 
 /*##########################################################################
@@ -658,6 +668,10 @@ void TUnzip::Init()
 {
     OnTrace = 0;
     OnInfo = 0;
+
+    FFileA = 0;
+    FFileSize = 0;
+    FFileCount = 0;
 
     FOutputHandle = 0;
     FDoDecrypt = FALSE;
