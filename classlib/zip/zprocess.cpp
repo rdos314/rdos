@@ -88,9 +88,6 @@ static const char CannotAllocateBuffers[] =
 static const char MissingBytes[] =
   "error [%s]:  missing %s bytes in zipfile\n\
   (attempting to process anyway)\n";
-static const char NullCentDirOffset[] =
-  "error [%s]:  NULL central directory offset\n\
-  (attempting to process anyway)\n";
 static const char ZipfileEmpty[] = "warning [%s]:  zipfile is empty\n";
 static const char CentDirStartNotFound[] =
   "error [%s]:  start of central directory not found;\n\
@@ -445,86 +442,8 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
             Info(0x401, MaybePakBug, UnzipClass.FInputFileName.GetData());
             error_in_archive = PK_WARN;
         }
-        if ((UnzipClass.FExtraBytes = UnzipClass.FRealHeaderOffset-UnzipClass.FExpectHeaderOffset) <
-            (long)0)
-        {
-            Info(0x401, MissingBytes,
-              UnzipClass.FInputFileName.GetData(), fzofft((-UnzipClass.FExtraBytes), NULL, NULL));
-            error_in_archive = PK_ERR;
-        } else if (UnzipClass.FExtraBytes > 0) {
-            if ((UnzipClass.FHeader.offset_start_central_directory == 0) &&
-                (UnzipClass.FHeader.size_central_directory != 0))   /* zip 1.5 -go bug */
-            {
-                Info(0x401, NullCentDirOffset, UnzipClass.FInputFileName.GetData());
-                UnzipClass.FHeader.offset_start_central_directory = UnzipClass.FExtraBytes;
-                UnzipClass.FExtraBytes = 0;
-                error_in_archive = PK_ERR;
-            }
-            else {
-                Info(0x401, ExtraBytesAtStart, UnzipClass.FInputFileName.GetData(),
-                  fzofft(UnzipClass.FExtraBytes, NULL, NULL),
-                  (UnzipClass.FExtraBytes == 1)? "":"s");
-                error_in_archive = PK_WARN;
-            }
-        }
 
-    /*-----------------------------------------------------------------------
-        Check for empty zipfile and exit now if so.
-      -----------------------------------------------------------------------*/
-
-        if (G.expect_ecrec_offset==0L && UnzipClass.FHeader.size_central_directory==0) {
-            if (uO.zipinfo_mode)
-                Info(0, "%sEmpty zipfile.\n",
-                  uO.lflag>9? "\n  " : "");
-            else
-                Info(0x401, ZipfileEmpty, UnzipClass.FInputFileName.GetData());
-            RdosCloseFile(UnzipClass.FInputHandle);
-            return (error_in_archive > PK_WARN)? error_in_archive : PK_WARN;
-        }
-
-    /*-----------------------------------------------------------------------
-        Compensate for missing or extra bytes, and seek to where the start
-        of central directory should be.  If header not found, uncompensate
-        and try again (necessary for at least some Atari archives created
-        with STZip, as well as archives created by J.H. Holm's ZIPSPLIT 1.1).
-      -----------------------------------------------------------------------*/
-
-        error = UnzipClass.Seek(UnzipClass.FHeader.offset_start_central_directory);
-        if (error == PK_BADERR) {
-            RdosCloseFile(UnzipClass.FInputHandle);
-            return PK_BADERR;
-        }
-        if ((error != PK_OK) || (UnzipClass.ReadBuf(G.sig, 4) == 0) ||
-            memcmp(G.sig, central_hdr_sig, 4))
-        {
-            long tmp = UnzipClass.FExtraBytes;
-
-            UnzipClass.FExtraBytes = 0;
-            error = UnzipClass.Seek(UnzipClass.FHeader.offset_start_central_directory);
-            if ((error != PK_OK) || (UnzipClass.ReadBuf(G.sig, 4) == 0) ||
-                memcmp(G.sig, central_hdr_sig, 4))
-            {
-                if (error != PK_BADERR)
-                  Info(0x401, CentDirStartNotFound, UnzipClass.FInputFileName.GetData(), ReportMsg);
-                RdosCloseFile(UnzipClass.FInputHandle);
-                return (error != PK_OK ? error : PK_BADERR);
-            }
-            Info(0x401, CentDirTooLong,
-              UnzipClass.FInputFileName.GetData(), fzofft((-tmp), NULL, NULL));
-            error_in_archive = PK_ERR;
-        }
-
-    /*-----------------------------------------------------------------------
-        Seek to the start of the central directory one last time, since we
-        have just read the first entry's signature bytes; then list, extract
-        or test member files as instructed, and close the zipfile.
-      -----------------------------------------------------------------------*/
-
-        error = UnzipClass.Seek(UnzipClass.FHeader.offset_start_central_directory);
-        if (error != PK_OK) {
-            RdosCloseFile(UnzipClass.FInputHandle);
-            return error;
-        }
+        error = UnzipClass.ProcessFiles();
 
         Trace("about to extract/list files (error = %d)\n",
           error_in_archive);

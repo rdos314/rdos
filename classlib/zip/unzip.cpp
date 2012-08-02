@@ -2236,11 +2236,91 @@ TUnzipFile *TUnzip::ProcessNextFile()
 #   Returns....: *
 #
 ##########################################################################*/
-void TUnzip::ProcessFiles()
+int TUnzip::ProcessFiles()
 {
+    int error = PK_OK;
     int i;
     TUnzipFile **newarr;
     TUnzipFile *file;
+    char sig[4];
+    static char central_hdr_sig[4]     = {0x50, 0x4B, 0x01, 0x02};
+
+    FExtraBytes = FRealHeaderOffset-FExpectHeaderOffset;
+    if (FExtraBytes < 0)
+    {
+        Info(0x401, "error [%s]:  missing %u bytes in zipfile\n",
+          FInputFileName.GetData(), -FExtraBytes);
+            error = PK_ERR;
+    } else if (FExtraBytes > 0) {
+        if ((FHeader.offset_start_central_directory == 0) &&
+                (FHeader.size_central_directory != 0))   /* zip 1.5 -go bug */
+        {
+            Info(0x401, "error [%s]:  NULL central directory offset\n",
+              FInputFileName.GetData());
+            FHeader.offset_start_central_directory = FExtraBytes;
+            FExtraBytes = 0;
+            error = PK_ERR;
+        }
+        else {
+            Info(0x401, "warning [%s]:  %d extra byte(s) at beginning or within zipfile\n", 
+              FInputFileName.GetData(),
+              FExtraBytes);
+            error = PK_WARN;
+        }
+    }
+
+    /*-----------------------------------------------------------------------
+        Check for empty zipfile and exit now if so.
+      -----------------------------------------------------------------------*/
+
+    if (FExpectHeaderOffset == 0 && FHeader.size_central_directory==0) {
+        Info(0x401, "warning [%s]:  zipfile is empty\n", FInputFileName.GetData());
+        return (error > PK_WARN) ? error : PK_WARN;
+    }
+
+    /*-----------------------------------------------------------------------
+        Compensate for missing or extra bytes, and seek to where the start
+        of central directory should be.  If header not found, uncompensate
+        and try again (necessary for at least some Atari archives created
+        with STZip, as well as archives created by J.H. Holm's ZIPSPLIT 1.1).
+      -----------------------------------------------------------------------*/
+
+    error = Seek(FHeader.offset_start_central_directory);
+    if (error == PK_BADERR) {
+        return PK_BADERR;
+    }
+    
+    if ((error != PK_OK) || (ReadBuf(sig, 4) == 0) ||
+        memcmp(sig, central_hdr_sig, 4))
+    {
+        long tmp = FExtraBytes;
+
+        FExtraBytes = 0;
+        error = Seek(FHeader.offset_start_central_directory);
+        if ((error != PK_OK) || (ReadBuf(sig, 4) == 0) ||
+            memcmp(sig, central_hdr_sig, 4))
+        {
+            if (error != PK_BADERR)
+                Info(0x401, "error [%s]:  start of central directory not found\n", 
+                  FInputFileName.GetData());
+            return (error != PK_OK ? error : PK_BADERR);
+        }
+
+        Info(0x401, "error [%s]:  reported length of central directory too long\n",
+          FInputFileName.GetData());
+        return PK_ERR;
+    }
+
+    /*-----------------------------------------------------------------------
+        Seek to the start of the central directory one last time, since we
+        have just read the first entry's signature bytes; then list, extract
+        or test member files as instructed, and close the zipfile.
+      -----------------------------------------------------------------------*/
+
+    error = Seek(FHeader.offset_start_central_directory);
+    if (error != PK_OK) {
+        return error;
+    }
 
     for (;;)
     {
@@ -2271,4 +2351,6 @@ void TUnzip::ProcessFiles()
         else
             break;
     }
+
+    return PK_OK;
 }

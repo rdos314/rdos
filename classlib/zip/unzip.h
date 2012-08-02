@@ -153,7 +153,7 @@ public:
     int Seek(long abs_offset);
     void DisplayHeaderString(int lenght, int oemconvert);
 
-    void ProcessFiles();
+    int ProcessFiles();
 
     TUnzipFile *GetFile(int index);
     int GetFileCount();

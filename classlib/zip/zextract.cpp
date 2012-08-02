@@ -294,8 +294,6 @@ int extract_or_test_files()    /* return PK-type error code */
     the central directory starts.  In practice, this had better be the ONLY
     disk in the archive, but we'll add multi-disk support soon.
   ---------------------------------------------------------------------------*/
-
-    UnzipClass.ProcessFiles();
     
     members_processed = 0;
     no_endsig_found = FALSE;
