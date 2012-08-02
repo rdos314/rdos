@@ -52,7 +52,7 @@
 #define INBUFSIZ  8192
 #define TMPOUTSIZ 0x10000
 
-const unsigned *crctab = get_crc_table();
+static const unsigned *crctab = get_crc_table();
 
 /*##########################################################################
 #

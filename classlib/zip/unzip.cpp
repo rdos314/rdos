@@ -39,17 +39,8 @@
 #include "unzip.h"
 #include "zipextr.h"
 #include "zipdefl.h"
+#include "zipstor.h"
 #include "zlib.h"
-
-class TStoreExtractor : public TUnzipExtractor
-{
-public:
-    TStoreExtractor(int InputFileHandle, TUnzipFile *File, const char *DestFileName);
-    virtual ~TStoreExtractor();
-
-protected:
-    virtual void Execute();
-};
 
 
 #define     FALSE       0
@@ -117,7 +108,7 @@ protected:
 #define MAX(a,b)   ((a) > (b) ? (a) : (b))
 #define MIN(a,b)   ((a) < (b) ? (a) : (b))
 
-const unsigned *crctab = get_crc_table();
+static const unsigned *crctab = get_crc_table();
 
 typedef struct
 {
@@ -604,72 +595,6 @@ unsigned FindCompressMethod(unsigned compr_methodnum)
 
 /*##########################################################################
 #
-#   Name       : TStoreExtractor::TStoreExtractor
-#
-#   Purpose....: Constructor for store extractor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TStoreExtractor::TStoreExtractor(int InputFileHandle, TUnzipFile *File, const char *DestFileName)
-  : TUnzipExtractor(InputFileHandle, File, DestFileName)
-{
-}
-
-/*##########################################################################
-#
-#   Name       : TStoreExtractor::~TStoreExtractor
-#
-#   Purpose....: Destructor for store extractor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TStoreExtractor::~TStoreExtractor()
-{
-}
-
-/*##########################################################################
-#
-#   Name       : TStoreExtractor::Execute
-#
-#   Purpose....: 
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TStoreExtractor::Execute()
-{
-    int b;
-    int r;
-    
-    FOutPtr = FOutBuf;
-    FOutCount = 0;
-
-    while ((b = GetNextByte()) != EOF) {
-        *FOutPtr++ = b;
-        if (++FOutCount == WSIZE) {
-            error = Flush(FOutBuf, FOutCount);
-            FOutPtr = FOutBuf;
-            FOutCount = 0;
-            if (error != PK_COOL) break;
-        }
-    }
-
-    if (FOutCount) {        /* flush final (partial) buffer */
-        r = Flush(FOutBuf, FOutCount);
-        if (error < r) error = r;
-    }
-}
-
-/*##########################################################################
-#
 #   Name       : TUnzipFile::TUnzipFile
 #
 #   Purpose....: Constructor for unzipfile
@@ -769,43 +694,6 @@ int TUnzipFile::DiskError()
     return PK_DISK;
 } /* end function disk_error() */
 
-
-/*##########################################################################
-#
-#   Name       : TUnzipFile::Store
-#
-#   Purpose....: 
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TUnzipFile::Store()
-{
-    int b;
-    int r, error=PK_COOL;
-    
-    FOutPtr = FOutBuf;
-    FOutCount = 0;
-
-    while ((b = FUnzip->GetNextByte()) != EOF) {
-        *FOutPtr++ = b;
-        if (++FOutCount == WSIZE) {
-            error = Flush(FOutBuf, FOutCount);
-            FOutPtr = FOutBuf;
-            FOutCount = 0;
-            if (error != PK_COOL || FUnzip->FDiskFull) break;
-        }
-    }
-
-    if (FOutCount) {        /* flush final (partial) buffer */
-        r = Flush(FOutBuf, FOutCount);
-        if (error < r) error = r;
-    }
-
-    return error;
-}
 
 /*##########################################################################
 #
@@ -1763,12 +1651,36 @@ int TUnzipFile::Extract()
 {
     char *extract_msg = "%8sing: %s";
     int error;
-    TUnzipExtractor *extractor;
+    TUnzipExtractor *extractor = 0;
 
-    if (compression_method == DEFLATED)
+    switch (compression_method) {
+        case STORED:
+            FUnzip->Info(0, extract_msg, "extract", cfilname);
+            extractor = new TUnzipStoreExtractor(FUnzip->FInputHandle, this, cfilname);
+            break;
+
+        case DEFLATED:
+            FUnzip->Info(0, extract_msg, "extract", cfilname);
+            extractor = new TUnzipDeflateExtractor(FUnzip->FInputHandle, this, cfilname);
+            break;
+
+        case SHRUNK:
+            FUnzip->Info(0, extract_msg, "unshrink", cfilname);
+            break;
+
+        case IMPLODED:
+            FUnzip->Info(0, extract_msg, "explod", cfilname);
+            break;
+
+        default:   /* should never get to this point */
+            FUnzip->Info(0x401, "%s:  unknown compression method\n", cfilname);
+            error = PK_WARN;
+            break;
+
+    } /* end switch (compression method) */
+
+    if (extractor)
     {
-        FUnzip->Info(0, extract_msg, "inflat", cfilname);
-        extractor = new TUnzipDeflateExtractor(FUnzip->FInputHandle, this, cfilname);
         extractor->Extract();
         error = extractor->error;
 
@@ -1785,130 +1697,10 @@ int TUnzipFile::Extract()
                 FUnzip->Info(0, "\n");
         }
         else
-            FUnzip->Info(0x401, " failed with error %d\n", error);
+            FUnzip->Info(0x401, " extract failed with error %d\n", error);
 
         delete extractor;
-
-        return error;
     }
-
-
-    FUnzip->FDoDecrypt = FALSE;
-    FDoText = textfile;
-
-    FUnzip->Seek(file_data_offset);
-
-    /* Size consistency checks must come after reading in the local extra
-     * field, so that any Zip64 extension local e.f. block has already
-     * been processed.
-     */
-    if (compression_method == STORED) {
-        unsigned long csiz_decrypted = compr_size;
-
-        if (encrypted)
-            csiz_decrypted -= 12;
-        if (uncompr_size != csiz_decrypted) {
-            FUnzip->Info(0x401, "%s:  ucsize %u <> csize %u for STORED entry\n",
-               cfilname,
-               uncompr_size,
-               csiz_decrypted);
-               
-            uncompr_size = csiz_decrypted;
-        }
-    }
-
-    if (encrypted) {
-        error = FUnzip->Decrypt();
-        if (error != PK_COOL) {
-            if (error == PK_WARN) {
-                FUnzip->Info(0x401, "   skipping: %-22s  incorrect password\n", cfilname);
-            } else {  /* (error > PK_WARN) */
-                FUnzip->Info(0x401, "   skipping: %-22s  unable to get password\n", cfilname);
-            }
-        }
-        if (error != PK_COOL)
-            return error;
-    }
-
-
-/*---------------------------------------------------------------------------
-    Unpack the file.
-  ---------------------------------------------------------------------------*/
-
-    if (OpenOutputFile(cfilname))
-        return PK_DISK;
-
-    FTmpOutBuf = new char[TMPOUTSIZ];
-    FOutBuf = new char[WSIZE + 1];
-
-    FUnzip->FDecompSize = compr_size;
-
-    FUnzip->DeferInput();    /* so NEXTBYTE bounds check will work */
-    switch (compression_method) {
-        case STORED:
-            FUnzip->Info(0, extract_msg, "extract", cfilname);
-            error = Store();
-            break;
-
-        case SHRUNK:
-            FUnzip->Info(0, extract_msg, "unshrink", cfilname);
-            error = Unshrink();
-            break;
-
-        case IMPLODED:
-            FUnzip->Info(0, extract_msg, "explod", cfilname);
-
-            error = Explode();
-            if (error == 5) { /* treat 5 specially */
-                int warning = FUsedCSize <= compr_size;
-                error = warning ? PK_WARN : PK_ERR;
-            }
-            break;
-
-        default:   /* should never get to this point */
-            FUnzip->Info(0x401, "%s:  unknown compression method\n", cfilname);
-            FUnzip->UndeferInput();
-            error = PK_WARN;
-
-    } /* end switch (compression method) */
-
-    delete FTmpOutBuf;
-    delete FOutBuf;
-
-/*---------------------------------------------------------------------------
-    Close the file and set its date and time (not necessarily in that order),
-    and make sure the CRC checked out OK.  Logical-AND the CRC for 64-bit
-    machines (redundant on 32-bit machines).
-  ---------------------------------------------------------------------------*/
-
-    CloseAndSetTime();
-
-    if (FUnzip->FDiskFull) {            /* set by flush() */
-        if (FUnzip->FDiskFull > 1) {
-            /* warn user about the incomplete file */
-            FUnzip->Info(0x421, "warning:  %s is probably truncated\n", cfilname);
-            error = PK_DISK;
-        } else {
-            error = PK_WARN;
-        }
-    }
-
-    if (error > PK_WARN) {/* don't print redundant CRC error if error already */
-        FUnzip->UndeferInput();
-        return error;
-    }
-
-    if (FCurrCrcVal != crc) {
-        /* if quiet enough, we haven't output the filename yet:  do it */
-        FUnzip->Info(0x401, "%-22s ", cfilname);
-        FUnzip->Info(0x401, " bad CRC %08lx  (should be %08lx)\n", FCurrCrcVal, crc);
-        if (encrypted)
-            FUnzip->Info(0x401, "   (may instead be incorrect password)\n");
-        error = PK_ERR;
-    } else
-        FUnzip->Info(0, "\n");
-
-    FUnzip->UndeferInput();
 
     return error;
 }
