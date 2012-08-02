@@ -501,15 +501,10 @@ reprompt:
             }
         } /* end if (extracting to disk) */
 
-        UnzipClass.FDiskFull = 0;
-
         error = file->Extract();
         if (error != PK_COOL) {
             if (error > error_in_archive)
                 error_in_archive = error;       /* ...and keep going */
-            if (UnzipClass.FDiskFull > 1) {
-                return error_in_archive;        /* (unless disk full) */
-            }
         }
     } /* end for-loop (i:  files in current block) */
 
