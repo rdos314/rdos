@@ -34,6 +34,7 @@
 #define _UNZIP_H
 
 #include "str.h"
+#include "thread.h"
 
 /* external return codes */
 #define PK_OK              0   /* no error */
@@ -89,6 +90,75 @@ struct TUnzipHuft {
  */
 
 class TUnzip;
+class TUnzipFile;
+
+class TUnzipExtractor : public TThread
+{
+public: 
+    TUnzipExtractor(int InputFileHandle, TUnzipFile *File, const char *DestFileName);
+    virtual ~TUnzipExtractor();
+
+    int IsFileOpen();
+    void SetupEncryption(const char *password);
+
+    int Extract();
+
+    int error;
+
+protected:
+    int Seek(long abs_offset);
+
+    int DecryptByte();
+    int UpdateKeys(int c);
+    int ZDecode(int c);
+    int Decrypt();
+
+    int ReadByte();
+    int GetNextByte();
+    void DeferInput();
+    void UndeferInput();
+
+    int Flush(char *rawbuf, int size);
+
+    TUnzipFile *FFile;
+
+    int FInputHandle;
+    int FOutputHandle;
+
+    char *FInBuf;
+    char *FInPtr;
+    int FInCount;
+
+    int FLeftoverCount;
+    char *FLeftoverPtr;
+
+    int FDoDecrypt;
+    long FDecompSize;
+
+    unsigned int FKeys[3]; 
+
+    char *FTmpOutBuf;
+    char *FOutBuf;
+    char *FOutPtr;
+    int FOutCount;
+
+    unsigned long FCurrCrcVal;
+
+    int FCrLast;
+    int FDoText;
+};
+
+
+class TStoreExtractor : public TUnzipExtractor
+{
+public: 
+    TStoreExtractor(int FileHandle, TUnzipFile *File, const char *DestFileName);
+    ~TStoreExtractor();
+
+protected:
+    virtual void Execute();
+};
+
 
 class TUnzipFile
 {
@@ -113,6 +183,7 @@ public:
     int encrypted;                  /* is encrypted */
     int error;
     unsigned long file_data_offset;
+    unsigned long abs_data_offset;
     unsigned char hostver;
     unsigned char hostnum;
     unsigned long rdos_msb_time;
