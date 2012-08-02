@@ -143,7 +143,6 @@ protected:
     int Store();
     void UnshrinkPartialClear(int lastcodeused);
     int Unshrink();
-    int Deflate();
 
     int ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl);
     int ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bl, unsigned bd, unsigned bdl);
