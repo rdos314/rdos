@@ -39,6 +39,88 @@
 #include "unzip.h"
 #include "zlib.h"
 
+class TUnzipExtractor : public TThread
+{
+public: 
+    TUnzipExtractor(int InputFileHandle, TUnzipFile *File, const char *DestFileName);
+    virtual ~TUnzipExtractor();
+
+    int IsFileOpen();
+    void SetupEncryption(const char *password);
+
+    int Extract();
+
+    int error;
+
+    unsigned long FCurrCrcVal;
+
+// these must be global due to callback interface
+
+    char *GetInbuf();
+    int FillInbuf();
+    int Flush(char *rawbuf, int size);
+
+protected:
+    int Seek(long abs_offset);
+
+    int DecryptByte();
+    int UpdateKeys(int c);
+    int ZDecode(int c);
+    int Decrypt();
+
+    int ReadByte();
+    int GetNextByte();
+    void DeferInput();
+    void UndeferInput();
+
+    TUnzipFile *FFile;
+
+    int FInputHandle;
+    int FOutputHandle;
+
+    char *FInBuf;
+    char *FInPtr;
+    int FInCount;
+
+    int FLeftoverCount;
+    char *FLeftoverPtr;
+
+    int FDoDecrypt;
+    long FDecompSize;
+
+    unsigned int FKeys[3]; 
+
+    char *FTmpOutBuf;
+    char *FOutBuf;
+    char *FOutPtr;
+    int FOutCount;
+
+    int FCrLast;
+    int FDoText;
+};
+
+
+class TStoreExtractor : public TUnzipExtractor
+{
+public:
+    TStoreExtractor(int InputFileHandle, TUnzipFile *File, const char *DestFileName);
+    virtual ~TStoreExtractor();
+
+protected:
+    virtual void Execute();
+};
+
+
+class TDeflateExtractor : public TUnzipExtractor
+{
+public:
+    TDeflateExtractor(int InputFileHandle, TUnzipFile *File, const char *DestFileName);
+    virtual ~TDeflateExtractor();
+
+protected:
+    virtual void Execute();
+};
+
 #define     FALSE       0
 #define     TRUE        !FALSE
 
@@ -611,6 +693,37 @@ unsigned FindCompressMethod(unsigned compr_methodnum)
 
 /*##########################################################################
 #
+#   Name       : TStoreExtractor::TStoreExtractor
+#
+#   Purpose....: Constructor for store extractor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TStoreExtractor::TStoreExtractor(int InputFileHandle, TUnzipFile *File, const char *DestFileName)
+  : TUnzipExtractor(InputFileHandle, File, DestFileName)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TStoreExtractor::~TStoreExtractor
+#
+#   Purpose....: Destructor for store extractor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TStoreExtractor::~TStoreExtractor()
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TStoreExtractor::Execute
 #
 #   Purpose....: 
@@ -642,6 +755,37 @@ void TStoreExtractor::Execute()
         r = Flush(FOutBuf, FOutCount);
         if (error < r) error = r;
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TDeflateExtractor::TDeflateExtractor
+#
+#   Purpose....: Constructor for deflate extractor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDeflateExtractor::TDeflateExtractor(int InputFileHandle, TUnzipFile *File, const char *DestFileName)
+  : TUnzipExtractor(InputFileHandle, File, DestFileName)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TDeflateExtractor::~TDeflateExtractor
+#
+#   Purpose....: Destructor for deflate extractor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDeflateExtractor::~TDeflateExtractor()
+{
 }
 
 /*##########################################################################
@@ -679,28 +823,27 @@ static int zlib_out(void *pG, unsigned char *outbuf, unsigned outcnt)
 void TDeflateExtractor::Execute()
 /* decompress an inflated entry using the zlib routines */
 {
+    int err=Z_OK;
+    z_stream dstrm;           /* inflate decompression stream */
     unsigned i;
     int windowBits;
-    int err;
-    z_stream dstrm;           /* inflate decompression stream */
 
+    error = 0;
+    
     dstrm.zalloc = (alloc_func)Z_NULL;
     dstrm.zfree = (free_func)Z_NULL;
 
-    /* For the callback interface, inflate initialization has to
-       be called before each decompression call.
-     */
     /* windowBits = log2(WSIZE) */
     for (i = (unsigned)WSIZE, windowBits = 0;
-         !(i & 1);  i >>= 1, ++windowBits);
+        !(i & 1);  i >>= 1, ++windowBits);
     if ((unsigned)windowBits > (unsigned)15)
         windowBits = 15;
     else if (windowBits < 8)
         windowBits = 8;
 
-    error = inflateBackInit(&dstrm, windowBits, (unsigned char *)FOutBuf);
+    err = inflateBackInit(&dstrm, windowBits, (unsigned char *)FOutBuf);
 
-    if (error == Z_MEM_ERROR)
+    if (err == Z_MEM_ERROR)
         error = 3;
     else if (err != Z_OK) {
         error = 2;
@@ -711,13 +854,13 @@ void TDeflateExtractor::Execute()
         dstrm.next_in = (unsigned char *)FInPtr;
         dstrm.avail_in = FInCount;
 
-        error = inflateBack(&dstrm, zlib_in, this, zlib_out, this);
-        if (error != Z_STREAM_END) {
-            if (error == Z_DATA_ERROR || error == Z_STREAM_ERROR) {
+        err = inflateBack(&dstrm, zlib_in, this, zlib_out, this);
+        if (err != Z_STREAM_END) {
+            if (err == Z_DATA_ERROR || err == Z_STREAM_ERROR) {
                 error = 2;
-            } else if (error == Z_MEM_ERROR) {
+            } else if (err == Z_MEM_ERROR) {
                 error = 3;
-            } else if (error == Z_BUF_ERROR) {
+            } else if (err == Z_BUF_ERROR) {
                 if (dstrm.next_in == Z_NULL) {
                     /* input failure */
                     error = 2;
@@ -871,6 +1014,7 @@ int TUnzipExtractor::Seek(long abs_offset)
     if (request < 0)
         return(PK_BADERR);
 
+    RdosSetFilePos(FInputHandle, bufstart);
     FInCount = RdosReadFile(FInputHandle, FInBuf, INBUFSIZ);
     if (FInCount <= 0)
         return(PK_EOF);
@@ -1242,7 +1386,10 @@ int TUnzipExtractor::Flush(char *rawbuf, int size)
 ##########################################################################*/
 int TUnzipExtractor::Extract()
 {
-    if (!IsFileOpen())
+    
+    if (IsFileOpen())
+        error = PK_COOL;
+    else
         return PK_ERR;
 
     FDoDecrypt = FALSE;
@@ -2487,6 +2634,35 @@ int TUnzipFile::Extract()
 {
     char *extract_msg = "%8sing: %s";
     int error;
+    TUnzipExtractor *extractor;
+
+    if (compression_method == DEFLATED)
+    {
+        FUnzip->Info(0, extract_msg, "inflat", cfilname);
+        extractor = new TDeflateExtractor(FUnzip->FInputHandle, this, cfilname);
+        extractor->Extract();
+        error = extractor->error;
+
+        if (error == PK_COOL)
+        {
+            if (extractor->FCurrCrcVal != crc) {
+            /* if quiet enough, we haven't output the filename yet:  do it */
+                FUnzip->Info(0x401, "%-22s ", cfilname);
+                FUnzip->Info(0x401, " bad CRC %08lx  (should be %08lx)\n", FCurrCrcVal, crc);
+                if (encrypted)
+                    FUnzip->Info(0x401, "   (may instead be incorrect password)\n");
+                error = PK_ERR;
+            } else
+                FUnzip->Info(0, "\n");
+        }
+        else
+            FUnzip->Info(0x401, " failed with error %d\n", error);
+
+        delete extractor;
+
+        return error;
+    }
+
 
     FUnzip->FDoDecrypt = FALSE;
     FDoText = textfile;
