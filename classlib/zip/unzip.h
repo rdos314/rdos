@@ -114,29 +114,7 @@ public:
     unsigned HasUxAtt : 1;   /* crec ext_file_attr has Unix style mode bits */
     char *cfilname;          /* central header version of filename */
 
-// must be global due to callbacks
-
-    int Flush(char *rawbuf, int size);
-
 protected:
-    int OpenOutputFile(const char *filename);
-    void CloseAndSetTime();
-    int DiskError();
-
-    int Store();
-
-    char *FOutBuf;
-    char *FOutPtr;
-    int FOutCount;
-
-    int FOutputHandle;
-    char *FTmpOutBuf;
-    int FCrLast;
-
-    int FDoText;
-
-    unsigned long FCurrCrcVal;
-
     TUnzip *FUnzip;
     
 };
