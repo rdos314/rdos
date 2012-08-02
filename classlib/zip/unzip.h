@@ -133,7 +133,6 @@ public:
     void (*OnInfo)(TUnzip *unzip, int code, const char *msg);
 
     void SetInputFile(const char *name);
-    void SetupEncryption(const char *password);
     int OpenInputFile();
     unsigned ReadBuf(char *buf, register unsigned size);
     int Seek(long abs_offset);
@@ -143,11 +142,6 @@ public:
 
     TUnzipFile *GetFile(int index);
     int GetFileCount();
-
-// these must be global due to callback interface
-
-    char *GetInbuf();
-    int FillInbuf();
 
     TString FInputFileName;
     int FInputHandle;
@@ -168,17 +162,7 @@ protected:
 private:
     void Init();
 
-    void DeferInput();
-    void UndeferInput();
-    int ReadByte();
-    int GetNextByte();
-
     void SkipHeaderString(int length);
-
-    int DecryptByte();
-    int UpdateKeys(int c);
-    int ZDecode(int c);
-    int Decrypt();
 
     int GetFileName(int length);
     int GetDirEntry(TUnzipFile *file);
@@ -189,14 +173,6 @@ private:
     TUnzipFile *ProcessNextFile();
 
     char FLogBuf[512];
-
-    int FLeftoverCount;
-    char *FLeftoverPtr;
-
-    int FDoDecrypt;
-    long FDecompSize;
-
-    unsigned int FKeys[3]; 
 
     int FFileSize;
     int FFileCount;
