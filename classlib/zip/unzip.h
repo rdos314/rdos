@@ -167,7 +167,7 @@ private:
 
     void SkipHeaderString(int length);
 
-    int GetFileName(int length);
+    int GetFileName(char *buf, int length);
     int SeekFile(TUnzipFile *file);
     TUnzipFile *ProcessNextFile();
 

@@ -679,13 +679,16 @@ int TUnzipFile::ProcessDirEntry()    /* return PK-type error code */
        strings (see do_string() function in fileio.c) */
     HasUxAtt = (external_file_attributes & 0xffff0000L) != 0L;
 
-    error = FUnzip->GetFileName(filename_length);
+    /* store a copy of the central header filename for later comparison */
+    cfilname = new char[filename_length + 1];
+
+    error = FUnzip->GetFileName(cfilname, filename_length);
     if (error != PK_COOL)
     {
         if (error > PK_WARN) {  /* fatal:  no more left to do */
             FUnzip->Info(0x401,
-              "%s:  bad filename length (%s)\n",
-              FUnzip->FCurrFileName, "central");
+              "%s:  bad filename length \n",
+              "central");
         }
         return error;
     }
@@ -699,7 +702,7 @@ int TUnzipFile::ProcessDirEntry()    /* return PK-type error code */
 
     if (version_needed_to_extract[0] > UNZIP_VERSION) {
         FUnzip->Info(0x401, "   skipping: %-22s  need %s compat. v%u.%u (can do v%u.%u)\n",
-              FUnzip->FCurrFileName, "PK",
+              cfilname, "PK",
               version_needed_to_extract[0] / 10,
               version_needed_to_extract[0] % 10,
               UNZIP_VERSION / 10, UNZIP_VERSION % 10);
@@ -713,21 +716,14 @@ int TUnzipFile::ProcessDirEntry()    /* return PK-type error code */
         cmpridx = FindCompressMethod(compression_method);
         if (cmpridx < NUM_METHODS)
             FUnzip->Info(0x401, "   skipping: %-22s  `%s' method not supported\n",
-              FUnzip->FCurrFileName,
+              cfilname,
               ComprNames[cmpridx]);
         else
             FUnzip->Info(0x401, "   skipping: %-22s  unsupported compression method %u\n",
-              FUnzip->FCurrFileName,
+              cfilname,
               compression_method);
         return PK_WARN;
     }
-
-    /* store a copy of the central header filename for later comparison */
-    cfilname = new char[strlen(FUnzip->FCurrFileName) + 1];
-    if (cfilname == 0) {
-        FUnzip->Info(0x401, "%s:  warning, no memory for comparison with local header\n", FUnzip->FCurrFileName);
-    } else
-        strcpy(cfilname, FUnzip->FCurrFileName);
 
     return PK_COOL;
 }
@@ -752,12 +748,9 @@ int TUnzipFile::ProcessFileHeader()
     int incnt;
     unsigned long csize;
     unsigned long ucsize;
-    unsigned long rdos_msb_time;
-    unsigned long rdos_lsb_time;
     unsigned long crc32;
     unsigned char ve[2];
     unsigned short general_purpose_bit_flag;
-    unsigned short compression_method;
     unsigned short filename_length;
     unsigned short extra_field_length;
 
@@ -815,7 +808,19 @@ int TUnzipFile::ProcessFileHeader()
     }
 
     if (error == PK_COOL)
-        error = FUnzip->GetFileName(filename_length);
+    {
+        char *buf = new char[filename_length + 1];
+        error = FUnzip->GetFileName(buf, filename_length);
+        if (error == PK_COOL)
+        {
+            if (strcmp(buf, cfilname))
+            {
+                FUnzip->Info(0x421, "filenames differ between headers\n");
+                error = PK_ERR;
+            }
+        }
+        delete buf;
+    }
 
     if (error != PK_COOL)
         FUnzip->Info(0x421, "bad local header\n");
@@ -1850,7 +1855,7 @@ int TUnzip::GetFileCount()
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::GetFileName(int length)
+int TUnzip::GetFileName(char *buf, int length)
 {
     int block_len;
     int error = PK_OK;
@@ -1867,20 +1872,20 @@ int TUnzip::GetFileName(int length)
         /* no excess size */
         block_len = 0;
 
-    if (ReadBuf(FCurrFileName, length) == 0)
+    if (ReadBuf(buf, length) == 0)
         return PK_EOF;
 
-    FCurrFileName[length] = '\0';      /* terminate w/zero:  ASCIIZ */
+    buf[length] = '\0';      /* terminate w/zero:  ASCIIZ */
 
     /* translate the Zip entry filename coded in host-dependent "extended
            ASCII" into the compiler's (system's) internal text code page */
-    AsciiToNative(FCurrFileName);
+    AsciiToNative(buf);
 
-    strtolower(FCurrFileName, FCurrFileName);
+    strtolower(buf, buf);
 
     if (block_len)         /* no overflow, we're done here */
     {
-        Info(0x401, "[ %s ]\n", FCurrFileName);
+        Info(0x401, "[ %s ]\n", buf);
         SkipHeaderString(block_len);
     }
 
