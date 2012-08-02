@@ -105,6 +105,12 @@ public:
 
     int error;
 
+// these must be global due to callback interface
+
+    char *GetInbuf();
+    int FillInbuf();
+    int Flush(char *rawbuf, int size);
+
 protected:
     int Seek(long abs_offset);
 
@@ -117,8 +123,6 @@ protected:
     int GetNextByte();
     void DeferInput();
     void UndeferInput();
-
-    int Flush(char *rawbuf, int size);
 
     TUnzipFile *FFile;
 
@@ -151,9 +155,14 @@ protected:
 
 class TStoreExtractor : public TUnzipExtractor
 {
-public: 
-    TStoreExtractor(int FileHandle, TUnzipFile *File, const char *DestFileName);
-    ~TStoreExtractor();
+
+protected:
+    virtual void Execute();
+};
+
+
+class TDeflateExtractor : public TUnzipExtractor
+{
 
 protected:
     virtual void Execute();

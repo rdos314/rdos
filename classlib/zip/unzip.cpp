@@ -646,6 +646,106 @@ void TStoreExtractor::Execute()
 
 /*##########################################################################
 #
+#  zlib callback interface for inflate
+#
+###########################################################################*/
+static unsigned zlib_in(void *pG, unsigned char ** pInbuf)
+{
+    TDeflateExtractor *extractor = (TDeflateExtractor *)pG;
+    
+    *pInbuf = (unsigned char *)extractor->GetInbuf();
+    return extractor->FillInbuf();
+}
+
+static int zlib_out(void *pG, unsigned char *outbuf, unsigned outcnt)
+{
+    TUnzipExtractor *extractor = (TUnzipExtractor *)pG;
+    
+    return extractor->Flush((char *)outbuf, outcnt);
+}
+
+
+/*##########################################################################
+#
+#   Name       : TDeflateExtractor::Execute
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDeflateExtractor::Execute()
+/* decompress an inflated entry using the zlib routines */
+{
+    unsigned i;
+    int windowBits;
+    int err;
+    z_stream dstrm;           /* inflate decompression stream */
+
+    dstrm.zalloc = (alloc_func)Z_NULL;
+    dstrm.zfree = (free_func)Z_NULL;
+
+    /* For the callback interface, inflate initialization has to
+       be called before each decompression call.
+     */
+    /* windowBits = log2(WSIZE) */
+    for (i = (unsigned)WSIZE, windowBits = 0;
+         !(i & 1);  i >>= 1, ++windowBits);
+    if ((unsigned)windowBits > (unsigned)15)
+        windowBits = 15;
+    else if (windowBits < 8)
+        windowBits = 8;
+
+    error = inflateBackInit(&dstrm, windowBits, (unsigned char *)FOutBuf);
+
+    if (error == Z_MEM_ERROR)
+        error = 3;
+    else if (err != Z_OK) {
+        error = 2;
+    }
+
+    if (error == 0)
+    {
+        dstrm.next_in = (unsigned char *)FInPtr;
+        dstrm.avail_in = FInCount;
+
+        error = inflateBack(&dstrm, zlib_in, this, zlib_out, this);
+        if (error != Z_STREAM_END) {
+            if (error == Z_DATA_ERROR || error == Z_STREAM_ERROR) {
+                error = 2;
+            } else if (error == Z_MEM_ERROR) {
+                error = 3;
+            } else if (error == Z_BUF_ERROR) {
+                if (dstrm.next_in == Z_NULL) {
+                    /* input failure */
+                    error = 2;
+                } else {
+                    /* output write failure */
+                    error = PK_DISK;
+                }
+            } else {
+                error = 2;
+            }
+        }
+        if (dstrm.next_in != NULL) {
+            FInPtr = (char *)dstrm.next_in;
+            FInCount = dstrm.avail_in;
+        }
+
+        err = inflateBackEnd(&dstrm);
+        if (err != Z_OK) {
+            if (error == 0)
+                error = 2;
+        }
+    }
+
+    inflateEnd(&dstrm);
+}
+
+/*##########################################################################
+#
 #   Name       : TUnzipExtractor::TUnzipExtractor
 #
 #   Purpose....: Constructor for unzipextractor
@@ -987,6 +1087,54 @@ int TUnzipExtractor::GetNextByte()
 {
     return (FInCount-- > 0 ? (int)(*FInPtr++) : ReadByte());
 }
+
+/*##########################################################################
+#
+#   Name       : TUnzipExtractor::GetInbuf
+#
+#   Purpose....: Function get inbuf()
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *TUnzipExtractor::GetInbuf()
+{
+    return FInBuf;
+}
+
+/*##########################################################################
+#
+#   Name       : TUnzipExtractor::FillInbuf
+#
+#   Purpose....: Function fillinbuf()
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzipExtractor::FillInbuf() /* like readbyte() except returns number of bytes in inbuf */
+{
+    FInCount = RdosReadFile(FInputHandle, FInBuf, INBUFSIZ);
+    if (FInCount <= 0)
+        return 0;
+
+    FInPtr = FInBuf;
+    DeferInput();           /* decrements G.csize */
+
+    if (FDoDecrypt) {
+        char *p;
+        int n;
+
+        for (n = FInCount, p = FInPtr;  n--;  p++)
+            *p = ZDecode(*p);
+    }
+
+    return FInCount;
+
+} /* end function fillinbuf() */
 
 /*##########################################################################
 #
