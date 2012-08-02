@@ -181,7 +181,6 @@ typedef struct Globals {
     char      *wildzipfn;
     unsigned char       *hold;
 
-    ecdir_rec       ecrec;         /* used in unzip.c, extract.c */
     struct stat   statbuf;              /* used by main, mapname, check_for_newer */
 
     int      reported_backslash;   /* extract.c static */

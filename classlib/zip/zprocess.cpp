@@ -422,21 +422,21 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
     archives) or inconsistencies (missing or extra bytes in zipfile).
   ---------------------------------------------------------------------------*/
 
-    error = !uO.zipinfo_mode && (G.ecrec.number_this_disk != 0);
+    error = !uO.zipinfo_mode && (UnzipClass.FHeader.number_this_disk != 0);
 
     if (uO.zipinfo_mode &&
-        G.ecrec.number_this_disk != G.ecrec.num_disk_start_cdir)
+        UnzipClass.FHeader.number_this_disk != UnzipClass.FHeader.num_disk_start_cdir)
     {
-        if (G.ecrec.number_this_disk > G.ecrec.num_disk_start_cdir) {
+        if (UnzipClass.FHeader.number_this_disk > UnzipClass.FHeader.num_disk_start_cdir) {
             Info(0x401, CentDirNotInZipMsg, UnzipClass.FInputFileName.GetData(),
-              (unsigned long)G.ecrec.number_this_disk,
-              (unsigned long)G.ecrec.num_disk_start_cdir);
+              (unsigned long)UnzipClass.FHeader.number_this_disk,
+              (unsigned long)UnzipClass.FHeader.num_disk_start_cdir);
             error_in_archive = PK_FIND;
             too_weird_to_continue = TRUE;
         } else {
             Info(0x401, EndCentDirBogus, UnzipClass.FInputFileName.GetData(),
-              (unsigned long)G.ecrec.number_this_disk,
-              (unsigned long)G.ecrec.num_disk_start_cdir);
+              (unsigned long)UnzipClass.FHeader.number_this_disk,
+              (unsigned long)UnzipClass.FHeader.num_disk_start_cdir);
             error_in_archive = PK_WARN;
         }
     }
@@ -453,11 +453,11 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
               UnzipClass.FInputFileName.GetData(), fzofft((-UnzipClass.FExtraBytes), NULL, NULL));
             error_in_archive = PK_ERR;
         } else if (UnzipClass.FExtraBytes > 0) {
-            if ((G.ecrec.offset_start_central_directory == 0) &&
-                (G.ecrec.size_central_directory != 0))   /* zip 1.5 -go bug */
+            if ((UnzipClass.FHeader.offset_start_central_directory == 0) &&
+                (UnzipClass.FHeader.size_central_directory != 0))   /* zip 1.5 -go bug */
             {
                 Info(0x401, NullCentDirOffset, UnzipClass.FInputFileName.GetData());
-                G.ecrec.offset_start_central_directory = UnzipClass.FExtraBytes;
+                UnzipClass.FHeader.offset_start_central_directory = UnzipClass.FExtraBytes;
                 UnzipClass.FExtraBytes = 0;
                 error_in_archive = PK_ERR;
             }
@@ -473,7 +473,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
         Check for empty zipfile and exit now if so.
       -----------------------------------------------------------------------*/
 
-        if (G.expect_ecrec_offset==0L && G.ecrec.size_central_directory==0) {
+        if (G.expect_ecrec_offset==0L && UnzipClass.FHeader.size_central_directory==0) {
             if (uO.zipinfo_mode)
                 Info(0, "%sEmpty zipfile.\n",
                   uO.lflag>9? "\n  " : "");
@@ -490,7 +490,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
         with STZip, as well as archives created by J.H. Holm's ZIPSPLIT 1.1).
       -----------------------------------------------------------------------*/
 
-        error = UnzipClass.Seek(G.ecrec.offset_start_central_directory);
+        error = UnzipClass.Seek(UnzipClass.FHeader.offset_start_central_directory);
         if (error == PK_BADERR) {
             RdosCloseFile(UnzipClass.FInputHandle);
             return PK_BADERR;
@@ -501,7 +501,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
             long tmp = UnzipClass.FExtraBytes;
 
             UnzipClass.FExtraBytes = 0;
-            error = UnzipClass.Seek(G.ecrec.offset_start_central_directory);
+            error = UnzipClass.Seek(UnzipClass.FHeader.offset_start_central_directory);
             if ((error != PK_OK) || (UnzipClass.ReadBuf(G.sig, 4) == 0) ||
                 memcmp(G.sig, central_hdr_sig, 4))
             {
@@ -521,7 +521,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
         or test member files as instructed, and close the zipfile.
       -----------------------------------------------------------------------*/
 
-        error = UnzipClass.Seek(G.ecrec.offset_start_central_directory);
+        error = UnzipClass.Seek(UnzipClass.FHeader.offset_start_central_directory);
         if (error != PK_OK) {
             RdosCloseFile(UnzipClass.FInputHandle);
             return error;
@@ -689,19 +689,19 @@ static int find_ecrec(long searchlen)          /* return PK-class error */
     if (UnzipClass.ReadBuf((char *)byterec, ECREC_SIZE+4) == 0)
         return PK_EOF;
 
-    G.ecrec.number_this_disk =
+    UnzipClass.FHeader.number_this_disk =
       makeword(&byterec[NUMBER_THIS_DISK]);
-    G.ecrec.num_disk_start_cdir =
+    UnzipClass.FHeader.num_disk_start_cdir =
       makeword(&byterec[NUM_DISK_WITH_START_CEN_DIR]);
-    G.ecrec.num_entries_centrl_dir_ths_disk =
+    UnzipClass.FHeader.num_entries_centrl_dir_ths_disk =
       makeword(&byterec[NUM_ENTRIES_CEN_DIR_THS_DISK]);
-    G.ecrec.total_entries_central_dir =
+    UnzipClass.FHeader.total_entries_central_dir =
       makeword(&byterec[TOTAL_ENTRIES_CENTRAL_DIR]);
-    G.ecrec.size_central_directory =
+    UnzipClass.FHeader.size_central_directory =
       makelong(&byterec[SIZE_CENTRAL_DIRECTORY]);
-    G.ecrec.offset_start_central_directory =
+    UnzipClass.FHeader.offset_start_central_directory =
       makelong(&byterec[OFFSET_START_CENTRAL_DIRECTORY]);
-    G.ecrec.zipfile_comment_length =
+    UnzipClass.FHeader.zipfile_comment_length =
       makeword(&byterec[ZIPFILE_COMMENT_LENGTH]);
 
     /* Now, we have to read the archive comment, BEFORE the file pointer
@@ -710,8 +710,8 @@ static int find_ecrec(long searchlen)          /* return PK-class error */
     if ( (error_in_archive = process_zip_cmmnt()) > PK_WARN )
         return error_in_archive;
 
-    G.expect_ecrec_offset = G.ecrec.offset_start_central_directory +
-                            G.ecrec.size_central_directory;
+    G.expect_ecrec_offset = UnzipClass.FHeader.offset_start_central_directory +
+                            UnzipClass.FHeader.size_central_directory;
 
     return error_in_archive;
 
@@ -743,31 +743,31 @@ static int process_zip_cmmnt()       /* return PK-type error code */
             of this fact.)
           -------------------------------------------------------------------*/
 
-        if (!G.ecrec.zipfile_comment_length)
+        if (!UnzipClass.FHeader.zipfile_comment_length)
             Info(0, NoZipfileComment);
         else {
             Info(0, ZipfileCommentDesc,
-              G.ecrec.zipfile_comment_length);
+              UnzipClass.FHeader.zipfile_comment_length);
             Info(0, ZipfileCommBegin);
-            UnzipClass.DisplayHeaderString(G.ecrec.zipfile_comment_length, FALSE);
+            UnzipClass.DisplayHeaderString(UnzipClass.FHeader.zipfile_comment_length, FALSE);
             Info(0, ZipfileCommEnd);
             if (error)
                 Info(0, ZipfileCommTrunc2);
         } /* endif (comment exists) */
 
     /* ZipInfo, non-verbose mode:  print zipfile comment only if requested */
-    } else if (G.ecrec.zipfile_comment_length &&
+    } else if (UnzipClass.FHeader.zipfile_comment_length &&
                (uO.zflag > 0) && uO.zipinfo_mode) {
-        UnzipClass.DisplayHeaderString(G.ecrec.zipfile_comment_length, FALSE);
+        UnzipClass.DisplayHeaderString(UnzipClass.FHeader.zipfile_comment_length, FALSE);
     } else
-    if ( G.ecrec.zipfile_comment_length &&
+    if ( UnzipClass.FHeader.zipfile_comment_length &&
          (uO.zflag > 0
           || (uO.zflag == 0
               && !uO.zipinfo_mode
               && !uO.qflag)
          ) )
     {
-        UnzipClass.DisplayHeaderString(G.ecrec.zipfile_comment_length, FALSE);
+        UnzipClass.DisplayHeaderString(UnzipClass.FHeader.zipfile_comment_length, FALSE);
     }
     return error;
 

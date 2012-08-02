@@ -72,6 +72,18 @@
    (top-down), to prevent internal padding and optimize memory usage!
  */
 
+struct TUnzipHeader
+{
+    unsigned long size_central_directory;
+    unsigned long offset_start_central_directory;
+    unsigned int num_entries_centrl_dir_ths_disk;
+    unsigned int total_entries_central_dir;
+    int number_this_disk;
+    int num_disk_start_cdir;
+    unsigned short zipfile_comment_length;
+};
+
+
 class TUnzip;
 
 class TUnzipFile
@@ -158,6 +170,7 @@ public:
     int FOldExtraBytes;
 
     long FZipLen;
+    TUnzipHeader FHeader;
     
 protected:
 

@@ -774,19 +774,6 @@ typedef struct VMStimbuf {
 #      define OFFSET_START_CENTRAL_DIRECT64     48
 
 
-   typedef struct end_central_dir_record {            /* END CENTRAL */
-       zusz_t size_central_directory;
-       zusz_t offset_start_central_directory;
-       zucn_t num_entries_centrl_dir_ths_disk;
-       zucn_t total_entries_central_dir;
-       zuvl_t number_this_disk;
-       zuvl_t num_disk_start_cdir;
-       int have_ecr64;                  /* valid Zip64 ecdir-record exists */
-       int is_zip64_archive;            /* Zip64 ecdir-record is mandatory */
-       unsigned short zipfile_comment_length;
-   } ecdir_rec;
-
-
 typedef struct _APIDocStruct {
     char *compare;
     char *function;
