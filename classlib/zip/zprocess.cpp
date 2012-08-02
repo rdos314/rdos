@@ -376,7 +376,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
         }
         return error? IZ_DIR : PK_NOZIP;
     }
-    G.ziplen = G.statbuf.st_size;
+    UnzipClass.FZipLen = G.statbuf.st_size;
 
     if (UnzipClass.OpenInputFile())   /* this should never happen, given */
         return PK_NOZIP;        /*  the stat() test above, but... */
@@ -398,7 +398,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
        )
         Info(0, LogInitline, UnzipClass.FInputFileName.GetData());
 
-    if ( (error_in_archive = find_ecrec(MIN(G.ziplen, 66000L)))
+    if ( (error_in_archive = find_ecrec(MIN(UnzipClass.FZipLen, 66000L)))
          > PK_WARN )
     {
         RdosCloseFile(UnzipClass.FInputHandle);
@@ -566,8 +566,8 @@ static int rec_find(long searchlen, char* signature, int rec_size)
     block at end of zipfile (if not TOO short).
   ---------------------------------------------------------------------------*/
 
-    if ((tail_len = G.ziplen % INBUFSIZ) > rec_size) {
-        RdosSetFilePos(UnzipClass.FInputHandle, G.ziplen-tail_len);
+    if ((tail_len = UnzipClass.FZipLen % INBUFSIZ) > rec_size) {
+        RdosSetFilePos(UnzipClass.FInputHandle, UnzipClass.FZipLen-tail_len);
         UnzipClass.FBufStart = RdosGetFilePos(UnzipClass.FInputHandle);
         if ((UnzipClass.FInCount = RdosReadFile(UnzipClass.FInputHandle, (char *)UnzipClass.FInBuf,
             (unsigned int)tail_len)) != (int)tail_len)
@@ -587,7 +587,7 @@ static int rec_find(long searchlen, char* signature, int rec_size)
         /* sig may span block boundary: */
         memcpy((char *)G.hold, (char *)UnzipClass.FInBuf, 3);
     } else
-        UnzipClass.FBufStart = G.ziplen - tail_len;
+        UnzipClass.FBufStart = UnzipClass.FZipLen - tail_len;
 
 /*-----------------------------------------------------------------------
     Loop through blocks of zipfile data, starting at the end and going
@@ -841,13 +841,13 @@ static int find_ecrec(long searchlen)          /* return PK-class error */
     Treat case of short zipfile separately.
   ---------------------------------------------------------------------------*/
 
-    if (G.ziplen <= INBUFSIZ) {
+    if (UnzipClass.FZipLen <= INBUFSIZ) {
         RdosSetFilePos(UnzipClass.FInputHandle, 0L);
-        if ((UnzipClass.FInCount = RdosReadFile(UnzipClass.FInputHandle,(char *)UnzipClass.FInBuf,(unsigned int)G.ziplen))
-            == (int)G.ziplen)
+        if ((UnzipClass.FInCount = RdosReadFile(UnzipClass.FInputHandle,(char *)UnzipClass.FInBuf,UnzipClass.FZipLen))
+            == UnzipClass.FZipLen)
 
             /* 'P' must be at least (ECREC_SIZE+4) bytes from end of zipfile */
-            for (UnzipClass.FInPtr = UnzipClass.FInBuf+(int)G.ziplen-(ECREC_SIZE+4);
+            for (UnzipClass.FInPtr = UnzipClass.FInBuf+UnzipClass.FZipLen-(ECREC_SIZE+4);
                  UnzipClass.FInPtr >= UnzipClass.FInBuf;
                  --UnzipClass.FInPtr) {
                 if ( (*UnzipClass.FInPtr == (unsigned char)0x50) &&         /* ASCII 'P' */

@@ -156,6 +156,8 @@ public:
 
     int FExtraBytes;
     int FOldExtraBytes;
+
+    long FZipLen;
     
 protected:
 
