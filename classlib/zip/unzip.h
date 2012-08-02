@@ -115,6 +115,9 @@ public:
     char *cfilname;          /* central header version of filename */
 
 protected:
+    int ProcessDirEntry();
+    int ProcessFileHeader();
+
     TUnzip *FUnzip;
     
 };
@@ -165,11 +168,7 @@ private:
     void SkipHeaderString(int length);
 
     int GetFileName(int length);
-    int GetDirEntry(TUnzipFile *file);
-    int ProcessDirEntry(TUnzipFile *file);
-    int DirEntryToFile(TUnzipFile *file, const char *filename);
     int SeekFile(TUnzipFile *file);
-    int ProcessFileHeader(TUnzipFile *file);
     TUnzipFile *ProcessNextFile();
 
     char FLogBuf[512];

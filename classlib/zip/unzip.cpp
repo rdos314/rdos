@@ -556,6 +556,11 @@ unsigned FindCompressMethod(unsigned compr_methodnum)
 TUnzipFile::TUnzipFile(TUnzip *unzip)
 {
     FUnzip = unzip;
+
+    error = ProcessDirEntry();
+
+    if (error == PK_COOL)
+        error = ProcessFileHeader();
 }
 
 /*##########################################################################
@@ -571,6 +576,264 @@ TUnzipFile::TUnzipFile(TUnzip *unzip)
 ##########################################################################*/
 TUnzipFile::~TUnzipFile()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TUnzipFile::ProcessDirEntry
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzipFile::ProcessDirEntry()    /* return PK-type error code */
+{
+    int error;
+    unsigned short filename_length;
+    unsigned short extra_field_length;
+    unsigned short file_comment_length;
+    unsigned long dos_datetime;
+    unsigned char byterec[ CREC_SIZE ];
+    unsigned cmpridx;
+
+/*---------------------------------------------------------------------------
+    Read the next central directory entry and do any necessary machine-type
+    conversions (byte ordering, structure padding compensation--do so by
+    copying the data from the array into which it was read (byterec) to the
+    usable struct (crec)).
+  ---------------------------------------------------------------------------*/
+
+    if (FUnzip->ReadBuf((char *)byterec, CREC_SIZE) == 0)
+        return PK_EOF;
+
+    hostver = byterec[C_VERSION_MADE_BY_0];
+    hostnum = MIN(byterec[C_VERSION_MADE_BY_1], NUM_HOSTS);
+
+    version_needed_to_extract[0] = byterec[C_VERSION_NEEDED_TO_EXTRACT_0];
+    version_needed_to_extract[1] = byterec[C_VERSION_NEEDED_TO_EXTRACT_1];
+
+    general_purpose_bit_flag = makeword(&byterec[C_GENERAL_PURPOSE_BIT_FLAG]);
+    encrypted = general_purpose_bit_flag & 1;   /* bit field */
+    ExtLocHdr = (general_purpose_bit_flag & 8) == 8;  /* bit */
+
+    dos_datetime = makelong(&byterec[C_LAST_MOD_DOS_DATETIME]);
+    DosToRdosTime(&rdos_msb_time, &rdos_lsb_time, dos_datetime);
+
+    crc = makelong(&byterec[C_CRC32]);
+    compr_size = makelong(&byterec[C_COMPRESSED_SIZE]);
+    uncompr_size = makelong(&byterec[C_UNCOMPRESSED_SIZE]);
+    compression_method = makeword(&byterec[C_COMPRESSION_METHOD]);
+
+    filename_length = makeword(&byterec[C_FILENAME_LENGTH]);
+    extra_field_length = makeword(&byterec[C_EXTRA_FIELD_LENGTH]);
+    file_comment_length = makeword(&byterec[C_FILE_COMMENT_LENGTH]);
+
+    diskstart = makeword(&byterec[C_DISK_NUMBER_START]);
+
+    internal_file_attributes = makeword(&byterec[C_INTERNAL_FILE_ATTRIBUTES]);
+    external_file_attributes = makelong(&byterec[C_EXTERNAL_FILE_ATTRIBUTES]);  /* LONG, not word! */
+    textfile = internal_file_attributes & 1;    /* bit field */
+
+    offset = makelong(&byterec[C_RELATIVE_OFFSET_LOCAL_HEADER]);
+
+/*---------------------------------------------------------------------------
+    Get central directory info, save host and method numbers, and set flag
+    for lowercase conversion of filename, depending on the OS from which the
+    file is coming.
+  ---------------------------------------------------------------------------*/
+
+    switch (hostnum) {
+        case FS_FAT_:     /* PKZIP and zip -k store in uppercase */
+        case CPM_:        /* like MS-DOS, right? */
+        case VM_CMS_:     /* all caps? */
+        case MVS_:        /* all caps? */
+        case TANDEM_:
+        case TOPS20_:
+        case VMS_:        /* our Zip uses lowercase, but ASi's doesn't */
+        /*  case Z_SYSTEM_:   ? */
+        /*  case QDOS_:       ? */
+            lcflag = 1;   /* convert filename to lowercase */
+            break;
+
+        default:     /* AMIGA_, FS_HPFS_, FS_NTFS_, MAC_, UNIX_, ATARI_, */
+            lcflag = 0;
+            break;   /*  FS_VFAT_, ATHEOS_, BEOS_ (Z_SYSTEM_), THEOS_: */
+                         /*  no conversion */
+    }
+
+    /* do Amigas (AMIGA_) also have volume labels? */
+    if ((external_file_attributes & 0x8) &&
+        (hostnum == FS_FAT_ || hostnum == FS_HPFS_ ||
+         hostnum == FS_NTFS_ || hostnum == ATARI_))
+    {
+        vollabel = TRUE;
+        lcflag = 0;        /* preserve case of volume labels */
+    } else
+        vollabel = FALSE;
+
+    /* this flag is needed to detect archives made by "PKZIP for Unix" when
+       deciding which kind of codepage conversion has to be applied to
+       strings (see do_string() function in fileio.c) */
+    HasUxAtt = (external_file_attributes & 0xffff0000L) != 0L;
+
+    error = FUnzip->GetFileName(filename_length);
+    if (error != PK_COOL)
+    {
+        if (error > PK_WARN) {  /* fatal:  no more left to do */
+            FUnzip->Info(0x401,
+              "%s:  bad filename length (%s)\n",
+              FUnzip->FCurrFileName, "central");
+        }
+        return error;
+    }
+
+    FUnzip->SkipHeaderString(extra_field_length);
+    FUnzip->SkipHeaderString(file_comment_length);
+
+/*---------------------------------------------------------------------------
+    Check central directory info for version/compatibility requirements.
+  ---------------------------------------------------------------------------*/
+
+    if (version_needed_to_extract[0] > UNZIP_VERSION) {
+        FUnzip->Info(0x401, "   skipping: %-22s  need %s compat. v%u.%u (can do v%u.%u)\n",
+              FUnzip->FCurrFileName, "PK",
+              version_needed_to_extract[0] / 10,
+              version_needed_to_extract[0] % 10,
+              UNZIP_VERSION / 10, UNZIP_VERSION % 10);
+        return PK_WARN;
+    }
+
+    if ((compression_method >= REDUCED1 && compression_method <= REDUCED4) ||
+        compression_method==TOKENIZED ||
+        (compression_method>DEFLATED))
+    {
+        cmpridx = FindCompressMethod(compression_method);
+        if (cmpridx < NUM_METHODS)
+            FUnzip->Info(0x401, "   skipping: %-22s  `%s' method not supported\n",
+              FUnzip->FCurrFileName,
+              ComprNames[cmpridx]);
+        else
+            FUnzip->Info(0x401, "   skipping: %-22s  unsupported compression method %u\n",
+              FUnzip->FCurrFileName,
+              compression_method);
+        return PK_WARN;
+    }
+
+    /* store a copy of the central header filename for later comparison */
+    cfilname = new char[strlen(FUnzip->FCurrFileName) + 1];
+    if (cfilname == 0) {
+        FUnzip->Info(0x401, "%s:  warning, no memory for comparison with local header\n", FUnzip->FCurrFileName);
+    } else
+        strcpy(cfilname, FUnzip->FCurrFileName);
+
+    return PK_COOL;
+}
+
+/*##########################################################################
+#
+#   Name       : TUnzipFile::ProcessFileHeader
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzipFile::ProcessFileHeader()
+{
+    unsigned long dos_datetime;
+    unsigned char byterec[ LREC_SIZE ];
+    long bufstart;
+    char *inptr;
+    int incnt;
+    unsigned long csize;
+    unsigned long ucsize;
+    unsigned long rdos_msb_time;
+    unsigned long rdos_lsb_time;
+    unsigned long crc32;
+    unsigned char ve[2];
+    unsigned short general_purpose_bit_flag;
+    unsigned short compression_method;
+    unsigned short filename_length;
+    unsigned short extra_field_length;
+
+    bufstart = FUnzip->FBufStart;
+    inptr = FUnzip->FInPtr;
+    incnt = FUnzip->FInCount;
+    
+    error = FUnzip->SeekFile(this);
+
+    if (error == PK_COOL)
+    {
+
+/*---------------------------------------------------------------------------
+    Read the next local file header and do any necessary machine-type con-
+    versions (byte ordering, structure padding compensation--do so by copy-
+    ing the data from the array into which it was read (byterec) to the
+    usable struct (lrec)).
+  ---------------------------------------------------------------------------*/
+
+        if (FUnzip->ReadBuf((char *)byterec, LREC_SIZE) == 0)
+            error = PK_EOF;
+        else
+        {
+            ve[0] = byterec[L_VERSION_NEEDED_TO_EXTRACT_0];
+            ve[1] = byterec[L_VERSION_NEEDED_TO_EXTRACT_1];
+
+            if (version_needed_to_extract[0] < ve[0])
+            {
+                version_needed_to_extract[0] = ve[0];
+                version_needed_to_extract[1] = ve[1];
+            }
+
+            general_purpose_bit_flag |= makeword(&byterec[L_GENERAL_PURPOSE_BIT_FLAG]);
+            
+            dos_datetime = makelong(&byterec[L_LAST_MOD_DOS_DATETIME]);
+            DosToRdosTime(&rdos_msb_time, &rdos_lsb_time, dos_datetime);
+
+            crc32 = makelong(&byterec[L_CRC32]);
+            csize = makelong(&byterec[L_COMPRESSED_SIZE]);
+            ucsize = makelong(&byterec[L_UNCOMPRESSED_SIZE]);
+            filename_length = makeword(&byterec[L_FILENAME_LENGTH]);
+            extra_field_length = makeword(&byterec[L_EXTRA_FIELD_LENGTH]);
+
+            if ((general_purpose_bit_flag & 8) == 0) {
+                crc = crc32;
+                compr_size = csize;
+                uncompr_size = ucsize;
+            }
+            
+            if (compression_method != makeword(&byterec[L_COMPRESSION_METHOD])) {
+                FUnzip->Info(0x421, "header incompability\n");
+                error = PK_ERR;
+            }
+        }
+    }
+
+    if (error == PK_COOL)
+        error = FUnzip->GetFileName(filename_length);
+
+    if (error != PK_COOL)
+        FUnzip->Info(0x421, "bad local header\n");
+
+    if (error == PK_COOL)
+    {
+        FUnzip->SkipHeaderString(extra_field_length);
+        file_data_offset = FUnzip->FBufStart - FUnzip->FExtraBytes + (FUnzip->FInPtr-FUnzip->FInBuf);
+        abs_data_offset = FUnzip->FBufStart + (FUnzip->FInPtr-FUnzip->FInBuf);
+    }
+
+    RdosSetFilePos(FUnzip->FInputHandle, bufstart);
+    FUnzip->FBufStart = RdosGetFilePos(FUnzip->FInputHandle);
+    RdosReadFile(FUnzip->FInputHandle, FUnzip->FInBuf, INBUFSIZ);  /* been here before... */
+    FUnzip->FInPtr = inptr;
+    FUnzip->FInCount = incnt;
+
+    return error;
 }
 
 /*##########################################################################
@@ -1626,180 +1889,6 @@ int TUnzip::GetFileName(int length)
 
 /*##########################################################################
 #
-#   Name       : TUnzip::DirEntryToFile
-#
-#   Purpose....: Convert dir-entry to file entry
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TUnzip::DirEntryToFile(TUnzipFile *file, const char *filename)
-{
-     unsigned cmpridx;
-
-/*---------------------------------------------------------------------------
-    Check central directory info for version/compatibility requirements.
-  ---------------------------------------------------------------------------*/
-
-    if (file->version_needed_to_extract[0] > UNZIP_VERSION) {
-        Info(0x401, "   skipping: %-22s  need %s compat. v%u.%u (can do v%u.%u)\n",
-              filename, "PK",
-              file->version_needed_to_extract[0] / 10,
-              file->version_needed_to_extract[0] % 10,
-              UNZIP_VERSION / 10, UNZIP_VERSION % 10);
-        return PK_WARN;
-    }
-
-    if ((file->compression_method >= REDUCED1 && file->compression_method <= REDUCED4) ||
-        file->compression_method==TOKENIZED ||
-        (file->compression_method>DEFLATED))
-    {
-        cmpridx = FindCompressMethod(file->compression_method);
-        if (cmpridx < NUM_METHODS)
-            Info(0x401, "   skipping: %-22s  `%s' method not supported\n",
-              filename,
-              ComprNames[cmpridx]);
-        else
-            Info(0x401, "   skipping: %-22s  unsupported compression method %u\n",
-              filename,
-              file->compression_method);
-        return PK_WARN;
-    }
-
-    /* store a copy of the central header filename for later comparison */
-    file->cfilname = new char[strlen(filename) + 1];
-    if (file->cfilname == 0) {
-        Info(0x401, "%s:  warning, no memory for comparison with local header\n", filename);
-    } else
-        strcpy(file->cfilname, filename);
-
-    return PK_COOL;
-
-} /* end function store_info() */
-
-/*##########################################################################
-#
-#   Name       : TUnzip::ProcessDirEntry
-#
-#   Purpose....: 
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TUnzip::ProcessDirEntry(TUnzipFile *file)    /* return PK-type error code */
-{
-    int error;
-    unsigned short filename_length;
-    unsigned short extra_field_length;
-    unsigned short file_comment_length;
-    unsigned long dos_datetime;
-    unsigned char byterec[ CREC_SIZE ];
-
-/*---------------------------------------------------------------------------
-    Read the next central directory entry and do any necessary machine-type
-    conversions (byte ordering, structure padding compensation--do so by
-    copying the data from the array into which it was read (byterec) to the
-    usable struct (crec)).
-  ---------------------------------------------------------------------------*/
-
-    if (ReadBuf((char *)byterec, CREC_SIZE) == 0)
-        return PK_EOF;
-
-    file->hostver = byterec[C_VERSION_MADE_BY_0];
-    file->hostnum = MIN(byterec[C_VERSION_MADE_BY_1], NUM_HOSTS);
-
-    file->version_needed_to_extract[0] = byterec[C_VERSION_NEEDED_TO_EXTRACT_0];
-    file->version_needed_to_extract[1] = byterec[C_VERSION_NEEDED_TO_EXTRACT_1];
-
-    file->general_purpose_bit_flag = makeword(&byterec[C_GENERAL_PURPOSE_BIT_FLAG]);
-    file->encrypted = file->general_purpose_bit_flag & 1;   /* bit field */
-    file->ExtLocHdr = (file->general_purpose_bit_flag & 8) == 8;  /* bit */
-
-    dos_datetime = makelong(&byterec[C_LAST_MOD_DOS_DATETIME]);
-    DosToRdosTime(&file->rdos_msb_time, &file->rdos_lsb_time, dos_datetime);
-
-    file->crc = makelong(&byterec[C_CRC32]);
-    file->compr_size = makelong(&byterec[C_COMPRESSED_SIZE]);
-    file->uncompr_size = makelong(&byterec[C_UNCOMPRESSED_SIZE]);
-    file->compression_method = makeword(&byterec[C_COMPRESSION_METHOD]);
-
-    filename_length = makeword(&byterec[C_FILENAME_LENGTH]);
-    extra_field_length = makeword(&byterec[C_EXTRA_FIELD_LENGTH]);
-    file_comment_length = makeword(&byterec[C_FILE_COMMENT_LENGTH]);
-
-    file->diskstart = makeword(&byterec[C_DISK_NUMBER_START]);
-
-    file->internal_file_attributes = makeword(&byterec[C_INTERNAL_FILE_ATTRIBUTES]);
-    file->external_file_attributes = makelong(&byterec[C_EXTERNAL_FILE_ATTRIBUTES]);  /* LONG, not word! */
-    file->textfile = file->internal_file_attributes & 1;    /* bit field */
-
-    file->offset = makelong(&byterec[C_RELATIVE_OFFSET_LOCAL_HEADER]);
-
-/*---------------------------------------------------------------------------
-    Get central directory info, save host and method numbers, and set flag
-    for lowercase conversion of filename, depending on the OS from which the
-    file is coming.
-  ---------------------------------------------------------------------------*/
-
-    switch (file->hostnum) {
-        case FS_FAT_:     /* PKZIP and zip -k store in uppercase */
-        case CPM_:        /* like MS-DOS, right? */
-        case VM_CMS_:     /* all caps? */
-        case MVS_:        /* all caps? */
-        case TANDEM_:
-        case TOPS20_:
-        case VMS_:        /* our Zip uses lowercase, but ASi's doesn't */
-        /*  case Z_SYSTEM_:   ? */
-        /*  case QDOS_:       ? */
-            file->lcflag = 1;   /* convert filename to lowercase */
-            break;
-
-        default:     /* AMIGA_, FS_HPFS_, FS_NTFS_, MAC_, UNIX_, ATARI_, */
-            file->lcflag = 0;
-            break;   /*  FS_VFAT_, ATHEOS_, BEOS_ (Z_SYSTEM_), THEOS_: */
-                         /*  no conversion */
-    }
-
-    /* do Amigas (AMIGA_) also have volume labels? */
-    if ((file->external_file_attributes & 0x8) &&
-        (file->hostnum == FS_FAT_ || file->hostnum == FS_HPFS_ ||
-         file->hostnum == FS_NTFS_ || file->hostnum == ATARI_))
-    {
-        file->vollabel = TRUE;
-        file->lcflag = 0;        /* preserve case of volume labels */
-    } else
-        file->vollabel = FALSE;
-
-    /* this flag is needed to detect archives made by "PKZIP for Unix" when
-       deciding which kind of codepage conversion has to be applied to
-       strings (see do_string() function in fileio.c) */
-    file->HasUxAtt = (file->external_file_attributes & 0xffff0000L) != 0L;
-
-    error = GetFileName(filename_length);
-    if (error != PK_COOL)
-    {
-        if (error > PK_WARN) {  /* fatal:  no more left to do */
-            Info(0x401,
-              "%s:  bad filename length (%s)\n",
-              FCurrFileName, "central");
-        }
-        return error;
-    }
-
-    SkipHeaderString(extra_field_length);
-    SkipHeaderString(file_comment_length);
-
-    error = DirEntryToFile(file, FCurrFileName);
-
-    return error;
-}
-
-/*##########################################################################
-#
 #   Name       : TUnzip::SeekFile
 #
 #   Purpose....: 
@@ -1895,101 +1984,6 @@ int TUnzip::SeekFile(TUnzipFile *file)    /* return PK-type error code */
 
 /*##########################################################################
 #
-#   Name       : TUnzip::ProcessFileHeader
-#
-#   Purpose....: 
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TUnzip::ProcessFileHeader(TUnzipFile *file)
-{
-    unsigned long dos_datetime;
-    unsigned char byterec[ LREC_SIZE ];
-    int error;
-    long bufstart;
-    char *inptr;
-    int incnt;
-    unsigned long csize;
-    unsigned long ucsize;
-    unsigned long rdos_msb_time;
-    unsigned long rdos_lsb_time;
-    unsigned long crc32;
-    unsigned char version_needed_to_extract[2];
-    unsigned short general_purpose_bit_flag;
-    unsigned short compression_method;
-    unsigned short filename_length;
-    unsigned short extra_field_length;
-
-    bufstart = FBufStart;
-    inptr = FInPtr;
-    incnt = FInCount;
-    
-    error = SeekFile(file);
-
-    if (error == PK_COOL)
-    {
-
-/*---------------------------------------------------------------------------
-    Read the next local file header and do any necessary machine-type con-
-    versions (byte ordering, structure padding compensation--do so by copy-
-    ing the data from the array into which it was read (byterec) to the
-    usable struct (lrec)).
-  ---------------------------------------------------------------------------*/
-
-        if (ReadBuf((char *)byterec, LREC_SIZE) == 0)
-            error = PK_EOF;
-        else
-        {
-            version_needed_to_extract[0] = byterec[L_VERSION_NEEDED_TO_EXTRACT_0];
-            version_needed_to_extract[1] = byterec[L_VERSION_NEEDED_TO_EXTRACT_1];
-
-            general_purpose_bit_flag = makeword(&byterec[L_GENERAL_PURPOSE_BIT_FLAG]);
-            compression_method = makeword(&byterec[L_COMPRESSION_METHOD]);
-
-            dos_datetime = makelong(&byterec[L_LAST_MOD_DOS_DATETIME]);
-            DosToRdosTime(&rdos_msb_time, &rdos_lsb_time, dos_datetime);
-
-            crc32 = makelong(&byterec[L_CRC32]);
-            csize = makelong(&byterec[L_COMPRESSED_SIZE]);
-            ucsize = makelong(&byterec[L_UNCOMPRESSED_SIZE]);
-            filename_length = makeword(&byterec[L_FILENAME_LENGTH]);
-            extra_field_length = makeword(&byterec[L_EXTRA_FIELD_LENGTH]);
-
-            if ((general_purpose_bit_flag & 8) == 0) {
-                file->crc = crc32;
-                file->compr_size = csize;
-                file->uncompr_size = ucsize;
-            }
-        }
-    }
-
-    if (error == PK_COOL)
-        error = GetFileName(filename_length);
-
-    if (error != PK_COOL)
-        Info(0x421, "bad local header\n");
-
-    if (error == PK_COOL)
-    {
-        SkipHeaderString(extra_field_length);
-        file->file_data_offset = FBufStart - FExtraBytes + (FInPtr-FInBuf);
-        file->abs_data_offset = FBufStart + (FInPtr-FInBuf);
-    }
-
-    RdosSetFilePos(FInputHandle, bufstart);
-    FBufStart = RdosGetFilePos(FInputHandle);
-    RdosReadFile(FInputHandle, FInBuf, INBUFSIZ);  /* been here before... */
-    FInPtr = inptr;
-    FInCount = incnt;
-
-    return error;
-}
-
-/*##########################################################################
-#
 #   Name       : TUnzip::ProcessNextFile
 #
 #   Purpose....: 
@@ -2041,11 +2035,6 @@ TUnzipFile *TUnzip::ProcessNextFile()
     }
 
     file = new TUnzipFile(this);
-
-    file->error = ProcessDirEntry(file);
-
-    if (file->error == PK_COOL)
-        file->error = ProcessFileHeader(file);
 
     return file;
 }
