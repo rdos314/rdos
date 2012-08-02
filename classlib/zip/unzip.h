@@ -141,8 +141,6 @@ protected:
     int DiskError();
 
     int Store();
-    void UnshrinkPartialClear(int lastcodeused);
-    int Unshrink();
 
     int ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl);
     int ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bl, unsigned bd, unsigned bdl);
@@ -165,13 +163,6 @@ protected:
     int FDoText;
 
     unsigned long FCurrCrcVal;
-
-    int *FShrinkParent;          /* pointer to (8192 * sizeof(int)) */
-    unsigned char *FShrinkValue;              /* pointer to 8KB char buffer */
-    unsigned char *FShrinkStack;              /* pointer to another 8KB char buffer */
-    int FZipeof;
-    int FBitsLeft;
-    unsigned long FBitBuf;
 
     int FUsedCSize;
 
