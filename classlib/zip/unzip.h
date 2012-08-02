@@ -62,23 +62,6 @@
 
 #define FILE_NAME_SIZE        513
 
-/* Huffman code lookup table entry--this entry is four bytes for machines
-   that have 16-bit pointers (e.g. PC's in the small or medium model).
-   Valid extra bits are 0..16.  e == 31 is EOB (end of block), e == 32
-   means that v is a literal, 32 < e < 64 means that v is a pointer to
-   the next table, which codes (e & 31)  bits, and lastly e == 99 indicates
-   an unused code.  If a code with e == 99 is looked up, this implies an
-   error in the data. */
-
-struct TUnzipHuft {
-    unsigned char e;                /* number of extra bits or operation */
-    unsigned char b;                /* number of bits in this code or subcode */
-    union {
-        unsigned short n;            /* literal, length base, or distance base */
-        struct TUnzipHuft *t;        /* pointer to next level of table */
-    } v;
-};
-
 /* The following structs are used to hold all header data of a zip entry.
    Traditionally, the structs' layouts followed the data layout of the
    corresponding zipfile header structures.  However, the zipfile header
@@ -142,16 +125,6 @@ protected:
 
     int Store();
 
-    int ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl);
-    int ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuft *td, unsigned bl, unsigned bd, unsigned bdl);
-
-    int BuildHuft(const unsigned *b, unsigned n, unsigned s, const unsigned short *d, const unsigned char *e, TUnzipHuft **t, unsigned *m);
-    void FreeHuft(struct TUnzipHuft *t);
-
-    int ExplodeGetTree(unsigned *l, unsigned n);
-
-    int Explode();
-
     char *FOutBuf;
     char *FOutPtr;
     int FOutCount;
@@ -163,8 +136,6 @@ protected:
     int FDoText;
 
     unsigned long FCurrCrcVal;
-
-    int FUsedCSize;
 
     TUnzip *FUnzip;
     
