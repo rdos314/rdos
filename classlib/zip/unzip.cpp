@@ -87,6 +87,16 @@
 #define L_FILENAME_LENGTH                 22
 #define L_EXTRA_FIELD_LENGTH              24
 
+#define ECREC_SIZE   18   /*  record, zip64 end-of-cent-dir locator */
+/*define SIGNATURE                        0   space-holder only */
+#define NUMBER_THIS_DISK                  4
+#define NUM_DISK_WITH_START_CEN_DIR       6
+#define NUM_ENTRIES_CEN_DIR_THS_DISK      8
+#define TOTAL_ENTRIES_CENTRAL_DIR         10
+#define SIZE_CENTRAL_DIRECTORY            12
+#define OFFSET_START_CENTRAL_DIRECTORY    16
+#define ZIPFILE_COMMENT_LENGTH            20
+
 #define RAND_HEAD_LEN  12       /* length of encryption random header */
 
 #define INBUFSIZ  8192
@@ -1672,6 +1682,177 @@ void TUnzip::SkipHeaderString(int length)
          * correct for it twice: */
     Seek(FBufStart - FExtraBytes + (FInPtr-FInBuf) + length);
 }
+
+/*##########################################################################
+#
+#   Name       : TUnzip::FindRec
+#
+#   Purpose....: Find record
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::FindRec(long searchlen, char* signature, int rec_size)
+    /* return 0 when rec found, 1 when not found, 2 in case of read error */
+{
+    int i, numblks, found=FALSE;
+    long tail_len;
+
+/*---------------------------------------------------------------------------
+    Zipfile is longer than INBUFSIZ:  may need to loop.  Start with short
+    block at end of zipfile (if not TOO short).
+  ---------------------------------------------------------------------------*/
+
+    if ((tail_len = FZipLen % INBUFSIZ) > rec_size) {
+        RdosSetFilePos(FInputHandle, FZipLen-tail_len);
+        FBufStart = RdosGetFilePos(FInputHandle);
+        if ((FInCount = RdosReadFile(FInputHandle, FInBuf,
+            (unsigned int)tail_len)) != (int)tail_len)
+            return 2;      /* it's expedient... */
+
+        /* 'P' must be at least (rec_size+4) bytes from end of zipfile */
+        for (FInPtr = FInBuf+(int)tail_len-(rec_size+4);
+             FInPtr >= FInBuf;
+             --FInPtr) {
+            if ( (*FInPtr == (unsigned char)0x50) &&         /* ASCII 'P' */
+                 !memcmp(FInPtr, signature, 4) ) {
+                FInCount -= (int)(FInPtr - FInBuf);
+                found = TRUE;
+                break;
+            }
+        }
+        /* sig may span block boundary: */
+        memcpy(FSearchHold, FInBuf, 3);
+    } else
+        FBufStart = FZipLen - tail_len;
+
+/*-----------------------------------------------------------------------
+    Loop through blocks of zipfile data, starting at the end and going
+    toward the beginning.  In general, need not check whole zipfile for
+    signature, but may want to do so if testing.
+  -----------------------------------------------------------------------*/
+
+    numblks = (int)((searchlen - tail_len + (INBUFSIZ-1)) / INBUFSIZ);
+    /*               ==amount=   ==done==   ==rounding==    =blksiz=  */
+
+    for (i = 1;  !found && (i <= numblks);  ++i) {
+        FBufStart -= INBUFSIZ;
+        RdosSetFilePos(FInputHandle, FBufStart);
+        if ((FInCount = RdosReadFile(FInputHandle,FInBuf,INBUFSIZ))
+            != INBUFSIZ)
+            return 2;          /* read error is fatal failure */
+
+        for (FInPtr = FInBuf+INBUFSIZ-1;  FInPtr >= FInBuf; --FInPtr)
+            if ( (*FInPtr == (unsigned char)0x50) &&         /* ASCII 'P' */
+                 !memcmp(FInPtr, signature, 4) ) {
+                FInCount -= (int)(FInPtr - FInBuf);
+                found = TRUE;
+                break;
+            }
+        /* sig may span block boundary: */
+        memcpy(FSearchHold, FInBuf, 3);
+    }
+    return (found ? 0 : 1);
+} /* end function rec_find() */
+
+
+
+/*##########################################################################
+#
+#   Name       : TUnzip::GetCentralHeader
+#
+#   Purpose....: Get central header
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::GetCentralHeader(long searchlen)
+{
+    int found = FALSE;
+    int error;
+    int result;
+    unsigned char byterec[ECREC_SIZE+4];
+    static char end_central_sig[4]   = {0x50, 0x4B, 0x05, 0x06};
+
+/*---------------------------------------------------------------------------
+    Treat case of short zipfile separately.
+  ---------------------------------------------------------------------------*/
+
+    if (FZipLen <= INBUFSIZ) {
+        RdosSetFilePos(FInputHandle, 0L);
+        FInCount = RdosReadFile(FInputHandle, FInBuf, FZipLen);
+        if (FInCount == FZipLen)
+
+            /* 'P' must be at least (ECREC_SIZE+4) bytes from end of zipfile */
+            for (FInPtr = FInBuf+FZipLen-(ECREC_SIZE+4);
+                 FInPtr >= FInBuf;
+                 --FInPtr) {
+                if ( (*FInPtr == (unsigned char)0x50) &&         /* ASCII 'P' */
+                     !memcmp(FInPtr, end_central_sig, 4)) {
+                    FInCount -= (int)(FInPtr - FInBuf);
+                    found = TRUE;
+                    break;
+                }
+            }
+
+/*---------------------------------------------------------------------------
+    Zipfile is longer than INBUFSIZ:
+
+    MB - this next block of code moved to rec_find so that same code can be
+    used to look for zip64 ec record.  No need to include code above since
+    a zip64 ec record will only be looked for if it is a BIG file.
+  ---------------------------------------------------------------------------*/
+
+    } else {
+        found =
+          (FindRec(searchlen, end_central_sig, ECREC_SIZE) == 0
+           ? TRUE : FALSE);
+    } /* end if (ziplen > INBUFSIZ) */
+
+/*---------------------------------------------------------------------------
+    Searched through whole region where signature should be without finding
+    it.  Print informational message and die a horrible death.
+  ---------------------------------------------------------------------------*/
+
+    if (!found) {
+        Info(0x401, "[%s]\n", FInputFileName.GetData());
+        Info(0x401, "End-of-central-directory signature not found. Probably no zip archive\n");
+        return PK_ERR;   /* failed */
+    }
+
+/*---------------------------------------------------------------------------
+    Found the signature, so get the end-central data before returning.  Do
+    any necessary machine-type conversions (byte ordering, structure padding
+    compensation) by reading data into character array and copying to struct.
+  ---------------------------------------------------------------------------*/
+
+    FRealHeaderOffset = FBufStart + (FInPtr-FInBuf);
+
+    if (ReadBuf((char *)byterec, ECREC_SIZE+4) == 0)
+        return PK_EOF;
+
+    FHeader.number_this_disk = makeword(&byterec[NUMBER_THIS_DISK]);
+    FHeader.num_disk_start_cdir = makeword(&byterec[NUM_DISK_WITH_START_CEN_DIR]);
+    FHeader.num_entries_centrl_dir_ths_disk = makeword(&byterec[NUM_ENTRIES_CEN_DIR_THS_DISK]);
+    FHeader.total_entries_central_dir = makeword(&byterec[TOTAL_ENTRIES_CENTRAL_DIR]);
+    FHeader.size_central_directory = makelong(&byterec[SIZE_CENTRAL_DIRECTORY]);
+    FHeader.offset_start_central_directory = makelong(&byterec[OFFSET_START_CENTRAL_DIRECTORY]);
+    FHeader.zipfile_comment_length = makeword(&byterec[ZIPFILE_COMMENT_LENGTH]);
+
+    DisplayHeaderString(FHeader.zipfile_comment_length, FALSE);
+
+    FExpectHeaderOffset = FHeader.offset_start_central_directory +
+                            FHeader.size_central_directory;
+
+    return PK_OK;
+
+} /* end function find_ecrec() */
+
+
 
 /*##########################################################################
 #

@@ -167,7 +167,6 @@ typedef struct Globals {
     int create_dirs;      /* used by main(), mapname(), checkdir() */
     int extract_flag;
     int newzip;           /* reset in extract.c; used in crypt.c */
-    long   real_ecrec_offset;
     long   expect_ecrec_offset;
 
     char **pfnames;
@@ -179,7 +178,6 @@ typedef struct Globals {
 
     char      *argv0;               /* used for NT and EXE_EXTENSION */
     char      *wildzipfn;
-    unsigned char       *hold;
 
     struct stat   statbuf;              /* used by main, mapname, check_for_newer */
 

@@ -78,8 +78,8 @@ struct TUnzipHeader
     unsigned long offset_start_central_directory;
     unsigned int num_entries_centrl_dir_ths_disk;
     unsigned int total_entries_central_dir;
-    int number_this_disk;
-    int num_disk_start_cdir;
+    unsigned short number_this_disk;
+    unsigned short num_disk_start_cdir;
     unsigned short zipfile_comment_length;
 };
 
@@ -158,6 +158,8 @@ public:
     TUnzipFile *GetFile(int index);
     int GetFileCount();
 
+    int GetCentralHeader(long searchlen);
+
     TString FInputFileName;
     int FInputHandle;
 
@@ -170,6 +172,9 @@ public:
     int FOldExtraBytes;
 
     long FZipLen;
+    unsigned long FRealHeaderOffset;
+    unsigned long FExpectHeaderOffset;
+    char *FSearchHold;
     TUnzipHeader FHeader;
     
 protected:
@@ -182,6 +187,7 @@ private:
     int GetFileName(char *buf, int length);
     int SeekFile(TUnzipFile *file);
     TUnzipFile *ProcessNextFile();
+    int FindRec(long searchlen, char* signature, int rec_size);
 
     char FLogBuf[512];
 
