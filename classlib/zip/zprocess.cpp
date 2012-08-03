@@ -197,9 +197,10 @@ int process_zipfiles()    /* return PK-type error code */
             && (NumWinFiles+NumLoseFiles+NumWarnFiles+NumMissFiles) > 0)
             Info(0, "\n");
 
-        error = UnzipClass.Open(inputfn);
-        if (error == PK_OK)
+        if (UnzipClass.Open(inputfn))
             error = extract_or_test_files();   /* EXTRACT OR TEST 'EM */
+        else
+            error = PK_NOZIP;
 
         if (error == PK_WARN)
             ++NumWarnFiles;
@@ -249,9 +250,10 @@ int process_zipfiles()    /* return PK-type error code */
             NumMissDirs = NumMissFiles = 0;
             error_in_archive = PK_COOL;
 
-            error = UnzipClass.Open(lastzipfn);
-            if (error == PK_OK)
+            if (UnzipClass.Open(lastzipfn))
                 error = extract_or_test_files();   /* EXTRACT OR TEST 'EM */
+            else
+                error = PK_NOZIP;
                 
             switch (error) {
               case PK_WARN:

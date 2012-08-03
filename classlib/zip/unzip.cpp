@@ -1582,21 +1582,21 @@ int TUnzip::Open(const char *filename)
     if (!FInputHandle)
     {
         Info(0x401, "error:  cannot open zipfile [ %s ]\n", filename);
-        return PK_NOZIP;
+        return FALSE;
     }
 
     FZipLen = RdosGetFileSize(FInputHandle);
 
     error = ProcessFiles(filename);
 
-    if (error != PK_OK)
+    if (error == PK_OK)
+        return TRUE;
+    else
     {
         RdosCloseFile(FInputHandle);
         FInputHandle = 0;
+        return FALSE;
     }
-
-    return error;
-
 } /* end function do_seekable() */
 
 
