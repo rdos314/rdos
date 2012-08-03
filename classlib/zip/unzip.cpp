@@ -2235,6 +2235,7 @@ int TUnzip::ProcessFiles()
     char sig[4];
     static char central_hdr_sig[4]     = {0x50, 0x4B, 0x01, 0x02};
 
+    FSearchHold = FInBuf + INBUFSIZ;     /* to check for boundary-spanning sigs */
 
 /*---------------------------------------------------------------------------
     Find and process the end-of-central-directory header.  UnZip need only

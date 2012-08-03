@@ -159,21 +159,6 @@ public:
     int GetFileCount();
 
     TString FInputFileName;
-    int FInputHandle;
-
-    char *FInBuf;
-    char *FInPtr;
-    int FInCount;
-    int FBufStart;
-
-    int FExtraBytes;
-    int FOldExtraBytes;
-
-    long FZipLen;
-    unsigned long FRealHeaderOffset;
-    unsigned long FExpectHeaderOffset;
-    char *FSearchHold;
-    TUnzipHeader FHeader;
     
 protected:
 
@@ -194,6 +179,22 @@ private:
     int FFileSize;
     int FFileCount;
     TUnzipFile **FFileArr;
+
+    int FInputHandle;
+
+    char *FInBuf;
+    char *FInPtr;
+    int FInCount;
+    int FBufStart;
+
+    int FExtraBytes;
+    int FOldExtraBytes;
+
+    long FZipLen;
+    unsigned long FRealHeaderOffset;
+    unsigned long FExpectHeaderOffset;
+    char *FSearchHold;
+    TUnzipHeader FHeader;
 
 };
 

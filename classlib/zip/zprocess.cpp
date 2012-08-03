@@ -141,8 +141,6 @@ int process_zipfiles()    /* return PK-type error code */
     strings.
   ---------------------------------------------------------------------------*/
 
-    UnzipClass.FSearchHold = UnzipClass.FInBuf + INBUFSIZ;     /* to check for boundary-spanning sigs */
-
     /* finish up initialization of magic signature strings */
     local_hdr_sig[0]  /* = extd_local_sig[0] */ =       /* ASCII 'P', */
       central_hdr_sig[0] = end_central_sig[0] =         /* not EBCDIC */
