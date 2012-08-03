@@ -1581,14 +1581,13 @@ int TUnzip::Open(const char *filename)
 
     if (!FInputHandle)
     {
-        Info(0x401, "error:  cannot open zipfile [ %s ]\n",
-          FInputFileName.GetData());
+        Info(0x401, "error:  cannot open zipfile [ %s ]\n", filename);
         return PK_NOZIP;
     }
 
     FZipLen = RdosGetFileSize(FInputHandle);
 
-    error = ProcessFiles();
+    error = ProcessFiles(filename);
 
     if (error != PK_OK)
     {
@@ -1855,7 +1854,7 @@ int TUnzip::FindRec(long searchlen, char* signature, int rec_size)
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::GetCentralHeader(long searchlen)
+int TUnzip::GetCentralHeader(const char *filename, long searchlen)
 {
     int found = FALSE;
     int error;
@@ -1904,7 +1903,7 @@ int TUnzip::GetCentralHeader(long searchlen)
   ---------------------------------------------------------------------------*/
 
     if (!found) {
-        Info(0x401, "[%s]\n", FInputFileName.GetData());
+        Info(0x401, "[%s]\n", filename);
         Info(0x401, "End-of-central-directory signature not found. Probably no zip archive\n");
         return PK_ERR;   /* failed */
     }
@@ -2139,7 +2138,7 @@ int TUnzip::SeekFile(TUnzipFile *file)    /* return PK-type error code */
     bufstart = request - inbuf_offset;
 
     if (request < 0) {
-        Info(0x401, SeekMsg, FInputFileName.GetData());
+        Info(0x401, SeekMsg, file->cfilname);
         if (file == FFileArr[0] && FExtraBytes != 0L) {
             FOldExtraBytes =  FExtraBytes;
             FExtraBytes = 0L;
@@ -2148,7 +2147,7 @@ int TUnzip::SeekFile(TUnzipFile *file)    /* return PK-type error code */
             bufstart = request - inbuf_offset;
             /* try again */
             if (request < 0) {
-                Info(0x401, SeekMsg, FInputFileName.GetData());
+                Info(0x401, SeekMsg, file->cfilname);
                 return PK_BADERR;
             }
         } else {
@@ -2272,7 +2271,7 @@ TUnzipFile *TUnzip::ProcessNextFile()
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::ProcessFiles()
+int TUnzip::ProcessFiles(const char *filename)
 {
     int error = PK_OK;
     int i;
@@ -2294,9 +2293,9 @@ int TUnzip::ProcessFiles()
     FBufStart = 0;
     FInPtr = FInBuf;
 
-    Info(0, "Archive:  %s\n", FInputFileName.GetData());
+    Info(0, "Archive:  %s\n", filename);
 
-    error = GetCentralHeader(MIN(FZipLen, 66000L));
+    error = GetCentralHeader(filename, MIN(FZipLen, 66000L));
     
     if (error > PK_WARN)
         return error;
@@ -2312,23 +2311,20 @@ int TUnzip::ProcessFiles()
     FExtraBytes = FRealHeaderOffset - FExpectHeaderOffset;
     if (FExtraBytes < 0)
     {
-        Info(0x401, "error [%s]:  missing %u bytes in zipfile\n",
-          FInputFileName.GetData(), -FExtraBytes);
+        Info(0x401, "error [%s]:  missing %u bytes in zipfile\n", filename, -FExtraBytes);
             error = PK_ERR;
     } else if (FExtraBytes > 0) {
         if ((FHeader.offset_start_central_directory == 0) &&
                 (FHeader.size_central_directory != 0))   /* zip 1.5 -go bug */
         {
-            Info(0x401, "error [%s]:  NULL central directory offset\n",
-              FInputFileName.GetData());
+            Info(0x401, "error [%s]:  NULL central directory offset\n", filename);
             FHeader.offset_start_central_directory = FExtraBytes;
             FExtraBytes = 0;
             error = PK_ERR;
         }
         else {
             Info(0x401, "warning [%s]:  %d extra byte(s) at beginning or within zipfile\n", 
-              FInputFileName.GetData(),
-              FExtraBytes);
+              filename, FExtraBytes);
             error = PK_WARN;
         }
     }
@@ -2341,7 +2337,7 @@ int TUnzip::ProcessFiles()
       -----------------------------------------------------------------------*/
 
     if (FExpectHeaderOffset == 0 && FHeader.size_central_directory==0) {
-        Info(0x401, "warning [%s]:  zipfile is empty\n", FInputFileName.GetData());
+        Info(0x401, "warning [%s]:  zipfile is empty\n", filename);
         return (error > PK_WARN) ? error : PK_WARN;
     }
 
@@ -2368,13 +2364,11 @@ int TUnzip::ProcessFiles()
             memcmp(sig, central_hdr_sig, 4))
         {
             if (error != PK_BADERR)
-                Info(0x401, "error [%s]:  start of central directory not found\n", 
-                  FInputFileName.GetData());
+                Info(0x401, "error [%s]:  start of central directory not found\n", filename);
             return (error != PK_OK ? error : PK_BADERR);
         }
 
-        Info(0x401, "error [%s]:  reported length of central directory too long\n",
-          FInputFileName.GetData());
+        Info(0x401, "error [%s]:  reported length of central directory too long\n", filename);
         return PK_ERR;
     }
 

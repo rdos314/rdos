@@ -159,7 +159,7 @@ protected:
 private:
     void Init();
 
-    int GetCentralHeader(long searchlen);
+    int GetCentralHeader(const char *filename, long searchlen);
 
     unsigned ReadBuf(char *buf, register unsigned size);
     int Seek(long abs_offset);
@@ -172,7 +172,7 @@ private:
     TUnzipFile *ProcessNextFile();
     int FindRec(long searchlen, char* signature, int rec_size);
 
-    int ProcessFiles();
+    int ProcessFiles(const char *filename);
 
     char FLogBuf[512];
 
@@ -195,8 +195,6 @@ private:
     unsigned long FExpectHeaderOffset;
     char *FSearchHold;
     TUnzipHeader FHeader;
-
-    TString FInputFileName;
 };
 
 #endif
