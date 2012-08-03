@@ -138,10 +138,12 @@ class TUnzip
 {
 friend class TUnzipFile;
 public:
+    TUnzip(const char *name);
     TUnzip();
     ~TUnzip();
 
     int Open(const char *name);
+    void Close();
 
     void Trace(const char *format, ...);
     void Info(int code, const char *format, ...);
@@ -195,7 +197,6 @@ private:
     TUnzipHeader FHeader;
 
     TString FInputFileName;
-
 };
 
 #endif

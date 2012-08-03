@@ -1499,6 +1499,24 @@ TUnzip::TUnzip()
     Init();
 }
 
+
+/*##########################################################################
+#
+#   Name       : TUnzip::TUnzip
+#
+#   Purpose....: Constructor for unzip
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TUnzip::TUnzip(const char *filename)
+{
+    Init();
+    Open(filename);
+}
+
 /*##########################################################################
 #
 #   Name       : TUnzip::~TUnzip
@@ -1516,13 +1534,7 @@ TUnzip::~TUnzip()
     
     delete FInBuf;
 
-    if (FFileSize)
-    {
-        for (i = 0; i < FFileCount; i++)
-            delete FFileArr[i];
-
-        delete FFileArr;
-    }
+    Close();
 }
 
 /*##########################################################################
@@ -1563,6 +1575,8 @@ int TUnzip::Open(const char *filename)
 {
     int error;
 
+    Close();
+
     FInputHandle = RdosOpenFile(filename, 0);
 
     if (!FInputHandle)
@@ -1587,6 +1601,38 @@ int TUnzip::Open(const char *filename)
 } /* end function do_seekable() */
 
 
+/*##########################################################################
+#
+#   Name       : TUnzip::Close
+#
+#   Purpose....: Close zip file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUnzip::Close()
+{
+    int i;
+
+    if (FInputHandle)
+    {
+        RdosCloseFile(FInputHandle);
+        FInputHandle = 0;
+    }
+
+    for (i = 0; i < FFileCount; i++)
+    {
+        if (FFileArr[i])
+            delete FFileArr[0];
+
+        delete FFileArr;
+        FFileCount = 0;
+        FFileSize = 0;
+    }
+}
+    
 /*##########################################################################
 #
 #   Name       : TUnzip::Trace
