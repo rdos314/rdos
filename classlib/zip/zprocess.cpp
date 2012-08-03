@@ -348,7 +348,7 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
     /* static int no_ecrec = FALSE;  SKM: moved to globals.h */
     int maybe_exe=FALSE;
     int too_weird_to_continue=FALSE;
-    int error=0, error_in_archive;
+    int error=0;
 
 
 /*---------------------------------------------------------------------------
@@ -376,91 +376,14 @@ static int do_seekable(int lastchance)        /* return PK-type error code */
     if (UnzipClass.OpenInputFile())   /* this should never happen, given */
         return PK_NOZIP;        /*  the stat() test above, but... */
 
+    error = UnzipClass.ProcessFiles();
 
-/*---------------------------------------------------------------------------
-    Find and process the end-of-central-directory header.  UnZip need only
-    check last 65557 bytes of zipfile:  comment may be up to 65535, end-of-
-    central-directory record is 18 bytes, and signature itself is 4 bytes;
-    add some to allow for appended garbage.  Since ZipInfo is often used as
-    a debugging tool, search the whole zipfile if zipinfo_mode is true.
-  ---------------------------------------------------------------------------*/
-
-    UnzipClass.FBufStart = 0;
-    UnzipClass.FInPtr = UnzipClass.FInBuf;
-
-    if ( (!uO.zipinfo_mode && !uO.qflag
-         )
-       )
-        Info(0, LogInitline, UnzipClass.FInputFileName.GetData());
-
-    if ( (error_in_archive = UnzipClass.GetCentralHeader(MIN(UnzipClass.FZipLen, 66000L)))
-         > PK_WARN )
-    {
-        RdosCloseFile(UnzipClass.FInputHandle);
-
-        if (maybe_exe)
-            Info(0x401, MaybeExe, UnzipClass.FInputFileName.GetData());
-        if (lastchance)
-            return error_in_archive;
-        else {
-            G.no_ecrec = TRUE;    /* assume we found wrong file:  e.g., */
-            return PK_NOZIP;       /*  unzip instead of unzip.zip */
-        }
-    }
-
-    if ((uO.zflag > 0) && !uO.zipinfo_mode) { /* unzip: zflag = comment ONLY */
-        RdosCloseFile(UnzipClass.FInputHandle);
-        return error_in_archive;
-    }
-
-/*---------------------------------------------------------------------------
-    Test the end-of-central-directory info for incompatibilities (multi-disk
-    archives) or inconsistencies (missing or extra bytes in zipfile).
-  ---------------------------------------------------------------------------*/
-
-    error = !uO.zipinfo_mode && (UnzipClass.FHeader.number_this_disk != 0);
-
-    if (uO.zipinfo_mode &&
-        UnzipClass.FHeader.number_this_disk != UnzipClass.FHeader.num_disk_start_cdir)
-    {
-        if (UnzipClass.FHeader.number_this_disk > UnzipClass.FHeader.num_disk_start_cdir) {
-            Info(0x401, CentDirNotInZipMsg, UnzipClass.FInputFileName.GetData(),
-              (unsigned long)UnzipClass.FHeader.number_this_disk,
-              (unsigned long)UnzipClass.FHeader.num_disk_start_cdir);
-            error_in_archive = PK_FIND;
-            too_weird_to_continue = TRUE;
-        } else {
-            Info(0x401, EndCentDirBogus, UnzipClass.FInputFileName.GetData(),
-              (unsigned long)UnzipClass.FHeader.number_this_disk,
-              (unsigned long)UnzipClass.FHeader.num_disk_start_cdir);
-            error_in_archive = PK_WARN;
-        }
-    }
-
-    if (!too_weird_to_continue) {  /* (relatively) normal zipfile:  go for it */
-        if (error) {
-            Info(0x401, MaybePakBug, UnzipClass.FInputFileName.GetData());
-            error_in_archive = PK_WARN;
-        }
-
-        error = UnzipClass.ProcessFiles();
-
-        Trace("about to extract/list files (error = %d)\n",
-          error_in_archive);
-
-        {
-            error = extract_or_test_files();   /* EXTRACT OR TEST 'EM */
-
-            Trace("done with extract/list files (error = %d)\n",
-                   error);
-        }
-
-        if (error > error_in_archive)   /* don't overwrite stronger error */
-            error_in_archive = error;   /*  with (for example) a warning */
-    } /* end if (!too_weird_to_continue) */
+    if (error == PK_OK)
+        error = extract_or_test_files();   /* EXTRACT OR TEST 'EM */
 
     RdosCloseFile(UnzipClass.FInputHandle);
-    return error_in_archive;
+
+    return error;
 
 } /* end function do_seekable() */
 

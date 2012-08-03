@@ -2245,7 +2245,34 @@ int TUnzip::ProcessFiles()
     char sig[4];
     static char central_hdr_sig[4]     = {0x50, 0x4B, 0x01, 0x02};
 
-    FExtraBytes = FRealHeaderOffset-FExpectHeaderOffset;
+
+/*---------------------------------------------------------------------------
+    Find and process the end-of-central-directory header.  UnZip need only
+    check last 65557 bytes of zipfile:  comment may be up to 65535, end-of-
+    central-directory record is 18 bytes, and signature itself is 4 bytes;
+    add some to allow for appended garbage.  Since ZipInfo is often used as
+    a debugging tool, search the whole zipfile if zipinfo_mode is true.
+  ---------------------------------------------------------------------------*/
+
+    FBufStart = 0;
+    FInPtr = FInBuf;
+
+    Info(0, "Archive:  %s\n", FInputFileName.GetData());
+
+    error = GetCentralHeader(MIN(FZipLen, 66000L));
+    
+    if (error > PK_WARN)
+        return error;
+
+/*---------------------------------------------------------------------------
+    Test the end-of-central-directory info for incompatibilities (multi-disk
+    archives) or inconsistencies (missing or extra bytes in zipfile).
+  ---------------------------------------------------------------------------*/
+
+    if (FHeader.number_this_disk != 0)
+        return PK_NOZIP;
+
+    FExtraBytes = FRealHeaderOffset - FExpectHeaderOffset;
     if (FExtraBytes < 0)
     {
         Info(0x401, "error [%s]:  missing %u bytes in zipfile\n",
@@ -2268,6 +2295,9 @@ int TUnzip::ProcessFiles()
             error = PK_WARN;
         }
     }
+
+    if (error > PK_WARN)
+        return error;
 
     /*-----------------------------------------------------------------------
         Check for empty zipfile and exit now if so.
