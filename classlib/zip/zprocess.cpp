@@ -190,7 +190,6 @@ int process_zipfiles()    /* return PK-type error code */
     char *inputfn;
 
     while ((inputfn = do_wild(G.wildzipfn)) != 0) {
-        UnzipClass.SetInputFile(inputfn);
         Trace("do_wild( %s ) returns %s\n", G.wildzipfn, inputfn);
 
         lastzipfn = inputfn;
@@ -200,7 +199,11 @@ int process_zipfiles()    /* return PK-type error code */
             && (NumWinFiles+NumLoseFiles+NumWarnFiles+NumMissFiles) > 0)
             Info(0, "\n");
 
-        if ((error = do_seekable(0)) == PK_WARN)
+        error = UnzipClass.Open(inputfn);
+        if (error == PK_OK)
+            error = extract_or_test_files();   /* EXTRACT OR TEST 'EM */
+
+        if (error == PK_WARN)
             ++NumWarnFiles;
         else if (error == IZ_DIR)
             ++NumMissDirs;
@@ -243,15 +246,15 @@ int process_zipfiles()    /* return PK-type error code */
              * do_seekable() again with the same zipfile name (and the
              * lastchance flag set), just to trigger the error report...
              */
-              strcpy(lastzipfn + strlen(lastzipfn), ZSUFX);
-
-            UnzipClass.SetInputFile(lastzipfn);
+            strcpy(lastzipfn + strlen(lastzipfn), ZSUFX);
 
             NumMissDirs = NumMissFiles = 0;
             error_in_archive = PK_COOL;
 
-            error = do_seekable(1);
-            Trace("do_seekable(1) returns %d\n", error);
+            error = UnzipClass.Open(lastzipfn);
+            if (error == PK_OK)
+                error = extract_or_test_files();   /* EXTRACT OR TEST 'EM */
+                
             switch (error) {
               case PK_WARN:
                 ++NumWarnFiles;
@@ -334,59 +337,5 @@ void free_G_buffers()     /* releases all memory allocated in global vars */
         G.key = (char *)NULL;
    }
 } /* end function free_G_buffers() */
-
-
-
-
-
-/**************************/
-/* Function do_seekable() */
-/**************************/
-
-static int do_seekable(int lastchance)        /* return PK-type error code */
-{
-    /* static int no_ecrec = FALSE;  SKM: moved to globals.h */
-    int maybe_exe=FALSE;
-    int too_weird_to_continue=FALSE;
-    int error=0;
-
-
-/*---------------------------------------------------------------------------
-    Open the zipfile for reading in BINARY mode to prevent CR/LF translation,
-    which would corrupt the bit streams.
-  ---------------------------------------------------------------------------*/
-
-    if (stat(UnzipClass.FInputFileName.GetData(), &G.statbuf) ||
-        (error = S_ISDIR(G.statbuf.st_mode)) != 0)
-    {
-        if (lastchance && (uO.qflag < 3)) {
-            if (G.no_ecrec)
-                Info(0x401, CannotFindZipfileDirMsg,
-                  (uO.zipinfo_mode ? Zipnfo : Unzip),
-                  G.wildzipfn, uO.zipinfo_mode? "  " : "", UnzipClass.FInputFileName.GetData());
-            else
-                Info(0x401, CannotFindEitherZipfile,
-                  (uO.zipinfo_mode ? Zipnfo : Unzip),
-                  G.wildzipfn, UnzipClass.FInputFileName.GetData());
-        }
-        return error? IZ_DIR : PK_NOZIP;
-    }
-    UnzipClass.FZipLen = G.statbuf.st_size;
-
-    if (UnzipClass.OpenInputFile())   /* this should never happen, given */
-        return PK_NOZIP;        /*  the stat() test above, but... */
-
-    error = UnzipClass.ProcessFiles();
-
-    if (error == PK_OK)
-        error = extract_or_test_files();   /* EXTRACT OR TEST 'EM */
-
-    RdosCloseFile(UnzipClass.FInputHandle);
-
-    return error;
-
-} /* end function do_seekable() */
-
-
 
 

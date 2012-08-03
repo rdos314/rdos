@@ -1550,6 +1550,45 @@ void TUnzip::Init()
 
 /*##########################################################################
 #
+#   Name       : TUnzip::Open
+#
+#   Purpose....: Open zipfile
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::Open(const char *filename)
+{
+    int error;
+
+    FInputHandle = RdosOpenFile(filename, 0);
+
+    if (!FInputHandle)
+    {
+        Info(0x401, "error:  cannot open zipfile [ %s ]\n",
+          FInputFileName.GetData());
+        return PK_NOZIP;
+    }
+
+    FZipLen = RdosGetFileSize(FInputHandle);
+
+    error = ProcessFiles();
+
+    if (error != PK_OK)
+    {
+        RdosCloseFile(FInputHandle);
+        FInputHandle = 0;
+    }
+
+    return error;
+
+} /* end function do_seekable() */
+
+
+/*##########################################################################
+#
 #   Name       : TUnzip::Trace
 #
 #   Purpose....: Trace
@@ -1851,55 +1890,6 @@ int TUnzip::GetCentralHeader(long searchlen)
     return PK_OK;
 
 } /* end function find_ecrec() */
-
-
-
-/*##########################################################################
-#
-#   Name       : TUnzip::SetInputFile
-#
-#   Purpose....: Set input file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TUnzip::SetInputFile(const char *filename)
-{
-    FInputFileName = filename;
-}
-
-/*##########################################################################
-#
-#   Name       : TUnzip::OpenInputFile
-#
-#   Purpose....: Open input file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TUnzip::OpenInputFile()    /* return 1 if open failed */
-{
-    /*
-     *  open the zipfile for reading and in BINARY mode to prevent cr/lf
-     *  translation, which would corrupt the bitstreams
-     */
-
-    FInputHandle = RdosOpenFile(FInputFileName.GetData(), 0);
-
-    if (!FInputHandle)
-    {
-        Info(0x401, "error:  cannot open zipfile [ %s ]\n",
-          FInputFileName.GetData());
-        return 1;
-    }
-    return 0;
-
-}
-
 
 /*##########################################################################
 #

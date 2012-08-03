@@ -141,14 +141,14 @@ public:
     TUnzip();
     ~TUnzip();
 
+    int Open(const char *name);
+
     void Trace(const char *format, ...);
     void Info(int code, const char *format, ...);
 
     void (*OnTrace)(TUnzip *unzip, const char *msg);
     void (*OnInfo)(TUnzip *unzip, int code, const char *msg);
 
-    void SetInputFile(const char *name);
-    int OpenInputFile();
     unsigned ReadBuf(char *buf, register unsigned size);
     int Seek(long abs_offset);
     void DisplayHeaderString(int lenght, int oemconvert);
@@ -157,8 +157,6 @@ public:
 
     TUnzipFile *GetFile(int index);
     int GetFileCount();
-
-    int GetCentralHeader(long searchlen);
 
     TString FInputFileName;
     int FInputHandle;
@@ -181,6 +179,8 @@ protected:
 
 private:
     void Init();
+
+    int GetCentralHeader(long searchlen);
 
     void SkipHeaderString(int length);
 
