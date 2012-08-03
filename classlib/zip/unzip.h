@@ -145,14 +145,14 @@ public:
     int Open(const char *name);
     void Close();
 
+    TUnzipFile *GetFile(int index);
+    int GetFileCount();
+
     void Trace(const char *format, ...);
     void Info(int code, const char *format, ...);
 
     void (*OnTrace)(TUnzip *unzip, const char *msg);
     void (*OnInfo)(TUnzip *unzip, int code, const char *msg);
-
-    TUnzipFile *GetFile(int index);
-    int GetFileCount();
     
 protected:
 
