@@ -149,16 +149,8 @@ public:
     void (*OnTrace)(TUnzip *unzip, const char *msg);
     void (*OnInfo)(TUnzip *unzip, int code, const char *msg);
 
-    unsigned ReadBuf(char *buf, register unsigned size);
-    int Seek(long abs_offset);
-    void DisplayHeaderString(int lenght, int oemconvert);
-
-    int ProcessFiles();
-
     TUnzipFile *GetFile(int index);
     int GetFileCount();
-
-    TString FInputFileName;
     
 protected:
 
@@ -167,12 +159,18 @@ private:
 
     int GetCentralHeader(long searchlen);
 
+    unsigned ReadBuf(char *buf, register unsigned size);
+    int Seek(long abs_offset);
+
     void SkipHeaderString(int length);
+    void DisplayHeaderString(int lenght, int oemconvert);
 
     int GetFileName(char *buf, int length);
     int SeekFile(TUnzipFile *file);
     TUnzipFile *ProcessNextFile();
     int FindRec(long searchlen, char* signature, int rec_size);
+
+    int ProcessFiles();
 
     char FLogBuf[512];
 
@@ -195,6 +193,8 @@ private:
     unsigned long FExpectHeaderOffset;
     char *FSearchHold;
     TUnzipHeader FHeader;
+
+    TString FInputFileName;
 
 };
 

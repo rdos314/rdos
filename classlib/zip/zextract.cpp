@@ -380,7 +380,7 @@ startover:
                 if (*p) do {
                     if (*p == '\\') {
                         if (!G.reported_backslash) {
-                            Info(0x21, BackslashPathSep, UnzipClass.FInputFileName.GetData());
+                            Info(0x21, BackslashPathSep, file->cfilname);
                             G.reported_backslash = TRUE;
                             if (!error_in_archive)
                                 error_in_archive = PK_WARN;
