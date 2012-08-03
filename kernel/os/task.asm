@@ -72,7 +72,6 @@ futex_handle_seg          STRUC
 
 fh_base     handle_header <>
 
-fh_ads      DD ?,?
 fh_list     DW ?
 fh_lock     DW ?
 
@@ -8204,7 +8203,6 @@ acquire_futex   Proc near
     push esi
 ;    
     mov esi,ebx
-;
     mov ebx,es:[esi].fs_handle
     mov ax,FUTEX_HANDLE
     DerefHandle
@@ -8217,12 +8215,10 @@ acquire_futex   Proc near
     mov ebx,es:[esi].fs_handle
     mov ax,FUTEX_HANDLE
     DerefHandle
-    jnc acquire_take
+    jnc acquire_handle_ok
 ;
     mov cx,SIZE futex_handle_seg
     AllocateHandle
-    mov ds:[ebx].fh_ads,esi
-    mov ds:[ebx].fh_ads+4,es
     mov ds:[ebx].fh_list,0
     mov ds:[ebx].fh_lock,0
     mov [ebx].hh_sign,FUTEX_HANDLE
@@ -8230,7 +8226,7 @@ acquire_futex   Proc near
     movzx eax,[ebx].hh_handle
     mov es:[esi].fs_handle,eax
 
-acquire_take:
+acquire_handle_ok:
     push ds
     mov ax,task_sel
     mov ds,ax
@@ -8240,37 +8236,16 @@ acquire_take:
 acquire_no_sect:
     call LockCore
     call cs:lock_futex_proc    
-    mov ax,es:[esi].fs_val
-    cmp ax,1
-    je acquire_block
+    mov ax,1
+    xchg ax,es:[esi].fs_val
+    cmp ax,-1
+    je acquire_take
 ;
-    mov ax,ds:[ebx].fh_list
-    or ax,ax
-    jz acquire_unlock
-;    
-    push es
-    push esi
-    push di
-;    
-    lea esi,ds:[ebx].fh_list
-    call RemoveBlock32
-    mov es:p_data,0
-;
-    cli
-    mov di,OFFSET ps_wakeup_list
-    call InsertCoreBlock
-    sti
-;
-    pop di
-    pop esi
-    pop es
-
-acquire_block:
     mov ax,ds
     push OFFSET acquire_done
     call SaveLockedThread
-;
     mov ds,ax
+;
     lea edi,[ebx].fh_list     
     mov es,fs:ps_curr_thread
     mov fs:ps_curr_thread,0
@@ -8282,7 +8257,11 @@ acquire_block:
     mov es:p_sleep_offset,edi    
     jmp LoadThread
 
-acquire_unlock:
+acquire_take:
+    str ax
+    mov es:[esi].fs_owner,ax
+    mov es:[esi].fs_counter,1
+;    
     call cs:unlock_futex_proc
     call UnlockCore
     
@@ -8328,8 +8307,10 @@ release_futex   Proc near
     push eax
     push ebx
     push cx
+    push esi
 ;
-    mov ebx,es:[ebx].fs_handle
+    mov esi,ebx
+    mov ebx,es:[esi].fs_handle
     mov ax,FUTEX_HANDLE
     DerefHandle
     jc release_done
@@ -8341,23 +8322,36 @@ release_futex   Proc near
     or ax,ax
     jz release_unlock
 ;    
-    push es
-    push esi
+    mov ax,1
+    xchg ax,es:[esi].fs_val
+    cmp ax,-1
+    jne release_unlock
+;    
     push di
 ;    
+    push es
+    push esi
     lea esi,ds:[ebx].fh_list
     call RemoveBlock32
     mov es:p_data,0
+    mov cx,es
+    mov di,es:p_tss_sel
+    pop esi
+    pop es
+;
+    mov es:[esi].fs_owner,di
+    mov es:[esi].fs_counter,1
     call cs:unlock_futex_proc    
 ;
+    push es    
+    mov es,cx
     cli
     mov di,OFFSET ps_wakeup_list
     call InsertCoreBlock
     sti
-;
-    pop di
-    pop esi
     pop es
+;    
+    pop di
 ;    
     call UnlockCore
     jmp release_done
@@ -8367,6 +8361,7 @@ release_unlock:
     call UnlockCore
     
 release_done:
+    pop esi
     pop cx
     pop ebx
     pop eax

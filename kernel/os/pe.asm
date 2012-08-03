@@ -337,10 +337,9 @@ create_us_section   Endp
 free_us_section   Proc near
     push edx
 ;    
-    or ebx,ebx
-    jz fusDone
+    sub ebx,1
+    jc fusDone
 ;
-    dec ebx
     cmp ebx,MAX_SECTIONS
     jae fusDone
 ;
@@ -371,10 +370,9 @@ enter_us_section    Proc near
     push eax
     push ebx
 ;    
-    or ebx,ebx
-    jz eusDone
+    sub ebx,1
+    jc eusDone
 ;
-    dec ebx
     cmp ebx,MAX_SECTIONS
     jae eusDone
 ;
@@ -396,20 +394,20 @@ p4:
 eusLock:
     lock add [ebx].fs_val,1
     jc eusTake
-
-eusRetry:
+;
     mov eax,1
     xchg ax,[ebx].fs_val
     cmp ax,-1
-    je eusTake
-;
-    UserGateApp acquire_futex_nr
-    jmp eusRetry
+    jne eusBlock
 
 eusTake:
     str ax
     mov [ebx].fs_owner,ax
     mov [ebx].fs_counter,1
+    jmp eusDone
+
+eusBlock:
+    UserGateApp acquire_futex_nr
 
 eusDone:
     pop ebx
@@ -421,10 +419,9 @@ leave_us_section    Proc near
     push eax
     push ebx
 ;    
-    or ebx,ebx
-    jz lusDone
+    sub ebx,1
+    jc lusDone
 ;
-    dec ebx
     cmp ebx,MAX_SECTIONS
     jae lusDone
 ;
