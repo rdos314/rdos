@@ -499,11 +499,8 @@ reprompt:
             }
         } /* end if (extracting to disk) */
 
-        error = file->Extract();
-        if (error != PK_COOL) {
-            if (error > error_in_archive)
-                error_in_archive = error;       /* ...and keep going */
-        }
+        if (!file->Extract())
+            error_in_archive = PK_ERR;       /* ...and keep going */
     } /* end for-loop (i:  files in current block) */
 
     return PK_OK;

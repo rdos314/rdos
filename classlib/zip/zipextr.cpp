@@ -554,9 +554,9 @@ int TUnzipExtractor::Flush(char *rawbuf, int size)
 int TUnzipExtractor::Extract()
 {    
     if (IsFileOpen())
-        error = PK_COOL;
+        FOk = TRUE;
     else
-        return PK_ERR;
+        return FALSE;
 
     FDoDecrypt = FALSE;
     FDoText = FFile->textfile;
@@ -581,10 +581,11 @@ int TUnzipExtractor::Extract()
     }
 
     if (FFile->encrypted) {
-        error = Decrypt();
+        if (Decrypt() != PK_COOL)
+            FOk = FALSE;
     }
 
-    if (error == PK_COOL) {
+    if (FOk) {
         FDecompSize = FFile->compr_size;
 
         DeferInput();    /* so NEXTBYTE bounds check will work */
@@ -598,5 +599,5 @@ int TUnzipExtractor::Extract()
         FTmpOutBuf = 0;
     }
 
-    return error;
+    return FOk;
 }

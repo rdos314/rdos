@@ -39,6 +39,9 @@
 #include "zipexpl.h"
 #include "unzip.h"
 
+#define FALSE 0
+#define TRUE !FALSE
+
 /* If BMAX needs to be larger than 16, then h and x[] should be unsigned long. */
 #define BMAX 16         /* maximum bit length of any code (16 for explode) */
 #define N_MAX 288       /* maximum number of codes in any set */
@@ -679,19 +682,19 @@ void TUnzipExplodeExtractor::Execute()
   {
     bb = 9;                     /* base table size for literals */
     if ((r = ExplodeGetTree(l, 256)) != 0) {
-       error = r;
+       FOk = FALSE;
        return;
     }
     if ((r = BuildHuft(l, 256, 256, NULL, NULL, &tb, &bb)) != 0)
     {
       if (r == 1)
         FreeHuft(tb);
-      error = r;
+      FOk = FALSE;
       return;
     }
     if ((r = ExplodeGetTree(l, 64)) != 0) {
       FreeHuft(tb);
-      error = r;
+      FOk = FALSE;
       return;
     }
     if ((r = BuildHuft(l, 64, 0, cplen3, extra, &tl, &bl)) != 0)
@@ -699,7 +702,7 @@ void TUnzipExplodeExtractor::Execute()
       if (r == 1)
         FreeHuft(tl);
       FreeHuft(tb);
-      error = r;
+      FOk = FALSE;
       return;
     }
   }
@@ -708,14 +711,14 @@ void TUnzipExplodeExtractor::Execute()
   {
     tb = 0;
     if ((r = ExplodeGetTree(l, 64)) != 0) {
-      error = r;
+      FOk = FALSE;
       return;
     }
     if ((r = BuildHuft(l, 64, 0, cplen2, extra, &tl, &bl)) != 0)
     {
       if (r == 1)
         FreeHuft(tl);
-      error = r;
+      FOk = FALSE;
       return;
     }
   }
@@ -723,7 +726,7 @@ void TUnzipExplodeExtractor::Execute()
   if ((r = ExplodeGetTree(l, 64)) != 0) {
     FreeHuft(tl);
     if (tb != 0) FreeHuft(tb);
-    error = r;
+    FOk = FALSE;
     return;
   }
   if (FFile->general_purpose_bit_flag & 2)      /* true if 8K */
@@ -742,16 +745,21 @@ void TUnzipExplodeExtractor::Execute()
       FreeHuft(td);
     FreeHuft(tl);
     if (tb != 0) FreeHuft(tb);
-    error = r;
+    FOk = FALSE;
     return;
   }
 
   if (tb != NULL) {
-    error = ExplodeLit(tb, tl, td, bb, bl, bd, bdl);
+    r = ExplodeLit(tb, tl, td, bb, bl, bd, bdl);
     FreeHuft(tb);
   } else {
-    error = ExplodeNolit(tl, td, bl, bd, bdl);
+    r = ExplodeNolit(tl, td, bl, bd, bdl);
   }
+
+  if (r == 0)
+      FOk = TRUE;
+  else
+      FOk = FALSE;
 
   FreeHuft(td);
   FreeHuft(tl);

@@ -39,6 +39,9 @@
 #include "unzip.h"
 #include "zipstor.h"
 
+#define FALSE 0
+#define TRUE !FALSE
+
 /*##########################################################################
 #
 #   Name       : TUnzipStoreExtractor::TUnzipStoreExtractor
@@ -85,6 +88,7 @@ void TUnzipStoreExtractor::Execute()
 {
     int b;
     int r;
+    int error;
     
     FOutPtr = FOutBuf;
     FOutCount = 0;
@@ -103,4 +107,10 @@ void TUnzipStoreExtractor::Execute()
         r = Flush(FOutBuf, FOutCount);
         if (error < r) error = r;
     }
+
+    if (error == 0)
+        FOk = TRUE;
+    else
+        FOk = FALSE;
 }
+

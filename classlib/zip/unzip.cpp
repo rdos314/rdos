@@ -918,7 +918,7 @@ int TUnzipFile::IsSkipped()
 int TUnzipFile::Extract()
 {
     char *extract_msg = "%8sing: %s";
-    int error;
+    int ok;
     TUnzipExtractor *extractor = 0;
 
     switch (compression_method) {
@@ -944,7 +944,7 @@ int TUnzipFile::Extract()
 
         default:   /* should never get to this point */
             FUnzip->Info(0x401, "%s:  unknown compression method\n", cfilname);
-            error = PK_WARN;
+            ok = FALSE;
             break;
 
     } /* end switch (compression method) */
@@ -952,9 +952,9 @@ int TUnzipFile::Extract()
     if (extractor)
     {
         extractor->Extract();
-        error = extractor->error;
+        ok = extractor->FOk;
 
-        if (error == PK_COOL)
+        if (ok)
         {
             if (extractor->FCurrCrcVal != crc) {
             /* if quiet enough, we haven't output the filename yet:  do it */
@@ -962,17 +962,17 @@ int TUnzipFile::Extract()
                 FUnzip->Info(0x401, " bad CRC %08lx  (should be %08lx)\n", extractor->FCurrCrcVal, crc);
                 if (encrypted)
                     FUnzip->Info(0x401, "   (may instead be incorrect password)\n");
-                error = PK_ERR;
+                ok = FALSE;
             } else
                 FUnzip->Info(0, "\n");
         }
         else
-            FUnzip->Info(0x401, " extract failed with error %d\n", error);
+            FUnzip->Info(0x401, " extract failed %d\n");
 
         delete extractor;
     }
 
-    return error;
+    return ok;
 }
 
 

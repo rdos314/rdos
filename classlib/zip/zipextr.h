@@ -69,7 +69,7 @@ public:
 
     int Extract();
 
-    int error;
+    int FOk;
 
     unsigned long FCurrCrcVal;
 

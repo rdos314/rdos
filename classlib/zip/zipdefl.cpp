@@ -40,6 +40,9 @@
 #include "zlib.h"
 #include "unzip.h"
 
+#define FALSE 0
+#define TRUE !FALSE
+
 /*##########################################################################
 #
 #   Name       : TUnzipDeflateExtractor::TUnzipDeflateExtractor
@@ -111,7 +114,7 @@ void TUnzipDeflateExtractor::Execute()
     unsigned i;
     int windowBits;
 
-    error = 0;
+    FOk = TRUE;
     
     dstrm.zalloc = (alloc_func)Z_NULL;
     dstrm.zfree = (free_func)Z_NULL;
@@ -126,34 +129,18 @@ void TUnzipDeflateExtractor::Execute()
 
     err = inflateBackInit(&dstrm, windowBits, (unsigned char *)FOutBuf);
 
-    if (err == Z_MEM_ERROR)
-        error = 3;
-    else if (err != Z_OK) {
-        error = 2;
+    if (err != Z_OK) {
+        FOk = FALSE;
     }
 
-    if (error == 0)
+    if (FOk)
     {
         dstrm.next_in = (unsigned char *)FInPtr;
         dstrm.avail_in = FInCount;
 
         err = inflateBack(&dstrm, zlib_in, this, zlib_out, this);
         if (err != Z_STREAM_END) {
-            if (err == Z_DATA_ERROR || err == Z_STREAM_ERROR) {
-                error = 2;
-            } else if (err == Z_MEM_ERROR) {
-                error = 3;
-            } else if (err == Z_BUF_ERROR) {
-                if (dstrm.next_in == Z_NULL) {
-                    /* input failure */
-                    error = 2;
-                } else {
-                    /* output write failure */
-                    error = PK_DISK;
-                }
-            } else {
-                error = 2;
-            }
+            FOk = FALSE;
         }
         if (dstrm.next_in != NULL) {
             FInPtr = (char *)dstrm.next_in;
@@ -162,8 +149,7 @@ void TUnzipDeflateExtractor::Execute()
 
         err = inflateBackEnd(&dstrm);
         if (err != Z_OK) {
-            if (error == 0)
-                error = 2;
+            FOk = FALSE;
         }
     }
 
