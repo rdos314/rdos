@@ -1621,7 +1621,7 @@ void TUnzip::Init()
 ##########################################################################*/
 int TUnzip::Open(const char *filename)
 {
-    int error;
+    int ok;
 
     Close();
 
@@ -1635,16 +1635,15 @@ int TUnzip::Open(const char *filename)
 
     FZipLen = RdosGetFileSize(FInputHandle);
 
-    error = ProcessFiles(filename);
+    ok = ProcessFiles(filename);
 
-    if (error == PK_OK)
-        return TRUE;
-    else
+    if (!ok)
     {
         RdosCloseFile(FInputHandle);
         FInputHandle = 0;
-        return FALSE;
     }
+
+    return ok;
 } /* end function do_seekable() */
 
 
@@ -2319,8 +2318,8 @@ TUnzipFile *TUnzip::ProcessNextFile()
 ##########################################################################*/
 int TUnzip::ProcessFiles(const char *filename)
 {
+    int error;
     int ok;
-    int error = PK_OK;
     int i;
     TUnzipFile **newarr;
     TUnzipFile *file;
@@ -2345,7 +2344,7 @@ int TUnzip::ProcessFiles(const char *filename)
     ok = GetCentralHeader(filename, MIN(FZipLen, 66000L));
 
     if (!ok)
-        return PK_ERR;
+        return ok;
 
 /*---------------------------------------------------------------------------
     Test the end-of-central-directory info for incompatibilities (multi-disk
@@ -2353,13 +2352,13 @@ int TUnzip::ProcessFiles(const char *filename)
   ---------------------------------------------------------------------------*/
 
     if (FHeader.number_this_disk != 0)
-        return PK_NOZIP;
+        return FALSE;
 
     FExtraBytes = FRealHeaderOffset - FExpectHeaderOffset;
     if (FExtraBytes < 0)
     {
         Info(0x401, "error [%s]:  missing %u bytes in zipfile\n", filename, -FExtraBytes);
-            error = PK_ERR;
+            ok = FALSE;
     } else if (FExtraBytes > 0) {
         if ((FHeader.offset_start_central_directory == 0) &&
                 (FHeader.size_central_directory != 0))   /* zip 1.5 -go bug */
@@ -2367,17 +2366,16 @@ int TUnzip::ProcessFiles(const char *filename)
             Info(0x401, "error [%s]:  NULL central directory offset\n", filename);
             FHeader.offset_start_central_directory = FExtraBytes;
             FExtraBytes = 0;
-            error = PK_ERR;
+            ok = FALSE;
         }
         else {
             Info(0x401, "warning [%s]:  %d extra byte(s) at beginning or within zipfile\n", 
               filename, FExtraBytes);
-            error = PK_WARN;
         }
     }
 
-    if (error > PK_WARN)
-        return error;
+    if (!ok)
+        return ok;
 
     /*-----------------------------------------------------------------------
         Check for empty zipfile and exit now if so.
@@ -2385,7 +2383,7 @@ int TUnzip::ProcessFiles(const char *filename)
 
     if (FExpectHeaderOffset == 0 && FHeader.size_central_directory==0) {
         Info(0x401, "warning [%s]:  zipfile is empty\n", filename);
-        return (error > PK_WARN) ? error : PK_WARN;
+        return TRUE;
     }
 
     /*-----------------------------------------------------------------------
@@ -2397,7 +2395,7 @@ int TUnzip::ProcessFiles(const char *filename)
 
     error = Seek(FHeader.offset_start_central_directory);
     if (error == PK_BADERR) {
-        return PK_BADERR;
+        return FALSE;
     }
     
     if ((error != PK_OK) || (ReadBuf(sig, 4) == 0) ||
@@ -2412,11 +2410,11 @@ int TUnzip::ProcessFiles(const char *filename)
         {
             if (error != PK_BADERR)
                 Info(0x401, "error [%s]:  start of central directory not found\n", filename);
-            return (error != PK_OK ? error : PK_BADERR);
+            return FALSE;
         }
 
         Info(0x401, "error [%s]:  reported length of central directory too long\n", filename);
-        return PK_ERR;
+        return FALSE;
     }
 
     /*-----------------------------------------------------------------------
@@ -2427,7 +2425,7 @@ int TUnzip::ProcessFiles(const char *filename)
 
     error = Seek(FHeader.offset_start_central_directory);
     if (error != PK_OK) {
-        return error;
+        return FALSE;
     }
 
     for (;;)
@@ -2460,5 +2458,5 @@ int TUnzip::ProcessFiles(const char *filename)
             break;
     }
 
-    return PK_OK;
+    return TRUE;
 }
