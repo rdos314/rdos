@@ -1905,7 +1905,7 @@ int TUnzip::FindRec(long searchlen, char* signature, int rec_size)
 int TUnzip::GetCentralHeader(const char *filename, long searchlen)
 {
     int found = FALSE;
-    int error;
+    int ok;
     int result;
     unsigned char byterec[ECREC_SIZE+4];
     static char end_central_sig[4]   = {0x50, 0x4B, 0x05, 0x06};
@@ -1953,7 +1953,7 @@ int TUnzip::GetCentralHeader(const char *filename, long searchlen)
     if (!found) {
         Info(0x401, "[%s]\n", filename);
         Info(0x401, "End-of-central-directory signature not found. Probably no zip archive\n");
-        return PK_ERR;   /* failed */
+        return FALSE;   /* failed */
     }
 
 /*---------------------------------------------------------------------------
@@ -1965,7 +1965,7 @@ int TUnzip::GetCentralHeader(const char *filename, long searchlen)
     FRealHeaderOffset = FBufStart + (FInPtr-FInBuf);
 
     if (ReadBuf((char *)byterec, ECREC_SIZE+4) == 0)
-        return PK_EOF;
+        return FALSE;
 
     FHeader.number_this_disk = makeword(&byterec[NUMBER_THIS_DISK]);
     FHeader.num_disk_start_cdir = makeword(&byterec[NUM_DISK_WITH_START_CEN_DIR]);
@@ -1980,7 +1980,7 @@ int TUnzip::GetCentralHeader(const char *filename, long searchlen)
     FExpectHeaderOffset = FHeader.offset_start_central_directory +
                             FHeader.size_central_directory;
 
-    return PK_OK;
+    return TRUE;
 
 } /* end function find_ecrec() */
 
@@ -2319,6 +2319,7 @@ TUnzipFile *TUnzip::ProcessNextFile()
 ##########################################################################*/
 int TUnzip::ProcessFiles(const char *filename)
 {
+    int ok;
     int error = PK_OK;
     int i;
     TUnzipFile **newarr;
@@ -2341,10 +2342,10 @@ int TUnzip::ProcessFiles(const char *filename)
 
     Info(0, "Archive:  %s\n", filename);
 
-    error = GetCentralHeader(filename, MIN(FZipLen, 66000L));
-    
-    if (error > PK_WARN)
-        return error;
+    ok = GetCentralHeader(filename, MIN(FZipLen, 66000L));
+
+    if (!ok)
+        return PK_ERR;
 
 /*---------------------------------------------------------------------------
     Test the end-of-central-directory info for incompatibilities (multi-disk
