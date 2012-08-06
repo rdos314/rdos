@@ -86,6 +86,24 @@ extern TUnzip UnzipClass;
 #define Trace  UnzipClass.Trace
 #define Info   UnzipClass.Info
 
+/* external return codes */
+#define PK_OK              0   /* no error */
+#define PK_COOL            0   /* no error */
+#define PK_WARN            1   /* warning error */
+#define PK_ERR             2   /* error in zipfile */
+#define PK_BADERR          3   /* severe error in zipfile */
+#define PK_MEM             4   /* insufficient memory (during initialization) */
+#define PK_MEM2            5   /* insufficient memory (password failure) */
+#define PK_MEM3            6   /* insufficient memory (file decompression) */
+#define PK_MEM4            7   /* insufficient memory (memory decompression) */
+#define PK_MEM5            8   /* insufficient memory (not yet used) */
+#define PK_NOZIP           9   /* zipfile not found */
+#define PK_PARAM          10   /* bad or illegal parameters specified */
+#define PK_FIND           11   /* no files found */
+#define PK_SKIP           12   /* don't extract */
+#define PK_DISK           50   /* disk full */
+#define PK_EOF            51   /* unexpected EOF */
+
 /*
 #define Info(buf,flag,sprf_arg) \
       (*G.message)((void *)&G, (unsigned char *)(buf), (unsigned long)sprintf sprf_arg, (flag))

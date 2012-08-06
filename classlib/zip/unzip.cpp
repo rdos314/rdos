@@ -1306,7 +1306,7 @@ void TUnzipFile::ShowVerbose()
 ##########################################################################*/
 void TUnzipFile::ShowCompact()
 {
-    int         k, error, error_in_archive=PK_COOL;
+    int         k;
     unsigned    methid, methnum, xattr;
     char        *p, workspace[12], attribs[16];
     char        methbuf[5];
@@ -2292,7 +2292,6 @@ TUnzipFile *TUnzip::ProcessNextFile()
              */
 //            Info(0x401, CentSigMsg, j + blknum*DIR_BLKSIZ + 1);
 //            Info(0x401, ReportMsg);
-//            return PK_BADERR;
 //        }
     }
 
