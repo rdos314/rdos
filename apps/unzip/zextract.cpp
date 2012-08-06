@@ -306,7 +306,7 @@ int extract_or_test_files()    /* return PK-type error code */
         if (file == 0)
             break;
 
-        if (file->error != PK_COOL)
+        if (!file->IsOk())
             continue;
 
         if (!G.process_all_files) {
@@ -334,7 +334,7 @@ int extract_or_test_files()    /* return PK-type error code */
                     }
             }
             if (!do_this_file) 
-                file->error = PK_SKIP;
+                file->Skip();
         } /* end if (process_all_files) */
     }
 
@@ -350,10 +350,10 @@ int extract_or_test_files()    /* return PK-type error code */
         if (file == 0)
             break;
 
-        if (file->error == PK_EOF)
-            break;
+        if (!file->IsOk())
+            continue;
 
-        if (file->error != PK_COOL)
+        if (file->IsSkipped())
             continue;
 
         /*

@@ -92,6 +92,11 @@ friend class TUnzip;
 public:
     TUnzipFile(TUnzip *unzip);
     ~TUnzipFile();
+
+    void Skip();
+
+    int IsOk();
+    int IsSkipped();
     
     int Extract();
 
@@ -107,7 +112,6 @@ public:
     unsigned long crc;              /* crc (needed if extended header) */
     unsigned short diskstart;       /* no of volume where this entry starts */
     int encrypted;                  /* is encrypted */
-    int error;
     unsigned long file_data_offset;
     unsigned long abs_data_offset;
     unsigned char hostver;
@@ -129,6 +133,9 @@ public:
 protected:
     int ProcessDirEntry();
     int ProcessFileHeader();
+
+    int FOk;
+    int FSkipped;
 
     TUnzip *FUnzip;
     

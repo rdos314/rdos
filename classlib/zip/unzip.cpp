@@ -567,10 +567,11 @@ TUnzipFile::TUnzipFile(TUnzip *unzip)
 {
     FUnzip = unzip;
 
-    error = ProcessDirEntry();
+    FSkipped = FALSE;
+    FOk = ProcessDirEntry();
 
-    if (error == PK_COOL)
-        error = ProcessFileHeader();
+    if (FOk)
+        FOk = ProcessFileHeader();
 }
 
 /*##########################################################################
@@ -599,7 +600,7 @@ TUnzipFile::~TUnzipFile()
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzipFile::ProcessDirEntry()    /* return PK-type error code */
+int TUnzipFile::ProcessDirEntry()
 {
     int error;
     unsigned short filename_length;
@@ -617,7 +618,7 @@ int TUnzipFile::ProcessDirEntry()    /* return PK-type error code */
   ---------------------------------------------------------------------------*/
 
     if (FUnzip->ReadBuf((char *)byterec, CREC_SIZE) == 0)
-        return PK_EOF;
+        return FALSE;
 
     hostver = byterec[C_VERSION_MADE_BY_0];
     hostnum = MIN(byterec[C_VERSION_MADE_BY_1], NUM_HOSTS);
@@ -700,7 +701,7 @@ int TUnzipFile::ProcessDirEntry()    /* return PK-type error code */
               "%s:  bad filename length \n",
               "central");
         }
-        return error;
+        return FALSE;
     }
 
     FUnzip->SkipHeaderString(extra_field_length);
@@ -716,7 +717,7 @@ int TUnzipFile::ProcessDirEntry()    /* return PK-type error code */
               version_needed_to_extract[0] / 10,
               version_needed_to_extract[0] % 10,
               UNZIP_VERSION / 10, UNZIP_VERSION % 10);
-        return PK_WARN;
+        return FALSE;
     }
 
     if ((compression_method >= REDUCED1 && compression_method <= REDUCED4) ||
@@ -732,10 +733,10 @@ int TUnzipFile::ProcessDirEntry()    /* return PK-type error code */
             FUnzip->Info(0x401, "   skipping: %-22s  unsupported compression method %u\n",
               cfilname,
               compression_method);
-        return PK_WARN;
+        return FALSE;
     }
 
-    return PK_COOL;
+    return TRUE;
 }
 
 /*##########################################################################
@@ -751,6 +752,7 @@ int TUnzipFile::ProcessDirEntry()    /* return PK-type error code */
 ##########################################################################*/
 int TUnzipFile::ProcessFileHeader()
 {
+    int error;
     unsigned long dos_datetime;
     unsigned char byterec[ LREC_SIZE ];
     long bufstart;
@@ -848,7 +850,58 @@ int TUnzipFile::ProcessFileHeader()
     FUnzip->FInPtr = inptr;
     FUnzip->FInCount = incnt;
 
-    return error;
+    if (error == PK_COOL)
+        return TRUE;
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TUnzipFile::Skip
+#
+#   Purpose....: Skip file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUnzipFile::Skip()
+{
+    FSkipped = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TUnzipFile::IsOk
+#
+#   Purpose....: Check if file is ok
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzipFile::IsOk()
+{
+    return FOk;
+}
+
+/*##########################################################################
+#
+#   Name       : TUnzipFile::IsSkipped
+#
+#   Purpose....: Check if file is skipped
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzipFile::IsSkipped()
+{
+    return FSkipped;
 }
 
 /*##########################################################################
