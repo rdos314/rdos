@@ -170,26 +170,23 @@ int TUnzipExtractor::Seek(long abs_offset)
  *  use the slide[] buffer for the error message.
  *
  * returns PK error codes:
- *  PK_BADERR if effective offset in zipfile is negative
- *  PK_EOF if seeking past end of zipfile
- *  PK_OK when seek was successful
  */
     long request = abs_offset;
     long inbuf_offset = request % INBUFSIZ;
     long bufstart = request - inbuf_offset;
 
     if (request < 0)
-        return(PK_BADERR);
+        return FALSE;
 
     RdosSetFilePos(FInputHandle, bufstart);
     FInCount = RdosReadFile(FInputHandle, FInBuf, INBUFSIZ);
     if (FInCount <= 0)
-        return(PK_EOF);
+        return FALSE;
 
     FInCount -= (int)inbuf_offset;
     FInPtr = FInBuf + (int)inbuf_offset;
 
-    return(PK_OK);
+    return TRUE;
 } /* end function seek_zipf() */
 
 /*##########################################################################
@@ -553,9 +550,9 @@ int TUnzipExtractor::Flush(char *rawbuf, int size)
 ##########################################################################*/
 int TUnzipExtractor::Extract()
 {    
-    if (IsFileOpen())
-        FOk = TRUE;
-    else
+    FOk = TRUE;
+
+    if (!IsFileOpen())
         return FALSE;
 
     FDoDecrypt = FALSE;
@@ -564,7 +561,8 @@ int TUnzipExtractor::Extract()
     if (FDoText)
         FTmpOutBuf = new char[TMPOUTSIZ];
 
-    Seek(FFile->abs_data_offset);
+    if (!Seek(FFile->abs_data_offset))
+        return FALSE;
 
     /* Size consistency checks must come after reading in the local extra
      * field, so that any Zip64 extension local e.f. block has already
