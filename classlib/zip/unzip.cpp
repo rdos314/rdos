@@ -2048,31 +2048,27 @@ int TUnzip::Seek(long abs_offset)
  *  Since seek_zipf() is never used during decompression, it is safe to
  *  use the slide[] buffer for the error message.
  *
- * returns PK error codes:
- *  PK_BADERR if effective offset in zipfile is negative
- *  PK_EOF if seeking past end of zipfile
- *  PK_OK when seek was successful
  */
     long request = abs_offset + FExtraBytes;
     long inbuf_offset = request % INBUFSIZ;
     long bufstart = request - inbuf_offset;
 
     if (request < 0)
-        return(PK_BADERR);
+        return FALSE;
     
     if (bufstart != FBufStart) {
         RdosSetFilePos(FInputHandle, bufstart);
         FBufStart = RdosGetFilePos(FInputHandle);
         FInCount = RdosReadFile(FInputHandle, FInBuf, INBUFSIZ);
         if (FInCount <= 0)
-            return(PK_EOF);
+            return FALSE;
         FInCount -= (int)inbuf_offset;
         FInPtr = FInBuf + (int)inbuf_offset;
     } else {
         FInCount += (FInPtr-FInBuf) - (int)inbuf_offset;
         FInPtr = FInBuf + (int)inbuf_offset;
     }
-    return(PK_OK);
+    return TRUE;
 } /* end function seek_zipf() */
 
 /*##########################################################################
@@ -2167,7 +2163,7 @@ int TUnzip::GetFileName(char *buf, int length)
 int TUnzip::SeekFile(TUnzipFile *file)  
 {
     long bufstart, inbuf_offset, request;
-    int error;
+    int ok;
     char sig[4];
     static const char SeekMsg[] =  "error [%s]:  attempt to seek before beginning of zipfile\n";
     static const char OffsetMsg[] = "bad zipfile offset (%s):  %ld\n";
@@ -2232,9 +2228,9 @@ int TUnzip::SeekFile(TUnzipFile *file)
             } else
                 FExtraBytes = FOldExtraBytes; /* third attempt */
 
-            error = Seek(file->offset);
-            if ((error != PK_OK) || (ReadBuf(sig, 4) == 0)) {  /* bad offset */
-                if (error != PK_BADERR)
+            ok = Seek(file->offset);
+            if (!ok || ReadBuf(sig, 4) == 0) {  /* bad offset */
+                if (!ok)
                     Info(0x401, OffsetMsg, "EOF", request);
                 return FALSE;
             }
@@ -2318,7 +2314,6 @@ TUnzipFile *TUnzip::ProcessNextFile()
 ##########################################################################*/
 int TUnzip::ProcessFiles(const char *filename)
 {
-    int error;
     int ok;
     int i;
     TUnzipFile **newarr;
@@ -2393,22 +2388,19 @@ int TUnzip::ProcessFiles(const char *filename)
         with STZip, as well as archives created by J.H. Holm's ZIPSPLIT 1.1).
       -----------------------------------------------------------------------*/
 
-    error = Seek(FHeader.offset_start_central_directory);
-    if (error == PK_BADERR) {
-        return FALSE;
-    }
+    ok = Seek(FHeader.offset_start_central_directory);
     
-    if ((error != PK_OK) || (ReadBuf(sig, 4) == 0) ||
+    if (!ok || (ReadBuf(sig, 4) == 0) ||
         memcmp(sig, central_hdr_sig, 4))
     {
         long tmp = FExtraBytes;
 
         FExtraBytes = 0;
-        error = Seek(FHeader.offset_start_central_directory);
-        if ((error != PK_OK) || (ReadBuf(sig, 4) == 0) ||
+        ok = Seek(FHeader.offset_start_central_directory);
+        if (!ok || (ReadBuf(sig, 4) == 0) ||
             memcmp(sig, central_hdr_sig, 4))
         {
-            if (error != PK_BADERR)
+            if (!ok)
                 Info(0x401, "error [%s]:  start of central directory not found\n", filename);
             return FALSE;
         }
@@ -2423,8 +2415,8 @@ int TUnzip::ProcessFiles(const char *filename)
         or test member files as instructed, and close the zipfile.
       -----------------------------------------------------------------------*/
 
-    error = Seek(FHeader.offset_start_central_directory);
-    if (error != PK_OK) {
+    ok = Seek(FHeader.offset_start_central_directory);
+    if (!ok) {
         return FALSE;
     }
 
