@@ -221,7 +221,7 @@ int TUnzipExtractor::Decrypt()
 
     FDoDecrypt = TRUE;
 
-    return PK_WARN;
+    return TRUE;
 
 } /* end function decrypt() */
 
@@ -579,7 +579,7 @@ int TUnzipExtractor::Extract()
     }
 
     if (FFile->encrypted) {
-        if (Decrypt() != PK_COOL)
+        if (!Decrypt())
             FOk = FALSE;
     }
 
