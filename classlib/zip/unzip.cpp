@@ -767,7 +767,10 @@ int TUnzipFile::ProcessFileHeader()
     inptr = FUnzip->FInPtr;
     incnt = FUnzip->FInCount;
     
-    error = FUnzip->SeekFile(this);
+    if (FUnzip->SeekFile(this))
+        error = PK_COOL;
+    else
+        error = PK_ERR;
 
     if (error == PK_COOL)
     {
@@ -2168,7 +2171,7 @@ int TUnzip::GetFileName(char *buf, int length)
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::SeekFile(TUnzipFile *file)    /* return PK-type error code */
+int TUnzip::SeekFile(TUnzipFile *file)  
 {
     long bufstart, inbuf_offset, request;
     int error;
@@ -2197,10 +2200,10 @@ int TUnzip::SeekFile(TUnzipFile *file)    /* return PK-type error code */
             /* try again */
             if (request < 0) {
                 Info(0x401, SeekMsg, file->cfilname);
-                return PK_BADERR;
+                return FALSE;
             }
         } else {
-            return PK_BADERR;
+            return FALSE;
         }
     }
 
@@ -2211,7 +2214,7 @@ int TUnzip::SeekFile(TUnzipFile *file)    /* return PK-type error code */
         if (FInCount <= 0)
         {
             Info(0x401, OffsetMsg, "lseek", bufstart);
-            return PK_BADERR;
+            return FALSE;
         }
         FInPtr = FInBuf + (int)inbuf_offset;
         FInCount -= (int)inbuf_offset;
@@ -2223,7 +2226,7 @@ int TUnzip::SeekFile(TUnzipFile *file)    /* return PK-type error code */
     /* should be in proper position now, so check for sig */
     if (ReadBuf(sig, 4) == 0) {  /* bad offset */
         Info(0x401, OffsetMsg, "EOF", request);
-        return PK_BADERR;
+        return FALSE;
     }
 
     if (memcmp(sig, local_hdr_sig, 4)) {
@@ -2240,16 +2243,16 @@ int TUnzip::SeekFile(TUnzipFile *file)    /* return PK-type error code */
             if ((error != PK_OK) || (ReadBuf(sig, 4) == 0)) {  /* bad offset */
                 if (error != PK_BADERR)
                     Info(0x401, OffsetMsg, "EOF", request);
-                return PK_BADERR;
+                return FALSE;
             }
             if (memcmp(sig, local_hdr_sig, 4)) {
                 Info(0x401, OffsetMsg, "signature", request);
-                return PK_BADERR;
+                return FALSE;
             }
         } else
-            return PK_ERR;
+            return FALSE;
     }
-    return PK_COOL;
+    return TRUE;
 }
 
 /*##########################################################################
