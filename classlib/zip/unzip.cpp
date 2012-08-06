@@ -693,14 +693,11 @@ int TUnzipFile::ProcessDirEntry()
     /* store a copy of the central header filename for later comparison */
     cfilname = new char[filename_length + 1];
 
-    error = FUnzip->GetFileName(cfilname, filename_length);
-    if (error != PK_COOL)
+    if (!FUnzip->GetFileName(cfilname, filename_length))
     {
-        if (error > PK_WARN) {  /* fatal:  no more left to do */
-            FUnzip->Info(0x401,
-              "%s:  bad filename length \n",
-              "central");
-        }
+        FUnzip->Info(0x401,
+          "%s:  bad filename length \n",
+          "central");
         return FALSE;
     }
 
@@ -822,8 +819,7 @@ int TUnzipFile::ProcessFileHeader()
     if (error == PK_COOL)
     {
         char *buf = new char[filename_length + 1];
-        error = FUnzip->GetFileName(buf, filename_length);
-        if (error == PK_COOL)
+        if (FUnzip->GetFileName(buf, filename_length))
         {
             if (strcmp(buf, cfilname))
             {
@@ -831,6 +827,8 @@ int TUnzipFile::ProcessFileHeader()
                 error = PK_ERR;
             }
         }
+        else
+            error = PK_ERR;
         delete buf;
     }
 
@@ -2127,12 +2125,10 @@ int TUnzip::GetFileCount()
 int TUnzip::GetFileName(char *buf, int length)
 {
     int block_len;
-    int error = PK_OK;
 
     if (length >= FILE_NAME_SIZE) {
         Info(0x401, "warning:  filename too long--truncating.\n");
 
-        error = PK_WARN;
         /* remember excess length in block_len */
         block_len = length - (FILE_NAME_SIZE - 1);
         length = FILE_NAME_SIZE - 1;
@@ -2142,7 +2138,7 @@ int TUnzip::GetFileName(char *buf, int length)
         block_len = 0;
 
     if (ReadBuf(buf, length) == 0)
-        return PK_EOF;
+        return FALSE;
 
     buf[length] = '\0';      /* terminate w/zero:  ASCIIZ */
 
@@ -2158,7 +2154,7 @@ int TUnzip::GetFileName(char *buf, int length)
         SkipHeaderString(block_len);
     }
 
-     return PK_OK;
+     return TRUE;
 }
 
 /*##########################################################################
