@@ -436,7 +436,7 @@ int TUnzipExplodeExtractor::ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft 
   register unsigned long b;       /* bit buffer */
   register unsigned k;  /* number of bits in bit buffer */
   unsigned u;           /* true if unflushed */
-  int retval = 0;       /* error code returned: initialized to "no error" */
+  int ok;
 
 
   /* explode the coded data */
@@ -458,8 +458,9 @@ int TUnzipExplodeExtractor::ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft 
       FOutBuf[w++] = (unsigned char)t->v.n;
       if (w == WSIZE)
       {
-        if ((retval = Flush(FOutBuf, w)) != 0)
-          return retval;
+        ok = Flush(FOutBuf, w);
+        if (!ok)
+          return ok;
         w = u = 0;
       }
     }
@@ -505,8 +506,9 @@ int TUnzipExplodeExtractor::ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft 
             } while (--e);
         if (w == WSIZE)
         {
-          if ((retval = Flush(FOutBuf, w)) != 0)
-            return retval;
+          ok = Flush(FOutBuf, w);
+          if (!ok)
+            return ok;
           w = u = 0;
         }
       } while (n);
@@ -514,14 +516,15 @@ int TUnzipExplodeExtractor::ExplodeLit(struct TUnzipHuft *tb, struct TUnzipHuft 
   }
 
   /* flush out redirSlide */
-  if ((retval = Flush(FOutBuf, w)) != 0)
-    return retval;
+  ok = Flush(FOutBuf, w);
+  if (!ok)
+    return ok;
   if (FDecompSize + FInCount + (k >> 3))   /* should have read csize bytes, but */
   {                        /* sometimes read one too many:  k>>3 compensates */
     FUsedCSize = FFile->compr_size - FDecompSize - FInCount - (k >> 3);
-    return 5;
+    return FALSE;
   }
-  return 0;
+  return TRUE;
 }
 
 /*##########################################################################
@@ -549,7 +552,7 @@ int TUnzipExplodeExtractor::ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuf
   register unsigned long b;       /* bit buffer */
   register unsigned k;  /* number of bits in bit buffer */
   unsigned u;           /* true if unflushed */
-  int retval = 0;       /* error code returned: initialized to "no error" */
+  int ok;
 
 
   /* explode the coded data */
@@ -570,8 +573,9 @@ int TUnzipExplodeExtractor::ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuf
       FOutBuf[w++] = (char)b;
       if (w == WSIZE)
       {
-        if ((retval = Flush(FOutBuf, w)) != 0)
-          return retval;
+        ok = Flush(FOutBuf, w);
+        if (!ok)
+          return ok;
         w = u = 0;
       }
       ADVANCEBITS(8)
@@ -618,8 +622,9 @@ int TUnzipExplodeExtractor::ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuf
             } while (--e);
         if (w == WSIZE)
         {
-          if ((retval = Flush(FOutBuf, w)) != 0)
-            return retval;
+          ok = Flush(FOutBuf, w);
+          if (!ok)
+            return ok;
           w = u = 0;
         }
       } while (n);
@@ -627,14 +632,15 @@ int TUnzipExplodeExtractor::ExplodeNolit(struct TUnzipHuft *tl, struct TUnzipHuf
   }
 
   /* flush out redirSlide */
-  if ((retval = Flush(FOutBuf, w)) != 0)
-    return retval;
+  ok = Flush(FOutBuf, w);
+  if (!ok)
+    return ok;
   if (FDecompSize + FInCount + (k >> 3))   /* should have read csize bytes, but */
   {                        /* sometimes read one too many:  k>>3 compensates */
     FUsedCSize = FFile->compr_size - FDecompSize - FInCount - (k >> 3);
-    return 5;
+    return FALSE;
   }
-  return 0;
+  return TRUE;
 }
 
 
@@ -750,16 +756,11 @@ void TUnzipExplodeExtractor::Execute()
   }
 
   if (tb != NULL) {
-    r = ExplodeLit(tb, tl, td, bb, bl, bd, bdl);
+    FOk = ExplodeLit(tb, tl, td, bb, bl, bd, bdl);
     FreeHuft(tb);
   } else {
-    r = ExplodeNolit(tl, td, bl, bd, bdl);
+    FOk = ExplodeNolit(tl, td, bl, bd, bdl);
   }
-
-  if (r == 0)
-      FOk = TRUE;
-  else
-      FOk = FALSE;
 
   FreeHuft(td);
   FreeHuft(tl);

@@ -471,7 +471,7 @@ int TUnzipExtractor::Flush(char *rawbuf, int size)
     FCurrCrcVal = crc32(FCurrCrcVal, (unsigned char *)rawbuf, size);
 
     if (!FOutputHandle || size == 0L)  /* testing or nothing to write:  all done */
-        return PK_OK;
+        return TRUE;
 
 /*---------------------------------------------------------------------------
     Write the bytes rawbuf[0..size-1] to the output device, first converting
@@ -518,7 +518,7 @@ int TUnzipExtractor::Flush(char *rawbuf, int size)
 
         if (q > FTmpOutBuf) {
             if (!RdosWriteFile(FOutputHandle, FTmpOutBuf, q-FTmpOutBuf))
-                return PK_DISK;
+                return FALSE;
         }
     } else {   /* binary mode:  aflag is false */
 
@@ -533,10 +533,10 @@ int TUnzipExtractor::Flush(char *rawbuf, int size)
          * DEC Ultrix cc), write() is used anyway.
          */
         if (!RdosWriteFile(FOutputHandle, rawbuf, size))
-            return PK_DISK;
+            return FALSE;
     }
 
-    return PK_OK;
+    return TRUE;
 
 } /* end function flush() [resp. partflush() for 16-bit Deflate64 support] */
 

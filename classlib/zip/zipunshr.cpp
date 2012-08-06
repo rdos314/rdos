@@ -39,6 +39,9 @@
 #include "zipunshr.h"
 #include "unzip.h"
 
+#define FALSE 0
+#define TRUE !FALSE
+
 #define MAX_BITS    13                 /* used in unshrink() */
 #define HSIZE       (1 << MAX_BITS)    /* size of global work area */
 
@@ -149,7 +152,7 @@ void TUnzipUnshrinkExtractor::Execute()
     unsigned char *stacktop;
     register unsigned char *newstr;
     unsigned char finalval;
-    int codesize=9, len, error;
+    int codesize=9, len;
     int code, oldcode, curcode;
     int lastfreecode;
     unsigned char *p;
@@ -168,7 +171,7 @@ void TUnzipUnshrinkExtractor::Execute()
     Get and output first code, then loop over remaining ones.
   ---------------------------------------------------------------------------*/
 
-    error = PK_OK;
+    FOk = TRUE;
     
     READBITS(codesize, oldcode)
     if (FZipeof)
@@ -194,7 +197,7 @@ void TUnzipUnshrinkExtractor::Execute()
     *FOutPtr++ = finalval;
     ++FOutCount;
 
-    while (error == PK_OK) {
+    while (FOk) {
         READBITS(codesize, code)
         if (FZipeof)
             break;
@@ -206,7 +209,7 @@ void TUnzipUnshrinkExtractor::Execute()
                 ++codesize;
                 if (codesize > MAX_BITS)
                 {
-                    error = PK_ERR;
+                    FOk = FALSE;
                     break;
                 }
             } else if (code == 2) {
@@ -233,7 +236,7 @@ void TUnzipUnshrinkExtractor::Execute()
         while (code != BOGUSCODE) {
             if (newstr < FShrinkStack) {
                 /* Bogus compression stream caused buffer underflow! */
-                error = PK_ERR;
+                FOk = FALSE;
                 break;
             }
             if (FShrinkParent[code] == FREE_CODE) {
@@ -256,7 +259,8 @@ void TUnzipUnshrinkExtractor::Execute()
         for (p = newstr;  p < newstr+len;  ++p) {
             *FOutPtr++ = *p;
             if (++FOutCount == WSIZE) {
-                if ((error = Flush(FOutBuf, FOutCount)) != 0) {
+                FOk = Flush(FOutBuf, FOutCount);
+                if (!FOk) {
                     break;
                 }
                 FOutPtr = FOutBuf;
@@ -276,7 +280,7 @@ void TUnzipUnshrinkExtractor::Execute()
         lastfreecode = code;
         if (code >= HSIZE) {
             /* invalid compressed data caused max-code overflow! */
-            error = PK_ERR;
+            FOk = FALSE;
             break;
         }
 
@@ -291,8 +295,8 @@ void TUnzipUnshrinkExtractor::Execute()
   ---------------------------------------------------------------------------*/
 
     if (FOutCount > 0) {
-        if (error == PK_OK)
-            error = Flush(FOutBuf, FOutCount) != 0;
+        if (FOk)
+            FOk = Flush(FOutBuf, FOutCount);
         else
             Flush(FOutBuf, FOutCount);
     }

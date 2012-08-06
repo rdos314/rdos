@@ -91,7 +91,10 @@ static int zlib_out(void *pG, unsigned char *outbuf, unsigned outcnt)
 {
     TUnzipExtractor *extractor = (TUnzipExtractor *)pG;
     
-    return extractor->Flush((char *)outbuf, outcnt);
+    if (extractor->Flush((char *)outbuf, outcnt))
+        return 0;
+    else
+        return 1;
 }
 
 

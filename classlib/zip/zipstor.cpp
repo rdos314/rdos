@@ -88,7 +88,6 @@ void TUnzipStoreExtractor::Execute()
 {
     int b;
     int r;
-    int error;
     
     FOutPtr = FOutBuf;
     FOutCount = 0;
@@ -96,21 +95,15 @@ void TUnzipStoreExtractor::Execute()
     while ((b = GetNextByte()) != EOF) {
         *FOutPtr++ = b;
         if (++FOutCount == WSIZE) {
-            error = Flush(FOutBuf, FOutCount);
+            FOk = Flush(FOutBuf, FOutCount);
             FOutPtr = FOutBuf;
             FOutCount = 0;
-            if (error != PK_COOL) break;
+            if (!FOk) break;
         }
     }
 
-    if (FOutCount) {        /* flush final (partial) buffer */
-        r = Flush(FOutBuf, FOutCount);
-        if (error < r) error = r;
+    if (FOk && FOutCount) {        /* flush final (partial) buffer */
+        FOk = Flush(FOutBuf, FOutCount);
     }
-
-    if (error == 0)
-        FOk = TRUE;
-    else
-        FOk = FALSE;
 }
 
