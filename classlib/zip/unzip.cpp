@@ -749,7 +749,7 @@ int TUnzipFile::ProcessDirEntry()
 ##########################################################################*/
 int TUnzipFile::ProcessFileHeader()
 {
-    int error;
+    int ok;
     unsigned long dos_datetime;
     unsigned char byterec[ LREC_SIZE ];
     long bufstart;
@@ -767,12 +767,9 @@ int TUnzipFile::ProcessFileHeader()
     inptr = FUnzip->FInPtr;
     incnt = FUnzip->FInCount;
     
-    if (FUnzip->SeekFile(this))
-        error = PK_COOL;
-    else
-        error = PK_ERR;
+    ok = FUnzip->SeekFile(this);
 
-    if (error == PK_COOL)
+    if (ok)
     {
 
 /*---------------------------------------------------------------------------
@@ -783,7 +780,7 @@ int TUnzipFile::ProcessFileHeader()
   ---------------------------------------------------------------------------*/
 
         if (FUnzip->ReadBuf((char *)byterec, LREC_SIZE) == 0)
-            error = PK_EOF;
+            ok = FALSE;
         else
         {
             ve[0] = byterec[L_VERSION_NEEDED_TO_EXTRACT_0];
@@ -814,31 +811,31 @@ int TUnzipFile::ProcessFileHeader()
             
             if (compression_method != makeword(&byterec[L_COMPRESSION_METHOD])) {
                 FUnzip->Info(0x421, "header incompability\n");
-                error = PK_ERR;
+                ok = FALSE;
             }
         }
     }
 
-    if (error == PK_COOL)
+    if (ok)
     {
         char *buf = new char[filename_length + 1];
-        if (FUnzip->GetFileName(buf, filename_length))
+        ok = FUnzip->GetFileName(buf, filename_length);
+
+        if (ok)
         {
             if (strcmp(buf, cfilname))
             {
                 FUnzip->Info(0x421, "filenames differ between headers\n");
-                error = PK_ERR;
+                ok = FALSE;
             }
         }
-        else
-            error = PK_ERR;
         delete buf;
     }
 
-    if (error != PK_COOL)
+    if (!ok)
         FUnzip->Info(0x421, "bad local header\n");
 
-    if (error == PK_COOL)
+    if (ok)
     {
         FUnzip->SkipHeaderString(extra_field_length);
         file_data_offset = FUnzip->FBufStart - FUnzip->FExtraBytes + (FUnzip->FInPtr-FUnzip->FInBuf);
@@ -851,10 +848,7 @@ int TUnzipFile::ProcessFileHeader()
     FUnzip->FInPtr = inptr;
     FUnzip->FInCount = incnt;
 
-    if (error == PK_COOL)
-        return TRUE;
-    else
-        return FALSE;
+    return ok;
 }
 
 /*##########################################################################
