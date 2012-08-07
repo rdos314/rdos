@@ -202,7 +202,7 @@ char *do_wild(const char *wildspec)
 /*  Function mapname()  */
 /************************/
 
-int mapname(TUnzipFile *file, int renamed)
+int mapname(char *filename, int renamed)
 /*
  * returns:
  *  MPN_OK          - no problem detected
@@ -233,18 +233,18 @@ int mapname(TUnzipFile *file, int renamed)
     renamed_fullpath = FALSE;
 
     if (renamed) {
-        cp = file->cfilname - 1;    /* point to beginning of renamed name... */
+        cp = filename - 1;    /* point to beginning of renamed name... */
         while (*++cp)
             if (*cp == '\\')    /* convert backslashes to forward */
                 *cp = '/';
-        cp = file->cfilname;
+        cp = filename;
         /* use temporary rootpath if user gave full pathname */
-        if (file->cfilname[0] == '/') {
+        if (filename[0] == '/') {
             renamed_fullpath = TRUE;
             pathcomp[0] = '/';  /* copy the '/' and terminate */
             pathcomp[1] = '\0';
             ++cp;
-        } else if (isalpha((unsigned char)file->cfilname[0]) && file->cfilname[1] == ':') {
+        } else if (isalpha((unsigned char)filename[0]) && filename[1] == ':') {
             renamed_fullpath = TRUE;
             pp = pathcomp;
             *pp++ = *cp++;      /* copy the "d:" (+ '/', possibly) */
@@ -256,16 +256,16 @@ int mapname(TUnzipFile *file, int renamed)
     }
 
     /* pathcomp is ignored unless renamed_fullpath is TRUE: */
-    if ((error = checkdir(file, pathcomp, INIT)) != 0) /* initialize path buf */
+    if ((error = checkdir(pathcomp, INIT)) != 0) /* initialize path buf */
         return error;           /* ...unless no mem or vol label on hard disk */
 
     *pathcomp = '\0';           /* initialize translation buffer */
     pp = pathcomp;              /* point to translation buffer */
     if (!renamed) {             /* cp already set if renamed */
         if (uO.jflag)           /* junking directories */
-            cp = (char *)strrchr(file->cfilname, '/');
+            cp = (char *)strrchr(filename, '/');
         if (cp == (char *)NULL) /* no '/' or not junking dirs */
-            cp = file->cfilname;    /* point to internal zipfile-member pathname */
+            cp = filename;    /* point to internal zipfile-member pathname */
         else
             ++cp;               /* point to start of last component of path */
     }
@@ -289,7 +289,7 @@ int mapname(TUnzipFile *file, int renamed)
                 }
                 /* when path component is not empty, append it now */
                 if (*pathcomp != '\0' &&
-                    ((error = checkdir(file, pathcomp, APPEND_DIR))
+                    ((error = checkdir(pathcomp, APPEND_DIR))
                      & MPN_MASK) > MPN_INF_TRUNC)
                     return error;
                 pp = pathcomp;    /* reset conversion buffer for next piece */
@@ -336,8 +336,8 @@ int mapname(TUnzipFile *file, int renamed)
     fore exiting.
   ---------------------------------------------------------------------------*/
 
-    if (file->cfilname[strlen(file->cfilname) - 1] == '/') {
-        checkdir(file, file->cfilname, GETPATH);
+    if (filename[strlen(filename) - 1] == '/') {
+        checkdir(filename, GETPATH);
         if (created_dir) {
             if (!uO.qflag) {
             }
@@ -368,17 +368,12 @@ int mapname(TUnzipFile *file, int renamed)
             *lastsemi = '\0';
     }
 
-    if (file->vollabel) {
-        if (strlen(pathcomp) > 11)
-            pathcomp[11] = '\0';
-    }
-
     if (*pathcomp == '\0') {
         return (error & ~MPN_MASK) | MPN_ERR_SKIP;
     }
 
-    checkdir(file, pathcomp, APPEND_NAME);  /* returns 1 if truncated: care? */
-    checkdir(file, file->cfilname, GETPATH);
+    checkdir(pathcomp, APPEND_NAME);  /* returns 1 if truncated: care? */
+    checkdir(filename, GETPATH);
 
     return error;
 
@@ -407,7 +402,7 @@ int screensize(int *tt_rows, int *tt_cols)
 /* Function checkdir() */
 /***********************/
 
-int checkdir(TUnzipFile *file, char *pathcomp, int flag)
+int checkdir(char *pathcomp, int flag)
 /*
  * returns:
  *  MPN_OK          - no problem detected
@@ -505,7 +500,7 @@ int checkdir(TUnzipFile *file, char *pathcomp, int flag)
     if (FUNCTION == INIT) {
         Trace("initializing buildpath to ");
         /* allocate space for full filename, root path, and maybe "./" */
-        if ((buildpath = (char *)malloc(strlen(file->cfilname)+rootlen+3)) ==
+        if ((buildpath = (char *)malloc(FILE_NAME_SIZE)) ==
             (char *)NULL)
             return MPN_NOMEM;
         if (renamed_fullpath) {   /* pathcomp = valid data */

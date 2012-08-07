@@ -234,6 +234,7 @@ int extract_or_test_files()    /* return PK-type error code */
     int renamed, query;
     int skip_entry;
     int errcode;
+    char filename[FILE_NAME_SIZE];
 
 /* possible values for local skip_entry flag: */
 #define SKIP_NO         0       /* do not skip this entry */
@@ -248,7 +249,7 @@ int extract_or_test_files()    /* return PK-type error code */
     /* b) check out if specified extraction root directory exists */
     if (uO.exdir != (char *)NULL && G.extract_flag) {
         G.create_dirs = !uO.fflag;
-        if ((error = checkdir(file, uO.exdir, ROOT)) > MPN_INF_SKIP) {
+        if ((error = checkdir(uO.exdir, ROOT)) > MPN_INF_SKIP) {
             /* out of memory, or file in way */
             return (error == MPN_NOMEM ? PK_MEM : PK_ERR);
         }
@@ -363,6 +364,9 @@ int extract_or_test_files()    /* return PK-type error code */
          * loop because we don't store the possibly renamed filename[] in
          * info[])
          */
+
+        strcpy(filename, file->cfilname);
+         
         if (!uO.tflag && !uO.cflag)
         {
             renamed = FALSE;   /* user hasn't renamed output file yet */
@@ -374,13 +378,13 @@ startover:
              *  of slash as directory separator (bug in some zipper(s); so
              *  far, not a problem in HPFS, NTFS or VFAT systems)
              */
-            if (file->hostnum == FS_FAT_ && !strchr(file->cfilname, '/')) {
-                char *p=file->cfilname;
+            if (file->hostnum == FS_FAT_ && !strchr(filename, '/')) {
+                char *p=filename;
 
                 if (*p) do {
                     if (*p == '\\') {
                         if (!G.reported_backslash) {
-                            Info(0x21, BackslashPathSep, file->cfilname);
+                            Info(0x21, BackslashPathSep, filename);
                             G.reported_backslash = TRUE;
                             if (!error_in_archive)
                                 error_in_archive = PK_WARN;
@@ -394,25 +398,25 @@ startover:
                /* remove absolute path specs */
                if (file->cfilname[0] == '/') {
                    Info(0x401, AbsolutePathWarning,
-                        FnFilter1(file->cfilname));
+                        FnFilter1(filename));
                    if (!error_in_archive)
                        error_in_archive = PK_WARN;
                    do {
-                       char *p = file->cfilname + 1;
+                       char *p = filename + 1;
                        do {
                            *(p-1) = *p;
                        } while (*p++ != '\0');
-                   } while (file->cfilname[0] == '/');
+                   } while (filename[0] == '/');
                }
             }
 
             /* mapname can create dirs if not freshening or if renamed */
-            error = mapname(file, renamed);
+            error = mapname(filename, renamed);
             if ((errcode = error & ~MPN_MASK) != PK_OK &&
                 error_in_archive < errcode)
                 error_in_archive = errcode;
 
-            switch (file->CheckForNewer(file->cfilname)) {
+            switch (file->CheckForNewer(filename)) {
                 case DOES_NOT_EXIST:
                     /* freshen (no new files): skip unless just renamed */
                     if (uO.fflag && !renamed)
@@ -442,7 +446,7 @@ startover:
                 extent fnlen;
 reprompt:
                 Info(0x81, ReplaceQuery,
-                  FnFilter1(file->cfilname));
+                  FnFilter1(filename));
                 if (fgets(G.answerbuf, sizeof(G.answerbuf), stdin)
                     == (char *)NULL) {
                     Info(1, AssumeNone);
@@ -455,11 +459,11 @@ reprompt:
                     case 'R':
                         do {
                             Info(0x81, NewNameQuery);
-                            fgets(file->cfilname, FILE_NAME_SIZE, stdin);
+                            fgets(filename, FILE_NAME_SIZE, stdin);
                             /* usually get \n here:  better check for it */
-                            fnlen = strlen(file->cfilname);
-                            if (file->cfilname[fnlen-1] == '\n')
-                                file->cfilname[--fnlen] = '\0';
+                            fnlen = strlen(filename);
+                            if (filename[fnlen-1] == '\n')
+                                filename[--fnlen] = '\0';
                         } while (fnlen == 0);
                         renamed = TRUE;
                         goto startover;   /* sorry for a goto */
