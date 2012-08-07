@@ -378,7 +378,7 @@ startover:
              *  of slash as directory separator (bug in some zipper(s); so
              *  far, not a problem in HPFS, NTFS or VFAT systems)
              */
-            if (file->hostnum == FS_FAT_ && !strchr(filename, '/')) {
+            if (!strchr(filename, '/')) {
                 char *p=filename;
 
                 if (*p) do {

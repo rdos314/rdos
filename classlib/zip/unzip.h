@@ -71,6 +71,8 @@ class TUnzip;
 class TUnzipFile
 {
 friend class TUnzip;
+friend class TUnzipExtractor;
+friend class TUnzipExplodeExtractor;
 public:
     TUnzipFile(TUnzip *unzip);
     ~TUnzipFile();
@@ -88,6 +90,17 @@ public:
     void ShowVerbose();
     void ShowCompact();
 
+    char *cfilname;          /* central header version of filename */
+
+protected:
+    int ProcessDirEntry();
+    int ProcessFileHeader();
+
+    int FOk;
+    int FSkipped;
+
+    TUnzip *FUnzip;
+    
     long offset;
     unsigned long compr_size;       /* compressed size (needed if extended header) */
     unsigned long uncompr_size;     /* uncompressed size (needed if extended header) */
@@ -110,17 +123,6 @@ public:
     unsigned lcflag : 1;     /* convert filename to lowercase */
     unsigned vollabel : 1;   /* "file" is an MS-DOS volume (disk) label */
     unsigned HasUxAtt : 1;   /* crec ext_file_attr has Unix style mode bits */
-    char *cfilname;          /* central header version of filename */
-
-protected:
-    int ProcessDirEntry();
-    int ProcessFileHeader();
-
-    int FOk;
-    int FSkipped;
-
-    TUnzip *FUnzip;
-    
 };
 
 class TUnzip
