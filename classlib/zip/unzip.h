@@ -80,7 +80,7 @@ public:
     int IsOk();
     int IsSkipped();
     
-    int Extract();
+    int Extract(const char *filename);
 
     int CheckForNewer(const char *filename);
 

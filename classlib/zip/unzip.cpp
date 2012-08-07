@@ -910,7 +910,7 @@ int TUnzipFile::IsSkipped()
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzipFile::Extract()
+int TUnzipFile::Extract(const char *filename)
 {
     char *extract_msg = "%8sing: %s";
     int ok;
@@ -918,27 +918,27 @@ int TUnzipFile::Extract()
 
     switch (compression_method) {
         case STORED:
-            FUnzip->Info(0, extract_msg, "extract", cfilname);
-            extractor = new TUnzipStoreExtractor(FUnzip->FInputHandle, this, cfilname);
+            FUnzip->Info(0, extract_msg, "extract", filename);
+            extractor = new TUnzipStoreExtractor(FUnzip->FInputHandle, this, filename);
             break;
 
         case DEFLATED:
-            FUnzip->Info(0, extract_msg, "extract", cfilname);
-            extractor = new TUnzipDeflateExtractor(FUnzip->FInputHandle, this, cfilname);
+            FUnzip->Info(0, extract_msg, "extract", filename);
+            extractor = new TUnzipDeflateExtractor(FUnzip->FInputHandle, this, filename);
             break;
 
         case SHRUNK:
-            FUnzip->Info(0, extract_msg, "unshrink", cfilname);
-            extractor = new TUnzipUnshrinkExtractor(FUnzip->FInputHandle, this, cfilname);
+            FUnzip->Info(0, extract_msg, "unshrink", filename);
+            extractor = new TUnzipUnshrinkExtractor(FUnzip->FInputHandle, this, filename);
             break;
 
         case IMPLODED:
-            FUnzip->Info(0, extract_msg, "explod", cfilname);
-            extractor = new TUnzipExplodeExtractor(FUnzip->FInputHandle, this, cfilname);
+            FUnzip->Info(0, extract_msg, "explod", filename);
+            extractor = new TUnzipExplodeExtractor(FUnzip->FInputHandle, this, filename);
             break;
 
         default:   /* should never get to this point */
-            FUnzip->Info(0x401, "%s:  unknown compression method\n", cfilname);
+            FUnzip->Info(0x401, "%s:  unknown compression method\n", filename);
             ok = FALSE;
             break;
 
@@ -953,7 +953,7 @@ int TUnzipFile::Extract()
         {
             if (extractor->FCurrCrcVal != crc) {
             /* if quiet enough, we haven't output the filename yet:  do it */
-                FUnzip->Info(0x401, "%-22s ", cfilname);
+                FUnzip->Info(0x401, "%-22s ", filename);
                 FUnzip->Info(0x401, " bad CRC %08lx  (should be %08lx)\n", extractor->FCurrCrcVal, crc);
                 if (encrypted)
                     FUnzip->Info(0x401, "   (may instead be incorrect password)\n");

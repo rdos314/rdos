@@ -396,7 +396,7 @@ startover:
 
             if (!renamed) {
                /* remove absolute path specs */
-               if (file->cfilname[0] == '/') {
+               if (filename[0] == '/') {
                    Info(0x401, AbsolutePathWarning,
                         FnFilter1(filename));
                    if (!error_in_archive)
@@ -503,7 +503,7 @@ reprompt:
             }
         } /* end if (extracting to disk) */
 
-        if (!file->Extract())
+        if (!file->Extract(filename))
             error_in_archive = PK_ERR;       /* ...and keep going */
     } /* end for-loop (i:  files in current block) */
 
