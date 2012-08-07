@@ -42,7 +42,7 @@ int defer_dir_attribs(TUnzipFile *file, direntry **pd)
     struct dirent *d_entry;
 
     d_entry = (struct dirent *)malloc(sizeof(struct dirent));
-    strcpy(d_entry->d_name, file->cfilname);
+    strcpy(d_entry->d_name, file->GetFileName());
     return PK_OK;
 } /* end function defer_dir_attribs() */
 

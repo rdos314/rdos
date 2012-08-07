@@ -86,15 +86,18 @@ public:
 
     int CheckForNewer(const char *filename);
 
-    void CreateTimeStr(char *str);
     void ShowVerbose();
     void ShowCompact();
 
-    char *cfilname;          /* central header version of filename */
+    const char *GetFileName();
 
 protected:
+    void CreateTimeStr(char *str);
+
     int ProcessDirEntry();
     int ProcessFileHeader();
+
+    char *cfilname;          /* central header version of filename */
 
     int FOk;
     int FSkipped;

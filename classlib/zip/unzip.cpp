@@ -853,6 +853,22 @@ int TUnzipFile::ProcessFileHeader()
 
 /*##########################################################################
 #
+#   Name       : TUnzipFile::GetFileName
+#
+#   Purpose....: Get filename of entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TUnzipFile::GetFileName()
+{
+    return cfilname;
+}
+
+/*##########################################################################
+#
 #   Name       : TUnzipFile::Skip
 #
 #   Purpose....: Skip file
