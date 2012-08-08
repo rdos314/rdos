@@ -83,6 +83,7 @@ public:
     int IsSkipped();
     
     int Extract(const char *filename);
+    int NeedUpdate(const char *filename);
 
     int CheckForNewer(const char *filename);
 
@@ -137,6 +138,7 @@ public:
     ~TUnzip();
 
     int Open(const char *name);
+    int OpenNoHeader(const char *name);
     void Close();
 
     TUnzipFile *GetFile(int index);
@@ -153,7 +155,7 @@ protected:
 private:
     void Init();
 
-    int GetCentralHeader(const char *filename, long searchlen);
+    int GetCentralHeader(const char *filename, long searchlen, int verbose);
 
     unsigned ReadBuf(char *buf, register unsigned size);
     int Seek(long abs_offset);
@@ -166,7 +168,7 @@ private:
     TUnzipFile *ProcessNextFile();
     int FindRec(long searchlen, char* signature, int rec_size);
 
-    int ProcessFiles(const char *filename);
+    int ProcessFiles(const char *filename, int verbose);
 
     char FLogBuf[512];
 

@@ -1021,6 +1021,81 @@ int TUnzipFile::CheckForNewer(const char *filename)
 
 } /* end function check_for_newer() */
 
+
+/*##########################################################################
+#
+#   Name       : TUnzipFile::NeedUpdate
+#
+#   Purpose....: Check if file need to be updated
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzipFile::NeedUpdate(const char *filename)
+{
+    unsigned long msb, lsb;
+    int handle;
+    unsigned long long old_time;
+    unsigned long long new_time;
+    long long diff_time;
+    char *buf;
+    int size;
+    unsigned long old_crc;
+
+    handle = RdosOpenFile(filename, 0);
+
+    if (handle)
+    {
+        RdosGetFileTime(handle, &msb, &lsb);
+
+        old_time = ((long long)msb << 32) + lsb;
+        new_time = ((long long)rdos_msb_time << 32) + rdos_lsb_time;
+        diff_time = new_time - old_time;
+
+        if (diff_time < 0)
+            diff_time = -diff_time;
+
+        if (diff_time > 2 * 1193)
+        {
+            RdosCloseFile(handle);
+            return TRUE;
+        }
+
+        if (RdosGetFileSize(handle) != uncompr_size)
+        {
+            RdosCloseFile(handle);
+            return TRUE;
+        }
+
+        buf = new char[WSIZE];
+        old_crc = 0;
+
+        for (;;)
+        {
+            size = RdosReadFile(handle, buf, WSIZE);
+
+            if (size)
+                old_crc = crc32(old_crc, (unsigned char *)buf, size);
+            else
+                break;
+        }
+
+        RdosCloseFile(handle);
+        delete buf;
+
+        if (old_crc == crc)
+            return FALSE;
+        else
+            return TRUE;               
+        
+    }
+    else
+        return TRUE;
+
+} /* end function check_for_newer() */
+
 /*##########################################################################
 #
 #   Name       : TUnzipFile::CreateTimeStr
@@ -1651,7 +1726,45 @@ int TUnzip::Open(const char *filename)
 
     FZipLen = RdosGetFileSize(FInputHandle);
 
-    ok = ProcessFiles(filename);
+    ok = ProcessFiles(filename, TRUE);
+
+    if (!ok)
+    {
+        RdosCloseFile(FInputHandle);
+        FInputHandle = 0;
+    }
+
+    return ok;
+} /* end function do_seekable() */
+
+/*##########################################################################
+#
+#   Name       : TUnzip::OpenNoHeader
+#
+#   Purpose....: Open zipfile, no info-header
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUnzip::OpenNoHeader(const char *filename)
+{
+    int ok;
+
+    Close();
+
+    FInputHandle = RdosOpenFile(filename, 0);
+
+    if (!FInputHandle)
+    {
+        Info(0x401, "error:  cannot open zipfile [ %s ]\n", filename);
+        return FALSE;
+    }
+
+    FZipLen = RdosGetFileSize(FInputHandle);
+
+    ok = ProcessFiles(filename, FALSE);
 
     if (!ok)
     {
@@ -1917,7 +2030,7 @@ int TUnzip::FindRec(long searchlen, char* signature, int rec_size)
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::GetCentralHeader(const char *filename, long searchlen)
+int TUnzip::GetCentralHeader(const char *filename, long searchlen, int verbose)
 {
     int found = FALSE;
     int ok;
@@ -1990,7 +2103,10 @@ int TUnzip::GetCentralHeader(const char *filename, long searchlen)
     FHeader.offset_start_central_directory = makelong(&byterec[OFFSET_START_CENTRAL_DIRECTORY]);
     FHeader.zipfile_comment_length = makeword(&byterec[ZIPFILE_COMMENT_LENGTH]);
 
-    DisplayHeaderString(FHeader.zipfile_comment_length, FALSE);
+    if (verbose)
+        DisplayHeaderString(FHeader.zipfile_comment_length, FALSE);
+    else
+        SkipHeaderString(FHeader.zipfile_comment_length);
 
     FExpectHeaderOffset = FHeader.offset_start_central_directory +
                             FHeader.size_central_directory;
@@ -2327,7 +2443,7 @@ TUnzipFile *TUnzip::ProcessNextFile()
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzip::ProcessFiles(const char *filename)
+int TUnzip::ProcessFiles(const char *filename, int verbose)
 {
     int ok;
     int i;
@@ -2349,9 +2465,10 @@ int TUnzip::ProcessFiles(const char *filename)
     FBufStart = 0;
     FInPtr = FInBuf;
 
-    Info(0, "Archive:  %s\n", filename);
+    if (verbose)
+        Info(0, "Archive:  %s\n", filename);
 
-    ok = GetCentralHeader(filename, MIN(FZipLen, 66000L));
+    ok = GetCentralHeader(filename, MIN(FZipLen, 66000L), verbose);
 
     if (!ok)
         return ok;
