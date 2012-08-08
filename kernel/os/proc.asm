@@ -2216,6 +2216,7 @@ init_first_tss  PROC near
     mov ds:p_tss_ds,dx
     mov ds:p_tss_fs,dx
     mov ds:p_tss_gs,dx
+    mov ds:p_tss_ldt,0
     mov ds:p_tss_t,0
     mov ds:p_tss_bitmap,OFFSET p_tss_io_bitmap
     mov ds:p_tss_back_link,0
