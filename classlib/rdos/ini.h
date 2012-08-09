@@ -41,6 +41,10 @@ public:
     int ReadVar(const char *var, char *str, int maxsize);
     int WriteVar(const char *var, const char *str);
     int DeleteVar(const char *var);
+
+    int GotoFirstVar();
+    int GotoNextVar();
+    int GetCurrVar(char *var, int maxsize);
     
 protected:
 	int FHandle;

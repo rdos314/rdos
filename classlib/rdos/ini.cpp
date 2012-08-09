@@ -160,3 +160,51 @@ int TIniFile::DeleteVar(const char *var)
 {
     return RdosDeleteIni(FHandle, var);
 }
+
+/*##########################################################################
+#
+#   Name       : TIniFile::GotoFirstVar
+#
+#   Purpose....: Goto first ini-var in current section
+#
+#   In params..: var
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TIniFile::GotoFirstVar()
+{
+    return RdosGotoFirstIniVar(FHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TIniFile::GotoNextVar
+#
+#   Purpose....: Goto next ini-var in current section
+#
+#   In params..: var
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TIniFile::GotoNextVar()
+{
+    return RdosGotoNextIniVar(FHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TIniFile::GetCurrVar
+#
+#   Purpose....: Get current variable
+#
+#   In params..: var
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TIniFile::GetCurrVar(char *var, int maxsize)
+{
+    return RdosGetCurrIniVar(FHandle, var, maxsize);
+}

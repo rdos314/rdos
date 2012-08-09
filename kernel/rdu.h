@@ -590,6 +590,10 @@
 #define usergate_release_futex 472
 #define usergate_cleanup_futex 473
 
+#define usergate_goto_first_inivar 474
+#define usergate_goto_next_inivar 475
+#define usergate_get_curr_inivar 476
+
 
 
 #ifdef __FLAT__
@@ -1185,6 +1189,10 @@
 #define CallGate_release_futex 0x67 0x9a 216 1 0 0 3 0
 #define CallGate_cleanup_futex 0x67 0x9a 217 1 0 0 3 0
 
+#define CallGate_goto_first_inivar 0x67 0x9a 218 1 0 0 3 0
+#define CallGate_goto_next_inivar 0x67 0x9a 219 1 0 0 3 0
+#define CallGate_get_curr_inivar 0x67 0x9a 220 1 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1777,5 +1785,9 @@
 #define CallGate_acquire_futex 0x3e 0x67 0x9a 215 1 0 0 3 0
 #define CallGate_release_futex 0x3e 0x67 0x9a 216 1 0 0 3 0
 #define CallGate_cleanup_futex 0x3e 0x67 0x9a 217 1 0 0 3 0
+
+#define CallGate_goto_first_inivar 0x3e 0x67 0x9a 218 1 0 0 3 0
+#define CallGate_goto_next_inivar 0x3e 0x67 0x9a 219 1 0 0 3 0
+#define CallGate_get_curr_inivar 0x3e 0x67 0x9a 220 1 0 0 3 0
 
 #endif

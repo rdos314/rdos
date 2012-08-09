@@ -590,4 +590,8 @@ acquire_futex_nr                = 471
 release_futex_nr                = 472
 cleanup_futex_nr                = 473
 
+goto_first_inivar_nr            = 474
+goto_next_inivar_nr             = 475
+get_curr_inivar_nr              = 476
+
 usergate_entries			    = 512

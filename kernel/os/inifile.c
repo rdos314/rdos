@@ -51,6 +51,7 @@ struct TIniSection
     int Index;
     int Deleted;
     char *Name;
+    struct TIniVar *FCurrVar;
     struct TIniVar *FVarList;
     struct TIniSection *FNextSection;
 };
@@ -480,6 +481,7 @@ struct TIniSection *AddSection(struct TIni *Ini, char *name, char *ptr)
     IniSect->Index = Ini->SectionCount;
     IniSect->Deleted = FALSE;
     IniSect->FVarList = 0;
+    IniSect->FCurrVar = 0;
     IniSect->FNextSection = 0;
     IniSect->Name = name;
 
@@ -1294,6 +1296,9 @@ int DeleteIniVar(int Handle, char *VarName)
                     {
                         var->Deleted = TRUE;
                         found = TRUE;
+
+                        if (var == sect->FCurrVar)
+                            sect->FCurrVar = 0;
                     }
                     else
                         var = var->FNextVar;                    
@@ -1533,6 +1538,247 @@ void __far ImplDeleteHandle(int handle)
 {
     DeleteHandle(handle);
 }
+
+/*##########################################################################
+#
+#   Name       : ImplGetFirstVar
+#
+#   Purpose....: Goto first var
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGotoFirstVar "*" rdosdev parm routine [ebx] 
+void __far ImplGotoFirstVar(int handle)
+{
+    struct TIniHandle *IniHandle = (struct TIniHandle *)RdosDerefHandle(INI_HANDLE, handle);
+    struct TIni *Ini;
+    struct TIniSection *sect;
+    struct TIniVar *var;
+    int found = FALSE;
+
+    if (IniHandle && IniHandle->SectionName)
+    {
+        Ini = IniHandle->Ini;
+        
+        RdosEnterKernelSection(&Ini->Section);
+
+        sect = Ini->FSectionList;
+
+        while (sect && !found)
+        {
+            if (strcmp(IniHandle->SectionName, sect->Name) == 0)
+                found = TRUE;
+            else
+                sect = sect->FNextSection;                    
+        }
+
+        if (found)
+        {
+            var = sect->FVarList;
+
+            while (var)
+            {
+                if (var->Deleted)
+                    var = var->FNextVar;                    
+                else
+                    break;
+            }
+
+            sect->FCurrVar = var;
+
+            if (!var)
+                found = FALSE;
+        }
+        
+        RdosLeaveKernelSection(&Ini->Section);
+
+    }    
+
+    if (found)    
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+}
+
+/*##########################################################################
+#
+#   Name       : ImplGetNextVar
+#
+#   Purpose....: Goto next var
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGotoNextVar "*" rdosdev parm routine [ebx] 
+void __far ImplGotoNextVar(int handle)
+{
+    struct TIniHandle *IniHandle = (struct TIniHandle *)RdosDerefHandle(INI_HANDLE, handle);
+    struct TIni *Ini;
+    struct TIniSection *sect;
+    struct TIniVar *var;
+    int found = FALSE;
+
+    if (IniHandle && IniHandle->SectionName)
+    {
+        Ini = IniHandle->Ini;
+        
+        RdosEnterKernelSection(&Ini->Section);
+
+        sect = Ini->FSectionList;
+
+        while (sect && !found)
+        {
+            if (strcmp(IniHandle->SectionName, sect->Name) == 0)
+                found = TRUE;
+            else
+                sect = sect->FNextSection;                    
+        }
+
+        if (found)
+        {
+            var = sect->FCurrVar;
+
+            if (var)
+                var = var->FNextVar;
+
+            while (var)
+            {
+                if (var->Deleted)
+                    var = var->FNextVar;                    
+                else
+                    break;
+            }
+
+            sect->FCurrVar = var;
+
+            if (!var)
+                found = FALSE;
+        }
+        
+        RdosLeaveKernelSection(&Ini->Section);
+
+    }    
+
+    if (found)    
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+}
+
+/*##########################################################################
+#
+#   Name       : GetCurrVar
+#
+#   Purpose....: Get current var
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int GetCurrVar(int Handle, char *VarName, int MaxSize)
+{
+    struct TIniHandle *IniHandle = (struct TIniHandle *)RdosDerefHandle(INI_HANDLE, Handle);
+    struct TIni *Ini;
+    struct TIniSection *sect;
+    struct TIniVar *var;
+    int found = FALSE;
+    int size;
+
+    if (IniHandle && IniHandle->SectionName)
+    {
+        Ini = IniHandle->Ini;
+        
+        RdosEnterKernelSection(&Ini->Section);
+
+        sect = Ini->FSectionList;
+
+        while (sect && !found)
+        {
+            if (strcmp(IniHandle->SectionName, sect->Name) == 0)
+                found = TRUE;
+            else
+                sect = sect->FNextSection;                    
+        }
+
+        if (found)
+        {
+            var = sect->FCurrVar;
+            if (var)
+            {
+                size = strlen(var->Name);
+                if (size >= MaxSize)
+                    size = MaxSize - 1;
+                    
+                strncpy(VarName, var->Name, size);
+                VarName[size] = 0;
+            }
+            else
+                found = FALSE;
+        }
+        
+        RdosLeaveKernelSection(&Ini->Section);
+
+    }    
+
+    return found;
+}
+
+/*##########################################################################
+#
+#   Name       : ImplGetCurrVar
+#
+#   Purpose....: Get current inivar, 16-bit version
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetCurrVar16 "*" rdosdev parm routine [ebx] [es edi] [ecx]
+void __far ImplGetCurrVar16(int handle, char *var, int maxsize)
+{
+    int ok;
+    
+    RdosExtendCx();
+    RdosExtendDi();
+
+    ok = GetCurrVar(handle, var, maxsize);
+
+    if (ok)    
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+}
+
+/*##########################################################################
+#
+#   Name       : ImplGetCurrVar32
+#
+#   Purpose....: Get current var, 32-bit version
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetCurrVar32 "*" rdosdev parm routine [ebx] [es edi] [ecx]
+void __far ImplGetCurrVar32(int handle, char *var, int maxsize)
+{
+    int ok;
+    
+    ok = GetCurrVar(handle, var, maxsize);
+
+    if (ok)    
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+}
     
 /*##########################################################################
 #
@@ -1606,6 +1852,9 @@ int main()
     RdosRegisterBimodalUserGate(usergate_close_ini, &ImplCloseIni, "Close Ini");
     RdosRegisterSegUserGate(usergate_goto_ini_section, GATE_ES_IN, &ImplGotoIniSection16, &ImplGotoIniSection32, "Goto Ini Section");
     RdosRegisterSegUserGate(usergate_remove_ini_section, GATE_ES_IN, &ImplRemoveIniSection16, &ImplRemoveIniSection32, "Remove Ini Section");
+    RdosRegisterBimodalUserGate(usergate_goto_first_inivar, &ImplGotoFirstVar, "Goto First Inivar");
+    RdosRegisterBimodalUserGate(usergate_goto_next_inivar, &ImplGotoNextVar, "Goto Next Inivar");
+    RdosRegisterSegUserGate(usergate_get_curr_inivar, GATE_ES_IN, &ImplGetCurrVar16, &ImplGetCurrVar32, "Get Current Inivar");
     RdosRegisterHandle(INI_HANDLE, &ImplDeleteHandle);    
     RdosHookInitTasking(&InitTasking);
 }

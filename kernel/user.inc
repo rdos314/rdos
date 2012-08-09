@@ -1030,6 +1030,23 @@ DeleteIni	MACRO
 	UserGate delete_ini_nr
 	        ENDM
 
+; IN  BX            Ini handle
+GotoFirstIniVar	MACRO
+	UserGate goto_first_inivar_nr
+	        ENDM
+
+; IN  BX            Ini handle
+GotoNextIniVar	MACRO
+	UserGate goto_next_inivar_nr
+	        ENDM
+
+; IN  BX            Ini handle
+; IN  ES:(E)DI      Var name
+; IN  (E)CX         Max var size
+GetCurrIniVar	MACRO
+	UserGate get_curr_inivar_nr
+	        ENDM
+
 ;;;;;;;;;;;;;; DEBUGGING ;;;;;;;;;;;
 
 ; IN  EDX           IP address (0 = local)

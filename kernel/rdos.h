@@ -619,6 +619,9 @@ int RDOSAPI RdosRemoveIniSection(int handle, const char *name);
 int RDOSAPI RdosReadIni(int handle, const char *var, char *str, int maxsize);
 int RDOSAPI RdosWriteIni(int handle, const char *var, const char *str);
 int RDOSAPI RdosDeleteIni(int handle, const char *var);
+int RDOSAPI RdosGotoFirstIniVar(int handle);
+int RDOSAPI RdosGotoNextIniVar(int handle);
+int RDOSAPI RdosGetCurrIniVar(int handle, char *var, int maxsize);
 
 void RDOSAPI RdosEnableStatusLED();
 void RDOSAPI RdosDisableStatusLED();
@@ -2887,6 +2890,24 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_delete_ini \
     CarryToBool \
     parm [ebx] [esi] \
+    value [eax];
+
+#pragma aux RdosGotoFirstIniVar = \
+    CallGate_goto_first_inivar \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosGotoNextIniVar = \
+    CallGate_goto_next_inivar \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosGetCurrIniVar = \
+    CallGate_get_curr_inivar \
+    CarryToBool \
+    parm [ebx] [edi] [ecx] \
     value [eax];
 
 #pragma aux RdosEnableStatusLED = \
