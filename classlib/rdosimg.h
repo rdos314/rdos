@@ -350,6 +350,11 @@ public:
     void AddConfig(const char *ConfigFile);
     void AddConfigCmd(const char *cmd, const char *param);
 
+    int IsIdentical(TRdosImage &img);
+    int HasKernel();
+    int HasShutdown();
+    int HasDevice(const char *name);
+
 #ifdef __RDOS__
     void AddRunning();
 #endif

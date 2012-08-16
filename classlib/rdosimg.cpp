@@ -117,6 +117,7 @@ TRdosObject::TRdosObject(TFile *File, int Size)
     FSize = Size;
     FType = 0;
     FData = new char[FSize];
+    memset(FData, 0xFF, FSize);
     File->Read(FData, FSize);
 }
 
@@ -269,6 +270,7 @@ void TRdosObject::LoadFile(TFile *File)
     {
         FSize = File->GetSize();
         FData = new char[FSize];
+        memset(FData, 0xFF, FSize);
         File->Read(FData, FSize);
     }
 }
@@ -405,6 +407,7 @@ int TRdosSimpleDeviceBaseObject::LoadDeviceFile(const char *FileName)
         FDeviceSize = Size << 4;
         FSize = FDeviceSize + sizeof(TRdosSimpleDeviceHeader);
         FData = new char[FSize];
+        memset(FData, 0xFF, FSize);
         FDeviceHeader = (TRdosSimpleDeviceHeader *)FData;
         FDeviceData = FData + sizeof(TRdosSimpleDeviceHeader);
 
@@ -537,6 +540,7 @@ int TRdosDosDeviceBaseObject::LoadDeviceFile(const char *FileName, const char *P
         FDeviceSize = Size << 4;
         FSize = FDeviceSize + HeaderSize;
         FData = new char[FSize];
+        memset(FData, 0xFF, FSize);
         FDeviceHeader = (TRdosDosDeviceHeader *)FData;
         FDeviceData = FData + HeaderSize;
 
@@ -669,6 +673,7 @@ int TRdosDevice16BaseObject::LoadDeviceFile(const char *FileName, const char *Pa
         FDeviceSize = ExeHeader.CodeSize + ExeHeader.DataSize;
         FSize = FDeviceSize + HeaderSize;
         FData = new char[FSize];
+        memset(FData, 0xFF, FSize);
         FDeviceHeader = (TRdosDevice16Header *)FData;
         FDeviceData = FData + HeaderSize;
 
@@ -804,6 +809,7 @@ int TRdosDevice32BaseObject::LoadDeviceFile(const char *FileName, const char *Pa
         FDeviceSize = ExeHeader.CodeSize + ExeHeader.DataSize;
         FSize = FDeviceSize + HeaderSize;
         FData = new char[FSize];
+        memset(FData, 0xFF, FSize);
         FDeviceHeader = (TRdosDevice32Header *)FData;
         FDeviceData = FData + HeaderSize;
 
@@ -1616,6 +1622,7 @@ void TRdosOldFileObject::LoadFileAndHeader(const char *FileName)
         FFileSize = File.GetSize();
         FSize = FFileSize + sizeof(TRdosOldFileHeader);
         FData = new char[FSize];
+        memset(FData, 0xFF, FSize);
         FFileHeader = (TRdosOldFileHeader *)FData;
         FFileData = FData + sizeof(TRdosOldFileHeader);
                     
@@ -1806,6 +1813,7 @@ void TRdosFileObject::LoadFileAndHeader(const char *FileName)
         FFileSize = File.GetSize();
         FSize = FFileSize + HeaderSize;
         FData = new char[FSize];
+        memset(FData, 0xFF, FSize);
         FFileHeader = (TRdosFileHeader *)FData;
         FFileData = FData + HeaderSize;
 
@@ -2671,4 +2679,151 @@ void TRdosImage::WriteImage(const char *ImageFile)
         Header.crc = 0;
         File.Write(&Header, sizeof(Header));
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosImage::IsIdentical
+#
+#   Purpose....: Check if another image is identical (by comparing CRCs)
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRdosImage::IsIdentical(TRdosImage &img)
+{
+    TRdosObject *obj1;
+    TRdosObject *obj2;
+    unsigned short int crc1;
+    unsigned short int crc2;
+
+    obj1 = FObjectList;
+    obj2 = img.FObjectList;
+
+    while (obj1 && obj2)
+    {
+        crc1 = obj1->CalcCrc(&FCrc);
+        crc2 = obj2->CalcCrc(&img.FCrc);
+
+        if (crc1 != crc2)
+            return FALSE;
+            
+        obj1 = obj1->FLink;
+        obj2 = obj2->FLink;
+    }
+
+    if (obj1 == 0 && obj2 == 0)
+        return TRUE;
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosImage::HasKernel
+#
+#   Purpose....: Check if image has kernel
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRdosImage::HasKernel()
+{
+    TRdosObject *obj;
+
+    obj = FObjectList;
+
+    while (obj)
+    {
+        if (obj->GetType() == RDOS_OBJECT_KERNEL)
+            return TRUE;
+            
+        obj = obj->FLink;
+    }
+
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosImage::HasShutdown
+#
+#   Purpose....: Check if image has shutdown
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRdosImage::HasShutdown()
+{
+    TRdosObject *obj;
+
+    obj = FObjectList;
+
+    while (obj)
+    {
+        if (obj->GetType() == RDOS_OBJECT_SHUTDOWN)
+            return TRUE;
+            
+        obj = obj->FLink;
+    }
+
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosImage::HasDevice
+#
+#   Purpose....: Check if image has a specific device
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRdosImage::HasDevice(const char *name)
+{
+    int Type;
+    const char *devname;
+    TRdosObject *obj;
+    const char *matchstr;
+    
+    obj = FObjectList;
+
+    while (obj)
+    {
+        Type = obj->GetType();
+        switch (Type)
+        {
+            case RDOS_OBJECT_DEVICE16:
+            case RDOS_OBJECT_DEVICE32:
+                devname = obj->GetInfo().GetData();
+                matchstr = strstr(devname, name);
+                if (matchstr)
+                {
+                    if (matchstr == devname)
+                        return TRUE;
+
+                    switch (*(matchstr - 1))
+                    {
+                        case ':':
+                        case '\\':
+                        case '/':
+                        case ' ':
+                            return TRUE;
+                    }
+                }
+                break;
+        }                
+            
+        obj = obj->FLink;
+    }
+
+    return FALSE;
 }
