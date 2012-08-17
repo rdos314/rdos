@@ -58,6 +58,8 @@ pr_wait_for_print_proc      DD ?
 ; IN  ES:EDI    Name
 pr_get_name_proc            DD ?
 
+pr_reset_proc               DD ?
+
 printer_device              DW ?
 
 printer_struc	ENDS

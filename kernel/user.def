@@ -594,4 +594,6 @@ goto_first_inivar_nr            = 474
 goto_next_inivar_nr             = 475
 get_curr_inivar_nr              = 476
 
+reset_printer_nr                = 477
+
 usergate_entries			    = 512

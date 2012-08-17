@@ -691,6 +691,44 @@ eject_media      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           Reset
+;
+;       description:    Reset printer
+;
+;       PARAMETERS:     BX              Printer handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_printer_name DB 'Reset Printer',0
+
+reset_printer       Proc far
+    push ds
+    push ax
+    push ebx
+;
+    push ax
+    mov ax,PRINTER_HANDLE
+    DerefHandle
+    pop ax
+    jc reset_done
+;
+    mov ds,[ebx].printer_sel
+    mov ebx,ds:pr_reset_proc
+    or ebx,ebx
+    jz reset_done
+;       
+    call ds:pr_reset_proc
+
+reset_done:
+    pop ebx
+    pop ax
+    pop ds
+    retf32
+reset_printer      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           WaitForPrint
 ;
 ;       description:    Wait for printout to finish
@@ -759,6 +797,7 @@ add_printer    Proc far
     mov ds:pr_eject_media_proc,0
     mov ds:pr_wait_for_print_proc,0
     mov ds:pr_get_name_proc,0
+    mov ds:pr_reset_proc,0
 ;
     mov dx,ds
     mov bx,SEG data
@@ -851,6 +890,12 @@ init    Proc far
     mov edi,OFFSET has_printer_paper_in_presenter_name
     xor dx,dx
     mov ax,has_printer_paper_in_presenter_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET reset_printer
+    mov edi,OFFSET reset_printer_name
+    xor dx,dx
+    mov ax,reset_printer_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET print_test

@@ -1931,6 +1931,44 @@ wait_for_print    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ResetPrinter
+;
+;       DESCRIPTION:    Reset printer (USB)
+;
+;       PARAMETERS:     DS      Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_printer   Proc far
+    push ds
+    push es
+    push ax
+    push cx
+    push di
+;
+    mov ax,SEG data
+    mov ds,ax
+    test ds:kr_flag,FLAG_ATTACHED
+    stc
+    jz reset_done
+;
+    int 3    
+    mov bx,ds:kr_out_handle
+    ResetUsbPipe
+    clc
+
+reset_done:    
+    pop di
+    pop cx
+    pop ax
+    pop es
+    pop ds
+    ret
+reset_printer    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           StatusTimeout
 ;
 ;       DESCRIPTION:    Timer that signals control thread in order to read status

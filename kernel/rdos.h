@@ -323,6 +323,7 @@ void RDOSAPI RdosPrintBitmap(int Handle, int Bitmap);
 void RDOSAPI RdosPresentPrinterMedia(int Handle, int Length);
 void RDOSAPI RdosEjectPrinterMedia(int Handle);
 void RDOSAPI RdosWaitForPrint(int Handle);
+void RDOSAPI RdosResetPrinter(int Handle);
 
 int RDOSAPI RdosOpenFile(const char *FileName, char Access);
 int RDOSAPI RdosCreateFile(const char *FileName, int Attrib);
@@ -1405,6 +1406,10 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosWaitForPrint = \
     CallGate_wait_for_print  \
+    parm [ebx];
+
+#pragma aux RdosResetPrinter = \
+    CallGate_reset_printer  \
     parm [ebx];
 
 #pragma aux RdosOpenFile = \
@@ -3658,6 +3663,10 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosWaitForPrint = \
     CallGate_wait_for_print  \
+    parm [ebx];
+
+#pragma aux RdosResetPrinter = \
+    CallGate_reset_printer  \
     parm [ebx];
 
 #pragma aux RdosOpenFile = \

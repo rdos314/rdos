@@ -594,6 +594,8 @@
 #define usergate_goto_next_inivar 475
 #define usergate_get_curr_inivar 476
 
+#define usergate_reset_printer 477
+
 
 
 #ifdef __FLAT__
@@ -1193,6 +1195,8 @@
 #define CallGate_goto_next_inivar 0x67 0x9a 219 1 0 0 3 0
 #define CallGate_get_curr_inivar 0x67 0x9a 220 1 0 0 3 0
 
+#define CallGate_reset_printer 0x67 0x9a 221 1 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1789,5 +1793,7 @@
 #define CallGate_goto_first_inivar 0x3e 0x67 0x9a 218 1 0 0 3 0
 #define CallGate_goto_next_inivar 0x3e 0x67 0x9a 219 1 0 0 3 0
 #define CallGate_get_curr_inivar 0x3e 0x67 0x9a 220 1 0 0 3 0
+
+#define CallGate_reset_printer 0x3e 0x67 0x9a 221 1 0 0 3 0
 
 #endif

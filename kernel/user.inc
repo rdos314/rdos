@@ -2183,6 +2183,11 @@ WaitForPrint       MACRO
 	UserGate wait_for_print_nr
 						ENDM
 
+;	IN  BX		Printer handle
+ResetPrinter       MACRO
+	UserGate reset_printer_nr
+						ENDM
+
 ;;;;;;;;;; SCREEN, TEXT MODE ;;;;;;;;;;
 
 ;	IN  CX              Column number (x)
