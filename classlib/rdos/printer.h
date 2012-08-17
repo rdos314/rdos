@@ -47,6 +47,7 @@ public:
     virtual int IsPaperEnd();
     virtual int IsPrintHeadLifted();
     virtual int HasPaperInPresenter();
+    virtual void Reset();
 
     virtual void PrintTest();
 

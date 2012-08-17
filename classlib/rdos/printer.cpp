@@ -257,6 +257,20 @@ int TPrinterDevice::HasPaperInPresenter()
 
 /*##########################################################################
 #
+#   Name       : TPrinterDevice::Reset
+#
+#   Purpose....: Reset
+#
+#   Returns....:
+#
+##########################################################################*/
+void TPrinterDevice::Reset()
+{
+    RdosResetPrinter(FHandle);
+}
+
+/*##########################################################################
+#
 #   Name       : TPrinterDevice::PrintTest
 #
 #   Purpose....: Make a test printout
