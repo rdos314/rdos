@@ -3747,18 +3747,20 @@ BootCore    Proc near
     pushad
 ;
     xor edx,edx
-    GetOldPhysicalPage
+    GetPhysicalPage
     push eax
+    push ebx
 ;    
     mov eax,63h
-    SetOldPhysicalPage
+    SetPhysicalPage
 ;    
     mov edx,1000h
-    GetOldPhysicalPage
+    GetPhysicalPage
     push eax
+    push ebx
 ;    
     mov eax,1063h
-    SetOldPhysicalPage
+    SetPhysicalPage
 ;
     mov ax,flat_sel
     mov es,ax
@@ -3866,13 +3868,15 @@ bcDone:
     out 71h,al
     jmp short $+2
 ;
+    pop ebx
     pop eax
     mov edx,1000h
-    SetOldPhysicalPage
+    SetPhysicalPage
 ;
+    pop ebx
     pop eax
     xor edx,edx
-    SetOldPhysicalPage
+    SetPhysicalPage
 ;
     popad
     pop es
