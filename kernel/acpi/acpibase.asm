@@ -128,11 +128,15 @@ AcpiOsGetRootPointer_ Proc near
     mov eax,1000h
     AllocateBigLinear
     AllocateGdt
+    push bx
+;    
     mov ecx,1000h
     CreateDataSelector16
-    mov eax,7h
-    SetOldPhysicalPage
     mov ds,bx    
+;    
+    xor ebx,ebx
+    mov eax,7h
+    SetPhysicalPage
 ;    
     mov esi,40Eh
     mov si,[si]
@@ -142,7 +146,7 @@ AcpiOsGetRootPointer_ Proc near
     mov eax,esi
     and ax,0F000h
     or al,7
-    SetOldPhysicalPage
+    SetPhysicalPage
     and si,0FFFh
 ;    
     mov cx,40h
@@ -161,7 +165,7 @@ os_get_rsdp_bios:
     mov eax,edi
     and ax,0F000h
     or al,7
-    SetOldPhysicalPage
+    SetPhysicalPage
 ;
     mov esi,edi
     and si,0FFFh
@@ -183,7 +187,7 @@ os_get_rsdp_bios_page:
     jmp os_get_rsdp_done
 
 os_get_rsdp_ok:
-    GetOldPhysicalPage
+    GetPhysicalPage
     and ax,0F000h
     or ax,si
 
@@ -191,11 +195,13 @@ os_get_rsdp_done:
     push eax
     xor eax,eax
     mov ds,ax
-    SetOldPhysicalPage
+    SetPhysicalPage
     mov ecx,1000h
     FreeLinear
-    FreeGdt    
     pop eax
+;
+    pop bx    
+    FreeGdt    
 ;    
     pop bp
     pop edi
