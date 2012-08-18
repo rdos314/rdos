@@ -224,11 +224,14 @@ switch_from     Proc far
     jz switch_from_done
 ;
     mov edx,ds:v_mem_base
-    GetOldPhysicalPage
+    GetPhysicalPage
     push eax
+    push ebx
+;    
     mov eax,edx
+    xor ebx,ebx
     or ax,807h
-    SetOldPhysicalPage
+    SetPhysicalPage
 ;
     EnterSection ds:v_section
     push ds
@@ -244,26 +247,29 @@ switch_from     Proc far
 ;
     GetFocusThread
     mov bx,ax
+    mov es,bx
     mov edx,ds:v_buf_base
-    GetOldPhysicalPage
+    push ebx
+    GetPhysicalPage
+    pop ebx
     or ax,807h
     mov edx,ds:v_mem_base
     SetThreadPhysicalPage
     LeaveSection ds:v_section
-;
-    pop eax
-    push ax
-    mov es,bx
+
     mov edx,es:p_cr3
     GetThread
     mov es,ax
-    pop ax
+;
+    pop ebx
+    pop eax    
+;    
     cmp edx,es:p_cr3
     je switch_from_done
 ;
     mov edx,ds:v_mem_base
     or ax,807h
-    SetOldPhysicalPage
+    SetPhysicalPage
 
 switch_from_done:
     popad
@@ -719,6 +725,7 @@ scroll_down     Endp
 init_mode3      Proc far
     push ds
     push es
+    push ebx
     push cx
     push si
     push di
@@ -766,24 +773,26 @@ init_mode3      Proc far
     push ax
     mov edx,0B0000h
     xor eax,eax
+    xor ebx,ebx
 
 init_mono_loop:
-    SetOldPhysicalPage
+    SetPhysicalPage
     add edx,1000h
     cmp edx,0C0000h
     jne init_mono_loop
 ;
     mov edx,ds:v_buf_base
-    GetOldPhysicalPage
+    GetPhysicalPage
     or ax,807h
     mov edx,ds:v_mem_base
-    SetOldPhysicalPage
+    SetPhysicalPage
     pop ax
     clc
 ;
     pop di
     pop si
     pop cx
+    pop ebx
     pop es
     pop ds
     retf32
