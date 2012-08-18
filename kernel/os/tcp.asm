@@ -439,17 +439,21 @@ CreateBuffer    Proc near
 ;
     shr ecx,12
     xor esi,esi
+;
+    push ebx    
 
 cbAlias:
     lea edx,[esi+ebp]
-    GetOldPhysicalPage
+    GetPhysicalPage
 ;
     lea edx,[edi+ebp]
-    SetOldPhysicalPage
+    SetPhysicalPage
 ;
     add esi,1000h
     add edi,1000h
     loop cbAlias    
+;
+    pop ebx    
 ;
     mov ax,bx    
     pop ebp
@@ -486,13 +490,18 @@ FreeBuffer    Proc near
     shr ecx,1
     add edx,ecx
     shr ecx,12
-
+;
+    push ebx
+    
 fbAlias:
     xor eax,eax
-    SetOldPhysicalPage
+    xor ebx,ebx
+    SetPhysicalPage
     add edx,1000h
     loop fbAlias    
 ;
+    pop ebx
+;    
     mov es,bx
     FreeMem
 ;    

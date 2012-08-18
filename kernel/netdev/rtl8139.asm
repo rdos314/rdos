@@ -324,7 +324,7 @@ AllocateRing    Proc near
     mov ecx,2 SHL RX_BUF_LEN_IDX
 
 al_rxring_loop:
-    SetOldPhysicalPage
+    SetPhysicalPage
     add eax,1000h
     add edx,1000h
     loop al_rxring_loop
@@ -334,7 +334,7 @@ al_rxring_loop:
     or al,7
 
 al_arxring_loop:
-    SetOldPhysicalPage
+    SetPhysicalPage
     add eax,1000h
     add edx,1000h
     loop al_arxring_loop
@@ -792,7 +792,7 @@ sPadOk:
     push ecx
     GetSelectorBaseSize
     pop ecx
-    GetOldPhysicalPage
+    GetPhysicalPage
     and ax,0F000h
     and ecx,0FFFh
     and dx,0FFFh

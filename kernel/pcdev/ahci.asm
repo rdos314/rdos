@@ -815,7 +815,7 @@ apPagesOk:
     push ecx
 
 apPhysLoop:
-    SetOldPhysicalPage
+    SetPhysicalPage
     add eax,1000h
     add edx,1000h
     loop apPhysLoop
@@ -967,13 +967,19 @@ ipaLoop:
     mov cl,PCI_nbr_base_address5
     ReadPciDword
 ;
+    push ebx
+    xor ebx,ebx
     or al,67h
-    SetOldPhysicalPage
+    SetPhysicalPage
+    pop ebx
 ;
+    push ebx
+    xor ebx,ebx
     add eax,1000h
     add edx,1000h
-    SetOldPhysicalPage
+    SetPhysicalPage
     sub edx,1000h
+    pop ebx
 ;        
     push bx
     AllocateGdt
@@ -1628,7 +1634,10 @@ AddPrdEntry     Proc near
 ;
     mov edx,esi
     and dx,0F000h        
-    GetOldPhysicalPage
+    push ebx
+    GetPhysicalPage
+    pop ebx
+;    
     and ax,0F000h
     and esi,0FFFh
     add esi,eax

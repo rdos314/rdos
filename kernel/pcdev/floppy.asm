@@ -885,6 +885,7 @@ SelectDrive     Endp
 
 SetupDMA    Proc near
     push ax
+    push ebx
     push edx
 ;
     mov edx,ebx
@@ -893,7 +894,7 @@ SetupDMA    Proc near
     mov ax,flat_sel
     mov es,ax
 ;
-    GetOldPhysicalPage
+    GetPhysicalPage
     and ax,0F000h
     or eax,eax
     jz setup_dma_alloc
@@ -902,13 +903,12 @@ SetupDMA    Proc near
     jc setup_dma_inrange
 ;
     int 3
-    xor ebx,ebx
     FreePhysical
 
 setup_dma_alloc:
     AllocateDmaPhysical
     or al,3
-    SetOldPhysicalPage
+    SetPhysicalPage
     and ax,0F000h
     cmp eax,1000000h
     jc setup_dma_inrange
@@ -957,6 +957,7 @@ setup_dma_inrange:
     ReleaseSpinlock ds:FloppySpinlock    
 ;
     pop edx
+    pop ebx
     pop ax
     ret
 SetupDMA    Endp

@@ -186,18 +186,20 @@ init_mode12     Proc far
         mov cx,10h
         mov edx,0A0000h
         xor eax,eax
+        xor ebx,ebx
 
 init_org_bit_loop:
-        SetOldPhysicalPage
+        SetPhysicalPage
         add edx,1000h
         loop init_org_bit_loop
 ;
         mov cx,10h
         mov edx,ds:v_mem_base
+        xor ebx,ebx
         mov eax,0A0003h
 
 init_alias_bit_loop:
-        SetOldPhysicalPage
+        SetPhysicalPage
         add eax,1000h
         add edx,1000h
         loop init_alias_bit_loop
@@ -225,16 +227,17 @@ init_mode12     Endp
 
 delete_mode12   Proc far
         push ax
-        push bx
+        push ebx
         push ecx
         push edx
 ;
         mov edx,ds:v_mem_base
+        xor ebx,ebx
         xor eax,eax
         mov cx,10h
 
 delete_bit_loop:
-        SetOldPhysicalPage
+        SetPhysicalPage
         add edx,1000h
         loop delete_bit_loop
 ;
@@ -253,7 +256,7 @@ delete_bit_loop:
 ;
         pop edx
         pop ecx
-        pop bx
+        pop ebx
         pop ax
         ret
 delete_mode12   Endp

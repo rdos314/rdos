@@ -66,9 +66,10 @@
 #define osgate_allocate_system_linear 68
 #define osgate_allocate_fixed_vm_linear 69
 
-#define osgate_allocate_physical 70
-#define osgate_allocate_dma_physical 71
-#define osgate_free_physical 72
+#define osgate_allocate_physical32 70
+#define osgate_allocate_physical64 71
+#define osgate_allocate_dma_physical 72
+#define osgate_free_physical 73
 
 #define osgate_create_process 74
 
@@ -289,7 +290,8 @@
 #define osgate_get_net_buffer 281
 #define osgate_get_ppp_buffer 282
 
-#define osgate_allocate_multiple_physical 283
+#define osgate_allocate_multiple_physical32 283
+#define osgate_allocate_multiple_physical64 284
 
 #define osgate_add_net_source_address 286
 
@@ -504,7 +506,13 @@
 #define osgate_lock_file 431
 #define osgate_unlock_file 432
 
-#define osgate_setup_timer_core 433
+#define osgate_switch_one_core_irq 433
+#define osgate_switch_all_core_irqs 434
+
+#define osgate_app_patch 435
+
+#define osgate_get_old_physical_page 436
+#define osgate_set_old_physical_page 437
 
 
 
@@ -576,9 +584,10 @@
 #define OsGate_allocate_system_linear 0x3E 0x67 0x9a 68 0 0 0 2 0
 #define OsGate_allocate_fixed_vm_linear 0x3E 0x67 0x9a 69 0 0 0 2 0
 
-#define OsGate_allocate_physical 0x3E 0x67 0x9a 70 0 0 0 2 0
-#define OsGate_allocate_dma_physical 0x3E 0x67 0x9a 71 0 0 0 2 0
-#define OsGate_free_physical 0x3E 0x67 0x9a 72 0 0 0 2 0
+#define OsGate_allocate_physical32 0x3E 0x67 0x9a 70 0 0 0 2 0
+#define OsGate_allocate_physical64 0x3E 0x67 0x9a 71 0 0 0 2 0
+#define OsGate_allocate_dma_physical 0x3E 0x67 0x9a 72 0 0 0 2 0
+#define OsGate_free_physical 0x3E 0x67 0x9a 73 0 0 0 2 0
 
 #define OsGate_create_process 0x3E 0x67 0x9a 74 0 0 0 2 0
 
@@ -799,7 +808,8 @@
 #define OsGate_get_net_buffer 0x3E 0x67 0x9a 25 1 0 0 2 0
 #define OsGate_get_ppp_buffer 0x3E 0x67 0x9a 26 1 0 0 2 0
 
-#define OsGate_allocate_multiple_physical 0x3E 0x67 0x9a 27 1 0 0 2 0
+#define OsGate_allocate_multiple_physical32 0x3E 0x67 0x9a 27 1 0 0 2 0
+#define OsGate_allocate_multiple_physical64 0x3E 0x67 0x9a 28 1 0 0 2 0
 
 #define OsGate_add_net_source_address 0x3E 0x67 0x9a 30 1 0 0 2 0
 
@@ -1014,5 +1024,11 @@
 #define OsGate_lock_file 0x3E 0x67 0x9a 175 1 0 0 2 0
 #define OsGate_unlock_file 0x3E 0x67 0x9a 176 1 0 0 2 0
 
-#define OsGate_setup_timer_core 0x3E 0x67 0x9a 177 1 0 0 2 0
+#define OsGate_switch_one_core_irq 0x3E 0x67 0x9a 177 1 0 0 2 0
+#define OsGate_switch_all_core_irqs 0x3E 0x67 0x9a 178 1 0 0 2 0
+
+#define OsGate_app_patch 0x3E 0x67 0x9a 179 1 0 0 2 0
+
+#define OsGate_get_old_physical_page 0x3E 0x67 0x9a 180 1 0 0 2 0
+#define OsGate_set_old_physical_page 0x3E 0x67 0x9a 181 1 0 0 2 0
 

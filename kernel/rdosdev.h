@@ -28,7 +28,7 @@ extern "C" {
 #define DLL_HANDLE32       0x26DF
 #define SPRITE_HANDLE      0x2CF5
 #define CRC_HANDLE         0x367A
-#define FILE_HANDLE 	   0x3AB6
+#define FILE_HANDLE        0x3AB6
 #define PROCESS_HANDLE     0x43AF
 #define SERIAL_HANDLE      0x5A45
 #define ENV_HANDLE         0x5FAE
@@ -37,21 +37,21 @@ extern "C" {
 #define USB_REQ_HANDLE     0x6B8E
 #define SYSLOG_HANDLE      0x703A
 #define SECTION_HANDLE     0x7A87
-#define IPC_HANDLE  	   0x7B5A
+#define IPC_HANDLE         0x7B5A
 #define TCP_LISTEN_HANDLE  0x7FAE
 #define TCP_SOCKET_HANDLE  0x847F
-#define FONT_HANDLE 	   0x9AF4
-#define DIR_HANDLE  	   0xA765
-#define XMS_HANDLE  	   0xA560
+#define FONT_HANDLE        0x9AF4
+#define DIR_HANDLE         0xA765
+#define XMS_HANDLE         0xA560
 #define SIGNAL_HANDLE      0xADEF
 #define PRINTER_HANDLE     0xB63A
-#define MEMMAP_HANDLE 	   0xBA54
+#define MEMMAP_HANDLE      0xBA54
 #define FM_HANDLE          0xBCAF
 #define MODULE_HANDLE      0xC3AF
 #define AUDIO_OUT_HANDLE   0xCEDA
 #define HID_HANDLE         0xD736
-#define BITMAP_HANDLE 	   0xDB57
-#define INI_HANDLE 	       0xEAF3
+#define BITMAP_HANDLE      0xDB57
+#define INI_HANDLE             0xEAF3
 #define USB_PIPE_HANDLE    0xFA3E
 
 // special user-mode gates
@@ -537,8 +537,8 @@ void RdosCreateCallGateSelector(int sel, void __far (*dest)(), int count);
 void RdosCreateIntGateSelector(int intnum, int dpl, void __far (*dest)());
 void RdosCreateTrapGateSelector(int intnum, int dpl, void __far (*dest)());
 
-long RdosGetPhysicalPage(long linear);
-void RdosSetPhysicalPage(long linear, long page);
+long long RdosGetPhysicalPage(long linear);
+void RdosSetPhysicalPage(long linear, long long page);
 
 long RdosGetThreadPhysicalPage(int thread, long linear);
 void RdosSetThreadPhysicalPage(int thread, long linear, long page);
@@ -575,9 +575,11 @@ long RdosUsedBigGlobalMem();
 void *RdosAllocateFixedSystemMem(int sel, long size);
 void *RdosAllocateFixedProcessMem(int sel, long size);
 
-long RdosAllocatePhysical();
-long RdosAllocateMultiplePhysical(int pages);
-void RdosFreePhysical(long ads);
+long long RdosAllocatePhysical32();
+long long RdosAllocatePhysical64();
+long long RdosAllocateMultiplePhysical32(int pages);
+long long RdosAllocateMultiplePhysical64(int pages);
+void RdosFreePhysical(long long ads);
 
 void RdosRegisterSwapProc(__rdos_swap_callback *callb_proc);
 
@@ -1070,11 +1072,11 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
 #pragma aux RdosGetPhysicalPage = \
     OsGate_get_physical_page  \
     parm [edx] \
-    value [eax];
+    value [ebx eax];
 
 #pragma aux RdosSetPhysicalPage = \
     OsGate_set_physical_page  \
-    parm [edx] [eax];
+    parm [edx] [ebx eax];
 
 #pragma aux RdosGetThreadPhysicalPage = \
     OsGate_get_thread_physical_page  \
@@ -1245,18 +1247,27 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     parm [ebx] [eax]  \
     value [dx eax];
 
-#pragma aux RdosAllocatePhysical = \
-    OsGate_allocate_physical  \
-    value [eax];
+#pragma aux RdosAllocatePhysical32 = \
+    OsGate_allocate_physical32  \
+    value [ebx eax];
 
-#pragma aux RdosAllocateMultiplePhysical = \
-    OsGate_allocate_physical  \
+#pragma aux RdosAllocatePhysical64 = \
+    OsGate_allocate_physical64  \
+    value [ebx eax];
+
+#pragma aux RdosAllocateMultiplePhysical32 = \
+    OsGate_allocate_physical32  \
     parm [ecx] \
-    value [eax];
+    value [ebx eax];
+
+#pragma aux RdosAllocateMultiplePhysical64 = \
+    OsGate_allocate_physical64  \
+    parm [ecx] \
+    value [ebx eax];
 
 #pragma aux RdosFreePhysical = \
-    OsGate_allocate_physical  \
-    parm [eax];
+    OsGate_free_physical  \
+    parm [ebx eax];
 
 #pragma aux RdosRegisterSwapProc = \
     OsGate_register_swap_proc  \

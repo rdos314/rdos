@@ -164,7 +164,7 @@ switch_mode_done:
         mov edx,ds:v_mem_base
         mov eax,edx
         or ax,807h
-        SetOldThreadPhysicalPage
+        SetThreadPhysicalPage
 ;
         mov ds:v_has_focus,1
         mov ds,ds:v_buf_sel
@@ -243,7 +243,7 @@ switch_from     Proc far
         GetOldPhysicalPage
         or ax,807h
         mov edx,ds:v_mem_base
-        SetOldThreadPhysicalPage
+        SetThreadPhysicalPage
         LeaveSection ds:v_section
 ;
         pop eax

@@ -284,6 +284,13 @@ AllocateBlock32 PROC near
     push ecx    
     mov eax,1000h
     AllocateBigLinear
+;
+    push ebx    
+    AllocatePhysical32
+    or al,7
+    SetPhysicalPage
+    pop ebx
+;    
     mov ecx,32
     mov ds:OhciList32,edx
     
@@ -513,7 +520,10 @@ AllocateEd      PROC near
     call AllocateBlock32
     call InitEd
 ;
-    GetOldPhysicalPage
+    push ebx
+    GetPhysicalPage
+    pop ebx
+;    
     and ax,0F000h
     mov cx,dx
     and cx,0FFFh
@@ -543,7 +553,10 @@ AllocateTd      PROC near
     call AllocateBlock32
     call InitTd
 ;
-    GetOldPhysicalPage
+    push ebx
+    GetPhysicalPage
+    pop ebx
+;    
     and ax,0F000h
     mov cx,dx
     and cx,0FFFh
@@ -604,8 +617,13 @@ SyncHead    Proc near
     movzx ebx,ax
     and bx,0FF0h
     and ax,0F000h
+;
+    push ebx
+    xor ebx,ebx
     or ax,803h
-    SetOldPhysicalPage
+    SetPhysicalPage
+    pop ebx
+;    
     mov edx,es:[ebx+edx].otd_my_va
     mov ebx,fs:osp_ed
     mov es:[ebx].oes_head_va,edx
@@ -1014,7 +1032,11 @@ add_pipe_has_buffer:
     push edx
     mov al,es:[edi]
     mov edx,edi    
-    GetOldPhysicalPage
+;
+    push ebx
+    GetPhysicalPage
+    pop ebx
+;    
     and ax,0F000h
     mov cx,dx
     and cx,0FFFh
@@ -2107,8 +2129,9 @@ dpDone:
 
 rpSetupDone:   
     mov edx,fs:osp_sync_linear
+    xor ebx,ebx
     xor eax,eax
-    SetOldPhysicalPage
+    SetPhysicalPage
 ;    
     mov ecx,1000h
     FreeLinear
@@ -2259,7 +2282,10 @@ update_reverse_loop:
     and bx,0FFFh
     or ax,803h
     mov edx,ds:ohc_map_linear
-    SetOldPhysicalPage
+    push ebx
+    xor ebx,ebx
+    SetPhysicalPage
+    pop ebx
 ;    
     mov edx,fs:[bx].otd_my_va
 ;
@@ -2751,8 +2777,9 @@ AddFunction  Proc near
     AllocateBigLinear
     pop eax
 ;
+    xor ebx,ebx
     or ax,803h
-    SetOldPhysicalPage
+    SetPhysicalPage
 ;
     push ecx
     AllocateGdt
@@ -2763,6 +2790,10 @@ AddFunction  Proc near
 ;     
     mov eax,1000h
     AllocateBigLinear
+    AllocatePhysical32
+    or al,7
+    SetPhysicalPage
+;    
     mov ecx,eax
     AllocateGdt
     CreateDataSelector16
@@ -2780,7 +2811,10 @@ AddFunction  Proc near
     mov ds:ohc_reg_sel,bp
     mov ds:ohc_int_status,0
     mov ds:ohc_linear,edx
-    GetOldPhysicalPage
+;
+    push ebx
+    GetPhysicalPage
+    pop ebx
     and ax,0F000h
     mov ds:ohc_phys,eax
     mov bp,bx

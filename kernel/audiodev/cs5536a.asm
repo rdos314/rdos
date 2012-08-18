@@ -392,7 +392,7 @@ CreatePrdTable  Proc near
     mov cx,10h
 
 cptPrd1Loop:
-    SetOldPhysicalPage
+    SetPhysicalPage
     add eax,1000h
     add edx,1000h
     loop cptPrd1Loop
@@ -403,7 +403,7 @@ cptPrd1Loop:
     mov cx,10h
 
 cptPrd2Loop:
-    SetOldPhysicalPage
+    SetPhysicalPage
     add eax,1000h
     add edx,1000h
     loop cptPrd2Loop
@@ -418,7 +418,7 @@ cptPrd2Loop:
     mov eax,ds:[si].AcPrdPhys
     mov edx,ds:[si].AcPrdLinear
     or al,7
-    SetOldPhysicalPage
+    SetPhysicalPage
 ;
     mov ax,flat_sel
     mov es,ax

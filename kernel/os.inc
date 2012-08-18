@@ -467,29 +467,41 @@ SetupTrapGate  MACRO
 ;;;;;;;;; PAGING ;;;;;;;;;;;;;;;;;;;;
 
 ;       EDX         LINEAR ADDRESS
-;       EAX         PAGE ENTRY
+;       EBX:EAX     PAGE ENTRY
+GetPhysicalPage MACRO
+    OsGate get_physical_page_nr
+                    ENDM
+
+;       EDX         LINEAR ADDRESS
+;       EBX:EAX     PAGE ENTRY
+SetPhysicalPage MACRO
+    OsGate set_physical_page_nr
+                    ENDM
+
+;       EDX         LINEAR ADDRESS
+;       EAX     PAGE ENTRY
 GetOldPhysicalPage MACRO
     OsGate get_old_physical_page_nr
                     ENDM
 
 ;       EDX         LINEAR ADDRESS
-;       EAX         PAGE ENTRY
+;       EAX     PAGE ENTRY
 SetOldPhysicalPage MACRO
     OsGate set_old_physical_page_nr
                     ENDM
 
 ;       BX          TRèD
 ;       EDX         LINEAR ADDRESS
-;       EAX         PAGE ENTRY
-GetOldThreadPhysicalPage   MACRO
-    OsGate get_old_thread_physical_page_nr
+;       EBX:EAX     PAGE ENTRY
+GetThreadPhysicalPage   MACRO
+    OsGate get_thread_physical_page_nr
                     ENDM
 
 ;       BX          TRèD
 ;       EDX         LINEAR ADDRESS
-;       EAX         PAGE ENTRY
-SetOldThreadPhysicalPage   MACRO
-    OsGate set_old_thread_physical_page_nr
+;       EBX:EAX     PAGE ENTRY
+SetThreadPhysicalPage   MACRO
+    OsGate set_thread_physical_page_nr
                     ENDM
 
 ;       DX:ESI  ADDRESS TO READ

@@ -355,7 +355,7 @@ CreateSgdTable  Proc near
     mov cx,10h
 
 cstSgd1Loop:
-    SetOldPhysicalPage
+    SetPhysicalPage
     add eax,1000h
     add edx,1000h
     loop cstSgd1Loop
@@ -366,7 +366,7 @@ cstSgd1Loop:
     mov cx,10h
 
 cstSgd2Loop:
-    SetOldPhysicalPage
+    SetPhysicalPage
     add eax,1000h
     add edx,1000h
     loop cstSgd2Loop
@@ -381,7 +381,7 @@ cstSgd2Loop:
     mov eax,ds:[si].AcSgdPhys
     mov edx,ds:[si].AcSgdLinear
     or al,7
-    SetOldPhysicalPage
+    SetPhysicalPage
 ;
     mov ax,flat_sel
     mov es,ax

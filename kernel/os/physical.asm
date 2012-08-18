@@ -250,23 +250,39 @@ init_physical_gates     PROC near
     mov esi,OFFSET get_physical_page
     mov edi,OFFSET get_physical_page_name
     xor cl,cl
-    mov ax,get_old_physical_page_nr
+    mov ax,get_physical_page_nr
     RegisterOsGate
+;
     mov esi,OFFSET set_physical_page
     mov edi,OFFSET set_physical_page_name
     xor cl,cl
+    mov ax,set_physical_page_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_old_physical_page
+    mov edi,OFFSET get_old_physical_page_name
+    xor cl,cl
+    mov ax,get_old_physical_page_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET set_old_physical_page
+    mov edi,OFFSET set_old_physical_page_name
+    xor cl,cl
     mov ax,set_old_physical_page_nr
     RegisterOsGate
+;    
     mov esi,OFFSET get_thread_physical_page
     mov edi,OFFSET get_thread_physical_page_name
     xor cl,cl
-    mov ax,get_old_thread_physical_page_nr
+    mov ax,get_thread_physical_page_nr
     RegisterOsGate
+;    
     mov esi,OFFSET set_thread_physical_page
     mov edi,OFFSET set_thread_physical_page_name
     xor cl,cl
-    mov ax,set_old_thread_physical_page_nr
+    mov ax,set_thread_physical_page_nr
     RegisterOsGate
+;    
     pop ds
     popa
     ret
@@ -681,7 +697,6 @@ allocate_multiple_physical32      PROC far
     push ds
     push es
     push fs
-    push ebx
     push edx
 ;
     mov ax,system_data_sel
@@ -704,6 +719,7 @@ allocate_multiple_physical32      PROC far
     call allocate_multi_entries
     sub ds:phys_free_pages,ecx
     mov eax,edx
+    xor ebx,ebx
     ReleaseSpinlockNoSti ds:phys_spinlock
     popf
     clc
@@ -716,7 +732,6 @@ allocate_multi_fail:
 
 allocate_multi_done:
     pop edx
-    pop ebx
     pop fs
     pop es
     pop ds
@@ -756,7 +771,7 @@ get_free_physical_mem   ENDP
 ;
 ;           PARAMETERS:         EDX         linear address
 ;
-;           RETURNS:        EAX         physical address or 0                       
+;           RETURNS:        EBX:EAX         physical address or 0                       
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -770,6 +785,7 @@ get_physical_page       Proc far
     shr eax,10
     and al,0FCh
     mov eax,[eax]
+    xor ebx,ebx
     pop ds
     retf32
 get_physical_page       Endp
@@ -782,8 +798,8 @@ get_physical_page       Endp
 ;
 ;           DESCRIPTION:    Set physical page for linear address
 ;
-;           PARAMETERS:         EDX         linear address
-;                           EAX         physical address or 0                       
+;           PARAMETERS:     EDX         linear address
+;                           EBX:EAX     physical address or 0                       
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -794,6 +810,12 @@ set_physical_page       Proc far
     push ebx
     push cx
 ;
+    or ebx,ebx
+    jz sppok
+;
+    int 3
+
+sppok:    
     mov bx,process_page_sel
     mov ds,bx
     mov ebx,edx
@@ -808,6 +830,70 @@ set_physical_page       Proc far
     pop ds
     retf32
 set_physical_page       Endp
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetOldPhysicalPage
+;
+;           DESCRIPTION:    Get physical page for linear address
+;
+;           PARAMETERS:         EDX         linear address
+;
+;           RETURNS:        EAX         physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_old_physical_page_name  DB 'Get Old Physical Page',0
+
+get_old_physical_page       Proc far
+    push ds
+    mov ax,process_page_sel
+    mov ds,ax
+    mov eax,edx
+    shr eax,10
+    and al,0FCh
+    mov eax,[eax]
+    pop ds
+    retf32
+get_old_physical_page       Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetOldPhysicalPage
+;
+;           DESCRIPTION:    Set physical page for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;                           EBX:EAX     physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_old_physical_page_name  DB 'Set Old Physical Page',0
+
+set_old_physical_page       Proc far
+    push ds
+    push ebx
+    push cx
+;    
+    mov bx,process_page_sel
+    mov ds,bx
+    mov ebx,edx
+    shr ebx,10
+    and bl,0FCh
+    mov [ebx],eax
+    mov cx,1
+    call local_flush_process_tlb    
+;
+    pop cx
+    pop ebx
+    pop ds
+    retf32
+set_old_physical_page       Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -884,7 +970,7 @@ get_thread_physical_page    Endp
 ;
 ;           DESCRIPTION:    Set physical page for linear address in other thread.
 ;
-;           PARAMETERS:         BX          Thread
+;           PARAMETERS:     BX          Thread
 ;                           EDX         Linear address
 ;                           EAX         Physical address
 ;                           
