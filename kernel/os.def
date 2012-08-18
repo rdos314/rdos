@@ -511,7 +511,4 @@ switch_all_core_irqs_nr     = 434
 
 app_patch_nr                = 435
 
-get_old_physical_page_nr    = 436
-set_old_physical_page_nr    = 437
-
 osgate_entries				= 480

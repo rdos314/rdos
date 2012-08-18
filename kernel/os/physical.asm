@@ -258,18 +258,6 @@ init_physical_gates     PROC near
     xor cl,cl
     mov ax,set_physical_page_nr
     RegisterOsGate
-;
-    mov esi,OFFSET get_old_physical_page
-    mov edi,OFFSET get_old_physical_page_name
-    xor cl,cl
-    mov ax,get_old_physical_page_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET set_old_physical_page
-    mov edi,OFFSET set_old_physical_page_name
-    xor cl,cl
-    mov ax,set_old_physical_page_nr
-    RegisterOsGate
 ;    
     mov esi,OFFSET get_thread_physical_page
     mov edi,OFFSET get_thread_physical_page_name
@@ -830,71 +818,6 @@ sppok:
     pop ds
     retf32
 set_physical_page       Endp
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetOldPhysicalPage
-;
-;           DESCRIPTION:    Get physical page for linear address
-;
-;           PARAMETERS:         EDX         linear address
-;
-;           RETURNS:        EAX         physical address or 0                       
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_old_physical_page_name  DB 'Get Old Physical Page',0
-
-get_old_physical_page       Proc far
-    push ds
-    mov ax,process_page_sel
-    mov ds,ax
-    mov eax,edx
-    shr eax,10
-    and al,0FCh
-    mov eax,[eax]
-    pop ds
-    retf32
-get_old_physical_page       Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetOldPhysicalPage
-;
-;           DESCRIPTION:    Set physical page for linear address
-;
-;           PARAMETERS:     EDX         linear address
-;                           EBX:EAX     physical address or 0                       
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_old_physical_page_name  DB 'Set Old Physical Page',0
-
-set_old_physical_page       Proc far
-    push ds
-    push ebx
-    push cx
-;    
-    mov bx,process_page_sel
-    mov ds,bx
-    mov ebx,edx
-    shr ebx,10
-    and bl,0FCh
-    mov [ebx],eax
-    mov cx,1
-    call local_flush_process_tlb    
-;
-    pop cx
-    pop ebx
-    pop ds
-    retf32
-set_old_physical_page       Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

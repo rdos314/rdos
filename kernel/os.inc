@@ -478,18 +478,6 @@ SetPhysicalPage MACRO
     OsGate set_physical_page_nr
                     ENDM
 
-;       EDX         LINEAR ADDRESS
-;       EAX     PAGE ENTRY
-GetOldPhysicalPage MACRO
-    OsGate get_old_physical_page_nr
-                    ENDM
-
-;       EDX         LINEAR ADDRESS
-;       EAX     PAGE ENTRY
-SetOldPhysicalPage MACRO
-    OsGate set_old_physical_page_nr
-                    ENDM
-
 ;       BX          TRèD
 ;       EDX         LINEAR ADDRESS
 ;       EBX:EAX     PAGE ENTRY
