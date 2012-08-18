@@ -478,18 +478,18 @@ SetPhysicalPage MACRO
     OsGate set_physical_page_nr
                     ENDM
 
-;       BX          TRèD
+;       BP          Thread
 ;       EDX         LINEAR ADDRESS
 ;       EBX:EAX     PAGE ENTRY
-GetOldThreadPhysicalPage   MACRO
-    OsGate get_old_thread_physical_page_nr
+GetThreadPhysicalPage   MACRO
+    OsGate get_thread_physical_page_nr
                     ENDM
 
-;       BX          TRèD
+;       BP          Thread
 ;       EDX         LINEAR ADDRESS
 ;       EBX:EAX     PAGE ENTRY
-SetOldThreadPhysicalPage   MACRO
-    OsGate set_old_thread_physical_page_nr
+SetThreadPhysicalPage   MACRO
+    OsGate set_thread_physical_page_nr
                     ENDM
 
 ;       DX:ESI  ADDRESS TO READ

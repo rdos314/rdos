@@ -163,11 +163,12 @@ switch_mode_done:
     push ds
     push ebx
     GetFocusThread
-    mov bx,ax
+    mov bp,ax
     mov edx,ds:v_mem_base
     mov eax,edx
+    xor ebx,ebx
     or ax,807h
-    SetOldThreadPhysicalPage
+    SetThreadPhysicalPage
     pop ebx
 ;
     mov ds:v_has_focus,1
@@ -246,15 +247,13 @@ switch_from     Proc far
     pop ds
 ;
     GetFocusThread
-    mov bx,ax
-    mov es,bx
+    mov bp,ax
+    mov es,bp
     mov edx,ds:v_buf_base
-    push ebx
     GetPhysicalPage
-    pop ebx
     or ax,807h
     mov edx,ds:v_mem_base
-    SetOldThreadPhysicalPage
+    SetThreadPhysicalPage
     LeaveSection ds:v_section
 
     mov edx,es:p_cr3

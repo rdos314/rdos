@@ -3422,7 +3422,9 @@ read_thread_selector    PROC far
     push ecx
     push edx
     push esi
+    push bp
 ;
+    mov bp,bx
     mov ax,process_page_sel
     mov ds,ax
     mov ax,flat_sel
@@ -3442,7 +3444,7 @@ read_thread_selector_retry:
 
 read_thread_selector_normal:
     and si,0FFFh
-    GetOldThreadPhysicalPage
+    GetThreadPhysicalPage
 ;
     test al,1
     jnz read_thread_selector_ok
@@ -3466,6 +3468,7 @@ read_thread_selector_ok:
     FreeLinear
     clc
 read_thread_selector_done:
+    pop bp
     pop esi
     pop edx
     pop ecx
@@ -3497,7 +3500,9 @@ write_thread_selector   PROC far
     push ecx
     push edx
     push esi
+    push bp
 ;
+    mov bp,bx
     mov cl,al
     mov ax,process_page_sel
     mov ds,ax
@@ -3518,7 +3523,7 @@ write_thread_selector_retry:
 
 write_thread_selector_normal:
     and si,0FFFh
-    GetOldThreadPhysicalPage
+    GetThreadPhysicalPage
 ;
     test al,1
     jnz write_thread_selector_do
@@ -3526,7 +3531,7 @@ write_thread_selector_normal:
     push ebx
     AllocatePhysical64
     or al,7
-    SetOldThreadPhysicalPage
+    SetThreadPhysicalPage
     pop ebx
 
 write_thread_selector_do:
@@ -3545,6 +3550,7 @@ write_thread_selector_do:
     FreeLinear
     clc
 write_thread_selector_done:
+    pop bp
     pop esi
     pop edx
     pop ecx
@@ -3730,7 +3736,9 @@ read_thread_segment     PROC far
     push ecx
     push edx
     push esi
+    push bp
 ;
+    mov bp,bx
     mov ax,process_page_sel
     mov ds,ax
     mov ax,flat_sel
@@ -3756,7 +3764,7 @@ read_thread_segment_retry:
 
 read_thread_segment_normal:
     and si,0FFFh
-    GetOldThreadPhysicalPage
+    GetThreadPhysicalPage
 ;
     test al,1
     jnz read_thread_segment_ok
@@ -3785,6 +3793,7 @@ read_thread_segment_ok:
     FreeLinear
     clc
 read_thread_segment_done:
+    pop bp
     pop esi
     pop edx
     pop ecx
@@ -3816,7 +3825,9 @@ write_thread_segment    PROC far
     push ecx
     push edx
     push esi
+    push bp
 ;
+    mov bp,bx
     mov cl,al
     mov ax,process_page_sel
     mov ds,ax
@@ -3840,7 +3851,7 @@ write_thread_segment_retry:
 
 write_thread_segment_normal:
     and si,0FFFh
-    GetOldThreadPhysicalPage
+    GetThreadPhysicalPage
 ;
     test al,1
     jnz write_thread_segment_do
@@ -3848,7 +3859,7 @@ write_thread_segment_normal:
     push ebx
     AllocatePhysical64
     or al,7
-    SetOldThreadPhysicalPage
+    SetThreadPhysicalPage
     pop ebx
 
 write_thread_segment_do:
@@ -3866,6 +3877,8 @@ write_thread_segment_do:
     mov ecx,1000h
     FreeLinear
     clc
+;
+    pop bp    
     pop esi
     pop edx
     pop ecx

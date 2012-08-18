@@ -262,13 +262,13 @@ init_physical_gates     PROC near
     mov esi,OFFSET get_thread_physical_page
     mov edi,OFFSET get_thread_physical_page_name
     xor cl,cl
-    mov ax,get_old_thread_physical_page_nr
+    mov ax,get_thread_physical_page_nr
     RegisterOsGate
 ;    
     mov esi,OFFSET set_thread_physical_page
     mov edi,OFFSET set_thread_physical_page_name
     xor cl,cl
-    mov ax,set_old_thread_physical_page_nr
+    mov ax,set_thread_physical_page_nr
     RegisterOsGate
 ;    
     pop ds
@@ -826,10 +826,10 @@ set_physical_page       Endp
 ;
 ;           DESCRIPTION:    Get physical page for linear address in other thread.
 ;
-;           PARAMETERS:         BX          Thread
+;           PARAMETERS:     BP          Thread
 ;                           EDX         Linear address
 ;
-;           RETURNS:        EAX         Physical address or 0                       
+;           RETURNS:        EBX:EAX     Physical address or 0                       
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -847,7 +847,7 @@ get_thread_physical_page    Proc far
     mov ax,process_dir_sel
     mov ds,ax
     mov si,(alias_linear SHR 20) AND 0FFFh
-    mov es,bx
+    mov es,bp
     mov eax,es:p_cr3
     or ax,803h
     mov [si],eax
@@ -868,12 +868,14 @@ get_thread_physical_page    Proc far
     jnz get_thread_phys_do
 ;
     xor eax,eax
+    xor ebx,ebx
     jmp get_thread_phys_done
 
 get_thread_phys_do:     
     mov ax,flat_sel
     mov ds,ax
     mov eax,[ebx]
+    xor ebx,ebx
 
 get_thread_phys_done:
     SimSti
@@ -893,9 +895,9 @@ get_thread_physical_page    Endp
 ;
 ;           DESCRIPTION:    Set physical page for linear address in other thread.
 ;
-;           PARAMETERS:     BX          Thread
+;           PARAMETERS:     BP          Thread
 ;                           EDX         Linear address
-;                           EAX         Physical address
+;                           EBX:EAX     Physical address
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -908,12 +910,18 @@ set_thread_physical_page    Proc far
     push edx
     push si
 ;
+    or ebx,ebx
+    jz stppok
+;
+    int 3
+
+stppok:    
     push eax
     SimCli
     mov ax,process_dir_sel
     mov ds,ax
     mov si,(alias_linear SHR 20) AND 0FFFh
-    mov es,bx
+    mov es,bp
     mov eax,es:p_cr3
     or ax,803h
     mov [si],eax
