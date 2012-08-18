@@ -3292,7 +3292,8 @@ init_ioapic_pci_trigger_mode:
     AllocateBigLinear
     mov eax,es:apic_phys
     or ax,33h
-    SetOldPhysicalPage    
+    xor ebx,ebx
+    SetPhysicalPage    
     mov bx,apic_mem_sel
     mov ecx,1000h
     CreateDataSelector16
@@ -3311,7 +3312,8 @@ init_ioapic_table_loop:
     AllocateBigLinear
     mov eax,es:[di].aio_phys
     or ax,33h
-    SetOldPhysicalPage    
+    xor ebx,ebx
+    SetPhysicalPage    
     AllocateGdt
     mov ecx,1000h
     CreateDataSelector16
@@ -4281,7 +4283,8 @@ init    PROC far
     AllocateBigLinear
     mov eax,es:hpett_phys_base
     or ax,33h
-    SetOldPhysicalPage
+    xor ebx,ebx
+    SetPhysicalPage
     AllocateGdt
     mov ecx,1000h
     CreateDataSelector16
