@@ -318,7 +318,7 @@ free_local_loop:
     or eax,eax
     jz free_local_next
 ;
-    FreePhysical
+    FreeOldPhysical
 
 free_local_next:
     add ebx,4

@@ -131,7 +131,7 @@ AcpiOsGetRootPointer_ Proc near
     mov ecx,1000h
     CreateDataSelector16
     mov eax,7h
-    SetPhysicalPage
+    SetOldPhysicalPage
     mov ds,bx    
 ;    
     mov esi,40Eh
@@ -142,7 +142,7 @@ AcpiOsGetRootPointer_ Proc near
     mov eax,esi
     and ax,0F000h
     or al,7
-    SetPhysicalPage
+    SetOldPhysicalPage
     and si,0FFFh
 ;    
     mov cx,40h
@@ -161,7 +161,7 @@ os_get_rsdp_bios:
     mov eax,edi
     and ax,0F000h
     or al,7
-    SetPhysicalPage
+    SetOldPhysicalPage
 ;
     mov esi,edi
     and si,0FFFh
@@ -183,7 +183,7 @@ os_get_rsdp_bios_page:
     jmp os_get_rsdp_done
 
 os_get_rsdp_ok:
-    GetPhysicalPage
+    GetOldPhysicalPage
     and ax,0F000h
     or ax,si
 
@@ -191,7 +191,7 @@ os_get_rsdp_done:
     push eax
     xor eax,eax
     mov ds,ax
-    SetPhysicalPage
+    SetOldPhysicalPage
     mov ecx,1000h
     FreeLinear
     FreeGdt    
@@ -236,7 +236,7 @@ GetRsdp Proc near
     mov ecx,1000h
     CreateDataSelector16
     mov eax,7h
-    SetPhysicalPage
+    SetOldPhysicalPage
     mov ds,bx    
 ;    
     mov esi,40Eh
@@ -247,7 +247,7 @@ GetRsdp Proc near
     mov eax,esi
     and ax,0F000h
     or al,7
-    SetPhysicalPage
+    SetOldPhysicalPage
     and si,0FFFh
 ;    
     mov cx,40h
@@ -266,7 +266,7 @@ get_rsdp_bios:
     mov eax,edi
     and ax,0F000h
     or al,7
-    SetPhysicalPage
+    SetOldPhysicalPage
 ;
     mov esi,edi
     and si,0FFFh
@@ -295,7 +295,7 @@ get_rsdp_done:
     pushf
     xor eax,eax
     mov ds,ax
-    SetPhysicalPage
+    SetOldPhysicalPage
     mov ecx,1000h
     FreeLinear
     FreeGdt    
@@ -340,7 +340,7 @@ GetTable Proc near
     and bx,0FFFh
     and ax,0F000h
     or al,7    
-    SetPhysicalPage
+    SetOldPhysicalPage
 ;    
     push edx
     add edx,ebx
@@ -353,7 +353,7 @@ GetTable Proc near
     mov ecx,ds:acpi_size
     xor eax,eax
     mov ds,ax
-    SetPhysicalPage
+    SetOldPhysicalPage
     push ecx
     mov ecx,1000h
     FreeLinear
@@ -404,7 +404,7 @@ GetTable Proc near
     or al,7    
 
 get_table_set_phys:
-    SetPhysicalPage
+    SetOldPhysicalPage
     add eax,1000h
     add edx,1000h
     loop get_table_set_phys
@@ -453,7 +453,7 @@ get_table_free:
     push edx
 
 get_table_free_phys:
-    SetPhysicalPage
+    SetOldPhysicalPage
     add edx,1000h
     loop get_table_free_phys
     pop edx

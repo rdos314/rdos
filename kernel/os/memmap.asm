@@ -520,7 +520,7 @@ fw_loop:
 ;
     push eax
     mov eax,es:[edx]
-    FreePhysical
+    FreeOldPhysical
     pop eax
 
 fw_mark:

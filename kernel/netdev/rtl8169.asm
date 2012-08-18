@@ -332,7 +332,7 @@ CreateRxRing    Proc near
     xor eax,eax
     rep stos dword ptr es:[edi]
 ;
-    GetPhysicalPage
+    GetOldPhysicalPage
     and ax,0F000h
     mov ds:RxRingPhys,eax
 ;
@@ -356,15 +356,15 @@ crLoop:
     mov ds:[si],edx
 ;    
     mov ecx,2
-    AllocateMultiplePhysical
+    AllocateOldMultiplePhysical
     pop ecx
     mov es:[di].rx_low_ads,eax
 ;
     mov al,67h
-    SetPhysicalPage
+    SetOldPhysicalPage
     add edx,1000h
     add eax,1000h
-    SetPhysicalPage
+    SetOldPhysicalPage
 ;
     add si,4
     add di,16
@@ -401,7 +401,7 @@ CreateTxRing    Proc near
     xor eax,eax
     rep stos dword ptr es:[edi]
 ;
-    GetPhysicalPage
+    GetOldPhysicalPage
     and ax,0F000h
     mov ds:TxRingPhys,eax
 ;
@@ -424,15 +424,15 @@ ctLoop:
     mov ds:[si],edx
 ;    
     mov ecx,2
-    AllocateMultiplePhysical
+    AllocateOldMultiplePhysical
     pop ecx
     mov es:[di].tx_low_ads,eax
 ;
     mov al,67h
-    SetPhysicalPage
+    SetOldPhysicalPage
     add edx,1000h
     add eax,1000h
-    SetPhysicalPage
+    SetOldPhysicalPage
 ;
     add si,4
     add di,16

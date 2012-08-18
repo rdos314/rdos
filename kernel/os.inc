@@ -468,28 +468,28 @@ SetupTrapGate  MACRO
 
 ;       EDX         LINEAR ADDRESS
 ;       EAX         PAGE ENTRY
-GetPhysicalPage MACRO
-    OsGate get_physical_page_nr
+GetOldPhysicalPage MACRO
+    OsGate get_old_physical_page_nr
                     ENDM
 
 ;       EDX         LINEAR ADDRESS
 ;       EAX         PAGE ENTRY
-SetPhysicalPage MACRO
-    OsGate set_physical_page_nr
-                    ENDM
-
-;       BX          TRèD
-;       EDX         LINEAR ADDRESS
-;       EAX         PAGE ENTRY
-GetThreadPhysicalPage   MACRO
-    OsGate get_thread_physical_page_nr
+SetOldPhysicalPage MACRO
+    OsGate set_old_physical_page_nr
                     ENDM
 
 ;       BX          TRèD
 ;       EDX         LINEAR ADDRESS
 ;       EAX         PAGE ENTRY
-SetThreadPhysicalPage   MACRO
-    OsGate set_thread_physical_page_nr
+GetOldThreadPhysicalPage   MACRO
+    OsGate get_old_thread_physical_page_nr
+                    ENDM
+
+;       BX          TRèD
+;       EDX         LINEAR ADDRESS
+;       EAX         PAGE ENTRY
+SetOldThreadPhysicalPage   MACRO
+    OsGate set_old_thread_physical_page_nr
                     ENDM
 
 ;       DX:ESI  ADDRESS TO READ
@@ -675,8 +675,8 @@ AllocateFixedVMLinear   MACRO
 ;;;;;;;;;;;;; PHYSICAL MEMORY MANAGEMENT ;;;;;;;;;;
 
 ;       EAX         FYSISK ADDRESS
-AllocatePhysical    MACRO
-    OsGate allocate_physical_nr
+AllocateOldPhysical    MACRO
+    OsGate allocate_old_physical_nr
                     ENDM
 
 ;       EAX         FYSISK ADDRESS
@@ -685,14 +685,14 @@ AllocateDmaPhysical     MACRO
                     ENDM
 
 ;       EAX         FYSISK ADDRESS
-FreePhysical    MACRO
-    OsGate free_physical_nr
+FreeOldPhysical    MACRO
+    OsGate free_old_physical_nr
                     ENDM
 
 ;       IN  ECX     Number of pages
 ;       OUT EAX     Physical base address
-AllocateMultiplePhysical    MACRO
-    OsGate allocate_multiple_physical_nr
+AllocateOldMultiplePhysical    MACRO
+    OsGate allocate_old_multiple_physical_nr
                     ENDM
 
 ;       ES:EDI      Swap callback

@@ -32,10 +32,10 @@ segment_to_selector_nr		= 30
 free_selector_nr			= 31
 segment_not_present_nr		= 32
 
-get_physical_page_nr		= 33
-set_physical_page_nr		= 34
-get_thread_physical_page_nr = 35
-set_thread_physical_page_nr	= 36
+get_old_physical_page_nr		= 33
+set_old_physical_page_nr		= 34
+get_old_thread_physical_page_nr = 35
+set_old_thread_physical_page_nr	= 36
 read_thread_selector_nr		= 37
 write_thread_selector_nr	= 38
 read_thread_segment_nr		= 39
@@ -66,9 +66,9 @@ allocate_process_linear_nr	= 67
 allocate_system_linear_nr	= 68
 allocate_fixed_vm_linear_nr	= 69
 
-allocate_physical_nr		= 70
-allocate_dma_physical_nr	= 71
-free_physical_nr			= 72
+allocate_old_physical_nr		= 70
+allocate_dma_physical_nr	    = 71
+free_old_physical_nr			= 72
 
 create_process_nr			= 74
 
@@ -289,7 +289,7 @@ unlock_disc_request_nr      = 280
 get_net_buffer_nr			= 281
 get_ppp_buffer_nr			= 282
 
-allocate_multiple_physical_nr	= 283
+allocate_old_multiple_physical_nr	= 283
 
 add_net_source_address_nr	= 286
 

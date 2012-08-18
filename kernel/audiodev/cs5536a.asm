@@ -367,7 +367,7 @@ CreatePrdTable  Proc near
     push edi
 ;    
     mov ecx,20h
-    AllocateMultiplePhysical
+    AllocateOldMultiplePhysical
     jc cptDone
 ;
     mov ds:[bx].AcPrd1Phys,eax
@@ -389,7 +389,7 @@ CreatePrdTable  Proc near
     mov cx,10h
 
 cptPrd1Loop:
-    SetPhysicalPage
+    SetOldPhysicalPage
     add eax,1000h
     add edx,1000h
     loop cptPrd1Loop
@@ -400,12 +400,12 @@ cptPrd1Loop:
     mov cx,10h
 
 cptPrd2Loop:
-    SetPhysicalPage
+    SetOldPhysicalPage
     add eax,1000h
     add edx,1000h
     loop cptPrd2Loop
 ;
-    AllocatePhysical
+    AllocateOldPhysical
     mov ds:[bx].AcPrdPhys,eax    
 ;    
     mov eax,1000h
@@ -415,7 +415,7 @@ cptPrd2Loop:
     mov eax,ds:[bx].AcPrdPhys
     mov edx,ds:[bx].AcPrdLinear
     or al,7
-    SetPhysicalPage
+    SetOldPhysicalPage
 ;
     mov ax,flat_sel
     mov es,ax

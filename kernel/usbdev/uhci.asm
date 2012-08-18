@@ -472,7 +472,7 @@ InitQh  PROC near
     mov es:[edx].uqh_va_link,0
     mov es:[edx].uqh_elem,1
     mov es:[edx].uqh_va_elem,0
-    GetPhysicalPage
+    GetOldPhysicalPage
     and ax,0F000h
     mov cx,dx
     and cx,0FFFh
@@ -507,7 +507,7 @@ AllocateQh      PROC near
     mov es:[edx].uqh_va_link,0
     mov es:[edx].uqh_elem,1
     mov es:[edx].uqh_va_elem,0
-    GetPhysicalPage
+    GetOldPhysicalPage
     and ax,0F000h
     mov cx,dx
     and cx,0FFFh
@@ -575,7 +575,7 @@ atSaveSeq:
     mov fs:usbp_seq,al   
     mov es:[edx].utd_host,ecx
 ;    
-    GetPhysicalPage
+    GetOldPhysicalPage
     and ax,0F000h
     mov cx,dx
     and cx,0FFFh
@@ -588,7 +588,7 @@ atSaveSeq:
 ;    
     push edx
     mov edx,edi
-    GetPhysicalPage
+    GetOldPhysicalPage
     and ax,0F000h
     mov cx,dx
     and cx,0FFFh
@@ -1066,7 +1066,7 @@ ciQhLoop:
     loop ciQhLoop
 ;
     mov edx,ds:uhc_int_linear
-    GetPhysicalPage
+    GetOldPhysicalPage
     and ax,0F000h
     mov ds:uhc_int_phys,eax    
 ;
@@ -2569,7 +2569,7 @@ AddFunction  Proc near
     mov ax,ds
     mov es,ax
 ;
-    GetPhysicalPage
+    GetOldPhysicalPage
     and ax,0F000h
     mov ds:uhc_hw_phys,eax    
 ;    

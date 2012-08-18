@@ -804,7 +804,7 @@ AddPort     Proc near
     inc cx
 
 apPagesOk:
-    AllocateMultiplePhysical
+    AllocateOldMultiplePhysical
     mov al,67h
     push eax
     mov eax,ecx
@@ -815,7 +815,7 @@ apPagesOk:
     push ecx
 
 apPhysLoop:
-    SetPhysicalPage
+    SetOldPhysicalPage
     add eax,1000h
     add edx,1000h
     loop apPhysLoop
@@ -968,11 +968,11 @@ ipaLoop:
     ReadPciDword
 ;
     or al,67h
-    SetPhysicalPage
+    SetOldPhysicalPage
 ;
     add eax,1000h
     add edx,1000h
-    SetPhysicalPage
+    SetOldPhysicalPage
     sub edx,1000h
 ;        
     push bx
@@ -1628,7 +1628,7 @@ AddPrdEntry     Proc near
 ;
     mov edx,esi
     and dx,0F000h        
-    GetPhysicalPage
+    GetOldPhysicalPage
     and ax,0F000h
     and esi,0FFFh
     add esi,eax

@@ -542,7 +542,7 @@ init_mem_sels   PROC near
 ;
     mov ax,sys_page_sel
     mov ds,ax
-    AllocatePhysical
+    AllocateOldPhysical
     and ax,0F000h
     or ax,807h
     mov ebx,fixed_vm_linear
@@ -1875,7 +1875,7 @@ free_pages_loop:
     test ax,800h
     jnz free_pages_nopage
 ;
-    FreePhysical
+    FreeOldPhysical
 
 free_pages_nopage:
     add bx,4
@@ -3439,7 +3439,7 @@ read_thread_selector_retry:
 
 read_thread_selector_normal:
     and si,0FFFh
-    GetThreadPhysicalPage
+    GetOldThreadPhysicalPage
 ;
     test al,1
     jnz read_thread_selector_ok
@@ -3515,13 +3515,13 @@ write_thread_selector_retry:
 
 write_thread_selector_normal:
     and si,0FFFh
-    GetThreadPhysicalPage
+    GetOldThreadPhysicalPage
 ;
     test al,1
     jnz write_thread_selector_do
-    AllocatePhysical
+    AllocateOldPhysical
     or al,7
-    SetThreadPhysicalPage
+    SetOldThreadPhysicalPage
 write_thread_selector_do:
     push eax
     mov eax,1000h
@@ -3749,7 +3749,7 @@ read_thread_segment_retry:
 
 read_thread_segment_normal:
     and si,0FFFh
-    GetThreadPhysicalPage
+    GetOldThreadPhysicalPage
 ;
     test al,1
     jnz read_thread_segment_ok
@@ -3833,13 +3833,13 @@ write_thread_segment_retry:
 
 write_thread_segment_normal:
     and si,0FFFh
-    GetThreadPhysicalPage
+    GetOldThreadPhysicalPage
 ;
     test al,1
     jnz write_thread_segment_do
-    AllocatePhysical
+    AllocateOldPhysical
     or al,7
-    SetThreadPhysicalPage
+    SetOldThreadPhysicalPage
 write_thread_segment_do:
     push eax
     mov eax,1000h

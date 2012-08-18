@@ -893,7 +893,7 @@ SetupDMA    Proc near
     mov ax,flat_sel
     mov es,ax
 ;
-    GetPhysicalPage
+    GetOldPhysicalPage
     and ax,0F000h
     or eax,eax
     jz setup_dma_alloc
@@ -902,12 +902,12 @@ SetupDMA    Proc near
     jc setup_dma_inrange
 ;
     int 3
-    FreePhysical
+    FreeOldPhysical
 
 setup_dma_alloc:
     AllocateDmaPhysical
     or al,3
-    SetPhysicalPage
+    SetOldPhysicalPage
     and ax,0F000h
     cmp eax,1000000h
     jc setup_dma_inrange

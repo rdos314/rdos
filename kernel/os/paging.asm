@@ -498,7 +498,7 @@ free_startup_ram_loop:
     cmp eax,edx
     jae free_startup_zero
 ;
-    FreePhysical
+    FreeOldPhysical
 
 free_startup_zero:
     xor eax,eax
@@ -567,7 +567,7 @@ free_process_page_loop:
     test ax,800h
     jnz free_process_page_next
 ;
-    FreePhysical
+    FreeOldPhysical
 
 free_process_page_next:
     add esi,4
@@ -577,7 +577,7 @@ free_process_page_next:
     xor eax,eax
     xchg eax,es:[edi]
 ;
-    FreePhysical
+    FreeOldPhysical
     jmp free_process_next_dir_page
     
 free_process_next_dir:
@@ -616,7 +616,7 @@ free_global_loop:
 ;
     xor eax,eax
     xchg eax,es:[edi]
-    FreePhysical
+    FreeOldPhysical
 
 free_global_next:
     add edi,4

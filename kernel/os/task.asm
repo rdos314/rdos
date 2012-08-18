@@ -3704,7 +3704,7 @@ cleanup_process_linear_loop:
     test al,1
     jz cleanup_process_linear_next
 ;
-    FreePhysical
+    FreeOldPhysical
 
 cleanup_process_linear_next:
     add edx,4
@@ -3717,10 +3717,10 @@ cleanup_process_linear_next:
     add edx,alias_linear
     shr edx,10
     mov eax,[edx]
-    FreePhysical
+    FreeOldPhysical
 ;
     mov eax,es:p_cr3
-    FreePhysical
+    FreeOldPhysical
 ;
     sti
     push es
@@ -5492,7 +5492,7 @@ fgtsLoop:
     test ax,800h
     jnz fgtsNext
 ;
-    FreePhysical
+    FreeOldPhysical
 
 fgtsNext:
     add edx,4
@@ -5538,7 +5538,7 @@ fptsLoop:
     test ax,800h
     jnz fptsNext
 ;
-    FreePhysical
+    FreeOldPhysical
 
 fptsNext:
     add edx,4
@@ -5906,7 +5906,7 @@ FreeTlb     Proc near
     
 frtLoop:
     mov eax,es:[esi]
-    FreePhysical
+    FreeOldPhysical
     add esi,4
     loop frtLoop
 

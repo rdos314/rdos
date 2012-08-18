@@ -414,7 +414,7 @@ init    PROC far
     mov edi,OFFSET process_page_arr
 
 alloc_page_loop:
-    AllocatePhysical
+    AllocateOldPhysical
     or al,5
     mov es:[edx],eax
     mov ds:[edi],eax

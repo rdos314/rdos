@@ -214,12 +214,12 @@ init_physical_gates     PROC near
     mov esi,OFFSET free_physical
     mov edi,OFFSET free_physical_name
     xor cl,cl
-    mov ax,free_physical_nr
+    mov ax,free_old_physical_nr
     RegisterOsGate
     mov esi,OFFSET allocate_physical
     mov edi,OFFSET allocate_physical_name
     xor cl,cl
-    mov ax,allocate_physical_nr
+    mov ax,allocate_old_physical_nr
     RegisterOsGate
     mov esi,OFFSET allocate_dma_physical
     mov edi,OFFSET allocate_dma_physical_name
@@ -229,27 +229,27 @@ init_physical_gates     PROC near
     mov esi,OFFSET allocate_multiple_physical
     mov edi,OFFSET allocate_multiple_physical_name
     xor cl,cl
-    mov ax,allocate_multiple_physical_nr
+    mov ax,allocate_old_multiple_physical_nr
     RegisterOsGate
     mov esi,OFFSET get_physical_page
     mov edi,OFFSET get_physical_page_name
     xor cl,cl
-    mov ax,get_physical_page_nr
+    mov ax,get_old_physical_page_nr
     RegisterOsGate
     mov esi,OFFSET set_physical_page
     mov edi,OFFSET set_physical_page_name
     xor cl,cl
-    mov ax,set_physical_page_nr
+    mov ax,set_old_physical_page_nr
     RegisterOsGate
     mov esi,OFFSET get_thread_physical_page
     mov edi,OFFSET get_thread_physical_page_name
     xor cl,cl
-    mov ax,get_thread_physical_page_nr
+    mov ax,get_old_thread_physical_page_nr
     RegisterOsGate
     mov esi,OFFSET set_thread_physical_page
     mov edi,OFFSET set_thread_physical_page_name
     xor cl,cl
-    mov ax,set_thread_physical_page_nr
+    mov ax,set_old_thread_physical_page_nr
     RegisterOsGate
     pop ds
     popa

@@ -330,7 +330,7 @@ CreateSgdTable  Proc near
     push edi
 ;    
     mov ecx,20h
-    AllocateMultiplePhysical
+    AllocateOldMultiplePhysical
     jc cstDone
 ;
     mov ds:[bx].AcSgd1Phys,eax
@@ -352,7 +352,7 @@ CreateSgdTable  Proc near
     mov cx,10h
 
 cstSgd1Loop:
-    SetPhysicalPage
+    SetOldPhysicalPage
     add eax,1000h
     add edx,1000h
     loop cstSgd1Loop
@@ -363,12 +363,12 @@ cstSgd1Loop:
     mov cx,10h
 
 cstSgd2Loop:
-    SetPhysicalPage
+    SetOldPhysicalPage
     add eax,1000h
     add edx,1000h
     loop cstSgd2Loop
 ;
-    AllocatePhysical
+    AllocateOldPhysical
     mov ds:[bx].AcSgdPhys,eax    
 ;    
     mov eax,1000h
@@ -378,7 +378,7 @@ cstSgd2Loop:
     mov eax,ds:[bx].AcSgdPhys
     mov edx,ds:[bx].AcSgdLinear
     or al,7
-    SetPhysicalPage
+    SetOldPhysicalPage
 ;
     mov ax,flat_sel
     mov es,ax

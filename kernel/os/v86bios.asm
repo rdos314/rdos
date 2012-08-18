@@ -345,7 +345,7 @@ handle_output_zero:
     or eax,eax
     jz handle_output_zero_next
 ;
-    FreePhysical
+    FreeOldPhysical
 
 handle_output_zero_next:
     add esi,4
