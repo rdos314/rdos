@@ -262,13 +262,13 @@ init_physical_gates     PROC near
     mov esi,OFFSET get_thread_physical_page
     mov edi,OFFSET get_thread_physical_page_name
     xor cl,cl
-    mov ax,get_thread_physical_page_nr
+    mov ax,get_old_thread_physical_page_nr
     RegisterOsGate
 ;    
     mov esi,OFFSET set_thread_physical_page
     mov edi,OFFSET set_thread_physical_page_name
     xor cl,cl
-    mov ax,set_thread_physical_page_nr
+    mov ax,set_old_thread_physical_page_nr
     RegisterOsGate
 ;    
     pop ds
