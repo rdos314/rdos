@@ -352,9 +352,13 @@ GetTable Proc near
     mov eax,ebp
     movzx ebx,ax
     and bx,0FFFh
+;
+    push ebx
+    xor ebx,ebx    
     and ax,0F000h
     or al,7    
-    SetOldPhysicalPage
+    SetPhysicalPage
+    pop ebx
 ;    
     push edx
     add edx,ebx
@@ -364,10 +368,14 @@ GetTable Proc near
     mov ds,bx    
     pop edx
 ;
+    push ebx
     mov ecx,ds:acpi_size
+    xor ebx,ebx
     xor eax,eax
     mov ds,ax
-    SetOldPhysicalPage
+    SetPhysicalPage
+    pop ebx
+;    
     push ecx
     mov ecx,1000h
     FreeLinear
@@ -413,16 +421,21 @@ GetTable Proc near
     pop edx
     pop ecx
 ;
+    push ebx
     push edx
+;
+    xor ebx,ebx    
     and ax,0F000h
     or al,7    
 
 get_table_set_phys:
-    SetOldPhysicalPage
+    SetPhysicalPage
     add eax,1000h
     add edx,1000h
     loop get_table_set_phys
+    
     pop edx
+    pop ebx
 ;    
     mov si,SIZE acpi_header
     mov ecx,ds:acpi_size
@@ -462,16 +475,21 @@ get_table_pop_fail:
 get_table_free:
     pop ecx
 ;
-    xor eax,eax
+    push ebx
     push ecx
     push edx
+;    
+    xor eax,eax
+    xor ebx,ebx
 
 get_table_free_phys:
-    SetOldPhysicalPage
+    SetPhysicalPage
     add edx,1000h
     loop get_table_free_phys
+
     pop edx
     pop ecx
+    pop ebx
 ;
     shl ecx,12
     movzx ecx,cx
