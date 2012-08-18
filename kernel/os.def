@@ -66,9 +66,10 @@ allocate_process_linear_nr	= 67
 allocate_system_linear_nr	= 68
 allocate_fixed_vm_linear_nr	= 69
 
-allocate_old_physical_nr		= 70
-allocate_dma_physical_nr	    = 71
-free_old_physical_nr			= 72
+allocate_physical32_nr	    = 70
+allocate_physical64_nr   	= 71
+allocate_dma_physical_nr	= 72
+free_physical_nr            = 73
 
 create_process_nr			= 74
 
@@ -289,7 +290,8 @@ unlock_disc_request_nr      = 280
 get_net_buffer_nr			= 281
 get_ppp_buffer_nr			= 282
 
-allocate_old_multiple_physical_nr	= 283
+allocate_multiple_physical32_nr = 283
+allocate_multiple_physical64_nr = 284
 
 add_net_source_address_nr	= 286
 
@@ -508,11 +510,5 @@ switch_one_core_irq_nr      = 433
 switch_all_core_irqs_nr     = 434
 
 app_patch_nr                = 435
-
-allocate_physical32_nr	    	= 436
-allocate_physical64_nr   		= 437
-free_physical_nr                = 438
-allocate_multiple_physical32_nr = 439
-allocate_multiple_physical64_nr = 440
 
 osgate_entries				= 480
