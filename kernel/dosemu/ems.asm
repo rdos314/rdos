@@ -253,7 +253,12 @@ free_ems_pages_loop:
         or eax,eax
         jz free_ems_pages_next
         and ax,0F000h
-        FreeOldPhysical
+;
+        push ebx
+        xor ebx,ebx
+        FreePhysical
+        pop ebx
+        
 free_ems_pages_next:
         loop free_ems_pages_loop
         pop eax

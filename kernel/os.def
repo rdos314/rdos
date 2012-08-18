@@ -509,4 +509,10 @@ switch_all_core_irqs_nr     = 434
 
 app_patch_nr                = 435
 
-osgate_entries				= 440
+allocate_physical32_nr	    	= 436
+allocate_physical64_nr   		= 437
+free_physical_nr                = 438
+allocate_multiple_physical32_nr = 439
+allocate_multiple_physical64_nr = 440
+
+osgate_entries				= 480

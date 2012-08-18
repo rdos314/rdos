@@ -3704,7 +3704,8 @@ cleanup_process_linear_loop:
     test al,1
     jz cleanup_process_linear_next
 ;
-    FreeOldPhysical
+    xor ebx,ebx
+    FreePhysical
 
 cleanup_process_linear_next:
     add edx,4
@@ -3717,10 +3718,12 @@ cleanup_process_linear_next:
     add edx,alias_linear
     shr edx,10
     mov eax,[edx]
-    FreeOldPhysical
+    xor ebx,ebx
+    FreePhysical
 ;
     mov eax,es:p_cr3
-    FreeOldPhysical
+    xor ebx,ebx
+    FreePhysical
 ;
     sti
     push es
@@ -5475,6 +5478,7 @@ FlushTlb486    Endp
 FreeGlobalTlbSingle Proc near
     push ds
     push eax
+    push ebx
     push cx
     push edx
 ;    
@@ -5492,7 +5496,8 @@ fgtsLoop:
     test ax,800h
     jnz fgtsNext
 ;
-    FreeOldPhysical
+    xor ebx,ebx
+    FreePhysical
 
 fgtsNext:
     add edx,4
@@ -5500,6 +5505,7 @@ fgtsNext:
 ;
     pop edx
     pop cx
+    pop ebx
     pop eax
     pop ds
     call cs:flush_global_tlb_proc
@@ -5521,6 +5527,7 @@ FreeGlobalTlbSingle Endp
 FreeProcessTlbSingle Proc near
     push ds
     push eax
+    push ebx
     push cx
     push edx
 ;    
@@ -5538,7 +5545,8 @@ fptsLoop:
     test ax,800h
     jnz fptsNext
 ;
-    FreeOldPhysical
+    xor ebx,ebx
+    FreePhysical
 
 fptsNext:
     add edx,4
@@ -5546,6 +5554,7 @@ fptsNext:
 ;
     pop edx
     pop cx
+    pop ebx
     pop eax
     pop ds
     call cs:flush_process_tlb_proc
@@ -5898,6 +5907,7 @@ FlushTlbList   Endp
 
 FreeTlb     Proc near
     push eax
+    push ebx
     push cx
     push esi
 ;    
@@ -5906,13 +5916,15 @@ FreeTlb     Proc near
     
 frtLoop:
     mov eax,es:[esi]
-    FreeOldPhysical
+    xor ebx,ebx
+    FreePhysical
     add esi,4
     loop frtLoop
 
 frtDone:
     pop esi
     pop cx
+    pop ebx
     pop eax    
     ret
 FreeTlb   Endp

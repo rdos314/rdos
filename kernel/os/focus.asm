@@ -318,7 +318,10 @@ free_local_loop:
     or eax,eax
     jz free_local_next
 ;
-    FreeOldPhysical
+    push ebx
+    xor ebx,ebx
+    FreePhysical
+    pop ebx
 
 free_local_next:
     add ebx,4

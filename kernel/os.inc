@@ -675,9 +675,9 @@ AllocateFixedVMLinear   MACRO
 ;;;;;;;;;;;;; PHYSICAL MEMORY MANAGEMENT ;;;;;;;;;;
 
 ;       EAX         FYSISK ADDRESS
-AllocateOldPhysical    MACRO
-    OsGate allocate_old_physical_nr
-                    ENDM
+;AllocateOldPhysical    MACRO
+;    OsGate allocate_old_physical_nr
+;                    ENDM
 
 ;       EAX         FYSISK ADDRESS
 AllocateDmaPhysical     MACRO
@@ -685,15 +685,43 @@ AllocateDmaPhysical     MACRO
                     ENDM
 
 ;       EAX         FYSISK ADDRESS
-FreeOldPhysical    MACRO
-    OsGate free_old_physical_nr
-                    ENDM
+;FreeOldPhysical    MACRO
+;    OsGate free_old_physical_nr
+;                    ENDM
 
 ;       IN  ECX     Number of pages
 ;       OUT EAX     Physical base address
-AllocateOldMultiplePhysical    MACRO
-    OsGate allocate_old_multiple_physical_nr
+;AllocateOldMultiplePhysical    MACRO
+;    OsGate allocate_old_multiple_physical_nr
+;                    ENDM
+
+; IN  ECX           Number of pages
+; OUT EBX:EAX       Physical base address
+AllocateMultiplePhysical32    MACRO
+    OsGate allocate_multiple_physical32_nr
                     ENDM
+
+; IN  ECX           Number of pages
+; OUT EBX:EAX       Physical base address
+AllocateMultiplePhysical64    MACRO
+    OsGate allocate_multiple_physical64_nr
+                    ENDM
+
+; OUT EBX:EAX       Physical base address
+AllocatePhysical32    MACRO
+    OsGate allocate_physical32_nr
+                    ENDM
+
+; OUT EBX:EAX       Physical base address
+AllocatePhysical64    MACRO
+    OsGate allocate_physical64_nr
+                    ENDM
+
+; IN  EBX:EAX       Physical base address
+FreePhysical    MACRO
+    OsGate free_physical_nr
+                    ENDM
+
 
 ;       ES:EDI      Swap callback
 ;       AL  Swap level (0 = highest priority, 15 = lowest priority)

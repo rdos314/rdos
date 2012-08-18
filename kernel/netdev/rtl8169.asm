@@ -356,7 +356,7 @@ crLoop:
     mov ds:[si],edx
 ;    
     mov ecx,2
-    AllocateOldMultiplePhysical
+    AllocateMultiplePhysical32
     pop ecx
     mov es:[di].rx_low_ads,eax
 ;
@@ -424,7 +424,7 @@ ctLoop:
     mov ds:[si],edx
 ;    
     mov ecx,2
-    AllocateOldMultiplePhysical
+    AllocateMultiplePhysical32
     pop ecx
     mov es:[di].tx_low_ads,eax
 ;

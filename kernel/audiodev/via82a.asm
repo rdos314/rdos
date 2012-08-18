@@ -327,27 +327,30 @@ CreateSgdTable  Proc near
     push eax
     push ecx
     push edx
+    push esi
     push edi
 ;    
+    mov si,bx
+;    
     mov ecx,20h
-    AllocateOldMultiplePhysical
+    AllocateMultiplePhysical32
     jc cstDone
 ;
-    mov ds:[bx].AcSgd1Phys,eax
+    mov ds:[si].AcSgd1Phys,eax
     add eax,10000h
-    mov ds:[bx].AcSgd2Phys,eax
+    mov ds:[si].AcSgd2Phys,eax
 ;
     mov eax,10000h
     AllocateBigLinear
-    mov ds:[bx].AcSgd1Linear,edx
-    mov ds:[bx].AcCurrSgd,edx
+    mov ds:[si].AcSgd1Linear,edx
+    mov ds:[si].AcCurrSgd,edx
 ;    
     mov eax,10000h
     AllocateBigLinear
-    mov ds:[bx].AcSgd2Linear,edx
+    mov ds:[si].AcSgd2Linear,edx
 ;
-    mov eax,ds:[bx].AcSgd1Phys
-    mov edx,ds:[bx].AcSgd1Linear
+    mov eax,ds:[si].AcSgd1Phys
+    mov edx,ds:[si].AcSgd1Linear
     or al,7
     mov cx,10h
 
@@ -357,8 +360,8 @@ cstSgd1Loop:
     add edx,1000h
     loop cstSgd1Loop
 ;
-    mov eax,ds:[bx].AcSgd2Phys
-    mov edx,ds:[bx].AcSgd2Linear
+    mov eax,ds:[si].AcSgd2Phys
+    mov edx,ds:[si].AcSgd2Linear
     or al,7
     mov cx,10h
 
@@ -368,34 +371,35 @@ cstSgd2Loop:
     add edx,1000h
     loop cstSgd2Loop
 ;
-    AllocateOldPhysical
-    mov ds:[bx].AcSgdPhys,eax    
+    AllocatePhysical32
+    mov ds:[si].AcSgdPhys,eax    
 ;    
     mov eax,1000h
     AllocateBigLinear
-    mov ds:[bx].AcSgdLinear,edx
+    mov ds:[si].AcSgdLinear,edx
 ;       
-    mov eax,ds:[bx].AcSgdPhys
-    mov edx,ds:[bx].AcSgdLinear
+    mov eax,ds:[si].AcSgdPhys
+    mov edx,ds:[si].AcSgdLinear
     or al,7
     SetOldPhysicalPage
 ;
     mov ax,flat_sel
     mov es,ax
-    mov edi,ds:[bx].AcSgdLinear
+    mov edi,ds:[si].AcSgdLinear
 ;
-    mov eax,ds:[bx].AcSgd1Phys
+    mov eax,ds:[si].AcSgd1Phys
     stos dword ptr es:[edi]
     mov eax,40000000h
     stos dword ptr es:[edi]
 ;
-    mov eax,ds:[bx].AcSgd2Phys
+    mov eax,ds:[si].AcSgd2Phys
     stos dword ptr es:[edi]
     mov eax,80000000h
     stos dword ptr es:[edi]
 
 cstDone:    
     pop edi
+    pop esi
     pop edx
     pop ecx
     pop eax

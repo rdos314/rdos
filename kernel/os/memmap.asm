@@ -519,8 +519,11 @@ fw_loop:
     jnz fw_mark
 ;
     push eax
+    push ebx
     mov eax,es:[edx]
-    FreeOldPhysical
+    xor ebx,ebx
+    FreePhysical
+    pop ebx
     pop eax
 
 fw_mark:

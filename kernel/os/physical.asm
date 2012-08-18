@@ -214,23 +214,39 @@ init_physical_gates     PROC near
     mov esi,OFFSET free_physical
     mov edi,OFFSET free_physical_name
     xor cl,cl
-    mov ax,free_old_physical_nr
+    mov ax,free_physical_nr
     RegisterOsGate
-    mov esi,OFFSET allocate_physical
-    mov edi,OFFSET allocate_physical_name
+;
+    mov esi,OFFSET allocate_physical32
+    mov edi,OFFSET allocate_physical32_name
     xor cl,cl
-    mov ax,allocate_old_physical_nr
+    mov ax,allocate_physical32_nr
     RegisterOsGate
+;
+    mov esi,OFFSET allocate_physical32
+    mov edi,OFFSET allocate_physical32_name
+    xor cl,cl
+    mov ax,allocate_physical64_nr
+    RegisterOsGate
+;
     mov esi,OFFSET allocate_dma_physical
     mov edi,OFFSET allocate_dma_physical_name
     xor cl,cl
     mov ax,allocate_dma_physical_nr
     RegisterOsGate
-    mov esi,OFFSET allocate_multiple_physical
-    mov edi,OFFSET allocate_multiple_physical_name
+;
+    mov esi,OFFSET allocate_multiple_physical32
+    mov edi,OFFSET allocate_multiple_physical32_name
     xor cl,cl
-    mov ax,allocate_old_multiple_physical_nr
+    mov ax,allocate_multiple_physical32_nr
     RegisterOsGate
+;
+    mov esi,OFFSET allocate_multiple_physical32
+    mov edi,OFFSET allocate_multiple_physical32_name
+    xor cl,cl
+    mov ax,allocate_multiple_physical64_nr
+    RegisterOsGate
+;
     mov esi,OFFSET get_physical_page
     mov edi,OFFSET get_physical_page_name
     xor cl,cl
@@ -318,20 +334,40 @@ local_allocate_physical       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AllocatePhysical
+;           NAME:           AllocatePhysical32
 ;
 ;           DESCRIPTION:    Allocate physical page
 ;
-;           PARAMETERS:         EAX         Address
+;           RETURNS:        EBX:EAX         Address
 ;                                                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-allocate_physical_name  DB 'Allocate Physical Memory',0
+allocate_physical32_name  DB 'Allocate Physical Memory32',0
 
-allocate_physical       PROC far
+allocate_physical32       PROC far
     call local_allocate_physical
+    xor ebx,ebx
     retf32
-allocate_physical       ENDP
+allocate_physical32       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AllocatePhysical64
+;
+;           DESCRIPTION:    Allocate physical page
+;
+;           RETURNS:        EBX:EAX         Address
+;                                                   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_physical64_name  DB 'Allocate Physical Memory64',0
+
+allocate_physical64       PROC far
+    call local_allocate_physical
+    xor ebx,ebx
+    retf32
+allocate_physical64       ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -447,7 +483,7 @@ local_free_physical   ENDP
 ;
 ;           DESCRIPTION:    Free physical page
 ;
-;           PARAMETERS:         EAX         Address
+;           PARAMETERS:     EBX:EAX         Address
 ;                           
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -455,6 +491,12 @@ local_free_physical   ENDP
 free_physical_name      DB 'Free Physical Memory',0
 
 free_physical   PROC far
+    or ebx,ebx
+    jz fpdo
+;
+    int 3
+
+fpdo:    
     call local_free_physical
     retf32
 free_physical   ENDP
@@ -463,17 +505,17 @@ free_physical   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AllocateMultiplePhysical
+;           NAME:           AllocateMultiplePhysical32
 ;
 ;           DESCRIPTION:    Allocate multiple physical page
 ;
-;           PARAMETERS:         ECX         Number of pages
+;           PARAMETERS:     ECX         Number of pages
 ;
-;           RETURN:         EAX         Physical base address
+;           RETURN:         EBX:EAX     Physical base address
 ;                                                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-allocate_multiple_physical_name DB 'Allocate Multiple Physical Memory',0
+allocate_multiple_physical32_name DB 'Allocate 32-bit Multiple Physical Memory',0
 
 ; edx address to check for
 
@@ -635,7 +677,7 @@ allocate_multi_entry_done:
     ret
 allocate_multi_entries  Endp
 
-allocate_multiple_physical      PROC far
+allocate_multiple_physical32      PROC far
     push ds
     push es
     push fs
@@ -679,8 +721,7 @@ allocate_multi_done:
     pop es
     pop ds
     retf32
-allocate_multiple_physical      ENDP
-
+allocate_multiple_physical32      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

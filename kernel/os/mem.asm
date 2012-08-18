@@ -542,7 +542,7 @@ init_mem_sels   PROC near
 ;
     mov ax,sys_page_sel
     mov ds,ax
-    AllocateOldPhysical
+    AllocatePhysical64
     and ax,0F000h
     or ax,807h
     mov ebx,fixed_vm_linear
@@ -1875,7 +1875,10 @@ free_pages_loop:
     test ax,800h
     jnz free_pages_nopage
 ;
-    FreeOldPhysical
+    push ebx
+    xor ebx,ebx
+    FreePhysical
+    pop ebx
 
 free_pages_nopage:
     add bx,4
@@ -3519,9 +3522,13 @@ write_thread_selector_normal:
 ;
     test al,1
     jnz write_thread_selector_do
-    AllocateOldPhysical
+;
+    push ebx
+    AllocatePhysical64
     or al,7
     SetOldThreadPhysicalPage
+    pop ebx
+
 write_thread_selector_do:
     push eax
     mov eax,1000h
@@ -3837,9 +3844,13 @@ write_thread_segment_normal:
 ;
     test al,1
     jnz write_thread_segment_do
-    AllocateOldPhysical
+;    
+    push ebx
+    AllocatePhysical64
     or al,7
     SetOldThreadPhysicalPage
+    pop ebx
+
 write_thread_segment_do:
     push eax
     mov eax,1000h

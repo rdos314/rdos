@@ -364,27 +364,30 @@ CreatePrdTable  Proc near
     push eax
     push ecx
     push edx
+    push esi
     push edi
 ;    
+    mov si,bx
+;    
     mov ecx,20h
-    AllocateOldMultiplePhysical
+    AllocateMultiplePhysical32
     jc cptDone
 ;
-    mov ds:[bx].AcPrd1Phys,eax
+    mov ds:[si].AcPrd1Phys,eax
     add eax,10000h
-    mov ds:[bx].AcPrd2Phys,eax
+    mov ds:[si].AcPrd2Phys,eax
 ;
     mov eax,10000h
     AllocateBigLinear
-    mov ds:[bx].AcPrd1Linear,edx
-    mov ds:[bx].AcCurrPrd,edx
+    mov ds:[si].AcPrd1Linear,edx
+    mov ds:[si].AcCurrPrd,edx
 ;    
     mov eax,10000h
     AllocateBigLinear
-    mov ds:[bx].AcPrd2Linear,edx
+    mov ds:[si].AcPrd2Linear,edx
 ;
-    mov eax,ds:[bx].AcPrd1Phys
-    mov edx,ds:[bx].AcPrd1Linear
+    mov eax,ds:[si].AcPrd1Phys
+    mov edx,ds:[si].AcPrd1Linear
     or al,7
     mov cx,10h
 
@@ -394,8 +397,8 @@ cptPrd1Loop:
     add edx,1000h
     loop cptPrd1Loop
 ;
-    mov eax,ds:[bx].AcPrd2Phys
-    mov edx,ds:[bx].AcPrd2Linear
+    mov eax,ds:[si].AcPrd2Phys
+    mov edx,ds:[si].AcPrd2Linear
     or al,7
     mov cx,10h
 
@@ -405,41 +408,42 @@ cptPrd2Loop:
     add edx,1000h
     loop cptPrd2Loop
 ;
-    AllocateOldPhysical
-    mov ds:[bx].AcPrdPhys,eax    
+    AllocatePhysical32
+    mov ds:[si].AcPrdPhys,eax    
 ;    
     mov eax,1000h
     AllocateBigLinear
-    mov ds:[bx].AcPrdLinear,edx
+    mov ds:[si].AcPrdLinear,edx
 ;       
-    mov eax,ds:[bx].AcPrdPhys
-    mov edx,ds:[bx].AcPrdLinear
+    mov eax,ds:[si].AcPrdPhys
+    mov edx,ds:[si].AcPrdLinear
     or al,7
     SetOldPhysicalPage
 ;
     mov ax,flat_sel
     mov es,ax
-    mov edi,ds:[bx].AcPrdLinear
+    mov edi,ds:[si].AcPrdLinear
 ;
-    mov eax,ds:[bx].AcPrd1Phys
+    mov eax,ds:[si].AcPrd1Phys
     stos dword ptr es:[edi]
     mov eax,40000000h
     stos dword ptr es:[edi]
 ;
-    mov eax,ds:[bx].AcPrd2Phys
+    mov eax,ds:[si].AcPrd2Phys
     stos dword ptr es:[edi]
     mov eax,40000000h
     stos dword ptr es:[edi]
 ;
-    mov eax,ds:[bx].AcPrdPhys
+    mov eax,ds:[si].AcPrdPhys
     stos dword ptr es:[edi]
     mov eax,20000000h
     stos dword ptr es:[edi]            
 ;
-    mov ds:[bx].AcFlags,0    
+    mov ds:[si].AcFlags,0    
 
 cptDone:    
     pop edi
+    pop esi
     pop edx
     pop ecx
     pop eax

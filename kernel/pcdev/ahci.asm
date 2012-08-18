@@ -804,7 +804,7 @@ AddPort     Proc near
     inc cx
 
 apPagesOk:
-    AllocateOldMultiplePhysical
+    AllocateMultiplePhysical32
     mov al,67h
     push eax
     mov eax,ecx

@@ -902,7 +902,8 @@ SetupDMA    Proc near
     jc setup_dma_inrange
 ;
     int 3
-    FreeOldPhysical
+    xor ebx,ebx
+    FreePhysical
 
 setup_dma_alloc:
     AllocateDmaPhysical

@@ -548,7 +548,7 @@ WaitForAccept   Endp
 
 InitCmd Proc near
     mov ecx,TX_RING_SIZE SHR 12
-    AllocateOldMultiplePhysical
+    AllocateMultiplePhysical32
     jc icDone
 ;
     mov ds:TxRingPhys,eax
@@ -722,7 +722,7 @@ InitRfd Endp
 
 InitRx  Proc near
     mov ecx,RX_RING_SIZE SHR 12
-    AllocateOldMultiplePhysical
+    AllocateMultiplePhysical32
     jc irDone
 ;
     mov ds:RxRingPhys,eax

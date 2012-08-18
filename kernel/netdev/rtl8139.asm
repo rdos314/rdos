@@ -306,7 +306,7 @@ ReadEthernetAddress     Endp
 AllocateRing    Proc near
     mov ds:RxRingPtr,0
     mov ecx,(2 SHL RX_BUF_LEN_IDX) + 1
-    AllocateOldMultiplePhysical
+    AllocateMultiplePhysical32
     jc arDone
 ;
     mov ds:RxRingPhys,eax
