@@ -55,24 +55,24 @@ global_byte_linear		EQU 0E0000000h
 global_byte_size		EQU 008000000h
 
 global_page_linear		EQU 0E8000000h
-global_page_size		EQU 014000000h
+global_page_size		EQU 013000000h
 
-handle_linear			EQU 0FC000000h
-fixed_process_linear	EQU 0FC010000h
+handle_linear			EQU 0FB000000h
+fixed_process_linear	EQU 0FB010000h
 
-io_focus_linear			EQU 0FC400000h
-video_mem_focus_linear	EQU 0FC600000h
+io_focus_linear			EQU 0FB400000h
+video_mem_focus_linear	EQU 0FB600000h
 
-io_local_linear			EQU 0FC800000h
-video_mem_local_linear	EQU 0FCA00000h
+io_local_linear			EQU 0FB800000h
+video_mem_local_linear	EQU 0FBA00000h
 
-alias_linear			EQU 0FCC00000h
+phys_list_linear		EQU 0FBC00000h
+phys_page_linear		EQU 0FC000000h
+
+alias_linear			EQU 0FC800000h
 
 sys_page_linear			EQU 0FD000000h
-process_page_linear		EQU 0FD400000h
-
-phys_list_linear		EQU 0FD800000h
-phys_page_linear		EQU 0FDC00000h
+process_page_linear		EQU 0FD800000h
 
 video_focus_linear		EQU 0FE000000h
 
