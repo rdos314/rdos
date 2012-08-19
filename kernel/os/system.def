@@ -113,7 +113,7 @@ free_phys_list		DD ?
 free_dma_phys_list	DD ?
 unused_phys_list	DD ?
 
-dummy_pad2          DW 4 DUP(?)
+ram64_size          DD ?,?
 
 debug_list			DW ?
 
