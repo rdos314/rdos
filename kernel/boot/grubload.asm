@@ -892,8 +892,27 @@ MbMemOk:
     mov ds:ram2_base,100000h
     mov eax,es:[ebx].mb_mem_upper
     shl eax,10
-    mov ds:ram2_size,eax
+    mov edx,eax
+    shr edx,10
+    cmp edx,es:[ebx].mb_mem_upper
+    je MbBelow4G
 ;
+    mov ds:ram2_size,0FFF00000h
+;
+    mov eax,es:[ebx].mb_mem_upper
+    mov edx,1024
+    mul edx
+    sub eax,0FFF00000h
+    sbb edx,0
+    mov ds:ram64_size,eax
+    mov ds:ram64_size+4,edx
+    jmp MbUpperOk
+
+MbBelow4G:    
+    mov ds:ram2_size,eax
+
+MbUpperOk:
+    mov edx,es:[ebx].mb_flags
     test dl,MB_FLAG_MODULE
     jnz MbModuleOk
 
