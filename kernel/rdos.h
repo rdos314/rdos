@@ -279,7 +279,7 @@ void RDOSAPI RdosDebugNext();
 
 #endif
 
-int RDOSAPI RdosGetFreePhysical();
+long long RDOSAPI RdosGetFreePhysical();
 int RDOSAPI RdosGetFreeGdt();
 int RDOSAPI RdosGetFreeSmallKernelLinear();
 int RDOSAPI RdosGetFreeBigKernelLinear();
@@ -1218,7 +1218,7 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosGetFreePhysical = \
     CallGate_get_free_physical  \
-    value [eax];
+    value [edx eax];
 
 #pragma aux RdosGetFreeGdt = \
     CallGate_get_free_gdt  \
@@ -3475,7 +3475,7 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosGetFreePhysical = \
     CallGate_get_free_physical  \
-    value [eax];
+    value [edx eax];
 
 #pragma aux RdosGetFreeGdt = \
     CallGate_get_free_gdt  \

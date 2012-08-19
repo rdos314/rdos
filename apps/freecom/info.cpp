@@ -145,7 +145,7 @@ void TInfoCommand::InitOptions()
 ##########################################################################*/
 int TInfoCommand::Execute(char *param)
 {
-    long PhysMem;
+    long long PhysMem;
     long Gdt;
     long Linear;
     long mb;
@@ -162,8 +162,8 @@ int TInfoCommand::Execute(char *param)
         return 1;
 
     PhysMem = RdosGetFreePhysical();
-    mb = PhysMem / 1024 / 1024;
-    kb = PhysMem - mb * 1024 * 1024;
+    mb = (int)(PhysMem / 1024LL / 1024LL);
+    kb = PhysMem - (long long)mb * 1024LL * 1024LL;
     kb = kb * 1000 / 1024;
     kb = kb * 100 / 1024;
     FMsg.printf(TEXT_INFO_PHYSICAL, mb, kb);

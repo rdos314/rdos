@@ -1178,7 +1178,16 @@ read_file       Proc near
     mov ax,flat_sel
     mov es,ax
 ;    
+    push edx
     GetFreePhysical
+    or edx,edx
+    jz read_file_low
+;
+    mov eax,0FFFFFFFFh
+
+read_file_low:
+    pop edx
+;    
     cmp eax,100000h
     ja read_file_mem_all_ok
 ;
@@ -1201,7 +1210,15 @@ read_file_size_ok:
     jz read_file_done
 
 read_file_loop:
+    push edx
     GetFreePhysical
+    or edx,edx
+    jz read_file_loop_low
+;
+    mov eax,0FFFFFFFFh
+
+read_file_loop_low:
+    pop edx
     cmp eax,100000h
     ja read_file_mem_ok
 ;
@@ -1353,7 +1370,15 @@ write_file      Proc near
     mov ax,flat_sel
     mov es,ax
 ;    
+    push edx
     GetFreePhysical
+    or edx,edx
+    jz write_file_low
+;
+    mov eax,0FFFFFFFFh
+
+write_file_low:
+    pop edx
     cmp eax,100000h
     ja write_file_mem_all_ok
 ;
@@ -1382,7 +1407,15 @@ write_file_size_ok:
     jz write_file_done
 
 write_file_loop:
+    push edx
     GetFreePhysical
+    or edx,edx
+    jz write_file_loop_low
+;
+    mov eax,0FFFFFFFFh
+
+write_file_loop_low:
+    pop edx
     cmp eax,100000h
     ja write_file_mem_ok
 ;

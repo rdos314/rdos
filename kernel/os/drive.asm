@@ -1800,7 +1800,15 @@ set_disc_param  Proc far
     mov ds:disc_sectors_per_cyl,si
     mov ds:disc_heads,di
 ;
+    push edx
     GetFreePhysical
+    or edx,edx
+    jz set_param_low
+;
+    mov eax,0FFFFFFFFh
+
+set_param_low:
+    pop edx
     shr eax,5           ; use 1/32 of physical memory per disc
     cmp eax,10000h      ; use a minimum of 64k per disc
     ja set_param_max

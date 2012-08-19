@@ -733,7 +733,7 @@ allocate_multiple_physical32      ENDP
 ;
 ;           DESCRIPTION:    Get free physical memory
 ;
-;           PARAMETERS:         EAX         # of free bytes
+;           PARAMETERS:     EDX:EAX         # of free bytes
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -745,6 +745,7 @@ get_free_physical_mem   PROC far
     mov ds,ax
     mov eax,ds:phys_free_pages
     shl eax,12
+    xor edx,edx
     pop ds
     retf32
 get_free_physical_mem   ENDP

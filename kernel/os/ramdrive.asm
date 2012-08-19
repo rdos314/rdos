@@ -212,7 +212,9 @@ dismount	ENDP
 get_drive_info	PROC far
 	AvailableBigLinear
 	mov edx,eax
+	push edx
 	GetFreePhysical
+	pop edx
 	shr edx,12
 	shr eax,12
 	mov cx,1000h
