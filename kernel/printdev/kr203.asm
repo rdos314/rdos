@@ -1952,9 +1952,12 @@ reset_printer   Proc far
     stc
     jz reset_done
 ;
-    int 3    
-    mov bx,ds:kr_out_handle
+    mov bx,ds:kr_controller
+    mov ax,ds:kr_device
+    xor dl,dl
+    OpenUsbPipe
     ResetUsbPipe
+    CloseUsbPipe
     clc
 
 reset_done:    
@@ -2132,6 +2135,9 @@ kr203_thread:
 ;    
     mov word ptr es:pr_wait_for_print_proc,OFFSET wait_for_print
     mov word ptr es:pr_wait_for_print_proc+2,cs
+;    
+    mov word ptr es:pr_reset_proc,OFFSET reset_printer
+    mov word ptr es:pr_reset_proc+2,cs
 ;    
     GetSystemTime
     add eax,1193000 * 2  ; 2s

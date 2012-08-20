@@ -2425,6 +2425,7 @@ UpdatePort   Proc near
     test ax,ds:ohc_reset
     jz upNoReset
 ;
+    int 3
     not ax
     and ds:ohc_reset,ax
 ;        
@@ -2436,6 +2437,9 @@ UpdatePort   Proc near
     or bx,bx
     jz upNoReset
 ;    
+    mov eax,es:HcRhDescriptorA
+;    
+
     mov al,cl
     NotifyUsbDetach
     jmp upAttach
@@ -2735,6 +2739,15 @@ ifOperational:
     mov fs:HcControl,eax
 ;
     mov eax,fs:HcRhDescriptorA
+    and ah,NOT 3
+    or ah,1
+    mov fs:HcRhDescriptorA,eax
+;    
+    mov eax,fs:HcRhDescriptorB
+    or eax,0FFFF0000h
+    mov fs:HcRhDescriptorB,eax    
+;
+    mov eax,fs:HcRhDescriptorA
     movzx ax,al
     or ax,ax
     jnz ifPortsOk
@@ -2743,7 +2756,7 @@ ifOperational:
 
 ifPortsOk:    
     mov ds:ohc_root_ports,ax
-;
+;    
     popad
     pop es
     pop ds
