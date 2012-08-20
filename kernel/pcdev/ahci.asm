@@ -804,6 +804,8 @@ AddPort     Proc near
     inc cx
 
 apPagesOk:
+    push ebx
+;
     AllocateMultiplePhysical32
     mov al,67h
     push eax
@@ -821,6 +823,8 @@ apPhysLoop:
     loop apPhysLoop
 ;
     pop ecx
+;
+    pop ebx
 ;        
     push cx
     shl ecx,12
