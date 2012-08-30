@@ -33,16 +33,17 @@
 #include "rdos.h"
 #include "file.h"
 
-#define FALSE	0
-#define	TRUE	!FALSE
+#define FALSE   0
+#define TRUE    !FALSE
 
-#define CMD_LOAD_CONFIG		0x0
-#define CMD_LOAD_PROGRAM	0x2
-#define CMD_INCR_ADDRESS	0x6
-#define CMD_CHIP_ERASE		0x1F
+#define CMD_LOAD_CONFIG         0x0
+#define CMD_LOAD_PROGRAM        0x2
+#define CMD_READ_PROGRAM        0x4
+#define CMD_INCR_ADDRESS        0x6
+#define CMD_CHIP_ERASE          0x1F
 #define CMD_PROGRAM_ERASE   0x8
 #define CMD_PROGRAM_ONLY    0x18
-#define CMD_END_PROGRAM		0x17
+#define CMD_END_PROGRAM         0x17
 
 int InConfig;
 
@@ -59,62 +60,62 @@ int InConfig;
 ##########################################################################*/
 int ReadRecord(TFile &file, int *op, int *offset, char *buf)
 {
-	char ch;
-	char str[10];
-	int size;
-	char *ptr;
-	int i;
-	int val;
+        char ch;
+        char str[10];
+        int size;
+        char *ptr;
+        int i;
+        int val;
 
-	*offset = 0;
-	*op = 1;
-	size = 0;
+        *offset = 0;
+        *op = 1;
+        size = 0;
 
-	ch = ' ';
+        ch = ' ';
 
-	while (ch != ':')
-	{
-		if (file.Read(&ch, 1) == 0)
-		{
-			printf("Unexpected end of hex-file\r\n");
-			return 0;
-		}
-	}
+        while (ch != ':')
+        {
+                if (file.Read(&ch, 1) == 0)
+                {
+                        printf("Unexpected end of hex-file\r\n");
+                        return 0;
+                }
+        }
 
-	file.Read(str, 8);
-	str[8] = 0;
+        file.Read(str, 8);
+        str[8] = 0;
 
-	if (sscanf(str, "%2hX%4hX%2hX", &size, offset, op) == 3)
-	{
-		if (*op == 0)
-		{
-			ptr = buf;
-			for (i = 0; i < size; i++)
-			{
-				val = 0;
-				file.Read(str, 2);
-				if (sscanf(str, "%2hX", &val) == 1)
-					*ptr = (char)val;
-				else
-				{
-					printf("Data error in hex-file\r\n");
-					*op = 1;
-					return 0;
-				}
-				ptr++;
-			}
-			return size;
-		}
-		else
-			return 0;
-	}
-	else
-	{
-		*op = 1;
-		printf("Format error in hex-file\r\n");
-	}
+        if (sscanf(str, "%2hX%4hX%2hX", &size, offset, op) == 3)
+        {
+                if (*op == 0)
+                {
+                        ptr = buf;
+                        for (i = 0; i < size; i++)
+                        {
+                                val = 0;
+                                file.Read(str, 2);
+                                if (sscanf(str, "%2hX", &val) == 1)
+                                        *ptr = (char)val;
+                                else
+                                {
+                                        printf("Data error in hex-file\r\n");
+                                        *op = 1;
+                                        return 0;
+                                }
+                                ptr++;
+                        }
+                        return size;
+                }
+                else
+                        return 0;
+        }
+        else
+        {
+                *op = 1;
+                printf("Format error in hex-file\r\n");
+        }
 
-	return 0;
+        return 0;
 }
 
 /*##########################################################################
@@ -130,8 +131,8 @@ int ReadRecord(TFile &file, int *op, int *offset, char *buf)
 ##########################################################################*/
 void SendCmd(int handle, int cmd)
 {
-	RdosWriteICSPCommand(handle, cmd);
-	RdosWaitMicro(1);
+        RdosWriteICSPCommand(handle, cmd);
+        RdosWaitMicro(1);
 }
 
 /*##########################################################################
@@ -147,10 +148,33 @@ void SendCmd(int handle, int cmd)
 ##########################################################################*/
 void SendCmd(int handle, int cmd, int data)
 {
-	RdosWriteICSPCommand(handle, cmd);
-	RdosWaitMicro(1);
-	RdosWriteICSPData(handle, data);
-	RdosWaitMicro(1);
+        RdosWriteICSPCommand(handle, cmd);
+        RdosWaitMicro(1);
+        RdosWriteICSPData(handle, data);
+        RdosWaitMicro(1);
+}
+
+/*##########################################################################
+#
+#   Name       : ReadData
+#
+#   Purpose....: Read data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int ReadData(int handle, int cmd)
+{
+    int val;
+    
+        RdosWriteICSPCommand(handle, cmd);
+        RdosWaitMicro(1);
+        RdosReadICSPData(handle, &val);
+        RdosWaitMicro(1);
+
+        return val;
 }
 
 /*##########################################################################
@@ -166,85 +190,103 @@ void SendCmd(int handle, int cmd, int data)
 ##########################################################################*/
 void DoICSP(int handle, TFile &file)
 {
-	int op;
-	int offset;
-	int size;
-	char buf[256];
-	int data;
-	int i;
-	char *ptr;
-	int adr;
+    int verify;
+        int op;
+        int offset;
+        int size;
+        char buf[256];
+        int data;
+        int val;
+        int i;
+        char *ptr;
+        int adr;
 
-	adr = 0;
-	op = 0;
+        adr = 0;
+        op = 0;
 
-	SendCmd(handle, CMD_CHIP_ERASE);
-	RdosWaitMilli(8);
+/*        RdosWriteICSPCommand(handle, CMD_READ_PROGRAM);
+        RdosWaitMicro(1);
+        verify = RdosReadICSPData(handle, &data);
+        RdosWaitMicro(1); */
 
-	while (op != 1)
-	{
-		size = ReadRecord(file, &op, &offset, buf);
+        verify = FALSE;
 
-		if (size && op == 0)
-		{
-			size = size / 2;
-			offset = offset / 2;
-			ptr = buf;
+        SendCmd(handle, CMD_CHIP_ERASE);
+        RdosWaitMilli(8);
 
-			if (offset >= 0x2000 && !InConfig)
-			{
-				SendCmd(handle, CMD_LOAD_CONFIG, 0x3FFF);
-				adr = 0x2000;
-				InConfig = TRUE;
-			}
+        while (op != 1)
+        {
+                size = ReadRecord(file, &op, &offset, buf);
 
-			while (offset > adr)
-			{
-				SendCmd(handle, CMD_INCR_ADDRESS);
-				adr++;
-			}
+                if (size && op == 0)
+                {
+                        size = size / 2;
+                        offset = offset / 2;
+                        ptr = buf;
 
-			if ((offset & 7) == 0 && size == 8)
-			{
-				for (i = 0; i < 8; i++)
-				{
-					data = 0;
-					memcpy(&data, ptr, 2);
-					SendCmd(handle, CMD_LOAD_PROGRAM, data);
-					if (i != 7)
-						SendCmd(handle, CMD_INCR_ADDRESS);
+                        if (offset >= 0x2000 && !InConfig)
+                        {
+                                SendCmd(handle, CMD_LOAD_CONFIG, 0x3FFF);
+                                adr = 0x2000;
+                                InConfig = TRUE;
+                        }
 
-					ptr += 2;
-					adr++;
-				}
-				SendCmd(handle, CMD_PROGRAM_ERASE);
-				RdosWaitMilli(8);
-				SendCmd(handle, CMD_END_PROGRAM);
-				SendCmd(handle, CMD_INCR_ADDRESS);
-			}
-			else
-			{
-				for (i = 0; i < size; i++)
-				{
-					data = 0;
-					memcpy(&data, ptr, 2);
-					SendCmd(handle, CMD_LOAD_PROGRAM, data);
+                        while (offset > adr)
+                        {
+                                SendCmd(handle, CMD_INCR_ADDRESS);
+                                adr++;
+                        }
 
-					if (InConfig)
-						SendCmd(handle, CMD_PROGRAM_ERASE);
-					else
-						SendCmd(handle, CMD_PROGRAM_ONLY);
+                        if ((offset & 7) == 0 && size == 8)
+                        {
+                                for (i = 0; i < 8; i++)
+                                {
+                                        data = 0;
+                                        memcpy(&data, ptr, 2);
+                                        SendCmd(handle, CMD_LOAD_PROGRAM, data);
+                                        
+                                        if (i != 7)
+                                                SendCmd(handle, CMD_INCR_ADDRESS);
 
-					RdosWaitMilli(1);
-					SendCmd(handle, CMD_END_PROGRAM);
-					SendCmd(handle, CMD_INCR_ADDRESS);
+                                        ptr += 2;
+                                        adr++;
+                                }
+                                SendCmd(handle, CMD_PROGRAM_ERASE);
+                                RdosWaitMilli(8);
+                                SendCmd(handle, CMD_END_PROGRAM);
+                                SendCmd(handle, CMD_INCR_ADDRESS);
+                        }
+                        else
+                        {
+                                for (i = 0; i < size; i++)
+                                {
+                                        data = 0;
+                                        memcpy(&data, ptr, 2);
+                                        SendCmd(handle, CMD_LOAD_PROGRAM, data);
 
-					ptr += 2;
-					adr++;
-				}
-			}
-		}
-	}
+                                        if (InConfig)
+                                                SendCmd(handle, CMD_PROGRAM_ERASE);
+                                        else
+                                                SendCmd(handle, CMD_PROGRAM_ONLY);
+
+                                        RdosWaitMilli(1);
+                                        SendCmd(handle, CMD_END_PROGRAM);
+
+                                        if (verify)
+                                        {
+                                            val = ReadData(handle, CMD_READ_PROGRAM);
+                                            if (val != data)
+                                                printf("Verify failed expected: %04hX, found %04hX\r\n", data, val);
+                                        }
+
+                                        SendCmd(handle, CMD_INCR_ADDRESS);
+
+                                        ptr += 2;
+                                        adr++;
+                                }
+                        }
+                }
+        }
 }
 
 /*##########################################################################
@@ -260,47 +302,47 @@ void DoICSP(int handle, TFile &file)
 ##########################################################################*/
 int main(int argc, char **argv)
 {
-	char DeviceStr[256];
-	char FileName[256];
-	int id;
-	int handle;
+        char DeviceStr[256];
+        char FileName[256];
+        int id;
+        int handle;
 
-	if (argc != 3)
-	{
-		printf("usage: icsp87x device-id hex-filename\r\n");
-		return 1;
-	}
+        if (argc != 3)
+        {
+                printf("usage: icsp87x device-id hex-filename\r\n");
+                return 1;
+        }
 
-	RdosWaitMilli(250);
+        RdosWaitMilli(250);
 
-	strcpy(DeviceStr, argv[1]);
+        strcpy(DeviceStr, argv[1]);
 
-	strcpy(FileName, argv[2]);
-	strlwr(FileName);
+        strcpy(FileName, argv[2]);
+        strlwr(FileName);
 
-	TFile file(FileName);
+        TFile file(FileName);
 
-	InConfig = FALSE;
+        InConfig = FALSE;
 
-	if (file.IsOpen())
-	{
-		id = atoi(DeviceStr);
+        if (file.IsOpen())
+        {
+                id = atoi(DeviceStr);
 
-		if (id > 0)
-			handle = RdosOpenICSP(id);
-		else
-			handle = 0;
+                if (id > 0)
+                        handle = RdosOpenICSP(id);
+                else
+                        handle = 0;
 
-		if (handle)
-		{
-			DoICSP(handle, file);
-			RdosCloseICSP(handle);
-		}
-		else
-			printf("Invalid device-id or no ICSP available\r\n");
-	}
-	else
-		printf("File not found\r\n");
+                if (handle)
+                {
+                        DoICSP(handle, file);
+                        RdosCloseICSP(handle);
+                }
+                else
+                        printf("Invalid device-id or no ICSP available\r\n");
+        }
+        else
+                printf("File not found\r\n");
 
-	return 0;
+        return 0;
 }
