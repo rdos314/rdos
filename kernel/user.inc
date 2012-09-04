@@ -2733,6 +2733,10 @@ WriteHid      MACRO
 
 ;;;;;;;;;;; ICSP (In-circuit serial programming) ;;;;;;;;;;
 
+HasICSP      MACRO
+	UserGate has_icsp_nr
+						ENDM
+
 ;   IN  AL          Device #
 ;   OUT BX          Handle
 OpenICSP      MACRO

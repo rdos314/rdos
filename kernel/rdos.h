@@ -660,6 +660,7 @@ int RDOSAPI RdosWriteHid(int Handle, const char *buf, int size);
 int RDOSAPI RdosGetAllocatedUsbBlocks();
 int RDOSAPI RdosGetUsbCloseCount();
 
+int RDOSAPI RdosHasICSP();
 int RDOSAPI RdosOpenICSP(int DeviceID);
 void RDOSAPI RdosCloseICSP(int Handle);
 int RDOSAPI RdosWriteICSPCommand(int Handle, int Cmd);
@@ -3053,6 +3054,11 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_write_hid \
     CarryToBool \
     parm [ebx] [edi] [ecx] \
+    value [eax];
+    
+#pragma aux RdosHasICSP = \
+    CallGate_has_icsp \
+    CarryToBool \
     value [eax];
     
 #pragma aux RdosOpenICSP = \
