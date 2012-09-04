@@ -265,7 +265,7 @@ void TIcsp87X::WriteData(int data)
 
 /*##########################################################################
 #
-#   Name       : TIcsp87X::DoICSP
+#   Name       : TIcsp87X::DoProgram
 #
 #   Purpose....: Do ICSP programming
 #
@@ -274,7 +274,7 @@ void TIcsp87X::WriteData(int data)
 #   Returns....: *
 #
 ##########################################################################*/
-int TIcsp87X::DoICSP()
+int TIcsp87X::DoProgram()
 {
         int op;
         int offset;

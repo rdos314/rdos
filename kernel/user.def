@@ -597,5 +597,6 @@ get_curr_inivar_nr              = 476
 reset_printer_nr                = 477
 
 has_icsp_nr                     = 478
+reset_icsp_nr                   = 479
 
 usergate_entries			    = 512

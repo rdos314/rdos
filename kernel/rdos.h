@@ -663,6 +663,7 @@ int RDOSAPI RdosGetUsbCloseCount();
 int RDOSAPI RdosHasICSP();
 int RDOSAPI RdosOpenICSP(int DeviceID);
 void RDOSAPI RdosCloseICSP(int Handle);
+void RDOSAPI RdosResetICSP(int Handle);
 int RDOSAPI RdosWriteICSPCommand(int Handle, int Cmd);
 int RDOSAPI RdosWriteICSPData(int Handle, int Data);
 int RDOSAPI RdosReadICSPData(int Handle, int *Data);
@@ -3071,6 +3072,10 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_close_icsp \
     parm [ebx];
 
+#pragma aux RdosResetICSP = \
+    CallGate_reset_icsp \
+    parm [ebx];
+
 #pragma aux RdosWriteICSPCommand = \
     CallGate_write_icsp_cmd \
     CarryToBool \
@@ -5150,6 +5155,10 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosCloseICSP = \
     CallGate_close_icsp \
+    parm [ebx];
+
+#pragma aux RdosResetICSP = \
+    CallGate_reset_icsp \
     parm [ebx];
 
 #pragma aux RdosWriteICSPCommand = \

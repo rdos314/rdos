@@ -2748,6 +2748,11 @@ CloseICSP      MACRO
 	UserGate close_icsp_nr
 						ENDM
 
+;   IN BX          Handle
+ResetICSP      MACRO
+	UserGate reset_icsp_nr
+						ENDM
+
 ;   IN  BX          Handle
 ;   IN  EAX         Command
 WriteICSPCommand      MACRO

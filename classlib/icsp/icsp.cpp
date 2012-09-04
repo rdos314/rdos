@@ -164,7 +164,7 @@ int TIcsp::Program(const char *filename, int devid)
 
                 if (FHandle)
                 {
-                        ok = DoICSP();
+                        ok = DoProgram();
                         RdosCloseICSP(FHandle);                 
                 }
                 else
@@ -177,4 +177,54 @@ int TIcsp::Program(const char *filename, int devid)
     FFile = 0;
 
         return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TIcsp::Verify
+#
+#   Purpose....: Verify
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TIcsp::Verify(const char *filename, int devid)
+{
+    int ok = FALSE;
+    
+    FFile = new TFile(filename);
+
+    if (FFile->IsOpen())
+    {
+        FHandle = RdosOpenICSP(devid);
+
+        if (FHandle)
+        {
+            ok = DoVerify();
+            RdosCloseICSP(FHandle);                 
+        }
+    }
+
+    delete FFile;
+    FFile = 0;
+
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TIcsp::DoVerify
+#
+#   Purpose....: Do ICSP verify
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TIcsp::DoVerify()
+{
+    return TRUE;
 }

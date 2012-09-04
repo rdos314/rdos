@@ -37,13 +37,15 @@ public:
     ~TIcsp();
 
     int Program(const char *filename, int devid);
+    int Verify(const char *filename, int devid);
 
     void (*OnInfo)(TIcsp *icsp, const char *msg);
 
 protected:
     void Info(const char *format, ...);
 
-    virtual int DoICSP() = 0;
+    virtual int DoProgram() = 0;
+    virtual int DoVerify();
 
     char FLogBuf[512];
     TFile *FFile;

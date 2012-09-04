@@ -41,12 +41,14 @@ protected:
     int ReadRecord(int *op, int *offset, char *buf);
     void SendCmd(int cmd);
     void SendCmd(int cmd, int data);
+    int ReadCmd(int cmd);
     void Erase();
     void LoadConfig(int data);
     void GotoNextAddress();
     void WriteData(int data);
 
-    virtual int DoICSP();
+    virtual int DoProgram();
+    virtual int DoVerify();
 
     int FInConfig;
 };

@@ -597,6 +597,7 @@
 #define usergate_reset_printer 477
 
 #define usergate_has_icsp 478
+#define usergate_reset_icsp 479
 
 
 
@@ -1200,6 +1201,7 @@
 #define CallGate_reset_printer 0x67 0x9a 221 1 0 0 3 0
 
 #define CallGate_has_icsp 0x67 0x9a 222 1 0 0 3 0
+#define CallGate_reset_icsp 0x67 0x9a 223 1 0 0 3 0
 
 #else
 
@@ -1801,5 +1803,6 @@
 #define CallGate_reset_printer 0x3e 0x67 0x9a 221 1 0 0 3 0
 
 #define CallGate_has_icsp 0x3e 0x67 0x9a 222 1 0 0 3 0
+#define CallGate_reset_icsp 0x3e 0x67 0x9a 223 1 0 0 3 0
 
 #endif

@@ -38,6 +38,7 @@
 
 #define CMD_LOAD_CONFIG		0x0
 #define CMD_LOAD_PROGRAM	0x2
+#define CMD_READ_PROGRAM	0x4
 #define CMD_INCR_ADDRESS	0x6
 #define CMD_CHIP_ERASE		0x1F
 #define CMD_PROGRAM_ERASE   0x8
@@ -183,7 +184,30 @@ void TIcsp87Xa::SendCmd(int cmd, int data)
 
 /*##########################################################################
 #
-#   Name       : TIcsp87Xa::DoICSP
+#   Name       : TIcsp87Xa::ReadCmd
+#
+#   Purpose....: Read ICSP command & data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TIcsp87Xa::ReadCmd(int cmd)
+{
+    int data = 0;
+    
+	RdosWriteICSPCommand(FHandle, cmd);
+	RdosWaitMicro(1);
+	RdosReadICSPData(FHandle, &data);
+	RdosWaitMicro(1);
+
+	return data;
+}
+
+/*##########################################################################
+#
+#   Name       : TIcsp87Xa::DoProgram
 #
 #   Purpose....: Do ICSP programming
 #
@@ -192,7 +216,7 @@ void TIcsp87Xa::SendCmd(int cmd, int data)
 #   Returns....: *
 #
 ##########################################################################*/
-int TIcsp87Xa::DoICSP()
+int TIcsp87Xa::DoProgram()
 {
 	int op;
 	int offset;
@@ -202,14 +226,13 @@ int TIcsp87Xa::DoICSP()
 	int i;
 	char *ptr;
 	int adr;
+	int ok;
+	int val;
 
 	adr = 0;
 	op = 0;
 
 	FInConfig = FALSE;
-
-	SendCmd(CMD_CHIP_ERASE);
-	RdosWaitMilli(8);
 
 	while (op != 1)
 	{
@@ -234,23 +257,57 @@ int TIcsp87Xa::DoICSP()
 				adr++;
 			}
 
-			if ((offset & 7) == 0 && size == 8)
+			if ((offset & 7) == 0)
 			{
-				for (i = 0; i < 8; i++)
-				{
+			    ok = TRUE;
+
+                for (i = 0; i < size && ok; i++)
+                {
 					data = 0;
 					memcpy(&data, ptr, 2);
-					SendCmd(CMD_LOAD_PROGRAM, data);
-					if (i != 7)
-						SendCmd(CMD_INCR_ADDRESS);
+                    val = ReadCmd(CMD_READ_PROGRAM);
 
-					ptr += 2;
-					adr++;
-				}
-				SendCmd(CMD_PROGRAM_ERASE);
-				RdosWaitMilli(8);
-				SendCmd(CMD_END_PROGRAM);
-				SendCmd(CMD_INCR_ADDRESS);
+                    if (val == data)
+                    {
+    				    SendCmd(CMD_INCR_ADDRESS);
+
+	    				ptr += 2;
+		    			adr++;
+		    	    }
+		    	    else
+		    	        ok = FALSE;
+                }
+
+                if (!ok)
+                {
+                	RdosResetICSP(FHandle);
+                	adr = 0;
+        			ptr = buf;
+                            
+        			while (offset > adr)
+		        	{
+				        SendCmd(CMD_INCR_ADDRESS);
+        				adr++;
+		        	}
+			
+    				for (i = 0; i < 8; i++)
+	    			{
+		    			data = 0;
+		    			if (i < size)
+    			    		memcpy(&data, ptr, 2);
+
+				    	SendCmd(CMD_LOAD_PROGRAM, data);
+    					if (i != 7)
+	    					SendCmd(CMD_INCR_ADDRESS);
+    
+	    				ptr += 2;
+		    			adr++;
+			    	}
+				    SendCmd(CMD_PROGRAM_ERASE);
+    				RdosWaitMilli(8);
+	    			SendCmd(CMD_END_PROGRAM);
+		    		SendCmd(CMD_INCR_ADDRESS);
+			    }
 			}
 			else
 			{
@@ -273,6 +330,78 @@ int TIcsp87Xa::DoICSP()
 					adr++;
 				}
 			}
+		}
+	}
+
+	return TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TIcsp87Xa::DoVerify
+#
+#   Purpose....: Do ICSP verify
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TIcsp87Xa::DoVerify()
+{
+	int op;
+	int offset;
+	int size;
+	char buf[256];
+	int data;
+	int i;
+	char *ptr;
+	int adr;
+	int ok;
+	int val;
+
+	adr = 0;
+	op = 0;
+
+	FInConfig = FALSE;
+
+	while (op != 1)
+	{
+		size = ReadRecord(&op, &offset, buf);
+
+		if (size && op == 0)
+		{
+			size = size / 2;
+			offset = offset / 2;
+			ptr = buf;
+
+			if (offset >= 0x2000 && !FInConfig)
+			{
+				SendCmd(CMD_LOAD_CONFIG, 0x3FFF);
+				adr = 0x2000;
+				FInConfig = TRUE;
+			}
+
+			while (offset > adr)
+			{
+				SendCmd(CMD_INCR_ADDRESS);
+				adr++;
+			}
+
+		    for (i = 0; i < size; i++)
+			{
+				data = 0;
+				memcpy(&data, ptr, 2);
+				val = ReadCmd(CMD_READ_PROGRAM);
+
+                if (val != data)
+                    return FALSE;
+
+    			SendCmd(CMD_INCR_ADDRESS);
+
+	    		ptr += 2;
+		    	adr++;
+            }
 		}
 	}
 

@@ -46,7 +46,7 @@ protected:
     void GotoNextAddress();
     void WriteData(int data);
 
-    virtual int DoICSP();
+    virtual int DoProgram();
 };
 
 #endif
