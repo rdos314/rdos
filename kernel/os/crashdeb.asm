@@ -369,11 +369,10 @@ InitVideo Proc near
     push gs
     pushad
 ;    
-    mov ax,process_page_sel
-    mov ds,ax
-    xor bx,bx
+    xor edx,edx
+    xor ebx,ebx
     mov eax,7
-    mov ds:[bx],eax
+    SetPhysicalPage
 ;
     mov eax,cr3
     mov cr3,eax
