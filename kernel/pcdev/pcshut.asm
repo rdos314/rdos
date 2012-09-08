@@ -744,17 +744,11 @@ abort_task_do:
     mov bx,dosB800
     mov edx,[bx+2]
     and edx,0FFFFFFh
-    shr edx,12
-    mov ecx,edx
-    shl ecx,12
-    or cl,7
-    shl edx,2
-    mov ax,process_page_sel
-    mov ds,ax
-    mov [edx],ecx   
-    mov ax,sys_page_sel
-    mov ds,ax
-    mov [edx],ecx
+    mov eax,edx
+    or al,7
+    xor ebx,ebx
+    SetPhysicalPage
+;
     mov ecx,cr3
     mov cr3,ecx
 ;
