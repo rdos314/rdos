@@ -267,22 +267,23 @@ init_focus_process      Proc far
     push eax
     push ebx
     push cx
+    push edx
 ;
     mov ax,focus_process_sel
     mov ds,ax
     mov ds:fp_key,0
 ;       
-    mov ax,process_page_sel
-    mov ds,ax
-    mov ebx,io_local_linear
-    shr ebx,10
+    mov edx,io_local_linear
     mov cx,400h
     xor eax,eax
+    xor ebx,ebx
+    
 init_local_loop:
-    mov [ebx],eax
-    add ebx,4
+    SetPhysicalPage
+    add edx,1000h
     loop init_local_loop    
 ;
+    pop edx
     pop cx
     pop ebx
     pop eax
@@ -303,34 +304,29 @@ init_focus_process      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_focus_process      Proc far
-    push ds
     push eax
     push ebx
     push cx
+    push edx
 ;
-    mov ax,process_page_sel
-    mov ds,ax
-    mov ebx,io_local_linear
-    shr ebx,10
+    mov edx,io_local_linear
     mov cx,400h
+
 free_local_loop:
-    mov eax,[ebx]
+    GetPhysicalPage
     or eax,eax
     jz free_local_next
 ;
-    push ebx
-    xor ebx,ebx
     FreePhysical
-    pop ebx
 
 free_local_next:
-    add ebx,4
+    add edx,1000h
     loop free_local_loop    
 ;
+    pop edx
     pop cx
     pop ebx
     pop eax
-    pop ds
     retf32
 free_focus_process      Endp
 
