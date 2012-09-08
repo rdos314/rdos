@@ -102,23 +102,19 @@ CopyFromSender	Proc near
 	pop es
 	pop ds
 ;
-	push ds
-	mov ax,process_page_sel
-	mov ds,ax
-;
 	mov ecx,es:il_send_glob_size
 	shr ecx,12
-	mov esi,es:il_send_glob_base
-	shr esi,10
-	mov eax,2
+	mov edx,es:il_send_glob_base
+;
+    xor ebx,ebx
+    mov eax,2
 
 do_rec_zero:
-	mov [esi],eax
-	add esi,4
+    SetPhysicalPage
+	add edx,1000h
 	sub ecx,1
 	jnz do_rec_zero
 ;
-	pop ds
 	mov bx,es:il_send_glob_sel
 	FreeGdt
 ;
@@ -197,22 +193,14 @@ InsertSend	Proc near
 	shr ecx,12
 	mov esi,ds:m_send_base
 	and si,0F000h
-	shr esi,10
 	mov edi,ds:m_send_glob_base
-	shr edi,10
-;
-	push ds
-	mov ax,process_page_sel
-	mov ds,ax
 
 ins_send_copy:
-	mov eax,[esi]
-	mov [edi],eax
-	add esi,4
-	add edi,4
+    CopyPhysicalPage    
+	add esi,1000h
+	add edi,1000h
 	sub ecx,1
 	jnz ins_send_copy
-	pop ds		
 ;
 	popad
 	ret
@@ -240,7 +228,6 @@ QueueSend	Proc near
 	push es
 	pushad
 ;
-	push ds
 	mov ebp,ecx
 	mov ecx,eax
 	push es
@@ -283,18 +270,12 @@ QueueSend	Proc near
 	shr ecx,12
 	mov esi,gs:il_reply_base
 	and si,0F000h
-	shr esi,10
 	mov edi,gs:il_reply_glob_base
-	shr edi,10
-;
-	mov ax,process_page_sel
-	mov ds,ax
 
 queue_send_copy:
-	mov eax,[esi]
-	mov [edi],eax
-	add esi,4
-	add edi,4
+    CopyPhysicalPage
+	add esi,1000h
+	add edi,1000h
 	sub ecx,1
 	jnz queue_send_copy
 ;
@@ -331,22 +312,15 @@ queue_send_copy:
 	shr ecx,12
 	mov esi,gs:il_send_base
 	and si,0F000h
-	shr esi,10
 	mov edi,gs:il_send_glob_base
-	shr edi,10
-;
-	mov ax,process_page_sel
-	mov ds,ax
 
 queue_send_rep_copy:
-	mov eax,[esi]
-	mov [edi],eax
-	add esi,4
-	add edi,4
+    CopyPhysicalPage
+	add esi,1000h
+	add edi,1000h
 	sub ecx,1
 	jnz queue_send_rep_copy
 ;
-	pop ds
 	mov ax,gs
 	mov es,ax
 	call QueueReceiveRequest
@@ -376,23 +350,14 @@ RemoveSend	Proc near
 	mov edx,esi
 	shr ecx,12
 	push ecx
-	shr esi,10
 	and di,0F000h
-	shr edi,10
-;
-	push ds
-	mov ax,process_page_sel
-	mov ds,ax
 
 rem_send_copy:
-	mov eax,2
-	xchg eax,[esi]
-	mov [edi],eax
-	add esi,4
-	add edi,4
+    MovePhysicalPage
+	add esi,1000h
+	add edi,1000h
 	sub ecx,1
 	jnz rem_send_copy
-	pop ds
 ;
 	pop ecx
 	shl ecx,12
