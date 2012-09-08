@@ -130,11 +130,8 @@ HandleInputSel  Proc near
     call DecodeSelector
     jc handle_input_ds_fail
 ;
-    mov ax,process_page_sel
-    mov gs,ax
     mov esi,edx
-    shr esi,10
-    mov edi,40h
+    mov edi,10000h
     dec ecx
     shr ecx,12
     inc cx
@@ -144,11 +141,19 @@ HandleInputSel  Proc near
     mov cx,10h
 
 handle_input_ds_move:
+    mov edx,esi
+    GetPhysicalPage
+;
+    mov edx,edi
+    SetPhysicalPage
+;    
     mov eax,2
-    xchg eax,gs:[esi]
-    mov gs:[edi],eax
-    add esi,4
-    add edi,4
+    xor ebx,ebx
+    mov edx,esi
+    SetPhysicalPage
+;    
+    add esi,1000h
+    add edi,1000h
     loop handle_input_ds_move
 ;
     mov ax,v86_bios_ds_sel
@@ -164,11 +169,8 @@ handle_input_es:
     call DecodeSelector
     jc handle_input_es_fail
 ;
-    mov ax,process_page_sel
-    mov gs,ax
     mov esi,edx
-    shr esi,10
-    mov edi,80h
+    mov edi,20000h
     dec ecx
     shr ecx,12
     inc cx
@@ -178,11 +180,19 @@ handle_input_es:
     mov cx,10h
 
 handle_input_es_move:
+    mov edx,esi
+    GetPhysicalPage
+;
+    mov edx,edi
+    SetPhysicalPage
+;    
     mov eax,2
-    xchg eax,gs:[esi]
-    mov gs:[edi],eax
-    add esi,4
-    add edi,4
+    xor ebx,ebx
+    mov edx,esi
+    SetPhysicalPage
+;    
+    add esi,1000h
+    add edi,1000h
     loop handle_input_es_move
 ;
     mov ax,v86_bios_es_sel
@@ -209,9 +219,6 @@ HandleInputSel  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleOutputSel Proc near
-    mov ax,process_page_sel
-    mov gs,ax
-;
     mov ax,ds
     or ax,ax
     jz handle_output_es
@@ -224,14 +231,12 @@ HandleOutputSel Proc near
     jc handle_output_es
 ;
     mov edi,edx
-    shr edi,10
 ;
     mov bx,ds
     push ecx
     GetSelectorBaseSize
     pop ecx
     mov esi,edx
-    shr esi,10
     dec ecx
     shr ecx,12
     inc cx
@@ -241,10 +246,14 @@ HandleOutputSel Proc near
     mov cx,10h
 
 handle_output_ds_copy:
-    mov eax,gs:[esi]
-    mov gs:[edi],eax
-    add esi,4
-    add edi,4
+    mov edx,esi
+    GetPhysicalPage
+;
+    mov edx,edi
+    SetPhysicalPage    
+;
+    add esi,1000h
+    add edi,1000h
     loop handle_output_ds_copy
 ;
     jmp handle_output_es
@@ -255,8 +264,7 @@ handle_output_ds_same:
     jc handle_output_es
 ;
     mov edi,edx
-    shr edi,10
-    mov esi,40h
+    mov esi,10000h
     dec ecx
     shr ecx,12
     inc cx
@@ -266,11 +274,19 @@ handle_output_ds_same:
     mov cx,10h
 
 handle_output_ds_move:
+    mov edx,esi
+    GetPhysicalPage
+;
+    mov edx,edi
+    SetPhysicalPage
+;    
     mov eax,2
-    xchg eax,gs:[esi]
-    mov gs:[edi],eax
-    add esi,4
-    add edi,4
+    xor ebx,ebx
+    mov edx,esi
+    SetPhysicalPage
+;    
+    add esi,1000h
+    add edi,1000h
     loop handle_output_ds_move
 
 handle_output_es:
@@ -286,14 +302,12 @@ handle_output_es:
     jc handle_output_done
 ;
     mov edi,edx
-    shr edi,10
 ;
     mov bx,es
     push ecx
     GetSelectorBaseSize
     pop ecx
     mov esi,edx
-    shr esi,10
     dec ecx
     shr ecx,12
     inc cx
@@ -303,10 +317,14 @@ handle_output_es:
     mov cx,10h
 
 handle_output_es_copy:
-    mov eax,gs:[esi]
-    mov gs:[edi],eax
-    add esi,4
-    add edi,4
+    mov edx,esi
+    GetPhysicalPage
+;
+    mov edx,edi
+    SetPhysicalPage    
+;    
+    add esi,1000h
+    add edi,1000h
     loop handle_output_es_copy
     jmp handle_output_done
 
@@ -316,8 +334,7 @@ handle_output_es_same:
     jc handle_output_done
 ;
     mov edi,edx
-    shr edi,10
-    mov esi,80h
+    mov esi,20000h
     dec ecx
     shr ecx,12
     inc cx
@@ -327,30 +344,45 @@ handle_output_es_same:
     mov cx,10h
 
 handle_output_es_move:
+    mov edx,esi
+    GetPhysicalPage
+;
+    mov edx,edi
+    SetPhysicalPage
+;    
     mov eax,2
-    xchg eax,gs:[esi]
-    mov gs:[edi],eax
-    add esi,4
-    add edi,4
+    xor ebx,ebx
+    mov edx,esi
+    SetPhysicalPage
+;    
+    add esi,1000h
+    add edi,1000h
     loop handle_output_es_move
 
 handle_output_done:
-    mov edi,40h
+    mov edi,10000h
     mov cx,20h
 
 handle_output_zero:
+    mov edx,edi
+    GetPhysicalPage
+;
+    push eax
+    push ebx
+    xor ebx,ebx        
     mov eax,2
-    xchg eax,gs:[edi]
+    SetPhysicalPage
+    pop ebx
+    pop eax
+;
     and ax,0F000h
     or eax,eax
     jz handle_output_zero_next
 ;
-    xor ebx,ebx
     FreePhysical
 
 handle_output_zero_next:
-    add esi,4
-    add edi,4
+    add edi,1000h
     loop handle_output_zero
 ;
     ret
@@ -373,28 +405,31 @@ bios_process:
     mov al,16
     SetBitness
 ;
-    mov ax,process_page_sel
-    mov ds,ax
-    xor bx,bx
+    xor edx,edx
+    xor ebx,ebx
     mov eax,7
-    mov [bx],eax
+    SetPhysicalPage
 ;
+    xor ebx,ebx
     mov eax,0A0007h
-    mov bx,0A0000h SHR 10
+    mov edx,0A0000h
     mov cx,40h
+
 rom_loop:
-    mov [bx],eax
+    SetPhysicalPage
     add eax,1000h
-    add bx,4
+    add edx,1000h
     loop rom_loop
 ;
+    xor ebx,ebx
     mov eax,0F0007h
-    mov bx,0F0000h SHR 10
+    mov edx,0F0000h
     mov cx,10h
+
 bios_loop:
-    mov [bx],eax
+    SetPhysicalPage
     add eax,1000h
-    add bx,4
+    add edx,1000h
     loop bios_loop
 ;
     mov ax,emulate_opcode_nr
