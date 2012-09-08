@@ -2824,10 +2824,7 @@ MapFromImage    Proc near
     mov edi,edx
 
 map_from_image_loop:
-    mov edx,esi
-    GetPhysicalPage
-    mov edx,edi
-    SetPhysicalPage
+    CopyPhysicalPage
 ;
     add esi,1000h
     add edi,1000h

@@ -722,11 +722,7 @@ InsertReceive   Proc near
     mov edi,ds:m_rec_glob_base
 
 ins_rec_copy:
-    mov edx,esi
-    GetPhysicalPage
-;
-    mov edx,edi
-    SetPhysicalPage    
+    CopyPhysicalPage
 ;    
     add esi,1000h
     add edi,1000h
@@ -759,16 +755,7 @@ RemoveReceive   Proc near
     and di,0F000h
 
 rem_rec_copy:
-    mov edx,esi
-    GetPhysicalPage
-;
-    mov edx,edi
-    SetPhysicalPage
-;
-    xor ebx,ebx
-    mov eax,2        
-    mov edx,esi
-    SetPhysicalPage
+    MovePhysicalPage
 ;    
     add esi,1000h
     add edi,1000h
