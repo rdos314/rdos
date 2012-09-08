@@ -56,7 +56,7 @@ data    SEGMENT byte public 'DATA'
 
 stub_start          DD ?
 
-process_page_arr    DD STUB_PAGES DUP (?)
+process_page_arr    DD STUB_PAGES DUP (?,?)
 
 gate_index_arr      DD usergate_entries DUP (?)
 
@@ -335,17 +335,17 @@ test_thread:
 init_process    PROC far
     mov ax,SEG data
     mov ds,ax
-    mov ax,process_page_sel
-    mov es,ax
     mov ecx,STUB_PAGES
-    mov edx,STUB_LINEAR SHR 10
-    mov edi,OFFSET process_page_arr
+    mov edx,STUB_LINEAR
+    mov esi,OFFSET process_page_arr
 
 setup_page_loop:
-    mov eax,ds:[edi]
-    mov es:[edx],eax
-    add edx,4
-    add edi,4
+    mov eax,ds:[esi]
+    mov ebx,ds:[esi+4]
+    SetPhysicalPage
+;    
+    add edx,1000h
+    add esi,8
     loop setup_page_loop        
     ret
 init_process    Endp
@@ -407,19 +407,20 @@ init    PROC far
     mov ds,ax
     mov ds:stub_start,STUB_LINEAR
 ;
-    mov ax,process_page_sel
-    mov es,ax
     mov ecx,STUB_PAGES
-    mov edx,STUB_LINEAR SHR 10
+    mov edx,STUB_LINEAR
     mov edi,OFFSET process_page_arr
 
 alloc_page_loop:
     AllocatePhysical64
     or al,5
-    mov es:[edx],eax
+;    
     mov ds:[edi],eax
-    add edx,4
-    add edi,4
+    mov ds:[edi+4],ebx
+    SetPhysicalPage
+;
+    add edx,1000h
+    add edi,8
     loop alloc_page_loop        
 ;
     mov ecx,usergate_entries
