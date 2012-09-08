@@ -173,12 +173,12 @@ load_object     Proc far
     mov ds,ax
     EnterSection ds:mod_section
 ;
-    mov ax,process_page_sel
-    mov ds,ax
-    mov eax,edx
-    add eax,ecx
-    shr eax,10
-    mov eax,[eax]
+    push ebx
+    push edx
+    add edx,ecx
+    GetPhysicalPage
+    pop edx
+    pop ebx
     pop ds
     test al,1
     jnz load_object_leave
@@ -2721,14 +2721,13 @@ FreePeDll Endp
 LoadPage    Proc near
     pushad
 ;
-    push ds
-    mov ax,process_page_sel
-    mov ds,ax
-    mov eax,ebp
-    add eax,ecx
-    shr eax,10
-    mov eax,[eax]
-    pop ds
+    push ebx
+    push edx
+    mov edx,ebp
+    add edx,ecx
+    GetPhysicalPage
+    pop edx
+    pop ebx
     test al,1
     stc
     jnz load_page_done
@@ -2824,15 +2823,17 @@ MapFromImage    Proc near
     shr ecx,12
     mov ax,process_page_sel
     mov ds,ax
-    shr edx,10
-    shr ebp,10
+    mov esi,ebp
+    mov edi,edx
 
 map_from_image_loop:
-    mov eax,ds:[ebp]
-    mov ds:[edx],eax
+    mov edx,esi
+    GetPhysicalPage
+    mov edx,edi
+    SetPhysicalPage
 ;
-    add edx,4
-    add ebp,4
+    add esi,1000h
+    add edi,1000h
     loop map_from_image_loop
 
 map_from_image_done:
@@ -2867,39 +2868,51 @@ MapToImage    Proc near
     sub ebx,eax
     shr ebx,12
     push ebx
+    push edx
 ;    
-    mov ebx,[esi].o_flags
-    add edx,ecx
-    add ebp,ecx
+    mov edi,ebp
+    mov ebp,[esi].o_flags
+    mov esi,edx
+    add esi,ecx
+    add edi,ecx
 ;
     mov ecx,eax
     shr ecx,12
-    mov ax,process_page_sel
-    mov ds,ax
-    shr edx,10
-    shr ebp,10
 
 map_to_image_loop:
+    mov edx,esi
+    GetPhysicalPage
+;
+    push eax
+    push ebx
     xor eax,eax
-    xchg eax,[edx]
+    xor ebx,ebx
+    SetPhysicalPage    
+    pop ebx
+    pop eax
+;
     test al,1
     jnz map_to_image_valid
 ;
     xor eax,eax
+    xor ebx,ebx
     jmp map_to_image_save       
 
 map_to_image_valid:
-    test ebx,80000000h
+    test ebp,80000000h
     jnz map_to_image_save
 
     and al,NOT 2
 
 map_to_image_save:
-    mov ds:[ebp],eax
-    add edx,4
-    add ebp,4
+    mov edx,edi
+    SetPhysicalPage
+;    
+    add esi,1000h
+    add edi,1000h
     loop map_to_image_loop
 ;
+    pop edx
     pop ecx
     or ecx,ecx
     jz map_to_image_done
@@ -2907,8 +2920,8 @@ map_to_image_save:
     xor eax,eax
 
 map_to_image_reset:
-    mov ds:[edx],eax
-    add edx,4
+    SetPhysicalPage
+    add edx,1000h
     loop map_to_image_reset
 
 map_to_image_done:    
