@@ -478,6 +478,18 @@ SetPhysicalPage MACRO
     OsGate set_physical_page_nr
                     ENDM
 
+;       ESI         SOURCE LINEAR ADDRESS
+;       EDI         DEST LINEAR ADDRESS
+CopyPhysicalPage MACRO
+    OsGate copy_physical_page_nr
+                    ENDM
+
+;       ESI         SOURCE LINEAR ADDRESS
+;       EDI         DEST LINEAR ADDRESS
+MovePhysicalPage MACRO
+    OsGate move_physical_page_nr
+                    ENDM
+
 ;       BP          Thread
 ;       EDX         LINEAR ADDRESS
 ;       EBX:EAX     PAGE ENTRY

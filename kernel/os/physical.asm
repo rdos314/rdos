@@ -258,6 +258,18 @@ init_physical_gates     PROC near
     xor cl,cl
     mov ax,set_physical_page_nr
     RegisterOsGate
+;
+    mov esi,OFFSET copy_physical_page
+    mov edi,OFFSET copy_physical_page_name
+    xor cl,cl
+    mov ax,copy_physical_page_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET move_physical_page
+    mov edi,OFFSET move_physical_page_name
+    xor cl,cl
+    mov ax,move_physical_page_nr
+    RegisterOsGate
 ;    
     mov esi,OFFSET get_thread_physical_page
     mov edi,OFFSET get_thread_physical_page_name
@@ -819,6 +831,79 @@ sppok:
     pop ds
     retf32
 set_physical_page       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CopyPhysicalPage
+;
+;           DESCRIPTION:    Copy physical page 
+;
+;           PARAMETERS:     ESI         source linear address
+;                           EDI         dest linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+copy_physical_page_name  DB 'Copy Physical Page',0
+
+copy_physical_page       Proc far
+    push ds
+    pushad
+;
+    mov edx,edi
+    mov bx,process_page_sel
+    mov ds,bx
+    shr esi,10
+    shr edi,10
+    and si,0FFFCh
+    and di,0FFFCh
+    mov ebx,[esi]
+    mov [edi],ebx
+;    
+    mov cx,1
+    call local_flush_process_tlb    
+;
+    popad
+    pop ds
+    retf32
+copy_physical_page       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MovePhysicalPage
+;
+;           DESCRIPTION:    Move physical page
+;
+;           PARAMETERS:     ESI         source linear address
+;                           EDI         dest linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+move_physical_page_name  DB 'Move Physical Page',0
+
+move_physical_page       Proc far
+    push ds
+    pushad
+;
+    mov edx,edi
+    mov bx,process_page_sel
+    mov ds,bx
+    shr esi,10
+    shr edi,10
+    and si,0FFFCh
+    and di,0FFFCh
+    mov ebx,2
+    xchg ebx,[esi]
+    mov [edi],ebx
+;    
+    mov cx,1
+    call local_flush_process_tlb    
+;
+    popad
+    pop ds
+    retf32
+move_physical_page       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

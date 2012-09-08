@@ -141,16 +141,7 @@ HandleInputSel  Proc near
     mov cx,10h
 
 handle_input_ds_move:
-    mov edx,esi
-    GetPhysicalPage
-;
-    mov edx,edi
-    SetPhysicalPage
-;    
-    mov eax,2
-    xor ebx,ebx
-    mov edx,esi
-    SetPhysicalPage
+    MovePhysicalPage
 ;    
     add esi,1000h
     add edi,1000h
@@ -180,16 +171,7 @@ handle_input_es:
     mov cx,10h
 
 handle_input_es_move:
-    mov edx,esi
-    GetPhysicalPage
-;
-    mov edx,edi
-    SetPhysicalPage
-;    
-    mov eax,2
-    xor ebx,ebx
-    mov edx,esi
-    SetPhysicalPage
+    MovePhysicalPage
 ;    
     add esi,1000h
     add edi,1000h
@@ -246,11 +228,7 @@ HandleOutputSel Proc near
     mov cx,10h
 
 handle_output_ds_copy:
-    mov edx,esi
-    GetPhysicalPage
-;
-    mov edx,edi
-    SetPhysicalPage    
+    CopyPhysicalPage
 ;
     add esi,1000h
     add edi,1000h
@@ -274,16 +252,7 @@ handle_output_ds_same:
     mov cx,10h
 
 handle_output_ds_move:
-    mov edx,esi
-    GetPhysicalPage
-;
-    mov edx,edi
-    SetPhysicalPage
-;    
-    mov eax,2
-    xor ebx,ebx
-    mov edx,esi
-    SetPhysicalPage
+    MovePhysicalPage
 ;    
     add esi,1000h
     add edi,1000h
@@ -317,11 +286,7 @@ handle_output_es:
     mov cx,10h
 
 handle_output_es_copy:
-    mov edx,esi
-    GetPhysicalPage
-;
-    mov edx,edi
-    SetPhysicalPage    
+    CopyPhysicalPage
 ;    
     add esi,1000h
     add edi,1000h
@@ -344,16 +309,7 @@ handle_output_es_same:
     mov cx,10h
 
 handle_output_es_move:
-    mov edx,esi
-    GetPhysicalPage
-;
-    mov edx,edi
-    SetPhysicalPage
-;    
-    mov eax,2
-    xor ebx,ebx
-    mov edx,esi
-    SetPhysicalPage
+    MovePhysicalPage
 ;    
     add esi,1000h
     add edi,1000h
