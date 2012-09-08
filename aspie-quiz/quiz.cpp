@@ -717,6 +717,28 @@ void TQuiz::Init()
 #endif
 }
 
+/*##################  TQuiz::ExportExcelCase ##########################
+*   Purpose....: Export histogram                                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportExcelCase(const char *filename, int PcaType)
+{
+}
+
+/*##################  TQuiz::ExportExcelAspie ##########################
+*   Purpose....: Export histogram                                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportExcelAspie(const char *filename)
+{
+}
+
 /*##################  TQuiz::round ##########################
 *   Purpose....: round long double to int                                                                       #
 *   In params..: *                                                          #
@@ -3403,9 +3425,9 @@ void TQuiz::CalcGlobal()
 //        DsmSynaesthesia.Correlate();
 //        DsmPA.Correlate();
 //        DsmDysgraphia.Correlate();
-//		  DsmBipolar.Correlate();
-//		  DsmSchizophrenia.Correlate();
-//		  DsmSocialPhobia.Correlate();
+//                DsmBipolar.Correlate();
+//                DsmSchizophrenia.Correlate();
+//                DsmSocialPhobia.Correlate();
 
         GlobalInited = TRUE;
 
@@ -5025,7 +5047,7 @@ void TQuiz::WriteFieldHeader(TFile &File, int RelWidth)
 {
     char str[80];
 
-    sprintf(str, "\n<td width=\"%d%\" colspan=2 valign=top>\n", RelWidth);
+    sprintf(str, "\n<td width=\"%d%%\" colspan=2 valign=top>\n", RelWidth);
     File.Write(str);
 
         File.Write("<p>\n");
@@ -5043,7 +5065,7 @@ void TQuiz::WriteCenteredFieldHeader(TFile &File, int RelWidth)
 {
     char str[80];
 
-    sprintf(str, "\n<td width=\"%d%\" colspan=2 valign=top>\n", RelWidth);
+    sprintf(str, "\n<td width=\"%d%%\" colspan=2 valign=top>\n", RelWidth);
     File.Write(str);
 
         File.Write("<p align=\"center\">\n");
@@ -5061,7 +5083,7 @@ void TQuiz::WriteRightFieldHeader(TFile &File, int RelWidth)
 {
     char str[80];
 
-    sprintf(str, "\n<td width=\"%d%\" colspan=2 valign=top>\n", RelWidth);
+    sprintf(str, "\n<td width=\"%d%%\" colspan=2 valign=top>\n", RelWidth);
     File.Write(str);
 
         File.Write("<p align=\"right\">\n");
@@ -5134,17 +5156,17 @@ void TQuiz::WriteReferer(TFile &file, TReferer *ref)
                         }
 
                         WriteRightFieldHeader(file, 4);
-                        sprintf(str, "%d%", round(100.0 * ref->ResultNt / ref->Count));
+                        sprintf(str, "%d%%", round(100.0 * ref->ResultNt / ref->Count));
             file.Write(str);
                 WriteFieldFooter(file);
     
                 WriteRightFieldHeader(file, 4);
-            sprintf(str, "%d%", round(100.0 * ref->ResultMixed / ref->Count));
+            sprintf(str, "%d%%", round(100.0 * ref->ResultMixed / ref->Count));
                 file.Write(str);
                 WriteFieldFooter(file);
 
             WriteRightFieldHeader(file, 4);
-                sprintf(str, "%d%", round(100.0 * ref->ResultAs / ref->Count));
+                sprintf(str, "%d%%", round(100.0 * ref->ResultAs / ref->Count));
                 file.Write(str);
                 WriteFieldFooter(file);
 
@@ -5153,7 +5175,7 @@ void TQuiz::WriteReferer(TFile &file, TReferer *ref)
                             if (ref->AqCount)
                             {
                     WriteRightFieldHeader(file, 4);
-                        sprintf(str, "%d%", round(100.0 * ref->ResultAq / ref->AqCount));
+                        sprintf(str, "%d%%", round(100.0 * ref->ResultAq / ref->AqCount));
                         file.Write(str);
                         WriteFieldFooter(file);
                     }
@@ -5173,22 +5195,22 @@ void TQuiz::WriteReferer(TFile &file, TReferer *ref)
                 WriteFieldFooter(file);
 
             WriteRightFieldHeader(file, 4);
-                sprintf(str, "%d%", round(100.0 * ref->Result0_59 / ref->Count));
+                sprintf(str, "%d%%", round(100.0 * ref->Result0_59 / ref->Count));
             file.Write(str);
                         WriteFieldFooter(file);
     
                 WriteRightFieldHeader(file, 4);
-            sprintf(str, "%d%", round(100.0 * ref->Result60_99 / ref->Count));
+            sprintf(str, "%d%%", round(100.0 * ref->Result60_99 / ref->Count));
                 file.Write(str);
                 WriteFieldFooter(file);
 
             WriteRightFieldHeader(file, 4);
-                sprintf(str, "%d%", round(100.0 * ref->Result100_139 / ref->Count));
+                sprintf(str, "%d%%", round(100.0 * ref->Result100_139 / ref->Count));
                 file.Write(str);
                 WriteFieldFooter(file);
               
             WriteRightFieldHeader(file, 4);
-            sprintf(str, "%d%", round(100.0 * ref->Result140_200 / ref->Count));
+            sprintf(str, "%d%%", round(100.0 * ref->Result140_200 / ref->Count));
             file.Write(str);
                 WriteFieldFooter(file);
             }
@@ -5323,35 +5345,35 @@ void TQuiz::WriteReferers(const char *filename)
     file.Write("Groups");
         WriteFieldFooter(file);
 
-		WriteFieldHeader(file, 66);
-		file.Write("Web site / description");
-		WriteFieldFooter(file);
+                WriteFieldHeader(file, 66);
+                file.Write("Web site / description");
+                WriteFieldFooter(file);
 
-		file.Write("</tr>");
+                file.Write("</tr>");
 
-		WriteReferer(file, &AutismRef);
-		WriteReferer(file, &AsRef);
-		WriteReferer(file, &TsRef);
-		WriteReferer(file, &AddRef);
-		WriteReferer(file, &MaleAddRef);
-		WriteReferer(file, &FemaleAddRef);
-		WriteReferer(file, &SelfAsRef);
-		WriteReferer(file, &MaleAsRef);
-		WriteReferer(file, &FemaleAsRef);
-		WriteReferer(file, &MaleNonAsRef);
-		WriteReferer(file, &FemaleNonAsRef);
-		WriteReferer(file, &MaleAspieRef);
-		WriteReferer(file, &FemaleAspieRef);
-		WriteReferer(file, &MaleRef);
-		WriteReferer(file, &FemaleRef);
-		WriteReferer(file, &AspieRef);
-		WriteReferer(file, &HyperlexiaRef);
-		WriteReferer(file, &DyspraxiaRef);
-		WriteReferer(file, &DyslexiaRef);
-		WriteReferer(file, &DyscalculiaRef);
-		WriteReferer(file, &OCDRef);
-		WriteReferer(file, &FemaleOCDRef);
-		WriteReferer(file, &MaleOCDRef);
+                WriteReferer(file, &AutismRef);
+                WriteReferer(file, &AsRef);
+                WriteReferer(file, &TsRef);
+                WriteReferer(file, &AddRef);
+                WriteReferer(file, &MaleAddRef);
+                WriteReferer(file, &FemaleAddRef);
+                WriteReferer(file, &SelfAsRef);
+                WriteReferer(file, &MaleAsRef);
+                WriteReferer(file, &FemaleAsRef);
+                WriteReferer(file, &MaleNonAsRef);
+                WriteReferer(file, &FemaleNonAsRef);
+                WriteReferer(file, &MaleAspieRef);
+                WriteReferer(file, &FemaleAspieRef);
+                WriteReferer(file, &MaleRef);
+                WriteReferer(file, &FemaleRef);
+                WriteReferer(file, &AspieRef);
+                WriteReferer(file, &HyperlexiaRef);
+                WriteReferer(file, &DyspraxiaRef);
+                WriteReferer(file, &DyslexiaRef);
+                WriteReferer(file, &DyscalculiaRef);
+                WriteReferer(file, &OCDRef);
+                WriteReferer(file, &FemaleOCDRef);
+                WriteReferer(file, &MaleOCDRef);
         WriteReferer(file, &ODDRef);
         WriteReferer(file, &SynaesthesiaRef);
         WriteReferer(file, &PARef);
@@ -5360,7 +5382,7 @@ void TQuiz::WriteReferers(const char *filename)
         WriteReferer(file, &SchizophreniaRef);
         WriteReferer(file, &SocialPhobiaRef);
         WriteReferer(file, &FemaleSocialRef);
-		WriteReferer(file, &MaleSocialRef);
+                WriteReferer(file, &MaleSocialRef);
         WriteReferer(file, &WhiteRef);
         WriteReferer(file, &AsianRef);
         WriteReferer(file, &AmerindianRef);
@@ -5600,7 +5622,7 @@ void TQuiz::WriteCorrVal(TFile &File, long double corr, int count)
     {
 #ifdef USE_PERCENT
         ival = round(100.0 * corr * corr);
-                sprintf(str, "%d%", ival);
+                sprintf(str, "%d%%", ival);
                 File.Write(str);
 #else
         if (corr <= 0.0)
@@ -6155,7 +6177,7 @@ void TQuiz::WritePcaPopCorr(TFile &File, TQuiz *quiz, int PopType, int PcaNr)
 
 #ifdef USE_PERCENT
     ival = quiz->round(100.0 * val * val);
-    sprintf(str, "%d%", ival);
+    sprintf(str, "%d%%", ival);
     File.Write(str);
 #else
     if (val <= 0.0)
@@ -6281,7 +6303,7 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
                 if (All.Count[i])
             {
                     ival = round(100.0 * Quiz[i].NoAnswer / All.ValueCount);
-                sprintf(str, "%d%", ival);
+                sprintf(str, "%d%%", ival);
                     file.Write(str);
                     }
                 else
@@ -7071,7 +7093,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 
 #ifdef USE_PERCENT
                                 ival = round(100.0 * quiz->Quiz[q].Corr * quiz->Quiz[q].Corr);
-                                sprintf(str, "%d%", ival);
+                                sprintf(str, "%d%%", ival);
                                 file.Write(str);
 #else
                                 ival = round(100.0 * quiz->Quiz[q].Corr);
@@ -7141,7 +7163,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 
 #ifdef USE_PERCENT
                                         ival = round(100.0 * val * val);
-                                        sprintf(str, "%d%", ival);
+                                        sprintf(str, "%d%%", ival);
                                             file.Write(str);
 #else
                                         ival = round(100.0 * val);
@@ -7313,7 +7335,7 @@ void TQuiz::WritePcaLoadTable(const char *filename)
 
 #ifdef USE_PERCENT  
                                 ival = round(100.0 * quiz->Quiz[q].Corr * quiz->Quiz[q].Corr);
-                                sprintf(str, "%d%", ival);
+                                sprintf(str, "%d%%", ival);
                                 file.Write(str);
 #else
                                 ival = round(100.0 * quiz->Quiz[q].Corr);
@@ -7574,7 +7596,7 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
 
 #ifdef USE_PERCENT
                                 ival = round(100.0 * val * val);
-                                sprintf(str, "%d%", ival);
+                                sprintf(str, "%d%%", ival);
                                 file.Write(str);
 #else
                                 ival = round(100.0 * val);
@@ -7622,7 +7644,7 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
 
 #ifdef USE_PERCENT
                                                 ival = round(100.0 * val * val);
-                                                sprintf(str, "%d%", ival);
+                                                sprintf(str, "%d%%", ival);
                                                 file.Write(str);
 #else
                                                 ival = round(100.0 * val);
@@ -7804,7 +7826,7 @@ void TQuiz::WriteAveragePcaTable(const char *filename)
 
 #ifdef USE_PERCENT  
                             ival = round(100.0 * val * val);
-                                sprintf(str, "%d%", ival);
+                                sprintf(str, "%d%%", ival);
                                 file.Write(str);
 #else
                                 ival = round(100.0 * val);
@@ -7995,7 +8017,7 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 
 #ifdef USE_PERCENT
                                 ival = round(100.0 * val * val);
-                                sprintf(str, "%d%", ival);
+                                sprintf(str, "%d%%", ival);
                                 file.Write(str);
 #else
                                 ival = round(100.0 * val);
@@ -9444,7 +9466,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 
 #ifdef USE_PERCENT
                 ival = round(100.0 * val * val);
-                sprintf(str, "%d%", ival);
+                sprintf(str, "%d%%", ival);
                 file.Write(str);
 #else
                 ival = round(100.0 * val);
@@ -9622,7 +9644,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 
 #ifdef USE_PERCENT
                                 ival = round(100.0 * val * val);
-                                sprintf(str, "%d%", ival);
+                                sprintf(str, "%d%%", ival);
                                 file.Write(str);
 #else
                                 ival = round(100.0 * val);
@@ -9653,7 +9675,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 
 #ifdef USE_PERCENT
                                 ival = round(100.0 * val * val);
-                                sprintf(str, "%d%", ival);
+                                sprintf(str, "%d%%", ival);
                                 file.Write(str);
 #else
                                 ival = round(100.0 * val);
@@ -10560,34 +10582,34 @@ void TQuiz::WritePca(const char *filename)
 
                 WriteCenteredFieldHeader(file, 5);
         ival = round(100.0 * Quiz[i].Pca[0]);
-                sprintf(str, "%d%", ival);
+                sprintf(str, "%d%%", ival);
                 file.Write(str);
                 file.Write("<br>");
                 
         ival = round(100.0 * Quiz[i].Pca[1]);
-                sprintf(str, "%d%", ival);
+                sprintf(str, "%d%%", ival);
                 file.Write(str);
                 WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 5);
         ival = round(100.0 * Quiz[i].YoungPca[0]);
-                sprintf(str, "%d%", ival);
+                sprintf(str, "%d%%", ival);
                 file.Write(str);
                 file.Write("<br>");
 
                 ival = round(100.0 * Quiz[i].YoungPca[1]);
-                sprintf(str, "%d%", ival);
+                sprintf(str, "%d%%", ival);
                 file.Write(str);
                 WriteFieldFooter(file);
 
                 WriteCenteredFieldHeader(file, 5);
                 ival = round(100.0 * Quiz[i].OldPca[0]);
-                sprintf(str, "%d%", ival);
+                sprintf(str, "%d%%", ival);
                 file.Write(str);
                 file.Write("<br>");
 
                 ival = round(100.0 * Quiz[i].OldPca[1]);
-                sprintf(str, "%d%", ival);
+                sprintf(str, "%d%%", ival);
                 file.Write(str);
                 WriteFieldFooter(file);
 
@@ -10596,7 +10618,7 @@ void TQuiz::WritePca(const char *filename)
                         ival = round(100.0 * Quiz[i].MixedPca[0]);
                 else
                         ival = round(100.0 * Quiz[i].AsPca[0]);
-                sprintf(str, "%d%", ival);
+                sprintf(str, "%d%%", ival);
                 file.Write(str);
                 file.Write("<br>");
 
@@ -10604,7 +10626,7 @@ void TQuiz::WritePca(const char *filename)
                         ival = round(100.0 * Quiz[i].MixedPca[1]);
                 else
                         ival = round(100.0 * Quiz[i].AsPca[1]);
-                sprintf(str, "%d%", ival);
+                sprintf(str, "%d%%", ival);
                 file.Write(str);
                 WriteFieldFooter(file);
 
@@ -10893,202 +10915,202 @@ void TQuiz::WriteDsmReport(TFile &File, TDsmPopulation &DsmPop)
 void TQuiz::WriteDsmReport(const char *filename, int PopType)
 {
 /*
-		  TFile file(filename, 0);
+                  TFile file(filename, 0);
 
-	 switch (PopType)
-	 {
-		  case POP_TYPE_AUTISM:
+         switch (PopType)
+         {
+                  case POP_TYPE_AUTISM:
 
 #ifdef ENGLISH
-								file.Write("<h2>Autism diagnosis correlations</h2>\n");
+                                                                file.Write("<h2>Autism diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-					 file.Write("<h2>Autism diagnos korrelationer</h2>\n");
+                                         file.Write("<h2>Autism diagnos korrelationer</h2>\n");
 #endif
-				WriteDsmReport(file, DsmAutism);
-				break;
+                                WriteDsmReport(file, DsmAutism);
+                                break;
 
-		  case POP_TYPE_AS:
+                  case POP_TYPE_AS:
 
 #ifdef ENGLISH
-					 file.Write("<h2>AS/HFA/PDD diagnosis correlations</h2>\n");
+                                         file.Write("<h2>AS/HFA/PDD diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-					 file.Write("<h2>AS/HFA/PDD diagnos korrelationer</h2>\n");
+                                         file.Write("<h2>AS/HFA/PDD diagnos korrelationer</h2>\n");
 #endif
-				WriteDsmReport(file, DsmAs);
-				break;
+                                WriteDsmReport(file, DsmAs);
+                                break;
 
-		  case POP_TYPE_ADD:
+                  case POP_TYPE_ADD:
 
 #ifdef ENGLISH
-					 file.Write("<h2>ADD/ADHD diagnosis correlations</h2>\n");
+                                         file.Write("<h2>ADD/ADHD diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-								file.Write("<h2>ADD/ADHD diagnos korrelationer</h2>\n");
+                                                                file.Write("<h2>ADD/ADHD diagnos korrelationer</h2>\n");
 #endif
-				WriteDsmReport(file, DsmAdd);
-				break;
+                                WriteDsmReport(file, DsmAdd);
+                                break;
 
-		  case POP_TYPE_TS:
+                  case POP_TYPE_TS:
 
 #ifdef ENGLISH
-					 file.Write("<h2>Tourette diagnosis correlations</h2>\n");
+                                         file.Write("<h2>Tourette diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-					 file.Write("<h2>Tourette diagnos korrelationer</h2>\n");
+                                         file.Write("<h2>Tourette diagnos korrelationer</h2>\n");
 #endif
-				WriteDsmReport(file, DsmTs);
-				break;
+                                WriteDsmReport(file, DsmTs);
+                                break;
 
-		  case POP_TYPE_HYPERLEXIA:
+                  case POP_TYPE_HYPERLEXIA:
 
 #ifdef ENGLISH
-					 file.Write("<h2>Hyperlexia diagnosis correlations</h2>\n");
+                                         file.Write("<h2>Hyperlexia diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-					 file.Write("<h2>Hyperlexi diagnos korrelationer</h2>\n");
+                                         file.Write("<h2>Hyperlexi diagnos korrelationer</h2>\n");
 #endif
-				WriteDsmReport(file, DsmHyperlexia);
-				break;
+                                WriteDsmReport(file, DsmHyperlexia);
+                                break;
 
-		  case POP_TYPE_DYSPRAXIA:
+                  case POP_TYPE_DYSPRAXIA:
 
 #ifdef ENGLISH
-					 file.Write("<h2>Dyspraxia diagnosis correlations</h2>\n");
+                                         file.Write("<h2>Dyspraxia diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-					 file.Write("<h2>Dyspraxi diagnos korrelationer</h2>\n");
+                                         file.Write("<h2>Dyspraxi diagnos korrelationer</h2>\n");
 #endif
-				WriteDsmReport(file, DsmDyspraxia);
-				break;
+                                WriteDsmReport(file, DsmDyspraxia);
+                                break;
 
-		  case POP_TYPE_DYSLEXIA:
+                  case POP_TYPE_DYSLEXIA:
 
 #ifdef ENGLISH
-					 file.Write("<h2>Dyslexia diagnosis correlations</h2>\n");
+                                         file.Write("<h2>Dyslexia diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-					 file.Write("<h2>Dyslexi diagnos korrelationer</h2>\n");
+                                         file.Write("<h2>Dyslexi diagnos korrelationer</h2>\n");
 #endif
-				WriteDsmReport(file, DsmDyslexia);
-				break;
+                                WriteDsmReport(file, DsmDyslexia);
+                                break;
 
-		  case POP_TYPE_DYSCALCULIA:
+                  case POP_TYPE_DYSCALCULIA:
 
 #ifdef ENGLISH
-					 file.Write("<h2>Dyscalculia diagnosis correlations</h2>\n");
+                                         file.Write("<h2>Dyscalculia diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-					 file.Write("<h2>Dyskalkuli diagnos korrelationer</h2>\n");
+                                         file.Write("<h2>Dyskalkuli diagnos korrelationer</h2>\n");
 #endif
-				WriteDsmReport(file, DsmDyscalculia);
-				break;
+                                WriteDsmReport(file, DsmDyscalculia);
+                                break;
 
-		  case POP_TYPE_OCD:
+                  case POP_TYPE_OCD:
 
 #ifdef ENGLISH
-								file.Write("<h2>Obsessive Compulsive Disorder diagnosis correlations</h2>\n");
+                                                                file.Write("<h2>Obsessive Compulsive Disorder diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-								file.Write("<h2>Tvångssyndrom diagnos korrelationer</h2>\n");
+                                                                file.Write("<h2>Tvångssyndrom diagnos korrelationer</h2>\n");
 #endif
-								WriteDsmReport(file, DsmOCD);
-								break;
+                                                                WriteDsmReport(file, DsmOCD);
+                                                                break;
 
-					 case POP_TYPE_ODD:
+                                         case POP_TYPE_ODD:
 
 #ifdef ENGLISH
-								file.Write("<h2>ODD diagnosis correlations</h2>\n");
+                                                                file.Write("<h2>ODD diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-								file.Write("<h2>ODD diagnos korrelationer</h2>\n");
+                                                                file.Write("<h2>ODD diagnos korrelationer</h2>\n");
 #endif
-								WriteDsmReport(file, DsmODD);
-								break;
+                                                                WriteDsmReport(file, DsmODD);
+                                                                break;
 
-		  case POP_TYPE_SYNAESTHESIA:
+                  case POP_TYPE_SYNAESTHESIA:
 
 #ifdef ENGLISH
-					 file.Write("<h2>Synaesthesia diagnosis correlations</h2>\n");
+                                         file.Write("<h2>Synaesthesia diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-					 file.Write("<h2>Synestesi diagnos korrelationer</h2>\n");
+                                         file.Write("<h2>Synestesi diagnos korrelationer</h2>\n");
 #endif
-				WriteDsmReport(file, DsmSynaesthesia);
-				break;
+                                WriteDsmReport(file, DsmSynaesthesia);
+                                break;
 
-		  case POP_TYPE_PA:
+                  case POP_TYPE_PA:
 
 #ifdef ENGLISH
-					 file.Write("<h2>Prosopagnosia diagnosis correlations</h2>\n");
+                                         file.Write("<h2>Prosopagnosia diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-					 file.Write("<h2>Prosopagnosi diagnos korrelationer</h2>\n");
+                                         file.Write("<h2>Prosopagnosi diagnos korrelationer</h2>\n");
 #endif
-				WriteDsmReport(file, DsmPA);
-								break;
+                                WriteDsmReport(file, DsmPA);
+                                                                break;
 
-		  case POP_TYPE_DYSGRAPHIA:
+                  case POP_TYPE_DYSGRAPHIA:
 
 #ifdef ENGLISH
-					 file.Write("<h2>Dysgraphia diagnosis correlations</h2>\n");
+                                         file.Write("<h2>Dysgraphia diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-								file.Write("<h2>Dysgrafi diagnos korrelationer</h2>\n");
+                                                                file.Write("<h2>Dysgrafi diagnos korrelationer</h2>\n");
 #endif
-				WriteDsmReport(file, DsmDysgraphia);
-				break;
+                                WriteDsmReport(file, DsmDysgraphia);
+                                break;
 
-		  case POP_TYPE_BIPOLAR:
+                  case POP_TYPE_BIPOLAR:
 
 #ifdef ENGLISH
-					 file.Write("<h2>Bipolar diagnosis correlations</h2>\n");
+                                         file.Write("<h2>Bipolar diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-								file.Write("<h2>Bipolär diagnos korrelationer</h2>\n");
+                                                                file.Write("<h2>Bipolär diagnos korrelationer</h2>\n");
 #endif
-				WriteDsmReport(file, DsmBipolar);
-				break;
+                                WriteDsmReport(file, DsmBipolar);
+                                break;
 
-		  case POP_TYPE_SCHIZOPHRENIA:
+                  case POP_TYPE_SCHIZOPHRENIA:
 
 #ifdef ENGLISH
-					 file.Write("<h2>Schizophrenia diagnosis correlations</h2>\n");
+                                         file.Write("<h2>Schizophrenia diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-					 file.Write("<h2>Schizofreni diagnos korrelationer</h2>\n");
+                                         file.Write("<h2>Schizofreni diagnos korrelationer</h2>\n");
 #endif
-				WriteDsmReport(file, DsmSchizophrenia);
-				break;
+                                WriteDsmReport(file, DsmSchizophrenia);
+                                break;
 
-		  case POP_TYPE_SOCIAL_PHOBIA:
+                  case POP_TYPE_SOCIAL_PHOBIA:
 
 #ifdef ENGLISH
-					 file.Write("<h2>Social phobia diagnosis correlations</h2>\n");
+                                         file.Write("<h2>Social phobia diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
-					 file.Write("<h2>Social fobi diagnos korrelationer</h2>\n");
+                                         file.Write("<h2>Social fobi diagnos korrelationer</h2>\n");
 #endif
-				WriteDsmReport(file, DsmSocialPhobia);
-				break;
-	 } */
+                                WriteDsmReport(file, DsmSocialPhobia);
+                                break;
+         } */
 }
 
 /*##################  TQuiz::ExportBirthMonthHistogram ##########################
@@ -11100,7 +11122,7 @@ void TQuiz::WriteDsmReport(const char *filename, int PopType)
 *##########################################################################*/
 void TQuiz::ExportBirthMonthHistogram(const char *filename)
 {
-	 BirthMonth.ExportHistogram(filename);
+         BirthMonth.ExportHistogram(filename);
 }
 
 /*##################  TQuiz::ExportBirthYearHistogram ##########################
@@ -11744,7 +11766,7 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
                                 file.Write(str);
 
                     ival = round(100.0 * NoAnswerSum[GlobalId] / CorrCount[GlobalId]);
-                        sprintf(str, "%d%)", ival);
+                        sprintf(str, "%d%%)", ival);
                     file.Write(str);
 
                                 if (Mark[GlobalId])
@@ -11807,7 +11829,7 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
                                 file.Write(str);
             
                             ival = round(100.0 * NoAnswerSum[q] / CorrCount[q]);
-                                sprintf(str, "%d%), intercorr: ", ival);
+                                sprintf(str, "%d%%), intercorr: ", ival);
                             file.Write(str);
 
                                                         cnt = GlobalCorrCount[GlobalId][q];
@@ -11931,7 +11953,7 @@ void TQuiz::WriteQuizWiki(const char *filename)
                     file.Write(str);
 
                 ival = round(100.0 * Quiz[i].NoAnswer / All.ValueCount);
-                sprintf(str, "%d%)", ival);
+                sprintf(str, "%d%%)", ival);
                     file.Write(str);
 
 
@@ -13111,7 +13133,7 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
                     
 #ifdef USE_PERCENT
                                 ival = round(100.0 * val * val);
-                                sprintf(str, "%d%", ival);
+                                sprintf(str, "%d%%", ival);
                                 file.Write(str);
 #else
                                 if (val <= 0.0)
@@ -13196,7 +13218,7 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
 
 #ifdef USE_PERCENT
                                 ival = round(100.0 * val * val);
-                                sprintf(str, "%d%", ival);
+                                sprintf(str, "%d%%", ival);
                                 file.Write(str);
 #else
                                 ival = round(100.0 * val);
@@ -13651,7 +13673,7 @@ void TQuiz::WriteAxisLoadTable(const char *filename)
 
 #ifdef USE_PERCENT  
                                 ival = round(100.0 * quiz->Quiz[q].Corr * quiz->Quiz[q].Corr);
-                                sprintf(str, "%d%", ival);
+                                sprintf(str, "%d%%", ival);
                                 file.Write(str);
 #else
                                 ival = round(100.0 * quiz->Quiz[q].Corr);
@@ -13856,7 +13878,7 @@ void TQuiz::WriteAverageAxisTable(const char *filename)
 
 #ifdef USE_PERCENT
                                         ival = round(100.0 * val * val);
-                                        sprintf(str, "%d%", ival);
+                                        sprintf(str, "%d%%", ival);
                                         file.Write(str);
 #else
                                         ival = round(100.0 * val);
@@ -14021,7 +14043,7 @@ void TQuiz::WriteDxLoadTable(const char *filename)
 
 #ifdef USE_PERCENT
                                 ival = round(100.0 * quiz->Quiz[q].Corr * quiz->Quiz[q].Corr);
-                                sprintf(str, "%d%", ival);
+                                sprintf(str, "%d%%", ival);
                                 file.Write(str);
 #else
                                 ival = round(100.0 * quiz->Quiz[q].Corr);
@@ -14239,7 +14261,7 @@ void TQuiz::WriteAverageDxTable(const char *filename)
 
 #ifdef USE_PERCENT
                                         ival = round(100.0 * val * val);
-                                        sprintf(str, "%d%", ival);
+                                        sprintf(str, "%d%%", ival);
                                         file.Write(str);
 #else
                                         ival = round(100.0 * val);
@@ -15068,7 +15090,7 @@ void TQuiz::DsmCutoff(TFile &file, const char *Text, int PopType)
                 val = PredNoDxFail[PopType] * 100 / (PredYesOk[PopType] + PredNoDxFail[PopType]);
                 DiffSum += val;
                 WriteCenteredFieldHeader(file, 15);
-                sprintf(str, " %d%\n", val);
+                sprintf(str, " %d%%\n", val);
                 file.Write(str);
                 WriteFieldFooter(file);
 
@@ -15077,7 +15099,7 @@ void TQuiz::DsmCutoff(TFile &file, const char *Text, int PopType)
                 {
                         val = PredNoSelfFail[PopType] * 100 / (PredSelfOk[PopType] + PredNoSelfFail[PopType]);
                         DiffSum += val;
-                        sprintf(str, " %d%\n", val);
+                        sprintf(str, " %d%%\n", val);
                 }
                 else
                         strcpy(str, "--");
@@ -15087,7 +15109,7 @@ void TQuiz::DsmCutoff(TFile &file, const char *Text, int PopType)
                 val = PredYesFail[PopType] * 100 / (PredYesFail[PopType] + PredNoOk[PopType]);
                 DiffSum += val;
                 WriteCenteredFieldHeader(file, 15);
-                sprintf(str, " %d%\n", val);
+                sprintf(str, " %d%%\n", val);
                 file.Write(str);
                 WriteFieldFooter(file);
 
@@ -15219,7 +15241,7 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 
         file.Write("</table>\n");
 
-        sprintf(str, "Sum: %d%\n", DiffSum);
+        sprintf(str, "Sum: %d%%\n", DiffSum);
         file.Write(str);
 }
 

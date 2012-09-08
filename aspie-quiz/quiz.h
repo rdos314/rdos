@@ -36,6 +36,8 @@
 
 //#define USE_PERCENT     1     // write correlations in % variance explained
 
+#define M_PI   3.141592653589793
+
 #define MAX_GROUP_COUNT      	15
 
 #define MAX_REFERERS            1024
@@ -342,8 +344,8 @@ public:
 
 	virtual void ImportMvsp(const char *filename, int PcaType) = 0;
 	virtual void ImportMvspAspie(const char *filename);
-	virtual void ExportExcelCase(const char *filename, int PcaType) = 0;
-	virtual void ExportExcelAspie(const char *filename) = 0;
+	virtual void ExportExcelCase(const char *filename, int PcaType);
+	virtual void ExportExcelAspie(const char *filename);
 
     virtual void ExportExcelAspieItems(const char *filename);
     virtual void ExportExcelNtItems(const char *filename);
