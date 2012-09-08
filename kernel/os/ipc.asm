@@ -719,22 +719,19 @@ InsertReceive   Proc near
     shr ecx,12
     mov esi,ds:m_rec_base
     and si,0F000h
-    shr esi,10
     mov edi,ds:m_rec_glob_base
-    shr edi,10
-;
-    push ds
-    mov ax,process_page_sel
-    mov ds,ax
 
 ins_rec_copy:
-    mov eax,[esi]
-    mov [edi],eax
-    add esi,4
-    add edi,4
+    mov edx,esi
+    GetPhysicalPage
+;
+    mov edx,edi
+    SetPhysicalPage    
+;    
+    add esi,1000h
+    add edi,1000h
     sub ecx,1
     jnz ins_rec_copy
-    pop ds      
 ;
     popad
     ret
@@ -758,25 +755,26 @@ RemoveReceive   Proc near
     mov ecx,ds:m_rec_glob_size
     shr ecx,12
     mov esi,ds:m_rec_glob_base
-    shr esi,10
     mov edi,ds:m_rec_base
     and di,0F000h
-    shr edi,10
-;
-    push ds
-    mov ax,process_page_sel
-    mov ds,ax
 
 rem_rec_copy:
-    mov eax,2
-    xchg eax,[esi]
-    mov [edi],eax
-    add esi,4
-    add edi,4
+    mov edx,esi
+    GetPhysicalPage
+;
+    mov edx,edi
+    SetPhysicalPage
+;
+    xor ebx,ebx
+    mov eax,2        
+    mov edx,esi
+    SetPhysicalPage
+;    
+    add esi,1000h
+    add edi,1000h
     sub ecx,1
     jnz rem_rec_copy
 ;
-    pop ds
     mov bx,ds:m_rec_glob_sel
     FreeGdt
 ;
