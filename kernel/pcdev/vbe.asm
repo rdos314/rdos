@@ -112,12 +112,12 @@ mt02 DW OFFSET switch_from_linear,  SEG code
 init_flat_mode  Proc far
     push ds
     push es
-    push bx
-    push cx
-    push dx
-    push si
-    push di
-    push bp
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
 ;
     mov bx,SEG data
     mov ds,bx
@@ -243,39 +243,36 @@ init_flat_check:
     rep stos dword ptr es:[edi]
     pop es
 ;
-    push ds
-    push es
     mov esi,es:vo_mem_base
-    shr esi,10
     mov edi,es:v_app_base
-    shr edi,10
     mov ecx,es:v_app_size
     shr ecx,12
-    mov bx,process_page_sel
-    mov ds,bx
-    mov es,bx
-    rep movs dword ptr es:[edi],ds:[esi]
-    pop es
-    pop ds
+
+init_flat_move_loop:
+    mov edx,esi
+    GetPhysicalPage
+    mov edx,edi
+    SetPhysicalPage
 ;
-    push ds
-    mov edi,es:v_phys_base
-    shr edi,10
+    add esi,1000h
+    add edi,1000h
+    sub ecx,1
+    jnz init_flat_move_loop    
+;
+    mov edx,es:v_phys_base
     mov ecx,es:v_app_size
     shr ecx,12
-    mov bx,process_page_sel
-    mov ds,bx
-    mov edx,es:vo_lfb
-    or dl,0Fh
+    xor ebx,ebx
+    mov eax,es:vo_lfb
+    or al,0Fh
 
 init_lfb_map_loop:
-    mov ds:[edi],edx
-    add edi,4
+    SetPhysicalPage
+    add eax,1000h
     add edx,1000h
     sub ecx,1
     jnz init_lfb_map_loop
 ;
-    pop ds
     push ds
     mov cx,3
     mov ax,cs
@@ -297,12 +294,12 @@ init_flat_fail:
     stc
 
 init_flat_done:
-    pop bp
-    pop di
-    pop si
-    pop dx
-    pop cx
-    pop bx
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
     pop es
     pop ds
     retf32
@@ -324,28 +321,36 @@ init_flat_mode  Endp
 
 delete_linear   Proc far
     push ax
-    push bx
+    push ebx
     push ecx
     push edx
     push edi
 ;
     call ClearVideoObj
-    mov ax,process_page_sel
-    mov es,ax
 ;
-    mov edi,ds:v_phys_base
-    shr edi,10
+    mov edx,ds:v_phys_base
     mov ecx,ds:v_app_size
     shr ecx,12
     xor eax,eax
-    rep stos dword ptr es:[edi]
+    xor ebx,ebx
+
+delete_phys_loop:
+    SetPhysicalPage
+    add edx,1000h
+    sub ecx,1
+    jnz delete_phys_loop
 ;
-    mov edi,ds:v_app_base
-    shr edi,10
+    mov edx,ds:v_app_base
     mov ecx,ds:v_app_size
     shr ecx,12
     xor eax,eax
-    rep stos dword ptr es:[edi]
+    xor ebx,ebx
+
+delete_app_loop:
+    SetPhysicalPage
+    add edx,1000h
+    sub ecx,1
+    jnz delete_app_loop
 ;
     mov ecx,ds:v_app_size
     mov edx,ds:v_phys_base
@@ -364,7 +369,7 @@ delete_linear   Proc far
     pop edi
     pop edx
     pop ecx
-    pop bx
+    pop ebx
     pop ax
     ret
 delete_linear   Endp
@@ -1442,32 +1447,32 @@ init_v86_io_loop:
     mov edx,es:[ebx]
     movzx eax,word ptr es:[ebx+4]
 ;
-    push ds
     push es
     dec eax
     and ax,0F000h
     add eax,1000h
     AllocateGlobalMem
     mov bx,es
+;    
     push edx
     GetSelectorBaseSize
-    mov ax,process_page_sel
-    mov ds,ax
-    mov edi,edx
-    pop edx
-    shr edi,10
+    pop eax
+;
+    push ebx    
+    xor ebx,ebx
     shr ecx,12
-    or dl,3
+    or al,3
 
 init_v86_memmap_loop:
-    mov ds:[edi],edx
-    add edi,4
+    SetPhysicalPage
     add edx,1000h
+    add eax,1000h
     sub ecx,1
     jnz init_v86_memmap_loop
 ;
+    pop ebx
     pop es
-    pop ds
+;    
     mov ds:v_pm32_io,bx
     jmp init_v86_pm32
 
@@ -1491,16 +1496,13 @@ init_v86_calls:
     GetSelectorBaseSize
     add edx,1000h
     sub ecx,1000h
-    mov ax,process_page_sel
-    mov ds,ax
-    mov edi,edx
-    shr edi,10
     shr ecx,12
-    mov edx,2
+    mov eax,2
+    xor ebx,ebx
 
 init_v86_free_loop:
-    mov ds:[edi],edx
-    add edi,4
+    SetPhysicalPage
+    add edx,1000h
     sub ecx,1
     jnz init_v86_free_loop
 ;
