@@ -2810,7 +2810,6 @@ LoadPage    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MapFromImage    Proc near
-    push ds
     pushad
 ;    
     add edx,ecx
@@ -2821,8 +2820,6 @@ MapFromImage    Proc near
 ;    
     mov ecx,eax
     shr ecx,12
-    mov ax,process_page_sel
-    mov ds,ax
     mov esi,ebp
     mov edi,edx
 
@@ -2838,7 +2835,6 @@ map_from_image_loop:
 
 map_from_image_done:
     popad
-    pop ds
     ret
 MapFromImage  Endp
                       
@@ -2862,7 +2858,6 @@ MapFromImage  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MapToImage    Proc near
-    push ds
     pushad
 ;
     sub ebx,eax
@@ -2926,7 +2921,6 @@ map_to_image_reset:
 
 map_to_image_done:    
     popad
-    pop ds
     ret
 MapToImage  Endp
                       
