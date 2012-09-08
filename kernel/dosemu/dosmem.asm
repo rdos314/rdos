@@ -456,8 +456,6 @@ free_dos_no_merge_up:
     shl eax,4       
     add edx,10h
     add eax,edx
-    mov bx,process_page_sel
-    mov ds,bx
     mov ax,dos_process_sel
     mov ds,ax
 

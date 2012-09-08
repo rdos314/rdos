@@ -349,11 +349,11 @@ CheckReadPage   Proc near
     mov eax,ebx
 
 check_read_page_loop:
-    mov dx,process_page_sel
-    mov ds,dx
-    shr ebx,10
-    and bx,0FFFCh
-    mov edx,[ebx]
+    mov edx,ebx
+    push eax
+    GetPhysicalPage
+    mov edx,eax
+    pop eax
 ;
     and dl,7
     cmp dl,6
@@ -436,11 +436,11 @@ CheckWritePage  Proc near
     mov eax,ebx
 
 check_write_page_loop:
-    mov dx,process_page_sel
-    mov ds,dx
-    shr ebx,10
-    and bx,0FFFCh
-    mov edx,[ebx]
+    mov edx,ebx
+    push eax
+    GetPhysicalPage
+    mov edx,eax
+    pop eax
 ;
     and dl,7
     cmp dl,6
@@ -526,12 +526,11 @@ CheckWritePage  Endp
 ReadTrappedByte Proc near
     push ebx
 ;
-    mov cx,process_page_sel
-    mov ds,cx
-    mov ecx,ebx
-    shr ebx,10
-    and bx,0FFFCh
-    mov edx,[ebx]
+    mov edx,ebx
+    push eax
+    GetPhysicalPage
+    mov edx,eax
+    pop eax
 ;
     and dl,7
     cmp dl,6
@@ -575,12 +574,11 @@ ReadTrappedByte Endp
 WriteTrappedByte    Proc near
     push ebx
 ;
-    mov cx,process_page_sel
-    mov ds,cx
-    mov ecx,ebx
-    shr ebx,10
-    and bx,0FFFCh
-    mov edx,[ebx]
+    mov edx,ebx
+    push eax
+    GetPhysicalPage
+    mov edx,eax
+    pop eax
 ;
     and dl,7
     cmp dl,6
