@@ -1035,22 +1035,14 @@ QueueSend	Proc near
 	shr ecx,12
 	mov esi,gs:l_reply_base
 	and si,0F000h
-	shr esi,10
 	mov edi,gs:l_reply_glob_base
-	shr edi,10
-;
-	push ds
-	mov ax,process_page_sel
-	mov ds,ax
 
 queue_smp_send_copy:
-	mov eax,[esi]
-	mov [edi],eax
-	add esi,4
-	add edi,4
+    CopyPhysicalPage
+	add esi,1000h
+	add edi,1000h
 	sub ecx,1
 	jnz queue_smp_send_copy
-	pop ds
 ;
 	mov edi,edx
 	mov ecx,ebp
@@ -1085,22 +1077,14 @@ queue_smp_send_copy:
 	shr ecx,12
 	mov esi,gs:l_send_base
 	and si,0F000h
-	shr esi,10
 	mov edi,gs:l_send_glob_base
-	shr edi,10
-;
-	push ds
-	mov ax,process_page_sel
-	mov ds,ax
 
 queue_smp_send_rep_copy:
-	mov eax,[esi]
-	mov [edi],eax
-	add esi,4
-	add edi,4
+    CopyPhysicalPage
+	add esi,1000h
+	add edi,1000h
 	sub ecx,1
 	jnz queue_smp_send_rep_copy
-	pop ds
 ;
 	popad
 	pop es
@@ -1122,25 +1106,17 @@ QueueSend	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RemoveSend	Proc near
-	push ds
 	pushad
 ;
 	mov edx,esi
 	shr ecx,12
 	push ecx
-	shr esi,10
 	and di,0F000h
-	shr edi,10
-;
-	mov ax,process_page_sel
-	mov ds,ax
 
 rem_smp_send_copy:
-	mov eax,2
-	xchg eax,[esi]
-	mov [edi],eax
-	add esi,4
-	add edi,4
+    MovePhysicalPage
+	add esi,1000h
+	add edi,1000h
 	sub ecx,1
 	jnz rem_smp_send_copy
 ;
@@ -1149,7 +1125,6 @@ rem_smp_send_copy:
 	FreeLinear
 ;
 	popad
-	pop ds
 	ret
 RemoveSend	Endp
 
@@ -1168,25 +1143,17 @@ RemoveSend	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RemoveReply	Proc near
-	push ds
 	pushad
 ;
 	mov edx,esi
 	shr ecx,12
 	push ecx
-	shr esi,10
 	and di,0F000h
-	shr edi,10
-;
-	mov ax,process_page_sel
-	mov ds,ax
 
 rem_reply_copy:
-	mov eax,2
-	xchg eax,[esi]
-	mov [edi],eax
-	add esi,4
-	add edi,4
+    MovePhysicalPage
+	add esi,1000h
+	add edi,1000h
 	sub ecx,1
 	jnz rem_reply_copy
 ;
@@ -1195,7 +1162,6 @@ rem_reply_copy:
 	FreeLinear
 ;
 	popad
-	pop ds
 	ret
 RemoveReply	Endp
 
