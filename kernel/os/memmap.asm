@@ -406,30 +406,28 @@ CreateNamedFile Endp
 ;
 ;           NAME:           SyncOnePage
 ;
-;           DESCRIPTION:    BX              Map file
-;               ES:EDX      Page table entry
-;               EDI             File offset
+;           DESCRIPTION:    EBX:EAX         Physical address
+;                           EDX             Linear address
+;                           EDI             File offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SyncOnePage Proc near
     push eax
-    push bx
-    push edx
+    push ebx
 ;
+    mov bx,es:map_file
     or bx,bx
     jz sopDone
 ;
-    test word ptr es:[edx],40h
+    test al,40h
     jz sopDone
 ;
-    shl edx,10
     mov eax,edi
     call sync_memmap
 
 sopDone:
-    pop edx
-    pop bx
+    pop ebx
     pop eax
     ret
 SyncOnePage Endp
@@ -440,27 +438,25 @@ SyncOnePage Endp
 ;
 ;           NAME:           FreeOnePage
 ;
-;           DESCRIPTION:    BX              Map file
-;               ES:EDX      Page table entry
-;               EDI             File offset
+;           DESCRIPTION:    EBX:EAX         Physical address
+;                           EDX             Linear address
+;                           EDI             File offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeOnePage Proc near
     push eax
-    push bx
-    push edx
+    push ebx
 ;
+    mov bx,es:map_file
     or bx,bx
     jz fopDone
 ;
-    shl edx,10
     mov eax,edi
     call free_memmap
 
 fopDone:
-    pop edx
-    pop bx
+    pop ebx
     pop eax
     ret
 FreeOnePage Endp
@@ -498,42 +494,36 @@ FreeView    Proc near
     xchg ecx,ds:[esi].view_size
     mov edx,ds:[esi].view_base
 ;
-    mov ax,process_page_sel
-    mov es,ax
-;
     add ecx,edx
     and dx,0F000h
     dec ecx
     and cx,0F000h
     add ecx,1000h
     sub ecx,edx
-    shr edx,10
     shr ecx,12
-    mov eax,2
 
 fw_loop:
-    test byte ptr es:[edx],1
+    GetPhysicalPage
+    test al,1
     jz fw_next
 ;
-    test word ptr es:[edx],800h
+    test ax,800h
     jnz fw_mark
 ;
-    push eax
-    push ebx
-    mov eax,es:[edx]
-    xor ebx,ebx
     FreePhysical
-    pop ebx
-    pop eax
 
 fw_mark:
     call SyncOnePage
-    mov es:[edx],eax
+;
+	xor ebx,ebx
+	mov eax,2
+    SetPhysicalPage
+;    
     call FreeOnePage
 
 fw_next:
+    add edx,1000h
     add edi,1000h
-    add edx,4
     loop fw_loop
 
 fw_done:
@@ -583,31 +573,27 @@ UpdateView    Proc near
     mov ecx,ds:[esi].view_size
     mov edx,ds:[esi].view_base
 ;
-    mov ax,process_page_sel
-    mov es,ax
-;
     add ecx,edx
     and dx,0F000h
     dec ecx
     and cx,0F000h
     add ecx,1000h
     sub ecx,edx
-    shr edx,10
     shr ecx,12
-    mov eax,2
 
 uw_loop:
-    test byte ptr es:[edx],1
+    GetPhysicalPage
+    test al,1
     jz uw_next
 ;
-    test word ptr es:[edx],800h
+    test ax,800h
     jz uw_next
 ;
     call SyncOnePage    
 
 uw_next:
+    add edx,1000h
     add edi,1000h
-    add edx,4
     loop uw_loop
 
 uw_done:
@@ -1135,43 +1121,40 @@ close_mapping   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 map_to_user     Proc near
-    push es
     push eax
     push ebx
+    push ecx
     push edx
 ;
-    mov ax,process_page_sel
-    mov es,ax
-    shr ebx,10
-    shr edx,10
+    push edx
 ;
-    mov eax,es:[ebx]
+    mov edx,ebx
+    GetPhysicalPage
     test al,1
     jnz map_to_user_do
 ;
     push es
-    push ecx
     push edi
     mov ax,flat_sel
     mov es,ax
-    mov edi,ebx
-    shl edi,10
+    mov edi,edx
     xor eax,eax
     mov ecx,400h
     rep stos dword ptr es:[edi]     
     pop edi
-    pop ecx
     pop es
-    mov eax,es:[ebx]
+;
+    GetPhysicalPage
 
 map_to_user_do:
+    pop edx
     or ax,807h
-    mov es:[edx],eax
+    SetPhysicalPage
 ;
     pop edx
+    pop ecx
     pop ebx
     pop eax
-    pop es
     ret
 map_to_user     Endp
 
