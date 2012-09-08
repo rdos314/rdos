@@ -1,4 +1,4 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; RDOS operating system
 ; Copyright (C) 1988-2000, Leif Ekblad
 ;
@@ -2578,14 +2578,12 @@ map_to_file_do_first:
     and edx,eax
     add esi,edx
 ;
-    mov ax,process_page_sel
-    mov es,ax
-    shr esi,10
-    shr edi,10
-    mov eax,es:[esi]
+    mov edx,esi
+    GetPhysicalPage
     or ax,807h
     and al,NOT 40h
-    mov es:[edi],eax
+    mov edx,edi
+    SetPhysicalPage
 ;
     LeaveSection ds:file_list_section
     clc
@@ -2595,12 +2593,15 @@ map_to_file_leave:
     jmp map_to_file_done
 
 map_to_file_read:
-    push edi
-    mov si,process_page_sel
-    mov es,si
-    shr edi,10
-    mov dword ptr es:[edi],2
-    pop edi
+    push ebx
+    push edx
+    mov edx,edi
+    xor ebx,ebx
+    mov eax,2
+    SetPhysicalPage
+    pop edx
+    pop ebx
+;    
     mov si,flat_sel
     mov es,si
     mov ecx,1000h
