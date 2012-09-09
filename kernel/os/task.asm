@@ -179,8 +179,6 @@ unlock_futex_proc           DW OFFSET UnlockFutexSingle
 flush_global_tlb_proc       DW OFFSET FlushTlb386
 flush_process_tlb_proc      DW OFFSET FlushTlb386
 
-free_global_tlb_proc        DW OFFSET FreeGlobalTlbSingle
-
 preempt_reload_proc         DW OFFSET TimerPreemptReload
 
 core_count                  DW 0
@@ -3833,7 +3831,6 @@ start_processor_null_threads    Proc near
     mov ds:unlock_futex_proc,OFFSET UnlockFutexMultiple
     mov ds:flush_global_tlb_proc,OFFSET FlushGlobalTlbMultiple
     mov ds:flush_process_tlb_proc,OFFSET FlushProcessTlbMultiple
-    mov ds:free_global_tlb_proc,OFFSET FreeGlobalTlbMultiple
 
 start_locks_ok:
     mov ecx,stack0_size
@@ -5463,55 +5460,6 @@ FlushTlb486    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FreeGlobalTlbSingle
-;
-;           DESCRIPTION:    Free global TLB entries, single processor version
-;
-;           PARAMETERS:     CX      Number of entries
-;                           EDX     Linear address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeGlobalTlbSingle Proc near
-    push ds
-    push eax
-    push ebx
-    push cx
-    push edx
-;    
-    mov ax,sys_page_sel
-    mov ds,ax
-    shr edx,10
-    and dl,0FCh    
-    
-fgtsLoop:
-    xor eax,eax
-    xchg eax,[edx]
-    test al,1
-    jz fgtsNext
-;
-    test ax,800h
-    jnz fgtsNext
-;
-    xor ebx,ebx
-    FreePhysical
-
-fgtsNext:
-    add edx,4
-    loop fgtsLoop
-;
-    pop edx
-    pop cx
-    pop ebx
-    pop eax
-    pop ds
-    call cs:flush_global_tlb_proc
-    ret
-FreeGlobalTlbSingle Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           LockTlbBlock
 ;
 ;       DESCRIPTION:    Lock TLB block
@@ -6188,110 +6136,6 @@ FlushProcessTlbMultiple    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FreeGlobalTlbMultiple
-;
-;           DESCRIPTION:    Free global TLB entries, multiple processor version
-;
-;           PARAMETERS:     CX      Number of entries
-;                           EDX     Linear base
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeGlobalTlbMultiple    Proc near
-    push ds
-    push es
-    push fs
-    pushad
-;
-    mov ax,task_sel
-    mov ds,ax
-    mov ax,flat_sel
-    mov es,ax
-;    
-    call TryLockCore
-    pushf
-
-fgtmBlockLoop:
-    mov esi,edx
-    call AllocateTlb
-    mov es:[edx].th_page_count,0
-    mov es:[edx].th_phys_count,0
-;
-    push ds
-    mov ax,sys_page_sel
-    mov ds,ax
-    shr esi,10
-    and si,0FFFCh    
-    lea edi,[edx].th_phys_arr
-    
-fgtmEntryLoop:
-    xor eax,eax
-    xchg eax,[esi]
-    test al,1
-    jz fgtmEntryNext
-;
-    test ax,800h
-    jnz fgtmEntryNext
-;
-    stos dword ptr es:[edi]
-    mov ax,es:[edx].th_phys_count
-    inc ax
-    mov es:[edx].th_phys_count,ax
-    cmp ax,MAX_TLB_PHYS_ENTRIES
-    jne fgtmEntryNext
-
-fgtmLastLoop:
-    inc es:[edx].th_page_count
-    add esi,4    
-    sub cx,1
-    jz fgtmBlockDone    
-;
-    mov eax,[esi]
-    test al,1
-    jnz fgtmBlockDone
-;     
-    xor eax,eax   
-    mov [esi],eax
-    jmp fgtmLastLoop
-
-fgtmEntryNext:
-    inc es:[edx].th_page_count
-    add esi,4
-    loop fgtmEntryLoop
-
-fgtmBlockDone:
-    pop ds
-;
-    shl esi,10
-    push cx
-    push esi
-;
-    call LockTlb
-    call SetupGlobalTlbCores
-    call InsertTlb
-    call UnlockTlb
-;
-    call SignalTlbCores
-;
-    pop edx
-    pop cx
-    or cx,cx
-    jnz fgtmBlockLoop
-;
-    popf
-    call UpdateTlbList    
-    call TryUnlockCore
-;    
-    popad
-    pop fs
-    pop es
-    pop ds
-    ret
-FreeGlobalTlbMultiple    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           FlushGlobalTLB
 ;
 ;           DESCRIPTION:    Flush global TLB entries
@@ -6320,25 +6164,6 @@ local_flush_process_tlb Proc near
     call cs:flush_process_tlb_proc
     ret
 local_flush_process_tlb Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FreeGlobalTLB
-;
-;           DESCRIPTION:    Free & flush global TLB entries
-;
-;           PARAMETERS:     CX      Number of entries
-;                           EDX     Linear address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public local_free_global_tlb
-    
-local_free_global_tlb    Proc near
-    call cs:free_global_tlb_proc
-    ret
-local_free_global_tlb  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

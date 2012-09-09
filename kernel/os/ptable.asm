@@ -59,19 +59,21 @@ code    SEGMENT byte public use16 'CODE'
     public set_page_entry_proc
     public has_page_entry_proc
     public free_page_entries_proc
+    public free_global_page_entries_proc
     public copy_page_entries_proc
     public move_page_entries_proc
     public get_thread_page_entry_proc
     public set_thread_page_entry_proc
 
-get_page_entry_proc         DW OFFSET local_get_page_entry32
-set_page_entry_proc         DW OFFSET local_set_page_entry32
-has_page_entry_proc         DW OFFSET local_has_page_entry32
-free_page_entries_proc      DW OFFSET local_free_page_entries32
-copy_page_entries_proc      DW OFFSET local_copy_page_entries32
-move_page_entries_proc      DW OFFSET local_move_page_entries32
-get_thread_page_entry_proc  DW OFFSET local_get_thread_page_entry32
-set_thread_page_entry_proc  DW OFFSET local_set_thread_page_entry32
+get_page_entry_proc             DW OFFSET local_get_page_entry32
+set_page_entry_proc             DW OFFSET local_set_page_entry32
+has_page_entry_proc             DW OFFSET local_has_page_entry32
+free_page_entries_proc          DW OFFSET local_free_page_entries32
+free_global_page_entries_proc   DW OFFSET local_free_global_page_entries32
+copy_page_entries_proc          DW OFFSET local_copy_page_entries32
+move_page_entries_proc          DW OFFSET local_move_page_entries32
+get_thread_page_entry_proc      DW OFFSET local_get_thread_page_entry32
+set_thread_page_entry_proc      DW OFFSET local_set_thread_page_entry32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -115,6 +117,12 @@ init_page_table     PROC near
     mov edi,OFFSET free_page_entries_name
     xor cl,cl
     mov ax,free_page_entries_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_global_page_entries
+    mov edi,OFFSET free_global_page_entries_name
+    xor cl,cl
+    mov ax,free_global_page_entries_nr
     RegisterOsGate
 ;
     mov esi,OFFSET copy_page_entries
@@ -302,6 +310,63 @@ fpeDone32:
     pop ds
     ret
 local_free_page_entries32       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_free_global_page_entries32
+;
+;           DESCRIPTION:    Free global page entries 
+;
+;           PARAMETERS:     EAX         free signature
+;                           ECX         number of entries
+;                           EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_free_global_page_entries32       Proc near
+    push ds
+    pushad
+;   
+    or ecx,ecx
+    jz fgpeDone32
+;
+    mov esi,eax
+    push ecx
+    push edx
+;
+    mov bx,sys_page_sel
+    mov ds,bx
+    shr edx,10
+    and dl,0FCh
+    
+fgpeLoop32:
+    mov eax,[edx]
+    test al,1
+    jz fgpeMark32
+;
+    test ax,800h
+    jnz fgpeMark32
+;
+    xor ebx,ebx
+    FreePhysical
+
+fgpeMark32:        
+    mov [edx],esi
+;
+    add edx,4
+    sub ecx,1
+    jnz fgpeLoop32    
+;    
+    pop edx
+    pop ecx
+    call local_flush_process_tlb    
+
+fgpeDone32:
+    popad
+    pop ds
+    ret
+local_free_global_page_entries32       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -622,6 +687,26 @@ free_page_entries       Proc far
     call cs:free_page_entries_proc
     retf32
 free_page_entries       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FreeGlobalPageEntries
+;
+;           DESCRIPTION:    Free global page entries 
+;
+;           PARAMETERS:     EAX         free signature
+;                           ECX         number of entries
+;                           EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_global_page_entries_name  DB 'Free Global Page Entries',0
+
+free_global_page_entries       Proc far
+    call cs:free_global_page_entries_proc
+    retf32
+free_global_page_entries       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

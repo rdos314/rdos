@@ -86,9 +86,9 @@ local_mem_seg   ENDS
     .386p
 
     extrn local_create_data_sel16:near
-    extrn local_free_global_tlb:near
 
     extrn free_page_entries_proc:word
+    extrn free_global_page_entries_proc:word
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -1913,7 +1913,8 @@ free_big_mem    PROC near
     add es:big_avail_mem,ecx
     sub es:big_used_mem,ecx
     shr ecx,12
-    call local_free_global_tlb    
+    xor eax,eax
+    call cs:free_global_page_entries_proc
     LeaveSection ds:big_section
     ret
 free_big_mem    ENDP

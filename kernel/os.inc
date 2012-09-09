@@ -491,6 +491,13 @@ FreePageEntries MACRO
     OsGate free_page_entries_nr
                     ENDM
 
+; IN    EAX         Free bits
+; IN    ECX         Number of entries
+; IN    EDX         Linear address
+FreeGlobalPageEntries MACRO
+    OsGate free_global_page_entries_nr
+                    ENDM
+
 ; IN    ECX         Number of entries
 ; IN    ESI         Source linear address
 ; IN    EDI         Dest linear address
