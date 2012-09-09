@@ -61,6 +61,7 @@ ENDIF
     extrn init_os_protseg:near
     extrn init_user_protseg:near
     extrn init_paging_gates:near
+    extrn init_page_table:near
     extrn init_mem:near
     extrn init_gdt:near
     extrn init_idt:near
@@ -742,6 +743,7 @@ prot_init:
     mov bx,kernel_patch_sel
     call local_create_data_sel16
 ;    
+    call init_page_table
     call init_paging_gates
     call init_physical_gates
     call init_mem_sels
