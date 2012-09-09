@@ -1175,7 +1175,7 @@ set_flat_linear_readwrite_name  DB 'Set Flat Linear Read/Write',0
 set_flat_linear_readwrite       PROC far
     push ds
     push eax
-    push bx
+    push ebx
     push ecx
     push edx
 ;
@@ -1192,8 +1192,6 @@ set_flat_linear_readwrite       PROC far
     jae set_readwrite_done
 ;
     push edx
-    mov bx,process_page_sel
-    mov ds,bx
 ;
     mov ecx,eax
     add ecx,edx
@@ -1202,12 +1200,11 @@ set_flat_linear_readwrite       PROC far
     and cx,0F000h
     add ecx,1000h
     sub ecx,edx
-    shr edx,10
     shr ecx,12
     push cx
 
 set_readwrite_mark:
-    mov eax,[edx]
+    call cs:get_page_entry_proc
     test al,1
     jnz set_readwrite_allocated
     and al,6
@@ -1216,15 +1213,17 @@ set_readwrite_mark:
     cmp al,6
     je set_readwrite_next
 ;
-    and byte ptr [edx],NOT 20h
+    call cs:get_page_entry_proc
+    and al,NOT 20h
+    call cs:set_page_entry_proc
     jmp set_readwrite_next
 
 set_readwrite_allocated:
     or al,2
-    mov [edx],al
+    call cs:set_page_entry_proc
 
 set_readwrite_next:
-    add edx,4
+    add edx,1000h
     loop set_readwrite_mark
 ;
     pop cx
@@ -1234,7 +1233,7 @@ set_readwrite_next:
 set_readwrite_done:
     pop edx
     pop ecx
-    pop bx
+    pop ebx
     pop eax
     pop ds
     retf32
@@ -1258,7 +1257,7 @@ set_flat_linear_read_name       DB 'Set Flat Linear Read',0
 set_flat_linear_read    PROC far
     push ds
     push eax
-    push bx
+    push ebx
     push ecx
     push edx
 ;
@@ -1274,9 +1273,6 @@ set_flat_linear_read    PROC far
     cmp edx,flat_size
     jae set_read_done
 ;
-    mov bx,process_page_sel
-    mov ds,bx
-;
     mov ecx,eax
     add ecx,edx
     and dx,0F000h
@@ -1284,11 +1280,10 @@ set_flat_linear_read    PROC far
     and cx,0F000h
     add ecx,1000h
     sub ecx,edx
-    shr edx,10
     shr ecx,12
 
 set_read_mark:
-    mov eax,[edx]
+    call cs:get_page_entry_proc
     test al,1
     jnz set_read_allocated
 ;
@@ -1298,21 +1293,23 @@ set_read_mark:
     cmp al,6
     je set_read_mark_next
 ;
-    or byte ptr [edx],20h
+    call cs:get_page_entry_proc
+    or al,20h
+    call cs:set_page_entry_proc
     jmp set_read_mark_next
 
 set_read_allocated:
     and al,NOT 2
-    mov [edx],al
+    call cs:set_page_entry_proc
 
 set_read_mark_next:
-    add edx,4
+    add edx,1000h
     loop set_read_mark
 
 set_read_done:
     pop edx
     pop ecx
-    pop bx
+    pop ebx
     pop eax
     pop ds
     retf32
