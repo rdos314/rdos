@@ -65,6 +65,7 @@ code    SEGMENT byte public use16 'CODE'
     public free_global_page_entries_proc
     public copy_page_entries_proc
     public move_page_entries_proc
+    public emulate_page_proc
     public hook_page_proc
     public unhook_page_proc
     public get_thread_page_entry_proc
@@ -79,6 +80,7 @@ free_page_entries_proc          DW OFFSET local_free_page_entries32
 free_global_page_entries_proc   DW OFFSET local_free_global_page_entries32
 copy_page_entries_proc          DW OFFSET local_copy_page_entries32
 move_page_entries_proc          DW OFFSET local_move_page_entries32
+emulate_page_proc               DW OFFSET local_emulate_page32
 hook_page_proc                  DW OFFSET local_hook_page32
 unhook_page_proc                DW OFFSET local_unhook_page32
 get_thread_page_entry_proc      DW OFFSET local_get_thread_page_entry32
@@ -158,14 +160,20 @@ init_page_table     PROC near
     mov ax,move_page_entries_nr
     RegisterOsGate
 ;
-    mov si,OFFSET hook_page
-    mov di,OFFSET hook_page_name
+    mov esi,OFFSET set_page_emulate
+    mov edi,OFFSET set_page_emulate_name
+    xor cl,cl
+    mov ax,set_page_emulate_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET hook_page
+    mov edi,OFFSET hook_page_name
     xor cl,cl
     mov ax,hook_page_nr
     RegisterOsGate
 ;
-    mov si,OFFSET unhook_page
-    mov di,OFFSET unhook_page_name
+    mov esi,OFFSET unhook_page
+    mov edi,OFFSET unhook_page_name
     xor cl,cl
     mov ax,unhook_page_nr
     RegisterOsGate
@@ -642,6 +650,49 @@ local_move_page_entries32       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           local_emulate_page
+;
+;           DESCRIPTION:    Hook page to emulate contents
+;
+;           PARAMETERS:     EAX         Size
+;                           EDX         Linear base
+;                           ES:DI       Emulation callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_emulate_page32    PROC near
+    push ds
+    push eax
+    push ecx
+    push edx
+;
+    mov cx,sys_page_sel
+    mov ds,cx
+    mov ecx,eax
+    dec ecx
+    shr ecx,12
+    inc cx
+    shr edx,10
+    and dx,0FFFCh
+    mov ax,es
+    or ax,8006h
+    
+epMark32:
+    mov [edx],ax
+    mov word ptr [edx+2],di
+    add edx,4
+    loop epMark32
+;    
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
+    ret
+local_emulate_page32    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           local_hook_page32
 ;
 ;           DESCRIPTION:    Hook for a specified linear address range
@@ -1082,6 +1133,26 @@ move_page_entries       Proc far
     call cs:move_page_entries_proc
     retf32
 move_page_entries       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           EmulatePage
+;
+;           DESCRIPTION:    Hook for a specified linear address range
+;
+;           PARAMETERS:     EAX         Size
+;                           EDX         Linear base
+;                           ES:DI       Callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_page_emulate_name  DB 'Emulate Page',0
+
+set_page_emulate       Proc far
+    call cs:emulate_page_proc
+    retf32
+set_page_emulate       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

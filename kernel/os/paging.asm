@@ -1187,49 +1187,6 @@ trap_14_done:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           SET_PAGE_EMULATE
-;
-;           DESCRIPTION:    Hook page to emulate contents
-;
-;           PARAMETERS:         EAX         Size
-;                           EDX         Linear base
-;                           ES:DI   Emulation callback
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_page_emulate_name   DB 'Set Page Emulate',0
-
-set_page_emulate    PROC far
-    push ds
-    push eax
-    push ecx
-    push edx
-;
-    mov cx,sys_page_sel
-    mov ds,cx
-    mov ecx,eax
-    dec ecx
-    shr ecx,12
-    inc cx
-    shr edx,10
-    and dx,0FFFCh
-    mov ax,es
-    or ax,8006h
-set_emul_mark:
-    mov [edx],ax
-    mov word ptr [edx+2],di
-    add edx,4
-    loop set_emul_mark
-    pop edx
-    pop ecx
-    pop eax
-    pop ds
-    retf32
-set_page_emulate    ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           FreeV86
 ;
 ;           DESCRIPTION:    Free adapter areas in V86 process (C0000-FFFFF)
@@ -1614,12 +1571,6 @@ init_paging_gates       PROC near
     xor ebx,ebx
     xor esi,esi
     xor edi,edi
-;
-    mov si,OFFSET set_page_emulate
-    mov di,OFFSET set_page_emulate_name
-    xor cl,cl
-    mov ax,set_page_emulate_nr
-    RegisterOsGate
 ;
     mov si,OFFSET free_v86
     mov di,OFFSET free_v86_name
