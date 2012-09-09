@@ -58,6 +58,7 @@ code    SEGMENT byte public use16 'CODE'
     public get_page_entry_proc
     public set_page_entry_proc
     public has_page_entry_proc
+    public reserve_page_entries_proc
     public allocate_page_entries_proc
     public free_page_entries_proc
     public free_global_page_entries_proc
@@ -69,6 +70,7 @@ code    SEGMENT byte public use16 'CODE'
 get_page_entry_proc             DW OFFSET local_get_page_entry32
 set_page_entry_proc             DW OFFSET local_set_page_entry32
 has_page_entry_proc             DW OFFSET local_has_page_entry32
+reserve_page_entries_proc       DW OFFSET local_reserve_page_entries32
 allocate_page_entries_proc      DW OFFSET local_allocate_page_entries32
 free_page_entries_proc          DW OFFSET local_free_page_entries32
 free_global_page_entries_proc   DW OFFSET local_free_global_page_entries32
@@ -113,6 +115,12 @@ init_page_table     PROC near
     mov edi,OFFSET has_page_entry_name
     xor cl,cl
     mov ax,has_page_entry_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET reserve_page_entries
+    mov edi,OFFSET reserve_page_entries_name
+    xor cl,cl
+    mov ax,reserve_page_entries_nr
     RegisterOsGate
 ;
     mov esi,OFFSET allocate_page_entries
@@ -261,6 +269,64 @@ hpeDone32:
     ret
 local_has_page_entry32       Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_reserve_page_entries32
+;
+;           DESCRIPTION:    Reserve page entries 
+;
+;           PARAMETERS:     ECX         number of entries
+;                           EDX         start linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_reserve_page_entries32       Proc near
+    push eax
+;    
+    mov ax,process_page_sel
+    mov ds,ax
+    shr edx,10
+;
+    push ecx
+    push edx
+
+rpeLoop:
+    mov al,[edx]
+    test al,7
+    jnz rpePopFail
+;    
+    add edx,4
+    sub ecx,1
+    jnz rpeLoop
+;    
+    pop edx
+    pop ecx
+;
+    push ecx    
+
+rpeMark:
+    mov eax,2
+    mov [edx],eax
+    add edx,4
+;    
+    sub ecx,1
+    jnz rpeMark
+;
+    pop ecx
+    clc
+    jmp rpeDone    
+
+rpePopFail:
+    pop edx
+    pop ecx
+    stc
+
+rpeDone:    
+    pop eax
+    ret
+local_reserve_page_entries32       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -753,6 +819,24 @@ has_page_entry       Proc far
     retf32
 has_page_entry       Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReservePageEntries
+;
+;           DESCRIPTION:    Reserve page entries 
+;
+;           PARAMETERS:     ECX         number of entries
+;                           EDX         start linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reserve_page_entries_name  DB 'Reserve Page Entries',0
+
+reserve_page_entries       Proc far
+    call cs:reserve_page_entries_proc
+    retf32
+reserve_page_entries       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

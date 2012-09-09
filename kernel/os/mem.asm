@@ -87,6 +87,7 @@ local_mem_seg   ENDS
 
     extrn local_create_data_sel16:near
 
+    extrn reserve_page_entries_proc:word
     extrn allocate_page_entries_proc:word
     extrn free_page_entries_proc:word
     extrn free_global_page_entries_proc:word
@@ -1115,33 +1116,10 @@ reserve_local_linear    PROC far
     cmp ecx,flat_size
     jae reserve_local_linear_inv_range
 ;
-    shr edx,10
     shr eax,12
-    mov bx,process_page_sel
-    mov ds,bx
-    mov ebx,eax
-    push edx
-reserve_local_linear_loop:
-    mov cl,[edx]
-    test cl,7
-    jnz reserve_local_linear_fail
-    add edx,4
-    sub ebx,1
-    jnz reserve_local_linear_loop
-    pop edx
-;
-    mov ebx,eax
-    mov cl,2
-reserve_local_linear_mark:
-    mov [edx],cl
-    add edx,4
-    sub ebx,1
-    jnz reserve_local_linear_mark
-    clc
-    jmp reserve_local_linear_done
-
-reserve_local_linear_fail:
-    pop edx
+    mov ecx,eax
+    call cs:reserve_page_entries_proc
+    jnc reserve_local_linear_done
 
 reserve_local_linear_inv_range:
     stc
