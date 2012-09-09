@@ -87,6 +87,7 @@ local_mem_seg   ENDS
 
     extrn local_create_data_sel16:near
 
+    extrn allocate_page_entries_proc:word
     extrn free_page_entries_proc:word
     extrn free_global_page_entries_proc:word
 
@@ -885,6 +886,7 @@ no_local_biggest_block:
     pop es
     pop ds
     retf32
+
 allocate_page_local_linear:
     dec eax
     and ax,0F000h
@@ -893,53 +895,23 @@ allocate_page_local_linear:
     mov ds,dx
     mov es,dx
     EnterSection ds:local_mem_section
-    mov ebx,local_page_linear
-    shr ebx,10
-    add ebx,4
     add ds:local_big_used_mem,eax
     sub ds:local_big_avail_mem,eax
     shr eax,12
-    mov dx,process_page_sel
-    mov ds,dx
-    xor dx,dx
-allocate_blocal_loop:
-    cmp ebx,(flat_size SHR 10) AND 003FFFFFh
-    jne allocate_blocal_no_wrap
+;    
+    mov edx,local_page_linear + 1000h
+    mov ecx,eax
+    mov eax,flat_size
+    call cs:allocate_page_entries_proc
+    jnc allocate_page_local_ok
 ;
-    mov ebx,local_page_linear
-    shr ebx,10
-    add ebx,4
-    xor dx,dx
+    int 3
 
-allocate_blocal_no_wrap:
-    inc dx
-    mov cl,[ebx]
-    test cl,7
-    jz allocate_blocal_next
-    xor dx,dx
-allocate_blocal_next:
-    add ebx,4
-    cmp ax,dx
-    je allocate_blocal_end
-    jmp allocate_blocal_loop
-allocate_blocal_end:
-    mov cx,ax
-    shl eax,2
-    sub ebx,eax
-    mov dl,2
-    push ebx
-    push cx
-allocate_blocal_mark:
-    mov [ebx],dl
-    add ebx,4
-    loop allocate_blocal_mark
-    pop cx
-    pop edx
-;
+allocate_page_local_ok:    
     mov ax,local_mem_sel
     mov ds,ax
     LeaveSection ds:local_mem_section
-    shl edx,10
+;
     pop ecx
     pop ebx
     pop eax

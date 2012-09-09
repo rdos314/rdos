@@ -517,5 +517,6 @@ move_page_entries_nr        = 437
 has_page_entry_nr           = 438
 free_page_entries_nr        = 439
 free_global_page_entries_nr = 439
+allocate_page_entries_nr    = 440
 
 osgate_entries				= 480

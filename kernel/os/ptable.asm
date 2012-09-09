@@ -58,6 +58,7 @@ code    SEGMENT byte public use16 'CODE'
     public get_page_entry_proc
     public set_page_entry_proc
     public has_page_entry_proc
+    public allocate_page_entries_proc
     public free_page_entries_proc
     public free_global_page_entries_proc
     public copy_page_entries_proc
@@ -68,6 +69,7 @@ code    SEGMENT byte public use16 'CODE'
 get_page_entry_proc             DW OFFSET local_get_page_entry32
 set_page_entry_proc             DW OFFSET local_set_page_entry32
 has_page_entry_proc             DW OFFSET local_has_page_entry32
+allocate_page_entries_proc      DW OFFSET local_allocate_page_entries32
 free_page_entries_proc          DW OFFSET local_free_page_entries32
 free_global_page_entries_proc   DW OFFSET local_free_global_page_entries32
 copy_page_entries_proc          DW OFFSET local_copy_page_entries32
@@ -111,6 +113,12 @@ init_page_table     PROC near
     mov edi,OFFSET has_page_entry_name
     xor cl,cl
     mov ax,has_page_entry_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_page_entries
+    mov edi,OFFSET allocate_page_entries_name
+    xor cl,cl
+    mov ax,allocate_page_entries_nr
     RegisterOsGate
 ;
     mov esi,OFFSET free_page_entries
@@ -253,6 +261,84 @@ hpeDone32:
     ret
 local_has_page_entry32       Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_allocate_page_entries32
+;
+;           DESCRIPTION:    Allocate page entries 
+;
+;           PARAMETERS:     EAX         allocate limit
+;                           ECX         number of entries
+;                           EDX         start linear address
+;
+;           RETURNS:        EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_allocate_page_entries32       Proc near
+    push eax
+    push ebx
+    push esi
+;
+    mov esi,eax
+    shr edx,10
+    shr esi,10
+;    
+    mov bx,process_page_sel
+    mov ds,bx
+;    
+    xor ebx,ebx
+
+apeLoop:
+    cmp edx,esi
+    stc
+    je apeFail
+;
+    inc ebx
+    mov al,[edx]
+    test al,7
+    jz apeNext
+;    
+    xor ebx,ebx
+    
+apeNext:
+    add edx,4
+    cmp ecx,ebx
+    jne apeLoop
+;
+    mov eax,ecx
+    shl eax,2
+    sub edx,eax
+;
+    push edx
+    push ecx
+;    
+    mov eax,2
+    
+apeMark:
+    mov [edx],eax
+    add edx,4
+    sub ecx,1
+    jnz apeMark
+;
+    pop ecx
+    pop edx
+;    
+    shl edx,10
+    clc
+    jmp apeDone
+
+apeFail:
+    stc
+
+apeDone:
+    pop esi
+    pop ebx
+    pop eax
+    ret
+local_allocate_page_entries32       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -667,6 +753,28 @@ has_page_entry       Proc far
     retf32
 has_page_entry       Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AllocatePageEntries
+;
+;           DESCRIPTION:    Allocate page entries 
+;
+;           PARAMETERS:     EAX         allocate limit
+;                           ECX         number of entries
+;                           EDX         start linear address
+;
+;           RETURNS:        EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_page_entries_name  DB 'Allocate Page Entries',0
+
+allocate_page_entries       Proc far
+    call cs:allocate_page_entries_proc
+    retf32
+allocate_page_entries       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

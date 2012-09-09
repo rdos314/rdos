@@ -484,6 +484,14 @@ HasPageEntry MACRO
     OsGate has_page_entry_nr
                     ENDM
 
+; IN    EAX         Allocation limit
+; IN    ECX         Number of entries
+; IN    EDX         Start linear address
+; OUT   EDX         Linear address
+AllocatePageEntries MACRO
+    OsGate allocate_page_entries_nr
+                    ENDM
+
 ; IN    EAX         Free bits
 ; IN    ECX         Number of entries
 ; IN    EDX         Linear address
