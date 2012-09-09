@@ -3444,7 +3444,7 @@ read_thread_selector_retry:
 
 read_thread_selector_normal:
     and si,0FFFh
-    GetThreadPhysicalPage
+    GetThreadPageEntry
 ;
     test al,1
     jnz read_thread_selector_ok
@@ -3523,7 +3523,7 @@ write_thread_selector_retry:
 
 write_thread_selector_normal:
     and si,0FFFh
-    GetThreadPhysicalPage
+    GetThreadPageEntry
 ;
     test al,1
     jnz write_thread_selector_do
@@ -3531,7 +3531,7 @@ write_thread_selector_normal:
     push ebx
     AllocatePhysical64
     or al,7
-    SetThreadPhysicalPage
+    SetThreadPageEntry
     pop ebx
 
 write_thread_selector_do:
@@ -3764,7 +3764,7 @@ read_thread_segment_retry:
 
 read_thread_segment_normal:
     and si,0FFFh
-    GetThreadPhysicalPage
+    GetThreadPageEntry
 ;
     test al,1
     jnz read_thread_segment_ok
@@ -3851,7 +3851,7 @@ write_thread_segment_retry:
 
 write_thread_segment_normal:
     and si,0FFFh
-    GetThreadPhysicalPage
+    GetThreadPageEntry
 ;
     test al,1
     jnz write_thread_segment_do
@@ -3859,7 +3859,7 @@ write_thread_segment_normal:
     push ebx
     AllocatePhysical64
     or al,7
-    SetThreadPhysicalPage
+    SetThreadPageEntry
     pop ebx
 
 write_thread_segment_do:

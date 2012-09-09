@@ -32,10 +32,10 @@
 #define osgate_free_selector 31
 #define osgate_segment_not_present 32
 
-#define osgate_get_physical_page 33
-#define osgate_set_physical_page 34
-#define osgate_get_thread_physical_page 35
-#define osgate_set_thread_physical_page 36
+#define osgate_get_page_entry 33
+#define osgate_set_page_entry 34
+#define osgate_get_thread_page_entry 35
+#define osgate_set_thread_page_entry 36
 #define osgate_read_thread_selector 37
 #define osgate_write_thread_selector 38
 #define osgate_read_thread_segment 39
@@ -514,6 +514,9 @@
 #define osgate_copy_page_entries 436
 #define osgate_move_page_entries 437
 
+#define osgate_has_page_entry 438
+#define osgate_free_page_entries 439
+
 
 
 
@@ -550,10 +553,10 @@
 #define OsGate_free_selector 0x3E 0x67 0x9a 31 0 0 0 2 0
 #define OsGate_segment_not_present 0x3E 0x67 0x9a 32 0 0 0 2 0
 
-#define OsGate_get_physical_page 0x3E 0x67 0x9a 33 0 0 0 2 0
-#define OsGate_set_physical_page 0x3E 0x67 0x9a 34 0 0 0 2 0
-#define OsGate_get_thread_physical_page 0x3E 0x67 0x9a 35 0 0 0 2 0
-#define OsGate_set_thread_physical_page 0x3E 0x67 0x9a 36 0 0 0 2 0
+#define OsGate_get_page_entry 0x3E 0x67 0x9a 33 0 0 0 2 0
+#define OsGate_set_page_entry 0x3E 0x67 0x9a 34 0 0 0 2 0
+#define OsGate_get_thread_page_entry 0x3E 0x67 0x9a 35 0 0 0 2 0
+#define OsGate_set_thread_page_entry 0x3E 0x67 0x9a 36 0 0 0 2 0
 #define OsGate_read_thread_selector 0x3E 0x67 0x9a 37 0 0 0 2 0
 #define OsGate_write_thread_selector 0x3E 0x67 0x9a 38 0 0 0 2 0
 #define OsGate_read_thread_segment 0x3E 0x67 0x9a 39 0 0 0 2 0
@@ -1031,4 +1034,7 @@
 
 #define OsGate_copy_page_entries 0x3E 0x67 0x9a 180 1 0 0 2 0
 #define OsGate_move_page_entries 0x3E 0x67 0x9a 181 1 0 0 2 0
+
+#define OsGate_has_page_entry 0x3E 0x67 0x9a 182 1 0 0 2 0
+#define OsGate_free_page_entries 0x3E 0x67 0x9a 183 1 0 0 2 0
 

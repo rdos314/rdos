@@ -468,14 +468,26 @@ SetupTrapGate  MACRO
 
 ;       EDX         LINEAR ADDRESS
 ;       EBX:EAX     PAGE ENTRY
-GetPhysicalPage MACRO
-    OsGate get_physical_page_nr
+GetPageEntry MACRO
+    OsGate get_page_entry_nr
                     ENDM
 
 ;       EDX         LINEAR ADDRESS
 ;       EBX:EAX     PAGE ENTRY
-SetPhysicalPage MACRO
-    OsGate set_physical_page_nr
+SetPageEntry MACRO
+    OsGate set_page_entry_nr
+                    ENDM
+
+; IN    EDX         Linear address
+; OUT   NC          Valid 
+HasPageEntry MACRO
+    OsGate has_page_entry_nr
+                    ENDM
+
+; IN    ECX         Number of entries
+; IN    EDX         Linear address
+FreePageEntries MACRO
+    OsGate free_page_entries_nr
                     ENDM
 
 ; IN    ECX         Number of entries
@@ -495,15 +507,15 @@ MovePageEntries MACRO
 ;       BP          Thread
 ;       EDX         LINEAR ADDRESS
 ;       EBX:EAX     PAGE ENTRY
-GetThreadPhysicalPage   MACRO
-    OsGate get_thread_physical_page_nr
+GetThreadPageEntry   MACRO
+    OsGate get_thread_page_entry_nr
                     ENDM
 
 ;       BP          Thread
 ;       EDX         LINEAR ADDRESS
 ;       EBX:EAX     PAGE ENTRY
-SetThreadPhysicalPage   MACRO
-    OsGate set_thread_physical_page_nr
+SetThreadPageEntry   MACRO
+    OsGate set_thread_page_entry_nr
                     ENDM
 
 ;       DX:ESI  ADDRESS TO READ

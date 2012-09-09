@@ -173,15 +173,12 @@ load_object     Proc far
     mov ds,ax
     EnterSection ds:mod_section
 ;
-    push ebx
     push edx
     add edx,ecx
-    GetPhysicalPage
+    HasPageEntry
     pop edx
-    pop ebx
     pop ds
-    test al,1
-    jnz load_object_leave
+    jnc load_object_leave
 ;
     xor eax,eax
     mov ebp,edx
@@ -2721,16 +2718,13 @@ FreePeDll Endp
 LoadPage    Proc near
     pushad
 ;
-    push ebx
     push edx
     mov edx,ebp
     add edx,ecx
-    GetPhysicalPage
+    HasPageEntry
     pop edx
-    pop ebx
-    test al,1
-    stc
-    jnz load_page_done
+    cmc
+    jc load_page_done
 ;       
     test [esi].o_flags,80h
     jz load_page_from_file
@@ -2867,13 +2861,13 @@ MapToImage    Proc near
 
 map_to_image_loop:
     mov edx,esi
-    GetPhysicalPage
+    GetPageEntry
 ;
     push eax
     push ebx
     xor eax,eax
     xor ebx,ebx
-    SetPhysicalPage    
+    SetPageEntry    
     pop ebx
     pop eax
 ;
@@ -2892,7 +2886,7 @@ map_to_image_valid:
 
 map_to_image_save:
     mov edx,edi
-    SetPhysicalPage
+    SetPageEntry
 ;    
     add esi,1000h
     add edi,1000h
@@ -2906,7 +2900,7 @@ map_to_image_save:
     xor eax,eax
 
 map_to_image_reset:
-    SetPhysicalPage
+    SetPageEntry
     add edx,1000h
     loop map_to_image_reset
 

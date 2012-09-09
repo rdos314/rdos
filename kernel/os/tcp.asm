@@ -444,10 +444,10 @@ CreateBuffer    Proc near
 
 cbAlias:
     lea edx,[esi+ebp]
-    GetPhysicalPage
+    GetPageEntry
 ;
     lea edx,[edi+ebp]
-    SetPhysicalPage
+    SetPageEntry
 ;
     add esi,1000h
     add edi,1000h
@@ -496,7 +496,7 @@ FreeBuffer    Proc near
 fbAlias:
     xor eax,eax
     xor ebx,ebx
-    SetPhysicalPage
+    SetPageEntry
     add edx,1000h
     loop fbAlias    
 ;

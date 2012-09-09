@@ -32,10 +32,10 @@ segment_to_selector_nr		= 30
 free_selector_nr			= 31
 segment_not_present_nr		= 32
 
-get_physical_page_nr		= 33
-set_physical_page_nr		= 34
-get_thread_physical_page_nr = 35
-set_thread_physical_page_nr	= 36
+get_page_entry_nr		    = 33
+set_page_entry_nr		    = 34
+get_thread_page_entry_nr    = 35
+set_thread_page_entry_nr	= 36
 read_thread_selector_nr		= 37
 write_thread_selector_nr	= 38
 read_thread_segment_nr		= 39
@@ -513,5 +513,8 @@ app_patch_nr                = 435
 
 copy_page_entries_nr        = 436
 move_page_entries_nr        = 437
+
+has_page_entry_nr           = 438
+free_page_entries_nr        = 439
 
 osgate_entries				= 480

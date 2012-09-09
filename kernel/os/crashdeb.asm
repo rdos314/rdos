@@ -372,7 +372,7 @@ InitVideo Proc near
     xor edx,edx
     xor ebx,ebx
     mov eax,7
-    SetPhysicalPage
+    SetPageEntry
 ;
     mov eax,cr3
     mov cr3,eax

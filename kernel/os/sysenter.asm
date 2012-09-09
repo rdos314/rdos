@@ -342,7 +342,7 @@ init_process    PROC far
 setup_page_loop:
     mov eax,ds:[esi]
     mov ebx,ds:[esi+4]
-    SetPhysicalPage
+    SetPageEntry
 ;    
     add edx,1000h
     add esi,8
@@ -417,7 +417,7 @@ alloc_page_loop:
 ;    
     mov ds:[edi],eax
     mov ds:[edi+4],ebx
-    SetPhysicalPage
+    SetPageEntry
 ;
     add edx,1000h
     add edi,8

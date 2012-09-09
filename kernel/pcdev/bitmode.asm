@@ -189,7 +189,7 @@ init_mode12     Proc far
         xor ebx,ebx
 
 init_org_bit_loop:
-        SetPhysicalPage
+        SetPageEntry
         add edx,1000h
         loop init_org_bit_loop
 ;
@@ -199,7 +199,7 @@ init_org_bit_loop:
         mov eax,0A0003h
 
 init_alias_bit_loop:
-        SetPhysicalPage
+        SetPageEntry
         add eax,1000h
         add edx,1000h
         loop init_alias_bit_loop
@@ -237,7 +237,7 @@ delete_mode12   Proc far
         mov cx,10h
 
 delete_bit_loop:
-        SetPhysicalPage
+        SetPageEntry
         add edx,1000h
         loop delete_bit_loop
 ;

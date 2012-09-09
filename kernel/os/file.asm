@@ -2579,11 +2579,11 @@ map_to_file_do_first:
     add esi,edx
 ;
     mov edx,esi
-    GetPhysicalPage
+    GetPageEntry
     or ax,807h
     and al,NOT 40h
     mov edx,edi
-    SetPhysicalPage
+    SetPageEntry
 ;
     LeaveSection ds:file_list_section
     clc
@@ -2598,7 +2598,7 @@ map_to_file_read:
     mov edx,edi
     xor ebx,ebx
     mov eax,2
-    SetPhysicalPage
+    SetPageEntry
     pop edx
     pop ebx
 ;    

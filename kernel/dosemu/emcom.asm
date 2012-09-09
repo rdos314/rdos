@@ -351,7 +351,7 @@ CheckReadPage   Proc near
 check_read_page_loop:
     mov edx,ebx
     push eax
-    GetPhysicalPage
+    GetPageEntry
     mov edx,eax
     pop eax
 ;
@@ -438,7 +438,7 @@ CheckWritePage  Proc near
 check_write_page_loop:
     mov edx,ebx
     push eax
-    GetPhysicalPage
+    GetPageEntry
     mov edx,eax
     pop eax
 ;
@@ -528,7 +528,7 @@ ReadTrappedByte Proc near
 ;
     mov edx,ebx
     push eax
-    GetPhysicalPage
+    GetPageEntry
     mov edx,eax
     pop eax
 ;
@@ -576,7 +576,7 @@ WriteTrappedByte    Proc near
 ;
     mov edx,ebx
     push eax
-    GetPhysicalPage
+    GetPageEntry
     mov edx,eax
     pop eax
 ;

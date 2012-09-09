@@ -817,7 +817,7 @@ apPagesOk:
     push ecx
 
 apPhysLoop:
-    SetPhysicalPage
+    SetPageEntry
     add eax,1000h
     add edx,1000h
     loop apPhysLoop
@@ -974,14 +974,14 @@ ipaLoop:
     push ebx
     xor ebx,ebx
     or al,67h
-    SetPhysicalPage
+    SetPageEntry
     pop ebx
 ;
     push ebx
     xor ebx,ebx
     add eax,1000h
     add edx,1000h
-    SetPhysicalPage
+    SetPageEntry
     sub edx,1000h
     pop ebx
 ;        
@@ -1639,7 +1639,7 @@ AddPrdEntry     Proc near
     mov edx,esi
     and dx,0F000h        
     push ebx
-    GetPhysicalPage
+    GetPageEntry
     pop ebx
 ;    
     and ax,0F000h

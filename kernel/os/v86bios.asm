@@ -294,13 +294,13 @@ handle_output_done:
 
 handle_output_zero:
     mov edx,edi
-    GetPhysicalPage
+    GetPageEntry
 ;
     push eax
     push ebx
     xor ebx,ebx        
     mov eax,2
-    SetPhysicalPage
+    SetPageEntry
     pop ebx
     pop eax
 ;
@@ -337,7 +337,7 @@ bios_process:
     xor edx,edx
     xor ebx,ebx
     mov eax,7
-    SetPhysicalPage
+    SetPageEntry
 ;
     xor ebx,ebx
     mov eax,0A0007h
@@ -345,7 +345,7 @@ bios_process:
     mov cx,40h
 
 rom_loop:
-    SetPhysicalPage
+    SetPageEntry
     add eax,1000h
     add edx,1000h
     loop rom_loop
@@ -356,7 +356,7 @@ rom_loop:
     mov cx,10h
 
 bios_loop:
-    SetPhysicalPage
+    SetPageEntry
     add eax,1000h
     add edx,1000h
     loop bios_loop

@@ -3293,7 +3293,7 @@ init_ioapic_pci_trigger_mode:
     mov eax,es:apic_phys
     or ax,33h
     xor ebx,ebx
-    SetPhysicalPage    
+    SetPageEntry    
     mov bx,apic_mem_sel
     mov ecx,1000h
     CreateDataSelector16
@@ -3313,7 +3313,7 @@ init_ioapic_table_loop:
     mov eax,es:[di].aio_phys
     or ax,33h
     xor ebx,ebx
-    SetPhysicalPage    
+    SetPageEntry    
     AllocateGdt
     mov ecx,1000h
     CreateDataSelector16
@@ -3747,20 +3747,20 @@ BootCore    Proc near
     pushad
 ;
     xor edx,edx
-    GetPhysicalPage
+    GetPageEntry
     push eax
     push ebx
 ;    
     mov eax,63h
-    SetPhysicalPage
+    SetPageEntry
 ;    
     mov edx,1000h
-    GetPhysicalPage
+    GetPageEntry
     push eax
     push ebx
 ;    
     mov eax,1063h
-    SetPhysicalPage
+    SetPageEntry
 ;
     mov ax,flat_sel
     mov es,ax
@@ -3871,12 +3871,12 @@ bcDone:
     pop ebx
     pop eax
     mov edx,1000h
-    SetPhysicalPage
+    SetPageEntry
 ;
     pop ebx
     pop eax
     xor edx,edx
-    SetPhysicalPage
+    SetPageEntry
 ;
     popad
     pop es
@@ -4288,7 +4288,7 @@ init    PROC far
     mov eax,es:hpett_phys_base
     or ax,33h
     xor ebx,ebx
-    SetPhysicalPage
+    SetPageEntry
     AllocateGdt
     mov ecx,1000h
     CreateDataSelector16

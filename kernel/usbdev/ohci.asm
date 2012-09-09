@@ -288,7 +288,7 @@ AllocateBlock32 PROC near
     push ebx    
     AllocatePhysical32
     or al,7
-    SetPhysicalPage
+    SetPageEntry
     pop ebx
 ;    
     mov ecx,32
@@ -521,7 +521,7 @@ AllocateEd      PROC near
     call InitEd
 ;
     push ebx
-    GetPhysicalPage
+    GetPageEntry
     pop ebx
 ;    
     and ax,0F000h
@@ -554,7 +554,7 @@ AllocateTd      PROC near
     call InitTd
 ;
     push ebx
-    GetPhysicalPage
+    GetPageEntry
     pop ebx
 ;    
     and ax,0F000h
@@ -621,7 +621,7 @@ SyncHead    Proc near
     push ebx
     xor ebx,ebx
     or ax,803h
-    SetPhysicalPage
+    SetPageEntry
     pop ebx
 ;    
     mov edx,es:[ebx+edx].otd_my_va
@@ -1034,7 +1034,7 @@ add_pipe_has_buffer:
     mov edx,edi    
 ;
     push ebx
-    GetPhysicalPage
+    GetPageEntry
     pop ebx
 ;    
     and ax,0F000h
@@ -2131,7 +2131,7 @@ rpSetupDone:
     mov edx,fs:osp_sync_linear
     xor ebx,ebx
     xor eax,eax
-    SetPhysicalPage
+    SetPageEntry
 ;    
     mov ecx,1000h
     FreeLinear
@@ -2284,7 +2284,7 @@ update_reverse_loop:
     mov edx,ds:ohc_map_linear
     push ebx
     xor ebx,ebx
-    SetPhysicalPage
+    SetPageEntry
     pop ebx
 ;    
     mov edx,fs:[bx].otd_my_va
@@ -2792,7 +2792,7 @@ AddFunction  Proc near
 ;
     xor ebx,ebx
     or ax,803h
-    SetPhysicalPage
+    SetPageEntry
 ;
     push ecx
     AllocateGdt
@@ -2805,7 +2805,7 @@ AddFunction  Proc near
     AllocateBigLinear
     AllocatePhysical32
     or al,7
-    SetPhysicalPage
+    SetPageEntry
 ;    
     mov ecx,eax
     AllocateGdt
@@ -2826,7 +2826,7 @@ AddFunction  Proc near
     mov ds:ohc_linear,edx
 ;
     push ebx
-    GetPhysicalPage
+    GetPageEntry
     pop ebx
     and ax,0F000h
     mov ds:ohc_phys,eax

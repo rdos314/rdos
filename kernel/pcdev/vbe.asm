@@ -247,17 +247,7 @@ init_flat_check:
     mov edi,es:v_app_base
     mov ecx,es:v_app_size
     shr ecx,12
-
-init_flat_move_loop:
-    mov edx,esi
-    GetPhysicalPage
-    mov edx,edi
-    SetPhysicalPage
-;
-    add esi,1000h
-    add edi,1000h
-    sub ecx,1
-    jnz init_flat_move_loop    
+    CopyPageEntries
 ;
     mov edx,es:v_phys_base
     mov ecx,es:v_app_size
@@ -267,7 +257,7 @@ init_flat_move_loop:
     or al,0Fh
 
 init_lfb_map_loop:
-    SetPhysicalPage
+    SetPageEntry
     add eax,1000h
     add edx,1000h
     sub ecx,1
@@ -335,7 +325,7 @@ delete_linear   Proc far
     xor ebx,ebx
 
 delete_phys_loop:
-    SetPhysicalPage
+    SetPageEntry
     add edx,1000h
     sub ecx,1
     jnz delete_phys_loop
@@ -347,7 +337,7 @@ delete_phys_loop:
     xor ebx,ebx
 
 delete_app_loop:
-    SetPhysicalPage
+    SetPageEntry
     add edx,1000h
     sub ecx,1
     jnz delete_app_loop
@@ -1464,7 +1454,7 @@ init_v86_io_loop:
     or al,3
 
 init_v86_memmap_loop:
-    SetPhysicalPage
+    SetPageEntry
     add edx,1000h
     add eax,1000h
     sub ecx,1
@@ -1501,7 +1491,7 @@ init_v86_calls:
     xor ebx,ebx
 
 init_v86_free_loop:
-    SetPhysicalPage
+    SetPageEntry
     add edx,1000h
     sub ecx,1
     jnz init_v86_free_loop

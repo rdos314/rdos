@@ -537,11 +537,11 @@ void RdosCreateCallGateSelector(int sel, void __far (*dest)(), int count);
 void RdosCreateIntGateSelector(int intnum, int dpl, void __far (*dest)());
 void RdosCreateTrapGateSelector(int intnum, int dpl, void __far (*dest)());
 
-long long RdosGetPhysicalPage(long linear);
-void RdosSetPhysicalPage(long linear, long long page);
+long long RdosGetPageEntry(long linear);
+void RdosSetPageEntry(long linear, long long page);
 
-long RdosGetThreadPhysicalPage(int thread, long linear);
-void RdosSetThreadPhysicalPage(int thread, long linear, long page);
+long RdosGetThreadPageEntry(int thread, long linear);
+void RdosSetThreadPageEntry(int thread, long linear, long page);
 
 int RdosAllocateBigGlobalSelector(long size);
 int RdosAllocateSmallGlobalSelector(long size);
@@ -1069,22 +1069,22 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     "pop ds" \
     parm [eax] [ebx] [esi];
 
-#pragma aux RdosGetPhysicalPage = \
-    OsGate_get_physical_page  \
+#pragma aux RdosGetPageEntry = \
+    OsGate_get_page_entry  \
     parm [edx] \
     value [ebx eax];
 
-#pragma aux RdosSetPhysicalPage = \
-    OsGate_set_physical_page  \
+#pragma aux RdosSetPageEntry = \
+    OsGate_set_page_entry  \
     parm [edx] [ebx eax];
 
-#pragma aux RdosGetThreadPhysicalPage = \
-    OsGate_get_thread_physical_page  \
+#pragma aux RdosGetThreadPageEntry = \
+    OsGate_get_thread_page_entry  \
     parm [ebx] [edx] \
     value [eax];
 
-#pragma aux RdosSetThreadPhysicalPage = \
-    OsGate_set_thread_physical_page  \
+#pragma aux RdosSetThreadPageEntry = \
+    OsGate_set_thread_page_entry  \
     parm [ebx] [edx] [eax];
 
 #pragma aux RdosAllocateBigGlobalSelector = \

@@ -279,7 +279,7 @@ init_focus_process      Proc far
     xor ebx,ebx
     
 init_local_loop:
-    SetPhysicalPage
+    SetPageEntry
     add edx,1000h
     loop init_local_loop    
 ;
@@ -311,17 +311,7 @@ free_focus_process      Proc far
 ;
     mov edx,io_local_linear
     mov cx,400h
-
-free_local_loop:
-    GetPhysicalPage
-    or eax,eax
-    jz free_local_next
-;
-    FreePhysical
-
-free_local_next:
-    add edx,1000h
-    loop free_local_loop    
+    FreePageEntries
 ;
     pop edx
     pop cx

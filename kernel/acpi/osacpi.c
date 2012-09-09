@@ -161,7 +161,7 @@ void *AcpiOsMapMemory(ACPI_PHYSICAL_ADDRESS PhysicalAddress, ACPI_SIZE Length)
         ads = linear + offset;
         while (size)
         {
-            RdosSetPhysicalPage(linear, PhysicalAddress | 0x3);
+            RdosSetPageEntry(linear, PhysicalAddress | 0x3);
             linear += 0x1000;
             PhysicalAddress += 0x1000;
             size -= 0x1000;
@@ -200,7 +200,7 @@ void AcpiOsUnmapMemory(void *LogicalAddress, ACPI_SIZE Length)
 
     while (size)
     {
-        RdosSetPhysicalPage(linear, 0);
+        RdosSetPageEntry(linear, 0);
         linear += 0x1000;
         size -= 0x1000;
     }
@@ -223,7 +223,7 @@ ACPI_STATUS AcpiOsGetPhysicalAddress(void *LogicalAddress, ACPI_PHYSICAL_ADDRESS
     offset = linear & 0xFFF;
     linear &= 0xFFFFF000;
 
-    *PhysicalAddress = RdosGetPhysicalPage(linear) + offset;
+    *PhysicalAddress = RdosGetPageEntry(linear) + offset;
 
     return AE_OK;
 }
@@ -616,8 +616,8 @@ ACPI_STATUS AcpiOsReadMemory(ACPI_PHYSICAL_ADDRESS Address, UINT32 *Value, UINT3
 
     flags = RdosRequestSpinlock(&MapLock);
 
-    RdosSetPhysicalPage(MapLinear, page | 0x3);
-    RdosSetPhysicalPage(MapLinear + 0x1000, (page + 0x1000) | 0x3);
+    RdosSetPageEntry(MapLinear, page | 0x3);
+    RdosSetPageEntry(MapLinear + 0x1000, (page + 0x1000) | 0x3);
     ptr = RdosLinearToPointer(MapLinear + offset);
 
     switch (Width)
@@ -659,8 +659,8 @@ ACPI_STATUS AcpiOsWriteMemory(ACPI_PHYSICAL_ADDRESS Address, UINT32 Value, UINT3
 
     flags = RdosRequestSpinlock(&MapLock);
 
-    RdosSetPhysicalPage(MapLinear, page | 0x3);
-    RdosSetPhysicalPage(MapLinear + 0x1000, (page + 0x1000) | 0x3);
+    RdosSetPageEntry(MapLinear, page | 0x3);
+    RdosSetPageEntry(MapLinear + 0x1000, (page + 0x1000) | 0x3);
     ptr = RdosLinearToPointer(MapLinear + offset);
 
     switch (Width)

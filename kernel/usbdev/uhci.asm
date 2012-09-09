@@ -302,7 +302,7 @@ AllocateBlock32 PROC near
 ;    
     AllocatePhysical32
     or al,7
-    SetPhysicalPage
+    SetPageEntry
     pop ebx
 ;    
     mov ecx,32
@@ -479,7 +479,7 @@ InitQh  PROC near
     mov es:[edx].uqh_elem,1
     mov es:[edx].uqh_va_elem,0
     push ebx
-    GetPhysicalPage
+    GetPageEntry
     pop ebx
 ;    
     and ax,0F000h
@@ -517,7 +517,7 @@ AllocateQh      PROC near
     mov es:[edx].uqh_elem,1
     mov es:[edx].uqh_va_elem,0
     push ebx
-    GetPhysicalPage
+    GetPageEntry
     pop ebx
     and ax,0F000h
     mov cx,dx
@@ -587,7 +587,7 @@ atSaveSeq:
     mov es:[edx].utd_host,ecx
 ;    
     push ebx
-    GetPhysicalPage
+    GetPageEntry
     pop ebx
     and ax,0F000h
     mov cx,dx
@@ -602,7 +602,7 @@ atSaveSeq:
     push edx
     mov edx,edi
     push ebx
-    GetPhysicalPage
+    GetPageEntry
     pop ebx
     and ax,0F000h
     mov cx,dx
@@ -1063,7 +1063,7 @@ CreateIntrQueue PROC near
     AllocateBigLinear
     AllocatePhysical32
     or al,7
-    SetPhysicalPage
+    SetPageEntry
     mov ds:uhc_int_linear,edx
     mov ecx,eax
     AllocateGdt
@@ -1084,7 +1084,7 @@ ciQhLoop:
     loop ciQhLoop
 ;
     mov edx,ds:uhc_int_linear
-    GetPhysicalPage
+    GetPageEntry
     and ax,0F000h
     mov ds:uhc_int_phys,eax    
 ;
@@ -2575,7 +2575,7 @@ AddFunction  Proc near
     AllocateBigLinear
     AllocatePhysical32
     or al,7
-    SetPhysicalPage
+    SetPageEntry
 ;    
     mov ds:uhc_hw_linear,edx
     mov ecx,eax
@@ -2591,7 +2591,7 @@ AddFunction  Proc near
     mov ax,ds
     mov es,ax
 ;
-    GetPhysicalPage
+    GetPageEntry
     and ax,0F000h
     mov ds:uhc_hw_phys,eax    
 ;    

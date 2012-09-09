@@ -329,13 +329,13 @@ CreateRxRing    Proc near
     AllocateBigLinear
     AllocatePhysical32
     or al,7
-    SetPhysicalPage
+    SetPageEntry
     mov edi,edx
     mov ecx,400h
     xor eax,eax
     rep stos dword ptr es:[edi]
 ;
-    GetPhysicalPage
+    GetPageEntry
     and ax,0F000h
     mov ds:RxRingPhys,eax
 ;
@@ -364,10 +364,10 @@ crLoop:
     mov es:[di].rx_low_ads,eax
 ;
     mov al,67h
-    SetPhysicalPage
+    SetPageEntry
     add edx,1000h
     add eax,1000h
-    SetPhysicalPage
+    SetPageEntry
 ;
     add si,4
     add di,16
@@ -401,13 +401,13 @@ CreateTxRing    Proc near
     AllocateBigLinear
     AllocatePhysical32
     or al,7
-    SetPhysicalPage
+    SetPageEntry
     mov edi,edx
     mov ecx,400h
     xor eax,eax
     rep stos dword ptr es:[edi]
 ;
-    GetPhysicalPage
+    GetPageEntry
     and ax,0F000h
     mov ds:TxRingPhys,eax
 ;
@@ -435,10 +435,10 @@ ctLoop:
     mov es:[di].tx_low_ads,eax
 ;
     mov al,67h
-    SetPhysicalPage
+    SetPageEntry
     add edx,1000h
     add eax,1000h
-    SetPhysicalPage
+    SetPageEntry
 ;
     add si,4
     add di,16

@@ -231,7 +231,7 @@ AllocateBlock64 PROC near
     push ebx
     AllocatePhysical32
     or al,7
-    SetPhysicalPage
+    SetPageEntry
     pop ebx
 ;    
     mov ecx,64
@@ -481,7 +481,7 @@ AllocateQh      PROC near
     call InitQh
 ;
     push ebx
-    GetPhysicalPage
+    GetPageEntry
     pop ebx
 ;    
     and ax,0F000h
@@ -513,7 +513,7 @@ AllocateQtd     PROC near
     call AllocateBlock64
 ;
     push ebx
-    GetPhysicalPage
+    GetPageEntry
     pop ebx
     and ax,0F000h
     mov cx,dx
@@ -657,7 +657,7 @@ AllocateFillQtd PROC near
 ;
     mov al,es:[edx]
     push ebx
-    GetPhysicalPage
+    GetPageEntry
     pop ebx
     and ax,0F000h
     mov bx,dx
@@ -677,7 +677,7 @@ AllocateFillQtd PROC near
 afqLoop:    
     mov al,es:[edx]
     push ebx
-    GetPhysicalPage
+    GetPageEntry
     pop ebx
 ;    
     and ax,0F000h
@@ -1642,7 +1642,7 @@ AddFunction  Proc near
 ;
     xor ebx,ebx
     or ax,803h
-    SetPhysicalPage
+    SetPageEntry
 ;
     push ecx
     AllocateGdt
@@ -1672,7 +1672,7 @@ AddFunction  Proc near
 ;
     mov ds:ehc_reg_sel,bp
     mov ds:ehc_linear,edx
-    GetPhysicalPage
+    GetPageEntry
     and ax,0F000h
     mov ds:ehc_phys,eax
 ;     

@@ -151,13 +151,13 @@ switch_mode_done:
     call SetCursorPhysical
 ;
     mov edx,ds:v_mem_base
-    GetPhysicalPage
+    GetPageEntry
     push eax
     push ebx
 ;    
     mov eax,edx
     or ax,807h
-    SetPhysicalPage
+    SetPageEntry
 ;
     EnterSection ds:v_section
     push ds
@@ -168,7 +168,7 @@ switch_mode_done:
     mov eax,edx
     xor ebx,ebx
     or ax,807h
-    SetThreadPhysicalPage
+    SetThreadPageEntry
     pop ebx
 ;
     mov ds:v_has_focus,1
@@ -198,7 +198,7 @@ switch_mode_done:
 ;
     or ax,807h
     mov edx,ds:v_mem_base
-    SetPhysicalPage
+    SetPageEntry
 
 switch_to_done:
     popad
@@ -225,14 +225,14 @@ switch_from     Proc far
     jz switch_from_done
 ;
     mov edx,ds:v_mem_base
-    GetPhysicalPage
+    GetPageEntry
     push eax
     push ebx
 ;    
     mov eax,edx
     xor ebx,ebx
     or ax,807h
-    SetPhysicalPage
+    SetPageEntry
 ;
     EnterSection ds:v_section
     push ds
@@ -250,10 +250,10 @@ switch_from     Proc far
     mov bp,ax
     mov es,bp
     mov edx,ds:v_buf_base
-    GetPhysicalPage
+    GetPageEntry
     or ax,807h
     mov edx,ds:v_mem_base
-    SetThreadPhysicalPage
+    SetThreadPageEntry
     LeaveSection ds:v_section
 
     mov edx,es:p_cr3
@@ -268,7 +268,7 @@ switch_from     Proc far
 ;
     mov edx,ds:v_mem_base
     or ax,807h
-    SetPhysicalPage
+    SetPageEntry
 
 switch_from_done:
     popad
@@ -775,16 +775,16 @@ init_mode3      Proc far
     xor ebx,ebx
 
 init_mono_loop:
-    SetPhysicalPage
+    SetPageEntry
     add edx,1000h
     cmp edx,0C0000h
     jne init_mono_loop
 ;
     mov edx,ds:v_buf_base
-    GetPhysicalPage
+    GetPageEntry
     or ax,807h
     mov edx,ds:v_mem_base
-    SetPhysicalPage
+    SetPageEntry
     pop ax
     clc
 ;

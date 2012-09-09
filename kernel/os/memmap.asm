@@ -503,7 +503,7 @@ FreeView    Proc near
     shr ecx,12
 
 fw_loop:
-    GetPhysicalPage
+    GetPageEntry
     test al,1
     jz fw_next
 ;
@@ -515,9 +515,9 @@ fw_loop:
 fw_mark:
     call SyncOnePage
 ;
-	xor ebx,ebx
-	mov eax,2
-    SetPhysicalPage
+        xor ebx,ebx
+        mov eax,2
+    SetPageEntry
 ;    
     call FreeOnePage
 
@@ -582,7 +582,7 @@ UpdateView    Proc near
     shr ecx,12
 
 uw_loop:
-    GetPhysicalPage
+    GetPageEntry
     test al,1
     jz uw_next
 ;
@@ -1129,7 +1129,7 @@ map_to_user     Proc near
     push edx
 ;
     mov edx,ebx
-    GetPhysicalPage
+    GetPageEntry
     test al,1
     jnz map_to_user_do
 ;
@@ -1144,12 +1144,12 @@ map_to_user     Proc near
     pop edi
     pop es
 ;
-    GetPhysicalPage
+    GetPageEntry
 
 map_to_user_do:
     pop edx
     or ax,807h
-    SetPhysicalPage
+    SetPageEntry
 ;
     pop edx
     pop ecx

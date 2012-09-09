@@ -71,13 +71,25 @@ init_page_table     PROC near
     mov esi,OFFSET get_page_entry
     mov edi,OFFSET get_page_entry_name
     xor cl,cl
-    mov ax,get_physical_page_nr
+    mov ax,get_page_entry_nr
     RegisterOsGate
 ;
     mov esi,OFFSET set_page_entry
     mov edi,OFFSET set_page_entry_name
     xor cl,cl
-    mov ax,set_physical_page_nr
+    mov ax,set_page_entry_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET has_page_entry
+    mov edi,OFFSET has_page_entry_name
+    xor cl,cl
+    mov ax,has_page_entry_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_page_entries
+    mov edi,OFFSET free_page_entries_name
+    xor cl,cl
+    mov ax,free_page_entries_nr
     RegisterOsGate
 ;
     mov esi,OFFSET copy_page_entries
@@ -95,13 +107,13 @@ init_page_table     PROC near
     mov esi,OFFSET get_thread_page_entry
     mov edi,OFFSET get_thread_page_entry_name
     xor cl,cl
-    mov ax,get_thread_physical_page_nr
+    mov ax,get_thread_page_entry_nr
     RegisterOsGate
 ;    
     mov esi,OFFSET set_thread_page_entry
     mov edi,OFFSET set_thread_page_entry_name
     xor cl,cl
-    mov ax,set_thread_physical_page_nr
+    mov ax,set_thread_page_entry_nr
     RegisterOsGate
 ;    
     pop ds
@@ -178,6 +190,99 @@ sppok:
     pop ds
     retf32
 set_page_entry       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           HasPageEntry
+;
+;           DESCRIPTION:    Check physical page for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;
+;           RETURNS:        NC          valid
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_page_entry_name  DB 'Has Page Entry',0
+
+has_page_entry       Proc far
+    push ds
+    push eax
+;    
+    mov ax,process_page_sel
+    mov ds,ax
+    mov eax,edx
+    shr eax,10
+    and al,0FCh
+    mov eax,[eax]
+    test al,1
+    clc
+    jnz hpeDone
+;
+    stc
+
+hpeDone:    
+    pop eax    
+    pop ds
+    retf32
+has_page_entry       Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FreePageEntries
+;
+;           DESCRIPTION:    Free page entries 
+;
+;           PARAMETERS:     ECX         number of entries
+;                           EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_page_entries_name  DB 'Free Page Entries',0
+
+free_page_entries       Proc far
+    push ds
+    pushad
+;
+    or ecx,ecx
+    jz fpeDone
+;
+    push ecx
+    push edx
+;
+    mov bx,process_page_sel
+    mov ds,bx
+    shr edx,10
+    and dl,0FCh
+    
+fpeLoop:
+    mov eax,[edx]
+    test al,1
+    jz fpeMark
+;
+    xor ebx,ebx
+    FreePhysical
+
+fpeMark:        
+    mov eax,2
+    mov [edx],eax
+;
+    add edx,4
+    sub ecx,1
+    jnz fpeLoop    
+;    
+    pop edx
+    pop ecx
+    call local_flush_process_tlb    
+
+fpeDone:
+    popad
+    pop ds
+    retf32
+free_page_entries       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

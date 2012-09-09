@@ -136,7 +136,7 @@ AcpiOsGetRootPointer_ Proc near
 ;    
     xor ebx,ebx
     mov eax,7h
-    SetPhysicalPage
+    SetPageEntry
 ;    
     mov esi,40Eh
     mov si,[si]
@@ -146,7 +146,7 @@ AcpiOsGetRootPointer_ Proc near
     mov eax,esi
     and ax,0F000h
     or al,7
-    SetPhysicalPage
+    SetPageEntry
     and si,0FFFh
 ;    
     mov cx,40h
@@ -165,7 +165,7 @@ os_get_rsdp_bios:
     mov eax,edi
     and ax,0F000h
     or al,7
-    SetPhysicalPage
+    SetPageEntry
 ;
     mov esi,edi
     and si,0FFFh
@@ -187,7 +187,7 @@ os_get_rsdp_bios_page:
     jmp os_get_rsdp_done
 
 os_get_rsdp_ok:
-    GetPhysicalPage
+    GetPageEntry
     and ax,0F000h
     or ax,si
 
@@ -195,7 +195,7 @@ os_get_rsdp_done:
     push eax
     xor eax,eax
     mov ds,ax
-    SetPhysicalPage
+    SetPageEntry
     mov ecx,1000h
     FreeLinear
     pop eax
@@ -247,7 +247,7 @@ GetRsdp Proc near
 ;
     xor ebx,ebx
     mov eax,7h
-    SetPhysicalPage
+    SetPageEntry
 ;    
     mov esi,40Eh
     mov si,[si]
@@ -257,7 +257,7 @@ GetRsdp Proc near
     mov eax,esi
     and ax,0F000h
     or al,7
-    SetPhysicalPage
+    SetPageEntry
     and si,0FFFh
 ;    
     mov cx,40h
@@ -276,7 +276,7 @@ get_rsdp_bios:
     mov eax,edi
     and ax,0F000h
     or al,7
-    SetPhysicalPage
+    SetPageEntry
 ;
     mov esi,edi
     and si,0FFFh
@@ -305,7 +305,7 @@ get_rsdp_done:
     pushf
     xor eax,eax
     mov ds,ax
-    SetPhysicalPage
+    SetPageEntry
     mov ecx,1000h
     FreeLinear
     popf
@@ -357,7 +357,7 @@ GetTable Proc near
     xor ebx,ebx    
     and ax,0F000h
     or al,7    
-    SetPhysicalPage
+    SetPageEntry
     pop ebx
 ;    
     push edx
@@ -373,7 +373,7 @@ GetTable Proc near
     xor ebx,ebx
     xor eax,eax
     mov ds,ax
-    SetPhysicalPage
+    SetPageEntry
     pop ebx
 ;    
     push ecx
@@ -429,7 +429,7 @@ GetTable Proc near
     or al,7    
 
 get_table_set_phys:
-    SetPhysicalPage
+    SetPageEntry
     add eax,1000h
     add edx,1000h
     loop get_table_set_phys
@@ -483,7 +483,7 @@ get_table_free:
     xor ebx,ebx
 
 get_table_free_phys:
-    SetPhysicalPage
+    SetPageEntry
     add edx,1000h
     loop get_table_free_phys
 

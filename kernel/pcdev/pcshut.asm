@@ -747,7 +747,7 @@ abort_task_do:
     mov eax,edx
     or al,7
     xor ebx,ebx
-    SetPhysicalPage
+    SetPageEntry
 ;
     mov ecx,cr3
     mov cr3,ecx

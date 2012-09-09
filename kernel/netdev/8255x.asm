@@ -562,7 +562,7 @@ InitCmd Proc near
     mov ecx,TX_RING_SIZE SHR 12
 
 ic_ring_loop:
-    SetPhysicalPage
+    SetPageEntry
     add eax,1000h
     add edx,1000h
     loop ic_ring_loop
@@ -736,7 +736,7 @@ InitRx  Proc near
     mov ecx,RX_RING_SIZE SHR 12
 
 ir_rxring_loop:
-    SetPhysicalPage
+    SetPageEntry
     add eax,1000h
     add edx,1000h
     loop ir_rxring_loop
@@ -1215,7 +1215,7 @@ send_do:
     push ecx
     GetSelectorBaseSize
     pop ecx
-    GetPhysicalPage
+    GetPageEntry
     and ax,0F000h
     and ecx,0FFFh
     and dx,0FFFh
