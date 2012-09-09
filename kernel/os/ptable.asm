@@ -639,7 +639,6 @@ local_move_page_entries32       Endp
 local_get_thread_page_entry32    Proc near
     push ds
     push es
-    push ebx
     push edx
     push si
 ;
@@ -682,7 +681,6 @@ get_thread_phys_done32:
     SimSti
     pop si
     pop edx
-    pop ebx
     pop es
     pop ds
     ret

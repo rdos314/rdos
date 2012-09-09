@@ -3300,7 +3300,6 @@ validate_thread_selector    Endp
 get_thread_linear_name  DB 'Get Thread Linear',0
 
 get_thread_linear       PROC far
-    push ds
     push es
     push ax
     push bx
@@ -3308,18 +3307,14 @@ get_thread_linear       PROC far
     ThreadToSel
     jc get_thread_linear_done
 ;    
-    mov ax,process_page_sel
-    mov ds,ax
     mov ax,flat_sel
     mov es,ax
-;
     call validate_thread_selector
 
 get_thread_linear_done:
     pop bx
     pop ax
     pop es
-    pop ds
     ret
 get_thread_linear       ENDP
 
@@ -3344,26 +3339,26 @@ get_thread_linear       ENDP
 read_thread_selector_name       DB 'Read Thread Selector',0
 
 read_thread_selector    PROC far
-    push ds
     push es
+    push ebx
     push ecx
     push edx
     push esi
     push bp
 ;
     mov bp,bx
-    mov ax,process_page_sel
-    mov ds,ax
     mov ax,flat_sel
     mov es,ax
-;
+
 read_thread_selector_retry:
     call validate_thread_selector
     jc read_thread_selector_done
+;
     movzx esi,dx
     and dx,0F000h
     or edx,edx
     jnz read_thread_selector_normal
+;    
     mov dx,flat_sel
     movzx esi,si
     add esi,page0_linear
@@ -3375,6 +3370,7 @@ read_thread_selector_normal:
 ;
     test al,1
     jnz read_thread_selector_ok
+;    
     stc
     mov al,'%'
     jmp read_thread_selector_done
@@ -3384,23 +3380,27 @@ read_thread_selector_ok:
     mov eax,1000h
     AllocateLocalLinear
     pop eax
-    shr edx,10
-    mov [edx],eax
-    shl edx,10
+    SetPageEntry
+;
     mov al,es:[edx+esi]
-    shr edx,10
-    mov dword ptr [edx],0
-    shl edx,10
+;
+    push eax
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+    pop eax
+;    
     mov ecx,1000h
     FreeLinear
     clc
+    
 read_thread_selector_done:
     pop bp
     pop esi
     pop edx
     pop ecx
+    pop ebx
     pop es
-    pop ds
     retf32
 read_thread_selector    ENDP
 
@@ -3421,9 +3421,9 @@ read_thread_selector    ENDP
 write_thread_selector_name      DB 'Write Thread Selector',0
 
 write_thread_selector   PROC far
-    push ds
     push es
     push eax
+    push ebx
     push ecx
     push edx
     push esi
@@ -3431,18 +3431,18 @@ write_thread_selector   PROC far
 ;
     mov bp,bx
     mov cl,al
-    mov ax,process_page_sel
-    mov ds,ax
     mov ax,flat_sel
     mov es,ax
-;
+
 write_thread_selector_retry:
     call validate_thread_selector
     jc write_thread_selector_done
+;    
     movzx esi,dx
     and dx,0F000h
     or edx,edx
     jnz write_thread_selector_normal
+;    
     mov dx,flat_sel
     movzx esi,si
     add esi,page0_linear
@@ -3455,35 +3455,36 @@ write_thread_selector_normal:
     test al,1
     jnz write_thread_selector_do
 ;
-    push ebx
     AllocatePhysical64
     or al,7
     SetThreadPageEntry
-    pop ebx
 
 write_thread_selector_do:
     push eax
     mov eax,1000h
     AllocateLocalLinear
     pop eax
-    shr edx,10
-    mov [edx],eax
-    shl edx,10
+;
+    SetPageEntry
+;
     mov es:[edx+esi],cl
-    shr edx,10
-    mov dword ptr [edx],0
-    shl edx,10
+;
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry    
+;
     mov ecx,1000h
     FreeLinear
     clc
+    
 write_thread_selector_done:
     pop bp
     pop esi
     pop edx
     pop ecx
+    pop ebx
     pop eax
     pop es
-    pop ds
     retf32
 write_thread_selector   ENDP
 
@@ -3658,16 +3659,14 @@ write_thread_mem32      Endp
 read_thread_segment_name    DB 'Read Thread Segment',0
 
 read_thread_segment     PROC far
-    push ds
     push es
+    push ebx
     push ecx
     push edx
     push esi
     push bp
 ;
     mov bp,bx
-    mov ax,process_page_sel
-    mov ds,ax
     mov ax,flat_sel
     mov es,ax
 ;
@@ -3677,11 +3676,13 @@ read_thread_segment     PROC far
     movzx edx,dx
     shl edx,4
     add edx,esi
+
 read_thread_segment_retry:
     movzx esi,dx
     and dx,0F000h
     or edx,edx
     jnz read_thread_segment_normal
+;    
     mov dx,flat_sel
     movzx esi,si
     add esi,page0_linear
@@ -3695,6 +3696,7 @@ read_thread_segment_normal:
 ;
     test al,1
     jnz read_thread_segment_ok
+;    
     stc
     mov al,'%'
     jmp read_thread_segment_done
@@ -3709,23 +3711,28 @@ read_thread_segment_ok:
     mov eax,1000h
     AllocateLocalLinear
     pop eax
-    shr edx,10
-    mov [edx],eax
-    shl edx,10
+;
+    SetPageEntry
+;
     mov al,es:[edx+esi]
-    shr edx,10
-    mov dword ptr [edx],0
-    shl edx,10
+;
+    push eax
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry    
+    pop eax
+;
     mov ecx,1000h
     FreeLinear
     clc
+
 read_thread_segment_done:
     pop bp
     pop esi
     pop edx
     pop ecx
+    pop ebx
     pop es
-    pop ds
     retf32
 read_thread_segment     ENDP
 
@@ -3746,9 +3753,9 @@ read_thread_segment     ENDP
 write_thread_segment_name       DB 'Write Thread Segment',0
 
 write_thread_segment    PROC far
-    push ds
     push es
     push eax
+    push ebx
     push ecx
     push edx
     push esi
@@ -3756,19 +3763,19 @@ write_thread_segment    PROC far
 ;
     mov bp,bx
     mov cl,al
-    mov ax,process_page_sel
-    mov ds,ax
     mov ax,flat_sel
     mov es,ax
 ;
     movzx edx,dx
     shl edx,4
     add edx,esi
+
 write_thread_segment_retry:
     movzx esi,dx
     and dx,0F000h
     or edx,edx
     jnz write_thread_segment_normal
+;
     mov dx,flat_sel
     movzx esi,si
     add esi,page0_linear
@@ -3783,24 +3790,24 @@ write_thread_segment_normal:
     test al,1
     jnz write_thread_segment_do
 ;    
-    push ebx
     AllocatePhysical64
     or al,7
     SetThreadPageEntry
-    pop ebx
 
 write_thread_segment_do:
     push eax
     mov eax,1000h
     AllocateLocalLinear
     pop eax
-    shr edx,10
-    mov [edx],eax
-    shl edx,10
+;
+    SetPageEntry 
+;    
     mov es:[edx+esi],cl
-    shr edx,10
-    mov dword ptr [edx],0
-    shl edx,10
+;
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry    
+;    
     mov ecx,1000h
     FreeLinear
     clc
@@ -3809,9 +3816,9 @@ write_thread_segment_do:
     pop esi
     pop edx
     pop ecx
+    pop ebx
     pop eax
     pop es
-    pop ds
     retf32
 write_thread_segment    ENDP
 
