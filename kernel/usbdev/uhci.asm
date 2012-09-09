@@ -300,6 +300,7 @@ AllocateBlock32 PROC near
     mov eax,1000h
     AllocateBigLinear
 ;    
+    push ebx
     AllocatePhysical32
     or al,7
     SetPageEntry
