@@ -526,15 +526,17 @@ CheckWritePage  Endp
 ReadTrappedByte Proc near
     push ebx
 ;
-    mov cx,process_page_sel
-    mov ds,cx
-    mov ecx,ebx
-    shr ebx,10
-    and bx,0FFFCh
-    mov edx,[ebx]
+	mov ecx,ebx
+    push eax
+    mov edx,ebx
+    GetPageEntry
+    mov edx,eax
+    pop eax
 ;
+    push dx
     and dl,7
     cmp dl,6
+    pop dx
     jne read_trapped_byte_normal
 ;
     test dh,80h
@@ -542,10 +544,10 @@ ReadTrappedByte Proc near
 ;
     push cs
     push OFFSET read_trapped_byte_done
-    mov dx,[ebx]
     and dx,7FF8h
     push dx
-    push word ptr [ebx+2]
+    shr edx,16
+    push dx
     mov ebx,ecx
     clc
     retf
@@ -575,15 +577,17 @@ ReadTrappedByte Endp
 WriteTrappedByte    Proc near
     push ebx
 ;
-    mov cx,process_page_sel
-    mov ds,cx
 	mov ecx,ebx
-    shr ebx,10
-    and bx,0FFFCh
-    mov edx,[ebx]
+    push eax
+    mov edx,ebx
+    GetPageEntry
+    mov edx,eax
+    pop eax
 ;
+    push dx
     and dl,7
     cmp dl,6
+    pop dx
     jne write_trapped_byte_normal
 ;
     test dh,80h
@@ -591,10 +595,10 @@ WriteTrappedByte    Proc near
 ;
     push cs
     push OFFSET write_trapped_byte_done
-    mov dx,[ebx]
     and dx,7FF8h
     push dx
-    push word ptr [ebx+2]
+    shr edx,16
+    push dx
     mov ebx,ecx
     stc
     retf
