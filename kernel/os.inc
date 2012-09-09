@@ -478,16 +478,18 @@ SetPhysicalPage MACRO
     OsGate set_physical_page_nr
                     ENDM
 
-;       ESI         SOURCE LINEAR ADDRESS
-;       EDI         DEST LINEAR ADDRESS
-CopyPhysicalPage MACRO
-    OsGate copy_physical_page_nr
+; IN    ECX         Number of entries
+; IN    ESI         Source linear address
+; IN    EDI         Dest linear address
+CopyPageEntries MACRO
+    OsGate copy_page_entries_nr
                     ENDM
 
-;       ESI         SOURCE LINEAR ADDRESS
-;       EDI         DEST LINEAR ADDRESS
-MovePhysicalPage MACRO
-    OsGate move_physical_page_nr
+; IN    ECX         Number of entries
+; IN    ESI         Source linear address
+; IN    EDI         Dest linear address
+MovePageEntries MACRO
+    OsGate move_page_entries_nr
                     ENDM
 
 ;       BP          Thread

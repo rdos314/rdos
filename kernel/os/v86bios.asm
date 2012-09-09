@@ -134,18 +134,14 @@ HandleInputSel  Proc near
     mov edi,10000h
     dec ecx
     shr ecx,12
-    inc cx
-    cmp cx,10h
+    inc ecx
+    cmp ecx,10h
     jbe handle_input_ds_move
 ;
-    mov cx,10h
+    mov ecx,10h
 
 handle_input_ds_move:
-    MovePhysicalPage
-;    
-    add esi,1000h
-    add edi,1000h
-    loop handle_input_ds_move
+    MovePageEntries
 ;
     mov ax,v86_bios_ds_sel
     mov ds,ax
@@ -164,18 +160,14 @@ handle_input_es:
     mov edi,20000h
     dec ecx
     shr ecx,12
-    inc cx
-    cmp cx,10h
+    inc ecx
+    cmp ecx,10h
     jbe handle_input_es_move
 ;
-    mov cx,10h
+    mov ecx,10h
 
 handle_input_es_move:
-    MovePhysicalPage
-;    
-    add esi,1000h
-    add edi,1000h
-    loop handle_input_es_move
+    MovePageEntries
 ;
     mov ax,v86_bios_es_sel
     mov es,ax
@@ -221,19 +213,14 @@ HandleOutputSel Proc near
     mov esi,edx
     dec ecx
     shr ecx,12
-    inc cx
-    cmp cx,10h
+    inc ecx
+    cmp ecx,10h
     jbe handle_output_ds_copy
 ;
-    mov cx,10h
+    mov ecx,10h
 
 handle_output_ds_copy:
-    CopyPhysicalPage
-;
-    add esi,1000h
-    add edi,1000h
-    loop handle_output_ds_copy
-;
+    CopyPageEntries
     jmp handle_output_es
 
 handle_output_ds_same:
@@ -245,19 +232,14 @@ handle_output_ds_same:
     mov esi,10000h
     dec ecx
     shr ecx,12
-    inc cx
-    cmp cx,10h
+    inc ecx
+    cmp ecx,10h
     jbe handle_output_ds_move
 ;
-    mov cx,10h
+    mov ecx,10h
 
 handle_output_ds_move:
-    MovePhysicalPage
-;    
-    add esi,1000h
-    add edi,1000h
-    loop handle_output_ds_move
-
+    MovePageEntrieshandle_output_es:
 handle_output_es:
     mov ax,es
     or ax,ax
@@ -279,19 +261,14 @@ handle_output_es:
     mov esi,edx
     dec ecx
     shr ecx,12
-    inc cx
-    cmp cx,10h
+    inc ecx
+    cmp ecx,10h
     jbe handle_output_es_copy
 ;
-    mov cx,10h
+    mov ecx,10h
 
 handle_output_es_copy:
-    CopyPhysicalPage
-;    
-    add esi,1000h
-    add edi,1000h
-    loop handle_output_es_copy
-    jmp handle_output_done
+    CopyPageEntries    jmp handle_output_done
 
 handle_output_es_same:
     mov bx,fs:list_es
@@ -302,18 +279,14 @@ handle_output_es_same:
     mov esi,20000h
     dec ecx
     shr ecx,12
-    inc cx
-    cmp cx,10h
+    inc ecx
+    cmp ecx,10h
     jbe handle_output_es_move
 ;
-    mov cx,10h
+    mov ecx,10h
 
 handle_output_es_move:
-    MovePhysicalPage
-;    
-    add esi,1000h
-    add edi,1000h
-    loop handle_output_es_move
+    MovePageEntries
 
 handle_output_done:
     mov edi,10000h

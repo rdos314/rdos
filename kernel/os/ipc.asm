@@ -720,14 +720,7 @@ InsertReceive   Proc near
     mov esi,ds:m_rec_base
     and si,0F000h
     mov edi,ds:m_rec_glob_base
-
-ins_rec_copy:
-    CopyPhysicalPage
-;    
-    add esi,1000h
-    add edi,1000h
-    sub ecx,1
-    jnz ins_rec_copy
+    CopyPageEntries
 ;
     popad
     ret
@@ -753,14 +746,7 @@ RemoveReceive   Proc near
     mov esi,ds:m_rec_glob_base
     mov edi,ds:m_rec_base
     and di,0F000h
-
-rem_rec_copy:
-    MovePhysicalPage
-;    
-    add esi,1000h
-    add edi,1000h
-    sub ecx,1
-    jnz rem_rec_copy
+    MovePageEntries
 ;
     mov bx,ds:m_rec_glob_sel
     FreeGdt

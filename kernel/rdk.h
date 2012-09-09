@@ -511,8 +511,8 @@
 
 #define osgate_app_patch 435
 
-#define osgate_get_old_physical_page 436
-#define osgate_set_old_physical_page 437
+#define osgate_copy_page_entries 436
+#define osgate_move_page_entries 437
 
 
 
@@ -1029,6 +1029,6 @@
 
 #define OsGate_app_patch 0x3E 0x67 0x9a 179 1 0 0 2 0
 
-#define OsGate_get_old_physical_page 0x3E 0x67 0x9a 180 1 0 0 2 0
-#define OsGate_set_old_physical_page 0x3E 0x67 0x9a 181 1 0 0 2 0
+#define OsGate_copy_page_entries 0x3E 0x67 0x9a 180 1 0 0 2 0
+#define OsGate_move_page_entries 0x3E 0x67 0x9a 181 1 0 0 2 0
 

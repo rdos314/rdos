@@ -194,13 +194,7 @@ InsertSend	Proc near
 	mov esi,ds:m_send_base
 	and si,0F000h
 	mov edi,ds:m_send_glob_base
-
-ins_send_copy:
-    CopyPhysicalPage    
-	add esi,1000h
-	add edi,1000h
-	sub ecx,1
-	jnz ins_send_copy
+	CopyPageEntries
 ;
 	popad
 	ret
@@ -271,13 +265,7 @@ QueueSend	Proc near
 	mov esi,gs:il_reply_base
 	and si,0F000h
 	mov edi,gs:il_reply_glob_base
-
-queue_send_copy:
-    CopyPhysicalPage
-	add esi,1000h
-	add edi,1000h
-	sub ecx,1
-	jnz queue_send_copy
+	CopyPageEntries
 ;
 	mov edi,edx
 	mov ecx,ebp
@@ -313,13 +301,7 @@ queue_send_copy:
 	mov esi,gs:il_send_base
 	and si,0F000h
 	mov edi,gs:il_send_glob_base
-
-queue_send_rep_copy:
-    CopyPhysicalPage
-	add esi,1000h
-	add edi,1000h
-	sub ecx,1
-	jnz queue_send_rep_copy
+	CopyPageEntries
 ;
 	mov ax,gs
 	mov es,ax
@@ -351,13 +333,7 @@ RemoveSend	Proc near
 	shr ecx,12
 	push ecx
 	and di,0F000h
-
-rem_send_copy:
-    MovePhysicalPage
-	add esi,1000h
-	add edi,1000h
-	sub ecx,1
-	jnz rem_send_copy
+	MovePageEntries
 ;
 	pop ecx
 	shl ecx,12

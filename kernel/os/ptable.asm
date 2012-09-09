@@ -80,16 +80,16 @@ init_page_table     PROC near
     mov ax,set_physical_page_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET copy_page_entry
-    mov edi,OFFSET copy_page_entry_name
+    mov esi,OFFSET copy_page_entries
+    mov edi,OFFSET copy_page_entries_name
     xor cl,cl
-    mov ax,copy_physical_page_nr
+    mov ax,copy_page_entries_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET move_page_entry
-    mov edi,OFFSET move_page_entry_name
+    mov esi,OFFSET move_page_entries
+    mov edi,OFFSET move_page_entries_name
     xor cl,cl
-    mov ax,move_physical_page_nr
+    mov ax,move_page_entries_nr
     RegisterOsGate
 ;    
     mov esi,OFFSET get_thread_page_entry
@@ -182,43 +182,57 @@ set_page_entry       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CopyPageEntry
+;           NAME:           CopyPageEntries
 ;
-;           DESCRIPTION:    Copy physical page 
+;           DESCRIPTION:    Copy page entries 
 ;
-;           PARAMETERS:     ESI         source linear address
+;           PARAMETERS:     ECX         number of entries
+;                           ESI         source linear address
 ;                           EDI         dest linear address
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-copy_page_entry_name  DB 'Copy Page Entry',0
+copy_page_entries_name  DB 'Copy Page Entries',0
 
-copy_page_entry       Proc far
+copy_page_entries       Proc far
     push ds
     pushad
 ;
-    mov edx,edi
+    or ecx,ecx
+    jz cpeDone
+;
+    push ecx
+    push edi
+;
     mov bx,process_page_sel
     mov ds,bx
     shr esi,10
     shr edi,10
     and si,0FFFCh
     and di,0FFFCh
+    
+cpeLoop:
     mov ebx,[esi]
     mov [edi],ebx
+    add esi,4
+    add edi,4
+    sub ecx,1
+    jnz cpeLoop    
 ;    
-    mov cx,1
+    pop edx
+    pop ecx
     call local_flush_process_tlb    
-;
+
+cpeDone:
     popad
     pop ds
     retf32
-copy_page_entry       Endp
+copy_page_entries       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           MovePageEntry
+;           NAME:           MovePageEntries
 ;
 ;           DESCRIPTION:    Move physical page
 ;
@@ -227,30 +241,48 @@ copy_page_entry       Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-move_page_entry_name  DB 'Move Page Entry',0
+move_page_entries_name  DB 'Move Page Entries',0
 
-move_page_entry       Proc far
+move_page_entries       Proc far
     push ds
     pushad
 ;
-    mov edx,edi
+    or ecx,ecx
+    jz mpeDone
+;
+    push esi
+    push edi
+    push ecx
+;    
     mov bx,process_page_sel
     mov ds,bx
     shr esi,10
     shr edi,10
     and si,0FFFCh
     and di,0FFFCh
+
+mpeLoop:    
     mov ebx,2
     xchg ebx,[esi]
     mov [edi],ebx
+;
+    add esi,4
+    add edi,4
+    sub ecx,1
+    jnz mpeLoop    
 ;    
-    mov cx,1
+    pop ecx
+    pop edx
     call local_flush_process_tlb    
 ;
+    pop edx
+    call local_flush_process_tlb    
+
+mpeDone:
     popad
     pop ds
     retf32
-move_page_entry       Endp
+move_page_entries       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

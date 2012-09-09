@@ -2822,13 +2822,7 @@ MapFromImage    Proc near
     shr ecx,12
     mov esi,ebp
     mov edi,edx
-
-map_from_image_loop:
-    CopyPhysicalPage
-;
-    add esi,1000h
-    add edi,1000h
-    loop map_from_image_loop
+    CopyPageEntries
 
 map_from_image_done:
     popad
