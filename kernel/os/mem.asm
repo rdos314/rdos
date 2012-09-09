@@ -87,7 +87,8 @@ local_mem_seg   ENDS
 
     extrn local_create_data_sel16:near
     extrn local_free_global_tlb:near
-    extrn local_free_process_tlb:near
+
+    extrn free_page_entries_proc:word
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -1366,16 +1367,17 @@ resize_flat_shrink:
     jc resize_flat_leave
 ;    
     shl eax,12
-    cmp cx,ax
+    cmp ecx,eax
     jbe resize_flat_size_ok
 ;
-    mov cx,ax    
+    mov ecx,eax    
 
 resize_flat_size_ok:
-    or cx,cx
+    or ecx,ecx
     jz resize_flat_leave
 ;
-    call local_free_process_tlb
+    xor eax,eax
+    call cs:free_page_entries_proc
     clc
 
 resize_flat_leave:
@@ -2255,7 +2257,8 @@ free_big_local_mem      PROC near
     add es:local_big_avail_mem,ecx
     sub es:local_big_used_mem,ecx
     shr ecx,12
-    call local_free_process_tlb
+    xor eax,eax
+    call cs:free_page_entries_proc
     LeaveSection ds:local_mem_section
     ret
 free_big_local_mem      ENDP

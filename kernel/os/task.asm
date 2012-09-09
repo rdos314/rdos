@@ -180,7 +180,6 @@ flush_global_tlb_proc       DW OFFSET FlushTlb386
 flush_process_tlb_proc      DW OFFSET FlushTlb386
 
 free_global_tlb_proc        DW OFFSET FreeGlobalTlbSingle
-free_process_tlb_proc       DW OFFSET FreeProcessTlbSingle
 
 preempt_reload_proc         DW OFFSET TimerPreemptReload
 
@@ -3835,7 +3834,6 @@ start_processor_null_threads    Proc near
     mov ds:flush_global_tlb_proc,OFFSET FlushGlobalTlbMultiple
     mov ds:flush_process_tlb_proc,OFFSET FlushProcessTlbMultiple
     mov ds:free_global_tlb_proc,OFFSET FreeGlobalTlbMultiple
-    mov ds:free_process_tlb_proc,OFFSET FreeProcessTlbMultiple
 
 start_locks_ok:
     mov ecx,stack0_size
@@ -5514,31 +5512,6 @@ FreeGlobalTlbSingle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FreeProcessTlbSingle
-;
-;           DESCRIPTION:    Free process TLB entries, single processor version
-;
-;           PARAMETERS:     CX      Number of entries
-;                           EDX     Linear address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeProcessTlbSingle Proc near
-    push eax
-    push ecx
-;    
-    movzx ecx,cx
-    xor eax,eax
-    call cs:free_page_entries_proc
-;
-    pop ecx
-    pop eax
-    ret
-FreeProcessTlbSingle Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           LockTlbBlock
 ;
 ;       DESCRIPTION:    Lock TLB block
@@ -6319,31 +6292,6 @@ FreeGlobalTlbMultiple    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FreeProcessTlbMultiple
-;
-;           DESCRIPTION:    Free process TLB entries, multiple processor version
-;
-;           PARAMETERS:     CX      Number of entries
-;                           EDX     Linear base
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeProcessTlbMultiple    Proc near
-    push eax
-    push ecx
-;    
-    movzx ecx,cx
-    xor eax,eax
-    call cs:free_page_entries_proc
-;
-    pop ecx
-    pop eax
-    ret
-FreeProcessTlbMultiple    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           FlushGlobalTLB
 ;
 ;           DESCRIPTION:    Flush global TLB entries
@@ -6391,25 +6339,6 @@ local_free_global_tlb    Proc near
     call cs:free_global_tlb_proc
     ret
 local_free_global_tlb  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FreeProcessTLB
-;
-;           DESCRIPTION:    Free process TLB entries
-;
-;           PARAMETERS:     CX      Number of entries
-;                           EDX     Linear address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public local_free_process_tlb
-
-local_free_process_tlb Proc near
-    call cs:free_process_tlb_proc
-    ret
-local_free_process_tlb Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
