@@ -647,49 +647,43 @@ page_fault_user PROC near
     mov ax,[ebp].trap_eflags
     and ax,NOT 4500h
     push ax
-    mov eax,cr2
+    mov edx,cr2
     popf
 ;    
-    push eax
-    push edx
-    mov edx,eax
     call cs:get_page_entry_proc
-    mov ecx,eax
-    pop edx
-    pop eax
 ;    
-    test cl,1
+    test al,1
     jnz page_fault_user_retry
 ;
-    test cl,2
+    test al,2
     jnz page_fault_user_valid
 ;
-    cmp eax,local_page_linear
+    cmp edx,local_page_linear
     jae page_fault_user_flat
 ;
-    cmp eax,fixed_vm_linear
+    cmp edx,fixed_vm_linear
     jae page_fault_user_valid
 ;    
     push ds
     push bx
     mov bx,system_data_sel
     mov ds,bx
-    cmp eax,ds:flat_base
+    cmp edx,ds:flat_base
     pop bx
     pop ds 
     jb page_fault_user_valid
     jmp page_fault_user_invalid
 
 page_fault_user_flat:
-    cmp eax,flat_size
+    cmp edx,flat_size
     jb page_fault_user_invalid
 
 page_fault_user_valid:
-    and cl,7
-    cmp cl,6
+    and al,7
+    cmp al,6
     jne page_fault_user_normal
 ;
-    test ch,80h
+    test ah,80h
     jz page_fault_em_normal
 ;
     mov ax,emulate_opcode_nr
@@ -715,33 +709,23 @@ page_fault_user_valid:
     iretd
 
 page_fault_em_normal:
-    push edx
-;    
-    mov edx,eax
     call cs:get_page_entry_proc
 ;
     push cs
-    push OFFSET page_fault_user_hook_end
+    push OFFSET page_fault_user_retry
     and ax,0FFF8h
     push ax
     shr eax,16
     push ax
     retf
-    
-page_fault_user_hook_end:
-    pop edx
-    jmp page_fault_user_retry
 
 page_fault_user_invalid:
     jmp page_fault_error
 
 page_fault_user_normal:
-    push edx
-    mov edx,eax
     call local_allocate_physical
     mov al,7    
     call cs:set_page_entry_proc
-    pop edx
 
 page_fault_user_retry:
     ret
