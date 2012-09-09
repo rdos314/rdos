@@ -6329,94 +6329,15 @@ FreeGlobalTlbMultiple    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeProcessTlbMultiple    Proc near
-    push ds
-    push es
-    push fs
-    pushad
-;
-    mov ax,task_sel
-    mov ds,ax
-    mov ax,flat_sel
-    mov es,ax
-;
-    call TryLockCore
-    pushf
- 
-fptmBlockLoop:
-    mov esi,edx
-    call AllocateTlb
-    mov es:[edx].th_page_count,cx
-    mov es:[edx].th_phys_count,0
-;
-    push ds
-    mov ax,process_page_sel
-    mov ds,ax
-    shr esi,10
-    and si,0FFFCh    
-    lea edi,[edx].th_phys_arr
-    
-fptmEntryLoop:
-    xor eax,eax
-    xchg eax,[esi]
-    test al,1
-    jz fptmEntryNext
-;
-    test ax,800h
-    jnz fptmEntryNext
-;
-    stos dword ptr es:[edi]
-    mov ax,es:[edx].th_phys_count
-    inc ax
-    mov es:[edx].th_phys_count,ax
-    cmp ax,MAX_TLB_PHYS_ENTRIES
-    jne fptmEntryNext
-
-fptmLastLoop:
-    inc es:[edx].th_page_count
-    add esi,4    
-    sub cx,1
-    jz fptmBlockDone    
-;
-    mov eax,[esi]
-    test al,1
-    jnz fptmBlockDone
-;     
-    xor eax,eax   
-    mov [esi],eax
-    jmp fptmLastLoop
-
-fptmEntryNext:
-    inc es:[edx].th_page_count
-    add esi,4
-    loop fptmEntryLoop
-
-fptmBlockDone:
-    pop ds
-;
-    shl esi,10
-    push cx
-    push esi
-;
-    call LockTlb
-    call SetupProcessTlbCores
-    call InsertTlb
-    call UnlockTlb
-;
-    call SignalTlbCores
-;
-    pop edx
-    pop cx
-    or cx,cx
-    jnz fptmBlockLoop
-;
-    popf
-    call UpdateTlbList
-    call TryUnlockCore
+    push eax
+    push ecx
 ;    
-    popad
-    pop fs
-    pop es
-    pop ds
+    movzx ecx,cx
+    xor eax,eax
+    call cs:free_page_entries_proc
+;
+    pop ecx
+    pop eax
     ret
 FreeProcessTlbMultiple    Endp
 
