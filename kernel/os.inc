@@ -484,6 +484,7 @@ HasPageEntry MACRO
     OsGate has_page_entry_nr
                     ENDM
 
+; IN    EAX         Free bits
 ; IN    ECX         Number of entries
 ; IN    EDX         Linear address
 FreePageEntries MACRO

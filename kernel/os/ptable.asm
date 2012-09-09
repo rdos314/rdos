@@ -253,7 +253,8 @@ local_has_page_entry32       Endp
 ;
 ;           DESCRIPTION:    Free page entries 
 ;
-;           PARAMETERS:     ECX         number of entries
+;           PARAMETERS:     EAX         free signature
+;                           ECX         number of entries
 ;                           EDX         linear address
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -261,10 +262,11 @@ local_has_page_entry32       Endp
 local_free_page_entries32       Proc near
     push ds
     pushad
-;
+;   
     or ecx,ecx
     jz fpeDone32
 ;
+    mov esi,eax
     push ecx
     push edx
 ;
@@ -278,12 +280,14 @@ fpeLoop32:
     test al,1
     jz fpeMark32
 ;
+    test ax,800h
+    jnz fpeMark32
+;
     xor ebx,ebx
     FreePhysical
 
 fpeMark32:        
-    mov eax,2
-    mov [edx],eax
+    mov [edx],esi
 ;
     add edx,4
     sub ecx,1
@@ -606,7 +610,8 @@ has_page_entry       Endp
 ;
 ;           DESCRIPTION:    Free page entries 
 ;
-;           PARAMETERS:     ECX         number of entries
+;           PARAMETERS:     EAX         free signature
+;                           ECX         number of entries
 ;                           EDX         linear address
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

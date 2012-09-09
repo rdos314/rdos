@@ -311,6 +311,7 @@ free_focus_process      Proc far
 ;
     mov edx,io_local_linear
     mov cx,400h
+    mov eax,2
     FreePageEntries
 ;
     pop edx

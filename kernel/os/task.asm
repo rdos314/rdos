@@ -140,6 +140,8 @@ code    SEGMENT byte public use16 'CODE'
 
     extrn SetupMpPatch:near
 
+    extrn free_page_entries_proc:word
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -3711,15 +3713,12 @@ cleanup_process_linear_next:
     add edx,4
     loop cleanup_process_linear_loop
 ;
-    mov ax,process_page_sel
-    mov ds,ax
     mov edx,handle_linear
     shr edx,10
     add edx,alias_linear
-    shr edx,10
-    mov eax,[edx]
-    xor ebx,ebx
-    FreePhysical
+    mov eax,2
+    mov ecx,1
+    FreePageEntries
 ;
     mov eax,es:p_cr3
     xor ebx,ebx
@@ -5525,39 +5524,15 @@ FreeGlobalTlbSingle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeProcessTlbSingle Proc near
-    push ds
     push eax
-    push ebx
-    push cx
-    push edx
+    push ecx
 ;    
-    mov ax,process_page_sel
-    mov ds,ax
-    shr edx,10
-    and dl,0FCh    
-    
-fptsLoop:
+    movzx ecx,cx
     xor eax,eax
-    xchg eax,[edx]
-    test al,1
-    jz fptsNext
+    call cs:free_page_entries_proc
 ;
-    test ax,800h
-    jnz fptsNext
-;
-    xor ebx,ebx
-    FreePhysical
-
-fptsNext:
-    add edx,4
-    loop fptsLoop
-;
-    pop edx
-    pop cx
-    pop ebx
+    pop ecx
     pop eax
-    pop ds
-    call cs:flush_process_tlb_proc
     ret
 FreeProcessTlbSingle Endp
 
