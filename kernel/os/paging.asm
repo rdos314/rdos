@@ -649,14 +649,18 @@ page_fault_user PROC near
     push ax
     mov eax,cr2
     popf
-    mov bx,process_page_sel
-    mov ds,bx
-    mov ebx,eax
-    shr ebx,10
-    and bx,0FFFCh
-    mov ecx,[ebx]
+;    
+    push eax
+    push edx
+    mov edx,eax
+    call cs:get_page_entry_proc
+    mov ecx,eax
+    pop edx
+    pop eax
+;    
     test cl,1
     jnz page_fault_user_retry
+;
     test cl,2
     jnz page_fault_user_valid
 ;
@@ -712,14 +716,18 @@ page_fault_user_valid:
 
 page_fault_em_normal:
     push edx
+;    
     mov edx,eax
+    call cs:get_page_entry_proc
+;
     push cs
     push OFFSET page_fault_user_hook_end
-    mov ax,[ebx]
     and ax,0FFF8h
     push ax
-    push word ptr [ebx+2]
+    shr eax,16
+    push ax
     retf
+    
 page_fault_user_hook_end:
     pop edx
     jmp page_fault_user_retry
@@ -728,9 +736,13 @@ page_fault_user_invalid:
     jmp page_fault_error
 
 page_fault_user_normal:
+    push edx
+    mov edx,eax
     call local_allocate_physical
-    mov al,7
-    mov [ebx],eax
+    mov al,7    
+    call cs:set_page_entry_proc
+    pop edx
+
 page_fault_user_retry:
     ret
 page_fault_user ENDP
