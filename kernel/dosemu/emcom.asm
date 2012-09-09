@@ -349,8 +349,8 @@ CheckReadPage   Proc near
     mov eax,ebx
 
 check_read_page_loop:
-    mov edx,ebx
     push eax
+    mov edx,ebx
     GetPageEntry
     mov edx,eax
     pop eax
@@ -390,7 +390,7 @@ check_read_page_hooks:
     test dh,80h
     jz check_read_page_next
 ;
-    mov dx,[ebx+2]  
+    shr edx,16
     or dx,dx
     jz EmulateError
     stc
@@ -436,8 +436,8 @@ CheckWritePage  Proc near
     mov eax,ebx
 
 check_write_page_loop:
-    mov edx,ebx
     push eax
+    mov edx,ebx
     GetPageEntry
     mov edx,eax
     pop eax
@@ -484,7 +484,7 @@ check_write_page_hooks:
     test dh,80h
     jz check_write_page_next
 ;
-    mov dx,[ebx+2]  
+    shr edx,16
     or dx,dx
     jz EmulateError
     stc
@@ -526,8 +526,9 @@ CheckWritePage  Endp
 ReadTrappedByte Proc near
     push ebx
 ;
-    mov edx,ebx
+	mov ecx,ebx
     push eax
+    mov edx,ebx
     GetPageEntry
     mov edx,eax
     pop eax
@@ -541,10 +542,10 @@ ReadTrappedByte Proc near
 ;
     push cs
     push OFFSET read_trapped_byte_done
-    mov dx,[ebx]
     and dx,7FF8h
     push dx
-    push word ptr [ebx+2]
+    shr edx,16
+    push dx
     mov ebx,ecx
     clc
     retf
@@ -574,8 +575,9 @@ ReadTrappedByte Endp
 WriteTrappedByte    Proc near
     push ebx
 ;
-    mov edx,ebx
+	mov ecx,ebx
     push eax
+    mov edx,ebx
     GetPageEntry
     mov edx,eax
     pop eax
@@ -589,10 +591,10 @@ WriteTrappedByte    Proc near
 ;
     push cs
     push OFFSET write_trapped_byte_done
-    mov dx,[ebx]
     and dx,7FF8h
     push dx
-    push word ptr [ebx+2]
+    shr edx,16
+    push dx
     mov ebx,ecx
     stc
     retf
