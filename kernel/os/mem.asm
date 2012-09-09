@@ -458,7 +458,6 @@ init_mem    ENDP
 
 init_process_mem    PROC near
     push ds
-    push es
     push eax
     push edx
     push di
@@ -487,13 +486,15 @@ init_process_mem    PROC near
     InitSection ds:local_mem_section
     InitSection ds:vm_mem_section
 ;
-    mov ax,process_page_sel
-    mov es,ax
-    mov edi,vm_linear
-    shr edi,10
-    mov cx,0Fh
+    mov edx,vm_linear
     xor eax,eax
-    rep stosd
+    xor ebx,ebx
+    mov cx,0Fh
+
+init_vm_linear_loop:
+    SetPageEntry
+    add edx,1000h
+    loop init_vm_linear_loop
 ;
     mov ax,vm_linear_sel
     mov ds,ax
@@ -517,11 +518,10 @@ init_process_mem    PROC near
     pop di
     pop edx
     pop eax
-    pop es
     pop ds
     ret
 init_process_mem    ENDP
-õ
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
