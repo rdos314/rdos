@@ -754,11 +754,9 @@ page_fault_global       PROC near
     test al,1
     jnz page_fault_global_retry
 ;
-    push eax
     call local_allocate_physical
     or ax,107h
     call cs:set_page_entry_proc
-    pop eax
 
 page_fault_global_retry:
     ret
@@ -1084,7 +1082,7 @@ set_flat_linear_invalid_name    DB 'Set Flat Linear Invalid',0
 set_flat_linear_invalid PROC far
     push ds
     push eax
-    push bx
+    push ebx
     push ecx
     push edx
 ;
@@ -1101,8 +1099,6 @@ set_flat_linear_invalid PROC far
     jae set_inv_done
 ;
     push edx
-    mov bx,process_page_sel
-    mov ds,bx
 ;
     mov ecx,eax
     add ecx,edx
@@ -1111,24 +1107,25 @@ set_flat_linear_invalid PROC far
     and cx,0F000h
     add ecx,1000h
     sub ecx,edx
-    shr edx,10
     shr ecx,12
     push cx
 
 set_inv_mark:
-    mov eax,[edx]
+    call cs:get_page_entry_proc
     test al,1
     jz set_inv_free
 ;
     push ax
     call local_free_physical
     pop ax
+;
     not al
     and al,2
     shl al,4
     or al,4
     movzx eax,al
-    mov [edx],eax
+    xor ebx,ebx
+    call cs:set_page_entry_proc
     jmp set_inv_next
 
 set_inv_free:   
@@ -1138,13 +1135,13 @@ set_inv_free:
     cmp al,6
     je set_inv_next
 ;
-    mov eax,[edx]
+    call cs:get_page_entry_proc
     and al,NOT 6
     or al,4
-    mov [edx],eax
+    call cs:set_page_entry_proc
 
 set_inv_next:
-    add edx,4
+    add edx,1000h
     loop set_inv_mark
 ;
     pop cx
@@ -1154,7 +1151,7 @@ set_inv_next:
 set_inv_done:    
     pop edx
     pop ecx
-    pop bx
+    pop ebx
     pop eax
     pop ds
     retf32
