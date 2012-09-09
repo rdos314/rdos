@@ -44,6 +44,9 @@ INCLUDE system.inc
     extrn virt_exception:near
 
     extrn local_flush_process_tlb:near
+
+    extrn get_page_entry_proc:word
+    extrn set_page_entry_proc:word
     
 code    SEGMENT byte public 'CODE'
 
@@ -978,27 +981,25 @@ trap_14_done:
 free_v86_name   DB 'Free V86',0
 
 free_v86    PROC far
-    push ds
     push eax
+    push ebx
     push ecx
     push edx
-;
-    mov ax,process_page_sel
-    mov ds,ax
 ;       
-    mov edx,0A0000h SHR 10
+    mov edx,0A0000h
     mov ecx,060000h SHR 12
     mov eax,2
+    xor ebx,ebx
 
 free_v86_loop:
-    mov [edx],eax
-    add edx,4
+    call cs:set_page_entry_proc
+    add edx,1000h
     loop free_v86_loop
 ;
     pop edx
     pop ecx
+    pop ebx
     pop eax
-    pop ds
     retf32
 free_v86    ENDP
 
@@ -1010,7 +1011,7 @@ free_v86    ENDP
 ;
 ;           DESCRIPTION:    Set flat page to valid
 ;
-;           PARAMETERS:         EAX         Size
+;           PARAMETERS:     EAX         Size
 ;                           EDX         Offset in user-mode flat selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1020,7 +1021,7 @@ set_flat_linear_valid_name      DB 'Set Flat Linear Valid',0
 set_flat_linear_valid   PROC far
     push ds
     push eax
-    push bx
+    push ebx
     push ecx
     push edx
 ;
@@ -1036,9 +1037,6 @@ set_flat_linear_valid   PROC far
     cmp edx,flat_size
     jae set_valid_done
 ;
-    mov bx,process_page_sel
-    mov ds,bx
-;
     mov ecx,eax
     add ecx,edx
     and dx,0F000h
@@ -1046,11 +1044,10 @@ set_flat_linear_valid   PROC far
     and cx,0F000h
     add ecx,1000h
     sub ecx,edx
-    shr edx,10
     shr ecx,12
 
 set_valid_mark:
-    mov eax,[edx]
+    call cs:get_page_entry_proc
     test al,1
     jnz set_valid_next
 ;
@@ -1060,19 +1057,19 @@ set_valid_mark:
     cmp al,6
     je set_valid_next
 ;
-    mov eax,[edx]
+    call cs:get_page_entry_proc
     and al,NOT 6
     or al,2
-    mov [edx],eax
+    call cs:set_page_entry_proc
 
 set_valid_next:
-    add edx,4
+    add edx,1000h
     loop set_valid_mark
 
 set_valid_done:
     pop edx
     pop ecx
-    pop bx
+    pop ebx
     pop eax
     pop ds
     retf32
