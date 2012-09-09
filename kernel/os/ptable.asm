@@ -41,6 +41,7 @@ ELSE
     .386p
 ENDIF
 
+    extrn local_free_physical:near
     extrn local_flush_process_tlb:near
 
 code    SEGMENT byte public use16 'CODE'
@@ -64,6 +65,8 @@ code    SEGMENT byte public use16 'CODE'
     public free_global_page_entries_proc
     public copy_page_entries_proc
     public move_page_entries_proc
+    public hook_page_proc
+    public unhook_page_proc
     public get_thread_page_entry_proc
     public set_thread_page_entry_proc
 
@@ -76,6 +79,8 @@ free_page_entries_proc          DW OFFSET local_free_page_entries32
 free_global_page_entries_proc   DW OFFSET local_free_global_page_entries32
 copy_page_entries_proc          DW OFFSET local_copy_page_entries32
 move_page_entries_proc          DW OFFSET local_move_page_entries32
+hook_page_proc                  DW OFFSET local_hook_page32
+unhook_page_proc                DW OFFSET local_unhook_page32
 get_thread_page_entry_proc      DW OFFSET local_get_thread_page_entry32
 set_thread_page_entry_proc      DW OFFSET local_set_thread_page_entry32
 
@@ -151,6 +156,18 @@ init_page_table     PROC near
     mov edi,OFFSET move_page_entries_name
     xor cl,cl
     mov ax,move_page_entries_nr
+    RegisterOsGate
+;
+    mov si,OFFSET hook_page
+    mov di,OFFSET hook_page_name
+    xor cl,cl
+    mov ax,hook_page_nr
+    RegisterOsGate
+;
+    mov si,OFFSET unhook_page
+    mov di,OFFSET unhook_page_name
+    xor cl,cl
+    mov ax,unhook_page_nr
     RegisterOsGate
 ;    
     mov esi,OFFSET get_thread_page_entry
@@ -623,6 +640,134 @@ mpeDone32:
 local_move_page_entries32       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           local_hook_page32
+;
+;           DESCRIPTION:    Hook for a specified linear address range
+;
+;           PARAMETERS:     EAX         Size
+;                           EDX         Linear base
+;                           ES:DI       Callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_hook_page32       PROC near
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov cx,process_page_sel
+    mov ds,cx
+;
+    or eax,eax
+    jz hpDone32
+;
+    mov ecx,eax
+    add ecx,edx
+    and dx,0F000h
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+    sub ecx,edx
+    shr edx,10
+    shr ecx,12
+
+hpMark32:
+    mov eax,[edx]
+    test al,1
+    jz hpDo32
+;
+    xor ebx,ebx
+    call local_free_physical
+;
+    mov eax,cr3
+    mov cr3,eax
+    mov eax,2
+
+hpDo32:
+    and al,6
+    jz hpNext32
+;
+    mov ax,es
+    or al,6
+    mov [edx],ax
+    mov [edx+2],di
+
+hpNext32:
+    add edx,4
+    loop hpMark32
+
+hpDone32:
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+local_hook_page32       ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           local_unhook_page32
+;
+;           DESCRIPTION:    Unhook for a specified linear address range
+;
+;           PARAMETERS:     EAX         Size
+;                           EDX         Linear base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_unhook_page32     PROC near
+    push ds
+    push eax
+    push ecx
+    push edx
+;
+    mov cx,process_page_sel
+    mov ds,cx
+;
+    or eax,eax
+    jz uhpDone32
+;
+    mov ecx,eax
+    add ecx,edx
+    and dx,0F000h
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+    sub ecx,edx
+    shr edx,10
+    shr ecx,12
+
+uhpMark32:
+    mov eax,[edx]
+    test al,1
+    jnz uhpMark32
+;
+    and al,6
+    cmp al,6
+    jne uhpNext32
+;
+    mov dword ptr [edx],2
+
+uhpNext32:
+    add edx,4
+    loop uhpMark32
+
+uhpDone32:
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
+    ret
+local_unhook_page32     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           local_get_thread_page_entry32
@@ -937,6 +1082,45 @@ move_page_entries       Proc far
     call cs:move_page_entries_proc
     retf32
 move_page_entries       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           HookPage
+;
+;           DESCRIPTION:    Hook for a specified linear address range
+;
+;           PARAMETERS:     EAX         Size
+;                           EDX         Linear base
+;                           ES:DI       Callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_page_name  DB 'Hook Page',0
+
+hook_page       Proc far
+    call cs:hook_page_proc
+    retf32
+hook_page       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           UnhookPage
+;
+;           DESCRIPTION:    Unhook for a specified linear address range
+;
+;           PARAMETERS:     EAX         Size
+;                           EDX         Linear base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unhook_page_name  DB 'Unhook Page',0
+
+unhook_page       Proc far
+    call cs:unhook_page_proc
+    retf32
+unhook_page       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
