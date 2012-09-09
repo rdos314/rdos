@@ -763,22 +763,17 @@ page_fault_global       PROC near
     mov ax,[ebp].trap_eflags
     and ax,NOT 4500h
     push ax
-    mov eax,cr2
+    mov edx,cr2
     popf
-
-    mov bx,process_page_sel
-    mov ds,bx
-    mov ebx,eax
-    shr ebx,10
-    and bx,0FFFCh
-    mov al,[ebx]
+;    
+    call cs:get_page_entry_proc
     test al,1
     jnz page_fault_global_retry
 ;
     push eax
     call local_allocate_physical
     or ax,107h
-    mov [ebx],eax
+    call cs:set_page_entry_proc
     pop eax
 
 page_fault_global_retry:
