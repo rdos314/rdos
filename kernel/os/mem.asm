@@ -1045,55 +1045,28 @@ allocate_debug_page_local_linear:
     mov ds,dx
     mov es,dx
     EnterSection ds:local_mem_section
-    mov ebx,ds:local_big_base    
-    shr ebx,10
     add ds:local_big_used_mem,eax
     sub ds:local_big_avail_mem,eax
     shr eax,12
-    mov dx,process_page_sel
-    mov ds,dx
-    xor dx,dx
-allocate_debug_blocal_loop:
-    cmp ebx,(flat_size SHR 10) AND 003FFFFFh
-    jne allocate_debug_blocal_no_wrap
+;    
+    mov edx,ds:local_big_base
+    mov ecx,eax
+    mov eax,flat_size
+    call cs:allocate_page_entries_proc
+    jnc allocate_debug_page_local_ok
 ;
-    mov ebx,local_page_linear
-    shr ebx,10
-    add ebx,4
-    xor dx,dx
+    mov edx,local_page_linear + 1000h
+    call cs:allocate_page_entries_proc
+    jnc allocate_debug_page_local_ok
+;
+    int 3
 
-allocate_debug_blocal_no_wrap:
-    inc dx
-    mov cl,[ebx]
-    test cl,7
-    jz allocate_debug_blocal_next
-    xor dx,dx
-allocate_debug_blocal_next:
-    add ebx,4
-    cmp ax,dx
-    je allocate_debug_blocal_end
-    jmp allocate_debug_blocal_loop
-allocate_debug_blocal_end:
-    mov cx,ax
-    shl eax,2
-    sub ebx,eax
-    mov dl,2
-    push ebx
-    push cx
-allocate_debug_blocal_mark:
-    mov [ebx],dl
-    add ebx,4
-    loop allocate_debug_blocal_mark
-    pop cx
-    pop edx
-;
+allocate_debug_page_local_ok:    
     mov ax,local_mem_sel
     mov ds,ax
-    shl edx,10
-    mov ds:local_big_base,edx
-    movzx ecx,cx
     shl ecx,12
-    add ds:local_big_base,ecx
+    add ecx,edx
+    mov ds:local_big_base,ecx
     LeaveSection ds:local_mem_section
 ;
     pop ecx
