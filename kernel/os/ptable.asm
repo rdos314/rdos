@@ -56,6 +56,8 @@ code    SEGMENT byte public use16 'CODE'
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public init_process_proc
+    public free_process_proc
     public get_page_entry_proc
     public set_page_entry_proc
     public has_page_entry_proc
@@ -71,6 +73,8 @@ code    SEGMENT byte public use16 'CODE'
     public get_thread_page_entry_proc
     public set_thread_page_entry_proc
 
+init_process_proc               DW OFFSET local_init_process32
+free_process_proc               DW OFFSET local_free_process32
 get_page_entry_proc             DW OFFSET local_get_page_entry32
 set_page_entry_proc             DW OFFSET local_set_page_entry32
 has_page_entry_proc             DW OFFSET local_has_page_entry32
@@ -194,6 +198,212 @@ init_page_table     PROC near
     popa
     ret
 init_page_table     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_init_process32
+;
+;           DESCRIPTION:    Init process paging
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_init_process32     Proc near
+    mov ax,sys_page_sel
+    mov ds,ax
+    mov ax,system_data_sel
+    mov es,ax
+    mov ecx,es:rom1_size
+    or ecx,ecx
+    jz ipUnmapDone1_32
+;
+    mov edx,es:rom1_base
+    add ecx,edx
+    and dx,0F000h
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+    sub ecx,edx
+    shr edx,10
+    shr ecx,12
+
+ipUnmapLoop1_32:
+    mov dword ptr [edx],0
+    add edx,4
+    loop ipUnmapLoop1_32
+
+ipUnmapDone1_32:
+    mov ecx,es:rom2_size
+    or ecx,ecx
+    jz ipUnmapDone2_32
+;
+    mov edx,es:rom2_base
+    add ecx,edx
+    and dx,0F000h
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+    sub ecx,edx
+    shr edx,10
+    shr ecx,12
+
+ipUnmapLoop2_32:
+    mov dword ptr [edx],0
+    add edx,4
+    loop ipUnmapLoop2_32
+
+ipUnmapDone2_32:
+    mov ax,sys_dir_sel
+    mov ds,ax
+    mov bx,(sys_page_linear SHR 20) AND 0FFFh
+    mov ebx,[bx]
+    and bx,0F000h
+;
+    mov ax,sys_page_sel
+    mov ds,ax
+    mov ax,process_page_sel
+    mov es,ax
+    mov edx,4
+
+ipFreeStartupLoop32:
+    mov eax,[edx]
+    test al,1
+    jz ipFreeStartupDone32
+;
+    and ax,0F000h
+    cmp eax,ebx
+    jae ipFreeStartupZero32
+;
+    xor ebx,ebx
+    FreePhysical
+
+ipFreeStartupZero32:
+    xor eax,eax
+    mov [edx],eax
+    mov es:[edx],eax
+    add edx,4
+    jmp ipFreeStartupLoop32
+
+ipFreeStartupDone32:  
+    mov ax,system_data_sel
+    mov es,ax
+    mov eax,es:flat_base
+    or eax,eax
+    jnz ipFlatOk32
+;    
+    xor ebx,ebx
+    mov [ebx],ebx
+
+ipFlatOk32:    
+    mov eax,cr3
+    mov cr3,eax
+    ret
+local_init_process32     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_free_process32
+;
+;           DESCRIPTION:    Free process paging
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_free_process32     Proc near
+    mov bx,process_page_sel
+    mov ds,bx
+    mov bx,process_dir_sel
+    mov es,bx
+    xor esi,esi
+    mov ecx,flat_size
+    shr ecx,22
+    xor edi,edi
+
+fpDirLoop32:
+    mov eax,es:[edi]
+    test al,1
+    jz fpNextDir32
+;
+    test ax,800h
+    jnz fpNextDir32
+;
+    push cx
+    mov cx,400h
+
+fpPageLoop32:
+    xor eax,eax
+    xchg eax,[esi]
+    test al,1
+    jz fpNextPage32
+;
+    test ax,800h
+    jnz fpNextPage32
+;
+    xor ebx,ebx
+    FreePhysical
+
+fpNextPage32:
+    add esi,4
+    loop fpPageLoop32
+;
+    pop cx
+    xor eax,eax
+    xchg eax,es:[edi]
+;
+    xor ebx,ebx
+    FreePhysical
+    jmp fpNextDirPage32
+    
+fpNextDir32:
+    add esi,1000h
+
+fpNextDirPage32:
+    add edi,4
+    loop fpDirLoop32
+;
+    mov eax,flat_size
+    shr eax,22
+    mov cx,400h
+    sub cx,ax
+    mov bx,sys_dir_sel
+    mov ds,bx
+
+fpGlobalLoop32:
+    mov eax,es:[edi]
+    test al,1
+    jz fpGlobalNext32
+;
+    test ax,800h
+    jnz fpGlobalNext32
+;
+    and ax,0F000h
+    mov ebx,[edi]
+    and bx,0F000h
+    cmp eax,ebx
+    je fpGlobalNext32
+;
+    cmp edi,(fixed_process_linear SHR 20) AND 0FFFh
+    je fpGlobalNext32
+;
+    cmp edi,(process_page_linear SHR 20) AND 0FFFh
+    je fpGlobalNext32
+;
+    xor eax,eax
+    xchg eax,es:[edi]
+    xor ebx,ebx
+    FreePhysical
+
+fpGlobalNext32:
+    add edi,4
+    loop fpGlobalLoop32
+;
+    ret
+local_free_process32     Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

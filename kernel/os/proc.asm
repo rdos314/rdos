@@ -116,8 +116,9 @@ code    SEGMENT byte public use16 'CODE'
 
     extrn wake_new:near
 
-    extrn init_process_paging:near
-    extrn free_process_paging:near
+    extrn init_process_proc:word
+    extrn free_process_proc:word
+
     extrn init_process_mem:near
     extrn free_handle_process:near
 
@@ -1702,7 +1703,7 @@ terminate_pd_done:
     call trap_terminate_thread
     call free_handle_process
     call trap_terminate_process
-    call free_process_paging
+    call cs:free_process_proc
     jmp cleanup_process
 
 
@@ -2295,7 +2296,7 @@ init_first_process      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_first_process_callback:
-    call init_process_paging
+    call cs:init_process_proc
     call start_processor_null_threads
     call trap_init_tasking
     sti
