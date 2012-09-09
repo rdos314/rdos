@@ -531,12 +531,9 @@ ReadTrappedByte Proc near
     mov edx,ebx
     GetPageEntry
     mov edx,eax
+    and al,7
+    cmp al,6
     pop eax
-;
-    push dx
-    and dl,7
-    cmp dl,6
-    pop dx
     jne read_trapped_byte_normal
 ;
     test dh,80h
@@ -582,12 +579,9 @@ WriteTrappedByte    Proc near
     mov edx,ebx
     GetPageEntry
     mov edx,eax
+    and al,7
+    cmp al,6
     pop eax
-;
-    push dx
-    and dl,7
-    cmp dl,6
-    pop dx
     jne write_trapped_byte_normal
 ;
     test dh,80h
