@@ -445,8 +445,9 @@ local_get_page_entry32       Endp
 
 local_set_page_entry32       Proc near
     push ds
-    push ebx
-    push cx
+    push eax
+    push ecx
+    push edx
 ;
     or ebx,ebx
     jz sppok32
@@ -454,17 +455,22 @@ local_set_page_entry32       Proc near
     int 3
 
 sppok32:    
-    mov bx,process_page_sel
-    mov ds,bx
-    mov ebx,edx
-    shr ebx,10
-    and bl,0FCh
-    mov [ebx],eax
+    mov cx,process_page_sel
+    mov ds,cx
+    shr edx,10
+    and dl,0FCh
+;
+    xchg eax,[edx]
+    test al,1
+    jz sppDone
+;
     mov cx,1
     call local_flush_process_tlb    
-;
-    pop cx
-    pop ebx
+
+sppDone:
+    pop edx
+    pop ecx
+    pop eax
     pop ds
     ret
 local_set_page_entry32       Endp
