@@ -43,6 +43,8 @@ public:
 
 	void (*GoodCard)(TCardReaderDevice *CardReader, const char *strip);
 	void (*BadCard)(TCardReaderDevice *CardReader);
+
+	void *Owner;
     
 protected:
     virtual void Execute();
