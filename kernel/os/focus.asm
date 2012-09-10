@@ -562,33 +562,8 @@ set_focus_no_lost:
     mov ds:focus_current_thread,bx
     mov bp,bx
 ;    
-
     mov edx,io_local_linear
-    push ds
-    push edx
-;
-    mov eax,cr3
-    push eax
-;    
-    mov ds,bp    
-    mov eax,ds:p_cr3
-    mov bx,process_dir_sel
-    mov ds,bx
-;
-    shr edx,20
-    and dl,0FCh
-;
-    cli
-    mov cr3,eax
-    mov eax,[edx]
-;    
-    pop edx
-    mov cr3,edx
-    sti
-    xor ebx,ebx
-;
-    pop edx
-    pop ds    
+    GetThreadPageDir
 ;    
     mov bx,process_dir_sel
     mov ds,bx
