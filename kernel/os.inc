@@ -540,6 +540,13 @@ SetThreadPageEntry   MACRO
     OsGate set_thread_page_entry_nr
                     ENDM
 
+;       BP          Thread
+;       EDX         LINEAR ADDRESS
+;       EBX:EAX     PAGE ENTRY
+GetThreadPageDir   MACRO
+    OsGate get_thread_page_dir_nr
+                    ENDM
+
 ;       DX:ESI  ADDRESS TO READ
 ;       BX          TRèD
 ;       NC          VALID

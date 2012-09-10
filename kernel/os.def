@@ -522,4 +522,6 @@ reserve_page_entries_nr     = 441
 
 add_carddev_nr              = 442
 
+get_thread_page_dir_nr      = 443
+
 osgate_entries				= 480

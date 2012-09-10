@@ -72,6 +72,7 @@ code    SEGMENT byte public use16 'CODE'
     public unhook_page_proc
     public get_thread_page_entry_proc
     public set_thread_page_entry_proc
+    public get_thread_page_dir_proc
 
 init_process_proc               DW OFFSET local_init_process32
 free_process_proc               DW OFFSET local_free_process32
@@ -89,6 +90,7 @@ hook_page_proc                  DW OFFSET local_hook_page32
 unhook_page_proc                DW OFFSET local_unhook_page32
 get_thread_page_entry_proc      DW OFFSET local_get_thread_page_entry32
 set_thread_page_entry_proc      DW OFFSET local_set_thread_page_entry32
+get_thread_page_dir_proc        DW OFFSET local_get_thread_page_dir32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -192,6 +194,12 @@ init_page_table     PROC near
     mov edi,OFFSET set_thread_page_entry_name
     xor cl,cl
     mov ax,set_thread_page_entry_nr
+    RegisterOsGate
+;    
+    mov esi,OFFSET get_thread_page_dir
+    mov edi,OFFSET get_thread_page_dir_name
+    xor cl,cl
+    mov ax,get_thread_page_dir_nr
     RegisterOsGate
 ;    
     pop ds
@@ -1172,6 +1180,49 @@ local_set_thread_page_entry32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           local_get_thread_page_dir32
+;
+;           DESCRIPTION:    Get physical page directory for other thread
+;
+;           PARAMETERS:     BP          Thread
+;                           EDX         Linear address
+;
+;           RETURNS:        EBX:EAX     Physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_get_thread_page_dir32    Proc near
+    push ds
+    push edx
+;
+    mov eax,cr3
+    push eax
+;    
+    mov ds,bp    
+    mov eax,ds:p_cr3
+    mov bx,process_dir_sel
+    mov ds,bx
+;
+    shr edx,20
+    and dl,0FCh
+;
+    cli
+    mov cr3,eax
+    mov eax,[edx]
+;    
+    pop edx
+    mov cr3,edx
+    sti
+    xor ebx,ebx
+;
+    pop edx
+    pop ds    
+    ret
+local_get_thread_page_dir32    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetPageEntry
 ;
 ;           DESCRIPTION:    Get physical page for linear address
@@ -1450,6 +1501,28 @@ set_thread_page_entry    Proc far
     call cs:set_thread_page_entry_proc
     retf32
 set_thread_page_entry    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetThreadPageDir
+;
+;           DESCRIPTION:    Get physical page dir for linear address in other thread.
+;
+;           PARAMETERS:     BP          Thread
+;                           EDX         Linear address
+;
+;           RETURNS:        EBX:EAX     Physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_thread_page_dir_name   DB 'Get Thread Page Dir',0
+
+get_thread_page_dir    Proc far
+    call cs:get_thread_page_dir_proc
+    retf32
+get_thread_page_dir    Endp
+
 
 code    ENDS
 
