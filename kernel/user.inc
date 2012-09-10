@@ -2188,6 +2188,42 @@ ResetPrinter       MACRO
 	UserGate reset_printer_nr
 						ENDM
 
+;;;;;;;;;;;;;; CARD DEVICE ;;;;;;;;;;;;
+
+;   OUT AL      Card device #
+GetMaxCardDev       MACRO
+	UserGate get_max_carddev_nr
+						ENDM
+
+;	IN  AL		Card device #
+;	OUT BX		Card device handle
+OpenCardDev       MACRO
+	UserGate open_carddev_nr
+						ENDM
+
+;	IN  BX		Card device handle
+CloseCardDev       MACRO
+	UserGate close_carddev_nr
+						ENDM
+
+;	IN  BX		      Card device handle
+;   IN  ES:(E)DI      Name buffer
+GetCardDevName       MACRO
+	UserGate get_carddev_name_nr
+						ENDM
+
+;	IN  BX		Card device handle
+;   OUT NC      OK
+IsCardDevOk       MACRO
+	UserGate is_carddev_ok_nr
+						ENDM
+
+;	IN  BX		      Card device handle
+;   IN  ES:(E)DI      Strip buffer
+WaitForCard       MACRO
+	UserGate wait_for_card_nr
+						ENDM
+
 ;;;;;;;;;; SCREEN, TEXT MODE ;;;;;;;;;;
 
 ;	IN  CX              Column number (x)

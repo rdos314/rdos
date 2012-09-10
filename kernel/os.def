@@ -520,4 +520,6 @@ free_global_page_entries_nr = 439
 allocate_page_entries_nr    = 440
 reserve_page_entries_nr     = 441
 
+add_carddev_nr              = 442
+
 osgate_entries				= 480

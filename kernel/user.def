@@ -599,4 +599,11 @@ reset_printer_nr                = 477
 has_icsp_nr                     = 478
 reset_icsp_nr                   = 479
 
+get_max_carddev_nr              = 480
+open_carddev_nr                 = 481
+close_carddev_nr                = 482
+is_carddev_ok_nr                = 483
+wait_for_card_nr                = 484
+get_carddev_name_nr             = 485
+
 usergate_entries			    = 512

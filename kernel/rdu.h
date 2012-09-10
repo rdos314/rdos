@@ -599,6 +599,13 @@
 #define usergate_has_icsp 478
 #define usergate_reset_icsp 479
 
+#define usergate_get_max_carddev 480
+#define usergate_open_carddev 481
+#define usergate_close_carddev 482
+#define usergate_is_carddev_ok 483
+#define usergate_wait_for_card 484
+#define usergate_get_carddev_name 485
+
 
 
 #ifdef __FLAT__
@@ -1203,6 +1210,13 @@
 #define CallGate_has_icsp 0x67 0x9a 222 1 0 0 3 0
 #define CallGate_reset_icsp 0x67 0x9a 223 1 0 0 3 0
 
+#define CallGate_get_max_carddev 0x67 0x9a 224 1 0 0 3 0
+#define CallGate_open_carddev 0x67 0x9a 225 1 0 0 3 0
+#define CallGate_close_carddev 0x67 0x9a 226 1 0 0 3 0
+#define CallGate_is_carddev_ok 0x67 0x9a 227 1 0 0 3 0
+#define CallGate_wait_for_card 0x67 0x9a 228 1 0 0 3 0
+#define CallGate_get_carddev_name 0x67 0x9a 229 1 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1804,5 +1818,12 @@
 
 #define CallGate_has_icsp 0x3e 0x67 0x9a 222 1 0 0 3 0
 #define CallGate_reset_icsp 0x3e 0x67 0x9a 223 1 0 0 3 0
+
+#define CallGate_get_max_carddev 0x3e 0x67 0x9a 224 1 0 0 3 0
+#define CallGate_open_carddev 0x3e 0x67 0x9a 225 1 0 0 3 0
+#define CallGate_close_carddev 0x3e 0x67 0x9a 226 1 0 0 3 0
+#define CallGate_is_carddev_ok 0x3e 0x67 0x9a 227 1 0 0 3 0
+#define CallGate_wait_for_card 0x3e 0x67 0x9a 228 1 0 0 3 0
+#define CallGate_get_carddev_name 0x3e 0x67 0x9a 229 1 0 0 3 0
 
 #endif

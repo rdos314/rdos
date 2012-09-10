@@ -41,6 +41,7 @@ FLAG_STARTED           = 2
 FLAG_CLOSED            = 4
 FLAG_WAS_LIFTED        = 8
 FLAG_INIT              = 10h
+FLAG_STATUS            = 20h
 
 STATUS_PAPER_JAM       = 1h
 STATUS_CUTTER_JAM      = 2h
@@ -608,19 +609,31 @@ dsStatusLoop:
 ;
     mov bx,ds:kr_in_req
     IsUsbReqReady
-    jc dsStatusDone
+    jnc dsGetStatus
 ;
+    inc dx
+    cmp dx,30
+    jne dsStatusLoop
+;
+    jmp dsOffline
+
+dsGetStatus:
     GetUsbReqData
     mov es,ds:kr_in_buffer
     call NotifyStatus
 ;
     StartUsbReq
-    mov dx,1
-    jmp dsStatusLoop
-
-dsStatusDone:    
-    or dx,dx
-    jnz dsStatusOk
+;
+    mov ax,5
+    WaitMilliSec
+;
+    test ds:kr_flag,FLAG_ATTACHED
+    jz dsOffline
+;
+    mov bx,ds:kr_in_req
+    IsUsbReqReady
+    jnc dsGetStatus
+    jmp dsStatusOk
 
 dsOffline:    
     or ds:kr_temp_status,STATUS_OFFLINE
@@ -1981,6 +1994,8 @@ reset_printer    Endp
 StatusTimeout  Proc far
     mov ax,SEG data
     mov ds,ax
+    lock or ds:kr_flag,FLAG_STATUS
+;
     mov bx,ds:kr_session_thread
     or bx,bx
     jz stDone
@@ -2188,8 +2203,13 @@ krDoSession:
     jmp krLoop        
 
 krDoStatus:
+    test ds:kr_flag,FLAG_STATUS
+    jz krStatusDone
+;
+    lock and ds:kr_flag,NOT FLAG_STATUS    
     call UpdateStatus
-;    
+
+krStatusDone:    
     test ds:kr_status,STATUS_CUTTER_JAM
     jz krClearCutter
 ;

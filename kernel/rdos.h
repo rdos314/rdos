@@ -325,6 +325,13 @@ void RDOSAPI RdosEjectPrinterMedia(int Handle);
 void RDOSAPI RdosWaitForPrint(int Handle);
 void RDOSAPI RdosResetPrinter(int Handle);
 
+int RDOSAPI RdosGetMaxCardDev();
+int RDOSAPI RdosOpenCardDev(char ID);
+void RDOSAPI RdosCloseCardDev(int Handle);
+int RDOSAPI RdosGetCardDevName(int Handle, char *NameBuf);
+int RDOSAPI RdosIsCardDevOk(int Handle);
+int RDOSAPI RdosWaitForCard(int Handle, char *Strip);
+
 int RDOSAPI RdosOpenFile(const char *FileName, char Access);
 int RDOSAPI RdosCreateFile(const char *FileName, int Attrib);
 void RDOSAPI RdosCloseFile(int Handle);
@@ -1413,6 +1420,39 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosResetPrinter = \
     CallGate_reset_printer  \
     parm [ebx];
+
+#pragma aux RdosGetMaxCardDev = \
+    CallGate_get_max_carddev  \
+    "movzx eax,al"  \
+    value [eax];
+
+#pragma aux RdosOpenCardDev = \
+    CallGate_open_carddev  \
+    ValidateHandle  \
+    parm [al]  \
+    value [ebx];
+
+#pragma aux RdosCloseCardDev = \
+    CallGate_close_carddev  \
+    parm [ebx];
+
+#pragma aux RdosGetCardDevName = \
+    CallGate_get_carddev_name  \
+    CarryToBool \
+    parm [ebx] [edi] \
+    value [eax];
+
+#pragma aux RdosIsCardDevOk = \
+    CallGate_is_carddev_ok  \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosWaitForCard = \
+    CallGate_wait_for_card  \
+    CarryToBool \
+    parm [ebx] [edi] \
+    value [eax];
 
 #pragma aux RdosOpenFile = \
     CallGate_open_file  \
@@ -3679,6 +3719,39 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosResetPrinter = \
     CallGate_reset_printer  \
     parm [ebx];
+
+#pragma aux RdosGetMaxCardDev = \
+    CallGate_get_max_carddev  \
+    "movzx eax,al"  \
+    value [eax];
+
+#pragma aux RdosOpenCardDev = \
+    CallGate_open_carddev  \
+    ValidateHandle  \
+    parm [al]  \
+    value [ebx];
+
+#pragma aux RdosCloseCardDev = \
+    CallGate_close_carddev  \
+    parm [ebx];
+
+#pragma aux RdosGetCardDevName = \
+    CallGate_get_carddev_name  \
+    CarryToBool \
+    parm [ebx] [es edi] \
+    value [eax];
+
+#pragma aux RdosIsCardDevOk = \
+    CallGate_is_carddev_ok  \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosWaitForCard = \
+    CallGate_wait_for_card  \
+    CarryToBool \
+    parm [ebx] [es edi] \
+    value [eax];
 
 #pragma aux RdosOpenFile = \
     CallGate_open_file  \

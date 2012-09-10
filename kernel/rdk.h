@@ -516,6 +516,11 @@
 
 #define osgate_has_page_entry 438
 #define osgate_free_page_entries 439
+#define osgate_free_global_page_entries 439
+#define osgate_allocate_page_entries 440
+#define osgate_reserve_page_entries 441
+
+#define osgate_add_carddev 442
 
 
 
@@ -1037,4 +1042,9 @@
 
 #define OsGate_has_page_entry 0x3E 0x67 0x9a 182 1 0 0 2 0
 #define OsGate_free_page_entries 0x3E 0x67 0x9a 183 1 0 0 2 0
+#define OsGate_free_global_page_entries 0x3E 0x67 0x9a 183 1 0 0 2 0
+#define OsGate_allocate_page_entries 0x3E 0x67 0x9a 184 1 0 0 2 0
+#define OsGate_reserve_page_entries 0x3E 0x67 0x9a 185 1 0 0 2 0
+
+#define OsGate_add_carddev 0x3E 0x67 0x9a 186 1 0 0 2 0
 

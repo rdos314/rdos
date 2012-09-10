@@ -25,6 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
 ADC_HANDLE =        015FCh 
 FM_INSTR_HANDLE =   017DEh
 DLL_HANDLE16 =      026CFh
@@ -44,6 +45,7 @@ SECTION_HANDLE =    07A87h
 IPC_HANDLE =	    07B5Ah
 TCP_LISTEN_HANDLE = 07FAEh
 TCP_SOCKET_HANDLE = 0847Fh
+CARDDEV_HANDLE =    08AEBh
 FONT_HANDLE =	    09AF4h
 DIR_HANDLE = 	    0A765h
 XMS_HANDLE =	    0A560h

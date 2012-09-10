@@ -2944,6 +2944,15 @@ AddPrinter      MACRO
     OsGate add_printer_nr
                     ENDM
 
+;;;;;;;;;; Card device ;;;;;;;;;
+
+;   AX      Controller #
+;   DX      Device #
+;   DS      Card device selector
+AddCardDev      MACRO
+    OsGate add_carddev_nr
+                    ENDM
+
 ;;;;;;;;;; IR ;;;;;;;;;
 
 ; IN  ES:DI     Data buffer
