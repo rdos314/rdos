@@ -60,6 +60,7 @@ code    SEGMENT byte public use16 'CODE'
     public free_process_proc
     public get_page_entry_proc
     public set_page_entry_proc
+    public set_page_dir_proc
     public has_page_entry_proc
     public reserve_page_entries_proc
     public allocate_page_entries_proc
@@ -79,6 +80,7 @@ free_process_proc               DW OFFSET local_free_process32
 get_page_entry_proc             DW OFFSET local_get_page_entry32
 set_page_entry_proc             DW OFFSET local_set_page_entry32
 has_page_entry_proc             DW OFFSET local_has_page_entry32
+set_page_dir_proc               DW OFFSET local_set_page_dir32
 reserve_page_entries_proc       DW OFFSET local_reserve_page_entries32
 allocate_page_entries_proc      DW OFFSET local_allocate_page_entries32
 free_page_entries_proc          DW OFFSET local_free_page_entries32
@@ -122,6 +124,12 @@ init_page_table     PROC near
     mov edi,OFFSET set_page_entry_name
     xor cl,cl
     mov ax,set_page_entry_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET set_page_dir
+    mov edi,OFFSET set_page_dir_name
+    xor cl,cl
+    mov ax,set_page_dir_nr
     RegisterOsGate
 ;
     mov esi,OFFSET has_page_entry
@@ -482,6 +490,34 @@ sppDone:
     pop ds
     ret
 local_set_page_entry32       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_set_page_dir32
+;
+;           DESCRIPTION:    Set physical dir for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;                           EBX:EAX     physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_set_page_dir32       Proc near
+    push ds
+    push cx
+    push edx
+;    
+    mov cx,process_dir_sel
+    mov ds,cx
+    shr edx,20
+    mov [edx],eax
+;
+    pop edx
+    pop cx
+    pop ds
+    ret
+local_set_page_dir32    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1279,6 +1315,25 @@ has_page_entry       Proc far
     call cs:has_page_entry_proc
     retf32
 has_page_entry       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetPageDir
+;
+;           DESCRIPTION:    Set physical page dir for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;                           EBX:EAX     physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_page_dir_name  DB 'Set Page Dir',0
+
+set_page_dir       Proc far
+    call cs:set_page_dir_proc
+    retf32
+set_page_dir       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

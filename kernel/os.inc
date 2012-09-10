@@ -484,6 +484,12 @@ HasPageEntry MACRO
     OsGate has_page_entry_nr
                     ENDM
 
+;       EDX         LINEAR ADDRESS
+;       EBX:EAX     PAGE ENTRY
+SetPageDir MACRO
+    OsGate set_page_dir_nr
+                    ENDM
+
 ; IN    EAX         Allocation limit
 ; IN    ECX         Number of entries
 ; IN    EDX         Start linear address

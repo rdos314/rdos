@@ -564,18 +564,16 @@ set_focus_no_lost:
 ;    
     mov edx,io_local_linear
     GetThreadPageDir
-;    
-    mov bx,process_dir_sel
-    mov ds,bx
-    mov ebx,io_focus_linear
-    shr ebx,20
-    mov [bx],eax
-
+;  
+    mov edx,io_focus_linear
+    SetPageDir  
+;
     mov bx,sys_dir_sel
     mov ds,bx
     mov ebx,io_focus_linear
     shr ebx,20
     mov [bx],eax;
+;    
     mov bx,SEG data
     mov ds,bx
     call trap_got_focus
