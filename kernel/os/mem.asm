@@ -1199,30 +1199,28 @@ resize_flat_grow:
     sub eax,ecx
     mov ecx,eax
     push ecx
-    shr edx,10
     shr ecx,12
-    mov ax,process_page_sel
-    mov ds,ax
 ;
     push ecx
     push edx
 
 resize_flat_test_grow_loop:
-    mov eax,[edx]
+    GetPageEntry
     test al,7
     jnz resize_flat_grow_copy
 ;
-    add edx,4
+    add edx,1000h
     loop resize_flat_test_grow_loop
 ;
     pop edx
     pop ecx
 ;
     mov eax,2
+    xor ebx,ebx
 
 resize_flat_grow_loop:
-    mov [edx],eax
-    add edx,4
+    SetPageEntry
+    add edx,1000h
     loop resize_flat_grow_loop
 ;
     pop ecx
@@ -1231,12 +1229,12 @@ resize_flat_grow_loop:
     sub ds:local_big_avail_mem,ecx
     add ds:local_big_used_mem,ecx
     LeaveSection ds:local_mem_section
-    add sp,12
+    add esp,12
     clc
     jmp resize_flat_done
 
 resize_flat_grow_copy:
-    add sp,12
+    add esp,12
     mov bx,local_mem_sel
     mov ds,bx
     LeaveSection ds:local_mem_section
@@ -1246,34 +1244,24 @@ resize_flat_grow_copy:
     pop eax
     AllocateLocalLinear
 ;
-    add sp,4
+    add esp,4
     sub edx,esi
     push edx
     add edx,esi
 ;
-    push ebx
+    push esi
+    push edi
     push ecx
 ;
-    shr ebx,10
-    shr edx,10
+    mov esi,ebx
+    mov edi,edx
     shr ecx,12
-    mov ax,process_page_sel
-    mov ds,ax
-
-resize_flat_grow_copy_loop:
-    cmp ebx,(flat_size SHR 10) AND 003FFFFFh
-    jae resize_flat_grow_copy_done
+    CopyPageEntries
 ;
-    mov eax,2
-    xchg eax,[ebx]
-    mov [edx],eax
-    add ebx,4
-    add edx,4
-    loop resize_flat_grow_copy_loop
-
-resize_flat_grow_copy_done:
     pop ecx
-    pop edx
+    pop edi
+    pop esi
+;    
     FreeLinear
     clc
     jmp resize_flat_done
@@ -2061,9 +2049,6 @@ free_local_no_merge_up:
 free_local_not_limit_page:
     add edx,local_byte_linear + 10h
     add eax,local_byte_linear
-    mov bx,process_page_sel
-    mov ds,bx
-;       call free_pages
     mov bx,local_mem_sel
     mov ds,bx
     LeaveSection ds:local_mem_section
@@ -2161,9 +2146,6 @@ free_vm_not_limit_page:
     movzx eax,di
     add edx,vm_linear + 8
     add eax,vm_linear
-    mov bx,process_page_sel
-    mov ds,bx
-;       call free_pages
     mov bx,local_mem_sel
     mov ds,bx
     LeaveSection ds:vm_mem_section
