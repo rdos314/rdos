@@ -778,23 +778,16 @@ page_fault_system       PROC near
     mov ax,[ebp].trap_eflags
     and ax,NOT 4500h
     push ax
-    mov eax,cr2
+    mov edx,cr2
     popf
-
-    mov bx,process_page_sel
-    mov ds,bx
-    mov ebx,eax
-    shr ebx,10
-    and bx,0FFFCh
-    mov al,[ebx]
+;
+    call cs:get_page_entry_proc
     test al,1
     jnz page_fault_system_retry
 ;
-    push eax
     call local_allocate_physical
     mov al,07h
-    mov [ebx],eax
-    pop eax
+    call cs:set_page_entry_proc
 
 page_fault_system_retry:
     ret
