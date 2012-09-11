@@ -430,17 +430,16 @@ start_paging    Endp
 ;
 ;           DESCRIPTION:    Pagefault in system page directory
 ;
-;           PARAMETERS:         EAX         page fault address
+;           PARAMETERS:         EDX         page fault address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 sys_dir_fault   Proc near
-    sub eax,sys_page_linear
-    shl eax,10
-    cmp eax,system_mem_start
+    sub edx,sys_page_linear
+    shl edx,10
+    cmp edx,system_mem_start
     jb page_fault_error2
 ;
-    mov edx,eax
     jmp cs:create_sys_page_dir_proc
 
 sys_dir_fault   Endp
@@ -468,8 +467,8 @@ process_dir_fault_move  Proc near
     jnz sys_dir_valid
     push bx
     cli
-    mov eax,edx
-    add eax,sys_page_linear
+;    
+    add edx,sys_page_linear
     call sys_dir_fault
     pop bx
     mov ax,sys_dir_sel
@@ -734,7 +733,7 @@ page_fault      Proc near
     mov ax,[ebp].trap_eflags
     and ax,NOT 4500h
     push ax
-    mov eax,cr2
+    mov edx,cr2
     popf
     jmp sys_dir_fault
 
