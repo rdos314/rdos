@@ -430,26 +430,6 @@ start_paging    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           sys_dir_fault
-;
-;           DESCRIPTION:    Pagefault in system page directory
-;
-;           PARAMETERS:         EDX         page fault address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-sys_dir_fault   Proc near
-    cmp edx,system_mem_start
-    jb page_fault_error2
-;
-    jmp cs:create_sys_page_dir_proc
-
-sys_dir_fault   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           process_dir_fault_move
 ;
 ;           DESCRIPTION:    Pagefault in user process page directory
@@ -465,7 +445,10 @@ process_dir_fault_move  Proc near
     jnz sys_dir_valid
 ;    
     cli
-    call sys_dir_fault
+    cmp edx,system_mem_start
+    jb page_fault_error2
+;
+    call cs:create_sys_page_dir_proc
     call cs:get_sys_page_dir_proc    
 
 sys_dir_valid:
@@ -729,7 +712,10 @@ page_fault      Proc near
     popf
     sub edx,sys_page_linear
     shl edx,10
-    jmp sys_dir_fault
+    cmp edx,system_mem_start
+    jb page_fault_error2
+;
+    jmp cs:create_sys_page_dir_proc
 
 page_fault      Endp
 
