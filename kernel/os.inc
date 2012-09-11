@@ -486,8 +486,16 @@ HasPageEntry MACRO
 
 ;       EDX         LINEAR ADDRESS
 ;       EBX:EAX     PAGE ENTRY
+;       CL          Entry #
 SetPageDir MACRO
     OsGate set_page_dir_nr
+                    ENDM
+
+;       EDX         LINEAR ADDRESS
+;       EBX:EAX     PAGE ENTRY
+;       CL          Entry #
+SetSysPageDir MACRO
+    OsGate set_sys_page_dir_nr
                     ENDM
 
 ; IN    EAX         Allocation limit
@@ -549,6 +557,7 @@ SetThreadPageEntry   MACRO
 ;       BP          Thread
 ;       EDX         LINEAR ADDRESS
 ;       EBX:EAX     PAGE ENTRY
+;       CL          Entry #
 GetThreadPageDir   MACRO
     OsGate get_thread_page_dir_nr
                     ENDM

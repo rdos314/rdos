@@ -524,5 +524,6 @@ add_carddev_nr              = 442
 
 get_thread_page_dir_nr      = 443
 set_page_dir_nr             = 444
+set_sys_page_dir_nr         = 445
 
 osgate_entries				= 480

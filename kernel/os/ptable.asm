@@ -61,6 +61,7 @@ code    SEGMENT byte public use16 'CODE'
     public get_page_entry_proc
     public set_page_entry_proc
     public set_page_dir_proc
+    public set_sys_page_dir_proc
     public has_page_entry_proc
     public reserve_page_entries_proc
     public allocate_page_entries_proc
@@ -81,6 +82,7 @@ get_page_entry_proc             DW OFFSET local_get_page_entry32
 set_page_entry_proc             DW OFFSET local_set_page_entry32
 has_page_entry_proc             DW OFFSET local_has_page_entry32
 set_page_dir_proc               DW OFFSET local_set_page_dir32
+set_sys_page_dir_proc           DW OFFSET local_set_sys_page_dir32
 reserve_page_entries_proc       DW OFFSET local_reserve_page_entries32
 allocate_page_entries_proc      DW OFFSET local_allocate_page_entries32
 free_page_entries_proc          DW OFFSET local_free_page_entries32
@@ -130,6 +132,12 @@ init_page_table     PROC near
     mov edi,OFFSET set_page_dir_name
     xor cl,cl
     mov ax,set_page_dir_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET set_sys_page_dir
+    mov edi,OFFSET set_sys_page_dir_name
+    xor cl,cl
+    mov ax,set_sys_page_dir_nr
     RegisterOsGate
 ;
     mov esi,OFFSET has_page_entry
@@ -500,6 +508,7 @@ local_set_page_entry32       Endp
 ;
 ;           PARAMETERS:     EDX         linear address
 ;                           EBX:EAX     physical address or 0                       
+;                           CL          entry #
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -508,16 +517,57 @@ local_set_page_dir32       Proc near
     push cx
     push edx
 ;    
+    or cl,cl
+    stc
+    jnz spdDone
+;    
     mov cx,process_dir_sel
     mov ds,cx
     shr edx,20
     mov [edx],eax
-;
+    clc
+    
+spdDone:
     pop edx
     pop cx
     pop ds
     ret
 local_set_page_dir32    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_set_sys_page_dir32
+;
+;           DESCRIPTION:    Set physical dir for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;                           EBX:EAX     physical address or 0                       
+;                           CL          entry #
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_set_sys_page_dir32       Proc near
+    push ds
+    push cx
+    push edx
+;    
+    or cl,cl
+    stc
+    jnz sspdDone
+;    
+    mov cx,sys_dir_sel
+    mov ds,cx
+    shr edx,20
+    mov [edx],eax
+    clc
+    
+sspdDone:
+    pop edx
+    pop cx
+    pop ds
+    ret
+local_set_sys_page_dir32    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1222,6 +1272,7 @@ local_set_thread_page_entry32    Endp
 ;
 ;           PARAMETERS:     BP          Thread
 ;                           EDX         Linear address
+;                           CL          Entry #
 ;
 ;           RETURNS:        EBX:EAX     Physical address or 0                       
 ;                           
@@ -1231,6 +1282,10 @@ local_get_thread_page_dir32    Proc near
     push ds
     push edx
 ;
+    or cl,cl
+    stc
+    jnz gtpdDone
+;    
     mov eax,cr3
     push eax
 ;    
@@ -1250,7 +1305,9 @@ local_get_thread_page_dir32    Proc near
     mov cr3,edx
     sti
     xor ebx,ebx
-;
+    clc
+
+gtpdDone:
     pop edx
     pop ds    
     ret
@@ -1334,6 +1391,25 @@ set_page_dir       Proc far
     call cs:set_page_dir_proc
     retf32
 set_page_dir       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetSysPageDir
+;
+;           DESCRIPTION:    Set physical page dir for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;                           EBX:EAX     physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_sys_page_dir_name  DB 'Set Sys Page Dir',0
+
+set_sys_page_dir       Proc far
+    call cs:set_sys_page_dir_proc
+    retf32
+set_sys_page_dir       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

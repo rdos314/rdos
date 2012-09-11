@@ -561,22 +561,27 @@ set_focus_no_lost:
     mov ds:focus_switched,1
     mov ds:focus_current_thread,bx
     mov bp,bx
-;    
+    xor cl,cl
+
+set_focus_loop:
     mov edx,io_local_linear
     GetThreadPageDir
+    jc set_focus_pages_ok
 ;  
     mov edx,io_focus_linear
     SetPageDir  
 ;
-    mov bx,sys_dir_sel
-    mov ds,bx
-    mov ebx,io_focus_linear
-    shr ebx,20
-    mov [bx],eax;
-;    
+    mov edx,io_focus_linear
+    SetSysPageDir
+;
+    inc cl
+    jmp set_focus_loop    
+
+set_focus_pages_ok:        
     mov bx,SEG data
     mov ds,bx
     call trap_got_focus
+
 set_focus_done:
     LeaveSection ds:focus_section
     popad
