@@ -66,6 +66,7 @@ code    SEGMENT byte public use16 'CODE'
     public set_page_dir_proc
     public set_sys_page_dir_proc
     public create_page_dir_proc
+    public create_sys_page_dir_proc
     public has_page_entry_proc
     public reserve_page_entries_proc
     public allocate_page_entries_proc
@@ -90,6 +91,7 @@ get_page_dir_proc               DW OFFSET local_get_page_dir32
 set_page_dir_proc               DW OFFSET local_set_page_dir32
 set_sys_page_dir_proc           DW OFFSET local_set_sys_page_dir32
 create_page_dir_proc            DW OFFSET local_create_page_dir32
+create_sys_page_dir_proc        DW OFFSET local_create_sys_page_dir32
 reserve_page_entries_proc       DW OFFSET local_reserve_page_entries32
 allocate_page_entries_proc      DW OFFSET local_allocate_page_entries32
 free_page_entries_proc          DW OFFSET local_free_page_entries32
@@ -669,6 +671,53 @@ cpdInit:
     pop eax
     ret
 local_create_page_dir32    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_create_sys_page_dir32
+;
+;           DESCRIPTION:    Create sys page directory entry
+;
+;           PARAMETERS:     EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_create_sys_page_dir32       Proc near
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    push edx
+    mov bx,sys_dir_sel
+    mov ds,bx
+    shr edx,20
+    and dx,0FFCh
+    call local_allocate_physical
+    mov al,7
+    mov [edx],eax    
+    pop edx
+;
+    shr edx,10
+    and dx,0F000h
+    mov bx,sys_page_sel
+    mov ds,bx
+;
+    mov cx,400h
+    xor ebx,ebx
+
+cspdInit:
+    mov [edx],ebx
+    add edx,4
+    loop cspdInit
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+local_create_sys_page_dir32    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

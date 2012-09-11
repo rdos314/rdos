@@ -48,6 +48,7 @@ INCLUDE system.inc
     extrn get_page_entry_proc:word
     extrn set_page_entry_proc:word
     extrn create_page_dir_proc:word
+    extrn create_sys_page_dir_proc:word
     
 code    SEGMENT byte public 'CODE'
 
@@ -422,44 +423,6 @@ start_paging_global_done:
     ret
 start_paging    Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           sys_dir_fault_system
-;
-;           DESCRIPTION:    Pagefault in system system page directory
-;
-;           PARAMETERS:         EAX         page fault address (not in dir)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-sys_dir_fault_system    Proc near
-    push eax
-    mov bx,sys_dir_sel
-    mov ds,bx
-    shr eax,20
-    and ax,0FFCh
-    mov bx,ax
-    call local_allocate_physical
-    mov al,3
-    mov [bx],eax    
-    pop eax
-;
-    shr eax,10
-    and ax,0F000h
-    mov bx,sys_page_sel
-    mov ds,bx
-    mov cx,400h
-    xor ebx,ebx
-sys_dir_fault_system_init:
-    mov [eax],ebx
-    add eax,4
-    loop sys_dir_fault_system_init
-    ret
-sys_dir_fault_system    Endp
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -476,7 +439,10 @@ sys_dir_fault   Proc near
     shl eax,10
     cmp eax,system_mem_start
     jb page_fault_error2
-    jmp sys_dir_fault_system
+;
+    mov edx,eax
+    jmp cs:create_sys_page_dir_proc
+
 sys_dir_fault   Endp
 
 
