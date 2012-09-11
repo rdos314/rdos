@@ -430,36 +430,6 @@ start_paging    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           process_dir_fault_move
-;
-;           DESCRIPTION:    Pagefault in user process page directory
-;
-;           PARAMETERS:         EAX         page fault address (not in dir)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-process_dir_fault_move  Proc near
-    mov edx,eax
-    call cs:get_sys_page_dir_proc    
-    test al,1
-    jnz sys_dir_valid
-;    
-    cli
-    cmp edx,system_mem_start
-    jb page_fault_error2
-;
-    call cs:create_sys_page_dir_proc
-    call cs:get_sys_page_dir_proc    
-
-sys_dir_valid:
-    call cs:set_page_dir_proc
-    ret
-process_dir_fault_move  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           process_dir_fault
 ;
 ;           DESCRIPTION:    Pagefault in process page directory
@@ -490,8 +460,22 @@ process_dir_fault       Proc near
 ;
     cmp edi,io_local_linear
     je process_dir_fault_local
+
+process_dir_fault_move:
+    mov edx,eax
+    call cs:get_sys_page_dir_proc    
+    test al,1
+    jnz process_dir_fault_valid
+;    
+    cli
+    cmp edx,system_mem_start
+    jb page_fault_error2
 ;
-    jmp process_dir_fault_move
+    call cs:create_sys_page_dir_proc
+    call cs:get_sys_page_dir_proc    
+
+process_dir_fault_valid:
+    jmp cs:set_page_dir_proc
 
 process_dir_fault_local:
     mov edx,eax
