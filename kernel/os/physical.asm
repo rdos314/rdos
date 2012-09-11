@@ -404,7 +404,7 @@ allocate_dma_physical   ENDP
 ;
 ;           DESCRIPTION:    Free physical page
 ;
-;           PARAMETERS:         EAX         Address
+;           PARAMETERS:     EBX:EAX         Address
 ;                           
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -416,6 +416,13 @@ local_free_physical   PROC near
     push es
     push ebx
     push edx
+;
+    or ebx,ebx
+    jz fpdo
+;
+    int 3
+
+fpdo:    
     and ax,0F000h
     mov bx,system_data_sel
     mov ds,bx
@@ -449,6 +456,7 @@ free_link_page:
     pop ds
     ReleaseSpinlockNoSti ds:phys_spinlock
     popf
+;    
     pop edx
     pop ebx
     pop es
@@ -471,12 +479,6 @@ local_free_physical   ENDP
 free_physical_name      DB 'Free Physical Memory',0
 
 free_physical   PROC far
-    or ebx,ebx
-    jz fpdo
-;
-    int 3
-
-fpdo:    
     call local_free_physical
     retf32
 free_physical   ENDP
