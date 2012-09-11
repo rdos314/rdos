@@ -47,6 +47,10 @@ INCLUDE system.inc
 
     extrn get_page_entry_proc:word
     extrn set_page_entry_proc:word
+    extrn get_page_dir_proc:word
+    extrn get_sys_page_dir_proc:word
+    extrn set_page_dir_proc:word
+    extrn set_sys_page_dir_proc:word
     extrn create_page_dir_proc:word
     extrn create_sys_page_dir_proc:word
     
@@ -455,29 +459,17 @@ sys_dir_fault   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 process_dir_fault_move  Proc near
-    mov bx,sys_dir_sel
-    mov ds,bx
-    mov ebx,eax
-    shr ebx,20
-    and bx,0FFCh
-    mov ecx,[bx]
-    test cl,1
+    mov edx,eax
+    call cs:get_sys_page_dir_proc    
+    test al,1
     jnz sys_dir_valid
 ;    
-    push bx
     cli
-    mov edx,eax
     call sys_dir_fault
-    pop bx
-;
-    mov ax,sys_dir_sel
-    mov ds,ax
-    mov ecx,[bx]
+    call cs:get_sys_page_dir_proc    
 
 sys_dir_valid:
-    mov ax,process_dir_sel
-    mov ds,ax
-    mov [bx],ecx
+    call cs:set_page_dir_proc
     ret
 process_dir_fault_move  Endp
 

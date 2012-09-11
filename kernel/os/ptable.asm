@@ -64,6 +64,7 @@ code    SEGMENT byte public use16 'CODE'
     public get_page_dir_attrib_proc
     public get_page_dir_proc
     public set_page_dir_proc
+    public get_sys_page_dir_proc
     public set_sys_page_dir_proc
     public create_page_dir_proc
     public create_sys_page_dir_proc
@@ -89,6 +90,7 @@ has_page_entry_proc             DW OFFSET local_has_page_entry32
 get_page_dir_attrib_proc        DW OFFSET local_get_page_dir_attrib32
 get_page_dir_proc               DW OFFSET local_get_page_dir32
 set_page_dir_proc               DW OFFSET local_set_page_dir32
+get_sys_page_dir_proc           DW OFFSET local_get_sys_page_dir32
 set_sys_page_dir_proc           DW OFFSET local_set_sys_page_dir32
 create_page_dir_proc            DW OFFSET local_create_page_dir32
 create_sys_page_dir_proc        DW OFFSET local_create_sys_page_dir32
@@ -566,6 +568,35 @@ local_get_page_dir32       Proc near
     pop ds
     ret
 local_get_page_dir32    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_get_sys_page_dir32
+;
+;           DESCRIPTION:    Get physical dir for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;
+;           RETURNS:        EBX:EAX     physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_get_sys_page_dir32       Proc near
+    push ds
+    push edx
+;    
+    mov ax,sys_dir_sel
+    mov ds,ax
+    shr edx,20
+    and dl,0FCh
+    mov eax,[edx]
+    xor ebx,ebx
+;    
+    pop edx
+    pop ds
+    ret
+local_get_sys_page_dir32    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
