@@ -371,12 +371,15 @@ check_read_page_loop:
     je EmulateError
 
 check_read_page_check_dir:
-    mov ebx,eax
-    mov dx,process_dir_sel
-    mov ds,dx
-    shr ebx,20
-    and bx,0FFCh
-    mov dl,[bx]
+    push eax
+    push ebx
+;
+    mov edx,eax
+    GetPageDir
+    mov dl,al
+;   
+    pop ebx 
+    pop eax
     test dl,4
     jnz check_read_page_next
 ;
@@ -461,13 +464,15 @@ check_write_page_loop:
     je EmulateError
 
 check_write_page_check_dir:
-    mov ebx,eax
-    mov dx,process_dir_sel
-    mov ds,dx
-    shr ebx,20
-    and bx,0FFCh
-    mov dl,[bx]
+    push eax
+    push ebx
 ;
+    mov edx,eax
+    GetPageDir
+    mov dl,al
+;   
+    pop ebx 
+    pop eax
     test dl,2
     jz EmulateError
 ;

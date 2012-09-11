@@ -492,6 +492,12 @@ GetPageDirAttrib MACRO
 
 ;       EDX         LINEAR ADDRESS
 ;       EBX:EAX     PAGE ENTRY
+GetPageDir MACRO
+    OsGate get_page_dir_nr
+                    ENDM
+
+;       EDX         LINEAR ADDRESS
+;       EBX:EAX     PAGE ENTRY
 SetPageDir MACRO
     OsGate set_page_dir_nr
                     ENDM

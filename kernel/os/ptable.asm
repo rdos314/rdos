@@ -61,6 +61,7 @@ code    SEGMENT byte public use16 'CODE'
     public get_page_entry_proc
     public set_page_entry_proc
     public get_page_dir_attrib_proc
+    public get_page_dir_proc
     public set_page_dir_proc
     public set_sys_page_dir_proc
     public has_page_entry_proc
@@ -83,6 +84,7 @@ get_page_entry_proc             DW OFFSET local_get_page_entry32
 set_page_entry_proc             DW OFFSET local_set_page_entry32
 has_page_entry_proc             DW OFFSET local_has_page_entry32
 get_page_dir_attrib_proc        DW OFFSET local_get_page_dir_attrib32
+get_page_dir_proc               DW OFFSET local_get_page_dir32
 set_page_dir_proc               DW OFFSET local_set_page_dir32
 set_sys_page_dir_proc           DW OFFSET local_set_sys_page_dir32
 reserve_page_entries_proc       DW OFFSET local_reserve_page_entries32
@@ -130,10 +132,22 @@ init_page_table     PROC near
     mov ax,set_page_entry_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET has_page_entry
+    mov edi,OFFSET has_page_entry_name
+    xor cl,cl
+    mov ax,has_page_entry_nr
+    RegisterOsGate
+;
     mov esi,OFFSET get_page_dir_attrib
     mov edi,OFFSET get_page_dir_attrib_name
     xor cl,cl
     mov ax,get_page_dir_attrib_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_page_dir
+    mov edi,OFFSET get_page_dir_name
+    xor cl,cl
+    mov ax,get_page_dir_nr
     RegisterOsGate
 ;
     mov esi,OFFSET set_page_dir
@@ -146,12 +160,6 @@ init_page_table     PROC near
     mov edi,OFFSET set_sys_page_dir_name
     xor cl,cl
     mov ax,set_sys_page_dir_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET has_page_entry
-    mov edi,OFFSET has_page_entry_name
-    xor cl,cl
-    mov ax,has_page_entry_nr
     RegisterOsGate
 ;
     mov esi,OFFSET reserve_page_entries
@@ -524,6 +532,35 @@ local_get_page_dir_attrib32       Proc near
     mov esi,400000h
     ret
 local_get_page_dir_attrib32    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_get_page_dir32
+;
+;           DESCRIPTION:    Get physical dir for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;
+;           RETURNS:        EBX:EAX     physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_get_page_dir32       Proc near
+    push ds
+    push edx
+;    
+    mov ax,process_dir_sel
+    mov ds,ax
+    shr edx,20
+    and dl,0FCh
+    mov eax,[edx]
+    xor ebx,ebx
+;    
+    pop edx
+    pop ds
+    ret
+local_get_page_dir32    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1398,6 +1435,26 @@ get_page_dir_attrib       Proc far
     call cs:get_page_dir_attrib_proc
     retf32
 get_page_dir_attrib       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetPageDir
+;
+;           DESCRIPTION:    Get physical page dir for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;                           
+;           RETURNS:        EBX:EAX     physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_page_dir_name  DB 'Get Page Dir',0
+
+get_page_dir       Proc far
+    call cs:get_page_dir_proc
+    retf32
+get_page_dir       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
