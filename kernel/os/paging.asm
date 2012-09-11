@@ -435,8 +435,6 @@ start_paging    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 sys_dir_fault   Proc near
-    sub edx,sys_page_linear
-    shl edx,10
     cmp edx,system_mem_start
     jb page_fault_error2
 ;
@@ -465,18 +463,17 @@ process_dir_fault_move  Proc near
     mov ecx,[bx]
     test cl,1
     jnz sys_dir_valid
+;    
     push bx
     cli
-;    
     mov edx,eax
-    shr edx,10
-    add edx,sys_page_linear
     call sys_dir_fault
-;
     pop bx
+;
     mov ax,sys_dir_sel
     mov ds,ax
     mov ecx,[bx]
+
 sys_dir_valid:
     mov ax,process_dir_sel
     mov ds,ax
@@ -738,6 +735,8 @@ page_fault      Proc near
     push ax
     mov edx,cr2
     popf
+    sub edx,sys_page_linear
+    shl edx,10
     jmp sys_dir_fault
 
 page_fault      Endp
