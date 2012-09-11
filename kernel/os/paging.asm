@@ -47,6 +47,7 @@ INCLUDE system.inc
 
     extrn get_page_entry_proc:word
     extrn set_page_entry_proc:word
+    extrn create_page_dir_proc:word
     
 code    SEGMENT byte public 'CODE'
 
@@ -425,43 +426,6 @@ start_paging    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           sys_dir_fault_user
-;
-;           DESCRIPTION:    Pagefault in user system page directory
-;
-;           PARAMETERS:         EAX         page fault address (not in dir)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-sys_dir_fault_user      Proc near
-    push eax
-    mov bx,sys_dir_sel
-    mov ds,bx
-    shr eax,20
-    and ax,0FFCh
-    mov bx,ax
-    call local_allocate_physical
-    mov al,7
-    mov [bx],eax    
-    pop eax
-;
-    shr eax,10
-    and ax,0F000h
-    mov bx,sys_page_sel
-    mov ds,bx
-    mov cx,400h
-    xor ebx,ebx
-sys_dir_fault_user_init:
-    mov [eax],ebx
-    add eax,4
-    loop sys_dir_fault_user_init
-    ret
-sys_dir_fault_user      Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           sys_dir_fault_system
 ;
 ;           DESCRIPTION:    Pagefault in system system page directory
@@ -556,43 +520,6 @@ process_dir_fault_move  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           process_dir_fault_local
-;
-;           DESCRIPTION:    Pagefault in local process page directory
-;
-;           PARAMETERS:         EAX         page fault address (not in dir)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-process_dir_fault_local Proc near
-    push eax
-    mov bx,process_dir_sel
-    mov ds,bx
-    shr eax,20
-    and ax,0FFCh
-    mov bx,ax
-    call local_allocate_physical
-    mov al,7
-    mov [bx],eax    
-    pop eax
-;
-    shr eax,10
-    and ax,0F000h
-    mov bx,process_page_sel
-    mov ds,bx
-    mov cx,400h
-    xor ebx,ebx
-process_dir_fault_local_init:
-    mov [eax],ebx
-    add eax,4
-    loop process_dir_fault_local_init
-    ret
-process_dir_fault_local Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           process_dir_fault
 ;
 ;           DESCRIPTION:    Pagefault in process page directory
@@ -625,6 +552,11 @@ process_dir_fault       Proc near
     je process_dir_fault_local
 ;
     jmp process_dir_fault_move
+
+process_dir_fault_local:
+    mov edx,eax
+    jmp cs:create_page_dir_proc    
+
 process_dir_fault       Endp
 
 
