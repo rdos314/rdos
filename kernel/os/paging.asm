@@ -468,8 +468,11 @@ process_dir_fault_move  Proc near
     push bx
     cli
 ;    
+    mov edx,eax
+    shr edx,10
     add edx,sys_page_linear
     call sys_dir_fault
+;
     pop bx
     mov ax,sys_dir_sel
     mov ds,ax
