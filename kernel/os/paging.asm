@@ -442,14 +442,13 @@ process_dir_fault       Proc near
     mov ax,[ebp].trap_eflags
     and ax,NOT 4500h
     push ax
-    mov eax,cr2
+    mov edx,cr2
     popf
 ;
-    sub eax,process_page_linear
-    mov edx,eax
-    shl eax,10
+    sub edx,process_page_linear
+    shl edx,10
 ;
-    mov edi,eax
+    mov edi,edx
     and edi,0FFC00000h
 ;
     cmp edi,system_mem_start
@@ -462,7 +461,6 @@ process_dir_fault       Proc near
     je process_dir_fault_local
 
 process_dir_fault_move:
-    mov edx,eax
     call cs:get_sys_page_dir_proc    
     test al,1
     jnz process_dir_fault_valid
@@ -478,7 +476,6 @@ process_dir_fault_valid:
     jmp cs:set_page_dir_proc
 
 process_dir_fault_local:
-    mov edx,eax
     jmp cs:create_page_dir_proc    
 
 process_dir_fault       Endp
