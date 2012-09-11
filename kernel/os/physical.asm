@@ -261,7 +261,7 @@ init_physical_gates     ENDP
 ;
 ;           DESCRIPTION:    Allocate physical page
 ;
-;           PARAMETERS:         EAX         Address
+;           PARAMETERS:     EDX:EAX         Address
 ;                                                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -270,8 +270,8 @@ init_physical_gates     ENDP
 local_allocate_physical       PROC near
     push ds
     push es
-    push ebx
     push edx
+;    
     mov bx,system_data_sel
     mov ds,bx
     pushf
@@ -304,9 +304,10 @@ allocate_mark:
     xor al,al
     pop ds
     ReleaseSpinlockNoSti ds:phys_spinlock
+    xor ebx,ebx
     popf
+;
     pop edx
-    pop ebx
     pop es
     pop ds
     ret
@@ -327,7 +328,6 @@ allocate_physical32_name  DB 'Allocate Physical Memory32',0
 
 allocate_physical32       PROC far
     call local_allocate_physical
-    xor ebx,ebx
     retf32
 allocate_physical32       ENDP
 
@@ -346,7 +346,6 @@ allocate_physical64_name  DB 'Allocate Physical Memory64',0
 
 allocate_physical64       PROC far
     call local_allocate_physical
-    xor ebx,ebx
     retf32
 allocate_physical64       ENDP
 
