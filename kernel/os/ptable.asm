@@ -62,6 +62,7 @@ code    SEGMENT byte public use16 'CODE'
     public get_page_entry_proc
     public set_page_entry_proc
     public get_page_dir_attrib_proc
+    public fault_to_dir_proc
     public get_page_dir_proc
     public set_page_dir_proc
     public get_sys_page_dir_proc
@@ -88,6 +89,7 @@ get_page_entry_proc             DW OFFSET local_get_page_entry32
 set_page_entry_proc             DW OFFSET local_set_page_entry32
 has_page_entry_proc             DW OFFSET local_has_page_entry32
 get_page_dir_attrib_proc        DW OFFSET local_get_page_dir_attrib32
+fault_to_dir_proc               DW OFFSET local_fault_to_dir32
 get_page_dir_proc               DW OFFSET local_get_page_dir32
 set_page_dir_proc               DW OFFSET local_set_page_dir32
 get_sys_page_dir_proc           DW OFFSET local_get_sys_page_dir32
@@ -539,6 +541,25 @@ local_get_page_dir_attrib32       Proc near
     mov esi,400000h
     ret
 local_get_page_dir_attrib32    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_fault_to_dir32
+;
+;           DESCRIPTION:    Convert page fault to dir position
+;
+;           PARAMETERS:     EDX         Linear address
+;
+;           RETURNS:        EDX         Page dir address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_fault_to_dir32       Proc near
+    sub edx,process_page_linear
+    shl edx,10
+    ret
+local_fault_to_dir32    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

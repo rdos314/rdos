@@ -48,6 +48,7 @@ INCLUDE system.inc
     extrn get_page_entry_proc:word
     extrn set_page_entry_proc:word
     extrn get_page_dir_proc:word
+    extrn fault_to_dir_proc:word
     extrn get_sys_page_dir_proc:word
     extrn set_page_dir_proc:word
     extrn set_sys_page_dir_proc:word
@@ -445,9 +446,7 @@ process_dir_fault       Proc near
     mov edx,cr2
     popf
 ;
-    sub edx,process_page_linear
-    shl edx,10
-;
+    call cs:fault_to_dir_proc
     mov edi,edx
     and edi,0FFC00000h
 ;
@@ -691,8 +690,8 @@ page_fault      Proc near
     push ax
     mov edx,cr2
     popf
-    sub edx,sys_page_linear
-    shl edx,10
+    call cs:fault_to_dir_proc
+;    
     cmp edx,system_mem_start
     jb page_fault_error2
 ;
