@@ -60,6 +60,7 @@ code    SEGMENT byte public use16 'CODE'
     public free_process_proc
     public get_page_entry_proc
     public set_page_entry_proc
+    public get_page_dir_attrib_proc
     public set_page_dir_proc
     public set_sys_page_dir_proc
     public has_page_entry_proc
@@ -81,6 +82,7 @@ free_process_proc               DW OFFSET local_free_process32
 get_page_entry_proc             DW OFFSET local_get_page_entry32
 set_page_entry_proc             DW OFFSET local_set_page_entry32
 has_page_entry_proc             DW OFFSET local_has_page_entry32
+get_page_dir_attrib_proc        DW OFFSET local_get_page_dir_attrib32
 set_page_dir_proc               DW OFFSET local_set_page_dir32
 set_sys_page_dir_proc           DW OFFSET local_set_sys_page_dir32
 reserve_page_entries_proc       DW OFFSET local_reserve_page_entries32
@@ -126,6 +128,12 @@ init_page_table     PROC near
     mov edi,OFFSET set_page_entry_name
     xor cl,cl
     mov ax,set_page_entry_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_page_dir_attrib
+    mov edi,OFFSET get_page_dir_attrib_name
+    xor cl,cl
+    mov ax,get_page_dir_attrib_nr
     RegisterOsGate
 ;
     mov esi,OFFSET set_page_dir
@@ -502,13 +510,30 @@ local_set_page_entry32       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           local_get_page_dir_attrib32
+;
+;           DESCRIPTION:    Get page dir attributes
+;
+;           RETURNS:        ESI         linear address space size per entry
+;                           CX          # of entries per 32-bit page dir entries
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_get_page_dir_attrib32       Proc near
+    mov cx,1
+    mov esi,400000h
+    ret
+local_get_page_dir_attrib32    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           local_set_page_dir32
 ;
 ;           DESCRIPTION:    Set physical dir for linear address
 ;
 ;           PARAMETERS:     EDX         linear address
 ;                           EBX:EAX     physical address or 0                       
-;                           CL          entry #
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -517,17 +542,12 @@ local_set_page_dir32       Proc near
     push cx
     push edx
 ;    
-    or cl,cl
-    stc
-    jnz spdDone
-;    
     mov cx,process_dir_sel
     mov ds,cx
     shr edx,20
+    and dl,0FCh
     mov [edx],eax
-    clc
-    
-spdDone:
+;    
     pop edx
     pop cx
     pop ds
@@ -543,7 +563,6 @@ local_set_page_dir32    Endp
 ;
 ;           PARAMETERS:     EDX         linear address
 ;                           EBX:EAX     physical address or 0                       
-;                           CL          entry #
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -552,17 +571,12 @@ local_set_sys_page_dir32       Proc near
     push cx
     push edx
 ;    
-    or cl,cl
-    stc
-    jnz sspdDone
-;    
     mov cx,sys_dir_sel
     mov ds,cx
     shr edx,20
+    and dl,0FCh
     mov [edx],eax
-    clc
-    
-sspdDone:
+;    
     pop edx
     pop cx
     pop ds
@@ -1272,7 +1286,6 @@ local_set_thread_page_entry32    Endp
 ;
 ;           PARAMETERS:     BP          Thread
 ;                           EDX         Linear address
-;                           CL          Entry #
 ;
 ;           RETURNS:        EBX:EAX     Physical address or 0                       
 ;                           
@@ -1281,10 +1294,6 @@ local_set_thread_page_entry32    Endp
 local_get_thread_page_dir32    Proc near
     push ds
     push edx
-;
-    or cl,cl
-    stc
-    jnz gtpdDone
 ;    
     mov eax,cr3
     push eax
@@ -1305,9 +1314,7 @@ local_get_thread_page_dir32    Proc near
     mov cr3,edx
     sti
     xor ebx,ebx
-    clc
-
-gtpdDone:
+;
     pop edx
     pop ds    
     ret
@@ -1372,6 +1379,25 @@ has_page_entry       Proc far
     call cs:has_page_entry_proc
     retf32
 has_page_entry       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetPageDirAttrib
+;
+;           DESCRIPTION:    Get page dir attributes
+;
+;           RETURNS:        ESI         linear address space size per entry
+;                           CX          # of entries per 32-bit page dir entries
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_page_dir_attrib_name  DB 'Get Page Dir Attrib',0
+
+get_page_dir_attrib       Proc far
+    call cs:get_page_dir_attrib_proc
+    retf32
+get_page_dir_attrib       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

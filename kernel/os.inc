@@ -484,16 +484,20 @@ HasPageEntry MACRO
     OsGate has_page_entry_nr
                     ENDM
 
+; OUT   ESI         Linear space of page directory entry (200000h for PAE)
+; OUT   CX          Number of entries per 32-bit paging entry (2 for PAE)
+GetPageDirAttrib MACRO
+    OsGate get_page_dir_attrib_nr
+                    ENDM
+
 ;       EDX         LINEAR ADDRESS
 ;       EBX:EAX     PAGE ENTRY
-;       CL          Entry #
 SetPageDir MACRO
     OsGate set_page_dir_nr
                     ENDM
 
 ;       EDX         LINEAR ADDRESS
 ;       EBX:EAX     PAGE ENTRY
-;       CL          Entry #
 SetSysPageDir MACRO
     OsGate set_sys_page_dir_nr
                     ENDM
@@ -557,7 +561,6 @@ SetThreadPageEntry   MACRO
 ;       BP          Thread
 ;       EDX         LINEAR ADDRESS
 ;       EBX:EAX     PAGE ENTRY
-;       CL          Entry #
 GetThreadPageDir   MACRO
     OsGate get_thread_page_dir_nr
                     ENDM
