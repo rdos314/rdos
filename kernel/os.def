@@ -527,5 +527,6 @@ set_page_dir_nr             = 444
 set_sys_page_dir_nr         = 445
 get_page_dir_attrib_nr      = 446
 get_page_dir_nr             = 447
+set_sys_page_entry_nr       = 448
 
 osgate_entries				= 480

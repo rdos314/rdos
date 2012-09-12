@@ -2517,11 +2517,10 @@ init_common     Proc near
     mov edx,80000h
 ;       SetPageEmulate
 ;
-    mov cx,sys_page_sel
-    mov ds,cx
     mov edx,page0_linear
-    shr edx,10
-    mov byte ptr [edx],3
+    mov eax,3
+    xor ebx,ebx
+    SetSysPageEntry
     ret
 init_common     Endp
 

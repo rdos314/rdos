@@ -522,6 +522,13 @@
 
 #define osgate_add_carddev 442
 
+#define osgate_get_thread_page_dir 443
+#define osgate_set_page_dir 444
+#define osgate_set_sys_page_dir 445
+#define osgate_get_page_dir_attrib 446
+#define osgate_get_page_dir 447
+#define osgate_set_sys_page_entry 448
+
 
 
 
@@ -1047,4 +1054,11 @@
 #define OsGate_reserve_page_entries 0x3E 0x67 0x9a 185 1 0 0 2 0
 
 #define OsGate_add_carddev 0x3E 0x67 0x9a 186 1 0 0 2 0
+
+#define OsGate_get_thread_page_dir 0x3E 0x67 0x9a 187 1 0 0 2 0
+#define OsGate_set_page_dir 0x3E 0x67 0x9a 188 1 0 0 2 0
+#define OsGate_set_sys_page_dir 0x3E 0x67 0x9a 189 1 0 0 2 0
+#define OsGate_get_page_dir_attrib 0x3E 0x67 0x9a 190 1 0 0 2 0
+#define OsGate_get_page_dir 0x3E 0x67 0x9a 191 1 0 0 2 0
+#define OsGate_set_sys_page_entry 0x3E 0x67 0x9a 192 1 0 0 2 0
 
