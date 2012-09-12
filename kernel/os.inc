@@ -552,6 +552,13 @@ CopyPageEntries MACRO
 ; IN    ECX         Number of entries
 ; IN    ESI         Source linear address
 ; IN    EDI         Dest linear address
+CopySysPageEntries MACRO
+    OsGate copy_sys_page_entries_nr
+                    ENDM
+
+; IN    ECX         Number of entries
+; IN    ESI         Source linear address
+; IN    EDI         Dest linear address
 MovePageEntries MACRO
     OsGate move_page_entries_nr
                     ENDM

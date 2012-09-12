@@ -76,6 +76,7 @@ code    SEGMENT byte public use16 'CODE'
     public free_page_entries_proc
     public free_global_page_entries_proc
     public copy_page_entries_proc
+    public copy_sys_page_entries_proc
     public move_page_entries_proc
     public emulate_page_proc
     public hook_page_proc
@@ -103,6 +104,7 @@ allocate_page_entries_proc      DW OFFSET local_allocate_page_entries32
 free_page_entries_proc          DW OFFSET local_free_page_entries32
 free_global_page_entries_proc   DW OFFSET local_free_global_page_entries32
 copy_page_entries_proc          DW OFFSET local_copy_page_entries32
+copy_sys_page_entries_proc      DW OFFSET local_copy_sys_page_entries32
 move_page_entries_proc          DW OFFSET local_move_page_entries32
 emulate_page_proc               DW OFFSET local_emulate_page32
 hook_page_proc                  DW OFFSET local_hook_page32
@@ -207,6 +209,12 @@ init_page_table     PROC near
     mov edi,OFFSET copy_page_entries_name
     xor cl,cl
     mov ax,copy_page_entries_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET copy_sys_page_entries
+    mov edi,OFFSET copy_sys_page_entries_name
+    xor cl,cl
+    mov ax,copy_sys_page_entries_nr
     RegisterOsGate
 ;
     mov esi,OFFSET move_page_entries
@@ -1153,6 +1161,47 @@ local_copy_page_entries32       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           local_copy_sys_page_entries32
+;
+;           DESCRIPTION:    Copy page entries 
+;
+;           PARAMETERS:     ECX         number of entries
+;                           ESI         source linear address
+;                           EDI         dest linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_copy_sys_page_entries32       Proc near
+    push ds
+    pushad
+;
+    or ecx,ecx
+    jz cspeDone32
+;
+    mov bx,sys_page_sel
+    mov ds,bx
+    shr esi,10
+    shr edi,10
+    and si,0FFFCh
+    and di,0FFFCh
+    
+cspeLoop32:
+    mov ebx,[esi]
+    mov [edi],ebx
+    add esi,4
+    add edi,4
+    sub ecx,1
+    jnz cspeLoop32    
+
+cspeDone32:
+    popad
+    pop ds
+    ret
+local_copy_sys_page_entries32       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           local_move_page_entries32
 ;
 ;           DESCRIPTION:    Move page entries
@@ -1810,6 +1859,26 @@ copy_page_entries       Proc far
     call cs:copy_page_entries_proc
     retf32
 copy_page_entries       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CopySysPageEntries
+;
+;           DESCRIPTION:    Copy sys page entries 
+;
+;           PARAMETERS:     ECX         number of entries
+;                           ESI         source linear address
+;                           EDI         dest linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+copy_sys_page_entries_name  DB 'Copy Sys Page Entries',0
+
+copy_sys_page_entries       Proc far
+    call cs:copy_sys_page_entries_proc
+    retf32
+copy_sys_page_entries       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

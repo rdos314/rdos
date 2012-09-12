@@ -256,14 +256,8 @@ create_core_gdt    PROC far
     mov [edi+7],al
     add edi,8
 ;
-    mov ax,sys_page_sel
-    mov ds,ax
-    mov es,ax
-;
-    shr esi,10
-    shr edi,10
     mov ecx,0Fh
-    rep movs dword ptr es:[edi],ds:[esi]
+    CopySysPageEntries
 ;
     mov bx,gdt_sel
     mov ds,bx
