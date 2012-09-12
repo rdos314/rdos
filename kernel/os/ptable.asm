@@ -58,6 +58,7 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public init_process_proc
+    public create_process_proc
     public free_process_proc
     public get_page_entry_proc
     public set_page_entry_proc
@@ -87,6 +88,7 @@ code    SEGMENT byte public use16 'CODE'
     public get_thread_page_dir_proc
 
 init_process_proc               DW OFFSET local_init_process32
+create_process_proc             DW OFFSET local_create_process32
 free_process_proc               DW OFFSET local_free_process32
 get_page_entry_proc             DW OFFSET local_get_page_entry32
 set_page_entry_proc             DW OFFSET local_set_page_entry32
@@ -374,6 +376,75 @@ ipFlatOk32:
     mov cr3,eax
     ret
 local_init_process32     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Create_process32
+;
+;           DESCRIPTION:    Create process paging environment
+;
+;           PARAMETERS:     ES          Thread
+;                           EAX         CR3
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_create_process32       PROC near
+    push ds
+    push es
+    mov eax,3000h
+    AllocateGlobalMem
+    mov ax,sys_dir_sel
+    mov ds,ax
+    xor ax,ax
+    mov di,1000h
+    mov ecx,system_mem_start
+    shr ecx,22
+    rep stosd
+    mov eax,system_mem_start
+    mov esi,eax
+    shr esi,20
+    shr eax,22
+    mov cx,400h
+    sub cx,ax
+    rep movsd
+;
+    mov ax,sys_page_sel
+    mov ds,ax
+    xor si,si
+    mov cx,400h
+    xor eax,eax
+    rep movsd
+;
+    mov ax,gdt_sel
+    mov ds,ax
+    mov bx,es
+    mov edx,[bx+2]
+    rol edx,8
+    mov dl,[bx+7]
+    ror edx,8
+    shr edx,10
+;
+    mov ax,sys_page_sel
+    mov ds,ax
+    mov eax,[edx+8]
+    mov di,1000h
+    mov es:[di],eax
+;
+    mov eax,[edx+4]
+    mov al,7
+    mov ebx,process_page_linear
+    shr ebx,20
+    mov es:[bx+di],eax
+;
+    mov dx,es
+    mov fs,dx
+    pop es
+    pop ds
+    mov es:p_cr3,eax
+    mov ds:p_tss_cr3,eax
+    ret
+local_create_process32       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

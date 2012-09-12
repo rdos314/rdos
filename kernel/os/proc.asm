@@ -117,6 +117,7 @@ code    SEGMENT byte public use16 'CODE'
     extrn wake_new:near
 
     extrn init_process_proc:word
+    extrn create_process_proc:word
     extrn free_process_proc:word
 
     extrn init_process_mem:near
@@ -1801,77 +1802,6 @@ init_process_callback   PROC near
     ret
 init_process_callback   ENDP
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CREATE_ENVIROMENT
-;
-;           DESCRIPTION:    Create paging environment
-;
-;           PARAMETERS:         ES          Thread
-;                           EAX         CR3
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_enviroment       PROC near
-    push ds
-    push es
-    mov eax,3000h
-    AllocateGlobalMem
-    mov ax,sys_dir_sel
-    mov ds,ax
-    xor ax,ax
-    mov di,1000h
-    mov ecx,system_mem_start
-    shr ecx,22
-    rep stosd
-    mov eax,system_mem_start
-    mov esi,eax
-    shr esi,20
-    shr eax,22
-    mov cx,400h
-    sub cx,ax
-    rep movsd
-;
-    mov ax,sys_page_sel
-    mov ds,ax
-    xor si,si
-    mov cx,400h
-    xor eax,eax
-    rep movsd
-;
-    mov ax,gdt_sel
-    mov ds,ax
-    mov bx,es
-    mov edx,[bx+2]
-    rol edx,8
-    mov dl,[bx+7]
-    ror edx,8
-    shr edx,10
-;
-    mov ax,sys_page_sel
-    mov ds,ax
-    mov eax,[edx+8]
-    mov di,1000h
-    mov es:[di],eax
-;
-    mov eax,[edx+4]
-    mov al,7
-    mov ebx,process_page_linear
-    shr ebx,20
-    mov es:[bx+di],eax
-;
-    mov dx,es
-    mov fs,dx
-    pop es
-    pop ds
-    mov es:p_cr3,eax
-    mov ds:p_tss_cr3,eax
-    ret
-create_enviroment       ENDP
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1927,7 +1857,7 @@ create_process  PROC far
     mov ax,es
     mov ds,ax
     call init_default_tss
-    call create_enviroment
+    call cs:create_process_proc
     mov ax,[ebp].cr_mode
     test ax,1
     jz create_mod_prot
@@ -2274,7 +2204,7 @@ init_first_process      Proc near
     mov ax,es
     mov ds,ax
     call init_first_tss
-    call create_enviroment
+    call cs:create_process_proc
     mov ds:p_tss_es,fs
     GetCore
     mov fs:ps_null_thread,es
