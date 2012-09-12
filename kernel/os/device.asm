@@ -37,6 +37,9 @@ code    SEGMENT byte public 'CODE'
 
 .386
 
+    extrn get_sys_page_entry_proc:word
+    extrn set_sys_page_entry_proc:word
+
     assume cs:code
 
 
@@ -162,8 +165,6 @@ move_adapter_loop:
     jmp move_page_done
 
 move_adapter_shadow_ok:
-    mov ax,sys_page_sel
-    mov ds,ax
     mov ecx,fs:[bx].adapter_size
     mov esi,fs:[bx].adapter_base
     mov eax,esi
@@ -185,21 +186,29 @@ move_adapter_try2:
 move_adapter_bias:
     add edi,kernel_linear
     mov edx,edi
-    shr esi,12
-    shl esi,2
-    shr edi,12
-    shl edi,2
+    and di,0F000h
+    and si,0F000h
     dec ecx
     add ecx,1000h
     shr ecx,12
+;
+    push ebx
+    push edx
 
 move_page_loop:
-    mov eax,[esi]
+    mov edx,esi
+    call cs:get_sys_page_entry_proc
+;    
     mov al,5
-    mov [edi],eax
-    add esi,4
-    add edi,4
+    mov edx,edi
+    call cs:set_sys_page_entry_proc
+;
+    add esi,1000h
+    add edi,1000h
     loop move_page_loop
+;
+	pop edx
+	pop ebx
 
 move_page_done:
     pop edi
