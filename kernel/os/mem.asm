@@ -87,6 +87,7 @@ local_mem_seg   ENDS
 
     extrn local_create_data_sel16:near
 
+    extrn set_sys_page_entry_proc:word
     extrn reserve_page_entries_proc:word
     extrn allocate_page_entries_proc:word
     extrn free_page_entries_proc:word
@@ -543,14 +544,11 @@ init_mem_sels   PROC near
     push ds
     push es
 ;
-    mov ax,sys_page_sel
-    mov ds,ax
     AllocatePhysical64
     and ax,0F000h
     or ax,807h
-    mov ebx,fixed_vm_linear
-    shr ebx,10
-    mov [ebx],eax
+    mov edx,fixed_vm_linear
+    call cs:set_sys_page_entry_proc
 ;
     mov bx,local_linear_sel
     mov edx,local_byte_linear
