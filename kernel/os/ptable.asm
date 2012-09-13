@@ -75,6 +75,7 @@ code    SEGMENT byte public use16 'CODE'
     public has_page_entry_proc
     public reserve_page_entries_proc
     public allocate_page_entries_proc
+    public allocate_sys_page_entries_proc
     public free_page_entries_proc
     public free_global_page_entries_proc
     public copy_page_entries_proc
@@ -105,6 +106,7 @@ create_page_dir_proc            DW OFFSET local_create_page_dir32
 create_sys_page_dir_proc        DW OFFSET local_create_sys_page_dir32
 reserve_page_entries_proc       DW OFFSET local_reserve_page_entries32
 allocate_page_entries_proc      DW OFFSET local_allocate_page_entries32
+allocate_sys_page_entries_proc  DW OFFSET local_allocate_sys_page_entries32
 free_page_entries_proc          DW OFFSET local_free_page_entries32
 free_global_page_entries_proc   DW OFFSET local_free_global_page_entries32
 copy_page_entries_proc          DW OFFSET local_copy_page_entries32
@@ -1100,6 +1102,84 @@ apeDone:
     pop eax
     ret
 local_allocate_page_entries32       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_allocate_sys_page_entries32
+;
+;           DESCRIPTION:    Allocate sys page entries 
+;
+;           PARAMETERS:     EAX         allocate limit
+;                           ECX         number of entries
+;                           EDX         start linear address
+;
+;           RETURNS:        EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_allocate_sys_page_entries32       Proc near
+    push eax
+    push ebx
+    push esi
+;
+    mov esi,eax
+    shr edx,10
+    shr esi,10
+;    
+    mov bx,sys_page_sel
+    mov ds,bx
+;    
+    xor ebx,ebx
+
+aspeLoop:
+    cmp edx,esi
+    stc
+    je aspeFail
+;
+    inc ebx
+    mov eax,[edx]
+    or eax,eax
+    jz aspeNext
+;    
+    xor ebx,ebx
+    
+aspeNext:
+    add edx,4
+    cmp ecx,ebx
+    jne aspeLoop
+;
+    mov eax,ecx
+    shl eax,2
+    sub edx,eax
+;
+    push edx
+    push ecx
+;    
+    mov eax,2
+    
+aspeMark:
+    mov [edx],eax
+    add edx,4
+    sub ecx,1
+    jnz aspeMark
+;
+    pop ecx
+    pop edx
+;    
+    shl edx,10
+    clc
+    jmp aspeDone
+
+aspeFail:
+    stc
+
+aspeDone:
+    pop esi
+    pop ebx
+    pop eax
+    ret
+local_allocate_sys_page_entries32       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

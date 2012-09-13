@@ -90,6 +90,7 @@ local_mem_seg   ENDS
     extrn set_sys_page_entry_proc:word
     extrn reserve_page_entries_proc:word
     extrn allocate_page_entries_proc:word
+    extrn allocate_sys_page_entries_proc:word
     extrn free_page_entries_proc:word
     extrn free_global_page_entries_proc:word
 
@@ -577,7 +578,7 @@ init_mem_sels   ENDP
 ;
 ;           DESCRIPTION:    Allocate page-aligned kernel memory
 ;
-;           PARAMETERS:         EAX         # of bytes
+;           PARAMETERS:     EAX         # of bytes
 ;
 ;           RETURNS:        EDX         Linear base address
 ;                           CX          # of pages
@@ -596,57 +597,34 @@ allocate_big_linear     PROC far
     mov ds,dx
     mov es,dx
     EnterSection ds:big_section
-    mov ebx,global_page_size
-    sub ebx,es:big_avail_mem
-    add ebx,global_page_linear
-    shr ebx,10
-    mov dx,sys_page_sel
-    mov ds,dx
+;    
+    mov edx,global_page_size
+    sub edx,es:big_avail_mem
+    add edx,global_page_linear
     dec eax
     and ax,0F000h
     add eax,1000h
     add es:big_used_mem,eax
     sub es:big_avail_mem,eax
     shr eax,12
-    xor edx,edx
-allocate_global_loop:
-    cmp ebx,((global_page_linear + global_page_size) SHR 10) AND 003FFFFFh
-    jne allocate_global_no_wrap
-;
-    mov ebx,global_page_linear
-    shr ebx,10  
-    xor edx,edx
-
-allocate_global_no_wrap:
-    inc edx
-    mov ecx,[ebx]
-    or ecx,ecx
-    jz allocate_global_next
-    xor edx,edx
-allocate_global_next:
-    add ebx,4
-    cmp eax,edx
-    je allocate_global_end
-    jmp allocate_global_loop
-allocate_global_end:
     mov ecx,eax
-    shl eax,2
-    sub ebx,eax
-    mov dl,2
-    push ebx
-    push ecx
-allocate_global_mark:
-    mov [ebx],dl
-    add ebx,4
-    sub ecx,1
-    jnz allocate_global_mark
-    pop ecx
-    pop edx
+    mov eax,global_page_linear + global_page_size
+    call cs:allocate_sys_page_entries_proc
+    jnc allocate_big_ok
+
+allocate_big_retry:
+    mov ax,100
+    WaitMilliSec
 ;
+    mov edx,global_page_linear
+    mov eax,global_page_linear + global_page_size
+    call cs:allocate_sys_page_entries_proc
+    jc allocate_big_retry
+        
+allocate_big_ok:
     mov ax,mem_sel
     mov ds,ax
     LeaveSection ds:big_section
-    shl edx,10
     pop ebx
     pop eax
     pop es
