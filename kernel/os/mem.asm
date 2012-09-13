@@ -1903,11 +1903,6 @@ free_small_no_merge_up:
     xor ebx,ebx
     mov [ebx].sls_prev,edx
 free_small_not_limit_page:
-    add edx,10h
-    add edx,(global_byte_linear SHR 10) AND 003FFFFFh
-    mov bx,sys_page_sel
-    mov ds,bx
-;       call free_pages
     mov bx,mem_sel
     mov ds,bx
     LeaveSection ds:small_section
