@@ -140,6 +140,10 @@ code    SEGMENT byte public use16 'CODE'
 
     extrn SetupMpPatch:near
 
+    extrn get_page_dir_attrib_proc:word
+    extrn get_page_dir_proc:word
+    extrn set_page_dir_proc:word
+    extrn get_sys_page_dir_proc:word
     extrn free_page_entries_proc:word
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3017,14 +3021,6 @@ load_a_task:
     and byte ptr ds:[bx+5],NOT 2
     ltr bx
 ;    
-    mov ax,sys_dir_sel
-    mov ds,ax
-    mov bx,(io_focus_linear SHR 20) AND 0FFFh
-    mov edx,[bx]
-    mov bx,process_dir_sel
-    mov ds,bx
-    mov bx,(io_focus_linear SHR 20) AND 0FFFh
-;
     test fs:ps_flags,PS_FLAG_FLUSH
     jz load_not_flush
 ;
@@ -3032,15 +3028,38 @@ load_a_task:
     jmp load_reload_cr3
 
 load_not_flush:
-    cmp edx,[bx]
+    mov edx,io_focus_linear
+    call cs:get_sys_page_dir_proc
+;    
+    mov esi,eax
+    mov edi,ebx
+;
+    mov edx,io_focus_linear
+    call cs:get_page_dir_proc    
+;    
+    cmp esi,eax
     jne load_reload_cr3
+;
+    cmp edi,ebx
+    jne load_reload_cr3    
 ;
     mov eax,cr3
     cmp eax,es:p_cr3
     je load_cr3_ok
 
 load_reload_cr3:    
-    mov [bx],edx        
+    call cs:get_page_dir_attrib_proc
+    xor edi,edi
+
+load_reload_cr3_loop:
+    mov edx,io_focus_linear
+    add edx,edi
+    call cs:get_sys_page_dir_proc    
+    call cs:set_page_dir_proc
+;    
+    add edi,esi
+    loop load_reload_cr3_loop
+;
     mov eax,es:p_cr3
     mov cr3,eax
 
