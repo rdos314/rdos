@@ -3055,3 +3055,10 @@ GetPciDeviceIrq      MACRO
 GetCpuTemperature      MACRO
 	UserGate get_cpu_temperature_nr
 	                ENDM
+
+;;;;;;;;;;; Touch ;;;;;;;;;;
+
+;   OUT NC          Touch hardware available
+HasTouch      MACRO
+	UserGate has_touch_nr
+						ENDM

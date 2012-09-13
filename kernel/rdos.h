@@ -700,6 +700,8 @@ void RDOSAPI RdosSetFmSustain(int Handle, int VolumeHalf, int BetaHalf);
 void RDOSAPI RdosSetFmRelease(int Handle, int VolumeHalf, int BetaHalf);
 void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, int PeakRightVolume, int SustainSamples);
 
+int RDOSAPI RdosHasTouch();
+
 #ifdef __cplusplus
 }
 #endif
@@ -1252,7 +1254,12 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosGetMaxComPort = \
     CallGate_get_max_com_port  \
+    "jc fail" \
     "movzx eax,al"  \
+    "jmp done" \
+    "fail:" \
+    "xor eax,eax" \
+    "done:" \        
     value [eax];
 
 #pragma aux RdosOpenCom = \
@@ -1330,7 +1337,12 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosGetMaxPrinters = \
     CallGate_get_max_printer  \
+    "jc fail" \
     "movzx eax,al"  \
+    "jmp done" \
+    "fail:" \
+    "xor eax,eax" \
+    "done:" \        
     value [eax];
 
 #pragma aux RdosOpenPrinter = \
@@ -1423,7 +1435,12 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosGetMaxCardDev = \
     CallGate_get_max_carddev  \
+    "jc fail" \
     "movzx eax,al"  \
+    "jmp done" \
+    "fail:" \
+    "xor eax,eax" \
+    "done:" \        
     value [eax];
 
 #pragma aux RdosOpenCardDev = \
@@ -3302,6 +3319,11 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_play_fm_note \
     parm [ebx] [8087] [eax] [edx] [ecx];
 
+#pragma aux RdosHasTouch = \
+    CallGate_has_touch \
+    CarryToBool \
+    value [eax];
+
 #elif __COMPACT__
  
 /* 32-bit compact memory model (device-drivers) */
@@ -3551,7 +3573,12 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosGetMaxComPort = \
     CallGate_get_max_com_port  \
+    "jc fail" \
     "movzx eax,al"  \
+    "jmp done" \
+    "fail:" \
+    "xor eax,eax" \
+    "done:" \        
     value [eax];
 
 #pragma aux RdosOpenCom = \
@@ -3629,7 +3656,12 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosGetMaxPrinters = \
     CallGate_get_max_printer  \
+    "jc fail" \
     "movzx eax,al"  \
+    "jmp done" \
+    "fail:" \
+    "xor eax,eax" \
+    "done:" \        
     value [eax];
 
 #pragma aux RdosOpenPrinter = \
@@ -3722,7 +3754,12 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosGetMaxCardDev = \
     CallGate_get_max_carddev  \
+    "jc fail" \
     "movzx eax,al"  \
+    "jmp done" \
+    "fail:" \
+    "xor eax,eax" \
+    "done:" \        
     value [eax];
 
 #pragma aux RdosOpenCardDev = \

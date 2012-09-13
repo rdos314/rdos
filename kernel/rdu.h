@@ -606,6 +606,8 @@
 #define usergate_wait_for_card 484
 #define usergate_get_carddev_name 485
 
+#define usergate_has_touch 488
+
 
 
 #ifdef __FLAT__
@@ -1217,6 +1219,8 @@
 #define CallGate_wait_for_card 0x67 0x9a 228 1 0 0 3 0
 #define CallGate_get_carddev_name 0x67 0x9a 229 1 0 0 3 0
 
+#define CallGate_has_touch 0x67 0x9a 232 1 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1825,5 +1829,7 @@
 #define CallGate_is_carddev_ok 0x3e 0x67 0x9a 227 1 0 0 3 0
 #define CallGate_wait_for_card 0x3e 0x67 0x9a 228 1 0 0 3 0
 #define CallGate_get_carddev_name 0x3e 0x67 0x9a 229 1 0 0 3 0
+
+#define CallGate_has_touch 0x3e 0x67 0x9a 232 1 0 0 3 0
 
 #endif

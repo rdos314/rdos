@@ -294,6 +294,25 @@ ttDone:
     mov bx,ds:td_wait
     CloseWait
     retf
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           HasTouch
+;
+;           DESCRIPTION:    Check if touch is available
+;
+;           RETURNS:        NC      Touch available
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_touch_name DB 'Has Touch',0
+
+has_touch      Proc far
+    clc
+    retf32    
+has_touch  Endp
+
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -339,12 +358,20 @@ init_touch      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
-        mov ax,cs
-        mov es,ax
-        mov edi,OFFSET init_touch
-        HookInitTasking
-        clc
-        ret
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;
+    mov esi,OFFSET has_touch
+    mov edi,OFFSET has_touch_name
+    xor dx,dx
+    mov ax,has_touch_nr
+    RegisterBimodalUserGate
+;    
+    mov edi,OFFSET init_touch
+    HookInitTasking
+    clc
+    ret
 init    ENDP
 
 code    ENDS
