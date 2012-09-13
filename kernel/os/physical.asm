@@ -45,6 +45,9 @@ ENDIF
     extrn local_flush_process_tlb:near
     extrn AllocateRam:near
 
+    extrn get_page_dir_attrib_proc:word
+    extrn set_sys_page_dir_proc:word
+
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
@@ -66,26 +69,42 @@ code    SEGMENT byte public use16 'CODE'
 init_physical_dir       Proc near
     mov ax,flat_sel
     mov ds,ax
-    mov ax,sys_dir_sel
-    mov es,ax
     mov ax,system_data_sel
     mov fs,ax
     mov fs:phys_free_pages,0
 ;
+    call cs:get_page_dir_attrib_proc
+    xor edi,edi
+
+init_phys_page_pages_dir:
+    push esi    
     call AllocateRam
-    mov edx,esi
-    mov bx,(phys_page_linear SHR 20) AND 0FFFh
-    and bl,0FCh
-    or si,3
-    mov es:[bx],esi
+    mov eax,esi
+    pop esi
+;    
+    push eax
+    xor ebx,ebx
+    mov edx,phys_page_linear
+    add edx,edi
+    or al,3
+    call cs:set_sys_page_dir_proc
+    pop edx
 ;
+    push ecx
     mov cx,400h
     xor eax,eax
+
 init_phys_page_pages:
     mov [edx],eax
     add edx,4
     loop init_phys_page_pages
 ;
+    pop ecx
+    add edi,esi
+    loop init_phys_page_pages_dir    
+;
+    mov ax,sys_dir_sel
+    mov es,ax
     call AllocateRam
     mov edx,esi
     mov bx,(phys_list_linear SHR 20) AND 0FFFh
