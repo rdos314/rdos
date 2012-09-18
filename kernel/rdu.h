@@ -606,6 +606,9 @@
 #define usergate_wait_for_card 484
 #define usergate_get_carddev_name 485
 
+#define usergate_is_carddev_busy 486
+#define usergate_is_carddev_inserted 487
+
 #define usergate_has_touch 488
 
 
@@ -1219,6 +1222,9 @@
 #define CallGate_wait_for_card 0x67 0x9a 228 1 0 0 3 0
 #define CallGate_get_carddev_name 0x67 0x9a 229 1 0 0 3 0
 
+#define CallGate_is_carddev_busy 0x67 0x9a 230 1 0 0 3 0
+#define CallGate_is_carddev_inserted 0x67 0x9a 231 1 0 0 3 0
+
 #define CallGate_has_touch 0x67 0x9a 232 1 0 0 3 0
 
 #else
@@ -1829,6 +1835,9 @@
 #define CallGate_is_carddev_ok 0x3e 0x67 0x9a 227 1 0 0 3 0
 #define CallGate_wait_for_card 0x3e 0x67 0x9a 228 1 0 0 3 0
 #define CallGate_get_carddev_name 0x3e 0x67 0x9a 229 1 0 0 3 0
+
+#define CallGate_is_carddev_busy 0x3e 0x67 0x9a 230 1 0 0 3 0
+#define CallGate_is_carddev_inserted 0x3e 0x67 0x9a 231 1 0 0 3 0
 
 #define CallGate_has_touch 0x3e 0x67 0x9a 232 1 0 0 3 0
 

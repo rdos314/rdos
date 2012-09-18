@@ -29,6 +29,10 @@ carddev_struc	STRUC
 
 cd_ok_proc                  DD ?
 
+cd_busy_proc                DD ?
+
+cd_inserted_proc            DD ?
+
 ; IN  ES:EDI    Name
 cd_get_name_proc            DD ?
 

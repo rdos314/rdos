@@ -40,6 +40,8 @@ public:
     virtual void DeviceName(char *Name, int MaxLen) const;
 
     virtual int IsOnline() const;
+    virtual int IsBusy() const;
+    virtual int IsCardInserted() const;
 
 	void (*GoodCard)(TCardReaderDevice *CardReader, const char *strip);
 	void (*BadCard)(TCardReaderDevice *CardReader);

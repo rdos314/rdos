@@ -144,6 +144,34 @@ int TCardReaderDevice::IsOnline() const
 
 /*##########################################################################
 #
+#   Name       : TCardReaderDevice::IsBusy
+#
+#   Purpose....: Check if busy
+#
+#   Returns....: TRUE if busy
+#
+##########################################################################*/
+int TCardReaderDevice::IsBusy() const
+{
+    return RdosIsCardDevBusy(FHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TCardReaderDevice::IsCardInserted
+#
+#   Purpose....: Check if card is inserted
+#
+#   Returns....: TRUE if card inserted
+#
+##########################################################################*/
+int TCardReaderDevice::IsCardInserted() const
+{
+    return RdosIsCardDevInserted(FHandle);
+}
+
+/*##########################################################################
+#
 #   Name       : TCardReaderDevice::Execute
 #
 #   Purpose....: Execute card reader

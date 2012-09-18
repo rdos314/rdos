@@ -304,6 +304,84 @@ is_carddev_ok       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           IsCardDevBusy
+;
+;       description:    Is card device busy
+;
+;       PARAMETERS:     BX              Card device handle
+;
+;       RETURNS:        NC              Busy
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_carddev_busy_name DB 'Is Card Device Busy?',0
+
+is_carddev_busy       Proc far
+    push ds
+    push eax
+    push ebx
+;
+    mov ax,CARDDEV_HANDLE
+    DerefHandle
+    jc is_carddev_busy_done
+;
+    mov ds,[ebx].carddev_sel
+    mov eax,ds:cd_busy_proc
+    or eax,eax
+    stc
+    jz is_carddev_busy_done
+;       
+    call ds:cd_busy_proc
+
+is_carddev_busy_done:
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+is_carddev_busy       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IsCardDevInserted
+;
+;       description:    Is card device inserted
+;
+;       PARAMETERS:     BX              Card device handle
+;
+;       RETURNS:        NC              Inserted
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_carddev_inserted_name DB 'Is Card Device Inserted?',0
+
+is_carddev_inserted       Proc far
+    push ds
+    push eax
+    push ebx
+;
+    mov ax,CARDDEV_HANDLE
+    DerefHandle
+    jc is_carddev_inserted_done
+;
+    mov ds,[ebx].carddev_sel
+    mov eax,ds:cd_inserted_proc
+    or eax,eax
+    stc
+    jz is_carddev_inserted_done
+;       
+    call ds:cd_inserted_proc
+
+is_carddev_inserted_done:
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+is_carddev_inserted       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           WaitForCard
 ;
 ;       description:    Wait for card
@@ -387,6 +465,8 @@ add_carddev    Proc far
     push dx
 ;
     mov ds:cd_ok_proc,0
+    mov ds:cd_busy_proc,0
+    mov ds:cd_inserted_proc,0
     mov ds:cd_wait_for_card_proc,0
     mov ds:cd_get_name_proc,0
 ;
@@ -451,6 +531,18 @@ init    Proc far
     mov edi,OFFSET is_carddev_ok_name
     xor dx,dx
     mov ax,is_carddev_ok_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET is_carddev_busy
+    mov edi,OFFSET is_carddev_busy_name
+    xor dx,dx
+    mov ax,is_carddev_busy_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET is_carddev_inserted
+    mov edi,OFFSET is_carddev_inserted_name
+    xor dx,dx
+    mov ax,is_carddev_inserted_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET wait_for_card16

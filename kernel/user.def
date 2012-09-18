@@ -606,6 +606,9 @@ is_carddev_ok_nr                = 483
 wait_for_card_nr                = 484
 get_carddev_name_nr             = 485
 
+is_carddev_busy_nr              = 486
+is_carddev_inserted_nr          = 487
+
 has_touch_nr                    = 488
 
 usergate_entries			    = 512

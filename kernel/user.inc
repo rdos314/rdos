@@ -2218,6 +2218,18 @@ IsCardDevOk       MACRO
 	UserGate is_carddev_ok_nr
 						ENDM
 
+;	IN  BX		Card device handle
+;   OUT NC      Busy
+IsCardDevBusy       MACRO
+	UserGate is_carddev_busy_nr
+						ENDM
+
+;	IN  BX		Card device handle
+;   OUT NC      Card inserted
+IsCardDevInserted       MACRO
+	UserGate is_carddev_inserted_nr
+						ENDM
+
 ;	IN  BX		      Card device handle
 ;   IN  ES:(E)DI      Strip buffer
 WaitForCard       MACRO
