@@ -60,6 +60,11 @@ public:
     TFormControl(TControl *control);
     virtual ~TFormControl();
 
+    static void UseTouch();
+    static void IgnoreTouch();
+    static void UseKeyboard();
+    static void IgnoreKeyboard();
+
     static int IsFormControl(TControl *control);
     
     void LoadControls(const char *IniName);
@@ -105,6 +110,8 @@ protected:
     TFormControlEntry *FControlList;
 
     static TSection FSection;
+    static int FUseTouch;
+    static int FUseKeyboard;
 
     int FInnerWidth;
     int FInnerHeight;

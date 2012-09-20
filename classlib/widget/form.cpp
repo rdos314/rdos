@@ -28,6 +28,7 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "rdos.h"
 #include "form.h"
 #include "ini.h"
 
@@ -45,6 +46,8 @@
 #define FORM_TYPE_PANEL         9
 
 TSection TFormControl::FSection;
+int TFormControl::FUseTouch = RdosHasTouch();
+int TFormControl::FUseKeyboard = !RdosHasTouch();
 
 /*##########################################################################
 #
@@ -179,6 +182,72 @@ void TFormControl::Init()
     
 /*##########################################################################
 #
+#   Name       : TFormControl::UseTouch
+#
+#   Purpose....: Force use of touch interface
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFormControl::UseTouch()
+{
+    FUseTouch = TRUE;
+}
+    
+/*##########################################################################
+#
+#   Name       : TFormControl::IgnoreTouch
+#
+#   Purpose....: Ignore touch interface
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFormControl::IgnoreTouch()
+{
+    FUseTouch = FALSE;
+    FUseKeyboard = TRUE;
+}
+    
+/*##########################################################################
+#
+#   Name       : TFormControl::UseKeyboard
+#
+#   Purpose....: Force use of keyboard interface
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFormControl::UseKeyboard()
+{
+    FUseKeyboard = TRUE;
+}
+    
+/*##########################################################################
+#
+#   Name       : TFormControl::IgnoreKeyboard
+#
+#   Purpose....: Ignore keyboard interface
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFormControl::IgnoreKeyboard()
+{
+    FUseKeyboard = FALSE;
+    FUseTouch = TRUE;
+}
+    
+/*##########################################################################
+#
 #   Name       : TFormControl::IsFormControl
 #
 #   Purpose....: Check if control is a form
@@ -209,8 +278,8 @@ int TFormControl::IsFormControl(TControl *control)
 ##########################################################################*/
 void TFormControl::RecalcInner()
 {
-         int xstart, ystart;
-         int xsize, ysize;
+    int xstart, ystart;
+    int xsize, ysize;
 
     TFormControlEntry *p;
 
@@ -980,34 +1049,52 @@ void TFormControl::LoadControl(const char *IniName, const char *Name)
 {
     TIniFile Ini(IniName);
     char str[256];
+    int use = TRUE;
 
     Ini.GotoSection(Name);
-    
-    if (Ini.ReadVar("Type", str, 255))
+
+    if (Ini.ReadVar("Touch", str, 255))
     {
-        if (!strcmp(str, "Label"))
-            LoadLabel(IniName, Name);
+        if (FUseTouch)
+        {
+            if (atoi(str) == 0)
+                use = FALSE;
+        }
+        else
+        {
+            if (atoi(str) == 1)
+                use = FALSE;
+        }
+    }
 
-        if (!strcmp(str, "Button"))
-            LoadButton(IniName, Name);
+    if (use)
+    {            
+        if (Ini.ReadVar("Type", str, 255))
+        {
+            if (!strcmp(str, "Label"))
+                LoadLabel(IniName, Name);
 
-        if (!strcmp(str, "FileView"))
-            LoadFileView(IniName, Name);
+            if (!strcmp(str, "Button"))
+                LoadButton(IniName, Name);
 
-        if (!strcmp(str, "List"))
-            LoadList(IniName, Name);
+            if (!strcmp(str, "FileView"))
+                LoadFileView(IniName, Name);
 
-        if (!strcmp(str, "VerScroll"))
-            LoadVerScroll(IniName, Name);
+            if (!strcmp(str, "List"))
+                LoadList(IniName, Name);
 
-        if (!strcmp(str, "HorScroll"))
-            LoadHorScroll(IniName, Name);
+            if (!strcmp(str, "VerScroll"))
+                LoadVerScroll(IniName, Name);
 
-        if (!strcmp(str, "Image"))
-            LoadImage(IniName, Name);
+            if (!strcmp(str, "HorScroll"))
+                LoadHorScroll(IniName, Name);
+    
+            if (!strcmp(str, "Image"))
+                LoadImage(IniName, Name);
 
-        if (!strcmp(str, "Panel"))
-            LoadPanel(IniName, Name);
+            if (!strcmp(str, "Panel"))
+                LoadPanel(IniName, Name);
+        }
     }
 }
 
