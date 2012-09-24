@@ -611,4 +611,7 @@ is_carddev_inserted_nr          = 487
 
 has_touch_nr                    = 488
 
+had_carddev_inserted_nr         = 489
+clear_carddev_inserted_nr       = 490
+
 usergate_entries			    = 512

@@ -42,6 +42,8 @@ public:
     virtual int IsOnline() const;
     virtual int IsBusy() const;
     virtual int IsCardInserted() const;
+    virtual int WasCardInserted() const;
+    virtual void ClearCardInserted() const;
 
 	void (*GoodCard)(TCardReaderDevice *CardReader, const char *strip);
 	void (*BadCard)(TCardReaderDevice *CardReader);

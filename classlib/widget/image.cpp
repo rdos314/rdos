@@ -18,6 +18,76 @@
 #define FALSE   0
 #define TRUE    !FALSE
 
+/*##########################################################################
+#
+#   Name       : DecodeKey
+#
+#   Purpose....: Decode key-string to VK-key
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static char DecodeKey(const char *key)
+{
+    if (strlen(key) == 1)
+        return key[0];
+
+    if (!strcmp(key, "BACK"))
+        return VK_BACK;    
+
+    if (!strcmp(key, "TAB"))
+        return VK_TAB;    
+
+    if (!strcmp(key, "CLEAR"))
+        return VK_CLEAR;    
+
+    if (!strcmp(key, "RETURN"))
+        return VK_RETURN;    
+
+    if (!strcmp(key, "ESC"))
+        return VK_ESCAPE;    
+
+    if (!strcmp(key, "ESCAPE"))
+        return VK_ESCAPE;    
+
+    if (!strcmp(key, "SPACE"))
+        return VK_SPACE;    
+
+    if (!strcmp(key, "PRIOR"))
+        return VK_PRIOR;    
+
+    if (!strcmp(key, "NEXT"))
+        return VK_NEXT;    
+
+    if (!strcmp(key, "END"))
+        return VK_END;    
+
+    if (!strcmp(key, "HOME"))
+        return VK_HOME;    
+
+    if (!strcmp(key, "LEFT"))
+        return VK_LEFT;    
+
+    if (!strcmp(key, "UP"))
+        return VK_UP;    
+
+    if (!strcmp(key, "RIGHT"))
+        return VK_RIGHT;    
+
+    if (!strcmp(key, "DOWN"))
+        return VK_DOWN;    
+
+    if (!strcmp(key, "INSERT"))
+        return VK_INSERT;    
+
+    if (!strcmp(key, "DELETE"))
+        return VK_DELETE;    
+
+    return 0;        
+}
+
 /*##################  TLoaderThread::TLoaderThread     ##########################
 *   Purpose....: Constructor for loader thread                                          #
 *   In params..: *                                                          #
@@ -263,6 +333,9 @@ void TImageControl::Set(const char *IniName, const char *IniSection)
     char str[256];
 
     Ini.GotoSection(IniSection);
+
+    if (Ini.ReadVar("Key", str, 255))
+        FKey = DecodeKey(str);
 
     if (Ini.ReadVar("BackColor.R", str, 255))
         FBackR = atoi(str);

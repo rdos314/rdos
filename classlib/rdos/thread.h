@@ -45,6 +45,7 @@ public:
 protected:
 
 	void Start(const char *ThreadName, int StackSize);
+	void Start(const char *ThreadName, int Prio, int StackSize);
 	virtual void Execute();
 
     int FInstalled;

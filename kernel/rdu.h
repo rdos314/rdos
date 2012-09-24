@@ -611,6 +611,9 @@
 
 #define usergate_has_touch 488
 
+#define usergate_had_carddev_inserted 489
+#define usergate_clear_carddev_inserted 490
+
 
 
 #ifdef __FLAT__
@@ -1227,6 +1230,9 @@
 
 #define CallGate_has_touch 0x67 0x9a 232 1 0 0 3 0
 
+#define CallGate_had_carddev_inserted 0x67 0x9a 233 1 0 0 3 0
+#define CallGate_clear_carddev_inserted 0x67 0x9a 234 1 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1840,5 +1846,8 @@
 #define CallGate_is_carddev_inserted 0x3e 0x67 0x9a 231 1 0 0 3 0
 
 #define CallGate_has_touch 0x3e 0x67 0x9a 232 1 0 0 3 0
+
+#define CallGate_had_carddev_inserted 0x3e 0x67 0x9a 233 1 0 0 3 0
+#define CallGate_clear_carddev_inserted 0x3e 0x67 0x9a 234 1 0 0 3 0
 
 #endif

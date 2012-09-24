@@ -332,6 +332,8 @@ int RDOSAPI RdosGetCardDevName(int Handle, char *NameBuf);
 int RDOSAPI RdosIsCardDevOk(int Handle);
 int RDOSAPI RdosIsCardDevBusy(int Handle);
 int RDOSAPI RdosIsCardDevInserted(int Handle);
+int RDOSAPI RdosHadCardDevInserted(int Handle);
+void RDOSAPI RdosClearCardDevInserted(int Handle);
 int RDOSAPI RdosWaitForCard(int Handle, char *Strip);
 
 int RDOSAPI RdosOpenFile(const char *FileName, char Access);
@@ -1478,6 +1480,16 @@ int RDOSAPI RdosHasTouch();
     CarryToBool \
     parm [ebx] \
     value [eax];
+
+#pragma aux RdosHadCardDevInserted = \
+    CallGate_had_carddev_inserted  \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosClearCardDevInserted = \
+    CallGate_clear_carddev_inserted  \
+    parm [ebx];
 
 #pragma aux RdosWaitForCard = \
     CallGate_wait_for_card  \
@@ -3809,6 +3821,16 @@ int RDOSAPI RdosHasTouch();
     CarryToBool \
     parm [ebx] \
     value [eax];
+
+#pragma aux RdosHadCardDevInserted = \
+    CallGate_had_carddev_inserted  \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosClearCardDevInserted = \
+    CallGate_clear_carddev_inserted  \
+    parm [ebx];
 
 #pragma aux RdosWaitForCard = \
     CallGate_wait_for_card  \

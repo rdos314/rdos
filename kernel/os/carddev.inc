@@ -33,6 +33,10 @@ cd_busy_proc                DD ?
 
 cd_inserted_proc            DD ?
 
+cd_had_inserted_proc        DD ?
+
+cd_clear_inserted_proc      DD ?
+
 ; IN  ES:EDI    Name
 cd_get_name_proc            DD ?
 

@@ -137,6 +137,24 @@ void TThread::Start(const char *ThreadName, int StackSize)
 
 /*##########################################################################
 #
+#   Name       : TThread::Start
+#
+#   Purpose....: Start thread
+#
+#   In params..: ThreadName     name of thread
+#                Prio           priority
+#                StackSize      size of stack
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TThread::Start(const char *ThreadName, int Prio, int StackSize)
+{
+	RdosCreatePrioThread(ThreadStartup, Prio, ThreadName, this, StackSize);
+}
+
+/*##########################################################################
+#
 #   Name       : TThread::Run
 #
 #   Purpose....: Run thread (from internal callback)

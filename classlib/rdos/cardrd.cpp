@@ -172,6 +172,32 @@ int TCardReaderDevice::IsCardInserted() const
 
 /*##########################################################################
 #
+#   Name       : TCardReaderDevice::WasCardInserted
+#
+#   Purpose....: Check if card is was inserted
+#
+#   Returns....: TRUE if card inserted
+#
+##########################################################################*/
+int TCardReaderDevice::WasCardInserted() const
+{
+    return RdosHadCardDevInserted(FHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TCardReaderDevice::ClearCardInserted
+#
+#   Purpose....: Clear card is was inserted
+#
+##########################################################################*/
+void TCardReaderDevice::ClearCardInserted() const
+{
+    RdosClearCardDevInserted(FHandle);
+}
+
+/*##########################################################################
+#
 #   Name       : TCardReaderDevice::Execute
 #
 #   Purpose....: Execute card reader
