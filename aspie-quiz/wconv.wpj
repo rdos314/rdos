@@ -4,10 +4,10 @@ projectIdent
 VpeMain
 1
 WRect
-2195
--56
+1344
+0
 7840
-8590
+8578
 2
 MProject
 3
@@ -29,9 +29,9 @@ VComponent
 8
 WRect
 832
-910
+898
 5664
-4141
+4130
 0
 0
 9
@@ -39,5 +39,5 @@ WFileName
 9
 wconv.tgt
 0
-0
+1
 7
