@@ -49,6 +49,7 @@ protected:
 
     virtual int DoProgram();
     virtual int DoVerify();
+    virtual int DoChipErase();
 
     int FInConfig;
 };

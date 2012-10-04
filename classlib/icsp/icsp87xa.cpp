@@ -338,6 +338,24 @@ int TIcsp87Xa::DoProgram()
 
 /*##########################################################################
 #
+#   Name       : TIcsp87Xa::DoChipErase
+#
+#   Purpose....: Do chip erase
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TIcsp87Xa::DoChipErase()
+{
+	SendCmd(CMD_CHIP_ERASE);
+	RdosWaitMilli(100);
+	return TRUE;
+}
+
+/*##########################################################################
+#
 #   Name       : TIcsp87Xa::DoVerify
 #
 #   Purpose....: Do ICSP verify

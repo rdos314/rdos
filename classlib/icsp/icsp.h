@@ -36,6 +36,7 @@ public:
 	TIcsp();
     ~TIcsp();
 
+    int ChipErase(int devid);
     int Program(const char *filename, int devid);
     int Verify(const char *filename, int devid);
 
@@ -45,6 +46,7 @@ protected:
     void Info(const char *format, ...);
 
     virtual int DoProgram() = 0;
+    virtual int DoChipErase() = 0;
     virtual int DoVerify();
 
     char FLogBuf[512];

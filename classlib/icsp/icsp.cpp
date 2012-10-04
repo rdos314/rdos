@@ -181,6 +181,34 @@ int TIcsp::Program(const char *filename, int devid)
 
 /*##########################################################################
 #
+#   Name       : TIcsp::ChipErase
+#
+#   Purpose....: ChipErase
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TIcsp::ChipErase(int devid)
+{
+    int ok = FALSE;
+    
+    FHandle = RdosOpenICSP(devid);
+
+    if (FHandle)
+    {
+        ok = DoChipErase();
+        RdosCloseICSP(FHandle);                 
+    }
+    else
+        Info("Invalid device-id or no ICSP available\r\n");
+
+    return ok;
+}
+
+/*##########################################################################
+#
 #   Name       : TIcsp::Verify
 #
 #   Purpose....: Verify
