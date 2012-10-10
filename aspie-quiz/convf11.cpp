@@ -39,96 +39,25 @@
 #define TRUE !FALSE
 
 #define MAX_IN_ROW      0x8000
-#define MAX_REFERERS    1024
 
-const char InsertString[] = "INSERT INTO aspie-quiz-f11 VALUES(";
+void OpenPca(const char *Suffix);
+void AddPca(int Gender, int BirthYear, int ScoreDiff, char *ScoreArr, int Count);
+void ClosePca();
 
-TFile quizfile("quizf11.bin", 0);
-TFile ancfile("ancf11.bin", 0);
-
+static TFile *quizfile;
 
 /*##################  HandleRow ##########################
-*   Purpose....: Handle a row       	   					      	        #
+*   Purpose....: Handle a row                                                                   #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void HandleRow(TQuizRow *Row)
+static void HandleRow(TQuizRow *Row)
 {
-	int dx;
+    quizfile->Write(Row, sizeof(TQuizRow));
 
-	quizfile.Write(Row, sizeof(TQuizRow));
-
-	printf("%d AS: %d, NT: %d, [", Row->ID, Row->AsResult, Row->NtResult);
-
-	for (dx = 0; dx < DX_COUNT; dx++)
-	{
-		printf("%d", Row->DxResult[dx]);
-		if (dx != DX_COUNT - 1)
-			printf(", ");
-	}
-
-	printf("], Ref: %s\n", Row->Referer);
-}
-
-/*##################  UpdateReferer ##########################
-*   Purpose....: UpdateReferer    	   					      	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-char *UpdateReferer(char *Referer)
-{
-	char *ptr;
-	 const char http[] = "http://";
-	 const char www[] = "www.";
-	char str[10];
-
-	ptr = strchr(Referer, '&');
-	if (ptr)
-		*ptr = 0;
-
-	memcpy(str, Referer, strlen(http));
-	str[strlen(http)] = 0;
-
-	if (!strcmp(str, http))
-		Referer += strlen(http);
-
-	memcpy(str, Referer, strlen(www));
-	str[strlen(www)] = 0;
-
-	if (!strcmp(str, www))
-		Referer += strlen(www);
-
-	return Referer;
-}
-
-/*##################  GetQuoted ##########################
-*   Purpose....: Get quoted string    	   					      	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-char *GetQuoted(char *str)
-{
-	char *ptr;
-	char *res;
-
-	res = strchr(str, 0x27);
-	if (res)
-	{
-		res++;
-		ptr = strchr(res, 0x27);
-		if (ptr)
-		{
-			*ptr = 0;
-			return res;
-		}
-	}
-	return 0;
+    printf("F11: %d AS: %d, NT: %d\r\n", Row->ID, Row->AsResult, Row->NtResult);
 }
 
 /*##################  UpdateScore ##########################
@@ -138,7 +67,7 @@ char *GetQuoted(char *str)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void UpdateScore(TQuizRow *row)
+static void UpdateScore(TQuizRow *row)
 {
 	int grp;
 	int dx;
@@ -180,248 +109,164 @@ void UpdateScore(TQuizRow *row)
 		else
 			row->GroupResult[grp] = 0;
 	}
-
-	for (dx = 0; dx < DX_COUNT; dx++)
-	{
-		sum = 0;
-		totsum = 0;
-
-		for (i = 0; i < 145; i++)
-		{
-			val = row->Quiz[i];
-
-			if (val)
-			{
-				w = Dw[i][dx];
-
-				if (w < 0)
-				{
-					w = -w;
-					val = 3 - val;
-				}
-				else
-					val--;
-
-				sum += val * w;
-				totsum += 2 * w;
-			}
-		}
-
-
-		if (totsum)
-			row->DxResult[dx] = 100 * sum / totsum;
-		else
-			row->DxResult[dx] = 0;
-	}
-
 }
 
 /*##################  ProcessRow ##########################
-*   Purpose....: Process row        	   					      	        #
+*   Purpose....: Process row                                                                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-char *ProcessRow(char *str)
+static void ProcessRow(char *str)
 {
-	char *valstr;
-	char *ptr;
-	int fieldno;
-	int i;
-	int j;
-	TQuizRow Row;
-	TQuizAncestryRow AncestryRow;
-	int quote;
+    char *valstr;
+    char *ptr;
+    int fieldno;
+    int i;
+    int year, month, day;
+    int hour, min, sec;
+    TDateTime *time;
+    TQuizRow Row;
 
-    AncestryRow.Lang = 0;
-    
-	for (fieldno = 0; fieldno < 195; fieldno++)
-	{
-		valstr = str;
+    ptr = str;
+    for (fieldno = 0; ptr; fieldno++)
+    {
+        valstr = str;
+        ptr = strstr(str, ";");
+        if (ptr)
+            *ptr = 0;
 
-		quote = FALSE;
-		ptr = str;
-		while (*ptr && (quote || (*ptr != ',' && *ptr != ')')))
-		{
-			 switch (*ptr)
-			 {
-				case '\\':
-						  ptr++;
-						  if (*ptr == '\\')
-						  {
-								ptr++;
-								if (*ptr == 0x27)
-								{
-									 ptr++;
-									 if (*ptr == 0x27)
-										  ptr++;
-									 else
-										  quote = FALSE;
-								}
-						  }
-						  break;
+        str = ptr + 1;
 
-					 case 0x27:
-						  quote = !quote;
-						  ptr++;
-						  break;
+        switch (fieldno)
+        {
+            case 0:
+                Row.ID = atol(valstr);
+                break;
 
-					 default:
-						  ptr++;
-						  break;
-				}
-		}
+            case 1:
+                Row.UserID = atol(valstr);
+                break;
 
-		if (*ptr == ',' || *ptr == ')')
-		{
-			*ptr = 0;
-			str = ptr + 1;
+            case 2:
+                sscanf(valstr+1, "%04d-%02d-%02d %02d:%02d:%02d",
+                        &year, &month, &day,
+                        &hour, &min, &sec);
 
-			switch (fieldno)
-			{
-				case 0:
-					Row.ID = atol(valstr);
-					break;
+                time = new TDateTime(year, month, day, hour, min, sec);
+                Row.LsbTime = time->GetLsb();
+                Row.MsbTime = time->GetMsb();
+                delete time;
+                break;
 
-				case 1:
-					Row.userid = atol(valstr);
-					break;
+            case 3:
+                sscanf(valstr+1, "%04d-%02d-%02d %02d:%02d:%02d",
+                        &year, &month, &day,
+                        &hour, &min, &sec);
 
-				case 2:
-				case 3:
-				case 4:
-					break;
+                time = new TDateTime(year, month, day, hour, min, sec);
+                Row.FilloutTime = time->GetLsb() - Row.LsbTime;
+                delete time;
+                break;
 
-				case 5:
-					Row.BirthYear = atoi(valstr);
-					AncestryRow.BirthYear = atoi(valstr);
-					break;
+            case 4:
+                Row.BirthYear = atoi(valstr);
+                break;
 
-				case 6:
-					Row.BirthMonth = atoi(valstr);
-					AncestryRow.BirthMonth = atoi(valstr);
-					break;
+            case 5:
+                Row.BirthMonth = atoi(valstr);
+                break;
 
-				case 7:
-					Row.Gender = atoi(valstr);
-					AncestryRow.Gender = atoi(valstr);
-					break;
+            case 6:
+                Row.Gender = atoi(valstr);
+                break;
 
-				case 8:
-					Row.Country = atoi(valstr);
-					AncestryRow.Country = atoi(valstr);
-					break;
+            case 7:
+                Row.Country = atoi(valstr);
+                break;
 
-				case 9:
-					Row.Ancestry = atoi(valstr);
-					AncestryRow.Ancestry = atoi(valstr);
-					break;
+            case 8:
+                 Row.Ancestry = atoi(valstr);
+                 break;
 
-				case 10:
-					Row.Aspie = atoi(valstr);
-					AncestryRow.Aspie = atoi(valstr);
-					break;
+            case 9:
+                 Row.Aspie = atoi(valstr);
+                 break;
 
-				case 11:
-					Row.ADHD = atoi(valstr);
-					AncestryRow.ADHD = atoi(valstr);
-					break;
+            case 10:
+                 Row.ADHD = atoi(valstr);
+                 break;
 
-				case 12:
-					Row.OCD = atoi(valstr);
-					AncestryRow.OCD = atoi(valstr);
-					break;
+            case 11:
+                 Row.OCD = atoi(valstr);
+                 break;
 
-				case 13:
-					Row.Social = atoi(valstr);
-					AncestryRow.Social = atoi(valstr);
-					break;
+            case 12:
+                 Row.Social = atoi(valstr);
+                 break;
 
-				case 14:
-					valstr = GetQuoted(valstr);
-					if (valstr)
-					{
-						valstr = UpdateReferer(valstr);
-						if (strlen(valstr) >= 100)
-							valstr[99] = 0;
-						strcpy(Row.Referer, valstr);
-						strcpy(AncestryRow.Referer, valstr);
-					}
-					else
-					{
-						Row.Referer[0] = 0;
-						AncestryRow.Referer[0] = 0;
-				    }
-					break;
+            case 13:
+                 Row.AsResult = atoi(valstr);
+                 break;
 
-				case 15:
-					Row.AsResult = atoi(valstr);
-					AncestryRow.AsResult = atoi(valstr);
-					break;
+            case 14:
+                 Row.NtResult = atoi(valstr);
+                 break;
 
-				case 16:
-					Row.NtResult = atoi(valstr);
-					AncestryRow.NtResult = atoi(valstr);
-					break;
+            default:
+                 i = fieldno - 15;
+        	     Row.Quiz[i] = atoi(valstr);
+                 break;
 
-				default:
-					i = fieldno - 17;
-					if (i >= 0)
-					{
-        				Row.Quiz[i] = atoi(valstr);
-    
-                        if (i < 150)
-    	    				AncestryRow.Quiz[i] = atoi(valstr);
-    	    		}
-					break;
-			}
-		}
-	}
+        }
+    }
 
-	UpdateScore(&Row);
-	HandleRow(&Row);
-
-	ancfile.Write(&AncestryRow, sizeof(TQuizAncestryRow));
-
-	return str;
+    UpdateScore(&Row);
+    HandleRow(&Row);
+    AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 178);
 }
 
-/*##################  main ##########################
-*   Purpose....: Program entry-point	   					      	        #
+/*################## ConvF11 ##########################
+*   Purpose....: Convert quiz f11                                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int main(int argc, char **argv)
+void ConvF11()
 {
-	char buf[MAX_IN_ROW];
-	int size;
-	char *rowstr;
-	char *ptr;
-	long pos = 0;
-	TFile infile("quizf11.sql");
-	int i;
-	int grp;
-	int max;
-	long double w;
+    char buf[MAX_IN_ROW];
+    int size;
+    long pos = 0;
+    TFile infile("raw\\aspie-quiz-f11.csv");
+    TFile outfile("bin\\quizf11.bin", 0);
+    char *ptr;
 
-	while (size = infile.Read(buf, MAX_IN_ROW))
-	{
-		buf[size] = 0;
-		rowstr = strstr(buf, InsertString);
-		if (rowstr)
-		{
-			rowstr += strlen(InsertString);
-			ptr = ProcessRow(rowstr);
+    quizfile = &outfile;
+    OpenPca("F11");
 
-			pos += ptr - buf;
-		 }
-		 else
-			pos += strlen(buf) + 1;
+    size = infile.Read(buf, MAX_IN_ROW);
+    buf[size] = 0;
+    ptr = strchr(buf, 0xd);
+    if (ptr)
+        *ptr = 0;       
 
-		infile.SetPos(pos);
-	}
+    pos += strlen(buf) + 1;
+    infile.SetPos(pos);
+
+    while (size = infile.Read(buf, MAX_IN_ROW))
+    {
+        buf[size] = 0;
+        ptr = strchr(buf, 0xd);
+        if (ptr)
+            *ptr = 0;   
+
+        pos += strlen(buf) + 1;
+        infile.SetPos(pos);
+
+        if (ptr)
+            ProcessRow(buf);
+    }
+    ClosePca();
 }
-
