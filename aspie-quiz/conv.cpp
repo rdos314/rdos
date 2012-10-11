@@ -76,12 +76,13 @@ void ConvF9();
 void ConvF10();
 void ConvF11();
 void ConvF12();
+void ConvF13();
+void ConvF14();
+void ConvF15();
 
 void ConvH4();
 void ConvH5();
 void ConvH6();
-void ConvH7();
-void ConvH8();
 
 #define MAX_QUESTIONS 400
 
@@ -471,6 +472,9 @@ int main(int argc, char **argv)
     ConvF9();
     ConvF10();
     ConvF11();
+    ConvF12();
+    ConvF13();
+    ConvF14();
 
     ConvH4();
     ConvH5();
@@ -478,7 +482,7 @@ int main(int argc, char **argv)
     ConvH7();
 */
 
-    ConvF12();
+    ConvF15();
 
 //    ConvH8();
     
