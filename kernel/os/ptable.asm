@@ -592,6 +592,127 @@ init_paging32     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           init_physical32
+;
+;           DESCRIPTION:    init physical page directories & tables, 32-bit version
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public init_physical32
+
+init_physical32       Proc near
+    mov ax,flat_sel
+    mov ds,ax
+    mov ax,system_data_sel
+    mov fs,ax
+    mov fs:phys_free_pages,0
+;
+    call local_get_page_dir_attrib32
+    xor edi,edi
+
+init_phys_page_pages_dir32:
+    push esi    
+    call AllocateRam
+    mov eax,esi
+    pop esi
+;    
+    push eax
+    xor ebx,ebx
+    mov edx,phys_page_linear
+    add edx,edi
+    or al,3
+    call cs:set_sys_page_dir_proc
+    pop edx
+;
+    push ecx
+    mov cx,400h
+    xor eax,eax
+
+init_phys_page_pages32:
+    mov [edx],eax
+    add edx,4
+    loop init_phys_page_pages32
+;
+    pop ecx
+    add edi,esi
+    loop init_phys_page_pages_dir32
+;
+    mov ax,sys_dir_sel
+    mov es,ax
+    call AllocateRam
+    mov edx,esi
+    mov bx,(phys_list_linear SHR 20) AND 0FFFh
+    and bl,0FCh
+    or si,3
+    mov es:[bx],esi
+;
+    mov cx,400h
+    xor eax,eax
+    
+init_phys_list_pages32:
+    mov [edx],eax
+    add edx,4
+    loop init_phys_list_pages32
+;
+    xor ebx,ebx
+    xor ebp,ebp
+
+init_free_dir_loop32:
+    call AllocateRam
+    jc init_free_done32
+;
+    mov di,(phys_page_linear SHR 20) AND 0FFFh
+    mov edx,es:[di]
+    xor dl,dl
+;
+    push esi
+    or si,3
+    mov [ebx+edx],esi
+;
+    call AllocateRam
+    jc init_free_done32
+;
+    mov edi,(phys_list_linear SHR 20) AND 0FFFh
+    mov edx,es:[di]
+    xor dl,dl
+;
+    push esi
+    or si,3
+    mov [ebx+edx],esi
+;
+    pop edx
+    pop edi
+    mov cx,400h
+
+init_free_page_loop32:
+    call AllocateRam
+    jc init_free_done32
+;
+    or si,3
+    mov [edi],esi
+    add ebp,4
+    mov [edx],ebp
+    add edx,4
+    add edi,4
+;
+    inc fs:phys_free_pages
+    loop init_free_page_loop32
+;       
+    add ebx,4
+    jmp init_free_dir_loop32
+
+init_free_done32:
+    mov fs:unused_phys_list,-1
+    mov fs:free_phys_list,0
+    mov fs:free_dma_phys_list,0
+    ret
+init_physical32       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           start_paging32

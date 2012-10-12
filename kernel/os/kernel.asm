@@ -54,7 +54,7 @@ ENDIF
 
     extrn init_paging32:near
     extrn start_paging32:near
-    extrn init_physical_dir:near
+    extrn init_physical32:near
     extrn init_physical:near
     extrn init_paging_trap:near
     extrn init_physical_gates:near
@@ -713,7 +713,7 @@ prot_init:
     call init_pre_tasking
     call init_boot_system
     call init_paging32
-    call init_physical_dir
+    call init_physical32
     call start_paging32
     call init_physical
     call init_paging_trap
