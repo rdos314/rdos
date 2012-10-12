@@ -47,6 +47,7 @@ ENDIF
     extrn local_flush_process_tlb:near
 
     extrn AllocateRam:near
+    extrn AllocateMultipleRam:near
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -2723,6 +2724,130 @@ start_paging_global_done32:
     call local_create_data_sel16
     ret
 start_paging32    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           init_flat_dir64
+;
+;           DESCRIPTION:    Setup flat (identity) mapped page-tables, 64 bit version
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_flat_dir64   Proc near
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov ecx,4
+    call AllocateMultipleRam
+;
+    mov edx,esi
+    mov bx,sys_dir_sel
+    mov ecx,4000h
+    call local_create_data_sel16
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov ebx,cr3
+    and bx,0F000h
+;
+    mov cx,4
+    mov eax,edx
+    or al,1
+
+init_flat_loop64:
+    mov [ebx],eax
+    mov dword ptr [ebx+4],0
+    add ebx,8
+    add eax,1000h
+    loop init_flat_loop64
+;
+    mov ax,sys_dir_sel
+    mov ds,ax
+    xor eax,eax
+    mov cx,1000h
+    xor bx,bx
+
+init_empty_dir64:
+    mov [bx],eax
+    add bx,4
+    loop init_empty_dir64
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+init_flat_dir64  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           map_dir64
+;
+;           DESCRIPTION:    Map dir selectors, 64-bit version
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+map_dir64 Proc near
+    mov ax,sys_dir_sel
+    mov ds,ax
+    mov eax,cr3
+    mov bx,(sys_page_linear SHR 18) AND 3FFFh
+    mov al,3
+    mov [bx],eax
+    mov bx,(process_page_linear SHR 18) AND 3FFFh
+    mov [bx],eax
+    int 3
+    ret
+map_dir64 Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           create_paging64
+;
+;           DESCRIPTION:    Create initial paging for system process, 64-bit version
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_paging64     PROC near
+    mov ax,system_data_sel
+    mov es,ax
+;
+    call init_flat_dir64
+    call map_dir64
+    ret
+create_paging64     ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           start_paging64
+;
+;           DESCRIPTION:    Start paging hardware, 64-bit version
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public start_paging64
+
+start_paging64    Proc near
+    call create_paging64
+    ret
+start_paging64    Endp
 
 code    ENDS
 

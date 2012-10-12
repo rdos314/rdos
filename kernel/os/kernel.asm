@@ -53,6 +53,7 @@ ENDIF
     extrn init_pretask_traps:near
 
     extrn start_paging32:near
+    extrn start_paging64:near
     extrn init_physical:near
     extrn init_paging_trap:near
     extrn init_physical_gates:near
@@ -315,6 +316,44 @@ AllocRamDone:
     pop ds
     ret
 AllocateRam     Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AllocateMultipleRam
+;
+;           DESCRIPTION:    get free ram during startup
+;
+;           PARAMETERS:     ECX     Number of pages
+;
+;           RETURNS:        ESI     Address to use
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public AllocateMultipleRam
+
+AllocateMultipleRam     Proc near
+    push ds
+    push eax
+    push ecx
+;
+    mov ax,system_data_sel
+    mov ds,ax
+;
+    mov esi,ds:alloc_base
+    add esi,1000h
+;
+    dec ecx
+    shl ecx,12
+    add ecx,esi
+    mov ds:alloc_base,ecx
+;
+    clc
+    pop ecx
+    pop eax
+    pop ds
+    ret
+AllocateMultipleRam     Endp
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
