@@ -41,9 +41,12 @@ ELSE
     .386p
 ENDIF
 
+    extrn local_create_data_sel16:near
     extrn local_allocate_physical:near
     extrn local_free_physical:near
     extrn local_flush_process_tlb:near
+
+    extrn AllocateRam:near
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -275,6 +278,379 @@ init_page_table     PROC near
     popa
     ret
 init_page_table     ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           init_flat_dir32
+;
+;           DESCRIPTION:    Setup flat (identity) mapped page-tables, 32 bit version
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_flat_dir32   Proc near
+    push ds
+    push eax
+    push bx
+    push cx
+    push edx
+;
+    mov bx,sys_dir_sel
+    mov ecx,1000h
+    mov edx,cr3
+    and dx,0F000h
+    call local_create_data_sel16
+;
+    mov ds,bx
+    xor eax,eax
+    mov cx,400h
+    xor bx,bx
+
+init_empty_dir32:
+    mov [bx],eax
+    add bx,4
+    loop init_empty_dir32
+;
+    pop edx
+    pop cx
+    pop bx
+    pop eax
+    pop ds
+    ret
+init_flat_dir32  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           map_dir32
+;
+;           DESCRIPTION:    Map dir selectors, 32-bit version
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+map_dir32 Proc near
+    mov ax,sys_dir_sel
+    mov ds,ax
+    mov eax,cr3
+    mov bx,(sys_page_linear SHR 20) AND 0FFFh
+    mov al,3
+    mov [bx],eax
+    mov bx,(process_page_linear SHR 20) AND 0FFFh
+    mov [bx],eax
+    ret
+map_dir32 Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           map_flat32
+;
+;           DESCRIPTION:    Map a page flat
+;
+;           PARAMETERS:         EDX             Linear base address
+;                           ECX             Number of bytes to map
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+map_flat32    Proc near
+    push ds
+    pushad
+;
+    or ecx,ecx
+    jz map_flat_done32
+
+map_flat_more32:
+    mov bx,sys_dir_sel
+    mov ds,bx
+    mov ebx,edx
+    shr ebx,22
+    shl bx,2
+    mov edi,[bx]
+    or edi,edi
+    jnz map_flat_do32
+;
+    call AllocateRam
+    mov edi,esi
+    or si,3
+    mov [bx],esi
+;
+    mov ax,flat_sel
+    mov ds,ax
+    push cx
+    mov cx,400h
+    xor eax,eax
+
+map_flat_init_loop32:
+    mov [edi],eax
+    add edi,4
+    loop map_flat_init_loop32
+;
+    sub edi,1000h
+    pop cx
+
+map_flat_do32:
+    mov ax,flat_sel
+    mov ds,ax
+    mov ebx,edx
+    shr ebx,12
+    and ebx,3FFh
+    mov eax,400h
+    shr ecx,12
+    sub eax,ebx
+    sub ecx,eax
+    jnc map_flat_start32
+;
+    add ecx,eax
+    mov eax,ecx
+    xor ecx,ecx
+
+map_flat_start32:
+    shl bx,2
+    shl ecx,12
+    push ecx
+    mov cx,ax
+    and dx,0F000h
+    or dx,803h
+    and di,0F000h
+    or di,bx
+
+map_flat_loop32:
+    mov [edi],edx
+    add edi,4
+    add edx,1000h
+    loop map_flat_loop32
+    pop ecx
+    or ecx,ecx
+    jnz map_flat_more32
+
+map_flat_done32:
+    popad
+    pop ds
+    ret
+map_flat32    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           map_flat_user32
+;
+;           DESCRIPTION:    Map a page flat, user access, 32-bit version
+;
+;           PARAMETERS:         EDX             Linear base address
+;                           ECX             Number of bytes to map
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+map_flat_user32   Proc near
+    push ds
+    pushad
+;
+    or ecx,ecx
+    jz map_flat_user_done32
+
+map_flat_user_more32:
+    mov bx,sys_dir_sel
+    mov ds,bx
+    mov ebx,edx
+    shr ebx,22
+    shl bx,2
+    mov edi,[bx]
+    or edi,edi
+    jnz map_flat_user_do32
+;
+    call AllocateRam
+    mov edi,esi
+    or si,7
+    mov [bx],esi
+;
+    mov ax,flat_sel
+    mov ds,ax
+    push cx
+    mov cx,400h
+    xor eax,eax
+
+map_flat_user_init_loop32:
+    mov [edi],eax
+    add edi,4
+    loop map_flat_user_init_loop32
+;    
+    sub edi,1000h
+    pop cx
+
+map_flat_user_do32:
+    mov ax,flat_sel
+    mov ds,ax
+    mov ebx,edx
+    shr ebx,12
+    and ebx,3FFh
+    mov eax,400h
+    shr ecx,12
+    sub eax,ebx
+    sub ecx,eax
+    jnc map_flat_user_start32
+;
+    add ecx,eax
+    mov eax,ecx
+    xor ecx,ecx
+
+map_flat_user_start32:
+    shl bx,2
+    shl ecx,12
+    push ecx
+    mov cx,ax
+    and dx,0F000h
+    or dx,807h
+    and di,0F000h
+    or di,bx
+
+map_flat_user_loop32:
+    mov [edi],edx
+    add edi,4
+    add edx,1000h
+    loop map_flat_user_loop32
+;    
+    pop ecx
+    or ecx,ecx
+    jnz map_flat_user_more32
+
+map_flat_user_done32:
+    popad
+    pop ds
+    ret
+map_flat_user32   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           init_paging32
+;
+;           DESCRIPTION:    Create initial paging for system process, 32-bit version
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public init_paging32
+
+init_paging32     PROC near
+    mov ax,system_data_sel
+    mov es,ax
+;
+    call init_flat_dir32
+    call map_dir32
+;
+    xor edx,edx
+    mov ecx,es:alloc_base
+    add ecx,1000h
+    call map_flat32
+;
+    mov edx,es:rom1_base
+    mov ecx,es:rom1_size
+    add ecx,edx
+    and dx,0F000h
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+    sub ecx,edx
+    call map_flat32
+;
+    mov edx,es:rom2_base
+    mov ecx,es:rom2_size
+    or ecx,ecx
+    jz init_paging_ram32
+;
+    add ecx,edx
+    and dx,0F000h
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+    sub ecx,edx
+    call map_flat32
+
+init_paging_ram32:
+    mov ecx,es:ram2_size
+    or ecx,ecx
+    jz init_paging_done32
+;
+    mov edx,0A0000h
+    mov ecx,100000h
+    sub ecx,edx
+    call map_flat_user32
+    
+init_paging_done32:
+    ret
+init_paging32     ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           start_paging32
+;
+;           DESCRIPTION:    Start paging hardware, 32-bit version
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public start_paging32
+
+start_paging32    Proc near
+    mov eax,cr0
+    or eax,80000000h
+    mov cr0,eax
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:cpu_feature_flags
+    test ax,2000h
+    jz start_paging_global_done32
+;    
+;    db 0Fh
+;    db 20h
+;    db 0E0h     ; mov eax,cr4
+;
+;    or ax,80h   ; enable global pages
+;
+;    db 0Fh
+;    db 22h
+;    db 0E0h     ; mov cr4,eax
+
+start_paging_global_done32:
+    mov bx,sys_dir_sel
+    mov ecx,1000h
+    mov edx,sys_page_linear
+    shr edx,10
+    add edx,sys_page_linear
+    call local_create_data_sel16
+;
+    mov bx,sys_page_sel
+    mov edx,sys_page_linear
+    mov ecx,400000h
+    call local_create_data_sel16
+;
+    mov bx,process_dir_sel
+    mov ecx,1000h
+    mov edx,process_page_linear
+    shr edx,10
+    add edx,process_page_linear
+    call local_create_data_sel16
+;
+    mov bx,process_page_sel
+    mov edx,process_page_linear
+    mov ecx,400000h
+    call local_create_data_sel16
+    ret
+start_paging32    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
