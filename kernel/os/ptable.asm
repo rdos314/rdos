@@ -1894,6 +1894,9 @@ local_free_process64     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_get_page_entry64       Proc near
+    pop bp
+    int 3
+
     push ds
     mov ax,process_page_sel
     mov ds,ax
@@ -3740,6 +3743,7 @@ init_physical64       Proc near
     mov ax,system_data_sel
     mov fs,ax
     mov fs:phys_free_pages,0
+    jmp init_free_done64
 ;
     call local_get_page_dir_attrib64
     xor edi,edi
@@ -3783,10 +3787,28 @@ init_phys_page_pages64:
     mov cx,400h
     xor eax,eax
     
-init_phys_list_pages64:
+init_phys_list_pages64_1:
     mov [edx],eax
     add edx,4
-    loop init_phys_list_pages64
+    loop init_phys_list_pages64_1
+;
+    mov ax,sys_dir_sel
+    mov es,ax
+    call AllocateRam
+    mov edx,esi
+    mov bx,(phys_list_linear SHR 21) AND 3FFFh
+    and bl,0F8h
+    add bx,8
+    or si,3
+    mov es:[bx],esi
+;
+    mov cx,400h
+    xor eax,eax
+    
+init_phys_list_pages64_2:
+    mov [edx],eax
+    add edx,4
+    loop init_phys_list_pages64_2
 ;
     xor ebx,ebx
     xor ebp,ebp
