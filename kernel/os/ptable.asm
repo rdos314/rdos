@@ -41,6 +41,7 @@ ELSE
     .386p
 ENDIF
 
+    extrn local_get_selector_base_size:near
     extrn local_create_data_sel16:near
     extrn local_allocate_physical:near
     extrn local_free_physical:near
@@ -92,6 +93,7 @@ code    SEGMENT byte public use16 'CODE'
     public set_thread_page_entry_proc
     public get_thread_page_dir_proc
 
+proc_start:
 init_process_proc               DW OFFSET local_init_process32
 create_process_proc             DW OFFSET local_create_process32
 free_process_proc               DW OFFSET local_free_process32
@@ -122,6 +124,39 @@ unhook_page_proc                DW OFFSET local_unhook_page32
 get_thread_page_entry_proc      DW OFFSET local_get_thread_page_entry32
 set_thread_page_entry_proc      DW OFFSET local_set_thread_page_entry32
 get_thread_page_dir_proc        DW OFFSET local_get_thread_page_dir32
+
+p64_start:
+init_process_p64                DW OFFSET local_init_process64
+create_process_p64              DW OFFSET local_create_process64
+free_process_p64                DW OFFSET local_free_process64
+get_page_entry_p64              DW OFFSET local_get_page_entry64
+set_page_entry_p64              DW OFFSET local_set_page_entry64
+get_sys_page_entry_p64          DW OFFSET local_get_sys_page_entry64
+set_sys_page_entry_p64          DW OFFSET local_set_sys_page_entry64
+has_page_entry_p64              DW OFFSET local_has_page_entry64
+get_page_dir_attrib_p64         DW OFFSET local_get_page_dir_attrib64
+fault_to_dir_p64                DW OFFSET local_fault_to_dir64
+get_page_dir_p64                DW OFFSET local_get_page_dir64
+set_page_dir_p64                DW OFFSET local_set_page_dir64
+get_sys_page_dir_p64            DW OFFSET local_get_sys_page_dir64
+set_sys_page_dir_p64            DW OFFSET local_set_sys_page_dir64
+create_page_dir_p64             DW OFFSET local_create_page_dir64
+create_sys_page_dir_p64         DW OFFSET local_create_sys_page_dir64
+reserve_page_entries_p64        DW OFFSET local_reserve_page_entries64
+allocate_page_entries_p64       DW OFFSET local_allocate_page_entries64
+allocate_sys_page_entries_p64   DW OFFSET local_allocate_sys_page_entries64
+free_page_entries_p64           DW OFFSET local_free_page_entries64
+free_global_page_entries_p64    DW OFFSET local_free_global_page_entries64
+copy_page_entries_p64           DW OFFSET local_copy_page_entries64
+copy_sys_page_entries_p64       DW OFFSET local_copy_sys_page_entries64
+move_page_entries_p64           DW OFFSET local_move_page_entries64
+emulate_page_p64                DW OFFSET local_emulate_page64
+hook_page_p64                   DW OFFSET local_hook_page64
+unhook_page_p64                 DW OFFSET local_unhook_page64
+get_thread_page_entry_p64       DW OFFSET local_get_thread_page_entry64
+set_thread_page_entry_p64       DW OFFSET local_set_thread_page_entry64
+get_thread_page_dir_p64         DW OFFSET local_get_thread_page_dir64
+p64_end:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1795,6 +1830,588 @@ local_get_thread_page_dir32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           local_init_process64
+;
+;           DESCRIPTION:    Init process paging
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_init_process64     Proc near
+    pop bp
+    int 3
+    ret
+local_init_process64     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Create_process64
+;
+;           DESCRIPTION:    Create process paging environment
+;
+;           PARAMETERS:     ES          Thread
+;                           EAX         CR3
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_create_process64       PROC near
+    pop bp
+    int 3
+    ret
+local_create_process64       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_free_process64
+;
+;           DESCRIPTION:    Free process paging
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_free_process64     Proc near
+    pop bp
+    int 3
+    ret
+local_free_process64     Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_get_page_entry64
+;
+;           DESCRIPTION:    Get physical page for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;
+;           RETURNS:        EBX:EAX         physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_get_page_entry64       Proc near
+    push ds
+    mov ax,process_page_sel
+    mov ds,ax
+    mov eax,edx
+    shr eax,9
+    and al,0F8h
+    mov ebx,[eax+4]
+    mov eax,[eax]
+    pop ds
+    ret
+local_get_page_entry64       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_set_page_entry64
+;
+;           DESCRIPTION:    Set physical page for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;                           EBX:EAX     physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_set_page_entry64       Proc near
+    pop bp
+    int 3
+    ret
+local_set_page_entry64       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_get_sys_page_entry64
+;
+;           DESCRIPTION:    Get physical page for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;
+;           RETURNS:        EBX:EAX         physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_get_sys_page_entry64       Proc near
+    pop bp
+    int 3
+    ret
+local_get_sys_page_entry64       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_set_sys_page_entry64
+;
+;           DESCRIPTION:    Set physical page for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;                           EBX:EAX     physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_set_sys_page_entry64       Proc near
+    pop bp
+    int 3
+    ret
+local_set_sys_page_entry64       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_get_page_dir_attrib64
+;
+;           DESCRIPTION:    Get page dir attributes
+;
+;           RETURNS:        ESI         linear address space size per entry
+;                           CX          # of entries per 32-bit page dir entries
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_get_page_dir_attrib64       Proc near
+    mov cx,2
+    mov esi,200000h
+    ret
+local_get_page_dir_attrib64    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_fault_to_dir64
+;
+;           DESCRIPTION:    Convert page fault to dir position
+;
+;           PARAMETERS:     EDX         Linear address
+;
+;           RETURNS:        EDX         Page dir address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_fault_to_dir64       Proc near
+    pop bp
+    int 3
+    ret
+local_fault_to_dir64    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_get_page_dir64
+;
+;           DESCRIPTION:    Get physical dir for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;
+;           RETURNS:        EBX:EAX     physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_get_page_dir64       Proc near
+    pop bp
+    int 3
+    ret
+local_get_page_dir64    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_get_sys_page_dir64
+;
+;           DESCRIPTION:    Get physical dir for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;
+;           RETURNS:        EBX:EAX     physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_get_sys_page_dir64       Proc near
+    pop bp
+    int 3
+    ret
+local_get_sys_page_dir64    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_set_page_dir64
+;
+;           DESCRIPTION:    Set physical dir for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;                           EBX:EAX     physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_set_page_dir64       Proc near
+    pop bp
+    int 3
+    ret
+local_set_page_dir64    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_set_sys_page_dir64
+;
+;           DESCRIPTION:    Set physical dir for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;                           EBX:EAX     physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_set_sys_page_dir64       Proc near
+    push ds
+    push cx
+    push edx
+;    
+    mov cx,sys_dir_sel
+    mov ds,cx
+    shr edx,21
+    and dl,0F8h
+    mov [edx],eax
+    mov [edx+4],ebx
+;    
+    pop edx
+    pop cx
+    pop ds
+    ret
+local_set_sys_page_dir64    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_create_page_dir64
+;
+;           DESCRIPTION:    Create page directory entry
+;
+;           PARAMETERS:     EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_create_page_dir64       Proc near
+    pop bp
+    int 3
+    ret
+local_create_page_dir64    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_create_sys_page_dir64
+;
+;           DESCRIPTION:    Create sys page directory entry
+;
+;           PARAMETERS:     EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_create_sys_page_dir64       Proc near
+    pop bp
+    int 3
+    ret
+local_create_sys_page_dir64    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_has_page_entry64
+;
+;           DESCRIPTION:    Check physical page for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;
+;           RETURNS:        NC          valid
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_has_page_entry64       Proc near
+    pop bp
+    int 3
+    ret
+local_has_page_entry64       Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_reserve_page_entries64
+;
+;           DESCRIPTION:    Reserve page entries 
+;
+;           PARAMETERS:     ECX         number of entries
+;                           EDX         start linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_reserve_page_entries64       Proc near
+    pop bp
+    int 3
+    ret
+local_reserve_page_entries64       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_allocate_page_entries64
+;
+;           DESCRIPTION:    Allocate page entries 
+;
+;           PARAMETERS:     EAX         allocate limit
+;                           ECX         number of entries
+;                           EDX         start linear address
+;
+;           RETURNS:        EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_allocate_page_entries64       Proc near
+    pop bp
+    int 3
+    ret
+local_allocate_page_entries64       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_allocate_sys_page_entries64
+;
+;           DESCRIPTION:    Allocate sys page entries 
+;
+;           PARAMETERS:     EAX         allocate limit
+;                           ECX         number of entries
+;                           EDX         start linear address
+;
+;           RETURNS:        EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_allocate_sys_page_entries64       Proc near
+    pop bp
+    int 3
+    ret
+local_allocate_sys_page_entries64       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_free_page_entries64
+;
+;           DESCRIPTION:    Free page entries 
+;
+;           PARAMETERS:     EAX         free signature
+;                           ECX         number of entries
+;                           EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_free_page_entries64       Proc near
+    pop bp
+    int 3
+    ret
+local_free_page_entries64       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_free_global_page_entries64
+;
+;           DESCRIPTION:    Free global page entries 
+;
+;           PARAMETERS:     EAX         free signature
+;                           ECX         number of entries
+;                           EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_free_global_page_entries64       Proc near
+    pop bp
+    int 3
+    ret
+local_free_global_page_entries64       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_copy_page_entries64
+;
+;           DESCRIPTION:    Copy page entries 
+;
+;           PARAMETERS:     ECX         number of entries
+;                           ESI         source linear address
+;                           EDI         dest linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_copy_page_entries64       Proc near
+    pop bp
+    int 3
+    ret
+local_copy_page_entries64       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_copy_sys_page_entries64
+;
+;           DESCRIPTION:    Copy page entries 
+;
+;           PARAMETERS:     ECX         number of entries
+;                           ESI         source linear address
+;                           EDI         dest linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_copy_sys_page_entries64       Proc near
+    pop bp
+    int 3
+    ret
+local_copy_sys_page_entries64       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_move_page_entries64
+;
+;           DESCRIPTION:    Move page entries
+;
+;           PARAMETERS:     ECX         number of entries
+;                           ESI         source linear address
+;                           EDI         dest linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_move_page_entries64       Proc near
+    pop bp
+    int 3
+    ret
+local_move_page_entries64       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           local_emulate_page64
+;
+;           DESCRIPTION:    Hook page to emulate contents
+;
+;           PARAMETERS:     EAX         Size
+;                           EDX         Linear base
+;                           ES:DI       Emulation callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_emulate_page64    PROC near
+    pop bp
+    int 3
+    ret
+local_emulate_page64    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           local_hook_page64
+;
+;           DESCRIPTION:    Hook for a specified linear address range
+;
+;           PARAMETERS:     EAX         Size
+;                           EDX         Linear base
+;                           ES:DI       Callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_hook_page64       PROC near
+    pop bp
+    int 3
+    ret
+local_hook_page64       ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           local_unhook_page64
+;
+;           DESCRIPTION:    Unhook for a specified linear address range
+;
+;           PARAMETERS:     EAX         Size
+;                           EDX         Linear base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_unhook_page64     PROC near
+    pop bp
+    int 3
+    ret
+local_unhook_page64     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_get_thread_page_entry64
+;
+;           DESCRIPTION:    Get physical page for linear address in other thread.
+;
+;           PARAMETERS:     BP          Thread
+;                           EDX         Linear address
+;
+;           RETURNS:        EBX:EAX     Physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_get_thread_page_entry64    Proc near
+    pop bp
+    int 3
+    ret
+local_get_thread_page_entry64    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_set_thread_page_entry64
+;
+;           DESCRIPTION:    Set physical page for linear address in other thread.
+;
+;           PARAMETERS:     BP          Thread
+;                           EDX         Linear address
+;                           EBX:EAX     Physical address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_set_thread_page_entry64    Proc near
+    pop bp
+    int 3
+    ret
+local_set_thread_page_entry64    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_get_thread_page_dir64
+;
+;           DESCRIPTION:    Get physical page directory for other thread
+;
+;           PARAMETERS:     BP          Thread
+;                           EDX         Linear address
+;
+;           RETURNS:        EBX:EAX     Physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_get_thread_page_dir64    Proc near
+    pop bp
+    int 3
+    ret
+local_get_thread_page_dir64    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetPageEntry
 ;
 ;           DESCRIPTION:    Get physical page for linear address
@@ -2798,17 +3415,220 @@ init_flat_dir64  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 map_dir64 Proc near
-    mov ax,sys_dir_sel
+    mov ax,flat_sel
     mov ds,ax
-    mov eax,cr3
-    mov bx,(sys_page_linear SHR 18) AND 3FFFh
+    mov ax,sys_dir_sel   
+    mov es,ax
+;    
+    mov ebx,cr3
+    mov di,(sys_page_linear SHR 18) AND 3FFFh
+    mov cx,4
+
+map_sys_dir_loop64:    
+    mov eax,[ebx]
     mov al,3
-    mov [bx],eax
-    mov bx,(process_page_linear SHR 18) AND 3FFFh
-    mov [bx],eax
-    int 3
+    mov es:[di],eax
+    add ebx,8
+    add di,8
+    loop map_sys_dir_loop64
+;    
+    mov ebx,cr3
+    mov di,(process_page_linear SHR 18) AND 3FFFh
+    mov cx,4
+
+map_proc_dir_loop64:    
+    mov eax,[ebx]
+    mov al,3
+    mov es:[di],eax
+    add bx,8
+    add di,8
+    loop map_proc_dir_loop64
+;
     ret
 map_dir64 Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           map_flat64
+;
+;           DESCRIPTION:    Map a page flat
+;
+;           PARAMETERS:     EDX             Linear base address
+;                           ECX             Number of bytes to map
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+map_flat64    Proc near
+    push ds
+    pushad
+;
+    or ecx,ecx
+    jz map_flat_done64
+
+map_flat_more64:
+    mov bx,sys_dir_sel
+    mov ds,bx
+    mov ebx,edx
+    shr ebx,21
+    shl bx,3
+    mov edi,[bx]
+    or edi,edi
+    jnz map_flat_do64
+;
+    call AllocateRam
+    mov edi,esi
+    or si,3
+    mov [bx],esi
+;
+    mov ax,flat_sel
+    mov ds,ax
+    push cx
+    mov cx,400h
+    xor eax,eax
+
+map_flat_init_loop64:
+    mov [edi],eax
+    add edi,4
+    loop map_flat_init_loop64
+;
+    sub edi,1000h
+    pop cx
+
+map_flat_do64:
+    mov ax,flat_sel
+    mov ds,ax
+    mov ebx,edx
+    shr ebx,12
+    and ebx,1FFh
+    mov eax,200h
+    shr ecx,12
+    sub eax,ebx
+    sub ecx,eax
+    jnc map_flat_start64
+;
+    add ecx,eax
+    mov eax,ecx
+    xor ecx,ecx
+
+map_flat_start64:
+    shl bx,3
+    shl ecx,12
+    push ecx
+    mov cx,ax
+    and dx,0F000h
+    or dx,803h
+    and di,0F000h
+    or di,bx
+
+map_flat_loop64:
+    mov [edi],edx
+    mov dword ptr [edi+4],0
+    add edi,8
+    add edx,1000h
+    loop map_flat_loop64
+    pop ecx
+    or ecx,ecx
+    jnz map_flat_more64
+
+map_flat_done64:
+    popad
+    pop ds
+    ret
+map_flat64    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           map_flat_user64
+;
+;           DESCRIPTION:    Map a page flat in user-space
+;
+;           PARAMETERS:     EDX             Linear base address
+;                           ECX             Number of bytes to map
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+map_flat_user64    Proc near
+    push ds
+    pushad
+;
+    or ecx,ecx
+    jz map_flat_user_done64
+
+map_flat_user_more64:
+    mov bx,sys_dir_sel
+    mov ds,bx
+    mov ebx,edx
+    shr ebx,21
+    shl bx,3
+    mov edi,[bx]
+    or edi,edi
+    jnz map_flat_user_do64
+;
+    call AllocateRam
+    mov edi,esi
+    or si,7
+    mov [bx],esi
+;
+    mov ax,flat_sel
+    mov ds,ax
+    push cx
+    mov cx,400h
+    xor eax,eax
+
+map_flat_user_init_loop64:
+    mov [edi],eax
+    add edi,4
+    loop map_flat_user_init_loop64
+;
+    sub edi,1000h
+    pop cx
+
+map_flat_user_do64:
+    mov ax,flat_sel
+    mov ds,ax
+    mov ebx,edx
+    shr ebx,12
+    and ebx,1FFh
+    mov eax,200h
+    shr ecx,12
+    sub eax,ebx
+    sub ecx,eax
+    jnc map_flat_user_start64
+;
+    add ecx,eax
+    mov eax,ecx
+    xor ecx,ecx
+
+map_flat_user_start64:
+    shl bx,3
+    shl ecx,12
+    push ecx
+    mov cx,ax
+    and dx,0F000h
+    or dx,807h
+    and di,0F000h
+    or di,bx
+
+map_flat_user_loop64:
+    mov [edi],edx
+    mov dword ptr [edi+4],0
+    add edi,8
+    add edx,1000h
+    loop map_flat_user_loop64
+    pop ecx
+    or ecx,ecx
+    jnz map_flat_user_more64
+
+map_flat_user_done64:
+    popad
+    pop ds
+    ret
+map_flat_user64    Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2827,8 +3647,203 @@ create_paging64     PROC near
 ;
     call init_flat_dir64
     call map_dir64
+;
+    mov ax,system_data_sel
+    mov es,ax
+    xor edx,edx
+    mov ecx,es:alloc_base
+    add ecx,1000h
+    call map_flat64
+;
+    mov edx,es:rom1_base
+    mov ecx,es:rom1_size
+    add ecx,edx
+    and dx,0F000h
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+    sub ecx,edx
+    call map_flat64
+;
+    mov edx,es:rom2_base
+    mov ecx,es:rom2_size
+    or ecx,ecx
+    jz create_paging_ram64
+;
+    add ecx,edx
+    and dx,0F000h
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+    sub ecx,edx
+    call map_flat64
+
+create_paging_ram64:
+    mov ecx,es:ram2_size
+    or ecx,ecx
+    jz create_paging_done64
+;
+    mov edx,0A0000h
+    mov ecx,100000h
+    sub ecx,edx
+    call map_flat_user64
+    
+create_paging_done64:
     ret
 create_paging64     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           setup_proc64
+;
+;           DESCRIPTION:    Setup 64-bit interface
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_proc64     PROC near
+    mov bx,cs
+    call local_get_selector_base_size
+;
+    mov esi,edx
+    add esi,OFFSET p64_start
+;    
+    mov edi,edx
+    add edi,OFFSET proc_start
+;
+    mov cx,OFFSET p64_end - OFFSET p64_start
+    shr cx,1    
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov es,ax
+    rep movs word ptr es:[edi],[esi]
+    ret
+setup_proc64    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           init_physical64
+;
+;           DESCRIPTION:    init physical page directories & tables, 64-bit version
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_physical64       Proc near
+    mov ax,flat_sel
+    mov ds,ax
+    mov ax,system_data_sel
+    mov fs,ax
+    mov fs:phys_free_pages,0
+;
+    call local_get_page_dir_attrib64
+    xor edi,edi
+
+init_phys_page_pages_dir64:
+    push esi    
+    call AllocateRam
+    mov eax,esi
+    pop esi
+;    
+    push eax
+    xor ebx,ebx
+    mov edx,phys_page_linear
+    add edx,edi
+    or al,3
+    call cs:set_sys_page_dir_proc
+    pop edx
+;
+    push ecx
+    mov cx,400h
+    xor eax,eax
+
+init_phys_page_pages64:
+    mov [edx],eax
+    add edx,4
+    loop init_phys_page_pages64
+;
+    pop ecx
+    add edi,esi
+    loop init_phys_page_pages_dir64
+;
+    mov ax,sys_dir_sel
+    mov es,ax
+    call AllocateRam
+    mov edx,esi
+    mov bx,(phys_list_linear SHR 21) AND 3FFFh
+    and bl,0F8h
+    or si,3
+    mov es:[bx],esi
+;
+    mov cx,400h
+    xor eax,eax
+    
+init_phys_list_pages64:
+    mov [edx],eax
+    add edx,4
+    loop init_phys_list_pages64
+;
+    xor ebx,ebx
+    xor ebp,ebp
+
+init_free_dir_loop64:
+    call AllocateRam
+    jc init_free_done64
+;
+    mov di,(phys_page_linear SHR 21) AND 3FFFh
+    mov edx,es:[di]
+    xor dl,dl
+;
+    push esi
+    or si,3
+    mov [ebx+edx],esi
+;
+    call AllocateRam
+    jc init_free_done64
+;
+    mov edi,(phys_list_linear SHR 21) AND 3FFFh
+    mov edx,es:[di]
+    xor dl,dl
+;
+    push esi
+    or si,3
+    mov [ebx+edx],esi
+;
+    pop edx
+    pop edi
+    mov cx,200h
+
+init_free_page_loop64:
+    call AllocateRam
+    jc init_free_done64
+;
+    or si,3
+    xor eax,eax
+    mov [edi],esi
+    mov [edi+4],eax
+    add ebp,8
+    mov [edx],ebp
+    mov [edx+4],eax
+    add edx,8
+    add edi,8
+;
+    inc fs:phys_free_pages
+    loop init_free_page_loop64
+;       
+    add ebx,8
+    jmp init_free_dir_loop64
+
+init_free_done64:
+    mov fs:unused_phys_list,-1
+    mov fs:free_phys_list,0
+    mov fs:free_dma_phys_list,0
+    ret
+init_physical64       Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2846,6 +3861,57 @@ create_paging64     ENDP
 
 start_paging64    Proc near
     call create_paging64
+    call setup_proc64
+    call init_physical64
+;
+    mov eax,cr4
+    or eax,20h
+    mov cr4,eax
+;    
+    mov eax,cr0
+    or eax,80000000h
+    mov cr0,eax
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:cpu_feature_flags
+    test ax,2000h
+    jz start_paging_global_done64
+;    
+;    db 0Fh
+;    db 20h
+;    db 0E0h     ; mov eax,cr4
+;
+;    or ax,80h   ; enable global pages
+;
+;    db 0Fh
+;    db 22h
+;    db 0E0h     ; mov cr4,eax
+
+start_paging_global_done64:
+    mov bx,sys_dir_sel
+    mov ecx,4000h
+    mov edx,sys_page_linear
+    shr edx,9
+    add edx,sys_page_linear
+    call local_create_data_sel16
+;
+    mov bx,sys_page_sel
+    mov edx,sys_page_linear
+    mov ecx,800000h
+    call local_create_data_sel16
+;
+    mov bx,process_dir_sel
+    mov ecx,4000h
+    mov edx,process_page_linear
+    shr edx,9
+    add edx,process_page_linear
+    call local_create_data_sel16
+;
+    mov bx,process_page_sel
+    mov edx,process_page_linear
+    mov ecx,800000h
+    call local_create_data_sel16
     ret
 start_paging64    Endp
 

@@ -41,6 +41,7 @@ ELSE
     .386p
 ENDIF
 
+    extrn local_get_selector_base_size:near
     extrn local_create_data_sel16:near
     extrn local_flush_process_tlb:near
     extrn AllocateRam:near
