@@ -170,7 +170,8 @@ system_seg	ENDS
 
 phys_header     STRUC
 
-phys_curr_header    DW ?
+phys_curr_header32  DW ?
+phys_curr_header64  DW ?
 phys_bitmap_count   DW ?
 
 phys_header     ENDS

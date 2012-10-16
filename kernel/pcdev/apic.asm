@@ -4048,113 +4048,407 @@ DisablePic  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 test_thread_name    DB 'APIC Test',0
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetPhysBitmap32
+;
+;       DESCRIPTION:    Get 32-bit physical bitmap
+;
+;       RETURNS:        SI      Bitmap header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-update_phys_bitmap  Proc near
+GetPhysBitmap32  Proc near
     mov cx,ds:phys_bitmap_count
-    mov bx,phys_header_start
+    sub cx,1
+    jc gpbDone32
+;    
+    cmp cx,31
+    jbe gpbCountOk32
+;
+    mov cx,31
+
+gpbCountOk32:
+    mov bx,4 + phys_header_start
     mov si,bx
     xor di,di
 
-update_phys_bitmap_loop:
+gpbLoop32:
     mov ax,ds:[bx].phys_bitmap_free
     cmp ax,di
-    jbe update_phys_bitmap_next
+    jbe gpbNext32
 ;
     mov si,bx
     mov di,ax
+    cmp ax,4000h
+    jae gpbOk32
 
-update_phys_bitmap_next:
+gpbNext32:
     add bx,4
-    loop update_phys_bitmap_loop
+    loop gpbLoop32
 ;
     or di,di
     stc
-    jz update_phys_bitmap_done
-;
-    sub si,phys_header_start
-    shr si,2
-    mov ds:phys_curr_header,si
+    jz gpbDone32
+
+gpbOk32:
     clc
 
-update_phys_bitmap_done:
+gpbDone32:
     ret
-update_phys_bitmap  Endp
+GetPhysBitmap32  Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetPhysBitmap64
+;
+;       DESCRIPTION:    Get 64-bit physical bitmap
+;
+;       RETURNS:        SI      Bitmap header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; OUT EBX:EAX       Physical address
+GetPhysBitmap64  Proc near
+    mov cx,ds:phys_bitmap_count
+    sub cx,32
+    jc gpbDone64
+;    
+    mov bx,32 * 4 + phys_header_start
+    mov si,bx
+    xor di,di
 
-allocate_phys   Proc near
+gpbLoop64:
+    mov ax,ds:[bx].phys_bitmap_free
+    cmp ax,di
+    jbe gpbNext64
+;
+    mov si,bx
+    mov di,ax
+    cmp ax,4000h
+    jae gpbOk64
+
+gpbNext64:
+    add bx,4
+    loop gpbLoop64
+;
+    or di,di
+    stc
+    jz gpbDone64
+
+gpbOk64:
+    clc
+
+gpbDone64:
+    ret
+GetPhysBitmap64  Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AllocateFromBitmap
+;
+;       DESCRIPTION:    Try to allocate from bitmap
+;
+;       PARAMETERS:     EBX     Position
+;                       EDX     Max postion
+;                       SI      Header offset
+;                       EDI     Bitmap offset
+;
+;       RETURNS:        EBX     New position
+;                       ECX     Allocated bit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateFromBitmap  Proc near
+
+afbLoop:
+    cmp ebx,edx
+    jae afbFail
+;    
+    mov eax,ds:[ebx+edi]
+    or eax,eax
+    jz afbNext
+;
+    bsf ecx,eax
+    lock btr ds:[ebx+edi],ecx
+    jc afbOk
+
+afbNext:
+    add bx,4
+    jmp afbLoop
+
+afbFail:
+    xor bx,bx
+    stc
+    jmp afbDone
+
+afbOk:
+    lock dec ds:[si].phys_bitmap_free
+;
+    mov ax,si
+    sub ax,phys_header_start
+    movzx eax,ax
+    shl eax,13
+    add ecx,eax
+;    
+    mov eax,ebx
+    shl eax,3
+    add ecx,eax
+    clc
+
+afbDone:
+    ret
+AllocateFromBitmap  Endp    
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AllocatePhys64
+;
+;       DESCRIPTION:    Allocate 64-bit memory
+;
+;       RETURNS:        EBX:EAX Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocatePhys64  Proc near
     push ds
     push ecx
+    push edx
     push esi
     push edi
 ;
     mov ax,phys_bit_sel
     mov ds,ax
+    xor ebx,ebx
+    xor esi,esi
 
-alloc_phys_retry_new:
-    movzx ebx,ds:phys_curr_header
-    mov esi,phys_header_start
+apRetry64:
+    mov bx,ds:phys_curr_header64
+    cmp bx,ds:phys_bitmap_count
+    jae apNew64
+;    
+    mov si,phys_header_start
     mov eax,ebx
     shl eax,2
-    add esi,eax
+    add si,ax
 ;    
     mov edi,phys_bitmap_start
     shl eax,10
     add edi,eax
 ;
-    mov ax,ds:[esi].phys_bitmap_free
+    mov ax,ds:[si].phys_bitmap_free
     or ax,ax
-    jz alloc_phys_new_bitmap
+    jz apNew64
 ;
-    movzx ebx,ds:[esi].phys_bitmap_pos
+    movzx ebx,ds:[si].phys_bitmap_pos
+    mov edx,1000h
+    call AllocateFromBitmap
+    jnc apOk64
 
-alloc_phys_retry:    
-    mov eax,ds:[ebx+edi]
-    or eax,eax
-    jz alloc_phys_next_dword
+apNew64:
+    call GetPhysBitmap64
+    jnc apNewNext64
 ;
-    bsf ecx,eax
-    lock btr ds:[ebx+edi],ecx
-    jc alloc_phys_ok
+    call GetPhysBitmap32
+    jc apNewFirst64
 
-alloc_phys_next_dword:
-    add bx,4
-    cmp bx,1000h
-    jne alloc_phys_in_range
+apNewNext64:
+    mov ax,si
+    sub ax,phys_header_start
+    shr ax,2
+    mov ds:phys_curr_header64,ax
+    jmp apRetry64
+
+apNewFirst64:
+    mov si,phys_header_start
+    mov ax,ds:[si].phys_bitmap_free
+    or ax,ax
+    jz apFail64
 ;
-    mov ds:[esi].phys_bitmap_pos,0
-    jmp alloc_phys_new_bitmap
-
-alloc_phys_in_range:
-    mov ds:[esi].phys_bitmap_pos,bx    
-    jmp alloc_phys_retry
-
-alloc_phys_new_bitmap:
-    call update_phys_bitmap
-    jc alloc_phys_done
-    jmp alloc_phys_retry_new
-
-alloc_phys_ok:
-    lock dec ds:[esi].phys_bitmap_free
+    mov ebx,200h
+    mov edx,1000h
+    mov edi,phys_bitmap_start
+    call AllocateFromBitmap
+    jnc apOk64
 ;
-    sub esi,phys_header_start
-    shl esi,13
-    add ecx,esi
-    shl ebx,3
-    add ecx,ebx
+    xor ebx,ebx    
+    mov edx,200h
+    mov edi,phys_bitmap_start
+    call AllocateFromBitmap
+    jnc apOk64
+
+apFail64:
+    stc
+    jnp apDone64
+
+apOk64:
+    mov ds:[si].phys_bitmap_pos,bx
+;    
     mov eax,ecx
     mov ebx,ecx
     shl eax,12
     shr ebx,20
     clc
 
-alloc_phys_done:    
+apDone64:
     pop edi
     pop esi
+    pop edx
     pop ecx
     pop ds
     ret
-allocate_phys   Endp
+AllocatePhys64  Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AllocatePhys32
+;
+;       DESCRIPTION:    Allocate 32-bit memory
+;
+;       RETURNS:        EBX:EAX Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocatePhys32  Proc near
+    push ds
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov ax,phys_bit_sel
+    mov ds,ax
+    xor ebx,ebx
+    xor esi,esi
+
+apRetry32:
+    mov bx,ds:phys_curr_header32
+    cmp bx,ds:phys_bitmap_count
+    jae apNew32
+;    
+    mov si,phys_header_start
+    mov eax,ebx
+    shl eax,2
+    add si,ax
+;    
+    mov edi,phys_bitmap_start
+    shl eax,10
+    add edi,eax
+;
+    mov ax,ds:[si].phys_bitmap_free
+    or ax,ax
+    jz apNew32
+;
+    movzx ebx,ds:[si].phys_bitmap_pos
+    mov edx,1000h
+    call AllocateFromBitmap
+    jnc apOk32
+
+apNew32:
+    call GetPhysBitmap32
+    jc apNewFirst32
+;
+    mov ax,si
+    sub ax,phys_header_start
+    shr ax,2
+    mov ds:phys_curr_header64,ax
+    jmp apRetry32
+
+apNewFirst32:
+    mov si,phys_header_start
+    mov ax,ds:[si].phys_bitmap_free
+    or ax,ax
+    jz apFail32
+;
+    mov ebx,200h
+    mov edx,1000h
+    mov edi,phys_bitmap_start
+    call AllocateFromBitmap
+    jnc apOk32
+;
+    xor ebx,ebx    
+    mov edx,200h
+    mov edi,phys_bitmap_start
+    call AllocateFromBitmap
+    jnc apOk32
+
+apFail32:
+    stc
+    jnp apDone32
+
+apOk32:
+    mov ds:[si].phys_bitmap_pos,bx
+;    
+    mov eax,ecx
+    shl eax,12
+    xor ebx,ebx
+    clc
+
+apDone32:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ds
+    ret
+AllocatePhys32  Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AllocatePhysDma
+;
+;       DESCRIPTION:    Allocate ISA DMA memory
+;
+;       RETURNS:        EBX:EAX Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocatePhysDma  Proc near
+    push ds
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov ax,phys_bit_sel
+    mov ds,ax
+;    
+    mov si,phys_header_start
+    mov ax,ds:[si].phys_bitmap_free
+    or ax,ax
+    jz apFailDma
+;
+    xor ebx,ebx    
+    mov edx,200h
+    mov edi,phys_bitmap_start
+    call AllocateFromBitmap
+    jnc apOkDma
+
+apFailDma:
+    stc
+    jnp apDoneDma
+
+apOkDma:
+    mov eax,ecx
+    shl eax,12
+    xor ebx,ebx
+    clc
+
+apDoneDma:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ds
+    ret
+AllocatePhysDma  Endp
+
 
 
 ; IN  DS:EDI     Bitmap
@@ -4355,12 +4649,9 @@ test_thread:
     mov ebx,1
     mov eax,2000h
     call free_phys
-;
-    mov ecx,5
-    call allocate_mult_phys
 
 tl:    
-    call allocate_phys
+    call AllocatePhys64
     jmp tl
     int 3
     

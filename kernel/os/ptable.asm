@@ -3195,7 +3195,8 @@ init_phys_bitmap32       Proc near
     or al,3
     mov ds:[edi],eax
 ;
-    mov ds:[esi].phys_curr_header,0
+    mov ds:[esi].phys_curr_header32,1
+    mov ds:[esi].phys_curr_header64,32
     mov ds:[esi].phys_bitmap_count,1
 ;
     mov ebx,esi
