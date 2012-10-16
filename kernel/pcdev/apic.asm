@@ -4049,33 +4049,197 @@ DisablePic  Endp
 
 test_thread_name    DB 'APIC Test',0
 
+update_phys_bitmap  Proc near
+    mov cx,ds:phys_bitmap_count
+    mov bx,phys_header_start
+    mov si,bx
+    xor di,di
+
+update_phys_bitmap_loop:
+    mov ax,ds:[bx].phys_bitmap_free
+    cmp ax,di
+    jbe update_phys_bitmap_next
+;
+    mov si,bx
+    mov di,ax
+
+update_phys_bitmap_next:
+    add bx,4
+    loop update_phys_bitmap_loop
+;
+    or di,di
+    stc
+    jz update_phys_bitmap_done
+;
+    sub si,phys_header_start
+    shr si,2
+    mov ds:phys_curr_header,si
+    clc
+
+update_phys_bitmap_done:
+    ret
+update_phys_bitmap  Endp
+
+; OUT EBX:EAX       Physical address
+
+allocate_phys   Proc near
+    push ds
+    push ecx
+    push esi
+    push edi
+;
+    mov ax,phys_bit_sel
+    mov ds,ax
+
+alloc_phys_retry_new:
+    movzx ebx,ds:phys_curr_header
+    mov esi,phys_header_start
+    mov eax,ebx
+    shl eax,2
+    add esi,eax
+;    
+    mov edi,phys_bitmap_start
+    shl eax,10
+    add edi,eax
+;
+    mov ax,ds:[esi].phys_bitmap_free
+    or ax,ax
+    jz alloc_phys_new_bitmap
+;
+    movzx ebx,ds:[esi].phys_bitmap_pos
+
+alloc_phys_retry:    
+    mov eax,ds:[ebx+edi]
+    or eax,eax
+    jz alloc_phys_next_dword
+;
+    bsf ecx,eax
+    lock btr ds:[ebx+edi],ecx
+    jc alloc_phys_ok
+
+alloc_phys_next_dword:
+    add bx,4
+    cmp bx,1000h
+    jne alloc_phys_in_range
+;
+    mov ds:[esi].phys_bitmap_pos,0
+    jmp alloc_phys_new_bitmap
+
+alloc_phys_in_range:
+    mov ds:[esi].phys_bitmap_pos,bx    
+    jmp alloc_phys_retry
+
+alloc_phys_new_bitmap:
+    call update_phys_bitmap
+    jc alloc_phys_done
+    jmp alloc_phys_retry_new
+
+alloc_phys_ok:
+    lock dec ds:[esi].phys_bitmap_free
+;
+    sub esi,phys_header_start
+    shl esi,13
+    add ecx,esi
+    shl ebx,3
+    add ecx,ebx
+    mov eax,ecx
+    mov ebx,ecx
+    shl eax,12
+    shr ebx,20
+    clc
+
+alloc_phys_done:    
+    pop edi
+    pop esi
+    pop ecx
+    pop ds
+    ret
+allocate_phys   Endp
+    
+
+; IN EBX:EAX       Physical address
+
+free_phys   Proc near
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push esi
+    push edi
+;
+    mov cx,phys_bit_sel
+    mov ds,cx
+;
+    mov ecx,ebx
+    shl ecx,20
+    mov esi,eax
+    shr esi,12
+    add ecx,esi
+    mov ebx,ecx
+    shr ebx,15
+    and ecx,7FFFh
+
+free_phys_retry:
+    cmp bx,ds:phys_bitmap_count
+    jb free_phys_do
+;
+    push es
+    push ecx
+;    
+    mov ax,ds
+    mov es,ax
+;
+    movzx edi,ds:phys_bitmap_count
+    shl edi,2
+    add edi,phys_header_start
+    mov ds:[edi].phys_bitmap_pos,0
+    mov ds:[edi].phys_bitmap_free,0
+;    
+    movzx edi,ds:phys_bitmap_count
+    shl edi,12
+    add edi,phys_bitmap_start
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;    
+    inc ds:phys_bitmap_count
+;    
+    pop ecx
+    pop es
+    jmp free_phys_retry
+    
+free_phys_do:
+    mov edi,ebx
+    shl edi,12
+    add edi,phys_bitmap_start
+    lock bts ds:[edi],ecx
+;
+    shl ebx,2
+    add ebx,phys_header_start
+    lock inc ds:[ebx].phys_bitmap_free
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+free_phys   Endp    
 
 test_thread:
     int 3
-    mov ax,system_data_sel
-    mov ds,ax
-    mov ax,phys_bit_sel
-    mov es,ax
-    mov edi,phys_bitmap_start
+    xor ebx,ebx
+    mov eax,800A000h
+    call free_phys
 ;
-    mov esi,ds:alloc_base
-    mov esi,1000h
+    mov ebx,1
+    mov eax,2000h
+    call free_phys
 
-alloc_loop:
-    cmp esi,ds:ram1_size
-    jae alloc_done
-;    
-    cmp esi,10000h
-    jae alloc_done
-;
-    mov ecx,esi
-    shr ecx,12
-    bts es:[edi],ecx
-;
-    add esi,1000h
-    jmp alloc_loop        
-
-alloc_done:
+tl:    
+    call allocate_phys
+    jmp tl
     int 3
     
 
