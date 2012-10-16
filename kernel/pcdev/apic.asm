@@ -4155,7 +4155,126 @@ alloc_phys_done:
     pop ds
     ret
 allocate_phys   Endp
+
+
+; IN  DS:EDI     Bitmap
+; IN  DX         Number of dwords wanted
+; OUT EDI        Position in bitmap
+
+alloc_mult_bitmap   Proc near
+    push bx
+    push cx
+    push esi
+;    
+    mov cx,400h
+    xor bx,bx    
+    mov esi,edi
+
+alloc_mult_bitmap_loop:
+    mov eax,ds:[edi]
+    cmp eax,-1
+    jne alloc_mult_bitmap_reset
+;
+    inc bx
+    cmp bx,dx
+    je alloc_mult_bitmap_ok
+;        
+    add edi,4
+    jmp alloc_mult_bitmap_next
     
+alloc_mult_bitmap_reset:    
+    add edi,4
+    mov esi,edi
+    xor bx,bx
+
+alloc_mult_bitmap_next:
+    loop alloc_mult_bitmap_loop
+;    
+    stc
+    jmp alloc_mult_bitmap_done
+
+alloc_mult_bitmap_ok:
+    mov edi,esi
+    clc
+
+alloc_mult_bitmap_done:
+    pop esi
+    pop cx
+    pop bx
+    ret    
+alloc_mult_bitmap   Endp
+
+; IN  EAX           Pages
+; OUT EBX:EAX       Physical address
+
+allocate_mult_phys   Proc near
+    push ds
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov ax,phys_bit_sel
+    mov ds,ax
+;
+    mov edx,ecx
+    dec edx
+    and dl,0E0h
+    shr edx,5
+    inc dx
+;
+    xor bx,bx
+    mov bp,ds:phys_bitmap_count
+
+alloc_mult_loop:
+    mov si,bx
+    shl si,2
+    add si,phys_header_start
+    cmp cx,ds:[si].phys_bitmap_free
+    ja alloc_mult_next
+;
+    movzx edi,bx
+    shl edi,12
+    add edi,phys_bitmap_start
+    call alloc_mult_bitmap
+    jc alloc_mult_next
+;    
+    int 3
+    xor eax,eax
+
+alloc_mult_mark_loop:    
+    lock btr ds:[edi],eax     
+    jnc alloc_mult_next
+;    
+    lock dec ds:[si].phys_bitmap_free
+    inc eax
+    cmp eax,ecx
+    jb alloc_mult_mark_loop
+;
+    jmp alloc_mult_ok
+
+alloc_mult_next:
+    inc bx
+    sub bp,1
+    jnz alloc_mult_loop
+;
+    stc
+    jmp alloc_mult_done
+
+alloc_mult_ok:
+    stc
+
+alloc_mult_done:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ds
+    ret
+allocate_mult_phys  Endp
+            
 
 ; IN EBX:EAX       Physical address
 
@@ -4236,6 +4355,9 @@ test_thread:
     mov ebx,1
     mov eax,2000h
     call free_phys
+;
+    mov ecx,5
+    call allocate_mult_phys
 
 tl:    
     call allocate_phys
