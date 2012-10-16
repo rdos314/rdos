@@ -66,6 +66,8 @@ video_mem_focus_linear	EQU 0FA600000h
 io_local_linear			EQU 0FA800000h
 video_mem_local_linear	EQU 0FAA00000h
 
+phys_bitmap_linear      EQU 0FB000000h
+
 phys_list_linear		EQU 0FB800000h
 phys_page_linear		EQU 0FC000000h
 

@@ -4049,18 +4049,28 @@ DisablePic  Endp
 
 test_thread_name    DB 'APIC Test',0
 
+
 test_thread:
     int 3
-    mov eax,1000h
-    AllocateBigLinear
-    mov ecx,eax
-    AllocateGdt
-    CreateDownSelector32
+    mov bx,phys_bit_sel
+    mov ecx,800000h
+    mov edx,phys_bitmap_linear
+    CreateDataSelector16
+    mov ds,bx
     mov es,bx
-    mov esi,ecx
-    not esi
-    mov al,es:[esi]
-    GetSelectorBaseSize
+;
+    mov ds:phys_curr_header,0
+    mov ds:phys_bitmap_count,1
+;
+    mov bx,phys_header_start
+    mov [bx].phys_bitmap_free,0
+    mov [bx].phys_bitmap_pos,0
+;    
+    mov ecx,400h
+    mov edi,phys_bitmap_start
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    int 3
     
 
 init_task   Proc far

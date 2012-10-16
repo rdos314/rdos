@@ -65,6 +65,7 @@ temp_sel			EQU 88h
 ;
 tss_data_sel        EQU 90h
 shutdown_task_gate	EQU 98h
+phys_bit_sel        EQU 0A0h
 ;
 acpi_data_sel       EQU 0A8h
 ;

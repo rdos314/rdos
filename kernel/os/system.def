@@ -168,6 +168,23 @@ system_size			DB ?
 
 system_seg	ENDS
 
+phys_header     STRUC
+
+phys_curr_header    DW ?
+phys_bitmap_count   DW ?
+
+phys_header     ENDS
+
+phys_bitmap_header   STRUC
+
+phys_bitmap_free     DW ?
+phys_bitmap_pos      DW ?
+
+phys_bitmap_header   ENDS
+
+phys_header_start    = 8
+phys_bitmap_start    = 2000h
+
 app_seg	STRUC
 
 app_next			        DW ?

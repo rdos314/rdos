@@ -3161,6 +3161,61 @@ create_paging_done32:
     ret
 create_paging32     ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           init_phys_bitmap32
+;
+;           DESCRIPTION:    init physical bitmaps, 32-bit version
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_phys_bitmap32       Proc near
+    mov ax,flat_sel
+    mov ds,ax
+    mov es,ax
+;    
+    call AllocateRam
+    mov edi,esi
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]    
+;        
+    mov eax,esi
+    mov edi,esi
+    xor ebx,ebx
+    or al,3
+    mov edx,phys_bitmap_linear
+    call local_set_sys_page_dir32
+;
+    call AllocateRam
+    mov eax,esi
+    or al,3
+    mov ds:[edi],eax
+;
+    mov ds:[esi].phys_curr_header,0
+    mov ds:[esi].phys_bitmap_count,1
+;
+    mov ebx,esi
+    add ebx,phys_header_start
+    mov [ebx].phys_bitmap_free,0
+    mov [ebx].phys_bitmap_pos,0
+;
+    call AllocateRam
+    mov eax,esi
+    or al,3
+    add edi,phys_bitmap_start SHR 10
+    mov ds:[edi],eax
+;
+    mov edi,esi
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    ret
+init_phys_bitmap32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3296,6 +3351,7 @@ init_physical32       Endp
 
 start_paging32    Proc near
     call create_paging32
+    call init_phys_bitmap32
     call init_physical32
 ;
     mov eax,cr0
