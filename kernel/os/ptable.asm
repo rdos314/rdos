@@ -3200,8 +3200,8 @@ init_phys_bitmap32       Proc near
 ;
     mov ebx,esi
     add ebx,phys_header_start
-    mov [ebx].phys_bitmap_free,0
-    mov [ebx].phys_bitmap_pos,0
+    mov ds:[ebx].phys_bitmap_free,0
+    mov ds:[ebx].phys_bitmap_pos,0
 ;
     call AllocateRam
     mov eax,esi
@@ -3213,7 +3213,27 @@ init_phys_bitmap32       Proc near
     mov ecx,400h
     xor eax,eax
     rep stos dword ptr es:[edi]
+    mov edi,esi
 ;
+    mov ax,system_data_sel
+    mov ds,ax
+
+init_phys_alloc_loop32:
+    mov esi,ds:alloc_base
+    cmp esi,ds:ram1_size
+    jae init_phys_alloc_done32
+;    
+    cmp esi,40000h
+    jae init_phys_alloc_done32
+;
+    call AllocateRam
+    mov ecx,esi
+    shr ecx,12
+    bts es:[edi],ecx
+    inc es:[ebx].phys_bitmap_free
+    jmp init_phys_alloc_loop32
+
+init_phys_alloc_done32:
     ret
 init_phys_bitmap32  Endp
 
@@ -3397,6 +3417,11 @@ start_paging_global_done32:
     mov bx,process_page_sel
     mov edx,process_page_linear
     mov ecx,400000h
+    call local_create_data_sel16
+;
+    mov bx,phys_bit_sel
+    mov ecx,800000h
+    mov edx,phys_bitmap_linear
     call local_create_data_sel16
     ret
 start_paging32    Endp
@@ -3989,6 +4014,11 @@ start_paging_global_done64:
     mov bx,process_page_sel
     mov edx,process_page_linear
     mov ecx,800000h
+    call local_create_data_sel16
+;
+    mov bx,phys_bit_sel
+    mov ecx,800000h
+    mov edx,phys_bitmap_linear
     call local_create_data_sel16
     ret
 start_paging64    Endp

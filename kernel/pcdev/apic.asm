@@ -4052,24 +4052,30 @@ test_thread_name    DB 'APIC Test',0
 
 test_thread:
     int 3
-    mov bx,phys_bit_sel
-    mov ecx,800000h
-    mov edx,phys_bitmap_linear
-    CreateDataSelector16
-    mov ds,bx
-    mov es,bx
-;
-    mov ds:phys_curr_header,0
-    mov ds:phys_bitmap_count,1
-;
-    mov bx,phys_header_start
-    mov [bx].phys_bitmap_free,0
-    mov [bx].phys_bitmap_pos,0
-;    
-    mov ecx,400h
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ax,phys_bit_sel
+    mov es,ax
     mov edi,phys_bitmap_start
-    xor eax,eax
-    rep stos dword ptr es:[edi]
+;
+    mov esi,ds:alloc_base
+    mov esi,1000h
+
+alloc_loop:
+    cmp esi,ds:ram1_size
+    jae alloc_done
+;    
+    cmp esi,10000h
+    jae alloc_done
+;
+    mov ecx,esi
+    shr ecx,12
+    bts es:[edi],ecx
+;
+    add esi,1000h
+    jmp alloc_loop        
+
+alloc_done:
     int 3
     
 
