@@ -4505,14 +4505,22 @@ apDoneDma:
     pop ds
     ret
 AllocatePhysDma  Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AllocateMultBitmap
+;
+;       DESCRIPTION:    Allocate multiple entries in bitmap
+;
+;       PARAMETERS:     DS:EDI      Bitmap
+;                       DX          Number of dwords wanted
+;
+;       RETURNS:        EDI         Position in bitmap
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
-; IN  DS:EDI     Bitmap
-; IN  DX         Number of dwords wanted
-; OUT EDI        Position in bitmap
-
-alloc_mult_bitmap   Proc near
+AllocateMultBitmap   Proc near
     push bx
     push cx
     push esi
@@ -4521,51 +4529,198 @@ alloc_mult_bitmap   Proc near
     xor bx,bx    
     mov esi,edi
 
-alloc_mult_bitmap_loop:
+ambLoop:
     mov eax,ds:[edi]
     cmp eax,-1
-    jne alloc_mult_bitmap_reset
+    jne ambReset
 ;
     inc bx
     cmp bx,dx
-    je alloc_mult_bitmap_ok
+    je ambOk
 ;        
     add edi,4
-    jmp alloc_mult_bitmap_next
+    jmp ambNext
     
-alloc_mult_bitmap_reset:    
+ambReset:    
     add edi,4
     mov esi,edi
     xor bx,bx
 
-alloc_mult_bitmap_next:
-    loop alloc_mult_bitmap_loop
+ambNext:
+    loop ambLoop
 ;    
     stc
-    jmp alloc_mult_bitmap_done
+    jmp ambDone
 
-alloc_mult_bitmap_ok:
+ambOk:
     mov edi,esi
     clc
 
-alloc_mult_bitmap_done:
+ambDone:
     pop esi
     pop cx
     pop bx
     ret    
-alloc_mult_bitmap   Endp
+AllocateMultBitmap   Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetMultPhys64
+;
+;       DESCRIPTION:    Get multiple entries, 64-bit version
+;
+;       PARAMETERS:     CX          Number of entries wanted
+;                       DX          Number of dwords needed
+;
+;       RETURNS:        BX          Bitmap #
+;                       SI          Header offset
+;                       EDI         Offset in bitmap         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; IN  EAX           Pages
-; OUT EBX:EAX       Physical address
+GetMultPhys64   Proc near
+    push bp
+;    
+    mov bx,32
+    mov bp,ds:phys_bitmap_count
+    sub bp,bx
+    jbe gmpDone64
 
-allocate_mult_phys   Proc near
+gmpLoop64:
+    mov si,bx
+    shl si,2
+    add si,phys_header_start
+    cmp cx,ds:[si].phys_bitmap_free
+    ja gmpNext64
+;
+    movzx edi,bx
+    shl edi,12
+    add edi,phys_bitmap_start
+    call AllocateMultBitmap
+    jnc gmpDone64
+
+gmpNext64:
+    inc bx
+    sub bp,1
+    jnz gmpLoop64
+;
+    stc
+
+gmpDone64:
+    pop bp
+    ret
+GetMultPhys64  Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetMultPhys32
+;
+;       DESCRIPTION:    Get multiple entries, 32-bit version
+;
+;       PARAMETERS:     CX          Number of entries wanted
+;                       DX          Number of dwords needed
+;
+;       RETURNS:        BX          Bitmap #
+;                       SI          Header offset
+;                       EDI         Offset in bitmap         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMultPhys32   Proc near
+    push bp
+;    
+    mov bp,ds:phys_bitmap_count
+    cmp bp,32
+    jbe gmpCountOk32
+;
+    mov bp,32
+
+gmpCountOk32:    
+    mov bx,1
+    sub bp,bx
+    jbe gmpDone32
+
+gmpLoop32:
+    mov si,bx
+    shl si,2
+    add si,phys_header_start
+    cmp cx,ds:[si].phys_bitmap_free
+    ja gmpNext32
+;
+    movzx edi,bx
+    shl edi,12
+    add edi,phys_bitmap_start
+    call AllocateMultBitmap
+    jnc gmpDone32
+
+gmpNext32:
+    inc bx
+    sub bp,1
+    jnz gmpLoop32
+;
+    stc
+
+gmpDone32:
+    pop bp
+    ret
+GetMultPhys32  Endp
+
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetMultPhysDma
+;
+;       DESCRIPTION:    Get multiple entries, DMA version
+;
+;       PARAMETERS:     CX          Number of entries wanted
+;                       DX          Number of dwords needed
+;
+;       RETURNS:        BX          Bitmap #
+;                       SI          Header offset
+;                       EDI         Offset in bitmap         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMultPhysDma   Proc near
+    xor bx,bx
+    mov si,phys_header_start
+    cmp cx,ds:[si].phys_bitmap_free
+    ja gmpFailDma
+;
+    mov edi,phys_bitmap_start
+    call AllocateMultBitmap
+    jmp gmpDoneDma
+
+gmpFailDma:
+    stc
+
+gmpDoneDma:
+    ret
+GetMultPhysDma  Endp
+
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AllocateMultPhys64
+;
+;       DESCRIPTION:    Allocate multiple entries, 64-bit version
+;
+;       PARAMETERS:     ECX         Number of entries wanted
+;
+;       RETURNS:        EBX:EAX     Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateMultPhys64   Proc near
     push ds
-    push ecx
     push edx
     push esi
-    push edi
-    push ebp
-;
+    push edi    
+;    
     mov ax,phys_bit_sel
     mov ds,ax
 ;
@@ -4574,58 +4729,53 @@ allocate_mult_phys   Proc near
     and dl,0E0h
     shr edx,5
     inc dx
-;
-    xor bx,bx
-    mov bp,ds:phys_bitmap_count
 
-alloc_mult_loop:
-    mov si,bx
-    shl si,2
-    add si,phys_header_start
-    cmp cx,ds:[si].phys_bitmap_free
-    ja alloc_mult_next
+ampRetry:
+    call GetMultPhys64
+    jnc ampTake64
 ;
-    movzx edi,bx
-    shl edi,12
-    add edi,phys_bitmap_start
-    call alloc_mult_bitmap
-    jc alloc_mult_next
-;    
-    int 3
+    call GetMultPhys32
+    jnc ampTake64
+;
+    call GetMultPhysDma
+    jc ampDone64
+
+ampTake64:            
     xor eax,eax
 
-alloc_mult_mark_loop:    
+ampMark64:    
     lock btr ds:[edi],eax     
-    jnc alloc_mult_next
+    jnc ampRetry
 ;    
     lock dec ds:[si].phys_bitmap_free
     inc eax
     cmp eax,ecx
-    jb alloc_mult_mark_loop
+    jb ampMark64
 ;
-    jmp alloc_mult_ok
+    mov ax,si
+    sub ax,phys_header_start
+    movzx eax,ax
+    shl eax,13
+    mov edx,eax
+;    
+    mov eax,edi
+    and ax,0FFFh
+    shl eax,3
+    add edx,eax
+;    
+    mov eax,edx
+    mov ebx,edx
+    shl eax,12
+    shr ebx,20
+    clc
 
-alloc_mult_next:
-    inc bx
-    sub bp,1
-    jnz alloc_mult_loop
-;
-    stc
-    jmp alloc_mult_done
-
-alloc_mult_ok:
-    stc
-
-alloc_mult_done:
-    pop ebp
+ampDone64:
     pop edi
     pop esi
     pop edx
-    pop ecx
     pop ds
-    ret
-allocate_mult_phys  Endp
-            
+    ret   
+AllocateMultPhys64  Endp     
 
 ; IN EBX:EAX       Physical address
 
@@ -4701,15 +4851,27 @@ test_thread:
     int 3
     xor ebx,ebx
     mov eax,800A000h
+
+tfl:    
     call free_phys
+    add eax,1000h
+    cmp eax,900A000h
+    jne tfl
 ;
+    int 3
     mov ebx,1
     mov eax,2000h
     call free_phys
 
-tl:    
-    call AllocatePhys64
-    jmp tl
+tl1:  
+    mov ecx,57h  
+    call AllocateMultPhys64
+    jnc tl1
+
+tl2:
+    call AllocatePhys64    
+    jnc tl2
+;    
     int 3
     
 
