@@ -4273,21 +4273,55 @@ apNewFirst64:
     mov edx,1000h
     mov edi,phys_bitmap_start
     call AllocateFromBitmap
-    jnc apOk64
+    jnc apOk64_0
 ;
     xor ebx,ebx    
     mov edx,200h
     mov edi,phys_bitmap_start
     call AllocateFromBitmap
-    jnc apOk64
+    jnc apOk64_0
 
 apFail64:
     stc
-    jnp apDone64
+    jmp apDone64
+
+apOk64_0:
+    mov ax,si
+    sub ax,phys_header_start
+    shr ax,2
+    mov ds:phys_curr_header64,ax
 
 apOk64:
-    mov ds:[si].phys_bitmap_pos,bx
+    cmp bx,ds:[si].phys_bitmap_pos
+    je apRetAds64
 ;    
+    mov ds:[si].phys_bitmap_pos,bx
+;
+    mov ax,ds:phys_curr_header64
+    cmp ax,32
+    jae apRetAds64
+;
+    push ecx
+    call GetPhysBitmap64
+    pop ecx
+    jnc apUpdateHeader64
+;
+    mov ax,ds:phys_curr_header64
+    or ax,ax
+    jnz apRetAds64
+;
+    push ecx
+    call GetPhysBitmap32
+    pop ecx
+    jc apRetAds64
+
+apUpdateHeader64:    
+    mov ax,si
+    sub ax,phys_header_start
+    shr ax,2
+    mov ds:phys_curr_header64,ax
+
+apRetAds64:    
     mov eax,ecx
     mov ebx,ecx
     shl eax,12
@@ -4369,21 +4403,44 @@ apNewFirst32:
     mov edx,1000h
     mov edi,phys_bitmap_start
     call AllocateFromBitmap
-    jnc apOk32
+    jnc apOk32_0
 ;
     xor ebx,ebx    
     mov edx,200h
     mov edi,phys_bitmap_start
     call AllocateFromBitmap
-    jnc apOk32
+    jnc apOk32_0
 
 apFail32:
     stc
-    jnp apDone32
+    jmp apDone32
+
+apOk32_0:
+    mov ax,si
+    sub ax,phys_header_start
+    shr ax,2
+    mov ds:phys_curr_header32,ax
 
 apOk32:
-    mov ds:[si].phys_bitmap_pos,bx
+    cmp bx,ds:[si].phys_bitmap_pos
+    je apRetAds32
 ;    
+    mov ds:[si].phys_bitmap_pos,bx
+    mov ax,ds:phys_curr_header32
+    or ax,ax
+    jnz apRetAds32
+;
+    push ecx
+    call GetPhysBitmap32
+    pop ecx
+    jc apRetAds32
+;
+    mov ax,si
+    sub ax,phys_header_start
+    shr ax,2
+    mov ds:phys_curr_header32,ax
+
+apRetAds32:    
     mov eax,ecx
     shl eax,12
     xor ebx,ebx
@@ -4432,7 +4489,7 @@ AllocatePhysDma  Proc near
 
 apFailDma:
     stc
-    jnp apDoneDma
+    jmp apDoneDma
 
 apOkDma:
     mov eax,ecx
