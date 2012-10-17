@@ -4849,10 +4849,19 @@ ampDone32:
     pop ds
     ret   
 AllocateMultPhys32  Endp     
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddPhys
+;
+;       DESCRIPTION:    Add physical entry
+;
+;       PARAMETERS:     EBX:EAX     Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; IN EBX:EAX       Physical address
-
-free_phys   Proc near
+AddPhys   Proc near
     push ds
     push eax
     push ebx
@@ -4872,9 +4881,9 @@ free_phys   Proc near
     shr ebx,15
     and ecx,7FFFh
 
-free_phys_retry:
+apRetry:
     cmp bx,ds:phys_bitmap_count
-    jb free_phys_do
+    jb apDo
 ;
     push es
     push ecx
@@ -4899,9 +4908,9 @@ free_phys_retry:
 ;    
     pop ecx
     pop es
-    jmp free_phys_retry
+    jmp apRetry
     
-free_phys_do:
+apDo:
     mov edi,ebx
     shl edi,12
     add edi,phys_bitmap_start
@@ -4918,23 +4927,125 @@ free_phys_do:
     pop eax
     pop ds
     ret
-free_phys   Endp    
+AddPhys Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FreePhys
+;
+;       DESCRIPTION:    Free physical entry
+;
+;       PARAMETERS:     EBX:EAX     Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreePhys   Proc near
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push esi
+    push edi
+;
+    mov cx,phys_bit_sel
+    mov ds,cx
+;
+    mov ecx,ebx
+    shl ecx,20
+    mov esi,eax
+    shr esi,12
+    add ecx,esi
+    mov ebx,ecx
+    shr ebx,15
+    and ecx,7FFFh
+;
+    cmp bx,ds:phys_bitmap_count
+    jb fpDo
+;
+    int 3
+
+fpDo:
+    mov edi,ebx
+    shl edi,12
+    add edi,phys_bitmap_start
+    lock bts ds:[edi],ecx
+;
+    shl ebx,2
+    add ebx,phys_header_start
+    lock inc ds:[ebx].phys_bitmap_free
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+FreePhys   Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GET_FREE_PHYSICAL_MEM
+;
+;           DESCRIPTION:    Get free physical memory
+;
+;           PARAMETERS:     EDX:EAX         # of free bytes
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetFreePhys   PROC near
+    push ds
+    push ecx
+    push esi
+    push edi
+;
+    mov ax,phys_bit_sel
+    mov ds,ax
+;
+    xor eax,eax
+    xor edx,edx
+;    
+    mov si,phys_header_start
+    mov cx,ds:phys_bitmap_count
+
+gfpLoop:
+    movzx edi,ds:[si].phys_bitmap_free
+    shl edi,12
+    add eax,edi
+    adc edx,0
+;
+    add si,4
+    loop gfpLoop
+;    
+    pop edi
+    pop esi
+    pop ecx
+    pop ds
+    ret
+GetFreePhys   ENDP
+
 
 test_thread:
     int 3
+    call GetFreePhys
+;    
     xor ebx,ebx
     mov eax,800A000h
 
 tfl:    
-    call free_phys
+    call AddPhys
     add eax,1000h
     cmp eax,900A000h
     jne tfl
 ;
     int 3
+    call GetFreePhys
+;    
     mov ebx,1
     mov eax,2000h
-    call free_phys
+    call AddPhys
 
 tl1:  
     mov ecx,57h  
@@ -4942,10 +5053,13 @@ tl1:
     jnc tl1
 
 tl2:
+    call GetFreePhys
+;
     call AllocatePhys64    
     jnc tl2
 ;    
     int 3
+    call GetFreePhys
     
 
 init_task   Proc far
