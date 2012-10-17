@@ -4730,7 +4730,7 @@ AllocateMultPhys64   Proc near
     shr edx,5
     inc dx
 
-ampRetry:
+ampRetry64:
     call GetMultPhys64
     jnc ampTake64
 ;
@@ -4745,7 +4745,7 @@ ampTake64:
 
 ampMark64:    
     lock btr ds:[edi],eax     
-    jnc ampRetry
+    jnc ampRetry64
 ;    
     lock dec ds:[si].phys_bitmap_free
     inc eax
@@ -4776,6 +4776,79 @@ ampDone64:
     pop ds
     ret   
 AllocateMultPhys64  Endp     
+
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AllocateMultPhys32
+;
+;       DESCRIPTION:    Allocate multiple entries, 32-bit version
+;
+;       PARAMETERS:     ECX         Number of entries wanted
+;
+;       RETURNS:        EBX:EAX     Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateMultPhys32   Proc near
+    push ds
+    push edx
+    push esi
+    push edi    
+;    
+    mov ax,phys_bit_sel
+    mov ds,ax
+;
+    mov edx,ecx
+    dec edx
+    and dl,0E0h
+    shr edx,5
+    inc dx
+
+ampRetry32:
+    call GetMultPhys32
+    jnc ampTake32
+;
+    call GetMultPhysDma
+    jc ampDone32
+
+ampTake32:            
+    xor eax,eax
+
+ampMark32:    
+    lock btr ds:[edi],eax     
+    jnc ampRetry32
+;    
+    lock dec ds:[si].phys_bitmap_free
+    inc eax
+    cmp eax,ecx
+    jb ampMark32
+;
+    mov ax,si
+    sub ax,phys_header_start
+    movzx eax,ax
+    shl eax,13
+    mov edx,eax
+;    
+    mov eax,edi
+    and ax,0FFFh
+    shl eax,3
+    add edx,eax
+;    
+    mov eax,edx
+    mov ebx,edx
+    shl eax,12
+    shr ebx,20
+    clc
+
+ampDone32:
+    pop edi
+    pop esi
+    pop edx
+    pop ds
+    ret   
+AllocateMultPhys32  Endp     
 
 ; IN EBX:EAX       Physical address
 
@@ -4865,7 +4938,7 @@ tfl:
 
 tl1:  
     mov ecx,57h  
-    call AllocateMultPhys64
+    call AllocateMultPhys32
     jnc tl1
 
 tl2:
