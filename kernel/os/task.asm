@@ -194,7 +194,6 @@ code    SEGMENT byte public use16 'CODE'
 
     extrn SetupMpPatch:near
 
-    extrn set_page_dir_proc:word
     extrn get_sys_page_dir_proc:word
 
     extrn init_process_proc:word
@@ -2978,7 +2977,7 @@ load_reload_cr3_loop:
     mov edx,io_focus_linear
     add edx,edi
     call cs:get_sys_page_dir_proc    
-    call cs:set_page_dir_proc
+    SetPageDir
 ;    
     add edi,esi
     loop load_reload_cr3_loop
