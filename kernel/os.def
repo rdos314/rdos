@@ -534,5 +534,10 @@ get_sys_page_dir_nr         = 451
 
 notify_init_process_nr      = 452
 notify_create_process_nr    = 453
+notify_init_tasking_nr      = 454
+notify_thread_created_nr    = 455
+notify_thread_exit_nr       = 456
+notify_process_created_nr   = 457
+notify_process_exit_nr      = 458
 
 osgate_entries				= 480
