@@ -53,7 +53,7 @@ ENDIF
     extrn init_pretask_traps:near
 
     extrn start_paging32:near
-    extrn start_paging64:near
+;    extrn start_paging64:near
     extrn init_physical:near
     extrn init_paging_trap:near
     extrn init_physical_gates:near

@@ -125,6 +125,8 @@ get_thread_page_entry_proc      DW OFFSET local_get_thread_page_entry32
 set_thread_page_entry_proc      DW OFFSET local_set_thread_page_entry32
 get_thread_page_dir_proc        DW OFFSET local_get_thread_page_dir32
 
+IFDEF PAE
+
 p64_start:
 init_process_p64                DW OFFSET local_init_process64
 create_process_p64              DW OFFSET local_create_process64
@@ -157,6 +159,8 @@ get_thread_page_entry_p64       DW OFFSET local_get_thread_page_entry64
 set_thread_page_entry_p64       DW OFFSET local_set_thread_page_entry64
 get_thread_page_dir_p64         DW OFFSET local_get_thread_page_dir64
 p64_end:
+
+ENDIF
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1827,6 +1831,8 @@ local_get_thread_page_dir32    Proc near
     ret
 local_get_thread_page_dir32    Endp
 
+IFDEF PAE
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2411,6 +2417,8 @@ local_get_thread_page_dir64    Proc near
     int 3
     ret
 local_get_thread_page_dir64    Endp
+
+ENDIF
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3427,6 +3435,8 @@ start_paging_global_done32:
     ret
 start_paging32    Endp
 
+IFDEF PAE
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -4023,6 +4033,8 @@ start_paging_global_done64:
     call local_create_data_sel16
     ret
 start_paging64    Endp
+
+ENDIF
 
 code    ENDS
 

@@ -530,5 +530,6 @@ get_page_dir_nr             = 447
 set_sys_page_entry_nr       = 448
 copy_sys_page_entries_nr    = 449
 get_sys_page_entry_nr       = 450
+get_sys_page_dir_nr         = 451
 
 osgate_entries				= 480
