@@ -194,7 +194,6 @@ code    SEGMENT byte public use16 'CODE'
 
     extrn SetupMpPatch:near
 
-    extrn get_page_dir_attrib_proc:word
     extrn get_page_dir_proc:word
     extrn set_page_dir_proc:word
     extrn get_sys_page_dir_proc:word
@@ -792,15 +791,13 @@ notify_time_drift  Endp
 
     public init_task
 
-    extrn local_allocate_fixed_system_mem:near
-
 init_task       PROC near
     pusha
     push ds
 ;
     mov bx,task_sel
     mov eax,SIZE task_seg
-    call local_allocate_fixed_system_mem
+    AllocateFixedSystemMem
 ;
     mov ax,task_sel
     mov ds,ax
@@ -2975,7 +2972,7 @@ load_not_flush:
     je load_cr3_ok
 
 load_reload_cr3:    
-    call cs:get_page_dir_attrib_proc
+    GetPageDirAttrib
     xor edi,edi
 
 load_reload_cr3_loop:
