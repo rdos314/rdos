@@ -194,9 +194,6 @@ code    SEGMENT byte public use16 'CODE'
 
     extrn SetupMpPatch:near
 
-    extrn init_process_proc:word
-    extrn create_process_proc:word
-
     extrn free_handle_process:near
 
     extrn trap_init_tasking:near    
@@ -9904,7 +9901,7 @@ create_process  PROC far
     mov ax,es
     mov ds,ax
     call init_default_tss
-    call cs:create_process_proc
+    NotifyCreateProcess
     mov ax,[ebp].cr_mode
     test ax,1
     jz create_mod_prot
@@ -10251,7 +10248,7 @@ init_first_process      Proc near
     mov ax,es
     mov ds,ax
     call init_first_tss
-    call cs:create_process_proc
+    NotifyCreateProcess
     mov ds:p_tss_es,fs
     GetCore
     mov fs:ps_null_thread,es
@@ -10273,7 +10270,7 @@ init_first_process      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_first_process_callback:
-    call cs:init_process_proc
+    NotifyInitProcess
     call start_processor_null_threads
     call trap_init_tasking
     sti
