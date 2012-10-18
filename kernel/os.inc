@@ -466,6 +466,18 @@ SetupTrapGate  MACRO
 
 ;;;;;;;;; PAGING ;;;;;;;;;;;;;;;;;;;;
 
+NotifyInitProcess MACRO
+    OsGate notify_init_process_nr
+                    ENDM
+
+NotifyCreateProcess MACRO
+    OsGate notify_create_process_nr
+                    ENDM
+
+NotifyFreeProcess MACRO
+    OsGate notify_free_process_nr
+                    ENDM
+
 ;       EDX         LINEAR ADDRESS
 ;       EBX:EAX     PAGE ENTRY
 GetPageEntry MACRO

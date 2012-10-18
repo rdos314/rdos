@@ -532,4 +532,8 @@ copy_sys_page_entries_nr    = 449
 get_sys_page_entry_nr       = 450
 get_sys_page_dir_nr         = 451
 
+notify_init_process_nr      = 452
+notify_create_process_nr    = 453
+notify_free_process_nr      = 454
+
 osgate_entries				= 480
