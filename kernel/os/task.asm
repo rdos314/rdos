@@ -196,12 +196,6 @@ code    SEGMENT byte public use16 'CODE'
 
     extrn free_handle_process:near
 
-    extrn trap_init_tasking:near    
-    extrn trap_create_thread:near
-    extrn trap_terminate_thread:near
-    extrn trap_create_process:near
-    extrn trap_terminate_process:near
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -2818,8 +2812,7 @@ thread_create:
     push ds
     push es
 ;
-    push cs
-    call trap_create_thread
+    NotifyThreadCreated
 ;
     pop es
     pop ds
@@ -9711,7 +9704,7 @@ no_free_ss:
     call fword ptr ds:p_free_proc
 
 terminate_app_handled:
-    call trap_terminate_thread
+    NotifyThreadExit
     jmp cleanup_thread
 
 terminate_proc:
@@ -9746,9 +9739,9 @@ terminate_free_pd:
     FreeMem    
 
 terminate_pd_done:
-    call trap_terminate_thread
+    NotifyThreadExit
     call free_handle_process
-    call trap_terminate_process
+    NotifyProcessExit
     jmp cleanup_process
 
 
@@ -10054,7 +10047,7 @@ create_process_callback:
     GetThread
     mov fs,ax
     push ds
-    call trap_create_process
+    NotifyProcessCreated
     pop ds
     mov es,ds:cm_process
     mov ax,ds:cm_mode
@@ -10272,7 +10265,7 @@ init_first_process      Endp
 init_first_process_callback:
     NotifyInitProcess
     call start_processor_null_threads
-    call trap_init_tasking
+    NotifyInitTasking
     sti
     jmp null_thread0
     

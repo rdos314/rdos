@@ -73,8 +73,6 @@ code    SEGMENT byte public use16 'CODE'
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public trap_create_thread
-
 trap_create_thread      PROC near
     sti
     push cx
@@ -107,7 +105,7 @@ trap_create_thread_loop:
     jnz trap_create_thread_loop
 trap_create_thread_done:
     pop cx
-    retf
+    ret
 trap_create_thread      ENDP
 
 
@@ -121,8 +119,6 @@ trap_create_thread      ENDP
 ;           PARAMETERS:         
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public trap_terminate_thread
 
 trap_terminate_thread   PROC near
     push cx
@@ -170,8 +166,6 @@ trap_terminate_thread   ENDP
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public trap_create_process
-
 trap_create_process     PROC near
     sti
     push cx
@@ -201,7 +195,6 @@ trap_create_process_done:
     pop cx
 ;
     xor ebp,ebp
-    push cs
     call trap_create_thread
     ret
 trap_create_process     ENDP
@@ -217,8 +210,6 @@ trap_create_process     ENDP
 ;           PARAMETERS:         
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public trap_terminate_process
 
 trap_terminate_process  PROC near
     call cs:free_process_proc
@@ -256,8 +247,6 @@ trap_terminate_process  ENDP
 ;           PARAMETERS:         
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public trap_init_tasking
     
 trap_init_tasking       PROC near
     InitTrapGates
