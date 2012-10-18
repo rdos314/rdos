@@ -194,7 +194,6 @@ code    SEGMENT byte public use16 'CODE'
 
     extrn SetupMpPatch:near
 
-    extrn get_page_dir_proc:word
     extrn set_page_dir_proc:word
     extrn get_sys_page_dir_proc:word
 
@@ -2959,7 +2958,7 @@ load_not_flush:
     mov edi,ebx
 ;
     mov edx,io_focus_linear
-    call cs:get_page_dir_proc    
+    GetPageDir
 ;    
     cmp esi,eax
     jne load_reload_cr3
