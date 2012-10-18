@@ -38,6 +38,7 @@ INCLUDE ..\pcdev\apic.inc
 INCLUDE proc.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\apicheck.inc
+include ..\wait.inc
 
 
 MSR_SYSENTER_CS  = 174h
@@ -126,6 +127,22 @@ timer_free          DW ?
 timer_entries       DB 256 * SIZE timer_struc DUP(?)
 
 task_seg    ENDS
+
+proc_handle_seg     STRUC
+
+ph_base handle_header <>
+
+ph_lib_sel          DW ?
+ph_proc_sel         DW ?
+
+proc_handle_seg     ENDS
+
+proc_end_wait_header    STRUC
+
+pew_obj             wait_obj_header <>
+pew_proc_sel        DW ?
+
+proc_end_wait_header    ENDS
 
 IFDEF __WASM__
     .686p
@@ -907,6 +924,36 @@ timer_free_list_create:
     xor cl,cl
     mov ax,wait_for_signal_timeout_nr
     RegisterOsGate
+;
+    mov si,OFFSET create_proc_handle
+    mov di,OFFSET create_proc_handle_name
+    xor cl,cl
+    mov ax,create_proc_handle_nr
+    RegisterOsGate
+;
+    mov si,OFFSET deref_proc_handle
+    mov di,OFFSET deref_proc_handle_name
+    xor cl,cl
+    mov ax,deref_proc_handle_nr
+    RegisterOsGate
+;
+    mov si,OFFSET free_proc_handle
+    mov di,OFFSET free_proc_handle_name
+    xor dx,dx
+    mov ax,free_proc_handle_nr
+    RegisterBimodalUserGate
+;
+    mov si,OFFSET get_proc_exit_code
+    mov di,OFFSET get_proc_exit_code_name
+    xor dx,dx
+    mov ax,get_proc_exit_code_nr
+    RegisterBimodalUserGate
+;
+    mov si,OFFSET add_wait_for_proc_end
+    mov di,OFFSET add_wait_for_proc_end_name
+    xor dx,dx
+    mov ax,add_wait_for_proc_end_nr
+    RegisterBimodalUserGate
 ;
     mov si,OFFSET soft_reset
     mov di,OFFSET soft_reset_name
@@ -8836,6 +8883,316 @@ update_time     PROC far
     pop ds
     retf32
 update_time     ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CreateProcHandle
+;
+;           DESCRIPTION:    Create a process handle
+;
+;       PARAMETERS:     AX      Lib selector
+;               DX      Process descriptor
+;
+;       RETURNS:    BX      Process handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_proc_handle_name DB 'Create Process Handle',0
+
+create_proc_handle      PROC far
+    push ds
+    push cx
+    mov cx,SIZE proc_handle_seg
+    AllocateHandle
+    mov [ebx].ph_lib_sel,ax
+    mov [ebx].ph_proc_sel,dx
+    mov [ebx].hh_sign,PROCESS_HANDLE
+    mov bx,[ebx].hh_handle
+;
+    mov ds,dx
+    inc ds:pd_ref_count
+;       
+    pop cx
+    pop ds
+    retf32
+create_proc_handle  Endp    
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           DerefProcHandle
+;
+;           DESCRIPTION:    Deref a process handle
+;
+;       PARAMETERS:     BX      Process handle
+;
+;       RETURNS:    AX      Lib selector
+;               DX      Process descriptor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+deref_proc_handle_name  DB 'Deref Process Handle',0
+
+deref_proc_handle       PROC far
+    push ds
+    push ebx
+;    
+    mov ax,PROCESS_HANDLE
+    DerefHandle
+    jc deref_proc_handle_done
+;
+    mov ax,[ebx].ph_lib_sel
+    mov dx,[ebx].ph_proc_sel
+    clc
+
+deref_proc_handle_done:
+    pop ebx
+    pop ds
+    retf32
+deref_proc_handle   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           FreeProcHandle
+;
+;           DESCRIPTION:    Free a process handle
+;
+;       PARAMETERS:     BX      Process handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_proc_handle_name   DB 'Free Process Handle',0
+
+free_proc_handle    PROC far
+    push ds
+    push ax
+    push ebx
+    push dx
+;    
+    mov ax,PROCESS_HANDLE
+    DerefHandle
+    jc free_proc_handle_done
+;
+    mov dx,[ebx].ph_proc_sel
+    FreeHandle
+;       
+    mov ds,dx
+    sub ds:pd_ref_count,1
+    jnz free_proc_handle_done
+;
+    push es
+    mov ax,ds
+    mov es,ax
+    xor ax,ax
+    mov ds,ax
+    FreeMem    
+    pop es
+    clc
+
+free_proc_handle_done:
+    pop dx
+    pop ebx
+    pop ax
+    pop ds
+    retf32
+free_proc_handle    Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetProcExitCode
+;
+;           DESCRIPTION:    Get process exit code
+;
+;       PARAMETERS:     BX      Process handle
+;
+;       RETURNS:    AX      Exit code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_proc_exit_code_name DB 'Get Process Exit Code',0
+
+get_proc_exit_code      PROC far
+    push ds
+    push ebx
+;    
+    mov ax,PROCESS_HANDLE
+    DerefHandle
+    mov ax,-1
+    jc get_proc_exit_done
+;
+    mov ds,[ebx].ph_proc_sel
+    mov ax,ds:pd_exit_code
+    clc
+
+get_proc_exit_done:
+    pop ebx
+    pop ds
+    retf32
+get_proc_exit_code   Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StartWaitForProcEnd
+;
+;           DESCRIPTION:    Start a wait for process end event
+;
+;           PARAMETERS:         ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_wait_for_proc_end PROC far
+    push ds
+    push eax
+;
+    ClearSignal
+    mov ax,es:pew_proc_sel
+    mov ds,ax
+    mov ds:pd_wait,es
+;
+    mov ax,ds:pd_proc_sel
+    or ax,ax
+    jnz start_wait_done
+;
+    mov ds:pd_wait,0
+    SignalWait
+
+start_wait_done:    
+    pop eax
+    pop ds
+    ret
+start_wait_for_proc_end Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StopWaitForProcEnd
+;
+;           DESCRIPTION:    Stop a wait for process end event
+;
+;           PARAMETERS:         ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_wait_for_proc_end  PROC far
+    push ds
+    push eax
+;
+    mov ax,es:pew_proc_sel
+    mov ds,ax
+    mov ds:pd_wait,0
+;    
+    pop eax
+    pop ds
+    ret
+stop_wait_for_proc_end Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           DummyClearProcEnd
+;
+;           DESCRIPTION:    Clear process end event
+;
+;           PARAMETERS:         ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dummy_clear_proc_end    PROC far
+    ret
+dummy_clear_proc_end Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           IsProcEndIdle
+;
+;           DESCRIPTION:    Check if proc end is idle
+;
+;           PARAMETERS:         ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_proc_end_idle    PROC far
+    push ds
+    push eax
+;
+    mov ax,es:pew_proc_sel
+    mov ds,ax
+    mov ax,ds:pd_proc_sel
+    or ax,ax
+    clc
+    jne is_idle_done
+;
+    stc
+
+is_idle_done:    
+    pop eax
+    pop ds
+    ret
+is_proc_end_idle Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AddWaitForProcEnd
+;
+;           DESCRIPTION:    Add a wait for process end
+;
+;           PARAMETERS:         AX      Process handle
+;               BX      Wait handle
+;               ECX     Signalled ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_proc_end_name      DB 'Add Wait For Process End',0
+
+add_wait_tab:
+aw0 DD OFFSET start_wait_for_proc_end,      kernel_code
+aw1 DD OFFSET stop_wait_for_proc_end,       kernel_code
+aw2 DD OFFSET dummy_clear_proc_end,     kernel_code
+aw3 DD OFFSET is_proc_end_idle,         kernel_code
+
+add_wait_for_proc_end   PROC far
+    push ds
+    push es
+    push eax
+    push dx
+    push edi
+;
+    push bx
+    mov bx,ax
+    DerefProcHandle
+    pop bx
+    jc add_wait_done
+;
+    push ax
+    mov ax,cs
+    mov es,ax
+    mov ax,SIZE proc_end_wait_header - SIZE wait_obj_header
+    mov edi,OFFSET add_wait_tab
+    AddWait
+    pop ax
+    jc add_wait_done
+;    
+    mov es:pew_proc_sel,dx
+
+add_wait_done:
+    pop edi
+    pop dx
+    pop eax
+    pop es
+    pop ds
+    retf32
+add_wait_for_proc_end   ENDP
+
 
 code    ENDS
 
