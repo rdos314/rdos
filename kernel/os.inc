@@ -474,10 +474,6 @@ NotifyCreateProcess MACRO
     OsGate notify_create_process_nr
                     ENDM
 
-NotifyFreeProcess MACRO
-    OsGate notify_free_process_nr
-                    ENDM
-
 ;       EDX         LINEAR ADDRESS
 ;       EBX:EAX     PAGE ENTRY
 GetPageEntry MACRO

@@ -194,12 +194,6 @@ init_page_table     PROC near
     mov ax,notify_create_process_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET notify_free_process
-    mov edi,OFFSET notify_free_process_name
-    xor cl,cl
-    mov ax,notify_free_process_nr
-    RegisterOsGate
-;
     mov esi,OFFSET get_page_entry
     mov edi,OFFSET get_page_entry_name
     xor cl,cl
@@ -2478,22 +2472,6 @@ notify_create_process       Proc far
     call cs:create_process_proc
     retf32
 notify_create_process       Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           NotifyFreeProcess
-;
-;           DESCRIPTION:    Notify free process
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_free_process_name  DB 'Notify Free Process',0
-
-notify_free_process       Proc far
-    call cs:free_process_proc
-    retf32
-notify_free_process       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
