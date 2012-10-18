@@ -460,6 +460,86 @@ hook_init_tasking       PROC far
     pop ds
     retf32
 hook_init_tasking       ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           NotifyThreadCreated
+;
+;           DESCRIPTION:    Notify thread created
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_thread_created_name  DB 'Notify Thread Created',0
+
+notify_thread_created       PROC far
+    call trap_create_thread
+    retf32
+notify_thread_created       ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           NotifyThreadExit
+;
+;           DESCRIPTION:    Notify thread exit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_thread_exit_name  DB 'Notify Thread Exit',0
+
+notify_thread_exit       PROC far
+    call trap_terminate_thread
+    retf32
+notify_thread_exit       ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           NotifyProcessCreated
+;
+;           DESCRIPTION:    Notify process created
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_process_created_name  DB 'Notify Process Created',0
+
+notify_process_created       PROC far
+    call trap_create_process
+    retf32
+notify_process_created       ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           NotifyProcessExit
+;
+;           DESCRIPTION:    Notify process exit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_process_exit_name  DB 'Notify Process Exit',0
+
+notify_process_exit       PROC far
+    call trap_terminate_process
+    retf32
+notify_process_exit       ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           NotifyInitTasking
+;
+;           DESCRIPTION:    Notify init tasking
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_init_tasking_name  DB 'Notify Init Tasking',0
+
+notify_init_tasking       PROC far
+    call trap_init_tasking
+    retf32
+notify_init_tasking       ENDP
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -744,6 +824,36 @@ init_thread     PROC near
     mov di,OFFSET hook_init_tasking_name
     xor cl,cl
     mov ax,hook_init_tasking_nr
+    RegisterOsGate
+;
+    mov si,OFFSET notify_thread_created
+    mov di,OFFSET notify_thread_created_name
+    xor cl,cl
+    mov ax,notify_thread_created_nr
+    RegisterOsGate
+;
+    mov si,OFFSET notify_thread_exit
+    mov di,OFFSET notify_thread_exit_name
+    xor cl,cl
+    mov ax,notify_thread_exit_nr
+    RegisterOsGate
+;
+    mov si,OFFSET notify_process_created
+    mov di,OFFSET notify_process_created_name
+    xor cl,cl
+    mov ax,notify_process_created_nr
+    RegisterOsGate
+;
+    mov si,OFFSET notify_process_exit
+    mov di,OFFSET notify_process_exit_name
+    xor cl,cl
+    mov ax,notify_process_exit_nr
+    RegisterOsGate
+;
+    mov si,OFFSET notify_init_tasking
+    mov di,OFFSET notify_init_tasking_name
+    xor cl,cl
+    mov ax,notify_init_tasking_nr
     RegisterOsGate
 ;
     mov si,OFFSET sim_sti
