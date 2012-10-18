@@ -230,6 +230,12 @@ init_page_table     PROC near
     mov ax,set_page_dir_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET get_sys_page_dir
+    mov edi,OFFSET get_sys_page_dir_name
+    xor cl,cl
+    mov ax,get_sys_page_dir_nr
+    RegisterOsGate
+;
     mov esi,OFFSET set_sys_page_dir
     mov edi,OFFSET set_sys_page_dir_name
     xor cl,cl
@@ -2577,6 +2583,26 @@ set_page_dir       Proc far
     call cs:set_page_dir_proc
     retf32
 set_page_dir       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetSysPageDir
+;
+;           DESCRIPTION:    Get sys physical page dir for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;                           
+;           RETURNS:        EBX:EAX     physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_sys_page_dir_name  DB 'Get Sys Page Dir',0
+
+get_sys_page_dir       Proc far
+    call cs:get_sys_page_dir_proc
+    retf32
+get_sys_page_dir       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

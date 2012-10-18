@@ -194,8 +194,6 @@ code    SEGMENT byte public use16 'CODE'
 
     extrn SetupMpPatch:near
 
-    extrn get_sys_page_dir_proc:word
-
     extrn init_process_proc:word
     extrn create_process_proc:word
     extrn free_process_proc:word
@@ -2951,7 +2949,7 @@ load_a_task:
 
 load_not_flush:
     mov edx,io_focus_linear
-    call cs:get_sys_page_dir_proc
+    GetSysPageDir
 ;    
     mov esi,eax
     mov edi,ebx
@@ -2976,7 +2974,7 @@ load_reload_cr3:
 load_reload_cr3_loop:
     mov edx,io_focus_linear
     add edx,edi
-    call cs:get_sys_page_dir_proc    
+    GetSysPageDir
     SetPageDir
 ;    
     add edi,esi
