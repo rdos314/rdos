@@ -144,7 +144,6 @@ code    SEGMENT byte public use16 'CODE'
     extrn get_page_dir_proc:word
     extrn set_page_dir_proc:word
     extrn get_sys_page_dir_proc:word
-    extrn free_page_entries_proc:word
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -6151,22 +6150,6 @@ FlushProcessTlbMultiple    Proc near
     pop ds
     ret
 FlushProcessTlbMultiple    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FlushGlobalTLB
-;
-;           DESCRIPTION:    Flush global TLB entries
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public local_flush_global_tlb
-    
-local_flush_global_tlb    Proc near
-    call cs:flush_global_tlb_proc
-    ret
-local_flush_global_tlb  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
