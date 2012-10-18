@@ -196,7 +196,6 @@ code    SEGMENT byte public use16 'CODE'
 
     extrn init_process_proc:word
     extrn create_process_proc:word
-    extrn free_process_proc:word
 
     extrn free_handle_process:near
 
@@ -9753,7 +9752,6 @@ terminate_pd_done:
     call trap_terminate_thread
     call free_handle_process
     call trap_terminate_process
-    call cs:free_process_proc
     jmp cleanup_process
 
 

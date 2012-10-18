@@ -58,6 +58,7 @@ thread_data_seg ENDS
 code    SEGMENT byte public use16 'CODE'
 
     extrn init_process_mem:near
+    extrn free_process_proc:word
 
     assume cs:code
 
@@ -220,6 +221,7 @@ trap_create_process     ENDP
     public trap_terminate_process
 
 trap_terminate_process  PROC near
+    call cs:free_process_proc
     push cx
     mov ax,proc_data_sel
     mov ds,ax
