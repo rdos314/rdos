@@ -78,8 +78,6 @@ code    SEGMENT byte use16 public 'CODE'
 
     extrn get_task_lock:near
 
-    extrn get_thread:near
-
     extrn prot_exception:near
     extrn virt_exception:near
 

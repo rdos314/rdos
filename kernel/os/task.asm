@@ -3742,8 +3742,6 @@ stThreadOk:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-    public start_processor_null_threads
-
 start_processor_null_threads    Proc near
     mov ax,system_data_sel
     mov ds,ax
@@ -3827,8 +3825,6 @@ start_processor_free:
 start_processor_null_threads    Endp
 
 null_base   DB 'Null'
-
-    public null_thread0
 
 null_thread0:
     mov ax,core_data_sel
@@ -6628,7 +6624,7 @@ stop_core_timer      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public init_first_thread
-
+    
 init_first_thread:
     mov eax,cr0
     or al,8
@@ -6719,8 +6715,6 @@ preempt_timer_combined:
 ;                                                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public wake_new
-
 wake_new    PROC near
     pushf
     mov dx,es
@@ -6750,8 +6744,6 @@ wake_new    ENDP
 ;           DESCRIPTION:    Free resources for current thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public cleanup_thread
     
 cleanup_thread:
     call SkipCurrentThread
@@ -6784,8 +6776,6 @@ cleanup_thread:
 ;           DESCRIPTION:    Free resources for current process
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public cleanup_process
     
 cleanup_process:
     call SkipCurrentThread
@@ -8030,8 +8020,6 @@ cleanup_futex32 Endp
 ;           PARAMETERS:         AX          Thread
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public get_thread
 
 get_thread      PROC far
     push ds
@@ -10258,7 +10246,7 @@ init_first_tss  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public init_first_process
-
+    
 init_first_process      Proc near
     mov ax,0002h
     push ax
