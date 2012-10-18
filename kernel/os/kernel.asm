@@ -784,12 +784,12 @@ prot_init:
     call init_mem_sels
     call init_tsc
     call init_state
-    call init_task
     call init_thread
     call init_handle
     call init_int
     call init_tss_int
     call init_trap_vectors
+    call init_task
     call init_device    
 ;
     mov bx,system_data_sel
