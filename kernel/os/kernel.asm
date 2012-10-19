@@ -65,7 +65,6 @@ ENDIF
     extrn init_gdt:near
     extrn init_idt:near
     extrn init_state:near
-    extrn init_task:near
     extrn init_thread:near
     extrn init_handle:near
     extrn init_mem_sels:near
@@ -779,7 +778,6 @@ prot_init:
     call init_handle
     call init_int
     call init_trap_vectors
-    call init_task
     call init_device    
 ;
     mov bx,system_data_sel

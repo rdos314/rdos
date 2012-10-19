@@ -194,6 +194,8 @@ code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
+filler DB 4096 DUP(5Ah)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -8433,10 +8435,10 @@ is_proc_end_idle Endp
 add_wait_for_proc_end_name      DB 'Add Wait For Process End',0
 
 add_wait_tab:
-aw0 DD OFFSET start_wait_for_proc_end,      kernel_code
-aw1 DD OFFSET stop_wait_for_proc_end,       kernel_code
-aw2 DD OFFSET dummy_clear_proc_end,     kernel_code
-aw3 DD OFFSET is_proc_end_idle,         kernel_code
+aw0 DD OFFSET start_wait_for_proc_end,      task_code_sel
+aw1 DD OFFSET stop_wait_for_proc_end,       task_code_sel
+aw2 DD OFFSET dummy_clear_proc_end,         task_code_sel
+aw3 DD OFFSET is_proc_end_idle,             task_code_sel
 
 add_wait_for_proc_end   PROC far
     push ds
@@ -9784,9 +9786,7 @@ start_tasking:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public init_task
-
-init_task       PROC near
+init       PROC far
     pusha
     push ds
 ;
@@ -10303,9 +10303,9 @@ timer_free_list_create:
     pop ds
     popa
     ret
-init_task       ENDP
+init       ENDP
 
 code    ENDS
 
-    END
+    END init
 
