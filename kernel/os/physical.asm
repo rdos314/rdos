@@ -1141,22 +1141,6 @@ fillup_physical_mem   Endp
 
 init_physical   PROC near
     call fillup_physical_mem
-;    
-    mov ax,system_data_sel
-    mov ds,ax
-;
-    InitSpinlock ds:phys_spinlock
-    mov bx,phys_page_sel
-    mov edx,phys_page_linear
-    mov ecx,ds:phys_free_pages
-    shl ecx,2
-    call local_create_data_sel16
-;
-    mov bx,phys_list_sel
-    mov ecx,ds:phys_free_pages
-    shl ecx,2
-    mov edx,phys_list_linear
-    call local_create_data_sel16
     ret
 init_physical   ENDP
 
