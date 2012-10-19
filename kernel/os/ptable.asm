@@ -45,7 +45,6 @@ ENDIF
     extrn local_create_data_sel16:near
     extrn local_allocate_physical:near
     extrn local_free_physical:near
-    extrn local_flush_process_tlb:near
 
     extrn AllocateRam:near
     extrn AllocateMultipleRam:near
@@ -673,7 +672,7 @@ sppok32:
     jz sppDone
 ;
     mov cx,1
-    call local_flush_process_tlb    
+    FlushTlb
 
 sppDone:
     pop edx
@@ -1292,7 +1291,7 @@ fpeMark32:
 ;    
     pop edx
     pop ecx
-    call local_flush_process_tlb    
+    FlushTlb
 
 fpeDone32:
     popad
@@ -1349,7 +1348,7 @@ fgpeMark32:
 ;    
     pop edx
     pop ecx
-    call local_flush_process_tlb    
+    FlushTlb
 
 fgpeDone32:
     popad
@@ -1397,7 +1396,7 @@ cpeLoop32:
 ;    
     pop edx
     pop ecx
-    call local_flush_process_tlb    
+    FlushTlb
 
 cpeDone32:
     popad
@@ -1489,10 +1488,10 @@ mpeLoop32:
 ;    
     pop ecx
     pop edx
-    call local_flush_process_tlb    
+    FlushTlb
 ;
     pop edx
-    call local_flush_process_tlb    
+    FlushTlb
 
 mpeDone32:
     popad

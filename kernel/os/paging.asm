@@ -41,8 +41,6 @@ INCLUDE system.inc
     extrn prot_exception:near
     extrn virt_exception:near
 
-    extrn local_flush_process_tlb:near
-
     extrn get_page_entry_proc:word
     extrn set_page_entry_proc:word
     extrn get_page_dir_proc:word
@@ -628,7 +626,7 @@ set_inv_next:
 ;
     pop cx
     pop edx
-    call local_flush_process_tlb
+    FlushTlb
     
 set_inv_done:    
     pop edx
@@ -710,7 +708,7 @@ set_readwrite_next:
 ;
     pop cx
     pop edx
-    call local_flush_process_tlb
+    FlushTlb
 
 set_readwrite_done:
     pop edx

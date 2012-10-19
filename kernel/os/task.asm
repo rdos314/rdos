@@ -230,8 +230,7 @@ unlock_user_section_proc    DW OFFSET UnlockUserSectionSingle
 lock_futex_proc             DW OFFSET LockFutexSingle
 unlock_futex_proc           DW OFFSET UnlockFutexSingle
 
-flush_global_tlb_proc       DW OFFSET FlushTlb386
-flush_process_tlb_proc      DW OFFSET FlushTlb386
+flush_tlb_proc              DW OFFSET FlushTlb386
 
 preempt_reload_proc         DW OFFSET TimerPreemptReload
 
@@ -3225,8 +3224,7 @@ start_processor_null_threads    Proc near
 ;
     mov ax,kernel_patch_sel
     mov ds,ax
-    mov ds:flush_global_tlb_proc,OFFSET FlushTlb486
-    mov ds:flush_process_tlb_proc,OFFSET FlushTlb486
+    mov ds:flush_tlb_proc,OFFSET FlushTlb486
 ;    
     GetCoreCount
     cmp cx,1
@@ -3247,8 +3245,7 @@ start_processor_null_threads    Proc near
     mov ds:unlock_user_section_proc,OFFSET UnlockUserSectionMultiple
     mov ds:lock_futex_proc,OFFSET LockFutexMultiple
     mov ds:unlock_futex_proc,OFFSET UnlockFutexMultiple
-    mov ds:flush_global_tlb_proc,OFFSET FlushGlobalTlbMultiple
-    mov ds:flush_process_tlb_proc,OFFSET FlushProcessTlbMultiple
+    mov ds:flush_tlb_proc,OFFSET FlushTlbMultiple
 
 start_locks_ok:
     mov ecx,stack0_size
@@ -5456,63 +5453,16 @@ SignalTlbCores  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FlushGlobalTlbMultiple
+;           NAME:           FlushTlbMultiple
 ;
-;           DESCRIPTION:    Flush global TLB entries, multiple processor version
-;
-;           PARAMETERS:     CX      Number of entries
-;                           EDX     Linear address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FlushGlobalTlbMultiple    Proc near
-    push ds
-    push es
-    push fs
-    pushad
-;
-    mov ax,task_sel
-    mov ds,ax
-    mov ax,flat_sel
-    mov es,ax
-;
-    call TryLockCore
-    pushf
-;
-    call AllocateTlb
-    mov es:[edx].th_page_count,cx
-    mov es:[edx].th_phys_count,0
-;    
-    call LockTlb
-    call SetupGlobalTlbCores
-    call InsertTlb
-    call UnlockTlb
-    call SignalTlbCores
-;
-    popf
-    call UpdateTlbList
-    call TryUnlockCore
-;
-    popad
-    pop fs
-    pop es
-    pop ds
-    ret
-FlushGlobalTlbMultiple    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FlushProcessTlbMultiple
-;
-;           DESCRIPTION:    Flush process TLB entries, multiple processor version
+;           DESCRIPTION:    Flush TLB entries, multiple processor version
 ;
 ;           PARAMETERS:     CX      Number of entries
 ;                           EDX     Linear address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FlushProcessTlbMultiple    Proc near
+FlushTlbMultiple    Proc near
     push ds
     push es
     push fs
@@ -5545,23 +5495,23 @@ FlushProcessTlbMultiple    Proc near
     pop es
     pop ds
     ret
-FlushProcessTlbMultiple    Endp
+FlushTlbMultiple    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FlushProcessTLB
+;           NAME:           FlushTLB
 ;
-;           DESCRIPTION:    Flush process TLB entries
+;           DESCRIPTION:    Flush TLB entries
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public local_flush_process_tlb
+flush_tlb_name DB 'Flush Tlb', 0
 
-local_flush_process_tlb Proc near
-    call cs:flush_process_tlb_proc
-    ret
-local_flush_process_tlb Endp
+flush_tlb Proc far
+    call cs:flush_tlb_proc
+    retf32
+flush_tlb Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -9948,6 +9898,12 @@ timer_free_list_create:
     mov edi,OFFSET notify_flush_tlb_name
     xor cl,cl
     mov ax,notify_flush_tlb_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET flush_tlb
+    mov edi,OFFSET flush_tlb_name
+    xor cl,cl
+    mov ax,flush_tlb_nr
     RegisterOsGate
 ;
     mov si,OFFSET irq_schedule

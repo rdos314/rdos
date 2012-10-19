@@ -1297,6 +1297,10 @@ NotifyFlushTlb    MACRO
     OsGate notify_flush_tlb_nr
                         ENDM
 
+FlushTlb    MACRO
+    OsGate flush_tlb_nr
+                        ENDM
+
 ;    DS:SI       Thread
 ;    AX          Status to thread
 Wake MACRO
