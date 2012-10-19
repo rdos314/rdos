@@ -9851,6 +9851,11 @@ timer_free_list_create:
     mov bx,ax
     loop timer_free_list_create
 ;
+    mov bx,cs
+    GetSelectorBaseSize
+    mov bx,kernel_patch_sel
+    CreateDataSelector32
+;
     mov ax,cs
     mov ds,ax
     mov es,ax

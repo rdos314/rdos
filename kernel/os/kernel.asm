@@ -768,11 +768,6 @@ prot_init:
     call init_physical_gates
     call move_adapters
     call setup_global_paging
-;
-    mov bx,cs
-    call local_get_selector_base_size
-    mov bx,kernel_patch_sel
-    call local_create_data_sel16
 ;    
     call init_page_table
     call init_paging_gates
