@@ -457,7 +457,7 @@ reload_preempt_timer_nr     = 399
 start_sys_preempt_timer_nr  = 400
 reload_sys_preempt_timer_nr = 401
 
-flush_tlb_nr                = 402
+notify_flush_tlb_nr         = 402
 
 is_valid_usb_pipe_sel_nr    = 403
 

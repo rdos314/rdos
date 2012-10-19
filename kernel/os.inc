@@ -1293,8 +1293,8 @@ UpdatePstate  MACRO
     OsGate update_pstate_nr
                         ENDM
 
-FlushTlb    MACRO
-    OsGate flush_tlb_nr
+NotifyFlushTlb    MACRO
+    OsGate notify_flush_tlb_nr
                         ENDM
 
 ;    DS:SI       Thread

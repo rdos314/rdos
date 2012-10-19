@@ -3184,7 +3184,7 @@ tlb_flush_int:
     xor eax,eax
     mov ds:APIC_EOI,eax
 ;
-    FlushTlb    
+    NotifyFlushTlb    
 ;    
     popad
     pop fs

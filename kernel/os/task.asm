@@ -5280,15 +5280,15 @@ UpdateTlbList   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FlushTlb
+;           NAME:           NotifyFlushTlb
 ;
 ;           DESCRIPTION:    Flush request from core ISR (81)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-flush_tlb_name  DB 'Flush TLB', 0
+notify_flush_tlb_name  DB 'Notify Flush TLB', 0
 
-flush_tlb   Proc far
+notify_flush_tlb   Proc far
     mov ax,task_sel
     mov ds,ax
     mov ax,flat_sel
@@ -5298,7 +5298,7 @@ flush_tlb   Proc far
     call UpdateTlbList
     call TryUnlockCore
     retf32
-flush_tlb   Endp
+notify_flush_tlb   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -9944,10 +9944,10 @@ timer_free_list_create:
     mov ax,preempt_timer_expired_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET flush_tlb
-    mov edi,OFFSET flush_tlb_name
+    mov esi,OFFSET notify_flush_tlb
+    mov edi,OFFSET notify_flush_tlb_name
     xor cl,cl
-    mov ax,flush_tlb_nr
+    mov ax,notify_flush_tlb_nr
     RegisterOsGate
 ;
     mov si,OFFSET irq_schedule

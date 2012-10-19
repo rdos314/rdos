@@ -457,7 +457,7 @@
 #define osgate_start_sys_preempt_timer 400
 #define osgate_reload_sys_preempt_timer 401
 
-#define osgate_flush_tlb 402
+#define osgate_notify_flush_tlb 402
 
 #define osgate_is_valid_usb_pipe_sel 403
 
@@ -538,6 +538,8 @@
 #define osgate_notify_thread_exit 456
 #define osgate_notify_process_created 457
 #define osgate_notify_process_exit 458
+
+#define osgate_get_scheduler_lock_counter 459
 
 
 
@@ -1000,7 +1002,7 @@
 #define OsGate_start_sys_preempt_timer 0x3E 0x67 0x9a 144 1 0 0 2 0
 #define OsGate_reload_sys_preempt_timer 0x3E 0x67 0x9a 145 1 0 0 2 0
 
-#define OsGate_flush_tlb 0x3E 0x67 0x9a 146 1 0 0 2 0
+#define OsGate_notify_flush_tlb 0x3E 0x67 0x9a 146 1 0 0 2 0
 
 #define OsGate_is_valid_usb_pipe_sel 0x3E 0x67 0x9a 147 1 0 0 2 0
 
@@ -1081,4 +1083,6 @@
 #define OsGate_notify_thread_exit 0x3E 0x67 0x9a 200 1 0 0 2 0
 #define OsGate_notify_process_created 0x3E 0x67 0x9a 201 1 0 0 2 0
 #define OsGate_notify_process_exit 0x3E 0x67 0x9a 202 1 0 0 2 0
+
+#define OsGate_get_scheduler_lock_counter 0x3E 0x67 0x9a 203 1 0 0 2 0
 
