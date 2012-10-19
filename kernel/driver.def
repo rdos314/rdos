@@ -59,8 +59,6 @@ double_tss_data_sel EQU 50h
 shutdown_pretask_gate	EQU 68h
 ;
 process_sel			EQU 70h
-phys_list_sel		EQU 78h
-phys_page_sel		EQU 80h
 temp_sel			EQU 88h
 ;
 tss_data_sel        EQU 90h
