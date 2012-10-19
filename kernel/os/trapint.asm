@@ -168,7 +168,7 @@ leave_code_patch    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupMpPatch
+;           NAME:           SetupSmpPatch
 ;
 ;           DESCRIPTION:    Setup multiprocessor patch support
 ;
@@ -176,9 +176,9 @@ leave_code_patch    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public SetupMpPatch
+setup_smp_patch_name DB 'Setup SMP Patch', 0
     
-SetupMpPatch    Proc near
+setup_smp_patch    Proc far
     push ds
     push ax
 ;
@@ -189,8 +189,8 @@ SetupMpPatch    Proc near
 ;
     pop ax
     pop ds
-    ret
-SetupMpPatch    Endp
+    retf32
+setup_smp_patch    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2407,6 +2407,12 @@ init_avail_irq_loop:
     mov edi,OFFSET segment_not_present_name
     xor cl,cl
     mov ax,segment_not_present_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET setup_smp_patch
+    mov edi,OFFSET setup_smp_patch_name
+    xor cl,cl
+    mov ax,setup_smp_patch_nr
     RegisterOsGate
     ret
 init_trap_vectors       ENDP

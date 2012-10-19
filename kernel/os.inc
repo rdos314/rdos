@@ -1181,6 +1181,10 @@ leave_section_done:
 
 ;;;;;;;;;;; MULTITASKING ;;;;;;;;;;;;;;;;
 
+SetupSmpPatch MACRO
+    OsGate setup_smp_patch_nr
+                    ENDM
+
 StartTasking MACRO
     OsGate start_tasking_nr
                     ENDM

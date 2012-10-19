@@ -542,5 +542,6 @@ notify_process_exit_nr      = 458
 
 get_scheduler_lock_counter_nr = 459
 flush_tlb_nr                = 460
+setup_smp_patch_nr          = 461
 
 osgate_entries				= 480
