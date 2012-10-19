@@ -3795,6 +3795,7 @@ create_core    Proc far
     mov es:ps_id,ax    
 ;
     xor ax,ax
+    mov ds,ax
     mov bx,OFFSET ps_ptab
     mov es:ps_prio_act,bx
 ;
@@ -6058,14 +6059,18 @@ init_first_thread:
     IsValidOsGate
     jc preempt_timer_combined
 ;
+    StartSysTimer
     mov bx,task_data_sel
     mov ds,bx
     mov ds,ds:patch_sel
-;
-    StartSysTimer
     mov ds:update_tics,eax
+    xor ax,ax
+    mov ds,ax
 ;
     StartPreemptTimer
+    mov bx,task_data_sel
+    mov ds,bx
+    mov ds,ds:patch_sel
     mov ds:preempt_reload_proc,OFFSET PreemptReload
 ;
     GetSystemTime
@@ -6090,11 +6095,10 @@ init_first_thread:
     jmp LoadThread
         
 preempt_timer_combined:        
+    StartSysPreemptTimer
     mov bx,task_data_sel
     mov ds,bx
     mov ds,ds:patch_sel
-;
-    StartSysPreemptTimer
     mov ds:update_tics,eax
 ;
     mov ax,cs
