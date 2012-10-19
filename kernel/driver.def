@@ -80,7 +80,6 @@ proc_data_sel		EQU 0E0h
 swap_data_sel       EQU 0E8h
 ;
 task_sel			EQU 0F0h
-io_bitmap_sel		EQU 0F8h
 ;
 event_def_sel		EQU 100h
 event_list_sel		EQU 108h
@@ -99,11 +98,11 @@ random_proc_sel     EQU 140h
 ;
 term_code_sel		EQU 14Bh
 state_data_sel		EQU 150h
+io_bitmap_sel		EQU 158h
 ;
 multicore_code_sel  EQU 160h
 multicore_data_sel  EQU 168h
 ;
-kernel_patch_sel    EQU 170h
 kernel_tss			EQU 178h
 virt_tss			EQU 180h
 kernel_stack		EQU 188h

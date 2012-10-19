@@ -121,6 +121,8 @@ tlb_remain_linear   DD ?
 
 futex_section       section_typ <>
 
+patch_sel           DW ?
+
 timer_spinlock      DW ?
 timer_head          DW ?
 timer_free          DW ?
@@ -749,8 +751,9 @@ notify_time_drift       Proc far
     push ecx
     push edx
 ;    
-    mov cx,kernel_patch_sel
-    mov es,cx    
+    mov cx,task_sel
+    mov es,cx
+    mov es,es:patch_sel
 ;
     sub es:time_diff,eax
     sbb es:time_diff,0
@@ -3168,8 +3171,9 @@ DeleteProcess   Endp
 system_thread_name  DB 'System', 0
 
 system_thread_pr:
-    mov ax,kernel_patch_sel
+    mov ax,task_sel
     mov ds,ax
+    mov ds,ds:patch_sel
     GetThread
     mov ds:system_thread,ax
 ;
@@ -3222,8 +3226,9 @@ start_processor_null_threads    Proc near
     cmp al,3
     jbe start_locks_ok
 ;
-    mov ax,kernel_patch_sel
+    mov ax,task_sel
     mov ds,ax
+    mov ds,ds:patch_sel
     mov ds:flush_tlb_proc,OFFSET FlushTlb486
 ;    
     GetCoreCount
@@ -3797,8 +3802,9 @@ create_core    Proc far
     mov ds,bx
     mov ds:[0],bx
 ;
-    mov ax,kernel_patch_sel
+    mov ax,task_sel
     mov ds,ax
+    mov ds,ds:patch_sel
     mov ax,ds:core_count
     mov si,ax
     add si,si
@@ -6070,8 +6076,9 @@ init_first_thread:
     IsValidOsGate
     jc preempt_timer_combined
 ;
-    mov bx,kernel_patch_sel
+    mov bx,task_sel
     mov ds,bx
+    mov ds,ds:patch_sel
 ;
     StartSysTimer
     mov ds:update_tics,eax
@@ -6101,8 +6108,9 @@ init_first_thread:
     jmp LoadThread
         
 preempt_timer_combined:        
-    mov bx,kernel_patch_sel
+    mov bx,task_sel
     mov ds,bx
+    mov ds,ds:patch_sel
 ;
     StartSysPreemptTimer
     mov ds:update_tics,eax
@@ -8162,8 +8170,9 @@ update_time_name    DB 'Update Time',0
 update_time     PROC far
     push ds
     push bx
-    mov bx,kernel_patch_sel
+    mov bx,task_sel
     mov ds,bx
+    mov ds,ds:patch_sel
     cli
     mov ds:time_diff,eax
     mov ds:time_diff+4,edx
@@ -9853,8 +9862,9 @@ timer_free_list_create:
 ;
     mov bx,cs
     GetSelectorBaseSize
-    mov bx,kernel_patch_sel
+    AllocateGdt
     CreateDataSelector32
+    mov ds:patch_sel,bx
 ;
     mov ax,cs
     mov ds,ax
