@@ -107,11 +107,11 @@ system_seg	STRUC
 
 dummy_pad1          DW ?
 
-phys_free_pages		DD ?
+dummy_phys_free_pages		DD ?
 
-free_phys_list		DD ?
-free_dma_phys_list	DD ?
-unused_phys_list	DD ?
+dummy_free_phys_list		DD ?
+dummy_free_dma_phys_list	DD ?
+dummy_unused_phys_list	DD ?
 
 ram64_size          DD ?,?
 
