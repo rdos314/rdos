@@ -194,8 +194,6 @@ code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
-    extrn free_handle_process:near
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -9185,7 +9183,6 @@ terminate_free_pd:
 
 terminate_pd_done:
     NotifyThreadExit
-    call free_handle_process
     NotifyProcessExit
     jmp cleanup_process
 
