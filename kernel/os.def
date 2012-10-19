@@ -74,7 +74,6 @@ free_physical_nr            = 73
 create_process_nr			= 74
 
 init_trap_gates_nr          = 75
-init_tss_gates_nr           = 76
 
 setup_int_gate_nr           = 77
 setup_trap_gate_nr          = 78

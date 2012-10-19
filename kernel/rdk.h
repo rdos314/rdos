@@ -74,7 +74,6 @@
 #define osgate_create_process 74
 
 #define osgate_init_trap_gates 75
-#define osgate_init_tss_gates 76
 
 #define osgate_setup_int_gate 77
 #define osgate_setup_trap_gate 78
@@ -528,6 +527,17 @@
 #define osgate_get_page_dir_attrib 446
 #define osgate_get_page_dir 447
 #define osgate_set_sys_page_entry 448
+#define osgate_copy_sys_page_entries 449
+#define osgate_get_sys_page_entry 450
+#define osgate_get_sys_page_dir 451
+
+#define osgate_notify_init_process 452
+#define osgate_notify_create_process 453
+#define osgate_notify_init_tasking 454
+#define osgate_notify_thread_created 455
+#define osgate_notify_thread_exit 456
+#define osgate_notify_process_created 457
+#define osgate_notify_process_exit 458
 
 
 
@@ -607,7 +617,6 @@
 #define OsGate_create_process 0x3E 0x67 0x9a 74 0 0 0 2 0
 
 #define OsGate_init_trap_gates 0x3E 0x67 0x9a 75 0 0 0 2 0
-#define OsGate_init_tss_gates 0x3E 0x67 0x9a 76 0 0 0 2 0
 
 #define OsGate_setup_int_gate 0x3E 0x67 0x9a 77 0 0 0 2 0
 #define OsGate_setup_trap_gate 0x3E 0x67 0x9a 78 0 0 0 2 0
@@ -1061,4 +1070,15 @@
 #define OsGate_get_page_dir_attrib 0x3E 0x67 0x9a 190 1 0 0 2 0
 #define OsGate_get_page_dir 0x3E 0x67 0x9a 191 1 0 0 2 0
 #define OsGate_set_sys_page_entry 0x3E 0x67 0x9a 192 1 0 0 2 0
+#define OsGate_copy_sys_page_entries 0x3E 0x67 0x9a 193 1 0 0 2 0
+#define OsGate_get_sys_page_entry 0x3E 0x67 0x9a 194 1 0 0 2 0
+#define OsGate_get_sys_page_dir 0x3E 0x67 0x9a 195 1 0 0 2 0
+
+#define OsGate_notify_init_process 0x3E 0x67 0x9a 196 1 0 0 2 0
+#define OsGate_notify_create_process 0x3E 0x67 0x9a 197 1 0 0 2 0
+#define OsGate_notify_init_tasking 0x3E 0x67 0x9a 198 1 0 0 2 0
+#define OsGate_notify_thread_created 0x3E 0x67 0x9a 199 1 0 0 2 0
+#define OsGate_notify_thread_exit 0x3E 0x67 0x9a 200 1 0 0 2 0
+#define OsGate_notify_process_created 0x3E 0x67 0x9a 201 1 0 0 2 0
+#define OsGate_notify_process_exit 0x3E 0x67 0x9a 202 1 0 0 2 0
 
