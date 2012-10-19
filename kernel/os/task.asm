@@ -6044,8 +6044,6 @@ stop_core_timer      ENDP
 ;           PARAMETERS:         ES          Thread control block
 ;                                                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public init_first_thread
     
 init_first_thread:
     mov eax,cr0
@@ -9665,8 +9663,6 @@ init_first_tss  ENDP
 ;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public init_first_process
     
 init_first_process      Proc near
     mov ax,0002h
@@ -9701,7 +9697,7 @@ init_first_process      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_double_fault	Proc near
+init_double_fault       Proc near
     push ds
     push es
     pushad
@@ -9710,8 +9706,8 @@ init_double_fault	Proc near
     AllocateSmallLinear
 ;
     mov bx,double_tss_sel
-	mov ecx,400h
-	CreateTssSelector
+        mov ecx,400h
+        CreateTssSelector
 ;
     mov bx,double_tss_data_sel
     mov ecx,400h
@@ -9738,20 +9734,20 @@ init_double_fault	Proc near
     mov ds:c_tss_cs,cs
     mov ds:c_tss_eip,OFFSET double_fault
 ;
-	mov ax,idt_sel
-	mov ds,ax
-	mov bx,8 * 8
-	mov word ptr [bx],0
-	mov word ptr [bx+2],double_tss_sel
-	mov byte ptr [bx+4],0
-	mov byte ptr [bx+5],85h
-	mov word ptr [bx+6],0    
+        mov ax,idt_sel
+        mov ds,ax
+        mov bx,8 * 8
+        mov word ptr [bx],0
+        mov word ptr [bx+2],double_tss_sel
+        mov byte ptr [bx+4],0
+        mov byte ptr [bx+5],85h
+        mov word ptr [bx+6],0    
 ;
     popad
     pop es
     pop ds
-	ret
-init_double_fault	Endp
+        ret
+init_double_fault       Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -9771,7 +9767,23 @@ init_first_process_callback:
     NotifyInitTasking
     sti
     jmp null_thread0
-    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StartTasking
+;
+;           DESCRIPTION:    Start tasikng
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_tasking_name  DB 'Start Tasking', 0
+
+start_tasking:    
+    call init_first_process
+    jmp init_first_thread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -9845,6 +9857,12 @@ timer_free_list_create:
     xor ebx,ebx
     xor esi,esi
     xor edi,edi
+;
+    mov si,OFFSET start_tasking
+    mov di,OFFSET start_tasking_name
+    xor cl,cl
+    mov ax,start_tasking_nr
+    RegisterOsGate
 ;
     mov si,OFFSET create_core
     mov di,OFFSET create_core_name

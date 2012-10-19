@@ -1181,6 +1181,10 @@ leave_section_done:
 
 ;;;;;;;;;;; MULTITASKING ;;;;;;;;;;;;;;;;
 
+StartTasking MACRO
+    OsGate start_tasking_nr
+                    ENDM
+
 ;       ES:EDI       ADDRESS TILL CALLBACK
 HookInitTasking MACRO
     OsGate hook_init_tasking_nr

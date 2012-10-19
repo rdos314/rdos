@@ -75,9 +75,6 @@ ENDIF
     extrn init_trap_vectors:near
     extrn move_adapters:near
     extrn init_device:near
-
-    extrn init_first_process:near
-    extrn init_first_thread:near
     
 code    SEGMENT byte use16 public 'CODE'
 
@@ -809,8 +806,7 @@ prot_init:
     mov bx,syscall_data_sel
     CreateDataSelector32    
 ;
-    call init_first_process
-    jmp init_first_thread
+    StartTasking
     
 code    ENDS
 
