@@ -40,7 +40,6 @@ INCLUDE ..\handle.inc
 INCLUDE ..\apicheck.inc
 include ..\wait.inc
 
-
 MSR_SYSENTER_CS  = 174h
 MSR_SYSENTER_ESP = 175h
 MSR_SYSENTER_EIP = 176h
@@ -96,40 +95,6 @@ th_phys_arr         DD MAX_TLB_PHYS_ENTRIES DUP(?)
 
 tlb_struc   ENDS
 
-task_seg    STRUC
-
-global_ptab         DW 256 DUP(?)
-global_prio_act     DW ?
-
-global_spinlock     DW ?
-
-term_thread_list    DW ?
-term_proc_list      DW ?
-
-list_lock           DW ?
-
-tlb_spinlock        DW ?
-tlb_list            DD ?
- 
-sys_lsb_tics_base   DD ?
-sys_msb_tics_base   DD ?
-
-tlb_block_spinlock  DW ?
-tlb_block_list      DD ?
-tlb_curr_linear     DD ?
-tlb_remain_linear   DD ?
-
-futex_section       section_typ <>
-
-patch_sel           DW ?
-
-timer_spinlock      DW ?
-timer_head          DW ?
-timer_free          DW ?
-timer_entries       DB 256 * SIZE timer_struc DUP(?)
-
-task_seg    ENDS
-
 proc_handle_seg     STRUC
 
 ph_base handle_header <>
@@ -183,6 +148,40 @@ cr_edx      EQU -26
 cr_esi      EQU -30
 cr_edi      EQU -34
 
+data    SEGMENT byte public 'DATA'
+
+global_ptab         DW 256 DUP(?)
+global_prio_act     DW ?
+
+global_spinlock     DW ?
+
+term_thread_list    DW ?
+term_proc_list      DW ?
+
+list_lock           DW ?
+
+tlb_spinlock        DW ?
+tlb_list            DD ?
+ 
+sys_lsb_tics_base   DD ?
+sys_msb_tics_base   DD ?
+
+tlb_block_spinlock  DW ?
+tlb_block_list      DD ?
+tlb_curr_linear     DD ?
+tlb_remain_linear   DD ?
+
+futex_section       section_typ <>
+
+patch_sel           DW ?
+
+timer_spinlock      DW ?
+timer_head          DW ?
+timer_free          DW ?
+timer_entries       DB 256 * SIZE timer_struc DUP(?)
+
+data    ENDS
+
 IFDEF __WASM__
     .686p
     .xmm2
@@ -193,8 +192,6 @@ ENDIF
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
-
-filler DB 4096 DUP(5Ah)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -749,7 +746,7 @@ notify_time_drift       Proc far
     push ecx
     push edx
 ;    
-    mov cx,task_data_sel
+    mov cx,SEG data
     mov es,cx
     mov es,es:patch_sel
 ;
@@ -2307,7 +2304,7 @@ LoadThread:
     UpdatePState
 
 load_thread_loop:
-    mov ax,task_data_sel
+    mov ax,SEG data
     mov ds,ax
     xor ax,ax
     mov es,ax
@@ -2381,7 +2378,7 @@ load_reload_loop:
     jnc load_a_task
     
 load_retry:
-    mov ax,task_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov ax,es
     cmp ax,fs:ps_null_thread
@@ -2979,7 +2976,7 @@ ContinueCurrentThread:
     test fs:ps_flags,PS_FLAG_PREEMPT
     jz cctLocal
 ;
-    mov ax,task_data_sel
+    mov ax,SEG data
     mov ds,ax
     call cs:lock_ready_proc
     call InsertBlock
@@ -3153,13 +3150,13 @@ DeleteProcess   Endp
 system_thread_name  DB 'System', 0
 
 system_thread_pr:
-    mov ax,task_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov ds,ds:patch_sel
     GetThread
     mov ds:system_thread,ax
 ;
-    mov ax,task_data_sel
+    mov ax,SEG data
     mov ds,ax    
 
 stLoop:
@@ -3208,7 +3205,7 @@ start_processor_null_threads    Proc near
     cmp al,3
     jbe start_locks_ok
 ;
-    mov ax,task_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov ds,ds:patch_sel
     mov ds:flush_tlb_proc,OFFSET FlushTlb486
@@ -3784,7 +3781,7 @@ create_core    Proc far
     mov ds,bx
     mov ds:[0],bx
 ;
-    mov ax,task_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov ds,ds:patch_sel
     mov ax,ds:core_count
@@ -4180,7 +4177,7 @@ LockListMultiple    Proc near
     push ds
     push ax
 ;
-    mov ax,task_data_sel
+    mov ax,SEG data
     mov ds,ax    
 
 llSpinLock:    
@@ -4221,7 +4218,7 @@ UnlockListMultiple      Proc near
     push ds
     push ax
 ;
-    mov ax,task_data_sel
+    mov ax,SEG data
     mov ds,ax    
     mov ds:list_lock,0
     sti
@@ -5000,7 +4997,7 @@ FreeTlbBlock     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockTlb    Proc near
-    mov ax,task_data_sel
+    mov ax,SEG data
     mov ds,ax
 
 ltmSpinLock:    
@@ -5275,7 +5272,7 @@ UpdateTlbList   Endp
 notify_flush_tlb_name  DB 'Notify Flush TLB', 0
 
 notify_flush_tlb   Proc far
-    mov ax,task_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov ax,flat_sel
     mov es,ax
@@ -5457,7 +5454,7 @@ FlushTlbMultiple    Proc near
     push fs
     pushad
 ;
-    mov ax,task_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov ax,flat_sel
     mov es,ax
@@ -5518,7 +5515,7 @@ timer_expired_name   DB 'Timer Expired', 0
 timer_expired    Proc far
     call TryLockCore
     sti
-    mov ax,task_data_sel
+    mov ax,SEG data
     mov ds,ax
 
 timer_expired_check:   
@@ -5606,7 +5603,7 @@ preempt_timer_expired    Proc far
     jmp reload_timer_preempt_done
 
 reload_timer_preempt_locked:
-    mov ax,task_data_sel
+    mov ax,SEG data
     mov ds,ax
 
 reload_timer_preempt_loop:
@@ -5691,7 +5688,7 @@ start_global_timer     PROC far
     push bx
     push si
 ;
-    mov si,task_data_sel
+    mov si,SEG data
     mov ds,si    
 ;    
     call LockTimerGlobal
@@ -5797,7 +5794,7 @@ stop_global_timer      PROC far
     push cx
     push si
 ;    
-    mov ax,task_data_sel
+    mov ax,SEG data
     mov ds,ax
 ;    
     call LockTimerGlobal
@@ -6060,7 +6057,7 @@ init_first_thread:
     jc preempt_timer_combined
 ;
     StartSysTimer
-    mov bx,task_data_sel
+    mov bx,SEG data
     mov ds,bx
     mov ds,ds:patch_sel
     mov ds:update_tics,eax
@@ -6068,11 +6065,13 @@ init_first_thread:
     mov ds,ax
 ;
     StartPreemptTimer
-    mov bx,task_data_sel
+    mov bx,SEG data
     mov ds,bx
     mov ds,ds:patch_sel
     mov ds:preempt_reload_proc,OFFSET PreemptReload
 ;
+    mov bx,SEG data
+    mov ds,bx
     GetSystemTime
     mov ds:sys_lsb_tics_base,eax
     mov ds:sys_msb_tics_base,edx
@@ -6096,7 +6095,7 @@ init_first_thread:
         
 preempt_timer_combined:        
     StartSysPreemptTimer
-    mov bx,task_data_sel
+    mov bx,SEG data
     mov ds,bx
     mov ds,ds:patch_sel
     mov ds:update_tics,eax
@@ -6170,7 +6169,7 @@ cleanup_thread:
     mov es,fs:ps_curr_thread
     mov fs:ps_curr_thread,0
 ;    
-    mov ax,task_data_sel
+    mov ax,SEG data
     mov ds,ax    
     mov edi,OFFSET term_thread_list
 ;
@@ -6202,7 +6201,7 @@ cleanup_process:
     mov es,fs:ps_curr_thread
     mov fs:ps_curr_thread,0    
 ;
-    mov ax,task_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov edi,OFFSET term_proc_list
 ;
@@ -6766,7 +6765,7 @@ cecsBlock:
     adc edx,ecx
 ;
     push ds
-    mov cx,task_data_sel
+    mov cx,SEG data
     mov ds,cx
     mov cx,cs
     mov es,cx
@@ -7204,7 +7203,7 @@ acquire_futex   Proc near
     DerefHandle
     jnc acquire_no_sect
 ;    
-    mov ax,task_data_sel
+    mov ax,SEG data
     mov ds,ax
     EnterSection ds:futex_section
 ;
@@ -7224,7 +7223,7 @@ acquire_futex   Proc near
 
 acquire_handle_ok:
     push ds
-    mov ax,task_data_sel
+    mov ax,SEG data
     mov ds,ax
     LeaveSection ds:futex_section
     pop ds
@@ -7437,7 +7436,7 @@ cleanup_futex32 Endp
 
 get_thread      PROC far
     push ds
-    mov ax,task_data_sel
+    mov ax,SEG data
     verr ax
     jz get_thread_norm
 
@@ -7758,7 +7757,7 @@ wait_until      PROC far
     push OFFSET wait_until_done
     call SaveCurrentThread
 ;
-    mov cx,task_data_sel
+    mov cx,SEG data
     mov ds,cx
     mov cx,fs:ps_curr_thread
     mov bx,cs
@@ -7809,7 +7808,7 @@ wait_milli_sec  PROC far
     add eax,ebx
     adc edx,0
 ;
-    mov cx,task_data_sel
+    mov cx,SEG data
     mov ds,cx
     mov cx,es
     mov bx,cs
@@ -7861,7 +7860,7 @@ wait_micro_sec  PROC far
     add eax,ebx
     adc edx,0
 ;
-    mov cx,task_data_sel
+    mov cx,SEG data
     mov ds,cx
     mov cx,es
     mov bx,cs
@@ -7998,7 +7997,7 @@ check_not_wait:
     jmp check_copy_zero
     
 check_not_signal:
-    cmp ax,task_data_sel
+    cmp ax,SEG data
     jne check_not_task
 ;
     mov si,OFFSET Ready_state
@@ -8156,7 +8155,7 @@ update_time_name    DB 'Update Time',0
 update_time     PROC far
     push ds
     push bx
-    mov bx,task_data_sel
+    mov bx,SEG data
     mov ds,bx
     mov ds,ds:patch_sel
     cli
@@ -9794,11 +9793,7 @@ init       PROC far
     pusha
     push ds
 ;
-    mov bx,task_data_sel
-    mov eax,SIZE task_seg
-    AllocateFixedSystemMem
-;
-    mov ax,task_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov ds:term_thread_list,0
     mov ds:term_proc_list,0
