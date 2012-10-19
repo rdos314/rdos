@@ -256,7 +256,6 @@ apRetry64:
     jnc apOk64
 
 apNew64:
-    int 3
     call GetPhysBitmap64
     jnc apNewNext64
 ;
