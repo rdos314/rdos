@@ -73,7 +73,6 @@ ENDIF
     extrn init_usergate:near
     extrn init_int:near
     extrn init_trap_vectors:near
-    extrn init_tss_int:near
     extrn move_adapters:near
     extrn init_device:near
 
@@ -787,7 +786,6 @@ prot_init:
     call init_thread
     call init_handle
     call init_int
-    call init_tss_int
     call init_trap_vectors
     call init_task
     call init_device    

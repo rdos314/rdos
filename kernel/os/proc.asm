@@ -250,7 +250,6 @@ trap_terminate_process  ENDP
     
 trap_init_tasking       PROC near
     InitTrapGates
-    InitTssGates
     call trap_create_process
     push cx
     mov ax,proc_data_sel
