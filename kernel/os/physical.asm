@@ -56,39 +56,6 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           INIT_PHYSICAL
-;
-;           DESCRIPTION:    Init module
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public init_physical
-
-init_physical   PROC near
-    mov ax,system_data_sel
-    mov ds,ax
-;
-    InitSpinlock ds:phys_spinlock
-    mov bx,phys_page_sel
-    mov edx,phys_page_linear
-    mov ecx,ds:phys_free_pages
-    shl ecx,2
-    call local_create_data_sel16
-;
-    mov bx,phys_list_sel
-    mov ecx,ds:phys_free_pages
-    shl ecx,2
-    mov edx,phys_list_linear
-    call local_create_data_sel16
-    ret
-init_physical   ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           INIT_PHYSICAL_GATES
 ;
 ;           DESCRIPTION:    Init module syscalls
@@ -627,6 +594,38 @@ get_free_physical_mem   PROC far
     pop ds
     retf32
 get_free_physical_mem   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           INIT_PHYSICAL
+;
+;           DESCRIPTION:    Init module
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public init_physical
+
+init_physical   PROC near
+    mov ax,system_data_sel
+    mov ds,ax
+;
+    InitSpinlock ds:phys_spinlock
+    mov bx,phys_page_sel
+    mov edx,phys_page_linear
+    mov ecx,ds:phys_free_pages
+    shl ecx,2
+    call local_create_data_sel16
+;
+    mov bx,phys_list_sel
+    mov ecx,ds:phys_free_pages
+    shl ecx,2
+    mov edx,phys_list_linear
+    call local_create_data_sel16
+    ret
+init_physical   ENDP
 
 
 code    ENDS

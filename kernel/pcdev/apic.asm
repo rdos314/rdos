@@ -4853,85 +4853,6 @@ AllocateMultPhys32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           AddPhys
-;
-;       DESCRIPTION:    Add physical entry
-;
-;       PARAMETERS:     EBX:EAX     Physical address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddPhys   Proc near
-    push ds
-    push eax
-    push ebx
-    push ecx
-    push esi
-    push edi
-;
-    mov cx,phys_bit_sel
-    mov ds,cx
-;
-    mov ecx,ebx
-    shl ecx,20
-    mov esi,eax
-    shr esi,12
-    add ecx,esi
-    mov ebx,ecx
-    shr ebx,15
-    and ecx,7FFFh
-
-apRetry:
-    cmp bx,ds:phys_bitmap_count
-    jb apDo
-;
-    push es
-    push ecx
-;    
-    mov ax,ds
-    mov es,ax
-;
-    movzx edi,ds:phys_bitmap_count
-    shl edi,2
-    add edi,phys_header_start
-    mov ds:[edi].phys_bitmap_pos,0
-    mov ds:[edi].phys_bitmap_free,0
-;    
-    movzx edi,ds:phys_bitmap_count
-    shl edi,12
-    add edi,phys_bitmap_start
-    mov ecx,400h
-    xor eax,eax
-    rep stos dword ptr es:[edi]
-;    
-    inc ds:phys_bitmap_count
-;    
-    pop ecx
-    pop es
-    jmp apRetry
-    
-apDo:
-    mov edi,ebx
-    shl edi,12
-    add edi,phys_bitmap_start
-    lock bts ds:[edi],ecx
-;
-    shl ebx,2
-    add ebx,phys_header_start
-    lock inc ds:[ebx].phys_bitmap_free
-;
-    pop edi
-    pop esi
-    pop ecx
-    pop ebx
-    pop eax
-    pop ds
-    ret
-AddPhys Endp
-      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           FreePhys
 ;
 ;       DESCRIPTION:    Free physical entry
@@ -5030,22 +4951,6 @@ GetFreePhys   ENDP
 test_thread:
     int 3
     call GetFreePhys
-;    
-    xor ebx,ebx
-    mov eax,800A000h
-
-tfl:    
-    call AddPhys
-    add eax,1000h
-    cmp eax,900A000h
-    jne tfl
-;
-    int 3
-    call GetFreePhys
-;    
-    mov ebx,1
-    mov eax,2000h
-    call AddPhys
 
 tl1:  
     mov ecx,57h  
