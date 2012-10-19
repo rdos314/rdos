@@ -76,8 +76,6 @@ code    SEGMENT byte use16 public 'CODE'
     extrn local_create_trap_gate_sel:near
     extrn local_get_selector_base_size:near
 
-    extrn get_task_lock:near
-
     extrn prot_exception:near
     extrn virt_exception:near
 
@@ -379,7 +377,7 @@ trap_1:
     push ax
     push ds
 ;
-    call get_task_lock
+    GetSchedulerLockCounter
     add ax,1
     jnc t1_ret
 ;    

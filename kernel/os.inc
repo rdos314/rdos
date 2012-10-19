@@ -1239,6 +1239,11 @@ ReloadSysPreemptTimer    MACRO
     OsGate reload_sys_preempt_timer_nr
                         ENDM
 
+;   OUT AX      Lock counter
+GetSchedulerLockCounter    MACRO
+    OsGate get_scheduler_lock_counter_nr
+                        ENDM
+
 EnterInt    MACRO
     mov ax,core_data_sel
     mov ds,ax

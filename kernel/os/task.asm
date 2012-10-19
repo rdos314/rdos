@@ -3872,7 +3872,7 @@ create_core    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           GetTaskLock
+;       NAME:           GetSchedulerLockCounter
 ;
 ;       DESCRIPTION:    Get state of task lock
 ;
@@ -3880,16 +3880,16 @@ create_core    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public get_task_lock
-    
-get_task_lock   Proc near
+get_scheduler_lock_counter_name   DB 'Get Scheduler Lock Counter',0
+
+get_scheduler_lock_counter   Proc far
     push fs
     mov ax,core_data_sel
     mov fs,ax
     mov ax,fs:ps_nesting
     pop fs
-    ret
-get_task_lock    Endp
+    retf32
+get_scheduler_lock_counter    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -9954,6 +9954,12 @@ timer_free_list_create:
     mov di,OFFSET irq_schedule_name
     xor cl,cl
     mov ax,irq_schedule_nr
+    RegisterOsGate
+;
+    mov si,OFFSET get_scheduler_lock_counter
+    mov di,OFFSET get_scheduler_lock_counter_name
+    xor cl,cl
+    mov ax,get_scheduler_lock_counter_nr
     RegisterOsGate
 ;
     mov si,OFFSET lock_task
