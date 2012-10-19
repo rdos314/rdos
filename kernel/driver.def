@@ -79,7 +79,8 @@ bios_data			EQU 0D8h
 proc_data_sel		EQU 0E0h
 swap_data_sel       EQU 0E8h
 ;
-task_sel			EQU 0F0h
+task_code_sel		EQU 0F0h
+task_data_sel		EQU 0F8h
 ;
 event_def_sel		EQU 100h
 event_list_sel		EQU 108h
