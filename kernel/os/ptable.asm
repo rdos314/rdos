@@ -2923,122 +2923,6 @@ get_thread_page_dir    Proc far
     call cs:get_thread_page_dir_proc
     retf32
 get_thread_page_dir    Endp
-      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           AddPhys
-;
-;       DESCRIPTION:    Add physical entry
-;
-;       PARAMETERS:     EBX:EAX     Physical address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddPhys   Proc near
-    push ds
-    push eax
-    push ebx
-    push ecx
-    push esi
-    push edi
-;
-    mov cx,phys_bit_sel
-    mov ds,cx
-;
-    mov ecx,ebx
-    shl ecx,20
-    mov esi,eax
-    shr esi,12
-    add ecx,esi
-    mov ebx,ecx
-    shr ebx,15
-    and ecx,7FFFh
-
-apRetry:
-    cmp bx,ds:phys_bitmap_count
-    jb apDo
-;
-    push es
-    push ecx
-;    
-    mov ax,ds
-    mov es,ax
-;
-    movzx edi,ds:phys_bitmap_count
-    shl edi,2
-    add edi,phys_header_start
-    mov ds:[edi].phys_bitmap_pos,0
-    mov ds:[edi].phys_bitmap_free,0
-;    
-    movzx edi,ds:phys_bitmap_count
-    shl edi,12
-    add edi,phys_bitmap_start
-    mov ecx,400h
-    xor eax,eax
-    rep stos dword ptr es:[edi]
-;    
-    inc ds:phys_bitmap_count
-;    
-    pop ecx
-    pop es
-    jmp apRetry
-    
-apDo:
-    mov edi,ebx
-    shl edi,12
-    add edi,phys_bitmap_start
-    lock bts ds:[edi],ecx
-;
-    shl ebx,2
-    add ebx,phys_header_start
-    lock inc ds:[ebx].phys_bitmap_free
-;
-    pop edi
-    pop esi
-    pop ecx
-    pop ebx
-    pop eax
-    pop ds
-    ret
-AddPhys Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FillupPhysicalMem
-;
-;           DESCRIPTION:    Fillup physical mem structure 
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-fillup_physical_mem   Proc near
-    push ds
-    push eax
-    push ebx
-    push esi
-;    
-    mov ax,system_data_sel
-    mov ds,ax
-    mov ds:alloc_base,41000h
-
-fillup_phys_mem_loop:
-    call AllocateRam
-    jc fillup_phys_mem_done
-;
-    xor ebx,ebx
-    mov eax,esi
-    call AddPhys
-    jmp fillup_phys_mem_loop
-
-fillup_phys_mem_done:
-    pop esi
-    pop ebx
-    pop eax
-    pop ds
-    ret
-fillup_physical_mem   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3383,7 +3267,7 @@ init_phys_bitmap32       Proc near
     mov ds:[edi],eax
 ;
     mov ds:[esi].phys_curr_header32,1
-    mov ds:[esi].phys_curr_header64,32
+    mov ds:[esi].phys_curr_header64,0
     mov ds:[esi].phys_bitmap_count,1
 ;
     mov ebx,esi
@@ -3560,8 +3444,7 @@ init_physical32       Endp
 start_paging32    Proc near
     call create_paging32
     call init_phys_bitmap32
-    call init_physical32
-    call fillup_physical_mem
+;    call init_physical32
 ;
     mov eax,cr0
     or eax,80000000h

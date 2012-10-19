@@ -52,6 +52,1114 @@ code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetPhysBitmap32
+;
+;       DESCRIPTION:    Get 32-bit physical bitmap
+;
+;       RETURNS:        SI      Bitmap header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPhysBitmap32  Proc near
+    mov cx,ds:phys_bitmap_count
+    sub cx,1
+    jc gpbDone32
+;    
+    cmp cx,31
+    jbe gpbCountOk32
+;
+    mov cx,31
+
+gpbCountOk32:
+    mov bx,4 + phys_header_start
+    mov si,bx
+    xor di,di
+
+gpbLoop32:
+    mov ax,ds:[bx].phys_bitmap_free
+    cmp ax,di
+    jbe gpbNext32
+;
+    mov si,bx
+    mov di,ax
+    cmp ax,4000h
+    jae gpbOk32
+
+gpbNext32:
+    add bx,4
+    loop gpbLoop32
+;
+    or di,di
+    stc
+    jz gpbDone32
+
+gpbOk32:
+    clc
+
+gpbDone32:
+    ret
+GetPhysBitmap32  Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetPhysBitmap64
+;
+;       DESCRIPTION:    Get 64-bit physical bitmap
+;
+;       RETURNS:        SI      Bitmap header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPhysBitmap64  Proc near
+    mov cx,ds:phys_bitmap_count
+    sub cx,32
+    jc gpbDone64
+;    
+    mov bx,32 * 4 + phys_header_start
+    mov si,bx
+    xor di,di
+
+gpbLoop64:
+    mov ax,ds:[bx].phys_bitmap_free
+    cmp ax,di
+    jbe gpbNext64
+;
+    mov si,bx
+    mov di,ax
+    cmp ax,4000h
+    jae gpbOk64
+
+gpbNext64:
+    add bx,4
+    loop gpbLoop64
+;
+    or di,di
+    stc
+    jz gpbDone64
+
+gpbOk64:
+    clc
+
+gpbDone64:
+    ret
+GetPhysBitmap64  Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AllocateFromBitmap
+;
+;       DESCRIPTION:    Try to allocate from bitmap
+;
+;       PARAMETERS:     EBX     Position
+;                       EDX     Max postion
+;                       SI      Header offset
+;                       EDI     Bitmap offset
+;
+;       RETURNS:        EBX     New position
+;                       ECX     Allocated bit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateFromBitmap  Proc near
+
+afbLoop:
+    cmp ebx,edx
+    jae afbFail
+;    
+    mov eax,ds:[ebx+edi]
+    or eax,eax
+    jz afbNext
+;
+    bsf ecx,eax
+    lock btr ds:[ebx+edi],ecx
+    jc afbOk
+
+afbNext:
+    add bx,4
+    jmp afbLoop
+
+afbFail:
+    xor bx,bx
+    stc
+    jmp afbDone
+
+afbOk:
+    lock dec ds:[si].phys_bitmap_free
+;
+    mov ax,si
+    sub ax,phys_header_start
+    movzx eax,ax
+    shl eax,13
+    add ecx,eax
+;    
+    mov eax,ebx
+    shl eax,3
+    add ecx,eax
+    clc
+
+afbDone:
+    ret
+AllocateFromBitmap  Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LocalAllocatePhysical
+;
+;           DESCRIPTION:    Allocate physical page
+;
+;           PARAMETERS:     EDX:EAX         Address
+;                                                   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public local_allocate_physical
+
+local_allocate_physical       PROC near
+    push ds
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov ax,phys_bit_sel
+    mov ds,ax
+    xor ebx,ebx
+    xor esi,esi
+
+apRetry64:
+    mov bx,ds:phys_curr_header64
+    cmp bx,ds:phys_bitmap_count
+    jae apNew64
+;    
+    mov si,phys_header_start
+    mov eax,ebx
+    shl eax,2
+    add si,ax
+;    
+    mov edi,phys_bitmap_start
+    shl eax,10
+    add edi,eax
+;
+    mov ax,ds:[si].phys_bitmap_free
+    or ax,ax
+    jz apNew64
+;
+    movzx ebx,ds:[si].phys_bitmap_pos
+    mov edx,1000h
+    call AllocateFromBitmap
+    jnc apOk64
+
+apNew64:
+    int 3
+    call GetPhysBitmap64
+    jnc apNewNext64
+;
+    call GetPhysBitmap32
+    jc apNewFirst64
+
+apNewNext64:
+    mov ax,si
+    sub ax,phys_header_start
+    shr ax,2
+    mov ds:phys_curr_header64,ax
+    jmp apRetry64
+
+apNewFirst64:
+    mov si,phys_header_start
+    mov ax,ds:[si].phys_bitmap_free
+    or ax,ax
+    jz apFail64
+;
+    mov ebx,200h
+    mov edx,1000h
+    mov edi,phys_bitmap_start
+    call AllocateFromBitmap
+    jnc apOk64_0
+;
+    xor ebx,ebx    
+    mov edx,200h
+    mov edi,phys_bitmap_start
+    call AllocateFromBitmap
+    jnc apOk64_0
+
+apFail64:
+    stc
+    jmp apDone64
+
+apOk64_0:
+    mov ax,si
+    sub ax,phys_header_start
+    shr ax,2
+    mov ds:phys_curr_header64,ax
+
+apOk64:
+    cmp bx,ds:[si].phys_bitmap_pos
+    je apRetAds64
+;    
+    mov ds:[si].phys_bitmap_pos,bx
+;
+    mov ax,ds:phys_curr_header64
+    cmp ax,32
+    jae apRetAds64
+;
+    push ecx
+    call GetPhysBitmap64
+    pop ecx
+    jnc apUpdateHeader64
+;
+    mov ax,ds:phys_curr_header64
+    or ax,ax
+    jnz apRetAds64
+;
+    push ecx
+    call GetPhysBitmap32
+    pop ecx
+    jc apRetAds64
+
+apUpdateHeader64:    
+    mov ax,si
+    sub ax,phys_header_start
+    shr ax,2
+    mov ds:phys_curr_header64,ax
+
+apRetAds64:    
+    mov eax,ecx
+    mov ebx,ecx
+    shl eax,12
+    shr ebx,20
+    clc
+
+apDone64:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ds
+    ret
+local_allocate_physical       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AllocatePhysical32
+;
+;           DESCRIPTION:    Allocate physical page
+;
+;           RETURNS:        EBX:EAX         Address
+;                                                   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_physical32_name  DB 'Allocate Physical Memory32',0
+
+allocate_physical32       PROC far
+    push ds
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov ax,phys_bit_sel
+    mov ds,ax
+    xor ebx,ebx
+    xor esi,esi
+
+apRetry32:
+    mov bx,ds:phys_curr_header32
+    cmp bx,ds:phys_bitmap_count
+    jae apNew32
+;    
+    mov si,phys_header_start
+    mov eax,ebx
+    shl eax,2
+    add si,ax
+;    
+    mov edi,phys_bitmap_start
+    shl eax,10
+    add edi,eax
+;
+    mov ax,ds:[si].phys_bitmap_free
+    or ax,ax
+    jz apNew32
+;
+    movzx ebx,ds:[si].phys_bitmap_pos
+    mov edx,1000h
+    call AllocateFromBitmap
+    jnc apOk32
+
+apNew32:
+    call GetPhysBitmap32
+    jc apNewFirst32
+;
+    mov ax,si
+    sub ax,phys_header_start
+    shr ax,2
+    mov ds:phys_curr_header64,ax
+    jmp apRetry32
+
+apNewFirst32:
+    mov si,phys_header_start
+    mov ax,ds:[si].phys_bitmap_free
+    or ax,ax
+    jz apFail32
+;
+    mov ebx,200h
+    mov edx,1000h
+    mov edi,phys_bitmap_start
+    call AllocateFromBitmap
+    jnc apOk32_0
+;
+    xor ebx,ebx    
+    mov edx,200h
+    mov edi,phys_bitmap_start
+    call AllocateFromBitmap
+    jnc apOk32_0
+
+apFail32:
+    stc
+    jmp apDone32
+
+apOk32_0:
+    mov ax,si
+    sub ax,phys_header_start
+    shr ax,2
+    mov ds:phys_curr_header32,ax
+
+apOk32:
+    cmp bx,ds:[si].phys_bitmap_pos
+    je apRetAds32
+;    
+    mov ds:[si].phys_bitmap_pos,bx
+    mov ax,ds:phys_curr_header32
+    or ax,ax
+    jnz apRetAds32
+;
+    push ecx
+    call GetPhysBitmap32
+    pop ecx
+    jc apRetAds32
+;
+    mov ax,si
+    sub ax,phys_header_start
+    shr ax,2
+    mov ds:phys_curr_header32,ax
+
+apRetAds32:    
+    mov eax,ecx
+    shl eax,12
+    xor ebx,ebx
+    clc
+
+apDone32:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ds
+    retf32
+allocate_physical32       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AllocatePhysical64
+;
+;           DESCRIPTION:    Allocate physical page
+;
+;           RETURNS:        EBX:EAX         Address
+;                                                   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_physical64_name  DB 'Allocate Physical Memory64',0
+
+allocate_physical64       PROC far
+    call local_allocate_physical
+    retf32
+allocate_physical64       ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AllocateDmaPhysical
+;
+;           DESCRIPTION:    Allocate DMA physical page
+;
+;           PARAMETERS:         EAX         Address
+;                                                   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_dma_physical_name      DB 'Allocate DMA Physical Memory',0
+
+allocate_dma_physical   PROC far
+    push ds
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov ax,phys_bit_sel
+    mov ds,ax
+;    
+    mov si,phys_header_start
+    mov ax,ds:[si].phys_bitmap_free
+    or ax,ax
+    jz apFailDma
+;
+    xor ebx,ebx    
+    mov edx,200h
+    mov edi,phys_bitmap_start
+    call AllocateFromBitmap
+    jnc apOkDma
+
+apFailDma:
+    stc
+    jmp apDoneDma
+
+apOkDma:
+    mov eax,ecx
+    shl eax,12
+    xor ebx,ebx
+    clc
+
+apDoneDma:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ds
+    retf32
+allocate_dma_physical   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LocalFreePhysical
+;
+;           DESCRIPTION:    Free physical page
+;
+;           PARAMETERS:     EBX:EAX         Address
+;                           
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public local_free_physical
+
+local_free_physical   PROC near
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push esi
+    push edi
+;
+    mov cx,phys_bit_sel
+    mov ds,cx
+;
+    mov ecx,ebx
+    shl ecx,20
+    mov esi,eax
+    shr esi,12
+    add ecx,esi
+    mov ebx,ecx
+    shr ebx,15
+    and ecx,7FFFh
+;
+    cmp bx,ds:phys_bitmap_count
+    jb fpDo
+;
+    int 3
+
+fpDo:
+    mov edi,ebx
+    shl edi,12
+    add edi,phys_bitmap_start
+    lock bts ds:[edi],ecx
+;
+    shl ebx,2
+    add ebx,phys_header_start
+    lock inc ds:[ebx].phys_bitmap_free
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+local_free_physical   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FreePhysical
+;
+;           DESCRIPTION:    Free physical page
+;
+;           PARAMETERS:     EBX:EAX         Address
+;                           
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_physical_name      DB 'Free Physical Memory',0
+
+free_physical   PROC far
+    call local_free_physical
+    retf32
+free_physical   ENDP
+
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AllocateMultBitmap
+;
+;       DESCRIPTION:    Allocate multiple entries in bitmap
+;
+;       PARAMETERS:     DS:EDI      Bitmap
+;                       DX          Number of dwords wanted
+;
+;       RETURNS:        EDI         Position in bitmap
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateMultBitmap   Proc near
+    push bx
+    push cx
+    push esi
+;    
+    mov cx,400h
+    xor bx,bx    
+    mov esi,edi
+
+ambLoop:
+    mov eax,ds:[edi]
+    cmp eax,-1
+    jne ambReset
+;
+    inc bx
+    cmp bx,dx
+    je ambOk
+;        
+    add edi,4
+    jmp ambNext
+    
+ambReset:    
+    add edi,4
+    mov esi,edi
+    xor bx,bx
+
+ambNext:
+    loop ambLoop
+;    
+    stc
+    jmp ambDone
+
+ambOk:
+    mov edi,esi
+    clc
+
+ambDone:
+    pop esi
+    pop cx
+    pop bx
+    ret    
+AllocateMultBitmap   Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetMultPhys64
+;
+;       DESCRIPTION:    Get multiple entries, 64-bit version
+;
+;       PARAMETERS:     CX          Number of entries wanted
+;                       DX          Number of dwords needed
+;
+;       RETURNS:        BX          Bitmap #
+;                       SI          Header offset
+;                       EDI         Offset in bitmap         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMultPhys64   Proc near
+    push bp
+;    
+    mov bx,32
+    mov bp,ds:phys_bitmap_count
+    sub bp,bx
+    jbe gmpDone64
+
+gmpLoop64:
+    mov si,bx
+    shl si,2
+    add si,phys_header_start
+    cmp cx,ds:[si].phys_bitmap_free
+    ja gmpNext64
+;
+    movzx edi,bx
+    shl edi,12
+    add edi,phys_bitmap_start
+    call AllocateMultBitmap
+    jnc gmpDone64
+
+gmpNext64:
+    inc bx
+    sub bp,1
+    jnz gmpLoop64
+;
+    stc
+
+gmpDone64:
+    pop bp
+    ret
+GetMultPhys64  Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetMultPhys32
+;
+;       DESCRIPTION:    Get multiple entries, 32-bit version
+;
+;       PARAMETERS:     CX          Number of entries wanted
+;                       DX          Number of dwords needed
+;
+;       RETURNS:        BX          Bitmap #
+;                       SI          Header offset
+;                       EDI         Offset in bitmap         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMultPhys32   Proc near
+    push bp
+;    
+    mov bp,ds:phys_bitmap_count
+    cmp bp,32
+    jbe gmpCountOk32
+;
+    mov bp,32
+
+gmpCountOk32:    
+    mov bx,1
+    sub bp,bx
+    jbe gmpDone32
+
+gmpLoop32:
+    mov si,bx
+    shl si,2
+    add si,phys_header_start
+    cmp cx,ds:[si].phys_bitmap_free
+    ja gmpNext32
+;
+    movzx edi,bx
+    shl edi,12
+    add edi,phys_bitmap_start
+    call AllocateMultBitmap
+    jnc gmpDone32
+
+gmpNext32:
+    inc bx
+    sub bp,1
+    jnz gmpLoop32
+;
+    stc
+
+gmpDone32:
+    pop bp
+    ret
+GetMultPhys32  Endp
+
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetMultPhysDma
+;
+;       DESCRIPTION:    Get multiple entries, DMA version
+;
+;       PARAMETERS:     CX          Number of entries wanted
+;                       DX          Number of dwords needed
+;
+;       RETURNS:        BX          Bitmap #
+;                       SI          Header offset
+;                       EDI         Offset in bitmap         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMultPhysDma   Proc near
+    xor bx,bx
+    mov si,phys_header_start
+    cmp cx,ds:[si].phys_bitmap_free
+    ja gmpFailDma
+;
+    mov edi,phys_bitmap_start
+    call AllocateMultBitmap
+    jmp gmpDoneDma
+
+gmpFailDma:
+    stc
+
+gmpDoneDma:
+    ret
+GetMultPhysDma  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AllocateMultiplePhysical64
+;
+;           DESCRIPTION:    Allocate multiple physical page
+;
+;           PARAMETERS:     ECX         Number of pages
+;
+;           RETURN:         EBX:EAX     Physical base address
+;                                                   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_multiple_physical64_name DB 'Allocate 64-bit Multiple Physical Memory',0
+
+allocate_multiple_physical64      PROC far
+    push ds
+    push edx
+    push esi
+    push edi    
+;    
+    mov ax,phys_bit_sel
+    mov ds,ax
+;
+    mov edx,ecx
+    dec edx
+    and dl,0E0h
+    shr edx,5
+    inc dx
+
+ampRetry64:
+    call GetMultPhys64
+    jnc ampTake64
+;
+    call GetMultPhys32
+    jnc ampTake64
+;
+    call GetMultPhysDma
+    jc ampDone64
+
+ampTake64:            
+    xor eax,eax
+
+ampMark64:    
+    lock btr ds:[edi],eax     
+    jnc ampRetry64
+;    
+    lock dec ds:[si].phys_bitmap_free
+    inc eax
+    cmp eax,ecx
+    jb ampMark64
+;
+    mov ax,si
+    sub ax,phys_header_start
+    movzx eax,ax
+    shl eax,13
+    mov edx,eax
+;    
+    mov eax,edi
+    and ax,0FFFh
+    shl eax,3
+    add edx,eax
+;    
+    mov eax,edx
+    mov ebx,edx
+    shl eax,12
+    shr ebx,20
+    clc
+
+ampDone64:
+    pop edi
+    pop esi
+    pop edx
+    pop ds
+    retf32
+allocate_multiple_physical64      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AllocateMultiplePhysical32
+;
+;           DESCRIPTION:    Allocate multiple physical page
+;
+;           PARAMETERS:     ECX         Number of pages
+;
+;           RETURN:         EBX:EAX     Physical base address
+;                                                   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_multiple_physical32_name DB 'Allocate 32-bit Multiple Physical Memory',0
+
+allocate_multiple_physical32      PROC far
+    push ds
+    push edx
+    push esi
+    push edi    
+;    
+    mov ax,phys_bit_sel
+    mov ds,ax
+;
+    mov edx,ecx
+    dec edx
+    and dl,0E0h
+    shr edx,5
+    inc dx
+
+ampRetry32:
+    call GetMultPhys32
+    jnc ampTake32
+;
+    call GetMultPhysDma
+    jc ampDone32
+
+ampTake32:            
+    xor eax,eax
+
+ampMark32:    
+    lock btr ds:[edi],eax     
+    jnc ampRetry32
+;    
+    lock dec ds:[si].phys_bitmap_free
+    inc eax
+    cmp eax,ecx
+    jb ampMark32
+;
+    mov ax,si
+    sub ax,phys_header_start
+    movzx eax,ax
+    shl eax,13
+    mov edx,eax
+;    
+    mov eax,edi
+    and ax,0FFFh
+    shl eax,3
+    add edx,eax
+;    
+    mov eax,edx
+    mov ebx,edx
+    shl eax,12
+    shr ebx,20
+    clc
+
+ampDone32:
+    pop edi
+    pop esi
+    pop edx
+    pop ds
+    retf32
+allocate_multiple_physical32      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GET_FREE_PHYSICAL_MEM
+;
+;           DESCRIPTION:    Get free physical memory
+;
+;           PARAMETERS:     EDX:EAX         # of free bytes
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_free_physical_name  DB 'Get Free Physical Memory',0
+
+get_free_physical_mem   PROC far
+    push ds
+    push ecx
+    push esi
+    push edi
+;
+    mov ax,phys_bit_sel
+    mov ds,ax
+;
+    xor eax,eax
+    xor edx,edx
+;    
+    mov si,phys_header_start
+    mov cx,ds:phys_bitmap_count
+
+gfpLoop:
+    movzx edi,ds:[si].phys_bitmap_free
+    shl edi,12
+    add eax,edi
+    adc edx,0
+;
+    add si,4
+    loop gfpLoop
+;    
+    pop edi
+    pop esi
+    pop ecx
+    pop ds
+    retf32
+get_free_physical_mem   ENDP
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddPhys
+;
+;       DESCRIPTION:    Add physical entry
+;
+;       PARAMETERS:     EBX:EAX     Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddPhys   Proc near
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push esi
+    push edi
+;
+    mov cx,phys_bit_sel
+    mov ds,cx
+;
+    mov ecx,ebx
+    shl ecx,20
+    mov esi,eax
+    shr esi,12
+    add ecx,esi
+    mov ebx,ecx
+    shr ebx,15
+    and ecx,7FFFh
+
+apRetry:
+    cmp bx,ds:phys_bitmap_count
+    jb apDo
+;
+    push es
+    push ecx
+;    
+    mov ax,ds
+    mov es,ax
+;
+    movzx edi,ds:phys_bitmap_count
+    shl edi,2
+    add edi,phys_header_start
+    mov ds:[edi].phys_bitmap_pos,0
+    mov ds:[edi].phys_bitmap_free,0
+;    
+    movzx edi,ds:phys_bitmap_count
+    shl edi,12
+    add edi,phys_bitmap_start
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;    
+    inc ds:phys_bitmap_count
+;    
+    pop ecx
+    pop es
+    jmp apRetry
+    
+apDo:
+    mov edi,ebx
+    shl edi,12
+    add edi,phys_bitmap_start
+    lock bts ds:[edi],ecx
+;
+    shl ebx,2
+    add ebx,phys_header_start
+    lock inc ds:[ebx].phys_bitmap_free
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+AddPhys Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FillupPhysicalMem
+;
+;           DESCRIPTION:    Fillup physical mem structure 
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+fillup_physical_mem   Proc near
+    push eax
+    push ebx
+    push esi
+
+fillup_phys_mem_loop:
+    mov eax,cr0
+    and eax,NOT 80000000h
+    mov cr0,eax    
+;
+    call AllocateRam
+    jc fillup_phys_mem_done
+;
+    mov eax,cr0
+    or eax,80000000h
+    mov cr0,eax    
+;
+    xor ebx,ebx
+    mov eax,esi
+    call AddPhys
+    jmp fillup_phys_mem_loop
+
+fillup_phys_mem_done:
+    mov eax,cr0
+    or eax,80000000h
+    mov cr0,eax    
+;
+    pop esi
+    pop ebx
+    pop eax
+    ret
+fillup_physical_mem   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           INIT_PHYSICAL
+;
+;           DESCRIPTION:    Init module
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public init_physical
+
+init_physical   PROC near
+    call fillup_physical_mem
+;    
+    mov ax,system_data_sel
+    mov ds,ax
+;
+    InitSpinlock ds:phys_spinlock
+    mov bx,phys_page_sel
+    mov edx,phys_page_linear
+    mov ecx,ds:phys_free_pages
+    shl ecx,2
+    call local_create_data_sel16
+;
+    mov bx,phys_list_sel
+    mov ecx,ds:phys_free_pages
+    shl ecx,2
+    mov edx,phys_list_linear
+    call local_create_data_sel16
+    ret
+init_physical   ENDP
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -91,8 +1199,8 @@ init_physical_gates     PROC near
     mov ax,allocate_physical32_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET allocate_physical32
-    mov edi,OFFSET allocate_physical32_name
+    mov esi,OFFSET allocate_physical64
+    mov edi,OFFSET allocate_physical64_name
     xor cl,cl
     mov ax,allocate_physical64_nr
     RegisterOsGate
@@ -119,514 +1227,6 @@ init_physical_gates     PROC near
     popa
     ret
 init_physical_gates     ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LocalAllocatePhysical
-;
-;           DESCRIPTION:    Allocate physical page
-;
-;           PARAMETERS:     EDX:EAX         Address
-;                                                   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public local_allocate_physical
-
-local_allocate_physical       PROC near
-    push ds
-    push es
-    push edx
-;    
-    mov bx,system_data_sel
-    mov ds,bx
-    pushf
-    push ds
-    RequestSpinlock ds:phys_spinlock
-    dec ds:phys_free_pages
-    mov dx,phys_list_sel
-    mov es,dx
-    mov ebx,ds:free_phys_list
-    or ebx,ebx
-    jnz allocate_normal
-;
-    mov ebx,ds:free_dma_phys_list
-    mov edx,es:[ebx]
-    mov ds:free_dma_phys_list,edx
-    jmp allocate_mark
-
-allocate_normal:
-    mov edx,es:[ebx]
-    mov ds:free_phys_list,edx
-
-allocate_mark:
-    mov edx,ds:unused_phys_list
-    mov es:[ebx],edx
-    mov ds:unused_phys_list,ebx
-    mov ax,phys_page_sel
-    mov ds,ax
-    mov eax,ebx
-    mov eax,[eax]
-    xor al,al
-    pop ds
-    ReleaseSpinlockNoSti ds:phys_spinlock
-    xor ebx,ebx
-    popf
-;
-    pop edx
-    pop es
-    pop ds
-    ret
-local_allocate_physical       ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AllocatePhysical32
-;
-;           DESCRIPTION:    Allocate physical page
-;
-;           RETURNS:        EBX:EAX         Address
-;                                                   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-allocate_physical32_name  DB 'Allocate Physical Memory32',0
-
-allocate_physical32       PROC far
-    call local_allocate_physical
-    retf32
-allocate_physical32       ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AllocatePhysical64
-;
-;           DESCRIPTION:    Allocate physical page
-;
-;           RETURNS:        EBX:EAX         Address
-;                                                   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-allocate_physical64_name  DB 'Allocate Physical Memory64',0
-
-allocate_physical64       PROC far
-    call local_allocate_physical
-    retf32
-allocate_physical64       ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AllocateDmaPhysical
-;
-;           DESCRIPTION:    Allocate DMA physical page
-;
-;           PARAMETERS:         EAX         Address
-;                                                   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-allocate_dma_physical_name      DB 'Allocate DMA Physical Memory',0
-
-allocate_dma_physical   PROC far
-    push ds
-    push es
-    push ebx
-    push edx
-    mov bx,system_data_sel
-    mov ds,bx
-    pushf
-    push ds
-    RequestSpinlock ds:phys_spinlock
-    dec ds:phys_free_pages
-    mov dx,phys_list_sel
-    mov es,dx
-    mov ebx,ds:free_dma_phys_list
-    mov edx,es:[ebx]
-    mov ds:free_dma_phys_list,edx
-    mov edx,ds:unused_phys_list
-    mov es:[ebx],edx
-    mov ds:unused_phys_list,ebx
-    mov ax,phys_page_sel
-    mov ds,ax
-    mov eax,ebx
-    mov eax,[eax]
-    xor al,al
-    pop ds
-    ReleaseSpinlockNoSti ds:phys_spinlock
-    popf
-    pop edx
-    pop ebx
-    pop es
-    pop ds
-    retf32
-allocate_dma_physical   ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LocalFreePhysical
-;
-;           DESCRIPTION:    Free physical page
-;
-;           PARAMETERS:     EBX:EAX         Address
-;                           
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public local_free_physical
-
-local_free_physical   PROC near
-    push ds
-    push es
-    push ebx
-    push edx
-;
-    or ebx,ebx
-    jz fpdo
-;
-    int 3
-
-fpdo:    
-    and ax,0F000h
-    mov bx,system_data_sel
-    mov ds,bx
-    pushf
-    push ds
-    RequestSpinlock ds:phys_spinlock
-    inc ds:phys_free_pages
-    xor ebx,ebx
-    mov dx,phys_list_sel
-    mov es,dx
-    mov ebx,ds:unused_phys_list
-    mov edx,es:[ebx]
-    mov ds:unused_phys_list,edx
-    cmp eax,1000000h
-    jc free_dma_phys
-;
-    mov edx,ds:free_phys_list
-    mov es:[ebx],edx
-    mov ds:free_phys_list,ebx
-    jmp free_link_page
-
-free_dma_phys:
-    mov edx,ds:free_dma_phys_list
-    mov es:[ebx],edx
-    mov ds:free_dma_phys_list,ebx
-
-free_link_page:
-    mov dx,phys_page_sel
-    mov ds,dx
-    mov [ebx],eax
-    pop ds
-    ReleaseSpinlockNoSti ds:phys_spinlock
-    popf
-;    
-    pop edx
-    pop ebx
-    pop es
-    pop ds  
-    ret
-local_free_physical   ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FreePhysical
-;
-;           DESCRIPTION:    Free physical page
-;
-;           PARAMETERS:     EBX:EAX         Address
-;                           
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-free_physical_name      DB 'Free Physical Memory',0
-
-free_physical   PROC far
-    call local_free_physical
-    retf32
-free_physical   ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AllocateMultiplePhysical32
-;
-;           DESCRIPTION:    Allocate multiple physical page
-;
-;           PARAMETERS:     ECX         Number of pages
-;
-;           RETURN:         EBX:EAX     Physical base address
-;                                                   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-allocate_multiple_physical32_name DB 'Allocate 32-bit Multiple Physical Memory',0
-
-; edx address to check for
-
-check_address   Proc near
-    push eax
-    push ebx
-    push esi
-;
-    mov esi,ds:phys_free_pages
-    shl esi,2
-    mov ebx,ds:free_dma_phys_list
-
-check_addr_loop:
-    or ebx,ebx
-    jz check_addr_fail
-;       
-    cmp ebx,esi
-    jae check_addr_fail
-;    
-    mov eax,fs:[ebx]
-    xor al,al
-    cmp eax,edx
-    je check_addr_found
-;
-    mov ebx,es:[ebx]
-    jmp check_addr_loop
-
-check_addr_fail:
-    stc
-    jmp check_addr_done
-
-check_addr_found:
-    clc
-
-check_addr_done:
-    pop esi
-    pop ebx
-    pop eax
-    ret
-check_address   Endp
-
-; edx start address
-; ecx number of pages
-
-do_one_scan     Proc near
-    push ecx
-    push edx
-
-do_one_scan_loop:
-    call check_address
-    jc do_one_scan_done
-;
-    add edx,1000h
-    loop do_one_scan_loop
-;
-    clc
-
-do_one_scan_done:
-    pop edx
-    pop ecx 
-    ret
-do_one_scan     Endp
-
-; ecx number of pages
-; edx start address
-
-find_multi_page Proc near
-    push ebx
-;
-    mov ebx,ds:free_dma_phys_list
-
-find_multi_loop:
-    or ebx,ebx
-    jz find_multi_fail
-;       
-    mov edx,fs:[ebx]
-    xor dl,dl
-    call do_one_scan
-    jnc find_multi_done
-;
-    mov ebx,es:[ebx]
-    jmp find_multi_loop
-
-find_multi_fail:
-    stc
-
-find_multi_done:
-    pop ebx
-    ret
-find_multi_page Endp
-
-; edx physical address
-
-allocate_one_entry      Proc near
-    push eax
-    push ebx
-    push esi
-;
-    xor esi,esi
-    mov ebx,ds:free_dma_phys_list
-
-allocate_one_loop:
-    or ebx,ebx
-    jz allocate_one_fail
-;
-    mov eax,fs:[ebx]
-    xor al,al
-    cmp eax,edx
-    je allocate_one_do
-;
-    mov esi,ebx
-    mov ebx,es:[ebx]
-    jmp allocate_one_loop
-
-allocate_one_do:
-    or esi,esi
-    jnz allocate_one_not_first
-;
-    mov eax,es:[ebx]
-    mov ds:free_dma_phys_list,eax
-    jmp allocate_one_unused
-
-allocate_one_not_first:
-    mov eax,es:[ebx]
-    mov es:[esi],eax
-
-allocate_one_unused:
-    mov eax,ds:unused_phys_list
-    mov es:[ebx],eax
-    mov ds:unused_phys_list,ebx
-    clc
-    jmp allocate_one_done
-
-allocate_one_fail:
-    stc
-
-allocate_one_done:
-    pop esi
-    pop ebx
-    pop eax
-    ret
-allocate_one_entry      Endp
-
-; ecx number of pages
-; edx physical start address
-
-allocate_multi_entries  Proc near
-    push ecx
-    push edx
-
-allocate_multi_entry_loop:
-    call allocate_one_entry
-    add edx,1000h
-    loop allocate_multi_entry_loop
-
-allocate_multi_entry_done:
-    pop edx
-    pop ecx
-    ret
-allocate_multi_entries  Endp
-
-allocate_multiple_physical32      PROC far
-    push ds
-    push es
-    push fs
-    push edx
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov ax,phys_list_sel
-    mov es,ax
-    mov ax,phys_page_sel
-    mov fs,ax
-    pushf
-    RequestSpinlock ds:phys_spinlock
-    or ecx,ecx
-    jz allocate_multi_fail
-;
-    cmp ecx,ds:phys_free_pages
-    ja allocate_multi_fail
-;
-    call find_multi_page
-    jc allocate_multi_fail
-;
-    call allocate_multi_entries
-    sub ds:phys_free_pages,ecx
-    mov eax,edx
-    xor ebx,ebx
-    ReleaseSpinlockNoSti ds:phys_spinlock
-    popf
-    clc
-    jmp allocate_multi_done
-
-allocate_multi_fail:
-    ReleaseSpinlockNoSti ds:phys_spinlock
-    popf
-    stc
-
-allocate_multi_done:
-    pop edx
-    pop fs
-    pop es
-    pop ds
-    retf32
-allocate_multiple_physical32      ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GET_FREE_PHYSICAL_MEM
-;
-;           DESCRIPTION:    Get free physical memory
-;
-;           PARAMETERS:     EDX:EAX         # of free bytes
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_free_physical_name  DB 'Get Free Physical Memory',0
-
-get_free_physical_mem   PROC far
-    push ds
-    mov ax,system_data_sel
-    mov ds,ax
-    mov eax,ds:phys_free_pages
-    shl eax,12
-    xor edx,edx
-    pop ds
-    retf32
-get_free_physical_mem   ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           INIT_PHYSICAL
-;
-;           DESCRIPTION:    Init module
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public init_physical
-
-init_physical   PROC near
-    mov ax,system_data_sel
-    mov ds,ax
-;
-    InitSpinlock ds:phys_spinlock
-    mov bx,phys_page_sel
-    mov edx,phys_page_linear
-    mov ecx,ds:phys_free_pages
-    shl ecx,2
-    call local_create_data_sel16
-;
-    mov bx,phys_list_sel
-    mov ecx,ds:phys_free_pages
-    shl ecx,2
-    mov edx,phys_list_linear
-    call local_create_data_sel16
-    ret
-init_physical   ENDP
-
 
 code    ENDS
 
