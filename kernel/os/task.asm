@@ -2034,9 +2034,6 @@ GetNextThread   Endp
 ;           DESCRIPTION:    Suspend thread callback from scheduler
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    extrn prot_exception:near
-    extrn virt_exception:near
     
 thread_suspend:
     push dword ptr 0
@@ -2047,21 +2044,8 @@ thread_suspend:
     mov eax,ds
     push eax
 ;
-    mov eax,[ebp].trap_eflags
-    or eax,10100h
-    mov [ebp].trap_eflags,eax
-    test eax,20000h
-    jnz tsVm
-;
-    mov al,1
-    call prot_exception
-    jmp tsRet
-
-tsVm:
-    mov al,1
-    call virt_exception
-
-tsRet:
+    NotifyThreadSuspend
+;    
     pop eax
     mov ds,ax
     pop ebx

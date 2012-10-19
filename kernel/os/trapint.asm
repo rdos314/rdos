@@ -195,6 +195,38 @@ setup_smp_patch    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           NotifyThreadSuspend
+;
+;           DESCRIPTION:    Notify thread suspend
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_thread_suspend_name DB 'Notify Thread Suspend', 0
+    
+notify_thread_suspend    Proc far
+    mov eax,[ebp].trap_eflags
+    or eax,10100h
+    mov [ebp].trap_eflags,eax
+    test eax,20000h
+    jnz tsVm
+;
+    mov al,1
+    call prot_exception
+    jmp tsRet
+
+tsVm:
+    mov al,1
+    call virt_exception
+
+tsRet:
+    retf32
+notify_thread_suspend   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           int66, int67
 ;
 ;           DESCRIPTION:    Trap handlers for int 66 and 67
@@ -2413,6 +2445,12 @@ init_avail_irq_loop:
     mov edi,OFFSET setup_smp_patch_name
     xor cl,cl
     mov ax,setup_smp_patch_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET notify_thread_suspend
+    mov edi,OFFSET notify_thread_suspend_name
+    xor cl,cl
+    mov ax,notify_thread_suspend_nr
     RegisterOsGate
     ret
 init_trap_vectors       ENDP

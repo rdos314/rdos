@@ -1185,6 +1185,10 @@ SetupSmpPatch MACRO
     OsGate setup_smp_patch_nr
                     ENDM
 
+NotifyThreadSuspend MACRO
+    OsGate notify_thread_suspend_nr
+                    ENDM
+
 StartTasking MACRO
     OsGate start_tasking_nr
                     ENDM
