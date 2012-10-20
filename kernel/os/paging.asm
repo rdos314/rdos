@@ -262,7 +262,7 @@ page_fault_system       PROC near
     push ax
     mov edx,cr2
     popf
-;
+;    
     call cs:get_page_entry_proc
     test al,1
     jnz page_fault_system_retry
@@ -309,6 +309,7 @@ page_fault      Proc near
     cmp eax,io_local_linear
     je page_fault_user
 ;
+    and eax,0FF800000h
     cmp eax,process_page_linear
     je process_dir_fault
 ;

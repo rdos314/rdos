@@ -332,6 +332,10 @@ prot_start:
 ;
     mov ax,20h
     mov es,ax
+;    
+    mov eax,es:ap_cr4
+    mov cr4,eax
+;
     mov eax,es:ap_cr3
     mov cr3,eax
 ;    
@@ -384,11 +388,6 @@ page_struc  ENDS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ApInit:
-    mov eax,es:ap_cr4
-    db 0Fh
-    db 22h
-    db 0E0h     ; mov cr4,eax
-;    
     xor ax,ax
     mov ds,ax
     mov es,ax
@@ -3791,9 +3790,7 @@ BootCore    Proc near
     mov eax,cr3
     mov es:[di].ap_cr3,eax
 ;
-    db 0Fh
-    db 20h
-    db 0E0h     ; mov eax,cr4
+    mov eax,cr4
     mov es:[di].ap_cr4,eax
 ;
     db 66h

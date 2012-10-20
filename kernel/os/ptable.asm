@@ -1874,8 +1874,61 @@ local_init_process64     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_create_process64       PROC near
-    pop bp
     int 3
+    push ds
+    push es
+    mov eax,3000h
+    AllocateGlobalMem
+    mov ax,sys_dir_sel
+    mov ds,ax
+    xor ax,ax
+    mov di,1000h
+    mov ecx,system_mem_start
+    shr ecx,20
+    rep stosd
+;    
+    mov eax,system_mem_start
+    mov esi,eax
+    shr esi,18
+    shr eax,20
+    mov cx,400h
+    sub cx,ax
+    rep movsd
+;
+    mov ax,sys_page_sel
+    mov ds,ax
+    xor si,si
+    mov cx,400h
+    xor eax,eax
+    rep movsd
+;
+    mov ax,gdt_sel
+    mov ds,ax
+    mov bx,es
+    mov edx,[bx+2]
+    rol edx,8
+    mov dl,[bx+7]
+    ror edx,8
+    shr edx,10
+;
+    mov ax,sys_page_sel
+    mov ds,ax
+    mov eax,[edx+8]
+    mov di,1000h
+    mov es:[di],eax
+;
+    mov eax,[edx+4]
+    mov al,7
+    mov ebx,process_page_linear
+    shr ebx,18
+    mov es:[bx+di],eax
+;
+    mov dx,es
+    mov fs,dx
+    pop es
+    pop ds
+    mov es:p_cr3,eax
+    mov ds:p_tss_cr3,eax
     ret
 local_create_process64       ENDP
 
@@ -1911,9 +1964,6 @@ local_free_process64     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_get_page_entry64       Proc near
-    pop bp
-    int 3
-
     push ds
     mov ax,process_page_sel
     mov ds,ax
@@ -1939,8 +1989,29 @@ local_get_page_entry64       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_set_page_entry64       Proc near
-    pop bp
-    int 3
+    push ds
+    push eax
+    push ecx
+    push edx
+;    
+    mov cx,process_page_sel
+    mov ds,cx
+    shr edx,9
+    and dl,0F8h
+;
+    mov [edx+4],ebx
+    xchg eax,[edx]
+    test al,1
+    jz sppDone64
+;
+    mov cx,1
+    FlushTlb
+
+sppDone64:
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
     ret
 local_set_page_entry64       Endp
 
@@ -1958,8 +2029,15 @@ local_set_page_entry64       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_get_sys_page_entry64       Proc near
-    pop bp
-    int 3
+    push ds
+    mov ax,sys_page_sel
+    mov ds,ax
+    mov eax,edx
+    shr eax,9
+    and al,0F8h
+    mov ebx,[eax+4]
+    mov eax,[eax]
+    pop ds
     ret
 local_get_sys_page_entry64       Endp
 
@@ -1976,8 +2054,22 @@ local_get_sys_page_entry64       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_set_sys_page_entry64       Proc near
-    pop bp
-    int 3
+    push ds
+    push eax
+    push ecx
+    push edx
+;
+    mov cx,sys_page_sel
+    mov ds,cx
+    shr edx,9
+    and dl,0F8h
+    mov [edx],eax
+    mov [edx+4],ebx
+;
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
     ret
 local_set_sys_page_entry64       Endp
 
@@ -2013,8 +2105,8 @@ local_get_page_dir_attrib64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_fault_to_dir64       Proc near
-    pop bp
-    int 3
+    sub edx,process_page_linear
+    shl edx,9
     ret
 local_fault_to_dir64    Endp    
 
@@ -2051,8 +2143,18 @@ local_get_page_dir64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_get_sys_page_dir64       Proc near
-    pop bp
-    int 3
+    push ds
+    push edx
+;    
+    mov ax,sys_dir_sel
+    mov ds,ax
+    shr edx,18
+    and dl,0F8h
+    mov eax,[edx]
+    mov ebx,[edx+4]
+;    
+    pop edx
+    pop ds
     ret
 local_get_sys_page_dir64    Endp    
 
@@ -2069,8 +2171,20 @@ local_get_sys_page_dir64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_set_page_dir64       Proc near
-    pop bp
-    int 3
+    push ds
+    push cx
+    push edx
+;    
+    mov cx,process_dir_sel
+    mov ds,cx
+    shr edx,18
+    and dl,0F8h
+    mov [edx],eax
+    mov [edx+4],ebx
+;    
+    pop edx
+    pop cx
+    pop ds
     ret
 local_set_page_dir64    Endp    
 
@@ -2093,7 +2207,7 @@ local_set_sys_page_dir64       Proc near
 ;    
     mov cx,sys_dir_sel
     mov ds,cx
-    shr edx,21
+    shr edx,18
     and dl,0F8h
     mov [edx],eax
     mov [edx+4],ebx
@@ -2133,8 +2247,39 @@ local_create_page_dir64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_create_sys_page_dir64       Proc near
-    pop bp
-    int 3
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    push edx
+    mov bx,sys_dir_sel
+    mov ds,bx
+    shr edx,18
+    and dx,3FF8h
+    call local_allocate_physical
+    mov al,7
+    mov [edx],eax    
+    mov [edx+4],ebx
+    pop edx
+;
+    shr edx,9
+    and dx,0F000h
+    mov bx,sys_page_sel
+    mov ds,bx
+;
+    mov cx,400h
+    xor ebx,ebx
+
+cspdInit64:
+    mov [edx],ebx
+    add edx,4
+    loop cspdInit64
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
     ret
 local_create_sys_page_dir64    Endp    
 
@@ -2213,8 +2358,65 @@ local_allocate_page_entries64       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_allocate_sys_page_entries64       Proc near
-    pop bp
-    int 3
+    push eax
+    push ebx
+    push esi
+;
+    mov esi,eax
+    shr edx,9
+    shr esi,9
+;    
+    mov bx,sys_page_sel
+    mov ds,bx
+;    
+    xor ebx,ebx
+
+aspeLoop64:
+    cmp edx,esi
+    stc
+    je aspeFail64
+;
+    inc ebx
+    mov eax,[edx]
+    or eax,eax
+    jz aspeNext64
+;    
+    xor ebx,ebx
+    
+aspeNext64:
+    add edx,8
+    cmp ecx,ebx
+    jne aspeLoop64
+;
+    mov eax,ecx
+    shl eax,3
+    sub edx,eax
+;
+    push edx
+    push ecx
+;    
+    mov eax,2
+    
+aspeMark64:
+    mov [edx],eax
+    add edx,8
+    sub ecx,1
+    jnz aspeMark64
+;
+    pop ecx
+    pop edx
+;    
+    shl edx,9
+    clc
+    jmp aspeDone64
+
+aspeFail64:
+    stc
+
+aspeDone64:
+    pop esi
+    pop ebx
+    pop eax
     ret
 local_allocate_sys_page_entries64       Endp
 
@@ -2251,8 +2453,47 @@ local_free_page_entries64       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_free_global_page_entries64       Proc near
-    pop bp
-    int 3
+    push ds
+    pushad
+;   
+    or ecx,ecx
+    jz fgpeDone64
+;
+    mov esi,eax
+    push ecx
+    push edx
+;
+    mov bx,sys_page_sel
+    mov ds,bx
+    shr edx,9
+    and dl,0F8h
+    
+fgpeLoop64:
+    mov eax,[edx]
+    test al,1
+    jz fgpeMark64
+;
+    test ax,800h
+    jnz fgpeMark64
+;
+    mov ebx,[edx+4]
+    FreePhysical
+
+fgpeMark64:        
+    mov [edx],esi
+    mov dword ptr [edx+4],0
+;
+    add edx,8
+    sub ecx,1
+    jnz fgpeLoop64
+;    
+    pop edx
+    pop ecx
+    FlushTlb
+
+fgpeDone64:
+    popad
+    pop ds
     ret
 local_free_global_page_entries64       Endp
 
@@ -2289,8 +2530,32 @@ local_copy_page_entries64       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_copy_sys_page_entries64       Proc near
-    pop bp
-    int 3
+    push ds
+    pushad
+;
+    or ecx,ecx
+    jz cspeDone64
+;
+    mov bx,sys_page_sel
+    mov ds,bx
+    shr esi,9
+    shr edi,9
+    and si,0FFF8h
+    and di,0FFF8h
+    
+cspeLoop64:
+    mov ebx,[esi]
+    mov [edi],ebx
+    mov ebx,[esi+4]
+    mov [edi+4],ebx
+    add esi,8
+    add edi,8
+    sub ecx,1
+    jnz cspeLoop64
+
+cspeDone64:
+    popad
+    pop ds
     ret
 local_copy_sys_page_entries64       Endp
 
@@ -2327,8 +2592,33 @@ local_move_page_entries64       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_emulate_page64    PROC near
-    pop bp
-    int 3
+    push ds
+    push eax
+    push ecx
+    push edx
+;
+    mov cx,sys_page_sel
+    mov ds,cx
+    mov ecx,eax
+    dec ecx
+    shr ecx,12
+    inc cx
+    shr edx,9
+    and dx,0FFF8h
+    mov ax,es
+    or ax,8006h
+    
+epMark64:
+    mov [edx],ax
+    mov [edx+2],di
+    mov dword ptr [edx+4],0
+    add edx,8
+    loop epMark64
+;    
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
     ret
 local_emulate_page64    ENDP
 
@@ -3464,6 +3754,7 @@ map_sys_dir_loop64:
     mov eax,[ebx]
     mov al,3
     mov es:[di],eax
+    mov dword ptr es:[di+4],0
     add ebx,8
     add di,8
     loop map_sys_dir_loop64
@@ -3476,6 +3767,7 @@ map_proc_dir_loop64:
     mov eax,[ebx]
     mov al,3
     mov es:[di],eax
+    mov dword ptr es:[di+4],0
     add bx,8
     add di,8
     loop map_proc_dir_loop64
@@ -3760,6 +4052,87 @@ setup_proc64     PROC near
 setup_proc64    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           init_phys_bitmap64
+;
+;           DESCRIPTION:    init physical bitmaps, 64-bit version
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_phys_bitmap64       Proc near
+    mov ax,flat_sel
+    mov ds,ax
+    mov es,ax
+;    
+    call AllocateRam
+    mov edi,esi
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]    
+;        
+    mov eax,esi
+    mov edi,esi
+    xor ebx,ebx
+    or al,3
+    mov edx,phys_bitmap_linear
+    call local_set_sys_page_dir64
+;
+    call AllocateRam
+    mov eax,esi
+    or al,3
+    mov ds:[edi],eax
+    xor eax,eax
+    mov ds:[edi+4],eax
+;
+    mov ds:[esi].phys_curr_header32,1
+    mov ds:[esi].phys_curr_header64,0
+    mov ds:[esi].phys_bitmap_count,1
+;
+    mov ebx,esi
+    add ebx,phys_header_start
+    mov ds:[ebx].phys_bitmap_free,0
+    mov ds:[ebx].phys_bitmap_pos,0
+;
+    call AllocateRam
+    mov eax,esi
+    or al,3
+    add edi,phys_bitmap_start SHR 9
+    mov ds:[edi],eax
+    xor eax,eax
+    mov ds:[edi+4],eax
+;
+    mov edi,esi
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    mov edi,esi
+;
+    mov ax,system_data_sel
+    mov ds,ax
+
+init_phys_alloc_loop64:
+    mov esi,ds:alloc_base
+    cmp esi,ds:ram1_size
+    jae init_phys_alloc_done64
+;    
+    cmp esi,40000h
+    jae init_phys_alloc_done64
+;
+    call AllocateRam
+    mov ecx,esi
+    shr ecx,12
+    bts es:[edi],ecx
+    inc es:[ebx].phys_bitmap_free
+    jmp init_phys_alloc_loop64
+
+init_phys_alloc_done64:
+    ret
+init_phys_bitmap64  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           start_paging64
@@ -3775,6 +4148,7 @@ setup_proc64    Endp
 start_paging64    Proc near
     call create_paging64
     call setup_proc64
+    call init_phys_bitmap64
 ;
     mov eax,cr4
     or eax,20h
@@ -3784,6 +4158,9 @@ start_paging64    Proc near
     or eax,80000000h
     mov cr0,eax
 ;
+    mov eax,cr3
+    mov cr3,eax
+;    
     mov ax,system_data_sel
     mov ds,ax
     mov eax,ds:cpu_feature_flags
