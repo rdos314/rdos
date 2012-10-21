@@ -1856,8 +1856,94 @@ local_get_thread_page_dir32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_init_process64     Proc near
-    pop bp
-    int 3
+    mov ax,sys_page_sel
+    mov ds,ax
+    mov ax,system_data_sel
+    mov es,ax
+    mov ecx,es:rom1_size
+    or ecx,ecx
+    jz ipUnmapDone1_64
+;
+    mov edx,es:rom1_base
+    add ecx,edx
+    and dx,0F000h
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+    sub ecx,edx
+    shr edx,9
+    shr ecx,12
+
+ipUnmapLoop1_64:
+    mov dword ptr [edx],0
+    add edx,8
+    loop ipUnmapLoop1_64
+
+ipUnmapDone1_64:
+    mov ecx,es:rom2_size
+    or ecx,ecx
+    jz ipUnmapDone2_64
+;
+    mov edx,es:rom2_base
+    add ecx,edx
+    and dx,0F000h
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+    sub ecx,edx
+    shr edx,9
+    shr ecx,12
+
+ipUnmapLoop2_64:
+    mov dword ptr [edx],0
+    add edx,8
+    loop ipUnmapLoop2_64
+
+ipUnmapDone2_64:
+    mov ax,sys_dir_sel
+    mov ds,ax
+    mov bx,(sys_page_linear SHR 18) AND 3FFFh
+    mov ebx,[bx]
+    and bx,0F000h
+;
+    mov ax,sys_page_sel
+    mov ds,ax
+    mov ax,process_page_sel
+    mov es,ax
+    mov edx,8
+
+ipFreeStartupLoop64:
+    mov eax,[edx]
+    test al,1
+    jz ipFreeStartupDone64
+;
+    and ax,0F000h
+    cmp eax,ebx
+    jae ipFreeStartupZero64
+;
+    xor ebx,ebx
+    FreePhysical
+
+ipFreeStartupZero64:
+    xor eax,eax
+    mov [edx],eax
+    mov es:[edx],eax
+    add edx,8
+    jmp ipFreeStartupLoop64
+
+ipFreeStartupDone64:  
+    mov ax,system_data_sel
+    mov es,ax
+    mov eax,es:flat_base
+    or eax,eax
+    jnz ipFlatOk64
+;    
+    xor ebx,ebx
+    mov [ebx],ebx
+
+ipFlatOk64:    
+    mov eax,cr3
+    mov cr3,eax
     ret
 local_init_process64     Endp
 
@@ -1927,23 +2013,31 @@ local_create_process64       PROC near
     mov es:[di+4],eax
 ;
     mov cx,4
+    mov esi,16
     mov ebx,process_page_linear
     shr ebx,18
-    mov esi,16
+    add bx,di
+    mov di,1000h
 
 create_process_loop64:    
     mov eax,[edx+esi]
     mov al,7
-    mov es:[bx+di],eax
+    mov es:[bx],eax
+    and ax,0F000h
+    mov al,1
+    mov es:[di],eax
 ;
     add esi,4
     add bx,4
+    add di,4
 ;        
     mov eax,[edx+esi]
-    mov es:[bx+di],eax
+    mov es:[bx],eax
+    mov es:[di],eax
 ;
     add esi,4
     add bx,4
+    add di,4
 ;    
     loop create_process_loop64
 ;
@@ -1971,7 +2065,7 @@ local_create_process64       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_free_process64     Proc near
-    pop bp
+    CrashGate
     int 3
     ret
 local_free_process64     Endp
@@ -2267,8 +2361,39 @@ local_set_sys_page_dir64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_create_page_dir64       Proc near
-    pop bp
-    int 3
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    push edx
+    mov bx,process_dir_sel
+    mov ds,bx
+    shr edx,18
+    and dx,3FF8h
+    call local_allocate_physical
+    mov al,7
+    mov [edx],eax    
+    mov [edx+4],ebx
+    pop edx
+;
+    shr edx,9
+    and dx,0F000h
+    mov bx,process_page_sel
+    mov ds,bx
+;
+    mov cx,400h
+    xor ebx,ebx
+
+cpdInit64:
+    mov [edx],ebx
+    add edx,4
+    loop cpdInit64
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
     ret
 local_create_page_dir64    Endp    
 
@@ -2334,7 +2459,7 @@ local_create_sys_page_dir64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_has_page_entry64       Proc near
-    pop bp
+    CrashGate
     int 3
     ret
 local_has_page_entry64       Endp
@@ -2353,7 +2478,7 @@ local_has_page_entry64       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_reserve_page_entries64       Proc near
-    pop bp
+    CrashGate
     int 3
     ret
 local_reserve_page_entries64       Endp
@@ -2374,8 +2499,65 @@ local_reserve_page_entries64       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_allocate_page_entries64       Proc near
-    pop bp
-    int 3
+    push eax
+    push ebx
+    push esi
+;
+    mov esi,eax
+    shr edx,9
+    shr esi,9
+;    
+    mov bx,process_page_sel
+    mov ds,bx
+;    
+    xor ebx,ebx
+
+apeLoop64:
+    cmp edx,esi
+    stc
+    je apeFail64
+;
+    inc ebx
+    mov al,[edx]
+    test al,7
+    jz apeNext64
+;    
+    xor ebx,ebx
+    
+apeNext64:
+    add edx,8
+    cmp ecx,ebx
+    jne apeLoop64
+;
+    mov eax,ecx
+    shl eax,3
+    sub edx,eax
+;
+    push edx
+    push ecx
+;    
+    mov eax,2
+    
+apeMark64:
+    mov [edx],eax
+    add edx,8
+    sub ecx,1
+    jnz apeMark64
+;
+    pop ecx
+    pop edx
+;    
+    shl edx,9
+    clc
+    jmp apeDone64
+
+apeFail64:
+    stc
+
+apeDone64:
+    pop esi
+    pop ebx
+    pop eax
     ret
 local_allocate_page_entries64       Endp
 
@@ -2471,7 +2653,7 @@ local_allocate_sys_page_entries64       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_free_page_entries64       Proc near
-    pop bp
+    CrashGate
     int 3
     ret
 local_free_page_entries64       Endp
@@ -2548,8 +2730,39 @@ local_free_global_page_entries64       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_copy_page_entries64       Proc near
-    pop bp
-    int 3
+    push ds
+    pushad
+;
+    or ecx,ecx
+    jz cpeDone64
+;
+    push ecx
+    push edi
+;
+    mov bx,process_page_sel
+    mov ds,bx
+    shr esi,9
+    shr edi,9
+    and si,0FFF8h
+    and di,0FFF8h
+    
+cpeLoop64:
+    mov ebx,[esi]
+    mov [edi],ebx
+    mov ebx,[esi+4]
+    mov [edi],ebx
+    add esi,8
+    add edi,8
+    sub ecx,1
+    jnz cpeLoop64
+;    
+    pop edx
+    pop ecx
+    FlushTlb
+
+cpeDone64:
+    popad
+    pop ds
     ret
 local_copy_page_entries64       Endp
 
@@ -2610,7 +2823,7 @@ local_copy_sys_page_entries64       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_move_page_entries64       Proc near
-    pop bp
+    CrashGate
     int 3
     ret
 local_move_page_entries64       Endp
@@ -2673,7 +2886,7 @@ local_emulate_page64    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_hook_page64       PROC near
-    pop bp
+    CrashGate
     int 3
     ret
 local_hook_page64       ENDP
@@ -2692,7 +2905,7 @@ local_hook_page64       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_unhook_page64     PROC near
-    pop bp
+    CrashGate
     int 3
     ret
 local_unhook_page64     ENDP
@@ -2712,7 +2925,7 @@ local_unhook_page64     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_get_thread_page_entry64    Proc near
-    pop bp
+    CrashGate
     int 3
     ret
 local_get_thread_page_entry64    Endp
@@ -2731,7 +2944,7 @@ local_get_thread_page_entry64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_set_thread_page_entry64    Proc near
-    pop bp
+    CrashGate
     int 3
     ret
 local_set_thread_page_entry64    Endp
@@ -2751,7 +2964,7 @@ local_set_thread_page_entry64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_get_thread_page_dir64    Proc near
-    pop bp
+    CrashGate
     int 3
     ret
 local_get_thread_page_dir64    Endp
