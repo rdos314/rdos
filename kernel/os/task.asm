@@ -9532,6 +9532,15 @@ create_first_thread       PROC near
     mov es:p_pm_deb_sel,ax
     mov es:p_pm_deb_offs,eax
     mov es:p_debug_proc,0
+    mov es:p_flags,0
+    mov es:p_cli_spinlock,0
+    mov es:p_sti_spinlock,0
+    mov es:p_signal,0
+    mov es:p_parent_switch,0
+    mov es:p_wait_list,0
+    mov es:p_kill,0
+    mov es:p_ref_count,0
+    mov es:p_is_waiting,0
 ;
     mov ax,cs
     mov ds,ax

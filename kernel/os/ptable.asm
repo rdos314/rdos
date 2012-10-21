@@ -1868,30 +1868,44 @@ local_init_process64     Endp
 ;
 ;           DESCRIPTION:    Create process paging environment
 ;
-;           PARAMETERS:     ES          Thread
-;                           EAX         CR3
+;           RETURNS:        FS          Thread sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_create_process64       PROC near
-    int 3
     push ds
     push es
-    mov eax,3000h
+;    
+    mov eax,7000h
     AllocateGlobalMem
+;   
+    mov bx,es
+    GetSelectorBaseSize
+    add edx,1000h
+;
+    AllocatePhysical32
+    or al,3
+    SetPageEntry
+    sub edx,1000h
+;    
+    mov di,1000h
+    mov cx,400h
+    xor eax,eax
+    rep stosd
+;     
     mov ax,sys_dir_sel
     mov ds,ax
-    xor ax,ax
-    mov di,1000h
+    mov di,2000h
     mov ecx,system_mem_start
     shr ecx,20
+    xor eax,eax
     rep stosd
 ;    
     mov eax,system_mem_start
     mov esi,eax
     shr esi,18
     shr eax,20
-    mov cx,400h
+    mov cx,1000h
     sub cx,ax
     rep movsd
 ;
@@ -1901,27 +1915,40 @@ local_create_process64       PROC near
     mov cx,400h
     xor eax,eax
     rep movsd
-;
-    mov ax,gdt_sel
-    mov ds,ax
-    mov bx,es
-    mov edx,[bx+2]
-    rol edx,8
-    mov dl,[bx+7]
-    ror edx,8
-    shr edx,10
+;    
+    shr edx,9
 ;
     mov ax,sys_page_sel
     mov ds,ax
-    mov eax,[edx+8]
-    mov di,1000h
+    mov di,2000h
+    mov eax,[edx+48]
     mov es:[di],eax
+    mov eax,[edx+52]
+    mov es:[di+4],eax
 ;
-    mov eax,[edx+4]
-    mov al,7
+    mov cx,4
     mov ebx,process_page_linear
     shr ebx,18
+    mov esi,16
+
+create_process_loop64:    
+    mov eax,[edx+esi]
+    mov al,7
     mov es:[bx+di],eax
+;
+    add esi,4
+    add bx,4
+;        
+    mov eax,[edx+esi]
+    mov es:[bx+di],eax
+;
+    add esi,4
+    add bx,4
+;    
+    loop create_process_loop64
+;
+    mov eax,[edx+8]        
+    xor al,al
 ;
     mov dx,es
     mov fs,dx
@@ -2124,8 +2151,18 @@ local_fault_to_dir64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_get_page_dir64       Proc near
-    pop bp
-    int 3
+    push ds
+    push edx
+;    
+    mov ax,process_dir_sel
+    mov ds,ax
+    shr edx,18
+    and dl,0F8h
+    mov eax,[edx]
+    mov ebx,[edx+4]
+;    
+    pop edx
+    pop ds
     ret
 local_get_page_dir64    Endp    
 

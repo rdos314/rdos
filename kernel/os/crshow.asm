@@ -1289,6 +1289,11 @@ ReadData        Proc near
     mov ebx,gs:cs_cr3
     mov cr3,ebx
 ;
+    mov ebx,cr4
+    test bx,20h
+    jnz rd64
+
+rd32:    
     mov bx,process_dir_sel
     mov ds,bx
     mov ebx,edx
@@ -1308,11 +1313,39 @@ ReadData        Proc near
     test al,1
     stc
     jz rdDone
-;        
+;
     mov bx,flat_sel
     mov ds,bx
     mov al,[edx]
     clc
+    jmp rdDone
+
+rd64:    
+    mov bx,process_dir_sel
+    mov ds,bx
+    mov ebx,edx
+    shr ebx,18
+    and bl,0F8h
+    mov eax,[bx]
+    test al,1
+    stc
+    jz rdDone
+;
+    mov bx,process_page_sel
+    mov ds,bx
+    mov ebx,edx
+    shr ebx,9
+    and bl,0F8h
+    mov eax,[ebx]
+    test al,1
+    stc
+    jz rdDone
+;
+    mov bx,flat_sel
+    mov ds,bx
+    mov al,[edx]
+    clc
+    jmp rdDone
 
 rdDone:
     pop ebx

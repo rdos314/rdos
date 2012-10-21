@@ -188,16 +188,33 @@ LocalGetSelectorBaseSize  Endp
     
 LocalSetPhysicalPage    Proc near
     push ds
-    push ebx
-    mov bx,process_page_sel
-    mov ds,bx
-    mov ebx,edx
-    shr ebx,10
-    and bl,0FCh
-    mov [ebx],eax
-    mov ebx,cr3
-    mov cr3,ebx
-    pop ebx
+    push ecx
+    mov ecx,cr4
+    test cx,20h
+    jnz spp64
+
+spp32:    
+    mov cx,process_page_sel
+    mov ds,cx
+    mov ecx,edx
+    shr ecx,10
+    and cl,0FCh
+    mov [ecx],eax
+    jmp sppDone
+
+spp64:
+    mov cx,process_page_sel
+    mov ds,cx
+    mov ecx,edx
+    shr ecx,9
+    and cl,0F8h
+    mov [ecx],eax
+    mov [ecx+4],ebx
+
+sppDone:    
+    mov ecx,cr3
+    mov cr3,ecx
+    pop ecx
     pop ds
     ret
 LocalSetPhysicalPage Endp
