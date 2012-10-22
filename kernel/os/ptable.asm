@@ -2065,7 +2065,6 @@ local_create_process64       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_free_process64     Proc near
-    CrashGate
     int 3
     ret
 local_free_process64     Endp
@@ -2459,8 +2458,24 @@ local_create_sys_page_dir64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_has_page_entry64       Proc near
-    CrashGate
-    int 3
+    push ds
+    push eax
+;    
+    mov ax,process_page_sel
+    mov ds,ax
+    mov eax,edx
+    shr eax,9
+    and al,0F8h
+    mov eax,[eax]
+    test al,1
+    clc
+    jnz hpeDone64
+;
+    stc
+
+hpeDone64:    
+    pop eax    
+    pop ds
     ret
 local_has_page_entry64       Endp
 
@@ -2478,8 +2493,48 @@ local_has_page_entry64       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_reserve_page_entries64       Proc near
-    CrashGate
-    int 3
+    push eax
+;    
+    mov ax,process_page_sel
+    mov ds,ax
+    shr edx,9
+;
+    push ecx
+    push edx
+
+rpeLoop64:
+    mov al,[edx]
+    test al,7
+    jnz rpePopFail64
+;    
+    add edx,8
+    sub ecx,1
+    jnz rpeLoop64
+;    
+    pop edx
+    pop ecx
+;
+    push ecx    
+
+rpeMark64:
+    mov eax,2
+    mov [edx],eax
+    add edx,8
+;    
+    sub ecx,1
+    jnz rpeMark64
+;
+    pop ecx
+    clc
+    jmp rpeDone64
+
+rpePopFail64:
+    pop edx
+    pop ecx
+    stc
+
+rpeDone64:    
+    pop eax
     ret
 local_reserve_page_entries64       Endp
 
@@ -2653,8 +2708,46 @@ local_allocate_sys_page_entries64       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_free_page_entries64       Proc near
-    CrashGate
-    int 3
+    push ds
+    pushad
+;   
+    or ecx,ecx
+    jz fpeDone64
+;
+    mov esi,eax
+    push ecx
+    push edx
+;
+    mov bx,process_page_sel
+    mov ds,bx
+    shr edx,9
+    and dl,0F8h
+    
+fpeLoop64:
+    mov eax,[edx]
+    test al,1
+    jz fpeMark64
+;
+    test ax,800h
+    jnz fpeMark64
+;
+    mov ebx,[edx+4]
+    FreePhysical
+
+fpeMark64:        
+    mov [edx],esi
+;
+    add edx,8
+    sub ecx,1
+    jnz fpeLoop64
+;    
+    pop edx
+    pop ecx
+    FlushTlb
+
+fpeDone64:
+    popad
+    pop ds
     ret
 local_free_page_entries64       Endp
 
@@ -2823,8 +2916,45 @@ local_copy_sys_page_entries64       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_move_page_entries64       Proc near
-    CrashGate
-    int 3
+    push ds
+    pushad
+;
+    or ecx,ecx
+    jz mpeDone64
+;
+    push esi
+    push edi
+    push ecx
+;    
+    mov bx,process_page_sel
+    mov ds,bx
+    shr esi,9
+    shr edi,9
+    and si,0FFF8h
+    and di,0FFF8h
+
+mpeLoop64:
+    mov ebx,[esi+4]
+    mov [edi+4],ebx
+    mov ebx,2
+    xchg ebx,[esi]
+    mov [edi],ebx
+;
+    add esi,8
+    add edi,8
+    sub ecx,1
+    jnz mpeLoop64
+;    
+    pop ecx
+    pop edx
+    FlushTlb
+;
+    pop edx
+    FlushTlb
+
+mpeDone64:
+    popad
+    pop ds
     ret
 local_move_page_entries64       Endp
 
@@ -2886,8 +3016,59 @@ local_emulate_page64    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_hook_page64       PROC near
-    CrashGate
-    int 3
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov cx,process_page_sel
+    mov ds,cx
+;
+    or eax,eax
+    jz hpDone64
+;
+    mov ecx,eax
+    add ecx,edx
+    and dx,0F000h
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+    sub ecx,edx
+    shr edx,9
+    shr ecx,12
+
+hpMark64:
+    mov eax,[edx]
+    test al,1
+    jz hpDo64
+;
+    mov ebx,[edx+4]
+    call local_free_physical
+;
+    mov eax,cr3
+    mov cr3,eax
+    mov eax,2
+
+hpDo64:
+    and al,6
+    jz hpNext64
+;
+    mov ax,es
+    or al,6
+    mov [edx],ax
+    mov [edx+2],di
+
+hpNext64:
+    add edx,8
+    loop hpMark64
+
+hpDone64:
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
     ret
 local_hook_page64       ENDP
 
@@ -2905,8 +3086,47 @@ local_hook_page64       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_unhook_page64     PROC near
-    CrashGate
-    int 3
+    push ds
+    push eax
+    push ecx
+    push edx
+;
+    mov cx,process_page_sel
+    mov ds,cx
+;
+    or eax,eax
+    jz uhpDone64
+;
+    mov ecx,eax
+    add ecx,edx
+    and dx,0F000h
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+    sub ecx,edx
+    shr edx,9
+    shr ecx,12
+
+uhpMark64:
+    mov eax,[edx]
+    test al,1
+    jnz uhpMark64
+;
+    and al,6
+    cmp al,6
+    jne uhpNext64
+;
+    mov dword ptr [edx],2
+
+uhpNext64:
+    add edx,8
+    loop uhpMark64
+
+uhpDone64:
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
     ret
 local_unhook_page64     ENDP
 
@@ -2925,8 +3145,57 @@ local_unhook_page64     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_get_thread_page_entry64    Proc near
-    CrashGate
     int 3
+    push ds
+    push es
+    push edx
+    push si
+    push edi
+;
+    and dx,0F000h
+    SimCli
+    mov es,bp
+;    
+    mov ax,process_dir_sel
+    mov ds,ax
+    mov si,(alias_linear SHR 18) AND 0FFFh
+    mov eax,es:p_cr3
+    or ax,803h
+    mov [si],eax
+    mov eax,cr3
+    mov cr3,eax
+;
+    mov eax,alias_linear
+    mov edi,edx
+    shr edi,18
+    and di,0FFF8h
+    add edi,eax
+    mov ebx,edi
+    shr edi,9
+    and di,0FFF8h
+    mov ax,process_page_sel
+    mov ds,ax
+    mov eax,[edx]
+    test al,1
+    jnz get_thread_phys_do64
+;
+    xor eax,eax
+    xor ebx,ebx
+    jmp get_thread_phys_done64
+
+get_thread_phys_do64:     
+    mov ax,flat_sel
+    mov ds,ax
+    mov eax,[ebx]
+    xor ebx,ebx
+
+get_thread_phys_done64:
+    SimSti
+    pop edi
+    pop si
+    pop edx
+    pop es
+    pop ds
     ret
 local_get_thread_page_entry64    Endp
 
@@ -2944,7 +3213,6 @@ local_get_thread_page_entry64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_set_thread_page_entry64    Proc near
-    CrashGate
     int 3
     ret
 local_set_thread_page_entry64    Endp
@@ -2964,8 +3232,70 @@ local_set_thread_page_entry64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_get_thread_page_dir64    Proc near
-    CrashGate
+    push ds
+    push edx
+    push esi
+    push edi
+;
+    and dx,0F000h
+    SimCli
+    mov es,bp
+;    
+    mov ax,process_dir_sel
+    mov ds,ax
+    mov si,(alias_linear SHR 18) AND 3FFFh
+    mov eax,es:p_cr3
+    or ax,803h
+    mov [si],eax
+    mov dword ptr [si+4],0
+    mov ebx,cr3
+    mov cr3,ebx
+;
+    mov edi,edx
+    shr edi,18
+    and di,0FFF8h
+    add edi,alias_linear
+    shr edi,9
+    and di,0FFF8h
+    mov bx,process_page_sel
+    mov ds,bx
+    mov eax,[edi]
+    test al,1
+    stc
+    jz get_thread_dir_done64
+;
+    mov ebx,[edi+4]
+    mov si,process_dir_sel
+    mov ds,si
+    mov si,(alias_linear SHR 18) AND 3FFFh
+    or ax,803h
+    mov [si],eax
+    mov [si+4],ebx
+    mov ebx,cr3
+    mov cr3,ebx
+;
+    mov edi,edx
+    shr edi,9
+    and edi,1FFFF8h
+    add edi,alias_linear
+    shr edi,9
+    and di,0FFF8h
+    mov bx,process_page_sel
+    mov ds,bx
+    mov eax,[edi]
+    mov ebx,[edi+4]
+    test al,1
+    stc
+    jz get_thread_dir_done64
+;
+    clc
+
+get_thread_dir_done64:
     int 3
+    pop edi
+    pop esi
+    pop edx
+    pop ds
     ret
 local_get_thread_page_dir64    Endp
 

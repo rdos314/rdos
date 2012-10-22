@@ -669,6 +669,26 @@ abort_pretask_do:
     mov gs,ax
 ;
 abort_fatal_write:
+    jmp abort_no_mono
+    push eax
+    push ebx
+    push edx
+    mov edx,0B0000h
+    mov eax,0B0007h
+    xor ebx,ebx
+
+init_mono_loop:
+    SetPageEntry
+    add edx,1000h
+    add eax,1000h
+    cmp edx,0C0000h
+    jne init_mono_loop
+;
+    pop edx
+    pop ebx
+    pop eax
+
+abort_no_mono:
     push bx
     call get_video
     mov es,bx

@@ -268,7 +268,8 @@ handle_output_es:
     mov ecx,10h
 
 handle_output_es_copy:
-    CopyPageEntries    jmp handle_output_done
+    CopyPageEntries    
+    jmp handle_output_done
 
 handle_output_es_same:
     mov bx,fs:list_es

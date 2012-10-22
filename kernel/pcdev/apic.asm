@@ -4976,7 +4976,7 @@ init_task   Proc far
     mov edi,OFFSET test_thread_name
     mov ax,4
     mov cx,stack0_size
-    CreateThread
+;    CreateThread
 ;
     popad
     pop es
