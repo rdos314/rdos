@@ -744,7 +744,7 @@ prot_init:
     cli
     call init_pre_tasking
     call init_boot_system
-    call start_paging32
+    call start_paging64
     call init_paging_trap
     call init_physical
     call create_mem

@@ -1909,7 +1909,6 @@ vs_FF   DW OFFSET error_sw
 DebugFunc       Proc near
     push gs
     push di
-;
     mov al,es:db_op
     cmp al,'n'
     je debug_next

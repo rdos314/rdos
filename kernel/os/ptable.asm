@@ -3145,100 +3145,13 @@ local_unhook_page64     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_get_thread_page_entry64    Proc near
-    int 3
     push ds
     push es
-    push edx
-    push si
-    push edi
-;
-    and dx,0F000h
-    SimCli
-    mov es,bp
-;    
-    mov ax,process_dir_sel
-    mov ds,ax
-    mov si,(alias_linear SHR 18) AND 0FFFh
-    mov eax,es:p_cr3
-    or ax,803h
-    mov [si],eax
-    mov eax,cr3
-    mov cr3,eax
-;
-    mov eax,alias_linear
-    mov edi,edx
-    shr edi,18
-    and di,0FFF8h
-    add edi,eax
-    mov ebx,edi
-    shr edi,9
-    and di,0FFF8h
-    mov ax,process_page_sel
-    mov ds,ax
-    mov eax,[edx]
-    test al,1
-    jnz get_thread_phys_do64
-;
-    xor eax,eax
-    xor ebx,ebx
-    jmp get_thread_phys_done64
-
-get_thread_phys_do64:     
-    mov ax,flat_sel
-    mov ds,ax
-    mov eax,[ebx]
-    xor ebx,ebx
-
-get_thread_phys_done64:
-    SimSti
-    pop edi
-    pop si
-    pop edx
-    pop es
-    pop ds
-    ret
-local_get_thread_page_entry64    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           local_set_thread_page_entry64
-;
-;           DESCRIPTION:    Set physical page for linear address in other thread.
-;
-;           PARAMETERS:     BP          Thread
-;                           EDX         Linear address
-;                           EBX:EAX     Physical address
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-local_set_thread_page_entry64    Proc near
-    int 3
-    ret
-local_set_thread_page_entry64    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           local_get_thread_page_dir64
-;
-;           DESCRIPTION:    Get physical page directory for other thread
-;
-;           PARAMETERS:     BP          Thread
-;                           EDX         Linear address
-;
-;           RETURNS:        EBX:EAX     Physical address or 0                       
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-local_get_thread_page_dir64    Proc near
-    push ds
     push edx
     push esi
     push edi
 ;
     and dx,0F000h
-    SimCli
     mov es,bp
 ;    
     mov ax,process_dir_sel
@@ -3262,7 +3175,192 @@ local_get_thread_page_dir64    Proc near
     mov eax,[edi]
     test al,1
     stc
-    jz get_thread_dir_done64
+    jz get_thread_page_fail64
+;
+    mov ebx,[edi+4]
+    mov si,process_dir_sel
+    mov ds,si
+    mov si,(alias_linear SHR 18) AND 3FFFh
+    or ax,803h
+    mov [si],eax
+    mov [si+4],ebx
+    mov ebx,cr3
+    mov cr3,ebx
+;
+    mov edi,edx
+    shr edi,9
+    and edi,1FFFF8h
+    add edi,alias_linear
+    mov edx,edi
+    shr edi,9
+    and di,0FFF8h
+    mov bx,process_page_sel
+    mov ds,bx
+    mov eax,[edi]
+    mov ebx,[edi+4]
+    test al,1
+    jz get_thread_page_fail64
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov eax,[edx]
+    mov ebx,[edx+4]
+    jmp get_thread_page_done64
+
+get_thread_page_fail64:    
+    xor eax,eax
+    xor ebx,ebx
+
+get_thread_page_done64:
+    pop edi
+    pop esi
+    pop edx
+    pop es
+    pop ds
+    ret
+local_get_thread_page_entry64    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_set_thread_page_entry64
+;
+;           DESCRIPTION:    Set physical page for linear address in other thread.
+;
+;           PARAMETERS:     BP          Thread
+;                           EDX         Linear address
+;                           EBX:EAX     Physical address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_set_thread_page_entry64    Proc near
+    push ds
+    push es
+    push edx
+    push esi
+    push edi
+;
+    push eax
+    push ebx
+;
+    and dx,0F000h
+    mov es,bp
+;    
+    mov ax,process_dir_sel
+    mov ds,ax
+    mov si,(alias_linear SHR 18) AND 3FFFh
+    mov eax,es:p_cr3
+    or ax,803h
+    mov [si],eax
+    mov dword ptr [si+4],0
+    mov ebx,cr3
+    mov cr3,ebx
+;
+    mov edi,edx
+    shr edi,18
+    and di,0FFF8h
+    add edi,alias_linear
+    shr edi,9
+    and di,0FFF8h
+    mov bx,process_page_sel
+    mov ds,bx
+    mov eax,[edi]
+    test al,1
+    stc
+    jz set_thread_page_fail64
+;
+    mov ebx,[edi+4]
+    mov si,process_dir_sel
+    mov ds,si
+    mov si,(alias_linear SHR 18) AND 3FFFh
+    or ax,803h
+    mov [si],eax
+    mov [si+4],ebx
+    mov ebx,cr3
+    mov cr3,ebx
+;
+    mov edi,edx
+    shr edi,9
+    and edi,1FFFF8h
+    add edi,alias_linear
+    mov edx,edi
+    shr edi,9
+    and di,0FFF8h
+    mov bx,process_page_sel
+    mov ds,bx
+    mov eax,[edi]
+    mov ebx,[edi+4]
+    test al,1
+    jz set_thread_page_fail64
+;
+    mov ax,flat_sel
+    mov ds,ax
+;    
+    pop ebx
+    pop eax
+    mov [edx],eax
+    mov [edx+4],ebx
+    jmp set_thread_page_done64
+
+set_thread_page_fail64:
+    pop ebx
+    pop eax
+
+set_thread_page_done64:
+    pop edi
+    pop esi
+    pop edx
+    pop es
+    pop ds
+    ret
+local_set_thread_page_entry64    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_get_thread_page_dir64
+;
+;           DESCRIPTION:    Get physical page directory for other thread
+;
+;           PARAMETERS:     BP          Thread
+;                           EDX         Linear address
+;
+;           RETURNS:        EBX:EAX     Physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_get_thread_page_dir64    Proc near
+    push ds
+    push es
+    push edx
+    push esi
+    push edi
+;
+    and dx,0F000h
+    mov es,bp
+;    
+    mov ax,process_dir_sel
+    mov ds,ax
+    mov si,(alias_linear SHR 18) AND 3FFFh
+    mov eax,es:p_cr3
+    or ax,803h
+    mov [si],eax
+    mov dword ptr [si+4],0
+    mov ebx,cr3
+    mov cr3,ebx
+;
+    mov edi,edx
+    shr edi,18
+    and di,0FFF8h
+    add edi,alias_linear
+    shr edi,9
+    and di,0FFF8h
+    mov bx,process_page_sel
+    mov ds,bx
+    mov eax,[edi]
+    test al,1
+    stc
+    jz get_thread_dir_fail64
 ;
     mov ebx,[edi+4]
     mov si,process_dir_sel
@@ -3285,16 +3383,17 @@ local_get_thread_page_dir64    Proc near
     mov eax,[edi]
     mov ebx,[edi+4]
     test al,1
-    stc
-    jz get_thread_dir_done64
-;
-    clc
+    jnz get_thread_dir_done64
+
+get_thread_dir_fail64:
+    xor eax,eax
+    xor ebx,ebx
 
 get_thread_dir_done64:
-    int 3
     pop edi
     pop esi
     pop edx
+    pop es
     pop ds
     ret
 local_get_thread_page_dir64    Endp

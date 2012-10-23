@@ -69,8 +69,20 @@ wait_gate2:
     mov al,0FEh
     out 60h,al
 ;
+    mov ax,idt_sel
+    mov ds,ax
+;    
+    mov bx,13 * 8
     xor eax,eax
-    mov cr3,eax
+    mov [bx],eax
+    mov [bx+4],eax
+;
+    mov bx,8 * 8
+    mov [bx],eax
+    mov [bx+4],eax
+;
+    mov ax,-1
+    mov ds,ax
 
 reset_wait:
     jmp reset_wait
