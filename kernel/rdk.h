@@ -545,6 +545,9 @@
 #define osgate_setup_smp_patch 461
 #define osgate_notify_thread_suspend 462
 
+#define osgate_has_long_mode 463
+#define osgate_prepare_long_mode 464
+
 
 
 
@@ -1093,4 +1096,7 @@
 #define OsGate_flush_tlb 0x3E 0x67 0x9a 204 1 0 0 2 0
 #define OsGate_setup_smp_patch 0x3E 0x67 0x9a 205 1 0 0 2 0
 #define OsGate_notify_thread_suspend 0x3E 0x67 0x9a 206 1 0 0 2 0
+
+#define OsGate_has_long_mode 0x3E 0x67 0x9a 207 1 0 0 2 0
+#define OsGate_prepare_long_mode 0x3E 0x67 0x9a 208 1 0 0 2 0
 

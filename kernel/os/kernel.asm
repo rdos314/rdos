@@ -111,6 +111,56 @@ get_version Proc far
     retf32
 get_version Endp
 
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           HasLongMode
+;
+;       DESCRIPTION:    Check for long mode support
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_long_mode_name    DB 'Has Long Mode', 0
+
+has_long_mode Proc far
+    push ds
+    push eax
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:cpu_ext_feature_flags
+    test eax,20000000h
+    stc
+    jz hlmDone
+    clc
+hlmDone:
+    pop eax
+    pop ds       
+    retf32
+has_long_mode Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           PrepareLongMode
+;
+;       DESCRIPTION:    Prepare for long mode by moving code to start of physical memory
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+prepare_long_mode_name    DB 'Prepare Long Mode', 0
+
+prepare_long_mode Proc far
+    push ds
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:boot64_start_page
+    mov cx,ds:boot64_page_count
+    pop ds
+    retf32
+prepare_long_mode Endp
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -604,9 +654,12 @@ init_no_bda:
     mov ds:cpu_type,3
     mov ds:cpu_vendor,0
     mov ds:cpu_feature_flags,0
+    mov ds:cpu_ext_feature_flags,0
     mov ds:max_cpuid,0
     mov ds:sys_tsc_tics,0
     mov ds:sys_tsc_rest,0
+    mov ds:boot64_page_count,0
+    mov ds:boot64_start_page,0
 ;
     pushfd
     pop eax
@@ -647,6 +700,15 @@ init_no_bda:
     and al,0Fh
     add al,cl
     mov ds:cpu_type,al       
+;
+    mov eax,80000000h    
+    cpuid
+    cmp eax,80000001h
+    jb init_cpu_ok
+;
+    mov eax,80000001h
+    cpuid
+    mov ds:cpu_ext_feature_flags,edx
 
 init_cpu_ok:
     mov eax,ds:cpu_feature_flags
@@ -677,6 +739,18 @@ init_cpu_done:
     call ZeroRam
     call MarkupRam
 ;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:cpu_ext_feature_flags    
+    test eax,20000000h    
+    jz init_long_mode_done
+;
+    mov ecx,boot64_pages
+    call AllocateMultipleRam
+    mov ds:boot64_page_count,cx
+    mov ds:boot64_start_page,esi
+
+init_long_mode_done:
     mov ax,flat_sel
     mov ds,ax
     mov ax,gdt_sel
@@ -758,6 +832,18 @@ prot_init:
     xor dx,dx
     mov ax,get_version_nr
     RegisterBimodalUserGate
+;       
+    mov esi,OFFSET has_long_mode
+    mov edi,OFFSET has_long_mode_name
+    xor cl,cl
+    mov ax,has_long_mode_nr
+    RegisterOsGate
+;       
+    mov esi,OFFSET prepare_long_mode
+    mov edi,OFFSET prepare_long_mode_name
+    xor cl,cl
+    mov ax,prepare_long_mode_nr
+    RegisterOsGate
 ;
     call init_mem
     call init_gdt

@@ -83,13 +83,12 @@ init_task:
     mov esi,test_thread
     mov edi,test_thread_name
     mov ax,4
-    mov cx,0x1000
-    UserGate create_thread
+    mov ecx,0x1000
+    OsGate create_process
 ;
     popad
     pop es
-    pop ds
-    
+    pop ds    
     retf
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -102,12 +101,17 @@ init_task:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 init:
+    OsGate has_long_mode
+    jc init_done
     mov ax,cs
     mov ds,ax
     mov es,ax
     mov edi,init_task
     OsGate hook_init_tasking
+
+init_done:    
     retf
+
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -121,6 +125,20 @@ init:
 test_thread_name  DB 'Nasm Test Thread', 0
 
 test_thread:
-    int 3    
+    int 3  
+    jmp unity
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;  Unity mapped code at 3000h
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+times 0x3012 - ($ - $$) db 0
+
+unity:
+    OsGate prepare_long_mode
+    int 3  
 
 text_end:

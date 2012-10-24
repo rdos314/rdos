@@ -103,13 +103,14 @@ dev32_init_ip       DD ?
 
 device32_header   ENDS
 
+boot64_pages        = 16
+
 system_seg	STRUC
 
-dummy_pad1          DW ?
+boot64_page_count           DW ?
+boot64_start_page		    DD ?
+cpu_ext_feature_flags   	DD ?
 
-dummy_phys_free_pages		DD ?
-
-dummy_free_phys_list		DD ?
 dummy_free_dma_phys_list	DD ?
 dummy_unused_phys_list	DD ?
 

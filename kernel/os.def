@@ -545,4 +545,7 @@ flush_tlb_nr                = 460
 setup_smp_patch_nr          = 461
 notify_thread_suspend_nr    = 462
 
+has_long_mode_nr            = 463
+prepare_long_mode_nr        = 464
+
 osgate_entries				= 480
