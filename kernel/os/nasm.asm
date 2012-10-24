@@ -30,6 +30,20 @@
 %include '..\osnasm.def'
 %include '..\usernasm.def'
 
+%macro OsGate 1
+    db 67h
+    db 66h
+    db 9Ah
+    dd %1
+    dw 2    
+%endmacro
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;   32-bit device driver header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
    bits 32
 
    org 0xFFFFFFEE
@@ -41,7 +55,33 @@ code_sel    dw nasm_code_sel
 data_size   dd 0
 data_sel    dw nasm_data_sel
     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;    NAME:           Init_task
+;
+;    DESCRIPTION:    Init tasking
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+init_task:
+    retf
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;    NAME:           Init
+;
+;    DESCRIPTION:    Init module
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
 init:
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,init_task
+    OsGate hook_init_tasking
     retf
 
 text_end:
