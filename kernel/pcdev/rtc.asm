@@ -451,7 +451,7 @@ set_cmos_time ENDP
 
 update_rtc_name DB 'Update RTC',0
 
-update_rtc      Proc far
+update_rtc_near      Proc near
     push eax
     push edx
 ;
@@ -475,9 +475,14 @@ update_rtc      Proc far
 ;
     pop edx
     pop eax
+    ret
+update_rtc_near      Endp
+
+update_rtc  Proc far
+    call update_rtc_near
     retf32
-update_rtc      Endp
-    
+update_rtc  Endp 
+   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -685,6 +690,9 @@ rtc_io  ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+sys_leave:
+    SysLeave
+
 init    Proc far
     mov ax,SEG data
     mov ds,ax
@@ -696,9 +704,10 @@ init    Proc far
 ;
     mov esi,OFFSET update_rtc
     mov edi,OFFSET update_rtc_name
+    mov ebp,OFFSET update_rtc_near
     xor dx,dx
     mov ax,update_rtc_nr
-    RegisterBimodalUserGate
+    RegisterBimodalSyscall
 ;
     mov al,1Ah
     mov edi,OFFSET rtc_io
@@ -708,6 +717,11 @@ init    Proc far
     TimeToBinary
     SetSystemTime
     call setup_int
+;    
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET sys_leave
+    SetupSysleave
     clc
     ret
 init    Endp
