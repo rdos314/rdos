@@ -8,25 +8,6 @@
 char ch;
 char tval;
 
-int sec_handle;
-
-void TestThread(void *param)
-{
-    char mych = ch;
-
-    for (;;)
-    {
-        RdosEnterSection(sec_handle);
-        tval = mych;
-        RdosWriteChar(mych);
-        if (tval != mych)
-            for (;;)
-                ;
-        RdosLeaveSection(sec_handle);
-    }
-}
-    
-
 void main()
 {
     int bpp;
@@ -42,35 +23,6 @@ void main()
     int size;        
 
     int i;
-
-    sec_handle = RdosCreateSection();
-    ch = '1';
-
-    for (i = 0; i < 2; i++)
-    {
-        RdosCreateThread(TestThread, "Sect Test", 0, 0x8000);
-        RdosWaitMilli(100);
-        ch++;
-    }
-
-    for (;;)
-    {
-        RdosEnterSection(sec_handle);
-        RdosWriteChar('0');
-        RdosLeaveSection(sec_handle);
-    }
-    
-    RdosDeleteSection(sec_handle);
-    
-
-    for (;;)
-        ;    
-
-    x = 1.0;
-    y = 3.1456;
-    x = sin(x) * y;
-
-    RdosTestGate();
 
     bpp = 24;
     width = 640;

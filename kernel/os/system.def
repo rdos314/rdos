@@ -153,7 +153,7 @@ flat_base           DD ?
 sys_tsc_tics        DD ?
 sys_tsc_rest        DW ?
 
-phys_spinlock		spinlock_typ <>
+page_spinlock		spinlock_typ <>
 gdt_section			section_typ <>
 
 enter_patch_proc    DW ?

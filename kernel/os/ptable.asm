@@ -1686,8 +1686,11 @@ local_get_thread_page_entry32    Proc near
     push edx
     push si
 ;
+    mov ax,system_data_sel
+    mov ds,ax
+    RequestSpinlock ds:page_spinlock
+;
     and dx,0F000h
-    SimCli
     mov ax,process_dir_sel
     mov ds,ax
     mov si,(alias_linear SHR 20) AND 0FFFh
@@ -1722,7 +1725,10 @@ get_thread_phys_do32:
     xor ebx,ebx
 
 get_thread_phys_done32:
-    SimSti
+    mov dx,system_data_sel
+    mov ds,dx
+    ReleaseSpinlock ds:page_spinlock
+;
     pop si
     pop edx
     pop es
@@ -1757,7 +1763,11 @@ local_set_thread_page_entry32    Proc near
 
 stppok32:    
     push eax
-    SimCli
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    RequestSpinlock ds:page_spinlock
+;
     mov ax,process_dir_sel
     mov ds,ax
     mov si,(alias_linear SHR 20) AND 0FFFh
@@ -1791,7 +1801,9 @@ set_thread_phys_do32:
     mov [ebx],eax
 
 set_thread_phys_done32:
-    SimSti
+    mov dx,system_data_sel
+    mov ds,dx
+    ReleaseSpinlock ds:page_spinlock
 ;
     pop si
     pop edx
@@ -2843,7 +2855,7 @@ cpeLoop64:
     mov ebx,[esi]
     mov [edi],ebx
     mov ebx,[esi+4]
-    mov [edi],ebx
+    mov [edi+4],ebx
     add esi,8
     add edi,8
     sub ecx,1
@@ -3153,6 +3165,10 @@ local_get_thread_page_entry64    Proc near
 ;
     and dx,0F000h
     mov es,bp
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    RequestSpinlock ds:page_spinlock
 ;    
     mov ax,process_dir_sel
     mov ds,ax
@@ -3212,6 +3228,10 @@ get_thread_page_fail64:
     xor ebx,ebx
 
 get_thread_page_done64:
+    mov dx,system_data_sel
+    mov ds,dx
+    ReleaseSpinlock ds:page_spinlock
+;
     pop edi
     pop esi
     pop edx
@@ -3245,6 +3265,10 @@ local_set_thread_page_entry64    Proc near
 ;
     and dx,0F000h
     mov es,bp
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    RequestSpinlock ds:page_spinlock
 ;    
     mov ax,process_dir_sel
     mov ds,ax
@@ -3307,6 +3331,10 @@ set_thread_page_fail64:
     pop eax
 
 set_thread_page_done64:
+    mov dx,system_data_sel
+    mov ds,dx
+    ReleaseSpinlock ds:page_spinlock
+;
     pop edi
     pop esi
     pop edx
@@ -3338,6 +3366,10 @@ local_get_thread_page_dir64    Proc near
 ;
     and dx,0F000h
     mov es,bp
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    RequestSpinlock ds:page_spinlock
 ;    
     mov ax,process_dir_sel
     mov ds,ax
@@ -3390,6 +3422,10 @@ get_thread_dir_fail64:
     xor ebx,ebx
 
 get_thread_dir_done64:
+    mov dx,system_data_sel
+    mov ds,dx
+    ReleaseSpinlock ds:page_spinlock
+;
     pop edi
     pop esi
     pop edx
@@ -4289,8 +4325,6 @@ init_phys_bitmap32  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public start_paging32
-
 start_paging32    Proc near
     call create_paging32
     call init_phys_bitmap32
@@ -4822,8 +4856,6 @@ init_phys_bitmap64  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public start_paging64
-
 start_paging64    Proc near
     call create_paging64
     call setup_proc64
@@ -4887,6 +4919,30 @@ start_paging_global_done64:
     call local_create_data_sel16
     ret
 start_paging64    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           start_paging
+;
+;           DESCRIPTION:    Start paging hardware
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public start_paging
+
+start_paging:
+    mov ax,system_data_sel
+    mov ds,ax
+    InitSpinlock ds:page_spinlock
+;
+    mov eax,ds:cpu_feature_flags
+    test al,40h
+    jz start_paging32
+;
+    jmp start_paging64        
 
 code    ENDS
 

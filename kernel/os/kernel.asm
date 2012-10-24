@@ -52,8 +52,7 @@ ENDIF
     extrn create_mem:near
     extrn init_pretask_traps:near
 
-    extrn start_paging32:near
-    extrn start_paging64:near
+    extrn start_paging:near
     extrn init_physical:near
     extrn init_paging_trap:near
     extrn init_physical_gates:near
@@ -744,7 +743,7 @@ prot_init:
     cli
     call init_pre_tasking
     call init_boot_system
-    call start_paging64
+    call start_paging
     call init_paging_trap
     call init_physical
     call create_mem
