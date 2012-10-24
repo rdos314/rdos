@@ -1574,7 +1574,7 @@ gpdn16_done:
     retf32
 get_pci_dev_name16  Endp
 
-get_pci_dev_name32  Proc far
+get_pci_dev_name_near  Proc near
     push ds
     push ax
     push si
@@ -1584,26 +1584,31 @@ get_pci_dev_name32  Proc far
     mov ds,si
     cmp ax,ds:ext_pci_dev_count
     cmc
-    jc gpdn32_done
+    jc gpdn_near_done
 ;
     mov si,ax
     add si,si
     mov ds,ds:[si].ext_pci_dev_arr
     mov si,OFFSET epci_acpi_name
 
-gpdn32_loop:
+gpdn_near_loop:
     lodsb
     stos byte ptr es:[edi]
     or al,al
-    jnz gpdn32_loop
+    jnz gpdn_near_loop
 ;
     clc
     
-gpdn32_done:
+gpdn_near_done:
     pop edi
     pop si
     pop ax
     pop ds
+    ret
+get_pci_dev_name_near  Endp
+
+get_pci_dev_name32  Proc far
+    call get_pci_dev_name_near
     retf32
 get_pci_dev_name32  Endp
 
@@ -1624,7 +1629,7 @@ get_pci_dev_name32  Endp
 
 get_pci_dev_info_name DB 'Get PCI Device Info', 0
 
-get_pci_dev_info    Proc far
+get_pci_dev_info_near    Proc near
     push ds
     push si
 ;   
@@ -1632,7 +1637,7 @@ get_pci_dev_info    Proc far
     mov ds,si
     cmp ax,ds:ext_pci_dev_count
     cmc
-    jc gpdi_done
+    jc gpdi_near_done
 ;
     mov si,ax
     add si,si
@@ -1642,9 +1647,14 @@ get_pci_dev_info    Proc far
     mov ch,ds:epci_function
     clc
 
-gpdi_done:
+gpdi_near_done:
     pop si
     pop ds    
+    ret
+get_pci_dev_info_near    Endp
+
+get_pci_dev_info    Proc far
+    call get_pci_dev_info_near
     retf32
 get_pci_dev_info    Endp
 
@@ -1664,7 +1674,7 @@ get_pci_dev_info    Endp
 
 get_pci_dev_vendor_name DB 'Get PCI Device Vendor', 0
 
-get_pci_dev_vendor    Proc far
+get_pci_dev_vendor_near    Proc near
     push ds
     push si
 ;   
@@ -1684,8 +1694,13 @@ get_pci_dev_vendor    Proc far
 gpdv_done:
     pop si
     pop ds    
+    ret
+get_pci_dev_vendor_near    Endp
+
+get_pci_dev_vendor  Proc far
+    call get_pci_dev_vendor_near
     retf32
-get_pci_dev_vendor    Endp
+get_pci_dev_vendor  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1703,7 +1718,7 @@ get_pci_dev_vendor    Endp
 
 get_pci_dev_class_name DB 'Get PCI Device Class', 0
 
-get_pci_dev_class    Proc far
+get_pci_dev_class_near    Proc near
     push ds
     push si
 ;   
@@ -1722,8 +1737,13 @@ get_pci_dev_class    Proc far
 gpdc_done:
     pop si
     pop ds    
+    ret
+get_pci_dev_class_near    Endp
+
+get_pci_dev_class   Proc far
+    call get_pci_dev_class_near
     retf32
-get_pci_dev_class    Endp
+get_pci_dev_class   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1740,7 +1760,7 @@ get_pci_dev_class    Endp
 
 get_pci_dev_irq_name DB 'Get PCI Device IRQ', 0
 
-get_pci_dev_irq    Proc far
+get_pci_dev_irq_near    Proc near
     push ds
     push si
 ;   
@@ -1759,28 +1779,13 @@ get_pci_dev_irq    Proc far
 gpdirq_done:
     pop si
     pop ds    
+    ret
+get_pci_dev_irq_near    Endp
+
+get_pci_dev_irq Proc far
+    call get_pci_dev_irq_near
     retf32
-get_pci_dev_irq    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Test gate
-;
-;           DESCRIPTION:    Test gate
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_pr_name DB 'Test Gate', 0
-
-test_pr    Proc far
-    mov bh,2
-    mov bl,0
-    mov ch,0
-    retf32 
-test_pr Endp   
+get_pci_dev_irq Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1792,6 +1797,9 @@ test_pr Endp
 ;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+sys_leave:
+    SysLeave
 
 init    Proc far
     mov bx,SEG data
@@ -1899,40 +1907,39 @@ init    Proc far
 ;
     mov ebx,OFFSET get_pci_dev_name16
     mov esi,OFFSET get_pci_dev_name32
+    mov ebp,OFFSET get_pci_dev_name_near
     mov edi,OFFSET get_pci_dev_name
     mov dx,virt_es_in
     mov ax,get_pci_device_name_nr
-    RegisterUserGate
+    RegisterSyscall
 ;
     mov esi,OFFSET get_pci_dev_info
     mov edi,OFFSET get_pci_dev_info_name
+    mov ebp,OFFSET get_pci_dev_info_near
     xor dx,dx
     mov ax,get_pci_device_info_nr
-    RegisterBimodalUserGate
+    RegisterBimodalSyscall
 ;
     mov esi,OFFSET get_pci_dev_vendor
     mov edi,OFFSET get_pci_dev_vendor_name
+    mov ebp,OFFSET get_pci_dev_vendor_near
     xor dx,dx
     mov ax,get_pci_device_vendor_nr
-    RegisterBimodalUserGate
+    RegisterBimodalSyscall
 ;
     mov esi,OFFSET get_pci_dev_class
     mov edi,OFFSET get_pci_dev_class_name
+    mov ebp,OFFSET get_pci_dev_class_near
     xor dx,dx
     mov ax,get_pci_device_class_nr
-    RegisterBimodalUserGate
+    RegisterBimodalSyscall
 ;
     mov esi,OFFSET get_pci_dev_irq
     mov edi,OFFSET get_pci_dev_irq_name
+    mov ebp,OFFSET get_pci_dev_irq_near
     xor dx,dx
     mov ax,get_pci_device_irq_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET test_pr
-    mov edi,OFFSET test_pr_name
-    xor dx,dx
-    mov ax,test_gate_nr
-;    RegisterBimodalUserGate
+    RegisterBimodalSyscall
 ;
     mov esi,OFFSET get_pci_irq
     mov edi,OFFSET get_pci_irq_name
@@ -1941,6 +1948,10 @@ init    Proc far
     RegisterOsGate
 
 init_pci_done:
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET sys_leave
+    SetupSysleave
     clc
     ret
 init    Endp
