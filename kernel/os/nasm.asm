@@ -30,6 +30,8 @@
 %include '..\osnasm.def'
 %include '..\usernasm.def'
 
+IA32_EFER   equ 0xC0000080
+
 %macro OsGate 1
     db 67h
     db 66h
@@ -140,10 +142,47 @@ times 0x3012 - ($ - $$) db 0
 unity:
     OsGate prepare_long_mode
     int 3  
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,12000h
+    mov eax,cr3
+    or ax,3
+    stosd
+    xor eax,eax
+    mov ecx,1023
+    rep stosd    
+;    
+    mov ebp,cr3
     cli
     mov eax,cr0
     and eax,7FFFFFFFh
     mov cr0,eax
+;
+    mov ecx,IA32_EFER
+    rdmsr
+    or eax,0x100
+    wrmsr
+;
+    mov eax,12000h
+    mov cr3,eax  
+;
+    mov eax,cr0
+    or eax,80000000h
+    mov cr0,eax
+;
+    mov edx,12345h
+    mov ecx,98765h
+;    
+    mov eax,cr0
+    and eax,7FFFFFFFh
+    mov cr0,eax
+;
+    mov ecx,IA32_EFER
+    rdmsr
+    and eax,0xFFFFFEFF   
+    wrmsr
+;
+    mov cr3,ebp          
 ;
     mov eax,cr0
     or eax,80000000h
