@@ -37,6 +37,14 @@
     dd %1
     dw 2    
 %endmacro
+
+%macro UserGate 1
+    db 3Eh
+    db 67h
+    db 9Ah
+    dd %1
+    dw 3
+%endmacro
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -65,6 +73,23 @@ data_sel    dw nasm_data_sel
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 init_task:
+    push ds
+    push es
+    pushad
+;    
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,test_thread
+    mov edi,test_thread_name
+    mov ax,4
+    mov cx,0x1000
+    UserGate create_thread
+;
+    popad
+    pop es
+    pop ds
+    
     retf
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -83,5 +108,19 @@ init:
     mov edi,init_task
     OsGate hook_init_tasking
     retf
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;    NAME:           Test_thread
+;
+;    DESCRIPTION:    Test thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_thread_name  DB 'Nasm Test Thread', 0
+
+test_thread:
+    int 3    
 
 text_end:
