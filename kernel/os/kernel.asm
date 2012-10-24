@@ -153,12 +153,41 @@ has_long_mode Endp
 prepare_long_mode_name    DB 'Prepare Long Mode', 0
 
 prepare_long_mode Proc far
-    push ds
     mov ax,system_data_sel
     mov ds,ax
     mov eax,ds:boot64_start_page
+    xor ebx,ebx
+    mov edx,eax
+    or ax,803h
     mov cx,ds:boot64_page_count
-    pop ds
+
+plPageLoop:
+    SetPageEntry
+    add edx,1000h
+    add eax,1000h
+    loop plPageLoop
+;
+    pop eax
+    pop ebx
+;
+    GetSelectorBaseSize
+    mov esi,edx
+    mov edx,ds:boot64_start_page
+    add esi,edx
+    mov edi,edx
+    sub ecx,edx
+    mov dx,flat_sel
+    mov es,dx
+    push ecx
+    rep movs es:[edi],es:[esi]
+    pop ecx
+;
+    add ecx,ds:boot64_start_page
+    xor edx,edx
+    CreateCodeSelector32
+;
+    push ebx
+    push eax        
     retf32
 prepare_long_mode Endp
 
