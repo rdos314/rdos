@@ -1,0 +1,616 @@
+
+allocate_dos_mem equ 0
+allocate_local_mem equ 1
+free_mem equ 2
+available_small_local_linear equ 3
+used_local_linear equ 4
+available_vm_linear equ 5
+used_vm_linear equ 6
+
+reserve_pe_mem equ 7
+set_flat_linear_valid equ 8
+set_flat_linear_invalid equ 9
+set_flat_linear_read equ 10
+set_flat_linear_readwrite equ 11
+
+get_raw_switch_ads equ 12
+raw_switch_pm equ 13
+get_exception equ 14
+set_exception equ 15
+get_pm_int equ 16
+set_pm_int equ 17
+get_vm_int equ 18
+set_vm_int equ 19
+dpmi_int equ 20
+dpmi_call_int equ 21
+dpmi_call equ 22
+allocate_vm_callback equ 23
+free_vm_callback equ 24
+
+wait_milli equ 25
+wait_micro equ 26
+wait_until equ 27
+create_thread equ 28
+terminate_thread equ 29
+get_thread equ 30
+raw_switch_vm equ 31
+
+create_user_section equ 32
+create_blocked_user_section equ 33
+delete_user_section equ 34
+enter_user_section equ 35
+leave_user_section equ 36
+
+get_local_mailslot equ 37
+get_remote_mailslot equ 38
+free_mailslot equ 39
+send_mailslot equ 40
+define_mailslot equ 41
+receive_mailslot equ 42
+reply_mailslot equ 43
+
+load_exe equ 44
+spawn_exe equ 45
+unload_exe equ 46
+get_exit_code equ 47
+get_exe_name equ 48
+get_cmd_line equ 49
+get_env equ 50
+load_dll equ 51
+free_dll equ 52
+get_module_proc equ 53
+get_module_resource equ 54
+get_module_name equ 55
+get_module equ 56
+allocate_app_mem equ 57
+free_app_mem equ 58
+get_psp_sel equ 59
+
+get_debug_thread equ 61
+debug_trace equ 62
+debug_pace equ 63
+debug_go equ 64
+debug_next equ 65
+
+add_wait_for_debug_event equ 66
+get_debug_event_data equ 67
+continue_debug_event equ 68
+notify_pe_exception equ 70
+read_thread_mem equ 71
+write_thread_mem equ 72
+get_thread_tss equ 73
+set_thread_tss equ 74
+
+get_cpu_time equ 75
+get_system_time equ 76
+get_time equ 77
+time_to_system_time equ 78
+system_time_to_time equ 79
+days_in_month equ 80
+adjust_time equ 81
+passed_days equ 82
+time_to_binary equ 83
+binary_to_time equ 84
+sync_time equ 85
+
+set_focus equ 86
+enable_focus equ 87
+
+get_dns equ 88
+get_ppp_dns equ 89
+open_tcp_connection equ 90
+wait_for_tcp_connection equ 92
+close_tcp_connection equ 93
+delete_tcp_connection equ 94
+is_tcp_connection_closed equ 95
+abort_tcp_connection equ 96
+read_tcp_connection equ 97
+write_tcp_connection equ 98
+push_tcp_connection equ 99
+get_ip_address equ 100
+name_to_ip equ 101
+ip_to_name equ 102
+ping equ 103
+
+get_disc_info equ 104
+format_drive equ 105
+get_rdfs_info equ 106
+read_disc equ 107
+write_disc equ 108
+get_drive_info equ 109
+
+set_cur_drive equ 110
+get_cur_drive equ 111
+set_cur_dir equ 112
+get_cur_dir equ 113
+make_dir equ 114
+remove_dir equ 115
+rename_file equ 116
+delete_file equ 117
+get_file_attribute equ 118
+set_file_attribute equ 119
+open_dir equ 120
+close_dir equ 121
+read_dir equ 122
+
+open_file equ 123
+create_file equ 124
+close_file equ 125
+dupl_file equ 126
+get_ioctl_data equ 127
+get_file_size equ 128
+set_file_size equ 129
+get_file_pos equ 130
+set_file_pos equ 131
+get_file_time equ 132
+set_file_time equ 133
+read_file equ 134
+write_file equ 135
+read_con equ 136
+
+create_mapping equ 137
+create_named_mapping equ 138
+create_file_mapping equ 139
+create_named_file_mapping equ 140
+open_named_mapping equ 141
+sync_mapping equ 142
+close_mapping equ 143
+map_view equ 144
+unmap_view equ 145
+
+read_keyboard equ 146
+poll_keyboard equ 147
+flush_keyboard equ 148
+get_keyboard_state equ 151
+
+show_mouse equ 152
+hide_mouse equ 153
+get_mouse_position equ 154
+set_mouse_position equ 155
+set_mouse_window equ 156
+set_mouse_mickey equ 157
+get_left_button equ 158
+get_right_button equ 159
+get_left_button_press_position equ 160
+get_right_button_press_position equ 161
+get_left_button_release_position equ 162
+get_right_button_release_position equ 163
+hook_mouse equ 164
+unhook_mouse equ 165
+
+lock_cd equ 166
+unlock_cd equ 167
+eject_cd equ 168
+insert_cd equ 169
+
+open_com equ 170
+close_com equ 171
+flush_com equ 172
+add_wait_for_com equ 174
+read_com equ 175
+write_com equ 176
+set_dtr equ 177
+reset_dtr equ 178
+
+set_cursor_position equ 182
+get_cursor_position equ 183
+write_char equ 184
+write_asciiz equ 185
+write_size_string equ 186
+
+set_video_mode equ 187
+set_vga_mode equ 188
+set_forecolor equ 189
+set_backcolor equ 190
+get_string_metrics equ 193
+set_font equ 194
+get_video_mode equ 195
+draw_string equ 197
+
+xms_handler equ 198
+ems_handler equ 199
+
+update_rtc equ 200
+
+resize_flat_linear equ 201
+
+set_drawcolor equ 202
+set_lgop equ 203
+set_hollow_style equ 204
+set_filled_style equ 205
+get_pixel equ 206
+set_pixel equ 207
+draw_line equ 208
+draw_rect equ 209
+draw_ellipse equ 210
+create_bitmap equ 211
+close_bitmap equ 212
+blit equ 213
+open_font equ 215
+close_font equ 216
+create_string_bitmap equ 217
+get_bitmap_info equ 218
+draw_mask equ 219
+
+create_sprite equ 220
+close_sprite equ 221
+show_sprite equ 222
+hide_sprite equ 223
+move_sprite equ 224
+
+dup_bitmap_handle equ 225
+set_clip_rect equ 226
+clear_clip_rect equ 227
+
+set_rts equ 228
+reset_rts equ 229
+get_com_receive_space equ 230
+get_com_send_space equ 231
+
+get_char_attrib equ 232
+
+create_wait equ 233
+close_wait equ 234
+is_wait_idle equ 235
+wait_no_timeout equ 236
+wait_timeout equ 237
+stop_wait equ 238
+add_wait_for_keyboard equ 239
+
+peek_key_event equ 240
+read_key_event equ 241
+
+add_wait_for_mouse equ 242
+remove_wait equ 243
+
+add_wait_for_adc equ 244
+open_adc equ 245
+close_adc equ 246
+define_adc_time equ 247
+read_adc equ 248
+
+free_v86 equ 249
+
+read_serial_lines equ 250
+toggle_serial_line equ 251
+
+read_serial_val equ 252
+write_serial_val equ 253
+
+create_file_drive equ 254
+open_file_drive equ 255
+
+dos_ext_exec equ 256
+
+open_sys_env equ 257
+open_proc_env equ 258
+close_env equ 259
+add_env_var equ 260
+delete_env_var equ 261
+find_env_var equ 262
+get_env_data equ 263
+set_env_data equ 264
+
+open_sys_ini equ 265
+close_ini equ 266
+goto_ini_section equ 267
+remove_ini_section equ 268
+read_ini equ 269
+write_ini equ 270
+delete_ini equ 271
+
+get_version equ 273
+
+enable_status_led equ 274
+disable_status_led equ 275
+
+start_watchdog equ 276
+kick_watchdog equ 277
+
+erase_disc_sectors equ 278
+
+enable_cts equ 280
+disable_cts equ 281
+
+wait_for_send_completed_com equ 282
+
+add_wait_for_tcp_connection equ 283
+
+get_remote_tcp_connection_ip equ 284
+get_remote_tcp_connection_port equ 285
+get_local_tcp_connection_port equ 286
+
+enable_auto_rts equ 287
+disable_auto_rts equ 288
+
+put_keyboard_code equ 289
+
+poll_tcp_connection equ 290
+
+create_signal equ 291
+free_signal equ 292
+add_wait_for_signal equ 293
+set_signal equ 294
+reset_signal equ 295
+is_signalled equ 296
+
+get_drive_disc_param equ 297
+
+get_ide_disc equ 298
+get_floppy_disc equ 299
+demand_load_drive equ 300
+set_disc_info equ 301
+
+get_thread_state equ 302
+suspend_thread equ 303
+resume_thread equ 304
+
+update_time equ 305
+
+allocate_static_drive equ 306
+allocate_fixed_drive equ 307
+allocate_dynamic_drive equ 308
+
+get_focus equ 309
+
+add_wait_for_tcp_listen equ 310
+create_tcp_listen equ 311
+get_tcp_listen equ 312
+close_tcp_listen equ 313
+
+get_random equ 314
+
+suspend_and_signal_thread equ 315
+
+start_net_capture equ 316
+stop_net_capture equ 317
+
+create_crc equ 318
+close_crc equ 319
+calc_crc equ 320
+
+get_usb_device equ 321
+get_usb_config equ 322
+
+open_usb_pipe equ 323
+close_usb_pipe equ 324
+add_wait_for_usb_pipe equ 325
+req_usb_data equ 326
+get_usb_data_size equ 327
+write_usb_data equ 328
+req_usb_status equ 329
+write_usb_status equ 330
+write_usb_control equ 331
+lock_usb_pipe equ 333
+unlock_usb_pipe equ 334
+
+get_max_com_port equ 335
+
+config_usb_device equ 336
+
+start_usb_transaction equ 337
+
+open_ini equ 338
+
+open_icsp equ 339
+close_icsp equ 340
+write_icsp_cmd equ 341
+write_icsp_data equ 342
+read_icsp_data equ 343
+
+get_gateway equ 344
+
+get_free_physical equ 345
+get_free_gdt equ 346
+available_big_linear equ 347
+available_small_linear equ 348
+
+get_ip_mask equ 349
+
+get_master_volume equ 350
+set_master_volume equ 351
+
+get_line_out_volume equ 352
+set_line_out_volume equ 353
+
+create_audio_out_channel equ 354
+close_audio_out_channel equ 355
+write_audio equ 356
+
+stop_watchdog equ 357
+
+is_valid_usergate equ 358
+
+open_fm equ 359
+close_fm equ 360
+fm_wait equ 361
+create_fm_instrument equ 362
+free_fm_instrument equ 363
+set_fm_attack equ 364
+set_fm_sustain equ 365
+set_fm_release equ 366
+play_fm_note equ 367
+
+get_thread_linear equ 368
+get_current_module equ 369
+
+get_module_focus_key equ 370
+
+get_debug_event equ 371
+clear_debug_event equ 372
+
+get_free_handles equ 373
+
+get_env_size equ 374
+
+show_exception_text equ 375
+
+get_watchdog_tics equ 376
+
+is_usb_trans_done equ 377
+was_usb_trans_ok equ 378
+
+is_tcp_connection_idle equ 379
+
+set_codec_gpio0 equ 380
+
+free_proc_handle equ 381
+add_wait_for_proc_end equ 382
+get_proc_exit_code equ 383
+
+get_cpu_version equ 384
+get_options equ 385
+
+fork equ 386
+
+get_core_id equ 387
+
+create_user_read_write_section equ 388
+delete_user_read_write_section equ 389
+enter_user_read_section equ 390
+leave_user_read_section equ 391
+enter_user_write_section equ 392
+leave_user_write_section equ 393
+
+power_failure equ 394
+
+define_fault_save equ 395
+get_fault_thread_state equ 396
+get_fault_thread_tss equ 397
+clear_fault_save equ 398
+
+get_free_handle_mem equ 399
+
+get_image_header equ 400
+get_image_data equ 401
+
+allocate_debug_app_mem equ 402
+free_debug_app_mem equ 403
+
+get_key_layout equ 404
+set_key_layout equ 405
+
+get_device_info equ 406
+get_selector_info equ 407
+
+set_code_break equ 408
+set_read_data_break equ 409
+set_write_data_break equ 410
+clear_break equ 411
+
+get_max_printer equ 412
+open_printer equ 413
+close_printer equ 414
+
+is_printer_jammed equ 415
+is_printer_paper_low equ 416
+is_printer_paper_end equ 417
+is_printer_ok equ 418
+is_printer_head_lifted equ 419
+has_printer_paper_in_presenter equ 420
+
+print_test equ 421
+
+create_printer_bitmap equ 422
+print_bitmap equ 423
+
+present_printer_media equ 424
+eject_printer_media equ 425
+
+wait_for_print equ 426
+
+has_audio equ 427
+
+available_big_local_linear equ 428
+
+get_allocated_usb_blocks equ 429
+get_usb_close_count equ 430
+
+reset_usb_pipe equ 431
+
+add_syslog equ 432
+open_syslog equ 433
+close_syslog equ 434
+add_wait_for_syslog equ 435
+get_syslog equ 436
+
+soft_reset equ 437
+hard_reset equ 438
+
+is_emergency_stopped equ 439
+
+load_device32 equ 440
+
+debug_run equ 441
+
+test_gate equ 442
+
+get_acpi_status equ 443
+get_acpi_object equ 444
+get_cpu_temperature equ 445
+get_acpi_method equ 446
+
+write_attrib_string equ 447
+
+debug_break equ 448
+
+has_hard_reset equ 449
+
+get_acpi_device equ 450
+get_acpi_device_irq equ 451
+get_acpi_device_io equ 452
+get_acpi_device_mem equ 453
+
+get_pci_device_name equ 454
+get_pci_device_info equ 455
+get_pci_device_vendor equ 456
+get_pci_device_class equ 457
+get_pci_device_irq equ 458
+
+open_hid equ 459
+close_hid equ 460
+get_hid_pipe equ 461
+
+get_core_load equ 462
+get_core_duty equ 463
+
+has_global_timer equ 464
+
+remote_debug equ 465
+
+read_hid equ 466
+write_hid equ 467
+
+ansi_to_utf8 equ 468
+utf8_to_ansi equ 469
+
+get_printer_name equ 470
+
+acquire_futex equ 471
+release_futex equ 472
+cleanup_futex equ 473
+
+goto_first_inivar equ 474
+goto_next_inivar equ 475
+get_curr_inivar equ 476
+
+reset_printer equ 477
+
+has_icsp equ 478
+reset_icsp equ 479
+
+get_max_carddev equ 480
+open_carddev equ 481
+close_carddev equ 482
+is_carddev_ok equ 483
+wait_for_card equ 484
+get_carddev_name equ 485
+
+is_carddev_busy equ 486
+is_carddev_inserted equ 487
+
+has_touch equ 488
+
+had_carddev_inserted equ 489
+clear_carddev_inserted equ 490
+

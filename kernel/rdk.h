@@ -74,6 +74,7 @@
 #define osgate_create_process 74
 
 #define osgate_init_trap_gates 75
+#define osgate_start_tasking 76
 
 #define osgate_setup_int_gate 77
 #define osgate_setup_trap_gate 78
@@ -541,6 +542,8 @@
 
 #define osgate_get_scheduler_lock_counter 459
 #define osgate_flush_tlb 460
+#define osgate_setup_smp_patch 461
+#define osgate_notify_thread_suspend 462
 
 
 
@@ -620,6 +623,7 @@
 #define OsGate_create_process 0x3E 0x67 0x9a 74 0 0 0 2 0
 
 #define OsGate_init_trap_gates 0x3E 0x67 0x9a 75 0 0 0 2 0
+#define OsGate_start_tasking 0x3E 0x67 0x9a 76 0 0 0 2 0
 
 #define OsGate_setup_int_gate 0x3E 0x67 0x9a 77 0 0 0 2 0
 #define OsGate_setup_trap_gate 0x3E 0x67 0x9a 78 0 0 0 2 0
@@ -1087,4 +1091,6 @@
 
 #define OsGate_get_scheduler_lock_counter 0x3E 0x67 0x9a 203 1 0 0 2 0
 #define OsGate_flush_tlb 0x3E 0x67 0x9a 204 1 0 0 2 0
+#define OsGate_setup_smp_patch 0x3E 0x67 0x9a 205 1 0 0 2 0
+#define OsGate_notify_thread_suspend 0x3E 0x67 0x9a 206 1 0 0 2 0
 

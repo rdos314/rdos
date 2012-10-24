@@ -437,6 +437,9 @@ acpi_code_sel       EQU 0B00h
 carddev_code_sel    EQU 0B10h
 carddev_data_sel    EQU 0B18h
 
+nasm_code_sel       EQU 0B20h
+nasm_data_sel       EQU 0B28h
+
 debug_dev32_code_sel    EQU 0EF0h
 debug_dev32_data_sel    EQU 0EF8h
 

@@ -1,0 +1,547 @@
+
+register_osgate equ 0
+is_valid_osgate equ 1
+register_usergate equ 2
+register_bimodal_usergate equ 3
+register_usergate16 equ 4
+register_usergate32 equ 5
+create_alias_sel16 equ 7
+create_core_gdt equ 8
+emulate_opcode equ 9
+
+allocate_gdt equ 10
+free_gdt equ 11
+allocate_ldt equ 12
+free_ldt equ 13
+allocate_multiple_ldt equ 14
+get_selector_base_size equ 15
+create_data_sel16 equ 16
+create_data_sel32 equ 17
+create_code_sel16 equ 18
+create_code_sel32 equ 19
+create_conform_sel16 equ 20
+create_conform_sel32 equ 21
+create_ldt_sel equ 22
+create_tss_sel equ 23
+create_call_gate_sel16 equ 24
+create_call_gate_sel32 equ 25
+create_task_gate_sel equ 26
+create_down_sel32 equ 27
+selector_to_segment equ 29
+segment_to_selector equ 30
+free_selector equ 31
+segment_not_present equ 32
+
+get_page_entry equ 33
+set_page_entry equ 34
+get_thread_page_entry equ 35
+set_thread_page_entry equ 36
+read_thread_selector equ 37
+write_thread_selector equ 38
+read_thread_segment equ 39
+write_thread_segment equ 40
+install_device_file equ 41
+check_device_file equ 42
+set_page_emulate equ 43
+hook_page equ 45
+unhook_page equ 46
+
+allocate_global_mem equ 47
+allocate_small_global_mem equ 48
+allocate_small_mem equ 49
+allocate_big_mem equ 50
+allocate_big_linear equ 51
+allocate_small_linear equ 52
+allocate_local_linear equ 53
+reserve_local_linear equ 54
+allocate_vm_linear equ 55
+free_linear equ 56
+resize_linear equ 57
+used_big_linear equ 60
+used_small_linear equ 61
+used_local_linear_thread equ 62
+allocate_fixed_process_mem equ 64
+allocate_fixed_system_mem equ 65
+allocate_process_linear equ 67
+allocate_system_linear equ 68
+allocate_fixed_vm_linear equ 69
+
+allocate_physical32 equ 70
+allocate_physical64 equ 71
+allocate_dma_physical equ 72
+free_physical equ 73
+
+create_process equ 74
+
+init_trap_gates equ 75
+start_tasking equ 76
+
+setup_int_gate equ 77
+setup_trap_gate equ 78
+
+wake_thread equ 79
+sleep_thread equ 80
+irq_schedule equ 81
+clear_signal equ 83
+signal equ 84
+wait_for_signal equ 85
+enter_section equ 86
+leave_section equ 87
+cond_enter_section equ 88
+start_timer equ 89
+stop_timer equ 90
+debug_exc_break equ 92
+hook_create_thread equ 93
+hook_create_process equ 94
+hook_terminate_thread equ 95
+hook_terminate_process equ 96
+hook_init_tasking equ 97
+hook_state equ 98
+
+sim_sti equ 99
+sim_cli equ 100
+sim_set_flags equ 101
+sim_get_flags equ 102
+save_context equ 103
+restore_context equ 104
+call_vm equ 105
+call_pm16 equ 106
+call_pm32 equ 107
+hook_vm_int equ 108
+hook_pm16_int equ 109
+hook_pm32_int equ 110
+hook_exception equ 111
+hook_get_vm_int equ 112
+hook_set_vm_int equ 113
+hook_get_pm16_int equ 114
+hook_set_pm16_int equ 115
+hook_get_pm32_int equ 116
+hook_set_pm32_int equ 117
+reflect_exception equ 118
+reflect_pm_to_vm equ 119
+v86_bios_int equ 120
+set_bitness equ 121
+
+hook_in equ 122
+hook_out equ 123
+
+disable_all_irq equ 126
+
+set_system_time equ 128
+
+register_handle equ 129
+allocate_handle equ 130
+free_handle equ 131
+deref_handle equ 132
+
+register_net_class equ 133
+register_net_protocol equ 134
+register_net_driver equ 135
+register_ppp_driver equ 136
+send_net equ 137
+send_ppp equ 138
+net_received equ 139
+hook_ip equ 140
+create_ip_header equ 141
+send_ip_data equ 142
+hook_ip_cache equ 143
+allocate_ip_cache_mem equ 144
+lookup_ip_cache equ 145
+get_host_timeout equ 146
+update_round_trip_time equ 147
+get_ppp_ip equ 148
+open_ppp equ 149
+close_ppp equ 150
+query_udp equ 151
+listen_udp_port equ 152
+
+allocate_dos_linear equ 153
+free_dos_linear equ 154
+resize_dos_linear equ 155
+available_dos_linear equ 156
+query_xms equ 157
+query_dpmi equ 158
+query_dpmi16 equ 159
+get_bios_data equ 160
+set_bios_data equ 161
+hook_get_bios_data equ 162
+hook_set_bios_data equ 163
+hook_load_dos_exe equ 164
+read_keyboard_serial equ 165
+poll_keyboard_serial equ 166
+write_dos_string equ 167
+get_psp equ 168
+set_psp equ 169
+enter_dpmi equ 170
+enter_dos16 equ 171
+enter_dos32 equ 172
+register_dos_device equ 173
+check_dos_device equ 174
+
+hook_open_app equ 177
+hook_close_app equ 178
+hook_load_exe equ 179
+open_app equ 180
+close_app equ 181
+
+hook_enable_focus equ 182
+hook_lost_focus equ 183
+hook_got_focus equ 184
+get_focus_thread equ 185
+get_thread_focus_key equ 186
+allocate_focus_linear equ 187
+allocate_fixed_focus_mem equ 188
+
+bios_pci_int equ 189
+read_pci_byte equ 190
+read_pci_word equ 191
+read_pci_dword equ 192
+write_pci_byte equ 193
+write_pci_word equ 194
+write_pci_dword equ 195
+find_pci_class equ 196
+find_pci_device equ 197
+
+hook_init_disc equ 198
+install_disc equ 199
+register_disc_change equ 200
+start_disc equ 201
+stop_disc equ 202
+set_disc_param equ 203
+wait_for_disc_request equ 204
+get_disc_request equ 205
+poll_disc_request equ 206
+disc_request_completed equ 207
+new_disc_request equ 208
+get_disc_request_array equ 209
+open_drive equ 214
+close_drive equ 215
+flush_drive equ 216
+get_drive_param equ 217
+lock_sector equ 218
+unlock_sector equ 219
+modify_sector equ 220
+new_sector equ 221
+create_disc_seq equ 222
+modify_seq_sector equ 223
+perform_disc_seq equ 224
+req_sector equ 225
+define_sector equ 226
+wait_for_sector equ 227
+reset_drive equ 228
+
+hook_init_file_system equ 229
+register_file_system equ 230
+define_media_check equ 231
+demand_load_file_system equ 232
+is_file_system_available equ 233
+install_file_system equ 234
+format_file_system equ 235
+start_file_system equ 236
+stop_file_system equ 237
+get_file_list_entry equ 238
+free_file_list_entry equ 239
+cache_dir equ 240
+insert_dir_entry equ 241
+insert_file_entry equ 242
+hook_file_system_started equ 243
+
+get_file_info equ 247
+dupl_file_info equ 248
+
+get_utf8_bitmap equ 250
+register_video_mode equ 251
+
+init_mouse equ 252
+update_mouse equ 253
+
+init_video_bitmap equ 254
+
+allocate_small_kernel_mem equ 255
+
+hide_sprite_line equ 256
+show_sprite_line equ 257
+
+set_keyboard_state equ 264
+
+add_wait equ 266
+signal_wait equ 267
+
+invert_mouse equ 268
+
+load_dos_exe equ 269
+
+get_exception_stack16 equ 270
+get_exception_stack32 equ 271
+
+lock_sys_env equ 272
+unlock_sys_env equ 273
+
+lock_proc_env equ 274
+unlock_proc_env equ 275
+
+erase_sectors equ 276
+flush_sector equ 277
+
+lock_disc_request equ 278
+modify_disc_request equ 279
+unlock_disc_request equ 280
+
+get_net_buffer equ 281
+get_ppp_buffer equ 282
+
+allocate_multiple_physical32 equ 283
+allocate_multiple_physical64 equ 284
+
+add_net_source_address equ 286
+
+get_broadcast_buffer equ 287
+send_broadcast equ 288
+
+create_broadcast_ip equ 289
+send_broadcast_ip equ 290
+
+net_broadcast equ 291
+add_dhcp_option equ 292
+
+define_protocol_addr equ 293
+
+register_swap_proc equ 294
+
+setup_irq_detect equ 296
+poll_irq_detect equ 297
+
+find_pci_cap equ 298
+
+wait_for_signal_timeout equ 299
+
+notify_ethernet_packet equ 300
+
+init_usb_device equ 301
+notify_usb_attach equ 302
+
+notify_usb_detach equ 304
+
+add_com_port equ 305
+
+hook_usb_attach equ 306
+hook_usb_detach equ 307
+
+set_mouse equ 308
+set_mouse_limit equ 309
+
+get_net_driver equ 310
+
+create_usb_req equ 311
+add_write_usb_control_req equ 312
+add_write_usb_data_req equ 313
+add_read_usb_data_req equ 314
+add_usb_status_in_req equ 315
+add_usb_status_out_req equ 316
+start_usb_req equ 317
+is_usb_req_started equ 318
+is_usb_req_ready equ 319
+get_usb_req_data equ 320
+usb_req_done equ 321
+close_usb_req equ 322
+
+notify_ir_data equ 323
+
+read_codec equ 324
+write_codec equ 325
+
+get_audio_dac_rate equ 326
+set_audio_dac_rate equ 327
+get_audio_adc_rate equ 328
+set_audio_adc_rate equ 329
+
+open_audio_out equ 330
+close_audio_out equ 331
+send_audio_out equ 332
+
+get_audio_out_buf equ 333
+post_audio_out_buf equ 334
+is_audio_out_completed equ 335
+
+set_module equ 336
+create_module equ 337
+free_module equ 338
+reset_module equ 339
+deref_module_handle equ 340
+alias_module_handle equ 341
+
+thread_to_sel equ 342
+
+stop_usb_req equ 344
+
+get_usb_info equ 345
+
+reserve_com_line equ 346
+
+device_set_dtr equ 347
+device_reset_dtr equ 348
+
+wait_for_line_state equ 349
+get_line_state equ 350
+
+create_proc_handle equ 351
+deref_proc_handle equ 352
+
+notify_time_drift equ 353
+set_options equ 354
+
+clone_handle_mem equ 355
+clone_app equ 356
+
+get_apic_id equ 357
+
+debug_exception equ 360
+
+create_core equ 362
+get_core_num equ 363
+
+locked_debug_exception equ 364
+
+lock_task equ 365
+unlock_task equ 366
+
+get_core equ 368
+get_core_count equ 369
+run_ap_core equ 370
+
+preempt_timer_expired equ 371
+timer_expired equ 372
+
+reload_sys_timer equ 373
+start_sys_timer equ 374
+
+is_net_address_valid equ 375
+
+get_acpi_table equ 376
+
+allocate_debug_local_linear equ 377
+
+process_key_scan equ 378
+
+get_debug_thread_sel equ 379
+
+find_pci_class_all equ 380
+
+show_proc_debug equ 381
+
+get_pci_irq equ 382
+
+preempt_expired equ 383
+
+send_eoi equ 384
+send_int equ 385
+send_nmi equ 386
+
+add_printer equ 387
+
+crash_gate equ 388
+crash_tss equ 389
+crash_fault equ 390
+
+start_crash_core equ 391
+
+read_pnp_byte equ 393
+write_pnp_byte equ 394
+
+add_sys_env_var equ 395
+delete_sys_env_var equ 396
+find_sys_env_var equ 397
+
+start_preempt_timer equ 398
+reload_preempt_timer equ 399
+
+start_sys_preempt_timer equ 400
+reload_sys_preempt_timer equ 401
+
+notify_flush_tlb equ 402
+
+is_valid_usb_pipe_sel equ 403
+
+hook_net_link_up equ 404
+req_arp equ 405
+
+begin_disc_handler equ 406
+end_disc_handler equ 407
+
+hook_init_pci equ 408
+
+register_msi equ 409
+
+allocate_ints equ 410
+free_int equ 411
+
+get_acpi_pci_device_name equ 412
+get_acpi_pci_device_info equ 413
+get_acpi_pci_device_irq equ 414
+
+start_core equ 415
+shutdown_core equ 416
+
+update_pstate equ 417
+
+enter_c3 equ 418
+
+get_pci_msi equ 419
+setup_pci_msi equ 420
+request_msi_handler equ 421
+request_irq_handler equ 422
+request_pci_irq_handler equ 423
+
+register_syscall equ 424
+register_bimodal_syscall equ 425
+
+syscall_patch equ 426
+start_syscall equ 427
+setup_sysleave equ 428
+
+start_dev32 equ 429
+
+get_ioapic_state equ 430
+
+lock_file equ 431
+unlock_file equ 432
+
+switch_one_core_irq equ 433
+switch_all_core_irqs equ 434
+
+app_patch equ 435
+
+copy_page_entries equ 436
+move_page_entries equ 437
+
+has_page_entry equ 438
+free_page_entries equ 439
+free_global_page_entries equ 439
+allocate_page_entries equ 440
+reserve_page_entries equ 441
+
+add_carddev equ 442
+
+get_thread_page_dir equ 443
+set_page_dir equ 444
+set_sys_page_dir equ 445
+get_page_dir_attrib equ 446
+get_page_dir equ 447
+set_sys_page_entry equ 448
+copy_sys_page_entries equ 449
+get_sys_page_entry equ 450
+get_sys_page_dir equ 451
+
+notify_init_process equ 452
+notify_create_process equ 453
+notify_init_tasking equ 454
+notify_thread_created equ 455
+notify_thread_exit equ 456
+notify_process_created equ 457
+notify_process_exit equ 458
+
+get_scheduler_lock_counter equ 459
+flush_tlb equ 460
+setup_smp_patch equ 461
+notify_thread_suspend equ 462
+

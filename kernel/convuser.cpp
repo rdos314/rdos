@@ -15,6 +15,7 @@ int main()
     char *next;
     TFile InFile("user.def");
     TFile OutFile("rdu.h", 0);
+    TFile NasmFile("usernasm.def", 0);
 
     Size = InFile.Read(Buffer, MAX_USER_SIZE);
     Buffer[Size] = 0;
@@ -58,12 +59,16 @@ int main()
                             GateId);
 
                     OutFile.Write(Macro);
+
+                    sprintf(Macro, "%s equ %d\r\n", GateName, GateId);
+                    NasmFile.Write(Macro);
                 }
             }
         }
         else
         {
             OutFile.Write("\r\n");
+            NasmFile.Write("\r\n");
         }
 
         ptr = next;
