@@ -125,7 +125,7 @@ init_done:
 test_thread_name  DB 'Nasm Test Thread', 0
 
 test_thread:
-    int 3  
+    int 3
     jmp unity
 
     
@@ -140,5 +140,15 @@ times 0x3012 - ($ - $$) db 0
 unity:
     OsGate prepare_long_mode
     int 3  
+    cli
+    mov eax,cr0
+    and eax,7FFFFFFFh
+    mov cr0,eax
+;
+    mov eax,cr0
+    or eax,80000000h
+    mov cr0,eax
+    sti
+    int 3    
 
 text_end:
