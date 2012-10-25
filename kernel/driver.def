@@ -437,8 +437,9 @@ acpi_code_sel       EQU 0B00h
 carddev_code_sel    EQU 0B10h
 carddev_data_sel    EQU 0B18h
 
-longmode_code_sel       EQU 0B20h
-longmode_data_sel       EQU 0B28h
+long_dev_code_sel       EQU 0B20h
+long_kernel_code_sel    EQU 0B28h
+long_user_code_sel      EQU 0B33h
 
 debug_dev32_code_sel    EQU 0EF0h
 debug_dev32_data_sel    EQU 0EF8h

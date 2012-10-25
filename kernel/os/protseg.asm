@@ -596,6 +596,62 @@ create_code_sel32       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CreateLongCodeSelector
+;
+;           DESCRIPTION:    Create long mode code selector
+;
+;           PARAMETERS:     BX              DESCRIPTOR
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_long_code_sel_name DB 'Create Long Mode Code Selector',0
+
+create_long_code_sel       PROC far
+    push ds
+    push eax
+    push bx
+;
+    test bx,4
+    jz create_long_code_gdt
+
+create_long_code_ldt:
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_ldt_sel
+    jmp create_long_code_dt_ok
+
+create_long_code_gdt:
+    mov ax,gdt_sel
+    mov ds,ax
+
+create_long_code_dt_ok:
+    mov al,bl
+    and bx,0FFF8h
+;
+    shl al,5
+    or al,9Ah
+    mov [bx+5],al
+;
+    mov al,0A0h
+    mov [bx+6],al    
+;
+    xor ax,ax
+    mov [bx+2],ax
+    mov [bx+4],al
+;
+    mov ax,-1    
+    mov [bx],ax
+    mov [bx+7],al
+;
+    pop bx
+    pop eax
+    pop ds
+    retf32
+create_long_code_sel       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CreateConformSelector16
 ;
 ;           DESCRIPTION:    Create 16-bit conforming code selector
@@ -1248,6 +1304,12 @@ init_os_protseg PROC near
     mov edi,OFFSET create_code_sel32_name
     xor cl,cl
     mov ax,create_code_sel32_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET create_long_code_sel
+    mov edi,OFFSET create_long_code_sel_name
+    xor cl,cl
+    mov ax,create_long_code_sel_nr
     RegisterOsGate
 ;
     mov esi,OFFSET create_conform_sel16

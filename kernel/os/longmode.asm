@@ -61,9 +61,9 @@ IA32_EFER   equ 0xC0000080
 hdr         dw 0x3252
 cip         dd init
 code_size   dd text_end
-code_sel    dw longmode_code_sel
+code_sel    dw long_dev_code_sel
 data_size   dd 0
-data_sel    dw longmode_data_sel
+data_sel    dw 0
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -105,6 +105,10 @@ init_task:
 init:
     OsGate has_long_mode
     jc init_done
+;
+    mov bx,long_kernel_code_sel
+    OsGate create_long_code_sel
+;    
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -142,8 +146,6 @@ times 0x3012 - ($ - $$) db 0
 unity:
     OsGate prepare_long_mode
     int 3 
-
-
 ;
     mov edx,2000h
     xor ebx,ebx
@@ -182,6 +184,11 @@ unity:
 ;    
     mov edi,cr3
 ;
+    mov edx,0xB8000
+    mov eax,0xB8007
+    xor ebx,ebx
+    OsGate set_page_entry
+;    
     cli
     mov eax,cr0
     and eax,7FFFFFFFh
@@ -199,8 +206,9 @@ unity:
     or eax,80000000h
     mov cr0,eax
 
-    jmp longmode_code_sel:flush1
-flush1:        
+    jmp long_kernel_code_sel:test64
+
+test32:        
     mov eax,2000h
     mov ebx,[eax]
     mov ebp,[eax+8]
@@ -221,5 +229,21 @@ flush1:
     mov cr0,eax
     sti
     int 3
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;  64-bit test code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    bits 64
+
+test64:
+    mov rbx,0xB8000
+    mov eax,0x7310731
+    mov [rbx],eax
+
+stopl:
+    jmp stopl        
 
 text_end:

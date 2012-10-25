@@ -27,6 +27,7 @@ create_call_gate_sel16_nr	= 24
 create_call_gate_sel32_nr	= 25
 create_task_gate_sel_nr		= 26
 create_down_sel32_nr		= 27
+create_long_code_sel_nr     = 28
 selector_to_segment_nr		= 29
 segment_to_selector_nr		= 30
 free_selector_nr			= 31

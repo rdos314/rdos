@@ -381,6 +381,11 @@ CreateCodeSelector32    MACRO
                     ENDM
 
 ;       BX          DESCRIPTOR
+CreateLongCodeSelector    MACRO
+    OsGate create_long_code_sel_nr
+                    ENDM
+
+;       BX          DESCRIPTOR
 ;       EDX         BASE
 ;       ECX         LIMIT
 CreateConformSelector16 MACRO

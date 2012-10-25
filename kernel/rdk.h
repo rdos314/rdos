@@ -27,6 +27,7 @@
 #define osgate_create_call_gate_sel32 25
 #define osgate_create_task_gate_sel 26
 #define osgate_create_down_sel32 27
+#define osgate_create_long_code_sel 28
 #define osgate_selector_to_segment 29
 #define osgate_segment_to_selector 30
 #define osgate_free_selector 31
@@ -579,6 +580,7 @@
 #define OsGate_create_call_gate_sel32 0x3E 0x67 0x9a 25 0 0 0 2 0
 #define OsGate_create_task_gate_sel 0x3E 0x67 0x9a 26 0 0 0 2 0
 #define OsGate_create_down_sel32 0x3E 0x67 0x9a 27 0 0 0 2 0
+#define OsGate_create_long_code_sel 0x3E 0x67 0x9a 28 0 0 0 2 0
 #define OsGate_selector_to_segment 0x3E 0x67 0x9a 29 0 0 0 2 0
 #define OsGate_segment_to_selector 0x3E 0x67 0x9a 30 0 0 0 2 0
 #define OsGate_free_selector 0x3E 0x67 0x9a 31 0 0 0 2 0

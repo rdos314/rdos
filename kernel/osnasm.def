@@ -27,6 +27,7 @@ create_call_gate_sel16 equ 24
 create_call_gate_sel32 equ 25
 create_task_gate_sel equ 26
 create_down_sel32 equ 27
+create_long_code_sel equ 28
 selector_to_segment equ 29
 segment_to_selector equ 30
 free_selector equ 31
