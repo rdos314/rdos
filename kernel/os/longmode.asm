@@ -33,11 +33,11 @@
 IA32_EFER   equ 0xC0000080
 
 %macro OsGate 1
+    db 3Eh
     db 67h
-    db 66h
     db 9Ah
     dd %1
-    dw 2    
+    dw 2
 %endmacro
 
 %macro UserGate 1
@@ -61,9 +61,9 @@ IA32_EFER   equ 0xC0000080
 hdr         dw 0x3252
 cip         dd init
 code_size   dd text_end
-code_sel    dw nasm_code_sel
+code_sel    dw longmode_code_sel
 data_size   dd 0
-data_sel    dw nasm_data_sel
+data_sel    dw longmode_data_sel
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -141,18 +141,47 @@ times 0x3012 - ($ - $$) db 0
 
 unity:
     OsGate prepare_long_mode
-    int 3  
-    mov ax,flat_sel
-    mov es,ax
-    mov edi,12000h
+    int 3 
+
+
+;
+    mov edx,2000h
+    xor ebx,ebx
     mov eax,cr3
-    or ax,3
+    or al,67h
+    OsGate set_page_entry
+;    
+    mov ax,flat_sel
+    mov ds,ax
+    mov es,ax
+;
+    mov esi,2000h
+    mov edi,11000h
+    mov ecx,400h
+    rep movsd
+;
+    mov edi,11000h
+    mov al,7
+    stosb
+;    
+    add edi,7    
+    stosb
+;    
+    add edi,7    
+    stosb
+;    
+    add edi,7    
+    stosb
+;
+    mov edi,12000h
+    mov eax,11007h
     stosd
     xor eax,eax
     mov ecx,1023
     rep stosd    
 ;    
-    mov ebp,cr3
+    mov edi,cr3
+;
     cli
     mov eax,cr0
     and eax,7FFFFFFFh
@@ -169,9 +198,12 @@ unity:
     mov eax,cr0
     or eax,80000000h
     mov cr0,eax
-;
-    mov edx,12345h
-    mov ecx,98765h
+
+    jmp longmode_code_sel:flush1
+flush1:        
+    mov eax,2000h
+    mov ebx,[eax]
+    mov ebp,[eax+8]
 ;    
     mov eax,cr0
     and eax,7FFFFFFFh
@@ -182,12 +214,12 @@ unity:
     and eax,0xFFFFFEFF   
     wrmsr
 ;
-    mov cr3,ebp          
+    mov cr3,edi
 ;
     mov eax,cr0
     or eax,80000000h
     mov cr0,eax
     sti
-    int 3    
+    int 3
 
 text_end:
