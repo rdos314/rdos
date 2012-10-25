@@ -1,1 +1,1 @@
-nasm nasm.asm -o nasm.rdv -l nasm.lst
+nasm longmode.asm -o longmode.rdv -l longmode.lst
