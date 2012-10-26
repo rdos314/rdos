@@ -131,7 +131,13 @@ init_done:
 test_thread_name  DB 'Nasm Test Thread', 0
 
 test_thread:
-    int 3
+    int 3 
+    mov bx,ss
+    OsGate get_selector_base_size
+    add edx,esp
+    mov ax,syscall_data_sel
+    mov ss,ax
+    mov esp,edx    
     jmp unity
 
     
@@ -145,7 +151,6 @@ times 0x3012 - ($ - $$) db 0
 
 unity:
     OsGate prepare_long_mode
-    int 3 
 ;
     mov edx,2000h
     xor ebx,ebx
@@ -238,10 +243,220 @@ test32:
 
     bits 64
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           WriteChar
+;
+;   DESCRIPTION:    Write a char to screen
+;
+;   PARAMETERS:     DL          Char
+;                   DH          Attrib
+;                   AL          Row
+;                   AH          Col
+;                   R8          Screen base
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteChar:
+    push rax
+    push rbx
+    push rcx
+;    
+    mov cx,ax
+    mov al,80
+    mul ch
+    add al,cl
+    adc ah,0
+    add ax,ax
+    movzx rbx,ax
+    mov [r8+rbx],dx
+;
+    pop rcx
+    pop rbx
+    pop rax
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SingleHex
+;
+;   DESCRIPTION:    Convert number to printable hex
+;
+;   PARAMETERS:     AL          Value
+;
+;   RETURNS:        AX          Hex value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SingelHex:
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb shLow1
+    
+    add al,7
+
+shLow1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb shHigh1
+    
+    add ah,7
+
+shHigh1:
+    add ah,30h
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           WriteHexByte
+;
+;   DESCRIPTION:    Write a hex byte to screen
+;
+;   PARAMETERS:     AL          Data
+;                   CL          Attrib
+;                   DL          Row
+;                   DH          Col
+;                   R8          Screen base
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteHexByte:
+    push rax
+    push rcx
+    push rdx
+;
+    mov ah,cl
+    mov cx,ax
+    call SingelHex
+;    
+    push rax
+    xchg rax,rdx
+    mov dh,ch
+    call WriteChar
+    pop rdx
+;    
+    inc al
+    mov dl,dh
+    mov dh,ch
+    call WriteChar
+    pop rdx
+    add dl,2
+;    
+    pop rcx
+    pop rax
+    ret
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           WriteHexWord
+;
+;   DESCRIPTION:    Write a hex word to screen
+;
+;   PARAMETERS:     AX          Data
+;                   CL          Attrib
+;                   DL          Row
+;                   DH          Col
+;                   R8          Screen base
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteHexWord:
+    push rax
+    rol ax,8
+    call WriteHexByte
+    rol ax,8
+    call WriteHexByte
+    pop rax
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           WriteHexDword
+;
+;   DESCRIPTION:    Write a hex dword to screen
+;
+;   PARAMETERS:     EAX         Data
+;                   CL          Attrib
+;                   DL          Row
+;                   DH          Col
+;                   R8          Screen base
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteHexDword:
+    push rax
+    rol eax,8
+    call WriteHexByte
+    rol eax,8
+    call WriteHexByte
+    rol eax,8
+    call WriteHexByte
+    rol eax,8
+    call WriteHexByte
+    pop rax
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           WriteHexQword
+;
+;   DESCRIPTION:    Write a hex qword to screen
+;
+;   PARAMETERS:     RAX         Data
+;                   CL          Attrib
+;                   DL          Row
+;                   DH          Col
+;                   R8          Screen base
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteHexQword:
+    push rax
+    rol rax,8
+    call WriteHexByte
+    rol rax,8
+    call WriteHexByte
+    rol rax,8
+    call WriteHexByte
+    rol rax,8
+    call WriteHexByte
+    rol rax,8
+    call WriteHexByte
+    rol rax,8
+    call WriteHexByte
+    rol rax,8
+    call WriteHexByte
+    rol rax,8
+    call WriteHexByte
+    pop rax
+    ret
+
+
 test64:
-    mov rbx,0xB8000
-    mov eax,0x7310731
-    mov [rbx],eax
+    mov r8,0xB8000
+    mov rax,0xFEDCBA9834565A11
+    mov cl,13
+    mov dl,0
+    mov dh,0
+    call WriteHexQword
 
 stopl:
     jmp stopl        
