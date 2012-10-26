@@ -449,16 +449,92 @@ WriteHexQword:
     pop rax
     ret
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           WriteString
+;
+;   DESCRIPTION:    Write string to screen
+;
+;   PARAMETERS:     RDI         String
+;                   AH          Attrib
+;                   DH          Row
+;                   DL          Col
+;                   RCX         Characters
+;                   R8          Screen base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteString:
+    xchg rax,rdx
+    push rdi
+    push rbx
+
+wsLoop:
+    push rax
+    mov bh,al
+    mov al,ah
+    mov bl,80
+    mul bl
+    add al,bh
+    adc ah,0
+    add ax,ax
+    movzx rbx,ax
+    pop rax
+    mov dl,[rdi]
+    cmp dl,13
+    jne wsNotCr
+
+    xor al,al
+    jmp wsEnd
+
+wsNotCr:
+    cmp dl,10
+    jne wsNotLf
+
+    inc ah
+    jmp wsEnd
+    
+wsNotLf:
+    mov [r8+rbx],dx
+    
+    inc al
+
+wsEnd:
+    cmp al,80
+    jne wsLineShiftOk
+
+    inc ah
+    mov al,0
+
+wsLineShiftOk:
+    cmp ah,24
+    jb wsPageShiftOk
+    
+    mov ah,24       
+
+wsPageShiftOk:
+    inc rdi
+    loop wsLoop
+
+    pop rbx
+    pop rdi
+    xchg rax,rdx
+    ret
+
+test_str    DB 'Long mode test string', 0
 
 test64:
     mov r8,0xB8000
-    mov rax,0xFEDCBA9834565A11
-    mov cl,13
+    mov ah,13
     mov dl,0
     mov dh,0
-    call WriteHexQword
+    mov rcx,21
+    mov edi,test_str
+    call WriteString
 
 stopl:
     jmp stopl        
+
 
 text_end:
