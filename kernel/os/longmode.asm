@@ -47,6 +47,37 @@ IA32_EFER   equ 0xC0000080
     dd %1
     dw 3
 %endmacro
+
+struc Reg64
+
+reg_rax:    resq 1
+reg_rcx:    resq 1
+reg_rdx:    resq 1
+reg_rbx:    resq 1
+reg_rsp:    resq 1
+reg_rbp:    resq 1
+reg_rsi:    resq 1
+reg_rdi:    resq 1
+reg_r8:     resq 1
+reg_r9:     resq 1
+reg_r10:    resq 1
+reg_r11:    resq 1
+reg_r12:    resq 1
+reg_r13:    resq 1
+reg_r14:    resq 1
+reg_r15:    resq 1
+reg_rip:    resq 1
+reg_cs:     resw 1
+reg_ds:     resw 1
+reg_es:     resw 1
+reg_fs:     resw 1
+reg_gs:     resw 1
+reg_ss:     resw 1
+reg_flags:  resq 1
+
+reg_end:    resb 1
+
+endstruc
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -56,7 +87,7 @@ IA32_EFER   equ 0xC0000080
 
    bits 32
 
-   org 0xFFFFFFEE
+   org 0xFFFFFFFFFFFFFFEE
 
 hdr         dw 0x3252
 cip         dd init
@@ -318,6 +349,38 @@ shHigh1:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           WriteSpace
+;
+;   DESCRIPTION:    Write space
+;
+;   PARAMETERS:     CL          Attrib
+;                   DL          Row
+;                   DH          Col
+;                   R8          Screen base
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteSpace:
+    push rax
+    push rcx
+    push rdx
+;
+    mov ah,cl    
+    xchg rax,rdx
+    mov dl,'_'
+    call WriteChar
+;    
+    pop rdx
+    pop rcx
+    pop rax
+    add dl,1
+    ret
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           WriteHexByte
 ;
 ;   DESCRIPTION:    Write a hex byte to screen
@@ -438,6 +501,9 @@ WriteHexQword:
     call WriteHexByte
     rol rax,8
     call WriteHexByte
+;  
+    call WriteSpace
+;    
     rol rax,8
     call WriteHexByte
     rol rax,8
@@ -522,16 +588,317 @@ wsPageShiftOk:
     xchg rax,rdx
     ret
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           WriteQwordReg
+;
+;   DESCRIPTION:    Write 64-bit registers
+;
+;   PARAMETERS:     RDI     Register table
+;                   CL      Attrib
+;                   DH      Row
+;                   DL      Col
+;                   R8      Video
+;                   R15     Register state
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteQwordReg:
+    push rcx
+    mov ah,cl
+    mov rcx,4
+    call WriteString
+    pop rcx   
+    add rdi,4
+;
+    xor rbx,rbx
+    mov ebx,[rdi]
+    mov rax,[r15+rbx]
+    call WriteHexQword
+    add rdi,4
+    inc dl
+    mov al,[rdi]
+    or al,al
+    jnz WriteQwordReg
+;
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           WriteSegReg
+;
+;   DESCRIPTION:    Write segment registers
+;
+;   PARAMETERS:     CL      Attrib
+;                   DH      Row
+;                   DL      Col
+;                   R8      Video
+;                   R15     Register state
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+seg_reg_tab:
+    db 'CS='
+    dd reg_cs
+    db 'DS='
+    dd reg_ds
+    db 'ES='
+    dd reg_es
+    db 'FS='
+    dd reg_fs
+    db 'GS='
+    dd reg_gs
+    db 'SS='
+    dd reg_ss
+    db 0
+
+WriteSegReg:
+    mov rdi,seg_reg_tab
+
+wsrLoop:
+    push rcx
+    mov ah,cl
+    mov rcx,3
+    call WriteString
+    pop rcx   
+    add rdi,3
+;
+    xor rbx,rbx
+    mov ebx,[rdi]
+    mov ax,[r15+rbx]
+    call WriteHexWord
+    add rdi,4
+    inc dl
+    mov al,[rdi]
+    or al,al
+    jnz wsrLoop
+;
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           WriteFlags
+;
+;   DESCRIPTION:    Write FLAGS
+;
+;   PARAMETERS:     DH      Row
+;                   DL      Col
+;                   R8      Video
+;                   R15     Register state
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+flags_tab:
+;
+;           reset       set
+et_cf   DB 'NC ',       'CY '
+et_1    DB 0,0,0,       0,0,0
+et_pf   DB 'PO ',       'PE '
+et_3    DB 0,0,0,       0,0,0
+et_af   DB 'NA ',       'AC '
+et_5    DB 0,0,0,       0,0,0
+et_zf   DB 'NZ ',       'ZR '
+et_sf   DB 'PL ',       'NG '
+et_tf   DB 0,0,0,       0,0,0
+et_if   DB 'DI ',       'EI '
+et_df   DB 'UP ',       'DN '
+et_of   DB 'NV ',       'OV '
+et_end  DB 0FFh
+
+WriteFlags:
+    mov rbx,reg_flags
+    mov rax,[r15+rbx]
+    mov rdi,flags_tab
+
+wfLoop:
+    mov ch,[rdi]
+    or ch,ch
+    je wfNext
+;    
+    cmp ch,0FFh
+    je wfDone
+;    
+    push rdi
+    mov cl,10
+    test ax,1
+    jz wfPosOk
+;
+    add rdi,3
+    mov cl,12
+
+wfPosOk:
+    push rax
+    mov ah,cl
+    mov rcx,3
+    call WriteString
+    pop rax
+    pop rdi
+    
+wfNext:
+    add rdi,6
+    shr rax,1
+    jmp wfLoop
+    
+wfDone:
+    ret
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;   qword reg tables
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+qword_reg_tab1:
+    db 'RAX='
+    dd reg_rax
+    db 'RBX='
+    dd reg_rbx
+    db 'RCX='
+    dd reg_rcx
+    db 0
+
+qword_reg_tab2:
+    db 'RDX='
+    dd reg_rdx
+    db 'RSI='
+    dd reg_rsi
+    db 'RDI='
+    dd reg_rdi
+    db 0
+
+qword_reg_tab3:
+    db ' R8='
+    dd reg_r8
+    db ' R9='
+    dd reg_r9
+    db 'R10='
+    dd reg_r10
+    db 0
+
+qword_reg_tab4:
+    db 'R11='
+    dd reg_r11
+    db 'R12='
+    dd reg_r12
+    db 'R13='
+    dd reg_r13
+    db 0
+
+qword_reg_tab5:
+    db 'R14='
+    dd reg_r14
+    db 'R15='
+    dd reg_r15
+    db 0
+
+qword_reg_tab6:
+    db 'RIP='
+    dd reg_rip
+    db 'RSP='
+    dd reg_rsp
+    db 'RBP='
+    dd reg_rbp
+    db 0
+
+
 test_str    DB 'Long mode test string', 0
 
+regs  times reg_end db 0
+
 test64:
+    push r15
+    mov r15,regs
+    mov [r15+reg_rax],rax
+    mov [r15+reg_rcx],rcx
+    mov [r15+reg_rdx],rdx
+    mov [r15+reg_rbx],rbx
+    mov [r15+reg_rbp],rbp
+    mov [r15+reg_rsi],rsi
+    mov [r15+reg_rdi],rdi
+    mov [r15+reg_r8],r8
+    mov [r15+reg_r9],r9
+    mov [r15+reg_r10],r10
+    mov [r15+reg_r11],r11
+    mov [r15+reg_r12],r12
+    mov [r15+reg_r13],r13
+    mov [r15+reg_r14],r14
+    pop rax
+    mov [r15+reg_r15],rax
+    mov [r15+reg_rsp],rsp
+    mov qword [r15+reg_rip],test64
+;
+    mov word [r15+reg_cs],cs
+    mov word [r15+reg_ds],ds
+    mov word [r15+reg_es],es
+    mov word [r15+reg_fs],fs
+    mov word [r15+reg_gs],gs
+    mov word [r15+reg_ss],ss
+;
+    pushfq
+    pop qword rax
+    mov qword [r15+reg_flags],rax
+;
     mov r8,0xB8000
-    mov ah,13
-    mov dl,0
-    mov dh,0
-    mov rcx,21
-    mov edi,test_str
-    call WriteString
+    xor rdx,rdx
+;    
+    mov rdi,qword_reg_tab1
+    mov cl,10
+    xor dl,dl
+    call WriteQwordReg
+    inc dh
+    xor dl,dl
+;    
+    mov rdi,qword_reg_tab2
+    mov cl,10
+    xor dl,dl
+    call WriteQwordReg
+    inc dh
+    xor dl,dl
+;    
+    mov rdi,qword_reg_tab3
+    mov cl,10
+    xor dl,dl
+    call WriteQwordReg
+    inc dh
+    xor dl,dl
+;    
+    mov rdi,qword_reg_tab4
+    mov cl,10
+    xor dl,dl
+    call WriteQwordReg
+    inc dh
+    xor dl,dl
+;    
+    mov rdi,qword_reg_tab5
+    mov cl,10
+    xor dl,dl
+    call WriteQwordReg
+    inc dh
+    xor dl,dl
+;    
+    mov rdi,qword_reg_tab6
+    mov cl,10
+    xor dl,dl
+    call WriteQwordReg
+    inc dh
+    xor dl,dl
+;    
+    mov cl,10
+    xor dl,dl
+    call WriteSegReg
+    inc dh
+    xor dl,dl
+;    
+    mov cl,10
+    xor dl,dl
+    call WriteFlags
+    inc dh
+    xor dl,dl
 
 stopl:
     jmp stopl        
