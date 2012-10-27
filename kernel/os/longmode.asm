@@ -130,9 +130,18 @@ init_ok:
     mov es,ax
     mov edi,init_task
     OsGate hook_init_tasking
+;    
+    mov esi,boot_end
+    mov edi,text_start
+    mov ecx,UNITY_MAP_SIZE
+    mov bx,cs
+    OsGate prepare_long_mode
 
-init_done:    
-    retf
+boot_end:    
+
+section .text progbits follows=.boot vstart=MAP_LINEAR align=1
+
+text_start:
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -160,18 +169,7 @@ init_task:
     popad
     pop es
     pop ds
-;    
-    mov esi,boot_end
-    mov edi,text_start
-    mov ecx,UNITY_MAP_SIZE
-    mov bx,cs
-    OsGate prepare_long_mode
-
-boot_end:    
-
-section .text progbits follows=.boot vstart=MAP_LINEAR align=1
-
-text_start:
+    retf
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
