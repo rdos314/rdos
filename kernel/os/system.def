@@ -107,12 +107,12 @@ boot64_pages        = 16
 
 system_seg	STRUC
 
-boot64_page_count           DW ?
-boot64_start_page		    DD ?
+dum1                        DD ?
+dum2                        DW ?
+
 cpu_ext_feature_flags   	DD ?
 
-dummy_free_dma_phys_list	DD ?
-dummy_unused_phys_list	DD ?
+dum3                        DD ?,?
 
 ram64_size          DD ?,?
 

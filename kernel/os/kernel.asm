@@ -690,8 +690,6 @@ init_no_bda:
     mov ds:max_cpuid,0
     mov ds:sys_tsc_tics,0
     mov ds:sys_tsc_rest,0
-    mov ds:boot64_page_count,0
-    mov ds:boot64_start_page,0
 ;
     pushfd
     pop eax
@@ -771,18 +769,6 @@ init_cpu_done:
     call ZeroRam
     call MarkupRam
 ;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov eax,ds:cpu_ext_feature_flags    
-    test eax,20000000h    
-    jz init_long_mode_done
-;
-    mov ecx,boot64_pages
-    call AllocateMultipleRam
-    mov ds:boot64_page_count,cx
-    mov ds:boot64_start_page,esi
-
-init_long_mode_done:
     mov ax,flat_sel
     mov ds,ax
     mov ax,gdt_sel
