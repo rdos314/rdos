@@ -719,15 +719,15 @@ gdt0:
     dw 0
 gdt8:
     dw 10h*8-1
-    dd 110000h + OFFSET rom_idt + MY_OFFSET
+    dd 120000h + OFFSET rom_idt + MY_OFFSET
     dw 0
 gdt10:
     dw 28h-1
-    dd 110000h + OFFSET rom_gdt + MY_OFFSET
+    dd 120000h + OFFSET rom_gdt + MY_OFFSET
     dw 0
 gdt18:
     dw 0FFFFh
-    dd 9A110000h + MY_OFFSET
+    dd 9A120000h + MY_OFFSET
     dw 0
 gdt20:
     dw 0FFFFh

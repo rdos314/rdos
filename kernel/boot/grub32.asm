@@ -33,7 +33,7 @@
 
 INCLUDE ..\driver.def
 
-IMAGE_BASE = 110000h
+IMAGE_BASE = 120000h
 
 MY_OFFSET       = 40h
 
