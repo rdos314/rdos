@@ -32,6 +32,13 @@
 
 IA32_EFER   equ 0xC0000080
 
+PAE_CR3_LINEAR  equ 2000h
+MAP_LINEAR      equ 3000h
+UNITY_MAP_SIZE  equ 10000h
+
+IA64_PAE_LINEAR equ 11000h
+IA64_CR3_LINEAR equ 12000h
+
 %macro OsGate 1
     db 3Eh
     db 67h
@@ -174,16 +181,16 @@ test_thread:
 ;    
     mov esi,boot_end
     mov edi,text_start
-    mov ecx,10000h
+    mov ecx,UNITY_MAP_SIZE
     mov bx,cs
     OsGate prepare_long_mode
 
 boot_end:    
 
-section .text progbits follows=.boot vstart=0x00003000 align=1
+section .text progbits follows=.boot vstart=MAP_LINEAR align=1
 
 text_start:
-    mov edx,2000h
+    mov edx,PAE_CR3_LINEAR
     xor ebx,ebx
     mov eax,cr3
     or al,67h
@@ -193,12 +200,12 @@ text_start:
     mov ds,ax
     mov es,ax
 ;
-    mov esi,2000h
-    mov edi,11000h
+    mov esi,PAE_CR3_LINEAR
+    mov edi,IA64_PAE_LINEAR
     mov ecx,400h
     rep movsd
 ;
-    mov edi,11000h
+    mov edi,IA64_PAE_LINEAR
     mov al,7
     stosb
 ;    
@@ -211,11 +218,11 @@ text_start:
     add edi,7    
     stosb
 ;
-    mov edi,12000h
-    mov eax,11007h
+    mov edi,IA64_CR3_LINEAR
+    mov eax,IA64_PAE_LINEAR + 7
     stosd
     xor eax,eax
-    mov ecx,1023
+    mov ecx,0x3FF
     rep stosd    
 ;    
     mov edi,cr3
@@ -235,7 +242,7 @@ text_start:
     or eax,0x100
     wrmsr
 ;
-    mov eax,12000h
+    mov eax,IA64_CR3_LINEAR
     mov cr3,eax  
 ;
     mov eax,cr0
@@ -245,10 +252,6 @@ text_start:
     jmp long_kernel_code_sel:test64
 
 test32:        
-    mov eax,2000h
-    mov ebx,[eax]
-    mov ebp,[eax+8]
-;    
     mov eax,cr0
     and eax,7FFFFFFFh
     mov cr0,eax
