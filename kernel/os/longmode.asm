@@ -87,11 +87,11 @@ endstruc
 
    bits 32
 
-   org 0xFFFFFFFFFFFFFFEE
+section .header progbits start=0x00000000 vstart=0x00000000 align=1
 
 hdr         dw 0x3252
 cip         dd init
-code_size   dd text_end
+code_size   dd text_end - text_start + boot_end
 code_sel    dw long_dev_code_sel
 data_size   dd 0
 data_sel    dw 0
@@ -104,6 +104,8 @@ data_sel    dw 0
 ;    DESCRIPTION:    Init tasking
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+section .boot progbits follows=.header vstart=0x00000000 align=1
     
 init_task:
     push ds
@@ -169,20 +171,18 @@ test_thread:
     mov ax,syscall_data_sel
     mov ss,ax
     mov esp,edx    
-    jmp unity
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;  Unity mapped code at 3000h
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-times 0x3012 - ($ - $$) db 0
-
-unity:
+;    
+    mov esi,boot_end
+    mov edi,text_start
+    mov ecx,10000h
+    mov bx,cs
     OsGate prepare_long_mode
-;
+
+boot_end:    
+
+section .text progbits follows=.boot vstart=0x00003000 align=1
+
+text_start:
     mov edx,2000h
     xor ebx,ebx
     mov eax,cr3

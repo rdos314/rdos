@@ -148,18 +148,27 @@ has_long_mode Endp
 ;
 ;       DESCRIPTION:    Prepare for long mode by moving code to start of physical memory
 ;
+;       PARAMETERS:     BX      dev code selector
+;                       ECX     map size
+;                       ESI     start of unity section in code sel
+;                       EDI     map position for unity section
+;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 prepare_long_mode_name    DB 'Prepare Long Mode', 0
 
-prepare_long_mode Proc far
-    mov ax,system_data_sel
-    mov ds,ax
-    mov eax,ds:boot64_start_page
+prepare_long_mode:
+    push ebx
+    push ecx
+    dec ecx
+    and cx,0F000h
+    shr ecx,12
+    inc cx
+;
+    mov eax,edi
     xor ebx,ebx
     mov edx,eax
     or ax,803h
-    mov cx,ds:boot64_page_count
 
 plPageLoop:
     SetPageEntry
@@ -167,30 +176,27 @@ plPageLoop:
     add eax,1000h
     loop plPageLoop
 ;
-    pop eax
+    pop ecx
     pop ebx
 ;
+    push ebx
+    push edi
+;    
+    mov ds,bx
+    mov ax,flat_sel
+    mov es,ax
     GetSelectorBaseSize
-    mov esi,edx
-    mov edx,ds:boot64_start_page
-    add esi,edx
-    mov edi,edx
-    sub ecx,edx
-    mov dx,flat_sel
-    mov es,dx
+    sub ecx,esi
     push ecx
-    rep movs es:[edi],es:[esi]
+    rep movs es:[edi],ds:[esi]
     pop ecx
 ;
-    add ecx,ds:boot64_start_page
+    int 3
+    mov ecx,edi
     xor edx,edx
     CreateCodeSelector32
-;
-    push ebx
-    push eax        
+;    
     retf32
-prepare_long_mode Endp
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
