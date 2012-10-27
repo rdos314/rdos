@@ -103,6 +103,36 @@ code_size   dd text_end - text_start + boot_end
 code_sel    dw long_dev_code_sel
 data_size   dd 0
 data_sel    dw 0
+
+section .boot progbits follows=.header vstart=0x00000000 align=1
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;    NAME:           Init
+;
+;    DESCRIPTION:    Init module
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+init:
+    OsGate has_long_mode
+    jnc init_ok
+;
+    retf
+
+init_ok:
+    mov bx,long_kernel_code_sel
+    OsGate create_long_code_sel
+;    
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,init_task
+    OsGate hook_init_tasking
+
+init_done:    
+    retf
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -112,8 +142,6 @@ data_sel    dw 0
 ;    DESCRIPTION:    Init tasking
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-section .boot progbits follows=.header vstart=0x00000000 align=1
     
 init_task:
     push ds
@@ -132,31 +160,6 @@ init_task:
     popad
     pop es
     pop ds    
-    retf
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;    NAME:           Init
-;
-;    DESCRIPTION:    Init module
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-init:
-    OsGate has_long_mode
-    jc init_done
-;
-    mov bx,long_kernel_code_sel
-    OsGate create_long_code_sel
-;    
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov edi,init_task
-    OsGate hook_init_tasking
-
-init_done:    
     retf
 
     

@@ -171,7 +171,7 @@ prepare_long_mode:
     or ax,803h
 
 plPageLoop:
-    SetPageEntry
+    SetSysPageEntry
     add edx,1000h
     add eax,1000h
     loop plPageLoop
@@ -191,7 +191,6 @@ plPageLoop:
     rep movs es:[edi],ds:[esi]
     pop ecx
 ;
-    int 3
     mov ecx,edi
     xor edx,edx
     CreateCodeSelector32
