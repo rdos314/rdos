@@ -178,9 +178,6 @@ plPageLoop:
 ;
     pop ecx
     pop ebx
-;
-    push ebx
-    push edi
 ;    
     mov ds,bx
     mov ax,flat_sel
@@ -195,6 +192,7 @@ plPageLoop:
     xor edx,edx
     CreateCodeSelector32
 ;    
+    add sp,8
     retf32
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

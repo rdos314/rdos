@@ -155,13 +155,23 @@ init_task:
     mov edi,test_thread_name
     mov ax,4
     mov ecx,0x1000
-    OsGate create_process
+;    OsGate create_process
 ;
     popad
     pop es
-    pop ds    
-    retf
+    pop ds
+;    
+    mov esi,boot_end
+    mov edi,text_start
+    mov ecx,UNITY_MAP_SIZE
+    mov bx,cs
+    OsGate prepare_long_mode
 
+boot_end:    
+
+section .text progbits follows=.boot vstart=MAP_LINEAR align=1
+
+text_start:
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -175,24 +185,14 @@ init_task:
 test_thread_name  DB 'Nasm Test Thread', 0
 
 test_thread:
-    int 3 
-    mov esi,boot_end
-    mov edi,text_start
-    mov ecx,UNITY_MAP_SIZE
-    mov bx,cs
-    OsGate prepare_long_mode
-
-boot_end:    
-
-section .text progbits follows=.boot vstart=MAP_LINEAR align=1
-
-text_start:
+    int 3
     mov bx,ss
     OsGate get_selector_base_size
     add edx,esp
     mov ax,syscall_data_sel
     mov ss,ax
     mov esp,edx    
+    int 3 
 ;    
     mov edx,PAE_CR3_LINEAR
     xor ebx,ebx
