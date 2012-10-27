@@ -164,7 +164,7 @@ init_task:
     mov edi,test_thread_name
     mov ax,4
     mov ecx,0x1000
-;    OsGate create_process
+    UserGate create_thread
 ;
     popad
     pop es
@@ -190,7 +190,6 @@ test_thread:
     mov ax,syscall_data_sel
     mov ss,ax
     mov esp,edx    
-    int 3 
 ;    
     mov edx,PAE_CR3_LINEAR
     xor ebx,ebx
@@ -227,6 +226,7 @@ test_thread:
     mov ecx,0x3FF
     rep stosd    
 ;    
+    int 3 
     mov edi,cr3
 ;
     mov edx,0xB8000
