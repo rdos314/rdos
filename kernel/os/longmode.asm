@@ -183,6 +183,9 @@ init_task:
 
 test_thread_name  DB 'Nasm Test Thread', 0
 
+long_idt_size   DW 0FFFh
+long_idt_base   DD IDT_LINEAR
+
 test_thread:
     mov bx,ss
     OsGate get_selector_base_size
@@ -190,6 +193,9 @@ test_thread:
     mov ax,syscall_data_sel
     mov ss,ax
     mov esp,edx    
+;
+    int 3
+    call InitIdt
 ;    
     mov edx,PAE_CR3_LINEAR
     xor ebx,ebx
@@ -200,11 +206,6 @@ test_thread:
     mov ax,flat_sel
     mov ds,ax
     mov es,ax
-;
-    mov edi,IDT_LINEAR
-    mov ecx,400h
-    xor eax,eax
-    rep stosd
 ;
     mov esi,PAE_CR3_LINEAR
     mov edi,IA64_PAE_LINEAR
@@ -255,7 +256,8 @@ test_thread:
     mov eax,cr0
     or eax,80000000h
     mov cr0,eax
-
+;
+    lidt [long_idt_size]
     jmp long_kernel_code_sel:test64
 
 test32:        
@@ -278,7 +280,89 @@ test32:
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;  64-bit test code
+;  32-bit code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CreateTrapGate
+;
+;   DESCRIPTION:    Create trap gate
+;
+;   PARAMETERS:     AL      Interrupt #
+;                   BL      Dpl
+;                   ESI     Entry point
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+CreateTrapGate:
+    push ds
+    push eax
+    push edx
+    push edi
+;
+    mov dx,flat_sel
+    mov ds,dx
+;
+    movzx edi,al
+    shl edi,4
+    add edi,IDT_LINEAR
+;
+    mov edx,esi
+    mov [edi],dx
+;
+    shr edx,16
+    mov [edi+6],dx
+;
+    mov dx,long_kernel_code_sel
+    mov [edi+2],dx
+;
+    xor edx,edx    
+    mov [edi+8],edx
+    mov [edi+12],edx
+;
+    xor al,al
+    mov ah,bl
+    shl ah,5
+    or ah,8Fh
+    mov [edi+4],ax
+;
+    pop edi
+    pop edx
+    pop eax
+    pop ds
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           InitIdt
+;
+;   DESCRIPTION:    Init 64-bit IDT
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitIdt:
+    mov ax,flat_sel
+    mov ds,ax
+    mov es,ax
+;
+    mov edi,IDT_LINEAR
+    mov ecx,400h
+    xor eax,eax
+    rep stosd
+;    
+    mov al,3
+    xor bl,bl
+    mov esi,trap_3
+    call CreateTrapGate
+    ret
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;  64-bit code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -815,12 +899,14 @@ qword_reg_tab6:
     dd reg_rbp
     db 0
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           trap vectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-test_str    DB 'Long mode test string', 0
-
-regs  times reg_end db 0
-
-test64:
+trap_3:
     push r15
     mov r15,regs
     mov [r15+reg_rax],rax
@@ -839,19 +925,26 @@ test64:
     mov [r15+reg_r14],r14
     pop rax
     mov [r15+reg_r15],rax
-    mov [r15+reg_rsp],rsp
-    mov qword [r15+reg_rip],test64
+;    
+    mov rax,[rsp]
+    mov [r15+reg_rip],rax
+;    
+    mov ax,[rsp+8]
+    mov word [r15+reg_cs],ax
 ;
-    mov word [r15+reg_cs],cs
+    mov rax,[rsp+16]
+    mov [r15+reg_flags],rax
+;   
+    mov rax,[rsp+24]
+    mov [r15+reg_rsp],rax
+;
+    mov ax,[rsp+32]
+    mov word [r15+reg_ss],ax
+;     
     mov word [r15+reg_ds],ds
     mov word [r15+reg_es],es
     mov word [r15+reg_fs],fs
     mov word [r15+reg_gs],gs
-    mov word [r15+reg_ss],ss
-;
-    pushfq
-    pop qword rax
-    mov qword [r15+reg_flags],rax
 ;
     mov r8,0xB8000
     xor rdx,rdx
@@ -909,6 +1002,17 @@ test64:
     call WriteFlags
     inc dh
     xor dl,dl
+
+trap3_loop:
+    jmp trap3_loop
+
+
+test_str    DB 'Long mode test string', 0
+
+regs  times reg_end db 0
+
+test64:
+    int 3
 
 stopl:
     jmp stopl        
