@@ -259,6 +259,8 @@ test_thread:
     mov cr0,eax
 ;
     lidt [long_idt_size]
+    mov ax,-1
+    mov ds,ax
     jmp long_kernel_code_sel:test64
 
 test32:        
@@ -987,7 +989,56 @@ WriteFault:
     call WriteString
 ;
     add dl,2
-;    call write_fault
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           WriteErrorCode
+;
+;   DESCRIPTION:    Write error code
+;
+;   PARAMETERS:     EAX     Error code
+;                   DH      Row
+;                   DL      Col
+;                   R8      Video
+;                   R15     Register state
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ft_idt  DB 'Idt '
+ft_ldt  DB 'Ldt '
+ft_gdt  DB 'Gdt '
+
+WriteErrorCode:
+    or eax,eax
+    jz wecDone
+;    
+    test ax,2
+    jz wecNotIdt
+;    
+    mov edi,ft_idt
+    jmp wecDo
+
+wecNotIdt:
+    mov edi,ft_gdt
+    test ax,4
+    jz wecDo
+;    
+    mov edi,ft_ldt
+
+wecDo:
+    push rax
+    mov ah,11
+    mov cx,4
+    call WriteString
+    pop rax
+;    
+    and ax,0FFF8h
+    mov cl,11
+    call WriteHexWord
+
+wecDone:
     inc dh
     xor dl,dl
     ret
@@ -1066,6 +1117,9 @@ do_fault:
 ;
     mov ax,[r15+reg_fault]
     call WriteFault
+;
+    mov eax,[rbp+fault_error_code]
+    call WriteErrorCode    
 ;    
     mov rdi,qword_reg_tab1
     mov cl,10
