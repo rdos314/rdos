@@ -547,7 +547,8 @@
 #define osgate_notify_thread_suspend 462
 
 #define osgate_has_long_mode 463
-#define osgate_prepare_long_mode 464
+#define osgate_setup_long_mode 464
+#define osgate_start_long_mode 465
 
 
 
@@ -1100,5 +1101,6 @@
 #define OsGate_notify_thread_suspend 0x3E 0x67 0x9a 206 1 0 0 2 0
 
 #define OsGate_has_long_mode 0x3E 0x67 0x9a 207 1 0 0 2 0
-#define OsGate_prepare_long_mode 0x3E 0x67 0x9a 208 1 0 0 2 0
+#define OsGate_setup_long_mode 0x3E 0x67 0x9a 208 1 0 0 2 0
+#define OsGate_start_long_mode 0x3E 0x67 0x9a 209 1 0 0 2 0
 

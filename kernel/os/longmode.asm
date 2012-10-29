@@ -107,185 +107,6 @@ data_size   dd 0
 data_sel    dw 0
 
 section .boot progbits follows=.header vstart=0x00000000 align=1
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;    NAME:           Init
-;
-;    DESCRIPTION:    Init module
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-init:
-    OsGate has_long_mode
-    jnc init_ok
-;
-    retf
-
-init_ok:
-    mov bx,long_kernel_code_sel
-    OsGate create_long_code_sel
-;    
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov edi,init_task
-    OsGate hook_init_tasking
-;    
-    mov esi,boot_end
-    mov edi,text_start
-    mov ecx,UNITY_MAP_SIZE
-    mov bx,cs
-    OsGate prepare_long_mode
-
-boot_end:    
-
-section .text progbits follows=.boot vstart=MAP_LINEAR align=1
-
-text_start:
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;    NAME:           Init_task
-;
-;    DESCRIPTION:    Init tasking
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-init_task:
-    push ds
-    push es
-    pushad
-;    
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov esi,test_thread
-    mov edi,test_thread_name
-    mov ax,4
-    mov ecx,0x1000
-    UserGate create_thread
-;
-    popad
-    pop es
-    pop ds
-    retf
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;    NAME:           Test_thread
-;
-;    DESCRIPTION:    Test thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_thread_name  DB 'Nasm Test Thread', 0
-
-long_idt_size   DW 0FFFh
-long_idt_base   DD IDT_LINEAR
-
-test_thread:
-    mov bx,ss
-    OsGate get_selector_base_size
-    add edx,esp
-    mov ax,syscall_data_sel
-    mov ss,ax
-    mov esp,edx    
-;
-    int 3
-    call InitIdt
-;    
-    mov edx,PAE_CR3_LINEAR
-    xor ebx,ebx
-    mov eax,cr3
-    or al,67h
-    OsGate set_page_entry
-;    
-    mov ax,flat_sel
-    mov ds,ax
-    mov es,ax
-;
-    mov esi,PAE_CR3_LINEAR
-    mov edi,IA64_PAE_LINEAR
-    mov ecx,400h
-    rep movsd
-;
-    mov edi,IA64_PAE_LINEAR
-    mov al,7
-    stosb
-;    
-    add edi,7    
-    stosb
-;    
-    add edi,7    
-    stosb
-;    
-    add edi,7    
-    stosb
-;
-    mov edi,IA64_CR3_LINEAR
-    mov eax,IA64_PAE_LINEAR + 7
-    stosd
-    xor eax,eax
-    mov ecx,0x3FF
-    rep stosd    
-;    
-    mov edi,cr3
-;
-    int 3 
-    mov edx,0xB8000
-    mov eax,0xB8007
-    xor ebx,ebx
-    OsGate set_page_entry
-;    
-    cli
-    mov eax,cr0
-    and eax,7FFFFFFFh
-    mov cr0,eax
-;
-    mov ecx,IA32_EFER
-    rdmsr
-    or eax,0x100
-    wrmsr
-;
-    mov eax,IA64_CR3_LINEAR
-    mov cr3,eax  
-;
-    mov eax,cr0
-    or eax,80000000h
-    mov cr0,eax
-;
-    lidt [long_idt_size]
-    mov ax,-1
-    mov ds,ax
-    jmp long_kernel_code_sel:test64
-
-test32:        
-    mov eax,cr0
-    and eax,7FFFFFFFh
-    mov cr0,eax
-;
-    mov ecx,IA32_EFER
-    rdmsr
-    and eax,0xFFFFFEFF   
-    wrmsr
-;
-    mov cr3,edi
-;
-    mov eax,cr0
-    or eax,80000000h
-    mov cr0,eax
-    sti
-    int 3
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;  32-bit code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -370,8 +191,14 @@ pg16    DD      16,         pretask16
 pg7_end DD      0FFFFFFFFh
 
 InitIdt:
-    mov ax,flat_sel
+    push ds
+    push es
+    pushad
+;    
+    mov ax,cs
     mov ds,ax
+;    
+    mov ax,flat_sel
     mov es,ax
 ;
     mov edi,IDT_LINEAR
@@ -394,7 +221,190 @@ iiLoop:
     jmp iiLoop
 
 iiDone:
+    popad
+    pop es
+    pop ds
     ret
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;    NAME:           Init
+;
+;    DESCRIPTION:    Init module
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+init:
+    OsGate has_long_mode
+    jnc init_ok
+;
+    retf
+
+init_ok:
+    mov bx,long_kernel_code_sel
+    OsGate create_long_code_sel
+;    
+    mov ecx,UNITY_MAP_SIZE
+    mov edi,MAP_LINEAR
+    OsGate setup_long_mode
+;    
+    call InitIdt
+;    
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,init_task
+    OsGate hook_init_tasking    
+;    
+    mov esi,boot_end
+    mov edi,text_start
+    mov ecx,UNITY_MAP_SIZE
+    mov bx,cs
+    OsGate start_long_mode
+
+boot_end:    
+
+section .text progbits follows=.boot vstart=MAP_LINEAR align=1
+
+text_start:
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;    NAME:           Init_task
+;
+;    DESCRIPTION:    Init tasking
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+init_task:
+    push ds
+    push es
+    pushad
+;    
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,test_thread
+    mov edi,test_thread_name
+    mov ax,4
+    mov ecx,0x1000
+    UserGate create_thread
+;
+    popad
+    pop es
+    pop ds
+    retf
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;    NAME:           Test_thread
+;
+;    DESCRIPTION:    Test thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_thread_name  DB 'Nasm Test Thread', 0
+
+long_idt_size   DW 0FFFh
+long_idt_base   DD IDT_LINEAR
+
+test_thread:
+    mov bx,ss
+    OsGate get_selector_base_size
+    add edx,esp
+    mov ax,syscall_data_sel
+    mov ss,ax
+    mov esp,edx    
+;    
+    mov edx,PAE_CR3_LINEAR
+    xor ebx,ebx
+    mov eax,cr3
+    or al,67h
+    OsGate set_page_entry
+;    
+    mov ax,flat_sel
+    mov ds,ax
+    mov es,ax
+;
+    mov esi,PAE_CR3_LINEAR
+    mov edi,IA64_PAE_LINEAR
+    mov ecx,400h
+    rep movsd
+;
+    mov edi,IA64_PAE_LINEAR
+    mov al,7
+    stosb
+;    
+    add edi,7    
+    stosb
+;    
+    add edi,7    
+    stosb
+;    
+    add edi,7    
+    stosb
+;
+    mov edi,IA64_CR3_LINEAR
+    mov eax,IA64_PAE_LINEAR + 7
+    stosd
+    xor eax,eax
+    mov ecx,0x3FF
+    rep stosd    
+;    
+    mov edi,cr3
+;
+    int 3 
+    mov edx,0xB8000
+    mov eax,0xB8007
+    xor ebx,ebx
+    OsGate set_page_entry
+;    
+    cli
+    mov eax,cr0
+    and eax,7FFFFFFFh
+    mov cr0,eax
+;
+    mov ecx,IA32_EFER
+    rdmsr
+    or eax,0x100
+    wrmsr
+;
+    mov eax,IA64_CR3_LINEAR
+    mov cr3,eax  
+;
+    mov eax,cr0
+    or eax,80000000h
+    mov cr0,eax
+;
+    lidt [long_idt_size]
+    jmp long_kernel_code_sel:test64
+
+test32:        
+    mov eax,cr0
+    and eax,7FFFFFFFh
+    mov cr0,eax
+;
+    mov ecx,IA32_EFER
+    rdmsr
+    and eax,0xFFFFFEFF   
+    wrmsr
+;
+    mov cr3,edi
+;
+    mov eax,cr0
+    or eax,80000000h
+    mov cr0,eax
+    sti
+    int 3
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;  32-bit code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

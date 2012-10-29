@@ -547,5 +547,6 @@ setup_smp_patch equ 461
 notify_thread_suspend equ 462
 
 has_long_mode equ 463
-prepare_long_mode equ 464
+setup_long_mode equ 464
+start_long_mode equ 465
 

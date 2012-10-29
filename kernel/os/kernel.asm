@@ -144,22 +144,21 @@ has_long_mode Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           PrepareLongMode
+;       NAME:           SetupLongmode
 ;
-;       DESCRIPTION:    Prepare for long mode by moving code to start of physical memory
+;       DESCRIPTION:    Setup long mode memory layout
 ;
-;       PARAMETERS:     BX      dev code selector
-;                       ECX     map size
-;                       ESI     start of unity section in code sel
+;       PARAMETERS:     ECX     map size
 ;                       EDI     map position for unity section
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-prepare_long_mode_name    DB 'Prepare Long Mode', 0
+setup_long_mode_name    DB 'Setup Long Mode', 0
 
-prepare_long_mode:
+setup_long_mode Proc far
     push ebx
     push ecx
+;
     dec ecx
     and cx,0F000h
     shr ecx,12
@@ -170,15 +169,34 @@ prepare_long_mode:
     mov edx,eax
     or ax,803h
 
-plPageLoop:
+slPageLoop:
     SetSysPageEntry
     add edx,1000h
     add eax,1000h
-    loop plPageLoop
+    loop slPageLoop
 ;
     pop ecx
     pop ebx
-;    
+    retf32
+setup_long_mode Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           StartLongMode
+;
+;       DESCRIPTION:    Start long mode by moving code to start of physical memory
+;
+;       PARAMETERS:     BX      dev code selector
+;                       ECX     map size
+;                       ESI     start of unity section in code sel
+;                       EDI     map position for unity section
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_long_mode_name    DB 'Start Long Mode', 0
+
+start_long_mode:
     mov ds,bx
     mov ax,flat_sel
     mov es,ax
@@ -857,10 +875,16 @@ prot_init:
     mov ax,has_long_mode_nr
     RegisterOsGate
 ;       
-    mov esi,OFFSET prepare_long_mode
-    mov edi,OFFSET prepare_long_mode_name
+    mov esi,OFFSET setup_long_mode
+    mov edi,OFFSET setup_long_mode_name
     xor cl,cl
-    mov ax,prepare_long_mode_nr
+    mov ax,setup_long_mode_nr
+    RegisterOsGate
+;       
+    mov esi,OFFSET start_long_mode
+    mov edi,OFFSET start_long_mode_name
+    xor cl,cl
+    mov ax,start_long_mode_nr
     RegisterOsGate
 ;
     call init_mem
