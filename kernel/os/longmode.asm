@@ -59,6 +59,7 @@ UNITY_MAP_SIZE  equ 10000h
 
 struc Reg64
 
+reg_fault:  resw 1
 reg_rax:    resq 1
 reg_rcx:    resq 1
 reg_rdx:    resq 1
@@ -344,6 +345,28 @@ CreateTrapGate:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+pretask_int_tab:
+;
+;               int #   Entry
+;
+pg0     DD      0,          pretask0
+pg1     DD      1,          pretask1
+pg2     DD      2,          pretask2
+pg3     DD      3,          pretask3
+pg4     DD      4,          pretask4
+pg5     DD      5,          pretask5
+pg6     DD      6,          pretask6
+pg7     DD      7,          pretask7
+pg8     DD      8,          pretask8
+pg9     DD      9,          pretask9
+pg10    DD      10,         pretask10
+pg11    DD      11,         pretask11
+pg12    DD      12,         pretask12
+pg13    DD      13,         pretask13
+pg14    DD      14,         pretask14
+pg16    DD      16,         pretask16
+pg7_end DD      0FFFFFFFFh
+
 InitIdt:
     mov ax,flat_sel
     mov ds,ax
@@ -353,11 +376,22 @@ InitIdt:
     mov ecx,400h
     xor eax,eax
     rep stosd
+;
+    mov edi,pretask_int_tab
+
+iiLoop:
+    mov eax,[edi]
+    cmp eax,0FFFFFFFFh
+    jz iiDone
 ;    
-    mov al,3
+    mov esi,[edi+4]
     xor bl,bl
-    mov esi,trap_3
     call CreateTrapGate
+;
+    add edi,8
+    jmp iiLoop
+
+iiDone:
     ret
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -902,18 +936,90 @@ qword_reg_tab6:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           trap vectors
+;   NAME:           WriteFault
+;
+;   DESCRIPTION:    Write fault
+;
+;   PARAMETERS:     AX      Fault #
+;                   DH      Row
+;                   DL      Col
+;                   R8      Video
+;                   R15     Register state
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-trap_3:
+error_code_tab:
+ke00    DB 'Divide error            '
+ke01    DB 'Single step             '
+ke02    DB 'NMI                     '
+ke03    DB 'Breakpoint              '
+ke04    DB 'Overflow                '
+ke05    DB 'Array bounds error      '
+ke06    DB 'Invalid OP-code         '
+ke07    DB '80387 not present       '
+ke08    DB 'Double fault            '
+ke09    DB '80387 overrun           '
+ke0A    DB 'Invalid TSS             '
+ke0B    DB 'Segment not present     '
+ke0C    DB 'Stack fault             '
+ke0D    DB 'Protection fault        '
+ke0E    DB 'Page fault              '
+ke0F    DB 'Unknown Fault           '
+ke10    DB '80387 error             '
+ke11    DB 'Cannot emulate          '
+ke12    DB 'Cannot emulate 80387    '
+ke13    DB 'Now in real mode        '
+ke14    DB '----------------------- '
+ke15    DB 'Illegal int request     '
+ke16    DB 'Undefined method        '
+ke17    DB 'Invalid handle          '
+ke18    DB 'Invalid selector        '
+
+WriteFault:
+    movzx edi,ax
+    shl edi,3
+    mov eax,edi
+    add eax,eax
+    add edi,eax
+    add edi,error_code_tab
+    mov ecx,24
+    mov ah,11
+    call WriteString
+;
+    add dl,2
+;    call write_fault
+    inc dh
+    xor dl,dl
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           do_fault
+;
+;   DESCRIPTION:    Write fault info
+;
+;   PARAMETERS:     RBP     Frame pointer
+;                   AX      Vector #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+fault_ss            equ 48
+fault_rsp           equ 40
+fault_rflags        equ 32
+fault_cs            equ 24
+fault_rip           equ 16
+fault_error_code    equ 8
+fault_rbp           equ 0
+fault_rax           equ -8
+fault_rbx           equ -16
+
+do_fault:
     push r15
     mov r15,regs
-    mov [r15+reg_rax],rax
+    mov [r15+reg_fault],ax
     mov [r15+reg_rcx],rcx
     mov [r15+reg_rdx],rdx
-    mov [r15+reg_rbx],rbx
-    mov [r15+reg_rbp],rbp
     mov [r15+reg_rsi],rsi
     mov [r15+reg_rdi],rdi
     mov [r15+reg_r8],r8
@@ -926,20 +1032,29 @@ trap_3:
     pop rax
     mov [r15+reg_r15],rax
 ;    
-    mov rax,[rsp]
+    mov rax,[rbp+fault_rip]
     mov [r15+reg_rip],rax
 ;    
-    mov ax,[rsp+8]
+    mov ax,[rbp+fault_cs]
     mov word [r15+reg_cs],ax
 ;
-    mov rax,[rsp+16]
+    mov rax,[rbp+fault_rflags]
     mov [r15+reg_flags],rax
 ;   
-    mov rax,[rsp+24]
+    mov rax,[rbp+fault_rsp]
     mov [r15+reg_rsp],rax
 ;
-    mov ax,[rsp+32]
+    mov ax,[rbp+fault_ss]
     mov word [r15+reg_ss],ax
+;
+    mov rax,[rbp+fault_rax]
+    mov [r15+reg_rax],rax
+;
+    mov rax,[rbp+fault_rbx]
+    mov [r15+reg_rbx],rax
+;
+    mov rax,[rbp+fault_rbp]
+    mov [r15+reg_rbp],rax
 ;     
     mov word [r15+reg_ds],ds
     mov word [r15+reg_es],es
@@ -948,6 +1063,9 @@ trap_3:
 ;
     mov r8,0xB8000
     xor rdx,rdx
+;
+    mov ax,[r15+reg_fault]
+    call WriteFault
 ;    
     mov rdi,qword_reg_tab1
     mov cl,10
@@ -1006,12 +1124,160 @@ trap_3:
 trap3_loop:
     jmp trap3_loop
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           trap vectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+pretask0:
+    push qword 0
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    mov ax,0
+    jmp do_fault
+
+pretask1:
+    push qword 0
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    mov ax,1
+    jmp do_fault
+
+pretask2:
+    push qword 0
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    mov ax,2
+    jmp do_fault
+
+pretask3:
+    push qword 0
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    mov ax,3
+    jmp do_fault
+
+pretask4:
+    push qword 0
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    mov ax,4
+    jmp do_fault
+
+pretask5:
+    push qword 0
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    mov ax,5
+    jmp do_fault
+
+pretask6:
+    push qword 0
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    mov ax,6
+    jmp do_fault
+
+pretask7:
+    push qword 0
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    mov ax,7
+    jmp do_fault
+
+pretask8:
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    mov ax,8
+    jmp do_fault
+
+pretask9:
+    push qword 0
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    mov ax,9
+    jmp do_fault
+
+pretask10:
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    mov ax,10
+    jmp do_fault
+
+pretask11:
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    mov ax,11
+    jmp do_fault
+
+pretask12:
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    mov ax,12
+    jmp do_fault
+
+pretask13:
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    mov ax,13
+    jmp do_fault
+
+pretask14:
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    mov ax,14
+    jmp do_fault
+
+pretask16:
+    push qword 0
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    mov ax,9
+    jmp do_fault
+
+
 
 test_str    DB 'Long mode test string', 0
 
 regs  times reg_end db 0
 
 test64:
+    mov rax,0x12345678
     int 3
 
 stopl:
