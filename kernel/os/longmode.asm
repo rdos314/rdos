@@ -34,6 +34,7 @@ IA32_EFER   equ 0xC0000080
 
 MAP_LINEAR      equ 110000h
 
+IDT_LINEAR      equ 11C000h
 PAE_CR3_LINEAR  equ 11D000h
 IA64_PAE_LINEAR equ 11E000h
 IA64_CR3_LINEAR equ 11F000h
@@ -183,7 +184,6 @@ init_task:
 test_thread_name  DB 'Nasm Test Thread', 0
 
 test_thread:
-    int 3
     mov bx,ss
     OsGate get_selector_base_size
     add edx,esp
@@ -200,6 +200,11 @@ test_thread:
     mov ax,flat_sel
     mov ds,ax
     mov es,ax
+;
+    mov edi,IDT_LINEAR
+    mov ecx,400h
+    xor eax,eax
+    rep stosd
 ;
     mov esi,PAE_CR3_LINEAR
     mov edi,IA64_PAE_LINEAR
@@ -226,9 +231,9 @@ test_thread:
     mov ecx,0x3FF
     rep stosd    
 ;    
-    int 3 
     mov edi,cr3
 ;
+    int 3 
     mov edx,0xB8000
     mov eax,0xB8007
     xor ebx,ebx
