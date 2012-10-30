@@ -113,7 +113,7 @@ idt  dd IDT_LINEAR
 
    db 'Start of driver', 0
     
-CreateTrapGate:
+CreateTrapGate  proc near
     push ds
     push eax
     push edx
@@ -150,6 +150,7 @@ CreateTrapGate:
     pop eax
     pop ds
     ret
+CreateTrapGate  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -182,21 +183,13 @@ pg14    DD      14,         pretask14
 pg16    DD      16,         pretask16
 pg7_end DD      0FFFFFFFFh
 
-InitIdt:
+InitIdt proc near
     push ds
     push es
     pushad
 ;    
     mov ax,cs
     mov ds,ax
-;    
-    mov ax,flat_sel
-    mov es,ax
-;
-    mov edi,IDT_LINEAR
-    mov ecx,400h
-    xor eax,eax
-    rep stosd
 ;
     mov edi,pretask_int_tab
 
@@ -217,6 +210,7 @@ iiDone:
     pop es
     pop ds
     ret
+InitIdt Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -227,37 +221,16 @@ iiDone:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
-init:
-    HasLongMode
-    jnc init_ok
-;
-    retf
-
-init_ok:
-    mov bx,long_kernel_code_sel
-    CreateLongCodeSelector
-;    
-    mov ecx,UNITY_MAP_SIZE
-    mov edi,MAP_LINEAR
-    SetupLongMode
-;    
-    call InitIdt
-;    
+init    proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
     mov edi,init_task
     HookInitTasking    
 ;    
-    mov esi,boot_end
-    mov edi,text_start
-    mov ecx,UNITY_MAP_SIZE
-    mov bx,cs
-    StartLongMode
-
-boot_end:    
-
-text_start:
+    call InitIdt
+    ret
+init    endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

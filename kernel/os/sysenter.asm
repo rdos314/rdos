@@ -321,6 +321,7 @@ start_syscall   Endp
 setup_long_mode Proc near
     push ebx
     push ecx
+    push edx
 ;
     dec ecx
     and cx,0F000h
@@ -338,10 +339,44 @@ slPageLoop:
     add eax,1000h
     loop slPageLoop
 ;
+    pop edx
     pop ecx
     pop ebx
     ret
 setup_long_mode Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           setup_long_idt
+;
+;       DESCRIPTION:    Setup long mode IDT
+;
+;       PARAMETERS:     EDI     map position
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_long_idt Proc near
+    push ds
+    push es
+    pushad
+;    
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:long_idt_linear,edi
+;    
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov ecx,400h
+    xor eax,eax
+    rep stosd
+;    
+    popad
+    pop es
+    pop ds
+    ret
+setup_long_idt  Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -359,27 +394,52 @@ install_long_mode   PROC near
     push es
     pushad
 ;    
-    int 3
     mov ecx,[edx].len
     sub ecx,SIZE rdos_header
     add edx,SIZE rdos_header
     push ecx
     push edx
 ;
-    mov edi,[edx].lm_image_base
-    mov ecx,[edx].lm_image_size
-    mov esi,[edx].lm_idt_base
-;
     mov bx,long_kernel_code_sel
     CreateLongCodeSelector
-;    
-    call setup_long_mode
 ;
+    mov edi,[edx].lm_image_base
+    mov ecx,[edx].lm_image_size    
+    call setup_long_mode
+;    
+    mov edi,[edx].lm_idt_base
+    call setup_long_idt
+;
+    mov edi,[edx].lm_image_base
+    mov ebp,[edx].lm_init_ip
+;    
     pop edx
     pop ecx
     sub ecx,[edx].lm_size
     add edx,[edx].lm_size
+;
+    mov ax,flat_sel
+    mov es,ax
 ;    
+    mov esi,edx
+    push ecx
+    rep movs es:[edi],ds:[esi]
+    pop ecx
+    int 3
+;
+    mov ecx,edi
+    xor edx,edx
+    mov bx,long_dev_code_sel
+    CreateCodeSelector32
+;
+    mov eax,OFFSET inst_long_ret
+    push cs
+    push eax
+    push ebx
+    push ebp
+    retf
+
+inst_long_ret:    
     popad
     pop es
     pop ds

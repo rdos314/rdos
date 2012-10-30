@@ -123,7 +123,9 @@ dum2                        DW ?
 
 cpu_ext_feature_flags   	DD ?
 
-dum3                        DD ?,?
+long_idt_linear             DD ?
+
+dum3                        DD ?
 
 ram64_size          DD ?,?
 
