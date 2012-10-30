@@ -405,6 +405,9 @@ test32:
 ;  32-bit code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+compat_test:
+    retf
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1195,6 +1198,7 @@ trap3_loop:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+regs  times reg_end db 0
 
 pretask0:
     push qword 0
@@ -1335,13 +1339,16 @@ pretask16:
     jmp do_fault
 
 
-
-test_str    DB 'Long mode test string', 0
-
-regs  times reg_end db 0
-
+comp_dest:
+    dd compat_test
+    dw long_dev_code_sel
+    
 test64:
     mov rax,0x12345678
+    db 0xFF
+    db 0x1C
+    db 0x25
+    dd comp_dest
     int 3
 
 stopl:
