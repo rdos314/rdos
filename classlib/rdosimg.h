@@ -160,6 +160,28 @@ public:
     virtual TString GetInfo();
 };
     
+class TRdosLongModeObject : public TRdosObject
+{
+public:
+    TRdosLongModeObject(const char *FileName);
+    TRdosLongModeObject(TFile *File, int Size);
+
+#ifdef __RDOS__
+    TRdosLongModeObject(int adapter, int entry, int size);
+#endif
+    
+    virtual ~TRdosLongModeObject();
+
+    virtual TString GetInfo();
+
+protected:
+    int LoadFile(const char *FileName);
+
+    TRdosLongModeHeader *FDeviceHeader;    
+    char *FDeviceData;
+    int FDeviceSize;
+};
+    
 class TRdosFontObject : public TRdosObject
 {
 public:

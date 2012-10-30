@@ -46,6 +46,7 @@
 
 #define RDOS_OBJECT_DEVICE16        18
 #define RDOS_OBJECT_DEVICE32        19
+#define RDOS_OBJECT_LONG_MODE       20
 
 #define RDOS_SIGN    0x5A1E75D4
 
@@ -91,6 +92,13 @@ typedef struct TRdosDevice32Header
     long StartIp;
     char NameParam;
 } TRdosDevice32Header;
+
+typedef struct TRdosLongModeHeader
+{
+    long Size;
+    long StartIp;
+    char NameParam;
+} TRdosLongModeHeader;
 
 typedef struct TRdosOldFileHeader
 {

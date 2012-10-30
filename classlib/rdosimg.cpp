@@ -81,6 +81,12 @@ struct TRdvHeader32
     short int DataSel;
 };
 
+struct TBinLongModeHeader
+{
+    short int Signature;
+    long Eip;
+};
+
 #pragma pack( pop )
 
 /*##########################################################################
@@ -831,6 +837,162 @@ int TRdosDevice32BaseObject::LoadDeviceFile(const char *FileName, const char *Pa
         return TRUE;
     }
     return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosLongModeObject::TRdosLongModeObject
+#
+#   Purpose....: Constructor for TRdosLongModeObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosLongModeObject::TRdosLongModeObject(const char *FileName)
+{
+    if (LoadFile(FileName))
+        FType = RDOS_OBJECT_LONG_MODE;
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosLongModeObject::TRdosLongModeObject
+#
+#   Purpose....: Constructor for TRdosLongModeObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosLongModeObject::TRdosLongModeObject(TFile *File, int Size)
+ : TRdosObject(File, Size)
+{
+    FDeviceHeader = (TRdosLongModeHeader *)FData; 
+    FDeviceSize = FSize - FDeviceHeader->Size;
+    FDeviceData = FData + FDeviceHeader->Size;    
+    FType = RDOS_OBJECT_LONG_MODE;
+}
+
+#ifdef __RDOS__
+
+/*##########################################################################
+#
+#   Name       : TRdosLongModeObject::TRdosLongModeObject
+#
+#   Purpose....: Constructor for TRdosLongModeObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosLongModeObject::TRdosLongModeObject(int adapter, int entry, int size)
+  : TRdosObject(adapter, entry, size)
+{
+    FDeviceHeader = (TRdosLongModeHeader *)FData; 
+    FDeviceSize = FSize - FDeviceHeader->Size;
+    FDeviceData = FData + FDeviceHeader->Size;    
+    FType = RDOS_OBJECT_LONG_MODE;
+}
+
+#endif
+
+/*##########################################################################
+#
+#   Name       : TRdosLongModeObject::~TRdosLongModeObject
+#
+#   Purpose....: Destructor for TRdosLongModeObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosLongModeObject::~TRdosLongModeObject()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosLongModeObject::LoadFile
+#
+#   Purpose....: Load file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRdosLongModeObject::LoadFile(const char *FileName)
+{
+    TBinLongModeHeader ExeHeader;
+    TFile File(FileName);
+    int HeaderSize;
+    int Size;
+    char *ptr;
+
+    if (FData)
+        delete FData;
+    FData = 0;
+    FSize = 0;
+
+    if (File.IsOpen())
+    {
+        ExeHeader.Signature = 0;
+        File.Read(&ExeHeader, sizeof(TBinLongModeHeader));
+
+        if (ExeHeader.Signature != 0x6452)
+            return FALSE;
+
+        HeaderSize = sizeof(TRdosLongModeHeader);
+        HeaderSize += strlen(FileName);
+        HeaderSize++;
+
+        FDeviceSize = File.GetSize() - File.GetPos();
+        FSize = FDeviceSize + HeaderSize;
+        FData = new char[FSize];
+        memset(FData, 0xFF, FSize);
+        FDeviceHeader = (TRdosLongModeHeader *)FData;
+        FDeviceData = FData + HeaderSize;
+
+        FDeviceHeader->Size = HeaderSize;
+        FDeviceHeader->StartIp = ExeHeader.Eip;
+
+        ptr = &FDeviceHeader->NameParam;
+        strcpy(ptr, FileName);
+
+        File.Read(FDeviceData, FDeviceSize);
+
+        return TRUE;
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosLongModeObject::GetInfo
+#
+#   Purpose....: Get printable object info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TRdosLongModeObject::GetInfo()
+{
+    char str[256];
+    char *ptr;
+
+    strcpy(str, "LongMode ");
+
+    ptr = &FDeviceHeader->NameParam;
+    strcat(str, ptr);
+    
+    return TString(str);
 }
 
 /*##########################################################################
@@ -2271,6 +2433,10 @@ void TRdosImage::AddImage(const char *ImageFile)
                         obj = new TRdosKernelObject(&File, size);
                         break;
 
+                    case RDOS_OBJECT_LONG_MODE:
+                        obj = new TRdosLongModeObject(&File, size);
+                        break;
+
                     case RDOS_OBJECT_FONT:
                         obj = new TRdosFontObject(&File, size);
                         break;
@@ -2372,6 +2538,10 @@ void TRdosImage::AddRunning()
                             obj = new TRdosKernelObject(adapter, entry, size);
                             break;
 
+                        case RDOS_OBJECT_LONG_MODE:
+                            obj = new TRdosLongModeObject(adapter, entry, size);
+                            break;
+
                         case RDOS_OBJECT_FONT:
                             obj = new TRdosFontObject(adapter, entry, size);
                             break;
@@ -2471,6 +2641,9 @@ void TRdosImage::AddConfigCmd(const char *cmd, const char *param)
 
     if (!strcmp(cmd, "kernel"))
         obj = new TRdosKernelObject(file);
+
+    if (!strcmp(cmd, "longmode"))
+        obj = new TRdosLongModeObject(file);
     
     if (!strcmp(cmd, "font"))
         obj = new TRdosFontObject(file);

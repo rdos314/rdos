@@ -84,6 +84,8 @@ swrite_list         DW ?
 swrite_lock         DW ?
 read_write_section_typ  ENDS
 
+ifndef __JWASM__
+
 pause   MACRO
     db 0F3h
     db 90h
@@ -108,6 +110,8 @@ wrmsr   MACRO
     db 0Fh
     db 30h
     ENDM
+
+endif    
     
 Retf16  MACRO
     db 66h
@@ -468,6 +472,20 @@ SetupIntGate   MACRO
 SetupTrapGate  MACRO
     OsGate setup_trap_gate_nr
                             ENDM
+
+;;;;;;;;; LONG MODE ;;;;;;;;;;;;;;;;;;;;
+
+HasLongMode MACRO
+    OsGate has_long_mode_nr
+                    ENDM
+
+SetupLongMode MACRO
+    OsGate setup_long_mode_nr
+                    ENDM
+
+StartLongMode MACRO
+    OsGate start_long_mode_nr
+                    ENDM
 
 ;;;;;;;;; PAGING ;;;;;;;;;;;;;;;;;;;;
 
