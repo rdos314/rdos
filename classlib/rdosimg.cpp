@@ -85,6 +85,8 @@ struct TBinLongModeHeader
 {
     short int Signature;
     long Eip;
+    long ImageBase;
+    long ImageSize;
 };
 
 #pragma pack( pop )
@@ -933,6 +935,7 @@ int TRdosLongModeObject::LoadFile(const char *FileName)
     int HeaderSize;
     int Size;
     char *ptr;
+    long pos;
 
     if (FData)
         delete FData;
@@ -951,7 +954,10 @@ int TRdosLongModeObject::LoadFile(const char *FileName)
         HeaderSize += strlen(FileName);
         HeaderSize++;
 
-        FDeviceSize = File.GetSize() - File.GetPos();
+        pos = ExeHeader.ImageBase;
+        File.SetPos(pos);
+
+        FDeviceSize = File.GetSize() - pos;
         FSize = FDeviceSize + HeaderSize;
         FData = new char[FSize];
         memset(FData, 0xFF, FSize);
@@ -960,6 +966,8 @@ int TRdosLongModeObject::LoadFile(const char *FileName)
 
         FDeviceHeader->Size = HeaderSize;
         FDeviceHeader->StartIp = ExeHeader.Eip;
+        FDeviceHeader->ImageBase = ExeHeader.ImageBase;
+        FDeviceHeader->ImageSize = ExeHeader.ImageSize;
 
         ptr = &FDeviceHeader->NameParam;
         strcpy(ptr, FileName);

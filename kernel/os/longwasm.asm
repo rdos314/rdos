@@ -92,6 +92,10 @@ Code32 segment byte public use32 'code32'
 
 sign dw 6452h
 eip  dd OFFSET init
+ib   dd MAP_LINEAR
+ic   dd UNITY_MAP_SIZE
+
+    org MAP_LINEAR
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -105,6 +109,8 @@ eip  dd OFFSET init
 ;                   ESI     Entry point
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+   db 'Start of driver', 0
     
 CreateTrapGate:
     push ds

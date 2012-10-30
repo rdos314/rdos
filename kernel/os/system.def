@@ -48,6 +48,7 @@ RdosFile = 17
 
 RdosDevice16 = 18
 RdosDevice32 = 19
+RdosLongMode = 20
 
 RdosEnd = 0E5E5h
 
@@ -102,6 +103,15 @@ dev32_data_sel      DW ?
 dev32_init_ip       DD ?
 
 device32_header   ENDS
+
+long_mode_header   STRUC
+
+lm_size             DD ?
+lm_init_ip          DD ?
+lm_image_base       DD ?
+lm_image_size       DD ?
+
+long_mode_header   ENDS
 
 boot64_pages        = 16
 

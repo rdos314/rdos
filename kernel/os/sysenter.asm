@@ -305,6 +305,82 @@ start_syscall_load_msr:
     ret
 start_syscall   Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           install_long_mode
+;
+;           DESCRIPTION:    install long mode
+;
+;           PARAMETERS:     DS:EDX  device header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+install_long_mode   PROC near
+    push ds
+    push es
+    pushad
+;    
+    mov ecx,[edx].len
+    sub ecx,SIZE rdos_header
+    add edx,SIZE rdos_header
+;
+    mov eax,[edx].lm_init_ip
+    mov edi,[edx].lm_image_base
+    mov ecx,[edx].lm_image_size
+    sub ecx,[edx].lm_size
+    add edx,[edx].lm_size
+;    
+    popad
+    pop es
+    pop ds
+    ret
+install_long_mode   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           install_adapter
+;
+;           DESCRIPTION:    install devices in adapter
+;
+;           PARAMETERS:         edx         base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+install_adapter Proc near
+    push ds
+    push ax
+    push bx
+    push edx
+    mov ax,flat_sel
+    mov ds,ax
+
+install_adapter_loop:
+    mov ax,[edx].typ
+    cmp ax,RdosLongMode
+    jne not_install_long_mode
+;       
+    call install_long_mode
+    jmp install_adapter_next
+
+not_install_long_mode:
+    cmp ax,RdosEnd
+    je install_adapter_done
+
+install_adapter_next:
+    add edx,[edx].len
+    jmp install_adapter_loop
+
+install_adapter_done:
+    pop edx
+    pop bx
+    pop ax
+    pop ds
+    ret
+install_adapter Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -320,6 +396,16 @@ test_thread_name  DB 'Sysenter thread', 0
 
 test_thread:
     int 3
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov cx,ds:rom_modules
+    mov bx,OFFSET rom_adapters
+init_device_loop:
+    mov edx,[bx].adapter_base
+    call install_adapter
+    add bx,SIZE adapter_typ
+    loop init_device_loop   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
