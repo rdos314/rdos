@@ -94,6 +94,7 @@ sign dw 6452h
 eip  dd OFFSET init
 ib   dd MAP_LINEAR
 ic   dd UNITY_MAP_SIZE
+idt  dd IDT_LINEAR
 
     org MAP_LINEAR
 

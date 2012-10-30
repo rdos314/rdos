@@ -87,6 +87,7 @@ struct TBinLongModeHeader
     long Eip;
     long ImageBase;
     long ImageSize;
+    long IdtBase;
 };
 
 #pragma pack( pop )
@@ -968,6 +969,7 @@ int TRdosLongModeObject::LoadFile(const char *FileName)
         FDeviceHeader->StartIp = ExeHeader.Eip;
         FDeviceHeader->ImageBase = ExeHeader.ImageBase;
         FDeviceHeader->ImageSize = ExeHeader.ImageSize;
+        FDeviceHeader->IdtBase = ExeHeader.IdtBase;
 
         ptr = &FDeviceHeader->NameParam;
         strcpy(ptr, FileName);

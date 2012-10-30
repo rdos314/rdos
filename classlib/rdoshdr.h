@@ -99,6 +99,7 @@ typedef struct TRdosLongModeHeader
     long StartIp;
     long ImageBase;
     long ImageSize;
+    long IdtBase;
     char NameParam;
 } TRdosLongModeHeader;
 

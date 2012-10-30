@@ -305,6 +305,43 @@ start_syscall_load_msr:
     ret
 start_syscall   Endp
 
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           setup_long_mode
+;
+;       DESCRIPTION:    Setup long mode memory layout
+;
+;       PARAMETERS:     ECX     map size
+;                       EDI     map position for unity section
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_long_mode Proc near
+    push ebx
+    push ecx
+;
+    dec ecx
+    and cx,0F000h
+    shr ecx,12
+    inc cx
+;
+    mov eax,edi
+    xor ebx,ebx
+    mov edx,eax
+    or ax,803h
+
+slPageLoop:
+    SetSysPageEntry
+    add edx,1000h
+    add eax,1000h
+    loop slPageLoop
+;
+    pop ecx
+    pop ebx
+    ret
+setup_long_mode Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -322,13 +359,24 @@ install_long_mode   PROC near
     push es
     pushad
 ;    
+    int 3
     mov ecx,[edx].len
     sub ecx,SIZE rdos_header
     add edx,SIZE rdos_header
+    push ecx
+    push edx
 ;
-    mov eax,[edx].lm_init_ip
     mov edi,[edx].lm_image_base
     mov ecx,[edx].lm_image_size
+    mov esi,[edx].lm_idt_base
+;
+    mov bx,long_kernel_code_sel
+    CreateLongCodeSelector
+;    
+    call setup_long_mode
+;
+    pop edx
+    pop ecx
     sub ecx,[edx].lm_size
     add edx,[edx].lm_size
 ;    
