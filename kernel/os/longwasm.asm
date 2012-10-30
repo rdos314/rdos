@@ -110,8 +110,6 @@ idt  dd IDT_LINEAR
 ;                   ESI     Entry point
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-   db 'Start of driver', 0
     
 CreateTrapGate  proc near
     push ds
@@ -275,6 +273,7 @@ long_idt_size   DW 0FFFh
 long_idt_base   DD IDT_LINEAR
 
 test_thread:
+    int 3
     mov bx,ss
     GetSelectorBaseSize
     add edx,esp
