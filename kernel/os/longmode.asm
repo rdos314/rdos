@@ -59,6 +59,11 @@ pushq0  Macro
     db 0
         Endm
 
+Iret64  MACRO
+    db 48h
+    db 0CFh
+        ENDM
+
 Reg64   struc
 
 reg_fault   dw ?
@@ -1324,7 +1329,64 @@ pretask13:
 ;    
     add edx,eax
     mov al,[edx]
+;
+    cmp al,0CDh
+    jne gpfNotInt
+;
+    mov al,[edx+1]
     int 3
+    cmp al,66h
+    je gpfLeaveRetry
+;
+    cmp al,67h
+    je gpfLeaveRetry
+;
+    cmp al,9Ah
+    je gpfLeaveRetry
+;
+    jmp gpfDefault
+        
+gpfNotInt:
+    cmp al,3Eh
+    je gpfGate32
+;
+    cmp al,67h
+    jne gpfDefault
+
+gpfGate16:
+    mov al,[edx+1]
+    int 3
+
+gpfGate32:    
+    mov al,[edx+1]
+    cmp al,67h
+    jne gpfDefault
+;
+    mov ax,[edx+7]
+    cmp ax,3
+    ja gpfDefault
+
+gpfCall32:
+;    push ds
+;    mov ax,system_data_sel
+;    mov ds,ax
+;    call ds:leave_patch_proc
+;    pop ds
+;
+    mov al,0CDh
+    xchg al,[edx]
+    jmp gpfRetry
+
+gpfLeaveRetry:
+
+gpfRetry:
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    pop rbp
+    add rsp,8
+    Iret64
 
 gpfDefault:
     pop rdx
