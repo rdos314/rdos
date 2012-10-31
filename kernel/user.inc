@@ -126,6 +126,13 @@ UserGate32	MACRO gate_nr
     dw 3
 			ENDM
 
+UserGate64    MACRO gate_nr
+    push r15
+    mov r15,usergate_linear + gate_nr SHL 5
+    call fword ptr [r15]
+    pop r15
+            ENDM
+
 UserGateForce32 MACRO gate_nr
     db 67h
     db 66h
@@ -145,7 +152,11 @@ UserGate        MACRO gate_nr
 IF (size $) EQ 0FF02h
     UserGate16 gate_nr
 ELSE
-	UserGate32 gate_nr
+  IFDEF rax
+    UserGate64 gate_nr  
+  ELSE
+    UserGate32 gate_nr
+  ENDIF
 ENDIF
 			ENDM
 			
