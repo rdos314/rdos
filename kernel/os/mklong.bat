@@ -1,1 +1,1 @@
-nasm longmode.asm -o longmode.rdv -l longmode.lst
+jwasm -10 -Zm -bin -Fllongmode.lst longmode.asm 

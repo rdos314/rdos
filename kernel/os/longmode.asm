@@ -26,68 +26,59 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-%include '..\driver.def'
-%include '..\osnasm.def'
-%include '..\usernasm.def'
+include ..\driver.def
+include ..\os.def
+include ..\user.def
+include ..\os.inc
+include ..\user.inc
 
-IA32_EFER   equ 0xC0000080
+IA32_EFER       = 0C0000080h
 
-MAP_LINEAR      equ 110000h
+MAP_LINEAR      = 110000h
 
-IDT_LINEAR      equ 11C000h
-PAE_CR3_LINEAR  equ 11D000h
-IA64_PAE_LINEAR equ 11E000h
-IA64_CR3_LINEAR equ 11F000h
+IDT_LINEAR      = 11C000h
+PAE_CR3_LINEAR  = 11D000h
+IA64_PAE_LINEAR = 11E000h
+IA64_CR3_LINEAR = 11F000h
 
-UNITY_MAP_SIZE  equ 10000h
+UNITY_MAP_SIZE  = 10000h
 
-%macro OsGate 1
-    db 3Eh
-    db 67h
-    db 9Ah
-    dd %1
-    dw 2
-%endmacro
+pushq0  Macro
+    db 6Ah
+    db 0
+        Endm
 
-%macro UserGate 1
-    db 3Eh
-    db 67h
-    db 9Ah
-    dd %1
-    dw 3
-%endmacro
+Reg64   struc
 
-struc Reg64
+reg_fault   dw ?
+reg_rax     dq ?
+reg_rcx     dq ?
+reg_rdx     dq ?
+reg_rbx     dq ?
+reg_rsp     dq ?
+reg_rbp     dq ?
+reg_rsi     dq ?
+reg_rdi     dq ?
+reg_r8      dq ?
+reg_r9      dq ?
+reg_r10     dq ?
+reg_r11     dq ?
+reg_r12     dq ?
+reg_r13     dq ?
+reg_r14     dq ?
+reg_r15     dq ?
+reg_rip     dq ?
+reg_cs      dw ?
+reg_ds      dw ?
+reg_es      dw ?
+reg_fs      dw ?
+reg_gs      dw ?
+reg_ss      dw ?
+reg_flags   dq ?
 
-reg_fault:  resw 1
-reg_rax:    resq 1
-reg_rcx:    resq 1
-reg_rdx:    resq 1
-reg_rbx:    resq 1
-reg_rsp:    resq 1
-reg_rbp:    resq 1
-reg_rsi:    resq 1
-reg_rdi:    resq 1
-reg_r8:     resq 1
-reg_r9:     resq 1
-reg_r10:    resq 1
-reg_r11:    resq 1
-reg_r12:    resq 1
-reg_r13:    resq 1
-reg_r14:    resq 1
-reg_r15:    resq 1
-reg_rip:    resq 1
-reg_cs:     resw 1
-reg_ds:     resw 1
-reg_es:     resw 1
-reg_fs:     resw 1
-reg_gs:     resw 1
-reg_ss:     resw 1
-reg_flags:  resq 1
+reg_end     db ?
 
-reg_end:    resb 1
-
-endstruc
+Reg64   Ends
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -95,18 +86,17 @@ endstruc
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-   bits 32
+.686p
 
-section .header progbits start=0x00000000 vstart=0x00000000 align=1
+Code32 segment byte public use32 'code32'
 
-hdr         dw 0x3252
-cip         dd init
-code_size   dd text_end - text_start + boot_end
-code_sel    dw long_dev_code_sel
-data_size   dd 0
-data_sel    dw 0
+sign dw 6452h
+eip  dd OFFSET init
+ib   dd MAP_LINEAR
+ic   dd UNITY_MAP_SIZE
+idt  dd IDT_LINEAR
 
-section .boot progbits follows=.header vstart=0x00000000 align=1
+    org MAP_LINEAR
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -121,7 +111,7 @@ section .boot progbits follows=.header vstart=0x00000000 align=1
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
-CreateTrapGate:
+CreateTrapGate  proc near
     push ds
     push eax
     push edx
@@ -158,6 +148,7 @@ CreateTrapGate:
     pop eax
     pop ds
     ret
+CreateTrapGate  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -190,21 +181,13 @@ pg14    DD      14,         pretask14
 pg16    DD      16,         pretask16
 pg7_end DD      0FFFFFFFFh
 
-InitIdt:
+InitIdt proc near
     push ds
     push es
     pushad
 ;    
     mov ax,cs
     mov ds,ax
-;    
-    mov ax,flat_sel
-    mov es,ax
-;
-    mov edi,IDT_LINEAR
-    mov ecx,400h
-    xor eax,eax
-    rep stosd
 ;
     mov edi,pretask_int_tab
 
@@ -225,6 +208,7 @@ iiDone:
     pop es
     pop ds
     ret
+InitIdt Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -235,39 +219,16 @@ iiDone:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
-init:
-    OsGate has_long_mode
-    jnc init_ok
-;
-    retf
-
-init_ok:
-    mov bx,long_kernel_code_sel
-    OsGate create_long_code_sel
-;    
-    mov ecx,UNITY_MAP_SIZE
-    mov edi,MAP_LINEAR
-    OsGate setup_long_mode
-;    
-    call InitIdt
-;    
+init    proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
     mov edi,init_task
-    OsGate hook_init_tasking    
+    HookInitTasking    
 ;    
-    mov esi,boot_end
-    mov edi,text_start
-    mov ecx,UNITY_MAP_SIZE
-    mov bx,cs
-    OsGate start_long_mode
-
-boot_end:    
-
-section .text progbits follows=.boot vstart=MAP_LINEAR align=1
-
-text_start:
+    call InitIdt
+    ret
+init    endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -286,11 +247,11 @@ init_task:
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov esi,test_thread
-    mov edi,test_thread_name
+    mov esi,OFFSET test_thread
+    mov edi,OFFSET test_thread_name
     mov ax,4
-    mov ecx,0x1000
-    UserGate create_thread
+    mov ecx,1000h
+    CreateThread
 ;
     popad
     pop es
@@ -312,8 +273,9 @@ long_idt_size   DW 0FFFh
 long_idt_base   DD IDT_LINEAR
 
 test_thread:
+    int 3
     mov bx,ss
-    OsGate get_selector_base_size
+    GetSelectorBaseSize
     add edx,esp
     mov ax,syscall_data_sel
     mov ss,ax
@@ -323,7 +285,7 @@ test_thread:
     xor ebx,ebx
     mov eax,cr3
     or al,67h
-    OsGate set_page_entry
+    SetPageEntry
 ;    
     mov ax,flat_sel
     mov ds,ax
@@ -351,16 +313,16 @@ test_thread:
     mov eax,IA64_PAE_LINEAR + 7
     stosd
     xor eax,eax
-    mov ecx,0x3FF
+    mov ecx,3FFh
     rep stosd    
 ;    
     mov edi,cr3
 ;
     int 3 
-    mov edx,0xB8000
-    mov eax,0xB8007
+    mov edx,0B8000h
+    mov eax,0B8007h
     xor ebx,ebx
-    OsGate set_page_entry
+    SetPageEntry
 ;    
     cli
     mov eax,cr0
@@ -369,7 +331,7 @@ test_thread:
 ;
     mov ecx,IA32_EFER
     rdmsr
-    or eax,0x100
+    or eax,100h
     wrmsr
 ;
     mov eax,IA64_CR3_LINEAR
@@ -379,8 +341,10 @@ test_thread:
     or eax,80000000h
     mov cr0,eax
 ;
-    lidt [long_idt_size]
-    jmp long_kernel_code_sel:test64
+    lidt fword ptr ds:long_idt_size
+    db 0EAh
+    dd OFFSET test64
+    dw long_kernel_code_sel
 
 test32:        
     mov eax,cr0
@@ -389,7 +353,7 @@ test32:
 ;
     mov ecx,IA32_EFER
     rdmsr
-    and eax,0xFFFFFEFF   
+    and eax,0FFFFFEFFh   
     wrmsr
 ;
     mov cr3,edi
@@ -408,6 +372,13 @@ test32:
 
 compat_test:
     retf
+
+    option PROCALIGN:32    
+
+code32_end  Proc near
+code32_end  Endp
+
+code32  Ends    
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -415,12 +386,17 @@ compat_test:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    bits 64
+
+.x64
+
+Code64 segment byte public use64 'code64'
+
+    org OFFSET code32_end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           WriteChar
+;   NAME:           LocalWriteChar
 ;
 ;   DESCRIPTION:    Write a char to screen
 ;
@@ -433,7 +409,7 @@ compat_test:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteChar:
+LocalWriteChar  proc near
     push rax
     push rbx
     push rcx
@@ -451,6 +427,7 @@ WriteChar:
     pop rbx
     pop rax
     ret
+LocalWriteChar  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -465,7 +442,7 @@ WriteChar:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SingelHex:
+SingelHex   Proc near
     mov ah,al
     and al,0F0h
     rol al,1
@@ -488,6 +465,7 @@ shLow1:
 shHigh1:
     add ah,30h
     ret
+SingelHex   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -504,7 +482,7 @@ shHigh1:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteSpace:
+WriteSpace  Proc near
     push rax
     push rcx
     push rdx
@@ -512,14 +490,14 @@ WriteSpace:
     mov ah,cl    
     xchg rax,rdx
     mov dl,'_'
-    call WriteChar
+    call LocalWriteChar
 ;    
     pop rdx
     pop rcx
     pop rax
     add dl,1
     ret
-
+WriteSpace  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -537,7 +515,7 @@ WriteSpace:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteHexByte:
+WriteHexByte    Proc near
     push rax
     push rcx
     push rdx
@@ -549,19 +527,20 @@ WriteHexByte:
     push rax
     xchg rax,rdx
     mov dh,ch
-    call WriteChar
+    call LocalWriteChar
     pop rdx
 ;    
     inc al
     mov dl,dh
     mov dh,ch
-    call WriteChar
+    call LocalWriteChar
     pop rdx
     add dl,2
 ;    
     pop rcx
     pop rax
     ret
+WriteHexByte    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -580,7 +559,7 @@ WriteHexByte:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteHexWord:
+WriteHexWord    Proc near
     push rax
     rol ax,8
     call WriteHexByte
@@ -588,6 +567,7 @@ WriteHexWord:
     call WriteHexByte
     pop rax
     ret
+WriteHexWord    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -605,7 +585,7 @@ WriteHexWord:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteHexDword:
+WriteHexDword   Proc near
     push rax
     rol eax,8
     call WriteHexByte
@@ -617,6 +597,7 @@ WriteHexDword:
     call WriteHexByte
     pop rax
     ret
+WriteHexDword   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -634,7 +615,7 @@ WriteHexDword:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteHexQword:
+WriteHexQword   Proc near
     push rax
     rol rax,8
     call WriteHexByte
@@ -657,6 +638,7 @@ WriteHexQword:
     call WriteHexByte
     pop rax
     ret
+WriteHexQword   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -674,7 +656,7 @@ WriteHexQword:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteString:
+WriteString Proc near
     xchg rax,rdx
     push rdi
     push rbx
@@ -730,7 +712,7 @@ wsPageShiftOk:
     pop rdi
     xchg rax,rdx
     ret
-
+WriteString Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -748,7 +730,7 @@ wsPageShiftOk:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteQwordReg:
+WriteQwordReg   Proc near
     push rcx
     mov ah,cl
     mov rcx,4
@@ -767,6 +749,7 @@ WriteQwordReg:
     jnz WriteQwordReg
 ;
     ret
+WriteQwordReg   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -798,8 +781,8 @@ seg_reg_tab:
     dd reg_ss
     db 0
 
-WriteSegReg:
-    mov rdi,seg_reg_tab
+WriteSegReg Proc near
+    mov rdi,OFFSET seg_reg_tab
 
 wsrLoop:
     push rcx
@@ -820,6 +803,7 @@ wsrLoop:
     jnz wsrLoop
 ;
     ret
+WriteSegReg Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -853,10 +837,10 @@ et_df   DB 'UP ',       'DN '
 et_of   DB 'NV ',       'OV '
 et_end  DB 0FFh
 
-WriteFlags:
+WriteFlags  Proc near
     mov rbx,reg_flags
     mov rax,[r15+rbx]
-    mov rdi,flags_tab
+    mov rdi,OFFSET flags_tab
 
 wfLoop:
     mov ch,[rdi]
@@ -889,6 +873,7 @@ wfNext:
     
 wfDone:
     ret
+WriteFlags  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -990,19 +975,20 @@ ke16    DB 'Undefined method        '
 ke17    DB 'Invalid handle          '
 ke18    DB 'Invalid selector        '
 
-WriteFault:
+WriteFault  Proc near
     movzx edi,ax
     shl edi,3
     mov eax,edi
     add eax,eax
     add edi,eax
-    add edi,error_code_tab
+    add edi,OFFSET error_code_tab
     mov ecx,24
     mov ah,11
     call WriteString
 ;
     add dl,2
     ret
+WriteFault  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1023,22 +1009,22 @@ ft_idt  DB 'Idt '
 ft_ldt  DB 'Ldt '
 ft_gdt  DB 'Gdt '
 
-WriteErrorCode:
+WriteErrorCode  proc near
     or eax,eax
     jz wecDone
 ;    
     test ax,2
     jz wecNotIdt
 ;    
-    mov edi,ft_idt
+    mov edi,OFFSET ft_idt
     jmp wecDo
 
 wecNotIdt:
-    mov edi,ft_gdt
+    mov edi,OFFSET ft_gdt
     test ax,4
     jz wecDo
 ;    
-    mov edi,ft_ldt
+    mov edi,OFFSET ft_ldt
 
 wecDo:
     push rax
@@ -1055,6 +1041,7 @@ wecDone:
     inc dh
     xor dl,dl
     ret
+WriteErrorCode  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1080,7 +1067,7 @@ fault_rbx           equ -16
 
 do_fault:
     push r15
-    mov r15,regs
+    mov r15,OFFSET regs
     mov [r15+reg_fault],ax
     mov [r15+reg_rcx],rcx
     mov [r15+reg_rdx],rdx
@@ -1100,7 +1087,7 @@ do_fault:
     mov [r15+reg_rip],rax
 ;    
     mov ax,[rbp+fault_cs]
-    mov word [r15+reg_cs],ax
+    mov [r15+reg_cs],ax
 ;
     mov rax,[rbp+fault_rflags]
     mov [r15+reg_flags],rax
@@ -1109,7 +1096,7 @@ do_fault:
     mov [r15+reg_rsp],rax
 ;
     mov ax,[rbp+fault_ss]
-    mov word [r15+reg_ss],ax
+    mov [r15+reg_ss],ax
 ;
     mov rax,[rbp+fault_rax]
     mov [r15+reg_rax],rax
@@ -1120,12 +1107,12 @@ do_fault:
     mov rax,[rbp+fault_rbp]
     mov [r15+reg_rbp],rax
 ;     
-    mov word [r15+reg_ds],ds
-    mov word [r15+reg_es],es
-    mov word [r15+reg_fs],fs
-    mov word [r15+reg_gs],gs
+    mov [r15+reg_ds],ds
+    mov [r15+reg_es],es
+    mov [r15+reg_fs],fs
+    mov [r15+reg_gs],gs
 ;
-    mov r8,0xB8000
+    mov r8,0B8000h
     xor rdx,rdx
 ;
     mov ax,[r15+reg_fault]
@@ -1134,42 +1121,42 @@ do_fault:
     mov eax,[rbp+fault_error_code]
     call WriteErrorCode    
 ;    
-    mov rdi,qword_reg_tab1
+    mov rdi,OFFSET qword_reg_tab1
     mov cl,10
     xor dl,dl
     call WriteQwordReg
     inc dh
     xor dl,dl
 ;    
-    mov rdi,qword_reg_tab2
+    mov rdi,OFFSET qword_reg_tab2
     mov cl,10
     xor dl,dl
     call WriteQwordReg
     inc dh
     xor dl,dl
 ;    
-    mov rdi,qword_reg_tab3
+    mov rdi,OFFSET qword_reg_tab3
     mov cl,10
     xor dl,dl
     call WriteQwordReg
     inc dh
     xor dl,dl
 ;    
-    mov rdi,qword_reg_tab4
+    mov rdi,OFFSET qword_reg_tab4
     mov cl,10
     xor dl,dl
     call WriteQwordReg
     inc dh
     xor dl,dl
 ;    
-    mov rdi,qword_reg_tab5
+    mov rdi,OFFSET qword_reg_tab5
     mov cl,10
     xor dl,dl
     call WriteQwordReg
     inc dh
     xor dl,dl
 ;    
-    mov rdi,qword_reg_tab6
+    mov rdi,OFFSET qword_reg_tab6
     mov cl,10
     xor dl,dl
     call WriteQwordReg
@@ -1198,10 +1185,10 @@ trap3_loop:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-regs  times reg_end db 0
+regs  Reg64 <>
 
 pretask0:
-    push qword 0
+    pushq0
     push rbp
     mov rbp,rsp
     push rax
@@ -1210,7 +1197,7 @@ pretask0:
     jmp do_fault
 
 pretask1:
-    push qword 0
+    pushq0
     push rbp
     mov rbp,rsp
     push rax
@@ -1219,7 +1206,7 @@ pretask1:
     jmp do_fault
 
 pretask2:
-    push qword 0
+    pushq0
     push rbp
     mov rbp,rsp
     push rax
@@ -1228,7 +1215,7 @@ pretask2:
     jmp do_fault
 
 pretask3:
-    push qword 0
+    pushq0
     push rbp
     mov rbp,rsp
     push rax
@@ -1237,7 +1224,7 @@ pretask3:
     jmp do_fault
 
 pretask4:
-    push qword 0
+    pushq0
     push rbp
     mov rbp,rsp
     push rax
@@ -1246,7 +1233,7 @@ pretask4:
     jmp do_fault
 
 pretask5:
-    push qword 0
+    pushq0
     push rbp
     mov rbp,rsp
     push rax
@@ -1255,7 +1242,7 @@ pretask5:
     jmp do_fault
 
 pretask6:
-    push qword 0
+    pushq0
     push rbp
     mov rbp,rsp
     push rax
@@ -1264,7 +1251,7 @@ pretask6:
     jmp do_fault
 
 pretask7:
-    push qword 0
+    pushq0
     push rbp
     mov rbp,rsp
     push rax
@@ -1281,7 +1268,7 @@ pretask8:
     jmp do_fault
 
 pretask9:
-    push qword 0
+    pushq0
     push rbp
     mov rbp,rsp
     push rax
@@ -1330,7 +1317,7 @@ pretask14:
     jmp do_fault
 
 pretask16:
-    push qword 0
+    pushq0
     push rbp
     mov rbp,rsp
     push rax
@@ -1340,15 +1327,15 @@ pretask16:
 
 
 comp_dest:
-    dd compat_test
+    dd OFFSET compat_test
     dw long_dev_code_sel
     
 test64:
-    mov rax,0x12345678
-    db 0xFF
-    db 0x1C
-    db 0x25
-    dd comp_dest
+    mov rax,12345678h
+    db 0FFh
+    db 1Ch
+    db 25h
+    dd OFFSET comp_dest
     int 3
 
 stopl:
@@ -1356,3 +1343,7 @@ stopl:
 
 
 text_end:
+
+Code64  Ends
+
+    end
