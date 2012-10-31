@@ -1996,6 +1996,7 @@ test_near   Proc near
 test_near   Endp
 
 test_gate_pr    Proc far
+    GetVersion
     retf32
 test_gate_pr    Endp
    
@@ -4119,7 +4120,7 @@ init    PROC far
     mov edi,OFFSET test_gate_name
     xor dx,dx
     mov ax,test_gate_nr
-;    RegisterBimodalSyscall
+    RegisterBimodalSyscall
 ;
     mov esi,OFFSET switch_one_core_irq
     mov edi,OFFSET switch_one_core_irq_name

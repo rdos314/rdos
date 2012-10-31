@@ -385,7 +385,7 @@ test32:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 compat_test:
-    GetVersion
+    UserGate test_gate_nr
     retf
 
     option PROCALIGN:32    
@@ -1248,7 +1248,18 @@ LeaveCodePatch    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PatchUser16 Proc near
-    int 3
+    mov ebx,[edx+3]
+    shl ebx,USER_GATE_SHIFT
+    add ebx,usergate_linear
+;
+    mov eax,[ebx].user_gate_entry_offset16
+    xchg eax,[edx+3]
+;
+    mov ax,[ebx].user_gate_entry_sel16
+    xchg ax,[edx+7]
+;    
+    mov al,90h
+    xchg al,[edx]
     ret
 PatchUser16 Endp
 
@@ -1547,10 +1558,24 @@ gpfNotInt:
 ;
     cmp al,67h
     jne gpfDefault
+;
+    mov al,[edx+2]
+    cmp al,9Ah
+    jne gpfDefault
+;
+    mov ax,[edx+7]
+    or ax,ax
+    jz gpfDefault
+;
+    cmp ax,3
+    ja gpfDefault
 
 gpfGate16:
-    mov al,[edx+1]
-    int 3
+    call LeaveCodePatch
+;
+    mov al,0CDh
+    xchg al,[edx]
+    jmp gpfDoRetry
 
 gpfGate32:    
     mov al,[edx+1]
