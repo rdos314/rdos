@@ -59,11 +59,6 @@ pushq0  Macro
     db 0
         Endm
 
-Iret64  MACRO
-    db 48h
-    db 0CFh
-        ENDM
-
 Reg64   struc
 
 reg_fault   dw ?
@@ -1386,7 +1381,7 @@ gpfRetry:
     pop rax
     pop rbp
     add rsp,8
-    Iret64
+    iretq
 
 gpfDefault:
     pop rdx
