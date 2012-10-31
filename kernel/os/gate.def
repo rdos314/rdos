@@ -44,12 +44,12 @@ os_gate_entry      ENDS
 USER_GATE_SHIFT = 5
 
 user_gate_entry      STRUC
+user_gate_entry_offset32     DD ?
+user_gate_entry_sel32        DW ?
 user_gate_name_offset        DD ?
 user_gate_name_sel           DW ?
 user_gate_entry_offset16     DD ?
 user_gate_entry_sel16        DW ?
-user_gate_entry_offset32     DD ?
-user_gate_entry_sel32        DW ?
 user_gate_sel16              DW ?
 user_gate_sel32              DW ?
 user_gate_near_call          DD ?

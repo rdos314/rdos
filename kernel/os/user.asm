@@ -46,6 +46,7 @@ ENDIF
     extrn local_get_selector_base_size:near
 
     extrn local_allocate_fixed_system_mem:near
+    extrn local_create_data_sel16:near
 
     extrn translate_segment:near
     extrn translate_selector:near
@@ -71,8 +72,11 @@ init_usergate   PROC near
     pusha
 ;    
     mov bx,usergate_sel
-    mov eax,usergate_entries SHL USER_GATE_SHIFT
-    call local_allocate_fixed_system_mem
+    mov edx,usergate_linear
+    mov ecx,usergate_entries SHL USER_GATE_SHIFT
+    call local_create_data_sel16
+    mov es,bx
+;
     xor al,al
     xor di,di
     mov cx,usergate_entries SHL USER_GATE_SHIFT
