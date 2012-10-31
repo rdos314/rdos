@@ -1332,6 +1332,7 @@ comp_dest:
     
 test64:
     mov rax,12345678h
+    db 48h
     db 0FFh
     db 1Ch
     db 25h
