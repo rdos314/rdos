@@ -385,8 +385,7 @@ test32:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 compat_test:
-    mov bx,kernel_code
-    GetSelectorBaseSize
+    GetVersion
     retf
 
     option PROCALIGN:32    
@@ -1266,7 +1265,18 @@ PatchUser16 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PatchUser32 Proc near
-    int 3
+    mov ebx,[edx+3]
+    shl ebx,USER_GATE_SHIFT
+    add ebx,usergate_linear
+;
+    mov eax,[ebx].user_gate_entry_offset32
+    xchg eax,[edx+3]
+;
+    mov ax,[ebx].user_gate_entry_sel32
+    xchg ax,[edx+7]
+;    
+    mov al,90h
+    xchg al,[edx]
     ret
 PatchUser32 Endp
 
@@ -1605,7 +1615,6 @@ comp_dest:
     dw long_dev_code_sel
     
 test64:
-    mov rax,12345678h
     db 0FFh
     db 1Ch
     db 25h
