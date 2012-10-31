@@ -442,7 +442,7 @@ LocalWriteChar  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SingelHex:
+SingelHex   Proc near
     mov ah,al
     and al,0F0h
     rol al,1
@@ -465,6 +465,7 @@ shLow1:
 shHigh1:
     add ah,30h
     ret
+SingelHex   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -481,7 +482,7 @@ shHigh1:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteSpace:
+WriteSpace  Proc near
     push rax
     push rcx
     push rdx
@@ -496,7 +497,7 @@ WriteSpace:
     pop rax
     add dl,1
     ret
-
+WriteSpace  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -514,7 +515,7 @@ WriteSpace:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteHexByte:
+WriteHexByte    Proc near
     push rax
     push rcx
     push rdx
@@ -539,6 +540,7 @@ WriteHexByte:
     pop rcx
     pop rax
     ret
+WriteHexByte    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -557,7 +559,7 @@ WriteHexByte:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteHexWord:
+WriteHexWord    Proc near
     push rax
     rol ax,8
     call WriteHexByte
@@ -565,6 +567,7 @@ WriteHexWord:
     call WriteHexByte
     pop rax
     ret
+WriteHexWord    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -582,7 +585,7 @@ WriteHexWord:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteHexDword:
+WriteHexDword   Proc near
     push rax
     rol eax,8
     call WriteHexByte
@@ -594,6 +597,7 @@ WriteHexDword:
     call WriteHexByte
     pop rax
     ret
+WriteHexDword   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -611,7 +615,7 @@ WriteHexDword:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteHexQword:
+WriteHexQword   Proc near
     push rax
     rol rax,8
     call WriteHexByte
@@ -634,6 +638,7 @@ WriteHexQword:
     call WriteHexByte
     pop rax
     ret
+WriteHexQword   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -651,7 +656,7 @@ WriteHexQword:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteString:
+WriteString Proc near
     xchg rax,rdx
     push rdi
     push rbx
@@ -707,7 +712,7 @@ wsPageShiftOk:
     pop rdi
     xchg rax,rdx
     ret
-
+WriteString Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -725,7 +730,7 @@ wsPageShiftOk:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteQwordReg:
+WriteQwordReg   Proc near
     push rcx
     mov ah,cl
     mov rcx,4
@@ -744,6 +749,7 @@ WriteQwordReg:
     jnz WriteQwordReg
 ;
     ret
+WriteQwordReg   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -775,8 +781,8 @@ seg_reg_tab:
     dd reg_ss
     db 0
 
-WriteSegReg:
-    mov rdi,seg_reg_tab
+WriteSegReg Proc near
+    mov rdi,OFFSET seg_reg_tab
 
 wsrLoop:
     push rcx
@@ -797,6 +803,7 @@ wsrLoop:
     jnz wsrLoop
 ;
     ret
+WriteSegReg Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -830,10 +837,10 @@ et_df   DB 'UP ',       'DN '
 et_of   DB 'NV ',       'OV '
 et_end  DB 0FFh
 
-WriteFlags:
+WriteFlags  Proc near
     mov rbx,reg_flags
     mov rax,[r15+rbx]
-    mov rdi,flags_tab
+    mov rdi,OFFSET flags_tab
 
 wfLoop:
     mov ch,[rdi]
@@ -866,6 +873,7 @@ wfNext:
     
 wfDone:
     ret
+WriteFlags  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -967,19 +975,20 @@ ke16    DB 'Undefined method        '
 ke17    DB 'Invalid handle          '
 ke18    DB 'Invalid selector        '
 
-WriteFault:
+WriteFault  Proc near
     movzx edi,ax
     shl edi,3
     mov eax,edi
     add eax,eax
     add edi,eax
-    add edi,error_code_tab
+    add edi,OFFSET error_code_tab
     mov ecx,24
     mov ah,11
     call WriteString
 ;
     add dl,2
     ret
+WriteFault  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1000,7 +1009,7 @@ ft_idt  DB 'Idt '
 ft_ldt  DB 'Ldt '
 ft_gdt  DB 'Gdt '
 
-WriteErrorCode:
+WriteErrorCode  proc near
     or eax,eax
     jz wecDone
 ;    
@@ -1032,6 +1041,7 @@ wecDone:
     inc dh
     xor dl,dl
     ret
+WriteErrorCode  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1057,7 +1067,7 @@ fault_rbx           equ -16
 
 do_fault:
     push r15
-    mov r15,regs
+    mov r15,OFFSET regs
     mov [r15+reg_fault],ax
     mov [r15+reg_rcx],rcx
     mov [r15+reg_rdx],rdx
@@ -1317,7 +1327,7 @@ pretask16:
 
 
 comp_dest:
-    dd compat_test
+    dd OFFSET compat_test
     dw long_dev_code_sel
     
 test64:
@@ -1325,7 +1335,7 @@ test64:
     db 0FFh
     db 1Ch
     db 25h
-    dd comp_dest
+    dd OFFSET comp_dest
     int 3
 
 stopl:
