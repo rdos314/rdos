@@ -32,6 +32,7 @@ include ..\user.def
 include ..\os.inc
 include ..\user.inc
 include protseg.def
+include gate.def
 
 fault_ss            equ 48
 fault_rsp           equ 40
@@ -384,7 +385,7 @@ test32:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 compat_test:
-    mov bx,cs
+    mov bx,kernel_code
     GetSelectorBaseSize
     retf
 
@@ -1185,6 +1186,58 @@ trap3_loop:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;   Code patching
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+long_patch_spinlock  DD 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           EnterCodePatch
+;
+;           DESCRIPTION:    Take code-patching spinlock
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EnterCodePatch    Proc near
+    push rax
+
+ecpLoop:
+    mov eax,1
+    xchg eax,[long_patch_spinlock]
+    or eax,eax
+    jz ecpLocked
+;
+    pause
+    jmp ecpLoop
+
+ecpLocked:     
+    pop rax
+    ret
+EnterCodePatch    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LeaveCodePatch
+;
+;           DESCRIPTION:    Release code-patching spinlock
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LeaveCodePatch    Proc near
+    mov [long_patch_spinlock],0
+    ret
+LeaveCodePatch    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;
 ;           NAME:           PatchUser16
 ;
@@ -1230,7 +1283,17 @@ PatchUser32 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PatchOs Proc near
-    int 3
+    mov ebx,[edx+3]
+    shl ebx,4
+    add ebx,osgate_linear
+    mov eax,[ebx].os_gate_offset
+    xchg eax,[edx+3]
+;
+    mov ax,[ebx].os_gate_sel
+    xchg ax,[edx+7]
+;    
+    mov al,90h
+    xchg al,[edx]
     ret
 PatchOs Endp
 
@@ -1265,7 +1328,7 @@ int67:
     push rcx
     push rdx
 ;
-;    call ds:enter_patch_proc
+    call EnterCodePatch
 ;
     mov ebx,[rbp+fault_cs]
     IsLongCodeSelector
@@ -1297,7 +1360,7 @@ intpCall:
     call [eax]
 
 intpRetry:
-;    call ds:leave_patch_proc
+    call LeaveCodePatch
     pop rdx
     pop rcx
     pop rbx
@@ -1436,6 +1499,8 @@ pretask13:
     push rcx
     push rdx
 ;
+    call EnterCodePatch
+;    
     mov ebx,[rbp+fault_cs]
     IsLongCodeSelector
     jnc gpfDefault
@@ -1456,13 +1521,13 @@ pretask13:
     mov al,[edx+1]
     int 3
     cmp al,66h
-    je gpfLeaveRetry
+    je gpfRetry
 ;
     cmp al,67h
-    je gpfLeaveRetry
+    je gpfRetry
 ;
     cmp al,9Ah
-    je gpfLeaveRetry
+    je gpfRetry
 ;
     jmp gpfDefault
         
@@ -1487,19 +1552,16 @@ gpfGate32:
     ja gpfDefault
 
 gpfCall32:
-;    push ds
-;    mov ax,system_data_sel
-;    mov ds,ax
-;    call ds:leave_patch_proc
-;    pop ds
+    call LeaveCodePatch
 ;
     mov al,0CDh
     xchg al,[edx]
-    jmp gpfRetry
-
-gpfLeaveRetry:
+    jmp gpfDoRetry
 
 gpfRetry:
+    call LeaveCodePatch
+
+gpfDoRetry:
     pop rdx
     pop rcx
     pop rbx
@@ -1509,6 +1571,8 @@ gpfRetry:
     iretq
 
 gpfDefault:
+    call LeaveCodePatch
+;    
     pop rdx
     pop rcx
     mov ax,13
