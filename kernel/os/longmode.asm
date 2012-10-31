@@ -1186,11 +1186,74 @@ trap3_loop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           PatchUser16
+;
+;           DESCRIPTION:    Patch 16-bit user gate
+;
+;           PARAMETERS:     RBP     Fault frame
+;                           EDX     Code address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PatchUser16 Proc near
+    int 3
+    ret
+PatchUser16 Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           PatchUser32
+;
+;           DESCRIPTION:    Patch 32-bit user gate
+;
+;           PARAMETERS:     RBP     Fault frame
+;                           EDX     Code address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PatchUser32 Proc near
+    int 3
+    ret
+PatchUser32 Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           PatchOs
+;
+;           DESCRIPTION:    Patch os gate
+;
+;           PARAMETERS:     RBP     Fault frame
+;                           EDX     Code address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PatchOs Proc near
+    int 3
+    ret
+PatchOs Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           int66, int67
 ;
 ;           DESCRIPTION:    Trap handlers for int 66 and 67
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PatchError  Proc near
+    mov al,0CCh
+    mov [edx],al
+    ret
+PatchError  Endp
+
+int_patch_tab:
+ict00   DQ OFFSET PatchError
+ict01   DQ OFFSET PatchUser16
+ict02   DQ OFFSET PatchOs
+ict03   DQ OFFSET PatchUser32
 
 int66:
 int67:
@@ -1221,11 +1284,17 @@ int67:
     cmp al,0CDh
     jne intpRetry
 ;
-    mov ax,[edx+7]
-    cmp ax,2
-    jne intpRetry
+    sub dword ptr [rbp+fault_rip],2
+    movzx eax,word ptr [edx+7]
+    cmp eax,4
+    jb intpCall
 ;
-    int 3    
+    xor eax,eax
+
+intpCall:
+    shl eax,3
+    add eax,OFFSET int_patch_tab
+    call [eax]
 
 intpRetry:
 ;    call ds:leave_patch_proc
