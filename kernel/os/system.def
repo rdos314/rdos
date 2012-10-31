@@ -110,8 +110,6 @@ lm_size             DD ?
 lm_init_ip          DD ?
 lm_image_base       DD ?
 lm_image_size       DD ?
-lm_size32           DD ?
-lm_base64           DD ?
 lm_idt_base         DD ?
 
 long_mode_header   ENDS

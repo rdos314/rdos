@@ -87,8 +87,6 @@ struct TBinLongModeHeader
     long Eip;
     long ImageBase;
     long ImageSize;
-    long Size32;
-    long Base64;
     long IdtBase;
 };
 
@@ -971,8 +969,6 @@ int TRdosLongModeObject::LoadFile(const char *FileName)
         FDeviceHeader->StartIp = ExeHeader.Eip;
         FDeviceHeader->ImageBase = ExeHeader.ImageBase;
         FDeviceHeader->ImageSize = ExeHeader.ImageSize;
-        FDeviceHeader->Size32 = ExeHeader.Size32;
-        FDeviceHeader->Base64 = ExeHeader.Base64;
         FDeviceHeader->IdtBase = ExeHeader.IdtBase;
 
         ptr = &FDeviceHeader->NameParam;
