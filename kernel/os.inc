@@ -165,11 +165,22 @@ OsGate32    MACRO gate_nr
     dw 2
             ENDM
 
+OsGate64    MACRO gate_nr
+    push r15
+    mov r15,osgate_linear + gate_nr SHL 4
+    call fword ptr [r15]
+    pop r15
+            ENDM
+
 OsGate  MACRO gate_nr
 IF (size $) EQ 0FF02h
     OsGate16 gate_nr
 ELSE
+  IFDEF rax
+    OsGate64 gate_nr  
+  ELSE
     OsGate32 gate_nr
+  ENDIF
 ENDIF
             ENDM
 

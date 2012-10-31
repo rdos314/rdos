@@ -43,6 +43,7 @@ ENDIF
 
     extrn local_get_selector_base_size:near
     extrn local_create_trap_gate_sel:near
+    extrn local_create_data_sel16:near
 
     extrn local_allocate_fixed_system_mem:near
 
@@ -70,9 +71,11 @@ init_osgate     PROC near
     mov ds,ax
 ;
     mov bx,osgate_sel
-    mov eax,osgate_entries SHL 4
-    call local_allocate_fixed_system_mem
-    mov cx,osgate_entries SHL 4
+    mov edx,osgate_linear
+    mov ecx,osgate_entries SHL 4
+    call local_create_data_sel16
+    mov es,bx
+;    
     xor al,al
     xor di,di
     rep stosb

@@ -31,6 +31,17 @@ include ..\os.def
 include ..\user.def
 include ..\os.inc
 include ..\user.inc
+include protseg.def
+
+fault_ss            equ 48
+fault_rsp           equ 40
+fault_rflags        equ 32
+fault_cs            equ 24
+fault_rip           equ 16
+fault_error_code    equ 8
+fault_rbp           equ 0
+fault_rax           equ -8
+fault_rbx           equ -16
 
 IA32_EFER       = 0C0000080h
 
@@ -371,6 +382,8 @@ test32:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 compat_test:
+    mov bx,cs
+    GetSelectorBaseSize
     retf
 
     option PROCALIGN:32    
@@ -1055,16 +1068,6 @@ WriteErrorCode  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-fault_ss            equ 48
-fault_rsp           equ 40
-fault_rflags        equ 32
-fault_cs            equ 24
-fault_rip           equ 16
-fault_error_code    equ 8
-fault_rbp           equ 0
-fault_rax           equ -8
-fault_rbx           equ -16
-
 do_fault:
     push r15
     mov r15,OFFSET regs
@@ -1305,6 +1308,27 @@ pretask13:
     mov rbp,rsp
     push rax
     push rbx
+    push rcx
+    push rdx
+;
+    mov ebx,[rbp+fault_cs]
+    cmp ebx,long_kernel_code_sel
+    je gpfDefault
+;
+    GetSelectorBaseSize
+    jc gpfDefault
+;
+    mov eax,[rbp+fault_rip]
+    cmp eax,ecx
+    jae gpfDefault
+;    
+    add edx,eax
+    mov al,[edx]
+    int 3
+
+gpfDefault:
+    pop rdx
+    pop rcx
     mov ax,13
     jmp do_fault
 
@@ -1313,6 +1337,10 @@ pretask14:
     mov rbp,rsp
     push rax
     push rbx
+;
+    mov rax,cr2
+    int 3 
+;       
     mov ax,14
     jmp do_fault
 
@@ -1332,7 +1360,6 @@ comp_dest:
     
 test64:
     mov rax,12345678h
-    db 48h
     db 0FFh
     db 1Ch
     db 25h
