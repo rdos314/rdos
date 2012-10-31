@@ -367,14 +367,23 @@ install_long_mode   PROC near
     pop edx
     pop ecx
     sub ecx,[edx].lm_size
-    add edx,[edx].lm_size
 ;
     mov ax,flat_sel
     mov es,ax
 ;    
     mov esi,edx
+    add esi,[edx].lm_size
     push ecx
+;
+    push ecx    
+    mov ecx,[edx].lm_size32
     rep movs es:[edi],ds:[esi]
+    pop ecx
+;
+    sub ecx,[edx].lm_size32
+    mov edi,[edx].lm_base64
+    rep movs es:[edi],ds:[esi]
+;    
     pop ecx
 ;
     mov ecx,edi

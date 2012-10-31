@@ -36,6 +36,8 @@ IA32_EFER       = 0C0000080h
 
 MAP_LINEAR      = 110000h
 
+CODE64_LINEAR   = 111000h
+
 IDT_LINEAR      = 11C000h
 PAE_CR3_LINEAR  = 11D000h
 IA64_PAE_LINEAR = 11E000h
@@ -94,6 +96,8 @@ sign dw 6452h
 eip  dd OFFSET init
 ib   dd MAP_LINEAR
 ic   dd UNITY_MAP_SIZE
+s32  dd OFFSET code32_end - MAP_LINEAR
+l64  dd CODE64_LINEAR
 idt  dd IDT_LINEAR
 
     org MAP_LINEAR
@@ -341,9 +345,9 @@ test_thread:
     or eax,80000000h
     mov cr0,eax
 ;
-    lidt fword ptr ds:long_idt_size
+;    lidt fword ptr ds:long_idt_size
     db 0EAh
-    dd test64
+    dd OFFSET test64
     dw long_kernel_code_sel
 
 test32:        
@@ -373,6 +377,11 @@ test32:
 compat_test:
     retf
 
+    option PROCALIGN:32    
+
+code32_end  Proc near
+code32_end  Endp
+
 code32  Ends    
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -385,6 +394,8 @@ code32  Ends
 .x64
 
 Code64 segment byte public use64 'code64'
+
+    org CODE64_LINEAR
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1314,6 +1325,7 @@ comp_dest:
     dw long_dev_code_sel
     
 test64:
+    jmp test64
     mov rax,12345678h
     db 0FFh
     db 1Ch

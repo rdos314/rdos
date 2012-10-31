@@ -1,1 +1,1 @@
-jwasm -10 -Zm -bin longwasm.asm
+jwasm -10 -Zm -bin -Fllongwasm.lst longwasm.asm 
