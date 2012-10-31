@@ -484,6 +484,11 @@ SetupTrapGate  MACRO
     OsGate setup_trap_gate_nr
                             ENDM
 
+;       BX          DESCRIPTOR
+IsLongCodeSelector    MACRO
+    OsGate is_long_code_sel_nr
+                    ENDM
+
 ;;;;;;;;; LONG MODE ;;;;;;;;;;;;;;;;;;;;
 
 HasLongMode MACRO

@@ -247,7 +247,7 @@ ict03   DW OFFSET do_usercall32
 
 int66:
 int67:
-    sub sp,8
+    sub esp,8
     push ebp
     mov ebp,esp
     push ds
@@ -295,7 +295,7 @@ int_retry:
     pop es
     pop ds
     pop ebp
-    add sp,8
+    add esp,8
     iretd
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

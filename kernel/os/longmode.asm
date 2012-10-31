@@ -20,8 +20,8 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; NASM.ASM
-; Nasm test device
+; LONGMODE.ASM
+; Long mode device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -174,22 +174,24 @@ pretask_int_tab:
 ;
 ;               int #   Entry
 ;
-pg0     DD      0,          pretask0
-pg1     DD      1,          pretask1
-pg2     DD      2,          pretask2
-pg3     DD      3,          pretask3
-pg4     DD      4,          pretask4
-pg5     DD      5,          pretask5
-pg6     DD      6,          pretask6
-pg7     DD      7,          pretask7
-pg8     DD      8,          pretask8
-pg9     DD      9,          pretask9
-pg10    DD      10,         pretask10
-pg11    DD      11,         pretask11
-pg12    DD      12,         pretask12
-pg13    DD      13,         pretask13
-pg14    DD      14,         pretask14
-pg16    DD      16,         pretask16
+pg0     DD      0,          OFFSET pretask0,        0
+pg1     DD      1,          OFFSET pretask1,        0
+pg2     DD      2,          OFFSET pretask2,        0
+pg3     DD      3,          OFFSET pretask3,        0
+pg4     DD      4,          OFFSET pretask4,        0
+pg5     DD      5,          OFFSET pretask5,        0
+pg6     DD      6,          OFFSET pretask6,        0
+pg7     DD      7,          OFFSET pretask7,        0
+pg8     DD      8,          OFFSET pretask8,        0
+pg9     DD      9,          OFFSET pretask9,        0
+pg10    DD      10,         OFFSET pretask10,       0
+pg11    DD      11,         OFFSET pretask11,       0
+pg12    DD      12,         OFFSET pretask12,       0
+pg13    DD      13,         OFFSET pretask13,       0
+pg14    DD      14,         OFFSET pretask14,       0
+pg16    DD      16,         OFFSET pretask16,       0
+rg66    DD      66h,        OFFSET int66,           3
+rg67    DD      67h,        OFFSET int67,           3
 pg7_end DD      0FFFFFFFFh
 
 InitIdt proc near
@@ -208,10 +210,10 @@ iiLoop:
     jz iiDone
 ;    
     mov esi,[edi+4]
-    xor bl,bl
+    mov bl,[edi+8]
     call CreateTrapGate
 ;
-    add edi,8
+    add edi,12
     jmp iiLoop
 
 iiDone:
@@ -1184,6 +1186,60 @@ trap3_loop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           int66, int67
+;
+;           DESCRIPTION:    Trap handlers for int 66 and 67
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+int66:
+int67:
+    pushq0
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    push rcx
+    push rdx
+;
+;    call ds:enter_patch_proc
+;
+    mov ebx,[rbp+fault_cs]
+    IsLongCodeSelector
+    jnc intpRetry
+;
+    GetSelectorBaseSize
+    jc intpRetry
+;
+    mov eax,[rbp+fault_rip]
+    cmp eax,ecx
+    jae intpRetry
+;    
+    add edx,eax
+    sub edx,2
+    mov al,[edx]
+    cmp al,0CDh
+    jne intpRetry
+;
+    mov ax,[edx+7]
+    cmp ax,2
+    jne intpRetry
+;
+    int 3    
+
+intpRetry:
+;    call ds:leave_patch_proc
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    pop rbp
+    add rsp,8
+    iretq
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           trap vectors
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1312,8 +1368,8 @@ pretask13:
     push rdx
 ;
     mov ebx,[rbp+fault_cs]
-    cmp ebx,long_kernel_code_sel
-    je gpfDefault
+    IsLongCodeSelector
+    jnc gpfDefault
 ;
     GetSelectorBaseSize
     jc gpfDefault

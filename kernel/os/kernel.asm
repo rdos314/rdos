@@ -115,107 +115,6 @@ get_version Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           HasLongMode
-;
-;       DESCRIPTION:    Check for long mode support
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-has_long_mode_name    DB 'Has Long Mode', 0
-
-has_long_mode Proc far
-    push ds
-    push eax
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov eax,ds:cpu_ext_feature_flags
-    test eax,20000000h
-    stc
-    jz hlmDone
-    clc
-hlmDone:
-    pop eax
-    pop ds       
-    retf32
-has_long_mode Endp
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           SetupLongmode
-;
-;       DESCRIPTION:    Setup long mode memory layout
-;
-;       PARAMETERS:     ECX     map size
-;                       EDI     map position for unity section
-;                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-setup_long_mode_name    DB 'Setup Long Mode', 0
-
-setup_long_mode Proc far
-    push ebx
-    push ecx
-;
-    dec ecx
-    and cx,0F000h
-    shr ecx,12
-    inc cx
-;
-    mov eax,edi
-    xor ebx,ebx
-    mov edx,eax
-    or ax,803h
-
-slPageLoop:
-    SetSysPageEntry
-    add edx,1000h
-    add eax,1000h
-    loop slPageLoop
-;
-    pop ecx
-    pop ebx
-    retf32
-setup_long_mode Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           StartLongMode
-;
-;       DESCRIPTION:    Start long mode by moving code to start of physical memory
-;
-;       PARAMETERS:     BX      dev code selector
-;                       ECX     map size
-;                       ESI     start of unity section in code sel
-;                       EDI     map position for unity section
-;                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-start_long_mode_name    DB 'Start Long Mode', 0
-
-start_long_mode:
-    mov ds,bx
-    mov ax,flat_sel
-    mov es,ax
-    GetSelectorBaseSize
-    sub ecx,esi
-    push ecx
-    rep movs es:[edi],ds:[esi]
-    pop ecx
-;
-    mov ecx,edi
-    xor edx,edx
-    CreateCodeSelector32
-;    
-    add sp,8
-    retf32
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           ZeroRam
 ;
 ;           DESCRIPTION:    zero ram content
@@ -868,24 +767,6 @@ prot_init:
     xor dx,dx
     mov ax,get_version_nr
     RegisterBimodalUserGate
-;       
-    mov esi,OFFSET has_long_mode
-    mov edi,OFFSET has_long_mode_name
-    xor cl,cl
-    mov ax,has_long_mode_nr
-    RegisterOsGate
-;       
-    mov esi,OFFSET setup_long_mode
-    mov edi,OFFSET setup_long_mode_name
-    xor cl,cl
-    mov ax,setup_long_mode_nr
-    RegisterOsGate
-;       
-    mov esi,OFFSET start_long_mode
-    mov edi,OFFSET start_long_mode_name
-    xor cl,cl
-    mov ax,start_long_mode_nr
-    RegisterOsGate
 ;
     call init_mem
     call init_gdt
