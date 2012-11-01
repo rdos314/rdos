@@ -113,17 +113,19 @@ idt  dd IDT_LINEAR
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           CreateTrapGate
+;   NAME:           SetupLongTrapGate
 ;
-;   DESCRIPTION:    Create trap gate
+;   DESCRIPTION:    Setup long-mode trap gate
 ;
 ;   PARAMETERS:     AL      Interrupt #
 ;                   BL      Dpl
 ;                   ESI     Entry point
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_long_trap_gate_name   DB 'Setup Long Trap Gate', 0
     
-CreateTrapGate  proc near
+setup_long_trap_gate  proc far
     push ds
     push eax
     push edx
@@ -160,7 +162,61 @@ CreateTrapGate  proc near
     pop eax
     pop ds
     ret
-CreateTrapGate  Endp
+setup_long_trap_gate  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SetupLongIntGate
+;
+;   DESCRIPTION:    Setup long-mode int gate
+;
+;   PARAMETERS:     AL      Interrupt #
+;                   BL      Dpl
+;                   ESI     Entry point
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_long_int_gate_name   DB 'Setup Long Int Gate', 0
+    
+setup_long_int_gate  proc far
+    push ds
+    push eax
+    push edx
+    push edi
+;
+    mov dx,flat_sel
+    mov ds,dx
+;
+    movzx edi,al
+    shl edi,4
+    add edi,IDT_LINEAR
+;
+    mov edx,esi
+    mov [edi],dx
+;
+    shr edx,16
+    mov [edi+6],dx
+;
+    mov dx,long_kernel_code_sel
+    mov [edi+2],dx
+;
+    xor edx,edx    
+    mov [edi+8],edx
+    mov [edi+12],edx
+;
+    xor al,al
+    mov ah,bl
+    shl ah,5
+    or ah,8Eh
+    mov [edi+4],ax
+;
+    pop edi
+    pop edx
+    pop eax
+    pop ds
+    ret
+setup_long_int_gate  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -212,7 +268,7 @@ iiLoop:
 ;    
     mov esi,[edi+4]
     mov bl,[edi+8]
-    call CreateTrapGate
+    SetupLongTrapGate
 ;
     add edi,12
     jmp iiLoop
@@ -237,6 +293,19 @@ init    proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET setup_long_trap_gate
+    mov edi,OFFSET setup_long_trap_gate_name
+    xor cl,cl
+    mov ax,setup_long_trap_gate_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET setup_long_int_gate
+    mov edi,OFFSET setup_long_int_gate_name
+    xor cl,cl
+    mov ax,setup_long_int_gate_nr
+    RegisterOsGate
+;
     mov edi,init_task
     HookInitTasking    
 ;    
@@ -1640,6 +1709,9 @@ comp_dest:
     dw long_dev_code_sel
     
 test64:
+    xor eax,eax
+    mov ds,ax
+;
     db 0FFh
     db 1Ch
     db 25h

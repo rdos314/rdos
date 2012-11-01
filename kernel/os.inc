@@ -484,6 +484,20 @@ SetupTrapGate  MACRO
     OsGate setup_trap_gate_nr
                             ENDM
 
+; IN  AL        INT #
+; IN  BL        DPL
+; IN  ESI       ENTRY POINT
+SetupLongIntGate   MACRO
+    OsGate setup_long_int_gate_nr
+                            ENDM
+
+; IN  AL        INT #
+; IN  BL        DPL
+; IN  ESI       ENTRY POINT
+SetupLongTrapGate  MACRO
+    OsGate setup_long_trap_gate_nr
+                            ENDM
+
 ;       BX          DESCRIPTOR
 IsLongCodeSelector    MACRO
     OsGate is_long_code_sel_nr
