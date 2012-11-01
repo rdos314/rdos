@@ -441,12 +441,15 @@ SetupIsaIrqHandler   Proc near
     jmp sirhDone
 
 sirhChainPrev:
-    mov edx,ebp
-    sub edx,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
+    mov ecx,ebp
+    sub ecx,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
     add eax,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
-    xchg eax,dword ptr es:[edx].isa_irch_chain
+    add eax,edx
+    xchg eax,dword ptr es:[ecx].isa_irch_chain
     mov dword ptr es:[ebp].isa_irch_chain,eax
-    xchg eax,dword ptr es:[edx].isa_irch_chain+4
+;    
+    xor eax,eax
+    xchg eax,dword ptr es:[ecx].isa_irch_chain+4
     mov dword ptr es:[ebp].isa_irch_chain+4,eax
     jmp sirhDone
         
@@ -556,6 +559,14 @@ test_irq2    Proc far
     ret
 test_irq2    Endp
 
+test_irq3    Proc far
+    ret
+test_irq3    Endp
+
+test_irq4    Proc far
+    ret
+test_irq4    Endp
+
 test_thread:
     mov al,80h
     call CreateIsaIrq
@@ -576,6 +587,20 @@ test_thread:
     mov dx,task_data_sel
     mov ds,dx
     mov edi,OFFSET test_irq2
+    call SetupIsaIrqHandler
+;    
+    mov dx,cs
+    mov es,dx
+    mov dx,gdt_sel
+    mov ds,dx
+    mov edi,OFFSET test_irq3
+    call SetupIsaIrqHandler
+;    
+    mov dx,cs
+    mov es,dx
+    mov dx,system_data_sel
+    mov ds,dx
+    mov edi,OFFSET test_irq4
     call SetupIsaIrqHandler
 ;    
     mov bx,ss
@@ -675,7 +700,10 @@ test32:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 compat_test:
-    UserGate test_gate_nr
+    mov eax,task_data_sel
+    mov ds,ax
+    int 80h
+    int 3
     retf
 
     option PROCALIGN:32    
@@ -2038,11 +2066,6 @@ comp_dest:
     dw long_dev_code_sel
     
 test64:
-    int 80h
-    int 3
-    xor eax,eax
-    mov ds,ax
-;
     db 0FFh
     db 1Ch
     db 25h
