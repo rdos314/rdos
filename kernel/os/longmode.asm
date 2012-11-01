@@ -60,6 +60,23 @@ pushq0  Macro
     db 0
         Endm
 
+isa_irq_handler_struc   STRUC
+
+isa_irq_handler_ads     DD ?,?
+isa_irq_chain           DQ ?
+isa_irq_handler_data    DW ?
+isa_irq_detect_nr       DB ?
+
+isa_irq_handler_struc   ENDS
+
+isa_irq_chain_struc  STRUC
+
+isa_irch_handler_ads     DD ?,?
+isa_irch_handler_data    DW ?
+isa_irch_chain           DQ ?
+
+isa_irq_chain_struc ENDS
+
 Reg64   struc
 
 reg_fault   dw ?
@@ -283,6 +300,71 @@ InitIdt Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CreateIsaIrq
+;
+;       DESCRIPTION:    Create new ISA IRQ context
+;
+;       PARAMETERS:     AL           IRQ # (for detect)
+;
+;       RETURNS:        ESI          Linear address of entry-point
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateIsaIrq   Proc near
+    push ds
+    push es
+    push eax
+    push bx
+    push ecx
+    push edx
+    push edi
+;
+    push ax
+    mov eax,1000h
+    AllocateBigLinear
+;
+    mov ecx,OFFSET IsaIrqEnd - OFFSET IsaIrqStart
+    mov ax,cs
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+    mov esi,OFFSET IsaIrqStart
+    mov edi,edx
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    mov edi,edx
+    add edi,OFFSET IsaIrqPatchLinear + 1 - OFFSET IsaIrqStart
+    mov es:[edi],edx
+;    
+    mov eax,OFFSET IsaIrqExit - OFFSET IsaIrqStart
+    add eax,edx
+    mov dword ptr es:[edx].isa_irq_chain,eax
+    mov dword ptr es:[edx].isa_irq_chain+4,0
+;
+    mov eax,OFFSET IsaIrqDetect - OFFSET IsaIrqStart    
+    add eax,edx
+    mov dword ptr es:[edx].isa_irq_handler_ads,eax
+    mov word ptr es:[edx].isa_irq_handler_ads+4,long_kernel_code_sel
+    mov word ptr es:[edx].isa_irq_handler_data,0
+    pop ax
+    mov es:[edx].isa_irq_detect_nr,al
+;
+    mov esi,OFFSET IsaIrqEntry - OFFSET IsaIrqStart
+    add esi,edx
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop bx
+    pop eax
+    pop es
+    pop ds
+    ret
+CreateIsaIrq   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;    NAME:           Init
 ;
 ;    DESCRIPTION:    Init module
@@ -357,6 +439,12 @@ long_idt_base   DD IDT_LINEAR
 
 test_thread:
     int 3
+    mov al,80h
+    call CreateIsaIrq
+;
+    xor dl,dl
+    SetupLongIntGate
+;    
     mov bx,ss
     GetSelectorBaseSize
     add edx,esp
@@ -1703,12 +1791,122 @@ pretask16:
     mov ax,9
     jmp do_fault
 
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           ISA IRQ handler
+;
+;               DESCRIPTION:    Code for patching into IRQ handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsaIrqStart:
+
+isa_irq_handler     isa_irq_handler_struc <>
+
+IsaIrqEntry:
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    push rbp
+;
+    mov eax,ds
+    push rax
+;
+    mov eax,es
+    push rax
+;            
+    mov eax,fs
+    push rax
+;
+    xor eax,eax
+    mov ds,eax
+    mov es,eax
+    mov fs,eax
+;
+;    EnterLongInt
+;    sti
+    push rax
+
+IsaIrqPatchLinear:
+    mov edi,0
+;   
+    mov ds,[edi].isa_irq_handler_data
+    call fword ptr [edi].isa_irq_handler_ads
+;
+    mov ebx,OFFSET IsaIrqEnd - OFFSET IsaIrqStart
+    add ebx,edi
+    jmp [edi].isa_irq_chain
+
+IsaIrqExit:
+    pop rax
+    cli
+;    SendEoi
+;    LeaveLongInt
+;
+    pop rax
+    mov fs,eax
+;
+    pop rax
+    mov es,eax
+;
+    pop rax
+    mov ds,eax
+;
+    pop rbp
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    iretq
+
+IsaIrqDetect:
+    mov al,[edi].isa_irq_detect_nr
+    NotifyIrq
+    retf
+
+IsaIrqEnd:
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           ISA IRQ chaining
+;
+;               DESCRIPTION:    Code for adding at end of ISA IRQ handler in order to chain
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsaIrqChainStart:
+
+isa_irch_handler      isa_irq_chain_struc <>
+
+IsaIrqChainEntry:
+    push rbx
+    mov ds,[ebx+edi].isa_irch_handler_data
+    call fword ptr [ebx+edi].isa_irch_handler_ads
+    pop rbx
+;
+    mov esi,ebx
+    add ebx,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
+    jmp [esi+edi].isa_irch_chain
+
+IsaIrqChainEnd:
+
+
 
 comp_dest:
     dd OFFSET compat_test
     dw long_dev_code_sel
     
 test64:
+    int 80h
+    int 3
     xor eax,eax
     mov ds,ax
 ;

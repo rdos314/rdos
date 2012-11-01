@@ -1495,14 +1495,18 @@ notify_irq  Proc far
     push bx
     push dx
 ;    
+    push ax
     movzx bx,al
     mov ax,SEG data
     mov ds,ax
     shl bx,3
     add bx,OFFSET global_int_arr
     mov al,ds:[bx].gi_ioapic_id
-    mov es,ds:[bx].gi_ioapic_sel
+    mov dx,ds:[bx].gi_ioapic_sel
+    or dx,dx
+    jz niNoIoApic
 ;       
+    mov es,dx
     mov bl,10h
     add bl,al
     add bl,al
@@ -1517,8 +1521,11 @@ notify_irq  Proc far
     xor eax,eax
     mov es:ioapic_window,eax
     UnlockIoApic
+
+niNoIoApic:
+    pop ax
 ;
-    movzx dx,cs:isa_irq_detect_nr
+    movzx dx,al
     cmp dx,64
     jae niDone
 ;    

@@ -4794,6 +4794,70 @@ unlock_task     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           EnterLongInt
+;
+;   DESCRIPTION:    Enter long mode int
+;
+;   RETURNS:        AX      Locked core selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+enter_long_int_name  DB 'Enter Long Int',0
+
+enter_long_int   Proc far
+    mov ax,core_data_sel
+    mov ds,ax
+    add ds:ps_nesting,1
+    mov ax,ds:ps_sel
+    retf32
+enter_long_int  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LeaveLongInt
+;
+;   DESCRIPTION:    Leave long mode int
+;
+;   PARAMETERS:     AX      Locked core selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+leave_long_int_name  DB 'Leave Long Int',0
+
+leave_long_int   Proc far
+    mov ds,ax
+    sub ds:ps_nesting,1
+    jnc lliDone
+;
+    mov ax,ds:ps_curr_thread
+    or ax,ax
+    jz lliDone
+;    
+    test ds:ps_flags,PS_FLAG_TIMER OR PS_FLAG_PREEMPT
+    jnz lliSwap
+;    
+    mov ax,ds:ps_wakeup_list
+    or ax,ax
+    jz lliDone
+
+lliSwap:
+    add ds:ps_nesting,1
+    sti
+    mov ax,ds
+    mov fs,ax
+;
+    push OFFSET lliDone
+    call SaveLockedThread
+    jmp ContinueCurrentThread
+
+lliDone:
+    retf32
+leave_long_int  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           FlushTlb386
 ;
 ;           DESCRIPTION:    Flush TLB entries, 386 processor version
@@ -9964,6 +10028,18 @@ timer_free_list_create:
     mov di,OFFSET unlock_task_name
     xor cl,cl
     mov ax,unlock_task_nr
+    RegisterOsGate
+;
+    mov si,OFFSET enter_long_int
+    mov di,OFFSET enter_long_int_name
+    xor cl,cl
+    mov ax,enter_long_int_nr
+    RegisterOsGate
+;
+    mov si,OFFSET leave_long_int
+    mov di,OFFSET leave_long_int_name
+    xor cl,cl
+    mov ax,leave_long_int_nr
     RegisterOsGate
 ;
     mov si,OFFSET debug_exception

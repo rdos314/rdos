@@ -1354,6 +1354,16 @@ UnlockTask    MACRO
     OsGate unlock_task_nr
                         ENDM
 
+;  OUT  AX Locked core
+EnterLongInt    MACRO
+    OsGate enter_long_int_nr
+                        ENDM
+
+;  IN   AX Locked core
+LeaveLongInt    MACRO
+    OsGate leave_long_int_nr
+                        ENDM
+
 UpdatePstate  MACRO                        
     OsGate update_pstate_nr
                         ENDM

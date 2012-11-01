@@ -550,4 +550,7 @@ is_long_code_sel_nr         = 463
 setup_long_int_gate_nr      = 464
 setup_long_trap_gate_nr     = 465
 
+enter_long_int_nr           = 466
+leave_long_int_nr           = 467
+
 osgate_entries				= 480
