@@ -4847,9 +4847,9 @@ lliSwap:
     mov ax,ds
     mov fs,ax
 ;
-    push OFFSET lliDone
-    call SaveLockedThread
-    jmp ContinueCurrentThread
+;    push OFFSET lliDone
+;    call SaveLockedThread
+;    jmp ContinueCurrentThread
 
 lliDone:
     retf32

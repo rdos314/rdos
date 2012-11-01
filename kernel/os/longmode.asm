@@ -78,6 +78,13 @@ isa_irch_chain           DQ ?
 
 isa_irq_chain_struc ENDS
 
+msi_handler_struc   STRUC
+
+msi_handler_ads     DD ?,?
+msi_handler_data    DW ?
+
+msi_handler_struc   ENDS
+
 Reg64   struc
 
 reg_fault   dw ?
@@ -479,6 +486,95 @@ SetupIsaIrqHandler  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CreateMsi
+;
+;       DESCRIPTION:    Create new MSI context
+;
+;       RETURNS:        DS:ESI       Address of entry-point
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateMsi   Proc near
+    push ds
+    push es
+    push eax
+    push bx
+    push ecx
+    push edx
+    push edi
+;
+    mov eax,OFFSET MsiEnd - OFFSET MsiStart
+    AllocateSmallLinear
+;
+    mov ecx,eax
+    mov ax,cs
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+    mov esi,OFFSET MsiStart
+    mov edi,edx
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    mov edi,edx
+    add edi,OFFSET MsiPatchLinear + 1 - OFFSET MsiStart
+    mov es:[edi],edx
+;
+    mov eax,OFFSET MsiDefault - OFFSET MsiStart    
+    add eax,edx
+    mov dword ptr es:[edx].msi_handler_ads,eax
+    mov word ptr es:[edx].msi_handler_ads+4,long_kernel_code_sel
+    mov word ptr es:[edx].msi_handler_data,0
+;    
+    mov esi,OFFSET MsiEntry - OFFSET MsiStart
+    add esi,edx
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop bx
+    pop eax
+    pop es
+    pop ds
+    ret
+CreateMsi   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SetupMsiHandler
+;
+;       DESCRIPTION:    Setup MSI handler
+;
+;       PARAMETERS:     ESI         Linear address of entry-point
+;                       DS          Handler data
+;                       ES:EDI      Handler address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupMsiHandler   Proc near
+    push fs
+    push ax
+    push edx
+;    
+    mov ax,flat_sel
+    mov fs,ax
+;    
+    mov edx,esi
+    sub edx,OFFSET MsiEntry - OFFSET MsiStart
+;    
+    mov fs:[edx].msi_handler_data,ds
+    mov fs:[edx].msi_handler_ads,edi
+    mov word ptr fs:[edx].msi_handler_ads+4,es
+;    
+    pop edx
+    pop ax
+    pop fs
+    ret
+SetupMsiHandler  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;    NAME:           Init
 ;
 ;    DESCRIPTION:    Init module
@@ -551,56 +647,23 @@ test_thread_name  DB 'Nasm Test Thread', 0
 long_idt_size   DW 0FFFh
 long_idt_base   DD IDT_LINEAR
 
-test_irq1    Proc far
+test_irq    Proc far
     ret
-test_irq1    Endp
-
-test_irq2    Proc far
-    ret
-test_irq2    Endp
-
-test_irq3    Proc far
-    ret
-test_irq3    Endp
-
-test_irq4    Proc far
-    ret
-test_irq4    Endp
+test_irq    Endp
 
 test_thread:
     mov al,80h
-    call CreateIsaIrq
+    call CreateMsi
 ;
     xor dl,dl
     SetupLongIntGate
-;    
     int 3
+;    
     mov dx,cs
     mov es,dx
     mov dx,apic_data_sel
     mov ds,dx
-    mov edi,OFFSET test_irq1
-    call SetupIsaIrqHandler
-;    
-    mov dx,cs
-    mov es,dx
-    mov dx,task_data_sel
-    mov ds,dx
-    mov edi,OFFSET test_irq2
-    call SetupIsaIrqHandler
-;    
-    mov dx,cs
-    mov es,dx
-    mov dx,gdt_sel
-    mov ds,dx
-    mov edi,OFFSET test_irq3
-    call SetupIsaIrqHandler
-;    
-    mov dx,cs
-    mov es,dx
-    mov dx,system_data_sel
-    mov ds,dx
-    mov edi,OFFSET test_irq4
+    mov edi,OFFSET test_irq
     call SetupIsaIrqHandler
 ;    
     mov bx,ss
@@ -1989,8 +2052,8 @@ IsaIrqEntry:
     mov es,eax
     mov fs,eax
 ;
-;    EnterLongInt
-;    sti
+    EnterLongInt
+    sti
     push rax
 
 IsaIrqPatchLinear:
@@ -2006,8 +2069,8 @@ IsaIrqPatchLinear:
 IsaIrqExit:
     pop rax
     cli
-;    SendEoi
-;    LeaveLongInt
+    SendEoi
+    LeaveLongInt
 ;
     pop rax
     mov fs,eax
@@ -2059,6 +2122,81 @@ IsaIrqChainEntry:
 
 IsaIrqChainEnd:
 
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           MSI handler
+;
+;               DESCRIPTION:    Code for creating MSI interrupt handlers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MsiStart:
+
+msi_handler     msi_handler_struc <>
+
+MsiEntry:
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    push rbp
+;
+    mov eax,ds
+    push rax
+;
+    mov eax,es
+    push rax
+;            
+    mov eax,fs
+    push rax
+;
+    xor eax,eax
+    mov ds,eax
+    mov es,eax
+    mov fs,eax
+;
+;    EnterLongInt
+;    SendEoi
+;    sti
+    push rax
+
+MsiPatchLinear:
+    mov edi,0
+;   
+    mov ax,[edi].msi_handler_data
+    int 3
+    call fword ptr [edi].msi_handler_ads
+;
+    cli    
+;    LeaveLongInt
+;
+    pop rax
+    mov fs,eax
+;
+    pop rax
+    mov es,eax
+;
+    pop rax
+    mov ds,eax
+;
+    pop rbp
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    iretq
+    
+MsiDefault:
+    int 3
+    retf
+
+MsiEnd:
 
 
 comp_dest:
