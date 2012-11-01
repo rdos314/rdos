@@ -65,6 +65,7 @@ isa_irq_handler_struc   STRUC
 isa_irq_handler_ads     DD ?,?
 isa_irq_chain           DQ ?
 isa_irq_handler_data    DW ?
+isa_irq_size            DW ?
 isa_irq_detect_nr       DB ?
 
 isa_irq_handler_struc   ENDS
@@ -341,13 +342,16 @@ CreateIsaIrq   Proc near
     mov dword ptr es:[edx].isa_irq_chain,eax
     mov dword ptr es:[edx].isa_irq_chain+4,0
 ;
+    mov eax,OFFSET IsaIrqEnd - OFFSET IsaIrqStart
+    mov es:[edx].isa_irq_size,ax
+;
     mov eax,OFFSET IsaIrqDetect - OFFSET IsaIrqStart    
     add eax,edx
     mov dword ptr es:[edx].isa_irq_handler_ads,eax
     mov word ptr es:[edx].isa_irq_handler_ads+4,long_kernel_code_sel
     mov word ptr es:[edx].isa_irq_handler_data,0
     pop ax
-    mov es:[edx].isa_irq_detect_nr,al
+    mov es:[edx].isa_irq_detect_nr,al    
 ;
     mov esi,OFFSET IsaIrqEntry - OFFSET IsaIrqStart
     add esi,edx
@@ -361,6 +365,113 @@ CreateIsaIrq   Proc near
     pop ds
     ret
 CreateIsaIrq   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SetupIsaIrqHandler
+;
+;       DESCRIPTION:    Setup IRQ handler
+;
+;       PARAMETERS:     ESI         Linear address of entry-point
+;                       DS          Handler data
+;                       ES:EDI      Handler address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupIsaIrqHandler   Proc near
+    push ds
+    push es
+    pushad
+;
+    push ds
+    push es
+    push edi
+;    
+    mov ax,cs
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+;    
+    mov edx,esi
+    sub edx,OFFSET IsaIrqEntry - OFFSET IsaIrqStart
+;
+    mov al,es:[edx].isa_irq_detect_nr
+    cmp al,-1
+    jne sirhReplace
+;
+    movzx ecx,es:[edx].isa_irq_size
+    mov eax,ecx
+    add ecx,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
+    cmp ecx,1000h
+    ja sirhFail
+;
+    mov es:[edx].isa_irq_size,cx
+    mov edi,edx
+    add edi,eax
+    mov ebp,edi
+;    
+    mov esi,OFFSET IsaIrqChainStart
+    mov ecx,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
+    rep movs byte ptr es:[edi],ds:[esi]
+;    
+    pop esi
+    pop ds
+    pop ebx
+;    
+    mov es:[ebp].isa_irch_handler_data,bx
+    mov es:[ebp].isa_irch_handler_ads,esi
+    mov word ptr es:[ebp].isa_irch_handler_ads+4,ds
+;
+    mov eax,ebp
+    sub eax,edx
+    add eax,OFFSET IsaIrqChainEntry - OFFSET IsaIrqChainStart
+    sub eax,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
+    cmp eax,OFFSET IsaIrqEnd - OFFSET IsaIrqStart
+    jae sirhChainPrev
+;    
+    add eax,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
+    add eax,edx
+    xchg eax,dword ptr es:[edx].isa_irq_chain
+    mov dword ptr es:[ebp].isa_irch_chain,eax
+;
+    xor eax,eax
+    xchg eax,dword ptr es:[edx].isa_irq_chain+4
+    mov dword ptr es:[ebp].isa_irch_chain+4,eax
+    jmp sirhDone
+
+sirhChainPrev:
+    mov edx,ebp
+    sub edx,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
+    add eax,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
+    xchg eax,dword ptr es:[edx].isa_irch_chain
+    mov dword ptr es:[ebp].isa_irch_chain,eax
+    xchg eax,dword ptr es:[edx].isa_irch_chain+4
+    mov dword ptr es:[ebp].isa_irch_chain+4,eax
+    jmp sirhDone
+        
+sirhReplace:    
+    pop esi
+    pop ds
+    pop ebx
+;    
+    mov es:[edx].isa_irq_handler_data,bx
+    mov es:[edx].isa_irq_handler_ads,esi
+    mov word ptr es:[edx].isa_irq_handler_ads+4,ds
+    mov es:[edx].isa_irq_detect_nr,-1
+    jmp sirhDone
+
+sirhFail:
+    pop esi
+    pop ds
+    pop ebx
+    
+sirhDone:
+    popad
+    pop es
+    pop ds
+    ret
+SetupIsaIrqHandler  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -437,13 +548,35 @@ test_thread_name  DB 'Nasm Test Thread', 0
 long_idt_size   DW 0FFFh
 long_idt_base   DD IDT_LINEAR
 
+test_irq1    Proc far
+    ret
+test_irq1    Endp
+
+test_irq2    Proc far
+    ret
+test_irq2    Endp
+
 test_thread:
-    int 3
     mov al,80h
     call CreateIsaIrq
 ;
     xor dl,dl
     SetupLongIntGate
+;    
+    int 3
+    mov dx,cs
+    mov es,dx
+    mov dx,apic_data_sel
+    mov ds,dx
+    mov edi,OFFSET test_irq1
+    call SetupIsaIrqHandler
+;    
+    mov dx,cs
+    mov es,dx
+    mov dx,task_data_sel
+    mov ds,dx
+    mov edi,OFFSET test_irq2
+    call SetupIsaIrqHandler
 ;    
     mov bx,ss
     GetSelectorBaseSize
@@ -1888,13 +2021,13 @@ isa_irch_handler      isa_irq_chain_struc <>
 
 IsaIrqChainEntry:
     push rbx
-    mov ds,[ebx+edi].isa_irch_handler_data
-    call fword ptr [ebx+edi].isa_irch_handler_ads
+    mov ds,[ebx].isa_irch_handler_data
+    call fword ptr [ebx].isa_irch_handler_ads
     pop rbx
 ;
     mov esi,ebx
     add ebx,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
-    jmp [esi+edi].isa_irch_chain
+    jmp [esi].isa_irch_chain
 
 IsaIrqChainEnd:
 
