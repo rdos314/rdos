@@ -704,6 +704,63 @@ seDone:
 send_eoi    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           NotifyIrq
+;
+;           description:    Notify IRQ detected
+;
+;           PARAMETERS:     AL      Int
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_irq_name   DB 'Notify IRQ', 0
+
+notify_irq   Proc far
+    push ds
+    push ax
+    push bx
+    push cx
+;   
+    push ax 
+    cmp al,8
+    jae niDo2
+
+niDo1:    
+    mov ah,1
+    mov cl,al
+    shl ah,cl
+    in al,INT0_MASK
+    or al,ah
+    out INT0_MASK,al
+    jmp niUpdate
+
+niDo2:    
+    sub al,8
+    mov ah,1
+    mov cl,al
+    shl ah,cl
+    in al,INT1_MASK
+    or al,ah
+    out INT1_MASK,al
+
+niUpdate:    
+    mov ax,SEG data
+    mov ds,ax
+    pop ax
+;
+    mov bx,OFFSET detected_irqs
+    movzx ax,al
+    bts ds:[bx],ax
+;
+    pop cx
+    pop bx
+    pop ax
+    pop ds
+    retf32
+notify_irq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           StartSysTimer
@@ -1105,6 +1162,12 @@ init_global_int:
     mov edi,OFFSET send_eoi_name
     xor cl,cl
     mov ax,send_eoi_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET notify_irq
+    mov edi,OFFSET notify_irq_name
+    xor cl,cl
+    mov ax,notify_irq_nr
     RegisterOsGate
 ;
     mov esi,OFFSET disable_all_irq

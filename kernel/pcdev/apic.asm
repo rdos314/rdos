@@ -1478,6 +1478,65 @@ send_eoi Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           NotifyIrq
+;
+;       DESCRIPTION:    Notify IRQ occurred
+;
+;       PARAMETERS:     AL      Int
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_irq_name    DB 'Notify IRQ',0
+
+notify_irq  Proc far
+    push ds
+    push es
+    push eax
+    push bx
+    push dx
+;    
+    movzx bx,al
+    mov ax,SEG data
+    mov ds,ax
+    shl bx,3
+    add bx,OFFSET global_int_arr
+    mov al,ds:[bx].gi_ioapic_id
+    mov es,ds:[bx].gi_ioapic_sel
+;       
+    mov bl,10h
+    add bl,al
+    add bl,al
+;    
+    LockIoApic
+    mov es:ioapic_regsel,bl
+    mov eax,10000h
+    mov es:ioapic_window,eax
+;
+    inc bl
+    mov es:ioapic_regsel,bl
+    xor eax,eax
+    mov es:ioapic_window,eax
+    UnlockIoApic
+;
+    movzx dx,cs:isa_irq_detect_nr
+    cmp dx,64
+    jae niDone
+;    
+    mov bx,OFFSET detected_irqs
+    bts ds:[bx],dx
+
+niDone:
+    pop dx
+    pop bx
+    pop eax
+    pop es
+    pop ds
+    retf32
+notify_irq  Endp    
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           SendNmi
 ;
 ;       DESCRIPTION:    Send NMI request
@@ -3589,6 +3648,12 @@ init    PROC far
     mov edi,OFFSET send_eoi_name
     xor cl,cl
     mov ax,send_eoi_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET notify_irq
+    mov edi,OFFSET notify_irq_name
+    xor cl,cl
+    mov ax,notify_irq_nr
     RegisterOsGate
 ;
     mov esi,OFFSET send_nmi

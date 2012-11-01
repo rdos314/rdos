@@ -1608,6 +1608,11 @@ SendEoi MACRO
     OsGate send_eoi_nr
                     ENDM
 
+;       AL              IRQ NR
+NotifyIrq MACRO
+    OsGate notify_irq_nr
+                    ENDM
+
 ; OUT EAX     Active IRQ lines
 DisableAllIrq   MACRO
     OsGate disable_all_irq_nr
