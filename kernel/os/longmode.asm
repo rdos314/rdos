@@ -490,7 +490,7 @@ SetupIsaIrqHandler  Endp
 ;
 ;       DESCRIPTION:    Create new MSI context
 ;
-;       RETURNS:        DS:ESI       Address of entry-point
+;       RETURNS:        ESI       Address of entry-point
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -503,10 +503,10 @@ CreateMsi   Proc near
     push edx
     push edi
 ;
-    mov eax,OFFSET MsiEnd - OFFSET MsiStart
-    AllocateSmallLinear
+    mov eax,1000h
+    AllocateBigLinear
+    mov ecx,OFFSET MsiEnd - OFFSET MsiStart
 ;
-    mov ecx,eax
     mov ax,cs
     mov ds,ax
     mov ax,flat_sel
@@ -652,12 +652,12 @@ test_irq    Proc far
 test_irq    Endp
 
 test_thread:
-    mov al,80h
-    call CreateMsi
-;
-    xor dl,dl
-    SetupLongIntGate
     int 3
+    mov al,90h
+    call CreateIsaIrq
+;
+    xor bl,bl
+    SetupLongIntGate
 ;    
     mov dx,cs
     mov es,dx
@@ -1452,6 +1452,7 @@ WriteErrorCode  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 do_fault:
+    cli
     push r15
     mov r15,OFFSET regs
     mov [r15+reg_fault],ax
@@ -2145,6 +2146,7 @@ MsiEntry:
     push rdi
     push rbp
 ;
+    int 3
     mov eax,ds
     push rax
 ;
@@ -2167,8 +2169,7 @@ MsiEntry:
 MsiPatchLinear:
     mov edi,0
 ;   
-    mov ax,[edi].msi_handler_data
-    int 3
+    mov ds,[edi].msi_handler_data
     call fword ptr [edi].msi_handler_ads
 ;
     cli    
@@ -2204,6 +2205,7 @@ comp_dest:
     dw long_dev_code_sel
     
 test64:
+    int 3
     db 0FFh
     db 1Ch
     db 25h
