@@ -1640,16 +1640,6 @@ RequestIrqHandler    MACRO
     OsGate request_irq_handler_nr
                     ENDM
 
-; IN  AH        Priority
-; IN  BH        Bus
-; IN  BL        Device
-; IN  CH        Function
-; IN  DS        Data passed to handler
-; IN  ES:EDI    Handler address
-RequestPciIrqHandler    MACRO
-    OsGate request_pci_irq_handler_nr
-                    ENDM
-
 SetupIrqDetect  MACRO
     OsGate setup_irq_detect_nr
                     ENDM

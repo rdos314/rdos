@@ -4200,12 +4200,6 @@ init    PROC far
     mov ax,request_irq_handler_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET request_pci_irq_handler
-    mov edi,OFFSET request_pci_irq_handler_name
-    xor cl,cl
-    mov ax,request_pci_irq_handler_nr
-    RegisterOsGate
-;
     mov esi,OFFSET register_msi
     mov edi,OFFSET register_msi_name
     xor cl,cl
