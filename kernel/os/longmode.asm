@@ -679,26 +679,7 @@ test_thread_name  DB 'Nasm Test Thread', 0
 long_idt_size   DW 0FFFh
 long_idt_base   DD IDT_LINEAR
 
-test_irq    Proc far
-    int 3
-    ret
-test_irq    Endp
-
 test_thread:
-    int 3
-    mov al,80h
-    CreateLongMsi
-;
-    xor bl,bl
-    SetupLongIntGate
-;    
-    mov dx,cs
-    mov es,dx
-    mov dx,apic_data_sel
-    mov ds,dx
-    mov edi,OFFSET test_irq
-    AddLongMsi
-;    
     mov bx,ss
     GetSelectorBaseSize
     add edx,esp
@@ -798,8 +779,6 @@ test32:
 compat_test:
     mov eax,task_data_sel
     mov ds,ax
-    int 80h
-    int 3
     retf
 
     option PROCALIGN:32 
@@ -2241,7 +2220,7 @@ test64:
     db 1Ch
     db 25h
     dd OFFSET comp_dest
-    int 3
+    sti
 
 stopl:
     jmp stopl        
