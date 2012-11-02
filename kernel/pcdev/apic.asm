@@ -2770,7 +2770,15 @@ siPreemptOk:
     mov al,82h
     mov esi,OFFSET hpet_int
     SetupIntGate
-;
+;    
+    mov ax,setup_long_tlb_flush_int_nr
+    IsValidOsGate
+    jc siTlbFlushOk
+;    
+    mov al,81h
+    SetupLongTlbFlushInt
+
+siTlbFlushOk:
     mov al,83h
     mov esi,OFFSET mixed_int
     SetupIntGate

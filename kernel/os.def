@@ -561,5 +561,6 @@ add_long_msi_nr             = 471
 setup_long_spurious_int_nr  = 472
 setup_long_timer_int_nr     = 473
 setup_long_preempt_int_nr   = 474
+setup_long_tlb_flush_int_nr = 475
 
 osgate_entries				= 480

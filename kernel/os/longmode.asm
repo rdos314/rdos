@@ -312,6 +312,28 @@ setup_long_preempt_int Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           SetupLongTlbFlushInt
+;
+;   DESCRIPTION:    Setup long-mode TLB flush int
+;
+;   PARAMETERS:     AL      Interrupt #
+;                   BL      DPL
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_long_tlb_flush_int_name   DB 'Setup Long TLB Flush Int', 0
+    
+setup_long_tlb_flush_int  proc far
+    push esi
+    mov esi,OFFSET tlb_flush_int
+    SetupLongIntGate
+    pop esi
+    ret
+setup_long_tlb_flush_int Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           InitIdt
 ;
 ;   DESCRIPTION:    Init 64-bit IDT
@@ -712,6 +734,12 @@ init    proc far
     mov edi,OFFSET setup_long_preempt_int_name
     xor cl,cl
     mov ax,setup_long_preempt_int_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET setup_long_tlb_flush_int
+    mov edi,OFFSET setup_long_tlb_flush_int_name
+    xor cl,cl
+    mov ax,setup_long_tlb_flush_int_nr
     RegisterOsGate
 ;
     mov edi,init_task
@@ -2412,6 +2440,59 @@ preempt_int:
 ;
     SendEoi
     PreemptExpired
+;    
+    pop rax
+    mov fs,eax
+;
+    pop rax
+    mov es,eax
+;
+    pop rax
+    mov ds,eax
+;
+    pop rbp
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    iretq
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           tlb_flush_int
+;
+;   DESCRIPTION:    TLB flush handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+tlb_flush_int:
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    push rbp
+;
+    mov eax,ds
+    push rax
+;
+    mov eax,es
+    push rax
+;            
+    mov eax,fs
+    push rax
+;
+    xor eax,eax
+    mov ds,eax
+    mov es,eax
+    mov fs,eax
+;
+    SendEoi
+    NotifyFlushTlb    
 ;    
     pop rax
     mov fs,eax
