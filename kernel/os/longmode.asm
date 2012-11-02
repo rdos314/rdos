@@ -246,6 +246,28 @@ setup_long_int_gate  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           SetupLongSpuriousInt
+;
+;   DESCRIPTION:    Setup long-mode spurious int
+;
+;   PARAMETERS:     AL      Interrupt #
+;                   BL      DPL
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_long_spurious_int_name   DB 'Setup Long Spurious Int', 0
+    
+setup_long_spurious_int  proc far
+    push esi
+    mov esi,OFFSET spurious_int
+    SetupLongIntGate
+    pop esi
+    ret
+setup_long_spurious_int Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           InitIdt
 ;
 ;   DESCRIPTION:    Init 64-bit IDT
@@ -630,10 +652,21 @@ init    proc far
     mov ax,setup_long_int_gate_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET setup_long_spurious_int
+    mov edi,OFFSET setup_long_spurious_int_name
+    xor cl,cl
+    mov ax,setup_long_spurious_int_nr
+    RegisterOsGate
+;
     mov edi,init_task
     HookInitTasking    
 ;    
     call InitIdt
+;
+    mov esi,OFFSET nmi_int
+    mov al,2
+    xor bl,bl
+    SetupLongIntGate    
     ret
 init    endp
     
@@ -1425,6 +1458,7 @@ WriteErrorCode  proc near
     jz wecNotIdt
 ;    
     mov edi,OFFSET ft_idt
+    shr ax,2
     jmp wecDo
 
 wecNotIdt:
@@ -2172,9 +2206,9 @@ MsiEntry:
     mov es,eax
     mov fs,eax
 ;
-;    EnterLongInt
-;    SendEoi
-;    sti
+    EnterLongInt
+    SendEoi
+    sti
     push rax
 
 MsiPatchLinear:
@@ -2185,7 +2219,7 @@ MsiPatchLinear:
 ;
     pop rax
     cli    
-;    LeaveLongInt
+    LeaveLongInt
 ;
     pop rax
     mov fs,eax
@@ -2209,7 +2243,31 @@ MsiDefault:
     retf
 
 MsiEnd:
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           nmi_int
+;
+;   DESCRIPTION:    NMI handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+nmi_int:
+    SendEoi
+    iretq
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           spurious_int
+;
+;   DESCRIPTION:    Spurious handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+spurious_int:
+    iretq
 
 comp_dest:
     dd OFFSET compat_test

@@ -2730,7 +2730,15 @@ SetupInts Proc near
     mov al,0Fh
     mov esi,OFFSET spurious_int
     SetupIntGate
-;
+;    
+    mov ax,setup_long_spurious_int_nr
+    IsValidOsGate
+    jc siSpurOk
+;    
+    mov al,0Fh
+    SetupLongSpuriousInt
+
+siSpurOk:
     mov al,40h
     mov esi,OFFSET timer_int
     SetupIntGate

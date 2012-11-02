@@ -558,4 +558,6 @@ add_long_irq_nr             = 469
 create_long_msi_nr          = 470
 add_long_msi_nr             = 471
 
+setup_long_spurious_int_nr  = 472
+
 osgate_entries				= 480
