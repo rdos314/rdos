@@ -652,19 +652,19 @@ test_irq    Proc far
 test_irq    Endp
 
 test_thread:
-    int 3
-    mov al,90h
-    call CreateIsaIrq
+    mov al,80h
+    call CreateMsi
 ;
     xor bl,bl
     SetupLongIntGate
 ;    
+    int 3
     mov dx,cs
     mov es,dx
     mov dx,apic_data_sel
     mov ds,dx
     mov edi,OFFSET test_irq
-    call SetupIsaIrqHandler
+    call SetupMsiHandler
 ;    
     mov bx,ss
     GetSelectorBaseSize
@@ -769,7 +769,7 @@ compat_test:
     int 3
     retf
 
-    option PROCALIGN:32    
+    option PROCALIGN:32 
 
 code32_end  Proc near
 code32_end  Endp
@@ -2146,7 +2146,6 @@ MsiEntry:
     push rdi
     push rbp
 ;
-    int 3
     mov eax,ds
     push rax
 ;
@@ -2172,6 +2171,7 @@ MsiPatchLinear:
     mov ds,[edi].msi_handler_data
     call fword ptr [edi].msi_handler_ads
 ;
+    pop rax
     cli    
 ;    LeaveLongInt
 ;
@@ -2194,7 +2194,6 @@ MsiPatchLinear:
     iretq
     
 MsiDefault:
-    int 3
     retf
 
 MsiEnd:
@@ -2205,7 +2204,6 @@ comp_dest:
     dw long_dev_code_sel
     
 test64:
-    int 3
     db 0FFh
     db 1Ch
     db 25h
