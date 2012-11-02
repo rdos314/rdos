@@ -1927,6 +1927,17 @@ request_msi_handler  Proc far
     pop ds    
     call SetupMsiHandler
 ;
+    push ax
+    mov ax,create_long_msi_nr
+    IsValidOsGate
+    pop ax
+    jc rmhDone
+;
+    CreateLongMsi
+    SetupLongIntGate
+    AddLongMsi
+
+rmhDone:
     pop esi
     pop bx
     retf32
