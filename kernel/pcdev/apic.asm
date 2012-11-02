@@ -1096,6 +1096,13 @@ rihPrioOk:
     push ds
     push bx
 ;
+    mov esi,fs:[bx].gi_long_ads
+    or esi,esi
+    jz rihLongPrioOk
+;
+    SetupLongIntGate
+
+rihLongPrioOk:    
     mov ds,fs:[bx].gi_handler_sel
     mov esi,OFFSET IsaIrqEntry - OFFSET IsaIrqStart
     xor bl,bl
