@@ -2783,6 +2783,14 @@ siTlbFlushOk:
     mov esi,OFFSET mixed_int
     SetupIntGate
 ;    
+    mov ax,setup_long_preempt_timer_int_nr
+    IsValidOsGate
+    jc siPreemptTimerOk
+;    
+    mov al,83h
+    SetupLongPreemptTimerInt
+
+siPreemptTimerOk:
     popad
     pop ds
     ret

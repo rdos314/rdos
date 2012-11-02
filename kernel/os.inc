@@ -1709,6 +1709,11 @@ SetupLongTlbFlushInt   MACRO
     OsGate setup_long_tlb_flush_int_nr
                     ENDM
 
+; IN  AL        IRQ #
+SetupLongPreemptTimerInt   MACRO
+    OsGate setup_long_preempt_timer_int_nr
+                    ENDM
+
 ;;;;;;;;; TIME & DATE ;;;;;;;;;;;;;
 
 ;       EDX:EAX     SYSTEM TIME
