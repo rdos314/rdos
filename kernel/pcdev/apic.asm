@@ -2714,46 +2714,43 @@ tlb_flush_int:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ipi_tab:
-;
-;                       int #   Entry                   
-;
-pi02   DW      02h,    OFFSET nmi_int
-pi0F   DW      0Fh,    OFFSET spurious_int
-pi40   DW      40h,    OFFSET timer_int
-pi80   DW      80h,    OFFSET preempt_int
-pi81   DW      81h,    OFFSET tlb_flush_int
-pi82   DW      82h,    OFFSET hpet_int
-pi83   DW      83h,    OFFSET mixed_int
-       DW      0FFFFh
-
-;
-; tabell offsets
-;
-ipi_nr          EQU 0
-ipi_entry       EQU 2
 
 SetupInts Proc near
     push ds
     pushad
-;    
+
     mov ax,cs
     mov ds,ax
     xor bl,bl
-    mov di,OFFSET ipi_tab
-
-ipiLoop:
-    mov ax,cs:[di]
-    cmp ax,0FFFFh
-    jz ipiDone
 ;
-    mov al,cs:[di].ipi_nr
-    movzx esi, word ptr cs:[di].ipi_entry
+    mov al,2
+    mov esi,OFFSET nmi_int
     SetupIntGate
-    add di,4
-    jmp ipiLoop
-    
-ipiDone:
+;
+    mov al,0Fh
+    mov esi,OFFSET spurious_int
+    SetupIntGate
+;
+    mov al,40h
+    mov esi,OFFSET timer_int
+    SetupIntGate
+;
+    mov al,80h
+    mov esi,OFFSET preempt_int
+    SetupIntGate
+;
+    mov al,81h
+    mov esi,OFFSET tlb_flush_int
+    SetupIntGate
+;
+    mov al,82h
+    mov esi,OFFSET hpet_int
+    SetupIntGate
+;
+    mov al,83h
+    mov esi,OFFSET mixed_int
+    SetupIntGate
+;    
     popad
     pop ds
     ret
