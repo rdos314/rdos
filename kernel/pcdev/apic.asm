@@ -961,6 +961,7 @@ request_irq_handler Proc far
     shl bx,4
     mov dx,SEG data
     mov fs,dx
+    mov esi,fs:[bx].global_int_arr.gi_long_ads
     mov bx,fs:[bx].global_int_arr.gi_handler_sel
     or bx,bx
     jz rihDone
@@ -979,6 +980,12 @@ rihPrioHighOk:
 rihPrioLowOk:
     push ax
 ;   
+    or esi,esi
+    jz rihLongOk
+;
+    AddLongIrq
+
+rihLongOk:
     mov fs,bx
     mov edx,fs:isa_irq_linear
     mov ax,flat_sel
