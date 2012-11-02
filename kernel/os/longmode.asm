@@ -503,9 +503,9 @@ CreateMsi   Proc near
     push edx
     push edi
 ;
-    mov eax,1000h
-    AllocateBigLinear
     mov ecx,OFFSET MsiEnd - OFFSET MsiStart
+    mov eax,ecx
+    AllocateSmallLinear
 ;
     mov ax,cs
     mov ds,ax
