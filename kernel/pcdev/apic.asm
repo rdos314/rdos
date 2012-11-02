@@ -124,6 +124,7 @@ global_int_struc    STRUC
 
 gi_handler_sel      DW ?
 gi_ioapic_sel       DW ?
+gi_long_ads         DD ?
 gi_ioapic_id        DB ?
 gi_int_num          DB ?
 gi_prio             DB ?
@@ -218,7 +219,7 @@ ioapic_arr          DW 16 DUP(?)
 
 redir_arr           DB 16 DUP(?)
 
-global_int_arr      DD 256 DUP(?,?)
+global_int_arr      DD 256 DUP(?,?,?,?)
 
 core_irq_arr        DW 256 DUP(?)
 
@@ -509,7 +510,7 @@ get_ioapic_state    Proc far
     mov ds,bx
 ;
     movzx bx,al
-    shl bx,3    
+    shl bx,4
     add bx,OFFSET global_int_arr
 ;    
     mov al,ds:[bx].gi_ioapic_id
@@ -812,7 +813,7 @@ IsaIrqDetect:
     mov ax,SEG data
     mov ds,ax
     movzx bx,cs:isa_irq_detect_nr
-    shl bx,3
+    shl bx,4
     add bx,OFFSET global_int_arr
     mov al,ds:[bx].gi_ioapic_id
     mov es,ds:[bx].gi_ioapic_sel
@@ -957,7 +958,7 @@ request_irq_handler Proc far
     pushad
 ;
     movzx bx,al
-    shl bx,3
+    shl bx,4
     mov dx,SEG data
     mov fs,dx
     mov bx,fs:[bx].global_int_arr.gi_handler_sel
@@ -1063,7 +1064,7 @@ rihChainDone:
     pop ax
 ;    
     movzx bx,al
-    shl bx,3
+    shl bx,4
     add bx,OFFSET global_int_arr
     mov dx,SEG data
     mov fs,dx
@@ -1499,7 +1500,7 @@ notify_irq  Proc far
     movzx bx,al
     mov ax,SEG data
     mov ds,ax
-    shl bx,3
+    shl bx,4
     add bx,OFFSET global_int_arr
     mov al,ds:[bx].gi_ioapic_id
     mov dx,ds:[bx].gi_ioapic_sel
@@ -1673,7 +1674,7 @@ edLoop:
     UnlockIoApic
 
 edNext:
-    add si,8
+    add si,16
     loop edLoop
 ;
     popad
@@ -2754,7 +2755,7 @@ InitIoApic    Proc near
     push es
     mov ax,SEG data
     mov es,ax
-    mov cx,256 * 2
+    mov cx,256 * 4
     xor eax,eax
     mov di,OFFSET global_int_arr
     rep stosd        
@@ -2765,14 +2766,15 @@ InitIoApic    Proc near
 
 init_ioapic_isa_trigger_mode:
     mov [di].gi_trigger_mode,0
-    add di,8
+    mov ds:[bx].gi_long_ads,0
+    add di,16
     loop init_ioapic_isa_trigger_mode
 ;
     mov cx,256-16
 
 init_ioapic_pci_trigger_mode:
     mov [di].gi_trigger_mode,0A0h
-    add di,8
+    add di,16
     loop init_ioapic_pci_trigger_mode
 ;        
     mov eax,1000h
@@ -2820,14 +2822,14 @@ init_ioapic_table_loop:
     inc ds:ioapic_count
 ;
     mov ebx,es:[di].aio_int_base
-    shl bx,3
+    shl bx,4
     add bx,OFFSET global_int_arr
     xor dl,dl
 
 init_ioapic_loop:
     mov ds:[bx].gi_ioapic_sel,ax
     mov ds:[bx].gi_ioapic_id,dl
-    add bx,8
+    add bx,16
     inc dl
     loop init_ioapic_loop
 ;    
@@ -2877,6 +2879,22 @@ create_irq_loop:
     push bx
 ;    
     push ax
+    mov ds:[bx].gi_long_ads,0
+;    
+    mov ax,create_long_irq_nr
+    IsValidOsGate
+    jc create_irq32
+;
+    mov al,dl
+    CreateLongIrq
+    mov ds:[bx].gi_long_ads,esi
+    pop ax
+;
+    push ax
+    xor bl,bl
+    SetupLongIntGate
+    
+create_irq32:
     mov al,dl
     call CreateIsaIrq
     pop ax
@@ -2890,7 +2908,7 @@ create_irq_loop:
     mov ds:[bx].gi_handler_sel,ax
 
 create_irq_next:
-    add bx,8
+    add bx,16
     inc dl
     loop create_irq_loop
 ;
@@ -2934,7 +2952,7 @@ init_apic_loop:
     jae init_apic_next
 ;
     mov bx,ax
-    shl bx,3
+    shl bx,4
     add bx,OFFSET global_int_arr
 ;
     mov ax,es:[di].ao_flags
