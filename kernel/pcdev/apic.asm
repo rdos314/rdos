@@ -2754,7 +2754,15 @@ siTimerOk:
     mov al,80h
     mov esi,OFFSET preempt_int
     SetupIntGate
-;
+;    
+    mov ax,setup_long_preempt_int_nr
+    IsValidOsGate
+    jc siPreemptOk
+;    
+    mov al,80h
+    SetupLongPreemptInt
+
+siPreemptOk:
     mov al,81h
     mov esi,OFFSET tlb_flush_int
     SetupIntGate

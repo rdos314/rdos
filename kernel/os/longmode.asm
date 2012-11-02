@@ -290,6 +290,28 @@ setup_long_timer_int Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           SetupLongPreemptInt
+;
+;   DESCRIPTION:    Setup long-mode preemption int
+;
+;   PARAMETERS:     AL      Interrupt #
+;                   BL      DPL
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_long_preempt_int_name   DB 'Setup Long Preempt Int', 0
+    
+setup_long_preempt_int  proc far
+    push esi
+    mov esi,OFFSET preempt_int
+    SetupLongIntGate
+    pop esi
+    ret
+setup_long_preempt_int Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           InitIdt
 ;
 ;   DESCRIPTION:    Init 64-bit IDT
@@ -684,6 +706,12 @@ init    proc far
     mov edi,OFFSET setup_long_timer_int_name
     xor cl,cl
     mov ax,setup_long_timer_int_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET setup_long_preempt_int
+    mov edi,OFFSET setup_long_preempt_int_name
+    xor cl,cl
+    mov ax,setup_long_preempt_int_nr
     RegisterOsGate
 ;
     mov edi,init_task
@@ -2331,6 +2359,59 @@ timer_int:
 ;
     SendEoi
     TimerExpired
+;    
+    pop rax
+    mov fs,eax
+;
+    pop rax
+    mov es,eax
+;
+    pop rax
+    mov ds,eax
+;
+    pop rbp
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    iretq
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           Preempt int
+;
+;   DESCRIPTION:    preemption int handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+preempt_int:
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    push rbp
+;
+    mov eax,ds
+    push rax
+;
+    mov eax,es
+    push rax
+;            
+    mov eax,fs
+    push rax
+;
+    xor eax,eax
+    mov ds,eax
+    mov es,eax
+    mov fs,eax
+;
+    SendEoi
+    PreemptExpired
 ;    
     pop rax
     mov fs,eax
