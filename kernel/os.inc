@@ -1664,6 +1664,31 @@ PollIrqDetect   MACRO
     OsGate poll_irq_detect_nr
                     ENDM
 
+; IN  AL        IRQ #
+; OUT ESI       IRQ entrypoint
+CreateLongIrq   MACRO
+    OsGate create_long_irq_nr
+                    ENDM
+
+; IN  ESI       IRQ entrypoint
+; IN  DS        Handler data
+; IN  ES:EDI    Handler address
+AddLongIrq   MACRO
+    OsGate add_long_irq_nr
+                    ENDM
+
+; OUT ESI       Handler address
+CreateLongMsi   MACRO
+    OsGate create_long_msi_nr
+                    ENDM
+
+; IN  ESI       MSI entrypoint
+; IN  DS        Handler data
+; IN  ES:EDI    Handler address
+AddLongMsi   MACRO
+    OsGate add_long_msi_nr
+                    ENDM
+
 ;;;;;;;;; TIME & DATE ;;;;;;;;;;;;;
 
 ;       EDX:EAX     SYSTEM TIME

@@ -308,7 +308,7 @@ InitIdt Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CreateIsaIrq
+;       NAME:           CreateLongIrq
 ;
 ;       DESCRIPTION:    Create new ISA IRQ context
 ;
@@ -318,7 +318,9 @@ InitIdt Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateIsaIrq   Proc near
+create_long_irq_name    DB 'Create Long IRQ', 0
+
+create_long_irq   Proc far
     push ds
     push es
     push eax
@@ -371,14 +373,14 @@ CreateIsaIrq   Proc near
     pop es
     pop ds
     ret
-CreateIsaIrq   Endp
+create_long_irq   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           SetupIsaIrqHandler
+;       NAME:           AddLongIrq
 ;
-;       DESCRIPTION:    Setup IRQ handler
+;       DESCRIPTION:    Add IRQ handler
 ;
 ;       PARAMETERS:     ESI         Linear address of entry-point
 ;                       DS          Handler data
@@ -386,7 +388,9 @@ CreateIsaIrq   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupIsaIrqHandler   Proc near
+add_long_irq_name   DB 'Add Long IRQ', 0
+
+add_long_irq   Proc far
     push ds
     push es
     pushad
@@ -481,12 +485,12 @@ sirhDone:
     pop es
     pop ds
     ret
-SetupIsaIrqHandler  Endp
+add_long_irq  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CreateMsi
+;       NAME:           CreateLongMsi
 ;
 ;       DESCRIPTION:    Create new MSI context
 ;
@@ -494,7 +498,9 @@ SetupIsaIrqHandler  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateMsi   Proc near
+create_long_msi_name DB 'Create Long MSI', 0
+
+create_long_msi   Proc far
     push ds
     push es
     push eax
@@ -536,14 +542,14 @@ CreateMsi   Proc near
     pop es
     pop ds
     ret
-CreateMsi   Endp
+create_long_msi   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           SetupMsiHandler
+;       NAME:           AddLongMsi
 ;
-;       DESCRIPTION:    Setup MSI handler
+;       DESCRIPTION:    Add MSI handler
 ;
 ;       PARAMETERS:     ESI         Linear address of entry-point
 ;                       DS          Handler data
@@ -551,7 +557,9 @@ CreateMsi   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupMsiHandler   Proc near
+add_long_msi_name   DB 'Add Long MSI', 0
+
+add_long_msi   Proc far
     push fs
     push ax
     push edx
@@ -570,7 +578,7 @@ SetupMsiHandler   Proc near
     pop ax
     pop fs
     ret
-SetupMsiHandler  Endp
+add_long_msi  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -585,6 +593,30 @@ init    proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET create_long_irq
+    mov edi,OFFSET create_long_irq_name
+    xor cl,cl
+    mov ax,create_long_irq_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET add_long_irq
+    mov edi,OFFSET add_long_irq_name
+    xor cl,cl
+    mov ax,add_long_irq_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET create_long_msi
+    mov edi,OFFSET create_long_msi_name
+    xor cl,cl
+    mov ax,create_long_msi_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET add_long_msi
+    mov edi,OFFSET add_long_msi_name
+    xor cl,cl
+    mov ax,add_long_msi_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET setup_long_trap_gate
     mov edi,OFFSET setup_long_trap_gate_name
@@ -648,23 +680,24 @@ long_idt_size   DW 0FFFh
 long_idt_base   DD IDT_LINEAR
 
 test_irq    Proc far
+    int 3
     ret
 test_irq    Endp
 
 test_thread:
+    int 3
     mov al,80h
-    call CreateMsi
+    CreateLongMsi
 ;
     xor bl,bl
     SetupLongIntGate
 ;    
-    int 3
     mov dx,cs
     mov es,dx
     mov dx,apic_data_sel
     mov ds,dx
     mov edi,OFFSET test_irq
-    call SetupMsiHandler
+    AddLongMsi
 ;    
     mov bx,ss
     GetSelectorBaseSize

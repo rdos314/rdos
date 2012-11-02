@@ -553,4 +553,9 @@ setup_long_trap_gate_nr     = 465
 enter_long_int_nr           = 466
 leave_long_int_nr           = 467
 
+create_long_irq_nr          = 468
+add_long_irq_nr             = 469
+create_long_msi_nr          = 470
+add_long_msi_nr             = 471
+
 osgate_entries				= 480
