@@ -1694,6 +1694,11 @@ SetupLongSpuriousInt   MACRO
     OsGate setup_long_spurious_int_nr
                     ENDM
 
+; IN  AL        IRQ #
+SetupLongTimerInt   MACRO
+    OsGate setup_long_timer_int_nr
+                    ENDM
+
 ;;;;;;;;; TIME & DATE ;;;;;;;;;;;;;
 
 ;       EDX:EAX     SYSTEM TIME

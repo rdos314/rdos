@@ -268,6 +268,28 @@ setup_long_spurious_int Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           SetupLongTimerInt
+;
+;   DESCRIPTION:    Setup long-mode timer int
+;
+;   PARAMETERS:     AL      Interrupt #
+;                   BL      DPL
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_long_timer_int_name   DB 'Setup Long Timer Int', 0
+    
+setup_long_timer_int  proc far
+    push esi
+    mov esi,OFFSET timer_int
+    SetupLongIntGate
+    pop esi
+    ret
+setup_long_timer_int Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           InitIdt
 ;
 ;   DESCRIPTION:    Init 64-bit IDT
@@ -656,6 +678,12 @@ init    proc far
     mov edi,OFFSET setup_long_spurious_int_name
     xor cl,cl
     mov ax,setup_long_spurious_int_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET setup_long_timer_int
+    mov edi,OFFSET setup_long_timer_int_name
+    xor cl,cl
+    mov ax,setup_long_timer_int_nr
     RegisterOsGate
 ;
     mov edi,init_task
@@ -1458,7 +1486,7 @@ WriteErrorCode  proc near
     jz wecNotIdt
 ;    
     mov edi,OFFSET ft_idt
-    shr ax,2
+    shr ax,3
     jmp wecDo
 
 wecNotIdt:
@@ -2267,6 +2295,59 @@ nmi_int:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 spurious_int:
+    iretq
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           Timer int
+;
+;   DESCRIPTION:    timer int handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+timer_int:
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    push rbp
+;
+    mov eax,ds
+    push rax
+;
+    mov eax,es
+    push rax
+;            
+    mov eax,fs
+    push rax
+;
+    xor eax,eax
+    mov ds,eax
+    mov es,eax
+    mov fs,eax
+;
+    SendEoi
+    TimerExpired
+;    
+    pop rax
+    mov fs,eax
+;
+    pop rax
+    mov es,eax
+;
+    pop rax
+    mov ds,eax
+;
+    pop rbp
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
     iretq
 
 comp_dest:

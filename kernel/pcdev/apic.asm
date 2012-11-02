@@ -2742,7 +2742,15 @@ siSpurOk:
     mov al,40h
     mov esi,OFFSET timer_int
     SetupIntGate
-;
+;    
+    mov ax,setup_long_timer_int_nr
+    IsValidOsGate
+    jc siTimerOk
+;    
+    mov al,40h
+    SetupLongTimerInt
+
+siTimerOk:
     mov al,80h
     mov esi,OFFSET preempt_int
     SetupIntGate
