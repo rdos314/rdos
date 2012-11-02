@@ -563,5 +563,7 @@ setup_long_timer_int_nr     = 473
 setup_long_preempt_int_nr   = 474
 setup_long_tlb_flush_int_nr = 475
 setup_long_preempt_timer_int_nr   = 476
+setup_long_hpet_int_nr      = 477
+clear_hpet_nr               = 478
 
 osgate_entries				= 480

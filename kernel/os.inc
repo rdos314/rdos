@@ -992,6 +992,10 @@ PreemptTimerExpired    MACRO
     OsGate preempt_timer_expired_nr
                         ENDM
 
+ClearHpet    MACRO
+    OsGate clear_hpet_nr
+                        ENDM
+
 ;   IN  FS      Processor selector
 SendNmi    MACRO
     OsGate send_nmi_nr
@@ -1712,6 +1716,11 @@ SetupLongTlbFlushInt   MACRO
 ; IN  AL        IRQ #
 SetupLongPreemptTimerInt   MACRO
     OsGate setup_long_preempt_timer_int_nr
+                    ENDM
+
+; IN  AL        IRQ #
+SetupLongHpetInt   MACRO
+    OsGate setup_long_hpet_int_nr
                     ENDM
 
 ;;;;;;;;; TIME & DATE ;;;;;;;;;;;;;
