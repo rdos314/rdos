@@ -2685,7 +2685,8 @@ test64:
     db 1Ch
     db 25h
     dd OFFSET comp_dest
-    sti
+;
+    CrashGate    
 
 stopl:
     jmp stopl        
