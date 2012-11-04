@@ -178,12 +178,15 @@ void BatteryThread(void *Param)
 
                 if (charger)
                 {
-                    if (bat_u >= 25.0)
+//                    if (bat_u >= 25.0)
+                    if (bat_u >= 26.0)
                         charger = FALSE;
                 }
                 else
                 {
-                    if (bat_u < 24.0 && curr_power < 25.0)
+
+                    if (bat_u < 25.0 && curr_power < 50.0)              
+//                    if (bat_u < 24.0 && curr_power < 25.0)
                         charger = TRUE;
                 }
 
