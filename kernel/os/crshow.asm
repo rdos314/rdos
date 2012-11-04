@@ -539,12 +539,12 @@ WriteEflags     PROC near
     push di
     mov ax,cs
     mov es,ax
-    mov ax,word ptr gs:cs_eflags
+    mov ax,word ptr gs:cs_rflags
     and ax,200h
     shr ax,7
-    or ax,word ptr gs:cs_eflags+2
+    or ax,word ptr gs:cs_rflags+2
     shl eax,16
-    mov ax,word ptr gs:cs_eflags
+    mov ax,word ptr gs:cs_rflags
     mov di,OFFSET eflags_tab
     mov cx,18
     
@@ -572,7 +572,7 @@ eflags_skip:
 ;    
     mov di,OFFSET iopl_text
     call ShowAsciiz
-    mov ax,word ptr gs:cs_eflags
+    mov ax,word ptr gs:cs_rflags
     shr ax,12
     and ax,3
     add ax,'0'
@@ -927,29 +927,29 @@ dword_dr_reg_tab:
 
 dword_reg_tab1:
     DB ' EAX='
-    DW OFFSET cs_eax
+    DW OFFSET cs_rax
     DB ' EBX='
-    DW OFFSET cs_ebx
+    DW OFFSET cs_rbx
     DB ' ECX='
-    DW OFFSET cs_ecx
+    DW OFFSET cs_rcx
     DB ' EDX='
-    DW OFFSET cs_edx
+    DW OFFSET cs_rdx
     DB 0
 
 dword_reg_tab2:
     DB ' ESI='
-    DW OFFSET cs_esi
+    DW OFFSET cs_rsi
     DB ' EDI='
-    DW OFFSET cs_edi
+    DW OFFSET cs_rdi
     DB ' ESP='
-    DW OFFSET cs_esp
+    DW OFFSET cs_rsp
     DB ' EBP='
-    DW OFFSET cs_ebp
+    DW OFFSET cs_rbp
     DB 0
 
 dword_reg_tab3:
     DB ' EPC='
-    DW OFFSET cs_eip
+    DW OFFSET cs_rip
     DB 0
 
 WriteDwordRegs  PROC near
@@ -1601,7 +1601,7 @@ not_call_far:
     inc dh    
     movzx ebx,dh
     add ebx,[si]
-    add ebx,dword ptr gs:cs_eip
+    add ebx,dword ptr gs:cs_rip
     add ebx,4
 ;
     push ebx
@@ -1629,7 +1629,7 @@ write_call_near16:
     inc dh
     movzx bx,dh
     add bx,[si]
-    add bx,word ptr gs:cs_eip
+    add bx,word ptr gs:cs_rip
     add bx,2
     push bx
     mov dx,gs:cs_cs
@@ -1674,12 +1674,12 @@ GetMne  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadInstr    Proc near
-    mov ebx,dword ptr gs:cs_eip
+    mov ebx,dword ptr gs:cs_rip
     call SetIpAds
     call GetOpBuf
 ;
     mov bx,gs:cs_cs
-    mov edx,dword ptr gs:cs_eip
+    mov edx,dword ptr gs:cs_rip
 ;    
     call GetBaseSize
     jc read_instr_done
@@ -1850,12 +1850,12 @@ WriteCpuReg     Proc near
     call Delimiter
 ;    
     mov bx,gs:cs_ss
-    movzx edx,word ptr gs:cs_esp
+    movzx edx,word ptr gs:cs_rsp
     call WriteDataRow
     call NewLine    
 ;    
     mov bx,gs:cs_cs
-    movzx edx,word ptr gs:cs_eip
+    movzx edx,word ptr gs:cs_rip
     call WriteDataRow
     call NewLine    
 ;    

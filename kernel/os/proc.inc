@@ -39,6 +39,7 @@ PS_FLAG_SHUTDOWN    = 400h
 PS_FLAG_QUERY_SYS   = 800h
 PS_FLAG_HAS_SYS     = 1000h
 PS_FLAG_MOVE        = 2000h
+PS_FLAG_LONG_MODE   = 4000h
 
 timer_struc	STRUC
 
@@ -120,16 +121,24 @@ cs_dr2              DD ?
 cs_dr3              DD ?
 cs_dr7              DD ?
 
-cs_eip              DD ?
-cs_eflags           DD ?
-cs_eax              DD ?
-cs_ecx              DD ?
-cs_edx              DD ?
-cs_ebx              DD ?
-cs_esp              DD ?
-cs_ebp              DD ?
-cs_esi              DD ?
-cs_edi              DD ?
+cs_rip              DQ ?
+cs_rflags           DQ ?
+cs_rax              DQ ?
+cs_rcx              DQ ?
+cs_rdx              DQ ?
+cs_rbx              DQ ?
+cs_rsp              DQ ?
+cs_rbp              DQ ?
+cs_rsi              DQ ?
+cs_rdi              DQ ?
+cs_r8               DQ ?
+cs_r9               DQ ?
+cs_r10              DQ ?
+cs_r11              DQ ?
+cs_r12              DQ ?
+cs_r13              DQ ?
+cs_r14              DQ ?
+cs_r15              DQ ?
 
 cs_es               DW ?
 cs_cs               DW ?

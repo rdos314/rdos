@@ -683,24 +683,24 @@ set_reg_byte  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 exec_table:
-meax  exec_s <4,  1,  3, OFFSET cs_eax,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
-deax  exec_s <4,  5,  8, OFFSET cs_eax,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
-mebx  exec_s <4,  14, 3, OFFSET cs_ebx,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
-debx  exec_s <4,  18, 8, OFFSET cs_ebx,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
-mecx  exec_s <4,  27, 3, OFFSET cs_ecx,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
-decx  exec_s <4,  31, 8, OFFSET cs_ecx,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
-medx  exec_s <4,  40, 3, OFFSET cs_edx,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
-dedx  exec_s <4,  44, 8, OFFSET cs_edx,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
-mesi  exec_s <5,  1,  3, OFFSET cs_esi,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
-desi  exec_s <5,  5,  8, OFFSET cs_esi,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
-medi  exec_s <5,  14, 3, OFFSET cs_edi,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
-dedi  exec_s <5,  18, 8, OFFSET cs_edi,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
-mesp  exec_s <5,  27, 3, OFFSET cs_esp,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
-desp  exec_s <5,  31, 8, OFFSET cs_esp,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
-mebp  exec_s <5,  40, 3, OFFSET cs_ebp,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
-debp  exec_s <5,  44, 8, OFFSET cs_ebp,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
-meip  exec_s <6,  1,  3, OFFSET cs_eip,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
-deip  exec_s <6,  5,  8, OFFSET cs_eip,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+meax  exec_s <4,  1,  3, OFFSET cs_rax,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+deax  exec_s <4,  5,  8, OFFSET cs_rax,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mebx  exec_s <4,  14, 3, OFFSET cs_rbx,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+debx  exec_s <4,  18, 8, OFFSET cs_rbx,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mecx  exec_s <4,  27, 3, OFFSET cs_rcx,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+decx  exec_s <4,  31, 8, OFFSET cs_rcx,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+medx  exec_s <4,  40, 3, OFFSET cs_rdx,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+dedx  exec_s <4,  44, 8, OFFSET cs_rdx,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mesi  exec_s <5,  1,  3, OFFSET cs_rsi,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+desi  exec_s <5,  5,  8, OFFSET cs_rsi,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+medi  exec_s <5,  14, 3, OFFSET cs_rdi,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+dedi  exec_s <5,  18, 8, OFFSET cs_rdi,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mesp  exec_s <5,  27, 3, OFFSET cs_rsp,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+desp  exec_s <5,  31, 8, OFFSET cs_rsp,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mebp  exec_s <5,  40, 3, OFFSET cs_rbp,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+debp  exec_s <5,  44, 8, OFFSET cs_rbp,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+meip  exec_s <6,  1,  3, OFFSET cs_rip,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+deip  exec_s <6,  5,  8, OFFSET cs_rip,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
 dtr   exec_s <7,  4,  4, OFFSET cs_tr,   OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
 dldt  exec_s <8,  4,  4, OFFSET cs_ldt,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
 dcs   exec_s <9,  4,  4, OFFSET cs_cs,   OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
@@ -1514,17 +1514,17 @@ nmi_handler:
     mov gs:cs_irq,0
 ;    
     mov eax,[ebp].nmi_ebp
-    mov gs:cs_ebp,eax
+    mov dword ptr gs:cs_rbp,eax
     mov eax,[ebp].nmi_ebx
-    mov gs:cs_ebx,eax
+    mov dword ptr gs:cs_rbx,eax
     mov eax,[ebp].nmi_eax
-    mov gs:cs_eax,eax
+    mov dword ptr gs:cs_rax,eax
     mov eax,[ebp].nmi_eip
-    mov gs:cs_eip,eax
+    mov dword ptr gs:cs_rip,eax
     mov ax,[ebp].nmi_cs
     mov gs:cs_cs,ax
     mov ebx,[ebp].nmi_efl
-    mov gs:cs_eflags,ebx
+    mov dword ptr gs:cs_rflags,ebx
     test ebx,20000h
     jnz nmi_v86
 ;    
@@ -1538,7 +1538,7 @@ nmi_handler:
     jz nmi_kernel
 ;
     mov eax,[ebp].nmi_esp
-    mov gs:cs_esp,eax
+    mov dword ptr gs:cs_rsp,eax
     mov ax,[ebp].nmi_ss
     mov gs:cs_ss,ax
     jmp nmi_block
@@ -1546,12 +1546,12 @@ nmi_handler:
 nmi_kernel:
     mov eax,ebp
     add eax,nmi_esp
-    mov gs:cs_esp,eax
+    mov dword ptr gs:cs_rsp,eax
     jmp nmi_block
 
 nmi_v86:
     mov eax,[ebp].nmi_esp
-    mov gs:cs_esp,eax
+    mov dword ptr gs:cs_rsp,eax
     mov ax,[ebp].nmi_ss
     mov gs:cs_ss,ax
     mov ax,[ebp].nmi_ds
@@ -1637,14 +1637,14 @@ DelayMs Endp
 SaveCore Proc near
     push eax
 ;    
-    mov fs:cs_eax,eax
-    mov fs:cs_ecx,ecx
-    mov fs:cs_edx,edx
-    mov fs:cs_ebx,ebx
-    mov fs:cs_esp,esp
-    mov fs:cs_ebp,ebp
-    mov fs:cs_esi,esi
-    mov fs:cs_edi,edi
+    mov dword ptr fs:cs_rax,eax
+    mov dword ptr fs:cs_rcx,ecx
+    mov dword ptr fs:cs_rdx,edx
+    mov dword ptr fs:cs_rbx,ebx
+    mov dword ptr fs:cs_rsp,esp
+    mov dword ptr fs:cs_rbp,ebp
+    mov dword ptr fs:cs_rsi,esi
+    mov dword ptr fs:cs_rdi,edi
 ;
     mov fs:cs_es,es
     mov fs:cs_cs,cs
@@ -1654,8 +1654,8 @@ SaveCore Proc near
     mov fs:cs_gs,gs
 ;
     pushfd
-    pop fs:cs_eflags
-    mov fs:cs_eip, OFFSET SaveCore
+    pop dword ptr fs:cs_rflags
+    mov dword ptr fs:cs_rip, OFFSET SaveCore
 ;
     mov eax,cr0
     mov fs:cs_cr0,eax
@@ -2047,7 +2047,7 @@ crash_gate:
     mov fs:cs_fs,ax
 ;    
     pop eax
-    mov fs:cs_eip,eax
+    mov dword ptr fs:cs_rip,eax
 ;
     pop eax
     mov fs:cs_cs,ax
@@ -2059,7 +2059,7 @@ crash_gate_chain:
     mov fs:cs_fs,ax
 ;    
     pop eax
-    mov fs:cs_eip,eax
+    mov dword ptr fs:cs_rip,eax
 ;
     pop eax
     mov fs:cs_cs,ax
@@ -2097,22 +2097,22 @@ crash_fault:
     mov fs:cs_ds,ax
 ;    
     mov eax,[ebp].trap_eax
-    mov fs:cs_eax,eax
+    mov dword ptr fs:cs_rax,eax
 ;    
     mov eax,[ebp].trap_ebx
-    mov fs:cs_ebx,eax
+    mov dword ptr fs:cs_rbx,eax
 ;
     mov eax,[ebp].trap_ebp
-    mov fs:cs_ebp,eax
+    mov dword ptr fs:cs_rbp,eax
 ;    
     mov eax,[ebp].trap_eflags
-    mov fs:cs_eflags,eax
+    mov dword ptr fs:cs_rflags,eax
 ;
     mov ax,[ebp].trap_cs
     mov fs:cs_cs,ax
 ;    
     mov eax,[ebp].trap_eip
-    mov fs:cs_eip,eax
+    mov dword ptr fs:cs_rip,eax
 ;
     test dword ptr [ebp].trap_eflags,20000h
     jnz crash_fault_vm
@@ -2126,13 +2126,13 @@ crash_fault_pm:
     mov fs:cs_ss,ax
 ;    
     mov eax,[ebp].trap_esp
-    mov fs:cs_esp,eax
+    mov dword ptr fs:cs_rsp,eax
     jmp CrashHandler
     
 crash_fault_kernel:
     mov eax,ebp
     add eax,trap_esp
-    mov fs:cs_esp,eax
+    mov dword ptr fs:cs_rsp,eax
     jmp CrashHandler
 
 crash_fault_vm:
@@ -2152,7 +2152,7 @@ crash_fault_vm:
     mov fs:cs_ss,ax
 ;    
     mov eax,[ebp].trap_esp
-    mov fs:cs_esp,eax
+    mov dword ptr fs:cs_rsp,eax
     jmp CrashHandler
 
 crash_fault_chain:
@@ -2167,22 +2167,22 @@ crash_fault_chain:
     mov fs:cs_ds,ax
 ;    
     mov eax,[ebp].trap_eax
-    mov fs:cs_eax,eax
+    mov dword ptr fs:cs_rax,eax
 ;    
     mov eax,[ebp].trap_ebx
-    mov fs:cs_ebx,eax
+    mov dword ptr fs:cs_rbx,eax
 ;
     mov eax,[ebp].trap_ebp
-    mov fs:cs_ebp,eax
+    mov dword ptr fs:cs_rbp,eax
 ;    
     mov eax,[ebp].trap_eflags
-    mov fs:cs_eflags,eax
+    mov dword ptr fs:cs_rflags,eax
 ;
     mov ax,[ebp].trap_cs
     mov fs:cs_cs,ax
 ;    
     mov eax,[ebp].trap_eip
-    mov fs:cs_eip,eax
+    mov dword ptr fs:cs_rip,eax
 ;
     test dword ptr [ebp].trap_eflags,20000h
     jnz crash_fault_chain_vm
@@ -2196,13 +2196,13 @@ crash_fault_chain_pm:
     mov fs:cs_ss,ax
 ;    
     mov eax,[ebp].trap_esp
-    mov fs:cs_esp,eax
+    mov dword ptr fs:cs_rsp,eax
     jmp nmi_block
     
 crash_fault_chain_kernel:
     mov eax,ebp
     add eax,trap_esp
-    mov fs:cs_esp,eax
+    mov dword ptr fs:cs_rsp,eax
     jmp nmi_block
 
 crash_fault_chain_vm:
@@ -2222,7 +2222,7 @@ crash_fault_chain_vm:
     mov fs:cs_ss,ax
 ;    
     mov eax,[ebp].trap_esp
-    mov fs:cs_esp,eax
+    mov dword ptr fs:cs_rsp,eax
     jmp nmi_block
 
 
@@ -2266,31 +2266,31 @@ crash_tss:
     CreateDataSelector16
     mov ds,bx
     mov eax,ds:c_tss_eax
-    mov fs:cs_eax,eax
+    mov dword ptr fs:cs_rax,eax
 ;    
     mov eax,ds:c_tss_ecx
-    mov fs:cs_ecx,eax
+    mov dword ptr fs:cs_rcx,eax
 ;
     mov eax,ds:c_tss_edx
-    mov fs:cs_edx,eax
+    mov dword ptr fs:cs_rdx,eax
 ;
     mov eax,ds:c_tss_ebx
-    mov fs:cs_ebx,eax
+    mov dword ptr fs:cs_rbx,eax
 ;
     mov eax,ds:c_tss_esp    
-    mov fs:cs_esp,eax
+    mov dword ptr fs:cs_rsp,eax
 ;
     mov eax,ds:c_tss_ebp    
-    mov fs:cs_ebp,eax
+    mov dword ptr fs:cs_rbp,eax
 ;
     mov eax,ds:c_tss_eip    
-    mov fs:cs_eip,eax
+    mov dword ptr fs:cs_rip,eax
 ;    
     mov eax,ds:c_tss_esi
-    mov fs:cs_esi,eax
+    mov dword ptr fs:cs_rsi,eax
 ;
     mov eax,ds:c_tss_edi    
-    mov fs:cs_edi,eax
+    mov dword ptr fs:cs_rdi,eax
 ;    
     mov ax,ds:c_tss_es
     mov fs:cs_es,ax
@@ -2316,7 +2316,7 @@ crash_tss:
     mov fs:cs_fault,8
 ;
     mov eax,ds:c_tss_eflags
-    mov fs:cs_eflags,eax
+    mov dword ptr fs:cs_rflags,eax
 ;
     mov eax,cr0
     mov fs:cs_cr0,eax
@@ -2366,28 +2366,28 @@ crash_tss_chain:
     CreateDataSelector16
     mov ds,bx
     mov eax,ds:c_tss_eax
-    mov fs:cs_eax,eax
+    mov dword ptr fs:cs_rax,eax
 ;    
     mov eax,ds:c_tss_ecx
-    mov fs:cs_ecx,eax
+    mov dword ptr fs:cs_rcx,eax
 ;
     mov eax,ds:c_tss_edx
-    mov fs:cs_edx,eax
+    mov dword ptr fs:cs_rdx,eax
 ;
     mov eax,ds:c_tss_ebx
-    mov fs:cs_ebx,eax
+    mov dword ptr fs:cs_rbx,eax
 ;
     mov eax,ds:c_tss_esp    
-    mov fs:cs_esp,eax
+    mov dword ptr fs:cs_rsp,eax
 ;
     mov eax,ds:c_tss_ebp    
-    mov fs:cs_ebp,eax
+    mov dword ptr fs:cs_rbp,eax
 ;    
     mov eax,ds:c_tss_esi
-    mov fs:cs_esi,eax
+    mov dword ptr fs:cs_rsi,eax
 ;
     mov eax,ds:c_tss_edi    
-    mov fs:cs_edi,eax
+    mov dword ptr fs:cs_rdi,eax
 ;    
     mov ax,ds:c_tss_es
     mov fs:cs_es,ax
@@ -2413,7 +2413,7 @@ crash_tss_chain:
     mov fs:cs_fault,8
 ;
     mov eax,ds:c_tss_eflags
-    mov fs:cs_eflags,eax
+    mov dword ptr fs:cs_rflags,eax
 ;
     mov eax,cr0
     mov fs:cs_cr0,eax
