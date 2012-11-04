@@ -36,6 +36,8 @@ INCLUDE ..\pcdev\key.inc
 INCLUDE port.def
 INCLUDE proc.inc
 
+IA32_EFER       = 0C0000080h
+
 data    SEGMENT byte public 'DATA'
 
 curr_num        DW ?
@@ -2051,6 +2053,21 @@ crash_gate:
 ;
     pop eax
     mov fs:cs_cs,ax
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:cpu_ext_feature_flags
+    test eax,20000000h
+    jz crash_gate_prot
+;
+    mov ecx,IA32_EFER
+    rdmsr
+    test eax,100h
+    jz crash_gate_prot
+;    
+    int 3
+
+crash_gate_prot:    
     jmp CrashHandler
 
 crash_gate_chain:
