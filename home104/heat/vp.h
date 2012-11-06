@@ -53,8 +53,11 @@ public:
 
 	void SetTempError(int temp);
 	void SetAmbient(int ref, int ambient);
+	void SetCirc(int circ);
 
 protected:
+    void UpdateVp(int diff);
+
 	virtual void Execute();
 
 	 TFuzzyVar FTempDiffVar;
@@ -65,6 +68,15 @@ protected:
 	 int TempCount;
 	 long double AmbientSum;
 	 int AmbientCount;
+	 
+    int FVpOn;
+    int FPrevOn;
+    int FValidCirc;
+    int FCirc;
+    int FIncCount;
+
+    int FHasLowTemp;
+    int FLowTemp;
 
 	int FValidTank;
 	int FValidHeat;
