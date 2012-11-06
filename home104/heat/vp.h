@@ -53,7 +53,7 @@ public:
 
 	void SetTempError(int temp);
 	void SetAmbient(int ref, int ambient);
-	void SetCirc(int circ);
+	void SetCirc(int circ, long double speed);
 
 protected:
     void UpdateVp(int diff);
@@ -74,6 +74,8 @@ protected:
     int FValidCirc;
     int FCirc;
     int FIncCount;
+    int FHasCirc;
+    long double FCircSpeed;
 
     int FHasLowTemp;
     int FLowTemp;

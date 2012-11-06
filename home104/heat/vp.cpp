@@ -113,6 +113,7 @@ TVp::TVp(TControlThread *control)
     FValidAmbient = FALSE;
     FHasLowTemp = FALSE;
     FIncCount = 0;
+    FHasCirc = FALSE;
 
     for (i = 0; i < 40; i++)
         ValidTankArr[i] = FALSE;
@@ -350,18 +351,20 @@ void TVp::SetAmbient(int ref, int ambient)
 #   Returns....: *
 #
 ##########################################################################*/
-void TVp::SetCirc(int circ)
+void TVp::SetCirc(int circ, long double speed)
 {
     FSection.Enter();
 
     FCirc = circ;
+    FCircSpeed = speed;
+    FHasCirc = TRUE;
     
     if (FCirc < 25)
         FVpOn = FALSE;
 
     if (FCirc > 75)
         FVpOn = TRUE;
-
+        
     FSection.Leave();    
 }
 
@@ -524,6 +527,7 @@ void TVp::Execute()
     Table->AddRow(24, 45);
     Table->AddRow(24, 45);
     Table->AddRow(24, 45);
+    Table->AddRow(24, 45);
 
     Table->SetText(0, 0, "Tank temp");
     Table->SetText(0, 2, "°C");
@@ -542,6 +546,9 @@ void TVp::Execute()
 
     Table->SetText(5, 0, "Start");
     Table->SetText(5, 2, "°C");
+
+    Table->SetText(6, 0, "Cirkulation");
+    Table->SetText(6, 2, "V");
 
 
     TempSum = 0;
@@ -580,7 +587,6 @@ void TVp::Execute()
 
     while (FInstalled)
     {
-
         if (RdosReadSerialRaw(1, 5, &ival))
         {
             FTankSum += ival;
@@ -630,6 +636,12 @@ void TVp::Execute()
 
         if (LastMin != min && TempCount)
         {
+            if (FHasCirc)
+            {
+                sprintf(str, "%4.1Lf", FCircSpeed);
+                Table->SetText(6, 1, str);
+            }
+
             LastMin = min;
 
             if (FMaxHeatDay != day)

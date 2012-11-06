@@ -309,15 +309,6 @@ void TCirc::Execute()
                         TempCount = 0;
 
                         FSection.Leave();
-                        
-                sprintf(str, "Circ: %4.1Lf V", FSpeed);
-
-                vbe->SetFilledStyle();
-                vbe->SetDrawColor(0, 0, 0);
-                vbe->DrawRect(550, 316, 550 + 100, 316 + 16);
-                
-                vbe->SetDrawColor(255, 255, 255);
-                vbe->DrawString(550, 316, str);
                 }
 
                 RdosWaitMilli(1000);

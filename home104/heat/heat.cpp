@@ -291,7 +291,7 @@ int main()
         {
             Vp->SetTempError(temperrmax);
             Vp->SetAmbient(refsum / count, 100); // 10C outside temperature
-            Vp->SetCirc(circmax);
+            Vp->SetCirc(circmax, Circ->GetSpeed());
         }
 
         RdosWaitMilli(1000);
