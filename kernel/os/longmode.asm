@@ -31,6 +31,7 @@ include ..\os.def
 include ..\user.def
 include ..\os.inc
 include ..\user.inc
+include proc.inc
 include protseg.def
 include gate.def
 
@@ -374,6 +375,28 @@ setup_long_hpet_int  proc far
     pop esi
     ret
 setup_long_hpet_int Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SetupLongCrashGate
+;
+;   DESCRIPTION:    Setup long-mode crash gate
+;
+;   PARAMETERS:     AL      Interrupt #
+;                   BL      DPL
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_long_crash_gate_name   DB 'Setup Long Crash Gate', 0
+    
+setup_long_crash_gate  proc far
+    push esi
+    mov esi,OFFSET crash_gate_int
+    SetupLongIntGate
+    pop esi
+    ret
+setup_long_crash_gate Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -796,6 +819,12 @@ init    proc far
     mov edi,OFFSET setup_long_hpet_int_name
     xor cl,cl
     mov ax,setup_long_hpet_int_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET setup_long_crash_gate
+    mov edi,OFFSET setup_long_crash_gate_name
+    xor cl,cl
+    mov ax,setup_long_crash_gate_nr
     RegisterOsGate
 ;
     mov edi,init_task
@@ -2674,6 +2703,123 @@ hpet_int:
     pop rbx
     pop rax
     iretq
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           crash_gate_int
+;
+;   DESCRIPTION:    Crash gate handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+crash_gate_int:
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    push rbp
+    push fs
+;
+    EnterCrashDebug
+    jc cgiChain
+;
+    mov bx,fs
+    GetSelectorBaseSize
+    pop fs
+;
+    lock or [edx].ps_flags,PS_FLAG_LONG_MODE
+    pop rax
+    mov [edx].cs_rbp,rax
+;    
+    pop rax
+    mov [edx].cs_rdi,rax
+;    
+    pop rax
+    mov [edx].cs_rsi,rax
+;    
+    pop rax
+    mov [edx].cs_rdx,rax
+;    
+    pop rax
+    mov [edx].cs_rcx,rax
+;    
+    pop rax
+    mov [edx].cs_rbx,rax
+;    
+    pop rax
+    mov [edx].cs_rax,rax
+;    
+    pop rax
+    mov [edx].cs_rip,rax
+;
+    pop rax
+    mov [edx].cs_cs,ax
+;
+    pop rax
+    mov [edx].cs_rflags,rax
+;
+    pop rax
+    mov [edx].cs_rsp,rax
+;
+    pop rax
+    mov [edx].cs_ss,ax
+;            
+    mov [edx].cs_r8,r8
+    mov [edx].cs_r9,r9
+    mov [edx].cs_r10,r10
+    mov [edx].cs_r11,r11
+    mov [edx].cs_r12,r12
+    mov [edx].cs_r13,r13
+    mov [edx].cs_r14,r14
+    mov [edx].cs_r15,r15
+    mov [edx].cs_es,es
+    mov [edx].cs_ds,ds
+    mov [edx].cs_fs,fs
+    mov [edx].cs_gs,gs
+;
+    mov rax,cr0
+    mov [edx].cs_cr0,eax
+;
+    mov rax,cr2
+    mov [edx].cs_cr2,eax
+;
+    mov rax,cr3
+    mov [edx].cs_cr3,eax
+;
+    mov rax,cr4
+    mov [edx].cs_cr4,eax
+;
+    mov rax,dr0
+    mov [edx].cs_dr0,eax
+;
+    mov rax,dr1
+    mov [edx].cs_dr1,eax
+;
+    mov rax,dr2
+    mov [edx].cs_dr2,eax
+;
+    mov rax,dr3
+    mov [edx].cs_dr3,eax
+;
+    mov rax,dr7
+    mov [edx].cs_dr7,eax
+;
+    sldt eax
+    mov [edx].cs_ldt,ax
+;
+    str eax
+    mov [edx].cs_tr,ax
+;
+    sgdt [edx].cs_gdtr
+    sidt [edx].cs_idtr            
+    ExecuteCrashHandler
+
+cgiChain:
+    int 3
+    iretq
 
 
 comp_dest:
@@ -2686,7 +2832,22 @@ test64:
     db 25h
     dd OFFSET comp_dest
 ;
-    CrashGate    
+    mov rax,1111111111111111h
+    mov rbx,2222222222222222h
+    mov rcx,3333333333333333h
+    mov rdx,4444444444444444h
+    mov rsi,5555555555555555h
+    mov rdi,6666666666666666h
+    mov rbp,7777777777777777h
+    mov r8,8888888888888888h
+    mov r9,9999999999999999h
+    mov r10,0AAAAAAAAAAAAAAAAh
+    mov r11,0BBBBBBBBBBBBBBBBh
+    mov r12,0CCCCCCCCCCCCCCCCh
+    mov r13,0DDDDDDDDDDDDDDDDh
+    mov r14,0EEEEEEEEEEEEEEEEh
+    mov r15,0FFFFFFFFFFFFFFFFh
+    int 84h
 
 stopl:
     jmp stopl        

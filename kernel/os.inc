@@ -225,6 +225,13 @@ RegisterOsGate  MACRO
                     ENDM
 
 ;       AX          GATE NUMBER
+;       ESI         GATE CALL ADDRESS
+;       EDI         GATE NAME ADDRESS
+RegisterLongOsGate  MACRO
+    OsGate register_long_osgate_nr
+                    ENDM
+
+;       AX          GATE NUMBER
 IsValidOsGate   MACRO
     OsGate is_valid_osgate_nr
                     ENDM
@@ -1409,8 +1416,14 @@ ThreadToSel     MACRO
 
 ;;;;;;;;;;; Crash handler ;;;;;;;;;;;;;;;;
 
-StartCrashCore       MACRO
-    OsGate start_crash_core_nr
+; OUT FS       Processor core
+; OUT NC       First invocation
+EnterCrashDebug       MACRO
+    OsGate enter_crash_debug_nr
+                    ENDM
+
+ExecuteCrashHandler       MACRO
+    OsGate execute_crash_handler_nr
                     ENDM
 
 CrashGate       MACRO
@@ -1426,6 +1439,7 @@ CrashFault      MACRO
 CrashTss    MACRO
     OsGate crash_tss_nr
                     ENDM
+
 
 ;;;;;;;;;;; Debugger ;;;;;;;;;;;;;;;;
 
@@ -1721,6 +1735,11 @@ SetupLongPreemptTimerInt   MACRO
 ; IN  AL        IRQ #
 SetupLongHpetInt   MACRO
     OsGate setup_long_hpet_int_nr
+                    ENDM
+
+; IN  AL        IRQ #
+SetupLongCrashGate   MACRO
+    OsGate setup_long_crash_gate_nr
                     ENDM
 
 ;;;;;;;;; TIME & DATE ;;;;;;;;;;;;;

@@ -1691,15 +1691,15 @@ SaveCore Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CrashHandler
+;           NAME:           ExecuteCrashHandler
 ;
 ;           DESCRIPTION:    Crash handler
 ;
-;           PARAMETERS:     GS      Core
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CrashHandler:
+execute_crash_handler_name  DB 'Execute Crash Handler', 0
+
+execute_crash_handler:
     call SetupBiosPic
     call SetupBiosPit
     call InitVideo
@@ -1849,7 +1849,7 @@ ShowHere    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           EnterHandler
+;           NAME:           EnterCrashDebug
 ;
 ;           DESCRIPTION:    Enter crash handler
 ;
@@ -1859,7 +1859,9 @@ ShowHere    Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EnterHandler    Proc near 
+enter_crash_debug_name  DB 'Enter Crash Debug', 0
+
+enter_crash_debug    Proc far
     push ds
     push ax
 ;       
@@ -1987,43 +1989,20 @@ handle_nmi_done:
 enter_done:
     pop ax
     pop ds
-    ret
-EnterHandler    Endp
+    retf32
+enter_crash_debug    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           StartCrashCore
+;           NAME:           CrashGateInt
 ;
-;           DESCRIPTION:    Start crash core
+;           DESCRIPTION:    Crash with a gate (from interrupt)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_crash_core_name    DB 'Start Crash Core', 0
-
-start_crash_core:
-    GetCore
-    call SaveCore
-;    
-    call InitCrashKeyboard
-
-start_crash_loop:
-    call GetCrashKey
-    jc start_crash_loop
-;    
-    test ah,80h
-    jnz start_crash_loop
-;    
-    cmp al,1Bh
-    jne start_crash_loop
-;
-    call EnterHandler
-    jc start_crash_chain
-;
-    jmp CrashHandler
-
-start_crash_chain:
-    jmp nmi_block            
+crash_gate_int:
+    int 3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2039,12 +2018,38 @@ start_crash_chain:
 crash_gate_name    DB 'Crash Gate', 0
 
 crash_gate:
+    int 3
     cli    
     push fs
-    call EnterHandler
+    EnterCrashDebug
     jc crash_gate_chain
 ;
-    call SaveCore    
+    push ds
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:cpu_ext_feature_flags
+    test eax,20000000h
+    jz crash_gate_prot
+;
+    push ecx
+    push edx
+    mov ecx,IA32_EFER
+    rdmsr
+    pop edx
+    pop ecx
+    test eax,100h
+    jz crash_gate_prot
+;   
+    lock or fs:ps_flags,PS_FLAG_LONG_MODE 
+;
+    push bx
+    push ecx
+    mov bx,fs
+    GetSelectorBaseSize
+    pop ecx
+    pop bx
+;    CrashSaveLongRegs    
+;    
     pop ax
     mov fs:cs_fs,ax
 ;    
@@ -2054,21 +2059,23 @@ crash_gate:
     pop eax
     mov fs:cs_cs,ax
 ;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov eax,ds:cpu_ext_feature_flags
-    test eax,20000000h
-    jz crash_gate_prot
-;
-    mov ecx,IA32_EFER
-    rdmsr
-    test eax,100h
-    jz crash_gate_prot
-;    
-    int 3
+    pop eax
+    mov dword ptr fs:cs_r15,eax
+    pop eax
+    mov dword ptr fs:cs_r15+4,eax
+    ExecuteCrashHandler
 
 crash_gate_prot:    
-    jmp CrashHandler
+    call SaveCore    
+    pop ax
+    mov fs:cs_fs,ax
+;    
+    pop eax
+    mov dword ptr fs:cs_rip,eax
+;
+    pop eax
+    mov fs:cs_cs,ax
+    ExecuteCrashHandler
 
 crash_gate_chain:
     call SaveCore    
@@ -2100,7 +2107,7 @@ crash_fault:
     cli    
     push eax
     push fs
-    call EnterHandler
+    EnterCrashDebug
     jc crash_fault_chain
 ;
     call SaveCore    
@@ -2144,13 +2151,13 @@ crash_fault_pm:
 ;    
     mov eax,[ebp].trap_esp
     mov dword ptr fs:cs_rsp,eax
-    jmp CrashHandler
+    ExecuteCrashHandler
     
 crash_fault_kernel:
     mov eax,ebp
     add eax,trap_esp
     mov dword ptr fs:cs_rsp,eax
-    jmp CrashHandler
+    ExecuteCrashHandler
 
 crash_fault_vm:
     mov ax,[ebp].trap_gs
@@ -2170,7 +2177,7 @@ crash_fault_vm:
 ;    
     mov eax,[ebp].trap_esp
     mov dword ptr fs:cs_rsp,eax
-    jmp CrashHandler
+    ExecuteCrashHandler
 
 crash_fault_chain:
     call SaveCore    
@@ -2257,7 +2264,7 @@ crash_fault_chain_vm:
 crash_tss_name    DB 'Crash Tss', 0
     
 crash_tss:
-    call EnterHandler
+    EnterCrashDebug
     jc crash_tss_chain
 ;    
     mov ax,double_tss_data_sel
@@ -2357,7 +2364,7 @@ crash_tss:
 ;
     sgdt fword ptr fs:cs_gdtr
     sidt fword ptr fs:cs_idtr
-    jmp CrashHandler
+    ExecuteCrashHandler
 
 crash_tss_chain:    
     mov ax,double_tss_data_sel
@@ -2478,12 +2485,6 @@ init_crashdeb    PROC near
     mov ds,ax
     mov es,ax
 ;
-    mov esi,OFFSET start_crash_core
-    mov edi,OFFSET start_crash_core_name
-    xor cl,cl
-    mov ax,start_crash_core_nr
-    RegisterOsGate
-;
     mov esi,OFFSET crash_gate
     mov edi,OFFSET crash_gate_name
     xor cl,cl
@@ -2502,6 +2503,31 @@ init_crashdeb    PROC near
     mov ax,crash_tss_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET enter_crash_debug
+    mov edi,OFFSET enter_crash_debug_name
+    xor cl,cl
+    mov ax,enter_crash_debug_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET execute_crash_handler
+    mov edi,OFFSET execute_crash_handler_name
+    xor cl,cl
+    mov ax,execute_crash_handler_nr
+    RegisterOsGate
+;
+    xor bl,bl
+    mov al,84h
+    mov esi,OFFSET crash_gate_int
+    SetupIntGate
+;    
+    mov ax,setup_long_crash_gate_nr
+    IsValidOsGate
+    jc icDone
+;    
+    mov al,84h
+    SetupLongCrashGate
+
+icDone:
     ret
 init_crashdeb    ENDP
 

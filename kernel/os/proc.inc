@@ -149,8 +149,8 @@ cs_gs               DW ?
 
 cs_ldt              DW ?
 cs_tr               DW ?
-cs_gdtr             DD ?, ?
-cs_idtr             DD ?, ?
+cs_gdtr             DD ?, ?, ?
+cs_idtr             DD ?, ?, ?
 
 cs_usel             DW ?
 cs_uoffs            DD ?

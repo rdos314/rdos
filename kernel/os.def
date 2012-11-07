@@ -5,6 +5,7 @@ register_usergate_nr		    = 2
 register_bimodal_usergate_nr	= 3
 register_usergate16_nr		    = 4
 register_usergate32_nr		    = 5
+register_long_osgate_nr         = 6
 create_alias_sel16_nr           = 7
 create_core_gdt_nr              = 8
 emulate_opcode_nr			    = 9
@@ -444,8 +445,6 @@ crash_gate_nr               = 388
 crash_tss_nr                = 389
 crash_fault_nr              = 390
 
-start_crash_core_nr         = 391
-
 read_pnp_byte_nr            = 393
 write_pnp_byte_nr           = 394
 
@@ -566,4 +565,9 @@ setup_long_preempt_timer_int_nr   = 476
 setup_long_hpet_int_nr      = 477
 clear_hpet_nr               = 478
 
-osgate_entries				= 480
+setup_long_crash_gate_nr    = 479
+
+enter_crash_debug_nr        = 480
+execute_crash_handler_nr    = 481
+
+osgate_entries				= 500

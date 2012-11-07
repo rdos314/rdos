@@ -105,6 +105,12 @@ init_osgate_loop:
     xor cl,cl
     RegisterOsGate
 ;
+    mov esi,OFFSET register_long_gate
+    mov edi,OFFSET register_long_gate_name
+    mov ax,register_long_osgate_nr
+    xor cl,cl
+    RegisterOsGate
+;
     popa
     pop es
     pop ds
@@ -160,6 +166,40 @@ register_gate   PROC far
     pop ds
     retf32
 register_gate   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           RegisterLongOsGate
+;
+;           DESCRIPTION:    Register an OS gate to long mode code segment
+;
+;           PARAMETERS:     AX          GATE NUMBER
+;                           CL          NUMBER OF 16-BIT PARAMETERS
+;                           ESI         GATE CALL ADDRESS
+;                           EDI         GATE NAME ADDRESS
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+register_long_gate_name      DB 'Register Long Kernel Gate',0
+
+register_long_gate   PROC far
+    push ds
+    push bx
+;
+    mov bx,ax
+    mov ax,osgate_sel
+    mov ds,ax
+    shl bx,4
+    mov [bx].os_gate_sel,long_kernel_code_sel
+    mov [bx].os_gate_offset,esi
+    mov [bx].os_gate_name_sel,long_kernel_code_sel
+    mov [bx].os_gate_name_offset,edi
+;
+    pop bx
+    pop ds
+    retf32
+register_long_gate   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
