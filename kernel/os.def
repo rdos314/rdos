@@ -441,7 +441,6 @@ send_nmi_nr                 = 386
 
 add_printer_nr              = 387
 
-crash_gate_nr               = 388
 crash_tss_nr                = 389
 crash_fault_nr              = 390
 

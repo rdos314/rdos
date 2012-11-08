@@ -2002,56 +2002,41 @@ enter_crash_debug    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 crash_gate_int:
-    int 3
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CrashGate
-;
-;           DESCRIPTION:    Crash with a gate
-;
-;           PARAMETERS:     CS:EIP on stack
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-crash_gate_name    DB 'Crash Gate', 0
-
-crash_gate:
-    int 3
-    cli    
-    push fs
-    EnterCrashDebug
-    jc crash_gate_chain
-;
-    push ds
-    mov ax,system_data_sel
-    mov ds,ax
-    mov eax,ds:cpu_ext_feature_flags
-    test eax,20000000h
-    jz crash_gate_prot
-;
+    push eax
+    push ebx
     push ecx
     push edx
-    mov ecx,IA32_EFER
-    rdmsr
-    pop edx
-    pop ecx
-    test eax,100h
-    jz crash_gate_prot
-;   
-    lock or fs:ps_flags,PS_FLAG_LONG_MODE 
+    push esi
+    push edi
+    push ebp
+    push fs
 ;
-    push bx
-    push ecx
-    mov bx,fs
-    GetSelectorBaseSize
-    pop ecx
-    pop bx
-;    CrashSaveLongRegs    
-;    
+    EnterCrashDebug
+    jc cgiChain
+;
     pop ax
     mov fs:cs_fs,ax
+;
+    pop eax
+    mov dword ptr fs:cs_rbp,eax
+;    
+    pop eax
+    mov dword ptr fs:cs_rdi,eax
+;    
+    pop eax
+    mov dword ptr fs:cs_rsi,eax
+;    
+    pop eax
+    mov dword ptr fs:cs_rdx,eax
+;    
+    pop eax
+    mov dword ptr fs:cs_rcx,eax
+;    
+    pop eax
+    mov dword ptr fs:cs_rbx,eax
+;    
+    pop eax
+    mov dword ptr fs:cs_rax,eax
 ;    
     pop eax
     mov dword ptr fs:cs_rip,eax
@@ -2060,33 +2045,126 @@ crash_gate:
     mov fs:cs_cs,ax
 ;
     pop eax
-    mov dword ptr fs:cs_r15,eax
-    pop eax
-    mov dword ptr fs:cs_r15+4,eax
+    mov dword ptr fs:cs_rflags,eax
+;            
+    mov fs:cs_ss,ss
+    mov dword ptr fs:cs_rsp,esp
+    mov fs:cs_es,es
+    mov fs:cs_ds,ds
+    mov fs:cs_gs,gs
+;
+    mov eax,cr0
+    mov fs:cs_cr0,eax
+;
+    mov eax,cr2
+    mov fs:cs_cr2,eax
+;
+    mov eax,cr3
+    mov fs:cs_cr3,eax
+;
+    mov eax,cr4
+    mov fs:cs_cr4,eax
+;
+    mov eax,dr0
+    mov fs:cs_dr0,eax
+;
+    mov eax,dr1
+    mov fs:cs_dr1,eax
+;
+    mov eax,dr2
+    mov fs:cs_dr2,eax
+;
+    mov eax,dr3
+    mov fs:cs_dr3,eax
+;
+    mov eax,dr7
+    mov fs:cs_dr7,eax
+;
+    sldt ax
+    mov fs:cs_ldt,ax
+;
+    str ax
+    mov fs:cs_tr,ax
+;
+    sgdt fs:cs_gdtr
+    sidt fs:cs_idtr            
     ExecuteCrashHandler
 
-crash_gate_prot:    
-    call SaveCore    
+cgiChain:
     pop ax
     mov fs:cs_fs,ax
+;
+    pop eax
+    mov dword ptr fs:cs_rbp,eax
+;    
+    pop eax
+    mov dword ptr fs:cs_rdi,eax
+;    
+    pop eax
+    mov dword ptr fs:cs_rsi,eax
+;    
+    pop eax
+    mov dword ptr fs:cs_rdx,eax
+;    
+    pop eax
+    mov dword ptr fs:cs_rcx,eax
+;    
+    pop eax
+    mov dword ptr fs:cs_rbx,eax
+;    
+    pop eax
+    mov dword ptr fs:cs_rax,eax
 ;    
     pop eax
     mov dword ptr fs:cs_rip,eax
 ;
     pop eax
     mov fs:cs_cs,ax
-    ExecuteCrashHandler
-
-crash_gate_chain:
-    call SaveCore    
-    pop ax
-    mov fs:cs_fs,ax
-;    
-    pop eax
-    mov dword ptr fs:cs_rip,eax
 ;
     pop eax
-    mov fs:cs_cs,ax
+    mov dword ptr fs:cs_rflags,eax
+;            
+    mov fs:cs_ss,ss
+    mov dword ptr fs:cs_rsp,esp
+    mov fs:cs_es,es
+    mov fs:cs_ds,ds
+    mov fs:cs_gs,gs
+;
+    mov eax,cr0
+    mov fs:cs_cr0,eax
+;
+    mov eax,cr2
+    mov fs:cs_cr2,eax
+;
+    mov eax,cr3
+    mov fs:cs_cr3,eax
+;
+    mov eax,cr4
+    mov fs:cs_cr4,eax
+;
+    mov eax,dr0
+    mov fs:cs_dr0,eax
+;
+    mov eax,dr1
+    mov fs:cs_dr1,eax
+;
+    mov eax,dr2
+    mov fs:cs_dr2,eax
+;
+    mov eax,dr3
+    mov fs:cs_dr3,eax
+;
+    mov eax,dr7
+    mov fs:cs_dr7,eax
+;
+    sldt ax
+    mov fs:cs_ldt,ax
+;
+    str ax
+    mov fs:cs_tr,ax
+;
+    sgdt fs:cs_gdtr
+    sidt fs:cs_idtr
     jmp nmi_block
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2484,12 +2562,6 @@ init_crashdeb    PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    mov esi,OFFSET crash_gate
-    mov edi,OFFSET crash_gate_name
-    xor cl,cl
-    mov ax,crash_gate_nr
-    RegisterOsGate
 ;
     mov esi,OFFSET crash_fault
     mov edi,OFFSET crash_fault_name

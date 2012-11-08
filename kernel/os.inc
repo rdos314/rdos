@@ -1427,7 +1427,7 @@ ExecuteCrashHandler       MACRO
                     ENDM
 
 CrashGate       MACRO
-    OsGate crash_gate_nr
+    int 84h
                     ENDM
 
 ;   SS:EBP       Fault stack
