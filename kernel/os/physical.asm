@@ -185,6 +185,7 @@ afbNext:
     jmp afbLoop
 
 afbFail:
+    mov ds:[si].phys_bitmap_pos,0
     xor bx,bx
     stc
     jmp afbDone
