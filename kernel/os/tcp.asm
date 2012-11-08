@@ -1686,6 +1686,13 @@ retrans_close:
     mov bx,ds:tcp_owner
     Signal
 ;
+    mov bx,ds:tcp_writer
+    or bx,bx
+    jz retrans_no_writer
+;
+    Signal
+
+retrans_no_writer:
     mov bx,ds:tcp_wait  
     or bx,bx
     jz retrans_done
@@ -1828,6 +1835,13 @@ CheckRst    Proc near
     mov bx,ds:tcp_owner
     Signal
 ;
+    mov bx,ds:tcp_writer
+    or bx,bx
+    jz check_rst_no_writer
+;
+    Signal
+
+check_rst_no_writer:
     mov bx,ds:tcp_wait  
     or bx,bx
     jz check_rst_ok
@@ -3835,9 +3849,17 @@ close_tcp_connection    Proc far
     call word ptr cs:[bx].close_tab
     LeaveSection ds:tcp_section
 ;
+    mov bx,ds:tcp_writer
+    or bx,bx
+    jz close_tcp_no_writer
+;
+    Signal
+
+close_tcp_no_writer:
     mov bx,ds:tcp_owner
     or bx,bx
     jz close_tcp_owner_ok
+;
     Signal
 
 close_tcp_owner_ok:
@@ -5577,6 +5599,13 @@ tcp_delete_timeout_do:
     mov bx,ds:tcp_owner
     Signal
 ;
+    mov bx,ds:tcp_writer
+    or bx,bx
+    jz tcp_delete_no_writer
+;
+    Signal
+
+tcp_delete_no_writer:
     mov bx,ds:tcp_wait  
     or bx,bx
     jz tcp_delete_timeout_done
