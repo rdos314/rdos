@@ -482,7 +482,7 @@ get_fault_thread_tss    PROC near
     mov ax,fs
     mov es,ax
     mov edi,ebp
-    mov ecx,OFFSET p_tss_end
+    mov ecx,SIZE user_tss_struc
     rep movs byte ptr es:[edi],ds:[esi]
     clc
     jmp gftEnd    
