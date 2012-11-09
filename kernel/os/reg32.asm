@@ -1687,17 +1687,17 @@ init_double_fault       Proc near
 ;
     mov eax,200h
     AllocateSmallGlobalMem
-    mov ds:c_tss_ss,es
-    mov ds:c_tss_esp,200h
+    mov ds:tss32_ss,es
+    mov ds:tss32_esp,200h
     mov eax,cr3
-    mov ds:c_tss_cr3,eax
+    mov ds:tss32_cr3,eax
 ;
-    mov ds:c_tss_bitmap, OFFSET c_tss_bitmap_space
+    mov ds:tss32_bitmap, OFFSET tss32_bitmap_space
     mov bx,3FFh
     mov byte ptr ds:[bx],-1    
 ;
-    mov ds:c_tss_cs,cs
-    mov ds:c_tss_eip,OFFSET double_fault
+    mov ds:tss32_cs,cs
+    mov ds:tss32_eip,OFFSET double_fault
 ;
     mov ax,idt_sel
     mov ds,ax

@@ -449,38 +449,38 @@ ms_pd_sel       DW ?
 
 process_seg	ENDS
 
-core_tss_seg		STRUC
+tss32_seg		STRUC
 
-c_tss_back_link	    DD ?
-c_tss_esp0		    DD ?
-c_tss_ess0		    DW ?,?
-c_tss_esp1		    DD ?
-c_tss_ess1		    DW ?,?
-c_tss_esp2		    DD ?
-c_tss_ess2		    DW ?,?
-c_tss_cr3			DD ?
-c_tss_eip			DD ?
-c_tss_eflags		DD ?
-c_tss_eax			DD ?
-c_tss_ecx			DD ?
-c_tss_edx			DD ?
-c_tss_ebx			DD ?
-c_tss_esp			DD ?
-c_tss_ebp			DD ?
-c_tss_esi			DD ?
-c_tss_edi			DD ?
-c_tss_es			DW ?,?
-c_tss_cs			DW ?,?
-c_tss_ss			DW ?,?
-c_tss_ds			DW ?,?
-c_tss_fs			DW ?,?
-c_tss_gs			DW ?,?
-c_tss_ldt			DW ?,?
-c_tss_t			    DW ?
-c_tss_bitmap		DW ?
+tss32_back_link	    DD ?
+tss32_esp0		    DD ?
+tss32_ess0		    DW ?,?
+tss32_esp1		    DD ?
+tss32_ess1		    DW ?,?
+tss32_esp2		    DD ?
+tss32_ess2		    DW ?,?
+tss32_cr3			DD ?
+tss32_eip			DD ?
+tss32_eflags		DD ?
+tss32_eax			DD ?
+tss32_ecx			DD ?
+tss32_edx			DD ?
+tss32_ebx			DD ?
+tss32_esp			DD ?
+tss32_ebp			DD ?
+tss32_esi			DD ?
+tss32_edi			DD ?
+tss32_es			DW ?,?
+tss32_cs			DW ?,?
+tss32_ss			DW ?,?
+tss32_ds			DW ?,?
+tss32_fs			DW ?,?
+tss32_gs			DW ?,?
+tss32_ldt			DW ?,?
+tss32_t			    DW ?
+tss32_bitmap		DW ?
 
-c_tss_io_bitmap     DW 40h DUP(?)
+tss32_io_bitmap     DW 40h DUP(?)
 
-c_tss_bitmap_space  DW ?
+tss32_bitmap_space  DW ?
 
-core_tss_seg		ENDS
+tss32_seg		ENDS

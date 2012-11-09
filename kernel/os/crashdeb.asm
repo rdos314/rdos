@@ -2414,7 +2414,7 @@ crash_tss:
 ;    
     mov ax,double_tss_data_sel
     mov ds,ax
-    mov bx,word ptr ds:c_tss_back_link
+    mov bx,word ptr ds:tss32_back_link
     mov fs:cs_tr,bx
 ;
     mov ax,gdt_sel
@@ -2434,57 +2434,57 @@ crash_tss:
     AllocateGdt
     CreateDataSelector16
     mov ds,bx
-    mov eax,ds:c_tss_eax
+    mov eax,ds:tss32_eax
     mov dword ptr fs:cs_rax,eax
 ;    
-    mov eax,ds:c_tss_ecx
+    mov eax,ds:tss32_ecx
     mov dword ptr fs:cs_rcx,eax
 ;
-    mov eax,ds:c_tss_edx
+    mov eax,ds:tss32_edx
     mov dword ptr fs:cs_rdx,eax
 ;
-    mov eax,ds:c_tss_ebx
+    mov eax,ds:tss32_ebx
     mov dword ptr fs:cs_rbx,eax
 ;
-    mov eax,ds:c_tss_esp    
+    mov eax,ds:tss32_esp    
     mov dword ptr fs:cs_rsp,eax
 ;
-    mov eax,ds:c_tss_ebp    
+    mov eax,ds:tss32_ebp    
     mov dword ptr fs:cs_rbp,eax
 ;
-    mov eax,ds:c_tss_eip    
+    mov eax,ds:tss32_eip    
     mov dword ptr fs:cs_rip,eax
 ;    
-    mov eax,ds:c_tss_esi
+    mov eax,ds:tss32_esi
     mov dword ptr fs:cs_rsi,eax
 ;
-    mov eax,ds:c_tss_edi    
+    mov eax,ds:tss32_edi    
     mov dword ptr fs:cs_rdi,eax
 ;    
-    mov ax,ds:c_tss_es
+    mov ax,ds:tss32_es
     mov fs:cs_es,ax
 ;
-    mov ax,ds:c_tss_cs    
+    mov ax,ds:tss32_cs    
     mov fs:cs_cs,ax
 ;    
-    mov ax,ds:c_tss_ss
+    mov ax,ds:tss32_ss
     mov fs:cs_ss,ax
 ;
-    mov ax,ds:c_tss_ds    
+    mov ax,ds:tss32_ds    
     mov fs:cs_ds,ax
 ;
-    mov ax,ds:c_tss_fs    
+    mov ax,ds:tss32_fs    
     mov fs:cs_fs,ax
 ;
-    mov ax,ds:c_tss_gs    
+    mov ax,ds:tss32_gs    
     mov fs:cs_gs,ax    
 ;
-    mov ax,ds:c_tss_ldt
+    mov ax,ds:tss32_ldt
     mov fs:cs_ldt,ax
 ;
     mov fs:cs_fault,8
 ;
-    mov eax,ds:c_tss_eflags
+    mov eax,ds:tss32_eflags
     mov dword ptr fs:cs_rflags,eax
 ;
     mov eax,cr0
@@ -2514,7 +2514,7 @@ crash_tss:
 crash_tss_chain:    
     mov ax,double_tss_data_sel
     mov ds,ax
-    mov bx,word ptr ds:c_tss_back_link
+    mov bx,word ptr ds:tss32_back_link
     mov fs:cs_tr,bx
 ;
     mov ax,gdt_sel
@@ -2534,54 +2534,54 @@ crash_tss_chain:
     AllocateGdt
     CreateDataSelector16
     mov ds,bx
-    mov eax,ds:c_tss_eax
+    mov eax,ds:tss32_eax
     mov dword ptr fs:cs_rax,eax
 ;    
-    mov eax,ds:c_tss_ecx
+    mov eax,ds:tss32_ecx
     mov dword ptr fs:cs_rcx,eax
 ;
-    mov eax,ds:c_tss_edx
+    mov eax,ds:tss32_edx
     mov dword ptr fs:cs_rdx,eax
 ;
-    mov eax,ds:c_tss_ebx
+    mov eax,ds:tss32_ebx
     mov dword ptr fs:cs_rbx,eax
 ;
-    mov eax,ds:c_tss_esp    
+    mov eax,ds:tss32_esp    
     mov dword ptr fs:cs_rsp,eax
 ;
-    mov eax,ds:c_tss_ebp    
+    mov eax,ds:tss32_ebp    
     mov dword ptr fs:cs_rbp,eax
 ;    
-    mov eax,ds:c_tss_esi
+    mov eax,ds:tss32_esi
     mov dword ptr fs:cs_rsi,eax
 ;
-    mov eax,ds:c_tss_edi    
+    mov eax,ds:tss32_edi    
     mov dword ptr fs:cs_rdi,eax
 ;    
-    mov ax,ds:c_tss_es
+    mov ax,ds:tss32_es
     mov fs:cs_es,ax
 ;
-    mov ax,ds:c_tss_cs    
+    mov ax,ds:tss32_cs    
     mov fs:cs_cs,ax
 ;    
-    mov ax,ds:c_tss_ss
+    mov ax,ds:tss32_ss
     mov fs:cs_ss,ax
 ;
-    mov ax,ds:c_tss_ds    
+    mov ax,ds:tss32_ds    
     mov fs:cs_ds,ax
 ;
-    mov ax,ds:c_tss_fs    
+    mov ax,ds:tss32_fs    
     mov fs:cs_fs,ax
 ;
-    mov ax,ds:c_tss_gs    
+    mov ax,ds:tss32_gs    
     mov fs:cs_gs,ax    
 ;
-    mov ax,ds:c_tss_ldt
+    mov ax,ds:tss32_ldt
     mov fs:cs_ldt,ax
 ;
     mov fs:cs_fault,8
 ;
-    mov eax,ds:c_tss_eflags
+    mov eax,ds:tss32_eflags
     mov dword ptr fs:cs_rflags,eax
 ;
     mov eax,cr0
