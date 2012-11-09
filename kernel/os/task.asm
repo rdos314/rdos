@@ -2570,65 +2570,6 @@ debug_break_block_do:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DoubleFault
-;
-;           DESCRIPTION:    Handle double fault exception (from task-gate)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-double_fault:
-    pushf
-    pop ax
-    and ax,NOT 4000h
-    push ax
-    popf
-;       
-    mov ax,gdt_sel
-    mov ds,ax
-    mov bx,double_tss_sel
-    and byte ptr ds:[bx+5],NOT 2
-;    
-    call TryLockCore
-    jc double_fault_lock_ok
-;    
-    CrashTss
-    
-double_fault_lock_ok:    
-    mov ss,fs:ps_ss
-    mov esp,fs:ps_esp
-;
-    xor ax,ax
-    mov es,ax
-    mov gs,ax    
-;
-    mov ax,fs:ps_curr_thread
-    or ax,ax
-    jz double_block
-
-double_fatal_no_thread:
-    CrashTss
-    
-double_block:
-    mov es,ax    
-    mov es:p_fault_vector,8
-    mov es:p_fault_code,0
-    mov fs:ps_curr_thread,0
-;    
-    mov ax,system_data_sel
-    mov ds,ax
-    mov edi,OFFSET debug_list       
-;
-    call cs:lock_list_proc
-    call InsertBlock32
-    call cs:unlock_list_proc
-;
-    mov es:p_sleep_sel,ds
-    mov es:p_sleep_offset,edi
-    jmp LoadThread        
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           PreemptNotify
 ;
 ;       DESCRIPTION:    Default preempt procedure
@@ -8702,69 +8643,6 @@ init_first_process      Proc near
     mov es:p_sti_spinlock,0
     ret
 init_first_process      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Init_double_fault
-;
-;           DESCRIPTION:    Init double fault handler
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_double_fault       Proc near
-    push ds
-    push es
-    pushad
-;    
-    mov eax,400h
-    AllocateSmallLinear
-;
-    mov bx,double_tss_sel
-        mov ecx,400h
-        CreateTssSelector
-;
-    mov bx,double_tss_data_sel
-    mov ecx,400h
-    CreateDataSelector16
-    mov ds,bx
-    mov es,bx
-;    
-    xor di,di
-    mov cx,100h
-    xor eax,eax
-    rep stosd
-;
-    mov eax,200h
-    AllocateSmallGlobalMem
-    mov ds:c_tss_ss,es
-    mov ds:c_tss_esp,200h
-    mov eax,cr3
-    mov ds:c_tss_cr3,eax
-;
-    mov ds:c_tss_bitmap, OFFSET c_tss_bitmap_space
-    mov bx,3FFh
-    mov byte ptr ds:[bx],-1    
-;
-    mov ds:c_tss_cs,cs
-    mov ds:c_tss_eip,OFFSET double_fault
-;
-        mov ax,idt_sel
-        mov ds,ax
-        mov bx,8 * 8
-        mov word ptr [bx],0
-        mov word ptr [bx+2],double_tss_sel
-        mov byte ptr [bx+4],0
-        mov byte ptr [bx+5],85h
-        mov word ptr [bx+6],0    
-;
-    popad
-    pop es
-    pop ds
-        ret
-init_double_fault       Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -8778,7 +8656,6 @@ init_double_fault       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_first_process_callback:
-    call init_double_fault
     NotifyInitProcess
     call start_processor_null_threads
     NotifyInitTasking

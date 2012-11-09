@@ -60,6 +60,7 @@ code    SEGMENT byte public use16 'CODE'
     extrn init_process_mem:near
     extrn free_process_proc:word
     extrn free_handle_process:near
+    extrn init_double_fault:near
 
     assume cs:code
 
@@ -527,6 +528,7 @@ notify_process_exit       ENDP
 notify_init_tasking_name  DB 'Notify Init Tasking',0
 
 notify_init_tasking       PROC far
+    call init_double_fault
     call trap_init_tasking
     retf32
 notify_init_tasking       ENDP

@@ -48,6 +48,46 @@ code    SEGMENT byte use16 public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           DoubleFault
+;
+;           DESCRIPTION:    Handle double fault exception (from task-gate)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+double_fault:
+    pushf
+    pop ax
+    and ax,NOT 4000h
+    push ax
+    popf
+;       
+    mov ax,gdt_sel
+    mov ds,ax
+    mov bx,double_tss_sel
+    and byte ptr ds:[bx+5],NOT 2
+;    
+    TryLockTask
+    jc double_fault_lock_ok
+
+double_crash:
+    CrashTss
+    
+double_fault_lock_ok:    
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz double_crash
+;
+    cmp ax,fs:ps_null_thread
+    je double_crash
+;
+    mov es,ax    
+    mov es:p_fault_vector,8
+    mov es:p_fault_code,0
+    DebugBlock
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           DebugException / LockedDebugException
 ;
 ;           DESCRIPTION:    Save current state from stack + local registers
@@ -1161,6 +1201,492 @@ clear_break ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetThreadTss
+;
+;           DESCRIPTION:    Get thread TSS
+;
+;           PARAMETERS:         ES:(E)DI        Buffer for TSS
+;                           BX                  Thread handle
+;                           NC                  Thread exists
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_thread_tss_name DB 'Get Thread TSS',0
+
+get_thread_tss  Proc near
+    push ds
+    push eax
+    push dx
+    push si
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov si,OFFSET debug_list
+    mov ax,[si]
+    or ax,ax
+    stc
+    jz get_thread_tss_done
+;
+    mov dx,ax
+
+get_thread_tss_loop:
+    mov ds,ax
+    cmp bx,ds:p_id
+    je get_thread_tss_found
+;
+    mov ax,ds:p_next
+    cmp ax,dx
+    jne get_thread_tss_loop
+    stc
+    jmp get_thread_tss_done
+
+get_thread_tss_found:
+    fnop
+    push ecx
+    push esi
+    push edi
+    mov ds,ax
+;
+    mov eax,ds:p_tss_cr3
+    mov es:[edi].ut_cr3,eax
+;    
+    mov eax,ds:p_tss_eip
+    mov es:[edi].ut_eip,eax
+;    
+    mov eax,ds:p_tss_eflags
+    mov es:[edi].ut_eflags,eax
+;    
+    mov eax,ds:p_tss_eax
+    mov es:[edi].ut_eax,eax
+;    
+    mov eax,ds:p_tss_ecx
+    mov es:[edi].ut_ecx,eax
+;    
+    mov eax,ds:p_tss_edx
+    mov es:[edi].ut_edx,eax
+;    
+    mov eax,ds:p_tss_ebx
+    mov es:[edi].ut_ebx,eax
+;    
+    mov eax,ds:p_tss_esp
+    mov es:[edi].ut_esp,eax
+;    
+    mov eax,ds:p_tss_ebp
+    mov es:[edi].ut_ebp,eax
+;    
+    mov eax,ds:p_tss_esi
+    mov es:[edi].ut_esi,eax
+;    
+    mov eax,ds:p_tss_edi
+    mov es:[edi].ut_edi,eax
+;    
+    mov ax,ds:p_tss_es
+    mov es:[edi].ut_es,ax
+;    
+    mov ax,ds:p_tss_cs
+    mov es:[edi].ut_cs,ax
+;    
+    mov ax,ds:p_tss_ss
+    mov es:[edi].ut_ss,ax
+;    
+    mov ax,ds:p_tss_ds
+    mov es:[edi].ut_ds,ax
+;    
+    mov ax,ds:p_tss_fs
+    mov es:[edi].ut_fs,ax
+;    
+    mov ax,ds:p_tss_gs
+    mov es:[edi].ut_gs,ax
+;    
+    mov ax,ds:p_tss_ldt
+    mov es:[edi].ut_ldt,ax
+;    
+    mov eax,ds:p_tss_dr0
+    mov es:[edi].ut_dr0,eax
+;    
+    mov eax,ds:p_tss_dr1
+    mov es:[edi].ut_dr1,eax
+;    
+    mov eax,ds:p_tss_dr2
+    mov es:[edi].ut_dr2,eax
+;    
+    mov eax,ds:p_tss_dr3
+    mov es:[edi].ut_dr3,eax
+;    
+    mov eax,ds:p_tss_dr7
+    mov es:[edi].ut_dr7,eax
+;    
+    mov eax,dword ptr ds:p_math_control
+    mov es:[edi].ut_math_control,eax
+;    
+    mov eax,dword ptr ds:p_math_status
+    mov es:[edi].ut_math_status,eax
+;    
+    mov eax,dword ptr ds:p_math_tag
+    mov es:[edi].ut_math_tag,eax
+;    
+    mov eax,ds:p_math_eip
+    mov es:[edi].ut_math_eip,eax
+;    
+    mov ax,ds:p_math_cs
+    mov es:[edi].ut_math_cs,ax
+;    
+    mov eax,ds:p_math_data_offs
+    mov es:[edi].ut_math_data_offs,eax
+;    
+    mov ax,ds:p_math_data_sel
+    mov es:[edi].ut_math_data_sel,ax
+;
+    mov esi,OFFSET p_math_st0
+    add edi,OFFSET ut_st0
+;        
+    mov eax,cr0
+    test al,4
+    jz get_thread_real_fpu
+
+get_thread_emul_fpu:
+    mov ax,ds:p_math_status
+    shr ax,3
+    mov al,ah
+    and ax,7
+    add ax,ax
+    mov si,ax
+    shl ax,2
+    add si,ax
+    add si,OFFSET p_math_st0
+    shr ax,3
+    mov dx,8
+
+get_thread_emul_loop:
+    mov ecx,10
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    inc al
+    cmp al,8
+    jne get_thread_emul_next
+;
+    xor al,al
+    mov si,OFFSET p_math_st0
+
+get_thread_emul_next:
+    sub dx,1
+    jnz get_thread_emul_loop   
+    jmp get_thread_fpu_done
+
+get_thread_real_fpu:
+    mov ecx,2 * 10
+    rep movs dword ptr es:[edi],ds:[esi]
+
+get_thread_fpu_done:
+    pop edi
+    pop esi
+    pop ecx
+    clc
+
+get_thread_tss_done:
+    pop si
+    pop dx
+    pop eax
+    pop ds
+    ret
+get_thread_tss  Endp
+
+get_thread_tss16    Proc far
+    push edi
+    movzx edi,di
+    call get_thread_tss
+    pop edi
+    retf32
+get_thread_tss16    Endp
+
+get_thread_tss32    Proc far
+    call get_thread_tss
+    retf32
+get_thread_tss32    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SetThreadTss
+;
+;           DESCRIPTION:    Set thread TSS
+;
+;           PARAMETERS:         ES:(E)DI        Buffer for TSS
+;                           BX                  Thread handle
+;                           NC                  Thread exists
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_thread_tss_name DB 'Set Thread TSS',0
+
+set_thread_tss  Proc near
+    push ds
+    push eax
+    push dx
+    push si
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov si,OFFSET debug_list
+    mov ax,[si]
+    or ax,ax
+    stc
+    jz set_thread_tss_done
+;
+    mov dx,ax
+
+set_thread_tss_loop:
+    mov ds,ax
+    cmp bx,ds:p_id
+    je set_thread_tss_found
+;
+    mov ax,ds:p_next
+    cmp ax,dx
+    jne set_thread_tss_loop
+    stc
+    jmp set_thread_tss_done
+
+set_thread_tss_found:
+    push ds
+    push es
+    push ecx
+    push esi
+    push edi
+;
+    mov cx,es
+    mov ds,cx
+    mov es,ax
+    mov esi,edi
+;
+    mov eax,ds:[esi].ut_cr3
+    mov es:p_cr3,eax
+;    
+    mov eax,ds:[esi].ut_eip
+    mov es:p_tss_eip,eax
+;    
+    mov eax,ds:[esi].ut_eflags
+    mov es:p_tss_eflags,eax
+;    
+    mov eax,ds:[esi].ut_eax
+    mov es:p_tss_eax,eax
+;    
+    mov eax,ds:[esi].ut_ecx
+    mov es:p_tss_ecx,eax
+;    
+    mov eax,ds:[esi].ut_edx
+    mov es:p_tss_edx,eax
+;    
+    mov eax,ds:[esi].ut_ebx
+    mov es:p_tss_ebx,eax
+;    
+    mov eax,ds:[esi].ut_esp
+    mov es:p_tss_esp,eax
+;    
+    mov eax,ds:[esi].ut_ebp
+    mov es:p_tss_ebp,eax
+;    
+    mov eax,ds:[esi].ut_esi
+    mov es:p_tss_esi,eax
+;    
+    mov eax,ds:[esi].ut_edi
+    mov es:p_tss_edi,eax
+;    
+    mov ax,ds:[esi].ut_es
+    mov es:p_tss_es,ax
+;    
+    mov ax,ds:[esi].ut_cs
+    mov es:p_tss_cs,ax
+;    
+    mov ax,ds:[esi].ut_ss
+    mov es:p_tss_ss,ax
+;    
+    mov ax,ds:[esi].ut_ds
+    mov es:p_tss_ds,ax
+;    
+    mov ax,ds:[esi].ut_fs
+    mov es:p_tss_fs,ax
+;    
+    mov ax,ds:[esi].ut_gs
+    mov es:p_tss_gs,ax
+;    
+    mov ax,ds:[esi].ut_ldt
+    mov es:p_tss_ldt,ax
+;    
+    mov eax,ds:[esi].ut_dr0
+    mov es:p_tss_dr0,eax
+;    
+    mov eax,ds:[esi].ut_dr1
+    mov es:p_tss_dr1,eax
+;    
+    mov eax,ds:[esi].ut_dr2
+    mov es:p_tss_dr2,eax
+;    
+    mov eax,ds:[esi].ut_dr3
+    mov es:p_tss_dr3,eax
+;    
+    mov eax,ds:[esi].ut_dr7
+    mov es:p_tss_dr7,eax
+;    
+    mov eax,ds:[esi].ut_math_control
+    mov dword ptr es:p_math_control,eax
+;    
+    mov eax,ds:[esi].ut_math_status
+    mov dword ptr es:p_math_status,eax
+;    
+    mov eax,ds:[esi].ut_math_tag
+    mov dword ptr es:p_math_tag,eax
+;    
+    mov eax,ds:[esi].ut_math_eip
+    mov es:p_math_eip,eax
+;    
+    mov ax,ds:[esi].ut_math_cs
+    mov es:p_math_cs,ax
+;    
+    mov eax,ds:[esi].ut_math_data_offs
+    mov es:p_math_data_offs,eax
+;    
+    mov ax,ds:[esi].ut_math_data_sel
+    mov es:p_math_data_sel,ax
+;
+    add esi,OFFSET ut_st0
+    mov edi,OFFSET p_math_st0
+;
+    mov eax,cr0
+    test al,4
+    jz set_thread_real_fpu
+
+set_thread_emul_fpu:
+    mov ax,es:p_math_status
+    shr ax,3
+    mov al,ah
+    and ax,7
+    add ax,ax
+    mov di,ax
+    shl ax,2
+    add di,ax
+    add di,OFFSET p_math_st0
+    shr ax,3
+    mov dx,8
+
+set_thread_emul_loop:
+    mov ecx,10
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    inc al
+    cmp al,8
+    jne set_thread_emul_next
+;
+    xor al,al
+    mov di,OFFSET p_math_st0
+
+set_thread_emul_next:
+    sub dx,1
+    jnz set_thread_emul_loop   
+    jmp set_thread_fpu_done
+
+set_thread_real_fpu:
+    mov ecx,2 * 10
+    rep movs dword ptr es:[edi],ds:[esi]
+
+set_thread_fpu_done:
+    pop edi
+    pop esi
+    pop ecx
+    pop es
+    pop ds
+    clc
+
+set_thread_tss_done:
+    pop si
+    pop dx
+    pop eax
+    pop ds
+    ret
+set_thread_tss  Endp
+
+set_thread_tss16    Proc far
+    push edi
+    movzx edi,di
+    call set_thread_tss
+    pop edi
+    retf32
+set_thread_tss16    Endp
+
+set_thread_tss32    Proc far
+    call set_thread_tss
+    retf32
+set_thread_tss32    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Init_double_fault
+;
+;           DESCRIPTION:    Init double fault handler
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public init_double_fault
+    
+init_double_fault       Proc near
+    push ds
+    push es
+    pushad
+;    
+    mov eax,400h
+    AllocateSmallLinear
+;
+    mov bx,double_tss_sel
+    mov ecx,400h
+    CreateTssSelector
+;
+    mov bx,double_tss_data_sel
+    mov ecx,400h
+    CreateDataSelector16
+    mov ds,bx
+    mov es,bx
+;    
+    xor di,di
+    mov cx,100h
+    xor eax,eax
+    rep stosd
+;
+    mov eax,200h
+    AllocateSmallGlobalMem
+    mov ds:c_tss_ss,es
+    mov ds:c_tss_esp,200h
+    mov eax,cr3
+    mov ds:c_tss_cr3,eax
+;
+    mov ds:c_tss_bitmap, OFFSET c_tss_bitmap_space
+    mov bx,3FFh
+    mov byte ptr ds:[bx],-1    
+;
+    mov ds:c_tss_cs,cs
+    mov ds:c_tss_eip,OFFSET double_fault
+;
+    mov ax,idt_sel
+    mov ds,ax
+    mov bx,8 * 8
+    mov word ptr [bx],0
+    mov word ptr [bx+2],double_tss_sel
+    mov byte ptr [bx+4],0
+    mov byte ptr [bx+5],85h
+    mov word ptr [bx+6],0    
+;
+    popad
+    pop es
+    pop ds
+        ret
+init_double_fault       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           INIT_REG32
@@ -1258,9 +1784,22 @@ init_reg32       PROC near
     xor dx,dx
     mov ax,clear_break_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET get_thread_tss16
+    mov esi,OFFSET get_thread_tss32
+    mov edi,OFFSET get_thread_tss_name
+    mov dx,virt_es_in
+    mov ax,get_thread_tss_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET set_thread_tss16
+    mov esi,OFFSET set_thread_tss32
+    mov edi,OFFSET set_thread_tss_name
+    mov dx,virt_es_in
+    mov ax,set_thread_tss_nr
+    RegisterUserGate
     ret
 init_reg32       ENDP
-
 
 code    ENDS
 
