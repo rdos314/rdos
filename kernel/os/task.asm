@@ -7334,12 +7334,6 @@ allocate_thread_block   PROC near
     mov eax,SIZE thread_seg
     AllocateSmallGlobalMem
     mov es:p_thread_sel,es
-;
-    mov bx,es
-    GetSelectorBaseSize
-    AllocateGdt
-    CreateTssSelector
-    mov es:p_tss_sel,bx
     ret
 allocate_thread_block   ENDP
 
@@ -7545,7 +7539,7 @@ init_virt_thread    ENDP
 ;
 ;   DESCRIPTION:    Create 32-bit TSS
 ;
-;   PARAMETERS:     DS          TSS
+;   PARAMETERS:     DS          Thread
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -7555,6 +7549,12 @@ create_tss32    PROC near
     push ebx
     push ecx
     push edx
+;
+    mov bx,ds
+    GetSelectorBaseSize
+    AllocateGdt
+    CreateTssSelector
+    mov ds:p_tss_sel,bx
 ;       
     mov ds:tss32_back_link,0
     mov ds:tss32_t,0
@@ -8541,6 +8541,13 @@ init_first_process      Proc near
     mov ax,virt_thread_sel
     mov es,ax
     call allocate_thread_block
+;
+    mov bx,es
+    GetSelectorBaseSize
+    AllocateGdt
+    CreateTssSelector
+    mov es:p_tss_sel,bx
+;
     call create_first_thread
     call init_process_block
     mov ax,es
