@@ -406,6 +406,7 @@ locked_debug_exception_nr   = 364
 
 lock_task_nr                = 365
 unlock_task_nr              = 366
+try_lock_task_nr            = 367
 
 get_core_nr                 = 368
 get_core_count_nr           = 369

@@ -1357,6 +1357,11 @@ tucSwap:
 tucDone:
                         ENDM
 
+;  OUT FS       Core sel
+TryLockTask    MACRO
+    OsGate try_lock_task_nr
+                        ENDM
+
 LockTask    MACRO
     OsGate lock_task_nr
                         ENDM

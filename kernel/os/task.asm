@@ -3424,7 +3424,7 @@ locked_debug_exception:
 debug_exception:
     movzx ax,al
     push fs
-    call TryLockCore
+    TryLockTask
     jc debug_normal
 
 debug_fault:
@@ -3438,6 +3438,12 @@ debug_normal:
     pop ax
     jz debug_fault
 ;    
+    push ax
+    mov ax,fs:ps_curr_thread
+    cmp ax,fs:ps_null_thread
+    pop ax
+    je debug_fault
+;
     mov ds,fs:ps_curr_thread 
     mov al,[ebp].trap_exc_nr
     mov ds:p_fault_vector,al
@@ -3516,10 +3522,6 @@ debug_save_ok:
     mov ds,ax
     mov es,ax
     mov gs,ax    
-;
-    mov ax,fs:ps_curr_thread
-    cmp ax,fs:ps_null_thread
-    je debug_fault
     
 debug_block:
     mov es,fs:ps_curr_thread
@@ -4740,6 +4742,28 @@ irq_schedule    Proc far
 irqsDone:
     retf32
 irq_schedule    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TryLockTask
+;
+;           DESCRIPTION:    Try lock task
+;
+;           RETURNS:        FS      Core sel
+;                           NC      Not previously locked
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+try_lock_task_name  DB 'Try Lock Task',0
+
+try_lock_task       Proc far
+    push ds
+    call TryLockCore
+    pop ds
+    retf32
+try_lock_task       Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -10016,6 +10040,12 @@ timer_free_list_create:
     mov di,OFFSET get_scheduler_lock_counter_name
     xor cl,cl
     mov ax,get_scheduler_lock_counter_nr
+    RegisterOsGate
+;
+    mov si,OFFSET try_lock_task
+    mov di,OFFSET try_lock_task_name
+    xor cl,cl
+    mov ax,try_lock_task_nr
     RegisterOsGate
 ;
     mov si,OFFSET lock_task
