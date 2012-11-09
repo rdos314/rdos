@@ -224,6 +224,127 @@ tsRet:
     retf32
 notify_thread_suspend   Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DebugException / LockedDebugException
+;
+;           DESCRIPTION:    Save current state from stack + local registers
+;
+;       PARAMETERS:     SS:EBP       Exception stack
+;                       AL      Fault vector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+debug_exception_name            DB 'Debug Exception', 0
+locked_debug_exception_name     DB 'Locked Debug Exception', 0
+
+locked_debug_exception:
+    movzx ax,al
+    push fs
+    push ax
+    mov ax,core_data_sel
+    mov fs,ax
+    mov fs,fs:ps_sel
+    pop ax
+    jmp debug_normal
+
+debug_exception:
+    movzx ax,al
+    push fs
+    TryLockTask
+    jc debug_normal
+
+debug_fault:
+    movzx eax,al
+    CrashFault
+   
+debug_normal:       
+    push ax
+    mov ax,fs:ps_curr_thread 
+    or ax,ax
+    pop ax
+    jz debug_fault
+;    
+    push ax
+    mov ax,fs:ps_curr_thread
+    cmp ax,fs:ps_null_thread
+    pop ax
+    je debug_fault
+;
+    mov ds,fs:ps_curr_thread 
+    mov al,[ebp].trap_exc_nr
+    mov ds:p_fault_vector,al
+    mov eax,[ebp].trap_err
+    mov ds:p_fault_code,eax
+;
+    mov eax,[ebp].trap_eax
+    mov ds:p_tss_eax,eax
+    mov eax,[ebp].trap_ebx
+    mov ds:p_tss_ebx,eax
+    mov ds:p_tss_ecx,ecx
+    mov ds:p_tss_edx,edx
+    mov ds:p_tss_esi,esi
+    mov ds:p_tss_edi,edi
+    mov eax,[ebp].trap_ebp
+    mov ds:p_tss_ebp,eax
+;       
+    mov eax,[ebp].trap_eflags
+    mov ds:p_tss_eflags,eax
+    mov ax,[ebp].trap_cs
+    mov ds:p_tss_cs,ax
+    mov eax,[ebp].trap_eip
+    mov ds:p_tss_eip,eax
+;       
+    pop si
+    test dword ptr [ebp].trap_eflags,20000h
+    jnz debug_vm
+
+debug_pm:
+    mov al,[ebp].trap_cs
+    test al,3
+    jz debug_kernel
+;
+    mov ax,[ebp].trap_ss
+    mov ds:p_tss_ss,ax
+    mov eax,[ebp].trap_esp
+    mov ds:p_tss_esp,eax
+    jmp debug_pm_common
+    
+debug_kernel:
+    mov ax,ss
+    mov ds:p_tss_ss,ax
+    mov eax,ebp
+    add eax,trap_esp
+    mov ds:p_tss_esp,eax
+    
+debug_pm_common:
+    mov ax,[ebp].trap_pds
+    mov ds:p_tss_ds,ax
+    mov ax,es
+    mov ds:p_tss_es,ax
+    mov ds:p_tss_fs,si
+    mov ax,gs
+    mov ds:p_tss_gs,ax
+    jmp debug_save_ok
+
+debug_vm:
+    mov ax,[ebp].trap_gs
+    mov ds:p_tss_gs,ax
+    mov ax,[ebp].trap_fs
+    mov ds:p_tss_fs,ax
+    mov ax,[ebp].trap_ds
+    mov ds:p_tss_ds,ax
+    mov ax,[ebp].trap_es
+    mov ds:p_tss_es,ax
+    mov ax,[ebp].trap_ss
+    mov ds:p_tss_ss,ax
+    mov eax,[ebp].trap_esp
+    mov ds:p_tss_esp,eax
+
+debug_save_ok:
+    DebugBlock
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2451,6 +2572,18 @@ init_avail_irq_loop:
     mov edi,OFFSET notify_thread_suspend_name
     xor cl,cl
     mov ax,notify_thread_suspend_nr
+    RegisterOsGate
+;
+    mov si,OFFSET debug_exception
+    mov di,OFFSET debug_exception_name
+    xor cl,cl
+    mov ax,debug_exception_nr
+    RegisterOsGate
+;
+    mov si,OFFSET locked_debug_exception
+    mov di,OFFSET locked_debug_exception_name
+    xor cl,cl
+    mov ax,locked_debug_exception_nr
     RegisterOsGate
     ret
 init_trap_vectors       ENDP

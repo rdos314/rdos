@@ -1452,6 +1452,11 @@ CrashTss    MACRO
 
 ;;;;;;;;;;; Debugger ;;;;;;;;;;;;;;;;
 
+;   FS      Core
+DebugBlock    MACRO
+    OsGate debug_block_nr
+                        ENDM
+
 ;   SS:EBP     Exception stack
 DebugException    MACRO
     OsGate debug_exception_nr
