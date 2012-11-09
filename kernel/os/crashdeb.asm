@@ -1474,112 +1474,6 @@ SetupFaultHandlers      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:           Nmi
-;
-;               DESCRIPTION:    NMI handler
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-nmi_gs  EQU 48
-nmi_fs  EQU 44
-nmi_ds  EQU 40
-nmi_es  EQU 36
-nmi_ss  EQU 32
-nmi_esp EQU 28
-nmi_efl EQU 24
-nmi_cs  EQU 20
-nmi_eip EQU 16
-nmi_sfs EQU 14
-nmi_sgs EQU 12
-nmi_eax EQU 8
-nmi_ebx EQU 4
-nmi_ebp EQU 0
-
-nmi_handler:
-    push fs
-    push gs
-    push eax
-    push ebx
-    push ebp
-    mov ebp,esp
-;
-    GetCore
-    test fs:ps_flags,PS_FLAG_NMI
-    jnz nmi_ret
-;
-    or fs:ps_flags,PS_FLAG_NMI    
-    mov ax,fs
-    mov gs,ax
-;    
-    call SaveCore
-    mov gs:cs_fault,-1
-    mov gs:cs_irq,0
-;    
-    mov eax,[ebp].nmi_ebp
-    mov dword ptr gs:cs_rbp,eax
-    mov eax,[ebp].nmi_ebx
-    mov dword ptr gs:cs_rbx,eax
-    mov eax,[ebp].nmi_eax
-    mov dword ptr gs:cs_rax,eax
-    mov eax,[ebp].nmi_eip
-    mov dword ptr gs:cs_rip,eax
-    mov ax,[ebp].nmi_cs
-    mov gs:cs_cs,ax
-    mov ebx,[ebp].nmi_efl
-    mov dword ptr gs:cs_rflags,ebx
-    test ebx,20000h
-    jnz nmi_v86
-;    
-    mov bx,[ebp].nmi_sfs
-    mov gs:cs_fs,bx
-    mov bx,[ebp].nmi_sgs
-    mov gs:cs_gs,bx
-;    
-    and al,3
-    or al,al
-    jz nmi_kernel
-;
-    mov eax,[ebp].nmi_esp
-    mov dword ptr gs:cs_rsp,eax
-    mov ax,[ebp].nmi_ss
-    mov gs:cs_ss,ax
-    jmp nmi_block
-
-nmi_kernel:
-    mov eax,ebp
-    add eax,nmi_esp
-    mov dword ptr gs:cs_rsp,eax
-    jmp nmi_block
-
-nmi_v86:
-    mov eax,[ebp].nmi_esp
-    mov dword ptr gs:cs_rsp,eax
-    mov ax,[ebp].nmi_ss
-    mov gs:cs_ss,ax
-    mov ax,[ebp].nmi_ds
-    mov gs:cs_ds,ax
-    mov ax,[ebp].nmi_es
-    mov gs:cs_es,ax
-    mov ax,[ebp].nmi_fs
-    mov gs:cs_fs,ax
-    mov ax,[ebp].nmi_gs
-    mov gs:cs_gs,ax
-
-nmi_block:
-    jmp nmi_block
-
-nmi_ret:
-    pop ebp
-    pop ebx
-    pop eax
-    pop gs
-    pop fs
-    iretd
-
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;               NAME:           DelayMs
 ;
 ;               DESCRIPTION:    Delay that does not use multitasking functions
@@ -1687,6 +1581,20 @@ SaveCore Proc near
     pop eax
     ret
 SaveCore Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CrashNmi
+;
+;           DESCRIPTION:    Crash from NMI
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+crash_nmi_name  DB 'Crash NMI', 0
+
+crash_nmi:
+    jmp crash_nmi
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1922,7 +1830,7 @@ enter_first:
     mov es,ax
     mov al,2
     xor bl,bl
-    mov esi,OFFSET nmi_handler
+    mov esi,OFFSET nmi_int
     SetupIntGate
 ;
     pop esi
@@ -1991,6 +1899,157 @@ enter_done:
     pop ds
     retf32
 enter_crash_debug    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           NmiInt
+;
+;           DESCRIPTION:    Crash from NMI
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+nmi_int:
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+    push fs
+;
+    GetCore
+    test fs:ps_flags,PS_FLAG_NMI
+    jnz nmi_ret
+;
+    or fs:ps_flags,PS_FLAG_NMI    
+;
+    pop ax
+    mov fs:cs_fs,ax
+;
+    pop eax
+    mov dword ptr fs:cs_rbp,eax
+;    
+    pop eax
+    mov dword ptr fs:cs_rdi,eax
+;    
+    pop eax
+    mov dword ptr fs:cs_rsi,eax
+;    
+    pop eax
+    mov dword ptr fs:cs_rdx,eax
+;    
+    pop eax
+    mov dword ptr fs:cs_rcx,eax
+;    
+    pop eax
+    mov dword ptr fs:cs_rbx,eax
+;    
+    pop eax
+    mov dword ptr fs:cs_rax,eax
+;    
+    pop eax
+    mov dword ptr fs:cs_rip,eax
+;
+    pop eax
+    mov fs:cs_cs,ax
+;
+    pop eax
+    mov dword ptr fs:cs_rflags,eax
+;
+    mov fs:cs_es,es
+    mov fs:cs_ds,ds
+    mov fs:cs_gs,gs
+;
+    mov eax,cr0
+    mov fs:cs_cr0,eax
+;
+    mov eax,cr2
+    mov fs:cs_cr2,eax
+;
+    mov eax,cr3
+    mov fs:cs_cr3,eax
+;
+    mov eax,cr4
+    mov fs:cs_cr4,eax
+;
+    mov eax,dr0
+    mov fs:cs_dr0,eax
+;
+    mov eax,dr1
+    mov fs:cs_dr1,eax
+;
+    mov eax,dr2
+    mov fs:cs_dr2,eax
+;
+    mov eax,dr3
+    mov fs:cs_dr3,eax
+;
+    mov eax,dr7
+    mov fs:cs_dr7,eax
+;
+    sldt ax
+    mov fs:cs_ldt,ax
+;
+    str ax
+    mov fs:cs_tr,ax
+;
+    sgdt fs:cs_gdtr
+    sidt fs:cs_idtr           
+;
+    mov eax,dword ptr fs:cs_rflags
+    test eax,20000h
+    jnz nmi_v86
+;
+    mov ax,fs:cs_cs
+    and al,3
+    or al,al
+    jz nmi_kernel
+
+nmi_user:
+    pop eax
+    mov dword ptr fs:cs_rsp,eax
+;
+    pop eax
+    mov fs:cs_ss,ax
+    CrashNmi
+
+nmi_kernel:
+    mov fs:cs_ss,ss
+    mov dword ptr fs:cs_rsp,esp
+    CrashNmi
+
+nmi_v86:
+    pop eax
+    mov dword ptr fs:cs_rsp,eax
+;
+    pop eax
+    mov fs:cs_ss,ax
+;
+    pop eax
+    mov fs:cs_es,ax
+;
+    pop eax
+    mov fs:cs_ds,ax
+;
+    pop eax
+    mov fs:cs_fs,ax
+;
+    pop eax
+    mov fs:cs_gs,ax 
+    CrashNmi
+
+nmi_ret:
+    pop fs
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2165,7 +2224,7 @@ cgiChain:
 ;
     sgdt fs:cs_gdtr
     sidt fs:cs_idtr
-    jmp nmi_block
+    CrashNmi
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2299,13 +2358,13 @@ crash_fault_chain_pm:
 ;    
     mov eax,[ebp].trap_esp
     mov dword ptr fs:cs_rsp,eax
-    jmp nmi_block
+    CrashNmi
     
 crash_fault_chain_kernel:
     mov eax,ebp
     add eax,trap_esp
     mov dword ptr fs:cs_rsp,eax
-    jmp nmi_block
+    CrashNmi
 
 crash_fault_chain_vm:
     mov ax,[ebp].trap_gs
@@ -2325,7 +2384,7 @@ crash_fault_chain_vm:
 ;    
     mov eax,[ebp].trap_esp
     mov dword ptr fs:cs_rsp,eax
-    jmp nmi_block
+    CrashNmi
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2539,7 +2598,7 @@ crash_tss_chain:
 ;
     sgdt fword ptr fs:cs_gdtr
     sidt fword ptr fs:cs_idtr
-    jmp nmi_block
+    CrashNmi
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2585,6 +2644,12 @@ init_crashdeb    PROC near
     mov edi,OFFSET execute_crash_handler_name
     xor cl,cl
     mov ax,execute_crash_handler_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET crash_nmi
+    mov edi,OFFSET crash_nmi_name
+    xor cl,cl
+    mov ax,crash_nmi_nr
     RegisterOsGate
 ;
     xor bl,bl
