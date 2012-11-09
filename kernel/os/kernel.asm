@@ -71,6 +71,7 @@ ENDIF
     extrn init_usergate:near
     extrn init_int:near
     extrn init_trap_vectors:near
+    extrn init_reg32:near
     extrn move_adapters:near
     extrn init_device:near
     
@@ -786,6 +787,7 @@ prot_init:
     call init_handle
     call init_int
     call init_trap_vectors
+    call init_reg32
     call init_device    
 ;
     mov bx,system_data_sel
