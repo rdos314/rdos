@@ -83,6 +83,34 @@ double_fault_lock_ok:
     mov es,ax    
     mov es:p_fault_vector,8
     mov es:p_fault_code,0
+;
+    mov eax,es:p_tss_eax
+    mov dword ptr es:p_tss_rax,eax
+;
+    mov eax,es:p_tss_ebx
+    mov dword ptr es:p_tss_rbx,eax
+;
+    mov eax,es:p_tss_ecx
+    mov dword ptr es:p_tss_rcx,eax
+;
+    mov eax,es:p_tss_edx
+    mov dword ptr es:p_tss_rdx,eax
+;
+    mov eax,es:p_tss_esi
+    mov dword ptr es:p_tss_rsi,eax
+;
+    mov eax,es:p_tss_edi
+    mov dword ptr es:p_tss_rdi,eax
+;
+    mov eax,es:p_tss_ebp
+    mov dword ptr es:p_tss_rbp,eax
+;
+    mov eax,es:p_tss_esp
+    mov dword ptr es:p_tss_rsp,eax
+;
+    mov eax,es:p_tss_eip
+    mov dword ptr es:p_tss_rip,eax
+;        
     DebugBlock
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
