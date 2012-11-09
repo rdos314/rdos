@@ -1746,6 +1746,11 @@ SetupLongCrashGate   MACRO
     OsGate setup_long_crash_gate_nr
                     ENDM
 
+; IN  AL        IRQ #
+SetupLongCrashNmi   MACRO
+    OsGate setup_long_crash_nmi_nr
+                    ENDM
+
 ;;;;;;;;; TIME & DATE ;;;;;;;;;;;;;
 
 ;       EDX:EAX     SYSTEM TIME

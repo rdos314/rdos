@@ -401,6 +401,28 @@ setup_long_crash_gate Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           SetupLongCrashNmi
+;
+;   DESCRIPTION:    Setup long-mode crash NMI handler
+;
+;   PARAMETERS:     AL      Interrupt #
+;                   BL      DPL
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_long_crash_nmi_name   DB 'Setup Long Crash Nmi', 0
+    
+setup_long_crash_nmi  proc far
+    push esi
+    mov esi,OFFSET crash_nmi_int
+    SetupLongIntGate
+    pop esi
+    ret
+setup_long_crash_nmi Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           InitIdt
 ;
 ;   DESCRIPTION:    Init 64-bit IDT
@@ -825,6 +847,12 @@ init    proc far
     mov edi,OFFSET setup_long_crash_gate_name
     xor cl,cl
     mov ax,setup_long_crash_gate_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET setup_long_crash_nmi
+    mov edi,OFFSET setup_long_crash_nmi_name
+    xor cl,cl
+    mov ax,setup_long_crash_nmi_nr
     RegisterOsGate
 ;
     mov edi,init_task
@@ -2818,9 +2846,228 @@ crash_gate_int:
     ExecuteCrashHandler
 
 cgiChain:
-    int 3
-    iretq
+    mov bx,fs
+    GetSelectorBaseSize
+    pop fs
+;
+    lock or [edx].ps_flags,PS_FLAG_LONG_MODE
+    pop rax
+    mov [edx].cs_rbp,rax
+;    
+    pop rax
+    mov [edx].cs_rdi,rax
+;    
+    pop rax
+    mov [edx].cs_rsi,rax
+;    
+    pop rax
+    mov [edx].cs_rdx,rax
+;    
+    pop rax
+    mov [edx].cs_rcx,rax
+;    
+    pop rax
+    mov [edx].cs_rbx,rax
+;    
+    pop rax
+    mov [edx].cs_rax,rax
+;    
+    pop rax
+    mov [edx].cs_rip,rax
+;
+    pop rax
+    mov [edx].cs_cs,ax
+;
+    pop rax
+    mov [edx].cs_rflags,rax
+;
+    pop rax
+    mov [edx].cs_rsp,rax
+;
+    pop rax
+    mov [edx].cs_ss,ax
+;            
+    mov [edx].cs_r8,r8
+    mov [edx].cs_r9,r9
+    mov [edx].cs_r10,r10
+    mov [edx].cs_r11,r11
+    mov [edx].cs_r12,r12
+    mov [edx].cs_r13,r13
+    mov [edx].cs_r14,r14
+    mov [edx].cs_r15,r15
+    mov [edx].cs_es,es
+    mov [edx].cs_ds,ds
+    mov [edx].cs_fs,fs
+    mov [edx].cs_gs,gs
+;
+    mov rax,cr0
+    mov [edx].cs_cr0,eax
+;
+    mov rax,cr2
+    mov [edx].cs_cr2,eax
+;
+    mov rax,cr3
+    mov [edx].cs_cr3,eax
+;
+    mov rax,cr4
+    mov [edx].cs_cr4,eax
+;
+    mov rax,dr0
+    mov [edx].cs_dr0,eax
+;
+    mov rax,dr1
+    mov [edx].cs_dr1,eax
+;
+    mov rax,dr2
+    mov [edx].cs_dr2,eax
+;
+    mov rax,dr3
+    mov [edx].cs_dr3,eax
+;
+    mov rax,dr7
+    mov [edx].cs_dr7,eax
+;
+    sldt eax
+    mov [edx].cs_ldt,ax
+;
+    str eax
+    mov [edx].cs_tr,ax
+;
+    sgdt [edx].cs_gdtr
+    sidt [edx].cs_idtr            
+    CrashNmi
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           crash_nmi_int
+;
+;   DESCRIPTION:    Crash NMI handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+crash_nmi_int:
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    push rbp
+;
+    push fs
+    GetCore
+;
+    mov bx,fs
+    GetSelectorBaseSize
+    pop fs
+;
+    test [edx].ps_flags,PS_FLAG_NMI
+    jnz nmi_ret
+;
+    lock or [edx].ps_flags,PS_FLAG_LONG_MODE OR PS_FLAG_NMI    
+    pop rax
+    mov [edx].cs_rbp,rax
+;    
+    pop rax
+    mov [edx].cs_rdi,rax
+;    
+    pop rax
+    mov [edx].cs_rsi,rax
+;    
+    pop rax
+    mov [edx].cs_rdx,rax
+;    
+    pop rax
+    mov [edx].cs_rcx,rax
+;    
+    pop rax
+    mov [edx].cs_rbx,rax
+;    
+    pop rax
+    mov [edx].cs_rax,rax
+;    
+    pop rax
+    mov [edx].cs_rip,rax
+;
+    pop rax
+    mov [edx].cs_cs,ax
+;
+    pop rax
+    mov [edx].cs_rflags,rax
+;
+    pop rax
+    mov [edx].cs_rsp,rax
+;
+    pop rax
+    mov [edx].cs_ss,ax
+;            
+    mov [edx].cs_r8,r8
+    mov [edx].cs_r9,r9
+    mov [edx].cs_r10,r10
+    mov [edx].cs_r11,r11
+    mov [edx].cs_r12,r12
+    mov [edx].cs_r13,r13
+    mov [edx].cs_r14,r14
+    mov [edx].cs_r15,r15
+    mov [edx].cs_es,es
+    mov [edx].cs_ds,ds
+    mov [edx].cs_fs,fs
+    mov [edx].cs_gs,gs
+;
+    mov rax,cr0
+    mov [edx].cs_cr0,eax
+;
+    mov rax,cr2
+    mov [edx].cs_cr2,eax
+;
+    mov rax,cr3
+    mov [edx].cs_cr3,eax
+;
+    mov rax,cr4
+    mov [edx].cs_cr4,eax
+;
+    mov rax,dr0
+    mov [edx].cs_dr0,eax
+;
+    mov rax,dr1
+    mov [edx].cs_dr1,eax
+;
+    mov rax,dr2
+    mov [edx].cs_dr2,eax
+;
+    mov rax,dr3
+    mov [edx].cs_dr3,eax
+;
+    mov rax,dr7
+    mov [edx].cs_dr7,eax
+;
+    sldt eax
+    mov [edx].cs_ldt,ax
+;
+    str eax
+    mov [edx].cs_tr,ax
+;
+    sgdt [edx].cs_gdtr
+    sidt [edx].cs_idtr            
+    CrashNmi
+
+nmi_ret:
+    pop rbp
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    iretq
+    
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;  Test code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 comp_dest:
     dd OFFSET compat_test

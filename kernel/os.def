@@ -569,5 +569,6 @@ setup_long_crash_gate_nr    = 479
 enter_crash_debug_nr        = 480
 execute_crash_handler_nr    = 481
 crash_nmi_nr                = 482
+setup_long_crash_nmi_nr     = 483
 
 osgate_entries				= 500
