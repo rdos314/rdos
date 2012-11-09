@@ -83,33 +83,80 @@ double_fault_lock_ok:
     mov es,ax    
     mov es:p_fault_vector,8
     mov es:p_fault_code,0
+;    
+    mov ax,double_tss_data_sel
+    mov ds,ax
+    mov bx,word ptr ds:tss32_back_link
 ;
-    mov eax,es:p_tss_eax
+    mov ax,gdt_sel
+    mov ds,ax
+    and bx,0FFF8h
+    xor ecx,ecx
+    mov cl,[bx+6]
+    and cl,0Fh
+    shl ecx,16
+    mov cx,[bx]
+    inc ecx
+    mov edx,[bx+2]
+    rol edx,8
+    mov dl,[bx+7]
+    ror edx,8
+;       
+    AllocateGdt
+    CreateDataSelector16
+    mov ds,bx
+;
+    mov eax,ds:tss32_eflags
+    mov dword ptr es:p_tss_rflags,eax
+;
+    mov eax,ds:tss32_eax
     mov dword ptr es:p_tss_rax,eax
 ;
-    mov eax,es:p_tss_ebx
+    mov eax,ds:tss32_ebx
     mov dword ptr es:p_tss_rbx,eax
 ;
-    mov eax,es:p_tss_ecx
+    mov eax,ds:tss32_ecx
     mov dword ptr es:p_tss_rcx,eax
 ;
-    mov eax,es:p_tss_edx
+    mov eax,ds:tss32_edx
     mov dword ptr es:p_tss_rdx,eax
 ;
-    mov eax,es:p_tss_esi
+    mov eax,ds:tss32_esi
     mov dword ptr es:p_tss_rsi,eax
 ;
-    mov eax,es:p_tss_edi
+    mov eax,ds:tss32_edi
     mov dword ptr es:p_tss_rdi,eax
 ;
-    mov eax,es:p_tss_ebp
+    mov eax,ds:tss32_ebp
     mov dword ptr es:p_tss_rbp,eax
 ;
-    mov eax,es:p_tss_esp
+    mov eax,ds:tss32_esp
     mov dword ptr es:p_tss_rsp,eax
 ;
-    mov eax,es:p_tss_eip
+    mov eax,ds:tss32_eip
     mov dword ptr es:p_tss_rip,eax
+;    
+    mov ax,ds:tss32_es
+    mov es:p_tss_es,ax
+;
+    mov ax,ds:tss32_cs    
+    mov es:p_tss_cs,ax
+;    
+    mov ax,ds:tss32_ss
+    mov es:p_tss_ss,ax
+;
+    mov ax,ds:tss32_ds    
+    mov es:p_tss_ds,ax
+;
+    mov ax,ds:tss32_fs    
+    mov es:p_tss_fs,ax
+;
+    mov ax,ds:tss32_gs    
+    mov es:p_tss_gs,ax    
+;
+    xor ax,ax
+    mov ds,ax
+    FreeGdt
 ;        
     DebugBlock
 
