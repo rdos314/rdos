@@ -7550,36 +7550,41 @@ init_virt_thread    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_tss32    PROC near
-    mov ds:p_tss_back_link,0
-    mov ds:p_tss_t,0
-    mov ds:p_tss_bitmap,OFFSET p_tss_io_bitmap
-;       
     push es
     push eax
-    push bx
+    push ebx
     push ecx
+    push edx
+;       
+    mov ds:tss32_back_link,0
+    mov ds:tss32_t,0
+    mov ds:tss32_bitmap,OFFSET tss32_io_bitmap
+;    
     mov eax,stack0_size
     AllocateBigLinear
     AllocateGdt
     mov ecx,eax
     CreateDataSelector32
-    mov ds:p_tss_esp0,stack0_size
-    mov ds:p_tss_ess0,bx
+;    
+    mov ds:tss32_esp0,stack0_size
+    mov ds:tss32_ess0,bx
     mov es,bx
     mov es:[0],bx
-    pop ecx
-    pop bx
-    pop eax
-    pop es
 ;
     add edx,stack0_size
     mov ds:p_stack0_top,edx
 ;    
     xor edx,edx
-    mov ds:p_tss_esp1,edx
-    mov ds:p_tss_ess1,dx
-    mov ds:p_tss_esp2,edx
-    mov ds:p_tss_ess2,dx
+    mov ds:tss32_esp1,edx
+    mov ds:tss32_ess1,dx
+    mov ds:tss32_esp2,edx
+    mov ds:tss32_ess2,dx
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
     ret
 create_tss32    Endp
 
