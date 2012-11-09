@@ -2457,116 +2457,6 @@ debug_block_do:
     mov es:p_sleep_offset,edi
     jmp LoadThread        
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           DebugBreak
-;
-;           DESCRIPTION:    Put current thread in debugger
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-debug_break_name   DB 'Debug Bread',0
-
-db_eax   EQU -8
-db_fs    EQU -4
-db_ds    EQU -2
-db_bp    EQU 0
-db_eip   EQU 2
-db_cs    EQU 6
-db_esp   EQU 10
-db_ss    EQU 14 
-
-debug_break:
-    push bp
-    mov bp,sp
-;
-    push ds
-    push fs
-    push eax
-;    
-    call LockCore
-    mov ds,fs:ps_curr_thread 
-;
-    mov eax,[bp].db_eax
-    mov ds:p_tss_eax,eax
-    mov ds:p_tss_ebx,ebx
-    mov ds:p_tss_ecx,ecx
-    mov ds:p_tss_edx,edx
-    mov ds:p_tss_esi,esi
-    mov ds:p_tss_edi,edi
-    mov eax,ebp
-    mov ax,[bp].db_bp
-    mov ds:p_tss_ebp,eax
-;       
-    pushfd
-    pop ds:p_tss_eflags
-;
-    mov ax,[bp].db_cs
-    mov ds:p_tss_cs,ax
-    mov eax,[bp].db_eip
-    mov ds:p_tss_eip,eax
-;
-    mov al,[bp].db_cs
-    test al,3
-    jz debug_break_kernel
-;
-    mov ax,[bp].db_ss
-    mov ds:p_tss_ss,ax
-    mov eax,[bp].db_esp
-    mov ds:p_tss_esp,eax
-    jmp debug_break_common
-    
-debug_break_kernel:
-    mov ax,ss
-    mov ds:p_tss_ss,ax
-    mov ax,bp
-    add ax,db_esp
-    movzx eax,ax
-    mov ds:p_tss_esp,eax
-    
-debug_break_common:
-    mov ax,[bp].db_ds
-    mov ds:p_tss_ds,ax
-    mov ax,es
-    mov ds:p_tss_es,ax
-    mov ax,[bp].db_fs
-    mov ds:p_tss_fs,ax
-    mov ax,gs
-    mov ds:p_tss_gs,ax
-;
-    mov ss,fs:ps_ss
-    mov esp,fs:ps_esp
-;
-    xor ax,ax
-    mov ds,ax
-    mov es,ax
-    mov gs,ax    
-;    
-    mov es,fs:ps_curr_thread
-    mov eax,es:p_debug_proc
-    or eax,eax
-    jz debug_break_block_do
-;
-    call es:p_debug_proc
-
-debug_break_block_do:
-    mov fs:ps_curr_thread,0
-;    
-    mov ax,system_data_sel
-    mov ds,ax
-    mov edi,OFFSET debug_list       
-;
-    call cs:lock_list_proc
-    call InsertBlock32
-    call cs:unlock_list_proc
-;
-    mov es:p_sleep_sel,ds
-    mov es:p_sleep_offset,edi
-    jmp LoadThread        
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -8967,12 +8857,6 @@ timer_free_list_create:
     mov di,OFFSET power_failure_name
     xor dx,dx
     mov ax,power_failure_nr
-    RegisterBimodalUserGate
-;
-    mov si,OFFSET debug_break
-    mov di,OFFSET debug_break_name
-    xor dx,dx
-    mov ax,debug_break_nr
     RegisterBimodalUserGate
 ;
     mov si,OFFSET get_thread_pr
