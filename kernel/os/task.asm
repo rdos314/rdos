@@ -7541,15 +7541,15 @@ init_virt_thread    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           INIT_DEFAULT_TSS
+;   NAME:           CreateTss32
 ;
-;           DESCRIPTION:    Setup default TSS contents
+;   DESCRIPTION:    Create 32-bit TSS
 ;
-;           PARAMETERS:         DS          TSS
+;   PARAMETERS:     DS          TSS
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_default_tss    PROC near
+create_tss32    PROC near
     mov ds:p_tss_back_link,0
     mov ds:p_tss_t,0
     mov ds:p_tss_bitmap,OFFSET p_tss_io_bitmap
@@ -7580,7 +7580,21 @@ init_default_tss    PROC near
     mov ds:p_tss_ess1,dx
     mov ds:p_tss_esp2,edx
     mov ds:p_tss_ess2,dx
+    ret
+create_tss32    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;
+;           NAME:           INIT_DEFAULT_TSS
+;
+;           DESCRIPTION:    Setup default TSS contents
+;
+;           PARAMETERS:         DS          TSS
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_default_tss    PROC near
     mov edx,cr3
     mov es:p_cr3,edx
     mov ds:p_tss_cr3,edx
@@ -7854,6 +7868,7 @@ create_thread   PROC near
     call init_thread_block
     mov ax,es
     mov ds,ax
+    call create_tss32
     call init_default_tss
     mov ax,[ebp].cr_mode
     test ax,1
@@ -8166,6 +8181,7 @@ create_process  PROC far
     call init_process_block
     mov ax,es
     mov ds,ax
+    call create_tss32
     call init_default_tss
     NotifyCreateProcess
     mov ax,[ebp].cr_mode
