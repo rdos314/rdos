@@ -390,7 +390,8 @@ bios_loop:
 ;
     AllocateGdt
     CreateTssSelector
-    xchg bx,ds:p_tss_sel
+    xchg bx,ds:p_tss_sel    
+    FreeGdt
 ;    
     mov ax,1
     WaitMilliSec
