@@ -91,7 +91,7 @@ default_copy_done:
 ;
     mov ds,bx
     mov cx,ds:p_tss_cs
-    mov edx,ds:p_tss_eip
+    mov edx,dword ptr ds:p_rip
     clc
 ;
     pop si

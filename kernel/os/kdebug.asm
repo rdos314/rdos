@@ -70,7 +70,7 @@ ReadData    Proc near
     push esi
     mov esi,ebx
     mov bx,es
-    test word ptr gs:p_tss_eflags+2,2
+    test word ptr gs:p_rflags+2,2
     jz read_data_prot
 read_data_virt:
     ReadThreadSegment
@@ -181,7 +181,7 @@ GetOsCall       PROC near
     push fs
     push si
 ;    
-    mov ax,word ptr gs:p_tss_eflags+2
+    mov ax,word ptr gs:p_rflags+2
     test ax,2
     jnz short get_oscall_error
 ;
@@ -257,7 +257,7 @@ GetUserCall     PROC near
     push ds
     push fs
     push si
-    mov ax,word ptr gs:p_tss_eflags+2
+    mov ax,word ptr gs:p_rflags+2
     test ax,2
     jnz short get_usercall_error
 ;
@@ -353,7 +353,7 @@ interact_incr   PROC near
     pushf
     add esi,eax
     mov bx,gs
-    test word ptr gs:p_tss_eflags+2,2
+    test word ptr gs:p_rflags+2,2
     jz interact_inc_read_prot
 interact_inc_read_virt:
     ReadThreadSegment
@@ -373,7 +373,7 @@ inc_low:
     and ah,0F0h
     or al,ah
 inc_j:
-    test word ptr gs:p_tss_eflags+2,2
+    test word ptr gs:p_rflags+2,2
     jz interact_inc_write_prot
 interact_inc_write_virt:
     WriteThreadSegment
@@ -413,7 +413,7 @@ interact_decr   PROC near
     pushf
     add esi,eax
     mov bx,gs
-    test word ptr gs:p_tss_eflags+2,2
+    test word ptr gs:p_rflags+2,2
     jz interact_dec_read_prot
 interact_dec_read_virt:
     ReadThreadSegment
@@ -433,7 +433,7 @@ dec_low:
     and ah,0F0h
     or al,ah
 dec_j:
-    test word ptr gs:p_tss_eflags+2,2
+    test word ptr gs:p_rflags+2,2
     jz interact_dec_write_prot
 interact_dec_write_virt:
     WriteThreadSegment
@@ -474,7 +474,7 @@ interact_set_value      PROC near
     pushf
     add esi,eax
     mov bx,gs
-    test word ptr gs:p_tss_eflags+2,2
+    test word ptr gs:p_rflags+2,2
     jz interact_set_read_prot
 interact_set_read_virt:
     ReadThreadSegment
@@ -494,7 +494,7 @@ set_low:
     and al,0F0h
     or al,ch
 set_j:
-    test word ptr gs:p_tss_eflags+2,2
+    test word ptr gs:p_rflags+2,2
     jz interact_set_write_prot
 interact_set_write_virt:
     WriteThreadSegment
@@ -554,7 +554,7 @@ incdec  ENDP
     
 incdec_eax      PROC near
     mov dx,gs
-    mov esi,OFFSET p_tss_eax
+    mov esi,OFFSET p_rax
     call incdec
     ret
 incdec_eax      ENDP
@@ -575,7 +575,7 @@ incdec_eax      ENDP
 
 incdec_ebx      PROC near
     mov dx,gs
-    mov esi,OFFSET p_tss_ebx
+    mov esi,OFFSET p_rbx
     call incdec
     ret
 incdec_ebx      ENDP
@@ -595,7 +595,7 @@ incdec_ebx      ENDP
 
 incdec_ecx      PROC near
     mov dx,gs
-    mov esi,OFFSET p_tss_ecx
+    mov esi,OFFSET p_rcx
     call incdec
     ret
 incdec_ecx      ENDP
@@ -615,7 +615,7 @@ incdec_ecx      ENDP
 
 incdec_edx      PROC near
     mov dx,gs
-    mov esi,OFFSET p_tss_edx
+    mov esi,OFFSET p_rdx
     call incdec
     ret
 incdec_edx      ENDP
@@ -635,7 +635,7 @@ incdec_edx      ENDP
 
 incdec_esi      PROC near
     mov dx,gs
-    mov esi,OFFSET p_tss_esi
+    mov esi,OFFSET p_rsi
     call incdec
     ret
 incdec_esi      ENDP
@@ -655,7 +655,7 @@ incdec_esi      ENDP
 
 incdec_edi      PROC near
     mov dx,gs
-    mov esi,OFFSET p_tss_edi
+    mov esi,OFFSET p_rdi
     call incdec
     ret
 incdec_edi      ENDP
@@ -675,7 +675,7 @@ incdec_edi      ENDP
 
 incdec_esp      PROC near
     mov dx,gs
-    mov esi,OFFSET p_tss_esp
+    mov esi,OFFSET p_rsp
     call incdec
     ret
 incdec_esp      ENDP
@@ -695,7 +695,7 @@ incdec_esp      ENDP
 
 incdec_ebp      PROC near
     mov dx,gs
-    mov esi,OFFSET p_tss_ebp
+    mov esi,OFFSET p_rbp
     call incdec
     ret
 incdec_ebp      ENDP
@@ -715,7 +715,7 @@ incdec_ebp      ENDP
 
 incdec_epc      PROC near
     mov dx,gs
-    mov esi,OFFSET p_tss_eip
+    mov esi,OFFSET p_rip
     call incdec
     ret
 incdec_epc      ENDP
@@ -903,73 +903,73 @@ no_adr  ENDP
 
     public bx_adr
 bx_adr  PROC near
-    movzx eax,word ptr gs:p_tss_ebx
+    movzx eax,word ptr gs:p_rbx
     ret
 bx_adr  ENDP
 
     public bp_adr
 bp_adr  PROC near
-    movzx eax,word ptr gs:p_tss_ebp
+    movzx eax,word ptr gs:p_rbp
     ret
 bp_adr  ENDP
 
     public si_adr
 si_adr  PROC near
-    movzx eax,word ptr gs:p_tss_esi
+    movzx eax,word ptr gs:p_rsi
     ret
 si_adr  ENDP
 
     public di_adr
 di_adr  PROC near
-    movzx eax,word ptr gs:p_tss_edi
+    movzx eax,word ptr gs:p_rdi
     ret
 di_adr  ENDP
 
     public eax_adr
 eax_adr PROC near
-    mov eax,gs:p_tss_eax
+    mov eax,dword ptr gs:p_rax
     ret
 eax_adr ENDP
 
     public ebx_adr
 ebx_adr PROC near
-    mov eax,gs:p_tss_ebx
+    mov eax,dword ptr gs:p_rbx
     ret
 ebx_adr ENDP
 
     public ecx_adr
 ecx_adr PROC near
-    mov eax,gs:p_tss_ecx
+    mov eax,dword ptr gs:p_rcx
     ret
 ecx_adr ENDP
 
     public edx_adr
 edx_adr PROC near
-    mov eax,gs:p_tss_edx
+    mov eax,dword ptr gs:p_rdx
     ret
 edx_adr ENDP
 
     public esi_adr
 esi_adr PROC near
-    mov eax,gs:p_tss_esi
+    mov eax,dword ptr gs:p_rsi
     ret
 esi_adr ENDP
 
     public edi_adr
 edi_adr PROC near
-    mov eax,gs:p_tss_edi
+    mov eax,dword ptr gs:p_rdi
     ret
 edi_adr ENDP
 
     public ebp_adr
 ebp_adr PROC near
-    mov eax,gs:p_tss_ebp
+    mov eax,dword ptr gs:p_rbp
     ret
 ebp_adr ENDP
 
     public esp_adr
 esp_adr PROC near
-    mov eax,gs:p_tss_esp
+    mov eax,dword ptr gs:p_rsp
     ret
 esp_adr ENDP
 

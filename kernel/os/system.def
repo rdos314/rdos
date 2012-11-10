@@ -289,18 +289,27 @@ THREAD_FLAG_SUSPEND = 4
 
 thread_seg	STRUC
 
+p_rax           DQ ?
+p_rbx           DQ ?
+p_rcx           DQ ?
+p_rdx           DQ ?
+p_rsi           DQ ?
+p_rdi           DQ ?
+p_rbp           DQ ?
+p_rsp           DQ ?
+p_rip           DQ ?
+p_r8            DQ ?
+p_r9            DQ ?
+p_r10           DQ ?
+p_r11           DQ ?
+p_r12           DQ ?
+p_r13           DQ ?
+p_r14           DQ ?
+p_r15           DQ ?
+p_rflags        DQ ?
+
 p_tss_esp0		    DD ?
 p_tss_ess0		    DW ?,?
-p_tss_eip			DD ?
-p_tss_eflags		DD ?
-p_tss_eax			DD ?
-p_tss_ecx			DD ?
-p_tss_edx			DD ?
-p_tss_ebx			DD ?
-p_tss_esp			DD ?
-p_tss_ebp			DD ?
-p_tss_esi			DD ?
-p_tss_edi			DD ?
 p_tss_es			DW ?,?
 p_tss_cs			DW ?,?
 p_tss_ss			DW ?,?
@@ -308,25 +317,6 @@ p_tss_ds			DW ?,?
 p_tss_fs			DW ?,?
 p_tss_gs			DW ?,?
 p_tss_ldt			DW ?,?
-
-p_tss_rax           DQ ?
-p_tss_rbx           DQ ?
-p_tss_rcx           DQ ?
-p_tss_rdx           DQ ?
-p_tss_rsi           DQ ?
-p_tss_rdi           DQ ?
-p_tss_rbp           DQ ?
-p_tss_rsp           DQ ?
-p_tss_rip           DQ ?
-p_tss_r8            DQ ?
-p_tss_r9            DQ ?
-p_tss_r10           DQ ?
-p_tss_r11           DQ ?
-p_tss_r12           DQ ?
-p_tss_r13           DQ ?
-p_tss_r14           DQ ?
-p_tss_r15           DQ ?
-p_tss_rflags        DQ ?
 
 p_tss_dr0			DD ?
 p_tss_dr1			DD ?

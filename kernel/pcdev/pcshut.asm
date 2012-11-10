@@ -462,7 +462,7 @@ et_vm   DB 'PM ',       'VM '
 et_end  DB 0FFh
 
 write_eflags    PROC near
-    mov bx,OFFSET p_tss_eflags
+    mov bx,OFFSET p_rflags
     mov eax,gs:[bx]
     mov di,OFFSET eflags_tab
     mov cx,cs
@@ -580,25 +580,25 @@ ke18    DB 'Invalid selector        '
 
 dword_reg_tab1:
     DB 'EAX='
-    DW OFFSET p_tss_eax
+    DW OFFSET p_rax
     DB 'EBX='
-    DW OFFSET p_tss_ebx
+    DW OFFSET p_rbx
     DB 'ECX='
-    DW OFFSET p_tss_ecx
+    DW OFFSET p_rcx
     DB 'EDX='
-    DW OFFSET p_tss_edx
+    DW OFFSET p_rdx
     DB 'ESI='
-    DW OFFSET p_tss_esi
+    DW OFFSET p_rsi
     DB 'EDI='
-    DW OFFSET p_tss_edi
+    DW OFFSET p_rdi
     DB 0
 dword_reg_tab2:
     DB 'EPC='
-    DW OFFSET p_tss_eip
+    DW OFFSET p_rip
     DB 'ESP='
-    DW OFFSET p_tss_esp
+    DW OFFSET p_rsp
     DB 'EBP='
-    DW OFFSET p_tss_ebp
+    DW OFFSET p_rbp
     DB 0
 word_reg_tab:
     DB 'CS='
@@ -638,20 +638,20 @@ abort_pretask_do:
     mov ax,system_data_sel
     mov es,ax
     mov eax,[ebp].trap_eip
-    mov es:p_tss_eip,eax
+    mov dword ptr es:p_rip,eax
     mov eax,[ebp].trap_eflags
-    mov es:p_tss_eflags,eax
+    mov dword ptr es:p_rflags,eax
     mov eax,[ebp].trap_eax
-    mov es:p_tss_eax,eax
-    mov es:p_tss_ecx,ecx
-    mov es:p_tss_edx,edx
+    mov dword ptr es:p_rax,eax
+    mov dword ptr es:p_rcx,ecx
+    mov dword ptr es:p_rdx,edx
     mov eax,[ebp].trap_ebx
-    mov es:p_tss_ebx,eax
+    mov dword ptr es:p_rbx,eax
     mov eax,ebp
     add eax,18
-    mov es:p_tss_esp,eax
-    mov es:p_tss_esi,esi
-    mov es:p_tss_edi,edi
+    mov dword ptr es:p_rsp,eax
+    mov dword ptr es:p_rsi,esi
+    mov dword ptr es:p_rdi,edi
     mov ax,[ebp].trap_cs
     mov es:p_tss_cs,ax
     mov es:p_tss_ss,ss
@@ -662,7 +662,7 @@ abort_pretask_do:
     mov es:p_tss_fs,fs
     mov es:p_tss_gs,gs
     mov ebp,[ebp].trap_ebp
-    mov es:p_tss_ebp,ebp
+    mov dword ptr es:p_rbp,ebp
     sldt ax
     mov es:p_tss_ldt,ax       
     mov ax,es

@@ -318,12 +318,12 @@ WriteEflags     PROC near
     push di
     mov ax,cs
     mov es,ax
-    mov ax,word ptr gs:p_tss_eflags
+    mov ax,word ptr gs:p_rflags
     and ax,200h
     shr ax,7
-    or ax,word ptr gs:p_tss_eflags+2
+    or ax,word ptr gs:p_rflags+2
     shl eax,16
-    mov ax,word ptr gs:p_tss_eflags
+    mov ax,word ptr gs:p_rflags
     mov di,OFFSET eflags_tab
     mov cx,19
 eflags_loop:
@@ -348,7 +348,7 @@ eflags_skip:
     loop eflags_loop
     mov di,OFFSET iopl_text
     WriteAsciiz
-    mov ax,word ptr gs:p_tss_eflags
+    mov ax,word ptr gs:p_rflags
     shr ax,12
     and ax,3
     add ax,'0'
@@ -427,27 +427,27 @@ WriteWordRegs   ENDP
 
 dword_reg_tab1:
     DB ' EAX='
-    DW OFFSET p_tss_eax
+    DW OFFSET p_rax
     DB ' EBX='
-    DW OFFSET p_tss_ebx
+    DW OFFSET p_rbx
     DB ' ECX='
-    DW OFFSET p_tss_ecx
+    DW OFFSET p_rcx
     DB ' EDX='
-    DW OFFSET p_tss_edx
+    DW OFFSET p_rdx
     DB 0
 dword_reg_tab2:
     DB ' ESI='
-    DW OFFSET p_tss_esi
+    DW OFFSET p_rsi
     DB ' EDI='
-    DW OFFSET p_tss_edi
+    DW OFFSET p_rdi
     DB ' ESP='
-    DW OFFSET p_tss_esp
+    DW OFFSET p_rsp
     DB ' EBP='
-    DW OFFSET p_tss_ebp
+    DW OFFSET p_rbp
     DB 0
 dword_reg_tab3:
     DB ' EPC='
-    DW OFFSET p_tss_eip
+    DW OFFSET p_rip
     DB 0
 
 WriteDwordRegs  PROC near
@@ -481,7 +481,7 @@ WriteDwordRegs  ENDP
 
 WriteDataRow    PROC near
     mov ds:DataHeader.dd_op,DEBUG_REQ_DATA
-    test word ptr gs:p_tss_eflags+2,2
+    test word ptr gs:p_rflags+2,2
     jz write_mode_prot
 write_mode_virt:
     mov ds:DataHeader.dd_vm,1
@@ -564,7 +564,7 @@ ft_ldt  DB 'ldt ',0
 ft_gdt  DB 'gdt ',0
 
 WriteFault      PROC near
-    test word ptr gs:p_tss_eflags+2,2
+    test word ptr gs:p_rflags+2,2
     jnz write_fault_end
     mov eax,gs:p_fault_code
     cmp ax,3
@@ -748,12 +748,12 @@ data_next:
     call NewLine
 ;
     mov ax,gs:p_tss_cs
-    mov ebx,gs:p_tss_eip
+    mov ebx,dword ptr gs:p_rip
     call WriteDataRow
     call NewLine
 ;
     mov ax,gs:p_tss_ss
-    mov ebx,gs:p_tss_esp
+    mov ebx,dword ptr gs:p_rsp
     call WriteDataRow
     call NewLine
 ;
@@ -762,18 +762,18 @@ data_next:
     call WriteDataRow
     call NewLine
 ;
-    push gs:p_tss_eflags+2
-    mov word ptr gs:p_tss_eflags+2,0
+    push word ptr gs:p_rflags+2
+    mov word ptr gs:p_rflags+2,0
     mov ax,fs:p_pm_deb_sel
     mov ebx,fs:p_pm_deb_offs
     call WriteDataRow
     call NewLine
 ;
-    mov word ptr gs:p_tss_eflags+2,2
+    mov word ptr gs:p_rflags+2,2
     mov ax,fs:p_vm_deb_sel
     mov ebx,fs:p_vm_deb_offs
     call WriteDataRow
-    pop gs:p_tss_eflags+2
+    pop word ptr gs:p_rflags+2
     ret
 WriteData       ENDP
 
