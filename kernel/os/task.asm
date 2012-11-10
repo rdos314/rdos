@@ -7550,21 +7550,31 @@ create_tss32    PROC near
     push ecx
     push edx
 ;
-    mov bx,ds
-    GetSelectorBaseSize
-    AllocateGdt
-    CreateTssSelector
-    mov ds:p_tss_sel,bx
-;       
-    mov ds:tss32_back_link,0
-    mov ds:tss32_t,0
-    mov ds:tss32_bitmap,OFFSET tss32_io_bitmap
+    mov ax,flat_sel
+    mov es,ax
+;    
+    mov eax,SIZE tss32_seg
+    mov ecx,eax
+    AllocateSmallLinear
+    mov edi,edx
+;    
+    push ecx
+    push edi
+    xor al,al
+    rep stos byte ptr es:[edi]
+    pop edi
+    pop ecx
+;
+    mov es:[edi].tss32_bitmap,OFFSET tss32_io_bitmap
 ;    
     mov eax,stack0_size
     AllocateBigLinear
     AllocateGdt
     mov ecx,eax
     CreateDataSelector32
+;    
+    mov es:[edi].tss32_esp0,stack0_size
+    mov es:[edi].tss32_ess0,bx
 ;    
     mov ds:tss32_esp0,stack0_size
     mov ds:tss32_ess0,bx
@@ -7574,11 +7584,10 @@ create_tss32    PROC near
     add edx,stack0_size
     mov ds:p_stack0_top,edx
 ;    
-    xor edx,edx
-    mov ds:tss32_esp1,edx
-    mov ds:tss32_ess1,dx
-    mov ds:tss32_esp2,edx
-    mov ds:tss32_ess2,dx
+    mov edx,edi
+    AllocateGdt
+    CreateTssSelector
+    mov ds:p_tss_sel,bx
 ;
     pop edx
     pop ecx
