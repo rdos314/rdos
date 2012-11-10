@@ -8551,11 +8551,9 @@ init_first_process      Proc near
     mov es,ax
     call allocate_thread_block
 ;
-    mov bx,es
-    GetSelectorBaseSize
-    AllocateGdt
-    CreateTssSelector
-    mov es:p_tss_sel,bx
+    mov ax,es
+    mov ds,ax
+    call create_tss32
 ;
     call create_first_thread
     call init_process_block
