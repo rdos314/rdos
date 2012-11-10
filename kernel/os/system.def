@@ -315,9 +315,10 @@ p_ds			DW ?
 p_fs			DW ?
 p_gs			DW ?
 
+p_kernel_esp    DD ?
+p_kernel_ss		DW ?,?
+p_kernel_stack  DD ?
 
-p_tss_esp0		    DD ?
-p_tss_ess0		    DW ?,?
 p_tss_ldt			DW ?,?
 
 p_tss_dr0			DD ?
@@ -380,8 +381,6 @@ p_int_locked_stack	DW ?
 p_int_prot16_stack	DW ?
 p_int_prot32_stack	DW ?
 p_int_real_stack	DD ?
-
-p_stack0_top        DD ?
 
 p_fault_vector      DB ?
 p_fault_space       DB ?

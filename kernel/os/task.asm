@@ -1088,9 +1088,9 @@ acPm:
     mov si,ss
     mov edi,esp
 ;    
-    mov dx,ds:p_tss_ess0
+    mov dx,ds:p_kernel_ss
     mov ss,dx
-    mov esp,ds:p_tss_esp0
+    mov esp,ds:p_kernel_esp
 ;
     xor dx,dx
     push dx
@@ -1111,9 +1111,9 @@ acVm:
     mov si,ss
     mov edi,esp
 ;    
-    mov dx,ds:p_tss_ess0
+    mov dx,ds:p_kernel_ss
     mov ss,dx
-    mov esp,ds:p_tss_esp0
+    mov esp,ds:p_kernel_esp
 ;
     xor dx,dx
     push dx
@@ -1550,7 +1550,7 @@ load_regs:
     lock or fs:ps_flags,PS_FLAG_HAS_SYS 
 
 load_msr:    
-    mov eax,ds:p_stack0_top
+    mov eax,ds:p_kernel_stack
     xor edx,edx
     mov ecx,MSR_SYSENTER_ESP
     wrmsr
@@ -1624,9 +1624,9 @@ load_kernel_ds:
     iretd
 
 load_pm_app:    
-    mov ax,ds:p_tss_ess0
+    mov ax,ds:p_kernel_ss
     mov ss,ax
-    mov esp,ds:p_tss_esp0
+    mov esp,ds:p_kernel_esp
 ;
     xor ax,ax
     push ax
@@ -1684,9 +1684,9 @@ load_pm_app_ds:
     iretd
 
 load_vm:
-    mov ax,ds:p_tss_ess0
+    mov ax,ds:p_kernel_ss
     mov ss,ax
-    mov esp,ds:p_tss_esp0
+    mov esp,ds:p_kernel_esp
 ;
     xor ax,ax
     push ax
@@ -2067,7 +2067,7 @@ run_core_do:
 
 DeleteThread    Proc near
     push es
-    mov es,es:p_tss_ess0
+    mov es,es:p_kernel_ss
     FreeMem
     pop es
 ;
@@ -2141,7 +2141,7 @@ cleanup_process_linear_next:
 ;
     sti
     push es
-    mov es,es:p_tss_ess0
+    mov es,es:p_kernel_ss
     FreeMem
     pop es
 ;
@@ -4869,9 +4869,9 @@ init_first_thread:
     mov ax,es
     mov ds,ax
     mov ax,ds:p_ss
-    mov ds:p_tss_ess0,ax
+    mov ds:p_kernel_ss,ax
     mov eax,dword ptr ds:p_rsp
-    mov ds:p_tss_esp0,eax
+    mov ds:p_kernel_esp,eax
 ;    
     call LockCore
     mov di,es:p_prio
@@ -7576,13 +7576,13 @@ create_tss32    PROC near
     mov es:[edi].tss32_esp0,stack0_size
     mov es:[edi].tss32_ess0,bx
 ;    
-    mov ds:p_tss_esp0,stack0_size
-    mov ds:p_tss_ess0,bx
+    mov ds:p_kernel_esp,stack0_size
+    mov ds:p_kernel_ss,bx
     mov es,bx
     mov es:[0],bx
 ;
     add edx,stack0_size
-    mov ds:p_stack0_top,edx
+    mov ds:p_kernel_stack,edx
 ;    
     mov edx,edi
     AllocateGdt
@@ -7731,7 +7731,7 @@ init_prot_tss_default:
 
 init_kernel_tss:
     push es
-    mov ax,ds:p_tss_ess0
+    mov ax,ds:p_kernel_ss
     mov ds:p_ss,ax
     mov bx,stack0_size - 6
     mov es,ax
@@ -8043,7 +8043,7 @@ init_process_tss    PROC near
     mov eax,OFFSET create_process_callback
     mov dword ptr ds:p_rip,eax
     mov ds:p_cs,cs
-    mov ax,ds:p_tss_ess0
+    mov ax,ds:p_kernel_ss
     mov ds:p_ss,ax
     mov eax,stack0_size
     mov dword ptr ds:p_rsp,eax
