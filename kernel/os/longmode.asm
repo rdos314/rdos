@@ -34,6 +34,7 @@ include ..\user.inc
 include proc.inc
 include protseg.def
 include gate.def
+include system.def
 
 fault_ss            equ 48
 fault_rsp           equ 40
@@ -117,6 +118,15 @@ reg_flags   dq ?
 reg_end     db ?
 
 Reg64   Ends
+
+mmap_struc  STRUC
+
+mmap_len    DD ?
+mmap_base   DD ?,?
+mmap_size   DD ?,?
+mmap_type   DD ?
+
+mmap_struc  ENDS
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -128,7 +138,7 @@ Reg64   Ends
 
 Code32 segment byte public use32 'code32'
 
-sign dw 6452h
+sgn  dw 6452h
 eip  dd OFFSET init
 ib   dd MAP_LINEAR
 ic   dd UNITY_MAP_SIZE
@@ -909,6 +919,62 @@ test_thread_name  DB 'Nasm Test Thread', 0
 long_idt_size   DW 0FFFh
 long_idt_base   DD IDT_LINEAR
 
+AddPhys Proc near
+    ret
+AddPhys Endp
+
+; esi = mmap buffer entry
+; ebp = min physical
+
+AddRegion   Proc near
+    mov eax,[esi].mmap_base
+    mov ebx,[esi].mmap_base+4
+;
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+;
+    mov ecx,[esi].mmap_base
+    sub ecx,eax
+;
+    mov edx,[esi].mmap_size
+    mov edi,[esi].mmap_size+4
+    sub edx,ecx
+    and dx,0F000h
+;
+    or ebx,ebx
+    jnz arLoop
+;
+    cmp eax,ebp
+    jae arLoop
+;
+    mov ecx,ebp
+    sub ecx,eax
+;
+    sub edx,ecx
+    sbb edi,0
+    mov eax,ebp
+
+arLoop:
+    mov ecx,edx
+    or ecx,edi
+    jz arDone
+
+    call AddPhys
+;
+    add eax,1000h
+    adc ebx,0
+;
+    sub edx,1000h
+    sbb edi,0
+    jmp arLoop
+
+arDone:
+    int 3
+    ret
+AddRegion   Endp
+                    
+
 test_thread:
     mov bx,ss
     GetSelectorBaseSize
@@ -954,7 +1020,44 @@ test_thread:
 ;    
     mov edi,cr3
 ;
+    mov edx,02F000h
+    mov eax,02F007h
+    xor ebx,ebx
+    SetPageEntry
+;
+    mov edx,056000h
+    mov eax,056007h
+    xor ebx,ebx
+    SetPageEntry
     int 3 
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    movzx ecx,ds:multiboot_mmap_len
+    mov esi,ds:multiboot_mmap_addr
+    mov ax,flat_sel
+    mov ds,ax
+    mov ebp,12000h
+
+mem_loop:
+    mov eax,[esi].mmap_type
+    cmp eax,1
+    jne mem_next
+;    
+    push ecx
+    push esi
+    call AddRegion
+    pop esi
+    pop ecx
+
+mem_next:
+    mov eax,[esi].mmap_len
+    add eax,4
+    add esi,eax
+    sub ecx,eax
+    jnz mem_loop
+;               
+    
     mov edx,0B8000h
     mov eax,0B8007h
     xor ebx,ebx

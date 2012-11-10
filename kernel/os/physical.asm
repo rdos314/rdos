@@ -34,6 +34,15 @@ INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\driver.def
 
+mmap_struc  STRUC
+
+mmap_len    DD ?
+mmap_base   DD ?,?
+mmap_size   DD ?,?
+mmap_type   DD ?
+
+mmap_struc  ENDS
+
 IFDEF __WASM__
     .686p
     .xmm2
@@ -1127,6 +1136,69 @@ fillup_phys_mem_done:
 fillup_physical_mem   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AddRegion
+;
+;   DESCRIPTION:    Add a region of physical memory
+;
+;   PARAMETERS:     ESI     Memory block
+;                   EBP     Low limit
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddRegion   Proc near
+    mov eax,[esi].mmap_base
+    mov ebx,[esi].mmap_base+4
+;
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+;
+    mov ecx,[esi].mmap_base
+    sub ecx,eax
+;
+    mov edx,[esi].mmap_size
+    mov edi,[esi].mmap_size+4
+    sub edx,ecx
+    and dx,0F000h
+;
+    mov ecx,cr0
+    or ecx,80000000h
+    mov cr0,ecx    
+;
+    or ebx,ebx
+    jnz arLoop
+;
+    cmp eax,ebp
+    jae arLoop
+;
+    mov ecx,ebp
+    sub ecx,eax
+;
+    sub edx,ecx
+    sbb edi,0
+    mov eax,ebp
+
+arLoop:
+    mov ecx,edx
+    or ecx,edi
+    jz arDone
+
+    call AddPhys
+;
+    add eax,1000h
+    adc ebx,0
+;
+    sub edx,1000h
+    sbb edi,0
+    jmp arLoop
+
+arDone:
+    ret
+AddRegion   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           INIT_PHYSICAL
@@ -1140,7 +1212,45 @@ fillup_physical_mem   Endp
     public init_physical
 
 init_physical   PROC near
-    call fillup_physical_mem
+;    call fillup_physical_mem
+    mov eax,cr0
+    and eax,NOT 80000000h
+    mov cr0,eax    
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    movzx ecx,ds:multiboot_mmap_len
+    mov esi,ds:multiboot_mmap_addr
+    mov ebp,ds:alloc_base
+    add ebp,1000h
+    mov ax,flat_sel
+    mov ds,ax
+
+init_phys_loop:
+    mov eax,[esi].mmap_type
+    cmp eax,1
+    jne init_phys_next
+;    
+    push ecx
+    push esi
+    call AddRegion
+    pop esi
+    pop ecx
+;
+    mov eax,cr0
+    and eax,NOT 80000000h
+    mov cr0,eax    
+
+init_phys_next:
+    mov eax,[esi].mmap_len
+    add eax,4
+    add esi,eax
+    sub ecx,eax
+    jnz init_phys_loop
+;                    
+    mov eax,cr0
+    or eax,80000000h
+    mov cr0,eax    
     ret
 init_physical   ENDP
 

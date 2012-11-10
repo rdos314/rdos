@@ -119,13 +119,14 @@ boot64_pages        = 16
 system_seg	STRUC
 
 dum1                        DD ?
-dum2                        DW ?
+
+multiboot_mmap_len          DW ?
 
 cpu_ext_feature_flags   	DD ?
 
 long_idt_linear             DD ?
 
-dum3                        DD ?
+multiboot_mmap_addr         DD ?
 
 ram64_size          DD ?,?
 

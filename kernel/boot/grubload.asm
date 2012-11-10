@@ -44,16 +44,20 @@ MB_FLAG_MEM     =    1
 MB_FLAG_DEV =    2
 MB_FLAG_CMDLINE= 4
 MB_FLAG_MODULE = 8
+MB_FLAG_MEM_MAP = 40h
 
 Multiboot_struc STRUC
 
 mb_flags        DD ?
 mb_mem_lower    DD ?
 mb_mem_upper    DD ?
-mb_boot_dev         DD ?
-mb_cmdline          DD ?
+mb_boot_dev     DD ?
+mb_cmdline      DD ?
 mb_module_count DD ?
 mb_module_ads   DD ?
+mb_syms         DD 4 DUP(?)
+mb_mmap_len     DD ?
+mb_mmap_addr    DD ?
 
 Multiboot_struc ENDS
 
@@ -873,7 +877,18 @@ prot_init:
     mov ax,system_data_sel
     mov ds,ax
     mov ds:alloc_base,esi
+    mov ds:multiboot_mmap_addr,0
+    mov ds:multiboot_mmap_len,0
     mov edx,es:[ebx].mb_flags
+    test dl,MB_FLAG_MEM_MAP
+    jz MbMmapDone
+;    
+    mov eax,es:[ebx].mb_mmap_addr
+    mov ds:multiboot_mmap_addr,eax
+    mov eax,es:[ebx].mb_mmap_len
+    mov ds:multiboot_mmap_len,ax
+
+MbMmapDone:    
     test dl,MB_FLAG_MEM
     jnz MbMemOk
 ;
