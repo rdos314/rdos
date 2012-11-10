@@ -137,22 +137,22 @@ double_fault_lock_ok:
     mov dword ptr es:p_rip,eax
 ;    
     mov ax,ds:tss32_es
-    mov es:p_tss_es,ax
+    mov es:p_es,ax
 ;
     mov ax,ds:tss32_cs    
-    mov es:p_tss_cs,ax
+    mov es:p_cs,ax
 ;    
     mov ax,ds:tss32_ss
-    mov es:p_tss_ss,ax
+    mov es:p_ss,ax
 ;
     mov ax,ds:tss32_ds    
-    mov es:p_tss_ds,ax
+    mov es:p_ds,ax
 ;
     mov ax,ds:tss32_fs    
-    mov es:p_tss_fs,ax
+    mov es:p_fs,ax
 ;
     mov ax,ds:tss32_gs    
-    mov es:p_tss_gs,ax    
+    mov es:p_gs,ax    
 ;
     xor ax,ax
     mov ds,ax
@@ -228,7 +228,7 @@ debug_normal:
     mov eax,[ebp].trap_eflags
     mov dword ptr ds:p_rflags,eax
     mov ax,[ebp].trap_cs
-    mov ds:p_tss_cs,ax
+    mov ds:p_cs,ax
     mov eax,[ebp].trap_eip
     mov dword ptr ds:p_rip,eax
 ;       
@@ -242,39 +242,39 @@ debug_pm:
     jz debug_kernel
 ;
     mov ax,[ebp].trap_ss
-    mov ds:p_tss_ss,ax
+    mov ds:p_ss,ax
     mov eax,[ebp].trap_esp
     mov dword ptr ds:p_rsp,eax
     jmp debug_pm_common
     
 debug_kernel:
     mov ax,ss
-    mov ds:p_tss_ss,ax
+    mov ds:p_ss,ax
     mov eax,ebp
     add eax,trap_esp
     mov dword ptr ds:p_rsp,eax
     
 debug_pm_common:
     mov ax,[ebp].trap_pds
-    mov ds:p_tss_ds,ax
+    mov ds:p_ds,ax
     mov ax,es
-    mov ds:p_tss_es,ax
-    mov ds:p_tss_fs,si
+    mov ds:p_es,ax
+    mov ds:p_fs,si
     mov ax,gs
-    mov ds:p_tss_gs,ax
+    mov ds:p_gs,ax
     jmp debug_save_ok
 
 debug_vm:
     mov ax,[ebp].trap_gs
-    mov ds:p_tss_gs,ax
+    mov ds:p_gs,ax
     mov ax,[ebp].trap_fs
-    mov ds:p_tss_fs,ax
+    mov ds:p_fs,ax
     mov ax,[ebp].trap_ds
-    mov ds:p_tss_ds,ax
+    mov ds:p_ds,ax
     mov ax,[ebp].trap_es
-    mov ds:p_tss_es,ax
+    mov ds:p_es,ax
     mov ax,[ebp].trap_ss
-    mov ds:p_tss_ss,ax
+    mov ds:p_ss,ax
     mov eax,[ebp].trap_esp
     mov dword ptr ds:p_rsp,eax
 
@@ -481,7 +481,7 @@ debug_trace     PROC far
     jz debug_trace_done
     mov bx,ax
     mov es,bx
-    mov dx,es:p_tss_cs
+    mov dx,es:p_cs
     mov esi,dword ptr es:p_rip
     call ReadWord
     push ax
@@ -509,13 +509,13 @@ debug_trace     PROC far
     push bx
     or word ptr es:p_rflags+2,2
     mov bx,es
-    mov dx,es:p_tss_ss
+    mov dx,es:p_ss
     movzx esi,word ptr es:p_rsp
     sub esi,6
     pop ax
     pop cx
     xchg ax,word ptr es:p_rip
-    xchg cx,es:p_tss_cs
+    xchg cx,es:p_cs
     add ax,2
     call WriteWord
     mov ax,cx
@@ -575,7 +575,7 @@ debug_pace      PROC far
     mov es,bx
 ;
     xor cl,cl
-    mov bx,es:p_tss_cs
+    mov bx,es:p_cs
     test byte ptr es:p_rflags+2,2
     jnz debug_pace_bitness_done
 ;
@@ -597,7 +597,7 @@ debug_pace_bitness_get:
     and cl,1
 
 debug_pace_bitness_done:
-    mov dx,es:p_tss_cs
+    mov dx,es:p_cs
     mov esi,dword ptr es:p_rip
     call ReadWord
 ;    
@@ -659,20 +659,20 @@ debug_pace_step:
 ;
     xor eax,eax
     xor edx,edx
-    mov ax,es:p_tss_cs
+    mov ax,es:p_cs
     shl eax,4
     mov dx,word ptr es:p_rip
     add eax,edx
     jmp debug_pace_step_do
     
 debug_pace_step_prot:
-    mov si,es:p_tss_cs
+    mov si,es:p_cs
     test si,4
     jz debug_pace_step_gdt
 ;
     xor eax,eax
     mov ds,es:p_ldt_sel
-    mov si,es:p_tss_cs
+    mov si,es:p_cs
     and si,0FFF8h
     mov eax,[si+2]
     rol eax,8
@@ -1357,22 +1357,22 @@ get_thread_tss_found:
     mov eax,dword ptr ds:p_rdi
     mov es:[edi].ut_edi,eax
 ;    
-    mov ax,ds:p_tss_es
+    mov ax,ds:p_es
     mov es:[edi].ut_es,ax
 ;    
-    mov ax,ds:p_tss_cs
+    mov ax,ds:p_cs
     mov es:[edi].ut_cs,ax
 ;    
-    mov ax,ds:p_tss_ss
+    mov ax,ds:p_ss
     mov es:[edi].ut_ss,ax
 ;    
-    mov ax,ds:p_tss_ds
+    mov ax,ds:p_ds
     mov es:[edi].ut_ds,ax
 ;    
-    mov ax,ds:p_tss_fs
+    mov ax,ds:p_fs
     mov es:[edi].ut_fs,ax
 ;    
-    mov ax,ds:p_tss_gs
+    mov ax,ds:p_gs
     mov es:[edi].ut_gs,ax
 ;    
     mov ax,ds:p_tss_ldt
@@ -1570,22 +1570,22 @@ set_thread_tss_found:
     mov dword ptr es:p_rdi,eax
 ;    
     mov ax,ds:[esi].ut_es
-    mov es:p_tss_es,ax
+    mov es:p_es,ax
 ;    
     mov ax,ds:[esi].ut_cs
-    mov es:p_tss_cs,ax
+    mov es:p_cs,ax
 ;    
     mov ax,ds:[esi].ut_ss
-    mov es:p_tss_ss,ax
+    mov es:p_ss,ax
 ;    
     mov ax,ds:[esi].ut_ds
-    mov es:p_tss_ds,ax
+    mov es:p_ds,ax
 ;    
     mov ax,ds:[esi].ut_fs
-    mov es:p_tss_fs,ax
+    mov es:p_fs,ax
 ;    
     mov ax,ds:[esi].ut_gs
-    mov es:p_tss_gs,ax
+    mov es:p_gs,ax
 ;    
     mov ax,ds:[esi].ut_ldt
     mov es:p_tss_ldt,ax

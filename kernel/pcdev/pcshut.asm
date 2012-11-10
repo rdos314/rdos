@@ -602,17 +602,17 @@ dword_reg_tab2:
     DB 0
 word_reg_tab:
     DB 'CS='
-    DW OFFSET p_tss_cs
+    DW OFFSET p_cs
     DB 'SS='
-    DW OFFSET p_tss_ss
+    DW OFFSET p_ss
     DB 'DS='
-    DW OFFSET p_tss_ds
+    DW OFFSET p_ds
     DB 'ES='
-    DW OFFSET p_tss_es
+    DW OFFSET p_es
     DB 'FS='
-    DW OFFSET p_tss_fs
+    DW OFFSET p_fs
     DB 'GS='
-    DW OFFSET p_tss_gs
+    DW OFFSET p_gs
     DB 0
 
 pm_es   EQU -16
@@ -653,14 +653,14 @@ abort_pretask_do:
     mov dword ptr es:p_rsi,esi
     mov dword ptr es:p_rdi,edi
     mov ax,[ebp].trap_cs
-    mov es:p_tss_cs,ax
-    mov es:p_tss_ss,ss
+    mov es:p_cs,ax
+    mov es:p_ss,ss
     mov ax,[ebp].trap_pds
-    mov es:p_tss_ds,ax
+    mov es:p_ds,ax
     mov ax,[ebp].pm_es
-    mov es:p_tss_es,ax
-    mov es:p_tss_fs,fs
-    mov es:p_tss_gs,gs
+    mov es:p_es,ax
+    mov es:p_fs,fs
+    mov es:p_gs,gs
     mov ebp,[ebp].trap_ebp
     mov dword ptr es:p_rbp,ebp
     sldt ax

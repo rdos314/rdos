@@ -90,7 +90,7 @@ default_copy_done:
     stos byte ptr es:[edi]
 ;
     mov ds,bx
-    mov cx,ds:p_tss_cs
+    mov cx,ds:p_cs
     mov edx,dword ptr ds:p_rip
     clc
 ;

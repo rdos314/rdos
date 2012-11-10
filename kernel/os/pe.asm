@@ -3509,12 +3509,12 @@ init_thread     PROC far
     mov es:pvArbitrary,ecx
     mov es:pvModuleHandle,ebx
     mov es:pvProcessHandle,edx
-    mov ds:p_tss_fs,es
-    mov ds:p_tss_ds,fs
-    mov ds:p_tss_ss,fs
-    mov ds:p_tss_es,fs
-    mov ds:p_tss_cs,flat_code_sel
-    mov ds:p_tss_gs,0
+    mov ds:p_fs,es
+    mov ds:p_ds,fs
+    mov ds:p_ss,fs
+    mov ds:p_es,fs
+    mov ds:p_cs,flat_code_sel
+    mov ds:p_gs,0
     pop eax
     add eax,200h
     and ax,0F000h

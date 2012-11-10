@@ -735,7 +735,7 @@ incdec_epc      ENDP
 
 incdec_cs       PROC near
     mov dx,gs
-    mov esi,OFFSET p_tss_cs
+    mov esi,OFFSET p_cs
     call incdec
     ret
 incdec_cs       ENDP
@@ -755,7 +755,7 @@ incdec_cs       ENDP
 
 incdec_ds       PROC near
     mov dx,gs
-    mov esi,OFFSET p_tss_ds
+    mov esi,OFFSET p_ds
     call incdec
     ret
 incdec_ds       ENDP
@@ -775,7 +775,7 @@ incdec_ds       ENDP
 
 incdec_es       PROC near
     mov dx,gs
-    mov esi,OFFSET p_tss_es
+    mov esi,OFFSET p_es
     call incdec
     ret
 incdec_es       ENDP
@@ -795,7 +795,7 @@ incdec_es       ENDP
 
 incdec_fs       PROC near
     mov dx,gs
-    mov esi,OFFSET p_tss_fs
+    mov esi,OFFSET p_fs
     call incdec
     ret
 incdec_fs       ENDP
@@ -815,7 +815,7 @@ incdec_fs       ENDP
 
 incdec_gs       PROC near
     mov dx,gs
-    mov esi,OFFSET p_tss_gs
+    mov esi,OFFSET p_gs
     call incdec
     ret
 incdec_gs       ENDP
@@ -835,7 +835,7 @@ incdec_gs       ENDP
 
 incdec_ss       PROC near
     mov dx,gs
-    mov esi,OFFSET p_tss_ss
+    mov esi,OFFSET p_ss
     call incdec
     ret
 incdec_ss       ENDP
@@ -855,42 +855,42 @@ incdec_ss       ENDP
 
     public ds_sel
 ds_sel  PROC near
-    mov ax,gs:p_tss_ds
+    mov ax,gs:p_ds
     call SetDataSel
     ret
 ds_sel  ENDP
 
     public ss_sel
 ss_sel  PROC near
-    mov ax,gs:p_tss_ss
+    mov ax,gs:p_ss
     call SetDataSel
     ret
 ss_sel  ENDP
 
     public cs_sel
 cs_sel  PROC near
-    mov ax,gs:p_tss_cs
+    mov ax,gs:p_cs
     call SetDataSel
     ret
 cs_sel  ENDP
 
     public es_sel
 es_sel  PROC near
-    mov ax,gs:p_tss_es
+    mov ax,gs:p_es
     call SetDataSel
     ret
 es_sel  ENDP
 
     public fs_sel
 fs_sel  PROC near
-    mov ax,gs:p_tss_fs
+    mov ax,gs:p_fs
     call SetDataSel
     ret
 fs_sel  ENDP
 
     public gs_sel
 gs_sel  PROC near
-    mov ax,gs:p_tss_gs
+    mov ax,gs:p_gs
     call SetDataSel
     ret
 gs_sel  ENDP

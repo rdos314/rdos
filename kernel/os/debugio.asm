@@ -421,17 +421,17 @@ word_reg_tab1:
     DB 0
 word_reg_tab2:
     DB ' CS='
-    DW OFFSET p_tss_cs
+    DW OFFSET p_cs
     DB ' DS='
-    DW OFFSET p_tss_ds
+    DW OFFSET p_ds
     DB ' ES='
-    DW OFFSET p_tss_es
+    DW OFFSET p_es
     DB ' FS='
-    DW OFFSET p_tss_fs
+    DW OFFSET p_fs
     DB ' GS='
-    DW OFFSET p_tss_gs
+    DW OFFSET p_gs
     DB ' SS='
-    DW OFFSET p_tss_ss
+    DW OFFSET p_ss
     DB 0
 
 WriteWordRegs   PROC near
@@ -764,21 +764,21 @@ data_next:
     call NewLine
     pop ds
 ;
-    mov ax,gs:p_tss_cs
+    mov ax,gs:p_cs
     mov bx,word ptr gs:p_rip+2
     shl ebx,16
     mov bx,word ptr gs:p_rip
     call WriteDataRow
     call NewLine
 ;
-    mov ax,gs:p_tss_ss
+    mov ax,gs:p_ss
     mov bx,word ptr gs:p_rsp+2
     shl ebx,16
     mov bx,word ptr gs:p_rsp
     call WriteDataRow
     call NewLine
 ;
-    mov ax,gs:p_tss_es
+    mov ax,gs:p_es
     xor ebx,ebx
     call WriteDataRow
     call NewLine
@@ -806,7 +806,7 @@ GetMne  PROC near
 ;
     xor dl,dl
     xor dh,dh
-    mov bx,gs:p_tss_cs
+    mov bx,gs:p_cs
     test byte ptr gs:p_rflags+2,2
     jnz get_cs_bitness_done
 
@@ -959,7 +959,7 @@ not_call_far:
     add ebx,4
 ;
     push ebx
-    mov dx,gs:p_tss_cs
+    mov dx,gs:p_cs
     mov ax,SEG data
     mov es,ax
     mov di,OFFSET op_in_text
@@ -969,7 +969,7 @@ not_call_far:
     pop ebx
     jnc write_special_end
 ;
-    mov dx,gs:p_tss_cs
+    mov dx,gs:p_cs
     mov ax,SEG data
     mov es,ax
     mov di,OFFSET op_in_text
@@ -986,7 +986,7 @@ write_call_near16:
     add bx,word ptr gs:p_rip
     add bx,2
     push bx
-    mov dx,gs:p_tss_cs
+    mov dx,gs:p_cs
     mov ax,SEG data
     mov es,ax
     mov di,OFFSET op_in_text
@@ -996,7 +996,7 @@ write_call_near16:
     pop bx
     jnc write_special_end
 ;
-    mov dx,gs:p_tss_cs
+    mov dx,gs:p_cs
     mov ax,SEG data
     mov es,ax
     mov di,OFFSET op_in_text
@@ -1019,7 +1019,7 @@ LoadInstr       PROC near
     mov ax,word ptr gs:p_rflags+2
     test ax,2
     jnz seg_size_ok
-    mov bx,gs:p_tss_cs
+    mov bx,gs:p_cs
     test bx,4
     jz code_in_gdt
 code_in_ldt:
@@ -1045,7 +1045,7 @@ seg_size_ok:
     mov ds,ax
     mov ax,gs
     mov es,ax
-    mov dx,gs:p_tss_cs
+    mov dx,gs:p_cs
     mov ebx,dword ptr gs:p_rip
     call SetIpAds
     call GetOpBuf
@@ -1481,7 +1481,7 @@ change_epc      ENDP
 change_cs       PROC near
     and cl,3
     mov dx,gs
-    mov esi,OFFSET p_tss_cs
+    mov esi,OFFSET p_cs
     push di
     ret
     ret
@@ -1490,7 +1490,7 @@ change_cs       ENDP
 change_ds       PROC near
     and cl,3
     mov dx,gs
-    mov esi,OFFSET p_tss_ds
+    mov esi,OFFSET p_ds
     push di
     ret
     ret
@@ -1499,7 +1499,7 @@ change_ds       ENDP
 change_es       PROC near
     and cl,3
     mov dx,gs
-    mov esi,OFFSET p_tss_es
+    mov esi,OFFSET p_es
     push di
     ret
     ret
@@ -1508,7 +1508,7 @@ change_es       ENDP
 change_fs       PROC near
     and cl,3
     mov dx,gs
-    mov esi,OFFSET p_tss_fs
+    mov esi,OFFSET p_fs
     push di
     ret
     ret
@@ -1517,7 +1517,7 @@ change_fs       ENDP
 change_gs       PROC near
     and cl,3
     mov dx,gs
-    mov esi,OFFSET p_tss_gs
+    mov esi,OFFSET p_gs
     push di
     ret
     ret
@@ -1526,7 +1526,7 @@ change_gs       ENDP
 change_ss       PROC near
     and cl,3
     mov dx,gs
-    mov esi,OFFSET p_tss_ss
+    mov esi,OFFSET p_ss
     push di
     ret
     ret
@@ -1630,7 +1630,7 @@ mem_ads PROC near
 mem_ads ENDP
 
 mem_cs  PROC near
-    mov dx,gs:p_tss_cs
+    mov dx,gs:p_cs
     mov si,OFFSET p_rip
     mov esi,gs:[si]
     call mem_do
@@ -1638,7 +1638,7 @@ mem_cs  PROC near
 mem_cs  ENDP
 
 mem_ss  PROC near
-    mov dx,gs:p_tss_ss
+    mov dx,gs:p_ss
     mov si,OFFSET p_rsp
     mov esi,gs:[si]
     call mem_do
@@ -1646,7 +1646,7 @@ mem_ss  PROC near
 mem_ss  ENDP
 
 mem_es  PROC near
-    mov dx,gs:p_tss_es
+    mov dx,gs:p_es
     xor esi,esi
     call mem_do
     ret
@@ -2028,10 +2028,10 @@ virt_sw_run     PROC near
     pop ds
     mov ax,[bp].call_ebx
     xchg ax,word ptr ds:p_rip
-    xchg bx,ds:p_tss_cs
+    xchg bx,ds:p_cs
     push es
     push bx
-    mov bx,ds:p_tss_ss
+    mov bx,ds:p_ss
     mov es,bx
     pop bx
     xor edx,edx

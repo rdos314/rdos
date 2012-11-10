@@ -377,17 +377,17 @@ word_reg_tab1:
     DB 0
 word_reg_tab2:
     DB ' CS='
-    DW OFFSET p_tss_cs
+    DW OFFSET p_cs
     DB ' DS='
-    DW OFFSET p_tss_ds
+    DW OFFSET p_ds
     DB ' ES='
-    DW OFFSET p_tss_es
+    DW OFFSET p_es
     DB ' FS='
-    DW OFFSET p_tss_fs
+    DW OFFSET p_fs
     DB ' GS='
-    DW OFFSET p_tss_gs
+    DW OFFSET p_gs
     DB ' SS='
-    DW OFFSET p_tss_ss
+    DW OFFSET p_ss
     DB 0
 
 WriteWordRegs   PROC near
@@ -747,17 +747,17 @@ data_no_good:
 data_next:
     call NewLine
 ;
-    mov ax,gs:p_tss_cs
+    mov ax,gs:p_cs
     mov ebx,dword ptr gs:p_rip
     call WriteDataRow
     call NewLine
 ;
-    mov ax,gs:p_tss_ss
+    mov ax,gs:p_ss
     mov ebx,dword ptr gs:p_rsp
     call WriteDataRow
     call NewLine
 ;
-    mov ax,gs:p_tss_es
+    mov ax,gs:p_es
     xor ebx,ebx
     call WriteDataRow
     call NewLine

@@ -308,14 +308,16 @@ p_r14           DQ ?
 p_r15           DQ ?
 p_rflags        DQ ?
 
+p_es			DW ?
+p_cs			DW ?
+p_ss			DW ?
+p_ds			DW ?
+p_fs			DW ?
+p_gs			DW ?
+
+
 p_tss_esp0		    DD ?
 p_tss_ess0		    DW ?,?
-p_tss_es			DW ?,?
-p_tss_cs			DW ?,?
-p_tss_ss			DW ?,?
-p_tss_ds			DW ?,?
-p_tss_fs			DW ?,?
-p_tss_gs			DW ?,?
 p_tss_ldt			DW ?,?
 
 p_tss_dr0			DD ?
