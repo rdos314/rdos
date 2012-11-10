@@ -1212,13 +1212,20 @@ AddRegion   Endp
     public init_physical
 
 init_physical   PROC near
-;    call fillup_physical_mem
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:ram2_size
+    or eax,eax
+    jz init_phys_multiboot
+;
+    call fillup_physical_mem
+    jmp init_phys_done
+
+init_phys_multiboot:    
     mov eax,cr0
     and eax,NOT 80000000h
     mov cr0,eax    
 ;
-    mov ax,system_data_sel
-    mov ds,ax
     movzx ecx,ds:multiboot_mmap_len
     mov esi,ds:multiboot_mmap_addr
     mov ebp,ds:alloc_base
@@ -1247,7 +1254,8 @@ init_phys_next:
     add esi,eax
     sub ecx,eax
     jnz init_phys_loop
-;                    
+
+init_phys_done:                    
     mov eax,cr0
     or eax,80000000h
     mov cr0,eax    

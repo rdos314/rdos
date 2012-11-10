@@ -877,8 +877,6 @@ prot_init:
     mov ax,system_data_sel
     mov ds,ax
     mov ds:alloc_base,esi
-    mov ds:multiboot_mmap_addr,0
-    mov ds:multiboot_mmap_len,0
     mov edx,es:[ebx].mb_flags
     test dl,MB_FLAG_MEM_MAP
     jz MbMmapDone
@@ -887,6 +885,14 @@ prot_init:
     mov ds:multiboot_mmap_addr,eax
     mov eax,es:[ebx].mb_mmap_len
     mov ds:multiboot_mmap_len,ax
+;    
+    mov eax,es:[ebx].mb_mem_lower
+    shl eax,10
+    and ax,0F000h
+    mov ds:ram1_size,eax
+    mov ds:ram2_base,100000h
+    mov ds:ram2_size,0
+    jmp MbUpperOk
 
 MbMmapDone:    
     test dl,MB_FLAG_MEM
@@ -913,14 +919,6 @@ MbMemOk:
     je MbBelow4G
 ;
     mov ds:ram2_size,0FFF00000h
-;
-    mov eax,es:[ebx].mb_mem_upper
-    mov edx,1024
-    mul edx
-    sub eax,0FFF00000h
-    sbb edx,0
-    mov ds:ram64_size,eax
-    mov ds:ram64_size+4,edx
     jmp MbUpperOk
 
 MbBelow4G:    
@@ -976,9 +974,15 @@ MbModuleNext:
     mov ds:rom_shadow,0
     add eax,ds:rom1_base
     sub eax,ds:ram2_base
+;
+    mov ebx,ds:ram2_size
+    or ebx,ebx
+    jz MbSize2Ok
+;    
     sub ds:ram2_size,eax
     add ds:ram2_base,eax
-;
+
+MbSize2Ok:
     mov ax,gdt_sel
     mov ss,ax
     mov sp,1000h

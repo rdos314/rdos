@@ -4224,10 +4224,6 @@ create_paging32     PROC near
     call map_flat32
 
 create_paging_ram32:
-    mov ecx,es:ram2_size
-    or ecx,ecx
-    jz create_paging_done32
-;
     mov edx,0A0000h
     mov ecx,100000h
     sub ecx,edx
@@ -4720,10 +4716,6 @@ create_paging64     PROC near
     call map_flat64
 
 create_paging_ram64:
-    mov ecx,es:ram2_size
-    or ecx,ecx
-    jz create_paging_done64
-;
     mov edx,0A0000h
     mov ecx,100000h
     sub ecx,edx
