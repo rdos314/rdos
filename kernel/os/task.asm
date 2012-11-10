@@ -7611,7 +7611,6 @@ create_tss32    Endp
 init_default_tss    PROC near
     mov edx,cr3
     mov es:p_cr3,edx
-    mov ds:p_tss_cr3,edx
 ;
     mov edx,[ebp].cr_offs
     mov ds:p_tss_eip,edx
@@ -8469,7 +8468,7 @@ init_first_tss  PROC near
     mov ds:p_fault_vector,-1
     mov ds:p_fault_code,0
 ;
-    mov ds:p_tss_cr3,edx
+    mov ds:p_cr3,edx
     mov ds:p_tss_eax,edx
     mov ds:p_tss_ecx,edx
     mov ds:p_tss_edx,edx

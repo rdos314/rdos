@@ -501,7 +501,6 @@ local_create_process32       PROC near
     pop es
     pop ds
     mov es:p_cr3,eax
-    mov ds:p_tss_cr3,eax
     ret
 local_create_process32       ENDP
 
@@ -2061,7 +2060,6 @@ create_process_loop64:
     pop es
     pop ds
     mov es:p_cr3,eax
-    mov ds:p_tss_cr3,eax
     ret
 local_create_process64       ENDP
 

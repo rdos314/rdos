@@ -291,7 +291,6 @@ thread_seg	STRUC
 
 p_tss_esp0		    DD ?
 p_tss_ess0		    DW ?,?
-p_tss_cr3			DD ?
 p_tss_eip			DD ?
 p_tss_eflags		DD ?
 p_tss_eax			DD ?
@@ -351,8 +350,6 @@ p_math_st5		    DT ?
 p_math_st6		    DT ?
 p_math_st7		    DT ?
 p_math_prev_op	    DB ?,?
-
-p_tss_end           DW ?
 
 p_next			    DW ?
 p_prev			    DW ?

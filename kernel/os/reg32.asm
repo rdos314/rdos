@@ -1324,7 +1324,7 @@ get_thread_tss_found:
     push edi
     mov ds,ax
 ;
-    mov eax,ds:p_tss_cr3
+    mov eax,ds:p_cr3
     mov es:[edi].ut_cr3,eax
 ;    
     mov eax,ds:p_tss_eip
