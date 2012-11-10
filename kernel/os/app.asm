@@ -620,7 +620,7 @@ close_app_ldt_data:
     mov bx,fs:app_ldt_sel
 
 close_app_ldt:
-    mov es:p_tss_ldt,bx
+    mov es:p_ldt,bx
     lldt bx
     sti
     retf32

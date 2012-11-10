@@ -373,7 +373,7 @@ word_reg_tab1:
     DB ' TR='
     DW 0
     DB ' DT='
-    DW OFFSET p_tss_ldt
+    DW OFFSET p_ldt
     DB 0
 word_reg_tab2:
     DB ' CS='

@@ -315,17 +315,18 @@ p_ds			DW ?
 p_fs			DW ?
 p_gs			DW ?
 
+p_ldt			DW ?
+
 p_kernel_esp    DD ?
-p_kernel_ss		DW ?,?
+p_kernel_ss		DW ?
 p_kernel_stack  DD ?
 
-p_tss_ldt			DW ?,?
+p_dr0			DD ?
+p_dr1			DD ?
+p_dr2			DD ?
+p_dr3			DD ?
+p_dr7			DD ?
 
-p_tss_dr0			DD ?
-p_tss_dr1			DD ?
-p_tss_dr2			DD ?
-p_tss_dr3			DD ?
-p_tss_dr7			DD ?
 p_math_control	    DW ?,?
 p_math_status		DW ?,?
 p_math_tag		    DW ?,?

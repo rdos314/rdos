@@ -664,7 +664,7 @@ abort_pretask_do:
     mov ebp,[ebp].trap_ebp
     mov dword ptr es:p_rbp,ebp
     sldt ax
-    mov es:p_tss_ldt,ax       
+    mov es:p_ldt,ax       
     mov ax,es
     mov gs,ax
 ;

@@ -1262,15 +1262,15 @@ PreemptReload  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 load_breaks Proc near
-    mov eax,ds:p_tss_dr0
+    mov eax,ds:p_dr0
     mov dr0,eax
-    mov eax,ds:p_tss_dr1
+    mov eax,ds:p_dr1
     mov dr1,eax
-    mov eax,ds:p_tss_dr2
+    mov eax,ds:p_dr2
     mov dr2,eax
-    mov eax,ds:p_tss_dr3
+    mov eax,ds:p_dr3
     mov dr3,eax
-    mov eax,ds:p_tss_dr7
+    mov eax,ds:p_dr7
     mov dr7,eax
     and ax,0FFh
     jnz load_break_done
@@ -1487,7 +1487,7 @@ load_cr3_ok:
     mov cr0,eax    
 
 load_fpu_ok:
-    lldt ds:p_tss_ldt
+    lldt ds:p_ldt
 ;
     mov ax,ds:p_flags
     or ax,ax
@@ -7640,16 +7640,16 @@ init_default_tss    PROC near
     mov ds:p_cs,dx
 ;    
     sldt dx
-    mov ds:p_tss_ldt,dx
+    mov ds:p_ldt,dx
 ;
 ; dr0 - dr7
 ;
     xor edx,edx
-    mov ds:p_tss_dr0,edx
-    mov ds:p_tss_dr1,edx
-    mov ds:p_tss_dr2,edx
-    mov ds:p_tss_dr3,edx
-    mov ds:p_tss_dr7,edx
+    mov ds:p_dr0,edx
+    mov ds:p_dr1,edx
+    mov ds:p_dr2,edx
+    mov ds:p_dr3,edx
+    mov ds:p_dr7,edx
 ;
 ; 387 status
 ;
@@ -8447,11 +8447,11 @@ init_first_tss  PROC near
 ;
 ; dr0 - dr7
 ;
-    mov ds:p_tss_dr0,edx
-    mov ds:p_tss_dr1,edx
-    mov ds:p_tss_dr2,edx
-    mov ds:p_tss_dr3,edx
-    mov ds:p_tss_dr7,edx
+    mov ds:p_dr0,edx
+    mov ds:p_dr1,edx
+    mov ds:p_dr2,edx
+    mov ds:p_dr3,edx
+    mov ds:p_dr7,edx
 ;
 ; 387 status
 ;
@@ -8480,7 +8480,7 @@ init_first_tss  PROC near
     mov ds:p_ds,dx
     mov ds:p_fs,dx
     mov ds:p_gs,dx
-    mov ds:p_tss_ldt,0
+    mov ds:p_ldt,0
 ;
     mov eax,OFFSET init_first_process_callback
     mov dword ptr ds:p_rip,eax
