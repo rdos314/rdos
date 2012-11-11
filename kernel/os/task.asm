@@ -1778,10 +1778,12 @@ SaveCurrentThread       Proc near
     movzx edx,dx
     mov dword ptr ds:p_rip,edx
     mov dword ptr ds:p_rsp,esp
-    mov edx,dword ptr ds:p_rdx
-;    
-    mov ss,fs:ps_ss
-    mov esp,fs:ps_esp
+;
+    mov dx,syscall_data_sel
+    mov ss,dx
+    mov esp,fs:ps_stack
+;
+    mov edx,dword ptr ds:p_rdx    
     push bp
 ;
     xor bp,bp
@@ -1846,10 +1848,12 @@ SaveLockedThread    Proc near
     movzx edx,dx
     mov dword ptr ds:p_rip,edx
     mov dword ptr ds:p_rsp,esp
+;
+    mov dx,syscall_data_sel
+    mov ss,dx
+    mov esp,fs:ps_stack
+;        
     mov edx,dword ptr ds:p_rdx
-;    
-    mov ss,fs:ps_ss
-    mov esp,fs:ps_esp
     push bp
 ;
     xor bp,bp
@@ -1913,10 +1917,12 @@ SaveLockedThreadKeepEs    Proc near
     movzx edx,dx
     mov dword ptr ds:p_rip,edx
     mov dword ptr ds:p_rsp,esp
+;   
+    mov dx,syscall_data_sel
+    mov ss,dx
+    mov esp,fs:ps_stack
+;        
     mov edx,dword ptr ds:p_rdx
-;    
-    mov ss,fs:ps_ss
-    mov esp,fs:ps_esp
     push bp
 ;
     xor bp,bp
@@ -1955,8 +1961,9 @@ SkipCurrentThread       Proc near
 ;    
     pop bp
 ;    
-    mov ss,fs:ps_ss
-    mov esp,fs:ps_esp
+    mov dx,syscall_data_sel
+    mov ss,dx
+    mov esp,fs:ps_stack
     push bp
 ;
     xor bp,bp
@@ -2427,8 +2434,9 @@ WakeThread      ENDP
 debug_block_name        DB 'Debug Block', 0
 
 debug_block:
-    mov ss,fs:ps_ss
-    mov esp,fs:ps_esp
+    mov ax,syscall_data_sel
+    mov ss,ax
+    mov esp,fs:ps_stack
 ;
     xor ax,ax
     mov ds,ax
@@ -2517,13 +2525,9 @@ create_core    Proc far
 ;
     mov eax,1000h
     AllocateBigLinear
-    AllocateGdt
-    mov ecx,eax
-    CreateDataSelector32
-    mov es:ps_ss,bx
-    mov es:ps_esp,1000h
-    mov ds,bx
-    mov ds:[0],bx
+    mov ds:[edx],dx
+    add edx,1000h
+    mov es:ps_stack,edx
 ;
     mov ax,SEG data
     mov ds,ax

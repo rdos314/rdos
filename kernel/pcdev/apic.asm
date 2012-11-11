@@ -344,7 +344,7 @@ prot_start:
     db 66h
     lidt fword ptr es:ap_idt
 ;
-    mov dx,es:ap_ss
+    mov edx,es:ap_stack
 ;    
     mov eax,es:ap_cr0
     mov cr0,eax
@@ -368,12 +368,12 @@ prot_end:
 
 page_struc  STRUC
 
-ap_ss   DW ?
-ap_cr0  DD ?
-ap_cr3  DD ?
-ap_cr4  DD ?
-ap_gdt  DB 6 DUP(?)
-ap_idt  DB 6 DUP(?)
+ap_stack DD ?
+ap_cr0   DD ?
+ap_cr3   DD ?
+ap_cr4   DD ?
+ap_gdt   DB 6 DUP(?)
+ap_idt   DB 6 DUP(?)
 
 page_struc  ENDS
     
@@ -393,8 +393,9 @@ ApInit:
     mov fs,ax
     mov gs,ax
 ;
-    mov ss,dx
-    mov sp,200h    
+    mov ax,syscall_data_sel
+    mov ss,ax
+    mov esp,edx
 ;
     mov ax,SEG data
     mov ds,ax
@@ -3406,8 +3407,8 @@ BootCore    Proc near
     mov eax,fs:ps_gdt_base
     mov dword ptr es:[di].ap_gdt+2,eax
 ;
-    mov ax,fs:ps_ss
-    mov es:[di].ap_ss,ax
+    mov eax,fs:ps_stack
+    mov es:[di].ap_stack,eax
 ;
     mov bx,467h
     mov ax,0

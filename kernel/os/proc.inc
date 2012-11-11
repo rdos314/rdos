@@ -64,8 +64,7 @@ ps_id               DW ?
 
 ps_sel              DW ?
 
-ps_ss               DW ?
-ps_esp              DD ?
+ps_stack            DD ?
 
 ps_nesting          DW ?
 ps_curr_thread      DW ?

@@ -776,6 +776,14 @@ prot_init:
     call init_physical_gates
     call move_adapters
     call setup_global_paging
+;
+    xor edx,edx
+    mov ecx,0FFFFFFFFh
+    mov bx,syscall_code_sel
+    CreateCodeSelector32
+;    
+    mov bx,syscall_data_sel
+    CreateDataSelector32    
 ;    
     call init_page_table
     call init_paging_gates
@@ -800,14 +808,6 @@ prot_init:
 ;
     mov bx,flat_data_sel
     CreateDataSelector32
-;
-    xor edx,edx
-    mov ecx,0FFFFFFFFh
-    mov bx,syscall_code_sel
-    CreateCodeSelector32
-;    
-    mov bx,syscall_data_sel
-    CreateDataSelector32    
 ;
     StartTasking
     
