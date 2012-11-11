@@ -524,6 +524,16 @@ StartLongMode MACRO
     OsGate start_long_mode_nr
                     ENDM
 
+; IN  EAX  Long mode compatible CR3
+SwitchToLongMode MACRO
+    OsGate switch_to_long_mode_nr
+                    ENDM
+
+; IN  EAX  Protected mode compatible CR3
+SwitchToProtectedMode MACRO
+    OsGate switch_to_protected_mode_nr
+                    ENDM
+
 ;;;;;;;;; PAGING ;;;;;;;;;;;;;;;;;;;;
 
 NotifyInitProcess MACRO

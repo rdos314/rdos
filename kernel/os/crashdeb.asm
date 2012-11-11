@@ -1727,10 +1727,31 @@ handle_loop:
     GetCoreNumber
         
 handle_next_set:
+    push dx
     mov ds:curr_num,ax
+    mov dx,gs:ps_flags
     mov ax,fs
     mov gs,ax
     xor ax,ax
+    xor dx,gs:ps_flags
+    test dx,PS_FLAG_LONG_MODE
+    jz handle_mode_ok
+;
+    mov dx,gs:ps_flags
+    test dx,PS_FLAG_LONG_MODE
+    jnz handle_switch_to_long
+
+handle_switch_to_prot:
+    mov eax,gs:cs_cr3
+    SwitchToProtectedMode
+    jmp handle_mode_ok        
+
+handle_switch_to_long:    
+    mov eax,gs:cs_cr3
+    SwitchToLongMode
+
+handle_mode_ok:    
+    pop dx
 
 handle_func:
     call HideMarker

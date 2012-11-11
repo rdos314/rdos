@@ -137,6 +137,12 @@ idt  dd IDT_LINEAR
 
     org MAP_LINEAR
 
+prot_idt_size   DW ?
+prot_idt_base   DD ? 
+
+long_idt_size   DW 0FFFh
+long_idt_base   DD IDT_LINEAR
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -477,6 +483,10 @@ iiLoop:
     jmp iiLoop
 
 iiDone:
+    mov ax,flat_sel
+    mov ds,ax
+    sidt fword ptr ds:prot_idt_size
+;
     popad
     pop es
     pop ds
@@ -761,6 +771,102 @@ add_long_msi  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           SwitchToLongMode
+;
+;       DESCRIPTION:    Switch to long mode
+;
+;       PARAMETERS:     EAX         Long mode CR3
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+switch_to_long_mode_name   DB 'Switch To Long Mode', 0
+
+switch_to_long_mode   Proc far
+    push eax
+    push ebx
+    push ecx
+    push edx
+    pushf
+;
+    mov ebx,eax
+    cli
+;
+    mov eax,cr0
+    and eax,7FFFFFFFh
+    mov cr0,eax
+;
+    mov ecx,IA32_EFER
+    rdmsr
+    or eax,100h
+    wrmsr
+;
+    mov cr3,ebx
+;
+    mov eax,cr0
+    or eax,80000000h
+    mov cr0,eax
+;
+    lidt fword ptr cs:long_idt_size
+;
+    popf
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+switch_to_long_mode  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SwitchToProtectedMode
+;
+;       DESCRIPTION:    Switch to protected mode
+;
+;       PARAMETERS:     EAX         Protected mode CR3
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+switch_to_protected_mode_name   DB 'Switch To Protected Mode', 0
+
+switch_to_protected_mode   Proc far
+    push eax
+    push ebx
+    push ecx
+    push edx
+    pushf
+;
+    mov ebx,eax
+    cli
+;
+    mov eax,cr0
+    and eax,7FFFFFFFh
+    mov cr0,eax
+;
+    mov ecx,IA32_EFER
+    rdmsr
+    and eax,0FFFFFEFFh   
+    wrmsr
+;
+    mov cr3,ebx
+;
+    mov eax,cr0
+    or eax,80000000h
+    mov cr0,eax
+;
+    lidt fword ptr cs:prot_idt_size
+;
+    popf
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax    
+    ret
+switch_to_protected_mode  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;    NAME:           Init
 ;
 ;    DESCRIPTION:    Init module
@@ -856,6 +962,18 @@ init    proc far
     mov ax,setup_long_crash_nmi_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET switch_to_long_mode
+    mov edi,OFFSET switch_to_long_mode_name
+    xor cl,cl
+    mov ax,switch_to_long_mode_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET switch_to_protected_mode
+    mov edi,OFFSET switch_to_protected_mode_name
+    xor cl,cl
+    mov ax,switch_to_protected_mode_nr
+    RegisterOsGate
+;
     mov edi,init_task
     HookInitTasking    
 ;    
@@ -906,9 +1024,6 @@ init_task:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 test_thread_name  DB 'Nasm Test Thread', 0
-
-long_idt_size   DW 0FFFh
-long_idt_base   DD IDT_LINEAR
 
 test_thread:
     mov bx,ss
@@ -1030,7 +1145,7 @@ code32  Ends
 
 Code64 segment byte public use64 'code64'
 
-    org OFFSET code32_end
+    org OFFSET code32_end + 20h
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

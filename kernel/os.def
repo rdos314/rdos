@@ -574,4 +574,7 @@ setup_long_crash_nmi_nr     = 483
 
 debug_block_nr              = 484
 
+switch_to_long_mode_nr      = 485
+switch_to_protected_mode_nr = 486
+
 osgate_entries				= 500

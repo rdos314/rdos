@@ -7584,6 +7584,7 @@ create_tss32    PROC near
     add edx,stack0_size
     mov ds:p_kernel_stack,edx
 ;    
+    mov ecx,SIZE tss32_seg
     mov edx,edi
     AllocateGdt
     CreateTssSelector
