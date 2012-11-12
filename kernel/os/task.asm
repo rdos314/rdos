@@ -8176,8 +8176,8 @@ init_process_callback   ENDP
 ;           PARAMETERS:     AL          Priority
 ;                           AH          Mode, 0=Protected mode, 1=V86 mode, 2=Long mode
 ;                           ECX         Stack size
-;                           DS:SI       Start address
-;                           ES:DI       Thread name
+;                           DS:ESI      Start address
+;                           ES:EDI      Thread name
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -8198,8 +8198,6 @@ create_process  PROC far
     push edx
     push esi
     push edi
-    movzx esi,si
-    movzx edi,di
     mov [ebp].cr_seg,ds
     mov [ebp].cr_offs,esi
     xor dx,dx

@@ -581,8 +581,8 @@ init_process    PROC far
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov si,OFFSET bios_process
-    mov di,OFFSET bios_name
+    mov esi,OFFSET bios_process
+    mov edi,OFFSET bios_name
     mov ecx,stack0_size
     mov ax,5
     CreateProcess

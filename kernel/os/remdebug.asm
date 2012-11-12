@@ -1440,8 +1440,8 @@ remote_debug    Proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov si,OFFSET debug_process
-    mov di,OFFSET debug_name
+    mov esi,OFFSET debug_process
+    mov edi,OFFSET debug_name
     mov ecx,stack0_size
     mov ax,20
     CreateProcess

@@ -1321,10 +1321,10 @@ DoSpawn Proc near
     push di
 ;    
     mov es,gs:s_name
-    xor di,di
+    xor edi,edi
     mov ax,cs
     mov ds,ax
-    mov si,OFFSET spawn_startup
+    mov esi,OFFSET spawn_startup
     mov bx,gs
     mov ax,2
     mov ecx,stack0_size
@@ -2028,7 +2028,7 @@ run_process     PROC near
     mov bx,es
     mov ax,cs
     mov ds,ax
-    mov si,OFFSET load_process
+    mov esi,OFFSET load_process
     mov ax,2
     mov ecx,stack0_size
     CreateProcess

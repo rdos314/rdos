@@ -1017,6 +1017,20 @@ init_task:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;    NAME:           Test_process
+;
+;    DESCRIPTION:    Test process
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_process_name  DB 'Test Process', 0
+
+test_process:
+    int 3
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;    NAME:           Test_thread
 ;
 ;    DESCRIPTION:    Test thread
@@ -1026,6 +1040,18 @@ init_task:
 test_thread_name  DB 'Nasm Test Thread', 0
 
 test_thread:
+    int 3
+;    
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET test_process
+    mov edi,OFFSET test_process_name
+    mov ax,204h
+    mov ecx,1000h
+    CreateProcess
+;
+    int 3    
     mov bx,ss
     GetSelectorBaseSize
     add edx,esp
