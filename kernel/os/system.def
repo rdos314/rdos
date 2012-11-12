@@ -461,3 +461,31 @@ tss32_io_bitmap     DW 40h DUP(?)
 tss32_bitmap_space  DW ?
 
 tss32_seg		ENDS
+
+tss64_seg		STRUC
+
+tss64_resv1   	    DD ?
+tss64_rsp0		    DQ ?
+tss64_rsp1		    DQ ?
+tss64_rsp2		    DQ ?
+
+tss64_resv2         DQ ?
+
+tss64_ist1		    DQ ?
+tss64_ist2		    DQ ?
+tss64_ist3		    DQ ?
+tss64_ist4		    DQ ?
+tss64_ist5		    DQ ?
+tss64_ist6		    DQ ?
+tss64_ist7		    DQ ?
+
+tss64_resv3         DQ ?
+tss64_resv4         DW ?
+
+tss64_bitmap        DW ?
+
+tss64_io_bitmap     DW 40h DUP(?)
+
+tss64_bitmap_space  DW ?
+    
+tss64_seg       ENDS

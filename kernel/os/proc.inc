@@ -101,6 +101,9 @@ ps_system_time      DD ?,?
 ps_syscall_eip      DD ?
 ps_syscall_esp      DD ?
 
+ps_long_tr          DW ?
+ps_long_ldt         DW ?
+
 ps_timer_spinlock   DW ?
 ps_timer_head		DW ?
 ps_timer_free		DW ?

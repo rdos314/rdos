@@ -1424,6 +1424,10 @@ load_long_mode:
     test fs:ps_flags,PS_FLAG_LONG_MODE
     jnz load_long_mode_active
 ;
+    mov bx,fs:ps_long_tr
+    and byte ptr ds:[bx+5],NOT 2
+    ltr bx
+;    
     mov eax,es:p_cr3
     SwitchToLongMode
     lock or fs:ps_flags,PS_FLAG_LONG_MODE
@@ -2499,6 +2503,52 @@ preempt_notify    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CreateLongTss
+;
+;       DESCRIPTION:    Create long-mode TSS
+;
+;       RETURNS:        BX      TSS selector 
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_long_tss   Proc near
+    push es
+    push eax
+    push ecx
+    push edx
+;
+    mov ax,flat_sel
+    mov es,ax
+;    
+    mov eax,SIZE tss64_seg
+    mov ecx,eax
+    AllocateSmallLinear
+    mov edi,edx
+;    
+    push ecx
+    push edi
+    xor al,al
+    rep stos byte ptr es:[edi]
+    pop edi
+    pop ecx
+;
+    mov es:[edi].tss64_bitmap,OFFSET tss64_io_bitmap
+;    
+    mov ecx,SIZE tss64_seg
+    mov edx,edi
+    AllocateGdt
+    CreateTssSelector
+;
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    ret
+create_long_tss   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CreateCore
 ;
 ;       DESCRIPTION:    Create core
@@ -2605,6 +2655,11 @@ core_timer_list_create:
     mov bx,ax
     loop core_timer_list_create
 ;
+    call create_long_tss
+    mov es:ps_long_tr,bx
+;
+    mov es:ps_long_ldt,0
+;    
     mov ax,es:ps_id     
 ;
     pop edi
