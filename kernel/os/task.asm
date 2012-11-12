@@ -1417,6 +1417,13 @@ load_a_task:
     mov ax,gdt_sel
     mov ds,ax
     mov bx,es:p_tss_sel
+    or bx,bx
+    jnz load_protected_mode
+
+load_long_mode:
+    CrashGate
+
+load_protected_mode:    
     and byte ptr ds:[bx+5],NOT 2
     ltr bx
 ;    
