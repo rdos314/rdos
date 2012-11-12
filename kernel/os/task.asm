@@ -7348,7 +7348,7 @@ allocate_thread_block   ENDP
 ;
 ;           DESCRIPTION:    Init thread content
 ;
-;           PARAMETERS:         ES          Thread
+;           PARAMETERS:     ES          Thread
 ;                           DX          Priority
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -7605,15 +7605,56 @@ create_tss32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           INIT_DEFAULT_TSS
+;   NAME:           CreateTss64
 ;
-;           DESCRIPTION:    Setup default TSS contents
+;   DESCRIPTION:    Create 64-bit TSS
 ;
-;           PARAMETERS:         DS          TSS
+;   PARAMETERS:     DS          Thread
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_default_tss    PROC near
+create_tss64    PROC near
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov ax,flat_sel
+    mov es,ax
+;    
+    mov eax,stack0_size
+    AllocateBigLinear
+    mov es:[edx],eax
+;    
+    add edx,stack0_size
+    mov ds:p_kernel_stack,edx
+;
+    mov ds:p_kernel_esp,edx
+    mov ds:p_kernel_ss,syscall_data_sel
+;
+    mov ds:p_tss_sel,0
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+create_tss64    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           INIT_DEFAULT_REGS
+;
+;           DESCRIPTION:    Setup default register state
+;
+;           PARAMETERS:     DS         Thread block
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_default_regs    PROC near
     mov edx,cr3
     mov es:p_cr3,edx
 ;
@@ -7671,7 +7712,7 @@ init_default_tss    PROC near
     mov ds:p_fault_vector,-1
     mov ds:p_fault_code,0
     ret
-init_default_tss    ENDP
+init_default_regs    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -7868,7 +7909,7 @@ create_thread   PROC near
     mov ax,es
     mov ds,ax
     call create_tss32
-    call init_default_tss
+    call init_default_regs
     mov ax,[ebp].cr_mode
     test ax,1
     jz create_prot
@@ -8035,16 +8076,15 @@ terminate_pd_done:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           INIT_PROCESS_TSS
+;           NAME:           INIT_PROCESS_REGS
 ;
-;           DESCRIPTION:    Init process TSS
+;           DESCRIPTION:    Init process regs
 ;
-;           PARAMETERS:         DS          TSS
-;                           ES          Thread
+;           PARAMETERS:     DS          Thread
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_process_tss    PROC near
+init_process_regs    PROC near
     mov eax,OFFSET create_process_callback
     mov dword ptr ds:p_rip,eax
     mov ds:p_cs,cs
@@ -8054,30 +8094,30 @@ init_process_tss    PROC near
     mov dword ptr ds:p_rsp,eax
 ;
     mov ax,[ebp].cr_mode
-    test ax,1
-    jz init_tss_prot_iopl
+    cmp ax,1
+    jnz init_regs_prot_iopl
     mov ax,[ebp].cr_flags
     or dx,200h
     and dx,NOT 7000h
     movzx edx,dx
     mov dword ptr ds:p_rflags,eax
-    jmp init_tss_iopl_done
+    jmp init_regs_iopl_done
 
-init_tss_prot_iopl:
+init_regs_prot_iopl:
     mov ax,[ebp].cr_flags
     or ax,200h
     and ax,NOT 7000h
     movzx eax,ax
     mov dword ptr ds:p_rflags,eax
 
-init_tss_iopl_done:     
+init_regs_iopl_done:     
     xor ax,ax
     mov ds:p_es,ax
     mov ds:p_ds,ax
     mov ds:p_fs,ax
     mov ds:p_gs,ax
     ret
-init_process_tss    ENDP
+init_process_regs    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8133,9 +8173,9 @@ init_process_callback   ENDP
 ;
 ;           DESCRIPTION:    Create process
 ;
-;           PARAMETERS:         AL              Priority
-;                           AH              Mode, 0=PM, 1=VM
-;                           ECX             Stack size
+;           PARAMETERS:     AL          Priority
+;                           AH          Mode, 0=Protected mode, 1=V86 mode, 2=Long mode
+;                           ECX         Stack size
 ;                           DS:SI       Start address
 ;                           ES:DI       Thread name
 ;
@@ -8180,18 +8220,28 @@ create_process  PROC far
     call init_process_block
     mov ax,es
     mov ds,ax
+    mov ax,[ebp].cr_mode
+    cmp ax,2
+    jne create_mod32
+;
+    call create_tss64
+    jmp create_mod_tss_ok
+
+create_mod32:
     call create_tss32
-    call init_default_tss
+
+create_mod_tss_ok:    
+    call init_default_regs
     NotifyCreateProcess
     mov ax,[ebp].cr_mode
-    test ax,1
-    jz create_mod_prot
+    cmp ax,1
+    jne create_mod_prot
     call init_virt_thread
     jmp create_mod_tss_done
 create_mod_prot:
     call init_prot_thread
 create_mod_tss_done:
-    call init_process_tss
+    call init_process_regs
     call init_process_callback
 ;
     call wake_new

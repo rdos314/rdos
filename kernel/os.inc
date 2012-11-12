@@ -1415,7 +1415,7 @@ Sleep    MACRO
                     ENDM
 
 ;       AL          PRIORITET
-;       AH          MODE, 0=PM, 1=VM
+;       AH          MODE, 0=Protected mode, 1=V86 mode, 2=Long mode
 ;       ECX         STACK SIZE
 ;       DS:ESI      ADDRESS TO START AT
 ;       ES:EDI      PROCESS NAME
