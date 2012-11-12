@@ -1421,7 +1421,14 @@ load_a_task:
     jnz load_protected_mode
 
 load_long_mode:
+    test fs:ps_flags,PS_FLAG_LONG_MODE
+    jnz load_long_mode_active
+;
+    mov eax,es:p_cr3
+    SwitchToLongMode
     CrashGate
+        
+load_long_mode_active:
 
 load_protected_mode:    
     and byte ptr ds:[bx+5],NOT 2
@@ -8229,22 +8236,27 @@ create_process  PROC far
     cmp ax,2
     jne create_mod32
 ;
+    int 3
     call create_tss64
-    jmp create_mod_tss_ok
+    call init_default_regs
+    NotifyCreateLongProcess
+    jmp create_mod_prot
 
 create_mod32:
     call create_tss32
-
-create_mod_tss_ok:    
     call init_default_regs
     NotifyCreateProcess
+;
     mov ax,[ebp].cr_mode
     cmp ax,1
     jne create_mod_prot
+;
     call init_virt_thread
     jmp create_mod_tss_done
+
 create_mod_prot:
     call init_prot_thread
+
 create_mod_tss_done:
     call init_process_regs
     call init_process_callback

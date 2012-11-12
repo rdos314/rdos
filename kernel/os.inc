@@ -544,6 +544,9 @@ NotifyCreateProcess MACRO
     OsGate notify_create_process_nr
                     ENDM
 
+NotifyCreateLongProcess MACRO
+    OsGate notify_create_long_process_nr
+                    ENDM
 
 NotifyInitTasking MACRO
     OsGate notify_init_tasking_nr

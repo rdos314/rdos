@@ -1171,7 +1171,7 @@ code32  Ends
 
 Code64 segment byte public use64 'code64'
 
-    org OFFSET code32_end + 20h
+    org OFFSET code32_end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

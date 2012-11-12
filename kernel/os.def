@@ -577,4 +577,6 @@ debug_block_nr              = 484
 switch_to_long_mode_nr      = 485
 switch_to_protected_mode_nr = 486
 
+notify_create_long_process_nr = 487
+
 osgate_entries				= 500

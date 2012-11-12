@@ -63,6 +63,7 @@ code    SEGMENT byte public use16 'CODE'
 
     public init_process_proc
     public create_process_proc
+    public create_long_process_proc
     public free_process_proc
     public get_page_entry_proc
     public set_page_entry_proc
@@ -95,6 +96,7 @@ code    SEGMENT byte public use16 'CODE'
 proc_start:
 init_process_proc               DW OFFSET local_init_process32
 create_process_proc             DW OFFSET local_create_process32
+create_long_process_proc        DW OFFSET local_create_long_process32
 free_process_proc               DW OFFSET local_free_process32
 get_page_entry_proc             DW OFFSET local_get_page_entry32
 set_page_entry_proc             DW OFFSET local_set_page_entry32
@@ -127,6 +129,7 @@ get_thread_page_dir_proc        DW OFFSET local_get_thread_page_dir32
 p64_start:
 init_process_p64                DW OFFSET local_init_process64
 create_process_p64              DW OFFSET local_create_process64
+create_long_process_p64         DW OFFSET local_create_long_process64
 free_process_p64                DW OFFSET local_free_process64
 get_page_entry_p64              DW OFFSET local_get_page_entry64
 set_page_entry_p64              DW OFFSET local_set_page_entry64
@@ -187,6 +190,12 @@ init_page_table     PROC near
     mov edi,OFFSET notify_create_process_name
     xor cl,cl
     mov ax,notify_create_process_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET notify_create_long_process
+    mov edi,OFFSET notify_create_long_process_name
+    xor cl,cl
+    mov ax,notify_create_long_process_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_page_entry
@@ -503,6 +512,23 @@ local_create_process32       PROC near
     mov es:p_cr3,eax
     ret
 local_create_process32       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Create_long_process32
+;
+;           DESCRIPTION:    Create long mode process paging environment
+;
+;           PARAMETERS:     ES          Thread
+;                           EAX         CR3
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_create_long_process32       PROC near
+    int 3
+    ret
+local_create_long_process32       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2066,6 +2092,118 @@ local_create_process64       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           Create_long_process64
+;
+;           DESCRIPTION:    Create long process paging environment
+;
+;           RETURNS:        FS          Thread sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_create_long_process64       PROC near
+    push ds
+    push es
+;    
+    mov eax,8000h
+    AllocateGlobalMem
+    mov bx,es
+    GetSelectorBaseSize
+;
+    add edx,7000h
+    AllocatePhysical32
+    or al,3
+    SetPageEntry
+    sub edx,7000h
+    push eax
+;    
+    mov di,1000h
+    mov cx,400h
+    xor eax,eax
+    rep stosd
+;     
+    mov ax,sys_dir_sel
+    mov ds,ax
+    mov di,2000h
+    mov ecx,system_mem_start
+    shr ecx,20
+    xor eax,eax
+    rep stosd               ; dir selector at 2000h
+;    
+    mov eax,system_mem_start
+    mov esi,eax
+    shr esi,18
+    shr eax,20
+    mov cx,1000h
+    sub cx,ax
+    rep movsd               ; dir ptr entries at 2000h, 3000h, 4000h, 5000h
+;
+    mov ax,sys_page_sel
+    mov ds,ax
+    xor si,si
+    mov cx,400h
+    xor eax,eax
+    rep movsd               ; lower mem page at 6000h
+;    
+    shr edx,9
+;
+    mov ax,sys_page_sel
+    mov ds,ax
+    mov di,2000h
+    mov eax,[edx+48]
+    mov es:[di],eax
+    mov eax,[edx+52]
+    mov es:[di+4],eax
+;
+    mov cx,4
+    mov esi,16
+    mov ebx,process_page_linear
+    shr ebx,18
+    add bx,di
+    mov di,1000h
+
+create_long_process_loop64:    
+    mov eax,[edx+esi]
+    mov es:[bx],eax
+    mov es:[di],eax
+;
+    add esi,4
+    add bx,4
+    add di,4
+;        
+    mov eax,[edx+esi]
+    mov es:[bx],eax
+    mov es:[di],eax
+;
+    add esi,4
+    add bx,4
+    add di,4
+;    
+    loop create_long_process_loop64
+;
+    mov di,7000h
+    mov eax,[edx+8]           
+    stosd
+    mov eax,[edx+12]
+    stosd
+;    
+    mov cx,3FEh
+    xor eax,eax
+    rep stosd
+;
+    pop eax
+    xor al,al
+;
+    mov dx,es
+    mov fs,dx
+    pop es
+    pop ds
+    mov es:p_cr3,eax
+    ret
+local_create_long_process64       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           local_free_process64
 ;
 ;           DESCRIPTION:    Free process paging
@@ -3466,6 +3604,25 @@ notify_create_process       Proc far
     call cs:create_process_proc
     retf32
 notify_create_process       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           NotifyCreateLongProcess
+;
+;           DESCRIPTION:    Notify create long process
+;
+;           PARAMETERS:     ES          Thread
+;                           EAX         CR3
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_create_long_process_name  DB 'Notify Create Long Process',0
+
+notify_create_long_process       Proc far
+    call cs:create_long_process_proc
+    retf32
+notify_create_long_process       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
