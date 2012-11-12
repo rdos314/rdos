@@ -1426,6 +1426,8 @@ load_long_mode:
 ;
     mov eax,es:p_cr3
     SwitchToLongMode
+    lock or fs:ps_flags,PS_FLAG_LONG_MODE
+;
     CrashGate
         
 load_long_mode_active:
@@ -7695,6 +7697,40 @@ init_default_regs    PROC near
 ;    
     mov edx,[ebp].cr_edi
     mov dword ptr ds:p_rdi,edx
+;
+    xor edx,edx
+    mov dword ptr ds:p_rip+4,edx
+    mov dword ptr ds:p_rax+4,edx
+    mov dword ptr ds:p_rcx+4,edx
+    mov dword ptr ds:p_rdx+4,edx
+    mov dword ptr ds:p_rbx+4,edx
+    mov dword ptr ds:p_rbp+4,edx
+    mov dword ptr ds:p_rsi+4,edx
+    mov dword ptr ds:p_rdi+4,edx
+;    
+    mov dword ptr ds:p_r8,edx
+    mov dword ptr ds:p_r8+4,edx
+;    
+    mov dword ptr ds:p_r9,edx
+    mov dword ptr ds:p_r9+4,edx
+;    
+    mov dword ptr ds:p_r10,edx
+    mov dword ptr ds:p_r10+4,edx
+;    
+    mov dword ptr ds:p_r11,edx
+    mov dword ptr ds:p_r11+4,edx
+;    
+    mov dword ptr ds:p_r12,edx
+    mov dword ptr ds:p_r12+4,edx
+;    
+    mov dword ptr ds:p_r13,edx
+    mov dword ptr ds:p_r13+4,edx
+;    
+    mov dword ptr ds:p_r14,edx
+    mov dword ptr ds:p_r14+4,edx
+;    
+    mov dword ptr ds:p_r15,edx
+    mov dword ptr ds:p_r15+4,edx
 ;    
     mov dx,[ebp].cr_seg
     mov ds:p_cs,dx
@@ -8236,7 +8272,6 @@ create_process  PROC far
     cmp ax,2
     jne create_mod32
 ;
-    int 3
     call create_tss64
     call init_default_regs
     NotifyCreateLongProcess
