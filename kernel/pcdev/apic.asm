@@ -1101,7 +1101,10 @@ rihPrioOk:
     or esi,esi
     jz rihLongPrioOk
 ;
+    push bx
+    xor bl,bl
     SetupLongIntGate
+    pop bx
 
 rihLongPrioOk:    
     mov ds,fs:[bx].gi_handler_sel
@@ -1935,7 +1938,12 @@ request_msi_handler  Proc far
     jc rmhDone
 ;
     CreateLongMsi
+;
+    push bx
+    xor bl,bl
     SetupLongIntGate
+    pop bx
+;    
     AddLongMsi
 
 rmhDone:
