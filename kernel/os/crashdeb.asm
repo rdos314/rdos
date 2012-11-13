@@ -1729,15 +1729,15 @@ handle_loop:
 handle_next_set:
     push dx
     mov ds:curr_num,ax
-    mov dx,gs:ps_flags
+    mov dx,word ptr gs:ps_flags
     mov ax,fs
     mov gs,ax
     xor ax,ax
-    xor dx,gs:ps_flags
+    xor dx,word ptr gs:ps_flags
     test dx,PS_FLAG_LONG_MODE
     jz handle_mode_ok
 ;
-    mov dx,gs:ps_flags
+    mov dx,word ptr gs:ps_flags
     test dx,PS_FLAG_LONG_MODE
     jnz handle_switch_to_long
 

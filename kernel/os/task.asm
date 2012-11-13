@@ -1422,7 +1422,7 @@ load_a_task:
 
 load_long_mode:
     test fs:ps_flags,PS_FLAG_LONG_MODE
-    jnz load_long_mode_active
+    jnz load_check_flush
 ;
     mov bx,fs:ps_long_tr
     and byte ptr ds:[bx+5],NOT 2
@@ -1430,16 +1430,15 @@ load_long_mode:
 ;    
     mov eax,es:p_cr3
     SwitchToLongMode
-    lock or fs:ps_flags,PS_FLAG_LONG_MODE
-;
-    CrashGate
-        
-load_long_mode_active:
+    lock or fs:ps_flags,PS_FLAG_LONG_MODE OR PS_FLAG_SKIP_FLUSH
+    lock and fs:ps_flags, NOT PS_FLAG_FLUSH
+    jmp load_check_flush
 
 load_protected_mode:    
     and byte ptr ds:[bx+5],NOT 2
     ltr bx
-;    
+
+load_check_flush:    
     test fs:ps_flags,PS_FLAG_FLUSH
     jz load_not_flush
 ;
@@ -1479,13 +1478,23 @@ load_reload_cr3_loop:
     add edi,esi
     loop load_reload_cr3_loop
 ;
+    test fs:ps_flags,PS_FLAG_SKIP_FLUSH
+    jnz load_cr3_ok
+;
     mov eax,es:p_cr3
     mov cr3,eax
 
 load_cr3_ok:
+    lock and fs:ps_flags,NOT PS_FLAG_SKIP_FLUSH
     mov ax,es
     mov ds,ax
 ;
+
+    test fs:ps_flags,PS_FLAG_LONG_MODE
+    jz loadcnt
+    CrashGate
+loadcnt:
+
     test fs:ps_flags,PS_FLAG_FPU
     jz load_fpu_ok
 ;    

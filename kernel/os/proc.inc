@@ -40,6 +40,7 @@ PS_FLAG_QUERY_SYS   = 800h
 PS_FLAG_HAS_SYS     = 1000h
 PS_FLAG_MOVE        = 2000h
 PS_FLAG_LONG_MODE   = 4000h
+PS_FLAG_SKIP_FLUSH  = 8000h
 
 timer_struc	STRUC
 
@@ -65,11 +66,11 @@ ps_id               DW ?
 ps_sel              DW ?
 
 ps_stack            DD ?
+ps_flags            DD ?
 
 ps_nesting          DW ?
 ps_curr_thread      DW ?
 ps_last_thread      DW ?
-ps_flags            DW ?
 ps_null_thread      DW ?
 ps_math_thread      DW ?
 
