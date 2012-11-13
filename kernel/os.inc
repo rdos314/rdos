@@ -539,6 +539,10 @@ LoadLongRegs MACRO
     OsGate load_long_regs_nr
                     ENDM
 
+IsLongThread MACRO
+    OsGate is_long_thread_nr
+                    ENDM
+
 ;;;;;;;;; PAGING ;;;;;;;;;;;;;;;;;;;;
 
 NotifyInitProcess MACRO

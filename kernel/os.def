@@ -580,5 +580,6 @@ switch_to_protected_mode_nr = 486
 notify_create_long_process_nr = 487
 
 load_long_regs_nr           = 488
+is_long_thread_nr           = 489
 
 osgate_entries				= 500

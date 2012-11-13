@@ -195,6 +195,12 @@ trap_create_process_loop:
 trap_create_process_done:
     pop si
     pop cx
+
+    IsLongThread
+    jc tcpCont
+    CrashGate
+tcpCont:
+
 ;
     xor ebp,ebp
     call trap_create_thread

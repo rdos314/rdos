@@ -6394,6 +6394,37 @@ get_thread_pr   PROC far
     pop ds
     retf32
 get_thread_pr   ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           IsLongThread
+;
+;       DESCRIPTION:    Check for long mode thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_long_thread_name   DB 'Is Long Thread', 0
+
+is_long_thread   Proc far
+    push ds
+    push ax
+;    
+    mov ax,core_data_sel
+    mov ds,ax
+    mov ds,ds:ps_curr_thread    
+    mov ax,ds:p_tss_sel
+    or ax,ax
+    clc
+    jz iltDone
+;
+    stc
+
+iltDone:
+    pop ax    
+    pop ds
+    retf32
+is_long_thread  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -8576,16 +8607,11 @@ init_prot_callback_frame    ENDP
 create_process_callback:
     GetThread
     mov fs,ax
-
-    mov ax,fs:p_tss_sel
-    or ax,ax
-    jnz cpcCont
-    CrashGate
-cpcCont:
-    
+;
     push ds
     NotifyProcessCreated
     pop ds
+;
     mov es,ds:cm_process
     mov ax,ds:cm_mode
     test ax,1
@@ -9214,6 +9240,12 @@ timer_free_list_create:
     mov di,OFFSET cond_enter_section_name
     xor cl,cl
     mov ax,cond_enter_section_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET is_long_thread
+    mov edi,OFFSET is_long_thread_name
+    xor cl,cl
+    mov ax,is_long_thread_nr
     RegisterOsGate
 ;
     mov si,OFFSET create_user_section

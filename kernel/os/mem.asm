@@ -466,6 +466,9 @@ init_process_mem    PROC near
     push edx
     push di
 ;     
+    IsLongThread
+    jnc ipmDone
+;
     mov ax,local_linear_sel
     mov ds,ax
     xor eax,eax
@@ -518,7 +521,8 @@ init_vm_linear_loop:
     mov ds,ax
     mov ds:vm_avail_mem,dx
     mov ds:vm_used_mem,0
-;
+
+ipmDone:
     pop di
     pop edx
     pop eax
