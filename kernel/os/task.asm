@@ -1489,12 +1489,6 @@ load_cr3_ok:
     mov ax,es
     mov ds,ax
 ;
-
-    test fs:ps_flags,PS_FLAG_LONG_MODE
-    jz loadcnt
-    CrashGate
-loadcnt:
-
     test fs:ps_flags,PS_FLAG_FPU
     jz load_fpu_ok
 ;    
@@ -1517,6 +1511,14 @@ loadcnt:
 
 load_fpu_ok:
     lldt ds:p_ldt
+
+
+    test fs:ps_flags,PS_FLAG_LONG_MODE
+    jz loadcnt
+    CrashGate
+loadcnt:
+
+
 ;
     mov ax,ds:p_flags
     or ax,ax
@@ -7673,6 +7675,9 @@ create_tss32    PROC near
     AllocateGdt
     CreateTssSelector
     mov ds:p_tss_sel,bx
+;    
+    sldt dx
+    mov ds:p_ldt,dx
 ;
     pop edx
     pop ecx
@@ -7714,6 +7719,8 @@ create_tss64    PROC near
     mov ds:p_kernel_ss,syscall_data_sel
 ;
     mov ds:p_tss_sel,0
+    mov ds:p_ldt_sel,0
+    mov ds:p_ldt,0
 ;
     pop edx
     pop ecx
@@ -7798,9 +7805,6 @@ init_default_regs    PROC near
 ;    
     mov dx,[ebp].cr_seg
     mov ds:p_cs,dx
-;    
-    sldt dx
-    mov ds:p_ldt,dx
 ;
 ; dr0 - dr7
 ;
