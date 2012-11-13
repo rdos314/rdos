@@ -983,6 +983,16 @@ init    proc far
     mov al,2
     xor bl,bl
     SetupLongIntGate    
+;
+    mov ax,long_kernel_code_sel
+    mov ds,ax
+    mov es,ax
+;    
+    mov esi,OFFSET load_long_regs
+    mov edi,OFFSET load_long_regs_name
+    xor cl,cl
+    mov ax,load_long_regs_nr
+    RegisterOsGate
     ret
 init    endp
     
@@ -3204,6 +3214,56 @@ nmi_ret:
     pop rax
     iretq
     
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           LoadLongRegs
+;
+;   DESCRIPTION:    Load long mode registers
+;
+;   PARAMETERS:     ES      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_long_regs_name DB 'Load Long Regs', 0
+
+load_long_regs:
+    mov bx,es
+    GetSelectorBaseSize
+;
+    movzx rax,[edx].p_ss
+    push rax
+    push [edx].p_rsp
+;
+    push [edx].p_rflags
+;
+    movzx rax,[edx].p_cs
+    push rax
+    push [edx].p_rip
+;    
+    mov rax,[edx].p_rax
+    mov rbx,[edx].p_rbx
+    mov rcx,[edx].p_rcx
+    mov rsi,[edx].p_rsi
+    mov rdi,[edx].p_rdi
+    mov rbp,[edx].p_rbp
+;
+    mov r8,[edx].p_r8    
+    mov r9,[edx].p_r9  
+    mov r10,[edx].p_r10   
+    mov r11,[edx].p_r11   
+    mov r12,[edx].p_r12   
+    mov r13,[edx].p_r13   
+    mov r14,[edx].p_r14   
+    mov r15,[edx].p_r15    
+;
+    mov ds,[edx].p_ds
+    mov es,[edx].p_es
+    mov fs,[edx].p_fs
+    mov gs,[edx].p_gs
+;
+    iretq
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

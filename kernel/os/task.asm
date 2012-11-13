@@ -1560,13 +1560,15 @@ load_relock:
         
 load_regs:
     test fs:ps_flags,PS_FLAG_LONG_MODE
-    jz lcont
-    CrashGate
-lcont:
+    jz load_prot_regs
+;    
+    mov fs:ps_curr_thread,es
+    mov fs:ps_last_thread,es
+    lock and fs:ps_flags,NOT PS_FLAG_LOADING
+;
+    LoadLongRegs
 
-
-
-
+load_prot_regs:
     test fs:ps_flags,PS_FLAG_QUERY_SYS OR PS_FLAG_HAS_SYS
     jz load_no_syscall
 ;
@@ -7771,6 +7773,8 @@ init_default_regs    PROC near
 ;
     xor edx,edx
     mov dword ptr ds:p_rip+4,edx
+    mov dword ptr ds:p_rsp+4,edx
+    mov dword ptr ds:p_rflags+4,edx
     mov dword ptr ds:p_rax+4,edx
     mov dword ptr ds:p_rcx+4,edx
     mov dword ptr ds:p_rdx+4,edx
@@ -7921,6 +7925,58 @@ init_prot_tss_com:
     pop fs
     ret
 init_prot_tss   ENDP
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           INIT_LONG_TSS
+;
+;           DESCRIPTION:    Init long mode TSS
+;
+;           PARAMETERS:     DS              TSS
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_long_tss   PROC near
+    push fs
+;
+    mov dx,[ebp].cr_flags
+    or dx,200h
+    and dx,NOT 7000h
+    movzx edx,dx
+    mov dword ptr ds:p_rflags,edx
+;
+    mov ax,[ebp].cr_seg
+    test ax,3
+    jz init_long_kernel_tss
+;
+    int 3
+    jmp init_long_tss_com
+
+init_long_kernel_tss:
+    mov ax,ds:p_kernel_ss
+    mov ds:p_ss,ax
+    mov ebx,ds:p_kernel_stack
+    mov dword ptr ds:p_rsp,ebx
+    mov es:p_stack_sel,0
+
+init_long_tss_com:
+    mov ax,[ebp].cr_es
+    mov ds:p_es,ax
+;
+    mov ax,[ebp].cr_ds
+    mov ds:p_ds,ax
+;    
+    mov ax,[ebp].cr_fs
+    mov ds:p_fs,ax
+;    
+    mov ax,[ebp].cr_gs
+    mov ds:p_gs,ax    
+    pop fs
+    ret
+init_long_tss   ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8203,6 +8259,10 @@ terminate_pd_done:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_process_regs    PROC near
+    mov ax,[ebp].cr_mode
+    cmp ax,2
+    je init_long_proc_esp
+;    
     mov eax,OFFSET create_process_callback
     mov dword ptr ds:p_rip,eax
     mov ds:p_cs,cs
@@ -8210,10 +8270,22 @@ init_process_regs    PROC near
     mov ds:p_ss,ax
     mov eax,stack0_size
     mov dword ptr ds:p_rsp,eax
-;
+    jmp init_proc_esp_ok
+
+init_long_proc_esp:    
+    mov eax,OFFSET create_process_callback64
+    mov dword ptr ds:p_rip,eax
+    mov ds:p_cs,cs
+    mov ax,ds:p_kernel_ss
+    mov ds:p_ss,ax
+    mov eax,ds:p_kernel_stack
+    mov dword ptr ds:p_rsp,eax
+
+init_proc_esp_ok:
     mov ax,[ebp].cr_mode
     cmp ax,1
     jnz init_regs_prot_iopl
+;
     mov ax,[ebp].cr_flags
     or dx,200h
     and dx,NOT 7000h
@@ -8500,6 +8572,9 @@ init_prot_callback_frame    ENDP
 ;           PARAMETERS:         DS          Process data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_process_callback64:
+    CrashGate
 
 create_process_callback:
     GetThread

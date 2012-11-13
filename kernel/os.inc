@@ -534,6 +534,11 @@ SwitchToProtectedMode MACRO
     OsGate switch_to_protected_mode_nr
                     ENDM
 
+; IN  FS   Processor sel
+LoadLongRegs MACRO
+    OsGate load_long_regs_nr
+                    ENDM
+
 ;;;;;;;;; PAGING ;;;;;;;;;;;;;;;;;;;;
 
 NotifyInitProcess MACRO
