@@ -8273,7 +8273,7 @@ init_process_regs    PROC near
     jmp init_proc_esp_ok
 
 init_long_proc_esp:    
-    mov eax,OFFSET create_process_callback64
+    mov eax,OFFSET create_process_callback
     mov dword ptr ds:p_rip,eax
     mov ds:p_cs,cs
     mov ax,ds:p_kernel_ss
@@ -8573,12 +8573,16 @@ init_prot_callback_frame    ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_process_callback64:
-    CrashGate
-
 create_process_callback:
     GetThread
     mov fs,ax
+
+    mov ax,fs:p_tss_sel
+    or ax,ax
+    jnz cpcCont
+    CrashGate
+cpcCont:
+    
     push ds
     NotifyProcessCreated
     pop ds
