@@ -1511,14 +1511,6 @@ load_cr3_ok:
 
 load_fpu_ok:
     lldt ds:p_ldt
-
-
-    test fs:ps_flags,PS_FLAG_LONG_MODE
-    jz loadcnt
-    CrashGate
-loadcnt:
-
-
 ;
     mov ax,ds:p_flags
     or ax,ax
@@ -1553,6 +1545,11 @@ load_bp_done:
     mov dr7,eax
 
 load_actions_done: 
+    test fs:ps_flags,PS_FLAG_LONG_MODE
+    jz lcont
+    CrashGate
+lcont:
+
     call LoadUnlockCore
     mov ax,fs:ps_wakeup_list
     or ax,ax
