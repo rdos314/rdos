@@ -1545,11 +1545,6 @@ load_bp_done:
     mov dr7,eax
 
 load_actions_done: 
-    test fs:ps_flags,PS_FLAG_LONG_MODE
-    jz lcont
-    CrashGate
-lcont:
-
     call LoadUnlockCore
     mov ax,fs:ps_wakeup_list
     or ax,ax
@@ -1564,6 +1559,14 @@ load_relock:
     jmp load_retry
         
 load_regs:
+    test fs:ps_flags,PS_FLAG_LONG_MODE
+    jz lcont
+    CrashGate
+lcont:
+
+
+
+
     test fs:ps_flags,PS_FLAG_QUERY_SYS OR PS_FLAG_HAS_SYS
     jz load_no_syscall
 ;
