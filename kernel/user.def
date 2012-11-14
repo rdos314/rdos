@@ -612,4 +612,6 @@ has_touch_nr                    = 488
 had_carddev_inserted_nr         = 489
 clear_carddev_inserted_nr       = 490
 
+get_printer_error_code_nr       = 491
+
 usergate_entries			    = 512

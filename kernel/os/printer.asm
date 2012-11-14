@@ -499,6 +499,44 @@ has_printer_paper_in_presenter       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetPrinterErrorCode
+;
+;       description:    Get printer error code
+;
+;       PARAMETERS:     BX              Printer handle
+;
+;       RETURNS:        AX              Error code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_printer_error_code_name DB 'Get Printer Error Code',0
+
+get_printer_error_code       Proc far
+    push ds
+    push ebx
+;
+    mov ax,PRINTER_HANDLE
+    DerefHandle
+    mov ax,-1
+    jc get_printer_error_code_done
+;
+    mov ds,[ebx].printer_sel
+    mov eax,ds:pr_get_error_code_proc
+    or eax,eax
+    mov ax,-1
+    jz get_printer_error_code_done
+;       
+    call ds:pr_get_error_code_proc
+
+get_printer_error_code_done:
+    pop ebx
+    pop ds
+    retf32
+get_printer_error_code       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           PrintTest
 ;
 ;       description:    Print a test page
@@ -792,6 +830,7 @@ add_printer    Proc far
     mov ds:pr_paper_in_presenter_proc,0
     mov ds:pr_print_test_proc,0
     mov ds:pr_create_bitmap_proc,0
+    mov ds:pr_get_error_code_proc,0
     mov ds:pr_print_bitmap_proc,0
     mov ds:pr_present_media_proc,0
     mov ds:pr_eject_media_proc,0

@@ -1320,6 +1320,35 @@ has_paper_in_presenter   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetErrorCode
+;
+;       DESCRIPTION:    Check error code
+;
+;       PARAMETERS:     DS          Printer sel
+;
+;       RETURNS:        AX          Status code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_error_code   Proc far
+    push ds
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,-1
+    test ds:kr_flag,FLAG_ATTACHED
+    jz gecDone
+;    
+    mov ax,ds:kr_status
+    
+gecDone:
+    pop ds
+    ret
+get_error_code   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           print_test
 ;
 ;       DESCRIPTION:    Print test page
@@ -2132,6 +2161,9 @@ kr203_thread:
 ;    
     mov word ptr es:pr_paper_in_presenter_proc,OFFSET has_paper_in_presenter
     mov word ptr es:pr_paper_in_presenter_proc+2,cs
+;    
+    mov word ptr es:pr_get_error_code_proc,OFFSET get_error_code
+    mov word ptr es:pr_get_error_code_proc+2,cs
 ;    
     mov word ptr es:pr_print_test_proc,OFFSET print_test
     mov word ptr es:pr_print_test_proc+2,cs

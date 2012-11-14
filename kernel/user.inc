@@ -2157,6 +2157,12 @@ HasPrinterPaperInPresenter      MACRO
 						ENDM
 
 ;	IN  BX		Printer handle
+;   OUT AX      Error code
+GetPrinterErrorCode      MACRO
+	UserGate get_printer_error_code_nr
+						ENDM
+
+;	IN  BX		Printer handle
 PrintTest       MACRO
 	UserGate print_test_nr
 						ENDM

@@ -316,6 +316,7 @@ int RDOSAPI RdosIsPrinterPaperEnd(int Handle);
 int RDOSAPI RdosIsPrinterOk(int Handle);
 int RDOSAPI RdosIsPrinterHeadLifted(int Handle);
 int RDOSAPI RdosHasPrinterPaperInPresenter(int Handle);
+int RDOSAPI RdosGetPrinterErrorCode();
 void RDOSAPI RdosPrintTest(int Handle);
 int RDOSAPI RdosCreatePrinterBitmap(int Handle, int Height);
 void RDOSAPI RdosPrintBitmap(int Handle, int Bitmap);
@@ -1399,6 +1400,12 @@ int RDOSAPI RdosHasTouch();
     CallGate_has_printer_paper_in_presenter  \
     "cmc" \
     CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosGetPrinterErrorCode = \
+    CallGate_get_printer_error_code  \
+    "movzx eax,ax" \
     parm [ebx] \
     value [eax];
 
@@ -3737,6 +3744,12 @@ int RDOSAPI RdosHasTouch();
     CallGate_has_printer_paper_in_presenter  \
     "cmc" \
     CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosGetPrinterErrorCode = \
+    CallGate_get_printer_error_code  \
+    "movzx eax,ax" \
     parm [ebx] \
     value [eax];
 
