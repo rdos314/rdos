@@ -36,6 +36,11 @@ include protseg.def
 include gate.def
 include system.def
 
+PAGE_TABLE_LINEAR   equ 0FFFFFF8000000000h
+DIR_TABLE_LINEAR    equ 0FFFFFFFFC0000000h
+PTR_TABLE_LINEAR    equ 0FFFFFFFFFFE00000h
+PLM4_TABLE_LINEAR   equ 0FFFFFFFFFFFFF000h
+
 fault_ss            equ 48
 fault_rsp           equ 40
 fault_rflags        equ 32
@@ -453,8 +458,8 @@ pg9     DD      9,          OFFSET pretask9,        0
 pg10    DD      10,         OFFSET pretask10,       0
 pg11    DD      11,         OFFSET pretask11,       0
 pg12    DD      12,         OFFSET pretask12,       0
-pg13    DD      13,         OFFSET pretask13,       0
-pg14    DD      14,         OFFSET pretask14,       0
+pg13    DD      13,         OFFSET protection_fault,0
+pg14    DD      14,         OFFSET page_fault,      0
 pg16    DD      16,         OFFSET pretask16,       0
 rg66    DD      66h,        OFFSET int66,           3
 rg67    DD      67h,        OFFSET int67,           3
@@ -2289,7 +2294,24 @@ pretask12:
     mov ax,12
     jmp do_fault
 
-pretask13:
+pretask16:
+    pushq0
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    mov ax,9
+    jmp do_fault
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           protection fault
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+protection_fault:
     push rbp
     mov rbp,rsp
     push rax
@@ -2390,27 +2412,393 @@ gpfDefault:
     mov ax,13
     jmp do_fault
 
-pretask14:
-    push rbp
-    mov rbp,rsp
-    push rax
-    push rbx
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-    mov rax,cr2
-    int 3 
-;       
-    mov ax,14
-    jmp do_fault
+;
+;           NAME:           page_fault_error
+;
+;           DESCRIPTION:    Page fault error
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-pretask16:
-    pushq0
+page_fault_error    Proc near
+    CrashGate
+    ret
+page_fault_error    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           page_fault_plm4
+;
+;           DESCRIPTION:    Page fault in PLM4
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+page_fault_plm4    Proc near
+    CrashGate
+    ret
+page_fault_plm4     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           page_fault_ptr
+;
+;           DESCRIPTION:    Page fault in dir ptr
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+page_fault_ptr    Proc near
+    CrashGate
+    ret
+page_fault_ptr     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           process_fault_dir
+;
+;           DESCRIPTION:    Page fault in process dir
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+process_fault_dir   Proc near
+    mov rax,rsi
+    sub rax,process_page_linear
+    shl rax,9
+    and eax,0FFC00000h
+;
+    mov rbx,rax
+    shr rbx,32
+    or rbx,rbx
+    jnz process_fault_dir_local
+;
+    cmp eax,system_mem_start
+    jc process_fault_dir_local
+;
+    cmp eax,handle_linear
+    je process_fault_dir_local
+;
+    cmp eax,io_local_linear
+    je process_fault_dir_local
+
+process_fault_dir_global:
+    CrashGate    
+
+process_fault_dir_local:
+    mov rax,rsi
+    mov rbx,process_page_linear
+    sub rax,rbx
+    shr rax,9
+    mov rdx,DIR_TABLE_LINEAR
+    and dl,0F8h
+    mov rbx,[rax+rdx]
+;
+    test bl,1
+    jnz page_fault_error
+;
+    push rax
+    push rdx
+    AllocatePhysical64
+    shl rbx,32
+    or rbx,rax
+    mov bl,7
+;    
+    pop rdx
+    pop rax
+;    
+    mov [rax+rdx],rbx
+;
+    shl rax,9
+    mov rdi,PAGE_TABLE_LINEAR
+    add rdi,rax
+    xor rax,rax
+    mov rcx,512
+    rep stosq
+    ret
+process_fault_dir   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           page_fault_dir
+;
+;           DESCRIPTION:    Page fault in dir
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+page_fault_dir    Proc near
+    mov rax,rsi
+    sub rax,DIR_TABLE_LINEAR
+    shl rax,9
+    and eax,0FFC00000h
+;
+    mov rbx,rax
+    shr rbx,32
+    or rbx,rbx
+    jnz page_fault_dir_local
+;
+    cmp eax,system_mem_start
+    jc page_fault_dir_local
+;
+    cmp eax,handle_linear
+    je page_fault_dir_local
+;
+    cmp eax,io_local_linear
+    je page_fault_dir_local
+
+page_fault_dir_global:
+    CrashGate    
+
+page_fault_dir_local:
+    mov rax,rsi
+    mov rbx,PAGE_TABLE_LINEAR
+    sub rax,rbx
+    shr rax,9
+    mov rdx,DIR_TABLE_LINEAR
+    and dl,0F8h
+    mov rbx,[rax+rdx]
+;
+    test bl,1
+    jnz page_fault_error
+;
+    push rax
+    push rdx
+    AllocatePhysical64
+    shl rbx,32
+    or rbx,rax
+    mov bl,7
+;    
+    pop rdx
+    pop rax
+;    
+    mov [rax+rdx],rbx
+;
+    shl rax,9
+    mov rdi,PAGE_TABLE_LINEAR
+    add rdi,rax
+    xor rax,rax
+    mov rcx,512
+    rep stosq
+    ret
+page_fault_dir     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           page_fault64
+;
+;           DESCRIPTION:    Page fault above 4G
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+page_fault64    Proc near
+    mov rax,rsi
+    mov rbx,PLM4_TABLE_LINEAR
+    cmp rax,rbx
+    jae page_fault_error
+;
+    mov rbx,PTR_TABLE_LINEAR    
+    cmp rax,rbx
+    jae page_fault_plm4
+;
+    mov rbx,DIR_TABLE_LINEAR
+    cmp rax,rbx
+    jae page_fault_ptr
+;
+    mov rbx,PAGE_TABLE_LINEAR
+    cmp rax,rbx
+    jae page_fault_dir
+;        
+    CrashGate
+    ret
+page_fault64    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           page_fault_global
+;
+;           DESCRIPTION:    Page fault in global memory
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+page_fault_global    Proc near
+    CrashGate
+    ret
+page_fault_global    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           page_fault_user
+;
+;           DESCRIPTION:    Page fault in user memory
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+page_fault_user    Proc near
+    mov rax,PAGE_TABLE_LINEAR
+    mov rdx,rsi
+    mov rdi,rdx
+    shr rdi,9
+    and di,0FFF8h
+    add rdi,rax
+    mov rax,[rdi]
+;    
+    test al,1
+    jnz page_fault_user_retry
+;    
+    test al,2
+    jnz page_fault_user_valid
+;
+    cmp edx,flat_size
+    jb page_fault_error
+
+page_fault_user_valid:
+    and al,7
+    cmp al,6
+    jne page_fault_user_normal
+    jmp page_fault_error
+
+page_fault_user_normal:
+    push rdi
+    AllocatePhysical64
+    pop rdi
+;
+    shl rbx,32
+    or rax,rbx
+    mov al,7
+    mov [rdi],rax    
+    
+page_fault_user_retry:
+    ret
+page_fault_user    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           page_fault_system
+;
+;           DESCRIPTION:    Page fault in system memory
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+page_fault_system    Proc near
+    mov rax,PAGE_TABLE_LINEAR
+    mov rdx,rsi
+    mov rdi,rdx
+    shr rdi,9
+    and di,0FFF8h
+    add rdi,rax
+    mov rax,[rdi]
+;    
+    test al,1
+    jnz page_fault_system_retry
+;
+    push rdi
+    AllocatePhysical64
+    pop rdi
+;
+    shl rbx,32
+    or rax,rbx
+    mov al,7
+    mov [rdi],rax    
+    
+page_fault_system_retry:
+    ret
+page_fault_system    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           handle_page_fault
+;
+;           DESCRIPTION:    Handle non-present page
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+handle_page_fault   Proc near
+    mov rsi,cr2
+    mov rax,rsi
+    mov rbx,rax
+    shr rbx,32
+    or rbx,rbx
+    jnz page_fault64
+
+page_fault32:
+    and eax,0FFC00000h
+;
+    cmp eax,system_mem_start
+    jc page_fault_error
+;
+    cmp eax,global_page_linear
+    jc page_fault_global    
+;
+    cmp eax,kernel_linear
+    jnc page_fault_global
+;
+    cmp eax,handle_linear
+    je page_fault_user
+;
+    cmp eax,io_focus_linear
+    je page_fault_user
+;
+    cmp eax,io_local_linear
+    je page_fault_user
+;
+    and eax,0FF800000h
+    cmp eax,process_page_linear
+    je process_fault_dir
+;
+    cmp eax,sys_page_linear
+    jne page_fault_system
+;
+    CrashGate
+    ret
+handle_page_fault   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           page fault
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+page_fault:
     push rbp
     mov rbp,rsp
     push rax
     push rbx
-    mov ax,9
-    jmp do_fault
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+;
+    mov rax,[ebp].trap_err
+    test ax,1
+    jz page_not_present
 
+page_error_do:
+    call page_fault_error
+    jmp page_fault_done
+
+page_not_present:
+    call handle_page_fault
+    mov rax,cr3
+    mov cr3,rax
+
+page_fault_done:
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    pop rbp
+    add rsp,8
+    iretq
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
