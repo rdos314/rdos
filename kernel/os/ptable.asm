@@ -2181,16 +2181,21 @@ create_long_process_loop64:
     loop create_long_process_loop64
 ;
     mov di,7000h
-    mov eax,[edx+8]           
+    mov eax,[edx+8]          
+    mov al,3
     stosd
     mov eax,[edx+12]
     stosd
 ;    
-    mov cx,3FEh
+    mov cx,3FCh
     xor eax,eax
     rep stosd
 ;
     pop eax
+    mov al,3
+    stosd
+    mov dword ptr es:[di],0    
+;
     xor al,al
 ;
     mov dx,es
