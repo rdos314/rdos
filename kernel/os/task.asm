@@ -8592,6 +8592,43 @@ init_prot_callback_frame    PROC near
     ret
 init_prot_callback_frame    ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           INIT_LONG_CALLBACK_FRAME
+;
+;           DESCRIPTION:    Create long mode IRETD stack frame
+;
+;           PARAMETERS:         
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_long_callback_frame    PROC near
+    pop bp
+    xor eax,eax
+    mov eax,ds:cm_stack
+    AllocateGlobalMem
+;
+    push 0
+    push es
+;
+    push eax
+;
+    push 0
+    mov ax,ds:cm_flags
+    or ax,200h
+    and ax,NOT 7000h
+    push ax
+;
+    mov ax,ds:cm_cs
+    push eax
+;
+    mov eax,ds:cm_eip
+    push eax
+;
+    push bp
+    ret
+init_long_callback_frame    ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -8614,12 +8651,22 @@ create_process_callback:
 ;
     mov es,ds:cm_process
     mov ax,ds:cm_mode
-    test ax,1
+    or ax,ax
     jz create_callback_prot
+;    
+    cmp ax,1
+    je create_callback_virt
+;
+    call init_long_callback_frame
+    jmp create_callback_frame_done
+
+create_callback_virt:    
     call init_virt_callback_frame
     jmp create_callback_frame_done
+
 create_callback_prot:
     call init_prot_callback_frame
+    
 create_callback_frame_done:
     mov eax,ds:cm_eax
     mov ebx,ds:cm_ebx
@@ -8638,7 +8685,6 @@ create_callback_frame_done:
     FreeMem
     pop ax
     iretd
-;
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
