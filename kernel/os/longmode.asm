@@ -1022,7 +1022,16 @@ init_task:
     mov edi,OFFSET test_thread_name
     mov ax,4
     mov ecx,1000h
-    CreateThread
+;    CreateThread
+;    
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET test_process
+    mov edi,OFFSET test_process_name
+    mov ax,204h
+    mov ecx,1000h
+    CreateProcess
 ;
     popad
     pop es
