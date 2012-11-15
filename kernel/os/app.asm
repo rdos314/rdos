@@ -492,10 +492,15 @@ run_open_hooks  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_process    PROC far
+    IsLongThread
+    jnc ipDone
+;    
     call create_ldt
     mov al,16
     SetBitness
     call run_open_hooks
+
+ipDone:
     retf32
 init_process    ENDP
 

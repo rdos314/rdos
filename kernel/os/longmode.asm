@@ -1041,6 +1041,7 @@ init_task:
 test_process_name  DB 'Test Process', 0
 
 test_process:
+    CrashGate
     int 3
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
