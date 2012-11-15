@@ -448,7 +448,7 @@ pretask_int_tab:
 pg0     DD      0,          OFFSET pretask0,        0
 pg1     DD      1,          OFFSET pretask1,        0
 pg2     DD      2,          OFFSET pretask2,        0
-pg3     DD      3,          OFFSET pretask3,        0
+pg3     DD      3,          OFFSET trap_3,          0
 pg4     DD      4,          OFFSET pretask4,        0
 pg5     DD      5,          OFFSET pretask5,        0
 pg6     DD      6,          OFFSET pretask6,        0
@@ -1041,7 +1041,6 @@ init_task:
 test_process_name  DB 'Test Process', 0
 
 test_process:
-    CrashGate
     int 3
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2076,6 +2075,45 @@ intpRetry:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           do_exception
+;
+;   DESCRIPTION     run exception handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+do_exception:
+    GetThread
+    mov bx,ax
+    GetSelectorBaseSize
+;
+    CrashGate
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           trap_3
+;
+;   DESCRIPTION     Breakpoint fault
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trap_3:
+    pushq0
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+;    
+    mov eax,3
+    jmp do_exception
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           trap vectors
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2107,15 +2145,6 @@ pretask2:
     push rax
     push rbx
     mov ax,2
-    jmp do_fault
-
-pretask3:
-    pushq0
-    push rbp
-    mov rbp,rsp
-    push rax
-    push rbx
-    mov ax,3
     jmp do_fault
 
 pretask4:
@@ -2219,6 +2248,8 @@ protection_fault:
     push rbx
     push rcx
     push rdx
+    push rsi
+    push rdi
 ;
     call EnterCodePatch
 ;    
@@ -2297,6 +2328,8 @@ gpfRetry:
     call LeaveCodePatch
 
 gpfDoRetry:
+    pop rdi
+    pop rsi
     pop rdx
     pop rcx
     pop rbx
