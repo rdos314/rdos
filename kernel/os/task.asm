@@ -1435,6 +1435,15 @@ load_long_mode:
     jmp load_check_flush
 
 load_protected_mode:    
+    test fs:ps_flags,PS_FLAG_LONG_MODE
+    jz load_prot_switch_ok
+;
+    mov eax,es:p_cr3
+    SwitchToProtectedMode
+    lock or fs:ps_flags,PS_FLAG_SKIP_FLUSH
+    lock and fs:ps_flags, NOT (PS_FLAG_FLUSH OR PS_FLAG_LONG_MODE)
+
+load_prot_switch_ok:    
     and byte ptr ds:[bx+5],NOT 2
     ltr bx
 

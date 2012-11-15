@@ -2079,9 +2079,21 @@ intpRetry:
 ;
 ;   DESCRIPTION     run exception handler
 ;
+;   PARAMETERS:     AX      Exception #
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 do_exception:
+    movzx ax,al
+    push fs
+    TryLockTask
+    jc debug_normal
+
+debug_fault:
+    movzx eax,al
+    CrashFault
+   
+debug_normal:       
     GetThread
     mov bx,ax
     GetSelectorBaseSize
@@ -2120,7 +2132,7 @@ do_exception:
     mov [edx].p_fs,fs
     mov [edx].p_gs,gs
 ;        
-    CrashGate
+    DebugBlock
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
