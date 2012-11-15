@@ -2084,26 +2084,38 @@ intpRetry:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 do_exception:
-    movzx ax,al
     push fs
     TryLockTask
-    jc debug_normal
-
-debug_fault:
-    movzx eax,al
-    CrashFault
-   
-debug_normal:       
+    jnc do_fault
+;
+    push rax
     GetThread
     mov bx,ax
     GetSelectorBaseSize
+    pop rax
 ;
+    pop rbx
+    mov [edx].p_fs,bx
+;    
     pop [edx].p_rdi
     pop [edx].p_rsi
     pop [edx].p_rdx
     pop [edx].p_rcx
     pop [edx].p_rbx
     pop [edx].p_rax
+;
+    pop [edx].p_rbp
+    add rsp,8
+;
+    pop [edx].p_rip
+    pop rbx
+    mov [edx].p_cs,bx
+;    
+    pop [edx].p_rflags
+;    
+    pop [edx].p_rsp
+    pop rbx
+    mov [edx].p_ss,bx
 ;
     mov [edx].p_r8,r8    
     mov [edx].p_r9,r9  
@@ -2114,24 +2126,10 @@ debug_normal:
     mov [edx].p_r14,r14   
     mov [edx].p_r15,r15    
 ;
-    pop [edx].p_rbp
-    add rsp,8
-;
-    pop [edx].p_rip
-    pop rax
-    mov [edx].p_cs,ax
-;    
-    pop [edx].p_rflags
-;    
-    pop [edx].p_rsp
-    pop rax
-    mov [edx].p_ss,ax
-;
     mov [edx].p_ds,ds
     mov [edx].p_es,es
-    mov [edx].p_fs,fs
     mov [edx].p_gs,gs
-;        
+;            
     DebugBlock
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
