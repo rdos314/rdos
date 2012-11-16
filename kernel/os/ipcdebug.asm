@@ -65,7 +65,7 @@ code    SEGMENT byte public 'CODE'
 
     extrn interact_incr:near
     extrn interact_decr:near
-    extrn interact_set_value32:near
+    extrn interact_set_value:near
 
     extrn incdec_eax:near
     extrn incdec_ebx:near
@@ -559,7 +559,7 @@ DefaultReply    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 interact_set      PROC near
-    call interact_set_value32
+    call interact_set_value
     inc es:db_x
     ret
 interact_set      ENDP

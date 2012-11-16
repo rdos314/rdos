@@ -70,8 +70,7 @@ code    SEGMENT byte public 'CODE'
 
     extrn interact_incr:near
     extrn interact_decr:near
-    extrn interact_set_value32:near
-    extrn interact_set_value64:near
+    extrn interact_set_value:near
 
     extrn incdec_eax:near
     extrn incdec_ebx:near
@@ -89,6 +88,7 @@ code    SEGMENT byte public 'CODE'
     extrn incdec_gs:near
     extrn incdec_ss:near
 
+    extrn incdec_r14:near
     extrn incdec_rip:near
     extrn incdec_rsp:near
     extrn incdec_rbp:near
@@ -1623,17 +1623,11 @@ WriteCpu64    ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-interact_set32    PROC near
-    call interact_set_value32
+interact_set    PROC near
+    call interact_set_value
     inc word ptr [bp].call_edx
     ret
-interact_set32    ENDP
-
-interact_set64    PROC near
-    call interact_set_value64
-    inc word ptr [bp].call_edx
-    ret
-interact_set64    ENDP
+interact_set    ENDP
 
 change_eax      PROC near
     mov dx,gs
@@ -1707,29 +1701,69 @@ change_epc      PROC near
     ret
 change_epc      ENDP
 
-change_rip      PROC near
+change_ripl      PROC near
     mov dx,gs
     mov esi,OFFSET p_rip
     push di
     ret
     ret
-change_rip      ENDP
+change_ripl      ENDP
 
-change_rsp      PROC near
+change_riph      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rip + 4
+    push di
+    ret
+    ret
+change_riph      ENDP
+
+change_r14l      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_r14
+    push di
+    ret
+    ret
+change_r14l      ENDP
+
+change_r14h      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_r14 + 4
+    push di
+    ret
+    ret
+change_r14h      ENDP
+
+change_rspl      PROC near
     mov dx,gs
     mov esi,OFFSET p_rsp
     push di
     ret
     ret
-change_rsp      ENDP
+change_rspl      ENDP
 
-change_rbp      PROC near
+change_rsph      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rsp + 4
+    push di
+    ret
+    ret
+change_rsph      ENDP
+
+change_rbpl      PROC near
     mov dx,gs
     mov esi,OFFSET p_rbp
     push di
     ret
     ret
-change_rbp      ENDP
+change_rbpl      ENDP
+
+change_rbph      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rbp + 4
+    push di
+    ret
+    ret
+change_rbph      ENDP
 
 change_cs       PROC near
     and cl,3
@@ -2132,7 +2166,7 @@ dec_sw32  ENDP
 ;
 set_base_sw32     PROC near
     pusha
-    mov di,OFFSET interact_set32
+    mov di,OFFSET interact_set
     call debug_call_do32
     popa
     ret
@@ -2155,12 +2189,18 @@ debug_table64:
 ;
 ;           rad     kolumn  antal   action
 ;
+mr14   DW 10,         1,          3,          OFFSET incdec_r14
+dr14h  DW 10,         5,          8,          OFFSET change_r14h
+dr14l  DW 10,         14,         8,          OFFSET change_r14l
 mrip64 DW 11,         1,          3,          OFFSET incdec_rip
-drip64 DW 11,         5,          17,         OFFSET change_rip
+driph  DW 11,         5,          8,          OFFSET change_riph
+dripl  DW 11,         14,         8,          OFFSET change_ripl
 mrsp64 DW 11,         22,         3,          OFFSET incdec_rsp
-drsp64 DW 11,         27,         17,         OFFSET change_rsp
+drsph  DW 11,         27,         8,          OFFSET change_rsph
+drspl  DW 11,         36,         8,          OFFSET change_rspl
 mrsb64 DW 11,         44,         3,          OFFSET incdec_rbp
-drsb64 DW 11,         49,         17,         OFFSET change_rbp
+drbph  DW 11,         49,         8,          OFFSET change_rbph
+drbpl  DW 11,         58,         8,          OFFSET change_rbpl
 mcs64  DW 12,         1,          2,          OFFSET incdec_cs
 dcs64  DW 12,         4,          4,          OFFSET change_cs
 mds64  DW 12,         9,          2,          OFFSET incdec_ds
@@ -2246,7 +2286,7 @@ dec_sw64  ENDP
 ;
 set_base_sw64     PROC near
     pusha
-    mov di,OFFSET interact_set64
+    mov di,OFFSET interact_set
     call debug_call_do64
     popa
     ret

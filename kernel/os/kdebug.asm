@@ -461,21 +461,9 @@ interact_decr   ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public interact_set_value32
-    public interact_set_value64
+    public interact_set_value
 
-interact_set_value64    Proc near
-    cmp cl,8
-    jc interact_set_value32
-;
-    add esi,4
-    sub cl,9
-    jnc interact_set_value32
-;
-    ret    
-interact_set_value64    Endp
-
-interact_set_value32     PROC near
+interact_set_value     PROC near
     push eax
     push bx
     push esi
@@ -518,7 +506,7 @@ interact_set_write_done:
     pop bx
     pop eax
     ret
-interact_set_value32      ENDP
+interact_set_value      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -816,6 +804,26 @@ incdec_rip      PROC near
     call incdec64
     ret
 incdec_rip      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       incdec_r14
+;
+;       DESCRIPTION:    INC / DEC R14
+;
+;       PARAMETERS:     GS          8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_r14
+
+incdec_r14      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_r14
+    call incdec64
+    ret
+incdec_r14      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
