@@ -6592,7 +6592,10 @@ get_core_duty    ENDP
 soft_reset_name  DB 'Soft Reset',0
 
 soft_reset       PROC far
+    IsLongThread
     cli
+    pushf
+;
 wait_gate1:
     in al,64h
     and al,2
@@ -6606,6 +6609,14 @@ wait_gate2:
     mov al,0FEh
     out 60h,al
 ;
+    popf
+    jc prot_reset
+;
+    xor eax,eax
+    mov cr3,eax
+;    LongModeReset
+
+prot_reset:    
     mov ax,idt_sel
     mov ds,ax
 ;    

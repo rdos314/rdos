@@ -581,5 +581,6 @@ notify_create_long_process_nr = 487
 
 load_long_regs_nr           = 488
 is_long_thread_nr           = 489
+long_mode_reset_nr          = 490
 
 osgate_entries				= 500

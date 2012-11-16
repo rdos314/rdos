@@ -874,6 +874,46 @@ switch_to_protected_mode  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LongModeReset
+;
+;       DESCRIPTION:    Long mode reset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+long_mode_reset_name   DB 'Long Mode Reset', 0
+
+long_mode_reset:
+    mov dx,flat_sel
+    mov ds,dx
+;
+    movzx edi,al
+    shl edi,4
+    add edi,IDT_LINEAR
+;    
+    mov ebx,13 * 16
+    xor eax,eax
+    mov [ebx+edi],eax
+    mov [ebx+edi+4],eax
+    mov [ebx+edi+8],eax
+    mov [ebx+edi+12],eax
+;
+    mov ebx,8 * 16
+    mov [ebx+edi],eax
+    mov [ebx+edi+4],eax
+    mov [ebx+edi+8],eax
+    mov [ebx+edi+12],eax
+;
+    mov ax,-1
+    mov ds,ax
+
+reset_wait:
+    jmp reset_wait
+
+    
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;    NAME:           Init
 ;
 ;    DESCRIPTION:    Init module
@@ -979,6 +1019,12 @@ init    proc far
     mov edi,OFFSET switch_to_protected_mode_name
     xor cl,cl
     mov ax,switch_to_protected_mode_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET long_mode_reset
+    mov edi,OFFSET long_mode_reset_name
+    xor cl,cl
+    mov ax,long_mode_reset_nr
     RegisterOsGate
 ;
     mov edi,init_task
@@ -2172,8 +2218,11 @@ pretask16:
 do_exception:
     push fs
     TryLockTask
-    jnc do_fault
+    jc do_exception_block
 ;
+    CrashGate
+
+do_exception_block:
     push rax
     GetThread
     mov bx,ax
@@ -3857,9 +3906,8 @@ load_long_regs:
     iretq
 
 test64:
-    mov r15,123456ABEFh    
-    int 2
-    mov ax,1
+    inc rax
+    jmp test64
 
 text_end:
 

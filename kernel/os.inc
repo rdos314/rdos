@@ -517,6 +517,10 @@ HasLongMode MACRO
     OsGate has_long_mode_nr
                     ENDM
 
+LongModeReset MACRO
+    OsGate long_mode_reset_nr
+                    ENDM
+
 SetupLongMode MACRO
     OsGate setup_long_mode_nr
                     ENDM
