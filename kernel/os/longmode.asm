@@ -2439,10 +2439,8 @@ gpfDoRetry:
 gpfDefault:
     call LeaveCodePatch
 ;    
-    pop rdx
-    pop rcx
-    mov ax,13
-    jmp do_fault
+    mov eax,13
+    jmp do_exception
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
