@@ -1051,6 +1051,10 @@ test_process_name  DB 'Test Process', 0
 
 test_process:
     int 3
+    mov bx,1234h
+    mov ax,-1
+    mov ds,ax
+    
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
