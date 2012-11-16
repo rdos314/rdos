@@ -446,7 +446,7 @@ pretask_int_tab:
 ;               int #   Entry
 ;
 pg0     DD      0,          OFFSET pretask0,        0
-pg1     DD      1,          OFFSET pretask1,        0
+pg1     DD      1,          OFFSET trap_1,          0
 pg2     DD      2,          OFFSET pretask2,        0
 pg3     DD      3,          OFFSET trap_3,          0
 pg4     DD      4,          OFFSET pretask4,        0
@@ -2099,15 +2099,6 @@ pretask0:
     mov ax,0
     jmp do_fault
 
-pretask1:
-    pushq0
-    push rbp
-    mov rbp,rsp
-    push rax
-    push rbx
-    mov ax,1
-    jmp do_fault
-
 pretask2:
     pushq0
     push rbp
@@ -2266,6 +2257,53 @@ do_exception:
     mov [edx].p_gs,gs
 ;            
     DebugBlock
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           trap_1
+;
+;   DESCRIPTION     Single step fault
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trap_1:
+    pushq0
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+;    
+    GetSchedulerLockCounter
+    add ax,1
+    jnc t1_ret
+;    
+    GetThread
+    or ax,ax
+    jz t1_ret
+;    
+    sti
+    mov eax,[rbp+fault_rflags]
+    or eax,10100h
+    mov [rbp+fault_rflags],eax
+;
+    mov eax,1
+    jmp do_exception
+
+t1_ret:
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    pop rbp
+    add rsp,8
+    iretq
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
