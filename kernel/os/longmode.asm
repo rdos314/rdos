@@ -448,13 +448,13 @@ pretask_int_tab:
 ;
 pg0     DD      0,          OFFSET pretask0,        0,      0
 pg1     DD      1,          OFFSET trap_1,          0,      0
-pg2     DD      2,          OFFSET pretask2,        0,      1
+pg2     DD      2,          OFFSET pretask2,        0,      0
 pg3     DD      3,          OFFSET trap_3,          0,      0
 pg4     DD      4,          OFFSET pretask4,        0,      0
 pg5     DD      5,          OFFSET pretask5,        0,      0
 pg6     DD      6,          OFFSET pretask6,        0,      0
 pg7     DD      7,          OFFSET pretask7,        0,      0
-pg8     DD      8,          OFFSET pretask8,        0,      0
+pg8     DD      8,          OFFSET double_fault,    0,      1
 pg9     DD      9,          OFFSET pretask9,        0,      0
 pg10    DD      10,         OFFSET pretask10,       0,      0
 pg11    DD      11,         OFFSET pretask11,       0,      0
@@ -2115,14 +2115,6 @@ pretask7:
     mov ax,7
     jmp do_fault
 
-pretask8:
-    push rbp
-    mov rbp,rsp
-    push rax
-    push rbx
-    mov ax,8
-    jmp do_fault
-
 pretask9:
     pushq0
     push rbp
@@ -2298,6 +2290,7 @@ trap_3:
 ;    
     mov eax,3
     jmp do_exception
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3279,6 +3272,9 @@ hpet_int:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+double_fault:
+    add rsp,8
+
 crash_gate_int:
     push rax
     push rbx
@@ -3653,6 +3649,8 @@ load_long_regs:
 
 test64:
     mov r15,123456ABEFh    
+    int 2
+    mov ax,1
 
 text_end:
 

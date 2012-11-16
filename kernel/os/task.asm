@@ -2555,6 +2555,10 @@ create_long_tss   Proc near
     pop ecx
 ;
     mov es:[edi].tss64_bitmap,OFFSET tss64_io_bitmap
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov dword ptr es:[edi].tss64_ist1,edx    
 ;    
     mov ecx,SIZE tss64_seg
     mov edx,edi
