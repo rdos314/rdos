@@ -464,7 +464,16 @@ interact_decr   ENDP
     public interact_set_value32
     public interact_set_value64
 
-interact_set_value64:
+interact_set_value64    Proc near
+    cmp cl,8
+    jc interact_set_value32
+;
+    add esi,4
+    sub cl,9
+    jnc interact_set_value32
+;
+    ret    
+interact_set_value64    Endp
 
 interact_set_value32     PROC near
     push eax
