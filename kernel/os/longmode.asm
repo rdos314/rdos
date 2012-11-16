@@ -2417,8 +2417,10 @@ gpfDefault:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 page_fault_error    Proc near
-    CrashGate
-    ret
+    pop rax
+    mov eax,14
+    jmp do_exception
+
 page_fault_error    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2431,7 +2433,7 @@ page_fault_error    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 page_fault_plm4    Proc near
-    CrashGate
+    jmp page_fault_error
     ret
 page_fault_plm4     Endp
 
@@ -2445,7 +2447,7 @@ page_fault_plm4     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 page_fault_ptr    Proc near
-    CrashGate
+    jmp page_fault_error
     ret
 page_fault_ptr     Endp
 
@@ -2479,7 +2481,7 @@ process_fault_dir   Proc near
     je process_fault_dir_local
 
 process_fault_dir_global:
-    CrashGate    
+    jmp page_fault_error
 
 process_fault_dir_local:
     mov rax,rsi
@@ -2544,7 +2546,7 @@ page_fault_dir    Proc near
     je page_fault_dir_local
 
 page_fault_dir_global:
-    CrashGate    
+    jmp page_fault_error
 
 page_fault_dir_local:
     mov rax,rsi
@@ -2606,7 +2608,7 @@ page_fault64    Proc near
     cmp rax,rbx
     jae page_fault_dir
 ;        
-    CrashGate
+    jmp page_fault_error
     ret
 page_fault64    Endp
 
@@ -2620,7 +2622,7 @@ page_fault64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 page_fault_global    Proc near
-    CrashGate
+    jmp page_fault_error
     ret
 page_fault_global    Endp
 
@@ -2750,8 +2752,7 @@ page_fault32:
     cmp eax,sys_page_linear
     jne page_fault_system
 ;
-    CrashGate
-    ret
+    jmp page_fault_error
 handle_page_fault   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
