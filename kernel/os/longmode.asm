@@ -1018,15 +1018,6 @@ init_task:
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov esi,OFFSET test_thread
-    mov edi,OFFSET test_thread_name
-    mov ax,4
-    mov ecx,1000h
-;    CreateThread
-;    
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
     mov esi,OFFSET test_process
     mov edi,OFFSET test_process_name
     mov ax,204h
@@ -1051,36 +1042,10 @@ test_process_name  DB 'Test Process', 0
 
 test_process:
     int 3
-    mov bx,1234h
-    mov ax,-1
-    mov ds,ax
+    db 0EAh
+    dd OFFSET test64
+    dw long_kernel_code_sel
     
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;    NAME:           Test_thread
-;
-;    DESCRIPTION:    Test thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_thread_name  DB 'Nasm Test Thread', 0
-
-test_thread:
-    int 3
-;    
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov esi,OFFSET test_process
-    mov edi,OFFSET test_process_name
-    mov ax,204h
-    mov ecx,1000h
-    CreateProcess
-;
-    int 3    
-
     option PROCALIGN:32 
 
 code32_end  Proc near
@@ -3682,6 +3647,9 @@ load_long_regs:
     mov gs,[edx].p_gs
 ;
     iretq
+
+test64:
+    mov r15,123456ABEFh    
 
 text_end:
 
