@@ -808,6 +808,66 @@ incdec_rip      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:       incdec_rax
+;
+;       DESCRIPTION:    INC / DEC RAX
+;
+;       PARAMETERS:     GS          8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_rax
+
+incdec_rax      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rax
+    call incdec64
+    ret
+incdec_rax      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       incdec_rbx
+;
+;       DESCRIPTION:    INC / DEC RBX
+;
+;       PARAMETERS:     GS          8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_rbx
+
+incdec_rbx      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rbx
+    call incdec64
+    ret
+incdec_rbx      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       incdec_rcx
+;
+;       DESCRIPTION:    INC / DEC RCX
+;
+;       PARAMETERS:     GS          8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_rcx
+
+incdec_rcx      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rcx
+    call incdec64
+    ret
+incdec_rcx      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:       incdec_rdx
 ;
 ;       DESCRIPTION:    INC / DEC RDX

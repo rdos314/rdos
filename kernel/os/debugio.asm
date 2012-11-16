@@ -88,6 +88,9 @@ code    SEGMENT byte public 'CODE'
     extrn incdec_gs:near
     extrn incdec_ss:near
 
+    extrn incdec_rax:near
+    extrn incdec_rbx:near
+    extrn incdec_rcx:near
     extrn incdec_rdx:near
     extrn incdec_rsi:near
     extrn incdec_rdi:near
@@ -1711,6 +1714,54 @@ change_epc      PROC near
     ret
 change_epc      ENDP
 
+change_raxl      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rax
+    push di
+    ret
+    ret
+change_raxl      ENDP
+
+change_raxh      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rax + 4
+    push di
+    ret
+    ret
+change_raxh      ENDP
+
+change_rbxl      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rbx
+    push di
+    ret
+    ret
+change_rbxl      ENDP
+
+change_rbxh      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rbx + 4
+    push di
+    ret
+    ret
+change_rbxh      ENDP
+
+change_rcxl      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rcx
+    push di
+    ret
+    ret
+change_rcxl      ENDP
+
+change_rcxh      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rcx + 4
+    push di
+    ret
+    ret
+change_rcxh      ENDP
+
 change_rdxl      PROC near
     mov dx,gs
     mov esi,OFFSET p_rdx
@@ -2359,6 +2410,15 @@ debug_table64:
 ;
 ;           rad     kolumn  antal   action
 ;
+mrax   DW 6,          1,          3,          OFFSET incdec_rax
+draxh  DW 6,          5,          8,          OFFSET change_raxh
+draxl  DW 6,          14,         8,          OFFSET change_raxl
+mrbx   DW 6,          23,         3,          OFFSET incdec_rbx
+drbxh  DW 6,          27,         8,          OFFSET change_rbxh
+drbxl  DW 6,          36,         8,          OFFSET change_rbxl
+mrcx   DW 6,          45,         3,          OFFSET incdec_rcx
+drcxh  DW 6,          49,         8,          OFFSET change_rcxh
+drcxl  DW 6,          58,         8,          OFFSET change_rcxl
 mrdx   DW 7,          1,          3,          OFFSET incdec_rdx
 drdxh  DW 7,          5,          8,          OFFSET change_rdxh
 drdxl  DW 7,          14,         8,          OFFSET change_rdxl
