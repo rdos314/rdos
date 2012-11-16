@@ -88,6 +88,9 @@ code    SEGMENT byte public 'CODE'
     extrn incdec_gs:near
     extrn incdec_ss:near
 
+    extrn incdec_r11:near
+    extrn incdec_r12:near
+    extrn incdec_r13:near
     extrn incdec_r14:near
     extrn incdec_r15:near
     extrn incdec_rip:near
@@ -1702,6 +1705,54 @@ change_epc      PROC near
     ret
 change_epc      ENDP
 
+change_r11l      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_r11
+    push di
+    ret
+    ret
+change_r11l      ENDP
+
+change_r11h      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_r11 + 4
+    push di
+    ret
+    ret
+change_r11h      ENDP
+
+change_r12l      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_r12
+    push di
+    ret
+    ret
+change_r12l      ENDP
+
+change_r12h      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_r12 + 4
+    push di
+    ret
+    ret
+change_r12h      ENDP
+
+change_r13l      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_r13
+    push di
+    ret
+    ret
+change_r13l      ENDP
+
+change_r13h      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_r13 + 4
+    push di
+    ret
+    ret
+change_r13h      ENDP
+
 change_r14l      PROC near
     mov dx,gs
     mov esi,OFFSET p_r14
@@ -2206,19 +2257,28 @@ debug_table64:
 ;
 ;           rad     kolumn  antal   action
 ;
+mr11   DW 9,          1,          3,          OFFSET incdec_r11
+dr11h  DW 9,          5,          8,          OFFSET change_r11h
+dr11l  DW 9,          14,         8,          OFFSET change_r11l
+mr12   DW 9,          23,         3,          OFFSET incdec_r12
+dr12h  DW 9,          27,         8,          OFFSET change_r12h
+dr12l  DW 9,          36,         8,          OFFSET change_r12l
+mr13   DW 9,          45,         3,          OFFSET incdec_r13
+dr13h  DW 9,          49,         8,          OFFSET change_r13h
+dr13l  DW 9,          58,         8,          OFFSET change_r13l
 mr14   DW 10,         1,          3,          OFFSET incdec_r14
 dr14h  DW 10,         5,          8,          OFFSET change_r14h
 dr14l  DW 10,         14,         8,          OFFSET change_r14l
-mr15   DW 10,         22,         3,          OFFSET incdec_r15
+mr15   DW 10,         23,         3,          OFFSET incdec_r15
 dr15h  DW 10,         27,         8,          OFFSET change_r15h
 dr15l  DW 10,         36,         8,          OFFSET change_r15l
 mrip64 DW 11,         1,          3,          OFFSET incdec_rip
 driph  DW 11,         5,          8,          OFFSET change_riph
 dripl  DW 11,         14,         8,          OFFSET change_ripl
-mrsp64 DW 11,         22,         3,          OFFSET incdec_rsp
+mrsp64 DW 11,         23,         3,          OFFSET incdec_rsp
 drsph  DW 11,         27,         8,          OFFSET change_rsph
 drspl  DW 11,         36,         8,          OFFSET change_rspl
-mrsb64 DW 11,         44,         3,          OFFSET incdec_rbp
+mrsb64 DW 11,         45,         3,          OFFSET incdec_rbp
 drbph  DW 11,         49,         8,          OFFSET change_rbph
 drbpl  DW 11,         58,         8,          OFFSET change_rbpl
 mcs64  DW 12,         1,          2,          OFFSET incdec_cs
