@@ -88,6 +88,9 @@ code    SEGMENT byte public 'CODE'
     extrn incdec_gs:near
     extrn incdec_ss:near
 
+    extrn incdec_r8:near
+    extrn incdec_r9:near
+    extrn incdec_r10:near
     extrn incdec_r11:near
     extrn incdec_r12:near
     extrn incdec_r13:near
@@ -1705,6 +1708,54 @@ change_epc      PROC near
     ret
 change_epc      ENDP
 
+change_r8l      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_r8
+    push di
+    ret
+    ret
+change_r8l      ENDP
+
+change_r8h      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_r8 + 4
+    push di
+    ret
+    ret
+change_r8h      ENDP
+
+change_r9l      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_r9
+    push di
+    ret
+    ret
+change_r9l      ENDP
+
+change_r9h      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_r9 + 4
+    push di
+    ret
+    ret
+change_r9h      ENDP
+
+change_r10l      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_r10
+    push di
+    ret
+    ret
+change_r10l      ENDP
+
+change_r10h      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_r10 + 4
+    push di
+    ret
+    ret
+change_r10h      ENDP
+
 change_r11l      PROC near
     mov dx,gs
     mov esi,OFFSET p_r11
@@ -2257,6 +2308,15 @@ debug_table64:
 ;
 ;           rad     kolumn  antal   action
 ;
+mr8    DW 8,          2,          2,          OFFSET incdec_r8
+dr8h   DW 8,          5,          8,          OFFSET change_r8h
+dr8l   DW 8,          14,         8,          OFFSET change_r8l
+mr9    DW 8,          24,         2,          OFFSET incdec_r9
+dr9h   DW 8,          27,         8,          OFFSET change_r9h
+dr9l   DW 8,          36,         8,          OFFSET change_r9l
+mr10   DW 8,          45,         3,          OFFSET incdec_r10
+dr10h  DW 8,          49,         8,          OFFSET change_r10h
+dr10l  DW 8,          58,         8,          OFFSET change_r10l
 mr11   DW 9,          1,          3,          OFFSET incdec_r11
 dr11h  DW 9,          5,          8,          OFFSET change_r11h
 dr11l  DW 9,          14,         8,          OFFSET change_r11l
