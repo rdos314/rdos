@@ -3306,18 +3306,44 @@ local_get_thread_page_entry64    Proc near
 ;
     and dx,0F000h
     mov es,bp
-;
     mov ax,system_data_sel
     mov ds,ax
     RequestSpinlock ds:page_spinlock
 ;    
     mov ax,process_dir_sel
     mov ds,ax
-    mov si,(alias_linear SHR 18) AND 3FFFh
     mov eax,es:p_cr3
+    xor ebx,ebx
+;
+    mov di,es:p_tss_sel
+    or di,di
+    jnz gtpBaseOk
+;
+    mov si,(alias_linear SHR 18) AND 3FFFh
     or ax,803h
     mov [si],eax
-    mov dword ptr [si+4],0
+    mov [si+4],ebx
+    mov ebx,cr3
+    mov cr3,ebx
+;
+    mov edi,alias_linear SHR 9
+    mov bx,process_page_sel
+    mov ds,bx
+    mov eax,[edi]
+    mov ebx,[edi+4]
+    test al,1
+    stc
+    jz get_thread_page_fail64
+;
+    mov di,process_dir_sel
+    mov ds,di
+    and ax,0F000h
+
+gtpBaseOk:
+    mov si,(alias_linear SHR 18) AND 3FFFh
+    or ax,803h
+    mov [si],eax
+    mov [si+4],ebx
     mov ebx,cr3
     mov cr3,ebx
 ;
