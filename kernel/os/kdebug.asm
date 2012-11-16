@@ -340,12 +340,9 @@ GetUserCall     ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public interact_incr32
-    public interact_incr64
-
-interact_incr64:
+    public interact_incr
     
-interact_incr32   PROC near
+interact_incr   PROC near
     push eax
     push bx
     push esi
@@ -388,7 +385,7 @@ interact_inc_write_done:
     pop bx
     pop eax
     ret
-interact_incr32   ENDP
+interact_incr   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -403,12 +400,9 @@ interact_incr32   ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public interact_decr32
-    public interact_decr64
-
-interact_decr64:
+    public interact_decr
     
-interact_decr32   PROC near
+interact_decr   PROC near
     push eax
     push bx
     push esi
@@ -451,7 +445,7 @@ interact_dec_write_done:
     pop bx
     pop eax
     ret
-interact_decr32   ENDP
+interact_decr   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

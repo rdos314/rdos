@@ -63,8 +63,8 @@ code    SEGMENT byte public 'CODE'
     extrn GetOsCall:near
     extrn GetUserCall:near
 
-    extrn interact_incr32:near
-    extrn interact_decr32:near
+    extrn interact_incr:near
+    extrn interact_decr:near
     extrn interact_set_value32:near
 
     extrn incdec_eax:near
@@ -1399,7 +1399,7 @@ DebugCallDo     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 inc_sw  PROC near
-    mov di,OFFSET interact_incr32
+    mov di,OFFSET interact_incr
     call DebugCallDo
     ret
 inc_sw  ENDP
@@ -1416,7 +1416,7 @@ inc_sw  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 dec_sw  PROC near
-    mov di,OFFSET interact_decr32
+    mov di,OFFSET interact_decr
     call DebugCallDo
     ret
 dec_sw  ENDP
