@@ -2010,6 +2010,7 @@ nmi_int:
     test fs:ps_flags,PS_FLAG_NMI
     jnz nmi_ret
 ;
+    mov fs:cs_fault,19h
     or fs:ps_flags,PS_FLAG_NMI    
 ;
     pop ax
@@ -2163,6 +2164,7 @@ crash_gate_int:
     pop ax
     mov fs:cs_fs,ax
 ;
+    mov fs:cs_fault,1Ah
     pop eax
     mov dword ptr fs:cs_rbp,eax
 ;    
@@ -2240,6 +2242,7 @@ cgiChain:
     pop ax
     mov fs:cs_fs,ax
 ;
+    mov fs:cs_fault,1Ah
     pop eax
     mov dword ptr fs:cs_rbp,eax
 ;    
