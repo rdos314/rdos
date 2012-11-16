@@ -1128,13 +1128,15 @@ ke15    DB 'Illegal int request     '
 ke16    DB 'Undefined method        '
 ke17    DB 'Invalid handle          '
 ke18    DB 'Invalid selector        '
+ke19    DB 'NMI                     '
+ke1A    DB 'Crash Gate              '
 
 WriteFault    Proc near
     mov al,' '
     call ShowChar
 ;    
     mov edx,gs:cs_fault
-    cmp dx,18h
+    cmp dx,1Ah
     jbe wfDo
 ;
     mov dx,14h    

@@ -3266,14 +3266,220 @@ hpet_int:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           double_fault
+;
+;   DESCRIPTION:    double fault
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+double_fault:
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    push rbp
+    push fs
+;
+    EnterCrashDebug
+    jc dfChain
+;
+    mov bx,fs
+    GetSelectorBaseSize
+    pop fs
+;
+    mov [edx].cs_fault,8
+    lock or [edx].ps_flags,PS_FLAG_LONG_MODE
+    pop rax
+    mov [edx].cs_rbp,rax
+;    
+    pop rax
+    mov [edx].cs_rdi,rax
+;    
+    pop rax
+    mov [edx].cs_rsi,rax
+;    
+    pop rax
+    mov [edx].cs_rdx,rax
+;    
+    pop rax
+    mov [edx].cs_rcx,rax
+;    
+    pop rax
+    mov [edx].cs_rbx,rax
+;    
+    pop rax
+    mov [edx].cs_rax,rax
+;    
+    pop rax
+;    
+    pop rax
+    mov [edx].cs_rip,rax
+;
+    pop rax
+    mov [edx].cs_cs,ax
+;
+    pop rax
+    mov [edx].cs_rflags,rax
+;
+    pop rax
+    mov [edx].cs_rsp,rax
+;
+    pop rax
+    mov [edx].cs_ss,ax
+;            
+    mov [edx].cs_r8,r8
+    mov [edx].cs_r9,r9
+    mov [edx].cs_r10,r10
+    mov [edx].cs_r11,r11
+    mov [edx].cs_r12,r12
+    mov [edx].cs_r13,r13
+    mov [edx].cs_r14,r14
+    mov [edx].cs_r15,r15
+    mov [edx].cs_es,es
+    mov [edx].cs_ds,ds
+    mov [edx].cs_fs,fs
+    mov [edx].cs_gs,gs
+;
+    mov rax,cr0
+    mov [edx].cs_cr0,eax
+;
+    mov rax,cr2
+    mov [edx].cs_cr2,eax
+;
+    mov rax,cr3
+    mov [edx].cs_cr3,eax
+;
+    mov rax,cr4
+    mov [edx].cs_cr4,eax
+;
+    mov rax,dr0
+    mov [edx].cs_dr0,eax
+;
+    mov rax,dr1
+    mov [edx].cs_dr1,eax
+;
+    mov rax,dr2
+    mov [edx].cs_dr2,eax
+;
+    mov rax,dr3
+    mov [edx].cs_dr3,eax
+;
+    mov rax,dr7
+    mov [edx].cs_dr7,eax
+;
+    sldt eax
+    mov [edx].cs_ldt,ax
+;
+    str eax
+    mov [edx].cs_tr,ax
+;
+    sgdt [edx].cs_gdtr
+    sidt [edx].cs_idtr            
+    ExecuteCrashHandler
+
+dfChain:
+    mov bx,fs
+    GetSelectorBaseSize
+    pop fs
+;
+    mov [edx].cs_fault,8
+    lock or [edx].ps_flags,PS_FLAG_LONG_MODE
+    pop rax
+    mov [edx].cs_rbp,rax
+;    
+    pop rax
+    mov [edx].cs_rdi,rax
+;    
+    pop rax
+    mov [edx].cs_rsi,rax
+;    
+    pop rax
+    mov [edx].cs_rdx,rax
+;    
+    pop rax
+    mov [edx].cs_rcx,rax
+;    
+    pop rax
+    mov [edx].cs_rbx,rax
+;    
+    pop rax
+    mov [edx].cs_rax,rax
+;    
+    pop rax
+    mov [edx].cs_rip,rax
+;
+    pop rax
+    mov [edx].cs_cs,ax
+;
+    pop rax
+    mov [edx].cs_rflags,rax
+;
+    pop rax
+    mov [edx].cs_rsp,rax
+;
+    pop rax
+    mov [edx].cs_ss,ax
+;            
+    mov [edx].cs_r8,r8
+    mov [edx].cs_r9,r9
+    mov [edx].cs_r10,r10
+    mov [edx].cs_r11,r11
+    mov [edx].cs_r12,r12
+    mov [edx].cs_r13,r13
+    mov [edx].cs_r14,r14
+    mov [edx].cs_r15,r15
+    mov [edx].cs_es,es
+    mov [edx].cs_ds,ds
+    mov [edx].cs_fs,fs
+    mov [edx].cs_gs,gs
+;
+    mov rax,cr0
+    mov [edx].cs_cr0,eax
+;
+    mov rax,cr2
+    mov [edx].cs_cr2,eax
+;
+    mov rax,cr3
+    mov [edx].cs_cr3,eax
+;
+    mov rax,cr4
+    mov [edx].cs_cr4,eax
+;
+    mov rax,dr0
+    mov [edx].cs_dr0,eax
+;
+    mov rax,dr1
+    mov [edx].cs_dr1,eax
+;
+    mov rax,dr2
+    mov [edx].cs_dr2,eax
+;
+    mov rax,dr3
+    mov [edx].cs_dr3,eax
+;
+    mov rax,dr7
+    mov [edx].cs_dr7,eax
+;
+    sldt eax
+    mov [edx].cs_ldt,ax
+;
+    str eax
+    mov [edx].cs_tr,ax
+;
+    sgdt [edx].cs_gdtr
+    sidt [edx].cs_idtr            
+    CrashNmi
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           crash_gate_int
 ;
 ;   DESCRIPTION:    Crash gate handler
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-double_fault:
-    add rsp,8
 
 crash_gate_int:
     push rax
@@ -3292,6 +3498,7 @@ crash_gate_int:
     GetSelectorBaseSize
     pop fs
 ;
+    mov [edx].cs_fault,1Ah
     lock or [edx].ps_flags,PS_FLAG_LONG_MODE
     pop rax
     mov [edx].cs_rbp,rax
@@ -3384,6 +3591,7 @@ cgiChain:
     GetSelectorBaseSize
     pop fs
 ;
+    mov [edx].cs_fault,1Ah
     lock or [edx].ps_flags,PS_FLAG_LONG_MODE
     pop rax
     mov [edx].cs_rbp,rax
@@ -3499,6 +3707,7 @@ crash_nmi_int:
     test [edx].ps_flags,PS_FLAG_NMI
     jnz nmi_ret
 ;
+    mov [edx].cs_fault,19h
     lock or [edx].ps_flags,PS_FLAG_LONG_MODE OR PS_FLAG_NMI    
     pop rax
     mov [edx].cs_rbp,rax
