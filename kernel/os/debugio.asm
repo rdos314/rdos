@@ -89,6 +89,7 @@ code    SEGMENT byte public 'CODE'
     extrn incdec_ss:near
 
     extrn incdec_r14:near
+    extrn incdec_r15:near
     extrn incdec_rip:near
     extrn incdec_rsp:near
     extrn incdec_rbp:near
@@ -1701,22 +1702,6 @@ change_epc      PROC near
     ret
 change_epc      ENDP
 
-change_ripl      PROC near
-    mov dx,gs
-    mov esi,OFFSET p_rip
-    push di
-    ret
-    ret
-change_ripl      ENDP
-
-change_riph      PROC near
-    mov dx,gs
-    mov esi,OFFSET p_rip + 4
-    push di
-    ret
-    ret
-change_riph      ENDP
-
 change_r14l      PROC near
     mov dx,gs
     mov esi,OFFSET p_r14
@@ -1732,6 +1717,38 @@ change_r14h      PROC near
     ret
     ret
 change_r14h      ENDP
+
+change_r15l      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_r15
+    push di
+    ret
+    ret
+change_r15l      ENDP
+
+change_r15h      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_r15 + 4
+    push di
+    ret
+    ret
+change_r15h      ENDP
+
+change_ripl      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rip
+    push di
+    ret
+    ret
+change_ripl      ENDP
+
+change_riph      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rip + 4
+    push di
+    ret
+    ret
+change_riph      ENDP
 
 change_rspl      PROC near
     mov dx,gs
@@ -2192,6 +2209,9 @@ debug_table64:
 mr14   DW 10,         1,          3,          OFFSET incdec_r14
 dr14h  DW 10,         5,          8,          OFFSET change_r14h
 dr14l  DW 10,         14,         8,          OFFSET change_r14l
+mr15   DW 10,         22,         3,          OFFSET incdec_r15
+dr15h  DW 10,         27,         8,          OFFSET change_r15h
+dr15l  DW 10,         36,         8,          OFFSET change_r15l
 mrip64 DW 11,         1,          3,          OFFSET incdec_rip
 driph  DW 11,         5,          8,          OFFSET change_riph
 dripl  DW 11,         14,         8,          OFFSET change_ripl

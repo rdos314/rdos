@@ -828,6 +828,26 @@ incdec_r14      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:       incdec_r15
+;
+;       DESCRIPTION:    INC / DEC R15
+;
+;       PARAMETERS:     GS          8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_r15
+
+incdec_r15      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_r15
+    call incdec64
+    ret
+incdec_r15      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:       incdec_rbp
 ;
 ;       DESCRIPTION:    INC / DEC RBP
