@@ -340,9 +340,12 @@ GetUserCall     ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public interact_incr
+    public interact_incr32
+    public interact_incr64
+
+interact_incr64:
     
-interact_incr   PROC near
+interact_incr32   PROC near
     push eax
     push bx
     push esi
@@ -385,7 +388,7 @@ interact_inc_write_done:
     pop bx
     pop eax
     ret
-interact_incr   ENDP
+interact_incr32   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -400,9 +403,12 @@ interact_incr   ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public interact_decr
+    public interact_decr32
+    public interact_decr64
+
+interact_decr64:
     
-interact_decr   PROC near
+interact_decr32   PROC near
     push eax
     push bx
     push esi
@@ -445,7 +451,7 @@ interact_dec_write_done:
     pop bx
     pop eax
     ret
-interact_decr   ENDP
+interact_decr32   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -461,9 +467,12 @@ interact_decr   ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public interact_set_value
+    public interact_set_value32
+    public interact_set_value64
 
-interact_set_value      PROC near
+interact_set_value64:
+
+interact_set_value32     PROC near
     push eax
     push bx
     push esi
@@ -506,12 +515,12 @@ interact_set_write_done:
     pop bx
     pop eax
     ret
-interact_set_value      ENDP
+interact_set_value32      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       incdec
+;       NAME:       incdec16
 ;
 ;       DESCRIPTION:    INC / DEC
 ;
@@ -521,22 +530,87 @@ interact_set_value      ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-incdec  PROC near
+incdec16  PROC near
     mov fs,dx
     cmp al,'+'
-    jne not_inc_reg
+    jne not_inc_reg16
+;
+    inc word ptr fs:[esi]
+    ret
+    
+not_inc_reg16:
+    cmp al,'-'
+    jne not_dec_reg16
+;
+    dec word ptr fs:[esi]
+    ret
+
+not_dec_reg16:
+    ret
+incdec16  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       incdec32
+;
+;       DESCRIPTION:    INC / DEC
+;
+;       PARAMETERS:     GS      80386 TSS
+;               DX:ESI      address to data
+;               AL      operation ('+' och '-')
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+incdec32  PROC near
+    mov fs,dx
+    cmp al,'+'
+    jne not_inc_reg32
 ;
     inc dword ptr fs:[esi]
     ret
-not_inc_reg:
+not_inc_reg32:
     cmp al,'-'
-    jne not_dec_reg
+    jne not_dec_reg32
 ;
     dec dword ptr fs:[esi]
     ret
-not_dec_reg:
+not_dec_reg32:
     ret
-incdec  ENDP
+incdec32  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       incdec64
+;
+;       DESCRIPTION:    INC / DEC
+;
+;       PARAMETERS:     GS      80386 TSS
+;               DX:ESI      address to data
+;               AL      operation ('+' och '-')
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+incdec64  PROC near
+    mov fs,dx
+    cmp al,'+'
+    jne not_inc_reg64
+;
+    add dword ptr fs:[esi],1
+    adc dword ptr fs:[esi+4],0
+    ret
+
+not_inc_reg64:
+    cmp al,'-'
+    jne not_dec_reg64
+;
+    sub dword ptr fs:[esi],1
+    sbb dword ptr fs:[esi+4],0
+    ret
+not_dec_reg64:
+    ret
+incdec64  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -555,7 +629,7 @@ incdec  ENDP
 incdec_eax      PROC near
     mov dx,gs
     mov esi,OFFSET p_rax
-    call incdec
+    call incdec32
     ret
 incdec_eax      ENDP
 
@@ -576,7 +650,7 @@ incdec_eax      ENDP
 incdec_ebx      PROC near
     mov dx,gs
     mov esi,OFFSET p_rbx
-    call incdec
+    call incdec32
     ret
 incdec_ebx      ENDP
 
@@ -596,7 +670,7 @@ incdec_ebx      ENDP
 incdec_ecx      PROC near
     mov dx,gs
     mov esi,OFFSET p_rcx
-    call incdec
+    call incdec32
     ret
 incdec_ecx      ENDP
 
@@ -616,7 +690,7 @@ incdec_ecx      ENDP
 incdec_edx      PROC near
     mov dx,gs
     mov esi,OFFSET p_rdx
-    call incdec
+    call incdec32
     ret
 incdec_edx      ENDP
 
@@ -636,7 +710,7 @@ incdec_edx      ENDP
 incdec_esi      PROC near
     mov dx,gs
     mov esi,OFFSET p_rsi
-    call incdec
+    call incdec32
     ret
 incdec_esi      ENDP
 
@@ -656,7 +730,7 @@ incdec_esi      ENDP
 incdec_edi      PROC near
     mov dx,gs
     mov esi,OFFSET p_rdi
-    call incdec
+    call incdec32
     ret
 incdec_edi      ENDP
 
@@ -676,7 +750,7 @@ incdec_edi      ENDP
 incdec_esp      PROC near
     mov dx,gs
     mov esi,OFFSET p_rsp
-    call incdec
+    call incdec32
     ret
 incdec_esp      ENDP
 
@@ -696,7 +770,7 @@ incdec_esp      ENDP
 incdec_ebp      PROC near
     mov dx,gs
     mov esi,OFFSET p_rbp
-    call incdec
+    call incdec32
     ret
 incdec_ebp      ENDP
 
@@ -716,9 +790,69 @@ incdec_ebp      ENDP
 incdec_epc      PROC near
     mov dx,gs
     mov esi,OFFSET p_rip
-    call incdec
+    call incdec32
     ret
 incdec_epc      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       incdec_rip
+;
+;       DESCRIPTION:    INC / DEC RIP
+;
+;       PARAMETERS:     GS          8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_rip
+
+incdec_rip      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rip
+    call incdec64
+    ret
+incdec_rip      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       incdec_rbp
+;
+;       DESCRIPTION:    INC / DEC RBP
+;
+;       PARAMETERS:     GS          8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_rbp
+
+incdec_rbp      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rbp
+    call incdec64
+    ret
+incdec_rbp      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       incdec_rsp
+;
+;       DESCRIPTION:    INC / DEC RSP
+;
+;       PARAMETERS:     GS          8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_rsp
+
+incdec_rsp      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rsp
+    call incdec64
+    ret
+incdec_rsp      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -736,7 +870,7 @@ incdec_epc      ENDP
 incdec_cs       PROC near
     mov dx,gs
     mov esi,OFFSET p_cs
-    call incdec
+    call incdec16
     ret
 incdec_cs       ENDP
 
@@ -756,7 +890,7 @@ incdec_cs       ENDP
 incdec_ds       PROC near
     mov dx,gs
     mov esi,OFFSET p_ds
-    call incdec
+    call incdec16
     ret
 incdec_ds       ENDP
 
@@ -776,7 +910,7 @@ incdec_ds       ENDP
 incdec_es       PROC near
     mov dx,gs
     mov esi,OFFSET p_es
-    call incdec
+    call incdec16
     ret
 incdec_es       ENDP
 
@@ -796,7 +930,7 @@ incdec_es       ENDP
 incdec_fs       PROC near
     mov dx,gs
     mov esi,OFFSET p_fs
-    call incdec
+    call incdec16
     ret
 incdec_fs       ENDP
 
@@ -816,7 +950,7 @@ incdec_fs       ENDP
 incdec_gs       PROC near
     mov dx,gs
     mov esi,OFFSET p_gs
-    call incdec
+    call incdec16
     ret
 incdec_gs       ENDP
 
@@ -836,7 +970,7 @@ incdec_gs       ENDP
 incdec_ss       PROC near
     mov dx,gs
     mov esi,OFFSET p_ss
-    call incdec
+    call incdec16
     ret
 incdec_ss       ENDP
 

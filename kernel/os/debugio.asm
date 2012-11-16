@@ -68,9 +68,13 @@ code    SEGMENT byte public 'CODE'
     extrn GetOsCall:near
     extrn GetUserCall:near
 
-    extrn interact_incr:near
-    extrn interact_decr:near
-    extrn interact_set_value:near
+    extrn interact_incr32:near
+    extrn interact_decr32:near
+    extrn interact_set_value32:near
+
+    extrn interact_incr64:near
+    extrn interact_decr64:near
+    extrn interact_set_value64:near
 
     extrn incdec_eax:near
     extrn incdec_ebx:near
@@ -87,6 +91,10 @@ code    SEGMENT byte public 'CODE'
     extrn incdec_fs:near
     extrn incdec_gs:near
     extrn incdec_ss:near
+
+    extrn incdec_rip:near
+    extrn incdec_rsp:near
+    extrn incdec_rbp:near
 
 .386p
 
@@ -1618,11 +1626,17 @@ WriteCpu64    ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-interact_set    PROC near
-    call interact_set_value
+interact_set32    PROC near
+    call interact_set_value32
     inc word ptr [bp].call_edx
     ret
-interact_set    ENDP
+interact_set32    ENDP
+
+interact_set64    PROC near
+    call interact_set_value64
+    inc word ptr [bp].call_edx
+    ret
+interact_set64    ENDP
 
 change_eax      PROC near
     mov dx,gs
@@ -1695,6 +1709,30 @@ change_epc      PROC near
     ret
     ret
 change_epc      ENDP
+
+change_rip      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rip
+    push di
+    ret
+    ret
+change_rip      ENDP
+
+change_rsp      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rsp
+    push di
+    ret
+    ret
+change_rsp      ENDP
+
+change_rbp      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rbp
+    push di
+    ret
+    ret
+change_rbp      ENDP
 
 change_cs       PROC near
     and cl,3
@@ -1975,7 +2013,138 @@ change_vm_offs  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           debug_call_do
+;           NAME:           debug_call_do32
+;
+;           DESCRIPTION:    Perform a function
+;
+;           PARAMETERS:         GS              TSS
+;                           DI              Offset to debug-function
+;                           CH              Digit / param
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+debug_row       EQU 0
+debug_col       EQU 2
+debug_ant       EQU 4
+debug_call      EQU 6
+debug_size      EQU 8
+    
+debug_table32:
+;
+;           rad     kolumn  antal   action
+;
+meax32 DW 9,          1,          3,          OFFSET incdec_eax
+deax32 DW 9,          5,          8,          OFFSET change_eax
+mebx32 DW 9,          14,         3,          OFFSET incdec_ebx
+debx32 DW 9,          18,         8,          OFFSET change_ebx
+mecx32 DW 9,          27,         3,          OFFSET incdec_ecx
+decx32 DW 9,          31,         8,          OFFSET change_ecx
+medx32 DW 9,          40,         3,          OFFSET incdec_edx
+dedx32 DW 9,          44,         8,          OFFSET change_edx
+mesi32 DW 10,         1,          3,          OFFSET incdec_esi
+desi32 DW 10,         5,          8,          OFFSET change_esi
+medi32 DW 10,         14,         3,          OFFSET incdec_edi
+dedi32 DW 10,         18,         8,          OFFSET change_edi
+mesp32 DW 10,         27,         3,          OFFSET incdec_esp
+desp32 DW 10,         31,         8,          OFFSET change_esp
+mebp32 DW 10,         40,         3,          OFFSET incdec_ebp
+debp32 DW 10,         44,         8,          OFFSET change_ebp
+mepc32 DW 11,         1,          3,          OFFSET incdec_epc
+depc32 DW 11,         5,          8,          OFFSET change_epc
+mcs32  DW 12,         1,          2,          OFFSET incdec_cs
+dcs32  DW 12,         4,          4,          OFFSET change_cs
+mds32  DW 12,         9,          2,          OFFSET incdec_ds
+dds32  DW 12,         12,         4,          OFFSET change_ds
+mes32  DW 12,         17,         2,          OFFSET incdec_es
+des32  DW 12,         20,         4,          OFFSET change_es
+mfs32  DW 12,         25,         2,          OFFSET incdec_fs
+dfs32  DW 12,         28,         4,          OFFSET change_fs
+mgs32  DW 12,         33,         2,          OFFSET incdec_gs
+dgs32  DW 12,         36,         4,          OFFSET change_gs
+mss32  DW 12,         41,         2,          OFFSET incdec_ss
+dss32  DW 12,         44,         4,          OFFSET change_ss
+dcy32  DW 13,         0,          2,          OFFSET toggle_cy
+dpa32  DW 13,         3,          2,          OFFSET toggle_pa
+dac32  DW 13,         6,          2,          OFFSET toggle_ac
+dzr32  DW 13,         9,          2,          OFFSET toggle_zr
+dplc32 DW 13,         12,         2,          OFFSET toggle_pl
+disf32 DW 13,         15,         2,          OFFSET toggle_im
+ddir32 DW 13,         18,         2,          OFFSET toggle_dir
+dov32  DW 13,         21,         2,          OFFSET toggle_ov
+dnt32  DW 13,         24,         2,          OFFSET toggle_nt
+dgo32  DW 16,         0,          30,         OFFSET go_sw
+dtra32 DW 17,         0,          40,         OFFSET trace_sw
+dnex32 DW 17,         40,         40,         OFFSET next_sw
+mdad32 DW 19,         14,         47,         OFFSET mem_ads
+mdcs32 DW 20,         14,         47,         OFFSET mem_cs
+mdss32 DW 21,         14,         47,         OFFSET mem_ss
+mdes32 DW 22,         14,         47,         OFFSET mem_es
+pms32  DW 23,         0,          4,          OFFSET change_pm_sel
+pmo32  DW 23,         5,          8,          OFFSET change_pm_offs
+pdat32 DW 23,         14,         47,         OFFSET mem_pm
+vms32  DW 24,         0,          4,          OFFSET change_vm_sel
+vmo32  DW 24,         5,          8,          OFFSET change_vm_offs
+vdat32 DW 24,         14,         47,         OFFSET mem_vm
+dend32 DW 0FFFFh, 0FFFFh
+
+debug_call_do32   PROC near
+    mov bx,OFFSET debug_table32
+    mov ax,[bp].call_edx
+d_c_loop32:
+    mov cl,cs:[bx+debug_row]
+    cmp cl,0FFh
+    je d_c_end32
+    cmp cl,ah
+    jne not_this_entry32
+    mov cl,al
+    sub cl,cs:[bx+debug_col]
+    cmp cl,cs:[bx+debug_ant]
+    jnc not_this_entry32
+    xor cl,7
+    and cl,7
+    mov ax,[bp].call_eax
+    call word ptr cs:[bx+debug_call]
+    jmp d_c_end32
+    
+not_this_entry32:
+    add bx,debug_size
+    jmp d_c_loop32
+
+d_c_end32:
+    ret
+debug_call_do32   ENDP
+
+inc_sw32  PROC near
+    pusha
+    mov di,OFFSET interact_incr32
+    call debug_call_do32
+    popa
+    ret
+inc_sw32  ENDP
+
+dec_sw32  PROC near
+    pusha
+    mov di,OFFSET interact_decr32
+    call debug_call_do32
+    popa
+    ret
+dec_sw32  ENDP
+
+;
+; ch = siffra
+;
+set_base_sw32     PROC near
+    pusha
+    mov di,OFFSET interact_set32
+    call debug_call_do32
+    popa
+    ret
+set_base_sw32     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           debug_call_do64
 ;
 ;           DESCRIPTION:    Perform a function
 ;
@@ -1985,216 +2154,253 @@ change_vm_offs  ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
-debug_table:
+debug_table64:
 ;
 ;           rad     kolumn  antal   action
 ;
-meax DW 9,          1,          3,          OFFSET incdec_eax
-deax DW 9,          5,          8,          OFFSET change_eax
-mebx DW 9,          14,         3,          OFFSET incdec_ebx
-debx DW 9,          18,         8,          OFFSET change_ebx
-mecx DW 9,          27,         3,          OFFSET incdec_ecx
-decx DW 9,          31,         8,          OFFSET change_ecx
-medx DW 9,          40,         3,          OFFSET incdec_edx
-dedx DW 9,          44,         8,          OFFSET change_edx
-mesi DW 10,         1,          3,          OFFSET incdec_esi
-desi DW 10,         5,          8,          OFFSET change_esi
-medi DW 10,         14,         3,          OFFSET incdec_edi
-dedi DW 10,         18,         8,          OFFSET change_edi
-mesp DW 10,         27,         3,          OFFSET incdec_esp
-desp DW 10,         31,         8,          OFFSET change_esp
-mebp DW 10,         40,         3,          OFFSET incdec_ebp
-debp DW 10,         44,         8,          OFFSET change_ebp
-mepc DW 11,         1,          3,          OFFSET incdec_epc
-depc DW 11,         5,          8,          OFFSET change_epc
-mcs  DW 12,         1,          2,          OFFSET incdec_cs
-dcs      DW 12,     4,          4,          OFFSET change_cs
-mds  DW 12,         9,          2,          OFFSET incdec_ds
-dds      DW 12,     12,         4,          OFFSET change_ds
-mes      DW 12,     17,         2,          OFFSET incdec_es
-des  DW 12,         20,         4,          OFFSET change_es
-mfs      DW 12,     25,         2,          OFFSET incdec_fs
-dfs  DW 12,         28,         4,          OFFSET change_fs
-mgs      DW 12,     33,         2,          OFFSET incdec_gs
-dgs  DW 12,         36,         4,          OFFSET change_gs
-mss      DW 12,     41,         2,          OFFSET incdec_ss
-dss  DW 12,         44,         4,          OFFSET change_ss
-dcy  DW 13,         0,          2,          OFFSET toggle_cy
-dpa  DW 13,         3,          2,          OFFSET toggle_pa
-dac  DW 13,         6,          2,          OFFSET toggle_ac
-dzr  DW 13,         9,          2,          OFFSET toggle_zr
-dplc DW 13,         12,         2,          OFFSET toggle_pl
-disf DW 13,         15,         2,          OFFSET toggle_im
-ddir DW 13,         18,         2,          OFFSET toggle_dir
-dov  DW 13,         21,         2,          OFFSET toggle_ov
-dnt  DW 13,         24,         2,          OFFSET toggle_nt
-dgo  DW 16,         0,          30,         OFFSET go_sw
-dtra DW 17,         0,          40,         OFFSET trace_sw
-dnex DW 17,         40,         40,         OFFSET next_sw
-mdad DW 19,         14,         47,         OFFSET mem_ads
-mdcs DW 20,         14,         47,         OFFSET mem_cs
-mdss DW 21,         14,         47,         OFFSET mem_ss
-mdes DW 22,         14,         47,         OFFSET mem_es
-pms  DW 23,         0,          4,          OFFSET change_pm_sel
-pmo  DW 23,         5,          8,          OFFSET change_pm_offs
-pdat DW 23,         14,         47,         OFFSET mem_pm
-vms  DW 24,         0,          4,          OFFSET change_vm_sel
-vmo  DW 24,         5,          8,          OFFSET change_vm_offs
-vdat DW 24,         14,         47,         OFFSET mem_vm
-dend DW 0FFFFh, 0FFFFh
+mrip64 DW 11,         1,          3,          OFFSET incdec_rip
+drip64 DW 11,         5,          17,         OFFSET change_rip
+mrsp64 DW 11,         22,         3,          OFFSET incdec_rsp
+drsp64 DW 11,         27,         17,         OFFSET change_rsp
+mrsb64 DW 11,         44,         3,          OFFSET incdec_rbp
+drsb64 DW 11,         49,         17,         OFFSET change_rbp
+mcs64  DW 12,         1,          2,          OFFSET incdec_cs
+dcs64  DW 12,         4,          4,          OFFSET change_cs
+mds64  DW 12,         9,          2,          OFFSET incdec_ds
+dds64  DW 12,         12,         4,          OFFSET change_ds
+mes64  DW 12,         17,         2,          OFFSET incdec_es
+des64  DW 12,         20,         4,          OFFSET change_es
+mfs64  DW 12,         25,         2,          OFFSET incdec_fs
+dfs64  DW 12,         28,         4,          OFFSET change_fs
+mgs64  DW 12,         33,         2,          OFFSET incdec_gs
+dgs64  DW 12,         36,         4,          OFFSET change_gs
+mss64  DW 12,         41,         2,          OFFSET incdec_ss
+dss64  DW 12,         44,         4,          OFFSET change_ss
+dcy64  DW 13,         0,          2,          OFFSET toggle_cy
+dpa64  DW 13,         3,          2,          OFFSET toggle_pa
+dac64  DW 13,         6,          2,          OFFSET toggle_ac
+dzr64  DW 13,         9,          2,          OFFSET toggle_zr
+dplc64 DW 13,         12,         2,          OFFSET toggle_pl
+disf64 DW 13,         15,         2,          OFFSET toggle_im
+ddir64 DW 13,         18,         2,          OFFSET toggle_dir
+dov64  DW 13,         21,         2,          OFFSET toggle_ov
+dnt64  DW 13,         24,         2,          OFFSET toggle_nt
+dgo64  DW 16,         0,          30,         OFFSET go_sw
+dtra64 DW 17,         0,          40,         OFFSET trace_sw
+dnex64 DW 17,         40,         40,         OFFSET next_sw
+mdad64 DW 19,         14,         47,         OFFSET mem_ads
+mdcs64 DW 20,         14,         47,         OFFSET mem_cs
+mdss64 DW 21,         14,         47,         OFFSET mem_ss
+mdes64 DW 22,         14,         47,         OFFSET mem_es
+pms64  DW 23,         0,          4,          OFFSET change_pm_sel
+pmo64  DW 23,         5,          8,          OFFSET change_pm_offs
+pdat64 DW 23,         14,         47,         OFFSET mem_pm
+vms64  DW 24,         0,          4,          OFFSET change_vm_sel
+vmo64  DW 24,         5,          8,          OFFSET change_vm_offs
+vdat64 DW 24,         14,         47,         OFFSET mem_vm
+dend64 DW 0FFFFh, 0FFFFh
 
-debug_row       EQU 0
-debug_col       EQU 2
-debug_ant       EQU 4
-debug_call      EQU 6
-debug_size      EQU 8
-
-debug_call_do   PROC near
+debug_call_do64   PROC near
+    mov bx,OFFSET debug_table64
     mov ax,[bp].call_edx
-    mov bx,OFFSET debug_table
-d_c_loop:
+
+d_c_loop64:
     mov cl,cs:[bx+debug_row]
     cmp cl,0FFh
-    je d_c_end
+    je d_c_end64
     cmp cl,ah
-    jne not_this_entry
+    jne not_this_entry64
     mov cl,al
     sub cl,cs:[bx+debug_col]
     cmp cl,cs:[bx+debug_ant]
-    jnc not_this_entry
+    jnc not_this_entry64
     xor cl,7
     and cl,7
     mov ax,[bp].call_eax
     call word ptr cs:[bx+debug_call]
-    jmp d_c_end
-not_this_entry:
+    jmp d_c_end64
+    
+not_this_entry64:
     add bx,debug_size
-    jmp d_c_loop
-d_c_end:
+    jmp d_c_loop64
+    
+d_c_end64:
     ret
-debug_call_do   ENDP
+debug_call_do64   ENDP
 
-inc_sw  PROC near
+inc_sw64  PROC near
     pusha
-    mov di,OFFSET interact_incr
-    call debug_call_do
+    mov di,OFFSET interact_incr64
+    call debug_call_do64
     popa
     ret
-inc_sw  ENDP
+inc_sw64  ENDP
 
-dec_sw  PROC near
+dec_sw64  PROC near
     pusha
-    mov di,OFFSET interact_decr
-    call debug_call_do
+    mov di,OFFSET interact_decr64
+    call debug_call_do64
     popa
     ret
-dec_sw  ENDP
+dec_sw64  ENDP
 
 ;
 ; ch = siffra
 ;
-set_base_sw     PROC near
+set_base_sw64     PROC near
     pusha
-    mov di,OFFSET interact_set
-    call debug_call_do
+    mov di,OFFSET interact_set64
+    call debug_call_do64
     popa
     ret
-set_base_sw     ENDP
+set_base_sw64     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;   Interact functions
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+inc_sw  PROC near
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz inc_sw64
+    jmp inc_sw32
+inc_sw  ENDP
+
+dec_sw  PROC near
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz dec_sw64
+    jmp dec_sw32
+dec_sw  ENDP
 
 set0_sw PROC near
     mov ch,0
-    call set_base_sw
-    ret
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
 set0_sw ENDP
 
 set1_sw PROC near
     mov ch,1
-    call set_base_sw
-    ret
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
 set1_sw ENDP
 
 set2_sw PROC near
     mov ch,2
-    call set_base_sw
-    ret
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
 set2_sw ENDP
 
 set3_sw PROC near
     mov ch,3
-    call set_base_sw
-    ret
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
 set3_sw ENDP
 
 set4_sw PROC near
     mov ch,4
-    call set_base_sw
-    ret
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
 set4_sw ENDP
 
 set5_sw PROC near
     mov ch,5
-    call set_base_sw
-    ret
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
 set5_sw ENDP
 
 set6_sw PROC near
     mov ch,6
-    call set_base_sw
-    ret
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
 set6_sw ENDP
 
 set7_sw PROC near
     mov ch,7
-    call set_base_sw
-    ret
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
 set7_sw ENDP
 
 set8_sw PROC near
     mov ch,8
-    call set_base_sw
-    ret
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
 set8_sw ENDP
 
 set9_sw PROC near
     mov ch,9
-    call set_base_sw
-    ret
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
 set9_sw ENDP
 
 setA_sw PROC near
     mov ch,0Ah
-    call set_base_sw
-    ret
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
 setA_sw ENDP
 
 setB_sw PROC near
     mov ch,0Bh
-    call set_base_sw
-    ret
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
 setB_sw ENDP
 
 setC_sw PROC near
     mov ch,0Ch
-    call set_base_sw
-    ret
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
 setC_sw ENDP
 
 setD_sw PROC near
     mov ch,0Dh
-    call set_base_sw
-    ret
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
 setD_sw ENDP
 
 setE_sw PROC near
     mov ch,0Eh
-    call set_base_sw
-    ret
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
 setE_sw ENDP
 
 setF_sw PROC near
     mov ch,0Fh
-    call set_base_sw
-    ret
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
 setF_sw ENDP
 
 go_sw   PROC near
