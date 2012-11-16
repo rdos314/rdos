@@ -500,6 +500,7 @@ SetupLongIntGate   MACRO
 
 ; IN  AL        INT #
 ; IN  BL        DPL
+; IN  BH        IST
 ; IN  ESI       ENTRY POINT
 SetupLongTrapGate  MACRO
     OsGate setup_long_trap_gate_nr

@@ -157,6 +157,7 @@ long_idt_base   DD IDT_LINEAR
 ;
 ;   PARAMETERS:     AL      Interrupt #
 ;                   BL      Dpl
+;                   BH      IST
 ;                   ESI     Entry point
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -189,7 +190,7 @@ setup_long_trap_gate  proc far
     mov [edi+8],edx
     mov [edi+12],edx
 ;
-    xor al,al
+    mov al,bh
     mov ah,bl
     shl ah,5
     or ah,8Fh
@@ -443,26 +444,26 @@ setup_long_crash_nmi Endp
 
 pretask_int_tab:
 ;
-;               int #   Entry
+;               int #       Entry                   DPL     IST
 ;
-pg0     DD      0,          OFFSET pretask0,        0
-pg1     DD      1,          OFFSET trap_1,          0
-pg2     DD      2,          OFFSET pretask2,        0
-pg3     DD      3,          OFFSET trap_3,          0
-pg4     DD      4,          OFFSET pretask4,        0
-pg5     DD      5,          OFFSET pretask5,        0
-pg6     DD      6,          OFFSET pretask6,        0
-pg7     DD      7,          OFFSET pretask7,        0
-pg8     DD      8,          OFFSET pretask8,        0
-pg9     DD      9,          OFFSET pretask9,        0
-pg10    DD      10,         OFFSET pretask10,       0
-pg11    DD      11,         OFFSET pretask11,       0
-pg12    DD      12,         OFFSET pretask12,       0
-pg13    DD      13,         OFFSET protection_fault,0
-pg14    DD      14,         OFFSET page_fault,      0
-pg16    DD      16,         OFFSET pretask16,       0
-rg66    DD      66h,        OFFSET int66,           3
-rg67    DD      67h,        OFFSET int67,           3
+pg0     DD      0,          OFFSET pretask0,        0,      0
+pg1     DD      1,          OFFSET trap_1,          0,      0
+pg2     DD      2,          OFFSET pretask2,        0,      1
+pg3     DD      3,          OFFSET trap_3,          0,      0
+pg4     DD      4,          OFFSET pretask4,        0,      0
+pg5     DD      5,          OFFSET pretask5,        0,      0
+pg6     DD      6,          OFFSET pretask6,        0,      0
+pg7     DD      7,          OFFSET pretask7,        0,      0
+pg8     DD      8,          OFFSET pretask8,        0,      0
+pg9     DD      9,          OFFSET pretask9,        0,      0
+pg10    DD      10,         OFFSET pretask10,       0,      0
+pg11    DD      11,         OFFSET pretask11,       0,      0
+pg12    DD      12,         OFFSET pretask12,       0,      0
+pg13    DD      13,         OFFSET protection_fault,0,      0
+pg14    DD      14,         OFFSET page_fault,      0,      0
+pg16    DD      16,         OFFSET pretask16,       0,      0
+rg66    DD      66h,        OFFSET int66,           3,      0
+rg67    DD      67h,        OFFSET int67,           3,      0
 pg7_end DD      0FFFFFFFFh
 
 InitIdt proc near
@@ -482,9 +483,10 @@ iiLoop:
 ;    
     mov esi,[edi+4]
     mov bl,[edi+8]
+    mov bh,[edi+12]
     SetupLongTrapGate
 ;
-    add edi,12
+    add edi,16
     jmp iiLoop
 
 iiDone:
