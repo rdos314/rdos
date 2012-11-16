@@ -88,6 +88,9 @@ code    SEGMENT byte public 'CODE'
     extrn incdec_gs:near
     extrn incdec_ss:near
 
+    extrn incdec_rdx:near
+    extrn incdec_rsi:near
+    extrn incdec_rdi:near
     extrn incdec_r8:near
     extrn incdec_r9:near
     extrn incdec_r10:near
@@ -1708,6 +1711,54 @@ change_epc      PROC near
     ret
 change_epc      ENDP
 
+change_rdxl      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rdx
+    push di
+    ret
+    ret
+change_rdxl      ENDP
+
+change_rdxh      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rdx + 4
+    push di
+    ret
+    ret
+change_rdxh      ENDP
+
+change_rsil      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rsi
+    push di
+    ret
+    ret
+change_rsil      ENDP
+
+change_rsih      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rsi + 4
+    push di
+    ret
+    ret
+change_rsih      ENDP
+
+change_rdil      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rdi
+    push di
+    ret
+    ret
+change_rdil      ENDP
+
+change_rdih      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rdi + 4
+    push di
+    ret
+    ret
+change_rdih      ENDP
+
 change_r8l      PROC near
     mov dx,gs
     mov esi,OFFSET p_r8
@@ -2308,6 +2359,15 @@ debug_table64:
 ;
 ;           rad     kolumn  antal   action
 ;
+mrdx   DW 7,          1,          3,          OFFSET incdec_rdx
+drdxh  DW 7,          5,          8,          OFFSET change_rdxh
+drdxl  DW 7,          14,         8,          OFFSET change_rdxl
+mrsi   DW 7,          23,         3,          OFFSET incdec_rsi
+drsih  DW 7,          27,         8,          OFFSET change_rsih
+drsil  DW 7,          36,         8,          OFFSET change_rsil
+mrdi   DW 7,          45,         3,          OFFSET incdec_rdi
+drdih  DW 7,          49,         8,          OFFSET change_rdih
+drdil  DW 7,          58,         8,          OFFSET change_rdil
 mr8    DW 8,          2,          2,          OFFSET incdec_r8
 dr8h   DW 8,          5,          8,          OFFSET change_r8h
 dr8l   DW 8,          14,         8,          OFFSET change_r8l

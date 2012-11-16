@@ -808,6 +808,66 @@ incdec_rip      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:       incdec_rdx
+;
+;       DESCRIPTION:    INC / DEC RDX
+;
+;       PARAMETERS:     GS          8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_rdx
+
+incdec_rdx      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rdx
+    call incdec64
+    ret
+incdec_rdx      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       incdec_rsi
+;
+;       DESCRIPTION:    INC / DEC RSI
+;
+;       PARAMETERS:     GS          8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_rsi
+
+incdec_rsi      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rsi
+    call incdec64
+    ret
+incdec_rsi      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       incdec_rdi
+;
+;       DESCRIPTION:    INC / DEC RDI
+;
+;       PARAMETERS:     GS          8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_rdi
+
+incdec_rdi      PROC near
+    mov dx,gs
+    mov esi,OFFSET p_rdi
+    call incdec64
+    ret
+incdec_rdi      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:       incdec_r8
 ;
 ;       DESCRIPTION:    INC / DEC R8
