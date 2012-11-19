@@ -1068,7 +1068,7 @@ init_task:
     mov es,ax
     mov esi,OFFSET test_process
     mov edi,OFFSET test_process_name
-    mov ax,204h
+    mov ax,202h
     mov ecx,1000h
     CreateProcess
 ;
@@ -2477,7 +2477,7 @@ page_fault_error    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 page_fault_plm4    Proc near
-    jmp page_fault_error
+    CrashGate
     ret
 page_fault_plm4     Endp
 
@@ -2491,7 +2491,7 @@ page_fault_plm4     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 page_fault_ptr    Proc near
-    jmp page_fault_error
+    CrashGate
     ret
 page_fault_ptr     Endp
 
@@ -2525,7 +2525,7 @@ process_fault_dir   Proc near
     je process_fault_dir_local
 
 process_fault_dir_global:
-    jmp page_fault_error
+    CrashGate
 
 process_fault_dir_local:
     mov rax,rsi
@@ -2590,7 +2590,18 @@ page_fault_dir    Proc near
     je page_fault_dir_local
 
 page_fault_dir_global:
-    jmp page_fault_error
+    mov rdx,rsi
+    sub rdx,DIR_TABLE_LINEAR
+    shl rdx,9
+    GetSysPageDir    
+    test al,1
+    jnz page_fault_dir_global_valid
+;    
+    CrashGate
+
+page_fault_dir_global_valid:
+    SetPageDir
+    ret
 
 page_fault_dir_local:
     mov rax,rsi
@@ -2652,7 +2663,7 @@ page_fault64    Proc near
     cmp rax,rbx
     jae page_fault_dir
 ;        
-    jmp page_fault_error
+    CrashGate
     ret
 page_fault64    Endp
 
@@ -2666,7 +2677,7 @@ page_fault64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 page_fault_global    Proc near
-    jmp page_fault_error
+    CrashGate
     ret
 page_fault_global    Endp
 
@@ -2796,7 +2807,8 @@ page_fault32:
     cmp eax,sys_page_linear
     jne page_fault_system
 ;
-    jmp page_fault_error
+    CrashGate
+    ret
 handle_page_fault   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3906,7 +3918,8 @@ load_long_regs:
     iretq
 
 test64:
-    inc rax
+    mov ax,1
+    WaitMilliSec
     jmp test64
 
 text_end:
