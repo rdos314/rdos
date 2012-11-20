@@ -2677,7 +2677,32 @@ page_fault64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 page_fault_global    Proc near
-    CrashGate
+    mov rax,PAGE_TABLE_LINEAR
+    mov rdx,rsi
+    mov rdi,rdx
+    shr rdi,9
+    and di,0FFF8h
+    add rdi,rax
+    mov rax,[rdi]
+;    
+    test al,1
+    jnz page_fault_global_retry
+;
+    push rdi
+    AllocatePhysical64
+    pop rdi
+;
+    shl rbx,32
+    or rax,rbx
+    mov ax,107h
+    xchg rax,[rdi]
+    test al,1
+    jz page_fault_global_retry
+;
+    mov cx,1
+    FlushTlb
+    
+page_fault_global_retry:
     ret
 page_fault_global    Endp
 
@@ -2722,7 +2747,12 @@ page_fault_user_normal:
     shl rbx,32
     or rax,rbx
     mov al,7
-    mov [rdi],rax    
+    xchg rax,[rdi]
+    test al,1
+    jz page_fault_user_retry
+;
+    mov cx,1
+    FlushTlb
     
 page_fault_user_retry:
     ret
