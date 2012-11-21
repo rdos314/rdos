@@ -1017,9 +1017,13 @@ set_signal   Proc far
     or ax,ax
     jz set_sig_done
 ;
-    mov es,ax
-    SignalWait
     mov ds:[ebx].sig_wait_obj,0
+    mov es,ax
+    inc es:wo_signalled
+    sti
+;        
+    mov bx,es:wo_thread
+    Signal
 
 set_sig_done:
     sti
