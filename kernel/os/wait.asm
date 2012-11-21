@@ -1117,8 +1117,11 @@ start_wait_for_signal   PROC far
 ;
     mov ds:[ebx].sig_state,0
     mov ds:[ebx].sig_wait_obj,0
+    inc es:wo_signalled
     sti
-    SignalWait
+;
+    mov bx,es:wo_thread
+    Signal
 
 start_wait_for_done:
     sti
