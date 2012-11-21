@@ -103,22 +103,7 @@ del_scan	PROC near
 	cmp cx,alt_pressed OR ctrl_pressed
 	jne num_scan
 ;
-	cli
-wait_gate1:
-	in al,64h
-	and al,2
-	jnz wait_gate1
-	mov al,0D1h
-	out 64h,al
-wait_gate2:
-	in al,64h
-	and al,2
-	jnz wait_gate2
-	mov al,0FEh
-	out 60h,al
-;
-	xor eax,eax
-	mov cr3,eax
+    SoftReset
 	ret
 del_scan	Endp
 
