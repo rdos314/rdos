@@ -60,12 +60,47 @@ sig_handle_base handle_header <>
 
 sig_wait_obj        DW ?
 sig_state           DB ?
+sig_lock            DB ?
 
 signal_handle_seg           ENDS
 
-
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
     .386p
+ENDIF
 
+LockWaitObj Macro
+    local lock_loop
+    local lock_get
+    local lock_done
+
+lock_loop:
+    sti
+    mov al,ds:[ebx].sig_lock
+    or al,al
+    je lock_get
+;
+    pause
+    jmp lock_loop
+
+lock_get:
+    cli
+    inc al
+    xchg al,ds:[ebx].sig_lock
+    or al,al
+    je lock_done
+;
+    jmp lock_loop
+
+lock_done:
+    Endm
+
+UnlockWaitObj Macro
+    mov ds:[ebx].sig_lock,0
+    sti
+            Endm
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
