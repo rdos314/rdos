@@ -60,47 +60,11 @@ sig_handle_base handle_header <>
 
 sig_wait_obj        DW ?
 sig_state           DB ?
-sig_lock            DB ?
 
 signal_handle_seg           ENDS
 
-IFDEF __WASM__
-    .686p
-    .xmm2
-ELSE
+
     .386p
-ENDIF
-
-LockWaitObj Macro
-    local lock_loop
-    local lock_get
-    local lock_done
-
-lock_loop:
-    sti
-    mov al,ds:[ebx].sig_lock
-    or al,al
-    je lock_get
-;
-    pause
-    jmp lock_loop
-
-lock_get:
-    cli
-    inc al
-    xchg al,ds:[ebx].sig_lock
-    or al,al
-    je lock_done
-;
-    jmp lock_loop
-
-lock_done:
-    Endm
-
-UnlockWaitObj Macro
-    mov ds:[ebx].sig_lock,0
-    sti
-            Endm
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -901,7 +865,6 @@ create_signal   Proc far
     mov ax,SIGNAL_HANDLE
     mov cx,SIZE signal_handle_seg
     AllocateHandle
-    mov [edx].sig_lock,0
     mov [ebx].sig_wait_obj,0
     mov [ebx].sig_state,0
     mov [ebx].hh_sign,SIGNAL_HANDLE
@@ -1048,25 +1011,18 @@ set_signal   Proc far
     DerefHandle
     jc set_sig_done
 ;
-    LockWaitObj
+    cli
     mov ds:[ebx].sig_state,1
     mov ax,ds:[ebx].sig_wait_obj
     or ax,ax
-    jz set_sig_unlock
+    jz set_sig_done
 ;
     mov es,ax
-    inc es:wo_signalled
-    mov bx,es:wo_thread
+    SignalWait
     mov ds:[ebx].sig_wait_obj,0
-    UnlockWaitObj
-;
-    Signal
-    jmp set_sig_done
-
-set_sig_unlock:
-    UnlockWaitObj    
 
 set_sig_done:
+    sti
     pop ebx
     pop ax
     pop es
@@ -1149,7 +1105,7 @@ start_wait_for_signal   PROC far
     DerefHandle
     jc start_wait_for_done
 ;
-    LockWaitObj
+    cli
     mov ds:[ebx].sig_wait_obj,es
     mov al,ds:[ebx].sig_state
     or al,al
@@ -1157,16 +1113,11 @@ start_wait_for_signal   PROC far
 ;
     mov ds:[ebx].sig_state,0
     mov ds:[ebx].sig_wait_obj,0
-    inc es:wo_signalled
-    mov bx,es:wo_thread
-    UnlockWaitObj
-    Signal
-    jmp start_wait_for_done
+    sti
+    SignalWait
 
-start_wait_for_unlock:
-    UnlockWaitObj
-    
 start_wait_for_done:
+    sti
     pop ebx
     pop ax
     pop ds
@@ -1194,9 +1145,7 @@ stop_wait_for_signal    PROC far
     DerefHandle
     jc stop_wait_signal_done
 ;
-    LockWaitObj
     mov ds:[ebx].sig_wait_obj,0
-    UnlockWaitObj
 
 stop_wait_signal_done:
     pop ebx

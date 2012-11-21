@@ -431,7 +431,6 @@ switch_to_pm:
     mov sp,bp
 
 switch_to_active:
-    SimCli
     mov ax,ds
     call SetVideoObj
     mov ds:v_has_focus,1
@@ -443,7 +442,6 @@ switch_to_active:
     mov ecx,ds:v_app_size
     rep movs byte ptr es:[edi],es:[esi]
 ;    call ds:phys_update_proc
-    SimSti
 ;
     popad
     pop es

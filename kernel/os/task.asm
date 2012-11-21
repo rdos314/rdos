@@ -8224,7 +8224,6 @@ create_thread32 Endp
 terminate_thread_name   DB 'Terminate Thread',0
 
 terminate_thread:
-    SimSti
     GetThread
     mov ds,ax
     mov al,ds:p_parent_switch

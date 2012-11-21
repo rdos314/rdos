@@ -448,7 +448,6 @@ load_program    Proc near
     call CreateExecParam
     call CreateExecOptions
 ;       
-    SimSti
     SaveContext
     xor eax,eax
     push eax
@@ -586,7 +585,6 @@ dos_ext_exec16:
     push edx
     movzx eax,ax
     push eax
-    SimSti
     SaveContext
     xor eax,eax
     push eax
@@ -679,7 +677,6 @@ dos_ext_fail16:
 load_cmd_line   DB 0, 0Dh
 
 load_process:
-    SimSti
     mov ax,SEG data
     mov ds,ax
     mov es,bx
