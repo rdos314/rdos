@@ -3923,6 +3923,7 @@ load_long_regs:
     movzx rax,[edx].p_cs
     push rax
     push [edx].p_rip
+    push [edx].p_rdx
 ;    
     mov rax,[edx].p_rax
     mov rbx,[edx].p_rbx
@@ -3945,11 +3946,12 @@ load_long_regs:
     mov fs,[edx].p_fs
     mov gs,[edx].p_gs
 ;
+    pop rdx
     iretq
 
 test64:
-    mov ax,1
-    WaitMilliSec
+    mov ax,100
+;    WaitMicroSec
     jmp test64
 
 text_end:

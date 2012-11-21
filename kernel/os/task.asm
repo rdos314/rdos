@@ -1430,9 +1430,9 @@ load_long_mode:
 ;    
     mov eax,es:p_cr3
     SwitchToLongMode
-    lock or fs:ps_flags,PS_FLAG_LONG_MODE OR PS_FLAG_SKIP_FLUSH
+    lock or fs:ps_flags,PS_FLAG_LONG_MODE
     lock and fs:ps_flags, NOT PS_FLAG_FLUSH
-    jmp load_check_flush
+    jmp load_not_flush
 
 load_protected_mode:    
     test fs:ps_flags,PS_FLAG_LONG_MODE
@@ -1440,10 +1440,10 @@ load_protected_mode:
 ;
     mov eax,es:p_cr3
     SwitchToProtectedMode
-    lock or fs:ps_flags,PS_FLAG_SKIP_FLUSH
     lock and fs:ps_flags, NOT (PS_FLAG_FLUSH OR PS_FLAG_LONG_MODE)
 
 load_prot_switch_ok:    
+    mov bx,es:p_tss_sel
     and byte ptr ds:[bx+5],NOT 2
     ltr bx
 
@@ -1487,14 +1487,10 @@ load_reload_cr3_loop:
     add edi,esi
     loop load_reload_cr3_loop
 ;
-    test fs:ps_flags,PS_FLAG_SKIP_FLUSH
-    jnz load_cr3_ok
-;
     mov eax,es:p_cr3
     mov cr3,eax
 
 load_cr3_ok:
-    lock and fs:ps_flags,NOT PS_FLAG_SKIP_FLUSH
     mov ax,es
     mov ds,ax
 ;
@@ -3714,9 +3710,9 @@ lliSwap:
     mov ax,ds
     mov fs,ax
 ;
-;    push OFFSET lliDone
-;    call SaveLockedThread
-;    jmp ContinueCurrentThread
+    push OFFSET lliDone
+    call SaveLockedThread
+    jmp ContinueCurrentThread
 
 lliDone:
     retf32
