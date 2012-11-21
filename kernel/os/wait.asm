@@ -1148,22 +1148,25 @@ start_wait_for_signal   PROC far
     DerefHandle
     jc start_wait_for_done
 ;
-    cli
+    LockWaitObj
     mov ds:[ebx].sig_wait_obj,es
     mov al,ds:[ebx].sig_state
     or al,al
-    je start_wait_for_done
+    je start_wait_for_unlock
 ;
     mov ds:[ebx].sig_state,0
     mov ds:[ebx].sig_wait_obj,0
     inc es:wo_signalled
-    sti
+    UnlockWaitObj
 ;
     mov bx,es:wo_thread
     Signal
+    jmp start_wait_for_done
+
+start_wait_for_unlock:    
+    UnlockWaitObj
 
 start_wait_for_done:
-    sti
     pop ebx
     pop ax
     pop ds
