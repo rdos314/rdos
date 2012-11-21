@@ -902,6 +902,7 @@ create_signal   Proc far
     AllocateHandle
     mov [ebx].sig_wait_obj,0
     mov [ebx].sig_state,0
+    mov [ebx].sig_lock,0
     mov [ebx].hh_sign,SIGNAL_HANDLE
     mov bx,[ebx].hh_handle
 ;
@@ -1046,22 +1047,25 @@ set_signal   Proc far
     DerefHandle
     jc set_sig_done
 ;
-    cli
+    LockWaitObj
     mov ds:[ebx].sig_state,1
     mov ax,ds:[ebx].sig_wait_obj
     or ax,ax
-    jz set_sig_done
+    jz set_sig_unlock
 ;
     mov ds:[ebx].sig_wait_obj,0
     mov es,ax
     inc es:wo_signalled
-    sti
+    UnlockWaitObj
 ;        
     mov bx,es:wo_thread
     Signal
+    jmp set_sig_done
+
+set_sig_unlock:
+    UnlockWaitObj
 
 set_sig_done:
-    sti
     pop ebx
     pop ax
     pop es
