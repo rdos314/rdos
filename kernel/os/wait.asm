@@ -1194,7 +1194,9 @@ stop_wait_for_signal    PROC far
     DerefHandle
     jc stop_wait_signal_done
 ;
+    LockWaitObj
     mov ds:[ebx].sig_wait_obj,0
+    UnlockWaitObj
 
 stop_wait_signal_done:
     pop ebx
