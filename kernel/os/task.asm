@@ -776,7 +776,7 @@ notify_time_drift  Endp
 HandleGlobal    Proc near
     mov si,ds:global_prio_act
     cmp si,fs:ps_prio_act
-    jbe hgDone
+    jb hgDone
 ;
     test fs:ps_flags,PS_FLAG_MOVE
     jz hgTake
@@ -2052,7 +2052,7 @@ cctGlobalUnlock:
     jmp cctPop
         
 cctLocal:
-    call InsertCoreFirst
+    call InsertCoreBlock
     cmp di,fs:ps_prio_act
     jbe cctPop
 ;

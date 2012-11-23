@@ -720,7 +720,7 @@ dsLoop:
     push es
     pusha
 ;    
-    mov cx,10
+    mov cx,50
     mov bx,ds:kr_out_req
     IsUsbReqStarted
     jc dsWriteDo
@@ -2061,17 +2061,18 @@ init_thread Proc far
 
 init_thread_retry:
     mov ax,ds:kr_init_count
-;    inc ax
-    cmp ax,20
+    inc ax
+    cmp ax,50
     jb init_thread_do
 ;
-    call DoHardReset
-    xor ax,ax    
+    mov bx,ds:kr_in_handle
+    ResetUsbPipe
+    jmp init_done
 
 init_thread_do:
     mov ds:kr_init_count,ax
 ;        
-    mov ax,2500
+    mov ax,250
     WaitMilliSec
 ;    
     mov bl,6
@@ -2107,7 +2108,8 @@ init_thread_do:
 ;
     or al,al
     jnz init_thread_retry
-;
+
+init_done:
     lock and ds:kr_flag, NOT FLAG_INIT
     ret
 init_thread Endp
@@ -2197,7 +2199,7 @@ kr203_thread:
     StartTimer
 
 krRestart:
-    mov ax,1000
+    mov ax,250
     WaitMilliSec
 ;
     call OpenPipes

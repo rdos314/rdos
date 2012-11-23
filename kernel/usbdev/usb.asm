@@ -2150,7 +2150,7 @@ oupIn:
     or di,di
     jnz oupCreateHandle    
 ;
-    int 3
+;    int 3
     jmp oupFail
 
 oupOut:
@@ -2161,7 +2161,7 @@ oupOut:
     or di,di
     jnz oupCreateHandle    
 ;
-    int 3
+;    int 3
     jmp oupFail
 
 oupCreateHandle:    

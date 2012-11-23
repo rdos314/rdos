@@ -2425,7 +2425,6 @@ UpdatePort   Proc near
     test ax,ds:ohc_reset
     jz upNoReset
 ;
-    int 3
     not ax
     and ds:ohc_reset,ax
 ;        
@@ -2436,13 +2435,33 @@ UpdatePort   Proc near
     mov bx,ds:[di].usb_port_sel_arr
     or bx,bx
     jz upNoReset
+;
+    or al,10h
+    mov es:[si].HcRhPortStatus,eax
+;
+    push cx
+    push di
 ;    
-    mov eax,es:HcRhDescriptorA
-;    
+    xor cx,cx
+    xor di,di
 
+upDetAll:    
+    mov bx,ds:[di].usb_port_sel_arr
+    or bx,bx
+    jz upDetNext
+;    
     mov al,cl
     NotifyUsbDetach
-    jmp upAttach
+
+upDetNext:
+    add di,2
+    inc cx
+    cmp cx,ds:ohc_root_ports
+    jb upDetAll   
+;
+    pop di
+    pop cx
+    jmp upDone
     
 upNoReset:
     mov eax,es:[si].HcRhPortStatus
