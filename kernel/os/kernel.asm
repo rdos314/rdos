@@ -28,6 +28,7 @@
 INCLUDE ..\os.def
 INCLUDE ..\user.def
 INCLUDE ..\os.inc
+INCLUDE ..\user.inc
 INCLUDE protseg.def
 INCLUDE system.def
 INCLUDE port.def
