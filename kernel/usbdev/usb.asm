@@ -434,10 +434,10 @@ GetDescr    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClosePipe   Proc near
-    push es
     push ax
     push bx
     push cx
+    push es
 ;
     mov ax,fs:usbp_device_sel
     or ax,ax
@@ -464,10 +464,18 @@ cpConfNext:
 ;
     call ds:close_pipe_proc
 ;
+    pop ax
+    verr ax
+    jz close_pipe_es
+;
+    xor ax,ax
+    
+close_pipe_es:
+    mov es,ax
+;
     pop cx
     pop bx
     pop ax
-    pop es    
     ret
 ClosePipe   Endp
 

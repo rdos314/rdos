@@ -305,6 +305,7 @@ void RDOSAPI RdosResetRts(int Handle);
 int RDOSAPI RdosGetReceiveBufferSpace(int Handle);
 int RDOSAPI RdosGetSendBufferSpace(int Handle);
 void RDOSAPI RdosWaitForSendCompletedCom(int Handle);
+void RDOSAPI RdosResetCom(int Handle);
 
 int RDOSAPI RdosGetMaxPrinters();
 int RDOSAPI RdosOpenPrinter(char ID);
@@ -1275,6 +1276,10 @@ int RDOSAPI RdosHasTouch();
 
 #pragma aux RdosFlushCom = \
     CallGate_flush_com  \
+    parm [ebx];
+
+#pragma aux RdosResetCom = \
+    CallGate_reset_com  \
     parm [ebx];
 
 #pragma aux RdosReadCom = \
@@ -3619,6 +3624,10 @@ int RDOSAPI RdosHasTouch();
 
 #pragma aux RdosFlushCom = \
     CallGate_flush_com  \
+    parm [ebx];
+
+#pragma aux RdosResetCom = \
+    CallGate_reset_com  \
     parm [ebx];
 
 #pragma aux RdosReadCom = \

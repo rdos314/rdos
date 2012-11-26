@@ -88,6 +88,7 @@ ups_data_bits       DB ?
 ups_stop_bits       DB ?
 ups_parity      DB ?
 ups_control     DB ?
+ups_reinit      DB ?
 
 ups_pl_control      DB ?
 ups_pl_buf      DB 7 DUP(?)
@@ -476,7 +477,51 @@ gbdCall:
     pop bx
     ret
 GetBaudDivisor  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CheckPipes
+;
+;           DESCRIPTION:    Check pipe and reinit if required
+;
+;           PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+CheckPipes      PROC near
+    mov al,ds:ups_reinit
+    or al,al
+    jz cpDone
+;    
+    push ds
+    pushad
+;    
+    mov bx,ds:ups_control_wait
+    CloseWait
+;
+    mov bx,ds:ups_controller
+    mov ax,ds:ups_device
+    xor dl,dl
+    OpenUsbPipe
+    mov ds:ups_control_pipe,bx
+;
+    CreateWait
+    mov ds:ups_control_wait,bx
+;
+    mov ax,ds:ups_control_pipe
+    mov bx,ds:ups_control_wait
+    movzx ecx,bx
+    AddWaitForUsbPipe
+;
+    mov ds:ups_reinit,0 
+;
+    popad
+    pop ds
+
+cpDone:    
+    ret
+CheckPipes Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -820,6 +865,7 @@ open_com_ftdi   Proc far
     mov ds:ups_data_bits,ah
     mov ds:ups_stop_bits,bl
     mov ds:ups_parity,bh
+    mov ds:ups_reinit,0
 ;    
     mov ax,es:uds_device_type
     mov ds:ups_device_type,ax
@@ -940,6 +986,8 @@ enable_cts_ftdi PROC far
     push es
     pushad
 ;
+    call CheckPipes
+;
     or ds:ups_control,CONTROL_CTS
     mov bx,ds:ups_control_pipe
     mov dx,ds:ups_index
@@ -995,6 +1043,8 @@ disable_cts_ftdi    PROC far
     push es
     pushad
 ;
+    call CheckPipes
+;
     and ds:ups_control,NOT CONTROL_CTS
     mov bx,ds:ups_control_pipe
     mov dx,ds:ups_index
@@ -1049,6 +1099,8 @@ set_dtr_ftdi    Proc far
     push es
     pushad
 ;
+    call CheckPipes
+;    
     or ds:ups_control,CONTROL_DTR
     mov bx,ds:ups_control_pipe
     mov dx,ds:ups_index
@@ -1102,6 +1154,8 @@ set_dtr_ftdi    Endp
 reset_dtr_ftdi  Proc far
     push es
     pushad
+;
+    call CheckPipes
 ;
     and ds:ups_control,NOT CONTROL_DTR
     mov bx,ds:ups_control_pipe
@@ -1157,6 +1211,8 @@ set_rts_ftdi    Proc far
     push es
     pushad
 ;
+    call CheckPipes
+;
     or ds:ups_control,CONTROL_RTS
     mov bx,ds:ups_control_pipe
     mov dx,ds:ups_index
@@ -1210,6 +1266,8 @@ set_rts_ftdi    Endp
 reset_rts_ftdi  Proc far
     push es
     pushad
+;
+    call CheckPipes
 ;
     and ds:ups_control,NOT CONTROL_RTS
     mov bx,ds:ups_control_pipe
@@ -1323,6 +1381,8 @@ Fish    Endp
 ReadLineState   Proc near
     push es
     pushad
+;
+    call CheckPipes
 ;
     mov bx,ds:ups_control_pipe
 ;    
@@ -1440,6 +1500,8 @@ WriteLineState  Proc near
     push es
     pushad
 ;
+    call CheckPipes
+;
     mov bx,ds:ups_control_pipe
 ;    
     push ax
@@ -1501,6 +1563,8 @@ WriteLineState    Endp
 WriteControl    Proc near
     push es
     pushad
+;
+    call CheckPipes
 ;
     mov bx,ds:ups_control_pipe
 ;    
@@ -1749,6 +1813,7 @@ open_com_pl     Proc far
     mov ds:ups_data_bits,ah
     mov ds:ups_stop_bits,bl
     mov ds:ups_parity,bh
+    mov ds:ups_reinit,0
     mov ds:ups_divisor,ecx
     mov ds:ups_control,CONTROL_DTR OR CONTROL_RTS
 ;
@@ -1864,6 +1929,8 @@ close_com_pl    Endp
 enable_cts_pl   PROC far
     push es
     pushad
+;
+    call CheckPipes
 ;
     or ds:ups_control,CONTROL_CTS
     mov bx,ds:ups_control_pipe
@@ -2293,6 +2360,8 @@ SendCtsMct      Proc near
     push edx
     push edi
 ;
+    call CheckPipes
+;
     push bp   
     xor ax,ax
     test ds:ups_control,CONTROL_CTS
@@ -2373,6 +2442,8 @@ SetLineControl  Proc near
     push cx
     push edx
     push edi
+;
+    call CheckPipes
 ;
     push bp  
 ;    
@@ -2475,6 +2546,8 @@ WriteModemControl       Proc near
     push cx
     push edx
     push edi
+;
+    call CheckPipes
 ;
     push bp   
     mov ax,8
@@ -2597,6 +2670,7 @@ open_com_mct    Proc far
     mov ds:ups_data_bits,ah
     mov ds:ups_stop_bits,bl
     mov ds:ups_parity,bh
+    mov ds:ups_reinit,0
 ;
     mov ax,es:uds_device_type
     mov ds:ups_device_type,ax
@@ -2847,6 +2921,30 @@ disable_auto_rts Endp
 flush_com       PROC far
     ret
 flush_com Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ResetPort
+;
+;           DESCRIPTION:    Reset com
+;
+;           PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_port       PROC far
+    push ax
+    push bx
+    call CheckPipes
+;
+    mov bx,ds:ups_control_pipe
+    ResetUsbPipe    
+;
+    pop bx
+    pop ax
+    ret
+reset_port Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2909,6 +3007,7 @@ fpt08 DW OFFSET enable_auto_rts,    SEG code
 fpt09 DW OFFSET disable_auto_rts,       SEG code
 fpt10 DW OFFSET flush_com,          SEG code
 fpt11 DW OFFSET start_send,         SEG code
+fpt12 DW OFFSET reset_port,         SEG code
 
 CreatePortFtdi  Proc far
     pushad
@@ -2922,7 +3021,7 @@ CreatePortFtdi  Proc far
 ;
     mov si,OFFSET ftdi_port_tab
     xor di,di
-    mov cx,12
+    mov cx,13
     rep movs dword ptr es:[di],cs:[si]
 ;
     movzx ax,ds:uds_interface
@@ -2961,6 +3060,7 @@ ppt08 DW OFFSET enable_auto_rts,     SEG code
 ppt09 DW OFFSET disable_auto_rts,    SEG code
 ppt10 DW OFFSET flush_com,       SEG code
 ppt11 DW OFFSET start_send,      SEG code
+ppt12 DW OFFSET reset_port,      SEG code
 
 CreatePortPl2303    Proc far
     pushad
@@ -2974,7 +3074,7 @@ CreatePortPl2303    Proc far
 ;
     mov si,OFFSET pl2303_port_tab
     xor di,di
-    mov cx,12
+    mov cx,13
     rep movs dword ptr es:[di],cs:[si]
 ;
     movzx ax,ds:uds_interface
@@ -3013,6 +3113,7 @@ mct08 DW OFFSET enable_auto_rts,    SEG code
 mct09 DW OFFSET disable_auto_rts,       SEG code
 mct10 DW OFFSET flush_com,          SEG code
 mct11 DW OFFSET start_send,         SEG code
+mct12 DW OFFSET reset_port,         SEG code
 
 CreatePortMct   Proc far
     pushad
@@ -3026,7 +3127,7 @@ CreatePortMct   Proc far
 ;
     mov si,OFFSET mct_port_tab
     xor di,di
-    mov cx,12
+    mov cx,13
     rep movs dword ptr es:[di],cs:[si]
 ;
     movzx ax,ds:uds_interface
@@ -3209,6 +3310,9 @@ ReInit    Proc near
     mov es,ax
     mov ds,es:uds_port_sel
 ;
+    push ds:ups_control_pipe
+    push ds:ups_control_wait    
+;
     mov bx,es:cd_controller
     mov ax,es:cd_device
     xor dl,dl
@@ -3227,6 +3331,16 @@ ReInit    Proc near
     movzx di,ch
     add di,di
     call word ptr cs:[di].reinit_port_tab    
+;    
+    mov bx,ds:ups_control_wait
+    CloseWait
+;
+    mov bx,ds:ups_control_pipe
+    CloseUsbPipe    
+    mov ds:ups_reinit,1
+;
+    pop ds:ups_control_wait
+    pop ds:ups_control_pipe
 ;
     pop di
     pop cx
@@ -4429,13 +4543,6 @@ udCheckLoop:
 ;
     push es
     mov es,ax
-    mov bx,es:ups_control_wait
-    CloseWait
-    mov es:ups_control_wait,0
-;    
-    mov bx,es:ups_control_pipe
-    CloseUsbPipe    
-    mov es:ups_control_pipe,0
 ;
     mov es:send_count,0
     mov bx,es:send_wait

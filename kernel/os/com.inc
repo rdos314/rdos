@@ -95,6 +95,9 @@ flush_com_proc   DD ?
 ;   IN  DS      Com port selector
 start_send_com_proc   DD ?
 
+;   IN  DS      Com port selector
+reset_com_proc   DD ?
+
 send_count		DW ?
 rec_count	  	DW ?
 

@@ -191,6 +191,7 @@
 #define usergate_write_com 176
 #define usergate_set_dtr 177
 #define usergate_reset_dtr 178
+#define usergate_reset_com 179
 
 #define usergate_set_cursor_position 182
 #define usergate_get_cursor_position 183
@@ -810,6 +811,7 @@
 #define CallGate_write_com 0x67 0x9a 176 0 0 0 3 0
 #define CallGate_set_dtr 0x67 0x9a 177 0 0 0 3 0
 #define CallGate_reset_dtr 0x67 0x9a 178 0 0 0 3 0
+#define CallGate_reset_com 0x67 0x9a 179 0 0 0 3 0
 
 #define CallGate_set_cursor_position 0x67 0x9a 182 0 0 0 3 0
 #define CallGate_get_cursor_position 0x67 0x9a 183 0 0 0 3 0
@@ -1427,6 +1429,7 @@
 #define CallGate_write_com 0x3e 0x67 0x9a 176 0 0 0 3 0
 #define CallGate_set_dtr 0x3e 0x67 0x9a 177 0 0 0 3 0
 #define CallGate_reset_dtr 0x3e 0x67 0x9a 178 0 0 0 3 0
+#define CallGate_reset_com 0x3e 0x67 0x9a 179 0 0 0 3 0
 
 #define CallGate_set_cursor_position 0x3e 0x67 0x9a 182 0 0 0 3 0
 #define CallGate_get_cursor_position 0x3e 0x67 0x9a 183 0 0 0 3 0

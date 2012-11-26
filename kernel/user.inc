@@ -2028,6 +2028,11 @@ FlushCom       MACRO
 						ENDM
 
 ;	IN  BX		port handle
+ResetCom       MACRO
+	UserGate reset_com_nr
+						ENDM
+
+;	IN  BX		port handle
 ;	OUT AX		data read or -1
 ReadCom       MACRO
 	UserGate read_com_nr

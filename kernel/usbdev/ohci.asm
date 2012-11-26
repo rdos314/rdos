@@ -2435,32 +2435,35 @@ UpdatePort   Proc near
     mov bx,ds:[di].usb_port_sel_arr
     or bx,bx
     jz upNoReset
-;
-    or al,10h
-    mov es:[si].HcRhPortStatus,eax
-;
-    push cx
-    push di
 ;    
-    xor cx,cx
-    xor di,di
+    mov eax,10h
+    mov es:[si].HcRhPortStatus,eax
 
-upDetAll:    
-    mov bx,ds:[di].usb_port_sel_arr
-    or bx,bx
-    jz upDetNext
+upWaitRes:        
+    mov ax,5
+    WaitMilliSec
+;
+    mov eax,es:[si].HcRhPortStatus
+    test al,1
+    jz upDetach
+;
+    test al,10h
+    jnz upWaitRes
 ;    
     mov al,cl
     NotifyUsbDetach
-
-upDetNext:
-    add di,2
-    inc cx
-    cmp cx,ds:ohc_root_ports
-    jb upDetAll   
-;
-    pop di
-    pop cx
+;    
+    mov eax,2
+    mov es:[si].HcRhPortStatus,eax
+;    
+    mov ax,200
+    WaitMilliSec
+;    
+    mov eax,es:[si].HcRhPortStatus
+    shr ah,1
+    and ah,1
+    mov al,cl
+    NotifyUsbAttach
     jmp upDone
     
 upNoReset:

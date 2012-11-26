@@ -74,6 +74,7 @@ public:
 	virtual int GetStopBits() const;
 	virtual int GetSendBufferSpace();
 	virtual int GetReceiveBufferSpace();
+	virtual void Reset();
 	virtual void Clear();
 	virtual void ResetDtr();
     virtual void SetDtr();

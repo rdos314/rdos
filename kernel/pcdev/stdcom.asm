@@ -702,7 +702,21 @@ flush_com   PROC far
     pop ax
     ret
 flush_com Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   
+;
+;       NAME:       ResetPort
+;
+;       DESCRIPTION:    Reset com
+;
+;       PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+reset_port   PROC far
+    ret
+reset_port  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -867,6 +881,21 @@ reset_rts   Proc far
     ret
 reset_rts   Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       reset_com
+;
+;       description:    Reset com
+;
+;       PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_com   Proc far
+    ret
+reset_com   Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -892,6 +921,7 @@ pt08 DW OFFSET enable_auto_rts,     SEG code
 pt09 DW OFFSET disable_auto_rts,    SEG code
 pt10 DW OFFSET flush_com,       SEG code
 pt11 DW OFFSET start_send,      SEG code
+pt12 DW OFFSET reset_port,      SEG code
 
 create_port Proc far
     push eax
@@ -908,7 +938,7 @@ create_port Proc far
 ;
     mov si,OFFSET port_tab
     xor di,di
-    mov cx,12
+    mov cx,13
     rep movs dword ptr es:[di],cs:[si]
 ;
     mov ax,ds:pds_base

@@ -191,6 +191,7 @@ read_com_nr					= 175
 write_com_nr				= 176
 set_dtr_nr					= 177
 reset_dtr_nr				= 178
+reset_com_nr                = 179
 
 set_cursor_position_nr		= 182
 get_cursor_position_nr		= 183

@@ -484,6 +484,38 @@ flush_com_done:
     pop ds
     retf32
 flush_com Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ResetCom
+;
+;           DESCRIPTION:    Reset com
+;
+;           PARAMETERS:     BX      Port handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_com_name DB 'Reset Com',0
+
+reset_com       PROC far
+    push ds
+    push ax
+    push ebx
+;
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc reset_com_done
+;
+    mov ds,[ebx].port_sel
+    call ds:reset_com_proc
+
+reset_com_done:
+    pop ebx
+    pop ax
+    pop ds
+    retf32
+reset_com Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1403,6 +1435,12 @@ init    Proc far
     mov edi,OFFSET flush_com_name
     xor dx,dx
     mov ax,flush_com_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET reset_com
+    mov edi,OFFSET reset_com_name
+    xor dx,dx
+    mov ax,reset_com_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET read_com

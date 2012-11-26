@@ -763,6 +763,23 @@ int TSerialDevice::GetReceiveBufferSpace()
 
 /*##########################################################################
 #
+#   Name       : TSerialDevice::Reset
+#
+#   Purpose....: Reset port
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSerialDevice::Reset()
+{
+    if (FHandle)
+    	RdosResetCom(FHandle);
+}
+
+/*##########################################################################
+#
 #   Name       : TSerialDevice::EnableCts
 #
 #   Purpose....: Enable CTS signal
