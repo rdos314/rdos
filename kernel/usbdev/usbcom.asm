@@ -490,6 +490,8 @@ GetBaudDivisor  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckPipes      PROC near
+    ret
+;    
     mov al,ds:ups_reinit
     or al,al
     jz cpDone
@@ -2934,15 +2936,24 @@ flush_com Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 reset_port       PROC far
+    push ds
+    push es
     push ax
-    push bx
-    call CheckPipes
+    push cx
+    push di
 ;
-    mov bx,ds:ups_control_pipe
-    ResetUsbPipe    
+    mov bx,ds:ups_controller
+    mov ax,ds:ups_device
+    xor dl,dl
+    OpenUsbPipe
+    ResetUsbPipe
+    CloseUsbPipe
 ;
-    pop bx
+    pop di
+    pop cx
     pop ax
+    pop es
+    pop ds
     ret
 reset_port Endp
 
@@ -3310,9 +3321,6 @@ ReInit    Proc near
     mov es,ax
     mov ds,es:uds_port_sel
 ;
-    push ds:ups_control_pipe
-    push ds:ups_control_wait    
-;
     mov bx,es:cd_controller
     mov ax,es:cd_device
     xor dl,dl
@@ -3331,16 +3339,6 @@ ReInit    Proc near
     movzx di,ch
     add di,di
     call word ptr cs:[di].reinit_port_tab    
-;    
-    mov bx,ds:ups_control_wait
-    CloseWait
-;
-    mov bx,ds:ups_control_pipe
-    CloseUsbPipe    
-    mov ds:ups_reinit,1
-;
-    pop ds:ups_control_wait
-    pop ds:ups_control_pipe
 ;
     pop di
     pop cx
@@ -4543,6 +4541,13 @@ udCheckLoop:
 ;
     push es
     mov es,ax
+    mov bx,es:ups_control_wait
+    CloseWait
+    mov es:ups_control_wait,0
+;    
+    mov bx,es:ups_control_pipe
+    CloseUsbPipe    
+    mov es:ups_control_pipe,0
 ;
     mov es:send_count,0
     mov bx,es:send_wait
