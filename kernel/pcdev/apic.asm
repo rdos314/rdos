@@ -3661,6 +3661,15 @@ test_thread_name    DB 'APIC Test',0
 
 test_thread:
     int 3
+    mov eax,3000h
+    AllocateBigLinear
+    GetPageEntry
+    xor ebx,ebx
+    mov eax,4
+    SetPageEntry
+    mov ax,flat_sel
+    mov ds,ax
+    mov [edx],ax
     
 init_task   Proc far
     push ds

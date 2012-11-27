@@ -2611,8 +2611,15 @@ create_core    Proc far
     rep stosb
     mov es:ps_sel,es
 ;
-    mov eax,1000h
+    mov eax,3000h
     AllocateBigLinear
+    xor ebx,ebx
+    mov eax,4
+    SetPageEntry
+    add edx,2000h
+    SetPageEntry
+    sub edx,1000h
+;    
     mov ds:[edx],dx
     add edx,1000h
     mov es:ps_stack,edx

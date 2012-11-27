@@ -275,6 +275,39 @@ page_fault_system_retry:
     ret
 page_fault_system       ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           page_fault_global_page
+;
+;           DESCRIPTION:    pagefault in global page memory
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+page_fault_global_page       PROC near
+    mov ax,[ebp].trap_eflags
+    and ax,NOT 4500h
+    push ax
+    mov edx,cr2
+    popf
+;    
+    call cs:get_page_entry_proc
+    test al,1
+    jnz page_fault_global_page_retry
+;
+    cmp eax,2
+    jnz page_fault_error
+;
+    call local_allocate_physical
+    mov al,07h
+    call cs:set_page_entry_proc
+
+page_fault_global_page_retry:
+    ret
+page_fault_global_page       ENDP
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -301,6 +334,8 @@ page_fault      Proc near
     jnc page_fault_global
 ;
     cmp eax,handle_linear
+    jc page_fault_global_page
+;    
     je page_fault_user
 ;
     cmp eax,io_focus_linear
