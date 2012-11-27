@@ -2306,7 +2306,7 @@ void GetPtc()
 
     Buffer.Length = 0x4000;
     Buffer.Pointer = TempResourceBuf;
-    Status = AcpiEvaluateObject(ProcessorArr[3]->Handle, "_PTC", NULL, &Buffer);
+    Status = AcpiEvaluateObject(ProcessorArr[0]->Handle, "_PTC", NULL, &Buffer);
 
     if (Status == AE_OK)
     {
@@ -2595,11 +2595,15 @@ void Load()
         AcpiWalkNamespace(ACPI_TYPE_ANY, ACPI_ROOT_OBJECT, 10, AddAcpiObject, 0, 0, 0);
         GetHardware();        
         GetPciDevices();
-        GetIrqRouting();        
-        GetPct();
-        GetPtc();
-        GetPss();
-//        GetTss();
+        GetIrqRouting();
+
+        if (ProcessorArr[0])
+        {        
+            GetPct();
+            GetPtc();
+            GetPss();
+//          GetTss();
+        }
     }
 }
 
