@@ -1261,8 +1261,6 @@ SplitLine       Proc near
 ;
     push cx
     mov cx,dx
-;
-    DrawStart cx
 
 split_left_loop:
     mov bx,[bp].curr_x
@@ -1272,15 +1270,16 @@ split_left_loop:
     cmp bx,ds:v_x_max
     jg split_left_next
 ;
+    DrawStart 1
     mov eax,ds:v_color
     call ds:set_proc
-
+    call DrawDone
+    
 split_left_next:
     inc word ptr [bp].curr_x
     add edi,4
     loop split_left_loop
 ;
-    call DrawDone
     pop cx
     add [bp].curr_x,cx
 ;
@@ -1289,7 +1288,6 @@ split_left_next:
     add edi,eax
 ;
     mov cx,dx
-    DrawStart cx
 
 split_right_loop:
     mov bx,[bp].curr_x
@@ -1299,15 +1297,15 @@ split_right_loop:
     cmp bx,ds:v_x_max
     jg split_right_next
 ;
+    DrawStart 1
     mov eax,ds:v_color
     call ds:set_proc
+    call DrawDone
 
 split_right_next:
     inc word ptr [bp].curr_x
     add edi,4
     loop split_right_loop
-;    
-    call DrawDone
 
 split_line_done:
     pop edi
