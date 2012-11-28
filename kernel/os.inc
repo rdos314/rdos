@@ -1096,8 +1096,12 @@ RequestSpinlock MACRO spinlock
     local rs_lock
     local rs_get
     local rs_done
+    local rs_pause
 
     push ax
+    push cx
+;
+    xor cx,cx
 
 rs_lock:    
     mov ax,spinlock.sl_value
@@ -1105,6 +1109,12 @@ rs_lock:
     je rs_get
 ;
     sti
+    add cx,1
+    jnc rs_pause
+;
+    CrashGate
+
+rs_pause:    
     pause
     jmp rs_lock
 
@@ -1118,6 +1128,7 @@ rs_get:
     jmp rs_lock
 
 rs_done:
+    pop cx
     pop ax
     ENDM
 
