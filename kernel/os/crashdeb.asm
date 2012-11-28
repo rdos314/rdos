@@ -72,6 +72,7 @@ code    SEGMENT byte public use16 'CODE'
     extrn GetCrashKey:near
 
     extrn InitCrashShow:near
+    extrn SetViewType:near
     extrn ShowCrashCore:near
 
     extrn LocalOsGate:near
@@ -1256,6 +1257,13 @@ ftFE   DW OFFSET no_func
 ftFF   DW OFFSET no_func
 
 DoFunc   PROC near
+    mov bx,gs
+    or bx,bx
+    jnz DoFuncDo
+;
+    ret
+
+DoFuncDo:    
     movzx bx,al
     add bx,bx
     call word ptr cs:[bx].func_tab
@@ -1714,7 +1722,21 @@ handle_loop:
 ;
     cmp al,28h
     je down_arrow
-;        
+;
+    cmp al,'T'
+    jne not_thread
+;
+    call SetViewType    
+    jmp handle_func
+    
+not_thread:       
+    cmp al,'R'
+    jne not_regs
+;
+    call SetViewType
+    jmp handle_func
+
+not_regs:
     cmp al,'N'
     jne handle_func
 ;
@@ -1723,13 +1745,28 @@ handle_loop:
     GetCoreNumber
     jnc handle_next_set
 ;
+    mov dx,word ptr gs:ps_flags
+    mov ds:curr_num,-1
     xor ax,ax
-    GetCoreNumber
+    mov gs,ax
+    test dx,PS_FLAG_LONG_MODE
+    jz handle_func
+;
+    mov eax,gs:cs_cr3
+    SwitchToProtectedMode
+    jmp handle_func
         
 handle_next_set:
     push dx
     mov ds:curr_num,ax
+    xor dx,dx
+    mov ax,gs
+    or ax,ax
+    jz handle_next_first
+;
     mov dx,word ptr gs:ps_flags
+
+handle_next_first:    
     mov ax,fs
     mov gs,ax
     xor ax,ax

@@ -43,6 +43,8 @@ op_in_text      DB 100 DUP(?)
 op_text_end     DW ?
 op_size         DW ?
 
+view_type       DB ?
+
 curr_pos        DW ?
 
 data    ENDS
@@ -2113,6 +2115,197 @@ WriteCpuReg64     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           WriteOneThread
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     ES      Thread
+;                           AX      Prio
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteOneThread   PROC near
+    push ax
+    push ebx
+    push cx
+    push dx
+    push di
+;    
+    call WriteHexWord
+;
+    mov al,':'
+    call ShowChar
+;
+    mov al,' '
+    call ShowChar
+;            
+    mov di,OFFSET thread_name
+    mov cx,32
+    call ShowSizeString
+;
+    mov al,' '
+    call ShowChar
+;    
+    mov dx,es:p_cs
+    mov ebx,dword ptr es:p_rip
+    call WriteHexPtr32
+    call NewLine
+;
+    pop di
+    pop dx
+    pop cx
+    pop ebx
+    pop ax
+    ret
+WriteOneThread Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteCoreThreads
+;
+;           DESCRIPTION:    Write all threads active on core
+;
+;           PARAMETERS:     GS      Core
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteCoreThreads   PROC near
+    push es
+    mov ax,cs
+    mov es,ax
+;
+    call WriteCore
+    call WriteThread
+    call NewLine    
+;
+    mov ax,gs:ps_null_thread
+    mov es,ax
+    xor ax,ax
+    call WriteOneThread
+;
+    mov si,OFFSET ps_ptab
+    mov cx,256
+    xor ax,ax
+
+wctLoop:
+    mov bx,gs:[si]
+    or bx,bx
+    jz wctNext
+;
+    mov es,bx
+    call WriteOneThread
+
+wctListLoop:    
+    mov dx,es:p_next
+    cmp bx,dx
+    je wctNext
+;
+    mov es,dx
+    call WriteOneThread
+    jmp wctListLoop    
+
+wctNext:
+    inc ax
+    add si,2
+    loop wctLoop
+;
+    mov ax,gs:ps_curr_thread
+    or ax,ax
+    jz wctDone
+;  
+    cmp ax,gs:ps_null_thread
+    je wctDone
+;      
+    mov es,ax
+    mov ax,es:p_prio
+    shr ax,1
+    call WriteOneThread
+
+wctDone:
+    pop es
+    ret
+WriteCoreThreads    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteGlobalThreads
+;
+;           DESCRIPTION:    Write global threads
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+global_msg DB 'Global threads', 0
+
+WriteGlobalThreads   PROC near
+    push es
+    mov ax,cs
+    mov es,ax
+    mov ax,task_data_sel
+    mov ds,ax
+;
+    mov di,OFFSET global_msg
+    call ShowAsciiz
+    call NewLine    
+;
+    xor si,si
+    mov cx,256
+    xor ax,ax
+
+wgtLoop:
+    mov bx,[si]
+    or bx,bx
+    jz wgtNext
+;
+    mov es,bx
+    call WriteOneThread
+
+wgtListLoop:    
+    mov dx,es:p_next
+    cmp bx,dx
+    je wgtNext
+;
+    mov es,dx
+    call WriteOneThread
+    jmp wgtListLoop    
+
+wgtNext:
+    inc ax
+    add si,2
+    loop wgtLoop
+;
+    pop es
+    ret
+WriteGlobalThreads    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetViewType
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     AL      View type
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public SetViewType
+    
+SetViewType    Proc near
+    push ds
+    push bx
+    mov bx,SEG data
+    mov ds,bx
+    mov ds:view_type,al
+    pop bx
+    pop ds
+    ret
+SetViewType Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ShowCrashCore
 ;
 ;           DESCRIPTION:    
@@ -2126,6 +2319,23 @@ ShowCrashCore    Proc near
     mov ax,SEG data
     mov ds,ax
     call Clear
+;    
+    mov ax,gs
+    or ax,ax
+    jnz sccCore
+;
+    call WriteGlobalThreads
+    jmp sccDone    
+
+sccCore:    
+    mov al,ds:view_type
+    cmp al,'R'
+    je sccRegs
+;
+    call WriteCoreThreads
+    jmp sccDone
+        
+sccRegs:        
     test gs:ps_flags,PS_FLAG_LONG_MODE
     jz scc32
 
@@ -2158,6 +2368,7 @@ InitCrashShow    Proc near
     mov ax,SEG data
     mov ds,ax
     mov ds:curr_pos,0
+    mov ds:view_type,'R'
 ;        
     pop ds
     ret
