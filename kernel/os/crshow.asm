@@ -851,6 +851,8 @@ WriteSelReg   PROC near
     jz write_sel_gdt
 
 write_sel_ldt:
+    jmp write_sel_done      ; doesn't work yet
+
     mov si,gs:cs_ldt
     or si,si
     jz write_sel_done

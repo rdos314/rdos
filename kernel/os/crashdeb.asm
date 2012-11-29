@@ -1791,6 +1791,11 @@ handle_mode_ok:
     pop dx
 
 handle_func:
+    mov edx,0B8000h
+    xor ebx,ebx
+    mov eax,0B8007h
+    SetPageEntry
+;
     call HideMarker
     call DoFunc
     call ShowCrashCore
