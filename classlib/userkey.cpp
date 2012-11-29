@@ -52,7 +52,7 @@ TUserKeyboardDevice::TUserKeyboardDevice(const char *IniSection, int Enabled)
 	: TKeyboardDevice(IniSection)
 {
 	FCurrentSize = 0;
-	FBuffer = (int *)new char[2 * BUFFER_SIZE];
+	FBuffer = new int[BUFFER_SIZE + 1];
 	FInPtr = FBuffer;
 	FOutPtr = FBuffer;
 }
@@ -71,7 +71,7 @@ TUserKeyboardDevice::TUserKeyboardDevice(const char *IniSection, int Enabled)
 TUserKeyboardDevice::TUserKeyboardDevice(int Enabled)
 {
 	FCurrentSize = 0;
-	FBuffer = (int *)new char[2 * BUFFER_SIZE];
+	FBuffer = new int[BUFFER_SIZE + 1];
 	FInPtr = FBuffer;
 	FOutPtr = FBuffer;
 }

@@ -2075,6 +2075,16 @@ void TDebug::DoTrace()
 ##########################################################################*/
 void TDebug::DoGo()
 {
+    TDebugThread *thread = ThreadList;
+
+    while (thread)
+    {
+        if (thread != CurrentThread)
+            thread->ActivateBreaks(0, WatchList);
+
+        thread = thread->Next;
+    }
+
     if ((CurrentThread->Cs & 0x3) == 0x3)
     {
         CurrentThread->SetupGo();
@@ -2514,6 +2524,7 @@ void TDebug::SignalNewData()
     int ExitCode;
     int handle;
     TDebugThread *newt;
+    TDebugThread *t;
 
     RdosWaitMilli(5);
 
@@ -2589,6 +2600,15 @@ void TDebug::SignalNewData()
 
     if (debtype == EVENT_EXCEPTION || debtype == EVENT_KERNEL)
     {
+        t = ThreadList;
+
+        while (t)
+        {
+            if (t != CurrentThread)
+                t->DeactivateBreaks(0, WatchList);
+            t = t->Next;
+        }
+
         if (CurrentThread)
         {
             CurrentThread->DeactivateBreaks(BreakList, WatchList);

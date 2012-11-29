@@ -140,11 +140,15 @@ TString::~TString()
 ##########################################################################*/
 void TString::AllocCopy(TString& dest, int CopyLen, int CopyIndex, int ExtraLen) const
 {
-        int NewLen = CopyLen + ExtraLen;
+    int NewLen = CopyLen + ExtraLen;
 
-        dest.AllocBuffer(NewLen + 1);
-        memcpy(dest.FBuf, FBuf+CopyIndex, CopyLen);
-        *(dest.FBuf+CopyLen) = 0;
+    dest.FSection.Enter();
+    
+    dest.AllocBuffer(NewLen + 1);
+    memcpy(dest.FBuf, FBuf+CopyIndex, CopyLen);
+    *(dest.FBuf+CopyLen) = 0;
+
+    dest.FSection.Leave();
 }
 
 /*##########################################################################
@@ -163,12 +167,16 @@ void TString::AllocCopy(TString& dest, int CopyLen, int CopyIndex, int ExtraLen)
 ##########################################################################*/
 void TString::ConcatCopy(const char *str1, int len1, const char *str2, int len2)
 {
-        int NewLen = len1 + len2;
+    int NewLen = len1 + len2;
 
-        AllocBuffer(NewLen + 1);
-        memcpy(FBuf, str1, len1);
-        memcpy(FBuf+len1, str2, len2);
-        *(FBuf+len1+len2) = 0;
+    FSection.Enter();
+    
+    AllocBuffer(NewLen + 1);
+    memcpy(FBuf, str1, len1);
+    memcpy(FBuf+len1, str2, len2);
+    *(FBuf+len1+len2) = 0;
+
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -185,6 +193,8 @@ void TString::ConcatCopy(const char *str1, int len1, const char *str2, int len2)
 ##########################################################################*/
 void TString::ConcatInPlace(const char *str, int size)
 {
+    FSection.Enter();
+
     if (FData == 0)
         AssignCopy(str, size + 1);
     else 
@@ -205,6 +215,7 @@ void TString::ConcatInPlace(const char *str, int size)
                 }
         }
     }
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -221,7 +232,7 @@ void TString::ConcatInPlace(const char *str, int size)
 const TString &TString::operator=(const TString &src)
 {
     Load(src);
-        return *this;
+    return *this;
 }
 
 /*##########################################################################
@@ -237,7 +248,13 @@ const TString &TString::operator=(const TString &src)
 ##########################################################################*/
 int TString::Compare(const TString &str) const
 {
-    return strcmp(FBuf, str.FBuf);
+    int res;
+
+    FSection.Enter();
+    res = strcmp(FBuf, str.FBuf);
+    FSection.Leave();
+
+    return res;
 }
 
 /*##########################################################################
@@ -253,8 +270,8 @@ int TString::Compare(const TString &str) const
 ##########################################################################*/
 const TString &TString::operator=(const char *str)
 {
-        AssignCopy(str, strlen(str) + 1);
-        return *this;
+    AssignCopy(str, strlen(str) + 1);
+    return *this;
 }
 
 /*##########################################################################
@@ -270,10 +287,10 @@ const TString &TString::operator=(const char *str)
 ##########################################################################*/
 int TString::operator==(const TString &str) const
 {
-        if (Compare(str) == 0)
-                return TRUE;
-        else
-                return FALSE;
+    if (Compare(str) == 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -289,10 +306,10 @@ int TString::operator==(const TString &str) const
 ##########################################################################*/
 int TString::operator!=(const TString &str) const
 {
-        if (Compare(str) == 0)
-                return FALSE;
-        else
-                return TRUE;
+    if (Compare(str) == 0)
+        return FALSE;
+    else
+        return TRUE;
 }
 
 /*##########################################################################
@@ -308,10 +325,10 @@ int TString::operator!=(const TString &str) const
 ##########################################################################*/
 int TString::operator>(const TString &dest) const
 {
-        if (Compare(dest) > 0)
-                return TRUE;
-        else
-                return FALSE;
+    if (Compare(dest) > 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -327,10 +344,10 @@ int TString::operator>(const TString &dest) const
 ##########################################################################*/
 int TString::operator<(const TString &dest) const
 {
-        if (Compare(dest) < 0)
-                return TRUE;
-        else
-                return FALSE;
+    if (Compare(dest) < 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -346,10 +363,10 @@ int TString::operator<(const TString &dest) const
 ##########################################################################*/
 int TString::operator>=(const TString &dest) const
 {
-        if (Compare(dest) >= 0)
-                return TRUE;
-        else
-                return FALSE;
+    if (Compare(dest) >= 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -365,10 +382,10 @@ int TString::operator>=(const TString &dest) const
 ##########################################################################*/
 int TString::operator<=(const TString &dest) const
 {
-        if (Compare(dest) <= 0)
-                return TRUE;
-        else
-                return FALSE;
+    if (Compare(dest) <= 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -384,10 +401,16 @@ int TString::operator<=(const TString &dest) const
 ##########################################################################*/
 char TString::operator[](int n) const
 {
+    char ch = 0;
+
+    FSection.Enter();
+    
     if (FData && FData->FDataSize > n)
-        return FBuf[n];
-    else
-        return 0; 
+        ch = FBuf[n];
+
+    FSection.Leave();
+
+    return ch;
 }
 
 /*##########################################################################
@@ -404,9 +427,9 @@ char TString::operator[](int n) const
 ##########################################################################*/
 TString operator+(const TString& str1, const TString& str2)
 {
-        TString s;
-        s.ConcatCopy(str1.GetData(), str1.GetSize(), str2.GetData(), str2.GetSize());
-        return s;
+    TString s;
+    s.ConcatCopy(str1.GetData(), str1.GetSize(), str2.GetData(), str2.GetSize());
+    return s;
 }
 
 /*##########################################################################
@@ -423,9 +446,9 @@ TString operator+(const TString& str1, const TString& str2)
 ##########################################################################*/
 TString operator+(const TString& str, const char *cstr)
 {
-        TString s;
-        s.ConcatCopy(str.GetData(), str.GetSize(), cstr, strlen(cstr));
-        return s;
+    TString s;
+    s.ConcatCopy(str.GetData(), str.GetSize(), cstr, strlen(cstr));
+    return s;
 }
 
 /*##########################################################################
@@ -442,9 +465,9 @@ TString operator+(const TString& str, const char *cstr)
 ##########################################################################*/
 TString operator+(const char *cstr, const TString& str)
 {
-        TString s;
-        s.ConcatCopy(cstr, strlen(cstr), str.GetData(), str.GetSize());
-        return s;
+    TString s;
+    s.ConcatCopy(cstr, strlen(cstr), str.GetData(), str.GetSize());
+    return s;
 }
 
 /*##########################################################################
@@ -460,8 +483,8 @@ TString operator+(const char *cstr, const TString& str)
 ##########################################################################*/
 const TString &TString::operator+=(const char *str)
 {
-        ConcatInPlace(str, strlen(str));
-        return *this;
+    ConcatInPlace(str, strlen(str));
+    return *this;
 }
 
 /*##########################################################################
@@ -477,8 +500,8 @@ const TString &TString::operator+=(const char *str)
 ##########################################################################*/
 const TString &TString::operator+=(char ch)
 {
-        ConcatInPlace(&ch, 1);
-        return *this;
+    ConcatInPlace(&ch, 1);
+    return *this;
 }
 
 /*##########################################################################
@@ -494,8 +517,8 @@ const TString &TString::operator+=(char ch)
 ##########################################################################*/
 const TString &TString::operator+=(const TString& str)
 {
-        ConcatInPlace(str.GetData(), str.GetSize());
-        return *this;
+    ConcatInPlace(str.GetData(), str.GetSize());
+    return *this;
 }
 
 /*##########################################################################
@@ -511,10 +534,10 @@ const TString &TString::operator+=(const TString& str)
 ##########################################################################*/
 const char *TString::GetData() const
 {
-        if (FBuf)
-                return FBuf;
-        else
-                return "";
+    if (FBuf)
+        return FBuf;
+    else
+        return "";
 }
 
 /*##########################################################################
@@ -530,10 +553,16 @@ const char *TString::GetData() const
 ##########################################################################*/
 int TString::GetSize() const
 {
-        if (FData)
-                return FData->FDataSize - 1;
-        else
-                return 0;
+    int size = 0;
+
+    FSection.Enter();
+        
+    if (FData)
+        size = FData->FDataSize - 1;
+
+    FSection.Leave();
+
+    return size;
 }
 
 /*##########################################################################
@@ -549,10 +578,10 @@ int TString::GetSize() const
 ##########################################################################*/
 const char *TString::Find(char ch) const
 {
-        if (FBuf)
-                return strchr(FBuf, ch);
-        else
-                return 0;
+    if (FBuf)
+        return strchr(FBuf, ch);
+    else
+        return 0;
 }
 
 /*##########################################################################
@@ -568,10 +597,10 @@ const char *TString::Find(char ch) const
 ##########################################################################*/
 const char *TString::Find(const char *str) const
 {
-        if (FBuf)
-                return strstr(FBuf, str);
-        else
-                return 0;
+    if (FBuf)
+        return strstr(FBuf, str);
+    else
+        return 0;
 }
 
 /*##########################################################################
@@ -587,7 +616,7 @@ const char *TString::Find(const char *str) const
 ##########################################################################*/
 char TString::Upper(char ch)
 {
-        return toupper(ch);
+    return toupper(ch);
 }
 
 /*##########################################################################
@@ -603,20 +632,24 @@ char TString::Upper(char ch)
 ##########################################################################*/
 void TString::Upper()
 {
-        int i;
-        char *ptr;
+    int i;
+    char *ptr;
 
-        CopyBeforeWrite();
+    FSection.Enter();
+    
+    CopyBeforeWrite();
 
-        if (FData)
+    if (FData)
+    {
+        ptr = FBuf;
+        for (i = 0; i < FData->FDataSize - 1; i++)
         {
-                ptr = FBuf;
-                for (i = 0; i < FData->FDataSize - 1; i++)
-                {
-                        *ptr = Upper(*ptr);
-                        ptr++;
-                }
+            *ptr = Upper(*ptr);
+            ptr++;
         }
+    }
+
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -632,7 +665,7 @@ void TString::Upper()
 ##########################################################################*/
 char TString::Lower(char ch)
 {
-        return tolower(ch);
+    return tolower(ch);
 }
 
 /*##########################################################################
@@ -648,20 +681,24 @@ char TString::Lower(char ch)
 ##########################################################################*/
 void TString::Lower()
 {
-        int i;
-        char *ptr;
+    int i;
+    char *ptr;
 
-        CopyBeforeWrite();
+    FSection.Enter();
+    
+    CopyBeforeWrite();
 
-        if (FData)
+    if (FData)
+    {
+        ptr = FBuf;
+        for (i = 0; i < FData->FDataSize - 1; i++)
         {
-                ptr = FBuf;
-                for (i = 0; i < FData->FDataSize - 1; i++)
-                {
-                        *ptr = Lower(*ptr);
-                        ptr++;
-                }
+            *ptr = Lower(*ptr);
+            ptr++;
         }
+    }
+
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -677,30 +714,34 @@ void TString::Lower()
 ##########################################################################*/
 void TString::RemoveCrLf()
 {
-        char *ptr;
+    char *ptr;
 
-        if (FData)
+    FSection.Enter();
+    
+    if (FData)
+    {
+        ptr = FBuf + FData->FDataSize - 2;
+        if (*ptr == 0xd || *ptr == 0xa)
         {
-                ptr = FBuf + FData->FDataSize - 2;
-                if (*ptr == 0xd || *ptr == 0xa)
+            CopyBeforeWrite();
+
+            while (*ptr == 0xd || *ptr == 0xa)
+            {
+                *ptr = 0;
+                FData->FDataSize--;
+
+                if (ptr == FBuf)
                 {
-                        CopyBeforeWrite();
-
-                        while (*ptr == 0xd || *ptr == 0xa)
-                        {
-                                *ptr = 0;
-                                FData->FDataSize--;
-
-                                if (ptr == FBuf)
-                                {
-                                        Release();
-                                        break;
-                                }
-                                else
-                                        ptr--;
-                        }
+                    Release();
+                    break;
                 }
+                else
+                    ptr--;
+            }
         }
+    }
+
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -716,11 +757,11 @@ void TString::RemoveCrLf()
 ##########################################################################*/
 static int skip_atoi(const char **s)
 {
-        int i = 0;
+    int i = 0;
 
-        while (isdigit(**s))
-                i = i*10 + *((*s)++) - '0';
-        return i;
+    while (isdigit(**s))
+        i = i*10 + *((*s)++) - '0';
+    return i;
 }
 
 /*##########################################################################
@@ -736,27 +777,31 @@ static int skip_atoi(const char **s)
 ##########################################################################*/
 void TString::Append(char ch)
 {
-        if (FData == 0)
-        {
-                AllocBuffer(0x10);
-                *FBuf = 0;
-                FData->FDataSize = 1;
-        }
+    FSection.Enter();
+    
+    if (FData == 0)
+    {
+        AllocBuffer(0x10);
+        *FBuf = 0;
+        FData->FDataSize = 1;
+    }
 
-        if (FData->FDataSize + 1 > FData->FAllocSize)
-        {
-                TShareObjectData* OldData = FData;
-                char *ptr = FBuf;
+    if (FData->FDataSize + 1 > FData->FAllocSize)
+    {
+        TShareObjectData* OldData = FData;
+        char *ptr = FBuf;
 
-                AllocBuffer(OldData->FDataSize + 0x10);
-                memcpy(FBuf, ptr, OldData->FDataSize);
-                FData->FDataSize = OldData->FDataSize;
+        AllocBuffer(OldData->FDataSize + 0x10);
+        memcpy(FBuf, ptr, OldData->FDataSize);
+        FData->FDataSize = OldData->FDataSize;
 
-                Release(OldData);
-        }
-        *(FBuf+FData->FDataSize-1) = ch;
-        *(FBuf+FData->FDataSize) = 0;
-        FData->FDataSize++;
+        Release(OldData);
+    }
+    *(FBuf+FData->FDataSize-1) = ch;
+    *(FBuf+FData->FDataSize) = 0;
+    FData->FDataSize++;
+
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -772,11 +817,11 @@ void TString::Append(char ch)
 ##########################################################################*/
 void TString::Append(const char *str)
 {
-        while (*str)
-        {
-                Append(*str);
-                str++;
-        }
+    while (*str)
+    {
+        Append(*str);
+        str++;
+    }
 }
 
 /*##########################################################################
@@ -928,6 +973,8 @@ int TString::printf(const char *fmt, va_list args)
         unsigned long num;
         int i, base;
         const char *s;
+
+        FSection.Enter();
 
         Release();
 
@@ -1166,6 +1213,9 @@ int TString::printf(const char *fmt, va_list args)
 
                 n += Number(num, base, field_width, precision, flags);
         }
+
+        FSection.Leave();
+        
         return n;
 }
 
@@ -1185,9 +1235,13 @@ int TString::printf(const char *fmt, ...)
         va_list args;
         int result;
 
+        FSection.Enter();
+
         va_start(args, fmt);
         result = printf(fmt, args);
         va_end(args);
+
+        FSection.Leave();
 
         return result;
 }

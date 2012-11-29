@@ -28,6 +28,8 @@
 #ifndef _SHAREOBJ_H
 #define _SHAREOBJ_H
 
+#include "section.h"
+
 class TShareObjectData
 {
 friend class TShareObject;
@@ -79,6 +81,7 @@ protected:
 
 	char *FBuf;
 	TShareObjectData *FData;
+    TSection FSection;
 };
 
 #endif
