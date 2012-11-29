@@ -64,7 +64,8 @@ ps_id               DW ?
 
 ps_sel              DW ?
 
-ps_stack            DD ?
+ps_stack_offset     DD ?
+ps_stack_sel        DW ?
 ps_flags            DD ?
 
 ps_nesting          DW ?

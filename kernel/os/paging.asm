@@ -297,8 +297,8 @@ page_fault_global_page       PROC near
     test al,1
     jnz page_fault_global_page_retry
 ;
-    cmp eax,2
-    jnz page_fault_error
+    cmp eax,4
+    je page_fault_error
 ;
     call local_allocate_physical
     mov al,07h

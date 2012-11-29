@@ -344,7 +344,8 @@ prot_start:
     db 66h
     lidt fword ptr es:ap_idt
 ;
-    mov edx,es:ap_stack
+    mov edx,es:ap_stack_offset
+    mov bx,es:ap_stack_sel
 ;    
     mov eax,es:ap_cr0
     mov cr0,eax
@@ -368,21 +369,24 @@ prot_end:
 
 page_struc  STRUC
 
-ap_stack DD ?
-ap_cr0   DD ?
-ap_cr3   DD ?
-ap_cr4   DD ?
-ap_gdt   DB 6 DUP(?)
-ap_idt   DB 6 DUP(?)
+ap_stack_offset DD ?
+ap_stack_sel    DW ?
+ap_cr0          DD ?
+ap_cr3          DD ?
+ap_cr4          DD ?
+ap_gdt          DB 6 DUP(?)
+ap_idt          DB 6 DUP(?)
 
 page_struc  ENDS
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   ApInit
+;               NAME:           ApInit
 ;
 ;               DESCRIPTION:    Paged entry-point for AP initialization
+;
+;               PARAMETERS:     BX:EDX      Stack
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -393,8 +397,7 @@ ApInit:
     mov fs,ax
     mov gs,ax
 ;
-    mov ax,syscall_data_sel
-    mov ss,ax
+    mov ss,bx
     mov esp,edx
 ;
     mov ax,SEG data
@@ -3415,8 +3418,10 @@ BootCore    Proc near
     mov eax,fs:ps_gdt_base
     mov dword ptr es:[di].ap_gdt+2,eax
 ;
-    mov eax,fs:ps_stack
-    mov es:[di].ap_stack,eax
+    mov eax,fs:ps_stack_offset
+    mov es:[di].ap_stack_offset,eax
+    mov ax,fs:ps_stack_sel
+    mov es:[di].ap_stack_sel,ax
 ;
     mov bx,467h
     mov ax,0

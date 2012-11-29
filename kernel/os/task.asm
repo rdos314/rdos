@@ -786,10 +786,16 @@ HandleGlobal    Proc near
 
 hgTake:
     call cs:lock_ready_proc
-    mov si,ds:global_prio_act
-    cmp si,fs:ps_prio_act
-    ja hgRemove
 ;
+    mov si,ds:global_prio_act
+    mov ax,[si]
+    or ax,ax
+    jz hgUnlockDone
+;    
+    cmp si,fs:ps_prio_act
+    jae hgRemove
+
+hgUnlockDone:
     call cs:unlock_ready_proc
     jmp hgDone    
 
@@ -1817,10 +1823,7 @@ SaveCurrentThread       Proc near
     mov dword ptr ds:p_rip,edx
     mov dword ptr ds:p_rsp,esp
 ;
-    mov dx,syscall_data_sel
-    mov ss,dx
-    mov esp,fs:ps_stack
-;
+    lss esp,fword ptr fs:ps_stack_offset
     mov edx,dword ptr ds:p_rdx    
     push bp
 ;
@@ -1887,10 +1890,7 @@ SaveLockedThread    Proc near
     mov dword ptr ds:p_rip,edx
     mov dword ptr ds:p_rsp,esp
 ;
-    mov dx,syscall_data_sel
-    mov ss,dx
-    mov esp,fs:ps_stack
-;        
+    lss esp,fword ptr fs:ps_stack_offset        
     mov edx,dword ptr ds:p_rdx
     push bp
 ;
@@ -1956,9 +1956,7 @@ SaveLockedThreadKeepEs    Proc near
     mov dword ptr ds:p_rip,edx
     mov dword ptr ds:p_rsp,esp
 ;   
-    mov dx,syscall_data_sel
-    mov ss,dx
-    mov esp,fs:ps_stack
+    lss esp,fword ptr fs:ps_stack_offset        
 ;        
     mov edx,dword ptr ds:p_rdx
     push bp
@@ -1997,11 +1995,8 @@ SkipCurrentThread       Proc near
     pop ds
     pop eax
 ;    
-    pop bp
-;    
-    mov dx,syscall_data_sel
-    mov ss,dx
-    mov esp,fs:ps_stack
+    pop bp    
+    lss esp,fword ptr fs:ps_stack_offset        
     push bp
 ;
     xor bp,bp
@@ -2472,9 +2467,7 @@ WakeThread      ENDP
 debug_block_name        DB 'Debug Block', 0
 
 debug_block:
-    mov ax,syscall_data_sel
-    mov ss,ax
-    mov esp,fs:ps_stack
+    lss esp,fword ptr fs:ps_stack_offset        
 ;
     xor ax,ax
     mov ds,ax
@@ -2611,6 +2604,28 @@ create_core    Proc far
     rep stosb
     mov es:ps_sel,es
 ;
+    mov ax,sysenter_code_sel
+    verr ax
+    jz cr_flat_stack
+;
+    mov ax,long_dev_code_sel
+    verr ax
+    jz cr_flat_stack
+;    
+    mov eax,1000h
+    AllocateBigLinear
+    AllocateGdt
+;    
+    mov ecx,1000h
+    CreateDataSelector32
+;
+    mov ds,bx
+    mov ds:[0],dx
+    mov es:ps_stack_offset,ecx
+    mov es:ps_stack_sel,bx
+    jmp cr_stack_ok    
+    
+cr_flat_stack:
     mov eax,3000h
     AllocateBigLinear
     xor ebx,ebx
@@ -2622,8 +2637,10 @@ create_core    Proc far
 ;    
     mov ds:[edx],dx
     add edx,1000h
-    mov es:ps_stack,edx
-;
+    mov es:ps_stack_offset,edx
+    mov es:ps_stack_sel,syscall_data_sel
+    
+cr_stack_ok:
     mov ax,SEG data
     mov ds,ax
     mov ds,ds:patch_sel
