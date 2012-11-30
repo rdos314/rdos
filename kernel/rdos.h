@@ -317,7 +317,7 @@ int RDOSAPI RdosIsPrinterPaperEnd(int Handle);
 int RDOSAPI RdosIsPrinterOk(int Handle);
 int RDOSAPI RdosIsPrinterHeadLifted(int Handle);
 int RDOSAPI RdosHasPrinterPaperInPresenter(int Handle);
-int RDOSAPI RdosGetPrinterErrorCode();
+int RDOSAPI RdosGetPrinterErrorCode(int Handle);
 void RDOSAPI RdosPrintTest(int Handle);
 int RDOSAPI RdosCreatePrinterBitmap(int Handle, int Height);
 void RDOSAPI RdosPrintBitmap(int Handle, int Bitmap);

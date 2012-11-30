@@ -251,7 +251,22 @@ int TString::Compare(const TString &str) const
     int res;
 
     FSection.Enter();
-    res = strcmp(FBuf, str.FBuf);
+
+    if (FBuf == 0 || str.FBuf == 0)
+    {
+        if (FBuf == 0)
+        {
+            if (str.FBuf == 0)
+                res = 0;
+            else
+                res = 1;
+        }
+        else
+            res = -1;
+    }
+    else
+        res = strcmp(FBuf, str.FBuf);
+
     FSection.Leave();
 
     return res;

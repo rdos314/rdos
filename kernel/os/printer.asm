@@ -931,6 +931,12 @@ init    Proc far
     mov ax,has_printer_paper_in_presenter_nr
     RegisterBimodalUserGate
 ;
+    mov esi,OFFSET get_printer_error_code
+    mov edi,OFFSET get_printer_error_code_name
+    xor dx,dx
+    mov ax,get_printer_error_code_nr
+    RegisterBimodalUserGate
+;
     mov esi,OFFSET reset_printer
     mov edi,OFFSET reset_printer_name
     xor dx,dx

@@ -669,16 +669,16 @@ ReadTaskFile    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ReadSector
+;           NAME:           ReadHwSector
 ;
-;           DESCRIPTION:    Read data
+;           DESCRIPTION:    Read data, direct hardware access
 ;
-;           PARAMETERS:         EDX         Sector #
+;           PARAMETERS:     EDX         Sector #
 ;                           DS:BX   Address of buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadSector      Proc near
+ReadHwSector      Proc near
     push es
     pushad
 ;    
@@ -688,14 +688,14 @@ ReadSector      Proc near
     mov cx,1
 ;    
     cmp cs:LbaMode,0
-    jz ReadIde
+    jz ReadHwIde
 
-ReadLba:
+ReadHwLba:
     mov ah,cs:Precomp
     call SetupLbaTaskFile
-    jmp ReadStart
+    jmp ReadHwStart
 
-ReadIde:
+ReadHwIde:
     push edx
     mov eax,edx
     xor edx,edx
@@ -713,18 +713,77 @@ ReadIde:
     call SetupIdeTaskFile
     pop edx
 
-ReadStart:
-    jc ReadDone
+ReadHwStart:
+    jc ReadHwDone
 ;       
     mov al,20h
     call ReadTaskFile
 
-ReadDone:
+ReadHwDone:
     popad
     pop es
     ret
-ReadSector      Endp
+ReadHwSector      Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadBiosSector
+;
+;           DESCRIPTION:    Read data
+;
+;           PARAMETERS:     EDX         Sector #
+;                           DS:BX   Address of buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+bios_lba_struc  STRUC
+bl_size     DB 10h
+bl_2        DB 0
+bl_count    DW 1
+bl_buf      DD 0
+bl_lba      DD 0
+bl_lbah     DD 0
+bios_lba_struc  ENDS
+
+lba_buf bios_lba_struc <>
+
+ReadBiosSector      Proc near
+    push ds
+    pushad
+;   
+    mov cs:lba_buf.bl_lba,edx
+    mov word ptr cs:lba_buf.bl_buf,bx
+    mov word ptr cs:lba_buf.bl_buf+2,ds
+;    
+    mov ax,cs
+    mov ds,ax
+    mov si,OFFSET lba_buf
+    mov ah,42h
+    mov dl,cs:DriveNr
+    int 13h
+;
+    popad
+    pop ds
+    ret
+ReadBiosSector      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadSector
+;
+;           DESCRIPTION:    Read sector
+;
+;           PARAMETERS:     EDX         Sector #
+;                           DS:BX   Address of buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadSector Proc near
+    call ReadBiosSector
+    ret
+ReadSector  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2070,7 +2129,7 @@ part_stop:
     
 Start:
     mov cs:DefaultBoot,al
-    call SetupVectors
+;    call SetupVectors
     sti
     mov al,dl
     call WriteHexByte
@@ -2078,6 +2137,7 @@ Start:
     call WriteChar
 ;
     mov cs:DriveNr,dl
+    jmp read_with_bios
 
 boot_retry:    
     test dl,2
@@ -2089,7 +2149,7 @@ boot_retry:
     call WriteChar
 
     mov cs:IoBase,170h
-    jmp boot_base_ok    
+    jmp boot_base_ok
 
 boot_prim:
     mov ax,1F0h
@@ -2107,12 +2167,12 @@ boot_base_ok:
     call WriteHexByte
     mov al,' '
     call WriteChar
-;       
+;
     mov ax,DATA_SEG
     mov ds,ax
     xor bx,bx
-    call InitIrq
-    jnc read_part_ok
+;    call InitIrq
+;    jnc read_part_ok
 ;
     mov dl,cs:DriveNr
     cmp dl,84h
@@ -2121,6 +2181,11 @@ boot_base_ok:
     inc dl
     mov cs:DriveNr,dl
     jmp boot_retry
+
+read_with_bios:       
+    mov ax,DATA_SEG
+    mov ds,ax
+    xor bx,bx
     
 read_part_ok:
     mov bx,1BEh
@@ -2273,7 +2338,7 @@ LoadStart:
 stop:
     jmp stop
 
-pad db 329 DUP(0)
+pad db 269 DUP(0)
 
 _TEXT   ends    
 

@@ -257,6 +257,20 @@ int TPrinterDevice::HasPaperInPresenter()
 
 /*##########################################################################
 #
+#   Name       : TPrinterDevice::GetErrorCode
+#
+#   Purpose....: Get error code
+#
+#   Returns....: 
+#
+##########################################################################*/
+int TPrinterDevice::GetErrorCode()
+{
+    return RdosGetPrinterErrorCode(FHandle);
+}
+
+/*##########################################################################
+#
 #   Name       : TPrinterDevice::Reset
 #
 #   Purpose....: Reset

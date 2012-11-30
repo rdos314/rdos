@@ -48,6 +48,7 @@ public:
     virtual int IsPrintHeadLifted();
     virtual int HasPaperInPresenter();
     virtual void Reset();
+    int GetErrorCode();
 
     virtual void PrintTest();
 
