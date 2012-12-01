@@ -37,7 +37,7 @@
 
 #define STACK_SIZE      0x2000
 
-#define LIST_ID         0x2AEA
+#define LIST_ID         0x2A9C
 #define LIST_SECTORS    1440
 
 #define FALSE               0
