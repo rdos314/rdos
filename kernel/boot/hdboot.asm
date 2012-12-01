@@ -27,6 +27,7 @@
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
+IMG_SEG = 5000h
 DATA_SEG = 6000h
 MAX_IMAGES = 20
 
@@ -1479,6 +1480,8 @@ LoadAdapter     Proc near
 ;    
     mov ax,cs
     mov es,ax
+    mov ax,DATA_SEG
+    mov ds,ax
 
 laClusterLoop:
     call GetCurrentSector
@@ -1488,7 +1491,7 @@ laSectorLoop:
     xor si,si
     push bx
     push cx
-    xor bx,bx
+    mov bx,1000h
     mov cx,1
     movzx ebp,cx
     call ReadSectors
@@ -1498,7 +1501,7 @@ laSectorLoop:
 ;
     push edx
     push cx
-    mov esi,16 * DATA_SEG
+    mov esi,(16 * DATA_SEG) + 1000h
     mov ecx,ebp
     shl ecx,9
     call MoveData
@@ -1815,7 +1818,7 @@ LoadStart:
 stop:
     jmp stop
 
-pad db 940 DUP(0)
+pad db 934 DUP(0)
 
 _TEXT   ends    
 
