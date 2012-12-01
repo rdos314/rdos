@@ -126,19 +126,6 @@ CurrFatSector       DD 0
 Tics        DD ?
 
 OrgTimerVect    DD ?
-OrgIdeVect1     DD ?
-OrgIdeVect2     DD ?
-
-IntFlag         DB ?
-IoBase          DW 1F0h
-DiscSubUnit     DB ?
-LbaMode         DB ?
-Precomp         DB ?
-LbaSectors      DD ?
-DiscCyls        DW ?
-DiscHeads       DW ?
-SectorsPerCyl       DW ?
-
 BootMedia       DB 0
 CurrEntry       DW ?
 MenuEntries     DW 0
@@ -268,25 +255,33 @@ WriteHexWord    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WriteAsciiz
+;           NAME:           WriteHexDword
 ;
-;           DESCRIPTION:    Write text to screen
+;           DESCRIPTION:    Write hex dword on screen
 ;
-;           PARAMETERS:         CS:SI       Message to write
+;           PARAMETERS:     EAX          Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteAsciiz     Proc near
-    lods byte ptr cs:[si]
-    or al,al
-    jz WriteAsciizDone
-    mov ah,0Eh
-    mov bx,7
-    int 10h
-    jmp WriteAsciiz
-WriteAsciizDone:
+WriteHexDword    PROC near
+    push bx
+;    
+    mov bx,ax
+    shr eax,16
+    xchg al,ah
+    call WriteHexByte
+    xchg al,ah
+    call WriteHexByte
+;
+    mov ax,bx    
+    xchg al,ah
+    call WriteHexByte
+    xchg al,ah
+    call WriteHexByte
+;
+    pop bx    
     ret
-WriteAsciiz     Endp
+WriteHexDword    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -315,420 +310,30 @@ tiDone:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           IdeInt1
+;           NAME:           WriteAsciiz
 ;
-;           DESCRIPTION:    IDE INTERRUPT
+;           DESCRIPTION:    Write text to screen
 ;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IdeInt1:
-    push ax
-    mov al,62h
-    out 20h,al
-    mov cs:IntFlag,1
-;    
-    mov al,66h
-    out 0A0h,al
-    pop ax
-    iret
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IdeInt2
-;
-;           DESCRIPTION:    IDE INTERRUPT
-;
-;           PARAMETERS:         
+;           PARAMETERS:         CS:SI       Message to write
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-IdeInt2:
-    push ax
-    mov al,62h
-    out 20h,al
-    mov cs:IntFlag,1
-;    
-    mov al,67h
-    out 0A0h,al
-    pop ax
-    iret
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CheckReady
-;
-;           DESCRIPTION:    Wait for ready
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CheckReady      PROC near
-    push ax
-    push cx
-    push dx
-;
-    mov dx,cs:IoBase
-    add dx,7
-    xor cx,cx
-    
-CheckReadyLoop:
-    in al,dx
-    test al,80h
-    clc
-    jz CheckReadyDone
-;       
-    loop CheckReadyLoop
-    stc
-CheckReadyDone:
-    pop dx
-    pop cx
-    pop ax
-    ret
-CheckReady      ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           WaitDrq
-;
-;           DESCRIPTION:    Wait for data request
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WaitDrq Proc near
-    push ax
-    push cx
-    push dx
-;
-    mov cx,100h
-    mov dx,cs:IoBase
-    add dx,7
-    
-WaitDrqLoop:
-    in al,dx
-    test al,8
-    clc
-    jnz WaitDrqDone
-    loop WaitDrqLoop
-    stc
-WaitDrqDone:
-    pop dx
-    pop cx
-    pop ax
-    ret
-WaitDrq Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CheckStatus
-;
-;           DESCRIPTION:    Check transfer status
-;
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CheckStatus     Proc near
-    push ax
-    push dx
-;
-    mov dx,cs:IoBase
-    add dx,7
-    in al,dx
-    test al,80h
-    jnz CheckStatusFail
-    test al,20h
-    jnz CheckStatusFail
-    test al,40h
-    jz CheckStatusFail
-    test al,10h
-    jz CheckStatusFail
-    test al,1
-    clc
-    jz CheckStatusDone
-;
-    mov dx,cs:IoBase    
-    add dx,1
-    in al,dx
-CheckStatusFail:
-    stc
-CheckStatusDone:
-    pop dx
-    pop ax
-    ret
-CheckStatus     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetupIdeTaskFile
-;
-;           DESCRIPTION:    Setup IDE comp. task file
-;
-;           PARAMETERS:         AH          Precomp
-;                           BH          Head #
-;                           BL          Sector
-;                           CX          Number of sectors
-;                           DX          Cylinder
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupIdeTaskFile    Proc near
-    push ax
-    push bx
-    push dx
-;
-    call CheckReady
-    jc SetupIdeTaskDone
-;       
-    push dx
-    mov dx,cs:IoBase
-    inc dx
-;
-    jmp short $+2
-    mov al,ah
-    out dx,al
-    inc dx
-;
-    jmp short $+2
-    mov ax,cx
-    out dx,al
-    inc dx
-;
-    jmp short $+2
-    mov al,bl
-    out dx,al
-    inc dx
-;
-    pop ax
-    jmp short $+2
-    out dx,al
-    inc dx
-;
-    jmp short $+2
-    mov al,ah
-    out dx,al
-    inc dx
-;
-    mov al,cs:DiscSubUnit
-    shl al,4
-    or al,bh
-    or al,0A0h
-    out dx,al
-    clc
-SetupIdeTaskDone:
-    pop dx
-    pop bx
-    pop ax
-    ret
-SetupIdeTaskFile    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetupLbaTaskFile
-;
-;           DESCRIPTION:    Setup LBA comp. task file
-;
-;           PARAMETERS:         AH          Precomp
-;                           CX          Number of sectors
-;                           EDX         Sector #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupLbaTaskFile    Proc near
-    push ax
-    push bx
-    push dx
-;
-    call CheckReady
-    jc SetupLbaTaskDone
-;
-    push edx
-    mov dx,cs:IoBase
-    inc dx
-;
-    jmp short $+2
-    mov al,ah
-    out dx,al
-    inc dx
-;
-    jmp short $+2
-    mov al,cl
-    out dx,al
-    inc dx
-;
-    pop ax
-    jmp short $+2
-    out dx,al
-    inc dx
-;
-    mov al,ah
-    jmp short $+2
-    out dx,al
-    inc dx
-;
-    pop ax
-    jmp short $+2
-    out dx,al
-    inc dx
-;
-    mov bl,ah
-    mov al,cs:DiscSubUnit
-    shl al,4
-    or al,bl
-    or al,0E0h
-    out dx,al
-    clc
-    
-SetupLbaTaskDone:
-    pop dx
-    pop bx
-    pop ax
-    ret
-SetupLbaTaskFile    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           RunTaskFile
-;
-;           DESCRIPTION:    Run command
-;
-;           PARAMETERS:         AL          COMMAND CODE
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RunTaskFile     Proc near
-    push dx
-    mov dx,cs:IoBase
-    add dx,7
-    out dx,al
-
-rtfWait:
-    mov al,cs:IntFlag
+WriteAsciiz     Proc near
+    lods byte ptr cs:[si]
     or al,al
-    jz rtfWait
-;       
-    call CheckStatus
-    
-RunTaskFileDone:
-    pop dx
+    jz WriteAsciizDone
+    mov ah,0Eh
+    mov bx,7
+    int 10h
+    jmp WriteAsciiz
+WriteAsciizDone:
     ret
-RunTaskFile     ENDP
+WriteAsciiz     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ReadTaskFile
-;
-;           DESCRIPTION:    Read data from device
-;
-;           PARAMETERS:         AL          COMMAND CODE
-;                           CX          Number of sectors
-;                           ES:DI   Logical address of buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadTaskFile    Proc near
-    push cx
-    push dx
-    push di
-;
-    mov cs:IntFlag,0
-    mov dx,cs:IoBase
-    add dx,7
-    out dx,al
-    
-ReadTaskFileInt:
-    mov al,cs:IntFlag
-    or al,al
-    jz ReadTaskFileInt
-;    
-    push cx
-    mov dx,cs:IoBase
-    mov cx,256
-    rep insw
-    pop cx
-    call CheckStatus
-    jc ReadTaskFileDone
-;       
-    loop ReadTaskFileInt
-    clc
-    
-ReadTaskFileDone:
-    pop di
-    pop dx
-    pop cx
-    ret
-ReadTaskFile    ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ReadHwSector
-;
-;           DESCRIPTION:    Read data, direct hardware access
-;
-;           PARAMETERS:     EDX         Sector #
-;                           DS:BX   Address of buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadHwSector      Proc near
-    push es
-    pushad
-;    
-    mov ax,ds
-    mov es,ax
-    mov di,bx
-    mov cx,1
-;    
-    cmp cs:LbaMode,0
-    jz ReadHwIde
-
-ReadHwLba:
-    mov ah,cs:Precomp
-    call SetupLbaTaskFile
-    jmp ReadHwStart
-
-ReadHwIde:
-    push edx
-    mov eax,edx
-    xor edx,edx
-    movzx ecx,cs:DiscHeads
-    div ecx
-;    
-    push ax
-    mov ax,dx
-    div byte ptr cs:SectorsPerCyl
-    mov bh,al
-    mov bl,ah
-    inc bl
-    mov ah,cs:Precomp
-    pop dx
-    call SetupIdeTaskFile
-    pop edx
-
-ReadHwStart:
-    jc ReadHwDone
-;       
-    mov al,20h
-    call ReadTaskFile
-
-ReadHwDone:
-    popad
-    pop es
-    ret
-ReadHwSector      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ReadBiosSector
+;           NAME:           ReadSector
 ;
 ;           DESCRIPTION:    Read data
 ;
@@ -748,10 +353,10 @@ bios_lba_struc  ENDS
 
 lba_buf bios_lba_struc <>
 
-ReadBiosSector      Proc near
+ReadSector      Proc near
     push ds
     pushad
-;   
+;    
     mov cs:lba_buf.bl_lba,edx
     mov word ptr cs:lba_buf.bl_buf,bx
     mov word ptr cs:lba_buf.bl_buf+2,ds
@@ -766,24 +371,7 @@ ReadBiosSector      Proc near
     popad
     pop ds
     ret
-ReadBiosSector      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ReadSector
-;
-;           DESCRIPTION:    Read sector
-;
-;           PARAMETERS:     EDX         Sector #
-;                           DS:BX   Address of buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadSector Proc near
-    call ReadBiosSector
-    ret
-ReadSector  Endp
+ReadSector      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -831,95 +419,11 @@ SetupVectors    Proc near
     mov word ptr [bx],OFFSET TimerInt
     mov [bx+2],cs
 ;
-    mov bx,76h SHL 2
-    mov eax,[bx]
-    mov cs:OrgIdeVect1,eax
-    mov word ptr [bx],OFFSET IdeInt1
-    mov [bx+2],cs
-;
-    mov bx,77h SHL 2
-    mov eax,[bx]
-    mov cs:OrgIdeVect2,eax
-    mov word ptr [bx],OFFSET IdeInt2
-    mov [bx+2],cs
-;
     pop bx
     pop eax
     pop ds    
     ret
 SetupVectors    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           InitIrq
-;
-;           DESCRIPTION:    Init IDE IRQ
-;
-;           PARAMETERS:         DS:BX       Sector 0 buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitIrq Proc near
-    push ds
-    push es
-    push bx
-;    
-    mov ax,ds
-    mov es,ax
-    mov di,bx
-;    
-    mov cs:IntFlag,0
-;
-    mov cs:Precomp,0FFh
-    xor dx,dx
-    xor bx,bx
-    mov cx,1
-    mov ah,cs:Precomp
-    call SetupIdeTaskFile
-    jc init_irq_done
-;
-    mov al,0ECh
-    call ReadTaskFile
-    jc init_irq_done
-;
-    mov eax,es:[di+120]
-    mov cs:LbaSectors,eax
-    mov ax,word ptr es:[di+2]
-    mov cs:DiscCyls,ax
-    mov ax,es:[di+6]
-    mov cs:DiscHeads,ax
-    mov ax,es:[di+12]
-    mov cs:SectorsPerCyl,ax
-;
-    mov cs:LbaMode,1
-    mov cx,1
-    mov ah,cs:Precomp
-    xor edx,edx
-    call SetupLbaTaskFile
-    jc init_irq_done
-;
-    mov al,20h
-    call ReadTaskFile       
-    jnc init_irq_done
-;
-    mov cs:LbaMode,0
-    mov bh,0
-    mov bl,1
-    mov cx,1
-    xor dx,dx
-    call SetupIdeTaskFile
-    jc init_irq_done
-;
-    mov al,20h
-    call ReadTaskFile
-
-init_irq_done:
-    pop bx
-    pop es
-    pop ds
-    ret
-InitIrq Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2129,63 +1633,16 @@ part_stop:
     
 Start:
     mov cs:DefaultBoot,al
-;    call SetupVectors
+    call SetupVectors
     sti
-    mov al,dl
-    call WriteHexByte
-    mov al,' '
-    call WriteChar
-;
     mov cs:DriveNr,dl
-    jmp read_with_bios
-
-boot_retry:    
-    test dl,2
-    jz boot_prim
-;
-    mov ax,170h
-    call WriteHexWord
-    mov al,' '
-    call WriteChar
-
-    mov cs:IoBase,170h
-    jmp boot_base_ok
-
-boot_prim:
-    mov ax,1F0h
-    call WriteHexWord
-    mov al,' '
-    call WriteChar
-
-    mov cs:IoBase,1F0h
-
-boot_base_ok:
-    and dl,1
-    mov cs:DiscSubUnit,dl
 ;    
-    mov al,dl
-    call WriteHexByte
-    mov al,' '
-    call WriteChar
-;
     mov ax,DATA_SEG
     mov ds,ax
     xor bx,bx
-;    call InitIrq
-;    jnc read_part_ok
-;
-    mov dl,cs:DriveNr
-    cmp dl,84h
-    jae read_part_error
-;
-    inc dl
-    mov cs:DriveNr,dl
-    jmp boot_retry
-
-read_with_bios:       
-    mov ax,DATA_SEG
-    mov ds,ax
-    xor bx,bx
+    xor edx,edx
+    call ReadSector
+    jc read_part_error
     
 read_part_ok:
     mov bx,1BEh
@@ -2199,18 +1656,6 @@ read_part_ok:
     call ReadSector
     jc read_part_error
 ;
-    cmp cs:LbaMode,0
-    jne boot_check_part_type
-;
-    mov ax,ds:boot_sectors_per_cyl
-    cmp ax,cs:SectorsPerCyl
-    jne read_part_error
-;    
-    mov ax,ds:boot_heads
-    cmp ax,cs:DiscHeads
-    jne read_part_error
-
-boot_check_part_type:
     mov al,ds:boot_media
     mov cs:BootMedia,al
 ;    
@@ -2296,14 +1741,6 @@ LoadDefaultOk:
     mov eax,cs:OrgTimerVect
     mov [bx],eax
 ;
-    mov bx,76h SHL 2
-    mov eax,cs:OrgIdeVect1
-    mov [bx],eax
-;
-    mov bx,77h SHL 2
-    mov eax,cs:OrgIdeVect2
-    mov [bx],eax
-;
     mov si,600h + 1BEh    
     db 0EAh
     dw 7C00h
@@ -2338,7 +1775,7 @@ LoadStart:
 stop:
     jmp stop
 
-pad db 269 DUP(0)
+pad db 1000 DUP(0)
 
 _TEXT   ends    
 
