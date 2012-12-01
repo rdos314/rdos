@@ -94,6 +94,15 @@ mem_type    DD ?
 
 bios_mem_type   ENDS
 
+bios_lba_struc  STRUC
+bl_size     DB 10h
+bl_2        DB 0
+bl_count    DW 1
+bl_buf      DD 0
+bl_lba      DD 0
+bl_lbah     DD 0
+bios_lba_struc  ENDS
+
 
 _TEXT segment byte public use16 'CODE'
 
@@ -132,6 +141,8 @@ MenuEntries     DW 0
 MenuArr         DW MAX_IMAGES DUP(0)
 EntryCount      DW 0
 EntryArr        DB MAX_IMAGES * 32 DUP(0)
+
+lba_buf bios_lba_struc <>
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -342,21 +353,11 @@ WriteAsciiz     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-bios_lba_struc  STRUC
-bl_size     DB 10h
-bl_2        DB 0
-bl_count    DW 1
-bl_buf      DD 0
-bl_lba      DD 0
-bl_lbah     DD 0
-bios_lba_struc  ENDS
-
-lba_buf bios_lba_struc <>
-
 ReadSector      Proc near
     push ds
     pushad
 ;    
+    mov cs:lba_buf.bl_count,1
     mov cs:lba_buf.bl_lba,edx
     mov word ptr cs:lba_buf.bl_buf,bx
     mov word ptr cs:lba_buf.bl_buf+2,ds
@@ -372,6 +373,40 @@ ReadSector      Proc near
     pop ds
     ret
 ReadSector      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadSectors
+;
+;           DESCRIPTION:    Read data
+;
+;           PARAMETERS:     EDX     Sector #
+;                           CX      Number of sectors
+;                           DS:BX   Address of buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadSectors      Proc near
+    push ds
+    pushad
+;    
+    mov cs:lba_buf.bl_count,cx
+    mov cs:lba_buf.bl_lba,edx
+    mov word ptr cs:lba_buf.bl_buf,bx
+    mov word ptr cs:lba_buf.bl_buf+2,ds
+;    
+    mov ax,cs
+    mov ds,ax
+    mov si,OFFSET lba_buf
+    mov ah,42h
+    mov dl,cs:DriveNr
+    int 13h
+;
+    popad
+    pop ds
+    ret
+ReadSectors      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1452,25 +1487,30 @@ laClusterLoop:
 laSectorLoop:
     xor si,si
     push bx
+    push cx
     xor bx,bx
-    call ReadSector
+    mov cx,1
+    movzx ebp,cx
+    call ReadSectors
+    pop cx
     pop bx
     jc laError
 ;
     push edx
     push cx
     mov esi,16 * DATA_SEG
-    mov ecx,512
+    mov ecx,ebp
+    shl ecx,9
     call MoveData
     add edi,ecx
+    sub cs:ImageSize,ecx
     pop cx
     pop edx
-;
-    sub cs:ImageSize,200h
     jbe laDone
 ;
-    inc edx
-    loop laSectorLoop
+    add edx,ebp
+    sub cx,bp
+    jnz laSectorLoop
 ;
     call NextCluster
     jnc laClusterLoop
@@ -1775,7 +1815,7 @@ LoadStart:
 stop:
     jmp stop
 
-pad db 1000 DUP(0)
+pad db 940 DUP(0)
 
 _TEXT   ends    
 
