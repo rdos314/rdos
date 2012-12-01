@@ -1492,7 +1492,13 @@ laSectorLoop:
     push bx
     push cx
     mov bx,1000h
-    mov cx,1
+;
+    cmp cx,64
+    jbe laSectorsOk
+;
+    mov cx,64
+
+laSectorsOk:        
     movzx ebp,cx
     call ReadSectors
     pop cx
@@ -1818,7 +1824,7 @@ LoadStart:
 stop:
     jmp stop
 
-pad db 934 DUP(0)
+pad db 929 DUP(0)
 
 _TEXT   ends    
 
