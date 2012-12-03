@@ -66,7 +66,7 @@ TMakePartitionFactory::TMakePartitionFactory()
 ##########################################################################*/
 TCommand *TMakePartitionFactory::Create(TSession *session, const char *param)
 {
-	return new TMakePartitionCommand(session, param);
+        return new TMakePartitionCommand(session, param);
 }
 
 /*##########################################################################
@@ -83,7 +83,7 @@ TCommand *TMakePartitionFactory::Create(TSession *session, const char *param)
 TMakePartitionCommand::TMakePartitionCommand(TSession *session, const char *param)
   : TCommand(session, param)
 {
-	FHelpScreen.Load(TEXT_CMDHELP_MKPART);
+        FHelpScreen.Load(TEXT_CMDHELP_MKPART);
 }
 
 /*##########################################################################
@@ -99,28 +99,38 @@ TMakePartitionCommand::TMakePartitionCommand(TSession *session, const char *para
 ##########################################################################*/
 int TMakePartitionCommand::Make(TDisc *Disc, const char *FsName, int Size)
 {
-	TDiscPartition *DiscPart;
+        TDiscPartition *DiscPart;
+        TPartition *part;
+        char *BootCode;
+        int BootSize;
 
-	if (Disc->IsValid())
-	{
-		DiscPart = new TDiscPartition(Disc);
-		if (DiscPart->Add(FsName, Size))
-		{
-			delete DiscPart;
-			return 0;
-		}
-		else
-		{
-			FMsg.Load(TEXT_MKPART_ERROR);
-			Write(FMsg.GetData());
-			delete DiscPart;
-			return 1;
-		}
-	}
+        if (Disc->IsValid())
+        {
+        BootCode = new char[512];
+        BootSize = RdosReadBinaryResource(0, 100, BootCode, 0x1BE);
 
-	FMsg.printf(TEXT_SHOWPART_DISC_ERROR, Disc->GetDiscNr());
-	Write(FMsg.GetData());
-	return 1;
+                DiscPart = new TDiscPartition(Disc);
+                part = DiscPart->Add(FsName, Size, BootCode, BootSize);
+
+                delete BootCode;
+
+                if (part)
+                {
+                        delete DiscPart;
+                        return 0;
+                }
+                else
+                {
+                        FMsg.Load(TEXT_MKPART_ERROR);
+                        Write(FMsg.GetData());
+                        delete DiscPart;
+                        return 1;
+                }
+        }
+
+        FMsg.printf(TEXT_SHOWPART_DISC_ERROR, Disc->GetDiscNr());
+        Write(FMsg.GetData());
+        return 1;
 }
 
 /*##########################################################################
@@ -136,38 +146,38 @@ int TMakePartitionCommand::Make(TDisc *Disc, const char *FsName, int Size)
 ##########################################################################*/
 int TMakePartitionCommand::Execute(char *param)
 {
-	int DiscNr;
-	int d;
-	TDisc *Disc;
-	long Size;
-	const char *FsName;
-	int ret;
+        int DiscNr;
+        int d;
+        TDisc *Disc;
+        long Size;
+        const char *FsName;
+        int ret;
 
-	if (!ScanCmdLine(param, 0))
-		return 1;
+        if (!ScanCmdLine(param, 0))
+                return 1;
 
-	if (FArgCount != 3)
-	{
-		FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
-		Write(FMsg.GetData());
-		return E_Useage;
-	}
+        if (FArgCount != 3)
+        {
+                FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
+                Write(FMsg.GetData());
+                return E_Useage;
+        }
 
-	if (sscanf(FArgList->FName.GetData(), "%d", &DiscNr) != 1)
-	{
-		ErrorSyntax(0);
-		return 1;
-	}
+        if (sscanf(FArgList->FName.GetData(), "%d", &DiscNr) != 1)
+        {
+                ErrorSyntax(0);
+                return 1;
+        }
 
-	FsName = FArgList->FList->FName.GetData();
+        FsName = FArgList->FList->FName.GetData();
 
-	if (sscanf(FArgList->FList->FList->FName.GetData(), "%d", &Size) != 1)
-	{
-		ErrorSyntax(0);
-		return 1;
-	}
+        if (sscanf(FArgList->FList->FList->FName.GetData(), "%d", &Size) != 1)
+        {
+                ErrorSyntax(0);
+                return 1;
+        }
 
-	ret = 1;
+        ret = 1;
 
 
     for (d = 0; d < 16; d++)
@@ -181,9 +191,9 @@ int TMakePartitionCommand::Execute(char *param)
     }
 
 
-	if (Disc && Disc->IsValid())
-		ret = Make(Disc, FsName, Size * 0x800);
-	delete Disc;
-	return ret;
+        if (Disc && Disc->IsValid())
+                ret = Make(Disc, FsName, Size * 0x800);
+        delete Disc;
+        return ret;
 }
 

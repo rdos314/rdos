@@ -147,7 +147,7 @@ TFsPartition *TRdfsPartitionFactory::Open(TDisc *Disc, TPartitionTable *Parent, 
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFsPartition *TRdfsPartitionFactory::Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size)
+TFsPartition *TRdfsPartitionFactory::Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size, const char *CodeBase, int CodeSize)
 {
 	TRdfsPartition *RdfsPart;
 

@@ -116,7 +116,7 @@ TFsPartition *TFlashFsPartitionFactory::Open(TDisc *Disc, TPartitionTable *Paren
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFsPartition *TFlashFsPartitionFactory::Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size)
+TFsPartition *TFlashFsPartitionFactory::Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size, const char *CodeBase, int CodeSize)
 {
 	TFlashFsPartition *FatPart;
 

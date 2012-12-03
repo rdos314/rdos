@@ -398,17 +398,83 @@ int MakeBootPart(int DiscNr)
     return FALSE;
 }
 
+/*##########################################################################
+#
+#   Name       : RemovePart
+#
+#   Purpose....: Remove partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int RemovePart(TDiscPartition *DiscPart)
+{
+    int i;
+    int ok = FALSE;
+    TPartition *Part = 0;
+
+    for (i = 0; i < DiscPart->PartCount; i++)
+    {
+        Part = DiscPart->PartArr[i];
+
+        if (Part && Part->IsFs())
+        {
+            DiscPart->Delete(i);
+            ok = TRUE;
+        }
+    }
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : RemoveDisc
+#
+#   Purpose....: Remove all partitions on disc
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int RemoveDisc(int DiscNr)
+{
+    TDisc *Disc;
+    TDiscPartition *DiscPart;
+    int ok = FALSE;
+
+    Disc = new TIdeDisc(DiscNr);
+
+        if (Disc->IsValid())
+        {
+                DiscPart = new TDiscPartition(Disc);
+                ok = RemovePart(DiscPart);
+                delete DiscPart;
+        }
+        return ok;
+}
+
 int main()
 {
     int DiscNr;
     int ok = FALSE;
-
-    printf("Formatting disk...");
     
     RdosWaitMilli(2500);
     DiscNr = FindCf();
     if (DiscNr >= 0)
     {
+        ok = RemoveDisc(DiscNr);
+
+        if (ok)
+        {
+            printf("Removing partitions...");
+            RdosWaitMilli(2000);
+            RdosSoftReset();
+        }
+            
+        printf("Formatting disk...");
         MakeBootable(DiscNr);
         ok = MakeBootPart(DiscNr);
     }
