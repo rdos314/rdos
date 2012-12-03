@@ -479,6 +479,7 @@ void TVp::Execute()
     int EpLimit;
     char str[50];
     long tempval;
+    long double E = 0.0;
 
     TLabelFactory CommentLabelFactory;
     TLabelFactory ValueLabelFactory;
@@ -526,29 +527,21 @@ void TVp::Execute()
     Table->AddRow(24, 45);
     Table->AddRow(24, 45);
     Table->AddRow(24, 45);
-    Table->AddRow(24, 45);
-    Table->AddRow(24, 45);
 
     Table->SetText(0, 0, "Tank temp");
     Table->SetText(0, 2, "°C");
 
-    Table->SetText(1, 0, "Tank effekt");
-    Table->SetText(1, 2, "kW");
+    Table->SetText(1, 0, "Förvärme temp");
+    Table->SetText(1, 2, "°C");
 
-    Table->SetText(2, 0, "Förvärme temp");
+    Table->SetText(2, 0, "Start");
     Table->SetText(2, 2, "°C");
 
-    Table->SetText(3, 0, "Förvärme effekt");
-    Table->SetText(3, 2, "W");
+    Table->SetText(3, 0, "Cirkulation");
+    Table->SetText(3, 2, "V");
 
-    Table->SetText(4, 0, "Trend");
-    Table->SetText(4, 2, "°C");
-
-    Table->SetText(5, 0, "Start");
-    Table->SetText(5, 2, "°C");
-
-    Table->SetText(6, 0, "Cirkulation");
-    Table->SetText(6, 2, "V");
+    Table->SetText(4, 0, "Förbrukning");
+    Table->SetText(4, 2, "kWh");
 
 
     TempSum = 0;
@@ -621,7 +614,7 @@ void TVp::Execute()
 
                 val = (long double)FHeatTemp / 10;
                 sprintf(str, "%5.1Lf", val);
-                Table->SetText(2, 1, str);
+                Table->SetText(1, 1, str);
 
                 FValidHeat = TRUE;
 
@@ -639,7 +632,7 @@ void TVp::Execute()
             if (FHasCirc)
             {
                 sprintf(str, "%4.1Lf", FCircSpeed);
-                Table->SetText(6, 1, str);
+                Table->SetText(3, 1, str);
             }
 
             LastMin = min;
@@ -662,17 +655,20 @@ void TVp::Execute()
             if (ValidTankArr[38] && FValidTank)
             {
                 UpdateVp(FTankTemp - TankArr[38]);
-                val = (long double)(FTankTemp - TankArr[38]) / 10;
-                sprintf(str, "%5.1Lf", val);
-                Table->SetText(4, 1, str);
 
                 if (FHasLowTemp)
                 {
                     val = (long double)(FLowTemp) / 10;
                     sprintf(str, "%5.1Lf", val);
-                    Table->SetText(5, 1, str);
+                    Table->SetText(2, 1, str);
                 }
             }
+
+            if (FVpOn)
+                E += 0.1;
+              
+            sprintf(str, "%5.1Lf", E);
+            Table->SetText(4, 1, str);
 
             if (FValidTank)
             {
@@ -715,9 +711,6 @@ void TVp::Execute()
                     dT = val - PrevVal;
                     PTank = 0.07 * VOLUME_TANK * dT / 30;
                     FValidPTank = TRUE;
-
-                    sprintf(str, "%5.2Lf", PTank);
-                    Table->SetText(1, 1, str);
                 }
             }
 
@@ -771,10 +764,6 @@ void TVp::Execute()
                     dT = val - PrevVal;
                     PHeat = 0.07 * VOLUME_HEAT * dT / 15;
                     FValidPHeat = TRUE;
-
-                    tempval = (long)(1000.0 * PHeat); 
-                    sprintf(str, "%d", tempval);
-                    Table->SetText(3, 1, str);
                 }
             }
 

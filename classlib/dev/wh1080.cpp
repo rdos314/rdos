@@ -739,6 +739,7 @@ void TWh1080Device::DecodeData(char *Buffer)
     unsigned char uch;
     unsigned short int usval;
     unsigned char uhi;
+    int val;
 
     if ((Buffer[0] == 1) && ((Buffer[15] & 0x40) == 0))
     {
@@ -755,9 +756,14 @@ void TWh1080Device::DecodeData(char *Buffer)
         if (usval != 0xFFFF)
         {
             if (usval & 0x8000)
-                usval = -(usval & 0x7FFF);
+            {
+                val = (usval & 0x7FFF);
+                val = -val;
+            }
+            else
+                val = usval;
 
-            FIndoorTemperature = 0.1 * (long double)usval;
+            FIndoorTemperature = 0.1 * (long double)val;
             FIndoorTemperatureTime.SetCurrent();
         }        
 
@@ -772,7 +778,12 @@ void TWh1080Device::DecodeData(char *Buffer)
         if (usval != 0xFFFF)
         {
             if (usval & 0x8000)
-                usval = -(usval & 0x7FFF);
+            {
+                val = (usval & 0x7FFF);
+                val = -val;
+            }
+            else
+                val = usval;
 
             FOutdoorTemperature = 0.1 * (long double)usval;
             FOutdoorTemperatureTime.SetCurrent();

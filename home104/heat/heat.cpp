@@ -55,6 +55,47 @@
 #define RAD_X   5
 #define RAD_Y  500
 
+TControlThread *control;
+
+/*##########################################################################
+#
+#   Name       : TimeThread
+#
+#   Purpose....: Time thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TimeThread(void *Param)
+{
+    TLabelControl *Label;
+    int year, month, day;
+    int hour, min, sec;
+    int ms, us;
+    unsigned long msb, lsb;
+    char str[100];
+    
+    Label = new TLabelControl(control, 850, 700, 200, 30);
+    Label->SetFont(20);
+    Label->SetBackColor(100, 100, 100);
+    Label->SetDrawColor(0, 0, 0);
+    Label->Show();
+
+    for (;;)
+    {
+        RdosGetTime(&msb, &lsb);
+        RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+        RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
+    
+        sprintf(str, "%04d-%02d-%02d %02d.%02d.%02d",
+                        year, month, day,
+                        hour, min, sec);
+        Label->SetText(str);
+        RdosWaitMilli(200);
+    }  
+}
 
 int main()
 {
@@ -91,7 +132,6 @@ int main()
     int width;
     int height;
     TBitmapGraphicDevice *bitmap;
-    TControlThread *control;
     TRadControl *RadControl;
     TDataStore *Store;
     TSolar solar(55, 49, 5, 13, 14, 43);
@@ -178,6 +218,8 @@ int main()
 
     Power = new TPower(control);
     Store->Add(Power);
+
+    RdosCreateThread(TimeThread, "Time", control, 0x4000);
 
     for (;;)
     {
