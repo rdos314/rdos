@@ -127,7 +127,7 @@ protected:
 	void LbaToChs(long Sector, char *Data);
 	void Process();
 	void ProcessOne(int Entry, const char *Data);
-	TFsPartition *InsertFs(const char *FsName, TFreePartition *FreePart, long Size, char Active);
+	TFsPartition *InsertFs(const char *FsName, TFreePartition *FreePart, long Size, char Active, const char *BootCode, int BootSize);
 	void FreeEntry(int Entry);
 
 	int FSectorsPerCyl;
@@ -162,11 +162,11 @@ public:
 	virtual ~TFsPartitionFactory();
 
 	static TFsPartition *Parse(TDisc *Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long Start, long Size);
-	static TFsPartition *Format(TDisc *Disc, const char *FsName, TPartitionTable *Parent, int Entry, long Start, long Size);
+	static TFsPartition *Format(TDisc *Disc, const char *FsName, TPartitionTable *Parent, int Entry, long Start, long Size, const char *BootCode, int BootSize);
 
 protected:
 	virtual TFsPartition *Open(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size) = 0;
-	virtual TFsPartition *Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size) = 0;
+	virtual TFsPartition *Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size, const char *BootCode, int BootSize) = 0;
 
     static TString GetFs(TDisc *Disc, long Start);
 
@@ -189,7 +189,7 @@ public:
 	TDisc *GetDisc();
 
 	void Delete(int Entry);
-	TFsPartition *Add(const char *FsName, long Size);
+	TFsPartition *Add(const char *FsName, long Size, const char *BootCode, int BootSize);
 
 	TPartitionTable *PartRoot;
 	TPartition *PartArr[MAX_PART_COUNT];

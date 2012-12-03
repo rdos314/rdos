@@ -2646,7 +2646,7 @@ int RDOSAPI RdosHasTouch();
 
 #pragma aux RdosFormatDrive = \
     CallGate_format_drive  \
-    ValidateDisc \
+    CarryToBool \
     parm [eax] [edx] [ecx] [edi] \
     value [eax];
 

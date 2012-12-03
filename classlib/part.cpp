@@ -684,75 +684,80 @@ TPartitionTable *TPartitionTable::Create(int Entry, TFreePartition *FreePart)
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFsPartition *TPartitionTable::InsertFs(const char *FsName, TFreePartition *FreePart, long NewSize, char Active)
+TFsPartition *TPartitionTable::InsertFs(const char *FsName, TFreePartition *FreePart, long NewSize, char Active, const char *BootCode, int BootSize)
 {
-        int i;
-        TFsPartition *FsPart;
-        TPartitionTable *PartTable;
-        int FreeEntries;
+    int i;
+    TFsPartition *FsPart;
+    TPartitionTable *PartTable;
+    int FreeEntries;
 
-        if (Start > FreePart->Start)
-                return 0;
+    if (Start > FreePart->Start)
+        return 0;
 
-        if (Start + Size < FreePart->Start)
-                return 0;
+    if (Start + Size < FreePart->Start)
+        return 0;
 
-        for (i = 0; i < 4; i++)
-                if (PartArr[i])
+    for (i = 0; i < 4; i++)
+        if (PartArr[i])
+        {
+            if (PartArr[i]->IsTable())
+            {
+                if (PartArr[i]->Start <= FreePart->Start && PartArr[i]->Start + PartArr[i]->Size >= FreePart->Start)
                 {
-                        if (PartArr[i]->IsTable())
-                        {
-                                if (PartArr[i]->Start <= FreePart->Start && PartArr[i]->Start + PartArr[i]->Size >= FreePart->Start)
-                                {
-                                    PartTable = (TPartitionTable *)PartArr[i];
-                                        FsPart = PartTable->InsertFs(FsName, FreePart, NewSize, 0);
-                                        while (PartTable->FParent && FsPart->Start + FsPart->Size > PartTable->Start + PartTable->Size)
+                    PartTable = (TPartitionTable *)PartArr[i];
+                    FsPart = PartTable->InsertFs(FsName, FreePart, NewSize, 0, BootCode, BootSize);
+                    if (FsPart)
                     {
-                                        PartTable->Size = FsPart->Start + FsPart->Size - PartTable->Start;
-                                PartTable->WriteToTable(PartTable->FParent, 0);
-                                PartTable = PartTable->FParent;
-                                        }
-                                        return FsPart;
-                }
+                        while (PartTable->FParent && FsPart->Start + FsPart->Size > PartTable->Start + PartTable->Size)
+                        {
+                            PartTable->Size = FsPart->Start + FsPart->Size - PartTable->Start;
+                            PartTable->WriteToTable(PartTable->FParent, 0);
+                            PartTable = PartTable->FParent;
                         }
+                    }
+                    return FsPart;
                 }
+            }
+        }
 
         FreeEntries = 0;
         for (i = 0; i < 4; i++)
-                if (PartArr[i])
-                        if (!PartArr[i]->IsFs() && !PartArr[i]->IsTable())
-                                FreeEntries++;
+            if (PartArr[i])
+                if (!PartArr[i]->IsFs() && !PartArr[i]->IsTable())
+                    FreeEntries++;
 
         if (FreeEntries <= 2)
         {
-                for (i = 0; i < 4; i++)
-                        if (PartArr[i])
-                                if (!PartArr[i]->IsFs() && !PartArr[i]->IsTable())
-                                {
-                                        delete PartArr[i];
-                                        PartTable = Create(i, FreePart);
-                                        PartArr[i] = PartTable;
-                                        return PartTable->InsertFs(FsName, FreePart, NewSize, 0);
-                                }
+            for (i = 0; i < 4; i++)
+                if (PartArr[i])
+                    if (!PartArr[i]->IsFs() && !PartArr[i]->IsTable())
+                    {
+                        delete PartArr[i];
+                        PartTable = Create(i, FreePart);
+                        PartArr[i] = PartTable;
+                        return PartTable->InsertFs(FsName, FreePart, NewSize, 0, BootCode, BootSize);
+                    }
         }
 
         for (i = 0; i < 4; i++)
-                if (PartArr[i])
+            if (PartArr[i])
+            {
+                if (!PartArr[i]->IsFs() && !PartArr[i]->IsTable())
                 {
-                        if (!PartArr[i]->IsFs() && !PartArr[i]->IsTable())
-                        {
-                                delete PartArr[i];
-                                FsPart = TFsPartitionFactory::Format(FDisc, FsName, this, i, FreePart->Start, NewSize);
-                                PartArr[i] = FsPart;
-                                if (i == 0)
-                                FsPart->WriteToTable(this, Active);
+                    delete PartArr[i];
+                    FsPart = TFsPartitionFactory::Format(FDisc, FsName, this, i, FreePart->Start, NewSize, BootCode, BootSize);
+                    if (FsPart)
+                    {
+                        PartArr[i] = FsPart;
+                        if (i == 0)
+                            FsPart->WriteToTable(this, Active);
                         else
-                                        FsPart->WriteToTable(this, 0);
-                                
-                                return FsPart;
-                        }
+                            FsPart->WriteToTable(this, 0);
+                    }            
+                    return FsPart;
                 }
-        return 0;
+            }
+    return 0;
 }
 
 /*##################  TPartitionTable::FreeEntry  #############
@@ -908,21 +913,21 @@ TFsPartition *TFsPartitionFactory::Parse(TDisc *Disc, unsigned char Type, TParti
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFsPartition *TFsPartitionFactory::Format(TDisc *Disc, const char *FsName, TPartitionTable *Parent, int Entry, long Start, long Size)
+TFsPartition *TFsPartitionFactory::Format(TDisc *Disc, const char *FsName, TPartitionTable *Parent, int Entry, long Start, long Size, const char *BootCode, int BootSize)
 {
-        TFsPartitionFactory *factory = 0;
-        TString Name(FsName);
+    TFsPartitionFactory *factory = 0;
+    TString Name(FsName);
 
-        factory = FPartList;
+    factory = FPartList;
     while (factory)
-        {
-            if (Name == factory->FFsName)
-                break;
-                factory = factory->FList;
-        }
+    {
+        if (Name == factory->FFsName)
+            break;
+        factory = factory->FList;
+    }
 
     if (factory)
-        return factory->Create(Disc, Parent, Entry, Start, Size);
+        return factory->Create(Disc, Parent, Entry, Start, Size, BootCode, BootSize);
     else
         return 0;
 }
@@ -1207,7 +1212,7 @@ void TDiscPartition::Update()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFsPartition *TDiscPartition::Add(const char *FsName, long Sectors)
+TFsPartition *TDiscPartition::Add(const char *FsName, long Sectors, const char *BootCode, int BootSize)
 {
         int i;
         TFsPartition *FsPart;
@@ -1232,9 +1237,9 @@ TFsPartition *TDiscPartition::Add(const char *FsName, long Sectors)
                             PartArr[i]->Start = Start;
                             PartArr[i]->Size = Size;
                             if (i == 0)
-                                FsPart = PartRoot->InsertFs(FsName, (TFreePartition *)PartArr[i], Sectors, 0x80);
+                                FsPart = PartRoot->InsertFs(FsName, (TFreePartition *)PartArr[i], Sectors, 0x80, BootCode, BootSize);
                         else
-                                FsPart = PartRoot->InsertFs(FsName, (TFreePartition *)PartArr[i], Sectors, 0);
+                                FsPart = PartRoot->InsertFs(FsName, (TFreePartition *)PartArr[i], Sectors, 0, BootCode, BootSize);
 
                                 if (FsPart)
                                 {

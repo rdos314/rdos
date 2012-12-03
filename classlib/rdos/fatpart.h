@@ -34,6 +34,9 @@ class TFatPartition : public TFsPartition
 {
 public:
 	TFatPartition(TDisc *Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long Start, long Size);
+
+protected:
+    void WriteBootSector(const char *BootCode, int BootSize);
 };
 
 class TFat12Partition : public TFatPartition
@@ -41,7 +44,7 @@ class TFat12Partition : public TFatPartition
 public:
 	TFat12Partition(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
 	virtual const char *GetPartName();
-	virtual int Format();
+	virtual int Format(const char *BootCode, int BootSize);
 };
 
 class TFat16Partition : public TFatPartition
@@ -49,7 +52,7 @@ class TFat16Partition : public TFatPartition
 public:
 	TFat16Partition(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
 	virtual const char *GetPartName();
-	virtual int Format();
+	virtual int Format(const char *BootCode, int BootSize);
 };
 
 class TFat32Partition : public TFatPartition
@@ -57,7 +60,7 @@ class TFat32Partition : public TFatPartition
 public:
 	TFat32Partition(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
 	virtual const char *GetPartName();
-	virtual int Format();
+	virtual int Format(const char *BootCode, int BootSize);
 };
 
 class TFat12PartitionFactory : public TFsPartitionFactory
@@ -68,7 +71,7 @@ public:
 
 protected:
 	virtual TFsPartition *Open(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
-	virtual TFsPartition *Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
+	virtual TFsPartition *Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size, const char *BootCode, int BootSize);
 };
 
 class TFat16PartitionFactory : public TFsPartitionFactory
@@ -79,7 +82,7 @@ public:
 
 protected:
 	virtual TFsPartition *Open(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
-	virtual TFsPartition *Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
+	virtual TFsPartition *Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size, const char *BootCode, int BootSize);
 };
 
 class TFat32PartitionFactory : public TFsPartitionFactory
@@ -90,7 +93,7 @@ public:
 
 protected:
 	virtual TFsPartition *Open(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
-	virtual TFsPartition *Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
+	virtual TFsPartition *Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size, const char *BootCode, int BootSize);
 };
 
 #endif
