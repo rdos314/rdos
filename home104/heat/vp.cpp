@@ -664,7 +664,7 @@ void TVp::Execute()
                 }
             }
 
-            if (FVpOn)
+            if (FPrevOn)
                 E += 0.1;
               
             sprintf(str, "%5.1Lf", E);
