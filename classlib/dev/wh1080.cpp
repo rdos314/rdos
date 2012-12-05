@@ -785,7 +785,7 @@ void TWh1080Device::DecodeData(char *Buffer)
             else
                 val = usval;
 
-            FOutdoorTemperature = 0.1 * (long double)usval;
+            FOutdoorTemperature = 0.1 * (long double)val;
             FOutdoorTemperatureTime.SetCurrent();
         }        
 

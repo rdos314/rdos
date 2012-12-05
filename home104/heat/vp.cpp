@@ -665,7 +665,7 @@ void TVp::Execute()
             }
 
             if (FPrevOn)
-                E += 0.1;
+                E += 0.055;
               
             sprintf(str, "%5.1Lf", E);
             Table->SetText(4, 1, str);
