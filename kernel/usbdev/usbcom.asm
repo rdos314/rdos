@@ -88,7 +88,6 @@ ups_data_bits       DB ?
 ups_stop_bits       DB ?
 ups_parity      DB ?
 ups_control     DB ?
-ups_reinit      DB ?
 
 ups_pl_control      DB ?
 ups_pl_buf      DB 7 DUP(?)
@@ -481,53 +480,6 @@ GetBaudDivisor  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           CheckPipes
-;
-;           DESCRIPTION:    Check pipe and reinit if required
-;
-;           PARAMETERS:     DS      Port selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CheckPipes      PROC near
-    ret
-;    
-    mov al,ds:ups_reinit
-    or al,al
-    jz cpDone
-;    
-    push ds
-    pushad
-;    
-    mov bx,ds:ups_control_wait
-    CloseWait
-;
-    mov bx,ds:ups_controller
-    mov ax,ds:ups_device
-    xor dl,dl
-    OpenUsbPipe
-    mov ds:ups_control_pipe,bx
-;
-    CreateWait
-    mov ds:ups_control_wait,bx
-;
-    mov ax,ds:ups_control_pipe
-    mov bx,ds:ups_control_wait
-    movzx ecx,bx
-    AddWaitForUsbPipe
-;
-    mov ds:ups_reinit,0 
-;
-    popad
-    pop ds
-
-cpDone:    
-    ret
-CheckPipes Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           ResetSio
 ;
 ;           DESCRIPTION:    Reset SIO
@@ -867,7 +819,6 @@ open_com_ftdi   Proc far
     mov ds:ups_data_bits,ah
     mov ds:ups_stop_bits,bl
     mov ds:ups_parity,bh
-    mov ds:ups_reinit,0
 ;    
     mov ax,es:uds_device_type
     mov ds:ups_device_type,ax
@@ -967,6 +918,9 @@ ccfNoDevice:
     mov bx,ds:sd_thread
     Signal    
 ;
+    mov ax,150
+    WaitMilliSec    
+;
     pop bx
     pop ds    
     ret
@@ -987,8 +941,6 @@ close_com_ftdi  Endp
 enable_cts_ftdi PROC far
     push es
     pushad
-;
-    call CheckPipes
 ;
     or ds:ups_control,CONTROL_CTS
     mov bx,ds:ups_control_pipe
@@ -1045,8 +997,6 @@ disable_cts_ftdi    PROC far
     push es
     pushad
 ;
-    call CheckPipes
-;
     and ds:ups_control,NOT CONTROL_CTS
     mov bx,ds:ups_control_pipe
     mov dx,ds:ups_index
@@ -1100,8 +1050,6 @@ disable_cts_ftdi Endp
 set_dtr_ftdi    Proc far
     push es
     pushad
-;
-    call CheckPipes
 ;    
     or ds:ups_control,CONTROL_DTR
     mov bx,ds:ups_control_pipe
@@ -1157,8 +1105,6 @@ reset_dtr_ftdi  Proc far
     push es
     pushad
 ;
-    call CheckPipes
-;
     and ds:ups_control,NOT CONTROL_DTR
     mov bx,ds:ups_control_pipe
     mov dx,ds:ups_index
@@ -1213,8 +1159,6 @@ set_rts_ftdi    Proc far
     push es
     pushad
 ;
-    call CheckPipes
-;
     or ds:ups_control,CONTROL_RTS
     mov bx,ds:ups_control_pipe
     mov dx,ds:ups_index
@@ -1268,8 +1212,6 @@ set_rts_ftdi    Endp
 reset_rts_ftdi  Proc far
     push es
     pushad
-;
-    call CheckPipes
 ;
     and ds:ups_control,NOT CONTROL_RTS
     mov bx,ds:ups_control_pipe
@@ -1383,8 +1325,6 @@ Fish    Endp
 ReadLineState   Proc near
     push es
     pushad
-;
-    call CheckPipes
 ;
     mov bx,ds:ups_control_pipe
 ;    
@@ -1502,8 +1442,6 @@ WriteLineState  Proc near
     push es
     pushad
 ;
-    call CheckPipes
-;
     mov bx,ds:ups_control_pipe
 ;    
     push ax
@@ -1565,8 +1503,6 @@ WriteLineState    Endp
 WriteControl    Proc near
     push es
     pushad
-;
-    call CheckPipes
 ;
     mov bx,ds:ups_control_pipe
 ;    
@@ -1815,7 +1751,6 @@ open_com_pl     Proc far
     mov ds:ups_data_bits,ah
     mov ds:ups_stop_bits,bl
     mov ds:ups_parity,bh
-    mov ds:ups_reinit,0
     mov ds:ups_divisor,ecx
     mov ds:ups_control,CONTROL_DTR OR CONTROL_RTS
 ;
@@ -1911,6 +1846,9 @@ ccpNoDevice:
     mov bx,ds:sd_thread
     Signal    
 ;
+    mov ax,150
+    WaitMilliSec    
+;
     pop bx
     pop ds    
     ret
@@ -1931,8 +1869,6 @@ close_com_pl    Endp
 enable_cts_pl   PROC far
     push es
     pushad
-;
-    call CheckPipes
 ;
     or ds:ups_control,CONTROL_CTS
     mov bx,ds:ups_control_pipe
@@ -2362,8 +2298,6 @@ SendCtsMct      Proc near
     push edx
     push edi
 ;
-    call CheckPipes
-;
     push bp   
     xor ax,ax
     test ds:ups_control,CONTROL_CTS
@@ -2444,8 +2378,6 @@ SetLineControl  Proc near
     push cx
     push edx
     push edi
-;
-    call CheckPipes
 ;
     push bp  
 ;    
@@ -2548,8 +2480,6 @@ WriteModemControl       Proc near
     push cx
     push edx
     push edi
-;
-    call CheckPipes
 ;
     push bp   
     mov ax,8
@@ -2672,7 +2602,6 @@ open_com_mct    Proc far
     mov ds:ups_data_bits,ah
     mov ds:ups_stop_bits,bl
     mov ds:ups_parity,bh
-    mov ds:ups_reinit,0
 ;
     mov ax,es:uds_device_type
     mov ds:ups_device_type,ax
@@ -3235,6 +3164,9 @@ OpenPort    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClosePort    Proc near
+    mov ax,50
+    WaitMilliSec
+;    
     xor ax,ax
     mov es,ax
 ;    
