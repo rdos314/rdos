@@ -314,10 +314,12 @@ int RDOSAPI RdosGetPrinterName(int Handle, char *NameBuf);
 int RDOSAPI RdosIsPrinterJammed(int Handle);
 int RDOSAPI RdosIsPrinterPaperLow(int Handle);
 int RDOSAPI RdosIsPrinterPaperEnd(int Handle);
+int RDOSAPI RdosIsPrinterCutterJammed(int Handle);
 int RDOSAPI RdosIsPrinterOk(int Handle);
 int RDOSAPI RdosIsPrinterHeadLifted(int Handle);
 int RDOSAPI RdosHasPrinterPaperInPresenter(int Handle);
-int RDOSAPI RdosGetPrinterErrorCode(int Handle);
+int RDOSAPI RdosHasPrinterTemperatureError(int Handle);
+int RDOSAPI RdosHasPrinterFeedError(int Handle);
 void RDOSAPI RdosPrintTest(int Handle);
 int RDOSAPI RdosCreatePrinterBitmap(int Handle, int Height);
 void RDOSAPI RdosPrintBitmap(int Handle, int Bitmap);
@@ -1388,6 +1390,13 @@ int RDOSAPI RdosHasTouch();
     parm [ebx] \
     value [eax];
 
+#pragma aux RdosIsPrinterCutterJammed = \
+    CallGate_is_printer_cutter_jammed  \
+    "cmc" \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
 #pragma aux RdosIsPrinterOk = \
     CallGate_is_printer_ok  \
     CarryToBool \
@@ -1408,9 +1417,17 @@ int RDOSAPI RdosHasTouch();
     parm [ebx] \
     value [eax];
 
-#pragma aux RdosGetPrinterErrorCode = \
-    CallGate_get_printer_error_code  \
-    "movzx eax,ax" \
+#pragma aux RdosHasPrinterTemperatureError = \
+    CallGate_has_printer_temp_error  \
+    "cmc" \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosHasPrinterFeedError = \
+    CallGate_has_printer_feed_error  \
+    "cmc" \
+    CarryToBool \
     parm [ebx] \
     value [eax];
 
@@ -3736,6 +3753,13 @@ int RDOSAPI RdosHasTouch();
     parm [ebx] \
     value [eax];
 
+#pragma aux RdosIsPrinterCutterJammed = \
+    CallGate_is_printer_cutter_jammed  \
+    "cmc" \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
 #pragma aux RdosIsPrinterOk = \
     CallGate_is_printer_ok  \
     CarryToBool \
@@ -3756,9 +3780,17 @@ int RDOSAPI RdosHasTouch();
     parm [ebx] \
     value [eax];
 
-#pragma aux RdosGetPrinterErrorCode = \
-    CallGate_get_printer_error_code  \
-    "movzx eax,ax" \
+#pragma aux RdosHasPrinterTemperatureError = \
+    CallGate_has_printer_temp_error  \
+    "cmc" \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosHasPrinterFeedError = \
+    CallGate_has_printer_feed_error  \
+    "cmc" \
+    CarryToBool \
     parm [ebx] \
     value [eax];
 

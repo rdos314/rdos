@@ -501,8 +501,6 @@ void RdosExtendDi();
 void RdosSaveEax();
 void RdosRestoreEax();
 
-void RdosCrashGate();
-
 int RdosIsValidOsGate(int gate);
 void RdosRegisterOsGate(int gate, __rdos_gate_callback *callb_proc, const char *name);
 void RdosRegisterBimodalUserGate(int gate, __rdos_gate_callback *callb_proc, const char *name);
@@ -985,9 +983,6 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
 #pragma aux RdosPointerToOffset = \
     parm [edx eax] \
     value [eax];
-
-#pragma aux RdosCrashGate = \
-    OsGate_crash_gate;
 
 #pragma aux RdosAllocateGdt = \
     OsGate_allocate_gdt  \

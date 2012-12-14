@@ -613,7 +613,9 @@
 #define usergate_had_carddev_inserted 489
 #define usergate_clear_carddev_inserted 490
 
-#define usergate_get_printer_error_code 491
+#define usergate_is_printer_cutter_jammed 491
+#define usergate_has_printer_temp_error 492
+#define usergate_has_printer_feed_error 493
 
 
 
@@ -1233,7 +1235,9 @@
 #define CallGate_had_carddev_inserted 0x67 0x9a 233 1 0 0 3 0
 #define CallGate_clear_carddev_inserted 0x67 0x9a 234 1 0 0 3 0
 
-#define CallGate_get_printer_error_code 0x67 0x9a 235 1 0 0 3 0
+#define CallGate_is_printer_cutter_jammed 0x67 0x9a 235 1 0 0 3 0
+#define CallGate_has_printer_temp_error 0x67 0x9a 236 1 0 0 3 0
+#define CallGate_has_printer_feed_error 0x67 0x9a 237 1 0 0 3 0
 
 #else
 
@@ -1851,6 +1855,8 @@
 #define CallGate_had_carddev_inserted 0x3e 0x67 0x9a 233 1 0 0 3 0
 #define CallGate_clear_carddev_inserted 0x3e 0x67 0x9a 234 1 0 0 3 0
 
-#define CallGate_get_printer_error_code 0x3e 0x67 0x9a 235 1 0 0 3 0
+#define CallGate_is_printer_cutter_jammed 0x3e 0x67 0x9a 235 1 0 0 3 0
+#define CallGate_has_printer_temp_error 0x3e 0x67 0x9a 236 1 0 0 3 0
+#define CallGate_has_printer_feed_error 0x3e 0x67 0x9a 237 1 0 0 3 0
 
 #endif

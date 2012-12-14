@@ -2144,6 +2144,12 @@ IsPrinterPaperEnd       MACRO
 						ENDM
 
 ;	IN  BX		Printer handle
+;   OUT CY      Cutter jammed
+IsPrinterCutterJammed       MACRO
+	UserGate is_printer_cutter_jammed_nr
+						ENDM
+
+;	IN  BX		Printer handle
 ;   OUT NC      OK
 IsPrinterOk       MACRO
 	UserGate is_printer_ok_nr
@@ -2162,9 +2168,15 @@ HasPrinterPaperInPresenter      MACRO
 						ENDM
 
 ;	IN  BX		Printer handle
-;   OUT AX      Error code
-GetPrinterErrorCode      MACRO
-	UserGate get_printer_error_code_nr
+;   OUT CY      Temperature error
+HasPrinterTemperatureError      MACRO
+	UserGate has_printer_temp_error_nr
+						ENDM
+
+;	IN  BX		Printer handle
+;   OUT CY      Feed error
+HasPrinterFeedError      MACRO
+	UserGate has_printer_feed_error_nr
 						ENDM
 
 ;	IN  BX		Printer handle

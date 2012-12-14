@@ -1100,7 +1100,7 @@ is_jammed   Proc far
     jz ijDone
 ;
     mov ax,ds:kr_status
-    test ax,STATUS_PAPER_JAM OR STATUS_CUTTER_JAM
+    test ax,STATUS_PAPER_JAM
     clc
     jz ijDone
 ;
@@ -1193,6 +1193,47 @@ ipeDone:
     pop ds
     ret
 is_paper_end   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IsCutterJammed
+;
+;       DESCRIPTION:    Check if cutter is jammed
+;
+;       PARAMETERS:     DS          Printer sel
+;
+;       RETURNS:        CY          Cutter jammed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_cutter_jammed   Proc far
+    push ds
+    push ax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    test ds:kr_flag,FLAG_ATTACHED
+    clc
+    jz icjDone
+;
+    mov ax,ds:kr_session_thread
+    or ax,ax
+    clc
+    jz icjDone
+;
+    mov ax,ds:kr_status
+    test ax,STATUS_CUTTER_JAM
+    clc
+    jz icjDone
+;
+    stc
+    
+icjDone:
+    pop ax
+    pop ds
+    ret
+is_cutter_jammed   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1320,31 +1361,84 @@ has_paper_in_presenter   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           GetErrorCode
+;       NAME:           HasTempError
 ;
-;       DESCRIPTION:    Check error code
+;       DESCRIPTION:    Check for temperature error
 ;
 ;       PARAMETERS:     DS          Printer sel
 ;
-;       RETURNS:        AX          Status code
+;       RETURNS:        CY          Temperature error
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_error_code   Proc far
+has_temp_error   Proc far
     push ds
+    push ax
 ;    
     mov ax,SEG data
     mov ds,ax
-    mov ax,-1
     test ds:kr_flag,FLAG_ATTACHED
-    jz gecDone
-;    
+    clc
+    jz hteDone
+;
+    mov ax,ds:kr_session_thread
+    or ax,ax
+    clc
+    jz hteDone
+;
     mov ax,ds:kr_status
+    test ax,STATUS_TEMP_ERROR
+    clc
+    jz hteDone
+;
+    stc
     
-gecDone:
+hteDone:
+    pop ax
     pop ds
     ret
-get_error_code   Endp
+has_temp_error   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           HasFeedError
+;
+;       DESCRIPTION:    Check for feed error
+;
+;       PARAMETERS:     DS          Printer sel
+;
+;       RETURNS:        CY          Feed error
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_feed_error   Proc far
+    push ds
+    push ax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    test ds:kr_flag,FLAG_ATTACHED
+    clc
+    jz hfeDone
+;
+    mov ax,ds:kr_session_thread
+    or ax,ax
+    clc
+    jz hfeDone
+;
+    mov ax,ds:kr_status
+    test ax,STATUS_FEED_ERROR
+    clc
+    jz hfeDone
+;
+    stc
+    
+hfeDone:
+    pop ax
+    pop ds
+    ret
+has_feed_error   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2155,6 +2249,9 @@ kr203_thread:
     mov word ptr es:pr_paper_end_proc,OFFSET is_paper_end
     mov word ptr es:pr_paper_end_proc+2,cs
 ;    
+    mov word ptr es:pr_cutter_jammed_proc,OFFSET is_cutter_jammed
+    mov word ptr es:pr_cutter_jammed_proc+2,cs
+;    
     mov word ptr es:pr_ok_proc,OFFSET is_ok
     mov word ptr es:pr_ok_proc+2,cs
 ;    
@@ -2164,8 +2261,11 @@ kr203_thread:
     mov word ptr es:pr_paper_in_presenter_proc,OFFSET has_paper_in_presenter
     mov word ptr es:pr_paper_in_presenter_proc+2,cs
 ;    
-    mov word ptr es:pr_get_error_code_proc,OFFSET get_error_code
-    mov word ptr es:pr_get_error_code_proc+2,cs
+    mov word ptr es:pr_temp_error_proc,OFFSET has_temp_error
+    mov word ptr es:pr_temp_error_proc+2,cs
+;    
+    mov word ptr es:pr_feed_error_proc,OFFSET has_feed_error
+    mov word ptr es:pr_feed_error_proc+2,cs
 ;    
     mov word ptr es:pr_print_test_proc,OFFSET print_test
     mov word ptr es:pr_print_test_proc+2,cs

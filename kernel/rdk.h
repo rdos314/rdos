@@ -5,6 +5,7 @@
 #define osgate_register_bimodal_usergate 3
 #define osgate_register_usergate16 4
 #define osgate_register_usergate32 5
+#define osgate_register_long_osgate 6
 #define osgate_create_alias_sel16 7
 #define osgate_create_core_gdt 8
 #define osgate_emulate_opcode 9
@@ -405,6 +406,7 @@
 
 #define osgate_lock_task 365
 #define osgate_unlock_task 366
+#define osgate_try_lock_task 367
 
 #define osgate_get_core 368
 #define osgate_get_core_count 369
@@ -440,11 +442,8 @@
 
 #define osgate_add_printer 387
 
-#define osgate_crash_gate 388
 #define osgate_crash_tss 389
 #define osgate_crash_fault 390
-
-#define osgate_start_crash_core 391
 
 #define osgate_read_pnp_byte 393
 #define osgate_write_pnp_byte 394
@@ -491,7 +490,7 @@
 #define osgate_setup_pci_msi 420
 #define osgate_request_msi_handler 421
 #define osgate_request_irq_handler 422
-#define osgate_request_pci_irq_handler 423
+#define osgate_notify_irq 423
 
 #define osgate_register_syscall 424
 #define osgate_register_bimodal_syscall 425
@@ -546,9 +545,43 @@
 #define osgate_setup_smp_patch 461
 #define osgate_notify_thread_suspend 462
 
-#define osgate_has_long_mode 463
-#define osgate_setup_long_mode 464
-#define osgate_start_long_mode 465
+#define osgate_is_long_code_sel 463
+#define osgate_setup_long_int_gate 464
+#define osgate_setup_long_trap_gate 465
+
+#define osgate_enter_long_int 466
+#define osgate_leave_long_int 467
+
+#define osgate_create_long_irq 468
+#define osgate_add_long_irq 469
+#define osgate_create_long_msi 470
+#define osgate_add_long_msi 471
+
+#define osgate_setup_long_spurious_int 472
+#define osgate_setup_long_timer_int 473
+#define osgate_setup_long_preempt_int 474
+#define osgate_setup_long_tlb_flush_int 475
+#define osgate_setup_long_preempt_timer_int 476
+#define osgate_setup_long_hpet_int 477
+#define osgate_clear_hpet 478
+
+#define osgate_setup_long_crash_gate 479
+
+#define osgate_enter_crash_debug 480
+#define osgate_execute_crash_handler 481
+#define osgate_crash_nmi 482
+#define osgate_setup_long_crash_nmi 483
+
+#define osgate_debug_block 484
+
+#define osgate_switch_to_long_mode 485
+#define osgate_switch_to_protected_mode 486
+
+#define osgate_notify_create_long_process 487
+
+#define osgate_load_long_regs 488
+#define osgate_is_long_thread 489
+#define osgate_long_mode_reset 490
 
 
 
@@ -559,6 +592,7 @@
 #define OsGate_register_bimodal_usergate 0x3E 0x67 0x9a 3 0 0 0 2 0
 #define OsGate_register_usergate16 0x3E 0x67 0x9a 4 0 0 0 2 0
 #define OsGate_register_usergate32 0x3E 0x67 0x9a 5 0 0 0 2 0
+#define OsGate_register_long_osgate 0x3E 0x67 0x9a 6 0 0 0 2 0
 #define OsGate_create_alias_sel16 0x3E 0x67 0x9a 7 0 0 0 2 0
 #define OsGate_create_core_gdt 0x3E 0x67 0x9a 8 0 0 0 2 0
 #define OsGate_emulate_opcode 0x3E 0x67 0x9a 9 0 0 0 2 0
@@ -959,6 +993,7 @@
 
 #define OsGate_lock_task 0x3E 0x67 0x9a 109 1 0 0 2 0
 #define OsGate_unlock_task 0x3E 0x67 0x9a 110 1 0 0 2 0
+#define OsGate_try_lock_task 0x3E 0x67 0x9a 111 1 0 0 2 0
 
 #define OsGate_get_core 0x3E 0x67 0x9a 112 1 0 0 2 0
 #define OsGate_get_core_count 0x3E 0x67 0x9a 113 1 0 0 2 0
@@ -994,11 +1029,8 @@
 
 #define OsGate_add_printer 0x3E 0x67 0x9a 131 1 0 0 2 0
 
-#define OsGate_crash_gate 0x3E 0x67 0x9a 132 1 0 0 2 0
 #define OsGate_crash_tss 0x3E 0x67 0x9a 133 1 0 0 2 0
 #define OsGate_crash_fault 0x3E 0x67 0x9a 134 1 0 0 2 0
-
-#define OsGate_start_crash_core 0x3E 0x67 0x9a 135 1 0 0 2 0
 
 #define OsGate_read_pnp_byte 0x3E 0x67 0x9a 137 1 0 0 2 0
 #define OsGate_write_pnp_byte 0x3E 0x67 0x9a 138 1 0 0 2 0
@@ -1045,7 +1077,7 @@
 #define OsGate_setup_pci_msi 0x3E 0x67 0x9a 164 1 0 0 2 0
 #define OsGate_request_msi_handler 0x3E 0x67 0x9a 165 1 0 0 2 0
 #define OsGate_request_irq_handler 0x3E 0x67 0x9a 166 1 0 0 2 0
-#define OsGate_request_pci_irq_handler 0x3E 0x67 0x9a 167 1 0 0 2 0
+#define OsGate_notify_irq 0x3E 0x67 0x9a 167 1 0 0 2 0
 
 #define OsGate_register_syscall 0x3E 0x67 0x9a 168 1 0 0 2 0
 #define OsGate_register_bimodal_syscall 0x3E 0x67 0x9a 169 1 0 0 2 0
@@ -1100,7 +1132,41 @@
 #define OsGate_setup_smp_patch 0x3E 0x67 0x9a 205 1 0 0 2 0
 #define OsGate_notify_thread_suspend 0x3E 0x67 0x9a 206 1 0 0 2 0
 
-#define OsGate_has_long_mode 0x3E 0x67 0x9a 207 1 0 0 2 0
-#define OsGate_setup_long_mode 0x3E 0x67 0x9a 208 1 0 0 2 0
-#define OsGate_start_long_mode 0x3E 0x67 0x9a 209 1 0 0 2 0
+#define OsGate_is_long_code_sel 0x3E 0x67 0x9a 207 1 0 0 2 0
+#define OsGate_setup_long_int_gate 0x3E 0x67 0x9a 208 1 0 0 2 0
+#define OsGate_setup_long_trap_gate 0x3E 0x67 0x9a 209 1 0 0 2 0
+
+#define OsGate_enter_long_int 0x3E 0x67 0x9a 210 1 0 0 2 0
+#define OsGate_leave_long_int 0x3E 0x67 0x9a 211 1 0 0 2 0
+
+#define OsGate_create_long_irq 0x3E 0x67 0x9a 212 1 0 0 2 0
+#define OsGate_add_long_irq 0x3E 0x67 0x9a 213 1 0 0 2 0
+#define OsGate_create_long_msi 0x3E 0x67 0x9a 214 1 0 0 2 0
+#define OsGate_add_long_msi 0x3E 0x67 0x9a 215 1 0 0 2 0
+
+#define OsGate_setup_long_spurious_int 0x3E 0x67 0x9a 216 1 0 0 2 0
+#define OsGate_setup_long_timer_int 0x3E 0x67 0x9a 217 1 0 0 2 0
+#define OsGate_setup_long_preempt_int 0x3E 0x67 0x9a 218 1 0 0 2 0
+#define OsGate_setup_long_tlb_flush_int 0x3E 0x67 0x9a 219 1 0 0 2 0
+#define OsGate_setup_long_preempt_timer_int 0x3E 0x67 0x9a 220 1 0 0 2 0
+#define OsGate_setup_long_hpet_int 0x3E 0x67 0x9a 221 1 0 0 2 0
+#define OsGate_clear_hpet 0x3E 0x67 0x9a 222 1 0 0 2 0
+
+#define OsGate_setup_long_crash_gate 0x3E 0x67 0x9a 223 1 0 0 2 0
+
+#define OsGate_enter_crash_debug 0x3E 0x67 0x9a 224 1 0 0 2 0
+#define OsGate_execute_crash_handler 0x3E 0x67 0x9a 225 1 0 0 2 0
+#define OsGate_crash_nmi 0x3E 0x67 0x9a 226 1 0 0 2 0
+#define OsGate_setup_long_crash_nmi 0x3E 0x67 0x9a 227 1 0 0 2 0
+
+#define OsGate_debug_block 0x3E 0x67 0x9a 228 1 0 0 2 0
+
+#define OsGate_switch_to_long_mode 0x3E 0x67 0x9a 229 1 0 0 2 0
+#define OsGate_switch_to_protected_mode 0x3E 0x67 0x9a 230 1 0 0 2 0
+
+#define OsGate_notify_create_long_process 0x3E 0x67 0x9a 231 1 0 0 2 0
+
+#define OsGate_load_long_regs 0x3E 0x67 0x9a 232 1 0 0 2 0
+#define OsGate_is_long_thread 0x3E 0x67 0x9a 233 1 0 0 2 0
+#define OsGate_long_mode_reset 0x3E 0x67 0x9a 234 1 0 0 2 0
 

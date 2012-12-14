@@ -613,6 +613,8 @@ has_touch_nr                    = 488
 had_carddev_inserted_nr         = 489
 clear_carddev_inserted_nr       = 490
 
-get_printer_error_code_nr       = 491
+is_printer_cutter_jammed_nr     = 491
+has_printer_temp_error_nr       = 492
+has_printer_feed_error_nr       = 493
 
 usergate_entries			    = 512

@@ -33,14 +33,17 @@ pr_paper_low_proc           DD ?
 
 pr_paper_end_proc           DD ?
 
+pr_cutter_jammed_proc       DD ?
+
 pr_ok_proc                  DD ?
 
 pr_head_lifted_proc         DD ?
 
 pr_paper_in_presenter_proc  DD ?
 
-; OUT AX    Error code
-pr_get_error_code_proc      DD ?
+pr_temp_error_proc          DD ?
+
+pr_feed_error_proc          DD ?
 
 pr_print_test_proc          DD ?
 

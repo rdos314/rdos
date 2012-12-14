@@ -460,6 +460,45 @@ is_printer_head_lifted       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           IsPrinterCutterJammed
+;
+;       description:    Is printer cutter jammed
+;
+;       PARAMETERS:     BX              Printer handle
+;
+;       RETURNS:        CY              Cutter jammed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_printer_cutter_jammed_name DB 'Is Printer Cutter Jammed?',0
+
+is_printer_cutter_jammed       Proc far
+    push ds
+    push eax
+    push ebx
+;
+    mov ax,PRINTER_HANDLE
+    DerefHandle
+    jc is_printer_cutter_jammed_done
+;
+    mov ds,[ebx].printer_sel
+    mov eax,ds:pr_cutter_jammed_proc
+    or eax,eax
+    clc
+    jz is_printer_cutter_jammed_done
+;       
+    call ds:pr_cutter_jammed_proc
+
+is_printer_cutter_jammed_done:
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+is_printer_cutter_jammed       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           HasPrinterPaperInPresenter
 ;
 ;       description:    Has printer paper in presenter
@@ -499,40 +538,80 @@ has_printer_paper_in_presenter       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           GetPrinterErrorCode
+;       NAME:           HasPrinterTempError
 ;
-;       description:    Get printer error code
+;       description:    Has printer temperature error
 ;
 ;       PARAMETERS:     BX              Printer handle
 ;
-;       RETURNS:        AX              Error code
+;       RETURNS:        CY              Temp error
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_printer_error_code_name DB 'Get Printer Error Code',0
+has_printer_temp_error_name DB 'Has Printer Temperature Error?',0
 
-get_printer_error_code       Proc far
+has_printer_temp_error       Proc far
     push ds
+    push eax
     push ebx
 ;
     mov ax,PRINTER_HANDLE
     DerefHandle
-    mov ax,-1
-    jc get_printer_error_code_done
+    jc has_printer_temp_error_done
 ;
     mov ds,[ebx].printer_sel
-    mov eax,ds:pr_get_error_code_proc
+    mov eax,ds:pr_temp_error_proc
     or eax,eax
-    mov ax,-1
-    jz get_printer_error_code_done
+    clc
+    jz has_printer_temp_error_done
 ;       
-    call ds:pr_get_error_code_proc
+    call ds:pr_temp_error_proc
 
-get_printer_error_code_done:
+has_printer_temp_error_done:
     pop ebx
+    pop eax
     pop ds
     retf32
-get_printer_error_code       Endp
+has_printer_temp_error       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           HasPrinterFeedError
+;
+;       description:    Has printer feed error
+;
+;       PARAMETERS:     BX              Printer handle
+;
+;       RETURNS:        CY              Feed error
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_printer_feed_error_name DB 'Has Printer Feed Error?',0
+
+has_printer_feed_error       Proc far
+    push ds
+    push eax
+    push ebx
+;
+    mov ax,PRINTER_HANDLE
+    DerefHandle
+    jc has_printer_feed_error_done
+;
+    mov ds,[ebx].printer_sel
+    mov eax,ds:pr_feed_error_proc
+    or eax,eax
+    clc
+    jz has_printer_feed_error_done
+;       
+    call ds:pr_feed_error_proc
+
+has_printer_feed_error_done:
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+has_printer_feed_error       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -825,12 +904,14 @@ add_printer    Proc far
     mov ds:pr_jammed_proc,0
     mov ds:pr_paper_low_proc,0
     mov ds:pr_paper_end_proc,0
+    mov ds:pr_cutter_jammed_proc,0
     mov ds:pr_ok_proc,0
     mov ds:pr_head_lifted_proc,0
     mov ds:pr_paper_in_presenter_proc,0
+    mov ds:pr_temp_error_proc,0
+    mov ds:pr_feed_error_proc,0
     mov ds:pr_print_test_proc,0
     mov ds:pr_create_bitmap_proc,0
-    mov ds:pr_get_error_code_proc,0
     mov ds:pr_print_bitmap_proc,0
     mov ds:pr_present_media_proc,0
     mov ds:pr_eject_media_proc,0
@@ -925,16 +1006,28 @@ init    Proc far
     mov ax,is_printer_head_lifted_nr
     RegisterBimodalUserGate
 ;
+    mov esi,OFFSET is_printer_cutter_jammed
+    mov edi,OFFSET is_printer_cutter_jammed_name
+    xor dx,dx
+    mov ax,is_printer_cutter_jammed_nr
+    RegisterBimodalUserGate
+;
     mov esi,OFFSET has_printer_paper_in_presenter
     mov edi,OFFSET has_printer_paper_in_presenter_name
     xor dx,dx
     mov ax,has_printer_paper_in_presenter_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET get_printer_error_code
-    mov edi,OFFSET get_printer_error_code_name
+    mov esi,OFFSET has_printer_temp_error
+    mov edi,OFFSET has_printer_temp_error_name
     xor dx,dx
-    mov ax,get_printer_error_code_nr
+    mov ax,has_printer_temp_error_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET has_printer_feed_error
+    mov edi,OFFSET has_printer_feed_error_name
+    xor dx,dx
+    mov ax,has_printer_feed_error_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET reset_printer
