@@ -1791,10 +1791,16 @@ handle_mode_ok:
     pop dx
 
 handle_func:
+    push eax
+    push ebx
+    push edx
     mov edx,0B8000h
     xor ebx,ebx
     mov eax,0B8007h
     SetPageEntry
+	pop edx
+	pop ebx
+	pop eax
 ;
     call HideMarker
     call DoFunc
