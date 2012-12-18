@@ -2226,6 +2226,9 @@ uaCheckLoop:
 
 uaCheckNext:
     movzx cx,es:[di].ucd_len
+    or cx,cx
+    jz uaDone
+;    
     add di,cx
     cmp di,es:ucd_size
     jb uaCheckLoop

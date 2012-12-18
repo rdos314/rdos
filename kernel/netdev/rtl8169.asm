@@ -664,6 +664,8 @@ InitHardware    Endp
 NetInt  Proc far
     mov dx,ds:IoBase
     add dx,REG_IMR
+    in ax,dx
+    mov di,ax
     xor ax,ax
     out dx,ax
 
@@ -680,6 +682,11 @@ niLoop:
     test ax,IR_ROK OR IR_RDU OR IR_FOVW OR IR_SER
     jz niNotRx
 ;
+    mov bx,ax
+    and bx,IR_RDU OR IR_FOVW
+    not bx
+    and di,bx
+;    
     mov bx,ds:Handle
     or bx,bx
     jz niNotRx
@@ -716,7 +723,7 @@ niNotTx:
 niDone:
     mov dx,ds:IoBase
     add dx,REG_IMR
-    mov ax,IR_MASK
+    mov ax,di
     out dx,ax
     retf32
 NetInt  Endp
@@ -742,6 +749,8 @@ NetTimeout  Proc far
     mov ds,cx
     mov dx,ds:IoBase
     add dx,REG_IMR
+    in ax,dx
+    mov di,ax
     xor ax,ax
     out dx,ax
 
@@ -757,6 +766,11 @@ ntLoop:
     out dx,ax
     test ax,IR_ROK OR IR_RDU OR IR_FOVW OR IR_SER
     jz ntNotRx
+;
+    mov bx,ax
+    and bx,IR_RDU OR IR_FOVW
+    not bx
+    and di,bx
 ;
     mov bx,ds:Handle
     or bx,bx
@@ -794,7 +808,7 @@ ntNotTx:
 ntDone:
     mov dx,ds:IoBase
     add dx,REG_IMR
-    mov ax,IR_MASK
+    mov ax,di
     out dx,ax
 ;
     pop edx
@@ -856,6 +870,11 @@ preview_loop:
     add si,4
     add bx,16
     loop preview_loop
+;    
+    mov dx,ds:IoBase
+    add dx,REG_IMR
+    mov ax,IR_MASK
+    out dx,ax
     stc
     jmp preview_done        
 
