@@ -44,7 +44,7 @@
 #
 ##########################################################################*/
 TPrinterDevice::TPrinterDevice(const char *IniSection)
-	: TWaitDevice(IniSection)
+        : TWaitDevice(IniSection)
 {
     FHandle = 0;
     FPort = 0;
@@ -80,9 +80,9 @@ TPrinterDevice::TPrinterDevice()
 #
 ##########################################################################*/
 TPrinterDevice::TPrinterDevice(const char *IniSection, int Port)
-	: TWaitDevice(IniSection)
+        : TWaitDevice(IniSection)
 {
-	Init(Port);
+        Init(Port);
 }
 
 /*##########################################################################
@@ -98,7 +98,7 @@ TPrinterDevice::TPrinterDevice(const char *IniSection, int Port)
 ##########################################################################*/
 TPrinterDevice::TPrinterDevice(int Port)
 {
-	Init(Port);
+        Init(Port);
 }
 
 /*##########################################################################
@@ -151,9 +151,9 @@ void TPrinterDevice::DeviceName(char *Name, int MaxLen) const
     char str[512];
 
     if (RdosGetPrinterName(FHandle, str))
-    	strncpy(Name, str, MaxLen);
+        strncpy(Name, str, MaxLen);
     else
-    	strncpy(Name,"Printer device",MaxLen);
+        strncpy(Name,"Printer device",MaxLen);
 }
 
 /*##########################################################################
@@ -201,6 +201,20 @@ int TPrinterDevice::IsJammed()
 
 /*##########################################################################
 #
+#   Name       : TPrinterDevice::IsCutterJammed
+#
+#   Purpose....: Check if cutter jammed
+#
+#   Returns....: TRUE if cutter jammed
+#
+##########################################################################*/
+int TPrinterDevice::IsCutterJammed()
+{
+    return RdosIsPrinterCutterJammed(FHandle);
+}
+
+/*##########################################################################
+#
 #   Name       : TPrinterDevice::IsPaperLow
 #
 #   Purpose....: Check if paper is low
@@ -243,6 +257,34 @@ int TPrinterDevice::IsPrintHeadLifted()
 
 /*##########################################################################
 #
+#   Name       : TPrinterDevice::HasFeedError
+#
+#   Purpose....: Check if there is a feed error
+#
+#   Returns....: TRUE if paper feed error
+#
+##########################################################################*/
+int TPrinterDevice::HasFeedError()
+{
+    return RdosHasPrinterFeedError(FHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TPrinterDevice::HasTemperatureError
+#
+#   Purpose....: Check if there is a temperature error
+#
+#   Returns....: TRUE if paper temperature error
+#
+##########################################################################*/
+int TPrinterDevice::HasTemperatureError()
+{
+    return RdosHasPrinterTemperatureError(FHandle);
+}
+
+/*##########################################################################
+#
 #   Name       : TPrinterDevice::HasPaperInPresenter
 #
 #   Purpose....: Check if there is paper in presenter
@@ -253,20 +295,6 @@ int TPrinterDevice::IsPrintHeadLifted()
 int TPrinterDevice::HasPaperInPresenter()
 {
     return RdosHasPrinterPaperInPresenter(FHandle);
-}
-
-/*##########################################################################
-#
-#   Name       : TPrinterDevice::GetErrorCode
-#
-#   Purpose....: Get error code
-#
-#   Returns....: 
-#
-##########################################################################*/
-int TPrinterDevice::GetErrorCode()
-{
-    return RdosGetPrinterErrorCode(FHandle);
 }
 
 /*##########################################################################

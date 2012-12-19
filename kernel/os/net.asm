@@ -1248,7 +1248,8 @@ register_driver_done:
     mov ds,ax
     mov si,OFFSET NetThread
     mov cx,stack0_size
-    mov ax,20
+;    mov ax,20
+    mov ax,2
     CreateThread
 ;
     pop esi

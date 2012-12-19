@@ -43,12 +43,14 @@ public:
     virtual int IsOnline() const;
 
     virtual int IsJammed();
+    virtual int IsCutterJammed();
     virtual int IsPaperLow();
     virtual int IsPaperEnd();
     virtual int IsPrintHeadLifted();
+    virtual int HasFeedError();
+    virtual int HasTemperatureError();
     virtual int HasPaperInPresenter();
     virtual void Reset();
-    int GetErrorCode();
 
     virtual void PrintTest();
 

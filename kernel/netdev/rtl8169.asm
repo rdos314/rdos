@@ -677,8 +677,9 @@ niLoop:
     jz niDone
 ;
     mov si,1
-    or ds:Isr,ax
+    mov ds:Isr,ax
     out dx,ax
+    and ax,di
     test ax,IR_ROK OR IR_RDU OR IR_FOVW OR IR_SER
     jz niNotRx
 ;
