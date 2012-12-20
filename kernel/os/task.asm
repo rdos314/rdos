@@ -1091,10 +1091,16 @@ acKernel:
     jmp acDone
 
 acPm:
+    push es
+    mov dx,ds:p_kernel_ss
+    mov es,dx
+    mov edi,ds:p_kernel_esp
+    mov word ptr es:[edi-2],0
+    pop es
+;    
     mov si,ss
     mov edi,esp
 ;    
-    mov dx,ds:p_kernel_ss
     mov ss,dx
     mov esp,ds:p_kernel_esp
 ;
