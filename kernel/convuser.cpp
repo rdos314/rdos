@@ -53,7 +53,7 @@ int main()
                     if (GateName[Size - 3] == '_')
                         GateName[Size - 3] = 0;
 
-                    sprintf(Macro, "#define usergate_%s %d\r\n",
+                    sprintf(Macro, "#define usergate_%s 0x%08hX\r\n",
                             GateName,
                             GateId);
 
