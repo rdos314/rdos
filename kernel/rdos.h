@@ -4,16 +4,9 @@
 
 #pragma pack( push, 1 )
 
-#ifndef __GNUC__
-#ifdef __cplusplus
-extern "C" {
-#endif
-#endif
-
 #include "rdoshdr.h"
 
 #define RDOSAPI
-#define RDOSATTR
 
 #ifdef __WATCOMC__
 #include "machtype.h"
@@ -23,8 +16,6 @@ extern "C" {
 
 #ifdef __GNUC__
 #include "rdu.h"
-#undef RDOSATTR
-#define RDOSATTR inline __attribute__ ((always_inline))
 #define real_math   long double
 #endif
 
@@ -182,10 +173,13 @@ typedef struct _EXCEPTION_POINTERS {
 
 // API functions
 
-void RDOSAPI RdosTestGate();
+#ifndef __GNUC__
 
-#pragma aux RdosTestGate = \
-    CallGate_test_gate;
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void RDOSAPI RdosTestGate();
 
 void RDOSAPI RdosLoad32();
 
@@ -194,7 +188,7 @@ long RDOSAPI RdosSwapLong(long val);
 
 int RDOSAPI RdosGetCharSize(const char *str);
 
-RDOSATTR long RDOSAPI RdosGetLongRandom();
+long RDOSAPI RdosGetLongRandom();
 long RDOSAPI RdosGetRandom(long range);
 
 long RDOSAPI RdosGetAcpiStatus();
@@ -712,10 +706,10 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 int RDOSAPI RdosHasTouch();
 
-#ifndef __GNUC__
 #ifdef __cplusplus
 }
 #endif
+
 #endif
 
 #pragma pack( pop )

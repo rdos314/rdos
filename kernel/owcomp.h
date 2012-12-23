@@ -25,6 +25,9 @@
 // check disc id, set to -1 on carry, extend to eax
 #define ValidateDisc 0x73 2 0xB0 0xFF 0xF 0xBE 0xC0
 
+#pragma aux RdosTestGate = \
+    CallGate_test_gate;
+
 #pragma aux RdosLoad32 = \
     CallGate_load_device32  \
 
