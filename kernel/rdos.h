@@ -4,20 +4,19 @@
 
 #pragma pack( push, 1 )
 
-#include "rdoshdr.h"
-
 #define RDOSAPI
 
 #ifdef __WATCOMC__
 #include "machtype.h"
-#include "rdu.h"
 #define real_math   xreal
 #endif
 
 #ifdef __GNUC__
-#include "rdu.h"
 #define real_math   long double
 #endif
+
+#include "rdoshdr.h"
+#include "rdu.h"
 
 #define FILE_ATTRIBUTE_READONLY         0x1
 #define FILE_ATTRIBUTE_HIDDEN           0x2
@@ -169,6 +168,8 @@ typedef struct _EXCEPTION_POINTERS {
     EXCEPTION_RECORD *ExceptionRecord;
     CONTEXT *ContextRecord;
 } EXCEPTION_POINTERS;
+
+#pragma pack( pop )
 
 
 // API functions
@@ -711,8 +712,6 @@ int RDOSAPI RdosHasTouch();
 #endif
 
 #endif
-
-#pragma pack( pop )
 
 #ifdef __GNUC__
 #include "user64.h"
