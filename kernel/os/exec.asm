@@ -1470,6 +1470,7 @@ CreateSpawnHandle   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 spawn_startup:
+    sti
     mov gs,bx
     mov ax,SEG data
     mov ds,ax
@@ -1613,6 +1614,7 @@ spFail:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 spawn_startup64:
+    sti
     mov gs,bx
     GetThread
     mov es,ax

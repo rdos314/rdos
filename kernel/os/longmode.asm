@@ -68,6 +68,16 @@ pushq0  Macro
     db 0
         Endm
 
+
+; this should be at linear address 0
+
+elf_proc_struc  STRUC
+
+ep_prog_name    DD ?
+ep_prog_cmd     DD ?
+
+elf_proc_struc  ENDS
+
 isa_irq_handler_struc   STRUC
 
 isa_irq_handler_ads     DD ?,?
@@ -1018,12 +1028,81 @@ is_64_bit_exe32 Endp
 init_long_exe_name DB 'Init Long Exe', 0
 
 init_long_exe   Proc far
-    int 3       
+    push ds
+    push es
+    pushad
+;    
+    AllocatePhysical64
+    xor edx,edx
+    or ax,3
+    SetPageEntry
+;
+    push esi
+    xor ecx,ecx
+
+init_pg_name_loop:
+    lodsb
+    or al,al
+    jz init_pg_name_ok
+;
+    inc ecx
+    jmp init_pg_name_loop
+
+init_pg_name_ok:
+    pop esi
+    inc ecx
+;
+    push es
+    push edi
+;    
+    mov eax,ecx
+    AllocateLocalLinear
+    mov edi,edx
+;    
+    mov ax,flat_sel
+    mov es,ax
+    mov es:ep_prog_name,edi
+    rep movsb
+;
+    pop edi
+    pop es
+;
+    mov ax,es
+    mov ds,ax
+    mov esi,edi
+;    
+    push esi
+    xor ecx,ecx
+
+init_pg_cmd_loop:
+    lodsb
+    or al,al
+    jz init_pg_cmd_ok
+;
+    inc ecx
+    jmp init_pg_cmd_loop
+
+init_pg_cmd_ok:
+    pop esi
+    inc ecx
+;    
+    mov eax,ecx
+    AllocateLocalLinear
+    mov edi,edx
+;    
+    mov ax,flat_sel
+    mov es,ax
+    mov es:ep_prog_cmd,edi
+    rep movsb
+;
+    int 3
+    mov edi,es:ep_prog_name
     xor cx,cx
     OpenFile
-    jc ileFail
-
-ileFail:
+;    
+    popad
+    pop es
+    pop ds
     ret
 init_long_exe   Endp
     
@@ -2723,20 +2802,11 @@ page_fault_dir_global:
     test al,1
     jnz page_fault_dir_global_valid
 ;    
-    cmp edx,system_mem_start
-    jb page_fault_dir_error
-    jmp page_fault_dir_error
-;
-    int 3
-    CreateSysPageDir
-    GetSysPageDir    
+    CrashGate
 
 page_fault_dir_global_valid:
     SetPageDir
     ret
-
-page_fault_dir_error:    
-    CrashGate
 
 page_fault_dir_local:
     mov rax,rsi
@@ -2744,7 +2814,7 @@ page_fault_dir_local:
     sub rax,rbx
     shr rax,9
     mov rdx,DIR_TABLE_LINEAR
-    and dl,0F8h
+    and al,0F8h
     mov rbx,[rax+rdx]
 ;
     test bl,1
@@ -2861,14 +2931,7 @@ page_fault_user    Proc near
 ;    
     test al,1
     jnz page_fault_user_retry
-;    
-    test al,2
-    jnz page_fault_user_valid
 ;
-    cmp edx,flat_size
-    jb page_fault_error
-
-page_fault_user_valid:
     and al,7
     cmp al,6
     jne page_fault_user_normal
@@ -2948,7 +3011,7 @@ page_fault32:
     and eax,0FFC00000h
 ;
     cmp eax,system_mem_start
-    jc page_fault_error
+    jc page_fault_user
 ;
     cmp eax,global_page_linear
     jc page_fault_global    

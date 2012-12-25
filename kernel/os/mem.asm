@@ -465,9 +465,6 @@ init_process_mem    PROC near
     push eax
     push edx
     push di
-;     
-    IsLongThread
-    jnc ipmDone
 ;
     mov ax,local_linear_sel
     mov ds,ax
@@ -557,7 +554,7 @@ init_mem_sels   PROC near
 ;
     mov bx,local_linear_sel
     mov edx,local_byte_linear
-    mov ecx,local_page_linear
+    mov ecx,local_page_linear - local_byte_linear
     CreateDataSelector32
 ;
     mov bx,vm_linear_sel

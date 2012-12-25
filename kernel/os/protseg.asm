@@ -641,6 +641,7 @@ create_long_code_dt_ok:
 ;
     mov ax,-1    
     mov [bx],ax
+    xor al,al
     mov [bx+7],al
 ;
     pop bx
