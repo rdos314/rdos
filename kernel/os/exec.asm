@@ -1617,24 +1617,11 @@ spawn_startup64:
     GetThread
     mov es,ax
 ;
-    int 3
     mov ax,3Bh
     EnableFocus
     SetFocus
-    mov es:app_key,al
 ;
-    xor si,si
-    mov ds,gs:s_name    
-    mov di,OFFSET app_exe_name
-
-spCopyExeLoop64:
-    lodsb
-    stosb
-    or al,al
-    jne spCopyExeLoop64
-;
-    pop ds
-    xor bx,bx
+    int 3
 ;
     GetThread
     mov es,ax
