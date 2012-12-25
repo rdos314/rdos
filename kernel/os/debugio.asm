@@ -887,28 +887,30 @@ WriteFreeMem    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WriteData
+;           NAME:           WriteData32
 ;
 ;           DESCRIPTION:    
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteData       PROC near
+WriteData32       PROC near
     push ds
     mov ax,SEG data
     mov ds,ax
     call GetDataGood
     or al,al
-    jz data_no_good
+    jz data_no_good32
 ;       
     call GetDataSel
     call GetDataOffset
     call WriteDataRow
-    jmp data_next
-data_no_good:
+    jmp data_next32
+
+data_no_good32:
     mov cx,79
     call Blank
-data_next:
+
+data_next32:
     call NewLine
     pop ds
 ;
@@ -946,7 +948,69 @@ data_next:
     call WriteDataRow
     pop word ptr gs:p_rflags+2
     ret
-WriteData       ENDP
+WriteData32       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteData64
+;
+;           DESCRIPTION:    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteData64       PROC near
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    call GetDataGood
+    or al,al
+    jz data_no_good64
+;       
+    call GetDataSel
+    call GetDataOffset
+    call WriteDataRow
+    jmp data_next64
+
+data_no_good64:
+    mov cx,79
+    call Blank
+
+data_next64:
+    call NewLine
+    pop ds
+;
+    mov ax,gs:p_cs
+    mov bx,word ptr gs:p_rip+2
+    shl ebx,16
+    mov bx,word ptr gs:p_rip
+    call WriteDataRow
+    call NewLine
+;
+    mov ax,gs:p_ss
+    mov bx,word ptr gs:p_rsp+2
+    shl ebx,16
+    mov bx,word ptr gs:p_rsp
+    call WriteDataRow
+    call NewLine
+;
+    mov ax,gs:p_es
+    xor ebx,ebx
+    call WriteDataRow
+    call NewLine
+;
+    mov ax,gs
+    mov es,ax
+    mov ax,es:p_pm_deb_sel
+    mov ebx,es:p_pm_deb_offs
+    call WriteDataRow
+    call NewLine
+;
+    mov ax,flat_sel
+    mov ebx,es:p_vm_deb_offs
+    call WriteDataRow
+    ret
+WriteData64       ENDP
 
 GetMne  PROC near
     push si
@@ -1584,7 +1648,7 @@ WriteCpu32    PROC near
     call WriteInstr
     call WriteThread
     call Delimiter
-    call WriteData
+    call WriteData32
     xor dx,dx
     xor cx,cx
     SetCursorPosition
@@ -1615,7 +1679,7 @@ WriteCpu64    PROC near
     call WriteInstr
     call WriteThread
     call Delimiter
-    call WriteData
+    call WriteData64
     xor dx,dx
     xor cx,cx
     SetCursorPosition
