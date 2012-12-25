@@ -586,5 +586,6 @@ long_mode_reset_nr          = 490
 create_sys_page_dir_nr      = 491
 
 init_long_exe_nr            = 492
+start_long_exe_nr           = 493
 
 osgate_entries				= 500

@@ -75,6 +75,7 @@ elf_proc_struc  STRUC
 
 ep_prog_name    DD ?
 ep_prog_cmd     DD ?
+ep_file_handle  DW ?
 
 elf_proc_struc  ENDS
 
@@ -1095,16 +1096,30 @@ init_pg_cmd_ok:
     mov es:ep_prog_cmd,edi
     rep movsb
 ;
-    int 3
     mov edi,es:ep_prog_name
     xor cx,cx
     OpenFile
+    mov es:ep_file_handle,bx    
 ;    
     popad
     pop es
     pop ds
     ret
 init_long_exe   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           StartLongExe
+;
+;       DESCRIPTION:    Start long mode executable
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_long_exe_name DB 'Start Long Exe', 0
+
+start_long_exe:
+    int 3
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1226,6 +1241,12 @@ init    proc far
     mov edi,OFFSET init_long_exe_name
     xor cl,cl
     mov ax,init_long_exe_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET start_long_exe
+    mov edi,OFFSET start_long_exe_name
+    xor cl,cl
+    mov ax,start_long_exe_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET is_64_bit_exe16

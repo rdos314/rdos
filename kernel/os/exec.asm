@@ -1634,12 +1634,47 @@ spawn_startup64:
     call SetupSpawnDir
     call SetupSpawnEnv
 ;
-    int 3
     xor esi,esi
     xor edi,edi
     mov ds,gs:s_name
     mov es,gs:s_cmd
     InitLongExe
+    jc spFail64
+;    
+    mov gs:s_ret_code,0
+    mov gs:s_app,0
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_process_sel
+    mov ax,ds:ms_pd_sel
+    mov gs:s_proc_sel,ax
+;
+    mov ax,gs
+    mov ds,ax
+    mov es,ax
+    LeaveSection ds:s_sect1
+    WaitForSignal
+;
+    mov ax,10
+    WaitMilliSec
+;
+    call FreeSpawn
+    int 3
+    StartLongExe
+
+spFail64:
+    mov gs:s_ret_code,-1
+    mov ax,gs
+    mov ds,ax
+    LeaveSection ds:s_sect1
+    WaitForSignal
+;
+    mov ax,10
+    WaitMilliSec
+;
+    call FreeSpawn
+    UnloadExe
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

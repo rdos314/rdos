@@ -1884,6 +1884,10 @@ InitLongExe     MACRO
     OsGate init_long_exe_nr
                     ENDM
 
+StartLongExe     MACRO
+    OsGate start_long_exe_nr
+                    ENDM
+
 ; IN  ES    Module selector
 SetModule       MACRO
     OsGate set_module_nr
