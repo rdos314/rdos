@@ -1006,6 +1006,30 @@ is_64_bit_exe32 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           InitLongExe
+;
+;       DESCRIPTION:    Init long mode executable
+;
+;       PARAMETERS:     DS:ESI  Program name
+;                       ES:EDI  Cmd line    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_long_exe_name DB 'Init Long Exe', 0
+
+init_long_exe   Proc far
+    int 3       
+    xor cx,cx
+    OpenFile
+    jc ileFail
+
+ileFail:
+    ret
+init_long_exe   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;    NAME:           Init
 ;
 ;    DESCRIPTION:    Init module
@@ -1119,8 +1143,11 @@ init    proc far
     mov ax,long_mode_reset_nr
     RegisterOsGate
 ;
-    mov edi,init_task
-    HookInitTasking    
+    mov esi,OFFSET init_long_exe
+    mov edi,OFFSET init_long_exe_name
+    xor cl,cl
+    mov ax,init_long_exe_nr
+    RegisterOsGate
 ;
     mov ebx,OFFSET is_64_bit_exe16
     mov esi,OFFSET is_64_bit_exe32

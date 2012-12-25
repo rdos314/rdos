@@ -1878,6 +1878,12 @@ CloneApp    MACRO
     OsGate clone_app_nr
                     ENDM
 
+;  DS:ESI       Program name
+;  ES:EDI       Cmd line
+InitLongExe     MACRO
+    OsGate init_long_exe_nr
+                    ENDM
+
 ; IN  ES    Module selector
 SetModule       MACRO
     OsGate set_module_nr

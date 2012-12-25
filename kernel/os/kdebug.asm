@@ -106,11 +106,11 @@ GetIllegalOsGate    PROC near
     mov esi,[bx].os_gate_name_offset
     xor bx,bx
 illegal_out_os_loop:
-    mov al,fs:[si]
+    mov al,fs:[esi]
     or al,al
     je illegal_out_os_ok
     stosb
-    inc si
+    inc esi
     inc bx
     loop illegal_out_os_loop
 illegal_out_os_ok:

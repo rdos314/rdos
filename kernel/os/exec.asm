@@ -1631,20 +1631,13 @@ spawn_startup64:
 ;
     call SetupSpawnDir
     call SetupSpawnEnv
-;    
-    int 3       
-    xor di,di
-    mov es,gs:s_name
-    xor cx,cx
-    OpenFile
-    jc spFail64
 ;
+    int 3
     xor esi,esi
     xor edi,edi
     mov ds,gs:s_name
     mov es,gs:s_cmd
-
-spFail64:
+    InitLongExe
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
