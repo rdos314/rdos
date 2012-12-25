@@ -1340,6 +1340,46 @@ DoSpawn Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           DoSpawn64
+;
+;           DESCRIPTION:    Do spawn, 64-bit
+;
+;           PARAMETERS:     GS      Spawn sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DoSpawn64 Proc near       
+    push ds
+    push es
+    push ax
+    push bx
+    push ecx
+    push si
+    push di
+;    
+    mov es,gs:s_name
+    xor edi,edi
+    mov ax,cs
+    mov ds,ax
+    mov esi,OFFSET spawn_startup64
+    mov bx,gs
+    mov ax,202h
+    mov ecx,stack0_size
+    CreateProcess
+;
+    pop di
+    pop si
+    pop ecx
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    ret
+DoSpawn64 Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           WaitForSpawn
 ;
 ;           DESCRIPTION:    Wait for spawn
@@ -1564,6 +1604,21 @@ spFail:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SpawnStartup64
+;
+;           DESCRIPTION:    Spawn startup stub, 64-bit version
+;
+;           PARAMETERS:     BX      Spawn sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+spawn_startup64:
+    int 3
+    mov gs,bx
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           spawn_program16/32
 ;
 ;           DESCRIPTION:    Load & detach executable file
@@ -1591,7 +1646,15 @@ spawn_program   Proc near
     UserGateForce32 is_64_bit_exe_nr
     jc spProt
 ;
-    int 3
+    call SetupSpawn
+    call CreateSpawnProg
+    call CreateSpawnParam
+    call CreateSpawnStartDir
+    call CreateSpawnEnv
+    call CreateSpawnOptions
+;
+    call DoSpawn64    
+    jmp spWait
     
 spProt:
     call SetupSpawn
@@ -1602,6 +1665,8 @@ spProt:
     call CreateSpawnOptions
 ;
     call DoSpawn
+
+spWait:    
     call WaitForSpawn
 ;
     mov cx,gs:s_ret_code

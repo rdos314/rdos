@@ -1119,15 +1119,15 @@ init    proc far
     mov ax,long_mode_reset_nr
     RegisterOsGate
 ;
+    mov edi,init_task
+    HookInitTasking    
+;
     mov ebx,OFFSET is_64_bit_exe16
     mov esi,OFFSET is_64_bit_exe32
     mov edi,OFFSET is_64_bit_exe_name
     mov dx,virt_ds_in
     mov ax,is_64_bit_exe_nr
     RegisterUserGate
-;
-    mov edi,init_task
-    HookInitTasking    
 ;    
     call InitIdt
 ;
