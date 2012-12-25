@@ -1660,7 +1660,6 @@ spawn_startup64:
     WaitMilliSec
 ;
     call FreeSpawn
-    int 3
     StartLongExe
 
 spFail64:
