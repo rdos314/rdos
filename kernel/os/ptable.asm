@@ -3323,8 +3323,15 @@ local_get_thread_page_entry64    Proc near
 ;
     mov di,es:p_tss_sel
     or di,di
-    jnz gtpBaseOk
+    jz gtpLong
 ;
+    or cx,cx
+    jz gtpBaseOk
+;    
+    stc
+    jmp get_thread_page_fail64
+
+gtpLong:
     mov si,(alias_linear SHR 18) AND 3FFFh
     or ax,803h
     mov [si],eax
@@ -3450,8 +3457,15 @@ local_set_thread_page_entry64    Proc near
 ;
     mov di,es:p_tss_sel
     or di,di
-    jnz stpBaseOk
+    jz stpLong
 ;
+    or cx,cx
+    jz stpBaseOk
+;    
+    stc
+    jmp set_thread_page_fail64
+
+stpLong:
     mov si,(alias_linear SHR 18) AND 3FFFh
     or ax,803h
     mov [si],eax
@@ -3578,8 +3592,15 @@ local_get_thread_page_dir64    Proc near
 ;
     mov di,es:p_tss_sel
     or di,di
-    jnz gtdBaseOk
+    jz gtdLong
 ;
+    or cx,cx
+    jz gtdBaseOk
+;    
+    stc
+    jmp get_thread_dir_fail64
+
+gtdLong:
     mov si,(alias_linear SHR 18) AND 3FFFh
     or ax,803h
     mov [si],eax

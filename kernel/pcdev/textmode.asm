@@ -165,6 +165,7 @@ switch_mode_done:
     GetFocusThread
     mov bp,ax
     mov edx,ds:v_mem_base
+    xor cx,cx
     mov eax,edx
     xor ebx,ebx
     or ax,807h
@@ -252,6 +253,7 @@ switch_from     Proc far
     mov edx,ds:v_buf_base
     GetPageEntry
     or ax,807h
+    xor cx,cx
     mov edx,ds:v_mem_base
     SetThreadPageEntry
     LeaveSection ds:v_section
