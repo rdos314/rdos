@@ -348,6 +348,18 @@ init_mem    PROC near
     mov ax,write_thread_segment_nr
     RegisterOsGate
 ;
+    mov si,OFFSET read_thread64
+    mov di,OFFSET read_thread64_name
+    xor cl,cl
+    mov ax,read_thread64_nr
+    RegisterOsGate
+;
+    mov si,OFFSET write_thread64
+    mov di,OFFSET write_thread64_name
+    xor cl,cl
+    mov ax,write_thread64_nr
+    RegisterOsGate
+;
     mov si,OFFSET get_thread_linear
     mov di,OFFSET get_thread_linear_name
     xor dx,dx
@@ -3358,7 +3370,7 @@ read_thread_selector    ENDP
 ;
 ;           DESCRIPTION:    Write byte to another thread
 ;
-;           PARAMETERS:         DX:EAX      Selector:offset in thread
+;           PARAMETERS:     DX:ESI          Selector:offset in thread
 ;                           BX              Thread
 ;                           AL              Value to write
 ;
@@ -3384,11 +3396,13 @@ write_thread_selector_retry:
     call validate_thread_selector
     jc write_thread_selector_done
 ;    
+    push cx
     xor cx,cx
     movzx esi,dx
     and dx,0F000h
     and si,0FFFh
     GetThreadPageEntry
+    pop cx
 ;
     test al,1
     jnz write_thread_selector_do
@@ -3723,9 +3737,11 @@ write_thread_segment_retry:
     jmp write_thread_segment_retry
 
 write_thread_segment_normal:
+    push cx
     xor cx,cx
     and si,0FFFh
     GetThreadPageEntry
+    pop cx
 ;
     test al,1
     jnz write_thread_segment_do
@@ -3761,6 +3777,152 @@ write_thread_segment_do:
     pop es
     retf32
 write_thread_segment    ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           READ_THREAD64
+;
+;           DESCRIPTION:    Read byte from another thread
+;
+;           PARAMETERS:     DX:ESI          Offset in thread
+;                           BX              Thread
+;
+;           RETURNS:        NC              Valid
+;                               AL          Value
+;                           CY              Invalid
+;                               AL          Error
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_thread64_name       DB 'Read Thread64',0
+
+read_thread64    PROC far
+    push es
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push bp
+;
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov bp,bx
+    mov cx,dx
+    mov edx,esi
+    and esi,0FFFh
+    GetThreadPageEntry
+;
+    test al,1
+    jnz read_thread64_ok
+;    
+    stc
+    mov al,'%'
+    jmp read_thread64_done
+
+read_thread64_ok:
+    push eax
+    mov eax,1000h
+    AllocateLocalLinear
+    pop eax
+    SetPageEntry
+;
+    mov al,es:[edx+esi]
+;
+    push eax
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+    pop eax
+;    
+    mov ecx,1000h
+    FreeLinear
+    clc
+    
+read_thread64_done:
+    pop bp
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    retf32
+read_thread64    ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           WRITE_THREAD64
+;
+;           DESCRIPTION:    Write byte to another thread
+;
+;           PARAMETERS:     DX:EAX          Offset in thread
+;                           BX              Thread
+;                           AL              Value to write
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_thread64_name      DB 'Write Thread64',0
+
+write_thread64   PROC far
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push bp
+;
+    push ax
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov bp,bx
+    mov cx,dx
+    mov edx,esi
+    and esi,0FFFh
+    GetThreadPageEntry
+;
+    test al,1
+    jnz write_thread64_do
+;
+    AllocatePhysical64
+    or al,7
+    SetThreadPageEntry
+
+write_thread64_do:
+    pop cx
+;    
+    push eax
+    mov eax,1000h
+    AllocateLocalLinear
+    pop eax
+;
+    SetPageEntry
+;
+    mov es:[edx+esi],cl
+;
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry    
+;
+    mov ecx,1000h
+    FreeLinear
+    clc
+    
+write_thread64_done:
+    pop bp
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    retf32
+write_thread64   ENDP
 
 
 code    ENDS

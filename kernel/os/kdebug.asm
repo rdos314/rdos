@@ -103,8 +103,7 @@ ReadData64    Proc near
     push esi
     mov esi,ebx
     mov bx,es
-    mov dx,flat_sel
-    ReadThreadSelector    
+    ReadThread64
     pop esi
     pop bx
     ret

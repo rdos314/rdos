@@ -749,6 +749,22 @@ WriteThreadSegment      MACRO
     OsGate write_thread_segment_nr
                     ENDM
 
+;       DX:ESI      ADDRESS TO READ
+;       BX          Thread
+;       NC          VALID
+;       AL          DATA OR ERROR REASON
+ReadThread64      MACRO
+    OsGate read_thread64_nr
+                    ENDM
+
+;       DX:ESI      ADDRESS TO WRITE
+;       BX          Thread
+;       NC          VALID
+;       AL          DATA TO WRITE
+WriteThread64     MACRO
+    OsGate write_thread64_nr
+                    ENDM
+
 ;       EAX         ANTAL BYTE
 ;       EDX         LINEAR BASE ADDRESS
 SetPageEmulate  MACRO
