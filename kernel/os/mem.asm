@@ -3310,15 +3310,6 @@ read_thread_selector_retry:
 ;
     movzx esi,dx
     and dx,0F000h
-    or edx,edx
-    jnz read_thread_selector_normal
-;    
-    mov dx,flat_sel
-    movzx esi,si
-    add esi,page0_linear
-    jmp read_thread_selector_retry
-
-read_thread_selector_normal:
     and si,0FFFh
     GetThreadPageEntry
 ;
@@ -3394,15 +3385,6 @@ write_thread_selector_retry:
 ;    
     movzx esi,dx
     and dx,0F000h
-    or edx,edx
-    jnz write_thread_selector_normal
-;    
-    mov dx,flat_sel
-    movzx esi,si
-    add esi,page0_linear
-    jmp write_thread_selector_retry
-
-write_thread_selector_normal:
     and si,0FFFh
     GetThreadPageEntry
 ;
