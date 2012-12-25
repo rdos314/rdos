@@ -617,4 +617,6 @@ is_printer_cutter_jammed_nr     = 491
 has_printer_temp_error_nr       = 492
 has_printer_feed_error_nr       = 493
 
+is_64_bit_exe_nr                = 494
+
 usergate_entries			    = 512

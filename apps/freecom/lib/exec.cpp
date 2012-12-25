@@ -72,6 +72,9 @@ int TExecCommand::Execute(char *param)
     int Handle;
     char env[2] = {0, 0};
 
+    if (RdosIs64BitExe(FProgName.GetData()))
+        FDetach = TRUE;
+
     if (FDetach)
     {
         Handle = RdosSpawn(FProgName.GetData(), param, StartupDir.Get().GetData(), 0, 0, &ThreadId);

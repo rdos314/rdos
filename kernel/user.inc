@@ -773,6 +773,11 @@ XmsHandler	MACRO
 					ENDM
 
 ; IN  DS:(E)SI	Program name
+Is64BitExe	MACRO
+	UserGate is_64_bit_exe_nr
+					ENDM
+
+; IN  DS:(E)SI	Program name
 ; IN  ES:(E)DI	Command line
 ; IN  GS:(E)BX	Options
 LoadExe	MACRO

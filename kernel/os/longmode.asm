@@ -35,6 +35,7 @@ include proc.inc
 include protseg.def
 include gate.def
 include system.def
+include elf.def
 
 PAGE_TABLE_LINEAR   equ 0FFFFFF8000000000h
 DIR_TABLE_LINEAR    equ 0FFFFFFFFC0000000h
@@ -910,6 +911,97 @@ reset_wait:
     jmp reset_wait
 
     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           Is64BitExe
+;
+;       DESCRIPTION:    Check for 64-bit exe
+;
+;       PARAMETERS:     DS:(E)SI  Program name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_64_bit_exe_name DB 'Is 64-bit Executable?', 0
+
+is_64_bit_exe   Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edi
+;
+    mov ax,ds
+    mov es,ax
+    mov edi,esi
+;
+    xor cl,cl
+    OpenFile
+    jc is_64_done
+;
+    mov eax,SIZE elf_header
+    AllocateSmallGlobalMem
+    mov ecx,eax
+    xor edi,edi
+    ReadFile
+    jc is_64_close_fail
+;
+    cmp eax,ecx
+    jnz is_64_close_fail
+;
+    mov eax,es:elf_magic
+    cmp eax,464C457Fh
+    jne is_64_close_fail
+;
+    mov al,es:elf_file_class
+    cmp al,EFC64
+    jne is_64_close_fail
+;
+    mov al,es:elf_endian
+    cmp al,EELSB
+    jne is_64_close_fail
+;        
+    mov al,es:elf_abi
+    cmp al,EOSABI_SYSV
+    jne is_64_close_fail
+;
+    mov ax,es:elf_type
+    cmp ax,ET_EXEC
+    jne is_64_close_fail
+;
+    FreeMem    
+    CloseFile
+    clc
+    jmp is_64_done
+
+is_64_close_fail:
+    FreeMem
+    CloseFile
+    stc
+        
+is_64_done:
+    pop edi
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+is_64_bit_exe   Endp
+
+is_64_bit_exe16 Proc far
+    push esi
+    movzx esi,si
+    call is_64_bit_exe
+    pop esi
+    ret
+is_64_bit_exe16 Endp
+
+is_64_bit_exe32 Proc far
+    call is_64_bit_exe
+    ret
+is_64_bit_exe32 Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1026,6 +1118,13 @@ init    proc far
     xor cl,cl
     mov ax,long_mode_reset_nr
     RegisterOsGate
+;
+    mov ebx,OFFSET is_64_bit_exe16
+    mov esi,OFFSET is_64_bit_exe32
+    mov edi,OFFSET is_64_bit_exe_name
+    mov dx,virt_ds_in
+    mov ax,is_64_bit_exe_nr
+    RegisterUserGate
 ;
     mov edi,init_task
     HookInitTasking    

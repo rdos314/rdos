@@ -617,6 +617,8 @@
 #define usergate_has_printer_temp_error 0x000001EC
 #define usergate_has_printer_feed_error 0x000001ED
 
+#define usergate_is_64_bit_exe 0x000001EE
+
 
 
 #ifdef __FLAT__
@@ -1239,6 +1241,8 @@
 #define CallGate_has_printer_temp_error 0x67 0x9a 236 1 0 0 3 0
 #define CallGate_has_printer_feed_error 0x67 0x9a 237 1 0 0 3 0
 
+#define CallGate_is_64_bit_exe 0x67 0x9a 238 1 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1858,5 +1862,7 @@
 #define CallGate_is_printer_cutter_jammed 0x3e 0x67 0x9a 235 1 0 0 3 0
 #define CallGate_has_printer_temp_error 0x3e 0x67 0x9a 236 1 0 0 3 0
 #define CallGate_has_printer_feed_error 0x3e 0x67 0x9a 237 1 0 0 3 0
+
+#define CallGate_is_64_bit_exe 0x3e 0x67 0x9a 238 1 0 0 3 0
 
 #endif

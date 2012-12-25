@@ -409,6 +409,8 @@ int RDOSAPI RdosHasGlobalTimer();
 int RDOSAPI RdosGetCoreLoad(int Core, long long *NullTics, long long *CoreTics);
 int RDOSAPI RdosGetCoreDuty(int Core, long long *CoreTics, long long *TotalTics);
 
+int RDOSAPI RdosIs64BitExe(const char *prog);
+
 #ifdef __RDOS__     // these are only available in user-mode
 
 int RDOSAPI RdosExec(const char *prog, const char *param, const char *options);

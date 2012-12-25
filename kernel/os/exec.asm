@@ -137,7 +137,7 @@ load_exe_file_ret:
     pop fs
     jnc load_exe_file_done
 ;
-    add ax,4
+    add ax,8
     dec cl
     jnz load_exe_file_loop
 ;
@@ -1588,6 +1588,12 @@ spawn_program   Proc near
     push bx
     push cx
 ;
+    UserGateForce32 is_64_bit_exe_nr
+    jc spProt
+;
+    int 3
+    
+spProt:
     call SetupSpawn
     call CreateSpawnProg
     call CreateSpawnParam

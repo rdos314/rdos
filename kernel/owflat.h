@@ -1139,6 +1139,12 @@
     "movzx eax,ax"  \
     value [eax];
 
+#pragma aux RdosIs64BitExe = \
+    CallGate_is_64_bit_exe  \
+    CarryToBool \    
+    parm [esi] \
+    value [eax];
+
 #pragma aux RdosExec = \
     "push gs" \
     "mov ax,ds" \
