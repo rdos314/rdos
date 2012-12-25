@@ -3308,6 +3308,7 @@ read_thread_selector_retry:
     call validate_thread_selector
     jc read_thread_selector_done
 ;
+    xor cx,cx
     movzx esi,dx
     and dx,0F000h
     and si,0FFFh
@@ -3383,6 +3384,7 @@ write_thread_selector_retry:
     call validate_thread_selector
     jc write_thread_selector_done
 ;    
+    xor cx,cx
     movzx esi,dx
     and dx,0F000h
     and si,0FFFh
@@ -3627,6 +3629,7 @@ read_thread_segment_retry:
     jmp read_thread_segment_retry
 
 read_thread_segment_normal:
+    xor cx,cx
     and si,0FFFh
     GetThreadPageEntry
 ;
@@ -3720,6 +3723,7 @@ write_thread_segment_retry:
     jmp write_thread_segment_retry
 
 write_thread_segment_normal:
+    xor cx,cx
     and si,0FFFh
     GetThreadPageEntry
 ;

@@ -3297,7 +3297,7 @@ local_unhook_page64     ENDP
 ;           DESCRIPTION:    Get physical page for linear address in other thread.
 ;
 ;           PARAMETERS:     BP          Thread
-;                           EDX         Linear address
+;                           CX:EDX      Linear address
 ;
 ;           RETURNS:        EBX:EAX     Physical address or 0                       
 ;                           
@@ -3421,7 +3421,7 @@ local_get_thread_page_entry64    Endp
 ;           DESCRIPTION:    Set physical page for linear address in other thread.
 ;
 ;           PARAMETERS:     BP          Thread
-;                           EDX         Linear address
+;                           CX:EDX      Linear address
 ;                           EBX:EAX     Physical address
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3551,7 +3551,7 @@ local_set_thread_page_entry64    Endp
 ;           DESCRIPTION:    Get physical page directory for other thread
 ;
 ;           PARAMETERS:     BP          Thread
-;                           EDX         Linear address
+;                           CX:EDX      Linear address
 ;
 ;           RETURNS:        EBX:EAX     Physical address or 0                       
 ;                           

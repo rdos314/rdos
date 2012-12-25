@@ -63,6 +63,7 @@ code    SEGMENT byte public 'CODE'
     extrn GetOpBuf:near
     
     extrn ReadData:near
+    extrn ReadData64:near
     extrn GetIllegalOsGate:near
     extrn GetIllegalUserGate:near
     extrn GetOsCall:near
@@ -377,6 +378,30 @@ WriteHexPtr32   PROC near
     pop eax
     ret
 WriteHexPtr32   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteHex64
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DX          High offset
+;                           EBX         Offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteHex64   PROC near
+    push eax
+    mov ax,dx
+    call WriteHexWord
+    mov al,'_'
+    WriteChar
+    mov eax,ebx
+    call WriteHexDword
+    pop eax
+    ret
+WriteHex64   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -711,6 +736,63 @@ WriteDataRow    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           WriteDataRow64
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     AX          High offset
+;                           EBX         Offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteDataRow64    PROC near
+    mov dx,ax
+    mov ax,gs
+    mov es,ax
+    call WriteHex64
+    mov cx,16
+    push ebx
+
+write_data_loop64:
+    mov al,' '
+    WriteChar
+    call ReadData64
+    jc write_data_inv64
+;
+    call WriteHexByte
+    jmp write_data_next64
+
+write_data_inv64:
+    WriteChar
+    WriteChar
+
+write_data_next64:
+    inc ebx
+    loop write_data_loop64
+    pop ebx
+;
+    mov al,' '
+    WriteChar
+    mov cx,16
+    
+write_ascii_loop64:
+    call ReadData64
+    cmp al,20h
+    jnc write_ascii_do64
+;
+    mov al,' '
+write_ascii_do64:
+    WriteChar
+    inc ebx
+    loop write_ascii_loop64
+
+write_data_end64:
+    ret
+WriteDataRow64    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           WriteFault
 ;
 ;           DESCRIPTION:    
@@ -960,23 +1042,76 @@ WriteData32       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteData64       PROC near
+    mov bx,gs:p_cs
+    IsLongCodeSelector
+    jc wd64_32
+
+wd64_64:    
     push ds
     mov ax,SEG data
     mov ds,ax
     call GetDataGood
     or al,al
-    jz data_no_good64
+    jz data_no_good64_64
+;       
+    call GetDataSel
+    call GetDataOffset
+    call WriteDataRow64
+    jmp data_next64_64
+
+data_no_good64_64:
+    mov cx,79
+    call Blank
+
+data_next64_64:
+    call NewLine
+    pop ds
+;
+    mov ax,gs:p_cs
+    mov bx,word ptr gs:p_rip+2
+    shl ebx,16
+    mov bx,word ptr gs:p_rip
+    call WriteDataRow64
+    call NewLine
+;
+    mov ax,gs:p_ss
+    mov bx,word ptr gs:p_rsp+2
+    shl ebx,16
+    mov bx,word ptr gs:p_rsp
+    call WriteDataRow64
+    call NewLine
+;
+    mov ax,gs:p_es
+    xor ebx,ebx
+    call WriteDataRow64
+    call NewLine
+;
+    mov ax,gs
+    mov es,ax
+    mov ax,es:p_pm_deb_sel
+    mov ebx,es:p_pm_deb_offs
+    call WriteDataRow64
+    call NewLine
+    jmp wd64_vm
+
+wd64_32:
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    call GetDataGood
+    or al,al
+    jz data_no_good64_32
 ;       
     call GetDataSel
     call GetDataOffset
     call WriteDataRow
-    jmp data_next64
+    jmp data_next64_32
 
-data_no_good64:
+data_no_good64_32:
     mov cx,79
     call Blank
 
-data_next64:
+data_next64_32:
     call NewLine
     pop ds
 ;
@@ -1005,10 +1140,11 @@ data_next64:
     mov ebx,es:p_pm_deb_offs
     call WriteDataRow
     call NewLine
-;
-    mov ax,flat_sel
+
+wd64_vm:
+    mov ax,es:p_vm_deb_sel
     mov ebx,es:p_vm_deb_offs
-    call WriteDataRow
+    call WriteDataRow64
     ret
 WriteData64       ENDP
 

@@ -697,21 +697,21 @@ MovePageEntries MACRO
                     ENDM
 
 ;       BP          Thread
-;       EDX         LINEAR ADDRESS
+;       CX:EDX      LINEAR ADDRESS
 ;       EBX:EAX     PAGE ENTRY
 GetThreadPageEntry   MACRO
     OsGate get_thread_page_entry_nr
                     ENDM
 
 ;       BP          Thread
-;       EDX         LINEAR ADDRESS
+;       CX:EDX      LINEAR ADDRESS
 ;       EBX:EAX     PAGE ENTRY
 SetThreadPageEntry   MACRO
     OsGate set_thread_page_entry_nr
                     ENDM
 
 ;       BP          Thread
-;       EDX         LINEAR ADDRESS
+;       CX:EDX      LINEAR ADDRESS
 ;       EBX:EAX     PAGE ENTRY
 GetThreadPageDir   MACRO
     OsGate get_thread_page_dir_nr

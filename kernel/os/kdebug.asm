@@ -86,6 +86,33 @@ ReadData    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ReadData64
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:         DX:EBX  ADDRESS
+;                           ES          THREAD
+;                           AL          RESULT
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public ReadData64
+    
+ReadData64    Proc near
+    push bx
+    push esi
+    mov esi,ebx
+    mov bx,es
+    mov dx,flat_sel
+    ReadThreadSelector    
+    pop esi
+    pop bx
+    ret
+ReadData64    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:       GetIllegalOsGate
 ;
 ;       DESCRIPTION:    Get illegal OS gate name

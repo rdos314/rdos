@@ -566,9 +566,12 @@ set_focus_no_lost:
     xor edi,edi
 
 set_focus_loop:
+    push cx
+    xor cx,cx
     mov edx,io_local_linear
     add edx,edi
     GetThreadPageDir
+    pop cx
 ;  
     mov edx,io_focus_linear
     add edx,edi
