@@ -2696,11 +2696,20 @@ page_fault_dir_global:
     test al,1
     jnz page_fault_dir_global_valid
 ;    
-    CrashGate
+    cmp edx,system_mem_start
+    jb page_fault_dir_error
+    jmp page_fault_dir_error
+;
+    int 3
+    CreateSysPageDir
+    GetSysPageDir    
 
 page_fault_dir_global_valid:
     SetPageDir
     ret
+
+page_fault_dir_error:    
+    CrashGate
 
 page_fault_dir_local:
     mov rax,rsi

@@ -1613,8 +1613,39 @@ spFail:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 spawn_startup64:
-    int 3
     mov gs,bx
+    GetThread
+    mov es,ax
+;
+    int 3
+    mov ax,3Bh
+    EnableFocus
+    SetFocus
+    mov es:app_key,al
+;
+    xor si,si
+    mov ds,gs:s_name    
+    mov di,OFFSET app_exe_name
+
+spCopyExeLoop64:
+    lodsb
+    stosb
+    or al,al
+    jne spCopyExeLoop64
+;
+    pop ds
+    xor bx,bx
+;
+    GetThread
+    mov es,ax
+    mov al,gs:s_switch
+    mov es:p_parent_switch,al
+;       
+    GetThread
+    mov gs:s_thread,ax
+;
+    call SetupSpawnDir
+    call SetupSpawnEnv
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
