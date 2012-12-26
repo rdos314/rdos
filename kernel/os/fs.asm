@@ -566,7 +566,7 @@ rename_file16   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           INIT_PROCESS
+;           NAME:           INIT_PRO
 ;
 ;           DESCRIPTION:    Init per-process data
 ;
@@ -802,12 +802,12 @@ init    PROC far
     mov edi,OFFSET init_hook_thread
     HookInitTasking
 ;
-    mov edi,OFFSET init_process
-    HookCreateProcess
+    mov edi,OFFSET init_program
+    HookStartProgram
 ;
     mov eax,SIZE fs_process_seg
     mov bx,fs_process_sel
-    AllocateFixedProcessMem
+    AllocateFixedProgramMem
 ;       
     mov eax,SIZE fs_data_seg
     mov bx,fs_sys_data_sel

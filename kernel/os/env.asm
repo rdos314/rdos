@@ -1267,13 +1267,13 @@ delete_handle   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   
 ;
-;       NAME:       InitProcess
+;       NAME:       InitProgram
 ;
-;       DESCRIPTION:    Init process
+;       DESCRIPTION:    Init program
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_process    Proc far
+init_program    Proc far
     push ds
     push es
     pushad
@@ -1310,7 +1310,7 @@ init_proc_var_loop:
     pop es
     pop ds
     retf32
-init_process    Endp
+init_program    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1353,14 +1353,14 @@ init_device_loop:
 ;
     mov eax,SIZE env_proc_seg
     mov bx,env_proc_sel
-    AllocateFixedProcessMem
+    AllocateFixedProgramMem
 ;
     mov ax,cs
     mov ds,ax
     mov es,ax
 ;
-    mov edi,OFFSET init_process
-    HookCreateProcess
+    mov edi,OFFSET init_program
+    HookStartProgram
 ;
     mov edi,OFFSET delete_handle
     mov ax,ENV_HANDLE
