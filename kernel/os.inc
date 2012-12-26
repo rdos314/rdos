@@ -582,6 +582,14 @@ NotifyProcessExit MACRO
     OsGate notify_process_exit_nr
                     ENDM
 
+NotifyStartProgram MACRO
+    OsGate notify_start_program_nr
+                    ENDM
+
+NotifyEndProgram MACRO
+    OsGate notify_end_program_nr
+                    ENDM
+
 ;       EDX         LINEAR ADDRESS
 ;       EBX:EAX     PAGE ENTRY
 GetPageEntry MACRO
@@ -1342,6 +1350,16 @@ HookCreateProcess       MACRO
 ;       ES:EDI       ADDRESS TILL CALLBACK
 HookTerminateProcess    MACRO
     OsGate hook_terminate_process_nr
+                    ENDM
+
+;       ES:EDI       ADDRESS TILL CALLBACK
+HookStartProgram       MACRO
+    OsGate hook_start_program_nr
+                    ENDM
+
+;       ES:EDI       ADDRESS TILL CALLBACK
+HookEndProgram    MACRO
+    OsGate hook_end_program_nr
                     ENDM
 
 ;       ES:EDI       ADDRESS TILL CALLBACK

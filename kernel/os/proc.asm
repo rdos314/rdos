@@ -475,7 +475,7 @@ hook_create_process     ENDP
 ;
 ;           DESCRIPTION:    Add TerminateProcess hook
 ;
-;           PARAMETERS:         ES:DI       Callback
+;           PARAMETERS:         ES:EDI       Callback
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -501,6 +501,76 @@ hook_terminate_process  PROC far
     pop ds
     retf32
 hook_terminate_process  ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           HOOK_START_PROGRAM
+;
+;           DESCRIPTION:    Add StartProgram hook
+;
+;           PARAMETERS:     ES:EDI       Callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_start_program_name    DB 'Hook Start Program',0
+
+hook_start_program     PROC far
+    push ds
+    push ax
+    push bx
+    mov ax,proc_data_sel
+    mov ds,ax
+    mov al,ds:start_program_hooks
+    mov bl,al
+    xor bh,bh
+    shl bx,3
+    add bx,OFFSET start_program_arr
+    mov [bx],edi
+    mov [bx+4],es
+    inc al
+    mov ds:start_program_hooks,al
+    pop bx
+    pop ax
+    pop ds
+    retf32
+hook_start_program     ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           HOOK_END_PROGRAM
+;
+;           DESCRIPTION:    Add EndProgram hook
+;
+;           PARAMETERS:         ES:EDI       Callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_end_program_name     DB 'Hook End Program',0
+
+hook_end_program  PROC far
+    push ds
+    push ax
+    push bx
+    mov ax,proc_data_sel
+    mov ds,ax
+    mov al,ds:end_program_hooks
+    mov bl,al
+    xor bh,bh
+    shl bx,3
+    add bx,OFFSET end_program_arr
+    mov [bx],edi
+    mov [bx+4],es
+    inc al
+    mov ds:end_program_hooks,al
+    pop bx
+    pop ax
+    pop ds
+    retf32
+hook_end_program  ENDP
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -601,6 +671,39 @@ notify_process_exit       PROC far
     call trap_terminate_process
     retf32
 notify_process_exit       ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           NotifyStartProgram
+;
+;           DESCRIPTION:    Notify program started
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_start_program_name  DB 'Notify Start Program',0
+
+notify_start_program       PROC far
+    call trap_start_program
+    retf32
+notify_start_program       ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           NotifyEndProgram
+;
+;           DESCRIPTION:    Notify program end
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_end_program_name  DB 'Notify End Program',0
+
+notify_end_program       PROC far
+    call free_handle_process
+    call trap_end_program
+    retf32
+notify_end_program       ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -900,6 +1003,18 @@ init_thread     PROC near
     mov ax,hook_terminate_process_nr
     RegisterOsGate
 ;
+    mov si,OFFSET hook_start_program
+    mov di,OFFSET hook_start_program_name
+    xor cl,cl
+    mov ax,hook_start_program_nr
+    RegisterOsGate
+;
+    mov si,OFFSET hook_end_program
+    mov di,OFFSET hook_end_program_name
+    xor cl,cl
+    mov ax,hook_end_program_nr
+    RegisterOsGate
+;
     mov si,OFFSET hook_init_tasking
     mov di,OFFSET hook_init_tasking_name
     xor cl,cl
@@ -928,6 +1043,18 @@ init_thread     PROC near
     mov di,OFFSET notify_process_exit_name
     xor cl,cl
     mov ax,notify_process_exit_nr
+    RegisterOsGate
+;
+    mov si,OFFSET notify_start_program
+    mov di,OFFSET notify_start_program_name
+    xor cl,cl
+    mov ax,notify_start_program_nr
+    RegisterOsGate
+;
+    mov si,OFFSET notify_end_program
+    mov di,OFFSET notify_end_program_name
+    xor cl,cl
+    mov ax,notify_end_program_nr
     RegisterOsGate
 ;
     mov si,OFFSET notify_init_tasking
