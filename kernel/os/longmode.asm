@@ -1053,7 +1053,7 @@ init_pg_name_ok:
     push edi
 ;    
     mov eax,ecx
-    AllocateLocalLinear
+    AllocateLongBuf
     mov edi,edx
 ;    
     mov ax,flat_sel
@@ -1084,7 +1084,7 @@ init_pg_cmd_ok:
     inc ecx
 ;    
     mov eax,ecx
-    AllocateLocalLinear
+    AllocateLongBuf
     mov edi,edx
 ;    
     mov ax,flat_sel
