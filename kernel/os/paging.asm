@@ -322,6 +322,14 @@ page_fault_global_page       ENDP
 
 page_fault      Proc near
     mov eax,cr2
+    and eax,0FF800000h
+    cmp eax,process_page_linear
+    je process_dir_fault
+;
+    cmp eax,sys_page_linear
+    je page_fault_sys_page
+;
+    mov eax,cr2
     and eax,0FFC00000h
 ;
     cmp eax,system_mem_start
@@ -344,14 +352,9 @@ page_fault      Proc near
 ;
     cmp eax,io_local_linear
     je page_fault_user
-;
-    and eax,0FF800000h
-    cmp eax,process_page_linear
-    je process_dir_fault
-;
-    cmp eax,sys_page_linear
-    jne page_fault_system
-;
+    jmp page_fault_system
+
+page_fault_sys_page:
     mov ax,[ebp].trap_eflags
     and ax,NOT 4500h
     push ax

@@ -2050,13 +2050,13 @@ local_create_process64       PROC near
     mov ax,sys_page_sel
     mov ds,ax
     mov di,2000h
-    mov eax,[edx+48]
+    mov eax,[edx+30h]
     mov es:[di],eax
-    mov eax,[edx+52]
+    mov eax,[edx+34h]
     mov es:[di+4],eax
 ;
     mov cx,4
-    mov esi,16
+    mov esi,10h
     mov ebx,process_page_linear
     shr ebx,18
     add bx,di

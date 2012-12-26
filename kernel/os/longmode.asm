@@ -3029,6 +3029,14 @@ handle_page_fault   Proc near
     jnz page_fault64
 
 page_fault32:
+    and eax,0FF800000h
+    cmp eax,process_page_linear
+    je process_fault_dir
+;
+    cmp eax,sys_page_linear
+    je page_fault_error
+;
+    mov rax,rsi
     and eax,0FFC00000h
 ;
     cmp eax,system_mem_start
@@ -3049,14 +3057,8 @@ page_fault32:
     cmp eax,io_local_linear
     je page_fault_user
 ;
-    and eax,0FF800000h
-    cmp eax,process_page_linear
-    je process_fault_dir
+    jmp page_fault_system
 ;
-    cmp eax,sys_page_linear
-    jne page_fault_system
-;
-    CrashGate
     ret
 handle_page_fault   Endp
 

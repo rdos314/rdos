@@ -2158,24 +2158,6 @@ free_error      PROC near
     ret
 free_error      ENDP
 
-free_mem_tab:
-f0      DW OFFSET free_local_mem
-f1      DW OFFSET free_local_mem
-f2      DW OFFSET free_local_mem
-f3      DW OFFSET free_local_mem
-f4      DW OFFSET free_local_mem
-f5      DW OFFSET free_local_mem
-f6      DW OFFSET free_error
-f7      DW OFFSET free_error
-f8      DW OFFSET free_error
-f9      DW OFFSET free_error
-fA      DW OFFSET free_error
-fB      DW OFFSET free_error
-fC      DW OFFSET free_error
-fD      DW OFFSET free_error
-fE      DW OFFSET free_system
-fF      DW OFFSET free_system
-
 free_mem    PROC far
     pushad
     push ds
