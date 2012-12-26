@@ -69,7 +69,7 @@ pushq0  Macro
         Endm
 
 
-; this should be at linear address 0
+; this should be at linear address long_process_linear
 
 elf_proc_struc  STRUC
 
@@ -1032,12 +1032,8 @@ init_long_exe   Proc far
     push ds
     push es
     pushad
-;    
-    AllocatePhysical64
-    xor edx,edx
-    or ax,3
-    SetPageEntry
 ;
+    mov ebp,long_process_linear
     push esi
     xor ecx,ecx
 
@@ -1062,7 +1058,7 @@ init_pg_name_ok:
 ;    
     mov ax,flat_sel
     mov es,ax
-    mov es:ep_prog_name,edi
+    mov es:[ebp].ep_prog_name,edi
     rep movsb
 ;
     pop edi
@@ -1093,13 +1089,13 @@ init_pg_cmd_ok:
 ;    
     mov ax,flat_sel
     mov es,ax
-    mov es:ep_prog_cmd,edi
+    mov es:[ebp].ep_prog_cmd,edi
     rep movsb
 ;
-    mov edi,es:ep_prog_name
+    mov edi,es:[ebp].ep_prog_name
     xor cx,cx
     OpenFile
-    mov es:ep_file_handle,bx    
+    mov es:[ebp].ep_file_handle,bx    
 ;    
     popad
     pop es
@@ -2747,6 +2743,9 @@ process_fault_dir   Proc near
     cmp eax,handle_linear
     je process_fault_dir_local
 ;
+    cmp eax,long_process_linear
+    je process_fault_dir_local
+;
     cmp eax,io_local_linear
     je process_fault_dir_local
 ;
@@ -2813,6 +2812,9 @@ page_fault_dir    Proc near
     jc page_fault_dir_local
 ;
     cmp eax,handle_linear
+    je page_fault_dir_local
+;
+    cmp eax,long_process_linear
     je page_fault_dir_local
 ;
     cmp eax,io_local_linear
@@ -3049,6 +3051,9 @@ page_fault32:
     jc page_fault_user
 ;
     cmp eax,handle_linear
+    je page_fault_user
+;
+    cmp eax,long_process_linear
     je page_fault_user
 ;
     cmp eax,global_page_linear
