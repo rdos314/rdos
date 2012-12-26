@@ -3309,7 +3309,7 @@ local_get_thread_page_entry64    Proc near
     push edx
     push esi
     push edi
-;
+;    
     and dx,0F000h
     mov es,bp
     mov ax,system_data_sel
@@ -3319,7 +3319,7 @@ local_get_thread_page_entry64    Proc near
     mov ax,process_dir_sel
     mov ds,ax
     mov eax,es:p_cr3
-    xor ebx,ebx
+    xor ebx,ebx    
 ;
     mov di,es:p_tss_sel
     or di,di
@@ -3340,6 +3340,11 @@ gtpLong:
     mov cr3,ebx
 ;
     mov edi,alias_linear SHR 9
+    movzx eax,cx
+    shr eax,4
+    and ax,0FFF8h
+    add edi,eax
+;    
     mov bx,process_page_sel
     mov ds,bx
     mov eax,[edi]
@@ -3453,7 +3458,7 @@ local_set_thread_page_entry64    Proc near
     mov ax,process_dir_sel
     mov ds,ax
     mov eax,es:p_cr3
-    xor ebx,ebx
+    xor ebx,ebx    
 ;
     mov di,es:p_tss_sel
     or di,di
@@ -3474,6 +3479,11 @@ stpLong:
     mov cr3,ebx
 ;
     mov edi,alias_linear SHR 9
+    movzx eax,cx
+    shr eax,4
+    and ax,0FFF8h
+    add edi,eax
+;    
     mov bx,process_page_sel
     mov ds,bx
     mov eax,[edi]
@@ -3588,7 +3598,7 @@ local_get_thread_page_dir64    Proc near
     mov ax,process_dir_sel
     mov ds,ax
     mov eax,es:p_cr3
-    xor ebx,ebx
+    xor ebx,ebx    
 ;
     mov di,es:p_tss_sel
     or di,di
@@ -3609,6 +3619,11 @@ gtdLong:
     mov cr3,ebx
 ;
     mov edi,alias_linear SHR 9
+    movzx eax,cx
+    shr eax,4
+    and ax,0FFF8h
+    add edi,eax
+;    
     mov bx,process_page_sel
     mov ds,bx
     mov eax,[edi]
