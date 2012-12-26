@@ -39,11 +39,15 @@ include proc.inc
 thread_data_seg STRUC
 
 create_thread_hooks         DB ?
-terminate_thread_hooks  DB ?
-create_process_hooks    DB ?
-terminate_process_hooks DB ?
+terminate_thread_hooks      DB ?
+create_process_hooks        DB ?
+terminate_process_hooks     DB ?
+start_program_hooks         DB ?
+end_program_hooks           DB ?
 init_tasking_hooks          DB ?
 
+start_program_arr       DD 2*32 DUP(?)
+end_program_arr         DD 2*32 DUP(?)
 create_process_arr      DD 2*32 DUP(?)
 terminate_process_arr   DD 2*32 DUP(?)
 create_thread_arr       DD 2*8 DUP(?)
@@ -157,6 +161,49 @@ trap_terminate_thread_done:
 trap_terminate_thread   ENDP
 
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TRAP_START_PROGRAM
+;
+;           DESCRIPTION:    Handle StartProgram hooks
+;
+;           PARAMETERS:         
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trap_start_program     PROC near
+    push cx
+    push si
+;
+    mov ax,proc_data_sel
+    mov ds,ax
+    mov cl,ds:start_program_hooks
+    or cl,cl
+    je trap_start_program_done
+;    
+    mov bx,OFFSET start_program_arr
+
+trap_start_program_loop:
+    push ds
+    push bx
+    push cx
+    call fword ptr [bx]
+    pop cx
+    pop bx
+    pop ds
+    add bx,8
+    dec cl
+    jnz trap_start_program_loop
+
+trap_start_program_done:
+    pop si
+    pop cx
+    ret
+trap_start_program     ENDP
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -198,9 +245,47 @@ trap_create_process_done:
 ;
     xor ebp,ebp
     call trap_create_thread
+    call trap_start_program
     ret
 trap_create_process     ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TRAP_END_PROGRAM
+;
+;           DESCRIPTION:    Handle EndProgram hooks
+;
+;           PARAMETERS:         
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trap_end_program  PROC near
+    push cx
+    mov ax,proc_data_sel
+    mov ds,ax
+    mov cl,ds:end_program_hooks
+    or cl,cl
+    je trap_end_program_done
+;
+    mov bx,OFFSET end_program_arr
+
+trap_end_program_loop:
+    push ds
+    push bx
+    push cx
+    call fword ptr [bx]
+    pop cx
+    pop bx
+    pop ds
+    add bx,8
+    dec cl
+    jnz trap_end_program_loop
+
+trap_end_program_done:
+    pop cx
+    ret
+trap_end_program  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -214,6 +299,7 @@ trap_create_process     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 trap_terminate_process  PROC near
+    call trap_end_program
     call cs:free_process_proc
     push cx
     mov ax,proc_data_sel
@@ -745,6 +831,8 @@ init_thread     PROC near
     xor ax,ax
     mov ds:create_thread_hooks,al
     mov ds:terminate_thread_hooks,al
+    mov ds:start_program_hooks,al
+    mov ds:end_program_hooks,al
     mov ds:create_process_hooks,al
     mov ds:terminate_process_hooks,al
     mov ds:init_tasking_hooks,al
