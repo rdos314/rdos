@@ -619,15 +619,15 @@ deref_handle    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           INIT_PROCESS
+;           NAME:           INIT_PROGRAM
 ;
-;           DESCRIPTION:    Init per-process data
+;           DESCRIPTION:    Init per-program data
 ;
 ;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_process    PROC far
+init_program    PROC far
     push ds
     push es
     pushad
@@ -666,7 +666,7 @@ init_handle_loop:
     pop es
     pop ds
     retf32
-init_process    Endp
+init_program    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -922,7 +922,7 @@ init_handle     PROC near
 ;
     mov eax,SIZE handle_seg
     mov bx,handle_sel
-    AllocateFixedProcessMem
+    AllocateFixedProgramMem
 ;
     mov edx,handle_linear
     mov ecx,10000h
@@ -933,8 +933,8 @@ init_handle     PROC near
     mov ds,ax
     mov es,ax
 ;
-    mov edi,OFFSET init_process
-    HookCreateProcess
+    mov edi,OFFSET init_program
+    HookStartProgram
 ;
     mov esi,OFFSET register_handle
     mov edi,OFFSET register_handle_name
