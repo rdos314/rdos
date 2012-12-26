@@ -1108,7 +1108,6 @@ init_long_exe   Endp
 start_long_exe_name DB 'Start Long Exe', 0
 
 start_long_exe:
-    int 3
     mov ax,flat_sel
     mov ds,ax
     mov es,ax
@@ -1119,14 +1118,37 @@ start_long_exe:
     xor eax,eax
     SetFilePos
 ;
-    mov edi,long_process_linear + OFFSET ep_header
+    mov edi,long_process_linear
     mov ecx,SIZE elf_header
     ReadFile            
 ;
-    mov eax,1000h
+    mov ax,ds:[esi].elf_phnum
+    mov dx,ds:[esi].elf_phentsize
+    mul dx
+    push dx
+    push ax
+    pop eax
+    or eax,eax
+    jz sleFailed
+;
+    mov ecx,eax
     AllocateLongBuf
     mov edi,edx
 ;
+    mov eax,dword ptr ds:[esi].elf_phoff
+    SetFilePos    
+    ReadFile
+;
+    cmp eax,ecx
+    jne sleFailed        
+;
+    mov dword ptr ds:[esi].elf_phoff,edi
+    int 3
+    db 0EAh
+    dd OFFSET start64
+    dw long_kernel_code_sel
+    
+sleFailed:
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4199,6 +4221,32 @@ test64:
     mov ax,100
 ;    WaitMicroSec
     jmp test64
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           start64
+;
+;   DESCRIPTION:    Start 64-bit app
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start64:
+    mov rsi,long_process_linear
+    mov rdi,[rsi].elf_phoff
+    movzx rcx,[rsi].elf_phnum
+
+alloc_sect_loop:
+    push rcx
+    mov rdx,[rdi].elfp_vaddr
+    mov rcx,[rdi].elfp_memsz
+    pop rcx
+;
+    movzx rax,[esi].elf_phentsize
+    add rdi,rax
+    loop alloc_sect_loop
+;
+    int 3    
 
 text_end:
 

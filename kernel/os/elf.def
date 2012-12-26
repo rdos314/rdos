@@ -69,3 +69,16 @@ elf_shnum		DW ?
 elf_shstrndx	DW ?
 
 elf_header	ENDS
+
+elf_prog_header STRUC
+
+elfp_type       DD ?
+elfp_flags      DD ?
+elfp_offset     DQ ?
+elfp_vaddr      DQ ?
+elfp_paddr      DQ ?
+elfp_filez      DQ ?
+elfp_memsz      DQ ?
+elfp_align      DQ ?
+
+elf_prog_header ENDS
