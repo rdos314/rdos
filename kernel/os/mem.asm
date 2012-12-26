@@ -84,6 +84,17 @@ vm_mem_section      section_typ <>
 
 local_mem_seg   ENDS
 
+long_mem_seg   STRUC
+
+long_avail_mem      DD ?
+long_used_mem       DD ?
+
+long_base           DD ?
+
+long_mem_section    section_typ <>
+
+long_mem_seg   ENDS
+
     .386p
 
     extrn local_create_data_sel16:near
@@ -412,6 +423,18 @@ init_mem    PROC near
     mov ax,reserve_local_linear_nr
     RegisterOsGate
 ;
+    mov si,OFFSET allocate_long_buf
+    mov di,OFFSET allocate_long_buf_name
+    xor cl,cl
+    mov ax,allocate_long_buf_nr
+    RegisterOsGate
+;
+    mov si,OFFSET free_long_buf
+    mov di,OFFSET free_long_buf_name
+    xor cl,cl
+    mov ax,free_long_buf_nr
+    RegisterOsGate
+;
     mov si,OFFSET available_small_local_linear
     mov di,OFFSET available_small_local_linear_name
     xor dx,dx
@@ -557,6 +580,40 @@ init_process_mem    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           INIT_PROGRAM_MEM
+;
+;           DESCRIPTION:    Init per-program memory
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public init_program_mem
+
+init_program_mem    PROC near
+    push ds
+    push eax
+    push edx
+    push di
+;
+    mov ax,long_mem_sel
+    mov ds,ax
+    mov ds:long_avail_mem,long_buf_size - long_buf_linear
+    mov ds:long_used_mem,0
+    mov ds:long_base,long_buf_linear
+    InitSection ds:long_mem_section
+;
+    pop di
+    pop edx
+    pop eax
+    pop ds
+    ret
+init_program_mem    ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           INIT_MEM_SELS
 ;
 ;           DESCRIPTION:    Init selectors
@@ -591,6 +648,10 @@ init_mem_sels   PROC near
     mov eax,SIZE local_mem_seg
     mov bx,local_mem_sel
     AllocateFixedProcessMem
+;
+    mov eax,SIZE long_mem_seg
+    mov bx,long_mem_sel
+    AllocateFixedProgramMem
 ;
     pop es
     pop ds
@@ -925,6 +986,103 @@ allocate_page_local_ok:
 allocate_local_linear   ENDP
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ALLOCATE_LONG_BUF
+;
+;           DESCRIPTION:    Allocate long mode buffer
+;
+;           PARAMETERS:     EAX         Number of bytes
+;
+;           RETURNS:        EDX         Linear base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_long_buf_name      DB 'Allocate Long Buf',0
+
+allocate_long_buf   PROC far
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+;    
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    mov dx,long_mem_sel
+    mov ds,dx
+    mov es,dx
+    EnterSection ds:long_mem_section
+    add ds:long_used_mem,eax
+    sub ds:long_avail_mem,eax
+    shr eax,12
+;    
+    mov edx,long_buf_linear
+    mov ecx,eax
+    mov eax,long_buf_size
+    call cs:allocate_page_entries_proc
+    jnc allocate_page_long_ok
+;
+    int 3
+
+allocate_page_long_ok:    
+    mov ax,long_mem_sel
+    mov ds,ax
+    LeaveSection ds:long_mem_section
+;
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    retf32
+allocate_long_buf   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           Free_LONG_BUF
+;
+;           DESCRIPTION:    Free long mode buffer
+;
+;           PARAMETERS:     ECX         Number of bytes
+;                           EDX         Linear base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_long_buf_name      DB 'Free Long Buf',0
+
+free_long_buf   PROC far
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+;    
+    mov ax,long_mem_sel
+    mov ds,ax
+    mov es,ax
+    EnterSection ds:long_mem_section
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+    add es:long_avail_mem,ecx
+    sub es:long_used_mem,ecx
+    shr ecx,12
+    xor eax,eax
+    call cs:free_page_entries_proc
+;    
+    LeaveSection ds:long_mem_section
+;
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    retf32
+free_long_buf   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

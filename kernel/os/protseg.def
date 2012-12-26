@@ -49,6 +49,9 @@ long_mode_linear        EQU 000110000h
 local_byte_linear		EQU 000120000h
 local_page_linear		EQU 000300000h
 
+long_buf_linear         EQU 040000000h
+long_buf_size           EQU 07F000000h
+
 flat_size				EQU 0BF000000h
 
 system_mem_start		EQU 0BF000000h

@@ -62,6 +62,7 @@ thread_data_seg ENDS
 code    SEGMENT byte public use16 'CODE'
 
     extrn init_process_mem:near
+    extrn init_program_mem:near
     extrn free_process_proc:word
     extrn free_handle_process:near
     extrn init_double_fault:near
@@ -177,6 +178,8 @@ trap_start_program     PROC near
     push cx
     push si
 ;
+    call init_program_mem
+;    
     mov ax,proc_data_sel
     mov ds,ax
     mov cl,ds:start_program_hooks

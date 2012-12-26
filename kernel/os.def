@@ -599,4 +599,7 @@ hook_end_program_nr         = 499
 notify_start_program_nr     = 500
 notify_end_program_nr       = 501
 
+allocate_long_buf_nr        = 502
+free_long_buf_nr            = 503
+
 osgate_entries				= 520

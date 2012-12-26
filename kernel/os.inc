@@ -874,6 +874,18 @@ ResizeLinear    MACRO
     OsGate resize_linear_nr
                     ENDM
 
+;       EAX     Bytes
+;       EDX     Linear base
+AllocateLongBuf     MACRO
+    OsGate allocate_long_buf_nr
+                    ENDM
+
+;       ECX     Size
+;       EDX     Linear base
+FreeLongBuf     MACRO
+    OsGate free_long_buf_nr
+                    ENDM
+
 ;       EAX         ANTAL BYTES
 UsedBigLinear   MACRO
     OsGate used_big_linear_nr
