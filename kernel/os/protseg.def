@@ -65,7 +65,9 @@ global_byte_linear		EQU 0C0800000h
 global_byte_size		EQU 007800000h
 
 global_page_linear		EQU 0C8000000h
-global_page_size		EQU 034400000h
+global_page_size		EQU 034000000h
+
+focus_process_linear    EQU 0FC000000h
 
 io_focus_linear			EQU 0FC400000h
 video_mem_focus_linear	EQU 0FC600000h

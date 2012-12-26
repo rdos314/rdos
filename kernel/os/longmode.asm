@@ -2749,6 +2749,9 @@ process_fault_dir   Proc near
 ;
     cmp eax,io_local_linear
     je process_fault_dir_local
+;
+    cmp eax,focus_process_linear
+    je process_fault_dir_local
 
 process_fault_dir_global:
     CrashGate
@@ -2813,6 +2816,9 @@ page_fault_dir    Proc near
     je page_fault_dir_local
 ;
     cmp eax,io_local_linear
+    je page_fault_dir_local
+;
+    cmp eax,focus_process_linear
     je page_fault_dir_local
 
 page_fault_dir_global:
@@ -3050,6 +3056,9 @@ page_fault32:
 ;
     cmp eax,kernel_linear
     jnc page_fault_global
+;
+    cmp eax,focus_process_linear
+    je page_fault_user
 ;
     cmp eax,io_focus_linear
     je page_fault_user
