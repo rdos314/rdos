@@ -684,11 +684,8 @@ local_set_page_entry32       Proc near
     push edx
 ;
     or ebx,ebx
-    jz sppok32
+    jnz sppDone
 ;
-    int 3
-
-sppok32:    
     mov cx,process_page_sel
     mov ds,cx
     shr edx,10
