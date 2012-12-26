@@ -53,14 +53,14 @@ flat_size				EQU 0E0000000h
 
 system_mem_start		EQU 0E0000000h
 
-global_byte_linear		EQU 0E0000000h
-global_byte_size		EQU 008000000h
+handle_linear			EQU 0E0000000h
+fixed_process_linear	EQU 0E0010000h
+
+global_byte_linear		EQU 0E1000000h
+global_byte_size		EQU 007000000h
 
 global_page_linear		EQU 0E8000000h
-global_page_size		EQU 013000000h
-
-handle_linear			EQU 0FB000000h
-fixed_process_linear	EQU 0FB010000h
+global_page_size		EQU 013400000h
 
 io_focus_linear			EQU 0FB400000h
 video_mem_focus_linear	EQU 0FB600000h

@@ -327,16 +327,17 @@ page_fault      Proc near
     cmp eax,system_mem_start
     jc page_fault_user
 ;
+    cmp eax,handle_linear
+    je page_fault_user
+;    
     cmp eax,global_page_linear
     jc page_fault_global    
 ;
     cmp eax,kernel_linear
     jnc page_fault_global
 ;
-    cmp eax,handle_linear
+    cmp eax,io_focus_linear
     jc page_fault_global_page
-;    
-    je page_fault_user
 ;
     cmp eax,io_focus_linear
     je page_fault_user
