@@ -3371,6 +3371,12 @@ gtpBaseOk:
     add edi,alias_linear
     shr edi,9
     and di,0FFF8h
+;
+    movzx eax,cx
+    and ax,7Fh
+    shl ax,5
+    add edi,eax
+;    
     mov bx,process_page_sel
     mov ds,bx
     mov eax,[edi]
@@ -3510,6 +3516,12 @@ stpBaseOk:
     add edi,alias_linear
     shr edi,9
     and di,0FFF8h
+;
+    movzx eax,cx
+    and ax,7Fh
+    shl ax,5
+    add edi,eax
+;    
     mov bx,process_page_sel
     mov ds,bx
     mov eax,[edi]
@@ -3650,6 +3662,12 @@ gtdBaseOk:
     add edi,alias_linear
     shr edi,9
     and di,0FFF8h
+;
+    movzx eax,cx
+    and ax,7Fh
+    shl ax,5
+    add edi,eax
+;    
     mov bx,process_page_sel
     mov ds,bx
     mov eax,[edi]
