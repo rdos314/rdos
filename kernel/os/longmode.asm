@@ -1107,6 +1107,23 @@ start_long_exe_name DB 'Start Long Exe', 0
 
 start_long_exe:
     int 3
+    mov ax,flat_sel
+    mov ds,ax
+    mov es,ax
+;
+    mov esi,long_process_linear
+    mov bx,ds:[esi].ep_file_handle
+;
+    mov eax,1000h
+    AllocateLongBuf
+    mov edi,edx
+;
+    xor eax,eax
+    SetFilePos
+;
+    mov ecx,1000h
+    ReadFile            
+;
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
