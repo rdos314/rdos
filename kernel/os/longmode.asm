@@ -1143,7 +1143,6 @@ start_long_exe:
     jne sleFailed        
 ;
     mov dword ptr ds:[esi].elf_phoff,edi
-    int 3
     db 0EAh
     dd OFFSET start64
     dw long_kernel_code_sel
@@ -4232,6 +4231,7 @@ test64:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start64:
+    int 3
     mov rsi,long_process_linear
     mov rdi,[rsi].elf_phoff
     movzx rcx,[rsi].elf_phnum

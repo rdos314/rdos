@@ -1067,22 +1067,18 @@ data_next64_64:
     call NewLine
     pop ds
 ;
-    mov ax,gs:p_cs
-    mov bx,word ptr gs:p_rip+2
-    shl ebx,16
-    mov bx,word ptr gs:p_rip
+    mov ax,word ptr gs:p_rip+4
+    mov ebx,dword ptr gs:p_rip
     call WriteDataRow64
     call NewLine
 ;
-    mov ax,gs:p_ss
-    mov bx,word ptr gs:p_rsp+2
-    shl ebx,16
-    mov bx,word ptr gs:p_rsp
+    mov ax,word ptr gs:p_rsp+4
+    mov ebx,dword ptr gs:p_rsp
     call WriteDataRow64
     call NewLine
 ;
-    mov ax,gs:p_es
-    xor ebx,ebx
+    mov ax,word ptr gs:p_rdi+4
+    mov ebx,dword ptr gs:p_rdi
     call WriteDataRow64
     call NewLine
 ;
