@@ -178,16 +178,14 @@ get_random    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   INIT_PROCESS
+;               NAME:                   INIT_PROGRAM
 ;
-;               DESCRIPTION:    Init random process
+;               DESCRIPTION:    Init random program
 ;
 ;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public init_process
-
-init_process    PROC far
+init_program    PROC far
     push ds
     pushad
 ;
@@ -225,7 +223,7 @@ init_genrand_loop:
     popad
     pop ds
     retf32
-init_process    Endp
+init_program    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -247,14 +245,14 @@ init_random     PROC near
 ;
         mov bx,random_proc_sel
         mov eax,SIZE random_proc_seg
-        AllocateFixedProcessMem
+        AllocateFixedProgramMem
 ;
         mov ax,cs
         mov ds,ax
         mov es,ax
 ;
-        mov edi,OFFSET init_process
-        HookCreateProcess
+        mov edi,OFFSET init_program
+        HookStartProgram
 ;
         mov esi,OFFSET get_random
         mov edi,OFFSET get_random_name
