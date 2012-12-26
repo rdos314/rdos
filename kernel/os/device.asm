@@ -314,7 +314,7 @@ setup_long_idt Proc near
 ;    
     mov ax,system_data_sel
     mov ds,ax
-    mov ds:long_idt_linear,edi
+    mov ds:long_idt_ads,edi
 ;    
     mov ax,flat_sel
     mov es,ax

@@ -124,7 +124,7 @@ multiboot_mmap_len          DW ?
 
 cpu_ext_feature_flags   	DD ?
 
-long_idt_linear             DD ?
+long_idt_ads                DD ?
 
 multiboot_mmap_addr         DD ?
 

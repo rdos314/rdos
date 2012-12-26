@@ -44,8 +44,6 @@ ems_linear				EQU 0000D0000h
 fixed_vm_linear			EQU 0000E0000h
 vm_linear				EQU 0000E1000h
 
-long_mode_linear        EQU 000110000h
-
 long_map_linear         EQU 000110000h
 long_idt_linear         EQU 00011F000h
 long_map_size           EQU 000010000h
