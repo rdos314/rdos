@@ -566,15 +566,15 @@ rename_file16   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           INIT_PRO
+;           NAME:           INIT_PROGRAM
 ;
-;           DESCRIPTION:    Init per-process data
+;           DESCRIPTION:    Init per-program data
 ;
 ;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_process    PROC far
+init_program    PROC far
     push ds
     push es
     pushad
@@ -591,7 +591,7 @@ init_process    PROC far
     pop es
     pop ds
     retf32
-init_process    ENDP
+init_program    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
