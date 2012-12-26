@@ -64,6 +64,8 @@ pushq0  Macro
 
 elf_proc_struc  STRUC
 
+ep_header       elf_header <>
+
 ep_prog_name    DD ?
 ep_prog_cmd     DD ?
 ep_file_handle  DW ?
@@ -1114,15 +1116,16 @@ start_long_exe:
     mov esi,long_process_linear
     mov bx,ds:[esi].ep_file_handle
 ;
-    mov eax,1000h
-    AllocateLongBuf
-    mov edi,edx
-;
     xor eax,eax
     SetFilePos
 ;
-    mov ecx,1000h
+    mov edi,long_process_linear + OFFSET ep_header
+    mov ecx,SIZE elf_header
     ReadFile            
+;
+    mov eax,1000h
+    AllocateLongBuf
+    mov edi,edx
 ;
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
