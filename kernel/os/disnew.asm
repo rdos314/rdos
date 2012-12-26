@@ -475,6 +475,7 @@ op_cdt_tab                      EQU 0FF7h
         extrn mem_im32:near
         extrn mem_sib:near
 
+        extrn override_rex:near
         extrn override_cs:near
         extrn override_ds:near
         extrn override_ss:near
@@ -7420,6 +7421,1852 @@ opFE:
                         DW 0FFFFh
 
 opFF:
+                        DW OFFSET opmrFF00
+                        DW op_mem_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+;;;;;;;;;;;;;;;;;;;;;;
+; LONG MAIN_OP_TAB
+;;;;;;;;;;;;;;;;;;;;;;
+
+        public long_main_tab
+
+long_main_tab:
+
+lop00:
+                        DW OFFSET op_mem_reg_byte
+                        DW OFFSET add_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop01:
+                        DW OFFSET op_mem_reg_word
+                        DW OFFSET add_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop02:
+                        DW OFFSET op_reg_mem_byte
+                        DW OFFSET add_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop03:
+                        DW OFFSET op_reg_mem_word
+                        DW OFFSET add_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop04:
+                        DW OFFSET op_byte
+                        DW OFFSET add_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lop05:
+                        DW OFFSET op_word
+                        DW OFFSET add_txt - OFFSET mne_tab + blank_sep
+                        DW ax_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lop06:
+                        DW OFFSET op_one
+                        DW OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET es_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop07:
+                        DW OFFSET op_one
+                        DW OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET es_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop08:
+                        DW OFFSET op_mem_reg_byte
+                        DW OFFSET or_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop09:
+                        DW OFFSET op_mem_reg_word
+                        DW OFFSET or_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop0A:
+                        DW OFFSET op_reg_mem_byte
+                        DW OFFSET or_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop0B:
+                        DW OFFSET op_reg_mem_word
+                        DW OFFSET or_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop0C:
+                        DW OFFSET op_byte
+                        DW OFFSET or_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lop0D:
+                        DW OFFSET op_word
+                        DW OFFSET or_txt - OFFSET mne_tab + blank_sep
+                        DW ax_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lop0E:
+                        DW OFFSET op_one
+                        DW OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET cs_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop0F:
+                        DW OFFSET oppr0F00
+                        DW op_protect_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop10:
+                        DW OFFSET op_mem_reg_byte
+                        DW OFFSET adc_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop11:
+                        DW OFFSET op_mem_reg_word
+                        DW OFFSET adc_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop12:
+                        DW OFFSET op_reg_mem_byte
+                        DW OFFSET adc_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop13:
+                        DW OFFSET op_reg_mem_word
+                        DW OFFSET adc_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop14:
+                        DW OFFSET op_byte
+                        DW OFFSET adc_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lop15:
+                        DW OFFSET op_word
+                        DW OFFSET adc_txt - OFFSET mne_tab + blank_sep
+                        DW ax_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lop16:
+                        DW OFFSET op_one
+                        DW OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET ss_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop17:
+                        DW OFFSET op_one
+                        DW OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET ss_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop18:
+                        DW OFFSET op_mem_reg_byte
+                        DW OFFSET sbb_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop19:
+                        DW OFFSET op_mem_reg_word
+                        DW OFFSET sbb_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop1A:
+                        DW OFFSET op_reg_mem_byte
+                        DW OFFSET sbb_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop1B:
+                        DW OFFSET op_reg_mem_word
+                        DW OFFSET sbb_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop1C:
+                        DW OFFSET op_byte
+                        DW OFFSET sbb_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lop1D:
+                        DW OFFSET op_word
+                        DW OFFSET sbb_txt - OFFSET mne_tab + blank_sep
+                        DW ax_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lop1E:
+                        DW OFFSET op_one
+                        DW OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET ds_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop1F:
+                        DW OFFSET op_one
+                        DW OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET ds_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop20:
+                        DW OFFSET op_mem_reg_byte
+                        DW OFFSET and_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop21:
+                        DW OFFSET op_mem_reg_word
+                        DW OFFSET and_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop22:
+                        DW OFFSET op_reg_mem_byte
+                        DW OFFSET and_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop23:
+                        DW OFFSET op_reg_mem_word
+                        DW OFFSET and_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop24:
+                        DW OFFSET op_byte
+                        DW OFFSET and_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lop25:
+                        DW OFFSET op_word
+                        DW OFFSET and_txt - OFFSET mne_tab + blank_sep
+                        DW ax_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lop26:
+                        DW OFFSET override_es
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop27:
+                        DW OFFSET op_one
+                        DW OFFSET daa_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop28:
+                        DW OFFSET op_mem_reg_byte
+                        DW OFFSET sub_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop29:
+                        DW OFFSET op_mem_reg_word
+                        DW OFFSET sub_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop2A:
+                        DW OFFSET op_reg_mem_byte
+                        DW OFFSET sub_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop2B:
+                        DW OFFSET op_reg_mem_word
+                        DW OFFSET sub_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop2C:
+                        DW OFFSET op_byte
+                        DW OFFSET sub_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lop2D:
+                        DW OFFSET op_word
+                        DW OFFSET sub_txt - OFFSET mne_tab + blank_sep
+                        DW ax_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lop2E:
+                        DW OFFSET override_cs
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop2F:
+                        DW OFFSET op_one
+                        DW OFFSET das_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop30:
+                        DW OFFSET op_mem_reg_byte
+                        DW OFFSET xor_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop31:
+                        DW OFFSET op_mem_reg_word
+                        DW OFFSET xor_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop32:
+                        DW OFFSET op_reg_mem_byte
+                        DW OFFSET xor_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop33:
+                        DW OFFSET op_reg_mem_word
+                        DW OFFSET xor_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop34:
+                        DW OFFSET op_byte
+                        DW OFFSET xor_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lop35:
+                        DW OFFSET op_word
+                        DW OFFSET xor_txt - OFFSET mne_tab + blank_sep
+                        DW ax_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lop36:
+                        DW OFFSET override_ss
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop37:
+                        DW OFFSET op_one
+                        DW OFFSET aaa_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop38:
+                        DW OFFSET op_mem_reg_byte
+                        DW OFFSET cmp_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop39:
+                        DW OFFSET op_mem_reg_word
+                        DW OFFSET cmp_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop3A:
+                        DW OFFSET op_reg_mem_byte
+                        DW OFFSET cmp_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop3B:
+                        DW OFFSET op_reg_mem_word
+                        DW OFFSET cmp_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop3C:
+                        DW OFFSET op_byte
+                        DW OFFSET cmp_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lop3D:
+                        DW OFFSET op_word
+                        DW OFFSET cmp_txt - OFFSET mne_tab + blank_sep
+                        DW ax_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lop3E:
+                        DW OFFSET override_ds
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop3F:
+                        DW OFFSET op_one
+                        DW OFFSET aas_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop40:
+                        DW OFFSET override_rex
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop41:
+                        DW OFFSET override_rex
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop42:
+                        DW OFFSET override_rex
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop43:
+                        DW OFFSET override_rex
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop44:
+                        DW OFFSET override_rex
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop45:
+                        DW OFFSET override_rex
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop46:
+                        DW OFFSET override_rex
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop47:
+                        DW OFFSET override_rex
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop48:
+                        DW OFFSET override_rex
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop49:
+                        DW OFFSET override_rex
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop4A:
+                        DW OFFSET override_rex
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop4B:
+                        DW OFFSET override_rex
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop4C:
+                        DW OFFSET override_rex
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop4D:
+                        DW OFFSET override_rex
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop4E:
+                        DW OFFSET override_rex
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop4F:
+                        DW OFFSET override_rex
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop50:
+                        DW OFFSET op_one
+                        DW OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DW ax_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop51:
+                        DW OFFSET op_one
+                        DW OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DW cx_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop52:
+                        DW OFFSET op_one
+                        DW OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DW dx_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop53:
+                        DW OFFSET op_one
+                        DW OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DW bx_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop54:
+                        DW OFFSET op_one
+                        DW OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DW sp_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop55:
+                        DW OFFSET op_one
+                        DW OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DW bp_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop56:
+                        DW OFFSET op_one
+                        DW OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DW si_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop57:
+                        DW OFFSET op_one
+                        DW OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DW di_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop58:
+                        DW OFFSET op_one
+                        DW OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DW ax_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop59:
+                        DW OFFSET op_one
+                        DW OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DW cx_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop5A:
+                        DW OFFSET op_one
+                        DW OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DW dx_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop5B:
+                        DW OFFSET op_one
+                        DW OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DW bx_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop5C:
+                        DW OFFSET op_one
+                        DW OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DW sp_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop5D:
+                        DW OFFSET op_one
+                        DW OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DW bp_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop5E:
+                        DW OFFSET op_one
+                        DW OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DW si_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop5F:
+                        DW OFFSET op_one
+                        DW OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DW di_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop60:
+                        DW OFFSET op_one
+                        DW OFFSET pusha_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop61:
+                        DW OFFSET op_one
+                        DW OFFSET popa_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop62:
+                        DW OFFSET op_reg_mem_word
+                        DW OFFSET bound_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop63:
+                        DW OFFSET op_reg_mem_word
+                        DW OFFSET arpl_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop64:
+                        DW OFFSET override_fs
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop65:
+                        DW OFFSET override_gs
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop66:
+                        DW OFFSET op_data_size
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop67:
+                        DW OFFSET op_address_size
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop68:
+                        DW OFFSET op_word
+                        DW OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop69:
+                        DW OFFSET opmr6900
+                        DW op_mem_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop6A:
+                        DW OFFSET op_byte
+                        DW OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop6B:
+                        DW OFFSET opmr6B00
+                        DW op_mem_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop6C:
+                        DW OFFSET op_string1b
+                        DW OFFSET ins_txt - OFFSET mne_tab + no_sep
+                        DW null_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop6D:
+                        DW OFFSET op_string1w
+                        DW OFFSET ins_txt - OFFSET mne_tab + no_sep
+                        DW null_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop6E:
+                        DW OFFSET op_string1b
+                        DW OFFSET outs_txt - OFFSET mne_tab + no_sep
+                        DW null_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop6F:
+                        DW OFFSET op_string1w
+                        DW OFFSET outs_txt - OFFSET mne_tab + no_sep
+                        DW null_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop70:
+                        DW OFFSET op_short
+                        DW OFFSET jo_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop71:
+                        DW OFFSET op_short
+                        DW OFFSET jno_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop72:
+                        DW OFFSET op_short
+                        DW OFFSET jb_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop73:
+                        DW OFFSET op_short
+                        DW OFFSET jnb_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop74:
+                        DW OFFSET op_short
+                        DW OFFSET jz_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop75:
+                        DW OFFSET op_short
+                        DW OFFSET jnz_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop76:
+                        DW OFFSET op_short
+                        DW OFFSET jbe_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop77:
+                        DW OFFSET op_short
+                        DW OFFSET ja_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop78:
+                        DW OFFSET op_short
+                        DW OFFSET js_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop79:
+                        DW OFFSET op_short
+                        DW OFFSET jns_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop7A:
+                        DW OFFSET op_short
+                        DW OFFSET jpe_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop7B:
+                        DW OFFSET op_short
+                        DW OFFSET jpo_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop7C:
+                        DW OFFSET op_short
+                        DW OFFSET jl_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop7D:
+                        DW OFFSET op_short
+                        DW OFFSET jge_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop7E:
+                        DW OFFSET op_short
+                        DW OFFSET jle_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop7F:
+                        DW OFFSET op_short
+                        DW OFFSET jg_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop80:
+                        DW OFFSET opmr8000
+                        DW op_mem_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop81:
+                        DW OFFSET opmr8100
+                        DW op_mem_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop82:
+                        DW OFFSET opmr8200
+                        DW op_mem_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop83:
+                        DW OFFSET opmr8300
+                        DW op_mem_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop84:
+                        DW OFFSET op_mem_reg_byte
+                        DW OFFSET test_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop85:
+                        DW OFFSET op_mem_reg_word
+                        DW OFFSET test_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop86:
+                        DW OFFSET op_reg_mem_byte
+                        DW OFFSET xchg_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop87:
+                        DW OFFSET op_reg_mem_word
+                        DW OFFSET xchg_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop88:
+                        DW OFFSET op_mem_reg_byte
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop89:
+                        DW OFFSET op_mem_reg_word
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop8A:
+                        DW OFFSET op_reg_mem_byte
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop8B:
+                        DW OFFSET op_reg_mem_word
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop8C:
+                        DW OFFSET opmr8C00
+                        DW op_mem_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop8D:
+                        DW OFFSET op_reg_mem_word
+                        DW OFFSET lea_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop8E:
+                        DW OFFSET opmr8E00
+                        DW op_mem_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop8F:
+                        DW OFFSET opmr8F00
+                        DW op_mem_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop90:
+                        DW OFFSET op_one
+                        DW OFFSET nop_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop91:
+                        DW OFFSET op_one
+                        DW OFFSET xchg_txt - OFFSET mne_tab + blank_sep
+                        DW ax_tab + komma_sep
+                        DW cx_tab + blank_sep
+                        DW 0FFFFh
+
+lop92:
+                        DW OFFSET op_one
+                        DW OFFSET xchg_txt - OFFSET mne_tab + blank_sep
+                        DW ax_tab + komma_sep
+                        DW dx_tab + blank_sep
+                        DW 0FFFFh
+
+lop93:
+                        DW OFFSET op_one
+                        DW OFFSET xchg_txt - OFFSET mne_tab + blank_sep
+                        DW ax_tab + komma_sep
+                        DW bx_tab + blank_sep
+                        DW 0FFFFh
+
+lop94:
+                        DW OFFSET op_one
+                        DW OFFSET xchg_txt - OFFSET mne_tab + blank_sep
+                        DW ax_tab + komma_sep
+                        DW sp_tab + blank_sep
+                        DW 0FFFFh
+
+lop95:
+                        DW OFFSET op_one
+                        DW OFFSET xchg_txt - OFFSET mne_tab + blank_sep
+                        DW ax_tab + komma_sep
+                        DW bp_tab + blank_sep
+                        DW 0FFFFh
+
+lop96:
+                        DW OFFSET op_one
+                        DW OFFSET xchg_txt - OFFSET mne_tab + blank_sep
+                        DW ax_tab + komma_sep
+                        DW si_tab + blank_sep
+                        DW 0FFFFh
+
+lop97:
+                        DW OFFSET op_one
+                        DW OFFSET xchg_txt - OFFSET mne_tab + blank_sep
+                        DW ax_tab + komma_sep
+                        DW di_tab + blank_sep
+                        DW 0FFFFh
+
+lop98:
+                        DW OFFSET op_one
+                        DW OFFSET cbw_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop99:
+                        DW OFFSET op_one
+                        DW OFFSET cwd_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop9A:
+                        DW OFFSET op_far
+                        DW OFFSET call_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lop9B:
+                        DW OFFSET op_wait
+                        DW OFFSET wait_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop9C:
+                        DW OFFSET op_one
+                        DW OFFSET pushf_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop9D:
+                        DW OFFSET op_one
+                        DW OFFSET popf_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop9E:
+                        DW OFFSET op_one
+                        DW OFFSET sahf_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lop9F:
+                        DW OFFSET op_one
+                        DW OFFSET lahf_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopA0:
+                        DW OFFSET op_word_mem
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DW OFFSET ds_txt - OFFSET mne_tab + kolon_par_sep
+                        DW null_tab + rhak_sep
+
+lopA1:
+                        DW OFFSET op_word_mem
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET ax_txt - OFFSET mne_tab + komma_sep
+                        DW OFFSET ds_txt - OFFSET mne_tab + kolon_par_sep
+                        DW null_tab + rhak_sep
+
+lopA2:
+                        DW OFFSET op_word_mem
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET ds_txt - OFFSET mne_tab + kolon_par_sep
+                        DW null_tab + par_komma_sep
+                        DW OFFSET al_txt - OFFSET mne_tab + blank_sep
+
+lopA3:
+                        DW OFFSET op_word_mem
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET ds_txt - OFFSET mne_tab + kolon_par_sep
+                        DW null_tab + par_komma_sep
+                        DW OFFSET ax_txt - OFFSET mne_tab + blank_sep
+
+lopA4:
+                        DW OFFSET op_string2b
+                        DW OFFSET movs_txt - OFFSET mne_tab + no_sep
+                        DW null_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopA5:
+                        DW OFFSET op_string2w
+                        DW OFFSET movs_txt - OFFSET mne_tab + no_sep
+                        DW null_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopA6:
+                        DW OFFSET op_string2b
+                        DW OFFSET cmps_txt - OFFSET mne_tab + no_sep
+                        DW null_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopA7:
+                        DW OFFSET op_string2w
+                        DW OFFSET cmps_txt - OFFSET mne_tab + no_sep
+                        DW null_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopA8:
+                        DW OFFSET op_byte
+                        DW OFFSET test_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lopA9:
+                        DW OFFSET op_word
+                        DW OFFSET test_txt - OFFSET mne_tab + blank_sep
+                        DW ax_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lopAA:
+                        DW OFFSET op_string1b
+                        DW OFFSET stos_txt - OFFSET mne_tab + no_sep
+                        DW null_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopAB:
+                        DW OFFSET op_string1w
+                        DW OFFSET stos_txt - OFFSET mne_tab + no_sep
+                        DW null_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopAC:
+                        DW OFFSET op_string1b
+                        DW OFFSET lods_txt - OFFSET mne_tab + no_sep
+                        DW null_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopAD:
+                        DW OFFSET op_string1w
+                        DW OFFSET lods_txt - OFFSET mne_tab + no_sep
+                        DW null_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopAE:
+                        DW OFFSET op_string1b
+                        DW OFFSET scas_txt - OFFSET mne_tab + no_sep
+                        DW null_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopAF:
+                        DW OFFSET op_string1w
+                        DW OFFSET scas_txt - OFFSET mne_tab + no_sep
+                        DW null_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopB0:
+                        DW OFFSET op_byte
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lopB1:
+                        DW OFFSET op_byte
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET cl_txt - OFFSET mne_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lopB2:
+                        DW OFFSET op_byte
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET dl_txt - OFFSET mne_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lopB3:
+                        DW OFFSET op_byte
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET bl_txt - OFFSET mne_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lopB4:
+                        DW OFFSET op_byte
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET ah_txt - OFFSET mne_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lopB5:
+                        DW OFFSET op_byte
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET ch_txt - OFFSET mne_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lopB6:
+                        DW OFFSET op_byte
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET dh_txt - OFFSET mne_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lopB7:
+                        DW OFFSET op_byte
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET bh_txt - OFFSET mne_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lopB8:
+                        DW OFFSET op_word
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW ax_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lopB9:
+                        DW OFFSET op_word
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW cx_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lopBA:
+                        DW OFFSET op_word
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW dx_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lopBB:
+                        DW OFFSET op_word
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW bx_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lopBC:
+                        DW OFFSET op_word
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW sp_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lopBD:
+                        DW OFFSET op_word
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW bp_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lopBE:
+                        DW OFFSET op_word
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW si_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lopBF:
+                        DW OFFSET op_word
+                        DW OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DW di_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lopC0:
+                        DW OFFSET opmrC000
+                        DW op_mem_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopC1:
+                        DW OFFSET opmrC100
+                        DW op_mem_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopC2:
+                        DW OFFSET op_word16
+                        DW OFFSET retn_txt - OFFSET mne_tab + no_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopC3:
+                        DW OFFSET op_add_opsize
+                        DW OFFSET retn_txt - OFFSET mne_tab + no_sep
+                        DW null_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopC4:
+                        DW OFFSET op_reg_mem_word
+                        DW OFFSET les_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopC5:
+                        DW OFFSET op_reg_mem_word
+                        DW OFFSET lds_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopC6:
+                        DW OFFSET opmrC600
+                        DW op_mem_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopC7:
+                        DW OFFSET opmrC700
+                        DW op_mem_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopC8:
+                        DW OFFSET op_enter
+                        DW OFFSET enter_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lopC9:
+                        DW OFFSET op_one
+                        DW OFFSET leave_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopCA:
+                        DW OFFSET op_word16
+                        DW OFFSET retf_txt - OFFSET mne_tab + no_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopCB:
+                        DW OFFSET op_add_opsize
+                        DW OFFSET retf_txt - OFFSET mne_tab + no_sep
+                        DW null_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopCC:
+                        DW OFFSET op_one
+                        DW OFFSET int_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET txt_3 - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopCD:
+                        DW OFFSET op_byte
+                        DW OFFSET int_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopCE:
+                        DW OFFSET op_one
+                        DW OFFSET into_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopCF:
+                        DW OFFSET op_add_opsize
+                        DW OFFSET iret_txt - OFFSET mne_tab + no_sep
+                        DW null_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopD0:
+                        DW OFFSET opmrD000
+                        DW op_mem_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopD1:
+                        DW OFFSET opmrD100
+                        DW op_mem_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopD2:
+                        DW OFFSET opmrD200
+                        DW op_mem_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopD3:
+                        DW OFFSET opmrD300
+                        DW op_mem_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopD4:
+                        DW OFFSET op_byte
+                        DW OFFSET aam_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopD5:
+                        DW OFFSET op_byte
+                        DW OFFSET aad_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopD6:
+                        DW OFFSET op_illegal
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopD7:
+                        DW OFFSET op_one
+                        DW OFFSET xlat_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopD8:
+                        DW OFFSET opmrD800
+                        DW op_math_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopD9:
+                        DW OFFSET opmrD900
+                        DW op_math_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopDA:
+                        DW OFFSET opmrDA00
+                        DW op_math_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopDB:
+                        DW OFFSET opmrDB00
+                        DW op_math_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopDC:
+                        DW OFFSET opmrDC00
+                        DW op_math_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopDD:
+                        DW OFFSET opmrDD00
+                        DW op_math_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopDE:
+                        DW OFFSET opmrDE00
+                        DW op_math_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopDF:
+                        DW OFFSET opmrDF00
+                        DW op_math_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopE0:
+                        DW OFFSET op_short
+                        DW OFFSET loopnz_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lopE1:
+                        DW OFFSET op_short
+                        DW OFFSET loopz_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lopE2:
+                        DW OFFSET op_short
+                        DW OFFSET loop_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lopE3:
+                        DW OFFSET op_short
+                        DW OFFSET jcxz_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lopE4:
+                        DW OFFSET op_byte
+                        DW OFFSET in_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lopE5:
+                        DW OFFSET op_byte
+                        DW OFFSET in_txt - OFFSET mne_tab + blank_sep
+                        DW ax_tab + komma_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+
+lopE6:
+                        DW OFFSET op_byte
+                        DW OFFSET out_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + komma_sep
+                        DW OFFSET al_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+
+lopE7:
+                        DW OFFSET op_byte
+                        DW OFFSET out_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + komma_sep
+                        DW ax_tab + blank_sep
+                        DW 0FFFFh
+
+lopE8:
+                        DW OFFSET op_near
+                        DW OFFSET call_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopE9:
+                        DW OFFSET op_near
+                        DW OFFSET jmp_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopEA:
+                        DW OFFSET op_far
+                        DW OFFSET jmp_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lopEB:
+                        DW OFFSET op_short
+                        DW OFFSET jmp_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+lopEC:
+                        DW OFFSET op_one
+                        DW OFFSET in_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DW OFFSET dx_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+
+lopED:
+                        DW OFFSET op_one
+                        DW OFFSET in_txt - OFFSET mne_tab + blank_sep
+                        DW ax_tab + komma_sep
+                        DW OFFSET dx_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+
+lopEE:
+                        DW OFFSET op_one
+                        DW OFFSET out_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET dx_txt - OFFSET mne_tab + komma_sep
+                        DW OFFSET al_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+
+lopEF:
+                        DW OFFSET op_one
+                        DW OFFSET out_txt - OFFSET mne_tab + blank_sep
+                        DW OFFSET dx_txt - OFFSET mne_tab + komma_sep
+                        DW ax_tab + blank_sep
+                        DW 0FFFFh
+
+lopF0:
+                        DW OFFSET op_one
+                        DW OFFSET lock_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopF1:
+                        DW OFFSET op_illegal
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopF2:
+                        DW OFFSET op_rep
+                        DW OFFSET repnz_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopF3:
+                        DW OFFSET op_rep
+                        DW OFFSET repz_txt - OFFSET mne_tab + blank_sep
+                        DW null_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopF4:
+                        DW OFFSET op_one
+                        DW OFFSET hlt_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopF5:
+                        DW OFFSET op_one
+                        DW OFFSET cmc_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopF6:
+                        DW OFFSET opmrF600
+                        DW op_mem_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopF7:
+                        DW OFFSET opmrF700
+                        DW op_mem_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopF8:
+                        DW OFFSET op_one
+                        DW OFFSET clc_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopF9:
+                        DW OFFSET op_one
+                        DW OFFSET stc_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopFA:
+                        DW OFFSET op_one
+                        DW OFFSET cli_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopFB:
+                        DW OFFSET op_one
+                        DW OFFSET sti_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopFC:
+                        DW OFFSET op_one
+                        DW OFFSET cld_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopFD:
+                        DW OFFSET op_one
+                        DW OFFSET std_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopFE:
+                        DW OFFSET opmrFE00
+                        DW op_mem_reg_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lopFF:
                         DW OFFSET opmrFF00
                         DW op_mem_reg_tab + blank_sep
                         DW 0FFFFh

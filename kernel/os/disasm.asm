@@ -45,6 +45,7 @@ data_48         EQU 3
 
 addr_16         EQU 0
 addr_32         EQU 1
+addr_64         EQU 2
 
 data    SEGMENT byte public 'DATA'
 
@@ -59,6 +60,7 @@ gaddr_mode      DB ?
 gdata_mode      DB ?
 edata_mode      DB ?
 ignore_ptr      DB ?
+op_rex          DB ?
 
 op_in_code      DB 50 DUP(?)
 op_codes        DW 100 DUP(?)
@@ -72,6 +74,7 @@ code    SEGMENT byte public 'CODE'
         assume cs:code
 
         extrn main_tab:near
+        extrn long_main_tab:near
         extrn mne_tab:near
         extrn sep_tab:near
         extrn txt_noth:near
@@ -548,8 +551,24 @@ add_komma_to_mem        ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-        public override_cs
+        public override_rex
+
+override_rex     PROC near
+        mov al,[si]
+        and al,0Fh
+        mov ds:op_rex,al
+;
+        mov bx,OFFSET long_main_tab
+        mov ds:op_syntax,bx
+        inc si
+        mov al,[si]
+        xor ah,ah
+        call decode_opcode
+        ret
+override_rex     ENDP
+
         extrn cs_txt:near
+        public override_cs
 
 override_cs     PROC near
         mov ax,OFFSET cs_txt
@@ -2038,6 +2057,7 @@ decode_data_sel ENDP
 ;               PARAMETERS:             DS              Data segment
 ;                                               DX = 0  16 bit segment
 ;                                               DX = 1  32 bit segment
+;                                               DX = 2  64 bit segment
 ;                       DI      Data buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2059,8 +2079,21 @@ dis_ass_one     PROC near
         mov si,OFFSET op_in_code
         mov al,[si]
         xor ah,ah
+        cmp dl,2
+        je dis_ass64
+
+dis_ass16_32:        
         mov bx,OFFSET main_tab
         mov ds:op_syntax,bx
+        jmp dis_ass_syntax_ok
+
+dis_ass64:
+        mov bx,OFFSET long_main_tab
+        mov ds:op_syntax,bx
+        mov ds:op_rex,0
+        mov dl,1
+
+dis_ass_syntax_ok:      
         mov di,OFFSET op_codes
         mov ds:gaddr_mode,dl
         mov ds:gdata_mode,dl
@@ -2087,8 +2120,12 @@ dis_ass_one     PROC near
         sub cx,ax
         sub cx,80
         neg cx
+        test cx,8000h
+        jnz dis_cont
         mov al,20h
         rep stosb
+
+dis_cont:        
         pop cx
         sub cx,OFFSET op_in_code
         inc cx

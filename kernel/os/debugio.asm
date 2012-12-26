@@ -1151,6 +1151,9 @@ GetMne  PROC near
     xor dl,dl
     xor dh,dh
     mov bx,gs:p_cs
+    IsLongCodeSelector
+    jnc get_cs64
+;    
     test byte ptr gs:p_rflags+2,2
     jnz get_cs_bitness_done
 
@@ -1349,6 +1352,10 @@ write_call_near16:
     mov ds:op_size,bx
     jmp write_special_end
 
+get_cs64:
+    mov di,OFFSET op_in_text
+    call GetOpBuf
+
 write_special_fail:
     stc
 
@@ -1359,10 +1366,16 @@ write_special_end:
 GetMne  ENDP
 
 LoadInstr       PROC near
+    mov di,2
+    mov bx,gs:p_cs
+    IsLongCodeSelector
+    jnc seg_size_ok
+;
     xor di,di
     mov ax,word ptr gs:p_rflags+2
     test ax,2
     jnz seg_size_ok
+;
     mov bx,gs:p_cs
     test bx,4
     jz code_in_gdt
@@ -1384,6 +1397,7 @@ code_in_gdt:
     shr al,6
     and ax,1
     mov di,ax
+
 seg_size_ok:
     mov ax,SEG data
     mov ds,ax
