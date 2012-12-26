@@ -54,15 +54,6 @@ fault_rbx           equ -16
 
 IA32_EFER       = 0C0000080h
 
-MAP_LINEAR      = 110000h
-
-IDT_LINEAR      = 11C000h
-PAE_CR3_LINEAR  = 11D000h
-IA64_PAE_LINEAR = 11E000h
-IA64_CR3_LINEAR = 11F000h
-
-UNITY_MAP_SIZE  = 10000h
-
 pushq0  Macro
     db 6Ah
     db 0
@@ -148,17 +139,17 @@ Code32 segment byte public use32 'code32'
 
 sgn  dw 6452h
 eip  dd OFFSET init
-ib   dd MAP_LINEAR
-ic   dd UNITY_MAP_SIZE
-idt  dd IDT_LINEAR
+ib   dd long_map_linear
+ic   dd long_map_size
+idt  dd long_idt_linear
 
-    org MAP_LINEAR
+    org long_map_linear
 
 prot_idt_size   DW ?
 prot_idt_base   DD ? 
 
 long_idt_size   DW 0FFFh
-long_idt_base   DD IDT_LINEAR
+long_idt_base   DD long_idt_linear
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -187,7 +178,7 @@ setup_long_trap_gate  proc far
 ;
     movzx edi,al
     shl edi,4
-    add edi,IDT_LINEAR
+    add edi,long_idt_linear
 ;
     mov edx,esi
     mov [edi],dx
@@ -241,7 +232,7 @@ setup_long_int_gate  proc far
 ;
     movzx edi,al
     shl edi,4
-    add edi,IDT_LINEAR
+    add edi,long_idt_linear
 ;
     mov edx,esi
     mov [edi],dx
@@ -900,7 +891,7 @@ long_mode_reset:
 ;
     movzx edi,al
     shl edi,4
-    add edi,IDT_LINEAR
+    add edi,long_idt_linear
 ;    
     mov ebx,13 * 16
     xor eax,eax
