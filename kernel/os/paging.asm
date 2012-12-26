@@ -86,7 +86,7 @@ process_dir_fault       Proc near
     cmp edi,handle_linear
     je process_dir_fault_local
 ;
-    cmp edi,focus_process_linear
+    cmp edi,fixed_process_linear
     je process_dir_fault_local
 ;
     cmp edi,io_local_linear
@@ -353,7 +353,7 @@ page_fault      Proc near
     cmp eax,io_focus_linear
     je page_fault_user
 ;
-    cmp eax,focus_process_linear
+    cmp eax,fixed_process_linear
     je page_fault_user
 ;
     cmp eax,io_local_linear

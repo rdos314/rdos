@@ -61,6 +61,7 @@ small_section       section_typ <>
 
 system_alloc_base       DD ?
 process_alloc_base      DD ?
+program_alloc_base      DD ?
 fixed_vm_base       DD ?
 
 mem_seg ENDS
@@ -183,6 +184,7 @@ init_mem    PROC near
     mov ds:big_used_mem,0
     mov ds:small_used_mem,0
     mov ds:process_alloc_base,fixed_process_linear + SIZE process_seg
+    mov ds:program_alloc_base,fixed_program_linear
     mov ds:fixed_vm_base,fixed_vm_linear
 ;
     mov ax,cs
@@ -306,6 +308,12 @@ init_mem    PROC near
     mov ax,allocate_process_linear_nr
     RegisterOsGate
 ;
+    mov si,OFFSET allocate_program_linear
+    mov di,OFFSET allocate_program_linear_name
+    xor cl,cl
+    mov ax,allocate_program_linear_nr
+    RegisterOsGate
+;
     mov si,OFFSET allocate_system_linear
     mov di,OFFSET allocate_system_linear_name
     xor cl,cl
@@ -322,6 +330,12 @@ init_mem    PROC near
     mov di,OFFSET allocate_fixed_system_mem_name
     xor cl,cl
     mov ax,allocate_fixed_system_mem_nr
+    RegisterOsGate
+;
+    mov si,OFFSET allocate_fixed_program_mem
+    mov di,OFFSET allocate_fixed_program_mem_name
+    xor cl,cl
+    mov ax,allocate_fixed_program_mem_nr
     RegisterOsGate
 ;
     mov si,OFFSET read_thread_selector
@@ -2883,6 +2897,32 @@ allocate_process_linear ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           ALLOCATE_PROGRAM_LINEAR
+;
+;           DESCRIPTION:    Allocate fixed program linear
+;
+;           PARAMETERS:     EAX         Number of bytes
+;
+;           RETURNS:        EDX         Linear base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_program_linear_name    DB 'Allocate Program Linear',0
+
+allocate_program_linear PROC far
+    push ds
+    mov dx,mem_sel
+    mov ds,dx
+    mov edx,ds:program_alloc_base
+    add ds:program_alloc_base,eax
+    pop ds
+    retf32
+allocate_program_linear ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           ALLOCATE_SYSTEM_LINEAR
 ;
 ;           DESCRIPTION:    Allocate fixed system memory
@@ -2973,6 +3013,39 @@ local_allocate_fixed_process_mem      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           Local_ALLOCATE_FIXED_PROGRAM_MEM
+;
+;           DESCRIPTION:    Allocate fixed program memory
+;
+;           PARAMETERS:         EAX         Number of bytes
+;                           BX          Selector
+;                           
+;           RETURNS:        ES          Selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public local_allocate_fixed_program_mem
+
+local_allocate_fixed_program_mem      PROC near
+    push ds
+    push ecx
+    push edx
+;
+    AllocateProgramLinear
+    mov ecx,eax
+    CreateDataSelector16
+    mov es,bx
+;
+    pop edx
+    pop ecx
+    pop ds
+    ret
+local_allocate_fixed_program_mem      ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           LOCAL_ALLOCATE_FIXED_SYSTEM_MEM
 ;
 ;           DESCRIPTION:    Allocate fixed system memory
@@ -3037,6 +3110,38 @@ allocate_fixed_process_mem      PROC far
     pop ds
     retf32
 allocate_fixed_process_mem      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ALLOCATE_FIXED_PROGRAM_MEM
+;
+;           DESCRIPTION:    Allocate fixed program memory
+;
+;           PARAMETERS:     EAX         Number of bytes
+;                           BX          Selector
+;                           
+;           RETURNS:        ES          Selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_fixed_program_mem_name DB 'Allocate Fixed Program Mem',0
+
+allocate_fixed_program_mem      PROC far
+    push ds
+    push ecx
+    push edx
+;
+    AllocateProgramLinear
+    mov ecx,eax
+    CreateDataSelector16
+    mov es,bx
+;
+    pop edx
+    pop ecx
+    pop ds
+    retf32
+allocate_fixed_program_mem      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -583,6 +583,17 @@
 #define osgate_is_long_thread 489
 #define osgate_long_mode_reset 490
 
+#define osgate_create_sys_page_dir 491
+
+#define osgate_init_long_exe 492
+#define osgate_start_long_exe 493
+
+#define osgate_read_thread64 494
+#define osgate_write_thread64 495
+
+#define osgate_allocate_fixed_program_linear 496
+#define osgate_allocate_fixed_program_mem 497
+
 
 
 
@@ -1169,4 +1180,15 @@
 #define OsGate_load_long_regs 0x3E 0x67 0x9a 232 1 0 0 2 0
 #define OsGate_is_long_thread 0x3E 0x67 0x9a 233 1 0 0 2 0
 #define OsGate_long_mode_reset 0x3E 0x67 0x9a 234 1 0 0 2 0
+
+#define OsGate_create_sys_page_dir 0x3E 0x67 0x9a 235 1 0 0 2 0
+
+#define OsGate_init_long_exe 0x3E 0x67 0x9a 236 1 0 0 2 0
+#define OsGate_start_long_exe 0x3E 0x67 0x9a 237 1 0 0 2 0
+
+#define OsGate_read_thread64 0x3E 0x67 0x9a 238 1 0 0 2 0
+#define OsGate_write_thread64 0x3E 0x67 0x9a 239 1 0 0 2 0
+
+#define OsGate_allocate_fixed_program_linear 0x3E 0x67 0x9a 240 1 0 0 2 0
+#define OsGate_allocate_fixed_program_mem 0x3E 0x67 0x9a 241 1 0 0 2 0
 

@@ -891,6 +891,13 @@ AllocateFixedProcessMem MACRO
 ;       EAX         ANTAL BYTES
 ;       BX          SELECTOR IN
 ;       ES          SELECTOR UT
+AllocateFixedProgramMem MACRO
+    OsGate allocate_fixed_program_mem_nr
+                    ENDM
+
+;       EAX         ANTAL BYTES
+;       BX          SELECTOR IN
+;       ES          SELECTOR UT
 AllocateFixedSystemMem  MACRO
     OsGate allocate_fixed_system_mem_nr
                     ENDM
@@ -899,6 +906,12 @@ AllocateFixedSystemMem  MACRO
 ;       EDX         LINJŽR ADDRESS
 AllocateProcessLinear   MACRO
     OsGate allocate_process_linear_nr
+                    ENDM
+
+;       EAX         ANTAL BYTES
+;       EDX         LINJŽR ADDRESS
+AllocateProgramLinear   MACRO
+    OsGate allocate_program_linear_nr
                     ENDM
 
 ;       EAX         ANTAL BYTES
