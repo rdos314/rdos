@@ -49,16 +49,20 @@ long_mode_linear        EQU 000110000h
 local_byte_linear		EQU 000120000h
 local_page_linear		EQU 000300000h
 
-flat_size				EQU 0BFC00000h
+flat_size				EQU 0BF000000h
 
-system_mem_start		EQU 0BFC00000h
+system_mem_start		EQU 0BF000000h
 
-handle_linear			EQU 0BFC00000h
-fixed_process_linear	EQU 0BFC10000h
-long_process_linear     EQU 0BFE00000h
+handle_linear			EQU 0BF000000h
+fixed_process_linear	EQU 0BF010000h
+long_process_linear     EQU 0BF400000h
 
-global_byte_linear		EQU 0C0000000h
-global_byte_size		EQU 008000000h
+process_page_linear		EQU 0BF800000h
+
+sys_page_linear			EQU 0C0000000h
+
+global_byte_linear		EQU 0C0800000h
+global_byte_size		EQU 007800000h
 
 global_page_linear		EQU 0C8000000h
 global_page_size		EQU 033400000h
@@ -72,9 +76,6 @@ video_mem_local_linear	EQU 0FBA00000h
 phys_bitmap_linear      EQU 0FC000000h
 
 alias_linear			EQU 0FC800000h
-
-sys_page_linear			EQU 0FD000000h
-process_page_linear		EQU 0FD800000h
 
 video_focus_linear		EQU 0FE000000h
 
