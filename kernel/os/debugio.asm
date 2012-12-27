@@ -1366,7 +1366,7 @@ write_special_end:
 GetMne  ENDP
 
 LoadInstr       PROC near
-    mov di,2
+    mov di,3
     mov bx,gs:p_cs
     IsLongCodeSelector
     jnc seg_size_ok

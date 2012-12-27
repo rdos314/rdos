@@ -61,6 +61,7 @@ gdata_mode      DB ?
 edata_mode      DB ?
 ignore_ptr      DB ?
 op_rex          DB ?
+root_tab        DW ?
 
 op_in_code      DB 50 DUP(?)
 op_codes        DW 100 DUP(?)
@@ -343,6 +344,7 @@ add_hex_dword   ENDP
 calc_ads_offset PROC near
         push ax
         mov bl,ds:gaddr_mode
+        and bl,1
         cmp bl,addr_32
         je c_a_ad32
 c_a_ad16:
@@ -392,6 +394,7 @@ calc_ads_offset ENDP
 
 decode_mem_mode PROC near
         mov bl,ds:gaddr_mode
+        and bl,1
         mov bh,bl
         add bl,bl
         add bl,bh
@@ -399,6 +402,7 @@ decode_mem_mode PROC near
         or al,al
         je data_8_sel
         add al,ds:gdata_mode
+        and al,1
 data_8_sel:
         mov ds:edata_mode,al
         add bl,al
@@ -440,6 +444,7 @@ decode_mem_mode ENDP
 
 decode_math_mem PROC near
         mov bl,ds:gaddr_mode
+        and bl,1
         mov bh,bl
         add bl,bl
         add bl,bh
@@ -447,6 +452,7 @@ decode_math_mem PROC near
         or al,al
         je mdata_8_sel
         add al,ds:gdata_mode
+        and al,1
 mdata_8_sel:
         mov ds:edata_mode,al
         add bl,al
@@ -502,6 +508,7 @@ decode_reg      PROC near
         or bl,bl
         je rdata_8_sel
         add bl,ds:gdata_mode
+        and bl,1
 rdata_8_sel:
         xor bh,bh
         add bx,bx
@@ -558,7 +565,7 @@ override_rex     PROC near
         and al,0Fh
         mov ds:op_rex,al
 ;
-        mov bx,OFFSET long_main_tab
+        mov bx,ds:root_tab
         mov ds:op_syntax,bx
         inc si
         mov al,[si]
@@ -573,7 +580,7 @@ override_rex     ENDP
 override_cs     PROC near
         mov ax,OFFSET cs_txt
         mov ds:override,ax
-        mov bx,OFFSET main_tab
+        mov bx,ds:root_tab
         mov ds:op_syntax,bx
         inc si
         mov al,[si]
@@ -588,7 +595,7 @@ override_cs     ENDP
 override_ds     PROC near
         mov ax,OFFSET ds_txt
         mov ds:override,ax
-        mov bx,OFFSET main_tab
+        mov bx,ds:root_tab
         mov ds:op_syntax,bx
         inc si
         mov al,[si]
@@ -603,7 +610,7 @@ override_ds     ENDP
 override_ss     PROC near
         mov ax,OFFSET ss_txt
         mov ds:override,ax
-        mov bx,OFFSET main_tab
+        mov bx,ds:root_tab
         mov ds:op_syntax,bx
         inc si
         mov al,[si]
@@ -618,7 +625,7 @@ override_ss     ENDP
 override_es     PROC near
         mov ax,OFFSET es_txt
         mov ds:override,ax
-        mov bx,OFFSET main_tab
+        mov bx,ds:root_tab
         mov ds:op_syntax,bx
         inc si
         mov al,[si]
@@ -633,7 +640,7 @@ override_es     ENDP
 override_fs     PROC near
         mov ax,OFFSET fs_txt
         mov ds:override,ax
-        mov bx,OFFSET main_tab
+        mov bx,ds:root_tab
         mov ds:op_syntax,bx
         inc si
         mov al,[si]
@@ -648,7 +655,7 @@ override_fs     ENDP
 override_gs     PROC near
         mov ax,OFFSET gs_txt
         mov ds:override,ax
-        mov bx,OFFSET main_tab
+        mov bx,ds:root_tab
         mov ds:op_syntax,bx
         inc si
         mov al,[si]
@@ -670,6 +677,7 @@ op_byte ENDP
 
 op_word PROC near
         mov al,ds:gdata_mode
+        and al,1
         or al,al
         jz op_w16
 op_w32:
@@ -688,6 +696,7 @@ op_word ENDP
 
 op_word_mem     PROC near
         mov al,ds:gdata_mode
+        and al,1
         or al,al
         jz op_wm16
 op_wm32:
@@ -726,6 +735,7 @@ op_short        ENDP
 
 op_near PROC near
         mov al,ds:gdata_mode
+        and al,1
         or al,al
         jz op_near16
 op_near32:
@@ -748,6 +758,7 @@ op_near ENDP
 
 op_near2        PROC near
         mov al,ds:gdata_mode
+        and al,1
         or al,al
         jz op_near16_2
 op_near32_2:
@@ -770,6 +781,7 @@ op_near2        ENDP
 
 op_far  PROC near
         mov al,ds:gdata_mode
+        and al,1
         or al,al
         jz op_far16
 op_far32:
@@ -814,7 +826,7 @@ op_enter        ENDP
         public op_address_size
 
 op_address_size PROC near
-        mov bx,OFFSET main_tab
+        mov bx,ds:root_tab
         mov ds:op_syntax,bx
         xor ds:gaddr_mode,1
         inc si
@@ -827,7 +839,7 @@ op_address_size ENDP
         public op_data_size
 
 op_data_size    PROC near
-        mov bx,OFFSET main_tab
+        mov bx,ds:root_tab
         mov ds:op_syntax,bx
         xor ds:gdata_mode,1
         inc si
@@ -840,7 +852,7 @@ op_data_size    ENDP
         public op_wait
 
 op_wait PROC near
-        mov bx,OFFSET main_tab
+        mov bx,ds:root_tab
         mov ds:op_syntax,bx
         inc si
         mov al,[si]
@@ -852,7 +864,7 @@ op_wait ENDP
         public op_rep
 
 op_rep  PROC near
-        mov bx,OFFSET main_tab
+        mov bx,ds:root_tab
         mov ds:op_syntax,bx
         inc si
         mov al,[si]
@@ -877,6 +889,7 @@ add_mne MACRO com_txt, sep
 
 op_string2b     PROC near
         mov al,ds:gaddr_mode
+        and al,1
         or al,al
         jz op_stringb16
 op_stringb32:
@@ -905,9 +918,11 @@ op_string2b     ENDP
 
 op_string2w     PROC near
         mov al,ds:gdata_mode
+        and al,1
         or al,al
         jnz op_string2d
         mov al,ds:gaddr_mode
+        and al,1
         or al,al
         jz op_string2w16
 op_string2w32:
@@ -932,6 +947,7 @@ op_string2w16:
         ret
 op_string2d:
         mov al,ds:gaddr_mode
+        and al,1
         or al,al
         jz op_string2d16
 op_string2d32:
@@ -961,6 +977,7 @@ op_string2w     ENDP
 
 op_string1b     PROC near
         mov al,ds:gaddr_mode
+        and al,1
         or al,al
         jz op_string1b16
 op_string1b32:
@@ -985,9 +1002,11 @@ op_string1b     ENDP
 
 op_string1w     PROC near
         mov al,ds:gdata_mode
+        and al,1
         or al,al
         jnz op_string1d
         mov al,ds:gaddr_mode
+        and al,1
         or al,al
         jz op_string1w16
 op_string1w32:
@@ -1008,6 +1027,7 @@ op_string1w16:
         ret
 op_string1d:
         mov al,ds:gaddr_mode
+        and al,1
         or al,al
         jz op_string1d16
 op_string1d32:
@@ -1035,6 +1055,7 @@ op_string1w     ENDP
 
 op_add_opsize   PROC near
         mov al,ds:gdata_mode
+        and al,1
         or al,al
         jz op_add16
 op_add32:
@@ -1587,6 +1608,7 @@ mem_op_next             ENDP
 
 ax_next PROC near
         mov al,ds:gdata_mode
+        and al,1
         or al,al
         jnz op_eax
 op_ax:
@@ -1607,6 +1629,7 @@ ax_next ENDP
 
 bx_next PROC near
         mov al,ds:gdata_mode
+        and al,1
         or al,al
         jnz op_ebx
 op_bx:
@@ -1627,6 +1650,7 @@ bx_next ENDP
 
 cx_next PROC near
         mov al,ds:gdata_mode
+        and al,1
         or al,al
         jnz op_ecx
 op_cx:
@@ -1647,6 +1671,7 @@ cx_next ENDP
 
 dx_next PROC near
         mov al,ds:gdata_mode
+        and al,1
         or al,al
         jnz op_edx
 op_dx:
@@ -1667,6 +1692,7 @@ dx_next ENDP
 
 sp_next PROC near
         mov al,ds:gdata_mode
+        and al,1
         or al,al
         jnz op_esp
 op_sp:
@@ -1687,6 +1713,7 @@ sp_next ENDP
 
 bp_next PROC near
         mov al,ds:gdata_mode
+        and al,1
         or al,al
         jnz op_ebp
 op_bp:
@@ -1707,6 +1734,7 @@ bp_next ENDP
 
 si_next PROC near
         mov al,ds:gdata_mode
+        and al,1
         or al,al
         jnz op_esi
 op_si:
@@ -1727,6 +1755,7 @@ si_next ENDP
 
 di_next PROC near
         mov al,ds:gdata_mode
+        and al,1
         or al,al
         jnz op_edi
 op_di:
@@ -2057,7 +2086,7 @@ decode_data_sel ENDP
 ;               PARAMETERS:             DS              Data segment
 ;                                               DX = 0  16 bit segment
 ;                                               DX = 1  32 bit segment
-;                                               DX = 2  64 bit segment
+;                                               DX = 3  64 bit segment
 ;                       DI      Data buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2079,19 +2108,20 @@ dis_ass_one     PROC near
         mov si,OFFSET op_in_code
         mov al,[si]
         xor ah,ah
-        cmp dl,2
+        cmp dl,3
         je dis_ass64
 
-dis_ass16_32:        
+dis_ass16_32:       
         mov bx,OFFSET main_tab
         mov ds:op_syntax,bx
+        mov ds:root_tab,bx
         jmp dis_ass_syntax_ok
 
 dis_ass64:
         mov bx,OFFSET long_main_tab
         mov ds:op_syntax,bx
+        mov ds:root_tab,bx
         mov ds:op_rex,0
-        mov dl,1
 
 dis_ass_syntax_ok:      
         mov di,OFFSET op_codes
