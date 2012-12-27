@@ -169,7 +169,13 @@ SetDataSel      PROC near
     push bx
     mov bx,SEG data
     mov ds,bx
+    mov ds:data_sel,0
+    test ds:gaddr_mode,2
+    jnz sdlDone
+;    
     mov ds:data_sel,ax
+
+sdlDone:    
     pop bx
     pop ds
     ret
@@ -401,8 +407,6 @@ c_a_ad64_32:
 
 c_a_ad64_32_do:        
         mov ds:data_good,1
-        mov ds:data_off,0
-        mov ds:data_sel,0
         add ax,ax
         add ax,ax
         add bx,ax
@@ -426,8 +430,6 @@ c_a_ad64_64:
 
 c_a_ad64_64_do:        
         mov ds:data_good,1
-        mov ds:data_off,0
-        mov ds:data_sel,0
         add ax,ax
         add ax,ax
         add bx,ax
