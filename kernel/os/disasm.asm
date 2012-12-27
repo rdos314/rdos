@@ -401,8 +401,9 @@ decode_mem_mode PROC near
         mov al,ds:data_mode
         or al,al
         je data_8_sel
-        add al,ds:gdata_mode
-        and al,1
+        mov ah,ds:gdata_mode
+        and ah,1
+        add al,ah
 data_8_sel:
         mov ds:edata_mode,al
         add bl,al
@@ -451,8 +452,9 @@ decode_math_mem PROC near
         mov al,ds:data_mode
         or al,al
         je mdata_8_sel
-        add al,ds:gdata_mode
-        and al,1
+        mov ah,ds:gdata_mode
+        and ah,1
+        add al,ah
 mdata_8_sel:
         mov ds:edata_mode,al
         add bl,al
@@ -502,13 +504,20 @@ decode_math_mem ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
         extrn reg_tab:near
+        extrn long_reg_tab:near
 
 decode_reg      PROC near
+        test ds:gdata_mode,2
+        jnz decode_reg64
+;        
         mov bl,ds:data_mode
         or bl,bl
         je rdata_8_sel
-        add bl,ds:gdata_mode
-        and bl,1
+;
+        mov bh,ds:gdata_mode
+        and bh,1
+        add bl,bh
+
 rdata_8_sel:
         xor bh,bh
         add bx,bx
@@ -520,6 +529,36 @@ rdata_8_sel:
         mov ds:ignore_ptr,1
         call decode_opcode
         ret
+
+decode_reg64:
+        mov bl,3
+        test ds:op_rex,8
+        jnz rdata_64_8_sel
+;
+        mov bl,ds:data_mode
+        or bl,bl
+        je rdata_64_8_sel
+;
+        mov bh,ds:gdata_mode
+        and bh,1
+        add bl,bh
+        
+rdata_64_8_sel:
+        xor bh,bh
+        add bx,bx
+        add bx,OFFSET long_reg_tab
+        mov cx,cs:[bx]
+        mov ds:op_syntax,cx
+        and ax,38h
+        shr ax,3
+        test ds:op_rex,2
+        jz rdata_64_do
+;
+        or ax,8        
+
+rdata_64_do:        
+        mov ds:ignore_ptr,1
+        call decode_opcode
 decode_reg      ENDP
 
 

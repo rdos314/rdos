@@ -46,6 +46,13 @@ reg8d   DW OFFSET mod8d_16a_rm11000
 reg16d  DW OFFSET mod16d_16a_rm11000
 reg32d  DW OFFSET mod32d_16a_rm11000
 
+    public long_reg_tab
+
+long_reg_tab:
+lreg8   DW OFFSET long_reg8_01000
+lreg16  DW OFFSET long_reg16_01000
+lreg32  DW OFFSET long_reg32_01000
+lreg64  DW OFFSET long_reg64_01000
 
         public mem_sib0_tab
 
@@ -350,6 +357,46 @@ pusha_txt                       DB 'pusha',0
 pushf_txt                       DB 'pushf',0
 qword_txt                       DB 'qword',0
 qword_ptr_txt           DB 'qword ptr',0
+r10_txt                         DB 'r10',0
+r10d_txt                        DB 'r10d',0
+r10l_txt                        DB 'r10l',0
+r10w_txt                        DB 'r10w',0
+r11_txt                         DB 'r11',0
+r11d_txt                        DB 'r11d',0
+r11l_txt                        DB 'r11l',0
+r11w_txt                        DB 'r11w',0
+r12_txt                         DB 'r12',0
+r12d_txt                        DB 'r12d',0
+r12l_txt                        DB 'r12l',0
+r12w_txt                        DB 'r12w',0
+r13_txt                         DB 'r13',0
+r13d_txt                        DB 'r13d',0
+r13l_txt                        DB 'r13l',0
+r13w_txt                        DB 'r13w',0
+r14_txt                         DB 'r14',0
+r14d_txt                        DB 'r14d',0
+r14l_txt                        DB 'r14l',0
+r14w_txt                        DB 'r14w',0
+r15_txt                         DB 'r15',0
+r15d_txt                        DB 'r15d',0
+r15l_txt                        DB 'r15l',0
+r15w_txt                        DB 'r15w',0
+r8_txt                          DB 'r8',0
+r8d_txt                         DB 'r8d',0
+r8l_txt                         DB 'r8l',0
+r8w_txt                         DB 'r8w',0
+r9_txt                          DB 'r9',0
+r9d_txt                         DB 'r9d',0
+r9l_txt                         DB 'r9l',0
+r9w_txt                         DB 'r9w',0
+rax_txt                         DB 'rax',0
+rbp_txt                         DB 'rbp',0
+rbx_txt                         DB 'rbx',0
+rcx_txt                         DB 'rcx',0
+rdi_txt                         DB 'rdi',0
+rdx_txt                         DB 'rdx',0
+rsi_txt                         DB 'rsi',0
+rsp_txt                         DB 'rsp',0
 rcl_txt                         DB 'rcl',0
 rcr_txt                         DB 'rcr',0
 rdmsr_txt                       DB 'rdmsr',0
@@ -490,6 +537,463 @@ op_cdt_tab                      EQU 0FF7h
         extrn op_string2w:near
 
         extrn op_add_opsize:near
+
+long_reg8_01000:
+                        DW OFFSET op_one
+                        DW OFFSET al_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg8_01001:
+                        DW OFFSET op_one
+                        DW OFFSET cl_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg8_01010:
+                        DW OFFSET op_one
+                        DW OFFSET dl_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg8_01011:
+                        DW OFFSET op_one
+                        DW OFFSET bl_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg8_01100:
+                        DW OFFSET op_one
+                        DW OFFSET ah_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg8_01101:
+                        DW OFFSET op_one
+                        DW OFFSET ch_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg8_01110:
+                        DW OFFSET op_one
+                        DW OFFSET dh_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg8_01111:
+                        DW OFFSET op_one
+                        DW OFFSET bh_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+long_reg8_11000:
+                        DW OFFSET op_one
+                        DW OFFSET r8l_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg8_11001:
+                        DW OFFSET op_one
+                        DW OFFSET r9l_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg8_11010:
+                        DW OFFSET op_one
+                        DW OFFSET r10l_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg8_11011:
+                        DW OFFSET op_one
+                        DW OFFSET r11l_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg8_11100:
+                        DW OFFSET op_one
+                        DW OFFSET r12l_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg8_11101:
+                        DW OFFSET op_one
+                        DW OFFSET r13l_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg8_11110:
+                        DW OFFSET op_one
+                        DW OFFSET r14l_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg8_11111:
+                        DW OFFSET op_one
+                        DW OFFSET r15l_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+long_reg16_01000:
+                        DW OFFSET op_one
+                        DW OFFSET ax_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg16_01001:
+                        DW OFFSET op_one
+                        DW OFFSET cx_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg16_01010:
+                        DW OFFSET op_one
+                        DW OFFSET dx_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg16_01011:
+                        DW OFFSET op_one
+                        DW OFFSET bx_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg16_01100:
+                        DW OFFSET op_one
+                        DW OFFSET sp_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg16_01101:
+                        DW OFFSET op_one
+                        DW OFFSET bp_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg16_01110:
+                        DW OFFSET op_one
+                        DW OFFSET si_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg16_01111:
+                        DW OFFSET op_one
+                        DW OFFSET di_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg16_11000:
+                        DW OFFSET op_one
+                        DW OFFSET r8w_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg16_11001:
+                        DW OFFSET op_one
+                        DW OFFSET r9w_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg16_11010:
+                        DW OFFSET op_one
+                        DW OFFSET r10w_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg16_11011:
+                        DW OFFSET op_one
+                        DW OFFSET r11w_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg16_11100:
+                        DW OFFSET op_one
+                        DW OFFSET r12w_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg16_11101:
+                        DW OFFSET op_one
+                        DW OFFSET r13w_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg16_11110:
+                        DW OFFSET op_one
+                        DW OFFSET r14w_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg16_11111:
+                        DW OFFSET op_one
+                        DW OFFSET r15w_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+long_reg32_01000:
+                        DW OFFSET op_one
+                        DW OFFSET eax_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg32_01001:
+                        DW OFFSET op_one
+                        DW OFFSET ecx_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg32_01010:
+                        DW OFFSET op_one
+                        DW OFFSET edx_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg32_01011:
+                        DW OFFSET op_one
+                        DW OFFSET ebx_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg32_01100:
+                        DW OFFSET op_one
+                        DW OFFSET esp_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg32_01101:
+                        DW OFFSET op_one
+                        DW OFFSET ebp_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg32_01110:
+                        DW OFFSET op_one
+                        DW OFFSET esi_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg32_01111:
+                        DW OFFSET op_one
+                        DW OFFSET edi_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+long_reg32_11000:
+                        DW OFFSET op_one
+                        DW OFFSET r8d_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg32_11001:
+                        DW OFFSET op_one
+                        DW OFFSET r9d_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg32_11010:
+                        DW OFFSET op_one
+                        DW OFFSET r10d_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg32_11011:
+                        DW OFFSET op_one
+                        DW OFFSET r11d_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg32_11100:
+                        DW OFFSET op_one
+                        DW OFFSET r12d_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg32_11101:
+                        DW OFFSET op_one
+                        DW OFFSET r13d_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg32_11110:
+                        DW OFFSET op_one
+                        DW OFFSET r14d_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg32_11111:
+                        DW OFFSET op_one
+                        DW OFFSET r15d_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+
+long_reg64_01000:
+                        DW OFFSET op_one
+                        DW OFFSET rax_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg64_01001:
+                        DW OFFSET op_one
+                        DW OFFSET rcx_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg64_01010:
+                        DW OFFSET op_one
+                        DW OFFSET rdx_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg64_01011:
+                        DW OFFSET op_one
+                        DW OFFSET rbx_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg64_01100:
+                        DW OFFSET op_one
+                        DW OFFSET rsp_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg64_01101:
+                        DW OFFSET op_one
+                        DW OFFSET rbp_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg64_01110:
+                        DW OFFSET op_one
+                        DW OFFSET rsi_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg64_01111:
+                        DW OFFSET op_one
+                        DW OFFSET rdi_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
+long_reg64_11000:
+                        DW OFFSET op_one
+                        DW OFFSET r8_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg64_11001:
+                        DW OFFSET op_one
+                        DW OFFSET r9_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg64_11010:
+                        DW OFFSET op_one
+                        DW OFFSET r10_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg64_11011:
+                        DW OFFSET op_one
+                        DW OFFSET r11_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg64_11100:
+                        DW OFFSET op_one
+                        DW OFFSET r12_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg64_11101:
+                        DW OFFSET op_one
+                        DW OFFSET r13_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg64_11110:
+                        DW OFFSET op_one
+                        DW OFFSET r14_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+long_reg64_11111:
+                        DW OFFSET op_one
+                        DW OFFSET r15_txt - OFFSET mne_tab + blank_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+
 
 ;;;;;;;;;;;;;;;;;
 ; OP_MATH_ONE_TAB
