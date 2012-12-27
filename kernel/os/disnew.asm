@@ -121,6 +121,33 @@ sep_tab:
         public di_txt
         public edi_txt
 
+        public rax_txt
+        public rbx_txt
+        public rcx_txt
+        public rdx_txt
+        public rsi_txt
+        public rdi_txt
+        public rsp_txt
+        public rbp_txt
+
+        public r8_txt
+        public r9_txt
+        public r10_txt
+        public r11_txt
+        public r12_txt
+        public r13_txt
+        public r14_txt
+        public r15_txt
+
+        public r8d_txt
+        public r9d_txt
+        public r10d_txt
+        public r11d_txt
+        public r12d_txt
+        public r13d_txt
+        public r14d_txt
+        public r15d_txt
+
         public cs_txt
         public ds_txt
         public ss_txt
@@ -11400,6 +11427,8 @@ sibc_11:
 
         public adr_16a_tab
         public adr_32a_tab
+        public adr_64_32a_tab
+        public adr_64_64a_tab
         public adr_sib_tab
         public adr_sib_index_tab
 
@@ -11416,6 +11445,30 @@ sibc_11:
         extrn edi_adr:near
         extrn ebp_adr:near
         extrn esp_adr:near
+        extrn rax_adr:near
+        extrn rbx_adr:near
+        extrn rcx_adr:near
+        extrn rdx_adr:near
+        extrn rsi_adr:near
+        extrn rdi_adr:near
+        extrn rbp_adr:near
+        extrn rsp_adr:near
+        extrn r8_adr:near
+        extrn r9_adr:near
+        extrn r10_adr:near
+        extrn r11_adr:near
+        extrn r12_adr:near
+        extrn r13_adr:near
+        extrn r14_adr:near
+        extrn r15_adr:near
+        extrn r8d_adr:near
+        extrn r9d_adr:near
+        extrn r10d_adr:near
+        extrn r11d_adr:near
+        extrn r12d_adr:near
+        extrn r13d_adr:near
+        extrn r14d_adr:near
+        extrn r15d_adr:near
 
 adr_16a_tab:
 adr_16a_rm00000:
@@ -11609,6 +11662,136 @@ adr_32a_rm10110:
 
 adr_32a_rm10111:
                         DW OFFSET edi_adr
+                        DW OFFSET no_adr
+
+adr_64_32a_tab:
+adr_64_32a_rm00000:
+                        DW OFFSET eax_adr
+                        DW OFFSET no_adr
+
+adr_64_32a_rm00001:
+                        DW OFFSET ecx_adr
+                        DW OFFSET no_adr
+
+adr_64_32a_rm00010:
+                        DW OFFSET edx_adr
+                        DW OFFSET no_adr
+
+adr_64_32a_rm00011:
+                        DW OFFSET ebx_adr
+                        DW OFFSET no_adr
+
+adr_64_32a_rm00100:
+                        DW OFFSET esp_adr
+                        DW OFFSET no_adr
+
+adr_64_32a_rm00101:
+                        DW OFFSET ebp_adr
+                        DW OFFSET no_adr
+
+adr_64_32a_rm00110:
+                        DW OFFSET esi_adr
+                        DW OFFSET no_adr
+
+adr_64_32a_rm00111:
+                        DW OFFSET edi_adr
+                        DW OFFSET no_adr
+
+adr_64_32a_rm01000:
+                        DW OFFSET r8d_adr
+                        DW OFFSET no_adr
+
+adr_64_32a_rm01001:
+                        DW OFFSET r9d_adr
+                        DW OFFSET no_adr
+
+adr_64_32a_rm01010:
+                        DW OFFSET r10d_adr
+                        DW OFFSET no_adr
+
+adr_64_32a_rm01011:
+                        DW OFFSET r11d_adr
+                        DW OFFSET no_adr
+
+adr_64_32a_rm01100:
+                        DW OFFSET r12d_adr
+                        DW OFFSET no_adr
+
+adr_64_32a_rm01101:
+                        DW OFFSET r13d_adr
+                        DW OFFSET no_adr
+
+adr_64_32a_rm01110:
+                        DW OFFSET r14d_adr
+                        DW OFFSET no_adr
+
+adr_64_32a_rm01111:
+                        DW OFFSET r15d_adr
+                        DW OFFSET no_adr
+
+adr_64_64a_tab:
+adr_64_64a_rm00000:
+                        DW OFFSET rax_adr
+                        DW OFFSET no_adr
+
+adr_64_64a_rm00001:
+                        DW OFFSET rcx_adr
+                        DW OFFSET no_adr
+
+adr_64_64a_rm00010:
+                        DW OFFSET rdx_adr
+                        DW OFFSET no_adr
+
+adr_64_64a_rm00011:
+                        DW OFFSET rbx_adr
+                        DW OFFSET no_adr
+
+adr_64_64a_rm00100:
+                        DW OFFSET rsp_adr
+                        DW OFFSET no_adr
+
+adr_64_64a_rm00101:
+                        DW OFFSET rbp_adr
+                        DW OFFSET no_adr
+
+adr_64_64a_rm00110:
+                        DW OFFSET rsi_adr
+                        DW OFFSET no_adr
+
+adr_64_64a_rm00111:
+                        DW OFFSET rdi_adr
+                        DW OFFSET no_adr
+
+adr_64_64a_rm01000:
+                        DW OFFSET r8_adr
+                        DW OFFSET no_adr
+
+adr_64_64a_rm01001:
+                        DW OFFSET r9_adr
+                        DW OFFSET no_adr
+
+adr_64_64a_rm01010:
+                        DW OFFSET r10_adr
+                        DW OFFSET no_adr
+
+adr_64_64a_rm01011:
+                        DW OFFSET r11_adr
+                        DW OFFSET no_adr
+
+adr_64_64a_rm01100:
+                        DW OFFSET r12_adr
+                        DW OFFSET no_adr
+
+adr_64_64a_rm01101:
+                        DW OFFSET r13_adr
+                        DW OFFSET no_adr
+
+adr_64_64a_rm01110:
+                        DW OFFSET r14_adr
+                        DW OFFSET no_adr
+
+adr_64_64a_rm01111:
+                        DW OFFSET r15_adr
                         DW OFFSET no_adr
 
 adr_sib_tab:

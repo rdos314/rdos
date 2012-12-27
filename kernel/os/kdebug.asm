@@ -1359,50 +1359,226 @@ di_adr  ENDP
     public eax_adr
 eax_adr PROC near
     mov eax,dword ptr gs:p_rax
+    xor bx,bx
     ret
 eax_adr ENDP
+
+    public rax_adr
+rax_adr PROC near
+    mov eax,dword ptr gs:p_rax
+    mov bx,word ptr gs:p_rax+4
+    ret
+rax_adr ENDP
 
     public ebx_adr
 ebx_adr PROC near
     mov eax,dword ptr gs:p_rbx
+    xor bx,bx
     ret
 ebx_adr ENDP
+
+    public rbx_adr
+rbx_adr PROC near
+    mov eax,dword ptr gs:p_rbx
+    mov bx,word ptr gs:p_rbx+4
+    ret
+rbx_adr ENDP
 
     public ecx_adr
 ecx_adr PROC near
     mov eax,dword ptr gs:p_rcx
+    xor bx,bx
     ret
 ecx_adr ENDP
+
+    public rcx_adr
+rcx_adr PROC near
+    mov eax,dword ptr gs:p_rcx
+    mov bx,word ptr gs:p_rcx+4
+    ret
+rcx_adr ENDP
 
     public edx_adr
 edx_adr PROC near
     mov eax,dword ptr gs:p_rdx
+    xor bx,bx
     ret
 edx_adr ENDP
+
+    public rdx_adr
+rdx_adr PROC near
+    mov eax,dword ptr gs:p_rdx
+    mov bx,word ptr gs:p_rdx+4
+    ret
+rdx_adr ENDP
 
     public esi_adr
 esi_adr PROC near
     mov eax,dword ptr gs:p_rsi
+    xor bx,bx
     ret
 esi_adr ENDP
+
+    public rsi_adr
+rsi_adr PROC near
+    mov eax,dword ptr gs:p_rsi
+    mov bx,word ptr gs:p_rsi+4
+    ret
+rsi_adr ENDP
 
     public edi_adr
 edi_adr PROC near
     mov eax,dword ptr gs:p_rdi
+    xor bx,bx
     ret
 edi_adr ENDP
+
+    public rdi_adr
+rdi_adr PROC near
+    mov eax,dword ptr gs:p_rdi
+    mov bx,word ptr gs:p_rdi+4
+    ret
+rdi_adr ENDP
 
     public ebp_adr
 ebp_adr PROC near
     mov eax,dword ptr gs:p_rbp
+    xor bx,bx
     ret
 ebp_adr ENDP
+
+    public rbp_adr
+rbp_adr PROC near
+    mov eax,dword ptr gs:p_rbp
+    mov bx,word ptr gs:p_rbp+4
+    ret
+rbp_adr ENDP
 
     public esp_adr
 esp_adr PROC near
     mov eax,dword ptr gs:p_rsp
+    xor bx,bx
     ret
 esp_adr ENDP
+
+    public rsp_adr
+rsp_adr PROC near
+    mov eax,dword ptr gs:p_rsp
+    mov bx,word ptr gs:p_rsp+4
+    ret
+rsp_adr ENDP
+
+    public r8d_adr
+r8d_adr PROC near
+    mov eax,dword ptr gs:p_r8
+    xor bx,bx
+    ret
+r8d_adr ENDP
+
+    public r8_adr
+r8_adr PROC near
+    mov eax,dword ptr gs:p_r8
+    mov bx,word ptr gs:p_r8+4
+    ret
+r8_adr ENDP
+
+    public r9d_adr
+r9d_adr PROC near
+    mov eax,dword ptr gs:p_r9
+    xor bx,bx
+    ret
+r9d_adr ENDP
+
+    public r9_adr
+r9_adr PROC near
+    mov eax,dword ptr gs:p_r9
+    mov bx,word ptr gs:p_r9+4
+    ret
+r9_adr ENDP
+
+    public r10d_adr
+r10d_adr PROC near
+    mov eax,dword ptr gs:p_r10
+    xor bx,bx
+    ret
+r10d_adr ENDP
+
+    public r10_adr
+r10_adr PROC near
+    mov eax,dword ptr gs:p_r10
+    mov bx,word ptr gs:p_r10+4
+    ret
+r10_adr ENDP
+
+    public r11d_adr
+r11d_adr PROC near
+    mov eax,dword ptr gs:p_r11
+    xor bx,bx
+    ret
+r11d_adr ENDP
+
+    public r11_adr
+r11_adr PROC near
+    mov eax,dword ptr gs:p_r11
+    mov bx,word ptr gs:p_r11+4
+    ret
+r11_adr ENDP
+
+    public r12d_adr
+r12d_adr PROC near
+    mov eax,dword ptr gs:p_r12
+    xor bx,bx
+    ret
+r12d_adr ENDP
+
+    public r12_adr
+r12_adr PROC near
+    mov eax,dword ptr gs:p_r12
+    mov bx,word ptr gs:p_r12+4
+    ret
+r12_adr ENDP
+
+    public r13d_adr
+r13d_adr PROC near
+    mov eax,dword ptr gs:p_r13
+    xor bx,bx
+    ret
+r13d_adr ENDP
+
+    public r13_adr
+r13_adr PROC near
+    mov eax,dword ptr gs:p_r13
+    mov bx,word ptr gs:p_r13+4
+    ret
+r13_adr ENDP
+
+    public r14d_adr
+r14d_adr PROC near
+    mov eax,dword ptr gs:p_r14
+    xor bx,bx
+    ret
+r14d_adr ENDP
+
+    public r14_adr
+r14_adr PROC near
+    mov eax,dword ptr gs:p_r14
+    mov bx,word ptr gs:p_r14+4
+    ret
+r14_adr ENDP
+
+    public r15d_adr
+r15d_adr PROC near
+    mov eax,dword ptr gs:p_r15
+    xor bx,bx
+    ret
+r15d_adr ENDP
+
+    public r15_adr
+r15_adr PROC near
+    mov eax,dword ptr gs:p_r15
+    mov bx,word ptr gs:p_r15+4
+    ret
+r15_adr ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

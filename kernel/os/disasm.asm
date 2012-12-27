@@ -340,13 +340,18 @@ add_hex_dword   ENDP
 
         extrn adr_16a_tab:near
         extrn adr_32a_tab:near
+        extrn adr_64_32a_tab:near
+        extrn adr_64_64a_tab:near
 
 calc_ads_offset PROC near
         push ax
         mov bl,ds:gaddr_mode
-        and bl,1
+        test bl,2
+        jnz c_a_ad64
+;        
         cmp bl,addr_32
         je c_a_ad32
+
 c_a_ad16:
         mov bx,OFFSET adr_16a_tab
         cmp ax,18h
@@ -361,6 +366,7 @@ c_a_ad16:
         add ds:data_off,eax
         mov word ptr ds:data_off+2,0
         jmp calc_out_o_r
+
 c_a_ad32:
         mov bx,OFFSET adr_32a_tab
         cmp ax,18h
@@ -369,10 +375,72 @@ c_a_ad32:
         add ax,ax
         add ax,ax
         add bx,ax
+        push bx
         call word ptr cs:[bx]
+        pop bx
         add ds:data_off,eax
         call word ptr cs:[bx+2]
         add ds:data_off,eax
+        jmp calc_out_o_r
+
+c_a_ad64:
+        cmp ax,18h
+        jae calc_out_o_r
+;
+        and ax,7        
+        test bl,1
+        je c_a_ad64_64
+
+c_a_ad64_32:
+        mov bx,OFFSET adr_64_32a_tab
+;
+        test ds:op_rex,2
+        jz c_a_ad64_32_do
+;
+        or ax,8        
+
+c_a_ad64_32_do:        
+        mov ds:data_good,1
+        mov ds:data_off,0
+        mov ds:data_sel,0
+        add ax,ax
+        add ax,ax
+        add bx,ax
+        push bx
+        call word ptr cs:[bx]
+        add ds:data_off,eax
+        adc ds:data_sel,bx
+        pop bx
+        call word ptr cs:[bx+2]
+        add ds:data_off,eax
+        adc ds:data_sel,bx
+        jmp calc_out_o_r
+
+c_a_ad64_64:                
+        mov bx,OFFSET adr_64_64a_tab
+;
+        test ds:op_rex,2
+        jz c_a_ad64_64_do
+;
+        or ax,8        
+
+c_a_ad64_64_do:        
+        mov ds:data_good,1
+        mov ds:data_off,0
+        mov ds:data_sel,0
+        add ax,ax
+        add ax,ax
+        add bx,ax
+        push bx
+        call word ptr cs:[bx]
+        add ds:data_off,eax
+        adc ds:data_sel,bx
+        pop bx
+        call word ptr cs:[bx+2]
+        add ds:data_off,eax
+        adc ds:data_sel,bx
+        jmp calc_out_o_r
+        
 calc_out_o_r:
         pop ax
         ret
@@ -1630,20 +1698,28 @@ mem_op_next             ENDP
 
         extrn ax_txt:near
         extrn eax_txt:near
+        extrn rax_txt:near
         extrn bx_txt:near
         extrn ebx_txt:near
+        extrn rbx_txt:near
         extrn cx_txt:near
         extrn ecx_txt:near
+        extrn rcx_txt:near
         extrn dx_txt:near
         extrn edx_txt:near
+        extrn rdx_txt:near
         extrn sp_txt:near
         extrn esp_txt:near
+        extrn rsp_txt:near
         extrn bp_txt:near
         extrn ebp_txt:near
+        extrn rbp_txt:near
         extrn si_txt:near
         extrn esi_txt:near
+        extrn rsi_txt:near
         extrn di_txt:near
         extrn edi_txt:near
+        extrn rdi_txt:near
 
 ax_next PROC near
         mov al,ds:gdata_mode
@@ -1659,6 +1735,13 @@ op_ax:
         ret
 op_eax:
         mov ax,OFFSET eax_txt
+        sub ax,OFFSET mne_tab
+        add ax,blank_sep
+        mov [di],ax
+        add di,2
+        ret
+op_rax:
+        mov ax,OFFSET rax_txt
         sub ax,OFFSET mne_tab
         add ax,blank_sep
         mov [di],ax
@@ -1680,6 +1763,12 @@ op_bx:
         ret
 op_ebx:
         mov ax,OFFSET ebx_txt
+        sub ax,OFFSET mne_tab
+        add ax,blank_sep
+        mov [di],ax
+        add di,2
+op_rbx:
+        mov ax,OFFSET rbx_txt
         sub ax,OFFSET mne_tab
         add ax,blank_sep
         mov [di],ax
@@ -1706,6 +1795,13 @@ op_ecx:
         mov [di],ax
         add di,2
         ret
+op_rcx:
+        mov ax,OFFSET rcx_txt
+        sub ax,OFFSET mne_tab
+        add ax,blank_sep
+        mov [di],ax
+        add di,2
+        ret
 cx_next ENDP
 
 dx_next PROC near
@@ -1722,6 +1818,13 @@ op_dx:
         ret
 op_edx:
         mov ax,OFFSET edx_txt
+        sub ax,OFFSET mne_tab
+        add ax,blank_sep
+        mov [di],ax
+        add di,2
+        ret
+op_rdx:
+        mov ax,OFFSET rdx_txt
         sub ax,OFFSET mne_tab
         add ax,blank_sep
         mov [di],ax
@@ -1748,6 +1851,13 @@ op_esp:
         mov [di],ax
         add di,2
         ret
+op_rsp:
+        mov ax,OFFSET rsp_txt
+        sub ax,OFFSET mne_tab
+        add ax,blank_sep
+        mov [di],ax
+        add di,2
+        ret
 sp_next ENDP
 
 bp_next PROC near
@@ -1764,6 +1874,13 @@ op_bp:
         ret
 op_ebp:
         mov ax,OFFSET ebp_txt
+        sub ax,OFFSET mne_tab
+        add ax,blank_sep
+        mov [di],ax
+        add di,2
+        ret
+op_rbp:
+        mov ax,OFFSET rbp_txt
         sub ax,OFFSET mne_tab
         add ax,blank_sep
         mov [di],ax
@@ -1790,6 +1907,13 @@ op_esi:
         mov [di],ax
         add di,2
         ret
+op_rsi:
+        mov ax,OFFSET rsi_txt
+        sub ax,OFFSET mne_tab
+        add ax,blank_sep
+        mov [di],ax
+        add di,2
+        ret
 si_next ENDP
 
 di_next PROC near
@@ -1806,6 +1930,13 @@ op_di:
         ret
 op_edi:
         mov ax,OFFSET edi_txt
+        sub ax,OFFSET mne_tab
+        add ax,blank_sep
+        mov [di],ax
+        add di,2
+        ret
+op_rdi:
+        mov ax,OFFSET rdi_txt
         sub ax,OFFSET mne_tab
         add ax,blank_sep
         mov [di],ax
