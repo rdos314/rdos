@@ -1333,19 +1333,28 @@ op_string1w     ENDP
 
         extrn txt_16:near
         extrn txt_32:near
+        extrn txt_64:near
 
         public op_add_opsize
 
 op_add_opsize   PROC near
         mov al,ds:gdata_mode
-        and al,1
-        or al,al
+        test al,2
+        jnz op_add64
+;        
+        test al,1
         jz op_add16
+
 op_add32:
         add_mne txt_32, blank_sep
         ret
+
 op_add16:
         add_mne txt_16, blank_sep
+        ret
+
+op_add64:
+        add_mne txt_64, blank_sep
         ret
 op_add_opsize   ENDP
 

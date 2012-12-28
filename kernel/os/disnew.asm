@@ -110,6 +110,7 @@ sep_tab:
 
         public txt_16
         public txt_32
+        public txt_64
         public b_txt
         public w_txt
         public d_txt
@@ -194,6 +195,7 @@ star4                           DB '*4',0
 star8                           DB '*8',0
 txt_16                          DB '16',0
 txt_32                          DB '32',0
+txt_64                          DB '64',0
 aaa_txt                         DB 'aaa',0
 aad_txt                         DB 'aad',0
 aam_txt                         DB 'aam',0
