@@ -59,8 +59,8 @@ reg32d  DW OFFSET mod32d_16a_rm11000
     public long_reg_tab
 
 long_reg_tab:
-lreg8   DW OFFSET mod64_8d_32a_rm111000
-lreg16  DW OFFSET mod64_16d_32a_rm111000
+lreg8   DW OFFSET mod64_8d_32a_rm110000
+lreg16  DW OFFSET mod64_16d_32a_rm110000
 lreg32  DW OFFSET mod64_32d_32a_rm110000
 lreg64  DW OFFSET mod64_32d_64a_rm110000
 

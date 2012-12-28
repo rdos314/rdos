@@ -4250,8 +4250,8 @@ alloc_sect_loop:
     int 3    
 
 test_call   Proc near
-    mov r15,rdi
-    mov rax,[r15+5]
+    mov cl,r15b
+    mov r12,[r15+5]
     ret
 test_call   Endp
     
