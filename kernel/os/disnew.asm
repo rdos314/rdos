@@ -576,6 +576,8 @@ op_cdt_tab                      EQU 0FF7h
         extrn override_gs:near
         extrn op_rep:near
 
+        extrn op_lodsb:near
+        extrn op_lodsw:near
         extrn op_string1b:near
         extrn op_string1w:near
         extrn op_string2b:near
@@ -6927,14 +6929,14 @@ opAB:
                         DW 0FFFFh
 
 opAC:
-                        DW OFFSET op_string1b
+                        DW OFFSET op_lodsb
                         DW OFFSET lods_txt - OFFSET mne_tab + no_sep
                         DW null_tab + no_sep
                         DW 0FFFFh
                         DW 0FFFFh
 
 opAD:
-                        DW OFFSET op_string1w
+                        DW OFFSET op_lodsw
                         DW OFFSET lods_txt - OFFSET mne_tab + no_sep
                         DW null_tab + no_sep
                         DW 0FFFFh
@@ -8773,14 +8775,14 @@ lopAB:
                         DW 0FFFFh
 
 lopAC:
-                        DW OFFSET op_string1b
+                        DW OFFSET op_lodsb
                         DW OFFSET lods_txt - OFFSET mne_tab + no_sep
                         DW null_tab + no_sep
                         DW 0FFFFh
                         DW 0FFFFh
 
 lopAD:
-                        DW OFFSET op_string1w
+                        DW OFFSET op_lodsw
                         DW OFFSET lods_txt - OFFSET mne_tab + no_sep
                         DW null_tab + no_sep
                         DW 0FFFFh

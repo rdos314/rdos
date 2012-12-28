@@ -4240,19 +4240,25 @@ alloc_sect_loop:
     push rcx
     mov rdx,[rdi].elfp_vaddr
     mov rcx,[rdi].elfp_memsz
+    call test_call
     pop rcx
 ;
     movzx rax,[esi].elf_phentsize
     add rdi,rax
     loop alloc_sect_loop
 ;
-    call test_call
     int 3    
 
 test_call   Proc near
+    push rsi
+    push rdi
     push r15
+    lodsb
+    stosb
     mov r15,123456789ABCDEFh
     pop r15
+    pop rdi
+    pop rsi
     ret
 test_call   Endp
     

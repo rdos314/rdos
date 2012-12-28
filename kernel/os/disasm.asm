@@ -805,6 +805,8 @@ add_komma_to_mem        ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
+        extrn noseg_txt:near
+        
         public override_rex
 
 override_rex     PROC near
@@ -1255,6 +1257,120 @@ op_string2d16:
         ret     
 op_string2w     ENDP
 
+        public op_lodsb
+
+op_lodsb     PROC near
+        mov al,ds:gaddr_mode
+        test al,2
+        jnz op_lodsb64
+;        
+        test al,1
+        jz op_lodsb16
+
+op_lodsb32:
+        mov ax,6
+        call calc_ads_offset
+        mov ds:data_sel,OFFSET ds_txt
+        add_mne b_txt, blank_sep
+        add_mne ds_txt, kolon_par_sep
+        add_mne esi_txt, rhak_sep
+        ret
+
+op_lodsb16:
+        mov ax,6
+        call calc_ads_offset
+        mov ds:data_sel,OFFSET ds_txt
+        add_mne b_txt, blank_sep
+        add_mne ds_txt, kolon_par_sep
+        add_mne si_txt, rhak_sep
+        ret     
+
+op_lodsb64:
+        mov ax,6
+        call long_calc_ads_offset
+        add_mne b_txt, blank_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rsi_txt, rhak_sep
+        ret
+op_lodsb     ENDP
+
+        public op_lodsw
+
+op_lodsw     PROC near
+        mov al,ds:gdata_mode
+        and al,1
+        or al,al
+        jnz op_lodsd
+;        
+        mov al,ds:gaddr_mode
+        test al,2
+        jnz op_lodsw64
+;        
+        test al,1
+        jz op_lodsw16
+
+op_lodsw32:
+        mov ax,6
+        call calc_ads_offset
+        mov ds:data_sel,OFFSET ds_txt
+        add_mne w_txt, blank_sep
+        add_mne ds_txt, kolon_par_sep
+        add_mne esi_txt, rhak_sep
+        ret
+
+op_lodsw16:
+        mov ax,6
+        call calc_ads_offset
+        mov ds:data_sel,OFFSET ds_txt
+        add_mne w_txt, blank_sep
+        add_mne ds_txt, kolon_par_sep
+        add_mne si_txt, rhak_sep
+        ret
+
+op_lodsw64:
+        mov ax,6
+        call long_calc_ads_offset
+        mov ds:data_sel,OFFSET ds_txt
+        add_mne w_txt, blank_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rsi_txt, rhak_sep
+        ret
+
+op_lodsd:
+        mov al,ds:gaddr_mode
+        test al,2
+        jz op_lodsd64
+;        
+        test al,1
+        jz op_lodsd16
+
+op_lodsd32:
+        mov ax,6
+        call calc_ads_offset
+        mov ds:data_sel,OFFSET ds_txt
+        add_mne d_txt, blank_sep
+        add_mne ds_txt, kolon_par_sep
+        add_mne esi_txt, rhak_sep
+        ret
+
+op_lodsd16:
+        mov ax,6
+        call calc_ads_offset
+        mov ds:data_sel,OFFSET ds_txt
+        add_mne d_txt, blank_sep
+        add_mne ds_txt, kolon_par_sep
+        add_mne si_txt, rhak_sep
+        ret     
+
+op_lodsd64:
+        mov ax,6
+        call long_calc_ads_offset
+        mov ds:data_sel,OFFSET noseg_txt
+        add_mne d_txt, blank_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne esi_txt, rhak_sep
+        ret
+op_lodsw     ENDP
 
         public op_string1b
 
