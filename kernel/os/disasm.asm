@@ -1265,9 +1265,12 @@ op_string2w64:
 
 op_string2d:
         mov al,ds:gaddr_mode
-        and al,1
-        or al,al
+        test al,2
+        jnz op_string2_64
+;        
+        test al,1
         jz op_string2d16
+
 op_string2d32:
         mov ax,6
         call calc_ads_offset
@@ -1278,6 +1281,7 @@ op_string2d32:
         add_mne ds_txt, kolon_par_sep
         add_mne esi_txt, rhak_sep
         ret
+
 op_string2d16:
         mov ax,4
         call calc_ads_offset
@@ -1288,6 +1292,32 @@ op_string2d16:
         add_mne ds_txt, kolon_par_sep
         add_mne si_txt, rhak_sep
         ret     
+
+op_string2_64:        
+        test ds:op_rex,8
+        jnz op_string2q64
+        
+op_string2d64:
+        mov ax,6
+        call long_calc_ads_offset
+        mov ds:data_sel,OFFSET noseg_txt
+        add_mne d_txt, blank_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rdi_txt, par_komma_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rsi_txt, rhak_sep
+        ret
+        
+op_string2q64:
+        mov ax,6
+        call long_calc_ads_offset
+        mov ds:data_sel,OFFSET noseg_txt
+        add_mne q_txt, blank_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rdi_txt, par_komma_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rsi_txt, rhak_sep
+        ret
 op_string2w     ENDP
 
         public op_lodsb
