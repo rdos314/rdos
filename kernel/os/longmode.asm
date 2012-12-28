@@ -4232,6 +4232,10 @@ test64:
 
 start64:
     int 3
+    clc
+    jnc alloc_sect_loop
+    jc LocalWriteChar
+;    
     mov rsi,long_process_linear
     mov rdi,[rsi].elf_phoff
     movzx rcx,[rsi].elf_phnum
@@ -4250,7 +4254,6 @@ alloc_sect_loop:
     int 3    
 
 test_call   Proc near
-    mov rcx,[rbx+4*r14+56]
     ret
 test_call   Endp
     

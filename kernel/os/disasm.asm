@@ -347,6 +347,49 @@ add_hex_dword   PROC near
 add_hex_dword   ENDP
 
 
+    extrn uscore_txt:near
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   ADD_HEX_FWORD
+;
+;               DESCRIPTION:    Add hex fword to output
+;
+;               PARAMETERS:             DX:EAX             Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+add_hex_fword   PROC near
+        push eax
+        push edx
+;
+        push eax
+;
+        mov al,dh
+        call put_hex_code
+        mov al,dl
+        call put_hex_code
+;
+        add_mne uscore_txt, no_sep
+;        
+        pop dx
+        pop ax
+        xchg al,ah
+        call put_hex_code
+        xchg al,ah
+        call put_hex_code
+        mov al,dh
+        call put_hex_code
+        mov al,dl
+        call put_hex_code
+;
+        pop edx
+        pop eax
+        ret
+add_hex_fword   ENDP
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -358,8 +401,6 @@ add_hex_dword   ENDP
 ;               PARAMETERS:             EDX:EAX             Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    extrn uscore_txt:near
     
 add_hex_qword   PROC near
         push eax
@@ -992,7 +1033,7 @@ not_op_back:
         add eax,2
         adc edx,0        
         add eax,ds:op_ads
-        adc edx,ds:op_ads+4
+        adc dx,word ptr ds:op_ads+4
 ;        
         add si,2
         mov bl,ds:gdata_mode
@@ -1011,7 +1052,7 @@ op_sw16:
         ret
 
 op_sw64:
-        call add_hex_qword       
+        call add_hex_fword       
         ret
 op_short        ENDP
 
@@ -1027,7 +1068,7 @@ op_near PROC near
 
 op_near32:
         mov eax,[si+1]
-        add eax,3
+        add eax,5
         add eax,dword ptr ds:op_ads
         call add_hex_dword
         add si,4
@@ -1042,12 +1083,13 @@ op_near16:
         ret
 
 op_near64:
-        xor edx,edx
         mov eax,[si+1]
-        add eax,3
+        cdq
+        add eax,5
+        adc dx,0
         add eax,dword ptr ds:op_ads
-        adc edx,dword ptr ds:op_ads+4        
-        call add_hex_qword
+        adc dx,word ptr ds:op_ads+4        
+        call add_hex_fword
         add si,4
         ret
 op_near ENDP
@@ -1056,22 +1098,37 @@ op_near ENDP
 
 op_near2        PROC near
         mov al,ds:gdata_mode
-        and al,1
-        or al,al
+        test al,2
+        jnz op_near64_2
+;        
+        test al,1
         jz op_near16_2
+
 op_near32_2:
         mov eax,[si+2]
-        add eax,4
+        add eax,6
         add eax,dword ptr ds:op_ads
         call add_hex_dword
         add si,5
         ret
+
 op_near16_2:    
         mov ax,[si+2]
         add ax,4
         add ax,word ptr ds:op_ads
         call add_hex_word
         add si,3
+        ret
+
+op_near64_2:
+        mov eax,[si+2]
+        cdq
+        add eax,6
+        adc dx,0
+        add eax,dword ptr ds:op_ads
+        adc dx,word ptr ds:op_ads+4
+        call add_hex_fword
+        add si,5
         ret
 op_near2        ENDP
 
