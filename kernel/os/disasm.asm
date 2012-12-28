@@ -613,7 +613,7 @@ dec64_data_8_sel:
         mov al,[si+1]
         mov ah,al
         and al,7
-        test ds:op_rex,2
+        test ds:op_rex,1
         jz dec64_op_reg_ok
 ;
         or ax,8        
@@ -928,7 +928,8 @@ op_word PROC near
         mov al,ds:gdata_mode
         test al,2
         jnz op_w64
-;        
+
+op_wp:
         test al,1
         jz op_w16
 
@@ -943,6 +944,10 @@ op_w16:
         add si,2
         ret
 op_w64:
+        test ds:op_rex,8
+        jz op_wp
+
+opw64_64:
         mov eax,[si+1]
         mov edx,[si+5]
         add si,8 
@@ -2165,7 +2170,8 @@ ax_next PROC near
         mov al,ds:gdata_mode
         test al,2
         jnz op_r08
-;        
+
+op_axp:
         test al,1
         jnz op_eax
 
@@ -2188,6 +2194,9 @@ op_eax:
 op_r08:
         test ds:op_rex,1
         jnz op_r8
+;        
+        test ds:op_rex,8
+        jz op_axp
         
 op_rax:
         mov ax,OFFSET rax_txt
@@ -2209,9 +2218,11 @@ bx_next PROC near
         mov al,ds:gdata_mode
         test al,2
         jnz op_r19
-;        
+
+op_bxp:        
         test al,1
         jnz op_ebx
+
 op_bx:
         mov ax,OFFSET bx_txt
         sub ax,OFFSET mne_tab
@@ -2231,6 +2242,9 @@ op_ebx:
 op_r19:
         test ds:op_rex,1
         jnz op_r9
+;        
+        test ds:op_rex,8
+        jz op_bxp
         
 op_rbx:
         mov ax,OFFSET rbx_txt
@@ -2253,9 +2267,11 @@ cx_next PROC near
         mov al,ds:gdata_mode
         test al,2
         jnz op_r210
-;        
+
+op_cxp:        
         test al,1
         jnz op_ecx
+
 op_cx:
         mov ax,OFFSET cx_txt
         sub ax,OFFSET mne_tab
@@ -2275,6 +2291,9 @@ op_ecx:
 op_r210:
         test ds:op_rex,1
         jnz op_r10
+;        
+        test ds:op_rex,8
+        jz op_cxp
         
 op_rcx:
         mov ax,OFFSET rcx_txt
@@ -2297,9 +2316,11 @@ dx_next PROC near
         mov al,ds:gdata_mode
         test al,2
         jnz op_r311
-;        
+
+op_dxp:        
         test al,1
         jnz op_edx
+
 op_dx:
         mov ax,OFFSET dx_txt
         sub ax,OFFSET mne_tab
@@ -2319,6 +2340,9 @@ op_edx:
 op_r311:
         test ds:op_rex,1
         jnz op_r11
+;
+        test ds:op_rex,8
+        jz op_dxp        
         
 op_rdx:
         mov ax,OFFSET rdx_txt
@@ -2341,9 +2365,11 @@ sp_next PROC near
         mov al,ds:gdata_mode
         test al,2
         jnz op_r412
-;        
+
+op_spp:        
         test al,1
         jnz op_esp
+
 op_sp:
         mov ax,OFFSET sp_txt
         sub ax,OFFSET mne_tab
@@ -2363,7 +2389,10 @@ op_esp:
 op_r412:
         test ds:op_rex,1
         jnz op_r12
-        
+;
+        test ds:op_rex,8
+        jz op_spp        
+
 op_rsp:
         mov ax,OFFSET rsp_txt
         sub ax,OFFSET mne_tab
@@ -2385,9 +2414,11 @@ bp_next PROC near
         mov al,ds:gdata_mode
         test al,2
         jnz op_r513
-;        
+
+op_bpp:        
         test al,1
         jnz op_ebp
+
 op_bp:
         mov ax,OFFSET bp_txt
         sub ax,OFFSET mne_tab
@@ -2407,6 +2438,9 @@ op_ebp:
 op_r513:
         test ds:op_rex,1
         jnz op_r13
+;
+        test ds:op_rex,8
+        jz op_bpp        
         
 op_rbp:
         mov ax,OFFSET rbp_txt
@@ -2429,9 +2463,11 @@ si_next PROC near
         mov al,ds:gdata_mode
         test al,2
         jnz op_r614
-;        
+
+op_sip:        
         test al,1
         jnz op_esi
+
 op_si:
         mov ax,OFFSET si_txt
         sub ax,OFFSET mne_tab
@@ -2451,6 +2487,9 @@ op_esi:
 op_r614:
         test ds:op_rex,1
         jnz op_r14
+;
+        test ds:op_rex,8
+        jz op_sip        
         
 op_rsi:
         mov ax,OFFSET rsi_txt
@@ -2473,9 +2512,11 @@ di_next PROC near
         mov al,ds:gdata_mode
         test al,2
         jnz op_r715
-;        
+
+op_dip:        
         test al,1
         jnz op_edi
+
 op_di:
         mov ax,OFFSET di_txt
         sub ax,OFFSET mne_tab
@@ -2495,6 +2536,9 @@ op_edi:
 op_r715:
         test ds:op_rex,1
         jnz op_r15
+;
+        test ds:op_rex,8
+        jz op_dip
 
 op_rdi:
         mov ax,OFFSET rdi_txt
