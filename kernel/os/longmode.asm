@@ -4250,7 +4250,7 @@ alloc_sect_loop:
     int 3    
 
 test_call   Proc near
-    mov r12,[r13+rax+23]
+    mov rcx,[rbx+4*r14+56]
     ret
 test_call   Endp
     

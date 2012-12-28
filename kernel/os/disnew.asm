@@ -69,6 +69,7 @@ lreg64  DW OFFSET mod64_32d_64a_rm110000
 
         public sib_scale_tab
         public sib_index_tab
+        public long_sib_index_tab
 
 blank_sep                       EQU 0
 komma_sep                       EQU 1000h
@@ -13986,6 +13987,120 @@ lsib2_1111:
                         DW OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
                         DW OFFSET r15_txt - OFFSET mne_tab + plus_sep
                         DW null_tab + no_sep
+                        DW 0FFFFh
+
+
+long_sib_index_tab:
+lsibi_0000:
+                        DW OFFSET op_one
+                        DW OFFSET rax_txt - OFFSET mne_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lsibi_0001:
+                        DW OFFSET op_one
+                        DW OFFSET rcx_txt - OFFSET mne_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lsibi_0010:
+                        DW OFFSET op_one
+                        DW OFFSET rdx_txt - OFFSET mne_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lsibi_0011:
+                        DW OFFSET op_one
+                        DW OFFSET rbx_txt - OFFSET mne_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lsibi_0100:
+                        DW OFFSET op_one
+                        DW OFFSET txt_0 - OFFSET mne_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lsibi_0101:
+                        DW OFFSET op_one
+                        DW OFFSET rbp_txt - OFFSET mne_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lsibi_0110:
+                        DW OFFSET op_one
+                        DW OFFSET rsi_txt - OFFSET mne_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lsibi_0111:
+                        DW OFFSET op_one
+                        DW OFFSET rdi_txt - OFFSET mne_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lsibi_1000:
+                        DW OFFSET op_one
+                        DW OFFSET r8_txt - OFFSET mne_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lsibi_1001:
+                        DW OFFSET op_one
+                        DW OFFSET r9_txt - OFFSET mne_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lsibi_1010:
+                        DW OFFSET op_one
+                        DW OFFSET r10_txt - OFFSET mne_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lsibi_1011:
+                        DW OFFSET op_one
+                        DW OFFSET r11_txt - OFFSET mne_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lsibi_1100:
+                        DW OFFSET op_one
+                        DW OFFSET r12_txt - OFFSET mne_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lsibi_1101:
+                        DW OFFSET op_one
+                        DW OFFSET r13_txt - OFFSET mne_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lsibi_1110:
+                        DW OFFSET op_one
+                        DW OFFSET r14_txt - OFFSET mne_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
+                        DW 0FFFFh
+
+lsibi_1111:
+                        DW OFFSET op_one
+                        DW OFFSET r15_txt - OFFSET mne_tab + no_sep
+                        DW 0FFFFh
+                        DW 0FFFFh
                         DW 0FFFFh
 
 

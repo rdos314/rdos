@@ -2002,6 +2002,7 @@ mem_sib ENDP
 
         public long_mem_sib
         extrn long_mem_sib0_tab:near
+        extrn long_sib_index_tab:near
 
 long_mem_sib PROC near
         mov ax,OFFSET long_mem_sib0_tab
@@ -2024,11 +2025,18 @@ long_sib0_ok:
         inc si
         call decode_opcode
 ;
-        mov ax,OFFSET sib_index_tab
+        mov ax,OFFSET long_sib_index_tab
         mov ds:op_syntax,ax
         mov al,[si]
         and ax,38h
         shr ax,3
+;
+        test ds:op_rex,2
+        jz long_sibi_ok
+;
+        or ax,8        
+
+long_sibi_ok:               
         call decode_opcode      
         mov ax,OFFSET sib_scale_tab
         mov ds:op_syntax,ax
