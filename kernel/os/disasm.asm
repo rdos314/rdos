@@ -1469,9 +1469,12 @@ op_string1w64:
 
 op_string1d:
         mov al,ds:gaddr_mode
-        and al,1
-        or al,al
+        test al,2
+        jnz op_string1_64
+;        
+        test al,1
         jz op_string1d16
+
 op_string1d32:
         mov ax,7
         call calc_ads_offset
@@ -1480,6 +1483,7 @@ op_string1d32:
         add_mne es_txt, kolon_par_sep
         add_mne edi_txt, rhak_sep
         ret
+
 op_string1d16:
         mov ax,5
         call calc_ads_offset
@@ -1488,6 +1492,28 @@ op_string1d16:
         add_mne es_txt, kolon_par_sep
         add_mne di_txt, rhak_sep
         ret     
+
+op_string1_64:
+        test ds:op_rex,8
+        jnz op_string1q64
+        
+op_string1d64:
+        mov ax,7
+        call calc_ads_offset
+        mov ds:data_sel,OFFSET noseg_txt
+        add_mne d_txt, blank_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rdi_txt, rhak_sep
+        ret
+        
+op_string1q64:
+        mov ax,7
+        call calc_ads_offset
+        mov ds:data_sel,OFFSET noseg_txt
+        add_mne q_txt, blank_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rdi_txt, rhak_sep
+        ret
 op_string1w     ENDP
 
         extrn txt_16:near
