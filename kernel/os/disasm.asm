@@ -2000,6 +2000,51 @@ mem_sib PROC near
         ret
 mem_sib ENDP
 
+        public long_mem_sib
+        extrn long_mem_sib0_tab:near
+
+long_mem_sib PROC near
+        mov ax,OFFSET long_mem_sib0_tab
+        mov ds:op_syntax,ax
+        mov ax,[si]
+; al = mod
+; ah = sib-byte
+        and ah,7
+        and al,0C0h     
+        shr al,2
+        or al,ah
+;
+        test ds:op_rex,1
+        jz long_sib0_ok
+;
+        or ax,8        
+
+long_sib0_ok:               
+        xor ah,ah
+        inc si
+        call decode_opcode
+;
+        mov ax,OFFSET sib_index_tab
+        mov ds:op_syntax,ax
+        mov al,[si]
+        and ax,38h
+        shr ax,3
+        call decode_opcode      
+        mov ax,OFFSET sib_scale_tab
+        mov ds:op_syntax,ax
+        mov al,[si]
+        and ax,0C0h
+        shr ax,6
+        call decode_opcode
+        call add_sib_ads
+        mov bl,[si-1]
+        and bx,0C0h
+        shr bx,5
+        add bx,OFFSET mem_disp_tab
+        call word ptr cs:[bx]
+        ret
+long_mem_sib ENDP
+
         public op_illegal
 
 op_illegal      PROC near
