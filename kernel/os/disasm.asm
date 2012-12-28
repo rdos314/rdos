@@ -1391,9 +1391,12 @@ op_lodsw     ENDP
 
 op_string1b     PROC near
         mov al,ds:gaddr_mode
-        and al,1
-        or al,al
+        test al,2
+        jnz op_string1b64
+;        
+        test al,1
         jz op_string1b16
+
 op_string1b32:
         mov ax,7
         call calc_ads_offset
@@ -1402,14 +1405,24 @@ op_string1b32:
         add_mne es_txt, kolon_par_sep
         add_mne edi_txt, rhak_sep
         ret
+
 op_string1b16:
-        mov ax,5
+        mov ax,7
         call calc_ads_offset
         mov ds:data_sel,OFFSET es_txt
         add_mne b_txt, blank_sep
         add_mne es_txt, kolon_par_sep
         add_mne di_txt, rhak_sep
         ret     
+
+op_string1b64:
+        mov ax,7
+        call long_calc_ads_offset
+        mov ds:data_sel,OFFSET noseg_txt
+        add_mne b_txt, blank_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rdi_txt, rhak_sep
+        ret
 op_string1b     ENDP
 
         public op_string1w
@@ -1419,10 +1432,14 @@ op_string1w     PROC near
         and al,1
         or al,al
         jnz op_string1d
+;
         mov al,ds:gaddr_mode
-        and al,1
-        or al,al
+        test al,2
+        jnz op_string1w64
+;        
+        test al,1
         jz op_string1w16
+
 op_string1w32:
         mov ax,7
         call calc_ads_offset
@@ -1431,14 +1448,25 @@ op_string1w32:
         add_mne es_txt, kolon_par_sep
         add_mne edi_txt, rhak_sep
         ret
+
 op_string1w16:
-        mov ax,5
+        mov ax,7
         call calc_ads_offset
         mov ds:data_sel,OFFSET es_txt
         add_mne w_txt, blank_sep
         add_mne es_txt, kolon_par_sep
         add_mne di_txt, rhak_sep
         ret
+
+op_string1w64:
+        mov ax,7
+        call long_calc_ads_offset
+        mov ds:data_sel,OFFSET noseg_txt
+        add_mne w_txt, blank_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rdi_txt, rhak_sep
+        ret
+
 op_string1d:
         mov al,ds:gaddr_mode
         and al,1

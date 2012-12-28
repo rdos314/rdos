@@ -4253,8 +4253,8 @@ test_call   Proc near
     push rsi
     push rdi
     push r15
-    lodsq
-    stosq
+    lodsw
+    stosw
     mov r15,123456789ABCDEFh
     pop r15
     pop rdi
