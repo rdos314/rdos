@@ -83,6 +83,14 @@ code    SEGMENT byte public 'CODE'
         extrn dr_tab:near
 
 
+add_mne MACRO com_txt, sep
+        mov ax,OFFSET com_txt
+        sub ax,OFFSET mne_tab
+        add ax,sep
+        mov [di],ax
+        add di,2
+                ENDM
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -336,6 +344,57 @@ add_hex_dword   PROC near
         pop eax
         ret
 add_hex_dword   ENDP
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   ADD_HEX_QWORD
+;
+;               DESCRIPTION:    Add hex qword to output
+;
+;               PARAMETERS:             EDX:EAX             Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extrn uscore_txt:near
+    
+add_hex_qword   PROC near
+        push eax
+        push edx
+;
+        push eax
+;
+        push edx
+        pop dx
+        pop ax
+        xchg al,ah
+        call put_hex_code
+        xchg al,ah
+        call put_hex_code
+        mov al,dh
+        call put_hex_code
+        mov al,dl
+        call put_hex_code
+;
+        add_mne uscore_txt, no_sep
+;        
+        pop dx
+        pop ax
+        xchg al,ah
+        call put_hex_code
+        xchg al,ah
+        call put_hex_code
+        mov al,dh
+        call put_hex_code
+        mov al,dl
+        call put_hex_code
+;
+        pop edx
+        pop eax
+        ret
+add_hex_qword   ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -864,9 +923,12 @@ op_byte ENDP
 
 op_word PROC near
         mov al,ds:gdata_mode
-        and al,1
-        or al,al
+        test al,2
+        jnz op_w64
+;        
+        test al,1
         jz op_w16
+
 op_w32:
         mov eax,[si+1]
         call add_hex_dword
@@ -876,6 +938,12 @@ op_w16:
         mov ax,[si+1]
         call add_hex_word
         add si,2
+        ret
+op_w64:
+        mov eax,[si+1]
+        mov edx,[si+5]
+        add si,8 
+        call add_hex_qword       
         ret
 op_word ENDP
 
@@ -1059,14 +1127,6 @@ op_rep  PROC near
         call decode_opcode
         ret
 op_rep  ENDP
-
-add_mne MACRO com_txt, sep
-        mov ax,OFFSET com_txt
-        sub ax,OFFSET mne_tab
-        add ax,sep
-        mov [di],ax
-        add di,2
-                ENDM
 
         extrn b_txt:near
         extrn w_txt:near

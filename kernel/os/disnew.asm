@@ -158,6 +158,7 @@ sep_tab:
         public r14d_txt
         public r15d_txt
 
+        public uscore_txt
         public noseg_txt
         public cs_txt
         public ds_txt
@@ -186,6 +187,7 @@ txt_E                           DB 'E',0
 txt_F                           DB 'F',0
 noseg_txt                       DB 0
 txt_noth                        DB 0
+uscore_txt                      DB '_',0
 star1                           DB '*1',0
 star2                           DB '*2',0
 star4                           DB '*4',0
