@@ -53,7 +53,7 @@ op_syntax       DW ?
 override        DW ?
 op_ads          DW ?,?
 data_sel        DW ?
-data_off        DD ?
+data_off        DD ?,?
 data_good       DB ?
 data_mode       DB ?
 gaddr_mode      DB ?
@@ -146,7 +146,18 @@ GetDataSel      PROC near
     push ds
     mov ax,SEG data
     mov ds,ax
+    mov ds:data_sel,0
+    test ds:gaddr_mode,2
+    jnz gdl64
+
+gdl32:    
     mov ax,ds:data_sel
+    jmp gdlDone
+
+gdl64:
+    mov ax,word ptr ds:data_off+4
+
+gdlDone:    
     pop ds
     ret
 GetDataSel  Endp
@@ -168,14 +179,8 @@ SetDataSel      PROC near
     push ds
     push bx
     mov bx,SEG data
-    mov ds,bx
-    mov ds:data_sel,0
-    test ds:gaddr_mode,2
-    jnz sdlDone
-;    
+    mov ds,bx    
     mov ds:data_sel,ax
-
-sdlDone:    
     pop bx
     pop ds
     ret
@@ -346,14 +351,12 @@ add_hex_dword   ENDP
 
         extrn adr_16a_tab:near
         extrn adr_32a_tab:near
-        extrn adr_64_32a_tab:near
-        extrn adr_64_64a_tab:near
 
 calc_ads_offset PROC near
         push ax
         mov bl,ds:gaddr_mode
         test bl,2
-        jnz c_a_ad64
+        jnz calc_out_o_r
 ;        
         cmp bl,addr_32
         je c_a_ad32
@@ -366,8 +369,10 @@ c_a_ad16:
         add ax,ax
         add ax,ax
         add bx,ax
+        push bx
         call word ptr cs:[bx]
         add ds:data_off,eax
+        pop bx
         call word ptr cs:[bx+2]
         add ds:data_off,eax
         mov word ptr ds:data_off+2,0
@@ -388,66 +393,75 @@ c_a_ad32:
         call word ptr cs:[bx+2]
         add ds:data_off,eax
         jmp calc_out_o_r
-
-c_a_ad64:
-        cmp ax,18h
-        jae calc_out_o_r
-;
-        and ax,7        
-        test bl,1
-        je c_a_ad64_64
-
-c_a_ad64_32:
-        mov bx,OFFSET adr_64_32a_tab
-;
-        test ds:op_rex,2
-        jz c_a_ad64_32_do
-;
-        or ax,8        
-
-c_a_ad64_32_do:        
-        mov ds:data_good,1
-        add ax,ax
-        add ax,ax
-        add bx,ax
-        push bx
-        call word ptr cs:[bx]
-        add ds:data_off,eax
-        adc ds:data_sel,bx
-        pop bx
-        call word ptr cs:[bx+2]
-        add ds:data_off,eax
-        adc ds:data_sel,bx
-        jmp calc_out_o_r
-
-c_a_ad64_64:                
-        mov bx,OFFSET adr_64_64a_tab
-;
-        test ds:op_rex,2
-        jz c_a_ad64_64_do
-;
-        or ax,8        
-
-c_a_ad64_64_do:        
-        mov ds:data_good,1
-        add ax,ax
-        add ax,ax
-        add bx,ax
-        push bx
-        call word ptr cs:[bx]
-        add ds:data_off,eax
-        adc ds:data_sel,bx
-        pop bx
-        call word ptr cs:[bx+2]
-        add ds:data_off,eax
-        adc ds:data_sel,bx
-        jmp calc_out_o_r
         
 calc_out_o_r:
         pop ax
         ret
 calc_ads_offset ENDP
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   LONG_CALC_ADS_OFFSET
+;
+;               DESCRIPTION:    Calculate offset, long mode
+;
+;               PARAMETERS:             AX              Table index
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+        extrn long_adr_32a_tab:near
+        extrn long_adr_64a_tab:near
+
+long_calc_ads_offset PROC near
+        push ax
+;        
+        test bl,1
+        je lc_a_ad64_64
+
+lc_a_ad64_32:
+        mov bx,OFFSET long_adr_32a_tab
+        cmp ax,30h
+        jae lcalc_out_o_r
+;
+        mov ds:data_good,1
+        add ax,ax
+        add ax,ax
+        add bx,ax
+        push bx
+        call word ptr cs:[bx]
+        add ds:data_off,eax
+        adc word ptr ds:data_off+4,bx
+        pop bx
+        call word ptr cs:[bx+2]
+        add ds:data_off,eax
+        adc word ptr ds:data_off+4,bx
+        jmp lcalc_out_o_r
+
+lc_a_ad64_64:
+        mov bx,OFFSET long_adr_64a_tab
+        cmp ax,30h
+        jae lcalc_out_o_r
+;
+        mov ds:data_good,1
+        add ax,ax
+        add ax,ax
+        add bx,ax
+        push bx
+        call word ptr cs:[bx]
+        add ds:data_off,eax
+        adc word ptr ds:data_off+4,bx
+        pop bx
+        call word ptr cs:[bx+2]
+        add ds:data_off,eax
+        adc word ptr ds:data_off+4,bx
+        
+lcalc_out_o_r:
+        pop ax
+        ret
+long_calc_ads_offset ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -555,7 +569,7 @@ dec64_mem_no_ignore:
         shr ah,2
         or al,ah
         xor ah,ah
-;        call calc_ads_offset
+        call long_calc_ads_offset
 ;
         inc si
         call decode_opcode
@@ -2367,6 +2381,7 @@ dis_ass_syntax_ok:
         mov ds:override,0
         mov ds:data_sel,0
         mov ds:data_off,0
+        mov ds:data_off+4,0
         mov ds:data_good,0
 ;
 ; si = opcode

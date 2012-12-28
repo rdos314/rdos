@@ -1329,30 +1329,35 @@ gs_sel  ENDP
     public no_adr
 no_adr  PROC near
     xor eax,eax
+    xor bx,bx
     ret
 no_adr  ENDP
 
     public bx_adr
 bx_adr  PROC near
     movzx eax,word ptr gs:p_rbx
+    xor bx,bx
     ret
 bx_adr  ENDP
 
     public bp_adr
 bp_adr  PROC near
     movzx eax,word ptr gs:p_rbp
+    xor bx,bx
     ret
 bp_adr  ENDP
 
     public si_adr
 si_adr  PROC near
     movzx eax,word ptr gs:p_rsi
+    xor bx,bx
     ret
 si_adr  ENDP
 
     public di_adr
 di_adr  PROC near
     movzx eax,word ptr gs:p_rdi
+    xor bx,bx
     ret
 di_adr  ENDP
 
@@ -1467,6 +1472,20 @@ rsp_adr PROC near
     mov bx,word ptr gs:p_rsp+4
     ret
 rsp_adr ENDP
+
+    public eip_adr
+eip_adr PROC near
+    mov eax,dword ptr gs:p_rip
+    xor bx,bx
+    ret
+eip_adr ENDP
+
+    public rip_adr
+rip_adr PROC near
+    mov eax,dword ptr gs:p_rip
+    mov bx,word ptr gs:p_rip+4
+    ret
+rip_adr ENDP
 
     public r8d_adr
 r8d_adr PROC near
