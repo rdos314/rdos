@@ -1405,17 +1405,37 @@ seg_size_ok:
     mov es,ax
     mov dx,word ptr gs:p_rip+4
     mov ebx,dword ptr gs:p_rip
-    call SetIpAds
-;    
-    mov dx,gs:p_cs
+    call SetIpAds    
     call GetOpBuf
+;
+    mov bx,gs:p_cs
+    IsLongCodeSelector
+    jc get_instr32
+
+get_instr64:
+    mov ebx,dword ptr gs:p_rip
+    mov dx,word ptr gs:p_rip+4
     mov cx,16
-get_instr_loop:
+
+get_instr64_loop:
+    call ReadData64
+    mov [si],al
+    inc ebx
+    inc si
+    loop get_instr64_loop
+    ret
+
+get_instr32:
+    mov ebx,dword ptr gs:p_rip
+    mov dx,gs:p_cs
+    mov cx,16
+
+get_instr32_loop:
     call ReadData
     mov [si],al
     inc ebx
     inc si
-    loop get_instr_loop
+    loop get_instr32_loop
     ret
 LoadInstr       Endp
 
