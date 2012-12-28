@@ -7406,9 +7406,9 @@ opEF:
                         DW 0FFFFh
 
 opF0:
-                        DW OFFSET op_one
+                        DW OFFSET op_rep
                         DW OFFSET lock_txt - OFFSET mne_tab + blank_sep
-                        DW 0FFFFh
+                        DW null_tab + blank_sep
                         DW 0FFFFh
                         DW 0FFFFh
 
@@ -7804,8 +7804,8 @@ lop25:
                         DW 0FFFFh
 
 lop26:
-                        DW OFFSET override_es
-                        DW null_tab + blank_sep
+                        DW OFFSET op_illegal
+                        DW 0FFFFh
                         DW 0FFFFh
                         DW 0FFFFh
                         DW 0FFFFh
@@ -7862,8 +7862,8 @@ lop2D:
                         DW 0FFFFh
 
 lop2E:
-                        DW OFFSET override_cs
-                        DW null_tab + blank_sep
+                        DW OFFSET op_illegal
+                        DW 0FFFFh
                         DW 0FFFFh
                         DW 0FFFFh
                         DW 0FFFFh
@@ -7920,8 +7920,8 @@ lop35:
                         DW 0FFFFh
 
 lop36:
-                        DW OFFSET override_ss
-                        DW null_tab + blank_sep
+                        DW OFFSET op_illegal
+                        DW 0FFFFh
                         DW 0FFFFh
                         DW 0FFFFh
                         DW 0FFFFh
@@ -7978,8 +7978,8 @@ lop3D:
                         DW 0FFFFh
 
 lop3E:
-                        DW OFFSET override_ds
-                        DW null_tab + blank_sep
+                        DW OFFSET op_illegal
+                        DW 0FFFFh
                         DW 0FFFFh
                         DW 0FFFFh
                         DW 0FFFFh
@@ -9252,9 +9252,9 @@ lopEF:
                         DW 0FFFFh
 
 lopF0:
-                        DW OFFSET op_one
+                        DW OFFSET op_rep
                         DW OFFSET lock_txt - OFFSET mne_tab + blank_sep
-                        DW 0FFFFh
+                        DW null_tab + blank_sep
                         DW 0FFFFh
                         DW 0FFFFh
 

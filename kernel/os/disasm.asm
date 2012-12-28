@@ -1803,8 +1803,10 @@ mem_op_next             ENDP
 
 ax_next PROC near
         mov al,ds:gdata_mode
-        and al,1
-        or al,al
+        test al,2
+        jnz op_rax
+;        
+        test al,1
         jnz op_eax
 op_ax:
         mov ax,OFFSET ax_txt
@@ -1831,8 +1833,10 @@ ax_next ENDP
 
 bx_next PROC near
         mov al,ds:gdata_mode
-        and al,1
-        or al,al
+        test al,2
+        jnz op_rbx
+;        
+        test al,1
         jnz op_ebx
 op_bx:
         mov ax,OFFSET bx_txt
@@ -1858,8 +1862,10 @@ bx_next ENDP
 
 cx_next PROC near
         mov al,ds:gdata_mode
-        and al,1
-        or al,al
+        test al,2
+        jnz op_rcx
+;        
+        test al,1
         jnz op_ecx
 op_cx:
         mov ax,OFFSET cx_txt
@@ -1886,8 +1892,10 @@ cx_next ENDP
 
 dx_next PROC near
         mov al,ds:gdata_mode
-        and al,1
-        or al,al
+        test al,2
+        jnz op_rdx
+;        
+        test al,1
         jnz op_edx
 op_dx:
         mov ax,OFFSET dx_txt
@@ -1914,8 +1922,10 @@ dx_next ENDP
 
 sp_next PROC near
         mov al,ds:gdata_mode
-        and al,1
-        or al,al
+        test al,2
+        jnz op_rsp
+;        
+        test al,1
         jnz op_esp
 op_sp:
         mov ax,OFFSET sp_txt
@@ -1942,8 +1952,10 @@ sp_next ENDP
 
 bp_next PROC near
         mov al,ds:gdata_mode
-        and al,1
-        or al,al
+        test al,2
+        jnz op_rbp
+;        
+        test al,1
         jnz op_ebp
 op_bp:
         mov ax,OFFSET bp_txt
@@ -1970,8 +1982,10 @@ bp_next ENDP
 
 si_next PROC near
         mov al,ds:gdata_mode
-        and al,1
-        or al,al
+        test al,2
+        jnz op_rsi
+;        
+        test al,1
         jnz op_esi
 op_si:
         mov ax,OFFSET si_txt
@@ -1998,8 +2012,10 @@ si_next ENDP
 
 di_next PROC near
         mov al,ds:gdata_mode
-        and al,1
-        or al,al
+        test al,2
+        jnz op_rdi
+;        
+        test al,1
         jnz op_edi
 op_di:
         mov ax,OFFSET di_txt
