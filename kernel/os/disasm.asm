@@ -461,19 +461,25 @@ calc_ads_offset ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
         extrn mod_rm_tab:near
+        extrn long_mod_rm_tab:near
 
 decode_mem_mode PROC near
+        test ds:gdata_mode,2
+        jnz decode_mem64
+
+decode_mem32:
         mov bl,ds:gaddr_mode
-        and bl,1
         mov bh,bl
         add bl,bl
         add bl,bh
         mov al,ds:data_mode
         or al,al
         je data_8_sel
+
         mov ah,ds:gdata_mode
         and ah,1
         add al,ah
+
 data_8_sel:
         mov ds:edata_mode,al
         add bl,al
@@ -488,7 +494,9 @@ data_8_sel:
         and ah,0C0h
         cmp ah,0C0h
         jne dec_mem_no_ignore
+;        
         mov ds:ignore_ptr,1
+
 dec_mem_no_ignore:
         shr ah,3
         or al,ah
@@ -497,7 +505,63 @@ dec_mem_no_ignore:
         inc si
         call decode_opcode
         ret
+
+decode_mem64:
+        xor bl,bl
+        test ds:op_rex,8
+        jz decode_mem64_op_ok
+;
+        mov bl,1
+
+decode_mem64_op_ok:        
+        mov bh,bl
+        add bl,bl
+        add bl,bh
+;
+        mov al,ds:data_mode
+        or al,al
+        je dec64_data_8_sel
+
+        mov ah,ds:gdata_mode
+        and ah,1
+        add al,ah
+
+dec64_data_8_sel:
+        mov ds:edata_mode,al
+;
+        add bl,al
+        xor bh,bh
+        add bx,bx
+        add bx,OFFSET long_mod_rm_tab
+        mov ax,cs:[bx]
+        mov ds:op_syntax,ax
+;        
+        mov al,[si+1]
+        mov ah,al
+        and al,7
+        test ds:op_rex,2
+        jz dec64_op_reg_ok
+;
+        or ax,8        
+
+dec64_op_reg_ok:       
+        and ah,0C0h
+        cmp ah,0C0h
+        jne dec64_mem_no_ignore
+;        
+        mov ds:ignore_ptr,1
+
+dec64_mem_no_ignore:
+        shr ah,2
+        or al,ah
+        xor ah,ah
+;        call calc_ads_offset
+;
+        inc si
+        call decode_opcode
+        ret
 decode_mem_mode ENDP
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
