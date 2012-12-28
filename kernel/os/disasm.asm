@@ -1943,6 +1943,54 @@ add_sib_ads     PROC near
         ret
 add_sib_ads     ENDP
 
+        extrn long_adr_sib_tab:near
+        extrn long_adr_sib_index_tab:near
+
+long_add_sib_ads     PROC near
+        mov ah,[si-1]
+        and ah,0C0h
+        mov al,[si]
+        and al,7
+        shr ah,2
+        or al,ah
+;
+        test ds:op_rex,1
+        jz long_sib0_ads_ok
+;
+        or ax,8        
+
+long_sib0_ads_ok:               
+        xor ah,ah
+        shl ax,2
+        mov bx,ax
+        call cs:word ptr [bx].long_adr_sib_tab
+        add ds:data_off,eax
+        adc word ptr ds:data_off+4,bx
+;
+        mov al,[si]
+        and al,38h
+        shr al,3
+;
+        test ds:op_rex,2
+        jz long_sibi_ads_ok
+;
+        or ax,8        
+
+long_sibi_ads_ok:               
+        xor ah,ah
+;
+        shl ax,2
+        mov bx,ax
+        call cs:word ptr [bx].long_adr_sib_index_tab
+        mov cl,[si]
+        and cl,0C0h
+        shr cl,6
+        shl eax,cl
+        add ds:data_off,eax
+        adc word ptr ds:data_off+4,bx
+        ret
+long_add_sib_ads     ENDP
+
         public mem_sib
 
         extrn mem_sib0_tab:near
@@ -2044,7 +2092,7 @@ long_sibi_ok:
         and ax,0C0h
         shr ax,6
         call decode_opcode
-        call add_sib_ads
+        call long_add_sib_ads
         mov bl,[si-1]
         and bx,0C0h
         shr bx,5

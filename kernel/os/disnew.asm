@@ -14110,6 +14110,8 @@ lsibi_1111:
         public long_adr_64a_tab
         public adr_sib_tab
         public adr_sib_index_tab
+        public long_adr_sib_tab
+        public long_adr_sib_index_tab
 
         extrn no_adr:near
         extrn bx_adr:near
@@ -14864,6 +14866,267 @@ adr_sibi_111:
                         DW OFFSET no_adr
 
 ;                                                                       ##GIL##
+
+long_adr_sib_tab:
+ladr_sib0_0000:
+                        DW OFFSET rax_adr
+                        DW OFFSET no_adr
+
+ladr_sib0_0001:
+                        DW OFFSET rcx_adr
+                        DW OFFSET no_adr
+
+ladr_sib0_0010:
+                        DW OFFSET rdx_adr
+                        DW OFFSET no_adr
+
+ladr_sib0_0011:
+                        DW OFFSET rbx_adr
+                        DW OFFSET no_adr
+
+ladr_sib0_0100:
+                        DW OFFSET rsp_adr
+                        DW OFFSET no_adr
+
+ladr_sib0_0101:
+                        DW OFFSET no_adr
+                        DW OFFSET no_adr
+
+ladr_sib0_0110:
+                        DW OFFSET rsi_adr
+                        DW OFFSET no_adr
+
+ladr_sib0_0111:
+                        DW OFFSET rdi_adr
+                        DW OFFSET no_adr
+
+ladr_sib0_1000:
+                        DW OFFSET r8_adr
+                        DW OFFSET no_adr
+
+ladr_sib0_1001:
+                        DW OFFSET r9_adr
+                        DW OFFSET no_adr
+
+ladr_sib0_1010:
+                        DW OFFSET r10_adr
+                        DW OFFSET no_adr
+
+ladr_sib0_1011:
+                        DW OFFSET r11_adr
+                        DW OFFSET no_adr
+
+ladr_sib0_1100:
+                        DW OFFSET r12_adr
+                        DW OFFSET no_adr
+
+ladr_sib0_1101:
+                        DW OFFSET no_adr
+                        DW OFFSET no_adr
+
+ladr_sib0_1110:
+                        DW OFFSET r14_adr
+                        DW OFFSET no_adr
+
+ladr_sib0_1111:
+                        DW OFFSET r15_adr
+                        DW OFFSET no_adr
+
+
+ladr_sib1_0000:
+                        DW OFFSET rax_adr
+                        DW OFFSET no_adr
+
+ladr_sib1_0001:
+                        DW OFFSET rcx_adr
+                        DW OFFSET no_adr
+
+ladr_sib1_0010:
+                        DW OFFSET rdx_adr
+                        DW OFFSET no_adr
+
+ladr_sib1_0011:
+                        DW OFFSET rbx_adr
+                        DW OFFSET no_adr
+
+ladr_sib1_0100:
+                        DW OFFSET rsp_adr
+                        DW OFFSET no_adr
+
+ladr_sib1_0101:
+                        DW OFFSET rbp_adr
+                        DW OFFSET no_adr
+
+ladr_sib1_0110:
+                        DW OFFSET rsi_adr
+                        DW OFFSET no_adr
+
+ladr_sib1_0111:
+                        DW OFFSET rdi_adr
+                        DW OFFSET no_adr
+
+
+ladr_sib1_1000:
+                        DW OFFSET r8_adr
+                        DW OFFSET no_adr
+
+ladr_sib1_1001:
+                        DW OFFSET r9_adr
+                        DW OFFSET no_adr
+
+ladr_sib1_1010:
+                        DW OFFSET r10_adr
+                        DW OFFSET no_adr
+
+ladr_sib1_1011:
+                        DW OFFSET r11_adr
+                        DW OFFSET no_adr
+
+ladr_sib1_1100:
+                        DW OFFSET r12_adr
+                        DW OFFSET no_adr
+
+ladr_sib1_1101:
+                        DW OFFSET r13_adr
+                        DW OFFSET no_adr
+
+ladr_sib1_1110:
+                        DW OFFSET r14_adr
+                        DW OFFSET no_adr
+
+ladr_sib1_1111:
+                        DW OFFSET r15_adr
+                        DW OFFSET no_adr
+
+
+ladr_sib2_0000:
+                        DW OFFSET rax_adr
+                        DW OFFSET no_adr
+
+ladr_sib2_0001:
+                        DW OFFSET rcx_adr
+                        DW OFFSET no_adr
+
+ladr_sib2_0010:
+                        DW OFFSET rdx_adr
+                        DW OFFSET no_adr
+
+ladr_sib2_0011:
+                        DW OFFSET rbx_adr
+                        DW OFFSET no_adr
+
+ladr_sib2_0100:
+                        DW OFFSET rsp_adr
+                        DW OFFSET no_adr
+
+ladr_sib2_0101:
+                        DW OFFSET rbp_adr
+                        DW OFFSET no_adr
+
+ladr_sib2_0110:
+                        DW OFFSET rsi_adr
+                        DW OFFSET no_adr
+
+ladr_sib2_0111:
+                        DW OFFSET rdi_adr
+                        DW OFFSET no_adr
+
+ladr_sib2_1000:
+                        DW OFFSET r8_adr
+                        DW OFFSET no_adr
+
+ladr_sib2_1001:
+                        DW OFFSET r9_adr
+                        DW OFFSET no_adr
+
+ladr_sib2_1010:
+                        DW OFFSET r10_adr
+                        DW OFFSET no_adr
+
+ladr_sib2_1011:
+                        DW OFFSET r11_adr
+                        DW OFFSET no_adr
+
+ladr_sib2_1100:
+                        DW OFFSET r12_adr
+                        DW OFFSET no_adr
+
+ladr_sib2_1101:
+                        DW OFFSET r13_adr
+                        DW OFFSET no_adr
+
+ladr_sib2_1110:
+                        DW OFFSET r14_adr
+                        DW OFFSET no_adr
+
+ladr_sib2_1111:
+                        DW OFFSET r15_adr
+                        DW OFFSET no_adr
+
+long_adr_sib_index_tab:
+ladr_sibi_0000:
+                        DW OFFSET rax_adr
+                        DW OFFSET no_adr
+
+ladr_sibi_0001:
+                        DW OFFSET rcx_adr
+                        DW OFFSET no_adr
+
+ladr_sibi_0010:
+                        DW OFFSET rdx_adr
+                        DW OFFSET no_adr
+
+ladr_sibi_0011:
+                        DW OFFSET rbx_adr
+                        DW OFFSET no_adr
+
+ladr_sibi_0100:
+                        DW OFFSET no_adr
+                        DW OFFSET no_adr
+
+ladr_sibi_0101:
+                        DW OFFSET rbp_adr
+                        DW OFFSET no_adr
+
+ladr_sibi_0110:
+                        DW OFFSET rsi_adr
+                        DW OFFSET no_adr
+
+ladr_sibi_0111:
+                        DW OFFSET rdi_adr
+                        DW OFFSET no_adr
+
+ladr_sibi_1000:
+                        DW OFFSET r8_adr
+                        DW OFFSET no_adr
+
+ladr_sibi_1001:
+                        DW OFFSET r9_adr
+                        DW OFFSET no_adr
+
+ladr_sibi_1010:
+                        DW OFFSET r10_adr
+                        DW OFFSET no_adr
+
+ladr_sibi_1011:
+                        DW OFFSET r11_adr
+                        DW OFFSET no_adr
+
+ladr_sibi_1100:
+                        DW OFFSET r12_adr
+                        DW OFFSET no_adr
+
+ladr_sibi_1101:
+                        DW OFFSET r13_adr
+                        DW OFFSET no_adr
+
+ladr_sibi_1110:
+                        DW OFFSET r14_adr
+                        DW OFFSET no_adr
+
+ladr_sibi_1111:
+                        DW OFFSET r15_adr
+                        DW OFFSET no_adr
 
                 public  cr_tab
                 
