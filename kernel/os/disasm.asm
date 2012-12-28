@@ -51,7 +51,7 @@ data    SEGMENT byte public 'DATA'
 
 op_syntax       DW ?
 override        DW ?
-op_ads          DW ?,?
+op_ads          DD ?,?
 data_sel        DW ?
 data_off        DD ?,?
 data_good       DB ?
@@ -98,7 +98,7 @@ add_mne MACRO com_txt, sep
 ;
 ;               DESCRIPTION:    Set address
 ;
-;       PARAMETERS:     EBX     EIP
+;       PARAMETERS:     DX:EBX     EIP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -109,7 +109,8 @@ SetIpAds        PROC near
     push ax
     mov ax,SEG data
     mov ds,ax
-    mov dword ptr ds:op_ads,ebx
+    mov ds:op_ads,ebx
+    mov word ptr ds:op_ads+4,dx
     pop ax
     pop ds
     ret
@@ -973,16 +974,37 @@ op_word_mem     ENDP
         public op_short
 
 op_short        PROC near
-        xor ah,ah
+        xor eax,eax
+        xor edx,edx
         mov al,[si+1]
         test al,80h
         jz not_op_back
-        mov ah,0FFh
+        movsx eax,al
+        mov edx,-1
 not_op_back:
-        add ax,2
-        add ax,ds:op_ads
-        call add_hex_word
+        add eax,2
+        adc edx,0        
+        add eax,ds:op_ads
+        adc edx,ds:op_ads+4
+;        
         add si,2
+        mov bl,ds:gdata_mode
+        test bl,2
+        jnz op_sw64
+;        
+        test al,1
+        jz op_sw16
+
+op_sw32:
+        call add_hex_dword
+        ret
+
+op_sw16: 
+        call add_hex_word
+        ret
+
+op_sw64:
+        call add_hex_qword       
         ret
 op_short        ENDP
 
@@ -1003,7 +1025,7 @@ op_near32:
 op_near16:      
         mov ax,[si+1]
         add ax,3
-        add ax,ds:op_ads
+        add ax,word ptr ds:op_ads
         call add_hex_word
         add si,2
         ret
@@ -1026,7 +1048,7 @@ op_near32_2:
 op_near16_2:    
         mov ax,[si+2]
         add ax,4
-        add ax,ds:op_ads
+        add ax,word ptr ds:op_ads
         call add_hex_word
         add si,3
         ret

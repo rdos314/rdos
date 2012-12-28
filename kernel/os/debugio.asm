@@ -1403,9 +1403,11 @@ seg_size_ok:
     mov ds,ax
     mov ax,gs
     mov es,ax
-    mov dx,gs:p_cs
+    mov dx,word ptr gs:p_rip+4
     mov ebx,dword ptr gs:p_rip
     call SetIpAds
+;    
+    mov dx,gs:p_cs
     call GetOpBuf
     mov cx,16
 get_instr_loop:

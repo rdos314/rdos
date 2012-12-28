@@ -1804,8 +1804,11 @@ GetMne  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadInstr    Proc near
+    mov dx,word ptr gs:cs_rip+4
     mov ebx,dword ptr gs:cs_rip
     call SetIpAds
+;    
+    mov dx,gs:p_cs
     call GetOpBuf
 ;
     mov bx,gs:cs_cs
