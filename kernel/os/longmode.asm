@@ -4250,15 +4250,8 @@ alloc_sect_loop:
     int 3    
 
 test_call   Proc near
-    push rsi
-    push rdi
-    push r15
-    mov ax,register_osgate_nr
-    IsValidOsGate
-    mov r15,123456789ABCDEFh
-    pop r15
-    pop rdi
-    pop rsi
+    mov r15,rdi
+    mov rax,[r15+5]
     ret
 test_call   Endp
     

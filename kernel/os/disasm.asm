@@ -759,7 +759,7 @@ rdata_64_8_sel:
         mov ds:op_syntax,cx
         and ax,38h
         shr ax,3
-        test ds:op_rex,2
+        test ds:op_rex,4
         jz rdata_64_do
 ;
         or ax,8        
