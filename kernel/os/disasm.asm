@@ -1222,10 +1222,14 @@ op_string2w     PROC near
         and al,1
         or al,al
         jnz op_string2d
+;
         mov al,ds:gaddr_mode
-        and al,1
-        or al,al
+        test al,2
+        jnz op_string2w64
+;        
+        test al,1
         jz op_string2w16
+
 op_string2w32:
         mov ax,6
         call calc_ads_offset
@@ -1236,6 +1240,7 @@ op_string2w32:
         add_mne ds_txt, kolon_par_sep
         add_mne esi_txt, rhak_sep
         ret
+
 op_string2w16:
         mov ax,4
         call calc_ads_offset
@@ -1246,6 +1251,18 @@ op_string2w16:
         add_mne ds_txt, kolon_par_sep
         add_mne si_txt, rhak_sep
         ret
+
+op_string2w64:
+        mov ax,6
+        call long_calc_ads_offset
+        mov ds:data_sel,OFFSET noseg_txt
+        add_mne w_txt, blank_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rdi_txt, par_komma_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rsi_txt, rhak_sep
+        ret
+
 op_string2d:
         mov al,ds:gaddr_mode
         and al,1
