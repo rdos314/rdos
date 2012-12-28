@@ -4246,7 +4246,17 @@ alloc_sect_loop:
     add rdi,rax
     loop alloc_sect_loop
 ;
+    call test_call
     int 3    
+
+test_call   Proc near
+    push r15
+    mov r15,123456789ABCDEFh
+    pop r15
+    ret
+test_call   Endp
+    
+
 
 text_end:
 
