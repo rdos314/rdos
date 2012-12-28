@@ -1169,6 +1169,7 @@ op_rep  ENDP
         extrn b_txt:near
         extrn w_txt:near
         extrn d_txt:near
+        extrn q_txt:near
 
         public op_string2b
 
@@ -1288,6 +1289,7 @@ op_lodsb16:
 op_lodsb64:
         mov ax,6
         call long_calc_ads_offset
+        mov ds:data_sel,OFFSET noseg_txt
         add_mne b_txt, blank_sep
         add_mne noseg_txt, lhak_sep
         add_mne rsi_txt, rhak_sep
@@ -1330,7 +1332,7 @@ op_lodsw16:
 op_lodsw64:
         mov ax,6
         call long_calc_ads_offset
-        mov ds:data_sel,OFFSET ds_txt
+        mov ds:data_sel,OFFSET noseg_txt
         add_mne w_txt, blank_sep
         add_mne noseg_txt, lhak_sep
         add_mne rsi_txt, rhak_sep
@@ -1339,7 +1341,7 @@ op_lodsw64:
 op_lodsd:
         mov al,ds:gaddr_mode
         test al,2
-        jz op_lodsd64
+        jnz op_lods64
 ;        
         test al,1
         jz op_lodsd16
@@ -1362,13 +1364,26 @@ op_lodsd16:
         add_mne si_txt, rhak_sep
         ret     
 
+op_lods64:
+        test ds:op_rex,8
+        jnz op_lodsq64
+        
 op_lodsd64:
         mov ax,6
         call long_calc_ads_offset
         mov ds:data_sel,OFFSET noseg_txt
         add_mne d_txt, blank_sep
         add_mne noseg_txt, lhak_sep
-        add_mne esi_txt, rhak_sep
+        add_mne rsi_txt, rhak_sep
+        ret
+        
+op_lodsq64:
+        mov ax,6
+        call long_calc_ads_offset
+        mov ds:data_sel,OFFSET noseg_txt
+        add_mne q_txt, blank_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rsi_txt, rhak_sep
         ret
 op_lodsw     ENDP
 

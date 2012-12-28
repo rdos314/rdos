@@ -114,6 +114,7 @@ sep_tab:
         public b_txt
         public w_txt
         public d_txt
+        public q_txt
 
         public ax_txt
         public eax_txt
@@ -399,6 +400,7 @@ ptr_txt                         DB 'ptr',0
 push_txt                        DB 'push',0
 pusha_txt                       DB 'pusha',0
 pushf_txt                       DB 'pushf',0
+q_txt                           DB 'q',0
 qword_txt                       DB 'qword',0
 qword_ptr_txt                   DB 'qword ptr',0
 r10_txt                         DB 'r10',0
