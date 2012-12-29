@@ -2734,6 +2734,7 @@ page_fault_plm4    Proc near
     mov rdi,rsi
     sub rdi,PTR_TABLE_LINEAR
     shr rdi,9
+    and rdi,0FFFFFFFFFFFFFFF8h
     mov cx,di
     add rdi,PLM4_TABLE_LINEAR
 ;
@@ -2755,8 +2756,7 @@ page_fault_plm4    Proc near
     add rdi,PTR_TABLE_LINEAR
     mov rcx,512
     xor rax,rax
-    rep stosq
-;        
+    rep stosq        
     ret
 page_fault_plm4     Endp
 
@@ -2770,7 +2770,27 @@ page_fault_plm4     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 page_fault_ptr    Proc near
-    int 3
+    mov rdi,rsi
+    sub rdi,DIR_TABLE_LINEAR
+    shr rdi,9
+    and rdi,0FFFFFFFFFFFFFFF8h
+    add rdi,PTR_TABLE_LINEAR
+;
+    push rdi
+    AllocatePhysical64
+    pop rdi
+;    
+    shl rbx,32
+    or rax,rbx
+    mov al,7
+    mov [rdi],rax
+;
+    sub rdi,PTR_TABLE_LINEAR
+    shl rdi,9
+    add rdi,DIR_TABLE_LINEAR
+    mov rcx,512
+    xor rax,rax
+    rep stosq
     ret
 page_fault_ptr     Endp
 
@@ -2856,15 +2876,19 @@ process_fault_dir   Endp
 
 page_fault_dir    Proc near
     mov rax,rsi
-    sub rax,DIR_TABLE_LINEAR
+    mov rbx,PAGE_TABLE_LINEAR
+    sub rax,rbx
     shl rax,9
-    and eax,0FFC00000h
+    and rax,0FFFFFFFFFFC00000h
 ;
     mov rbx,rax
     shr rbx,32
     or rbx,rbx
-    jnz page_fault_dir_local
+    jz page_fault_dir_not_long
 ;
+    jmp page_fault_dir_local
+    
+page_fault_dir_not_long:
     cmp eax,system_mem_start
     jc page_fault_dir_local
 ;
@@ -4368,6 +4392,47 @@ AllocateUserStack   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           MarkValid
+;
+;   DESCRIPTION:    Mark area as valid
+;
+;   PARAMETERS:     RCX     Size
+;                   RDX     Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MarkValid   Proc near
+    push rax
+    push rcx
+    push rdx
+    push rdi
+;
+    mov rdi,rdx
+    and rdi,0FFFFFFFFFFFFF000h
+;
+    and rdx,0FFFh
+    sub rcx,rdx
+    dec rcx
+    shr rcx,12
+    inc rcx
+;
+    shr rdi,9
+    mov rax,PAGE_TABLE_LINEAR
+    add rdi,rax
+;
+    mov rax,2
+    rep stosq                
+;
+    pop rdi
+    pop rdx
+    pop rcx
+    pop rax    
+    ret
+MarkValid   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           start64
 ;
 ;   DESCRIPTION:    Start 64-bit app
@@ -4387,7 +4452,7 @@ alloc_sect_loop:
     push rcx
     mov rdx,[rdi].elfp_vaddr
     mov rcx,[rdi].elfp_memsz
-    call test_call
+    call MarkValid
     pop rcx
 ;
     movzx rax,[esi].elf_phentsize
@@ -4395,11 +4460,6 @@ alloc_sect_loop:
     loop alloc_sect_loop
 ;
     int 3
-
-test_call   Proc near
-    ret
-test_call   Endp
-    
 
 
 text_end:
