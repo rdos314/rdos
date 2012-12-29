@@ -1143,12 +1143,6 @@ start_long_exe:
     jne sleFailed        
 ;    
     mov dword ptr ds:[esi].elf_phoff,edi
-;
-    int 3
-    str bx
-    mov ax,core_data_sel
-    mov ds,ax
-    mov edx,ds:ps_tr_linear
 ;    
     db 0EAh
     dd OFFSET start64
@@ -4468,10 +4462,6 @@ alloc_sect_loop:
 ;
     mov rcx,10000h
     call AllocateUserStack
-;
-    int 3
-    str rbx
-    GetSelectorBaseSize
     int 3        
 
 text_end:
