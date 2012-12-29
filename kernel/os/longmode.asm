@@ -3045,6 +3045,15 @@ page_fault64    Proc near
     jae page_fault_not_code
 ;
     call LoadCode
+    int 3
+    jc page_fault_error
+;
+    shr rsi,9    
+    mov rdx,PAGE_TABLE_LINEAR
+    add rsi,rdx
+    and rsi,0FFFFFFFFFFFFFFF8h
+    mov [rsi],rax
+    ret
 
 page_fault_not_code:
     int 3
@@ -4612,7 +4621,6 @@ load_code_size_ok:
     shr rcx,3
     rep stosq
 ;    
-    int 3
     mov rsi,PAGE_TABLE_LINEAR
     mov rax,rdx
     shr rax,9
