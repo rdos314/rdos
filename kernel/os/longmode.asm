@@ -1145,8 +1145,9 @@ start_long_exe:
     int 3
     GetThread
     mov es,ax
-    mov eax,es:p_kernel_esp
-    mov bx,es:p_kernel_ss
+    mov bx,ax
+    GetSelectorBaseSize
+    mov eax,es:p_linear
 ;    
     mov dword ptr ds:[esi].elf_phoff,edi
     db 0EAh

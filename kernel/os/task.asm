@@ -7503,9 +7503,21 @@ add_wait_for_proc_end   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 allocate_thread_block   PROC near
+    push ebx
+    push ecx
+    push edx
+;
     mov eax,SIZE thread_seg
     AllocateSmallGlobalMem
     mov es:p_thread_sel,es
+;    
+    mov bx,es
+    GetSelectorBaseSize
+    mov es:p_linear,edx
+;
+    pop edx
+    pop ecx
+    pop ebx    
     ret
 allocate_thread_block   ENDP
 

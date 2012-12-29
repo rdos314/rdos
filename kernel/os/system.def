@@ -320,6 +320,7 @@ p_ldt			DW ?
 p_kernel_esp    DD ?
 p_kernel_ss		DW ?
 p_kernel_stack  DD ?
+p_linear        DD ?
 
 p_dr0			DD ?
 p_dr1			DD ?
