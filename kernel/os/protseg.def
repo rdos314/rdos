@@ -96,3 +96,9 @@ osgate_linear           EQU 0FEFC0000h
 usergate_linear         EQU 0FEFD0000h
 
 kernel_linear			EQU 0FF000000h
+
+long_code_linear        EQU 010000000000h
+long_code_size          EQU 010000000000h
+
+long_stack_linear       EQU 020000000000h
+long_stack_size         EQU 060000000000h

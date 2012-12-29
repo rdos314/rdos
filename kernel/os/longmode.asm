@@ -2731,7 +2731,32 @@ page_fault_error    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 page_fault_plm4    Proc near
-    CrashGate
+    mov rdi,rsi
+    sub rdi,PTR_TABLE_LINEAR
+    shr rdi,9
+    mov cx,di
+    add rdi,PLM4_TABLE_LINEAR
+;
+    push rdi
+    AllocatePhysical64
+    pop rdi
+;    
+    shl rbx,32
+    or rax,rbx
+    shr cx,9
+    and cl,4
+    xor cl,4
+    or cl,3
+    mov al,cl
+    mov [rdi],rax
+;
+    sub rdi,PLM4_TABLE_LINEAR
+    shl rdi,9
+    add rdi,PTR_TABLE_LINEAR
+    mov rcx,512
+    xor rax,rax
+    rep stosq
+;        
     ret
 page_fault_plm4     Endp
 
@@ -2745,7 +2770,7 @@ page_fault_plm4     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 page_fault_ptr    Proc near
-    CrashGate
+    int 3
     ret
 page_fault_ptr     Endp
 
@@ -2785,7 +2810,7 @@ process_fault_dir   Proc near
     je process_fault_dir_local
 
 process_fault_dir_global:
-    CrashGate
+    int 3
 
 process_fault_dir_local:
     mov rax,rsi
@@ -2863,7 +2888,7 @@ page_fault_dir_global:
     test al,1
     jnz page_fault_dir_global_valid
 ;    
-    CrashGate
+    int 3
 
 page_fault_dir_global_valid:
     SetPageDir
@@ -2929,7 +2954,7 @@ page_fault64    Proc near
     cmp rax,rbx
     jae page_fault_dir
 ;        
-    CrashGate
+    int 3
     ret
 page_fault64    Endp
 
@@ -4221,6 +4246,125 @@ test64:
 ;    WaitMicroSec
     jmp test64
     
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           AllocateUserStack
+;
+;   DESCRIPTION:    Allocate long mode user stack
+;
+;   PARAMETERS:     RCX     Stack size
+;
+;   RETURNS:        RDX     Stack top
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateUserStack   Proc near
+    push rax
+    push rbx
+    push rcx
+    push rdi
+    push r12
+;
+    mov r12,rcx
+    dec r12
+    mov rcx, long_stack_size SHR 30
+    mov rdi,PTR_TABLE_LINEAR + long_stack_linear SHR 27
+
+ausLoop:
+    mov rax,[rdi]
+    test al,1
+    jz ausOk
+;
+    add rdi,8
+    loop ausLoop
+;
+    stc
+    jmp ausDone
+
+ausOk:        
+    push rdi
+    AllocatePhysical64
+    pop rdi
+;    
+    shr rbx,32
+    or rax,rbx
+    or al,7
+    mov [rdi],rax
+;
+    sub rdi,PTR_TABLE_LINEAR
+    shl rdi,9
+    add rdi,DIR_TABLE_LINEAR
+;
+    xor rax,rax
+    mov rcx,512
+    rep stosq
+;
+    sub rdi,400h
+    push rdi
+;
+    mov rcx,r12
+    shr rcx,21
+    inc rcx
+    sub rdi,8
+
+ausDirLoop:
+    push rcx
+    push rdi
+    AllocatePhysical64
+    pop rdi
+    pop rcx
+;    
+    shr rbx,32
+    or rax,rbx
+    or al,7
+    mov [rdi],rax
+;
+    sub rdi,8
+    loop ausDirLoop    
+;
+    pop rdi
+;
+    mov rcx,r12
+    shr rcx,21
+    inc rcx
+;    
+    sub rdi,DIR_TABLE_LINEAR
+    shl rdi,9
+    mov rax,PAGE_TABLE_LINEAR
+    add rdi,rax
+;
+    shl rcx,9
+    mov rax,rcx
+    shl rax,3
+    sub rdi,rax
+;
+    shr r12,12
+    inc r12
+    sub rcx,r12
+    xor rax,rax
+    rep stosq    
+;    
+    mov rcx,r12
+    mov rax,2
+    rep stosq
+;
+    mov rdx,rdi
+    mov rax,PAGE_TABLE_LINEAR
+    sub rdx,rax
+    shl rdx,9
+    clc
+    
+ausDone:
+    pop r12
+    pop rdi
+    pop rcx
+    pop rbx
+    pop rax
+    ret
+AllocateUserStack   Endp
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -4232,9 +4376,8 @@ test64:
 
 start64:
     int 3
-    clc
-    jnc alloc_sect_loop
-    jc LocalWriteChar
+    mov rcx,200000h
+    call AllocateUserStack
 ;    
     mov rsi,long_process_linear
     mov rdi,[rsi].elf_phoff
@@ -4251,7 +4394,7 @@ alloc_sect_loop:
     add rdi,rax
     loop alloc_sect_loop
 ;
-    CrashGate
+    int 3
 
 test_call   Proc near
     ret
