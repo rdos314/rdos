@@ -58,6 +58,7 @@ code    SEGMENT byte public 'CODE'
     extrn GetOpBuf:near
 
     extrn ReadData:near
+    extrn ReadData64:near
     extrn GetIllegalOsGate:near
     extrn GetIllegalUserGate:near
     extrn GetOsCall:near
@@ -214,6 +215,10 @@ GetMne  PROC near
 ;
     xor dl,dl
     xor dh,dh
+    mov bx,gs:p_cs
+    IsLongCodeSelector
+    jnc get_cs64
+;
     mov bx,gs:p_cs
     test byte ptr gs:p_rflags+2,2
     jnz get_cs_bitness_done
@@ -413,6 +418,10 @@ write_call_near16:
     mov ds:op_size,bx
     jmp write_special_end
 
+get_cs64:
+    mov di,OFFSET op_in_text
+    call GetOpBuf
+
 write_special_fail:
     stc
 
@@ -432,6 +441,11 @@ GetMne  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LoadInstr       PROC near
+    mov di,3
+    mov bx,gs:p_cs
+    IsLongCodeSelector
+    jnc seg_size_ok
+;
     xor di,di
     mov ax,word ptr gs:p_rflags+2
     test ax,2
@@ -457,6 +471,7 @@ code_in_gdt:
     shr al,6
     and ax,1
     mov di,ax
+
 seg_size_ok:
     mov ax,SEG data
     mov ds,ax
@@ -465,16 +480,36 @@ seg_size_ok:
     mov dx,word ptr gs:p_rip+4
     mov ebx,dword ptr gs:p_rip
     call SetIpAds
-;    
-    mov dx,gs:p_cs
     call GetOpBuf
+;
+    mov bx,gs:p_cs
+    IsLongCodeSelector
+    jc get_instr32
+
+get_instr64:
+    mov ebx,dword ptr gs:p_rip
+    mov dx,word ptr gs:p_rip+4
     mov cx,16
-get_instr_loop:
+
+get_instr64_loop:
+    call ReadData64
+    mov [si],al
+    inc ebx
+    inc si
+    loop get_instr64_loop
+    ret
+
+get_instr32:
+    mov ebx,dword ptr gs:p_rip
+    mov dx,gs:p_cs
+    mov cx,16
+
+get_instr32_loop:
     call ReadData
     mov [si],al
     inc ebx
     inc si
-    loop get_instr_loop
+    loop get_instr32_loop
     ret
 LoadInstr       Endp
 
