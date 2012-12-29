@@ -593,8 +593,12 @@ debug_pace_bitness_gdt:
 debug_pace_bitness_get:
     and bx,0FFF8h
     mov cl,ds:[bx+6]
+    mov ch,cl
     shr cl,6
     and cl,1
+    shr ch,5
+    and ch,1
+    or cl,ch
 
 debug_pace_bitness_done:
     mov dx,es:p_cs
