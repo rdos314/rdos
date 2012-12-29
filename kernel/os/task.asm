@@ -1584,6 +1584,7 @@ load_regs:
     lock and fs:ps_flags,NOT PS_FLAG_LOADING
 ;    
     mov edx,es:p_linear
+    mov edi,fs:ps_tr_linear
     LoadLongRegs
 
 load_prot_regs:

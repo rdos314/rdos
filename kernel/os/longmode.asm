@@ -4228,12 +4228,17 @@ nmi_ret:
 ;   DESCRIPTION:    Load long mode registers
 ;
 ;   PARAMETERS:     EDX     Thread base      
+;                   EDI     TSS base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 load_long_regs_name DB 'Load Long Regs', 0
 
 load_long_regs:
+    xor rax,rax
+    mov eax,[edx].p_kernel_stack
+    mov [edi+4],rax
+;
     movzx rax,[edx].p_ss
     push rax
     push [edx].p_rsp
