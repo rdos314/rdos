@@ -354,6 +354,9 @@ install_long_mode   PROC near
     mov bx,long_kernel_code_sel
     CreateLongCodeSelector
 ;
+    mov bx,long_user_code_sel
+    CreateLongCodeSelector
+;
     mov edi,[edx].lm_image_base
     mov ecx,[edx].lm_image_size    
     call setup_long_mode

@@ -2033,6 +2033,9 @@ WriteErrorCode  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 do_fault:
+    mov rbx,syscall_data_sel
+    mov ss,bx
+;    
     cli
     push r15
     mov r15,OFFSET regs
@@ -2545,6 +2548,9 @@ trap_1:
     push rsi
     push rdi
 ;    
+    mov ax,syscall_data_sel
+    mov ss,ax
+;
     GetSchedulerLockCounter
     add ax,1
     jnc t1_ret
@@ -2592,6 +2598,9 @@ trap_3:
     push rsi
     push rdi
 ;    
+    mov ax,syscall_data_sel
+    mov ss,ax
+;    
     mov eax,3
     jmp do_exception
 
@@ -2612,6 +2621,9 @@ protection_fault:
     push rdx
     push rsi
     push rdi
+;    
+    mov ax,syscall_data_sel
+    mov ss,ax
 ;
     call EnterCodePatch
 ;    
@@ -2979,7 +2991,7 @@ page_fault64    Proc near
     cmp rax,rbx
     jae page_fault_dir
 ;        
-    int 3
+    CrashGate
     ret
 page_fault64    Endp
 
@@ -3174,8 +3186,18 @@ page_fault:
     push rdx
     push rsi
     push rdi
+;    
+    mov ax,syscall_data_sel
+    mov ss,ax
 ;
-    mov rax,[ebp].trap_err
+    mov rax,[rbp].fault_cs
+    test al,3
+    jz page_not_user
+;
+    int 3
+
+page_not_user:        
+    mov rax,[rbp].fault_error_code
     test ax,1
     jz page_not_present
 
@@ -3220,6 +3242,9 @@ IsaIrqEntry:
     push rsi
     push rdi
     push rbp
+;    
+    mov ax,syscall_data_sel
+    mov ss,ax
 ;
     mov eax,ds
     push rax
@@ -3327,6 +3352,9 @@ MsiEntry:
     push rsi
     push rdi
     push rbp
+;    
+    mov ax,syscall_data_sel
+    mov ss,ax
 ;
     mov eax,ds
     push rax
@@ -3390,6 +3418,9 @@ MsiEnd:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 nmi_int:
+    mov ax,syscall_data_sel
+    mov ss,ax
+;    
     SendEoi
     iretq
     
@@ -3422,6 +3453,9 @@ timer_int:
     push rsi
     push rdi
     push rbp
+;    
+    mov ax,syscall_data_sel
+    mov ss,ax
 ;
     mov eax,ds
     push rax
@@ -3475,6 +3509,9 @@ preempt_int:
     push rsi
     push rdi
     push rbp
+;    
+    mov ax,syscall_data_sel
+    mov ss,ax
 ;
     mov eax,ds
     push rax
@@ -3528,6 +3565,9 @@ tlb_flush_int:
     push rsi
     push rdi
     push rbp
+;    
+    mov ax,syscall_data_sel
+    mov ss,ax
 ;
     mov eax,ds
     push rax
@@ -3581,6 +3621,9 @@ mixed_int:
     push rsi
     push rdi
     push rbp
+;    
+    mov ax,syscall_data_sel
+    mov ss,ax
 ;
     mov eax,ds
     push rax
@@ -3634,6 +3677,9 @@ hpet_int:
     push rsi
     push rdi
     push rbp
+;    
+    mov ax,syscall_data_sel
+    mov ss,ax
 ;
     mov eax,ds
     push rax
@@ -3689,6 +3735,9 @@ double_fault:
     push rdi
     push rbp
     push fs
+;    
+    mov ax,syscall_data_sel
+    mov ss,ax
 ;
     EnterCrashDebug
     jc dfChain
@@ -3898,6 +3947,9 @@ crash_gate_int:
     push rdi
     push rbp
     push fs
+;    
+    mov ax,syscall_data_sel
+    mov ss,ax
 ;
     EnterCrashDebug
     jc cgiChain
@@ -4104,6 +4156,9 @@ crash_nmi_int:
     push rsi
     push rdi
     push rbp
+;    
+    mov ax,syscall_data_sel
+    mov ss,ax
 ;
     push fs
     GetCore
@@ -4443,8 +4498,6 @@ MarkValid   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start64:
-    int 3
-;    
     mov rsi,long_process_linear
     mov rdi,[rsi].elf_phoff
     movzx rcx,[rsi].elf_phnum
@@ -4462,8 +4515,27 @@ alloc_sect_loop:
 ;
     mov rcx,10000h
     call AllocateUserStack
+;
     int 3        
+;
+    mov rax,flat_data_sel
+    push rax
+    push rdx
+    pushfq
+;
+    mov rax,long_user_code_sel
+    push rax
+;    mov rax,[rsi].elf_entry
+    mov rax,OFFSET test_user
+    push rax
+    iretq
 
+test_user:
+    int 3
+
+local_st_space  DQ 512 DUP(?)
+local_stack     DQ ?     
+    
 text_end:
 
 Code64  Ends
