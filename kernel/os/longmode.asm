@@ -1158,16 +1158,33 @@ sleFailed:
 ;
 ;       DESCRIPTION:    Handle code fault from long mode
 ;
-;       PARAMETERS:     ECX:EDX     Fault RIP
+;       PARAMETERS:     EDX         Offset into file
 ;
-;       RETURNS:        EBX:EAX     Page to use
+;       RETURNS:        EDX         Linear buffer offset
+;                       EAX         Bytes read
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 handle_code_fault_name DB 'Handle Code Fault', 0
 
 handle_code_fault   Proc far
-    int 3
+    push es
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov esi,long_process_linear
+;   
+    mov bx,es:[esi].ep_file_handle
+    mov eax,edx
+    SetFilePos    
+;   
+    mov eax,ecx
+    AllocateLongBuf
+;
+    mov edi,edx
+    ReadFile
+;
+    pop es            
     ret
 handle_code_fault   Endp
     
@@ -3018,7 +3035,6 @@ page_fault64    Proc near
     cmp rax,rbx
     jae page_fault_dir
 ;        
-    int 3
     mov rbx,long_code_linear
     cmp rax,rbx
     jb page_fault_error
@@ -3028,10 +3044,7 @@ page_fault64    Proc near
     cmp rax,rbx
     jae page_fault_not_code
 ;
-    mov rdx,rsi
-    mov rcx,rsi
-    shr rcx,32
-    HandleLongCodeFault
+    call LoadCode
 
 page_fault_not_code:
     int 3
@@ -4523,6 +4536,111 @@ MarkValid   Proc near
     pop rax    
     ret
 MarkValid   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           LoadCode
+;
+;   DESCRIPTION:    Load code
+;
+;   PARAMETERS:     RSI     Fault RIP
+;
+;   RETURNS:        RAX     Physical page to use
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadCode    Proc near
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    push r8
+;    
+    mov r8,long_process_linear
+    mov rdi,[r8].elf_phoff
+    movzx rcx,[r8].elf_phnum
+
+load_code_sect_loop:
+    mov rdx,[rdi].elfp_vaddr
+    cmp rsi,rdx
+    jc load_code_sect_next
+;
+    add rdx,[rdi].elfp_memsz
+    cmp rsi,rdx
+    jc load_code_sect_do
+
+load_code_sect_next:
+    movzx rax,[r8].elf_phentsize
+    add rdi,rax
+    loop load_code_sect_loop
+;
+    stc
+    jmp load_code_done
+
+load_code_sect_do:
+    mov rax,[rdi].elfp_vaddr
+    mov rdx,rsi
+    sub rdx,rax
+    and rdx,0FFFFFFFFFFFFF000h
+    mov rcx,[rdi].elfp_filez
+    sub rcx,rdx    
+    jbe load_code_loaded
+;
+    cmp rcx,1000h
+    jb load_code_size_ok
+;
+    mov rcx,1000h
+
+load_code_size_ok:        
+    mov eax,[rdi].elfp_flags
+    push rax
+    push [rdi].elfp_memsz
+    add rdx,[rdi].elfp_offset
+    HandleLongCodeFault
+    pop rcx
+;
+    sub rcx,rax
+    mov rdi,rdx
+    add rdi,rax
+    xor rax,rax
+    push rcx
+    and rcx,7
+    rep stosb
+    pop rcx
+    shr rcx,3
+    rep stosq
+;    
+    int 3
+    mov rsi,PAGE_TABLE_LINEAR
+    mov rax,rdx
+    shr rax,9
+    add rsi,rax
+    xor rax,rax
+    xchg rax,[rsi]
+    push rax
+    mov rcx,1000h
+    FreeLongBuf
+    pop rax
+    pop rbx
+    test bl,2
+    jnz load_code_loaded
+;
+    and rax,NOT 2
+                    
+load_code_loaded:
+    clc
+
+load_code_done:
+    pop r8
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    ret
+LoadCode    Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

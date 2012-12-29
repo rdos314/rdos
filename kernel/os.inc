@@ -548,8 +548,9 @@ IsLongThread MACRO
     OsGate is_long_thread_nr
                     ENDM
 
-; IN  ECX:EDX       Fault RIP
-; OUT EBX:EAX      Page to use
+; IN  EDX           Offset in file
+; OUT EDX           Linear address of data
+; OUT EAX           Bytes read
 HandleLongCodeFault MACRO
     OsGate handle_long_code_fault_nr
                     ENDM
