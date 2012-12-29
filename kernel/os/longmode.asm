@@ -37,6 +37,10 @@ include gate.def
 include system.def
 include elf.def
 
+IA32_FMASK      = 0C0000084h
+IA32_LSTAR      = 0C0000082h
+IA32_STAR       = 0C0000081h
+
 PAGE_TABLE_LINEAR   equ 0FFFFFF8000000000h
 DIR_TABLE_LINEAR    equ 0FFFFFFFFC0000000h
 PTR_TABLE_LINEAR    equ 0FFFFFFFFFFE00000h
@@ -1143,6 +1147,15 @@ start_long_exe:
     jne sleFailed        
 ;    
     mov dword ptr ds:[esi].elf_phoff,edi
+;
+    int 3    
+;
+    mov ecx,IA32_STAR
+    rdmsr
+    mov ecx,IA32_LSTAR
+    rdmsr
+    mov ecx,IA32_FMASK
+    rdmsr
 ;    
     db 0EAh
     dd OFFSET start64
@@ -4368,6 +4381,26 @@ nmi_ret:
 load_long_regs_name DB 'Load Long Regs', 0
 
 load_long_regs:
+    push rdx
+    xor eax,eax
+    mov edx,long_user_data_sel - 8
+    and dl,0F8h
+    shl edx,16
+    mov dx,long_kernel_code_sel
+    mov ecx,IA32_STAR
+    wrmsr
+;
+    mov eax,OFFSET syscall_entry
+    xor edx,edx
+    mov ecx,IA32_LSTAR
+    wrmsr
+;
+    mov eax,1
+    xor edx,edx
+    mov ecx,IA32_FMASK
+    wrmsr
+    pop rdx
+;
     xor rax,rax
     mov eax,[edx].p_kernel_stack
     mov [edi+4],rax
@@ -4686,6 +4719,7 @@ LoadCode    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start64:
+;
     mov rsi,long_process_linear
     mov rdi,[rsi].elf_phoff
     movzx rcx,[rsi].elf_phnum
@@ -4706,7 +4740,7 @@ alloc_sect_loop:
 ;
     int 3        
 ;
-    mov rax,flat_data_sel
+    mov rax,long_user_data_sel
     push rax
     push rdx
     pushfq
@@ -4716,6 +4750,13 @@ alloc_sect_loop:
     mov rax,[rsi].elf_entry
     push rax
     iretq
+
+syscall_entry:
+    mov ax,ss
+    push rax
+    mov ax,syscall_data_sel
+    mov ss,ax
+    int 3
 
 local_st_space  DQ 512 DUP(?)
 local_stack     DQ ?     

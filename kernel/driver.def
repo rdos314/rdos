@@ -440,7 +440,9 @@ carddev_data_sel    EQU 0B18h
 
 long_dev_code_sel       EQU 0B20h
 long_kernel_code_sel    EQU 0B28h
-long_user_code_sel      EQU 0B33h
+long_user_data_sel      EQU 0B33h
+long_kernel_data_sel    EQU 0B38h
+long_user_code_sel      EQU 0B43h
 
 debug_dev32_code_sel    EQU 0EF0h
 debug_dev32_data_sel    EQU 0EF8h
