@@ -602,4 +602,6 @@ notify_end_program_nr       = 501
 allocate_long_buf_nr        = 502
 free_long_buf_nr            = 503
 
+handle_long_code_fault_nr   = 504
+
 osgate_entries				= 520

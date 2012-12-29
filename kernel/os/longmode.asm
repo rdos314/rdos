@@ -1149,6 +1149,27 @@ start_long_exe:
     dw long_kernel_code_sel
     
 sleFailed:
+    int 3
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           HandleCodeFault
+;
+;       DESCRIPTION:    Handle code fault from long mode
+;
+;       PARAMETERS:     ECX:EDX     Fault RIP
+;
+;       RETURNS:        EBX:EAX     Page to use
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+handle_code_fault_name DB 'Handle Code Fault', 0
+
+handle_code_fault   Proc far
+    int 3
+    ret
+handle_code_fault   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1276,6 +1297,12 @@ init    proc far
     mov edi,OFFSET start_long_exe_name
     xor cl,cl
     mov ax,start_long_exe_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET handle_code_fault
+    mov edi,OFFSET handle_code_fault_name
+    xor cl,cl
+    mov ax,handle_long_code_fault_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET is_64_bit_exe16
@@ -2991,6 +3018,22 @@ page_fault64    Proc near
     cmp rax,rbx
     jae page_fault_dir
 ;        
+    int 3
+    mov rbx,long_code_linear
+    cmp rax,rbx
+    jb page_fault_error
+;
+    mov rcx,long_code_size
+    add rbx,rcx
+    cmp rax,rbx
+    jae page_fault_not_code
+;
+    mov rdx,rsi
+    mov rcx,rsi
+    shr rcx,32
+    HandleLongCodeFault
+
+page_fault_not_code:
     int 3
     ret
 page_fault64    Endp
