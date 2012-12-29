@@ -494,6 +494,7 @@ sti_txt                         DB 'sti',0
 stos_txt                        DB 'stos',0
 str_txt                         DB 'str',0
 sub_txt                         DB 'sub',0
+syscall_txt                     DB 'syscall',0
 tbyte_txt                       DB 'tbyte',0
 tbyte_ptr_txt           DB 'tbyte ptr',0
 test_txt                        DB 'test',0
@@ -3924,8 +3925,8 @@ oppr0F04:
                         DW 0FFFFh
 
 oppr0F05:
-                        DW OFFSET op_illegal
-                        DW 0FFFFh
+                        DW OFFSET op_one
+                        DW OFFSET syscall_txt - OFFSET mne_tab + blank_sep
                         DW 0FFFFh
                         DW 0FFFFh
                         DW 0FFFFh

@@ -3052,10 +3052,38 @@ page_fault64    Proc near
     add rsi,rdx
     and rsi,0FFFFFFFFFFFFFFF8h
     mov [rsi],rax
-    ret
+    jmp page_fault64_retry
 
 page_fault_not_code:
     int 3
+    shr rsi,9    
+    mov rdx,PAGE_TABLE_LINEAR
+    add rsi,rdx
+    and rsi,0FFFFFFFFFFFFFFF8h
+    mov rax,[rsi]
+    test al,1
+    jnz page_fault64_retry
+;
+    cmp rax,2
+    jne page_fault_error    
+;
+    push rsi
+    AllocatePhysical64
+    shl rbx,32
+    or rax,rbx
+    mov al,7
+    pop rdi
+    mov [rdi],rax
+;
+    mov rdx,PAGE_TABLE_LINEAR
+    sub rdi,rdx
+    shl rdi,9
+;            
+    xor rax,rax
+    mov rcx,200h
+    rep stosq
+
+page_fault64_retry:    
     ret
 page_fault64    Endp
 
