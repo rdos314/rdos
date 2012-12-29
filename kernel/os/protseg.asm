@@ -632,7 +632,7 @@ create_long_code_dt_ok:
     or al,9Ah
     mov [bx+5],al
 ;
-    mov al,0A0h
+    mov al,0AFh
     mov [bx+6],al    
 ;
     xor ax,ax
