@@ -37,10 +37,6 @@ include gate.def
 include system.def
 include elf.def
 
-IA32_FMASK      = 0C0000084h
-IA32_LSTAR      = 0C0000082h
-IA32_STAR       = 0C0000081h
-
 PAGE_TABLE_LINEAR   equ 0FFFFFF8000000000h
 DIR_TABLE_LINEAR    equ 0FFFFFFFFC0000000h
 PTR_TABLE_LINEAR    equ 0FFFFFFFFFFE00000h
@@ -57,6 +53,10 @@ fault_rax           equ -8
 fault_rbx           equ -16
 
 IA32_EFER       = 0C0000080h
+IA32_STAR       = 0C0000081h
+IA32_LSTAR      = 0C0000082h
+IA32_CSTAR      = 0C0000083h
+IA32_FMASK      = 0C0000084h
 
 pushq0  Macro
     db 6Ah
@@ -813,7 +813,26 @@ switch_to_long_mode   Proc far
 ;
     mov ecx,IA32_EFER
     rdmsr
-    or eax,100h
+    or eax,101h
+    wrmsr
+;
+    mov eax,OFFSET syscall_entry
+    mov edx,long_user_data_sel - 8
+    shl edx,16
+    mov dx,long_kernel_code_sel
+    mov ecx,IA32_STAR
+    wrmsr
+;
+    mov eax,OFFSET syscall_entry
+    xor edx,edx
+    mov ecx,IA32_LSTAR
+    wrmsr
+    mov ecx,IA32_CSTAR
+    wrmsr
+;
+    mov eax,1
+    xor edx,edx
+    mov ecx,IA32_FMASK
     wrmsr
 ;
     mov cr3,ebx
@@ -4381,26 +4400,6 @@ nmi_ret:
 load_long_regs_name DB 'Load Long Regs', 0
 
 load_long_regs:
-    push rdx
-    xor eax,eax
-    mov edx,long_user_data_sel - 8
-    and dl,0F8h
-    shl edx,16
-    mov dx,long_kernel_code_sel
-    mov ecx,IA32_STAR
-    wrmsr
-;
-    mov eax,OFFSET syscall_entry
-    xor edx,edx
-    mov ecx,IA32_LSTAR
-    wrmsr
-;
-    mov eax,1
-    xor edx,edx
-    mov ecx,IA32_FMASK
-    wrmsr
-    pop rdx
-;
     xor rax,rax
     mov eax,[edx].p_kernel_stack
     mov [edi+4],rax
@@ -4739,6 +4738,8 @@ alloc_sect_loop:
     call AllocateUserStack
 ;
     int 3        
+    mov rax,long_kernel_data_sel
+    mov ss,ax
 ;
     mov rax,long_user_data_sel
     push rax
@@ -4752,9 +4753,12 @@ alloc_sect_loop:
     iretq
 
 syscall_entry:
+    cli
+    jmp syscall_entry
+
     mov ax,ss
     push rax
-    mov ax,syscall_data_sel
+    mov rax,long_kernel_data_sel
     mov ss,ax
     int 3
 
