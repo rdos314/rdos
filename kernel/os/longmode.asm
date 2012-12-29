@@ -4525,13 +4525,9 @@ alloc_sect_loop:
 ;
     mov rax,long_user_code_sel
     push rax
-;    mov rax,[rsi].elf_entry
-    mov rax,OFFSET test_user
+    mov rax,[rsi].elf_entry
     push rax
     iretq
-
-test_user:
-    int 3
 
 local_st_space  DQ 512 DUP(?)
 local_stack     DQ ?     
