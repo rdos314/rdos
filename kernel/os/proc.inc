@@ -104,6 +104,7 @@ ps_syscall_esp      DD ?
 
 ps_long_tr          DW ?
 ps_long_ldt         DW ?
+ps_tr_linear        DD ?
 
 ps_timer_spinlock   DW ?
 ps_timer_head		DW ?

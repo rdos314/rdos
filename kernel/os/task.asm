@@ -2526,6 +2526,7 @@ preempt_notify    Endp
 ;       DESCRIPTION:    Create long-mode TSS
 ;
 ;       RETURNS:        BX      TSS selector 
+;                       EDX     Tss linear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2533,7 +2534,6 @@ create_long_tss   Proc near
     push es
     push eax
     push ecx
-    push edx
 ;
     mov ax,flat_sel
     mov es,ax
@@ -2561,7 +2561,6 @@ create_long_tss   Proc near
     AllocateGdt
     CreateTssSelector
 ;
-    pop edx
     pop ecx
     pop eax
     pop es
@@ -2710,6 +2709,7 @@ core_timer_list_create:
 ;
     call create_long_tss
     mov es:ps_long_tr,bx
+    mov es:ps_tr_linear,edx
 ;
     mov es:ps_long_ldt,0
 ;    

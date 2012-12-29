@@ -1141,15 +1141,15 @@ start_long_exe:
 ;
     cmp eax,ecx
     jne sleFailed        
-;
-    int 3
-    GetThread
-    mov es,ax
-    mov bx,ax
-    GetSelectorBaseSize
-    mov eax,es:p_linear
 ;    
     mov dword ptr ds:[esi].elf_phoff,edi
+;
+    int 3
+    str bx
+    mov ax,core_data_sel
+    mov ds,ax
+    mov edx,ds:ps_tr_linear
+;    
     db 0EAh
     dd OFFSET start64
     dw long_kernel_code_sel
