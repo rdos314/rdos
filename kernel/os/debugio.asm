@@ -3363,7 +3363,35 @@ debug_call_pr   ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+dump_file   DB 'z:\debug.log', 0
+
 DoFunc  PROC near
+    cmp al,'s'
+    jne not_dump
+;
+    push es
+    push bx
+    push cx
+    push di
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET dump_file
+    xor cx,cx
+    CreateFile
+;
+    mov ax,dosb800
+    mov es,ax
+    xor di,di
+    mov cx,25 * 80 * 2
+    WriteFile
+    CloseFile
+    pop di
+    pop cx
+    pop bx
+    pop es
+    ret
+            
+not_dump:
     HideMouse
     shr cx,3
     shr dx,3

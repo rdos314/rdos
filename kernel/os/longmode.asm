@@ -3055,7 +3055,6 @@ page_fault64    Proc near
     jmp page_fault64_retry
 
 page_fault_not_code:
-    int 3
     shr rsi,9    
     mov rdx,PAGE_TABLE_LINEAR
     add rsi,rdx
