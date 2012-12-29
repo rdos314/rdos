@@ -3045,7 +3045,6 @@ page_fault64    Proc near
     jae page_fault_not_code
 ;
     call LoadCode
-    int 3
     jc page_fault_error
 ;
     shr rsi,9    
