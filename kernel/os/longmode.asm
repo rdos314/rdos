@@ -1142,6 +1142,12 @@ start_long_exe:
     cmp eax,ecx
     jne sleFailed        
 ;
+    int 3
+    GetThread
+    mov es,ax
+    mov eax,es:p_kernel_esp
+    mov bx,es:p_kernel_ss
+;    
     mov dword ptr ds:[esi].elf_phoff,edi
     db 0EAh
     dd OFFSET start64
@@ -4220,16 +4226,13 @@ nmi_ret:
 ;
 ;   DESCRIPTION:    Load long mode registers
 ;
-;   PARAMETERS:     ES      Thread
+;   PARAMETERS:     EDX     Thread base      
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 load_long_regs_name DB 'Load Long Regs', 0
 
 load_long_regs:
-    mov bx,es
-    GetSelectorBaseSize
-;
     movzx rax,[edx].p_ss
     push rax
     push [edx].p_rsp
@@ -4441,8 +4444,6 @@ MarkValid   Endp
 
 start64:
     int 3
-    mov rcx,200000h
-    call AllocateUserStack
 ;    
     mov rsi,long_process_linear
     mov rdi,[rsi].elf_phoff
@@ -4459,8 +4460,13 @@ alloc_sect_loop:
     add rdi,rax
     loop alloc_sect_loop
 ;
+    mov rcx,10000h
+    call AllocateUserStack
+;
     int 3
-
+    str rbx
+    GetSelectorBaseSize
+    int 3        
 
 text_end:
 
