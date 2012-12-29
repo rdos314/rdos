@@ -1583,9 +1583,7 @@ load_regs:
     mov fs:ps_last_thread,es
     lock and fs:ps_flags,NOT PS_FLAG_LOADING
 ;    
-    mov bx,es
-    GetSelectorBaseSize
-;
+    mov edx,es:p_linear
     LoadLongRegs
 
 load_prot_regs:
