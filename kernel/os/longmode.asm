@@ -2991,7 +2991,7 @@ page_fault64    Proc near
     cmp rax,rbx
     jae page_fault_dir
 ;        
-    CrashGate
+    int 3
     ret
 page_fault64    Endp
 
@@ -3189,14 +3189,7 @@ page_fault:
 ;    
     mov ax,syscall_data_sel
     mov ss,ax
-;
-    mov rax,[rbp].fault_cs
-    test al,3
-    jz page_not_user
-;
-    int 3
-
-page_not_user:        
+;    
     mov rax,[rbp].fault_error_code
     test ax,1
     jz page_not_present
