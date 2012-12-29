@@ -4251,7 +4251,7 @@ alloc_sect_loop:
     add rdi,rax
     loop alloc_sect_loop
 ;
-    int 3    
+    CrashGate
 
 test_call   Proc near
     ret
