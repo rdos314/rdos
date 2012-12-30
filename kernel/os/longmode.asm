@@ -1211,8 +1211,6 @@ start_long_exe:
     jne sleFailed        
 ;    
     mov dword ptr ds:[esi].elf_phoff,edi
-;
-    int 3
 ;    
     db 0EAh
     dd OFFSET start64
@@ -4789,6 +4787,7 @@ alloc_sect_loop:
     push rdx
     pushfq
 ;
+    int 3
     mov rax,long_user_code_sel
     push rax
     mov rax,[rsi].elf_entry
