@@ -62,6 +62,8 @@ handle_linear			EQU 0BF000000h
 fixed_program_linear	EQU 0BF010000h
 long_process_linear     EQU 0BF400000h
 
+long_ldt_linear         EQU 0BF7F0000h
+
 process_page_linear		EQU 0BF800000h
 
 sys_page_linear			EQU 0C0000000h

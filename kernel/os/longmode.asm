@@ -1211,13 +1211,26 @@ start_long_exe:
     jne sleFailed        
 ;    
     mov dword ptr ds:[esi].elf_phoff,edi
+;
+    int 3
+    mov ax,flat_sel
+    mov ds,ax
+    mov edx,long_ldt_linear
+    mov ecx,1FFFh
+    mov eax,edx
+    mov eax,8
+
+init_ldt_loop:
+    mov [edx],eax    
+    add edx,8
+    add eax,8
+    loop init_ldt_loop                
 ;    
     db 0EAh
     dd OFFSET start64
     dw long_kernel_code_sel
     
 sleFailed:
-    int 3
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1419,6 +1432,11 @@ init    proc far
     xor cl,cl
     mov ax,load_long_regs_nr
     RegisterOsGate
+;
+    mov bx,long_ldt_sel
+    xor cx,cx
+    mov edx,long_ldt_linear
+    CreateLdtSelector        
     ret
 init    endp
     

@@ -139,6 +139,8 @@ callb_vm32_sel		EQU 23Bh
 ;
 irq_data_sel		EQU 240h
 
+long_ldt_sel        EQU 248h
+
 __0000				EQU 253h
 __0040				EQU 25Bh
 __B000				EQU 263h
