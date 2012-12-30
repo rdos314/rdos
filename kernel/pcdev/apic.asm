@@ -1426,26 +1426,6 @@ DelayMs Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:           Test gate
-;
-;               DESCRIPTION:    Test gate
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_gate_name    DB 'Test Gate',0
-
-test_near   Proc near
-    ret
-test_near   Endp
-
-test_gate_pr    Proc far
-    GetVersion
-    retf32
-test_gate_pr    Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;               NAME:           GetId
 ;
 ;               DESCRIPTION:    Get own ID
@@ -3662,55 +3642,9 @@ DisablePic  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-test_thread_name    DB 'APIC Test',0
-
-test_thread:
-    int 3
-    mov eax,3000h
-    AllocateBigLinear
-    GetPageEntry
-    xor ebx,ebx
-    mov eax,4
-    SetPageEntry
-    mov ax,flat_sel
-    mov ds,ax
-    mov [edx],ax
-    
-init_task   Proc far
-    push ds
-    push es
-    pushad
-;    
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov esi,OFFSET test_thread
-    mov edi,OFFSET test_thread_name
-    mov ax,4
-    mov cx,stack0_size
-    CreateThread
-;
-    popad
-    pop es
-    pop ds
-    retf32
-init_task   Endp 
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   Init
-;
-;               DESCRIPTION:    Init apic mp module
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 apic_tab    DB 'APIC'
 hpet_tab    DB 'HPET'
 
-
-sys_leave:
-    SysLeave
     
 init    PROC far
     mov ax,SEG data
@@ -3740,13 +3674,6 @@ init    PROC far
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    mov esi,OFFSET test_gate_pr
-    mov ebp,OFFSET test_near
-    mov edi,OFFSET test_gate_name
-    xor dx,dx
-    mov ax,test_gate_nr
-    RegisterBimodalSyscall
 ;
     mov esi,OFFSET switch_one_core_irq
     mov edi,OFFSET switch_one_core_irq_name
@@ -3874,9 +3801,6 @@ init    PROC far
     mov ax,has_global_timer_nr
     RegisterBimodalUserGate
 ;
-    mov edi,OFFSET init_task
-    HookInitTasking
-;
     mov eax,dword ptr cs:hpet_tab
     GetAcpiTable
     jc init_hpet_done
@@ -3996,10 +3920,6 @@ init_hpet_done:
     call StartupApCores
 
 init_apic_gates_ok:     
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET sys_leave
-    SetupSysleave
     ret
 init    ENDP
 

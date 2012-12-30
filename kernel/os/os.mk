@@ -4,8 +4,8 @@ dos\kernel\os\audio.rdv C:\rdos\kernel\os\exec.rdv C:\rdos\kernel\os\pe.rdv &
 C:\rdos\kernel\os\net.rdv C:\rdos\kernel\os\ip.rdv C:\rdos\kernel\os\ipc.rdv&
  C:\rdos\kernel\os\kdebug.rdv C:\rdos\kernel\os\com.rdv C:\rdos\kernel\os\fa&
 t.rdv C:\rdos\kernel\os\pcbios.rdv C:\rdos\kernel\os\wd.rdv C:\rdos\kernel\o&
-s\printer.rdv C:\rdos\kernel\os\sysenter.rdv C:\rdos\kernel\os\inifile.rdv C&
-:\rdos\kernel\os\carddev.rdv C:\rdos\kernel\os\task.rdv .SYMBOLIC
+s\printer.rdv C:\rdos\kernel\os\inifile.rdv C:\rdos\kernel\os\carddev.rdv C:&
+\rdos\kernel\os\task.rdv .SYMBOLIC
 
 !include C:\rdos\kernel\os\kernel.mk1
 !include C:\rdos\kernel\os\util.mk1
@@ -24,7 +24,6 @@ s\printer.rdv C:\rdos\kernel\os\sysenter.rdv C:\rdos\kernel\os\inifile.rdv C&
 !include C:\rdos\kernel\os\pcbios.mk1
 !include C:\rdos\kernel\os\wd.mk1
 !include C:\rdos\kernel\os\printer.mk1
-!include C:\rdos\kernel\os\sysenter.mk1
 !include C:\rdos\kernel\os\inifile.mk1
 !include C:\rdos\kernel\os\carddev.mk1
 !include C:\rdos\kernel\os\task.mk1

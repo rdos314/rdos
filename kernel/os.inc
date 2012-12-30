@@ -184,37 +184,6 @@ ELSE
 ENDIF
             ENDM
 
-syscall_ecx     = 4
-syscall_edx     = 0
-
-SysLeave16  MACRO
-    xchg ecx,ss:[esp+6]
-    mov ds:[ecx].syscall_edx,edx
-    mov edx,ss:[esp+6]
-    mov ds:[ecx].syscall_ecx,edx
-    mov edx,ss:[esp+2]
-    db 0Fh
-    db 35h
-            ENDM
-
-SysLeave32  MACRO
-    xchg ecx,ss:[esp+4]
-    mov ds:[ecx].syscall_edx,edx
-    mov edx,ss:[esp+4]
-    mov ds:[ecx].syscall_ecx,edx
-    mov edx,ss:[esp]
-    db 0Fh
-    db 35h
-            ENDM
-                
-SysLeave  MACRO gate_nr
-IF (size $) EQ 0FF02h
-    SysLeave16
-ELSE
-    SysLeave32
-ENDIF
-            ENDM
-
 ;;;;;;;;;; REGISTRATION / HOOKS ;;;;;;;;;;;
 
 ;       AX          GATE NUMBER
@@ -274,9 +243,9 @@ RegisterUserGate32      MACRO
 ;       DS:ESI  Far call address
 ;       DS:EBP  Near call address
 ;       ES:EDI  Gate name
-RegisterBimodalSyscall MACRO
-    OsGate register_bimodal_syscall_nr
-                        ENDM
+;RegisterBimodalSyscall MACRO
+;    OsGate register_bimodal_syscall_nr
+;                        ENDM
 
 ;       AX      Gate number
 ;       DX      Segment transfer
@@ -284,9 +253,9 @@ RegisterBimodalSyscall MACRO
 ;       DS:ESI  32-bit far call address
 ;       DS:EBP  32-bit near call address
 ;       ES:EDI  Gate name
-RegisterSyscall    MACRO
-    OsGate register_syscall_nr
-                        ENDM
+;RegisterSyscall    MACRO
+;    OsGate register_syscall_nr
+;                        ENDM
 
 ;       ES      Selector
 ;       EDI     Near ret address
