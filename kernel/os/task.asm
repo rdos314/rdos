@@ -2641,7 +2641,7 @@ cr_flat_stack:
     mov ds:[edx],dx
     add edx,1000h
     mov es:ps_stack_offset,edx
-    mov es:ps_stack_sel,syscall_data_sel
+    mov es:ps_stack_sel,long_kernel_data_sel
     
 cr_stack_ok:
     mov ax,SEG data
@@ -7809,7 +7809,7 @@ create_tss64    PROC near
     mov ds:p_kernel_stack,edx
 ;
     mov ds:p_kernel_esp,edx
-    mov ds:p_kernel_ss,syscall_data_sel
+    mov ds:p_kernel_ss,long_kernel_data_sel
 ;
     mov ds:p_tss_sel,0
     mov ds:p_ldt_sel,0

@@ -2102,7 +2102,7 @@ WriteErrorCode  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 do_fault:
-    mov rbx,syscall_data_sel
+    mov rbx,long_kernel_data_sel
     mov ss,bx
 ;    
     cli
@@ -2617,7 +2617,7 @@ trap_1:
     push rsi
     push rdi
 ;    
-    mov ax,syscall_data_sel
+    mov ax,long_kernel_data_sel
     mov ss,ax
 ;
     GetSchedulerLockCounter
@@ -2667,7 +2667,7 @@ trap_3:
     push rsi
     push rdi
 ;    
-    mov ax,syscall_data_sel
+    mov ax,long_kernel_data_sel
     mov ss,ax
 ;    
     mov eax,3
@@ -2691,7 +2691,7 @@ protection_fault:
     push rsi
     push rdi
 ;    
-    mov ax,syscall_data_sel
+    mov ax,long_kernel_data_sel
     mov ss,ax
 ;
     call EnterCodePatch
@@ -3303,7 +3303,7 @@ page_fault:
     push rsi
     push rdi
 ;    
-    mov ax,syscall_data_sel
+    mov ax,long_kernel_data_sel
     mov ss,ax
 ;    
     mov rax,[rbp].fault_error_code
@@ -3352,7 +3352,7 @@ IsaIrqEntry:
     push rdi
     push rbp
 ;    
-    mov ax,syscall_data_sel
+    mov ax,long_kernel_data_sel
     mov ss,ax
 ;
     mov eax,ds
@@ -3462,7 +3462,7 @@ MsiEntry:
     push rdi
     push rbp
 ;    
-    mov ax,syscall_data_sel
+    mov ax,long_kernel_data_sel
     mov ss,ax
 ;
     mov eax,ds
@@ -3527,7 +3527,7 @@ MsiEnd:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 nmi_int:
-    mov ax,syscall_data_sel
+    mov ax,long_kernel_data_sel
     mov ss,ax
 ;    
     SendEoi
@@ -3563,7 +3563,7 @@ timer_int:
     push rdi
     push rbp
 ;    
-    mov ax,syscall_data_sel
+    mov ax,long_kernel_data_sel
     mov ss,ax
 ;
     mov eax,ds
@@ -3619,7 +3619,7 @@ preempt_int:
     push rdi
     push rbp
 ;    
-    mov ax,syscall_data_sel
+    mov ax,long_kernel_data_sel
     mov ss,ax
 ;
     mov eax,ds
@@ -3675,7 +3675,7 @@ tlb_flush_int:
     push rdi
     push rbp
 ;    
-    mov ax,syscall_data_sel
+    mov ax,long_kernel_data_sel
     mov ss,ax
 ;
     mov eax,ds
@@ -3731,7 +3731,7 @@ mixed_int:
     push rdi
     push rbp
 ;    
-    mov ax,syscall_data_sel
+    mov ax,long_kernel_data_sel
     mov ss,ax
 ;
     mov eax,ds
@@ -3787,7 +3787,7 @@ hpet_int:
     push rdi
     push rbp
 ;    
-    mov ax,syscall_data_sel
+    mov ax,long_kernel_data_sel
     mov ss,ax
 ;
     mov eax,ds
@@ -3845,7 +3845,7 @@ double_fault:
     push rbp
     push fs
 ;    
-    mov ax,syscall_data_sel
+    mov ax,long_kernel_data_sel
     mov ss,ax
 ;
     EnterCrashDebug
@@ -4057,7 +4057,7 @@ crash_gate_int:
     push rbp
     push fs
 ;    
-    mov ax,syscall_data_sel
+    mov ax,long_kernel_data_sel
     mov ss,ax
 ;
     EnterCrashDebug
@@ -4266,7 +4266,7 @@ crash_nmi_int:
     push rdi
     push rbp
 ;    
-    mov ax,syscall_data_sel
+    mov ax,long_kernel_data_sel
     mov ss,ax
 ;
     push fs
