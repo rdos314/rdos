@@ -456,7 +456,7 @@ pretask_int_tab:
 ;               int #       Entry                   DPL     IST
 ;
 pg0     DD      0,          OFFSET pretask0,        0,      0
-pg1     DD      1,          OFFSET trap_1,          0,      0
+pg1     DD      1,          OFFSET trap_1,          0,      1
 pg2     DD      2,          OFFSET pretask2,        0,      0
 pg3     DD      3,          OFFSET trap_3,          0,      0
 pg4     DD      4,          OFFSET pretask4,        0,      0
@@ -830,7 +830,7 @@ switch_to_long_mode   Proc far
     mov ecx,IA32_CSTAR
     wrmsr
 ;
-    mov eax,1
+    mov eax,70h
     xor edx,edx
     mov ecx,IA32_FMASK
     wrmsr
@@ -1166,15 +1166,6 @@ start_long_exe:
     jne sleFailed        
 ;    
     mov dword ptr ds:[esi].elf_phoff,edi
-;
-    int 3    
-;
-    mov ecx,IA32_STAR
-    rdmsr
-    mov ecx,IA32_LSTAR
-    rdmsr
-    mov ecx,IA32_FMASK
-    rdmsr
 ;    
     db 0EAh
     dd OFFSET start64
@@ -4737,7 +4728,7 @@ alloc_sect_loop:
     mov rcx,10000h
     call AllocateUserStack
 ;
-    int 3        
+    int 3
     mov rax,long_kernel_data_sel
     mov ss,ax
 ;
@@ -4753,9 +4744,19 @@ alloc_sect_loop:
     iretq
 
 syscall_entry:
-    cli
-    jmp syscall_entry
+    mov rax,long_kernel_data_sel
+    mov ss,ax
+    mov rsp,OFFSET local_stack
+    int 3    
 
+    push rax
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    mov ax,0
+    jmp do_fault
+    
     mov ax,ss
     push rax
     mov rax,long_kernel_data_sel
