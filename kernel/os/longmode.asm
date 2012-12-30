@@ -1191,7 +1191,7 @@ start_long_exe:
     mov dword ptr ds:[esi].elf_phoff,edi
     int 3
     GetCore
-    mov edx,fs:ps_syscall_esp
+    mov edx,fs:ps_syscall_eip
 ;    
     db 0EAh
     dd OFFSET start64

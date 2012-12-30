@@ -2692,6 +2692,7 @@ core_timer_list_create:
     mov es:ps_linear,edx
     mov es:ps_long_ldt,0
     mov es:ps_syscall_esp,0
+    mov es:ps_syscall_eip,0
 ;    
     mov ax,es:ps_id     
 ;
