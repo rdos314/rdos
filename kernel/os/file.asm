@@ -36,6 +36,7 @@ INCLUDE system.inc
 INCLUDE ..\fs.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\apicheck.inc
+INCLUDE gate.def
 
 file_handle_seg     STRUC
 
@@ -2914,64 +2915,74 @@ init_file       PROC near
     mov esi,OFFSET dupl_file
     mov edi,OFFSET dupl_file_name
     xor dx,dx
+    xor ecx,ecx
     mov ax,dupl_file_nr
-    RegisterBimodalUserGate
+    RegisterBimodalSyscall
 ;
     mov esi,OFFSET get_ioctl_data
     mov edi,OFFSET get_ioctl_data_name
     xor dx,dx
+    xor ecx,ecx
     mov ax,get_ioctl_data_nr
-    RegisterBimodalUserGate
+    RegisterBimodalSyscall
 ;
     mov esi,OFFSET get_file_size
     mov edi,OFFSET get_file_size_name
     xor dx,dx
+    xor ecx,ecx
     mov ax,get_file_size_nr
-    RegisterBimodalUserGate
+    RegisterBimodalSyscall
 ;
     mov esi,OFFSET set_file_size
     mov edi,OFFSET set_file_size_name
     xor dx,dx
+    xor ecx,ecx
     mov ax,set_file_size_nr
-    RegisterBimodalUserGate
+    RegisterBimodalSyscall
 ;
     mov esi,OFFSET get_file_pos
     mov edi,OFFSET get_file_pos_name
     xor dx,dx
+    xor ecx,ecx
     mov ax,get_file_pos_nr
-    RegisterBimodalUserGate
+    RegisterBimodalSyscall
 ;
     mov esi,OFFSET set_file_pos
     mov edi,OFFSET set_file_pos_name
     xor dx,dx
+    xor ecx,ecx
     mov ax,set_file_pos_nr
-    RegisterBimodalUserGate
+    RegisterBimodalSyscall
 ;
     mov esi,OFFSET get_file_time
     mov edi,OFFSET get_file_time_name
     xor dx,dx
+    xor ecx,ecx
     mov ax,get_file_time_nr
-    RegisterBimodalUserGate
+    RegisterBimodalSyscall
 ;
     mov esi,OFFSET set_file_time
     mov edi,OFFSET set_file_time_name
     xor dx,dx
+    xor ecx,ecx
     mov ax,set_file_time_nr
-    RegisterBimodalUserGate
+    RegisterBimodalSyscall
 ;
     mov ebx,OFFSET read_file16
     mov esi,OFFSET read_file32
     mov edi,OFFSET read_file_name
+    mov ecx,UG_SYSCALL_PAR_ES_EDI
     mov dx,virt_es_in
     mov ax,read_file_nr
-    RegisterUserGate
+    RegisterSyscall
 ;
     mov ebx,OFFSET write_file16
     mov esi,OFFSET write_file32
     mov edi,OFFSET write_file_name
     mov dx,virt_es_in
+    mov ecx,UG_SYSCALL_PAR_ES_EDI
     mov ax,write_file_nr
-    RegisterUserGate
+    RegisterSyscall
 ;
     mov ax,SEG data
     mov ds,ax   

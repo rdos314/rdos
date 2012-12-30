@@ -36,6 +36,7 @@ INCLUDE system.inc
 INCLUDE ..\fs.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\apicheck.inc
+INCLUDE gate.def
 
 dir_handle_seg  STRUC
 
@@ -3006,103 +3007,118 @@ init_dir    PROC near
     mov esi,OFFSET get_drive_info
     mov edi,OFFSET get_drive_info_name
     xor dx,dx
+    xor ecx,ecx
     mov ax,get_drive_info_nr
-    RegisterBimodalUserGate
+    RegisterBimodalSyscall
 ;
     mov esi,OFFSET set_cur_drive
     mov edi,OFFSET set_cur_drive_name
     xor dx,dx
+    xor ecx,ecx
     mov ax,set_cur_drive_nr
-    RegisterBimodalUserGate
+    RegisterBimodalSyscall
 ;
     mov esi,OFFSET get_cur_drive
     mov edi,OFFSET get_cur_drive_name
     xor dx,dx
+    xor ecx,ecx
     mov ax,get_cur_drive_nr
-    RegisterBimodalUserGate
+    RegisterBimodalSyscall
 ;
     mov ebx,OFFSET set_cur_dir16
     mov esi,OFFSET set_cur_dir32
     mov edi,OFFSET set_cur_dir_name
     mov dx,virt_es_in
+    mov ecx,UG_SYSCALL_PAR_ES_EDI
     mov ax,set_cur_dir_nr
-    RegisterUserGate
+    RegisterSyscall
 ;
     mov ebx,OFFSET get_cur_dir16
     mov esi,OFFSET get_cur_dir32
     mov edi,OFFSET get_cur_dir_name
     mov dx,virt_es_in
+    mov ecx,UG_SYSCALL_PAR_ES_EDI
     mov ax,get_cur_dir_nr
-    RegisterUserGate
+    RegisterSyscall
 ;
     mov ebx,OFFSET make_dir16
     mov esi,OFFSET make_dir32
     mov edi,OFFSET make_dir_name
     mov dx,virt_es_in
+    mov ecx,UG_SYSCALL_PAR_ES_EDI
     mov ax,make_dir_nr
-    RegisterUserGate
+    RegisterSyscall
 ;
     mov ebx,OFFSET remove_dir16
     mov esi,OFFSET remove_dir32
     mov edi,OFFSET remove_dir_name
     mov dx,virt_es_in
+    mov ecx,UG_SYSCALL_PAR_ES_EDI
     mov ax,remove_dir_nr
-    RegisterUserGate
+    RegisterSyscall
 ;
     mov ebx,OFFSET get_file_attrib16
     mov esi,OFFSET get_file_attrib32
     mov edi,OFFSET get_file_attribute_name
     mov dx,virt_es_in
+    mov ecx,UG_SYSCALL_PAR_ES_EDI
     mov ax,get_file_attribute_nr
-    RegisterUserGate
+    RegisterSyscall
 ;
     mov ebx,OFFSET set_file_attrib16
     mov esi,OFFSET set_file_attrib32
     mov edi,OFFSET set_file_attribute_name
     mov dx,virt_es_in
+    mov ecx,UG_SYSCALL_PAR_ES_EDI
     mov ax,set_file_attribute_nr
-    RegisterUserGate
+    RegisterSyscall
 ;
     mov ebx,OFFSET delete_file16
     mov esi,OFFSET delete_file32
     mov edi,OFFSET delete_file_name
     mov dx,virt_es_in
+    mov ecx,UG_SYSCALL_PAR_ES_EDI
     mov ax,delete_file_nr
-    RegisterUserGate
+    RegisterSyscall
 ;
     mov ebx,OFFSET open_dir16
     mov esi,OFFSET open_dir32
     mov edi,OFFSET open_dir_name
     mov dx,virt_es_in
+    mov ecx,UG_SYSCALL_PAR_ES_EDI
     mov ax,open_dir_nr
-    RegisterUserGate
+    RegisterSyscall
 ;
     mov ebx,OFFSET read_dir16
     mov esi,OFFSET read_dir32
     mov edi,OFFSET read_dir_name
     mov dx,virt_es_in
+    mov ecx,UG_SYSCALL_PAR_ES_EDI
     mov ax,read_dir_nr
-    RegisterUserGate
+    RegisterSyscall
 ;
     mov esi,OFFSET close_dir
     mov edi,OFFSET close_dir_name
     xor dx,dx
+    xor ecx,ecx
     mov ax,close_dir_nr
-    RegisterBimodalUserGate
+    RegisterBimodalSyscall
 ;
     mov ebx,OFFSET open_file16
     mov esi,OFFSET open_file32
     mov edi,OFFSET open_file_name
     mov dx,virt_es_in
+    mov ecx,UG_SYSCALL_PAR_ES_EDI
     mov ax,open_file_nr
-    RegisterUserGate
+    RegisterSyscall
 ;
     mov ebx,OFFSET create_file16
     mov esi,OFFSET create_file32
     mov edi,OFFSET create_file_name
     mov dx,virt_es_in
+    mov ecx,UG_SYSCALL_PAR_ES_EDI
     mov ax,create_file_nr
-    RegisterUserGate
+    RegisterSyscall
 ;
     ret
 init_dir    ENDP

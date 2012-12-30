@@ -369,17 +369,17 @@ register_syscall_name  DB 'Register Syscall',0
 register_syscall       PROC far
     push fs
     push bx
-    push ecx
     push dx
+    push ebp
 ;
-    mov ecx,ebx
+    mov ebp,ebx
     mov bx,usergate_sel
     mov fs,bx
     mov bx,ax
     shl bx,USER_GATE_SHIFT
     mov fs:[bx].user_gate_name_offset,edi
     mov fs:[bx].user_gate_name_sel,es
-    mov fs:[bx].user_gate_entry_offset16,ecx
+    mov fs:[bx].user_gate_entry_offset16,ebp
     mov fs:[bx].user_gate_entry_sel16,ds
     mov fs:[bx].user_gate_entry_offset32,esi
     mov fs:[bx].user_gate_entry_sel32,ds
@@ -391,8 +391,8 @@ register_syscall       PROC far
     xchg dx,fs:[bx].user_gate_transfer
     
 register_syscall_done:
+    pop ebp
     pop dx
-    pop ecx
     pop bx
     pop fs
     retf32
