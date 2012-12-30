@@ -1157,6 +1157,24 @@ init_pg_cmd_ok:
     xor cx,cx
     OpenFile
     mov es:[ebp].ep_file_handle,bx    
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov edx,long_ldt_linear
+    mov ecx,1FFFh
+    mov eax,edx
+    mov eax,8
+    xor ebx,ebx
+
+init_ldt_loop:
+    mov [edx],eax    
+    mov [edx+4],ebx
+    add edx,8
+    add eax,8
+    loop init_ldt_loop                
+;
+    mov eax,-1
+    mov [edx],eax    
 ;    
     popad
     pop es
@@ -1213,18 +1231,6 @@ start_long_exe:
     mov dword ptr ds:[esi].elf_phoff,edi
 ;
     int 3
-    mov ax,flat_sel
-    mov ds,ax
-    mov edx,long_ldt_linear
-    mov ecx,1FFFh
-    mov eax,edx
-    mov eax,8
-
-init_ldt_loop:
-    mov [edx],eax    
-    add edx,8
-    add eax,8
-    loop init_ldt_loop                
 ;    
     db 0EAh
     dd OFFSET start64
@@ -4829,6 +4835,32 @@ alloc_sect_loop:
     push rax
     iretq
 
+ldt_spinlock  DQ 0
+
+LockLdt    Macro
+    local eldtLoop
+    local eldtLocked
+    
+    mov r9,OFFSET ldt_spinlock
+
+eldtLoop:
+    mov r8,1
+    xchg r8,[r9]
+    or r8,r8
+    jz eldtLocked
+;
+    pause
+    jmp eldtLoop
+
+eldtLocked:     
+            Endm
+
+UnlockLdt    Macro
+    mov r9,OFFSET ldt_spinlock
+    xor r8,r8
+    mov [r9],r8
+        Endm
+
 syscall_start:
     mov r9,123456789ABCh        ; patch to address of processor block
     mov r9d,[r9].ps_syscall_esp
@@ -4844,6 +4876,11 @@ syscall_start:
     add r15,r9
     test [r15].user_gate_syscall_flags,UG_SYSCALL_FLAG_HAS_PAR0
     jz syscall_do
+;
+    push r10
+    call AllocateLongLdt
+    call FreeLongLdt
+    pop r10
 
 syscall_do:
     call fword ptr [r15]
@@ -4856,6 +4893,34 @@ syscall_done:
 ;
     db 48h
     sysret        
+
+; R10 = LDT entry
+
+AllocateLongLdt Proc near
+    LockLdt
+;
+    mov r8,long_ldt_linear
+    mov r10,[r8]
+    mov r9,[r8+r10]
+    mov [r8],r9
+;
+    UnlockLdt
+    ret
+AllocateLongLdt Endp
+
+; R10 = LDT entry
+
+FreeLongLdt Proc near
+    LockLdt
+;
+    mov r8,long_ldt_linear
+    mov r9,[r8]
+    mov [r8+r10],r9
+    mov [r8],r10
+;
+    UnlockLdt
+    ret
+FreeLongLdt Endp
 
 syscall_end:
 

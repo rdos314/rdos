@@ -1436,6 +1436,9 @@ load_long_mode:
     test fs:ps_flags,PS_FLAG_LONG_MODE
     jnz load_check_flush
 ;
+    mov bx,long_ldt_sel
+    lldt bx
+;    
     mov bx,fs:ps_long_tr
     and byte ptr ds:[bx+5],NOT 2
     ltr bx
