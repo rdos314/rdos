@@ -2611,10 +2611,6 @@ create_core    Proc far
     rep stosb
     mov es:ps_sel,es
 ;
-    mov ax,sysenter_code_sel
-    verr ax
-    jz cr_flat_stack
-;
     mov ax,long_dev_code_sel
     verr ax
     jz cr_flat_stack

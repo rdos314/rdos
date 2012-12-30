@@ -127,9 +127,6 @@ def_exception_sel	EQU 1E8h
 vm_linear_sel		EQU 1F0h
 vm_int_sel			EQU 1F8h
 ;
-sysenter_code_sel   EQU 200h
-sysenter_data_sel   EQU 208h
-;
 callb_exc16_sel		EQU 213h
 callb_exc32_sel		EQU 21Bh
 callb_int16_sel		EQU 223h
