@@ -796,18 +796,40 @@ add_long_msi  Endp
 start_syscall_name   DB 'Start Syscall', 0
 
 start_syscall   Proc far
-    push eax
-    push ecx
-    push edx
+    push es
+    push fs
+    pushad
 ;    
-    mov eax,OFFSET syscall_entry
+    GetCore
+    mov edx,fs:ps_syscall_eip
+    or edx,edx
+    jnz start_syscall_setup
+;   
+    mov ax,flat_sel
+    mov es,ax 
+    mov eax,OFFSET syscall_end - OFFSET syscall_start
+    mov ecx,eax
+    AllocateSmallLinear
+    mov fs:ps_syscall_eip,edx
+;
+    mov esi,OFFSET syscall_start
+    mov edi,edx
+    rep movs byte ptr es:[edi],es:[esi]
+;
+    mov eax,fs:ps_linear
+    mov es:[edx+2],eax
+    xor eax,eax
+    mov es:[edx+6],eax            
+
+start_syscall_setup:    
+    mov eax,fs:ps_syscall_eip
     mov edx,long_user_data_sel - 8
     shl edx,16
     mov dx,long_kernel_code_sel
     mov ecx,IA32_STAR
     wrmsr
 ;
-    mov eax,OFFSET syscall_entry
+    mov eax,fs:ps_syscall_eip
     xor edx,edx
     mov ecx,IA32_LSTAR
     wrmsr
@@ -820,9 +842,9 @@ start_syscall   Proc far
     mov ecx,IA32_FMASK
     wrmsr
 ;
-    pop edx
-    pop ecx
-    pop eax
+    popad
+    pop fs
+    pop es
     ret
 start_syscall   Endp
     
@@ -1189,9 +1211,8 @@ start_long_exe:
     jne sleFailed        
 ;    
     mov dword ptr ds:[esi].elf_phoff,edi
+;
     int 3
-    GetCore
-    mov edx,fs:ps_syscall_eip
 ;    
     db 0EAh
     dd OFFSET start64
@@ -4774,25 +4795,12 @@ alloc_sect_loop:
     push rax
     iretq
 
-syscall_entry:
-    mov rax,long_kernel_data_sel
-    mov ss,ax
-    mov rsp,OFFSET local_stack
+syscall_start:
+    mov r8,123456789ABCh        ; patch to address of processor block
+    mov esp,[r8].ps_syscall_esp
     int 3    
 
-    push rax
-    push rbp
-    mov rbp,rsp
-    push rax
-    push rbx
-    mov ax,0
-    jmp do_fault
-    
-    mov ax,ss
-    push rax
-    mov rax,long_kernel_data_sel
-    mov ss,ax
-    int 3
+syscall_end:
 
 local_st_space  DQ 512 DUP(?)
 local_stack     DQ ?     
