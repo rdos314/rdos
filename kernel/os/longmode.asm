@@ -461,7 +461,7 @@ pg2     DD      2,          OFFSET pretask2,        0,      0
 pg3     DD      3,          OFFSET trap_3,          0,      0
 pg4     DD      4,          OFFSET pretask4,        0,      0
 pg5     DD      5,          OFFSET pretask5,        0,      0
-pg6     DD      6,          OFFSET pretask6,        0,      0
+pg6     DD      6,          OFFSET invalid_opcode,  0,      0
 pg7     DD      7,          OFFSET pretask7,        0,      0
 pg8     DD      8,          OFFSET double_fault,    0,      1
 pg9     DD      9,          OFFSET pretask9,        0,      0
@@ -1074,6 +1074,70 @@ is_64_bit_exe32 Proc far
     call is_64_bit_exe
     ret
 is_64_bit_exe32 Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           Undef32
+;
+;       DESCRIPTION:    Undefined gate call
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+undef32:
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+;        
+    GetThread
+    mov es,ax
+    mov edx,es:p_kernel_esp
+    mov eax,edx
+    sub eax,esp
+    mov ecx,stack0_size
+    sub edx,ecx
+    AllocateGdt
+    CreateDataSelector32
+;           
+    sub ecx,eax
+    mov ss,bx
+    mov esp,ecx
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax 
+    pop es
+;
+    retf       
+    
+undef_ret32:
+    int 3
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+;   
+    mov bx,ss
+    GetSelectorBaseSize
+    add edx,esp
+    mov ax,long_kernel_data_sel
+    mov ss,ax
+    mov esp,edx
+    FreeGdt
+;    
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es    
+;    
+    db 0EAh
+    dd OFFSET syscall_done
+    dw long_kernel_code_sel
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2519,15 +2583,6 @@ pretask5:
     mov ax,5
     jmp do_fault
 
-pretask6:
-    pushq0
-    push rbp
-    mov rbp,rsp
-    push rax
-    push rbx
-    mov ax,6
-    jmp do_fault
-
 pretask7:
     pushq0
     push rbp
@@ -2722,6 +2777,32 @@ trap_3:
     mov eax,3
     jmp do_exception
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           invalid_opcode
+;
+;   DESCRIPTION     Invalid opcode
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+invalid_opcode:
+    pushq0
+    push rbp
+    mov rbp,rsp
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+;    
+    mov ax,long_kernel_data_sel
+    mov ss,ax
+;    
+    mov eax,6
+    jmp do_exception
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4803,10 +4884,29 @@ syscall_start:
     push r11
     popfq
     mov rcx,r8
-
-syscall_disp:
-    call dispatch
 ;
+    shl r15,USER_GATE_SHIFT
+    add r15,usergate_linear
+    test [r15].user_gate_syscall_flags,UG_SYSCALL_FLAG_DEFINED    
+    jz syscall_undef
+
+syscall_def:
+    jmp syscall_done
+
+syscall_undef:
+    mov r9,long_dev_code_sel
+    shl r9,32
+    or r9,OFFSET undef_ret32
+    push r9
+;
+    mov r9,[r15]
+    push r9
+;    
+    db 0EAh
+    dd OFFSET undef32
+    dw long_dev_code_sel
+       
+syscall_done:
     mov r8,rcx
     pop rcx
     cli
@@ -4814,10 +4914,6 @@ syscall_disp:
 ;
     db 48h
     sysret        
-
-dispatch    Proc near
-    ret
-dispatch    Endp
 
 syscall_end:
 
