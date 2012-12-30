@@ -1078,70 +1078,6 @@ is_64_bit_exe32 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           Undef32
-;
-;       DESCRIPTION:    Undefined gate call
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-undef32:
-    push es
-    push eax
-    push ebx
-    push ecx
-    push edx
-;        
-    GetThread
-    mov es,ax
-    mov edx,es:p_kernel_esp
-    mov eax,edx
-    sub eax,esp
-    mov ecx,stack0_size
-    sub edx,ecx
-    AllocateGdt
-    CreateDataSelector32
-;           
-    sub ecx,eax
-    mov ss,bx
-    mov esp,ecx
-;
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax 
-    pop es
-;
-    retf       
-    
-undef_ret32:
-    int 3
-    push es
-    push eax
-    push ebx
-    push ecx
-    push edx
-;   
-    mov bx,ss
-    GetSelectorBaseSize
-    add edx,esp
-    mov ax,long_kernel_data_sel
-    mov ss,ax
-    mov esp,edx
-    FreeGdt
-;    
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    pop es    
-;    
-    db 0EAh
-    dd OFFSET syscall_done
-    dw long_kernel_code_sel
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           InitLongExe
 ;
 ;       DESCRIPTION:    Init long mode executable
@@ -4885,26 +4821,14 @@ syscall_start:
     popfq
     mov rcx,r8
 ;
+    mov r9,usergate_linear
     shl r15,USER_GATE_SHIFT
-    add r15,usergate_linear
-    test [r15].user_gate_syscall_flags,UG_SYSCALL_FLAG_DEFINED    
-    jz syscall_undef
+    add r15,r9
+    test [r15].user_gate_syscall_flags,UG_SYSCALL_FLAG_HAS_PAR0
+    jz syscall_do
 
-syscall_def:
-    jmp syscall_done
-
-syscall_undef:
-    mov r9,long_dev_code_sel
-    shl r9,32
-    or r9,OFFSET undef_ret32
-    push r9
-;
-    mov r9,[r15]
-    push r9
-;    
-    db 0EAh
-    dd OFFSET undef32
-    dw long_dev_code_sel
+syscall_do:
+    call fword ptr [r15]
        
 syscall_done:
     mov r8,rcx

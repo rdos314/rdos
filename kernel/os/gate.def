@@ -58,8 +58,7 @@ user_gate_transfer           DW ?
 user_gate_space              DD ?
 user_gate_entry      ENDS
 
-UG_SYSCALL_FLAG_DEFINED     = 1
-UG_SYSCALL_FLAG_HAS_PAR0    = 2
-UG_SYSCALL_FLAG_HAS_PAR1    = 4
-UG_SYSCALL_FLAG_HAS_PAR2    = 8
+UG_SYSCALL_FLAG_HAS_PAR0    = 1
+UG_SYSCALL_FLAG_HAS_PAR1    = 2
+UG_SYSCALL_FLAG_HAS_PAR2    = 3
 
