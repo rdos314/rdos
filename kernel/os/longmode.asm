@@ -837,7 +837,7 @@ start_syscall_setup:
     mov ecx,IA32_CSTAR
     wrmsr
 ;
-    mov eax,600h
+    mov eax,700h
     xor edx,edx
     mov ecx,IA32_FMASK
     wrmsr
@@ -4800,6 +4800,7 @@ syscall_start:
     mov esp,[r8].ps_syscall_esp
     push r11
     popfq
+    mov ax,1
     int 3    
 
 syscall_end:
