@@ -787,6 +787,48 @@ add_long_msi  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           StartSyscall
+;
+;       DESCRIPTION:    Start syscall
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_syscall_name   DB 'Start Syscall', 0
+
+start_syscall   Proc far
+    push eax
+    push ecx
+    push edx
+;    
+    mov eax,OFFSET syscall_entry
+    mov edx,long_user_data_sel - 8
+    shl edx,16
+    mov dx,long_kernel_code_sel
+    mov ecx,IA32_STAR
+    wrmsr
+;
+    mov eax,OFFSET syscall_entry
+    xor edx,edx
+    mov ecx,IA32_LSTAR
+    wrmsr
+;
+    mov ecx,IA32_CSTAR
+    wrmsr
+;
+    mov eax,600h
+    xor edx,edx
+    mov ecx,IA32_FMASK
+    wrmsr
+;
+    pop edx
+    pop ecx
+    pop eax
+    ret
+start_syscall   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           SwitchToLongMode
 ;
 ;       DESCRIPTION:    Switch to long mode
@@ -814,25 +856,6 @@ switch_to_long_mode   Proc far
     mov ecx,IA32_EFER
     rdmsr
     or eax,101h
-    wrmsr
-;
-    mov eax,OFFSET syscall_entry
-    mov edx,long_user_data_sel - 8
-    shl edx,16
-    mov dx,long_kernel_code_sel
-    mov ecx,IA32_STAR
-    wrmsr
-;
-    mov eax,OFFSET syscall_entry
-    xor edx,edx
-    mov ecx,IA32_LSTAR
-    wrmsr
-    mov ecx,IA32_CSTAR
-    wrmsr
-;
-    mov eax,600h
-    xor edx,edx
-    mov ecx,IA32_FMASK
     wrmsr
 ;
     mov cr3,ebx
@@ -1345,6 +1368,12 @@ init    proc far
     mov edi,OFFSET handle_code_fault_name
     xor cl,cl
     mov ax,handle_long_code_fault_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET start_syscall
+    mov edi,OFFSET start_syscall_name
+    xor cl,cl
+    mov ax,start_syscall_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET is_64_bit_exe16
