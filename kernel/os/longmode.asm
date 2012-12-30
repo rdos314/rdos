@@ -1190,7 +1190,8 @@ start_long_exe:
 ;    
     mov dword ptr ds:[esi].elf_phoff,edi
     int 3
-    SyscallPatch
+    GetCore
+    mov edx,fs:ps_linear
 ;    
     db 0EAh
     dd OFFSET start64
@@ -4759,9 +4760,6 @@ alloc_sect_loop:
     mov rcx,10000h
     call AllocateUserStack
 ;
-    int 3
-    SyscallPatch
-    
     mov rax,long_kernel_data_sel
     mov ss,ax
 ;

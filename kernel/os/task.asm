@@ -2684,7 +2684,11 @@ core_timer_list_create:
     mov es:ps_long_tr,bx
     mov es:ps_tr_linear,edx
 ;
+    mov bx,es
+    GetSelectorBaseSize
+    mov es:ps_linear,edx
     mov es:ps_long_ldt,0
+    mov es:ps_syscall_esp,0
 ;    
     mov ax,es:ps_id     
 ;

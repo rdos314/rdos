@@ -36,8 +36,8 @@ PS_FLAG_LOADING     = 80h
 PS_FLAG_FPU         = 100h
 PS_FLAG_P_STATE     = 200h
 PS_FLAG_SHUTDOWN    = 400h
-PS_FLAG_MOVE        = 2000h
-PS_FLAG_LONG_MODE   = 4000h
+PS_FLAG_MOVE        = 800h
+PS_FLAG_LONG_MODE   = 1000h
 
 timer_struc	STRUC
 
@@ -97,7 +97,7 @@ ps_curr_post        DB ?
 
 ps_system_time      DD ?,?
 
-ps_syscall_eip      DD ?
+ps_linear           DD ?
 ps_syscall_esp      DD ?
 
 ps_long_tr          DW ?
