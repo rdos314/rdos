@@ -239,35 +239,23 @@ RegisterUserGate32      MACRO
                         ENDM
 
 ;       AX      Gate number
+;       ECX     Syscall flags + par      
 ;       DX      Segment transfer
 ;       DS:ESI  Far call address
-;       DS:EBP  Near call address
 ;       ES:EDI  Gate name
-;RegisterBimodalSyscall MACRO
-;    OsGate register_bimodal_syscall_nr
-;                        ENDM
+RegisterBimodalSyscall MACRO
+    OsGate register_bimodal_syscall_nr
+                        ENDM
 
 ;       AX      Gate number
+;       ECX     Syscall flags + par      
 ;       DX      Segment transfer
 ;       DS:EBX  16-bit far call address
 ;       DS:ESI  32-bit far call address
-;       DS:EBP  32-bit near call address
 ;       ES:EDI  Gate name
-;RegisterSyscall    MACRO
-;    OsGate register_syscall_nr
-;                        ENDM
-
-;       ES      Selector
-;       EDI     Near ret address
-SetupSysLeave   MACRO
-    OsGate setup_sysleave_nr
-                    ENDM
-
-;       EBX     Patch linear address
-;       ES:EDI  Gate entry
-SyscallPatch   MACRO
-    OsGate syscall_patch_nr
-                    ENDM
+RegisterSyscall    MACRO
+    OsGate register_syscall_nr
+                        ENDM
 
 ;       FS      Processor selector
 StartSyscall   MACRO

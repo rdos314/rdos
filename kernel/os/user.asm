@@ -90,8 +90,10 @@ init_usergate_loop:
     mov es:[di].user_gate_entry_sel16,cs
     mov es:[di].user_gate_entry_offset32,OFFSET illegal_gate32
     mov es:[di].user_gate_entry_sel32,cs     
-    mov es:[di].user_gate_near_call,-1
-    mov es:[di].user_gate_near_ret,-1
+    mov es:[di].user_gate_syscall_flags,0
+    mov es:[di].user_gate_syscall_par,0
+    mov es:[di].user_gate_syscall_par+1,0
+    mov es:[di].user_gate_syscall_par+2,0
     add di,1 SHL USER_GATE_SHIFT
     loop init_usergate_loop
 ;
@@ -133,12 +135,6 @@ init_usergate_loop:
     mov edi,OFFSET register_syscall_name
     xor cl,cl
     mov ax,register_syscall_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET setup_sysleave
-    mov edi,OFFSET setup_sysleave_name
-    xor cl,cl
-    mov ax,setup_sysleave_nr
     RegisterOsGate
 ;
     mov esi,OFFSET is_valid_usergate
@@ -313,9 +309,9 @@ register_usergate       ENDP
 ;           DESCRIPTION:    Register bimodal 16- & 32-bit gate + syscall
 ;
 ;           PARAMETERS:     AX       Gate number
+;                           ECX      Syscall flags + par
 ;                           DX       Segment transfer
 ;                           DS:ESI   16 and 32-bit far call address
-;                           DS:EBP   32-bit near call address
 ;                           ES:EDI   GATE NAME ADDRESS
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -337,7 +333,7 @@ register_bimodal_syscall       PROC far
     mov fs:[bx].user_gate_entry_sel16,ds
     mov fs:[bx].user_gate_entry_offset32,esi
     mov fs:[bx].user_gate_entry_sel32,ds
-    mov fs:[bx].user_gate_near_call,ebp
+    mov dword ptr fs:[bx].user_gate_syscall_flags,ecx
     xchg dx,fs:[bx].user_gate_transfer
     or dx,dx
     jz register_bimodal_syscall_done
@@ -360,10 +356,10 @@ register_bimodal_syscall       ENDP
 ;           DESCRIPTION:    Register 16- & 32-bit gate + syscall
 ;
 ;           PARAMETERS:     AX       Gate number
+;                           ECX      Syscall flags + par
 ;                           DX       Segment transfer
 ;                           DS:EBX   16-bit far call address
 ;                           DS:ESI   32-bit far call address
-;                           DS:EBP   32-bit near call address
 ;                           ES:EDI   Gate name address
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -387,7 +383,7 @@ register_syscall       PROC far
     mov fs:[bx].user_gate_entry_sel16,ds
     mov fs:[bx].user_gate_entry_offset32,esi
     mov fs:[bx].user_gate_entry_sel32,ds
-    mov fs:[bx].user_gate_near_call,ebp
+    mov dword ptr fs:[bx].user_gate_syscall_flags,ecx
     xchg dx,fs:[bx].user_gate_transfer
     or dx,dx
     jz register_syscall_done
@@ -401,49 +397,6 @@ register_syscall_done:
     pop fs
     retf32
 register_syscall       ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetupSysleave
-;
-;           DESCRIPTION:    Setup leave-entry point for fast syscalls
-;
-;           PARAMETERS:     ES      Target CS
-;                           EDI     Leave entry-point
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-setup_sysleave_name  DB 'Setup Sysleave',0
-
-setup_sysleave       PROC far
-    push ds
-    push ax
-    push bx
-    push cx
-;
-    mov bx,usergate_sel
-    mov ds,bx
-    mov cx,usergate_entries
-    xor bx,bx
-    mov ax,es
-
-setup_leave_loop:
-    cmp ax,ds:[bx].user_gate_entry_sel32
-    jne setup_leave_next
-;
-    mov ds:[bx].user_gate_near_ret,edi
-
-setup_leave_next:
-    add bx,1 SHL USER_GATE_SHIFT
-    loop setup_leave_loop
-;
-    pop cx
-    pop bx
-    pop ax
-    pop ds
-    retf32
-setup_sysleave  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -813,23 +766,7 @@ do_usergate32_norm:
     shl edi,USER_GATE_SHIFT
     mov ax,usergate_sel
     mov es,ax
-;
-    mov eax,es:[edi].user_gate_near_call
-    cmp eax,-1
-    je do_usergate_not_syscall
-;
-    mov ax,ds
-    cmp ax,flat_code_sel
-    jne do_usergate_not_syscall    
-;
-    mov ax,syscall_patch_nr
-    IsValidOsGate
-    jz do_usergate_not_syscall
-;
-    SyscallPatch
-    jnc do_usergate32_done
-
-do_usergate_not_syscall:    
+;    
     push ebx
     mov bx,ds
     call local_get_selector_base_size

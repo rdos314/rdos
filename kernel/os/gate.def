@@ -52,7 +52,14 @@ user_gate_entry_offset16     DD ?
 user_gate_entry_sel16        DW ?
 user_gate_sel16              DW ?
 user_gate_sel32              DW ?
-user_gate_near_call          DD ?
-user_gate_near_ret           DD ?
+user_gate_syscall_flags      DB ?
+user_gate_syscall_par        DB 3 DUP(?)
 user_gate_transfer           DW ?
+user_gate_space              DD ?
 user_gate_entry      ENDS
+
+UG_SYSCALL_FLAG_DEFINED     = 1
+UG_SYSCALL_FLAG_HAS_PAR0    = 2
+UG_SYSCALL_FLAG_HAS_PAR1    = 4
+UG_SYSCALL_FLAG_HAS_PAR2    = 8
+
