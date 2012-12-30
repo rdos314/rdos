@@ -456,7 +456,7 @@ pretask_int_tab:
 ;               int #       Entry                   DPL     IST
 ;
 pg0     DD      0,          OFFSET pretask0,        0,      0
-pg1     DD      1,          OFFSET trap_1,          0,      1
+pg1     DD      1,          OFFSET trap_1,          0,      0
 pg2     DD      2,          OFFSET pretask2,        0,      0
 pg3     DD      3,          OFFSET trap_3,          0,      0
 pg4     DD      4,          OFFSET pretask4,        0,      0
