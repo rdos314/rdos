@@ -4801,7 +4801,6 @@ LoadCode    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start64:
-;
     mov rsi,long_process_linear
     mov rdi,[rsi].elf_phoff
     movzx rcx,[rsi].elf_phnum
@@ -4828,12 +4827,18 @@ alloc_sect_loop:
     push rdx
     pushfq
 ;
-    int 3
     mov rax,long_user_code_sel
     push rax
     mov rax,[rsi].elf_entry
     push rax
     iretq
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           LDT management
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ldt_spinlock  DQ 0
 
@@ -4860,39 +4865,6 @@ UnlockLdt    Macro
     xor r8,r8
     mov [r9],r8
         Endm
-
-syscall_start:
-    mov r9,123456789ABCh        ; patch to address of processor block
-    mov r9d,[r9].ps_syscall_esp
-    xchg rsp,r9
-    push r9
-    push rcx
-    push r11
-    popfq
-    mov rcx,r8
-;
-    mov r9,usergate_linear
-    shl r15,USER_GATE_SHIFT
-    add r15,r9
-    test [r15].user_gate_syscall_flags,UG_SYSCALL_FLAG_HAS_PAR0
-    jz syscall_do
-;
-    push r10
-    call AllocateLongLdt
-    call FreeLongLdt
-    pop r10
-
-syscall_do:
-    call fword ptr [r15]
-       
-syscall_done:
-    mov r8,rcx
-    pop rcx
-    cli
-    pop rsp
-;
-    db 48h
-    sysret        
 
 ; R10 = LDT entry
 
@@ -4921,6 +4893,67 @@ FreeLongLdt Proc near
     UnlockLdt
     ret
 FreeLongLdt Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           SetupParam
+;
+;   DESCRIPTION:    Setup parameter
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_es_edi    Proc near
+    push r10
+    call AllocateLongLdt
+    pop r10
+    ret
+setup_es_edi    Endp
+
+setup_param_tab:
+spt00 DQ OFFSET setup_es_edi
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           syscall entry point (template only)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+syscall_start:
+    mov r9,123456789ABCh        ; patch to address of processor block
+    mov r9d,[r9].ps_syscall_esp
+    xchg rsp,r9
+    push r9
+    push rcx
+    push r11
+    popfq
+    mov rcx,r8
+;
+    int 3
+    mov r9,usergate_linear
+    shl r15,USER_GATE_SHIFT
+    add r15,r9
+    test [r15].user_gate_syscall_flags,UG_SYSCALL_FLAG_HAS_PAR0
+    jz syscall_do
+;
+    mov r8,OFFSET setup_param_tab
+    xor r9,r9
+    mov r9b,[r15].user_gate_syscall_par
+    shl r9,3
+    call near ptr [r8+r9]
+
+syscall_do:
+    call fword ptr [r15]
+       
+syscall_done:
+    mov r8,rcx
+    pop rcx
+    cli
+    pop rsp
+;
+    db 48h
+    sysret        
 
 syscall_end:
 
