@@ -87,8 +87,8 @@ init_osgate     PROC near
     mov cx,osgate_entries-1
     mov di,16
 init_osgate_loop:
-    mov es:[di].os_gate_sel,0
-    mov es:[di].os_gate_offset,0
+    mov es:[di].os_gate_offset,OFFSET illegal_gate
+    mov es:[di].os_gate_sel,cs
     mov es:[di].os_gate_name_offset,OFFSET illegal_gate_name
     mov es:[di].os_gate_name_sel,cs
     mov es:[di].os_gate_flags,0
@@ -135,10 +135,8 @@ init_osgate     ENDP
 illegal_gate_name       DB 'Undefined Gate',0
 
 illegal_gate    PROC far
-    mov ax,1231h
-    mov es,ax
-    int 3
-    ret
+    stc
+    retf32
 illegal_gate    ENDP
 
 register_gate_name      DB 'Register Kernel Gate',0
@@ -223,12 +221,19 @@ is_valid_osgate PROC far
     mov ax,osgate_sel
     mov ds,ax
     shl bx,4
-    mov ax,[bx].os_gate_sel
-    or ax,ax
-    clc
-    jnz is_valid_gate_done
+    mov ax,cs
+    cmp ax,[bx].os_gate_sel
+    jne is_valid_ok
+;
+    mov eax,OFFSET illegal_gate
+    cmp eax,[bx].os_gate_offset
+    jne is_valid_ok
 ;
     stc
+    jmp is_valid_gate_done
+    
+is_valid_ok:   
+    clc
 
 is_valid_gate_done:
     pop bx

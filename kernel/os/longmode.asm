@@ -830,7 +830,7 @@ switch_to_long_mode   Proc far
     mov ecx,IA32_CSTAR
     wrmsr
 ;
-    mov eax,70h
+    mov eax,600h
     xor edx,edx
     mov ecx,IA32_FMASK
     wrmsr
@@ -1166,6 +1166,8 @@ start_long_exe:
     jne sleFailed        
 ;    
     mov dword ptr ds:[esi].elf_phoff,edi
+    int 3
+    SyscallPatch
 ;    
     db 0EAh
     dd OFFSET start64
@@ -4729,6 +4731,8 @@ alloc_sect_loop:
     call AllocateUserStack
 ;
     int 3
+    SyscallPatch
+    
     mov rax,long_kernel_data_sel
     mov ss,ax
 ;
