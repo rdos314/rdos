@@ -456,7 +456,7 @@ pretask_int_tab:
 ;               int #       Entry                   DPL     IST
 ;
 pg0     DD      0,          OFFSET pretask0,        0,      0
-pg1     DD      1,          OFFSET trap_1,          0,      0
+pg1     DD      1,          OFFSET trap_1,          0,      2
 pg2     DD      2,          OFFSET pretask2,        0,      0
 pg3     DD      3,          OFFSET trap_3,          0,      0
 pg4     DD      4,          OFFSET pretask4,        0,      0
@@ -4795,13 +4795,30 @@ alloc_sect_loop:
     push rax
     iretq
 
+dispatch    Proc near
+    ret
+dispatch    Endp
+
 syscall_start:
-    mov r8,123456789ABCh        ; patch to address of processor block
-    mov esp,[r8].ps_syscall_esp
+    mov r9,123456789ABCh        ; patch to address of processor block
+    mov r9d,[r9].ps_syscall_esp
+    xchg rsp,r9
+    push r9
+    push rcx
     push r11
     popfq
-    mov ax,1
-    int 3    
+    mov rcx,r8
+
+syscall_disp:
+    mov r9,OFFSET dispatch
+    call r9
+;
+    mov r8,rcx
+    pop rcx
+    pop rsp
+;
+    db 48h
+    sysret        
 
 syscall_end:
 

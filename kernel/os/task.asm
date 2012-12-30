@@ -2535,6 +2535,10 @@ create_long_tss   Proc near
     mov eax,1000h
     AllocateBigLinear
     mov dword ptr es:[edi].tss64_ist1,edx    
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov dword ptr es:[edi].tss64_ist2,edx    
 ;    
     mov ecx,SIZE tss64_seg
     mov edx,edi
