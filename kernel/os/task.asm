@@ -2070,10 +2070,6 @@ run_ap_core:
     mov fs,ax
     mov fs,fs:ps_sel
 ;
-    mov ax,start_syscall_nr
-    IsValidOsGate
-    jc  run_core_do
-;
     StartSyscall
 
 run_core_do:  
@@ -4970,6 +4966,7 @@ init_first_thread:
     mov eax,cr0
     or al,8
     mov cr0,eax    
+    StartSyscall
 ;    
     mov ax,es
     mov ds,ax
