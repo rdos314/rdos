@@ -4794,10 +4794,6 @@ alloc_sect_loop:
     push rax
     iretq
 
-dispatch    Proc near
-    ret
-dispatch    Endp
-
 syscall_start:
     mov r9,123456789ABCh        ; patch to address of processor block
     mov r9d,[r9].ps_syscall_esp
@@ -4809,15 +4805,19 @@ syscall_start:
     mov rcx,r8
 
 syscall_disp:
-    mov r9,OFFSET dispatch
-    call r9
+    call dispatch
 ;
     mov r8,rcx
     pop rcx
+    cli
     pop rsp
 ;
     db 48h
     sysret        
+
+dispatch    Proc near
+    ret
+dispatch    Endp
 
 syscall_end:
 
