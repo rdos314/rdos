@@ -4798,6 +4798,8 @@ alloc_sect_loop:
 syscall_start:
     mov r8,123456789ABCh        ; patch to address of processor block
     mov esp,[r8].ps_syscall_esp
+    push r11
+    popfq
     int 3    
 
 syscall_end:
