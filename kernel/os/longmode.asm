@@ -1231,6 +1231,7 @@ start_long_exe:
     mov dword ptr ds:[esi].elf_phoff,edi
 ;
     int 3
+    sldt bx
 ;    
     db 0EAh
     dd OFFSET start64
@@ -4880,6 +4881,7 @@ AllocateLongLdt Proc near
 ;
     UnlockLdt
 ;
+    dec ecx
     mov r8,long_ldt_linear
     cmp ecx,100000h
     jae ldtBig
@@ -4970,10 +4972,12 @@ setup_es_edi    Proc near
     shr rcx,12
     rep movsq    
 ;
+    pop rdi
+    add rdx,rdi
     mov rcx,r12
     call AllocateLongLdt
     mov es,r10
-    pop rdi
+    xor rdi,rdi
 ;            
     pop r10
     pop rsi

@@ -1435,9 +1435,6 @@ load_a_task:
 load_long_mode:
     test fs:ps_flags,PS_FLAG_LONG_MODE
     jnz load_check_flush
-;
-    mov bx,long_ldt_sel
-    lldt bx
 ;    
     mov bx,fs:ps_long_tr
     and byte ptr ds:[bx+5],NOT 2
@@ -7805,7 +7802,7 @@ create_tss64    PROC near
 ;
     mov ds:p_tss_sel,0
     mov ds:p_ldt_sel,0
-    mov ds:p_ldt,0
+    mov ds:p_ldt,long_ldt_sel
 ;
     pop edx
     pop ecx

@@ -3444,11 +3444,16 @@ validate_descriptor     Endp
 validate_thread_selector    Proc near
     test dx,4
     jz validate_thread_gdt
+
 validate_thread_ldt:
     push ds
     push ax
     push bx
     mov ds,bx
+    mov bx,ds:p_ldt
+    cmp bx,long_ldt_sel
+    je validate_ldt_thread_fail
+;
     mov bx,ds:p_ldt_sel
     mov ax,gdt_sel
     mov ds,ax
@@ -3465,6 +3470,13 @@ validate_ldt_thread_done:
     pop bx
     pop ax
     pop ds
+    jmp validate_thread_done
+
+validate_ldt_thread_fail:    
+    pop bx
+    pop ax
+    pop ds
+    stc
     jmp validate_thread_done
 
 validate_thread_gdt:
@@ -3484,6 +3496,7 @@ validate_gdt_thread_done:
     pop bx
     pop ds
     jmp validate_thread_done
+
 validate_thread_fail:
     stc
 validate_thread_done:
