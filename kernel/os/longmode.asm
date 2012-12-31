@@ -4932,7 +4932,6 @@ alloc_sect_loop:
     mov rcx,10000h
     call AllocateUserStack
 ;
-    int 3
     mov rax,long_kernel_data_sel
     mov ss,ax
 ;
@@ -5396,6 +5395,19 @@ CopyBuf Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           Cleanup
+;
+;   DESCRIPTION:    Cleanup after syscall
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Cleanup Proc near
+    ret
+Cleanup Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           SetupParam
 ;
 ;   DESCRIPTION:    Setup parameter
@@ -5409,6 +5421,16 @@ setup_rw_es_edi    Proc near
     push rdx
     push rsi
 ;
+    mov rax,rdi
+    shr rax,39
+    or ax,ax
+    stc
+    jz setup_rw_es_edi_done
+;
+    cmp rax,7FFh
+    cmc
+    jc setup_rw_es_edi_done
+;    
     mov rcx,rdi
     mov rsi,rdi
     and rsi,0FFFFFFFFFFFFF000h
@@ -5466,6 +5488,7 @@ syscall_start:
     push r11
     popfq
     mov rcx,r8
+    push rbp
 ;
     int 3
     mov r9,usergate_linear
@@ -5473,18 +5496,46 @@ syscall_start:
     add r15,r9
     test [r15].user_gate_syscall_flags,UG_SYSCALL_FLAG_HAS_PAR0
     jz syscall_do
+;  
+    cmp r12,20000000h
+    ja syscall_cleanup_fail
 ;
     mov r8,OFFSET setup_param_tab
     xor r9,r9
     mov r9b,[r15].user_gate_syscall_par
     shl r9,3
     call near ptr [r8+r9]
-    jc syscall_done
+    jc syscall_cleanup
+;    
+    call fword ptr [r15]
+    jnc syscall_cleanup_ok
+
+syscall_cleanup_fail:
+    or r11,1
+    jmp syscall_cleanup
+
+syscall_cleanup_ok:
+    and r11,NOT 1
+
+syscall_cleanup:    
+    mov r8,OFFSET Cleanup
+    call r8
+    jmp syscall_done
 
 syscall_do:
     call fword ptr [r15]
+    jc syscall_fail
+
+syscall_ok:
+    and r11,NOT 1 
+    jmp syscall_done   
        
-syscall_done:
+syscall_fail:
+    or r11,1
+
+syscall_done:       
+    pop rbp
+;    
     mov r8,rcx
     pop rcx
     cli
