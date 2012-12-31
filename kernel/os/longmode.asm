@@ -1097,9 +1097,9 @@ InitProcess   Proc near
     mov [edx+4],eax
 ;    
     mov edx,OFFSET long_alloc_base
-    mov eax,long_buf_linear
+    mov eax,long_buf_linear SHR 9
     mov [edx],eax
-    xor eax,eax
+    mov eax,PAGE_TABLE_LINEAR SHR 32
     mov [edx+4],eax
 ;
     mov edx,OFFSET long_ldt_spinlock
@@ -5144,6 +5144,78 @@ ValidateReadBuf Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           CopyBuf
+;
+;   DESCRIPTION:    Copy buffer below 4G
+;
+;   PARAMETERS:     RSI     Page table buffer
+;                   RCX     Number of pages
+;
+;   RETURNS:        EDX     New buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyBuf Proc near
+    push rcx
+    push rsi
+    push rdi
+;
+    LockBuf
+;
+    mov rdi,long_alloc_base
+    mov rdi,[rdi]
+
+cbRetry:    
+    mov r8,rdi
+            
+cbLoop:
+    mov rax,[rdi]
+    or rax,rax
+    jnz cbRestart
+;
+    movsq
+    loop cbLoop    
+;
+    mov rax,long_alloc_base
+    mov [rax],rdi
+;
+    mov rdx,r8
+    jmp cbDone
+
+cbRestart:
+    cmp rdi,r8
+    je cbNext
+;
+    xor rax,rax
+    mov [rdi],rax
+    sub rdi,8
+    sub rsi,8
+    inc rcx
+    jmp cbRestart
+
+cbNext:
+    mov rax,rcx
+    shl rax,3
+    add rdi,rax
+;
+    cmp edi,80000000h SHR 9
+    jb cbRetry
+;
+    mov edi,long_buf_linear SHR 9
+    jmp cbRetry
+
+cbDone:    
+    UnlockBuf
+;    
+    pop rdi
+    pop rsi
+    pop rcx            
+    ret
+CopyBuf Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           SetupParam
 ;
 ;   DESCRIPTION:    Setup parameter
@@ -5173,9 +5245,7 @@ setup_rw_es_edi    Proc near
     call ValidateReadBuf
     jc setup_rw_es_edi_fail
 ;
-    push rsi
-    AllocateLongBuf
-    pop rsi
+    call CopyBuf
     mov rdi,rdx
 ;
     shr rdi,9
