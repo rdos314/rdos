@@ -287,7 +287,7 @@ int TRemovePartitionCommand::Execute(char *param)
 
     for (d = 0; d < 16; d++)
     {
-        FDisc = new TIdeDisc(d);
+        FDisc = new TDisc(d);
         if (FDisc->IsValid())
             if (FDisc->GetDiscNr() == DiscNr)
                 break; 

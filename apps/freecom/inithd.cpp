@@ -345,7 +345,7 @@ int TInitHdCommand::Execute(char *param)
 
     if (sscanf(param, "%d", &DiscNr) == 1)
     {
-        Disc = new TIdeDisc(DiscNr);
+        Disc = new TDisc(DiscNr);
         ok = Disc->IsValid();
 
         if (ok)

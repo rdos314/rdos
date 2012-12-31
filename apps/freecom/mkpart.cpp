@@ -182,7 +182,7 @@ int TMakePartitionCommand::Execute(char *param)
 
     for (d = 0; d < 16; d++)
     {
-        Disc = new TIdeDisc(d);
+        Disc = new TDisc(d);
         if (Disc->IsValid())
             if (Disc->GetDiscNr() == DiscNr)
                 break; 

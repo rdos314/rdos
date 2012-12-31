@@ -2971,7 +2971,7 @@ init_file       PROC near
     mov ebx,OFFSET read_file16
     mov esi,OFFSET read_file32
     mov edi,OFFSET read_file_name
-    mov ecx,UG_SYSCALL_PAR_ES_EDI
+    mov ecx,UG_SYSCALL_WR_PAR_ES_EDI
     mov dx,virt_es_in
     mov ax,read_file_nr
     RegisterSyscall
@@ -2980,7 +2980,7 @@ init_file       PROC near
     mov esi,OFFSET write_file32
     mov edi,OFFSET write_file_name
     mov dx,virt_es_in
-    mov ecx,UG_SYSCALL_PAR_ES_EDI
+    mov ecx,UG_SYSCALL_RD_PAR_ES_EDI
     mov ax,write_file_nr
     RegisterSyscall
 ;

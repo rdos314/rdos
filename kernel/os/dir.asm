@@ -3029,7 +3029,7 @@ init_dir    PROC near
     mov esi,OFFSET set_cur_dir32
     mov edi,OFFSET set_cur_dir_name
     mov dx,virt_es_in
-    mov ecx,UG_SYSCALL_PAR_ES_EDI
+    mov ecx,UG_SYSCALL_RD_PAR_ES_EDI
     mov ax,set_cur_dir_nr
     RegisterSyscall
 ;
@@ -3037,7 +3037,7 @@ init_dir    PROC near
     mov esi,OFFSET get_cur_dir32
     mov edi,OFFSET get_cur_dir_name
     mov dx,virt_es_in
-    mov ecx,UG_SYSCALL_PAR_ES_EDI
+    mov ecx,UG_SYSCALL_WR_PAR_ES_EDI
     mov ax,get_cur_dir_nr
     RegisterSyscall
 ;
@@ -3045,7 +3045,7 @@ init_dir    PROC near
     mov esi,OFFSET make_dir32
     mov edi,OFFSET make_dir_name
     mov dx,virt_es_in
-    mov ecx,UG_SYSCALL_PAR_ES_EDI
+    mov ecx,UG_SYSCALL_RD_PAR_ES_EDI
     mov ax,make_dir_nr
     RegisterSyscall
 ;
@@ -3053,7 +3053,7 @@ init_dir    PROC near
     mov esi,OFFSET remove_dir32
     mov edi,OFFSET remove_dir_name
     mov dx,virt_es_in
-    mov ecx,UG_SYSCALL_PAR_ES_EDI
+    mov ecx,UG_SYSCALL_RD_PAR_ES_EDI
     mov ax,remove_dir_nr
     RegisterSyscall
 ;
@@ -3061,7 +3061,7 @@ init_dir    PROC near
     mov esi,OFFSET get_file_attrib32
     mov edi,OFFSET get_file_attribute_name
     mov dx,virt_es_in
-    mov ecx,UG_SYSCALL_PAR_ES_EDI
+    mov ecx,UG_SYSCALL_RD_PAR_ES_EDI
     mov ax,get_file_attribute_nr
     RegisterSyscall
 ;
@@ -3069,7 +3069,7 @@ init_dir    PROC near
     mov esi,OFFSET set_file_attrib32
     mov edi,OFFSET set_file_attribute_name
     mov dx,virt_es_in
-    mov ecx,UG_SYSCALL_PAR_ES_EDI
+    mov ecx,UG_SYSCALL_RD_PAR_ES_EDI
     mov ax,set_file_attribute_nr
     RegisterSyscall
 ;
@@ -3077,7 +3077,7 @@ init_dir    PROC near
     mov esi,OFFSET delete_file32
     mov edi,OFFSET delete_file_name
     mov dx,virt_es_in
-    mov ecx,UG_SYSCALL_PAR_ES_EDI
+    mov ecx,UG_SYSCALL_RD_PAR_ES_EDI
     mov ax,delete_file_nr
     RegisterSyscall
 ;
@@ -3085,7 +3085,7 @@ init_dir    PROC near
     mov esi,OFFSET open_dir32
     mov edi,OFFSET open_dir_name
     mov dx,virt_es_in
-    mov ecx,UG_SYSCALL_PAR_ES_EDI
+    mov ecx,UG_SYSCALL_WR_PAR_ES_EDI
     mov ax,open_dir_nr
     RegisterSyscall
 ;
@@ -3093,7 +3093,7 @@ init_dir    PROC near
     mov esi,OFFSET read_dir32
     mov edi,OFFSET read_dir_name
     mov dx,virt_es_in
-    mov ecx,UG_SYSCALL_PAR_ES_EDI
+    mov ecx,UG_SYSCALL_WR_PAR_ES_EDI
     mov ax,read_dir_nr
     RegisterSyscall
 ;
@@ -3108,7 +3108,7 @@ init_dir    PROC near
     mov esi,OFFSET open_file32
     mov edi,OFFSET open_file_name
     mov dx,virt_es_in
-    mov ecx,UG_SYSCALL_PAR_ES_EDI
+    mov ecx,UG_SYSCALL_RD_PAR_ES_EDI
     mov ax,open_file_nr
     RegisterSyscall
 ;
@@ -3116,7 +3116,7 @@ init_dir    PROC near
     mov esi,OFFSET create_file32
     mov edi,OFFSET create_file_name
     mov dx,virt_es_in
-    mov ecx,UG_SYSCALL_PAR_ES_EDI
+    mov ecx,UG_SYSCALL_RD_PAR_ES_EDI
     mov ax,create_file_nr
     RegisterSyscall
 ;

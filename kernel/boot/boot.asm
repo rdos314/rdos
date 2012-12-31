@@ -789,9 +789,9 @@ boot_idt:
     public init
 
 init:
+    cli    
     mov cs:code_base,edi
     mov cs:code_size,ecx
-    cli
     mov al,0FFh
     out INT0_MASK,al
 IF INT1_MASK NE -1
@@ -855,7 +855,7 @@ prot_init:
     mov fs,ax
     mov gs,ax
     mov ss,ax
-;
+;    
     xor esi,esi
     FindRam
     mov edx,esi
