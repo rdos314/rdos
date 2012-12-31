@@ -1090,6 +1090,12 @@ InitProcess   Proc near
 ;
     mov ax,flat_sel
     mov ds,ax
+;    
+    mov edx,OFFSET long_alloc_section
+    xor eax,eax
+    mov [edx],eax
+    mov [edx+4],eax
+;    
     mov edx,OFFSET long_alloc_base
     mov eax,long_buf_linear
     mov [edx],eax
@@ -5002,13 +5008,149 @@ FreeLongLdt Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           Buffer locks
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockBuf    Macro
+    LOCAL lock_done
+
+    push rsi
+    mov rsi,long_alloc_section
+    lock sub [rsi].cs_value,1
+    jc lock_done
+;    
+    OsGate64 enter_section_nr
+
+lock_done:
+    pop rsi
+            Endm
+
+UnlockBuf    Macro
+    local unlock_done
+    
+    push rsi
+    mov rsi,long_alloc_section
+    lock add [rsi].cs_value,1
+    jc unlock_done
+;    
+    OsGate64 leave_section_nr
+
+unlock_done:
+    pop rsi
+        Endm
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           ValidateWriteBuf
+;
+;   DESCRIPTION:    Validate buffer for read/write
+;
+;   PARAMETERS:     RSI     Page table buffer
+;                   RCX     Number of pages
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ValidateWriteBuf Proc near
+    push rcx
+    push rsi
+;    
+    or rcx,rcx
+    jz vwbFail
+
+vwbLoop:
+    lodsq
+    test al,1
+    jnz vwbPresent
+;
+    cmp rax,2
+    jne vwbFail
+;   
+    mov r8,rsi
+    sub r8,8
+    mov rax,PAGE_TABLE_LINEAR
+    sub r8,rax
+    shl r8,12
+    mov rax,[r8]
+
+vwbPresent:
+    test al,2
+    jz vwbFail
+;    
+    loop vwbLoop
+;
+    clc
+    jmp vwbDone
+    
+vwbFail:
+    stc
+
+vwbDone:    
+    pop rsi
+    pop rcx            
+    ret
+ValidateWriteBuf Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           ValidateReadBuf
+;
+;   DESCRIPTION:    Validate buffer for read-only
+;
+;   PARAMETERS:     RSI     Page table buffer
+;                   RCX     Number of pages
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ValidateReadBuf Proc near
+    push rcx
+    push rsi
+;    
+    or rcx,rcx
+    jz vrbFail
+
+vrbLoop:
+    lodsq
+    test al,1
+    jnz vrbPresent
+;
+    cmp rax,2
+    jne vrbFail
+;   
+    mov r8,rsi
+    sub r8,8
+    mov rax,PAGE_TABLE_LINEAR
+    sub r8,rax
+    shl r8,12
+    mov rax,[r8]
+
+vrbPresent:
+    loop vrbLoop
+;
+    clc
+    jmp vrbDone
+    
+vrbFail:
+    stc
+
+vrbDone:    
+    pop rsi
+    pop rcx            
+    ret
+ValidateReadBuf Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           SetupParam
 ;
 ;   DESCRIPTION:    Setup parameter
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-setup_es_edi    Proc near
+setup_rw_es_edi    Proc near
     push rax
     push rbx
     push rcx
@@ -5027,19 +5169,23 @@ setup_es_edi    Proc near
     dec rax
     shr rax,12
     inc rax
-    shl rax,12
     mov rcx,rax
+    shl rax,12
+; 
+    mov rax,PAGE_TABLE_LINEAR
+    shr rsi,9
+    add rsi,rax
+;    
+    call ValidateWriteBuf
+    jc setup_rw_es_edi_fail
+;
     push rsi
     AllocateLongBuf
     pop rsi
     mov rdi,rdx
 ;
-    mov rax,PAGE_TABLE_LINEAR
-    shr rsi,9
-    add rsi,rax
     shr rdi,9
     add rdi,rax
-    shr rcx,12
     rep movsq    
 ;
     pop rdi
@@ -5048,6 +5194,10 @@ setup_es_edi    Proc near
     call AllocateLongLdt
     mov es,rbx
     xor rdi,rdi
+
+setup_rw_es_edi_fail:
+    or r11,1
+    stc
 ;            
     pop rsi
     pop rdx
@@ -5055,10 +5205,10 @@ setup_es_edi    Proc near
     pop rbx
     pop rax
     ret
-setup_es_edi    Endp
+setup_rw_es_edi    Endp
 
 setup_param_tab:
-spt00 DQ OFFSET setup_es_edi
+spt00 DQ OFFSET setup_rw_es_edi
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5089,6 +5239,7 @@ syscall_start:
     mov r9b,[r15].user_gate_syscall_par
     shl r9,3
     call near ptr [r8+r9]
+    jc syscall_done
 
 syscall_do:
     call fword ptr [r15]
