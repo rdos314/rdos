@@ -5408,13 +5408,13 @@ Cleanup Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;   NAME:           SetupParam
+;   NAME:           SetupRdEsEdi
 ;
-;   DESCRIPTION:    Setup parameter
+;   DESCRIPTION:    Setup read-only to es:edi
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-setup_rw_es_edi    Proc near
+setup_rd_es_edi    Proc near
     push rax
     push rbx
     push rcx
@@ -5425,11 +5425,11 @@ setup_rw_es_edi    Proc near
     shr rax,39
     or ax,ax
     stc
-    jz setup_rw_es_edi_done
+    jz setup_rd_es_edi_done
 ;
     cmp rax,7FFh
     cmc
-    jc setup_rw_es_edi_done
+    jc setup_rd_es_edi_done
 ;    
     mov rcx,rdi
     mov rsi,rdi
@@ -5445,7 +5445,7 @@ setup_rw_es_edi    Proc near
     add rsi,rax
 ;    
     call ValidateReadBuf
-    jc setup_rw_es_edi_done
+    jc setup_rd_es_edi_done
 ;
     call CopyBuf    
     mov rax,PAGE_TABLE_LINEAR
@@ -5460,17 +5460,91 @@ setup_rw_es_edi    Proc near
     xor rdi,rdi
     clc
 
-setup_rw_es_edi_done:
+setup_rd_es_edi_done:
     pop rsi
     pop rdx
     pop rcx
     pop rbx
     pop rax
     ret
-setup_rw_es_edi    Endp
+setup_rd_es_edi    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           SetupWrEsEdi
+;
+;   DESCRIPTION:    Setup read/write to es:edi
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_wr_es_edi    Proc near
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+;
+    mov rax,rdi
+    shr rax,39
+    or ax,ax
+    stc
+    jz setup_wr_es_edi_done
+;
+    cmp rax,7FFh
+    cmc
+    jc setup_wr_es_edi_done
+;    
+    mov rcx,rdi
+    mov rsi,rdi
+    and rsi,0FFFFFFFFFFFFF000h
+    add rcx,r12
+    sub rcx,rsi
+    dec rcx
+    shr rcx,12
+    inc rcx
+; 
+    mov rax,PAGE_TABLE_LINEAR
+    shr rsi,9
+    add rsi,rax
+;    
+    call ValidateWriteBuf
+    jc setup_wr_es_edi_done
+;
+    call CopyBuf    
+    mov rax,PAGE_TABLE_LINEAR
+    sub rdx,rax
+    shl rdx,9
+;   
+    and rdi,0FFFh
+    add rdx,rdi
+    mov rcx,r12
+    call AllocateLongLdt
+    mov es,rbx
+    xor rdi,rdi
+    clc
+
+setup_wr_es_edi_done:
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    ret
+setup_wr_es_edi    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           SetupParam
+;
+;   DESCRIPTION:    Setup parameter
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 setup_param_tab:
-spt00 DQ OFFSET setup_rw_es_edi
+spt00 DQ OFFSET setup_rd_es_edi
+spt01 DQ OFFSET setup_wr_es_edi
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
