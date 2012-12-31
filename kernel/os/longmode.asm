@@ -5156,27 +5156,21 @@ setup_rw_es_edi    Proc near
     push rcx
     push rdx
     push rsi
-;   
-    mov rax,rdi
-    and rax,0FFFh
-    push rax
 ;
-    mov rax,rdi
+    mov rcx,rdi
     mov rsi,rdi
     and rsi,0FFFFFFFFFFFFF000h
-    add rax,r12
-    sub rax,rsi
-    dec rax
-    shr rax,12
-    inc rax
-    mov rcx,rax
-    shl rax,12
+    add rcx,r12
+    sub rcx,rsi
+    dec rcx
+    shr rcx,12
+    inc rcx
 ; 
     mov rax,PAGE_TABLE_LINEAR
     shr rsi,9
     add rsi,rax
 ;    
-    call ValidateWriteBuf
+    call ValidateReadBuf
     jc setup_rw_es_edi_fail
 ;
     push rsi
@@ -5187,6 +5181,10 @@ setup_rw_es_edi    Proc near
     shr rdi,9
     add rdi,rax
     rep movsq    
+;   
+    mov rcx,rdi
+    and rcx,0FFFh
+    push rcx
 ;
     pop rdi
     add rdx,rdi
