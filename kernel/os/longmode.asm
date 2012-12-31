@@ -4866,7 +4866,7 @@ alloc_sect_loop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;   NAME:           LDT management
+;   NAME:           LDT locks
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4893,17 +4893,27 @@ UnlockLdt    Macro
     xor r8,r8
     mov [r9],r8
         Endm
-
-; R10 = LDT entry
-; EDX = Base
-; ECX = Size
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           AllocateLongLdt
+;
+;   DESCRIPTION:    Allocate a new ldt-selector and assign it base & size
+;
+;   PARAMETERS:     EDX     Base
+;                   ECX     Size
+;
+;   RETURNS:        BX      Selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateLongLdt Proc near
     LockLdt
 ;
     mov r8,long_ldt_linear
-    mov r10,[r8]
-    mov r9,[r8+r10]
+    mov rbx,[r8]
+    mov r9,[r8+rbx]
     mov [r8],r9
 ;
     UnlockLdt
@@ -4914,43 +4924,76 @@ AllocateLongLdt Proc near
     jae ldtBig
 
 ldtSmall:
-    mov [r8+r10],cx
-    mov [r8+r10+2],edx
+    mov [r8+rbx],cx
+    mov [r8+rbx+2],edx
     mov al,92h
-    xchg al,[r8+r10+5]
+    xchg al,[r8+rbx+5]
     shr ecx,16
     and cx,0Fh
     or ch,al
     or cl,40h
-    mov [r8+r10+6],cx
+    mov [r8+rbx+6],cx
     jmp ldtDone
 
 ldtBig:
     shr ecx,12
-    mov [r8+r10],cx
-    mov [r8+r10+2],edx
+    mov [r8+rbx],cx
+    mov [r8+rbx+2],edx
     mov al,92h
-    xchg al,[r8+r10+5]
+    xchg al,[r8+rbx+5]
     shr ecx,16
     and cx,0Fh
     or ch,al
     or cl,0C0h
-    mov [r8+r10+6],cx
+    mov [r8+rbx+6],cx
 
 ldtDone:        
-    add r10,4
+    add rbx,4
     ret
 AllocateLongLdt Endp
-
-; R10 = LDT entry
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           FreeLongLdt
+;
+;   DESCRIPTION:    Free ldt-selector and return its base & size
+;
+;   PARAMETERS:     BX      Selector
+;
+;   RETURNS:        EDX     Base
+;                   ECX     Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeLongLdt Proc near
+    and rbx,0FFF8h
+;    
+    xor ecx,ecx
+    mov cl,[rbx+6]
+    and cl,0Fh
+    shl ecx,16
+    mov cx,[rbx]
+    test byte ptr [rbx+6],80h
+    jz fllSmall
+;
+    shl ecx,12
+    or cx,0FFFh
+
+fllSmall:
+    inc ecx
+;    
+    mov edx,[rbx+2]
+    rol edx,8
+    mov dl,[rbx+7]
+    ror edx,8
+;
     LockLdt
 ;
     mov r8,long_ldt_linear
     mov r9,[r8]
-    mov [r8+r10],r9
-    mov [r8],r10
+    mov [r8+rbx],r9
+    mov [r8],rbx
 ;
     UnlockLdt
     ret
@@ -4967,10 +5010,10 @@ FreeLongLdt Endp
 
 setup_es_edi    Proc near
     push rax
+    push rbx
     push rcx
     push rdx
     push rsi
-    push r10
 ;   
     mov rax,rdi
     and rax,0FFFh
@@ -5003,13 +5046,13 @@ setup_es_edi    Proc near
     add rdx,rdi
     mov rcx,r12
     call AllocateLongLdt
-    mov es,r10
+    mov es,rbx
     xor rdi,rdi
 ;            
-    pop r10
     pop rsi
     pop rdx
     pop rcx
+    pop rbx
     pop rax
     ret
 setup_es_edi    Endp
