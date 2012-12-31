@@ -1149,7 +1149,6 @@ init_long_exe   Proc far
 ;
     call InitProcess
 ;    
-    int 3
     mov ebp,long_process_linear
     push esi
     xor ecx,ecx
@@ -1479,6 +1478,12 @@ init    proc far
     mov edi,OFFSET allocate_buf_name
     xor cl,cl
     mov ax,allocate_long_buf_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_buf
+    mov edi,OFFSET free_buf_name
+    xor cl,cl
+    mov ax,free_long_buf_nr
     RegisterOsGate
 ;
     mov bx,long_ldt_sel
@@ -4586,13 +4591,12 @@ test64:
 allocate_buf_name DB 'Allocate Long Buf', 0
 
 allocate_buf    Proc far
-    int 3
     push rax
     push rcx
 ;    
     mov ecx,eax
     dec rcx
-    shr rcx,9
+    shr rcx,12
     inc rcx
 ;
     call AllocateBuf
@@ -4604,6 +4608,42 @@ allocate_buf    Proc far
     pop rax    
     ret
 allocate_buf    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           FreeLongBuf
+;
+;   DESCRIPTION:    Free long buffer
+;
+;   PARAMETERS:     ECX     Number of bytes
+;                   EDX     Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_buf_name DB 'Free Long Buf', 0
+
+free_buf    Proc far
+    push rax
+    push rcx
+    push rdx
+;    
+    dec rcx
+    shr rcx,12
+    inc rcx
+;
+    shr rdx,9
+    and rdx,0FFFFFFFFFFFFFFF8h
+    mov rax,PAGE_TABLE_LINEAR
+    add rdx,rax
+;
+    call FreeBuf
+; 
+    pop rdx
+    pop rcx   
+    pop rax
+    ret
+free_buf    Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4845,10 +4885,6 @@ load_code_size_ok:
     add rsi,rax
     xor rax,rax
     xchg rax,[rsi]
-    push rax
-    mov rcx,1000h
-    FreeLongBuf
-    pop rax
     pop rbx
     test bl,2
     jnz load_code_loaded
@@ -4878,10 +4914,6 @@ LoadCode    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start64:
-    int 3
-    mov rcx,3
-    call AllocateBuf
-;    
     mov rsi,long_process_linear
     mov rdi,[rsi].elf_phoff
     movzx rcx,[rsi].elf_phnum
@@ -5196,11 +5228,12 @@ ValidateReadBuf Endp
 ;
 ;   PARAMETERS:     RCX     Number of pages
 ;
-;   RETURNS:        EDX     New buffer
+;   RETURNS:        RDX     Pointer into page-table     
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateBuf Proc near
+    push rax
     push rcx
     push rsi
     push rdi
@@ -5257,8 +5290,36 @@ abDone:
     pop rdi
     pop rsi
     pop rcx            
+    pop rax
     ret
 AllocateBuf Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           FreeBuf
+;
+;   DESCRIPTION:    Free buffer below 4G
+;
+;   PARAMETERS:     RCX     Number of pages
+;                   RDX     Pointer into page table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeBuf Proc near
+    push rax
+    push rcx
+    push rdi
+;
+    mov rdi,rdx
+    xor rax,rax
+    stosq
+;    
+    pop rdi
+    pop rcx
+    pop rax            
+    ret
+FreeBuf Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

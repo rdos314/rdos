@@ -423,12 +423,6 @@ init_mem    PROC near
     mov ax,reserve_local_linear_nr
     RegisterOsGate
 ;
-    mov si,OFFSET free_long_buf
-    mov di,OFFSET free_long_buf_name
-    xor cl,cl
-    mov ax,free_long_buf_nr
-    RegisterOsGate
-;
     mov si,OFFSET available_small_local_linear
     mov di,OFFSET available_small_local_linear_name
     xor dx,dx
@@ -979,50 +973,6 @@ allocate_page_local_ok:
     retf32
 allocate_local_linear   ENDP
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           Free_LONG_BUF
-;
-;           DESCRIPTION:    Free long mode buffer
-;
-;           PARAMETERS:     ECX         Number of bytes
-;                           EDX         Linear base address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-free_long_buf_name      DB 'Free Long Buf',0
-
-free_long_buf   PROC far
-    push ds
-    push es
-    push eax
-    push ebx
-    push ecx
-;    
-    mov ax,long_mem_sel
-    mov ds,ax
-    mov es,ax
-    EnterSection ds:long_mem_section
-    dec ecx
-    and cx,0F000h
-    add ecx,1000h
-    add es:long_avail_mem,ecx
-    sub es:long_used_mem,ecx
-    shr ecx,12
-    xor eax,eax
-    call cs:free_page_entries_proc
-;    
-    LeaveSection ds:long_mem_section
-;
-    pop ecx
-    pop ebx
-    pop eax
-    pop es
-    pop ds
-    retf32
-free_long_buf   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
