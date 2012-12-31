@@ -423,12 +423,6 @@ init_mem    PROC near
     mov ax,reserve_local_linear_nr
     RegisterOsGate
 ;
-    mov si,OFFSET allocate_long_buf
-    mov di,OFFSET allocate_long_buf_name
-    xor cl,cl
-    mov ax,allocate_long_buf_nr
-    RegisterOsGate
-;
     mov si,OFFSET free_long_buf
     mov di,OFFSET free_long_buf_name
     xor cl,cl
@@ -985,60 +979,6 @@ allocate_page_local_ok:
     retf32
 allocate_local_linear   ENDP
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ALLOCATE_LONG_BUF
-;
-;           DESCRIPTION:    Allocate long mode buffer
-;
-;           PARAMETERS:     EAX         Number of bytes
-;
-;           RETURNS:        EDX         Linear base address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-allocate_long_buf_name      DB 'Allocate Long Buf',0
-
-allocate_long_buf   PROC far
-    push ds
-    push es
-    push eax
-    push ebx
-    push ecx
-;    
-    dec eax
-    and ax,0F000h
-    add eax,1000h
-    mov dx,long_mem_sel
-    mov ds,dx
-    mov es,dx
-    EnterSection ds:long_mem_section
-    add ds:long_used_mem,eax
-    sub ds:long_avail_mem,eax
-    shr eax,12
-;    
-    mov edx,long_buf_linear
-    mov ecx,eax
-    mov eax,long_buf_size
-    call cs:allocate_page_entries_proc
-    jnc allocate_page_long_ok
-;
-    int 3
-
-allocate_page_long_ok:    
-    mov ax,long_mem_sel
-    mov ds,ax
-    LeaveSection ds:long_mem_section
-;
-    pop ecx
-    pop ebx
-    pop eax
-    pop es
-    pop ds
-    retf32
-allocate_long_buf   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

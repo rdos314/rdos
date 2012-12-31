@@ -1149,6 +1149,7 @@ init_long_exe   Proc far
 ;
     call InitProcess
 ;    
+    int 3
     mov ebp,long_process_linear
     push esi
     xor ecx,ecx
@@ -1472,6 +1473,12 @@ init    proc far
     mov edi,OFFSET load_long_regs_name
     xor cl,cl
     mov ax,load_long_regs_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_buf
+    mov edi,OFFSET allocate_buf_name
+    xor cl,cl
+    mov ax,allocate_long_buf_nr
     RegisterOsGate
 ;
     mov bx,long_ldt_sel
@@ -4566,6 +4573,41 @@ test64:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           AllocateLongBuf
+;
+;   DESCRIPTION:    Allocate long buffer
+;
+;   PARAMETERS:     EAX     Number of bytes
+;
+;   RETURNS:        EDX     Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_buf_name DB 'Allocate Long Buf', 0
+
+allocate_buf    Proc far
+    int 3
+    push rax
+    push rcx
+;    
+    mov ecx,eax
+    dec rcx
+    shr rcx,9
+    inc rcx
+;
+    call AllocateBuf
+    mov rax,PAGE_TABLE_LINEAR
+    sub rdx,rax
+    shl rdx,9
+; 
+    pop rcx   
+    pop rax    
+    ret
+allocate_buf    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           AllocateUserStack
 ;
 ;   DESCRIPTION:    Allocate long mode user stack
@@ -4836,6 +4878,10 @@ LoadCode    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start64:
+    int 3
+    mov rcx,3
+    call AllocateBuf
+;    
     mov rsi,long_process_linear
     mov rdi,[rsi].elf_phoff
     movzx rcx,[rsi].elf_phnum
@@ -5144,6 +5190,79 @@ ValidateReadBuf Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           AllocateBuf
+;
+;   DESCRIPTION:    Allocate buffer below 4G
+;
+;   PARAMETERS:     RCX     Number of pages
+;
+;   RETURNS:        EDX     New buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateBuf Proc near
+    push rcx
+    push rsi
+    push rdi
+;
+    LockBuf
+;
+    mov rdi,long_alloc_base
+    mov rdi,[rdi]
+
+abRetry:    
+    mov rsi,rdi
+            
+abLoop:
+    mov rax,[rdi]
+    or rax,rax
+    jnz abRestart
+;
+    mov rax,2
+    stosq
+    loop abLoop    
+;
+    mov rax,long_alloc_base
+    mov [rax],rdi
+;
+    mov rdx,rsi
+    clc
+    jmp abDone
+
+abRestart:
+    cmp rdi,rsi
+    je abNext
+;
+    xor rax,rax
+    mov [rdi],rax
+    sub rdi,8
+    sub rsi,8
+    inc rcx
+    jmp abRestart
+
+abNext:
+    mov rax,rcx
+    shl rax,3
+    add rdi,rax
+;
+    cmp edi,80000000h SHR 9
+    jb abRetry
+;
+    mov rdi,long_buf_linear SHR 9 + PAGE_TABLE_LINEAR
+    jmp abRetry
+
+abDone:    
+    UnlockBuf
+;    
+    pop rdi
+    pop rsi
+    pop rcx            
+    ret
+AllocateBuf Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           CopyBuf
 ;
 ;   DESCRIPTION:    Copy buffer below 4G
@@ -5201,7 +5320,7 @@ cbNext:
     cmp edi,80000000h SHR 9
     jb cbRetry
 ;
-    mov edi,long_buf_linear SHR 9
+    mov rdi,long_buf_linear SHR 9 + PAGE_TABLE_LINEAR
     jmp cbRetry
 
 cbDone:    
