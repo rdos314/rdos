@@ -5243,30 +5243,22 @@ setup_rw_es_edi    Proc near
     add rsi,rax
 ;    
     call ValidateReadBuf
-    jc setup_rw_es_edi_fail
+    jc setup_rw_es_edi_done
 ;
-    call CopyBuf
-    mov rdi,rdx
-;
-    shr rdi,9
-    add rdi,rax
-    rep movsq    
+    call CopyBuf    
+    mov rax,PAGE_TABLE_LINEAR
+    sub rdx,rax
+    shl rdx,9
 ;   
-    mov rcx,rdi
-    and rcx,0FFFh
-    push rcx
-;
-    pop rdi
+    and rdi,0FFFh
     add rdx,rdi
     mov rcx,r12
     call AllocateLongLdt
     mov es,rbx
     xor rdi,rdi
+    clc
 
-setup_rw_es_edi_fail:
-    or r11,1
-    stc
-;            
+setup_rw_es_edi_done:
     pop rsi
     pop rdx
     pop rcx
