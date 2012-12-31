@@ -5050,7 +5050,9 @@ AllocateLongLdt Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeLongLdt Proc near
+    mov r8,long_ldt_linear
     and rbx,0FFF8h
+    add rbx,r8
 ;    
     xor ecx,ecx
     mov cl,[rbx+6]
@@ -5075,12 +5077,55 @@ fllSmall:
 ;
     mov r8,long_ldt_linear
     mov r9,[r8]
-    mov [r8+rbx],r9
+    mov [rbx],r9
+    sub rbx,r8
     mov [r8],rbx
 ;
     UnlockLdt
     ret
 FreeLongLdt Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           FreeLdtSel
+;
+;   DESCRIPTION:    Free possible ldt selector
+;
+;   PARAMETERS:     BX      Selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeLdtSel  Proc near
+    test bx,4
+    jz flsDone
+;
+    push rax
+    push rcx
+    push rdx
+    push rdi
+;
+    call FreeLongLdt
+;
+    dec rcx
+    shr rcx,12
+    inc rcx
+    mov rax,PAGE_TABLE_LINEAR
+    shr rdx,9
+    and rdx,0FFFFFFFFFFFFFFF8h
+    add rdx,rax
+    mov rdi,rdx
+    xor rax,rax
+    rep stosq    
+;    
+    pop rdi
+    pop rdx
+    pop rcx    
+    pop rax
+
+flsDone:    
+    ret
+FreeLdtSel  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5312,7 +5357,7 @@ FreeBuf Proc near
 ;
     mov rdi,rdx
     xor rax,rax
-    stosq
+    rep stosq
 ;    
     pop rdi
     pop rcx
@@ -5402,6 +5447,29 @@ CopyBuf Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Cleanup Proc near
+    push rax
+    push rbx
+;
+    mov rbx,ds
+    or rbx,rbx
+    jz cDsOk
+;
+    xor rax,rax
+    mov ds,rax
+    call FreeLdtSel
+
+cDsOk:
+    mov rbx,es
+    or rbx,rbx
+    jz cEsOk
+;
+    xor rax,rax
+    mov es,rax
+    call FreeLdtSel
+                    
+cEsOk:    
+    pop rbx
+    pop rax
     ret
 Cleanup Endp
     
