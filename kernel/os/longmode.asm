@@ -1074,7 +1074,54 @@ is_64_bit_exe32 Proc far
     call is_64_bit_exe
     ret
 is_64_bit_exe32 Endp
-    
+  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           InitProcess
+;
+;       DESCRIPTION:    Init process
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitProcess   Proc near
+    push ds
+    pushad
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov edx,OFFSET long_alloc_base
+    mov eax,long_buf_linear
+    mov [edx],eax
+    xor eax,eax
+    mov [edx+4],eax
+;
+    mov edx,OFFSET long_ldt_spinlock
+    xor eax,eax
+    mov [edx],eax
+    mov [edx+4],eax
+;    
+    mov edx,long_ldt_linear
+    mov ecx,1FFFh
+    mov eax,edx
+    mov eax,8
+    xor ebx,ebx
+
+init_ldt_loop:
+    mov [edx],eax    
+    mov [edx+4],ebx
+    add edx,8
+    add eax,8
+    loop init_ldt_loop                
+;
+    mov eax,-1
+    mov [edx],eax    
+;
+    popad
+    pop ds
+    ret
+InitProcess Endp    
+  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -1094,6 +1141,8 @@ init_long_exe   Proc far
     push es
     pushad
 ;
+    call InitProcess
+;    
     mov ebp,long_process_linear
     push esi
     xor ecx,ecx
@@ -1157,24 +1206,6 @@ init_pg_cmd_ok:
     xor cx,cx
     OpenFile
     mov es:[ebp].ep_file_handle,bx    
-;
-    mov ax,flat_sel
-    mov ds,ax
-    mov edx,long_ldt_linear
-    mov ecx,1FFFh
-    mov eax,edx
-    mov eax,8
-    xor ebx,ebx
-
-init_ldt_loop:
-    mov [edx],eax    
-    mov [edx+4],ebx
-    add edx,8
-    add eax,8
-    loop init_ldt_loop                
-;
-    mov eax,-1
-    mov [edx],eax    
 ;    
     popad
     pop es
@@ -1229,9 +1260,6 @@ start_long_exe:
     jne sleFailed        
 ;    
     mov dword ptr ds:[esi].elf_phoff,edi
-;
-    int 3
-    sldt bx
 ;    
     db 0EAh
     dd OFFSET start64
@@ -4820,6 +4848,7 @@ alloc_sect_loop:
     mov rcx,10000h
     call AllocateUserStack
 ;
+    int 3
     mov rax,long_kernel_data_sel
     mov ss,ax
 ;
@@ -4841,13 +4870,11 @@ alloc_sect_loop:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ldt_spinlock  DQ 0
-
 LockLdt    Macro
     local eldtLoop
     local eldtLocked
     
-    mov r9,OFFSET ldt_spinlock
+    mov r9,OFFSET long_ldt_spinlock
 
 eldtLoop:
     mov r8,1
@@ -4862,7 +4889,7 @@ eldtLocked:
             Endm
 
 UnlockLdt    Macro
-    mov r9,OFFSET ldt_spinlock
+    mov r9,OFFSET long_ldt_spinlock
     xor r8,r8
     mov [r9],r8
         Endm
