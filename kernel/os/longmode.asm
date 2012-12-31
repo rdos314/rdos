@@ -4867,6 +4867,8 @@ UnlockLdt    Macro
         Endm
 
 ; R10 = LDT entry
+; EDX = Base
+; ECX = Size
 
 AllocateLongLdt Proc near
     LockLdt
@@ -4877,6 +4879,37 @@ AllocateLongLdt Proc near
     mov [r8],r9
 ;
     UnlockLdt
+;
+    mov r8,long_ldt_linear
+    cmp ecx,100000h
+    jae ldtBig
+
+ldtSmall:
+    mov [r8+r10],cx
+    mov [r8+r10+2],edx
+    mov al,92h
+    xchg al,[r8+r10+5]
+    shr ecx,16
+    and cx,0Fh
+    or ch,al
+    or cl,40h
+    mov [r8+r10+6],cx
+    jmp ldtDone
+
+ldtBig:
+    shr ecx,12
+    mov [r8+r10],cx
+    mov [r8+r10+2],edx
+    mov al,92h
+    xchg al,[r8+r10+5]
+    shr ecx,16
+    and cx,0Fh
+    or ch,al
+    or cl,0C0h
+    mov [r8+r10+6],cx
+
+ldtDone:        
+    add r10,4
     ret
 AllocateLongLdt Endp
 
@@ -4904,9 +4937,49 @@ FreeLongLdt Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 setup_es_edi    Proc near
+    push rax
+    push rcx
+    push rdx
+    push rsi
     push r10
+;   
+    mov rax,rdi
+    and rax,0FFFh
+    push rax
+;
+    mov rax,rdi
+    mov rsi,rdi
+    and rsi,0FFFFFFFFFFFFF000h
+    add rax,r12
+    sub rax,rsi
+    dec rax
+    shr rax,12
+    inc rax
+    shl rax,12
+    mov rcx,rax
+    push rsi
+    AllocateLongBuf
+    pop rsi
+    mov rdi,rdx
+;
+    mov rax,PAGE_TABLE_LINEAR
+    shr rsi,9
+    add rsi,rax
+    shr rdi,9
+    add rdi,rax
+    shr rcx,12
+    rep movsq    
+;
+    mov rcx,r12
     call AllocateLongLdt
+    mov es,r10
+    pop rdi
+;            
     pop r10
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rax
     ret
 setup_es_edi    Endp
 
