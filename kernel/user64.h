@@ -6,20 +6,20 @@
 #define RdosClobberSyscall \
   asm volatile ( \
     "\n\t" \
-     : : : "rcx", "r9", "r11" \
+     : : : "rcx", "r9", "r11", "r14" \
    );
 
 #define RdosClobberSyscallRdi \
   asm volatile ( \
     "\n\t" \
-     : : : "rcx", "rdi", "r9", "r11" \
+     : : : "rcx", "rdi", "r9", "r11", "r14" \
    );
 
 #define RdosUserGateRetEax(nr, res) do { \
   register int _id asm("r14") = nr; \
   asm volatile( \
     "syscall\n\t" \
-    : "=a" (res) : : "rbx", "rdx", "rsi", "rdi" \
+    : "=a" (res) : "r" (_id) : "rbx", "rdx", "rsi", "rdi" \
   ); \
   RdosClobberSyscall; \
 } while(0);
@@ -37,7 +37,7 @@
     "1: \n\t" \
     "xorq %%rax,%%rax\n\t" \
     "2: \n\t" \
-    : "=a" (res) : "r" (_rdi), "r" (_rcx), "r" (_size) : "rbx", "rdx", "rsi" \
+    : "=a" (res) : "r" (_id), "r" (_rdi), "r" (_rcx), "r" (_size) : "rbx", "rdx", "rsi" \
   ); \
   RdosClobberSyscallRdi; \
 } while(0);
@@ -52,7 +52,7 @@
     "jnc 1f\n\t" \
     "xorq %%rax,%%rax\n\t" \
     "1: \n\t" \
-    : "=a" (res) : "r" (_rdi), "r" (_rcx), "r" (_size) : "rdx", "rsi" \
+    : "=a" (res) :  "r" (_id), "r" (_rdi), "r" (_rcx), "r" (_size) : "rdx", "rsi" \
   ); \
   RdosClobberSyscallRdi; \
 } while(0);
