@@ -683,6 +683,9 @@ debug_pace_bitness_done:
 debug_pace_not_sysret:            
     xor ebx,ebx
     add bx,2
+    cmp ax,50Fh
+    je debug_pace_step
+;    
     cmp al,0E2h
     je debug_pace_step
 ;
