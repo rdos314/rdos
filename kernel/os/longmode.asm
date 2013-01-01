@@ -1473,6 +1473,12 @@ init    proc far
     xor cl,cl
     mov ax,load_long_regs_nr
     RegisterOsGate
+;    
+    mov esi,OFFSET load_long_breaks
+    mov edi,OFFSET load_long_breaks_name
+    xor cl,cl
+    mov ax,load_long_breaks_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET allocate_buf
     mov edi,OFFSET allocate_buf_name
@@ -4574,6 +4580,39 @@ test64:
 ;    WaitMicroSec
     jmp test64
     
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           LoadLongBreaks
+;
+;   DESCRIPTION:    Load long mode break-points
+;
+;   PARAMETERS:     EDX     Thread base      
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_long_breaks_name DB 'Load Long Breaks', 0
+
+load_long_breaks    Proc far
+    mov rax,[edx].p_dr0
+    mov dr0,rax
+    mov rax,[edx].p_dr1
+    mov dr1,rax
+    mov rax,[edx].p_dr2
+    mov dr2,rax
+    mov rax,[edx].p_dr3
+    mov dr3,rax
+    mov rax,[edx].p_dr7
+    mov dr7,rax
+    and ax,0FFh
+    jnz load_break_done
+;
+    and [edx].p_flags,NOT THREAD_FLAG_BP
+    
+load_break_done:
+    ret
+load_long_breaks    Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

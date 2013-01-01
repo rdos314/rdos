@@ -1554,6 +1554,14 @@ load_suspend_done:
     test ax,THREAD_FLAG_BP
     jz load_bp_done
 ;
+    test fs:ps_flags,PS_FLAG_LONG_MODE
+    jz load_prot_breaks
+;
+    mov edx,ds:p_linear
+    LoadLongBreaks
+    jmp load_actions_done
+
+load_prot_breaks:    
     call load_breaks
     jmp load_actions_done
 

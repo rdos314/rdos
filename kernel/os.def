@@ -601,5 +601,6 @@ allocate_long_buf_nr        = 502
 free_long_buf_nr            = 503
 
 handle_long_code_fault_nr   = 504
+load_long_breaks_nr         = 505
 
 osgate_entries				= 520

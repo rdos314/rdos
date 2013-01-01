@@ -496,13 +496,19 @@ SwitchToProtectedMode MACRO
     OsGate switch_to_protected_mode_nr
                     ENDM
 
-; IN  FS   Processor sel
+IsLongThread MACRO
+    OsGate is_long_thread_nr
+                    ENDM
+
+; IN  EDX     Thread base      
+; IN  EDI     TSS base
 LoadLongRegs MACRO
     OsGate load_long_regs_nr
                     ENDM
 
-IsLongThread MACRO
-    OsGate is_long_thread_nr
+; IN  EDX     Thread base      
+LoadLongBreaks MACRO
+    OsGate load_long_breaks_nr
                     ENDM
 
 ; IN  EDX           Offset in file
