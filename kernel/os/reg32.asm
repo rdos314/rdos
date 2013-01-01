@@ -623,7 +623,26 @@ debug_pace_bitness_done:
     mov dx,es:p_cs
     mov esi,dword ptr es:p_rip
     call ReadWord
-;    
+;
+    cmp ax,485Ch
+    jne debug_pace_not_sysret
+;
+    push ax
+    push esi
+    add esi,2
+    call ReadWord
+    cmp ax,070Fh
+    pop esi
+    pop ax  
+    jne debug_pace_not_sysret  
+;
+    or word ptr es:p_r11,100h      
+    mov ax,word ptr es:p_rflags
+    and ax,NOT 100h
+    mov word ptr es:p_rflags,ax
+    jmp debug_pace_go
+
+debug_pace_not_sysret:            
     xor ebx,ebx
     add bx,2
     cmp al,0E2h
@@ -738,7 +757,9 @@ debug_pace_do:
     mov bx,es
     mov ds,bx
     or ds:p_flags,THREAD_FLAG_BP
-;
+
+debug_pace_go:
+    mov bx,es
     mov ax,system_data_sel
     mov ds,ax
     mov si,OFFSET debug_list
