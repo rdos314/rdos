@@ -298,7 +298,13 @@ debug_save_ok:
 ReadWord    Proc near
     push bx
     push cx
+    push dx
     push esi
+;
+    mov bx,dx
+    IsLongCodeSelector
+    jnc read_word64
+;    
     mov bx,es
     test word ptr es:p_rflags+2,2
     jz read_word_prot
@@ -310,6 +316,7 @@ read_word_virt:
     mov ah,al
     mov al,cl
     jmp read_word_done
+
 read_word_prot:
     ReadThreadSelector
     mov cx,ax
@@ -317,8 +324,21 @@ read_word_prot:
     ReadThreadSelector
     mov ah,al
     mov al,cl
+    jmp read_word_done
+
+read_word64:
+    mov bx,es
+    mov dx,word ptr es:p_rip+4    
+    ReadThread64
+    mov cx,ax
+    inc esi
+    ReadThread64
+    mov ah,al
+    mov al,cl
+
 read_word_done:
     pop esi
+    pop dx
     pop cx
     pop bx  
     ret
@@ -343,9 +363,15 @@ WriteWord       Proc near
     push cx
     push esi
     mov cx,ax
+;
+    mov bx,dx
+    IsLongCodeSelector
+    jnc write_word64
+;    
     mov bx,es
     test word ptr es:p_rflags+2,2
     jz write_word_prot
+
 write_word_virt:
     mov al,cl
     WriteThreadSegment
@@ -353,12 +379,24 @@ write_word_virt:
     mov al,ch
     WriteThreadSegment
     jmp write_word_done
+
 write_word_prot:
     mov al,cl
     WriteThreadSelector
     inc esi
     mov al,ch
     WriteThreadSelector
+    jmp write_word_done
+
+write_word64:
+    mov bx,es
+    mov dx,word ptr es:p_rip+4        
+    mov al,cl
+    WriteThread64
+    inc esi
+    mov al,ch
+    WriteThread64
+
 write_word_done:
     pop esi
     pop cx
