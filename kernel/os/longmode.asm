@@ -5634,9 +5634,9 @@ syscall_start:
     push rbp
 ;
     mov r9,usergate_linear
-    shl r15,USER_GATE_SHIFT
-    add r15,r9
-    test [r15].user_gate_syscall_flags,UG_SYSCALL_FLAG_HAS_PAR0
+    shl r14,USER_GATE_SHIFT
+    add r14,r9
+    test [r14].user_gate_syscall_flags,UG_SYSCALL_FLAG_HAS_PAR0
     jz syscall_do
 ;  
     cmp r12,20000000h
@@ -5644,12 +5644,12 @@ syscall_start:
 ;
     mov r8,OFFSET setup_param_tab
     xor r9,r9
-    mov r9b,[r15].user_gate_syscall_par
+    mov r9b,[r14].user_gate_syscall_par
     shl r9,3
     call near ptr [r8+r9]
     jc syscall_cleanup
 ;    
-    call fword ptr [r15]
+    call fword ptr [r14]
     jnc syscall_cleanup_ok
 
 syscall_cleanup_fail:
@@ -5665,7 +5665,7 @@ syscall_cleanup:
     jmp syscall_done
 
 syscall_do:
-    call fword ptr [r15]
+    call fword ptr [r14]
     jc syscall_fail
 
 syscall_ok:
