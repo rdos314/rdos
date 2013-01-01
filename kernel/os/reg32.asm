@@ -479,6 +479,7 @@ debug_trace     PROC far
     call local_get_debug_thread_sel
     or ax,ax
     jz debug_trace_done
+;    
     mov bx,ax
     mov es,bx
     mov dx,es:p_cs
@@ -489,6 +490,20 @@ debug_trace     PROC far
     call ReadWord
     mov dx,ax
     pop ax  
+;
+    cmp ax,485Ch
+    jne debug_trace_not_sysret
+;
+    cmp dx,070Fh
+    jne debug_trace_not_sysret  
+;
+    or word ptr es:p_r11,100h      
+    mov ax,word ptr es:p_rflags
+    and ax,NOT 100h
+    mov word ptr es:p_rflags,ax
+    jmp debug_trace_go
+
+debug_trace_not_sysret:        
     cmp al,0CDh
     jne debug_trace_trace
 ;
@@ -526,20 +541,24 @@ debug_trace     PROC far
     call WriteWord
     sub word ptr es:p_rsp,6
     jmp debug_trace_done
+
 debug_trace_trace:
     mov eax,es:p_dr7
     and ax,0FFFCh
     mov es:p_dr7,eax
-    mov bx,es
     mov ax,word ptr es:p_rflags
     or ax,100h
     mov word ptr es:p_rflags,ax
+
+debug_trace_go:
+    mov bx,es
     mov ax,system_data_sel
     mov ds,ax
     mov si,OFFSET debug_list
     mov [si],bx
     mov es,ax
     Wake
+
 debug_trace_done:
     popad
     pop es
