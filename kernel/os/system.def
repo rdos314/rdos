@@ -322,11 +322,11 @@ p_kernel_ss		DW ?
 p_kernel_stack  DD ?
 p_linear        DD ?
 
-p_dr0			DD ?
-p_dr1			DD ?
-p_dr2			DD ?
-p_dr3			DD ?
-p_dr7			DD ?
+p_dr0			DQ ?
+p_dr1			DQ ?
+p_dr2			DQ ?
+p_dr3			DQ ?
+p_dr7			DQ ?
 
 p_math_control	    DW ?,?
 p_math_status		DW ?,?

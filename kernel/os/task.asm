@@ -1274,15 +1274,15 @@ PreemptReload  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 load_breaks Proc near
-    mov eax,ds:p_dr0
+    mov eax,dword ptr ds:p_dr0
     mov dr0,eax
-    mov eax,ds:p_dr1
+    mov eax,dword ptr ds:p_dr1
     mov dr1,eax
-    mov eax,ds:p_dr2
+    mov eax,dword ptr ds:p_dr2
     mov dr2,eax
-    mov eax,ds:p_dr3
+    mov eax,dword ptr ds:p_dr3
     mov dr3,eax
-    mov eax,ds:p_dr7
+    mov eax,dword ptr ds:p_dr7
     mov dr7,eax
     and ax,0FFh
     jnz load_break_done
@@ -7893,11 +7893,16 @@ init_default_regs    PROC near
 ; dr0 - dr7
 ;
     xor edx,edx
-    mov ds:p_dr0,edx
-    mov ds:p_dr1,edx
-    mov ds:p_dr2,edx
-    mov ds:p_dr3,edx
-    mov ds:p_dr7,edx
+    mov dword ptr ds:p_dr0,edx
+    mov dword ptr ds:p_dr0+4,edx
+    mov dword ptr ds:p_dr1,edx
+    mov dword ptr ds:p_dr1+4,edx
+    mov dword ptr ds:p_dr2,edx
+    mov dword ptr ds:p_dr2+4,edx
+    mov dword ptr ds:p_dr3,edx
+    mov dword ptr ds:p_dr3+4,edx
+    mov dword ptr ds:p_dr7,edx
+    mov dword ptr ds:p_dr7+4,edx
 ;
 ; 387 status
 ;
@@ -8821,11 +8826,16 @@ init_first_tss  PROC near
 ;
 ; dr0 - dr7
 ;
-    mov ds:p_dr0,edx
-    mov ds:p_dr1,edx
-    mov ds:p_dr2,edx
-    mov ds:p_dr3,edx
-    mov ds:p_dr7,edx
+    mov dword ptr ds:p_dr0,edx
+    mov dword ptr ds:p_dr0+4,edx
+    mov dword ptr ds:p_dr1,edx
+    mov dword ptr ds:p_dr1+4,edx
+    mov dword ptr ds:p_dr2,edx
+    mov dword ptr ds:p_dr2+4,edx
+    mov dword ptr ds:p_dr3,edx
+    mov dword ptr ds:p_dr3+4,edx
+    mov dword ptr ds:p_dr7,edx
+    mov dword ptr ds:p_dr7+4,edx
 ;
 ; 387 status
 ;

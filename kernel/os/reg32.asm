@@ -581,9 +581,9 @@ debug_trace_not_sysret:
     jmp debug_trace_done
 
 debug_trace_trace:
-    mov eax,es:p_dr7
+    mov eax,dword ptr es:p_dr7
     and ax,0FFFCh
-    mov es:p_dr7,eax
+    mov dword ptr es:p_dr7,eax
     mov ax,word ptr es:p_rflags
     or ax,100h
     mov word ptr es:p_rflags,ax
@@ -773,20 +773,22 @@ debug_pace_step_gdt:
 
 debug_pace_step_do:
     add eax,ebx
-    mov es:p_dr0,eax
-    mov eax,es:p_dr7
+    mov dword ptr es:p_dr0,eax
+    mov eax,dword ptr es:p_rip+4
+    mov dword ptr es:p_dr0+4,eax    
+    mov eax,dword ptr es:p_dr7
     and eax,0FFF0FFFCh
     or ax,1
-    mov es:p_dr7,eax
+    mov dword ptr es:p_dr7,eax
     mov ax,word ptr es:p_rflags
     and ax,NOT 100h
     mov word ptr es:p_rflags,ax
     jmp debug_pace_do
     
 debug_pace_trace:
-    mov eax,es:p_dr7
+    mov eax,dword ptr es:p_dr7
     and ax,0FFFCh
-    mov es:p_dr7,eax
+    mov dword ptr es:p_dr7,eax
     mov ax,word ptr es:p_rflags
     or ax,100h
     mov word ptr es:p_rflags,ax
@@ -835,9 +837,9 @@ debug_go    PROC far
     jz debug_go_done
     mov bx,ax
     mov es,bx
-    mov eax,es:p_dr7
+    mov eax,dword ptr es:p_dr7
     and ax,0FFFCh
-    mov es:p_dr7,eax
+    mov dword ptr es:p_dr7,eax
     mov ax,word ptr es:p_rflags
     and ax,NOT 100h
     mov word ptr es:p_rflags,ax
@@ -1065,9 +1067,10 @@ abFixSizeFix:
 
 abFixSizeOk:
     movzx bx,al
-    shl bx,2 
+    shl bx,3
     add bx,OFFSET p_dr0
     mov es:[bx],edx
+    mov es:[bx+4],0
 ;
     cmp cl,7
     jbe abSizeOk
@@ -1106,8 +1109,8 @@ abSizeOk:
     shl cl,1
     mov dx,1
     shl dx,cl
-    and es:p_dr7,esi
-    or es:p_dr7,edx
+    and dword ptr es:p_dr7,esi
+    or dword ptr es:p_dr7,edx
     or es:p_flags,THREAD_FLAG_BP
     clc
     jmp abDone
@@ -1154,7 +1157,7 @@ RemoveBreak PROC near
     shl dx,cl
 ;    
     not edx
-    and es:p_dr7,edx
+    and dword ptr es:p_dr7,edx
     clc
     jmp rbDone
 
@@ -1460,19 +1463,19 @@ get_thread_tss_found:
     mov ax,ds:p_ldt
     mov es:[edi].ut_ldt,ax
 ;    
-    mov eax,ds:p_dr0
+    mov eax,dword ptr ds:p_dr0
     mov es:[edi].ut_dr0,eax
 ;    
-    mov eax,ds:p_dr1
+    mov eax,dword ptr ds:p_dr1
     mov es:[edi].ut_dr1,eax
 ;    
-    mov eax,ds:p_dr2
+    mov eax,dword ptr ds:p_dr2
     mov es:[edi].ut_dr2,eax
 ;    
-    mov eax,ds:p_dr3
+    mov eax,dword ptr ds:p_dr3
     mov es:[edi].ut_dr3,eax
 ;    
-    mov eax,ds:p_dr7
+    mov eax,dword ptr ds:p_dr7
     mov es:[edi].ut_dr7,eax
 ;    
     mov eax,dword ptr ds:p_math_control
@@ -1673,19 +1676,23 @@ set_thread_tss_found:
     mov es:p_ldt,ax
 ;    
     mov eax,ds:[esi].ut_dr0
-    mov es:p_dr0,eax
+    mov dword ptr es:p_dr0,eax
+    mov dword ptr es:p_dr0+4,0
 ;    
     mov eax,ds:[esi].ut_dr1
-    mov es:p_dr1,eax
+    mov dword ptr es:p_dr1,eax
+    mov dword ptr es:p_dr1+4,0
 ;    
     mov eax,ds:[esi].ut_dr2
-    mov es:p_dr2,eax
+    mov dword ptr es:p_dr2,eax
+    mov dword ptr es:p_dr2+4,0
 ;    
     mov eax,ds:[esi].ut_dr3
-    mov es:p_dr3,eax
+    mov dword ptr es:p_dr3,eax
+    mov dword ptr es:p_dr3+4,0
 ;    
     mov eax,ds:[esi].ut_dr7
-    mov es:p_dr7,eax
+    mov dword ptr es:p_dr7,eax
 ;    
     mov eax,ds:[esi].ut_math_control
     mov dword ptr es:p_math_control,eax
