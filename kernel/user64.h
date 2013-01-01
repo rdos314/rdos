@@ -28,7 +28,7 @@
   register int _id asm("r14") = nr; \
   register typeof(rdi) _rdi asm("rdi") = (rdi); \
   register typeof(rcx) _rcx asm("r8") = (rcx); \
-  register typeof(size) _size asm("r12") = (size); \
+  register int _size asm("r12") = (size); \
   asm volatile ( \
     "syscall\n\t" \
     "jc 1f\n\t" \
@@ -46,7 +46,7 @@
   register int _id asm("r14") = nr; \
   register typeof(rdi) _rdi asm("rdi") = (rdi); \
   register typeof(rcx) _rcx asm("r8") = (rcx); \
-  register typeof(rcx) _size asm("r12") = (rcx); \
+  register int _size asm("r12") = (rcx); \
   asm volatile ( \
     "syscall\n\t" \
     "jnc 1f\n\t" \
