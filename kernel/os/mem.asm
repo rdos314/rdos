@@ -3315,6 +3315,80 @@ validate_descriptor_done:
     ret
 validate_descriptor     Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           VALIDATE_DESCRIPTOR64
+;
+;           DESCRIPTION:    Validate 64-bit descriptor
+;
+;           PARAMETERS:     DX:ESI          Offset within descriptor
+;                           BX              Thread
+;
+;           RETURNS:        NC              Valid
+;                               EDX         Linear address (including offset)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+validate_descriptor64     PROC near
+    push ecx
+    push esi
+    and dx,0FFF8h
+    movzx esi,dx
+    mov dx,long_ldt_sel
+;
+    add si,5        ; offset 5
+    ReadThreadSelector
+    jc vd_fail64
+;
+    test al,80h
+    jz vd_fail64
+;
+    test al,10h
+    jz vd_fail64
+
+vd_code_data64:
+    add si,2        ; offset 7
+    ReadThreadSelector
+    jc vd_fail64
+;
+    movzx ecx,al
+    shl ecx,8
+;
+    sub si,3        ; offset 4
+    ReadThreadSelector
+    jc vd_fail64
+;
+    mov cl,al
+    shl ecx,8
+;
+    dec si          ; offset 3    
+    ReadThreadSelector
+    jc vd_fail64
+;
+    mov cl,al
+    shl ecx,8
+;
+    dec si          ; offset 2    
+    ReadThreadSelector
+    jc vd_fail64
+;
+    mov cl,al
+    pop esi
+    mov edx,ecx
+    add edx,esi
+    clc
+    jmp vd_done64
+
+vd_fail64:
+    pop esi
+    stc
+    
+vd_done64:
+    pop ecx
+    ret
+validate_descriptor64     Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3340,9 +3414,9 @@ validate_thread_ldt:
     push ax
     push bx
     mov ds,bx
-    mov bx,ds:p_ldt
-    cmp bx,long_ldt_sel
-    je validate_ldt_thread_fail
+    mov ax,ds:p_ldt
+    cmp ax,long_ldt_sel
+    je validate_ldt64
 ;
     mov bx,ds:p_ldt_sel
     mov ax,gdt_sel
@@ -3362,11 +3436,12 @@ validate_ldt_thread_done:
     pop ds
     jmp validate_thread_done
 
-validate_ldt_thread_fail:    
+validate_ldt64:
+    call validate_descriptor64    
+;    
     pop bx
     pop ax
     pop ds
-    stc
     jmp validate_thread_done
 
 validate_thread_gdt:
