@@ -229,9 +229,13 @@ TImageControl::~TImageControl()
 	if (FLoadIni)
 		delete FLoadIni;
 
+    Protect();
+
     for (i = 0; i < MAX_IMAGE_COUNT; i++)
 		if (FImgArr[i])
             delete FImgArr[i];
+
+    Unprotect();
 }
 
 /*##################  TImageControl::Init     ##########################
@@ -375,6 +379,8 @@ void TImageControl::SetLoadIni(const char *IniName, const char *IniSection)
 
     FLoadIni = 0;
 
+    Protect();
+
     for (i = 0; i < MAX_IMAGE_COUNT; i++)
     {
 		if (FImgArr[i])
@@ -384,6 +390,8 @@ void TImageControl::SetLoadIni(const char *IniName, const char *IniSection)
         }
 		FDelayArr[i] = 1000;
     }
+
+    Unprotect();
 
 	FIndex = MAX_IMAGE_COUNT;
 
@@ -443,6 +451,8 @@ void TImageControl::Hide()
     {
         FSection.Enter();
 
+        Protect();
+        
         for (i = 1; i < MAX_IMAGE_COUNT; i++)
         {
             if (FImgArr[i])
@@ -451,6 +461,8 @@ void TImageControl::Hide()
                 FImgArr[i] = 0;
             }
         }
+
+        Unprotect();
 
         FSection.Leave();
     }
@@ -592,7 +604,9 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
 
         if (bitmap)
         {
+            
             FSection.Enter();
+            Protect();
             
             if (FImgArr[FCount])
                 delete FImgArr[FCount];
@@ -601,7 +615,9 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
             FDelayArr[FCount] = StdDelay;
             FCount++;
 
+            Unprotect();
             FSection.Leave();
+
         }
     }
     else
@@ -683,6 +699,7 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
             if (bitmap)
             {
                 FSection.Enter();
+                Protect();
             
                 if (FImgArr[FCount])
                     delete FImgArr[FCount];
@@ -691,6 +708,7 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
                 FDelayArr[FCount] = delay;
                 FCount++;
 
+                Unprotect();
                 FSection.Leave();
             }
         }
