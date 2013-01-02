@@ -228,7 +228,7 @@ TImageControl::~TImageControl()
 
 	if (FLoadIni)
 		delete FLoadIni;
-
+		
     Protect();
 
     for (i = 0; i < MAX_IMAGE_COUNT; i++)
@@ -449,8 +449,6 @@ void TImageControl::Hide()
 
     if (FLoader)
     {
-        FSection.Enter();
-
         Protect();
         
         for (i = 1; i < MAX_IMAGE_COUNT; i++)
@@ -463,8 +461,6 @@ void TImageControl::Hide()
         }
 
         Unprotect();
-
-        FSection.Leave();
     }
 }
             
@@ -605,7 +601,6 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
         if (bitmap)
         {
             
-            FSection.Enter();
             Protect();
             
             if (FImgArr[FCount])
@@ -616,7 +611,6 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
             FCount++;
 
             Unprotect();
-            FSection.Leave();
 
         }
     }
@@ -698,7 +692,6 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
 
             if (bitmap)
             {
-                FSection.Enter();
                 Protect();
             
                 if (FImgArr[FCount])
@@ -709,7 +702,6 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
                 FCount++;
 
                 Unprotect();
-                FSection.Leave();
             }
         }
     }
@@ -910,8 +902,6 @@ void TImageControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
 
     ClearRedraw();
 
-    FSection.Enter();
-
     FIndex++;
 
     if (FIndex >= MAX_IMAGE_COUNT)
@@ -922,7 +912,6 @@ void TImageControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
         if (FLoading)
         {
             FIndex--;
-            FSection.Leave();
             Redraw(25);
             return;            
         }
@@ -956,8 +945,6 @@ void TImageControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
 
     if (bitmap)
         dev->Blit(bitmap, 0, 0, xstart, ystart, bmx, bmy);
-
-    FSection.Leave();
 
     if (IsVisible() && (FCount >= 2 || FLoader))
         Redraw(FDelayArr[FIndex]);
