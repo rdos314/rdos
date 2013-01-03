@@ -1,0 +1,622 @@
+
+allocate_dos_mem_nr			= 0
+allocate_local_mem_nr		= 1
+free_mem_nr					= 2
+available_small_local_linear_nr	= 3
+used_local_linear_nr		= 4
+available_vm_linear_nr		= 5
+used_vm_linear_nr			= 6
+
+reserve_pe_mem_nr			= 7
+set_flat_linear_valid_nr	= 8
+set_flat_linear_invalid_nr	= 9
+set_flat_linear_read_nr		= 10
+set_flat_linear_readwrite_nr = 11
+
+get_raw_switch_ads_nr		= 12
+raw_switch_pm_nr			= 13
+get_exception_nr			= 14
+set_exception_nr			= 15
+get_pm_int_nr				= 16
+set_pm_int_nr				= 17
+get_vm_int_nr				= 18
+set_vm_int_nr				= 19
+dpmi_int_nr					= 20
+dpmi_call_int_nr			= 21
+dpmi_call_nr				= 22
+allocate_vm_callback_nr		= 23
+free_vm_callback_nr			= 24
+
+wait_milli_nr				= 25
+wait_micro_nr				= 26
+wait_until_nr				= 27
+create_thread_nr			= 28
+terminate_thread_nr			= 29
+get_thread_nr				= 30
+raw_switch_vm_nr			= 31
+
+create_user_section_nr		= 32
+create_blocked_user_section_nr = 33
+delete_user_section_nr		= 34
+enter_user_section_nr		= 35
+leave_user_section_nr		= 36
+
+get_local_mailslot_nr		= 37
+get_remote_mailslot_nr		= 38
+free_mailslot_nr			= 39
+send_mailslot_nr			= 40
+define_mailslot_nr			= 41
+receive_mailslot_nr			= 42
+reply_mailslot_nr			= 43
+
+load_exe_nr					= 44
+spawn_exe_nr				= 45
+unload_exe_nr				= 46
+get_exit_code_nr			= 47
+get_exe_name_nr				= 48
+get_cmd_line_nr				= 49
+get_env_nr					= 50
+load_dll_nr					= 51
+free_dll_nr					= 52
+get_module_proc_nr			= 53
+get_module_resource_nr		= 54
+get_module_name_nr			= 55
+get_module_nr				= 56
+allocate_app_mem_nr			= 57
+free_app_mem_nr				= 58
+get_psp_sel_nr				= 59
+
+get_debug_thread_nr			= 61
+debug_trace_nr				= 62
+debug_pace_nr				= 63
+debug_go_nr					= 64
+debug_next_nr				= 65
+
+add_wait_for_debug_event_nr	= 66
+get_debug_event_data_nr     = 67
+continue_debug_event_nr		= 68
+notify_pe_exception_nr		= 70
+read_thread_mem_nr			= 71
+write_thread_mem_nr			= 72
+get_thread_tss_nr			= 73
+set_thread_tss_nr			= 74
+
+get_cpu_time_nr				= 75
+get_system_time_nr			= 76
+get_time_nr					= 77
+time_to_system_time_nr		= 78
+system_time_to_time_nr		= 79
+days_in_month_nr			= 80
+adjust_time_nr				= 81
+passed_days_nr				= 82
+time_to_binary_nr			= 83
+binary_to_time_nr			= 84
+sync_time_nr				= 85
+
+set_focus_nr				= 86
+enable_focus_nr				= 87
+
+get_dns_nr					= 88
+get_ppp_dns_nr				= 89
+open_tcp_connection_nr		= 90
+wait_for_tcp_connection_nr	= 92
+close_tcp_connection_nr		= 93
+delete_tcp_connection_nr	= 94
+is_tcp_connection_closed_nr	= 95
+abort_tcp_connection_nr		= 96
+read_tcp_connection_nr		= 97
+write_tcp_connection_nr		= 98
+push_tcp_connection_nr		= 99
+get_ip_address_nr			= 100
+name_to_ip_nr				= 101
+ip_to_name_nr				= 102
+ping_nr						= 103 
+
+get_disc_info_nr			= 104
+format_drive_nr				= 105
+get_rdfs_info_nr			= 106
+read_disc_nr				= 107
+write_disc_nr				= 108
+get_drive_info_nr			= 109
+
+set_cur_drive_nr			= 110
+get_cur_drive_nr			= 111
+set_cur_dir_nr				= 112
+get_cur_dir_nr				= 113
+make_dir_nr					= 114
+remove_dir_nr				= 115
+rename_file_nr				= 116
+delete_file_nr				= 117
+get_file_attribute_nr		= 118
+set_file_attribute_nr		= 119
+open_dir_nr					= 120
+close_dir_nr				= 121
+read_dir_nr					= 122
+
+open_file_nr				= 123
+create_file_nr				= 124
+close_file_nr				= 125
+dupl_file_nr				= 126
+get_ioctl_data_nr			= 127
+get_file_size_nr			= 128
+set_file_size_nr			= 129
+get_file_pos_nr				= 130
+set_file_pos_nr				= 131
+get_file_time_nr			= 132
+set_file_time_nr			= 133
+read_file_nr				= 134
+write_file_nr				= 135
+read_con_nr					= 136
+
+create_mapping_nr			= 137
+create_named_mapping_nr		= 138
+create_file_mapping_nr		= 139
+create_named_file_mapping_nr = 140
+open_named_mapping_nr		= 141
+sync_mapping_nr				= 142
+close_mapping_nr			= 143
+map_view_nr					= 144
+unmap_view_nr				= 145
+
+read_keyboard_nr			= 146
+poll_keyboard_nr			= 147
+flush_keyboard_nr			= 148
+get_keyboard_state_nr		= 151
+
+show_mouse_nr				= 152
+hide_mouse_nr				= 153
+get_mouse_position_nr		= 154
+set_mouse_position_nr		= 155
+set_mouse_window_nr			= 156
+set_mouse_mickey_nr			= 157
+get_left_button_nr			= 158
+get_right_button_nr			= 159
+get_left_button_press_position_nr	= 160
+get_right_button_press_position_nr	= 161
+get_left_button_release_position_nr	= 162
+get_right_button_release_position_nr	= 163
+hook_mouse_nr				= 164
+unhook_mouse_nr				= 165
+
+lock_cd_nr					= 166
+unlock_cd_nr				= 167
+eject_cd_nr					= 168
+insert_cd_nr				= 169
+
+open_com_nr					= 170
+close_com_nr				= 171
+flush_com_nr				= 172
+add_wait_for_com_nr			= 174
+read_com_nr					= 175
+write_com_nr				= 176
+set_dtr_nr					= 177
+reset_dtr_nr				= 178
+reset_com_nr                = 179
+
+set_cursor_position_nr		= 182
+get_cursor_position_nr		= 183
+write_char_nr				= 184
+write_asciiz_nr				= 185
+write_size_string_nr		= 186
+
+set_video_mode_nr			= 187
+set_vga_mode_nr				= 188
+set_forecolor_nr			= 189
+set_backcolor_nr			= 190
+get_string_metrics_nr		= 193
+set_font_nr					= 194
+get_video_mode_nr           = 195
+draw_string_nr				= 197
+
+xms_handler_nr				= 198
+ems_handler_nr				= 199
+
+update_rtc_nr			    = 200
+
+resize_flat_linear_nr		= 201
+
+set_drawcolor_nr			= 202
+set_lgop_nr					= 203
+set_hollow_style_nr			= 204
+set_filled_style_nr			= 205
+get_pixel_nr				= 206
+set_pixel_nr				= 207
+draw_line_nr				= 208
+draw_rect_nr				= 209
+draw_ellipse_nr				= 210
+create_bitmap_nr			= 211
+close_bitmap_nr				= 212
+blit_nr						= 213
+open_font_nr				= 215
+close_font_nr				= 216
+create_string_bitmap_nr		= 217
+get_bitmap_info_nr			= 218
+draw_mask_nr				= 219
+
+create_sprite_nr            = 220
+close_sprite_nr             = 221
+show_sprite_nr              = 222
+hide_sprite_nr              = 223
+move_sprite_nr              = 224
+
+dup_bitmap_handle_nr        = 225
+set_clip_rect_nr            = 226
+clear_clip_rect_nr          = 227
+
+set_rts_nr                  = 228
+reset_rts_nr                = 229
+get_com_receive_space_nr    = 230
+get_com_send_space_nr       = 231
+
+get_char_attrib_nr			= 232
+
+create_wait_nr              = 233
+close_wait_nr               = 234
+is_wait_idle_nr				= 235
+wait_no_timeout_nr          = 236
+wait_timeout_nr				= 237
+stop_wait_nr                = 238
+add_wait_for_keyboard_nr    = 239
+
+peek_key_event_nr           = 240
+read_key_event_nr           = 241
+
+add_wait_for_mouse_nr		= 242
+remove_wait_nr              = 243
+
+add_wait_for_adc_nr			= 244
+open_adc_nr					= 245
+close_adc_nr				= 246
+define_adc_time_nr 			= 247
+read_adc_nr					= 248
+
+free_v86_nr                 = 249
+
+read_serial_lines_nr		= 250
+toggle_serial_line_nr		= 251
+
+read_serial_val_nr			= 252
+write_serial_val_nr			= 253
+
+create_file_drive_nr        = 254
+open_file_drive_nr          = 255
+
+dos_ext_exec_nr				= 256
+
+open_sys_env_nr             = 257
+open_proc_env_nr            = 258
+close_env_nr                = 259
+add_env_var_nr              = 260
+delete_env_var_nr           = 261
+find_env_var_nr             = 262
+get_env_data_nr     	    = 263
+set_env_data_nr 	        = 264
+
+open_sys_ini_nr				= 265
+close_ini_nr				= 266
+goto_ini_section_nr         = 267
+remove_ini_section_nr       = 268
+read_ini_nr                 = 269
+write_ini_nr                = 270
+delete_ini_nr               = 271
+
+get_version_nr              = 273
+
+enable_status_led_nr        = 274
+disable_status_led_nr       = 275
+
+start_watchdog_nr           = 276
+kick_watchdog_nr            = 277
+
+erase_disc_sectors_nr       = 278
+
+enable_cts_nr               = 280
+disable_cts_nr              = 281
+
+wait_for_send_completed_com_nr  = 282
+
+add_wait_for_tcp_connection_nr  = 283
+
+get_remote_tcp_connection_ip_nr        = 284
+get_remote_tcp_connection_port_nr      = 285
+get_local_tcp_connection_port_nr       = 286
+
+enable_auto_rts_nr          = 287
+disable_auto_rts_nr         = 288
+
+put_keyboard_code_nr        = 289
+
+poll_tcp_connection_nr		= 290
+
+create_signal_nr            = 291
+free_signal_nr              = 292
+add_wait_for_signal_nr      = 293
+set_signal_nr               = 294
+reset_signal_nr             = 295
+is_signalled_nr             = 296
+
+get_drive_disc_param_nr     = 297
+
+get_ide_disc_nr             = 298
+get_floppy_disc_nr          = 299
+demand_load_drive_nr        = 300
+set_disc_info_nr            = 301
+
+get_thread_state_nr			= 302
+suspend_thread_nr	    	= 303
+resume_thread_nr	    	= 304
+
+update_time_nr				= 305
+
+allocate_static_drive_nr	= 306
+allocate_fixed_drive_nr		= 307
+allocate_dynamic_drive_nr	= 308
+
+get_focus_nr                = 309
+
+add_wait_for_tcp_listen_nr  = 310
+create_tcp_listen_nr        = 311
+get_tcp_listen_nr           = 312
+close_tcp_listen_nr         = 313
+
+get_random_nr               = 314
+
+suspend_and_signal_thread_nr    = 315
+
+start_net_capture_nr           = 316
+stop_net_capture_nr            = 317
+
+create_crc_nr               = 318
+close_crc_nr                = 319
+calc_crc_nr                 = 320
+
+get_usb_device_nr           = 321
+get_usb_config_nr           = 322
+
+open_usb_pipe_nr            = 323
+close_usb_pipe_nr           = 324
+add_wait_for_usb_pipe_nr    = 325
+req_usb_data_nr             = 326
+get_usb_data_size_nr        = 327
+write_usb_data_nr           = 328
+req_usb_status_nr           = 329
+write_usb_status_nr         = 330
+write_usb_control_nr        = 331
+lock_usb_pipe_nr            = 333
+unlock_usb_pipe_nr          = 334
+
+get_max_com_port_nr         = 335
+
+config_usb_device_nr        = 336
+
+start_usb_transaction_nr    = 337
+
+open_ini_nr                 = 338
+
+open_icsp_nr                = 339
+close_icsp_nr               = 340
+write_icsp_cmd_nr           = 341
+write_icsp_data_nr          = 342
+read_icsp_data_nr           = 343
+
+get_gateway_nr              = 344
+
+get_free_physical_nr		= 345
+get_free_gdt_nr             = 346
+available_big_linear_nr		= 347
+available_small_linear_nr   = 348
+
+get_ip_mask_nr              = 349
+
+get_master_volume_nr        = 350
+set_master_volume_nr        = 351
+
+get_line_out_volume_nr      = 352
+set_line_out_volume_nr      = 353
+
+create_audio_out_channel_nr = 354
+close_audio_out_channel_nr  = 355
+write_audio_nr              = 356
+
+stop_watchdog_nr            = 357
+
+is_valid_usergate_nr        = 358
+
+open_fm_nr                  = 359
+close_fm_nr                 = 360
+fm_wait_nr                  = 361
+create_fm_instrument_nr     = 362
+free_fm_instrument_nr       = 363
+set_fm_attack_nr            = 364
+set_fm_sustain_nr           = 365
+set_fm_release_nr           = 366
+play_fm_note_nr             = 367
+
+get_thread_linear_nr        = 368
+get_current_module_nr       = 369
+
+get_module_focus_key_nr     = 370
+
+get_debug_event_nr          = 371
+clear_debug_event_nr        = 372
+
+get_free_handles_nr         = 373
+
+get_env_size_nr     	    = 374
+
+show_exception_text_nr      = 375
+
+get_watchdog_tics_nr        = 376
+
+is_usb_trans_done_nr        = 377
+was_usb_trans_ok_nr         = 378
+
+is_tcp_connection_idle_nr	= 379
+
+set_codec_gpio0_nr	        = 380
+
+free_proc_handle_nr         = 381
+add_wait_for_proc_end_nr    = 382
+get_proc_exit_code_nr       = 383
+
+get_cpu_version_nr          = 384
+get_options_nr              = 385
+
+fork_nr                     = 386
+
+get_core_id_nr              = 387
+
+create_user_read_write_section_nr	= 388
+delete_user_read_write_section_nr	= 389
+enter_user_read_section_nr		    = 390
+leave_user_read_section_nr		    = 391
+enter_user_write_section_nr		    = 392
+leave_user_write_section_nr		    = 393
+
+power_failure_nr                    = 394
+
+define_fault_save_nr        = 395
+get_fault_thread_state_nr   = 396
+get_fault_thread_tss_nr     = 397
+clear_fault_save_nr         = 398
+
+get_free_handle_mem_nr      = 399
+
+get_image_header_nr         = 400
+get_image_data_nr           = 401
+
+allocate_debug_app_mem_nr   = 402
+free_debug_app_mem_nr       = 403
+
+get_key_layout_nr           = 404
+set_key_layout_nr           = 405
+
+get_device_info_nr          = 406
+get_selector_info_nr        = 407
+
+set_code_break_nr           = 408
+set_read_data_break_nr      = 409
+set_write_data_break_nr     = 410
+clear_break_nr              = 411
+
+get_max_printer_nr          = 412
+open_printer_nr             = 413
+close_printer_nr            = 414
+
+is_printer_jammed_nr                = 415
+is_printer_paper_low_nr             = 416
+is_printer_paper_end_nr             = 417
+is_printer_ok_nr                    = 418
+is_printer_head_lifted_nr           = 419
+has_printer_paper_in_presenter_nr   = 420
+
+print_test_nr               = 421
+
+create_printer_bitmap_nr    = 422
+print_bitmap_nr             = 423
+
+present_printer_media_nr    = 424
+eject_printer_media_nr      = 425
+
+wait_for_print_nr           = 426
+
+has_audio_nr                = 427
+
+available_big_local_linear_nr	= 428
+
+get_allocated_usb_blocks_nr     = 429
+get_usb_close_count_nr          = 430
+
+reset_usb_pipe_nr               = 431
+
+add_syslog_nr                   = 432
+open_syslog_nr                  = 433
+close_syslog_nr                 = 434
+add_wait_for_syslog_nr          = 435
+get_syslog_nr                   = 436
+
+soft_reset_nr                   = 437
+hard_reset_nr                   = 438
+
+is_emergency_stopped_nr         = 439
+
+load_device32_nr                = 440
+
+debug_run_nr                    = 441
+
+test_gate_nr                    = 442
+
+get_acpi_status_nr              = 443
+get_acpi_object_nr              = 444
+get_cpu_temperature_nr          = 445
+get_acpi_method_nr              = 446
+
+write_attrib_string_nr          = 447
+
+has_hard_reset_nr               = 449
+
+get_acpi_device_nr              = 450
+get_acpi_device_irq_nr          = 451
+get_acpi_device_io_nr           = 452
+get_acpi_device_mem_nr          = 453
+
+get_pci_device_name_nr          = 454
+get_pci_device_info_nr          = 455
+get_pci_device_vendor_nr        = 456
+get_pci_device_class_nr         = 457
+get_pci_device_irq_nr           = 458
+
+open_hid_nr                     = 459
+close_hid_nr                    = 460
+get_hid_pipe_nr                 = 461
+
+get_core_load_nr                = 462
+get_core_duty_nr                = 463
+
+has_global_timer_nr             = 464
+
+remote_debug_nr                 = 465
+
+read_hid_nr                     = 466
+write_hid_nr                    = 467
+
+ansi_to_utf8_nr                 = 468
+utf8_to_ansi_nr                 = 469
+
+get_printer_name_nr             = 470
+
+acquire_futex_nr                = 471
+release_futex_nr                = 472
+cleanup_futex_nr                = 473
+
+goto_first_inivar_nr            = 474
+goto_next_inivar_nr             = 475
+get_curr_inivar_nr              = 476
+
+reset_printer_nr                = 477
+
+has_icsp_nr                     = 478
+reset_icsp_nr                   = 479
+
+get_max_carddev_nr              = 480
+open_carddev_nr                 = 481
+close_carddev_nr                = 482
+is_carddev_ok_nr                = 483
+wait_for_card_nr                = 484
+get_carddev_name_nr             = 485
+
+is_carddev_busy_nr              = 486
+is_carddev_inserted_nr          = 487
+
+has_touch_nr                    = 488
+
+had_carddev_inserted_nr         = 489
+clear_carddev_inserted_nr       = 490
+
+is_printer_cutter_jammed_nr     = 491
+has_printer_temp_error_nr       = 492
+has_printer_feed_error_nr       = 493
+
+is_64_bit_exe_nr                = 494
+
+usergate_entries			    = 512

@@ -716,7 +716,7 @@ int RDOSAPI RdosHasTouch();
 #endif
 
 #ifdef __GNUC__
-#include "user64.h"
+#include "rdosgcc.h"
 #endif
 
 #ifdef __WATCOMC__
