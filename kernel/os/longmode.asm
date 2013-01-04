@@ -456,7 +456,7 @@ pretask_int_tab:
 ;               int #       Entry                   DPL     IST
 ;
 pg0     DD      0,          OFFSET pretask0,        0,      0
-pg1     DD      1,          OFFSET trap_1,          0,      2
+pg1     DD      1,          OFFSET trap_1,          0,      0
 pg2     DD      2,          OFFSET pretask2,        0,      0
 pg3     DD      3,          OFFSET trap_3,          0,      0
 pg4     DD      4,          OFFSET pretask4,        0,      0
@@ -5233,13 +5233,14 @@ vwbLoop:
     sub r8,8
     mov rax,PAGE_TABLE_LINEAR
     sub r8,rax
-    shl r8,12
+    shl r8,9
     mov rax,[r8]
+    mov rax,[rsi-8]
 
 vwbPresent:
     test al,2
     jz vwbFail
-;    
+;
     loop vwbLoop
 ;
     clc
@@ -5285,7 +5286,7 @@ vrbLoop:
     sub r8,8
     mov rax,PAGE_TABLE_LINEAR
     sub r8,rax
-    shl r8,12
+    shl r8,9
     mov rax,[r8]
 
 vrbPresent:

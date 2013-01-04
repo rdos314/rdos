@@ -3,16 +3,18 @@
 #undef RDOSAPI
 #define RDOSAPI static inline volatile __attribute__ ((always_inline))
 
+#ifdef __x86_64__
+
 #define RdosClobberSyscall \
   asm volatile ( \
     "\n\t" \
-     : : : "rcx", "r9", "r11", "r14" \
+     : : : "rcx", "r9", "r11", "r14", "cc" \
    );
 
 #define RdosClobberSyscallRdi \
   asm volatile ( \
     "\n\t" \
-     : : : "rcx", "rdi", "r9", "r11", "r14" \
+     : : : "rcx", "rdi", "r9", "r11", "r14", "cc" \
    );
 
 #define RdosUserGateRetEax(nr, res) do { \
@@ -44,6 +46,7 @@
 
 #define RdosUserGateEbxEdiEcxParRetEax(nr, rbx, rdi, rcx, res) do { \
   register int _id asm("r14") = nr; \
+  register typeof(rbx) _rbx asm("rbx") = (rbx); \
   register typeof(rdi) _rdi asm("rdi") = (rdi); \
   register typeof(rcx) _rcx asm("r8") = (rcx); \
   register int _size asm("r12") = (rcx); \
@@ -52,7 +55,7 @@
     "jnc 1f\n\t" \
     "xorq %%rax,%%rax\n\t" \
     "1: \n\t" \
-    : "=a" (res) :  "r" (_id), "r" (_rdi), "r" (_rcx), "r" (_size) : "rdx", "rsi" \
+    : "=a" (res) :  "r" (_id), "r" (_rbx), "r" (_rdi), "r" (_rcx), "r" (_size) : "rdx", "rsi" \
   ); \
   RdosClobberSyscallRdi; \
 } while(0);
@@ -66,6 +69,66 @@
   ); \
   RdosClobberSyscall; \
 } while(0);
+
+#else
+
+#define RdosUserGateRetEax(nr, res) do { \
+  asm volatile( \
+    "db 0x67\n\t" \
+    "db 0x9A\n\t" \
+    "dd %1\n\t" \
+    "dw 0x3\n\t" \
+    : "=a" (res) : "i" (nr) : "cc" \
+  ); \
+} while(0);
+
+#define RdosUserGateEdiEcxRetEbx(nr, edi, ecx, res) do { \
+  register typeof(edi) _edi asm("edi") = (edi); \
+  register typeof(ecx) _ecx asm("ecx") = (ecx); \
+  asm volatile ( \
+    "db 0x67\n\t" \
+    "db 0x9A\n\t" \
+    "dd %1\n\t" \
+    "dw 0x3\n\t" \
+    "jc 1f\n\t" \
+    "movzx %%bx,%%eax\n\t" \
+    "jmp 2f\n\t" \
+    "1: \n\t" \
+    "xorq %%eax,%%eax\n\t" \
+    "2: \n\t" \
+    : "=a" (res) :  "i" (nr), "r" (_edi), "r" (_ecx) : "cc" \
+  ); \
+} while(0);
+
+#define RdosUserGateEbxEdiEcxParRetEax(nr, ebx, edi, ecx, res) do { \
+  register typeof(ebx) _ebx asm("ebx") = (ebx); \
+  register typeof(edi) _edi asm("edi") = (edi); \
+  register typeof(ecx) _ecx asm("ecx") = (ecx); \
+  asm volatile ( \
+    "db 0x67\n\t" \
+    "db 0x9A\n\t" \
+    "dd %1\n\t" \
+    "dw 0x3\n\t" \
+    "jnc 1f\n\t" \
+    "xorq %%eax,%%eax\n\t" \
+    "1: \n\t" \
+    : "=a" (res) :  "i" (nr), "r" (_ebx), "r" (_edi), "r" (_ecx) : "cc" \
+  ); \
+} while(0);
+
+#define RdosUserGateEbx(nr, ebx) do { \
+  register typeof(ebx) _ebx asm("ebx") = (ebx); \
+  asm volatile ( \
+    "db 0x67\n\t" \
+    "db 0x9A\n\t" \
+    "dd %1\n\t" \
+    "dw 0x3\n\t" \
+    : :  "i" (nr), "r" (_ebx) : "cc" \
+  ); \
+} while(0);
+
+
+#endif
 
 RDOSAPI short int RdosSwapShort(short int val) 
 {
@@ -91,6 +154,8 @@ RDOSAPI int RdosSwapLong(int val)
   return (int)res;    
 }
 
+#ifdef __x86_64__
+
 RDOSAPI int RdosGetCharSize(const char *str) 
 {
   long res;
@@ -115,6 +180,34 @@ RDOSAPI int RdosGetCharSize(const char *str)
   return res;    
 }
 
+#else
+
+RDOSAPI int RdosGetCharSize(const char *str) 
+{
+  long res;
+  
+  asm ( \
+    "movb $1, %%al\n\t" \
+    "movb (%0), %%ah\n\t" \
+    "testb $0x80, %%ah\n\t" \
+    "jz 1f\n\t" \
+    "incb %%al\n\t" \
+    "testb $0x20, %%ah\n\t" \
+    "jz 1f\n\t" \
+    "incb %%al\n\t" \
+    "testb $0x10, %%ah\n\t" \
+    "jz 1f\n\t" \
+    "incb %%al\n\t" \
+    "1: \n\t" \
+    "movzx %%al, %%eax\n\t" \
+    : "=a" (res) : "r" (str) : "cc" \
+    );
+
+  return res;    
+}
+
+#endif
+
 RDOSAPI int RdosGetLongRandom() 
 {
     int res;
@@ -124,7 +217,7 @@ RDOSAPI int RdosGetLongRandom()
 
 RDOSAPI long RdosGetRandom(long range)
 {
-    long res;
+    long long res;
 
     RdosUserGateRetEax(usergate_get_random, res);
 
@@ -136,16 +229,24 @@ RDOSAPI long RdosGetRandom(long range)
 RDOSAPI int RdosOpenFile(const char *FileName, char Access)
 {
     int res;
+#ifdef __x86_64__    
     int size = strlen(FileName) + 1;
     RdosUserGateEdiEcxPar0RetEbx(usergate_open_file, FileName, Access, size, res);
+#else
+    RdosUserGateEdiEcxRetEbx(usergate_open_file, FileName, Access, res);
+#endif    
     return res;
 }
 
 RDOSAPI int RdosCreateFile(const char *FileName, int Attrib)
 {
     int res;
+#ifdef __x86_64__    
     int size = strlen(FileName) + 1;
     RdosUserGateEdiEcxPar0RetEbx(usergate_create_file, FileName, Attrib, size, res);
+#else
+    RdosUserGateEdiEcxRetEbx(usergate_create_file, FileName, Attrib, res);
+#endif    
     return res;
 }
 

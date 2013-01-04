@@ -51,17 +51,17 @@ _key_dtor_arr:
 	.global __deregister_frame_info
 
 __deregister_frame_info:
-    retq
+    ret
 
     .global __register_frame_info
 
 __register_frame_info:
-    retq
+    ret
 
     .global free
 
 free:
-    retq
+    ret
 
 					  					    
 /*##########################################################################
