@@ -4970,8 +4970,12 @@ alloc_sect_loop:
 ;
     mov rcx,10000h
     call AllocateUserStack
-;
+;    
     int 3
+    mov rax,rdx
+    shr rax,30
+    SetFutexId
+;
     mov rax,long_kernel_data_sel
     mov ss,ax
 ;

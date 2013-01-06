@@ -6131,6 +6131,34 @@ leave_user_section      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           SetFutexId
+;
+;           DESCRIPTION:    Set futex ID
+;
+;           PARAMS:         AX      Futex ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_futex_id_name    DB 'Set Futex ID',0
+
+set_futex_id    Proc far
+    push es
+    push bx
+;    
+    push ax
+    GetThread
+    mov es,ax
+    pop ax
+    mov es:p_futex_id,ax
+;
+    pop bx
+    pop es    
+    retf32
+set_futex_id Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           acquire_futex
 ;
 ;           DESCRIPTION:    Acquire futex
@@ -6205,7 +6233,10 @@ acquire_no_sect:
     jmp LoadThread
 
 acquire_take:
-    str ax
+    push es
+    mov es,fs:ps_curr_thread
+    mov ax,es:p_futex_id
+    pop es
     mov es:[esi].fs_owner,ax
     mov es:[esi].fs_counter,1
 ;    
@@ -6282,7 +6313,7 @@ release_futex   Proc near
     call RemoveBlock32
     mov es:p_data,0
     mov cx,es
-    mov di,es:p_tss_sel
+    mov di,es:p_futex_id
     pop esi
     pop es
 ;
@@ -7580,7 +7611,6 @@ init_thread_block       PROC near
     ret
 init_thread_block       ENDP
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -7765,6 +7795,7 @@ create_tss32    PROC near
     AllocateGdt
     CreateTssSelector
     mov ds:p_tss_sel,bx
+    mov ds:p_futex_id,bx
 ;    
     sldt dx
     mov ds:p_ldt,dx
@@ -7811,6 +7842,7 @@ create_tss64    PROC near
     mov ds:p_tss_sel,0
     mov ds:p_ldt_sel,0
     mov ds:p_ldt,long_ldt_sel
+    mov ds:p_futex_id,0
 ;
     pop edx
     pop ecx
@@ -9135,6 +9167,12 @@ timer_free_list_create:
     mov di,OFFSET unlock_task_name
     xor cl,cl
     mov ax,unlock_task_nr
+    RegisterOsGate
+;
+    mov si,OFFSET set_futex_id
+    mov di,OFFSET set_futex_id_name
+    xor cl,cl
+    mov ax,set_futex_id_nr
     RegisterOsGate
 ;
     mov si,OFFSET enter_long_int

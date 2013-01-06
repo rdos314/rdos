@@ -1305,6 +1305,11 @@ leave_section_done:
     popf
                         ENDM
 
+;  AX       Futex ID
+SetFutexId MACRO
+    OsGate set_futex_id_nr
+                    ENDM
+
 ;;;;;;;;;;; MULTITASKING ;;;;;;;;;;;;;;;;
 
 SetupSmpPatch MACRO
