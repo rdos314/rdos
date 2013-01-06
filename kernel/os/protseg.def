@@ -54,9 +54,11 @@ local_page_linear		EQU 000300000h
 long_buf_linear         EQU 040000000h
 long_buf_size           EQU 07F000000h
 
-flat_size				EQU 0BF000000h
+flat_size				EQU 0BE000000h
 
-system_mem_start		EQU 0BF000000h
+system_mem_start		EQU 0BE000000h
+
+long_section_alias      EQU 0BEE00000h
 
 handle_linear			EQU 0BF000000h
 fixed_program_linear	EQU 0BF010000h
@@ -105,5 +107,8 @@ kernel_linear			EQU 0FF000000h
 long_code_linear        EQU 010000000000h
 long_code_size          EQU 010000000000h
 
+long_section_linear     EQU 01FFC0000000h
+long_section_size       EQU 000000200000h
+
 long_stack_linear       EQU 020000000000h
-long_stack_size         EQU 060000000000h
+long_stack_size         EQU 010000000000h

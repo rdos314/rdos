@@ -4842,7 +4842,7 @@ MarkValid   Proc near
     pop rax    
     ret
 MarkValid   Endp
-    
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -4971,10 +4971,33 @@ alloc_sect_loop:
     mov rcx,10000h
     call AllocateUserStack
 ;    
-    int 3
     mov rax,rdx
     shr rax,30
     SetFutexId
+;
+    int 3
+    push rcx
+    push rdx
+    mov rdx,long_section_linear
+    mov rcx,long_section_size
+    call MarkValid
+    pop rdx
+    pop rcx
+;
+    push rsi
+    push rdi
+;    
+    mov rsi,long_section_linear
+    shr rsi,18
+    add rsi,DIR_TABLE_LINEAR
+;    
+    mov rdi,long_section_alias
+    shr rdi,18
+    add rdi,DIR_TABLE_LINEAR
+;
+    movsq
+    pop rdi
+    pop rsi
 ;
     mov rax,long_kernel_data_sel
     mov ss,ax
