@@ -4825,7 +4825,7 @@ MarkValid   Proc near
     and rdi,0FFFFFFFFFFFFF000h
 ;
     and rdx,0FFFh
-    sub rcx,rdx
+    add rcx,rdx
     dec rcx
     shr rcx,12
     inc rcx
