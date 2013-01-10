@@ -659,3 +659,25 @@ void TDateTime::AddYear(long year)
     FYear += year;
         RecordToRaw();
 }
+
+/*##########################################################################
+#
+#   Name       : TDateTime::NextDay
+#
+#   Purpose....: Goto next day
+#
+#   In params..: year
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDateTime::NextDay()
+{
+    FHour = 0;
+    FMin = 0;
+    FSec = 0;
+    FMilli = 0;
+    FMicro = 0;
+    RecordToRaw();
+    AddDay(1);
+}

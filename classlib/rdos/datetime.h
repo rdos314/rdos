@@ -57,6 +57,8 @@ public:
 	void AddMonth(long month);
 	void AddYear(long year);
 
+	void NextDay();
+
 	int GetDayOfWeek() const;
 	int GetYear() const;
 	int GetMonth() const;
