@@ -74,11 +74,11 @@
 
 #define RdosUserGateRetEax(nr, res) do { \
   asm volatile( \
-    "db 0x67\n\t" \
-    "db 0x9A\n\t" \
-    "dd %1\n\t" \
-    "dw 0x3\n\t" \
-    : "=a" (res) : "i" (nr) : "cc" \
+    ".byte 0x67\n\t" \
+    ".byte 0x9A\n\t" \
+    ".long %0\n\t" \
+    ".word 0x3\n\t" \
+    : "=a" (res) : "n" (nr) : "cc" \
   ); \
 } while(0);
 
@@ -86,17 +86,17 @@
   register typeof(edi) _edi asm("edi") = (edi); \
   register typeof(ecx) _ecx asm("ecx") = (ecx); \
   asm volatile ( \
-    "db 0x67\n\t" \
-    "db 0x9A\n\t" \
-    "dd %1\n\t" \
-    "dw 0x3\n\t" \
+    ".byte 0x67\n\t" \
+    ".byte 0x9A\n\t" \
+    ".long %0\n\t" \
+    ".word 0x3\n\t" \
     "jc 1f\n\t" \
     "movzx %%bx,%%eax\n\t" \
     "jmp 2f\n\t" \
     "1: \n\t" \
-    "xorq %%eax,%%eax\n\t" \
+    "xorl %%eax,%%eax\n\t" \
     "2: \n\t" \
-    : "=a" (res) :  "i" (nr), "r" (_edi), "r" (_ecx) : "cc" \
+    : "=a" (res) :  "n" (nr), "r" (_edi), "r" (_ecx) : "cc" \
   ); \
 } while(0);
 
@@ -105,25 +105,25 @@
   register typeof(edi) _edi asm("edi") = (edi); \
   register typeof(ecx) _ecx asm("ecx") = (ecx); \
   asm volatile ( \
-    "db 0x67\n\t" \
-    "db 0x9A\n\t" \
-    "dd %1\n\t" \
-    "dw 0x3\n\t" \
+    ".byte 0x67\n\t" \
+    ".byte 0x9A\n\t" \
+    ".long %0\n\t" \
+    ".word 0x3\n\t" \
     "jnc 1f\n\t" \
-    "xorq %%eax,%%eax\n\t" \
+    "xorl %%eax,%%eax\n\t" \
     "1: \n\t" \
-    : "=a" (res) :  "i" (nr), "r" (_ebx), "r" (_edi), "r" (_ecx) : "cc" \
+    : "=a" (res) :  "n" (nr), "r" (_ebx), "r" (_edi), "r" (_ecx) : "cc" \
   ); \
 } while(0);
 
 #define RdosUserGateEbx(nr, ebx) do { \
   register typeof(ebx) _ebx asm("ebx") = (ebx); \
   asm volatile ( \
-    "db 0x67\n\t" \
-    "db 0x9A\n\t" \
-    "dd %1\n\t" \
-    "dw 0x3\n\t" \
-    : :  "i" (nr), "r" (_ebx) : "cc" \
+    ".byte 0x67\n\t" \
+    ".byte 0x9A\n\t" \
+    ".long %0\n\t" \
+    ".word 0x3\n\t" \
+    : :  "n" (nr), "r" (_ebx) : "cc" \
   ); \
 } while(0);
 
