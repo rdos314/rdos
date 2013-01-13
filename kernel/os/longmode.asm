@@ -1265,7 +1265,6 @@ start_long_exe:
     cmp eax,ecx
     jne sleFailed        
 ;    
-    int 3
     mov dword ptr ds:[esi].elf_phoff,edi
 ;    
     db 0EAh

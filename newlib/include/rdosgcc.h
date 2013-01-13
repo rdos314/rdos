@@ -3,6 +3,21 @@
 #undef RDOSAPI
 #define RDOSAPI static inline volatile __attribute__ ((always_inline))
 
+struct futex_struc
+{
+    int handle;
+    int count;
+    short int val;
+    short int owner;
+    int sign;
+};
+
+#define FUTEX_STRUC_SIZE    16
+#define FUTEX_STRUC_SHIFT   4
+#define FUTEX_LINEAR        0x1FFC0000000
+#define FUTEX_SIGN          0xADE35AFE
+#define MAX_FUTEX_COUNT     0x20000
+
 #ifdef __x86_64__
 
 #define RdosClobberSyscall \
@@ -267,4 +282,27 @@ RDOSAPI int RdosWriteFile(int Handle, void *Buf, int Size)
 RDOSAPI RdosCloseFile(int Handle)
 {
     RdosUserGateEbx(usergate_close_file, Handle);
+}
+
+RDOSAPI int RdosCreateSection()
+{
+    int i;
+    void *base = (void *)FUTEX_LINEAR;
+    struct futex_struc *fp = (struct futex_struc *)base;
+
+    for (i = 0; i < MAX_FUTEX_COUNT; i++)
+    {
+        if (fp->sign != FUTEX_SIGN)
+        {
+            fp->handle = 0;
+            fp->count = 0;
+            fp->val = -1;
+            fp->owner = 0;
+            fp->sign = FUTEX_SIGN;
+            return i;
+        }
+        else
+            fp++;
+    }            
+    return 0;        
 }
