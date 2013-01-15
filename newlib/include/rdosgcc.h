@@ -16,7 +16,8 @@ struct futex_struc
 #define FUTEX_STRUC_SHIFT   4
 #define FUTEX_LINEAR        0x1FFC0000000
 #define FUTEX_SIGN          0xADE35AFE
-#define MAX_FUTEX_COUNT     0x20000
+#define FUTEX_HANDLE_BIAS   0x3AB50000
+#define MAX_FUTEX_COUNT     0x10000
 
 #ifdef __x86_64__
 
@@ -31,6 +32,100 @@ struct futex_struc
     "\n\t" \
      : : : "rcx", "rdi", "r9", "r11", "r14", "cc" \
    );
+
+#define RdosCleanupFutex(index) do { \
+  register int _id asm("r14") = usergate_cleanup_futex; \
+  register typeof(index) _rax asm("rax") = (index); \
+  asm volatile( \
+    "syscall\n\t" \
+    : : "r" (_id), "r" (_rax) : "rbx", "rdx", "rsi", "rdi" \
+  ); \
+  RdosClobberSyscall; \
+} while(0);
+
+#define RdosAcquireFutex(index) do { \
+  register int _id asm("r14") = usergate_acquire_futex; \
+  register typeof(index) _rax asm("rax") = (index); \
+  register char * _fp = FUTEX_LINEAR + ((index) << 4); \
+  asm volatile( \
+    "movq %%rsp,%%rdx\n\t" \
+    "shrq $30,%%rdx\n\t" \
+    "cmpw 10(%2),%%dx\n\t" \
+    "jne 1f\n\t" \
+    "incl 4(%2)\n\t" \
+    "jmp 4f\n\t" \
+    "1: \n\t" \
+    "lock\n\t" \
+    "addw $1, 8(%2)\n\t" \
+    "jc 2f\n\t" \
+    "movw $1,%%di\n\t" \
+    "xchgw 8(%2), %%di\n\t" \
+    "cmpw $0xFFFF, %%di\n\t" \
+    "jne 3f\n\t" \
+    "2: \n\t" \
+    "movw %%dx,10(%2)\n\t" \
+    "movl $1,4(%2)\n\t" \
+    "jmp 4f\n\t" \
+    "3: \n\t" \        
+    "syscall\n\t" \
+    "4: \n\t" \    
+    : : "r" (_id), "r" (_rax), "r" (_fp) : "rbx", "rdx", "rsi", "rdi" \
+  ); \
+  RdosClobberSyscall; \
+} while(0);
+
+#define RdosReleaseFutex(index) do { \
+  register int _id asm("r14") = usergate_release_futex; \
+  register typeof(index) _rax asm("rax") = (index); \
+  register char * _fp = FUTEX_LINEAR + ((index) << 4); \
+  asm volatile( \
+    "movq %%rsp,%%rdx\n\t" \
+    "shrq $30,%%rdx\n\t" \
+    "cmpw 10(%2),%%dx\n\t" \
+    "jne 1f\n\t" \
+    "subl $1,4(%2)\n\t" \
+    "jnz 1f\n\t" \
+    "movw $0,10(%2)\n\t" \
+    "lock\n\t" \
+    "subw $1, 8(%2)\n\t" \
+    "jc 1f\n\t" \
+    "movw $0xFFFF, 8(%2)\n\t" \
+    "syscall\n\t" \
+    "1: \n\t" \    
+    : : "r" (_id), "r" (_rax), "r" (_fp) : "rbx", "rdx", "rsi", "rdi" \
+  ); \
+  RdosClobberSyscall; \
+} while(0);
+
+#define RdosTryAcquireFutex(index, res) do { \
+  register char * _fp = FUTEX_LINEAR + ((index) << 4); \
+  asm volatile( \
+    "movq %%rsp,%%rdx\n\t" \
+    "shrq $30,%%rdx\n\t" \
+    "cmpw 10(%1),%%dx\n\t" \
+    "jne 1f\n\t" \
+    "incl 4(%1)\n\t" \
+    "jmp 3f\n\t" \
+    "1: \n\t" \
+    "lock\n\t" \
+    "addw $1, 8(%1)\n\t" \
+    "jc 2f\n\t" \
+    "movw $1,%%ax\n\t" \
+    "xchgw 8(%1), %%ax\n\t" \
+    "cmpw $0xFFFF, %%ax\n\t" \
+    "jne 4f\n\t" \
+    "2: \n\t" \
+    "movw %%dx,10(%1)\n\t" \
+    "movl $1,4(%1)\n\t" \
+    "3: \n\t" \ 
+    "movq $1,%%rax\n\t" \ 
+    "jmp 5f\n\t" \
+    "4: \n\t" \        
+    "xorq %%rax,%%rax\n\t" \
+    "5: \n\t" \  
+    : "=a" (res) : "r" (_fp) : "rdx", "cc" \
+  ); \
+} while(0);
 
 #define RdosUserGateRetEax(nr, res) do { \
   register int _id asm("r14") = nr; \
@@ -299,10 +394,67 @@ RDOSAPI int RdosCreateSection()
             fp->val = -1;
             fp->owner = 0;
             fp->sign = FUTEX_SIGN;
-            return i;
+            return i | FUTEX_HANDLE_BIAS;
         }
         else
             fp++;
     }            
     return 0;        
+}
+
+RDOSAPI RdosDeleteSection(int handle)
+{
+    int i;
+    void *base = (void *)FUTEX_LINEAR;
+    struct futex_struc *fp = (struct futex_struc *)base;
+
+    if ((handle & 0xFFFF0000) == FUTEX_HANDLE_BIAS)
+    {
+        i = handle & 0xFFFF;
+        fp += i;
+
+        if (fp->handle)
+            RdosCleanupFutex(i);
+        
+        fp->handle = 0;
+        fp->count = 0;
+        fp->val = 0;
+        fp->owner = 0;
+        fp->sign = 0;
+    }
+}
+
+RDOSAPI RdosEnterSection(int handle)
+{
+    int i;
+
+    if ((handle & 0xFFFF0000) == FUTEX_HANDLE_BIAS)
+    {
+        i = handle & 0xFFFF;
+        RdosAcquireFutex(i);
+    }
+}
+
+RDOSAPI RdosLeaveSection(int handle)
+{
+    int i;
+
+    if ((handle & 0xFFFF0000) == FUTEX_HANDLE_BIAS)
+    {
+        i = handle & 0xFFFF;
+        RdosReleaseFutex(i);
+    }
+}
+
+RDOSAPI int RdosTryEnterSection(int handle)
+{
+    int i;
+    int res = 0;
+
+    if ((handle & 0xFFFF0000) == FUTEX_HANDLE_BIAS)
+    {
+        i = handle & 0xFFFF;
+        RdosTryAcquireFutex(i, res);        
+    }
+    return res;
 }
