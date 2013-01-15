@@ -57,6 +57,7 @@ IA32_STAR       = 0C0000081h
 IA32_LSTAR      = 0C0000082h
 IA32_CSTAR      = 0C0000083h
 IA32_FMASK      = 0C0000084h
+MSR_GS_BASE     = 0C0000101h
 
 pushq0  Macro
     db 6Ah
@@ -1131,6 +1132,32 @@ InitProcess Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           SetLongTlsLinear
+;
+;       DESCRIPTION:    Setup long TLS linear
+;
+;       PARAMETERS:     EDX:EAX TLS linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_long_tls_linear_name DB 'Set Long TLS Linear', 0
+
+set_long_tls_linear   Proc far
+    push es
+;    
+    mov ebx,eax
+    GetThread
+    mov es,ax
+    mov dword ptr es:p_tls_linear,ebx
+    mov dword ptr es:p_tls_linear+4,edx
+;
+    pop es    
+    ret
+set_long_tls_linear   Endp
+  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           InitLongExe
 ;
 ;       DESCRIPTION:    Init long mode executable
@@ -1436,6 +1463,12 @@ init    proc far
     mov edi,OFFSET start_long_exe_name
     xor cl,cl
     mov ax,start_long_exe_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET set_long_tls_linear
+    mov edi,OFFSET set_long_tls_linear_name
+    xor cl,cl
+    mov ax,set_long_tls_linear_nr
     RegisterOsGate
 ;
     mov esi,OFFSET handle_code_fault
@@ -4975,7 +5008,26 @@ alloc_sect_loop:
     shr rax,30
     SetFutexId
 ;
-    int 3
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    add rdx,8000000h
+    mov rcx,10000h
+    call MarkValid
+;
+    mov rax,rdx
+    shr rdx,32
+    SetLongTlsLinear
+;    
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+;
+    mov rax,rdx
+        
+;
     push rcx
     push rdx
     mov rdx,long_section_linear
@@ -4999,6 +5051,7 @@ alloc_sect_loop:
     pop rdi
     pop rsi
 ;
+    int 3
     mov rax,long_kernel_data_sel
     mov ss,ax
 ;

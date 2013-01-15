@@ -359,6 +359,7 @@ p_cli_spinlock      DW ?
 p_sti_spinlock      DW ?
 p_free_proc		    DD ?,?
 p_cr3			    DD ?
+p_tls_linear        DQ ?
 p_vm_deb_sel	    DW ?
 p_vm_deb_offs	    DD ?
 p_pm_deb_sel	    DW ?

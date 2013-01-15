@@ -604,5 +604,6 @@ handle_long_code_fault_nr   = 504
 load_long_breaks_nr         = 505
 
 set_futex_id_nr             = 506
+set_long_tls_linear_nr      = 507
 
 osgate_entries				= 520

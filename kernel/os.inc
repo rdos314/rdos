@@ -1310,6 +1310,11 @@ SetFutexId MACRO
     OsGate set_futex_id_nr
                     ENDM
 
+;  EDX:EAX       TLS linear
+SetLongTlsLinear MACRO
+    OsGate set_long_tls_linear_nr
+                    ENDM
+
 ;;;;;;;;;;; MULTITASKING ;;;;;;;;;;;;;;;;
 
 SetupSmpPatch MACRO
