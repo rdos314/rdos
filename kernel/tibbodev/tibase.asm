@@ -47,7 +47,8 @@ _TEXT    SEGMENT byte public 'CODE'
 ;
 ;       DESCRIPTION:    UDP callback
 ;
-;       PARAMETERS:     ES:EDI      UDP request data
+;       PARAMETERS:     EDX         IP
+;                       ES:EDI      UDP request data
 ;                       CX          UDP request size
 ;
 ;       RETURNS:        ES:EDI      UDP reply data
@@ -60,10 +61,7 @@ _TEXT    SEGMENT byte public 'CODE'
 udp_callback    Proc far
     movzx ecx,cx
     call ImplUdpCallback
-;
     xor ecx,ecx
-    mov es,ecx
-    xor edi,edi
     ret
 udp_callback    Endp
 
@@ -88,9 +86,8 @@ InitTibboBase_    Proc near
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
     mov edi,OFFSET udp_callback
-    mov si,4096
+    mov si,4095
     ListenUdpPort
 ;
     popad
@@ -98,6 +95,59 @@ InitTibboBase_    Proc near
     pop ds
     ret
 InitTibboBase_    Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           BroadcastCallback
+;
+;       DESCRIPTION:    Broadcast callback
+;
+;       PARAMETERS:     DS          Class selector
+;                       FS          Driver selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extrn ImplBroadcast:near
+
+broadcast_callback    Proc far
+    push ds
+    mov eax,fs
+    call ImplBroadcast
+    pop ds
+    ret
+broadcast_callback    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitBroadcast
+;
+;           DESCRIPTION:    Initialize broadcast
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public InitBroadcast_
+
+InitBroadcast_    Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;    
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET broadcast_callback
+    NetBroadcast
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+InitBroadcast_    Endp
 
 _TEXT    ENDS
 

@@ -29,9 +29,49 @@
 #include "rdosdev.h"
 #include "string.h"
 
+#include <stdlib.h>
 #include <stdio.h>
 
-extern void InitAcpiTables();
+#define MAX_UDP_DEV     16
+#define MAX_TIBBO_DEV   16
+
+#define FALSE   0
+#define TRUE    !FALSE
+
+extern void InitTibboBase();
+extern void InitBroadcast();
+
+struct tibbo_dev
+{
+    char mac[30];
+    long ip;
+    short int port;
+    char loader;
+    char dhcp;
+    char ok;
+};
+
+int DriverCount;
+int DriverArr[MAX_UDP_DEV];
+
+int TibboCount;
+struct tibbo_dev *TibboArr[MAX_TIBBO_DEV];
+    
+/*##########################################################################
+#
+#   Name       : BroadcastData
+#
+##########################################################################*/
+void BroadcastData(char *buf, int size)
+{
+    int i;
+
+    DriverCount = 0;
+    InitBroadcast();
+
+    for (i = 0; i < DriverCount; i++)
+        RdosBroadcastUdp(4095, -1, DriverArr[i], buf, size);
+}        
     
 /*##########################################################################
 #
@@ -40,8 +80,13 @@ extern void InitAcpiTables();
 ##########################################################################*/
 void RunTibboThread()
 {
+    char str[10] = "X";
+
+    TibboCount = 0;
+
     for (;;)
     {
+        BroadcastData(str, strlen(str));
         RdosWaitMilli(250);
     }
 }
@@ -71,12 +116,127 @@ void __far ImplTestGate(const char *msg)
     
 /*##########################################################################
 #
+#   Name       : ParseEchoPar
+#
+##########################################################################*/
+void ParseEchoPar(struct tibbo_dev *dev, int par, char *buf)
+{
+    switch (par)
+    {
+        case 0:
+            strcpy(dev->mac, buf + 1);
+            break;
+            
+        case 1:
+            dev->port = atoi(buf);
+            break;
+
+        case 2:
+            dev->ok = TRUE;
+            dev->loader = FALSE;
+            dev->dhcp = FALSE;
+
+            switch (buf[0])
+            {
+                case 'L':
+                    dev->loader = TRUE;
+
+                case 'N':
+                    break;
+
+                default:
+                    dev->ok = FALSE;
+            }
+
+            if (buf[1] != '*')
+                dev->ok = FALSE;
+                
+            if (buf[2] != '*')
+                dev->ok = FALSE;
+
+            if (buf[3] != 'M')
+                dev->dhcp = TRUE;
+
+            break;
+    }
+}
+    
+/*##########################################################################
+#
+#   Name       : ParseEcho
+#
+##########################################################################*/
+void ParseEcho(struct tibbo_dev *dev, char *buf, int size)
+{
+    int i;
+    char *ptr = buf;
+    int nr = 0;
+
+    for (i = 0; i < size; i++)
+    {
+        if (buf[i] == '/')
+        {
+            buf[i] = 0;
+            ParseEchoPar(dev, nr, ptr);
+            ptr = buf + i + 1;
+            nr++;
+        }            
+    }    
+}
+    
+/*##########################################################################
+#
+#   Name       : InsertDev
+#
+##########################################################################*/
+void InsertDev(struct tibbo_dev *dev)
+{
+    int i;
+    int found = FALSE;
+
+    for (i = 0; i < TibboCount && !found; i++)
+        if (!strcmp(dev->mac, TibboArr[i]->mac))
+            found = TRUE;
+
+    if (found)
+        free(dev);
+    else
+    {
+        TibboArr[TibboCount] = dev;
+        TibboCount++;
+    }
+}
+    
+/*##########################################################################
+#
 #   Name       : ImplUdpCallback
 #
 ##########################################################################*/
-#pragma aux ImplUdpCallback "*" rdosdev parm routine [es edi] [ecx]
-void ImplUdpCallback(char *buf, int size)
+#pragma aux ImplUdpCallback "*" rdosdev parm routine [edx] [es edi] [ecx]
+void ImplUdpCallback(long ip, char *buf, int size)
 {
+    struct tibbo_dev *dev = (struct tibbo_dev *)malloc(sizeof(struct tibbo_dev));
+    char *ret_msg = 0;
+
+    dev->ip = ip;
+    ParseEcho(dev, buf, size);
+
+    if (dev->ok)
+        InsertDev(dev);
+    else
+        free(dev);
+}
+    
+/*##########################################################################
+#
+#   Name       : ImplBroadcast
+#
+##########################################################################*/
+#pragma aux ImplBroadcast "*" rdosdev parm routine [eax]
+void ImplBroadcast(int driver_sel)
+{
+    DriverArr[DriverCount] = driver_sel;
+    DriverCount++;
 }
 
 /*##########################################################################
@@ -93,6 +253,8 @@ void ImplUdpCallback(char *buf, int size)
 #pragma aux InitTasking "*" rdosdev parm routine
 void __far InitTasking()
 {
+    InitTibboBase();
+
     RdosCreateKernelThread(5, 0x1000, &TibboThread, "Tibbo", 0);
 } 
 
@@ -111,5 +273,4 @@ int main()
 {
     RdosHookInitTasking(&InitTasking);
     RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate");
-    InitTibboBase();
 }

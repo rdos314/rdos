@@ -58,6 +58,7 @@ Reverse MACRO
 data    SEGMENT byte public 'DATA'
 
 my_ip               DD ?
+bc_ip               DD ?
 ip_mask             DD ?
 gateway             DD ?
 ip_handle               DW ?
@@ -808,7 +809,8 @@ create_broad_fill:
     inc ds:curr_id
     xchg al,ah
     mov es:[di].ip_id,ax
-    mov es:[di].ip_source,0
+    mov eax,ds:bc_ip
+    mov es:[di].ip_source,eax
     mov es:[di].ip_dest,-1
     pop ds
 ;
@@ -1225,6 +1227,7 @@ define_ip       Proc near
     mov dx,SEG data
     mov ds,dx
     mov ds:my_ip,eax
+    mov ds:bc_ip,eax
     mov esi,OFFSET my_ip
     mov bx,ds:ip_handle
     DefineProtocolAddress
@@ -1677,6 +1680,7 @@ init    PROC far
     mov ax,SEG data
     mov ds,ax
     mov ds:my_ip,0
+    mov ds:bc_ip,0
     mov esi,OFFSET my_ip
     mov edi,OFFSET receive
     RegisterNetProtocol

@@ -468,6 +468,167 @@ query_udp       Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;       Name:           SendUdp
+;
+;       Purpose:        Send UDP data
+;
+;       Parameters:     SI              source port
+;                       BX              destination port
+;                       EDX             IP-address
+;                       ECX             Number of bytes to send
+;                       ES:EDI          Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_udp_name DB 'Send UDP',0
+
+send_udp       Proc far
+    push ds
+    push es
+    pushad
+;
+    push es
+    push edi
+    push si
+;
+    mov ax,cs
+    mov ds,ax
+    mov esi,OFFSET ip_options
+    mov al,17
+    mov ah,30
+    add ecx,SIZE udp_header
+    CreateIpHeader
+;    
+    pop ax
+    pop esi
+    pop ds
+    jc send_udp_done
+;       
+    xchg al,ah
+    mov es:[edi].udp_source,ax
+;    
+    mov ax,bx
+    xchg al,ah
+    mov es:[edi].udp_dest,ax
+;
+    xchg cl,ch
+    mov es:[edi].udp_len,cx
+    xchg cl,ch
+;
+    push ecx
+    push edi
+    sub ecx,SIZE udp_header
+    add edi,SIZE udp_header
+    rep movs byte ptr es:[edi],[esi]
+    pop edi
+    pop ecx
+;
+    mov es:[edi].udp_checksum,0
+    mov ax,cx
+    xchg al,ah
+    add ax,1100h
+    adc ax,0
+    adc ax,0
+    sub di,8
+    add cx,8
+    call CalcChecksum
+    not ax
+    add edi,8
+    mov es:[edi].udp_checksum,ax
+    sub ecx,8
+    SendIp
+
+send_udp_done:
+    popad
+    pop es
+    pop ds    
+    retf32
+send_udp       Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           BroadcastUdp
+;
+;       Purpose:        Broadcast UDP data
+;
+;       Parameters:     SI              source port
+;                       BX              destination port
+;                       ECX             Number of bytes to send
+;                       ES:EDI          Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+broadcast_udp_name DB 'Send UDP',0
+
+broadcast_udp       Proc far
+    push ds
+    push es
+    push fs
+    pushad
+;
+    push es
+    push edi
+    push si
+;
+    mov ax,cs
+    mov ds,ax
+    mov esi,OFFSET ip_options
+    mov al,17
+    mov ah,30
+    add ecx,SIZE udp_header
+    CreateBroadcastIp
+;    
+    pop ax
+    pop esi
+    pop ds
+    jc broadcast_udp_done
+;       
+    xchg al,ah
+    mov es:[edi].udp_source,ax
+;    
+    mov ax,bx
+    xchg al,ah
+    mov es:[edi].udp_dest,ax
+;
+    xchg cl,ch
+    mov es:[edi].udp_len,cx
+    xchg cl,ch
+;
+    push ecx
+    push edi
+    sub ecx,SIZE udp_header
+    add edi,SIZE udp_header
+    rep movs byte ptr es:[edi],[esi]
+    pop edi
+    pop ecx
+;
+    mov es:[edi].udp_checksum,0
+    mov ax,cx
+    xchg al,ah
+    add ax,1100h
+    adc ax,0
+    adc ax,0
+    sub di,8
+    add cx,8
+    call CalcChecksum
+    not ax
+    add edi,8
+    mov es:[edi].udp_checksum,ax
+    sub ecx,8
+    SendBroadcastIp
+
+broadcast_udp_done:
+    popad
+    pop fs
+    pop es
+    pop ds    
+    retf32
+broadcast_udp       Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;       Name:           FindListen
 ;
 ;       Purpose:        Look for a listen request
@@ -541,6 +702,7 @@ Receive Proc far
     push si
     push di
 ;
+    push dx
     push di
     mov dx,cx
     xchg dl,dh
@@ -564,6 +726,7 @@ Receive Proc far
     not ax
     or al,ah
     pop di
+    pop dx
     jnz receive_free
 ;
     mov ax,SEG data
@@ -799,6 +962,18 @@ query_list_create:
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET send_udp
+    mov edi,OFFSET send_udp_name
+    xor cl,cl
+    mov ax,send_udp_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET broadcast_udp
+    mov edi,OFFSET broadcast_udp_name
+    xor cl,cl
+    mov ax,broadcast_udp_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET query_udp
     mov edi,OFFSET query_udp_name

@@ -606,4 +606,7 @@ load_long_breaks_nr         = 505
 set_futex_id_nr             = 506
 set_long_tls_linear_nr      = 507
 
+send_udp_nr                 = 508
+broadcast_udp_nr            = 509
+
 osgate_entries				= 520

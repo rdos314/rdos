@@ -2443,12 +2443,31 @@ QueryUdp    MACRO
 
 ; IN  SI        local port
 ; IN  ES:EDI    callback upon request
+; IN    EDX     IP source
 ; IN    CX      UDP request size
 ; IN    ES:EDI  UDP request data
 ; OUT   CX      UDP reply size
 ; OUT   ES:EDI  UDP reply data
 ListenUdpPort   MACRO
     OsGate listen_udp_port_nr
+            ENDM
+
+; IN  SI        source port
+; IN  BX        destination port
+; IN  EDX       IP-address
+; IN  CX        Number of bytes to send
+; IN  ES:EDI    Data buffer
+SendUdp    MACRO
+    OsGate send_udp_nr
+            ENDM
+
+; IN  SI        source port
+; IN  BX        destination port
+; IN  CX        Number of bytes to send
+; IN  FS        Driver sel
+; IN  ES:EDI    Data buffer
+BroadcastUdp    MACRO
+    OsGate broadcast_udp_nr
             ENDM
 
 ; IN  ES:EDI  Pointer to data

@@ -495,9 +495,7 @@
 #define osgate_register_syscall 424
 #define osgate_register_bimodal_syscall 425
 
-#define osgate_syscall_patch 426
 #define osgate_start_syscall 427
-#define osgate_setup_sysleave 428
 
 #define osgate_start_dev32 429
 
@@ -591,8 +589,25 @@
 #define osgate_read_thread64 494
 #define osgate_write_thread64 495
 
-#define osgate_allocate_fixed_program_linear 496
+#define osgate_allocate_program_linear 496
 #define osgate_allocate_fixed_program_mem 497
+
+#define osgate_hook_start_program 498
+#define osgate_hook_end_program 499
+#define osgate_notify_start_program 500
+#define osgate_notify_end_program 501
+
+#define osgate_allocate_long_buf 502
+#define osgate_free_long_buf 503
+
+#define osgate_handle_long_code_fault 504
+#define osgate_load_long_breaks 505
+
+#define osgate_set_futex_id 506
+#define osgate_set_long_tls_linear 507
+
+#define osgate_send_udp 508
+#define osgate_broadcast_udp 509
 
 
 
@@ -1093,9 +1108,7 @@
 #define OsGate_register_syscall 0x3E 0x67 0x9a 168 1 0 0 2 0
 #define OsGate_register_bimodal_syscall 0x3E 0x67 0x9a 169 1 0 0 2 0
 
-#define OsGate_syscall_patch 0x3E 0x67 0x9a 170 1 0 0 2 0
 #define OsGate_start_syscall 0x3E 0x67 0x9a 171 1 0 0 2 0
-#define OsGate_setup_sysleave 0x3E 0x67 0x9a 172 1 0 0 2 0
 
 #define OsGate_start_dev32 0x3E 0x67 0x9a 173 1 0 0 2 0
 
@@ -1189,6 +1202,23 @@
 #define OsGate_read_thread64 0x3E 0x67 0x9a 238 1 0 0 2 0
 #define OsGate_write_thread64 0x3E 0x67 0x9a 239 1 0 0 2 0
 
-#define OsGate_allocate_fixed_program_linear 0x3E 0x67 0x9a 240 1 0 0 2 0
+#define OsGate_allocate_program_linear 0x3E 0x67 0x9a 240 1 0 0 2 0
 #define OsGate_allocate_fixed_program_mem 0x3E 0x67 0x9a 241 1 0 0 2 0
+
+#define OsGate_hook_start_program 0x3E 0x67 0x9a 242 1 0 0 2 0
+#define OsGate_hook_end_program 0x3E 0x67 0x9a 243 1 0 0 2 0
+#define OsGate_notify_start_program 0x3E 0x67 0x9a 244 1 0 0 2 0
+#define OsGate_notify_end_program 0x3E 0x67 0x9a 245 1 0 0 2 0
+
+#define OsGate_allocate_long_buf 0x3E 0x67 0x9a 246 1 0 0 2 0
+#define OsGate_free_long_buf 0x3E 0x67 0x9a 247 1 0 0 2 0
+
+#define OsGate_handle_long_code_fault 0x3E 0x67 0x9a 248 1 0 0 2 0
+#define OsGate_load_long_breaks 0x3E 0x67 0x9a 249 1 0 0 2 0
+
+#define OsGate_set_futex_id 0x3E 0x67 0x9a 250 1 0 0 2 0
+#define OsGate_set_long_tls_linear 0x3E 0x67 0x9a 251 1 0 0 2 0
+
+#define OsGate_send_udp 0x3E 0x67 0x9a 252 1 0 0 2 0
+#define OsGate_broadcast_udp 0x3E 0x67 0x9a 253 1 0 0 2 0
 
