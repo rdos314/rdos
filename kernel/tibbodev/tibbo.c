@@ -1,0 +1,115 @@
+/*#######################################################################
+# RDOS operating system
+# Copyright (C) 1988-2011, Leif Ekblad
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version. The only exception to this rule
+# is for commercial usage in embedded systems. For information on
+# usage in commercial embedded systems, contact embedded@rdos.net
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# The author of this program may be contacted at leif@rdos.net
+#
+# tibbo.c
+# Tibbo device
+#
+########################################################################*/
+
+#include "rdos.h"
+#include "rdosdev.h"
+#include "string.h"
+
+#include <stdio.h>
+
+extern void InitAcpiTables();
+    
+/*##########################################################################
+#
+#   Name       : RunTibboThread
+#
+##########################################################################*/
+void RunTibboThread()
+{
+    for (;;)
+    {
+        RdosWaitMilli(250);
+    }
+}
+    
+/*##########################################################################
+#
+#   Name       : TibboThread
+#
+##########################################################################*/
+#pragma aux TibboThread "*" rdosdev parm routine [es edi]
+void __far TibboThread(void *param)
+{
+    _asm int 3;
+    RunTibboThread();
+}
+    
+/*##########################################################################
+#
+#   Name       : Test gate (used for debugging)
+#
+##########################################################################*/
+#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
+void __far ImplTestGate(const char *msg)
+{
+    RunTibboThread();
+}
+    
+/*##########################################################################
+#
+#   Name       : ImplUdpCallback
+#
+##########################################################################*/
+#pragma aux ImplUdpCallback "*" rdosdev parm routine [es edi] [ecx]
+void ImplUdpCallback(char *buf, int size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : InitTasking
+#
+#   Purpose....: Init tasking callback
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux InitTasking "*" rdosdev parm routine
+void __far InitTasking()
+{
+    RdosCreateKernelThread(5, 0x1000, &TibboThread, "Tibbo", 0);
+} 
+
+/*##########################################################################
+#
+#   Name       : main
+#
+#   Purpose....: Initialization
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int main()
+{
+    RdosHookInitTasking(&InitTasking);
+    RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate");
+    InitTibboBase();
+}
