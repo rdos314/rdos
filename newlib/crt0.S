@@ -48,16 +48,6 @@ _key_dtor_arr:
 	.text
 	.align 4
 
-	.global __deregister_frame_info
-
-__deregister_frame_info:
-    ret
-
-    .global __register_frame_info
-
-__register_frame_info:
-    ret
-
     .global free
 
 free:
