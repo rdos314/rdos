@@ -2284,6 +2284,24 @@ SendBroadcast   MACRO
     OsGate send_broadcast_nr
                         ENDM
 
+; IN  FS        Driver handle
+; IN  ECX       Size
+; OUT ES:EDI    Data buffer to use
+; OUT NC        Success
+GetNetDriverBuffer      MACRO
+    OsGate get_net_driver_buffer_nr
+                        ENDM
+
+; IN  BX        Protocol handle
+; IN  FS        Driver handle
+; IN  ECX       Size
+; IN  ES        Data buffer
+; IN  DS:ESI    Dest address
+; OUT NC        Success
+SendNetDriver   MACRO
+    OsGate send_net_driver_nr
+                        ENDM
+
 ; IN  ES:EDI         Callback for each driver
 ;                           DS          class selector
 ;                           FS          driver handle
@@ -2378,6 +2396,24 @@ SendBroadcastIp MACRO
     OsGate send_broadcast_ip_nr
                         ENDM
 
+; IN  AL        Protocol
+; IN  AH        Time to live
+; IN  ECX       Size of data
+; IN  EDX       IP
+; IN  FS        Driver selector
+; IN  DS:ESI    Options
+; OUT ES:EDI    IP Data
+CreateDriverIp       MACRO
+    OsGate create_driver_ip_nr
+                        ENDM
+
+; IN  ES        Datagram to send
+; IN  FS        Driver selector
+; IN  DS:ESI    Destination address
+SendDriverIp MACRO
+    OsGate send_driver_ip_nr
+                        ENDM
+
 ; IN  AL        Option code
 ; IN  ES:EDI    Callback for option data
 ;        ECX    Size of option data
@@ -2468,6 +2504,17 @@ SendUdp    MACRO
 ; IN  ES:EDI    Data buffer
 BroadcastUdp    MACRO
     OsGate broadcast_udp_nr
+            ENDM
+
+; IN  AX        source port
+; IN  BX        destination port
+; IN  CX        Number of bytes to send
+; IN  EDX       IP address
+; IN  FS        Driver sel
+; IN  DS:ESI    Destination address
+; IN  ES:EDI    Data buffer
+SendDriverUdp    MACRO
+    OsGate send_driver_udp_nr
             ENDM
 
 ; IN  ES:EDI  Pointer to data

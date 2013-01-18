@@ -609,6 +609,14 @@
 #define osgate_send_udp 508
 #define osgate_broadcast_udp 509
 
+#define osgate_get_net_driver_buffer 510
+#define osgate_send_net_driver 511
+
+#define osgate_create_driver_ip 512
+#define osgate_send_driver_ip 513
+
+#define osgate_send_driver_udp 514
+
 
 
 
@@ -1221,4 +1229,12 @@
 
 #define OsGate_send_udp 0x3E 0x67 0x9a 252 1 0 0 2 0
 #define OsGate_broadcast_udp 0x3E 0x67 0x9a 253 1 0 0 2 0
+
+#define OsGate_get_net_driver_buffer 0x3E 0x67 0x9a 254 1 0 0 2 0
+#define OsGate_send_net_driver 0x3E 0x67 0x9a 255 1 0 0 2 0
+
+#define OsGate_create_driver_ip 0x3E 0x67 0x9a 0 2 0 0 2 0
+#define OsGate_send_driver_ip 0x3E 0x67 0x9a 1 2 0 0 2 0
+
+#define OsGate_send_driver_udp 0x3E 0x67 0x9a 2 2 0 0 2 0
 

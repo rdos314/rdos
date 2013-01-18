@@ -43,7 +43,8 @@ extern void InitBroadcast();
 
 struct tibbo_dev
 {
-    char mac[30];
+    int driver;
+    char mac[6];
     long ip;
     short int port;
     char loader;
@@ -53,9 +54,69 @@ struct tibbo_dev
 
 int DriverCount;
 int DriverArr[MAX_UDP_DEV];
+int CurrDriver;
 
 int TibboCount;
 struct tibbo_dev *TibboArr[MAX_TIBBO_DEV];
+
+char AnswerBuf[64];
+int SignalThread = 0;
+    
+/*##########################################################################
+#
+#   Name       : EthernetLogin
+#
+##########################################################################*/
+int EthernetLogin(struct tibbo_dev *dev)
+{
+    int ok;
+
+    SignalThread = RdosGetThreadHandle();
+    AnswerBuf[0] = 0;
+    RdosSendDriverUdp(4095, -1, dev->ip, dev->driver, dev->mac, "L", 1);
+    RdosWaitForSignal();
+
+    if (AnswerBuf[0] == 'A')
+        return TRUE;
+    else
+    {
+        SignalThread = 0;
+        return FALSE;
+    }
+}
+    
+/*##########################################################################
+#
+#   Name       : EthernetReboot
+#
+##########################################################################*/
+void EthernetReboot(struct tibbo_dev *dev)
+{
+    RdosSendDriverUdp(4095, -1, dev->ip, dev->driver, dev->mac, "E", 1);
+    SignalThread = 0;
+    RdosWaitMilli(25);
+}
+    
+/*##########################################################################
+#
+#   Name       : EthernetSession
+#
+##########################################################################*/
+int EthernetSession(struct tibbo_dev *dev, char *str, char *reply)
+{
+    int ok;
+    AnswerBuf[0] = 0;
+    RdosSendDriverUdp(4095, -1, dev->ip, dev->driver, dev->mac, str, strlen(str));
+    RdosWaitForSignal();
+
+    if (AnswerBuf[0] == 'A')
+    {
+        strcpy(reply, &AnswerBuf[1]);
+        return TRUE;
+    }
+    else
+        return FALSE;
+}
     
 /*##########################################################################
 #
@@ -70,7 +131,11 @@ void BroadcastData(char *buf, int size)
     InitBroadcast();
 
     for (i = 0; i < DriverCount; i++)
-        RdosBroadcastUdp(4095, -1, DriverArr[i], buf, size);
+    {
+        CurrDriver = DriverArr[i];
+        RdosBroadcastUdp(4095, -1, CurrDriver, buf, size);
+        RdosWaitMilli(250);
+    }
 }        
     
 /*##########################################################################
@@ -81,12 +146,25 @@ void BroadcastData(char *buf, int size)
 void RunTibboThread()
 {
     char str[10] = "X";
+    char reply[64];
+    int ok;
 
     TibboCount = 0;
 
     for (;;)
     {
         BroadcastData(str, strlen(str));
+
+        if (!TibboArr[0]->dhcp)
+        {
+            ok = EthernetLogin(TibboArr[0]);
+            if (ok)
+            {
+                EthernetSession(TibboArr[0], "SDH1", reply);
+                EthernetReboot(TibboArr[0]);
+                TibboArr[0]->dhcp = TRUE;
+            }
+        }
         RdosWaitMilli(250);
     }
 }
@@ -116,6 +194,37 @@ void __far ImplTestGate(const char *msg)
     
 /*##########################################################################
 #
+#   Name       : ConvMac
+#
+##########################################################################*/
+void ConvMac(char *mac, char *str)
+{
+    int i;
+    char *base = str;
+    char *ptr = str;
+
+    i = 0;
+
+    while (i < 6)
+    {
+        if (*ptr == '.' || *ptr == 0)
+        {
+            if (*ptr == '.')
+            {
+                *ptr = 0;
+                ptr++;
+            }
+            mac[i] = atoi(base);
+            base = ptr;
+            i++;
+        }
+        else
+            ptr++;
+    }    
+}
+    
+/*##########################################################################
+#
 #   Name       : ParseEchoPar
 #
 ##########################################################################*/
@@ -124,7 +233,7 @@ void ParseEchoPar(struct tibbo_dev *dev, int par, char *buf)
     switch (par)
     {
         case 0:
-            strcpy(dev->mac, buf + 1);
+            ConvMac(dev->mac, buf + 1);
             break;
             
         case 1:
@@ -193,13 +302,27 @@ void InsertDev(struct tibbo_dev *dev)
 {
     int i;
     int found = FALSE;
+    struct tibbo_dev *has_dev;
 
     for (i = 0; i < TibboCount && !found; i++)
-        if (!strcmp(dev->mac, TibboArr[i]->mac))
+    {
+        if (!memcmp(dev->mac, TibboArr[i]->mac, 6))
+        {
             found = TRUE;
+            has_dev = TibboArr[i];
+            break;
+        }
+    }
 
     if (found)
+    {
+        has_dev->ip = dev->ip;
+        has_dev->port = dev->port;
+        has_dev->loader = dev->loader;
+        has_dev->dhcp = dev->dhcp;
+        has_dev->ok = dev->ok;       
         free(dev);
+    }
     else
     {
         TibboArr[TibboCount] = dev;
@@ -218,13 +341,26 @@ void ImplUdpCallback(long ip, char *buf, int size)
     struct tibbo_dev *dev = (struct tibbo_dev *)malloc(sizeof(struct tibbo_dev));
     char *ret_msg = 0;
 
-    dev->ip = ip;
-    ParseEcho(dev, buf, size);
+    if (SignalThread)
+    {
+        if (size > 63)
+            size = 63;
+        buf[size] = 0;
+        strcpy(AnswerBuf, buf);
 
-    if (dev->ok)
-        InsertDev(dev);
+        RdosSignal(SignalThread);
+    }
     else
-        free(dev);
+    {
+        dev->driver = CurrDriver;
+        dev->ip = ip;
+        ParseEcho(dev, buf, size);
+
+        if (dev->ok)
+            InsertDev(dev);
+        else
+            free(dev);
+    }
 }
     
 /*##########################################################################

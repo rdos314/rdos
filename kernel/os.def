@@ -609,4 +609,12 @@ set_long_tls_linear_nr      = 507
 send_udp_nr                 = 508
 broadcast_udp_nr            = 509
 
+get_net_driver_buffer_nr    = 510
+send_net_driver_nr          = 511
+
+create_driver_ip_nr         = 512
+send_driver_ip_nr           = 513
+
+send_driver_udp_nr          = 514
+
 osgate_entries				= 520

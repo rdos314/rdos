@@ -1709,6 +1709,53 @@ send_broadcast  Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;       Name:           GetNetDriverBuffer
+;
+;       Purpose:        Get a net driver buffer
+;
+;       Parameters:     FS      driver handle
+;                       ECX     size of data
+;                       ES:EDI  address of data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_net_driver_buffer_name       DB 'Get Net Driver Buffer',0
+
+get_net_driver_buffer    Proc far
+    call fword ptr fs:d_get_buffer
+    retf32
+get_net_driver_buffer    Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           SendNetDriver
+;
+;       Purpose:        Send message to driver
+;
+;       Parameters:     BX          protocol
+;                       FS          driver handle
+;                       ECX         size of data
+;                       DS:ESI      driver dest address
+;                       ES:EDI      address of data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_net_driver_name     DB 'Send Net Driver',0
+
+send_net_driver  Proc far
+    push ds
+    mov ds,bx
+    mov dx,ds:p_packet_type
+    pop ds
+;    
+    call fword ptr fs:d_send
+;
+    retf32
+send_net_driver  Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;       Name:           ReqArp
 ;
 ;       Purpose:        Send ARP request
@@ -2810,6 +2857,18 @@ init    PROC far
     mov edi,OFFSET send_broadcast_name
     xor cl,cl
     mov ax,send_broadcast_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_net_driver_buffer
+    mov edi,OFFSET get_net_driver_buffer_name
+    xor cl,cl
+    mov ax,get_net_driver_buffer_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET send_net_driver
+    mov edi,OFFSET send_net_driver_name
+    xor cl,cl
+    mov ax,send_net_driver_nr
     RegisterOsGate
 ;
     mov esi,OFFSET net_broadcast

@@ -901,6 +901,195 @@ send_broadcast_ip       Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;       Name:           create_driver_ip
+;
+;       Purpose:        create an IP header for a specific driver, and allocate space for data
+;
+;       Parameters:     AL          Protocol
+;                       AH          Time to live
+;                       ECX         Size of data
+;                       EDX         IP address
+;                       DS:ESI      Options
+;                       FS          Driver handle
+;
+;       Returns:        ES:EDI  Ip data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_driver_ip_name    DB 'Create Driver IP',0
+
+create_driver_ip     Proc far
+    push eax
+    push bx
+    push ecx
+    push esi
+    push ebp
+;
+    push ds
+    push ax
+    push cx
+    mov cx,SIZE ip_header
+    push esi
+
+create_driver_opt_loop:
+    mov al,[esi]
+    or al,al
+    jz create_driver_alloc
+    inc esi
+    inc cx
+    cmp al,1
+    jz create_driver_opt_loop
+;
+    movzx eax,byte ptr [esi]
+    dec al
+    add cx,ax
+    add esi,eax
+    jmp create_driver_opt_loop
+
+create_driver_alloc:     
+    pop esi
+    mov bx,cx
+    dec cx
+    and cx,NOT 3
+    add cx,4
+    movzx eax,cx
+    pop cx
+    add ax,cx
+;
+    push ax
+    push bx
+    mov cx,ax
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,ds:ip_handle
+    GetNetDriverBuffer
+    mov es:[di].ip_dest,edx
+;
+    pop ax
+    pop cx
+    pop dx
+    pop ds
+    jc create_driver_fail
+
+create_driver_fill:
+    mov bp,di
+    mov es:[0],di
+    dec ax
+    shr ax,2
+    inc ax
+    or al,40h
+    mov es:[di].ip_hdr_ver,al
+    mov es:[di].ip_tos,0
+    xchg cl,ch
+    mov es:[di].ip_size,cx
+    mov es:[di].ip_frags,40h
+    mov es:[di].ip_ttl,dh
+    mov es:[di].ip_proto,dl
+    mov es:[di].ip_checksum,0
+;
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:curr_id
+    inc ds:curr_id
+    xchg al,ah
+    mov es:[di].ip_id,ax
+    mov eax,ds:bc_ip
+    mov es:[di].ip_source,eax
+    pop ds
+;
+    add edi,SIZE ip_header
+
+create_driver_copy_opt:
+    mov al,[esi]
+    or al,al
+    jz create_driver_pad
+    movs byte ptr es:[edi],ds:[esi]
+    cmp al,1
+    je create_driver_copy_opt
+    movzx ecx,byte ptr [esi]
+    rep movs byte ptr es:[edi],ds:[esi]
+    jmp create_driver_copy_opt
+
+create_driver_pad:
+    mov si,di
+    sub si,bp
+    xor al,al
+    
+create_driver_pad_loop:
+    test si,3
+    jz create_driver_ok
+    stos byte ptr es:[edi]
+    inc si
+    jmp create_driver_pad_loop           
+
+create_driver_fail:
+    xor ax,ax
+    mov es,ax
+    xor edi,edi
+    stc
+    jmp create_driver_done
+
+create_driver_ok:
+    clc
+
+create_driver_done:
+    pop ebp
+    pop esi
+    pop ecx
+    pop bx
+    pop eax
+    retf32
+create_driver_ip     Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           send_driver_ip
+;
+;       Purpose:        send driver IP data
+;
+;       Parameters:     ES          Data selector, IP datagram
+;                       FS          Driver selector
+;                       DS:ESI      Dest address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_driver_ip_name  DB 'Send Driver IP',0
+
+send_driver_ip       Proc far
+    push ds
+    push eax
+    push bx
+    push ecx
+    push edi
+;
+    push ds
+    mov ax,es
+    mov ds,ax
+    mov di,ds:[0]
+    call CalcChecksum
+;
+    movzx ecx,ds:[di].ip_size
+    xchg cl,ch
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov bx,ds:ip_handle
+;
+    pop ds
+    SendNetDriver
+;
+    pop edi
+    pop ecx
+    pop bx
+    pop eax
+    pop ds
+    retf32
+send_driver_ip       Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;       Name:           receive
 ;
 ;       Purpose:        received IP data
@@ -1655,6 +1844,18 @@ init    PROC far
     mov edi,OFFSET send_broadcast_ip_name
     xor cl,cl
     mov ax,send_broadcast_ip_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET create_driver_ip
+    mov edi,OFFSET create_driver_ip_name
+    xor cl,cl
+    mov ax,create_driver_ip_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET send_driver_ip
+    mov edi,OFFSET send_driver_ip_name
+    xor cl,cl
+    mov ax,send_driver_ip_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_ip_address

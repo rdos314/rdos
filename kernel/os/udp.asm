@@ -559,7 +559,7 @@ send_udp       Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-broadcast_udp_name DB 'Send UDP',0
+broadcast_udp_name DB 'Broadcast UDP',0
 
 broadcast_udp       Proc far
     push ds
@@ -625,6 +625,99 @@ broadcast_udp_done:
     pop ds    
     retf32
 broadcast_udp       Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           SendDriverUdp
+;
+;       Purpose:        Send UDP data to specific driver
+;
+;       Parameters:     AX              source port
+;                       BX              destination port
+;                       ECX             Number of bytes to send
+;                       EDX             IP
+;                       ES:EDI          Buffer
+;                       FS              Driver
+;                       DS:ESI          Destination
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_driver_udp_name DB 'Send Driver UDP',0
+
+send_driver_udp       Proc far
+    push es
+    push fs
+    pushad
+;
+    push ds
+    push esi
+;    
+    push es
+    push edi
+    push ax
+;
+    mov ax,cs
+    mov ds,ax
+    mov esi,OFFSET ip_options
+    mov al,17
+    mov ah,30
+    add ecx,SIZE udp_header
+    CreateDriverIp
+;    
+    pop ax
+    pop esi
+    pop ds
+    jc send_driver_udp_pop_fail
+;       
+    xchg al,ah
+    mov es:[edi].udp_source,ax
+;    
+    mov ax,bx
+    xchg al,ah
+    mov es:[edi].udp_dest,ax
+;
+    xchg cl,ch
+    mov es:[edi].udp_len,cx
+    xchg cl,ch
+;
+    push ecx
+    push edi
+    sub ecx,SIZE udp_header
+    add edi,SIZE udp_header
+    rep movs byte ptr es:[edi],[esi]
+    pop edi
+    pop ecx
+;
+    mov es:[edi].udp_checksum,0
+    mov ax,cx
+    xchg al,ah
+    add ax,1100h
+    adc ax,0
+    adc ax,0
+    sub di,8
+    add cx,8
+    call CalcChecksum
+    not ax
+    add edi,8
+    mov es:[edi].udp_checksum,ax
+    sub ecx,8
+;
+    pop esi
+    pop ds    
+    SendDriverIp
+    jmp send_driver_udp_done
+
+send_driver_udp_pop_fail:
+    pop esi
+    pop ds
+
+send_driver_udp_done:
+    popad
+    pop fs
+    pop es
+    retf32
+send_driver_udp       Endp
 
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -973,6 +1066,12 @@ query_list_create:
     mov edi,OFFSET broadcast_udp_name
     xor cl,cl
     mov ax,broadcast_udp_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET send_driver_udp
+    mov edi,OFFSET send_driver_udp_name
+    xor cl,cl
+    mov ax,send_driver_udp_nr
     RegisterOsGate
 ;
     mov esi,OFFSET query_udp

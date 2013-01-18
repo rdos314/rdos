@@ -696,6 +696,7 @@ void RdosUpdateRoundTripTime(int cache_sel, long time);
 int RdosQueryUdp(long timeout_ms, short int dest_port, long ip, char *buf, int size, char **answer_buf);
 void RdosSendUdp(short int source, short int dest, long ip, char *buf, int size);
 void RdosBroadcastUdp(short int source, short int dest, int driver_sel, char *buf, int size);
+void RdosSendDriverUdp(short int source, short int dest, long ip, int driver_sel, void *driver_dest, char *buf, int size);
 
 void RdosHookInitDisc(struct TDiscSystemHeader *disc_table);
 int RdosInstallDisc(int disc_handle, int read_ahead, int *disc_nr);
@@ -1718,6 +1719,16 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
 #pragma aux RdosBroadcastUdp = \
     OsGate_broadcast_udp \
     parm [si] [bx] [fs] [es edi] [ecx];
+
+#pragma aux RdosSendDriverUdp = \
+    "push ds" \
+    "push eax" \
+    "mov eax,gs" \
+    "mov ds,eax" \
+    "pop eax" \
+    OsGate_send_driver_udp \
+    "pop ds" \
+    parm [ax] [bx] [edx] [fs] [gs esi] [es edi] [ecx];
 
 #pragma aux RdosQueryUdp = \
     OsGate_query_udp \
