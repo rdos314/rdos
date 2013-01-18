@@ -79,10 +79,10 @@ int SignalThread = 0;
     
 /*##########################################################################
 #
-#   Name       : EthernetLogin
+#   Name       : Login
 #
 ##########################################################################*/
-int EthernetLogin(struct tibbo_dev *dev)
+int Login(struct tibbo_dev *dev)
 {
     int ok;
 
@@ -102,22 +102,22 @@ int EthernetLogin(struct tibbo_dev *dev)
     
 /*##########################################################################
 #
-#   Name       : EthernetReboot
+#   Name       : Reboot
 #
 ##########################################################################*/
-void EthernetReboot(struct tibbo_dev *dev)
+void Reboot(struct tibbo_dev *dev)
 {
     RdosSendDriverUdp(4095, -1, dev->ip, dev->driver, dev->mac, "E", 1);
     SignalThread = 0;
-    RdosWaitMilli(25);
+    RdosWaitMilli(250);
 }
     
 /*##########################################################################
 #
-#   Name       : EthernetSession
+#   Name       : Session
 #
 ##########################################################################*/
-int EthernetSession(struct tibbo_dev *dev, char *str, char *reply)
+int Session(struct tibbo_dev *dev, char *str, char *reply)
 {
     int ok;
     AnswerBuf[0] = 0;
@@ -131,6 +131,24 @@ int EthernetSession(struct tibbo_dev *dev, char *str, char *reply)
     }
     else
         return FALSE;
+}
+    
+/*##########################################################################
+#
+#   Name       : SetVar
+#
+##########################################################################*/
+int SetVar(struct tibbo_port *port, const char *setting, const char *val)
+{
+    char str[64];
+    char reply[64];
+
+    if (port->dev_port)
+        sprintf(str, "S%s@%d%s", setting, port->dev_port + 1, val);
+    else
+        sprintf(str, "S%s%s", setting, val);
+
+    return Session(port->dev, str, reply);        
 }
     
 /*##########################################################################
@@ -149,8 +167,46 @@ void BroadcastData(char *buf, int size)
     {
         CurrDriver = DriverArr[i];
         RdosBroadcastUdp(4095, -1, CurrDriver, buf, size);
-//        RdosWaitMilli(250);
+        RdosWaitMilli(250);
     }
+}        
+    
+/*##########################################################################
+#
+#   Name       : InitPort
+#
+##########################################################################*/
+int InitPort(struct tibbo_port *port)
+{
+    int ok;
+    char reply[64];
+    
+    ok = Login(port);
+    if (ok)
+    {
+        ok = Session(port, "STP1", reply);
+        Reboot(port);
+    }
+    return ok;
+}        
+    
+/*##########################################################################
+#
+#   Name       : InitDevPorts
+#
+##########################################################################*/
+void InitDevPorts(struct tibbo_dev *dev)
+{
+    int i;
+    int ok;
+
+    ok = Login(dev);
+
+    for (i = 0; i < dev->port_count && ok; i++)
+        ok = InitPort(dev->port_arr[i]);
+
+    dev->running = ok;
+    Reboot(dev);
 }        
     
 /*##########################################################################
@@ -173,14 +229,16 @@ void RunTibboThread()
 
         if (TibboArr[0]->dhcp)
         {
+            if (!TibboArr[0]->running)
+                InitDevPorts(TibboArr[0]);
         }            
         else
         {
-            ok = EthernetLogin(TibboArr[0]);
+            ok = Login(TibboArr[0]);
             if (ok)
             {
-                EthernetSession(TibboArr[0], "SDH1", reply);
-                EthernetReboot(TibboArr[0]);
+                Session(TibboArr[0], "SDH1", reply);
+                Reboot(TibboArr[0]);
                 TibboArr[0]->dhcp = TRUE;
             }
         }
@@ -411,6 +469,7 @@ void ImplUdpCallback(long ip, char *buf, int size)
         dev->driver = CurrDriver;
         dev->ip = ip;
         dev->port_count = 1;
+        dev->running = FALSE;
         ParseEcho(dev, buf, size);
 
         if (dev->ok)
