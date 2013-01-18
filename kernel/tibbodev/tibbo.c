@@ -32,8 +32,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define MAX_UDP_DEV     16
-#define MAX_TIBBO_DEV   16
+#define MAX_UDP_DEV         16
+#define MAX_TIBBO_DEV       16
+#define MAX_TIBBO_DEV_PORTS 16
+#define MAX_TIBBO_PORTS     32
 
 #define FALSE   0
 #define TRUE    !FALSE
@@ -41,15 +43,25 @@
 extern void InitTibboBase();
 extern void InitBroadcast();
 
+struct tibbo_port
+{
+    struct tibbo_dev *dev;
+    int dev_port;
+    short int port;
+};
+
 struct tibbo_dev
 {
     int driver;
     char mac[6];
     long ip;
     short int port;
+    int port_count;
     char loader;
     char dhcp;
     char ok;
+    int running;
+    struct tibbo_port *port_arr[MAX_TIBBO_DEV_PORTS];
 };
 
 int DriverCount;
@@ -58,6 +70,9 @@ int CurrDriver;
 
 int TibboCount;
 struct tibbo_dev *TibboArr[MAX_TIBBO_DEV];
+
+int TibboPortCount;
+struct tibbo_port *TibboPortArr[MAX_TIBBO_PORTS];
 
 char AnswerBuf[64];
 int SignalThread = 0;
@@ -134,7 +149,7 @@ void BroadcastData(char *buf, int size)
     {
         CurrDriver = DriverArr[i];
         RdosBroadcastUdp(4095, -1, CurrDriver, buf, size);
-        RdosWaitMilli(250);
+//        RdosWaitMilli(250);
     }
 }        
     
@@ -150,12 +165,16 @@ void RunTibboThread()
     int ok;
 
     TibboCount = 0;
+    TibboPortCount = 0;
 
     for (;;)
     {
         BroadcastData(str, strlen(str));
 
-        if (!TibboArr[0]->dhcp)
+        if (TibboArr[0]->dhcp)
+        {
+        }            
+        else
         {
             ok = EthernetLogin(TibboArr[0]);
             if (ok)
@@ -267,6 +286,10 @@ void ParseEchoPar(struct tibbo_dev *dev, int par, char *buf)
                 dev->dhcp = TRUE;
 
             break;
+
+        case 6:
+            dev->port_count = atoi(buf);
+            break;
     }
 }
     
@@ -291,6 +314,36 @@ void ParseEcho(struct tibbo_dev *dev, char *buf, int size)
             nr++;
         }            
     }    
+    ParseEchoPar(dev, nr, ptr);
+}
+    
+/*##########################################################################
+#
+#   Name       : CreateDevPorts
+#
+##########################################################################*/
+void CreateDevPorts(struct tibbo_dev *dev)
+{
+    int i;
+    struct tibbo_port *port;
+
+    for (i = 0; i < MAX_TIBBO_DEV_PORTS; i++)
+        dev->port_arr[i] = 0;
+
+    if (dev->port_count > MAX_TIBBO_DEV_PORTS)
+        dev->port_count = MAX_TIBBO_DEV_PORTS;
+
+    for (i = 0; i < dev->port_count; i++)
+    {
+        port = (struct tibbo_port *)malloc(sizeof(struct tibbo_port));
+        port->dev = dev;
+        port->dev_port = i;
+        port->port = dev->port + i;
+        dev->port_arr[i] = port;
+
+        TibboPortArr[TibboPortCount] = port;
+        TibboPortCount++;
+    }
 }
     
 /*##########################################################################
@@ -327,6 +380,9 @@ void InsertDev(struct tibbo_dev *dev)
     {
         TibboArr[TibboCount] = dev;
         TibboCount++;
+
+        if (dev->ok)
+            CreateDevPorts(dev);
     }
 }
     
@@ -354,6 +410,7 @@ void ImplUdpCallback(long ip, char *buf, int size)
     {
         dev->driver = CurrDriver;
         dev->ip = ip;
+        dev->port_count = 1;
         ParseEcho(dev, buf, size);
 
         if (dev->ok)
