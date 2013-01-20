@@ -480,6 +480,8 @@ void TVp::Execute()
     char str[50];
     long tempval;
     long double E = 0.0;
+    long double BaseTemp;
+    int ValidBaseTemp;
 
     TLabelFactory CommentLabelFactory;
     TLabelFactory ValueLabelFactory;
@@ -643,18 +645,33 @@ void TVp::Execute()
                 FMaxHeatTemp = 0;
             }
 
+            ValidBaseTemp = FALSE;
+
             for (i = 1; i < 40; i++)
             {
+                if (ValidTankArr[i])
+                {
+                    if (ValidBaseTemp)
+                    {
+                        if (TankArr[i] < BaseTemp)
+                            BaseTemp = TankArr[i];
+                    }
+                    else
+                        BaseTemp = TankArr[i];
+                    ValidBaseTemp = TRUE;
+                }
+
                 TankArr[i-1] = TankArr[i];
                 ValidTankArr[i-1] = ValidTankArr[i];
+
             }
 
             TankArr[39] = FTankTemp;
             ValidTankArr[39] = FValidTank;
 
-            if (ValidTankArr[38] && FValidTank)
+            if (ValidBaseTemp && FValidTank)
             {
-                UpdateVp(FTankTemp - TankArr[38]);
+                UpdateVp(FTankTemp - BaseTemp);
 
                 if (FHasLowTemp)
                 {
