@@ -33,6 +33,7 @@
 #include "file.h"
 #include "quizdbh9.h"
 #include "convg.h"
+#include "es9.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -123,6 +124,7 @@ static void ProcessRow(char *str)
     char *ptr;
     int fieldno;
     int i;
+    int val;
     int year, month, day;
     int hour, min, sec;
     TDateTime *time;
@@ -220,9 +222,21 @@ static void ProcessRow(char *str)
             default:
                  i = fieldno - 16;
                  if (i < 28)
+                 {
+                    Row.Quiz[150+i] = 0;
                     Row.EyeArr[i] = atoi(valstr);
+                    if (Row.EyeArr[i])
+                    {
+                        val = Row.EyeArr[i] - 1;
+                        if (val < 4)
+                        {
+                            Row.Quiz[150+i] = Ew[i][val];
+                        }
+                    }
+                 }
                  else
                     i -= 28;                    
+
                  Row.Quiz[i] = atoi(valstr);
                  break;
         }

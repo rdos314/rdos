@@ -645,33 +645,18 @@ void TVp::Execute()
                 FMaxHeatTemp = 0;
             }
 
-            ValidBaseTemp = FALSE;
-
             for (i = 1; i < 40; i++)
             {
-                if (ValidTankArr[i])
-                {
-                    if (ValidBaseTemp)
-                    {
-                        if (TankArr[i] < BaseTemp)
-                            BaseTemp = TankArr[i];
-                    }
-                    else
-                        BaseTemp = TankArr[i];
-                    ValidBaseTemp = TRUE;
-                }
-
                 TankArr[i-1] = TankArr[i];
                 ValidTankArr[i-1] = ValidTankArr[i];
-
             }
 
             TankArr[39] = FTankTemp;
             ValidTankArr[39] = FValidTank;
 
-            if (ValidBaseTemp && FValidTank)
+            if (ValidTankArr[37] && FValidTank)
             {
-                UpdateVp(FTankTemp - BaseTemp);
+                UpdateVp(FTankTemp - TankArr[37]);
 
                 if (FHasLowTemp)
                 {
@@ -680,6 +665,7 @@ void TVp::Execute()
                     Table->SetText(2, 1, str);
                 }
             }
+
 
             if (FPrevOn)
                 E += 0.055;
