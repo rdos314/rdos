@@ -48,7 +48,7 @@ ELSE
     .386p
 ENDIF
 
-MAX_SECTIONS EQU 1024
+MAX_SECTIONS EQU 32768
 
 code    SEGMENT byte public 'CODE'
     
