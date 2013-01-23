@@ -214,12 +214,8 @@ static void ProcessRow(char *str)
                  Row.NtResult = atoi(valstr);
                  break;
 
-            case 15:
-                 Row.EyeResult = atoi(valstr);
-                 break;
-
             default:
-                 i = fieldno - 16;
+                 i = fieldno - 15;
                  if (i < 28)
                  {
                     Row.Quiz[150+i] = 0;
