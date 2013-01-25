@@ -539,7 +539,7 @@ open_set_dtr:
     pop si
     pop dx
     pop ax  
-    ret
+    retf32
 open_com    Endp
 
 
@@ -577,7 +577,7 @@ close_com_not_reserved:
     pop dx
     pop ax
     pop es
-    ret
+    retf32
 close_com   Endp
 
     
@@ -599,7 +599,7 @@ enable_cts  PROC far
     or ds:flgs,FLG_ENABLE_CTS
 
 enable_cts_done:
-    ret
+    retf32
 enable_cts Endp
 
     
@@ -616,7 +616,7 @@ enable_cts Endp
 
 disable_cts PROC far
     and ds:flgs,NOT FLG_ENABLE_CTS
-    ret
+    retf32
 disable_cts Endp
 
     
@@ -644,7 +644,7 @@ enable_auto_rts PROC far
 ;   
     pop dx
     pop ax
-    ret
+    retf32
 enable_auto_rts Endp
 
     
@@ -672,7 +672,7 @@ disable_auto_rts    PROC far
 ;   
     pop dx
     pop ax
-    ret
+    retf32
 disable_auto_rts Endp
 
     
@@ -700,7 +700,7 @@ flush_com   PROC far
 ;   
     pop dx
     pop ax
-    ret
+    retf32
 flush_com Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -715,7 +715,7 @@ flush_com Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 reset_port   PROC far
-    ret
+    retf32
 reset_port  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -770,7 +770,7 @@ com_send_ok:
     ReleaseSpinlock ds:com_spinlock
     pop dx
     pop ax
-    ret
+    retf32
 start_send  ENDP
 
 
@@ -797,7 +797,7 @@ set_dtr Proc far
 ;
     pop dx
     pop ax
-    ret
+    retf32
 set_dtr Endp
 
 
@@ -824,7 +824,7 @@ reset_dtr   Proc far
 ;   
     pop dx
     pop ax
-    ret
+    retf32
 reset_dtr   Endp
 
 
@@ -851,7 +851,7 @@ set_rts Proc far
 ;
     pop dx
     pop ax
-    ret
+    retf32
 set_rts Endp
 
 
@@ -878,7 +878,7 @@ reset_rts   Proc far
 ;   
     pop dx
     pop ax
-    ret
+    retf32
 reset_rts   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -893,7 +893,7 @@ reset_rts   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 reset_com   Proc far
-    ret
+    retf32
 reset_com   Endp
 
 
@@ -909,19 +909,19 @@ reset_com   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 port_tab:
-pt00 DW OFFSET open_com,        SEG code
-pt01 DW OFFSET close_com,       SEG code
-pt02 DW OFFSET enable_cts,      SEG code
-pt03 DW OFFSET disable_cts,     SEG code
-pt04 DW OFFSET set_dtr,         SEG code
-pt05 DW OFFSET reset_dtr,       SEG code
-pt06 DW OFFSET set_rts,         SEG code
-pt07 DW OFFSET reset_rts,       SEG code
-pt08 DW OFFSET enable_auto_rts,     SEG code
-pt09 DW OFFSET disable_auto_rts,    SEG code
-pt10 DW OFFSET flush_com,       SEG code
-pt11 DW OFFSET start_send,      SEG code
-pt12 DW OFFSET reset_port,      SEG code
+pt00 DD OFFSET open_com,        SEG code
+pt01 DD OFFSET close_com,       SEG code
+pt02 DD OFFSET enable_cts,      SEG code
+pt03 DD OFFSET disable_cts,     SEG code
+pt04 DD OFFSET set_dtr,         SEG code
+pt05 DD OFFSET reset_dtr,       SEG code
+pt06 DD OFFSET set_rts,         SEG code
+pt07 DD OFFSET reset_rts,       SEG code
+pt08 DD OFFSET enable_auto_rts,     SEG code
+pt09 DD OFFSET disable_auto_rts,    SEG code
+pt10 DD OFFSET flush_com,       SEG code
+pt11 DD OFFSET start_send,      SEG code
+pt12 DD OFFSET reset_port,      SEG code
 
 create_port Proc far
     push eax
@@ -938,7 +938,7 @@ create_port Proc far
 ;
     mov si,OFFSET port_tab
     xor di,di
-    mov cx,13
+    mov cx,2 * 13
     rep movs dword ptr es:[di],cs:[si]
 ;
     mov ax,ds:pds_base
@@ -989,7 +989,7 @@ reserve_line_state  Proc far
 ;
     pop dx
     pop ax
-    ret
+    retf32
 reserve_line_state  Endp
 
 
@@ -1016,7 +1016,7 @@ device_set_dtr  Proc far
 ;
     pop dx
     pop ax
-    ret
+    retf32
 device_set_dtr  Endp
 
 
@@ -1043,7 +1043,7 @@ device_reset_dtr    Proc far
 ;   
     pop dx
     pop ax
-    ret
+    retf32
 device_reset_dtr    Endp
 
 
@@ -1069,7 +1069,7 @@ get_line_state  Proc far
 ;    mov al,ds:pds_line
     shr al,4
     and al,0Fh
-    ret
+    retf32
 get_line_state  Endp
 
 
@@ -1096,7 +1096,7 @@ wait_for_line_state Proc far
     mov al,ds:pds_line
     shr al,4
     and al,0Fh
-    ret
+    retf32
 wait_for_line_state Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1309,23 +1309,23 @@ AddPort Proc near
     xor dx,dx
     AddComPort
 ;    
-    mov word ptr ds:cd_create_proc,OFFSET create_port
-    mov word ptr ds:cd_create_proc+2,cs
+    mov dword ptr ds:cd_create_proc,OFFSET create_port
+    mov dword ptr ds:cd_create_proc+4,cs
 ;    
-    mov word ptr ds:cd_reserve_line_proc,OFFSET reserve_line_state
-    mov word ptr ds:cd_reserve_line_proc+2,cs
+    mov dword ptr ds:cd_reserve_line_proc,OFFSET reserve_line_state
+    mov dword ptr ds:cd_reserve_line_proc+4,cs
 ;    
-    mov word ptr ds:cd_set_dtr_proc,OFFSET device_set_dtr
-    mov word ptr ds:cd_set_dtr_proc+2,cs
+    mov dword ptr ds:cd_set_dtr_proc,OFFSET device_set_dtr
+    mov dword ptr ds:cd_set_dtr_proc+4,cs
 ;    
-    mov word ptr ds:cd_reset_dtr_proc,OFFSET device_reset_dtr
-    mov word ptr ds:cd_reset_dtr_proc+2,cs
+    mov dword ptr ds:cd_reset_dtr_proc,OFFSET device_reset_dtr
+    mov dword ptr ds:cd_reset_dtr_proc+4,cs
 ;    
-    mov word ptr ds:cd_get_line_state_proc,OFFSET get_line_state
-    mov word ptr ds:cd_get_line_state_proc+2,cs
+    mov dword ptr ds:cd_get_line_state_proc,OFFSET get_line_state
+    mov dword ptr ds:cd_get_line_state_proc+4,cs
 ;    
-    mov word ptr ds:cd_wait_for_line_state_proc,OFFSET wait_for_line_state
-    mov word ptr ds:cd_wait_for_line_state_proc+2,cs
+    mov dword ptr ds:cd_wait_for_line_state_proc,OFFSET wait_for_line_state
+    mov dword ptr ds:cd_wait_for_line_state_proc+4,cs
 ;
     popad
     pop es

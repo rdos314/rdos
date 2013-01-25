@@ -98,7 +98,7 @@ delete_handle   Proc far
     FreeHandle
     pop ds
 ;
-    call ds:close_com_proc
+    call fword ptr ds:close_com_proc
 ;
     mov es,ds:send_buf
     FreeMem
@@ -192,7 +192,7 @@ open_com    Proc far
 ;
     inc ds:cd_open
     push ds
-    call ds:cd_create_proc
+    call fword ptr ds:cd_create_proc
 ;
     mov ax,SERIAL_HANDLE
     mov cx,SIZE serial_handle_seg
@@ -233,7 +233,7 @@ open_com    Proc far
     pop ax
 ;    
     mov ds:com_device,es
-    call ds:open_com_proc
+    call fword ptr ds:open_com_proc
 ;
     mov bx,bp
     clc
@@ -284,7 +284,7 @@ close_com       Proc far
     FreeHandle
     pop ds
 ;
-    call ds:close_com_proc
+    call fword ptr ds:close_com_proc
 ;
     mov es,ds:send_buf
     FreeMem
@@ -335,7 +335,7 @@ enable_cts      PROC far
     jc enable_cts_done
 ;
     mov ds,[ebx].port_sel
-    call ds:enable_cts_proc
+    call fword ptr ds:enable_cts_proc
 
 enable_cts_done:
     pop ebx
@@ -368,7 +368,7 @@ disable_cts     PROC far
     jc disable_cts_done
 ;
     mov ds,[ebx].port_sel
-    call ds:disable_cts_proc
+    call fword ptr ds:disable_cts_proc
 
 disable_cts_done:
     pop ebx
@@ -401,7 +401,7 @@ enable_auto_rts PROC far
     jc enable_auto_rts_done
 ;
     mov ds,[ebx].port_sel
-    call ds:enable_auto_rts_proc
+    call fword ptr ds:enable_auto_rts_proc
 
 enable_auto_rts_done:
     pop ebx
@@ -434,7 +434,7 @@ disable_auto_rts    PROC far
     jc disable_auto_rts_done
 ;
     mov ds,[ebx].port_sel
-    call ds:disable_auto_rts_proc
+    call fword ptr ds:disable_auto_rts_proc
 
 disable_auto_rts_done:
     pop ebx
@@ -467,7 +467,7 @@ flush_com       PROC far
     jc flush_com_done
 ;
     mov ds,[ebx].port_sel
-    call ds:flush_com_proc
+    call fword ptr ds:flush_com_proc
 ;       
     RequestSpinlock ds:com_spinlock
     mov ds:send_count,0
@@ -508,7 +508,7 @@ reset_com       PROC far
     jc reset_com_done
 ;
     mov ds,[ebx].port_sel
-    call ds:reset_com_proc
+    call fword ptr ds:reset_com_proc
 
 reset_com_done:
     pop ebx
@@ -663,7 +663,7 @@ com_send_no_wrap:
     inc cx
     mov ds:send_count,cx
     ReleaseSpinlock ds:com_spinlock
-    call ds:start_send_com_proc
+    call fword ptr ds:start_send_com_proc
     jmp com_send_ok_done
     
 com_send_ok:
@@ -797,7 +797,7 @@ set_dtr Proc far
     cmp ds:line_reserved,0
     jne set_dtr_done
 ;
-    call ds:set_dtr_proc
+    call fword ptr ds:set_dtr_proc
 
 set_dtr_done:
     pop dx
@@ -835,7 +835,7 @@ reset_dtr       Proc far
     cmp ds:line_reserved,0
     jne reset_dtr_done
 ;
-    call ds:reset_dtr_proc
+    call fword ptr ds:reset_dtr_proc
 
 reset_dtr_done:
     pop dx
@@ -870,7 +870,7 @@ set_rts Proc far
     jc set_rts_done
 ;
     mov ds,[ebx].port_sel
-    call ds:set_rts_proc
+    call fword ptr ds:set_rts_proc
 
 set_rts_done:
     pop dx
@@ -905,7 +905,7 @@ reset_rts       Proc far
     jc reset_rts_done
 ;
     mov ds,[ebx].port_sel
-    call ds:reset_rts_proc
+    call fword ptr ds:reset_rts_proc
 
 reset_rts_done:
     pop dx
@@ -945,10 +945,10 @@ reserve_com_line    Proc far
     mov ds,ds:[bx].s_port_arr
 ;    
     mov edx,ds:cd_reserve_line_proc
-    or edx,edx
+    or edx,ds:cd_reserve_line_proc+4
     jz reserve_line_fail
 ;
-    call ds:cd_reserve_line_proc
+    call fword ptr ds:cd_reserve_line_proc
 
 reserve_line_fail:
     pop dx
@@ -987,10 +987,10 @@ device_set_dtr  Proc far
     mov ds,ds:[bx].s_port_arr
 ;
     mov edx,ds:cd_set_dtr_proc
-    or edx,edx
+    or edx,ds:cd_set_dtr_proc+4
     jz device_set_dtr_fail
 ;    
-    call ds:cd_set_dtr_proc
+    call fword ptr ds:cd_set_dtr_proc
 
 device_set_dtr_fail:
     pop edx
@@ -1029,10 +1029,10 @@ device_reset_dtr    Proc far
     mov ds,ds:[bx].s_port_arr
 ;
     mov edx,ds:cd_reset_dtr_proc
-    or edx,edx
+    or edx,ds:cd_reset_dtr_proc+4
     jz device_reset_dtr_fail
 ;    
-    call ds:cd_reset_dtr_proc
+    call fword ptr ds:cd_reset_dtr_proc
 
 device_reset_dtr_fail:
     pop edx
@@ -1073,10 +1073,10 @@ wait_for_line_state_change      Proc far
     mov ds,ds:[bx].s_port_arr
 ;
     mov edx,ds:cd_wait_for_line_state_proc
-    or edx,edx
+    or edx,ds:cd_wait_for_line_state_proc+4
     jz wait_for_line_state_fail
 ;    
-    call ds:cd_wait_for_line_state_proc
+    call fword ptr ds:cd_wait_for_line_state_proc
     clc
     jmp wait_for_line_state_done
 
@@ -1122,10 +1122,10 @@ get_line_state  Proc far
     mov ds,ds:[bx].s_port_arr
 ;
     mov edx,ds:cd_get_line_state_proc
-    or edx,edx
+    or edx,ds:cd_get_line_state_proc+4
     jz get_line_state_fail
 ;    
-    call ds:cd_get_line_state_proc
+    call fword ptr ds:cd_get_line_state_proc
     clc
     jmp get_line_state_done
 
@@ -1329,10 +1329,15 @@ add_com_port    Proc far
     push dx
 ;
     mov ds:cd_set_dtr_proc,0
+    mov ds:cd_set_dtr_proc+4,0
     mov ds:cd_reset_dtr_proc,0
+    mov ds:cd_reset_dtr_proc+4,0
     mov ds:cd_wait_for_line_state_proc,0
+    mov ds:cd_wait_for_line_state_proc+4,0
     mov ds:cd_get_line_state_proc,0
+    mov ds:cd_get_line_state_proc+4,0
     mov ds:cd_line_reserved,0
+    mov ds:cd_line_reserved+4,0
     mov ds:cd_controller,ax
     mov ds:cd_device,dx
     mov ds:cd_open,0

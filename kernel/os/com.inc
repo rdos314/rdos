@@ -33,18 +33,18 @@ DCD_LINE    = 8
 com_device_struc   STRUC
 
 ; OUT ES      Com port selector
-cd_create_proc              DD ?
+cd_create_proc              DD ?,?
 
-cd_reserve_line_proc        DD ?
+cd_reserve_line_proc        DD ?,?
 
-cd_set_dtr_proc             DD ?
+cd_set_dtr_proc             DD ?,?
 
-cd_reset_dtr_proc           DD ?
+cd_reset_dtr_proc           DD ?,?
 
-cd_wait_for_line_state_proc DD ?
+cd_wait_for_line_state_proc DD ?,?
 
 ; OUT AL Line status
-cd_get_line_state_proc      DD ?
+cd_get_line_state_proc      DD ?,?
 
 cd_controller               DW ?
 cd_device                   DW ?
@@ -60,43 +60,43 @@ com_port_struc	STRUC
 ;	IN  BH		parity char
 ;	IN  ECX		baudrate
 ;   IN  DS      Com port selector
-open_com_proc   DD ?
+open_com_proc   DD ?,?
 
 ;   IN  DS      Com port selector
-close_com_proc   DD ?
+close_com_proc   DD ?,?
 
 ;   IN  DS      Com port selector
-enable_cts_proc   DD ?
+enable_cts_proc   DD ?,?
 
 ;   IN  DS      Com port selector
-disable_cts_proc   DD ?
+disable_cts_proc   DD ?,?
 
 ;   IN  DS      Com port selector
-set_dtr_proc   DD ?
+set_dtr_proc   DD ?,?
 
 ;   IN  DS      Com port selector
-reset_dtr_proc   DD ?
+reset_dtr_proc   DD ?,?
 
 ;   IN  DS      Com port selector
-set_rts_proc   DD ?
+set_rts_proc   DD ?,?
 
 ;   IN  DS      Com port selector
-reset_rts_proc   DD ?
+reset_rts_proc   DD ?,?
 
 ;   IN  DS      Com port selector
-enable_auto_rts_proc   DD ?
+enable_auto_rts_proc   DD ?,?
 
 ;   IN  DS      Com port selector
-disable_auto_rts_proc   DD ?
+disable_auto_rts_proc   DD ?,?
 
 ;   IN  DS      Com port selector
-flush_com_proc   DD ?
+flush_com_proc   DD ?,?
 
 ;   IN  DS      Com port selector
-start_send_com_proc   DD ?
+start_send_com_proc   DD ?,?
 
 ;   IN  DS      Com port selector
-reset_com_proc   DD ?
+reset_com_proc   DD ?,?
 
 send_count		DW ?
 rec_count	  	DW ?

@@ -862,7 +862,7 @@ open_com_ftdi   Proc far
 open_ftdi_done:
     popad
     pop ds
-    ret
+    retf32
 open_com_ftdi   Endp
 
 
@@ -923,7 +923,7 @@ ccfNoDevice:
 ;
     pop bx
     pop ds    
-    ret
+    retf32
 close_com_ftdi  Endp
 
     
@@ -938,7 +938,7 @@ close_com_ftdi  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-enable_cts_ftdi PROC far
+enable_cts_ftdi PROC near
     push es
     pushad
 ;
@@ -981,7 +981,11 @@ enable_cts_ftdi PROC far
     ret
 enable_cts_ftdi Endp
 
-    
+far_enable_cts_ftdi Proc far
+    call enable_cts_ftdi
+    retf32
+far_enable_cts_ftdi Endp  
+  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -993,7 +997,7 @@ enable_cts_ftdi Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-disable_cts_ftdi    PROC far
+disable_cts_ftdi    PROC near
     push es
     pushad
 ;
@@ -1035,6 +1039,10 @@ disable_cts_ftdi    PROC far
     ret
 disable_cts_ftdi Endp
 
+far_disable_cts_ftdi    Proc far
+    call disable_cts_ftdi
+    retf32
+far_disable_cts_ftdi    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1047,7 +1055,7 @@ disable_cts_ftdi Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_dtr_ftdi    Proc far
+set_dtr_ftdi    Proc near
     push es
     pushad
 ;    
@@ -1089,6 +1097,10 @@ set_dtr_ftdi    Proc far
     ret
 set_dtr_ftdi    Endp
 
+far_set_dtr_ftdi    Proc far
+    call set_dtr_ftdi
+    retf32
+far_set_dtr_ftdi    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1101,7 +1113,7 @@ set_dtr_ftdi    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reset_dtr_ftdi  Proc far
+reset_dtr_ftdi  Proc near
     push es
     pushad
 ;
@@ -1143,6 +1155,10 @@ reset_dtr_ftdi  Proc far
     ret
 reset_dtr_ftdi  Endp
 
+far_reset_dtr_ftdi  Proc far
+    call reset_dtr_ftdi
+    retf32
+far_reset_dtr_ftdi  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1155,7 +1171,7 @@ reset_dtr_ftdi  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_rts_ftdi    Proc far
+set_rts_ftdi    Proc near
     push es
     pushad
 ;
@@ -1197,6 +1213,10 @@ set_rts_ftdi    Proc far
     ret
 set_rts_ftdi    Endp
 
+far_set_rts_ftdi    Proc far
+    call set_rts_ftdi
+    retf32
+far_set_rts_ftdi    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1209,7 +1229,7 @@ set_rts_ftdi    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reset_rts_ftdi  Proc far
+reset_rts_ftdi  Proc near
     push es
     pushad
 ;
@@ -1251,6 +1271,10 @@ reset_rts_ftdi  Proc far
     ret
 reset_rts_ftdi  Endp
 
+far_reset_rts_ftdi  Proc far
+    call reset_rts_ftdi
+    retf32
+far_reset_rts_ftdi  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1790,7 +1814,7 @@ open_com_pl     Proc far
 open_pl_done:
     popad
     pop ds
-    ret
+    retf32
 open_com_pl Endp
 
 
@@ -1851,7 +1875,7 @@ ccpNoDevice:
 ;
     pop bx
     pop ds    
-    ret
+    retf32
 close_com_pl    Endp
 
     
@@ -1866,7 +1890,7 @@ close_com_pl    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-enable_cts_pl   PROC far
+enable_cts_pl   PROC near
     push es
     pushad
 ;
@@ -1917,6 +1941,10 @@ ecpIndexOk:
     ret
 enable_cts_pl Endp
 
+far_enable_cts_pl   Proc far
+    call enable_cts_pl
+    retf32
+far_enable_cts_pl   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1929,10 +1957,15 @@ enable_cts_pl Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-disable_cts_pl  PROC far
+disable_cts_pl  PROC near
     and ds:ups_control,NOT CONTROL_CTS
     ret
 disable_cts_pl Endp
+
+far_disable_cts_pl  PROC far
+    and ds:ups_control,NOT CONTROL_CTS
+    retf32
+far_disable_cts_pl Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1946,12 +1979,20 @@ disable_cts_pl Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_dtr_pl      Proc far
+set_dtr_pl      Proc near
     or ds:ups_control,CONTROL_DTR
     or ds:ups_pl_control,1
     call WriteControl
     ret
 set_dtr_pl      Endp
+
+
+far_set_dtr_pl      Proc far
+    or ds:ups_control,CONTROL_DTR
+    or ds:ups_pl_control,1
+    call WriteControl
+    retf32
+far_set_dtr_pl      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1965,12 +2006,19 @@ set_dtr_pl      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reset_dtr_pl    Proc far
+reset_dtr_pl    Proc near
     and ds:ups_control,NOT CONTROL_DTR
     and ds:ups_pl_control,NOT 1
     call WriteControl
     ret
 reset_dtr_pl    Endp
+
+far_reset_dtr_pl    Proc far
+    and ds:ups_control,NOT CONTROL_DTR
+    and ds:ups_pl_control,NOT 1
+    call WriteControl
+    retf32
+far_reset_dtr_pl    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1984,12 +2032,19 @@ reset_dtr_pl    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_rts_pl      Proc far
+set_rts_pl      Proc near
     or ds:ups_control,CONTROL_RTS
     or ds:ups_pl_control,2
     call WriteControl
     ret
 set_rts_pl      Endp
+
+far_set_rts_pl      Proc far
+    or ds:ups_control,CONTROL_RTS
+    or ds:ups_pl_control,2
+    call WriteControl
+    retf32
+far_set_rts_pl      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2003,13 +2058,19 @@ set_rts_pl      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reset_rts_pl    Proc far
+reset_rts_pl    Proc near
     and ds:ups_control,NOT CONTROL_RTS
     and ds:ups_pl_control,NOT 2
     call WriteControl
     ret
 reset_rts_pl    Endp
 
+far_reset_rts_pl    Proc far
+    and ds:ups_control,NOT CONTROL_RTS
+    and ds:ups_pl_control,NOT 2
+    call WriteControl
+    retf32
+far_reset_rts_pl    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2653,7 +2714,7 @@ icmDivisorOk:
 ;
     popad
     pop ds
-    ret
+    retf32
 open_com_mct Endp
 
 
@@ -2676,7 +2737,7 @@ close_com_mct   Proc far
 ;
     pop bx
     pop ds    
-    ret
+    retf32
 close_com_mct   Endp
 
     
@@ -2691,7 +2752,7 @@ close_com_mct   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-enable_cts_mct  PROC far
+enable_cts_mct  PROC near
     push es
     pushad
 ;
@@ -2706,6 +2767,10 @@ enable_cts_mct  PROC far
     ret
 enable_cts_mct Endp
 
+far_enable_cts_mct  Proc far
+    call enable_cts_mct
+    retf32
+far_enable_cts_mct  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2718,7 +2783,7 @@ enable_cts_mct Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-disable_cts_mct PROC far
+disable_cts_mct PROC near
     push es
     pushad
 ;
@@ -2733,6 +2798,10 @@ disable_cts_mct PROC far
     ret
 disable_cts_mct Endp
 
+far_disable_cts_mct Proc far
+    call disable_cts_mct
+    retf32
+far_disable_cts_mct Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2745,12 +2814,17 @@ disable_cts_mct Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_dtr_mct     Proc far
+set_dtr_mct     Proc near
     or ds:ups_control,CONTROL_DTR
     call WriteModemControl
     ret
 set_dtr_mct     Endp
 
+far_set_dtr_mct Proc far
+    or ds:ups_control,CONTROL_DTR
+    call WriteModemControl
+    retf32
+far_set_dtr_mct Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2763,11 +2837,17 @@ set_dtr_mct     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reset_dtr_mct   Proc far
+reset_dtr_mct   Proc near
     and ds:ups_control,NOT CONTROL_DTR
     call WriteModemControl
     ret
 reset_dtr_mct   Endp
+
+far_reset_dtr_mct   Proc far
+    and ds:ups_control,NOT CONTROL_DTR
+    call WriteModemControl
+    retf32
+far_reset_dtr_mct   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2781,11 +2861,17 @@ reset_dtr_mct   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_rts_mct     Proc far
+set_rts_mct     Proc near
     or ds:ups_control,CONTROL_RTS
     call WriteModemControl
     ret
 set_rts_mct     Endp
+
+far_set_rts_mct     Proc far
+    or ds:ups_control,CONTROL_RTS
+    call WriteModemControl
+    retf32
+far_set_rts_mct     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2799,11 +2885,17 @@ set_rts_mct     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reset_rts_mct   Proc far
+reset_rts_mct   Proc near
     and ds:ups_control,NOT CONTROL_RTS
     call WriteModemControl
     ret
 reset_rts_mct   Endp
+
+far_reset_rts_mct   Proc far
+    and ds:ups_control,NOT CONTROL_RTS
+    call WriteModemControl
+    retf32
+far_reset_rts_mct   Endp
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2818,7 +2910,7 @@ reset_rts_mct   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 enable_auto_rts PROC far
-    ret
+    retf32
 enable_auto_rts Endp
 
     
@@ -2834,7 +2926,7 @@ enable_auto_rts Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 disable_auto_rts    PROC far
-    ret
+    retf32
 disable_auto_rts Endp
 
     
@@ -2850,7 +2942,7 @@ disable_auto_rts Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 flush_com       PROC far
-    ret
+    retf32
 flush_com Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2883,7 +2975,7 @@ reset_port       PROC far
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 reset_port Endp
 
 
@@ -2919,7 +3011,7 @@ ssOk:
 ssDone:
     pop ax
     pop es    
-    ret
+    retf32
 start_send      ENDP
 
 
@@ -2935,19 +3027,19 @@ start_send      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ftdi_port_tab:
-fpt00 DW OFFSET open_com_ftdi,          SEG code
-fpt01 DW OFFSET close_com_ftdi,     SEG code
-fpt02 DW OFFSET enable_cts_ftdi,    SEG code
-fpt03 DW OFFSET disable_cts_ftdi,       SEG code
-fpt04 DW OFFSET set_dtr_ftdi,       SEG code
-fpt05 DW OFFSET reset_dtr_ftdi,     SEG code
-fpt06 DW OFFSET set_rts_ftdi,       SEG code
-fpt07 DW OFFSET reset_rts_ftdi,     SEG code
-fpt08 DW OFFSET enable_auto_rts,    SEG code
-fpt09 DW OFFSET disable_auto_rts,       SEG code
-fpt10 DW OFFSET flush_com,          SEG code
-fpt11 DW OFFSET start_send,         SEG code
-fpt12 DW OFFSET reset_port,         SEG code
+fpt00 DD OFFSET open_com_ftdi,          SEG code
+fpt01 DD OFFSET close_com_ftdi,     SEG code
+fpt02 DD OFFSET far_enable_cts_ftdi,    SEG code
+fpt03 DD OFFSET far_disable_cts_ftdi,       SEG code
+fpt04 DD OFFSET far_set_dtr_ftdi,       SEG code
+fpt05 DD OFFSET far_reset_dtr_ftdi,     SEG code
+fpt06 DD OFFSET far_set_rts_ftdi,       SEG code
+fpt07 DD OFFSET far_reset_rts_ftdi,     SEG code
+fpt08 DD OFFSET enable_auto_rts,    SEG code
+fpt09 DD OFFSET disable_auto_rts,       SEG code
+fpt10 DD OFFSET flush_com,          SEG code
+fpt11 DD OFFSET start_send,         SEG code
+fpt12 DD OFFSET reset_port,         SEG code
 
 CreatePortFtdi  Proc far
     pushad
@@ -2961,7 +3053,7 @@ CreatePortFtdi  Proc far
 ;
     mov si,OFFSET ftdi_port_tab
     xor di,di
-    mov cx,13
+    mov cx,2 * 13
     rep movs dword ptr es:[di],cs:[si]
 ;
     movzx ax,ds:uds_interface
@@ -2972,7 +3064,7 @@ CreatePortFtdi  Proc far
     mov es:ups_device,ax
 ;    
     popad
-    ret
+    retf32
 CreatePortFtdi  Endp
 
 
@@ -2988,19 +3080,19 @@ CreatePortFtdi  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 pl2303_port_tab:
-ppt00 DW OFFSET open_com_pl,     SEG code
-ppt01 DW OFFSET close_com_pl,    SEG code
-ppt02 DW OFFSET enable_cts_pl,       SEG code
-ppt03 DW OFFSET disable_cts_pl,      SEG code
-ppt04 DW OFFSET set_dtr_pl,      SEG code
-ppt05 DW OFFSET reset_dtr_pl,    SEG code
-ppt06 DW OFFSET set_rts_pl,      SEG code
-ppt07 DW OFFSET reset_rts_pl,    SEG code
-ppt08 DW OFFSET enable_auto_rts,     SEG code
-ppt09 DW OFFSET disable_auto_rts,    SEG code
-ppt10 DW OFFSET flush_com,       SEG code
-ppt11 DW OFFSET start_send,      SEG code
-ppt12 DW OFFSET reset_port,      SEG code
+ppt00 DD OFFSET open_com_pl,     SEG code
+ppt01 DD OFFSET close_com_pl,    SEG code
+ppt02 DD OFFSET far_enable_cts_pl,       SEG code
+ppt03 DD OFFSET far_disable_cts_pl,      SEG code
+ppt04 DD OFFSET far_set_dtr_pl,      SEG code
+ppt05 DD OFFSET far_reset_dtr_pl,    SEG code
+ppt06 DD OFFSET far_set_rts_pl,      SEG code
+ppt07 DD OFFSET far_reset_rts_pl,    SEG code
+ppt08 DD OFFSET enable_auto_rts,     SEG code
+ppt09 DD OFFSET disable_auto_rts,    SEG code
+ppt10 DD OFFSET flush_com,       SEG code
+ppt11 DD OFFSET start_send,      SEG code
+ppt12 DD OFFSET reset_port,      SEG code
 
 CreatePortPl2303    Proc far
     pushad
@@ -3014,7 +3106,7 @@ CreatePortPl2303    Proc far
 ;
     mov si,OFFSET pl2303_port_tab
     xor di,di
-    mov cx,13
+    mov cx,2 * 13
     rep movs dword ptr es:[di],cs:[si]
 ;
     movzx ax,ds:uds_interface
@@ -3025,7 +3117,7 @@ CreatePortPl2303    Proc far
     mov es:ups_device,ax
 ;    
     popad
-    ret
+    retf32
 CreatePortPl2303    Endp
 
 
@@ -3041,19 +3133,19 @@ CreatePortPl2303    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 mct_port_tab:
-mct00 DW OFFSET open_com_mct,           SEG code
-mct01 DW OFFSET close_com_mct,      SEG code
-mct02 DW OFFSET enable_cts_mct,     SEG code
-mct03 DW OFFSET disable_cts_mct,    SEG code
-mct04 DW OFFSET set_dtr_mct,        SEG code
-mct05 DW OFFSET reset_dtr_mct,      SEG code
-mct06 DW OFFSET set_rts_mct,        SEG code
-mct07 DW OFFSET reset_rts_mct,      SEG code
-mct08 DW OFFSET enable_auto_rts,    SEG code
-mct09 DW OFFSET disable_auto_rts,       SEG code
-mct10 DW OFFSET flush_com,          SEG code
-mct11 DW OFFSET start_send,         SEG code
-mct12 DW OFFSET reset_port,         SEG code
+mct00 DD OFFSET open_com_mct,           SEG code
+mct01 DD OFFSET close_com_mct,      SEG code
+mct02 DD OFFSET enable_cts_mct,     SEG code
+mct03 DD OFFSET disable_cts_mct,    SEG code
+mct04 DD OFFSET far_set_dtr_mct,        SEG code
+mct05 DD OFFSET far_reset_dtr_mct,      SEG code
+mct06 DD OFFSET far_set_rts_mct,        SEG code
+mct07 DD OFFSET far_reset_rts_mct,      SEG code
+mct08 DD OFFSET enable_auto_rts,    SEG code
+mct09 DD OFFSET disable_auto_rts,       SEG code
+mct10 DD OFFSET flush_com,          SEG code
+mct11 DD OFFSET start_send,         SEG code
+mct12 DD OFFSET reset_port,         SEG code
 
 CreatePortMct   Proc far
     pushad
@@ -3067,7 +3159,7 @@ CreatePortMct   Proc far
 ;
     mov si,OFFSET mct_port_tab
     xor di,di
-    mov cx,13
+    mov cx,2 * 13
     rep movs dword ptr es:[di],cs:[si]
 ;
     movzx ax,ds:uds_interface
@@ -3078,7 +3170,7 @@ CreatePortMct   Proc far
     mov es:ups_device,ax
 ;    
     popad
-    ret
+    retf32
 CreatePortMct   Endp
 
 
@@ -3624,14 +3716,14 @@ utEnd:
 
 CreatePortError Proc far
     stc
-    ret
+    retf32
 CreatePortError Endp
 
 create_port_tab:
-cpt00 DW OFFSET CreatePortError
-cpt01 DW OFFSET CreatePortFtdi
-cpt02 DW OFFSET CreatePortPl2303
-cpt03 DW OFFSET CreatePortMct
+cpt00 DD OFFSET CreatePortError
+cpt01 DD OFFSET CreatePortFtdi
+cpt02 DD OFFSET CreatePortPl2303
+cpt03 DD OFFSET CreatePortMct
 
 AddPort Proc near
     push ds
@@ -3833,13 +3925,13 @@ apNoRecover:
     mov es:uds_port_offset,si
 ;
     mov cx,es:uds_device_type
-    movzx di,ch
-    add di,di
-    mov di,word ptr cs:[di].create_port_tab    
+    movzx edi,ch
+    shl edi,2
+    mov edi,dword ptr cs:[edi].create_port_tab    
     mov dx,es
     mov ds,dx
-    mov word ptr ds:cd_create_proc,di
-    mov word ptr ds:cd_create_proc+2,cs
+    mov dword ptr ds:cd_create_proc,edi
+    mov dword ptr ds:cd_create_proc+4,cs
 ;    
     movzx dx,al
     mov ax,bx
