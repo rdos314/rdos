@@ -950,7 +950,7 @@ create_port Proc far
     pop si
     pop cx
     pop eax
-    ret
+    retf32
 create_port Endp
 
 
