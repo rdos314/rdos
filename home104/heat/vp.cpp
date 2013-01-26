@@ -45,6 +45,8 @@
 #define VOLUME_TANK 500
 #define VOLUME_HEAT 100
 
+const int HistoryArr[] = {61, 91, 121, 181, 241, 301, 361, 421, 481, 541, 601, 0};
+
 /*##########################################################################
 #
 #   Name       : TVp::TVp
@@ -114,9 +116,7 @@ TVp::TVp(TControlThread *control)
     FHasLowTemp = FALSE;
     FIncCount = 0;
     FHasCirc = FALSE;
-
-    for (i = 0; i < 40; i++)
-        ValidTankArr[i] = FALSE;
+    FHistoryCount = 0;
 
     for (i = 0; i < 20; i++)
         ValidHeatArr[i] = FALSE;
@@ -200,7 +200,7 @@ int TVp::HasValidHeatTemp()
 ##########################################################################*/
 int TVp::GetTankTemp()
 {
-        return FTankTemp;
+    return FTankTemp;
 }
 
 /*##########################################################################
@@ -451,6 +451,156 @@ void TVp::UpdateVp(int diff)
 
 /*##########################################################################
 #
+#   Name       : TVp::CalcLinearRegression
+#
+#   Purpose....: Calculate linear regression parameters
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVp::CalcLinearRegression(int Size)
+{
+    int i;
+    int j;
+    long double xmean;
+    long double xdiff2;
+    long double sum;
+    long double xydiff;
+    long double val;
+
+        xmean = Size / 2;
+
+    xdiff2 = 0;
+    for (i = 0; i < Size; i++)
+    {
+        val = i - xmean;
+        xdiff2 += val * val;
+    }
+
+    sum = 0;
+        for (i = 0; i < Size; i++)
+    {
+        j = (i + FHistoryCount - Size) % MAX_LEVEL_HISTORY;
+        sum += FHistory[j];
+    }
+
+    FCurrMean = sum / Size;
+
+    sum = 0;
+    for (i = 0; i < Size; i++)
+    {
+        j = (i + FHistoryCount - Size) % MAX_LEVEL_HISTORY;
+        val = i - xmean;
+        sum += (FHistory[j] - FCurrMean) * val;
+    }
+
+    xydiff = sum;        
+
+    FCurrFlow = xydiff / xdiff2 * 3600.0;
+
+    FCurrSlope = xydiff * Size / xdiff2;
+    FCurrSl2 = xydiff * xydiff * Size / xdiff2 * Size / xdiff2;
+
+    sum = 0;
+    for (i = 0; i < Size; i++)
+    {
+        j = (i + FHistoryCount - Size) % MAX_LEVEL_HISTORY;
+        val = i - xmean;
+        val = FHistory[j] - FCurrMean - FCurrSlope * val / Size;
+        sum += val * val;
+    }
+
+    FCurrSd2 = sum  / (Size - 2.0);
+
+    if (FCurrSl2)
+        FCurrTurbulence = 100.0 * FCurrSd2 / FCurrSl2;
+    else
+        FCurrTurbulence = 1000.0;
+}
+
+/*##########################################################################
+#
+#   Name       : TVp::UpdateHistory
+#
+#   Purpose....: Update tank history
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVp::UpdateHistory(long double val)
+{
+    int i;
+    int j;
+    int index;
+    int n;
+    
+    if (FHistoryCount < MAX_LEVEL_HISTORY)
+    {
+        FHistoryIndex = 0;
+
+        FRawHistory[FHistoryCount] = val;
+        FHistoryCount++;
+    }
+    else
+    {
+        FRawHistory[FHistoryIndex] = val;
+        FHistoryIndex++;
+        if (FHistoryIndex == MAX_LEVEL_HISTORY)
+            FHistoryIndex = 0;
+    }
+
+    for (i = 0; i < FHistoryCount; i++)
+    {
+        j = (i + FHistoryIndex) % MAX_LEVEL_HISTORY;
+        FHistory[i] = FRawHistory[j];
+    }
+
+    if (FHistoryCount > 60)
+    {
+                index = 0;
+                FCurrTurbulence = 1000;
+                FCurrSd2 = 1000;
+                FCurrSlope = 1000;
+                FCurrFlow = 0;
+
+                while (HistoryArr[index] && FCurrTurbulence >= 10.0)
+                {
+                    n = HistoryArr[index];
+                        index++;
+
+                        if (n > FHistoryCount)
+                break;
+
+            CalcLinearRegression(n);
+        }
+
+        if (FCurrTurbulence < 10.0)
+        {
+            FValidPTank = TRUE;
+            PTank = 0.07 * VOLUME_TANK * FCurrSlope;
+            FCurrTemp = FCurrMean + FCurrSlope * 0.5;
+        
+            if (FCurrSlope > 0.1)
+                UpdateVp(1);
+
+            if (FCurrSlope < -0.1)
+                UpdateVp(-1);
+        }
+        else
+        {
+            FValidPTank = FALSE;
+            FCurrTemp = FCurrMean;
+        }
+
+        FTankTemp = (int)(FCurrTemp * 10.0);
+        FValidTank = TRUE;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TVp::Execute
 #
 #   Purpose....: Handler thread
@@ -461,27 +611,22 @@ void TVp::UpdateVp(int diff)
 ##########################################################################*/
 void TVp::Execute()
 {
+    int i;
     int year, month, day;
     int hour, min, sec;
     int ms, us;
     unsigned long msb, lsb;
     int LastMin;
-    int i;
-    long double ValArr[MAX_FUZZY_VARS];
     long double val;
+    long double dT;
     int ival;
     int diostat;
-    long double dT;
     int Sum;
     int Count;
     int PrevCount;
     long double PrevVal;
-    int EpLimit;
     char str[50];
-    long tempval;
     long double E = 0.0;
-    long double BaseTemp;
-    int ValidBaseTemp;
 
     TLabelFactory CommentLabelFactory;
     TLabelFactory ValueLabelFactory;
@@ -529,6 +674,8 @@ void TVp::Execute()
     Table->AddRow(24, 45);
     Table->AddRow(24, 45);
     Table->AddRow(24, 45);
+    Table->AddRow(24, 45);
+    Table->AddRow(24, 45);
 
     Table->SetText(0, 0, "Tank temp");
     Table->SetText(0, 2, "°C");
@@ -545,19 +692,16 @@ void TVp::Execute()
     Table->SetText(4, 0, "Förbrukning");
     Table->SetText(4, 2, "kWh");
 
+    Table->SetText(5, 0, "Effekt");
+    Table->SetText(5, 2, "kW");
+
+    Table->SetText(6, 0, "Turbolence");
+
 
     TempSum = 0;
     TempCount = 0;
     AmbientSum = 0;
     AmbientCount = 0;
-
-    for (i = 0; i < MAX_FUZZY_VARS; i++)
-        ValArr[i] = 0.0;
-
-    ValArr[1] = 0.5;
-
-    FTankSum = 0;
-    FTankCount = 0;
 
     FHeatSum = 0;
     FHeatCount = 0;
@@ -584,21 +728,19 @@ void TVp::Execute()
     {
         if (RdosReadSerialRaw(1, 5, &ival))
         {
-            FTankSum += ival;
-            FTankCount++;
+            val = (long double)ival / 10;
+            UpdateHistory(val);
 
-            if (FTankCount >= 5)
+            if (FHistoryCount > 60)
             {
-                FTankTemp = FTankSum / FTankCount;
-
-                val = (long double)FTankTemp / 10;
-                sprintf(str, "%5.1Lf", val);
+                sprintf(str, "%5.2Lf", FCurrTemp);
                 Table->SetText(0, 1, str);
 
-                FValidTank = TRUE;
+                sprintf(str, "%5.2Lf", PTank);
+                Table->SetText(5, 1, str);
 
-                FTankSum = 0;
-                FTankCount = 0;
+                sprintf(str, "%5.1Lf", FCurrTurbulence);
+                Table->SetText(6, 1, str);
             }
         }
 
@@ -610,9 +752,6 @@ void TVp::Execute()
             if (FHeatCount >= 5)
             {
                 FHeatTemp = FHeatSum / FHeatCount;
-
-                if (FHeatTemp > FMaxHeatTemp)
-                    FMaxHeatTemp = FHeatTemp;
 
                 val = (long double)FHeatTemp / 10;
                 sprintf(str, "%5.1Lf", val);
@@ -639,83 +778,18 @@ void TVp::Execute()
 
             LastMin = min;
 
-            if (FMaxHeatDay != day)
+            if (FHasLowTemp)
             {
-                FMaxHeatDay = day;
-                FMaxHeatTemp = 0;
+                val = (long double)(FLowTemp) / 10;
+                sprintf(str, "%5.1Lf", val);
+                Table->SetText(2, 1, str);
             }
-
-            for (i = 1; i < 40; i++)
-            {
-                TankArr[i-1] = TankArr[i];
-                ValidTankArr[i-1] = ValidTankArr[i];
-            }
-
-            TankArr[39] = FTankTemp;
-            ValidTankArr[39] = FValidTank;
-
-            if (ValidTankArr[37] && FValidTank)
-            {
-                UpdateVp(FTankTemp - TankArr[37]);
-
-                if (FHasLowTemp)
-                {
-                    val = (long double)(FLowTemp) / 10;
-                    sprintf(str, "%5.1Lf", val);
-                    Table->SetText(2, 1, str);
-                }
-            }
-
 
             if (FPrevOn)
                 E += 0.055;
               
             sprintf(str, "%5.1Lf", E);
             Table->SetText(4, 1, str);
-
-            if (FValidTank)
-            {
-                Sum = 0;
-                PrevCount = 0;
-                
-                for (i = 0; i < 10; i++)
-                {
-                    if (ValidTankArr[i])
-                    {
-                        Sum += TankArr[i] * i;
-                        PrevCount += i;
-                    }
-                }
-
-                if (PrevCount)
-                    PrevVal = (long double)Sum / (long double)PrevCount / 10.0;
-                else
-                    PrevVal = 0;
-
-                Sum = 0;
-                Count = 0;
-
-                for (i = 0; i < 10; i++)
-                {
-                    if (ValidTankArr[i + 30])
-                    {
-                        Sum += TankArr[i + 30] * i;
-                        Count += i;
-                    }
-                }
-
-                if (Count)
-                    val = (long double)Sum / (long double)Count / 10.0;
-                else
-                    val = 0;
-
-                if (Count && PrevCount)
-                {
-                    dT = val - PrevVal;
-                    PTank = 0.07 * VOLUME_TANK * dT / 30;
-                    FValidPTank = TRUE;
-                }
-            }
 
             for (i = 1; i < 20; i++)
             {
@@ -771,12 +845,6 @@ void TVp::Execute()
             }
 
             FSection.Enter();
-
-            if (TempCount)
-                ValArr[0] = (long double)TempSum / (long double)TempCount / 10.0;
-
-            if (AmbientCount)
-                ValArr[1] = AmbientSum / (long double)AmbientCount; 
 
             TempSum = 0;
             TempCount = 0;

@@ -33,6 +33,8 @@
 #include "file.h"
 #include "quizh10.h"
 
+#include "h10-1.h"
+#include "h10-2.h"
 
 #include "pop.h"
 
@@ -43,6 +45,51 @@
 #define TRUE !FALSE
 
 TQuizH10 *Quiz[50];
+
+/*##################  WriteUnion ##########################
+*   Purpose....: Write union                                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteUnion()
+{
+    int i;
+    int j;
+    int k;
+    int count;
+    int arr1[85];
+    int arr2[85];
+    char str[16];
+    TFile outfile("res\\unh10.txt", 0);
+
+    for (i = 0; i < 28; i++)
+    {
+        for (j = 0; j < 85; j++)
+        {
+            arr1[j] = FALSE;
+            arr2[j] = FALSE;
+        }
+
+        for (j = 0; j < 16; j++)
+        {
+            k = Freq1[i][j];
+            arr1[k] = TRUE;
+
+            k = Freq2[i][j];
+            arr2[k] = TRUE;
+        }
+
+        count = 0;
+        for (j = 0; j < 85; j++)
+            if (arr1[j] && arr2[j])
+                count++;
+
+        sprintf(str, "%d\r\n", count);
+        outfile.Write(str);        
+    }    
+}
 
 /*##################  main ##########################
 *   Purpose....: Program entry-point                                                            #
@@ -56,6 +103,8 @@ int main(int argc, char **argv)
         char str[80];
         int g;
 
+        WriteUnion();
+        
         printf("read data\r\n");
         Quiz[0] = new TQuizH10("bin\\quizh10.bin");
 

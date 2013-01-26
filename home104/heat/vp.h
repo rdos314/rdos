@@ -31,44 +31,48 @@
 #include "fuzzy.h"
 #include "control.h"
 
+#define MAX_LEVEL_HISTORY   601
+
 class TVp : public TFuzzy
 {
 public:
-	TVp(TControlThread *control);
-	~TVp();
+        TVp(TControlThread *control);
+        ~TVp();
 
-	void DeviceName(char *Name, int Size) const;
+        void DeviceName(char *Name, int Size) const;
 
-	int GetTankTemp();
-	int GetHeatTemp();
+        int GetTankTemp();
+        int GetHeatTemp();
 
-	int HasValidTankTemp();
-	int HasValidHeatTemp();
+        int HasValidTankTemp();
+        int HasValidHeatTemp();
 
-	int HasValidTankP();
-	long double GetTankP();
+        int HasValidTankP();
+        long double GetTankP();
 
-	int HasValidHeatP();
-	long double GetHeatP();
+        int HasValidHeatP();
+        long double GetHeatP();
 
-	void SetTempError(int temp);
-	void SetAmbient(int ref, int ambient);
-	void SetCirc(int circ, long double speed);
+        void SetTempError(int temp);
+        void SetAmbient(int ref, int ambient);
+        void SetCirc(int circ, long double speed);
 
 protected:
     void UpdateVp(int diff);
+    void CalcLinearRegression(int Size);
+    void UpdateHistory(long double val);
 
-	virtual void Execute();
+        virtual void Execute();
 
-	 TFuzzyVar FTempDiffVar;
-	 TFuzzyVar FAmbientVar;
-	 TFuzzyVar FOutputVar;
+         TFuzzyVar FTempDiffVar;
+         TFuzzyVar FAmbientVar;
+         TFuzzyVar FOutputVar;
 
-	 int TempSum;
-	 int TempCount;
-	 long double AmbientSum;
-	 int AmbientCount;
-	 
+         int TempSum;
+         int TempCount;
+         long double AmbientSum;
+         int AmbientCount;
+         
     int FVpOn;
     int FPrevOn;
     int FValidCirc;
@@ -80,40 +84,44 @@ protected:
     int FHasLowTemp;
     int FLowTemp;
 
-	int FValidTank;
-	int FValidHeat;
+        int FValidTank;
+        int FValidHeat;
 
-	int FTankTemp;
-	int FHeatTemp;
+        int FTankTemp;
+        int FHeatTemp;
 
-	int FTankSum;
-	int FTankCount;
+        int FHeatSum;
+        int FHeatCount;
 
-	int FHeatSum;
-	int FHeatCount;
+        int FValidPTank;
+        long double PTank;
 
-	int FValidPTank;
-	long double PTank;
+        int FValidPHeat;
+        long double PHeat;
 
-	int ValidTankArr[40];
-	long double TankArr[40];
+        int ValidHeatArr[20];
+        long double HeatArr[20];
 
-	int FValidPHeat;
-	long double PHeat;
+        long double FRawHistory[MAX_LEVEL_HISTORY];
+        int FHistoryIndex;
 
-	int ValidHeatArr[20];
-	long double HeatArr[20];
+        long double FHistory[MAX_LEVEL_HISTORY];
+        int FHistoryCount;
+        long double FCurrMean;
+        long double FCurrSl2;
+        long double FCurrFlow;
+        long double FCurrSlope;
+        long double FCurrSd2;
+        long double FCurrTurbulence;
+        long double FCurrTemp;
 
-	 int FMaxHeatTemp;
-	 int FMaxHeatDay;
+         int FValidAmbient;
+         int FAmbient;
+         int FRef;
 
-	 int FValidAmbient;
-	 int FAmbient;
-	 int FRef;
+         TControlThread *FControl;
 
-	 TControlThread *FControl;
-
-	 TSection FSection;
+         TSection FSection;
 };
 
 #endif
