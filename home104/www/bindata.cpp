@@ -323,14 +323,11 @@ void TBinData::DecodeTank(TDeviceTag *tag, TBinDataEntry *data)
     var = tag->GetVar(LOG_VAR_P);
     if (var)
 	{
-        ival = var->GetFloat2();
+        ival = var->GetSignedInt();
 
-		if (ival <= 1000 && ival >= -1000)
-		{
-            val = (long double)ival;
-	        data->TankP.val = val / 100.0;
-	        data->TankP.valid = TRUE;
-	    }
+        val = (long double)ival;
+	    data->TankP.val = val;
+	    data->TankP.valid = TRUE;
 	}
 }
 

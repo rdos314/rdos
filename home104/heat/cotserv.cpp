@@ -82,26 +82,26 @@ TCotexSocketServer::~TCotexSocketServer()
 ##########################################################################*/
 void TCotexSocketServer::AddRadData(TRadData *data, TDeviceMsg *doc)
 {
-	TDeviceTag *tag;
-	int ival;
+        TDeviceTag *tag;
+        int ival;
 
-	tag = doc->AddTag(LOG_TAG_RAD);
-	tag->AddSignedInt(LOG_VAR_Address, data->Address);
+        tag = doc->AddTag(LOG_TAG_RAD);
+        tag->AddSignedInt(LOG_VAR_Address, data->Address);
 
-	ival = 10.0 * data->Ref;
-	tag->AddFloat1(LOG_VAR_Ref, ival);
-	
-	ival = 10.0 * data->Temp;
-	tag->AddFloat1(LOG_VAR_Temp, ival);
+        ival = 10.0 * data->Ref;
+        tag->AddFloat1(LOG_VAR_Ref, ival);
+        
+        ival = 10.0 * data->Temp;
+        tag->AddFloat1(LOG_VAR_Temp, ival);
 
-	ival = 10.0 * data->Motor;
-	tag->AddFloat1(LOG_VAR_Motor, ival);
+        ival = 10.0 * data->Motor;
+        tag->AddFloat1(LOG_VAR_Motor, ival);
 
-	ival = 10.0 * data->Light;
-	tag->AddFloat1(LOG_VAR_Light, ival);
+        ival = 10.0 * data->Light;
+        tag->AddFloat1(LOG_VAR_Light, ival);
 
-	ival = 10.0 * data->AuxTemp;
-	tag->AddFloat1(LOG_VAR_AuxTemp, ival);
+        ival = 10.0 * data->AuxTemp;
+        tag->AddFloat1(LOG_VAR_AuxTemp, ival);
 }
 
 /*##########################################################################
@@ -117,96 +117,96 @@ void TCotexSocketServer::AddRadData(TRadData *data, TDeviceMsg *doc)
 ##########################################################################*/
 TDeviceMsg *TCotexSocketServer::ConvToCotex(THeatData *data)
 {
-	TDeviceMsg *doc;
-	TDeviceTag *tag;
-	int ival;
+        TDeviceMsg *doc;
+        TDeviceTag *tag;
+        int ival;
    int i;
 
-	doc = new TDeviceMsg(MAX_MSG_SIZE);
+        doc = new TDeviceMsg(MAX_MSG_SIZE);
 
-	tag = doc->AddTag(LOG_TAG_HEADER);
-	tag->AddUnsignedLong(LOG_VAR_MsbTime, data->Msb);
-	tag->AddUnsignedLong(LOG_VAR_LsbTime, data->Lsb);
+        tag = doc->AddTag(LOG_TAG_HEADER);
+        tag->AddUnsignedLong(LOG_VAR_MsbTime, data->Msb);
+        tag->AddUnsignedLong(LOG_VAR_LsbTime, data->Lsb);
 
-	if (data->HasWs)
-	{
-	    tag = doc->AddTag(LOG_TAG_INDOOR);
-		ival = 10.0 * data->IndoorTemp;
-		tag->AddFloat1(LOG_VAR_Temp, ival);
+        if (data->HasWs)
+        {
+            tag = doc->AddTag(LOG_TAG_INDOOR);
+                ival = 10.0 * data->IndoorTemp;
+                tag->AddFloat1(LOG_VAR_Temp, ival);
 
-		ival = data->IndoorHumidity;
-		tag->AddSignedInt(LOG_VAR_Humidity, ival);
+                ival = data->IndoorHumidity;
+                tag->AddSignedInt(LOG_VAR_Humidity, ival);
 
-		tag = doc->AddTag(LOG_TAG_OUTDOOR);
-		ival = 10.0 * data->OutdoorTemp;
-		tag->AddFloat1(LOG_VAR_Temp, ival);
+                tag = doc->AddTag(LOG_TAG_OUTDOOR);
+                ival = 10.0 * data->OutdoorTemp;
+                tag->AddFloat1(LOG_VAR_Temp, ival);
 
-		ival = data->OutdoorHumidity;
-		tag->AddSignedInt(LOG_VAR_Humidity, ival);
+                ival = data->OutdoorHumidity;
+                tag->AddSignedInt(LOG_VAR_Humidity, ival);
 
-		ival = 10.0 * data->WindAverage;
-	    tag->AddFloat1(LOG_VAR_Windspeed, ival);
+                ival = 10.0 * data->WindAverage;
+            tag->AddFloat1(LOG_VAR_Windspeed, ival);
 
-		ival = 10.0 * data->WindGust;
-	    tag->AddFloat1(LOG_VAR_Windgust, ival);
+                ival = 10.0 * data->WindGust;
+            tag->AddFloat1(LOG_VAR_Windgust, ival);
 
-		ival = data->WindDir / 22.5;
-		tag->AddSignedInt(LOG_VAR_Winddir, ival);
+                ival = data->WindDir / 22.5;
+                tag->AddSignedInt(LOG_VAR_Winddir, ival);
 
-		ival = 10.0 * data->AirPressure;
-		tag->AddFloat1(LOG_VAR_Pressure, ival);
+                ival = 10.0 * data->AirPressure;
+                tag->AddFloat1(LOG_VAR_Pressure, ival);
 
-	    ival = 10.0 * data->Rain;
-		tag->AddFloat1(LOG_VAR_Rain, ival);
-	}
+            ival = 10.0 * data->Rain;
+                tag->AddFloat1(LOG_VAR_Rain, ival);
+        }
 
-	if (data->HasCirc)
-	{
+        if (data->HasCirc)
+        {
         tag = doc->AddTag(LOG_TAG_CIRC);
-	    ival = 10.0 * data->CircSpeed;
-		tag->AddFloat1(LOG_VAR_Motor, ival);
-	}
+            ival = 10.0 * data->CircSpeed;
+                tag->AddFloat1(LOG_VAR_Motor, ival);
+        }
 
     if (data->HasVp)
     {
-    	tag = doc->AddTag(LOG_TAG_VP);
-		
-	    if (data->HasTankTemp)
-    	{
-	    	tag = doc->AddTag(LOG_TAG_TANK);
+        tag = doc->AddTag(LOG_TAG_VP);
+                
+            if (data->HasTankTemp)
+        {
+                tag = doc->AddTag(LOG_TAG_TANK);
             ival = 10.0 * data->TankTemp;
-    	    tag->AddFloat1(LOG_VAR_Temp, ival);
+            tag->AddFloat1(LOG_VAR_Temp, ival);
 
-	    	if (data->HasTankP)
-		    {
-    		    ival = 100.0 * data->TankP;
-	    		tag->AddFloat2(LOG_VAR_P, ival);
-		    }
-    	}
+                if (data->HasTankP)
+                    {
+                    ival = data->TankP;
+                        tag->AddSignedInt(LOG_VAR_P, ival);
+                    }
+        }
 
-	    if (data->HasHeatTemp)
-    	{
-	    	tag = doc->AddTag(LOG_TAG_HEAT);
+            if (data->HasHeatTemp)
+        {
+                tag = doc->AddTag(LOG_TAG_HEAT);
             ival = 10.0 * data->HeatTemp;
-    		tag->AddFloat1(LOG_VAR_Temp, ival);
+                tag->AddFloat1(LOG_VAR_Temp, ival);
     
-	    	if (data->HasHeatP)
-		    {
-    			ival = 100.0 * data->HeatP;
-	    		tag->AddFloat2(LOG_VAR_P, ival);
-		    }
+                if (data->HasHeatP)
+                    {
+                        ival = 100.0 * data->HeatP;
+                        tag->AddFloat2(LOG_VAR_P, ival);
+                    }
         }
     }
 
-	if (data->HasSolar)
-	{
-	    tag = doc->AddTag(LOG_TAG_SOLAR12);
-		ival = 1000.0 * data->Solar12P;
-		tag->AddFloat3(LOG_VAR_P, ival);
+        if (data->HasSolar)
+        {
+            tag = doc->AddTag(LOG_TAG_SOLAR12);
+                ival = 1000.0 * data->Solar12P;
+                tag->AddFloat3(LOG_VAR_P, ival);
 
-	    tag = doc->AddTag(LOG_TAG_SOLAR24);
-		ival = 1000.0 * data->Solar24P;
-		tag->AddFloat3(LOG_VAR_P, ival);
+            tag = doc->AddTag(LOG_TAG_SOLAR24);
+                ival = 1000.0 * data->Solar24P;
+                tag->AddFloat3(LOG_VAR_P, ival);
     }
 
     for (i = 0; i < RAD_COUNT; i++)

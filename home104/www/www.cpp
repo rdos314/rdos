@@ -91,17 +91,17 @@ void HandleRealData(TDeviceMsg *doc)
        	    }
        	}
 
-	    tag = doc->GetTag(LOG_TAG_SOLAR12);
+	    tag = doc->GetTag(LOG_TAG_TANK);
 
-        if (tag)
-        {
+	    if (tag)
+	    {
             var = tag->GetVar(LOG_VAR_P);
             if (var)
           	{
-                ival = var->GetFloat3();
+                ival = var->GetSignedInt();
                 val = (long double)ival;
                 val = val / 1000.0;
-                printf("%8.3LfW", val);
+                printf("%8.3LfkW", val);
        	    }
        	}
 

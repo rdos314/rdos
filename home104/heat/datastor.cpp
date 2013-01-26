@@ -231,15 +231,16 @@ void TDataStore::GetCurrData(THeatData *data)
 
          if (FVp)
          {
+                data->HasVp = TRUE;
                   if (FVp->HasValidTankTemp())
                   {
                                 data->HasTankTemp = TRUE;
-                                data->TankTemp = (long double)FVp->GetTankTemp() / 10.0;
+                                data->TankTemp = ((long double)FVp->GetTankTemp()) / 10.0;
 
                                 if (FVp->HasValidTankP())
                                 {
                                          data->HasTankP = TRUE;
-                                         data->TankP = (long double)FVp->GetTankP() / 100.0;
+                                         data->TankP = FVp->GetTankP() * 1000.0;
                                 }
                   }
 
