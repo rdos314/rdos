@@ -397,7 +397,7 @@ void TVp::UpdateVp(int diff)
                 FHasLowTemp = TRUE;
             }
 
-            if (FTankTemp > FLowTemp)
+            if (FTankTemp > FLowTemp + 5)
                 on = FALSE;                
             else
                 on = TRUE;
@@ -407,7 +407,7 @@ void TVp::UpdateVp(int diff)
         {
             if (FIncCount)
             {
-                FLowTemp = FTankTemp - 20;
+                FLowTemp = FTankTemp - 30;
                 FHasLowTemp = TRUE;
                 on = TRUE;
             }
@@ -581,6 +581,8 @@ void TVp::UpdateHistory(long double val)
             FValidPTank = TRUE;
             PTank = 0.07 * VOLUME_TANK * FCurrSlope;
             FCurrTemp = FCurrMean + FCurrSlope * 0.5;
+            FTankTemp = (int)(FCurrTemp * 10.0);
+            FValidTank = TRUE;
         
             if (FCurrSlope > 0.1)
                 UpdateVp(1);
@@ -592,10 +594,10 @@ void TVp::UpdateHistory(long double val)
         {
             FValidPTank = FALSE;
             FCurrTemp = FCurrMean;
+            FTankTemp = (int)(FCurrTemp * 10.0);
+            FValidTank = TRUE;
         }
 
-        FTankTemp = (int)(FCurrTemp * 10.0);
-        FValidTank = TRUE;
     }
 }
 
