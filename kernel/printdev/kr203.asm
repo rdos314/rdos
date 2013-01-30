@@ -1264,7 +1264,7 @@ is_ok   Proc far
     jz ioDone
 ;
     mov ax,ds:kr_status
-    test ax,STATUS_FEED_ERROR OR STATUS_TEMP_ERROR OR STATUS_OFFLINE
+    test ax,STATUS_OFFLINE
     clc
     jz ioDone
 ;
@@ -2087,7 +2087,7 @@ reset_printer   Proc far
     test ds:kr_flag,FLAG_ATTACHED
     stc
     jz reset_done
-;
+;    
     mov bx,ds:kr_controller
     mov ax,ds:kr_device
     xor dl,dl
@@ -2154,6 +2154,9 @@ init_thread Proc far
     mov ds:kr_init_count,0
 
 init_thread_retry:
+    test ds:kr_flag,FLAG_ATTACHED
+    jz init_done
+;    
     mov ax,ds:kr_init_count
     inc ax
     cmp ax,50
@@ -2376,6 +2379,9 @@ krWait:
     jmp krLoop
         
 krDetached:
+    mov ax,5
+    WaitMilliSec
+;    
     mov ax,ds:kr_session_list
     or ax,ax
     jz krDetachClose
@@ -2387,12 +2393,25 @@ krDetached:
     dec ds:kr_session_count
     LeaveSection ds:kr_section
 ;
+    mov bx,es:cs_wait
+    or bx,bx
+    jz krFreeSession
+;
+    Signal
+    xor ax,ax
+    mov es,ax
+    jmp krDetached
+        
+krFreeSession:
     call FreeSessionSel
     xor ax,ax
     mov es,ax
     jmp krDetached
 
 krDetachClose:
+    test ds:kr_flag,FLAG_INIT
+    jnz krDetached
+;    
     call ClosePipes
 
 krWaitAttach:
@@ -2618,8 +2637,7 @@ usb_detach  Proc far
     mov cx,100
     lock and ds:kr_flag,NOT FLAG_ATTACHED
 
-udWaitLoop:
-;    
+udWaitLoop:    
     mov bx,ds:kr_session_thread
     Signal
 ;
