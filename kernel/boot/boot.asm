@@ -36,6 +36,17 @@ INCLUDE ..\os\port.def
 INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
 
+IMAGE_BASE = 120000h
+
+mmap_struc  STRUC
+
+mmap_len    DD ?
+mmap_base   DD ?,?
+mmap_size   DD ?,?
+mmap_type   DD ?
+
+mmap_struc  ENDS
+
 DefaultIdtEntry     MACRO
     dw OFFSET DefaultInt
     dw device_code_sel
@@ -282,7 +293,6 @@ _TEXT segment byte public use16 'code'
 
     jmp Start
 
-code_base       DD ?
 code_size       DD ?
 
 ExceptionText DB 'Exception Fault in Boot ',0
@@ -291,6 +301,100 @@ NoBootText DB 'No kernel to boot up',0
 KernelLowError  DB 'Low Kernel Overwrite',0
 KernelMidError  DB 'Mid Kernel Overwrite',0
 KernelHighError DB 'High Kernel Overwrite',0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UpdateMemMap
+;
+;       DESCRIPTION:    Update memory map
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateMemMap    Proc near
+    push ds
+    pushad
+;    
+    mov ax,flat_sel
+    mov ds,ax
+    mov ebx,9E000h
+    mov ecx,ds:[ebx]
+    or ecx,ecx
+    jz ummDone
+;
+    add ebx,4
+
+ummLoop:    
+    mov eax,ds:[ebx].mmap_base+4
+    or eax,eax
+    jnz ummNext
+;    
+    mov eax,ds:[ebx].mmap_base
+    or eax,eax
+    jnz ummNext
+;
+    mov ds:[ebx].mmap_size,9E000h
+    jmp ummNext
+
+ummNotLow:    
+    cmp eax,IMAGE_BASE
+    ja ummNext
+;
+    add eax,ds:[ebx].mmap_size
+    cmp eax,IMAGE_BASE
+    jb ummNext
+;
+    mov edi,9E000h
+    add edi,ds:[edi]
+    add edi,4
+    mov eax,ds:[ebx].mmap_base
+    mov ds:[edi].mmap_base,eax
+    mov eax,ds:[ebx].mmap_base+4
+    mov ds:[edi].mmap_base+4,eax
+    mov eax,ds:[ebx].mmap_type
+    mov ds:[edi].mmap_type,eax
+    mov eax,20
+    mov ds:[edi].mmap_len,eax
+;
+    mov eax,IMAGE_BASE
+    add eax,cs:code_size
+    sub eax,ds:[ebx].mmap_base
+    add ds:[ebx].mmap_base,eax
+    sub ds:[ebx].mmap_size,eax
+;
+    mov eax,IMAGE_BASE
+    sub eax,ds:[edi].mmap_base
+    mov ds:[edi].mmap_size,eax
+    mov ds:[edi].mmap_size+4,0
+;    
+    mov edi,9E000h
+    mov eax,24 + 4
+    add ds:[edi],eax
+    
+ummNext:
+    mov eax,ds:[ebx].mmap_len
+    add eax,4
+    add ebx,eax
+    sub ecx,eax
+    jnz ummLoop
+;
+    mov ebx,9E000h
+    mov ebx,ds:[ebx]
+;
+    mov ax,system_data_sel
+    mov ds,ax
+;    
+    mov ds:multiboot_mmap_addr,9E004h
+    mov ds:multiboot_mmap_len,bx
+;
+    mov ds:ram2_base,100000h
+    mov ds:ram2_size,0
+            
+ummDone:    
+    popad
+    pop ds
+    ret
+UpdateMemMap    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -790,7 +894,6 @@ boot_idt:
 
 init:
     cli    
-    mov cs:code_base,edi
     mov cs:code_size,ecx
     mov al,0FFh
     out INT0_MASK,al
@@ -889,12 +992,15 @@ prot_init:
     mov ax,system_data_sel
     mov ds,ax
     mov ds:alloc_base,esi
-    mov ds:ram1_size,09F000h
-    mov ds:ram2_base,100000h
-    mov eax,cs:code_base
-    mov ds:rom1_base,eax
-    sub eax,ds:ram2_base
-    mov ds:ram2_size,eax
+;
+    mov ds:ram1_size,09E000h
+;
+    mov eax,cs:code_size
+    add eax,IMAGE_BASE
+    mov ds:ram2_base,eax
+    mov ds:ram2_size,20000000h  ; temporary test
+;    
+    mov ds:rom1_base,IMAGE_BASE
     mov eax,cs:code_size
     mov ds:rom1_size,eax
     mov ds:rom2_size,0
@@ -904,6 +1010,7 @@ prot_init:
     mov ss,ax
     mov sp,1000h
 ;
+    call UpdateMemMap
     call GetAllAdapters
     call StartShutDownDevice
     call GetBootDevice
