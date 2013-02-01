@@ -35,6 +35,7 @@
 
 #include "h10-1.h"
 #include "h10-2.h"
+#include "h10-3.h"
 
 #include "pop.h"
 
@@ -74,10 +75,10 @@ void WriteUnion()
 
         for (j = 0; j < 16; j++)
         {
-            k = Freq1[i][j];
+            k = Freq2[i][j];
             arr1[k] = TRUE;
 
-            k = Freq2[i][j];
+            k = Freq3[i][j];
             arr2[k] = TRUE;
         }
 
