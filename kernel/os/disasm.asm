@@ -155,7 +155,6 @@ GetDataSel      PROC near
     push ds
     mov ax,SEG data
     mov ds,ax
-    mov ds:data_sel,0
     test ds:gaddr_mode,2
     jnz gdl64
 
