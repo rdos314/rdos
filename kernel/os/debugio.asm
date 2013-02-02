@@ -1081,14 +1081,7 @@ data_next64_64:
     mov ebx,dword ptr gs:p_rdi
     call WriteDataRow64
     call NewLine
-;
-    mov ax,gs
-    mov es,ax
-    mov ax,es:p_pm_deb_sel
-    mov ebx,es:p_pm_deb_offs
-    call WriteDataRow64
-    call NewLine
-    jmp wd64_vm
+    jmp wd64_data
 
 wd64_32:
     push ds
@@ -1129,15 +1122,15 @@ data_next64_32:
     xor ebx,ebx
     call WriteDataRow
     call NewLine
-;
+
+wd64_data:    
     mov ax,gs
     mov es,ax
     mov ax,es:p_pm_deb_sel
     mov ebx,es:p_pm_deb_offs
     call WriteDataRow
     call NewLine
-
-wd64_vm:
+;
     mov ax,es:p_vm_deb_sel
     mov ebx,es:p_vm_deb_offs
     call WriteDataRow64
