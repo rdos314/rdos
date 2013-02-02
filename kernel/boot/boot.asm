@@ -36,7 +36,7 @@ INCLUDE ..\os\port.def
 INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
 
-IMAGE_BASE = 120000h
+IMAGE_BASE = 121000h
 
 mmap_struc  STRUC
 
