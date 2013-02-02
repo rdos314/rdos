@@ -128,7 +128,8 @@ long_idt_ads                DD ?
 
 multiboot_mmap_addr         DD ?
 
-ram64_size          DD ?,?
+long_base           DD ?
+long_size           DD ?
 
 debug_list			DW ?
 

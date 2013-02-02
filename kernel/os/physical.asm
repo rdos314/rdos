@@ -1270,6 +1270,77 @@ rriNext:
 RemoveRomImage  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           RemoveLongImage
+;
+;   DESCRIPTION:    Remove long image
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveLongImage  Proc near
+    push ds
+    push es
+;    
+    mov ax,flat_sel
+    mov ds,ax
+    mov ax,system_data_sel
+    mov es,ax
+;
+    movzx ecx,es:multiboot_mmap_len
+    mov edx,es:multiboot_mmap_addr
+;    
+    xor ebx,ebx
+
+rliLoop:    
+    mov eax,ds:[edx+ebx].mmap_base+4
+    or eax,eax
+    jnz rliNext
+;    
+    mov eax,ds:[edx+ebx].mmap_base
+    cmp eax,es:long_base
+    ja rliNext
+;
+    add eax,ds:[edx+ebx].mmap_size
+    cmp eax,es:long_base
+    jbe rliNext
+;
+    mov eax,ds:[edx+ebx].mmap_base
+    mov ds:[edx+ecx].mmap_base,eax
+    mov eax,ds:[edx+ebx].mmap_base+4
+    mov ds:[edx+ecx].mmap_base+4,eax
+    mov eax,ds:[edx+ebx].mmap_type
+    mov ds:[edx+ecx].mmap_type,eax
+    mov ds:[edx+ecx].mmap_len,20
+;
+    mov eax,es:long_base
+    add eax,es:long_size
+    sub eax,ds:[edx+ebx].mmap_base
+    add ds:[edx+ebx].mmap_base,eax
+    sub ds:[edx+ebx].mmap_size,eax
+;
+    mov eax,es:long_base
+    sub eax,ds:[edx+ecx].mmap_base
+    mov ds:[edx+ecx].mmap_size,eax
+    mov ds:[edx+ecx].mmap_size+4,0
+;    
+    add ecx,20 + 4
+    
+rliNext:
+    mov eax,ds:[edx+ebx].mmap_len
+    add eax,4
+    add ebx,eax
+    cmp ebx,ecx
+    jnz rliLoop
+;    
+    mov es:multiboot_mmap_len,cx
+;
+    pop es
+    pop ds    
+    ret
+RemoveLongImage  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           INIT_PHYSICAL
@@ -1297,7 +1368,13 @@ init_phys_multiboot:
     and eax,NOT 80000000h
     mov cr0,eax    
     call RemoveRomImage
+    mov eax,ds:long_size
+    or eax,eax
+    jz init_phys_long_ok
 ;
+    call RemoveLongImage
+        
+init_phys_long_ok:
     movzx ecx,ds:multiboot_mmap_len
     mov esi,ds:multiboot_mmap_addr
     mov ebp,ds:alloc_base

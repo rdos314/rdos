@@ -5181,6 +5181,10 @@ start_paging64    Proc near
 ;    
     mov ax,system_data_sel
     mov ds,ax
+;
+    mov ds:long_base,long_map_linear
+    mov ds:long_size,long_map_size
+;    
     mov eax,ds:cpu_feature_flags
     test ax,2000h
     jz start_paging_global_done64
@@ -5244,6 +5248,9 @@ start_paging:
     mov ax,system_data_sel
     mov ds,ax
     InitSpinlock ds:page_spinlock
+;
+    mov ds:long_base,0
+    mov ds:long_size,0
 ;
     mov eax,ds:cpu_feature_flags
     test al,40h
