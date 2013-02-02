@@ -325,51 +325,12 @@ UpdateMemMap    Proc near
     add ebx,4
 
 ummLoop:    
-    mov eax,ds:[ebx].mmap_base+4
-    or eax,eax
-    jnz ummNext
-;    
     mov eax,ds:[ebx].mmap_base
-    or eax,eax
+    or eax,ds:[ebx].mmap_base+4
     jnz ummNext
 ;
     mov ds:[ebx].mmap_size,9E000h
-    jmp ummNext
-
-ummNotLow:    
-    cmp eax,IMAGE_BASE
-    ja ummNext
-;
-    add eax,ds:[ebx].mmap_size
-    cmp eax,IMAGE_BASE
-    jb ummNext
-;
-    mov edi,9E000h
-    add edi,ds:[edi]
-    add edi,4
-    mov eax,ds:[ebx].mmap_base
-    mov ds:[edi].mmap_base,eax
-    mov eax,ds:[ebx].mmap_base+4
-    mov ds:[edi].mmap_base+4,eax
-    mov eax,ds:[ebx].mmap_type
-    mov ds:[edi].mmap_type,eax
-    mov eax,20
-    mov ds:[edi].mmap_len,eax
-;
-    mov eax,IMAGE_BASE
-    add eax,cs:code_size
-    sub eax,ds:[ebx].mmap_base
-    add ds:[ebx].mmap_base,eax
-    sub ds:[ebx].mmap_size,eax
-;
-    mov eax,IMAGE_BASE
-    sub eax,ds:[edi].mmap_base
-    mov ds:[edi].mmap_size,eax
-    mov ds:[edi].mmap_size+4,0
-;    
-    mov edi,9E000h
-    mov eax,24 + 4
-    add ds:[edi],eax
+    jmp ummSetup
     
 ummNext:
     mov eax,ds:[ebx].mmap_len
@@ -377,7 +338,8 @@ ummNext:
     add ebx,eax
     sub ecx,eax
     jnz ummLoop
-;
+
+ummSetup:
     mov ebx,9E000h
     mov ebx,ds:[ebx]
 ;

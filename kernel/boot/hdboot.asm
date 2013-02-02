@@ -1811,7 +1811,7 @@ LoadStart:
 stop:
     jmp stop
 
-pad db 167 DUP(0)
+pad db 329 DUP(0)
 
 _TEXT   ends    
 
