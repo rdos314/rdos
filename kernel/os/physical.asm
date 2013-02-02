@@ -1199,6 +1199,77 @@ arDone:
 AddRegion   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           RemoveRomImage
+;
+;   DESCRIPTION:    Remove rom image
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveRomImage  Proc near
+    push ds
+    push es
+;    
+    mov ax,flat_sel
+    mov ds,ax
+    mov ax,system_data_sel
+    mov es,ax
+;
+    movzx ecx,es:multiboot_mmap_len
+    mov edx,es:multiboot_mmap_addr
+;    
+    xor ebx,ebx
+
+rriLoop:    
+    mov eax,ds:[edx+ebx].mmap_base+4
+    or eax,eax
+    jnz rriNext
+;    
+    mov eax,ds:[edx+ebx].mmap_base
+    cmp eax,es:rom1_base
+    ja rriNext
+;
+    add eax,ds:[edx+ebx].mmap_size
+    cmp eax,es:rom1_base
+    jbe rriNext
+;
+    mov eax,ds:[edx+ebx].mmap_base
+    mov ds:[edx+ecx].mmap_base,eax
+    mov eax,ds:[edx+ebx].mmap_base+4
+    mov ds:[edx+ecx].mmap_base+4,eax
+    mov eax,ds:[edx+ebx].mmap_type
+    mov ds:[edx+ecx].mmap_type,eax
+    mov ds:[edx+ecx].mmap_len,20
+;
+    mov eax,es:rom1_base
+    add eax,es:rom1_size
+    sub eax,ds:[edx+ebx].mmap_base
+    add ds:[edx+ebx].mmap_base,eax
+    sub ds:[edx+ebx].mmap_size,eax
+;
+    mov eax,es:rom1_base
+    sub eax,ds:[edx+ecx].mmap_base
+    mov ds:[edx+ecx].mmap_size,eax
+    mov ds:[edx+ecx].mmap_size+4,0
+;    
+    add ecx,20 + 4
+    
+rriNext:
+    mov eax,ds:[edx+ebx].mmap_len
+    add eax,4
+    add ebx,eax
+    cmp ebx,ecx
+    jnz rriLoop
+;    
+    mov es:multiboot_mmap_len,cx
+;
+    pop es
+    pop ds    
+    ret
+RemoveRomImage  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           INIT_PHYSICAL
@@ -1225,6 +1296,7 @@ init_phys_multiboot:
     mov eax,cr0
     and eax,NOT 80000000h
     mov cr0,eax    
+    call RemoveRomImage
 ;
     movzx ecx,ds:multiboot_mmap_len
     mov esi,ds:multiboot_mmap_addr
