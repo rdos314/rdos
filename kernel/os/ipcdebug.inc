@@ -50,6 +50,7 @@ di_free_physical	DD ?
 di_used_small		DD ?
 di_used_big			DD ?
 di_used_local		DD ?
+di_mode             DW ?
 
 debug_req_info_struc	ENDS
 

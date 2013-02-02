@@ -233,6 +233,49 @@ WriteHexDword   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           WriteHexQword
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     EDX:EAX         Dword to write
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteHexQword   PROC near
+    push eax
+;    
+    push eax
+    mov eax,edx
+    rol eax,8
+    call WriteHexByte
+    rol eax,8
+    call WriteHexByte
+    rol eax,8
+    call WriteHexByte
+    rol eax,8
+    call WriteHexByte
+;
+    mov al,'_'
+    WriteChar
+;
+    pop eax
+;    
+    rol eax,8
+    call WriteHexByte
+    rol eax,8
+    call WriteHexByte
+    rol eax,8
+    call WriteHexByte
+    rol eax,8
+    call WriteHexByte
+;
+    pop eax    
+    ret
+WriteHexQword   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           WriteHexPtr16
 ;
 ;           DESCRIPTION:    
@@ -277,6 +320,30 @@ WriteHexPtr32   PROC near
     pop eax
     ret
 WriteHexPtr32   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteHex64
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DX          High offset
+;                           EBX         Offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteHex64   PROC near
+    push eax
+    mov ax,dx
+    call WriteHexWord
+    mov al,'_'
+    WriteChar
+    mov eax,ebx
+    call WriteHexDword
+    pop eax
+    ret
+WriteHex64   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -470,6 +537,90 @@ WriteDwordRegs  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           WriteQwordRegs
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:         ES:DI       Offset to table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+qword_reg_tab1:
+    DB ' RAX='
+    DW OFFSET p_rax
+    DB ' RBX='
+    DW OFFSET p_rbx
+    DB ' RCX='
+    DW OFFSET p_rcx
+    DB 0
+
+qword_reg_tab2:
+    DB ' RDX='
+    DW OFFSET p_rdx
+    DB ' RSI='
+    DW OFFSET p_rsi
+    DB ' RDI='
+    DW OFFSET p_rdi
+    DB 0
+
+qword_reg_tab3:
+    DB '  R8='
+    DW OFFSET p_r8
+    DB '  R9='
+    DW OFFSET p_r9
+    DB ' R10='
+    DW OFFSET p_r10
+    DB 0
+
+qword_reg_tab4:
+    DB ' R11='
+    DW OFFSET p_r11
+    DB ' R12='
+    DW OFFSET p_r12
+    DB ' R13='
+    DW OFFSET p_r13
+    DB 0
+
+qword_reg_tab5:
+    DB ' R14='
+    DW OFFSET p_r14
+    DB ' R15='
+    DW OFFSET p_r15
+    DB 0
+
+qword_reg_tab6:
+    DB ' RIP='
+    DW OFFSET p_rip
+    DB ' RSP='
+    DW OFFSET p_rsp
+    DB ' RBP='
+    DW OFFSET p_rbp
+    DB 0
+
+WriteQwordRegs  PROC near
+qword_write_loop:
+    mov al,es:[di]
+    or al,al
+    je qword_write_end
+;
+    mov cx,5
+    WriteSizeString
+    add di,5
+;    
+    mov bx,es:[di]
+    mov eax,gs:[bx]
+    mov edx,gs:[ebx+4]
+    call WriteHexQword
+    add di,2
+    jmp qword_write_loop
+    
+qword_write_end:
+    ret
+WriteQwordRegs  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           WriteDataRow
 ;
 ;           DESCRIPTION:    
@@ -546,6 +697,87 @@ write_ascii_do:
 write_data_end:
     ret
 WriteDataRow    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteDataRow64
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     AX          High offset
+;                           EBX         Offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteDataRow64    PROC near
+    mov ds:DataHeader.dd_op,DEBUG_REQ_DATA
+    mov ds:DataHeader.dd_vm,2
+;
+    push ax
+    mov ds:DataHeader.dd_offset,ebx
+    mov ds:DataHeader.dd_sel,ax
+    mov ds:DataHeader.dd_count,16
+;
+    mov ax,ds
+    mov es,ax
+    pusha
+    mov bx,ds:MailslotHandle
+    mov si,OFFSET DataHeader
+    mov cx,SIZE debug_req_data_struc
+    mov di,OFFSET DataHeader
+    mov ax,32 + SIZE debug_req_data_struc
+    SendMailslot
+    cmp cx,32 + SIZE debug_req_data_struc
+    popa
+    pop dx
+    jne write_data_end
+;       
+    call WriteHex64
+    mov cx,16
+    mov di,OFFSET DataArr
+    push ebx
+write_data_loop64:
+    mov al,' '
+    WriteChar
+    mov ax,es:[di]
+    add di,2
+    or ah,ah
+    jz write_data_inv64
+;
+    call WriteHexByte
+    jmp write_data_next64
+
+write_data_inv64:
+    WriteChar
+    WriteChar
+
+write_data_next64:
+    inc ebx
+    loop write_data_loop64
+    pop ebx
+;    
+    mov al,' '
+    WriteChar
+    mov cx,16
+    mov di,OFFSET DataArr
+
+write_ascii_loop64:
+    mov al,es:[di]
+    add di,2
+    cmp al,20h
+    jnc write_ascii_do64
+;    
+    mov al,' '
+
+write_ascii_do64:
+    WriteChar
+    inc ebx
+    loop write_ascii_loop64
+
+write_data_end64:
+    ret
+WriteDataRow64    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -725,26 +957,27 @@ WriteFreeMem    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WriteData
+;           NAME:           WriteData32
 ;
 ;           DESCRIPTION:    
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteData       PROC near
+WriteData32       PROC near
     mov al,ds:Mne.ddi_data_good
     or al,al
-    jz data_no_good
+    jz data_no_good32
 ;
     mov ax,ds:Mne.ddi_data_sel
     mov ebx,ds:Mne.ddi_data_offset
     call WriteDataRow
-    jmp data_next
+    jmp data_next32
 
-data_no_good:
+data_no_good32:
     mov cx,79
     call Blank
-data_next:
+
+data_next32:
     call NewLine
 ;
     mov ax,gs:p_cs
@@ -775,7 +1008,63 @@ data_next:
     call WriteDataRow
     pop word ptr gs:p_rflags+2
     ret
-WriteData       ENDP
+WriteData32       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteData64
+;
+;           DESCRIPTION:    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteData64       PROC near
+    mov al,ds:Mne.ddi_data_good
+    or al,al
+    jz data_no_good64
+;
+    mov ax,ds:Mne.ddi_data_sel
+    mov ebx,ds:Mne.ddi_data_offset
+    call WriteDataRow64
+    jmp data_next64
+
+data_no_good64:
+    mov cx,79
+    call Blank
+
+data_next64:
+    call NewLine
+;
+    mov ax,word ptr gs:p_rip+4
+    mov ebx,dword ptr gs:p_rip
+    call WriteDataRow64
+    call NewLine
+;
+    mov ax,word ptr gs:p_rsp+4
+    mov ebx,dword ptr gs:p_rsp
+    call WriteDataRow64
+    call NewLine
+;
+    mov ax,word ptr gs:p_rdi+4
+    mov ebx,dword ptr gs:p_rdi
+    call WriteDataRow64
+    call NewLine
+;
+    push word ptr gs:p_rflags+2
+    mov word ptr gs:p_rflags+2,0
+    mov ax,fs:p_pm_deb_sel
+    mov ebx,fs:p_pm_deb_offs
+    call WriteDataRow
+    call NewLine
+;
+    mov word ptr gs:p_rflags+2,2
+    mov ax,fs:p_vm_deb_sel
+    mov ebx,fs:p_vm_deb_offs
+    call WriteDataRow64
+    pop word ptr gs:p_rflags+2
+    ret
+WriteData64       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1033,23 +1322,27 @@ WriteCoproc     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WriteCpuReg
+;           NAME:           WriteCpuReg32
 ;
 ;           DESCRIPTION:    
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteCpuReg     Proc near
+WriteCpuReg32     Proc near
     push es
     mov ax,cs
     mov es,ax
 ;
     mov di,OFFSET dword_reg_tab1
     call WriteDwordRegs
+    mov cx,16
+    call Blank
     call NewLine
 ;
     mov di,OFFSET dword_reg_tab2
     call WriteDwordRegs
+    mov cx,16
+    call Blank
     call NewLine
 ;
     mov di,OFFSET dword_reg_tab3
@@ -1057,6 +1350,8 @@ WriteCpuReg     Proc near
 ;
     mov di,OFFSET word_reg_tab1
     call WriteWordRegs
+    mov cx,40
+    call Blank
     call NewLine
 ;
     mov di,OFFSET word_reg_tab2
@@ -1067,7 +1362,57 @@ WriteCpuReg     Proc near
     call NewLine
     pop es
     ret
-WriteCpuReg     Endp
+WriteCpuReg32     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteCpuReg64
+;
+;           DESCRIPTION:    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteCpuReg64     Proc near
+    push es
+    mov ax,cs
+    mov es,ax
+;
+    mov di,OFFSET qword_reg_tab1
+    call WriteQwordRegs
+    call NewLine
+;
+    mov di,OFFSET qword_reg_tab2
+    call WriteQwordRegs
+    call NewLine
+;
+    mov di,OFFSET qword_reg_tab3
+    call WriteQwordRegs
+    call NewLine
+;
+    mov di,OFFSET qword_reg_tab4
+    call WriteQwordRegs
+    call NewLine
+;
+    mov di,OFFSET qword_reg_tab5
+    call WriteQwordRegs
+    mov cx,20
+    call Blank
+    call NewLine
+;
+    mov di,OFFSET qword_reg_tab6
+    call WriteQwordRegs
+    call NewLine
+;
+    mov di,OFFSET word_reg_tab2
+    call WriteWordRegs
+    call NewLine
+;
+    call WriteEflags
+    call NewLine
+    pop es
+    ret
+WriteCpuReg64     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1090,31 +1435,93 @@ WriteStatus     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WriteCpu
+;           NAME:           WriteCpu32
 ;
 ;           DESCRIPTION:    
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteCpu    PROC near
+WriteCpu32    PROC near
     xor dx,dx
     xor cx,cx
     SetCursorPosition
     call WriteCoproc
     call Delimiter
-    call WriteCpuReg
+    call WriteCpuReg32
     call Delimiter
     call WriteFreeMem
     call WriteStatus
     call WriteInstr
     call WriteThread
     call Delimiter
-    call WriteData
+    call WriteData32
     xor dx,dx
     xor cx,cx
     SetCursorPosition
     ret
-WriteCpu    ENDP
+WriteCpu32    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteCpu64_32
+;
+;           DESCRIPTION:    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteCpu64_32    PROC near
+    xor dx,dx
+    xor cx,cx
+    SetCursorPosition
+    mov cx,5*80
+    call Blank
+;    
+    call Delimiter
+    call WriteCpuReg64
+    call Delimiter
+    call WriteFreeMem
+    call WriteStatus
+    call WriteInstr
+    call WriteThread
+    call Delimiter
+    call WriteData32
+    xor dx,dx
+    xor cx,cx
+    SetCursorPosition
+    ret
+WriteCpu64_32    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteCpu64_64
+;
+;           DESCRIPTION:    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteCpu64_64    PROC near
+    xor dx,dx
+    xor cx,cx
+    SetCursorPosition
+    mov cx,5*80
+    call Blank
+;    
+    call Delimiter
+    call WriteCpuReg64
+    call Delimiter
+    call WriteFreeMem
+    call WriteStatus
+    call WriteInstr
+    call WriteThread
+    call Delimiter
+    call WriteData64
+    xor dx,dx
+    xor cx,cx
+    SetCursorPosition
+    ret
+WriteCpu64_64    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1186,13 +1593,20 @@ get_info        Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+cpu_tab:
+c00 DW OFFSET WriteCpu32
+c01 DW OFFSET WriteCpu64_32
+c02 DW OFFSET WriteCpu64_64
+
 WriteAll        Proc near
     pusha
     call get_thread
     jc write_all_done
 ;
     call get_info
-    call WriteCpu
+    mov bx,ds:Info.di_mode
+    add bx,bx
+    call word ptr cs:[bx].cpu_tab    
 
 write_all_done:
     popa
