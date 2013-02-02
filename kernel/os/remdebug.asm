@@ -73,7 +73,9 @@ write_delim_loop:
     WriteChar
     loop write_delim_loop
     pop cx
-    call NewLine
+;
+    mov cx,20
+    call Blank    
     pop ax
     ret
 Delimiter       Endp
@@ -609,7 +611,7 @@ qword_write_loop:
 ;    
     mov bx,es:[di]
     mov eax,gs:[bx]
-    mov edx,gs:[ebx+4]
+    mov edx,gs:[bx+4]
     call WriteHexQword
     add di,2
     jmp qword_write_loop
@@ -1013,6 +1015,62 @@ WriteData32       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           WriteData64_32
+;
+;           DESCRIPTION:    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteData64_32       PROC near
+    mov al,ds:Mne.ddi_data_good
+    or al,al
+    jz data_no_good64_32
+;
+    mov ax,ds:Mne.ddi_data_sel
+    mov ebx,ds:Mne.ddi_data_offset
+    call WriteDataRow
+    jmp data_next64_32
+
+data_no_good64_32:
+    mov cx,79
+    call Blank
+
+data_next64_32:
+    call NewLine
+;
+    mov ax,gs:p_cs
+    mov ebx,dword ptr gs:p_rip
+    call WriteDataRow
+    call NewLine
+;
+    mov ax,gs:p_ss
+    mov ebx,dword ptr gs:p_rsp
+    call WriteDataRow
+    call NewLine
+;
+    mov ax,gs:p_es
+    xor ebx,ebx
+    call WriteDataRow
+    call NewLine
+;
+    push word ptr gs:p_rflags+2
+    mov word ptr gs:p_rflags+2,0
+    mov ax,fs:p_pm_deb_sel
+    mov ebx,fs:p_pm_deb_offs
+    call WriteDataRow
+    call NewLine
+;
+    mov word ptr gs:p_rflags+2,2
+    mov ax,fs:p_vm_deb_sel
+    mov ebx,fs:p_vm_deb_offs
+    call WriteDataRow64
+    pop word ptr gs:p_rflags+2
+    ret
+WriteData64_32       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           WriteData64
 ;
 ;           DESCRIPTION:    
@@ -1119,9 +1177,9 @@ math5   DB 'ST(5)=  ',0
 math6   DB 'ST(6)=  ',0
 math7   DB 'ST(7)=  ',0
 
-zero    DB 'Zero                        ',0
-nan     DB 'NAN                         ',0
-empty   DB 'EMPTY                       ',0
+zero    DB 'Zero                              ',0
+nan     DB 'NAN                               ',0
+empty   DB 'EMPTY                             ',0
 
 ; ax = tag word
 
@@ -1143,9 +1201,8 @@ write_math_empty:
     mov es,di
     mov di,OFFSET Empty
     WriteAsciiz
-    call NewLine
     pop es
-    ret
+    jmp write_math_done
 
 write_math_nan:
     push es
@@ -1153,9 +1210,8 @@ write_math_nan:
     mov es,di
     mov di,OFFSET nan
     WriteAsciiz
-    call NewLine
     pop es
-    ret
+    jmp write_math_done
 
 write_math_zero:
     push es
@@ -1163,9 +1219,8 @@ write_math_zero:
     mov es,di
     mov di,OFFSET zero
     WriteAsciiz
-    call NewLine
     pop es
-    ret
+    jmp write_math_done
 
 write_math_norm:    
     fld tbyte ptr gs:[si]
@@ -1185,6 +1240,10 @@ write_math_norm:
     WriteSizeString
     pop ax
     pop es
+
+write_math_done:
+    mov cx,35
+    call Blank
     call NewLine
     ret
 write_math      ENDP
@@ -1485,7 +1544,7 @@ WriteCpu64_32    PROC near
     call WriteInstr
     call WriteThread
     call Delimiter
-    call WriteData32
+    call WriteData64_32
     xor dx,dx
     xor cx,cx
     SetCursorPosition

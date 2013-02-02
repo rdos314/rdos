@@ -675,7 +675,7 @@ qword_write_loop:
 ;    
     mov bx,es:[di]
     mov eax,gs:[bx]
-    mov edx,gs:[ebx+4]
+    mov edx,gs:[bx+4]
     call WriteHexQword
     add di,2
     jmp qword_write_loop
