@@ -35,7 +35,7 @@ INCLUDE ..\pcdev\pci.inc
 
 data    SEGMENT byte public 'DATA'
 
-IoBase      DW ?
+HdaSel DW ?
 
 data    ENDS
 
@@ -121,6 +121,83 @@ has_audio      Proc far
 has_audio  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AddFunction
+;
+;       DESCRIPTION:    Add HDA function
+;
+;       PARAMETERS:     BX      Bus/device
+;                       CH      Function
+;                       EAX     Register base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddFunction  Proc near
+    push es
+    pushad
+;    
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    xor ebx,ebx
+    or ax,803h
+    SetPageEntry
+;
+    push ecx
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    pop ecx
+    mov ds:HdaSel,bx
+;    
+    mov es,bx
+;
+    popad
+    pop es
+    ret
+AddFunction Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitPciAdapter
+;
+;           DESCRIPTION:    Init PCI adapter if found
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        NC          Adapter found
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitPciAdapter  Proc near
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:HdaSel,0
+;    
+    xor ax,ax
+    mov bh,4
+    mov bl,3
+    xor ch,ch
+    FindPciClass
+    jc init_pci_done
+;
+    mov cl,10h
+    ReadPciDword
+    test al,1
+    jnz init_pci_done
+;    
+    and ax,0FFF0h
+    call AddFunction
+    
+init_pci_done:
+    ret
+InitPciAdapter  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           hda_thread
@@ -135,6 +212,7 @@ hda_thread_name DB 'HDA Thread', 0
 
 hda_thread:
     int 3
+    call InitPciAdapter
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
