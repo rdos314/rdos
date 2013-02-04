@@ -2688,7 +2688,12 @@ pci06   DW 8086h, 27C8h
 pci07   DW 8086h, 27C9h
 pci08   DW 8086h, 27CAh
 pci09   DW 8086h, 27CBh
-pci0A   DW 0,     0
+pci0A   DW 8086h, 2830h
+pci0B   DW 8086h, 2831h
+pci0C   DW 8086h, 2832h
+pci0D   DW 8086h, 2834h
+pci0E   DW 8086h, 2835h
+pci0F   DW 0,     0
 
 InitPciAdapter  Proc near
     mov si,OFFSET PciVendorTab
