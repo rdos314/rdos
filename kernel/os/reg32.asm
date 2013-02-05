@@ -710,6 +710,9 @@ debug_pace_far_loop:
     call ReadWord
     cmp al,66h
     je debug_pace_far_ov66
+;
+    cmp al,3Eh
+    je debug_pace_far_ov3e    
 ;   
     cmp al,67h
     je debug_pace_far_ov67 
@@ -727,6 +730,10 @@ debug_pace_far_ov66:
 debug_pace_far_ov67:
     inc bx
     jmp debug_pace_far_loop
+
+debug_pace_far_ov3e:
+    inc bx
+    jmp debug_pace_far_loop    
 
 debug_pace_far_call:
     add bx,5

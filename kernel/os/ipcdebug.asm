@@ -311,9 +311,13 @@ remove_ov_loop:
     cmp al,66h
     je remove_ads16
 ;
+    cmp al,3Eh
+    je remove_ov_one
+;
     cmp al,67h
-    jne remove_ov_done
-;    
+    jne remove_ov_done    
+
+remove_ov_one:    
     inc dh
     inc si
     jmp remove_ov_loop

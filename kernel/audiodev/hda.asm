@@ -84,7 +84,7 @@ data    ENDS
 
     .386p
 
-code    SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
@@ -104,7 +104,7 @@ open_audio_out_name DB 'Open Audio Out',0
 
 open_audio_out  Proc far
     stc
-    retf32
+    ret
 open_audio_out  Endp
 
 
@@ -120,7 +120,7 @@ open_audio_out  Endp
 close_audio_out_name DB 'Close Audio Out',0
 
 close_audio_out Proc far
-    retf32
+    ret
 close_audio_out  Endp
 
 
@@ -141,7 +141,7 @@ close_audio_out  Endp
 send_audio_out_name DB 'Send Audio Out',0
 
 send_audio_out  Proc far
-    retf32
+    ret
 send_audio_out  Endp
 
 
@@ -160,7 +160,7 @@ has_audio_name DB 'Has Audio',0
 
 has_audio      Proc far
     stc
-    retf32    
+    ret    
 has_audio  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -247,18 +247,18 @@ GetRirbSize Endp
 
 InitCorbBuf   Proc near
     push es
-    push cx
-    push di
+    push ecx
+    push edi
 ;    
     mov es,ds:CorbSel
-    mov cx,ds:CorbSize
-    shr cx,2
+    movzx ecx,ds:CorbSize
+    shr ecx,2
     xor eax,eax
-    xor di,di
+    xor edi,edi
     rep stosd
 ;
-    pop di
-    pop cx
+    pop edi
+    pop ecx
     pop es
     ret
 InitCorbBuf Endp    
@@ -277,18 +277,18 @@ InitCorbBuf Endp
 
 InitRirbBuf   Proc near
     push es
-    push cx
-    push di
+    push ecx
+    push edi
 ;    
     mov es,ds:RirbSel
-    mov cx,ds:RirbSize
-    shr cx,2
+    movzx ecx,ds:RirbSize
+    shr ecx,2
     xor eax,eax
-    xor di,di
+    xor edi,edi
     rep stosd
 ;
-    pop di
-    pop cx
+    pop edi
+    pop ecx
     pop es
     ret
 InitRirbBuf Endp    
@@ -454,16 +454,16 @@ init_dev    Proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov si,OFFSET hda_thread
-    mov di,OFFSET hda_thread_name
+    mov esi,OFFSET hda_thread
+    mov edi,OFFSET hda_thread_name
     mov ax,3
-    mov cx,stack0_size
+    mov ecx,stack0_size
     CreateThread
 ;
     popa
     pop es
     pop ds
-    retf32
+    ret
 init_dev       ENDP
 
 
