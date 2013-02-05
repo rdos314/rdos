@@ -33,9 +33,52 @@ INCLUDE ..\os.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\pcdev\pci.inc
 
+hda_reg STRUC
+
+HdaGcap         DW ?
+HdaVmin         DB ?
+HdaVmax         DB ?
+HdaOutPay       DW ?
+HdaInPay        DW ?
+HdaGctl         DD ?
+HdaWakeEn       DW ?
+HdaStateSts     DW ?
+HhaGsts         DW ?,?,?,?
+HdaOutStrmPay   DW ?
+HdaInStrmPay    DW ?,?,?
+HdaIntCtl       DD ?
+HdaIntSts       DD ?,?,?
+HdaClock        DD ?,?
+HdaSSync        DD ?,?
+HdaCorb         DD ?,?
+HdaCorbWp       DW ?
+HdaCorbRp       DW ?
+HdaCorbCtl      DB ?
+HdaCorbSts      DB ?
+HdaCorbSize     DB ?,?
+HdaRirb         DD ?,?
+HdaRirbWp       DW ?
+HdaRintCnt      DW ?
+HdaRirbCtl      DB ?
+HdaRirbSts      DB ?
+HdaRirbSize     DB ?,?
+HdaResv60       DD ?,?,?,?
+HdaDplBase      DD ?,?,?,?
+
+hda_reg Ends
+
 data    SEGMENT byte public 'DATA'
 
-HdaSel DW ?
+HdaSel      DW ?
+InStreams   DW ?
+OutStreams  DW ?
+CodexPhys   DD ?
+
+CorbSize    DW ?
+CorbSel     DW ?
+
+RirbSize    DW ?
+RirbSel     DW ?
 
 data    ENDS
 
@@ -123,6 +166,180 @@ has_audio  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetCorbSize
+;
+;       DESCRIPTION:    Determine (and configure) corb size
+;
+;       PARAMETERS:     DS      Data
+;                       ES      HDA registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetCorbSize Proc near
+    mov al,es:HdaCorbSize
+    mov cx,1024
+    mov ah,2
+    test al,40h
+    jnz gcsOk
+;
+    mov cx,64
+    mov ah,1
+    test al,20h
+    jnz gcsOk
+;
+    mov cx,8
+    mov ah,0
+
+gcsOk:
+    and al,0FCh
+    or al,ah
+    mov es:HdaCorbSize,al
+    mov ds:CorbSize,cx
+    ret
+GetCorbSize Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetRirbSize
+;
+;       DESCRIPTION:    Determine (and configure) rirb size
+;
+;       PARAMETERS:     DS      Data
+;                       ES      HDA registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetRirbSize Proc near
+    mov al,es:HdaRirbSize
+    mov cx,2048
+    mov ah,2
+    test al,40h
+    jnz grsOk
+;
+    mov cx,128
+    mov ah,1
+    test al,20h
+    jnz grsOk
+;
+    mov cx,16
+    mov ah,0
+
+grsOk:
+    and al,0FCh
+    or al,ah
+    mov es:HdaRirbSize,al
+    mov ds:RirbSize,cx
+    ret
+GetRirbSize Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InitCorbBuf
+;
+;       DESCRIPTION:    Init corb buffer
+;
+;       PARAMETERS:     DS      Data
+;                       ES      HDA registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitCorbBuf   Proc near
+    push es
+    push cx
+    push di
+;    
+    mov es,ds:CorbSel
+    mov cx,ds:CorbSize
+    shr cx,2
+    xor eax,eax
+    xor di,di
+    rep stosd
+;
+    pop di
+    pop cx
+    pop es
+    ret
+InitCorbBuf Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InitRirbBuf
+;
+;       DESCRIPTION:    Init rirb buffer
+;
+;       PARAMETERS:     DS      Data
+;                       ES      HDA registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitRirbBuf   Proc near
+    push es
+    push cx
+    push di
+;    
+    mov es,ds:RirbSel
+    mov cx,ds:RirbSize
+    shr cx,2
+    xor eax,eax
+    xor di,di
+    rep stosd
+;
+    pop di
+    pop cx
+    pop es
+    ret
+InitRirbBuf Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupCodecBuf
+;
+;       DESCRIPTION:    Setup codex corb and rirb buffers
+;
+;       PARAMETERS:     DS      Data
+;                       ES      HDA registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupCodecBuf   Proc near
+    AllocatePhysical32
+    mov ds:CodexPhys,eax
+    mov es:HdaCorb,eax
+    add eax,800h
+    mov es:HdaRirb,eax
+;    
+    mov eax,1000h
+    AllocateBigLinear
+;
+    AllocateGdt
+    movzx ecx,ds:CorbSize
+    CreateDataSelector16
+    mov ds:CorbSel,bx
+;
+    add edx,800h
+    AllocateGdt
+    movzx ecx,ds:RirbSize
+    CreateDataSelector16
+    mov ds:RirbSel,bx
+;
+    sub edx,800h
+    mov eax,ds:CodexPhys
+    xor ebx,ebx
+    or ax,803h
+    SetPageEntry
+;              
+    call InitCorbBuf
+    call InitRirbBuf
+    ret
+SetupCodecBuf   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AddFunction
 ;
 ;       DESCRIPTION:    Add HDA function
@@ -137,6 +354,7 @@ AddFunction  Proc near
     push es
     pushad
 ;    
+    int 3
     push eax
     mov eax,1000h
     AllocateBigLinear
@@ -154,6 +372,9 @@ AddFunction  Proc near
     mov ds:HdaSel,bx
 ;    
     mov es,bx
+    call GetCorbSize
+    call GetRirbSize            
+    call SetupCodecBuf
 ;
     popad
     pop es
