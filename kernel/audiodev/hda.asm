@@ -33,6 +33,8 @@ INCLUDE ..\os.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\pcdev\pci.inc
 
+REQ_RESET   = 1
+
 hda_reg STRUC
 
 HdaGcap         DW ?
@@ -80,6 +82,10 @@ CorbSel     DW ?
 RirbSize    DW ?
 RirbSel     DW ?
 
+CodecThread DW ?
+
+Req         DB ?
+
 data    ENDS
 
     .386p
@@ -99,6 +105,49 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HdaInt  Proc far
+
+hdiLoop:
+    mov eax,ds:HdaIntSts
+    test eax,80000000h
+    jz hdiDone
+;
+    test eax,40000000h
+    jz hdiStream
+;
+    mov al,ds:HdaCorbSts
+    test al,1
+    jz hdiNotCorb
+;
+    mov al,1
+    mov ds:HdaCorbSts,al
+    lock or ds:Req,REQ_RESET
+
+hdiNotCorb:
+    mov al,ds:HdaRirbSts
+    test al,4
+    jz hdiNotRirbOverrun
+;
+    mov al,4
+    mov ds:HdaRirbSts,al
+    lock or ds:Req,REQ_RESET
+
+hdiNotRirbOverrun:
+    mov al,ds:HdaRirbSts
+    test al,1
+    jz hdiNotResp
+;    
+    mov al,1
+    mov ds:HdaRirbSts,al
+    mov bx,ds:CodecThread
+    Signal
+
+hdiNotResp:
+    jmp hdiLoop
+
+hdiStream:
+    int 3 
+
+hdiDone:           
     ret
 HdaInt  Endp
 
@@ -470,6 +519,8 @@ InitPciAdapter  Proc near
     mov ax,SEG data
     mov ds,ax
     mov ds:HdaSel,0
+    mov ds:Req,0
+    mov ds:CodecThread,0
 ;    
     xor ax,ax
     mov bh,4
