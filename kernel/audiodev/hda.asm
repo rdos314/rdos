@@ -92,6 +92,19 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           HdaInt
+;
+;       DESCRIPTION:    HDA interrupt
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HdaInt  Proc far
+    ret
+HdaInt  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenAudioOut
 ;
 ;           DESCRIPTION:    Open audio out
@@ -340,6 +353,64 @@ SetupCodecBuf   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetupInts
+;
+;           DESCRIPTION:    Setup PCI or MSI IRQ
+;
+;       PARAMETERS:         BH    Bus
+;                           BL    Device
+;                           CH    Function
+;                           DS    data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupInts   Proc near
+    push ax
+    push bx
+    push cx
+    push edx
+    push edi
+;    
+    GetPciMsi
+    jc siIrq
+
+siMsi:
+    push cx
+    mov cx,1
+    mov al,12h
+    AllocateInts
+    pop cx
+    jc siIrq
+;    
+    mov dl,1
+    SetupPciMsi
+;    
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET HdaInt
+    RequestMsiHandler
+    jmp siDone
+
+siIrq:
+    GetPciIrqNr
+    mov ah,12h
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET HdaInt    
+    RequestIrqHandler
+
+siDone:
+    pop edi
+    pop edx
+    pop cx
+    pop bx
+    pop ax
+    ret
+SetupInts    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AddFunction
 ;
 ;       DESCRIPTION:    Add HDA function
@@ -356,6 +427,7 @@ AddFunction  Proc near
 ;    
     int 3
     push eax
+    call SetupInts
     mov eax,1000h
     AllocateBigLinear
     pop eax
