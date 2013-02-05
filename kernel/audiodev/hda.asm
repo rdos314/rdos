@@ -82,9 +82,12 @@ CorbSel     DW ?
 RirbSize    DW ?
 RirbSel     DW ?
 
+CodecChange DW ?
 CodecThread DW ?
 
+
 Req         DB ?
+
 
 data    ENDS
 
@@ -105,39 +108,51 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HdaInt  Proc far
+    push es
+    mov es,ds:HdaSel
 
 hdiLoop:
-    mov eax,ds:HdaIntSts
+    mov eax,es:HdaIntSts
     test eax,80000000h
     jz hdiDone
 ;
     test eax,40000000h
     jz hdiStream
 ;
-    mov al,ds:HdaCorbSts
+    mov ax,es:HdaStateSts
+    or ax,ax
+    jz hdiNotCodecChange
+;    
+    lock or ds:CodecChange,ax
+    mov es:HdaStateSts,ax
+    mov bx,ds:CodecThread
+    Signal    
+
+hdiNotCodecChange:
+    mov al,es:HdaCorbSts
     test al,1
     jz hdiNotCorb
 ;
     mov al,1
-    mov ds:HdaCorbSts,al
+    mov es:HdaCorbSts,al
     lock or ds:Req,REQ_RESET
 
 hdiNotCorb:
-    mov al,ds:HdaRirbSts
+    mov al,es:HdaRirbSts
     test al,4
     jz hdiNotRirbOverrun
 ;
     mov al,4
-    mov ds:HdaRirbSts,al
+    mov es:HdaRirbSts,al
     lock or ds:Req,REQ_RESET
 
 hdiNotRirbOverrun:
-    mov al,ds:HdaRirbSts
+    mov al,es:HdaRirbSts
     test al,1
     jz hdiNotResp
 ;    
     mov al,1
-    mov ds:HdaRirbSts,al
+    mov es:HdaRirbSts,al
     mov bx,ds:CodecThread
     Signal
 
@@ -148,6 +163,7 @@ hdiStream:
     int 3 
 
 hdiDone:           
+    pop es
     ret
 HdaInt  Endp
 
@@ -460,6 +476,77 @@ SetupInts    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           Reset
+;
+;       DESCRIPTION:    Reset controller
+;
+;       PARAMETERS:     DS      Data
+;                       ES      HDA registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Reset   Proc near
+    mov ds:CodecChange,0
+;
+    mov ax,7FFFh
+    mov es:HdaWakeEn,ax
+    mov es:HdaStateSts,ax
+
+rCorbCheckStopped:
+    mov al,es:HdaCorbCtl
+    test al,2
+    jz rRirbCheckStopped
+;
+    and al,NOT 2
+    mov es:HdaCorbCtl,al
+    mov ax,10
+    WaitMilliSec
+    jmp rCorbCheckStopped
+
+rRirbCheckStopped:
+    mov al,es:HdaRirbCtl
+    test al,2
+    jz rCodecIsStopped
+;
+    and al,NOT 2
+    mov es:HdaRirbCtl,al
+    mov ax,10
+    WaitMilliSec
+    jmp rRirbCheckStopped
+
+rCodecIsStopped:    
+    mov eax,es:HdaGctl
+    and al,NOT 1
+    mov es:HdaGctl,eax
+
+rWaitForReset:    
+    mov ax,10
+    WaitMilliSec
+    mov eax,es:HdaGctl
+    test al,1
+    jnz rWaitForReset
+;
+    or al,1
+    mov es:HdaGctl,eax
+
+rWaitForRunning:
+    mov ax,10
+    WaitMilliSec
+    mov eax,es:HdaGctl
+    test al,1
+    jz rWaitForRunning
+;
+    mov ax,10
+    WaitMilliSec
+;
+    mov eax,0C0000000h
+    mov es:HdaIntCtl,eax        
+    ret
+Reset   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AddFunction
 ;
 ;       DESCRIPTION:    Add HDA function
@@ -493,6 +580,7 @@ AddFunction  Proc near
     mov ds:HdaSel,bx
 ;    
     mov es,bx
+    call Reset
     call GetCorbSize
     call GetRirbSize            
     call SetupCodecBuf
