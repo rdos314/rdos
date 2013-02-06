@@ -41,6 +41,9 @@ extern void StartFunction(int id);
 extern int GetCodecMask(int id);
 #pragma aux GetCodecMask parm routine [ebx] value [eax]
 
+extern int QueryCodec(int id, int codec, int node, int data);
+#pragma aux QueryCodec parm routine [ebx] [esi] [edi] [edx] value [eax]
+
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 #define MAX_FUNCTIONS     16
@@ -63,6 +66,7 @@ static struct TFunction *FunctionArr[MAX_FUNCTIONS];
 
 void __far ImplTestGate(const char *msg)
 {
+    int val = QueryCodec(0, 0, 0, 0xF0004);
 }
 
 /*##########################################################################

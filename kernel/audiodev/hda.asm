@@ -81,6 +81,7 @@ CorbSel     DW ?
 
 RirbSize    DW ?
 RirbSel     DW ?
+RirbRp      DW ?
 
 CodecChange DW ?
 CodecThread DW ?
@@ -380,6 +381,77 @@ InitRirbBuf Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           StartCorb
+;
+;       DESCRIPTION:    Start corb
+;
+;       PARAMETERS:     DS      HDA sel
+;                       ES      HDA registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartCorb   Proc near
+    mov ax,8000h
+    mov es:HdaCorbRp,ax
+
+scWaitReset:
+    mov ax,es:HdaCorbRp    
+    test ax,8000h
+    jnz scResetOk
+;
+    mov ax,10
+    WaitMilliSec
+    jmp scWaitReset
+
+scResetOk:
+    xor ax,ax
+    mov es:HdaCorbRp,ax
+
+scWaitComplete:
+    mov ax,es:HdaCorbRp
+    test ax,8000h
+    jz scCompleteOk
+;
+    mov ax,10
+    WaitMilliSec
+    jmp scWaitComplete
+
+scCompleteOk:
+    mov al,3
+    mov es:HdaCorbCtl,al
+    ret
+StartCorb Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartRirb
+;
+;       DESCRIPTION:    Start rirb
+;
+;       PARAMETERS:     DS      HDA sel
+;                       ES      HDA registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartRirb   Proc near
+    mov ax,8000h
+    mov es:HdaRirbWp,ax
+;
+    mov ax,1
+    mov es:HdaRintCnt,ax
+;       
+    mov al,7
+    mov es:HdaRirbCtl,al
+;
+    xor ax,ax
+    mov ds:RirbRp,ax    
+    ret
+StartRirb Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           SetupCodecBuf
 ;
 ;       DESCRIPTION:    Setup codex corb and rirb buffers
@@ -418,6 +490,9 @@ SetupCodecBuf   Proc near
 ;              
     call InitCorbBuf
     call InitRirbBuf
+;
+    call StartCorb    
+    call StartRirb
     ret
 SetupCodecBuf   Endp
 
@@ -635,6 +710,105 @@ GetCodecMask_  Proc near
 cdmDone:
     ret
 GetCodecMask_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           QueryCodec
+;
+;       DESCRIPTION:    Query codec
+;
+;       PARAMETERS:     EBX     Function #
+;                       ESI     Codec
+;                       EDI     Node
+;                       EDX     Data
+;
+;       RETURNS:        EAX     Response
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public QueryCodec_
+    
+QueryCodec_  Proc near    
+    cmp bx,ds:HdaCount
+    jae qcDone
+;    
+    push ds
+    push es
+    push fs
+    push esi
+    push edi
+;
+    shl esi,28
+    shl edi,20    
+;    
+    mov eax,ebx
+    shl eax,1
+    mov ds,ds:[eax].HdaArr    
+    mov es,ds:HdaSel
+    mov fs,ds:CorbSel
+;
+    GetThread
+    mov ds:CodecThread,ax
+    ClearSignal
+;    
+    mov eax,edx
+    or eax,esi
+    or eax,edi
+;
+    mov bx,es:HdaCorbWp
+    inc bx
+    cmp bx,ds:CorbSize
+    jne qcUpdateCorb
+;
+    xor bx,bx
+
+qcUpdateCorb:
+    shl bx,2
+    mov fs:[bx],eax
+    shr bx,2
+    mov es:HdaCorbWp,bx
+
+qcWait:    
+    WaitForSignal
+
+qcRetry:
+    mov bx,es:HdaRirbWp
+    cmp bx,ds:RirbRp
+    je qcWait
+;        
+    mov bx,ds:RirbRp
+    inc bx
+    cmp bx,ds:RirbSize
+    jne qcRirpPosOk
+;
+    xor bx,bx
+
+qcRirpPosOk:
+    mov fs,ds:RirbSel
+    shl bx,3
+    mov eax,fs:[bx+4]
+    test ax,10h
+    jz qcRespOk
+;
+    shr bx,3
+    mov ds:RirbRp,bx
+    jmp qcRetry
+
+qcRespOk:
+    mov eax,fs:[bx]
+    shr bx,3
+    mov ds:RirbRp,bx
+;    
+    pop edi
+    pop esi
+    pop fs
+    pop es    
+    pop ds
+
+qcDone:
+    ret
+QueryCodec_   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
