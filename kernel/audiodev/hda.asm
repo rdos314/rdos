@@ -553,6 +553,24 @@ Reset   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetFunctionCount
+;
+;       DESCRIPTION:    Get HDA function block count
+;
+;       RETURNS:        EAX
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetFunctionCount_
+    
+GetFunctionCount_  Proc near    
+    movzx eax,ds:HdaCount
+    ret
+GetFunctionCount_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           Start function
 ;
 ;       DESCRIPTION:    Start HDA function
@@ -561,13 +579,13 @@ Reset   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartFunction  Proc near    
+    public StartFunction_
+    
+StartFunction_  Proc near    
     push ds
     push es
     pushad
 ;    
-    mov ax,SEG data
-    mov ds,ax
     cmp bx,ds:HdaCount
     jae sfDone
 ;    
@@ -585,7 +603,7 @@ sfDone:
     pop es
     pop ds
     ret
-StartFunction   Endp
+StartFunction_   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -724,9 +742,6 @@ InitPciHda_    Proc near
     pushad
 ;
     call InitPciAdapter
-;    
-    xor ebx,ebx
-    call StartFunction
 ;
     popad
     pop es
