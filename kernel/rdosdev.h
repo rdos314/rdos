@@ -639,6 +639,7 @@ void RdosHookCreateProcess(__rdos_hook_callback *callb_proc);
 void RdosHookTerminateProcess(__rdos_hook_callback *callb_proc);
 void RdosHookCreateThread(__rdos_hook_callback *callb_proc);
 void RdosHookTerminateThread(__rdos_hook_callback *callb_proc);
+void RdosHookInitPci(__rdos_hook_callback *callb_proc);
 
 void RdosHookOpenApp(__rdos_hook_callback *callb_proc);
 void RdosHookCloseApp(__rdos_hook_callback *callb_proc);
@@ -1454,6 +1455,10 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
 
 #pragma aux RdosHookInitTasking = \
     OsGate_hook_init_tasking \
+    parm [es edi];
+
+#pragma aux RdosHookInitPci = \
+    OsGate_hook_init_pci \
     parm [es edi];
 
 #pragma aux RdosHookCreateProcess = \

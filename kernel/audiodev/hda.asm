@@ -605,7 +605,6 @@ AddFunction  Proc near
     push es
     pushad
 ;    
-    int 3
     push eax
     mov eax,SIZE hda_seg
     AllocateSmallGlobalMem
@@ -709,59 +708,36 @@ InitPciAdapter  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           hda_thread
+;           NAME:           InitPciHda
 ;
-;           DESCRIPTION:    HDA thread
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hda_thread_name DB 'HDA Thread', 0
-
-hda_thread:
-    int 3
-    call InitPciAdapter
-;
-    xor bx,bx
-    call StartFunction
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           INIT_DEV
-;
-;           DESCRIPTION:    Init_dev
+;           DESCRIPTION:    Init PCI HDA
 ;
 ;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_dev    Proc far
+    public InitPciHda_
+
+InitPciHda_    Proc near
     push ds
     push es
-    pusha
+    pushad
 ;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov esi,OFFSET hda_thread
-    mov edi,OFFSET hda_thread_name
-    mov ax,3
-    mov ecx,stack0_size
-    CreateThread
+    call InitPciAdapter
+;    
+    xor ebx,ebx
+    call StartFunction
 ;
-    popa
+    popad
     pop es
     pop ds
     ret
-init_dev       ENDP
-
+InitPciHda_       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           INIT
+;           NAME:           InitHda
 ;
 ;           DESCRIPTION:    Init HDA
 ;
@@ -769,12 +745,16 @@ init_dev       ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init    PROC far
+    public InitHda_
+
+InitHda_    PROC near
+    push ds
+    push es
+    pushad
+;    
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov edi,OFFSET init_dev
-    HookInitTasking
 ;
     mov esi,OFFSET has_audio
     mov edi,OFFSET has_audio_name
@@ -799,10 +779,13 @@ init    PROC far
     xor cl,cl
     mov ax,send_audio_out_nr
     RegisterOsGate
-    clc
+;
+    popad
+    pop es
+    pop ds    
     ret
-init    ENDP
+InitHda_    ENDP
 
 code    ENDS
 
-    END init
+    END
