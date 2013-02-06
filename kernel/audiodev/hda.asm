@@ -69,7 +69,7 @@ HdaDplBase      DD ?,?,?,?
 
 hda_reg Ends
 
-data    SEGMENT byte public 'DATA'
+hda_seg STRUC
 
 HdaSel      DW ?
 InStreams   DW ?
@@ -85,9 +85,15 @@ RirbSel     DW ?
 CodecChange DW ?
 CodecThread DW ?
 
-
 Req         DB ?
 
+hda_seg ENDS
+
+
+data    SEGMENT byte public 'DATA'
+
+HdaCount    DW ?
+HdaArr      DW 16 DUP(?)
 
 data    ENDS
 
@@ -248,7 +254,7 @@ has_audio  Endp
 ;
 ;       DESCRIPTION:    Determine (and configure) corb size
 ;
-;       PARAMETERS:     DS      Data
+;       PARAMETERS:     DS      HDA sel
 ;                       ES      HDA registers
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -283,7 +289,7 @@ GetCorbSize Endp
 ;
 ;       DESCRIPTION:    Determine (and configure) rirb size
 ;
-;       PARAMETERS:     DS      Data
+;       PARAMETERS:     DS      HDA sel
 ;                       ES      HDA registers
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -318,7 +324,7 @@ GetRirbSize Endp
 ;
 ;       DESCRIPTION:    Init corb buffer
 ;
-;       PARAMETERS:     DS      Data
+;       PARAMETERS:     DS      HDA sel
 ;                       ES      HDA registers
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -348,7 +354,7 @@ InitCorbBuf Endp
 ;
 ;       DESCRIPTION:    Init rirb buffer
 ;
-;       PARAMETERS:     DS      Data
+;       PARAMETERS:     DS      HDA sel
 ;                       ES      HDA registers
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -378,7 +384,7 @@ InitRirbBuf Endp
 ;
 ;       DESCRIPTION:    Setup codex corb and rirb buffers
 ;
-;       PARAMETERS:     DS      Data
+;       PARAMETERS:     DS      HDA sel
 ;                       ES      HDA registers
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -425,7 +431,7 @@ SetupCodecBuf   Endp
 ;       PARAMETERS:         BH    Bus
 ;                           BL    Device
 ;                           CH    Function
-;                           DS    data
+;                           DS    Hda sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -480,7 +486,7 @@ SetupInts    Endp
 ;
 ;       DESCRIPTION:    Reset controller
 ;
-;       PARAMETERS:     DS      Data
+;       PARAMETERS:     DS      HDA sel
 ;                       ES      HDA registers
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -558,11 +564,25 @@ Reset   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddFunction  Proc near
+    push ds
     push es
     pushad
 ;    
     int 3
     push eax
+    mov eax,SIZE hda_seg
+    AllocateSmallGlobalMem
+    movzx eax,ds:HdaCount
+    shl eax,1
+    mov ds:[eax].HdaArr,es
+    inc ds:HdaCount
+    mov ax,es
+    mov ds,ax
+;    
+    mov ds:HdaSel,0
+    mov ds:Req,0
+    mov ds:CodecThread,0
+;
     call SetupInts
     mov eax,1000h
     AllocateBigLinear
@@ -587,6 +607,7 @@ AddFunction  Proc near
 ;
     popad
     pop es
+    pop ds
     ret
 AddFunction Endp
 
@@ -606,9 +627,7 @@ AddFunction Endp
 InitPciAdapter  Proc near
     mov ax,SEG data
     mov ds,ax
-    mov ds:HdaSel,0
-    mov ds:Req,0
-    mov ds:CodecThread,0
+    mov ds:HdaCount,0
 ;    
     xor ax,ax
     mov bh,4
@@ -620,10 +639,37 @@ InitPciAdapter  Proc near
     mov cl,10h
     ReadPciDword
     test al,1
-    jnz init_pci_done
+    jnz init_pci_more
 ;    
     and ax,0FFF0h
+    mov ebp,eax
     call AddFunction
+
+init_pci_more:       
+    mov dx,1
+
+init_pci_loop:
+    mov ax,dx
+    mov bh,4
+    mov bl,3
+    xor ch,ch
+    FindPciClass
+    jc init_pci_done
+;       
+    mov cl,10h
+    ReadPciDword
+    test al,1
+    jnz init_pci_next
+;    
+    and ax,0FFF0h
+    cmp eax,ebp
+    je init_pci_done
+;       
+    call AddFunction
+
+init_pci_next:
+    inc dx
+    jmp init_pci_loop
     
 init_pci_done:
     ret
