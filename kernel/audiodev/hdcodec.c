@@ -49,12 +49,22 @@ extern int QueryCodec(int id, int codec, int node, int data);
 #define MAX_FUNCTIONS       16
 #define MAX_CODECS          14
 #define MAX_GROUPS          16
+#define MAX_WIDGETS         256
+
+struct TWidget
+{
+    int Id;
+    int Address;
+    int Node;
+};
 
 struct TCodecGroup
 {
     int Id;
     int Address;
     int Node;
+    int WidgetCount;
+    struct TWidget *WidgetArr[MAX_WIDGETS];
 };    
 
 struct TCodec
@@ -81,11 +91,15 @@ void __far ImplTestGate(const char *msg)
     int i;
     int j;
     int k;
+    int l;
     int count;
     int node;
+    int wcount;
+    int wnode;
     struct TFunction *function;
     struct TCodec *codec;
     struct TCodecGroup *group;
+    struct TWidget *widget;
 
     for (i = 0; i < FunctionCount; i++)
     {
@@ -111,8 +125,28 @@ void __far ImplTestGate(const char *msg)
                 group = (struct TCodecGroup*)RdosAllocateSmallGlobalMem(sizeof(struct TCodecGroup));
                 group->Id = codec->Id;
                 group->Address = codec->Address;
-                group->Node = node;
+                group->Node = node + k;
                 codec->GroupArr[k] = group;
+
+                for (l = 0; l < MAX_WIDGETS; l++)
+                    group->WidgetArr[k] = 0;
+                            
+                val = GetParam(codec, node, 4);
+                wcount = val & 0xFF;
+                if (wcount > MAX_WIDGETS)
+                    wcount = MAX_WIDGETS;
+                wnode = (val >> 16) & 0xFF;
+
+                group->WidgetCount = wcount;            
+
+                for (l = 0; l < wcount; l++)
+                {
+                    widget = (struct TWidget*)RdosAllocateSmallGlobalMem(sizeof(struct TWidget));
+                    widget->Id = group->Id;
+                    widget->Address = group->Address;
+                    widget->Node = wnode + l;
+                    group->WidgetArr[l] = widget;
+                }
             }
         }
     }
