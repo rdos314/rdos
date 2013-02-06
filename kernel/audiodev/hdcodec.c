@@ -46,12 +46,23 @@ extern int QueryCodec(int id, int codec, int node, int data);
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
-#define MAX_FUNCTIONS     16
-#define MAX_CODECS        14
+#define MAX_FUNCTIONS       16
+#define MAX_CODECS          14
+#define MAX_GROUPS          16
+
+struct TCodecGroup
+{
+    int Id;
+    int Address;
+    int Node;
+};    
 
 struct TCodec
 {
+    int Id;
     int Address;
+    int GroupCount;
+    struct TCodecGroup *GroupArr[MAX_GROUPS];
 };
 
 struct TFunction
@@ -66,7 +77,77 @@ static struct TFunction *FunctionArr[MAX_FUNCTIONS];
 
 void __far ImplTestGate(const char *msg)
 {
-    int val = QueryCodec(0, 0, 0, 0xF0004);
+    int val;
+    int i;
+    int j;
+    int k;
+    int count;
+    int node;
+    struct TFunction *function;
+    struct TCodec *codec;
+    struct TCodecGroup *group;
+
+    for (i = 0; i < FunctionCount; i++)
+    {
+        function = FunctionArr[i];
+
+        for (j = 0; j < function->CodecCount; j++)
+        {
+            codec = function->CodecArr[j];
+
+            for (k = 0; k < MAX_GROUPS; k++)
+                codec->GroupArr[k] = 0;
+                            
+            val = GetParam(codec, 0, 4);
+            count = val & 0xFF;
+            if (count > MAX_GROUPS)
+                count = MAX_GROUPS;
+            node = (val >> 16) & 0xFF;
+
+            codec->GroupCount = count;            
+
+            for (k = 0; k < count; k++)
+            {
+                group = (struct TCodecGroup*)RdosAllocateSmallGlobalMem(sizeof(struct TCodecGroup));
+                group->Id = codec->Id;
+                group->Address = codec->Address;
+                group->Node = node;
+                codec->GroupArr[k] = group;
+            }
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : Query
+#
+#   Purpose....: Do a query
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int Query(struct TCodec *codec, int node, int verb)
+{
+    return QueryCodec(codec->Id, codec->Address, node, verb);
+}
+
+/*##########################################################################
+#
+#   Name       : GetParam
+#
+#   Purpose....: Get a parameter
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int GetParam(struct TCodec *codec, int node, int param)
+{
+    return Query(codec, node, 0xF0000 + param);
 }
 
 /*##########################################################################
@@ -102,6 +183,7 @@ void AddFunction(int Id, int CodecMask)
         if (m & CodecMask)
         {
             codec = (struct TCodec*)RdosAllocateSmallGlobalMem(sizeof(struct TCodec));
+            codec->Id = Id;
             codec->Address = i;
             function->CodecArr[function->CodecCount] = codec;
             function->CodecCount++;
