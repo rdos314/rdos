@@ -608,6 +608,37 @@ StartFunction_   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetCodecMask
+;
+;       DESCRIPTION:    Get HDA codec mask
+;
+;       PARAMETERS:     EBX     Function #
+;
+;       RETURNS:        EAX     Mask
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetCodecMask_
+    
+GetCodecMask_  Proc near    
+    xor eax,eax
+    cmp bx,ds:HdaCount
+    jae cdmDone
+;    
+    push ds
+    mov eax,ebx
+    shl eax,1
+    mov ds,ds:[eax].HdaArr    
+    movzx eax,ds:CodecChange
+    pop ds
+
+cdmDone:
+    ret
+GetCodecMask_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AddFunction
 ;
 ;       DESCRIPTION:    Add HDA function

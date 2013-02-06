@@ -38,15 +38,24 @@ extern int GetFunctionCount();
 extern void StartFunction(int id);
 #pragma aux StartFunction parm routine [ebx]
 
+extern int GetCodecMask(int id);
+#pragma aux GetCodecMask parm routine [ebx] value [eax]
+
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
     int i;
     int count = GetFunctionCount();
+    int mask;
 
     for (i = 0; i < count; i++)
         StartFunction(i);
+
+    for (i = 0; i < count; i++)
+    {
+        mask = GetCodecMask(i);
+    }            
 }
     
 /*##########################################################################
