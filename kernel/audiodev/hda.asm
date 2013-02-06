@@ -553,6 +553,43 @@ Reset   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           Start function
+;
+;       DESCRIPTION:    Start HDA function
+;
+;       PARAMETERS:     EBX      Function #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartFunction  Proc near    
+    push ds
+    push es
+    pushad
+;    
+    mov ax,SEG data
+    mov ds,ax
+    cmp bx,ds:HdaCount
+    jae sfDone
+;    
+    shl ebx,1
+    mov ds,ds:[ebx].HdaArr    
+    mov es,ds:HdaSel
+;    
+    call Reset
+    call GetCorbSize
+    call GetRirbSize            
+    call SetupCodecBuf
+
+sfDone:
+    popad
+    pop es
+    pop ds
+    ret
+StartFunction   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AddFunction
 ;
 ;       DESCRIPTION:    Add HDA function
@@ -598,12 +635,6 @@ AddFunction  Proc near
     CreateDataSelector16
     pop ecx
     mov ds:HdaSel,bx
-;    
-    mov es,bx
-    call Reset
-    call GetCorbSize
-    call GetRirbSize            
-    call SetupCodecBuf
 ;
     popad
     pop es
@@ -691,6 +722,9 @@ hda_thread_name DB 'HDA Thread', 0
 hda_thread:
     int 3
     call InitPciAdapter
+;
+    xor bx,bx
+    call StartFunction
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
