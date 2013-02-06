@@ -63,19 +63,6 @@ static struct TFunction *FunctionArr[MAX_FUNCTIONS];
 
 void __far ImplTestGate(const char *msg)
 {
-    int i;
-    int count = GetFunctionCount();
-    int mask;
-
-    for (i = 0; i < count; i++)
-        StartFunction(i);
-
-    for (i = 0; i < count; i++)
-    {
-        mask = GetCodecMask(i);
-        if (mask)
-            AddFunction(i, mask);
-    }            
 }
 
 /*##########################################################################
@@ -121,6 +108,34 @@ void AddFunction(int Id, int CodecMask)
     FunctionArr[FunctionCount] = function;
     FunctionCount++;    
 }
+
+/*##########################################################################
+#
+#   Name       : Start
+#
+#   Purpose....: Start all functions
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void Start()
+{
+    int i;
+    int count = GetFunctionCount();
+    int mask;
+
+    for (i = 0; i < count; i++)
+        StartFunction(i);
+
+    for (i = 0; i < count; i++)
+    {
+        mask = GetCodecMask(i);
+        if (mask)
+            AddFunction(i, mask);
+    }            
+}
     
 /*##########################################################################
 #
@@ -130,6 +145,8 @@ void AddFunction(int Id, int CodecMask)
 #pragma aux HdaThread "*" rdosdev parm routine [es edi]
 void __far HdaThread(void *param)
 {
+    Start();
+    
     for (;;)
     {
         RdosWaitMilli(250);
