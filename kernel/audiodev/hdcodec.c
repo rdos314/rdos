@@ -222,42 +222,93 @@ int GetParam(struct TCodec *codec, int node, int param)
 
 /*##########################################################################
 #
-#   Name       : GetLongConnectionList
+#   Name       : UpdateAudioOutput
 #
-#   Purpose....: Get long connection list
+#   Purpose....: Update audio output
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void GetLongConnectionList(struct TCodec *codec, int node, struct TWidget **list, int count)
+void UpdateAudioOutput(struct TCodec *codec, struct TAudioOutput *widget)
 {
-    int i;
-
-    for (i = 0; i < MAX_CONNECTIONS; i++)
-        list[i] = 0;    
 }
 
 /*##########################################################################
 #
-#   Name       : GetShortConnectionList
+#   Name       : UpdateAudioInput
 #
-#   Purpose....: Get short connection list
+#   Purpose....: Update audio input
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void GetShortConnectionList(struct TCodec *codec, int node, struct TWidget **list, int count)
+void UpdateAudioInput(struct TCodec *codec, struct TAudioInput *widget)
 {
-    int i;
-
-    for (i = 0; i < MAX_CONNECTIONS; i++)
-        list[i] = 0;    
 }
 
+/*##########################################################################
+#
+#   Name       : UpdateAudioMixer
+#
+#   Purpose....: Update audio mixer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void UpdateAudioMixer(struct TCodec *codec, struct TAudioMixer *widget)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : UpdateAudioSelector
+#
+#   Purpose....: Update audio selector
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void UpdateAudioSelector(struct TCodec *codec, struct TAudioSelector *widget)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : UpdatePinComplex
+#
+#   Purpose....: Update pin complex
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void UpdatePinComplex(struct TCodec *codec, struct TPinComplex *widget)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : UpdatePowerWidget
+#
+#   Purpose....: Update power widget
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void UpdatePowerWidget(struct TCodec *codec, struct TPowerWidget *widget)
+{
+}
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
@@ -265,8 +316,10 @@ void __far ImplTestGate(const char *msg)
 {
     int i;
     int j;
+    int k;
     struct TFunction *function;
     struct TCodec *codec;
+    struct TWidget *widget;
 
     for (i = 0; i < FunctionCount; i++)
     {
@@ -275,6 +328,40 @@ void __far ImplTestGate(const char *msg)
         for (j = 0; j < function->CodecCount; j++)
         {
             codec = function->CodecArr[j];
+
+            for (k = 0; k < MAX_WIDGETS; k++)
+            {
+                widget = codec->WidgetArr[k];
+                if (widget)
+                {
+                    switch (widget->Type)
+                    {
+                        case WIDGET_TYPE_OUTPUT:
+                            UpdateAudioOutput(codec, (struct TAudioOutput *)widget);
+                            break;
+                            
+                        case WIDGET_TYPE_INPUT:
+                            UpdateAudioInput(codec, (struct TAudioInput *)widget);
+                            break;
+                        
+                        case WIDGET_TYPE_MIXER:
+                            UpdateAudioMixer(codec, (struct TAudioMixer *)widget);
+                            break;
+                        
+                        case WIDGET_TYPE_SELECTOR:
+                            UpdateAudioSelector(codec, (struct TAudioSelector *)widget);
+                            break;
+                            
+                        case WIDGET_TYPE_PIN:
+                            UpdatePinComplex(codec, (struct TPinComplex *)widget);
+                            break;
+                            
+                        case WIDGET_TYPE_POWER:
+                            UpdatePowerWidget(codec, (struct TPowerWidget *)widget);
+                            break;
+                    }
+                }
+            }
         }
     }
 }
@@ -333,36 +420,40 @@ void AddAudioInput(struct TCodec *codec, int node, int cap, int channels)
 {
     struct TAudioInput *widget;
     struct TAudioInput *p;
-    int count;
+    int connections;
+    int i;
 
-    widget = (struct TAudioInput *)RdosAllocateSmallGlobalMem(sizeof(struct TAudioInput));
-    widget->Type = WIDGET_TYPE_INPUT;
-    widget->Id = codec->Id;
-    widget->Address = codec->Address;
-    widget->Node = node;
-    widget->Cap = cap;
-    widget->Channels = channels;
-    widget->List = 0;
+    connections = GetParam(codec, node, 0xE);
 
-    count = GetParam(codec, node, 0xE);
-    widget->ConnectionCount = count & 0x7F;
-    if (count & 0x80)
-        GetLongConnectionList(codec, node, &widget->ConnectionList[0], widget->ConnectionCount);
-    else
-        GetShortConnectionList(codec, node, &widget->ConnectionList[0], widget->ConnectionCount);
-
-    p = codec->AudioInputList;
-    if (p)
+    if (connections < 0x80)
     {
-        while (p->List)
-            p = p->List;
+        widget = (struct TAudioInput *)RdosAllocateSmallGlobalMem(sizeof(struct TAudioInput));
+        widget->Type = WIDGET_TYPE_INPUT;
+        widget->Id = codec->Id;
+        widget->Address = codec->Address;
+        widget->Node = node;
+        widget->Cap = cap;
+        widget->Channels = channels;
+        widget->List = 0;
 
-        p->List = widget;
+        for (i = 0; i < MAX_CONNECTIONS; i++)
+            widget->ConnectionList[i] = 0;    
+
+        widget->ConnectionCount = connections;
+
+        p = codec->AudioInputList;
+        if (p)
+        {
+            while (p->List)
+                p = p->List;
+
+            p->List = widget;
+        }
+        else
+            codec->AudioInputList = widget;
+
+        codec->WidgetArr[node] = (struct TWidget *)widget;
     }
-    else
-        codec->AudioInputList = widget;
-
-    codec->WidgetArr[node] = (struct TWidget *)widget;
 }
 
 /*##########################################################################
@@ -380,36 +471,40 @@ void AddAudioMixer(struct TCodec *codec, int node, int cap, int channels)
 {
     struct TAudioMixer *widget;
     struct TAudioMixer *p;
-    int count;
+    int connections;
+    int i;
 
-    widget = (struct TAudioMixer *)RdosAllocateSmallGlobalMem(sizeof(struct TAudioMixer));
-    widget->Type = WIDGET_TYPE_MIXER;
-    widget->Id = codec->Id;
-    widget->Address = codec->Address;
-    widget->Node = node;
-    widget->Cap = cap;
-    widget->Channels = channels;
-    widget->List = 0;
+    connections = GetParam(codec, node, 0xE);
 
-    count = GetParam(codec, node, 0xE);
-    widget->ConnectionCount = count & 0x7F;
-    if (count & 0x80)
-        GetLongConnectionList(codec, node, &widget->ConnectionList[0], widget->ConnectionCount);
-    else
-        GetShortConnectionList(codec, node, &widget->ConnectionList[0], widget->ConnectionCount);
-
-    p = codec->AudioMixerList;
-    if (p)
+    if (connections < 0x80)
     {
-        while (p->List)
-            p = p->List;
+        widget = (struct TAudioMixer *)RdosAllocateSmallGlobalMem(sizeof(struct TAudioMixer));
+        widget->Type = WIDGET_TYPE_MIXER;
+        widget->Id = codec->Id;
+        widget->Address = codec->Address;
+        widget->Node = node;
+        widget->Cap = cap;
+        widget->Channels = channels;
+        widget->List = 0;
 
-        p->List = widget;
+        for (i = 0; i < MAX_CONNECTIONS; i++)
+            widget->ConnectionList[i] = 0;    
+
+        widget->ConnectionCount = connections;
+
+        p = codec->AudioMixerList;
+        if (p)
+        {
+            while (p->List)
+                p = p->List;
+
+            p->List = widget;
+        }
+        else
+            codec->AudioMixerList = widget;
+
+        codec->WidgetArr[node] = (struct TWidget *)widget;
     }
-    else
-        codec->AudioMixerList = widget;
-
-    codec->WidgetArr[node] = (struct TWidget *)widget;
 }
 
 /*##########################################################################
@@ -427,36 +522,40 @@ void AddAudioSelector(struct TCodec *codec, int node, int cap, int channels)
 {
     struct TAudioSelector *widget;
     struct TAudioSelector *p;
-    int count;
+    int connections;
+    int i;
 
-    widget = (struct TAudioSelector *)RdosAllocateSmallGlobalMem(sizeof(struct TAudioSelector));
-    widget->Type = WIDGET_TYPE_SELECTOR;
-    widget->Id = codec->Id;
-    widget->Address = codec->Address;
-    widget->Node = node;
-    widget->Cap = cap;
-    widget->Channels = channels;
-    widget->List = 0;
+    connections = GetParam(codec, node, 0xE);
 
-    count = GetParam(codec, node, 0xE);
-    widget->ConnectionCount = count & 0x7F;
-    if (count & 0x80)
-        GetLongConnectionList(codec, node, &widget->ConnectionList[0], widget->ConnectionCount);
-    else
-        GetShortConnectionList(codec, node, &widget->ConnectionList[0], widget->ConnectionCount);
-
-    p = codec->AudioSelectorList;
-    if (p)
+    if (connections < 0x80)
     {
-        while (p->List)
-            p = p->List;
+        widget = (struct TAudioSelector *)RdosAllocateSmallGlobalMem(sizeof(struct TAudioSelector));
+        widget->Type = WIDGET_TYPE_SELECTOR;
+        widget->Id = codec->Id;
+        widget->Address = codec->Address;
+        widget->Node = node;
+        widget->Cap = cap;
+        widget->Channels = channels;
+        widget->List = 0;
 
-        p->List = widget;
+        for (i = 0; i < MAX_CONNECTIONS; i++)
+            widget->ConnectionList[i] = 0;    
+
+        widget->ConnectionCount = connections;
+
+        p = codec->AudioSelectorList;
+        if (p)
+        {
+            while (p->List)
+                p = p->List;
+
+            p->List = widget;
+        }
+        else
+            codec->AudioSelectorList = widget;
+
+        codec->WidgetArr[node] = (struct TWidget *)widget;
     }
-    else
-        codec->AudioSelectorList = widget;
-
-    codec->WidgetArr[node] = (struct TWidget *)widget;
 }
 
 /*##########################################################################
@@ -477,7 +576,8 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
     int val;
     int dev;
     int use;
-    int count;
+    int connections;
+    int i;
 
     val = Query(codec, node, 0xF1C00);
     dev = (val >> 20) & 0xF;
@@ -494,6 +594,13 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
         case 10:
             use = TRUE;
             break;
+    }
+
+    if (use)
+    {
+        connections = GetParam(codec, node, 0xE);
+        if (connections >= 0x80)
+            use = FALSE;
     }
 
     if (use)
@@ -516,12 +623,10 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
         widget->Association = (val >> 4) & 0xF;
         widget->Sequence = val & 0xF;
 
-        count = GetParam(codec, node, 0xE);
-        widget->ConnectionCount = count & 0x7F;
-        if (count & 0x80)
-            GetLongConnectionList(codec, node, &widget->ConnectionList[0], widget->ConnectionCount);
-        else    
-            GetShortConnectionList(codec, node, &widget->ConnectionList[0], widget->ConnectionCount);
+        for (i = 0; i < MAX_CONNECTIONS; i++)
+            widget->ConnectionList[i] = 0;    
+
+        widget->ConnectionCount = connections;
 
         switch (dev)
         {
@@ -614,36 +719,40 @@ void AddPowerWidget(struct TCodec *codec, int node, int cap, int channels)
 {
     struct TPowerWidget *widget;
     struct TPowerWidget *p;
-    int count;
+    int connections;
+    int i;
 
-    widget = (struct TPowerWidget *)RdosAllocateSmallGlobalMem(sizeof(struct TPowerWidget));
-    widget->Type = WIDGET_TYPE_POWER;
-    widget->Id = codec->Id;
-    widget->Address = codec->Address;
-    widget->Node = node;
-    widget->Cap = cap;
-    widget->Channels = channels;
-    widget->List = 0;
+    connections = GetParam(codec, node, 0xE);
 
-    count = GetParam(codec, node, 0xE);
-    widget->ConnectionCount = count & 0x7F;
-    if (count & 0x80)
-        GetLongConnectionList(codec, node, &widget->ConnectionList[0], widget->ConnectionCount);
-    else
-        GetShortConnectionList(codec, node, &widget->ConnectionList[0], widget->ConnectionCount);
-
-    p = codec->PowerWidgetList;
-    if (p)
+    if (connections < 0x80)
     {
-        while (p->List)
-            p = p->List;
+        widget = (struct TPowerWidget *)RdosAllocateSmallGlobalMem(sizeof(struct TPowerWidget));
+        widget->Type = WIDGET_TYPE_POWER;
+        widget->Id = codec->Id;
+        widget->Address = codec->Address;
+        widget->Node = node;
+        widget->Cap = cap;
+        widget->Channels = channels;
+        widget->List = 0;
 
-        p->List = widget;
+        for (i = 0; i < MAX_CONNECTIONS; i++)
+            widget->ConnectionList[i] = 0;    
+
+        widget->ConnectionCount = connections;
+
+        p = codec->PowerWidgetList;
+        if (p)
+        {
+            while (p->List)
+                p = p->List;
+
+            p->List = widget;
+        }
+        else
+            codec->PowerWidgetList = widget;
+
+        codec->WidgetArr[node] = (struct TWidget *)widget;
     }
-    else
-        codec->PowerWidgetList = widget;
-
-    codec->WidgetArr[node] = (struct TWidget *)widget;
 }
 
 /*##########################################################################
