@@ -258,6 +258,27 @@ void GetShortConnectionList(struct TCodec *codec, int node, struct TWidget **lis
         list[i] = 0;    
 }
 
+
+#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
+
+void __far ImplTestGate(const char *msg)
+{
+    int i;
+    int j;
+    struct TFunction *function;
+    struct TCodec *codec;
+
+    for (i = 0; i < FunctionCount; i++)
+    {
+        function = FunctionArr[i];
+
+        for (j = 0; j < function->CodecCount; j++)
+        {
+            codec = function->CodecArr[j];
+        }
+    }
+}
+
 /*##########################################################################
 #
 #   Name       : AddAudioOutput
@@ -625,101 +646,96 @@ void AddPowerWidget(struct TCodec *codec, int node, int cap, int channels)
     codec->WidgetArr[node] = (struct TWidget *)widget;
 }
 
-
-#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
-
-void __far ImplTestGate(const char *msg)
+/*##########################################################################
+#
+#   Name       : ProcessCodec
+#
+#   Purpose....: Process codec
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void ProcessCodec(struct TCodec *codec)
 {
     int val;
     int i;
-    int j;
-    int k;
     int count;
     int node;
     int type;
     int channels;
-    struct TFunction *function;
-    struct TCodec *codec;
 
-    for (i = 0; i < FunctionCount; i++)
+    val = GetParam(codec, 0, 4);
+    count = val & 0xFF;
+    node = (val >> 16) & 0xFF;
+
+    codec->AudioNode = 0;
+    codec->AudioOutputList = 0;
+    codec->AudioInputList = 0;
+    codec->AudioMixerList = 0;
+    codec->AudioSelectorList = 0;
+    codec->PowerWidgetList = 0;
+    codec->LineOutList = 0;
+    codec->LineInList = 0;
+    codec->SpeakerList = 0;
+    codec->HpOutList = 0;
+    codec->CdList = 0;
+    codec->AuxList = 0;
+    codec->MicList = 0;
+
+    for (i = 0; i < MAX_WIDGETS; i++)
+        codec->WidgetArr[i] = 0;
+
+    for (i = 0; i < count; i++)
     {
-        function = FunctionArr[i];
+        val = GetParam(codec, node + i, 5);
+        if ((val & 0xFF) == 1)
+            codec->AudioNode = node + i;
+    }
+    
+    if (codec->AudioNode)
+    {                    
+        val = GetParam(codec, codec->AudioNode, 4);
+        count = val & 0xFF;
+        if (count > MAX_WIDGETS)
+            count = MAX_WIDGETS;
+        node = (val >> 16) & 0xFF;
 
-        for (j = 0; j < function->CodecCount; j++)
+        for (i = 0; i < count; i++)
         {
-            codec = function->CodecArr[j];
-                            
-            val = GetParam(codec, 0, 4);
-            count = val & 0xFF;
-            node = (val >> 16) & 0xFF;
-            codec->AudioNode = 0;
-            codec->AudioOutputList = 0;
-            codec->AudioInputList = 0;
-            codec->AudioMixerList = 0;
-            codec->AudioSelectorList = 0;
-            codec->PowerWidgetList = 0;
-            codec->LineOutList = 0;
-            codec->LineInList = 0;
-            codec->SpeakerList = 0;
-            codec->HpOutList = 0;
-            codec->CdList = 0;
-            codec->AuxList = 0;
-            codec->MicList = 0;
+            val = GetParam(codec, node + i, 9);
+            type = (val >> 20) & 0xF;
+            channels = (val >> 12) & 7;
+            if (val & 1)
+                channels++;
+            channels++;
 
-            for (k = 0; k < MAX_WIDGETS; k++)
-                codec->WidgetArr[k] = 0;
-
-            for (k = 0; k < count; k++)
+            switch (type)
             {
-                val = GetParam(codec, node + k, 5);
-                if ((val & 0xFF) == 1)
-                    codec->AudioNode = node + k;
-            }
+                case 0:
+                    AddAudioOutput(codec, node + i, val, channels);
+                    break;
 
-            if (codec->AudioNode)
-            {                    
-                val = GetParam(codec, codec->AudioNode, 4);
-                count = val & 0xFF;
-                if (count > MAX_WIDGETS)
-                    count = MAX_WIDGETS;
-                node = (val >> 16) & 0xFF;
+                case 1:
+                    AddAudioInput(codec, node + i, val, channels);
+                    break;
 
-                for (k = 0; k < count; k++)
-                {
-                    val = GetParam(codec, node + k, 9);
-                    type = (val >> 20) & 0xF;
-                    channels = (val >> 12) & 7;
-                    if (val & 1)
-                        channels++;
-                    channels++;
+                case 2:
+                    AddAudioMixer(codec, node + i, val, channels);
+                    break;
 
-                    switch (type)
-                    {
-                        case 0:
-                            AddAudioOutput(codec, node + k, val, channels);
-                            break;
+                case 3:
+                    AddAudioSelector(codec, node + i, val, channels);
+                    break;
 
-                        case 1:
-                            AddAudioInput(codec, node + k, val, channels);
-                            break;
+                case 4:
+                    AddPinComplex(codec, node + i, val, channels);
+                    break;
 
-                        case 2:
-                            AddAudioMixer(codec, node + k, val, channels);
-                            break;
-
-                        case 3:
-                            AddAudioSelector(codec, node + k, val, channels);
-                            break;
-
-                        case 4:
-                            AddPinComplex(codec, node + k, val, channels);
-                            break;
-
-                        case 5:
-                            AddPowerWidget(codec, node + k, val, channels);
-                            break;
-                    }
-                }
+                case 5:
+                    AddPowerWidget(codec, node + i, val, channels);
+                    break;
             }
         }
     }
@@ -759,6 +775,8 @@ void AddFunction(int Id, int CodecMask)
             codec = (struct TCodec*)RdosAllocateSmallGlobalMem(sizeof(struct TCodec));
             codec->Id = Id;
             codec->Address = i;
+            ProcessCodec(codec);
+            
             function->CodecArr[function->CodecCount] = codec;
             function->CodecCount++;
         }
