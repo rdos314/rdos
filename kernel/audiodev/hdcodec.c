@@ -237,6 +237,25 @@ int GetParam(struct TCodec *codec, int node, int param)
 ##########################################################################*/
 void GetConnectionList(struct TCodec *codec, struct TWidget *widget)
 {
+    int i;
+    int j;
+    int val;
+    int node;
+    
+    for (i = 0; i < widget->ConnectionCount; i += 4)
+    {
+        val = Query(codec, widget->Node, 0xF0200 + i);        
+
+        for (j = 0; j < 4; j++)
+        {
+            if (i + j < widget->ConnectionCount)
+            {
+                node = val & 0x7F;
+                widget->ConnectionList[i + j] = codec->WidgetArr[node];
+            }
+            val = val >> 8;
+        }
+    }
 }
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
