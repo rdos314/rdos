@@ -65,6 +65,8 @@ struct TWidget
     int Id;
     int Address;
     int Node;
+    int ConnectionCount;
+    struct TWidget *ConnectionList[MAX_CONNECTIONS];
 };
 
 struct TAudioOutput
@@ -73,6 +75,8 @@ struct TAudioOutput
     int Id;
     int Address;
     int Node;
+    int ConnectionCount;
+    struct TWidget *ConnectionList[MAX_CONNECTIONS];
 
     struct TAudioOutput *List;
     int Cap;
@@ -85,12 +89,12 @@ struct TAudioInput
     int Id;
     int Address;
     int Node;
+    int ConnectionCount;
+    struct TWidget *ConnectionList[MAX_CONNECTIONS];
 
     struct TAudioInput *List;
     int Cap;
     int Channels;
-    int ConnectionCount;
-    struct TWidget *ConnectionList[MAX_CONNECTIONS];
 };
 
 struct TAudioMixer
@@ -99,12 +103,12 @@ struct TAudioMixer
     int Id;
     int Address;
     int Node;
+    int ConnectionCount;
+    struct TWidget *ConnectionList[MAX_CONNECTIONS];
 
     struct TAudioMixer *List;
     int Cap;
     int Channels;
-    int ConnectionCount;
-    struct TWidget *ConnectionList[MAX_CONNECTIONS];
 };
 
 struct TAudioSelector
@@ -113,12 +117,12 @@ struct TAudioSelector
     int Id;
     int Address;
     int Node;
+    int ConnectionCount;
+    struct TWidget *ConnectionList[MAX_CONNECTIONS];
 
     struct TAudioSelector *List;
     int Cap;
     int Channels;
-    int ConnectionCount;
-    struct TWidget *ConnectionList[MAX_CONNECTIONS];
 };
 
 struct TPinComplex
@@ -127,6 +131,8 @@ struct TPinComplex
     int Id;
     int Address;
     int Node;
+    int ConnectionCount;
+    struct TWidget *ConnectionList[MAX_CONNECTIONS];
 
     struct TPinComplex *List;
     int Cap;
@@ -139,8 +145,6 @@ struct TPinComplex
     int Misc;
     int Association;
     int Sequence;
-    int ConnectionCount;
-    struct TWidget *ConnectionList[MAX_CONNECTIONS];
 };
 
 struct TPowerWidget
@@ -149,12 +153,12 @@ struct TPowerWidget
     int Id;
     int Address;
     int Node;
+    int ConnectionCount;
+    struct TWidget *ConnectionList[MAX_CONNECTIONS];
 
     struct TPowerWidget *List;
     int Cap;
     int Channels;
-    int ConnectionCount;
-    struct TWidget *ConnectionList[MAX_CONNECTIONS];
 };
 
 struct TCodec
@@ -381,6 +385,7 @@ void AddAudioOutput(struct TCodec *codec, int node, int cap, int channels)
 {
     struct TAudioOutput *widget;
     struct TAudioOutput *p;
+    int i;
 
     widget = (struct TAudioOutput *)RdosAllocateSmallGlobalMem(sizeof(struct TAudioOutput));
     widget->Type = WIDGET_TYPE_OUTPUT;
@@ -390,6 +395,11 @@ void AddAudioOutput(struct TCodec *codec, int node, int cap, int channels)
     widget->Cap = cap;
     widget->Channels = channels;
     widget->List = 0;
+
+    for (i = 0; i < MAX_CONNECTIONS; i++)
+        widget->ConnectionList[i] = 0;    
+
+    widget->ConnectionCount = 0;
 
     p = codec->AudioOutputList;
     if (p)
