@@ -49,9 +49,8 @@ extern int QueryCodec(int id, int codec, int node, int data);
 
 #define MAX_FUNCTIONS       16
 #define MAX_CODECS          14
-#define MAX_GROUPS          16
-#define MAX_WIDGETS         256
-#define MAX_CONNECTIONS     64
+#define MAX_WIDGETS         128
+#define MAX_CONNECTIONS     128
 
 #define WIDGET_TYPE_OUTPUT      1
 #define WIDGET_TYPE_INPUT       2
@@ -175,6 +174,8 @@ struct TCodec
     struct TPinComplex *CdList;
     struct TPinComplex *AuxList;
     struct TPinComplex *MicList;
+
+    struct TWidget *WidgetArr[MAX_WIDGETS];
 };
 
 struct TFunction
@@ -292,6 +293,8 @@ void AddAudioOutput(struct TCodec *codec, int node, int cap, int channels)
     }
     else
         codec->AudioOutputList = widget;
+
+    codec->WidgetArr[node] = (struct TWidget *)widget;
 }
 
 /*##########################################################################
@@ -337,6 +340,8 @@ void AddAudioInput(struct TCodec *codec, int node, int cap, int channels)
     }
     else
         codec->AudioInputList = widget;
+
+    codec->WidgetArr[node] = (struct TWidget *)widget;
 }
 
 /*##########################################################################
@@ -382,6 +387,8 @@ void AddAudioMixer(struct TCodec *codec, int node, int cap, int channels)
     }
     else
         codec->AudioMixerList = widget;
+
+    codec->WidgetArr[node] = (struct TWidget *)widget;
 }
 
 /*##########################################################################
@@ -427,6 +434,8 @@ void AddAudioSelector(struct TCodec *codec, int node, int cap, int channels)
     }
     else
         codec->AudioSelectorList = widget;
+
+    codec->WidgetArr[node] = (struct TWidget *)widget;
 }
 
 /*##########################################################################
@@ -564,6 +573,8 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
                     break;
             }
         }
+
+        codec->WidgetArr[node] = (struct TWidget *)widget;
     }
 }
 
@@ -610,6 +621,8 @@ void AddPowerWidget(struct TCodec *codec, int node, int cap, int channels)
     }
     else
         codec->PowerWidgetList = widget;
+
+    codec->WidgetArr[node] = (struct TWidget *)widget;
 }
 
 
@@ -638,8 +651,6 @@ void __far ImplTestGate(const char *msg)
                             
             val = GetParam(codec, 0, 4);
             count = val & 0xFF;
-            if (count > MAX_GROUPS)
-                count = MAX_GROUPS;
             node = (val >> 16) & 0xFF;
             codec->AudioNode = 0;
             codec->AudioOutputList = 0;
@@ -654,6 +665,9 @@ void __far ImplTestGate(const char *msg)
             codec->CdList = 0;
             codec->AuxList = 0;
             codec->MicList = 0;
+
+            for (k = 0; k < MAX_WIDGETS; k++)
+                codec->WidgetArr[k] = 0;
 
             for (k = 0; k < count; k++)
             {
