@@ -224,6 +224,26 @@ int GetParam(struct TCodec *codec, int node, int param)
     return Query(codec, node, 0xF0000 + param);
 }
 
+#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
+
+void __far ImplTestGate(const char *msg)
+{
+    int i;
+    int j;
+    struct TFunction *function;
+    struct TCodec *codec;
+
+    for (i = 0; i < FunctionCount; i++)
+    {
+        function = FunctionArr[i];
+
+        for (j = 0; j < function->CodecCount; j++)
+        {
+            codec = function->CodecArr[j];
+        }
+    }
+}
+
 /*##########################################################################
 #
 #   Name       : GetConnectionList
@@ -258,33 +278,28 @@ void GetConnectionList(struct TCodec *codec, struct TWidget *widget)
     }
 }
 
-#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
-
-void __far ImplTestGate(const char *msg)
+/*##########################################################################
+#
+#   Name       : UpdateConnectionList
+#
+#   Purpose....: Update connection list
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void UpdateConnectionList(struct TCodec *codec)
 {
     int i;
-    int j;
-    int k;
-    struct TFunction *function;
-    struct TCodec *codec;
     struct TWidget *widget;
 
-    for (i = 0; i < FunctionCount; i++)
+    for (i = 0; i < MAX_WIDGETS; i++)
     {
-        function = FunctionArr[i];
+        widget = codec->WidgetArr[i];
 
-        for (j = 0; j < function->CodecCount; j++)
-        {
-            codec = function->CodecArr[j];
-
-            for (k = 0; k < MAX_WIDGETS; k++)
-            {
-                widget = codec->WidgetArr[k];
-
-                if (widget && widget->ConnectionCount)
-                    GetConnectionList(codec, widget);
-            }
-        }
+        if (widget && widget->ConnectionCount)
+            GetConnectionList(codec, widget);
     }
 }
 
@@ -813,6 +828,7 @@ void AddFunction(int Id, int CodecMask)
             codec->Id = Id;
             codec->Address = i;
             ProcessCodec(codec);
+            UpdateConnectionList(codec);
             
             function->CodecArr[function->CodecCount] = codec;
             function->CodecCount++;
