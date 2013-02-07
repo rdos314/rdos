@@ -226,91 +226,16 @@ int GetParam(struct TCodec *codec, int node, int param)
 
 /*##########################################################################
 #
-#   Name       : UpdateAudioOutput
+#   Name       : GetConnectionList
 #
-#   Purpose....: Update audio output
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void UpdateAudioOutput(struct TCodec *codec, struct TAudioOutput *widget)
-{
-}
-
-/*##########################################################################
-#
-#   Name       : UpdateAudioInput
-#
-#   Purpose....: Update audio input
+#   Purpose....: Get connection list
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void UpdateAudioInput(struct TCodec *codec, struct TAudioInput *widget)
-{
-}
-
-/*##########################################################################
-#
-#   Name       : UpdateAudioMixer
-#
-#   Purpose....: Update audio mixer
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void UpdateAudioMixer(struct TCodec *codec, struct TAudioMixer *widget)
-{
-}
-
-/*##########################################################################
-#
-#   Name       : UpdateAudioSelector
-#
-#   Purpose....: Update audio selector
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void UpdateAudioSelector(struct TCodec *codec, struct TAudioSelector *widget)
-{
-}
-
-/*##########################################################################
-#
-#   Name       : UpdatePinComplex
-#
-#   Purpose....: Update pin complex
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void UpdatePinComplex(struct TCodec *codec, struct TPinComplex *widget)
-{
-}
-
-/*##########################################################################
-#
-#   Name       : UpdatePowerWidget
-#
-#   Purpose....: Update power widget
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void UpdatePowerWidget(struct TCodec *codec, struct TPowerWidget *widget)
+void GetConnectionList(struct TCodec *codec, struct TWidget *widget)
 {
 }
 
@@ -336,35 +261,9 @@ void __far ImplTestGate(const char *msg)
             for (k = 0; k < MAX_WIDGETS; k++)
             {
                 widget = codec->WidgetArr[k];
-                if (widget)
-                {
-                    switch (widget->Type)
-                    {
-                        case WIDGET_TYPE_OUTPUT:
-                            UpdateAudioOutput(codec, (struct TAudioOutput *)widget);
-                            break;
-                            
-                        case WIDGET_TYPE_INPUT:
-                            UpdateAudioInput(codec, (struct TAudioInput *)widget);
-                            break;
-                        
-                        case WIDGET_TYPE_MIXER:
-                            UpdateAudioMixer(codec, (struct TAudioMixer *)widget);
-                            break;
-                        
-                        case WIDGET_TYPE_SELECTOR:
-                            UpdateAudioSelector(codec, (struct TAudioSelector *)widget);
-                            break;
-                            
-                        case WIDGET_TYPE_PIN:
-                            UpdatePinComplex(codec, (struct TPinComplex *)widget);
-                            break;
-                            
-                        case WIDGET_TYPE_POWER:
-                            UpdatePowerWidget(codec, (struct TPowerWidget *)widget);
-                            break;
-                    }
-                }
+
+                if (widget && widget->ConnectionCount)
+                    GetConnectionList(codec, widget);
             }
         }
     }
