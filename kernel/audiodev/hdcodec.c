@@ -877,6 +877,29 @@ void Start()
 
 /*##########################################################################
 #
+#   Name       : PresentDetect
+#
+#   Purpose....: Check for function present
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int PresentDetect(struct TPinComplex *pin)
+{
+    int val;
+
+    val = QueryCodec(pin->Id, pin->Address, pin->Node, 0xF0900);
+
+    if (val & 0x80000000)
+        return TRUE;
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
 #   Name       : GetAudioDeviceCount
 #
 #   Purpose....: Get device count
@@ -1137,47 +1160,65 @@ void GetPinComplexInfo(struct TPinComplex *widget, char *Info)
         }
     }        
 
-    switch (widget->Color)
+    if (widget->Connectivity == 0 || widget->Connectivity == 3)
     {
-        case 1:
-            strcat(Info, ", Black");
-            break;
+        switch (widget->Color)
+        {
+            case 1:
+                strcat(Info, ", Black");
+                break;
 
-        case 2:
-            strcat(Info, ", Grey");
-            break;
+            case 2:
+                strcat(Info, ", Grey");
+                break;
 
-        case 3:
-            strcat(Info, ", Blue");
-            break;
+            case 3:
+                strcat(Info, ", Blue");
+                break;
 
-        case 4:
-            strcat(Info, ", Green");
-            break;
+            case 4:
+                strcat(Info, ", Green");
+                break;
 
-        case 5:
-            strcat(Info, ", Red");
-            break;
+            case 5:
+                strcat(Info, ", Red");
+                break;
 
-        case 6:
-            strcat(Info, ", Orange");
-            break;
+            case 6:
+                strcat(Info, ", Orange");
+                break;
 
-        case 7:
-            strcat(Info, ", Yellow");
-            break;
+            case 7:
+                strcat(Info, ", Yellow");
+                break;
 
-        case 8:
-            strcat(Info, ", Purple");
-            break;
+            case 8:
+                strcat(Info, ", Purple");
+                break;
+    
+            case 9:
+                strcat(Info, ", Pink");
+                break;
 
-        case 9:
-            strcat(Info, ", Pink");
-            break;
+            case 14:
+                strcat(Info, ", White");
+                break;
+        }
+    }
 
-        case 14:
-            strcat(Info, ", White");
-            break;
+    if (widget->PinCap & 0x10)
+        if (widget->PinCap & 0x8)
+            strcat(Info, ", Headphone");
+
+    if (widget->PinCap & 0x4)
+    {
+        if ((widget->Misc & 0x1) == 0)
+        {
+            if (PresentDetect(widget))
+                strcat(Info, ", Connected");
+            else
+                strcat(Info, ", Not connected");
+        }
     }
 }
 
