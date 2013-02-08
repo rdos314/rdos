@@ -140,6 +140,7 @@ struct TPinComplex
     int PinCap;
     int Connectivity;
     int Location;
+    int Device;
     int ConnType;
     int Color;
     int Misc;
@@ -564,6 +565,7 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
         widget->PinCap = GetParam(codec, node, 0xC);
 
         widget->Connectivity = conn;
+        widget->Device = dev;
         widget->Location = (val >> 24) & 0x3F;
         widget->ConnType = (val >> 16) & 0xF;
         widget->Color = (val >> 12) & 0xF;
@@ -1059,6 +1061,123 @@ void GetPinComplexInfo(struct TPinComplex *widget, char *Info)
             strcat(Info, ", ");
             strcat(Info, LocStr);
         }
+
+        switch (widget->Device)
+        {
+            case 0:
+                strcat(Info, ", Line out");
+                break;
+
+            case 1:
+                strcat(Info, ", Speaker");
+                break;
+
+            case 2:
+                strcat(Info, ", HP out");
+                break;
+
+            case 3:
+                strcat(Info, ", CD");
+                break;
+
+            case 8:
+                strcat(Info, ", Line in");
+                break;
+
+            case 9:
+                strcat(Info, ", AUX");
+                break;
+
+            case 10:
+                strcat(Info, ", Mic");
+                break;
+        }
+
+        switch (widget->ConnType)
+        {
+            case 1:
+                strcat(Info, ", 1/8''");
+                break;
+
+            case 2:
+                strcat(Info, ", 1/4''");
+                break;
+
+            case 3:
+                strcat(Info, ", ATAPI");
+                break;
+        
+            case 4:
+                strcat(Info, ", RCA");
+                break;
+        
+            case 5:
+                strcat(Info, ", Optical");
+                break;
+        
+            case 6:
+                strcat(Info, ", Digital");
+                break;
+        
+            case 7:
+                strcat(Info, ", Analog");
+                break;
+        
+            case 8:
+                strcat(Info, ", DIN");
+                break;
+        
+            case 9:
+                strcat(Info, ", XLR");
+                break;
+        
+            case 10:
+                strcat(Info, ", RJ-11");
+                break;
+        }
+    }        
+
+    switch (widget->Color)
+    {
+        case 1:
+            strcat(Info, ", Black");
+            break;
+
+        case 2:
+            strcat(Info, ", Grey");
+            break;
+
+        case 3:
+            strcat(Info, ", Blue");
+            break;
+
+        case 4:
+            strcat(Info, ", Green");
+            break;
+
+        case 5:
+            strcat(Info, ", Red");
+            break;
+
+        case 6:
+            strcat(Info, ", Orange");
+            break;
+
+        case 7:
+            strcat(Info, ", Yellow");
+            break;
+
+        case 8:
+            strcat(Info, ", Purple");
+            break;
+
+        case 9:
+            strcat(Info, ", Pink");
+            break;
+
+        case 14:
+            strcat(Info, ", White");
+            break;
     }
 }
 
