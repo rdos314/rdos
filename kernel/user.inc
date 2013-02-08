@@ -2922,6 +2922,35 @@ WriteAudio      MACRO
 	UserGate write_audio_nr
 						ENDM
 
+;   OUT ECX         Device count
+GetAudioDeviceCount      MACRO
+	UserGate get_audio_device_count_nr
+	                ENDM
+
+;   IN  EAX         Device #
+;   OUT ECX         Device count
+GetAudioCodecCount      MACRO
+	UserGate get_audio_codec_count_nr
+	                ENDM
+
+;   IN  EAX         Device #
+;   IN  EDX         Codec #
+;   IN  EBX         Node #
+;   IN  ES:(E)DI    Info buffer
+;   OUT AL          Device type
+GetAudioWidgetInfo      MACRO
+	UserGate get_audio_widget_info_nr
+	                ENDM
+
+;   IN  EAX         Device #
+;   IN  EDX         Codec #
+;   IN  EBX         Node #
+;   IN  ES:(E)DI    Connection list array
+;   OUT ECX         Connection count
+GetAudioWidgetConnectionList      MACRO
+	UserGate get_audio_widget_connection_list_nr
+	                ENDM
+
 ;;;;;;;;;;; FM synthesis ;;;;;;;;;;
 
 ;   IN  AX          Sample rate

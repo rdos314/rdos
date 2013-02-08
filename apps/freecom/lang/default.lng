@@ -1785,3 +1785,9 @@ DEBUG [ip-address] [host name]
   ip-address      IP address to remote debug
   host name       Host name to remote debug
 .
+
+:TEXT_CMDHELP_AUDIO
+Shows audio information
+
+AUDIO
+.

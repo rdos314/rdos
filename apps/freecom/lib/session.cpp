@@ -80,6 +80,7 @@
 #include "dev.h"
 #include "pci.h"
 #include "debug.h"
+#include "audio.h"
 
 #include "file.h"
 #include "path.h"
@@ -99,6 +100,7 @@ static TFsPartitionFactory *fat32;
 static TFsPartitionFactory *flashfs;
 
 static TCommandFactory *acpi;
+static TCommandFactory *audio;
 static TCommandFactory *call;
 static TCommandFactory *cd;
 static TCommandFactory *chdir;
@@ -224,6 +226,7 @@ TSession::TSession()
         cd = new TCdFactory;
         capture = new TCaptureFactory;
         call = new TCallFactory;
+        audio = new TAudioFactory;
         acpi = new TAcpiFactory;
         help = new THelpFactory;
 

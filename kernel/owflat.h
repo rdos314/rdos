@@ -247,6 +247,30 @@
     "TempDone: " \
     value [eax];
 
+#pragma aux RdosGetAudioDeviceCount = \
+    "xor ecx,ecx" \
+    CallGate_get_audio_device_count  \
+    value [ecx];
+
+#pragma aux RdosGetAudioCodecCount = \
+    "xor ecx,ecx" \
+    CallGate_get_audio_codec_count  \
+    parm [eax] \
+    value [ecx];
+
+#pragma aux RdosGetAudioWidgetInfo = \
+    "xor eax,eax" \
+    CallGate_get_audio_widget_info  \
+    "movzx eax,al" \    
+    parm [eax] [edx] [ebx] [edi]    \
+    value [eax];
+
+#pragma aux RdosGetAudioWidgetConnectionList = \
+    "xor ecx,ecx" \
+    CallGate_get_audio_widget_connection_list  \
+    parm [eax] [edx] [ebx] [edi]    \
+    value [ecx];
+
 #pragma aux RdosSetTextMode = \
     "mov ax,3"  \
     CallGate_set_video_mode  \

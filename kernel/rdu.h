@@ -619,6 +619,11 @@
 
 #define usergate_is_64_bit_exe 494
 
+#define usergate_get_audio_device_count 495
+#define usergate_get_audio_codec_count 496
+#define usergate_get_audio_widget_info 497
+#define usergate_get_audio_widget_connection_list 498
+
 
 
 #ifdef __FLAT__
@@ -1243,6 +1248,11 @@
 
 #define CallGate_is_64_bit_exe 0x67 0x9a 238 1 0 0 3 0
 
+#define CallGate_get_audio_device_count 0x67 0x9a 239 1 0 0 3 0
+#define CallGate_get_audio_codec_count 0x67 0x9a 240 1 0 0 3 0
+#define CallGate_get_audio_widget_info 0x67 0x9a 241 1 0 0 3 0
+#define CallGate_get_audio_widget_connection_list 0x67 0x9a 242 1 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1864,5 +1874,10 @@
 #define CallGate_has_printer_feed_error 0x3e 0x67 0x9a 237 1 0 0 3 0
 
 #define CallGate_is_64_bit_exe 0x3e 0x67 0x9a 238 1 0 0 3 0
+
+#define CallGate_get_audio_device_count 0x3e 0x67 0x9a 239 1 0 0 3 0
+#define CallGate_get_audio_codec_count 0x3e 0x67 0x9a 240 1 0 0 3 0
+#define CallGate_get_audio_widget_info 0x3e 0x67 0x9a 241 1 0 0 3 0
+#define CallGate_get_audio_widget_connection_list 0x3e 0x67 0x9a 242 1 0 0 3 0
 
 #endif

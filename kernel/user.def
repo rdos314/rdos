@@ -619,4 +619,9 @@ has_printer_feed_error_nr       = 493
 
 is_64_bit_exe_nr                = 494
 
+get_audio_device_count_nr       = 495
+get_audio_codec_count_nr        = 496
+get_audio_widget_info_nr        = 497
+get_audio_widget_connection_list_nr  = 498
+
 usergate_entries			    = 512

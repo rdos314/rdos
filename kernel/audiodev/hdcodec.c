@@ -518,12 +518,14 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
     struct TPinComplex *p;
     int val;
     int dev;
+    int conn;
     int use;
     int connections;
     int i;
 
     val = Query(codec, node, 0xF1C00);
     dev = (val >> 20) & 0xF;
+    conn = (val >> 30) & 3;
 
     use = FALSE;
     switch (dev)
@@ -546,6 +548,9 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
             use = FALSE;
     }
 
+    if (conn == 1 && connections == 0)
+        use = FALSE;
+
     if (use)
     {
         widget = (struct TPinComplex *)RdosAllocateSmallGlobalMem(sizeof(struct TPinComplex));
@@ -558,7 +563,7 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
         widget->List = 0;
         widget->PinCap = GetParam(codec, node, 0xC);
 
-        widget->Connectivity = (val >> 30) & 3;
+        widget->Connectivity = conn;
         widget->Location = (val >> 24) & 0x3F;
         widget->ConnType = (val >> 16) & 0xF;
         widget->Color = (val >> 12) & 0xF;
@@ -867,6 +872,410 @@ void Start()
             AddFunction(i, mask);
     }            
 }
+
+/*##########################################################################
+#
+#   Name       : GetAudioDeviceCount
+#
+#   Purpose....: Get device count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetAudioDeviceCount "*" rdosdev parm routine value [ecx]
+long __far ImplGetAudioDeviceCount()
+{
+    RdosSetSuccess();
+    return FunctionCount;
+}
+
+/*##########################################################################
+#
+#   Name       : GetAudioCodecCount
+#
+#   Purpose....: Get codec count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetAudioCodecCount "*" rdosdev parm routine [eax] value [ecx]
+long __far ImplGetAudioCodecCount(int device)
+{
+    int count = 0;
+
+    if (device < FunctionCount)
+    {
+        count = FunctionArr[device]->CodecCount;
+        RdosSetSuccess();
+    }
+    else
+        RdosSetFailure();
+
+    return count;
+}
+
+/*##########################################################################
+#
+#   Name       : GetWidget
+#
+#   Purpose....: Get widget
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+struct TWidget *GetWidget(int Device, int CodecNr, int Node)
+{
+    struct TFunction *Function;
+    struct TCodec *Codec;
+    struct TWidget *Widget = 0;
+    
+    if (Device < FunctionCount)
+    {
+        Function = FunctionArr[Device];
+        if (Function && CodecNr < Function->CodecCount)
+        {
+            Codec = Function->CodecArr[CodecNr];
+            if (Codec && Node < MAX_WIDGETS)
+                Widget = Codec->WidgetArr[Node];                
+        }    
+    }
+
+    return Widget;
+}
+
+/*##########################################################################
+#
+#   Name       : GetAudioOutputInfo
+#
+#   Purpose....: Get audio output info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GetAudioOutputInfo(struct TAudioOutput *widget, char *Info)
+{
+    strcpy(Info, "Audio Out");
+}
+
+/*##########################################################################
+#
+#   Name       : GetAudioInputInfo
+#
+#   Purpose....: Get audio input info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GetAudioInputInfo(struct TAudioInput *widget, char *Info)
+{
+    strcpy(Info, "Audio In");
+}
+
+/*##########################################################################
+#
+#   Name       : GetAudioMixerInfo
+#
+#   Purpose....: Get audio mixer info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GetAudioMixerInfo(struct TAudioMixer *widget, char *Info)
+{
+    strcpy(Info, "Audio Mixer");
+}
+
+/*##########################################################################
+#
+#   Name       : GetAudioSelectorInfo
+#
+#   Purpose....: Get audio selector info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GetAudioSelectorInfo(struct TAudioSelector *widget, char *Info)
+{
+    strcpy(Info, "Audio Selector");
+}
+
+/*##########################################################################
+#
+#   Name       : GetPinComplexInfo
+#
+#   Purpose....: Get pin complex info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GetPinComplexInfo(struct TPinComplex *widget, char *Info)
+{
+    char *LocStr;
+    static char *LocationArr[] = {"Chassis", "Rear", "Front", "Left", "Right", "Top", "Bottom", "Rear panel", "Drive bay", 0, 0, 0, 0, 0, 0, 0,
+                                  "Internal", 0, 0, 0, 0, 0, 0, "Riser", "Digital display", "ATAPI", 0, 0, 0, 0, 0, 0,
+                                  "Box", "Box rear", "Box front", "Box left", "Box right", "Box top", "Box bottom", 0, 0, 0, 0, 0, 0, 0, 0,
+                                  "Unknown", 0, 0, 0, 0, 0 , "Other bottom", "Mobile mic", "Mobile outside", 0, 0, 0, 0, 0, 0, 0}; 
+    
+    switch (widget->Connectivity)
+    {
+        case 0:
+            strcpy(Info, "Jack");
+            break;
+
+        case 1:
+            strcpy(Info, "Pin");
+            break;
+
+        case 2:
+            strcpy(Info, "Fixed");
+            break;
+
+        case 3:
+            strcpy(Info, "Fixed Jack");
+            break;
+    }
+
+    if (widget->Connectivity != 1)
+    {
+        LocStr = LocationArr[widget->Location];
+        if (LocStr)
+        {
+            strcat(Info, ", ");
+            strcat(Info, LocStr);
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : GetPowerWidgetInfo
+#
+#   Purpose....: Get power widget info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GetPowerWidgetInfo(struct TPowerWidget *widget, char *Info)
+{
+    strcpy(Info, "Power");
+}
+
+/*##########################################################################
+#
+#   Name       : GetAudioWidgetInfo
+#
+#   Purpose....: Get widget info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char GetAudioWidgetInfo(int Device, int CodecNr, int Node, char *Info)
+{
+    char Type = 0;
+    struct TWidget *Widget;
+
+    Widget = GetWidget(Device, CodecNr, Node);
+
+    if (Widget)
+    {
+        Type = Widget->Type;
+
+        switch (Type)
+        {
+            case WIDGET_TYPE_OUTPUT:
+                GetAudioOutputInfo((struct TAudioOutput *)Widget, Info);
+                break;
+
+            case WIDGET_TYPE_INPUT:
+                GetAudioInputInfo((struct TAudioInput *)Widget, Info);
+                break;
+
+            case WIDGET_TYPE_MIXER:
+                GetAudioMixerInfo((struct TAudioMixer *)Widget, Info);
+                break;
+
+            case WIDGET_TYPE_SELECTOR:
+                GetAudioSelectorInfo((struct TAudioSelector *)Widget, Info);
+                break;
+
+            case WIDGET_TYPE_PIN:
+                GetPinComplexInfo((struct TPinComplex *)Widget, Info);
+                break;
+
+            case WIDGET_TYPE_POWER:
+                GetPowerWidgetInfo((struct TPowerWidget *)Widget, Info);
+                break;
+
+            default:
+                strcpy(Info, "Unknown");
+                break;
+        }
+    }
+    return Type;
+}
+
+/*##########################################################################
+#
+#   Name       : GetAudioWidgetInfo16
+#
+#   Purpose....: Get audio widget info, 16-bit version
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetAudioWidgetInfo16 "*" rdosdev parm routine [eax] [edx] [ebx] [es edi] value [al]
+char __far ImplGetAudioWidgetInfo16(int Device, int Codec, int Node, char *Info)
+{
+    char Type;
+    
+    RdosExtendDi();
+
+    Type = GetAudioWidgetInfo(Device, Codec, Node, Info);
+    if (Type)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
+    return Type;
+}
+
+/*##########################################################################
+#
+#   Name       : GetAudioWidgetInfo32
+#
+#   Purpose....: Get audio widget info, 32-bit version
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetAudioWidgetInfo32 "*" rdosdev parm routine [eax] [edx] [ebx] [es edi] value [al]
+char __far ImplGetAudioWidgetInfo32(int Device, int Codec, int Node, char *Info)
+{
+    char Type;
+    
+    Type = GetAudioWidgetInfo(Device, Codec, Node, Info);
+    if (Type)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
+    return Type;
+}
+
+/*##########################################################################
+#
+#   Name       : GetAudioConnectionList
+#
+#   Purpose....: Get widget connection list
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int GetAudioConnectionList(int Device, int CodecNr, int Node, int *ConnectionList)
+{
+    int Count = 0;
+    int i;
+    int size;
+    struct TWidget *Widget;
+    struct TWidget *w;
+
+    Widget = GetWidget(Device, CodecNr, Node);
+
+    if (Widget)
+    {
+        size = Widget->ConnectionCount;
+
+        for (i = 0; i < size; i++)
+        {
+            w = Widget->ConnectionList[i];
+            if (w && w->Node)
+            {
+                ConnectionList[Count] = w->Node;
+                Count++;
+            }
+        }
+    }
+
+    return Count;
+}
+
+/*##########################################################################
+#
+#   Name       : GetAudioConnectionList16
+#
+#   Purpose....: Get audio widget connection list, 16-bit version
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetAudioConnectionList16 "*" rdosdev parm routine [eax] [edx] [ebx] [es edi] value [ecx]
+int __far ImplGetAudioConnectionList16(int Device, int Codec, int Node, int *ConnectionList)
+{
+    int Count;
+    
+    RdosExtendDi();
+
+    Count = GetAudioConnectionList(Device, Codec, Node, ConnectionList);
+    if (Count)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
+    return Count;
+}
+
+/*##########################################################################
+#
+#   Name       : GetAudioConnectionList32
+#
+#   Purpose....: Get audio widget connection list, 32-bit version
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetAudioConnectionList32 "*" rdosdev parm routine [eax] [edx] [ebx] [es edi] value [ecx]
+int __far ImplGetAudioConnectionList32(int Device, int Codec, int Node, int *ConnectionList)
+{
+    int Count;
+
+    Count = GetAudioConnectionList(Device, Codec, Node, ConnectionList);
+    if (Count)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
+    return Count;
+}
     
 /*##########################################################################
 #
@@ -917,5 +1326,10 @@ int main()
 {
     RdosHookInitPci(&InitPci);
     InitHda();
+    RdosRegisterBimodalUserGate(usergate_get_audio_device_count, &ImplGetAudioDeviceCount, "Get Audio Device Count");
+    RdosRegisterBimodalUserGate(usergate_get_audio_codec_count, &ImplGetAudioCodecCount, "Get Audio Device Count");
+    RdosRegisterUserGate(usergate_get_audio_widget_info, &ImplGetAudioWidgetInfo16, &ImplGetAudioWidgetInfo32, "Get Audio Widget Info");
+    RdosRegisterUserGate(usergate_get_audio_widget_connection_list, &ImplGetAudioConnectionList16, &ImplGetAudioConnectionList32, "Get Audio Connection List");
+
     RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate"); 
 }
