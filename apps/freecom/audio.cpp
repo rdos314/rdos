@@ -66,7 +66,7 @@ TAudioFactory::TAudioFactory()
 ##########################################################################*/
 TCommand *TAudioFactory::Create(TSession *session, const char *param)
 {
-	return new TAudioCommand(session, param);
+        return new TAudioCommand(session, param);
 }
 
 /*##########################################################################
@@ -83,7 +83,7 @@ TCommand *TAudioFactory::Create(TSession *session, const char *param)
 TAudioCommand::TAudioCommand(TSession *session, const char *param)
   : TCommand(session, param)
 {
-	FHelpScreen.Load(TEXT_CMDHELP_AUDIO);
+        FHelpScreen.Load(TEXT_CMDHELP_AUDIO);
 }
 
 /*##########################################################################
@@ -108,7 +108,13 @@ int TAudioCommand::Execute(char *param)
     int Count;
     char Info[512];
     int ConnectionList[256];
+    int CurrConn;
     char Type;
+    int min;
+    int max;
+    long double lmin;
+    long double lmax;
+    int mute;
     char str[256];
 
     FunctionCount = RdosGetAudioDeviceCount();
@@ -134,12 +140,61 @@ int TAudioCommand::Execute(char *param)
                     Write(str);
                     Write(Info);
 
+                    mute = RdosHasAudioInputMute(i, j, k);
+
+                    RdosGetAudioInputAmpCap(i, j, k, &min, &max);
+                    if (mute || min || max)
+                    {
+                        Write(", In: ");
+                        lmin = (long double)min / 4.0;
+                        lmax = (long double)max / 4.0;
+
+                        if (min || max)
+                        {
+                            sprintf(str, "%0.1Lf-%0.1Lf", lmin, lmax);
+                            Write(str);
+
+                            if (mute)
+                                Write("/mute");
+                        }
+                        else                        
+                            Write("mute");
+                    }
+
+                    mute = RdosHasAudioOutputMute(i, j, k);
+
+                    RdosGetAudioOutputAmpCap(i, j, k, &min, &max);
+                    if (mute || min || max)
+                    {
+                        Write(", Out: ");
+                        lmin = (long double)min / 4.0;
+                        lmax = (long double)max / 4.0;
+
+                        if (min || max)
+                        {
+                            sprintf(str, "%0.1Lf-%0.1Lf", lmin, lmax);
+                            Write(str);
+
+                            if (mute)
+                                Write("/mute");
+                        }
+                        else                        
+                            Write("mute");
+                    }
+
                     Count = RdosGetAudioWidgetConnectionList(i, j, k, ConnectionList);
 
                     if (Count)
+                    {
                         Write(" (");
+                        CurrConn = RdosGetSelectedAudioConnection(i, j, k);
+                    }
+
                     for (l = 0; l < Count; l++)
                     {
+                        if (CurrConn == l)
+                            Write("*");
+                            
                         sprintf(str, "%d", ConnectionList[l]);
                         Write(str);
                         

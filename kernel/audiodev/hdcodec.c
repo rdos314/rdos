@@ -44,6 +44,12 @@ extern int GetCodecMask(int id);
 extern int QueryCodec(int id, int codec, int node, int data);
 #pragma aux QueryCodec parm routine [ebx] [esi] [edi] [edx] value [eax]
 
+long long CodeLongLong(int Lsb, int Msb);
+
+#pragma aux CodeLongLong = \
+    parm [eax] [edx] \
+    value [edx eax];
+
 #define FALSE   0
 #define TRUE  !FALSE
 
@@ -59,12 +65,24 @@ extern int QueryCodec(int id, int codec, int node, int data);
 #define WIDGET_TYPE_PIN         5
 #define WIDGET_TYPE_POWER       6
 
+struct TAmp
+{
+    int StepSize;
+    int NumSteps;
+    int Offset;
+    int Mutable;
+};
+
 struct TWidget
 {
     int Type;
     int Id;
     int Address;
     int Node;
+    int Cap;
+    int Channels;
+    struct TAmp InputAmp;
+    struct TAmp OutputAmp;
     int ConnectionCount;
     struct TWidget *ConnectionList[MAX_CONNECTIONS];
 };
@@ -75,12 +93,14 @@ struct TAudioOutput
     int Id;
     int Address;
     int Node;
+    int Cap;
+    int Channels;
+    struct TAmp InputAmp;
+    struct TAmp OutputAmp;
     int ConnectionCount;
     struct TWidget *ConnectionList[MAX_CONNECTIONS];
 
     struct TAudioOutput *List;
-    int Cap;
-    int Channels;
 };
 
 struct TAudioInput
@@ -89,12 +109,14 @@ struct TAudioInput
     int Id;
     int Address;
     int Node;
+    int Cap;
+    int Channels;
+    struct TAmp InputAmp;
+    struct TAmp OutputAmp;
     int ConnectionCount;
     struct TWidget *ConnectionList[MAX_CONNECTIONS];
 
     struct TAudioInput *List;
-    int Cap;
-    int Channels;
 };
 
 struct TAudioMixer
@@ -103,12 +125,14 @@ struct TAudioMixer
     int Id;
     int Address;
     int Node;
+    int Cap;
+    int Channels;
+    struct TAmp InputAmp;
+    struct TAmp OutputAmp;
     int ConnectionCount;
     struct TWidget *ConnectionList[MAX_CONNECTIONS];
 
     struct TAudioMixer *List;
-    int Cap;
-    int Channels;
 };
 
 struct TAudioSelector
@@ -117,12 +141,14 @@ struct TAudioSelector
     int Id;
     int Address;
     int Node;
+    int Cap;
+    int Channels;
+    struct TAmp InputAmp;
+    struct TAmp OutputAmp;
     int ConnectionCount;
     struct TWidget *ConnectionList[MAX_CONNECTIONS];
 
     struct TAudioSelector *List;
-    int Cap;
-    int Channels;
 };
 
 struct TPinComplex
@@ -131,12 +157,14 @@ struct TPinComplex
     int Id;
     int Address;
     int Node;
+    int Cap;
+    int Channels;
+    struct TAmp InputAmp;
+    struct TAmp OutputAmp;
     int ConnectionCount;
     struct TWidget *ConnectionList[MAX_CONNECTIONS];
 
     struct TPinComplex *List;
-    int Cap;
-    int Channels;
     int PinCap;
     int Connectivity;
     int Location;
@@ -154,12 +182,14 @@ struct TPowerWidget
     int Id;
     int Address;
     int Node;
+    int Cap;
+    int Channels;
+    struct TAmp InputAmp;
+    struct TAmp OutputAmp;
     int ConnectionCount;
     struct TWidget *ConnectionList[MAX_CONNECTIONS];
 
     struct TPowerWidget *List;
-    int Cap;
-    int Channels;
 };
 
 struct TCodec
@@ -306,6 +336,52 @@ void UpdateConnectionList(struct TCodec *codec)
 
 /*##########################################################################
 #
+#   Name       : ResetAmp
+#
+#   Purpose....: Reset amp parameters
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void ResetAmp(struct TAmp *amp)
+{
+    amp->StepSize = 0;
+    amp->NumSteps = 0;
+    amp->Offset = 0;
+    amp->Mutable = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : DefineAmp
+#
+#   Purpose....: Define amp parameters
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void DefineAmp(struct TAmp *amp, int val)
+{
+    if (val & 0x80000000)
+        amp->Mutable = TRUE;
+    else
+        amp->Mutable = FALSE;
+
+    amp->Offset = val & 0x7F;
+
+    val = val >> 8;
+    amp->NumSteps = (val & 0x7F) + 1;
+
+    val = val >> 8;
+    amp->StepSize = (val & 0x7F) + 1;
+}
+
+/*##########################################################################
+#
 #   Name       : AddAudioOutput
 #
 #   Purpose....: Add audio output widget
@@ -320,6 +396,7 @@ void AddAudioOutput(struct TCodec *codec, int node, int cap, int channels)
     struct TAudioOutput *widget;
     struct TAudioOutput *p;
     int i;
+    int val;
 
     widget = (struct TAudioOutput *)RdosAllocateSmallGlobalMem(sizeof(struct TAudioOutput));
     widget->Type = WIDGET_TYPE_OUTPUT;
@@ -332,6 +409,16 @@ void AddAudioOutput(struct TCodec *codec, int node, int cap, int channels)
 
     for (i = 0; i < MAX_CONNECTIONS; i++)
         widget->ConnectionList[i] = 0;    
+
+    ResetAmp(&widget->InputAmp);
+
+    if (widget->Cap & 4)
+    {
+        val = GetParam(codec, node, 0x12);
+        DefineAmp(&widget->OutputAmp, val);
+    }
+    else
+        ResetAmp(&widget->OutputAmp);
 
     widget->ConnectionCount = 0;
 
@@ -366,6 +453,7 @@ void AddAudioInput(struct TCodec *codec, int node, int cap, int channels)
     struct TAudioInput *p;
     int connections;
     int i;
+    int val;
 
     connections = GetParam(codec, node, 0xE);
 
@@ -379,6 +467,16 @@ void AddAudioInput(struct TCodec *codec, int node, int cap, int channels)
         widget->Cap = cap;
         widget->Channels = channels;
         widget->List = 0;
+
+        if (widget->Cap & 2)
+        {
+            val = GetParam(codec, node, 0xD);
+            DefineAmp(&widget->InputAmp, val);
+        }
+        else
+            ResetAmp(&widget->InputAmp);
+
+        ResetAmp(&widget->OutputAmp);
 
         for (i = 0; i < MAX_CONNECTIONS; i++)
             widget->ConnectionList[i] = 0;    
@@ -417,6 +515,7 @@ void AddAudioMixer(struct TCodec *codec, int node, int cap, int channels)
     struct TAudioMixer *p;
     int connections;
     int i;
+    int val;
 
     connections = GetParam(codec, node, 0xE);
 
@@ -430,6 +529,22 @@ void AddAudioMixer(struct TCodec *codec, int node, int cap, int channels)
         widget->Cap = cap;
         widget->Channels = channels;
         widget->List = 0;
+
+        if (widget->Cap & 2)
+        {
+            val = GetParam(codec, node, 0xD);
+            DefineAmp(&widget->InputAmp, val);
+        }
+        else
+            ResetAmp(&widget->InputAmp);
+
+        if (widget->Cap & 4)
+        {
+            val = GetParam(codec, node, 0x12);
+            DefineAmp(&widget->OutputAmp, val);
+        }
+        else
+            ResetAmp(&widget->OutputAmp);
 
         for (i = 0; i < MAX_CONNECTIONS; i++)
             widget->ConnectionList[i] = 0;    
@@ -468,6 +583,7 @@ void AddAudioSelector(struct TCodec *codec, int node, int cap, int channels)
     struct TAudioSelector *p;
     int connections;
     int i;
+    int val;
 
     connections = GetParam(codec, node, 0xE);
 
@@ -481,6 +597,16 @@ void AddAudioSelector(struct TCodec *codec, int node, int cap, int channels)
         widget->Cap = cap;
         widget->Channels = channels;
         widget->List = 0;
+
+        ResetAmp(&widget->InputAmp);
+
+        if (widget->Cap & 4)
+        {
+            val = GetParam(codec, node, 0x12);
+            DefineAmp(&widget->OutputAmp, val);
+        }
+        else
+            ResetAmp(&widget->OutputAmp);
 
         for (i = 0; i < MAX_CONNECTIONS; i++)
             widget->ConnectionList[i] = 0;    
@@ -572,6 +698,22 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
         widget->Misc = (val >> 8) & 0xF;
         widget->Association = (val >> 4) & 0xF;
         widget->Sequence = val & 0xF;
+
+        if (widget->Cap & 2)
+        {
+            val = GetParam(codec, node, 0xD);
+            DefineAmp(&widget->InputAmp, val);
+        }
+        else
+            ResetAmp(&widget->InputAmp);
+
+        if (widget->Cap & 4)
+        {
+            val = GetParam(codec, node, 0x12);
+            DefineAmp(&widget->OutputAmp, val);
+        }
+        else
+            ResetAmp(&widget->OutputAmp);
 
         for (i = 0; i < MAX_CONNECTIONS; i++)
             widget->ConnectionList[i] = 0;    
@@ -684,6 +826,9 @@ void AddPowerWidget(struct TCodec *codec, int node, int cap, int channels)
         widget->Cap = cap;
         widget->Channels = channels;
         widget->List = 0;
+
+        ResetAmp(&widget->InputAmp);
+        ResetAmp(&widget->OutputAmp);
 
         for (i = 0; i < MAX_CONNECTIONS; i++)
             widget->ConnectionList[i] = 0;    
@@ -896,6 +1041,86 @@ int PresentDetect(struct TPinComplex *pin)
         return TRUE;
     else
         return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : GetSelectedControl
+#
+#   Purpose....: Get currently selected control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int GetSelectedControl(struct TWidget *widget)
+{
+    int val;
+
+    switch (widget->ConnectionCount)
+    {
+        case 0:
+        case 1:
+            return 0;
+
+        default:
+            val = QueryCodec(widget->Id, widget->Address, widget->Node, 0xF0100);
+            return val & 0xFF;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : GetInputAmpSetting
+#
+#   Purpose....: Get input amp setting
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int GetInputAmpSetting(struct TWidget *widget, int channel, int index)
+{
+    int verb;
+    int val;
+
+    verb = 0xB0000;
+    verb |= channel << 13;
+    verb |= index;
+    
+    val = QueryCodec(widget->Id, widget->Address, widget->Node, verb);
+    if (val & 0x80)
+        val = -1;
+
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : GetOutputAmpSetting
+#
+#   Purpose....: Get output amp setting
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int GetOutputAmpSetting(struct TWidget *widget, int channel)
+{
+    int verb;
+    int val;
+
+    verb = 0xB8000;
+    verb |= channel << 13;
+    
+    val = QueryCodec(widget->Id, widget->Address, widget->Node, verb);
+    if (val & 0x80)
+        val = -1;
+
+    return val;
 }
 
 /*##########################################################################
@@ -1436,6 +1661,226 @@ int __far ImplGetAudioConnectionList32(int Device, int Codec, int Node, int *Con
 
     return Count;
 }
+
+/*##########################################################################
+#
+#   Name       : GetSelectedAudioConection
+#
+#   Purpose....: Get selected audio connection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetSelectedAudioConnection "*" rdosdev parm routine [eax] [edx] [ebx] value [eax]
+int __far ImplGetSelectedAudioConnection(int Device, int Codec, int Node)
+{
+    struct TWidget *Widget;
+    int curr = 0;
+
+    Widget = GetWidget(Device, Codec, Node);
+
+    if (Widget)
+    {
+        curr = GetSelectedControl(Widget);
+        RdosSetSuccess();
+    }
+    else
+        RdosSetFailure();
+        
+    return curr;
+}
+
+/*##########################################################################
+#
+#   Name       : GetAudioInputAmpCap
+#
+#   Purpose....: Get audio input amp range
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetAudioInputAmpCap "*" rdosdev parm routine [eax] [edx] [ebx] value [edx eax]
+long long __far ImplGetAudioInputAmpCap(int Device, int Codec, int Node)
+{
+    struct TWidget *Widget;
+    int min;
+    int max;
+    long long val = 0;
+
+    Widget = GetWidget(Device, Codec, Node);
+
+    if (Widget)
+    {
+        min = -Widget->InputAmp.Offset * Widget->InputAmp.StepSize;
+        max = (Widget->InputAmp.NumSteps - Widget->InputAmp.Offset - 1) * Widget->InputAmp.StepSize;
+        val = CodeLongLong(min, max);
+        RdosSetSuccess();
+    }
+    else
+        RdosSetFailure();
+        
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : GetAudioOutputAmpCap
+#
+#   Purpose....: Get audio output amp range
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetAudioOutputAmpCap "*" rdosdev parm routine [eax] [edx] [ebx] value [edx eax]
+long long __far ImplGetAudioOutputAmpCap(int Device, int Codec, int Node)
+{
+    struct TWidget *Widget;
+    int min;
+    int max;
+    long long val = 0;
+
+    Widget = GetWidget(Device, Codec, Node);
+
+    if (Widget)
+    {
+        min = -Widget->OutputAmp.Offset * Widget->OutputAmp.StepSize;
+        max = (Widget->OutputAmp.NumSteps - Widget->OutputAmp.Offset - 1) * Widget->OutputAmp.StepSize;
+        val = CodeLongLong(min, max);
+        RdosSetSuccess();
+    }
+    else
+        RdosSetFailure();
+        
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : HasAudioInputMute
+#
+#   Purpose....: Check for input amp mute
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplHasAudioInputMute "*" rdosdev parm routine [eax] [edx] [ebx]
+void __far ImplHasAudioInputMute(int Device, int Codec, int Node)
+{
+    struct TWidget *Widget;
+    int ok = FALSE;
+
+    Widget = GetWidget(Device, Codec, Node);
+
+    if (Widget)
+        ok = Widget->InputAmp.Mutable;
+
+    if (ok)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+}
+
+/*##########################################################################
+#
+#   Name       : HasAudioOutputMute
+#
+#   Purpose....: Check for output amp mute
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplHasAudioOutputMute "*" rdosdev parm routine [eax] [edx] [ebx]
+void __far ImplHasAudioOutputMute(int Device, int Codec, int Node)
+{
+    struct TWidget *Widget;
+    int ok = FALSE;
+
+    Widget = GetWidget(Device, Codec, Node);
+
+    if (Widget)
+        ok = Widget->OutputAmp.Mutable;
+
+    if (ok)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+}
+
+/*##########################################################################
+#
+#   Name       : ReadAudioInputAmp
+#
+#   Purpose....: Read audio input amp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplReadAudioInputAmp "*" rdosdev parm routine [eax] [edx] [ebx] [ecx] [esi] value [eax]
+int __far ImplReadAudioInputAmp(int Device, int Codec, int Node, int Channel, int Input)
+{
+    struct TWidget *Widget;
+    int curr = 0;
+
+    Widget = GetWidget(Device, Codec, Node);
+
+    if (Widget)
+    {
+        if (Widget->Cap & 2)
+            curr = GetInputAmpSetting(Widget, Channel, Input);
+        else
+            curr = 127;
+        RdosSetSuccess();
+    }
+    else
+        RdosSetFailure();
+        
+    return curr;
+}
+
+/*##########################################################################
+#
+#   Name       : ReadAudioOutputAmp
+#
+#   Purpose....: Read audio output amp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplReadAudioOutputAmp "*" rdosdev parm routine [eax] [edx] [ebx] [ecx] value [eax]
+int __far ImplReadAudioOutputAmp(int Device, int Codec, int Node, int Channel)
+{
+    struct TWidget *Widget;
+    int curr = 0;
+
+    Widget = GetWidget(Device, Codec, Node);
+
+    if (Widget)
+    {
+        if (Widget->Cap & 4)
+            curr = GetOutputAmpSetting(Widget, Channel);
+        else
+            curr = 127;
+        RdosSetSuccess();
+    }
+    else
+        RdosSetFailure();
+        
+    return curr;
+}
     
 /*##########################################################################
 #
@@ -1490,6 +1935,13 @@ int main()
     RdosRegisterBimodalUserGate(usergate_get_audio_codec_count, &ImplGetAudioCodecCount, "Get Audio Device Count");
     RdosRegisterUserGate(usergate_get_audio_widget_info, &ImplGetAudioWidgetInfo16, &ImplGetAudioWidgetInfo32, "Get Audio Widget Info");
     RdosRegisterUserGate(usergate_get_audio_widget_connection_list, &ImplGetAudioConnectionList16, &ImplGetAudioConnectionList32, "Get Audio Connection List");
+    RdosRegisterBimodalUserGate(usergate_get_selected_audio_connection, &ImplGetSelectedAudioConnection, "Get Selected Audio Connection");
+    RdosRegisterBimodalUserGate(usergate_get_audio_input_amp_cap, &ImplGetAudioInputAmpCap, "Get Audio Input Amp Cap");
+    RdosRegisterBimodalUserGate(usergate_get_audio_output_amp_cap, &ImplGetAudioOutputAmpCap, "Get Audio Output Amp Cap");
+    RdosRegisterBimodalUserGate(usergate_has_audio_input_mute, &ImplHasAudioInputMute, "Has Audio Input Mute");
+    RdosRegisterBimodalUserGate(usergate_has_audio_output_mute, &ImplHasAudioOutputMute, "Has Audio Output Mute");
+//    RdosRegisterBimodalUserGate(usergate_read_audio_input_amp, &ImplReadAudioInputAmp, "Read Audio Input Amp");
+//    RdosRegisterBimodalUserGate(usergate_read_audio_output_amp, &ImplReadAudioOutputAmp, "Read Audio Output Amp");
 
     RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate"); 
 }

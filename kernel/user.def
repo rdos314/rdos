@@ -623,5 +623,12 @@ get_audio_device_count_nr       = 495
 get_audio_codec_count_nr        = 496
 get_audio_widget_info_nr        = 497
 get_audio_widget_connection_list_nr  = 498
+get_selected_audio_connection_nr    = 499
+
+get_audio_input_amp_cap_nr      = 500
+get_audio_output_amp_cap_nr     = 501
+
+has_audio_input_mute_nr         = 502
+has_audio_output_mute_nr        = 503
 
 usergate_entries			    = 512

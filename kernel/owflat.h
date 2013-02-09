@@ -271,6 +271,50 @@
     parm [eax] [edx] [ebx] [edi]    \
     value [ecx];
 
+#pragma aux RdosGetSelectedAudioConnection = \
+    CallGate_get_selected_audio_connection  \
+    "jnc done" \
+    "xor eax,eax" \
+    "done: " \
+    parm [eax] [edx] [ebx]    \
+    value [eax];
+
+#pragma aux RdosGetAudioInputAmpCap = \
+    CallGate_get_audio_input_amp_cap  \
+    "jnc save" \
+    "xor eax,eax" \
+    "xor edx,edx" \
+    "save: " \
+    "mov [esi],eax" \
+    "mov [edi],edx" \
+    parm [eax] [edx] [ebx] [esi] [edi]   \
+    value [eax] \
+    modify [eax edx];
+
+#pragma aux RdosGetAudioOutputAmpCap = \
+    CallGate_get_audio_output_amp_cap  \
+    "jnc save" \
+    "xor eax,eax" \
+    "xor edx,edx" \
+    "save: " \
+    "mov [esi],eax" \
+    "mov [edi],edx" \
+    parm [eax] [edx] [ebx] [esi] [edi]   \
+    value [eax] \
+    modify [eax edx];
+
+#pragma aux RdosHasAudioInputMute = \
+    CallGate_has_audio_input_mute  \
+    CarryToBool \
+    parm [eax] [edx] [ebx] \
+    value [eax] \
+
+#pragma aux RdosHasAudioOutputMute = \
+    CallGate_has_audio_output_mute  \
+    CarryToBool \
+    parm [eax] [edx] [ebx] \
+    value [eax] \
+
 #pragma aux RdosSetTextMode = \
     "mov ax,3"  \
     CallGate_set_video_mode  \

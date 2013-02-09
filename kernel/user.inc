@@ -2951,6 +2951,48 @@ GetAudioWidgetConnectionList      MACRO
 	UserGate get_audio_widget_connection_list_nr
 	                ENDM
 
+;   IN  EAX         Device #
+;   IN  EDX         Codec #
+;   IN  EBX         Node #
+;   OUT EAX         Selected connection
+GetSelectedAudioConnection      MACRO
+	UserGate get_selected_audio_connection_nr
+	                ENDM
+
+;   IN  EAX         Device #
+;   IN  EDX         Codec #
+;   IN  EBX         Node #
+;   OUT EAX         Min setting (1/4 db)
+;   OUT EDX         Max setting (1/4 db)
+GetAudioInputAmpCap      MACRO
+	UserGate get_audio_input_amp_cap_nr
+	                ENDM
+
+;   IN  EAX         Device #
+;   IN  EDX         Codec #
+;   IN  EBX         Node #
+;   OUT EAX         Min setting (1/4 db)
+;   OUT EDX         Max setting (1/4 db)
+GetAudioOutputAmpCap      MACRO
+	UserGate get_audio_output_amp_cap_nr
+	                ENDM
+
+;   IN  EAX         Device #
+;   IN  EDX         Codec #
+;   IN  EBX         Node #
+;   OUT NC          Supported
+HasAudioInputMute      MACRO
+	UserGate has_audio_input_mute_nr
+	                ENDM
+
+;   IN  EAX         Device #
+;   IN  EDX         Codec #
+;   IN  EBX         Node #
+;   OUT NC          Supported
+HasAudioOutputMute      MACRO
+	UserGate has_audio_output_mute_nr
+	                ENDM
+
 ;;;;;;;;;;; FM synthesis ;;;;;;;;;;
 
 ;   IN  AX          Sample rate

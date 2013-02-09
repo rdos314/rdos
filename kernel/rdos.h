@@ -210,6 +210,11 @@ int RDOSAPI RdosGetAudioDeviceCount();
 int RDOSAPI RdosGetAudioCodecCount(int Device);
 int RDOSAPI RdosGetAudioWidgetInfo(int Device, int Codec, int Node, char *Info);
 int RDOSAPI RdosGetAudioWidgetConnectionList(int Device, int Codec, int Node, int *ConnectionList);
+int RDOSAPI RdosGetSelectedAudioConnection(int Device, int Codec, int Node);
+void RDOSAPI RdosGetAudioInputAmpCap(int Device, int Codec, int Node, int *min, int *max);
+void RDOSAPI RdosGetAudioOutputAmpCap(int Device, int Codec, int Node, int *min, int *max);
+int RDOSAPI RdosHasAudioInputMute(int Device, int Codec, int Node);
+int RDOSAPI RdosHasAudioOutputMute(int Device, int Codec, int Node);
 
 void RDOSAPI RdosSetTextMode();
 int RDOSAPI RdosSetVideoMode(int *BitsPerPixel, int *xres, int *yres, int *linesize, void **buffer);
