@@ -182,14 +182,6 @@ struct TCodec
     int Address;
     int AudioNode;
 
-    struct TPinComplex *FixedSpeaker;
-
-    int OutputCount;
-    struct TPinComplex *OutputArr[MAX_OUTPUTS];
-
-    int InputCount;
-    struct TPinComplex *InputArr[MAX_INPUTS];
-
     struct TWidget *WidgetArr[MAX_WIDGETS];
 };
 
@@ -202,6 +194,14 @@ struct TFunction
 
 static int FunctionCount = 0;
 static struct TFunction *FunctionArr[MAX_FUNCTIONS];
+
+static struct TPinComplex *FixedSpeaker;
+
+static int OutputCount = 0;
+static struct TPinComplex *OutputArr[MAX_OUTPUTS];
+
+static int InputCount = 0;
+static struct TPinComplex *InputArr[MAX_INPUTS];
 
 /*##########################################################################
 #
@@ -656,19 +656,19 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
             case 0:
                 if (widget->PinCap & 0x10)
                 {
-                    if (codec->OutputCount < MAX_OUTPUTS)
+                    if (OutputCount < MAX_OUTPUTS)
                     {
-                        codec->OutputArr[codec->OutputCount] = widget;
-                        codec->OutputCount++;
+                        OutputArr[OutputCount] = widget;
+                        OutputCount++;
                     }
                 }
 
                 if (widget->PinCap & 0x20)
                 {
-                    if (codec->InputCount < MAX_OUTPUTS)
+                    if (InputCount < MAX_OUTPUTS)
                     {
-                        codec->InputArr[codec->InputCount] = widget;
-                        codec->InputCount++;
+                        InputArr[InputCount] = widget;
+                        InputCount++;
                     }
                 }
                 break;
@@ -676,7 +676,7 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
             default:
                 if (widget->PinCap & 0x10)
                     if (widget->PinCap & 0x8)
-                        codec->FixedSpeaker = widget;
+                        FixedSpeaker = widget;
                 break;
         }
     }
@@ -751,16 +751,6 @@ void ProcessCodec(struct TCodec *codec)
 
     for (i = 0; i < MAX_WIDGETS; i++)
         codec->WidgetArr[i] = 0;
-
-    codec->FixedSpeaker = 0;
-    codec->InputCount = 0;
-    codec->OutputCount = 0;
-
-    for (i = 0; i < MAX_OUTPUTS; i++)
-        codec->OutputArr[i] = 0;
-
-    for (i = 0; i < MAX_INPUTS; i++)
-        codec->InputArr[i] = 0;
 
     for (i = 0; i < count; i++)
     {
