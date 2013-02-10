@@ -1999,6 +1999,45 @@ void SelectInput(struct TWidget *widget, int entry)
 
 /*##########################################################################
 #
+#   Name       : MuteOutputAmp
+#
+#   Purpose....: Mute output amp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void MuteOutputAmp(struct TWidget *widget, struct TAmp *amp)
+{
+    int verb;
+
+    verb = 0x3B080;
+    QueryCodec(widget->Id, widget->Address, widget->Node, verb);
+}
+
+/*##########################################################################
+#
+#   Name       : MuteInputAmp
+#
+#   Purpose....: Mute input amp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void MuteInputAmp(struct TWidget *widget, struct TAmp *amp, int entry)
+{
+    int verb;
+
+    verb = 0x37080;
+    verb |= entry << 8;
+    QueryCodec(widget->Id, widget->Address, widget->Node, verb);
+}
+
+/*##########################################################################
+#
 #   Name       : SetInputAmp
 #
 #   Purpose....: Set input amp
@@ -2010,31 +2049,40 @@ void SelectInput(struct TWidget *widget, int entry)
 ##########################################################################*/
 void SetInputAmp(struct TWidget *widget, int entry, int l, int r)
 {
+    int i;
     int lval;
     int rval;
     struct TAmp *amp = &widget->InputAmp;
-    
-    switch (amp->NumSteps)
+
+    switch (widget->Type)
     {
-        case 0:
-            switch (widget->Type)
+        case AUDIO_WIDGET_TYPE_SELECTOR:
+        case AUDIO_WIDGET_TYPE_PIN:
+            SelectInput(widget, entry);
+            break;
+    }
+
+    if (amp->NumSteps)
+    {
+        for (i = 0; i < widget->ConnectionCount; i++)
+        {
+            if (i == entry)
             {
-                case AUDIO_WIDGET_TYPE_SELECTOR:
-                case AUDIO_WIDGET_TYPE_PIN:
-                    SelectInput(widget, entry);
-                    break;
+                if (amp->NumSteps == 1)
+                    RawSetInputAmp(widget, amp, entry, amp->Offset, amp->Offset);
+                else
+                {
+                    lval = l / amp->StepSize + amp->Offset;
+                    rval = r / amp->StepSize + amp->Offset;
+                    RawSetInputAmp(widget, amp, entry, lval, rval);
+                }
             }
-            break;
-
-        case 1:
-            RawSetInputAmp(widget, amp, entry, amp->Offset, amp->Offset);
-            break;
-
-        default:
-            lval = l / amp->StepSize + amp->Offset;
-            rval = r / amp->StepSize + amp->Offset;
-            RawSetInputAmp(widget, amp, entry, lval, rval);
-            break;
+            else
+            {
+                if (widget->Type != AUDIO_WIDGET_TYPE_PIN)
+                    MuteInputAmp(widget, amp, i);
+            }
+        }
     }
 }
 
@@ -2166,6 +2214,35 @@ struct TPinComplex *DetermineActiveOutput()
         return 0;
 }
 
+/*##########################################################################
+#
+#   Name       : ActivateOutput
+#
+#   Purpose....: Activate output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void ActivateOutput(struct TWidget *widget)
+{
+    int i;
+
+    if (widget->Type == AUDIO_WIDGET_TYPE_OUTPUT)
+        SetOutputAmp(widget, 0, 0);
+    else
+    {
+        i = FindOutputPath(widget);
+        if (i >= 0)
+        {
+            SetOutputAmp(widget, 0, 0);
+            SetInputAmp(widget, i, 0, 0);
+            ActivateOutput(widget->ConnectionList[i]);
+        }
+    }
+}
+
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
@@ -2174,13 +2251,7 @@ void __far ImplTestGate(const char *msg)
     int i;
 
     widget = (struct TWidget *)DetermineActiveOutput();
-    i = FindOutputPath(widget);
-
-    if (i >= 0)
-    {
-        SetOutputAmp(widget, 0, 0);
-        SetInputAmp(widget, i, 0, 0);
-    }
+    ActivateOutput(widget);
 }
 
 /*##########################################################################

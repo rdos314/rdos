@@ -583,11 +583,7 @@ void TAudioCommand::WriteAudioSelector(int dev, int codec, int node)
 void TAudioCommand::WritePinComplex(int dev, int codec, int node)
 {
     WriteOutputAmp(dev, codec, node, ", ");
-
-    if (HasInputAmp(dev, codec, node))
-        WriteInputList(dev, codec, node);
-    else
-        WriteSelectList(dev, codec, node);
+    WriteSelectList(dev, codec, node);
 }
 
 /*##########################################################################
