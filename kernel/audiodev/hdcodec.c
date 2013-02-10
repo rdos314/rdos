@@ -1942,6 +1942,104 @@ void SetOutputAmp(struct TWidget *widget, int l, int r)
 
 /*##########################################################################
 #
+#   Name       : RawSetInputAmp
+#
+#   Purpose....: Set raw input amp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void RawSetInputAmp(struct TWidget *widget, struct TAmp *amp, int entry, int l, int r)
+{
+    int verb;
+
+    if (l == r)
+    {
+        verb = 0x37000;
+        verb |= entry << 8;
+        verb |= l;
+        
+        QueryCodec(widget->Id, widget->Address, widget->Node, verb);
+    }
+    else
+    {
+        verb = 0x35000;
+        verb |= entry << 8;
+        verb |= r;
+        QueryCodec(widget->Id, widget->Address, widget->Node, verb);
+
+        verb = 0x36000;
+        verb |= entry << 8;
+        verb |= l;
+        QueryCodec(widget->Id, widget->Address, widget->Node, verb);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : SelectInput
+#
+#   Purpose....: Select input
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void SelectInput(struct TWidget *widget, int entry)
+{
+    int verb;
+
+    verb = 0x70100;
+    verb |= entry;
+    QueryCodec(widget->Id, widget->Address, widget->Node, verb);
+}
+
+/*##########################################################################
+#
+#   Name       : SetInputAmp
+#
+#   Purpose....: Set input amp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void SetInputAmp(struct TWidget *widget, int entry, int l, int r)
+{
+    int lval;
+    int rval;
+    struct TAmp *amp = &widget->InputAmp;
+    
+    switch (amp->NumSteps)
+    {
+        case 0:
+            switch (widget->Type)
+            {
+                case AUDIO_WIDGET_TYPE_SELECTOR:
+                case AUDIO_WIDGET_TYPE_PIN:
+                    SelectInput(widget, entry);
+                    break;
+            }
+            break;
+
+        case 1:
+            RawSetInputAmp(widget, amp, entry, amp->Offset, amp->Offset);
+            break;
+
+        default:
+            lval = l / amp->StepSize + amp->Offset;
+            rval = r / amp->StepSize + amp->Offset;
+            RawSetInputAmp(widget, amp, entry, lval, rval);
+            break;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : FindSingleOutputPath
 #
 #   Purpose....: Find an output path
@@ -2076,9 +2174,13 @@ void __far ImplTestGate(const char *msg)
     int i;
 
     widget = (struct TWidget *)DetermineActiveOutput();
-    SetOutputAmp(widget, 0, 0);
-
     i = FindOutputPath(widget);
+
+    if (i >= 0)
+    {
+        SetOutputAmp(widget, 0, 0);
+        SetInputAmp(widget, i, 0, 0);
+    }
 }
 
 /*##########################################################################
