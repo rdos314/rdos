@@ -1789,5 +1789,6 @@ DEBUG [ip-address] [host name]
 :TEXT_CMDHELP_AUDIO
 Shows audio information
 
-AUDIO
+AUDIO [/D]
+  /D              Detailed list of widgets
 .

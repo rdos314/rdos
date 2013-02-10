@@ -88,6 +88,44 @@ TAudioCommand::TAudioCommand(TSession *session, const char *param)
 
 /*##########################################################################
 #
+#   Name       : TAudioCommand::InitOptions
+#
+#   Purpose....: Init options
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAudioCommand::InitOptions()
+{
+    FOptD = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TAudioCommand::OptScan
+#
+#   Purpose....: Opt scan callback
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TAudioCommand::OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg)
+{
+    switch (ch)
+    {
+        case 'D': 
+            return OptScanBool(optstr, bool, strarg, &FOptD);
+    }  
+    OptError(optstr);
+    return E_Useage;
+}
+
+/*##########################################################################
+#
 #   Name       : TAudioCommand::WriteOutputAmp
 #
 #   Purpose....: Write output amp
@@ -540,16 +578,16 @@ void TAudioCommand::WritePinComplex(int dev, int codec, int node)
 
 /*##########################################################################
 #
-#   Name       : TAudioCommand::Execute
+#   Name       : TAudioCommand::ShowFull
 #
-#   Purpose....: Execute command
+#   Purpose....: Show full
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TAudioCommand::Execute(char *param)
+void TAudioCommand::ShowFull()
 {
     int i;
     int j;
@@ -622,5 +660,33 @@ int TAudioCommand::Execute(char *param)
             }            
         }     
     }    
+}
+
+/*##########################################################################
+#
+#   Name       : TAudioCommand::Execute
+#
+#   Purpose....: Execute command
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TAudioCommand::Execute(char *param)
+{
+    TArg *arg;
+
+    InitOptions();
+
+    if (!ScanCmdLine(param, 0))
+        return 1;
+
+    if (FOptD)
+    {
+        ShowFull();
+        return 0;
+    }
+
     return 0;
 }

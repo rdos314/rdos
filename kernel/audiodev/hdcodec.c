@@ -57,6 +57,8 @@ long long CodeLongLong(int Lsb, int Msb);
 #define MAX_CODECS          14
 #define MAX_WIDGETS         128
 #define MAX_CONNECTIONS     128
+#define MAX_OUTPUTS         16
+#define MAX_INPUTS          16
 
 struct TAmp
 {
@@ -92,8 +94,6 @@ struct TAudioOutput
     struct TAmp OutputAmp;
     int ConnectionCount;
     struct TWidget *ConnectionList[MAX_CONNECTIONS];
-
-    struct TAudioOutput *List;
 };
 
 struct TAudioInput
@@ -108,8 +108,6 @@ struct TAudioInput
     struct TAmp OutputAmp;
     int ConnectionCount;
     struct TWidget *ConnectionList[MAX_CONNECTIONS];
-
-    struct TAudioInput *List;
 };
 
 struct TAudioMixer
@@ -124,8 +122,6 @@ struct TAudioMixer
     struct TAmp OutputAmp;
     int ConnectionCount;
     struct TWidget *ConnectionList[MAX_CONNECTIONS];
-
-    struct TAudioMixer *List;
 };
 
 struct TAudioSelector
@@ -140,8 +136,6 @@ struct TAudioSelector
     struct TAmp OutputAmp;
     int ConnectionCount;
     struct TWidget *ConnectionList[MAX_CONNECTIONS];
-
-    struct TAudioSelector *List;
 };
 
 struct TPinComplex
@@ -157,7 +151,6 @@ struct TPinComplex
     int ConnectionCount;
     struct TWidget *ConnectionList[MAX_CONNECTIONS];
 
-    struct TPinComplex *List;
     int PinCap;
     int Connectivity;
     int Location;
@@ -181,8 +174,6 @@ struct TPowerWidget
     struct TAmp OutputAmp;
     int ConnectionCount;
     struct TWidget *ConnectionList[MAX_CONNECTIONS];
-
-    struct TPowerWidget *List;
 };
 
 struct TCodec
@@ -190,6 +181,14 @@ struct TCodec
     int Id;
     int Address;
     int AudioNode;
+
+    struct TPinComplex *FixedSpeaker;
+
+    int OutputCount;
+    struct TPinComplex *OutputArr[MAX_OUTPUTS];
+
+    int InputCount;
+    struct TPinComplex *InputArr[MAX_INPUTS];
 
     struct TWidget *WidgetArr[MAX_WIDGETS];
 };
@@ -385,7 +384,6 @@ void AddAudioOutput(struct TCodec *codec, int node, int cap, int channels)
     widget->Node = node;
     widget->Cap = cap;
     widget->Channels = channels;
-    widget->List = 0;
 
     for (i = 0; i < MAX_CONNECTIONS; i++)
         widget->ConnectionList[i] = 0;    
@@ -434,7 +432,6 @@ void AddAudioInput(struct TCodec *codec, int node, int cap, int channels)
         widget->Node = node;
         widget->Cap = cap;
         widget->Channels = channels;
-        widget->List = 0;
 
         if (widget->Cap & 2)
         {
@@ -484,7 +481,6 @@ void AddAudioMixer(struct TCodec *codec, int node, int cap, int channels)
         widget->Node = node;
         widget->Cap = cap;
         widget->Channels = channels;
-        widget->List = 0;
 
         if (widget->Cap & 2)
         {
@@ -540,7 +536,6 @@ void AddAudioSelector(struct TCodec *codec, int node, int cap, int channels)
         widget->Node = node;
         widget->Cap = cap;
         widget->Channels = channels;
-        widget->List = 0;
 
         ResetAmp(&widget->InputAmp);
 
@@ -610,6 +605,9 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
     if (conn == 1 && connections == 0)
         use = FALSE;
 
+    if ((cap & 0x6) == 0)
+        use = FALSE;
+
     if (use)
     {
         widget = (struct TPinComplex *)RdosAllocateSmallGlobalMem(sizeof(struct TPinComplex));
@@ -619,7 +617,6 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
         widget->Node = node;
         widget->Cap = cap;
         widget->Channels = channels;
-        widget->List = 0;
         widget->PinCap = GetParam(codec, node, 0xC);
 
         widget->Connectivity = conn;
@@ -653,6 +650,35 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
         widget->ConnectionCount = connections;
 
         codec->WidgetArr[node] = (struct TWidget *)widget;
+
+        switch (widget->Connectivity)
+        {
+            case 0:
+                if (widget->PinCap & 0x10)
+                {
+                    if (codec->OutputCount < MAX_OUTPUTS)
+                    {
+                        codec->OutputArr[codec->OutputCount] = widget;
+                        codec->OutputCount++;
+                    }
+                }
+
+                if (widget->PinCap & 0x20)
+                {
+                    if (codec->InputCount < MAX_OUTPUTS)
+                    {
+                        codec->InputArr[codec->InputCount] = widget;
+                        codec->InputCount++;
+                    }
+                }
+                break;
+
+            default:
+                if (widget->PinCap & 0x10)
+                    if (widget->PinCap & 0x8)
+                        codec->FixedSpeaker = widget;
+                break;
+        }
     }
 }
 
@@ -684,7 +710,6 @@ void AddPowerWidget(struct TCodec *codec, int node, int cap, int channels)
         widget->Node = node;
         widget->Cap = cap;
         widget->Channels = channels;
-        widget->List = 0;
 
         ResetAmp(&widget->InputAmp);
         ResetAmp(&widget->OutputAmp);
@@ -726,6 +751,16 @@ void ProcessCodec(struct TCodec *codec)
 
     for (i = 0; i < MAX_WIDGETS; i++)
         codec->WidgetArr[i] = 0;
+
+    codec->FixedSpeaker = 0;
+    codec->InputCount = 0;
+    codec->OutputCount = 0;
+
+    for (i = 0; i < MAX_OUTPUTS; i++)
+        codec->OutputArr[i] = 0;
+
+    for (i = 0; i < MAX_INPUTS; i++)
+        codec->InputArr[i] = 0;
 
     for (i = 0; i < count; i++)
     {
@@ -1281,6 +1316,18 @@ void GetPinComplexInfo(struct TPinComplex *widget, char *Info)
                 strcat(Info, ", Not connected");
         }
     }
+
+    if (widget->PinCap & 0x40)
+        strcat(Info, ", Balanced");
+
+    if (widget->PinCap & 0x80)
+        strcat(Info, ", HDMI");
+
+    if (widget->PinCap & 0x10000)
+        strcat(Info, ", EAPD");
+
+    if (widget->PinCap & 0x1000000)
+        strcat(Info, ", Display Port");
 }
 
 /*##########################################################################
