@@ -49,7 +49,7 @@ protected:
 	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
     void InitOptions();
 
-    int HasInputAmp(int dev, int codec, int node, int input);
+    int HasInputAmp(int dev, int codec, int node);
     void WriteOutputAmp(int dev, int codec, int node, const char *init);
     void WriteInputAmp(int dev, int codec, int node, int input, const char *init);
     void WriteInputAmpCommon(int dev, int codec, int node, const char *init);
