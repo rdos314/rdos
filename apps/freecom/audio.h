@@ -44,6 +44,20 @@ public:
 	TAudioCommand(TSession *session, const char *param);
 
 	virtual int Execute(char *param);	
+
+protected:
+    int HasInputAmp(int dev, int codec, int node, int input);
+    void WriteOutputAmp(int dev, int codec, int node, const char *init);
+    void WriteInputAmp(int dev, int codec, int node, int input, const char *init);
+    void WriteInputAmpCommon(int dev, int codec, int node, const char *init);
+    void WriteInputList(int dev, int codec, int node);
+    void WriteSelectList(int dev, int codec, int node);
+    void WriteAudioOutput(int dev, int codec, int node);
+    void WriteAudioInput(int dev, int codec, int node);
+    void WriteAudioMixer(int dev, int codec, int node);
+    void WriteAudioSelector(int dev, int codec, int node);
+    void WritePinComplex(int dev, int codec, int node);
+	
 };
 
 #endif

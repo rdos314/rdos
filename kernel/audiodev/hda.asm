@@ -758,13 +758,13 @@ QueryCodec_  Proc near
 ;
     mov bx,es:HdaCorbWp
     inc bx
+    shl bx,2
     cmp bx,ds:CorbSize
     jne qcUpdateCorb
 ;
     xor bx,bx
 
 qcUpdateCorb:
-    shl bx,2
     mov fs:[bx],eax
     shr bx,2
     mov es:HdaCorbWp,bx
@@ -779,6 +779,7 @@ qcRetry:
 ;        
     mov bx,ds:RirbRp
     inc bx
+    shl bx,3
     cmp bx,ds:RirbSize
     jne qcRirpPosOk
 ;
@@ -786,7 +787,6 @@ qcRetry:
 
 qcRirpPosOk:
     mov fs,ds:RirbSel
-    shl bx,3
     mov eax,fs:[bx+4]
     test ax,10h
     jz qcRespOk

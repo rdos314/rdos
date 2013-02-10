@@ -631,4 +631,10 @@ get_audio_output_amp_cap_nr     = 501
 has_audio_input_mute_nr         = 502
 has_audio_output_mute_nr        = 503
 
+read_audio_input_amp_nr         = 504
+read_audio_output_amp_nr        = 505
+
+is_audio_input_amp_muted_nr     = 506
+is_audio_output_amp_muted_nr    = 507
+
 usergate_entries			    = 512

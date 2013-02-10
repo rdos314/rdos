@@ -58,13 +58,6 @@ long long CodeLongLong(int Lsb, int Msb);
 #define MAX_WIDGETS         128
 #define MAX_CONNECTIONS     128
 
-#define WIDGET_TYPE_OUTPUT      1
-#define WIDGET_TYPE_INPUT       2
-#define WIDGET_TYPE_MIXER       3
-#define WIDGET_TYPE_SELECTOR    4
-#define WIDGET_TYPE_PIN         5
-#define WIDGET_TYPE_POWER       6
-
 struct TAmp
 {
     int StepSize;
@@ -399,7 +392,7 @@ void AddAudioOutput(struct TCodec *codec, int node, int cap, int channels)
     int val;
 
     widget = (struct TAudioOutput *)RdosAllocateSmallGlobalMem(sizeof(struct TAudioOutput));
-    widget->Type = WIDGET_TYPE_OUTPUT;
+    widget->Type = AUDIO_WIDGET_TYPE_OUTPUT;
     widget->Id = codec->Id;
     widget->Address = codec->Address;
     widget->Node = node;
@@ -460,7 +453,7 @@ void AddAudioInput(struct TCodec *codec, int node, int cap, int channels)
     if (connections < 0x80)
     {
         widget = (struct TAudioInput *)RdosAllocateSmallGlobalMem(sizeof(struct TAudioInput));
-        widget->Type = WIDGET_TYPE_INPUT;
+        widget->Type = AUDIO_WIDGET_TYPE_INPUT;
         widget->Id = codec->Id;
         widget->Address = codec->Address;
         widget->Node = node;
@@ -522,7 +515,7 @@ void AddAudioMixer(struct TCodec *codec, int node, int cap, int channels)
     if (connections < 0x80)
     {
         widget = (struct TAudioMixer *)RdosAllocateSmallGlobalMem(sizeof(struct TAudioMixer));
-        widget->Type = WIDGET_TYPE_MIXER;
+        widget->Type = AUDIO_WIDGET_TYPE_MIXER;
         widget->Id = codec->Id;
         widget->Address = codec->Address;
         widget->Node = node;
@@ -590,7 +583,7 @@ void AddAudioSelector(struct TCodec *codec, int node, int cap, int channels)
     if (connections < 0x80)
     {
         widget = (struct TAudioSelector *)RdosAllocateSmallGlobalMem(sizeof(struct TAudioSelector));
-        widget->Type = WIDGET_TYPE_SELECTOR;
+        widget->Type = AUDIO_WIDGET_TYPE_SELECTOR;
         widget->Id = codec->Id;
         widget->Address = codec->Address;
         widget->Node = node;
@@ -681,7 +674,7 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
     if (use)
     {
         widget = (struct TPinComplex *)RdosAllocateSmallGlobalMem(sizeof(struct TPinComplex));
-        widget->Type = WIDGET_TYPE_PIN;
+        widget->Type = AUDIO_WIDGET_TYPE_PIN;
         widget->Id = codec->Id;
         widget->Address = codec->Address;
         widget->Node = node;
@@ -819,7 +812,7 @@ void AddPowerWidget(struct TCodec *codec, int node, int cap, int channels)
     if (connections < 0x80)
     {
         widget = (struct TPowerWidget *)RdosAllocateSmallGlobalMem(sizeof(struct TPowerWidget));
-        widget->Type = WIDGET_TYPE_POWER;
+        widget->Type = AUDIO_WIDGET_TYPE_POWER;
         widget->Id = codec->Id;
         widget->Address = codec->Address;
         widget->Node = node;
@@ -1487,27 +1480,27 @@ char GetAudioWidgetInfo(int Device, int CodecNr, int Node, char *Info)
 
         switch (Type)
         {
-            case WIDGET_TYPE_OUTPUT:
+            case AUDIO_WIDGET_TYPE_OUTPUT:
                 GetAudioOutputInfo((struct TAudioOutput *)Widget, Info);
                 break;
 
-            case WIDGET_TYPE_INPUT:
+            case AUDIO_WIDGET_TYPE_INPUT:
                 GetAudioInputInfo((struct TAudioInput *)Widget, Info);
                 break;
 
-            case WIDGET_TYPE_MIXER:
+            case AUDIO_WIDGET_TYPE_MIXER:
                 GetAudioMixerInfo((struct TAudioMixer *)Widget, Info);
                 break;
 
-            case WIDGET_TYPE_SELECTOR:
+            case AUDIO_WIDGET_TYPE_SELECTOR:
                 GetAudioSelectorInfo((struct TAudioSelector *)Widget, Info);
                 break;
 
-            case WIDGET_TYPE_PIN:
+            case AUDIO_WIDGET_TYPE_PIN:
                 GetPinComplexInfo((struct TPinComplex *)Widget, Info);
                 break;
 
-            case WIDGET_TYPE_POWER:
+            case AUDIO_WIDGET_TYPE_POWER:
                 GetPowerWidgetInfo((struct TPowerWidget *)Widget, Info);
                 break;
 
@@ -1831,22 +1824,25 @@ void __far ImplHasAudioOutputMute(int Device, int Codec, int Node)
 int __far ImplReadAudioInputAmp(int Device, int Codec, int Node, int Channel, int Input)
 {
     struct TWidget *Widget;
-    int curr = 0;
+    int val = 0;
 
     Widget = GetWidget(Device, Codec, Node);
 
     if (Widget)
     {
-        if (Widget->Cap & 2)
-            curr = GetInputAmpSetting(Widget, Channel, Input);
-        else
-            curr = 127;
+        if (Widget->InputAmp.NumSteps > 1)
+        {
+            val = GetInputAmpSetting(Widget, Channel, Input);
+            if (val >= 0)
+                val = (val - Widget->InputAmp.Offset) * Widget->InputAmp.StepSize;
+        }                
+            
         RdosSetSuccess();
     }
     else
         RdosSetFailure();
         
-    return curr;
+    return val;
 }
 
 /*##########################################################################
@@ -1864,22 +1860,97 @@ int __far ImplReadAudioInputAmp(int Device, int Codec, int Node, int Channel, in
 int __far ImplReadAudioOutputAmp(int Device, int Codec, int Node, int Channel)
 {
     struct TWidget *Widget;
-    int curr = 0;
+    int val = 0;
 
     Widget = GetWidget(Device, Codec, Node);
 
     if (Widget)
     {
-        if (Widget->Cap & 4)
-            curr = GetOutputAmpSetting(Widget, Channel);
-        else
-            curr = 127;
+        if (Widget->OutputAmp.NumSteps > 1)
+        {
+            val = GetOutputAmpSetting(Widget, Channel);
+            if (val >= 0)
+                val = (val - Widget->OutputAmp.Offset) * Widget->OutputAmp.StepSize;
+        }                
+            
         RdosSetSuccess();
     }
     else
         RdosSetFailure();
         
-    return curr;
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : IsAudioInputAmpMuted
+#
+#   Purpose....: Check if audio input is muted
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplIsAudioInputAmpMuted "*" rdosdev parm routine [eax] [edx] [ebx] [ecx] [esi]
+void __far ImplIsAudioInputAmpMuted(int Device, int Codec, int Node, int Channel, int Input)
+{
+    struct TWidget *Widget;
+    int ok = FALSE;
+    int val;
+
+    Widget = GetWidget(Device, Codec, Node);
+
+    if (Widget)
+    {
+        if (Widget->InputAmp.NumSteps)
+        {
+            val = GetInputAmpSetting(Widget, Channel, Input);
+            if (val < 0)
+                ok = TRUE;
+        }                
+    }
+
+    if (ok)            
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+}
+
+/*##########################################################################
+#
+#   Name       : IsAudioOutputAmpMuted
+#
+#   Purpose....: Check if audio output is muted
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplIsAudioOutputAmpMuted "*" rdosdev parm routine [eax] [edx] [ebx] [ecx] [esi]
+void __far ImplIsAudioOutputAmpMuted(int Device, int Codec, int Node, int Channel, int Input)
+{
+    struct TWidget *Widget;
+    int ok = FALSE;
+    int val;
+
+    Widget = GetWidget(Device, Codec, Node);
+
+    if (Widget)
+    {
+        if (Widget->OutputAmp.NumSteps)
+        {
+            val = GetOutputAmpSetting(Widget, Channel);
+            if (val < 0)
+                ok = TRUE;
+        }
+    }
+
+    if (ok)            
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
 }
     
 /*##########################################################################
@@ -1940,8 +2011,10 @@ int main()
     RdosRegisterBimodalUserGate(usergate_get_audio_output_amp_cap, &ImplGetAudioOutputAmpCap, "Get Audio Output Amp Cap");
     RdosRegisterBimodalUserGate(usergate_has_audio_input_mute, &ImplHasAudioInputMute, "Has Audio Input Mute");
     RdosRegisterBimodalUserGate(usergate_has_audio_output_mute, &ImplHasAudioOutputMute, "Has Audio Output Mute");
-//    RdosRegisterBimodalUserGate(usergate_read_audio_input_amp, &ImplReadAudioInputAmp, "Read Audio Input Amp");
-//    RdosRegisterBimodalUserGate(usergate_read_audio_output_amp, &ImplReadAudioOutputAmp, "Read Audio Output Amp");
+    RdosRegisterBimodalUserGate(usergate_read_audio_input_amp, &ImplReadAudioInputAmp, "Read Audio Input Amp");
+    RdosRegisterBimodalUserGate(usergate_read_audio_output_amp, &ImplReadAudioOutputAmp, "Read Audio Output Amp");
+    RdosRegisterBimodalUserGate(usergate_is_audio_input_amp_muted, &ImplIsAudioInputAmpMuted, "Is Audio Input Amp Muted");
+    RdosRegisterBimodalUserGate(usergate_is_audio_output_amp_muted, &ImplIsAudioOutputAmpMuted, "Is Audio Output Amp Muted");
 
     RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate"); 
 }

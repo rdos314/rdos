@@ -2993,6 +2993,44 @@ HasAudioOutputMute      MACRO
 	UserGate has_audio_output_mute_nr
 	                ENDM
 
+;   IN  EAX         Device #
+;   IN  EDX         Codec #
+;   IN  EBX         Node #
+;   IN  ECX         Channel
+;   IN  EDX         Input
+;   OUT EAX         Current setting
+ReadAudioInputAmp      MACRO
+	UserGate read_audio_input_amp_nr
+	                ENDM
+
+;   IN  EAX         Device #
+;   IN  EDX         Codec #
+;   IN  EBX         Node #
+;   IN  ECX         Channel
+;   OUT EAX         Current setting
+ReadAudioOutputAmp      MACRO
+	UserGate read_audio_output_amp_nr
+	                ENDM
+
+;   IN  EAX         Device #
+;   IN  EDX         Codec #
+;   IN  EBX         Node #
+;   IN  ECX         Channel
+;   IN  EDX         Input
+;   OUT NC          Muted
+IsAudioInputAmpMuted      MACRO
+	UserGate is_audio_input_amp_muted_nr
+	                ENDM
+
+;   IN  EAX         Device #
+;   IN  EDX         Codec #
+;   IN  EBX         Node #
+;   IN  ECX         Channel
+;   OUT NC          Muted
+IsAudioOutputAmpMuted      MACRO
+	UserGate is_audio_output_amp_muted_nr
+	                ENDM
+
 ;;;;;;;;;;; FM synthesis ;;;;;;;;;;
 
 ;   IN  AX          Sample rate

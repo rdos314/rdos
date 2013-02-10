@@ -631,6 +631,12 @@
 #define usergate_has_audio_input_mute 0x000001F6
 #define usergate_has_audio_output_mute 0x000001F7
 
+#define usergate_read_audio_input_amp 0x000001F8
+#define usergate_read_audio_output_amp 0x000001F9
+
+#define usergate_is_audio_input_amp_muted 0x000001FA
+#define usergate_is_audio_output_amp_muted 0x000001FB
+
 
 
 #ifdef __FLAT__
@@ -1267,6 +1273,12 @@
 #define CallGate_has_audio_input_mute 0x67 0x9a 246 1 0 0 3 0
 #define CallGate_has_audio_output_mute 0x67 0x9a 247 1 0 0 3 0
 
+#define CallGate_read_audio_input_amp 0x67 0x9a 248 1 0 0 3 0
+#define CallGate_read_audio_output_amp 0x67 0x9a 249 1 0 0 3 0
+
+#define CallGate_is_audio_input_amp_muted 0x67 0x9a 250 1 0 0 3 0
+#define CallGate_is_audio_output_amp_muted 0x67 0x9a 251 1 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1900,5 +1912,11 @@
 
 #define CallGate_has_audio_input_mute 0x3e 0x67 0x9a 246 1 0 0 3 0
 #define CallGate_has_audio_output_mute 0x3e 0x67 0x9a 247 1 0 0 3 0
+
+#define CallGate_read_audio_input_amp 0x3e 0x67 0x9a 248 1 0 0 3 0
+#define CallGate_read_audio_output_amp 0x3e 0x67 0x9a 249 1 0 0 3 0
+
+#define CallGate_is_audio_input_amp_muted 0x3e 0x67 0x9a 250 1 0 0 3 0
+#define CallGate_is_audio_output_amp_muted 0x3e 0x67 0x9a 251 1 0 0 3 0
 
 #endif

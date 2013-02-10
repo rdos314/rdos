@@ -43,6 +43,13 @@
 #define getblue(pgc)      ((pgc)&0xFF)
 #define mkcolor(r,g,b)    (((r)<<16)|((g)<<8)|(b))
 
+#define AUDIO_WIDGET_TYPE_OUTPUT      1
+#define AUDIO_WIDGET_TYPE_INPUT       2
+#define AUDIO_WIDGET_TYPE_MIXER       3
+#define AUDIO_WIDGET_TYPE_SELECTOR    4
+#define AUDIO_WIDGET_TYPE_PIN         5
+#define AUDIO_WIDGET_TYPE_POWER       6
+
 typedef struct ThreadState
 {
      short int ID;
@@ -215,6 +222,10 @@ void RDOSAPI RdosGetAudioInputAmpCap(int Device, int Codec, int Node, int *min, 
 void RDOSAPI RdosGetAudioOutputAmpCap(int Device, int Codec, int Node, int *min, int *max);
 int RDOSAPI RdosHasAudioInputMute(int Device, int Codec, int Node);
 int RDOSAPI RdosHasAudioOutputMute(int Device, int Codec, int Node);
+int RDOSAPI RdosReadAudioInputAmp(int Device, int Codec, int Node, int Channel, int Input);
+int RDOSAPI RdosReadAudioOutputAmp(int Device, int Codec, int Node, int Channel);
+int RDOSAPI RdosIsAudioInputAmpMuted(int Device, int Codec, int Node, int Channel, int Input);
+int RDOSAPI RdosIsAudioOutputAmpMuted(int Device, int Codec, int Node, int Channel);
 
 void RDOSAPI RdosSetTextMode();
 int RDOSAPI RdosSetVideoMode(int *BitsPerPixel, int *xres, int *yres, int *linesize, void **buffer);

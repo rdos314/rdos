@@ -88,6 +88,458 @@ TAudioCommand::TAudioCommand(TSession *session, const char *param)
 
 /*##########################################################################
 #
+#   Name       : TAudioCommand::WriteOutputAmp
+#
+#   Purpose....: Write output amp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAudioCommand::WriteOutputAmp(int dev, int codec, int node, const char *init)
+{
+    int mute;
+    int min;
+    int max;
+    long double lmin;
+    long double lmax;
+    int val;
+    long double r, l;
+    int mr, ml;
+    char str[40];
+    
+    mute = RdosHasAudioOutputMute(dev, codec, node);
+
+    RdosGetAudioOutputAmpCap(dev, codec, node, &min, &max);
+    if (mute || min || max)
+    {
+        Write(init);
+        
+        if (min || max)
+        {
+            val = RdosReadAudioOutputAmp(dev, codec, node, 0);
+            r = (long double)val / 4.0;
+
+            val = RdosReadAudioOutputAmp(dev, codec, node, 1);
+            l = (long double)val / 4.0;
+
+            if (mute)
+            {
+                mr = RdosIsAudioOutputAmpMuted(dev, codec, node, 0);
+                ml = RdosIsAudioOutputAmpMuted(dev, codec, node, 1);
+            }
+            else
+            {
+                mr = FALSE;
+                ml = FALSE;
+            }
+
+            if ((l == r) && (mr == ml))
+            {
+                if (mr)
+                    Write("Off");
+                else
+                {
+                    sprintf(str, "%0.1Lf", l);
+                    Write(str);
+                }
+            }
+            else
+            {
+                Write("L=");
+
+                if (ml)
+                    Write("Off");
+                else
+                {
+                    sprintf(str, "%0.1Lf", l);
+                    Write(str);
+                }
+
+                Write(", R=");
+
+                if (mr)
+                    Write("Off");
+                else
+                {
+                    sprintf(str, "%0.1Lf", r);
+                    Write(str);
+                }
+            }
+
+            lmin = (long double)min / 4.0;
+            lmax = (long double)max / 4.0;
+
+            sprintf(str, " (%0.1Lf-%0.1Lf)", lmin, lmax, l);
+            Write(str);
+        }
+        else
+        {
+            mr = RdosIsAudioOutputAmpMuted(dev, codec, node, 0);
+            ml = RdosIsAudioOutputAmpMuted(dev, codec, node, 1);
+
+            if (mr == ml)
+            {
+                if (mr)
+                    Write("Off");
+                else
+                    Write("On");
+            }
+            else
+            {
+                Write("L=");
+
+                if (ml)
+                    Write("Off");
+                else
+                    Write("On");
+            
+                Write(", R=");
+
+                if (mr)
+                    Write("Off");
+                else
+                    Write("On");
+            
+            }
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TAudioCommand::WriteInputAmp
+#
+#   Purpose....: Write input amp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAudioCommand::WriteInputAmp(int dev, int codec, int node, int input, const char *init)
+{
+    int mute;
+    int min;
+    int max;
+    int val;
+    long double r, l;
+    int mr, ml;
+    char str[40];
+    
+    mute = RdosHasAudioInputMute(dev, codec, node);
+
+    RdosGetAudioInputAmpCap(dev, codec, node, &min, &max);
+    if (mute || min || max)
+    {
+        if (min || max)
+        {
+            val = RdosReadAudioInputAmp(dev, codec, node, 0, input);
+            r = (long double)val / 4.0;
+
+            val = RdosReadAudioInputAmp(dev, codec, node, 1, input);
+            l = (long double)val / 4.0;
+
+            if (mute)
+            {
+                mr = RdosIsAudioInputAmpMuted(dev, codec, node, 0, input);
+                ml = RdosIsAudioInputAmpMuted(dev, codec, node, 1, input);
+            }
+            else
+            {
+                mr = FALSE;
+                ml = FALSE;
+            }
+
+            if ((l == r) && (mr == ml))
+            {
+                if (!mr)
+                {
+                    Write(init);
+                    sprintf(str, "%0.1Lf", l);
+                    Write(str);
+                }
+            }
+            else
+            {
+                Write(init);
+                Write("L=");
+
+                if (ml)
+                    Write("Off");
+                else
+                {
+                    sprintf(str, "%0.1Lf", l);
+                    Write(str);
+                }
+
+                Write(", R=");
+
+                if (mr)
+                    Write("Off");
+                else
+                {
+                    sprintf(str, "%0.1Lf", r);
+                    Write(str);
+                }
+            }
+        }
+        else
+        {
+            mr = RdosIsAudioInputAmpMuted(dev, codec, node, 0, input);
+            ml = RdosIsAudioInputAmpMuted(dev, codec, node, 1, input);
+
+            if (mr == ml)
+            {
+                if (!mr)
+                    Write("*");
+            }
+            else
+            {
+                Write(init);
+                
+                Write("L=");
+
+                if (ml)
+                    Write("Off");
+                else
+                    Write("On");
+            
+                Write(", R=");
+
+                if (mr)
+                    Write("Off");
+                else
+                    Write("On");
+            
+            }
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TAudioCommand::WriteInputAmpCommon
+#
+#   Purpose....: Write input amp common
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAudioCommand::WriteInputAmpCommon(int dev, int codec, int node, const char *init)
+{
+    int min;
+    int max;
+    long double lmin;
+    long double lmax;
+    char str[40];
+
+    RdosGetAudioInputAmpCap(dev, codec, node, &min, &max);
+    if (min || max)
+    {
+        lmin = (long double)min / 4.0;
+        lmax = (long double)max / 4.0;
+
+        Write(init);
+        sprintf(str, "%0.1Lf-%0.1Lf", lmin, lmax);
+        Write(str);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TAudioCommand::HasInputAmp
+#
+#   Purpose....: Check for input amp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TAudioCommand::HasInputAmp(int dev, int codec, int node, int input)
+{
+    int mute;
+    int min;
+    int max;
+    
+    mute = RdosHasAudioInputMute(dev, codec, node);
+
+    RdosGetAudioInputAmpCap(dev, codec, node, &min, &max);
+    if (mute || min || max)
+        return TRUE;
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TAudioCommand::WriteInputList
+#
+#   Purpose....: Write input list
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAudioCommand::WriteInputList(int dev, int codec, int node)
+{
+    int Count;
+    int i;
+    int ConnectionList[256];
+    char str[40];
+
+    Count = RdosGetAudioWidgetConnectionList(dev, codec, node, ConnectionList);
+
+    if (Count)
+        Write(", (");
+
+    for (i = 0; i < Count; i++)
+    {
+        sprintf(str, "%d", ConnectionList[i]);
+        Write(str);
+        strcpy(str, ": ");
+        WriteInputAmp(dev, codec, node, i, str);
+
+        if (i == Count - 1)
+            Write(")");
+        else
+            Write(", ");
+    }
+
+    WriteInputAmpCommon(dev, codec, node, ", ");
+}
+
+/*##########################################################################
+#
+#   Name       : TAudioCommand::WriteSelectList
+#
+#   Purpose....: Write select list
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAudioCommand::WriteSelectList(int dev, int codec, int node)
+{
+    int Count;
+    int CurrConn;
+    int i;
+    int ConnectionList[256];
+    char str[40];
+
+    Count = RdosGetAudioWidgetConnectionList(dev, codec, node, ConnectionList);
+
+    if (Count)
+    {
+        Write(" (");
+        CurrConn = RdosGetSelectedAudioConnection(dev, codec, node);
+    }
+
+    for (i = 0; i < Count; i++)
+    {
+        sprintf(str, "%d", ConnectionList[i]);
+        Write(str);
+
+        if (CurrConn == i)
+            Write("*");
+                                                    
+        if (i == Count - 1)
+            Write(")");
+        else
+            Write(", ");
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TAudioCommand::WriteAudioOutput
+#
+#   Purpose....: Write audio output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAudioCommand::WriteAudioOutput(int dev, int codec, int node)
+{
+    WriteOutputAmp(dev, codec, node, ", ");
+}
+
+/*##########################################################################
+#
+#   Name       : TAudioCommand::WriteAudioInput
+#
+#   Purpose....: Write audio input
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAudioCommand::WriteAudioInput(int dev, int codec, int node)
+{
+    WriteInputList(dev, codec, node);
+}
+
+/*##########################################################################
+#
+#   Name       : TAudioCommand::WriteAudioMixer
+#
+#   Purpose....: Write audio mixer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAudioCommand::WriteAudioMixer(int dev, int codec, int node)
+{
+    WriteOutputAmp(dev, codec, node, ", ");
+    WriteInputList(dev, codec, node);
+}
+
+/*##########################################################################
+#
+#   Name       : TAudioCommand::WriteAudioSelector
+#
+#   Purpose....: Write audio selector
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAudioCommand::WriteAudioSelector(int dev, int codec, int node)
+{
+    WriteSelectList(dev, codec, node);
+}
+
+/*##########################################################################
+#
+#   Name       : TAudioCommand::WritePinComplex
+#
+#   Purpose....: Write pin complex
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAudioCommand::WritePinComplex(int dev, int codec, int node)
+{
+    WriteOutputAmp(dev, codec, node, ", ");
+    WriteInputList(dev, codec, node);
+}
+
+/*##########################################################################
+#
 #   Name       : TAudioCommand::Execute
 #
 #   Purpose....: Execute command
@@ -134,78 +586,39 @@ int TAudioCommand::Execute(char *param)
             for (k = 0; k < 128; k++)
             {
                 Type = RdosGetAudioWidgetInfo(i, j, k, Info);
+
                 if (Type)
                 {
                     sprintf(str, "%3d: ", k); 
                     Write(str);
                     Write(Info);
+                }
+                
+                switch (Type)
+                {
+                    case AUDIO_WIDGET_TYPE_OUTPUT:
+                        WriteAudioOutput(i, j, k);
+                        break;
 
-                    mute = RdosHasAudioInputMute(i, j, k);
+                    case AUDIO_WIDGET_TYPE_INPUT:
+                        WriteAudioInput(i, j, k);
+                        break;
 
-                    RdosGetAudioInputAmpCap(i, j, k, &min, &max);
-                    if (mute || min || max)
-                    {
-                        Write(", In: ");
-                        lmin = (long double)min / 4.0;
-                        lmax = (long double)max / 4.0;
+                    case AUDIO_WIDGET_TYPE_MIXER:
+                        WriteAudioMixer(i, j, k);
+                        break;
 
-                        if (min || max)
-                        {
-                            sprintf(str, "%0.1Lf-%0.1Lf", lmin, lmax);
-                            Write(str);
+                    case AUDIO_WIDGET_TYPE_SELECTOR:
+                        WriteAudioSelector(i, j, k);
+                        break;
 
-                            if (mute)
-                                Write("/mute");
-                        }
-                        else                        
-                            Write("mute");
-                    }
+                    case AUDIO_WIDGET_TYPE_PIN:
+                        WritePinComplex(i, j, k);
+                        break;
+                }
 
-                    mute = RdosHasAudioOutputMute(i, j, k);
-
-                    RdosGetAudioOutputAmpCap(i, j, k, &min, &max);
-                    if (mute || min || max)
-                    {
-                        Write(", Out: ");
-                        lmin = (long double)min / 4.0;
-                        lmax = (long double)max / 4.0;
-
-                        if (min || max)
-                        {
-                            sprintf(str, "%0.1Lf-%0.1Lf", lmin, lmax);
-                            Write(str);
-
-                            if (mute)
-                                Write("/mute");
-                        }
-                        else                        
-                            Write("mute");
-                    }
-
-                    Count = RdosGetAudioWidgetConnectionList(i, j, k, ConnectionList);
-
-                    if (Count)
-                    {
-                        Write(" (");
-                        CurrConn = RdosGetSelectedAudioConnection(i, j, k);
-                    }
-
-                    for (l = 0; l < Count; l++)
-                    {
-                        if (CurrConn == l)
-                            Write("*");
-                            
-                        sprintf(str, "%d", ConnectionList[l]);
-                        Write(str);
-                        
-                        if (l == Count - 1)
-                            Write(")");
-                        else
-                            Write(", ");
-                    }
-
-                    Write("\r\n");
-                }                                
+                if (Type)
+                    Write("\r\n");                        
             }            
         }     
     }    

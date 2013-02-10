@@ -315,6 +315,28 @@
     parm [eax] [edx] [ebx] \
     value [eax] \
 
+#pragma aux RdosReadAudioInputAmp = \
+    CallGate_read_audio_input_amp  \
+    parm [eax] [edx] [ebx] [ecx] [esi]   \
+    value [eax];
+
+#pragma aux RdosReadAudioOutputAmp = \
+    CallGate_read_audio_output_amp  \
+    parm [eax] [edx] [ebx] [ecx] \
+    value [eax];
+
+#pragma aux RdosIsAudioInputAmpMuted = \
+    CallGate_is_audio_input_amp_muted  \
+    CarryToBool \
+    parm [eax] [edx] [ebx] [ecx] [esi]   \
+    value [eax];
+
+#pragma aux RdosIsAudioOutputAmpMuted = \
+    CallGate_is_audio_output_amp_muted  \
+    CarryToBool \
+    parm [eax] [edx] [ebx] [ecx] \
+    value [eax];
+
 #pragma aux RdosSetTextMode = \
     "mov ax,3"  \
     CallGate_set_video_mode  \
