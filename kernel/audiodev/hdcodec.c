@@ -190,18 +190,6 @@ struct TCodec
     int Id;
     int Address;
     int AudioNode;
-    struct TAudioOutput *AudioOutputList;
-    struct TAudioInput *AudioInputList;
-    struct TAudioMixer *AudioMixerList;
-    struct TAudioSelector *AudioSelectorList;
-    struct TPowerWidget *PowerWidgetList;
-    struct TPinComplex *LineOutList;
-    struct TPinComplex *LineInList;
-    struct TPinComplex *SpeakerList;
-    struct TPinComplex *HpOutList;
-    struct TPinComplex *CdList;
-    struct TPinComplex *AuxList;
-    struct TPinComplex *MicList;
 
     struct TWidget *WidgetArr[MAX_WIDGETS];
 };
@@ -387,7 +375,6 @@ void DefineAmp(struct TAmp *amp, int val)
 void AddAudioOutput(struct TCodec *codec, int node, int cap, int channels)
 {
     struct TAudioOutput *widget;
-    struct TAudioOutput *p;
     int i;
     int val;
 
@@ -415,17 +402,6 @@ void AddAudioOutput(struct TCodec *codec, int node, int cap, int channels)
 
     widget->ConnectionCount = 0;
 
-    p = codec->AudioOutputList;
-    if (p)
-    {
-        while (p->List)
-            p = p->List;
-
-        p->List = widget;
-    }
-    else
-        codec->AudioOutputList = widget;
-
     codec->WidgetArr[node] = (struct TWidget *)widget;
 }
 
@@ -443,7 +419,6 @@ void AddAudioOutput(struct TCodec *codec, int node, int cap, int channels)
 void AddAudioInput(struct TCodec *codec, int node, int cap, int channels)
 {
     struct TAudioInput *widget;
-    struct TAudioInput *p;
     int connections;
     int i;
     int val;
@@ -476,17 +451,6 @@ void AddAudioInput(struct TCodec *codec, int node, int cap, int channels)
 
         widget->ConnectionCount = connections;
 
-        p = codec->AudioInputList;
-        if (p)
-        {
-            while (p->List)
-                p = p->List;
-
-            p->List = widget;
-        }
-        else
-            codec->AudioInputList = widget;
-
         codec->WidgetArr[node] = (struct TWidget *)widget;
     }
 }
@@ -505,7 +469,6 @@ void AddAudioInput(struct TCodec *codec, int node, int cap, int channels)
 void AddAudioMixer(struct TCodec *codec, int node, int cap, int channels)
 {
     struct TAudioMixer *widget;
-    struct TAudioMixer *p;
     int connections;
     int i;
     int val;
@@ -544,17 +507,6 @@ void AddAudioMixer(struct TCodec *codec, int node, int cap, int channels)
 
         widget->ConnectionCount = connections;
 
-        p = codec->AudioMixerList;
-        if (p)
-        {
-            while (p->List)
-                p = p->List;
-
-            p->List = widget;
-        }
-        else
-            codec->AudioMixerList = widget;
-
         codec->WidgetArr[node] = (struct TWidget *)widget;
     }
 }
@@ -573,7 +525,6 @@ void AddAudioMixer(struct TCodec *codec, int node, int cap, int channels)
 void AddAudioSelector(struct TCodec *codec, int node, int cap, int channels)
 {
     struct TAudioSelector *widget;
-    struct TAudioSelector *p;
     int connections;
     int i;
     int val;
@@ -606,17 +557,6 @@ void AddAudioSelector(struct TCodec *codec, int node, int cap, int channels)
 
         widget->ConnectionCount = connections;
 
-        p = codec->AudioSelectorList;
-        if (p)
-        {
-            while (p->List)
-                p = p->List;
-
-            p->List = widget;
-        }
-        else
-            codec->AudioSelectorList = widget;
-
         codec->WidgetArr[node] = (struct TWidget *)widget;
     }
 }
@@ -635,7 +575,6 @@ void AddAudioSelector(struct TCodec *codec, int node, int cap, int channels)
 void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
 {
     struct TPinComplex *widget;
-    struct TPinComplex *p;
     int val;
     int dev;
     int conn;
@@ -713,78 +652,6 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
 
         widget->ConnectionCount = connections;
 
-        switch (dev)
-        {
-            case 0:
-                p = codec->LineOutList;
-                break;
-                
-            case 1:
-                p = codec->SpeakerList;
-                break;
-                
-            case 2:
-                p = codec->HpOutList;
-                break;
-                
-            case 3:
-                p = codec->CdList;
-                break;
-
-            case 8:
-                p = codec->LineInList;
-                break;
-
-            case 9:
-                p = codec->AuxList;
-                break;
-                
-            case 10:
-                p = codec->MicList;
-                break;
-        }
-
-        if (p)
-        {
-            while (p->List)
-                p = p->List;
-
-            p->List = widget;
-        }
-        else
-        {
-            switch (dev)
-            {
-                case 0:
-                    codec->LineOutList = widget;
-                    break;
-                
-                case 1:
-                    codec->SpeakerList = widget;
-                    break;
-                
-                case 2:
-                    codec->HpOutList = widget;
-                    break;
-                
-                case 3:
-                    codec->CdList = widget;
-                    break;
-
-                case 8:
-                    codec->LineInList = widget;
-                    break;
-
-                case 9:
-                    codec->AuxList = widget;
-                    break;
-                
-                case 10:
-                    codec->MicList = widget;
-                    break;
-            }
-        }
-
         codec->WidgetArr[node] = (struct TWidget *)widget;
     }
 }
@@ -803,7 +670,6 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
 void AddPowerWidget(struct TCodec *codec, int node, int cap, int channels)
 {
     struct TPowerWidget *widget;
-    struct TPowerWidget *p;
     int connections;
     int i;
 
@@ -827,17 +693,6 @@ void AddPowerWidget(struct TCodec *codec, int node, int cap, int channels)
             widget->ConnectionList[i] = 0;    
 
         widget->ConnectionCount = connections;
-
-        p = codec->PowerWidgetList;
-        if (p)
-        {
-            while (p->List)
-                p = p->List;
-
-            p->List = widget;
-        }
-        else
-            codec->PowerWidgetList = widget;
 
         codec->WidgetArr[node] = (struct TWidget *)widget;
     }
@@ -868,18 +723,6 @@ void ProcessCodec(struct TCodec *codec)
     node = (val >> 16) & 0xFF;
 
     codec->AudioNode = 0;
-    codec->AudioOutputList = 0;
-    codec->AudioInputList = 0;
-    codec->AudioMixerList = 0;
-    codec->AudioSelectorList = 0;
-    codec->PowerWidgetList = 0;
-    codec->LineOutList = 0;
-    codec->LineInList = 0;
-    codec->SpeakerList = 0;
-    codec->HpOutList = 0;
-    codec->CdList = 0;
-    codec->AuxList = 0;
-    codec->MicList = 0;
 
     for (i = 0; i < MAX_WIDGETS; i++)
         codec->WidgetArr[i] = 0;
