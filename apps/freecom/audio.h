@@ -61,6 +61,7 @@ protected:
     void WriteAudioSelector(int dev, int codec, int node);
     void WritePinComplex(int dev, int codec, int node);
     void ShowFull();
+    void ShowDevices();
 
 	int FOptD;
 	

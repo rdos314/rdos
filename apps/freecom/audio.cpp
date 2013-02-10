@@ -664,6 +664,97 @@ void TAudioCommand::ShowFull()
 
 /*##########################################################################
 #
+#   Name       : TAudioCommand::ShowDevice
+#
+#   Purpose....: Show devices
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAudioCommand::ShowDevices()
+{
+    int ok;
+    int i;
+    int dev;
+    int codec;
+    int node;
+    char Info[512];
+
+    ok = RdosGetFixedAudioOutput(&dev, &codec, &node);
+    if (ok)
+    {
+        Write("Fixed output:\r\n1: ");
+
+        WriteOutputAmp(dev, codec, node, "");
+        Write(", ");
+        
+        RdosGetAudioWidgetInfo(dev, codec, node, Info);
+        Write(Info);
+
+        sprintf(Info, " (%d.%d.%d)", dev, codec, node); 
+        Write(Info);
+        Write("\r\n\r\n");
+    }
+
+    for (i = 0; i < 256; i++)
+    {
+        ok = RdosGetJackAudioOutput(i, &dev, &codec, &node);
+        if (ok)
+        {
+            if (i == 0)
+                Write("Jack output:\r\n");                
+
+            sprintf(Info, "%d: ", i + 1);
+            Write(Info);
+
+            WriteOutputAmp(dev, codec, node, "");
+            Write(", ");
+            
+            RdosGetAudioWidgetInfo(dev, codec, node, Info);
+            Write(Info);
+
+            sprintf(Info, " (%d.%d.%d)", dev, codec, node); 
+            Write(Info);
+            Write("\r\n");
+        }
+        else
+        {
+            if (i != 0)
+                Write("\r\n");
+            break;
+        }
+    }
+
+    for (i = 0; i < 256; i++)
+    {
+        ok = RdosGetJackAudioInput(i, &dev, &codec, &node);
+        if (ok)
+        {
+            if (i == 0)
+                Write("Jack input:\r\n");                
+
+            sprintf(Info, "%d: ", i + 1);
+            Write(Info);
+
+            RdosGetAudioWidgetInfo(dev, codec, node, Info);
+            Write(Info);
+            sprintf(Info, " (%d.%d.%d)", dev, codec, node); 
+            Write(Info);
+            Write("\r\n");
+        }
+        else
+        {
+            if (i != 0)
+                Write("\r\n");
+            break;
+        }
+    }
+}    
+
+/*##########################################################################
+#
 #   Name       : TAudioCommand::Execute
 #
 #   Purpose....: Execute command
@@ -685,6 +776,11 @@ int TAudioCommand::Execute(char *param)
     if (FOptD)
     {
         ShowFull();
+        return 0;
+    }
+    else
+    {
+        ShowDevices();
         return 0;
     }
 

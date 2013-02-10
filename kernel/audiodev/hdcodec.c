@@ -203,6 +203,9 @@ static struct TPinComplex *OutputArr[MAX_OUTPUTS];
 static int InputCount = 0;
 static struct TPinComplex *InputArr[MAX_INPUTS];
 
+static int ForceFixed = FALSE;
+static int ForceOutput = -1;
+
 /*##########################################################################
 #
 #   Name       : Query
@@ -233,26 +236,6 @@ int Query(struct TCodec *codec, int node, int verb)
 int GetParam(struct TCodec *codec, int node, int param)
 {
     return Query(codec, node, 0xF0000 + param);
-}
-
-#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
-
-void __far ImplTestGate(const char *msg)
-{
-    int i;
-    int j;
-    struct TFunction *function;
-    struct TCodec *codec;
-
-    for (i = 0; i < FunctionCount; i++)
-    {
-        function = FunctionArr[i];
-
-        for (j = 0; j < function->CodecCount; j++)
-        {
-            codec = function->CodecArr[j];
-        }
-    }
 }
 
 /*##########################################################################
@@ -1845,7 +1828,7 @@ void __far ImplIsAudioOutputAmpMuted(int Device, int Codec, int Node, int Channe
 #
 ##########################################################################*/
 #pragma aux GetFixedOutput "*" rdosdev parm routine value [dx eax]
-struct TWidget *GetFixedOutput()
+struct TPinComplex *GetFixedOutput()
 {
     return FixedSpeaker;
 }
@@ -1862,7 +1845,7 @@ struct TWidget *GetFixedOutput()
 #
 ##########################################################################*/
 #pragma aux GetOutputJack "*" rdosdev parm routine [ebx] value [dx eax]
-struct TWidget *GetOutputJack(int num)
+struct TPinComplex *GetOutputJack(int num)
 {
     if (num < OutputCount)
         return OutputArr[num];
@@ -1882,14 +1865,78 @@ struct TWidget *GetOutputJack(int num)
 #
 ##########################################################################*/
 #pragma aux GetInputJack "*" rdosdev parm routine [ebx] value [dx eax]
-struct TWidget *GetInputJack(int num)
+struct TPinComplex *GetInputJack(int num)
 {
     if (num < InputCount)
         return InputArr[num];
     else
         return 0;
 }
+
+/*##########################################################################
+#
+#   Name       : DetermineActiveOutput
+#
+#   Purpose....: Determine active output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+struct TPinComplex *DetermineActiveOutput()
+{
+    int i;
+    int found = FALSE;
+    struct TPinComplex *widget;
+
+    if (ForceFixed && FixedSpeaker)
+    {
+        widget = FixedSpeaker;
+        found = TRUE;
+    }
     
+    if (!found)
+    {
+        if (ForceOutput >= 0 && ForceOutput < OutputCount)
+        {
+            widget = OutputArr[ForceOutput];
+            found = TRUE;
+        }
+    } 
+
+    for (i = 0; i < OutputCount && !found; i++)
+    {
+        widget = OutputArr[i];
+        if (widget->PinCap & 0x4)
+            if ((widget->Misc & 0x1) == 0)
+                if (PresentDetect(widget))
+                    found = TRUE;
+    }
+
+    if (!found && FixedSpeaker)
+    {
+        widget = FixedSpeaker;
+        found = TRUE;
+    }
+
+    for (i = 0; i < OutputCount && !found; i++)
+    {
+        widget = OutputArr[i];
+        if ((widget->PinCap & 0x4) == 0)
+            found = TRUE;
+    }
+}
+
+#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
+
+void __far ImplTestGate(const char *msg)
+{
+    struct TPinComplex *widget;
+
+    widget = DetermineActiveOutput();
+}
+
 /*##########################################################################
 #
 #   Name       : HdaThread
