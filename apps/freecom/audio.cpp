@@ -179,8 +179,13 @@ void TAudioCommand::WriteOutputAmp(int dev, int codec, int node, const char *ini
                     Write("Off");
                 else
                 {
-                    sprintf(str, "%0.1Lf", l);
-                    Write(str);
+                    if (l == 0)
+                        Write("On");
+                    else
+                    {
+                        sprintf(str, "%0.1Lf", l);
+                        Write(str);
+                    }
                 }
             }
             else
@@ -294,9 +299,14 @@ void TAudioCommand::WriteInputAmp(int dev, int codec, int node, int input, const
             {
                 if (!mr)
                 {
-                    Write(init);
-                    sprintf(str, "%0.1Lf", l);
-                    Write(str);
+                    if (l == 0)
+                        Write("*");
+                    else
+                    {
+                        Write(init);
+                        sprintf(str, "%0.1Lf", l);
+                        Write(str);
+                    }
                 }
             }
             else
