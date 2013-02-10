@@ -259,9 +259,11 @@
     value [ecx];
 
 #pragma aux RdosGetAudioWidgetInfo = \
-    "xor eax,eax" \
     CallGate_get_audio_widget_info  \
     "movzx eax,al" \    
+    "jnc done" \
+    "xor eax,eax" \
+    "done: " \
     parm [eax] [edx] [ebx] [edi]    \
     value [eax];
 
