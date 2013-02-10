@@ -1875,6 +1875,73 @@ struct TPinComplex *GetInputJack(int num)
 
 /*##########################################################################
 #
+#   Name       : RawSeOutputAmp
+#
+#   Purpose....: Set raw output amp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void RawSetOutputAmp(struct TWidget *widget, struct TAmp *amp, int l, int r)
+{
+    int verb;
+
+    if (l == r)
+    {
+        verb = 0x3B000;
+        verb |= l;
+        QueryCodec(widget->Id, widget->Address, widget->Node, verb);
+    }
+    else
+    {
+        verb = 0x39000;
+        verb |= r;
+        QueryCodec(widget->Id, widget->Address, widget->Node, verb);
+
+        verb = 0x3A000;
+        verb |= l;
+        QueryCodec(widget->Id, widget->Address, widget->Node, verb);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : SetOutputAmp
+#
+#   Purpose....: Set output amp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void SetOutputAmp(struct TWidget *widget, int l, int r)
+{
+    int lval;
+    int rval;
+    struct TAmp *amp = &widget->OutputAmp;
+    
+    switch (amp->NumSteps)
+    {
+        case 0:
+            break;
+
+        case 1:
+            RawSetOutputAmp(widget, amp, amp->Offset, amp->Offset);
+            break;
+
+        default:
+            lval = l / amp->StepSize + amp->Offset;
+            rval = r / amp->StepSize + amp->Offset;
+            RawSetOutputAmp(widget, amp, lval, rval);
+            break;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : DetermineActiveOutput
 #
 #   Purpose....: Determine active output
@@ -1926,15 +1993,21 @@ struct TPinComplex *DetermineActiveOutput()
         if ((widget->PinCap & 0x4) == 0)
             found = TRUE;
     }
+
+    if (found)
+        return widget;
+    else
+        return 0;
 }
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
-    struct TPinComplex *widget;
+    struct TWidget *widget;
 
-    widget = DetermineActiveOutput();
+    widget = (struct TWidget *)DetermineActiveOutput();
+    SetOutputAmp(widget, 0, 0);
 }
 
 /*##########################################################################
