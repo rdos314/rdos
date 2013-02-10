@@ -1942,6 +1942,74 @@ void SetOutputAmp(struct TWidget *widget, int l, int r)
 
 /*##########################################################################
 #
+#   Name       : FindSingleOutputPath
+#
+#   Purpose....: Find an output path
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int FindSingleOutputPath(struct TWidget *widget, int MaxIterations)
+{
+    int i;
+    int res;
+    struct TWidget *w;
+
+    if (MaxIterations == 0)
+        return -1;
+
+    switch (widget->Type)
+    {
+        case AUDIO_WIDGET_TYPE_OUTPUT:
+        case AUDIO_WIDGET_TYPE_INPUT:
+        case AUDIO_WIDGET_TYPE_SELECTOR:
+            return -1;
+    }
+
+    for (i = 0; i < widget->ConnectionCount; i++)
+    {
+        w = widget->ConnectionList[i];
+        if (w->Type == AUDIO_WIDGET_TYPE_OUTPUT)
+            return i;
+
+        res = FindSingleOutputPath(w, MaxIterations - 1);
+        if (res >= 0)
+            return i;                    
+    }
+
+    return -1;
+}
+
+/*##########################################################################
+#
+#   Name       : FindOutputPath
+#
+#   Purpose....: Find an output path
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int FindOutputPath(struct TWidget *widget)
+{
+    int i;
+    int res;
+
+    for (i = 1; i < 8; i++)
+    {
+        res = FindSingleOutputPath(widget, i);
+        if (res >= 0)
+            return res;
+    }
+
+    return -1;
+}
+
+/*##########################################################################
+#
 #   Name       : DetermineActiveOutput
 #
 #   Purpose....: Determine active output
@@ -2005,9 +2073,12 @@ struct TPinComplex *DetermineActiveOutput()
 void __far ImplTestGate(const char *msg)
 {
     struct TWidget *widget;
+    int i;
 
     widget = (struct TWidget *)DetermineActiveOutput();
     SetOutputAmp(widget, 0, 0);
+
+    i = FindOutputPath(widget);
 }
 
 /*##########################################################################
