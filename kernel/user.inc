@@ -3031,6 +3031,29 @@ IsAudioOutputAmpMuted      MACRO
 	UserGate is_audio_output_amp_muted_nr
 	                ENDM
 
+;   OUT EAX         Device #
+;   OUT EDX         Codec #
+;   OUT ECX         Node #
+GetFixedAudioOutput      MACRO
+	UserGate get_fixed_audio_output_nr
+	                ENDM
+
+;   IN  EBX         Jack #
+;   OUT EAX         Device #
+;   OUT EDX         Codec #
+;   OUT ECX         Node #
+GetJackAudioOutput      MACRO
+	UserGate get_jack_audio_output_nr
+	                ENDM
+
+;   IN  EBX         Jack #
+;   OUT EAX         Device #
+;   OUT EDX         Codec #
+;   OUT ECX         Node #
+GetJackAudioInput      MACRO
+	UserGate get_jack_audio_input_nr
+	                ENDM
+
 ;;;;;;;;;;; FM synthesis ;;;;;;;;;;
 
 ;   IN  AX          Sample rate

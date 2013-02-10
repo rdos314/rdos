@@ -35,6 +35,16 @@ INCLUDE ..\pcdev\pci.inc
 
 REQ_RESET   = 1
 
+widget_base STRUC
+
+wb_type     DD ?
+wb_id       DD ?
+wb_address  DD ?
+wb_node     DD ?
+wb_channels DD ?
+
+widget_base ENDS
+
 hda_reg STRUC
 
 HdaGcap         DW ?
@@ -104,6 +114,127 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
+    extrn GetFixedOutput:near
+    extrn GetOutputJack:near
+    extrn GetInputJack:near
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetFixedOutput
+;
+;           DESCRIPTION:    Get fixed output
+;
+;           RETURNS:        NC      Available
+;                           EAX     Function
+;                           EDX     Codec
+;                           ECX     Node
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_fixed_output_name DB 'Get Fixed Audio Output',0
+
+get_fixed_output      Proc far
+    push es
+    push edi
+;    
+    call GetFixedOutput
+    or dx,dx
+    stc
+    jz gfoDone
+;
+    mov es,dx
+    mov edi,eax
+    mov eax,es:[edi].wb_id
+    mov edx,es:[edi].wb_address
+    mov ecx,es:[edi].wb_node
+    clc
+
+gfoDone:
+    pop edi
+    pop es
+    ret    
+get_fixed_output  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetJackOutput
+;
+;           DESCRIPTION:    Get jack output
+;
+;           PARAMETERS:     EBX     Jack #
+;
+;           RETURNS:        NC      Available
+;                           EAX     Function
+;                           EDX     Codec
+;                           ECX     Node
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_jack_output_name DB 'Get Jack Audio Output',0
+
+get_jack_output      Proc far
+    push es
+    push edi
+;    
+    call GetOutputJack
+    or dx,dx
+    stc
+    jz gjoDone
+;
+    mov es,dx
+    mov edi,eax
+    mov eax,es:[edi].wb_id
+    mov edx,es:[edi].wb_address
+    mov ecx,es:[edi].wb_node
+    clc
+
+gjoDone:
+    pop edi
+    pop es
+    ret    
+get_jack_output  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetJackInput
+;
+;           DESCRIPTION:    Get jack input
+;
+;           PARAMETERS:     EBX     Jack #
+;
+;           RETURNS:        NC      Available
+;                           EAX     Function
+;                           EDX     Codec
+;                           ECX     Node
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_jack_input_name DB 'Get Jack Audio Input',0
+
+get_jack_input      Proc far
+    push es
+    push edi
+;    
+    call GetInputJack
+    or dx,dx
+    stc
+    jz gjiDone
+;
+    mov es,dx
+    mov edi,eax
+    mov eax,es:[edi].wb_id
+    mov edx,es:[edi].wb_address
+    mov ecx,es:[edi].wb_node
+    clc
+
+gjiDone:
+    pop edi
+    pop es
+    ret    
+get_jack_input  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -999,6 +1130,24 @@ InitHda_    PROC near
     xor cl,cl
     mov ax,send_audio_out_nr
     RegisterOsGate
+;
+    mov esi,OFFSET get_fixed_output
+    mov edi,OFFSET get_fixed_output_name
+    xor dx,dx
+    mov ax,get_fixed_audio_output_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_jack_output
+    mov edi,OFFSET get_jack_output_name
+    xor dx,dx
+    mov ax,get_jack_audio_output_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_jack_input
+    mov edi,OFFSET get_jack_input_name
+    xor dx,dx
+    mov ax,get_jack_audio_input_nr
+    RegisterBimodalUserGate
 ;
     popad
     pop es

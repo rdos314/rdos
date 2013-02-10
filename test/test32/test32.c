@@ -7,10 +7,12 @@
 
 void main()
 {
-    int min;
-    int max;
+    int ok;
+    int dev;
+    int codec;
+    int node;
 
-    RdosGetAudioInputAmpCap(0, 0, 12, &min, &max);
+    ok = RdosGetFixedAudioOutput(&dev, &codec, &node);
         
     RdosTestGate();    
 }

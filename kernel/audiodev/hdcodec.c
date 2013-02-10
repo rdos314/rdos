@@ -1832,6 +1832,63 @@ void __far ImplIsAudioOutputAmpMuted(int Device, int Codec, int Node, int Channe
     else
         RdosSetFailure();
 }
+
+/*##########################################################################
+#
+#   Name       : GetFixedOutput
+#
+#   Purpose....: Get fixed output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux GetFixedOutput "*" rdosdev parm routine value [dx eax]
+struct TWidget *GetFixedOutput()
+{
+    return FixedSpeaker;
+}
+
+/*##########################################################################
+#
+#   Name       : GetOutputJack
+#
+#   Purpose....: Get output jack
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux GetOutputJack "*" rdosdev parm routine [ebx] value [dx eax]
+struct TWidget *GetOutputJack(int num)
+{
+    if (num < OutputCount)
+        return OutputArr[num];
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : GetInputJack
+#
+#   Purpose....: Get input jack
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux GetInputJack "*" rdosdev parm routine [ebx] value [dx eax]
+struct TWidget *GetInputJack(int num)
+{
+    if (num < InputCount)
+        return InputArr[num];
+    else
+        return 0;
+}
     
 /*##########################################################################
 #

@@ -339,6 +339,60 @@
     parm [eax] [edx] [ebx] [ecx] \
     value [eax];
 
+#pragma aux RdosGetFixedAudioOutput = \
+    "push ecx" \
+    CallGate_get_fixed_audio_output  \
+    "jnc save" \
+    "xor eax,eax" \
+    "xor ecx,ecx" \
+    "xor edx,edx" \
+    "stc" \
+    "save: " \
+    "mov [esi],eax" \
+    "mov [edi],edx" \
+    "mov eax,ecx" \
+    "pop ecx" \
+    "mov [ecx],eax" \
+    CarryToBool \
+    parm [esi] [edi] [ecx] \
+    value [eax];
+
+#pragma aux RdosGetJackAudioOutput = \
+    "push ecx" \
+    CallGate_get_jack_audio_output  \
+    "jnc save" \
+    "xor eax,eax" \
+    "xor ecx,ecx" \
+    "xor edx,edx" \
+    "stc" \
+    "save: " \
+    "mov [esi],eax" \
+    "mov [edi],edx" \
+    "mov eax,ecx" \
+    "pop ecx" \
+    "mov [ecx],eax" \
+    CarryToBool \
+    parm [ebx] [esi] [edi] [ecx] \
+    value [eax];
+
+#pragma aux RdosGetJackAudioInput = \
+    "push ecx" \
+    CallGate_get_jack_audio_input  \
+    "jnc save" \
+    "xor eax,eax" \
+    "xor ecx,ecx" \
+    "xor edx,edx" \
+    "stc" \
+    "save: " \
+    "mov [esi],eax" \
+    "mov [edi],edx" \
+    "mov eax,ecx" \
+    "pop ecx" \
+    "mov [ecx],eax" \
+    CarryToBool \
+    parm [ebx] [esi] [edi] [ecx] \
+    value [eax];
+
 #pragma aux RdosSetTextMode = \
     "mov ax,3"  \
     CallGate_set_video_mode  \
