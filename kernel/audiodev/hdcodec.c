@@ -218,10 +218,8 @@ struct TVolumeControl *OutputVolumeArr[MAX_VOLUME_CONTROLS];
 static int InputCount = 0;
 static struct TPinComplex *InputArr[MAX_INPUTS];
 
-static int OutputLMute = FALSE;
+static int OutputMute = FALSE;
 static int OutputLVol = 0;
-
-static int OutputRMute = FALSE;
 static int OutputRVol = 0;
 
 static int ForceFixed = FALSE;
@@ -1839,71 +1837,6 @@ void __far ImplIsAudioOutputAmpMuted(int Device, int Codec, int Node, int Channe
 
 /*##########################################################################
 #
-#   Name       : GetAudioOutputVolume
-#
-#   Purpose....: Get audio output volume
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-#pragma aux ImplGetAudioOutputVolume "*" rdosdev parm routine value [edx eax]
-long long __far ImplGetAudioOutputVolume()
-{
-    int l, r;
-    long long val = 0;
-
-    if (OutputLMute)
-        l = -1;
-    else
-        l = (400 - OutputLVol) / 4;
-
-    if (OutputRMute)
-        r = -1;
-    else
-        r = (400 - OutputRVol) / 4;
-
-    val = CodeLongLong(l, r);
-    RdosSetSuccess();
-    return val;
-}
-
-/*##########################################################################
-#
-#   Name       : SetAudioOutputVolume
-#
-#   Purpose....: Set audio output volume
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-#pragma aux ImplSetAudioOutputVolume "*" rdosdev parm routine [eax] [edx]
-void __far ImplSetAudioOutputVolume(int l, int r)
-{
-    if (l < 0)
-        OutputLMute = TRUE;
-    else
-    {
-        OutputLMute = FALSE;
-        OutputLVol = 400 - 4 * l;
-    }
-
-    if (r < 0)
-        OutputRMute = TRUE;
-    else
-    {
-        OutputRMute = FALSE;
-        OutputRVol = 400 - 4 * r;
-    }
-
-    RdosSetSuccess();
-}
-
-/*##########################################################################
-#
 #   Name       : GetFixedOutput
 #
 #   Purpose....: Get fixed output
@@ -2469,6 +2402,116 @@ void FreeOutputVolumeControls()
 
 /*##########################################################################
 #
+#   Name       : UpdateVolume
+#
+#   Purpose....: Update output volume
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void UpdateOutputVolume()
+{
+    struct TVolumeControl *volume;
+    struct TWidget *widget;
+    int i;
+    int lval = OutputLVol;
+    int rval = OutputRVol;
+    int set_l;
+    int set_r;
+
+    for (i = 0; i < OutputVolumeControls; i++)
+    {
+        volume = OutputVolumeArr[i];
+        if (volume)
+        {
+            widget = volume->Widget;
+
+            if (OutputMute)
+            {
+                if (volume->IsInputAmp)
+                    MuteInputAmp(widget, &widget->InputAmp, volume->InputEntry);
+                else                    
+                    MuteOutputAmp(widget, &widget->OutputAmp);
+            }
+            else
+            {
+                set_l = 0;
+
+                if (lval > 0)
+                {
+                    if (volume->MaxVol > 0)
+                    {
+                        if (volume->MaxVol > lval)
+                            set_l = lval;
+                        else
+                            set_l = volume->MaxVol;
+
+                        if (set_l < volume->MinVol)
+                            set_l = volume->MinVol;
+                    }
+                }
+
+                if (lval < 0)
+                {
+                    if (volume->MinVol < 0)
+                    {
+                        if (volume->MinVol < lval)
+                            set_l = lval;
+                        else
+                            set_l = volume->MinVol;
+
+                        if (set_l > volume->MaxVol)
+                            set_l = volume->MaxVol;
+                    }
+                }
+
+                set_r = 0;
+
+                if (rval > 0)
+                {
+                    if (volume->MaxVol > 0)
+                    {
+                        if (volume->MaxVol > rval)
+                            set_r = rval;
+                        else
+                            set_r = volume->MaxVol;
+
+                        if (set_r < volume->MinVol)
+                            set_r = volume->MinVol;
+                    }
+                }
+
+                if (rval < 0)
+                {
+                    if (volume->MinVol < 0)
+                    {
+                        if (volume->MinVol < rval)
+                            set_r = rval;
+                        else
+                            set_r = volume->MinVol;
+
+                        if (set_r > volume->MaxVol)
+                            set_r = volume->MaxVol;
+                    }
+                }
+
+                if (volume->IsInputAmp)
+                    SetInputAmp(widget, volume->InputEntry, set_l, set_r);
+                else                    
+                    SetOutputAmp(widget, set_l, set_r);
+
+                lval -= set_l;
+                rval -= set_r;
+            }
+            
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : ActivateOutput
 #
 #   Purpose....: Activate output
@@ -2483,17 +2526,93 @@ void ActivateOutput(struct TWidget *widget)
     int i;
 
     if (widget->Type == AUDIO_WIDGET_TYPE_OUTPUT)
-        SetOutputAmp(widget, 0, 0);
+    {
+        if (widget->OutputAmp.NumSteps < 2)
+            SetOutputAmp(widget, 0, 0);
+    }
     else
     {
         i = FindOutputPath(widget);
         if (i >= 0)
         {
-            SetOutputAmp(widget, 0, 0);
-            SetInputAmp(widget, i, 0, 0);
+            if (widget->OutputAmp.NumSteps < 2)
+                SetOutputAmp(widget, 0, 0);
+
+            if (widget->InputAmp.NumSteps < 2)
+                SetInputAmp(widget, i, 0, 0);
+
             ActivateOutput(widget->ConnectionList[i]);
         }
     }
+}
+
+/*##########################################################################
+#
+#   Name       : GetAudioOutputVolume
+#
+#   Purpose....: Get audio output volume
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetAudioOutputVolume "*" rdosdev parm routine value [edx eax]
+long long __far ImplGetAudioOutputVolume()
+{
+    int l, r;
+    long long val = 0;
+
+    if (OutputMute)
+        l = -1;
+    else
+        l = (400 + OutputLVol) / 4;
+
+    if (OutputMute)
+        r = -1;
+    else
+        r = (400 + OutputRVol) / 4;
+
+    val = CodeLongLong(l, r);
+    RdosSetSuccess();
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : SetAudioOutputVolume
+#
+#   Purpose....: Set audio output volume
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplSetAudioOutputVolume "*" rdosdev parm routine [eax] [edx]
+void __far ImplSetAudioOutputVolume(int l, int r)
+{
+    if (l < 0 && r < 0)
+        OutputMute = TRUE;
+    else
+    {
+        OutputMute = FALSE;
+
+        if (l < 0)
+            l = 0;
+
+        OutputLVol = 4 * l - 400;
+
+        if (r < 0)
+            r  = 0;
+
+        OutputRVol = 4 * r - 400;
+    }
+
+    if (OutputVolumeControls)
+        UpdateOutputVolume();
+
+    RdosSetSuccess();
 }
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
@@ -2506,6 +2625,7 @@ void __far ImplTestGate(const char *msg)
     widget = (struct TWidget *)DetermineActiveOutput();
     FreeOutputVolumeControls();
     CreateOutputVolumeControls(widget);
+    UpdateOutputVolume();
     ActivateOutput(widget);
 }
 
