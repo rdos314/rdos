@@ -214,6 +214,8 @@ static struct TPinComplex *OutputArr[MAX_OUTPUTS];
 
 int OutputVolumeControls = 0;
 struct TVolumeControl *OutputVolumeArr[MAX_VOLUME_CONTROLS];
+struct TPinComplex *CurrentOutput = 0;
+struct TAudioOutput *OutputWidget = 0;
 
 static int InputCount = 0;
 static struct TPinComplex *InputArr[MAX_INPUTS];
@@ -2529,6 +2531,8 @@ void ActivateOutput(struct TWidget *widget)
     {
         if (widget->OutputAmp.NumSteps < 2)
             SetOutputAmp(widget, 0, 0);
+
+        OutputWidget = (struct TAudioOutput *)widget;
     }
     else
     {
@@ -2542,6 +2546,35 @@ void ActivateOutput(struct TWidget *widget)
                 SetInputAmp(widget, i, 0, 0);
 
             ActivateOutput(widget->ConnectionList[i]);
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : DeactivateOutput
+#
+#   Purpose....: Deactivate output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void DeactivateOutput(struct TWidget *widget)
+{
+    int i;
+
+    if (widget->Type == AUDIO_WIDGET_TYPE_OUTPUT)
+        MuteOutputAmp(widget, &widget->OutputAmp);
+    else
+    {
+        i = FindOutputPath(widget);
+        if (i >= 0)
+        {
+            MuteOutputAmp(widget, &widget->OutputAmp);
+            MuteInputAmp(widget, &widget->InputAmp, i);
+            DeactivateOutput(widget->ConnectionList[i]);
         }
     }
 }
@@ -2615,18 +2648,74 @@ void __far ImplSetAudioOutputVolume(int l, int r)
     RdosSetSuccess();
 }
 
+/*##########################################################################
+#
+#   Name       : AssignOutput
+#
+#   Purpose....: Assign output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AssignOutput(struct TWiget *widget)
+{
+    CreateOutputVolumeControls(widget);
+    UpdateOutputVolume();
+    ActivateOutput(widget);
+}
+
+/*##########################################################################
+#
+#   Name       : DeassignOutput
+#
+#   Purpose....: Deassign output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void DeassignOutput(struct TWiget *widget)
+{
+    FreeOutputVolumeControls();
+    DeactivateOutput(widget);
+}
+
+/*##########################################################################
+#
+#   Name       : UpdateOutput
+#
+#   Purpose....: Update output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void UpdateOutput()
+{
+    struct TPinComplex *pin;
+
+    pin = DetermineActiveOutput();
+    if (pin != CurrentOutput)
+    {
+        if (CurrentOutput)
+            DeassignOutput((struct TWidget *)CurrentOutput);
+
+        AssignOutput((struct TWidget *)pin);
+    }
+    CurrentOutput = pin;    
+}
+
+
+
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
-    struct TWidget *widget;
-    int i;
-
-    widget = (struct TWidget *)DetermineActiveOutput();
-    FreeOutputVolumeControls();
-    CreateOutputVolumeControls(widget);
-    UpdateOutputVolume();
-    ActivateOutput(widget);
+    UpdateOutput();
 }
 
 /*##########################################################################
