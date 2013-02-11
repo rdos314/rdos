@@ -209,6 +209,8 @@ static struct TFunction *FunctionArr[MAX_FUNCTIONS];
 
 static struct TPinComplex *FixedSpeaker;
 
+struct TKernelSection OutputSection;
+
 static int OutputCount = 0;
 static struct TPinComplex *OutputArr[MAX_OUTPUTS];
 
@@ -2642,8 +2644,12 @@ void __far ImplSetAudioOutputVolume(int l, int r)
         OutputRVol = 4 * r - 400;
     }
 
+    RdosEnterKernelSection(&OutputSection);
+
     if (OutputVolumeControls)
         UpdateOutputVolume();
+
+    RdosLeaveKernelSection(&OutputSection);
 
     RdosSetSuccess();
 }
@@ -2698,6 +2704,8 @@ void UpdateOutput()
 {
     struct TPinComplex *pin;
 
+    RdosEnterKernelSection(&OutputSection);
+
     pin = DetermineActiveOutput();
     if (pin != CurrentOutput)
     {
@@ -2707,6 +2715,8 @@ void UpdateOutput()
         AssignOutput((struct TWidget *)pin);
     }
     CurrentOutput = pin;    
+
+    RdosLeaveKernelSection(&OutputSection);
 }
 
 
@@ -2715,7 +2725,6 @@ void UpdateOutput()
 
 void __far ImplTestGate(const char *msg)
 {
-    UpdateOutput();
 }
 
 /*##########################################################################
@@ -2731,6 +2740,7 @@ void __far HdaThread(void *param)
     for (;;)
     {
         RdosWaitMilli(250);
+        UpdateOutput();
     }
 }
 
@@ -2767,6 +2777,8 @@ int main()
 {
     RdosHookInitPci(&InitPci);
     InitHda();
+    RdosInitKernelSection(&OutputSection);
+    
     RdosRegisterBimodalUserGate(usergate_get_audio_device_count, &ImplGetAudioDeviceCount, "Get Audio Device Count");
     RdosRegisterBimodalUserGate(usergate_get_audio_codec_count, &ImplGetAudioCodecCount, "Get Audio Device Count");
     RdosRegisterUserGate(usergate_get_audio_widget_info, &ImplGetAudioWidgetInfo16, &ImplGetAudioWidgetInfo32, "Get Audio Widget Info");
