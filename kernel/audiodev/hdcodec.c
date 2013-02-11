@@ -218,6 +218,12 @@ struct TVolumeControl *OutputVolumeArr[MAX_VOLUME_CONTROLS];
 static int InputCount = 0;
 static struct TPinComplex *InputArr[MAX_INPUTS];
 
+static int OutputLMute = FALSE;
+static int OutputLVol = 0;
+
+static int OutputRMute = FALSE;
+static int OutputRVol = 0;
+
 static int ForceFixed = FALSE;
 static int ForceOutput = -1;
 
@@ -1833,6 +1839,71 @@ void __far ImplIsAudioOutputAmpMuted(int Device, int Codec, int Node, int Channe
 
 /*##########################################################################
 #
+#   Name       : GetAudioOutputVolume
+#
+#   Purpose....: Get audio output volume
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetAudioOutputVolume "*" rdosdev parm routine value [edx eax]
+long long __far ImplGetAudioOutputVolume()
+{
+    int l, r;
+    long long val = 0;
+
+    if (OutputLMute)
+        l = -1;
+    else
+        l = (400 - OutputLVol) / 4;
+
+    if (OutputRMute)
+        r = -1;
+    else
+        r = (400 - OutputRVol) / 4;
+
+    val = CodeLongLong(l, r);
+    RdosSetSuccess();
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : SetAudioOutputVolume
+#
+#   Purpose....: Set audio output volume
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplSetAudioOutputVolume "*" rdosdev parm routine [eax] [edx]
+void __far ImplSetAudioOutputVolume(int l, int r)
+{
+    if (l < 0)
+        OutputLMute = TRUE;
+    else
+    {
+        OutputLMute = FALSE;
+        OutputLVol = 400 - 4 * l;
+    }
+
+    if (r < 0)
+        OutputRMute = TRUE;
+    else
+    {
+        OutputRMute = FALSE;
+        OutputRVol = 400 - 4 * r;
+    }
+
+    RdosSetSuccess();
+}
+
+/*##########################################################################
+#
 #   Name       : GetFixedOutput
 #
 #   Purpose....: Get fixed output
@@ -2500,6 +2571,8 @@ int main()
     RdosRegisterBimodalUserGate(usergate_read_audio_output_amp, &ImplReadAudioOutputAmp, "Read Audio Output Amp");
     RdosRegisterBimodalUserGate(usergate_is_audio_input_amp_muted, &ImplIsAudioInputAmpMuted, "Is Audio Input Amp Muted");
     RdosRegisterBimodalUserGate(usergate_is_audio_output_amp_muted, &ImplIsAudioOutputAmpMuted, "Is Audio Output Amp Muted");
+    RdosRegisterBimodalUserGate(usergate_get_output_volume, &ImplGetAudioOutputVolume, "Get Audio Output Volume");
+    RdosRegisterBimodalUserGate(usergate_set_output_volume, &ImplSetAudioOutputVolume, "Set Audio Output Volume");
 
     RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate"); 
 }

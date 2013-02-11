@@ -136,7 +136,7 @@ void TVolumeCommand::ShowVolume()
                 }
                 else
                 {
-                        FMsg.printf(TEXT_VOLUME_R_ON, L);
+                        FMsg.printf(TEXT_VOLUME_R_ON, R);
                         Write(FMsg.GetData());
                 }
         }
