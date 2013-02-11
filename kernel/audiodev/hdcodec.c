@@ -656,7 +656,7 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
                 }
                 break;
 
-            default:
+            case 1:
                 if (widget->PinCap & 0x10)
                     if (widget->PinCap & 0x8)
                         FixedSpeaker = widget;
