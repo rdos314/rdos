@@ -2877,6 +2877,18 @@ SetCodecGpio0      MACRO
 	UserGate set_codec_gpio0_nr
 						ENDM
 
+;   OUT EAX          Left
+;   OUT EDX          Right
+GetOutputVolume      MACRO
+	UserGate get_output_volume_nr
+						ENDM
+
+;   IN  EAX         Left
+;   IN  EDX         Right
+SetOutputVolume      MACRO
+	UserGate set_output_volume_nr
+						ENDM
+
 ;   OUT AL          Left
 ;   OUT AH          Right
 GetMasterVolume      MACRO

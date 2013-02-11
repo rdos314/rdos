@@ -641,4 +641,7 @@ get_fixed_audio_output_nr       = 508
 get_jack_audio_output_nr        = 509
 get_jack_audio_input_nr         = 510
 
-usergate_entries			    = 512
+get_output_volume_nr            = 511
+set_output_volume_nr            = 512
+
+usergate_entries			    = 540

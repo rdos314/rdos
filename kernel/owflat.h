@@ -2650,6 +2650,17 @@
     parm [eax] \
     modify [eax];
 
+#pragma aux RdosGetOutputVolume = \
+    CallGate_get_output_volume \
+    "mov [esi],eax" \    
+    "mov [edi],edx" \    
+    parm [esi] [edi] \
+    modify [eax edx];
+
+#pragma aux RdosSetOutputVolume = \
+    CallGate_set_output_volume \
+    parm [eax] [edx] \
+
 #pragma aux RdosGetMasterVolume = \
     CallGate_get_master_volume \
     "mov cx,ax" \

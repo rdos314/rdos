@@ -708,6 +708,9 @@ int RDOSAPI RdosReadICSPData(int Handle, int *Data);
 
 void RDOSAPI RdosSetCodecGpio0(int Value);
 
+void RDOSAPI RdosGetOutputVolume(int *Left, int *Right);
+void RDOSAPI RdosSetOutputVolume(int Left, int Right);
+
 void RDOSAPI RdosGetMasterVolume(int *Left, int *Right);
 void RDOSAPI RdosSetMasterVolume(int Left, int Right);
 

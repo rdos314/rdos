@@ -38,6 +38,119 @@ code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetVolume
+;
+;           DESCRIPTION:    Get audio volume
+;
+;           RETURNS:        EAX      Left channel volume
+;                           EDX      Right channel volume
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_volume_name          DB 'Get Volume',0
+
+get_volume       PROC far
+    push bx
+    push cx
+;    
+    mov bx,2
+    ReadCodec
+;
+    test ah,80h
+    jnz gvMute
+;
+    xchg al,ah
+    and ax,1F1Fh
+    shl ax,2
+    jmp gvConv
+
+gvMute:
+    mov ax,8080h
+
+gvConv:
+    mov cx,ax
+    mov dl,7Fh
+    sub dl,al
+    movsx edx,dl    
+    mov eax,200
+    imul edx
+    sar eax,8
+    push eax
+    mov dl,7Fh
+    sub dl,ch
+    movsx edx,dl
+    mov eax,200
+    imul edx
+    sar eax,8
+    pop edx
+;    
+    pop cx
+    pop bx    
+    retf32
+get_volume       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SetVolume
+;
+;           DESCRIPTION:    Set audio volume
+;
+;           PARAMETERS:     EAX     Left channel volume
+;                           EDX     Right channel volume
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_volume_name          DB 'Set Volume',0
+
+set_volume       PROC far
+    pushad
+;
+    mov ecx,edx
+    mov esi,eax
+    xor edx,edx
+    shl eax,8
+    sbb edx,0
+    mov esi,200
+    idiv esi
+    mov bl,7Fh
+    sub bl,al
+    adc bl,0
+    mov eax,ecx
+    mov esi,eax
+    xor edx,edx
+    shl eax,8
+    sbb edx,0
+    mov esi,200
+    idiv esi
+    mov bh,0x7F
+    sub bh,al
+    adc bh,0
+    mov ax,bx
+;
+    cmp ax,8080h
+    je svSet
+;
+    and ax,7F7Fh
+    shr ax,2
+
+svSet:    
+    mov bx,2
+    WriteCodec
+;    
+    mov bx,4
+    WriteCodec
+;    
+    mov bx,6
+    WriteCodec
+;
+    popad
+    retf32
+set_volume       ENDP
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -374,10 +487,16 @@ init    PROC far
     mov ax,set_audio_adc_rate_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET get_master_volume
-    mov edi,OFFSET get_master_volume_name
+    mov esi,OFFSET get_volume
+    mov edi,OFFSET get_volume_name
     xor dx,dx
-    mov ax,get_master_volume_nr
+    mov ax,get_output_volume_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_volume
+    mov edi,OFFSET set_volume_name
+    xor dx,dx
+    mov ax,set_output_volume_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET set_master_volume

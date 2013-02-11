@@ -66,7 +66,7 @@ TVolumeFactory::TVolumeFactory()
 ##########################################################################*/
 TCommand *TVolumeFactory::Create(TSession *session, const char *param)
 {
-	return new TVolumeCommand(session, param);
+        return new TVolumeCommand(session, param);
 }
 
 /*##########################################################################
@@ -83,7 +83,7 @@ TCommand *TVolumeFactory::Create(TSession *session, const char *param)
 TVolumeCommand::TVolumeCommand(TSession *session, const char *param)
   : TCommand(session, param)
 {
-	FHelpScreen.Load(TEXT_CMDHELP_VOLUME);
+        FHelpScreen.Load(TEXT_CMDHELP_VOLUME);
 }
 
 /*##########################################################################
@@ -101,45 +101,45 @@ void TVolumeCommand::ShowVolume()
 {
     int L, R;
 
-    RdosGetMasterVolume(&L, &R);
+    RdosGetOutputVolume(&L, &R);
 
-	if (L == R)
-	{
-		if (L < 0)
-		{
-			FMsg.Load(TEXT_VOLUME_OFF);
-			Write(FMsg.GetData());
-		}
-		else
-		{
-			FMsg.printf(TEXT_VOLUME_ON, L);
-			Write(FMsg.GetData());
-		}
-	}
-	else
-	{
-		if (L < 0)
-		{
-			FMsg.Load(TEXT_VOLUME_L_OFF);
-			Write(FMsg.GetData());
-		}
-		else
-		{
-			FMsg.printf(TEXT_VOLUME_L_ON, L);
-			Write(FMsg.GetData());
-		}
+        if (L == R)
+        {
+                if (L < 0)
+                {
+                        FMsg.Load(TEXT_VOLUME_OFF);
+                        Write(FMsg.GetData());
+                }
+                else
+                {
+                        FMsg.printf(TEXT_VOLUME_ON, L);
+                        Write(FMsg.GetData());
+                }
+        }
+        else
+        {
+                if (L < 0)
+                {
+                        FMsg.Load(TEXT_VOLUME_L_OFF);
+                        Write(FMsg.GetData());
+                }
+                else
+                {
+                        FMsg.printf(TEXT_VOLUME_L_ON, L);
+                        Write(FMsg.GetData());
+                }
 
-		if (R < 0)
-		{
-			FMsg.Load(TEXT_VOLUME_R_OFF);
-			Write(FMsg.GetData());
-		}
-		else
-		{
-			FMsg.printf(TEXT_VOLUME_R_ON, L);
-			Write(FMsg.GetData());
-		}
-	}
+                if (R < 0)
+                {
+                        FMsg.Load(TEXT_VOLUME_R_OFF);
+                        Write(FMsg.GetData());
+                }
+                else
+                {
+                        FMsg.printf(TEXT_VOLUME_R_ON, L);
+                        Write(FMsg.GetData());
+                }
+        }
 }
 
 /*##########################################################################
@@ -155,23 +155,22 @@ void TVolumeCommand::ShowVolume()
 ##########################################################################*/
 int TVolumeCommand::SetVolume1()
 {
-	const char *str;
+        const char *str;
     TString Str;
     int Volume;
 
-	Str = FArgList->FName;
-	Str.Lower();
-	str = Str.GetData();
+        Str = FArgList->FName;
+        Str.Lower();
+        str = Str.GetData();
 
-	if (!strcmp(str, "off"))
-		Volume = -1;
-	else
-		Volume = atoi(str);
+        if (!strcmp(str, "off"))
+                Volume = -1;
+        else
+                Volume = atoi(str);
 
-	RdosSetMasterVolume(Volume, Volume);
-	RdosSetLineOutVolume(Volume, Volume);
+        RdosSetOutputVolume(Volume, Volume);
 
-	return 0;
+        return 0;
 }
 
 /*##########################################################################
@@ -187,37 +186,36 @@ int TVolumeCommand::SetVolume1()
 ##########################################################################*/
 int TVolumeCommand::SetVolume2()
 {
-	const char *str;
-	int L, R;
-	TArg *arg;
-	TString Str;
+        const char *str;
+        int L, R;
+        TArg *arg;
+        TString Str;
 
-	arg = FArgList;
+        arg = FArgList;
 
-	Str = arg->FName;
-	Str.Lower();
-	str = Str.GetData();
+        Str = arg->FName;
+        Str.Lower();
+        str = Str.GetData();
 
-	if (!strcmp(str, "off"))
-		L = -1;
-	else
-		L = atoi(str);
+        if (!strcmp(str, "off"))
+                L = -1;
+        else
+                L = atoi(str);
 
-	arg = arg->FList;
+        arg = arg->FList;
 
-	Str = arg->FName;
-	Str.Lower();
-	str = Str.GetData();
+        Str = arg->FName;
+        Str.Lower();
+        str = Str.GetData();
 
-	if (!strcmp(str, "off"))
-		R = -1;
-	else
-		R = atoi(str);
+        if (!strcmp(str, "off"))
+                R = -1;
+        else
+                R = atoi(str);
 
-	RdosSetMasterVolume(L, R);
-	RdosSetLineOutVolume(L, R);
+        RdosSetOutputVolume(L, R);
 
-	return 0;
+        return 0;
 }
 
 /*##########################################################################
@@ -233,24 +231,24 @@ int TVolumeCommand::SetVolume2()
 ##########################################################################*/
 int TVolumeCommand::Execute(char *param)
 {
-	if (!ScanCmdLine(param, 0))
-		return 1;
+        if (!ScanCmdLine(param, 0))
+                return 1;
 
-	switch (FArgCount)
-	{
-		case 0:
-			ShowVolume();
-			return 0;
+        switch (FArgCount)
+        {
+                case 0:
+                        ShowVolume();
+                        return 0;
 
-		case 1:
-			return SetVolume1();
+                case 1:
+                        return SetVolume1();
 
-		case 2:
-			return SetVolume2();
+                case 2:
+                        return SetVolume2();
 
-		default:
-			FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
-			Write(FMsg.GetData());
-			return E_Useage;
-	}
+                default:
+                        FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
+                        Write(FMsg.GetData());
+                        return E_Useage;
+        }
 }
