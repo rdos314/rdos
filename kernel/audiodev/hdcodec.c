@@ -59,6 +59,7 @@ long long CodeLongLong(int Lsb, int Msb);
 #define MAX_CONNECTIONS     128
 #define MAX_OUTPUTS         16
 #define MAX_INPUTS          16
+#define MAX_VOLUME_CONTROLS 8
 
 struct TAmp
 {
@@ -80,6 +81,17 @@ struct TWidget
     struct TAmp OutputAmp;
     int ConnectionCount;
     struct TWidget *ConnectionList[MAX_CONNECTIONS];
+};
+
+struct TVolumeControl
+{
+    int IsInputAmp;
+    int InputEntry;
+    struct TWidget *Widget;
+
+    int MinVol;
+    int MaxVol;
+    int CurrVol;
 };
 
 struct TAudioOutput
@@ -199,6 +211,9 @@ static struct TPinComplex *FixedSpeaker;
 
 static int OutputCount = 0;
 static struct TPinComplex *OutputArr[MAX_OUTPUTS];
+
+int OutputVolumeControls = 0;
+struct TVolumeControl *OutputVolumeArr[MAX_VOLUME_CONTROLS];
 
 static int InputCount = 0;
 static struct TPinComplex *InputArr[MAX_INPUTS];
@@ -2088,6 +2103,123 @@ void SetInputAmp(struct TWidget *widget, int entry, int l, int r)
 
 /*##########################################################################
 #
+#   Name       : CreateInputVolumeControl
+#
+#   Purpose....: Create an input volume control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+struct TVolumeControl *CreateInputVolumeControl(struct TWidget *widget, int entry)
+{
+    struct TVolumeControl *volume;
+    
+    volume = (struct TVolumeControl *)RdosAllocateSmallGlobalMem(sizeof(struct TVolumeControl));
+    volume->IsInputAmp = TRUE;
+    volume->InputEntry = entry;
+    volume->Widget = widget;
+    volume->MinVol = -widget->InputAmp.Offset * widget->InputAmp.StepSize;
+    volume->MaxVol = (widget->InputAmp.NumSteps - widget->InputAmp.Offset - 1) * widget->InputAmp.StepSize;
+    volume->CurrVol = 0;    
+    return volume;
+}
+
+/*##########################################################################
+#
+#   Name       : CreateOutputVolumeControl
+#
+#   Purpose....: Create an output volume control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+struct TVolumeControl *CreateOutputVolumeControl(struct TWidget *widget)
+{
+    struct TVolumeControl *volume;
+    
+    volume = (struct TVolumeControl *)RdosAllocateSmallGlobalMem(sizeof(struct TVolumeControl));
+    volume->IsInputAmp = FALSE;
+    volume->InputEntry = 0;
+    volume->Widget = widget;
+    volume->MinVol = -widget->OutputAmp.Offset * widget->OutputAmp.StepSize;
+    volume->MaxVol = (widget->OutputAmp.NumSteps - widget->OutputAmp.Offset - 1) * widget->OutputAmp.StepSize;
+    volume->CurrVol = 0;    
+    return volume;
+}
+
+/*##########################################################################
+#
+#   Name       : FreeVolumeControl
+#
+#   Purpose....: Free volume control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void FreeVolumeControl(struct TVolumeControl *volume)
+{
+    int sel;
+
+    sel = RdosPointerToSelector(volume);
+    RdosFreeMem(sel);
+}
+
+/*##########################################################################
+#
+#   Name       : CheckOutputAmp
+#
+#   Purpose....: Check output amp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void CheckOutputAmp(struct TWidget *widget)
+{
+    struct TAmp *amp = &widget->OutputAmp;
+    struct TVolumeControl *volume;
+    
+    if (amp->NumSteps > 1)
+    {
+        volume = CreateOutputVolumeControl(widget);
+        OutputVolumeArr[OutputVolumeControls] = volume;
+        OutputVolumeControls++;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : CheckInputAmp
+#
+#   Purpose....: Check input amp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void CheckInputAmp(struct TWidget *widget, int entry)
+{
+    struct TAmp *amp = &widget->InputAmp;
+    struct TVolumeControl *volume;
+    
+    if (amp->NumSteps > 1)
+    {
+        volume = CreateInputVolumeControl(widget, entry);
+        OutputVolumeArr[OutputVolumeControls] = volume;
+        OutputVolumeControls++;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : FindSingleOutputPath
 #
 #   Purpose....: Find an output path
@@ -2216,6 +2348,56 @@ struct TPinComplex *DetermineActiveOutput()
 
 /*##########################################################################
 #
+#   Name       : CreateOutputVolumeControls
+#
+#   Purpose....: Create output volume controls
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void CreateOutputVolumeControls(struct TWidget *widget)
+{
+    int i;
+
+    if (widget->Type == AUDIO_WIDGET_TYPE_OUTPUT)
+        CheckOutputAmp(widget);
+    else
+    {
+        i = FindOutputPath(widget);
+        if (i >= 0)
+        {
+            CheckOutputAmp(widget);
+            CheckInputAmp(widget, i);
+            CreateOutputVolumeControls(widget->ConnectionList[i]);
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : FreeOutputVolumeControls
+#
+#   Purpose....: Free output volume controls
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void FreeOutputVolumeControls()
+{
+    int i;
+
+    for (i = 0; i < OutputVolumeControls; i++)
+        FreeVolumeControl(OutputVolumeArr[i]);
+
+    OutputVolumeControls = 0;
+}
+
+/*##########################################################################
+#
 #   Name       : ActivateOutput
 #
 #   Purpose....: Activate output
@@ -2251,6 +2433,8 @@ void __far ImplTestGate(const char *msg)
     int i;
 
     widget = (struct TWidget *)DetermineActiveOutput();
+    FreeOutputVolumeControls();
+    CreateOutputVolumeControls(widget);
     ActivateOutput(widget);
 }
 
