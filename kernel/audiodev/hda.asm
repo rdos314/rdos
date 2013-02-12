@@ -398,24 +398,6 @@ send_audio_out  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           HasAudio
-;
-;           DESCRIPTION:    Check if audio hardware is found & is working
-;
-;           RETURNS:        NC      Audio available
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-has_audio_name DB 'Has Audio',0
-
-has_audio      Proc far
-    stc
-    ret    
-has_audio  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           GetCorbSize
 ;
 ;       DESCRIPTION:    Determine (and configure) corb size
@@ -1214,12 +1196,6 @@ InitHda_    PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    mov esi,OFFSET has_audio
-    mov edi,OFFSET has_audio_name
-    xor dx,dx
-    mov ax,has_audio_nr
-    RegisterBimodalUserGate
 ;
     mov esi,OFFSET open_audio_out
     mov edi,OFFSET open_audio_out_name

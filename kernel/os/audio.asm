@@ -263,7 +263,7 @@ create_audio_out_channel    Proc far
     or ax,ax
     jnz caocHasMixer
 ;
-    mov ax,cx
+    movzx eax,cx
     SetAudioDacRate
     GetAudioDacRate
     mov cx,ax

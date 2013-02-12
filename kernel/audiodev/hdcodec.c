@@ -106,6 +106,8 @@ struct TAudioOutput
     struct TAmp OutputAmp;
     int ConnectionCount;
     struct TWidget *ConnectionList[MAX_CONNECTIONS];
+
+    int PcmRates;
 };
 
 struct TAudioInput
@@ -120,6 +122,8 @@ struct TAudioInput
     struct TAmp OutputAmp;
     int ConnectionCount;
     struct TWidget *ConnectionList[MAX_CONNECTIONS];
+
+    int PcmRates;
 };
 
 struct TAudioMixer
@@ -390,6 +394,7 @@ void AddAudioOutput(struct TCodec *codec, int node, int cap, int channels)
     widget->Node = node;
     widget->Cap = cap;
     widget->Channels = channels;
+    widget->PcmRates = GetParam(codec, node, 0xA);
 
     for (i = 0; i < MAX_CONNECTIONS; i++)
         widget->ConnectionList[i] = 0;    
@@ -438,6 +443,7 @@ void AddAudioInput(struct TCodec *codec, int node, int cap, int channels)
         widget->Node = node;
         widget->Cap = cap;
         widget->Channels = channels;
+        widget->PcmRates = GetParam(codec, node, 0xA);
 
         if (widget->Cap & 2)
         {
@@ -2719,6 +2725,95 @@ void UpdateOutput()
     RdosLeaveKernelSection(&OutputSection);
 }
 
+/*##########################################################################
+#
+#   Name       : HasAudio
+#
+#   Purpose....: Check for audio
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplHasAudio "*" rdosdev parm routine
+void __far ImplHasAudio()
+{
+    UpdateOutput();
+
+    if (CurrentOutput)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+}
+
+/*##########################################################################
+#
+#   Name       : SetDacRate
+#
+#   Purpose....: Try to set a DAC rate
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplSetDacRate "*" rdosdev parm routine [eax]
+void __far ImplSetDacRate(int rate)
+{
+    int format;
+    
+    UpdateOutput();
+
+    if (OutputWidget)
+    {
+        if (rate == 44100)
+            format = 0x4000;
+        else
+            format = 0;
+
+        format |= OutputWidget->Channels - 1;
+
+        if (OutputWidget->PcmRates & 0x100000)
+            format |= 0x40;
+        else
+        {
+            if (OutputWidget->PcmRates & 0x80000)
+                format |= 0x30;
+            else
+                format |= 0x20;
+        }
+    
+        RdosSetSuccess();
+    }        
+    else
+        RdosSetFailure();
+}
+
+/*##########################################################################
+#
+#   Name       : GetDacRate
+#
+#   Purpose....: Get DAC rate
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetDacRate "*" rdosdev parm routine value [eax]
+int __far ImplGetDacRate()
+{
+    UpdateOutput();
+
+    if (CurrentOutput)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
+    return 48000;
+}
+
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
@@ -2739,7 +2834,7 @@ void __far HdaThread(void *param)
     for (;;)
     {
         RdosWaitMilli(250);
-        UpdateOutput();
+//        UpdateOutput();
     }
 }
 
@@ -2777,7 +2872,11 @@ int main()
     RdosHookInitPci(&InitPci);
     InitHda();
     RdosInitKernelSection(&OutputSection);
+
+    RdosRegisterOsGate(osgate_get_audio_dac_rate, &ImplGetDacRate, "Get Dac Rate");
+    RdosRegisterOsGate(osgate_set_audio_dac_rate, &ImplSetDacRate, "Set Dac Rate");
     
+    RdosRegisterBimodalUserGate(usergate_has_audio, &ImplHasAudio, "Has Audio?");
     RdosRegisterBimodalUserGate(usergate_get_audio_device_count, &ImplGetAudioDeviceCount, "Get Audio Device Count");
     RdosRegisterBimodalUserGate(usergate_get_audio_codec_count, &ImplGetAudioCodecCount, "Get Audio Device Count");
     RdosRegisterUserGate(usergate_get_audio_widget_info, &ImplGetAudioWidgetInfo16, &ImplGetAudioWidgetInfo32, "Get Audio Widget Info");
