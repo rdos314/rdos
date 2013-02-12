@@ -905,6 +905,7 @@ StartFunction_  Proc near
     mov ds,ds:[ebx].HdaArr    
     mov es,ds:HdaSel
 ;    
+    call InitStreams
     call Reset
     call GetCorbSize
     call GetRirbSize            
@@ -916,40 +917,6 @@ sfDone:
     pop ds
     ret
 StartFunction_   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           InitStreams
-;
-;       DESCRIPTION:    Init streams
-;
-;       PARAMETERS:     EBX      Function #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public InitStreams_
-    
-InitStreams_  Proc near    
-    push ds
-    push es
-    pushad
-;    
-    cmp bx,ds:HdaCount
-    jae isDone
-;    
-    shl ebx,1
-    mov ds,ds:[ebx].HdaArr    
-    mov es,ds:HdaSel
-;    
-    call InitStreams
-
-isDone:
-    popad
-    pop es
-    pop ds
-    ret
-InitStreams_   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
