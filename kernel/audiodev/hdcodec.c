@@ -2812,6 +2812,9 @@ void __far ImplSetDacRate(int rate)
         verb |= format;
         QueryCodec(OutputWidget->Id, OutputWidget->Address, OutputWidget->Node, verb);
 
+        verb = 0x70301; 
+        QueryCodec(OutputWidget->Id, OutputWidget->Address, OutputWidget->Node, verb);
+
         OutputWidget->Format = format;
         OutputWidget->Width = width;
 
