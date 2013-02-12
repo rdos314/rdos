@@ -1094,7 +1094,14 @@ struct TWidget *GetWidget(int Device, int CodecNr, int Node)
 ##########################################################################*/
 void GetAudioOutputInfo(struct TAudioOutput *widget, char *Info)
 {
+    char str[40];
+    int val;
+    
     strcpy(Info, "Audio Out");
+
+    val = QueryCodec(widget->Id, widget->Address, widget->Node, 0xA0000);
+    sprintf(str, ", Format: %04hX", val);
+    strcat(Info, str);
 }
 
 /*##########################################################################
