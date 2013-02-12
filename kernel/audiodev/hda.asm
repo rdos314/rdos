@@ -41,6 +41,8 @@ MAX_OUTPUT_STREAMS  = 15
 OUTPUT_STREAM_ID    = 1
 
 STREAM_FLAG_RUNNING = 1
+STREAM_FLAG_IOC     = 2
+STREAM_FLAG_OF      = 4
 
 widget_base STRUC
 
@@ -115,6 +117,7 @@ sdPrd2Linear    DD ?
 sdCurrPrd       DD ?
 sdWidth         DW ?
 sdFlags         DW ?
+sdStatus        DB ?
 
 stream_data ENDS
 
@@ -298,9 +301,9 @@ get_jack_input  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HdaInt  Proc far
-    mov es,ds:HdaSel
 
 hdiLoop:
+    mov es,ds:HdaSel
     mov eax,es:HdaIntSts
     test eax,80000000h
     jz hdiDone
@@ -356,10 +359,29 @@ hdiStreamLoop:
     test al,1
     jz hdiNextStream
 ;
+    mov es,ds:[ebx].sdSel
+    test ds:[ebx].sdFlags,STREAM_FLAG_IOC
+    jz hdiStreamFirst
+;
+    lock or ds:[ebx].sdFlags,STREAM_FLAG_OF
+    and es:srControl,NOT 2
+    lock and ds:[ebx].sdFlags,NOT STREAM_FLAG_RUNNING
+        
+hdiStreamFirst:
+    lock or ds:[ebx].sdFlags,STREAM_FLAG_IOC
+;
+    push ax
     push bx
+;
+    mov al,es:srStatus
+    or ds:[ebx].sdStatus,al
+    mov es:srStatus,al
+;    
     mov bx,ds:[ebx].sdThread
     Signal
+;    
     pop bx
+    pop ax
 
 hdiNextStream:
     shr eax,1
@@ -1238,6 +1260,13 @@ open_audio_out  Proc far
     xor eax,eax
     mov es:srBdl+4,eax
     mov ds:[ebx].sdFlags,ax
+    mov ds:[ebx].sdStatus,al
+;
+    mov es,ds:HdaSel
+    mov cx,ds:InStreamCnt
+    mov eax,1
+    shl eax,cl
+    or es:HdaIntCtl,eax
     clc
 
 oaoDone:
@@ -1307,7 +1336,7 @@ send_audio_out  Proc far
     test ds:[ebx].sdFlags, STREAM_FLAG_RUNNING
     jnz saoWait
 ;
-    or ds:[ebx].sdFlags, STREAM_FLAG_RUNNING
+    lock or ds:[ebx].sdFlags, STREAM_FLAG_RUNNING
     mov ds:[ebx].sdThread,0
     jmp saoBuffer
 
@@ -1324,6 +1353,18 @@ saoWaitLoop:
     GetThread
     mov ds:[ebx].sdThread,ax
     WaitForSignal
+    test ds:[ebx].sdFlags,STREAM_FLAG_IOC
+    jz saoWaitLoop
+;
+    lock and ds:[ebx].sdFlags,NOT STREAM_FLAG_IOC
+;        
+    test ds:[ebx].sdFlags,STREAM_FLAG_OF
+    jz saoWaitDone
+;
+    int 3
+    lock and ds:[ebx].sdFlags,NOT (STREAM_FLAG_RUNNING OR STREAM_FLAG_OF)
+
+saoWaitDone:    
     mov ds:[ebx].sdThread,0
 
 saoBuffer:
