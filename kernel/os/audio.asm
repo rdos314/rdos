@@ -106,6 +106,7 @@ code    SEGMENT byte public use16 'CODE'
 ;       PARAMETERS:     CX  Sample rate
 ;
 ;           RETURNS:        AX  Mixer sel
+;                           CX  Number of samples in buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -130,6 +131,7 @@ CreateMixer Proc near
     mov ds:ams_outr_buf_sel,es
     mov ds:ams_out_buf_pos,0
     mov ax,ds
+    mov cx,ds:ams_buffer_size
 ;
     pop es
     pop ds

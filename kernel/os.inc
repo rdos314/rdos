@@ -3315,7 +3315,8 @@ SetAudioAdcRate      MACRO
     OsGate set_audio_adc_rate_nr
                         ENDM
 
-; IN    AX Sample rate
+; IN    AX Sample rateo
+; IN    CX Number of samples in buffers
 OpenAudioOut      MACRO
     OsGate open_audio_out_nr
                         ENDM

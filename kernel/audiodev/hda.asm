@@ -38,6 +38,8 @@ REQ_RESET   = 1
 MAX_INPUT_STREAMS   = 15
 MAX_OUTPUT_STREAMS  = 15
 
+OUTPUT_STREAM_ID    = 1
+
 widget_base STRUC
 
 wb_type     DD ?
@@ -96,41 +98,49 @@ srBdl            DD ?,?
 
 stream_reg    ENDS
 
-; always 4 bytes long!
+; must be less than 64 bytes
 
 stream_data STRUC
 
-sdSel       DW ?
-sdThread    DW ?
+sdSel           DW ?
+sdThread        DW ?
+sdPrdPhys       DD ?
+sdPrd1Phys      DD ?
+sdPrd2Phys      DD ?
+sdPrdLinear     DD ?
+sdPrd1Linear    DD ?
+sdPrd2Linear    DD ?
+sdCurrPrd       DD ?
+sdWidth         DW ?
 
 stream_data ENDS
 
 
 hda_seg STRUC
 
-HdaSel          DW ?
-HdaLinear       DD ?
-CodecPhys       DD ?
+HdaSel          DW 0
+HdaLinear       DD 0
+CodecPhys       DD 0
 
-CorbSize        DW ?
-CorbSel         DW ?
+CorbSize        DW 0
+CorbSel         DW 0
 
-RirbSize        DW ?
-RirbSel         DW ?
-RirbRp          DW ?
+RirbSize        DW 0
+RirbSel         DW 0
+RirbRp          DW 0
 
-CodecChange     DW ?
-CodecThread     DW ?
+CodecChange     DW 0
+CodecThread     DW 0
 
-Req             DB ?,?
+Req             DB 0,0
 
-StreamCnt       DW ?
-StreamArr       DW 30 DUP(?,?)      ; stream data structs
+StreamCnt       DW 0
+StreamArr       DB 30 * 64 DUP(0)      ; stream data structs
 
-InStreamCnt     DW ?
-OutStreamCnt    DW ?
-InStreamArr     DW MAX_INPUT_STREAMS DUP(?) 
-OutStreamArr    DW MAX_OUTPUT_STREAMS DUP(?) 
+InStreamCnt     DW 0
+OutStreamCnt    DW 0
+InStreamArr     DW MAX_INPUT_STREAMS DUP(0) 
+OutStreamArr    DW MAX_OUTPUT_STREAMS DUP(0) 
 
 hda_seg ENDS
 
@@ -724,6 +734,152 @@ Reset   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CreatePrdTable
+;
+;       DESCRIPTION:    Create a PRD table
+;
+;       PARAMETERS:     DS:EBX       Stream
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreatePrdTable  Proc near    
+    push es
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;    
+    mov esi,ebx
+;    
+    mov ecx,20h
+    AllocateMultiplePhysical32
+    jc cptDone
+;
+    mov ds:[esi].sdPrd1Phys,eax
+    add eax,10000h
+    mov ds:[esi].sdPrd2Phys,eax
+;
+    mov eax,10000h
+    AllocateBigLinear
+    mov ds:[esi].sdPrd1Linear,edx
+    mov ds:[esi].sdCurrPrd,edx
+;    
+    mov eax,10000h
+    AllocateBigLinear
+    mov ds:[esi].sdPrd2Linear,edx
+;
+    mov eax,ds:[esi].sdPrd1Phys
+    mov edx,ds:[esi].sdPrd1Linear
+    or al,7
+    mov cx,10h
+
+cptPrd1Loop:
+    SetPageEntry
+    add eax,1000h
+    add edx,1000h
+    loop cptPrd1Loop
+;
+    mov eax,ds:[esi].sdPrd2Phys
+    mov edx,ds:[esi].sdPrd2Linear
+    or al,7
+    mov cx,10h
+
+cptPrd2Loop:
+    SetPageEntry
+    add eax,1000h
+    add edx,1000h
+    loop cptPrd2Loop
+;
+    AllocatePhysical32
+    mov ds:[esi].sdPrdPhys,eax    
+;    
+    mov eax,1000h
+    AllocateBigLinear
+    mov ds:[esi].sdPrdLinear,edx
+;       
+    mov eax,ds:[esi].sdPrdPhys
+    mov edx,ds:[esi].sdPrdLinear
+    or al,7
+    SetPageEntry
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,ds:[si].sdPrdLinear
+;
+    mov eax,ds:[si].sdPrd1Phys
+    stosd
+    xor eax,eax
+    stosd
+    stosd
+    mov eax,1
+    stosd        
+;    
+    mov eax,ds:[si].sdPrd2Phys
+    stosd
+    xor eax,eax
+    stosd
+    stosd
+    mov eax,1
+    stosd        
+
+cptDone:    
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreatePrdTable  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreePrdTable
+;
+;       DESCRIPTION:    Free PRD table
+;
+;       PARAMETERS:     DS:EBX       Stream entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreePrdTable  Proc near    
+    push ecx
+    push edx
+;
+    mov edx,ds:[bx].sdPrdLinear
+    or edx,edx
+    jz fptDone
+;    
+    mov ecx,10000h
+    mov edx,ds:[ebx].sdPrd1Linear
+    FreeLinear
+    mov ds:[ebx].sdPrd1Phys,0
+    mov ds:[ebx].sdPrd1Linear,0
+;
+    mov ecx,10000h
+    mov edx,ds:[ebx].sdPrd2Linear
+    FreeLinear
+    mov ds:[ebx].sdPrd2Phys,0
+    mov ds:[ebx].sdPrd2Linear,0
+;
+    mov ecx,1000h
+    mov edx,ds:[ebx].sdPrdLinear
+    FreeLinear
+    mov ds:[ebx].sdPrdPhys,0
+    mov ds:[ebx].sdPrdLinear,0
+
+fptDone:
+    pop edx
+    pop ecx
+    ret
+FreePrdTable  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           InitStreams
 ;
 ;       DESCRIPTION:    Init stream interface
@@ -757,7 +913,7 @@ isInLoop:
 ;
     mov ds:[esi].sdSel,bx
     mov ds:[esi].sdThread,0
-    add esi,SIZE stream_data
+    add esi,64
 ;    
     mov ds:[edi],bx
     add edi,2
@@ -782,12 +938,19 @@ isOutLoop:
 ;
     mov ds:[esi].sdSel,bx
     mov ds:[esi].sdThread,0
-    add esi,SIZE stream_data
+    add esi,64
 ;
     mov ds:[edi],bx
     add edi,2
     add edx,20h
     loop isOutLoop
+;    
+; init default output stream
+;
+    movzx ebx,ds:InStreamCnt
+    shl ebx,6
+    add ebx,OFFSET StreamArr
+    call CreatePrdTable
 ;
     popad    
     ret
@@ -1006,11 +1169,12 @@ SetOutputFormat_    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           OpenAudioOut
+;       NAME:           OpenAudioOut
 ;
-;           DESCRIPTION:    Open audio out
+;       DESCRIPTION:    Open audio out
 ;
 ;       PARAMETERS:     AX      Sample rate
+;                       CX      Number of samples in buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1018,7 +1182,6 @@ open_audio_out_name DB 'Open Audio Out',0
 
 open_audio_out  Proc far
     push ds
-    push es
     pushad
 ;
     int 3
@@ -1028,17 +1191,37 @@ open_audio_out  Proc far
     cmp bx,ds:HdaCount
     jae oaoDone
 ;    
+    mov si,ds:OutputWidth
+    movzx ecx,cx
+    movzx eax,si
+    mul ecx
+    shl eax,1
+    mov ecx,eax    
     mov ax,ds:OutputFormat
-    mov cx,ds:OutputWidth
 ;    
     shl ebx,1
-    mov ds,ds:[ebx].HdaArr    
-    mov es,ds:OutStreamArr
+    mov ds,ds:[ebx].HdaArr
+;
+    mov bx,ds:InStreamCnt
+    movzx ebx,bx
+    shl ebx,6
+    add ebx,OFFSET StreamArr
+    mov ds:[ebx].sdWidth,si
+    mov es,ds:[ebx].sdSel
+;
     mov es:srFormat,ax
+    mov ax,OUTPUT_STREAM_ID SHL 12
+    mov es:srConfig,ax
+    mov es:srControl,4
+    mov es:srBufLen,ecx
+    mov es:srLvi,2
+    mov eax,ds:[ebx].sdPrdPhys
+    mov es:srBdl,eax
+    xor eax,eax
+    mov es:srBdl+4,eax
 
 oaoDone:
     popad
-    pop es
     pop ds    
     ret
 open_audio_out  Endp
