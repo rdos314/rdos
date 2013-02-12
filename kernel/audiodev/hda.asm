@@ -35,6 +35,9 @@ INCLUDE ..\pcdev\pci.inc
 
 REQ_RESET   = 1
 
+MAX_INPUT_STREAMS   = 15
+MAX_OUTPUT_STREAMS  = 15
+
 widget_base STRUC
 
 wb_type     DD ?
@@ -79,24 +82,55 @@ HdaDplBase      DD ?,?,?,?
 
 hda_reg Ends
 
+stream_reg    STRUC
+
+srControl        DB ?
+srConfig         DW ?
+srStatus         DB ?
+srLinkPos        DD ?
+srBufLen         DD ?
+srLvi            DW ?,?
+srFifoSize       DW ?
+srFormat         DW ?,?,?
+srBdl            DD ?,?
+
+stream_reg    ENDS
+
+; always 4 bytes long!
+
+stream_data STRUC
+
+sdSel       DW ?
+sdThread    DW ?
+
+stream_data ENDS
+
+
 hda_seg STRUC
 
-HdaSel      DW ?
-InStreams   DW ?
-OutStreams  DW ?
-CodexPhys   DD ?
+HdaSel          DW ?
+HdaLinear       DD ?
+CodecPhys       DD ?
 
-CorbSize    DW ?
-CorbSel     DW ?
+CorbSize        DW ?
+CorbSel         DW ?
 
-RirbSize    DW ?
-RirbSel     DW ?
-RirbRp      DW ?
+RirbSize        DW ?
+RirbSel         DW ?
+RirbRp          DW ?
 
-CodecChange DW ?
-CodecThread DW ?
+CodecChange     DW ?
+CodecThread     DW ?
 
-Req         DB ?
+Req             DB ?,?
+
+StreamCnt       DW ?
+StreamArr       DW 30 DUP(?,?)      ; stream data structs
+
+InStreamCnt     DW ?
+OutStreamCnt    DW ?
+InStreamArr     DW MAX_INPUT_STREAMS DUP(?) 
+OutStreamArr    DW MAX_OUTPUT_STREAMS DUP(?) 
 
 hda_seg ENDS
 
@@ -585,7 +619,7 @@ StartRirb Endp
 ;
 ;       NAME:           SetupCodecBuf
 ;
-;       DESCRIPTION:    Setup codex corb and rirb buffers
+;       DESCRIPTION:    Setup codec corb and rirb buffers
 ;
 ;       PARAMETERS:     DS      HDA sel
 ;                       ES      HDA registers
@@ -594,7 +628,7 @@ StartRirb Endp
 
 SetupCodecBuf   Proc near
     AllocatePhysical32
-    mov ds:CodexPhys,eax
+    mov ds:CodecPhys,eax
     mov es:HdaCorb,eax
     add eax,800h
     mov es:HdaRirb,eax
@@ -614,7 +648,7 @@ SetupCodecBuf   Proc near
     mov ds:RirbSel,bx
 ;
     sub edx,800h
-    mov eax,ds:CodexPhys
+    mov eax,ds:CodecPhys
     xor ebx,ebx
     or ax,803h
     SetPageEntry
@@ -759,6 +793,78 @@ Reset   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           InitStreams
+;
+;       DESCRIPTION:    Init stream interface
+;
+;       PARAMETERS:     DS      HDA sel
+;                       ES      HDA registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitStreams     Proc near
+    pushad
+;
+    mov ax,es:HdaGcap
+    mov al,ah
+    and al,0Fh
+    movzx ecx,al
+    mov ds:InStreamCnt,cx
+    mov ds:StreamCnt,cx
+    mov esi,OFFSET StreamArr
+    mov edi,OFFSET InStreamArr
+;
+    mov edx,ds:HdaLinear
+    add edx,80h
+
+isInLoop:    
+    push ecx
+    AllocateGdt
+    mov ecx,20h
+    CreateDataSelector32
+    pop ecx
+;
+    mov ds:[esi].sdSel,bx
+    mov ds:[esi].sdThread,0
+    add esi,SIZE stream_data
+;    
+    mov ds:[edi],bx
+    add edi,2
+    add edx,20h
+    loop isInLoop
+;
+    mov ax,es:HdaGcap
+    mov al,ah
+    shr al,4
+    and al,0Fh
+    movzx ecx,al
+    mov ds:OutStreamCnt,cx
+    add ds:StreamCnt,cx
+    mov edi,OFFSET OutStreamArr
+    
+isOutLoop:    
+    push ecx
+    AllocateGdt
+    mov ecx,20h
+    CreateDataSelector32
+    pop ecx
+;
+    mov ds:[esi].sdSel,bx
+    mov ds:[esi].sdThread,0
+    add esi,SIZE stream_data
+;
+    mov ds:[edi],bx
+    add edi,2
+    add edx,20h
+    loop isOutLoop
+;
+    popad    
+    ret
+InitStreams     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           GetFunctionCount
 ;
 ;       DESCRIPTION:    Get HDA function block count
@@ -810,6 +916,40 @@ sfDone:
     pop ds
     ret
 StartFunction_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InitStreams
+;
+;       DESCRIPTION:    Init streams
+;
+;       PARAMETERS:     EBX      Function #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public InitStreams_
+    
+InitStreams_  Proc near    
+    push ds
+    push es
+    pushad
+;    
+    cmp bx,ds:HdaCount
+    jae isDone
+;    
+    shl ebx,1
+    mov ds,ds:[ebx].HdaArr    
+    mov es,ds:HdaSel
+;    
+    call InitStreams
+
+isDone:
+    popad
+    pop es
+    pop ds
+    ret
+InitStreams_   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -987,6 +1127,7 @@ AddFunction  Proc near
     mov ecx,1000h
     CreateDataSelector16
     pop ecx
+    mov ds:HdaLinear,edx
     mov ds:HdaSel,bx
 ;
     popad

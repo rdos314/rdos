@@ -2720,11 +2720,14 @@ void UpdateOutput()
 }
 
 
+extern void InitStreams(int id);
+#pragma aux InitStreams parm routine [ebx]
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
+    InitStreams(0);
 }
 
 /*##########################################################################
