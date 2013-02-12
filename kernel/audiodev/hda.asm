@@ -137,6 +137,8 @@ hda_seg ENDS
 
 data    SEGMENT byte public 'DATA'
 
+OutputFunction  DD ?
+OutputCodec     DD ?
 OutputFormat    DW ?
 OutputWidth     DW ?
 
@@ -341,62 +343,6 @@ hdiDone:
     pop es
     ret
 HdaInt  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           OpenAudioOut
-;
-;           DESCRIPTION:    Open audio out
-;
-;       PARAMETERS:     AX      Sample rate
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_audio_out_name DB 'Open Audio Out',0
-
-open_audio_out  Proc far
-    stc
-    ret
-open_audio_out  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CloseAudioOut
-;
-;           DESCRIPTION:    Close audio out
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-close_audio_out_name DB 'Close Audio Out',0
-
-close_audio_out Proc far
-    ret
-close_audio_out  Endp
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SendAudioOut
-;
-;           DESCRIPTION:    Send audio out
-;
-;       PARAMETERS:     DS      Left channel 32-bit sample data
-;               ES      Right channel
-;               CX      Number of samples
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-send_audio_out_name DB 'Send Audio Out',0
-
-send_audio_out  Proc far
-    ret
-send_audio_out  Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1040,7 +986,9 @@ QueryCodec_   Endp
 ;
 ;       DESCRIPTION:    Set output format
 ;
-;       PARAMETERS:     AX      Format parameter
+;       PARAMETERS:     EBX     Function #
+;                       ESI     Codec #
+;                       AX      Format parameter
 ;                       CX      Channel width
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1048,10 +996,90 @@ QueryCodec_   Endp
     public SetOutputFormat_
     
 SetOutputFormat_  Proc near    
+    mov ds:OutputFunction,ebx
+    mov ds:OutputCodec,esi
     mov ds:OutputFormat,ax
     mov ds:OutputWidth,cx
     ret
 SetOutputFormat_    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           OpenAudioOut
+;
+;           DESCRIPTION:    Open audio out
+;
+;       PARAMETERS:     AX      Sample rate
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_audio_out_name DB 'Open Audio Out',0
+
+open_audio_out  Proc far
+    push ds
+    push es
+    pushad
+;
+    int 3
+    mov ax,SEG data
+    mov ds,ax
+    mov ebx,ds:OutputFunction    
+    cmp bx,ds:HdaCount
+    jae oaoDone
+;    
+    mov ax,ds:OutputFormat
+    mov cx,ds:OutputWidth
+;    
+    shl ebx,1
+    mov ds,ds:[ebx].HdaArr    
+    mov es,ds:OutStreamArr
+    mov es:srFormat,ax
+
+oaoDone:
+    popad
+    pop es
+    pop ds    
+    ret
+open_audio_out  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CloseAudioOut
+;
+;           DESCRIPTION:    Close audio out
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_audio_out_name DB 'Close Audio Out',0
+
+close_audio_out Proc far
+    ret
+close_audio_out  Endp
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SendAudioOut
+;
+;           DESCRIPTION:    Send audio out
+;
+;       PARAMETERS:     DS      Left channel 32-bit sample data
+;               ES      Right channel
+;               CX      Number of samples
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_audio_out_name DB 'Send Audio Out',0
+
+send_audio_out  Proc far
+    ret
+send_audio_out  Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

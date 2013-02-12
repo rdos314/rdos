@@ -44,8 +44,8 @@ extern int GetCodecMask(int id);
 extern int QueryCodec(int id, int codec, int node, int data);
 #pragma aux QueryCodec parm routine [ebx] [esi] [edi] [edx] value [eax]
 
-extern void SetOutputFormat(int format, int width);
-#pragma aux SetOutputFormat parm routine [eax] [ecx]
+extern void SetOutputFormat(int function, int codec, int format, int width);
+#pragma aux SetOutputFormat parm routine [ebx] [esi] [eax] [ecx]
 
 long long CodeLongLong(int Lsb, int Msb);
 
@@ -2815,7 +2815,7 @@ void __far ImplSetDacRate(int rate)
         OutputWidget->Format = format;
         OutputWidget->Width = width;
 
-        SetOutputFormat(format, width);
+        SetOutputFormat(OutputWidget->Id, OutputWidget->Address, format, width);
     
         RdosSetSuccess();
     }        
