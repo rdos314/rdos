@@ -44,6 +44,9 @@ extern int GetCodecMask(int id);
 extern int QueryCodec(int id, int codec, int node, int data);
 #pragma aux QueryCodec parm routine [ebx] [esi] [edi] [edx] value [eax]
 
+extern void SetOutputFormat(int format, int width);
+#pragma aux SetOutputFormat parm routine [eax] [ecx]
+
 long long CodeLongLong(int Lsb, int Msb);
 
 #pragma aux CodeLongLong = \
@@ -60,6 +63,8 @@ long long CodeLongLong(int Lsb, int Msb);
 #define MAX_OUTPUTS         16
 #define MAX_INPUTS          16
 #define MAX_VOLUME_CONTROLS 8
+
+#define OUTPUT_STREAM       1
 
 struct TAmp
 {
@@ -108,6 +113,8 @@ struct TAudioOutput
     struct TWidget *ConnectionList[MAX_CONNECTIONS];
 
     int PcmRates;
+    int Format;
+    int Width;
 };
 
 struct TAudioInput
@@ -124,6 +131,8 @@ struct TAudioInput
     struct TWidget *ConnectionList[MAX_CONNECTIONS];
 
     int PcmRates;
+    int Format;
+    int Width;
 };
 
 struct TAudioMixer
@@ -2761,18 +2770,24 @@ void __far ImplHasAudio()
 #pragma aux ImplSetDacRate "*" rdosdev parm routine [eax]
 void __far ImplSetDacRate(int rate)
 {
+    int verb;
     int format;
+    int width = 4;
     
     UpdateOutput();
 
     if (OutputWidget)
     {
+        verb = 0x70600; 
+        verb |= OUTPUT_STREAM << 4;
+        QueryCodec(OutputWidget->Id, OutputWidget->Address, OutputWidget->Node, verb);
+
         if (rate == 44100)
             format = 0x4000;
         else
             format = 0;
 
-        format |= OutputWidget->Channels - 1;
+        format |= 1; /* 2 channels for now */
 
         if (OutputWidget->PcmRates & 0x100000)
             format |= 0x40;
@@ -2781,8 +2796,26 @@ void __far ImplSetDacRate(int rate)
             if (OutputWidget->PcmRates & 0x80000)
                 format |= 0x30;
             else
-                format |= 0x20;
+            {
+                if (OutputWidget->PcmRates & 0x40000)
+                    format |= 0x20;
+                else
+                {
+                    width = 2;
+                    if (OutputWidget->PcmRates & 0x20000)
+                        format |= 0x10;
+                }
+            }
         }
+
+        verb = 0x20000; 
+        verb |= format;
+        QueryCodec(OutputWidget->Id, OutputWidget->Address, OutputWidget->Node, verb);
+
+        OutputWidget->Format = format;
+        OutputWidget->Width = width;
+
+        SetOutputFormat(format, width);
     
         RdosSetSuccess();
     }        
@@ -2804,14 +2837,19 @@ void __far ImplSetDacRate(int rate)
 #pragma aux ImplGetDacRate "*" rdosdev parm routine value [eax]
 int __far ImplGetDacRate()
 {
-    UpdateOutput();
-
-    if (CurrentOutput)
+    int rate = 48000;
+    
+    if (OutputWidget)
+    {
+        if (OutputWidget->Format & 0x4000)
+            rate = 44100;
+            
         RdosSetSuccess();
+    }
     else
         RdosSetFailure();
 
-    return 48000;
+    return rate;
 }
 
 

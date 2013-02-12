@@ -137,8 +137,11 @@ hda_seg ENDS
 
 data    SEGMENT byte public 'DATA'
 
-HdaCount    DW ?
-HdaArr      DW 16 DUP(?)
+OutputFormat    DW ?
+OutputWidth     DW ?
+
+HdaCount        DW ?
+HdaArr          DW 16 DUP(?)
 
 data    ENDS
 
@@ -1029,6 +1032,26 @@ qcRespOk:
 qcDone:
     ret
 QueryCodec_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetOutputFormat
+;
+;       DESCRIPTION:    Set output format
+;
+;       PARAMETERS:     AX      Format parameter
+;                       CX      Channel width
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public SetOutputFormat_
+    
+SetOutputFormat_  Proc near    
+    mov ds:OutputFormat,ax
+    mov ds:OutputWidth,cx
+    ret
+SetOutputFormat_    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
