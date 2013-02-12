@@ -1258,9 +1258,11 @@ open_audio_out  Proc far
     mov es,ds:[ebx].sdSel
 ;
     mov es:srFormat,ax
-    mov ax,OUTPUT_STREAM_ID SHL 12
-    mov es:srConfig,ax
-    mov es:srControl,4
+    mov eax,OUTPUT_STREAM_ID SHL 20
+    or al,4
+    or eax,1C000000h
+    mov dword ptr es:[0],eax
+;    
     mov es:srBufLen,ecx
     mov es:srLvi,2
     mov eax,ds:[ebx].sdPrdPhys
