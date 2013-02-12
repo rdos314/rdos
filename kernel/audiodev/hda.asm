@@ -943,6 +943,9 @@ InitStreams     Proc near
 ;
     mov edx,ds:HdaLinear
     add edx,80h
+;
+    or ecx,ecx
+    jz isInDone    
 
 isInLoop:    
     push ecx
@@ -959,7 +962,8 @@ isInLoop:
     add edi,2
     add edx,20h
     loop isInLoop
-;
+
+isInDone:
     mov ax,es:HdaGcap
     mov al,ah
     shr al,4
@@ -968,6 +972,8 @@ isInLoop:
     mov ds:OutStreamCnt,cx
     add ds:StreamCnt,cx
     mov edi,OFFSET OutStreamArr
+    or ecx,ecx
+    jz isOutDone
     
 isOutLoop:    
     push ecx
@@ -984,6 +990,8 @@ isOutLoop:
     add edi,2
     add edx,20h
     loop isOutLoop
+
+isOutDone:    
 ;    
 ; init default output stream
 ;

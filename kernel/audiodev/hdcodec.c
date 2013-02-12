@@ -1096,11 +1096,19 @@ void GetAudioOutputInfo(struct TAudioOutput *widget, char *Info)
 {
     char str[40];
     int val;
+    int stream;
+    int channel;
     
     strcpy(Info, "Audio Out");
 
     val = QueryCodec(widget->Id, widget->Address, widget->Node, 0xA0000);
     sprintf(str, ", Format: %04hX", val);
+    strcat(Info, str);
+
+    val = QueryCodec(widget->Id, widget->Address, widget->Node, 0xF0600);
+    stream = (val & 0xF0) >> 4;
+    channel = val & 0xF;
+    sprintf(str, ", Stream: %d, Channel: %d", stream,  channel);
     strcat(Info, str);
 }
 
@@ -2786,7 +2794,7 @@ void __far ImplSetDacRate(int rate)
     if (OutputWidget)
     {
         verb = 0x70600; 
-        verb |= OUTPUT_STREAM << 4;
+        verb |= (OUTPUT_STREAM << 4);
         QueryCodec(OutputWidget->Id, OutputWidget->Address, OutputWidget->Node, verb);
 
         if (rate == 44100)
