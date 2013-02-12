@@ -40,6 +40,8 @@ MAX_OUTPUT_STREAMS  = 15
 
 OUTPUT_STREAM_ID    = 1
 
+STREAM_FLAG_RUNNING = 1
+
 widget_base STRUC
 
 wb_type     DD ?
@@ -112,6 +114,7 @@ sdPrd1Linear    DD ?
 sdPrd2Linear    DD ?
 sdCurrPrd       DD ?
 sdWidth         DW ?
+sdFlags         DW ?
 
 stream_data ENDS
 
@@ -295,7 +298,6 @@ get_jack_input  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HdaInt  Proc far
-    push es
     mov es,ds:HdaSel
 
 hdiLoop:
@@ -347,10 +349,26 @@ hdiNotResp:
     jmp hdiLoop
 
 hdiStream:
-    int 3 
+    movzx ecx,ds:StreamCnt
+    mov ebx,OFFSET StreamArr
+
+hdiStreamLoop:    
+    test al,1
+    jz hdiNextStream
+;
+    push bx
+    mov bx,ds:[ebx].sdThread
+    Signal
+    pop bx
+
+hdiNextStream:
+    shr eax,1
+    add ebx,64
+    loop hdiStreamLoop        
+;
+    jmp hdiLoop    
 
 hdiDone:           
-    pop es
     ret
 HdaInt  Endp
 
@@ -1182,9 +1200,9 @@ open_audio_out_name DB 'Open Audio Out',0
 
 open_audio_out  Proc far
     push ds
+    push es
     pushad
 ;
-    int 3
     mov ax,SEG data
     mov ds,ax
     mov ebx,ds:OutputFunction    
@@ -1219,9 +1237,12 @@ open_audio_out  Proc far
     mov es:srBdl,eax
     xor eax,eax
     mov es:srBdl+4,eax
+    mov ds:[ebx].sdFlags,ax
+    clc
 
 oaoDone:
     popad
+    pop es
     pop ds    
     ret
 open_audio_out  Endp
@@ -1239,6 +1260,7 @@ open_audio_out  Endp
 close_audio_out_name DB 'Close Audio Out',0
 
 close_audio_out Proc far
+    int 3
     ret
 close_audio_out  Endp
 
@@ -1260,6 +1282,107 @@ close_audio_out  Endp
 send_audio_out_name DB 'Send Audio Out',0
 
 send_audio_out  Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
+    mov ax,ds
+    mov fs,ax
+    mov ax,es
+    mov gs,ax
+    mov ax,SEG data
+    mov ds,ax
+    mov ebx,ds:OutputFunction
+    shl ebx,1
+    mov ds,ds:[ebx].HdaArr
+;
+    mov bx,ds:InStreamCnt
+    movzx ebx,bx
+    shl ebx,6
+    add ebx,OFFSET StreamArr
+    mov es,ds:[ebx].sdSel
+;
+    test ds:[ebx].sdFlags, STREAM_FLAG_RUNNING
+    jnz saoWait
+;
+    or ds:[ebx].sdFlags, STREAM_FLAG_RUNNING
+    mov ds:[ebx].sdThread,0
+    jmp saoBuffer
+
+saoWait:    
+    mov al,es:srControl
+    test al,2
+    jnz saoWaitLoop
+;
+    or al,2
+    mov es:srControl,al
+    jmp saoBuffer
+
+saoWaitLoop:
+    GetThread
+    mov ds:[ebx].sdThread,ax
+    WaitForSignal
+    mov ds:[ebx].sdThread,0
+
+saoBuffer:
+    or cx,cx
+    jz saoStop
+;    
+    mov ax,flat_sel
+    mov es,ax
+    mov esi,2
+    push cx
+    mov edi,ds:[ebx].sdCurrPrd
+
+saoDataLoop:    
+    mov ax,fs:[esi]
+    shl eax,16
+    stosd
+    mov ax,gs:[esi]
+    shl eax,16
+    stosd
+    add esi,4
+    loop saoDataLoop
+;
+    pop cx
+;    
+    movzx eax,cx
+    shl eax,3
+    mov edx,ds:[ebx].sdPrdLinear
+    mov edi,ds:[ebx].sdCurrPrd
+    cmp edi,ds:[ebx].sdPrd1Linear
+    je saoPrd1
+
+saoPrd2:
+    mov edi,ds:[ebx].sdPrdLinear
+    mov es:[edi+18h],eax
+;
+    mov edi,ds:[ebx].sdPrd1Linear
+    mov ds:[ebx].sdCurrPrd,edi
+    jmp saoDone
+
+saoPrd1:
+    mov edi,ds:[ebx].sdPrdLinear
+    mov es:[edi+8h],eax
+;
+    mov edi,ds:[ebx].sdPrd2Linear
+    mov ds:[ebx].sdCurrPrd,edi
+    jmp saoDone
+
+saoStop:
+    mov al,es:srControl
+    and al,NOT 2
+    mov es:srControl,al
+    and ds:[ebx].sdFlags,NOT STREAM_FLAG_RUNNING
+        
+saoDone:        
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds    
     ret
 send_audio_out  Endp
 
