@@ -218,6 +218,10 @@ struct TFunction
     struct TCodec *CodecArr[MAX_CODECS];    
 };
 
+static int Vendor;
+static int SubSys;
+static int PowerState;
+
 static int FunctionCount = 0;
 static struct TFunction *FunctionArr[MAX_FUNCTIONS];
 
@@ -764,6 +768,10 @@ void ProcessCodec(struct TCodec *codec)
     int node;
     int type;
     int channels;
+
+    Vendor = GetParam(codec, 0, 0);
+    SubSys = GetParam(codec, 0, 1);
+    PowerState = Query(codec, 1, 0xF0500);
 
     val = GetParam(codec, 0, 4);
     count = val & 0xFF;
