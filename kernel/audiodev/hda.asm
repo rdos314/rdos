@@ -115,8 +115,10 @@ sdPrdLinear     DD ?
 sdPrd1Linear    DD ?
 sdPrd2Linear    DD ?
 sdCurrPrd       DD ?
+sdBufLen        DD ?
 sdWidth         DW ?
 sdFlags         DW ?
+sdFormat        DW ?
 sdStatus        DB ?
 
 stream_data ENDS
@@ -359,7 +361,17 @@ hdiStreamLoop:
     test al,1
     jz hdiNextStream
 ;
+    push ax
+    push bx
+;
     mov es,ds:[ebx].sdSel
+    mov al,es:srStatus
+    or ds:[ebx].sdStatus,al
+    mov es:srStatus,al
+;
+    test al,4
+    jz hdiStreamNextPop   
+;
     test ds:[ebx].sdFlags,STREAM_FLAG_IOC
     jz hdiStreamFirst
 ;
@@ -369,17 +381,11 @@ hdiStreamLoop:
         
 hdiStreamFirst:
     lock or ds:[ebx].sdFlags,STREAM_FLAG_IOC
-;
-    push ax
-    push bx
-;
-    mov al,es:srStatus
-    or ds:[ebx].sdStatus,al
-    mov es:srStatus,al
 ;    
     mov bx,ds:[ebx].sdThread
     Signal
-;    
+
+hdiStreamNextPop:    
     pop bx
     pop ax
 
@@ -631,7 +637,7 @@ SetupCodecBuf   Proc near
     sub edx,800h
     mov eax,ds:CodecPhys
     xor ebx,ebx
-    or ax,803h
+    or ax,863h
     SetPageEntry
 ;              
     call InitCorbBuf
@@ -811,7 +817,7 @@ CreatePrdTable  Proc near
 ;
     mov eax,ds:[esi].sdPrd1Phys
     mov edx,ds:[esi].sdPrd1Linear
-    or al,7
+    mov al,67h
     mov cx,10h
 
 cptPrd1Loop:
@@ -822,7 +828,7 @@ cptPrd1Loop:
 ;
     mov eax,ds:[esi].sdPrd2Phys
     mov edx,ds:[esi].sdPrd2Linear
-    or al,7
+    mov al,67
     mov cx,10h
 
 cptPrd2Loop:
@@ -840,7 +846,7 @@ cptPrd2Loop:
 ;       
     mov eax,ds:[esi].sdPrdPhys
     mov edx,ds:[esi].sdPrdLinear
-    or al,7
+    mov al,67h
     SetPageEntry
 ;
     mov ax,flat_sel
@@ -1255,22 +1261,8 @@ open_audio_out  Proc far
     shl ebx,6
     add ebx,OFFSET StreamArr
     mov ds:[ebx].sdWidth,si
-    mov es,ds:[ebx].sdSel
-;
-    mov es:srFormat,ax
-    mov eax,OUTPUT_STREAM_ID SHL 20
-    or al,4
-    or eax,1C000000h
-    mov dword ptr es:[0],eax
-;    
-    mov es:srBufLen,ecx
-    mov es:srLvi,2
-    mov eax,ds:[ebx].sdPrdPhys
-    mov es:srBdl,eax
-    xor eax,eax
-    mov es:srBdl+4,eax
-    mov ds:[ebx].sdFlags,ax
-    mov ds:[ebx].sdStatus,al
+    mov ds:[ebx].sdFormat,ax
+    mov ds:[ebx].sdBufLen,ecx
 ;
     mov es,ds:HdaSel
     mov cx,ds:InStreamCnt
@@ -1355,6 +1347,47 @@ saoWait:
     test al,2
     jnz saoWaitLoop
 ;
+    or al,1
+    mov es:srControl,al
+
+saoWaitResetStart:
+    mov ax,10
+    WaitMilliSec
+;
+    mov al,es:srControl        
+    test al,1
+    jz saoWaitResetStart
+;
+    and al,NOT 1
+    mov es:srControl,al
+
+saoWaitResetDone:
+    mov ax,10
+    WaitMilliSec
+;
+    mov al,es:srControl
+    test al,1
+    jnz saoWaitResetDone        
+;    
+    mov ax,ds:[ebx].sdFormat
+    mov es:srFormat,ax
+;
+    mov eax,OUTPUT_STREAM_ID SHL 20
+    or al,4
+    or eax,1C000000h
+    mov dword ptr es:[0],eax
+; 
+    mov eax,ds:[ebx].sdBufLen   
+    mov es:srBufLen,eax
+    mov es:srLvi,2
+    mov eax,ds:[ebx].sdPrdPhys
+    mov es:srBdl,eax
+    xor eax,eax
+    mov es:srBdl+4,eax
+    mov ds:[ebx].sdFlags,ax
+    mov ds:[ebx].sdStatus,al
+;
+    mov al,es:srControl
     or al,2
     mov es:srControl,al
     jmp saoBuffer
@@ -1504,7 +1537,7 @@ AddFunction  Proc near
     pop eax
 ;
     xor ebx,ebx
-    or ax,803h
+    or ax,863h
     SetPageEntry
 ;
     push ecx

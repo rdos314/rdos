@@ -1084,6 +1084,83 @@ struct TWidget *GetWidget(int Device, int CodecNr, int Node)
 
 /*##########################################################################
 #
+#   Name       : IsInputAmpMuted
+#
+#   Purpose....: Check if input amp is muted
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int IsInputAmpMuted(int id, int address, int node, int index)
+{
+    int val;
+    int verb;
+    
+    verb = 0xB0000;
+    verb |= index;
+    
+    val = QueryCodec(id, address, node, verb);
+    if (val & 0x80)
+        return TRUE;
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : IsOutputAmpMuted
+#
+#   Purpose....: Check if output amp is muted
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int IsOutputAmpMuted(int id, int address, int node)
+{
+    int verb;
+    int val;
+
+    verb = 0xB8000;
+    
+    val = QueryCodec(id, address, node, verb);
+    if (val & 0x80)
+        return TRUE;
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : ShowCap
+#
+#   Purpose....: Show cap info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void ShowCap(int Cap, char *Info)
+{
+    if (Cap & 0x200)
+        strcat(Info, ", Digital");
+
+    if (Cap & 0x40)
+        strcat(Info, ", Proc");
+
+    if (Cap & 0x20)
+        strcat(Info, ", Stripe");
+
+    if ((Cap & 8) == 0)
+        strcat(Info, ", Glob amp");
+}
+
+/*##########################################################################
+#
 #   Name       : GetAudioOutputInfo
 #
 #   Purpose....: Get audio output info
@@ -1111,6 +1188,11 @@ void GetAudioOutputInfo(struct TAudioOutput *widget, char *Info)
     channel = val & 0xF;
     sprintf(str, ", Stream: %d, Channel: %d", stream,  channel);
     strcat(Info, str);
+
+    if ((widget->Cap & 0x10) == 0)
+        strcat(Info, ", Global Format");
+
+    ShowCap(widget->Cap, Info);
 }
 
 /*##########################################################################
@@ -1127,6 +1209,11 @@ void GetAudioOutputInfo(struct TAudioOutput *widget, char *Info)
 void GetAudioInputInfo(struct TAudioInput *widget, char *Info)
 {
     strcpy(Info, "Audio In");
+
+    if ((widget->Cap & 0x10) == 0)
+        strcat(Info, ", Global Format");
+
+    ShowCap(widget->Cap, Info);
 }
 
 /*##########################################################################
@@ -1143,6 +1230,8 @@ void GetAudioInputInfo(struct TAudioInput *widget, char *Info)
 void GetAudioMixerInfo(struct TAudioMixer *widget, char *Info)
 {
     strcpy(Info, "Audio Mixer");
+
+    ShowCap(widget->Cap, Info);
 }
 
 /*##########################################################################
@@ -1159,6 +1248,8 @@ void GetAudioMixerInfo(struct TAudioMixer *widget, char *Info)
 void GetAudioSelectorInfo(struct TAudioSelector *widget, char *Info)
 {
     strcpy(Info, "Audio Selector");
+
+    ShowCap(widget->Cap, Info);
 }
 
 /*##########################################################################
@@ -1355,6 +1446,8 @@ void GetPinComplexInfo(struct TPinComplex *widget, char *Info)
 
     if (widget->PinCap & 0x1000000)
         strcat(Info, ", Display Port");
+
+    ShowCap(widget->Cap, Info);
 }
 
 /*##########################################################################
@@ -1371,6 +1464,8 @@ void GetPinComplexInfo(struct TPinComplex *widget, char *Info)
 void GetPowerWidgetInfo(struct TPowerWidget *widget, char *Info)
 {
     strcpy(Info, "Power");
+
+    ShowCap(widget->Cap, Info);
 }
 
 /*##########################################################################
@@ -2722,6 +2817,35 @@ void DeassignOutput(struct TWiget *widget)
 
 /*##########################################################################
 #
+#   Name       : TurnOnOutput
+#
+#   Purpose....: Turn on output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TurnOnOutput(struct TPinComplex *widget)
+{
+    int hp = FALSE;
+    int verb;
+
+    if (widget->PinCap & 0x10)
+        if (widget->PinCap & 0x8)
+            hp = TRUE;
+
+    verb = 0x70700;
+    if (hp)
+        verb | 0xC0;
+    else
+        verb | 0x40;
+
+    QueryCodec(widget->Id, widget->Address, widget->Node, verb);
+}
+
+/*##########################################################################
+#
 #   Name       : UpdateOutput
 #
 #   Purpose....: Update output
@@ -2744,6 +2868,7 @@ void UpdateOutput()
             DeassignOutput((struct TWidget *)CurrentOutput);
 
         AssignOutput((struct TWidget *)pin);
+        TurnOnOutput(pin);
     }
     CurrentOutput = pin;    
 
@@ -2794,6 +2919,10 @@ void __far ImplSetDacRate(int rate)
 
     if (OutputWidget)
     {
+        verb = 0x72D00; 
+        verb |= 2;
+        QueryCodec(OutputWidget->Id, OutputWidget->Address, OutputWidget->Node, verb);
+
         verb = 0x70600; 
         verb |= (OUTPUT_STREAM << 4);
         QueryCodec(OutputWidget->Id, OutputWidget->Address, OutputWidget->Node, verb);
