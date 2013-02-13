@@ -49,6 +49,7 @@
 #define AUDIO_WIDGET_TYPE_SELECTOR    4
 #define AUDIO_WIDGET_TYPE_PIN         5
 #define AUDIO_WIDGET_TYPE_POWER       6
+#define AUDIO_WIDGET_TYPE_BEEP        7
 
 typedef struct ThreadState
 {

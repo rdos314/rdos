@@ -202,6 +202,20 @@ struct TPowerWidget
     struct TWidget *ConnectionList[MAX_CONNECTIONS];
 };
 
+struct TBeepWidget
+{
+    int Type;
+    int Id;
+    int Address;
+    int Node;
+    int Cap;
+    int Channels;
+    struct TAmp InputAmp;
+    struct TAmp OutputAmp;
+    int ConnectionCount;
+    struct TWidget *ConnectionList[MAX_CONNECTIONS];
+};
+
 struct TCodec
 {
     int Id;
@@ -628,11 +642,11 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
             use = FALSE;
     }
 
-    if (conn == 1 && connections == 0)
-        use = FALSE;
+//    if (conn == 1 && connections == 0)
+//        use = FALSE;
 
-    if ((cap & 0x6) == 0)
-        use = FALSE;
+//    if ((cap & 0x6) == 0)
+//        use = FALSE;
 
     if (use)
     {
@@ -750,6 +764,47 @@ void AddPowerWidget(struct TCodec *codec, int node, int cap, int channels)
 
 /*##########################################################################
 #
+#   Name       : AddBeepWidget
+#
+#   Purpose....: Add beep widget
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddBeepWidget(struct TCodec *codec, int node, int cap, int channels)
+{
+    struct TBeepWidget *widget;
+    int connections;
+    int i;
+
+    connections = GetParam(codec, node, 0xE);
+
+    if (connections < 0x80)
+    {
+        widget = (struct TBeepWidget *)RdosAllocateSmallGlobalMem(sizeof(struct TBeepWidget));
+        widget->Type = AUDIO_WIDGET_TYPE_BEEP;
+        widget->Id = codec->Id;
+        widget->Address = codec->Address;
+        widget->Node = node;
+        widget->Cap = cap;
+        widget->Channels = channels;
+
+        ResetAmp(&widget->InputAmp);
+        ResetAmp(&widget->OutputAmp);
+
+        for (i = 0; i < MAX_CONNECTIONS; i++)
+            widget->ConnectionList[i] = 0;    
+
+        widget->ConnectionCount = connections;
+
+        codec->WidgetArr[node] = (struct TWidget *)widget;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : ProcessCodec
 #
 #   Purpose....: Process codec
@@ -829,6 +884,10 @@ void ProcessCodec(struct TCodec *codec)
 
                 case 5:
                     AddPowerWidget(codec, node + i, val, channels);
+                    break;
+
+                case 7:
+                    AddBeepWidget(codec, node + i, val, channels);
                     break;
             }
         }
@@ -1151,8 +1210,11 @@ int IsOutputAmpMuted(int id, int address, int node)
 #   Returns....: *
 #
 ##########################################################################*/
-void ShowCap(int Cap, char *Info)
+void ShowCap(int id, int address, int node, int Cap, char *Info)
 {
+    int verb;
+    int val;
+
     if (Cap & 0x200)
         strcat(Info, ", Digital");
 
@@ -1164,6 +1226,11 @@ void ShowCap(int Cap, char *Info)
 
     if ((Cap & 8) == 0)
         strcat(Info, ", Glob amp");
+
+    verb = 0xF0500;    
+    val = QueryCodec(id, address, node, verb);
+    if (val & 0xF0)
+        strcat(Info, ", Low Power");
 }
 
 /*##########################################################################
@@ -1199,7 +1266,7 @@ void GetAudioOutputInfo(struct TAudioOutput *widget, char *Info)
     if ((widget->Cap & 0x10) == 0)
         strcat(Info, ", Global Format");
 
-    ShowCap(widget->Cap, Info);
+    ShowCap(widget->Id, widget->Address, widget->Node, widget->Cap, Info);
 }
 
 /*##########################################################################
@@ -1220,7 +1287,7 @@ void GetAudioInputInfo(struct TAudioInput *widget, char *Info)
     if ((widget->Cap & 0x10) == 0)
         strcat(Info, ", Global Format");
 
-    ShowCap(widget->Cap, Info);
+    ShowCap(widget->Id, widget->Address, widget->Node, widget->Cap, Info);
 }
 
 /*##########################################################################
@@ -1238,7 +1305,7 @@ void GetAudioMixerInfo(struct TAudioMixer *widget, char *Info)
 {
     strcpy(Info, "Audio Mixer");
 
-    ShowCap(widget->Cap, Info);
+    ShowCap(widget->Id, widget->Address, widget->Node, widget->Cap, Info);
 }
 
 /*##########################################################################
@@ -1256,7 +1323,7 @@ void GetAudioSelectorInfo(struct TAudioSelector *widget, char *Info)
 {
     strcpy(Info, "Audio Selector");
 
-    ShowCap(widget->Cap, Info);
+    ShowCap(widget->Id, widget->Address, widget->Node, widget->Cap, Info);
 }
 
 /*##########################################################################
@@ -1272,6 +1339,7 @@ void GetAudioSelectorInfo(struct TAudioSelector *widget, char *Info)
 ##########################################################################*/
 void GetPinComplexInfo(struct TPinComplex *widget, char *Info)
 {
+    int val;
     char *LocStr;
     static char *LocationArr[] = {"Chassis", "Rear", "Front", "Left", "Right", "Top", "Bottom", "Rear panel", "Drive bay", 0, 0, 0, 0, 0, 0, 0,
                                   "Internal", 0, 0, 0, 0, 0, 0, "Riser", "Digital display", "ATAPI", 0, 0, 0, 0, 0, 0,
@@ -1454,7 +1522,18 @@ void GetPinComplexInfo(struct TPinComplex *widget, char *Info)
     if (widget->PinCap & 0x1000000)
         strcat(Info, ", Display Port");
 
-    ShowCap(widget->Cap, Info);
+    val = QueryCodec(widget->Id, widget->Address, widget->Node, 0xF0700);
+
+    if (val & 0x80)
+        strcat(Info, ", HP On");
+
+    if (val & 0x40)
+        strcat(Info, ", Out enable");
+
+    if (val & 0x20)
+        strcat(Info, ", In enable");
+
+    ShowCap(widget->Id, widget->Address, widget->Node, widget->Cap, Info);
 }
 
 /*##########################################################################
@@ -1472,7 +1551,25 @@ void GetPowerWidgetInfo(struct TPowerWidget *widget, char *Info)
 {
     strcpy(Info, "Power");
 
-    ShowCap(widget->Cap, Info);
+    ShowCap(widget->Id, widget->Address, widget->Node, widget->Cap, Info);
+}
+
+/*##########################################################################
+#
+#   Name       : GetBeepWidgetInfo
+#
+#   Purpose....: Get beep widget info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GetBeepWidgetInfo(struct TBeepWidget *widget, char *Info)
+{
+    strcpy(Info, "Beep");
+
+    ShowCap(widget->Id, widget->Address, widget->Node, widget->Cap, Info);
 }
 
 /*##########################################################################
@@ -1521,6 +1618,10 @@ char GetAudioWidgetInfo(int Device, int CodecNr, int Node, char *Info)
 
             case AUDIO_WIDGET_TYPE_POWER:
                 GetPowerWidgetInfo((struct TPowerWidget *)Widget, Info);
+                break;
+
+            case AUDIO_WIDGET_TYPE_BEEP:
+                GetBeepWidgetInfo((struct TBeepWidget *)Widget, Info);
                 break;
 
             default:
@@ -2844,9 +2945,9 @@ void TurnOnOutput(struct TPinComplex *widget)
 
     verb = 0x70700;
     if (hp)
-        verb | 0xC0;
+        verb |= 0xC0;
     else
-        verb | 0x40;
+        verb |= 0x40;
 
     QueryCodec(widget->Id, widget->Address, widget->Node, verb);
 
@@ -3018,6 +3119,23 @@ int __far ImplGetDacRate()
 
 void __far ImplTestGate(const char *msg)
 {
+    int val;
+    int verb;
+    struct TFunction *function = FunctionArr[0];
+    struct TCodec *codec = function->CodecArr[0];
+    
+    val = GetParam(codec, 1, 8);
+
+    verb = 0x70A00;
+    verb |= 40;    
+    val = QueryCodec(codec->Id, codec->Address, 1, verb);    
+
+    verb = 0x37080;
+    QueryCodec(codec->Id, codec->Address, 1, verb);
+
+    verb = 0x3B000;
+    QueryCodec(codec->Id, codec->Address, 1, verb);
+
 }
 
 /*##########################################################################
