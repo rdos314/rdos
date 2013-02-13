@@ -1243,7 +1243,7 @@ open_audio_out  Proc far
     movzx ecx,cx
     movzx eax,si
     mul ecx
-    shl eax,1
+    shl eax,2
     mov ecx,eax    
     mov ax,ds:OutputFormat
 ;    
@@ -1383,16 +1383,14 @@ saoBuffer:
 ;    
     mov ax,flat_sel
     mov es,ax
-    mov esi,2
+    xor esi,esi
     push cx
     mov edi,ds:[ebx].sdCurrPrd
 
 saoDataLoop:    
-    mov ax,fs:[esi]
-    shl eax,16
+    mov eax,fs:[esi]
     stosd
-    mov ax,gs:[esi]
-    shl eax,16
+    mov eax,gs:[esi]
     stosd
     add esi,4
     loop saoDataLoop
@@ -1437,6 +1435,36 @@ saoDone:
     ret
 send_audio_out  Endp
 
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DebugStream
+;
+;           DESCRIPTION:    Debug stream
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public DebugStream_
+
+DebugStream_    Proc near
+    int 3
+    mov ax,SEG data
+    mov ds,ax
+    mov ebx,ds:OutputFunction
+    shl ebx,1
+    mov ds,ds:[ebx].HdaArr
+;
+    mov bx,ds:InStreamCnt
+    movzx ebx,bx
+    shl ebx,6
+    add ebx,OFFSET StreamArr
+    mov es,ds:[ebx].sdSel
+    mov fs,ds:HdaSel
+    int 3    
+    ret
+DebugStream_    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

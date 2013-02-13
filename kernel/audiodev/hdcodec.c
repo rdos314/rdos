@@ -31,6 +31,7 @@
 
 extern void InitHda();
 extern void InitPciHda();
+extern void DebugStream();
 
 extern int GetFunctionCount();
 #pragma aux GetFinctionCount value [eax]
@@ -2889,6 +2890,7 @@ void __far HdaThread(void *param)
     
     for (;;)
     {
+        DebugStream();
         RdosWaitMilli(250);
 //        UpdateOutput();
     }
