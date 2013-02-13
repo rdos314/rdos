@@ -1249,7 +1249,7 @@ open_audio_out  Proc far
     movzx ecx,cx
     movzx eax,si
     mul ecx
-    shl eax,2
+    shl eax,1
     mov ecx,eax    
     mov ax,ds:OutputFormat
 ;    
@@ -1291,10 +1291,43 @@ open_audio_out  Endp
 close_audio_out_name DB 'Close Audio Out',0
 
 close_audio_out Proc far
-    int 3
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ebx,ds:OutputFunction
+    shl ebx,1
+    mov ds,ds:[ebx].HdaArr
+;
+    mov bx,ds:InStreamCnt
+    movzx ebx,bx
+    shl ebx,6
+    add ebx,OFFSET StreamArr
+    mov es,ds:[ebx].sdSel
+;
+    mov ds:[ebx].sdThread,0
+;    
+    mov al,es:srControl
+    and al,NOT 2
+    mov es:srControl,al
+
+caoWait:
+    mov ax,10
+    WaitMilliSec
+;
+    mov al,es:srControl
+    test al,2
+    jnz caoWait            
+;
+    mov ds:[ebx].sdFlags,0
+;    
+    popad
+    pop es
+    pop ds    
     ret
 close_audio_out  Endp
-
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
