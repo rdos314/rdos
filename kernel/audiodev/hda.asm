@@ -127,8 +127,10 @@ stream_data ENDS
 hda_seg STRUC
 
 HdaSel          DW 0
+DmaSel          DW 0
 HdaLinear       DD 0
 CodecPhys       DD 0
+DmaPhys         DD 0
 
 CorbSize        DW 0
 CorbSel         DW 0
@@ -637,7 +639,7 @@ SetupCodecBuf   Proc near
     sub edx,800h
     mov eax,ds:CodecPhys
     xor ebx,ebx
-    or ax,863h
+    or ax,13h
     SetPageEntry
 ;              
     call InitCorbBuf
@@ -774,6 +776,13 @@ rWaitForRunning:
 ;
     mov eax,0C0000000h
     mov es:HdaIntCtl,eax        
+;
+    xor eax,eax
+    mov es:HdaDplBase+4,eax
+;    
+    mov eax,ds:DmaPhys
+    mov al,1
+    mov es:HdaDplBase,eax    
     ret
 Reset   Endp
 
@@ -817,7 +826,7 @@ CreatePrdTable  Proc near
 ;
     mov eax,ds:[esi].sdPrd1Phys
     mov edx,ds:[esi].sdPrd1Linear
-    mov al,67h
+    mov al,13h
     mov cx,10h
 
 cptPrd1Loop:
@@ -828,7 +837,7 @@ cptPrd1Loop:
 ;
     mov eax,ds:[esi].sdPrd2Phys
     mov edx,ds:[esi].sdPrd2Linear
-    mov al,67
+    mov al,13h
     mov cx,10h
 
 cptPrd2Loop:
@@ -846,7 +855,7 @@ cptPrd2Loop:
 ;       
     mov eax,ds:[esi].sdPrdPhys
     mov edx,ds:[esi].sdPrdLinear
-    mov al,67h
+    mov al,13h
     SetPageEntry
 ;
     mov ax,flat_sel
@@ -937,6 +946,20 @@ FreePrdTable  Endp
 
 InitStreams     Proc near
     pushad
+;
+    AllocatePhysical32
+    mov ds:DmaPhys,eax
+    mov eax,1000h
+    AllocateBigLinear
+;
+    mov eax,ds:DmaPhys
+    mov al,13h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov ds:DmaSel,bx
 ;
     mov ax,es:HdaGcap
     mov al,ah
@@ -1249,7 +1272,7 @@ open_audio_out  Proc far
     movzx ecx,cx
     movzx eax,si
     mul ecx
-    shl eax,1
+    shl eax,2
     mov ecx,eax    
     mov ax,ds:OutputFormat
 ;    
@@ -1528,7 +1551,11 @@ DebugStream_    Proc near
     add ebx,OFFSET StreamArr
     mov es,ds:[ebx].sdSel
     mov fs,ds:HdaSel
+    mov edx,fs:HdaDplBase
     int 3    
+    mov eax,ds:DmaPhys
+    mov al,1
+    mov fs:HdaDplBase,eax
     ret
 DebugStream_    Endp
 
@@ -1570,7 +1597,7 @@ AddFunction  Proc near
     pop eax
 ;
     xor ebx,ebx
-    or ax,863h
+    or ax,13h
     SetPageEntry
 ;
     push ecx

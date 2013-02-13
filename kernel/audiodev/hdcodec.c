@@ -699,10 +699,9 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
                 }
                 break;
 
-            case 1:
-                if (widget->PinCap & 0x10)
-                    if (widget->PinCap & 0x8)
-                        FixedSpeaker = widget;
+            case 2:
+                if (widget->Device == 1)
+                    FixedSpeaker = widget;
                 break;
         }
     }
@@ -2850,6 +2849,12 @@ void TurnOnOutput(struct TPinComplex *widget)
         verb | 0x40;
 
     QueryCodec(widget->Id, widget->Address, widget->Node, verb);
+
+    if (widget->PinCap & 0x10000)
+    {
+        verb = 0x70C02;
+        QueryCodec(widget->Id, widget->Address, widget->Node, verb);
+    }
 }
 
 /*##########################################################################
