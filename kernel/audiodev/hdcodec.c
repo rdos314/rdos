@@ -2945,7 +2945,7 @@ void TurnOnOutput(struct TPinComplex *widget)
 
     verb = 0x70700;
     if (hp)
-        verb |= 0xC0;
+        verb |= 0x80;
     else
         verb |= 0x40;
 

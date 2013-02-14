@@ -1284,7 +1284,7 @@ wfbBuffer1:
     ja wfbDone
 
 wfbRetry:
-    mov ax,5
+    mov ax,10
     WaitMilliSec
     jmp wfbLoop
 
