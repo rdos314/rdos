@@ -127,10 +127,8 @@ stream_data ENDS
 hda_seg STRUC
 
 HdaSel          DW 0
-DmaSel          DW 0
 HdaLinear       DD 0
 CodecPhys       DD 0
-DmaPhys         DD 0
 
 CorbSize        DW 0
 CorbSel         DW 0
@@ -776,13 +774,6 @@ rWaitForRunning:
 ;
     mov eax,0C0000000h
     mov es:HdaIntCtl,eax        
-;
-    xor eax,eax
-    mov es:HdaDplBase+4,eax
-;    
-    mov eax,ds:DmaPhys
-    mov al,1
-    mov es:HdaDplBase,eax    
     ret
 Reset   Endp
 
@@ -946,20 +937,6 @@ FreePrdTable  Endp
 
 InitStreams     Proc near
     pushad
-;
-    AllocatePhysical32
-    mov ds:DmaPhys,eax
-    mov eax,1000h
-    AllocateBigLinear
-;
-    mov eax,ds:DmaPhys
-    mov al,13h
-    SetPageEntry
-;
-    AllocateGdt
-    mov ecx,1000h
-    CreateDataSelector16
-    mov ds:DmaSel,bx
 ;
     mov ax,es:HdaGcap
     mov al,ah
@@ -1553,9 +1530,6 @@ DebugStream_    Proc near
     mov fs,ds:HdaSel
     mov edx,fs:HdaDplBase
     int 3    
-    mov eax,ds:DmaPhys
-    mov al,1
-    mov fs:HdaDplBase,eax
     ret
 DebugStream_    Endp
 
