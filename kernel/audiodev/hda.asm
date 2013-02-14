@@ -107,7 +107,6 @@ stream_reg    ENDS
 stream_data STRUC
 
 sdSel           DW ?
-sdThread        DW ?
 sdPrdPhys       DD ?
 sdPrd1Phys      DD ?
 sdPrd2Phys      DD ?
@@ -119,6 +118,7 @@ sdBufLen        DD ?
 sdWidth         DW ?
 sdFlags         DW ?
 sdFormat        DW ?
+sdLastSize      DD ?
 sdStatus        DB ?
 
 stream_data ENDS
@@ -358,42 +358,7 @@ hdiStream:
     mov ebx,OFFSET StreamArr
 
 hdiStreamLoop:    
-    test al,1
-    jz hdiNextStream
-;
-    push ax
-    push bx
-;
-    mov es,ds:[ebx].sdSel
-    mov al,es:srStatus
-    or ds:[ebx].sdStatus,al
-    mov es:srStatus,al
-;
-    test al,4
-    jz hdiStreamNextPop   
-;
-    test ds:[ebx].sdFlags,STREAM_FLAG_IOC
-    jz hdiStreamFirst
-;
-    lock or ds:[ebx].sdFlags,STREAM_FLAG_OF
-    and es:srControl,NOT 2
-    lock and ds:[ebx].sdFlags,NOT STREAM_FLAG_RUNNING
-        
-hdiStreamFirst:
-    lock or ds:[ebx].sdFlags,STREAM_FLAG_IOC
-;    
-    mov bx,ds:[ebx].sdThread
-    Signal
-
-hdiStreamNextPop:    
-    pop bx
-    pop ax
-
-hdiNextStream:
-    shr eax,1
-    add ebx,64
-    loop hdiStreamLoop        
-;
+    int 3
     jmp hdiLoop    
 
 hdiDone:           
@@ -961,7 +926,6 @@ isInLoop:
     pop ecx
 ;
     mov ds:[esi].sdSel,bx
-    mov ds:[esi].sdThread,0
     add esi,64
 ;    
     mov ds:[edi],bx
@@ -989,7 +953,6 @@ isOutLoop:
     pop ecx
 ;
     mov ds:[esi].sdSel,bx
-    mov ds:[esi].sdThread,0
     add esi,64
 ;
     mov ds:[edi],bx
@@ -1249,7 +1212,7 @@ open_audio_out  Proc far
     movzx ecx,cx
     movzx eax,si
     mul ecx
-    shl eax,2
+    shl eax,1
     mov ecx,eax    
     mov ax,ds:OutputFormat
 ;    
@@ -1263,12 +1226,24 @@ open_audio_out  Proc far
     mov ds:[ebx].sdWidth,si
     mov ds:[ebx].sdFormat,ax
     mov ds:[ebx].sdBufLen,ecx
+    mov ds:[ebx].sdFlags,0
 ;
-    mov es,ds:HdaSel
-    mov cx,ds:InStreamCnt
-    mov eax,1
-    shl eax,cl
-    or es:HdaIntCtl,eax
+;    mov es,ds:HdaSel
+;    mov cx,ds:InStreamCnt
+;    mov eax,1
+;    shl eax,cl
+;    or es:HdaIntCtl,eax
+;    
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov eax,ds:[ebx].sdPrd1Linear
+    mov ds:[ebx].sdCurrPrd,eax
+;
+    mov ecx,ds:[ebx].sdBufLen
+    mov edi,ds:[ebx].sdPrdLinear
+    mov es:[edi+8],ecx
+    mov es:[edi+18h],ecx
     clc
 
 oaoDone:
@@ -1278,6 +1253,44 @@ oaoDone:
     ret
 open_audio_out  Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WaitForBuffer
+;
+;       DESCRIPTION:    Wait until buffer available
+;
+;       PARAMETERS:     DS:EBX  Stream
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForBuffer   Proc near
+    mov es,ds:[ebx].sdSel
+
+wfbLoop:
+    mov edi,ds:[ebx].sdCurrPrd
+    cmp edi,ds:[ebx].sdPrd1Linear
+    je wfbBuffer1
+
+wfbBuffer2:
+    mov eax,es:srLinkPos
+    cmp eax,ds:[ebx].sdBufLen
+    jb wfbDone    
+    jmp wfbRetry
+
+wfbBuffer1:
+    mov eax,es:srLinkPos
+    cmp eax,ds:[ebx].sdBufLen
+    ja wfbDone
+
+wfbRetry:
+    mov ax,25
+    WaitMilliSec
+    jmp wfbLoop
+
+wfbDone:
+    ret
+WaitForBuffer   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1307,7 +1320,16 @@ close_audio_out Proc far
     add ebx,OFFSET StreamArr
     mov es,ds:[ebx].sdSel
 ;
-    mov ds:[ebx].sdThread,0
+    call WaitForBuffer
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,ds:[ebx].sdCurrPrd
+    mov ecx,ds:sdBufLen
+    shr ecx,2
+    xor eax,eax
+    stosd
+    call WaitForBuffer
 ;    
     mov al,es:srControl
     and al,NOT 2
@@ -1364,22 +1386,52 @@ send_audio_out  Proc far
 ;
     mov bx,ds:InStreamCnt
     movzx ebx,bx
+    movzx ecx,cx
     shl ebx,6
     add ebx,OFFSET StreamArr
-    mov es,ds:[ebx].sdSel
 ;
     test ds:[ebx].sdFlags, STREAM_FLAG_RUNNING
-    jnz saoWait
-;
-    lock or ds:[ebx].sdFlags, STREAM_FLAG_RUNNING
-    mov ds:[ebx].sdThread,0
-    jmp saoBuffer
+    jz saoBuffer
+;    
+    call WaitForBuffer
 
-saoWait:    
-    mov al,es:srControl
-    test al,2
-    jnz saoWaitLoop
+saoBuffer:
+    mov ax,flat_sel
+    mov es,ax
+    xor esi,esi
+    push ecx
+    mov edi,ds:[ebx].sdCurrPrd
+
+saoDataLoop:    
+    mov eax,fs:[esi]
+    stosd
+    mov eax,gs:[esi]
+    stosd
+    add esi,4
+    loop saoDataLoop
 ;
+    pop ecx
+    mov edx,ds:[ebx].sdPrdLinear
+    mov edi,ds:[ebx].sdCurrPrd
+    cmp edi,ds:[ebx].sdPrd1Linear
+    je saoPrd1
+
+saoPrd2:
+    mov edi,ds:[ebx].sdPrd1Linear
+    mov ds:[ebx].sdCurrPrd,edi
+    jmp saoBuffered
+
+saoPrd1:
+    mov edi,ds:[ebx].sdPrd2Linear
+    mov ds:[ebx].sdCurrPrd,edi
+
+saoBuffered:
+    test ds:[ebx].sdFlags, STREAM_FLAG_RUNNING
+    jnz saoDone
+;    
+    mov es,ds:[ebx].sdSel
+;    
+    mov al,es:srControl
     or al,1
     mov es:srControl,al
 
@@ -1410,87 +1462,20 @@ saoWaitResetDone:
     or eax,1C000000h
     mov dword ptr es:[0],eax
 ; 
-    mov eax,ds:[ebx].sdBufLen   
+    mov eax,ds:[ebx].sdBufLen
+    shl eax,1   
     mov es:srBufLen,eax
     mov es:srLvi,2
     mov eax,ds:[ebx].sdPrdPhys
     mov es:srBdl,eax
     xor eax,eax
     mov es:srBdl+4,eax
-    mov ds:[ebx].sdFlags,ax
     mov ds:[ebx].sdStatus,al
+    mov ds:[ebx].sdFlags, STREAM_FLAG_RUNNING
 ;
     mov al,es:srControl
     or al,2
     mov es:srControl,al
-    jmp saoBuffer
-
-saoWaitLoop:
-    GetThread
-    mov ds:[ebx].sdThread,ax
-    WaitForSignal
-    test ds:[ebx].sdFlags,STREAM_FLAG_IOC
-    jz saoWaitLoop
-;
-    lock and ds:[ebx].sdFlags,NOT STREAM_FLAG_IOC
-;        
-    test ds:[ebx].sdFlags,STREAM_FLAG_OF
-    jz saoWaitDone
-;
-    int 3
-    lock and ds:[ebx].sdFlags,NOT (STREAM_FLAG_RUNNING OR STREAM_FLAG_OF)
-
-saoWaitDone:    
-    mov ds:[ebx].sdThread,0
-
-saoBuffer:
-    or cx,cx
-    jz saoStop
-;    
-    mov ax,flat_sel
-    mov es,ax
-    xor esi,esi
-    push cx
-    mov edi,ds:[ebx].sdCurrPrd
-
-saoDataLoop:    
-    mov eax,fs:[esi]
-    stosd
-    mov eax,gs:[esi]
-    stosd
-    add esi,4
-    loop saoDataLoop
-;
-    pop cx
-;    
-    movzx eax,cx
-    shl eax,3
-    mov edx,ds:[ebx].sdPrdLinear
-    mov edi,ds:[ebx].sdCurrPrd
-    cmp edi,ds:[ebx].sdPrd1Linear
-    je saoPrd1
-
-saoPrd2:
-    mov edi,ds:[ebx].sdPrdLinear
-    mov es:[edi+18h],eax
-;
-    mov edi,ds:[ebx].sdPrd1Linear
-    mov ds:[ebx].sdCurrPrd,edi
-    jmp saoDone
-
-saoPrd1:
-    mov edi,ds:[ebx].sdPrdLinear
-    mov es:[edi+8h],eax
-;
-    mov edi,ds:[ebx].sdPrd2Linear
-    mov ds:[ebx].sdCurrPrd,edi
-    jmp saoDone
-
-saoStop:
-    mov al,es:srControl
-    and al,NOT 2
-    mov es:srControl,al
-    and ds:[ebx].sdFlags,NOT STREAM_FLAG_RUNNING
         
 saoDone:        
     popad
