@@ -311,7 +311,7 @@ hdiLoop:
     jz hdiDone
 ;
     test eax,40000000h
-    jz hdiStream
+    jz hdiDone
 ;
     mov ax,es:HdaStateSts
     or ax,ax
