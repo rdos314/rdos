@@ -287,7 +287,7 @@ AllocateBlock32 PROC near
 ;
     push ebx    
     AllocatePhysical32
-    or al,7
+    mov al,13h
     SetPageEntry
     pop ebx
 ;    
@@ -620,7 +620,7 @@ SyncHead    Proc near
 ;
     push ebx
     xor ebx,ebx
-    or ax,803h
+    or ax,813h
     SetPageEntry
     pop ebx
 ;    
@@ -2280,7 +2280,7 @@ update_reverse_loop:
     mov bx,ax
     and ax,0F000h
     and bx,0FFFh
-    or ax,803h
+    or ax,813h
     mov edx,ds:ohc_map_linear
     push ebx
     xor ebx,ebx
@@ -2813,7 +2813,7 @@ AddFunction  Proc near
     pop eax
 ;
     xor ebx,ebx
-    or ax,803h
+    or ax,813h
     SetPageEntry
 ;
     push ecx
@@ -2826,7 +2826,7 @@ AddFunction  Proc near
     mov eax,1000h
     AllocateBigLinear
     AllocatePhysical32
-    or al,7
+    mov al,13h
     SetPageEntry
 ;    
     mov ecx,eax

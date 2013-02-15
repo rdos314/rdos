@@ -230,7 +230,7 @@ AllocateBlock64 PROC near
 ;
     push ebx
     AllocatePhysical32
-    or al,7
+    mov al,13h
     SetPageEntry
     pop ebx
 ;    
@@ -1641,7 +1641,7 @@ AddFunction  Proc near
     pop eax
 ;
     xor ebx,ebx
-    or ax,803h
+    or ax,813h
     SetPageEntry
 ;
     push ecx
