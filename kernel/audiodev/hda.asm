@@ -1586,11 +1586,42 @@ AddFunction Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+PciVendorTab:
+pci00   DW 1106h, 3288h
+pci01   DW 0,     0
+
 InitPciAdapter  Proc near
     mov ax,SEG data
     mov ds,ax
     mov ds:HdaCount,0
+;
+    mov si,OFFSET PciVendorTab
+    xor ax,ax
+
+init_pci_probe_loop:
+    mov dx,cs:[si]
+    mov cx,cs:[si+2]
+    or dx,dx
+    stc
+    jz init_pci_probe_done
+;
+    FindPciDevice
+    jnc init_pci_probe_found
+;
+    add si,4
+    jmp init_pci_probe_loop
+
+init_pci_probe_found:    
+    mov cl,10h
+    ReadPciDword
+    test al,1
+    jnz init_pci_probe_done
 ;    
+    and ax,0FFF0h
+    mov ebp,eax
+    call AddFunction
+
+init_pci_probe_done:    
     xor ax,ax
     mov bh,4
     mov bl,3
