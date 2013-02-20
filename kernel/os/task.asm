@@ -750,8 +750,9 @@ notify_time_drift       Proc far
     mov es,cx
     mov es,es:patch_sel
 ;
+    cdq
     sub es:time_diff,eax
-    sbb es:time_diff,0
+    sbb es:time_diff+4,edx
 
 ntdDone:
     pop edx

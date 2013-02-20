@@ -168,6 +168,7 @@ setup_int       PROC near
 ;
     mov al,ah
     or al,40h
+    and al,NOT 2
     out 71h,al
     ReleaseSpinlock ds:cmos_spinlock
     ret
@@ -380,7 +381,7 @@ set_cmos_year_ok:
     mov al,0Bh
     out 70h,al
     jmp short $+2
-    mov al,82h
+    mov al,0C0h
     out 71h,al
     jmp short $+2
 ;
@@ -429,7 +430,7 @@ set_cmos_year_ok:
     mov al,0Bh
     out 70h,al
     jmp short $+2
-    mov al,2
+    mov al,40h
     out 71h,al
     jmp short $+2
 ;
