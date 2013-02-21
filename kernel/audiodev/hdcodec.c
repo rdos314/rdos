@@ -3171,7 +3171,7 @@ void __far HdaThread(void *param)
 void __far InitPci()
 {
     InitPciHda();
-//    RdosCreateKernelThread(5, 0x1000, &HdaThread, "HDA", 0);
+    RdosCreateKernelThread(5, 0x1000, &HdaThread, "HDA", 0);
 } 
 
 /*##########################################################################
