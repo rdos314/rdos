@@ -1917,7 +1917,7 @@ Init    Proc far
     mov ax,cs
     mov es,ax
     mov edi,OFFSET init_usb
-    HookInitPci
+;    HookInitPci
     clc
 ;       
     ret
