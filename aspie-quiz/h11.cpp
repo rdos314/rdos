@@ -32,6 +32,8 @@
 
 #include "file.h"
 #include "quizh11.h"
+#include "h11-1.h"
+#include "h11-2.h"
 
 #include "pop.h"
 
@@ -61,7 +63,7 @@ void WriteUnion()
     char str[16];
     TFile outfile("res\\unh11.txt", 0);
 
-/*    for (i = 0; i < 28; i++)
+    for (i = 0; i < 28; i++)
     {
         for (j = 0; j < 85; j++)
         {
@@ -69,12 +71,12 @@ void WriteUnion()
             arr2[j] = FALSE;
         }
 
-        for (j = 0; j < 16; j++)
+        for (j = 0; j < 10; j++)
         {
-            k = Freq3[i][j];
+            k = Freq1[i][j];
             arr1[k] = TRUE;
 
-            k = Freq4[i][j];
+            k = Freq2[i][j];
             arr2[k] = TRUE;
         }
 
@@ -85,7 +87,7 @@ void WriteUnion()
 
         sprintf(str, "%d\r\n", count);
         outfile.Write(str);        
-    }    */
+    }
 }
 
 /*##################  main ##########################
@@ -100,7 +102,7 @@ int main(int argc, char **argv)
         char str[80];
         int g;
 
-//        WriteUnion();
+        WriteUnion();
         
         printf("read data\r\n");
         Quiz[0] = new TQuizH11("bin\\quizh11.bin");
