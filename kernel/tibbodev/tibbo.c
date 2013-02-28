@@ -178,16 +178,7 @@ void BroadcastData(char *buf, int size)
 ##########################################################################*/
 int InitPort(struct tibbo_port *port)
 {
-    int ok;
-    char reply[64];
-    
-    ok = Login(port);
-    if (ok)
-    {
-        ok = Session(port, "STP1", reply);
-        Reboot(port);
-    }
-    return ok;
+    return SetVar(port, "TP", "1");
 }        
     
 /*##########################################################################
