@@ -186,7 +186,6 @@ InitBroadcast_    Endp
     extrn ImplOpenCom:near
 
 open_com    Proc far
-    int 3
     push ds
     push es
     push fs
@@ -199,8 +198,19 @@ open_com    Proc far
     movzx eax,ah
     movzx ebx,bl
     les edi,es:td_port
+    push es
+    push edi
     call ImplOpenCom
+    pop edi
+    pop es
 ;
+    or eax,eax
+    jz ocDone    
+;
+    mov fs:tp_port,edi
+    mov fs:tp_port+4,es
+
+ocDone:
     popad
     pop fs
     pop es
@@ -331,7 +341,24 @@ reset_port  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    extrn ImplSignalSend:near
+
 start_send  PROC far
+    push ds
+    push es
+    pushad
+;
+    mov eax,ds:tp_port+4
+    or eax,eax
+    jz ssDone
+;    
+    les edi,ds:tp_port
+    call ImplSignalSend
+
+ssDone:
+    popad
+    pop es
+    pop ds    
     ret
 start_send  ENDP
 

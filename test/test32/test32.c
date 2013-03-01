@@ -15,7 +15,10 @@ void main()
     handle = RdosOpenCom(ports - 4, 9600, 'N', 8, 1, 0x1000, 0x1000);
 
     for (;;)
-        RdosWaitMilli(500);
+    {
+        RdosWaitMilli(5);
+        RdosWriteCom(handle, 'A');
+    }
 
 //    RdosTestGate();    
 }

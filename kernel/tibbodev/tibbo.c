@@ -46,6 +46,7 @@ struct tibbo_port
     int dev_port;
     short int port;
     int tcp_handle;
+    int handler_thread;
 };
 
 struct tibbo_dev
@@ -541,6 +542,25 @@ void ImplBroadcast(int driver_sel)
     
 /*##########################################################################
 #
+#   Name       : PortThread
+#
+##########################################################################*/
+#pragma aux PortThread "*" rdosdev parm routine [gs ebx]
+void __far PortThread(void *param)
+{
+    struct tibbo_port *port;
+
+    port = (struct tibbo_port *)param;
+    port->handler_thread = RdosGetThreadHandle();
+
+    for (;;)
+    {
+        RdosWaitForSignal();    
+    }
+}
+    
+/*##########################################################################
+#
 #   Name       : ImplOpenCom
 #
 ##########################################################################*/
@@ -683,9 +703,24 @@ int ImplOpenCom(struct tibbo_port *port, int baudrate, char parity, int databits
         Logout(port->dev);
 
         RdosLeaveKernelSection(&CmdSection);
+
+        port->tcp_handle = handle;
+
+        RdosCreateKernelThread(5, 0x1000, &PortThread, "Tibbo Com", port);
     }
 
     return ok;
+}
+    
+/*##########################################################################
+#
+#   Name       : ImplSignalSend
+#
+##########################################################################*/
+#pragma aux ImplSignalSend "*" rdosdev parm routine [es edi]
+int ImplSignalSend(struct tibbo_port *port)
+{
+    RdosSignal(port->handler_thread);
 }
 
 /*##########################################################################
