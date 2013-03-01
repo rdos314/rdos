@@ -38,9 +38,20 @@ include ..\os\com.inc
 
 tibbo_com_port_struc    STRUC
 
-t_base_struc  com_port_struc <>
+tp_base_struc  com_port_struc <>
+
+tp_port      DD ?,?
 
 tibbo_com_port_struc    ENDS
+
+
+tibbo_com_device_struc   STRUC
+
+td_base_struc    com_device_struc <>
+
+td_port      DD ?,?
+
+tibbo_com_device_struc   ENDS
 
 _TEXT    SEGMENT byte public 'CODE'
 
@@ -434,6 +445,146 @@ create_port Proc far
     pop eax
     ret
 create_port Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       reserve_line_state
+;
+;       description:    Reserve line-state signals
+;
+;       PARAMETERS:     DS      Com device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reserve_line_state  Proc far
+    stc
+    ret
+reserve_line_state  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       device_set_dtr
+;
+;       description:    Device set DTR signal
+;
+;       PARAMETERS:     DS      Com device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+device_set_dtr  Proc far
+    ret
+device_set_dtr  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       device_reset_dtr
+;
+;       description:    Device reset DTR signal
+;
+;       PARAMETERS:     DS      Com device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+device_reset_dtr    Proc far
+    ret
+device_reset_dtr    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       get_line_state
+;
+;       description:    Get current line-state change
+;
+;       PARAMETERS:     DS      Com device selector
+;
+;       RETURNS:    AL      Line-state
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_line_state  Proc far
+    xor al,al
+    stc
+    ret
+get_line_state  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       wait_for_line_state
+;
+;       description:    Wait for line-state change
+;
+;       PARAMETERS:     DS      Com device selector
+;
+;       RETURNS:    AL      Line-state
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_line_state Proc far
+    xor al,al
+    stc
+    ret
+wait_for_line_state Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AddPort
+;
+;   DESCRIPTION:    Add port to list of available ports
+;
+;   PARAMETERS:     ES:EDI          Port structure
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddPort Proc near
+    push ds
+    push es
+    pushad
+;
+    mov edx,es    
+    mov eax,SIZE tibbo_com_device_struc
+    AllocateSmallGlobalMem
+;
+    mov ax,es
+    mov ds,ax
+    mov ds:td_port,edi
+    mov ds:td_port+4,edx    
+    xor ax,ax
+    xor dx,dx
+    AddComPort
+;    
+    mov dword ptr ds:cd_create_proc,OFFSET create_port
+    mov dword ptr ds:cd_create_proc+4,cs
+;    
+    mov dword ptr ds:cd_reserve_line_proc,OFFSET reserve_line_state
+    mov dword ptr ds:cd_reserve_line_proc+4,cs
+;    
+    mov dword ptr ds:cd_set_dtr_proc,OFFSET device_set_dtr
+    mov dword ptr ds:cd_set_dtr_proc+4,cs
+;    
+    mov dword ptr ds:cd_reset_dtr_proc,OFFSET device_reset_dtr
+    mov dword ptr ds:cd_reset_dtr_proc+4,cs
+;    
+    mov dword ptr ds:cd_get_line_state_proc,OFFSET get_line_state
+    mov dword ptr ds:cd_get_line_state_proc+4,cs
+;    
+    mov dword ptr ds:cd_wait_for_line_state_proc,OFFSET wait_for_line_state
+    mov dword ptr ds:cd_wait_for_line_state_proc+4,cs
+;
+    popad
+    pop es
+    pop ds  
+    ret
+AddPort Endp
 
 _TEXT    ENDS
 
