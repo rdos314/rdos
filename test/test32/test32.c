@@ -12,8 +12,11 @@ void main()
 
     ports = RdosGetMaxComPort();
 
-    handle = RdosOpenCom(0, 9600, 'N', 8, 1, 0x1000, 0x1000);
+    handle = RdosOpenCom(ports - 4, 9600, 'N', 8, 1, 0x1000, 0x1000);
 
-    RdosTestGate();    
+    for (;;)
+        RdosWaitMilli(500);
+
+//    RdosTestGate();    
 }
 

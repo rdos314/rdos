@@ -45,6 +45,7 @@ struct tibbo_port
     struct tibbo_dev *dev;
     int dev_port;
     short int port;
+    int tcp_handle;
 };
 
 struct tibbo_dev
@@ -69,7 +70,7 @@ extern void AddPort(struct tibbo_port *port);
 
 int DriverCount;
 int DriverArr[MAX_UDP_DEV];
-int CurrDriver;
+int CurrDriver = -1;
 
 int TibboCount;
 struct tibbo_dev *TibboArr[MAX_TIBBO_DEV];
@@ -79,6 +80,8 @@ struct tibbo_port *TibboPortArr[MAX_TIBBO_PORTS];
 
 char AnswerBuf[64];
 int SignalThread = 0;
+
+struct TKernelSection CmdSection;
     
 /*##########################################################################
 #
@@ -101,6 +104,17 @@ int Login(struct tibbo_dev *dev)
         SignalThread = 0;
         return FALSE;
     }
+}
+    
+/*##########################################################################
+#
+#   Name       : Logout
+#
+##########################################################################*/
+void Logout(struct tibbo_dev *dev)
+{
+    RdosSendDriverUdp(4095, -1, dev->ip, dev->driver, dev->mac, "O", 1);
+    SignalThread = 0;
 }
     
 /*##########################################################################
@@ -156,12 +170,32 @@ int SetVar(struct tibbo_port *port, const char *setting, const char *val)
     
 /*##########################################################################
 #
+#   Name       : SetPar
+#
+##########################################################################*/
+int SetPar(struct tibbo_port *port, const char *par, const char *val)
+{
+    char str[64];
+    char reply[64];
+
+    if (port->dev_port)
+        sprintf(str, "P%s@%d%s", par, port->dev_port + 1, val);
+    else
+        sprintf(str, "P%s%s", par, val);
+
+    return Session(port->dev, str, reply);        
+}
+    
+/*##########################################################################
+#
 #   Name       : BroadcastData
 #
 ##########################################################################*/
 void BroadcastData(char *buf, int size)
 {
     int i;
+
+    RdosEnterKernelSection(&CmdSection);
 
     DriverCount = 0;
     InitBroadcast();
@@ -172,6 +206,10 @@ void BroadcastData(char *buf, int size)
         RdosBroadcastUdp(4095, -1, CurrDriver, buf, size);
         RdosWaitMilli(250);
     }
+
+    RdosLeaveKernelSection(&CmdSection);
+
+    CurrDriver = -1;
 }        
     
 /*##########################################################################
@@ -181,7 +219,13 @@ void BroadcastData(char *buf, int size)
 ##########################################################################*/
 int InitPort(struct tibbo_port *port)
 {
-    return SetVar(port, "TP", "1");
+    int ok;
+    
+    ok = SetVar(port, "RM", "0"); 
+    if (ok)
+        ok = SetVar(port, "TP", "1");
+
+    return ok;        
 }        
     
 /*##########################################################################
@@ -217,6 +261,8 @@ void RunTibboThread()
     TibboCount = 0;
     TibboPortCount = 0;
 
+    RdosWaitMilli(5000);
+
     for (;;)
     {
         BroadcastData(str, strlen(str));
@@ -248,7 +294,7 @@ void RunTibboThread()
 #pragma aux TibboThread "*" rdosdev parm routine [es edi]
 void __far TibboThread(void *param)
 {
-    _asm int 3;
+//    _asm int 3;
     RunTibboThread();
 }
     
@@ -448,7 +494,7 @@ void InsertDev(struct tibbo_dev *dev)
 #pragma aux ImplUdpCallback "*" rdosdev parm routine [edx] [es edi] [ecx]
 void ImplUdpCallback(long ip, char *buf, int size)
 {
-    struct tibbo_dev *dev = (struct tibbo_dev *)malloc(sizeof(struct tibbo_dev));
+    struct tibbo_dev *dev;
     char *ret_msg = 0;
 
     if (SignalThread)
@@ -462,16 +508,22 @@ void ImplUdpCallback(long ip, char *buf, int size)
     }
     else
     {
-        dev->driver = CurrDriver;
-        dev->ip = ip;
-        dev->port_count = 1;
-        dev->running = FALSE;
-        ParseEcho(dev, buf, size);
+        if ((size > 1) && (buf[0] == 'A'))
+        {
+            dev = (struct tibbo_dev *)malloc(sizeof(struct tibbo_dev));
 
-        if (dev->ok)
-            InsertDev(dev);
-        else
-            free(dev);
+            dev->driver = CurrDriver;
+            dev->ip = ip;
+            dev->port_count = 1;
+            dev->running = FALSE;
+            dev->ok = FALSE;
+            ParseEcho(dev, buf, size);
+
+            if (dev->ok)
+                InsertDev(dev);
+            else
+                free(dev);
+        }
     }
 }
     
@@ -492,9 +544,148 @@ void ImplBroadcast(int driver_sel)
 #   Name       : ImplOpenCom
 #
 ##########################################################################*/
-#pragma aux ImplOpenCom "*" rdosdev parm routine [es edi] [ecx] [dl] [eax] [ebx] value [eax]
+#pragma aux ImplOpenCom "*" rdosdev parm routine [es edi] [ecx] [edx] [eax] [ebx] value [eax]
 int ImplOpenCom(struct tibbo_port *port, int baudrate, char parity, int databits, int stopbits)
 {
+    int ok;
+    int val;
+    char str[64];
+    int handle;
+
+    switch (baudrate)
+    {
+        case 1200:
+            val = 0;
+            break;
+
+        case 2400:
+            val = 1;
+            break;
+
+        case 4800:
+            val = 2;    
+            break;
+
+        case 9600:
+            val = 3;
+            break;
+
+        case 19200:
+            val = 4;
+            break;
+
+        case 38400:
+            val = 5;
+            break;
+
+        case 57600:
+            val = 6;
+            break;
+
+        case 115200:
+            val = 7;
+            break;    
+
+        case 150:
+            val = 8;
+            break;
+
+        case 300:
+            val = 9;
+            break;
+
+        case 600:
+            val = 10;
+            break;
+
+        case 28800:
+            val = 11;
+            break;
+
+        default:
+            val = 0;
+            break;
+    }
+
+    if (val)
+    {
+        handle = RdosOpenTcpConnection(port->dev->ip, 1000, port->port, 500, 0x1000);
+        if (handle)
+        {
+            ok = RdosWaitForTcpConnection(handle, 500);
+            if (!ok)
+                RdosCloseTcpConnection(handle);
+        }
+        else
+            ok = FALSE;
+    }
+    else
+        ok = FALSE;
+
+    if (ok)
+    {
+        RdosEnterKernelSection(&CmdSection);
+
+        ok = Login(port->dev);
+
+        if (ok)
+        {
+            ok = SetVar(port, "SI", "0");    
+
+            if (ok)
+                ok = SetVar(port, "FC", "0");    
+
+            if (ok)
+                ok = SetVar(port, "DT", "0");    
+
+            if (ok)
+                ok = SetVar(port, "DS", "1");    
+
+            if (ok)
+                ok = SetVar(port, "SE", "0");    
+
+            if (ok)
+            {
+                sprintf(str, "%d", val);
+                ok = SetVar(port, "BR", str); 
+            }
+
+            if (ok)
+            {
+                switch (parity)
+                {
+                    case 'E':
+                        val = 1;
+                        break;
+
+                    case 'O':
+                        val = 2;
+                        break;
+
+                    default:
+                        val = 0;
+                        break;
+                }    
+                
+                sprintf(str, "%d", val);
+                ok = SetVar(port, "PR", str); 
+            }
+
+            if (ok)
+            {
+                if (databits == 7)
+                    ok = SetVar(port, "BB", "0"); 
+                else
+                    ok = SetVar(port, "BB", "1"); 
+            }                
+        }
+
+        Logout(port->dev);
+
+        RdosLeaveKernelSection(&CmdSection);
+    }
+
+    return ok;
 }
 
 /*##########################################################################
@@ -512,6 +703,7 @@ int ImplOpenCom(struct tibbo_port *port, int baudrate, char parity, int databits
 void __far InitTasking()
 {
     InitTibboBase();
+    RdosInitKernelSection(&CmdSection);
 
     RdosCreateKernelThread(5, 0x1000, &TibboThread, "Tibbo", 0);
 } 
