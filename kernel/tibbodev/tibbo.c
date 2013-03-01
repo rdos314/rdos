@@ -40,9 +40,6 @@
 #define FALSE   0
 #define TRUE    !FALSE
 
-extern void InitTibboBase();
-extern void InitBroadcast();
-
 struct tibbo_port
 {
     struct tibbo_dev *dev;
@@ -63,6 +60,12 @@ struct tibbo_dev
     int running;
     struct tibbo_port *port_arr[MAX_TIBBO_DEV_PORTS];
 };
+
+extern void InitTibboBase();
+extern void InitBroadcast();
+
+extern void AddPort(struct tibbo_port *port);
+#pragma aux AddPort parm routine [es edi]
 
 int DriverCount;
 int DriverArr[MAX_UDP_DEV];
@@ -392,6 +395,8 @@ void CreateDevPorts(struct tibbo_dev *dev)
 
         TibboPortArr[TibboPortCount] = port;
         TibboPortCount++;
+
+        AddPort(port);
     }
 }
     
@@ -480,6 +485,16 @@ void ImplBroadcast(int driver_sel)
 {
     DriverArr[DriverCount] = driver_sel;
     DriverCount++;
+}
+    
+/*##########################################################################
+#
+#   Name       : ImplOpenCom
+#
+##########################################################################*/
+#pragma aux ImplOpenCom "*" rdosdev parm routine [es edi] [ecx] [dl] [eax] [ebx] value [eax]
+int ImplOpenCom(struct tibbo_port *port, int baudrate, char parity, int databits, int stopbits)
+{
 }
 
 /*##########################################################################

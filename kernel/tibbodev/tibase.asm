@@ -183,8 +183,28 @@ InitBroadcast_    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    extrn ImplOpenCom:near
+
 open_com    Proc far
-    stc
+    int 3
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov dx,ds
+    mov fs,dx
+;    
+    mov dl,bh
+    movzx eax,ah
+    movzx ebx,bl
+    les edi,es:td_port
+    call ImplOpenCom
+;
+    popad
+    pop fs
+    pop es
+    pop ds    
     ret
 open_com    Endp
 
@@ -545,7 +565,9 @@ wait_for_line_state Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddPort Proc near
+    public AddPort_
+    
+AddPort_ Proc near
     push ds
     push es
     pushad
@@ -584,7 +606,7 @@ AddPort Proc near
     pop es
     pop ds  
     ret
-AddPort Endp
+AddPort_ Endp
 
 _TEXT    ENDS
 
