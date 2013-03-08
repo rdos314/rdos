@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# h12.cpp
-# Analyze H12
+# h13.cpp
+# Analyze H13
 #
 ########################################################################*/
 #include <stdio.h>
@@ -31,9 +31,7 @@
 #include <math.h>
 
 #include "file.h"
-#include "quizh12.h"
-#include "h12-1.h"
-#include "h12-2.h"
+#include "quizh13.h"
 
 #include "pop.h"
 
@@ -43,7 +41,7 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-TQuizH12 *Quiz[50];
+TQuizH13 *Quiz[50];
 
 /*##################  WriteUnion ##########################
 *   Purpose....: Write union                                                            #
@@ -54,7 +52,7 @@ TQuizH12 *Quiz[50];
 *##########################################################################*/
 void WriteUnion()
 {
-    int i;
+/*    int i;
     int j;
     int k;
     int count;
@@ -87,7 +85,7 @@ void WriteUnion()
 
         sprintf(str, "%d\r\n", count);
         outfile.Write(str);        
-    }
+    } */
 }
 
 /*##################  main ##########################
@@ -102,10 +100,10 @@ int main(int argc, char **argv)
         char str[80];
         int g;
 
-        WriteUnion();
+//        WriteUnion();
         
         printf("read data\r\n");
-        Quiz[0] = new TQuizH12("bin\\quizh12.bin");
+        Quiz[0] = new TQuizH13("bin\\quizh13.bin");
 
         printf("write no answer\r\n");
         Quiz[0]->WriteNoAnswerStats("res\\noans.txt");
@@ -114,17 +112,17 @@ int main(int argc, char **argv)
         Quiz[0]->WriteEyeResults("res\\eye.csv");
 
         printf("import\r\n");
-        Quiz[0]->ImportMvsp("pca-done\\allH12.txt", PCA_TYPE_ALL);
-        Quiz[0]->ImportMvsp("pca-done\\maleH12.txt", PCA_TYPE_MALE);
-        Quiz[0]->ImportMvsp("pca-done\\femH12.txt", PCA_TYPE_FEMALE);
+        Quiz[0]->ImportMvsp("pca-done\\allH13.txt", PCA_TYPE_ALL);
+        Quiz[0]->ImportMvsp("pca-done\\maleH13.txt", PCA_TYPE_MALE);
+        Quiz[0]->ImportMvsp("pca-done\\femH13.txt", PCA_TYPE_FEMALE);
 
         printf("details\r\n");
 
-         Quiz[0]->WriteSumaryTable("res\\quizh12.htm", FALSE);
+         Quiz[0]->WriteSumaryTable("res\\quizh13.htm", FALSE);
 
         printf("rel\r\n");
 
-         Quiz[0]->WriteIntercorr("res\\relh12.htm");
+         Quiz[0]->WriteIntercorr("res\\relh13.htm");
 
      printf("calc global\r\n");
         Quiz[0]->CalcGlobal();

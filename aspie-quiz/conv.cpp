@@ -89,6 +89,7 @@ void ConvH9();
 void ConvH10();
 void ConvH11();
 void ConvH12();
+void ConvH13();
 
 #define MAX_QUESTIONS 400
 
@@ -491,9 +492,10 @@ int main(int argc, char **argv)
     ConvH9();
     ConvH10();
     ConvH11();
+    ConvH12();
 */
 
-    ConvH12();
+    ConvH13();
     
     return 0;
 }
