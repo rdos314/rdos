@@ -90,6 +90,7 @@ void ConvH10();
 void ConvH11();
 void ConvH12();
 void ConvH13();
+void ConvH14();
 
 #define MAX_QUESTIONS 400
 
@@ -141,7 +142,7 @@ void WriteOne(struct TValArr *entry)
             sprintf(str, "%d,", val);
 
         PcaFile->Write(str);
-    }  
+    } 
 }
 
 /*##################  WriteRev ##########################
@@ -493,9 +494,10 @@ int main(int argc, char **argv)
     ConvH10();
     ConvH11();
     ConvH12();
+    ConvH13();
 */
 
-    ConvH13();
+    ConvH14();
     
     return 0;
 }
