@@ -264,6 +264,8 @@ allocate_small_kernel_mem_nr = 255
 hide_sprite_line_nr         = 256
 show_sprite_line_nr         = 257
 
+update_rtc_nr               = 258
+
 set_keyboard_state_nr       = 264
 
 add_wait_nr                 = 266

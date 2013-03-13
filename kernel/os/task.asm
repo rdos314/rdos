@@ -7193,13 +7193,44 @@ update_time_name    DB 'Update Time',0
 update_time     PROC far
     push ds
     push bx
+    push esi
+    push edi
+;    
     mov bx,SEG data
     mov ds,bx
     mov ds,ds:patch_sel
     cli
+    mov esi,ds:time_diff
+    mov edi,ds:time_diff+4
     mov ds:time_diff,eax
     mov ds:time_diff+4,edx
     sti
+;
+    sub esi,eax
+    sbb edi,edx
+    test edi,80000000h    
+    jz utSignOk
+;
+    not esi
+    not edi
+
+utSignOk:    
+    or edi,edi
+    jnz utSetRtc
+;
+    cmp esi,1193000
+    jb utDone    
+
+utSetRtc:
+    mov ax,update_rtc_nr
+    IsValidOsGate
+    jc utDone
+;
+    UpdateRtc
+
+utDone:
+    pop edi
+    pop esi
     pop bx
     pop ds
     retf32

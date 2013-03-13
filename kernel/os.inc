@@ -1854,6 +1854,10 @@ NotifyTimeDrift MACRO
     OsGate notify_time_drift_nr
                     ENDM
 
+UpdateRtc   MACRO
+    OsGate update_rtc_nr
+                    ENDM
+
 ;;;;;;;;;; HANDLES ;;;;;;;;;;;;;;;;;;
 
 ; IN  AX        Signature

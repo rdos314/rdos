@@ -153,22 +153,12 @@ setup_int       PROC near
     or al,0Fh
     out 71h,al    
     jmp short $+2
-;
-    mov al,0Bh
-    out 70h,al
-    jmp short $+2
-;
-    in al,71h
-    mov ah,al
-    jmp short $+2
 ;    
     mov al,0Bh
     out 70h,al
-    jmp short $+2
-;
-    mov al,ah
-    or al,40h
-    and al,NOT 2
+    jmp short $+2    
+;    
+    mov al,40h
     out 71h,al
     ReleaseSpinlock ds:cmos_spinlock
     ret
@@ -195,24 +185,9 @@ get_cmos_time   PROC near
     push ds
     mov ax,SEG data
     mov ds,ax
-    RequestSpinlock ds:cmos_spinlock
 
-get_cmos_wait_update:
-    mov al,0Ah
-    out 70h,al
-    jmp short $+2
-    in al,71h
-    test al,80h
-    jz get_cmos_wait_update
-
-get_cmos_wait_idle:
-    mov al,0Ah
-    out 70h,al
-    jmp short $+2
-    in al,71h
-    test al,80h
-    jnz get_cmos_wait_idle
-;       
+get_cmos_retry:    
+    RequestSpinlock ds:cmos_spinlock       
     mov al,0
     out 70h,al
     jmp short $+2
@@ -243,7 +218,14 @@ get_cmos_wait_idle:
     jmp short $+2
     in al,71h
     mov dl,al
+;
+    mov al,0
+    out 70h,al
+    jmp short $+2
+    in al,71h
     ReleaseSpinlock ds:cmos_spinlock
+    cmp ah,al
+    jne get_cmos_retry
 
 get_time_decode:
     mov al,ah
@@ -381,7 +363,7 @@ set_cmos_year_ok:
     mov al,0Bh
     out 70h,al
     jmp short $+2
-    mov al,0C0h
+    mov al,80h
     out 71h,al
     jmp short $+2
 ;
@@ -472,7 +454,6 @@ update_rtc  Proc far
     pop cx
     pop dx
     call set_cmos_time
-    call get_cmos_time
 ;
     pop edx
     pop eax
@@ -699,7 +680,7 @@ init    Proc far
     mov edi,OFFSET update_rtc_name
     xor dx,dx
     mov ax,update_rtc_nr
-    RegisterBimodalUserGate
+    RegisterOsGate
 ;
     mov al,1Ah
     mov edi,OFFSET rtc_io

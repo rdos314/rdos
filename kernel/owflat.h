@@ -1363,7 +1363,6 @@
     "mov eax,esi" \
     "mov edx,edi" \
     CallGate_update_time  \
-    CallGate_update_rtc  \
     parm [edi] [esi] \
     modify [eax edx esi edi];
 

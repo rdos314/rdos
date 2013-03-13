@@ -211,8 +211,6 @@
 #define usergate_xms_handler 198
 #define usergate_ems_handler 199
 
-#define usergate_update_rtc 200
-
 #define usergate_resize_flat_linear 201
 
 #define usergate_set_drawcolor 202
@@ -860,8 +858,6 @@
 #define CallGate_xms_handler 0x67 0x9a 198 0 0 0 3 0
 #define CallGate_ems_handler 0x67 0x9a 199 0 0 0 3 0
 
-#define CallGate_update_rtc 0x67 0x9a 200 0 0 0 3 0
-
 #define CallGate_resize_flat_linear 0x67 0x9a 201 0 0 0 3 0
 
 #define CallGate_set_drawcolor 0x67 0x9a 202 0 0 0 3 0
@@ -1506,8 +1502,6 @@
 
 #define CallGate_xms_handler 0x3e 0x67 0x9a 198 0 0 0 3 0
 #define CallGate_ems_handler 0x3e 0x67 0x9a 199 0 0 0 3 0
-
-#define CallGate_update_rtc 0x3e 0x67 0x9a 200 0 0 0 3 0
 
 #define CallGate_resize_flat_linear 0x3e 0x67 0x9a 201 0 0 0 3 0
 
