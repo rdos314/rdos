@@ -45,6 +45,11 @@ cmos_tics_base  DD ?,?
 
 cmos_spinlock   spinlock_typ <>
 
+last_time           DD ?,?
+time_drift          DD ?
+
+cmos_status_B       DB ?
+
 data    ENDS
 
 IFDEF __WASM__
@@ -66,16 +71,19 @@ code    SEGMENT byte public use16 'CODE'
 ;
 ;           DESCRIPTION:    RTC INTERRUPT
 ;
-;           PARAMETERS:     DS      System data sel
+;           PARAMETERS:     DS      data seg
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 rtc_int Proc far
+    RequestSpinlock ds:cmos_spinlock
     mov al,0Ch
     out 70h,al
     jmp short $+2
 ;
     in al,71h   
+    ReleaseSpinlock ds:cmos_spinlock
+;    
     test al,40h
     jz rtc_int_done
 ;    
@@ -113,7 +121,7 @@ rtc_int Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 setup_int       PROC near
-    mov bx,system_data_sel
+    mov bx,SEG data
     mov ds,bx
     mov ds:last_time,0
     mov ds:last_time+4,0
@@ -125,9 +133,6 @@ setup_int       PROC near
     mov al,8
     mov ah,30
     RequestIrqHandler
-;       
-    mov ax,SEG data
-    mov ds,ax
     RequestSpinlock ds:cmos_spinlock
 ;
     mov al,0Ch
@@ -151,6 +156,7 @@ setup_int       PROC near
 ;
     mov al,ah
     or al,0Fh
+    and al,7Fh
     out 71h,al    
     jmp short $+2
 ;    
@@ -158,7 +164,7 @@ setup_int       PROC near
     out 70h,al
     jmp short $+2    
 ;    
-    mov al,40h
+    mov al,ds:cmos_status_B
     out 71h,al
     ReleaseSpinlock ds:cmos_spinlock
     ret
@@ -185,9 +191,18 @@ get_cmos_time   PROC near
     push ds
     mov ax,SEG data
     mov ds,ax
+    mov di,0FFFFh
 
 get_cmos_retry:    
     RequestSpinlock ds:cmos_spinlock       
+    mov al,0Ah
+    out 70h,al
+    jmp short $+2
+;
+    in al,71h   
+    test al,80h
+    jnz get_time_failed
+;    
     mov al,0
     out 70h,al
     jmp short $+2
@@ -219,13 +234,82 @@ get_cmos_retry:
     in al,71h
     mov dl,al
 ;
+    mov al,0Ah
+    out 70h,al
+    jmp short $+2
+;
+    in al,71h   
+    test al,80h
+    jnz get_time_failed
+;
     mov al,0
     out 70h,al
     jmp short $+2
     in al,71h
+    cmp al,ah
+    jne get_time_failed
+;    
+    mov al,2
+    out 70h,al
+    jmp short $+2
+    in al,71h
+    cmp al,bl
+    jne get_time_failed
+;    
+    mov al,4
+    out 70h,al
+    jmp short $+2
+    in al,71h
+    cmp al,bh
+    jne get_time_failed
+;    
+    mov al,7
+    out 70h,al
+    jmp short $+2
+    in al,71h
+    cmp al,cl
+    jne get_time_failed
+;    
+    mov al,8
+    out 70h,al
+    jmp short $+2
+    in al,71h
+    cmp al,ch
+    jne get_time_failed
+;
+    mov al,9
+    out 70h,al
+    jmp short $+2
+    in al,71h
+    cmp al,dl
+    jne get_time_failed
+;    
     ReleaseSpinlock ds:cmos_spinlock
-    cmp ah,al
-    jne get_cmos_retry
+    jmp get_time_decode
+
+get_time_failed:
+    ReleaseSpinlock ds:cmos_spinlock
+
+get_time_wait_idle:
+    RequestSpinlock ds:cmos_spinlock
+    mov al,0Ah
+    out 70h,al
+    jmp short $+2
+;
+    in al,71h   
+    ReleaseSpinlock ds:cmos_spinlock
+;    
+    test al,80h
+    jnz get_time_wait_idle
+;    
+    sub di,1
+    jnz get_cmos_retry
+;
+    mov dx,2000
+    mov cx,0101h
+    xor bx,bx
+    xor ax,ax
+    jmp get_time_end
 
 get_time_decode:
     mov al,ah
@@ -280,8 +364,10 @@ get_time_decode:
     jc get_time_2000
     add dx,1900
     jmp get_time_end
+
 get_time_2000:
     add dx,2000
+
 get_time_end:
     pop ds
     ret
@@ -412,7 +498,7 @@ set_cmos_year_ok:
     mov al,0Bh
     out 70h,al
     jmp short $+2
-    mov al,40h
+    mov al,ds:cmos_status_B
     out 71h,al
     jmp short $+2
 ;
@@ -671,6 +757,16 @@ init    Proc far
     mov ax,SEG data
     mov ds,ax
     InitSpinlock ds:cmos_spinlock
+;
+    xor al,al
+    mov bx,apic_code_sel
+    verr bx
+    jnz init_save_status
+;
+    mov al,40h
+
+init_save_status:
+    mov ds:cmos_status_B,al            
 ;    
     mov ax,cs
     mov ds,ax
