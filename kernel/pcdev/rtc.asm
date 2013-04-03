@@ -758,15 +758,9 @@ init    Proc far
     mov ds,ax
     InitSpinlock ds:cmos_spinlock
 ;
-    xor al,al
-    mov bx,apic_code_sel
-    verr bx
-    jnz init_save_status
-;
-    mov al,40h
-
-init_save_status:
-    mov ds:cmos_status_B,al            
+;   mov al,40h
+    mov al,42h
+    mov ds:cmos_status_B,al
 ;    
     mov ax,cs
     mov ds,ax
