@@ -195,6 +195,7 @@ get_cmos_time   PROC near
 
 get_cmos_retry:    
     RequestSpinlock ds:cmos_spinlock       
+;
     mov al,0Ah
     out 70h,al
     jmp short $+2
@@ -202,6 +203,14 @@ get_cmos_retry:
     in al,71h   
     test al,80h
     jnz get_time_failed
+;
+    mov al,0Bh
+    out 70h,al
+    jmp short $+2    
+;    
+    mov al,2
+    out 71h,al
+    jmp short $+2    
 ;    
     mov al,0
     out 70h,al
@@ -758,7 +767,6 @@ init    Proc far
     mov ds,ax
     InitSpinlock ds:cmos_spinlock
 ;
-;   mov al,40h
     mov al,42h
     mov ds:cmos_status_B,al
 ;    
