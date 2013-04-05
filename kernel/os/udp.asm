@@ -38,6 +38,9 @@ INCLUDE system.inc
 INCLUDE ip.inc
 INCLUDE udp.inc
 
+BROADCAST_QUERY_PORT    EQU 4094
+
+
 RESEND_TIMEOUT  EQU 2000        ; 2000 ms
 
 Reverse MACRO
@@ -56,6 +59,14 @@ query_free          DW ?
 query_head          DW ?
 udp_spinlock        spinlock_typ <>
 udp_section         section_typ <>
+bq_section          section_typ <>
+bq_req_size         DD ?
+bq_reply_size       DD ?
+bq_req_offset       DD ?
+bq_req_sel          DW ?
+bq_reply_sel        DW ?
+bq_dest_port        DW ?
+bq_thread           DW ?
 listen_list         DW ?
 udp_queries         DB UDP_QUERY_ENTRIES * SIZE udp_query DUP(?)
 
@@ -769,7 +780,6 @@ find_listen_done:
     pop es
     ret
 FindListen      Endp
-
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1015,6 +1025,200 @@ listen_udp_port Proc far
     retf32
 listen_udp_port Endp
 
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           broadcast_listen_callback
+;
+;       Purpose:        Broadcast listen callback
+;
+;       Parameters:     CX      UDP request size
+;                       ES:EDI  UDP request data
+;
+;       Returns:        CX      UDP reply size
+;                       ES:EDI  UDP reply data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+broadcast_listen_callback   Proc far
+    push ds
+    push eax
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:bq_thread
+    or ax,ax
+    jz blcDone
+;
+    push es
+    push fs
+    push esi
+;
+    movzx ecx,cx
+    mov ax,es    
+    mov fs,ax
+    mov esi,edi
+;
+    mov eax,ecx
+    AllocateSmallGlobalMem
+    mov ds:bq_reply_size,ecx
+;    
+    xor edi,edi
+    rep movs byte ptr es:[edi],fs:[esi]
+    mov ds:bq_reply_sel,es
+;
+    pop esi
+    pop fs
+    pop es
+;
+    push bx
+    xor bx,bx
+    xchg bx,ds:bq_thread
+    Signal
+    pop bx                
+
+blcDone:
+    xor ecx,ecx
+;    
+    pop eax
+    pop ds        
+    retf32
+broadcast_listen_callback   Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           broadcast_send_callback
+;
+;       DESCRIPTION:    Broadcast send callback
+;
+;       PARAMETERS:     DS          Class selector
+;                       FS          Driver selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+broadcast_send_callback    Proc far
+    push ds
+    push es
+    pushad
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov si,BROADCAST_QUERY_PORT
+    mov bx,ds:bq_dest_port
+    mov ecx,ds:bq_req_size
+    mov es,ds:bq_req_sel
+    mov edi,ds:bq_req_offset
+    BroadcastUdp
+;
+    popad
+    pop es
+    pop ds
+    retf32
+broadcast_send_callback    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           BroadcastQueryUdp
+;
+;       Purpose:        Broadcast query UDP
+;
+;       Parameters:     EDX         Timeout in ms
+;                       (E)CX       Size of setup message
+;                       DS:(E)SI    Request buffer  
+;                       ES:(E)DI    Answer buffer
+;                       BX          Destination port
+;
+;       Returns:        EAX         Size of answer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+broadcast_query_udp_name    DB 'Broadcast Query UDP',0
+
+broadcast_query_udp Proc near
+    push ds
+    push fs
+;
+    mov ax,ds
+    mov fs,ax 
+;           
+    mov ax,SEG data
+    mov ds,ax    
+    EnterSection ds:bq_section
+;
+    mov ds:bq_req_size,ecx
+    mov ds:bq_req_sel,fs 
+    mov ds:bq_req_offset,esi 
+    mov ds:bq_dest_port,bx  
+    mov ds:bq_reply_sel,0
+    GetThread
+    mov ds:bq_thread,ax    
+;
+    mov si,BROADCAST_QUERY_PORT
+    call FindListen
+    jnc bquListenOk
+;
+    push es
+    push edi
+;
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET broadcast_listen_callback
+    ListenUdpPort
+;
+    pop edi
+    pop es
+
+bquListenOk:
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET broadcast_send_callback
+    NetBroadcast
+;
+    mov eax,1193
+    mul edx
+    push edx
+    push eax    
+    GetSystemTime
+    pop ecx
+    add eax,ecx
+    pop ecx
+    adc edx,ecx
+    WaitForSignalWithTimeout    
+;    
+    mov ecx,ds:bq_reply_size
+    mov es,ds:bq_reply_sel    
+    int 3    
+;
+    mov ds:bq_req_sel,0
+    mov ds:bq_thread,0
+    LeaveSection ds:bq_section
+;
+    pop fs
+    pop ds    
+    ret
+broadcast_query_udp Endp
+
+broadcast_query_udp16   Proc far
+    push ecx
+    push esi
+    push edi
+;
+    movzx ecx,cx
+    movzx esi,si
+    movzx edi,di
+    call broadcast_query_udp    
+;
+    pop edi
+    pop esi
+    pop ecx
+    retf32    
+broadcast_query_udp16   Endp
+
+broadcast_query_udp32   Proc far
+    call broadcast_query_udp    
+    retf32    
+broadcast_query_udp32   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1037,6 +1241,7 @@ init_task_udp    PROC near
     mov es,bx
 ;
     InitSection ds:udp_section
+    InitSection ds:bq_section
     InitSpinlock ds:udp_spinlock
     mov ds:listen_list,0
     mov cx,UDP_QUERY_ENTRIES - 1
@@ -1085,6 +1290,13 @@ query_list_create:
     xor cl,cl
     mov ax,listen_udp_port_nr
     RegisterOsGate
+;
+    mov ebx,OFFSET broadcast_query_udp16
+    mov esi,OFFSET broadcast_query_udp32
+    mov edi,OFFSET broadcast_query_udp_name
+    mov dx,virt_ds_in OR virt_es_in
+    mov ax,broadcast_query_udp_nr
+    RegisterUserGate
 ;
     mov al,17
     mov edi,OFFSET Receive

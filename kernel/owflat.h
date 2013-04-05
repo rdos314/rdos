@@ -1707,6 +1707,12 @@
     parm [edx] [edi] [ecx] \
     value [eax];
 
+#pragma aux RdosBroadcastQueryUdp = \
+    CallGate_broadcast_query_udp  \
+    parm [esi] [ecx] [edi] [ebx] [edx] \
+    value [eax];
+
+
 #pragma aux RdosCreateTcpListen = \
     CallGate_create_tcp_listen  \
     ValidateHandle \

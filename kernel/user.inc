@@ -1480,6 +1480,16 @@ Ping		MACRO
 	UserGate ping_nr
 			ENDM
 
+; IN  EDX         Timeout in ms
+; IN  (E)CX       Size of setup message
+; IN  DS:(E)SI    Request buffer  
+; IN  ES:(E)DI    Answer buffer
+; IN  BX          Destination port
+; OUT EAX         Answer size
+BroadcastQueryUdp      MACRO
+    UserGate broadcast_query_udp_nr
+	                ENDM
+
 ;;;;;;;;;;;;; LOW-LEVEL DISCS ;;;;;;;;;;;;;
 
 ; IN   BL           Unit #

@@ -642,6 +642,8 @@
 #define usergate_get_output_volume 511
 #define usergate_set_output_volume 512
 
+#define usergate_broadcast_query_udp 513
+
 
 
 #ifdef __FLAT__
@@ -1289,6 +1291,8 @@
 #define CallGate_get_output_volume 0x67 0x9a 255 1 0 0 3 0
 #define CallGate_set_output_volume 0x67 0x9a 0 2 0 0 3 0
 
+#define CallGate_broadcast_query_udp 0x67 0x9a 1 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1933,5 +1937,7 @@
 
 #define CallGate_get_output_volume 0x3e 0x67 0x9a 255 1 0 0 3 0
 #define CallGate_set_output_volume 0x3e 0x67 0x9a 0 2 0 0 3 0
+
+#define CallGate_broadcast_query_udp 0x3e 0x67 0x9a 1 2 0 0 3 0
 
 #endif

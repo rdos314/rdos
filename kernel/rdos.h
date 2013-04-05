@@ -508,6 +508,8 @@ long RDOSAPI RdosGetGateway();
 int RDOSAPI RdosNameToIp(const char *HostName);
 int RDOSAPI RdosIpToName(int Ip, char *HostName, int MaxSize);
 
+int RDOSAPI RdosBroadcastQueryUdp(const char *ReqBuf, int ReqSize, char *ReplyBuf, int DestPort, long Timeout);
+
 int RDOSAPI RdosCreateTcpListen(int Port, int MaxConnections, int BufferSize);
 int RDOSAPI RdosGetTcpListen(int Handle);
 void RDOSAPI RdosCloseTcpListen(int Handle);

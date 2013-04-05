@@ -642,4 +642,6 @@ get_jack_audio_input_nr         = 510
 get_output_volume_nr            = 511
 set_output_volume_nr            = 512
 
+broadcast_query_udp_nr          = 513
+
 usergate_entries			    = 540
