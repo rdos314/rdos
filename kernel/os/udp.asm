@@ -1138,6 +1138,7 @@ broadcast_query_udp_name    DB 'Broadcast Query UDP',0
 broadcast_query_udp Proc near
     push ds
     push fs
+    push ecx
 ;
     mov ax,ds
     mov fs,ax 
@@ -1170,10 +1171,19 @@ broadcast_query_udp Proc near
     pop es
 
 bquListenOk:
+    push es
+    push edi
+;    
     mov ax,cs
     mov es,ax
     mov edi,OFFSET broadcast_send_callback
     NetBroadcast
+;
+    pop edi
+    pop es
+;
+    mov ax,SEG data
+    mov ds,ax    
 ;
     mov eax,1193
     mul edx
@@ -1187,13 +1197,30 @@ bquListenOk:
     WaitForSignalWithTimeout    
 ;    
     mov ecx,ds:bq_reply_size
-    mov es,ds:bq_reply_sel    
-    int 3    
+    or ecx,ecx
+    jz bquFailed
 ;
+    push ds
+    push esi
+    mov ds,ds:bq_reply_sel    
+    xor esi,esi
+    rep movs byte ptr es:[edi],ds:[esi]
+    pop esi
+    pop ds
+;
+    push es
+    mov es,ds:bq_reply_sel
+    FreeMem
+    pop es    
+    clc
+
+bquFailed:
+    mov eax,ds:bq_reply_size
     mov ds:bq_req_sel,0
     mov ds:bq_thread,0
     LeaveSection ds:bq_section
 ;
+    pop ecx
     pop fs
     pop ds    
     ret
