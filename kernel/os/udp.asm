@@ -60,6 +60,7 @@ query_head          DW ?
 udp_spinlock        spinlock_typ <>
 udp_section         section_typ <>
 bq_section          section_typ <>
+bq_ip               DD ?
 bq_req_size         DD ?
 bq_reply_size       DD ?
 bq_req_offset       DD ?
@@ -486,14 +487,14 @@ query_udp       Endp
 ;       Parameters:     SI              source port
 ;                       BX              destination port
 ;                       EDX             IP-address
-;                       ECX             Number of bytes to send
-;                       ES:EDI          Buffer
+;                       (E)CX           Number of bytes to send
+;                       ES:(E)DI        Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 send_udp_name DB 'Send UDP',0
 
-send_udp       Proc far
+send_udp       Proc near
     push ds
     push es
     pushad
@@ -553,9 +554,26 @@ send_udp_done:
     popad
     pop es
     pop ds    
-    retf32
+    ret
 send_udp       Endp
 
+send_udp16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call send_udp    
+;
+    pop edi
+    pop ecx
+    retf32    
+send_udp16   Endp
+
+send_udp32   Proc far
+    call send_udp    
+    retf32    
+send_udp32   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1033,6 +1051,7 @@ listen_udp_port Endp
 ;       Purpose:        Broadcast listen callback
 ;
 ;       Parameters:     CX      UDP request size
+;                       EDX     IP
 ;                       ES:EDI  UDP request data
 ;
 ;       Returns:        CX      UDP reply size
@@ -1062,6 +1081,7 @@ broadcast_listen_callback   Proc far
     mov eax,ecx
     AllocateSmallGlobalMem
     mov ds:bq_reply_size,ecx
+    mov ds:bq_ip,edx
 ;    
     xor edi,edi
     rep movs byte ptr es:[edi],fs:[esi]
@@ -1196,6 +1216,7 @@ bquListenOk:
     adc edx,ecx
     WaitForSignalWithTimeout    
 ;    
+    xor edx,edx
     mov ecx,ds:bq_reply_size
     or ecx,ecx
     jz bquFailed
@@ -1212,6 +1233,7 @@ bquListenOk:
     mov es,ds:bq_reply_sel
     FreeMem
     pop es    
+    mov edx,ds:bq_ip
     clc
 
 bquFailed:
@@ -1246,6 +1268,82 @@ broadcast_query_udp32   Proc far
     call broadcast_query_udp    
     retf32    
 broadcast_query_udp32   Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           OpenUdpConnection
+;
+;       Purpose:        Open a udp connection
+;
+;       Parameters:     ECX         buffer size
+;                       EDX         ip address
+;                       SI          local port
+;                       DI          remote port
+;
+;       Returns:        NC          ok
+;                       BX          connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_udp_connection_name    DB 'Open UDP Connection',0
+
+open_udp_connection     Proc far
+    retf32
+open_udp_connection     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           CloseUdpConnection
+;
+;       Purpose:        Close connection
+;
+;       Parameters:     BX          Connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_udp_connection_name DB 'Close UDP Connection',0
+
+close_udp_connection    Proc far
+    retf32
+close_udp_connection    Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           SendUdpConnection
+;
+;       Purpose:        Send UDP data
+;
+;       Parameters:     BX              Connection handle
+;                       ES:(E)DI        Buffer
+;                       (E)CX           Number of bytes to send
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_udp_connection_name DB 'Send UDP Connection',0
+
+send_udp_connection       Proc near
+    ret
+send_udp_connection       Endp
+
+send_udp_connection16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call send_udp_connection    
+;
+    pop edi
+    pop ecx
+    retf32    
+send_udp_connection16   Endp
+
+send_udp_connection32   Proc far
+    call send_udp_connection 
+    retf32    
+send_udp_connection32   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1288,12 +1386,6 @@ query_list_create:
     mov ds,ax
     mov es,ax
 ;
-    mov esi,OFFSET send_udp
-    mov edi,OFFSET send_udp_name
-    xor cl,cl
-    mov ax,send_udp_nr
-    RegisterOsGate
-;
     mov esi,OFFSET broadcast_udp
     mov edi,OFFSET broadcast_udp_name
     xor cl,cl
@@ -1323,6 +1415,32 @@ query_list_create:
     mov edi,OFFSET broadcast_query_udp_name
     mov dx,virt_ds_in OR virt_es_in
     mov ax,broadcast_query_udp_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET send_udp16
+    mov esi,OFFSET send_udp32
+    mov edi,OFFSET send_udp_name
+    mov dx,virt_es_in
+    mov ax,send_udp_nr
+    RegisterUserGate
+;
+    mov esi,OFFSET open_udp_connection
+    mov edi,OFFSET open_udp_connection_name
+    xor dx,dx
+    mov ax,open_udp_connection_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET close_udp_connection
+    mov edi,OFFSET close_udp_connection_name
+    xor dx,dx
+    mov ax,close_udp_connection_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET send_udp_connection16
+    mov esi,OFFSET send_udp_connection32
+    mov edi,OFFSET send_udp_connection_name
+    mov dx,virt_es_in
+    mov ax,send_udp_connection_nr
     RegisterUserGate
 ;
     mov al,17

@@ -643,5 +643,10 @@ get_output_volume_nr            = 511
 set_output_volume_nr            = 512
 
 broadcast_query_udp_nr          = 513
+send_udp_nr                     = 514
+
+open_udp_connection_nr          = 515
+close_udp_connection_nr         = 516
+send_udp_connection_nr          = 517
 
 usergate_entries			    = 540

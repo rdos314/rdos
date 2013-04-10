@@ -1707,11 +1707,33 @@
     parm [edx] [edi] [ecx] \
     value [eax];
 
-#pragma aux RdosBroadcastQueryUdp = \
-    CallGate_broadcast_query_udp  \
-    parm [esi] [ecx] [edi] [ebx] [edx] \
-    value [eax];
+#pragma aux RdosSendUdp = \
+    CallGate_send_udp  \
+    parm [edx] [esi] [ebx] [edi] [ecx];
 
+#pragma aux RdosBroadcastQueryUdp = \
+    "push eax" \
+    CallGate_broadcast_query_udp  \
+    "pop esi" \
+    "mov [esi],eax" \
+    "mov eax,edx" \
+    parm [esi] [ecx] [edi] [eax] [ebx] [edx] \
+    value [eax] \
+    modify [edx esi];
+
+#pragma aux RdosOpenUdpConnection = \
+    CallGate_open_udp_connection  \
+    ValidateHandle \
+    parm [edx] [esi] [edi] \
+    value [ebx];
+
+#pragma aux RdosCloseUdpConnection = \
+    CallGate_close_udp_connection  \
+    parm [ebx];
+
+#pragma aux RdosSendUdpConnection = \
+    CallGate_close_udp_connection  \
+    parm [ebx] [edi] [ecx];
 
 #pragma aux RdosCreateTcpListen = \
     CallGate_create_tcp_listen  \

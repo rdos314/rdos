@@ -695,7 +695,6 @@ long RdosGetHostTimeout(int cache_sel);
 void RdosUpdateRoundTripTime(int cache_sel, long time);
 
 int RdosQueryUdp(long timeout_ms, short int dest_port, long ip, char *buf, int size, char **answer_buf);
-void RdosSendUdp(short int source, short int dest, long ip, char *buf, int size);
 void RdosBroadcastUdp(short int source, short int dest, int driver_sel, char *buf, int size);
 void RdosSendDriverUdp(short int source, short int dest, long ip, int driver_sel, void *driver_dest, char *buf, int size);
 
@@ -1716,10 +1715,6 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     OsGate_update_round_trip_time \
     "pop ds" \
     parm [ebx] [eax];
-
-#pragma aux RdosSendUdp = \
-    OsGate_send_udp \
-    parm [si] [bx] [edx] [es edi] [ecx];
 
 #pragma aux RdosBroadcastUdp = \
     OsGate_broadcast_udp \

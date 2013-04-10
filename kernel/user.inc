@@ -1480,15 +1480,45 @@ Ping		MACRO
 	UserGate ping_nr
 			ENDM
 
+; IN  SI        source port
+; IN  BX        destination port
+; IN  EDX       IP-address
+; IN  (E)CX     Number of bytes to send
+; IN  ES:(E)DI  Data buffer
+SendUdp    MACRO
+    UserGate send_udp_nr
+            ENDM
+
 ; IN  EDX         Timeout in ms
 ; IN  (E)CX       Size of setup message
 ; IN  DS:(E)SI    Request buffer  
 ; IN  ES:(E)DI    Answer buffer
 ; IN  BX          Destination port
 ; OUT EAX         Answer size
+; OUT EDX         IP
 BroadcastQueryUdp      MACRO
     UserGate broadcast_query_udp_nr
 	                ENDM
+
+; IN  EDX		ip address
+; IN  SI		local port
+; IN  DI		remote port
+; OUT BX		connection handle
+OpenUdpConnection	MACRO
+	UserGate open_udp_connection_nr
+			ENDM
+
+; IN  BX		connection handle
+CloseUdpConnection	MACRO
+	UserGate close_udp_connection_nr
+			ENDM
+
+; IN  BX        connection handle
+; IN  ES:(E)DI  Data buffer
+; IN  (E)CX     Number of bytes to send
+SendUdpConnection    MACRO
+    UserGate send_udp_connection_nr
+            ENDM
 
 ;;;;;;;;;;;;; LOW-LEVEL DISCS ;;;;;;;;;;;;;
 

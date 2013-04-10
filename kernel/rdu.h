@@ -643,6 +643,11 @@
 #define usergate_set_output_volume 512
 
 #define usergate_broadcast_query_udp 513
+#define usergate_send_udp 514
+
+#define usergate_open_udp_connection 515
+#define usergate_close_udp_connection 516
+#define usergate_send_udp_connection 517
 
 
 
@@ -1292,6 +1297,11 @@
 #define CallGate_set_output_volume 0x67 0x9a 0 2 0 0 3 0
 
 #define CallGate_broadcast_query_udp 0x67 0x9a 1 2 0 0 3 0
+#define CallGate_send_udp 0x67 0x9a 2 2 0 0 3 0
+
+#define CallGate_open_udp_connection 0x67 0x9a 3 2 0 0 3 0
+#define CallGate_close_udp_connection 0x67 0x9a 4 2 0 0 3 0
+#define CallGate_send_udp_connection 0x67 0x9a 5 2 0 0 3 0
 
 #else
 
@@ -1939,5 +1949,10 @@
 #define CallGate_set_output_volume 0x3e 0x67 0x9a 0 2 0 0 3 0
 
 #define CallGate_broadcast_query_udp 0x3e 0x67 0x9a 1 2 0 0 3 0
+#define CallGate_send_udp 0x3e 0x67 0x9a 2 2 0 0 3 0
+
+#define CallGate_open_udp_connection 0x3e 0x67 0x9a 3 2 0 0 3 0
+#define CallGate_close_udp_connection 0x3e 0x67 0x9a 4 2 0 0 3 0
+#define CallGate_send_udp_connection 0x3e 0x67 0x9a 5 2 0 0 3 0
 
 #endif

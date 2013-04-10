@@ -2494,15 +2494,6 @@ ListenUdpPort   MACRO
 
 ; IN  SI        source port
 ; IN  BX        destination port
-; IN  EDX       IP-address
-; IN  CX        Number of bytes to send
-; IN  ES:EDI    Data buffer
-SendUdp    MACRO
-    OsGate send_udp_nr
-            ENDM
-
-; IN  SI        source port
-; IN  BX        destination port
 ; IN  CX        Number of bytes to send
 ; IN  FS        Driver sel
 ; IN  ES:EDI    Data buffer

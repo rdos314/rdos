@@ -264,6 +264,8 @@
 #define osgate_hide_sprite_line 256
 #define osgate_show_sprite_line 257
 
+#define osgate_update_rtc 258
+
 #define osgate_set_keyboard_state 264
 
 #define osgate_add_wait 266
@@ -606,7 +608,6 @@
 #define osgate_set_futex_id 506
 #define osgate_set_long_tls_linear 507
 
-#define osgate_send_udp 508
 #define osgate_broadcast_udp 509
 
 #define osgate_get_net_driver_buffer 510
@@ -884,6 +885,8 @@
 
 #define OsGate_hide_sprite_line 0x3E 0x67 0x9a 0 1 0 0 2 0
 #define OsGate_show_sprite_line 0x3E 0x67 0x9a 1 1 0 0 2 0
+
+#define OsGate_update_rtc 0x3E 0x67 0x9a 2 1 0 0 2 0
 
 #define OsGate_set_keyboard_state 0x3E 0x67 0x9a 8 1 0 0 2 0
 
@@ -1227,7 +1230,6 @@
 #define OsGate_set_futex_id 0x3E 0x67 0x9a 250 1 0 0 2 0
 #define OsGate_set_long_tls_linear 0x3E 0x67 0x9a 251 1 0 0 2 0
 
-#define OsGate_send_udp 0x3E 0x67 0x9a 252 1 0 0 2 0
 #define OsGate_broadcast_udp 0x3E 0x67 0x9a 253 1 0 0 2 0
 
 #define OsGate_get_net_driver_buffer 0x3E 0x67 0x9a 254 1 0 0 2 0
