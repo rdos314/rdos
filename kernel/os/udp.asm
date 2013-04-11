@@ -33,11 +33,12 @@ INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE ..\handle.inc
+include ..\wait.inc
 INCLUDE exec.def
 INCLUDE system.inc
 INCLUDE ip.inc
 INCLUDE udp.inc
-INCLUDE ..\handle.inc
 
 BROADCAST_QUERY_PORT    EQU 4094
 
@@ -50,6 +51,13 @@ Reverse MACRO
     xchg al,ah
         ENDM
 
+udp_wait_header STRUC
+
+uw_obj          wait_obj_header <>
+uw_handle       DW ?
+
+udp_wait_header ENDS
+
 udp_handle_seg      STRUC
 
 udp_handle_base     handle_header <>
@@ -59,10 +67,13 @@ udp_handle_seg      ENDS
 
 udp_connection  STRUC
 
-udp_next                        DW ?
-udp_port                        DW ?
+udp_next                DW ?
+udp_port                DW ?
 udp_remote_ip           DD ?
 udp_remote_port         DW ?
+udp_wait                DW ?
+udp_data_sel            DW ?
+udp_data_size           DW ?
 
 udp_connection  ENDS
 
@@ -1114,6 +1125,9 @@ CreateConnection    Proc near
     mov es:udp_port,si
     mov es:udp_remote_ip,edx
     mov es:udp_remote_port,di
+    mov es:udp_data_sel,0
+    mov es:udp_data_size,0
+    mov es:udp_wait,0
 ;       
     mov ax,SEG data
     mov ds,ax
@@ -1148,6 +1162,14 @@ DeleteConnection    Proc near
     push ecx
     push edx
 ;
+    mov ax,ds:udp_data_sel
+    or ax,ax
+    jz delete_data_freed
+;
+    mov es,ax
+    FreeMem
+
+delete_data_freed:        
     mov dx,ds:udp_next
     mov bx,ds
     mov es,bx
@@ -1250,6 +1272,60 @@ find_connection_done:
     pop ds
     ret
 FindConnection  Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           UpdateConnection
+;
+;       Purpose:        Update connection
+;
+;       Parameters:     AX          Connection selector
+;                       CX          Size of data
+;                       ES:DI       Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateConnection  Proc near
+    push ds
+    push es
+    push fs
+    pusha
+;
+    mov si,es
+    mov fs,si
+    mov si,di
+;
+    mov ds,ax
+    mov ax,ds:udp_data_sel
+    or ax,ax
+    jz update_conn_add
+;
+    mov es,ax
+    FreeMem
+
+update_conn_add:
+    movzx eax,cx
+    AllocateSmallGlobalMem
+    mov ds:udp_data_sel,es
+    mov ds:udp_data_size,cx
+;    
+    xor di,di
+    rep movs es:[di],fs:[si]    
+;
+    mov ax,ds:udp_wait
+    or ax,ax
+    jz update_conn_done
+;
+    mov es,ax    
+    SignalWait
+
+update_conn_done:
+    popa
+    pop fs
+    pop es
+    pop ds    
+    ret
+UpdateConnection    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1435,6 +1511,189 @@ send_udp_connection32   Proc far
     call send_udp_connection 
     retf32    
 send_udp_connection32   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StartWaitForConnection
+;
+;           DESCRIPTION:    Start a wait for connection
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_wait_for_connection       PROC far
+    push ds
+    push ax
+    push ebx
+;
+    mov bx,es:uw_handle
+    mov ax,UDP_SOCKET_HANDLE
+    DerefHandle
+    jc start_wait_for_done
+;    
+    mov ax,[ebx].udp_handle_sel
+    or ax,ax
+    jz start_wait_for_done
+;
+    mov ds,ax
+    mov ds:udp_wait,es
+;
+    mov ax,ds:udp_data_sel
+    or ax,ax
+    jz start_wait_for_done
+;
+    mov ds:udp_wait,0
+    SignalWait
+
+start_wait_for_done:
+    pop ebx
+    pop ax
+    pop ds
+    retf32
+start_wait_for_connection Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StopWaitForConnection
+;
+;           DESCRIPTION:    Stop a wait for connection
+;
+;           PARAMETERS:         ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_wait_for_connection    PROC far
+    push ds
+    push ax
+    push ebx
+;
+    mov bx,es:uw_handle
+    mov ax,UDP_SOCKET_HANDLE
+    DerefHandle
+    jc stop_wait_done
+;    
+    mov ax,[ebx].udp_handle_sel
+    or ax,ax
+    jz stop_wait_done
+;
+    mov ds,ax
+    mov ds:udp_wait,0
+
+stop_wait_done:
+    pop ebx
+    pop ax
+    pop ds
+    retf32
+stop_wait_for_connection Endp
+
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ClearConnection
+;
+;           DESCRIPTION:    Clear tcp connection
+;
+;           PARAMETERS:         ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_connection    PROC far
+    retf32
+clear_connection Endp
+
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           IsConnectionIdle
+;
+;           DESCRIPTION:    Check if connection is idle
+;
+;           PARAMETERS:         ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_connection_idle      PROC far
+    push ds
+    push ax
+    push ebx
+;
+    mov bx,es:uw_handle
+    mov ax,UDP_SOCKET_HANDLE
+    DerefHandle
+    jc is_idle_done
+;    
+    mov ax,[ebx].udp_handle_sel
+    or ax,ax
+    stc
+    jz is_idle_done
+;
+    mov ax,ds:udp_data_sel
+    or ax,ax
+    clc
+    je is_idle_done
+;
+    stc
+
+is_idle_done:
+    pop ebx
+    pop ax
+    pop ds
+    retf32
+is_connection_idle Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           AddWaitForiUdpConnection
+;
+;   DESCRIPTION:    Add a wait for UDP connection
+;
+;   PARAMETERS:     AX      Connection handle
+;                   BX      Wait handle
+;                   ECX     Signalled ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_udp_connection_name    DB 'Add Wait For UDP Connection',0
+
+add_wait_tab:
+aw0 DD OFFSET start_wait_for_connection,    SEG code
+aw1 DD OFFSET stop_wait_for_connection,     SEG code
+aw2 DD OFFSET clear_connection,             SEG code
+aw3 DD OFFSET is_connection_idle,           SEG code
+
+add_wait_for_udp_connection     PROC far
+    push ds
+    push es
+    push eax
+    push edi
+;
+    push ax
+    mov ax,cs
+    mov es,ax
+    mov ax,SIZE udp_wait_header - SIZE wait_obj_header
+    mov edi,OFFSET add_wait_tab
+    AddWait
+    pop ax
+    jc add_wait_done
+;
+    mov es:uw_handle,ax
+
+add_wait_done:
+    pop edi
+    pop eax
+    pop es
+    pop ds
+    retf32
+add_wait_for_udp_connection     ENDP
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1531,7 +1790,25 @@ receive_not_dhcp:
     jmp receive_done
 
 receive_not_query:
+    push di
+    mov ax,es:[di].udp_dest
+    xchg al,ah
     mov si,ax
+    mov ax,es:[di].udp_source
+    xchg al,ah
+    mov di,ax
+    call FindConnection
+    pop di
+    jc receive_not_conn
+;
+    mov cx,es:[di].udp_len
+    xchg cl,ch
+    sub cx,SIZE udp_header
+    add di,SIZE udp_header
+    call UpdateConnection
+    jmp receive_free
+
+receive_not_conn:
     call FindListen
     jc receive_free
 ;
@@ -1729,6 +2006,12 @@ query_list_create:
     mov dx,virt_es_in
     mov ax,send_udp_connection_nr
     RegisterUserGate
+;
+    mov esi,OFFSET add_wait_for_udp_connection
+    mov edi,OFFSET add_wait_for_udp_connection_name
+    xor dx,dx
+    mov ax,add_wait_for_udp_connection_nr
+    RegisterBimodalUserGate
 ;
     mov al,17
     mov edi,OFFSET Receive

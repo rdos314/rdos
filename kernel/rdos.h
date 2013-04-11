@@ -514,6 +514,7 @@ int RDOSAPI RdosBroadcastQueryUdp(const char *ReqBuf, int ReqSize, char *ReplyBu
 int RDOSAPI RdosOpenUdpConnection(int RemoteIp, int LocalPort, int RemotePort);
 void RDOSAPI RdosCloseUdpConnection(int Handle);
 void RDOSAPI RdosSendUdpConnection(int Handle, const char *Buf, int Size);
+void RDOSAPI RdosAddWaitForUdpConnection(int Handle, int ConHandle, void *ID);
 
 int RDOSAPI RdosCreateTcpListen(int Port, int MaxConnections, int BufferSize);
 int RDOSAPI RdosGetTcpListen(int Handle);

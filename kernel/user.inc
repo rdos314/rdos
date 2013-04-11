@@ -612,6 +612,13 @@ AddWaitForTcpConnection       MACRO
 	UserGate add_wait_for_tcp_connection_nr
 						ENDM
 
+; IN  AX        Udp connection handle
+; IN  BX		Wait handle
+; IN  ECX       Object ID
+AddWaitForUdpConnection       MACRO
+	UserGate add_wait_for_udp_connection_nr
+						ENDM
+
 ; IN  AX        Tcp listen handle
 ; IN  BX		Wait handle
 ; IN  ECX       Object ID

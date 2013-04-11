@@ -648,6 +648,7 @@
 #define usergate_open_udp_connection 515
 #define usergate_close_udp_connection 516
 #define usergate_send_udp_connection 517
+#define usergate_add_wait_for_udp_connection 518
 
 
 
@@ -1302,6 +1303,7 @@
 #define CallGate_open_udp_connection 0x67 0x9a 3 2 0 0 3 0
 #define CallGate_close_udp_connection 0x67 0x9a 4 2 0 0 3 0
 #define CallGate_send_udp_connection 0x67 0x9a 5 2 0 0 3 0
+#define CallGate_add_wait_for_udp_connection 0x67 0x9a 6 2 0 0 3 0
 
 #else
 
@@ -1954,5 +1956,6 @@
 #define CallGate_open_udp_connection 0x3e 0x67 0x9a 3 2 0 0 3 0
 #define CallGate_close_udp_connection 0x3e 0x67 0x9a 4 2 0 0 3 0
 #define CallGate_send_udp_connection 0x3e 0x67 0x9a 5 2 0 0 3 0
+#define CallGate_add_wait_for_udp_connection 0x3e 0x67 0x9a 6 2 0 0 3 0
 
 #endif

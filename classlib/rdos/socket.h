@@ -36,6 +36,7 @@ class TSocket : public TWaitDevice
 {
 public:
     TSocket(int Handle);
+    TSocket(long IP, int LocalPort, int RemotePort);
     TSocket(long IP, int Port, int Timeout, int BufferSize);
     TSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize);
     ~TSocket();
@@ -68,6 +69,10 @@ protected:
 	virtual void Add(TWait *Wait);
 
 	int FHandle;
+	int FIsTcp;
+	int FLocalPort;
+	int FRemotePort;
+	long FRemoteIp;
 };
 
 class TSocketServer : public TThread

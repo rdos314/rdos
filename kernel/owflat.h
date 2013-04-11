@@ -1735,6 +1735,10 @@
     CallGate_send_udp_connection  \
     parm [ebx] [edi] [ecx];
 
+#pragma aux RdosAddWaitForUdpConnection = \
+    CallGate_add_wait_for_udp_connection  \
+    parm [ebx] [eax] [ecx];
+
 #pragma aux RdosCreateTcpListen = \
     CallGate_create_tcp_listen  \
     ValidateHandle \
