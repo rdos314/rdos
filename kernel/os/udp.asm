@@ -1101,13 +1101,13 @@ broadcast_query_udp32   Endp
 ;                       SI          local port
 ;                       DI          remote port
 ;
-;       Returns:        DS          connection selector
+;       Returns:        AX          connection selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateConnection    Proc near
+    push ds
     push es
-    push eax
 ;
     mov eax,SIZE udp_connection
     AllocateSmallGlobalMem
@@ -1123,8 +1123,10 @@ CreateConnection    Proc near
     mov ds:connection_list,es
     LeaveSection ds:udp_section
 ;
-    pop eax
+    mov ax,es
+;    
     pop es
+    pop ds
     ret
 CreateConnection    Endp
 
@@ -1268,6 +1270,24 @@ FindConnection  Endp
 open_udp_connection_name    DB 'Open UDP Connection',0
 
 open_udp_connection     Proc far
+    push ds
+    push ax
+    push dx
+;    
+    call CreateConnection
+    mov dx,ax
+;
+    mov ax,UDP_SOCKET_HANDLE
+    mov cx,SIZE udp_handle_seg
+    AllocateHandle
+    mov ds:[ebx].udp_handle_sel,dx
+    mov ds:[ebx].hh_sign,UDP_SOCKET_HANDLE
+    mov bx,ds:[ebx].hh_handle
+    clc
+;    
+    pop dx
+    pop ax
+    pop ds
     retf32
 open_udp_connection     Endp
         
@@ -1284,9 +1304,29 @@ open_udp_connection     Endp
 close_udp_connection_name DB 'Close UDP Connection',0
 
 close_udp_connection    Proc far
+    push ds
+    push ax
+;
+    mov ax,UDP_SOCKET_HANDLE
+    DerefHandle
+    jc close_udp_done
+;
+    push word ptr [ebx].udp_handle_sel
+    FreeHandle
+    pop ax
+;    
+    or ax,ax
+    stc
+    jz close_udp_done
+;
+    mov ds,ax
+    call DeleteConnection
+
+close_udp_done:    
+    pop ax
+    pop ds
     retf32
 close_udp_connection    Endp
-
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1303,6 +1343,78 @@ close_udp_connection    Endp
 send_udp_connection_name DB 'Send UDP Connection',0
 
 send_udp_connection       Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ax,UDP_SOCKET_HANDLE
+    DerefHandle
+    jc send_udp_done
+;    
+    mov ax,[ebx].udp_handle_sel
+    or ax,ax
+    stc
+    jz send_udp_conn_done
+;
+    mov fs,ax
+    push es
+    push edi
+;
+    mov edx,fs:udp_remote_ip
+    mov ax,cs
+    mov ds,ax
+    mov esi,OFFSET ip_options
+    mov al,17
+    mov ah,30
+    add ecx,SIZE udp_header
+    CreateIpHeader
+;    
+    pop esi
+    pop ds
+    jc send_udp_conn_done
+;       
+    mov ax,fs:udp_port
+    xchg al,ah
+    mov es:[edi].udp_source,ax
+;    
+    mov ax,fs:udp_remote_port
+    xchg al,ah
+    mov es:[edi].udp_dest,ax
+;
+    xchg cl,ch
+    mov es:[edi].udp_len,cx
+    xchg cl,ch
+;
+    push ecx
+    push edi
+    sub ecx,SIZE udp_header
+    add edi,SIZE udp_header
+    rep movs byte ptr es:[edi],[esi]
+    pop edi
+    pop ecx
+;
+    mov es:[edi].udp_checksum,0
+    mov ax,cx
+    xchg al,ah
+    add ax,1100h
+    adc ax,0
+    adc ax,0
+    sub di,8
+    add cx,8
+    call CalcChecksum
+    not ax
+    add edi,8
+    mov es:[edi].udp_checksum,ax
+    sub ecx,8
+    SendIp
+    clc
+
+send_udp_conn_done:    
+    popad
+    pop fs
+    pop es
+    pop ds    
     ret
 send_udp_connection       Endp
 
