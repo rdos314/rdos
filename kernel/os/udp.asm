@@ -37,6 +37,7 @@ INCLUDE exec.def
 INCLUDE system.inc
 INCLUDE ip.inc
 INCLUDE udp.inc
+INCLUDE ..\handle.inc
 
 BROADCAST_QUERY_PORT    EQU 4094
 
@@ -48,6 +49,22 @@ Reverse MACRO
     rol eax,16
     xchg al,ah
         ENDM
+
+udp_handle_seg      STRUC
+
+udp_handle_base     handle_header <>
+udp_handle_sel      DW ?
+
+udp_handle_seg      ENDS
+
+udp_connection  STRUC
+
+udp_next                        DW ?
+udp_port                        DW ?
+udp_remote_ip           DD ?
+udp_remote_port         DW ?
+
+udp_connection  ENDS
 
     extrn ReceiveClientDhcp:near
     extrn ReceiveServerDhcp:near
@@ -69,10 +86,10 @@ bq_reply_sel        DW ?
 bq_dest_port        DW ?
 bq_thread           DW ?
 listen_list         DW ?
+connection_list     DW ?
 udp_queries         DB UDP_QUERY_ENTRIES * SIZE udp_query DUP(?)
 
 data    ENDS
-
 
 code    SEGMENT byte public 'CODE'
 
@@ -801,201 +818,6 @@ FindListen      Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;       Name:           Receive
-;
-;       Purpose:        Receive notify from IP
-;
-;       Parameters:         FS      Protocol handle
-;           GS      Driver handle
-;           AX      Size of options
-;                       ECX         Size of data
-;                       EDX         Source IP address
-;                       DS:ESI  Options
-;                       ES:EDI  IP Data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-Receive Proc far
-    push ax
-    push bx
-    push cx
-    push dx
-    push si
-    push di
-;
-    push dx
-    push di
-    mov dx,cx
-    xchg dl,dh
-    add dx,1100h
-    adc dx,0
-    adc dx,0
-    sub si,8
-    lodsw
-    add dx,ax
-    lodsw
-    adc dx,ax
-    lodsw
-    adc dx,ax
-    lodsw
-    adc dx,ax
-    mov ax,dx
-    adc ax,0
-    adc ax,0
-    mov si,di
-    call CalcChecksum
-    not ax
-    or al,ah
-    pop di
-    pop dx
-    jnz receive_free
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,es:[di].udp_source
-    xchg al,ah
-;
-    cmp ax,67
-    jne receive_not_cl_dhcp
-;
-    call ReceiveClientDhcp
-    jmp receive_done
-
-receive_not_cl_dhcp:
-    cmp ax,68
-    jne receive_not_dhcp
-;
-    call ReceiveServerDhcp
-    jmp receive_done
-
-receive_not_dhcp:
-    mov ax,es:[di].udp_dest
-    xchg al,ah
-    test ax,8000h
-    jz receive_not_query
-;
-    push cx
-    mov cx,ax
-    call RemoveQuery
-    pop cx
-    jc receive_free
-;
-    mov ax,ds:[bx].udp_query_sel
-    cmp ax,-1
-    jne receive_free
-;
-    mov ds:[bx].udp_query_sel,es
-    mov ds:[bx].udp_query_offset,di
-    mov bx,ds:[bx].udp_query_thread
-    xor ax,ax
-    mov es,ax
-    StopTimer
-    Signal
-    jmp receive_done
-
-receive_not_query:
-    mov si,ax
-    call FindListen
-    jc receive_free
-;
-    push ds
-    push es
-    push edi
-;
-    mov cx,es:[di].udp_len
-    xchg cl,ch
-    sub cx,SIZE udp_header
-    add di,SIZE udp_header
-    movzx edi,di
-    call fword ptr ds:udp_listen_callback
-;
-    mov ax,es
-;
-    pop edi
-    pop es
-    pop ds
-;
-    or cx,cx
-    jz receive_free
-;    
-    mov fs,ax
-    mov edx,es:ip_source
-    push es
-    push di
-    mov ax,cs
-    mov ds,ax
-    mov esi,OFFSET ip_options
-    mov al,17
-    mov ah,30
-    add cx,SIZE udp_header
-    movzx ecx,cx
-    CreateIpHeader
-    pop si
-    jc receive_pop_free
-;
-    push cx
-    push si
-    push di
-    sub cx,SIZE udp_header
-    xor si,si
-    add di,SIZE udp_header
-    rep movs byte ptr es:[di],fs:[si]
-    pop di
-    pop si
-    pop cx
-;
-    pop ds
-    mov ax,ds:[si].udp_source
-    mov es:[di].udp_dest,ax
-    mov ax,ds:[si].udp_dest
-    mov es:[di].udp_source,ax
-    xchg cl,ch
-    mov es:[di].udp_len,cx
-    xchg cl,ch
-;
-    mov es:[di].udp_checksum,0
-    mov ax,cx
-    xchg al,ah
-    add ax,1100h
-    adc ax,0
-    adc ax,0
-    sub di,8
-    add cx,8
-    call CalcChecksum
-    not ax
-    add di,8
-    mov es:[di].udp_checksum,ax
-    SendIp
-    mov ax,fs
-    mov es,ax
-    xor ax,ax
-    mov fs,ax
-    FreeMem
-    mov ax,ds
-    mov es,ax
-    jmp receive_free
-
-receive_pop_free:
-    pop es
-
-receive_free:
-    xor ax,ax
-    mov ds,ax
-    FreeMem
-
-receive_done:
-    pop di
-    pop si
-    pop dx
-    pop cx
-    pop bx
-    pop ax
-    retf32
-Receive Endp
-
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
 ;       Name:           ListenUdpPort
 ;
 ;       Purpose:        Listen on a udp port
@@ -1268,7 +1090,164 @@ broadcast_query_udp32   Proc far
     call broadcast_query_udp    
     retf32    
 broadcast_query_udp32   Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           CreateConnection
+;
+;       Purpose:        Create a connection and link it
+;
+;       Parameters:     EDX         ip address
+;                       SI          local port
+;                       DI          remote port
+;
+;       Returns:        DS          connection selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+CreateConnection    Proc near
+    push es
+    push eax
+;
+    mov eax,SIZE udp_connection
+    AllocateSmallGlobalMem
+    mov es:udp_port,si
+    mov es:udp_remote_ip,edx
+    mov es:udp_remote_port,di
+;       
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:udp_section
+    mov dx,ds:connection_list
+    mov es:udp_next,dx
+    mov ds:connection_list,es
+    LeaveSection ds:udp_section
+;
+    pop eax
+    pop es
+    ret
+CreateConnection    Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           DeleteConnection
+;
+;       Purpose:        Delete a connection.
+;
+;       Parameters:     DS          connection selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteConnection    Proc near
+    push es
+    push ax
+    push bx
+    push ecx
+    push edx
+;
+    mov dx,ds:udp_next
+    mov bx,ds
+    mov es,bx
+;
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:udp_section    
+;
+    mov ax,ds:connection_list
+    cmp ax,bx
+    jne delete_connect_loop
+;
+    mov ds:connection_list,dx
+    jmp delete_connect_unlinked
+
+delete_connect_loop:
+    or ax,ax
+    jz delete_connect_unlinked
+;       
+    mov ds,ax
+    mov cx,ax
+    mov ax,ds:udp_next
+    cmp ax,bx
+    jne delete_connect_loop
+;
+    mov ds,ax
+    mov ax,ds:udp_next
+    mov ds,cx
+    mov ds:udp_next,ax
+
+delete_connect_unlinked:
+    mov ax,SEG data
+    mov ds,ax
+    LeaveSection ds:udp_section
+;    
+    FreeMem
+;
+    pop edx
+    pop ecx
+    pop bx
+    pop ax
+    pop es
+    ret
+DeleteConnection    Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           FindConnection
+;
+;       Purpose:        Look for a connection
+;
+;       Parameters:     EDX         remote ip
+;                       SI          local port
+;                       DI          remote port
+;
+;       Returns:        NC          connection found
+;                       AX          connection
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindConnection  Proc near
+    push ds
+    push es
+;
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:udp_section
+    mov ax,ds:connection_list
+
+find_connection_loop:
+    or ax,ax
+    jz find_connection_fail
+;
+    mov es,ax
+    cmp edx,es:udp_remote_ip
+    jne find_connection_next
+;
+    cmp si,es:udp_port
+    jne find_connection_next
+
+    cmp di,es:udp_remote_port
+    je find_connection_ok
+
+find_connection_next:
+    mov ax,es:udp_next
+    jmp find_connection_loop
+
+find_connection_fail:
+    stc
+    jmp find_connection_done
+
+find_connection_ok:
+    clc
+
+find_connection_done:
+    LeaveSection ds:udp_section
+;
+    pop es
+    pop ds
+    ret
+FindConnection  Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1344,6 +1323,201 @@ send_udp_connection32   Proc far
     call send_udp_connection 
     retf32    
 send_udp_connection32   Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           Receive
+;
+;       Purpose:        Receive notify from IP
+;
+;       Parameters:         FS      Protocol handle
+;           GS      Driver handle
+;           AX      Size of options
+;                       ECX         Size of data
+;                       EDX         Source IP address
+;                       DS:ESI  Options
+;                       ES:EDI  IP Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Receive Proc far
+    push ax
+    push bx
+    push cx
+    push dx
+    push si
+    push di
+;
+    push dx
+    push di
+    mov dx,cx
+    xchg dl,dh
+    add dx,1100h
+    adc dx,0
+    adc dx,0
+    sub si,8
+    lodsw
+    add dx,ax
+    lodsw
+    adc dx,ax
+    lodsw
+    adc dx,ax
+    lodsw
+    adc dx,ax
+    mov ax,dx
+    adc ax,0
+    adc ax,0
+    mov si,di
+    call CalcChecksum
+    not ax
+    or al,ah
+    pop di
+    pop dx
+    jnz receive_free
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,es:[di].udp_source
+    xchg al,ah
+;
+    cmp ax,67
+    jne receive_not_cl_dhcp
+;
+    call ReceiveClientDhcp
+    jmp receive_done
+
+receive_not_cl_dhcp:
+    cmp ax,68
+    jne receive_not_dhcp
+;
+    call ReceiveServerDhcp
+    jmp receive_done
+
+receive_not_dhcp:
+    mov ax,es:[di].udp_dest
+    xchg al,ah
+    test ax,8000h
+    jz receive_not_query
+;
+    push cx
+    mov cx,ax
+    call RemoveQuery
+    pop cx
+    jc receive_free
+;
+    mov ax,ds:[bx].udp_query_sel
+    cmp ax,-1
+    jne receive_free
+;
+    mov ds:[bx].udp_query_sel,es
+    mov ds:[bx].udp_query_offset,di
+    mov bx,ds:[bx].udp_query_thread
+    xor ax,ax
+    mov es,ax
+    StopTimer
+    Signal
+    jmp receive_done
+
+receive_not_query:
+    mov si,ax
+    call FindListen
+    jc receive_free
+;
+    push ds
+    push es
+    push edi
+;
+    mov cx,es:[di].udp_len
+    xchg cl,ch
+    sub cx,SIZE udp_header
+    add di,SIZE udp_header
+    movzx edi,di
+    call fword ptr ds:udp_listen_callback
+;
+    mov ax,es
+;
+    pop edi
+    pop es
+    pop ds
+;
+    or cx,cx
+    jz receive_free
+;    
+    mov fs,ax
+    mov edx,es:ip_source
+    push es
+    push di
+    mov ax,cs
+    mov ds,ax
+    mov esi,OFFSET ip_options
+    mov al,17
+    mov ah,30
+    add cx,SIZE udp_header
+    movzx ecx,cx
+    CreateIpHeader
+    pop si
+    jc receive_pop_free
+;
+    push cx
+    push si
+    push di
+    sub cx,SIZE udp_header
+    xor si,si
+    add di,SIZE udp_header
+    rep movs byte ptr es:[di],fs:[si]
+    pop di
+    pop si
+    pop cx
+;
+    pop ds
+    mov ax,ds:[si].udp_source
+    mov es:[di].udp_dest,ax
+    mov ax,ds:[si].udp_dest
+    mov es:[di].udp_source,ax
+    xchg cl,ch
+    mov es:[di].udp_len,cx
+    xchg cl,ch
+;
+    mov es:[di].udp_checksum,0
+    mov ax,cx
+    xchg al,ah
+    add ax,1100h
+    adc ax,0
+    adc ax,0
+    sub di,8
+    add cx,8
+    call CalcChecksum
+    not ax
+    add di,8
+    mov es:[di].udp_checksum,ax
+    SendIp
+    mov ax,fs
+    mov es,ax
+    xor ax,ax
+    mov fs,ax
+    FreeMem
+    mov ax,ds
+    mov es,ax
+    jmp receive_free
+
+receive_pop_free:
+    pop es
+
+receive_free:
+    xor ax,ax
+    mov ds,ax
+    FreeMem
+
+receive_done:
+    pop di
+    pop si
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    retf32
+Receive Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1369,6 +1543,7 @@ init_task_udp    PROC near
     InitSection ds:bq_section
     InitSpinlock ds:udp_spinlock
     mov ds:listen_list,0
+    mov ds:connection_list,0
     mov cx,UDP_QUERY_ENTRIES - 1
     mov bx,OFFSET udp_queries
     mov ds:query_head,0

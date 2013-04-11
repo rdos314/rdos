@@ -1732,7 +1732,7 @@
     parm [ebx];
 
 #pragma aux RdosSendUdpConnection = \
-    CallGate_close_udp_connection  \
+    CallGate_send_udp_connection  \
     parm [ebx] [edi] [ecx];
 
 #pragma aux RdosCreateTcpListen = \
