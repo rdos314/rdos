@@ -576,7 +576,7 @@ int TUdpSocket::IsIdle()
 int TUdpSocket::GetSize()
 {
     if (FHandle)
-        return 0;
+        return RdosPeekUdpConnection(FHandle);
     else
         return 0;
 }
@@ -630,7 +630,7 @@ void TUdpSocket::Write(const char *str)
 int TUdpSocket::Read(char *buf, int size)
 {
     if (FHandle)
-        return 0;
+        return RdosReadUdpConnection(FHandle, buf, size);
     else
         return 0;
 }

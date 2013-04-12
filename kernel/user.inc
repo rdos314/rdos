@@ -1527,6 +1527,20 @@ SendUdpConnection    MACRO
     UserGate send_udp_connection_nr
             ENDM
 
+; IN  BX        connection handle
+; OUT (E)CX     Bytes available
+PeekUdpConnection    MACRO
+    UserGate read_udp_connection_nr
+            ENDM
+
+; IN  BX        connection handle
+; IN  ES:(E)DI  Data buffer
+; IN  (E)CX     Buffer size
+; OUT (E)AX     Bytes read
+ReadUdpConnection    MACRO
+    UserGate read_udp_connection_nr
+            ENDM
+
 ;;;;;;;;;;;;; LOW-LEVEL DISCS ;;;;;;;;;;;;;
 
 ; IN   BL           Unit #

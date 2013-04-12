@@ -1512,6 +1512,122 @@ send_udp_connection32   Proc far
     retf32    
 send_udp_connection32   Endp
 
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           PeekUdpConnection
+;
+;       Purpose:        Peek connection
+;
+;       Parameters:     BX          Connection handle
+;
+;       Returns:        ECX         Size of message or 0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+peek_udp_connection_name DB 'Peek UDP Connection',0
+
+peek_udp_connection    Proc far
+    push ds
+    push ax
+;
+    mov ax,UDP_SOCKET_HANDLE
+    DerefHandle
+    jc peek_udp_done
+;
+    mov ax,[ebx].udp_handle_sel
+    or ax,ax
+    stc
+    jz peek_udp_done
+;
+    mov ds,ax
+    movzx ecx,ds:udp_data_size
+    clc
+
+peek_udp_done:    
+    pop ax
+    pop ds
+    retf32
+peek_udp_connection    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           ReadUdpConnection
+;
+;       Purpose:        Read UDP data
+;
+;       Parameters:     BX              Connection handle
+;                       ES:(E)DI        Buffer
+;                       (E)CX           Buffer size
+;
+;       Returns:        (E)AX           Bytes read
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_udp_connection_name DB 'Read UDP Connection',0
+
+read_udp_connection       Proc near
+    push ds
+;
+    mov ax,UDP_SOCKET_HANDLE
+    DerefHandle
+    jc read_udp_done
+;
+    mov ax,[ebx].udp_handle_sel
+    or ax,ax
+    stc
+    jz read_udp_done
+;
+    push ecx
+    push esi
+    push edi
+;
+    mov ds,ax
+    mov eax,ecx
+    movzx ecx,ds:udp_data_size
+    cmp ecx,eax
+    jbe read_udp_do
+;
+    mov ecx,eax
+
+read_udp_do:
+    mov eax,ecx
+    or ecx,ecx
+    jz read_udp_copied
+;    
+    mov ds,ds:udp_data_sel
+    xor esi,esi
+    rep movs byte ptr es:[edi],ds:[esi]
+    
+read_udp_copied:
+    pop edi
+    pop esi
+    pop ecx    
+    clc
+
+read_udp_done:    
+    pop ds
+    ret
+read_udp_connection       Endp
+
+read_udp_connection16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call read_udp_connection    
+;
+    pop edi
+    pop ecx
+    retf32    
+read_udp_connection16   Endp
+
+read_udp_connection32   Proc far
+    call read_udp_connection 
+    retf32    
+read_udp_connection32   Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2005,6 +2121,19 @@ query_list_create:
     mov edi,OFFSET send_udp_connection_name
     mov dx,virt_es_in
     mov ax,send_udp_connection_nr
+    RegisterUserGate
+;
+    mov esi,OFFSET peek_udp_connection
+    mov edi,OFFSET peek_udp_connection_name
+    xor dx,dx
+    mov ax,peek_udp_connection_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET read_udp_connection16
+    mov esi,OFFSET read_udp_connection32
+    mov edi,OFFSET read_udp_connection_name
+    mov dx,virt_es_in
+    mov ax,read_udp_connection_nr
     RegisterUserGate
 ;
     mov esi,OFFSET add_wait_for_udp_connection
