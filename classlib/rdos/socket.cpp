@@ -34,93 +34,6 @@
 
 /*##########################################################################
 #
-#   Name       : TSocket::TSocket
-#
-#   Purpose....: Constructor
-#
-#   In params..: Handle     Socket handle
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSocket::TSocket(int Handle)
-{
-        FHandle = Handle;
-        FIsTcp = TRUE;
-        Open();
-}
-
-/*##########################################################################
-#
-#   Name       : TSocket::TSocket
-#
-#   Purpose....: Constructor
-#
-#   In params..: Wait       Wait device
-#                IP         Remote IP address
-#                Port       remote port to connect to
-#                                Timeout        establish timeout in ms
-#                                BufferSize     socket buffer size
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSocket::TSocket(long IP, int Port, int Timeout, int BufferSize)
-{
-        FHandle = RdosOpenTcpConnection(IP, 0, Port, Timeout, BufferSize);
-        FIsTcp = TRUE;
-        Open();
-}
-
-/*##########################################################################
-#
-#   Name       : TSocket::TSocket
-#
-#   Purpose....: Constructor
-#
-#   In params..: Wait       Wait device
-#                IP         Remote IP address
-#                LocalPort  local port to use
-#                RemotePort remote port to connect to
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSocket::TSocket(long IP, int LocalPort, int RemotePort)
-{
-        FHandle = RdosOpenUdpConnection(IP, LocalPort, RemotePort);
-        FIsTcp = FALSE;
-        FLocalPort = LocalPort;
-        FRemotePort = RemotePort;
-        FRemoteIp = IP;
-    Open();     
-}
-
-/*##########################################################################
-#
-#   Name       : TSocket::TSocket
-#
-#   Purpose....: Constructor
-#
-#   In params..: Wait       Wait device
-#                IP         Remote IP address
-#                LocalPort  local port to use
-#                RemotePort remote port to connect to
-#                                Timeout        establish timeout in ms
-#                                BufferSize     socket buffer size
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSocket::TSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize)
-{
-        FHandle = RdosOpenTcpConnection(IP, LocalPort, RemotePort, Timeout, BufferSize);
-        FIsTcp = TRUE;
-    Open();     
-}
-
-/*##########################################################################
-#
 #   Name       : TSocket::~TSocket
 #
 #   Purpose....: Destructor
@@ -132,93 +45,6 @@ TSocket::TSocket(long IP, int LocalPort, int RemotePort, int Timeout, int Buffer
 ##########################################################################*/
 TSocket::~TSocket()
 {
-    if (FHandle)
-    {
-        if (FIsTcp)
-        {
-            RdosCloseTcpConnection(FHandle);
-            RdosDeleteTcpConnection(FHandle);
-        }
-        else
-            RdosCloseUdpConnection(FHandle);
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TSocket::DeviceName
-#
-#   Purpose....: Returns device-name
-#
-#   In params..: MaxLen max size of name
-#   Out params.: Name   device name
-#   Returns....: *
-#
-##########################################################################*/
-void TSocket::DeviceName(char *Name, int MaxLen) const
-{
-        strncpy(Name,"Socket",MaxLen);
-}
-
-/*##########################################################################
-#
-#   Name       : TSocket::Add
-#
-#   Purpose....: Add object to wait
-#
-#   In params..: Wait       Wait device
-#                Handle     Socket handle
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSocket::Add(TWait *Wait)
-{
-        if (FHandle)
-        {
-            if (FIsTcp)
-                RdosAddWaitForTcpConnection(Wait->GetHandle(), FHandle, this);
-        else
-                RdosAddWaitForUdpConnection(Wait->GetHandle(), FHandle, this);
-    }
-}
-
-/*##################  TSocket::IsOpen  ############################
-*   Purpose....: Check if socket is open                                            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-int TSocket::IsOpen() const
-{
-    if (TDevice::IsOpen() && FHandle)
-    {
-        if (FIsTcp)
-            return !RdosIsTcpConnectionClosed(FHandle);
-        else
-            return TRUE;
-    }
-    else    
-            return FALSE;
-}
-
-/*##################  TSocket::NotifyClose  ############################
-*   Purpose....: Notify socket closed                                       #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TSocket::NotifyClose()
-{
-        if (FHandle)
-        {
-            if (FIsTcp)
-                RdosCloseTcpConnection(FHandle);
-        else
-            RdosCloseUdpConnection(FHandle);
-    }
 }
 
 /*##################  TSocket::GetLocalIP  ############################
@@ -230,192 +56,12 @@ void TSocket::NotifyClose()
 *##########################################################################*/
 long TSocket::GetLocalIP()
 {
-        return RdosGetIp();
-}
-
-/*##################  TSocket::GetRemoteIP  ############################
-*   Purpose....: Get remote IP                                                      #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-long TSocket::GetRemoteIP() const
-{
-        if (FHandle)
-        {
-            if (FIsTcp)
-                return RdosGetRemoteTcpConnectionIP(FHandle);
-        else
-            return FRemoteIp;
-    }
-        else
-                return -1;
-}
-
-/*##################  TSocket::GetRemotePort  ############################
-*   Purpose....: Get remote port                                                    #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-int TSocket::GetRemotePort() const
-{
-        if (FHandle)
-        {
-            if (FIsTcp)
-                return RdosGetRemoteTcpConnectionPort(FHandle);
-        else
-            return FRemotePort;
-    }
-        else
-                return 0;
-}
-
-/*##################  TSocket::GetLocalPort  ############################
-*   Purpose....: Get local port                                                     #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-int TSocket::GetLocalPort() const
-{
-        if (FHandle)
-        {
-            if (FIsTcp)
-                return RdosGetLocalTcpConnectionPort(FHandle);
-        else
-            return FLocalPort;
-    }
-        else
-            return 0;
-}
-
-/*##################  TSocket::Push  ############################
-*   Purpose....: Push connection                                                    #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TSocket::Push()
-{
-        if (FHandle && FIsTcp)
-            RdosPushTcpConnection(FHandle);
-}
-
-/*##################  TSocket::IsIdle  ############################
-*   Purpose....: Check if connection is idle (no unsent data & no received data)                                                    #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-int TSocket::IsIdle()
-{
-        if (FHandle && FIsTcp)
-            return RdosIsTcpConnectionIdle(FHandle);
-        else
-            return TRUE;
-}
-
-/*##################  TSocket::WaitForConnection  ############################
-*   Purpose....: Wait for a connection                                      #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-int TSocket::WaitForConnection(int Timeout)
-{
-        if (FHandle && FIsTcp)
-                return RdosWaitForTcpConnection(FHandle, Timeout);
-        else
-            return FALSE;
+    return RdosGetIp();
 }
 
 /*##########################################################################
 #
-#   Name       : TSocket::Write
-#
-#   Purpose....: Write a char
-#
-#   In params..: ch     char to write
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSocket::Write(char ch)
-{
-    if (FHandle && FIsTcp)
-        RdosWriteTcpConnection(FHandle, &ch, 1);
-}
-
-/*##########################################################################
-#
-#   Name       : TSocket::Write
-#
-#   Purpose....: Write a buffer
-#
-#   In params..: buf     buffer to write
-#                count   count to write
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSocket::Write(const char *buf, int count)
-{
-    if (FHandle)
-    {
-        if (FIsTcp)
-            RdosWriteTcpConnection(FHandle, buf, count);
-        else
-            RdosSendUdpConnection(FHandle, buf, count);
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TSocket::Write
-#
-#   Purpose....: Write a string
-#
-#   In params..: str    string to write
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSocket::Write(const char *str)
-{
-    if (FHandle)
-    {
-        if (FIsTcp)
-            RdosWriteTcpConnection(FHandle, str, strlen(str));
-        else
-            RdosSendUdpConnection(FHandle, str, strlen(str));
-    }
-}
-
-/*##################  TSocket::Poll  ############################
-*   Purpose....: Check available bytes in receive buffer                        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-int TSocket::Poll()
-{
-        if (FHandle && FIsTcp)
-                return RdosPollTcpConnection(FHandle);
-        else
-                return 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TSocket::WaitForChar
+#   Name       : TSocket::WaitForData
 #
 #   Purpose....: Wait for something in the receive buffer
 #
@@ -424,56 +70,16 @@ int TSocket::Poll()
 #   Returns....: TRUE if available
 #
 ##########################################################################*/
-int TSocket::WaitForChar(long Timeout)
+int TSocket::WaitForData(long Timeout)
 {
     if (!FWait)
         CreateWait();
 
-        if (FWait)
-                if (FWait->WaitTimeout(Timeout) == this)
-                    return IsOpen();
+    if (FWait)
+        if (FWait->WaitTimeout(Timeout) == this)
+            return IsOpen();
 
     return FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TSocket::Read
-#
-#   Purpose....: Read a single character
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: character
-#
-##########################################################################*/
-char TSocket::Read()
-{
-    char ch = 0;
-
-    if (FHandle && FIsTcp)
-        RdosReadTcpConnection(FHandle, &ch, 1);
-
-    return ch;    
-}
-
-/*##########################################################################
-#
-#   Name       : TSocket::Read
-#
-#   Purpose....: Read to buffer
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: read chars
-#
-##########################################################################*/
-int TSocket::Read(char *buf, int size)
-{
-    if (FHandle && FIsTcp)
-        return RdosReadTcpConnection(FHandle, buf, size);
-    else
-        return 0;
 }
 
 /*##########################################################################
@@ -493,6 +99,544 @@ void TSocket::SignalNewData()
 
 /*##########################################################################
 #
+#   Name       : TTcpSocket::TTcpSocket
+#
+#   Purpose....: Constructor
+#
+#   In params..: Handle     Socket handle
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TTcpSocket::TTcpSocket(int Handle)
+{
+    FHandle = Handle;
+    Open();
+}
+
+/*##########################################################################
+#
+#   Name       : TTcpSocket::TTcpSocket
+#
+#   Purpose....: Constructor
+#
+#   In params..: IP         Remote IP address
+#                Port       remote port to connect to
+#                Timeout        establish timeout in ms
+#                BufferSize     socket buffer size
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TTcpSocket::TTcpSocket(long IP, int Port, int Timeout, int BufferSize)
+{
+    FHandle = RdosOpenTcpConnection(IP, 0, Port, Timeout, BufferSize);
+    Open();
+}
+
+/*##########################################################################
+#
+#   Name       : TTcpSocket::TTcpSocket
+#
+#   Purpose....: Constructor
+#
+#   In params..: IP         Remote IP address
+#                LocalPort  local port to use
+#                RemotePort remote port to connect to
+#                Timeout        establish timeout in ms
+#                BufferSize     socket buffer size
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TTcpSocket::TTcpSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize)
+{
+    FHandle = RdosOpenTcpConnection(IP, LocalPort, RemotePort, Timeout, BufferSize);
+    Open();     
+}
+
+/*##########################################################################
+#
+#   Name       : TTcpSocket::~TTcpSocket
+#
+#   Purpose....: Destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TTcpSocket::~TTcpSocket()
+{
+    if (FHandle)
+    {
+        RdosCloseTcpConnection(FHandle);
+        RdosDeleteTcpConnection(FHandle);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TTcpSocket::DeviceName
+#
+#   Purpose....: Returns device-name
+#
+#   In params..: MaxLen max size of name
+#   Out params.: Name   device name
+#   Returns....: *
+#
+##########################################################################*/
+void TTcpSocket::DeviceName(char *Name, int MaxLen) const
+{
+    strncpy(Name,"TCP Socket",MaxLen);
+}
+
+/*##########################################################################
+#
+#   Name       : TTcpSocket::Add
+#
+#   Purpose....: Add object to wait
+#
+#   In params..: Wait       Wait device
+#                Handle     Socket handle
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TTcpSocket::Add(TWait *Wait)
+{
+    if (FHandle)
+        RdosAddWaitForTcpConnection(Wait->GetHandle(), FHandle, this);
+}
+
+/*##################  TTcpSocket::IsOpen  ############################
+*   Purpose....: Check if socket is open                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TTcpSocket::IsOpen() const
+{
+    if (TDevice::IsOpen() && FHandle)
+        return !RdosIsTcpConnectionClosed(FHandle);
+    else    
+        return FALSE;
+}
+
+/*##################  TTcpSocket::NotifyClose  ############################
+*   Purpose....: Notify socket closed                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TTcpSocket::NotifyClose()
+{
+    if (FHandle)
+        RdosCloseTcpConnection(FHandle);
+}
+
+/*##################  TTcpSocket::GetRemoteIP  ############################
+*   Purpose....: Get remote IP                                                      #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+long TTcpSocket::GetRemoteIP() const
+{
+    if (FHandle)
+        return RdosGetRemoteTcpConnectionIP(FHandle);
+    else
+        return -1;
+}
+
+/*##################  TTcpSocket::GetRemotePort  ############################
+*   Purpose....: Get remote port                                                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TTcpSocket::GetRemotePort() const
+{
+    if (FHandle)
+        return RdosGetRemoteTcpConnectionPort(FHandle);
+    else
+        return 0;
+}
+
+/*##################  TTcpSocket::GetLocalPort  ############################
+*   Purpose....: Get local port                                                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TTcpSocket::GetLocalPort() const
+{
+    if (FHandle)
+        return RdosGetLocalTcpConnectionPort(FHandle);
+    else
+        return 0;
+}
+
+/*##################  TTcpSocket::Push  ############################
+*   Purpose....: Push connection                                                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TTcpSocket::Push()
+{
+    if (FHandle)
+        RdosPushTcpConnection(FHandle);
+}
+
+/*##################  TTcpSocket::IsIdle  ############################
+*   Purpose....: Check if connection is idle (no unsent data & no received data)                                                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TTcpSocket::IsIdle()
+{
+    if (FHandle)
+        return RdosIsTcpConnectionIdle(FHandle);
+    else
+        return TRUE;
+}
+
+/*##################  TTcpSocket::WaitForConnection  ############################
+*   Purpose....: Wait for a connection                                      #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TTcpSocket::WaitForConnection(int Timeout)
+{
+    if (FHandle)
+        return RdosWaitForTcpConnection(FHandle, Timeout);
+    else
+        return FALSE;
+}
+
+/*##################  TTcpSocket::GetSize  ############################
+*   Purpose....: Check available bytes in receive buffer                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TTcpSocket::GetSize()
+{
+    if (FHandle)
+        return RdosPollTcpConnection(FHandle);
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TTcpSocket::Write
+#
+#   Purpose....: Write a char
+#
+#   In params..: ch     char to write
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TTcpSocket::Write(char ch)
+{
+    if (FHandle)
+        RdosWriteTcpConnection(FHandle, &ch, 1);
+}
+
+/*##########################################################################
+#
+#   Name       : TTcpSocket::Write
+#
+#   Purpose....: Write a buffer
+#
+#   In params..: buf     buffer to write
+#                count   count to write
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TTcpSocket::Write(const char *buf, int count)
+{
+    if (FHandle)
+        RdosWriteTcpConnection(FHandle, buf, count);
+}
+
+/*##########################################################################
+#
+#   Name       : TTcpSocket::Write
+#
+#   Purpose....: Write a string
+#
+#   In params..: str    string to write
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TTcpSocket::Write(const char *str)
+{
+    if (FHandle)
+        RdosWriteTcpConnection(FHandle, str, strlen(str));
+}
+
+/*##########################################################################
+#
+#   Name       : TTcpSocket::Read
+#
+#   Purpose....: Read a single character
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: character
+#
+##########################################################################*/
+char TTcpSocket::Read()
+{
+    char ch = 0;
+
+    if (FHandle)
+        RdosReadTcpConnection(FHandle, &ch, 1);
+
+    return ch;    
+}
+
+/*##########################################################################
+#
+#   Name       : TTcpSocket::Read
+#
+#   Purpose....: Read to buffer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: read chars
+#
+##########################################################################*/
+int TTcpSocket::Read(char *buf, int size)
+{
+    if (FHandle)
+        return RdosReadTcpConnection(FHandle, buf, size);
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TUdpSocket::TUdpSocket
+#
+#   Purpose....: Constructor
+#
+#   In params..: IP         Remote IP address
+#                LocalPort  local port to use
+#                RemotePort remote port to connect to
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TUdpSocket::TUdpSocket(long IP, int LocalPort, int RemotePort)
+{
+    FHandle = RdosOpenUdpConnection(IP, LocalPort, RemotePort);
+    FLocalPort = LocalPort;
+    FRemotePort = RemotePort;
+    FRemoteIp = IP;
+    Open();     
+}
+
+/*##########################################################################
+#
+#   Name       : TUdpSocket::~TUdpSocket
+#
+#   Purpose....: Destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TUdpSocket::~TUdpSocket()
+{
+    if (FHandle)
+        RdosCloseUdpConnection(FHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TUdpSocket::DeviceName
+#
+#   Purpose....: Returns device-name
+#
+#   In params..: MaxLen max size of name
+#   Out params.: Name   device name
+#   Returns....: *
+#
+##########################################################################*/
+void TUdpSocket::DeviceName(char *Name, int MaxLen) const
+{
+    strncpy(Name,"UDP Socket",MaxLen);
+}
+
+/*##########################################################################
+#
+#   Name       : TUdpSocket::Add
+#
+#   Purpose....: Add object to wait
+#
+#   In params..: Wait       Wait device
+#                Handle     Socket handle
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUdpSocket::Add(TWait *Wait)
+{
+    if (FHandle)
+        RdosAddWaitForUdpConnection(Wait->GetHandle(), FHandle, this);
+}
+
+/*##################  TUdpSocket::NotifyClose  ############################
+*   Purpose....: Notify socket closed                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TUdpSocket::NotifyClose()
+{
+    if (FHandle)
+        RdosCloseUdpConnection(FHandle);
+}
+
+/*##################  TUdpSocket::GetRemoteIP  ############################
+*   Purpose....: Get remote IP                                                      #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+long TUdpSocket::GetRemoteIP() const
+{
+    return FRemoteIp;
+}
+
+/*##################  TUdpSocket::GetRemotePort  ############################
+*   Purpose....: Get remote port                                                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TUdpSocket::GetRemotePort() const
+{
+    return FRemotePort;
+}
+
+/*##################  TUdpSocket::GetLocalPort  ############################
+*   Purpose....: Get local port                                                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TUdpSocket::GetLocalPort() const
+{
+    return FLocalPort;
+}
+
+/*##################  TUdpSocket::IsIdle  ############################
+*   Purpose....: Check if connection is idle                                #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TUdpSocket::IsIdle()
+{
+    return TRUE;
+}
+
+/*##################  TUdpSocket::GetSize  ############################
+*   Purpose....: Check size of message, if available                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TUdpSocket::GetSize()
+{
+    if (FHandle)
+        return 0;
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TUdpSocket::Write
+#
+#   Purpose....: Write a buffer
+#
+#   In params..: buf     buffer to write
+#                count   count to write
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUdpSocket::Write(const char *buf, int count)
+{
+    if (FHandle)
+        RdosSendUdpConnection(FHandle, buf, count);
+}
+
+/*##########################################################################
+#
+#   Name       : TUdpSocket::Write
+#
+#   Purpose....: Write a string
+#
+#   In params..: str    string to write
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUdpSocket::Write(const char *str)
+{
+    if (FHandle)
+        RdosSendUdpConnection(FHandle, str, strlen(str));
+}
+
+/*##########################################################################
+#
+#   Name       : TUdpSocket::Read
+#
+#   Purpose....: Read to buffer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: read chars
+#
+##########################################################################*/
+int TUdpSocket::Read(char *buf, int size)
+{
+    if (FHandle)
+        return 0;
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TSocketServer::TSocketServer
 #
 #   Purpose....: Constructor for socket server
@@ -503,7 +647,7 @@ void TSocket::SignalNewData()
 #   Returns....: *
 #
 ##########################################################################*/
-TSocketServer::TSocketServer(const char *Name, int StackSize, TSocket *Socket)
+TSocketServer::TSocketServer(const char *Name, int StackSize, TTcpSocket *Socket)
 {
     FSocket = Socket;
     FNext = 0;
@@ -706,14 +850,14 @@ void TSocketServerFactory::Add(TWait *Wait)
 void TSocketServerFactory::SignalNewData()
 {
         int handle;
-        TSocket *socket;
+        TTcpSocket *socket;
 
     Cleanup();
         handle = RdosGetTcpListen(FListenHandle);
         if (handle)
         {
-            socket = new TSocket(handle);
-                Insert(Create(socket));
+            socket = new TTcpSocket(handle);
+            Insert(Create(socket));
         }
 }
 

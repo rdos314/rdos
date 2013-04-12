@@ -185,7 +185,7 @@ void TFtpLangString::printf(int ID, ...)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFtpLangString::Write(TSocket *Socket)
+void TFtpLangString::Write(TTcpSocket *Socket)
 {
 	char str[5];
 

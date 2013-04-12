@@ -58,7 +58,7 @@ void WriteCommand(TFtpSocketServer *server, const char *str)
 *##########################################################################*/
 long GetIwsIp()
 {
-    TSocket IwsSocket(RdosGetGateway(), 5000, 2500, 0x4000);
+    TTcpSocket IwsSocket(RdosGetGateway(), 5000, 2500, 0x4000);
     char Buf[64];
     int count;
     char ch;
@@ -74,7 +74,7 @@ long GetIwsIp()
 
         startok = FALSE;
             
-        while (IwsSocket.WaitForChar(2500) && !startok)
+        while (IwsSocket.WaitForData(2500) && !startok)
         {
             ch = IwsSocket.Read();
             if (ch == '=')
@@ -83,7 +83,7 @@ long GetIwsIp()
 
         count = 0;
 
-        while (IwsSocket.WaitForChar(100))
+        while (IwsSocket.WaitForData(100))
         {
             Buf[count] = IwsSocket.Read();
             count++;

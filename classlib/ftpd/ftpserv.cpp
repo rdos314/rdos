@@ -247,7 +247,7 @@ int TFtpSocketServer::MatchToken(char **Xp, const char *word, int len)
 #   Returns....: *
 #
 ##########################################################################*/
-TFtpSocketServer::TFtpSocketServer(TFtpUser *UserList, const char *Name, int StackSize, TSocket *Socket)
+TFtpSocketServer::TFtpSocketServer(TFtpUser *UserList, const char *Name, int StackSize, TTcpSocket *Socket)
   : TSocketServer(Name, StackSize, Socket)
 {
         FUserList = UserList;
@@ -338,7 +338,7 @@ int TFtpSocketServer::OpenDataConnection(long IP, int port)
                 if (FDataSocket)
                         delete FDataSocket;
 
-                FDataSocket = new TSocket(IP, port, 6000, 0x2000);
+                FDataSocket = new TTcpSocket(IP, port, 6000, 0x2000);
 
                 if (FDataSocket->WaitForConnection(6000))
                         return TRUE;
@@ -370,10 +370,10 @@ void TFtpSocketServer::ListenForDataConnection(long *IP, int *port)
         delete FDataSocket;
 
     if (FLocalPort)
-        FDataSocket = new TSocket(FSocket->GetRemoteIP(), FLocalPort, 0, 6000, 0x2000);
+        FDataSocket = new TTcpSocket(FSocket->GetRemoteIP(), FLocalPort, 0, 6000, 0x2000);
     else
     {
-        FDataSocket = new TSocket(FSocket->GetRemoteIP(), 0, 6000, 0x2000);
+        FDataSocket = new TTcpSocket(FSocket->GetRemoteIP(), 0, 6000, 0x2000);
         FLocalPort = FDataSocket->GetLocalPort();
     }
     *port = FLocalPort;

@@ -40,7 +40,7 @@ public:
 	void Load(int ID);
 	void printf(int ID, ...);
 
-	void Write(TSocket *Socket);
+	void Write(TTcpSocket *Socket);
 
 	static void SetLanguage(const char *language);
 

@@ -160,7 +160,7 @@ void THttpSocketServerFactory::AddCustomDir(THttpCustomDirFactory *dir)
 #   Returns....: *
 #
 ##########################################################################*/
-TSocketServer *THttpSocketServerFactory::Create(TSocket *Socket)
+TSocketServer *THttpSocketServerFactory::Create(TTcpSocket *Socket)
 {
 	THttpSocketServer *server;
 

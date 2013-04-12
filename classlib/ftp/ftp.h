@@ -130,8 +130,8 @@ protected:
     int FPort;
     TString FUser;
     TString FPassw;
-    TSocket *FSocket;
-    TSocket *FDataSocket;
+    TTcpSocket *FSocket;
+    TTcpSocket *FDataSocket;
 
     TSection FAppSection;
     TSignalDevice FAppSignal;

@@ -35,51 +35,93 @@ class TSocketServerFactory;
 class TSocket : public TWaitDevice
 {
 public:
-    TSocket(int Handle);
-    TSocket(long IP, int LocalPort, int RemotePort);
-    TSocket(long IP, int Port, int Timeout, int BufferSize);
-    TSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize);
-    ~TSocket();
+    virtual ~TSocket();
+
+	static long GetLocalIP();
+	
+	virtual long GetRemoteIP() const = 0;
+	virtual int GetRemotePort() const = 0;
+	virtual int GetLocalPort() const = 0;
+
+    int WaitForData(long Timeout);
+
+	virtual int IsIdle() = 0;
+    virtual int GetSize() = 0;
+	virtual void Write(const char *buf, int count) = 0;
+	virtual void Write(const char *str) = 0;
+	virtual int Read(char *buf, int size) = 0;
+
+protected:
+	virtual void SignalNewData();
+};
+
+class TTcpSocket : public TSocket
+{
+public:
+    TTcpSocket(int Handle);
+    TTcpSocket(long IP, int Port, int Timeout, int BufferSize);
+    TTcpSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize);
+    ~TTcpSocket();
 
 	virtual void DeviceName(char *Name, int MaxLen) const;
 	virtual int IsOpen() const;
     virtual void NotifyClose();
-
-	static long GetLocalIP();
 	
-	long GetRemoteIP() const;
-	int GetRemotePort() const;
-	int GetLocalPort() const;
+	virtual long GetRemoteIP() const;
+	virtual int GetRemotePort() const;
+	virtual int GetLocalPort() const;
 
     void Push();
-	int IsIdle();
+	void Write(char ch);
+	char Read();
     int WaitForConnection(int Timeout);
 
-	void Write(char ch);
-	void Write(const char *buf, int count);
-	void Write(const char *str);
-
-	int Poll();
-	int WaitForChar(long Timeout);
-	char Read();
-	int Read(char *buf, int size);
+	virtual int IsIdle();
+    virtual int GetSize();
+	virtual void Write(const char *buf, int count);
+	virtual void Write(const char *str);
+	virtual int Read(char *buf, int size);
 
 protected:
-	virtual void SignalNewData();
 	virtual void Add(TWait *Wait);
 
 	int FHandle;
-	int FIsTcp;
-	int FLocalPort;
-	int FRemotePort;
-	long FRemoteIp;
 };
+
+class TUdpSocket : public TSocket
+{
+public:
+    TUdpSocket(long IP, int LocalPort, int RemotePort);
+    ~TUdpSocket();
+
+	virtual void DeviceName(char *Name, int MaxLen) const;
+    virtual void NotifyClose();
+	
+	virtual long GetRemoteIP() const;
+	virtual int GetRemotePort() const;
+	virtual int GetLocalPort() const;
+
+	virtual int IsIdle();
+    virtual int GetSize();
+	virtual void Write(const char *buf, int count);
+	virtual void Write(const char *str);
+	virtual int Read(char *buf, int size);
+
+protected:
+	virtual void Add(TWait *Wait);
+
+	int FHandle;
+	int FLocalPort;
+	long FRemoteIp;
+	int FRemotePort;
+};
+
 
 class TSocketServer : public TThread
 {
 friend class TSocketServerFactory;
 public:
-    TSocketServer(const char *Name, int StackSize, TSocket *Socket);
+    TSocketServer(const char *Name, int StackSize, TTcpSocket *Socket);
 	virtual ~TSocketServer();
     
 protected:
@@ -89,7 +131,7 @@ protected:
     virtual void Execute();
     
     TSocketServer *FNext;
-	TSocket *FSocket;
+	TTcpSocket *FSocket;
 };
 
 class TSocketServerFactory : public TWaitDevice
@@ -98,7 +140,7 @@ public:
     TSocketServerFactory(int Port, int MaxConnections, int BufferSize);
     ~TSocketServerFactory();
 
-	virtual TSocketServer *Create(TSocket *Socket) = 0;
+	virtual TSocketServer *Create(TTcpSocket *Socket) = 0;
 
 protected:
     void Cleanup();

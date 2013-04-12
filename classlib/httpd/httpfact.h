@@ -39,7 +39,7 @@ public:
 	void AddCustomPage(THttpCustomPageFactory *page);
 	void AddCustomDir(THttpCustomDirFactory *dir);
 
-	virtual TSocketServer *Create(TSocket *Socket);
+	virtual TSocketServer *Create(TTcpSocket *Socket);
 
 	void (*OnCommand)(THttpSocketServer *server, const char *str);
 

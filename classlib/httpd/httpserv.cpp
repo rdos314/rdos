@@ -248,7 +248,7 @@ int THttpSocketServer::MatchToken(char **Xp, const char *word, int len)
 #   Returns....: *
 #
 ##########################################################################*/
-THttpSocketServer::THttpSocketServer(const char *Name, int StackSize, TSocket *Socket)
+THttpSocketServer::THttpSocketServer(const char *Name, int StackSize, TTcpSocket *Socket)
   : TSocketServer(Name, StackSize, Socket)
 {
         OnCommand = 0;
@@ -456,7 +456,7 @@ int THttpSocketServer::IsEmpty()
 {
         if (FBufCount == FBufPos)
         {
-                if (FSocket->Poll() == 0)
+                if (FSocket->GetSize() == 0)
                         return TRUE;
                 else
                         return FALSE;
@@ -492,7 +492,7 @@ int THttpSocketServer::Read(char *buf, int size)
         {
                 FBufPos -= FBufCount;
 
-                if (FSocket->WaitForChar(5000))
+                if (FSocket->WaitForData(5000))
                 {
                         FBufCount = FSocket->Read(FSocketBuf, BUF_SIZE);
                         FSocketBuf[FBufCount] = 0;
@@ -512,7 +512,7 @@ int THttpSocketServer::Read(char *buf, int size)
                         return 0;
             }
 
-                if (!FSocket->WaitForChar(5000))
+                if (!FSocket->WaitForData(5000))
                 {
                     count = FBufCount - FBufPos;
                     memcpy(buf, &FSocketBuf[FBufPos], count);
@@ -566,7 +566,7 @@ char *THttpSocketServer::ReadLine()
         {
                 FBufPos -= FBufCount;
 
-                if (FSocket->WaitForChar(5000))
+                if (FSocket->WaitForData(5000))
                 {
                         FBufCount = FSocket->Read(FSocketBuf, BUF_SIZE);
                         FSocketBuf[FBufCount] = 0;
@@ -588,7 +588,7 @@ char *THttpSocketServer::ReadLine()
                         return 0;
             }
 
-                if (!FSocket->WaitForChar(5000))
+                if (!FSocket->WaitForData(5000))
                 {
                         result = &FSocketBuf[FBufPos];
                         FBufPos = 0;
@@ -717,7 +717,7 @@ void THttpSocketServer::HandleSocket()
                 }
                 else
                 {
-                    if (KeepAlive == 0 || !FSocket->WaitForChar(KeepAlive * 1000))
+                    if (KeepAlive == 0 || !FSocket->WaitForData(KeepAlive * 1000))
                     break;
             }
                 }

@@ -385,11 +385,11 @@ public:
 
         void Open();
         void Close();
-        int IsOpen() const;
         void Enable();
         void Disable();
         int IsEnabled() const;
         
+        virtual int IsOpen() const;
         virtual int IsActive() const;
         virtual int IsBusy() const;
         virtual int IsOnline() const;

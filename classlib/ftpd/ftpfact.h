@@ -68,7 +68,7 @@ public:
 
 	void SetMyIp(long Ip);
 
-	virtual TSocketServer *Create(TSocket *Socket);
+	virtual TSocketServer *Create(TTcpSocket *Socket);
 
 	void (*OnCommand)(TFtpSocketServer *server, const char *str);
 

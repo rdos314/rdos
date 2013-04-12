@@ -1200,7 +1200,7 @@ void TFtp::DecodePasv(const char *param)
             IP = (arr[3] << 24) | (arr[2] << 16) | (arr[1] << 8) | arr[0];
             port = (arr[4] << 8) | arr[5];
 
-            FDataSocket = new TSocket(IP, port, 15000, 0x4000);
+            FDataSocket = new TTcpSocket(IP, port, 15000, 0x4000);
             FDataSocket->WaitForConnection(15000);
 
             if (FDataSocket->IsOpen())
@@ -1414,7 +1414,7 @@ void TFtp::HandleOpen()
 
     if (FSocket)
     {    
-        if (FSocket->WaitForChar(10 * 60000))
+        if (FSocket->WaitForData(10 * 60000))
         {
             count = FSocket->Read(str, 1024);
             str[count] = 0;
@@ -1455,7 +1455,7 @@ void TFtp::HandleClosed()
 
     NotifyMsg("Connecting\r\n");
 
-    FSocket = new TSocket(FIp, FPort, 15000, 0x1000);
+    FSocket = new TTcpSocket(FIp, FPort, 15000, 0x1000);
     FSocket->WaitForConnection(15000);
 }
 

@@ -55,7 +55,7 @@ enum InternalErrorCodes
 class TFtpSocketServer : public TSocketServer
 {
 public:
-    TFtpSocketServer(TFtpUser *UserList, const char *Name, int StackSize, TSocket *Socket);
+    TFtpSocketServer(TFtpUser *UserList, const char *Name, int StackSize, TTcpSocket *Socket);
 	~TFtpSocketServer();
 
 	virtual void HandleSocket();
@@ -95,7 +95,7 @@ public:
     long FMyIp;
 	int FLocalPort;
 
-	TSocket *FDataSocket;
+	TTcpSocket *FDataSocket;
 	TFtpUser *FUserList;
 };
 

@@ -72,7 +72,7 @@ TFtpCommandFactory *TFtpCommandFactory::FCmdList = 0;
 TFtpCommandFactory::TFtpCommandFactory(const char *name)
   : FName(name)
 {
-	InsertCommand();
+        InsertCommand();
 }
 
 /*##########################################################################
@@ -88,12 +88,12 @@ TFtpCommandFactory::TFtpCommandFactory(const char *name)
 ##########################################################################*/
 TFtpCommandFactory::~TFtpCommandFactory()
 {
-	RemoveCommand();
+        RemoveCommand();
 }
 
 /*##################  TFtpCommandFactory::InsertCommand  ##########################
 *   Purpose....: Insert device into command list                           #
-*				 Should only be done in constructor							#
+*                                Should only be done in constructor                                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -101,13 +101,13 @@ TFtpCommandFactory::~TFtpCommandFactory()
 *##########################################################################*/
 void TFtpCommandFactory::InsertCommand()
 {
-	FList = FCmdList;
-	FCmdList = this;
+        FList = FCmdList;
+        FCmdList = this;
 }
 
 /*##################  TFtpCommandFactory::RemoveCommand  ##########################
 *   Purpose....: Remove device from command list                           #
-*				 Should only done in destructor								#
+*                                Should only done in destructor                                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -115,20 +115,20 @@ void TFtpCommandFactory::InsertCommand()
 *##########################################################################*/
 void TFtpCommandFactory::RemoveCommand()
 {
-	TFtpCommandFactory *ptr;
-	TFtpCommandFactory *prev;
-	prev = 0;
+        TFtpCommandFactory *ptr;
+        TFtpCommandFactory *prev;
+        prev = 0;
 
-	ptr = FCmdList;
-	while ((ptr != 0) && (ptr != this))
-	 {
-		prev = ptr;
-		ptr = ptr->FList;
-	 }
-	if (prev == 0)
-		FCmdList = FCmdList->FList;
-	else
-		prev->FList = ptr->FList;
+        ptr = FCmdList;
+        while ((ptr != 0) && (ptr != this))
+         {
+                prev = ptr;
+                ptr = ptr->FList;
+         }
+        if (prev == 0)
+                FCmdList = FCmdList->FList;
+        else
+                prev->FList = ptr->FList;
 }
 
 /*##################  TFtpCommandFactory::PassAll  ##########################
@@ -140,7 +140,7 @@ void TFtpCommandFactory::RemoveCommand()
 *##########################################################################*/
 int TFtpCommandFactory::PassAll()
 {
-	 return FALSE;
+         return FALSE;
 }
 
 /*##################  TFtpCommandFactory::PassDir  ##########################
@@ -152,11 +152,11 @@ int TFtpCommandFactory::PassAll()
 *##########################################################################*/
 int TFtpCommandFactory::PassDir()
 {
-	 return FALSE;
+         return FALSE;
 }
 
 /*##################  TFtpCommandFactory::Parse  ##########################
-*   Purpose....: Parse a command line and return a command class	    	#
+*   Purpose....: Parse a command line and return a command class                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -164,79 +164,79 @@ int TFtpCommandFactory::PassDir()
 *##########################################################################*/
 TFtpCommand *TFtpCommandFactory::Parse(TFtpSocketServer *Server, const char *line)
 {
-	const char *rest;
-	int size;
-	 int i;
-	char *com;
-	char *ptr;
-	 int done;
-	 TString Line;
-	TFtpCommandFactory *factory = 0;
-	TFtpCommand *cmd;
+        const char *rest;
+        int size;
+         int i;
+        char *com;
+        char *ptr;
+         int done;
+         TString Line;
+        TFtpCommandFactory *factory = 0;
+        TFtpCommand *cmd;
 
-	Line = TString(TFtpSocketServer::LTrim(line));
+        Line = TString(TFtpSocketServer::LTrim(line));
 
-	rest = Line.GetData();
+        rest = Line.GetData();
 
-	if (*rest)
-	{
-		size = 0;
-		while (*rest && TFtpSocketServer::IsFileNameChar(*rest) && !strchr("\"", *rest))
-		{
-			size++;
-			rest++;
-		}
+        if (*rest)
+        {
+                size = 0;
+                while (*rest && TFtpSocketServer::IsFileNameChar(*rest) && !strchr("\"", *rest))
+                {
+                        size++;
+                        rest++;
+                }
 
-		if (*rest && strchr("\"", *rest))
-			size = 0;
+                if (*rest && strchr("\"", *rest))
+                        size = 0;
 
-		if (size)
-		{
-			com = new char[size + 1];
+                if (size)
+                {
+                        com = new char[size + 1];
 
-			rest = Line.GetData();
-			ptr = com;
+                        rest = Line.GetData();
+                        ptr = com;
 
-			for (i = 0; i < size; i++)
-			{
-				*ptr = toupper(*rest);
-				ptr++;
-				rest++;
-			}
-			*ptr = 0;
+                        for (i = 0; i < size; i++)
+                        {
+                                *ptr = toupper(*rest);
+                                ptr++;
+                                rest++;
+                        }
+                        *ptr = 0;
 
-			factory = FCmdList;
-			while (factory)
-			{
-				if (!strcmp(factory->FName.GetData(), com))
-					break;
+                        factory = FCmdList;
+                        while (factory)
+                        {
+                                if (!strcmp(factory->FName.GetData(), com))
+                                        break;
 
-				factory = factory->FList;
-			}
+                                factory = factory->FList;
+                        }
 
-			delete com;
-		}
-	}
+                        delete com;
+                }
+        }
 
-	if (factory)
-	{
-		done = factory->PassAll();
+        if (factory)
+        {
+                done = factory->PassAll();
 
-		if (!done && factory->PassDir())
-			done = *rest == '/' || *rest == '.' || *rest == ':';
+                if (!done && factory->PassDir())
+                        done = *rest == '/' || *rest == '.' || *rest == ':';
 
-		if (!done)
-			done = (!*rest || *rest == '/');
+                if (!done)
+                        done = (!*rest || *rest == '/');
 
-		if (!done)
-			if (TFtpSocketServer::IsArgDelim(*rest))
-				rest = TFtpSocketServer::LTrim(rest);
+                if (!done)
+                        if (TFtpSocketServer::IsArgDelim(*rest))
+                                rest = TFtpSocketServer::LTrim(rest);
 
-		return factory->Create(Server, rest);
+                return factory->Create(Server, rest);
 
-	}
-	else
-		 return 0;
+        }
+        else
+                 return 0;
 }
 
 /*##########################################################################
@@ -253,7 +253,7 @@ TFtpCommand *TFtpCommandFactory::Parse(TFtpSocketServer *Server, const char *lin
 TFtpSocketServerFactory::TFtpSocketServerFactory(int Port, int MaxConnections, int BufferSize)
   : TSocketServerFactory(Port, MaxConnections, BufferSize)
 {
-	Init();
+        Init();
 }
 
 /*##########################################################################
@@ -270,8 +270,8 @@ TFtpSocketServerFactory::TFtpSocketServerFactory(int Port, int MaxConnections, i
 TFtpSocketServerFactory::TFtpSocketServerFactory(int Port, int MaxConnections, int BufferSize, const char *Language)
   : TSocketServerFactory(Port, MaxConnections, BufferSize)
 {
-	TFtpLangString::SetLanguage(Language);
-	Init();
+        TFtpLangString::SetLanguage(Language);
+        Init();
 }
 
 /*##########################################################################
@@ -319,27 +319,27 @@ TFtpSocketServerFactory::~TFtpSocketServerFactory()
 ##########################################################################*/
 void TFtpSocketServerFactory::Init()
 {
-	user = new TFtpUserFactory;
-	pass = new TFtpPassFactory;
-	pwd = new TFtpPwdFactory;
-	syst = new TFtpSystFactory;
-	pasv = new TFtpPasvFactory;
-	port = new TFtpPortFactory;
-	list = new TFtpListFactory;
-	cwd = new TFtpCwdFactory;
-	cdup = new TFtpCdupFactory;
-	type = new TFtpTypeFactory;
-	retr = new TFtpRetrFactory;
+        user = new TFtpUserFactory;
+        pass = new TFtpPassFactory;
+        pwd = new TFtpPwdFactory;
+        syst = new TFtpSystFactory;
+        pasv = new TFtpPasvFactory;
+        port = new TFtpPortFactory;
+        list = new TFtpListFactory;
+        cwd = new TFtpCwdFactory;
+        cdup = new TFtpCdupFactory;
+        type = new TFtpTypeFactory;
+        retr = new TFtpRetrFactory;
     stor = new TFtpStorFactory;
-	mdtm = new TFtpMdtmFactory;
-	dele = new TFtpDeleFactory;
-	mkd = new TFtpMkdFactory;
-	rmd = new TFtpRmdFactory;
-	quit = new TFtpQuitFactory;
+        mdtm = new TFtpMdtmFactory;
+        dele = new TFtpDeleFactory;
+        mkd = new TFtpMkdFactory;
+        rmd = new TFtpRmdFactory;
+        quit = new TFtpQuitFactory;
 
-	FList = 0;
-	FMyIp = 0;
-	FLocalPort = 0;
+        FList = 0;
+        FMyIp = 0;
+        FLocalPort = 0;
 }
 
 /*##########################################################################
@@ -353,15 +353,15 @@ void TFtpSocketServerFactory::Init()
 #   Returns....: *
 #
 ##########################################################################*/
-TSocketServer *TFtpSocketServerFactory::Create(TSocket *Socket)
+TSocketServer *TFtpSocketServerFactory::Create(TTcpSocket *Socket)
 {
-	TFtpSocketServer *server;
-	server = new TFtpSocketServer(FList, "FTP", 0x2000, Socket);
-	server->FLocalPort = FLocalPort;
-	server->OnCommand = OnCommand;
-	server->FMyIp = FMyIp;
+        TFtpSocketServer *server;
+        server = new TFtpSocketServer(FList, "FTP", 0x2000, Socket);
+        server->FLocalPort = FLocalPort;
+        server->OnCommand = OnCommand;
+        server->FMyIp = FMyIp;
 
-	return server;
+        return server;
 }
 
 /*##########################################################################
