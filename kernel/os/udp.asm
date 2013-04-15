@@ -1595,9 +1595,22 @@ read_udp_do:
     or ecx,ecx
     jz read_udp_copied
 ;    
+    push ds
+    push es
     mov ds,ds:udp_data_sel
     xor esi,esi
     rep movs byte ptr es:[edi],ds:[esi]
+;
+    mov cx,ds
+    mov es,cx
+    xor cx,cx
+    mov es,cx
+    FreeMem    
+;
+    pop es
+    pop ds
+    mov ds:udp_data_sel,0
+    mov ds:udp_data_size,0
     
 read_udp_copied:
     pop edi
