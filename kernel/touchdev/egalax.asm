@@ -34,7 +34,7 @@ INCLUDE ..\os\protseg.def
 
 ; Auto-detect doesn't seem to work so give COM port here:
 
-COM_PORT = 1
+COM_PORT = 2
         
 
 X_START = 100

@@ -585,8 +585,13 @@ void TTimeXAxis::SetupMilliScale(int width)
 
     if (FIncr != 0)
     {
-        scales = (FXMax - FXMin) / width;
-        if (scales == 0)
+        if (width)
+        {
+            scales = (FXMax - FXMin) / width;
+            if (scales == 0)
+                FIncr = 0;
+        }
+        else
             FIncr = 0;
     }
 
@@ -815,9 +820,14 @@ void TTimeXAxis::SetupSecScale(int width)
 
         if (FIncr != 0)
         {
+            if (width)
+            {
                 scales = (FXMax - FXMin) / width;
                 if (scales == 0)
                         FIncr = 0;
+            }
+            else
+                FIncr = 0;
         }
 
         if (FIncr != 0)
@@ -985,9 +995,14 @@ void TTimeXAxis::SetupMinScale(int width)
 
         if (FIncr != 0)
         {
+            if (width)
+            {
                 scales = (FXMax - FXMin) / width;
                 if (scales == 0)
                         FIncr = 0;
+            }
+            else
+                FIncr = 0;
         }
 
         if (FIncr != 0)
@@ -1150,9 +1165,14 @@ void TTimeXAxis::SetupHourScale(int width)
 
         if (FIncr != 0)
         {
+            if (width)
+            {
                 scales = (FXMax - FXMin) / width;
                 if (scales == 0)
                         FIncr = 0;
+            }
+            else
+                FIncr = 0;
         }
 
         if (FIncr != 0)
@@ -1311,9 +1331,14 @@ void TTimeXAxis::SetupDateScale(int width)
 
         if (FIncr != 0)
         {
+            if (width)
+            {
                 scales = (FXMax - FXMin) / width;
                 if (scales == 0)
                         FIncr = 0;
+            }
+            else
+                FIncr = 0;
         }
 
         if (FIncr != 0)
@@ -1473,9 +1498,14 @@ void TTimeXAxis::SetupMonthScale(int width)
 
         if (FIncr != 0)
         {
+            if (width)
+            {
                 scales = (FXMax - FXMin) / width;
                 if (scales == 0)
                         FIncr = 0;
+            }
+            else
+                FIncr = 0;
         }
 
         if (FIncr != 0)
@@ -1590,9 +1620,14 @@ void TTimeXAxis::SetupYearScale(int width)
 
         if (FIncr != 0)
         {
+            if (width)
+            {
                 scales = (FXMax - FXMin) / width;
                 if (scales == 0)
                         FIncr = 0;
+            }
+            else
+                FIncr = 0;
         }
 
         if (FIncr != 0)
