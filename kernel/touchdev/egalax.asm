@@ -32,23 +32,24 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\os\protseg.def
 
-; Auto-detect doesn't seem to work so give COM port here:
-
-COM_PORT = 2
-        
-
-X_START = 100
-Y_START = 100
-X_SIZE = 1850
-Y_SIZE = 1850
-
 data    SEGMENT byte public 'DATA'
 
 td_wait         DW ?
 td_port         DW ?
 td_x            DW ?
 td_y            DW ?
+td_prev_x       DW ?
+td_prev_y       DW ?
+
+x_start         DW ?
+y_start         DW ?
+x_size          DW ?
+y_size          DW ?
+
 td_control      DB ?
+ComPort         DB ?
+
+Param           DD ?,?
 
 data    ENDS
 
@@ -119,8 +120,23 @@ htLoop:
     jz htLoop    
 
 htControl:
-    mov ds:td_control,al
-;    
+    test al,1
+    jz ttUp
+
+ttDown:
+    mov ds:td_control,1
+    jmp ttGetPos
+
+ttUp:
+    mov al,ds:td_control
+    or al,al
+    jz ttGetPos
+;
+    mov ds:td_control,0
+    mov ds:td_prev_x,-1
+    mov ds:td_prev_y,-1
+
+ttGetPos:
     GetSystemTime
     add eax,10 * 1192
     adc edx,0
@@ -131,10 +147,9 @@ htControl:
     ReadCom
     jc htLoop
 ;
-    test al,0F0h
+    test al,80h
     jnz htLoop
 ;
-    and ax,0Fh
     shl ax,7
     mov ds:td_x,ax        
 ;    
@@ -151,7 +166,6 @@ htControl:
     test al,80h
     jnz htLoop
 ;
-    and ax,7Fh
     or ds:td_x,ax
 ;    
     GetSystemTime
@@ -164,10 +178,9 @@ htControl:
     ReadCom
     jc htLoop
 ;
-    test al,0F0h
+    test al,80h
     jnz htLoop
 ;
-    and ax,0Fh
     shl ax,7
     mov ds:td_y,ax        
 ;    
@@ -184,68 +197,77 @@ htControl:
     test al,80h
     jnz htLoop
 ;
-    and ax,7Fh
     or ds:td_y,ax
+;
+; invert
+;
+    mov dx,ds:y_size
+    add dx,ds:y_start
+    add dx,ds:y_start
+    sub dx,ds:td_y
+    mov ds:td_y,dx    
 ;    
 ; custom scaling
 ;
     mov cx,ds:td_x
-    sub cx,X_START
+    sub cx,ds:x_start
     jnc htXMinOk
 ;
     xor cx,cx
 
 htXMinOk:
-    cmp cx,X_SIZE
+    cmp cx,ds:x_size
     jb htXMaxOk
 ;
-    mov cx,X_SIZE
+    mov cx,ds:x_size
 
 htXMaxOk:
     xor dx,dx
     mov ax,7FFFh
     mul cx
-    mov cx,X_SIZE
+    mov cx,ds:x_size
     div cx
     mov ds:td_x,ax
 ;
     mov cx,ds:td_y
-    sub cx,Y_START
+    sub cx,ds:y_start
     jnc htYMinOk
 ;
     xor cx,cx
 
 htYMinOk:
-    cmp cx,Y_SIZE
+    cmp cx,ds:y_size
     jb htYMaxOk
 ;
-    mov cx,Y_SIZE
+    mov cx,ds:y_size
 
 htYMaxOk:
     xor dx,dx
     mov ax,7FFFh
     mul cx
-    mov cx,Y_SIZE
+    mov cx,ds:y_size
     div cx
     mov ds:td_y,ax
 ;    
     mov cx,ds:td_x
     mov dx,ds:td_y
+;
+    mov bx,ds:td_prev_x
+    sub bx,cx
+    mov ax,ds:td_prev_y
+    sub ax,dx
+    or ax,bx
+    jz htLoop
+;
+    mov ds:td_prev_x,cx
+    mov ds:td_prev_y,dx    
     mov al,ds:td_control
-    and al,1
-;    shl cx,5
-;    shl dx,5
-;
-; upside-down touch
-;
-    not cx
-;    not dx
-    and ch,7Fh
-;    and dh,7Fh
-;    
+    and ax,1
     SetMouse
 ;
     jmp htLoop
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -268,8 +290,9 @@ touch_thread:
 ;
     mov ax,SEG data
     mov ds,ax
+    mov al,ds:ComPort
+    dec al
 ;    
-    mov al,COM_PORT
     mov ah,8
     mov bl,1
     mov bh,'N'
@@ -287,7 +310,8 @@ touch_thread:
     SetRts
     CloseCom
 ;
-    mov al,COM_PORT    
+    mov al,ds:ComPort
+    dec al
     jmp HandleTouch
 
 ttDone: 
@@ -345,6 +369,69 @@ init_touch      Proc far
         retf32
 init_touch      Endp
 
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           GetValue
+;
+;       Purpose:        Get value from string
+;
+;       Parameters:     ES:EDI      String
+;
+;       Returns:        NC          Found
+;                           AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetValue    Proc near
+    push bx
+    push cx
+    push dx
+;    
+    xor ax,ax
+
+find_first_loop:
+    mov bl,es:[edi]
+    cmp bl,' '
+    je find_first_next
+;
+    cmp bl,','
+    je find_first_next
+;
+    cmp bl,8
+    je find_first_next
+;ù
+    or bl,bl
+    jnz find_val_digit  
+
+find_first_next:
+    inc edi
+    jmp find_first_loop      
+
+find_val_digit:
+    mov bl,es:[edi]
+    or bl,bl
+    jz find_val_save
+;    
+    inc edi
+    sub bl,'0'
+    jc find_val_save
+;
+    cmp bl,10
+    jnc find_val_save
+;       
+    mov cx,10
+    mul cx
+    add al,bl
+    adc ah,0
+    jmp find_val_digit
+
+find_val_save:
+    pop dx
+    pop cx
+    pop bx
+    ret
+GetValue    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -358,6 +445,50 @@ init_touch      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
+    mov ax,SEG data
+    mov ds,ax
+;    
+    mov ds:ComPort,1
+    mov ds:x_start,100
+    mov ds:y_start,100
+    mov ds:x_size,1850
+    mov ds:y_size,1850
+    mov ds:td_prev_x,-1
+    mov ds:td_prev_y,-1
+;        
+    call GetValue
+    mov ds:ComPort,al
+;
+    call GetValue
+    or ax,ax
+    jz x_start_ok
+;
+    mov ds:x_start,ax
+    mov ds:y_start,ax
+
+x_start_ok:    
+    call GetValue
+    or ax,ax
+    jz x_size_ok
+;
+    mov ds:x_size,ax
+    mov ds:y_size,ax
+
+x_size_ok:
+    call GetValue
+    or ax,ax
+    jz y_start_ok
+;
+    mov ds:y_start,ax
+
+y_start_ok:
+    call GetValue
+    or ax,ax
+    jz y_size_ok
+;
+    mov ds:y_size,ax
+
+y_size_ok:
     mov ax,cs
     mov ds,ax
     mov es,ax

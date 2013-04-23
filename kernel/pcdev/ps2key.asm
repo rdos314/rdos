@@ -835,8 +835,13 @@ mode_name       DB 'Keyboard LEDs',0
 mode_pr:
     mov ax,SEG data
     mov ds,ax
+;
     GetThread
     mov ds:mode_thread,ax
+;    
+    mov eax,250
+    WaitMilliSec
+;
     in al,60h
 
 mode_thread_loop:
@@ -874,6 +879,15 @@ keyb_int_loop:
     jmp keyb_int_done
 
 keyb_int_get_cmd:
+    test al,20h
+    jz keyb_int_keyboard
+
+keyb_int_mouse:
+    in al,60h
+    ReleaseSpinlock ds:hw_spinlock
+    jmp keyb_int_loop
+
+keyb_int_keyboard:
     in al,60h
     ReleaseSpinlock ds:hw_spinlock
 ;
@@ -970,6 +984,15 @@ init_keyb_thread    PROC far
     push ds
     push es
     pusha
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;
+    mov si,OFFSET mode_pr
+    mov di,OFFSET mode_name
+    mov cx,stack0_size
+    mov ax,4
+    CreateThread
 ;
     mov bx,SEG data
     mov ds,bx
@@ -979,15 +1002,6 @@ init_keyb_thread    PROC far
     mov es,bx
     mov edi,OFFSET keyb_int
     RequestIrqHandler
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov si,OFFSET mode_pr
-    mov di,OFFSET mode_name
-    mov cx,stack0_size
-    mov ax,4
-    CreateThread
 ;
     popa
     pop es
