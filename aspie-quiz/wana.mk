@@ -1,3 +1,3 @@
-project : E:\rdos\aspie-quiz\wana.exe .SYMBOLIC
+project : C:\rdos\aspie-quiz\wana.exe .SYMBOLIC
 
-!include E:\rdos\aspie-quiz\wana.mk1
+!include C:\rdos\aspie-quiz\wana.mk1

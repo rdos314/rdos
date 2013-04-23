@@ -29,12 +29,6 @@
 #define LOG_H
 
 #include "device.h"
-#include "file.h"
-#include "rad.h"
-#include "ws2300.h"
-#include "circ.h"
-#include "vp.h"
-
 
 #define LOG_TAG_HEADER      50
 #define LOG_TAG_RAD         51
@@ -45,6 +39,8 @@
 #define LOG_TAG_VP          56
 #define LOG_TAG_TANK        57
 #define LOG_TAG_HEAT        58
+#define LOG_TAG_SOLAR12     59
+#define LOG_TAG_SOLAR24     60
 
 #define LOG_VAR_Address     100
 #define LOG_VAR_MsbTime     101
@@ -63,53 +59,13 @@
 #define LOG_VAR_Rain        114
 #define LOG_VAR_On          115
 #define LOG_VAR_P           116
+#define LOG_VAR_Windgust    117
 
-class TLogReader;
-
-class TLog : public TDevice
-{
-public:
-	TLog(const char *RootDir);
-	~TLog();
-
-	void DeviceName(char *Name, int Size) const;
-
-	void Add(TRad *rad);
-    void Add(TWs2300 *ws);	
-    void Add(TCirc *circ);
-    void Add(TVp *vp);
-
-    TLogReader *GetLog(int year, int month, int day);    
-    
-protected:
-    virtual void Execute();
-
-    void CreateRootDir();
-    void CreateDayFile();
-
-    char FRootDir[256];
-
-    int FYear;
-    int FMonth;
-    int FDay;
-    int FHour;
-    int FMin;
-
-    TFile *FFile;
-    TRad *FRadArr[256];
-    TWs2300 *FWs;
-    TCirc *FCirc;
-	TVp *FVp;
-};
-
-
-class TLogReader : public TDevice
+class TLogReader
 {
 public:
     TLogReader(const char *filename);
     ~TLogReader();
-
-	void DeviceName(char *Name, int Size) const;
 
     int GotoFirst();
     int GotoNext();
