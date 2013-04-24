@@ -502,6 +502,7 @@ y_size_ok:
     mov edi,OFFSET init_touch
     HookInitTasking
     clc
+    clc
     ret
 init    ENDP
 

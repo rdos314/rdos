@@ -10,6 +10,7 @@
 #include "waitdev.h"
 #include "keyboard.h"
 #include "mouse.h"
+#include "png.h"
 
 #define FALSE   0
 #define TRUE    !FALSE
@@ -354,6 +355,15 @@ void RightDown(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
         MouseSprite->Show();
 }
 
+
+void ShowPng(TGraphicDevice *dev)
+{
+    TBitmapGraphicDevice *bitmap;
+
+    bitmap = TPngBitmapDevice::Create("test.png", 255, 255, 255);
+    dev->Blit(bitmap, 0, 0, 0, 0, bitmap->GetWidth(), bitmap->GetHeight());
+}
+
 void cdecl main()
 {
         int i;
@@ -423,6 +433,8 @@ void cdecl main()
         vbe->DrawLine(240, 0, 0, 128);
 
         vbe->SetClipRect(0, 0, vbe->GetWidth(), vbe->GetHeight() - 35);
+
+        ShowPng(vbe);
 
         Planets = new TPlanetThread(vbe, 8);
 
