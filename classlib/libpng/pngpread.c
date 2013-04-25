@@ -1280,11 +1280,11 @@ png_set_progressive_read_fn(png_structrp png_ptr, png_voidp progressive_ptr,
    png_set_read_fn(png_ptr, progressive_ptr, png_push_fill_buffer);
 }
 
-png_voidp PNGAPI
+int PNGAPI
 png_get_progressive_ptr(png_const_structrp png_ptr)
 {
-   if (png_ptr == NULL)
-      return (NULL);
+   if (png_ptr == 0)
+      return 0;
 
    return png_ptr->io_ptr;
 }

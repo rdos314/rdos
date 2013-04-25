@@ -194,7 +194,7 @@
 #  endif
 #endif
 
-#include "png.h"
+#include "libpng.h"
 
 /* pngconf.h does not set PNG_DLL_EXPORT unless it is required, so: */
 #ifndef PNG_DLL_EXPORT

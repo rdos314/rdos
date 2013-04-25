@@ -33,7 +33,8 @@
 class TPngBitmapDevice : public TBitmapGraphicDevice
 {
 public:
-	TPngBitmapDevice(int bpp, int width, int height);
+	TPngBitmapDevice(int width, int height);
+	TPngBitmapDevice(int handle);
 
 	static TPngBitmapDevice *Create(const char *FileName, int BackR, int BackG, int BackB);
 	int Save(const char *FileName);

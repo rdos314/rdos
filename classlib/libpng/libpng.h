@@ -368,8 +368,8 @@
  *       PNG Development Group
  */
 
-#ifndef PNG_H
-#define PNG_H
+#ifndef LIBPNG_H
+#define LIBPNG_H
 
 /* This is not the place to learn how to use libpng. The file libpng-manual.txt
  * describes how to use libpng, and the file example.c summarizes it
@@ -1779,13 +1779,6 @@ PNG_EXPORT(76, png_voidp, png_get_error_ptr, (png_const_structrp png_ptr));
  * PNG_WRITE_FLUSH_SUPPORTED undefined, because in this case libpng's
  * default flush function, which uses the standard *FILE structure, will
  * be used.
- */
-PNG_EXPORT(77, void, png_set_write_fn, (png_structrp png_ptr, png_voidp io_ptr,
-    png_rw_ptr write_data_fn, png_flush_ptr output_flush_fn));
-
-/* Replace the default data input function with a user supplied one. */
-PNG_EXPORT(78, void, png_set_read_fn, (png_structrp png_ptr, png_voidp io_ptr,
-    png_rw_ptr read_data_fn));
 
 /* Return the user pointer associated with the I/O functions */
 PNG_EXPORT(79, png_voidp, png_get_io_ptr, (png_const_structrp png_ptr));
@@ -1876,7 +1869,7 @@ PNG_EXPORT(90, void, png_set_progressive_read_fn, (png_structrp png_ptr,
     png_progressive_row_ptr row_fn, png_progressive_end_ptr end_fn));
 
 /* Returns the user pointer associated with the push read functions */
-PNG_EXPORT(91, png_voidp, png_get_progressive_ptr,
+PNG_EXPORT(91, int, png_get_progressive_ptr,
     (png_const_structrp png_ptr));
 
 /* Function to be called when data becomes available */

@@ -587,7 +587,7 @@ typedef png_size_t            * png_size_tp;
 typedef const png_size_t      * png_const_size_tp;
 
 #ifdef PNG_STDIO_SUPPORTED
-typedef FILE            * png_FILE_p;
+typedef int                     png_FILE_p;
 #endif
 
 #ifdef PNG_FLOATING_POINT_SUPPORTED
