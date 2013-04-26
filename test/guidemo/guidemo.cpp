@@ -392,9 +392,9 @@ void cdecl main()
         Mouse->OnRightUp = RightUp;
         Mouse->OnRightDown = RightDown;
 
-        vbe = new TVideoGraphicDevice(24, 1366, 768);
+//        vbe = new TVideoGraphicDevice(24, 1366, 768);
 //        vbe = new TVideoGraphicDevice(24, 640, 480);
-//      vbe = new TVideoGraphicDevice(24, 800, 600);
+      vbe = new TVideoGraphicDevice(24, 800, 600);
 //      vbe = new TVideoGraphicDevice(1, 240, 128);
 
         Mouse->SetWindow(20, 20, vbe->GetWidth() - 20, vbe->GetHeight() - 20);
@@ -447,7 +447,7 @@ void cdecl main()
 
         vbe->DrawEllipse(vbe->GetWidth() / 2, vbe->GetHeight() / 2, vbe->GetWidth() / 2, vbe->GetHeight() / 2);
 
-//        vbe->SetLgopNone();
+        vbe->SetLgopNone();
 //        ShowPng(vbe);
 
         RdosWaitMilli(5000);
