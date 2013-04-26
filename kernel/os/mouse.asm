@@ -109,7 +109,7 @@ data    ENDS
 
     .386p
 
-code    SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
@@ -227,7 +227,7 @@ set_mouse_limit PROC far
 ;       
     pop ax
     pop ds
-    retf32
+    ret
 set_mouse_limit ENDP
 
 
@@ -280,7 +280,7 @@ mouse_int_signal:
 update_mouse_done:
     pop bx
     pop ds
-    retf32
+    ret
 update_mouse    ENDP
 
 
@@ -336,7 +336,7 @@ set_mouse_int_signal:
 set_mouse_done:
     pop bx
     pop ds
-    retf32
+    ret
 set_mouse       ENDP
 
 
@@ -579,7 +579,7 @@ init_param      PROC far
     call reset
     mov ax,0FFFFh
     mov bx,2
-    retf32
+    ret
 init_param      ENDP
 
 show    PROC far
@@ -590,7 +590,7 @@ show    PROC far
     call show_marker
     mov ax,[ebp].trap_eax
     mov ds,[ebp].trap_pds
-    retf32
+    ret
 show    ENDP
 
 hide    PROC far
@@ -601,7 +601,7 @@ hide    PROC far
     call show_marker
     mov ax,[ebp].trap_eax
     mov ds,[ebp].trap_pds
-    retf32
+    ret
 hide    ENDP
 
 get_position    PROC far
@@ -612,7 +612,7 @@ get_position    PROC far
     mov dx,ds:m_vert_pos    
     mov ax,[ebp].trap_eax
     mov ds,[ebp].trap_pds
-    retf32
+    ret
 get_position    ENDP
 
 set_position    PROC far
@@ -626,7 +626,7 @@ set_position    PROC far
     call show_marker
     mov ax,[ebp].trap_eax
     mov ds,[ebp].trap_pds
-    retf32
+    ret
 set_position    ENDP
 
 get_press_info  PROC far
@@ -640,13 +640,13 @@ get_press1:
     mov cx,ds:m_horiz_press1
     mov dx,ds:m_vert_press1
     mov ds,[bp].pm_ds
-    retf32
+    ret
 get_press0:
     mov bx,ds:m_count_press0
     mov cx,ds:m_horiz_press0
     mov dx,ds:m_vert_press0
     mov ds,[bp].pm_ds
-    retf32
+    ret
 get_press_info  ENDP
 
 get_rel_info    PROC far
@@ -660,13 +660,13 @@ get_rel1:
     mov cx,ds:m_horiz_rel1
     mov dx,ds:m_vert_rel1
     mov ds,[bp].pm_ds
-    retf32
+    ret
 get_rel0:
     mov bx,ds:m_count_rel0
     mov cx,ds:m_horiz_rel0
     mov dx,ds:m_vert_rel0
     mov ds,[bp].pm_ds
-    retf32
+    ret
 get_rel_info    ENDP
 
 set_horiz_area  PROC far
@@ -686,7 +686,7 @@ set_horiz_test_pos:
     call show_marker
     mov ax,[ebp].trap_eax
     mov ds,[ebp].trap_pds
-    retf32
+    ret
 set_horiz_area  ENDP
 
 set_vert_area   PROC far
@@ -706,11 +706,11 @@ set_vert_test_pos:
     call show_marker
     mov ax,[ebp].trap_eax
     mov ds,[ebp].trap_pds
-    retf32
+    ret
 set_vert_area   ENDP
 
 dummy   PROC far
-    retf32
+    ret
 dummy   ENDP
 
 set_cursor_type PROC far
@@ -727,7 +727,7 @@ set_cursor_not_supported:
     call show_marker
     mov ax,[ebp].trap_eax
     mov ds,[ebp].trap_pds
-    retf32
+    ret
 set_cursor_type ENDP
 
 read_motion_counter     PROC far
@@ -739,7 +739,7 @@ read_motion_counter     PROC far
     xchg dx,ds:m_vert_motion
     mov ax,[ebp].trap_eax
     mov ds,[ebp].trap_pds
-    retf32
+    ret
 read_motion_counter     ENDP
 
 set_mickey      PROC far
@@ -749,53 +749,53 @@ set_mickey      PROC far
     mov ds:m_vert_mickey,dx
     mov ax,[ebp].trap_eax
     mov ds,[ebp].trap_pds
-    retf32
+    ret
 set_mickey      ENDP
 
 mouse_tab:
-mo00    DW OFFSET init_param
-mo01    DW OFFSET show
-mo02    DW OFFSET hide
-mo03    DW OFFSET get_position
-mo04    DW OFFSET set_position
-mo05    DW OFFSET get_press_info
-mo06    DW OFFSET get_rel_info
-mo07    DW OFFSET set_horiz_area
-mo08    DW OFFSET set_vert_area
-mo09    DW OFFSET dummy
-mo0A    DW OFFSET set_cursor_type
-mo0B    DW OFFSET read_motion_counter
-mo0C    DW OFFSET dummy
-mo0D    DW OFFSET dummy
-mo0E    DW OFFSET dummy
-mo0F    DW OFFSET set_mickey
-mo10    DW OFFSET dummy
-mo11    DW OFFSET dummy
-mo12    DW OFFSET dummy
-mo13    DW OFFSET dummy
-mo14    DW OFFSET dummy
-mo15    DW OFFSET dummy
-mo16    DW OFFSET dummy
-mo17    DW OFFSET dummy
-mo18    DW OFFSET dummy
-mo19    DW OFFSET dummy
-mo1A    DW OFFSET dummy
-mo1B    DW OFFSET dummy
-mo1C    DW OFFSET dummy
-mo1D    DW OFFSET dummy
-mo1E    DW OFFSET dummy
-mo1F    DW OFFSET dummy
-mo20    DW OFFSET dummy
+mo00    DD OFFSET init_param
+mo01    DD OFFSET show
+mo02    DD OFFSET hide
+mo03    DD OFFSET get_position
+mo04    DD OFFSET set_position
+mo05    DD OFFSET get_press_info
+mo06    DD OFFSET get_rel_info
+mo07    DD OFFSET set_horiz_area
+mo08    DD OFFSET set_vert_area
+mo09    DD OFFSET dummy
+mo0A    DD OFFSET set_cursor_type
+mo0B    DD OFFSET read_motion_counter
+mo0C    DD OFFSET dummy
+mo0D    DD OFFSET dummy
+mo0E    DD OFFSET dummy
+mo0F    DD OFFSET set_mickey
+mo10    DD OFFSET dummy
+mo11    DD OFFSET dummy
+mo12    DD OFFSET dummy
+mo13    DD OFFSET dummy
+mo14    DD OFFSET dummy
+mo15    DD OFFSET dummy
+mo16    DD OFFSET dummy
+mo17    DD OFFSET dummy
+mo18    DD OFFSET dummy
+mo19    DD OFFSET dummy
+mo1A    DD OFFSET dummy
+mo1B    DD OFFSET dummy
+mo1C    DD OFFSET dummy
+mo1D    DD OFFSET dummy
+mo1E    DD OFFSET dummy
+mo1F    DD OFFSET dummy
+mo20    DD OFFSET dummy
 
 int33:
     SimSti
-    mov bx,ax
-    add bx,bx
-    cmp bx,40h
+    movzx ebx,ax
+    shl ebx,2
+    cmp ebx,80h
     jc mouse_call_do
-    mov bx,40h
+    mov ebx,80h
 mouse_call_do:
-    push word ptr cs:[bx].mouse_tab
+    push dword ptr cs:[ebx].mouse_tab
     mov bx,[ebp].trap_ebx
     retn
 
@@ -825,7 +825,7 @@ show_mouse      PROC far
 ;
     pop ax
     pop ds
-    retf32
+    ret
 show_mouse      ENDP
 
 
@@ -854,7 +854,7 @@ hide_mouse      PROC far
 ;
     pop ax
     pop ds
-    retf32
+    ret
 hide_mouse      ENDP
 
 
@@ -883,7 +883,7 @@ get_mouse_position      PROC far
 ;
     pop ax
     pop ds
-    retf32
+    ret
 get_mouse_position      ENDP
 
 
@@ -916,7 +916,7 @@ set_mouse_position      PROC far
 ;
     pop ax
     pop ds
-    retf32
+    ret
 set_mouse_position      ENDP
 
 
@@ -945,7 +945,7 @@ get_left_button PROC far
 ;
     pop ax
     pop ds
-    retf32
+    ret
 get_left_button ENDP
 
 
@@ -974,7 +974,7 @@ get_right_button    PROC far
 ;
     pop ax
     pop ds
-    retf32
+    ret
 get_right_button    ENDP
 
 
@@ -1003,7 +1003,7 @@ get_left_button_press_position  PROC far
 ;
     pop ax
     pop ds
-    retf32
+    ret
 get_left_button_press_position  ENDP
 
 
@@ -1032,7 +1032,7 @@ get_right_button_press_position PROC far
 ;
     pop ax
     pop ds
-    retf32
+    ret
 get_right_button_press_position ENDP
 
 
@@ -1061,7 +1061,7 @@ get_left_button_release_position    PROC far
 ;
     pop ax
     pop ds
-    retf32
+    ret
 get_left_button_release_position    ENDP
 
 
@@ -1090,7 +1090,7 @@ get_right_button_release_position       PROC far
 ;
     pop ax
     pop ds
-    retf32
+    ret
 get_right_button_release_position       ENDP
 
 
@@ -1126,7 +1126,7 @@ set_mouse_window    PROC far
     call show_marker
 ;
     pop ds
-    retf32
+    ret
 set_mouse_window    ENDP
 
 
@@ -1155,7 +1155,7 @@ set_mouse_mickey    PROC far
 ;
     pop ax
     pop ds
-    retf32
+    ret
 set_mouse_mickey    ENDP
 
     
@@ -1189,7 +1189,7 @@ start_wait_for_done:
     pop bx
     pop ax
     pop ds
-    retf32
+    ret
 start_wait_for_mouse Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1213,7 +1213,7 @@ stop_wait_for_mouse     PROC far
 ;
     pop ax
     pop ds
-    retf32
+    ret
 stop_wait_for_mouse Endp
 
     
@@ -1239,7 +1239,7 @@ clear_mouse     PROC far
 ;
     pop eax
     pop ds
-    retf32
+    ret
 clear_mouse Endp
 
     
@@ -1272,7 +1272,7 @@ is_idle_done:
     pop bx
     pop ax
     pop ds
-    retf32
+    ret
 is_mouse_idle Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1318,7 +1318,7 @@ add_wait_done:
     pop eax
     pop es
     pop ds
-    retf32
+    ret
 add_wait_for_mouse      ENDP
 
 
@@ -1425,12 +1425,12 @@ hook_mouse16    Proc far
     movzx edi,di
     call hook_mouse
     pop edi
-    retf32
+    ret
 hook_mouse16    Endp
 
 hook_mouse32    Proc far
     call hook_mouse
-    retf32
+    ret
 hook_mouse32    Endp    
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1456,7 +1456,7 @@ unhook_mouse    PROC near
 ;
     pop bx
     pop ds
-    retf32
+    ret
 unhook_mouse    ENDP
 
 
@@ -1517,7 +1517,7 @@ init_focus      PROC far
     mov ds,ax
     mov ds:m_counter,0
     mov ds:m_avail_obj,0
-    retf32
+    ret
 init_focus      ENDP
 
 
@@ -1559,7 +1559,7 @@ init_mouse_done:
     popa
     pop es
     pop ds
-    retf32
+    ret
 init_mouse_thread       ENDP
 
 

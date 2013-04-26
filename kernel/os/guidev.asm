@@ -40,7 +40,7 @@ INCLUDE ..\os.inc
         extrn init_mouse:near
         extrn init_video:near
 
-code    SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public 'CODE'
 
         assume cs:code
 

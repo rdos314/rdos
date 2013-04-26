@@ -62,7 +62,7 @@ data    ENDS
 
     .386p
 
-code    SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
@@ -86,7 +86,7 @@ get_focus_thread    PROC far
     mov ds,ax
     mov ax,ds:focus_current_thread
     pop ds
-    retf32
+    ret
 get_focus_thread    ENDP
 
 
@@ -120,7 +120,8 @@ get_thread_key_loop:
     je get_thread_key_ok
 ;
     add si,2
-    loop get_thread_key_loop
+    sub cx,1
+    jnz get_thread_key_loop
 ;
     xor ax,ax
     stc
@@ -136,7 +137,7 @@ get_thread_key_done:
     pop si
     pop cx
     pop ds
-    retf32
+    ret
 get_thread_focus_key    ENDP
 
 
@@ -162,7 +163,7 @@ allocate_focus_linear   PROC far
     mov edx,ds:focus_alloc_rel
     add ds:focus_alloc_rel,eax
     pop ds
-    retf32
+    ret
 allocate_focus_linear   ENDP
 
 
@@ -208,7 +209,7 @@ allocate_fixed_focus_mem    PROC far
     pop ecx
     pop eax
     pop ds
-    retf32
+    ret
 allocate_fixed_focus_mem    ENDP
 
 
@@ -244,10 +245,11 @@ free_thread_loop:
 
 free_thread_next:
     add bx,2
-    loop free_thread_loop
+    sub cx,1
+    jnz free_thread_loop
 
 free_thread_done:
-    retf32
+    ret
 free_thread     Endp
 
 
@@ -281,14 +283,15 @@ init_focus_process      Proc far
 init_local_loop:
     SetPageEntry
     add edx,1000h
-    loop init_local_loop    
+    sub cx,1
+    jnz init_local_loop    
 ;
     pop edx
     pop cx
     pop ebx
     pop eax
     pop ds
-    retf32
+    ret
 init_focus_process      Endp
 
 
@@ -318,7 +321,7 @@ free_focus_process      Proc far
     pop cx
     pop ebx
     pop eax
-    retf32
+    ret
 free_focus_process      Endp
 
 
@@ -451,7 +454,7 @@ hook_enable_focus       PROC far
     pop bx
     pop ax
     pop ds
-    retf32
+    ret
 hook_enable_focus       ENDP
 
     
@@ -486,7 +489,7 @@ hook_lost_focus PROC far
     pop bx
     pop ax
     pop ds
-    retf32
+    ret
 hook_lost_focus ENDP
 
     
@@ -521,7 +524,7 @@ hook_got_focus  PROC far
     pop bx
     pop ax
     pop ds
-    retf32
+    ret
 hook_got_focus  ENDP
 
 
@@ -582,7 +585,8 @@ set_focus_loop:
     SetSysPageDir
 ;    
     add edi,esi
-    loop set_focus_loop
+    sub cx,1
+    jnz set_focus_loop
 ;
     mov bx,SEG data
     mov ds,bx
@@ -593,7 +597,7 @@ set_focus_done:
     popad
     pop es
     pop ds
-    retf32
+    ret
 set_focus       ENDP
 
 
@@ -651,7 +655,7 @@ enable_focus_done:
     pop bx
     pop es
     pop ds
-    retf32
+    ret
 enable_focus    ENDP
 
 
@@ -674,7 +678,7 @@ get_focus       PROC far
     mov ds,ax
     mov al,ds:fp_key
     pop ds
-    retf32
+    ret
 get_focus   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -714,8 +718,8 @@ init_focus      PROC near
     mov bx,SEG data
     mov es,bx
     mov ds,bx
-    mov di,OFFSET focus_thread
-    mov cx,256
+    mov edi,OFFSET focus_thread
+    mov ecx,256
     xor ax,ax
     rep stosw
     mov ds:lost_focus_hooks,0

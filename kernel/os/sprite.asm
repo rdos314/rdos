@@ -39,7 +39,7 @@ INCLUDE sprite.inc
 INCLUDE ..\video.inc
 INCLUDE ..\apicheck.inc
 
-code    SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public 'CODE'
 
     .386
 
@@ -155,7 +155,8 @@ check_sprite_upper_ok:
 
 check_sprite_next:
     add di,16
-    loop check_sprite_loop
+    sub cx,1
+    jnz check_sprite_loop
 
 check_sprite_done:
     popad
@@ -254,15 +255,15 @@ create_sprite_sel_ok:
     shl eax,4
     push ds
     push es
-    push cx
-    push si
-    push di
-    mov cx,ds:v_sprite_size
-    add cx,cx
+    push ecx
+    push esi
+    push edi
+    movzx ecx,ds:v_sprite_size
+    add ecx,ecx
     mov ds,ds:v_sprite_sel
     AllocateSmallKernelMem
-    xor si,si
-    xor di,di         
+    xor esi,esi
+    xor edi,edi         
     rep movsd
     mov ax,es
     mov cx,ds
@@ -270,9 +271,9 @@ create_sprite_sel_ok:
     xor cx,cx
     mov ds,cx
     FreeMem
-    pop di
-    pop si
-    pop cx
+    pop edi
+    pop esi
+    pop ecx
     pop es
     pop ds
     mov ds:v_sprite_sel,ax
@@ -423,7 +424,7 @@ create_sprite_done:
     ApiCheckEdx
     ApiCheckEcx
     ApiCheckEax
-    retf32
+    ret
 create_sprite   Endp
 
 
@@ -1267,7 +1268,7 @@ hide_sprite_done:
     pop fs
     pop es
     pop ds
-    retf32
+    ret
 hide_sprite     Endp
 
 
@@ -1339,7 +1340,7 @@ show_sprite_done:
     pop fs
     pop es
     pop ds
-    retf32
+    ret
 show_sprite     Endp
 
 
@@ -1710,7 +1711,7 @@ move_sprite_done:
     pop fs
     pop es
     pop ds
-    retf32
+    ret
 move_sprite     Endp
 
 
@@ -1840,7 +1841,8 @@ delete_sprite_check_upper:
 
 delete_sprite_spl_next:
     add si,4
-    loop delete_sprite_spl_loop
+    sub cx,1
+    jnz delete_sprite_spl_loop
 ;
     mov ds,fs:sp_dest_sel
     LeaveSection ds:v_sprite_section
@@ -1913,7 +1915,7 @@ cl_sprite_done:
     ApiCheckEdx
     ApiCheckEcx
     ApiCheckEax
-    retf32
+    ret
 close_sprite    Endp
 
 
@@ -1942,7 +1944,7 @@ delete_handle_done:
     pop ebx
     pop ax
     pop ds
-    retf32
+    ret
 delete_handle   Endp
 
 
@@ -2078,7 +2080,7 @@ hide_sprite_l_next:
 
 hide_sprite_l_done:
     pop si
-    retf32
+    ret
 hide_sprite_line    Endp
 
 
@@ -2239,7 +2241,7 @@ show_sprite_l_next:
     pop ds:v_x_min
 
 show_sprite_l_done:
-    retf32
+    ret
 show_sprite_line    Endp
 
 

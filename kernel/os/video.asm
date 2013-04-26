@@ -76,7 +76,7 @@ data    ENDS
 
     .386p
 
-code    SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
@@ -115,7 +115,7 @@ register_video_mode     PROC far
     pop ax
     mov es:mode_nr,ax
     mov dword ptr es:mode_create,edi
-    pop ax
+    pop eax
     mov word ptr es:mode_create+4,ax
     mov es:mode_bpp,bl
     mov es:mode_x_resol,cx
@@ -128,7 +128,7 @@ register_video_mode     PROC far
     pop eax
     pop es
     pop ds
-    retf32
+    ret
 register_video_mode     ENDP
 
     
@@ -240,7 +240,7 @@ get_video_leave:
     pop bx
     pop es    
     pop ds
-    retf32
+    ret
 get_video_mode  Endp
 
     
@@ -339,7 +339,7 @@ set_video_mode_ok:
 
 set_video_mode_done:
     pop ds
-    retf32
+    ret
 set_video_mode  ENDP
 
     
@@ -368,7 +368,7 @@ invert_mouse    PROC far
     xchg bl,bh
     call fword ptr ds:v_write_char_proc
     pop ds
-    retf32
+    ret
 invert_mouse    ENDP
 
     
@@ -396,7 +396,7 @@ set_cursor_position     PROC far
     mov ds:p_col,cx
     pop ax
     pop ds
-    retf32
+    ret
 set_cursor_position     ENDP
 
     
@@ -425,7 +425,7 @@ get_cursor_position     PROC far
 ;
     pop ax
     pop ds
-    retf32
+    ret
 get_cursor_position     ENDP
 
     
@@ -454,7 +454,7 @@ set_forecolor   PROC far
 ;
     pop bx
     pop ds
-    retf32
+    ret
 set_forecolor   ENDP
 
     
@@ -483,7 +483,7 @@ set_backcolor   PROC far
 ;
     pop bx
     pop ds
-    retf32
+    ret
 set_backcolor   ENDP
 
     
@@ -691,38 +691,38 @@ WriteCr ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 write_tab:
-wct00   DW OFFSET WriteSkip
-wct01   DW OFFSET WriteNormal
-wct02   DW OFFSET WriteNormal
-wct03   DW OFFSET WriteNormal
-wct04   DW OFFSET WriteNormal
-wct05   DW OFFSET WriteNormal
-wct06   DW OFFSET WriteNormal
-wct07   DW OFFSET WriteNormal
-wct08   DW OFFSET WriteDel
-wct09   DW OFFSET WriteTab
-wct0A   DW OFFSET WriteLf
-wct0B   DW OFFSET WriteNormal
-wct0C   DW OFFSET WriteNormal
-wct0D   DW OFFSET WriteCr
-wct0E   DW OFFSET WriteNormal
-wct0F   DW OFFSET WriteNormal
+wct00   DD OFFSET WriteSkip
+wct01   DD OFFSET WriteNormal
+wct02   DD OFFSET WriteNormal
+wct03   DD OFFSET WriteNormal
+wct04   DD OFFSET WriteNormal
+wct05   DD OFFSET WriteNormal
+wct06   DD OFFSET WriteNormal
+wct07   DD OFFSET WriteNormal
+wct08   DD OFFSET WriteDel
+wct09   DD OFFSET WriteTab
+wct0A   DD OFFSET WriteLf
+wct0B   DD OFFSET WriteNormal
+wct0C   DD OFFSET WriteNormal
+wct0D   DD OFFSET WriteCr
+wct0E   DD OFFSET WriteNormal
+wct0F   DD OFFSET WriteNormal
 
 WriteOne    PROC near
-    push si
-    movzx si,al
-    cmp si,0Fh
+    push esi
+    movzx esi,al
+    cmp esi,0Fh
     jc write_char_doit
 ;
-    mov si,0Fh
+    mov esi,0Fh
 
 write_char_doit:
-    add si,si
-    call word ptr cs:[si].write_tab
+    shl esi,2
+    call dword ptr cs:[esi].write_tab
     call UpdatePos
 
 write_ansi_done:
-    pop si
+    pop esi
     ret
 WriteOne    ENDP
 
@@ -760,7 +760,7 @@ get_char_attrib PROC far
     pop dx
     pop cx
     pop ds
-    retf32
+    ret
 get_char_attrib ENDP
 
     
@@ -802,7 +802,7 @@ write_char      PROC far
     pop cx
     pop bx
     pop ds
-    retf32
+    ret
 write_char      ENDP
 
     
@@ -858,7 +858,7 @@ write_asciiz_done16:
     pop bx
     pop ax
     pop ds
-    retf32
+    ret
 write_asciiz16  ENDP
 
 write_asciiz32  PROC far
@@ -900,7 +900,7 @@ write_asciiz_done32:
     pop bx
     pop ax
     pop ds
-    retf32
+    ret
 write_asciiz32  ENDP
 
     
@@ -956,7 +956,7 @@ write_dos_string_done:
     pop bx
     pop ax
     pop ds
-    retf32
+    ret
 write_dos_string    ENDP
 
     
@@ -1008,7 +1008,7 @@ write_size_string_done16:
 ;       
     popa
     pop ds
-    retf32
+    ret
 write_size_string16     ENDP
 
 write_size_string32     PROC far
@@ -1045,7 +1045,7 @@ write_size_string_done32:
 ;
     popad
     pop ds
-    retf32
+    ret
 write_size_string32     ENDP
 
     
@@ -1093,7 +1093,7 @@ write_attr_string_done16:
 ;       
     popa
     pop ds
-    retf32
+    ret
 write_attr_string16     ENDP
 
 write_attr_string32     PROC far
@@ -1124,7 +1124,7 @@ write_attr_string_done32:
 ;
     popad
     pop ds
-    retf32
+    ret
 write_attr_string32     ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1246,7 +1246,7 @@ set_clip_rect_done:
     ApiCheckEdx
     ApiCheckEcx
     ApiCheckEax
-    retf32
+    ret
 set_clip_rect   ENDP
 
     
@@ -1301,7 +1301,7 @@ clear_clip_rect_done:
     ApiCheckEdx
     ApiCheckEcx
     ApiCheckEax
-    retf32
+    ret
 clear_clip_rect ENDP
 
     
@@ -1352,7 +1352,7 @@ set_draw_color_done:
     ApiCheckEdx
     ApiCheckEcx
     ApiCheckEax
-    retf32
+    ret
 set_draw_color  ENDP
 
     
@@ -1402,7 +1402,7 @@ set_lgop_done:
     ApiCheckEdx
     ApiCheckEcx
     ApiCheckEax
-    retf32
+    ret
 set_lgop    ENDP
 
     
@@ -1446,7 +1446,7 @@ set_hollow_done:
     ApiCheckEdx
     ApiCheckEcx
     ApiCheckEax
-    retf32
+    ret
 set_hollow_style    ENDP
 
     
@@ -1490,7 +1490,7 @@ set_filled_done:
     ApiCheckEdx
     ApiCheckEcx
     ApiCheckEax
-    retf32
+    ret
 set_filled_style    ENDP
 
     
@@ -1535,7 +1535,7 @@ set_font_done:
     ApiCheckEdx
     ApiCheckEcx
     ApiCheckEax
-    retf32
+    ret
 set_font    ENDP
 
     
@@ -1584,7 +1584,7 @@ get_pixel       PROC far
     ApiCheckEdx
     ApiCheckEcx
     ApiCheckEax
-    retf32
+    ret
 
 get_pixel_fail:
     pop ebx
@@ -1596,7 +1596,7 @@ get_pixel_fail:
     ApiCheckEdx
     ApiCheckEcx
     ApiCheckEax
-    retf32
+    ret
 get_pixel       ENDP
 
     
@@ -1654,7 +1654,7 @@ set_pixel       PROC far
     ApiCheckEdx
     ApiCheckEcx
     ApiCheckEax
-    retf32  
+    ret  
 
 set_pixel_fail:
     pop ebx
@@ -1666,7 +1666,7 @@ set_pixel_fail:
     ApiCheckEdx
     ApiCheckEcx
     ApiCheckEax
-    retf32
+    ret
 set_pixel       ENDP
 
     
@@ -2047,7 +2047,7 @@ blit_done:
     pop ds
     add esp,20
     pop ebp
-    retf32
+    ret
 blit_pr ENDP
 
     
@@ -2129,7 +2129,7 @@ draw_mask_done:
     pop esi
     pop edx
     pop ecx
-    retf32
+    ret
 draw_mask       ENDP
 
     
@@ -2191,7 +2191,7 @@ draw_string16_fail:
 
 draw_string16_done:
     pop edi
-    retf32
+    ret
 draw_string16   ENDP
 
 draw_string32   PROC far
@@ -2234,7 +2234,7 @@ draw_string32   PROC far
     ApiCheckEsi
     ApiCheckEdx
     ApiCheckEcx
-    retf32
+    ret
 
 draw_string32_fail:
     pop ebx
@@ -2245,7 +2245,7 @@ draw_string32_fail:
     ApiCheckEsi
     ApiCheckEdx
     ApiCheckEcx
-    retf32
+    ret
 draw_string32   ENDP
 
     
@@ -2304,7 +2304,7 @@ draw_line       PROC far
     ApiCheckEsi
     ApiCheckEdx
     ApiCheckEcx
-    retf32
+    ret
 
 draw_line_fail:
     pop ebx
@@ -2315,7 +2315,7 @@ draw_line_fail:
     ApiCheckEsi
     ApiCheckEdx
     ApiCheckEcx
-    retf32
+    ret
 draw_line       ENDP
 
     
@@ -2378,7 +2378,7 @@ draw_rect       PROC far
     ApiCheckEdx
     ApiCheckEcx
     ApiCheckEax
-    retf32
+    ret
 
 draw_rect_fail:
     pop ebx
@@ -2390,7 +2390,7 @@ draw_rect_fail:
     ApiCheckEdx
     ApiCheckEcx
     ApiCheckEax
-    retf32
+    ret
 draw_rect       ENDP
 
     
@@ -2453,7 +2453,7 @@ draw_ellipse    PROC far
     ApiCheckEdx
     ApiCheckEcx
     ApiCheckEax
-    retf32
+    ret
 
 draw_ellipse_fail:
     pop ebx
@@ -2465,7 +2465,7 @@ draw_ellipse_fail:
     ApiCheckEdx
     ApiCheckEcx
     ApiCheckEax
-    retf32
+    ret
 draw_ellipse    ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2566,7 +2566,7 @@ extract_vmask_fail:
     pop ds
     add esp,12
     pop ebp
-    retf32
+    ret
 extract_valid_bitmap_mask       ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2661,7 +2661,7 @@ extract_ivmask_fail:
     pop ds
     add esp,12
     pop ebp
-    retf32
+    ret
 extract_invalid_bitmap_mask       ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2698,7 +2698,7 @@ extract_alpha_bitmap       PROC far
 extract_alpha_fail:
     pop ebx
     pop ds
-    retf32
+    ret
 extract_alpha_bitmap       ENDP
 
     
@@ -2731,7 +2731,7 @@ set_cursor_pos  PROC far
     pop ds
     pop dx
     pop cx
-    retf32
+    ret
 set_cursor_pos  ENDP
 
     
@@ -2760,7 +2760,7 @@ read_cursor_pos PROC far
     xor bh,bh
     mov cl,1
     mov ch,8
-    retf32
+    ret
 read_cursor_pos ENDP
 
     
@@ -2777,7 +2777,7 @@ read_cursor_pos ENDP
 
 read_light_pen  PROC far
     xor ah,ah
-    retf32
+    ret
 read_light_pen  ENDP
 
     
@@ -2811,7 +2811,7 @@ read_video_attrib       PROC far
     pop dx
     pop cx
     pop bx
-    retf32
+    ret
 read_video_attrib       ENDP
 
     
@@ -2864,7 +2864,7 @@ write_ch_attr_done:
 ;
     popa
     pop ds
-    retf32
+    ret
 write_ch_attr   ENDP
 
     
@@ -2913,7 +2913,7 @@ write_ch_done:
 ;
     popa
     pop ds
-    retf32
+    ret
 write_ch    ENDP
 
     
@@ -2960,7 +2960,7 @@ scroll_video_up_do:
 scroll_video_up_done:
     ShowMouse
     popa        
-    retf32
+    ret
 scroll_video_up ENDP
 
     
@@ -3007,7 +3007,7 @@ scroll_video_down_do:
 scroll_video_down_done:
     ShowMouse
     popa        
-    retf32
+    ret
 scroll_video_down       ENDP
 
     
@@ -3058,7 +3058,7 @@ write_stg_not_del:
 write_stg_one_done:
     call UpdatePos
     pop bx
-    retf32
+    ret
 write_stg_one   ENDP
 
     
@@ -3088,7 +3088,7 @@ write_char_nm_loop:
     jmp write_char_nm_loop
 
 write_ch_no_m_end:
-    retf32
+    ret
 write_char_no_move      ENDP
 
 write_char_move PROC near
@@ -3107,7 +3107,7 @@ write_ch_m_end:
     mov ds:p_row,dx
     mov ds:p_col,cx
     CallVideo v_set_cursor_position_proc
-    retf32
+    ret
 write_char_move ENDP
 
 write_attr_no_move      PROC near
@@ -3126,7 +3126,7 @@ write_attr_nm_loop:
     jmp write_attr_nm_loop
 
 write_attr_no_m_end:
-    retf32
+    ret
 write_attr_no_move      ENDP
 
 write_attr_move PROC near
@@ -3148,20 +3148,20 @@ write_attr_m_end:
     mov ds:p_row,dx
     mov ds:p_col,cx
     CallVideo v_set_cursor_position_proc
-    retf32
+    ret
 write_attr_move ENDP
 
 write_stg_tab:
-ws0     DW OFFSET write_char_no_move
-ws1     DW OFFSET write_char_move
-ws2 DW OFFSET write_attr_no_move
-ws3 DW OFFSET write_attr_move
+ws0 DD OFFSET write_char_no_move
+ws1 DD OFFSET write_char_move
+ws2 DD OFFSET write_attr_no_move
+ws3 DD OFFSET write_attr_move
 
 write_stg       PROC far
     push ds
     push es
     push fs
-    pusha
+    pushad
 ;
     HideMouse
     mov al,[ebp+2].trap_eflags
@@ -3191,15 +3191,15 @@ write_stg_do:
     movzx cx,dl
     movzx dx,dh
 ;
-    movzx di,byte ptr [ebp].trap_eax
-    call cs:word ptr [di].write_stg_tab
+    movzx edi,byte ptr [ebp].trap_eax
+    call cs:dword ptr [edi].write_stg_tab
     ShowMouse
 ;
-    popa
+    popad
     pop fs
     pop es
     pop ds
-    retf32
+    ret
 write_stg       ENDP
 
     
@@ -3216,11 +3216,11 @@ write_stg       ENDP
 
 write_teletype  PROC far
     WriteChar
-    retf32
+    ret
 write_teletype  ENDP
 
 dummy_video     PROC far
-    retf32
+    ret
 dummy_video     ENDP
 
     
@@ -3239,7 +3239,7 @@ get_video_state PROC far
     mov al,3
     mov ah,80
     mov bh,0
-    retf32
+    ret
 get_video_state ENDP
 
     
@@ -3257,11 +3257,11 @@ get_video_state ENDP
 font_info       Proc far
     cmp al,30h
     je font_info_30
-    retf32
+    ret
 font_info_30:
     mov dl,24
     mov cx,2
-    retf32
+    ret
 font_info       Endp
 
     
@@ -3277,38 +3277,37 @@ font_info       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                             
 video_tab:
-v0      DW OFFSET dummy_video
-v1      DW OFFSET dummy_video
-v2      DW OFFSET set_cursor_pos
-v3      DW OFFSET read_cursor_pos
-v4      DW OFFSET read_light_pen
-v5      DW OFFSET dummy_video
-v6      DW OFFSET scroll_video_up
-v7      DW OFFSET scroll_video_down
-v8      DW OFFSET read_video_attrib
-v9      DW OFFSET write_ch_attr
-v10     DW OFFSET write_ch
-v11     DW OFFSET dummy_video
-v12     DW OFFSET dummy_video
-v13     DW OFFSET dummy_video
-v14     DW OFFSET write_teletype
-v15     DW OFFSET get_video_state
-v16     DW OFFSET dummy_video
-v17     DW OFFSET font_info
-v18     DW OFFSET dummy_video
-v19     DW OFFSET write_stg
-vend    DW OFFSET dummy_video
+v0      DD OFFSET dummy_video
+v1      DD OFFSET dummy_video
+v2      DD OFFSET set_cursor_pos
+v3      DD OFFSET read_cursor_pos
+v4      DD OFFSET read_light_pen
+v5      DD OFFSET dummy_video
+v6      DD OFFSET scroll_video_up
+v7      DD OFFSET scroll_video_down
+v8      DD OFFSET read_video_attrib
+v9      DD OFFSET write_ch_attr
+v10     DD OFFSET write_ch
+v11     DD OFFSET dummy_video
+v12     DD OFFSET dummy_video
+v13     DD OFFSET dummy_video
+v14     DD OFFSET write_teletype
+v15     DD OFFSET get_video_state
+v16     DD OFFSET dummy_video
+v17     DD OFFSET font_info
+v18     DD OFFSET dummy_video
+v19     DD OFFSET write_stg
+vend    DD OFFSET dummy_video
 
 int10:
     SimSti
-    mov bl,ah
-    xor bh,bh
-    add bx,bx
-    cmp bx,40
+    movzx ebx,ah
+    shl ebx,2
+    cmp ebx,80
     jc video_call_do
-    mov bx,40
+    mov ebx,80
 video_call_do:
-    push word ptr cs:[bx].video_tab
+    push dword ptr cs:[ebx].video_tab
     mov bx,[ebp].trap_ebx
     retn
 
@@ -3339,7 +3338,7 @@ lost_focus_hook PROC far
 
 lost_focus_hook_switched:
     pop ds
-    retf32
+    ret
 lost_focus_hook Endp
 
 
@@ -3369,7 +3368,7 @@ got_focus_hook  PROC far
 
 got_focus_hook_switched:
     pop ds
-    retf32
+    ret
 got_focus_hook  Endp
 
 
@@ -3562,7 +3561,7 @@ init_thread     PROC far
 ;
     pop ax
     pop ds
-    retf32
+    ret
 init_thread     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3592,7 +3591,7 @@ free_process    Proc far
 free_process_done:
     pop bx
     pop ds
-    retf32
+    ret
 free_process    Endp
 
 
@@ -3611,7 +3610,7 @@ init_focus      PROC far
     mov ax,video_local_sel
     mov ds,ax
     mov ds:v_handle,0
-    retf32
+    ret
 init_focus      Endp
 
 

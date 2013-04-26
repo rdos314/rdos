@@ -90,7 +90,7 @@ ELSE
     .386p
 ENDIF
 
-code    SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
@@ -254,7 +254,7 @@ kr_no_circ_buff:
     LeaveSection ds:key_section
     mov bx,[ebp].trap_ebx
     mov ds,[ebp].trap_pds
-    retf32
+    ret
 keyb_io_read    ENDP
 
 keyb_io_poll    PROC far
@@ -269,20 +269,20 @@ keyb_io_poll    PROC far
     LeaveSection ds:key_section
     mov bx,[ebp].trap_ebx
     mov ds,[ebp].trap_pds
-    retf32
+    ret
     
 keyb_p_empty:
     LeaveSection ds:key_section
     or word ptr [ebp].trap_eflags,40h
     mov bx,[ebp].trap_ebx
     mov ds,[ebp].trap_pds
-    retf32
+    ret
 keyb_io_poll    ENDP
 
 keyb_io_state   PROC far
     xor ax,ax
     mov ds,[bp].pm_ds
-    retf32
+    ret
 keyb_io_state   ENDP
 
 keyb_error:
@@ -293,43 +293,42 @@ keyb_error:
 keyb_write      PROC far
     mov al,1
     mov ds,[bp].pm_ds
-    retf32
+    ret
 keyb_write      ENDP
 
 keyb_io_tab:
-k00         DW OFFSET keyb_io_read
-k01         DW OFFSET keyb_io_poll
-k02         DW OFFSET keyb_io_state
-k03         DW OFFSET keyb_error
-k04         DW OFFSET keyb_error
-k05         DW OFFSET keyb_write
-k06         DW OFFSET keyb_error
-k07         DW OFFSET keyb_error
-k08         DW OFFSET keyb_error
-k09         DW OFFSET keyb_error
-k0A         DW OFFSET keyb_error
-k0B         DW OFFSET keyb_error
-k0C         DW OFFSET keyb_error
-k0D         DW OFFSET keyb_error
-k0E         DW OFFSET keyb_error
-k0F         DW OFFSET keyb_error
-k10         DW OFFSET keyb_io_read
-k11         DW OFFSET keyb_io_poll
-k12         DW OFFSET keyb_io_state
-k13         DW OFFSET keyb_error
+k00         DD OFFSET keyb_io_read
+k01         DD OFFSET keyb_io_poll
+k02         DD OFFSET keyb_io_state
+k03         DD OFFSET keyb_error
+k04         DD OFFSET keyb_error
+k05         DD OFFSET keyb_write
+k06         DD OFFSET keyb_error
+k07         DD OFFSET keyb_error
+k08         DD OFFSET keyb_error
+k09         DD OFFSET keyb_error
+k0A         DD OFFSET keyb_error
+k0B         DD OFFSET keyb_error
+k0C         DD OFFSET keyb_error
+k0D         DD OFFSET keyb_error
+k0E         DD OFFSET keyb_error
+k0F         DD OFFSET keyb_error
+k10         DD OFFSET keyb_io_read
+k11         DD OFFSET keyb_io_poll
+k12         DD OFFSET keyb_io_state
+k13         DD OFFSET keyb_error
 
 int16:
     SimSti
     mov bx,key_local_sel
     mov ds,bx
-    mov bl,ah
-    xor bh,bh
-    add bx,bx
-    cmp bx,26h
+    movzx ebx,ah
+    shl ebx,2
+    cmp bx,2 * 26h
     jc key_call_do
-    mov bx,26h
+    mov bx,2 * 26h
 key_call_do:
-    push word ptr cs:[bx].keyb_io_tab
+    push dword ptr cs:[ebx].keyb_io_tab
     mov bx,[ebp].trap_ebx
     retn
 
@@ -366,7 +365,7 @@ put_keyboard_code       PROC far
     pop bx
     pop ax
     pop ds
-    retf32
+    ret
 put_keyboard_code   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -397,7 +396,7 @@ poll_keyboard_serial    PROC far
 poll_key_serial_end:
     pop ax
     pop ds
-    retf32
+    ret
 poll_keyboard_serial    ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -432,7 +431,7 @@ key_serial_wait:
 key_serial_end:
     pop bx
     pop ds
-    retf32
+    ret
 read_keyboard_serial    ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -482,7 +481,7 @@ poll_key_avail:
     ApiCheckEcx
     ApiCheckEbx
     ApiCheckEax
-    retf32
+    ret
     
 poll_key_empty:
     LeaveSection ds:key_section
@@ -496,7 +495,7 @@ poll_key_empty:
     ApiCheckEcx
     ApiCheckEbx
     ApiCheckEax
-    retf32
+    ret
 poll_keyboard   ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -530,7 +529,7 @@ start_wait_for_done:
     pop bx
     pop ax
     pop ds
-    retf32
+    ret
 start_wait_for_keyboard Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -554,7 +553,7 @@ stop_wait_for_keyboard  PROC far
 ;
     pop ax
     pop ds
-    retf32
+    ret
 stop_wait_for_keyboard Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -587,7 +586,7 @@ check_idle_done:
     pop bx
     pop ax
     pop ds
-    retf32
+    ret
 is_keyboard_idle Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -602,7 +601,7 @@ is_keyboard_idle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 clear_keyboard  PROC far
-    retf32
+    ret
 clear_keyboard Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -639,7 +638,7 @@ add_wait_for_keyboard   PROC far
     pop edi
     pop ax
     pop es
-    retf32
+    ret
 add_wait_for_keyboard   ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -700,7 +699,7 @@ read_key_no_circ_buff:
     ApiCheckEsi
     ApiCheckEdx
     ApiCheckEcx
-    retf32
+    ret
 read_keyboard   ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -754,7 +753,7 @@ peek_key_event_done:
     ApiCheckEdi
     ApiCheckEsi
     ApiCheckEbx
-    retf32
+    ret
 peek_key_event  ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -817,7 +816,7 @@ read_key_event_done:
     ApiCheckEdi
     ApiCheckEsi
     ApiCheckEbx
-    retf32
+    ret
 read_key_event  ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -856,7 +855,7 @@ flush_keyboard  PROC far
     ApiCheckEdx
     ApiCheckEcx
     ApiCheckEax
-    retf32
+    ret
 flush_keyboard  ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -880,7 +879,7 @@ get_keyboard_state      PROC far
     mov ax,ds:shift_states
     pop bx
     pop ds
-    retf32
+    ret
 get_keyboard_state      ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -908,7 +907,7 @@ set_keyboard_state      PROC far
     pop cx
     pop bx
     pop ds
-    retf32
+    ret
 set_keyboard_state      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1073,7 +1072,7 @@ get_vm_key      PROC far
     mov ds,bx
     mov bx,ds:key_int_offs
     mov dx,ds:key_int_seg
-    retf32
+    ret
 get_vm_key      ENDP
 
 set_vm_key      PROC far
@@ -1084,7 +1083,7 @@ set_vm_key      PROC far
     mov ds:key_int_offs,bx
     mov ds:key_int_seg,dx
     call check_key_state
-    retf32
+    ret
 set_vm_key      ENDP
 
     
@@ -1140,7 +1139,7 @@ check_done:
     pop si
     pop ax
     pop fs
-    retf32
+    ret
 check_list      Endp
 
     
@@ -1194,7 +1193,7 @@ get1_not_num:
 get1_not_caps:  
     pop bx
     pop ds
-    retf32
+    ret
 get_status1     Endp
 
     
@@ -1231,7 +1230,7 @@ get2_not_print:
 get2_not_scroll:
     pop bx
     pop ds
-    retf32
+    ret
 get_status2     Endp
 
     
@@ -1258,7 +1257,7 @@ init_local_sel  PROC far
     mov ds:key_emul_thread,0
     mov ds:key_int_seg,0E000h
     mov ds:key_int_offs,9*4
-    retf32
+    ret
 init_local_sel  ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1278,7 +1277,7 @@ got_focus  PROC far
     mov ds:has_focus,1
     pop ax
     pop ds
-    retf32
+    ret
 got_focus  ENDP
 
     
@@ -1308,7 +1307,7 @@ init_keyb_thread    PROC far
     popa
     pop es
     pop ds
-    retf32
+    ret
 init_keyb_thread    ENDP
 
     

@@ -38,7 +38,7 @@ INCLUDE bitmap.inc
 INCLUDE ..\video.inc
 INCLUDE ..\apicheck.inc
 
-code    SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public 'CODE'
 
     .386
 
@@ -70,9 +70,9 @@ init_video_bitmap_name  DB 'Init Video Bitmap', 0
 
 init_video_bitmap       Proc far
     push ds
-    push cx
-    push si
-    push di
+    push ecx
+    push esi
+    push edi
 ;
     push si
     mov si,es
@@ -188,28 +188,28 @@ init_video_font_done:
 
 init_video1:
     mov es:v_color,1
-    mov si,OFFSET BitmapTab1
+    mov esi,OFFSET BitmapTab1
     jmp init_video_copy
     
 init_video16:
-    mov si,OFFSET BitmapTab16
+    mov esi,OFFSET BitmapTab16
     jmp init_video_copy
 
 init_video24:
-    mov si,OFFSET BitmapTab24
+    mov esi,OFFSET BitmapTab24
     jmp init_video_copy
 
 init_video32:
-    mov si,OFFSET BitmapTab32
+    mov esi,OFFSET BitmapTab32
     jmp init_video_copy
 
 init_video_copy:
-    mov cx,2 * VIDEO_ENTRIES
-    xor di,di
+    mov ecx,2 * VIDEO_ENTRIES
+    xor edi,edi
     rep movsd
 ;
-    mov di,es:v_sprite_lines
-    mov cx,dx
+    movzx edi,es:v_sprite_lines
+    movzx ecx,dx
     mov eax,-1
     rep stosd
     mov es:v_sprite_max_pos,di
@@ -236,11 +236,11 @@ init_video_done:
     mov bx,[ebx].hh_handle
     mov es:v_bitmap,bx
 ;
-    pop di
-    pop si
-    pop cx
+    pop edi
+    pop esi
+    pop ecx
     pop ds
-    retf32
+    ret
 init_video_bitmap       Endp
 
 
@@ -339,7 +339,7 @@ create_bitmap_no_pad:
 
 cr_bitmap1:
     mov es:v_color,1
-    mov si,OFFSET BitmapTab1
+    mov esi,OFFSET BitmapTab1
     mov ax,es:v_width
     dec ax
     shr ax,3
@@ -348,14 +348,14 @@ cr_bitmap1:
     jmp cr_bitmap_copy
 
 cr_bitmap16:
-    mov si,OFFSET BitmapTab16
+    mov esi,OFFSET BitmapTab16
     mov ax,es:v_width
     add ax,ax
     mov es:v_row_size,ax
     jmp cr_bitmap_copy
 
 cr_bitmap24:
-    mov si,OFFSET BitmapTab24
+    mov esi,OFFSET BitmapTab24
     mov ax,es:v_width
     add ax,ax
     add ax,es:v_width
@@ -365,7 +365,7 @@ cr_bitmap24:
     jmp cr_bitmap_copy
 
 cr_bitmap32:
-    mov si,OFFSET BitmapTab32
+    mov esi,OFFSET BitmapTab32
     mov ax,es:v_width
     add ax,ax
     add ax,ax
@@ -373,13 +373,13 @@ cr_bitmap32:
     jmp cr_bitmap_copy
 
 cr_bitmap_copy:
-    mov cx,2 * VIDEO_ENTRIES
-    xor di,di
+    mov ecx,2 * VIDEO_ENTRIES
+    xor edi,edi
     rep movsd
 ;
-    mov di,SIZE video_api_struc
+    mov edi,SIZE video_api_struc
     mov es:v_sprite_lines,di
-    mov cx,es:v_height
+    movzx ecx,es:v_height
     mov eax,-1
     rep stosd
     mov es:v_sprite_max_pos,di
@@ -434,7 +434,7 @@ cr_bitmap_end:
     pop eax
     pop es
     pop ds
-    retf32
+    ret
 create_bitmap   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -504,19 +504,19 @@ create_alpha_bitmap   Proc far
 ;
     mov si,cs
     mov ds,si    
-    mov si,OFFSET BitmapTab32
+    mov esi,OFFSET BitmapTab32
     mov ax,es:v_width
     add ax,ax
     add ax,ax
     mov es:v_row_size,ax
 ;
-    mov cx,2 * VIDEO_ENTRIES
-    xor di,di
+    mov ecx,2 * VIDEO_ENTRIES
+    xor edi,edi
     rep movsd
 ;
-    mov di,SIZE video_api_struc
+    mov edi,SIZE video_api_struc
     mov es:v_sprite_lines,di
-    mov cx,es:v_height
+    movzx ecx,es:v_height
     mov eax,-1
     rep stosd
     mov es:v_sprite_max_pos,di
@@ -570,7 +570,7 @@ create_alpha_bitmap   Proc far
     pop eax
     pop es
     pop ds
-    retf32
+    ret
 create_alpha_bitmap   Endp
 
 
@@ -639,7 +639,7 @@ dph_done:
     ApiCheckEdx
     ApiCheckEcx
     ApiCheckEax
-    retf32
+    ret
 dup_bitmap_handle       Endp
 
 
@@ -755,7 +755,7 @@ create_string_bitmap    Endp
 
 create_string_bitmap32  Proc far
     call create_string_bitmap
-    retf32
+    ret
 create_string_bitmap32  Endp
 
 create_string_bitmap16  Proc far
@@ -763,7 +763,7 @@ create_string_bitmap16  Proc far
     movzx edi,di
     call create_string_bitmap
     pop edi
-    retf32
+    ret
 create_string_bitmap16  Endp    
 
 
@@ -786,7 +786,7 @@ create_string_bitmap16  Endp
 
 get_bitmap_info_name    DB 'Get Bitmap Info', 0
 
-get_bitmap_info Proc near
+get_bitmap_info Proc far
     push ds
     push ebx
 ;
@@ -810,7 +810,7 @@ get_bitmap_info Proc near
 gbi_done:
     pop ebx
     pop ds
-    retf32
+    ret
 get_bitmap_info Endp
 
 
@@ -913,7 +913,7 @@ cl_bitmap_done:
     ApiCheckEdx
     ApiCheckEcx
     ApiCheckEax
-    retf32
+    ret
 close_bitmap    Endp
 
 
@@ -941,7 +941,7 @@ delete_handle_done:
     pop ebx
     pop ax
     pop ds
-    retf32
+    ret
 delete_handle   Endp
 
 

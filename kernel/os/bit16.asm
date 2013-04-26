@@ -74,7 +74,7 @@ SpriteStart MACRO reg
     mov word ptr [ebp].curr_size,reg
             ENDM
 
-code    SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public 'CODE'
 
     assume cs:code
     
@@ -109,7 +109,7 @@ curr_y      EQU -4
 
 phys_update Proc far
     rep movs word ptr es:[edi],es:[esi]
-    retf32
+    ret
 phys_update Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -607,21 +607,20 @@ LgopMul Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LgopTab:
-lgt00   DW OFFSET LgopNull
-lgt01   DW OFFSET LgopNone
-lgt02   DW OFFSET LgopOr
-lgt03   DW OFFSET LgopAnd
-lgt04   DW OFFSET LgopXor
-lgt05   DW OFFSET LgopInvert
-lgt06   DW OFFSET LgopInvertOr
-lgt07   DW OFFSET LgopInvertAnd
-lgt08   DW OFFSET LgopInvertXor
-lgt09   DW OFFSET LgopAdd
-lgt0A   DW OFFSET LgopSub
-lgt0B   DW OFFSET LgopMul
-lgt0C   DW OFFSET LgopNull
-lgt0D   DW OFFSET LgopNull
-
+lgt00   DD OFFSET LgopNull
+lgt01   DD OFFSET LgopNone
+lgt02   DD OFFSET LgopOr
+lgt03   DD OFFSET LgopAnd
+lgt04   DD OFFSET LgopXor
+lgt05   DD OFFSET LgopInvert
+lgt06   DD OFFSET LgopInvertOr
+lgt07   DD OFFSET LgopInvertAnd
+lgt08   DD OFFSET LgopInvertXor
+lgt09   DD OFFSET LgopAdd
+lgt0A   DD OFFSET LgopSub
+lgt0B   DD OFFSET LgopMul
+lgt0C   DD OFFSET LgopNull
+lgt0D   DD OFFSET LgopNull
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -659,7 +658,7 @@ translate_color Proc far
 ;
     pop edx
     pop bx
-    retf32
+    ret
 translate_color Endp
 
 
@@ -677,12 +676,12 @@ translate_color Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_base    Proc far
-    push bx
-    mov bx,ds:v_lgop
-    add bx,bx
-    call word ptr cs:[bx].LgopTab
-    pop bx
-    retf32
+    push ebx
+    movzx ebx,ds:v_lgop
+    shl ebx,2
+    call dword ptr cs:[ebx].LgopTab
+    pop ebx
+    ret
 set_base    Endp
 
 
@@ -701,7 +700,7 @@ set_base    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 slab    Proc far
-    push bx
+    push ebx
     push cx
     push dx
     push edi
@@ -709,7 +708,7 @@ slab    Proc far
     or cx,cx
     jz slab_done
 ;    
-    mov bx,ds:v_lgop
+    movzx ebx,ds:v_lgop
     cmp bx,LGOP_NONE
     jne slab_lgop
 ;
@@ -736,20 +735,21 @@ slab_lgop_none_double:
     jmp slab_done
 
 slab_lgop:
-    add bx,bx
+    shl ebx,2
 
 slab_lgop_loop:
-    call word ptr cs:[bx].LgopTab
+    call dword ptr cs:[ebx].LgopTab
     add edi,2
     inc word ptr [ebp].curr_x
-    loop slab_lgop_loop
+    sub cx,1
+    jnz slab_lgop_loop
 
 slab_done:
     pop edi
     pop dx
     pop cx
-    pop bx
-    retf32
+    pop ebx
+    ret
 slab    Endp
 
 
@@ -769,7 +769,7 @@ slab    Endp
 
 copy    Proc far
     push ax
-    push bx
+    push ebx
     push cx
     push esi
     push edi
@@ -777,18 +777,19 @@ copy    Proc far
     or cx,cx
     jz copy_done
 ;    
-    mov bx,ds:v_lgop
+    movzx ebx,ds:v_lgop
     cmp bx,LGOP_NONE
     je copy_none
 ;
-    add bx,bx
+    shl ebx,2
 
 copy_loop:
     lods word ptr fs:[esi]
-    call word ptr cs:[bx].LgopTab
+    call dword ptr cs:[ebx].LgopTab
     add edi,2
     inc word ptr [ebp].curr_x
-    loop copy_loop
+    sub cx,1
+    jnz copy_loop
     jmp copy_done
 
 copy_none:
@@ -814,9 +815,9 @@ copy_done:
     pop edi
     pop esi
     pop cx
-    pop bx
+    pop ebx
     pop ax
-    retf32
+    ret
 copy    Endp
 
 
@@ -858,11 +859,11 @@ mask_set_bit_loop:
     rcr dl,1
     jnc mask_set_line_next
 ;
-    push bx
-    mov bx,ds:v_lgop
-    add bx,bx
-    call word ptr cs:[bx].LgopTab
-    pop bx
+    push ebx
+    movzx ebx,ds:v_lgop
+    shl ebx,2
+    call dword ptr cs:[ebx].LgopTab
+    pop ebx
 
 mask_set_line_next:
     add edi,2
@@ -882,7 +883,7 @@ mask_set_line_done:
     pop dx
     pop cx
     pop ebx
-    retf32
+    ret
 mask_set    Endp
 
 
@@ -940,11 +941,11 @@ mask_copy_loop:
     jg mask_copy_next
 ;
     mov ax,fs:[esi]
-    push bx
-    mov bx,ds:v_lgop
-    add bx,bx
-    call word ptr cs:[bx].LgopTab
-    pop bx
+    push ebx
+    movzx ebx,ds:v_lgop
+    shl ebx,2
+    call dword ptr cs:[ebx].LgopTab
+    pop ebx
 
 mask_copy_next:
     add esi,2
@@ -965,7 +966,7 @@ mask_copy_done:
     pop dx
     pop cx
     pop ebx
-    retf32
+    ret
 mask_copy    Endp
 
 
@@ -1003,11 +1004,11 @@ anti_alias_set_line_loop:
     cmp dl,0FFh
     jne anti_alias_mix
 ;    
-    push bx
-    mov bx,ds:v_lgop
-    add bx,bx
-    call word ptr cs:[bx].LgopTab
-    pop bx
+    push ebx
+    movzx ebx,ds:v_lgop
+    shl ebx,2
+    call dword ptr cs:[ebx].LgopTab
+    pop ebx
     jmp anti_alias_set_line_next
 
 anti_alias_mix:
@@ -1076,11 +1077,11 @@ anti_alias_mix_g_ok:
     
 anti_alias_mix_r_ok:    
     mov ax,si
-    push bx
-    mov bx,ds:v_lgop
-    add bx,bx
-    call word ptr cs:[bx].LgopTab
-    pop bx
+    push ebx
+    movzx ebx,ds:v_lgop
+    shl ebx,2
+    call dword ptr cs:[ebx].LgopTab
+    pop ebx
 ;
     pop si
     pop ax    
@@ -1099,7 +1100,7 @@ anti_alias_set_line_done:
     pop edx
     pop ecx
     pop ebx
-    retf32
+    ret
 anti_alias_set    Endp
 
 
@@ -1361,7 +1362,8 @@ split_left_loop:
 split_left_next:
     inc word ptr [ebp].curr_x
     add edi,2
-    loop split_left_loop
+    sub cx,1
+    jnz split_left_loop
 ;
     pop cx
     add [ebp].curr_x,cx
@@ -1388,7 +1390,8 @@ split_right_loop:
 split_right_next:
     inc word ptr [ebp].curr_x
     add edi,2
-    loop split_right_loop
+    sub cx,1
+    jnz split_right_loop
 
 split_line_done:
     pop edi
@@ -1466,7 +1469,7 @@ get_native_done:
     pop bx  
     pop eax
     pop ds
-    retf32
+    ret
 get_native      Endp
 
 
@@ -1525,7 +1528,8 @@ get_rgb_loop:
     shl bx,3
     or ax,bx
     stos dword ptr es:[edi]
-    loop get_rgb_loop       
+    sub cx,1
+    jnz get_rgb_loop       
 
 get_rgb_done:
     pop edi
@@ -1535,7 +1539,7 @@ get_rgb_done:
     pop bx  
     pop eax
     pop ds
-    retf32
+    ret
 get_rgb Endp
 
 
@@ -1595,7 +1599,8 @@ get_rgba_loop:
     or ax,bx
     or eax,0FF000000h
     stos dword ptr es:[edi]
-    loop get_rgba_loop       
+    sub cx,1
+    jnz get_rgba_loop       
 
 get_rgba_done:
     pop edi
@@ -1605,7 +1610,7 @@ get_rgba_done:
     pop bx  
     pop eax
     pop ds
-    retf32
+    ret
 get_alpha Endp
 
 
@@ -1692,7 +1697,7 @@ set_native_done:
     popad
     pop fs
     pop es
-    retf32
+    ret
 set_native      Endp
 
 
@@ -1793,7 +1798,8 @@ set_rgb_loop:
     call fword ptr ds:v_set_proc
     add edi,2
     inc word ptr [ebp].curr_x
-    loop set_rgb_loop
+    sub cx,1
+    jnz set_rgb_loop
 ;
     call DrawDone
 
@@ -1803,7 +1809,7 @@ set_rgb_done:
     pop fs
     pop es
     pop ds
-    retf32
+    ret
 set_rgb Endp
 
 
@@ -1911,9 +1917,9 @@ set_rgba_loop:
     cmp bl,0FFh
     jne set_rgba_mix
 ;    
-    mov bx,ds:v_lgop
-    add bx,bx
-    call word ptr cs:[bx].LgopTab
+    movzx ebx,ds:v_lgop
+    shl ebx,2
+    call dword ptr cs:[ebx].LgopTab
     jmp set_rgba_next
 
 set_rgba_mix:
@@ -1983,9 +1989,9 @@ set_rgba_g_ok:
     
 set_rgba_r_ok:    
     mov ax,si
-    mov bx,ds:v_lgop
-    add bx,bx
-    call word ptr cs:[bx].LgopTab
+    movzx ebx,ds:v_lgop
+    shl ebx,2
+    call dword ptr cs:[ebx].LgopTab
 ;
     pop si
     pop ax    
@@ -2008,7 +2014,7 @@ set_rgba_done:
     pop fs
     pop es
     pop ds
-    retf32
+    ret
 set_alpha Endp
 
 
@@ -2093,7 +2099,7 @@ set_sprite_done:
     popad
     pop fs
     pop es
-    retf32
+    ret
 set_sprite      Endp
 
 
@@ -2134,7 +2140,7 @@ get_line    Proc far
     pop ecx
     pop eax
     pop ds
-    retf32
+    ret
 get_line    Endp
 
 
@@ -2181,7 +2187,7 @@ get_pixel       Proc far
     pop edx
     pop bx  
     pop ds
-    retf32
+    ret
 get_pixel       Endp
 
 
@@ -2248,7 +2254,7 @@ set_pixel_done:
     pop eax
     pop es
     pop ds
-    retf32
+    ret
 set_pixel       Endp
 
 
@@ -2384,7 +2390,7 @@ draw_mask_line_done:
     popad
     pop gs
     pop es
-    retf32
+    ret
 draw_mask_line  Endp
 
 
@@ -2452,7 +2458,7 @@ draw_sprite_done:
     pop gs
     pop fs
     pop es
-    retf32
+    ret
 draw_sprite_line    Endp
 
 
@@ -2594,7 +2600,7 @@ draw_string_done:
     popad
     pop gs
     pop es
-    retf32
+    ret
 draw_string     Endp
 
 
@@ -3105,7 +3111,7 @@ line_done:
     popad
     pop es
     pop ds
-    retf32
+    ret
 draw_line       Endp
 
 
@@ -3125,12 +3131,12 @@ draw_line       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 rect_border_style_tab:
-rb00 DW OFFSET FilledLine
-rb01 DW OFFSET FilledLine
+rb00 DD OFFSET FilledLine
+rb01 DD OFFSET FilledLine
 
 rect_mid_style_tab:
-rm00 DW OFFSET HollowLine
-rm01 DW OFFSET FilledLine
+rm00 DD OFFSET HollowLine
+rm01 DD OFFSET FilledLine
 
 draw_rect       Proc far
     push ds
@@ -3164,9 +3170,9 @@ draw_rect       Proc far
     mov ax,flat_sel
     mov es,ax
 ;
-    movzx bx,ds:v_style
-    add bx,bx
-    call word ptr cs:[bx].rect_border_style_tab
+    movzx ebx,ds:v_style
+    shl ebx,2
+    call dword ptr cs:[ebx].rect_border_style_tab
     inc word ptr [ebp].curr_y
     add edi,esi
     sub dx,1
@@ -3176,25 +3182,25 @@ rect_mid_loop:
     cmp dx,1
     je rect_bottom
 ;
-    movzx bx,ds:v_style
-    add bx,bx
-    call word ptr cs:[bx].rect_mid_style_tab
+    movzx ebx,ds:v_style
+    shl ebx,2
+    call dword ptr cs:[ebx].rect_mid_style_tab
     inc word ptr [ebp].curr_y
     add edi,esi
     dec dx
     jmp rect_mid_loop
 
 rect_bottom:
-    movzx bx,ds:v_style
-    add bx,bx
-    call word ptr cs:[bx].rect_border_style_tab
+    movzx ebx,ds:v_style
+    shl ebx,2
+    call dword ptr cs:[ebx].rect_border_style_tab
 
 rect_done:
     add esp,12
     popad
     pop es
     pop ds
-    retf32
+    ret
 draw_rect       Endp
 
 
@@ -3290,12 +3296,12 @@ draw_last_ellipse_filled    Proc near
 draw_last_ellipse_filled    Endp
 
 ellipse_mid_style_tab:
-em00 DW OFFSET draw_mid_ellipse_hollow
-em01 DW OFFSET draw_mid_ellipse_filled
+em00 DD OFFSET draw_mid_ellipse_hollow
+em01 DD OFFSET draw_mid_ellipse_filled
 
 ellipse_last_style_tab:
-el00 DW OFFSET draw_last_ellipse_hollow
-el01 DW OFFSET draw_last_ellipse_filled
+el00 DD OFFSET draw_last_ellipse_hollow
+el01 DD OFFSET draw_last_ellipse_filled
 
 draw_ellipse    Proc far
     push ds
@@ -3513,9 +3519,9 @@ ellipse_t_neg:
     inc word ptr [ebp].de_width
     add word ptr [ebp].de_size,2
 ;
-    movzx bx,ds:v_style
-    add bx,bx
-    call word ptr cs:[bx].ellipse_mid_style_tab
+    movzx ebx,ds:v_style
+    shl ebx,2
+    call dword ptr cs:[ebx].ellipse_mid_style_tab
     inc word ptr [ebp].de_y0
     dec word ptr [ebp].de_y1
     add [ebp].de_p0,esi
@@ -3543,9 +3549,9 @@ ellipse_t_pos:
     add [ebp].de_dTy,eax
     adc [ebp+4].de_dTy,dx
 ;
-    movzx bx,ds:v_style
-    add bx,bx
-    call word ptr cs:[bx].ellipse_mid_style_tab
+    movzx ebx,ds:v_style
+    shl ebx,2
+    call dword ptr cs:[ebx].ellipse_mid_style_tab
     inc word ptr [ebp].de_y0
     dec word ptr [ebp].de_y1
     add [ebp].de_p0,esi
@@ -3555,16 +3561,16 @@ ellipse_t_pos:
     jnz ellipse_loop
 
 ellipse_done:
-    movzx bx,ds:v_style
-    add bx,bx
-    call word ptr cs:[bx].ellipse_last_style_tab
+    movzx ebx,ds:v_style
+    shl ebx,2
+    call dword ptr cs:[ebx].ellipse_last_style_tab
 
 ellipse_end:
     add esp,96
     popad
     pop es
     pop ds
-    retf32
+    ret
 draw_ellipse    Endp
 
 
@@ -3601,13 +3607,13 @@ act0E   DD 0066FFFFh
 act0F   DD 00FFFFFFh
 
 attr_to_color   Proc near
-    push bx
+    push ebx
     push edx
 ;
     mov bl,al
-    and bx,0Fh
-    shl bx,2
-    mov eax,dword ptr cs:[bx].AttribColorTab    
+    and ebx,0Fh
+    shl ebx,2
+    mov eax,dword ptr cs:[ebx].AttribColorTab    
 ;
     mov edx,eax
     shr edx,8
@@ -3626,7 +3632,7 @@ attr_to_color   Proc near
     movzx eax,bx
 ;
     pop edx
-    pop bx
+    pop ebx
     ret
 attr_to_color   Endp
 
@@ -3650,7 +3656,7 @@ attr_to_color   Endp
 
 clear   Proc far
     clc
-    retf32
+    ret
 clear   Endp
 
 
@@ -3669,7 +3675,7 @@ clear   Endp
 
 set_cursor_pos  Proc far
     clc
-    retf32
+    ret
 set_cursor_pos  Endp
 
 
@@ -3739,7 +3745,7 @@ write_char      Proc far
     pop ds:v_font
     popad
     pop es
-    retf32
+    ret
 write_char      Endp
 
 
@@ -3762,7 +3768,7 @@ write_char      Endp
 
 read_char       Proc far
     clc
-    retf32
+    ret
 read_char       Endp
 
 
@@ -3786,7 +3792,7 @@ read_char       Endp
 
 scroll_up       Proc far
     clc
-    retf32
+    ret
 scroll_up       Endp
 
 
@@ -3810,12 +3816,12 @@ scroll_up       Endp
 
 scroll_down     Proc far
     clc
-    retf32
+    ret
 scroll_down     Endp
 
 errorp  Proc far
     stc
-    retf32
+    ret
 errorp  Endp
     
     public BitmapTab16

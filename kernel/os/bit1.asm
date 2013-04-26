@@ -74,7 +74,7 @@ SpriteStart MACRO reg
     mov word ptr [ebp].curr_size,reg
             ENDM
 
-code    SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
@@ -105,7 +105,7 @@ curr_y      EQU -4
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 phys_update Proc far
-    retf32
+    ret
 phys_update Endp
 
 
@@ -434,22 +434,22 @@ LgopInvertXor   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LgopTab:
-lgt00   DW OFFSET LgopNull
-lgt01   DW OFFSET LgopNorm
-lgt02   DW OFFSET LgopOr
-lgt03   DW OFFSET LgopAnd
-lgt04   DW OFFSET LgopXor
-lgt05   DW OFFSET LgopInvert
-lgt06   DW OFFSET LgopInvertOr
-lgt07   DW OFFSET LgopInvertAnd
-lgt08   DW OFFSET LgopInvertXor
-lgt09   DW OFFSET LgopOr
-lgt0A   DW OFFSET LgopAnd
-lgt0B   DW OFFSET LgopAnd
-lgt0C   DW OFFSET LgopNull
-lgt0D   DW OFFSET LgopNull
-lgt0E   DW OFFSET LgopNull
-lgt0F   DW OFFSET LgopNull
+lgt00   DD OFFSET LgopNull
+lgt01   DD OFFSET LgopNorm
+lgt02   DD OFFSET LgopOr
+lgt03   DD OFFSET LgopAnd
+lgt04   DD OFFSET LgopXor
+lgt05   DD OFFSET LgopInvert
+lgt06   DD OFFSET LgopInvertOr
+lgt07   DD OFFSET LgopInvertAnd
+lgt08   DD OFFSET LgopInvertXor
+lgt09   DD OFFSET LgopOr
+lgt0A   DD OFFSET LgopAnd
+lgt0B   DD OFFSET LgopAnd
+lgt0C   DD OFFSET LgopNull
+lgt0D   DD OFFSET LgopNull
+lgt0E   DD OFFSET LgopNull
+lgt0F   DD OFFSET LgopNull
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -487,7 +487,7 @@ translate_zero:
 
 translate_done:
     pop dx
-    retf32
+    ret
 translate_color Endp
 
 
@@ -504,12 +504,12 @@ translate_color Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_base    Proc far
-    push bx
-    mov bx,ds:v_lgop
-    add bx,bx
-    call word ptr cs:[bx].LgopTab
-    pop bx
-    retf32
+    push ebx
+    movzx ebx,ds:v_lgop
+    shl ebx,2
+    call dword ptr cs:[ebx].LgopTab
+    pop ebx
+    ret
 set_base    Endp
 
 
@@ -555,7 +555,7 @@ SlabSet Proc near
     cmp ax,8
     jc slab_set_last_loop
 ;
-    mov al,byte ptr cs:[bx].or_bit_tab
+    mov al,byte ptr cs:[ebx].or_bit_tab
     or es:[edi],al
     sub cx,8
     add cx,bx
@@ -577,7 +577,8 @@ slab_set_loop:
 slab_set_last_loop:
     bts es:[edi],ebx
     inc bl
-    loop slab_set_last_loop
+    sub cx,1
+    jnz slab_set_last_loop
 
 slab_set_done:
     pop edi
@@ -630,7 +631,7 @@ SlabReset       Proc near
     cmp ax,8
     jc slab_reset_last_loop
 ;
-    mov al,byte ptr cs:[bx].and_bit_tab
+    mov al,byte ptr cs:[ebx].and_bit_tab
     and es:[edi],al
     sub cx,8
     add cx,bx
@@ -652,7 +653,8 @@ slab_reset_loop:
 slab_reset_last_loop:
     btr es:[edi],ebx
     inc bl
-    loop slab_reset_last_loop
+    sub cx,1
+    jnz slab_reset_last_loop
 
 slab_reset_done:
     pop edi
@@ -695,7 +697,7 @@ SlabCompl       Proc near
     cmp ax,8
     jc slab_compl_last_loop
 ;
-    mov al,byte ptr cs:[bx].or_bit_tab
+    mov al,byte ptr cs:[ebx].or_bit_tab
     xor es:[edi],al
     sub cx,8
     add cx,bx
@@ -717,7 +719,8 @@ slab_compl_loop:
 slab_compl_last_loop:
     btc es:[edi],ebx
     inc bl
-    loop slab_compl_last_loop
+    sub cx,1
+    jnz slab_compl_last_loop
 
 slab_compl_done:
     pop edi
@@ -965,22 +968,22 @@ SlabInvertXor   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SlabTab:
-st00    DW OFFSET SlabNull
-st01    DW OFFSET SlabNorm
-st02    DW OFFSET SlabOr
-st03    DW OFFSET SlabAnd
-st04    DW OFFSET SlabXor
-st05    DW OFFSET SlabInvert
-st06    DW OFFSET SlabInvertOr
-st07    DW OFFSET SlabInvertAnd
-st08    DW OFFSET SlabInvertXor
-st09    DW OFFSET SlabOr
-st0A    DW OFFSET SlabAnd
-st0B    DW OFFSET SlabAnd
-st0C    DW OFFSET SlabNull
-st0D    DW OFFSET SlabNull
-st0E    DW OFFSET SlabNull
-st0F    DW OFFSET SlabNull
+st00    DD OFFSET SlabNull
+st01    DD OFFSET SlabNorm
+st02    DD OFFSET SlabOr
+st03    DD OFFSET SlabAnd
+st04    DD OFFSET SlabXor
+st05    DD OFFSET SlabInvert
+st06    DD OFFSET SlabInvertOr
+st07    DD OFFSET SlabInvertAnd
+st08    DD OFFSET SlabInvertXor
+st09    DD OFFSET SlabOr
+st0A    DD OFFSET SlabAnd
+st0B    DD OFFSET SlabAnd
+st0C    DD OFFSET SlabNull
+st0D    DD OFFSET SlabNull
+st0E    DD OFFSET SlabNull
+st0F    DD OFFSET SlabNull
 
 
 
@@ -998,12 +1001,12 @@ st0F    DW OFFSET SlabNull
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 slab    Proc far
-    push bx
-    mov bx,ds:v_lgop
-    add bx,bx
-    call word ptr cs:[bx].SlabTab
-    pop bx
-    retf32
+    push ebx
+    movzx ebx,ds:v_lgop
+    shl ebx,2
+    call dword ptr cs:[ebx].SlabTab
+    pop ebx
+    ret
 slab    Endp
 
 
@@ -1066,7 +1069,8 @@ copy_norm_set:
 copy_norm_next:
     inc esi
     inc edi
-    loop copy_norm_loop
+    sub cx,1
+    jnz copy_norm_loop
 
 copy_norm_done:
     pop edi
@@ -1109,7 +1113,8 @@ copy_and_loop:
 copy_and_next:
     inc esi
     inc edi
-    loop copy_and_loop
+    sub cx,1
+    jnz copy_and_loop
 
 copy_and_done:
     pop edi
@@ -1152,7 +1157,8 @@ copy_or_loop:
 copy_or_next:
     inc esi
     inc edi
-    loop copy_or_loop
+    sub cx,1
+    jnz copy_or_loop
 
 copy_or_done:
     pop edi
@@ -1195,7 +1201,8 @@ copy_xor_loop:
 copy_xor_next:
     inc esi
     inc edi
-    loop copy_xor_loop
+    sub cx,1
+    jnz copy_xor_loop
 
 copy_xor_done:
     pop edi
@@ -1243,7 +1250,8 @@ copy_inv_reset:
 copy_inv_next:
     inc esi
     inc edi
-    loop copy_inv_loop
+    sub cx,1
+    jnz copy_inv_loop
 
 copy_inv_done:
     pop edi
@@ -1286,7 +1294,8 @@ copy_inv_and_loop:
 copy_inv_and_next:
     inc esi
     inc edi
-    loop copy_inv_and_loop
+    sub cx,1
+    jnz copy_inv_and_loop
 
 copy_inv_and_done:
     pop edi
@@ -1329,7 +1338,8 @@ copy_inv_or_loop:
 copy_inv_or_next:
     inc esi
     inc edi
-    loop copy_inv_or_loop
+    sub cx,1
+    jnz copy_inv_or_loop
 
 copy_inv_or_done:
     pop edi
@@ -1372,7 +1382,8 @@ copy_inv_xor_loop:
 copy_inv_xor_next:
     inc esi
     inc edi
-    loop copy_inv_xor_loop
+    sub cx,1
+    jnz copy_inv_xor_loop
 
 copy_inv_xor_done:
     pop edi
@@ -1393,22 +1404,22 @@ CopyInvertXor   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CopyTab:
-ct00    DW OFFSET CopyNull
-ct01    DW OFFSET CopyNorm
-ct02    DW OFFSET CopyOr
-ct03    DW OFFSET CopyAnd
-ct04    DW OFFSET CopyXor
-ct05    DW OFFSET CopyInvert
-ct06    DW OFFSET CopyInvertOr
-ct07    DW OFFSET CopyInvertAnd
-ct08    DW OFFSET CopyInvertXor
-ct09    DW OFFSET CopyOr
-ct0A    DW OFFSET CopyAnd
-ct0B    DW OFFSET CopyAnd
-ct0C    DW OFFSET CopyNull
-ct0D    DW OFFSET CopyNull
-ct0E    DW OFFSET CopyNull
-ct0F    DW OFFSET CopyNull
+ct00    DD OFFSET CopyNull
+ct01    DD OFFSET CopyNorm
+ct02    DD OFFSET CopyOr
+ct03    DD OFFSET CopyAnd
+ct04    DD OFFSET CopyXor
+ct05    DD OFFSET CopyInvert
+ct06    DD OFFSET CopyInvertOr
+ct07    DD OFFSET CopyInvertAnd
+ct08    DD OFFSET CopyInvertXor
+ct09    DD OFFSET CopyOr
+ct0A    DD OFFSET CopyAnd
+ct0B    DD OFFSET CopyAnd
+ct0C    DD OFFSET CopyNull
+ct0D    DD OFFSET CopyNull
+ct0E    DD OFFSET CopyNull
+ct0F    DD OFFSET CopyNull
 
 
 
@@ -1427,17 +1438,17 @@ ct0F    DW OFFSET CopyNull
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 copy    Proc far
-    push bx
+    push ebx
     push edx
 ;
     mov edx,ds:v_app_base
-    mov bx,ds:v_lgop
-    add bx,bx
-    call word ptr cs:[bx].CopyTab
+    movzx ebx,ds:v_lgop
+    shl ebx,2
+    call dword ptr cs:[ebx].CopyTab
 ;
     pop edx
-    pop bx
-    retf32
+    pop ebx
+    ret
 copy    Endp
 
 
@@ -1500,7 +1511,8 @@ mask_set_norm_set_loop:
 mask_set_norm_set_next:
     inc esi
     inc edi
-    loop mask_set_norm_set_loop
+    sub cx,1
+    jnz mask_set_norm_set_loop
     jmp mask_set_norm_done
 
 mask_set_norm_reset_loop:
@@ -1512,7 +1524,8 @@ mask_set_norm_reset_loop:
 mask_set_norm_reset_next:
     inc esi
     inc edi
-    loop mask_set_norm_reset_loop
+    sub cx,1
+    jnz mask_set_norm_reset_loop
 
 mask_set_norm_done:
     pop edi
@@ -1559,7 +1572,8 @@ mask_set_and_loop:
 mask_set_and_next:
     inc esi
     inc edi
-    loop mask_set_and_loop
+    sub cx,1
+    jnz mask_set_and_loop
 
 mask_set_and_done:
     pop edi
@@ -1606,7 +1620,8 @@ mask_set_or_loop:
 mask_set_or_next:
     inc esi
     inc edi
-    loop mask_set_or_loop
+    sub cx,1
+    jnz mask_set_or_loop
 
 mask_set_or_done:
     pop edi
@@ -1653,7 +1668,8 @@ mask_set_xor_loop:
 mask_set_xor_next:
     inc esi
     inc edi
-    loop mask_set_xor_loop
+    sub cx,1
+    jnz mask_set_xor_loop
 
 mask_set_xor_done:
     pop edi
@@ -1700,7 +1716,8 @@ mask_set_inv_set_loop:
 mask_set_inv_set_next:
     inc esi
     inc edi
-    loop mask_set_inv_set_loop
+    sub cx,1
+    jnz mask_set_inv_set_loop
     jmp mask_set_inv_done
 
 mask_set_inv_reset_loop:
@@ -1712,7 +1729,8 @@ mask_set_inv_reset_loop:
 mask_set_inv_reset_next:
     inc esi
     inc edi
-    loop mask_set_inv_reset_loop
+    sub cx,1
+    jnz mask_set_inv_reset_loop
 
 mask_set_inv_done:
     pop edi
@@ -1759,7 +1777,8 @@ mask_set_inv_and_loop:
 mask_set_inv_and_next:
     inc esi
     inc edi
-    loop mask_set_inv_and_loop
+    sub cx,1
+    jnz mask_set_inv_and_loop
 
 mask_set_inv_and_done:
     pop edi
@@ -1806,7 +1825,8 @@ mask_set_inv_or_loop:
 mask_set_inv_or_next:
     inc esi
     inc edi
-    loop mask_set_inv_or_loop
+    sub cx,1
+    jnz mask_set_inv_or_loop
 
 mask_set_inv_or_done:
     pop edi
@@ -1853,7 +1873,8 @@ mask_set_inv_xor_loop:
 mask_set_inv_xor_next:
     inc esi
     inc edi
-    loop mask_set_inv_xor_loop
+    sub cx,1
+    jnz mask_set_inv_xor_loop
 
 mask_set_inv_xor_done:
     pop edi
@@ -1874,22 +1895,22 @@ MaskSetInvertXor    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MaskSetTab:
-mst00   DW OFFSET MaskSetNull
-mst01   DW OFFSET MaskSetNorm
-mst02   DW OFFSET MaskSetOr
-mst03   DW OFFSET MaskSetAnd
-mst04   DW OFFSET MaskSetXor
-mst05   DW OFFSET MaskSetInvert
-mst06   DW OFFSET MaskSetInvertOr
-mst07   DW OFFSET MaskSetInvertAnd
-mst08   DW OFFSET MaskSetInvertXor
-mst09   DW OFFSET MaskSetOr
-mst0A   DW OFFSET MaskSetAnd
-mst0B   DW OFFSET MaskSetAnd
-mst0C   DW OFFSET MaskSetNull
-mst0D   DW OFFSET MaskSetNull
-mst0E   DW OFFSET MaskSetNull
-mst0F   DW OFFSET MaskSetNull
+mst00   DD OFFSET MaskSetNull
+mst01   DD OFFSET MaskSetNorm
+mst02   DD OFFSET MaskSetOr
+mst03   DD OFFSET MaskSetAnd
+mst04   DD OFFSET MaskSetXor
+mst05   DD OFFSET MaskSetInvert
+mst06   DD OFFSET MaskSetInvertOr
+mst07   DD OFFSET MaskSetInvertAnd
+mst08   DD OFFSET MaskSetInvertXor
+mst09   DD OFFSET MaskSetOr
+mst0A   DD OFFSET MaskSetAnd
+mst0B   DD OFFSET MaskSetAnd
+mst0C   DD OFFSET MaskSetNull
+mst0D   DD OFFSET MaskSetNull
+mst0E   DD OFFSET MaskSetNull
+mst0F   DD OFFSET MaskSetNull
 
 
 
@@ -1909,7 +1930,7 @@ mst0F   DW OFFSET MaskSetNull
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 mask_set    Proc far
-    push bx
+    push ebx
     push edx
     push esi
     push ebp
@@ -1918,15 +1939,15 @@ mask_set    Proc far
     movzx esi,dl
     mov edx,ds:v_app_base
 ;
-    mov bx,ds:v_lgop
-    add bx,bx
-    call word ptr cs:[bx].MaskSetTab
+    movzx ebx,ds:v_lgop
+    shl ebx,2
+    call dword ptr cs:[ebx].MaskSetTab
 ;
     pop ebp
     pop esi
     pop edx
-    pop bx
-    retf32
+    pop ebx
+    ret
 mask_set    Endp
 
 
@@ -1963,7 +1984,7 @@ mask_copy_loop:
     bt gs:[edx],ebx
     jnc mask_copy_next
 ;
-    push bx
+    push ebx
 ;
     bt fs:[esi],ebx
     jc mask_copy_set
@@ -1975,16 +1996,17 @@ mask_copy_set:
     mov eax,1
 
 mask_copy_do:
-    mov bx,ds:v_lgop
-    add bx,bx
-    call word ptr cs:[bx].LgopTab
+    movzx ebx,ds:v_lgop
+    shl ebx,2
+    call dword ptr cs:[ebx].LgopTab
 ;
-    pop bx
+    pop ebx
 
 mask_copy_next:
     inc ebx
     inc edi
-    loop mask_copy_loop
+    sub cx,1
+    jnz mask_copy_loop
     jmp mask_copy_done
 
 mask_copy_none:
@@ -2008,11 +2030,12 @@ mask_copy_none_set:
 mask_copy_none_next:
     inc ebx
     inc edi
-    loop mask_copy_none_loop
+    sub cx,1
+    jnz mask_copy_none_loop
 
 mask_copy_done:
     popad
-    retf32
+    ret
 mask_copy    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2045,11 +2068,11 @@ anti_alias_set_line_loop:
     test dl,80h
     jz anti_alias_set_line_next
 ;    
-    push bx
-    mov bx,ds:v_lgop
-    add bx,bx
-    call word ptr cs:[bx].LgopTab
-    pop bx
+    push ebx
+    movzx ebx,ds:v_lgop
+    shl ebx,2
+    call dword ptr cs:[ebx].LgopTab
+    pop ebx
 
 anti_alias_set_line_next:
     pop cx
@@ -2065,7 +2088,7 @@ anti_alias_set_line_done:
     pop edx
     pop ecx
     pop ebx
-    retf32
+    ret
 anti_alias_set    Endp
 
 
@@ -2329,7 +2352,8 @@ split_left_loop:
 split_left_next:
     inc word ptr [ebp].curr_x
     inc edi
-    loop split_left_loop
+    sub cx,1
+    jnz split_left_loop
 ;
     pop cx
     add [ebp].curr_x,cx
@@ -2355,7 +2379,8 @@ split_right_loop:
 split_right_next:
     inc word ptr [ebp].curr_x
     inc edi
-    loop split_right_loop
+    sub cx,1
+    jnz split_right_loop
 
 split_line_done:
     pop edi
@@ -2434,7 +2459,7 @@ get_native_next:
 get_native_done:
     popad
     pop ds
-    retf32
+    ret
 get_native      Endp
 
 
@@ -2505,7 +2530,7 @@ get_rgb_next:
 get_rgb_done:
     popad
     pop ds
-    retf32
+    ret
 get_rgb Endp
 
 
@@ -2576,7 +2601,7 @@ get_rgba_next:
 get_rgba_done:
     popad
     pop ds
-    retf32
+    ret
 get_alpha Endp
 
 
@@ -2640,7 +2665,8 @@ set_native_do:
 ;
     inc ebx
     inc edi
-    loop set_native_loop
+    sub cx,1
+    jnz set_native_loop
 ;
     call DrawDone
 
@@ -2650,7 +2676,7 @@ set_native_done:
     pop fs
     pop es
     pop ds
-    retf32
+    ret
 set_native      Endp
 
 
@@ -2722,7 +2748,8 @@ set_rgb_do:
 ;
     add esi,4
     inc edi
-    loop set_rgb_loop
+    sub cx,1
+    jnz set_rgb_loop
 ;
     call DrawDone
 
@@ -2732,7 +2759,7 @@ set_rgb_done:
     pop fs
     pop es
     pop ds
-    retf32
+    ret
 set_rgb Endp
 
 
@@ -2807,7 +2834,8 @@ set_rgba_do:
 ;
     add esi,4
     inc edi
-    loop set_rgba_loop
+    sub cx,1
+    jnz set_rgba_loop
 ;
     call DrawDone
 
@@ -2817,7 +2845,7 @@ set_rgba_done:
     pop fs
     pop es
     pop ds
-    retf32
+    ret
 set_alpha Endp
 
 
@@ -2903,7 +2931,7 @@ set_sprite_done:
     popad
     pop fs
     pop es
-    retf32
+    ret
 set_sprite      Endp
 
 
@@ -2938,7 +2966,7 @@ get_line    Proc far
     movzx eax,cx
     and ax,7
     pop edx
-    retf32
+    ret
 get_line    Endp
 
 
@@ -2977,7 +3005,7 @@ get_pixel_set:
 get_pixel_done:
     pop edx 
     pop es
-    retf32
+    ret
 get_pixel       Endp
 
 
@@ -3044,7 +3072,7 @@ set_pixel_done:
     pop eax
     pop es
     pop ds
-    retf32
+    ret
 set_pixel       Endp
 
 
@@ -3066,7 +3094,7 @@ set_pixel       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 draw_mask_line  Proc far
-    retf32
+    ret
 draw_mask_line  Endp
 
 
@@ -3131,7 +3159,7 @@ draw_sprite_done:
     pop gs
     pop fs
     pop es
-    retf32
+    ret
 draw_sprite_line    Endp
 
 
@@ -3273,7 +3301,7 @@ draw_string_done:
     popad
     pop gs
     pop es
-    retf32
+    ret
 draw_string     Endp
 
 
@@ -3782,7 +3810,7 @@ line_done:
     popad
     pop es
     pop ds
-    retf32
+    ret
 draw_line       Endp
 
 
@@ -3802,12 +3830,12 @@ draw_line       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 rect_border_style_tab:
-rb00 DW OFFSET FilledLine
-rb01 DW OFFSET FilledLine
+rb00 DD OFFSET FilledLine
+rb01 DD OFFSET FilledLine
 
 rect_mid_style_tab:
-rm00 DW OFFSET HollowLine
-rm01 DW OFFSET FilledLine
+rm00 DD OFFSET HollowLine
+rm01 DD OFFSET FilledLine
 
 draw_rect       Proc far
     push ds
@@ -3840,9 +3868,9 @@ draw_rect       Proc far
     mov ax,flat_sel
     mov es,ax
 ;
-    movzx bx,ds:v_style
-    add bx,bx
-    call word ptr cs:[bx].rect_border_style_tab
+    movzx ebx,ds:v_style
+    shl ebx,2
+    call dword ptr cs:[ebx].rect_border_style_tab
     inc word ptr [ebp].curr_y
     add edi,esi
     sub dx,1
@@ -3852,25 +3880,25 @@ rect_mid_loop:
     cmp dx,1
     je rect_bottom
 ;
-    movzx bx,ds:v_style
-    add bx,bx
-    call word ptr cs:[bx].rect_mid_style_tab
+    movzx ebx,ds:v_style
+    shl ebx,2
+    call dword ptr cs:[ebx].rect_mid_style_tab
     inc word ptr [ebp].curr_y
     add edi,esi
     dec dx
     jmp rect_mid_loop
 
 rect_bottom:
-    movzx bx,ds:v_style
-    add bx,bx
-    call word ptr cs:[bx].rect_border_style_tab
+    movzx ebx,ds:v_style
+    shl ebx,2
+    call dword ptr cs:[ebx].rect_border_style_tab
 
 rect_done:
     add esp,12
     popad
     pop es
     pop ds
-    retf32
+    ret
 draw_rect       Endp
 
 
@@ -3966,12 +3994,12 @@ draw_last_ellipse_filled    Proc near
 draw_last_ellipse_filled    Endp
 
 ellipse_mid_style_tab:
-em00 DW OFFSET draw_mid_ellipse_hollow
-em01 DW OFFSET draw_mid_ellipse_filled
+em00 DD OFFSET draw_mid_ellipse_hollow
+em01 DD OFFSET draw_mid_ellipse_filled
 
 ellipse_last_style_tab:
-el00 DW OFFSET draw_last_ellipse_hollow
-el01 DW OFFSET draw_last_ellipse_filled
+el00 DD OFFSET draw_last_ellipse_hollow
+el01 DD OFFSET draw_last_ellipse_filled
 
 draw_ellipse    Proc far
     push ds
@@ -4186,9 +4214,9 @@ ellipse_t_neg:
     inc word ptr [ebp].de_width
     add word ptr [ebp].de_size,2
 ;
-    movzx bx,ds:v_style
-    add bx,bx
-    call word ptr cs:[bx].ellipse_mid_style_tab
+    movzx ebx,ds:v_style
+    shl ebx,2
+    call dword ptr cs:[ebx].ellipse_mid_style_tab
     inc word ptr [ebp].de_y0
     dec word ptr [ebp].de_y1
     add [ebp].de_p0,esi
@@ -4216,9 +4244,9 @@ ellipse_t_pos:
     add [ebp].de_dTy,eax
     adc [ebp+4].de_dTy,dx
 ;
-    movzx bx,ds:v_style
-    add bx,bx
-    call word ptr cs:[bx].ellipse_mid_style_tab
+    movzx ebx,ds:v_style
+    shl ebx,2
+    call dword ptr cs:[ebx].ellipse_mid_style_tab
     inc word ptr [ebp].de_y0
     dec word ptr [ebp].de_y1
     add [ebp].de_p0,esi
@@ -4228,16 +4256,16 @@ ellipse_t_pos:
     jnz ellipse_loop
 
 ellipse_done:
-    movzx bx,ds:v_style
-    add bx,bx
-    call word ptr cs:[bx].ellipse_last_style_tab
+    movzx ebx,ds:v_style
+    shl ebx,2
+    call dword ptr cs:[ebx].ellipse_last_style_tab
 
 ellipse_end:
     add esp,96
     popad
     pop es
     pop ds
-    retf32
+    ret
 draw_ellipse    Endp
 
 
@@ -4274,12 +4302,12 @@ act0E   DD 1
 act0F   DD 1
 
 attr_to_color   Proc near
-    push bx
+    push ebx
     mov bl,al
-    and bx,0Fh
-    shl bx,2
-    mov eax,dword ptr cs:[bx].AttribColorTab    
-    pop bx
+    and ebx,0Fh
+    shl ebx,2
+    mov eax,dword ptr cs:[ebx].AttribColorTab    
+    pop ebx
     ret
 attr_to_color   Endp
 
@@ -4303,7 +4331,7 @@ attr_to_color   Endp
 
 clear   Proc far
     clc
-    retf32
+    ret
 clear   Endp
 
 
@@ -4322,7 +4350,7 @@ clear   Endp
 
 set_cursor_pos  Proc far
     clc
-    retf32
+    ret
 set_cursor_pos  Endp
 
 
@@ -4417,7 +4445,7 @@ write_char_done:
     pop ds:v_font
     popad
     pop es
-    retf32
+    ret
 write_char      Endp
 
 
@@ -4460,7 +4488,7 @@ read_char       Proc far
     pop esi
     pop edx
     pop es
-    retf32
+    ret
 read_char       Endp
 
 
@@ -4484,7 +4512,7 @@ read_char       Endp
 
 scroll_up       Proc far
     clc
-    retf32
+    ret
 scroll_up       Endp
 
 
@@ -4508,12 +4536,12 @@ scroll_up       Endp
 
 scroll_down     Proc far
     clc
-    retf32
+    ret
 scroll_down     Endp
 
 errorp  Proc far
     stc
-    retf32
+    ret
 errorp  Endp
 
     public BitmapTab1
