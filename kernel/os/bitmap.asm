@@ -659,12 +659,12 @@ dup_bitmap_handle       Endp
 
 create_string_bitmap_name       DB 'Create String Bitmap', 0
 
-csb_font_handle     EQU -2
-csb_bitmap_handle       EQU -4
-csb_width               EQU -6
-csb_height              EQU -8
-csb_y               EQU -10
-csb_x               EQU -12
+csb_font_handle     EQU -4
+csb_bitmap_handle   EQU -6
+csb_width           EQU -8
+csb_height          EQU -10
+csb_y               EQU -12
+csb_x               EQU -14
 
 create_string_bitmap    Proc near
     ApiSaveEax
@@ -673,9 +673,9 @@ create_string_bitmap    Proc near
     ApiSaveEsi
     ApiSaveEdi
 
-    push bp
-    mov bp,sp
-    sub sp,12
+    push ebp
+    mov ebp,esp
+    sub esp,16
 ;
     push ds
     push es
@@ -688,19 +688,19 @@ create_string_bitmap    Proc near
 ;
     mov ax,es
     mov fs,ax
-    mov [bp].csb_font_handle,bx
+    mov [ebp].csb_font_handle,bx
     UserGateForce32 get_string_metrics_nr
-    mov [bp].csb_width,cx
-    mov [bp].csb_height,dx
+    mov [ebp].csb_width,cx
+    mov [ebp].csb_height,dx
 ;
     mov ax,1
     CreateBitmap
-    mov [bp].csb_bitmap_handle,bx
+    mov [ebp].csb_bitmap_handle,bx
 ;
     mov ax,LGOP_OR
     SetLgop
-    mov word ptr [bp].csb_x,0
-    mov word ptr [bp].csb_y,0
+    mov word ptr [ebp].csb_x,0
+    mov word ptr [ebp].csb_y,0
 
 crs_bitmap_loop:
     mov al,fs:[edi]
@@ -710,27 +710,27 @@ crs_bitmap_loop:
     inc edi
     push edi
 ;
-    mov bx,[bp].csb_font_handle
+    mov bx,[ebp].csb_font_handle
     stc
 ;    GetCharMask
     jc crs_bitmap_next
 ;
     mov ax,si
-    mov bx,[bp].csb_bitmap_handle
+    mov bx,[ebp].csb_bitmap_handle
     push dx
     push cx
     pop esi
     xor ecx,ecx
-    mov edx,[bp].csb_x
+    mov edx,[ebp].csb_x
     DrawMask
-    add [bp].csb_x,si
+    add [ebp].csb_x,si
 
 crs_bitmap_next:
     pop edi
     jmp crs_bitmap_loop
 
 crs_bitmap_ok:
-    mov bx,[bp].csb_bitmap_handle
+    mov bx,[ebp].csb_bitmap_handle
     clc
 
 crs_bitmap_done:
@@ -742,8 +742,8 @@ crs_bitmap_done:
     pop fs
     pop es
     pop ds
-    add sp,12
-    pop bp
+    add esp,16
+    pop ebp
 
     ApiCheckEdi
     ApiCheckEsi
