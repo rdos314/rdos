@@ -53,16 +53,16 @@ DrawStart MACRO reg
     push cx
     push dx
     mov ax,reg
-    mov cx,[bp].curr_x
-    mov dx,[bp].curr_y
+    mov cx,[ebp].curr_x
+    mov dx,[ebp].curr_y
     HideSpriteLine
     pop dx
     pop cx
     pop ax
 
 done:
-    mov [bp].curr_start,edi
-    mov word ptr [bp].curr_size,reg
+    mov [ebp].curr_start,edi
+    mov word ptr [ebp].curr_size,reg
             ENDM
 
 ;
@@ -71,8 +71,8 @@ done:
 ;
 
 SpriteStart MACRO reg
-    mov [bp].curr_start,edi
-    mov word ptr [bp].curr_size,reg
+    mov [ebp].curr_start,edi
+    mov word ptr [ebp].curr_size,reg
             ENDM
 
 code    SEGMENT byte public use16 'CODE'
@@ -88,10 +88,10 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-curr_start  EQU -8
-curr_size   EQU -6
-curr_x      EQU -4
-curr_y      EQU -2
+curr_start  EQU -10
+curr_size   EQU -8
+curr_x      EQU -6
+curr_y      EQU -4
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -148,8 +148,8 @@ DrawDone    Proc near
     push esi
     push edi
 ;    
-    movzx ecx,word ptr [bp].curr_size
-    mov esi,[bp].curr_start
+    movzx ecx,word ptr [ebp].curr_size
+    mov esi,[ebp].curr_start
     mov edi,esi
     sub edi,ds:v_app_base
     add edi,ds:v_phys_base
@@ -187,8 +187,8 @@ SpriteDone    Proc near
     push esi
     push edi
 ;
-    movzx ecx,word ptr [bp].curr_size
-    mov esi,[bp].curr_start
+    movzx ecx,word ptr [ebp].curr_size
+    mov esi,[ebp].curr_start
     mov edi,esi
     sub edi,ds:v_app_base
     add edi,ds:v_phys_base
@@ -806,7 +806,7 @@ slab_lgop:
 slab_lgop_loop:
     call word ptr cs:[bx].LgopTab
     add edi,3
-    inc word ptr [bp].curr_x
+    inc word ptr [ebp].curr_x
     loop slab_lgop_loop
 
 slab_done:
@@ -852,7 +852,7 @@ copy_loop:
     lods word ptr fs:[esi]
     call word ptr cs:[bx].LgopTab
     add edi,3
-    inc word ptr [bp].curr_x
+    inc word ptr [ebp].curr_x
     loop copy_loop
     jmp copy_done
 
@@ -945,7 +945,7 @@ mask_set_bit_loop:
 
 mask_set_line_next:
     add edi,3
-    inc word ptr [bp].curr_x
+    inc word ptr [ebp].curr_x
     sub si,1
     jz mask_set_line_done
 ;
@@ -1011,7 +1011,7 @@ mask_copy_loop:
     rcr dl,1
     jnc mask_copy_next
 ;
-    mov ax,[bp].curr_x
+    mov ax,[ebp].curr_x
     cmp ax,ds:v_x_min
     jl mask_copy_next
 ;
@@ -1028,7 +1028,7 @@ mask_copy_loop:
 mask_copy_next:
     add esi,3
     add edi,3
-    inc word ptr [bp].curr_x
+    inc word ptr [ebp].curr_x
     sub cx,1
     jz mask_copy_done
 ;
@@ -1143,7 +1143,7 @@ anti_alias_mix_r_ok:
 anti_alias_set_line_next:
     pop cx
     add edi,3
-    inc word ptr [bp].curr_x
+    inc word ptr [ebp].curr_x
     inc ebx
     sub cx,1
     jnz anti_alias_set_line_loop
@@ -1172,7 +1172,7 @@ anti_alias_set    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AntiAlias Proc near
-    push word ptr [bp].curr_x
+    push word ptr [ebp].curr_x
     push ebx
     push cx
     push si
@@ -1181,14 +1181,14 @@ AntiAlias Proc near
     or cx,cx
     jz aa_done
 ;    
-    mov ax,[bp].curr_y
+    mov ax,[ebp].curr_y
     cmp ax,ds:v_y_min
     jl aa_done
 ;
     cmp ax,ds:v_y_max
     jg aa_done
 ;
-    mov ax,[bp].curr_x
+    mov ax,[ebp].curr_x
     cmp ax,ds:v_x_max
     jg aa_done
     
@@ -1223,7 +1223,7 @@ aa_done:
     pop si
     pop cx
     pop ebx
-    pop word ptr [bp].curr_x
+    pop word ptr [ebp].curr_x
     ret
 AntiAlias Endp
 
@@ -1242,18 +1242,18 @@ AntiAlias Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HollowLine      Proc near
-    push word ptr [bp].curr_x
+    push word ptr [ebp].curr_x
     push cx
     push edi
 ;
-    mov ax,[bp].curr_y
+    mov ax,[ebp].curr_y
     cmp ax,ds:v_y_min
     jl hollow_line_done
 ;
     cmp ax,ds:v_y_max
     jg hollow_line_done
 ;
-    mov ax,[bp].curr_x
+    mov ax,[ebp].curr_x
     cmp ax,ds:v_x_max
     jg hollow_line_done
 ;
@@ -1274,10 +1274,10 @@ hollow_line_first_done:
     movzx eax,ax
     add edi,eax
 ;
-    mov ax,[bp].curr_x
+    mov ax,[ebp].curr_x
     add ax,cx
     dec ax
-    mov [bp].curr_x,ax
+    mov [ebp].curr_x,ax
     cmp ax,ds:v_x_min
     jl hollow_line_done
 ;
@@ -1292,7 +1292,7 @@ hollow_line_first_done:
 hollow_line_done:
     pop edi
     pop cx
-    pop word ptr [bp].curr_x
+    pop word ptr [ebp].curr_x
     ret
 HollowLine      Endp
 
@@ -1311,18 +1311,18 @@ HollowLine      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FilledLine      Proc near
-    push word ptr [bp].curr_x
+    push word ptr [ebp].curr_x
     push cx
     push edi
 ;
-    mov ax,[bp].curr_y
+    mov ax,[ebp].curr_y
     cmp ax,ds:v_y_min
     jl filled_line_done
 ;
     cmp ax,ds:v_y_max
     jg filled_line_done
 ;
-    mov ax,[bp].curr_x
+    mov ax,[ebp].curr_x
     cmp ax,ds:v_x_max
     jg filled_line_done
     
@@ -1350,7 +1350,7 @@ filled_line_do:
     or cx,cx
     jz filled_line_done
 ;
-    mov [bp].curr_x,ax
+    mov [ebp].curr_x,ax
 ;    
     DrawStart cx
     mov eax,ds:v_color
@@ -1360,7 +1360,7 @@ filled_line_do:
 filled_line_done:
     pop edi
     pop cx
-    pop word ptr [bp].curr_x
+    pop word ptr [ebp].curr_x
     ret
 FilledLine      Endp
 
@@ -1380,19 +1380,19 @@ FilledLine      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SplitLine       Proc near
-    push word ptr [bp].curr_x
+    push word ptr [ebp].curr_x
     push cx
     push dx
     push edi
 ;
-    mov bx,[bp].curr_y
+    mov bx,[ebp].curr_y
     cmp bx,ds:v_y_min
     jl split_line_done
 ;
     cmp bx,ds:v_y_max
     jg split_line_done
 ;
-    mov bx,[bp].curr_x
+    mov bx,[ebp].curr_x
     cmp bx,ds:v_x_max
     jg split_line_done
 ;
@@ -1404,7 +1404,7 @@ SplitLine       Proc near
     mov cx,dx
 
 split_left_loop:
-    mov bx,[bp].curr_x
+    mov bx,[ebp].curr_x
     cmp bx,ds:v_x_min
     jl split_left_next
 ;
@@ -1417,12 +1417,12 @@ split_left_loop:
     call DrawDone
 
 split_left_next:
-    inc word ptr [bp].curr_x
+    inc word ptr [ebp].curr_x
     add edi,3
     loop split_left_loop
 ;
     pop cx
-    add [bp].curr_x,cx
+    add [ebp].curr_x,cx
 ;
     mov ax,cx
     add ax,ax
@@ -1433,7 +1433,7 @@ split_left_next:
     mov cx,dx    
 
 split_right_loop:
-    mov bx,[bp].curr_x
+    mov bx,[ebp].curr_x
     cmp bx,ds:v_x_min
     jl split_right_next
 ;
@@ -1446,7 +1446,7 @@ split_right_loop:
     call DrawDone
 
 split_right_next:
-    inc word ptr [bp].curr_x
+    inc word ptr [ebp].curr_x
     add edi,3
     loop split_right_loop
 
@@ -1454,7 +1454,7 @@ split_line_done:
     pop edi
     pop dx
     pop cx
-    pop word ptr [bp].curr_x
+    pop word ptr [ebp].curr_x
     ret
 SplitLine       Endp
 
@@ -1684,10 +1684,10 @@ set_native      Proc far
     push es
     push fs
     pushad
-    mov bp,sp
-    sub sp,10
-    mov [bp].curr_x,cx
-    mov [bp].curr_y,dx
+    mov ebp,esp
+    sub esp,12
+    mov [ebp].curr_x,cx
+    mov [ebp].curr_y,dx
 ;
     cmp dx,ds:v_y_min
     jl set_native_done
@@ -1745,7 +1745,7 @@ set_native_do:
     call DrawDone
 
 set_native_done:
-    add sp,10
+    add esp,12
     popad
     pop fs
     pop es
@@ -1773,10 +1773,10 @@ set_rgb Proc far
     push es
     push fs
     pushad
-    mov bp,sp
-    sub sp,10
-    mov [bp].curr_x,cx
-    mov [bp].curr_y,dx
+    mov ebp,esp
+    sub esp,12
+    mov [ebp].curr_x,cx
+    mov [ebp].curr_y,dx
 ;
     cmp dx,ds:v_y_min
     jl set_rgb_done
@@ -1835,13 +1835,13 @@ set_rgb_loop:
     lods dword ptr fs:[esi]
     call ds:set_proc
     add edi,3
-    inc word ptr [bp].curr_x
+    inc word ptr [ebp].curr_x
     loop set_rgb_loop
 ;
     call DrawDone
 
 set_rgb_done:
-    add sp,10
+    add esp,12
     popad
     pop fs
     pop es
@@ -1869,10 +1869,10 @@ set_alpha Proc far
     push es
     push fs
     pushad
-    mov bp,sp
-    sub sp,10
-    mov [bp].curr_x,cx
-    mov [bp].curr_y,dx
+    mov ebp,esp
+    sub esp,12
+    mov [ebp].curr_x,cx
+    mov [ebp].curr_y,dx
 ;
     cmp dx,ds:v_y_min
     jl set_rgba_done
@@ -1996,14 +1996,14 @@ set_rgba_next:
 ;
     add esi,4
     add edi,3
-    inc word ptr [bp].curr_x
+    inc word ptr [ebp].curr_x
     sub cx,1
     jnz set_rgba_loop
 ;
     call DrawDone
 
 set_rgba_done:
-    add sp,10
+    add esp,12
     popad
     pop fs
     pop es
@@ -2031,10 +2031,10 @@ set_sprite      Proc far
     push es
     push fs
     pushad
-    mov bp,sp
-    sub sp,10
-    mov [bp].curr_x,cx
-    mov [bp].curr_y,dx
+    mov ebp,esp
+    sub esp,12
+    mov [ebp].curr_x,cx
+    mov [ebp].curr_y,dx
 ;
     cmp dx,ds:v_y_min
     jl set_sprite_done
@@ -2090,7 +2090,7 @@ set_sprite_do:
     call SpriteDone
 
 set_sprite_done:
-    add sp,10
+    add esp,12
     popad
     pop fs
     pop es
@@ -2195,11 +2195,11 @@ set_pixel       Proc far
     push bx
     push edx
     push edi
-    push bp
-    mov bp,sp
-    sub sp,10
-    mov [bp].curr_x,cx
-    mov [bp].curr_y,dx      
+    push ebp
+    mov ebp,esp
+    sub esp,12
+    mov [ebp].curr_x,cx
+    mov [ebp].curr_y,dx      
 ;
     cmp cx,ds:v_x_min
     jl set_pixel_done
@@ -2231,8 +2231,8 @@ set_pixel       Proc far
     call DrawDone
 
 set_pixel_done:
-    add sp,10
-    pop bp
+    add esp,12
+    pop ebp
     pop edi
     pop edx
     pop bx
@@ -2264,12 +2264,12 @@ draw_mask_line  Proc far
     push es
     push gs
     pushad
-    mov bp,sp
-    sub sp,10    
-    mov [bp].curr_x,edx
+    mov ebp,esp
+    sub esp,12    
+    mov [ebp].curr_x,edx
 ;
     push ax
-    mov ax,[bp].curr_y
+    mov ax,[ebp].curr_y
     cmp ax,ds:v_y_min
     jl draw_mask_pop_done
 ;
@@ -2306,7 +2306,7 @@ draw_mask_do:
     or si,si
     jz draw_mask_line_done
 ;
-    push bp
+    push ebp
     push ebx
     xchg ecx,edx
     movsx ebx,dx
@@ -2344,7 +2344,7 @@ draw_mask_do:
     mov es,ax
     pop eax
     mov bx,bp
-    pop bp
+    pop ebp
 ;
     mov dl,cl
     mov cx,bx
@@ -2354,7 +2354,7 @@ draw_mask_do:
     call DrawDone
 
 draw_mask_line_done:
-    add sp,10
+    add esp,12
     popad
     pop gs
     pop es
@@ -2383,11 +2383,11 @@ draw_sprite_line    Proc far
     push fs
     push gs
     pushad
-    mov bp,sp
-    sub sp,10
-    mov [bp].curr_x,ecx
+    mov ebp,esp
+    sub esp,12
+    mov [ebp].curr_x,ecx
 ;
-    mov bx,[bp].curr_y
+    mov bx,[ebp].curr_y
     cmp bx,ds:v_y_min
     jl draw_sprite_done
 ;
@@ -2422,7 +2422,7 @@ draw_sprite_line    Proc far
     call SpriteDone
 
 draw_sprite_done:
-    add sp,10
+    add esp,12
     popad
     pop gs
     pop fs
@@ -2444,25 +2444,25 @@ draw_sprite_line    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ds_dest_y           EQU -12
-ds_dest_x           EQU -14
-ds_str_sel          EQU -16
-ds_width            EQU -18
-ds_new_x            EQU -20
-ds_new_y            EQU -22
+ds_dest_y           EQU -14
+ds_dest_x           EQU -16
+ds_str_sel          EQU -18
+ds_width            EQU -20
+ds_new_x            EQU -22
+ds_new_y            EQU -24
 
 draw_string     Proc far
     push es
     push gs
     pushad
-    mov bp,sp
-    sub sp,22
+    mov ebp,esp
+    sub esp,24
 ;
-    mov [bp].ds_str_sel,es
-    mov [bp].curr_x,cx
-    mov [bp].curr_y,dx
-    mov [bp].ds_dest_x,cx
-    mov [bp].ds_dest_y,dx
+    mov [ebp].ds_str_sel,es
+    mov [ebp].curr_x,cx
+    mov [ebp].curr_y,dx
+    mov [ebp].ds_dest_x,cx
+    mov [ebp].ds_dest_y,dx
 
 draw_string_loop:
     mov al,es:[edi]
@@ -2475,16 +2475,16 @@ draw_string_loop:
     GetUtf8Bitmap
     jc draw_string_char_next
 ;
-    add si,[bp].ds_dest_x
-    mov [bp].ds_new_x,si
+    add si,[ebp].ds_dest_x
+    mov [ebp].ds_new_x,si
 ;
-    mov si,[bp].ds_dest_y    
-    mov [bp].ds_new_y,si
+    mov si,[ebp].ds_dest_y    
+    mov [ebp].ds_new_y,si
 ;
-    add [bp].ds_dest_x,ax
-    add [bp].ds_dest_y,bx
+    add [ebp].ds_dest_x,ax
+    add [ebp].ds_dest_y,bx
 ;
-    mov [bp].ds_width,cx
+    mov [ebp].ds_width,cx
 ;       
     mov ax,es
     mov gs,ax
@@ -2496,10 +2496,10 @@ draw_string_loop:
     or cx,cx
     jz draw_string_char_done
 ;
-    movsx esi,word ptr [bp].ds_dest_x
-    mov [bp].curr_x,si
-    movsx edx,word ptr [bp].ds_dest_y
-    mov [bp].curr_y,dx
+    movsx esi,word ptr [ebp].ds_dest_x
+    mov [ebp].curr_x,si
+    movsx edx,word ptr [ebp].ds_dest_y
+    mov [ebp].curr_y,dx
     movzx eax,word ptr ds:v_row_size
     imul edx
     mov edx,esi
@@ -2511,28 +2511,28 @@ draw_string_loop:
 
 draw_string_char_loop:
     push cx
-    mov cx,[bp].ds_width
+    mov cx,[ebp].ds_width
     call AntiAlias
     pop cx
 ;
-    inc word ptr [bp].curr_y
+    inc word ptr [ebp].curr_y
     movzx eax,ds:v_row_size
     add edi,eax
-    movzx eax,word ptr [bp].ds_width
+    movzx eax,word ptr [ebp].ds_width
     add ebx,eax
     sub cx,1
     jnz draw_string_char_loop
 
 draw_string_char_done:
-    mov ax,[bp].ds_new_x
-    mov [bp].ds_dest_x,ax
+    mov ax,[ebp].ds_new_x
+    mov [ebp].ds_dest_x,ax
 ;
-    mov ax,[bp].ds_new_y
-    mov [bp].ds_dest_y,ax
+    mov ax,[ebp].ds_new_y
+    mov [ebp].ds_dest_y,ax
 
 draw_string_char_next:
     pop edi
-    mov es,[bp].ds_str_sel
+    mov es,[ebp].ds_str_sel
     mov al,es:[edi]
     or al,al
     jz draw_string_ok
@@ -2566,7 +2566,7 @@ draw_string_ok:
     clc
 
 draw_string_done:
-    add sp,22
+    add esp,24
     popad
     pop gs
     pop es
@@ -2589,22 +2589,22 @@ draw_string     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-dl_phys_add_x   EQU -14
-dl_phys_add_y   EQU -18
-dl_log_add_x    EQU -20
-dl_log_add_y    EQU -22
-dl_dx           EQU -24
-dl_dy           EQU -26
-dl_inc_low      EQU -28
-dl_x2           EQU -30
-dl_y2           EQU -32
+dl_phys_add_x   EQU -16
+dl_phys_add_y   EQU -20
+dl_log_add_x    EQU -22
+dl_log_add_y    EQU -24
+dl_dx           EQU -26
+dl_dy           EQU -28
+dl_inc_low      EQU -30
+dl_x2           EQU -32
+dl_y2           EQU -34
 
 draw_line       Proc far
     push ds
     push es
     pushad
-    mov bp,sp
-    sub sp,32
+    mov ebp,esp
+    sub esp,36
 ;
     cmp di,dx
     je line_horiz
@@ -2650,8 +2650,8 @@ line_bresen_check_pos:
     jl line_done
 
 line_bresen_check_done:
-    mov [bp].curr_x,cx
-    mov [bp].curr_y,dx
+    mov [ebp].curr_x,cx
+    mov [ebp].curr_y,dx
 ;
     sub cx,si
     sub dx,di
@@ -2662,16 +2662,16 @@ line_bresen_check_done:
 line_bresen_dx_neg:
     add cx,cx
     neg cx
-    mov [bp].dl_dx,cx
-    mov word ptr [bp].dl_log_add_x,1
-    mov dword ptr [bp].dl_phys_add_x,3
+    mov [ebp].dl_dx,cx
+    mov word ptr [ebp].dl_log_add_x,1
+    mov dword ptr [ebp].dl_phys_add_x,3
     jmp line_bresen_dy
 
 line_bresen_dx_pos:
     add cx,cx
-    mov [bp].dl_dx,cx
-    mov word ptr [bp].dl_log_add_x,-1
-    mov dword ptr [bp].dl_phys_add_x,-3
+    mov [ebp].dl_dx,cx
+    mov word ptr [ebp].dl_log_add_x,-1
+    mov dword ptr [ebp].dl_phys_add_x,-3
 
 line_bresen_dy:
     test dh,80h
@@ -2680,19 +2680,19 @@ line_bresen_dy:
 line_bresen_dy_neg:
     add dx,dx
     neg dx
-    mov [bp].dl_dy,dx
-    mov word ptr [bp].dl_log_add_y,1
+    mov [ebp].dl_dy,dx
+    mov word ptr [ebp].dl_log_add_y,1
     movzx ebx,ds:v_row_size
-    mov [bp].dl_phys_add_y,ebx
+    mov [ebp].dl_phys_add_y,ebx
     jmp line_bresen_calc_inc
 
 line_bresen_dy_pos:
     add dx,dx
-    mov [bp].dl_dy,dx
-    mov word ptr [bp].dl_log_add_y,-1
+    mov [ebp].dl_dy,dx
+    mov word ptr [ebp].dl_log_add_y,-1
     movzx ebx,ds:v_row_size
     neg ebx
-    mov [bp].dl_phys_add_y,ebx
+    mov [ebp].dl_phys_add_y,ebx
 
 line_bresen_calc_inc:
     cmp cx,dx
@@ -2711,10 +2711,10 @@ line_bresen_calc_dy_inc:
 
 line_bresen_calc_save:
     neg ax
-    mov [bp].dl_inc_low,ax
+    mov [ebp].dl_inc_low,ax
 ;
-    mov cx,[bp].curr_x
-    mov dx,[bp].curr_y
+    mov cx,[ebp].curr_x
+    mov dx,[ebp].curr_y
 ;
     cmp cx,si
     jne line_more_low
@@ -2738,53 +2738,53 @@ line_more_low:
     jmp line_inrange_bresen
 
 line_skip_low:
-    mov ax,[bp].dl_dx
-    cmp ax,[bp].dl_dy
+    mov ax,[ebp].dl_dx
+    cmp ax,[ebp].dl_dy
     jb line_skip_dy_low
 
 line_skip_dx_low:
-    mov ax,[bp].dl_inc_low
+    mov ax,[ebp].dl_inc_low
     test ah,80h
     jnz line_skip_dx_fract_neg_low
 
 line_skip_dx_fract_pos_low:
-    mov ax,[bp].dl_dy
-    sub [bp].dl_inc_low,ax
-    add cx,[bp].dl_log_add_x
+    mov ax,[ebp].dl_dy
+    sub [ebp].dl_inc_low,ax
+    add cx,[ebp].dl_log_add_x
     cmp cx,si
     jne line_more_low
     jmp line_done
 
 line_skip_dx_fract_neg_low:
-    mov ax,[bp].dl_dx
-    add [bp].dl_inc_low,ax
-    add dx,[bp].dl_log_add_y
+    mov ax,[ebp].dl_dx
+    add [ebp].dl_inc_low,ax
+    add dx,[ebp].dl_log_add_y
     jmp line_more_low
 
 line_skip_dy_low:
-    mov ax,[bp].dl_inc_low
+    mov ax,[ebp].dl_inc_low
     test ah,80h
     jnz line_skip_dy_fract_neg_low
 
 line_skip_dy_fract_pos_low:
-    mov ax,[bp].dl_dx
-    sub [bp].dl_inc_low,ax
-    add dx,[bp].dl_log_add_y
+    mov ax,[ebp].dl_dx
+    sub [ebp].dl_inc_low,ax
+    add dx,[ebp].dl_log_add_y
     cmp dx,di
     jne line_more_low
     jmp line_done
 
 line_skip_dy_fract_neg_low:
-    mov ax,[bp].dl_dy
-    add [bp].dl_inc_low,ax
-    add cx,[bp].dl_log_add_x
+    mov ax,[ebp].dl_dy
+    add [ebp].dl_inc_low,ax
+    add cx,[ebp].dl_log_add_x
     jmp line_more_low
 
 line_inrange_bresen:    
-    mov [bp].curr_x,cx
-    mov [bp].curr_y,dx
-    mov [bp].dl_x2,si
-    mov [bp].dl_y2,di
+    mov [ebp].curr_x,cx
+    mov [ebp].curr_y,dx
+    mov [ebp].dl_x2,si
+    mov [ebp].dl_y2,di
     movsx ecx,cx
     movsx edx,dx
     movzx eax,ds:v_row_size
@@ -2797,14 +2797,14 @@ line_inrange_bresen:
 ;
     mov ax,flat_sel
     mov es,ax
-    mov ax,[bp].dl_inc_low
-    mov dx,[bp].curr_y
+    mov ax,[ebp].dl_inc_low
+    mov dx,[ebp].curr_y
     cmp ds:v_sprite_count,0
     je line_bresen_no_sprite
 
 line_bresen_sprite:
-    mov bx,[bp].dl_dx
-    cmp bx,[bp].dl_dy
+    mov bx,[ebp].dl_dx
+    cmp bx,[ebp].dl_dy
     jb line_bresen_dy_sprite_next
     jmp line_bresen_dx_sprite_next
 
@@ -2816,24 +2816,24 @@ line_bresen_dx_sprite_loop:
     call DrawDone
     pop ax
 ;
-    cmp cx,[bp].dl_x2
+    cmp cx,[ebp].dl_x2
     je line_done
 ;
     test ah,80h
     jnz line_bresen_dx_sprite_fract_neg
 
 line_bresen_dx_sprite_fract_pos:
-    add edi,[bp].dl_phys_add_x
-    add cx,[bp].dl_log_add_x
-    mov [bp].curr_x,cx
-    sub ax,[bp].dl_dy
+    add edi,[ebp].dl_phys_add_x
+    add cx,[ebp].dl_log_add_x
+    mov [ebp].curr_x,cx
+    sub ax,[ebp].dl_dy
     jmp line_bresen_dx_sprite_next
 
 line_bresen_dx_sprite_fract_neg:
-    add edi,[bp].dl_phys_add_y
-    add dx,[bp].dl_log_add_y
-    mov [bp].curr_y,dx
-    add ax,[bp].dl_dx
+    add edi,[ebp].dl_phys_add_y
+    add dx,[ebp].dl_log_add_y
+    mov [ebp].curr_y,dx
+    add ax,[ebp].dl_dx
 
 line_bresen_dx_sprite_next:
     cmp cx,ds:v_x_max
@@ -2857,24 +2857,24 @@ line_bresen_dy_sprite_loop:
     call DrawDone
     pop ax
 ;
-    cmp dx,[bp].dl_y2
+    cmp dx,[ebp].dl_y2
     je line_done
 ;
     test ah,80h
     jnz line_bresen_dy_sprite_fract_neg
 
 line_bresen_dy_sprite_fract_pos:
-    add edi,[bp].dl_phys_add_y
-    add dx,[bp].dl_log_add_y
-    mov [bp].curr_y,dx
-    sub ax,[bp].dl_dx
+    add edi,[ebp].dl_phys_add_y
+    add dx,[ebp].dl_log_add_y
+    mov [ebp].curr_y,dx
+    sub ax,[ebp].dl_dx
     jmp line_bresen_dy_sprite_next
 
 line_bresen_dy_sprite_fract_neg:
-    add edi,[bp].dl_phys_add_x
-    add cx,[bp].dl_log_add_x
-    mov [bp].curr_x,cx
-    add ax,[bp].dl_dy
+    add edi,[ebp].dl_phys_add_x
+    add cx,[ebp].dl_log_add_x
+    mov [ebp].curr_x,cx
+    add ax,[ebp].dl_dy
 
 line_bresen_dy_sprite_next:
     cmp cx,ds:v_x_max
@@ -2891,8 +2891,8 @@ line_bresen_dy_sprite_next:
     jmp line_bresen_dy_sprite_loop
 
 line_bresen_no_sprite:
-    mov bx,[bp].dl_dx
-    cmp bx,[bp].dl_dy
+    mov bx,[ebp].dl_dx
+    cmp bx,[ebp].dl_dy
     jb line_bresen_dy_next
     jmp line_bresen_dx_next
 
@@ -2904,24 +2904,24 @@ line_bresen_dx_loop:
     call DrawDone
     pop ax
 ;
-    cmp cx,[bp].dl_x2
+    cmp cx,[ebp].dl_x2
     je line_done
 ;
     test ah,80h
     jnz line_bresen_dx_fract_neg
 
 line_bresen_dx_fract_pos:
-    add edi,[bp].dl_phys_add_x
-    add cx,[bp].dl_log_add_x
-    mov [bp].curr_x,cx
-    sub ax,[bp].dl_dy
+    add edi,[ebp].dl_phys_add_x
+    add cx,[ebp].dl_log_add_x
+    mov [ebp].curr_x,cx
+    sub ax,[ebp].dl_dy
     jmp line_bresen_dx_next
 
 line_bresen_dx_fract_neg:
-    add edi,[bp].dl_phys_add_y
-    add dx,[bp].dl_log_add_y
-    mov [bp].curr_y,dx
-    add ax,[bp].dl_dx
+    add edi,[ebp].dl_phys_add_y
+    add dx,[ebp].dl_log_add_y
+    mov [ebp].curr_y,dx
+    add ax,[ebp].dl_dx
 
 line_bresen_dx_next:
     cmp cx,ds:v_x_max
@@ -2945,24 +2945,24 @@ line_bresen_dy_loop:
     call DrawDone
     pop ax
 ;
-    cmp dx,[bp].dl_y2
+    cmp dx,[ebp].dl_y2
     je line_done
 ;
     test ah,80h
     jnz line_bresen_dy_fract_neg
 
 line_bresen_dy_fract_pos:
-    add edi,[bp].dl_phys_add_y
-    add dx,[bp].dl_log_add_y
-    mov [bp].curr_y,dx
-    sub ax,[bp].dl_dx
+    add edi,[ebp].dl_phys_add_y
+    add dx,[ebp].dl_log_add_y
+    mov [ebp].curr_y,dx
+    sub ax,[ebp].dl_dx
     jmp line_bresen_dy_next
 
 line_bresen_dy_fract_neg:
-    add edi,[bp].dl_phys_add_x
-    add cx,[bp].dl_log_add_x
-    mov [bp].curr_x,cx
-    add ax,[bp].dl_dy
+    add edi,[ebp].dl_phys_add_x
+    add cx,[ebp].dl_log_add_x
+    mov [ebp].curr_x,cx
+    add ax,[ebp].dl_dy
 
 line_bresen_dy_next:
     cmp cx,ds:v_x_max
@@ -2986,8 +2986,8 @@ line_vert:
     xchg bx,dx
 
 line_vert_do:
-    mov [bp].curr_x,cx
-    mov [bp].curr_y,dx
+    mov [ebp].curr_x,cx
+    mov [ebp].curr_y,dx
 ;
     cmp cx,ds:v_x_max
     jg line_done
@@ -3015,7 +3015,7 @@ line_vert_do:
     je line_vert_loop
 
 line_vert_sprite_loop:
-    mov dx,[bp].curr_y
+    mov dx,[ebp].curr_y
     cmp dx,ds:v_y_min
     jl line_vert_sprite_next
 ;
@@ -3028,13 +3028,13 @@ line_vert_sprite_loop:
 
 line_vert_sprite_next:
     add edi,esi
-    inc word ptr [bp].curr_y
+    inc word ptr [ebp].curr_y
     sub cx,1
     jnz line_vert_sprite_loop
     jmp line_done
 
 line_vert_loop:
-    mov dx,[bp].curr_y
+    mov dx,[ebp].curr_y
     cmp dx,ds:v_y_min
     jl line_vert_next
 ;
@@ -3047,7 +3047,7 @@ line_vert_loop:
 
 line_vert_next:
     add edi,esi
-    inc word ptr [bp].curr_y
+    inc word ptr [ebp].curr_y
     sub cx,1
     jnz line_vert_loop
     jmp line_done
@@ -3060,8 +3060,8 @@ line_horiz:
     xchg ax,cx
 
 line_horiz_do:
-    mov [bp].curr_x,cx
-    mov [bp].curr_y,dx
+    mov [ebp].curr_x,cx
+    mov [ebp].curr_y,dx
     movsx ecx,cx
     movsx edx,dx
     movsx ebx,ax
@@ -3080,7 +3080,7 @@ line_horiz_do:
     call FilledLine
 
 line_done:
-    add sp,32
+    add esp,36
     popad
     pop es
     pop ds
@@ -3115,10 +3115,10 @@ draw_rect       Proc far
     push ds
     push es
     pushad
-    mov bp,sp
-    sub sp,10
-    mov [bp].curr_x,cx
-    mov [bp].curr_y,dx
+    mov ebp,esp
+    sub esp,12
+    mov [ebp].curr_x,cx
+    mov [ebp].curr_y,dx
 ;
     or si,si
     jz rect_done
@@ -3147,7 +3147,7 @@ draw_rect       Proc far
     movzx bx,ds:v_style
     add bx,bx
     call word ptr cs:[bx].rect_border_style_tab
-    inc word ptr [bp].curr_y
+    inc word ptr [ebp].curr_y
     add edi,esi
     sub dx,1
     jz rect_done
@@ -3159,7 +3159,7 @@ rect_mid_loop:
     movzx bx,ds:v_style
     add bx,bx
     call word ptr cs:[bx].rect_mid_style_tab
-    inc word ptr [bp].curr_y
+    inc word ptr [ebp].curr_y
     add edi,esi
     dec dx
     jmp rect_mid_loop
@@ -3170,7 +3170,7 @@ rect_bottom:
     call word ptr cs:[bx].rect_border_style_tab
 
 rect_done:
-    add sp,10
+    add esp,12
     popad
     pop es
     pop ds
@@ -3193,78 +3193,78 @@ draw_rect       Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-de_h2       EQU -14
-de_w2       EQU -18
-de_m        EQU -24
-de_S        EQU -30
-de_T        EQU -36
-de_dSx      EQU -42
-de_dTx      EQU -48
-de_dSy      EQU -54
-de_dTy      EQU -60
-de_ddx      EQU -66
-de_ddy      EQU -72
-de_cnt      EQU -74
-de_w        EQU -76
-de_h        EQU -78
-de_p0       EQU -82
-de_p1       EQU -86
-de_width    EQU -88
-de_size     EQU -90
-de_y0       EQU -92
-de_y1       EQU -94
+de_h2       EQU -16
+de_w2       EQU -20
+de_m        EQU -26
+de_S        EQU -32
+de_T        EQU -38
+de_dSx      EQU -44
+de_dTx      EQU -50
+de_dSy      EQU -56
+de_dTy      EQU -62
+de_ddx      EQU -68
+de_ddy      EQU -74
+de_cnt      EQU -76
+de_w        EQU -78
+de_h        EQU -80
+de_p0       EQU -84
+de_p1       EQU -88
+de_width    EQU -90
+de_size     EQU -92
+de_y0       EQU -94
+de_y1       EQU -96
 
 draw_mid_ellipse_hollow Proc near
-    mov ax,[bp].de_y0
-    mov [bp].curr_y,ax
-    mov edi,[bp].de_p0
-    mov ax,[bp].de_width
-    mov cx,[bp].de_size
+    mov ax,[ebp].de_y0
+    mov [ebp].curr_y,ax
+    mov edi,[ebp].de_p0
+    mov ax,[ebp].de_width
+    mov cx,[ebp].de_size
     call SplitLine
 ;
-    mov ax,[bp].de_y1
-    mov [bp].curr_y,ax
-    mov edi,[bp].de_p1
-    mov ax,[bp].de_width
-    mov cx,[bp].de_size
+    mov ax,[ebp].de_y1
+    mov [ebp].curr_y,ax
+    mov edi,[ebp].de_p1
+    mov ax,[ebp].de_width
+    mov cx,[ebp].de_size
     call SplitLine
 ;
-    mov word ptr [bp].de_width,1
+    mov word ptr [ebp].de_width,1
     ret
 draw_mid_ellipse_hollow Endp
 
 draw_mid_ellipse_filled Proc near
-    mov ax,[bp].de_y0
-    mov [bp].curr_y,ax
-    mov edi,[bp].de_p0
-    mov cx,[bp].de_size
+    mov ax,[ebp].de_y0
+    mov [ebp].curr_y,ax
+    mov edi,[ebp].de_p0
+    mov cx,[ebp].de_size
     call FilledLine
 ;
-    mov ax,[bp].de_y1
-    mov [bp].curr_y,ax
-    mov edi,[bp].de_p1
-    mov cx,[bp].de_size
+    mov ax,[ebp].de_y1
+    mov [ebp].curr_y,ax
+    mov edi,[ebp].de_p1
+    mov cx,[ebp].de_size
     call FilledLine
 ;
-    mov word ptr [bp].de_width,1
+    mov word ptr [ebp].de_width,1
     ret
 draw_mid_ellipse_filled Endp
 
 draw_last_ellipse_hollow    Proc near
-    mov ax,[bp].de_y0
-    mov [bp].curr_y,ax
-    mov edi,[bp].de_p0
-    mov ax,[bp].de_width
-    mov cx,[bp].de_size
+    mov ax,[ebp].de_y0
+    mov [ebp].curr_y,ax
+    mov edi,[ebp].de_p0
+    mov ax,[ebp].de_width
+    mov cx,[ebp].de_size
     call SplitLine
     ret
 draw_last_ellipse_hollow    Endp
 
 draw_last_ellipse_filled    Proc near
-    mov ax,[bp].de_y0
-    mov [bp].curr_y,ax
-    mov edi,[bp].de_p0
-    mov cx,[bp].de_size
+    mov ax,[ebp].de_y0
+    mov [ebp].curr_y,ax
+    mov edi,[ebp].de_p0
+    mov cx,[ebp].de_size
     call FilledLine
     ret
 draw_last_ellipse_filled    Endp
@@ -3281,8 +3281,8 @@ draw_ellipse    Proc far
     push ds
     push es
     pushad
-    mov bp,sp
-    sub sp,94
+    mov ebp,esp
+    sub esp,96
 ;
     cmp si,2
     jbe ellipse_end
@@ -3292,41 +3292,41 @@ draw_ellipse    Proc far
 ;
     dec si
     shr si,1
-    mov [bp].de_w,si
-    mov word ptr [bp].de_width,1
-    mov word ptr [bp].de_size,2
+    mov [ebp].de_w,si
+    mov word ptr [ebp].de_width,1
+    mov word ptr [ebp].de_size,2
 ;
     dec di
     shr di,1
-    mov [bp].de_h,di
-    mov [bp].de_cnt,di
+    mov [ebp].de_h,di
+    mov [ebp].de_cnt,di
 ;
     add cx,si
-    mov [bp].curr_x,cx
-    mov [bp].de_y0,dx
+    mov [ebp].curr_x,cx
+    mov [ebp].de_y0,dx
     add dx,di
     add dx,di
-    mov [bp].de_y1,dx
+    mov [ebp].de_y1,dx
 ;
     mov ax,di
     mul di
-    mov [bp].de_h2,ax
-    mov [bp+2].de_h2,dx
+    mov [ebp].de_h2,ax
+    mov [ebp+2].de_h2,dx
 ;
     mov ax,si
     mul si
-    mov [bp].de_w2,ax
-    mov [bp+2].de_w2,dx
+    mov [ebp].de_w2,ax
+    mov [ebp+2].de_w2,dx
 ;
-    movzx eax,word ptr [bp].de_h
+    movzx eax,word ptr [ebp].de_h
     shl eax,1
     neg eax
     inc eax
-    imul dword ptr [bp].de_w2
-    mov [bp].de_m,eax
-    mov [bp+4].de_m,dx
+    imul dword ptr [ebp].de_w2
+    mov [ebp].de_m,eax
+    mov [ebp+4].de_m,dx
 ;
-    mov eax,[bp].de_h2
+    mov eax,[ebp].de_h2
     xor dx,dx
     add eax,eax
     adc dx,dx
@@ -3334,72 +3334,72 @@ draw_ellipse    Proc far
     mov di,dx
     add eax,eax
     adc dx,dx
-    mov [bp].de_dTx,eax
-    mov [bp+4].de_dTx,dx 
+    mov [ebp].de_dTx,eax
+    mov [ebp+4].de_dTx,dx 
 ;
     add eax,esi
     adc dx,di
-    mov [bp].de_dSx,eax
-    mov [bp+4].de_dSx,dx
+    mov [ebp].de_dSx,eax
+    mov [ebp+4].de_dSx,dx
 ;
-    mov eax,[bp].de_m
-    mov dx,[bp+4].de_m
-    add eax,[bp].de_w2
+    mov eax,[ebp].de_m
+    mov dx,[ebp+4].de_m
+    add eax,[ebp].de_w2
     adc dx,0
     add eax,eax
     adc dx,dx
-    mov [bp].de_dSy,eax
-    mov [bp+4].de_dSy,dx
+    mov [ebp].de_dSy,eax
+    mov [ebp+4].de_dSy,dx
 ;
-    mov eax,[bp].de_w2
+    mov eax,[ebp].de_w2
     xor dx,dx
     add eax,eax
     adc dx,dx
-    add eax,[bp].de_dSy
-    adc dx,[bp+4].de_dSy
-    mov [bp].de_dTy,eax
-    mov [bp+4].de_dTy,dx
+    add eax,[ebp].de_dSy
+    adc dx,[ebp+4].de_dSy
+    mov [ebp].de_dTy,eax
+    mov [ebp+4].de_dTy,dx
 ;
-    mov eax,[bp].de_h2
+    mov eax,[ebp].de_h2
     xor dx,dx
     add eax,eax
     adc dx,dx
-    add eax,[bp].de_m
-    adc dx,[bp+4].de_m
-    mov [bp].de_S,eax
-    mov [bp+4].de_S,dx
+    add eax,[ebp].de_m
+    adc dx,[ebp+4].de_m
+    mov [ebp].de_S,eax
+    mov [ebp+4].de_S,dx
 ;
-    mov eax,[bp].de_m
-    mov dx,[bp+4].de_m
+    mov eax,[ebp].de_m
+    mov dx,[ebp+4].de_m
     add eax,eax
     adc dx,dx
-    add eax,[bp].de_h2
+    add eax,[ebp].de_h2
     adc dx,0
-    mov [bp].de_T,eax
-    mov [bp+4].de_T,dx
+    mov [ebp].de_T,eax
+    mov [ebp+4].de_T,dx
 ;
-    mov eax,[bp].de_h2
+    mov eax,[ebp].de_h2
     xor dx,dx
     add eax,eax
     adc dx,dx
     add eax,eax
     adc dx,dx
-    mov [bp].de_ddx,eax
-    mov [bp+4].de_ddx,dx
+    mov [ebp].de_ddx,eax
+    mov [ebp+4].de_ddx,dx
 ;
-    mov eax,[bp].de_w2
+    mov eax,[ebp].de_w2
     xor dx,dx
     add eax,eax
     adc dx,dx
     add eax,eax
     adc dx,dx
-    mov [bp].de_ddy,eax
-    mov [bp+4].de_ddy,dx
+    mov [ebp].de_ddy,eax
+    mov [ebp+4].de_ddy,dx
 ;
     movzx esi,ds:v_row_size
 ;
-    movsx ecx,word ptr [bp].curr_x
-    movsx edx,word ptr [bp].de_y0
+    movsx ecx,word ptr [ebp].curr_x
+    movsx edx,word ptr [ebp].de_y0
     mov eax,esi
     imul edx
     mov edi,ecx
@@ -3407,10 +3407,10 @@ draw_ellipse    Proc far
     add edi,ecx
     add edi,eax
     add edi,ds:v_app_base
-    mov [bp].de_p0,edi
+    mov [ebp].de_p0,edi
 ;
-    movsx ecx,word ptr [bp].curr_x
-    movsx edx,word ptr [bp].de_y1
+    movsx ecx,word ptr [ebp].curr_x
+    movsx edx,word ptr [ebp].de_y1
     mov eax,esi
     imul edx
     mov edi,ecx
@@ -3418,42 +3418,42 @@ draw_ellipse    Proc far
     add edi,ecx
     add edi,eax
     add edi,ds:v_app_base
-    mov [bp].de_p1,edi
+    mov [ebp].de_p1,edi
 ;
     mov ax,flat_sel
     mov es,ax
 
 ellipse_loop:
-    mov eax,[bp].de_S
-    mov bx,[bp+4].de_S
-    mov ecx,[bp].de_T
-    mov dx,[bp+4].de_T
+    mov eax,[ebp].de_S
+    mov bx,[ebp+4].de_S
+    mov ecx,[ebp].de_T
+    mov dx,[ebp+4].de_T
     test bh,80h
     jz ellipse_s_pos
 
 ellipse_s_neg:
-    add eax,[bp].de_dSx
-    adc bx,[bp+4].de_dSx
-    mov [bp].de_S,eax
-    mov [bp+4].de_S,bx
+    add eax,[ebp].de_dSx
+    adc bx,[ebp+4].de_dSx
+    mov [ebp].de_S,eax
+    mov [ebp+4].de_S,bx
 ;
-    add ecx,[bp].de_dTx
-    adc dx,[bp+4].de_dTx
-    mov [bp].de_T,ecx
-    mov [bp+4].de_T,dx
+    add ecx,[ebp].de_dTx
+    adc dx,[ebp+4].de_dTx
+    mov [ebp].de_T,ecx
+    mov [ebp+4].de_T,dx
 ;
-    mov eax,[bp].de_ddx
-    mov dx,[bp+4].de_ddx
-    add [bp].de_dSx,eax
-    adc [bp+4].de_dSx,dx
-    add [bp].de_dTx,eax
-    adc [bp+4].de_dTx,dx
+    mov eax,[ebp].de_ddx
+    mov dx,[ebp+4].de_ddx
+    add [ebp].de_dSx,eax
+    adc [ebp+4].de_dSx,dx
+    add [ebp].de_dTx,eax
+    adc [ebp+4].de_dTx,dx
 ;
-    dec word ptr [bp].curr_x
-    sub dword ptr [bp].de_p0,3
-    sub dword ptr [bp].de_p1,3
-    inc word ptr [bp].de_width
-    add word ptr [bp].de_size,2
+    dec word ptr [ebp].curr_x
+    sub dword ptr [ebp].de_p0,3
+    sub dword ptr [ebp].de_p1,3
+    inc word ptr [ebp].de_width
+    add word ptr [ebp].de_size,2
     jmp ellipse_loop
 
 ellipse_s_pos:
@@ -3461,79 +3461,79 @@ ellipse_s_pos:
     jz ellipse_t_pos
 
 ellipse_t_neg:
-    add eax,[bp].de_dSx
-    adc bx,[bp+4].de_dSx
-    add eax,[bp].de_dSy
-    adc bx,[bp+4].de_dSy
-    mov [bp].de_S,eax
-    mov [bp+4].de_S,bx
+    add eax,[ebp].de_dSx
+    adc bx,[ebp+4].de_dSx
+    add eax,[ebp].de_dSy
+    adc bx,[ebp+4].de_dSy
+    mov [ebp].de_S,eax
+    mov [ebp+4].de_S,bx
 ;
-    add ecx,[bp].de_dTx
-    adc dx,[bp+4].de_dTx
-    add ecx,[bp].de_dTy
-    adc dx,[bp+4].de_dTy
-    mov [bp].de_T,ecx
-    mov [bp+4].de_T,dx
+    add ecx,[ebp].de_dTx
+    adc dx,[ebp+4].de_dTx
+    add ecx,[ebp].de_dTy
+    adc dx,[ebp+4].de_dTy
+    mov [ebp].de_T,ecx
+    mov [ebp+4].de_T,dx
 ;
-    mov eax,[bp].de_ddx
-    mov dx,[bp+4].de_ddx
-    add [bp].de_dSx,eax
-    adc [bp+4].de_dSx,dx
-    add [bp].de_dTx,eax
-    adc [bp+4].de_dTx,dx
+    mov eax,[ebp].de_ddx
+    mov dx,[ebp+4].de_ddx
+    add [ebp].de_dSx,eax
+    adc [ebp+4].de_dSx,dx
+    add [ebp].de_dTx,eax
+    adc [ebp+4].de_dTx,dx
 ;
-    mov eax,[bp].de_ddy
-    mov dx,[bp+4].de_ddy
-    add [bp].de_dSy,eax
-    adc [bp+4].de_dSy,dx
-    add [bp].de_dTy,eax
-    adc [bp+4].de_dTy,dx
+    mov eax,[ebp].de_ddy
+    mov dx,[ebp+4].de_ddy
+    add [ebp].de_dSy,eax
+    adc [ebp+4].de_dSy,dx
+    add [ebp].de_dTy,eax
+    adc [ebp+4].de_dTy,dx
 ;
-    dec word ptr [bp].curr_x
-    sub dword ptr [bp].de_p0,3
-    sub dword ptr [bp].de_p1,3
-    inc word ptr [bp].de_width
-    add word ptr [bp].de_size,2
+    dec word ptr [ebp].curr_x
+    sub dword ptr [ebp].de_p0,3
+    sub dword ptr [ebp].de_p1,3
+    inc word ptr [ebp].de_width
+    add word ptr [ebp].de_size,2
 ;
     movzx bx,ds:v_style
     add bx,bx
     call word ptr cs:[bx].ellipse_mid_style_tab
-    inc word ptr [bp].de_y0
-    dec word ptr [bp].de_y1
-    add [bp].de_p0,esi
-    sub [bp].de_p1,esi
+    inc word ptr [ebp].de_y0
+    dec word ptr [ebp].de_y1
+    add [ebp].de_p0,esi
+    sub [ebp].de_p1,esi
 ;
-    sub word ptr [bp].de_cnt,1
+    sub word ptr [ebp].de_cnt,1
     jz ellipse_done
     jmp ellipse_loop
 
 ellipse_t_pos:
-    add eax,[bp].de_dSy
-    adc bx,[bp+4].de_dSy
-    mov [bp].de_S,eax
-    mov [bp+4].de_S,bx
+    add eax,[ebp].de_dSy
+    adc bx,[ebp+4].de_dSy
+    mov [ebp].de_S,eax
+    mov [ebp+4].de_S,bx
 ;
-    add ecx,[bp].de_dTy
-    adc dx,[bp+4].de_dTy
-    mov [bp].de_T,ecx
-    mov [bp+4].de_T,dx
+    add ecx,[ebp].de_dTy
+    adc dx,[ebp+4].de_dTy
+    mov [ebp].de_T,ecx
+    mov [ebp+4].de_T,dx
 ;
-    mov eax,[bp].de_ddy
-    mov dx,[bp+4].de_ddy
-    add [bp].de_dSy,eax
-    adc [bp+4].de_dSy,dx
-    add [bp].de_dTy,eax
-    adc [bp+4].de_dTy,dx
+    mov eax,[ebp].de_ddy
+    mov dx,[ebp+4].de_ddy
+    add [ebp].de_dSy,eax
+    adc [ebp+4].de_dSy,dx
+    add [ebp].de_dTy,eax
+    adc [ebp+4].de_dTy,dx
 ;
     movzx bx,ds:v_style
     add bx,bx
     call word ptr cs:[bx].ellipse_mid_style_tab
-    inc word ptr [bp].de_y0
-    dec word ptr [bp].de_y1
-    add [bp].de_p0,esi
-    sub [bp].de_p1,esi
+    inc word ptr [ebp].de_y0
+    dec word ptr [ebp].de_y1
+    add [ebp].de_p0,esi
+    sub [ebp].de_p1,esi
 ;
-    sub word ptr [bp].de_cnt,1
+    sub word ptr [ebp].de_cnt,1
     jnz ellipse_loop
 
 ellipse_done:
@@ -3542,7 +3542,7 @@ ellipse_done:
     call word ptr cs:[bx].ellipse_last_style_tab
 
 ellipse_end:
-    add sp,94
+    add esp,96
     popad
     pop es
     pop ds
@@ -3692,10 +3692,10 @@ write_char      Proc far
     mov ds:v_font,ax
     mov ax,ss
     mov es,ax
-    movzx edi,sp
+    mov edi,esp
     call ds:draw_string_proc
 ;       
-    add sp,2
+    add esp,2
     pop ds:v_lgop
     pop ds:v_color
     pop ds:v_font
