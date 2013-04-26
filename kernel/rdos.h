@@ -258,6 +258,7 @@ void RDOSAPI RdosDrawString(int handle, int x, int y, const char *str);
 void RDOSAPI RdosDrawRect(int handle, int x, int y, int width, int height);
 void RDOSAPI RdosDrawEllipse(int handle, int x, int y, int width, int height);
 int RDOSAPI RdosCreateBitmap(int BitsPerPixel, int width, int height);
+int RDOSAPI RdosCreateAlphaBitmap(int width, int height);
 int RDOSAPI RdosExtractValidBitmapMask(int handle);
 int RDOSAPI RdosExtractInvalidBitmapMask(int handle);
 int RDOSAPI RdosExtractAlphaBitmap(int handle);

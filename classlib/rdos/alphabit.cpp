@@ -20,45 +20,19 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# png.cpp
-# PNG interface
+# alphabit.cpp
+# Bitmap with alpha (transparency) channel class
 #
 ########################################################################*/
 
 #include "rdos.h"
-#include "png.h"
-
-extern "C" 
-{
-int LoadPngBase(const char *FileName);
-int SavePngBase(const char *FileName, int Bitmap);
-};
-
-#define FALSE   0
-#define TRUE    !FALSE
+#include "alphabit.h"
 
 /*##########################################################################
 #
-#   Name       : TPngBitmapDevice::TPngBitmapDevice
+#   Name       : TAlphaBitmapDevice::TAlphaBitmapDevice
 #
-#   Purpose....: Constructor for TPngBitmapDevice
-#
-#   In params..:                 width
-#                                height
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TPngBitmapDevice::TPngBitmapDevice(int width, int height)
-  : TAlphaBitmapDevice(width, height)
-{
-}
-
-/*##########################################################################
-#
-#   Name       : TPngBitmapDevice::TPngBitmapDevice
-#
-#   Purpose....: Constructor for TPngBitmapDevice
+#   Purpose....: Constructor for TAlphaBitmapDevice
 #
 #   In params..: bpp            bits per pixel
 #                                width
@@ -67,39 +41,55 @@ TPngBitmapDevice::TPngBitmapDevice(int width, int height)
 #   Returns....: *
 #
 ##########################################################################*/
-TPngBitmapDevice::TPngBitmapDevice(int handle)
-  : TAlphaBitmapDevice(handle)
+TAlphaBitmapDevice::TAlphaBitmapDevice(int width, int height)
+  : TBitmapGraphicDevice(32, width, height)
 {
+    FBitmapHandle = RdosCreateAlphaBitmap(width, height);
+    InitDevice();
+        RdosGetBitmapInfo(FBitmapHandle, &FBpp, &FWidth, &FHeight, &FRowSize, &FLinear);
 }
 
 /*##########################################################################
 #
-#   Name       : TPngBitmapDevice::Create
+#   Name       : TAlphaBitmapDevice::TAlphaBitmapDevice
 #
-#   Purpose....: Create a bitmap from a PNG file
+#   Purpose....: Constructor for TAlphaBitmapDevice
 #
-#   In params..: FileName               File to read
+#   In params..: bpp            bits per pixel
+#                                width
+#                                height
 #   Out params.: *
-#   Returns....: bitmap handle
+#   Returns....: *
 #
 ##########################################################################*/
-TPngBitmapDevice *TPngBitmapDevice::Create(const char *FileName, int r, int g, int b)
+TAlphaBitmapDevice::TAlphaBitmapDevice(int handle)
+  : TBitmapGraphicDevice(handle)
 {
-    int handle;
-
-    handle = LoadPngBase(FileName);
-
-    if (handle)
-        return new TPngBitmapDevice(handle);
-    else
-        return 0;
 }
 
 /*##########################################################################
 #
-#   Name       : TPngBitmapDevice::Save
+#   Name       : TAlphaBitmapDevice::~TAlphaBitmapDevice
 #
-#   Purpose....: Save a bitmap to a PNG file
+#   Purpose....: Destructor for TAlphaBitmapDevice
+#
+#   Returns....: *
+#
+##########################################################################*/
+TAlphaBitmapDevice::~TAlphaBitmapDevice()
+{
+    if (FMask)
+        delete FMask;
+
+    if (FAlpha)
+        delete FAlpha;
+}
+
+/*##########################################################################
+#
+#   Name       : TAlphaBitmapDevice::GetMaskBitmap
+#
+#   Purpose....: Get mask bitmap (if available)
 #
 #   In params..: FileName               File to write
 #              : bitmap
@@ -107,7 +97,41 @@ TPngBitmapDevice *TPngBitmapDevice::Create(const char *FileName, int r, int g, i
 #   Returns....: *
 #
 ##########################################################################*/
-int TPngBitmapDevice::Save(const char *FileName)
+TBitmapGraphicDevice *TAlphaBitmapDevice::GetMaskBitmap()
 {
-    return SavePngBase(FileName, FBitmapHandle);
+    int Handle;
+
+    if (!FMask)
+    {
+        Handle = RdosExtractValidBitmapMask(FBitmapHandle);
+        if (Handle)
+            FMask = new TAlphaBitmapDevice(Handle);
+    }
+
+    return FMask;
 }
+
+/*##########################################################################
+#
+#   Name       : TAlphaBitmapDevice::GetAlphaBitmap
+#
+#   Purpose....: Get alpha bitmap (if available)
+#
+#   In params..: *
+#   Returns....: *
+#
+##########################################################################*/
+TBitmapGraphicDevice *TAlphaBitmapDevice::GetAlphaBitmap()
+{
+    int Handle;
+
+    if (!FAlpha)
+    {
+        Handle = RdosExtractValidBitmapMask(FBitmapHandle);
+        if (Handle)
+            FAlpha = new TAlphaBitmapDevice(Handle);
+    }
+
+    return FAlpha;
+}
+

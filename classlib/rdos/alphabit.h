@@ -20,27 +20,30 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# png.cpp
-# PNG interface
+# alphabit.h
+# Bitmap with alpha (transparency) channel class
 #
 ########################################################################*/
 
-#ifndef _PNG_H
-#define _PNG_H
+#ifndef _ALPHA_BIT_H
+#define _AlPHA_BIT_H
 
-#include "alphabit.h"
+#include "bitdev.h"
 
-class TPngBitmapDevice : public TAlphaBitmapDevice
+class TAlphaBitmapDevice : public TBitmapGraphicDevice
 {
-public:
-	TPngBitmapDevice(int width, int height);
+public:	
+	TAlphaBitmapDevice(int width, int height);
+	~TAlphaBitmapDevice();
 
-	static TPngBitmapDevice *Create(const char *FileName, int BackR, int BackG, int BackB);
-	int Save(const char *FileName);
+	TBitmapGraphicDevice *GetMaskBitmap();
+	TBitmapGraphicDevice *GetAlphaBitmap();
 
 protected:
-	TPngBitmapDevice(int handle);
+	TAlphaBitmapDevice(int handle);
+
+    TBitmapGraphicDevice *FMask;	
+    TBitmapGraphicDevice *FAlpha;	
 };
 
 #endif
-

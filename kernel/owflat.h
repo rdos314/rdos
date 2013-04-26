@@ -522,6 +522,12 @@
     parm [eax] [ecx] [edx] \
     value [ebx];
 
+#pragma aux RdosCreateAlphaBitmap = \
+    CallGate_create_alpha_bitmap  \
+    ValidateHandle \
+    parm [ecx] [edx] \
+    value [ebx];
+
 #pragma aux RdosExtractValidBitmapMask = \
     CallGate_extract_valid_bitmap_mask  \
     "mov bx,ax" \

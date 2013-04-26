@@ -656,4 +656,6 @@ extract_alpha_bitmap_nr         = 521
 extract_valid_bitmap_mask_nr    = 522
 extract_invalid_bitmap_mask_nr  = 523
 
+create_alpha_bitmap_nr          = 524
+
 usergate_entries			    = 540

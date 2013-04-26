@@ -286,6 +286,7 @@ v_color 			DD ?
 v_lgop	    		DW ?
 v_font		    	DW ?
 v_style 			DB ?
+v_alpha             DB ?
 
 v_sprite_lines  	DW ?
 v_sprite_max_pos	DW ?

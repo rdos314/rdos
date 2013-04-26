@@ -656,6 +656,8 @@
 #define usergate_extract_valid_bitmap_mask 522
 #define usergate_extract_invalid_bitmap_mask 523
 
+#define usergate_create_alpha_bitmap 524
+
 
 
 #ifdef __FLAT__
@@ -1317,6 +1319,8 @@
 #define CallGate_extract_valid_bitmap_mask 0x67 0x9a 10 2 0 0 3 0
 #define CallGate_extract_invalid_bitmap_mask 0x67 0x9a 11 2 0 0 3 0
 
+#define CallGate_create_alpha_bitmap 0x67 0x9a 12 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1975,5 +1979,7 @@
 #define CallGate_extract_alpha_bitmap 0x3e 0x67 0x9a 9 2 0 0 3 0
 #define CallGate_extract_valid_bitmap_mask 0x3e 0x67 0x9a 10 2 0 0 3 0
 #define CallGate_extract_invalid_bitmap_mask 0x3e 0x67 0x9a 11 2 0 0 3 0
+
+#define CallGate_create_alpha_bitmap 0x3e 0x67 0x9a 12 2 0 0 3 0
 
 #endif

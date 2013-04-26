@@ -287,6 +287,7 @@ create_bitmap   Proc far
 ;    
     mov es:v_usage_count,1
     mov es:v_color,0
+    mov es:v_alpha,0
     mov es:v_lgop,1
     mov es:v_font,0
     mov es:v_text_font,0
@@ -435,6 +436,142 @@ cr_bitmap_end:
     pop ds
     retf32
 create_bitmap   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CreateAlphaBitmap
+;
+;           DESCRIPTION:    Create alpha bitmap
+;
+;           PARAMETERS:     CX          Width
+;                           DX          Height
+;
+;           RETURNS:        BX          Bitmap handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_alpha_bitmap_name      DB 'Create Alpha Bitmap', 0
+
+create_alpha_bitmap   Proc far
+    push ds
+    push es
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    push eax
+    mov ax,dx
+    shl ax,2    
+    add ax,SIZE video_api_struc
+    movzx eax,ax
+    AllocateSmallKernelMem
+    pop eax
+;
+    push si
+    mov si,es
+    mov ds,si
+    InitSection ds:v_section
+    InitSection ds:v_sprite_section
+    pop si
+;    
+    mov es:v_usage_count,1
+    mov es:v_color,0
+    mov es:v_alpha,1
+    mov es:v_lgop,1
+    mov es:v_font,0
+    mov es:v_text_font,0
+    mov es:v_style,0
+    mov es:v_phys_base,0
+    mov es:v_has_focus,0
+    mov es:v_bpp,32
+    mov es:v_width,cx
+    mov es:v_height,dx
+    mov es:v_sprite_count,0
+    mov es:v_sprite_size,0
+    mov es:v_sprite_sel,0
+    mov es:v_x_min,0
+    mov es:v_y_min,0
+    mov es:v_text,0
+    mov si,cx
+    dec si
+    mov es:v_x_max,si
+    mov si,dx
+    dec si
+    mov es:v_y_max,si
+;
+    mov si,cs
+    mov ds,si    
+    mov si,OFFSET BitmapTab32
+    mov ax,es:v_width
+    add ax,ax
+    add ax,ax
+    mov es:v_row_size,ax
+;
+    mov cx,VIDEO_ENTRIES
+    xor di,di
+    rep movsd
+;
+    mov di,SIZE video_api_struc
+    mov es:v_sprite_lines,di
+    mov cx,es:v_height
+    mov eax,-1
+    rep stosd
+    mov es:v_sprite_max_pos,di
+;
+    movzx eax,es:v_row_size
+    movzx edx,es:v_height
+    mul edx
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    mov es:v_app_size,eax
+    AllocateLocalLinear
+    mov es:v_app_base,edx
+;
+    push es
+    mov ecx,eax
+    shr ecx,2
+    mov edi,edx
+    mov ax,flat_sel
+    mov es,ax
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    pop es
+;
+    mov cx,SIZE bitmap_struc
+    AllocateHandle
+    mov ds:[ebx].bm_sel,es
+    mov ds:[ebx].bm_flag,BM_FLAG_BITMAP
+    mov ds:[ebx].hh_sign,BITMAP_HANDLE
+    mov eax,es:v_color
+    mov ds:[ebx].bm_color,eax
+    mov ds:[ebx].bm_lgop,1
+    mov ds:[ebx].bm_font,0
+    mov ds:[ebx].bm_style,0
+    mov ds:[ebx].bm_x_min,0
+    mov ds:[ebx].bm_y_min,0
+    mov ax,es:v_width
+    dec ax
+    mov ds:[ebx].bm_x_max,ax
+    mov ax,es:v_height
+    dec ax
+    mov ds:[ebx].bm_y_max,ax
+    mov bx,[ebx].hh_handle
+    mov es:v_bitmap,bx
+    clc
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+    retf32
+create_alpha_bitmap   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -838,6 +975,12 @@ init_bitmap     PROC near
     mov edi,OFFSET create_bitmap_name
     xor dx,dx
     mov ax,create_bitmap_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET create_alpha_bitmap
+    mov edi,OFFSET create_alpha_bitmap_name
+    xor dx,dx
+    mov ax,create_alpha_bitmap_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET dup_bitmap_handle

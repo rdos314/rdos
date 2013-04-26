@@ -2576,6 +2576,13 @@ CreateBitmap      MACRO
 	UserGate create_bitmap_nr
 						ENDM
 
+;	IN  CX		Width
+;	IN  DX		Height
+;	OUT BX		Bitmap handle
+CreateAlphaBitmap      MACRO
+	UserGate create_alpha_bitmap_nr
+						ENDM
+
 ;	IN  BX		Bitmap handle
 ;	OUT BX		Mask bitmap handle
 ExtractValidBitmapMask      MACRO

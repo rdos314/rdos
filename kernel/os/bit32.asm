@@ -2995,7 +2995,13 @@ draw_ellipse    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 check_alpha  Proc far
+    cmp ds:v_alpha,0
+    stc
+    jz caDone
+;
     clc
+
+caDone:    
     ret
 check_alpha  Endp
 
