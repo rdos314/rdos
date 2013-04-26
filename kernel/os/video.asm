@@ -57,7 +57,7 @@ CallVideo       MACRO   call_proc
     mov ds,ax
     pop ax
     mov ds,ds:v_handle
-    call ds:&call_proc
+    call fword ptr ds:&call_proc
     pop ds
                 ENDM
 
@@ -291,7 +291,7 @@ set_video_mode_loop:
 ;
     push ds
     mov ds,bx
-    call ds:destruct_proc
+    call fword ptr ds:v_destruct_proc
     pop ds
 
 set_mode_no_descruct:
@@ -313,7 +313,7 @@ set_mode_no_descruct:
 ;
     push ds
     mov ds,ds:v_handle
-    call ds:switch_to_proc
+    call fword ptr ds:v_switch_to_proc
     pop ds
     jmp set_video_mode_ok
 
@@ -364,9 +364,9 @@ invert_mouse    PROC far
     mov ds,ax
     pop ax
     mov ds,ds:v_handle
-    call ds:read_char_proc
+    call fword ptr ds:v_read_char_proc
     xchg bl,bh
-    call ds:write_char_proc
+    call fword ptr ds:v_write_char_proc
     pop ds
     retf32
 invert_mouse    ENDP
@@ -387,7 +387,7 @@ invert_mouse    ENDP
 set_cursor_pos_name     DB 'Set Cursor Position',0
 
 set_cursor_position     PROC far
-    CallVideo set_cursor_position_proc
+    CallVideo v_set_cursor_position_proc
     push ds
     push ax
     GetThread
@@ -527,7 +527,7 @@ update_video_same_row:
     xor dx,dx
     mov si,79
     mov di,24
-    CallVideo scroll_up_proc
+    CallVideo v_scroll_up_proc
     popa
 
 update_video_end:
@@ -551,7 +551,7 @@ UpdatePos       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteNormal     PROC near
-    CallVideo write_char_proc
+    CallVideo v_write_char_proc
     inc cx
     ret
 WriteNormal     ENDP
@@ -575,7 +575,7 @@ WriteNormal     ENDP
 WriteSkip       PROC near
     push ax
     mov al,' '
-    CallVideo write_char_proc
+    CallVideo v_write_char_proc
     inc cx
     pop ax
     ret
@@ -602,7 +602,7 @@ WriteTab    PROC near
     mov al,' '
 
 write_tab_more:
-    CallVideo write_char_proc
+    CallVideo v_write_char_proc
     inc cx
     test cx,3
     jnz write_tab_more
@@ -754,7 +754,7 @@ get_char_attrib PROC far
     pop ax
     mov dx,ds:p_row
     mov cx,ds:p_col
-    CallVideo read_char_proc
+    CallVideo v_read_char_proc
     ShowMouse
 ;
     pop dx
@@ -795,7 +795,7 @@ write_char      PROC far
     call WriteOne
     mov ds:p_row,dx
     mov ds:p_col,cx
-    CallVideo set_cursor_position_proc
+    CallVideo v_set_cursor_position_proc
     ShowMouse
 ;
     pop dx
@@ -849,7 +849,7 @@ write_asciiz_loop16:
 write_asciiz_done16:
     mov ds:p_row,dx
     mov ds:p_col,cx
-    CallVideo set_cursor_position_proc
+    CallVideo v_set_cursor_position_proc
     ShowMouse
 ;
     pop di
@@ -891,7 +891,7 @@ write_asciiz_loop32:
 write_asciiz_done32:
     mov ds:p_row,dx
     mov ds:p_col,cx
-    CallVideo set_cursor_position_proc
+    CallVideo v_set_cursor_position_proc
     ShowMouse
 ;
     pop edi
@@ -947,7 +947,7 @@ write_dos_string_loop:
 write_dos_string_done:
     mov ds:p_row,dx
     mov ds:p_col,cx
-    CallVideo set_cursor_position_proc
+    CallVideo v_set_cursor_position_proc
     ShowMouse
 ;
     pop edi
@@ -1003,7 +1003,7 @@ write_size_string_loop16:
 write_size_string_done16:
     mov ds:p_row,dx
     mov ds:p_col,cx
-    CallVideo set_cursor_position_proc
+    CallVideo v_set_cursor_position_proc
     ShowMouse
 ;       
     popa
@@ -1040,7 +1040,7 @@ write_size_string_loop32:
 write_size_string_done32:
     mov ds:p_row,dx
     mov ds:p_col,cx
-    CallVideo set_cursor_position_proc
+    CallVideo v_set_cursor_position_proc
     ShowMouse
 ;
     popad
@@ -1083,7 +1083,7 @@ write_attr_string_loop16:
     shr bh,4
     and bx,0F0Fh
     add di,2
-    CallVideo write_char_proc
+    CallVideo v_write_char_proc
     inc cx
     sub si,1
     jnz write_attr_string_loop16
@@ -1114,7 +1114,7 @@ write_attr_string_loop32:
     shr bh,4
     and bx,0F0Fh
     add edi,2
-    CallVideo write_char_proc
+    CallVideo v_write_char_proc
     inc cx
     sub esi,1
     jnz write_attr_string_loop32
@@ -1338,7 +1338,7 @@ set_draw_color  PROC far
 ;
     push ds
     mov ds,[ebx].bm_sel
-    call ds:translate_color_proc
+    call fword ptr ds:v_translate_color_proc
     pop ds
     mov [ebx].bm_color,eax
     
@@ -1575,7 +1575,7 @@ get_pixel       PROC far
     pop bx
     pop ax
     EnterSection ds:v_section
-    call ds:get_pixel_proc
+    call fword ptr ds:v_get_pixel_proc
     LeaveSection ds:v_section
     pop ds  
 
@@ -1645,7 +1645,7 @@ set_pixel       PROC far
     mov ds:v_color,eax
     pop ebx
     pop eax
-    call ds:set_pixel_proc
+    call fword ptr ds:v_set_pixel_proc
     LeaveSection ds:v_section
     pop ds
 
@@ -1824,14 +1824,14 @@ blit_diff_loop:
 
 blit_diff_get:
     xor edi,edi
-    call ds:get_rgb_row_proc
+    call fword ptr ds:v_get_rgb_row_proc
 ;
     mov ds,[ebp].blit_dest_sel
     mov ax,[ebp].blit_width
     mov cx,[ebp].blit_dest_x
     mov dx,[ebp].blit_dest_y
     xor edi,edi
-    call ds:set_rgb_row_proc
+    call fword ptr ds:v_set_rgb_row_proc
 
 blit_diff_next:
     inc word ptr [ebp].blit_src_y
@@ -1851,13 +1851,13 @@ blit_same_bpp:
     mov ds,[ebp].blit_src_sel
     mov cx,[ebp].blit_src_x
     mov dx,[ebp].blit_src_y
-    call ds:get_line_proc
+    call fword ptr ds:v_get_line_proc
 ;
     mov ds,[ebp].blit_dest_sel
     mov ax,[ebp].blit_width
     mov cx,[ebp].blit_dest_x
     mov dx,[ebp].blit_dest_y
-    call ds:set_native_row_proc
+    call fword ptr ds:v_set_native_row_proc
 ;
     inc word ptr [ebp].blit_src_y
     inc word ptr [ebp].blit_dest_y
@@ -1895,12 +1895,12 @@ blit_reverse:
 blit_reverse_loop:
     mov cx,[ebp].blit_src_x
     mov dx,[ebp].blit_src_y
-    call ds:get_line_proc
+    call fword ptr ds:v_get_line_proc
 ;
     mov ax,[ebp].blit_width
     mov cx,[ebp].blit_dest_x
     mov dx,[ebp].blit_dest_y
-    call ds:set_native_row_proc
+    call fword ptr ds:v_set_native_row_proc
 ;
     dec word ptr [ebp].blit_src_y
     dec word ptr [ebp].blit_dest_y
@@ -1915,12 +1915,12 @@ blit_reverse_loop:
 blit_forward:
     mov cx,[ebp].blit_src_x
     mov dx,[ebp].blit_src_y
-    call ds:get_line_proc
+    call fword ptr ds:v_get_line_proc
 ;
     mov ax,[ebp].blit_width
     mov cx,[ebp].blit_dest_x
     mov dx,[ebp].blit_dest_y
-    call ds:set_native_row_proc
+    call fword ptr ds:v_set_native_row_proc
 ;
     inc word ptr [ebp].blit_src_y
     inc word ptr [ebp].blit_dest_y
@@ -1942,13 +1942,13 @@ blit_same_line_loop:
     mov cx,[ebp].blit_src_x
     mov dx,[ebp].blit_src_y
     xor edi,edi
-    call ds:get_native_row_proc
+    call fword ptr ds:v_get_native_row_proc
 ;
     mov ax,[ebp].blit_width
     mov cx,[ebp].blit_dest_x
     mov dx,[ebp].blit_dest_y
     xor edi,edi
-    call ds:set_native_row_proc
+    call fword ptr ds:v_set_native_row_proc
 ;
     inc word ptr [ebp].blit_src_y
     inc word ptr [ebp].blit_dest_y
@@ -1987,14 +1987,14 @@ blit_alpha_loop:
 
 blit_alpha_get:
     xor edi,edi
-    call ds:get_alpha_row_proc
+    call fword ptr ds:v_get_alpha_row_proc
 ;
     mov ds,[ebp].blit_dest_sel
     mov ax,[ebp].blit_width
     mov cx,[ebp].blit_dest_x
     mov dx,[ebp].blit_dest_y
     xor edi,edi
-    call ds:set_alpha_row_proc
+    call fword ptr ds:v_set_alpha_row_proc
 
 blit_alpha_next:
     inc word ptr [ebp].blit_src_y
@@ -2025,7 +2025,7 @@ blit1:
     mov ebx,ds:v_color
 
 blit1_line_loop:
-    call ds:draw_mask_line_proc
+    call fword ptr ds:v_draw_mask_line_proc
     add ecx,10000h
     add edx,10000h
     sub word ptr [ebp].blit_height,1
@@ -2108,7 +2108,7 @@ draw_mask_loop:
     jz draw_mask_leave
 ;
     ror esi,16
-    call ds:draw_mask_line_proc
+    call fword ptr ds:v_draw_mask_line_proc
     add ecx,10000h
     add edx,10000h
     sub esi,10000h
@@ -2179,7 +2179,7 @@ draw_string16   PROC far
     mov ds:v_color,eax
     pop ebx
     pop eax
-    call ds:draw_string_proc
+    call fword ptr ds:v_draw_string_proc
     LeaveSection ds:v_section
     pop ds  
     jmp draw_string16_done
@@ -2226,7 +2226,7 @@ draw_string32   PROC far
     mov ds:v_color,eax
     pop ebx
     pop eax
-    call ds:draw_string_proc
+    call fword ptr ds:v_draw_string_proc
     LeaveSection ds:v_section
     pop ds
 
@@ -2296,7 +2296,7 @@ draw_line       PROC far
     mov ds:v_color,eax
     pop ebx
     pop eax
-    call ds:draw_line_proc
+    call fword ptr ds:v_draw_line_proc
     LeaveSection ds:v_section
     pop ds  
 
@@ -2369,7 +2369,7 @@ draw_rect       PROC far
     pop ds:v_color
     pop ebx
     pop ax
-    call ds:draw_rect_proc
+    call fword ptr ds:v_draw_rect_proc
     LeaveSection ds:v_section
     pop ds  
 
@@ -2444,7 +2444,7 @@ draw_ellipse    PROC far
     pop ds:v_color
     pop ebx
     pop ax
-    call ds:draw_ellipse_proc
+    call fword ptr ds:v_draw_ellipse_proc
     LeaveSection ds:v_section
     pop ds  
 
@@ -2504,7 +2504,7 @@ extract_valid_bitmap_mask       PROC far
     jc extract_vmask_fail
 ;
     mov ds,[ebx].bm_sel
-    call ds:has_alpha_proc
+    call fword ptr ds:v_has_alpha_proc
     jc extract_vmask_fail
 ;
     mov [ebp].emask_src_sel,ds
@@ -2533,7 +2533,7 @@ extract_vy_loop:
 
 extract_vx_loop:
     mov ds,[ebp].emask_src_sel
-    call ds:get_alpha_proc
+    call fword ptr ds:v_get_alpha_proc
     mov ds,[ebp].emask_dest_sel
     cmp al,80h
     ja extract_vset
@@ -2545,7 +2545,7 @@ extract_vset:
     mov ds:v_color,1
 
 extract_vdo:    
-    call ds:set_pixel_proc    
+    call fword ptr ds:v_set_pixel_proc    
 ;
     inc cx
     cmp cx,[ebp].emask_width
@@ -2599,7 +2599,7 @@ extract_invalid_bitmap_mask       PROC far
     jc extract_ivmask_fail
 ;
     mov ds,[ebx].bm_sel
-    call ds:has_alpha_proc
+    call fword ptr ds:v_has_alpha_proc
     jc extract_ivmask_fail
 ;
     mov [ebp].emask_src_sel,ds
@@ -2628,7 +2628,7 @@ extract_ivy_loop:
 
 extract_ivx_loop:
     mov ds,[ebp].emask_src_sel
-    call ds:get_alpha_proc
+    call fword ptr ds:v_get_alpha_proc
     mov ds,[ebp].emask_dest_sel
     cmp al,80h
     ja extract_ivreset
@@ -2640,7 +2640,7 @@ extract_ivreset:
     mov ds:v_color,0
 
 extract_ivdo:    
-    call ds:set_pixel_proc    
+    call fword ptr ds:v_set_pixel_proc    
 ;
     inc cx
     cmp cx,[ebp].emask_width
@@ -2690,7 +2690,7 @@ extract_alpha_bitmap       PROC far
     mov al,[ebx].bm_style
     mov ds,[ebx].bm_sel
     mov ds:v_style,al
-    call ds:has_alpha_proc
+    call fword ptr ds:v_has_alpha_proc
     jc extract_alpha_fail
 ;
     stc
@@ -2720,7 +2720,7 @@ set_cursor_pos  PROC far
     push dx
     movzx cx,dl
     movzx dx,dh
-    CallVideo set_cursor_position_proc
+    CallVideo v_set_cursor_position_proc
     push ds
     push ax
     GetThread
@@ -2803,7 +2803,7 @@ read_video_attrib       PROC far
     mov ds,ax
     mov dx,ds:p_row
     mov cx,ds:p_col
-    CallVideo read_char_proc
+    CallVideo v_read_char_proc
     mov ah,bh
     shl ah,4
     or ah,bl
@@ -2850,7 +2850,7 @@ write_ch_attr   PROC far
     jz write_ch_attr_done
 
 write_ch_attr_loop:
-    CallVideo write_char_proc
+    CallVideo v_write_char_proc
     inc cx
     call UpdatePos
     sub si,1
@@ -2859,7 +2859,7 @@ write_ch_attr_loop:
 write_ch_attr_done:
     mov ds:p_row,dx
     mov ds:p_col,cx
-    CallVideo set_cursor_position_proc
+    CallVideo v_set_cursor_position_proc
     ShowMouse
 ;
     popa
@@ -2899,7 +2899,7 @@ write_ch    PROC far
     jz write_ch_done
 
 write_ch_loop:
-    CallVideo write_char_proc
+    CallVideo v_write_char_proc
     inc cx
     call UpdatePos
     sub si,1
@@ -2908,7 +2908,7 @@ write_ch_loop:
 write_ch_done:
     mov ds:p_row,dx
     mov ds:p_col,cx
-    CallVideo set_cursor_position_proc
+    CallVideo v_set_cursor_position_proc
     ShowMouse
 ;
     popa
@@ -2950,12 +2950,12 @@ scroll_video_up PROC far
     or al,al
     jnz scroll_video_up_do
 ;
-    CallVideo clear_proc
+    CallVideo v_clear_proc
     jmp scroll_video_up_done
 
 scroll_video_up_do:
     movzx ax,al
-    CallVideo scroll_up_proc
+    CallVideo v_scroll_up_proc
 
 scroll_video_up_done:
     ShowMouse
@@ -2997,12 +2997,12 @@ scroll_video_down       PROC far
     or al,al
     jnz scroll_video_down_do
 ;
-    CallVideo clear_proc
+    CallVideo v_clear_proc
     jmp scroll_video_down_done
 
 scroll_video_down_do:
     movzx ax,al
-    CallVideo scroll_down_proc
+    CallVideo v_scroll_down_proc
 
 scroll_video_down_done:
     ShowMouse
@@ -3052,7 +3052,7 @@ write_stg_not_lf:
     jmp write_stg_one_done
 
 write_stg_not_del:
-    CallVideo write_char_proc
+    CallVideo v_write_char_proc
     inc cx
 
 write_stg_one_done:
@@ -3106,7 +3106,7 @@ write_char_m_loop:
 write_ch_m_end:
     mov ds:p_row,dx
     mov ds:p_col,cx
-    CallVideo set_cursor_position_proc
+    CallVideo v_set_cursor_position_proc
     retf32
 write_char_move ENDP
 
@@ -3147,7 +3147,7 @@ write_attr_m_loop:
 write_attr_m_end:
     mov ds:p_row,dx
     mov ds:p_col,cx
-    CallVideo set_cursor_position_proc
+    CallVideo v_set_cursor_position_proc
     retf32
 write_attr_move ENDP
 
@@ -3335,7 +3335,7 @@ lost_focus_hook PROC far
     jz lost_focus_hook_switched
 ;
     mov ds,ds:v_handle
-    call ds:switch_from_proc
+    call fword ptr ds:v_switch_from_proc
 
 lost_focus_hook_switched:
     pop ds
@@ -3365,7 +3365,7 @@ got_focus_hook  PROC far
     jz got_focus_hook_switched
 ;
     mov ds,ds:v_handle
-    call ds:switch_to_proc
+    call fword ptr ds:v_switch_to_proc
 
 got_focus_hook_switched:
     pop ds
@@ -3587,7 +3587,7 @@ free_process    Proc far
     jz free_process_done
 ;
     mov ds,bx
-    call ds:destruct_proc
+    call fword ptr ds:v_destruct_proc
 
 free_process_done:
     pop bx

@@ -105,9 +105,9 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LinearTab:
-mt00 DW OFFSET delete_linear,       SEG code
-mt01 DW OFFSET switch_to_linear,    SEG code
-mt02 DW OFFSET switch_from_linear,  SEG code
+mt00 DD OFFSET delete_linear,       SEG code
+mt01 DD OFFSET switch_to_linear,    SEG code
+mt02 DD OFFSET switch_from_linear,  SEG code
 
 init_flat_mode  Proc far
     push ds
@@ -264,7 +264,7 @@ init_lfb_map_loop:
     jnz init_lfb_map_loop
 ;
     push ds
-    mov cx,3
+    mov cx,2*3
     mov ax,cs
     mov ds,ax
     mov si,OFFSET LinearTab
@@ -361,7 +361,7 @@ delete_app_loop:
     pop ecx
     pop ebx
     pop ax
-    ret
+    retf32
 delete_linear   Endp
 
 
@@ -445,7 +445,7 @@ switch_to_active:
 ;
     popad
     pop es
-    ret
+    retf32
 switch_to_linear    Endp
 
 
@@ -462,7 +462,7 @@ switch_to_linear    Endp
 
 switch_from_linear      Proc far
     mov ds:v_has_focus,0
-    ret
+    retf32
 switch_from_linear      Endp
 
     

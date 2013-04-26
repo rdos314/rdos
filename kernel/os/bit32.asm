@@ -107,7 +107,7 @@ curr_y      EQU -4
 
 phys_update Proc far
     rep movs dword ptr es:[edi],es:[esi]
-    ret
+    retf32
 phys_update Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -132,7 +132,7 @@ DrawDone    Proc near
     mov edi,esi
     sub edi,ds:v_app_base
     add edi,ds:v_phys_base
-    call ds:phys_update_proc
+    call fword ptr ds:v_phys_update_proc
 ;
     pop edi
     pop esi
@@ -171,7 +171,7 @@ SpriteDone    Proc near
     mov edi,esi
     sub edi,ds:v_app_base
     add edi,ds:v_phys_base
-    call ds:phys_update_proc
+    call fword ptr ds:v_phys_update_proc
 ;
     pop edi
     pop esi
@@ -637,7 +637,7 @@ lgt0D   DW OFFSET LgopAlpha
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 translate_color Proc far
-    ret
+    retf32
 translate_color Endp
 
 
@@ -660,7 +660,7 @@ set_base    Proc far
     add bx,bx
     call word ptr cs:[bx].LgopTab
     pop bx
-    ret
+    retf32
 set_base    Endp
 
 
@@ -707,7 +707,7 @@ slab_done:
     pop edi
     pop ecx
     pop bx
-    ret
+    retf32
 slab    Endp
 
 
@@ -759,7 +759,7 @@ copy_done:
     pop ecx
     pop bx
     pop eax
-    ret
+    retf32
 copy    Endp
 
 
@@ -825,7 +825,7 @@ mask_set_line_done:
     pop dx
     pop cx
     pop ebx
-    ret
+    retf32
 mask_set    Endp
 
 
@@ -908,7 +908,7 @@ mask_copy_done:
     pop dx
     pop cx
     pop ebx
-    ret
+    retf32
 mask_copy    Endp
 
 
@@ -1017,7 +1017,7 @@ anti_alias_set_line_done:
     pop edx
     pop ecx
     pop ebx
-    ret
+    retf32
 anti_alias_set    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1077,7 +1077,7 @@ aa_start_ok:
 aa_do:
     DrawStart cx
     mov eax,ds:v_color
-    call ds:anti_alias_proc
+    call fword ptr ds:v_anti_alias_proc
     call DrawDone
 
 aa_done:
@@ -1123,7 +1123,7 @@ HollowLine      Proc near
 ;
     DrawStart 1
     mov eax,ds:v_color
-    call ds:set_proc
+    call fword ptr ds:v_set_proc
     call DrawDone
 
 hollow_line_first_done:
@@ -1145,7 +1145,7 @@ hollow_line_first_done:
 ;
     DrawStart 1
     mov eax,ds:v_color
-    call ds:set_proc
+    call fword ptr ds:v_set_proc
     call DrawDone
 
 hollow_line_done:
@@ -1213,7 +1213,7 @@ filled_line_do:
 ;    
     DrawStart cx
     mov eax,ds:v_color
-    call ds:slab_proc
+    call fword ptr ds:v_slab_proc
     call DrawDone
 
 filled_line_done:
@@ -1272,7 +1272,7 @@ split_left_loop:
 ;
     DrawStart 1
     mov eax,ds:v_color
-    call ds:set_proc
+    call fword ptr ds:v_set_proc
     call DrawDone
     
 split_left_next:
@@ -1299,7 +1299,7 @@ split_right_loop:
 ;
     DrawStart 1
     mov eax,ds:v_color
-    call ds:set_proc
+    call fword ptr ds:v_set_proc
     call DrawDone
 
 split_right_next:
@@ -1364,7 +1364,7 @@ get_native_done:
     pop bx  
     pop eax
     pop ds
-    ret
+    retf32
 get_native      Endp
 
 
@@ -1426,7 +1426,7 @@ get_rgba_done:
     pop bx  
     pop eax
     pop ds
-    ret
+    retf32
 get_rgba      Endp
 
 
@@ -1505,7 +1505,7 @@ set_native_do:
     jz set_native_done
 ;
     DrawStart cx
-    call ds:copy_proc
+    call fword ptr ds:v_copy_proc
     call DrawDone
 
 set_native_done:
@@ -1513,7 +1513,7 @@ set_native_done:
     popad
     pop fs
     pop es
-    ret
+    retf32
 set_native      Endp
 
 
@@ -1673,7 +1673,7 @@ set_rgba_done:
     popad
     pop fs
     pop es
-    ret
+    retf32
 set_rgba      Endp
 
 
@@ -1750,7 +1750,7 @@ set_sprite_do:
     mov es,ax
 ;
     SpriteStart cx
-    call ds:copy_proc
+    call fword ptr ds:v_copy_proc
     call SpriteDone
 
 set_sprite_done:
@@ -1758,7 +1758,7 @@ set_sprite_done:
     popad
     pop fs
     pop es
-    ret
+    retf32
 set_sprite      Endp
 
 
@@ -1799,7 +1799,7 @@ get_line    Proc far
     pop ecx
     pop eax
     pop ds
-    ret
+    retf32
 get_line    Endp
 
 
@@ -1833,7 +1833,7 @@ get_pixel       Proc far
     and eax,0FFFFFFh
     pop edx 
     pop ds
-    ret
+    retf32
 get_pixel       Endp
 
 
@@ -1888,7 +1888,7 @@ set_pixel       Proc far
 ;
     DrawStart 1
     mov eax,ds:v_color
-    call ds:set_proc
+    call fword ptr ds:v_set_proc
     call DrawDone
 
 set_pixel_done:
@@ -1900,7 +1900,7 @@ set_pixel_done:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 set_pixel       Endp
 
 
@@ -2011,7 +2011,7 @@ draw_mask_do:
     mov cx,bx
     mov ebx,esi
     DrawStart cx
-    call ds:mask_set_proc
+    call fword ptr ds:v_mask_set_proc
     call DrawDone
 
 draw_mask_line_done:
@@ -2019,7 +2019,7 @@ draw_mask_line_done:
     popad
     pop gs
     pop es
-    ret
+    retf32
 draw_mask_line  Endp
 
 
@@ -2078,7 +2078,7 @@ draw_sprite_line    Proc far
     mov es,ax
     mov fs,ax
     SpriteStart cx
-    call ds:mask_copy_proc
+    call fword ptr ds:v_mask_copy_proc
     call SpriteDone
 
 draw_sprite_done:
@@ -2087,7 +2087,7 @@ draw_sprite_done:
     pop gs
     pop fs
     pop es
-    ret
+    retf32
 draw_sprite_line    Endp
 
 
@@ -2230,7 +2230,7 @@ draw_string_done:
     popad
     pop gs
     pop es
-    ret
+    retf32
 draw_string     Endp
 
 
@@ -2471,7 +2471,7 @@ line_bresen_dx_sprite_loop:
     push ax
     DrawStart 1
     mov eax,ds:v_color
-    call ds:set_proc
+    call fword ptr ds:v_set_proc
     call DrawDone
     pop ax
 ;
@@ -2512,7 +2512,7 @@ line_bresen_dy_sprite_loop:
     push ax
     DrawStart 1
     mov eax,ds:v_color
-    call ds:set_proc
+    call fword ptr ds:v_set_proc
     call DrawDone
     pop ax
 ;
@@ -2559,7 +2559,7 @@ line_bresen_dx_loop:
     push ax
     DrawStart 1
     mov eax,ds:v_color
-    call ds:set_proc
+    call fword ptr ds:v_set_proc
     call DrawDone
     pop ax
 ;
@@ -2600,7 +2600,7 @@ line_bresen_dy_loop:
     push ax
     DrawStart 1
     mov eax,ds:v_color
-    call ds:set_proc
+    call fword ptr ds:v_set_proc
     call DrawDone
     pop ax
 ;
@@ -2683,7 +2683,7 @@ line_vert_sprite_loop:
     push ax
     DrawStart 1
     mov eax,ds:v_color
-    call ds:set_proc
+    call fword ptr ds:v_set_proc
     call DrawDone
     pop ax
 
@@ -2703,7 +2703,7 @@ line_vert_loop:
     jg line_vert_next
 ;
     DrawStart 1
-    call ds:set_proc
+    call fword ptr ds:v_set_proc
     call DrawDone
 
 line_vert_next:
@@ -2744,7 +2744,7 @@ line_done:
     popad
     pop es
     pop ds
-    ret
+    retf32
 draw_line       Endp
 
 
@@ -2833,7 +2833,7 @@ rect_done:
     popad
     pop es
     pop ds
-    ret
+    retf32
 draw_rect       Endp
 
 
@@ -3203,7 +3203,7 @@ ellipse_end:
     popad
     pop es
     pop ds
-    ret
+    retf32
 draw_ellipse    Endp
 
 
@@ -3224,7 +3224,7 @@ check_alpha  Proc far
     clc
 
 caDone:    
-    ret
+    retf32
 check_alpha  Endp
 
 
@@ -3264,7 +3264,7 @@ get_alpha       Proc far
     and eax,0FFFFFFh
     pop edx 
     pop ds
-    ret
+    retf32
 get_alpha       Endp
 
 
@@ -3329,7 +3329,7 @@ attr_to_color   Endp
 
 clear   Proc far
     clc
-    ret
+    retf32
 clear   Endp
 
 
@@ -3348,7 +3348,7 @@ clear   Endp
 
 set_cursor_pos  Proc far
     clc
-    ret
+    retf32
 set_cursor_pos  Endp
 
 
@@ -3397,7 +3397,7 @@ write_char      Proc far
 ;
     mov si,ds:v_pixels_per_col
     mov di,ds:v_pixels_per_row
-    call ds:draw_rect_proc
+    call fword ptr ds:v_draw_rect_proc
 ;
     pop ax
     mov ds:v_style,al
@@ -3410,7 +3410,7 @@ write_char      Proc far
     mov ax,ss
     mov es,ax
     mov edi,esp
-    call ds:draw_string_proc
+    call fword ptr ds:v_draw_string_proc
 ;       
     add esp,2
     pop ds:v_lgop
@@ -3418,7 +3418,7 @@ write_char      Proc far
     pop ds:v_font
     popad
     pop es
-    ret
+    retf32
 write_char      Endp
 
 
@@ -3441,7 +3441,7 @@ write_char      Endp
 
 read_char       Proc far
     clc
-    ret
+    retf32
 read_char       Endp
 
 
@@ -3465,7 +3465,7 @@ read_char       Endp
 
 scroll_up       Proc far
     clc
-    ret
+    retf32
 scroll_up       Endp
 
 
@@ -3489,59 +3489,59 @@ scroll_up       Endp
 
 scroll_down     Proc far
     clc
-    ret
+    retf32
 scroll_down     Endp
 
 errorp  Proc far
     stc
-    ret
+    retf32
 errorp  Endp
 
 
     public BitmapTab32
 
 BitmapTab32:
-mt00 DW OFFSET errorp,              SEG code
-mt01 DW OFFSET errorp,              SEG code
-mt02 DW OFFSET errorp,              SEG code
-mt03 DW OFFSET clear,               SEG code
-mt04 DW OFFSET set_cursor_pos,      SEG code
-mt05 DW OFFSET write_char,              SEG code
-mt06 DW OFFSET read_char,               SEG code
-mt07 DW OFFSET scroll_up,               SEG code
-mt08 DW OFFSET scroll_down,             SEG code
-mt09 DW OFFSET errorp,              SEG code
-mt0A DW OFFSET errorp,              SEG code
-mt0B DW OFFSET errorp,              SEG code
-mt0C DW OFFSET errorp,              SEG code
-mt0D DW OFFSET errorp,              SEG code
-mt0E DW OFFSET errorp,              SEG code
-mt0F DW OFFSET translate_color,     SEG code
-mt10 DW OFFSET set_base,            SEG code
-mt11 DW OFFSET slab,                SEG code
-mt12 DW OFFSET copy,                SEG code
-mt13 DW OFFSET mask_set,        SEG code
-mt14 DW OFFSET mask_copy,               SEG code
-mt15 DW OFFSET get_line,            SEG code
-mt16 DW OFFSET get_pixel,               SEG code
-mt17 DW OFFSET set_pixel,               SEG code
-mt18 DW OFFSET get_native,              SEG code
-mt19 DW OFFSET get_native,              SEG code
-mt1A DW OFFSET set_native,              SEG code
-mt1B DW OFFSET set_native,              SEG code
-mt1C DW OFFSET draw_mask_line,      SEG code
-mt1D DW OFFSET set_sprite,              SEG code
-mt1E DW OFFSET draw_sprite_line,    SEG code
-mt1F DW OFFSET draw_string,             SEG code
-mt20 DW OFFSET draw_line,               SEG code
-mt21 DW OFFSET draw_rect,               SEG code
-mt22 DW OFFSET draw_ellipse,        SEG code
-mt23 DW OFFSET anti_alias_set,      SEG code
-mt24 DW OFFSET phys_update,         SEG code
-mt25 DW OFFSET check_alpha,         SEG code
-mt26 DW OFFSET get_alpha,           SEG code
-mt27 DW OFFSET get_rgba,              SEG code
-mt28 DW OFFSET set_rgba,              SEG code
+mt00 DD OFFSET errorp,              SEG code
+mt01 DD OFFSET errorp,              SEG code
+mt02 DD OFFSET errorp,              SEG code
+mt03 DD OFFSET clear,               SEG code
+mt04 DD OFFSET set_cursor_pos,      SEG code
+mt05 DD OFFSET write_char,              SEG code
+mt06 DD OFFSET read_char,               SEG code
+mt07 DD OFFSET scroll_up,               SEG code
+mt08 DD OFFSET scroll_down,             SEG code
+mt09 DD OFFSET errorp,              SEG code
+mt0A DD OFFSET errorp,              SEG code
+mt0B DD OFFSET errorp,              SEG code
+mt0C DD OFFSET errorp,              SEG code
+mt0D DD OFFSET errorp,              SEG code
+mt0E DD OFFSET errorp,              SEG code
+mt0F DD OFFSET translate_color,     SEG code
+mt10 DD OFFSET set_base,            SEG code
+mt11 DD OFFSET slab,                SEG code
+mt12 DD OFFSET copy,                SEG code
+mt13 DD OFFSET mask_set,        SEG code
+mt14 DD OFFSET mask_copy,               SEG code
+mt15 DD OFFSET get_line,            SEG code
+mt16 DD OFFSET get_pixel,               SEG code
+mt17 DD OFFSET set_pixel,               SEG code
+mt18 DD OFFSET get_native,              SEG code
+mt19 DD OFFSET get_native,              SEG code
+mt1A DD OFFSET set_native,              SEG code
+mt1B DD OFFSET set_native,              SEG code
+mt1C DD OFFSET draw_mask_line,      SEG code
+mt1D DD OFFSET set_sprite,              SEG code
+mt1E DD OFFSET draw_sprite_line,    SEG code
+mt1F DD OFFSET draw_string,             SEG code
+mt20 DD OFFSET draw_line,               SEG code
+mt21 DD OFFSET draw_rect,               SEG code
+mt22 DD OFFSET draw_ellipse,        SEG code
+mt23 DD OFFSET anti_alias_set,      SEG code
+mt24 DD OFFSET phys_update,         SEG code
+mt25 DD OFFSET check_alpha,         SEG code
+mt26 DD OFFSET get_alpha,           SEG code
+mt27 DD OFFSET get_rgba,              SEG code
+mt28 DD OFFSET set_rgba,              SEG code
 
 code    ENDS
 

@@ -27,284 +27,284 @@
 
 VIDEO_ENTRIES   = 29h
 
-STYLE_HOLLOW			EQU 0
-STYLE_FILLED			EQU 1
+STYLE_HOLLOW                    EQU 0
+STYLE_FILLED                    EQU 1
 
-video_api_struc	STRUC
+video_api_struc STRUC
 
-destruct_proc			DD ?
+v_destruct_proc                 DD ?,?
 
-switch_to_proc			DD ?
+v_switch_to_proc            DD ?,?
 
-switch_from_proc		DD ?
+v_switch_from_proc              DD ?,?
 
-; IN  BL		Blank fore color
-; IN  BH		Blank back color
-; IN  CX		Upper Column
-; IN  DX		Upper Row
-; IN  SI		Lower Column
-; IN  DI		Lower Row
-clear_proc			DD ?
+; IN  BL                Blank fore color
+; IN  BH                Blank back color
+; IN  CX                Upper Column
+; IN  DX                Upper Row
+; IN  SI                Lower Column
+; IN  DI                Lower Row
+v_clear_proc                    DD ?,?
 
-; IN  CX		Column
-; IN  DX		Row
-set_cursor_position_proc	DD ?
+; IN  CX                Column
+; IN  DX                Row
+v_set_cursor_position_proc      DD ?,?
 
-; IN  AL		Char
-; IN  BL		Fore color
-; IN  BH		Back color
-; IN  CX		Column
-; IN  DX		Row
-write_char_proc       	DD ?
+; IN  AL                Char
+; IN  BL                Fore color
+; IN  BH                Back color
+; IN  CX                Column
+; IN  DX                Row
+v_write_char_proc               DD ?,?
 
-; IN  CX		Column
-; IN  DX		Row
-; OUT AL		Char
-; OUT BL		Fore color
-; OUT BH		Back color
-read_char_proc       	DD ?
+; IN  CX                Column
+; IN  DX                Row
+; OUT AL                Char
+; OUT BL                Fore color
+; OUT BH                Back color
+v_read_char_proc        DD ?,?
 
-; IN  AX		Number of lines
-; IN  BL		Blank fore color
-; IN  BH		Blank back color
-; IN  CX		Upper Column
-; IN  DX		Upper Row
-; IN  SI		Lower Column
-; IN  DI		Lower Row
-scroll_up_proc			DD ?
+; IN  AX                Number of lines
+; IN  BL                Blank fore color
+; IN  BH                Blank back color
+; IN  CX                Upper Column
+; IN  DX                Upper Row
+; IN  SI                Lower Column
+; IN  DI                Lower Row
+v_scroll_up_proc                        DD ?,?
 
-; IN  AX		Number of lines
-; IN  BL		Blank fore color
-; IN  BH		Blank back color
-; IN  CX		Upper Column
-; IN  DX		Upper Row
-; IN  SI		Lower Column
-; IN  DI		Lower Row
-scroll_down_proc		DD ?
+; IN  AX                Number of lines
+; IN  BL                Blank fore color
+; IN  BH                Blank back color
+; IN  CX                Upper Column
+; IN  DX                Upper Row
+; IN  SI                Lower Column
+; IN  DI                Lower Row
+v_scroll_down_proc                  DD ?,?
 
-; IN  CX		Number of palette entries
-; IN  ES:EDI	Palette
-define_palette_proc		DD ?
+; IN  CX                Number of palette entries
+; IN  ES:EDI    Palette
+v_define_palette_proc           DD ?,?
 
-; IN  AL		Palette index
-set_palette_color_proc	DD ?
+; IN  AL                Palette index
+v_set_palette_color_proc        DD ?,?
 
-; IN  AX		Red
-; IN  BX		Green
-; IN  DX		Blue
-set_rgb_color_proc		DD ?
+; IN  AX                Red
+; IN  BX                Green
+; IN  DX                Blue
+v_set_rgb_color_proc            DD ?,?
 
-clear_mask_proc			DD ?
+v_clear_mask_proc                       DD ?,?
 
-; IN  CX		x position
-; IN  DX		y position
-; IN  FS:ESI	bitmap info
-; IN  ES:EDI	bitmap
-add_mask_proc			DD ?
+; IN  CX                x position
+; IN  DX                y position
+; IN  FS:ESI    bitmap info
+; IN  ES:EDI    bitmap
+v_add_mask_proc                     DD ?,?
 
 ; IN  AX        Font handle
-set_font_proc  			DD ?
+v_set_font_proc                         DD ?,?
 
-; IN  EAX			RGB color
+; IN  EAX                       RGB color
 ; OUT EAX           internal color
-translate_color_proc	DD ?
+v_translate_color_proc      DD ?,?
 
 ;
 ; device-dependent functions
 ;
 
-; IN  EAX			Internal color
-; IN  EDI	    	Position
-set_proc          		DD ?
+; IN  EAX                       Internal color
+; IN  EDI               Position
+v_set_proc                      DD ?,?
 
-; IN  EAX			Internal color
-; IN  EDI	    	Position
-; IN  CX			Number of pixels
-slab_proc               DD ?
+; IN  EAX                       Internal color
+; IN  EDI               Position
+; IN  CX                        Number of pixels
+v_slab_proc                 DD ?,?
 
 ; IN  EAX           Source base
-; IN  FS:ESI	    Source pixels
-; IN  EDI	    	Position
-; IN  CX			Number of pixels
-copy_proc               DD ?
+; IN  FS:ESI        Source pixels
+; IN  EDI               Position
+; IN  CX                        Number of pixels
+v_copy_proc                 DD ?,?
 
 ; IN  EAX           Internal Color
-; IN  CX			number of pixels
+; IN  CX                        number of pixels
 ; IN  DL            Start bit number
 ; IN  GS:EBX        Mask bits
-; IN  EDI		    Dest buffer
-mask_set_proc               DD ?
+; IN  EDI                   Dest buffer
+v_mask_set_proc             DD ?,?
 
-; IN  CX			number of pixels
+; IN  CX                        number of pixels
 ; IN  DL            Start bit number
 ; IN  GS:EBX        Mask bits
 ; IN  FS:ESI        Source pixels
-; IN  EDI		    Dest buffer
-mask_copy_proc               DD ?
+; IN  EDI                   Dest buffer
+v_mask_copy_proc            DD ?,?
 
 ;
 ; device-independent functions
 ;
 
-; IN  CX			x
-; IN  DX			y
-; OUT ES:EDI   		Buffer
+; IN  CX                        x
+; IN  DX                        y
+; OUT ES:EDI            Buffer
 ; OUT AL            Bit number
-get_line_proc			DD ?
+v_get_line_proc                     DD ?,?
 
-; IN  CX			x
-; IN  DX			y
-; OUT EAX			RGB color
-get_pixel_proc			DD ?
+; IN  CX                        x
+; IN  DX                        y
+; OUT EAX                       RGB color
+v_get_pixel_proc                        DD ?,?
 
-; IN  CX			x
-; IN  DX			y
-set_pixel_proc			DD ?
+; IN  CX                        x
+; IN  DX                        y
+v_set_pixel_proc                        DD ?,?
 
-; IN  AX			number of pixels
-; IN  CX			x
-; IN  DX			y
-; IN  EDI		Position
-get_native_row_proc		DD ?
+; IN  AX                        number of pixels
+; IN  CX                        x
+; IN  DX                        y
+; IN  EDI               Position
+v_get_native_row_proc           DD ?,?
 
-; IN  AX			number of pixels
-; IN  CX			x
-; IN  DX			y
-; IN  EDI   		Position
-get_rgb_row_proc		DD ?
+; IN  AX                        number of pixels
+; IN  CX                        x
+; IN  DX                        y
+; IN  EDI               Position
+v_get_rgb_row_proc                  DD ?,?
 
-; IN  AX			number of pixels
-; IN  CX			x
-; IN  DX			y
-; IN  EDI   		Position
-set_native_row_proc		DD ?
+; IN  AX                        number of pixels
+; IN  CX                        x
+; IN  DX                        y
+; IN  EDI               Position
+v_set_native_row_proc           DD ?,?
 
-; IN  AX			number of pixels
-; IN  CX			x
-; IN  DX			y
-; IN  EDI   		Position
-set_rgb_row_proc		DD ?
+; IN  AX                        number of pixels
+; IN  CX                        x
+; IN  DX                        y
+; IN  EDI               Position
+v_set_rgb_row_proc                  DD ?,?
 
-; IN  AX			source row size
-; IN  EBX			color
-; IN  ECX			source x + y << 16
-; IN  EDX			dest x + y << 16
-; IN  SI			width
-; IN  ES:EDI		1-bit mask
-draw_mask_line_proc			DD ?
+; IN  AX                        source row size
+; IN  EBX                       color
+; IN  ECX                       source x + y << 16
+; IN  EDX                       dest x + y << 16
+; IN  SI                        width
+; IN  ES:EDI            1-bit mask
+v_draw_mask_line_proc       DD ?,?
 
-; IN  AX			number of pixels
+; IN  AX                        number of pixels
 ; IN  BL            bit number
-; IN  CX			x
-; IN  DX			y
-; IN  ES:EDI		line buffer
-set_sprite_row_proc		DD ?
+; IN  CX                        x
+; IN  DX                        y
+; IN  ES:EDI            line buffer
+v_set_sprite_row_proc           DD ?,?
 
 ; IN  AL            mask offset bit
 ; IN  BL            bit number
-; IN  ECX			x + y << 16
-; IN  DX			width
-; IN  ESI   		sprite bits
-; IN  ES:EDI		1-bit mask bits
-draw_sprite_line_proc			DD ?
+; IN  ECX                       x + y << 16
+; IN  DX                        width
+; IN  ESI               sprite bits
+; IN  ES:EDI            1-bit mask bits
+v_draw_sprite_line_proc         DD ?,?
 
-; IN  CX		x position
-; IN  DX		y position
-; IN  ES:EDI	Null terminated string
-draw_string_proc		DD ?
+; IN  CX                x position
+; IN  DX                y position
+; IN  ES:EDI    Null terminated string
+v_draw_string_proc                  DD ?,?
 
-; IN  AX			x1
-; IN  BX			y1
-; IN  CX			x2
-; IN  DX			y2
-draw_line_proc			DD ?
+; IN  AX                        x1
+; IN  BX                        y1
+; IN  CX                        x2
+; IN  DX                        y2
+v_draw_line_proc                        DD ?,?
 
-; IN  AX			x
-; IN  BX			y
-; IN  CX			w
-; IN  DX			b
-draw_rect_proc			DD ?
+; IN  AX                        x
+; IN  BX                        y
+; IN  CX                        w
+; IN  DX                        b
+v_draw_rect_proc                        DD ?,?
 
-; IN  AX			x
-; IN  BX			y
-; IN  CX			w
-; IN  DX			b
-draw_ellipse_proc			DD ?
+; IN  AX                        x
+; IN  BX                        y
+; IN  CX                        w
+; IN  DX                        b
+v_draw_ellipse_proc                     DD ?,?
 
 ; IN  EAX           Internal Color
-; IN  CX			number of pixels
+; IN  CX                        number of pixels
 ; IN  GS:EBX        Antialias bitmap (256 levels)
-; IN  EDI		    Dest buffer
-anti_alias_proc               DD ?
+; IN  EDI                   Dest buffer
+v_anti_alias_proc           DD ?,?
 
-; IN  ECX			Number of pixels
-; IN  ES:ESI		Bitmap buffer
-; IN  ES:EDI		Physical buffer
-phys_update_proc               DD ?
+; IN  ECX                       Number of pixels
+; IN  ES:ESI            Bitmap buffer
+; IN  ES:EDI            Physical buffer
+v_phys_update_proc          DD ?,?
 
-has_alpha_proc			DD ?
+v_has_alpha_proc                        DD ?,?
 
-; IN  CX			x
-; IN  DX			y
-; OUT EAX			RGB color
-get_alpha_proc			DD ?
+; IN  CX                        x
+; IN  DX                        y
+; OUT EAX                       RGB color
+v_get_alpha_proc                        DD ?,?
 
-; IN  AX			number of pixels
-; IN  CX			x
-; IN  DX			y
-; IN  EDI   		Position
-get_alpha_row_proc		DD ?
+; IN  AX                        number of pixels
+; IN  CX                        x
+; IN  DX                        y
+; IN  EDI               Position
+v_get_alpha_row_proc            DD ?,?
 
-; IN  AX			number of pixels
-; IN  CX			x
-; IN  DX			y
-; IN  EDI   		Position
-set_alpha_row_proc		DD ?
+; IN  AX                        number of pixels
+; IN  CX                        x
+; IN  DX                        y
+; IN  EDI               Position
+v_set_alpha_row_proc            DD ?,?
 
-v_section   	    section_typ <>
+v_section           section_typ <>
 v_sprite_section    section_typ <>
-v_mode	    	DW ?
-v_width	    	DW ?
-v_height    	DW ?
-v_row_size	    DW ?
-v_app_base	    DD ?
-v_app_size	    DD ?
-v_phys_base		DD ?
-v_has_focus	    DB ?
-v_bpp   		DB ?
+v_mode          DW ?
+v_width         DW ?
+v_height        DW ?
+v_row_size          DW ?
+v_app_base          DD ?
+v_app_size          DD ?
+v_phys_base             DD ?
+v_has_focus         DB ?
+v_bpp                   DB ?
 v_bitmap        DW ?
 
-v_sprite_count 		DW ?
-v_sprite_size   	DW ?
-v_sprite_sel    	DW ?
+v_sprite_count          DW ?
+v_sprite_size           DW ?
+v_sprite_sel            DW ?
 
-v_usage_count   	DW ?
+v_usage_count           DW ?
 
-v_x_min         	DW ?
-v_y_min         	DW ?
-v_x_max         	DW ?
-v_y_max         	DW ?
+v_x_min                 DW ?
+v_y_min                 DW ?
+v_x_max                 DW ?
+v_y_max                 DW ?
 
-v_row				DW ?
-v_col				DW ?
-v_row_count			DW ?
-v_col_count			DW ?
-v_text_font			DW ?
-v_pixels_per_row	DW ?
-v_pixels_per_col	DW ?
-v_text				DW ?
+v_row                           DW ?
+v_col                           DW ?
+v_row_count                     DW ?
+v_col_count                     DW ?
+v_text_font                     DW ?
+v_pixels_per_row        DW ?
+v_pixels_per_col        DW ?
+v_text                          DW ?
 
-v_color 			DD ?
-v_lgop	    		DW ?
-v_font		    	DW ?
-v_style 			DB ?
+v_color                         DD ?
+v_lgop                  DW ?
+v_font                  DW ?
+v_style                         DB ?
 v_alpha             DB ?
 
-v_sprite_lines  	DW ?
-v_sprite_max_pos	DW ?
+v_sprite_lines          DW ?
+v_sprite_max_pos        DW ?
 
 v_sprite_show_size  DW ?
 v_sprite_show_x     DW ?
 v_sprite_show_y     DW ?
 
-video_api_struc	ENDS
+video_api_struc ENDS

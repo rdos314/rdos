@@ -455,27 +455,27 @@ HideWholeLine    MACRO
     jbe hide_done
 ;
     push ax
-    call ds:get_line_proc
+    call fword ptr ds:v_get_line_proc
     mov bl,al
     pop ax
 ;
     mov ds,fs:sp_dest_sel
     xor cx,cx
     add dx,fs:sp_y
-    call ds:set_sprite_row_proc
+    call fword ptr ds:v_set_sprite_row_proc
     jmp hide_done
 
 hide_whole:
     mov ds,fs:sp_back_sel
     xor cx,cx
-    call ds:get_line_proc
+    call fword ptr ds:v_get_line_proc
     mov bl,al
     mov ax,fs:sp_w
 ;
     mov ds,fs:sp_dest_sel
     mov cx,fs:sp_x
     add dx,fs:sp_y
-    call ds:set_sprite_row_proc
+    call fword ptr ds:v_set_sprite_row_proc
 
 hide_done:
         ENDM
@@ -506,7 +506,7 @@ SaveAndShowWholeLine    MACRO
 ;
     xor cx,cx
     add dx,fs:sp_new_y
-    call ds:get_line_proc
+    call fword ptr ds:v_get_line_proc
     mov bl,al
     mov ax,ds:v_x_max
 ;
@@ -519,10 +519,10 @@ SaveAndShowWholeLine    MACRO
     jbe save_done
 ;
     push cx
-    call ds:set_sprite_row_proc
+    call fword ptr ds:v_set_sprite_row_proc
 ;
     mov ds,fs:sp_bitmap_sel
-    call ds:get_line_proc
+    call fword ptr ds:v_get_line_proc
     mov esi,edi
 ;
     push dx
@@ -544,12 +544,12 @@ SaveAndShowWholeLine    MACRO
     mov dx,fs:sp_w
     sub dx,ax
     and al,7
-    call ds:draw_sprite_line_proc
+    call fword ptr ds:v_draw_sprite_line_proc
     jmp save_done
 
 save_whole:
     add dx,fs:sp_new_y
-    call ds:get_line_proc
+    call fword ptr ds:v_get_line_proc
     mov bl,al
     mov ax,ds:v_x_max
     sub ax,cx
@@ -564,10 +564,10 @@ save_whole_width_ok:
     mov ds,fs:sp_back_sel
     xor cx,cx
     sub dx,fs:sp_new_y
-    call ds:set_sprite_row_proc
+    call fword ptr ds:v_set_sprite_row_proc
 ;
     mov ds,fs:sp_bitmap_sel
-    call ds:get_line_proc
+    call fword ptr ds:v_get_line_proc
     mov esi,edi
 ;
     push dx
@@ -587,7 +587,7 @@ save_whole_width_ok:
     mov cx,fs:sp_new_x
     mov dx,fs:sp_w
     xor al,al
-    call ds:draw_sprite_line_proc
+    call fword ptr ds:v_draw_sprite_line_proc
 
 save_done:
         ENDM
@@ -651,14 +651,14 @@ hide_line_do:
     mov ds,gs:sp_back_sel
     push bx
     push ax
-    call ds:get_line_proc
+    call fword ptr ds:v_get_line_proc
     mov bl,al
     pop ax
 ;
     mov ds,gs:sp_dest_sel
     add cx,gs:sp_x
     add dx,gs:sp_y
-    call ds:set_sprite_row_proc
+    call fword ptr ds:v_set_sprite_row_proc
     pop bx
     pop gs
     pop ds
@@ -730,7 +730,7 @@ save_line_do:
     add dx,gs:sp_new_y
     push bx
     push ax
-    call ds:get_line_proc
+    call fword ptr ds:v_get_line_proc
     mov bl,al
     pop ax
     mov si,ds:v_x_max
@@ -749,7 +749,7 @@ save_line_do:
     mov ax,si
 
 save_line_width_ok:    
-    call ds:set_sprite_row_proc
+    call fword ptr ds:v_set_sprite_row_proc
 
 save_line_sprite_ok:    
     pop bx
@@ -821,7 +821,7 @@ show_line_do:
 ;
     mov gs,ds:[bx].spi_sel
     mov ds,gs:sp_bitmap_sel
-    call ds:get_line_proc
+    call fword ptr ds:v_get_line_proc
     mov esi,edi
 ;
     push dx
@@ -846,7 +846,7 @@ show_line_do:
     movzx ecx,cx
     or ecx,edx
     mov dx,bp
-    call ds:draw_sprite_line_proc
+    call fword ptr ds:v_draw_sprite_line_proc
     pop bp
     pop bx
     pop gs
@@ -2048,14 +2048,14 @@ hide_sprite_len_ok:
     mov ds,gs:sp_back_sel
     push bx
     push ax
-    call ds:get_line_proc
+    call fword ptr ds:v_get_line_proc
     mov bl,al
     pop ax
 ;
     mov ds,gs:sp_dest_sel
     add cx,gs:sp_x
     add dx,gs:sp_y
-    call ds:set_sprite_row_proc
+    call fword ptr ds:v_set_sprite_row_proc
     pop bx
     pop gs
     pop ds
@@ -2179,18 +2179,18 @@ show_sprite_len_ok:
     add cx,gs:sp_x
     add dx,gs:sp_y
     push bx
-    call ds:get_line_proc
+    call fword ptr ds:v_get_line_proc
     mov bl,al
 ;
     mov ax,bp
     mov ds,gs:sp_back_sel
     sub cx,gs:sp_x
     sub dx,gs:sp_y
-    call ds:set_sprite_row_proc
+    call fword ptr ds:v_set_sprite_row_proc
     pop bx
 ;
     mov ds,gs:sp_bitmap_sel
-    call ds:get_line_proc
+    call fword ptr ds:v_get_line_proc
     mov esi,edi
 ;
     push dx
@@ -2214,7 +2214,7 @@ show_sprite_len_ok:
     movzx ecx,cx
     or ecx,edx
     mov dx,bp
-    call ds:draw_sprite_line_proc
+    call fword ptr ds:v_draw_sprite_line_proc
     pop bp
     pop bx
     pop gs

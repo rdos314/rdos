@@ -103,7 +103,7 @@ switch_mode_done:
 switch_to_done:
         popad
         pop es
-        ret
+        retf32
 switch_to       Endp
 
 
@@ -129,7 +129,7 @@ switch_from     Proc far
 ;
         popad
         pop es
-        ret
+        retf32
 switch_from     Endp
 
 
@@ -258,7 +258,7 @@ delete_bit_loop:
         pop ecx
         pop ebx
         pop ax
-        ret
+        retf32
 delete_mode12   Endp
 
 
@@ -273,45 +273,51 @@ delete_mode12   Endp
 
 error   Proc far
         stc
-        ret
+        retf32
 error   Endp
 
 ModeTab:
-mt00 DW OFFSET delete_mode12,   SEG code
-mt01 DW OFFSET switch_to,               SEG code
-mt02 DW OFFSET switch_from,             SEG code
-mt03 DW OFFSET error,                   SEG code
-mt04 DW OFFSET error,                   SEG code
-mt05 DW OFFSET error,                   SEG code
-mt06 DW OFFSET error,                   SEG code
-mt07 DW OFFSET error,                   SEG code
-mt08 DW OFFSET error,                   SEG code
-mt09 DW OFFSET error,                   SEG code
-mt0A DW OFFSET error,                   SEG code
-mt0B DW OFFSET error,                   SEG code
-mt0C DW OFFSET error,                   SEG code
-mt0D DW OFFSET error,                   SEG code
-mt0E DW OFFSET error,                   SEG code
-mt0F DW OFFSET error,                   SEG code
-mt10 DW OFFSET error,                   SEG code
-mt11 DW OFFSET error,                   SEG code
-mt12 DW OFFSET error,                   SEG code
-mt13 DW OFFSET error,                   SEG code
-mt14 DW OFFSET error,                   SEG code
-mt15 DW OFFSET error,                   SEG code
-mt16 DW OFFSET error,                   SEG code
-mt17 DW OFFSET error,                   SEG code
-mt18 DW OFFSET error,                   SEG code
-mt19 DW OFFSET error,                   SEG code
-mt1A DW OFFSET error,                   SEG code
-mt1B DW OFFSET error,                   SEG code
-mt1C DW OFFSET error,                   SEG code
-mt1D DW OFFSET error,                   SEG code
-mt1E DW OFFSET error,                   SEG code
-mt1F DW OFFSET error,                   SEG code
-mt20 DW OFFSET error,                   SEG code
-mt21 DW OFFSET error,                   SEG code
-mt22 DW OFFSET error,                   SEG code
+mt00 DD OFFSET delete_mode12,   SEG code
+mt01 DD OFFSET switch_to,               SEG code
+mt02 DD OFFSET switch_from,             SEG code
+mt03 DD OFFSET error,                   SEG code
+mt04 DD OFFSET error,                   SEG code
+mt05 DD OFFSET error,                   SEG code
+mt06 DD OFFSET error,                   SEG code
+mt07 DD OFFSET error,                   SEG code
+mt08 DD OFFSET error,                   SEG code
+mt09 DD OFFSET error,                   SEG code
+mt0A DD OFFSET error,                   SEG code
+mt0B DD OFFSET error,                   SEG code
+mt0C DD OFFSET error,                   SEG code
+mt0D DD OFFSET error,                   SEG code
+mt0E DD OFFSET error,                   SEG code
+mt0F DD OFFSET error,                   SEG code
+mt10 DD OFFSET error,                   SEG code
+mt11 DD OFFSET error,                   SEG code
+mt12 DD OFFSET error,                   SEG code
+mt13 DD OFFSET error,                   SEG code
+mt14 DD OFFSET error,                   SEG code
+mt15 DD OFFSET error,                   SEG code
+mt16 DD OFFSET error,                   SEG code
+mt17 DD OFFSET error,                   SEG code
+mt18 DD OFFSET error,                   SEG code
+mt19 DD OFFSET error,                   SEG code
+mt1A DD OFFSET error,                   SEG code
+mt1B DD OFFSET error,                   SEG code
+mt1C DD OFFSET error,                   SEG code
+mt1D DD OFFSET error,                   SEG code
+mt1E DD OFFSET error,                   SEG code
+mt1F DD OFFSET error,                   SEG code
+mt20 DD OFFSET error,                   SEG code
+mt21 DD OFFSET error,                   SEG code
+mt22 DD OFFSET error,                   SEG code
+mt23 DD OFFSET error,                   SEG code
+mt24 DD OFFSET error,                   SEG code
+mt25 DD OFFSET error,                   SEG code
+mt26 DD OFFSET error,                   SEG code
+mt27 DD OFFSET error,                   SEG code
+mt28 DD OFFSET error,                   SEG code
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -204,7 +204,7 @@ init_video32:
     jmp init_video_copy
 
 init_video_copy:
-    mov cx,VIDEO_ENTRIES
+    mov cx,2 * VIDEO_ENTRIES
     xor di,di
     rep movsd
 ;
@@ -373,7 +373,7 @@ cr_bitmap32:
     jmp cr_bitmap_copy
 
 cr_bitmap_copy:
-    mov cx,VIDEO_ENTRIES
+    mov cx,2 * VIDEO_ENTRIES
     xor di,di
     rep movsd
 ;
@@ -510,7 +510,7 @@ create_alpha_bitmap   Proc far
     add ax,ax
     mov es:v_row_size,ax
 ;
-    mov cx,VIDEO_ENTRIES
+    mov cx,2 * VIDEO_ENTRIES
     xor di,di
     rep movsd
 ;
