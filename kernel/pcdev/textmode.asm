@@ -493,9 +493,9 @@ suLowerCol      EQU 2
 suRows      EQU 4
 
 scroll_up       Proc far
-    push bp
-    sub sp,6
-    mov bp,sp
+    push ebp
+    sub esp,6
+    mov ebp,esp
 ;
     push ax
     push dx
@@ -505,9 +505,9 @@ scroll_up       Proc far
     push ds
     push es
 ;
-    mov [bp].suLowerRow,di
-    mov [bp].suLowerCol,si
-    mov [bp].suRows,ax
+    mov [ebp].suLowerRow,di
+    mov [ebp].suLowerCol,si
+    mov [ebp].suRows,ax
 ;
     mov ax,dosB800
     mov ds,ax
@@ -521,26 +521,26 @@ scroll_up_row_loop:
     add di,cx
 ;
     mov ax,80
-    mul word ptr [bp].suRows
+    mul word ptr [ebp].suRows
     mov si,ax
     add si,di
     add si,si
     add di,di
     pop dx
 ;
-    mov ax,[bp].suRows
+    mov ax,[ebp].suRows
     add ax,dx
-    cmp ax,[bp].suLowerRow
+    cmp ax,[ebp].suLowerRow
     ja scroll_up_clear
 ;
     push cx
-    sub cx,[bp].suLowerCol
+    sub cx,[ebp].suLowerCol
     neg cx
     movsw
     rep movsw
     pop cx
 ;
-    cmp dx,[bp].suLowerRow
+    cmp dx,[ebp].suLowerRow
     jae scroll_up_done
 ;
     inc dx
@@ -564,13 +564,13 @@ scroll_up_clear_row_loop:
     pop ax
 ;
     push cx
-    sub cx,[bp].suLowerCol
+    sub cx,[ebp].suLowerCol
     neg cx
     stosw
     rep stosw
     pop cx
 ;
-    cmp dx,[bp].suLowerRow
+    cmp dx,[ebp].suLowerRow
     jae scroll_up_done
 ;
     inc dx
@@ -585,8 +585,8 @@ scroll_up_done:
     pop si
     pop dx
     pop ax
-    add sp,6
-    pop bp
+    add esp,6
+    pop ebp
     ret
 scroll_up       Endp
 
@@ -612,9 +612,9 @@ sdLowerCol      EQU 2
 sdRows      EQU 4
 
 scroll_down     Proc far
-    push bp
-    sub sp,6
-    mov bp,sp
+    push ebp
+    sub esp,6
+    mov ebp,esp
 ;
     push ax
     push dx
@@ -624,9 +624,9 @@ scroll_down     Proc far
     push ds
     push es
 ;
-    mov [bp].sdUpperRow,dx
-    mov [bp].sdLowerCol,si
-    mov [bp].sdRows,ax
+    mov [ebp].sdUpperRow,dx
+    mov [ebp].sdLowerCol,si
+    mov [ebp].sdRows,ax
     mov dx,di
 ;
     mov ax,dosB800
@@ -641,7 +641,7 @@ scroll_down_row_loop:
     add di,cx
 ;
     mov ax,80
-    mul word ptr [bp].sdRows
+    mul word ptr [ebp].sdRows
     mov si,di
     sub si,ax
     add si,si
@@ -649,19 +649,19 @@ scroll_down_row_loop:
     pop dx
 ;
     mov ax,dx
-    sub ax,[bp].sdRows
+    sub ax,[ebp].sdRows
     jc scroll_down_clear
-    cmp ax,[bp].sdUpperRow
+    cmp ax,[ebp].sdUpperRow
     jb scroll_down_clear
 ;
     push cx
-    sub cx,[bp].sdLowerCol
+    sub cx,[ebp].sdLowerCol
     neg cx
     movsw
     rep movsw
     pop cx
 ;
-    cmp dx,[bp].sdUpperRow
+    cmp dx,[ebp].sdUpperRow
     jbe scroll_down_done
 ;
     dec dx
@@ -685,13 +685,13 @@ scroll_down_clear_row_loop:
     pop ax
 ;
     push cx
-    sub cx,[bp].sdLowerCol
+    sub cx,[ebp].sdLowerCol
     neg cx
     stosw
     rep stosw
     pop cx
 ;
-    cmp dx,[bp].sdUpperRow
+    cmp dx,[ebp].sdUpperRow
     jbe scroll_down_done
 ;
     dec dx
@@ -706,8 +706,8 @@ scroll_down_done:
     pop si
     pop dx
     pop ax
-    add sp,6
-    pop bp
+    add esp,6
+    pop ebp
     ret
 scroll_down     Endp
 
