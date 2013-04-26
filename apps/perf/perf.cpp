@@ -97,29 +97,6 @@ int main(int argc, char **argv)
         if (Count < MAX_SAMPLES)
             Count++;
 
-        if (RdosPollKeyboard())
-        {
-            RdosReadKeyboard();
-
-            for (Index = 0; Index < 1000; Index++)
-            {
-                sprintf(FileName, "%d.png", Index);
-                Handle = RdosOpenFile(FileName, 0);
-                if (Handle)
-                    RdosCloseFile(Handle);
-                else
-                    break;
-            }
-
-            bitmap = new TBitmapGraphicDevice(vbe->GetBpp(), vbe->GetWidth(), vbe->GetHeight());
-            bitmap->Blit(vbe, 0, 0, 0, 0, vbe->GetWidth(), vbe->GetHeight());
-            png = new TPngBitmapDevice(24, bitmap->GetWidth(), bitmap->GetHeight());
-            png->Blit(bitmap, 0, 0, 0, 0, bitmap->GetWidth(), bitmap->GetHeight());
-            png->Save(FileName);
-            delete bitmap;
-            delete png;
-        }   
-
     }
 
 
