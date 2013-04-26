@@ -2513,6 +2513,77 @@ get_rgb Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           GetAlpha
+;
+;           DESCRIPTION:    Get pixels in RGBA format
+;
+;           PARAMETER:      AX              number of pixels
+;                           CX              x
+;                           DX              y
+;                           ES:EDI      line buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_alpha Proc far
+    push ds
+    pushad
+;
+    push ax
+    movzx edx,dx
+    movzx eax,ds:v_row_size
+    mul edx
+    add eax,ds:v_app_base
+    mov esi,eax
+    mov ax,flat_sel
+    mov ds,ax
+    movzx eax,cx
+    shr eax,3
+    add esi,eax
+    and cl,7
+    pop dx
+;
+    or dx,dx
+    jz get_rgba_done
+;
+    lods byte ptr [esi]
+    shr al,cl
+    mov ch,8
+    sub ch,cl
+
+get_rgba_loop:
+    rcr al,1
+    jc get_rgba_set
+
+get_rgba_reset:
+    mov dword ptr es:[edi],0FF000000h
+    jmp get_rgba_next
+
+get_rgba_set:
+    mov dword ptr es:[edi],0FFFFFFFFh
+
+get_rgba_next:
+    add edi,4
+    sub dx,1
+    jz get_rgba_done
+;
+    sub ch,1
+    jnz get_rgba_loop
+;
+    lods byte ptr [esi]
+    mov ch,8
+    jmp get_rgba_loop
+
+get_rgba_done:
+    popad
+    pop ds
+    ret
+get_alpha Endp
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           SetNative
 ;
 ;           DESCRIPTION:    Set pixels in internal format
@@ -2663,6 +2734,91 @@ set_rgb_done:
     pop ds
     ret
 set_rgb Endp
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SetAlpha
+;
+;           DESCRIPTION:    Set pixels in RGBA format
+;
+;           PARAMETER:      AX              number of pixels
+;                           CX              x
+;                           DX              y
+;                           ES:EDI      line buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_alpha Proc far
+    push ds
+    push es
+    push fs
+    pushad
+    mov bp,sp
+    sub sp,10
+;
+    push ax
+    mov ax,es
+    mov fs,ax
+    mov ax,flat_sel
+    mov es,ax
+    mov esi,edi
+;
+    movzx edx,dx
+    movzx eax,ds:v_row_size
+    mul edx
+    shl eax,3
+    movzx ecx,cx
+    add eax,ecx
+    mov edi,eax
+    pop cx
+;
+    or cx,cx
+    jz set_rgba_done
+;
+    DrawStart cx
+
+set_rgba_loop:
+    mov eax,fs:[esi]
+    movzx dx,al
+    shr eax,8
+    add dl,al
+    adc dh,0
+    shr eax,8
+    add dl,al
+    adc dh,0
+    shr eax,8
+    cmp al,80h
+    jb set_rgba_zero
+;
+    cmp dx,3 * 128
+    jc set_rgba_zero
+;
+    mov eax,1
+    jmp set_rgba_do
+
+set_rgba_zero:
+    xor eax,eax
+
+set_rgba_do:
+    call ds:set_proc
+;
+    add esi,4
+    inc edi
+    loop set_rgba_loop
+;
+    call DrawDone
+
+set_rgba_done:
+    add sp,10
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+set_alpha Endp
 
 
 
@@ -4402,6 +4558,8 @@ mt23 DW OFFSET anti_alias_set,      SEG code
 mt24 DW OFFSET phys_update,         SEG code
 mt25 DW OFFSET errorp,              SEG code
 mt26 DW OFFSET errorp,              SEG code
+mt27 DW OFFSET get_alpha,             SEG code
+mt28 DW OFFSET set_alpha,             SEG code
 
 code    ENDS
 

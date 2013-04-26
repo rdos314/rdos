@@ -1780,6 +1780,10 @@ blit_take_dest_first:
     
 blit_entered:
     mov ds,[ebp].blit_src_sel
+    mov al,ds:v_alpha
+    cmp al,1
+    je blit_alpha
+;    
     mov al,ds:v_bpp
     cmp al,1
     je blit_check1
@@ -1956,6 +1960,57 @@ blit_same_line_loop:
     LeaveSection ds:v_section
     clc
     jmp blit_done
+
+blit_alpha:
+    movzx eax,word ptr [ebp].blit_width
+    shl eax,2
+    AllocateGlobalMem
+
+blit_alpha_loop:
+    mov ds,[ebp].blit_src_sel
+    mov ax,[ebp].blit_width
+    mov cx,[ebp].blit_src_x
+    mov dx,[ebp].blit_src_y
+    cmp dx,0
+    jl blit_alpha_next
+;
+    cmp dx,ds:v_height
+    jge blit_alpha_next
+;
+    mov di,cx
+    add di,ax
+    cmp di,ds:v_width
+    jle blit_alpha_get
+;
+    mov ax,ds:v_width
+    sub ax,cx
+
+blit_alpha_get:
+    xor edi,edi
+    call ds:get_alpha_row_proc
+;
+    mov ds,[ebp].blit_dest_sel
+    mov ax,[ebp].blit_width
+    mov cx,[ebp].blit_dest_x
+    mov dx,[ebp].blit_dest_y
+    xor edi,edi
+    call ds:set_alpha_row_proc
+
+blit_alpha_next:
+    inc word ptr [ebp].blit_src_y
+    inc word ptr [ebp].blit_dest_y
+    sub word ptr [ebp].blit_height,1
+    jnz blit_alpha_loop
+;
+    FreeMem 
+    mov ds,[ebp].blit_dest_sel
+    LeaveSection ds:v_section
+    mov ds,[ebp].blit_src_sel
+    LeaveSection ds:v_section
+    clc
+    jmp blit_done
+
+
 
 blit1:
     mov ds,[ebp].blit_src_sel

@@ -25,7 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-VIDEO_ENTRIES   = 27h
+VIDEO_ENTRIES   = 29h
 
 STYLE_HOLLOW			EQU 0
 STYLE_FILLED			EQU 1
@@ -248,6 +248,18 @@ has_alpha_proc			DD ?
 ; IN  DX			y
 ; OUT EAX			RGB color
 get_alpha_proc			DD ?
+
+; IN  AX			number of pixels
+; IN  CX			x
+; IN  DX			y
+; IN  EDI   		Position
+get_alpha_row_proc		DD ?
+
+; IN  AX			number of pixels
+; IN  CX			x
+; IN  DX			y
+; IN  EDI   		Position
+set_alpha_row_proc		DD ?
 
 v_section   	    section_typ <>
 v_sprite_section    section_typ <>

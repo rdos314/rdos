@@ -361,8 +361,7 @@ void ShowPng(TGraphicDevice *dev)
     TPngBitmapDevice *bitmap;
 
     bitmap = TPngBitmapDevice::Create("test.png", 255, 255, 255);
-    NormalSprite = dev->CreateSprite(bitmap, bitmap->GetMaskBitmap(), 0, 0);
-    NormalSprite->Move(dev->GetWidth() / 2, dev->GetHeight() / 2);
+    dev->Blit(bitmap, 0, 0, 0, 0, bitmap->GetWidth(), bitmap->GetHeight());
 }
 
 void cdecl main()
@@ -403,13 +402,10 @@ void cdecl main()
         Mouse->SetPosition(vbe->GetWidth() / 2, vbe->GetHeight() / 2);
 
         MouseMask = CreateMouseMask();
-/*
+
         MouseBitmap = CreateMouseBitmap(vbe, 255, 255, 255);
         NormalSprite = vbe->CreateSprite(MouseBitmap, MouseMask, 20, 20);
         NormalSprite->Move(vbe->GetWidth() / 2, vbe->GetHeight() / 2);
-*/
-
-        ShowPng(vbe);
 
         MouseBitmap = CreateMouseBitmap(vbe, 64, 128, 255);
         LeftSprite = vbe->CreateSprite(MouseBitmap, MouseMask, 20, 20);
@@ -450,6 +446,9 @@ void cdecl main()
         RdosWaitMilli(5000);
 
         vbe->DrawEllipse(vbe->GetWidth() / 2, vbe->GetHeight() / 2, vbe->GetWidth() / 2, vbe->GetHeight() / 2);
+
+//        vbe->SetLgopNone();
+//        ShowPng(vbe);
 
         RdosWaitMilli(5000);
 
