@@ -463,7 +463,7 @@ void cdecl main()
 
         RdosWaitMilli(5000);
 
-        bitmap = new TBitmapGraphicDevice(1, 480, 640);
+        bitmap = new TBitmapGraphicDevice(16, 480, 640);
         TestAll(bitmap);
 
         vbe->SetLgopNone();
