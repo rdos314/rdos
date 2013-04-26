@@ -1677,7 +1677,7 @@ set_pixel       ENDP
 ;
 ;           DESCRIPTION:    Blit
 ;
-;           PARAMETERS:         AX          Source bitmap handle
+;           PARAMETERS:     AX          Source bitmap handle
 ;                           BX          Dest bitmap handle
 ;                           CX          Width
 ;                           DX          Height
@@ -1688,25 +1688,25 @@ set_pixel       ENDP
 
 blit_name       DB 'Blit',0
 
-blit_src_y          EQU -2
-blit_src_x          EQU -4
-blit_dest_y         EQU -6
-blit_dest_x         EQU -8
-blit_width          EQU -10
-blit_height         EQU -12
-blit_src_sel    EQU -14
-blit_dest_sel   EQU -16
+blit_src_y          EQU -4
+blit_src_x          EQU -6
+blit_dest_y         EQU -8
+blit_dest_x         EQU -10
+blit_width          EQU -12
+blit_height         EQU -14
+blit_src_sel        EQU -16
+blit_dest_sel       EQU -18
 
 blit_pr PROC far
-    push bp
-    mov bp,sp
-    sub sp,16
+    push ebp
+    mov ebp,esp
+    sub esp,20
     push ds
     push es
     pushad
 ;
-    mov [bp].blit_src_x,esi
-    mov [bp].blit_dest_x,edi
+    mov [ebp].blit_src_x,esi
+    mov [ebp].blit_dest_x,edi
 ;
     or cx,cx
     jz blit_done
@@ -1714,8 +1714,8 @@ blit_pr PROC far
     or dx,dx
     jz blit_done
 ;
-    mov [bp].blit_width,cx
-    mov [bp].blit_height,dx
+    mov [ebp].blit_width,cx
+    mov [ebp].blit_height,dx
 ;
     mov cx,bx
     push ax
@@ -1726,7 +1726,7 @@ blit_pr PROC far
     jc blit_failed
 ;
     mov dx,[ebx].bm_sel
-    mov [bp].blit_src_sel,dx
+    mov [ebp].blit_src_sel,dx
 ;
     push ax
     mov bx,cx
@@ -1736,7 +1736,7 @@ blit_pr PROC far
     jc blit_failed
 ;
     mov dx,[ebx].bm_sel
-    mov [bp].blit_dest_sel,dx
+    mov [ebp].blit_dest_sel,dx
 ;
     push [ebx].bm_lgop
     push [ebx].bm_color
@@ -1745,17 +1745,17 @@ blit_pr PROC far
     push [ebx].bm_x_max
     push [ebx].bm_y_max
 ;
-    mov ax,[bp].blit_src_sel
-    cmp ax,[bp].blit_dest_sel
+    mov ax,[ebp].blit_src_sel
+    cmp ax,[ebp].blit_dest_sel
     je blit_same_bitmap
 ;
     jae blit_take_dest_first
 
 blit_take_src_first:
-    mov ds,[bp].blit_src_sel
+    mov ds,[ebp].blit_src_sel
     EnterSection ds:v_section
 ;
-    mov ds,[bp].blit_dest_sel
+    mov ds,[ebp].blit_dest_sel
     EnterSection ds:v_section
     pop ds:v_y_max
     pop ds:v_x_max
@@ -1766,7 +1766,7 @@ blit_take_src_first:
     jmp blit_entered
 
 blit_take_dest_first:
-    mov ds,[bp].blit_dest_sel
+    mov ds,[ebp].blit_dest_sel
     EnterSection ds:v_section
     pop ds:v_y_max
     pop ds:v_x_max
@@ -1775,35 +1775,35 @@ blit_take_dest_first:
     pop ds:v_color
     pop ds:v_lgop
 ;
-    mov ds,[bp].blit_src_sel
+    mov ds,[ebp].blit_src_sel
     EnterSection ds:v_section
     
 blit_entered:
-    mov ds,[bp].blit_src_sel
+    mov ds,[ebp].blit_src_sel
     mov al,ds:v_bpp
     cmp al,1
     je blit_check1
 ;
-    mov ds,[bp].blit_dest_sel
+    mov ds,[ebp].blit_dest_sel
     cmp al,ds:v_bpp
     je blit_same_bpp
     jmp blit_diff_bpp
 
 blit_check1:
-    mov ds,[bp].blit_dest_sel
+    mov ds,[ebp].blit_dest_sel
     cmp al,ds:v_bpp
     jne blit1
 
 blit_diff_bpp:
-    movzx eax,word ptr [bp].blit_width
+    movzx eax,word ptr [ebp].blit_width
     shl eax,2
     AllocateGlobalMem
 
 blit_diff_loop:
-    mov ds,[bp].blit_src_sel
-    mov ax,[bp].blit_width
-    mov cx,[bp].blit_src_x
-    mov dx,[bp].blit_src_y
+    mov ds,[ebp].blit_src_sel
+    mov ax,[ebp].blit_width
+    mov cx,[ebp].blit_src_x
+    mov dx,[ebp].blit_src_y
     cmp dx,0
     jl blit_diff_next
 ;
@@ -1822,53 +1822,53 @@ blit_diff_get:
     xor edi,edi
     call ds:get_rgb_row_proc
 ;
-    mov ds,[bp].blit_dest_sel
-    mov ax,[bp].blit_width
-    mov cx,[bp].blit_dest_x
-    mov dx,[bp].blit_dest_y
+    mov ds,[ebp].blit_dest_sel
+    mov ax,[ebp].blit_width
+    mov cx,[ebp].blit_dest_x
+    mov dx,[ebp].blit_dest_y
     xor edi,edi
     call ds:set_rgb_row_proc
 
 blit_diff_next:
-    inc word ptr [bp].blit_src_y
-    inc word ptr [bp].blit_dest_y
-    sub word ptr [bp].blit_height,1
+    inc word ptr [ebp].blit_src_y
+    inc word ptr [ebp].blit_dest_y
+    sub word ptr [ebp].blit_height,1
     jnz blit_diff_loop
 ;
     FreeMem 
-    mov ds,[bp].blit_dest_sel
+    mov ds,[ebp].blit_dest_sel
     LeaveSection ds:v_section
-    mov ds,[bp].blit_src_sel
+    mov ds,[ebp].blit_src_sel
     LeaveSection ds:v_section
     clc
     jmp blit_done
 
 blit_same_bpp:
-    mov ds,[bp].blit_src_sel
-    mov cx,[bp].blit_src_x
-    mov dx,[bp].blit_src_y
+    mov ds,[ebp].blit_src_sel
+    mov cx,[ebp].blit_src_x
+    mov dx,[ebp].blit_src_y
     call ds:get_line_proc
 ;
-    mov ds,[bp].blit_dest_sel
-    mov ax,[bp].blit_width
-    mov cx,[bp].blit_dest_x
-    mov dx,[bp].blit_dest_y
+    mov ds,[ebp].blit_dest_sel
+    mov ax,[ebp].blit_width
+    mov cx,[ebp].blit_dest_x
+    mov dx,[ebp].blit_dest_y
     call ds:set_native_row_proc
 ;
-    inc word ptr [bp].blit_src_y
-    inc word ptr [bp].blit_dest_y
-    sub word ptr [bp].blit_height,1
+    inc word ptr [ebp].blit_src_y
+    inc word ptr [ebp].blit_dest_y
+    sub word ptr [ebp].blit_height,1
     jnz blit_same_bpp
 ;
-    mov ds,[bp].blit_dest_sel
+    mov ds,[ebp].blit_dest_sel
     LeaveSection ds:v_section
-    mov ds,[bp].blit_src_sel
+    mov ds,[ebp].blit_src_sel
     LeaveSection ds:v_section
     clc
     jmp blit_done
 
 blit_same_bitmap:
-    mov ds,[bp].blit_src_sel
+    mov ds,[ebp].blit_src_sel
     EnterSection ds:v_section
     pop ds:v_y_max
     pop ds:v_x_max
@@ -1877,108 +1877,108 @@ blit_same_bitmap:
     pop ds:v_color
     pop ds:v_lgop
 ;
-    mov dx,[bp].blit_src_y
-    cmp dx,[bp].blit_dest_y
+    mov dx,[ebp].blit_src_y
+    cmp dx,[ebp].blit_dest_y
     je blit_same_line
     ja blit_forward
 
 blit_reverse:
-    mov ax,[bp].blit_height
+    mov ax,[ebp].blit_height
     dec ax
-    add [bp].blit_src_y,ax
-    add [bp].blit_dest_y,ax
+    add [ebp].blit_src_y,ax
+    add [ebp].blit_dest_y,ax
 
 blit_reverse_loop:
-    mov cx,[bp].blit_src_x
-    mov dx,[bp].blit_src_y
+    mov cx,[ebp].blit_src_x
+    mov dx,[ebp].blit_src_y
     call ds:get_line_proc
 ;
-    mov ax,[bp].blit_width
-    mov cx,[bp].blit_dest_x
-    mov dx,[bp].blit_dest_y
+    mov ax,[ebp].blit_width
+    mov cx,[ebp].blit_dest_x
+    mov dx,[ebp].blit_dest_y
     call ds:set_native_row_proc
 ;
-    dec word ptr [bp].blit_src_y
-    dec word ptr [bp].blit_dest_y
-    sub word ptr [bp].blit_height,1
+    dec word ptr [ebp].blit_src_y
+    dec word ptr [ebp].blit_dest_y
+    sub word ptr [ebp].blit_height,1
     jnz blit_reverse_loop
 ;
-    mov ds,[bp].blit_src_sel
+    mov ds,[ebp].blit_src_sel
     LeaveSection ds:v_section
     clc
     jmp blit_done
 
 blit_forward:
-    mov cx,[bp].blit_src_x
-    mov dx,[bp].blit_src_y
+    mov cx,[ebp].blit_src_x
+    mov dx,[ebp].blit_src_y
     call ds:get_line_proc
 ;
-    mov ax,[bp].blit_width
-    mov cx,[bp].blit_dest_x
-    mov dx,[bp].blit_dest_y
+    mov ax,[ebp].blit_width
+    mov cx,[ebp].blit_dest_x
+    mov dx,[ebp].blit_dest_y
     call ds:set_native_row_proc
 ;
-    inc word ptr [bp].blit_src_y
-    inc word ptr [bp].blit_dest_y
-    sub word ptr [bp].blit_height,1
+    inc word ptr [ebp].blit_src_y
+    inc word ptr [ebp].blit_dest_y
+    sub word ptr [ebp].blit_height,1
     jnz blit_forward
 ;
-    mov ds,[bp].blit_src_sel
+    mov ds,[ebp].blit_src_sel
     LeaveSection ds:v_section
     clc
     jmp blit_done
 
 blit_same_line:
-    movzx eax,word ptr [bp].blit_width
+    movzx eax,word ptr [ebp].blit_width
     shl eax,2
     AllocateGlobalMem
 
 blit_same_line_loop:
-    mov ax,[bp].blit_width
-    mov cx,[bp].blit_src_x
-    mov dx,[bp].blit_src_y
+    mov ax,[ebp].blit_width
+    mov cx,[ebp].blit_src_x
+    mov dx,[ebp].blit_src_y
     xor edi,edi
     call ds:get_native_row_proc
 ;
-    mov ax,[bp].blit_width
-    mov cx,[bp].blit_dest_x
-    mov dx,[bp].blit_dest_y
+    mov ax,[ebp].blit_width
+    mov cx,[ebp].blit_dest_x
+    mov dx,[ebp].blit_dest_y
     xor edi,edi
     call ds:set_native_row_proc
 ;
-    inc word ptr [bp].blit_src_y
-    inc word ptr [bp].blit_dest_y
-    sub word ptr [bp].blit_height,1
+    inc word ptr [ebp].blit_src_y
+    inc word ptr [ebp].blit_dest_y
+    sub word ptr [ebp].blit_height,1
     jnz blit_same_line_loop
 ;
     FreeMem
-    mov ds,[bp].blit_src_sel
+    mov ds,[ebp].blit_src_sel
     LeaveSection ds:v_section
     clc
     jmp blit_done
 
 blit1:
-    mov ds,[bp].blit_src_sel
+    mov ds,[ebp].blit_src_sel
     mov ax,flat_sel
     mov es,ax
     mov edi,ds:v_app_base
     mov ax,ds:v_row_size
-    mov ecx,[bp].blit_src_x
-    mov edx,[bp].blit_dest_x
-    mov si,[bp].blit_width
-    mov ds,[bp].blit_dest_sel
+    mov ecx,[ebp].blit_src_x
+    mov edx,[ebp].blit_dest_x
+    mov si,[ebp].blit_width
+    mov ds,[ebp].blit_dest_sel
     mov ebx,ds:v_color
 
 blit1_line_loop:
     call ds:draw_mask_line_proc
     add ecx,10000h
     add edx,10000h
-    sub word ptr [bp].blit_height,1
+    sub word ptr [ebp].blit_height,1
     jnz blit1_line_loop
 ;
-    mov ds,[bp].blit_dest_sel
+    mov ds,[ebp].blit_dest_sel
     LeaveSection ds:v_section
-    mov ds,[bp].blit_src_sel
+    mov ds,[ebp].blit_src_sel
     LeaveSection ds:v_section
     clc
     jmp blit_done
@@ -1990,8 +1990,8 @@ blit_done:
     popad
     pop es
     pop ds
-    add sp,16
-    pop bp
+    add esp,20
+    pop ebp
     retf32
 blit_pr ENDP
 
