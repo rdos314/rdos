@@ -652,4 +652,8 @@ add_wait_for_udp_connection_nr  = 518
 peek_udp_connection_nr          = 519
 read_udp_connection_nr          = 520
 
+extract_alpha_bitmap_nr         = 521
+extract_valid_bitmap_mask_nr    = 522
+extract_invalid_bitmap_mask_nr  = 523
+
 usergate_entries			    = 540

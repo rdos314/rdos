@@ -522,6 +522,30 @@
     parm [eax] [ecx] [edx] \
     value [ebx];
 
+#pragma aux RdosExtractValidBitmapMask = \
+    CallGate_extract_valid_bitmap_mask  \
+    "mov bx,ax" \
+    ValidateHandle  \
+    parm [ebx]  \
+    value [ebx] \
+    modify [ax];
+
+#pragma aux RdosExtractInvalidBitmapMask = \
+    CallGate_extract_invalid_bitmap_mask  \
+    "mov bx,ax" \
+    ValidateHandle  \
+    parm [ebx]  \
+    value [ebx] \
+    modify [ax];
+
+#pragma aux RdosExtractAlphaBitmap = \
+    CallGate_extract_alpha_bitmap  \
+    "mov bx,ax" \
+    ValidateHandle  \
+    parm [ebx]  \
+    value [ebx] \
+    modify [ax];
+
 #pragma aux RdosDuplicateBitmapHandle = \
     CallGate_dup_bitmap_handle  \
     ValidateHandle  \

@@ -25,6 +25,8 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+VIDEO_ENTRIES   = 27h
+
 STYLE_HOLLOW			EQU 0
 STYLE_FILLED			EQU 1
 
@@ -239,6 +241,13 @@ anti_alias_proc               DD ?
 ; IN  ES:ESI		Bitmap buffer
 ; IN  ES:EDI		Physical buffer
 phys_update_proc               DD ?
+
+has_alpha_proc			DD ?
+
+; IN  CX			x
+; IN  DX			y
+; OUT EAX			RGB color
+get_alpha_proc			DD ?
 
 v_section   	    section_typ <>
 v_sprite_section    section_typ <>

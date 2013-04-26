@@ -53,6 +53,8 @@ int SavePngBase(const char *FileName, int Bitmap);
 TPngBitmapDevice::TPngBitmapDevice(int width, int height)
   : TBitmapGraphicDevice(24, width, height)
 {
+    FMask = 0;
+    FAlpha = 0;
 }
 
 /*##########################################################################
@@ -71,6 +73,26 @@ TPngBitmapDevice::TPngBitmapDevice(int width, int height)
 TPngBitmapDevice::TPngBitmapDevice(int handle)
   : TBitmapGraphicDevice(handle)
 {
+    FMask = 0;
+    FAlpha = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TPngBitmapDevice::~TPngBitmapDevice
+#
+#   Purpose....: Destructor for TPngBitmapDevice
+#
+#   Returns....: *
+#
+##########################################################################*/
+TPngBitmapDevice::~TPngBitmapDevice()
+{
+    if (FMask)
+        delete FMask;
+
+    if (FAlpha)
+        delete FAlpha;
 }
 
 /*##########################################################################
@@ -111,4 +133,54 @@ TPngBitmapDevice *TPngBitmapDevice::Create(const char *FileName, int r, int g, i
 int TPngBitmapDevice::Save(const char *FileName)
 {
     return SavePngBase(FileName, FBitmapHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TPngBitmapDevice::GetMaskBitmap
+#
+#   Purpose....: Get mask bitmap (if available)
+#
+#   In params..: FileName               File to write
+#              : bitmap
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TBitmapGraphicDevice *TPngBitmapDevice::GetMaskBitmap()
+{
+    int Handle;
+
+    if (!FMask)
+    {
+        Handle = RdosExtractValidBitmapMask(FBitmapHandle);
+        if (Handle)
+            FMask = new TPngBitmapDevice(Handle);
+    }
+
+    return FMask;
+}
+
+/*##########################################################################
+#
+#   Name       : TPngBitmapDevice::GetAlphaBitmap
+#
+#   Purpose....: Get alpha bitmap (if available)
+#
+#   In params..: *
+#   Returns....: *
+#
+##########################################################################*/
+TBitmapGraphicDevice *TPngBitmapDevice::GetAlphaBitmap()
+{
+    int Handle;
+
+    if (!FAlpha)
+    {
+        Handle = RdosExtractValidBitmapMask(FBitmapHandle);
+        if (Handle)
+            FAlpha = new TPngBitmapDevice(Handle);
+    }
+
+    return FAlpha;
 }

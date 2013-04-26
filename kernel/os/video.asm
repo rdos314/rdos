@@ -2412,6 +2412,239 @@ draw_ellipse_fail:
     ApiCheckEax
     retf32
 draw_ellipse    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ExtractValidBitmapMask
+;
+;           DESCRIPTION:    Extract valid mask from bitmap
+;
+;           PARAMETERS:     BX          Bitmap handle
+;
+;           RETURNS:        AX          Mask bitmap handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+extract_valid_bitmap_mask_name  DB 'Extract Valid Bitmap Mask',0
+
+emask_width          EQU -4
+emask_height         EQU -6
+emask_src_sel        EQU -8
+emask_dest_sel       EQU -10
+emask_bitmap         EQU -12
+
+extract_valid_bitmap_mask       PROC far
+    push ebp
+    mov ebp,esp
+    sub esp,12
+    push ds
+    push es
+    push ebx
+    push ecx
+    push edx
+;
+    mov ax,BITMAP_HANDLE
+    DerefHandle
+    jc extract_vmask_fail
+;
+    mov ds,[ebx].bm_sel
+    call ds:has_alpha_proc
+    jc extract_vmask_fail
+;
+    mov [ebp].emask_src_sel,ds
+;
+    mov al,1
+    mov cx,ds:v_width
+    mov dx,ds:v_height
+    CreateBitmap
+    jc extract_vmask_fail
+;
+    mov [ebp].emask_bitmap,bx
+    mov [ebp].emask_width,cx
+    mov [ebp].emask_height,dx
+;
+    mov ax,BITMAP_HANDLE
+    DerefHandle
+    jc extract_vmask_fail
+;
+    mov ax,[ebx].bm_sel
+    mov [ebp].emask_dest_sel,ax
+;    
+    xor dx,dx
+
+extract_vy_loop:
+    xor cx,cx
+
+extract_vx_loop:
+    mov ds,[ebp].emask_src_sel
+    call ds:get_alpha_proc
+    mov ds,[ebp].emask_dest_sel
+    cmp al,80h
+    ja extract_vset
+;
+    mov ds:v_color,0
+    jmp extract_vdo
+
+extract_vset:
+    mov ds:v_color,1
+
+extract_vdo:    
+    call ds:set_pixel_proc    
+;
+    inc cx
+    cmp cx,[ebp].emask_width
+    jb extract_vx_loop
+;
+    inc dx
+    cmp dx,[ebp].emask_height
+    jb extract_vy_loop    
+;        
+    mov ax,[ebp].emask_bitmap
+    clc
+
+extract_vmask_fail:
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
+    add esp,12
+    pop ebp
+    retf32
+extract_valid_bitmap_mask       ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ExtractInvalidBitmapMask
+;
+;           DESCRIPTION:    Extract invalid mask from bitmap
+;
+;           PARAMETERS:     BX          Bitmap handle
+;
+;           RETURNS:        AX          Mask bitmap handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+extract_invalid_bitmap_mask_name  DB 'Extract Invalid Bitmap Mask',0
+
+extract_invalid_bitmap_mask       PROC far
+    push ebp
+    mov ebp,esp
+    sub esp,12
+    push ds
+    push es
+    push ebx
+    push ecx
+    push edx
+;
+    mov ax,BITMAP_HANDLE
+    DerefHandle
+    jc extract_ivmask_fail
+;
+    mov ds,[ebx].bm_sel
+    call ds:has_alpha_proc
+    jc extract_ivmask_fail
+;
+    mov [ebp].emask_src_sel,ds
+;
+    mov al,1
+    mov cx,ds:v_width
+    mov dx,ds:v_height
+    CreateBitmap
+    jc extract_ivmask_fail
+;
+    mov [ebp].emask_bitmap,bx
+    mov [ebp].emask_width,cx
+    mov [ebp].emask_height,dx
+;
+    mov ax,BITMAP_HANDLE
+    DerefHandle
+    jc extract_ivmask_fail
+;
+    mov ax,[ebx].bm_sel
+    mov [ebp].emask_dest_sel,ax
+;    
+    xor dx,dx
+
+extract_ivy_loop:
+    xor cx,cx
+
+extract_ivx_loop:
+    mov ds,[ebp].emask_src_sel
+    call ds:get_alpha_proc
+    mov ds,[ebp].emask_dest_sel
+    cmp al,80h
+    ja extract_ivreset
+;
+    mov ds:v_color,1
+    jmp extract_ivdo
+
+extract_ivreset:
+    mov ds:v_color,0
+
+extract_ivdo:    
+    call ds:set_pixel_proc    
+;
+    inc cx
+    cmp cx,[ebp].emask_width
+    jb extract_ivx_loop
+;
+    inc dx
+    cmp dx,[ebp].emask_height
+    jb extract_ivy_loop    
+;        
+    mov ax,[ebp].emask_bitmap
+    clc
+
+extract_ivmask_fail:
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
+    add esp,12
+    pop ebp
+    retf32
+extract_invalid_bitmap_mask       ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ExtractAlphaBitmap
+;
+;           DESCRIPTION:    Extract alpha channel from bitmap
+;
+;           PARAMETERS:     BX          Bitmap handle
+;
+;           RETURNS:        AX          Alpha bitmap handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+extract_alpha_bitmap_name  DB 'Extract Alpha Bitmap',0
+
+extract_alpha_bitmap       PROC far
+    push ds
+    push ebx
+;
+    mov ax,BITMAP_HANDLE
+    DerefHandle
+    jc extract_alpha_fail
+;
+    mov al,[ebx].bm_style
+    mov ds,[ebx].bm_sel
+    mov ds:v_style,al
+    call ds:has_alpha_proc
+    jc extract_alpha_fail
+;
+    stc
+
+extract_alpha_fail:
+    pop ebx
+    pop ds
+    retf32
+extract_alpha_bitmap       ENDP
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3539,6 +3772,24 @@ init_video      PROC near
     mov edi,OFFSET draw_ellipse_name
     xor dx,dx
     mov ax,draw_ellipse_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET extract_valid_bitmap_mask
+    mov edi,OFFSET extract_valid_bitmap_mask_name
+    xor dx,dx
+    mov ax,extract_valid_bitmap_mask_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET extract_invalid_bitmap_mask
+    mov edi,OFFSET extract_invalid_bitmap_mask_name
+    xor dx,dx
+    mov ax,extract_invalid_bitmap_mask_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET extract_alpha_bitmap
+    mov edi,OFFSET extract_alpha_bitmap_name
+    xor dx,dx
+    mov ax,extract_alpha_bitmap_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET write_dos_string

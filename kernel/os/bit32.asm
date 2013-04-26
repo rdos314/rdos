@@ -2985,6 +2985,60 @@ ellipse_end:
 draw_ellipse    Endp
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CheckAlpha
+;
+;           DESCRIPTION:    Check if alpha channel is available
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+check_alpha  Proc far
+    clc
+    ret
+check_alpha  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetAlpha
+;
+;           DESCRIPTION:    Get alpha value
+;
+;           PARAMETER:      CX              x
+;                           DX              y
+;
+;           RETURNS:        EAX
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_alpha       Proc far
+    push ds
+    push edx
+;    
+    movsx ecx,cx
+    movsx edx,dx
+    movzx eax,ds:v_row_size
+    imul edx
+    mov edx,ecx
+    shl edx,2
+    add eax,edx
+    add eax,ds:v_app_base
+    mov dx,flat_sel
+    mov ds,dx
+    mov eax,[eax]
+    shr eax,24
+    mov ah,al
+    shl eax,8
+    mov al,ah    
+    and eax,0FFFFFFh
+    pop edx 
+    pop ds
+    ret
+get_alpha       Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3256,6 +3310,8 @@ mt21 DW OFFSET draw_rect,               SEG code
 mt22 DW OFFSET draw_ellipse,        SEG code
 mt23 DW OFFSET anti_alias_set,      SEG code
 mt24 DW OFFSET phys_update,         SEG code
+mt25 DW OFFSET check_alpha,         SEG code
+mt26 DW OFFSET get_alpha,           SEG code
 
 code    ENDS
 

@@ -358,10 +358,11 @@ void RightDown(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 
 void ShowPng(TGraphicDevice *dev)
 {
-    TBitmapGraphicDevice *bitmap;
+    TPngBitmapDevice *bitmap;
 
     bitmap = TPngBitmapDevice::Create("test.png", 255, 255, 255);
-    dev->Blit(bitmap, 0, 0, 0, 0, bitmap->GetWidth(), bitmap->GetHeight());
+    NormalSprite = dev->CreateSprite(bitmap, bitmap->GetMaskBitmap(), 0, 0);
+    NormalSprite->Move(dev->GetWidth() / 2, dev->GetHeight() / 2);
 }
 
 void cdecl main()
@@ -392,8 +393,8 @@ void cdecl main()
         Mouse->OnRightUp = RightUp;
         Mouse->OnRightDown = RightDown;
 
-//        vbe = new TVideoGraphicDevice(24, 1366, 768);
-        vbe = new TVideoGraphicDevice(24, 640, 480);
+        vbe = new TVideoGraphicDevice(24, 1366, 768);
+//        vbe = new TVideoGraphicDevice(24, 640, 480);
 //      vbe = new TVideoGraphicDevice(24, 800, 600);
 //      vbe = new TVideoGraphicDevice(1, 240, 128);
 
@@ -402,10 +403,13 @@ void cdecl main()
         Mouse->SetPosition(vbe->GetWidth() / 2, vbe->GetHeight() / 2);
 
         MouseMask = CreateMouseMask();
-
+/*
         MouseBitmap = CreateMouseBitmap(vbe, 255, 255, 255);
         NormalSprite = vbe->CreateSprite(MouseBitmap, MouseMask, 20, 20);
         NormalSprite->Move(vbe->GetWidth() / 2, vbe->GetHeight() / 2);
+*/
+
+        ShowPng(vbe);
 
         MouseBitmap = CreateMouseBitmap(vbe, 64, 128, 255);
         LeftSprite = vbe->CreateSprite(MouseBitmap, MouseMask, 20, 20);
@@ -433,8 +437,6 @@ void cdecl main()
         vbe->DrawLine(240, 0, 0, 128);
 
         vbe->SetClipRect(0, 0, vbe->GetWidth(), vbe->GetHeight() - 35);
-
-        ShowPng(vbe);
 
         Planets = new TPlanetThread(vbe, 8);
 

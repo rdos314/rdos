@@ -2577,6 +2577,24 @@ CreateBitmap      MACRO
 						ENDM
 
 ;	IN  BX		Bitmap handle
+;	OUT BX		Mask bitmap handle
+ExtractValidBitmapMask      MACRO
+	UserGate extract_valid_bitmap_mask_nr
+						ENDM
+
+;	IN  BX		Bitmap handle
+;	OUT BX		Mask bitmap handle
+ExtractInvalidBitmapMask      MACRO
+	UserGate extract_invalid_bitmap_mask_nr
+						ENDM
+
+;	IN  BX		Bitmap handle
+;	OUT BX		Mask bitmap handle
+ExtractAlphaBitmap      MACRO
+	UserGate extract_alpha_bitmap_nr
+						ENDM
+
+;	IN  BX		Bitmap handle
 ;	OUT BX		Duplicated bitmap handle
 DuplicateBitmapHandle      MACRO
 	UserGate dup_bitmap_handle_nr

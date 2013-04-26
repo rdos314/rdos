@@ -35,9 +35,17 @@ class TPngBitmapDevice : public TBitmapGraphicDevice
 public:
 	TPngBitmapDevice(int width, int height);
 	TPngBitmapDevice(int handle);
+	~TPngBitmapDevice();
+
+	TBitmapGraphicDevice *GetMaskBitmap();
+	TBitmapGraphicDevice *GetAlphaBitmap();
 
 	static TPngBitmapDevice *Create(const char *FileName, int BackR, int BackG, int BackB);
 	int Save(const char *FileName);
+
+protected:
+    TBitmapGraphicDevice *FMask;	
+    TBitmapGraphicDevice *FAlpha;	
 };
 
 #endif
