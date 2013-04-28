@@ -448,7 +448,7 @@ void cdecl main()
         vbe->DrawEllipse(vbe->GetWidth() / 2, vbe->GetHeight() / 2, vbe->GetWidth() / 2, vbe->GetHeight() / 2);
 
         vbe->SetLgopNone();
-//        ShowPng(vbe);
+        ShowPng(vbe);
 
         RdosWaitMilli(5000);
 
