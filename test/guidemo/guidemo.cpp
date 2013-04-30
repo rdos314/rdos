@@ -362,6 +362,9 @@ void ShowPng(TGraphicDevice *dev)
 
     bitmap = TPngBitmapDevice::Create("test.png", 255, 255, 255);
     dev->Blit(bitmap, 0, 0, 0, 0, bitmap->GetWidth(), bitmap->GetHeight());
+
+    for (;;)
+        RdosWaitMilli(500);
 }
 
 void cdecl main()
