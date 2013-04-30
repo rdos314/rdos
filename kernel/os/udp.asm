@@ -1049,6 +1049,10 @@ bquListenOk:
     adc edx,ecx
     WaitForSignalWithTimeout    
 ;    
+    mov dx,ds:bq_reply_sel
+    or dx,dx
+    jz bquFailed
+;    
     xor edx,edx
     mov ecx,ds:bq_reply_size
     or ecx,ecx
