@@ -232,8 +232,6 @@ protected:
     void GetInner(int *xstart, int *ystart, int *xdiff, int *ydiff) const;
     int IsInsidePanel(int x, int y) const;
 
-    int FBackTrans;
-
     THorPanelScrollControl *FHorScroll;
     TVerPanelScrollControl *FVerScroll;
 

@@ -43,10 +43,10 @@ class TControl
 friend class TControlThread;
 friend class TDisplayControlThread;
 public:
-        TControl(TControlThread *dev);
-        TControl(TControlThread *dev, int xmin, int ymin, int width, int height);
-        TControl(TControl *Control);
-        TControl(TControl *Control, int xmin, int ymin, int width, int height);
+    TControl(TControlThread *dev);
+    TControl(TControlThread *dev, int xmin, int ymin, int width, int height);
+    TControl(TControl *Control);
+    TControl(TControl *Control, int xmin, int ymin, int width, int height);
     virtual ~TControl();    
 
     virtual void Set(const char *IniName, const char *IniSection);
@@ -82,10 +82,14 @@ public:
     void Redraw(int millisec);
     void ClearRedraw();
 
+    void SetTransparent();
+    void ClearTransparent();
+    int IsTransparent();
+
     void EnumerateControls(void *Data, void (*CallBack)(void *Data, TControl *Control));
     TControl *GetControl(int ControlId);
 
-        void (*OnChanged)(TControl *control);
+    void (*OnChanged)(TControl *control);
 
     void *Owner;
 
@@ -93,14 +97,14 @@ public:
     int ControlId;
 
 protected:
-        virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
-        virtual int OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
-        virtual int OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
+    virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
+    virtual int OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
+    virtual int OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
     virtual int OnMouseMove(int x, int y, int ButtonState, int KeyState);
-        virtual int OnLeftUp(int x, int y, int ButtonState, int KeyState);
-        virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
-        virtual int OnRightUp(int x, int y, int ButtonState, int KeyState);
-        virtual int OnRightDown(int x, int y, int ButtonState, int KeyState);
+    virtual int OnLeftUp(int x, int y, int ButtonState, int KeyState);
+    virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
+    virtual int OnRightUp(int x, int y, int ButtonState, int KeyState);
+    virtual int OnRightDown(int x, int y, int ButtonState, int KeyState);
 
     virtual void NotifyResize();
     virtual void ChildChange();
@@ -108,6 +112,7 @@ protected:
     virtual void UpdateChild(TControl *control, int level);
     virtual void RedrawChild(TControl *control, int level);
 
+    void RedrawBackground(TGraphicDevice *dev);
     void Apply(TGraphicDevice *dev);
     void DeleteDev();
 
@@ -122,23 +127,26 @@ protected:
     void Unload();
     void HandleUpdate();
     void HandleApply();
-        void SetClipRect(TGraphicDevice *dev, int xmin, int ymin);
-        void SetClipRect(TGraphicDevice *dev, int xmin, int ymin, int xmax, int ymax);
-        void UpdateChildren(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
-        void RedrawChildren(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
+    void SetClipRect(TGraphicDevice *dev, int xmin, int ymin);
+    void SetClipRect(TGraphicDevice *dev, int xmin, int ymin, int xmax, int ymax);
+    void UpdateChildren(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
+    void RedrawChildren(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
 
     int HasParent();
     void RedrawParent();
 
-        void Protect();
-        void Unprotect();
+    void Protect();
+    void Unprotect();
 
-        TControlThread *GetControlThread();
+    void SaveBackground();
+    void RestoreBackground();
+
+    TControlThread *GetControlThread();
 
 private:
     void Init();
-        void Add(TControl *Control);
-        void Delete(TControl *Control);
+    void Add(TControl *Control);
+    void Delete(TControl *Control);
     TDateTime GetRedrawTime();
 
     TDateTime *FDelay;
@@ -153,6 +161,9 @@ private:
 
     int FDirty;
 
+    int FTransparent;
+    TBitmapGraphicDevice *FTransBitmap;
+
     TControlThread *FDev;    
     TControl *FNext;    
     TControl *FControlList;
@@ -163,8 +174,8 @@ class TControlThread : public TThread
 {
 friend class TControl;
 public:
-        TControlThread();
-        TControlThread(TGraphicDevice *dev);
+    TControlThread();
+    TControlThread(TGraphicDevice *dev);
     virtual ~TControlThread();
 
     void Apply(TGraphicDevice *dev);
@@ -178,15 +189,15 @@ public:
     TControl *GetControl(int ControlId);
 
 protected:
-        virtual void Protect();
-        virtual void Unprotect();
+    virtual void Protect();
+    virtual void Unprotect();
 
     void Signal();
     void Add(TControl *control);
     void Delete(TControl *control);
     void Update(TControl *control);
 
-        virtual void DefaultRedraw(TControl *control);
+    virtual void DefaultRedraw(TControl *control);
     virtual int IsRedrawEnabled();
     virtual void PutKey(char ch);
 
@@ -206,7 +217,7 @@ private:
 class TDisplayControlThread : public TControlThread
 {
 public:
-        TDisplayControlThread(const char *name, TGraphicDevice *dev);
+    TDisplayControlThread(const char *name, TGraphicDevice *dev);
     virtual ~TDisplayControlThread();
 
     void Add(TKeyboardDevice *Keyboard);
@@ -221,31 +232,31 @@ public:
 
     void NotifyClick(TControl *Control, int x, int y);
 
-        void NotifyKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
-        void NotifyKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
+    void NotifyKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
+    void NotifyKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
     void NotifyMouseMove(int x, int y, int ButtonState, int KeyState);
-        void NotifyLeftUp(int x, int y, int ButtonState, int KeyState);
+    void NotifyLeftUp(int x, int y, int ButtonState, int KeyState);
     void NotifyLeftDown(int x, int y, int ButtonState, int KeyState);
-        void NotifyRightUp(int x, int y, int ButtonState, int KeyState);
-        void NotifyRightDown(int x, int y, int ButtonState, int KeyState);
+    void NotifyRightUp(int x, int y, int ButtonState, int KeyState);
+    void NotifyRightDown(int x, int y, int ButtonState, int KeyState);
 
-        void (*OnKeyPressed)(TControlThread *dev, int ExtKey, int KeyState, int VirtualKey, int ScanCode);
-        void (*OnKeyReleased)(TControlThread *dev, int ExtKey, int KeyState, int VirtualKey, int ScanCode);
-        void (*OnMouseMove)(TControlThread *dev, int x, int y, int ButtonState, int KeyState);
-        void (*OnLeftUp)(TControlThread *dev, int x, int y, int ButtonState, int KeyState);
-        void (*OnLeftDown)(TControlThread *dev, int x, int y, int ButtonState, int KeyState);
-        void (*OnRightUp)(TControlThread *dev, int x, int y, int ButtonState, int KeyState);
-        void (*OnRightDown)(TControlThread *dev, int x, int y, int ButtonState, int KeyState);
+    void (*OnKeyPressed)(TControlThread *dev, int ExtKey, int KeyState, int VirtualKey, int ScanCode);
+    void (*OnKeyReleased)(TControlThread *dev, int ExtKey, int KeyState, int VirtualKey, int ScanCode);
+    void (*OnMouseMove)(TControlThread *dev, int x, int y, int ButtonState, int KeyState);
+    void (*OnLeftUp)(TControlThread *dev, int x, int y, int ButtonState, int KeyState);
+    void (*OnLeftDown)(TControlThread *dev, int x, int y, int ButtonState, int KeyState);
+    void (*OnRightUp)(TControlThread *dev, int x, int y, int ButtonState, int KeyState);
+    void (*OnRightDown)(TControlThread *dev, int x, int y, int ButtonState, int KeyState);
 
 protected:
-        virtual void Protect();
-        virtual void Unprotect();
+    virtual void Protect();
+    virtual void Unprotect();
 
     TDateTime GetRedrawTime();
     void HandleUpdate();
-        virtual void Execute();
+    virtual void Execute();
 
-        virtual void DefaultRedraw(TControl *control);
+    virtual void DefaultRedraw(TControl *control);
     virtual int IsRedrawEnabled();
     virtual void PutKey(char ch);
 

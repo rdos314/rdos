@@ -55,6 +55,7 @@ public:
 
 	void EraseBackground();
 	void KeepBackground();
+	void TransparentBackground();
 
     virtual void Show();
     virtual void Hide();

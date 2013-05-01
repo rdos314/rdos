@@ -1409,7 +1409,7 @@ void TLabelControl::SetText(const char *Text)
 
     if (!same)
     {
-        if (FBackTrans && HasParent())
+        if (!IsTransparent() && HasParent())
             RedrawParent();
         else
         {
@@ -1516,7 +1516,7 @@ void TLabelControl::NotifyResize()
 ##########################################################################*/
 void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height)
 {
-        int xstart;
+    int xstart;
     int ystart;
     int xsize;
     int ysize;
@@ -1525,6 +1525,9 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     int xoffs, yoffs;
     int xdiff, ydiff;
     int redraw;
+
+    if (IsTransparent())
+        RedrawBackground(dev);
 
     TPanelControl::Paint(dev, xmin, ymin, width, height);
     GetInner(&xoffs, &yoffs, &xdiff, &ydiff);

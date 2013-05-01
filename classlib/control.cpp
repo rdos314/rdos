@@ -29,6 +29,7 @@
 
 #include "control.h"
 #include "ini.h"
+#include "bitdev.h"
 
 #define     STACK_SIZE  0x1000
 
@@ -293,6 +294,9 @@ TControl::~TControl()
 
     Protect();
 
+    if (FTransBitmap)
+        delete FTransBitmap;
+        
     control = FControlList;
 
     while (control)
@@ -337,6 +341,9 @@ void TControl::Init()
     FControlList = 0;
     FDelay = 0;
     FDirty = TRUE;
+
+    FTransparent = FALSE;
+    FTransBitmap = 0;
 
     IdSection.Enter();
     ControlId = CurrId;
@@ -727,6 +734,60 @@ void TControl::RestoreMouseMarker(TSprite *Sprite)
 
 /*##########################################################################
 #
+#   Name       : TControl::SetTransparent
+#
+#   Purpose....: Set control to transparent
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::SetTransparent()
+{
+    FTransparent = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::ClearTransparent
+#
+#   Purpose....: Set control to non-transparent
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::ClearTransparent()
+{
+    FTransparent = FALSE;
+
+    if (FTransBitmap)
+    {
+        delete FTransBitmap;
+        FTransBitmap = 0;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::IsTransparent
+#
+#   Purpose....: Check if control is transparent
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TControl::IsTransparent()
+{
+    return FTransparent;
+}
+
+/*##########################################################################
+#
 #   Name       : TControl::Set
 #
 #   Purpose....: Set control parameters from ini-file
@@ -754,6 +815,14 @@ void TControl::Set(const char *IniName, const char *IniSection)
     PosChanged = FALSE;
 
     Ini.GotoSection(IniSection);
+
+    if (Ini.ReadVar("Transparent", str, 255))
+    {
+        if (atoi(str))
+            SetTransparent();
+        else
+            ClearTransparent();
+    }
 
     if (Ini.ReadVar("Start.X", str, 255))
     {
@@ -786,7 +855,6 @@ void TControl::Set(const char *IniName, const char *IniSection)
     if (PosChanged)
         Move(StartX, StartY);
 
-
     if (Ini.ReadVar("Visible", str, 255))
     {
         if (atoi(str))
@@ -804,7 +872,95 @@ void TControl::Set(const char *IniName, const char *IniSection)
     }
 }
 
+/*##########################################################################
+#
+#   Name       : TControl::SaveBackground
+#
+#   Purpose....: Save background before drawing transparent control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::SaveBackground()
+{
+    TControlThread *dev = GetControlThread();
+    int x, y;
 
+    if (dev)
+    {    
+        Protect();
+
+        GetAbsPos(&x, &y);
+        
+        if (FTransBitmap)
+        {
+            if (FTransBitmap->GetWidth() != FWidth || FTransBitmap->GetHeight() != FHeight)
+            {            
+                delete FTransBitmap;
+                FTransBitmap = 0;
+            }
+        }
+
+        if (!FTransBitmap)
+            FTransBitmap = new TBitmapGraphicDevice(GetBpp(), FWidth, FHeight);
+
+        FTransBitmap->Blit(dev->FGraphic, x, y, 0, 0, FWidth, FHeight);
+
+        Unprotect();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::RestoreBackground
+#
+#   Purpose....: Restore background of transparent control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::RestoreBackground()
+{
+    TControlThread *dev = GetControlThread();
+    int x, y;
+
+    if (dev)
+    {    
+        Protect();
+
+        GetAbsPos(&x, &y);
+        dev->FGraphic->Blit(FTransBitmap, 0, 0, x, y, FWidth, FHeight);
+
+        Unprotect();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::RedrawBackground
+#
+#   Purpose....: Redraw background of transparent control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::RedrawBackground(TGraphicDevice *dev)
+{
+    int x,y;
+    
+    if (dev && FTransBitmap)
+    {    
+        GetAbsPos(&x, &y);
+        dev->Blit(FTransBitmap, 0, 0, x, y, FWidth, FHeight);
+    }
+}
+    
 /*##########################################################################
 #
 #   Name       : TControl::Show
@@ -818,6 +974,9 @@ void TControl::Set(const char *IniName, const char *IniSection)
 ##########################################################################*/
 void TControl::Show()
 {
+    if (!FVisible && FTransparent)
+        SaveBackground();
+        
     FVisible = TRUE;
     NotifyChildChange();
     Redraw();
@@ -836,6 +995,9 @@ void TControl::Show()
 ##########################################################################*/
 void TControl::Hide()
 {
+    if (FVisible && FTransparent)
+        RestoreBackground();
+
     FVisible = FALSE;
     NotifyChildChange();
 
@@ -932,19 +1094,28 @@ int TControl::IsEnabled() const
 ##########################################################################*/
 void TControl::Resize(int xsize, int ysize)
 {
-    FWidth = xsize;
-    FHeight = ysize;
-
-    NotifyResize();
-
-    if (FVisible)
+    if (FWidth != xsize || FHeight != ysize)
     {
-        NotifyChildChange();
+        if (FTransparent && FVisible)
+            RestoreBackground();
+    
+        FWidth = xsize;
+        FHeight = ysize;
 
-        if (FParent)
-            FParent->Redraw();
-        else
-            Redraw();
+        if (FTransparent && FVisible)
+            SaveBackground();
+
+        NotifyResize();
+
+        if (FVisible)
+        {
+            NotifyChildChange();
+
+            if (FParent)
+                FParent->Redraw();
+            else
+                Redraw();
+        }
     }
 }
 
@@ -961,17 +1132,26 @@ void TControl::Resize(int xsize, int ysize)
 ##########################################################################*/
 void TControl::Move(int xstart, int ystart)
 {
-    FXMin = xstart;
-    FYMin = ystart;
-
-    if (FVisible)
+    if (FXMin != xstart || FYMin != ystart)
     {
-        NotifyChildChange();
+        if (FTransparent && FVisible)
+            RestoreBackground();
+    
+        FXMin = xstart;
+        FYMin = ystart;
 
-        if (FParent)
-            FParent->Redraw();
-        else
-            Redraw();
+        if (FTransparent && FVisible)
+            SaveBackground();
+
+        if (FVisible)
+        {
+            NotifyChildChange();
+
+            if (FParent)
+                FParent->Redraw();
+            else
+                Redraw();
+        }
     }
 }
 

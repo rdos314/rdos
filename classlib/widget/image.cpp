@@ -163,12 +163,12 @@ void TLoaderThread::Execute()
 TImageControl::TImageControl(TControlThread *dev, int startx, int starty, int sizex, int sizey)
  : TControl(dev)
 {
-	Init();
+        Init();
 
-	Resize(sizex, sizey);
-	Move(startx, starty);
-	Enable();
-	Redraw();
+        Resize(sizex, sizey);
+        Move(startx, starty);
+        Enable();
+        Redraw();
 }
 
 /*##################  TImageControl::TImageControl     ##########################
@@ -181,12 +181,12 @@ TImageControl::TImageControl(TControlThread *dev, int startx, int starty, int si
 TImageControl::TImageControl(TControl *control, int startx, int starty, int sizex, int sizey)
  : TControl(control)
 {
-	Init();
+        Init();
 
-	Resize(sizex, sizey);
-	Move(startx, starty);
-	Enable();
-	Redraw();
+        Resize(sizex, sizey);
+        Move(startx, starty);
+        Enable();
+        Redraw();
 }
 
 /*##################  TImageControl::TImageControl     ##########################
@@ -199,7 +199,7 @@ TImageControl::TImageControl(TControl *control, int startx, int starty, int size
 TImageControl::TImageControl(TControlThread *dev)
  : TControl(dev)
 {
-	Init();
+        Init();
 }
 
 /*##################  TImageControl::TImageControl     ##########################
@@ -212,7 +212,7 @@ TImageControl::TImageControl(TControlThread *dev)
 TImageControl::TImageControl(TControl *control)
  : TControl(control)
 {
-	Init();
+        Init();
 }
 
 /*##################  TImageControl::~TImageControl     ##########################
@@ -224,15 +224,15 @@ TImageControl::TImageControl(TControl *control)
 *##########################################################################*/
 TImageControl::~TImageControl()
 {
-	int i;
+        int i;
 
-	if (FLoadIni)
-		delete FLoadIni;
-		
+        if (FLoadIni)
+                delete FLoadIni;
+                
     Protect();
 
     for (i = 0; i < MAX_IMAGE_COUNT; i++)
-		if (FImgArr[i])
+                if (FImgArr[i])
             delete FImgArr[i];
 
     Unprotect();
@@ -247,30 +247,30 @@ TImageControl::~TImageControl()
 *##########################################################################*/
 void TImageControl::Init()
 {
-	int i;
+        int i;
 
-	for (i = 0; i < MAX_IMAGE_COUNT; i++)
-	{
-		FImgArr[i] = 0;
-		FDelayArr[i] = 1000;
-	}
+        for (i = 0; i < MAX_IMAGE_COUNT; i++)
+        {
+                FImgArr[i] = 0;
+                FDelayArr[i] = 1000;
+        }
 
-	FLoadIni = 0;
+        FLoadIni = 0;
 
-	FBackR = 0;
-	FBackG = 0;
-	FBackB = 0;
+        FBackR = 0;
+        FBackG = 0;
+        FBackB = 0;
 
-	FKey = 0;
-	FCount = 0;
-	FErase = FALSE;
+        FKey = 0;
+        FCount = 0;
+        FErase = FALSE;
 
-	FIndex = MAX_IMAGE_COUNT;
+        FIndex = MAX_IMAGE_COUNT;
 
-	FLoader = 0;
-	FLoading = FALSE;
+        FLoader = 0;
+        FLoading = FALSE;
 
-	ControlType += TString(".IMAGE");
+        ControlType += TString(".IMAGE");
 }
     
 /*##########################################################################
@@ -345,7 +345,7 @@ void TImageControl::Set(const char *IniName, const char *IniSection)
         FBackR = atoi(str);
     
     if (Ini.ReadVar("BackColor.G", str, 255))
-		FBackG = atoi(str);
+                FBackG = atoi(str);
 
     if (Ini.ReadVar("BackColor.B", str, 255))
         FBackB = atoi(str);
@@ -383,17 +383,17 @@ void TImageControl::SetLoadIni(const char *IniName, const char *IniSection)
 
     for (i = 0; i < MAX_IMAGE_COUNT; i++)
     {
-		if (FImgArr[i])
-		{
+                if (FImgArr[i])
+                {
             delete FImgArr[i];
             FImgArr[i] = 0;
         }
-		FDelayArr[i] = 1000;
+                FDelayArr[i] = 1000;
     }
 
     Unprotect();
 
-	FIndex = MAX_IMAGE_COUNT;
+        FIndex = MAX_IMAGE_COUNT;
 
     fh = RdosOpenFile(IniName, 0);
     if (fh)
@@ -403,10 +403,10 @@ void TImageControl::SetLoadIni(const char *IniName, const char *IniSection)
         FLoadIni = new TIniFile(IniName);
         FLoadSection = IniSection;
 
-    	if (FLoader)
-    	    Load(1);
-	    else
-    		Load(MAX_IMAGE_COUNT);
+        if (FLoader)
+            Load(1);
+            else
+                Load(MAX_IMAGE_COUNT);
     }
 }
             
@@ -804,6 +804,7 @@ void TImageControl::SetBackColor(int r, int g, int b)
     FBackR = r;
     FBackG = g;
     FBackB = b;
+    ClearTransparent();
 }
 
 /*##########################################################################
@@ -836,6 +837,7 @@ void TImageControl::RestartSequence()
 void TImageControl::EraseBackground()
 {
     FErase = TRUE;
+    ClearTransparent();
 }
 
 /*##########################################################################
@@ -852,6 +854,24 @@ void TImageControl::EraseBackground()
 void TImageControl::KeepBackground()
 {
     FErase = FALSE;
+    ClearTransparent();
+}
+
+/*##########################################################################
+#
+#   Name       : TImageControl::TransparentBackground
+#
+#   Purpose....: Use transparent background
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TImageControl::TransparentBackground()
+{
+    FErase = FALSE;
+    SetTransparent();
 }
 
 /*##########################################################################
@@ -891,6 +911,7 @@ int TImageControl::OnLeftDown(int x, int y, int ButtonState, int KeyState)
 ##########################################################################*/
 void TImageControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height)
 {
+    int y;
     int bmx;
     int bmy;
     int xstart;
@@ -935,7 +956,7 @@ void TImageControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     xstart = xmin + width - bmx;
     ystart = ymin + height - bmy;
 
-    if (FErase)
+    if (FErase && !IsTransparent())
     {
         dev->SetLgopNone();
         dev->SetFilledStyle();
@@ -944,7 +965,15 @@ void TImageControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     }
 
     if (bitmap)
-        dev->Blit(bitmap, 0, 0, xstart, ystart, bmx, bmy);
+    {
+        if (IsTransparent())
+        {
+            for (y = 0; y < bmy; y++)
+                dev->Blit(bitmap, 0, y, xstart, y + ystart, bmx, 1);
+        }
+        else
+            dev->Blit(bitmap, 0, 0, xstart, ystart, bmx, bmy);
+    }
 
     if (IsVisible() && (FCount >= 2 || FLoader))
         Redraw(FDelayArr[FIndex]);
