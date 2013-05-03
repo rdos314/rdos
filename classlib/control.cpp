@@ -933,6 +933,7 @@ void TControl::RestoreBackground()
         Protect();
 
         GetAbsPos(&x, &y);
+        dev->FGraphic->ClearClipRect();
         dev->FGraphic->Blit(FTransBitmap, 0, 0, x, y, FWidth, FHeight);
 
         Unprotect();
@@ -995,10 +996,14 @@ void TControl::Show()
 ##########################################################################*/
 void TControl::Hide()
 {
+    Protect();
+
     if (FVisible && FTransparent)
         RestoreBackground();
 
     FVisible = FALSE;
+    Unprotect();
+
     NotifyChildChange();
 
     if (FParent)
@@ -1096,6 +1101,8 @@ void TControl::Resize(int xsize, int ysize)
 {
     if (FWidth != xsize || FHeight != ysize)
     {
+        Protect();
+        
         if (FTransparent && FVisible)
             RestoreBackground();
     
@@ -1104,6 +1111,8 @@ void TControl::Resize(int xsize, int ysize)
 
         if (FTransparent && FVisible)
             SaveBackground();
+
+        Unprotect();
 
         NotifyResize();
 
@@ -1134,6 +1143,8 @@ void TControl::Move(int xstart, int ystart)
 {
     if (FXMin != xstart || FYMin != ystart)
     {
+        Protect();
+        
         if (FTransparent && FVisible)
             RestoreBackground();
     
@@ -1143,6 +1154,8 @@ void TControl::Move(int xstart, int ystart)
         if (FTransparent && FVisible)
             SaveBackground();
 
+        Unprotect();
+        
         if (FVisible)
         {
             NotifyChildChange();

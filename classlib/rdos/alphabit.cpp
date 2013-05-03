@@ -46,7 +46,9 @@ TAlphaBitmapDevice::TAlphaBitmapDevice(int width, int height)
 {
     FBitmapHandle = RdosCreateAlphaBitmap(width, height);
     InitDevice();
-        RdosGetBitmapInfo(FBitmapHandle, &FBpp, &FWidth, &FHeight, &FRowSize, &FLinear);
+    RdosGetBitmapInfo(FBitmapHandle, &FBpp, &FWidth, &FHeight, &FRowSize, &FLinear);
+    FMask = 0;
+    FAlpha = 0;
 }
 
 /*##########################################################################
@@ -65,6 +67,8 @@ TAlphaBitmapDevice::TAlphaBitmapDevice(int width, int height)
 TAlphaBitmapDevice::TAlphaBitmapDevice(int handle)
   : TBitmapGraphicDevice(handle)
 {
+    FMask = 0;
+    FAlpha = 0;
 }
 
 /*##########################################################################

@@ -142,6 +142,7 @@ protected:
     void RestoreBackground();
 
     TControlThread *GetControlThread();
+    TBitmapGraphicDevice *FTransBitmap;
 
 private:
     void Init();
@@ -162,7 +163,6 @@ private:
     int FDirty;
 
     int FTransparent;
-    TBitmapGraphicDevice *FTransBitmap;
 
     TControlThread *FDev;    
     TControl *FNext;    

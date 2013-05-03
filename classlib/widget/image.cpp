@@ -432,40 +432,6 @@ void TImageControl::Show()
             
 /*##########################################################################
 #
-#   Name       : TImageControl::Hide
-#
-#   Purpose....: Hide image
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TImageControl::Hide()
-{
-    int i;
-    
-    TControl::Hide();
-
-    if (FLoader)
-    {
-        Protect();
-        
-        for (i = 1; i < MAX_IMAGE_COUNT; i++)
-        {
-            if (FImgArr[i])
-            {
-                delete FImgArr[i];
-                FImgArr[i] = 0;
-            }
-        }
-
-        Unprotect();
-    }
-}
-            
-/*##########################################################################
-#
 #   Name       : TImageControl::CheckJpg
 #
 #   Purpose....: Check if filename has jpg extension
@@ -917,6 +883,9 @@ void TImageControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     int xstart;
     int ystart;
     TBitmapGraphicDevice *bitmap;
+
+    if (!IsVisible())
+        return;
     
     dev->SetLgopNone();
     SetClipRect(dev, xmin, ymin);
@@ -966,10 +935,13 @@ void TImageControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
 
     if (bitmap)
     {
-        if (IsTransparent())
+        if (FTransBitmap)
         {
             for (y = 0; y < bmy; y++)
+            {
+                dev->Blit(FTransBitmap, 0, y, xstart, y + ystart, bmx, 1);
                 dev->Blit(bitmap, 0, y, xstart, y + ystart, bmx, 1);
+            }
         }
         else
             dev->Blit(bitmap, 0, 0, xstart, ystart, bmx, bmy);

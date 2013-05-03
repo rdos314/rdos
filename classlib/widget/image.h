@@ -58,7 +58,6 @@ public:
 	void TransparentBackground();
 
     virtual void Show();
-    virtual void Hide();
 
     void SetKey(char key);
 
