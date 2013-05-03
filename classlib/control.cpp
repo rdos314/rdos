@@ -975,12 +975,15 @@ void TControl::RedrawBackground(TGraphicDevice *dev)
 ##########################################################################*/
 void TControl::Show()
 {
-    if (!FVisible && FTransparent)
-        SaveBackground();
+    if (!FVisible)
+    {
+        if (FTransparent)
+            SaveBackground();
         
-    FVisible = TRUE;
-    NotifyChildChange();
-    Redraw();
+        FVisible = TRUE;
+        NotifyChildChange();
+        Redraw();
+    }
 }
 
 /*##########################################################################
@@ -996,18 +999,21 @@ void TControl::Show()
 ##########################################################################*/
 void TControl::Hide()
 {
-    Protect();
+    if (FVisible)
+    {
+        Protect();
 
-    if (FVisible && FTransparent)
-        RestoreBackground();
+        if (FTransparent)
+            RestoreBackground();
 
-    FVisible = FALSE;
-    Unprotect();
+        FVisible = FALSE;
+        Unprotect();
 
-    NotifyChildChange();
+        NotifyChildChange();
 
-    if (FParent)
-        FParent->Redraw();
+        if (FParent)
+           FParent->Redraw();
+    }
 }
 
 /*##########################################################################

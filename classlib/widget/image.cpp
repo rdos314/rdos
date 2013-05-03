@@ -224,15 +224,20 @@ TImageControl::TImageControl(TControl *control)
 *##########################################################################*/
 TImageControl::~TImageControl()
 {
-        int i;
+    int i;
 
-        if (FLoadIni)
-                delete FLoadIni;
+    FAbortLoad = TRUE;
+
+    while (FLoading)
+        RdosWaitMilli(25);
+        
+    if (FLoadIni)
+        delete FLoadIni;
                 
     Protect();
 
     for (i = 0; i < MAX_IMAGE_COUNT; i++)
-                if (FImgArr[i])
+        if (FImgArr[i])
             delete FImgArr[i];
 
     Unprotect();
@@ -256,6 +261,7 @@ void TImageControl::Init()
         }
 
         FLoadIni = 0;
+        FAbortLoad = FALSE;
 
         FBackR = 0;
         FBackG = 0;
@@ -616,6 +622,9 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
 
         for (i = FirstNr; FCount < MaxCount && i <= LastNr; i++)
         {
+            if (FAbortLoad)
+                break;
+                
             if (FLoader && FCount && !IsVisible())
                 break;
                 
@@ -704,7 +713,7 @@ void TImageControl::Load(int MaxCount)
             LoadOne(SeqPath, MaxCount);
         else
         {
-            for (i = 0; i < 256; i++)
+            for (i = 0; i < 256 && !FAbortLoad; i++)
             {
                 sprintf(str, "Path%i", i);
 

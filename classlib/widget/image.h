@@ -86,6 +86,7 @@ protected:
     TSection FSection;
     TLoaderThread *FLoader;
     int FLoading;
+    int FAbortLoad;
 
 	TBitmapGraphicDevice *FImgArr[MAX_IMAGE_COUNT];
 	long FDelayArr[MAX_IMAGE_COUNT];
