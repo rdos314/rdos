@@ -887,31 +887,30 @@ void TControl::Set(const char *IniName, const char *IniSection)
 ##########################################################################*/
 void TControl::SaveBackground()
 {
-    TControlThread *dev = GetControlThread();
     int x, y;
 
-    if (dev)
-    {    
-        Protect();
+    Protect();
 
-        GetAbsPos(&x, &y);
+    GetAbsPos(&x, &y);
         
-        if (FTransBitmap)
-        {
-            if (FTransBitmap->GetWidth() != FWidth || FTransBitmap->GetHeight() != FHeight)
-            {            
-                delete FTransBitmap;
-                FTransBitmap = 0;
-            }
+    if (FTransBitmap)
+    {
+        if (FTransBitmap->GetWidth() != FWidth || FTransBitmap->GetHeight() != FHeight)
+        {            
+            delete FTransBitmap;
+            FTransBitmap = 0;
         }
-
-        if (!FTransBitmap)
-            FTransBitmap = new TBitmapGraphicDevice(GetBpp(), FWidth, FHeight);
-
-        dev->SaveBackground(FTransBitmap, x, y, FWidth, FHeight);
-
-        Unprotect();
     }
+
+    if (!FTransBitmap)
+        FTransBitmap = new TBitmapGraphicDevice(GetBpp(), FWidth, FHeight);
+
+    if (FParent)
+        FParent->Paint(FTransBitmap, 0, 0, FWidth, FHeight);
+    else
+        FDev->SaveBackground(FTransBitmap, x, y, FWidth, FHeight);
+
+    Unprotect();
 }
 
 /*##########################################################################
@@ -927,18 +926,21 @@ void TControl::SaveBackground()
 ##########################################################################*/
 void TControl::RestoreBackground()
 {
-    TControlThread *dev = GetControlThread();
     int x, y;
 
-    if (dev)
-    {    
-        Protect();
+    Protect();
 
-        GetAbsPos(&x, &y);
-        dev->RestoreBackground(FTransBitmap, x, y, FWidth, FHeight);
+    GetAbsPos(&x, &y);
 
-        Unprotect();
+    if (FDev)
+    {
+        if (FTransBitmap)
+            FDev->RestoreBackground(FTransBitmap, x, y, FWidth, FHeight);
     }
+    else
+        FParent->Redraw();
+
+    Unprotect();
 }
 
 /*##########################################################################

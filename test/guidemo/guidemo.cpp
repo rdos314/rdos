@@ -464,22 +464,27 @@ void cdecl main()
         Image->TransparentBackground();
         Image->Show();
         Image->Move(100, 100);
-        Image->Hide();
 
-        Label = new TLabelControl(ControlThread);
+        Label = new TLabelControl(Image);
         Label->SetTransparent();
         Label->SetDrawColor(128, 128, 128);
         Label->SetFont(20);
-        Label->Move(50, 50);
+        Label->Move(0, 0);
         Label->Resize(200, 20);
         Label->SetText("Test label");
         Label->Show();
+
+        for (;;)
+            RdosWaitMilli(100);
+            
         Label->Move(200, 200);
         Label->Resize(200, 30);
         Label->Move(75, 75);
         Label->SetText("New text");
         Label->Redraw();
         Label->Hide();
+
+        Image->Hide();
 
         vbe->SetLgopNone();
         ShowPng(vbe);
