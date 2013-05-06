@@ -959,8 +959,10 @@ void TImageControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
 
     if (bitmap)
     {
-        if (FTransBitmap)
+        if (IsTransparent())
         {
+            UpdateTransparent();
+
             for (y = 0; y < bmy; y++)
             {
                 dev->Blit(FTransBitmap, 0, y, xstart, y + ystart, bmx, 1);

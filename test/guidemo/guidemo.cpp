@@ -373,7 +373,7 @@ void cdecl main()
 {
         int i;
         TGraphicDevice *vbe;
-        TGraphicDevice *bitmap;
+        TBitmapGraphicDevice *bitmap;
         TFont *font;
         TGraphicDevice *MouseMask;
         TGraphicDevice *MouseBitmap;
@@ -438,24 +438,24 @@ void cdecl main()
 //        Wait.Add(Mouse);
 //        Wait.StartThreadHandler("IO Thread", 0x1000);
 
-        vbe->SetDrawColor(255,255,255);
-        vbe->DrawLine(0, 0, vbe->GetWidth(), vbe->GetHeight());
-        vbe->DrawLine(240, 0, 0, 128);
+        bitmap = new TBitmapGraphicDevice(24, 1366, 768);
+        
+        bitmap->SetDrawColor(255,255,255);
+        bitmap->DrawLine(0, 0, vbe->GetWidth(), vbe->GetHeight());
+        bitmap->DrawLine(240, 0, 0, 128);
 
-        vbe->SetClipRect(0, 0, vbe->GetWidth(), vbe->GetHeight() - 35);
+        bitmap->SetClipRect(0, 0, vbe->GetWidth(), vbe->GetHeight() - 35);
+
+        bitmap->SetDrawColor(255, 127, 80);
+        bitmap->SetFilledStyle();
+        bitmap->SetLgopXor();
+        bitmap->DrawRect(0, 0, vbe->GetWidth(), vbe->GetHeight());
+
+        bitmap->DrawEllipse(vbe->GetWidth() / 2, vbe->GetHeight() / 2, vbe->GetWidth() / 2, vbe->GetHeight() / 2);
 
         Planets = new TPlanetThread(vbe, 8);
 
-        RdosWaitMilli(5000);
-
-        vbe->SetDrawColor(255, 127, 80);
-        vbe->SetFilledStyle();
-        vbe->SetLgopXor();
-        vbe->DrawRect(0, 0, vbe->GetWidth(), vbe->GetHeight());
-
-        RdosWaitMilli(5000);
-
-        vbe->DrawEllipse(vbe->GetWidth() / 2, vbe->GetHeight() / 2, vbe->GetWidth() / 2, vbe->GetHeight() / 2);
+        ControlThread->SetBackground(bitmap);
 
         Image = new TImageControl(ControlThread);
         Image->LoadImage("test.png");

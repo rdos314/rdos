@@ -344,6 +344,7 @@ void TControl::Init()
 
     FTransparent = FALSE;
     FTransBitmap = 0;
+    FTransChanged = TRUE;
 
     IdSection.Enter();
     ControlId = CurrId;
@@ -767,6 +768,7 @@ void TControl::ClearTransparent()
     {
         delete FTransBitmap;
         FTransBitmap = 0;
+        FTransChanged = TRUE;
     }
 }
 
@@ -906,7 +908,7 @@ void TControl::SaveBackground()
         if (!FTransBitmap)
             FTransBitmap = new TBitmapGraphicDevice(GetBpp(), FWidth, FHeight);
 
-        FTransBitmap->Blit(dev->FGraphic, x, y, 0, 0, FWidth, FHeight);
+        dev->SaveBackground(FTransBitmap, x, y, FWidth, FHeight);
 
         Unprotect();
     }
@@ -933,8 +935,7 @@ void TControl::RestoreBackground()
         Protect();
 
         GetAbsPos(&x, &y);
-        dev->FGraphic->ClearClipRect();
-        dev->FGraphic->Blit(FTransBitmap, 0, 0, x, y, FWidth, FHeight);
+        dev->RestoreBackground(FTransBitmap, x, y, FWidth, FHeight);
 
         Unprotect();
     }
@@ -961,6 +962,26 @@ void TControl::RedrawBackground(TGraphicDevice *dev)
         dev->Blit(FTransBitmap, 0, 0, x, y, FWidth, FHeight);
     }
 }
+
+/*##########################################################################
+#
+#   Name       : TControl::UpdateTransparent
+#
+#   Purpose....: Update transparent
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::UpdateTransparent()
+{
+    if (FTransChanged)
+    {
+        FTransChanged = FALSE;
+        SaveBackground();
+    }
+}
     
 /*##########################################################################
 #
@@ -977,9 +998,6 @@ void TControl::Show()
 {
     if (!FVisible)
     {
-        if (FTransparent)
-            SaveBackground();
-        
         FVisible = TRUE;
         NotifyChildChange();
         Redraw();
@@ -1116,7 +1134,7 @@ void TControl::Resize(int xsize, int ysize)
         FHeight = ysize;
 
         if (FTransparent && FVisible)
-            SaveBackground();
+            FTransChanged = TRUE;
 
         Unprotect();
 
@@ -1158,7 +1176,7 @@ void TControl::Move(int xstart, int ystart)
         FYMin = ystart;
 
         if (FTransparent && FVisible)
-            SaveBackground();
+            FTransChanged = TRUE;
 
         Unprotect();
         
@@ -2241,6 +2259,9 @@ TControlThread::~TControlThread()
 
     if (FGraphic)
         delete FGraphic;
+
+    if (FBackground)
+        delete FBackground;
 }
 
 /*##########################################################################
@@ -2257,6 +2278,92 @@ TControlThread::~TControlThread()
 void TControlThread::Init()
 {
     FControlList = 0;
+    FBackground = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::CreateBackground
+#
+#   Purpose....: Create background
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::CreateBackground()
+{
+    if (!FBackground && FVbe)
+    {
+        FBackground = new TBitmapGraphicDevice(32, FVbe->GetWidth(), FVbe->GetHeight());
+        FBackground->SetFilledStyle();
+        FBackground->SetDrawColor(0, 0, 0);
+        FBackground->DrawRect(0, 0, FVbe->GetWidth(), FVbe->GetHeight());
+    }        
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::SetBackground
+#
+#   Purpose....: Set background
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::SetBackground(TBitmapGraphicDevice *bitmap)
+{
+    CreateBackground();
+
+    if (FBackground)
+    {
+        FBackground->Blit(bitmap, 0, 0, 0, 0, bitmap->GetWidth(), bitmap->GetHeight());
+        FVbe->Blit(FBackground, 0, 0, 0, 0, FBackground->GetWidth(), FBackground->GetHeight());  
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::SaveBackground
+#
+#   Purpose....: Save background
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::SaveBackground(TBitmapGraphicDevice *bitmap, int x, int y, int width, int height)
+{
+    CreateBackground();
+
+    if (FBackground)
+        bitmap->Blit(FBackground, x, y, 0, 0, width, height);    
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::RestoreBackground
+#
+#   Purpose....: Restore background
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::RestoreBackground(TBitmapGraphicDevice *bitmap, int x, int y, int width, int height)
+{
+    CreateBackground();
+
+    if (FBackground)
+    {
+        FGraphic->ClearClipRect();
+        FGraphic->Blit(bitmap, 0, 0, x, y, width, height);
+    }
 }
 
 /*##########################################################################

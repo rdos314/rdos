@@ -112,6 +112,7 @@ protected:
     virtual void UpdateChild(TControl *control, int level);
     virtual void RedrawChild(TControl *control, int level);
 
+    void UpdateTransparent();
     void RedrawBackground(TGraphicDevice *dev);
     void Apply(TGraphicDevice *dev);
     void DeleteDev();
@@ -143,6 +144,7 @@ protected:
 
     TControlThread *GetControlThread();
     TBitmapGraphicDevice *FTransBitmap;
+    int FTransChanged;
 
 private:
     void Init();
@@ -182,6 +184,8 @@ public:
 
     void GetSize(int *x, int *y) const;
 
+    void SetBackground(TBitmapGraphicDevice *bitmap);
+
     virtual TSprite *SetMouseMarker(TGraphicDevice *MouseBitmap, TGraphicDevice *MouseMask, int HotX, int HotY);
     virtual void RestoreMouseMarker(TSprite *Sprite);
 
@@ -191,6 +195,10 @@ public:
 protected:
     virtual void Protect();
     virtual void Unprotect();
+
+    void CreateBackground();
+    void SaveBackground(TBitmapGraphicDevice *bitmap, int x, int y, int width, int height);
+    void RestoreBackground(TBitmapGraphicDevice *bitmap, int x, int y, int width, int height);
 
     void Signal();
     void Add(TControl *control);
@@ -203,6 +211,7 @@ protected:
 
     TGraphicDevice *FGraphic;
     TGraphicDevice *FVbe;
+    TBitmapGraphicDevice *FBackground;
 
     TWait FWait;
     TSignalDevice FSignal;

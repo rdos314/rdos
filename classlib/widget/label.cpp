@@ -1527,7 +1527,10 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     int redraw;
 
     if (IsTransparent())
+    {
+        UpdateTransparent();
         RedrawBackground(dev);
+    }
 
     TPanelControl::Paint(dev, xmin, ymin, width, height);
     GetInner(&xoffs, &yoffs, &xdiff, &ydiff);
