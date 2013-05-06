@@ -16,17 +16,17 @@ class TImageControl;
 class TLoaderThread : public TThread
 {
 public:
-	TLoaderThread();
-	~TLoaderThread();
+        TLoaderThread();
+        ~TLoaderThread();
 
-	void StartLoad(TImageControl *img);
+        void StartLoad(TImageControl *img);
 
 protected:
-	virtual void Execute();
+        virtual void Execute();
 
-	TSection FSection;
-	TImageControl *FCurrImg;
-	TSignalDevice FSignal;
+        TSection FSection;
+        TImageControl *FCurrImg;
+        TSignalDevice FSignal;
 };
 
 class TImageControl : public TControl
@@ -36,26 +36,28 @@ public:
     TImageControl(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
     TImageControl(TControl *control, int xstart, int ystart, int xsize, int ysize);
     TImageControl(TControlThread *dev);
-	TImageControl(TControl *control);
-	virtual ~TImageControl();
+        TImageControl(TControl *control);
+        virtual ~TImageControl();
 
-	static int IsImageControl(TControl *control);
+        static int IsImageControl(TControl *control);
 
-	virtual void Set(const char *IniName, const char *IniSection);
+        virtual void Set(const char *IniName, const char *IniSection);
 
-	void LoadImage(const char *FileName);
+        void LoadImage(const char *FileName);
 
-	const char *GetImage();
+        TBitmapGraphicDevice *GetImage(int Id);
 
-	void SetLoader(TLoaderThread *Loader);
-	void SetLoadIni(const char *IniName, const char *IniSection);
+        const char *GetImage();
 
-	void SetBackColor(int r, int g, int b);
-	void RestartSequence();
+        void SetLoader(TLoaderThread *Loader);
+        void SetLoadIni(const char *IniName, const char *IniSection);
 
-	void EraseBackground();
-	void KeepBackground();
-	void TransparentBackground();
+        void SetBackColor(int r, int g, int b);
+        void RestartSequence();
+
+        void EraseBackground();
+        void KeepBackground();
+        void TransparentBackground();
 
     virtual void Show();
 
@@ -67,33 +69,33 @@ protected:
     int CheckBmp(const char *path);
     int CheckGif(const char *path);
 
-	void LoadOne(const char *path, int MaxCount);
-	void Load(int MaxCount);
-	
-	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
-	virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
+        void LoadOne(const char *path, int MaxCount);
+        void Load(int MaxCount);
+        
+        virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
+        virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
 
-	TIniFile *FLoadIni;
+        TIniFile *FLoadIni;
     TString FLoadSection;
-	int FBackR;
-	int FBackG;
-	int FBackB;
-	int FIndex;
-	int FCount;
+        int FBackR;
+        int FBackG;
+        int FBackB;
+        int FIndex;
+        int FCount;
 
-	int FErase;
+        int FErase;
 
     TSection FSection;
     TLoaderThread *FLoader;
     int FLoading;
     int FAbortLoad;
 
-	TBitmapGraphicDevice *FImgArr[MAX_IMAGE_COUNT];
-	long FDelayArr[MAX_IMAGE_COUNT];
+        TBitmapGraphicDevice *FImgArr[MAX_IMAGE_COUNT];
+        long FDelayArr[MAX_IMAGE_COUNT];
 
-	char FKey;
+        char FKey;
 
-	TString FImageName;
+        TString FImageName;
 
 private:
     void Init();

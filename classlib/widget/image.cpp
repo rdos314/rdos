@@ -298,6 +298,21 @@ int TImageControl::IsImageControl(TControl *control)
         return FALSE;
 }
 
+/*##################  TImageControl::GetImage     ##########################
+*   Purpose....: Get image control                                          #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-08-28 le                                                #
+*##########################################################################*/
+TBitmapGraphicDevice *TImageControl::GetImage(int id)
+{
+    if (id >= 0 && id < MAX_IMAGE_COUNT)
+        return FImgArr[id];
+    else
+        return 0;
+}
+
 /*##########################################################################
 #
 #   Name       : TImageControl::SetKey
