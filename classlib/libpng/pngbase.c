@@ -126,9 +126,11 @@ int LoadPngBase(const char *FileName)
                 png_set_interlace_handling(png_ptr);
                 png_read_update_info(png_ptr, info_ptr);
 
+                bitmap = 0;
                 if (color_type & PNG_COLOR_MASK_ALPHA)
                     bitmap = RdosCreateAlphaBitmap(width, height);
-                else
+
+                if (!bitmap)
                     bitmap = RdosCreateBitmap(24, width, height);
 
                 RdosGetBitmapInfo(bitmap, &bpp, &iwidth, &iheight, &LineSize, &Linear);

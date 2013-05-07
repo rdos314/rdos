@@ -1409,13 +1409,10 @@ void TLabelControl::SetText(const char *Text)
 
     if (!same)
     {
-        if (!IsTransparent() && HasParent())
+        if (IsTransparent() && HasParent())
             RedrawParent();
         else
-        {
-            FRedrawBack = TRUE;
             Redraw(1);
-        }
     }
 }
 
@@ -1531,6 +1528,8 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
         UpdateTransparent();
         RedrawBackground(dev);
     }
+
+    FRedrawBack = TRUE;
 
     TPanelControl::Paint(dev, xmin, ymin, width, height);
     GetInner(&xoffs, &yoffs, &xdiff, &ydiff);

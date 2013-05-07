@@ -889,28 +889,28 @@ void TControl::SaveBackground()
 {
     int x, y;
 
-    Protect();
-
-    GetAbsPos(&x, &y);
-        
-    if (FTransBitmap)
+    if (!FParent)
     {
-        if (FTransBitmap->GetWidth() != FWidth || FTransBitmap->GetHeight() != FHeight)
-        {            
-            delete FTransBitmap;
-            FTransBitmap = 0;
+        Protect();
+
+        GetAbsPos(&x, &y);
+           
+        if (FTransBitmap)
+        {
+            if (FTransBitmap->GetWidth() != FWidth || FTransBitmap->GetHeight() != FHeight)
+            {            
+                delete FTransBitmap;
+                FTransBitmap = 0;
+            }
         }
-    }
 
-    if (!FTransBitmap)
-        FTransBitmap = new TBitmapGraphicDevice(GetBpp(), FWidth, FHeight);
+        if (!FTransBitmap)
+            FTransBitmap = new TBitmapGraphicDevice(GetBpp(), FWidth, FHeight);
 
-    if (FParent)
-        FParent->Paint(FTransBitmap, 0, 0, FWidth, FHeight);
-    else
         FDev->SaveBackground(FTransBitmap, x, y, FWidth, FHeight);
 
-    Unprotect();
+        Unprotect();
+    }
 }
 
 /*##########################################################################
@@ -928,19 +928,17 @@ void TControl::RestoreBackground()
 {
     int x, y;
 
-    Protect();
-
-    GetAbsPos(&x, &y);
-
-    if (FDev)
+    if (!FParent)
     {
+        Protect();
+
+        GetAbsPos(&x, &y);
+
         if (FTransBitmap)
             FDev->RestoreBackground(FTransBitmap, x, y, FWidth, FHeight);
-    }
-    else
-        FParent->Redraw();
 
-    Unprotect();
+        Unprotect();
+    }
 }
 
 /*##########################################################################
