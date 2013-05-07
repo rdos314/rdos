@@ -473,10 +473,6 @@ void cdecl main()
         Label->Resize(200, 20);
         Label->SetText("Test label");
         Label->Show();
-
-        for (;;)
-            RdosWaitMilli(100);
-            
         Label->Move(200, 200);
         Label->Resize(200, 30);
         Label->Move(75, 75);
