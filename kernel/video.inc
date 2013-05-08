@@ -253,13 +253,13 @@ v_get_alpha_proc                        DD ?,?
 ; IN  CX                        x
 ; IN  DX                        y
 ; IN  EDI               Position
-v_get_alpha_row_proc            DD ?,?
+v_get_rgba_row_proc            DD ?,?
 
 ; IN  AX                        number of pixels
 ; IN  CX                        x
 ; IN  DX                        y
 ; IN  EDI               Position
-v_set_alpha_row_proc            DD ?,?
+v_set_rgba_row_proc            DD ?,?
 
 v_section           section_typ <>
 v_sprite_section    section_typ <>
