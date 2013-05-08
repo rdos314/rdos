@@ -45,6 +45,7 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extrn BitmapTab1:near
+    extrn BitmapTab8:near
     extrn BitmapTab16:near
     extrn BitmapTab24:near
     extrn BitmapTab32:near
@@ -175,6 +176,9 @@ init_video_font_done:
     cmp al,1
     je init_video1
 ;
+    cmp al,8
+    je init_video8
+;
     cmp al,16
     je init_video16
 ;
@@ -189,6 +193,10 @@ init_video_font_done:
 init_video1:
     mov es:v_color,1
     mov esi,OFFSET BitmapTab1
+    jmp init_video_copy
+    
+init_video8:
+    mov esi,OFFSET BitmapTab8
     jmp init_video_copy
     
 init_video16:
@@ -324,6 +332,9 @@ create_bitmap_no_pad:
     cmp al,1
     je cr_bitmap1
 ;
+    cmp al,8
+    je cr_bitmap8
+;
     cmp al,16
     je cr_bitmap16
 ;
@@ -344,6 +355,12 @@ cr_bitmap1:
     dec ax
     shr ax,3
     inc ax
+    mov es:v_row_size,ax
+    jmp cr_bitmap_copy
+
+cr_bitmap8:
+    mov esi,OFFSET BitmapTab8
+    mov ax,es:v_width
     mov es:v_row_size,ax
     jmp cr_bitmap_copy
 

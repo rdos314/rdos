@@ -565,83 +565,18 @@ set_base    Endp
 
 slab    Proc far
     push ebx
-    push cx
-    push edx
+    push ecx
     push edi
 ;
     or cx,cx
     jz slab_done
 ;    
     movzx ebx,ds:v_lgop
-    cmp bx,LGOP_NONE
+    cmp ebx,LGOP_NONE
     jne slab_lgop
 ;
-    test di,1
-    jz slab_lgop_none_even
-
-slab_lgop_none_odd:
-    stos byte ptr es:[edi]
-    mov dl,al
-    rol eax,8
-    mov al,dl
-    ror eax,16
-    stos word ptr es:[edi]
-    rol eax,8
-    sub cx,1
-    jz slab_done
-
-slab_lgop_none_even:
-    test di,2
-    jz slab_lgop_none_double
-
-slab_lgop_none_word:
-    cmp cx,1
-    jbe slab_lgop_none_last
-;
-    stos word ptr es:[edi]
-    mov dx,ax
-    ror eax,16
-    rol edx,16
-    mov dl,al
-    mov dh,al
-    ror edx,8
-    mov eax,edx
-    stos dword ptr es:[edi]
-    ror eax,8
-    sub cx,2
-
-slab_lgop_none_double:
-    cmp cx,3
-    jbe slab_lgop_none_word
-;
-    mov dl,al
-    rol eax,8
-    mov al,dl
-    ror eax,8
-    stos dword ptr es:[edi]
-    ror eax,8
-    mov dl,al
-    rol eax,8
-    mov al,dl
-    ror eax,8
-    stos dword ptr es:[edi]
-    ror eax,8
-    mov dl,al
-    rol eax,8
-    mov al,dl
-    ror eax,8
-    stos dword ptr es:[edi]
-    ror eax,8
-    sub cx,4
-    jnc slab_lgop_none_double
-
-slab_lgop_none_last:
-    or cx,cx
-    jz slab_done
-;
-    stos word ptr es:[edi]
-    ror eax,16
-    stos byte ptr es:[edi]
+    movzx ecx,cx
+    rep stos byte ptr es:[edi]
     jmp slab_done
 
 slab_lgop:
@@ -649,15 +584,14 @@ slab_lgop:
 
 slab_lgop_loop:
     call dword ptr cs:[ebx].LgopTab
-    add edi,3
+    inc edi
     inc word ptr [ebp].curr_x
     sub cx,1
     jnz slab_lgop_loop
 
 slab_done:
     pop edi
-    pop edx
-    pop cx
+    pop ecx
     pop ebx
     ret
 slab    Endp
@@ -671,22 +605,22 @@ slab    Endp
 ;
 ;           DESCRIPTION:    Copy line
 ;
-;           PARAMETERS:         FS:ESI      Source pixels
+;           PARAMETERS:     FS:ESI      Source pixels
 ;                           ES:EDI      Dest buffer
-;                           CX              number of pixels
+;                           CX          number of pixels
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 copy    Proc far
-    push ax
+    push eax
     push ebx
-    push cx
+    push ecx
     push esi
     push edi
 ;
     or cx,cx
     jz copy_done
-;    
+;
     movzx ebx,ds:v_lgop
     cmp ebx,LGOP_NONE
     je copy_none
@@ -694,9 +628,9 @@ copy    Proc far
     shl ebx,2
 
 copy_loop:
-    lods word ptr fs:[esi]
+    lods byte ptr fs:[esi]
     call dword ptr cs:[ebx].LgopTab
-    add edi,3
+    inc edi
     inc word ptr [ebp].curr_x
     sub cx,1
     jnz copy_loop
@@ -704,43 +638,14 @@ copy_loop:
 
 copy_none:
     movzx ecx,cx
-    mov eax,ecx
-    add ecx,ecx
-    add ecx,eax
-;
-    test di,1
-    jz copy_even
-;
-    movs byte ptr es:[edi],fs:[esi]
-    sub ecx,1
-    jz copy_done
-
-copy_even:
-    cmp ecx,2
-    jb copy_last
-;
-    test di,2
-    jz copy_double
-;
-    movs word ptr es:[edi],fs:[esi]
-    sub ecx,2
-
-copy_double:
-    push cx
-    shr ecx,2
-    rep movs dword ptr es:[edi],fs:[esi]
-    pop cx
-    and ecx,3
-
-copy_last:
     rep movs byte ptr es:[edi],fs:[esi]
 
 copy_done:
     pop edi
     pop esi
-    pop cx
+    pop ecx
     pop ebx
-    pop ax
+    pop eax
     ret
 copy    Endp
 
@@ -753,10 +658,10 @@ copy    Endp
 ;
 ;           DESCRIPTION:    Set mask line
 ;
-;           PARAMETERS:         EAX     Color
+;           PARAMETERS:     EAX     Color
 ;                           CX              number of pixels
-;               DL      Start bit number
-;               GS:EBX      Mask bits
+;                           DL      Start bit number
+;                           GS:EBX      Mask bits
 ;                           ES:EDI      Dest buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -790,7 +695,7 @@ mask_set_bit_loop:
     pop ebx
 
 mask_set_line_next:
-    add edi,3
+    inc edi
     inc word ptr [ebp].curr_x
     sub si,1
     jz mask_set_line_done
@@ -809,8 +714,6 @@ mask_set_line_done:
     pop ebx
     ret
 mask_set    Endp
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -864,7 +767,7 @@ mask_copy_loop:
     cmp ax,ds:v_x_max
     jg mask_copy_next
 ;
-    mov ax,fs:[esi]
+    mov eax,fs:[esi]
     push ebx
     movzx ebx,ds:v_lgop
     shl ebx,2
@@ -872,8 +775,8 @@ mask_copy_loop:
     pop ebx
 
 mask_copy_next:
-    add esi,3
-    add edi,3
+    inc esi
+    inc edi
     inc word ptr [ebp].curr_x
     sub cx,1
     jz mask_copy_done
@@ -918,7 +821,7 @@ anti_alias_set  Proc far
 ;
     or cx,cx
     jz anti_alias_set_line_done
-    
+        
 anti_alias_set_line_loop:
     push cx
     mov dl,gs:[ebx]
@@ -937,47 +840,19 @@ anti_alias_set_line_loop:
 
 anti_alias_mix:
     push eax
-    mov ecx,eax
-;    
+    mov cl,al
     movzx ax,cl
     movzx dx,byte ptr es:[edi]
     sub ax,dx
-    jz anti_alias_mix_b_ok    
+    jz anti_alias_mix_ok    
 ;
     movzx dx,byte ptr gs:[ebx]
     imul dx
     mov cl,ah
     add cl,es:[edi]
 
-anti_alias_mix_b_ok:    
-    movzx ax,ch
-    movzx dx,byte ptr es:[edi+1]
-    sub ax,dx
-    jz anti_alias_mix_g_ok
-;
-    movzx dx,byte ptr gs:[ebx]
-    imul dx
-    mov ch,ah
-    add ch,es:[edi+1]
-
-anti_alias_mix_g_ok:    
-    mov eax,ecx
-    shr eax,16
-    movzx ax,al
-    movzx dx,byte ptr es:[edi+2]
-    sub ax,dx
-    jz anti_alias_mix_r_ok
-;
-    movzx dx,byte ptr gs:[ebx]
-    imul dx
-    xchg ax,cx
-    add ch,es:[edi+2]
-    shl ecx,8
-    xchg ax,cx
-    
-anti_alias_mix_r_ok:    
-    mov eax,ecx    
-    and eax,0FFFFFFh
+anti_alias_mix_ok:    
+    mov al,cl
     push ebx
     movzx ebx,ds:v_lgop
     shl ebx,2
@@ -988,7 +863,7 @@ anti_alias_mix_r_ok:
 
 anti_alias_set_line_next:
     pop cx
-    add edi,3
+    inc edi
     inc word ptr [ebp].curr_x
     inc ebx
     sub cx,1
@@ -1044,7 +919,7 @@ aa_buf_loop:
 
 aa_adv_buf:
     inc ax
-    add edi,3
+    inc edi
     sub cx,1
     jnz aa_buf_loop
     jmp aa_done
@@ -1114,10 +989,7 @@ HollowLine      Proc near
 hollow_line_first_done:
     mov ax,cx
     dec ax
-    mov bx,ax
-    add ax,ax
-    add ax,bx
-    movzx eax,ax
+    movsx eax,ax
     add edi,eax
 ;
     mov ax,[ebp].curr_x
@@ -1178,7 +1050,7 @@ filled_line_buf_loop:
 
 filled_line_adv_buf:
     inc ax
-    add edi,3
+    inc edi
     sub cx,1
     jnz filled_line_buf_loop
     jmp filled_line_done
@@ -1264,17 +1136,14 @@ split_left_loop:
 
 split_left_next:
     inc word ptr [ebp].curr_x
-    add edi,3
+    inc edi
     sub cx,1
     jnz split_left_loop
 ;
     pop cx
     add [ebp].curr_x,cx
 ;
-    mov ax,cx
-    add ax,ax
-    add ax,cx
-    movzx eax,ax
+    movsx eax,cx
     add edi,eax
 ;
     mov cx,dx    
@@ -1294,7 +1163,7 @@ split_right_loop:
 
 split_right_next:
     inc word ptr [ebp].curr_x
-    add edi,3
+    inc edi
     sub cx,1
     jnz split_right_loop
 
@@ -1337,8 +1206,6 @@ get_native      Proc far
     movzx eax,ds:v_row_size
     imul edx
     mov edx,ecx
-    add edx,edx
-    add edx,ecx
     add eax,edx
     add eax,ds:v_app_base
     mov esi,eax
@@ -1346,39 +1213,6 @@ get_native      Proc far
     mov ds,dx
     pop cx
 ;
-    or cx,cx
-    jz get_native_done
-;
-    movzx ecx,cx
-    mov eax,ecx
-    add ecx,ecx
-    add ecx,eax
-;
-    test si,1
-    jz get_native_even
-;
-    movs byte ptr es:[edi],ds:[esi]
-    sub ecx,1
-    jz get_native_done
-
-get_native_even:
-    cmp ecx,2
-    jb get_native_last
-;
-    test si,2
-    jz get_native_double
-;
-    movs word ptr es:[edi],ds:[esi]
-    sub ecx,2
-
-get_native_double:
-    push cx
-    shr ecx,2
-    rep movs dword ptr es:[edi],ds:[esi]
-    pop cx
-    and ecx,3
-
-get_native_last:
     rep movs byte ptr es:[edi],ds:[esi]
 
 get_native_done:
@@ -1401,7 +1235,7 @@ get_native      Endp
 ;
 ;           DESCRIPTION:    Get pixels in RGB format
 ;
-;           PARAMETER:          AX              number of pixels
+;           PARAMETER:      AX              number of pixels
 ;                           CX              x
 ;                           DX              y
 ;                           ES:EDI      line buffer
@@ -1422,8 +1256,6 @@ get_rgb Proc far
     movzx eax,ds:v_row_size
     imul edx
     mov edx,ecx
-    add edx,edx
-    add edx,ecx
     add eax,edx
     add eax,ds:v_app_base
     mov esi,eax
@@ -1435,10 +1267,12 @@ get_rgb Proc far
     jz get_rgb_done
 
 get_rgb_loop:
-    movzx ax,byte ptr [esi+2]
-    shl eax,16
-    mov ax,[esi]
-    add esi,3
+    mov al,[esi]
+    mov ah,al
+    shl eax,8
+    mov al,ah
+    and eax,0FFFFFFh
+    inc esi
     stos dword ptr es:[edi]
     sub cx,1
     jnz get_rgb_loop
@@ -1482,8 +1316,6 @@ get_alpha Proc far
     movzx eax,ds:v_row_size
     imul edx
     mov edx,ecx
-    add edx,edx
-    add edx,ecx
     add eax,edx
     add eax,ds:v_app_base
     mov esi,eax
@@ -1495,11 +1327,12 @@ get_alpha Proc far
     jz get_rgba_done
 
 get_rgba_loop:
-    mov al,[esi+2]
-    mov ah,0FFh
-    shl eax,16
-    mov ax,[esi]
-    add esi,3
+    mov al,[esi]
+    mov ah,al
+    shl eax,8
+    mov al,ah
+    and eax,0FFFFFFh
+    inc esi
     stos dword ptr es:[edi]
     sub cx,1
     jnz get_rgba_loop
@@ -1523,7 +1356,7 @@ get_alpha Endp
 ;
 ;           DESCRIPTION:    Set pixels in internal format
 ;
-;           PARAMETER:          AX              number of pixels
+;           PARAMETER:      AX              number of pixels
 ;                           CX              x
 ;                           DX              y
 ;                           ES:EDI      line buffer
@@ -1551,7 +1384,7 @@ set_native_buf_loop:
 
 set_native_adv_buf:
     inc cx
-    add edi,3
+    inc edi
     sub ax,1
     jnz set_native_buf_loop
     jmp set_native_done
@@ -1580,8 +1413,6 @@ set_native_do:
     movzx eax,ds:v_row_size
     imul edx
     mov edx,ecx
-    add edx,edx
-    add edx,ecx
     add eax,edx
     add eax,ds:v_app_base
     mov edi,eax
@@ -1601,7 +1432,6 @@ set_native_done:
     pop es
     ret
 set_native      Endp
-
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1640,7 +1470,7 @@ set_rgb_buf_loop:
 
 set_rgb_adv_buf:
     inc cx
-    add edi,3
+    inc edi
     sub ax,1
     jnz set_rgb_buf_loop
     jmp set_rgb_done
@@ -1669,8 +1499,6 @@ set_rgb_do:
     movzx eax,ds:v_row_size
     imul edx
     mov edx,ecx
-    add edx,edx
-    add edx,ecx
     add eax,edx
     add eax,ds:v_app_base
     mov edi,eax
@@ -1684,7 +1512,7 @@ set_rgb_do:
 set_rgb_loop:
     lods dword ptr fs:[esi]
     call fword ptr ds:v_set_proc
-    add edi,3
+    inc edi
     inc word ptr [ebp].curr_x
     sub cx,1
     jnz set_rgb_loop
@@ -1737,7 +1565,7 @@ set_rgba_buf_loop:
 
 set_rgba_adv_buf:
     inc cx
-    add edi,3
+    inc edi
     sub ax,1
     jnz set_rgba_buf_loop
     jmp set_rgba_done
@@ -1766,8 +1594,6 @@ set_rgba_do:
     movzx eax,ds:v_row_size
     imul edx
     mov edx,ecx
-    add edx,edx
-    add edx,ecx
     add eax,edx
     add eax,ds:v_app_base
     mov edi,eax
@@ -1846,7 +1672,7 @@ set_rgba_next:
     pop bx
 ;
     add esi,4
-    add edi,3
+    inc edi
     inc word ptr [ebp].curr_x
     sub cx,1
     jnz set_rgba_loop
@@ -1899,7 +1725,7 @@ set_sprite_buf_loop:
 
 set_sprite_adv_buf:
     inc cx
-    add edi,3
+    inc edi
     sub ax,1
     jnz set_sprite_buf_loop
     jmp set_sprite_done
@@ -1924,8 +1750,6 @@ set_sprite_do:
     movzx eax,ds:v_row_size
     imul edx
     mov edx,ecx
-    add edx,edx
-    add edx,ecx
     add eax,edx
     add eax,ds:v_app_base
     mov edi,eax
@@ -1975,8 +1799,6 @@ get_line    Proc far
     movzx eax,ds:v_row_size
     imul edx
     mov edx,ecx
-    add edx,edx
-    add edx,ecx
     add eax,edx
     add eax,ds:v_app_base
     mov edi,eax
@@ -2012,13 +1834,14 @@ get_pixel       Proc far
     movzx eax,ds:v_row_size
     imul edx
     mov edx,ecx
-    add edx,edx
-    add edx,ecx
     add eax,edx
     add eax,ds:v_app_base
     mov dx,flat_sel
     mov ds,dx
-    mov eax,[eax]
+    mov al,[eax]
+    mov ah,al
+    shl eax,8
+    mov al,ah
     and eax,0FFFFFFh
     pop edx 
     pop ds
@@ -2069,8 +1892,6 @@ set_pixel       Proc far
     movzx eax,ds:v_row_size
     imul edx
     mov edi,ecx
-    add edi,edi
-    add edi,ecx
     add edi,eax
     add edi,ds:v_app_base
     mov ax,flat_sel
@@ -2175,8 +1996,6 @@ draw_mask_do:
     movzx eax,ds:v_row_size
     imul edx
     mov edx,ebp
-    add edx,edx
-    add edx,ebp
     add eax,edx
     add eax,ds:v_app_base
 ;
@@ -2253,8 +2072,6 @@ draw_sprite_line    Proc far
     movzx eax,ds:v_row_size
     imul edx
     mov edx,ebx
-    add edx,edx
-    add edx,ebx
     add eax,edx
     add eax,ds:v_app_base
     mov ebx,eax
@@ -2354,8 +2171,6 @@ draw_string_loop:
     movzx eax,word ptr ds:v_row_size
     imul edx
     mov edx,esi
-    add edx,edx
-    add edx,esi
     add eax,edx
     add eax,ds:v_app_base
     mov edi,eax
@@ -2515,14 +2330,14 @@ line_bresen_dx_neg:
     neg cx
     mov [ebp].dl_dx,cx
     mov word ptr [ebp].dl_log_add_x,1
-    mov dword ptr [ebp].dl_phys_add_x,3
+    mov dword ptr [ebp].dl_phys_add_x,1
     jmp line_bresen_dy
 
 line_bresen_dx_pos:
     add cx,cx
     mov [ebp].dl_dx,cx
     mov word ptr [ebp].dl_log_add_x,-1
-    mov dword ptr [ebp].dl_phys_add_x,-3
+    mov dword ptr [ebp].dl_phys_add_x,-1
 
 line_bresen_dy:
     test dh,80h
@@ -2641,8 +2456,6 @@ line_inrange_bresen:
     movzx eax,ds:v_row_size
     imul edx
     mov edi,ecx
-    add edi,edi
-    add edi,ecx
     add edi,eax
     add edi,ds:v_app_base
 ;
@@ -2853,8 +2666,6 @@ line_vert_do:
     mov esi,eax
     imul edx
     mov edi,ecx
-    add edi,edi
-    add edi,ecx
     add edi,eax
     add edi,ds:v_app_base
     mov cx,bx
@@ -2873,9 +2684,12 @@ line_vert_sprite_loop:
     cmp dx,ds:v_y_max
     jg line_vert_sprite_next
 ;
+    push ax
     DrawStart 1
+    mov eax,ds:v_color
     call fword ptr ds:v_set_proc
     call DrawDone
+    pop ax
 
 line_vert_sprite_next:
     add edi,esi
@@ -2919,8 +2733,6 @@ line_horiz_do:
     movzx eax,ds:v_row_size
     imul edx
     mov edi,ecx
-    add edi,edi
-    add edi,ecx
     add edi,eax
     add edi,ds:v_app_base
     sub cx,bx
@@ -2985,8 +2797,6 @@ draw_rect       Proc far
     mov esi,eax
     imul edx
     mov edi,ecx
-    add edi,edi
-    add edi,ecx
     add edi,eax
     add edi,ds:v_app_base
     pop dx
@@ -3254,8 +3064,6 @@ draw_ellipse    Proc far
     mov eax,esi
     imul edx
     mov edi,ecx
-    add edi,edi
-    add edi,ecx
     add edi,eax
     add edi,ds:v_app_base
     mov [ebp].de_p0,edi
@@ -3265,8 +3073,6 @@ draw_ellipse    Proc far
     mov eax,esi
     imul edx
     mov edi,ecx
-    add edi,edi
-    add edi,ecx
     add edi,eax
     add edi,ds:v_app_base
     mov [ebp].de_p1,edi
@@ -3301,8 +3107,8 @@ ellipse_s_neg:
     adc [ebp+4].de_dTx,dx
 ;
     dec word ptr [ebp].curr_x
-    sub dword ptr [ebp].de_p0,3
-    sub dword ptr [ebp].de_p1,3
+    sub dword ptr [ebp].de_p0,1
+    sub dword ptr [ebp].de_p1,1
     inc word ptr [ebp].de_width
     add word ptr [ebp].de_size,2
     jmp ellipse_loop
@@ -3341,8 +3147,8 @@ ellipse_t_neg:
     adc [ebp+4].de_dTy,dx
 ;
     dec word ptr [ebp].curr_x
-    sub dword ptr [ebp].de_p0,3
-    sub dword ptr [ebp].de_p1,3
+    sub dword ptr [ebp].de_p0,1
+    sub dword ptr [ebp].de_p1,1
     inc word ptr [ebp].de_width
     add word ptr [ebp].de_size,2
 ;
@@ -3631,9 +3437,9 @@ errorp  Proc far
     ret
 errorp  Endp
     
-    public BitmapTab24
+    public BitmapTab8
 
-BitmapTab24:
+BitmapTab8:
 mt00 DD OFFSET errorp,              SEG code
 mt01 DD OFFSET errorp,              SEG code
 mt02 DD OFFSET errorp,              SEG code
