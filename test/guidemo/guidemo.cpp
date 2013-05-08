@@ -438,7 +438,7 @@ void cdecl main()
 //        Wait.Add(Mouse);
 //        Wait.StartThreadHandler("IO Thread", 0x1000);
 
-        bitmap = new TBitmapGraphicDevice(24, 1366, 768);
+        bitmap = new TBitmapGraphicDevice(8, 1366, 768);
         
         bitmap->SetDrawColor(255,255,255);
         bitmap->DrawLine(0, 0, vbe->GetWidth(), vbe->GetHeight());
