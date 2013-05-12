@@ -489,6 +489,7 @@ int main(int argc, char **argv)
     ConvF14();
     ConvF15();
 
+    ConvH3();
     ConvH4();
     ConvH5();
     ConvH6();
@@ -501,10 +502,9 @@ int main(int argc, char **argv)
     ConvH13();
     ConvH14();
     ConvH15();
-    ConvH17();
 */
 
-    ConvH3();
+    ConvH17();
     
     return 0;
 }
