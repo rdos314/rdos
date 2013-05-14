@@ -4583,8 +4583,8 @@ load_long_regs:
     push rax
     push [edx].p_rip
     push [edx].p_rdx
+    push [edx].p_rax
 ;    
-    mov rax,[edx].p_rax
     mov rbx,[edx].p_rbx
     mov rcx,[edx].p_rcx
     mov rsi,[edx].p_rsi
@@ -4603,8 +4603,20 @@ load_long_regs:
     mov ds,[edx].p_ds
     mov es,[edx].p_es
     mov fs,[edx].p_fs
-    mov gs,[edx].p_gs
+    mov ax,[edx].p_gs
+    mov gs,ax    
+    or ax,ax
+    jnz load_tls_done
 ;
+    push rcx
+    mov eax,dword ptr [edx].p_tls_linear
+    mov edx,dword ptr [edx].p_tls_linear+4
+    mov ecx,0C0000101h
+    wrmsr
+    pop rcx
+
+load_tls_done:
+    pop rax
     pop rdx
     iretq
 
@@ -5012,10 +5024,13 @@ alloc_sect_loop:
     push rbx
     push rcx
     push rdx
-    add rdx,8000000h
-    mov rcx,10000h
+    add rdx,7F80000h
+    mov rcx, 100000h
     call MarkValid
 ;
+    int 3
+    add rdx,80000h
+    mov [rdx],rdx
     mov rax,rdx
     shr rdx,32
     SetLongTlsLinear
