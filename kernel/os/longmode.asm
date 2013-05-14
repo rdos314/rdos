@@ -1245,6 +1245,99 @@ init_pg_cmd_ok:
     pop ds
     ret
 init_long_exe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           CreateTlsHeader
+;
+;   DESCRIPTION:    Create TLS header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateTlsHeader    Proc near
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;    
+    mov esi,long_process_linear
+    movzx ebx,[esi].elf_shentsize
+    movzx ecx,[esi].elf_shnum
+;    
+    mov esi,dword ptr ds:[esi].elf_shoff
+    mov [esi].elft_paddr,0
+    mov [esi].elft_psize,0
+    mov [esi].elft_vsize,0
+;    
+    mov edi,esi
+    add edi,ebx
+    sub ecx,1
+    jbe create_tls_done
+
+create_tls_loop:
+    mov eax,dword ptr [edi].elfs_flags
+    test ax,400h
+    jz create_tls_next
+;
+    mov eax,[esi].elft_paddr
+    or eax,eax
+    jnz create_tls_add
+;
+    mov eax,dword ptr [edi].elfs_paddr
+    mov [esi].elft_paddr,eax
+;
+    mov eax,dword ptr [edi].elfs_align
+    mov [esi].elft_vsize,eax
+;
+    mov eax,dword ptr [edi].elfs_size
+    mov [esi].elft_psize,eax
+    jmp create_tls_next    
+
+create_tls_add:
+    mov eax,dword ptr [edi].elfs_align
+    add [esi].elft_vsize,eax
+    
+create_tls_next:
+    add edi,ebx
+    loop create_tls_loop
+;
+    mov eax,[esi].elft_vsize
+    or eax,eax
+    jz create_tls_done
+;
+    mov edi,long_process_linear
+    mov bx,ds:[edi].ep_file_handle
+;
+    mov eax,[esi].elft_paddr
+    SetFilePos
+;
+    mov eax,[esi].elft_vsize
+    mov ecx,eax
+    AllocateLongBuf
+    mov edi,edx
+    mov [esi].elft_data,edi
+;
+    mov ecx,[esi].elft_psize
+    ReadFile            
+;
+    add edi,ecx
+    mov ecx,[esi].elft_vsize
+    sub ecx,[esi].elft_psize
+    jbe create_tls_done
+;
+    xor al,al
+    rep stos byte ptr es:[edi]
+
+create_tls_done:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    ret
+CreateTlsHeader    Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1261,6 +1354,7 @@ start_long_exe:
     mov ax,flat_sel
     mov ds,ax
     mov es,ax
+    mov gs,ax
 ;
     mov esi,long_process_linear
     mov bx,ds:[esi].ep_file_handle
@@ -1293,7 +1387,33 @@ start_long_exe:
     jne sleFailed        
 ;    
     mov dword ptr ds:[esi].elf_phoff,edi
+;
+    mov ax,ds:[esi].elf_shnum
+    mov dx,ds:[esi].elf_shentsize
+    mul dx
+    push dx
+    push ax
+    pop eax
+    or eax,eax
+    jz sleLoad
+;
+    mov ecx,eax
+    AllocateLongBuf
+    mov edi,edx
+;
+    int 3
+    mov eax,dword ptr ds:[esi].elf_shoff
+    SetFilePos    
+    ReadFile
+;
+    cmp eax,ecx
+    jne sleLoad
 ;    
+    mov dword ptr ds:[esi].elf_shoff,edi
+;
+    call CreateTlsHeader    
+
+sleLoad:    
     db 0EAh
     dd OFFSET start64
     dw long_kernel_code_sel
@@ -5029,11 +5149,15 @@ alloc_sect_loop:
     call MarkValid
 ;
     int 3
+
     add rdx,80000h
     mov [rdx],rdx
     mov rax,rdx
     shr rdx,32
     SetLongTlsLinear
+;    
+    xor ax,ax
+    mov gs,ax
 ;    
     pop rdx
     pop rcx

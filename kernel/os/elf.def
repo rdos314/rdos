@@ -82,3 +82,27 @@ elfp_memsz      DQ ?
 elfp_align      DQ ?
 
 elf_prog_header ENDS
+
+elf_sect_header STRUC
+
+elfs_name       DD ?
+elfs_type       DD ?
+elfs_flags      DQ ?
+elfs_vaddr      DQ ?
+elfs_paddr      DQ ?
+elfs_size       DQ ?
+elfs_link       DD ?
+elfs_info       DD ?
+elfs_align      DQ ?
+elfs_entsize    DQ ?
+
+elf_sect_header ENDS
+
+elf_tls_header  STRUC
+
+elft_paddr      DD ?
+elft_psize      DD ?
+elft_vsize      DD ?
+elft_data       DD ?
+
+elf_tls_header  ENDS
