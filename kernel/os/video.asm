@@ -1994,7 +1994,7 @@ blit_alpha_get:
     mov cx,[ebp].blit_dest_x
     mov dx,[ebp].blit_dest_y
     xor edi,edi
-    call fword ptr ds:v_set_rgb_row_proc
+    call fword ptr ds:v_set_rgba_row_proc
 
 blit_alpha_next:
     inc word ptr [ebp].blit_src_y
