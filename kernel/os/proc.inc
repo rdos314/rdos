@@ -100,6 +100,7 @@ ps_system_time      DD ?,?
 ps_linear           DD ?
 ps_syscall_esp      DD ?
 ps_syscall_eip      DD ?
+ps_tls_linear       DD ?,?
 
 ps_long_tr          DW ?
 ps_long_ldt         DW ?

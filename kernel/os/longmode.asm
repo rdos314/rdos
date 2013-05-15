@@ -1401,7 +1401,6 @@ start_long_exe:
     AllocateLongBuf
     mov edi,edx
 ;
-    int 3
     mov eax,dword ptr ds:[esi].elf_shoff
     SetFilePos    
     ReadFile
@@ -1452,6 +1451,17 @@ handle_code_fault   Proc far
 ;
     mov edi,edx
     ReadFile
+;
+    push eax
+    push edx
+    GetThread
+    mov es,ax
+    mov eax,dword ptr es:p_tls_linear
+    mov edx,dword ptr es:p_tls_linear+4
+    mov ecx,0C0000101h
+    wrmsr
+    pop edx
+    pop eax
 ;
     pop es            
     ret
@@ -5107,6 +5117,65 @@ load_code_done:
     pop rbx
     ret
 LoadCode    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           InitTls
+;
+;   DESCRIPTION:    Init TLS
+;
+;   PARAMETERS:     RDX     Stack base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitTls    Proc near
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+;
+    mov rsi,long_process_linear
+    mov rsi,[rsi].elf_shoff
+    mov ecx,[rsi].elft_vsize
+    dec ecx
+    and cx,0F00h
+    add ecx,1000h
+    add rdx,8000000h
+;    
+    push rdx
+    sub rdx,rcx
+    add ecx, 80000h
+    call MarkValid
+    pop rdx
+;
+    mov rdi,rdx
+    mov ecx,[rsi].elft_vsize
+    sub rdi,rcx
+    mov esi,[rsi].elft_data
+    rep movs byte ptr [rdi],[rsi]
+;
+    mov [rdx],rdx
+    mov rax,rdx
+    shr rdx,32
+    SetLongTlsLinear
+;    
+    xor ax,ax
+    mov gs,ax
+;    
+    mov ax,1
+    WaitMilliSec
+;    
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    ret
+InitTls Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5140,32 +5209,8 @@ alloc_sect_loop:
     shr rax,30
     SetFutexId
 ;
-    push rax
-    push rbx
-    push rcx
-    push rdx
-    add rdx,7F80000h
-    mov rcx, 100000h
-    call MarkValid
-;
-    int 3
-
-    add rdx,80000h
-    mov [rdx],rdx
+    call InitTls
     mov rax,rdx
-    shr rdx,32
-    SetLongTlsLinear
-;    
-    xor ax,ax
-    mov gs,ax
-;    
-    pop rdx
-    pop rcx
-    pop rbx
-    pop rax
-;
-    mov rax,rdx
-        
 ;
     push rcx
     push rdx
@@ -5190,7 +5235,6 @@ alloc_sect_loop:
     pop rdi
     pop rsi
 ;
-    int 3
     mov rax,long_kernel_data_sel
     mov ss,ax
 ;
@@ -5883,10 +5927,11 @@ spt01 DQ OFFSET setup_wr_es_edi
 
 syscall_start:
     mov r9,123456789ABCh        ; patch to address of processor block
-    mov r9d,[r9].ps_syscall_esp
-    xchg rsp,r9
-    push r9
+    mov r8d,[r9].ps_syscall_esp
+    xchg rsp,r8
+    push r8
     push rcx
+    push qword ptr [r9].ps_tls_linear
     push r11
     popfq
     mov rcx,r8
@@ -5908,6 +5953,7 @@ syscall_start:
     call near ptr [r8+r9]
     jc syscall_cleanup
 ;    
+    mov rcx,r12
     call fword ptr [r14]
     jnc syscall_cleanup_ok
 
@@ -5924,6 +5970,7 @@ syscall_cleanup:
     jmp syscall_done
 
 syscall_do:
+    mov rcx,r12
     call fword ptr [r14]
     jc syscall_fail
 
@@ -5935,13 +5982,25 @@ syscall_fail:
     or r11,1
 
 syscall_done:       
+    int 3
     pop rbp
-;    
     mov r8,rcx
+    pop r9
+;    
+    push rax
+    push rdx
+    mov rax,r9
+    mov rdx,r9
+    shr rdx,32
+    mov ecx,0C0000101h
+    wrmsr
+    pop rdx
+    pop rax
+;
     pop rcx
     cli
     pop rsp
-;
+;    
     db 48h
     sysret        
 

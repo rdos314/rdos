@@ -1595,6 +1595,11 @@ load_regs:
     mov eax,es:p_kernel_stack
     mov fs:ps_syscall_esp,eax
 ;    
+    mov eax,dword ptr es:p_tls_linear
+    mov fs:ps_tls_linear,eax
+    mov eax,dword ptr es:p_tls_linear+4
+    mov fs:ps_tls_linear+4,eax
+;    
     mov edx,es:p_linear
     mov edi,fs:ps_tr_linear
     LoadLongRegs
