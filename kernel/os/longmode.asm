@@ -1102,7 +1102,15 @@ is_64_bit_exe32 Endp
 create_long_thread_name DB 'Create Long Thread', 0
 
 create_long_thread   Proc far
+    push eax
     CreateLongThreadInfo
+    mov edx,esi
+    mov ax,long_kernel_code_sel
+    mov ds,ax
+    mov esi,OFFSET long_thread_start
+    pop eax
+    mov ah,2
+    CreateThread
     int 3
     ret
 create_long_thread  Endp
@@ -5324,6 +5332,49 @@ alloc_sect_loop:
     mov rax,[rsi].elf_entry
     push rax
     iretq
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           LongThreadStart
+;
+;   DESCRIPTION:    Startup procedure for long mode thread
+;
+;   PARAMETERS:     EDX     Block buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+long_thread_start:
+    mov rdi,rdx
+    mov rcx,[rdi].lti_stack_size
+    call AllocateUserStack
+;    
+    mov rax,rdx
+    shr rax,30
+    SetFutexId
+;
+    call InitTls
+    int 3
+;
+    mov rax,long_kernel_data_sel
+    mov ss,ax
+;
+    mov rax,long_user_data_sel
+    push rax
+    push rdx
+    pushfq
+;
+    mov rax,long_user_code_sel
+    push rax
+    mov rax,[rdi].lti_start
+    push rax
+;
+    mov rsi,[rdi].lti_param
+    mov ecx,SIZE long_thread_info_struc
+    mov edx,edi
+    FreeLongBuf
+    mov rdx,rsi        
+    iretq    
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

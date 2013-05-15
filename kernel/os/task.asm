@@ -8245,6 +8245,16 @@ create_thread   PROC near
     call init_thread_block
     mov ax,es
     mov ds,ax
+    mov ax,[ebp].cr_mode
+    cmp ax,2
+    jne create_t32
+
+create_t64:
+    call create_tss64
+    call init_default_regs
+    jmp create_prot
+
+create_t32:
     call create_tss32
     call init_default_regs
     mov ax,[ebp].cr_mode
@@ -8253,6 +8263,7 @@ create_thread   PROC near
     call init_virt_thread
     call init_virt_tss
     jmp create_tss_done
+
 create_prot:
     call init_prot_thread
     call init_prot_tss
