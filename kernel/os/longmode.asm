@@ -5328,6 +5328,7 @@ alloc_sect_loop:
     mov rax,long_kernel_data_sel
     mov ss,ax
 ;
+    int 3
     mov rax,long_user_data_sel
     push rax
     push rdx
