@@ -133,6 +133,14 @@ reg_flags   dq ?
 reg_end     db ?
 
 Reg64   Ends
+
+long_thread_info_struc  STRUC
+
+lti_stack_size      DQ ?
+lti_param           DQ ?
+lti_start           DQ ?
+
+long_thread_info_struc  ENDS
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1075,6 +1083,28 @@ is_64_bit_exe32 Proc far
     call is_64_bit_exe
     ret
 is_64_bit_exe32 Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateLongThread
+;
+;       DESCRIPTION:    Create long mode thread
+;
+;       PARAMETERS:     AL      Prio
+;                       RCX     Stack size
+;                       RDX     Param
+;                       RSI     Start address
+;                       ES:EDI  Thread name                       
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_long_thread_name DB 'Create Long Thread', 0
+
+create_long_thread   Proc far
+    CreateLongThreadInfo
+    ret
+create_long_thread  Endp
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1619,6 +1649,13 @@ init    proc far
     mov dx,virt_ds_in
     mov ax,is_64_bit_exe_nr
     RegisterUserGate
+;
+    mov esi,OFFSET create_long_thread
+    mov edi,OFFSET create_long_thread_name
+    xor dx,dx
+    mov ecx,UG_SYSCALL_RD_PAR_ES_EDI
+    mov ax,create_long_thread_nr
+    RegisterBimodalSyscall
 ;    
     call InitIdt
 ;
@@ -1653,6 +1690,12 @@ init    proc far
     mov edi,OFFSET free_buf_name
     xor cl,cl
     mov ax,free_long_buf_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET create_long_thread_info
+    mov edi,OFFSET create_long_thread_info_name
+    xor cl,cl
+    mov ax,create_long_thread_info_nr
     RegisterOsGate
 ;
     mov bx,long_ldt_sel
@@ -4792,6 +4835,38 @@ load_long_breaks    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           CreateLongThreadInfo
+;
+;   DESCRIPTION:    Create info buffer for long mode thread
+;
+;   PARAMETERS:     RCX     Stack size
+;                   RDX     Param
+;                   RSI     Start address
+;
+;   RETURNS:        ESI     Block buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_long_thread_info_name DB 'Create Long Thread Info', 0
+
+create_long_thread_info    Proc far
+    push rsi
+    push rdx
+    mov eax,SIZE long_thread_info_struc
+    AllocateLongBuf
+    mov esi,edx
+    pop rdx
+;
+    mov [esi].lti_stack_size,rcx
+    mov [esi].lti_param,rdx
+    pop rax
+    mov [esi].lti_start,rax    
+    ret
+create_long_thread_info Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           AllocateLongBuf
 ;
 ;   DESCRIPTION:    Allocate long buffer
@@ -5928,11 +6003,11 @@ spt01 DQ OFFSET setup_wr_es_edi
 
 syscall_start:
     mov r9,123456789ABCh        ; patch to address of processor block
-    mov r8d,[r9].ps_syscall_esp
-    xchg rsp,r8
-    push r8
+    mov r10d,[r9].ps_syscall_esp
+    xchg rsp,r10
+    push r10
+    mov r10,qword ptr [r9].ps_tls_linear
     push rcx
-    push qword ptr [r9].ps_tls_linear
     push r11
     popfq
     mov rcx,r8
@@ -5954,7 +6029,6 @@ syscall_start:
     call near ptr [r8+r9]
     jc syscall_cleanup
 ;    
-    mov rcx,r12
     call fword ptr [r14]
     jnc syscall_cleanup_ok
 
@@ -5971,7 +6045,6 @@ syscall_cleanup:
     jmp syscall_done
 
 syscall_do:
-    mov rcx,r12
     call fword ptr [r14]
     jc syscall_fail
 
@@ -5985,12 +6058,11 @@ syscall_fail:
 syscall_done:       
     pop rbp
     mov r8,rcx
-    pop r9
 ;    
     push rax
     push rdx
-    mov rax,r9
-    mov rdx,r9
+    mov rax,r10
+    mov rdx,r10
     shr rdx,32
     mov ecx,0C0000101h
     wrmsr

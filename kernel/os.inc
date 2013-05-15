@@ -500,6 +500,14 @@ IsLongThread MACRO
     OsGate is_long_thread_nr
                     ENDM
 
+; IN  RCX        Stack size
+; IN  RDX        Param
+; IN  RSI        Start address
+; OUT ESI        Info block
+CreateLongThreadInfo MACRO
+    OsGate create_long_thread_info_nr
+                    ENDM
+
 ; IN  EDX     Thread base      
 ; IN  EDI     TSS base
 LoadLongRegs MACRO

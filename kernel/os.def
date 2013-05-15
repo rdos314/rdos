@@ -618,4 +618,6 @@ send_driver_ip_nr           = 513
 
 send_driver_udp_nr          = 514
 
+create_long_thread_info_nr  = 515
+
 osgate_entries				= 520

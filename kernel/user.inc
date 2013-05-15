@@ -452,6 +452,15 @@ CreateThread   MACRO
 	UserGate create_thread_nr
 						ENDM
 
+; IN  AL         Priority
+; IN  RCX        Stack size
+; IN  RDX        Param
+; IN  RSI        Start address
+; IN  ES:EDI     Thread name
+CreateLongThread   MACRO
+	UserGate create_long_thread_nr
+						ENDM
+
 TerminateThread        MACRO
 	UserGate terminate_thread_nr
 						ENDM

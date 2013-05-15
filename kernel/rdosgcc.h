@@ -24,13 +24,19 @@ struct futex_struc
 #define RdosClobberSyscall \
   asm volatile ( \
     "\n\t" \
-     : : : "rcx", "r9", "r11", "r14", "cc" \
+     : : : "rcx", "r9", "r10", "r11", "r14", "cc" \
    );
 
 #define RdosClobberSyscallRdi \
   asm volatile ( \
     "\n\t" \
-     : : : "rcx", "rdi", "r9", "r11", "r14", "cc" \
+     : : : "rcx", "rdi", "r9", "r10", "r11", "r14", "cc" \
+   );
+
+#define RdosClobberSyscallRsiRdi \
+  asm volatile ( \
+    "\n\t" \
+     : : : "rcx", "rsi", "rdi", "r9", "r10", "r11", "r14", "cc" \
    );
 
 #define RdosCleanupFutex(index) do { \
@@ -170,6 +176,35 @@ struct futex_struc
   RdosClobberSyscallRdi; \
 } while(0);
 
+#define RdosUserGateEaxEcxEsiEdiPar0(nr, rax, rcx, rsi, rdi, size) do { \
+  register int _id asm("r14") = nr; \
+  register typeof(rax) _rax asm("rax") = (rax); \
+  register typeof(rcx) _rcx asm("r8") = (rcx); \
+  register typeof(rsi) _rsi asm("rsi") = (rsi); \
+  register typeof(rdi) _rdi asm("rdi") = (rdi); \
+  register int _size asm("r12") = (size); \
+  asm volatile ( \
+    "syscall\n\t" \
+  : : "r" (_id), "r" (_rax), "r" (_rcx), "r" (_rsi), "r" (_rdi), "r" (_size)\
+  ); \
+  RdosClobberSyscallRdi; \
+} while(0);
+
+#define RdosUserGateEaxEbxEcxEsiEdiPar0(nr, rax, rcx, rdx, rsi, rdi, size) do { \
+  register int _id asm("r14") = nr; \
+  register typeof(rax) _rax asm("rax") = (rax); \
+  register typeof(rcx) _rcx asm("r8") = (rcx); \
+  register typeof(rdx) _rdx asm("rdx") = (rdx); \
+  register typeof(rsi) _rsi asm("rsi") = (rsi); \
+  register typeof(rdi) _rdi asm("rdi") = (rdi); \
+  register int _size asm("r12") = (size); \
+  asm volatile ( \
+    "syscall\n\t" \
+  : : "r" (_id), "r" (_rax), "r" (_rcx), "r" (_rdx), "r" (_rsi), "r" (_rdi), "r" (_size)\
+  ); \
+  RdosClobberSyscallRdi; \
+} while(0);
+
 #define RdosUserGateEbx(nr, rbx) do { \
   register int _id asm("r14") = nr; \
   register typeof(rbx) _rbx asm("rbx") = (rbx); \
@@ -223,6 +258,35 @@ struct futex_struc
     "xorl %%eax,%%eax\n\t" \
     "1: \n\t" \
     : "=a" (res) :  "n" (nr), "r" (_ebx), "r" (_edi), "r" (_ecx) : "cc" \
+  ); \
+} while(0);
+
+#define RdosUserGateEaxEcxEsiEdiPar0(nr, rax, rcx, rsi, rdi, size) do { \
+  register typeof(eax) _eax asm("eax") = (eax); \
+  register typeof(ecx) _ecx asm("ecx") = (ecx); \
+  register typeof(esi) _esi asm("esi") = (esi); \
+  register typeof(edi) _edi asm("edi") = (edi); \
+  asm volatile ( \
+    ".byte 0x67\n\t" \
+    ".byte 0x9A\n\t" \
+    ".long %0\n\t" \
+    ".word 0x3\n\t" \
+    : : "n" (nr), "r" (_eax), "r" (_ecx), "r" (_esi), "r" (_edi) : "cc" \
+  ); \
+} while(0);
+
+#define RdosUserGateEaxEbxEcxEsiEdiPar0(nr, rax, rcx, rsi, rdi, size) do { \
+  register typeof(eax) _eax asm("eax") = (eax); \
+  register typeof(ebx) _eax asm("ebx") = (ebx); \
+  register typeof(ecx) _ecx asm("ecx") = (ecx); \
+  register typeof(esi) _esi asm("esi") = (esi); \
+  register typeof(edi) _edi asm("edi") = (edi); \
+  asm volatile ( \
+    ".byte 0x67\n\t" \
+    ".byte 0x9A\n\t" \
+    ".long %0\n\t" \
+    ".word 0x3\n\t" \
+    : : "n" (nr), "r" (_eax), "r" (_ebx), "r" (_ecx), "r" (_esi), "r" (_edi) : "cc" \
   ); \
 } while(0);
 
@@ -457,4 +521,10 @@ RDOSAPI int RdosTryEnterSection(int handle)
         RdosTryAcquireFutex(i, res);        
     }
     return res;
+}
+
+RDOSAPI void RdosCreateThread(void (*Start)(void *Param), const char *Name, void *Param, int StackSize)
+{
+    int size = strlen(Name) + 1;
+    RdosUserGateEaxEbxEcxEsiEdiPar0(usergate_create_long_thread, 0x202, StackSize, Param, Start, Name, size);
 }

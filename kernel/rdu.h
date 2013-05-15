@@ -658,6 +658,8 @@
 
 #define usergate_create_alpha_bitmap 524
 
+#define usergate_create_long_thread 525
+
 
 
 #ifdef __FLAT__
@@ -1321,6 +1323,8 @@
 
 #define CallGate_create_alpha_bitmap 0x67 0x9a 12 2 0 0 3 0
 
+#define CallGate_create_long_thread 0x67 0x9a 13 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1981,5 +1985,7 @@
 #define CallGate_extract_invalid_bitmap_mask 0x3e 0x67 0x9a 11 2 0 0 3 0
 
 #define CallGate_create_alpha_bitmap 0x3e 0x67 0x9a 12 2 0 0 3 0
+
+#define CallGate_create_long_thread 0x3e 0x67 0x9a 13 2 0 0 3 0
 
 #endif

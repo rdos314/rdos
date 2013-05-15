@@ -39,6 +39,7 @@ INCLUDE proc.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\apicheck.inc
 include ..\wait.inc
+include gate.def
 
 MSR_SYSENTER_CS  = 174h
 MSR_SYSENTER_ESP = 175h
@@ -8205,7 +8206,7 @@ init_virt_tss   ENDP
 ;           DESCRIPTION:    Create a thread
 ;
 ;           PARAMETERS:         AL              Priority
-;                           AH              Mode, 0=PM, 1=VM
+;                           AH              Mode, 0=PM, 1=VM, 2=long
 ;                           ECX             Stack size
 ;                           DS:(E)SI    Start address
 ;                           ES:(E)DI    Thread name
@@ -9299,7 +9300,7 @@ timer_free_list_create:
     mov bx,OFFSET create_thread16
     mov si,OFFSET create_thread32
     mov di,OFFSET create_thread_name
-    mov dx,virt_seg_in
+    mov dx,virt_es_in
     mov ax,create_thread_nr
     RegisterUserGate
 ;
