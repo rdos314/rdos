@@ -1103,6 +1103,7 @@ create_long_thread_name DB 'Create Long Thread', 0
 
 create_long_thread   Proc far
     CreateLongThreadInfo
+    int 3
     ret
 create_long_thread  Endp
   
@@ -5313,7 +5314,6 @@ alloc_sect_loop:
     mov rax,long_kernel_data_sel
     mov ss,ax
 ;
-    int 3
     mov rax,long_user_data_sel
     push rax
     push rdx
