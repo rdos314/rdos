@@ -5238,6 +5238,7 @@ alloc_sect_loop:
     mov rax,long_kernel_data_sel
     mov ss,ax
 ;
+    int 3
     mov rax,long_user_data_sel
     push rax
     push rdx
@@ -5982,7 +5983,6 @@ syscall_fail:
     or r11,1
 
 syscall_done:       
-    int 3
     pop rbp
     mov r8,rcx
     pop r9
