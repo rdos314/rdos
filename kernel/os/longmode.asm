@@ -1102,7 +1102,12 @@ is_64_bit_exe32 Endp
 create_long_thread_name DB 'Create Long Thread', 0
 
 create_long_thread   Proc far
+    push gs
     push eax
+;
+    mov ax,flat_sel
+    mov gs,ax
+;    
     CreateLongThreadInfo
     mov edx,esi
     mov ax,long_kernel_code_sel
@@ -1112,6 +1117,7 @@ create_long_thread   Proc far
     mov ah,2
     CreateThread
     int 3
+    pop gs
     ret
 create_long_thread  Endp
   
@@ -5345,6 +5351,10 @@ alloc_sect_loop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 long_thread_start:
+    int 3
+    mov ax,flat_sel
+    mov gs,ax
+;    
     mov rdi,rdx
     mov rcx,[rdi].lti_stack_size
     call AllocateUserStack
