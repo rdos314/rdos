@@ -3435,7 +3435,8 @@ page_fault64    Proc near
 ;
     call LoadCode
     jc page_fault_error
-;
+
+page_fault_loaded:
     shr rsi,9    
     mov rdx,PAGE_TABLE_LINEAR
     add rsi,rdx
@@ -3444,6 +3445,21 @@ page_fault64    Proc near
     jmp page_fault64_retry
 
 page_fault_not_code:
+    int 3
+    mov rbx,long_ldata_linear
+    cmp rax,rbx
+    jb page_fault_init
+;
+    mov rcx,long_ldata_size
+    add rbx,rcx
+    cmp rax,rbx
+    jae page_fault_init
+;
+    call LoadCode
+    jnc page_fault_loaded
+    jmp page_fault_error
+
+page_fault_init:
     shr rsi,9    
     mov rdx,PAGE_TABLE_LINEAR
     add rsi,rdx
