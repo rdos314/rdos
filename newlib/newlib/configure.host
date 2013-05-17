@@ -434,7 +434,7 @@ case "${host}" in
     ;;
   x86_64-*-rdos*)
     sys_dir=rdos
-    newlib_cflags="${newlib_cflags} -DMISSING_SYSCALL_NAMES -DSIGNAL_PROVIDED -DREENTRANT_SYSCALLS_PROVIDED"
+    newlib_cflags="${newlib_cflags} -DMALLOC_PROVIDED -DEXIT_PROVIDED -DSIGNAL_PROVIDED -DREENTRANT_SYSCALLS_PROVIDED -DHAVE_NANOSLEEP"
 	;;
   i[34567]86-*-sco*)
 	sys_dir=sysvi386
