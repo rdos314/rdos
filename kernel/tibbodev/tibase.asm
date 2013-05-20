@@ -34,7 +34,12 @@ INCLUDE ..\..\kernel\os\system.def
 INCLUDE ..\..\kernel\os\proc.inc
 include ..\os\com.inc
 
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
     .386p
+ENDIF
 
 tibbo_com_port_struc    STRUC
 
@@ -590,6 +595,8 @@ wait_for_line_state Endp
 ;
 ;   PARAMETERS:     ES:EDI          Port structure
 ;
+;   RETURNS:        EAX             Port sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public AddPort_
@@ -597,7 +604,7 @@ wait_for_line_state Endp
 AddPort_ Proc near
     push ds
     push es
-    pushad
+    push edx
 ;
     mov edx,es    
     mov eax,SIZE tibbo_com_device_struc
@@ -629,11 +636,83 @@ AddPort_ Proc near
     mov dword ptr ds:cd_wait_for_line_state_proc,OFFSET wait_for_line_state
     mov dword ptr ds:cd_wait_for_line_state_proc+4,cs
 ;
-    popad
+    mov eax,ds
+    pop edx
     pop es
     pop ds  
     ret
 AddPort_ Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           GetSendData
+;
+;   DESCRIPTION:    Get send data
+;
+;   PARAMETERS:     EBX             Port sel
+;                   ES:EDI          Buffer
+;                   ECX             Size
+;
+;   RETURNS:        EAX             Count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetSendData_
+
+GetSendData_    Proc near
+    push ds
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;   
+    mov ds,ebx
+    xor eax,eax
+    mov ds,ds:send_count
+    or dx,dx
+    jz gsdDone
+
+gsdLoop:
+    RequestSpinlock ds:com_spinlock
+    mov dx,ds:send_count
+    or dx,dx
+    jz gsdSend
+;       
+    dec dx
+    mov ds:send_count,dx
+    mov bx,ds:send_head
+    mov al,fs:[bx]
+    stosb
+    inc eax
+    inc bx
+    cmp bx,ds:send_size
+    jnz gsdWrapOk
+;       
+    xor bx,bx
+
+gsdWrapOk:
+    mov ds:send_head,bx
+    ReleaseSpinlock ds:com_spinlock
+;
+    cmp eax,ecx
+    jb gsdLoop
+;    
+    jmp gsdDone
+
+gsdSend:
+    ReleaseSpinlock ds:com_spinlock
+
+gsdDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop ds    
+    ret
+GetSendData_   Endp    
 
 _TEXT    ENDS
 

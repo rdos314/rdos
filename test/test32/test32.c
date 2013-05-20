@@ -10,9 +10,11 @@ void main()
     int ports;
     int handle;
 
+//    RdosTestGate();
+
     ports = RdosGetMaxComPort();
 
-    handle = RdosOpenCom(ports - 4, 9600, 'N', 8, 1, 0x1000, 0x1000);
+    handle = RdosOpenCom(ports - 3, 9600, 'N', 8, 1, 0x1000, 0x1000);
 
     for (;;)
     {

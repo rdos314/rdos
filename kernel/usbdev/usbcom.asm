@@ -3413,9 +3413,12 @@ prWrapOk:
     mov ds:rec_tail,bx
     ReleaseSpinlock ds:com_spinlock
     loop prGetLoop
+    jmp prSigRel
 
 prSignal:
     ReleaseSpinlock ds:com_spinlock
+
+prSigRel:
     mov bx,ds:avail_obj
     or bx,bx
     jz prDone
@@ -3491,9 +3494,12 @@ pwWrapOk:
     inc cx
     cmp cx,bp
     jb pwLoop
+    jmp pwSendRel
 
 pwSend:
     ReleaseSpinlock ds:com_spinlock
+
+pwSendRel:
     mov ax,ds:send_size    
     or ax,ax
     jz pwTimerOk

@@ -47,6 +47,7 @@ struct tibbo_port
     short int port;
     int tcp_handle;
     int handler_thread;
+    int sel;
 };
 
 struct tibbo_dev
@@ -66,8 +67,11 @@ struct tibbo_dev
 extern void InitTibboBase();
 extern void InitBroadcast();
 
-extern void AddPort(struct tibbo_port *port);
-#pragma aux AddPort parm routine [es edi]
+extern int AddPort(struct tibbo_port *port);
+#pragma aux AddPort parm routine [es edi] value [eax]
+
+extern int GetSendData(struct tibbo_port *port, char *buf, int size);
+#pragma aux GetSendData parm routine [ebx] [es edi] [ecx] value [eax]
 
 int DriverCount;
 int DriverArr[MAX_UDP_DEV];
@@ -443,7 +447,7 @@ void CreateDevPorts(struct tibbo_dev *dev)
         TibboPortArr[TibboPortCount] = port;
         TibboPortCount++;
 
-        AddPort(port);
+        port->sel = AddPort(port);
     }
 }
     
