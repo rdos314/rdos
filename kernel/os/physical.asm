@@ -77,6 +77,8 @@ GetPhysBitmap32  Proc near
     mov cx,ds:phys_bitmap_count
     sub cx,1
     jc gpbDone32
+    stc
+    jz gpbDone32
 ;    
     cmp cx,31
     jbe gpbCountOk32
@@ -128,6 +130,9 @@ GetPhysBitmap64  Proc near
     mov cx,ds:phys_bitmap_count
     sub cx,32
     jc gpbDone64
+;
+    stc
+    jz gpbDone64
 ;    
     mov bx,32 * 4 + phys_header_start
     mov si,bx
