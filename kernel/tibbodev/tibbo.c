@@ -59,7 +59,6 @@ struct tibbo_dev
     short int port;
     int port_count;
     char loader;
-    char dhcp;
     char ok;
     int running;
     struct tibbo_port *port_arr[MAX_TIBBO_DEV_PORTS];
@@ -228,41 +227,6 @@ void BroadcastData(char *buf, int size)
     
 /*##########################################################################
 #
-#   Name       : InitPort
-#
-##########################################################################*/
-int InitPort(struct tibbo_port *port)
-{
-    int ok;
-    
-    ok = SetVar(port, "RM", "0"); 
-    if (ok)
-        ok = SetVar(port, "TP", "1");
-
-    return ok;        
-}        
-    
-/*##########################################################################
-#
-#   Name       : InitDevPorts
-#
-##########################################################################*/
-void InitDevPorts(struct tibbo_dev *dev)
-{
-    int i;
-    int ok;
-
-    ok = Login(dev);
-
-    for (i = 0; i < dev->port_count && ok; i++)
-        ok = InitPort(dev->port_arr[i]);
-
-    dev->running = ok;
-    Reboot(dev);
-}        
-    
-/*##########################################################################
-#
 #   Name       : RunTibboThread
 #
 ##########################################################################*/
@@ -279,23 +243,9 @@ void RunTibboThread()
 
     for (;;)
     {
-        BroadcastData(str, strlen(str));
+        if (TibboCount == 0 || !TibboArr[0]->running)
+            BroadcastData(str, strlen(str));
 
-        if (TibboArr[0]->dhcp)
-        {
-            if (!TibboArr[0]->running)
-                InitDevPorts(TibboArr[0]);
-        }            
-        else
-        {
-            ok = Login(TibboArr[0]);
-            if (ok)
-            {
-                Session(TibboArr[0], "SDH1", reply);
-                Reboot(TibboArr[0]);
-                TibboArr[0]->dhcp = TRUE;
-            }
-        }
         RdosWaitMilli(250);
     }
 }
@@ -363,7 +313,6 @@ void ParseEchoPar(struct tibbo_dev *dev, int par, char *buf)
         case 2:
             dev->ok = TRUE;
             dev->loader = FALSE;
-            dev->dhcp = FALSE;
 
             switch (buf[0])
             {
@@ -384,7 +333,7 @@ void ParseEchoPar(struct tibbo_dev *dev, int par, char *buf)
                 dev->ok = FALSE;
 
             if (buf[3] != 'M')
-                dev->dhcp = TRUE;
+                dev->running = TRUE;
 
             break;
 
@@ -475,7 +424,6 @@ void InsertDev(struct tibbo_dev *dev)
         has_dev->ip = dev->ip;
         has_dev->port = dev->port;
         has_dev->loader = dev->loader;
-        has_dev->dhcp = dev->dhcp;
         has_dev->ok = dev->ok;       
         free(dev);
     }
@@ -577,7 +525,6 @@ void __far PortThread(void *param)
             count = RdosPollTcpConnection(port->tcp_handle);
             if (count)
             {
-                _asm int 3
                 if (count > 256)
                     count = 256;
                 count = RdosReadTcpConnection(port->tcp_handle, buf, count);
@@ -664,17 +611,7 @@ int ImplOpenCom(struct tibbo_port *port, int sel, int baudrate, char parity, int
     }
 
     if (val)
-    {
-        handle = RdosOpenTcpConnection(port->dev->ip, 1000, port->port, 500, 0x1000);
-        if (handle)
-        {
-            ok = RdosWaitForTcpConnection(handle, 500);
-            if (!ok)
-                RdosCloseTcpConnection(handle);
-        }
-        else
-            ok = FALSE;
-    }
+        ok = TRUE;
     else
         ok = FALSE;
 
@@ -736,15 +673,32 @@ int ImplOpenCom(struct tibbo_port *port, int sel, int baudrate, char parity, int
             }                
         }
 
-        Logout(port->dev);
-
         RdosLeaveKernelSection(&CmdSection);
+
+        handle = 0;
+
+        if (ok)
+        {
+            handle = RdosOpenTcpConnection(port->dev->ip, 1000, port->port, 500, 0x1000);
+            if (handle)
+            {
+                ok = RdosWaitForTcpConnection(handle, 500);
+                if (!ok)
+                    RdosCloseTcpConnection(handle);
+            }
+            else
+                ok = FALSE;
+        }
+
+        Logout(port->dev);
 
         port->tcp_handle = handle;
 
         test_port = port;
 
-        RdosCreateKernelThread(5, 0x1000, &PortThread, "Tibbo Com", port);
+        if (ok)
+            RdosCreateKernelThread(5, 0x1000, &PortThread, "Tibbo Com", port);
+
     }
 
     return ok;

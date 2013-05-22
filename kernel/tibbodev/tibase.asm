@@ -763,7 +763,6 @@ PostReceiveData_    Proc near
     push fs
     pushad    
 ;   
-    int 3
     mov ds,ebx
     mov eax,es
     mov fs,eax    
@@ -772,7 +771,7 @@ PostReceiveData_    Proc near
 
 prdGetLoop:
     lods byte ptr fs:[esi]
-;    RequestSpinlock ds:com_spinlock
+    RequestSpinlock ds:com_spinlock
     mov dx,ds:rec_count
     cmp dx,ds:rec_size
     je prdSignal
@@ -789,12 +788,12 @@ prdGetLoop:
     
 prdWrapOk:
     mov ds:rec_tail,bx
-;    ReleaseSpinlock ds:com_spinlock
+    ReleaseSpinlock ds:com_spinlock
     loop prdGetLoop
     jmp prdSigRel
 
 prdSignal:
-;    ReleaseSpinlock ds:com_spinlock
+    ReleaseSpinlock ds:com_spinlock
 
 prdSigRel:
     mov bx,ds:avail_obj
