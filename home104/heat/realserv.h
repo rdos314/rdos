@@ -39,7 +39,7 @@ class TRealtimeSocketServer : public TCotexSocketServer
 {
 friend class TRealtimeSocketServerFactory;
 public:
-	 TRealtimeSocketServer(TRealtimeSocketServerFactory *fact, const char *Name, int StackSize, TSocket *Socket);
+	 TRealtimeSocketServer(TRealtimeSocketServerFactory *fact, const char *Name, int StackSize, TTcpSocket *Socket);
 	~TRealtimeSocketServer();
 
 protected:
@@ -62,7 +62,7 @@ public:
     TRealtimeSocketServerFactory(int Port, int MaxConnections, int BufferSize);
 	~TRealtimeSocketServerFactory();
 
-	virtual TSocketServer *Create(TSocket *Socket);
+	virtual TSocketServer *Create(TTcpSocket *Socket);
 
 	void SendData(THeatData *data);
 

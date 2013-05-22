@@ -49,7 +49,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TCotexSocketServer::TCotexSocketServer(const char *Name, int StackSize, TSocket *Socket)
+TCotexSocketServer::TCotexSocketServer(const char *Name, int StackSize, TTcpSocket *Socket)
   : TSocketServer(Name, StackSize, Socket)
 {
 }

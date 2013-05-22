@@ -48,7 +48,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TRealtimeSocketServer::TRealtimeSocketServer(TRealtimeSocketServerFactory *fact, const char *Name, int StackSize, TSocket *Socket)
+TRealtimeSocketServer::TRealtimeSocketServer(TRealtimeSocketServerFactory *fact, const char *Name, int StackSize, TTcpSocket *Socket)
   : TCotexSocketServer(Name, StackSize, Socket)
 {
     FFactory = fact;
@@ -88,37 +88,37 @@ void TRealtimeSocketServer::HandleSocket()
     char *msg;
     char ch;
 
-	 FFactory->InsertServer(this);
+         FFactory->InsertServer(this);
         
     while (FSocket->IsOpen())
     {
         FSignal.WaitForever();
 
         if (FSocket->IsOpen() && FNewData)
-		  {
-				doc = ConvToCotex(&FHeatData);
+                  {
+                                doc = ConvToCotex(&FHeatData);
 
-				FNewData = FALSE;
+                                FNewData = FALSE;
 
-				size = doc->GetSize();
-				msg = new char[size];
-				doc->GetData(COT_SIGN, msg);
+                                size = doc->GetSize();
+                                msg = new char[size];
+                                doc->GetData(COT_SIGN, msg);
 
-				delete doc;
+                                delete doc;
 
-				FSocket->Write((char *)&size, 4);
-				FSocket->Write(msg, size);
-				FSocket->Push();
+                                FSocket->Write((char *)&size, 4);
+                                FSocket->Write(msg, size);
+                                FSocket->Push();
 
-				delete msg;
+                                delete msg;
 
-                if (FSocket->WaitForChar(30000))
+                if (FSocket->WaitForData(30000))
                     ch = FSocket->Read();
 
-		  }
-	 }
+                  }
+         }
 
-	 FFactory->RemoveServer(this);
+         FFactory->RemoveServer(this);
 }
 
 /*##########################################################################
@@ -183,12 +183,12 @@ TRealtimeSocketServerFactory::~TRealtimeSocketServerFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TSocketServer *TRealtimeSocketServerFactory::Create(TSocket *Socket)
+TSocketServer *TRealtimeSocketServerFactory::Create(TTcpSocket *Socket)
 {
-	TRealtimeSocketServer *server;
-	server = new TRealtimeSocketServer(this, "Realtime", 0x2000, Socket);
+        TRealtimeSocketServer *server;
+        server = new TRealtimeSocketServer(this, "Realtime", 0x2000, Socket);
 
-	return server;
+        return server;
 }
 
 

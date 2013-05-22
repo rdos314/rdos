@@ -35,7 +35,7 @@
 class TCotexSocketServer : public TSocketServer
 {
 public:
-    TCotexSocketServer(const char *Name, int StackSize, TSocket *Socket);
+    TCotexSocketServer(const char *Name, int StackSize, TTcpSocket *Socket);
 	~TCotexSocketServer();
 
 protected:

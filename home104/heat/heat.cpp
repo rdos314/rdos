@@ -141,8 +141,6 @@ int main()
     
     RdosWaitMilli(2500);
 
-    Store = new TDataStore;
-
     RdosWriteSerialVal(2, 0, 0);
     RdosWriteSerialVal(2, 1, 0);
 
@@ -154,6 +152,8 @@ int main()
     vbe = new TVideoGraphicDevice(32, 1280, 768);
     control = new TDisplayControlThread("Control", vbe);
     vbe->SetFont(&Font);
+
+    Store = new TDataStore;
 
 //    bitmap = TJpegBitmapDevice::Create("d:\\heat\\back.jpg");
 //    vbe->Blit(bitmap, 0, 0, 0, 0, 1280, 768);

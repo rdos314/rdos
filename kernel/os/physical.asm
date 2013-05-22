@@ -707,7 +707,7 @@ GetMultPhys64   Proc near
     mov bx,32
     mov bp,ds:phys_bitmap_count
     sub bp,bx
-    jbe gmpDone64
+    jbe gmpFail64
 
 gmpLoop64:
     mov si,bx
@@ -726,7 +726,8 @@ gmpNext64:
     inc bx
     sub bp,1
     jnz gmpLoop64
-;
+
+gmpFail64:
     stc
 
 gmpDone64:
@@ -762,7 +763,7 @@ GetMultPhys32   Proc near
 gmpCountOk32:    
     mov bx,1
     sub bp,bx
-    jbe gmpDone32
+    jbe gmpFail32
 
 gmpLoop32:
     mov si,bx
@@ -781,7 +782,8 @@ gmpNext32:
     inc bx
     sub bp,1
     jnz gmpLoop32
-;
+
+gmpFail32:
     stc
 
 gmpDone32:

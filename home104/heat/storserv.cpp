@@ -50,7 +50,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TStorageSocketServer::TStorageSocketServer(TStorageList *StorList, const char *Name, int StackSize, TSocket *Socket)
+TStorageSocketServer::TStorageSocketServer(TStorageList *StorList, const char *Name, int StackSize, TTcpSocket *Socket)
   : TCotexSocketServer(Name, StackSize, Socket)
 {
     FStorList = StorList;
@@ -84,22 +84,22 @@ TStorageSocketServer::~TStorageSocketServer()
 ##########################################################################*/
 void TStorageSocketServer::SendCotex(THeatData *data)
 {
-	int size;
-	char *msg;
-	char ch;
+        int size;
+        char *msg;
+        char ch;
     TDeviceMsg *doc = ConvToCotex(data);
         
     size = doc->GetSize();
     msg = new char[size];
-	 doc->GetData(COT_SIGN, msg);
+         doc->GetData(COT_SIGN, msg);
 
-	 if (FSocket->IsOpen())
-	 {
-		  FSocket->Write((char *)&size, 4);
-		  FSocket->Write(msg, size);
-		  FSocket->Push();
+         if (FSocket->IsOpen())
+         {
+                  FSocket->Write((char *)&size, 4);
+                  FSocket->Write(msg, size);
+                  FSocket->Push();
 
-        if (FSocket->WaitForChar(30000))
+        if (FSocket->WaitForData(30000))
         {
             ch = FSocket->Read();
 
@@ -183,10 +183,10 @@ TStorageSocketServerFactory::~TStorageSocketServerFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TSocketServer *TStorageSocketServerFactory::Create(TSocket *Socket)
+TSocketServer *TStorageSocketServerFactory::Create(TTcpSocket *Socket)
 {
-	TStorageSocketServer *server;
-	server = new TStorageSocketServer(FStorList, "Storage", 0x2000, Socket);
+        TStorageSocketServer *server;
+        server = new TStorageSocketServer(FStorList, "Storage", 0x2000, Socket);
 
-	return server;
+        return server;
 }

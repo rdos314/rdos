@@ -36,7 +36,7 @@
 class TStorageSocketServer : public TCotexSocketServer
 {
 public:
-    TStorageSocketServer(TStorageList *StorList, const char *Name, int StackSize, TSocket *Socket);
+    TStorageSocketServer(TStorageList *StorList, const char *Name, int StackSize, TTcpSocket *Socket);
 	~TStorageSocketServer();
 
 protected:
@@ -52,7 +52,7 @@ public:
     TStorageSocketServerFactory(TStorageList *StorList, int Port, int MaxConnections, int BufferSize);
 	~TStorageSocketServerFactory();
 
-	virtual TSocketServer *Create(TSocket *Socket);
+	virtual TSocketServer *Create(TTcpSocket *Socket);
 
 protected:
 	TStorageList *FStorList;
