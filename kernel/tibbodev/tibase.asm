@@ -196,8 +196,8 @@ open_com    Proc far
     push fs
     pushad
 ;
-    mov dx,ds
-    mov fs,dx
+    mov esi,ds
+    mov fs,esi
 ;    
     mov dl,bh
     movzx eax,ah
@@ -662,6 +662,7 @@ AddPort_ Endp
 
 GetSendData_    Proc near
     push ds
+    push fs
     push ebx
     push ecx
     push edx
@@ -669,10 +670,12 @@ GetSendData_    Proc near
     push edi
 ;   
     mov ds,ebx
-    xor eax,eax
-    mov ds,ds:send_count
+    xor esi,esi
+    mov dx,ds:send_count
     or dx,dx
     jz gsdDone
+;    
+    mov fs,ds:send_buf
 
 gsdLoop:
     RequestSpinlock ds:com_spinlock
@@ -685,7 +688,7 @@ gsdLoop:
     mov bx,ds:send_head
     mov al,fs:[bx]
     stosb
-    inc eax
+    inc esi
     inc bx
     cmp bx,ds:send_size
     jnz gsdWrapOk
@@ -696,7 +699,7 @@ gsdWrapOk:
     mov ds:send_head,bx
     ReleaseSpinlock ds:com_spinlock
 ;
-    cmp eax,ecx
+    cmp esi,ecx
     jb gsdLoop
 ;    
     jmp gsdDone
@@ -705,14 +708,110 @@ gsdSend:
     ReleaseSpinlock ds:com_spinlock
 
 gsdDone:
+    mov eax,esi
     pop edi
     pop esi
     pop edx
     pop ecx
     pop ebx
+    pop fs
     pop ds    
     ret
 GetSendData_   Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           WaitForData
+;
+;   DESCRIPTION:    Wait for data
+;
+;   PARAMETERS:     EBX             Wait handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public WaitForData_
+
+WaitForData_    Proc near
+    pushad
+    GetSystemTime
+    add eax,1193000
+    adc edx,0
+    WaitWithTimeout
+    popad
+    ret
+WaitForData_    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           PostReceiveData
+;
+;   DESCRIPTION:    Post receive data
+;
+;   PARAMETERS:     EBX             Port sel
+;                   ES:EDI          Buffer
+;                   ECX             Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public PostReceiveData_
+
+PostReceiveData_    Proc near
+    push ds
+    push es
+    push fs
+    pushad    
+;   
+    int 3
+    mov ds,ebx
+    mov eax,es
+    mov fs,eax    
+    mov esi,edi
+    mov es,ds:rec_buf
+
+prdGetLoop:
+    lods byte ptr fs:[esi]
+;    RequestSpinlock ds:com_spinlock
+    mov dx,ds:rec_count
+    cmp dx,ds:rec_size
+    je prdSignal
+;       
+    inc dx
+    mov ds:rec_count,dx
+    mov bx,ds:rec_tail
+    mov es:[bx],al
+    inc bx
+    cmp bx,ds:rec_size
+    jnz prdWrapOk
+;
+    xor bx,bx
+    
+prdWrapOk:
+    mov ds:rec_tail,bx
+;    ReleaseSpinlock ds:com_spinlock
+    loop prdGetLoop
+    jmp prdSigRel
+
+prdSignal:
+;    ReleaseSpinlock ds:com_spinlock
+
+prdSigRel:
+    mov bx,ds:avail_obj
+    or bx,bx
+    jz prdDone
+;
+    mov es,bx
+    SignalWait
+    mov ds:avail_obj,0
+
+prdDone:
+    popad
+    pop fs
+    pop es
+    pop ds    
+    ret
+PostReceiveData_   Endp    
 
 _TEXT    ENDS
 

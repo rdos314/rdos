@@ -46,7 +46,8 @@ struct tibbo_port
     int dev_port;
     short int port;
     int tcp_handle;
-    int handler_thread;
+    int wait_handle;
+    int signal_handle;
     int sel;
 };
 
@@ -70,8 +71,14 @@ extern void InitBroadcast();
 extern int AddPort(struct tibbo_port *port);
 #pragma aux AddPort parm routine [es edi] value [eax]
 
-extern int GetSendData(struct tibbo_port *port, char *buf, int size);
+extern int GetSendData(int sel, char *buf, int size);
 #pragma aux GetSendData parm routine [ebx] [es edi] [ecx] value [eax]
+
+extern void WaitForData(int handle);
+#pragma aux WaitForData parm routine [ebx]
+
+extern void PostReceiveData(int sel, char *buf, int size);
+#pragma aux PostReceiveData parm routine [ebx] [es edi] [ecx]
 
 int DriverCount;
 int DriverArr[MAX_UDP_DEV];
@@ -87,6 +94,8 @@ char AnswerBuf[64];
 int SignalThread = 0;
 
 struct TKernelSection CmdSection;
+
+struct tibbo_port *test_port;
     
 /*##########################################################################
 #
@@ -305,17 +314,6 @@ void __far TibboThread(void *param)
     
 /*##########################################################################
 #
-#   Name       : Test gate (used for debugging)
-#
-##########################################################################*/
-#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
-void __far ImplTestGate(const char *msg)
-{
-    RunTibboThread();
-}
-    
-/*##########################################################################
-#
 #   Name       : ConvMac
 #
 ##########################################################################*/
@@ -447,7 +445,7 @@ void CreateDevPorts(struct tibbo_dev *dev)
         TibboPortArr[TibboPortCount] = port;
         TibboPortCount++;
 
-        port->sel = AddPort(port);
+        AddPort(port);
     }
 }
     
@@ -552,14 +550,44 @@ void ImplBroadcast(int driver_sel)
 #pragma aux PortThread "*" rdosdev parm routine [gs ebx]
 void __far PortThread(void *param)
 {
+    char *buf;
     struct tibbo_port *port;
+    int count;
+        
+    buf = RdosAllocateSmallGlobalMem(256);
 
     port = (struct tibbo_port *)param;
-    port->handler_thread = RdosGetThreadHandle();
+
+    port->wait_handle = RdosCreateWait();
+    RdosAddWaitForTcpConnection(port->wait_handle, port->tcp_handle, 1);
+
+    port->signal_handle = RdosCreateSignal();
+    RdosAddWaitForSignal(port->wait_handle, port->signal_handle, 1);
 
     for (;;)
     {
-        RdosWaitForSignal();    
+        count = GetSendData(port->sel, buf, 256);
+        if (count)
+        {
+            RdosWriteTcpConnection(port->tcp_handle, buf, count);
+            RdosPushTcpConnection(port->tcp_handle);
+        }
+        else               
+        {
+            count = RdosPollTcpConnection(port->tcp_handle);
+            if (count)
+            {
+                _asm int 3
+                if (count > 256)
+                    count = 256;
+                count = RdosReadTcpConnection(port->tcp_handle, buf, count);
+
+                if (count)
+                    PostReceiveData(port->sel, buf, count);
+            }
+            else
+                WaitForData(port->wait_handle);
+        }            
     }
 }
     
@@ -568,13 +596,17 @@ void __far PortThread(void *param)
 #   Name       : ImplOpenCom
 #
 ##########################################################################*/
-#pragma aux ImplOpenCom "*" rdosdev parm routine [es edi] [ecx] [edx] [eax] [ebx] value [eax]
-int ImplOpenCom(struct tibbo_port *port, int baudrate, char parity, int databits, int stopbits)
+#pragma aux ImplOpenCom "*" rdosdev parm routine [es edi] [esi] [ecx] [edx] [eax] [ebx] value [eax]
+int ImplOpenCom(struct tibbo_port *port, int sel, int baudrate, char parity, int databits, int stopbits)
 {
     int ok;
     int val;
     char str[64];
     int handle;
+
+    port->sel = sel;
+    port->wait_handle = 0;
+    port->signal_handle = 0;
 
     switch (baudrate)
     {
@@ -710,6 +742,8 @@ int ImplOpenCom(struct tibbo_port *port, int baudrate, char parity, int databits
 
         port->tcp_handle = handle;
 
+        test_port = port;
+
         RdosCreateKernelThread(5, 0x1000, &PortThread, "Tibbo Com", port);
     }
 
@@ -724,9 +758,21 @@ int ImplOpenCom(struct tibbo_port *port, int baudrate, char parity, int databits
 #pragma aux ImplSignalSend "*" rdosdev parm routine [es edi]
 int ImplSignalSend(struct tibbo_port *port)
 {
-    RdosSignal(port->handler_thread);
+    if (port->signal_handle)
+        RdosSetSignal(port->signal_handle);
 }
 
+/*##########################################################################
+#
+#   Name       : Test gate (used for debugging)
+#
+##########################################################################*/
+#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
+void __far ImplTestGate(const char *msg)
+{
+    PortThread(test_port);
+}
+    
 /*##########################################################################
 #
 #   Name       : InitTasking

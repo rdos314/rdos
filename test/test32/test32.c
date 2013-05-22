@@ -10,18 +10,17 @@ void main()
     int ports;
     int handle;
 
-//    RdosTestGate();
-
     ports = RdosGetMaxComPort();
 
     handle = RdosOpenCom(ports - 3, 9600, 'N', 8, 1, 0x1000, 0x1000);
 
     for (;;)
     {
-        RdosWaitMilli(5);
         RdosWriteCom(handle, 'A');
+        RdosWriteCom(handle, 0xd);
+        RdosWriteCom(handle, 0xa);
+        RdosWaitMilli(1000);
     }
 
-//    RdosTestGate();    
 }
 

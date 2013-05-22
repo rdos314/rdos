@@ -1278,16 +1278,19 @@
 
 #pragma aux RdosReadTcpConnection = \
     CallGate_read_tcp_connection  \
+    ValidateEax \
     parm [ebx] [es edi] [ecx] \
     value [eax];
 
 #pragma aux RdosWriteTcpConnection = \
     CallGate_write_tcp_connection  \
+    ValidateEax \
     parm [ebx] [es edi] [ecx] \
     value [eax];
 
 #pragma aux RdosPollTcpConnection = \
     CallGate_poll_tcp_connection  \
+    ValidateEax \
     parm [ebx] \
     value [eax];
 
