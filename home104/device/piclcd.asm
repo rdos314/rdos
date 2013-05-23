@@ -279,7 +279,6 @@ DioRemove   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DioCheckReady1 Proc near
-    push es
     push ax
     push bx
     push cx
@@ -342,7 +341,6 @@ dcrDone1:
     pop cx
     pop bx    
     pop ax
-    pop es
     ret
 DioCheckReady1 Endp
 
@@ -357,7 +355,6 @@ DioCheckReady1 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DioCheckReady2 Proc near
-    push es
     push ax
     push bx
     push cx
@@ -427,7 +424,6 @@ dcrDone2:
     pop cx
     pop bx    
     pop ax
-    pop es
     ret
 DioCheckReady2 Endp
 
@@ -442,7 +438,6 @@ DioCheckReady2 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DioCheckIdle1   Proc near
-    push es
     push ax
     push bx
     push cx
@@ -537,7 +532,6 @@ dciDone1:
     pop cx
     pop bx
     pop ax
-    pop es
     ret
 DioCheckIdle1  Endp
 
@@ -552,7 +546,6 @@ DioCheckIdle1  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DioCheckIdle2   Proc near
-    push es
     push ax
     push bx
     push cx
@@ -621,7 +614,6 @@ dciDone2:
     pop cx
     pop bx
     pop ax
-    pop es
     ret
 DioCheckIdle2   Endp
 

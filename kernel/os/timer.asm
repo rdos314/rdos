@@ -172,7 +172,6 @@ out_speaker_control     Proc far
 out_speaker_control     Endp
 
 in_control      PROC far
-    int 3
     retf32
 in_control      ENDP
 

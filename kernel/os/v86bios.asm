@@ -362,10 +362,6 @@ bios_loop:
     add edx,1000h
     loop bios_loop
 ;
-    mov ax,emulate_opcode_nr
-    IsValidOsGate
-    jnc bios_bitmap_done
-;
     GetThread
     mov ds,ax
     mov ax,flat_sel
@@ -376,10 +372,28 @@ bios_loop:
     AllocateSmallLinear
     mov edi,edx
 ;
+    push ds
     push ecx
+    push esi
+;
+    mov ecx,OFFSET tss32_io_bitmap            
     xor al,al
     rep stos byte ptr es:[edi]
+;
+    push ecx
+    mov ax,io_bitmap_sel
+    mov ds,ax
+    xor esi,esi
+    mov ecx,80h
+    rep movs byte ptr es:[edi],ds:[esi]
     pop ecx
+;        
+    xor al,al
+    rep stos byte ptr es:[edi]
+;
+    pop esi    
+    pop ecx
+    pop ds
 ;
     mov eax,cr3
     mov es:[edx].tss32_cr3,eax
