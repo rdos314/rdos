@@ -630,6 +630,8 @@ void TVp::Execute()
     char str[50];
     long double E = 0.0;
 
+    RdosWaitMilli(1000);
+
     TLabelFactory CommentLabelFactory;
     TLabelFactory ValueLabelFactory;
     TLabelFactory UnitLabelFactory;

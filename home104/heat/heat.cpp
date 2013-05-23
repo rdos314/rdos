@@ -138,6 +138,7 @@ int main()
     long double altitude;
     long double azimuth;
     TDateTime currtime;
+    TLabelControl *Label;
     
     RdosWaitMilli(2500);
 
@@ -221,12 +222,18 @@ int main()
 
     RdosCreateThread(TimeThread, "Time", control, 0x4000);
 
+    Label = new TLabelControl(control, 10, 10, 200, 30);
+    Label->SetFont(20);
+    Label->SetBackColor(0, 20, 50);
+    Label->SetDrawColor(255, 255, 255);
+    Label->SetText("");
+    Label->Show();
+
     for (;;)
     {
-        RdosSetCursorPosition(0,0);
-
         CurrTime = new TDateTime;
 
+        str[0] = 0;
 
         if (RdosReadSerialLines(1, &diostat))
         {
@@ -234,9 +241,9 @@ int main()
             for (i = 0; i < 8; i++)
             {
                 if (diostat & mask)
-                    printf("1");
+                    strcat(str, "1");
                 else
-                    printf("0");
+                    strcat(str, "0");
                 mask = mask >> 1;
             }
 
@@ -258,8 +265,10 @@ int main()
 
         }
         else
-            printf("------");
+            strcpy(str, "------");
 
+        Label->SetText(str);
+        
         ambient = 150;
 
         summer = FALSE;

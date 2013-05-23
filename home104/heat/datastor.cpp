@@ -58,9 +58,11 @@ TDataStore::TDataStore()
 {
     int i;
     
-        FStorList = 0;
+    FStorList = 0;
     FCirc = 0;
     FVp = 0;
+    FClimate = 0;
+    FPower = 0;
 
     for (i = 0; i < RAD_COUNT; i++)
         FRadArr[i] = 0;
@@ -321,38 +323,42 @@ void TDataStore::SendRealtime(TRealtimeSocketServerFactory *fact, TRadData *data
 ##########################################################################*/
 void TDataStore::Execute()
 {
-        int year, month, day;
-        int hour, min, sec;
-        int ms, us;
-        int i;
-        int ival;
-        unsigned long msb;
-        unsigned long lsb;
-        THeatData CurrData;
-        TDisc *Disc;
-        long StartSector;
-        TDiscStorage *DiscStore[4];
-        TRedundanceStorageList *redu;
-        TStorageSocketServerFactory *storfact;
-        TRealtimeSocketServerFactory *realfact;
+    int year, month, day;
+    int hour, min, sec;
+    int ms, us;
+    int i;
+    int ival;
+    unsigned long msb;
+    unsigned long lsb;
+    THeatData CurrData;
+    TDisc *Disc;
+    long StartSector;
+    TDiscStorage *DiscStore[4];
+    TRedundanceStorageList *redu;
+    TStorageSocketServerFactory *storfact;
+    TRealtimeSocketServerFactory *realfact;
 
-        RdosGetTime(&msb, &lsb);
-        RdosDecodeMsbTics(msb, &FYear, &FMonth, &FDay, &FHour);
-        RdosDecodeLsbTics(lsb, &FMin, &sec, &ms, &us);
+    RdosGetTime(&msb, &lsb);
+    RdosDecodeMsbTics(msb, &FYear, &FMonth, &FDay, &FHour);
+    RdosDecodeLsbTics(lsb, &FMin, &sec, &ms, &us);
 
-        Disc = new TDisc(0);
-        StartSector = Disc->GetTotalSectors() - 10 * LIST_SECTORS + 4 * LIST_SECTORS;
+    Disc = new TDisc(0);
+    StartSector = Disc->GetTotalSectors() - 10 * LIST_SECTORS + 4 * LIST_SECTORS;
 
-        for (i = 0; i < 4; i++)
-                 DiscStore[i] = new TDiscStorage(Disc, StartSector + LIST_SECTORS * i, LIST_SECTORS);
+    for (i = 0; i < 4; i++)
+        DiscStore[i] = new TDiscStorage(Disc, StartSector + LIST_SECTORS * i, LIST_SECTORS);
 
-        redu = new TRedundanceStorageList(sizeof(THeatData), LIST_ID);
+    redu = new TRedundanceStorageList(sizeof(THeatData), LIST_ID);
 
-        for (i = 0; i < 4; i++)
+    for (i = 0; i < 4; i++)
         redu->Add(DiscStore[i]);
 
-        redu->Recover();
-        FStorList = redu;
+    redu->Recover();
+    FStorList = redu;
+
+    while (!FPower)
+        RdosWaitMilli(1000);
+            
 
     storfact = new TStorageSocketServerFactory(redu, 600, 10, 2048);
     storfact->StartHandler("Storage Server", 0x4000);

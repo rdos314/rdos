@@ -66,7 +66,7 @@ void EnergyThread(void *Param)
     long double chargep = 0;
     long double loadp = 0;
 
-    RdosWaitMilli(5000);
+    RdosWaitMilli(15000);
 
     for (;;)
     {
@@ -116,7 +116,7 @@ void BatteryThread(void *Param)
     int BatUSum = 0;
     int BatUCount = 0;
 
-    RdosWaitMilli(5000);
+    RdosWaitMilli(12000);
 
     for (;;)
     {
@@ -356,6 +356,8 @@ void TPower::Execute()
     long double solar12_i;
     long double solar24_i;
 
+    RdosWaitMilli(2500);
+
     TLabelFactory CommentLabelFactory;
     TLabelFactory ValueLabelFactory;
     TLabelFactory UnitLabelFactory;
@@ -382,7 +384,7 @@ void TPower::Execute()
 
     Label = new TLabelControl(FControl, 25, 25, 200, 30);
     Label->SetFont(20);
-    Label->SetBackTransparent();
+    Label->SetBackColor(0, 20, 50);
     Label->SetDrawColor(0, 0, 0);
     Label->SetText("Energi");
     Label->Show();

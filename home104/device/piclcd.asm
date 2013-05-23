@@ -279,6 +279,7 @@ DioRemove   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DioCheckReady1 Proc near
+    push es
     push ax
     push bx
     push cx
@@ -341,6 +342,7 @@ dcrDone1:
     pop cx
     pop bx    
     pop ax
+    pop es
     ret
 DioCheckReady1 Endp
 
@@ -355,6 +357,7 @@ DioCheckReady1 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DioCheckReady2 Proc near
+    push es
     push ax
     push bx
     push cx
@@ -424,6 +427,7 @@ dcrDone2:
     pop cx
     pop bx    
     pop ax
+    pop es
     ret
 DioCheckReady2 Endp
 
@@ -438,6 +442,7 @@ DioCheckReady2 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DioCheckIdle1   Proc near
+    push es
     push ax
     push bx
     push cx
@@ -532,6 +537,7 @@ dciDone1:
     pop cx
     pop bx
     pop ax
+    pop es
     ret
 DioCheckIdle1  Endp
 
@@ -546,6 +552,7 @@ DioCheckIdle1  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DioCheckIdle2   Proc near
+    push es
     push ax
     push bx
     push cx
@@ -614,6 +621,7 @@ dciDone2:
     pop cx
     pop bx
     pop ax
+    pop es
     ret
 DioCheckIdle2   Endp
 
@@ -1138,10 +1146,12 @@ ptLoop1:
     or ax,ax
     jz ptNoReset1
 ;
+    push es
     mov es,ax
     mov es:dqe_result,0
     mov ds:DioCurr0,0
     mov bx,es:dqe_thread
+    pop es
     Signal
     
 ptNoReset1:
@@ -1237,10 +1247,12 @@ ptLoop2:
     or ax,ax
     jz ptNoReset2
 ;
+    push es
     mov es,ax
     mov es:dqe_result,0
     mov ds:DioCurr1,0
     mov bx,es:dqe_thread
+    pop es
     Signal
     
 ptNoReset2:
