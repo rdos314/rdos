@@ -183,24 +183,6 @@ int SetVar(struct tibbo_port *port, const char *setting, const char *val)
     
 /*##########################################################################
 #
-#   Name       : SetPar
-#
-##########################################################################*/
-int SetPar(struct tibbo_port *port, const char *par, const char *val)
-{
-    char str[64];
-    char reply[64];
-
-    if (port->dev_port)
-        sprintf(str, "P%s@%d%s", par, port->dev_port + 1, val);
-    else
-        sprintf(str, "P%s%s", par, val);
-
-    return Session(port->dev, str, reply);        
-}
-    
-/*##########################################################################
-#
 #   Name       : BroadcastData
 #
 ##########################################################################*/
@@ -623,19 +605,10 @@ int ImplOpenCom(struct tibbo_port *port, int sel, int baudrate, char parity, int
 
         if (ok)
         {
-            ok = SetVar(port, "SI", "0");    
-
-            if (ok)
-                ok = SetVar(port, "FC", "0");    
-
-            if (ok)
-                ok = SetVar(port, "DT", "0");    
+            ok = SetVar(port, "FC", "0");    
 
             if (ok)
                 ok = SetVar(port, "DS", "1");    
-
-            if (ok)
-                ok = SetVar(port, "SE", "0");    
 
             if (ok)
             {
