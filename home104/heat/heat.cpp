@@ -109,7 +109,7 @@ void TimeThread(void *Param)
 
     LockGUI();
 
-    Label = new TLabelControl(control, 450, 330, 200, 30);
+    Label = new TLabelControl(control, 5, 330, 200, 30);
     Label->SetFont(20);
     Label->SetBackColor(100, 100, 100);
     Label->SetDrawColor(0, 0, 0);
@@ -270,7 +270,7 @@ int main()
     RdosCreateThread(TimeThread, "Time", control, 0x4000);
 
     LockGUI();
-    Label = new TLabelControl(control, 450, 300, 200, 30);
+    Label = new TLabelControl(control, 5, 300, 200, 30);
     Label->SetFont(20);
     Label->SetBackColor(0, 20, 50);
     Label->SetDrawColor(255, 255, 255);

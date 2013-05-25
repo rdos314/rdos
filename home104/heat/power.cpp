@@ -376,7 +376,7 @@ void TPower::Execute()
 
     LockGUI();
 
-    Table = new TTableControl(FControl, 50, 10, 750, 150);
+    Table = new TTableControl(FControl, 5, 10, 750, 125);
     Table->SetBackColor(0, 20, 50);
     Table->SetSpacingColor(0, 20, 50);
     Table->SetRowSpacing(5);
@@ -416,7 +416,7 @@ void TPower::Execute()
 
     Table->Show();
 
-    EnergyTable = new TTableControl(FControl, 50, 200, 300, 150);
+    EnergyTable = new TTableControl(FControl, 5, 150, 300, 100);
     EnergyTable->SetBackColor(0, 20, 50);
     EnergyTable->SetSpacingColor(0, 20, 50);
     EnergyTable->SetRowSpacing(5);
