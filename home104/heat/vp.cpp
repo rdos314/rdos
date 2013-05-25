@@ -48,7 +48,7 @@
 void LockGUI();
 void UnlockGUI();
 
-const int HistoryArr[] = {61, 91, 121, 181, 241, 301, 361, 421, 481, 541, 601, 0};
+const int HistoryArr[] = {601, 541, 481, 421, 361, 301, 241, 181, 121, 91, 61, 0};
 
 /*##########################################################################
 #
@@ -478,7 +478,7 @@ void TVp::CalcLinearRegression(int Size)
     if (FCurrSl2)
         FCurrTurbulence = 100.0 * FCurrSd2 / FCurrSl2;
     else
-        FCurrTurbulence = 1000.0;
+        FCurrTurbulence = 0.0;
 }
 
 /*##########################################################################
@@ -521,21 +521,22 @@ void TVp::UpdateHistory(long double val)
 
     if (FHistoryCount > 60)
     {
-                index = 0;
-                FCurrTurbulence = 1000;
-                FCurrSd2 = 1000;
-                FCurrSlope = 1000;
-                FCurrFlow = 0;
+        index = 0;
 
-                while (HistoryArr[index] && FCurrTurbulence >= 10.0)
-                {
-                    n = HistoryArr[index];
-                        index++;
-
-                        if (n > FHistoryCount)
-                break;
-
+        if (FHistoryCount <= 600)
             CalcLinearRegression(n);
+        else
+        {
+            n = HistoryArr[index];
+            index++;
+            CalcLinearRegression(n);
+            
+            while (HistoryArr[index] && FCurrTurbulence >= 10.0)
+            {
+                n = HistoryArr[index];
+                index++;
+                CalcLinearRegression(n);
+            }
         }
 
         if (FCurrTurbulence < 10.0)
@@ -663,6 +664,8 @@ void TVp::Execute()
 
     Table->SetText(6, 0, "Turbolence");
 
+    Table->Show();
+
     UnlockGUI();
 
     TempSum = 0;
@@ -676,8 +679,6 @@ void TVp::Execute()
     RdosGetTime(&msb, &lsb);
     RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
     RdosDecodeLsbTics(lsb, &LastMin, &sec, &ms, &us);
-
-    FInstalled = FALSE;
 
     while (FInstalled)
     {
@@ -695,7 +696,6 @@ void TVp::Execute()
 
     while (FInstalled)
     {
-/*
         if (RdosReadSerialRaw(1, 5, &ival))
         {
 
@@ -714,7 +714,6 @@ void TVp::Execute()
                 Table->SetText(6, 1, str);
             }
         }
-*/
 
         if (RdosReadSerialRaw(1, 6, &ival))
         {

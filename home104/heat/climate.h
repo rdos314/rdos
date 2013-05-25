@@ -47,7 +47,7 @@ protected:
     TLabelFactory ValueLabelFactory;
     TLabelFactory UnitLabelFactory;
 
-    TTableControl Table;
+    TTableControl *Table;
     
 };
 

@@ -224,9 +224,9 @@ ins_empty:
         mov es:dqe_next,es
         mov es:dqe_prev,es
         pop di
-        mov [di],es
 
 ins_done:
+        mov [di],es
     ret
 DioInsert   Endp
 
@@ -1185,17 +1185,17 @@ ptNoReset1:
     call DioCheckIdle1
     LeaveSection ds:ListSection
 ;
-        GetSystemTime
-        add eax,5 * 1193000
-        adc edx,0
-        mov bx,cs
-        mov es,bx
-        mov edi,OFFSET PicTimeout1
-        mov bx,ds:PicThread0
-        StopTimer
-        StartTimer
+    GetSystemTime
+    add eax,119300
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET PicTimeout1
+    mov bx,ds:PicThread0
+    StopTimer
+    StartTimer
 ;
-        WaitForSignal
+    WaitForSignal
     jmp ptLoop1
 
 
@@ -1285,18 +1285,18 @@ ptNoReset2:
     call DioCheckReady2
     call DioCheckIdle2
     LeaveSection ds:ListSection
-;
-        GetSystemTime
-        add eax,5 * 1193000
-        adc edx,0
-        mov bx,cs
-        mov es,bx
-        mov edi,OFFSET PicTimeout2
-        mov bx,ds:PicThread1
-        StopTimer
-        StartTimer
 ;    
-        WaitForSignal
+    GetSystemTime
+    add eax,119300
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET PicTimeout2
+    mov bx,ds:PicThread1
+    StopTimer
+    StartTimer
+;    
+    WaitForSignal
     jmp ptLoop2
 
 

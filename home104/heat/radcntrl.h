@@ -58,6 +58,8 @@ public:
 protected:
 	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
 
+    int FDrawHeader;
+
     int FChangedName[MAX_RAD_COUNT];
     char *FName[MAX_RAD_COUNT];
 

@@ -62,6 +62,8 @@ TRadControl::TRadControl(TControlThread *dev, int xmin, int ymin, int width, int
 {
     int i;
 
+    FDrawHeader = TRUE;
+
     for (i = 0; i < MAX_RAD_COUNT; i++)
     {
         FChangedName[i] = FALSE;
@@ -80,7 +82,7 @@ TRadControl::TRadControl(TControlThread *dev, int xmin, int ymin, int width, int
 
     Enable();
     Show();
-         Redraw(500);
+    Redraw(500);
 }
 
 /*##########################################################################
@@ -468,28 +470,33 @@ void TRadControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int 
         int ymax = ymin + height - 1;
         int x;
     int y;
-        char str[80];
-        TFont Font(20);
+    char str[80];
+    TFont Font(20);
 
-        if (IsVisible())
-        {
+    if (IsVisible())
+    {
         dev->SetLgopNone();
         dev->SetFilledStyle();
 
         dev->SetClipRect(  xmin, ymin,
-                                   xmax, ymax);
+                           xmax, ymax);
 
         dev->SetDrawColor(TEXT_R, TEXT_G, TEXT_B);
         dev->SetFont(&Font);
 
+        if (FDrawHeader)
+        {
             dev->DrawString(xmin + 300, ymin, "   Ref");
             dev->DrawString(xmin + 400, ymin, "  Temp");
             dev->DrawString(xmin + 500, ymin, "Pådrag");
             dev->DrawString(xmin + 600, ymin, "  Ljus");
             dev->DrawString(xmin + 700, ymin, "Temp 2");
 
+            FDrawHeader = FALSE;
+        }
+
         for (i = 0; i < MAX_RAD_COUNT; i++)
-            {
+        {
             if (FName[i])
             {
                 FSection.Enter();

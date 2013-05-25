@@ -53,10 +53,7 @@ void UnlockGUI();
 #
 ##########################################################################*/
 TClimate::TClimate(TControlThread *control)
-  : Table(control, 850, 50, 400, 300)
 {
-    TLabelControl *Label;
-
     FControl = control;
 
     CommentLabelFactory.SetSpace(4, 4);
@@ -79,56 +76,53 @@ TClimate::TClimate(TControlThread *control)
 
     LockGUI();
 
-    Label = new TLabelControl(FControl, 850, 20, 200, 30);
-    Label->SetFont(20);
-    Label->SetBackColor(0, 20, 50);
-    Label->SetDrawColor(0, 0, 0);
-    Label->SetText("Väder");
-    Label->Show();
+    Table = new TTableControl(control, 850, 10, 400, 280);
 
-    Table.SetRowSpacing(5);
-    Table.SetColSpacing(8);
-    Table.SetBackColor(0, 20, 50);
-    Table.SetSpacingColor(0, 20, 50);
-    Table.AddLabelColumn(&CommentLabelFactory, 220);
-    Table.AddLabelColumn(&ValueLabelFactory, 80);
-    Table.AddLabelColumn(&UnitLabelFactory, 70);
+    Table->SetRowSpacing(5);
+    Table->SetColSpacing(8);
+    Table->SetBackColor(0, 20, 50);
+    Table->SetSpacingColor(0, 20, 50);
+    Table->AddLabelColumn(&CommentLabelFactory, 220);
+    Table->AddLabelColumn(&ValueLabelFactory, 80);
+    Table->AddLabelColumn(&UnitLabelFactory, 70);
 
-    Table.AddRow(24, 45);
-    Table.AddRow(24, 45);
-    Table.AddRow(24, 45);
-    Table.AddRow(24, 45);
-    Table.AddRow(24, 45);
-    Table.AddRow(24, 45);
-    Table.AddRow(24, 45);
-    Table.AddRow(24, 45);
-    Table.AddRow(24, 45);
+    Table->AddRow(24, 45);
+    Table->AddRow(24, 45);
+    Table->AddRow(24, 45);
+    Table->AddRow(24, 45);
+    Table->AddRow(24, 45);
+    Table->AddRow(24, 45);
+    Table->AddRow(24, 45);
+    Table->AddRow(24, 45);
+    Table->AddRow(24, 45);
 
-    Table.SetText(0, 0, "Inne temp");
-    Table.SetText(0, 2, "°C");
+    Table->SetText(0, 0, "Inne temp");
+    Table->SetText(0, 2, "°C");
 
-    Table.SetText(1, 0, "Inne fukt");
-    Table.SetText(1, 2, "%");
+    Table->SetText(1, 0, "Inne fukt");
+    Table->SetText(1, 2, "%");
 
-    Table.SetText(2, 0, "Ute temp");
-    Table.SetText(2, 2, "°C");
+    Table->SetText(2, 0, "Ute temp");
+    Table->SetText(2, 2, "°C");
 
-    Table.SetText(3, 0, "Ute fukt");
-    Table.SetText(3, 2, "%");
+    Table->SetText(3, 0, "Ute fukt");
+    Table->SetText(3, 2, "%");
 
-    Table.SetText(4, 0, "Lufttryck");
-    Table.SetText(4, 2, "hPa");
+    Table->SetText(4, 0, "Lufttryck");
+    Table->SetText(4, 2, "hPa");
 
-    Table.SetText(5, 0, "Medelvind");
-    Table.SetText(5, 2, "m/s");
+    Table->SetText(5, 0, "Medelvind");
+    Table->SetText(5, 2, "m/s");
 
-    Table.SetText(6, 0, "Byvind");
-    Table.SetText(6, 2, "m/s");
+    Table->SetText(6, 0, "Byvind");
+    Table->SetText(6, 2, "m/s");
 
-    Table.SetText(7, 0, "Vindriktning");
+    Table->SetText(7, 0, "Vindriktning");
 
-    Table.SetText(8, 0, "Regn");
-    Table.SetText(8, 2, "mm");
+    Table->SetText(8, 0, "Regn");
+    Table->SetText(8, 2, "mm");
+
+    Table->Show();
 
     UnlockGUI();
 }
@@ -167,43 +161,43 @@ void TClimate::NotifyData()
         sprintf(str, "%3.1Lf", GetIndoorTemperature());
     else
         str[0] = 0;
-    Table.SetText(0, 1, str);
+    Table->SetText(0, 1, str);
 
     if (IsIndoorHumidityValid())
         sprintf(str, "%2.0Lf", GetIndoorHumidity());
     else
         str[0] = 0;
-    Table.SetText(1, 1, str);
+    Table->SetText(1, 1, str);
 
     if (IsOutdoorTemperatureValid())
         sprintf(str, "%3.1Lf", GetOutdoorTemperature());
     else
         str[0] = 0;
-    Table.SetText(2, 1, str);
+    Table->SetText(2, 1, str);
 
     if (IsOutdoorHumidityValid())
         sprintf(str, "%2.0Lf", GetOutdoorHumidity());
     else
         str[0] = 0;
-    Table.SetText(3, 1, str);
+    Table->SetText(3, 1, str);
 
     if (IsPressureValid())
         sprintf(str, "%3.1Lf", GetPressure());
     else
         str[0] = 0;
-    Table.SetText(4, 1, str);
+    Table->SetText(4, 1, str);
             
     if (IsWindAverageValid())
         sprintf(str, "%3.1Lf", GetWindAverage());
     else
         str[0] = 0;
-    Table.SetText(5, 1, str);
+    Table->SetText(5, 1, str);
             
     if (IsWindGustValid())
         sprintf(str, "%3.1Lf", GetWindGust());
     else
         str[0] = 0;
-    Table.SetText(6, 1, str);
+    Table->SetText(6, 1, str);
 
     if (IsWindDirValid())
     {
@@ -280,11 +274,11 @@ void TClimate::NotifyData()
     }
     else
         str[0] = 0;
-    Table.SetText(7, 1, str);
+    Table->SetText(7, 1, str);
                         
     if (IsRainValid())
         sprintf(str, "%3.1Lf", GetRain());
     else
         str[0] = 0;
-    Table.SetText(8, 1, str);
+    Table->SetText(8, 1, str);
 }

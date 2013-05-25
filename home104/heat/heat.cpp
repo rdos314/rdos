@@ -52,9 +52,6 @@
 #define WIDTH 240
 #define HEIGHT 15
 
-#define RAD_X   5
-#define RAD_Y  500
-
 TControlThread *control;
 TSection FGuiSection;
 
@@ -112,7 +109,7 @@ void TimeThread(void *Param)
 
     LockGUI();
     
-    Label = new TLabelControl(control, 850, 700, 200, 30);
+    Label = new TLabelControl(control, 850, 400, 200, 30);
     Label->SetFont(20);
     Label->SetBackColor(100, 100, 100);
     Label->SetDrawColor(0, 0, 0);
@@ -142,6 +139,7 @@ int main()
     TPower *Power;
     TClimate *Climate;
     int i;
+    int id;
     int diostat;
     int mask;
     TDateTime *CurrTime;
@@ -174,8 +172,16 @@ int main()
     TSolar solar(55, 49, 5, 13, 14, 43);
     long double altitude;
     long double azimuth;
+    long double phase;
+    int ph;
     TDateTime currtime;
     TLabelControl *Label;
+    TTableControl *Table;
+
+    TLabelFactory CommentLabelFactory;
+    TLabelFactory AltLabelFactory;
+    TLabelFactory AziLabelFactory;
+    TLabelFactory PhLabelFactory;
     
     RdosWaitMilli(2500);
 
@@ -200,13 +206,14 @@ int main()
     vbe->SetFilledStyle();
     vbe->DrawRect(0, 0, 1279, 767);
 
-    RdosWaitMilli(2000);
+    RadControl = new TRadControl(control, 5, 500, 850, 30 * 7);
 
-    RadControl = new TRadControl(control, RAD_X, RAD_Y, 800, 30 * 8);
-
+    id = 0;
+    
     for (i = 0; i < 8; i++)
     {
-
+        str[0] = 0;
+        
         switch (i)
         {
             case 0:
@@ -233,16 +240,17 @@ int main()
                 strcpy(str, "Sovrum, övre plan");
                 break;
 
-            case 6:
-                strcpy(str, "Trappa");
-                break;
-
             case 7:
                 strcpy(str, "Badrum");
                 break;
         }
-        RadArr[i] = new TRad(str, RadControl, i, 0x20 + i);
-        Store->Add(RadArr[i]);
+
+        if (strlen(str))
+        {
+            RadArr[id] = new TRad(str, RadControl, id, 0x20 + i);
+            Store->Add(RadArr[id]);
+            id++;
+        }
     }
 
     Circ = new TCirc(vbe);
@@ -266,11 +274,150 @@ int main()
     Label->SetDrawColor(255, 255, 255);
     Label->SetText("");
     Label->Show();
+
+    CommentLabelFactory.SetSpace(4, 4);
+    CommentLabelFactory.SetFont(20);
+    CommentLabelFactory.SetBackTransparent();
+    CommentLabelFactory.SetDrawColor(0, 0, 0);
+    CommentLabelFactory.AlignLeft();
+    
+    AltLabelFactory.SetSpace(4, 4);
+    AltLabelFactory.SetFont(20);
+    AltLabelFactory.SetBackColor(100, 100, 100);
+    AltLabelFactory.SetDrawColor(0, 0, 0);
+    AltLabelFactory.AlignRight();
+    
+    AziLabelFactory.SetSpace(4, 4);
+    AziLabelFactory.SetFont(20);
+    AziLabelFactory.SetBackColor(100, 100, 100);
+    AziLabelFactory.SetDrawColor(0, 0, 0);
+    AziLabelFactory.AlignRight();
+    
+    PhLabelFactory.SetSpace(4, 4);
+    PhLabelFactory.SetFont(20);
+    PhLabelFactory.SetBackColor(100, 100, 100);
+    PhLabelFactory.SetDrawColor(0, 0, 0);
+    PhLabelFactory.AlignRight();
+
+    Table = new TTableControl(control, 400, 250, 350, 250);
+    Table->SetBackColor(0, 20, 50);
+    Table->SetRowSpacing(5);
+    Table->SetColSpacing(8);
+    Table->SetSpacingColor(0, 20, 50);
+    Table->AddLabelColumn(&CommentLabelFactory, 75);
+    Table->AddLabelColumn(&AltLabelFactory, 75);
+    Table->AddLabelColumn(&AziLabelFactory, 75);
+    Table->AddLabelColumn(&PhLabelFactory, 75);
+
+    Table->AddRow(24, 45);
+    Table->AddRow(24, 45);
+    Table->AddRow(24, 45);
+    Table->AddRow(24, 45);
+    Table->AddRow(24, 45);
+    Table->AddRow(24, 45);
+    Table->AddRow(24, 45);
+
+    Table->SetText(0, 0, "Solen");
+    Table->SetText(1, 0, "Månen");
+    Table->SetText(2, 0, "Merkurius");
+    Table->SetText(3, 0, "Venus");
+    Table->SetText(4, 0, "Mars");
+    Table->SetText(5, 0, "Jupiter");
+    Table->SetText(6, 0, "Saturnus");
+    Table->Show();
+
     UnlockGUI();
 
     for (;;)
     {
         CurrTime = new TDateTime;
+            
+        solar.SetTime(currtime, 1);
+        solar.GetSunPosition(&altitude, &azimuth);
+
+        sprintf(str, "%5.2Lf", altitude);
+        Table->SetText(0, 1, str);
+
+        sprintf(str, "%5.2Lf", azimuth);
+        Table->SetText(0, 2, str);
+
+        solar.GetMoonPosition(&altitude, &azimuth);
+        phase = 100.0 * solar.GetMoonPhase();
+        ph = (int)phase;
+
+        sprintf(str, "%5.2Lf", altitude);
+        Table->SetText(1, 1, str);
+
+        sprintf(str, "%5.2Lf", azimuth);
+        Table->SetText(1, 2, str);
+
+        sprintf(str, "%d%", ph);
+        Table->SetText(1, 3, str);
+
+        solar.GetMercuryPosition(&altitude, &azimuth);
+        phase = 100.0 * solar.GetMercuryPhase();
+        ph = (int)phase;
+
+        sprintf(str, "%5.2Lf", altitude);
+        Table->SetText(2, 1, str);
+
+        sprintf(str, "%5.2Lf", azimuth);
+        Table->SetText(2, 2, str);
+
+        sprintf(str, "%d%", ph);
+        Table->SetText(2, 3, str);
+
+        solar.GetVenusPosition(&altitude, &azimuth);
+        phase = 100.0 * solar.GetVenusPhase();
+        ph = (int)phase;
+
+        sprintf(str, "%5.2Lf", altitude);
+        Table->SetText(3, 1, str);
+
+        sprintf(str, "%5.2Lf", azimuth);
+        Table->SetText(3, 2, str);
+
+        sprintf(str, "%d%", ph);
+        Table->SetText(3, 3, str);
+
+        solar.GetMarsPosition(&altitude, &azimuth);
+        phase = 100.0 * solar.GetMarsPhase();
+        ph = (int)phase;
+
+        sprintf(str, "%5.2Lf", altitude);
+        Table->SetText(4, 1, str);
+
+        sprintf(str, "%5.2Lf", azimuth);
+        Table->SetText(4, 2, str);
+
+        sprintf(str, "%d%", ph);
+        Table->SetText(4, 3, str);
+
+        solar.GetJupiterPosition(&altitude, &azimuth);
+        phase = 100.0 * solar.GetJupiterPhase();
+        ph = (int)phase;
+
+        sprintf(str, "%5.2Lf", altitude);
+        Table->SetText(5, 1, str);
+
+        sprintf(str, "%5.2Lf", azimuth);
+        Table->SetText(5, 2, str);
+
+        sprintf(str, "%d%", ph);
+        Table->SetText(5, 3, str);
+
+        solar.GetSaturnPosition(&altitude, &azimuth);
+        phase = 100.0 * solar.GetSaturnPhase();
+        ph = (int)phase;
+
+        sprintf(str, "%5.2Lf", altitude);
+        Table->SetText(6, 1, str);
+
+        sprintf(str, "%5.2Lf", azimuth);
+        Table->SetText(6, 2, str);
+
+        sprintf(str, "%d%", ph);
+        Table->SetText(6, 3, str);
 
         str[0] = 0;
 
@@ -301,7 +448,6 @@ int main()
                 if (diostat & 0x80)
                     RdosToggleSerialLine(1, 7);
             }
-
         }
         else
             strcpy(str, "------");

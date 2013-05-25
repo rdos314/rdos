@@ -352,6 +352,30 @@ void TGraphicDevice::ClearClipRect()
 ##########################################################################*/
 void TGraphicDevice::SetClipRect(int xmin, int ymin, int xmax, int ymax)
 {
+    if (xmin < 0)
+        xmin = 0;
+
+    if (xmin >= FWidth)
+        xmin = FWidth - 1;
+
+    if (ymin < 0)
+        ymin = 0;
+
+    if (ymin >=  FHeight)
+        ymin = FHeight - 1;
+
+    if (xmin > xmax)
+        xmax = xmin;
+        
+    if (ymin > ymax)
+        ymax = ymin;
+
+    if (xmax >= FWidth)
+        xmax = FWidth - 1;
+
+    if (ymax >= FHeight)
+        ymax = FHeight - 1;
+
     RdosSetClipRect(FBitmapHandle, xmin, ymin, xmax, ymax);
 }
 

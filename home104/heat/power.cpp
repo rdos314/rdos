@@ -423,6 +423,8 @@ void TPower::Execute()
     Table->SetText(3, 4, "volt");
     Table->SetText(3, 6, "ampere");
 
+    Table->Show();
+
     EnergyTable = new TTableControl(FControl, 50, 250, 300, 150);
     EnergyTable->SetBackColor(0, 20, 50);
     EnergyTable->SetSpacingColor(0, 20, 50);
@@ -444,6 +446,8 @@ void TPower::Execute()
 
     EnergyTable->SetText(2, 0, "Load");
     EnergyTable->SetText(2, 2, "kWh");
+
+    EnergyTable->Show();
 
     UnlockGUI();
 

@@ -532,7 +532,6 @@ TTableControl::TTableControl(TControlThread *dev, int xstart, int ystart, int xs
 
     Resize(xsize, ysize);
 	Move(xstart, ystart);
-	Show();
 }
     
 /*##########################################################################
@@ -553,7 +552,6 @@ TTableControl::TTableControl(TControl *control, int xstart, int ystart, int xsiz
 
     Resize(xsize, ysize);
 	Move(xstart, ystart);
-	Show();
 }
     
 /*##########################################################################
