@@ -597,6 +597,7 @@ void TVp::Execute()
     TLabelFactory ValueLabelFactory;
     TLabelFactory UnitLabelFactory;
 
+
     CommentLabelFactory.SetSpace(4, 4);
     CommentLabelFactory.SetFont(20);
     CommentLabelFactory.SetBackColor(0, 20, 50);
@@ -611,23 +612,15 @@ void TVp::Execute()
 
     UnitLabelFactory.SetSpace(4, 4);
     UnitLabelFactory.SetFont(20);
-    UnitLabelFactory.SetBackColor(100, 100, 100);
+    UnitLabelFactory.SetBackColor(0, 20, 50);
     UnitLabelFactory.SetDrawColor(0, 0, 0);
     UnitLabelFactory.AlignLeft();
 
-    TLabelControl *Label;
     TTableControl *Table;
 
     LockGUI();
-    
-    Label = new TLabelControl(FControl, 850, 500, 200, 30);
-    Label->SetFont(20);
-    Label->SetBackColor(0, 20, 50);
-    Label->SetDrawColor(0, 0, 0);
-    Label->SetText("Värme");
-    Label->Show();
 
-    Table = new TTableControl(FControl, 850, 530, 400, 300);
+    Table = new TTableControl(FControl, 850, 530, 400, 250);
     Table->SetBackColor(0, 20, 50);
     Table->SetRowSpacing(5);
     Table->SetColSpacing(8);

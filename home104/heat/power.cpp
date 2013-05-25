@@ -374,18 +374,9 @@ void TPower::Execute()
     UnitLabelFactory.SetDrawColor(0, 0, 0);
     UnitLabelFactory.AlignLeft();
 
-    TLabelControl *Label;
-
     LockGUI();
 
-    Label = new TLabelControl(FControl, 25, 25, 200, 30);
-    Label->SetFont(20);
-    Label->SetBackColor(0, 20, 50);
-    Label->SetDrawColor(0, 0, 0);
-    Label->SetText("Energi");
-    Label->Show();
-
-    Table = new TTableControl(FControl, 50, 50, 750, 150);
+    Table = new TTableControl(FControl, 50, 10, 750, 150);
     Table->SetBackColor(0, 20, 50);
     Table->SetSpacingColor(0, 20, 50);
     Table->SetRowSpacing(5);
@@ -425,7 +416,7 @@ void TPower::Execute()
 
     Table->Show();
 
-    EnergyTable = new TTableControl(FControl, 50, 250, 300, 150);
+    EnergyTable = new TTableControl(FControl, 50, 200, 300, 150);
     EnergyTable->SetBackColor(0, 20, 50);
     EnergyTable->SetSpacingColor(0, 20, 50);
     EnergyTable->SetRowSpacing(5);

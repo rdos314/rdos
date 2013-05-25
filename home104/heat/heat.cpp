@@ -108,8 +108,8 @@ void TimeThread(void *Param)
     char str[100];
 
     LockGUI();
-    
-    Label = new TLabelControl(control, 850, 400, 200, 30);
+
+    Label = new TLabelControl(control, 450, 330, 200, 30);
     Label->SetFont(20);
     Label->SetBackColor(100, 100, 100);
     Label->SetDrawColor(0, 0, 0);
@@ -206,7 +206,7 @@ int main()
     vbe->SetFilledStyle();
     vbe->DrawRect(0, 0, 1279, 767);
 
-    RadControl = new TRadControl(control, 5, 500, 850, 30 * 7);
+    RadControl = new TRadControl(control, 5, 500, 785, 30 * 7);
 
     id = 0;
     
@@ -253,6 +253,8 @@ int main()
         }
     }
 
+    RdosWaitMilli(1000);
+
     Circ = new TCirc(vbe);
     Store->Add(Circ);
 
@@ -268,7 +270,7 @@ int main()
     RdosCreateThread(TimeThread, "Time", control, 0x4000);
 
     LockGUI();
-    Label = new TLabelControl(control, 600, 10, 200, 30);
+    Label = new TLabelControl(control, 450, 300, 200, 30);
     Label->SetFont(20);
     Label->SetBackColor(0, 20, 50);
     Label->SetDrawColor(255, 255, 255);
@@ -299,12 +301,12 @@ int main()
     PhLabelFactory.SetDrawColor(0, 0, 0);
     PhLabelFactory.AlignRight();
 
-    Table = new TTableControl(control, 400, 250, 350, 250);
+    Table = new TTableControl(control, 850, 300, 400, 220);
     Table->SetBackColor(0, 20, 50);
     Table->SetRowSpacing(5);
     Table->SetColSpacing(8);
     Table->SetSpacingColor(0, 20, 50);
-    Table->AddLabelColumn(&CommentLabelFactory, 75);
+    Table->AddLabelColumn(&CommentLabelFactory, 120);
     Table->AddLabelColumn(&AltLabelFactory, 75);
     Table->AddLabelColumn(&AziLabelFactory, 75);
     Table->AddLabelColumn(&PhLabelFactory, 75);
