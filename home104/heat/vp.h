@@ -64,10 +64,6 @@ protected:
 
         virtual void Execute();
 
-         TFuzzyVar FTempDiffVar;
-         TFuzzyVar FAmbientVar;
-         TFuzzyVar FOutputVar;
-
          int TempSum;
          int TempCount;
          long double AmbientSum;

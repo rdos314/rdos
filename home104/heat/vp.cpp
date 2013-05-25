@@ -45,6 +45,9 @@
 #define VOLUME_TANK 500
 #define VOLUME_HEAT 100
 
+void LockGUI();
+void UnlockGUI();
+
 const int HistoryArr[] = {61, 91, 121, 181, 241, 301, 361, 421, 481, 541, 601, 0};
 
 /*##########################################################################
@@ -60,49 +63,8 @@ const int HistoryArr[] = {61, 91, 121, 181, 241, 301, 361, 421, 481, 541, 601, 0
 ##########################################################################*/
 TVp::TVp(TControlThread *control)
 {
-    int i, j;
-    int SetArr[MAX_FUZZY_VARS];
-    int RuleArr[3][5] =
-                                {
-                                        {3, 2, 1, 0, 0},
-                                        {4, 3, 3, 3, 2},
-                                        {6, 6, 5, 4, 3},
-                                };
-
-    FTempDiffVar.Add(0, new TLowFuzzySet(-1.0, -0.5));
-    FTempDiffVar.Add(1, new TMidFuzzySet(-1.0, -0.5, 0.0));
-    FTempDiffVar.Add(2, new TMidFuzzySet(-0.5, 0.0, 0.5));
-    FTempDiffVar.Add(3, new TMidFuzzySet(0.0, 0.5, 1.0));
-    FTempDiffVar.Add(4, new THighFuzzySet(0.5, 1.0));
-    AddInput(0, &FTempDiffVar);
-
-    FAmbientVar.Add(0, new TLowFuzzySet(0.25, 0.5));
-    FAmbientVar.Add(1, new TMidFuzzySet(0.25, 0.5, 1.0));
-    FAmbientVar.Add(2, new THighFuzzySet(0.5, 1.0));
-    AddInput(1, &FAmbientVar);
-
-    FOutputVar.Add(0, new TLowFuzzySet(-0.8, -0.4));
-    FOutputVar.Add(1, new TMidFuzzySet(-0.8, -0.4, -0.2));
-    FOutputVar.Add(2, new TMidFuzzySet(-0.4, -0.2, 0.0));
-    FOutputVar.Add(3, new TMidFuzzySet(-0.2, 0.0, 0.2));
-    FOutputVar.Add(4, new TMidFuzzySet(0.0, 0.2, 0.4));
-    FOutputVar.Add(5, new TMidFuzzySet(0.2, 0.4, 0.8));
-    FOutputVar.Add(6, new THighFuzzySet(0.4, 0.8));
-    AddOutput(&FOutputVar);
-
-    for (i = 0; i < 3; i++)
-    {
-        for (j = 0; j < 5; j++)
-        {
-            SetArr[0] = j;
-            SetArr[1] = i;
-            DefineRule(SetArr, RuleArr[i][j]);
-        }
-    }
-
-    FTempDiffVar.SetInputValue(0.0);
-    FAmbientVar.SetInputValue(0.5);
-
+    int i;
+    
     FControl = control;
 
     FTankTemp = 200;
@@ -630,8 +592,6 @@ void TVp::Execute()
     char str[50];
     long double E = 0.0;
 
-    RdosWaitMilli(1000);
-
     TLabelFactory CommentLabelFactory;
     TLabelFactory ValueLabelFactory;
     TLabelFactory UnitLabelFactory;
@@ -657,6 +617,8 @@ void TVp::Execute()
     TLabelControl *Label;
     TTableControl *Table;
 
+    LockGUI();
+    
     Label = new TLabelControl(FControl, 850, 500, 200, 30);
     Label->SetFont(20);
     Label->SetBackColor(0, 20, 50);
@@ -701,6 +663,7 @@ void TVp::Execute()
 
     Table->SetText(6, 0, "Turbolence");
 
+    UnlockGUI();
 
     TempSum = 0;
     TempCount = 0;
@@ -713,6 +676,8 @@ void TVp::Execute()
     RdosGetTime(&msb, &lsb);
     RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
     RdosDecodeLsbTics(lsb, &LastMin, &sec, &ms, &us);
+
+    FInstalled = FALSE;
 
     while (FInstalled)
     {
@@ -730,8 +695,10 @@ void TVp::Execute()
 
     while (FInstalled)
     {
+/*
         if (RdosReadSerialRaw(1, 5, &ival))
         {
+
             val = (long double)ival / 10;
             UpdateHistory(val);
 
@@ -747,6 +714,7 @@ void TVp::Execute()
                 Table->SetText(6, 1, str);
             }
         }
+*/
 
         if (RdosReadSerialRaw(1, 6, &ival))
         {

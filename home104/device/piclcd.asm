@@ -279,7 +279,6 @@ DioRemove   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DioCheckReady1 Proc near
-    push es
     push ax
     push bx
     push cx
@@ -334,6 +333,8 @@ dcrInputRead1:
 dcrInputOk1:    
     mov ds:DioCurr0,0
     mov bx,es:dqe_thread
+    xor ax,ax
+    mov es,ax
     Signal
 
 dcrDone1: 
@@ -342,7 +343,6 @@ dcrDone1:
     pop cx
     pop bx    
     pop ax
-    pop es
     ret
 DioCheckReady1 Endp
 
@@ -357,7 +357,6 @@ DioCheckReady1 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DioCheckReady2 Proc near
-    push es
     push ax
     push bx
     push cx
@@ -369,13 +368,6 @@ DioCheckReady2 Proc near
     jz dcrDone2
 ;
     and ds:IntFlag, NOT 2
-    mov al,ds:Data1
-    test al,20h
-    jz dcrQueue2
-;
-;    jmp dcrDone2
-    
-dcrQueue2:
     mov ax,ds:DioCurr1
     or ax,ax
     jz dcrDone2
@@ -386,7 +378,7 @@ dcrQueue2:
 ;
     movzx cx,al
     mov es:dqe_in_size,cl
-    and cx,7
+    and cx,1Fh
     or cx,cx
     jz dcrInputOk2
 ;
@@ -419,6 +411,8 @@ dcrInputRead2:
 dcrInputOk2:    
     mov ds:DioCurr1,0
     mov bx,es:dqe_thread
+    xor ax,ax
+    mov es,ax
     Signal
 
 dcrDone2:
@@ -427,7 +421,6 @@ dcrDone2:
     pop cx
     pop bx    
     pop ax
-    pop es
     ret
 DioCheckReady2 Endp
 
@@ -442,7 +435,6 @@ DioCheckReady2 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DioCheckIdle1   Proc near
-    push es
     push ax
     push bx
     push cx
@@ -532,12 +524,13 @@ dciIdle1:
     sti
 
 dciDone1:    
+    xor ax,ax
+    mov es,ax
     pop si
     pop dx
     pop cx
     pop bx
     pop ax
-    pop es
     ret
 DioCheckIdle1  Endp
 
@@ -552,7 +545,6 @@ DioCheckIdle1  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DioCheckIdle2   Proc near
-    push es
     push ax
     push bx
     push cx
@@ -580,6 +572,23 @@ dciNoIcsp2:
     or ax,ax
     jz dciDone2
 ;
+    cli
+    mov dx,IO_BASE + 10
+    in al,dx
+    test al,40h
+    jnz dciNoReq2
+;
+    sti
+    jmp dciDone2
+
+dciNoReq2:
+    mov dx,IO_BASE + 8
+    mov al,ds:PicOut
+    or al,10h
+    out dx,al
+    mov ds:PicOut,al
+    sti
+;    
     call DioRemove
     mov ds:DioCurr1,es
 ;
@@ -615,13 +624,24 @@ dciOutputNext2:
     mov dx,IO_BASE + 2
     out dx,al
 
+dciIdle2:    
+    cli
+    mov dx,IO_BASE + 8
+    mov al,ds:PicOut
+    and al,NOT 10h
+    out dx,al
+    mov ds:PicOut,al
+    sti
+
 dciDone2:
+    xor ax,ax
+    mov es,ax
+;    
     pop si
     pop dx
     pop cx
     pop bx
     pop ax
-    pop es
     ret
 DioCheckIdle2   Endp
 
@@ -1146,12 +1166,12 @@ ptLoop1:
     or ax,ax
     jz ptNoReset1
 ;
-    push es
     mov es,ax
     mov es:dqe_result,0
     mov ds:DioCurr0,0
     mov bx,es:dqe_thread
-    pop es
+    xor ax,ax
+    mov es,ax
     Signal
     
 ptNoReset1:
@@ -1247,12 +1267,12 @@ ptLoop2:
     or ax,ax
     jz ptNoReset2
 ;
-    push es
     mov es,ax
     mov es:dqe_result,0
     mov ds:DioCurr1,0
     mov bx,es:dqe_thread
-    pop es
+    xor ax,ax
+    mov es,ax
     Signal
     
 ptNoReset2:

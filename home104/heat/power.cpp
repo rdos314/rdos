@@ -48,6 +48,9 @@ long double charge_i = 0;
 long double curr_power = 0;
 int charger = FALSE;
 
+void LockGUI();
+void UnlockGUI();
+
 /*##########################################################################
 #
 #   Name       : EnergyThread
@@ -65,8 +68,6 @@ void EnergyThread(void *Param)
     long double solarp = 0;
     long double chargep = 0;
     long double loadp = 0;
-
-    RdosWaitMilli(15000);
 
     for (;;)
     {
@@ -115,8 +116,6 @@ void BatteryThread(void *Param)
     int ChargeICount = 0;
     int BatUSum = 0;
     int BatUCount = 0;
-
-    RdosWaitMilli(12000);
 
     for (;;)
     {
@@ -215,9 +214,6 @@ TPower::TPower(TControlThread *control)
     FControl = control;
 
     Start("Power", 0x2000);
-
-    RdosCreateThread(BatteryThread, "Battery", 0, 0x4000);
-    RdosCreateThread(EnergyThread, "Energy", 0, 0x4000);
 }
 
 /*##########################################################################
@@ -356,8 +352,6 @@ void TPower::Execute()
     long double solar12_i;
     long double solar24_i;
 
-    RdosWaitMilli(2500);
-
     TLabelFactory CommentLabelFactory;
     TLabelFactory ValueLabelFactory;
     TLabelFactory UnitLabelFactory;
@@ -381,6 +375,8 @@ void TPower::Execute()
     UnitLabelFactory.AlignLeft();
 
     TLabelControl *Label;
+
+    LockGUI();
 
     Label = new TLabelControl(FControl, 25, 25, 200, 30);
     Label->SetFont(20);
@@ -448,6 +444,11 @@ void TPower::Execute()
 
     EnergyTable->SetText(2, 0, "Load");
     EnergyTable->SetText(2, 2, "kWh");
+
+    UnlockGUI();
+
+    RdosCreateThread(BatteryThread, "Battery", 0, 0x4000);
+    RdosCreateThread(EnergyThread, "Energy", 0, 0x4000);
 
     serial.Open();
     serial.EnableAutoRts();

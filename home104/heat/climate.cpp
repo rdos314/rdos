@@ -38,6 +38,8 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+void LockGUI();
+void UnlockGUI();
 
 /*##########################################################################
 #
@@ -74,6 +76,8 @@ TClimate::TClimate(TControlThread *control)
     UnitLabelFactory.SetBackColor(0, 20, 50);
     UnitLabelFactory.SetDrawColor(0, 0, 0);
     UnitLabelFactory.AlignLeft();
+
+    LockGUI();
 
     Label = new TLabelControl(FControl, 850, 20, 200, 30);
     Label->SetFont(20);
@@ -125,6 +129,8 @@ TClimate::TClimate(TControlThread *control)
 
     Table.SetText(8, 0, "Regn");
     Table.SetText(8, 2, "mm");
+
+    UnlockGUI();
 }
 
 /*##########################################################################

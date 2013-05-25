@@ -56,6 +56,39 @@
 #define RAD_Y  500
 
 TControlThread *control;
+TSection FGuiSection;
+
+/*##########################################################################
+#
+#   Name       : LockGUI
+#
+#   Purpose....: Lock GUI
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void LockGUI()
+{
+    FGuiSection.Enter();
+}
+
+/*##########################################################################
+#
+#   Name       : UnockGUI
+#
+#   Purpose....: Unlock GUI
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void UnlockGUI()
+{
+    FGuiSection.Leave();
+}
 
 /*##########################################################################
 #
@@ -76,12 +109,16 @@ void TimeThread(void *Param)
     int ms, us;
     unsigned long msb, lsb;
     char str[100];
+
+    LockGUI();
     
     Label = new TLabelControl(control, 850, 700, 200, 30);
     Label->SetFont(20);
     Label->SetBackColor(100, 100, 100);
     Label->SetDrawColor(0, 0, 0);
     Label->Show();
+
+    UnlockGUI();
 
     for (;;)
     {
@@ -222,12 +259,14 @@ int main()
 
     RdosCreateThread(TimeThread, "Time", control, 0x4000);
 
-    Label = new TLabelControl(control, 10, 10, 200, 30);
+    LockGUI();
+    Label = new TLabelControl(control, 600, 10, 200, 30);
     Label->SetFont(20);
     Label->SetBackColor(0, 20, 50);
     Label->SetDrawColor(255, 255, 255);
     Label->SetText("");
     Label->Show();
+    UnlockGUI();
 
     for (;;)
     {
