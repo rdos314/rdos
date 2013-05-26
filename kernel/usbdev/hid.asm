@@ -130,9 +130,10 @@ data    SEGMENT byte public 'DATA'
 
 hid_section     section_typ <>
 hid_key_sel     DW ?
-hid_mouse_sel       DW ?
+hid_mouse_sel   DW ?
 hid_dev_list    DW ?
-hid_key_thread      DW ?
+hid_detach_list DW ?
+hid_key_thread  DW ?
 
 hid_key_leds    DB ?
 hid_key_mod     DB ?
@@ -201,6 +202,7 @@ CreateHidSel Endp
 FreeHidSel Proc near
     push es
     push ax
+    push bx
 ;
     mov es,bx
     mov bx,es:hid_control_handle
@@ -212,8 +214,14 @@ FreeHidSel Proc near
     mov bx,es:hid_control_wait
     CloseWait
 ;   
-    FreeMem
+    mov es:hid_control_handle,0
+    mov es:hid_intr_handle,0
+    mov es:hid_control_wait,0
+    mov es:hid_function_sel,0
+    mov es:hid_control_sel,0
+;    FreeMem
 ;
+    pop bx
     pop ax
     pop es    
     ret
@@ -512,6 +520,172 @@ rem_hid_sel_leave:
     pop ds 
     ret
 RemoveHidSel Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:       GetDetached
+;
+;           description:    Get HID device selector from controller and device
+;
+;           Parameters:     BX      Controller #
+;               AL      Device address
+;
+;       Returns:    NC
+;               BX      HID selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetDetached Proc near
+    push ds
+    push es
+    push si
+    push di
+;
+    mov di,SEG data
+    mov ds,di
+    EnterSection ds:hid_section
+;
+    mov di,ds:hid_detach_list
+    or di,di
+    jz gdFail
+
+gdCheck:
+    mov es,di
+    cmp al,es:hid_device
+    jne gdNext
+;
+    cmp bx,es:hid_controller
+    je gdOk
+
+gdNext:
+    mov di,es:hid_next    
+    cmp di,ds:hid_detach_list
+    jne gdCheck
+
+gdFail:
+    stc
+    jmp gdDone 
+
+gdOk:
+    mov bx,es
+    clc
+
+gdDone:   
+    LeaveSection ds:hid_section
+;    
+    pop di
+    pop si
+    pop es
+    pop ds
+    ret
+GetDetached   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:       InsertDetached
+;
+;           description:    Inserts a HID device selector into detached list
+;
+;           Parameters:     BX      HID selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertDetached    Proc near
+    push ds
+    push es
+    push ax
+    push di
+;
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:hid_section
+;
+    mov es,bx
+    mov di,ds:hid_detach_list
+    or di,di
+    je idEmpty
+;
+    push ds
+    push si
+    mov ds,di
+    mov si,ds:hid_prev
+    mov ds:hid_prev,es
+    mov ds,si
+    mov ds:hid_next,es
+    mov es:hid_next,di
+    mov es:hid_prev,si
+    pop si
+    pop ds
+    jmp idLeave
+    
+idEmpty:
+    mov es:hid_next,es
+    mov es:hid_prev,es
+    mov ds:hid_detach_list,es
+
+idLeave:
+    LeaveSection ds:hid_section
+;
+    pop di
+    pop ax
+    pop es
+    pop ds
+    ret
+InsertDetached Endp       
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           RemoveDetached
+;
+;           DESCRIPTION:    Detach a HID device selector
+;
+;           PARAMETERS:     BX      HID device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveDetached    Proc near
+    push ds
+    push es
+    push ax
+    push si
+;
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:hid_section
+;
+    mov es,bx
+    cmp bx,es:hid_next
+    je rdEmpty
+;       
+    push di
+    push ds
+    mov di,es:hid_next
+    mov ds:hid_detach_list,di
+    mov si,es:hid_prev
+    mov ds,di
+    mov ds:hid_prev,si
+    mov ds,si
+    mov ds:hid_next,di
+    pop ds
+    pop di
+    jmp rdLeave
+
+rdEmpty:      
+    mov ds:hid_detach_list,0
+
+rdLeave:
+    LeaveSection ds:hid_section
+    pop si
+    pop ax
+    pop es
+    pop ds 
+    ret
+RemoveDetached Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2236,6 +2410,16 @@ uaCheckNext:
 
 uaFound:
     ConfigUsbDevice
+    call GetDetached
+    jc uaCreate
+;
+    call RemoveDetached
+    call InitHidSel
+    call SetupBoot
+    call InsertHidSel
+    jmp uaDone
+    
+uaCreate:    
     call CreateHidSel
     call InitHidSel
     call SetupBoot
@@ -2295,8 +2479,9 @@ udStopKey:
     jmp udStopKey       
     
 udKeyOk:
-    call RemoveHidSel
     call FreeHidSel
+    call RemoveHidSel
+    call InsertDetached
         
 udDone:    
     popad
@@ -2489,10 +2674,12 @@ read_hid_loop:
     IsUsbReqReady
     jnc read_hid_get_data
 ;    
+    push cx
     GetSystemTime
     add eax,esi
     adc edx,0
     WaitForSignalWithTimeout
+    pop cx
 ;    
     IsUsbReqReady
     jc read_hid_fail
@@ -2531,11 +2718,18 @@ read_hid_get_data:
     jmp read_hid_done
 
 read_hid_fail:    
+    IsUsbReqStarted
+    jnc read_hid_fail_done
+;
     push es
+    push cx
     GetThread
     xor cx,cx
     StartUsbReq
+    pop cx
     pop es
+
+read_hid_fail_done:
     stc
 
 read_hid_done:
@@ -2674,6 +2868,10 @@ write_hid16  Proc far
     movzx edi,di
     mov ds,[ebx].hh_hid_sel
     mov ax,ds:hid_function_sel
+    or ax,ax
+    stc
+    jz wrDone16
+;    
     mov fs,ds:hid_control_sel
     mov ds,ax
     call write_hid
@@ -2703,6 +2901,10 @@ write_hid32  Proc far
 ;
     mov ds,[ebx].hh_hid_sel
     mov ax,ds:hid_function_sel
+    or ax,ax
+    stc
+    jz wrDone32
+;    
     mov fs,ds:hid_control_sel
     mov ds,ax
     call write_hid
@@ -2757,6 +2959,8 @@ init    Proc far
     mov bx,SEG data
     mov ds,bx
     InitSection ds:hid_section
+    mov ds:hid_dev_list,0
+    mov ds:hid_detach_list,0
 ;       
     mov ax,cs
     mov ds,ax
