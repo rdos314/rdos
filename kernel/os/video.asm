@@ -1207,24 +1207,28 @@ set_clip_y_ok:
     jc set_clip_xmin_noov
 ;
     mov cx,es:v_width
+    dec cx
 
 set_clip_xmin_noov:
     cmp dx,es:v_height
     jc set_clip_ymin_noov
 ;
     mov dx,es:v_height
+    dec dx
 
 set_clip_ymin_noov:
     cmp si,es:v_width
     jc set_clip_xmax_noov
 ;
     mov si,es:v_width
+    dec si
 
 set_clip_xmax_noov:
     cmp di,es:v_height
     jc set_clip_ymax_noov
 ;
     mov di,es:v_height
+    dec di
 
 set_clip_ymax_noov:
     mov [ebx].bm_x_min,cx

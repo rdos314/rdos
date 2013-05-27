@@ -86,6 +86,94 @@ code    SEGMENT byte use16 public 'CODE'
 
     assume cs:code
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Inbyte
+;
+;           description:    read a byte from I/O port
+;
+;           parameters:     DX              IO PORT
+;
+;           RETURNS:        AL              DATA
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InByte Proc near
+    push bx
+    push cx
+    push si
+;
+    mov ax,hook_in_sel
+    mov ds,ax
+    cmp dx,400h
+    jnc in_byte_real
+;
+    mov bx,dx
+    shl bx,3
+    mov ax,[bx+4]
+    or ax,ax
+    jz in_byte_real
+;
+    push ds
+    call fword ptr [bx]
+    pop ds
+    jmp in_byte_done
+
+in_byte_real:
+    in al,dx
+
+in_byte_done:
+    pop si
+    pop cx
+    pop bx
+    ret
+InByte  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           OutByte
+;
+;           description:    write a byte to I/O port
+;
+;           PARAMETERS:         SS:ebp       CPU
+;                           DX              IO PORT
+;                           AL              DATA
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OutByte Proc near
+    push bx
+    push cx
+    push si
+;
+    mov bx,hook_out_sel
+    mov ds,bx
+    cmp dx,400h
+    jnc out_byte_real
+;
+    mov bx,dx
+    shl bx,3
+    mov cx,[bx+4]
+    or cx,cx
+    jz out_byte_real
+;
+    push ds
+    call fword ptr [bx]
+    pop ds
+    jmp out_byte_done
+
+out_byte_real:
+    out dx,al
+
+out_byte_done:
+    pop si
+    pop cx
+    pop bx
+    ret
+OutByte Endp
+
 emulate PROC near
     mov ax,emulate_opcode_nr
     IsValidOsGate
@@ -104,6 +192,37 @@ emulate_exception:
     ret
 
 em_vm:
+    mov ax,flat_sel
+    mov ds,ax    
+    movzx ebx,word ptr [ebp].trap_cs
+    shl ebx,4
+    add ebx,[ebp].trap_eip
+    mov al,[ebx]
+;    
+    cmp al,0E4h
+    jne not_em_in_al
+;    
+    push dx
+    movzx dx,byte ptr [ebx+1]
+    call InByte
+    pop dx
+    mov [ebp].trap_eax,al
+    add word ptr [ebp].trap_eip,2  
+    ret
+
+not_em_in_al:
+    cmp al,0E6h
+    jne not_em_out_al
+;
+    push dx
+    movzx dx,byte ptr [ebx+1]
+    mov al,[ebp].trap_eax
+    call OutByte
+    pop dx
+    add word ptr [ebp].trap_eip,2  
+    ret
+
+not_em_out_al:
     call virt_exception
     ret
 emulate ENDP
@@ -1315,7 +1434,8 @@ trap_13:
 ;
     test byte ptr [ebp+2].trap_eflags,2
     jnz t13_default
-;    
+    
+t13_prot:    
     mov ds,[ebp].trap_cs
     mov ebx,[ebp].trap_eip
     mov al,[ebx]

@@ -364,6 +364,7 @@ bios_loop:
 ;
     GetThread
     mov ds,ax
+;    
     mov ax,flat_sel
     mov es,ax
 ;    
@@ -376,18 +377,19 @@ bios_loop:
     push ecx
     push esi
 ;
+    push ecx
     mov ecx,OFFSET tss32_io_bitmap            
     xor al,al
     rep stos byte ptr es:[edi]
 ;
-    push ecx
     mov ax,io_bitmap_sel
     mov ds,ax
     xor esi,esi
     mov ecx,80h
     rep movs byte ptr es:[edi],ds:[esi]
     pop ecx
-;        
+;       
+    sub ecx,80h + OFFSET tss32_io_bitmap
     xor al,al
     rep stos byte ptr es:[edi]
 ;

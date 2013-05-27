@@ -830,6 +830,7 @@ set_flags_test_wake:
     jmp set_flags_test_wake
 set_flags_nowake:
     and ax,NOT 7000h
+;    or ax,ds:ms_iopl
     or ax,200h
     ret
 set_flags       ENDP

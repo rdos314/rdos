@@ -7668,6 +7668,8 @@ init_process_block      PROC near
     mov es:ms_virt_flags,7200h
     mov es:ms_wait_sti,0
     mov es:ms_thread_count,1
+    mov es:ms_iopl,0
+    mov es:ms_cli_thread,0
     mov bx,es
 ;       
     mov eax,SIZE proc_descr_seg
