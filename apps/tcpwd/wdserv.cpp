@@ -288,7 +288,7 @@ void x86_mad_registers::Write(TDebugThread *t)
 #   Returns....: *
 #
 ##########################################################################*/
-TWdSocketServer::TWdSocketServer(TWdSocketServerFactory *fact, const char *Name, int StackSize, TSocket *Socket)
+TWdSocketServer::TWdSocketServer(TWdSocketServerFactory *fact, const char *Name, int StackSize, TTcpSocket *Socket)
   : TSocketServer(Name, StackSize, Socket)
 {
          FFactory = fact;

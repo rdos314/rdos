@@ -136,7 +136,7 @@ TWdSupplFactory *TWdSocketServerFactory::GetSuppl(const char *name)
 #   Returns....: *
 #
 ##########################################################################*/
-TSocketServer *TWdSocketServerFactory::Create(TSocket *Socket)
+TSocketServer *TWdSocketServerFactory::Create(TTcpSocket *Socket)
 {
         TWdSocketServer *server;
         server = new TWdSocketServer(this, "WD", 0x7000, Socket);

@@ -42,8 +42,8 @@ class TWdSocketServer : public TSocketServer
 friend class TWdSupplService;
 
 public:
-    TWdSocketServer(TWdSocketServerFactory *fact, const char *Name, int StackSize, TSocket *Socket);
-	~TWdSocketServer();
+    TWdSocketServer(TWdSocketServerFactory *fact, const char *Name, int StackSize, TTcpSocket *Socket);
+        ~TWdSocketServer();
 
     void AddSuppl(TWdSupplService *service);
 
@@ -61,7 +61,7 @@ protected:
     void PutString(const char *str);
     void PutData(void *ptr, int size);
 
-	TDebug *GetDebug();
+        TDebug *GetDebug();
 
     TString CheckFileExt(const char *path, const char *ext);
     TString CheckFileExt(const char *path, const char *name, const char *ext);
@@ -92,7 +92,7 @@ protected:
     void ReqProgStep();
     void ReqProgLoad();
     void ReqProgKill();
-	 void ReqSetWatch();
+         void ReqSetWatch();
     void ReqClearWatch();
     void ReqSetBreak();
     void ReqClearBreak();
@@ -105,21 +105,21 @@ protected:
     void ReqGetMsgText();
     void ReqRedirStdin();
     void ReqRedirStdout();
-	 void ReqSplitCmd();
-	 void ReqReadReg();
-	 void ReqWriteReg();
+         void ReqSplitCmd();
+         void ReqReadReg();
+         void ReqWriteReg();
     void ReqMachineData();
     
     void NotifyMsg();
 
-	virtual void HandleSocket();
+        virtual void HandleSocket();
 
     int FInSize;
-	char FInBuf[MAX_MSG_SIZE];
-	char *FInPtr;
+        char FInBuf[MAX_MSG_SIZE];
+        char *FInPtr;
 
     int FOutSize;
-    char FOutBuf[MAX_MSG_SIZE];	
+    char FOutBuf[MAX_MSG_SIZE]; 
     char *FOutPtr;
 
     int FSuppressAnswer;

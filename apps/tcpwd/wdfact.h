@@ -42,7 +42,7 @@ public:
         void AddSuppl(TWdSupplFactory *SupplFactory);
     TWdSupplFactory *GetSuppl(const char *name);
     
-        virtual TSocketServer *Create(TSocket *Socket);
+        virtual TSocketServer *Create(TTcpSocket *Socket);
 
         TString FLogFile;
 
