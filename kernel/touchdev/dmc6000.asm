@@ -32,7 +32,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\os\protseg.def
 
-touch_data_seg  STRUC
+data    SEGMENT byte public 'DATA'
 
 td_wait         DW ?
 td_port         DW ?
@@ -42,11 +42,17 @@ td_prev_x       DW ?
 td_prev_y       DW ?
 td_max          DW ?
 td_state        DB ?
+compat          DB ?
+
+x_start         DW ?
+y_start         DW ?
+x_size          DW ?
+y_size          DW ?
 
 td_out_buf      DB 6 DUP(?)
 td_in_buf       DB 6 DUP(?)
 
-touch_data_seg  ENDS
+data    ENDS
 
         .386p
 
@@ -338,7 +344,7 @@ touch_thread    Proc far
     mov ax,500
     WaitMilliSec
 ;
-    mov eax,SIZE touch_data_seg
+    mov eax,1000h
     AllocateSmallGlobalMem
     mov ax,es
     mov ds,ax
@@ -373,6 +379,20 @@ touch_thread    Proc far
     call EnableController
     jc ttEnd
 
+ttStart:
+    mov si,ds:td_port
+    mov di,ds:td_wait
+    mov ax,ds
+    mov es,ax
+    mov ax,SEG data
+    mov ds,ax
+    FreeMem
+    mov ds:td_port,si
+    mov ds:td_wait,di
+;    
+    call GetScaling    
+    call EnableController
+
 ttLoop:
     mov bx,ds:td_wait
     WaitWithoutTimeout
@@ -401,6 +421,67 @@ ttUp:
     mov ds:td_prev_y,-1
 
 ttDecodePos:
+    cmp ds:compat,0
+    jnz ttCompat
+;
+    int 3
+    mov ax,word ptr ds:td_in_buf+1
+    mov ds:td_x,ax
+    mov ax,word ptr ds:td_in_buf+3
+    mov ds:td_y,ax
+;
+; invert
+;
+    mov dx,ds:y_size
+    add dx,ds:y_start
+    add dx,ds:y_start
+    sub dx,ds:td_y
+    mov ds:td_y,dx
+;    
+; custom scaling
+;
+    mov cx,ds:td_x
+    sub cx,ds:x_start
+    jnc ttXMinOk
+;
+    xor cx,cx
+
+ttXMinOk:
+    cmp cx,ds:x_size
+    jb ttXMaxOk
+;
+    mov cx,ds:x_size
+
+ttXMaxOk:
+    xor dx,dx
+    mov ax,7FFFh
+    mul cx
+    mov cx,ds:x_size
+    div cx
+    mov ds:td_x,ax
+;
+    mov cx,ds:td_y
+    sub cx,ds:y_start
+    jnc ttYMinOk
+;
+    xor cx,cx
+
+ttYMinOk:
+    cmp cx,ds:y_size
+    jb ttYMaxOk
+;
+    mov cx,ds:y_size
+
+ttYMaxOk:
+    xor dx,dx
+    mov ax,7FFFh
+    mul cx
+    mov cx,ds:y_size
+    div cx
+    mov ds:td_y,ax
+    jmp ttProcess
+
+ttCompat:
     mov cx,ds:td_max
     mov ax,word ptr ds:td_in_buf+1
     cmp ax,cx
@@ -426,7 +507,8 @@ ttDecodePos:
     mov cx,ds:td_max
     div cx
     mov ds:td_y,ax
-;    
+
+ttProcess:    
     mov cx,ds:td_x
     mov dx,ds:td_y
 ;
@@ -542,6 +624,69 @@ init_touch      Proc far
         retf32
 init_touch      Endp
 
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           GetValue
+;
+;       Purpose:        Get value from string
+;
+;       Parameters:     ES:EDI      String
+;
+;       Returns:        NC          Found
+;                           AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetValue    Proc near
+    push bx
+    push cx
+    push dx
+;    
+    xor ax,ax
+
+find_first_loop:
+    mov bl,es:[edi]
+    cmp bl,' '
+    je find_first_next
+;
+    cmp bl,','
+    je find_first_next
+;
+    cmp bl,8
+    je find_first_next
+;ù
+    or bl,bl
+    jnz find_val_digit  
+
+find_first_next:
+    inc edi
+    jmp find_first_loop      
+
+find_val_digit:
+    mov bl,es:[edi]
+    or bl,bl
+    jz find_val_save
+;    
+    inc edi
+    sub bl,'0'
+    jc find_val_save
+;
+    cmp bl,10
+    jnc find_val_save
+;       
+    mov cx,10
+    mul cx
+    add al,bl
+    adc ah,0
+    jmp find_val_digit
+
+find_val_save:
+    pop dx
+    pop cx
+    pop bx
+    ret
+GetValue    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -555,6 +700,41 @@ init_touch      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:compat,1
+;
+    call GetValue
+    or ax,ax
+    jz init_done
+;
+    mov ds:compat,0
+    mov ds:x_start,ax
+    mov ds:y_start,ax
+
+x_start_ok:    
+    call GetValue
+    or ax,ax
+    jz x_size_ok
+;
+    mov ds:x_size,ax
+    mov ds:y_size,ax
+
+x_size_ok:
+    call GetValue
+    or ax,ax
+    jz y_start_ok
+;
+    mov ds:y_start,ax
+
+y_start_ok:
+    call GetValue
+    or ax,ax
+    jz init_done
+;
+    mov ds:y_size,ax
+
+init_done:
     mov ax,cs
     mov ds,ax
     mov es,ax
