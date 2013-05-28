@@ -333,11 +333,27 @@ power_update_callback *power_update_proc;
 
 char TempResourceBuf[0x4000];
 
+int turbo;
+long long State;
+long long Ctl;
+
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
+    for (;;)
+    {
+        Ctl = ReadMsr(INTEL_PERF_CTL);
+        if (Ctl > 100)
+        {
+            Ctl--;
+            WriteMsr(INTEL_PERF_CTL, Ctl);
+        }
+        
+        State = ReadMsr(INTEL_PERF_STATUS);
+        RdosWaitMilli(100);
+    }
 }
     
 /*##########################################################################
@@ -2691,5 +2707,5 @@ int main()
     RdosRegisterUserGate(usergate_get_acpi_device, &ImplGetAcpiDevice16, &ImplGetAcpiDevice32, "Get ACPI Device");
     RdosRegisterBimodalUserGate(usergate_get_cpu_temperature, &ImplGetCpuTemperature, "Get CPU Temperature");
 
-//    RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate"); 
+    RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate"); 
 }

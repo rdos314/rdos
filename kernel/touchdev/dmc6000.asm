@@ -424,19 +424,10 @@ ttDecodePos:
     cmp ds:compat,0
     jnz ttCompat
 ;
-    int 3
     mov ax,word ptr ds:td_in_buf+1
     mov ds:td_x,ax
     mov ax,word ptr ds:td_in_buf+3
     mov ds:td_y,ax
-;
-; invert
-;
-    mov dx,ds:y_size
-    add dx,ds:y_start
-    add dx,ds:y_start
-    sub dx,ds:td_y
-    mov ds:td_y,dx
 ;    
 ; custom scaling
 ;

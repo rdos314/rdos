@@ -3211,5 +3211,5 @@ int main()
     RdosRegisterBimodalUserGate(usergate_get_output_volume, &ImplGetAudioOutputVolume, "Get Audio Output Volume");
     RdosRegisterBimodalUserGate(usergate_set_output_volume, &ImplSetAudioOutputVolume, "Set Audio Output Volume");
 
-    RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate"); 
+//    RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate"); 
 }
