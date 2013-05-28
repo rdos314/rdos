@@ -77,8 +77,11 @@ extern void MoveOneTask(int Core);
 #define AMD10_PERF_STATUS    0xC0010063
 #define AMD10_PERF_CTL       0xC0010062
 
+#define INTEL_MPERF          0xE7
+#define INTEL_APERF          0xE8
 #define INTEL_PERF_STATUS    0x198
 #define INTEL_PERF_CTL       0x199
+#define INTEL_MISC_ENABLE    0x1A0
 
 
 char ReadBytePort(short int address);
@@ -333,25 +336,27 @@ power_update_callback *power_update_proc;
 
 char TempResourceBuf[0x4000];
 
-int turbo;
-long long State;
-long long Ctl;
+long EistCtl;
+long CtlArr[MAX_PROCESSOR_COUNT];
+long long StateArr[MAX_PROCESSOR_COUNT];
 
+long long TotPerfArr[MAX_PROCESSOR_COUNT];
+long long ActPerfArr[MAX_PROCESSOR_COUNT];
+long long AvgPerfArr[MAX_PROCESSOR_COUNT];
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
+    long long val;
+
+    val = RdosGetLongSysTime();
+    
     for (;;)
     {
-        Ctl = ReadMsr(INTEL_PERF_CTL);
-        if (Ctl > 100)
-        {
-            Ctl--;
-            WriteMsr(INTEL_PERF_CTL, Ctl);
-        }
-        
-        State = ReadMsr(INTEL_PERF_STATUS);
+        if (EistCtl > 100)
+            EistCtl -= 0x100;
+
         RdosWaitMilli(100);
     }
 }
@@ -467,6 +472,55 @@ void UpdateThrottle(int diff)
         ThrottleState = NewState;
         WriteReg(ThrottlingControl, ThrottlingStateArr[ThrottleState]->Control);
     }        
+}
+    
+/*##########################################################################
+#
+#   Name       : ImplUpdatePStateEist
+#
+##########################################################################*/
+#pragma aux ImplUpdatePStateEist "*" rdosdev parm routine
+void __far ImplUpdatePStateEist()
+{
+    long long mperf;
+    long long mbase;
+    long long time;
+    long long base;
+    int Core = RdosGetApicId();
+
+    mperf = ReadMsr(INTEL_MPERF);
+    mbase = TotPerfArr[Core];    
+
+    if (mbase)
+        AvgPerfArr[Core] = 4 * (mperf - mbase);
+
+    TotPerfArr[Core] = mperf;
+
+    ActPerfArr[Core] = ReadMsr(INTEL_APERF);
+    CtlArr[Core] = (int)ReadMsr(INTEL_PERF_CTL);
+    StateArr[Core] = ReadMsr(INTEL_PERF_STATUS);
+
+    WriteMsr(INTEL_PERF_CTL, EistCtl);
+}
+    
+/*##########################################################################
+#
+#   Name       : InitEist
+#
+##########################################################################*/
+void InitEist()
+{
+    EistCtl = (int)ReadMsr(INTEL_PERF_CTL);
+}
+    
+/*##########################################################################
+#
+#   Name       : UpdateEist
+#
+##########################################################################*/
+void UpdateEist(int diff)
+{
+    ReqPStateUpdate(ActiveProcessors);
 }
     
 /*##########################################################################
@@ -610,11 +664,11 @@ void InitAmdK10()
     
 /*##########################################################################
 #
-#   Name       : ImplUpdatePState
+#   Name       : ImplUpdatePStateAmdK10
 #
 ##########################################################################*/
-#pragma aux ImplUpdatePState "*" rdosdev parm routine
-void __far ImplUpdatePState()
+#pragma aux ImplUpdatePStateAmdK10 "*" rdosdev parm routine
+void __far ImplUpdatePStateAmdK10()
 {
     WriteMsr(AMD10_PERF_CTL, PowerState);
 }
@@ -687,6 +741,7 @@ void __far PowerThread(void *param)
     long long NullTics;
     long long CoreDiff;
     long long NullDiff;
+    int Updated;
     int Core;
     int CpuLoad;
     int MinLoadCore;
@@ -709,6 +764,8 @@ void __far PowerThread(void *param)
         MaxCpuLoad = 0;
         MinLoadCore = 0;
         HighCount = 0;
+
+        Updated = FALSE;
 
         for (Core = 0; Core < ProcessorCount; Core++)
         {
@@ -756,6 +813,8 @@ void __far PowerThread(void *param)
         {
             if (ActiveProcessors == ProcessorCount)
             {
+                Updated = TRUE;
+                
                 if (power_update_proc)
                     (*power_update_proc)(-1);
             }
@@ -769,10 +828,16 @@ void __far PowerThread(void *param)
                 StopCore();
             else        
             {
+                Updated = TRUE;
+
                 if (power_update_proc)
                     (*power_update_proc)(1);
             }
-        }        
+        }
+
+        if (!Updated)
+            if (power_update_proc)
+                (*power_update_proc)(0);        
     }
 }
 
@@ -2650,10 +2715,20 @@ void __far InitTasking()
 
         if (CpuVer >= 16)
         {
+            RdosRegisterOsGate(osgate_update_pstate, &ImplUpdatePStateAmdK10, "Update P-State AmdK10");
             power_init_proc = InitAmdK10;
             power_update_proc = UpdateAmdK10;
         }
     }    
+    else
+    {
+        if (GetExtFeatureFlags() & 0x80)
+        {
+            RdosRegisterOsGate(osgate_update_pstate, &ImplUpdatePStateEist, "Update P-State Eist");
+            power_init_proc = InitEist;
+            power_update_proc = UpdateEist;
+        }
+    }
 
     if (!power_init_proc)
     {
@@ -2700,7 +2775,6 @@ int main()
     RdosHookInitTasking(&InitTasking);
     RdosRegisterOsGate(osgate_get_acpi_pci_device_name, &ImplGetPciDeviceName, "Get PCI Device Name");
     RdosRegisterOsGate(osgate_get_acpi_pci_device_irq, &ImplGetPciDeviceIrq, "Get PCI Device IRQ");
-    RdosRegisterOsGate(osgate_update_pstate, &ImplUpdatePState, "Update P-State");
     RdosRegisterBimodalUserGate(usergate_get_acpi_status, &ImplGetAcpiStatus, "Get ACPI Status");
     RdosRegisterUserGate(usergate_get_acpi_object, &ImplGetAcpiObject16, &ImplGetAcpiObject32, "Get ACPI Object");
     RdosRegisterUserGate(usergate_get_acpi_method, &ImplGetAcpiMethod16, &ImplGetAcpiMethod32, "Get ACPI Method");

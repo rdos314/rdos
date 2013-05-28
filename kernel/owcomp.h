@@ -825,6 +825,10 @@
     parm [fs esi] [es edi] \
     modify [eax edx];
 
+#pragma aux RdosGetLongSysTime = \
+    CallGate_get_system_time  \
+    value [edx eax];
+
 #pragma aux RdosGetTime = \
     CallGate_get_time  \
     "mov fs:[esi],edx" \

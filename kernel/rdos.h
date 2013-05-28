@@ -459,6 +459,7 @@ void RDOSAPI RdosWaitMicro(int us);
 void RDOSAPI RdosWaitUntil(unsigned long msb, unsigned long lsb);
 
 void RDOSAPI RdosGetSysTime(unsigned long *msb, unsigned long *lsb);
+long long RDOSAPI RdosGetLongSysTime();
 void RDOSAPI RdosGetTime(unsigned long *msb, unsigned long *lsb);
 void RDOSAPI RdosSetTime(unsigned long msb, unsigned long lsb);
 int RDOSAPI RdosDayOfWeek(int year, int month, int day);
