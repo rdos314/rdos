@@ -235,8 +235,25 @@ open_com    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    extrn ImplCloseCom:near
+
 close_com   Proc far
-    stc
+    push ds
+    push es
+    pushad
+;
+    mov eax,ds:tp_port+4
+    or eax,eax
+    jz ccDone
+;    
+    les edi,ds:tp_port
+    call ImplCloseCom
+
+ccDone:
+    clc
+    popad
+    pop es
+    pop ds    
     ret
 close_com   Endp
 
@@ -741,6 +758,27 @@ WaitForData_    Proc near
     popad
     ret
 WaitForData_    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           WaitForSignal
+;
+;   DESCRIPTION:    Wait for signal
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public WaitForSignal_
+
+WaitForSignal_    Proc near
+    pushad
+    GetSystemTime
+    add eax,1193000
+    adc edx,0
+    WaitForSignalWithTimeout
+    popad
+    ret
+WaitForSignal_    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

@@ -49,6 +49,11 @@ struct tibbo_port
     int wait_handle;
     int signal_handle;
     int sel;
+    int baud_val;
+    int par_val;
+    int data_val;
+    int open;
+    int running;
 };
 
 struct tibbo_dev
@@ -72,6 +77,8 @@ extern int AddPort(struct tibbo_port *port);
 
 extern int GetSendData(int sel, char *buf, int size);
 #pragma aux GetSendData parm routine [ebx] [es edi] [ecx] value [eax]
+
+extern void WaitForSignal();
 
 extern void WaitForData(int handle);
 #pragma aux WaitForData parm routine [ebx]
@@ -108,7 +115,7 @@ int Login(struct tibbo_dev *dev)
     SignalThread = RdosGetThreadHandle();
     AnswerBuf[0] = 0;
     RdosSendDriverUdp(4095, -1, dev->ip, dev->driver, dev->mac, "L", 1);
-    RdosWaitForSignal();
+    WaitForSignal();
 
     if (AnswerBuf[0] == 'A')
         return TRUE;
@@ -474,6 +481,79 @@ void ImplBroadcast(int driver_sel)
     
 /*##########################################################################
 #
+#   Name       : CreateConnection
+#
+##########################################################################*/
+int CreateConnection(struct tibbo_port *port)
+{
+    int ok;
+    int handle;
+    char str[64];
+
+    RdosEnterKernelSection(&CmdSection);
+
+    ok = Login(port->dev);
+
+    if (ok)
+    {
+        ok = SetVar(port, "FC", "0");    
+
+        if (ok)
+            ok = SetVar(port, "DS", "1");    
+
+        if (ok)
+        {
+            sprintf(str, "%d", port->baud_val);
+            ok = SetVar(port, "BR", str); 
+        }
+
+        if (ok)
+        {
+            sprintf(str, "%d", port->par_val);
+            ok = SetVar(port, "PR", str); 
+        }
+
+        if (ok)
+        {
+            sprintf(str, "%d", port->data_val);
+            ok = SetVar(port, "BB", str); 
+        }
+
+        RdosLeaveKernelSection(&CmdSection);
+
+        if (ok)
+        {
+            handle = RdosOpenTcpConnection(port->dev->ip, port->port, port->port, 500, 0x1000);
+            if (handle)
+            {   
+                ok = RdosWaitForTcpConnection(handle, 500);
+                if (!ok)
+                    RdosCloseTcpConnection(handle);
+            }
+            else
+                ok = FALSE;
+        }
+
+        Logout(port->dev);
+    }
+    else
+        RdosLeaveKernelSection(&CmdSection);
+
+    if (ok)
+    {
+        port->tcp_handle = handle;
+        port->wait_handle = RdosCreateWait();
+        RdosAddWaitForTcpConnection(port->wait_handle, port->tcp_handle, 1);
+        RdosAddWaitForSignal(port->wait_handle, port->signal_handle, 1);
+    }
+    else
+        port->tcp_handle = 0;
+
+    return ok;
+}
+    
+/*##########################################################################
+#
 #   Name       : PortThread
 #
 ##########################################################################*/
@@ -483,24 +563,20 @@ void __far PortThread(void *param)
     char *buf;
     struct tibbo_port *port;
     int count;
+    int has_push = TRUE;
         
     buf = RdosAllocateSmallGlobalMem(256);
 
     port = (struct tibbo_port *)param;
 
-    port->wait_handle = RdosCreateWait();
-    RdosAddWaitForTcpConnection(port->wait_handle, port->tcp_handle, 1);
-
-    port->signal_handle = RdosCreateSignal();
-    RdosAddWaitForSignal(port->wait_handle, port->signal_handle, 1);
-
-    for (;;)
-    {
+    while (port->open)
+    {        
         count = GetSendData(port->sel, buf, 256);
         if (count)
         {
             RdosWriteTcpConnection(port->tcp_handle, buf, count);
             RdosPushTcpConnection(port->tcp_handle);
+            has_push = TRUE;
         }
         else               
         {
@@ -515,9 +591,35 @@ void __far PortThread(void *param)
                     PostReceiveData(port->sel, buf, count);
             }
             else
-                WaitForData(port->wait_handle);
+            {
+                if (RdosIsTcpConnectionClosed(port->tcp_handle))
+                {
+                    RdosCloseTcpConnection(port->tcp_handle);
+                    RdosCloseWait(port->wait_handle);
+
+                    CreateConnection(port);
+                    has_push = TRUE;
+                }
+                else
+                {
+                    if (!has_push)
+                        RdosPushTcpConnection(port->tcp_handle);
+
+                    has_push = FALSE;
+                    WaitForData(port->wait_handle);
+                }
+            }
         }            
-    }
+    }                    
+        
+    RdosFreeMem(RdosSelectorToPointer(buf));
+
+    RdosCloseTcpConnection(port->tcp_handle);
+    RdosCloseWait(port->wait_handle);
+
+    port->tcp_handle = 0;
+    port->wait_handle = 0;
+    port->running = FALSE;
 }
     
 /*##########################################################################
@@ -529,152 +631,126 @@ void __far PortThread(void *param)
 int ImplOpenCom(struct tibbo_port *port, int sel, int baudrate, char parity, int databits, int stopbits)
 {
     int ok;
-    int val;
     char str[64];
-    int handle;
 
     port->sel = sel;
     port->wait_handle = 0;
-    port->signal_handle = 0;
+    port->running = FALSE;
+    port->open = FALSE;
+    port->signal_handle = RdosCreateSignal();
+
+    ok = TRUE;
 
     switch (baudrate)
     {
         case 1200:
-            val = 0;
+            port->baud_val = 0;
             break;
 
         case 2400:
-            val = 1;
+            port->baud_val = 1;
             break;
 
         case 4800:
-            val = 2;    
+            port->baud_val = 2;    
             break;
 
         case 9600:
-            val = 3;
+            port->baud_val = 3;
             break;
 
         case 19200:
-            val = 4;
+            port->baud_val = 4;
             break;
 
         case 38400:
-            val = 5;
+            port->baud_val = 5;
             break;
 
         case 57600:
-            val = 6;
+            port->baud_val = 6;
             break;
 
         case 115200:
-            val = 7;
+            port->baud_val = 7;
             break;    
 
         case 150:
-            val = 8;
+            port->baud_val = 8;
             break;
 
         case 300:
-            val = 9;
+            port->baud_val = 9;
             break;
 
         case 600:
-            val = 10;
+            port->baud_val = 10;
             break;
 
         case 28800:
-            val = 11;
+            port->baud_val = 11;
             break;
 
         default:
-            val = 0;
+            ok = FALSE;
             break;
     }
 
-    if (val)
-        ok = TRUE;
-    else
-        ok = FALSE;
+    switch (parity)
+    {
+        case 'E':
+            port->par_val = 1;
+            break;
 
+        case 'O':
+            port->par_val = 2;
+            break;
+
+        default:
+            port->par_val = 0;
+            break;
+    }    
+
+    if (databits == 7)
+        port->data_val = 0;
+    else
+        port->data_val = 1;
+         
     if (ok)
     {
-        RdosEnterKernelSection(&CmdSection);
-
-        ok = Login(port->dev);
+        ok = CreateConnection(port);
 
         if (ok)
         {
-            ok = SetVar(port, "FC", "0");    
-
-            if (ok)
-                ok = SetVar(port, "DS", "1");    
-
-            if (ok)
-            {
-                sprintf(str, "%d", val);
-                ok = SetVar(port, "BR", str); 
-            }
-
-            if (ok)
-            {
-                switch (parity)
-                {
-                    case 'E':
-                        val = 1;
-                        break;
-
-                    case 'O':
-                        val = 2;
-                        break;
-
-                    default:
-                        val = 0;
-                        break;
-                }    
-                
-                sprintf(str, "%d", val);
-                ok = SetVar(port, "PR", str); 
-            }
-
-            if (ok)
-            {
-                if (databits == 7)
-                    ok = SetVar(port, "BB", "0"); 
-                else
-                    ok = SetVar(port, "BB", "1"); 
-            }                
+            port->open = TRUE;
+            port->running = TRUE;
+            sprintf(str, "Tibbo Com%d", port->port + 1);
+            RdosCreateKernelThread(5, 0x1000, &PortThread, str, port);
         }
-
-        RdosLeaveKernelSection(&CmdSection);
-
-        handle = 0;
-
-        if (ok)
-        {
-            handle = RdosOpenTcpConnection(port->dev->ip, 1000, port->port, 500, 0x1000);
-            if (handle)
-            {
-                ok = RdosWaitForTcpConnection(handle, 500);
-                if (!ok)
-                    RdosCloseTcpConnection(handle);
-            }
-            else
-                ok = FALSE;
-        }
-
-        Logout(port->dev);
-
-        port->tcp_handle = handle;
-
-        test_port = port;
-
-        if (ok)
-            RdosCreateKernelThread(5, 0x1000, &PortThread, "Tibbo Com", port);
-
     }
 
     return ok;
+}
+    
+/*##########################################################################
+#
+#   Name       : ImplCloseCom
+#
+##########################################################################*/
+#pragma aux ImplCloseCom "*" rdosdev parm routine [es edi]
+void ImplCloseCom(struct tibbo_port *port)
+{
+    port->open = FALSE;
+
+    while (port->running)
+    {    
+        RdosSetSignal(port->signal_handle);
+        RdosWaitMilli(50);
+    }
+
+    RdosFreeSignal(port->signal_handle);
+    port->signal_handle = 0;
+    port->sel = 0;
 }
     
 /*##########################################################################
