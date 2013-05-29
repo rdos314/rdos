@@ -5,39 +5,58 @@
 
 #include <rdos.h>
 
+int Load(int in)
+{
+    int val;
+
+    val = in;
+    val = val / 2;
+    return val;
+}
+
+TestThread(void *Param)
+{
+    long long time;
+    long diff;
+    int i;
+    int val;
+    int row;
+    char str[40];
+
+    row = *(int *)Param;
+
+    for (;;)
+    {
+        time = RdosGetLongSysTime();
+        for (i = 0; i < 10000000; i++)
+            val = Load(i);
+
+        diff = (int)(RdosGetLongSysTime() - time);
+
+        RdosSetCursorPosition(row, 0);
+        sprintf(str, "Tics: %d", diff);
+        RdosWriteString(str);
+    }            
+}
+
 void main()
 {
-    int ports;
-    int handle;
-    int wait;
-    char str[2] = {0, 0};
-    int id;
     int i;
+    char *str[50];
+    int *param;
 
-//    RdosTestGate();
-
-    ports = RdosGetMaxComPort();
-
-    wait = RdosCreateWait();
-
-    handle = RdosOpenCom(ports - 3, 9600, 'N', 8, 1, 0x1000, 0x1000);
-    RdosAddWaitForCom(wait, handle, 1);
-
-    for (i = 0; i < 10; i++)
+    for (i = 0; i < 2; i++)
     {
-        RdosWriteCom(handle, 'A');
-        RdosWriteCom(handle, 0xd);
-        RdosWriteCom(handle, 0xa);
-
-        id = RdosWaitTimeout(wait, 200);
-        while (id)
-        {
-            str[0] = RdosReadCom(handle);
-            printf(str);
-            id = RdosWaitTimeout(wait, 1000);
-        }
+        param = (int *)malloc(4);
+        *param = i;
+        sprintf(str, "Test Thread %d", i);
+        RdosCreateThread(TestThread, str, param, 0x5000);
     }
 
-    RdosCloseCom(handle);
+    RdosTestGate();
+
+    for (;;)
+        RdosWaitMilli(1000); 
+
 }
 
