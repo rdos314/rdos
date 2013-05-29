@@ -52,6 +52,9 @@ extern void ReqShutdown(int Core);
 extern int GetExtFeatureFlags();
 #pragma aux GetExtFeatureFlags value [eax]
 
+extern int GetCpuInfo();
+#pragma aux GetCpuInfo value [eax]
+
 extern void SwitchOneIrq(int Core);
 #pragma aux SwitchOneIrq parm routine [eax]
 
@@ -307,6 +310,10 @@ struct TThrottlingState *ThrottlingStateArr[MAX_PROCESSOR_TSTATES];
 int PowerState;
 int ThrottleState;
 
+int MinVid, MaxVid;
+int MinFid, MaxFid;
+
+int CpuInfo;
 int CpuVer;
 char CpuVendor[40];
 int FeatureFlags;
@@ -336,13 +343,7 @@ power_update_callback *power_update_proc;
 
 char TempResourceBuf[0x4000];
 
-long EistCtl;
-long CtlArr[MAX_PROCESSOR_COUNT];
 long long StateArr[MAX_PROCESSOR_COUNT];
-
-long long TotPerfArr[MAX_PROCESSOR_COUNT];
-long long ActPerfArr[MAX_PROCESSOR_COUNT];
-long long AvgPerfArr[MAX_PROCESSOR_COUNT];
 
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
@@ -354,9 +355,6 @@ void __far ImplTestGate(const char *msg)
     
     for (;;)
     {
-        if (EistCtl > 100)
-            EistCtl -= 0x100;
-
         RdosWaitMilli(100);
     }
 }
@@ -482,25 +480,13 @@ void UpdateThrottle(int diff)
 #pragma aux ImplUpdatePStateEist "*" rdosdev parm routine
 void __far ImplUpdatePStateEist()
 {
-    long long mperf;
-    long long mbase;
-    long long time;
-    long long base;
+    long eist;
+
     int Core = RdosGetApicId();
-
-    mperf = ReadMsr(INTEL_MPERF);
-    mbase = TotPerfArr[Core];    
-
-    if (mbase)
-        AvgPerfArr[Core] = 4 * (mperf - mbase);
-
-    TotPerfArr[Core] = mperf;
-
-    ActPerfArr[Core] = ReadMsr(INTEL_APERF);
-    CtlArr[Core] = (int)ReadMsr(INTEL_PERF_CTL);
     StateArr[Core] = ReadMsr(INTEL_PERF_STATUS);
 
-    WriteMsr(INTEL_PERF_CTL, EistCtl);
+    eist = (CurrFid << 8) | CurrVid;
+    WriteMsr(INTEL_PERF_CTL, eist);
 }
     
 /*##########################################################################
@@ -510,7 +496,6 @@ void __far ImplUpdatePStateEist()
 ##########################################################################*/
 void InitEist()
 {
-    EistCtl = (int)ReadMsr(INTEL_PERF_CTL);
 }
     
 /*##########################################################################
@@ -520,6 +505,36 @@ void InitEist()
 ##########################################################################*/
 void UpdateEist(int diff)
 {
+    int slope;
+    
+    if (diff < 0)
+    {
+        if (CurrFid < MaxFid)
+            CurrFid++;
+
+        if (CurrFid >= MaxFid)
+            CurrVid = MaxVid;
+        else
+        {
+            slope = 1000 * (CurrFid - MinFid) / (MaxFid - MinFid);
+            CurrVid = MinVid + slope * (MaxVid - MinVid) / 1000;
+        }
+    }
+
+    if (diff > 0)
+    {
+        if (CurrFid > MinFid)
+            CurrFid--;
+
+        if (CurrFid <= MinFid)
+            CurrVid = MinVid;
+        else
+        {
+            slope = 1000 * (CurrFid - MinFid) / (MaxFid - MinFid);
+            CurrVid = MinVid + slope * (MaxVid - MinVid) / 1000;
+        }
+    }
+
     ReqPStateUpdate(ActiveProcessors);
 }
     
@@ -880,7 +895,12 @@ int GetCpuFreq()
         if (ThrottlingStateCount)
             return BaseFreq * ThrottlingStateArr[ThrottleState]->Percent / 100;
         else
-            return BaseFreq;
+        {
+            if (MaxFid > MinFid)
+                return BaseFreq * CurrFid / MaxFid;
+            else
+                return BaseFreq;
+        }
     }
 }
 
@@ -2702,6 +2722,9 @@ void Load()
 #pragma aux InitTasking "*" rdosdev parm routine
 void __far InitTasking()
 {
+    int ok;
+    long long status;
+
     InitOsAcpi();
     Load();
 
@@ -2720,13 +2743,39 @@ void __far InitTasking()
             power_update_proc = UpdateAmdK10;
         }
     }    
-    else
+
+    if (strstr(CpuVendor, "Intel"))
     {
         if (GetExtFeatureFlags() & 0x80)
         {
-            RdosRegisterOsGate(osgate_update_pstate, &ImplUpdatePStateEist, "Update P-State Eist");
-            power_init_proc = InitEist;
-            power_update_proc = UpdateEist;
+            if ((CpuInfo & 0xFFFFF0) == 0x106C0)
+            {
+
+                status = ReadMsr(INTEL_PERF_STATUS);
+                CurrFid = (status >> 8) & 0xFF;
+                CurrVid = status & 0xFF;
+                
+                status = status >> 32;
+
+                MinVid = (status >> 16) & 0xFF;
+                MaxVid = status & 0xFF;
+                MinFid = (status >> 24) & 0xFF;
+                MaxFid = (status >> 8) & 0xFF;
+
+                if (MaxVid > MinVid && MaxFid > MinFid)
+                {
+                    RdosRegisterOsGate(osgate_update_pstate, &ImplUpdatePStateEist, "Update P-State Eist");
+                    power_init_proc = InitEist;
+                    power_update_proc = UpdateEist;
+                }
+                else
+                {
+                    MinVid = 0;
+                    MaxVid = 0;
+                    MinFid = 0;
+                    MaxFid = 0;
+                }
+            }
         }
     }
 
@@ -2757,6 +2806,7 @@ void __far InitTasking()
 int main()
 {
     CpuVer = RdosGetCpuVersion(CpuVendor, &FeatureFlags, &BaseFreq);    
+    CpuInfo = GetCpuInfo();
 
     InitAcpiTables();
 

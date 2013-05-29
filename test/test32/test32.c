@@ -45,12 +45,12 @@ void main()
     char *str[50];
     int *param;
 
-    for (i = 0; i < 2; i++)
+    for (i = 0; i < 3; i++)
     {
         param = (int *)malloc(4);
         *param = i;
         sprintf(str, "Test Thread %d", i);
-        RdosCreateThread(TestThread, str, param, 0x5000);
+//        RdosCreateThread(TestThread, str, param, 0x5000);
     }
 
     RdosTestGate();

@@ -87,10 +87,10 @@ get_cpu_version Proc near
     mul ecx
     add eax,esi
     adc edx,0    
-    add eax,500000
+    add eax,1000000
     adc edx,0
 ;
-    mov ecx,1000000
+    mov ecx,2000000
     div ecx
     mov ebx,eax
 

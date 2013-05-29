@@ -34,7 +34,7 @@ INCLUDE ..\..\kernel\os\system.def
 INCLUDE ..\..\kernel\os\proc.inc
 INCLUDE acpi.inc
 
-    .386p
+    .686p
 
 acpi_data_seg STRUC    
 
@@ -816,6 +816,29 @@ enter_c3    Proc far
     pop fs
     ret
 enter_c3    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetCpuInfo
+;
+;           DESCRIPTION:    Get CPU info (CPUID 1)
+;
+;           RETURNS:        EAX     ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetCpuInfo_
+
+GetCpuInfo_    Proc near
+    push ecx
+    push edx
+    mov eax,1
+    cpuid
+    pop edx
+    pop ecx
+    ret
+GetCpuInfo_     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
