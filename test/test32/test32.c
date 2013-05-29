@@ -12,6 +12,7 @@ void main()
     int wait;
     char str[2] = {0, 0};
     int id;
+    int i;
 
 //    RdosTestGate();
 
@@ -22,13 +23,13 @@ void main()
     handle = RdosOpenCom(ports - 3, 9600, 'N', 8, 1, 0x1000, 0x1000);
     RdosAddWaitForCom(wait, handle, 1);
 
-    for (;;)
+    for (i = 0; i < 10; i++)
     {
         RdosWriteCom(handle, 'A');
         RdosWriteCom(handle, 0xd);
         RdosWriteCom(handle, 0xa);
 
-        id = RdosWaitTimeout(wait, 20000);
+        id = RdosWaitTimeout(wait, 200);
         while (id)
         {
             str[0] = RdosReadCom(handle);
@@ -37,5 +38,6 @@ void main()
         }
     }
 
+    RdosCloseCom(handle);
 }
 

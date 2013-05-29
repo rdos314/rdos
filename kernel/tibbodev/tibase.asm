@@ -250,6 +250,9 @@ close_com   Proc far
     call ImplCloseCom
 
 ccDone:
+    mov ds:tp_port,0
+    mov ds:tp_port+4,0
+;
     clc
     popad
     pop es

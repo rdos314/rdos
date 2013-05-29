@@ -1444,7 +1444,7 @@ hook_mouse32    Endp
 
 unhook_mouse_name       DB 'Unhook Mouse',0
 
-unhook_mouse    PROC near
+unhook_mouse    PROC far
     push ds
     push bx
 ;

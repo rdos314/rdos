@@ -620,6 +620,8 @@ void __far PortThread(void *param)
     port->tcp_handle = 0;
     port->wait_handle = 0;
     port->running = FALSE;
+
+    RdosTerminateThread();
 }
     
 /*##########################################################################
@@ -724,7 +726,7 @@ int ImplOpenCom(struct tibbo_port *port, int sel, int baudrate, char parity, int
         {
             port->open = TRUE;
             port->running = TRUE;
-            sprintf(str, "Tibbo Com%d", port->port + 1);
+            sprintf(str, "Tibbo Com%d", port->port - 1000);
             RdosCreateKernelThread(5, 0x1000, &PortThread, str, port);
         }
     }
