@@ -135,6 +135,7 @@ void Logout(struct tibbo_dev *dev)
 {
     RdosSendDriverUdp(4095, -1, dev->ip, dev->driver, dev->mac, "O", 1);
     SignalThread = 0;
+    RdosWaitMilli(250);
 }
     
 /*##########################################################################
@@ -159,7 +160,7 @@ int Session(struct tibbo_dev *dev, char *str, char *reply)
     int ok;
     AnswerBuf[0] = 0;
     RdosSendDriverUdp(4095, -1, dev->ip, dev->driver, dev->mac, str, strlen(str));
-    RdosWaitForSignal();
+    WaitForSignal();
 
     if (AnswerBuf[0] == 'A')
     {
@@ -490,54 +491,56 @@ int CreateConnection(struct tibbo_port *port)
     int handle;
     char str[64];
 
-    RdosEnterKernelSection(&CmdSection);
-
-    ok = Login(port->dev);
+    handle = RdosOpenTcpConnection(port->dev->ip, port->port, port->port, 500, 0x1000);
+    if (handle)
+    {   
+        ok = RdosWaitForTcpConnection(handle, 500);
+        if (!ok)
+            RdosCloseTcpConnection(handle);
+    }
+    else
+        ok = FALSE;
 
     if (ok)
     {
-        ok = SetVar(port, "FC", "0");    
+        RdosEnterKernelSection(&CmdSection);
 
-        if (ok)
-            ok = SetVar(port, "DS", "1");    
-
-        if (ok)
-        {
-            sprintf(str, "%d", port->baud_val);
-            ok = SetVar(port, "BR", str); 
-        }
+        ok = Login(port->dev);
 
         if (ok)
         {
-            sprintf(str, "%d", port->par_val);
-            ok = SetVar(port, "PR", str); 
-        }
+            ok = SetVar(port, "FC", "0");    
+    
+            if (ok)
+                ok = SetVar(port, "DS", "1");    
 
-        if (ok)
-        {
-            sprintf(str, "%d", port->data_val);
-            ok = SetVar(port, "BB", str); 
-        }
-
-        RdosLeaveKernelSection(&CmdSection);
-
-        if (ok)
-        {
-            handle = RdosOpenTcpConnection(port->dev->ip, port->port, port->port, 500, 0x1000);
-            if (handle)
-            {   
-                ok = RdosWaitForTcpConnection(handle, 500);
-                if (!ok)
-                    RdosCloseTcpConnection(handle);
+            if (ok)
+            {
+                sprintf(str, "%d", port->baud_val);
+                ok = SetVar(port, "BR", str); 
             }
-            else
-                ok = FALSE;
+
+            if (ok)
+            {
+                sprintf(str, "%d", port->par_val);
+                ok = SetVar(port, "PR", str); 
+            }
+
+            if (ok)
+            {
+                sprintf(str, "%d", port->data_val);
+                ok = SetVar(port, "BB", str); 
+            }
         }
 
         Logout(port->dev);
-    }
-    else
+
         RdosLeaveKernelSection(&CmdSection);
+
+        if (!ok)
+            RdosCloseTcpConnection(handle);
+
+    }
 
     if (ok)
     {
@@ -597,7 +600,9 @@ void __far PortThread(void *param)
                     RdosCloseTcpConnection(port->tcp_handle);
                     RdosCloseWait(port->wait_handle);
 
-                    CreateConnection(port);
+                    if (!CreateConnection(port))
+                        RdosWaitMilli(250);
+                        
                     has_push = TRUE;
                 }
                 else
