@@ -1,0 +1,295 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RDOS operating system
+; Copyright (C) 1988-2011, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage in embedded systems. For information on
+; usage in commercial embedded systems, contact embedded@rdos.net
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; 88E80xx.ASM
+; Marvell 88E80xx series network driver
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+INCLUDE ..\driver.def
+INCLUDE ..\os.def
+INCLUDE ..\os.inc
+INCLUDE ..\user.def
+INCLUDE ..\user.inc
+INCLUDE ..\pcdev\pci.inc
+INCLUDE ..\os\net.inc
+
+MemControlReg   = 4
+ 
+data    STRUC
+
+MemSel              DW ?
+
+data    ENDS
+
+code    SEGMENT byte public 'CODE'
+
+
+    assume cs:code
+
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
+    .386p
+ENDIF
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InitBase
+;
+;       DESCRIPTION:    Init base memory
+;
+;       PARAMETERS:     BH:BL:CH    PCI address
+;                       DS          Ethernet selector
+;
+;       RETURNS:        ES          Base mem selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitBase    Proc near
+    mov cx,PCI_nbr_base_address0+4
+    ReadPciDword
+;
+    push eax
+    mov cx,PCI_nbr_base_address0
+    ReadPciDword
+    pop ebx
+    test al,4
+    jnz ibPhysOk
+;
+    xor ebx,ebx
+
+ibPhysOk:
+    push eax
+    mov eax,4000h
+    AllocateBigLinear
+    pop eax
+    xor al,al
+    or ax,13h
+;
+    mov ecx,4    
+
+ibPhysLoop:
+    SetPageEntry
+;
+    add eax,1000h
+    adc ebx,0
+    add edx,1000h
+    loop ibPhysLoop    
+;        
+    AllocateGdt
+    mov ecx,4000h
+    sub edx,ecx
+    CreateDataSelector16
+;
+    mov ds:MemSel,bx
+    mov es,bx
+    ret
+InitBase    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InitPciAdapter
+;
+;       DESCRIPTION:    Init PCI adapter if found
+;
+;       PARAMETERS:     AX      Device number
+;
+;       RETURNS:        NC          Adapter found
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DriverName1     DB '88E80xx-1',0
+DriverName2     DB '88E80xx-2',0
+
+PciVendorTab:
+pci00   DW 11ABh, 4380h
+pci01   DW 0,     0
+
+InitPrimaryPciAdapter   Proc near
+    mov bp,ax
+    mov ax,ether_data_sel
+    mov ds,ax
+    mov si,OFFSET PciVendorTab
+init_pci1_loop:
+    mov ax,bp
+    mov dx,cs:[si]
+    mov cx,cs:[si+2]
+    or dx,dx
+    stc
+    jz init_pci1_done
+;
+    FindPciDevice
+    jnc init_pci1_found
+;
+    add si,4
+    jmp init_pci1_loop
+
+init_pci1_found:
+    mov bp,bx
+    call InitBase
+    mov eax,es:MemControlReg
+    and al,NOT 0Fh
+    or al,0Ah
+    mov es:MemControlReg,eax
+;    
+    mov ax,bp   
+    clc
+
+init_pci1_done:
+    ret
+InitPrimaryPciAdapter   Endp
+
+InitSecondaryPciAdapter Proc near
+    mov bp,ax
+    mov ax,ether_data2_sel
+    mov ds,ax
+    mov si,OFFSET PciVendorTab
+init_pci2_loop:
+    mov ax,bp
+    mov dx,cs:[si]
+    mov cx,cs:[si+2]
+    or dx,dx
+    stc
+    jz init_pci2_done
+;
+    FindPciDevice
+    jnc init_pci2_found
+;
+    add si,4
+    jmp init_pci2_loop
+
+init_pci2_found:
+    mov bp,bx
+    call InitBase
+    mov ax,bp   
+    clc
+
+init_pci2_done:
+    ret
+InitSecondaryPciAdapter Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Init_net
+;
+;           DESCRIPTION:    inits adpater
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+detect_name DB 'Init Marvell', 0
+    
+init_net    Proc far
+    push ds
+    push es
+    pusha
+;
+    int 3
+    xor ax,ax
+    call InitPrimaryPciAdapter
+;
+    inc ax
+    call InitSecondaryPciAdapter
+;    
+    popa
+    pop es
+    pop ds
+    retf32
+init_net    Endp
+
+init_task   Proc far
+    push ds
+    push es
+    pusha
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;
+    mov esi,OFFSET init_net
+    mov edi,OFFSET detect_name
+    mov ecx,1000h
+    mov ax,4
+    CreateThread
+;
+    popa
+    pop es
+    pop ds
+    retf32
+init_task   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Init
+;
+;           DESCRIPTION:    init device
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Init    Proc far
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;
+    mov eax,SIZE data
+    mov bx,ether_data_sel
+    AllocateFixedSystemMem
+    mov ds,bx
+    mov es,bx
+    mov cx,ax
+    xor di,di
+    xor al,al
+    rep stosb
+;
+    mov eax,SIZE data
+    mov bx,ether_data2_sel
+    AllocateFixedSystemMem
+    mov ds,bx
+    mov es,bx
+    mov cx,ax
+    xor di,di
+    xor al,al
+    rep stosb
+;
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET init_task
+    HookInitTasking
+    clc
+    ret
+Init    Endp
+
+code    ENDS
+
+    END init
