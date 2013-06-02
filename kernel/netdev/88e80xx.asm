@@ -111,6 +111,29 @@ InitBase    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ResetController
+;
+;       DESCRIPTION:    Reset controller
+;
+;       PARAMETERS:     ES          Base mem selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ResetController    Proc near
+    mov eax,es:MemControlReg
+    and al,0FCh
+    or al,2
+    mov es:MemControlReg,eax
+;
+    mov eax,es:MemControlReg
+    int 3    
+    mov eax,es:MemControlReg
+    ret
+ResetController   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           InitPciAdapter
 ;
 ;       DESCRIPTION:    Init PCI adapter if found
@@ -151,9 +174,12 @@ init_pci1_found:
     mov bp,bx
     call InitBase
     mov eax,es:MemControlReg
-    and al,NOT 0Fh
+    and al,0F0h
     or al,0Ah
     mov es:MemControlReg,eax
+    mov eax,es:MemControlReg
+    int 3
+    mov eax,es:MemControlReg
 ;    
     mov ax,bp   
     clc
@@ -184,6 +210,7 @@ init_pci2_loop:
 init_pci2_found:
     mov bp,bx
     call InitBase
+    call ResetController
     mov ax,bp   
     clc
 
