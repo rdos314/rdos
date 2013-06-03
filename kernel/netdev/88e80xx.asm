@@ -34,6 +34,18 @@ INCLUDE ..\pcdev\pci.inc
 INCLUDE ..\os\net.inc
 
 MemControlReg   = 4
+PowerControlReg = 7
+
+RxBmuControlReg = 434h
+TxBmuControlReg = 6B4h
+
+RxMacControlReg = 0C48h
+TxMacControlReg = 0D48h
+
+StatusBmuControlReg = 0E80h
+
+MacControlReg   = 0F00h
+PhyControlReg   = 0F04h
  
 data    STRUC
 
@@ -111,25 +123,93 @@ InitBase    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ResetController
+;       NAME:           InitController
 ;
-;       DESCRIPTION:    Reset controller
+;       DESCRIPTION:    Init controller
 ;
 ;       PARAMETERS:     ES          Base mem selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ResetController    Proc near
+InitController    Proc near
     mov eax,es:MemControlReg
-    and al,0FCh
-    or al,2
+    and al,0F0h
+    or al,0Ah
     mov es:MemControlReg,eax
 ;
-    mov eax,es:MemControlReg
-    int 3    
-    mov eax,es:MemControlReg
+    mov ax,10
+    WaitMilliSec
+;
+    mov al,es:PowerControlReg
+    and al,0F0h
+    or al,6
+    mov es:PowerControlReg,al
+;    
+    mov ax,5D66h
+    mov es:RxBmuControlReg,ax
+;
+    mov ax,10
+    WaitMilliSec
+;    
+    mov ax,51AAh
+    mov es:RxBmuControlReg,ax
+;    
+    mov eax,es:TxBmuControlReg
+    mov ax,1D66h
+    mov es:TxBmuControlReg,eax
+;
+    mov ax,10
+    WaitMilliSec
+;    
+    mov eax,es:TxBmuControlReg
+    mov ax,11AAh
+    mov es:TxBmuControlReg,eax
+;    
+    mov eax,es:StatusBmuControlReg
+    and al,0E0h
+    or al,16h
+    mov es:StatusBmuControlReg,eax
+;
+    mov ax,10
+    WaitMilliSec
+;    
+    mov eax,es:StatusBmuControlReg
+    and al,0F0h
+    or al,0Ah
+    mov es:StatusBmuControlReg,eax
+    int 3
+;
+    mov al,es:MacControlReg
+    and al,0FCh
+    or al,2
+    mov es:MacControlReg,al
+;
+    mov ax,10
+    WaitMilliSec
+;    
+    mov al,es:PhyControlReg
+    and al,0FCh
+    or al,2
+    mov es:PhyControlReg,al
+;
+    mov ax,10
+    WaitMilliSec
+;    
+    mov eax,es:RxMacControlReg
+    and al,0F0h
+    or al,0Ah
+    mov es:RxMacControlReg,eax
+;
+    mov eax,es:TxMacControlReg
+    and al,0F0h
+    or al,0Ah
+    mov es:TxMacControlReg,eax
+;
+    mov ax,10
+    WaitMilliSec
+        
     ret
-ResetController   Endp
+InitController   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -173,13 +253,7 @@ init_pci1_loop:
 init_pci1_found:
     mov bp,bx
     call InitBase
-    mov eax,es:MemControlReg
-    and al,0F0h
-    or al,0Ah
-    mov es:MemControlReg,eax
-    mov eax,es:MemControlReg
-    int 3
-    mov eax,es:MemControlReg
+    call InitController
 ;    
     mov ax,bp   
     clc
@@ -210,7 +284,7 @@ init_pci2_loop:
 init_pci2_found:
     mov bp,bx
     call InitBase
-    call ResetController
+    call InitController
     mov ax,bp   
     clc
 
@@ -238,7 +312,7 @@ init_net    Proc far
     push es
     pusha
 ;
-    int 3
+    int 3    
     xor ax,ax
     call InitPrimaryPciAdapter
 ;
