@@ -56,6 +56,7 @@ StatusBmuListBase   = 0E88h
 
 MacControlReg   = 0F00h
 PhyControlReg   = 0F04h
+LinkControlReg  = 0F10h
  
 data    STRUC
 
@@ -342,6 +343,14 @@ InitController    Proc near
     mov es:TxBmuControlReg,eax
     int 3
 ;
+    mov al,es:LinkControlReg
+    and al,0FCh
+    or al,2
+    mov es:LinkControlReg,al
+;
+    mov ax,10
+    WaitMilliSec
+;    
     mov al,es:MacControlReg
     and al,0FCh
     or al,2
