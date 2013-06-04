@@ -43,6 +43,8 @@ RxMacControlReg = 0C48h
 TxMacControlReg = 0D48h
 
 StatusBmuControlReg = 0E80h
+StatusBmuLastIndex  = 0E84h
+StatusBmuListBase   = 0E88h
 
 MacControlReg   = 0F00h
 PhyControlReg   = 0F04h
@@ -50,6 +52,9 @@ PhyControlReg   = 0F04h
 data    STRUC
 
 MemSel              DW ?
+
+StatusBmuPhys       DD ?
+StatusBmuSel        DW ?
 
 data    ENDS
 
@@ -123,6 +128,57 @@ InitBase    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           InitStatusBmu
+;
+;       DESCRIPTION:    Init status BMU descriptors
+;
+;       PARAMETERS:     DS          Ethernet sel
+;                       ES          Base mem selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitStatusBmu    Proc near
+    mov eax,es:StatusBmuControlReg
+    and al,0E0h
+    or al,16h
+    mov es:StatusBmuControlReg,eax
+;
+    mov eax,1000h
+    AllocateBigLinear
+    AllocatePhysical32
+    mov ds:StatusBmuPhys,eax
+    or al,13h
+    SetPageEntry
+;
+    push es
+    mov ax,flat_sel
+    mov es,ax    
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    pop es
+;
+    mov ecx,0FFFh
+    AllocateGdt
+    CreateDataSelector16
+    mov ds:StatusBmuSel,bx
+;
+    mov word ptr es:StatusBmuLastIndex,0FFFh
+    mov eax,ds:StatusBmuPhys
+    mov es:StatusBmuListBase,eax
+    mov dword ptr es:StatusBmuListBase+4,0
+;    
+    mov eax,es:StatusBmuControlReg
+    and al,0F0h
+    or al,0Ah
+    mov es:StatusBmuControlReg,eax    
+    ret
+InitStatusBmu   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           InitController
 ;
 ;       DESCRIPTION:    Init controller
@@ -145,6 +201,9 @@ InitController    Proc near
     or al,6
     mov es:PowerControlReg,al
 ;    
+    call InitStatusBmu
+    int 3
+;    
     mov ax,5D66h
     mov es:RxBmuControlReg,ax
 ;
@@ -164,19 +223,6 @@ InitController    Proc near
     mov eax,es:TxBmuControlReg
     mov ax,11AAh
     mov es:TxBmuControlReg,eax
-;    
-    mov eax,es:StatusBmuControlReg
-    and al,0E0h
-    or al,16h
-    mov es:StatusBmuControlReg,eax
-;
-    mov ax,10
-    WaitMilliSec
-;    
-    mov eax,es:StatusBmuControlReg
-    and al,0F0h
-    or al,0Ah
-    mov es:StatusBmuControlReg,eax
     int 3
 ;
     mov al,es:MacControlReg
