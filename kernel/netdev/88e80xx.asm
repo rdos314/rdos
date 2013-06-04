@@ -36,6 +36,14 @@ INCLUDE ..\os\net.inc
 MemControlReg   = 4
 PowerControlReg = 7
 
+RxPfuControlReg = 450h
+RxPfuLastIndex  = 454h
+RxPfuListBase   = 458h
+
+TxPfuControlReg = 6D0h
+TxPfuLastIndex  = 6D4h
+TxPfuListBase   = 6D8h
+
 RxBmuControlReg = 434h
 TxBmuControlReg = 6B4h
 
@@ -55,6 +63,12 @@ MemSel              DW ?
 
 StatusBmuPhys       DD ?
 StatusBmuSel        DW ?
+
+RxPfuPhys           DD ?
+RxPfuSel            DW ?
+
+TxPfuPhys           DD ?
+TxPfuSel            DW ?
 
 data    ENDS
 
@@ -179,6 +193,108 @@ InitStatusBmu   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           InitRxPfu
+;
+;       DESCRIPTION:    Init Rx prefetch unit
+;
+;       PARAMETERS:     DS          Ethernet sel
+;                       ES          Base mem selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitRxPfu    Proc near
+    mov eax,es:RxPfuControlReg
+    and al,0FCh
+    or al,2
+    mov es:RxPfuControlReg,eax
+;
+    mov eax,1000h
+    AllocateBigLinear
+    AllocatePhysical32
+    mov ds:RxPfuPhys,eax
+    or al,13h
+    SetPageEntry
+;
+    push es
+    mov ax,flat_sel
+    mov es,ax    
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    pop es
+;
+    mov ecx,0FFFh
+    AllocateGdt
+    CreateDataSelector16
+    mov ds:RxPfuSel,bx
+;
+    mov word ptr es:RxPfuLastIndex,0FFFh
+    mov eax,ds:RxPfuPhys
+    mov es:RxPfuListBase,eax
+    mov dword ptr es:RxPfuListBase+4,0
+;    
+    mov eax,es:RxPfuControlReg
+    and al,0F0h
+    or al,0Ah
+    mov es:RxPfuControlReg,eax    
+    ret
+InitRxPfu   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InitTxPfu
+;
+;       DESCRIPTION:    Init Tx prefetch unit
+;
+;       PARAMETERS:     DS          Ethernet sel
+;                       ES          Base mem selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitTxPfu    Proc near
+    mov eax,es:TxPfuControlReg
+    and al,0FCh
+    or al,2
+    mov es:TxPfuControlReg,eax
+;
+    mov eax,1000h
+    AllocateBigLinear
+    AllocatePhysical32
+    mov ds:TxPfuPhys,eax
+    or al,13h
+    SetPageEntry
+;
+    push es
+    mov ax,flat_sel
+    mov es,ax    
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    pop es
+;
+    mov ecx,0FFFh
+    AllocateGdt
+    CreateDataSelector16
+    mov ds:TxPfuSel,bx
+;
+    mov word ptr es:TxPfuLastIndex,0FFFh
+    mov eax,ds:TxPfuPhys
+    mov es:TxPfuListBase,eax
+    mov dword ptr es:TxPfuListBase+4,0
+;    
+    mov eax,es:TxPfuControlReg
+    and al,0F0h
+    or al,0Ah
+    mov es:TxPfuControlReg,eax    
+    ret
+InitTxPfu   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           InitController
 ;
 ;       DESCRIPTION:    Init controller
@@ -202,7 +318,8 @@ InitController    Proc near
     mov es:PowerControlReg,al
 ;    
     call InitStatusBmu
-    int 3
+    call InitRxPfu
+    call InitTxPfu
 ;    
     mov ax,5D66h
     mov es:RxBmuControlReg,ax
