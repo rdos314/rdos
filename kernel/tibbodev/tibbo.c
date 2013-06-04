@@ -458,6 +458,7 @@ void ImplUdpCallback(long ip, char *buf, int size)
             dev->port_count = 1;
             dev->running = FALSE;
             dev->ok = FALSE;
+            buf[size] = 0;
             ParseEcho(dev, buf, size);
 
             if (dev->ok)
@@ -491,7 +492,7 @@ int CreateConnection(struct tibbo_port *port)
     int handle;
     char str[64];
 
-    handle = RdosOpenTcpConnection(port->dev->ip, port->port, port->port, 500, 0x1000);
+    handle = RdosOpenTcpConnection(port->dev->ip, 0, port->port, 500, 0x1000);
     if (handle)
     {   
         ok = RdosWaitForTcpConnection(handle, 500);
@@ -566,6 +567,7 @@ void __far PortThread(void *param)
     char *buf;
     struct tibbo_port *port;
     int count;
+    int ok;
     int has_push = TRUE;
         
     buf = RdosAllocateSmallGlobalMem(256);
@@ -573,48 +575,51 @@ void __far PortThread(void *param)
     port = (struct tibbo_port *)param;
 
     while (port->open)
-    {        
+    {    
         count = GetSendData(port->sel, buf, 256);
         if (count)
         {
-            RdosWriteTcpConnection(port->tcp_handle, buf, count);
+            ok = RdosWriteTcpConnection(port->tcp_handle, buf, count);
             RdosPushTcpConnection(port->tcp_handle);
             has_push = TRUE;
         }
-        else               
+        else
         {
             count = RdosPollTcpConnection(port->tcp_handle);
             if (count)
             {
+                ok = TRUE;
+                
                 if (count > 256)
                     count = 256;
                 count = RdosReadTcpConnection(port->tcp_handle, buf, count);
-
+    
                 if (count)
                     PostReceiveData(port->sel, buf, count);
             }
             else
-            {
-                if (RdosIsTcpConnectionClosed(port->tcp_handle))
-                {
-                    RdosCloseTcpConnection(port->tcp_handle);
-                    RdosCloseWait(port->wait_handle);
+                ok = !RdosIsTcpConnectionClosed(port->tcp_handle);
+        }
 
-                    if (!CreateConnection(port))
-                        RdosWaitMilli(250);
-                        
-                    has_push = TRUE;
-                }
-                else
-                {
-                    if (!has_push)
-                        RdosPushTcpConnection(port->tcp_handle);
+        if (ok)
+        {
+            if (!has_push)
+                RdosPushTcpConnection(port->tcp_handle);
 
-                    has_push = FALSE;
-                    WaitForData(port->wait_handle);
-                }
-            }
+            has_push = FALSE;
+            WaitForData(port->wait_handle);
         }            
+        else
+        {
+            RdosCloseTcpConnection(port->tcp_handle);
+            RdosCloseWait(port->wait_handle);
+
+            if (!CreateConnection(port))
+                RdosWaitMilli(250);
+
+            has_push = TRUE;
+
+        }
     }                    
         
     RdosFreeMem(RdosSelectorToPointer(buf));

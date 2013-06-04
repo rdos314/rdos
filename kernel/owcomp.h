@@ -1288,6 +1288,7 @@
 
 #pragma aux RdosWriteTcpConnection = \
     CallGate_write_tcp_connection  \
+    "mov eax,1" \
     ValidateEax \
     parm [ebx] [es edi] [ecx] \
     value [eax];

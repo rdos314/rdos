@@ -693,8 +693,16 @@ GetSendData_    Proc near
     xor esi,esi
     mov dx,ds:send_count
     or dx,dx
-    jz gsdDone
+    jnz gsdMore
 ;    
+    mov bx,ds:send_wait
+    or bx,bx
+    jz gsdDone
+;
+    Signal
+    jmp gsdDone
+
+gsdMore:    
     mov fs,ds:send_buf
 
 gsdLoop:
