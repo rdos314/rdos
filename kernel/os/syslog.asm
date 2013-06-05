@@ -619,7 +619,8 @@ start_wait_for_syslog PROC far
     cmp eax,ds:log_head_id
     jne start_wait_ready
 ;   
-    mov bx,ax 
+    xor dx,dx
+    mov bx,es
     mov ax,ds:log_obj_list
 
 start_wait_check_loop:
@@ -629,12 +630,21 @@ start_wait_check_loop:
     cmp ax,bx
     je start_wait_leave
 ;
+    mov dx,ax
     mov fs,ax
     mov ax,fs:wo_list
     jmp start_wait_check_loop
 
 start_wait_insert:
-    mov es:wo_list,ax
+    mov es:wo_list,0
+;    
+    or dx,dx
+    jz start_wait_head
+;
+    mov fs:wo_list,es
+    jmp start_wait_leave
+
+start_wait_head:    
     mov ds:log_obj_list,es
     jmp start_wait_leave
 
