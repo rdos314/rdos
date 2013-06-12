@@ -778,6 +778,55 @@ is_syslog_idle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 clear_syslog  PROC far
+    push ds
+    push fs
+    push eax
+    push bx
+    push dx
+;
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:log_section
+;    
+    xor dx,dx
+    mov bx,es
+    mov ax,ds:log_obj_list
+
+clear_wait_loop:
+    cmp ax,bx
+    je clear_wait_unlink
+;
+    or ax,ax
+    jz clear_wait_leave    
+;
+    mov dx,ax
+    mov fs,ax
+    mov ax,fs:wo_list
+    jmp clear_wait_loop
+
+clear_wait_unlink:
+    or dx,dx
+    jz clear_wait_head
+;
+    mov ax,es:wo_list
+    mov fs,dx
+    mov fs:wo_list,ax
+    jmp clear_wait_leave
+
+clear_wait_head:
+    mov ax,es:wo_list
+    mov ds:log_obj_list,ax
+
+clear_wait_leave:
+    xor ax,ax
+    mov fs,ax
+    LeaveSection ds:log_section
+;
+    pop dx
+    pop bx
+    pop eax
+    pop fs
+    pop ds
     retf32
 clear_syslog Endp
     
