@@ -2848,6 +2848,7 @@ disc_assign Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 drive_assign1   Proc far
+    retf32
     mov gs,bx
 ;    
     mov ax,flat_sel
@@ -2992,6 +2993,7 @@ InstallExtended Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 drive_assign2   Proc far
+    retf32
     mov gs,bx
 ;    
     mov ax,flat_sel
