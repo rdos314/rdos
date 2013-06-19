@@ -400,8 +400,8 @@ void cdecl main()
         Mouse->OnRightUp = RightUp;
         Mouse->OnRightDown = RightDown;
 
-//        vbe = new TVideoGraphicDevice(24, 1366, 768);
-        vbe = new TVideoGraphicDevice(24, 640, 480);
+        vbe = new TVideoGraphicDevice(24, 1366, 768);
+//        vbe = new TVideoGraphicDevice(24, 640, 480);
 //      vbe = new TVideoGraphicDevice(24, 800, 600);
 //      vbe = new TVideoGraphicDevice(1, 240, 128);
 
@@ -434,9 +434,9 @@ void cdecl main()
 
         TWait Wait;
 
-//        Wait.Add(Keyboard);
-//        Wait.Add(Mouse);
-//        Wait.StartThreadHandler("IO Thread", 0x1000);
+        Wait.Add(Keyboard);
+        Wait.Add(Mouse);
+        Wait.StartThreadHandler("IO Thread", 0x1000);
 
         bitmap = new TBitmapGraphicDevice(8, 1366, 768);
         
@@ -454,37 +454,6 @@ void cdecl main()
         bitmap->DrawEllipse(vbe->GetWidth() / 2, vbe->GetHeight() / 2, vbe->GetWidth() / 2, vbe->GetHeight() / 2);
 
         Planets = new TPlanetThread(vbe, 8);
-
-        ControlThread->SetBackground(bitmap);
-
-        Image = new TImageControl(ControlThread);
-        Image->LoadImage("test.png");
-        Image->Resize(380, 287);
-        Image->Move(50, 50);
-        Image->TransparentBackground();
-        Image->Show();
-        Image->Move(100, 100);
-
-        Label = new TLabelControl(Image);
-        Label->SetTransparent();
-        Label->SetDrawColor(128, 128, 128);
-        Label->SetFont(20);
-        Label->Move(0, 0);
-        Label->Resize(200, 20);
-        Label->SetText("Test label");
-        Label->Show();
-        Label->Move(200, 200);
-        Label->Resize(200, 30);
-        Label->Move(75, 75);
-        Label->SetText("New text");
-        Label->Redraw();
-        Label->Hide();
-
-        Image->Hide();
-
-        vbe->SetLgopNone();
-        ShowPng(vbe);
-
         RdosWaitMilli(5000);
 
         font = new TFont(24);
