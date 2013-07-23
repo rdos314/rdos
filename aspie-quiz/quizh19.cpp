@@ -51,7 +51,7 @@
 #
 ##########################################################################*/
 TQuizH19::TQuizH19(const char *FileName)
-  : TQuiz(198),
+  : TQuiz(202),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -112,7 +112,7 @@ int TQuizH19::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizH19::GetQuizN()
 {
-        return 198;
+        return 202;
 }
 
 /*##########################################################################
@@ -526,6 +526,11 @@ void TQuizH19::SetupTexts()
   Quiz[196].MyGroup = GROUP_MIXED;
   Quiz[197].MyGroup = GROUP_MIXED;
 
+  Quiz[198].MyGroup = GROUP_MIXED;
+  Quiz[199].MyGroup = GROUP_MIXED;
+  Quiz[200].MyGroup = GROUP_MIXED;
+  Quiz[201].MyGroup = GROUP_MIXED;
+
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Do you or others think that you have unconventional ways of solving problems?";
   Quiz[2].Text = "As a child, was your play more directed towards, for example, sorting, building, investigating or taking things apart than towards social games with other kids?";
@@ -737,6 +742,11 @@ void TQuizH19::SetupTexts()
   Quiz[196].Text = "Bike - Belief fatal, outcome neutral";
   Quiz[197].Text = "Bike - Belief fatal, outcome fatal";
 
+  Quiz[198].Text = "Belief neutral, outcome neutral";
+  Quiz[199].Text = "Belief neutral, outcome fatal";
+  Quiz[200].Text = "Belief fatal, outcome neutral";
+  Quiz[201].Text = "Belief fatal, outcome fatal";
+
 }
 
 /*##########################################################################
@@ -920,7 +930,7 @@ void TQuizH19::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 198; i++)
+    for (i = 0; i < 202; i++)
             DefineGlobalId(i, i);
 }
 

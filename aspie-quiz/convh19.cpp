@@ -128,6 +128,9 @@ static void ProcessRow(char *str)
     int hour, min, sec;
     TDateTime *time;
     TQuizRow Row;
+    int SumArr[4] = {0, 0, 0, 0};
+    int CountArr[4] = {0, 0, 0, 0};
+    int Ind;
 
     ptr = str;
     for (fieldno = 0; ptr; fieldno++)
@@ -217,8 +220,25 @@ static void ProcessRow(char *str)
             default:
                  i = fieldno - 15;
                  Row.Quiz[i] = atoi(valstr);
+                 if (i >= 150)
+                 {
+                    if (Row.Quiz[i])
+                    {
+                       Ind = (i - 150) % 4;
+                       (SumArr[Ind]) += Row.Quiz[i] - 1;
+                       (CountArr[Ind])++;
+                    }
+                 }
                  break;
         }
+    }
+
+    for (i = 0; i < 4; i++)
+    {
+        if (CountArr[i])
+            Row.Quiz[198 + i] = 1 + SumArr[i] / CountArr[i];
+        else
+            Row.Quiz[198 + i] = 0;
     }
 
     UpdateScore(&Row);
