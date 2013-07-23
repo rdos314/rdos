@@ -618,6 +618,8 @@
 
 #define osgate_send_driver_udp 514
 
+#define osgate_create_long_thread_info 515
+
 
 
 
@@ -1239,4 +1241,6 @@
 #define OsGate_send_driver_ip 0x3E 0x67 0x9a 1 2 0 0 2 0
 
 #define OsGate_send_driver_udp 0x3E 0x67 0x9a 2 2 0 0 2 0
+
+#define OsGate_create_long_thread_info 0x3E 0x67 0x9a 3 2 0 0 2 0
 

@@ -2823,13 +2823,13 @@ int main()
     }
 
     RdosHookInitTasking(&InitTasking);
-    RdosRegisterOsGate(osgate_get_acpi_pci_device_name, &ImplGetPciDeviceName, "Get PCI Device Name");
-    RdosRegisterOsGate(osgate_get_acpi_pci_device_irq, &ImplGetPciDeviceIrq, "Get PCI Device IRQ");
-    RdosRegisterBimodalUserGate(usergate_get_acpi_status, &ImplGetAcpiStatus, "Get ACPI Status");
-    RdosRegisterUserGate(usergate_get_acpi_object, &ImplGetAcpiObject16, &ImplGetAcpiObject32, "Get ACPI Object");
-    RdosRegisterUserGate(usergate_get_acpi_method, &ImplGetAcpiMethod16, &ImplGetAcpiMethod32, "Get ACPI Method");
-    RdosRegisterUserGate(usergate_get_acpi_device, &ImplGetAcpiDevice16, &ImplGetAcpiDevice32, "Get ACPI Device");
-    RdosRegisterBimodalUserGate(usergate_get_cpu_temperature, &ImplGetCpuTemperature, "Get CPU Temperature");
+    RdosRegisterOsGate(osgate_get_acpi_pci_device_name, (__rdos_gate_callback *)&ImplGetPciDeviceName, "Get PCI Device Name");
+    RdosRegisterOsGate(osgate_get_acpi_pci_device_irq, (__rdos_gate_callback *)&ImplGetPciDeviceIrq, "Get PCI Device IRQ");
+    RdosRegisterBimodalUserGate(usergate_get_acpi_status, (__rdos_gate_callback *)&ImplGetAcpiStatus, "Get ACPI Status");
+    RdosRegisterUserGate(usergate_get_acpi_object, (__rdos_gate_callback *)&ImplGetAcpiObject16, &ImplGetAcpiObject32, "Get ACPI Object");
+    RdosRegisterUserGate(usergate_get_acpi_method, (__rdos_gate_callback *)&ImplGetAcpiMethod16, &ImplGetAcpiMethod32, "Get ACPI Method");
+    RdosRegisterUserGate(usergate_get_acpi_device, (__rdos_gate_callback *)&ImplGetAcpiDevice16, &ImplGetAcpiDevice32, "Get ACPI Device");
+    RdosRegisterBimodalUserGate(usergate_get_cpu_temperature, (__rdos_gate_callback *)&ImplGetCpuTemperature, "Get CPU Temperature");
 
-    RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate"); 
+    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
 }

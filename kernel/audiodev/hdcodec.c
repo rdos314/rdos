@@ -3191,25 +3191,25 @@ int main()
     InitHda();
     RdosInitKernelSection(&OutputSection);
 
-    RdosRegisterOsGate(osgate_get_audio_dac_rate, &ImplGetDacRate, "Get Dac Rate");
-    RdosRegisterOsGate(osgate_set_audio_dac_rate, &ImplSetDacRate, "Set Dac Rate");
+    RdosRegisterOsGate(osgate_get_audio_dac_rate, (__rdos_gate_callback *)&ImplGetDacRate, "Get Dac Rate");
+    RdosRegisterOsGate(osgate_set_audio_dac_rate, (__rdos_gate_callback *)&ImplSetDacRate, "Set Dac Rate");
     
-    RdosRegisterBimodalUserGate(usergate_has_audio, &ImplHasAudio, "Has Audio?");
-    RdosRegisterBimodalUserGate(usergate_get_audio_device_count, &ImplGetAudioDeviceCount, "Get Audio Device Count");
-    RdosRegisterBimodalUserGate(usergate_get_audio_codec_count, &ImplGetAudioCodecCount, "Get Audio Device Count");
-    RdosRegisterUserGate(usergate_get_audio_widget_info, &ImplGetAudioWidgetInfo16, &ImplGetAudioWidgetInfo32, "Get Audio Widget Info");
-    RdosRegisterUserGate(usergate_get_audio_widget_connection_list, &ImplGetAudioConnectionList16, &ImplGetAudioConnectionList32, "Get Audio Connection List");
-    RdosRegisterBimodalUserGate(usergate_get_selected_audio_connection, &ImplGetSelectedAudioConnection, "Get Selected Audio Connection");
-    RdosRegisterBimodalUserGate(usergate_get_audio_input_amp_cap, &ImplGetAudioInputAmpCap, "Get Audio Input Amp Cap");
-    RdosRegisterBimodalUserGate(usergate_get_audio_output_amp_cap, &ImplGetAudioOutputAmpCap, "Get Audio Output Amp Cap");
-    RdosRegisterBimodalUserGate(usergate_has_audio_input_mute, &ImplHasAudioInputMute, "Has Audio Input Mute");
-    RdosRegisterBimodalUserGate(usergate_has_audio_output_mute, &ImplHasAudioOutputMute, "Has Audio Output Mute");
-    RdosRegisterBimodalUserGate(usergate_read_audio_input_amp, &ImplReadAudioInputAmp, "Read Audio Input Amp");
-    RdosRegisterBimodalUserGate(usergate_read_audio_output_amp, &ImplReadAudioOutputAmp, "Read Audio Output Amp");
-    RdosRegisterBimodalUserGate(usergate_is_audio_input_amp_muted, &ImplIsAudioInputAmpMuted, "Is Audio Input Amp Muted");
-    RdosRegisterBimodalUserGate(usergate_is_audio_output_amp_muted, &ImplIsAudioOutputAmpMuted, "Is Audio Output Amp Muted");
-    RdosRegisterBimodalUserGate(usergate_get_output_volume, &ImplGetAudioOutputVolume, "Get Audio Output Volume");
-    RdosRegisterBimodalUserGate(usergate_set_output_volume, &ImplSetAudioOutputVolume, "Set Audio Output Volume");
+    RdosRegisterBimodalUserGate(usergate_has_audio, (__rdos_gate_callback *)&ImplHasAudio, "Has Audio?");
+    RdosRegisterBimodalUserGate(usergate_get_audio_device_count, (__rdos_gate_callback *)&ImplGetAudioDeviceCount, "Get Audio Device Count");
+    RdosRegisterBimodalUserGate(usergate_get_audio_codec_count, (__rdos_gate_callback *)&ImplGetAudioCodecCount, "Get Audio Device Count");
+    RdosRegisterUserGate(usergate_get_audio_widget_info, (__rdos_gate_callback *)&ImplGetAudioWidgetInfo16, (__rdos_gate_callback *)&ImplGetAudioWidgetInfo32, "Get Audio Widget Info");
+    RdosRegisterUserGate(usergate_get_audio_widget_connection_list, (__rdos_gate_callback *)&ImplGetAudioConnectionList16, (__rdos_gate_callback *)&ImplGetAudioConnectionList32, "Get Audio Connection List");
+    RdosRegisterBimodalUserGate(usergate_get_selected_audio_connection, (__rdos_gate_callback *)&ImplGetSelectedAudioConnection, "Get Selected Audio Connection");
+    RdosRegisterBimodalUserGate(usergate_get_audio_input_amp_cap, (__rdos_gate_callback *)&ImplGetAudioInputAmpCap, "Get Audio Input Amp Cap");
+    RdosRegisterBimodalUserGate(usergate_get_audio_output_amp_cap, (__rdos_gate_callback *)&ImplGetAudioOutputAmpCap, "Get Audio Output Amp Cap");
+    RdosRegisterBimodalUserGate(usergate_has_audio_input_mute, (__rdos_gate_callback *)&ImplHasAudioInputMute, "Has Audio Input Mute");
+    RdosRegisterBimodalUserGate(usergate_has_audio_output_mute, (__rdos_gate_callback *)&ImplHasAudioOutputMute, "Has Audio Output Mute");
+    RdosRegisterBimodalUserGate(usergate_read_audio_input_amp, (__rdos_gate_callback *)&ImplReadAudioInputAmp, "Read Audio Input Amp");
+    RdosRegisterBimodalUserGate(usergate_read_audio_output_amp, (__rdos_gate_callback *)&ImplReadAudioOutputAmp, "Read Audio Output Amp");
+    RdosRegisterBimodalUserGate(usergate_is_audio_input_amp_muted, (__rdos_gate_callback *)&ImplIsAudioInputAmpMuted, "Is Audio Input Amp Muted");
+    RdosRegisterBimodalUserGate(usergate_is_audio_output_amp_muted, (__rdos_gate_callback *)&ImplIsAudioOutputAmpMuted, "Is Audio Output Amp Muted");
+    RdosRegisterBimodalUserGate(usergate_get_output_volume, (__rdos_gate_callback *)&ImplGetAudioOutputVolume, "Get Audio Output Volume");
+    RdosRegisterBimodalUserGate(usergate_set_output_volume, (__rdos_gate_callback *)&ImplSetAudioOutputVolume, "Set Audio Output Volume");
 
-//    RdosRegisterBimodalUserGate(usergate_test_gate, &ImplTestGate, "Test Gate"); 
+//    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
 }

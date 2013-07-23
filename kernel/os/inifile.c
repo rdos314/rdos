@@ -1847,14 +1847,14 @@ int main()
 
     InitGates();
 
-    RdosRegisterBimodalUserGate(usergate_open_sys_ini, &ImplOpenSysIni, "Open Sys Ini");
-    RdosRegisterSegUserGate(usergate_open_ini, GATE_ES_IN, &ImplOpenIni16, &ImplOpenIni32, "Open Ini");
-    RdosRegisterBimodalUserGate(usergate_close_ini, &ImplCloseIni, "Close Ini");
-    RdosRegisterSegUserGate(usergate_goto_ini_section, GATE_ES_IN, &ImplGotoIniSection16, &ImplGotoIniSection32, "Goto Ini Section");
-    RdosRegisterSegUserGate(usergate_remove_ini_section, GATE_ES_IN, &ImplRemoveIniSection16, &ImplRemoveIniSection32, "Remove Ini Section");
-    RdosRegisterBimodalUserGate(usergate_goto_first_inivar, &ImplGotoFirstVar, "Goto First Inivar");
-    RdosRegisterBimodalUserGate(usergate_goto_next_inivar, &ImplGotoNextVar, "Goto Next Inivar");
-    RdosRegisterSegUserGate(usergate_get_curr_inivar, GATE_ES_IN, &ImplGetCurrVar16, &ImplGetCurrVar32, "Get Current Inivar");
+    RdosRegisterBimodalUserGate(usergate_open_sys_ini, (__rdos_gate_callback *)&ImplOpenSysIni, "Open Sys Ini");
+    RdosRegisterSegUserGate(usergate_open_ini, GATE_ES_IN, (__rdos_gate_callback *)&ImplOpenIni16, (__rdos_gate_callback *)&ImplOpenIni32, "Open Ini");
+    RdosRegisterBimodalUserGate(usergate_close_ini, (__rdos_gate_callback *)&ImplCloseIni, "Close Ini");
+    RdosRegisterSegUserGate(usergate_goto_ini_section, GATE_ES_IN, (__rdos_gate_callback *)&ImplGotoIniSection16, (__rdos_gate_callback *)&ImplGotoIniSection32, "Goto Ini Section");
+    RdosRegisterSegUserGate(usergate_remove_ini_section, GATE_ES_IN, (__rdos_gate_callback *)&ImplRemoveIniSection16, (__rdos_gate_callback *)&ImplRemoveIniSection32, "Remove Ini Section");
+    RdosRegisterBimodalUserGate(usergate_goto_first_inivar, (__rdos_gate_callback *)&ImplGotoFirstVar, "Goto First Inivar");
+    RdosRegisterBimodalUserGate(usergate_goto_next_inivar, (__rdos_gate_callback *)&ImplGotoNextVar, "Goto Next Inivar");
+    RdosRegisterSegUserGate(usergate_get_curr_inivar, GATE_ES_IN, (__rdos_gate_callback *)&ImplGetCurrVar16, (__rdos_gate_callback *)&ImplGetCurrVar32, "Get Current Inivar");
     RdosRegisterHandle(INI_HANDLE, &ImplDeleteHandle);    
     RdosHookInitTasking(&InitTasking);
 }
