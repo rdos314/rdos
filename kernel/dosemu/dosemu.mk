@@ -1,6 +1,6 @@
-project : F:\rdos\kernel\dosemu\dos.rdv F:\rdos\kernel\dosemu\dpmi.rdv F:\rd&
+project : C:\rdos\kernel\dosemu\dos.rdv C:\rdos\kernel\dosemu\dpmi.rdv C:\rd&
 os\kernel\dosemu\emulate.rdv .SYMBOLIC
 
-!include F:\rdos\kernel\dosemu\dos.mk1
-!include F:\rdos\kernel\dosemu\dpmi.mk1
-!include F:\rdos\kernel\dosemu\emulate.mk1
+!include C:\rdos\kernel\dosemu\dos.mk1
+!include C:\rdos\kernel\dosemu\dpmi.mk1
+!include C:\rdos\kernel\dosemu\emulate.mk1
