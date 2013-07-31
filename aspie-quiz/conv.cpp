@@ -97,6 +97,8 @@ void ConvH15();
 void ConvH17();
 void ConvH19();
 
+void ConvH23();
+
 #define MAX_QUESTIONS 400
 
 struct TValArr
@@ -503,9 +505,10 @@ int main(int argc, char **argv)
     ConvH13();
     ConvH14();
     ConvH15();
+    ConvH19();
 */
 
-    ConvH19();
+    ConvH23();
     
     return 0;
 }
