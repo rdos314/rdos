@@ -649,71 +649,29 @@ void TQuizH23::SetupTexts()
   Quiz[148].Text = "Do you find it easy to estimate the age of people?";
   Quiz[149].Text = "Are you gracious about criticism, correction and direction?";
 
-  Quiz[150].Text = "Coffee - Belief neutral, outcome neutral";
-  Quiz[151].Text = "Coffee - Belief neutral, outcome fatal";
-  Quiz[152].Text = "Coffee - Belief fatal, outcome neutral";
-  Quiz[153].Text = "Coffee - Belief fatal, outcome fatal";
-
-  Quiz[154].Text = "Lab - Belief neutral, outcome neutral";
-  Quiz[155].Text = "Lab - Belief neutral, outcome fatal";
-  Quiz[156].Text = "Lab - Belief fatal, outcome neutral";
-  Quiz[157].Text = "Lab - Belief fatal, outcome fatal";
-
-  Quiz[158].Text = "Jellyfish - Belief neutral, outcome neutral";
-  Quiz[159].Text = "Jellyfish - Belief neutral, outcome fatal";
-  Quiz[160].Text = "Jellyfish - Belief fatal, outcome neutral";
-  Quiz[161].Text = "Jellyfish - Belief fatal, outcome fatal";
-
-  Quiz[162].Text = "Bridge - Belief neutral, outcome neutral";
-  Quiz[163].Text = "Bridge - Belief neutral, outcome fatal";
-  Quiz[164].Text = "Bridge - Belief fatal, outcome neutral";
-  Quiz[165].Text = "Bridge - Belief fatal, outcome fatal";
-
-  Quiz[166].Text = "Pool - Belief neutral, outcome neutral";
-  Quiz[167].Text = "Pool - Belief neutral, outcome fatal";
-  Quiz[168].Text = "Pool - Belief fatal, outcome neutral";
-  Quiz[169].Text = "Pool - Belief fatal, outcome fatal";
-
-  Quiz[170].Text = "Mushrooms - Belief neutral, outcome neutral";
-  Quiz[171].Text = "Mushrooms - Belief neutral, outcome fatal";
-  Quiz[172].Text = "Mushrooms - Belief fatal, outcome neutral";
-  Quiz[173].Text = "Mushrooms - Belief fatal, outcome fatal";
-  
-  Quiz[174].Text = "Latex - Belief neutral, outcome neutral";
-  Quiz[175].Text = "Latex - Belief neutral, outcome fatal";
-  Quiz[176].Text = "Latex - Belief fatal, outcome neutral";
-  Quiz[177].Text = "Latex - Belief fatal, outcome fatal";
-
-  Quiz[178].Text = "Motorboat - Belief neutral, outcome neutral";
-  Quiz[179].Text = "Motorboat - Belief neutral, outcome fatal";
-  Quiz[180].Text = "Motorboat - Belief fatal, outcome neutral";
-  Quiz[181].Text = "Motorboat - Belief fatal, outcome fatal";
-
-  Quiz[182].Text = "Asthma - Belief neutral, outcome neutral";
-  Quiz[183].Text = "Asthma - Belief neutral, outcome fatal";
-  Quiz[184].Text = "Asthma - Belief fatal, outcome neutral";
-  Quiz[185].Text = "Asthma - Belief fatal, outcome fatal";
-
-  Quiz[186].Text = "Vitamin - Belief neutral, outcome neutral";
-  Quiz[187].Text = "Vitamin - Belief neutral, outcome fatal";
-  Quiz[188].Text = "Vitamin - Belief fatal, outcome neutral";
-  Quiz[189].Text = "Vitamin - Belief fatal, outcome fatal";
-
-  Quiz[190].Text = "Sesame - Belief neutral, outcome neutral";
-  Quiz[191].Text = "Sesame - Belief neutral, outcome fatal";
-  Quiz[192].Text = "Sesame - Belief fatal, outcome neutral";
-  Quiz[193].Text = "Sesame - Belief fatal, outcome fatal";
-
-  Quiz[194].Text = "Bike - Belief neutral, outcome neutral";
-  Quiz[195].Text = "Bike - Belief neutral, outcome fatal";
-  Quiz[196].Text = "Bike - Belief fatal, outcome neutral";
-  Quiz[197].Text = "Bike - Belief fatal, outcome fatal";
-
-  Quiz[198].Text = "Belief neutral, outcome neutral";
-  Quiz[199].Text = "Belief neutral, outcome fatal";
-  Quiz[200].Text = "Belief fatal, outcome neutral";
-  Quiz[201].Text = "Belief fatal, outcome fatal";
-
+  Quiz[150].Text = "Do you have high self-esteem?";
+  Quiz[151].Text = "Talking to yourself - When hyperfocused";
+  Quiz[152].Text = "Walking on toes - For pleasure";
+  Quiz[153].Text = "Tapping fingers - When nervous";
+  Quiz[154].Text = "Biting lip, cheek or tongue - When anxious";
+  Quiz[155].Text = "Grinding teeth - When stressed";
+  Quiz[156].Text = "Watching a spinning, blinking or glittering object - For pleasure";
+  Quiz[157].Text = "Pacing - When thinking";
+  Quiz[158].Text = "Spinning an object - For pleasure";
+  Quiz[159].Text = "Twirling hair - For pleasure";
+  Quiz[160].Text = "Pulling hairs from head, face or body - When frustrated";
+  Quiz[161].Text = "Rubbing arms or thighs - When anxious";
+  Quiz[162].Text = "Rubbing hands together - When anticipating";
+  Quiz[163].Text = "Flapping hands - When excited";
+  Quiz[164].Text = "Sticking tounge out - When hyperfocused";
+  Quiz[165].Text = "Pressing eyes - When stressed";
+  Quiz[166].Text = "Clenching and unclenching fists - When angry";
+  Quiz[167].Text = "Rocking back-&-forth - For comfort";
+  Quiz[168].Text = "Jumping up and down - When happy";
+  Quiz[169].Text = "Biting yourself - When anxious";
+  Quiz[170].Text = "Banging head - When upset";
+  Quiz[171].Text = "Crossing arms - When in a closed state of mind";
+  Quiz[172].Text = "Pulling grass - Pretending to be uninterested";
 }
 
 /*##########################################################################
@@ -897,7 +855,7 @@ void TQuizH23::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 202; i++)
+    for (i = 0; i < 173; i++)
             DefineGlobalId(i, i);
 }
 

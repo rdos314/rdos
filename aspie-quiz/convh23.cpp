@@ -217,13 +217,13 @@ static void ProcessRow(char *str)
             default:
                 i = fieldno - 15;
 
-                if (i < 22)
+                if (i < 23)
                 {
                     val = atoi(valstr);
                     switch (val)
                     {
                         case 0:
-                            Row.Quiz[151+i] = 0;
+                            Row.Quiz[151+i] = 1;
                             break;
 
                         case 1:
@@ -232,13 +232,13 @@ static void ProcessRow(char *str)
 
                         case 2:
                         case 3:
-                            Row.Quiz[151+2] = 1;
+                            Row.Quiz[151+i] = 1;
                             break;
                     }
                 }
                 else
                 {
-                    i -= 22;
+                    i -= 23;
                     Row.Quiz[i] = atoi(valstr);
                 }
              
