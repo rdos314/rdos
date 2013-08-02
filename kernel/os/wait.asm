@@ -389,6 +389,8 @@ wait_no_timeout_start_leave:
     LeaveSection ds:[ebx].wh_section
 
 wait_no_timeout_do:
+    xor ax,ax
+    mov es,ax
     WaitForSignal
 ;
     EnterSection ds:[ebx].wh_section
@@ -540,6 +542,8 @@ wait_timeout_start_timer:
     LeaveSection ds:[ebx].wh_section
 
 wait_timeout_do:
+    xor ax,ax
+    mov es,ax
     WaitForSignal
 ;
     push bx

@@ -385,6 +385,43 @@ CreateRxRing   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ResetRxRing
+;
+;           DESCRIPTION:    Reset RX ring
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ResetRxRing    Proc near
+    push es
+    pushad
+;    
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov bx,ds:RxRingSel
+    mov es,bx
+    mov cx,RX_DESCR_COUNT
+    xor di,di
+
+rrLoop:
+    mov es:[di].rx_fl_size,1FF8h
+    mov es:[di].rx_flags,RX_OWN
+;
+    add di,16
+    sub cx,1
+    jnz rrLoop   
+;
+    sub di,16
+    or es:[di].rx_flags,RX_EOR
+;
+    popad
+    pop es
+    ret
+ResetRxRing   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CreateTxRing
 ;
 ;           DESCRIPTION:    Create TX ring
@@ -459,6 +496,45 @@ CreateTxRing   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ResetTxRing
+;
+;           DESCRIPTION:    Reset TX ring
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ResetTxRing    Proc near
+    push es
+    pushad
+;    
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov bx,ds:TxRingSel
+    mov es,bx
+    mov cx,TX_DESCR_COUNT
+    xor di,di
+
+rtLoop:
+    mov es:[di].tx_flags,TX_LS OR TX_FS
+;
+    add di,16
+    sub cx,1
+    jnz ctLoop   
+;
+    sub di,16
+    or es:[di].tx_flags,TX_EOR
+;
+    mov ds:TxCurrDescr,0
+    mov ds:TxLastDescr,di
+;
+    popad
+    pop es
+    ret
+ResetTxRing   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           WritePhy
 ;
 ;           DESCRIPTION:    Write to phy
@@ -516,6 +592,7 @@ InitHardware    Proc near
     mov dx,ds:IoBase
     add dx,REG_CR
     in al,dx
+    and al,NOT 0Ch
     or al,10h
     out dx,al
 ;
@@ -553,7 +630,7 @@ ihResetDone:
     mov dx,ds:IoBase
     add dx,REG_CCR
     in ax,dx
-    and ax,NOT 200h
+    and ax,NOT 260h
     or al,8
     out dx,ax 
 ;
@@ -647,6 +724,144 @@ ihDone:
     out dx,al    
     ret
 InitHardware    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ResetHardware
+;
+;       DESCRIPTION:    Reset hardware
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ResetHardware    Proc near
+    mov dx,ds:IoBase
+    add dx,REG_CR
+    in al,dx
+    and al,NOT 0Ch
+    or al,10h
+    out dx,al
+;
+    push cx
+    mov cx,10000
+
+rhResetWait:
+    in al,dx
+    test al,10h
+    jz rhResetDone
+;
+    pause
+    loop rhResetWait
+;
+    pop cx
+    stc
+    jmp rhDone
+
+rhResetDone:
+    pop cx
+;
+    mov dx,ds:IoBase
+    add dx,REG_9346CR
+    mov al,0C0h
+    out dx,al
+;
+    mov dx,ds:IoBase
+    add dx,REG_CCR
+    in ax,dx
+    and ax,NOT 260h
+    or al,8
+    out dx,ax 
+;
+    call ResetRxRing
+    mov dx,ds:IoBase
+    add dx,REG_RDSAR + 4
+    xor eax,eax
+    out dx,eax
+;
+    sub dx,4
+    mov eax,ds:RxRingPhys
+    out dx,eax
+;
+    call ResetTxRing    
+    mov dx,ds:IoBase
+    add dx,REG_TNPDS + 4
+    xor eax,eax
+    out dx,eax
+;
+    sub dx,4
+    mov eax,ds:TxRingPhys
+    out dx,eax
+;    
+    mov dx,ds:IoBase
+    add dx,REG_IMR
+    mov ax,IR_MASK
+    out dx,ax    
+;
+    mov dx,ds:IoBase
+    add dx,REG_RMS
+    mov ax,2000h
+    out dx,ax
+;
+    mov dx,ds:IoBase
+    add dx,REG_MTPS
+    mov al,3Bh
+    out dx,al           
+;
+    mov dx,ds:IoBase
+    add dx,REG_CONFIG3
+    in al,dx
+    or al,40h
+    out dx,al
+;    
+    mov dx,ds:IoBase
+    add dx,REG_9346CR
+    mov al,0
+    out dx,al
+;    
+    mov dx,ds:IoBase
+    add dx,REG_CR
+    in al,dx
+    or al,0Ch
+    out dx,al
+;    
+    mov dx,ds:IoBase
+    add dx,REG_TCR
+    in eax,dx
+    and ax,NOT 700h
+    or ax,400h
+    out dx,eax
+;
+    mov dx,ds:IoBase
+    add dx,REG_RCR
+    in eax,dx
+    or eax,10000h
+    and ax,1FFFh    
+    or ax,8000h
+    and ax,NOT 700h
+    or ax,400h
+    and al,0C0h
+    or al,0Ah
+    out dx,eax
+    clc
+
+rhDone:
+    mov ds:Isr,0
+;    
+    mov dl,4
+    mov ax,81E1h
+    call WritePhy
+;    
+    mov dx,ds:IoBase
+    add dx,REG_PHYAR
+    mov eax,80001240h
+    out dx,eax
+;
+    mov dx,ds:IoBase
+    add dx,REG_TPPoll
+    mov al,1
+    out dx,al    
+    ret
+ResetHardware    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -876,6 +1091,14 @@ preview_loop:
     add dx,REG_IMR
     mov ax,IR_MASK
     out dx,ax
+;
+    test ds:Isr,IR_FOVW
+    jz preview_failed
+;
+    int 3
+    call ResetHardware    
+
+preview_failed:
     stc
     jmp preview_done        
 
