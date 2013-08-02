@@ -374,7 +374,8 @@ crLoop:
     sub cx,1
     jnz crLoop   
 ;
-    sub di,16
+;    sub di,16
+    sub di,32
     or es:[di].rx_flags,RX_EOR
 ;
     popad
@@ -406,6 +407,8 @@ ResetRxRing    Proc near
 rrLoop:
     mov es:[di].rx_fl_size,1FF8h
     mov es:[di].rx_flags,RX_OWN
+    mov es:[di].rx_flags,RX_OWN
+    mov es:[di].rx_resv,0
 ;
     add di,16
     sub cx,1
@@ -519,7 +522,7 @@ rtLoop:
 ;
     add di,16
     sub cx,1
-    jnz ctLoop   
+    jnz rtLoop   
 ;
     sub di,16
     or es:[di].tx_flags,TX_EOR
@@ -1081,8 +1084,16 @@ preview_do:
     
 preview_loop:
     test es:[bx].rx_flags,RX_OWN
-    jz preview_found
+    jnz preview_next
 ;
+    mov ax,es:[bx].rx_fl_size
+    and ax,1FFFh    
+    jnz preview_found
+;
+    mov es:[bx].rx_fl_size,1FF8h
+    mov es:[bx].rx_flags,RX_OWN
+
+preview_next:
     add si,4
     add bx,16
     loop preview_loop
@@ -1092,7 +1103,7 @@ preview_loop:
     mov ax,IR_MASK
     out dx,ax
 ;
-    test ds:Isr,IR_FOVW
+    test ds:Isr,IR_FOVW OR IR_RDU
     jz preview_failed
 ;
     int 3
