@@ -407,7 +407,6 @@ ResetRxRing    Proc near
 rrLoop:
     mov es:[di].rx_fl_size,1FF8h
     mov es:[di].rx_flags,RX_OWN
-    mov es:[di].rx_flags,RX_OWN
     mov es:[di].rx_resv,0
 ;
     add di,16
