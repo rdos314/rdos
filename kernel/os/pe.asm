@@ -454,11 +454,16 @@ section_end:
 
 CreateSections  Proc near
     push es
+    push fs
     push eax
     push ecx
     push edx
     push esi
     push edi
+;    
+    GetThread
+    mov fs,ax
+    mov fs,fs:p_app_sel
 ;
     mov esi,OFFSET section_start
     mov eax,OFFSET section_end
@@ -527,6 +532,7 @@ CreateSections  Proc near
     pop edx
     pop ecx
     pop eax    
+    pop fs
     pop es    
     ret
 CreateSections     ENDP
@@ -3359,6 +3365,7 @@ load_pe Proc far
     call CreateImage
     call InsertApp
     call InitStack
+    call CreateSections
     call LoadImportedDlls
     pop ax
     call RunImage
@@ -3406,8 +3413,6 @@ load_pe_name_size:
     AllocateAppMem
     mov fs:app_cmd_line,edx
     mov fs:app_options,0
-;
-    call CreateSections
 ;
     push es
     push ecx
