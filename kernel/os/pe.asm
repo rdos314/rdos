@@ -2052,6 +2052,7 @@ import_by_ordinal:
     int 3
     mov ecx,[esi].exp_name_count
     mov edx,[esi].exp_ordinal_base
+
 import_by_ordinal_loop:
     cmp ax,[edx]
     je import_by_ordinal_found
@@ -2098,9 +2099,18 @@ import_by_name_next:
 import_by_name_ok:
     pop esi
     pop ebx
+;    
     sub edx,[esi].exp_name_va
+    sub edx,edi
+;
+    shr edx,1
+    add edx,[esi].exp_ordinal_va
+    add edx,edi
+    movzx edx,word ptr [edx]
+;
+    shl edx,2
     add edx,[esi].exp_entry_point_va
-    mov eax,[esi].exp_ordinal_va
+    add edx,edi
     mov eax,[edx]
     add eax,edi
 
