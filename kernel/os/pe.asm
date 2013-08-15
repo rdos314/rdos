@@ -3654,18 +3654,59 @@ start_thread    PROC far
     cmp ax,flat_code_sel
     jnz start_thread_done
 ;
+    push ds
     mov edx,[ebp].trap_eip
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
     mov ds,ds:app_mod_sel
     mov ax,ds:lib_debug_lib
     or ax,ax
-    jz start_thread_done
+    jz start_thread_notify
 ;
     call AllocateKernelEvent
     call CreateThreadEvent
     call SendEvent
+
+start_thread_notify:    
+    pop ds
+;    
+    mov bx,ds:app_handle
+    DerefModuleHandle
+    jc start_thread_done
+;    
+    mov ds,bx
+    EnterSection ds:mod_section
+    mov ax,ds:mod_list
+
+start_thread_dlls_loop:
+    or ax,ax
+    jz start_thread_dlls_ok
+;
+    mov es,ax
+    push ds
+    push es
+;    
+    mov ax,flat_sel
+    mov ds,ax
+;    
+    mov ebx,es:lib_header
+    mov eax,ds:[ebx].peh_entry_point
+    or eax,eax
+    jz start_thread_dlls_next
+;
+    add eax,ds:[ebx].peh_image_base
+    push eax
+    movzx eax,es:lib_init_param
+    movzx ebx,es:mod_handle
+    mov edx,2
+    CallPM32
+
+start_thread_dlls_next:
+    pop es
+    pop ds
+    mov ax,es:mod_next
+    jmp start_thread_dlls_loop
+
+start_thread_dlls_ok:
+    LeaveSection ds:mod_section
 
 start_thread_done:
     popad
@@ -5607,6 +5648,18 @@ init    PROC far
 ;
     mov edi,OFFSET close_app
     HookCloseApp
+;
+;    mov esi,OFFSET watcom_start_thread
+;    mov edi,OFFSET watcom_start_thread_name
+;    xor dx,dx
+;    mov ax,watcom_start_thread_nr
+;    RegisterUserGate32
+;
+;    mov esi,OFFSET watcom_end_thread
+;    mov edi,OFFSET watcom_end_thread_name
+;    xor dx,dx
+;    mov ax,watcom_end_thread_nr
+;    RegisterUserGate32
 ;
     mov esi,OFFSET notify_pe_exception
     mov edi,OFFSET notify_pe_exception_name
