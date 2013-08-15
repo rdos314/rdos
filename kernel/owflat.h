@@ -651,6 +651,12 @@
     CallGate_set_thread_tss  \
     parm [ebx] [edi];
 
+#pragma aux RdosWatcomStartThread = \
+    CallGate_watcom_start_thread;
+
+#pragma aux RdosWatcomEndThread = \
+    CallGate_watcom_end_thread;
+
 #pragma aux RdosRemoteDebug = \
     CallGate_remote_debug  \
     parm [edx];

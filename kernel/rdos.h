@@ -414,6 +414,9 @@ int RDOSAPI RdosGetThreadState(int ThreadNr, ThreadState *State);
 int RDOSAPI RdosSuspendThread(int Thread);
 int RDOSAPI RdosSuspendAndSignalThread(int Thread);
 
+void RDOSAPI RdosWatcomStartThread();
+void RDOSAPI RdosWatcomEndThread();
+
 #endif
 
 int RDOSAPI RdosGetImageHeader(int Adapter, int Entry, TRdosObjectHeader *Header);

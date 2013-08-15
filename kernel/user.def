@@ -660,4 +660,7 @@ create_alpha_bitmap_nr          = 524
 
 create_long_thread_nr			= 525
 
+watcom_start_thread_nr          = 526
+watcom_end_thread_nr            = 527
+
 usergate_entries			    = 540

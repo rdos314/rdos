@@ -1231,6 +1231,14 @@ GetSelectorInfo     MACRO
 	UserGate get_selector_info_nr
 						ENDM
 
+WatcomStartThread     MACRO
+	UserGate watcom_start_thread_nr
+						ENDM
+
+WatcomEndThread     MACRO
+	UserGate watcom_end_thread_nr
+						ENDM
+
 ;;;;;;;;;;; TIME & DATE ;;;;;;;;;;;;;
 
 ; IN  BX			Thread handle
