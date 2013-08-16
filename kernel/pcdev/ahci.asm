@@ -1635,18 +1635,29 @@ AddPrdEntry     Proc near
     push eax
     push edx
     push esi
+    push ebp
 ;
     mov edx,esi
     and dx,0F000h        
     push ebx
     GetPageEntry
+    mov ebp,ebx
     pop ebx
 ;    
+    or ebp,ebp
+    jz aprdDo
+;
+    test gs:hba_cap,HBA_CAP_S64A
+    jnz aprdDo
+;
+    int 3    
+
+aprdDo:
     and ax,0F000h
     and esi,0FFFh
     add esi,eax
     mov ds:[bx].ape_base,esi
-    mov ds:[bx+4].ape_base,0
+    mov ds:[bx+4].ape_base,ebp
     mov ds:[bx].ape_handle,edi
 ;
     mov eax,ecx
@@ -1655,6 +1666,7 @@ AddPrdEntry     Proc near
     mov ds:[bx].ape_byte_count,eax
     add bx,10h
 ;
+    pop ebp
     pop esi
     pop edx
     pop eax        
@@ -1894,6 +1906,7 @@ GetDriveParams  Proc near
     jc gdpDone
 ;    
     or gs:ap_flags,PORT_FLAG_ATA
+;
     mov ax,es:[esi+166]
     test ax,4000h
     jz gdp24
