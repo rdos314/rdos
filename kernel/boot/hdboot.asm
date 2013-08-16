@@ -1417,26 +1417,48 @@ ClearScreen Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GateA20 Proc near
+    xor cx,cx
+
 wait_gate1:
+    sub cx,1
+    jz gate_done
+;    
     in al,64h
     and al,2
     jnz wait_gate1
+;    
     mov al,0D1h
     out 64h,al
+;    
+    xor cx,cx
+
 wait_gate2:
+    sub cx,1
+    jz gate_done
+;    
     in al,64h
     and al,2
     jnz wait_gate2
+;    
     mov al,0DFh
     out 60h,al
+;    
+    xor cx,cx
+
 wait_gate3:
+    sub cx,1
+    jz gate_done
+;    
     in al,64h
     and al,2
     jnz wait_gate3
+    
     xor cx,cx
 gate_wait:
     inc ax
     loop gate_wait
+
+gate_done:
     ret
 GateA20 Endp
 
@@ -1811,7 +1833,7 @@ LoadStart:
 stop:
     jmp stop
 
-pad db 329 DUP(0)
+pad db 308 DUP(0)
 
 _TEXT   ends    
 
