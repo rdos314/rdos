@@ -5136,11 +5136,17 @@ init_disc       Proc far
     ClearSignal
     GetThread
     mov ds:disc_start_thread,ax
-;
+
     sub ds:disc_handlers,1
     jz init_disc_do
-;
+
+init_disc_retry:
+    mov ax,ds:disc_handlers
+    or ax,ax
+    jz init_disc_do
+;    
     WaitForSignal
+    jmp init_disc_retry
     
 init_disc_do:        
     call run_disc_assign
