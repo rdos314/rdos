@@ -41,6 +41,8 @@ MAX_NAME_SIZE       = 16
 ATA_DMA_READ            = 25h
 ATA_DMA_WRITE           = 35h
 ATA_PIO_IDENTIFY        = 0ECh
+ATA_FPDMA_READ          = 60h
+ATA_FPDMA_WRITE         = 61h
 
 FIS_TYPE_HTD            = 27h
 FIS_TYPE_DTH            = 34h
@@ -270,6 +272,9 @@ ap_sectors_per_unit DW ?
 ap_units            DW ?
 ap_disc_sel         DW ?
 ap_disc_nr          DB ?
+
+ap_cap              DD ?
+ap_sata_cap         DW ?
 
 ahci_port_struc     ENDS
 
@@ -857,7 +862,7 @@ apPhysLoop:
     mov es:[di],bx
     pop bx
     pop cx
-;
+;    
     mov ds:ap_linear,edx
     mov ds:ap_physical,eax
     mov ds:ap_pages,cx    
@@ -869,6 +874,9 @@ apPhysLoop:
     mov ds:ap_errors,0
     mov ds:ap_restart_count,0
     InitSpinlock ds:ap_spinlock
+;
+    mov eax,fs:hba_cap
+    mov ds:ap_cap,eax
 ;
     pop ax
     mov ds:ap_hba_sel,ax
@@ -1603,7 +1611,7 @@ SetupAta    Proc near
     mov ds:[bx].fhtd_port_flags,80h
     mov ds:[bx].fhtd_command,al
     mov dword ptr ds:[bx].fhtd_lbal,edx
-    xor dl,dl
+    mov dl,40h
     xchg dl,ds:[bx].fhtd_device
     movzx edx,dl
     mov dword ptr ds:[bx].fhtd_lbah,edx
@@ -1613,6 +1621,41 @@ SetupAta    Proc near
     pop edx    
     ret
 SetupAta    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupCnq
+;
+;       DESCRIPTION:    Setup CNQ
+;
+;       PARAMETERS:     GS      Port sel
+;                       DS:BX   PRDT entry 
+;                       AL      Command code
+;                       EDX     Sector #
+;                       CX      Sectors
+;
+;       RETURNS:        DS:BX   First PRD entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupCnq    Proc near
+    push edx
+;
+    mov ds:[bx].fhtd_type,FIS_TYPE_HTD
+    mov ds:[bx].fhtd_port_flags,80h
+    mov ds:[bx].fhtd_command,al
+    mov dword ptr ds:[bx].fhtd_lbal,edx
+    mov dl,40h
+    xchg dl,ds:[bx].fhtd_device
+    movzx edx,dl
+    mov dword ptr ds:[bx].fhtd_lbah,edx
+    mov ds:[bx].fhtd_count,cx
+    add bx,act_prd
+;
+    pop edx    
+    ret
+SetupCnq    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1647,7 +1690,7 @@ AddPrdEntry     Proc near
     or ebp,ebp
     jz aprdDo
 ;
-    test gs:hba_cap,HBA_CAP_S64A
+    test gs:ap_cap,HBA_CAP_S64A
     jnz aprdDo
 ;
     int 3    
@@ -1905,6 +1948,14 @@ GetDriveParams  Proc near
     call WaitForCompletion
     jc gdpDone
 ;    
+    mov ax,es:[esi+152]
+    test gs:ap_cap,HBA_CAP_SNCQ
+    jnz gdpSataCapOk
+;
+    and ax,0FFh    
+
+gdpSataCapOk:    
+    mov gs:ap_sata_cap,ax
     or gs:ap_flags,PORT_FLAG_ATA
 ;
     mov ax,es:[esi+166]
@@ -2030,15 +2081,32 @@ ReadSector  Proc near
     call AllocateSlot
 ;
     push ax
-    mov al,25h
-    test gs:ap_flags,PORT_FLAG_48_BIT
-    jnz rsOpOk
 ;    
+    test gs:ap_flags,PORT_FLAG_48_BIT
+    jz rsOpOld
+;
+    test gs:ap_sata_cap,100h
+;    jz rsOpDma
+    jmp rsOpDma
+
+rsOpCnq:
+    mov al,ATA_FPDMA_READ    
+    mov cx,1
+    call SetupCnq
+    jmp rsSetupOk
+
+rsOpOld:    
     mov al,0C8h
+    jmp rsOpOk
+
+rsOpDma:    
+    mov al,ATA_DMA_READ
 
 rsOpOk:
     mov cx,1
     call SetupAta
+
+rsSetupOk:    
     pop ax
 ;    
     xor edi,edi
@@ -2397,7 +2465,7 @@ perform_one_write:
 
 perform_write_has_slot:
     push ax
-    mov al,35h
+    mov al,ATA_DMA_WRITE
     test gs:ap_flags,PORT_FLAG_48_BIT
     jnz perform_write_op_ok
 ;    
@@ -2459,7 +2527,7 @@ perform_one_read:
 
 perform_read_has_slot:
     push ax
-    mov al,25h
+    mov al,ATA_DMA_READ
     test gs:ap_flags,PORT_FLAG_48_BIT
     jnz perform_read_op_ok
 ;    
@@ -2634,6 +2702,9 @@ notify_discbuf_retry:
     jb notify_do_reset
 ;
     int 3
+    push ds
+    mov ds,gs:ap_fis_sel
+    pop ds
 
 notify_do_reset:
     inc gs:ap_restart_count            
@@ -2861,7 +2932,6 @@ disc_assign Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 drive_assign1   Proc far
-    retf32
     mov gs,bx
 ;    
     mov ax,flat_sel
@@ -3006,7 +3076,6 @@ InstallExtended Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 drive_assign2   Proc far
-    retf32
     mov gs,bx
 ;    
     mov ax,flat_sel
