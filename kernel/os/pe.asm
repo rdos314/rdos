@@ -3692,6 +3692,7 @@ start_thread_dlls_loop:
     or eax,eax
     jz start_thread_dlls_next
 ;
+    int 3
     add eax,ds:[ebx].peh_image_base
     push eax
     movzx eax,es:lib_init_param

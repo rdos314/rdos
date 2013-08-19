@@ -254,6 +254,7 @@ get_tics3       ENDP
 timer_name      DB 'Timer Emulator',0
 
 timer_pr:
+    int 3
     mov ax,stack0_size
     mov sp,ax
 ;    

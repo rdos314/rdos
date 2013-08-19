@@ -3123,6 +3123,11 @@ drive_assign_next_part2:
     mov edx,edi
     FreeLinear
 ;    
+    push ax
+    mov ax,100
+    WaitMilliSec
+    pop ax
+    
     mov bx,gs:ap_disc_sel
     StartDisc
     retf32

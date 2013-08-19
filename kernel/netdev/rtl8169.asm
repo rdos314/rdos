@@ -1656,7 +1656,7 @@ init_pci1_found:
     call SetupInts
     call InitHardware
 ;
-    mov ax,1
+    mov ax,25
     WaitMilliSec
 ;    
     mov dx,ds:IoBase
