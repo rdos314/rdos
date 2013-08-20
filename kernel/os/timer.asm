@@ -254,9 +254,8 @@ get_tics3       ENDP
 timer_name      DB 'Timer Emulator',0
 
 timer_pr:
-    int 3
-    mov ax,stack0_size
-    mov sp,ax
+    mov eax,stack0_size
+    mov esp,eax
 ;    
     mov ax,pcbios_proc_sel
     mov ds,ax
@@ -296,14 +295,14 @@ timer_pr:
     push 0
     push 0
 ;
-    sub sp,4
+    sub esp,4
     push ebp
     mov ebp,esp
     push eax
     push ebx
     push word ptr 0
     push ds
-    sub sp,10
+    sub esp,10
     
 timer_tics_entry:
     SimSti
@@ -374,13 +373,13 @@ timer_tics:
     mov word ptr [edx+0FCh],0E000h
     mov word ptr [edx+0FEh],200h
     mov word ptr [ebp].trap_esp,0FAh
-    add sp,10
+    add esp,10
     pop ds
     pop ax
     pop ebx
     pop eax
     pop ebp
-    add sp,4
+    add esp,4
     iretd
 ;
     jmp timer_tics_entry

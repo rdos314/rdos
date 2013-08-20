@@ -1152,12 +1152,13 @@ GetMne  PROC near
 ;
     xor dl,dl
     xor dh,dh
-    mov bx,gs:p_cs
-    IsLongCodeSelector
-    jnc get_cs64
 ;    
     test byte ptr gs:p_rflags+2,2
     jnz get_cs_bitness_done
+;    
+    mov bx,gs:p_cs
+    IsLongCodeSelector
+    jnc get_cs64
 
 get_cs_bitness_pm:
     test bx,4

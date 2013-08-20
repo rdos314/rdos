@@ -2105,9 +2105,9 @@ translate_vm_reflect:
     movzx ebx,word ptr [ebp].trap_ss
     shl ebx,4
     movzx eax,word ptr [ebp].trap_esp
-    mov ax,[eax+ebx+4]
-    SetFlags
-    mov [ebp].trap_eflags,ax
+;    mov ax,[eax+ebx+4]
+;    SetFlags
+;    mov [ebp].trap_eflags,ax
     pop ax
     jmp reflect_to_pm
 

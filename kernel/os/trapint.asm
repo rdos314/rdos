@@ -547,7 +547,7 @@ trap_1:
     jmp t1_ret
 
 t1_vm:
-    call virt_exception
+    DebugException
     
 t1_ret:
     pop eax
@@ -626,8 +626,10 @@ trap_3:
 ;
     call prot_exception
     jmp t3_ret
+
 t3_vm:
-    call virt_exception
+    DebugException
+    
 t3_ret:
     pop eax
     mov ds,ax
