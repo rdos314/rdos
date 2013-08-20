@@ -580,6 +580,47 @@ WritePhy    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ReadPhy
+;
+;           DESCRIPTION:    Read from phy
+;
+;           PARAMETERS:     DL      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadPhy    Proc near
+    push cx
+    push dx
+;    
+    xor eax,eax
+    mov ah,dl
+    rol eax,8
+;    
+    mov dx,ds:IoBase
+    add dx,REG_PHYAR
+;
+    out dx,eax
+    xor cx,cx
+
+rpWait:    
+    pause
+    in eax,dx
+    test eax,80000000h
+    jnz rpDone
+;
+    loop rpWait
+
+rpDone:
+    pop dx
+    pop cx
+    ret
+ReadPhy    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           InitHardware
 ;
 ;       DESCRIPTION:    Initialize hardware
@@ -711,13 +752,9 @@ ihResetDone:
 ihDone:
     mov ds:Isr,0
 ;    
-    mov dl,4
-    mov ax,81E1h
-    call WritePhy
-;    
     mov dx,ds:IoBase
     add dx,REG_PHYAR
-    mov eax,80001240h
+    mov eax,80008000h
     out dx,eax
 ;
     mov dx,ds:IoBase
@@ -849,15 +886,11 @@ rhResetDone:
 rhDone:
     mov ds:Isr,0
 ;    
-    mov dl,4
-    mov ax,81E1h
-    call WritePhy
-;    
     mov dx,ds:IoBase
     add dx,REG_PHYAR
-    mov eax,80001240h
+    mov eax,80008000h
     out dx,eax
-;
+;    
     mov dx,ds:IoBase
     add dx,REG_TPPoll
     mov al,1
@@ -1606,6 +1639,60 @@ SetupInts    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           PhyTimeout
+;
+;           DESCRIPTION:    PHY timer
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PhyTimeout  Proc far
+    push edi
+;    
+    push eax
+    push cx
+    push edx
+;    
+    mov ds,cx
+    mov edi,1193 * 250
+;
+    mov dx,ds:IoBase
+    add dx,REG_PHYStatus
+    in al,dx
+    test al,2
+    jnz phy_timeout_next
+;
+    mov dx,ds:IoBase
+    add dx,REG_PHYAR
+    mov eax,80000200h
+    mov eax,80001240h
+    out dx,eax
+;
+    mov edi,1193 * 5000
+
+phy_timeout_next:
+    pop edx
+    pop cx
+    pop eax
+;    
+    add eax,edi
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET PhyTimeout
+    mov bx,cx
+    StartTimer
+;
+    pop edi
+    retf32
+PhyTimeout  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitPciAdapter
 ;
 ;           DESCRIPTION:    Init PCI adapter if found
@@ -1677,7 +1764,17 @@ init_pci1_found:
     mov cx,bx
     StartTimer
 
-init_pci1_int_ok:    
+init_pci1_int_ok:        
+    GetSystemTime    
+    add eax,119300
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET PhyTimeout
+    mov bx,ds
+    mov cx,bx
+    StartTimer
+;
     push ds
     mov ax,cs
     mov ds,ax
@@ -1747,6 +1844,16 @@ init_pci2_found:
     StartTimer
 
 init_pci2_int_ok:        
+    GetSystemTime    
+    add eax,119300
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET PhyTimeout
+    mov bx,ds
+    mov cx,bx
+    StartTimer
+;
     push ds
     mov ax,cs
     mov ds,ax
