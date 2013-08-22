@@ -2085,12 +2085,6 @@ nmi_int:
     push fs
 ;
     cli
-    mov ax,738h
-    call ShowHere
-
-stopn:
-    jmp stopn
-    
     GetCore
     test fs:ps_flags,PS_FLAG_NMI
     jnz nmi_ret
