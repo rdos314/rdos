@@ -2992,6 +2992,7 @@ CreateImage     Proc near
     jnc create_image_alloced
 ;
     AllocateLocalLinear
+    mov es:lib_base,edx
 
 create_image_alloced:
     sub edx,ebp
@@ -3692,8 +3693,7 @@ start_thread_dlls_loop:
     or eax,eax
     jz start_thread_dlls_next
 ;
-    int 3
-    add eax,ds:[ebx].peh_image_base
+    add eax,es:lib_base
     push eax
     movzx eax,es:lib_init_param
     movzx ebx,es:mod_handle
@@ -3768,7 +3768,7 @@ free_thread_dlls_loop:
     jz free_thread_dlls_next
 ;
     push ebp
-    add eax,ds:[ebx].peh_image_base
+    add eax,es:lib_base
     push eax
     movzx eax,es:lib_init_param
     movzx ebx,es:mod_handle

@@ -3124,7 +3124,7 @@ drive_assign_next_part2:
     FreeLinear
 ;    
     push ax
-    mov ax,100
+    mov ax,200
     WaitMilliSec
     pop ax
     
