@@ -1660,6 +1660,8 @@ SaveCore Endp
 crash_nmi_name  DB 'Crash NMI', 0
 
 crash_nmi:
+    mov ax,739h
+    call ShowHere
     jmp crash_nmi
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1859,24 +1861,37 @@ right_arrow:
 ;
 ;           DESCRIPTION:    Show here
 ;
+;           PARAMETERS:     AX      Atrib + char
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ShowHere    Proc near
+    push eax
+    push ebx
+    push edx
+    mov edx,0B8000h
+    xor ebx,ebx
+    mov eax,0B8007h
+    SetPageEntry
+	pop edx
+	pop ebx
+	pop eax
+;	
     push es
-    push ax
+    push fs
     push di
 ;    
     mov di,__B800
     mov es,di
 ;
-    mov di,2 * 80 * 23    
-    mov ax,0731h
-    stosw
-    mov ax,0F32h
+    GetCore
+    mov di,fs:ps_id
+    add di,80 * 23    
+    add di,di
     stosw
 ;    
     pop di
-    pop ax
+    pop fs
     pop es
     ret
 ShowHere    Endp
@@ -1918,6 +1933,21 @@ enter_do:
     GetCore
     or fs:ps_flags,PS_FLAG_NMI
     stc
+
+    mov ax,730h
+    call ShowHere
+
+stopl:
+    jmp stopl
+
+
+
+
+
+
+
+
+
     jmp enter_done
 
 enter_fault_do:
@@ -2054,6 +2084,13 @@ nmi_int:
     push ebp
     push fs
 ;
+    cli
+    mov ax,738h
+    call ShowHere
+
+stopn:
+    jmp stopn
+    
     GetCore
     test fs:ps_flags,PS_FLAG_NMI
     jnz nmi_ret
