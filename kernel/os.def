@@ -620,4 +620,6 @@ send_driver_udp_nr          = 514
 
 create_long_thread_info_nr  = 515
 
+has_long_mode_nr            = 516
+
 osgate_entries				= 520

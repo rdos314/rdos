@@ -169,6 +169,22 @@ long_idt_base   DD long_idt_linear
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           HasLongMode
+;
+;   DESCRIPTION:    Check for long-mode support
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_long_mode_name   DB 'Has Long Mode', 0
+    
+has_long_mode  proc far
+    clc
+    ret
+has_long_mode Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           SetupLongTrapGate
 ;
 ;   DESCRIPTION:    Setup long-mode trap gate
@@ -1525,6 +1541,12 @@ init    proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET has_long_mode
+    mov edi,OFFSET has_long_mode_name
+    xor cl,cl
+    mov ax,has_long_mode_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET create_long_irq
     mov edi,OFFSET create_long_irq_name

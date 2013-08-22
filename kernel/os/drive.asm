@@ -4699,8 +4699,8 @@ format_find_drive_below:
     jmp format_find_drive_next
 
 format_find_drive_above:
-    sub ebx,fs:drive_sectors
-    jc format_fail
+;    sub ebx,fs:drive_sectors
+;    jc format_fail
 
 format_find_drive_next:
     add si,2

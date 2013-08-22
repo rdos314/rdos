@@ -1933,21 +1933,11 @@ enter_do:
     GetCore
     or fs:ps_flags,PS_FLAG_NMI
     stc
-
     mov ax,730h
-    call ShowHere
 
 stopl:
     jmp stopl
-
-
-
-
-
-
-
-
-
+    
     jmp enter_done
 
 enter_fault_do:

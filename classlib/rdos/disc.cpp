@@ -206,7 +206,7 @@ int TDisc::GetDrive(long Start, long Size)
     for (DriveNr = 0; DriveNr < 25; DriveNr++)
 	    if (RdosGetDriveDiscParam(DriveNr, &DiscNr, &StartSector, &DriveSize))
 	        if (DiscNr == FDisc)
-			    if (Start <= StartSector && Start + Size >= StartSector + DriveSize)
+			    if (Start == StartSector)
 					return DriveNr;
 
     return 0;
