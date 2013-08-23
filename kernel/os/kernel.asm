@@ -693,6 +693,16 @@ init_cpu_done:
     mov ax,gdt_sel
     mov es,ax
 ;
+    mov cx,1000h - 40h
+    mov di,40h
+    xor al,al
+    rep stosb
+;    
+    mov edx,0B8000h
+    mov bx,dosb800
+    mov ecx,1000h
+    call local_create_data_sel16
+;
     call AllocateRam
     mov bx,idt_sel
     mov word ptr es:[bx],7FFh
