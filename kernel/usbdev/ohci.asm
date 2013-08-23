@@ -522,6 +522,12 @@ AllocateEd      PROC near
 ;
     push ebx
     GetPageEntry
+    or ebx,ebx
+    jz ae32
+;
+    int 3
+
+ae32:    
     pop ebx
 ;    
     and ax,0F000h
@@ -555,6 +561,12 @@ AllocateTd      PROC near
 ;
     push ebx
     GetPageEntry
+    or ebx,ebx
+    jz at32
+;
+    int 3
+
+at32:    
     pop ebx
 ;    
     and ax,0F000h
@@ -1035,6 +1047,12 @@ add_pipe_has_buffer:
 ;
     push ebx
     GetPageEntry
+    or ebx,ebx
+    jz apt32
+;
+    int 3
+
+apt32:
     pop ebx
 ;    
     and ax,0F000h
@@ -2849,6 +2867,12 @@ AddFunction  Proc near
 ;
     push ebx
     GetPageEntry
+    or ebx,ebx
+    jz af32
+;
+    int 3    
+
+af32:    
     pop ebx
     and ax,0F000h
     mov ds:ohc_phys,eax

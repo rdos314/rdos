@@ -302,7 +302,7 @@ AllocateBlock32 PROC near
 ;    
     push ebx
     AllocatePhysical32
-    or al,7
+    or al,67h
     SetPageEntry
     pop ebx
 ;    
@@ -479,8 +479,15 @@ InitQh  PROC near
     mov es:[edx].uqh_va_link,0
     mov es:[edx].uqh_elem,1
     mov es:[edx].uqh_va_elem,0
+;    
     push ebx
     GetPageEntry
+    or ebx,ebx
+    jz iq32
+;
+    int 3
+   
+iq32:        
     pop ebx
 ;    
     and ax,0F000h
@@ -517,9 +524,17 @@ AllocateQh      PROC near
     mov es:[edx].uqh_va_link,0
     mov es:[edx].uqh_elem,1
     mov es:[edx].uqh_va_elem,0
+;
     push ebx
     GetPageEntry
+    or ebx,ebx
+    jz aq32
+;
+    int 3
+
+aq32:
     pop ebx
+;
     and ax,0F000h
     mov cx,dx
     and cx,0FFFh
@@ -589,7 +604,14 @@ atSaveSeq:
 ;    
     push ebx
     GetPageEntry
+    or ebx,ebx
+    jz at32
+;
+    int 3    
+
+at32:    
     pop ebx
+;
     and ax,0F000h
     mov cx,dx
     and cx,0FFFh
@@ -602,9 +624,17 @@ atSaveSeq:
 ;    
     push edx
     mov edx,edi
+;    
     push ebx
     GetPageEntry
+    or ebx,ebx
+    jz atd32
+;
+    int 3    
+
+atd32:    
     pop ebx
+;    
     and ax,0F000h
     mov cx,dx
     and cx,0FFFh
@@ -1063,7 +1093,7 @@ CreateIntrQueue PROC near
     mov eax,1000h
     AllocateBigLinear
     AllocatePhysical32
-    or al,7
+    or al,67h
     SetPageEntry
     mov ds:uhc_int_linear,edx
     mov ecx,eax

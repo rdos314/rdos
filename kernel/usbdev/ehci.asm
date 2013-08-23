@@ -115,22 +115,28 @@ esp_flags       DB ?
 
 ehci_pipe   ENDS
 
-; this structure should be kept less than 64 bytes long!
+; this structure should be kept less than 128 bytes long!
 
 qtd_struc       STRUC
 
 ; HC part
 
-qtd_next    DD ?
-qtd_alt     DD ?
+qtd_next        DD ?
+qtd_alt         DD ?
 qtd_status      DB ?
 qtd_flags       DB ?
-qtd_size    DW ?
-qtd_page0       DD ?
-qtd_page1       DD ?
-qtd_page2       DD ?
-qtd_page3       DD ?
-qtd_page4       DD ?
+qtd_size        DW ?
+qtdl_page0      DD ?
+qtdl_page1      DD ?
+qtdl_page2      DD ?
+qtdl_page3      DD ?
+qtdl_page4      DD ?
+
+qtdu_page0      DD ?
+qtdu_page1      DD ?
+qtdu_page2      DD ?
+qtdu_page3      DD ?
+qtdu_page4      DD ?
 
 ; driver part
 
@@ -143,13 +149,13 @@ qtd_buffer_size DW ?
 
 qtd_struc       ENDS
 
-; this structure should be kept less than 64 bytes long!
+; this structure should be kept less than 128 bytes long!
 
 qh_struc       STRUC
 
 ; HC part
 
-qh_link     DD ?
+qh_link         DD ?
 qh_adress       DB ?
 qh_endpoint     DB ?
 qh_max_packet   DW ?
@@ -160,13 +166,19 @@ qh_current_qtd  DD ?
 qh_next_qtd     DD ?
 qh_alt_qtd      DD ?
 qh_status       DB ?
-qh_flags    DB ?
-qh_size     DW ?
-qh_page0    DD ?
-qh_page1    DD ?
-qh_page2    DD ?
-qh_page3    DD ?
-qh_page4    DD ?
+qh_flags        DB ?
+qh_size         DW ?
+qhl_page0       DD ?
+qhl_page1       DD ?
+qhl_page2       DD ?
+qhl_page3       DD ?
+qhl_page4       DD ?
+
+qhu_page0       DD ?
+qhu_page1       DD ?
+qhu_page2       DD ?
+qhu_page3       DD ?
+qhu_page4       DD ?
 
 ; driver part
 
@@ -179,7 +191,7 @@ qh_struc    ENDS
 
 data    SEGMENT byte public 'DATA'
 
-EhciList64      DD ?
+EhciList128     DD ?
 EhciSection     section_typ <>
 EhciThread      DW ?
 EhciFuncCount   DW ?
@@ -203,26 +215,26 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AllocateBlock64
+;       NAME:           AllocateBlock128
 ;
-;           DESCRIPTION:    Allocate 64-byte block with page-alignment
+;       DESCRIPTION:    Allocate 128-byte block with page-alignment
 ;
 ;       PARAMETERS:     ES      Flat sel
 ;
-;           RETURNS:        EDX         Data address
+;       RETURNS:        EDX         Data address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateBlock64 PROC near
+AllocateBlock128 PROC near
     push ds
     push eax
 ;    
     mov ax,SEG data
     mov ds,ax
     EnterSection ds:EhciSection
-    mov edx,ds:EhciList64
+    mov edx,ds:EhciList128
     or edx,edx
-    jnz allocate_block64_done
+    jnz allocate_block128_done
 ;
     push ecx    
     mov eax,1000h
@@ -234,47 +246,47 @@ AllocateBlock64 PROC near
     SetPageEntry
     pop ebx
 ;    
-    mov ecx,64
-    mov ds:EhciList64,edx
+    mov ecx,128
+    mov ds:EhciList128,edx
     
-allocate_block64_loop:
+allocate_block128_loop:
     mov eax,edx
     add eax,ecx
     mov es:[edx],eax
     mov edx,eax
     test dx,0FFFh
-    jnz allocate_block64_loop
+    jnz allocate_block128_loop
 ;
     sub edx,ecx
     mov dword ptr es:[edx],0
-    mov edx,ds:EhciList64
+    mov edx,ds:EhciList128
     pop ecx
 
-allocate_block64_done:
+allocate_block128_done:
     mov eax,es:[edx]
-    mov ds:EhciList64,eax
+    mov ds:EhciList128,eax
     LeaveSection ds:EhciSection
 ;
     pop eax
     pop ds
     ret
-AllocateBlock64 ENDP
+AllocateBlock128 ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FreeBlock64
+;       NAME:           FreeBlock128
 ;
-;           DESCRIPTION:    Free 64-byte block
+;       DESCRIPTION:    Free 128-byte block
 ;
 ;       PARAMETERS:     ES      Flat sel
 ;
-;           PARAMETERS:         EDX         Data address
+;       PARAMETERS:         EDX         Data address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FreeBlock64     PROC near
+FreeBlock128     PROC near
     push ds
     push eax
 ;
@@ -282,26 +294,26 @@ FreeBlock64     PROC near
     mov ds,ax
 ;    
     EnterSection ds:EhciSection
-    mov eax,ds:EhciList64
+    mov eax,ds:EhciList128
     mov es:[edx],eax
-    mov ds:EhciList64,edx
+    mov ds:EhciList128,edx
     LeaveSection ds:EhciSection
 ;       
     pop eax
     pop ds
     ret
-FreeBlock64     ENDP
+FreeBlock128     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           InsertPipe
+;       NAME:           InsertPipe
 ;
-;           DESCRIPTION:    Insert pipe into function pipe-list
+;       DESCRIPTION:    Insert pipe into function pipe-list
 ;
 ;       PARAMETERS:     DS      Function
-;               FS      Pipe
+;                       FS      Pipe
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -341,12 +353,12 @@ InsertPipe  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           RemovePipe
+;       NAME:           RemovePipe
 ;
-;           DESCRIPTION:    Remove pipe from function pipe-list
+;       DESCRIPTION:    Remove pipe from function pipe-list
 ;
 ;       PARAMETERS:     DS      Function
-;               FS      Pipe
+;                       FS      Pipe
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -388,13 +400,13 @@ RemovePipe  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           InitQh
+;       NAME:           InitQh
 ;
-;           DESCRIPTION:    Initialize an already allocated qh
+;       DESCRIPTION:    Initialize an already allocated qh
 ;
 ;       PARAMETERS:     DS      Function sel
-;               ES      Flat sel
-;               EDX     QH
+;                       ES      Flat sel
+;                       EDX     QH
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -412,11 +424,16 @@ InitQh  PROC near
     mov es:[edx].qh_status,0
     mov es:[edx].qh_flags,0
     mov es:[edx].qh_size,0
-    mov es:[edx].qh_page0,0    
-    mov es:[edx].qh_page1,0    
-    mov es:[edx].qh_page2,0    
-    mov es:[edx].qh_page3,0    
-    mov es:[edx].qh_page4,0
+    mov es:[edx].qhl_page0,0    
+    mov es:[edx].qhl_page1,0    
+    mov es:[edx].qhl_page2,0    
+    mov es:[edx].qhl_page3,0    
+    mov es:[edx].qhl_page4,0
+    mov es:[edx].qhu_page0,0    
+    mov es:[edx].qhu_page1,0    
+    mov es:[edx].qhu_page2,0    
+    mov es:[edx].qhu_page3,0    
+    mov es:[edx].qhu_page4,0
     mov es:[edx].qh_my_va,edx
     mov es:[edx].qh_link_va,0
     mov es:[edx].qh_next_va,0
@@ -428,14 +445,14 @@ InitQh  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           InitQtd
+;       NAME:           InitQtd
 ;
-;           DESCRIPTION:    Initialize an already allocated qTD
+;       DESCRIPTION:    Initialize an already allocated qTD
 ;
 ;       PARAMETERS:     ES      Flat sel
-;               FS      Pipe sel
-;               EAX     qTD physical
-;               EDX     qTD linear
+;                       FS      Pipe sel
+;                       EAX     qTD physical
+;                       EDX     qTD linear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -445,11 +462,16 @@ InitQtd PROC near
     mov es:[edx].qtd_status,80h
     mov es:[edx].qtd_flags,0Fh
     mov es:[edx].qtd_size,0
-    mov es:[edx].qtd_page0,0
-    mov es:[edx].qtd_page1,0
-    mov es:[edx].qtd_page2,0
-    mov es:[edx].qtd_page3,0
-    mov es:[edx].qtd_page4,0
+    mov es:[edx].qtdl_page0,0
+    mov es:[edx].qtdl_page1,0
+    mov es:[edx].qtdl_page2,0
+    mov es:[edx].qtdl_page3,0
+    mov es:[edx].qtdl_page4,0
+    mov es:[edx].qtdu_page0,0
+    mov es:[edx].qtdu_page1,0
+    mov es:[edx].qtdu_page2,0
+    mov es:[edx].qtdu_page3,0
+    mov es:[edx].qtdu_page4,0
     mov es:[edx].qtd_my_va,edx
     mov es:[edx].qtd_my_phys,eax
     mov es:[edx].qtd_next_va,0
@@ -463,21 +485,21 @@ InitQtd  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AllocateQh
+;       NAME:           AllocateQh
 ;
-;           DESCRIPTION:    Allocate & initialize an qh descriptor
+;       DESCRIPTION:    Allocate & initialize an qh descriptor
 ;
 ;       PARAMETERS:     DS      Function selector
-;               ES      Flat sel
+;                       ES      Flat sel
 ;
-;           RETURNS:        EDX         Linear address of qh
-;               EAX     Physical address of qh
+;       RETURNS:        EDX     Linear address of qh
+;                       EAX     Physical address of qh
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateQh      PROC near
     push cx
-    call AllocateBlock64
+    call AllocateBlock128
     call InitQh
 ;
     push ebx
@@ -496,21 +518,21 @@ AllocateQh  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AllocateQtd
+;       NAME:           AllocateQtd
 ;
-;           DESCRIPTION:    Allocate & initialize qTD
+;       DESCRIPTION:    Allocate & initialize qTD
 ;
 ;       PARAMETERS:     ES      Flat sel
-;               FS      Pipe sel
+;                       FS      Pipe sel
 ;
-;           RETURNS:        EDX         Linear address of qTD
-;               EAX     Physical address of qTD
+;       RETURNS:        EDX         Linear address of qTD
+;                       EAX     Physical address of qTD
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateQtd     PROC near
     push cx
-    call AllocateBlock64
+    call AllocateBlock128
 ;
     push ebx
     GetPageEntry
@@ -529,16 +551,16 @@ AllocateQtd  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AddControlQh
+;       NAME:           AddControlQh
 ;
-;           DESCRIPTION:    Add control qh
+;       DESCRIPTION:    Add control qh
 ;
 ;       PARAMETERS:     DS      Function sel
-;               ES      Flat sel
-;               FS      Pipe sel
+;                       ES      Flat sel
+;                       FS      Pipe sel
 ;
-;       RETURNS:    EDX     Linear address of qh added
-;               EAX     Physical address of qh added
+;       RETURNS:        EDX     Linear address of qh added
+;                       EAX     Physical address of qh added
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -617,16 +639,16 @@ AddControlQh  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AllocateFillQtd
+;       NAME:           AllocateFillQtd
 ;
-;           DESCRIPTION:    Allocate and fill qtd buffer pointers from buffer
+;       DESCRIPTION:    Allocate and fill qtd buffer pointers from buffer
 ;
 ;       PARAMETERS:     DS      Function selector
-;               ES:EDI  Data buffer
-;               CX      Size of data
+;                       ES:EDI  Data buffer
+;                       CX      Size of data
 ;
-;       RETURNS:    EDX     Allocated & filled qTD 
-;               EAX     qTD physical
+;       RETURNS:        EDX     Allocated & filled qTD 
+;                       EAX     qTD physical
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -658,12 +680,13 @@ AllocateFillQtd PROC near
     mov al,es:[edx]
     push ebx
     GetPageEntry
+    mov es:[esi].qtdu_page0,ebx
     pop ebx
     and ax,0F000h
     mov bx,dx
     and bx,0FFFh
     or ax,bx
-    mov es:[esi].qtd_page0,eax
+    mov es:[esi].qtdl_page0,eax
 ;
     mov ax,1000h
     sub ax,bx
@@ -672,21 +695,20 @@ AllocateFillQtd PROC near
 ;
     movzx ebx,ax
     add edx,ebx
-    mov ebx,OFFSET qtd_page1
+    mov edi,OFFSET qtdl_page1
 
 afqLoop:    
     mov al,es:[edx]
-    push ebx
     GetPageEntry
-    pop ebx
 ;    
     and ax,0F000h
-    mov es:[esi+ebx],eax
+    mov es:[esi+edi],eax
+    mov es:[esi+edi+20],ebx
     sub cx,1000h
     jc afqDone
 ;
     add edx,1000h
-    add ebx,4
+    add edi,4
     jmp afqLoop    
 
 afqDone:    
@@ -705,14 +727,14 @@ AllocateFillQtd   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           InsertQtd
+;       NAME:           InsertQtd
 ;
-;           DESCRIPTION:    Insert qTD into pipe schedule
+;       DESCRIPTION:    Insert qTD into pipe schedule
 ;
 ;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;               AL      PID code
-;               EDX     qTD linear 
+;                       FS      Pipe selector
+;                       AL      PID code
+;                       EDX     qTD linear 
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
