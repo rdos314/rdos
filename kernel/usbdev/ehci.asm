@@ -111,6 +111,7 @@ esp_next        DW ?
 esp_pending     DD ?
 esp_first       DD ?
 esp_signal      DW ?
+esp_size        DW ?
 esp_flags       DB ?
 
 ehci_pipe   ENDS
@@ -674,6 +675,7 @@ AllocateFillQtd PROC near
     pop edx
 ;
     mov es:[esi].qtd_size,cx
+    mov es:[esi].qtd_buffer_size,cx
     or cx,cx
     jz afqDone
 ;
@@ -1101,6 +1103,63 @@ WaitForCompletion   Endp
 
 EndTransfer   Proc far
     int 3
+    push es
+    push eax
+    push cx
+    push edx
+    push esi
+    push edi
+    push bp
+;    
+    test fs:esp_flags, ESP_FLAG_TRANSFER_PENDING
+    jz etrDone
+;
+    and fs:esp_flags, NOT ESP_FLAG_TRANSFER_PENDING
+;    
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov edx,fs:esp_qh
+    mov al,es:[edx].qh_status
+    test al,40h
+    jnz etrDone
+;    
+    xor edx,edx
+    xchg edx,fs:esp_pending
+;
+    xor bp,bp
+    or edx,edx
+    jz etrSaveOk
+
+etrLoop:
+    mov al,es:[edx].qtd_flags
+    and al,3
+    cmp al,1
+    jne etrNext
+;
+    mov cx,es:[edx].qtd_buffer_size
+    sub cx,es:[edx].qtd_size
+    add bp,cx
+
+etrNext:
+    mov edi,es:[edx].qtd_next_va
+    call FreeBlock128
+    mov edx,edi
+    or edx,edx
+    jnz etrLoop
+        
+etrSaveOk:
+    mov fs:esp_size,bp    
+    or fs:esp_flags, ESP_FLAG_TRANSFER_OK
+
+etrDone:
+    pop bp
+    pop edi
+    pop esi
+    pop edx
+    pop cx
+    pop eax
+    pop es
     ret
 EndTransfer   Endp
 
