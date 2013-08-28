@@ -662,6 +662,11 @@
 
 #define usergate_broadcast_udp 0x0000020E
 
+#define usergate_add_wait_for_udp_listen 0x0000020F
+#define usergate_create_udp_listen 0x00000210
+#define usergate_get_udp_listen_data 0x00000211
+#define usergate_close_udp_listen 0x00000212
+
 
 
 #ifdef __FLAT__
@@ -1329,6 +1334,11 @@
 
 #define CallGate_broadcast_udp 0x67 0x9a 14 2 0 0 3 0
 
+#define CallGate_add_wait_for_udp_listen 0x67 0x9a 15 2 0 0 3 0
+#define CallGate_create_udp_listen 0x67 0x9a 16 2 0 0 3 0
+#define CallGate_get_udp_listen_data 0x67 0x9a 17 2 0 0 3 0
+#define CallGate_close_udp_listen 0x67 0x9a 18 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1993,5 +2003,10 @@
 #define CallGate_create_long_thread 0x3e 0x67 0x9a 13 2 0 0 3 0
 
 #define CallGate_broadcast_udp 0x3e 0x67 0x9a 14 2 0 0 3 0
+
+#define CallGate_add_wait_for_udp_listen 0x3e 0x67 0x9a 15 2 0 0 3 0
+#define CallGate_create_udp_listen 0x3e 0x67 0x9a 16 2 0 0 3 0
+#define CallGate_get_udp_listen_data 0x3e 0x67 0x9a 17 2 0 0 3 0
+#define CallGate_close_udp_listen 0x3e 0x67 0x9a 18 2 0 0 3 0
 
 #endif

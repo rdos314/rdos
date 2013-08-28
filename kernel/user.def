@@ -662,4 +662,9 @@ create_long_thread_nr			= 525
 
 broadcast_udp_nr                = 526
 
+add_wait_for_udp_listen_nr      = 527
+create_udp_listen_nr            = 528
+get_udp_listen_data_nr          = 529
+close_udp_listen_nr             = 530
+
 usergate_entries			    = 540

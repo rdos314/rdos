@@ -1811,6 +1811,45 @@
     CallGate_add_wait_for_tcp_listen  \
     parm [ebx] [eax] [ecx];
 
+#pragma aux RdosCreateUdpListen = \
+    CallGate_create_udp_listen  \
+    ValidateHandle \
+    parm [esi] \
+    value [ebx];
+
+#pragma aux RdosGetUdpListenData = \
+    "push ebx" \
+    "push esi" \
+    "push edx" \
+    "push esi" \
+    "push edx" \
+    CallGate_get_udp_listen_data  \
+    "jc UdpListenFail" \
+    "pop ebx" \
+    "mov [ebx],edx" \
+    "pop ebx" \
+    "movzx esi,si" \
+    "mov [ebx],esi" \
+    "jmp UdpListenDone" \
+    "UdpListenFail:" \
+    "xor eax,eax" \
+    "pop edx" \
+    "pop esi" \
+    "UdpListenDone:" \    
+    "pop edx" \
+    "pop esi" \
+    "pop ebx" \
+    parm [ebx] [edi] [ecx] [edx] [esi] \
+    value [eax];
+
+#pragma aux RdosCloseUdpListen = \
+    CallGate_close_udp_listen  \
+    parm [ebx];
+
+#pragma aux RdosAddWaitForUdpListen = \
+    CallGate_add_wait_for_udp_listen  \
+    parm [ebx] [eax] [ecx];
+
 #pragma aux RdosOpenTcpConnection = \
     CallGate_open_tcp_connection  \
     ValidateHandle \

@@ -153,5 +153,31 @@ protected:
     int FListenHandle;
 };
 
+class TUdpSocketListner : public TWaitDevice
+{
+public:
+    TUdpSocketListner(int Port);
+	virtual ~TUdpSocketListner();
+
+    int WaitForMsg(long Timeout);
+    int HasMsg();
+
+    long GetIP();
+    int GetPort();
+    int GetMsgSize();
+    int GetMsg(char *buf, int size);    
+    
+protected:
+	virtual void SignalNewData();
+	virtual void Add(TWait *Wait);
+
+	int FHandle;
+
+	long FIp;
+	int FPort;
+	char *FBuf;
+	int FSize;
+};
+
 #endif
 

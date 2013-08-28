@@ -32,6 +32,8 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+#define MAX_UDP_SIZE    1500
+
 /*##########################################################################
 #
 #   Name       : TSocket::~TSocket
@@ -861,3 +863,211 @@ void TSocketServerFactory::SignalNewData()
         }
 }
 
+/*##########################################################################
+#
+#   Name       : TUdpSocketListner::TUdpSocketListner
+#
+#   Purpose....: Constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TUdpSocketListner::TUdpSocketListner(int Port)
+{
+    FHandle = RdosCreateUdpListen(Port);
+    FBuf = 0;
+    FSize = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TUdpSocketListner::~TUdpSocketListner
+#
+#   Purpose....: Destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TUdpSocketListner::~TUdpSocketListner()
+{
+    if (FHandle)
+        RdosCloseUdpListen(FHandle);
+
+    if (FBuf)
+        delete FBuf;
+}
+
+/*##########################################################################
+#
+#   Name       : TUdpSocketListner::Add
+#
+#   Purpose....: Add object to wait
+#
+#   In params..: Wait       Wait device
+#                Handle     UDP listen handle
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUdpSocketListner::Add(TWait *Wait)
+{
+    if (FHandle)
+        RdosAddWaitForUdpListen(Wait->GetHandle(), FHandle, this);
+}
+
+/*##########################################################################
+#
+#   Name       : TUdpSocketListner::WaitForMsg
+#
+#   Purpose....: Wait for a new message
+#
+#   In params..: Timeout    milliseconds timeout
+#   Out params.: *
+#   Returns....: TRUE if available
+#
+##########################################################################*/
+int TUdpSocketListner::WaitForMsg(long Timeout)
+{
+    if (!FWait)
+        CreateWait();
+
+    if (FWait)
+        if (FWait->WaitTimeout(Timeout) == this)
+            return IsOpen();
+
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TUdpSocketListner::SignalNewData
+#
+#   Purpose....: Signal new data is available
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUdpSocketListner::SignalNewData()
+{
+    if (FBuf)
+        delete FBuf;
+
+    FBuf = new char[MAX_UDP_SIZE];
+    FSize = RdosGetUdpListenData(FHandle, FBuf, MAX_UDP_SIZE, &FIp, &FPort);
+    if (FSize == 0)
+    {
+        delete FBuf;
+        FBuf = 0;
+    }    
+}
+
+/*##########################################################################
+#
+#   Name       : TUdpSocketListner::HasMsg
+#
+#   Purpose....: Check for unfetched message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: TRUE if available
+#
+##########################################################################*/
+int TUdpSocketListner::HasMsg()
+{
+    if (FBuf)
+        return TRUE;
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TUdpSocketListner::GetIP
+#
+#   Purpose....: Get IP for last message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: IP
+#
+##########################################################################*/
+long TUdpSocketListner::GetIP()
+{
+    return FIp;
+}
+
+/*##########################################################################
+#
+#   Name       : TUdpSocketListner::GetPort
+#
+#   Purpose....: Get port for last message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: IP
+#
+##########################################################################*/
+int TUdpSocketListner::GetPort()
+{
+    return FPort;
+}
+
+/*##########################################################################
+#
+#   Name       : TUdpSocketListner::GetMsgSize
+#
+#   Purpose....: Get size of last message (0 if no message)
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: size
+#
+##########################################################################*/
+int TUdpSocketListner::GetMsgSize()
+{
+    return FSize;
+}
+
+/*##########################################################################
+#
+#   Name       : TUdpSocketListner::GetMsg
+#
+#   Purpose....: Get size of last message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: size
+#
+##########################################################################*/
+int TUdpSocketListner::GetMsg(char *buf, int size)
+{
+    if (FBuf && FSize)
+    {
+        if (FSize < size)
+            size = FSize;
+
+        memcpy(buf, FBuf, size);
+
+        delete FBuf;
+        FBuf = 0;
+        FSize = 0;
+        
+        return size;
+    }
+    else
+    {
+        if (FBuf)
+            delete FBuf;
+
+        FBuf = 0;
+        FSize = 0;
+
+        return 0;
+    }
+}

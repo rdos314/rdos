@@ -635,6 +635,13 @@ AddWaitForTcpListen       MACRO
 	UserGate add_wait_for_tcp_listen_nr
 						ENDM
 
+; IN  AX        Udp listen handle
+; IN  BX		Wait handle
+; IN  ECX       Object ID
+AddWaitForUdpListen       MACRO
+	UserGate add_wait_for_udp_listen_nr
+						ENDM
+
 ; IN  AX        USB pipe handle
 ; IN  BX		Wait handle
 ; IN  ECX       Object ID
@@ -1523,6 +1530,27 @@ BroadcastUdp      MACRO
 BroadcastQueryUdp      MACRO
     UserGate broadcast_query_udp_nr
 	                ENDM
+
+; IN  SI			local port
+; OUT BX            listen handle
+CreateUdpListen	MACRO
+	UserGate create_udp_listen_nr
+			ENDM
+
+; IN  BX            listen handle
+; IN  (E)CX         max data size
+; IN  ES:(E)DI      buffer
+; OUT EAX           data size
+; OUT EDX           remote IP
+; OUT SI            remote port
+GetUdpListenData	MACRO
+	UserGate get_udp_listen_data_nr
+			ENDM
+
+; IN  BX		listen handle
+CloseUdpListen	MACRO
+	UserGate close_udp_listen_nr
+			ENDM
 
 ; IN  EDX		ip address
 ; IN  SI		local port
