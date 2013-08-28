@@ -160,6 +160,7 @@ public:
 	virtual ~TUdpSocketListner();
 
     int WaitForMsg(long Timeout);
+    int WaitForMsg();
     int HasMsg();
 
     long GetIP();

@@ -937,7 +937,30 @@ int TUdpSocketListner::WaitForMsg(long Timeout)
 
     if (FWait)
         if (FWait->WaitTimeout(Timeout) == this)
-            return IsOpen();
+            return HasMsg();
+
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TUdpSocketListner::WaitForMsg
+#
+#   Purpose....: Wait indefinitely for new message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: TRUE if available
+#
+##########################################################################*/
+int TUdpSocketListner::WaitForMsg()
+{
+    if (!FWait)
+        CreateWait();
+
+    if (FWait)
+        if (FWait->WaitForever() == this)
+            return HasMsg();
 
     return FALSE;
 }
