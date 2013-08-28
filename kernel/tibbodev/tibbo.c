@@ -206,7 +206,7 @@ void BroadcastData(char *buf, int size)
     for (i = 0; i < DriverCount; i++)
     {
         CurrDriver = DriverArr[i];
-        RdosBroadcastUdp(4095, -1, CurrDriver, buf, size);
+        RdosBroadcastDriverUdp(4095, -1, CurrDriver, buf, size);
         RdosWaitMilli(250);
     }
 

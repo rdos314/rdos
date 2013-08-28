@@ -94,6 +94,7 @@ bq_reply_size       DD ?
 bq_req_offset       DD ?
 bq_req_sel          DW ?
 bq_reply_sel        DW ?
+bq_source_port      DW ?
 bq_dest_port        DW ?
 bq_thread           DW ?
 listen_list         DW ?
@@ -605,20 +606,21 @@ send_udp32   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;       Name:           BroadcastUdp
+;       Name:           BroadcastDriverUdp
 ;
-;       Purpose:        Broadcast UDP data
+;       Purpose:        Broadcast driver UDP data
 ;
 ;       Parameters:     SI              source port
 ;                       BX              destination port
+;                       FS              Driver sel
 ;                       ECX             Number of bytes to send
 ;                       ES:EDI          Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-broadcast_udp_name DB 'Broadcast UDP',0
+broadcast_driver_udp_name DB 'Broadcast Driver UDP',0
 
-broadcast_udp       Proc far
+broadcast_driver_udp       Proc far
     push ds
     push es
     push fs
@@ -639,7 +641,7 @@ broadcast_udp       Proc far
     pop ax
     pop esi
     pop ds
-    jc broadcast_udp_done
+    jc broadcast_driver_udp_done
 ;       
     xchg al,ah
     mov es:[edi].udp_source,ax
@@ -675,13 +677,13 @@ broadcast_udp       Proc far
     sub ecx,8
     SendBroadcastIp
 
-broadcast_udp_done:
+broadcast_driver_udp_done:
     popad
     pop fs
     pop es
     pop ds    
     retf32
-broadcast_udp       Endp
+broadcast_driver_udp       Endp
 
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -941,6 +943,101 @@ broadcast_listen_callback   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           broadcast_udp_callback
+;
+;       DESCRIPTION:    Broadcast UDP callback
+;
+;       PARAMETERS:     DS          Class selector
+;                       FS          Driver selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+broadcast_udp_callback    Proc far
+    push ds
+    push es
+    pushad
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov si,ds:bq_source_port
+    mov bx,ds:bq_dest_port
+    mov ecx,ds:bq_req_size
+    mov es,ds:bq_req_sel
+    mov edi,ds:bq_req_offset
+    BroadcastDriverUdp
+;
+    popad
+    pop es
+    pop ds
+    retf32
+broadcast_udp_callback    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           BroadcastUdp
+;
+;       Purpose:        Broadcast UDP
+;
+;       Parameters:     (E)CX       Size of setup message
+;                       ES:(E)DI    Answer buffer
+;                       SI          Source port
+;                       BX          Destination port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+broadcast_udp_name    DB 'Broadcast UDP',0
+
+broadcast_udp Proc near
+    push ds
+    push es
+    push ecx
+    push edi
+;           
+    mov ax,SEG data
+    mov ds,ax    
+    EnterSection ds:bq_section
+;
+    mov ds:bq_req_size,ecx
+    mov ds:bq_req_sel,es 
+    mov ds:bq_req_offset,edi 
+    mov ds:bq_dest_port,bx  
+    mov ds:bq_source_port,si  
+;    
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET broadcast_udp_callback
+    NetBroadcast
+;    
+    LeaveSection ds:bq_section
+;
+    pop edi
+    pop ecx
+    pop es
+    pop ds    
+    ret
+broadcast_udp Endp
+
+broadcast_udp16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call broadcast_udp    
+;
+    pop edi
+    pop ecx
+    retf32    
+broadcast_udp16   Endp
+
+broadcast_udp32   Proc far
+    call broadcast_udp    
+    retf32    
+broadcast_udp32   Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           broadcast_send_callback
 ;
 ;       DESCRIPTION:    Broadcast send callback
@@ -962,7 +1059,7 @@ broadcast_send_callback    Proc far
     mov ecx,ds:bq_req_size
     mov es,ds:bq_req_sel
     mov edi,ds:bq_req_offset
-    BroadcastUdp
+    BroadcastDriverUdp
 ;
     popad
     pop es
@@ -2083,10 +2180,10 @@ query_list_create:
     mov ds,ax
     mov es,ax
 ;
-    mov esi,OFFSET broadcast_udp
-    mov edi,OFFSET broadcast_udp_name
+    mov esi,OFFSET broadcast_driver_udp
+    mov edi,OFFSET broadcast_driver_udp_name
     xor cl,cl
-    mov ax,broadcast_udp_nr
+    mov ax,broadcast_driver_udp_nr
     RegisterOsGate
 ;
     mov esi,OFFSET send_driver_udp
@@ -2106,6 +2203,13 @@ query_list_create:
     xor cl,cl
     mov ax,listen_udp_port_nr
     RegisterOsGate
+;
+    mov ebx,OFFSET broadcast_udp16
+    mov esi,OFFSET broadcast_udp32
+    mov edi,OFFSET broadcast_udp_name
+    mov dx,virt_es_in
+    mov ax,broadcast_udp_nr
+    RegisterUserGate
 ;
     mov ebx,OFFSET broadcast_query_udp16
     mov esi,OFFSET broadcast_query_udp32

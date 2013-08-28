@@ -1505,6 +1505,14 @@ SendUdp    MACRO
     UserGate send_udp_nr
             ENDM
 
+; IN  SI          Source port
+; IN  BX          Destination port
+; IN  (E)CX       Number of bytes to send
+; IN  ES:(E)DI    Data buffer
+BroadcastUdp      MACRO
+    UserGate broadcast_udp_nr
+	                ENDM
+
 ; IN  EDX         Timeout in ms
 ; IN  (E)CX       Size of setup message
 ; IN  DS:(E)SI    Request buffer  

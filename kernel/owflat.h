@@ -1745,6 +1745,10 @@
     CallGate_send_udp  \
     parm [edx] [esi] [ebx] [edi] [ecx];
 
+#pragma aux RdosBroadcastUdp = \
+    CallGate_broadcast_udp  \
+    parm [esi] [ebx] [edi] [ecx];
+
 #pragma aux RdosBroadcastQueryUdp = \
     "push eax" \
     CallGate_broadcast_query_udp  \

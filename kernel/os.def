@@ -608,7 +608,7 @@ load_long_breaks_nr         = 505
 set_futex_id_nr             = 506
 set_long_tls_linear_nr      = 507
 
-broadcast_udp_nr            = 509
+broadcast_driver_udp_nr     = 509
 
 get_net_driver_buffer_nr    = 510
 send_net_driver_nr          = 511

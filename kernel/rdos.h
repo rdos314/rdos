@@ -514,6 +514,7 @@ int RDOSAPI RdosNameToIp(const char *HostName);
 int RDOSAPI RdosIpToName(int Ip, char *HostName, int MaxSize);
 
 void RDOSAPI RdosSendUdp(long RemoteIp, int LocalPort, int RemotePort, const char *Buf, int Size);
+void RDOSAPI RdosBroadcastUdp(int LocalPort, int RemotePort, const char *Buf, int Size);
 int RDOSAPI RdosBroadcastQueryUdp(const char *ReqBuf, int ReqSize, char *ReplyBuf, int *ReplySize, int DestPort, long Timeout);
 
 int RDOSAPI RdosOpenUdpConnection(int RemoteIp, int LocalPort, int RemotePort);

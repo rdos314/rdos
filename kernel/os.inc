@@ -2505,8 +2505,8 @@ ListenUdpPort   MACRO
 ; IN  CX        Number of bytes to send
 ; IN  FS        Driver sel
 ; IN  ES:EDI    Data buffer
-BroadcastUdp    MACRO
-    OsGate broadcast_udp_nr
+BroadcastDriverUdp    MACRO
+    OsGate broadcast_driver_udp_nr
             ENDM
 
 ; IN  AX        source port

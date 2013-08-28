@@ -660,6 +660,8 @@
 
 #define usergate_create_long_thread 0x0000020D
 
+#define usergate_broadcast_udp 0x0000020E
+
 
 
 #ifdef __FLAT__
@@ -1325,6 +1327,8 @@
 
 #define CallGate_create_long_thread 0x67 0x9a 13 2 0 0 3 0
 
+#define CallGate_broadcast_udp 0x67 0x9a 14 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1987,5 +1991,7 @@
 #define CallGate_create_alpha_bitmap 0x3e 0x67 0x9a 12 2 0 0 3 0
 
 #define CallGate_create_long_thread 0x3e 0x67 0x9a 13 2 0 0 3 0
+
+#define CallGate_broadcast_udp 0x3e 0x67 0x9a 14 2 0 0 3 0
 
 #endif
