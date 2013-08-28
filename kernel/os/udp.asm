@@ -65,6 +65,20 @@ udp_handle_sel      DW ?
 
 udp_handle_seg      ENDS
 
+udp_listen_header STRUC
+
+ulw_obj              wait_obj_header <>
+ulw_handle           DW ?
+
+udp_listen_header ENDS
+
+listen_handle_seg           STRUC
+
+listen_handle_base      handle_header <>
+listen_handle_sel       DW ?
+
+listen_handle_seg           ENDS
+
 udp_connection  STRUC
 
 udp_next                DW ?
@@ -1827,7 +1841,7 @@ stop_wait_for_connection Endp
 ;
 ;           NAME:           ClearConnection
 ;
-;           DESCRIPTION:    Clear tcp connection
+;           DESCRIPTION:    Clear udp connection
 ;
 ;           PARAMETERS:         ES      Wait object
 ;
@@ -2136,7 +2150,318 @@ receive_done:
     pop ax
     retf32
 Receive Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;   Name:           CreateUdpListen
+;
+;   Purpose:        Create a UDP listen handle
+;
+;   Parameters:     AX      message buffer count
+;                   SI              local port
+;
+;   Returns:        BX      listen handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+create_udp_listen_name  DB 'Create UDP listen',0
+
+create_udp_listen       Proc far
+    push ds
+    push es
+    push eax
+    push cx
+    push dx
+;
+    mov ax,UDP_LISTEN_HANDLE
+    mov cx,SIZE listen_handle_seg
+    AllocateHandle
+    mov [ebx].listen_handle_sel,dx
+    mov [ebx].hh_sign,UDP_LISTEN_HANDLE
+    mov bx,[ebx].hh_handle
+;       
+    pop dx
+    pop cx
+    pop eax
+    pop es
+    pop ds
+    retf32
+create_udp_listen   Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;   Name:           GetUdpListenData
+;
+;   Purpose:        Get a connection from a listen
+;
+;   Parameters:     BX      listen handle
+;
+;   Returns:        AX      connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_udp_listen_data_name     DB 'Get UDP Listen Data',0
+
+get_udp_listen_data  Proc far
+    push ds
+    push es
+    push ebx
+    push cx
+    push dx
+;
+    mov ax,UDP_LISTEN_HANDLE
+    DerefHandle
+    jc get_udp_listen_data_done
+;    
+;    mov ax,[ebx].listen_handle_sel
+;    mov ds,ax
+;    EnterSection ds:tcp_listen_section
+;    mov dx,ds:tcp_listen_list
+;    or dx,dx
+;    jz get_listen_leave
+;
+;    mov es,dx
+;    mov bx,es:tcp_listen_link
+;    mov ds:tcp_listen_list,bx
+
+;get_listen_leave:
+;    LeaveSection ds:tcp_listen_section          
+;    or dx,dx
+;    stc
+;    jz get_listen_done
+;
+;    mov ax,TCP_SOCKET_HANDLE
+;    mov cx,SIZE tcp_handle_seg
+;    AllocateHandle
+;    mov [ebx].tcp_handle_sel,es
+;    mov [ebx].hh_sign,TCP_SOCKET_HANDLE
+;    mov ax,[ebx].hh_handle
+;    clc
+
+get_udp_listen_data_done:
+    pop dx
+    pop cx
+    pop ebx
+    pop es
+    pop ds  
+    retf32
+get_udp_listen_data Endp
+       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           CloseUdpListen
+;
+;       Purpose:        Close UDP listen
+;
+;       Parameters:     BX          Listen handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_udp_listen_name DB 'Close UDP Listen',0
+
+close_udp_listen    Proc far
+    push ds
+    push es
+    pushad
+;
+    mov ax,UDP_LISTEN_HANDLE
+    DerefHandle
+    jc close_tcp_listen_done
+;    
+;    mov ax,[ebx].listen_handle_sel
+;    or ax,ax
+;    stc
+;    jz close_tcp_listen_done
+;
+;    mov ds,ax
+;    call DeleteListen
+;    clc
+
+close_tcp_listen_done:
+    popad
+    pop es
+    pop ds
+    retf32
+close_udp_listen    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           StartWaitForListen
+;
+;       DESCRIPTION:    Start a wait for listen
+;
+;       PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_wait_for_listen   PROC far
+    push ds
+    push ax
+    push ebx
+;
+    mov bx,es:ulw_handle
+    mov ax,UDP_LISTEN_HANDLE
+    DerefHandle
+    jc start_wait_for_listen_done
+;    
+;    mov ax,[ebx].listen_handle_sel
+;    or ax,ax
+;    jz start_wait_for_listen_done
+;
+;    mov ds,ax
+;    mov ds:tcp_listen_wait,es
+;
+;    mov ax,ds:tcp_listen_list
+;    or ax,ax
+;    jz start_wait_for_listen_done
+;    
+;    mov ds:tcp_listen_wait,0
+;    SignalWait
+
+start_wait_for_listen_done:
+    pop ebx
+    pop ax
+    pop ds
+    retf32
+start_wait_for_listen Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           StopWaitForListen
+;
+;       DESCRIPTION:    Stop a wait for listen
+;
+;       PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_wait_for_listen    PROC far
+    push ds
+    push ax
+    push ebx
+;
+    mov bx,es:ulw_handle
+    mov ax,UDP_LISTEN_HANDLE
+    DerefHandle
+    jc stop_wait_listen_done
+;    
+;    mov ax,[ebx].listen_handle_sel
+;    or ax,ax
+;    jz stop_wait_listen_done
+;
+;    mov ds,ax
+;    mov ds:tcp_listen_wait,0
+
+stop_wait_listen_done:
+    pop ebx
+    pop ax
+    pop ds
+    retf32
+stop_wait_for_listen Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ClearListen
+;
+;       DESCRIPTION:    Clear tcp listen
+;
+;       PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_listen    PROC far
+    retf32
+clear_listen Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           IsListenIdle
+;
+;       DESCRIPTION:    Check if listen is idle
+;
+;       PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_listen_idle  PROC far
+    push ds
+    push ax
+    push ebx
+;
+    mov bx,es:ulw_handle
+    mov ax,UDP_LISTEN_HANDLE
+    DerefHandle
+    jc is_listen_idle_done
+;    
+;    mov ax,[ebx].listen_handle_sel
+;    or ax,ax
+;    stc
+;    jz is_listen_idle_done
+;
+;    mov ds,ax
+;    mov ax,ds:tcp_listen_list
+;    or ax,ax
+;    clc
+;    jne is_listen_idle_done
+;
+;    stc
+
+is_listen_idle_done:
+    pop ebx
+    pop ax
+    pop ds
+    retf32
+is_listen_idle Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddWaitForUdpListen
+;
+;       DESCRIPTION:    Add a wait for UDP listen
+;
+;       PARAMETERS:     AX      Listen handle
+;                       BX      Wait handle
+;                       ECX     Signalled ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_udp_listen_name    DB 'Add Wait For UDP Listen',0
+
+add_wait_listen_tab:
+al0 DD OFFSET start_wait_for_listen,        SEG code
+al1 DD OFFSET stop_wait_for_listen,         SEG code
+al2 DD OFFSET clear_listen,                 SEG code
+al3 DD OFFSET is_listen_idle,               SEG code
+
+add_wait_for_udp_listen PROC far
+    push ds
+    push es
+    push eax
+    push edi
+;
+    push ax
+    mov ax,cs
+    mov es,ax
+    mov ax,SIZE udp_listen_header - SIZE wait_obj_header
+    mov edi,OFFSET add_wait_listen_tab
+    AddWait
+    pop ax
+    jc add_wait_listen_done
+;
+    mov es:ulw_handle,ax
+
+add_wait_listen_done:
+    pop edi
+    pop eax
+    pop es
+    pop ds
+    retf32
+add_wait_for_udp_listen ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2224,6 +2549,30 @@ query_list_create:
     mov dx,virt_es_in
     mov ax,send_udp_nr
     RegisterUserGate
+;
+    mov esi,OFFSET create_udp_listen
+    mov edi,OFFSET create_udp_listen_name
+    xor dx,dx
+    mov ax,create_udp_listen_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_udp_listen_data
+    mov edi,OFFSET get_udp_listen_data_name
+    xor dx,dx
+    mov ax,get_udp_listen_data_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET close_udp_listen
+    mov edi,OFFSET close_udp_listen_name
+    xor dx,dx
+    mov ax,close_udp_listen_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET add_wait_for_udp_listen
+    mov edi,OFFSET add_wait_for_udp_listen_name
+    xor dx,dx
+    mov ax,add_wait_for_udp_listen_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET open_udp_connection
     mov edi,OFFSET open_udp_connection_name

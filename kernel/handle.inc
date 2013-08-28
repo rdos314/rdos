@@ -25,7 +25,6 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 ADC_HANDLE =        015FCh 
 FM_INSTR_HANDLE =   017DEh
 DLL_HANDLE16 =      026CFh
@@ -34,6 +33,7 @@ SPRITE_HANDLE =     02CF5h
 CRC_HANDLE =        0367Ah
 FILE_HANDLE = 	    03AB6h
 PROCESS_HANDLE =    043AFh
+UDP_LISTEN_HANDLE = 05236h
 SERIAL_HANDLE =     05A45h
 ENV_HANDLE =        05FAEh
 FUTEX_HANDLE =      0627Ah
