@@ -2218,17 +2218,10 @@ ulcLoop:
     add di,2
     loop ulcLoop
 ;
-    mov cx,ds:udp_listen_size
-    mov si,2
-    xor di,di
-;
-    push es
-    mov es,es:[di]
+    LeaveSection ds:udp_listen_section
+    mov es,dx
     FreeMem
-    pop es
-;
-    dec cx
-    rep movs word ptr es:[di],es:[si]
+    jmp ulcDone
 
 ulcFound:
     mov es:[di],dx        
