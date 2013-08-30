@@ -2651,18 +2651,91 @@ close_udp_listen    Proc far
 ;
     mov ax,UDP_LISTEN_HANDLE
     DerefHandle
-    jc close_tcp_listen_done
+    jc close_udp_listen_done
 ;    
-;    mov ax,[ebx].listen_handle_sel
-;    or ax,ax
-;    stc
-;    jz close_tcp_listen_done
+    push ds
+    push ebx
+;    
+    mov dx,[ebx].listen_handle_sel
+    or dx,dx
+    stc
+    jz close_udp_listen_handle
 ;
-;    mov ds,ax
-;    call DeleteListen
-;    clc
+    mov ax,SEG data
+    mov ds,ax
+    xor cx,cx
+    mov es,cx    
+    EnterSection ds:udp_section
+;    
+    mov ax,ds:listen_list
 
-close_tcp_listen_done:
+close_udp_listen_loop:    
+    or ax,ax
+    jz close_udp_listen_leave
+;
+    cmp ax,dx
+    je close_udp_listen_found
+;    
+    mov es,ax
+    mov ax,es:udp_listen_next
+    jmp close_udp_listen_loop
+
+close_udp_listen_found:
+    mov cx,es
+    or cx,cx
+    jz close_udp_listen_head
+
+close_udp_listen_link:
+    mov es,es:udp_listen_next
+    mov ax,es:udp_listen_next
+    mov es,cx
+    mov es:udp_listen_next,ax
+    jmp close_udp_listen_delete
+
+close_udp_listen_head:
+    mov es,ds:listen_list
+    mov ax,es:udp_listen_next
+    mov ds:listen_list,ax
+
+close_udp_listen_delete:
+    LeaveSection ds:udp_section
+;
+    mov ds,dx
+    mov cx,ds:udp_listen_size
+    mov ds,ds:udp_listen_data
+    xor si,si
+
+close_udp_listen_del_loop:
+    lodsw
+    or ax,ax
+    jz close_udp_listen_del_next
+;
+    mov es,ax
+    FreeMem
+
+close_udp_listen_del_next:
+    loop close_udp_listen_del_loop
+;
+    mov ds,dx
+    mov es,ds:udp_listen_data
+    FreeMem
+;
+    xor ax,ax
+    mov ds,ax
+    mov es,dx
+    FreeMem        
+    jmp close_udp_listen_handle
+        
+close_udp_listen_leave:
+    LeaveSection ds:udp_section
+
+close_udp_listen_handle:
+    pop ebx
+    pop ds
+;
+    FreeHandle
+
+close_udp_listen_done:
     popad
     pop es
     pop ds
