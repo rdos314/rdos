@@ -1814,33 +1814,37 @@
 #pragma aux RdosCreateUdpListen = \
     CallGate_create_udp_listen  \
     ValidateHandle \
-    parm [esi] \
+    parm [esi] [eax] \
     value [ebx];
 
-#pragma aux RdosGetUdpListenData = \
-    "push ebx" \
-    "push esi" \
-    "push edx" \
-    "push esi" \
-    "push edx" \
-    CallGate_get_udp_listen_data  \
-    "jc UdpListenFail" \
-    "pop ebx" \
-    "mov [ebx],edx" \
-    "pop ebx" \
-    "movzx esi,si" \
-    "mov [ebx],esi" \
-    "jmp UdpListenDone" \
-    "UdpListenFail:" \
-    "xor eax,eax" \
-    "pop edx" \
-    "pop esi" \
-    "UdpListenDone:" \    
-    "pop edx" \
-    "pop esi" \
-    "pop ebx" \
-    parm [ebx] [edi] [ecx] [edx] [esi] \
+#pragma aux RdosGetUdpListenSize = \
+    CallGate_get_udp_listen_size  \
+    ValidateEax \
+    parm [ebx] \
     value [eax];
+
+#pragma aux RdosGetUdpListenIp = \
+    CallGate_get_udp_listen_ip  \
+    ValidateEax \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosGetUdpListenPort = \
+    CallGate_get_udp_listen_port  \
+    "movzx eax,ax" \
+    ValidateEax \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosGetUdpListenData = \
+    CallGate_get_udp_listen_data  \
+    ValidateEax \
+    parm [ebx] [edi] [ecx] \
+    value [eax];
+
+#pragma aux RdosClearUdpListen = \
+    CallGate_clear_udp_listen  \
+    parm [ebx];
 
 #pragma aux RdosCloseUdpListen = \
     CallGate_close_udp_listen  \

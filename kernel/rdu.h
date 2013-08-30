@@ -664,8 +664,12 @@
 
 #define usergate_add_wait_for_udp_listen 0x0000020F
 #define usergate_create_udp_listen 0x00000210
-#define usergate_get_udp_listen_data 0x00000211
-#define usergate_close_udp_listen 0x00000212
+#define usergate_get_udp_listen_size 0x00000211
+#define usergate_get_udp_listen_ip 0x00000212
+#define usergate_get_udp_listen_port 0x00000213
+#define usergate_get_udp_listen_data 0x00000214
+#define usergate_clear_udp_listen 0x00000215
+#define usergate_close_udp_listen 0x00000216
 
 
 
@@ -1336,8 +1340,12 @@
 
 #define CallGate_add_wait_for_udp_listen 0x67 0x9a 15 2 0 0 3 0
 #define CallGate_create_udp_listen 0x67 0x9a 16 2 0 0 3 0
-#define CallGate_get_udp_listen_data 0x67 0x9a 17 2 0 0 3 0
-#define CallGate_close_udp_listen 0x67 0x9a 18 2 0 0 3 0
+#define CallGate_get_udp_listen_size 0x67 0x9a 17 2 0 0 3 0
+#define CallGate_get_udp_listen_ip 0x67 0x9a 18 2 0 0 3 0
+#define CallGate_get_udp_listen_port 0x67 0x9a 19 2 0 0 3 0
+#define CallGate_get_udp_listen_data 0x67 0x9a 20 2 0 0 3 0
+#define CallGate_clear_udp_listen 0x67 0x9a 21 2 0 0 3 0
+#define CallGate_close_udp_listen 0x67 0x9a 22 2 0 0 3 0
 
 #else
 
@@ -2006,7 +2014,11 @@
 
 #define CallGate_add_wait_for_udp_listen 0x3e 0x67 0x9a 15 2 0 0 3 0
 #define CallGate_create_udp_listen 0x3e 0x67 0x9a 16 2 0 0 3 0
-#define CallGate_get_udp_listen_data 0x3e 0x67 0x9a 17 2 0 0 3 0
-#define CallGate_close_udp_listen 0x3e 0x67 0x9a 18 2 0 0 3 0
+#define CallGate_get_udp_listen_size 0x3e 0x67 0x9a 17 2 0 0 3 0
+#define CallGate_get_udp_listen_ip 0x3e 0x67 0x9a 18 2 0 0 3 0
+#define CallGate_get_udp_listen_port 0x3e 0x67 0x9a 19 2 0 0 3 0
+#define CallGate_get_udp_listen_data 0x3e 0x67 0x9a 20 2 0 0 3 0
+#define CallGate_clear_udp_listen 0x3e 0x67 0x9a 21 2 0 0 3 0
+#define CallGate_close_udp_listen 0x3e 0x67 0x9a 22 2 0 0 3 0
 
 #endif

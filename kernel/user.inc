@@ -1531,6 +1531,7 @@ BroadcastQueryUdp      MACRO
     UserGate broadcast_query_udp_nr
 	                ENDM
 
+; IN  AX            max number of outstanding messages
 ; IN  SI			local port
 ; OUT BX            listen handle
 CreateUdpListen	MACRO
@@ -1538,13 +1539,33 @@ CreateUdpListen	MACRO
 			ENDM
 
 ; IN  BX            listen handle
-; IN  (E)CX         max data size
-; IN  ES:(E)DI      buffer
 ; OUT EAX           data size
-; OUT EDX           remote IP
-; OUT SI            remote port
+GetUdpListenSize	MACRO
+	UserGate get_udp_listen_size_nr
+			ENDM
+
+; IN  BX            listen handle
+; OUT EAX           IP
+GetUdpListenIp	MACRO
+	UserGate get_udp_listen_ip_nr
+			ENDM
+
+; IN  BX            listen handle
+; OUT AX            Port
+GetUdpListenPort	MACRO
+	UserGate get_udp_listen_port_nr
+			ENDM
+
+; IN  BX            listen handle
+; IN  (E)CX         buffer size
+; IN  ES:(E)DI      buffer
 GetUdpListenData	MACRO
 	UserGate get_udp_listen_data_nr
+			ENDM
+
+; IN  BX            listen handle
+ClearUdpListenData	MACRO
+	UserGate clear_udp_listen_data_nr
 			ENDM
 
 ; IN  BX		listen handle

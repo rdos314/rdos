@@ -51,6 +51,9 @@ udp_listen	STRUC
 udp_listen_section		section_typ <>
 udp_listen_next			DW ?
 udp_listen_port			DW ?
+udp_listen_data         DW ?
+udp_listen_size         DW ?
+udp_listen_wait_obj     DW ?
 udp_listen_callback		DD ?,?
 
 udp_listen	ENDS

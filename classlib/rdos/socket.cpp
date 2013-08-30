@@ -32,8 +32,6 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-#define MAX_UDP_SIZE    1500
-
 /*##########################################################################
 #
 #   Name       : TSocket::~TSocket
@@ -874,11 +872,9 @@ void TSocketServerFactory::SignalNewData()
 #   Returns....: *
 #
 ##########################################################################*/
-TUdpSocketListner::TUdpSocketListner(int Port)
+TUdpSocketListner::TUdpSocketListner(int Port, int MaxMessages)
 {
-    FHandle = RdosCreateUdpListen(Port);
-    FBuf = 0;
-    FSize = 0;
+    FHandle = RdosCreateUdpListen(Port, MaxMessages);
 }
 
 /*##########################################################################
@@ -896,9 +892,6 @@ TUdpSocketListner::~TUdpSocketListner()
 {
     if (FHandle)
         RdosCloseUdpListen(FHandle);
-
-    if (FBuf)
-        delete FBuf;
 }
 
 /*##########################################################################
@@ -978,16 +971,6 @@ int TUdpSocketListner::WaitForMsg()
 ##########################################################################*/
 void TUdpSocketListner::SignalNewData()
 {
-    if (FBuf)
-        delete FBuf;
-
-    FBuf = new char[MAX_UDP_SIZE];
-    FSize = RdosGetUdpListenData(FHandle, FBuf, MAX_UDP_SIZE, &FIp, &FPort);
-    if (FSize == 0)
-    {
-        delete FBuf;
-        FBuf = 0;
-    }    
 }
 
 /*##########################################################################
@@ -1003,7 +986,7 @@ void TUdpSocketListner::SignalNewData()
 ##########################################################################*/
 int TUdpSocketListner::HasMsg()
 {
-    if (FBuf)
+    if (RdosGetUdpListenSize(FHandle))
         return TRUE;
     else
         return FALSE;
@@ -1022,7 +1005,7 @@ int TUdpSocketListner::HasMsg()
 ##########################################################################*/
 long TUdpSocketListner::GetIP()
 {
-    return FIp;
+    return RdosGetUdpListenIp(FHandle);
 }
 
 /*##########################################################################
@@ -1033,12 +1016,12 @@ long TUdpSocketListner::GetIP()
 #
 #   In params..: *
 #   Out params.: *
-#   Returns....: IP
+#   Returns....: Port
 #
 ##########################################################################*/
 int TUdpSocketListner::GetPort()
 {
-    return FPort;
+    return RdosGetUdpListenPort(FHandle);
 }
 
 /*##########################################################################
@@ -1054,7 +1037,7 @@ int TUdpSocketListner::GetPort()
 ##########################################################################*/
 int TUdpSocketListner::GetMsgSize()
 {
-    return FSize;
+    return RdosGetUdpListenSize(FHandle);
 }
 
 /*##########################################################################
@@ -1070,27 +1053,21 @@ int TUdpSocketListner::GetMsgSize()
 ##########################################################################*/
 int TUdpSocketListner::GetMsg(char *buf, int size)
 {
-    if (FBuf && FSize)
-    {
-        if (FSize < size)
-            size = FSize;
+    return RdosGetUdpListenData(FHandle, buf, size);
+}
 
-        memcpy(buf, FBuf, size);
-
-        delete FBuf;
-        FBuf = 0;
-        FSize = 0;
-        
-        return size;
-    }
-    else
-    {
-        if (FBuf)
-            delete FBuf;
-
-        FBuf = 0;
-        FSize = 0;
-
-        return 0;
-    }
+/*##########################################################################
+#
+#   Name       : TUdpSocketListner::ClearMsg
+#
+#   Purpose....: Clear message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: size
+#
+##########################################################################*/
+void TUdpSocketListner::ClearMsg()
+{
+    RdosClearUdpListen(FHandle);
 }

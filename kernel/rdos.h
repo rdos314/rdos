@@ -529,8 +529,12 @@ int RDOSAPI RdosGetTcpListen(int Handle);
 void RDOSAPI RdosCloseTcpListen(int Handle);
 void RDOSAPI RdosAddWaitForTcpListen(int Handle, int ConHandle, void *ID);
 
-int RDOSAPI RdosCreateUdpListen(int Port);
-int RDOSAPI RdosGetUdpListenData(int Handle, char *Buf, int MaxSize, long *Ip, int *Port);
+int RDOSAPI RdosCreateUdpListen(int Port, int MaxBufferedMessages);
+int RDOSAPI RdosGetUdpListenSize(int Handle);
+long RDOSAPI RdosGetUdpListenIp(int Handle);
+int RDOSAPI RdosGetUdpListenPort(int Handle);
+int RDOSAPI RdosGetUdpListenData(int Handle, char *Buf, int Size);
+int RDOSAPI RdosClearUdpListen(int Handle);
 void RDOSAPI RdosCloseUdpListen(int Handle);
 void RDOSAPI RdosAddWaitForUdpListen(int Handle, int ConHandle, void *ID);
 

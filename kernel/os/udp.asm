@@ -79,6 +79,15 @@ listen_handle_sel       DW ?
 
 listen_handle_seg           ENDS
 
+listen_data_seg     STRUC
+
+listen_size     DW ?
+listen_ip       DD ?
+listen_port     DW ?
+listen_data     DB ?
+
+listen_data_seg ENDS
+
 udp_connection  STRUC
 
 udp_next                DW ?
@@ -2060,6 +2069,9 @@ receive_not_conn:
     push es
     push edi
 ;
+    mov ax,es:[di].udp_source
+    xchg al,ah
+;
     mov cx,es:[di].udp_len
     xchg cl,ch
     sub cx,SIZE udp_header
@@ -2153,12 +2165,100 @@ Receive Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;   Name:           UdpListenCallback
+;
+;   Purpose:        UDP listen callback
+;
+;   Parameters:     DS      Listen struct
+;                   ES:DI   UDP data
+;                   CX      Size of UDP data
+;                   EDX     IP
+;                   AX      Source
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;o
+
+UdpListenCallback   Proc far
+    push ds
+    push es
+    push bx
+    push cx
+    push si
+    push di
+;    
+    mov bx,ax
+;
+    push ds
+    mov ax,es
+    mov ds,ax
+    mov si,di
+;    
+    movzx eax,cx
+    add eax,OFFSET listen_data
+    AllocateSmallGlobalMem
+;
+    mov es:listen_size,cx
+    mov es:listen_ip,edx
+    mov es:listen_port,bx
+;
+    mov di,OFFSET listen_data
+    rep movsb
+    pop ds
+;
+    mov dx,es
+    EnterSection ds:udp_listen_section
+    mov es,ds:udp_listen_data
+    mov cx,ds:udp_listen_size
+    xor di,di
+
+ulcLoop:
+    mov ax,es:[di]
+    or ax,ax
+    jz ulcFound
+;
+    add di,2
+    loop ulcLoop
+;
+    mov cx,ds:udp_listen_size
+    mov si,2
+    xor di,di
+;
+    push es
+    mov es,es:[di]
+    FreeMem
+    pop es
+;
+    dec cx
+    rep movs word ptr es:[di],es:[si]
+
+ulcFound:
+    mov es:[di],dx        
+    LeaveSection ds:udp_listen_section
+;
+    mov ax,ds:udp_listen_wait_obj
+    or ax,ax
+    jz ulcDone
+;
+    mov es,ax
+    SignalWait    
+        
+ulcDone:
+    pop di
+    pop si
+    pop cx
+    pop bx
+    pop es
+    pop ds
+    retf32
+UdpListenCallback   Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;   Name:           CreateUdpListen
 ;
 ;   Purpose:        Create a UDP listen handle
 ;
 ;   Parameters:     AX      message buffer count
-;                   SI              local port
+;                   SI      local port
 ;
 ;   Returns:        BX      listen handle
 ;
@@ -2172,14 +2272,62 @@ create_udp_listen       Proc far
     push eax
     push cx
     push dx
+    push di
+;
+    or ax,ax
+    jnz culBufNotZero
+;
+    mov ax,1
+
+culBufNotZero:    
+    cmp ax,16
+    jbe culBufOk
+;
+    mov ax,16    
+
+culBufOk:    
+    push ax
+;
+    mov cx,ax
+    movzx eax,ax
+    shl eax,1
+    AllocateSmallGlobalMem
+    xor di,di
+    xor ax,ax
+    rep stosw
+    mov dx,es
+;       
+    mov eax,SIZE udp_listen
+    AllocateSmallGlobalMem
+    mov dword ptr es:udp_listen_callback,OFFSET UdpListenCallback
+    mov word ptr es:udp_listen_callback+4,cs
+    mov es:udp_listen_port,si
+    mov es:udp_listen_data,dx
+    mov es:udp_listen_wait_obj,0
+;
+    pop ax
+    mov es:udp_listen_size,ax    
+;
+    mov ax,es
+    mov ds,ax
+    InitSection ds:udp_listen_section
+;       
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:udp_section
+    mov ax,ds:listen_list
+    mov es:udp_listen_next,ax
+    mov ds:listen_list,es
+    LeaveSection ds:udp_section
 ;
     mov ax,UDP_LISTEN_HANDLE
     mov cx,SIZE listen_handle_seg
     AllocateHandle
-    mov [ebx].listen_handle_sel,dx
+    mov [ebx].listen_handle_sel,es
     mov [ebx].hh_sign,UDP_LISTEN_HANDLE
     mov bx,[ebx].hh_handle
 ;       
+    pop di
     pop dx
     pop cx
     pop eax
@@ -2190,62 +2338,299 @@ create_udp_listen   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;   Name:           GetUdpListenData
+;   Name:           GetUdpListenSize
 ;
-;   Purpose:        Get a connection from a listen
+;   Purpose:        Get current UDP listen object size
 ;
 ;   Parameters:     BX      listen handle
 ;
-;   Returns:        AX      connection handle
+;   Returns:        EAX     Message size or 0
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_udp_listen_data_name     DB 'Get UDP Listen Data',0
+get_udp_listen_size_name     DB 'Get UDP Listen Size',0
 
-get_udp_listen_data  Proc far
+get_udp_listen_size  Proc far
     push ds
-    push es
     push ebx
     push cx
     push dx
 ;
     mov ax,UDP_LISTEN_HANDLE
     DerefHandle
-    jc get_udp_listen_data_done
+    jc get_udp_listen_size_fail
 ;    
-;    mov ax,[ebx].listen_handle_sel
-;    mov ds,ax
-;    EnterSection ds:tcp_listen_section
-;    mov dx,ds:tcp_listen_list
-;    or dx,dx
-;    jz get_listen_leave
+    mov ax,[ebx].listen_handle_sel
+    or ax,ax
+    jc get_udp_listen_size_fail
 ;
-;    mov es,dx
-;    mov bx,es:tcp_listen_link
-;    mov ds:tcp_listen_list,bx
+    mov ds,ax
+    mov ds,ds:udp_listen_data
+    mov ax,ds:[0]
+    or ax,ax
+    jz get_udp_listen_size_fail
+;
+    mov ds,ax
+    movzx eax,ds:listen_size
+    clc
+    jmp get_udp_listen_size_done
 
-;get_listen_leave:
-;    LeaveSection ds:tcp_listen_section          
-;    or dx,dx
-;    stc
-;    jz get_listen_done
+get_udp_listen_size_fail:
+    xor eax,eax
+    stc
+
+get_udp_listen_size_done:
+    pop dx
+    pop cx
+    pop ebx
+    pop ds  
+    retf32
+get_udp_listen_size Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;    mov ax,TCP_SOCKET_HANDLE
-;    mov cx,SIZE tcp_handle_seg
-;    AllocateHandle
-;    mov [ebx].tcp_handle_sel,es
-;    mov [ebx].hh_sign,TCP_SOCKET_HANDLE
-;    mov ax,[ebx].hh_handle
-;    clc
+;   Name:           GetUdpListenIP
+;
+;   Purpose:        Get current UDP listen source IP
+;
+;   Parameters:     BX      listen handle
+;
+;   Returns:        EAX     IP
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_udp_listen_ip_name     DB 'Get UDP Listen IP',0
+
+get_udp_listen_ip  Proc far
+    push ds
+    push ebx
+    push cx
+    push dx
+;
+    mov ax,UDP_LISTEN_HANDLE
+    DerefHandle
+    jc get_udp_listen_ip_fail
+;    
+    mov ax,[ebx].listen_handle_sel
+    or ax,ax
+    jc get_udp_listen_ip_fail
+;
+    mov ds,ax
+    mov ds,ds:udp_listen_data
+    mov ax,ds:[0]
+    or ax,ax
+    jz get_udp_listen_ip_fail
+;
+    mov ds,ax
+    mov eax,ds:listen_ip
+    clc
+    jmp get_udp_listen_ip_done
+
+get_udp_listen_ip_fail:
+    xor eax,eax
+    stc
+
+get_udp_listen_ip_done:
+    pop dx
+    pop cx
+    pop ebx
+    pop ds  
+    retf32
+get_udp_listen_ip Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;   Name:           GetUdpListenPort
+;
+;   Purpose:        Get current UDP listen source port
+;
+;   Parameters:     BX      listen handle
+;
+;   Returns:        EAX     Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_udp_listen_port_name     DB 'Get UDP Listen Port',0
+
+get_udp_listen_port  Proc far
+    push ds
+    push ebx
+    push cx
+    push dx
+;
+    mov ax,UDP_LISTEN_HANDLE
+    DerefHandle
+    jc get_udp_listen_port_fail
+;    
+    mov ax,[ebx].listen_handle_sel
+    or ax,ax
+    jc get_udp_listen_port_fail
+;
+    mov ds,ax
+    mov ds,ds:udp_listen_data
+    mov ax,ds:[0]
+    or ax,ax
+    jz get_udp_listen_port_fail
+;
+    mov ds,ax
+    movzx eax,ds:listen_port
+    clc
+    jmp get_udp_listen_port_done
+
+get_udp_listen_port_fail:
+    xor eax,eax
+    stc
+
+get_udp_listen_port_done:
+    pop dx
+    pop cx
+    pop ebx
+    pop ds  
+    retf32
+get_udp_listen_port Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           GetUdpListenData
+;
+;       Purpose:        Get current UDP listen data 
+;
+;       Parameters:     BX              Listen handle
+;                       ES:(E)DI        Buffer
+;                       (E)CX           Buffer size
+;
+;       Returns:        (E)AX           Bytes read
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_udp_listen_data_name DB 'Get UDP Listen Data',0
+
+get_udp_listen_data       Proc near
+    push ds
+    push ebx
+    push ecx
+    push esi
+    push edi
+;
+    mov ax,UDP_LISTEN_HANDLE
+    DerefHandle
+    jc get_udp_listen_data_fail
+;    
+    mov ax,[ebx].listen_handle_sel
+    or ax,ax
+    jc get_udp_listen_data_fail
+;
+    mov ds,ax
+    mov ds,ds:udp_listen_data
+    mov ax,ds:[0]
+    or ax,ax
+    jz get_udp_listen_data_fail
+;
+    mov ds,ax
+    mov esi,OFFSET listen_data
+    movzx eax,ds:listen_size
+    cmp ecx,eax
+    jbe get_udp_listen_copy_data
+;
+    mov ecx,eax
+
+get_udp_listen_copy_data:
+    mov eax,ecx
+    rep movs byte ptr es:[edi],ds:[esi]    
+    clc
+    jmp get_udp_listen_data_done
+
+get_udp_listen_data_fail:
+    xor eax,eax
+    stc
 
 get_udp_listen_data_done:
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop ds  
+    ret
+get_udp_listen_data       Endp
+
+get_udp_listen_data16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call get_udp_listen_data
+;
+    pop edi
+    pop ecx
+    retf32    
+get_udp_listen_data16   Endp
+
+get_udp_listen_data32   Proc far
+    call get_udp_listen_data 
+    retf32    
+get_udp_listen_data32   Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;   Name:           ClearUdpListen
+;
+;   Purpose:        Clear current UDP listen message
+;
+;   Parameters:     BX      listen handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_udp_listen_name     DB 'Clear UDP Listen',0
+
+clear_udp_listen  Proc far
+    push ds
+    push es
+    push ebx
+    push cx
+    push dx
+    push si
+    push di
+;
+    mov ax,UDP_LISTEN_HANDLE
+    DerefHandle
+    jc clear_udp_listen_done
+;    
+    mov ax,[ebx].listen_handle_sel
+    or ax,ax
+    jc clear_udp_listen_done
+;
+    mov ds,ax
+    mov es,ds:udp_listen_data
+    mov cx,ds:udp_listen_size
+    xor di,di
+    mov si,2
+    mov ax,es:[di]
+    or ax,ax
+    jz clear_udp_listen_done
+;
+    push es
+    mov es,ax
+    FreeMem
+    pop es
+;    
+    EnterSection ds:udp_listen_section
+    dec cx
+    rep movs word ptr es:[di],es:[si]
+    xor ax,ax
+    stosw
+    LeaveSection ds:udp_listen_section
+
+clear_udp_listen_done:
+    pop di
+    pop si
     pop dx
     pop cx
     pop ebx
     pop es
     pop ds  
     retf32
-get_udp_listen_data Endp
+clear_udp_listen Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2305,19 +2690,22 @@ start_wait_for_listen   PROC far
     DerefHandle
     jc start_wait_for_listen_done
 ;    
-;    mov ax,[ebx].listen_handle_sel
-;    or ax,ax
-;    jz start_wait_for_listen_done
+    mov ax,[ebx].listen_handle_sel
+    or ax,ax
+    jz start_wait_for_listen_done
 ;
-;    mov ds,ax
-;    mov ds:tcp_listen_wait,es
+    mov ds,ax
+    mov ds:udp_listen_wait_obj,es
 ;
-;    mov ax,ds:tcp_listen_list
-;    or ax,ax
-;    jz start_wait_for_listen_done
+    push ds
+    mov ds,ds:udp_listen_data
+    mov ax,ds:[0]
+    pop ds
+    or ax,ax
+    jz start_wait_for_listen_done
 ;    
-;    mov ds:tcp_listen_wait,0
-;    SignalWait
+    mov ds:udp_listen_wait_obj,0
+    SignalWait
 
 start_wait_for_listen_done:
     pop ebx
@@ -2347,12 +2735,12 @@ stop_wait_for_listen    PROC far
     DerefHandle
     jc stop_wait_listen_done
 ;    
-;    mov ax,[ebx].listen_handle_sel
-;    or ax,ax
-;    jz stop_wait_listen_done
+    mov ax,[ebx].listen_handle_sel
+    or ax,ax
+    jz stop_wait_listen_done
 ;
-;    mov ds,ax
-;    mov ds:tcp_listen_wait,0
+    mov ds,ax
+    mov ds:udp_listen_wait_obj,0
 
 stop_wait_listen_done:
     pop ebx
@@ -2397,18 +2785,19 @@ is_listen_idle  PROC far
     DerefHandle
     jc is_listen_idle_done
 ;    
-;    mov ax,[ebx].listen_handle_sel
-;    or ax,ax
-;    stc
-;    jz is_listen_idle_done
+    mov ax,[ebx].listen_handle_sel
+    or ax,ax
+    stc
+    jz is_listen_idle_done
 ;
-;    mov ds,ax
-;    mov ax,ds:tcp_listen_list
-;    or ax,ax
-;    clc
-;    jne is_listen_idle_done
+    mov ds,ax
+    mov ds,ds:udp_listen_data
+    mov ax,ds:[0]
+    or ax,ax
+    clc
+    jne is_listen_idle_done
 ;
-;    stc
+    stc    
 
 is_listen_idle_done:
     pop ebx
@@ -2556,10 +2945,35 @@ query_list_create:
     mov ax,create_udp_listen_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET get_udp_listen_data
-    mov edi,OFFSET get_udp_listen_data_name
+    mov esi,OFFSET get_udp_listen_size
+    mov edi,OFFSET get_udp_listen_size_name
     xor dx,dx
+    mov ax,get_udp_listen_size_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_udp_listen_ip
+    mov edi,OFFSET get_udp_listen_ip_name
+    xor dx,dx
+    mov ax,get_udp_listen_ip_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_udp_listen_port
+    mov edi,OFFSET get_udp_listen_port_name
+    xor dx,dx
+    mov ax,get_udp_listen_port_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET get_udp_listen_data16
+    mov esi,OFFSET get_udp_listen_data32
+    mov edi,OFFSET get_udp_listen_data_name
+    mov dx,virt_es_in
     mov ax,get_udp_listen_data_nr
+    RegisterUserGate
+;
+    mov esi,OFFSET clear_udp_listen
+    mov edi,OFFSET clear_udp_listen_name
+    xor dx,dx
+    mov ax,clear_udp_listen_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET close_udp_listen
