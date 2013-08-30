@@ -582,6 +582,7 @@ protected:
 	TPopulation SocialPhobia;
 	TPopulation LowIQ;
 	TPopulation HighIQ;
+    TPopulation Exh;
 
 	static int PredYesOk[POP_TYPE_COUNT];
 	static int PredYesFail[POP_TYPE_COUNT];

@@ -37,6 +37,8 @@ public:
     TQuizH8(const char *FileName);
     ~TQuizH8();
 
+    void WriteExh(const char *filename);
+
     virtual void ImportMvsp(const char *filename, int PcaType);
 
 protected:

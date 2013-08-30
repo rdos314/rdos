@@ -399,6 +399,7 @@ TQuiz::TQuiz(int Questions)
          SocialPhobia(Questions),
          LowIQ(Questions),
          HighIQ(Questions),
+         Exh(Questions),
          NoRef("", "No referrer"),
      NTRef("", "NT control group"),
      AspieRef("", "Aspie control group"),
@@ -3697,8 +3698,11 @@ long double TQuiz::GetCutoffChi2(int cats, long double p)
 
             return 1000;
 
-                case 3:
-                                if (p >= 0.2)
+        case 3:
+            if (p >= 0.4)
+                return 2.00;    // test only
+
+            if (p >= 0.2)
                 return 3.22;
 
             if (p >= 0.1)

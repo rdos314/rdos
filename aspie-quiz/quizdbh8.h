@@ -17,6 +17,7 @@ struct TQuizRow
 	char Social;
 	long AsResult;
 	long NtResult;
+	long Exh;
 	char Quiz[250];
 	char GroupResult[ACTIVE_GROUP_COUNT];
 };

@@ -42,7 +42,7 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-TQuiz *Quiz[50];
+TQuizH8 *Quiz[50];
 
 /*##################  main ##########################
 *   Purpose....: Program entry-point                                                            #
@@ -74,6 +74,10 @@ int main(int argc, char **argv)
         printf("rel\r\n");
 
          Quiz[0]->WriteIntercorr("res\\relh8.htm");
+
+         printf("exhnt\r\n");
+         
+         Quiz[0]->WriteExh("res\\exhnt.htm");
 
      printf("calc global\r\n");
         Quiz[0]->CalcGlobal();

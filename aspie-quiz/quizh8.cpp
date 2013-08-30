@@ -822,6 +822,9 @@ void TQuizH8::LoadPopulations()
                                 AspieFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
                 }
 
+                if (Row.Exh)
+                        Exh.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
+
         }
 }
 
@@ -1002,4 +1005,17 @@ void TQuizH8::ImportMvsp(const char *filename, int PcaType)
                         }
                 }
         }
+}
+
+/*##################  TQuizH8::WriteExh ##########################
+*   Purpose....: Write exh vs NT correlation                                                #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizH8::WriteExh(const char *filename)
+{
+    if (Exh.ValueCount >= 5 && Nt.ValueCount >= 5)
+        WriteCorrTable(filename, "exhibitionism", "NT control", &Exh, &Nt, 0.4);
 }

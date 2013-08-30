@@ -206,15 +206,19 @@ static void ProcessRow(char *str)
                  break;
 
             case 13:
-                 Row.AsResult = atoi(valstr);
+                 Row.Exh = atoi(valstr);
                  break;
 
             case 14:
+                 Row.AsResult = atoi(valstr);
+                 break;
+
+            case 15:
                  Row.NtResult = atoi(valstr);
                  break;
 
             default:
-                 i = fieldno - 15;
+                 i = fieldno - 16;
                  Row.Quiz[i] = atoi(valstr);
                  break;
         }
