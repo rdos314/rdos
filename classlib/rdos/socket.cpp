@@ -863,6 +863,36 @@ void TSocketServerFactory::SignalNewData()
 
 /*##########################################################################
 #
+#   Name       : TSocketServerFactory::CloseAllSockets
+#
+#   Purpose....: Closes all open sockets
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSocketServerFactory::CloseAllSockets()
+{
+    TSocketServer *ptr;
+
+    ptr = FList;
+
+    while (ptr)
+    {
+        if (ptr->FSocket != 0)
+        {
+            ptr->FSocket->Close();
+        }
+        ptr = ptr->FNext;
+    }
+
+    // give the socket threads some time to terminate
+    RdosWaitMilli(50);
+}
+
+/*##########################################################################
+#
 #   Name       : TUdpSocketListner::TUdpSocketListner
 #
 #   Purpose....: Constructor

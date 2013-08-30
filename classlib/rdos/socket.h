@@ -141,6 +141,7 @@ public:
     ~TSocketServerFactory();
 
     virtual TSocketServer *Create(TTcpSocket *Socket) = 0;
+    void CloseAllSockets();
 
 protected:
     void Cleanup();
