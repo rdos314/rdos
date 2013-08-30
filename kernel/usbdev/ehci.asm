@@ -742,7 +742,7 @@ AllocateFillQtd   Endp
 
 InsertQtd       PROC near
     push es
-    push ax
+    push eax
     push ebx
 ;
     mov bx,flat_sel
@@ -753,9 +753,20 @@ InsertQtd       PROC near
     mov es:[edx].qtd_flags,al
 ;
     mov ebx,fs:esp_pending
-    mov fs:esp_pending,edx
     or ebx,ebx
     jz iqEmpty
+
+ipLoop:    
+    mov eax,es:[ebx].qtd_next_va
+    or eax,eax
+    jz ipAdd
+;
+    mov ebx,eax
+    jmp ipLoop
+
+ipAdd:
+    mov es:[edx].qtd_next_va,0
+    mov es:[edx].qtd_next,1
 ;    
     mov es:[ebx].qtd_next_va,edx
     mov edx,es:[edx].qtd_my_phys
@@ -767,10 +778,11 @@ iqEmpty:
     mov fs:esp_first,ebx
     mov es:[edx].qtd_next_va,0
     mov es:[edx].qtd_next,1
+    mov fs:esp_pending,edx
 
 iqLinked:
     pop ebx
-    pop ax
+    pop eax
     pop es
     ret
 InsertQtd   Endp
@@ -907,19 +919,30 @@ AddOut    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AddIn
+;   NAME:           AddIn
 ;
-;           DESCRIPTION:    Add in transaction to queue
+;   DESCRIPTION:    Add in transaction to queue
 ;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;               CX      Buffer size
-;               ES:EDI  Buffer
+;   PARAMETERS:     DS      Function selector
+;                   FS      Pipe selector
+;                   CX      Buffer size
+;                   ES:EDI  Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddIn    Proc far
-    int 3
+    push es
+    push eax
+    push edx
+;    
+    call AllocateFillQtd
+;
+    mov al,1
+    call InsertQtd
+;
+    pop edx
+    pop eax
+    pop es
     ret
 AddIn    Endp
 
@@ -936,7 +959,21 @@ AddIn    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddStatusOut    Proc far
-    int 3
+    push es
+    push eax
+    push cx
+    push edx
+;    
+    xor cx,cx
+    call AllocateFillQtd
+;
+    mov al,0
+    call InsertQtd
+;
+    pop edx
+    pop cx
+    pop eax
+    pop es
     ret
 AddStatusOut    Endp
 
@@ -1102,7 +1139,6 @@ WaitForCompletion   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EndTransfer   Proc far
-    int 3
     push es
     push eax
     push cx
@@ -1199,6 +1235,13 @@ WasTransferOk   Endp
 
 GetDataSize   Proc far
     int 3
+    xor cx,cx
+    test fs:esp_flags, ESP_FLAG_TRANSFER_OK
+    jz gdsDone
+;    
+    mov cx,fs:esp_size
+
+gdsDone:
     ret
 GetDataSize   Endp
 
@@ -1222,17 +1265,31 @@ ClosePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ChangeAddress
+;   NAME:           ChangeAddress
 ;
-;           DESCRIPTION:    Change address for pipe
+;   DESCRIPTION:    Change address for pipe
 ;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
+;   PARAMETERS:     DS      Function selector
+;                   FS      Pipe selector
+;                   AL      Address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ChangeAddress   Proc far
-    int 3
+    push es
+    push ax
+    push edx
+;
+    mov ax,flat_sel
+    mov es,ax
+;    
+    mov edx,fs:esp_qh
+    mov al,fs:usbp_address
+    mov es:[edx].qh_adress,al
+;
+    pop edx
+    pop ax
+    pop es
     ret
 ChangeAddress   Endp
 
