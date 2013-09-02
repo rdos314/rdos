@@ -510,7 +510,7 @@ int main(int argc, char **argv)
     ConvH19();
 */
 
-    ConvRu();
+    ConvH8();
     
     return 0;
 }

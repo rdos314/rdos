@@ -69,45 +69,54 @@ HcPortSc        DD ?
 
 hc_reg  ENDS
 
+count_struc STRUC
+
+ehc_cnt         DD ?
+ehc_qh          DD ?
+
+count_struc ENDS
+
 ehci_func_sel   STRUC
 
-usb_dev_base    usb_dev_struc <>
+usb_dev_base        usb_dev_struc <>
 
-ehc_reg_sel     DW ?
+ehc_reg_sel         DW ?
 
-ehc_bus         DB ?
-ehc_device      DB ?
-ehc_function    DB ?
+ehc_bus             DB ?
+ehc_device          DB ?
+ehc_function        DB ?
 
-ehc_op_offs     DB ?
-ehc_flags       DW ?
-ehc_ports       DB ?
+ehc_op_offs         DB ?
+ehc_flags           DW ?
+ehc_ports           DB ?
 ehc_debug_port      DB ?
 ehc_comp_ports      DB ?
 
-ehc_section     section_typ <>
+ehc_section         section_typ <>
 
 ehc_pipe_list       DW ?
 ehc_async_head_va   DD ?
 
 ehc_spinlock        spinlock_typ <>
 
+ehc_periodic_qh     DD ?
+
 ehc_periodic_sel    DW ?
 ehc_periodic_phys   DD ?
 
-ehc_1024_cnt        DB 1024 DUP(?)
-ehc_512_cnt         DB 512 DUP(?)
-ehc_256_cnt         DB 256 DUP(?)
-ehc_128_cnt         DB 128 DUP(?)
-ehc_64_cnt          DB 64 DUP(?)
-ehc_32_cnt          DB 32 DUP(?)
-ehc_16_cnt          DB 16 DUP(?)
-ehc_8_cnt           DB 8 DUP(?)
-ehc_4_cnt           DB 4 DUP(?)
-ehc_2_cnt           DB 2 DUP(?)
-ehc_1_cnt           DB ?
+ehc_1024            DD 1024 DUP(?,?)
+ehc_512             DD 512 DUP(?,?)
+ehc_256             DD 256 DUP(?,?)
+ehc_128             DD 128 DUP(?,?)
+ehc_64              DD 64 DUP(?,?)
+ehc_32              DD 32 DUP(?,?)
+ehc_16              DD 16 DUP(?,?)
+ehc_8               DD 8 DUP(?,?)
+ehc_4               DD 4 DUP(?,?)
+ehc_2               DD 2 DUP(?,?)
+ehc_1               DD ?,?
 
-ehc_curr_cnt        DB 1024 DUP(?)
+ehc_curr_cnt        DD 1024 DUP(?)
 
 ehci_func_sel    ENDS
 
@@ -859,14 +868,11 @@ CreateBulk   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateIntr
+;   NAME:           CreateIntr
 ;
-;           DESCRIPTION:    Create interrupt pipe
+;   DESCRIPTION:    Create interrupt pipe
 ;
-;       PARAMETERS:     DS      Function selector
-;               AL      Interval
-;
-;       RETURNS:    FS      Pipe selector
+;   PARAMETERS:     DS      Function selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1638,6 +1644,69 @@ ehci_timer  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           CreateInterrupt
+;
+;   DESCRIPTION:    Creae interrupt lists
+;
+;   PARAMETERS:     DS  Function sel
+;                   FS  Reg
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateInterrupt  Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;    
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    AllocatePhysical32
+    mov ds:ehc_periodic_phys,eax
+    mov al,13h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov fs,bx
+    mov ds:ehc_periodic_sel,bx
+;    
+    call AllocateQh
+;
+    mov ds:ehc_periodic_qh,edx
+    or al,2
+;
+    mov cx,1024    
+    xor bx,bx
+
+ciLoop:    
+    mov fs:[bx],eax
+    add bx,4
+    loop ciLoop
+;
+    mov fs,ds:ehc_reg_sel
+    mov eax,ds:ehc_periodic_phys
+    mov fs:HcPeriodicListBase,eax
+;
+    mov eax,fs:HcCommand    
+    or al,10h
+    mov fs:HcCommand,eax
+;
+    popad
+    pop fs
+    pop es
+    pop ds    
+    ret
+CreateInterrupt Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitFunction
 ;
 ;           DESCRIPTION:    Init EHCI function
@@ -1758,26 +1827,13 @@ ifPowerOk:
     jmp ifPortLoop    
 
 ifPortDone:
+    call CreateInterrupt
+;
     popad
     pop fs
     pop es
     ret
 InitFunction    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           CreateInterrupt
-;
-;   DESCRIPTION:    Creae interrupt lists
-;
-;   PARAMETERS:     DS  Function sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateInterrupt  Proc near
-    ret
-CreateInterrupt Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1888,7 +1944,6 @@ afPowerOk:
     sub ecx,eax
     CreateDataSelector16
     mov es,bx
-    call CreateInterrupt
 ;
     mov bx,ds
     mov ax,SEG data
