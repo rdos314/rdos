@@ -205,7 +205,8 @@ qhu_page4       DD ?
 
 ; driver part
 
-qh_my_va    DD ?
+qh_my_va        DD ?
+qh_my_phys      DD ?
 qh_link_va      DD ?
 qh_next_va      DD ?
 qh_alt_va       DD ?
@@ -534,6 +535,7 @@ AllocateQh      PROC near
     and cx,0FFFh
     or ax,cx
     pop cx
+    mov es:[edx].qh_my_phys,eax
     ret
 AllocateQh  ENDP
 
@@ -712,6 +714,48 @@ GetIntrEntry    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AddIntrEntry
+;
+;       DESCRIPTION:    Add intr entry
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Flat sel
+;                       BX      Table offset
+;                       AX      Entry
+;
+;       RETURNS:        EDX     QH linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddIntrEntry    PROC near
+    push esi
+    push edi
+;    
+    mov si,ax
+    shl si,3
+    call AllocateQh     ; edx qh linear
+;
+    inc ds:[bx+si].ehc_cnt
+    mov edi,ds:[bx+si].ehc_qh
+    or edi,edi
+    jnz aieIns
+;
+    mov edi,ds:ehc_periodic_qh
+        
+aieIns:
+    mov eax,es:[edi].qh_my_phys
+    or al,2
+    mov es:[edx].qh_link,eax    
+    mov es:[edx].qh_link_va,edi
+;
+    pop edi
+    pop esi        
+    ret
+AddIntrEntry    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AddIntrQh
 ;
 ;       DESCRIPTION:    Add interrupt qh
@@ -748,6 +792,7 @@ aiqLoop:
 aiqFound:
     int 3
     call GetIntrEntry
+    call AddIntrEntry
 ;    
     pop cx
     pop bx
