@@ -74,10 +74,6 @@ ehci_func_sel   STRUC
 usb_dev_base    usb_dev_struc <>
 
 ehc_reg_sel     DW ?
-ehc_map_sel     DW ?
-ehc_map_linear      DD ?
-ehc_linear      DD ?
-ehc_phys        DD ?
 
 ehc_bus         DB ?
 ehc_device      DB ?
@@ -95,6 +91,23 @@ ehc_pipe_list       DW ?
 ehc_async_head_va   DD ?
 
 ehc_spinlock        spinlock_typ <>
+
+ehc_periodic_sel    DW ?
+ehc_periodic_phys   DD ?
+
+ehc_1024_cnt        DB 1024 DUP(?)
+ehc_512_cnt         DB 512 DUP(?)
+ehc_256_cnt         DB 256 DUP(?)
+ehc_128_cnt         DB 128 DUP(?)
+ehc_64_cnt          DB 64 DUP(?)
+ehc_32_cnt          DB 32 DUP(?)
+ehc_16_cnt          DB 16 DUP(?)
+ehc_8_cnt           DB 8 DUP(?)
+ehc_4_cnt           DB 4 DUP(?)
+ehc_2_cnt           DB 2 DUP(?)
+ehc_1_cnt           DB ?
+
+ehc_curr_cnt        DB 1024 DUP(?)
 
 ehci_func_sel    ENDS
 
@@ -1754,6 +1767,21 @@ InitFunction    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           CreateInterrupt
+;
+;   DESCRIPTION:    Creae interrupt lists
+;
+;   PARAMETERS:     DS  Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateInterrupt  Proc near
+    ret
+CreateInterrupt Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           AddFunction
 ;
 ;           DESCRIPTION:    Add EHCI function
@@ -1792,17 +1820,14 @@ AddFunction  Proc near
     pop ecx
     mov bp,bx
 ;     
-    mov eax,1000h
-    AllocateBigLinear
-    mov ecx,eax
-    AllocateGdt
-    CreateDataSelector16
-    mov ds,bx
-    mov es,bx
+    mov eax,SIZE ehci_func_sel
+    mov cx,ax
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov ds,ax
     xor di,di
-    xor eax,eax
-    mov cx,400h
-    rep stosd
+    xor al,al
+    rep stosb
 ;
     pop cx
     pop bx
@@ -1812,18 +1837,6 @@ AddFunction  Proc near
     mov ds:ehc_function,ch    
 ;
     mov ds:ehc_reg_sel,bp
-    mov ds:ehc_linear,edx
-    GetPageEntry
-    and ax,0F000h
-    mov ds:ehc_phys,eax
-;     
-    mov eax,1000h
-    AllocateBigLinear
-    mov ecx,eax
-    AllocateGdt
-    CreateDataSelector16
-    mov ds:ehc_map_linear,edx
-    mov ds:ehc_map_sel,bx
     mov ds:ehc_pipe_list,0
     mov ds:ehc_async_head_va,0
     InitSpinlock ds:ehc_spinlock
@@ -1875,6 +1888,7 @@ afPowerOk:
     sub ecx,eax
     CreateDataSelector16
     mov es,bx
+    call CreateInterrupt
 ;
     mov bx,ds
     mov ax,SEG data
