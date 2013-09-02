@@ -662,6 +662,27 @@ AddControlQh  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AddIntrQh
+;
+;       DESCRIPTION:    Add interrupt qh
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Flat sel
+;                       FS      Pipe sel
+;                       AL      Interval
+;
+;       RETURNS:        EDX     Linear address of qh added
+;                       EAX     Physical address of qh added
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddIntrQh   PROC near
+    ret
+AddIntrQh   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AllocateFillQtd
 ;
 ;       DESCRIPTION:    Allocate and fill qtd buffer pointers from buffer
@@ -873,11 +894,36 @@ CreateBulk   Endp
 ;   DESCRIPTION:    Create interrupt pipe
 ;
 ;   PARAMETERS:     DS      Function selector
+;                   AL      Interval
+;
+;   RETURNS:        FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateIntr   Proc far
+    push es
+    pushad
+;    
     int 3
+    push ax
+    mov eax,SIZE ehci_pipe
+    AllocateSmallGlobalMem
+    xor di,di
+    mov cx,ax
+    xor al,al
+    rep stosb
+    mov ax,es
+    mov fs,ax
+    pop ax
+;    
+    mov dx,flat_sel
+    mov es,dx
+    call AddIntrQh
+    mov fs:esp_qh,edx
+    call InsertPipe
+;
+    popad
+    pop es
     ret
 CreateIntr  Endp
 
