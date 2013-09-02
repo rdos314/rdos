@@ -891,6 +891,10 @@ AddSetup    Proc far
     mov edx,fs:esp_qh
     mov es:[edx].qh_size,0
 ;
+    mov ax,fs:usbp_maxlen
+    or ax,3800h
+    mov es:[edx].qh_max_packet,ax
+;
     pop edx
     pop eax
     pop es
@@ -1234,7 +1238,6 @@ WasTransferOk   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetDataSize   Proc far
-    int 3
     xor cx,cx
     test fs:esp_flags, ESP_FLAG_TRANSFER_OK
     jz gdsDone

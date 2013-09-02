@@ -916,7 +916,7 @@ nuaLoop:
 nuaNotify:
     call ds:is_connected_proc
     jc nuaDone
-;
+;    
     xor ax,ax
     mov gs,ax
     mov bx,ds:usb_controller_id

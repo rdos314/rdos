@@ -395,6 +395,9 @@ ir_data_sel         EQU 9D8h
 audio_dev_code_sel  EQU 9E0h
 audio_dev_data_sel  EQU 9E8h
 
+hub_code_sel        EQU 9F0h
+hub_data_sel        EQU 9F8h
+
 wd_code_sel         EQU 0A00h
 wd_data_sel         EQU 0A08h
 
