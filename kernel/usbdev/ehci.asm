@@ -662,6 +662,56 @@ AddControlQh  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetIntrEntry
+;
+;       DESCRIPTION:    Get intr entry
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Flat sel
+;                       BX      Table offset
+;                       CX      Entry count
+;
+;       RETURNS:        AX      Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetIntrEntry    PROC near
+    push bx
+    push cx
+    push edx
+    push si
+    push di
+;
+    xor si,si    
+    xor di,di
+    mov eax,80000000h
+
+gieLoop:
+    mov edx,ds:[bx+si].ehc_cnt
+    cmp edx,eax
+    ja gieNext
+;
+    mov di,si
+    mov eax,edx
+
+gieNext:
+    add si,8
+    loop gieLoop
+;        
+    mov ax,di
+    shr ax,3    
+;
+    pop di
+    pop si
+    pop edx
+    pop cx
+    pop bx    
+    ret
+GetIntrEntry    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AddIntrQh
 ;
 ;       DESCRIPTION:    Add interrupt qh
@@ -677,6 +727,31 @@ AddControlQh  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddIntrQh   PROC near
+    push fs
+    push bx
+    push cx
+;    
+    mov cx,1024
+    movzx ax,al
+    mov bx,OFFSET ehc_1024
+    mov dx,8 * 1024
+
+aiqLoop:    
+    cmp ax,cx
+    jae aiqFound
+;
+    add bx,dx
+    shr dx,1
+    shr cx,1
+    jnz aiqLoop    
+
+aiqFound:
+    int 3
+    call GetIntrEntry
+;    
+    pop cx
+    pop bx
+    pop fs    
     ret
 AddIntrQh   Endp
 
@@ -904,7 +979,6 @@ CreateIntr   Proc far
     push es
     pushad
 ;    
-    int 3
     push ax
     mov eax,SIZE ehci_pipe
     AllocateSmallGlobalMem
