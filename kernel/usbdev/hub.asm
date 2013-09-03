@@ -33,9 +33,32 @@ include ..\driver.def
 INCLUDE ..\os\protseg.def
 include ..\usbdev\usb.inc
 
+hub_struc   STRUC
+
+hub_next            DW ?
+
+hub_controller      DW ?
+hub_device          DB ?
+hub_intr            DB ?
+
+hub_status_handle   DW ?
+
+hub_status_size     DW ?
+hub_status_sel      DW ?
+hub_status_req      DW ?
+
+hub_struc   ENDS
+
 data    SEGMENT byte public 'DATA'
 
-temp        DW ?
+hub_thread      DW ?
+
+hub_attach_list DW ?
+hub_detach_list DW ?
+
+hub_list        DW ?
+
+hub_section     section_typ <>
 
 data    ENDS
 
@@ -46,6 +69,99 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     .386p
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CreateHub
+;
+;   description:    Create hub
+;
+;   Parameters:     ES      Hub
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateHub  Proc near
+    pushad
+;    
+    mov bx,es:hub_controller
+    mov al,es:hub_device
+    mov dl,es:hub_intr
+    OpenUsbPipe
+    mov es:hub_status_handle,bx
+;
+    CreateUsbReq
+    mov es:hub_status_req,bx
+;
+    push es
+    mov cx,es:hub_status_size
+    movzx eax,cx
+    AllocateSmallGlobalMem
+    AddReadUsbDataReq
+    mov bx,es
+    pop es
+;
+    mov es:hub_status_sel,bx
+;
+    mov ax,ds:hub_thread
+    mov bx,es:hub_status_req
+    mov cx,es:hub_status_size
+    StartUsbReq    
+;
+    IsUsbReqStarted
+    jc chDone
+;
+    IsUsbReqReady
+    jc chDone
+;
+    GetUsbReqData
+    mov ax,es:hub_status_sel
+;
+    mov ax,ds:hub_list
+    mov es:hub_next,ax
+    mov ds:hub_list,es
+
+chDone:
+    popad
+    ret
+CreateHub   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           hub_thread
+;
+;           DESCRIPTION:    HUB thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hub_thread_name  DB 'USB Hub', 0
+
+hub_thread_handler:
+    mov ax,SEG data
+    mov ds,ax
+    GetThread
+    mov ds:hub_thread,ax
+    int 3
+    EnterSection ds:hub_section
+    xor ax,ax
+    xchg ax,ds:hub_attach_list
+    LeaveSection ds:hub_section
+
+hthAttachLoop:
+    or ax,ax
+    jz hthAttachOk
+;
+    mov es,ax
+    mov ax,es:hub_next
+    call CreateHub
+    jmp hthAttachLoop
+
+hthAttachOk:    
+    WaitForSignal
+    
+    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -102,7 +218,7 @@ uaCheckLoop:
 ;    
     mov cl,es:[di].uid_class
     cmp cl,9
-    je uaFound
+    je uaConfig
 
 uaCheckNext:
     movzx cx,es:[di].ucd_len
@@ -114,8 +230,91 @@ uaCheckNext:
     jb uaCheckLoop
     jmp uaDone
 
-uaFound:
+uaConfig:
     ConfigUsbDevice
+    jc uaDone
+;
+    xor di,di
+    movzx cx,es:ucd_len
+    add di,cx
+
+uaDescrLoop:
+    mov cl,es:[di].udd_type
+    cmp cl,5
+    jne uaDescrNext
+;
+    mov cl,es:[di].ued_attrib
+    and cl,3
+    cmp cl,3
+    jne uaDescrNext
+;
+    mov dl,es:[di].ued_address
+    mov cx,es:[di].ued_maxsize
+    jmp uaOk
+
+uaDescrNext:
+    movzx cx,es:[di].ucd_len
+    add di,cx
+    cmp di,es:ucd_size
+    jb uaDescrLoop    
+    jmp uaDone
+
+uaOk:
+    push es 
+    push ax
+    mov eax,SIZE hub_struc
+    AllocateSmallGlobalMem
+    pop ax
+    mov es:hub_controller,bx
+    mov es:hub_device,al
+    mov es:hub_intr,dl
+    mov es:hub_status_size,cx
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov bx,es
+;
+    EnterSection ds:hub_section   
+    mov ax,ds:hub_attach_list
+    or ax,ax
+    jz uaInsEmpty
+
+uaInsLoop:
+    mov es,ax
+    mov ax,es:hub_next
+    or ax,ax
+    jnz uaInsLoop
+;
+    mov es:hub_next,bx
+    jmp uaInsDone
+
+uaInsEmpty:
+    mov ds:hub_attach_list,bx
+
+uaInsDone:    
+    mov es,bx
+    mov es:hub_next,0
+    LeaveSection ds:hub_section
+    pop es
+;
+    mov bx,ds:hub_thread
+    or bx,bx
+    jz uaCreate
+;
+    Signal
+    jmp uaDone
+
+uaCreate:    
+    push es            
+    mov dx,cs
+    mov ds,dx
+    mov es,dx
+    mov di,OFFSET hub_thread_name
+    mov si,OFFSET hub_thread_handler
+    mov ax,3
+    mov cx,stack0_size
+    CreateThread
+    pop es
 
 uaDone:    
     FreeMem
@@ -165,6 +364,11 @@ usb_detach  Endp
 init    Proc far
     mov bx,SEG data
     mov ds,bx
+    mov ds:hub_thread,0
+    mov ds:hub_attach_list,0
+    mov ds:hub_detach_list,0
+    mov ds:hub_list,0
+    InitSection ds:hub_section
 ;       
     mov ax,cs
     mov ds,ax
