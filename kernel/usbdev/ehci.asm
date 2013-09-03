@@ -99,8 +99,6 @@ ehc_async_head_va   DD ?
 
 ehc_spinlock        spinlock_typ <>
 
-ehc_periodic_qh     DD ?
-
 ehc_periodic_sel    DW ?
 ehc_periodic_phys   DD ?
 
@@ -678,7 +676,6 @@ AddControlQh  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetIntrEntry    PROC near
-    push bx
     push cx
     push edx
     push si
@@ -707,7 +704,6 @@ gieNext:
     pop si
     pop edx
     pop cx
-    pop bx    
     ret
 GetIntrEntry    Endp
 
@@ -728,30 +724,124 @@ GetIntrEntry    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddIntrEntry    PROC near
+    push eax
     push esi
     push edi
 ;    
     mov si,ax
     shl si,3
-    call AllocateQh     ; edx qh linear
-;
-    inc ds:[bx+si].ehc_cnt
     mov edi,ds:[bx+si].ehc_qh
+;
+    call AllocateQh 
+    mov ds:[bx+si].ehc_qh,edx
+    inc ds:[bx+si].ehc_cnt
+;
     or edi,edi
     jnz aieIns
 ;
-    mov edi,ds:ehc_periodic_qh
+    mov eax,1
+    jmp aieAdd
         
 aieIns:
     mov eax,es:[edi].qh_my_phys
     or al,2
+
+aieAdd:    
     mov es:[edx].qh_link,eax    
     mov es:[edx].qh_link_va,edi
 ;
     pop edi
     pop esi        
+    pop eax
     ret
 AddIntrEntry    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetIntrPhys
+;
+;       DESCRIPTION:    Set intr physical
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Flat sel
+;                       AX      Entry
+;                       EDX     QH linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetIntrPhys     PROC near
+    push ds
+    push eax
+    push si
+;    
+    mov si,ax
+    shl si,2
+    mov eax,es:[edx].qh_my_phys
+    or al,2
+    mov ds,ds:ehc_periodic_sel
+    mov ds:[si],eax
+;
+    pop si
+    pop eax
+    pop ds    
+    ret
+SetIntrPhys     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AddIntrProp
+;
+;       DESCRIPTION:    Add intr propagate in tree
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Flat sel
+;                       BX      Table offset
+;                       CX      Table size / 2
+;                       AX      Entry
+;                       EDX     QH linear
+;                       BP      Table size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddIntrProp     PROC near
+    pushad
+;    
+    shl cx,1
+;    
+    mov si,ax
+    shl si,3    
+    mov edi,ds:[bx+si].ehc_qh
+    or edi,edi
+    jz aipInsEmpty
+;
+    int 3
+    jmp aipNext
+
+aipInsEmpty:
+    mov ds:[bx+si].ehc_qh,edx
+    inc ds:[bx+si].ehc_cnt
+
+aipNext:    
+    cmp bx,OFFSET ehc_1024
+    jne aipProp
+;
+    call SetIntrPhys
+    jmp aipDone
+
+aipProp:
+    shl bp,1
+    sub bx,bp
+    call AddIntrProp    
+;
+    add ax,cx
+    call AddIntrProp
+
+aipDone:
+    popad
+    ret
+AddIntrProp     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -774,26 +864,42 @@ AddIntrQh   PROC near
     push fs
     push bx
     push cx
+    push bp
 ;    
     mov cx,1024
     movzx ax,al
     mov bx,OFFSET ehc_1024
-    mov dx,8 * 1024
+    mov bp,8 * 1024
 
 aiqLoop:    
     cmp ax,cx
     jae aiqFound
 ;
-    add bx,dx
-    shr dx,1
+    add bx,bp
+    shr bp,1
     shr cx,1
     jnz aiqLoop    
 
 aiqFound:
-    int 3
     call GetIntrEntry
     call AddIntrEntry
 ;    
+    cmp bx,OFFSET ehc_1024
+    jne aiqProp
+;
+    call SetIntrPhys
+    jmp aiqDone
+
+aiqProp:
+    shl bp,1
+    sub bx,bp
+    call AddIntrProp    
+;
+    add ax,cx
+    call AddIntrProp
+
+aiqDone:
+    pop bp
     pop cx
     pop bx
     pop fs    
@@ -1840,14 +1946,10 @@ CreateInterrupt  Proc near
     CreateDataSelector16
     mov fs,bx
     mov ds:ehc_periodic_sel,bx
-;    
-    call AllocateQh
-;
-    mov ds:ehc_periodic_qh,edx
-    or al,2
 ;
     mov cx,1024    
     xor bx,bx
+    mov eax,1
 
 ciLoop:    
     mov fs:[bx],eax

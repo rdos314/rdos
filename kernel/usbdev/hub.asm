@@ -64,7 +64,6 @@ usb_attach  Proc far
     push es
     pushad
 ;
-    int 3
     push ax
     mov eax,1000h
     AllocateSmallGlobalMem
