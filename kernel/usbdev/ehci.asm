@@ -233,6 +233,122 @@ ELSE
     .386p
 ENDIF
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UpdatePipeList
+;
+;           DESCRIPTION:    Update pipe list
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdatePipeList  Proc near
+    push ax
+
+uplLoop:
+    RequestSpinlock ds:ehc_spinlock
+    mov ax,ds:ehc_pipe_list
+    or ax,ax
+    jz uplDone
+;
+    push es
+    push fs
+    push ebx
+    push edx
+    push di
+;
+    mov di,ax
+    mov fs,ax
+;
+    mov ax,flat_sel
+    mov es,ax
+
+uplElemLoop:
+    test fs:esp_flags, ESP_FLAG_TRANSFER_PENDING
+    jz uplNext
+;
+    mov edx,fs:esp_qh
+    or edx,edx
+    jz uplNext
+;    
+    mov eax,es:[edx].qh_next_qtd
+    test al,1
+    jz uplNext
+;
+    xor bx,bx
+    xchg bx,fs:esp_signal
+    or bx,bx
+    jz uplNext
+;
+    ReleaseSpinlock ds:ehc_spinlock    
+    Signal
+    pop di
+    pop edx
+    pop ebx
+    pop fs
+    pop es    
+    jmp uplLoop
+
+uplNext:    
+    mov ax,fs:esp_next
+    mov fs,ax
+    cmp ax,di
+    jne uplElemLoop
+;
+    pop di
+    pop edx
+    pop ebx
+    pop fs
+    pop es    
+
+uplDone:    
+    ReleaseSpinlock ds:ehc_spinlock
+    pop ax
+    ret
+UpdatePipeList  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           EhciInt
+;
+;           DESCRIPTION:    EHCI interrupt
+;
+;       PARAMETERS:     DS      Function selector
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EhciInt Proc far    
+    mov es,ds:ehc_reg_sel
+
+eiLoop:    
+    mov eax,es:HcStatus
+    and al,7
+    mov es:HcStatus,eax
+    jz eiDone
+;
+    test al,1
+    jz eiNotPipe
+;    
+    call UpdatePipeList
+
+eiNotPipe:
+    and al,NOT 1
+    jz eiLoop
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov bx,ds:EhciThread
+    Signal
+    jmp eiLoop
+
+eiDone:
+    retf32
+EhciInt  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -482,7 +598,7 @@ InitQtd PROC near
     mov es:[edx].qtd_next,1
     mov es:[edx].qtd_alt,1
     mov es:[edx].qtd_status,80h
-    mov es:[edx].qtd_flags,0Fh
+    mov es:[edx].qtd_flags,8Fh
     mov es:[edx].qtd_size,0
     mov es:[edx].qtdl_page0,0
     mov es:[edx].qtdl_page1,0
@@ -1018,7 +1134,7 @@ InsertQtd       PROC near
     mov es,bx
 ;    
     and al,3
-    or al,0Ch
+    or al,8Ch
     mov es:[edx].qtd_flags,al
 ;
     mov ebx,fs:esp_pending
@@ -1508,8 +1624,22 @@ EndTransfer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WasTransferOk   Proc far
-    int 3
+    test fs:esp_flags, ESP_FLAG_TRANSFER_PENDING
+    jz wtoNotPending
+;    
+    call EndTransfer
+
+wtoNotPending:
+    test fs:esp_flags, ESP_FLAG_TRANSFER_OK
+    jnz wtoOk
+;    
     stc
+    jmp wtoDone
+
+wtoOk:
+    clc
+
+wtoDone:
     ret
 WasTransferOk   Endp
 
@@ -1852,69 +1982,6 @@ UpdateUsb   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ehci_timer
-;
-;           DESCRIPTION:    Timer that scans for status change in controller
-;
-;       PARAMETERS:     
-;
-;           RETURNS:        
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ehci_timer  Proc far
-    push edx
-    push eax
-;    
-    mov ax,SEG data
-    mov ds,ax
-    mov bx,ds:EhciThread
-;
-    mov cx,ds:EhciFuncCount
-    or cx,cx
-    jz etDone
-;
-    mov si,OFFSET EhciFuncArr
-
-etLoop:
-    push ds
-    push cx
-    push si
-;    
-    mov ds,ds:[si]
-    mov es,ds:ehc_reg_sel
-    mov eax,es:HcStatus
-    and al,7
-    jz etNext
-;    
-    Signal
-
-etNext:
-    pop si
-    pop cx
-    pop ds
-;
-    add si,2
-    loop etLoop
-
-etDone:    
-    pop eax   
-    pop edx
-;    
-    GetSystemTime
-    add eax,1193
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov bx,cs
-    mov edi,OFFSET ehci_timer
-    StartTimer
-    retf32
-ehci_timer  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;   NAME:           CreateInterrupt
 ;
 ;   DESCRIPTION:    Creae interrupt lists
@@ -2031,10 +2098,41 @@ ifTabLoop:
     mov bh,ds:ehc_bus
     mov bl,ds:ehc_device
     mov ch,ds:ehc_function
+;
+    GetPciMsi
+    jc ifIrq
+;
+    push cx
+    mov cx,1
+    mov al,14h
+    AllocateInts
+    pop cx
+    jc ifIrq    
+;
+    SetupPciMsi
+;    
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET EhciInt
+    RequestMsiHandler
+    jmp ifIntDone
+
+ifIrq:
+    GetPciIrqNr
+    mov ah,14h
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET EhciInt
+    RequestIrqHandler
+
+ifIntDone:    
     mov al,1
     FindPciCapability
     jc ifHandoverOk
 ;    
+    mov bh,ds:ehc_bus
+    mov bl,ds:ehc_device
+    mov ch,ds:ehc_function
     mov cl,al
     ReadPciDword
     add cl,4
@@ -2094,6 +2192,9 @@ ifPowerOk:
     jmp ifPortLoop    
 
 ifPortDone:
+    mov eax,5
+    mov fs:HcInterruptEnable,eax
+;    
     call CreateInterrupt
 ;
     popad
@@ -2309,15 +2410,6 @@ etInitLoop:
     pop ds
     add si,2
     loop etInitLoop
-;    
-    GetSystemTime
-    add eax,11930
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov bx,cs
-    mov edi,OFFSET ehci_timer
-    StartTimer
 ;
     mov ax,20
     WaitMilliSec

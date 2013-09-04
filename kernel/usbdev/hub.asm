@@ -33,6 +33,29 @@ include ..\driver.def
 INCLUDE ..\os\protseg.def
 include ..\usbdev\usb.inc
 
+GET_STATUS = 0
+CLEAR_FEATURE = 1
+SET_FEATURE = 3
+GET_DESCR = 6
+SET_DESCR = 7
+CLEAR_TT = 8
+RESET_TT = 9
+GET_TT_STATE = 10
+STOP_TT = 11
+
+HUB_BUF_SIZE    = 40h
+
+usb_hub_descr   STRUC
+
+uhd_len             DB ?
+uhd_type            DB ?
+uhd_ports           DB ?
+uhd_info            DW ?
+uhd_power_time  DB ?
+uhd_current     DB ?
+
+usb_hub_descr   ENDS
+
 hub_struc   STRUC
 
 hub_next            DW ?
@@ -41,11 +64,20 @@ hub_controller      DW ?
 hub_device          DB ?
 hub_intr            DB ?
 
+hub_wait_handle     DW ?
+hub_control_handle  DW ?
 hub_status_handle   DW ?
 
 hub_status_size     DW ?
 hub_status_sel      DW ?
 hub_status_req      DW ?
+
+hub_control_data    DB 8 DUP (?)
+hub_buf             DB HUB_BUF_SIZE DUP(?)
+
+hub_power_time      DW ?
+hub_info            DW ?
+hub_ports           DW ?
 
 hub_struc   ENDS
 
@@ -74,39 +106,119 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           ProcessHubDescr
+;
+;   description:    Process Hub descriptor
+;
+;   Parameters:     GS      Hub
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProcessHubDescr  Proc near
+    push es
+    pushad
+;    
+    mov ax,gs
+    mov es,ax
+    mov bx,gs:hub_control_handle
+;    
+    mov di,OFFSET hub_control_data
+    mov es:[di].usd_type,0A0h
+    mov es:[di].usd_req,GET_DESCR
+    mov es:[di].usd_value,2900h
+    mov es:[di].usd_index,0
+    mov es:[di].usd_len,HUB_BUF_SIZE
+    mov cx,8
+    WriteUsbControl
+;
+    mov cx,HUB_BUF_SIZE
+    mov di,OFFSET hub_buf
+    mov es:[di].uhd_type,0
+    ReqUsbData    
+;    
+    WriteUsbStatus
+    StartUsbTransaction
+;
+    GetSystemTime
+    add eax,1000 * 1193    
+    adc edx,0
+    mov bx,gs:hub_wait_handle
+    WaitWithTimeout
+;    
+    mov bx,gs:hub_control_handle
+    WasUsbTransactionOk
+    jc ghdDone
+;
+    mov cl,es:[di].uhd_type
+    cmp cl,29h
+    stc
+    jne ghdDone
+;
+    movzx cx,es:[di].uhd_ports
+    mov gs:hub_ports,cx
+;
+    mov cx,es:[di].uhd_info
+    mov gs:hub_info,cx
+;
+    movzx cx,es:[di].uhd_power_time
+    shl cx,1
+    mov gs:hub_power_time,cx        
+    clc    
+
+ghdDone:    
+    popad
+    pop es
+    ret
+ProcessHubDescr Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           CreateHub
 ;
 ;   description:    Create hub
 ;
-;   Parameters:     ES      Hub
+;   Parameters:     GS      Hub
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateHub  Proc near
+    push es
     pushad
-;    
-    mov bx,es:hub_controller
-    mov al,es:hub_device
-    mov dl,es:hub_intr
+;
+    CreateWait
+    mov gs:hub_wait_handle,bx
+;
+    mov bx,gs:hub_controller
+    mov al,gs:hub_device
+    xor dl,dl
     OpenUsbPipe
-    mov es:hub_status_handle,bx
+    mov gs:hub_control_handle,bx
+;
+    mov ax,gs:hub_control_handle
+    mov bx,gs:hub_wait_handle
+    xor ecx,ecx
+    AddWaitForUsbPipe
+;    
+    mov bx,gs:hub_controller
+    mov al,gs:hub_device
+    mov dl,gs:hub_intr
+    OpenUsbPipe
+    mov gs:hub_status_handle,bx
 ;
     CreateUsbReq
-    mov es:hub_status_req,bx
+    mov gs:hub_status_req,bx
 ;
-    push es
-    mov cx,es:hub_status_size
+    mov cx,gs:hub_status_size
     movzx eax,cx
     AllocateSmallGlobalMem
+    mov gs:hub_status_sel,es
     AddReadUsbDataReq
-    mov bx,es
-    pop es
-;
-    mov es:hub_status_sel,bx
 ;
     mov ax,ds:hub_thread
-    mov bx,es:hub_status_req
-    mov cx,es:hub_status_size
+    mov bx,gs:hub_status_req
+    mov cx,gs:hub_status_size
     StartUsbReq    
 ;
     IsUsbReqStarted
@@ -116,14 +228,15 @@ CreateHub  Proc near
     jc chDone
 ;
     GetUsbReqData
-    mov ax,es:hub_status_sel
+    mov ax,gs:hub_status_sel
 ;
     mov ax,ds:hub_list
-    mov es:hub_next,ax
-    mov ds:hub_list,es
+    mov gs:hub_next,ax
+    mov ds:hub_list,gs
 
 chDone:
     popad
+    pop es
     ret
 CreateHub   Endp
 
@@ -153,9 +266,10 @@ hthAttachLoop:
     or ax,ax
     jz hthAttachOk
 ;
-    mov es,ax
-    mov ax,es:hub_next
+    mov gs,ax
+    mov ax,gs:hub_next
     call CreateHub
+    call ProcessHubDescr
     jmp hthAttachLoop
 
 hthAttachOk:    
@@ -234,6 +348,23 @@ uaConfig:
     ConfigUsbDevice
     jc uaDone
 ;
+    push es 
+    push ax
+    push ax
+    mov eax,SIZE hub_struc
+    AllocateSmallGlobalMem
+    pop ax
+    mov es:hub_controller,bx
+    mov es:hub_device,al
+    mov es:hub_status_size,0
+    mov es:hub_intr,0
+    mov es:hub_info,0
+    mov es:hub_power_time,0
+    mov ax,es
+    mov gs,ax
+    pop ax
+    pop es
+;
     xor di,di
     movzx cx,es:ucd_len
     add di,cx
@@ -242,37 +373,43 @@ uaDescrLoop:
     mov cl,es:[di].udd_type
     cmp cl,5
     jne uaDescrNext
-;
+
+uaDescrDo:
     mov cl,es:[di].ued_attrib
     and cl,3
     cmp cl,3
     jne uaDescrNext
 ;
-    mov dl,es:[di].ued_address
+    mov cl,es:[di].ued_address
+    mov gs:hub_intr,cl
+;
     mov cx,es:[di].ued_maxsize
-    jmp uaOk
+    mov gs:hub_status_size,cx
 
 uaDescrNext:
     movzx cx,es:[di].ucd_len
     add di,cx
     cmp di,es:ucd_size
     jb uaDescrLoop    
-    jmp uaDone
 
 uaOk:
-    push es 
-    push ax
-    mov eax,SIZE hub_struc
-    AllocateSmallGlobalMem
-    pop ax
-    mov es:hub_controller,bx
-    mov es:hub_device,al
-    mov es:hub_intr,dl
-    mov es:hub_status_size,cx
+    mov al,gs:hub_intr
+    or al,al
+    jnz uaValid
 ;
+    push es
+    mov ax,gs
+    mov es,ax
+    xor ax,ax
+    mov gs,ax
+    FreeMem
+    pop es
+    jmp uaDone
+
+uaValid:
     mov ax,SEG data
     mov ds,ax
-    mov bx,es
+    mov bx,gs
 ;
     EnterSection ds:hub_section   
     mov ax,ds:hub_attach_list
@@ -280,22 +417,21 @@ uaOk:
     jz uaInsEmpty
 
 uaInsLoop:
-    mov es,ax
-    mov ax,es:hub_next
+    mov gs,ax
+    mov ax,gs:hub_next
     or ax,ax
     jnz uaInsLoop
 ;
-    mov es:hub_next,bx
+    mov gs:hub_next,bx
     jmp uaInsDone
 
 uaInsEmpty:
     mov ds:hub_attach_list,bx
 
 uaInsDone:    
-    mov es,bx
-    mov es:hub_next,0
+    mov gs,bx
+    mov gs:hub_next,0
     LeaveSection ds:hub_section
-    pop es
 ;
     mov bx,ds:hub_thread
     or bx,bx
