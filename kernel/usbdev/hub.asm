@@ -43,7 +43,23 @@ RESET_TT = 9
 GET_TT_STATE = 10
 STOP_TT = 11
 
+PORT_CONNECTION     = 0
+PORT_ENABLE         = 1
+PORT_SUSPEND        = 2
+PORT_OVER_CURRENT   = 3
+PORT_RESET          = 4
+PORT_POWER          = 8
+PORT_LOW_SPEED      = 9
+C_PORT_CONNECTION   = 16
+C_PORT_ENABLE       = 17
+C_PORT_SUSPEND      = 18
+C_PORT_OVER_CURRENT = 19
+C_PORT_RESET        = 20
+PORT_TEST           = 21
+PORT_INDICATOR      = 22
+
 HUB_BUF_SIZE    = 40h
+MAX_HUB_PORTS   = 16
 
 usb_hub_descr   STRUC
 
@@ -55,6 +71,12 @@ uhd_power_time  DB ?
 uhd_current     DB ?
 
 usb_hub_descr   ENDS
+
+hub_port_status STRUC
+
+hps_status      DW ?
+
+hub_port_status ENDS
 
 hub_struc   STRUC
 
@@ -78,6 +100,8 @@ hub_buf             DB HUB_BUF_SIZE DUP(?)
 hub_power_time      DW ?
 hub_info            DW ?
 hub_ports           DW ?
+
+hub_port_arr        DW MAX_HUB_PORTS DUP(?)
 
 hub_struc   ENDS
 
@@ -175,6 +199,159 @@ ProcessHubDescr Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           GetPortStatus
+;
+;   description:    Get port status
+;
+;   Parameters:     GS      Hub
+;                   DX      Port
+;
+;   Returns:        AX      Port status
+;                   DX      Status change
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPortStatus  Proc near
+    push es
+    push bx
+    push cx
+    push di
+;    
+    mov ax,gs
+    mov es,ax
+    mov bx,gs:hub_control_handle
+;    
+    mov di,OFFSET hub_control_data
+    mov es:[di].usd_type,0A3h
+    mov es:[di].usd_req,GET_STATUS
+    mov es:[di].usd_value,0
+    mov es:[di].usd_index,dx
+    mov es:[di].usd_len,4
+    mov cx,8
+    WriteUsbControl
+;
+    mov cx,4
+    mov di,OFFSET hub_buf
+    mov es:[di].uhd_type,0
+    ReqUsbData    
+;    
+    WriteUsbStatus
+    StartUsbTransaction
+;
+    GetSystemTime
+    add eax,1000 * 1193    
+    adc edx,0
+    mov bx,gs:hub_wait_handle
+    WaitWithTimeout
+;    
+    mov bx,gs:hub_control_handle
+    WasUsbTransactionOk
+    jc gpsDone
+;    
+    mov di,OFFSET hub_buf
+    mov ax,es:[di]
+    mov dx,es:[di+2]
+    clc    
+
+gpsDone:    
+    pop di
+    pop cx
+    pop bx
+    pop es
+    ret
+GetPortStatus Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SetPortFeature
+;
+;   description:    Set port feature
+;
+;   Parameters:     GS      Hub
+;                   DX      Port
+;                   AX      Feature
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetPortFeature  Proc near
+    push es
+    pushad
+;    
+    mov bx,gs
+    mov es,bx
+    mov bx,gs:hub_control_handle
+;    
+    mov di,OFFSET hub_control_data
+    mov es:[di].usd_type,23h
+    mov es:[di].usd_req,SET_FEATURE
+    mov es:[di].usd_value,ax
+    mov es:[di].usd_index,dx
+    mov es:[di].usd_len,0
+    mov cx,8
+    WriteUsbControl
+    ReqUsbStatus
+    StartUsbTransaction
+;
+    GetSystemTime
+    add eax,1000 * 1193    
+    adc edx,0
+    mov bx,gs:hub_wait_handle
+    WaitWithTimeout
+;    
+    mov bx,gs:hub_control_handle
+    WasUsbTransactionOk
+;
+    popad
+    pop es
+    ret
+SetPortFeature Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           StartPorts
+;
+;   description:    Start hub ports (power-on)
+;
+;   Parameters:     GS      Hub
+;                   DX      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartPorts    Proc near
+    pushad
+;
+    mov cx,gs:hub_ports
+    mov bx,OFFSET hub_port_arr
+    mov si,1
+
+spLoop:
+    mov dx,si
+    call GetPortStatus
+    mov gs:[bx].hps_status,ax
+;
+    test ax,100h
+    jnz spNext
+;
+    mov dx,si
+    mov ax,PORT_POWER
+    call SetPortFeature    
+
+spNext:
+    add bx,2
+    inc si
+    loop spLoop
+;           
+    popad
+    ret
+StartPorts    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           CreateHub
 ;
 ;   description:    Create hub
@@ -221,24 +398,45 @@ CreateHub  Proc near
     mov cx,gs:hub_status_size
     StartUsbReq    
 ;
-    IsUsbReqStarted
-    jc chDone
-;
-    IsUsbReqReady
-    jc chDone
-;
-    GetUsbReqData
-    mov ax,gs:hub_status_sel
-;
     mov ax,ds:hub_list
     mov gs:hub_next,ax
     mov ds:hub_list,gs
-
-chDone:
+;
     popad
     pop es
     ret
 CreateHub   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           PollStatus
+;
+;   description:    Poll Hub status
+;
+;   Parameters:     GS      Hub
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PollStatus    Proc near
+    mov bx,gs:hub_status_req
+    IsUsbReqStarted
+    jnc psStarted
+;
+    StartUsbReq
+    jmp psDone        
+
+psStarted:
+    IsUsbReqReady
+    jc psDone
+;
+    GetUsbReqData
+    mov ax,gs:hub_status_sel
+    StartUsbReq
+
+psDone:
+    ret
+PollStatus  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -270,6 +468,8 @@ hthAttachLoop:
     mov ax,gs:hub_next
     call CreateHub
     call ProcessHubDescr
+    call StartPorts
+    call PollStatus
     jmp hthAttachLoop
 
 hthAttachOk:    
