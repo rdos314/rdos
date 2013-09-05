@@ -1192,8 +1192,12 @@ bquListenOk:
     pop es    
     mov edx,ds:bq_ip
     clc
+    jmp bquLeave
 
 bquFailed:
+    stc
+
+bquLeave:
     mov eax,ds:bq_reply_size
     mov ds:bq_req_sel,0
     mov ds:bq_thread,0

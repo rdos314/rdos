@@ -1752,6 +1752,7 @@
 #pragma aux RdosBroadcastQueryUdp = \
     "push eax" \
     CallGate_broadcast_query_udp  \
+    ValidateEdx \
     "pop esi" \
     "mov [esi],eax" \
     "mov eax,edx" \
