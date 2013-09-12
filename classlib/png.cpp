@@ -107,7 +107,17 @@ TPngBitmapDevice *TPngBitmapDevice::Create(const char *FileName, int r, int g, i
 #   Returns....: *
 #
 ##########################################################################*/
-int TPngBitmapDevice::Save(const char *FileName)
+int TPngBitmapDevice::Save(const char *FileName, TGraphicDevice *src)
 {
-    return SavePngBase(FileName, FBitmapHandle);
+    TBitmapGraphicDevice *bitmap;
+    int ok;
+    
+    bitmap = new TBitmapGraphicDevice(24, src->GetWidth(), src->GetHeight());
+    bitmap->Blit(src, 0, 0, 0, 0, src->GetWidth(), src->GetHeight());
+
+    ok = SavePngBase(FileName, bitmap->GetHandle());
+
+    delete bitmap;
+
+    return ok;
 }

@@ -48,6 +48,7 @@ public:
     int GetHeight();
 	void *GetLinear();
 	int GetLineSize();
+	int GetHandle();
 
     void SetFont(TFont *font);
     TSprite *CreateSprite(TGraphicDevice *bitmap, TGraphicDevice *mask, int hotx, int hoty);

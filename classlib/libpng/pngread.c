@@ -67,6 +67,12 @@ png_create_read_struct_2,(png_const_charp user_png_ver, png_voidp error_ptr,
             png_ptr->flags |= PNG_FLAG_APP_WARNINGS_WARN;
 #        endif
 #     endif
+
+      /* TODO: delay this, it can be done in png_init_io (if the app doesn't
+       * do it itself) avoiding setting the default function if it is not
+       * required.
+       */
+      png_set_read_fn(png_ptr, NULL, NULL);
    }
 
    return png_ptr;

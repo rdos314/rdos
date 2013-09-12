@@ -1,7 +1,7 @@
 
 /* pngconf.h - machine configurable file for libpng
  *
- * libpng version 1.6.1 - March 28, 2013
+ * libpng version 1.6.3 - July 18, 2013
  *
  * Copyright (c) 1998-2013 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
@@ -238,6 +238,7 @@
 #      define PNGAPI _stdcall
 #    endif
 #  endif /* compiler/api */
+
   /* NOTE: PNGCBAPI always defaults to PNGCAPI. */
 
 #  if defined(PNGAPI) && !defined(PNG_USER_PRIVATEBUILD)
@@ -587,7 +588,7 @@ typedef png_size_t            * png_size_tp;
 typedef const png_size_t      * png_const_size_tp;
 
 #ifdef PNG_STDIO_SUPPORTED
-typedef int                     png_FILE_p;
+typedef FILE            * png_FILE_p;
 #endif
 
 #ifdef PNG_FLOATING_POINT_SUPPORTED

@@ -282,6 +282,22 @@ int TGraphicDevice::GetLineSize()
 
 /*##########################################################################
 #
+#   Name       : TGraphicDevice::GetHandle
+#
+#   Purpose....: Get RDOS handle for bitmap
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: Handle
+#
+##########################################################################*/
+int TGraphicDevice::GetHandle()
+{
+    return FBitmapHandle;
+}
+
+/*##########################################################################
+#
 #   Name       : TGraphicDevice::SetFont
 #
 #   Purpose....: Set current font

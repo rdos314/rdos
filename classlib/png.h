@@ -36,7 +36,7 @@ public:
 	TPngBitmapDevice(int width, int height);
 
 	static TPngBitmapDevice *Create(const char *FileName, int BackR, int BackG, int BackB);
-	int Save(const char *FileName);
+	static int Save(const char *FileName, TGraphicDevice *bitmap);
 
 protected:
 	TPngBitmapDevice(int handle);
