@@ -80,6 +80,8 @@ void ConvF13();
 void ConvF14();
 void ConvF15();
 
+void ConvG3();
+
 void ConvH3();
 void ConvH4();
 void ConvH5();

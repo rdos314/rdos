@@ -21,44 +21,38 @@
 # The author of this program may be contacted at leif@rdos.net
 #
 # quizg3.h
-# Quiz final version 2, release 3 class
+# Quiz class for G3
 #
 ########################################################################*/
 
 #ifndef _QUIZG3_H
 #define _QUIZG3_H
 
-#include "quizg.h"
+#include "quiz.h"
 #include "file.h"
 
-class TQuizG3 : public TQuizFinal2
+class TQuizG3 : public TQuiz
 {
 public:
-	 TQuizG3(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4, TQuiz *QuizF5, TQuiz *QuizF6, TQuiz *QuizF7, TQuiz *QuizF8, TQuiz *QuizF9, TQuiz *QuizF10, TQuiz *QuizF11, TQuiz *QuizF12, TQuiz *QuizF13, TQuiz *QuizF14, TQuiz *QuizF15, TQuiz *QuizGe, TQuiz *QuizGe2, TQuiz *QuizGe3, TQuiz *QuizG1, TQuiz *QuizG2);
-	 ~TQuizG3();
+    TQuizG3(const char *FileName);
+    ~TQuizG3();
 
-	 virtual void ExportExcelCase(const char *filename, int PcaType);
-	 virtual void ExportExcelGroups(const char *filename);
-	 virtual void ExportExcelAspie(const char *filename);
-	 virtual void ImportMvsp(const char *filename, int PcaType);
+    virtual void ImportMvsp(const char *filename, int PcaType);
 
-	 virtual void WriteRetest(const char *filename);
-	 virtual void WriteRace(const char *filename);
-
-private:
+protected:
     virtual void GetReferer(const char *referer, TPopulation *pop);
     virtual void WriteName(TFile &File);
     virtual void WriteLongName(TFile &File);
-    virtual int GetCatCount(int Question);
+	virtual int GetPcaCount();
+	virtual int GetCatCount(int Question);
 	virtual int GetQuizN();
 
-	void SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4, TQuiz *QuizF5, TQuiz *QuizF6, TQuiz *QuizF7, TQuiz *QuizF8, TQuiz *QuizF9, TQuiz *QuizF10, TQuiz *QuizF11, TQuiz *QuizF12, TQuiz *QuizF13, TQuiz *QuizF14, TQuiz *QuizF15, TQuiz *QuizGe, TQuiz *QuizGe2, TQuiz *QuizGe3, TQuiz *QuizG1, TQuiz *QuizG2);
+	void SetupCross();
     void SetupTexts();
-    void LoadReferers();
     void LoadPopulations();
 
     TFile FDataFile;
+
 };
 
 #endif
-

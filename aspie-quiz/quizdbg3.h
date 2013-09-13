@@ -3,6 +3,9 @@ struct TQuizRow
 {
     long ID;
     long userid;
+    long LsbTime;
+    long MsbTime;
+    long FilloutTime;
     int  BirthYear;
     int  BirthMonth;
 	char Gender;
