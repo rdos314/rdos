@@ -373,6 +373,40 @@ CreateHub   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           HubAttach
+;
+;   description:    Hub attach event
+;
+;   Parameters:     GS      Hub
+;                   DX      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HubAttach    Proc near
+    int 3
+    ret
+HubAttach   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HubDetach
+;
+;   description:    Hub detach event
+;
+;   Parameters:     GS      Hub
+;                   DX      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HubDetach    Proc near
+    int 3
+    ret
+HubDetach   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           UpdatePorts
 ;
 ;   description:    Update ports
@@ -391,10 +425,10 @@ UpdatePorts    Proc near
 upLoop:
     mov dx,si
     call GetPortStatus
-    mov gs:[bx].hps_status,ax
     test ax,100h
     jnz upHasPower
 ;
+    mov gs:[bx].hps_status,ax
     mov dx,si
     mov ax,PORT_POWER
     call SetPortFeature    
@@ -402,17 +436,33 @@ upLoop:
 
 upHasPower:
     test ax,1
-    jz upNext
+    jz upNotConnected
 ;
     test ax,2
     jnz upIsEnabled
 ;        
+    mov gs:[bx].hps_status,ax
     mov dx,si
     mov ax,PORT_RESET
     call SetPortFeature    
     jmp upNext
 
 upIsEnabled:
+    xchg ax,gs:[bx].hps_status
+    test ax,2
+    jnz upNext
+;
+    mov dx,si
+    call HubAttach 
+    jmp upNext
+
+upNotConnected:
+    xchg ax,gs:[bx].hps_status
+    test ax,1
+    jz upNext
+;
+    mov dx,si
+    call HubDetach
 
 upNext:    
     add bx,2
@@ -470,7 +520,6 @@ hub_thread_handler:
     GetThread
     mov gs:hub_thread,ax
 ;
-    int 3
     call CreateHub
     call ProcessHubDescr
     jc hub_exit
