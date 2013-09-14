@@ -185,6 +185,15 @@ ProcessHubDescr  Proc near
     movzx cx,es:[di].uhd_power_time
     shl cx,1
     mov gs:hub_power_time,cx        
+;
+    mov cx,gs:hub_ports
+    mov bx,OFFSET hub_port_arr
+
+phdLoop:
+    mov gs:[bx].hps_status,0
+    add bx,2
+    loop phdLoop
+;               
     clc    
 
 ghdDone:    
@@ -306,47 +315,6 @@ SetPortFeature  Proc near
     ret
 SetPortFeature Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           StartPorts
-;
-;   description:    Start hub ports (power-on)
-;
-;   Parameters:     GS      Hub
-;                   DX      Port
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StartPorts    Proc near
-    pushad
-;
-    mov cx,gs:hub_ports
-    mov bx,OFFSET hub_port_arr
-    mov si,1
-
-spLoop:
-    mov dx,si
-    call GetPortStatus
-    mov gs:[bx].hps_status,ax
-;
-    test ax,100h
-    jnz spNext
-;
-    mov dx,si
-    mov ax,PORT_POWER
-    call SetPortFeature    
-
-spNext:
-    add bx,2
-    inc si
-    loop spLoop
-;           
-    popad
-    ret
-StartPorts    Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -401,6 +369,60 @@ CreateHub  Proc near
     ret
 CreateHub   Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           UpdatePorts
+;
+;   description:    Update ports
+;
+;   Parameters:     GS      Hub
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdatePorts    Proc near
+    pushad
+;
+    mov cx,gs:hub_ports
+    mov bx,OFFSET hub_port_arr
+    mov si,1
+
+upLoop:
+    mov dx,si
+    call GetPortStatus
+    mov gs:[bx].hps_status,ax
+    test ax,100h
+    jnz upHasPower
+;
+    mov dx,si
+    mov ax,PORT_POWER
+    call SetPortFeature    
+    jmp upNext
+
+upHasPower:
+    test ax,1
+    jz upNext
+;
+    test ax,2
+    jnz upIsEnabled
+;        
+    mov dx,si
+    mov ax,PORT_RESET
+    call SetPortFeature    
+    jmp upNext
+
+upIsEnabled:
+
+upNext:    
+    add bx,2
+    inc si
+    loop upLoop
+;           
+    popad
+    ret
+UpdatePorts    Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -435,46 +457,6 @@ PollStatus  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           ResetPorts
-;
-;   description:    Reset hub ports (enable)
-;
-;   Parameters:     GS      Hub
-;                   DX      Port
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ResetPorts    Proc near
-    pushad
-;
-    mov cx,gs:hub_ports
-    mov bx,OFFSET hub_port_arr
-    mov si,1
-
-rpLoop:
-    mov dx,si
-    call GetPortStatus
-    mov gs:[bx].hps_status,ax
-;
-    test ax,1
-    jz rpNext
-;
-    mov dx,si
-    mov ax,PORT_RESET
-    call SetPortFeature    
-
-rpNext:
-    add bx,2
-    inc si
-    loop rpLoop
-;           
-    popad
-    ret
-ResetPorts    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;   NAME:           hub_thread
 ;
 ;   DESCRIPTION:    HUB thread
@@ -491,14 +473,18 @@ hub_thread_handler:
     int 3
     call CreateHub
     call ProcessHubDescr
+    jc hub_exit
 
 hub_thread_loop:
-    call StartPorts
-    call ResetPorts
-    call ResetPorts
-    call PollStatus
+    call UpdatePorts
+;
+    mov ax,gs:hub_power_time
+    WaitMilliSec
+;
     jmp hub_thread_loop
-    
+
+hub_exit:
+        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
