@@ -82,6 +82,9 @@ hub_struc   STRUC
 
 hub_next            DW ?
 
+hub_thread          DW ?
+hub_attached        DW ?
+
 hub_controller      DW ?
 hub_device          DB ?
 hub_intr            DB ?
@@ -106,11 +109,6 @@ hub_port_arr        DW MAX_HUB_PORTS DUP(?)
 hub_struc   ENDS
 
 data    SEGMENT byte public 'DATA'
-
-hub_thread      DW ?
-
-hub_attach_list DW ?
-hub_detach_list DW ?
 
 hub_list        DW ?
 
@@ -393,14 +391,10 @@ CreateHub  Proc near
     mov gs:hub_status_sel,es
     AddReadUsbDataReq
 ;
-    mov ax,ds:hub_thread
+    GetThread
     mov bx,gs:hub_status_req
     mov cx,gs:hub_status_size
     StartUsbReq    
-;
-    mov ax,ds:hub_list
-    mov gs:hub_next,ax
-    mov ds:hub_list,gs
 ;
     popad
     pop es
@@ -441,41 +435,108 @@ PollStatus  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           hub_thread
+;   NAME:           ResetPorts
 ;
-;           DESCRIPTION:    HUB thread
+;   description:    Reset hub ports (enable)
+;
+;   Parameters:     GS      Hub
+;                   DX      Port
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-hub_thread_name  DB 'USB Hub', 0
+ResetPorts    Proc near
+    pushad
+;
+    mov cx,gs:hub_ports
+    mov bx,OFFSET hub_port_arr
+    mov si,1
+
+rpLoop:
+    mov dx,si
+    call GetPortStatus
+    mov gs:[bx].hps_status,ax
+;
+    test ax,1
+    jz rpNext
+;
+    mov dx,si
+    mov ax,PORT_RESET
+    call SetPortFeature    
+
+rpNext:
+    add bx,2
+    inc si
+    loop rpLoop
+;           
+    popad
+    ret
+ResetPorts    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           hub_thread
+;
+;   DESCRIPTION:    HUB thread
+;
+;   PARAMETERS:     BX      Hub selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hub_thread_handler:
-    mov ax,SEG data
-    mov ds,ax
+    mov gs,bx
     GetThread
-    mov ds:hub_thread,ax
-    int 3
-    EnterSection ds:hub_section
-    xor ax,ax
-    xchg ax,ds:hub_attach_list
-    LeaveSection ds:hub_section
-
-hthAttachLoop:
-    or ax,ax
-    jz hthAttachOk
+    mov gs:hub_thread,ax
 ;
-    mov gs,ax
-    mov ax,gs:hub_next
+    int 3
     call CreateHub
     call ProcessHubDescr
-    call StartPorts
-    call PollStatus
-    jmp hthAttachLoop
 
-hthAttachOk:    
-    WaitForSignal
+hub_thread_loop:
+    call StartPorts
+    call ResetPorts
+    call ResetPorts
+    call PollStatus
+    jmp hub_thread_loop
     
-    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HexToAscii
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     AL      Number to convert
+;
+;   RETURNS:        AX      Ascii result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HexToAscii      PROC near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+HexToAscii      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -488,6 +549,8 @@ hthAttachOk:
 ;                   AL      Device address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hub_name    DB 'Usb Hub ', 0
 
 usb_attach  Proc far
     push ds
@@ -612,7 +675,7 @@ uaValid:
     mov bx,gs
 ;
     EnterSection ds:hub_section   
-    mov ax,ds:hub_attach_list
+    mov ax,ds:hub_list
     or ax,ax
     jz uaInsEmpty
 
@@ -626,30 +689,53 @@ uaInsLoop:
     jmp uaInsDone
 
 uaInsEmpty:
-    mov ds:hub_attach_list,bx
+    mov ds:hub_list,bx
 
 uaInsDone:    
     mov gs,bx
     mov gs:hub_next,0
     LeaveSection ds:hub_section
 ;
-    mov bx,ds:hub_thread
-    or bx,bx
-    jz uaCreate
-;
-    Signal
-    jmp uaDone
-
-uaCreate:    
     push es            
+    mov eax,100h
+    AllocateSmallGlobalMem
+    xor di,di
+    mov si,OFFSET hub_name
+
+uaCopyHub:
+    mov al,cs:[si]
+    inc si
+    or al,al
+    jz uaCopyDone
+;
+    stosb
+    jmp uaCopyHub
+
+uaCopyDone:
+    mov ax,gs:hub_controller
+    call HexToAscii
+    stosw
+;
+    mov al,'.'
+    stosb
+;
+    mov al,gs:hub_device
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;            
+    mov bx,gs
+    xor di,di
     mov dx,cs
     mov ds,dx
-    mov es,dx
-    mov di,OFFSET hub_thread_name
     mov si,OFFSET hub_thread_handler
     mov ax,3
     mov cx,stack0_size
     CreateThread
+;
+    FreeMem
     pop es
 
 uaDone:    
@@ -700,9 +786,6 @@ usb_detach  Endp
 init    Proc far
     mov bx,SEG data
     mov ds,bx
-    mov ds:hub_thread,0
-    mov ds:hub_attach_list,0
-    mov ds:hub_detach_list,0
     mov ds:hub_list,0
     InitSection ds:hub_section
 ;       
