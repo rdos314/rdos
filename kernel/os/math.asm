@@ -475,23 +475,23 @@ float_error_decode:
 	mov ax,cs
 	mov ds,ax
 	mov si,OFFSET overflow_txt
-	mov cx,13
+	mov cx,14
 	rep movsb
 	ret
 float_normal	ENDP
 
-unsuported_txt	DB 'UNSUPORTED'
+unsupported_txt	DB 'UNSUPPORTED'
 nan_txt			DB 'NAN'
 infinity_txt	DB 'INFINITY'
 empty_txt		DB 'EMPTY'
 denormal_txt	DB 'DENORMAL'
-overflow_txt	DB 'TO BIG NUMBER'
+overflow_txt	DB 'TOO BIG NUMBER'
 
 float_unsuported	PROC near
 	mov ax,cs
 	mov ds,ax
 	mov si,OFFSET unsuported_txt
-	mov cx,10
+	mov cx,11
 	rep movsb
 	ret
 float_unsuported	ENDP
