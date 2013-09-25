@@ -490,7 +490,7 @@ overflow_txt	DB 'TOO BIG NUMBER'
 float_unsuported	PROC near
 	mov ax,cs
 	mov ds,ax
-	mov si,OFFSET unsuported_txt
+	mov si,OFFSET unsupported_txt
 	mov cx,11
 	rep movsb
 	ret
