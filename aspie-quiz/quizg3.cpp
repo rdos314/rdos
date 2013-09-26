@@ -51,7 +51,7 @@
 #
 ##########################################################################*/
 TQuizG3::TQuizG3(const char *FileName)
-  : TQuiz(166),
+  : TQuiz(167),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -109,7 +109,7 @@ int TQuizG3::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizG3::GetQuizN()
 {
-        return 166;
+        return 167;
 }
 
 /*##########################################################################
@@ -495,6 +495,7 @@ void TQuizG3::SetupTexts()
   Quiz[163].MyGroup = GROUP_ASPIE_NVC;
   Quiz[164].MyGroup = GROUP_MIXED;
   Quiz[165].MyGroup = GROUP_MIXED;
+  Quiz[166].MyGroup = GROUP_MIXED;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Do you or others think that you have unconventional ways of solving problems?";
@@ -663,6 +664,8 @@ void TQuizG3::SetupTexts()
   Quiz[163].Text = "<img border=\"0\" src=\"http://www.rdos.net/smileys/icon16.gif\"> - mocking over friendly";
   Quiz[164].Text = "<img border=\"0\" src=\"http://www.rdos.net/smileys/icon18.gif\"> - uncomfortable over bashful";
   Quiz[165].Text = "<img border=\"0\" src=\"http://www.rdos.net/smileys/icon20.gif\"> - creepy over content";
+
+  Quiz[166].Text = "Smiley score";
 }
 
 /*##########################################################################
@@ -845,7 +848,7 @@ void TQuizG3::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 166; i++)
+    for (i = 0; i < 167; i++)
             DefineGlobalId(i, i);
 }
 

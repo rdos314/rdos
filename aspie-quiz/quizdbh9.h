@@ -20,5 +20,6 @@ struct TQuizRow
 	long EyeResult;
 	char EyeArr[28];
 	char Quiz[250];
+	char EyeUnansw;
 	char GroupResult[ACTIVE_GROUP_COUNT];
 };

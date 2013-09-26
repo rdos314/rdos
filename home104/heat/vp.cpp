@@ -519,7 +519,7 @@ void TVp::UpdateHistory(long double val)
         FHistory[i] = FRawHistory[j];
     }
 
-/* 
+ 
     if (FHistoryCount > 60)
     {
         index = 0;
@@ -562,7 +562,7 @@ void TVp::UpdateHistory(long double val)
             FValidTank = TRUE;
         }
 
-    } */
+    } 
 }
 
 /*##########################################################################
@@ -699,7 +699,7 @@ void TVp::Execute()
             sprintf(str, "%5.2Lf", val);
             Table->SetText(0, 1, str);
 
-/*
+
             if (FHistoryCount > 60)
             {
                 sprintf(str, "%5.2Lf", FCurrTemp);
@@ -711,7 +711,7 @@ void TVp::Execute()
                 sprintf(str, "%5.1Lf", FCurrTurbulence);
                 Table->SetText(6, 1, str);
             }
-            */
+            
         }
 
         if (RdosReadSerialRaw(1, 6, &ival))

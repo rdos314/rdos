@@ -51,7 +51,7 @@
 #
 ##########################################################################*/
 TQuizH14::TQuizH14(const char *FileName)
-  : TQuiz(150),
+  : TQuiz(179),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -109,7 +109,7 @@ int TQuizH14::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizH14::GetQuizN()
 {
-        return 150;
+        return 179;
 }
 
 /*##########################################################################
@@ -474,6 +474,36 @@ void TQuizH14::SetupTexts()
   Quiz[148].MyGroup = GROUP_NT_SENSORY;
   Quiz[149].MyGroup = GROUP_ENVIRONMENT;
 
+  Quiz[150].MyGroup = GROUP_MIXED;
+  Quiz[151].MyGroup = GROUP_MIXED;
+  Quiz[152].MyGroup = GROUP_MIXED;
+  Quiz[153].MyGroup = GROUP_MIXED;
+  Quiz[154].MyGroup = GROUP_MIXED;
+  Quiz[155].MyGroup = GROUP_MIXED;
+  Quiz[156].MyGroup = GROUP_MIXED;
+  Quiz[157].MyGroup = GROUP_MIXED;
+  Quiz[158].MyGroup = GROUP_MIXED;
+  Quiz[159].MyGroup = GROUP_MIXED;
+  Quiz[160].MyGroup = GROUP_MIXED;
+  Quiz[161].MyGroup = GROUP_MIXED;
+  Quiz[162].MyGroup = GROUP_MIXED;
+  Quiz[163].MyGroup = GROUP_MIXED;
+  Quiz[164].MyGroup = GROUP_MIXED;
+  Quiz[165].MyGroup = GROUP_MIXED;
+  Quiz[166].MyGroup = GROUP_MIXED;
+  Quiz[167].MyGroup = GROUP_MIXED;
+  Quiz[168].MyGroup = GROUP_MIXED;
+  Quiz[169].MyGroup = GROUP_MIXED;
+  Quiz[170].MyGroup = GROUP_MIXED;
+  Quiz[171].MyGroup = GROUP_MIXED;
+  Quiz[172].MyGroup = GROUP_MIXED;
+  Quiz[173].MyGroup = GROUP_MIXED;
+  Quiz[174].MyGroup = GROUP_MIXED;
+  Quiz[175].MyGroup = GROUP_MIXED;
+  Quiz[176].MyGroup = GROUP_MIXED;
+  Quiz[177].MyGroup = GROUP_MIXED;
+  Quiz[178].MyGroup = GROUP_MIXED;
+
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Do you or others think that you have unconventional ways of solving problems?";
   Quiz[2].Text = "As a child, was your play more directed towards, for example, sorting, building, investigating or taking things apart than towards social games with other kids?";
@@ -624,6 +654,37 @@ void TQuizH14::SetupTexts()
   Quiz[147].Text = "Do you have a good sense for what is the right thing to do socially?";
   Quiz[148].Text = "Do you find it easy to estimate the age of people?";
   Quiz[149].Text = "Are you gracious about criticism, correction and direction?";
+
+  Quiz[150].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/1.jpg\">";
+  Quiz[151].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/2.jpg\">";
+  Quiz[152].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/3.jpg\">";
+  Quiz[153].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/4.jpg\">";
+  Quiz[154].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/5.jpg\">";
+  Quiz[155].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/6.jpg\">";
+  Quiz[156].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/7.jpg\">";
+  Quiz[157].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/8.jpg\">";
+  Quiz[158].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/9.jpg\">";
+  Quiz[159].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/10.jpg\">";
+  Quiz[160].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/11.jpg\">";
+  Quiz[161].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/12.jpg\">";
+  Quiz[162].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/13.jpg\">";
+  Quiz[163].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/14.jpg\">";
+  Quiz[164].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/15.jpg\">";
+  Quiz[165].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/16.jpg\">";
+  Quiz[166].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/17.jpg\">";
+  Quiz[167].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/18.jpg\">";
+  Quiz[168].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/19.jpg\">";
+  Quiz[169].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/20.jpg\">";
+  Quiz[170].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/21.jpg\">";
+  Quiz[171].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/22.jpg\">";
+  Quiz[172].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/23.jpg\">";
+  Quiz[173].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/24.jpg\">";
+  Quiz[174].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/25.jpg\">";
+  Quiz[175].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/26.jpg\">";
+  Quiz[176].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/27.jpg\">";
+  Quiz[177].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/28.jpg\">";
+
+  Quiz[178].Text = "Eye score";
 
 }
 
@@ -848,7 +909,7 @@ void TQuizH14::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 150; i++)
+    for (i = 0; i < 179; i++)
             DefineGlobalId(i, i);
 }
 
@@ -889,8 +950,24 @@ void TQuizH14::ImportMvsp(const char *filename, int PcaType)
 
         while (size = infile.Read(buf, MAX_IN_ROW))
         {
+            rowstr = strstr(buf, "variable loadings");
+            if (rowstr)
+            {
+                pos += (rowstr - buf);
+                break;
+            }
+            else
+                pos += MAX_IN_ROW - 25;
+
+            infile.SetPos(pos);
+        }
+        
+        infile.SetPos(pos);
+                                
+        while (size = infile.Read(buf, MAX_IN_ROW))
+        {
                 buf[size] = 0;
-                rowstr = strstr(buf, "#");
+                rowstr = strstr(buf, "C");
                 if (rowstr)
                 {
                         rowstr++;

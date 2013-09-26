@@ -46,8 +46,40 @@ void ClosePca();
 
 static TFile *quizfile;
 
+static int EyeScore[28][4] =
+  {
+    {45, 36, 0, 24},
+    {32, 24, -6, 0},
+    {0, 24, 30, 48},
+    {-1, 0, -12, 9},
+    {5, 0, -4, -12},
+    {18, 34, 0, 20},
+    {12, 18, 0, 5},
+    {0, 1, 6, 39},
+    {24, 22, 14, 0},
+    {-32, -15, 0, -17},
+    {29, 0, 30, 47},
+    {31, 6, 19, 0},
+    {0, 32, 7, -20},
+    {-14, 0, 4, -13},
+    {0, -13, 16, -7},
+    {0, -2, 6, 25},
+    {20, -16, 47, 0},
+    {0, 24, 8, 9},
+    {18, 18, 10, 0},
+    {-8, -2, 0, 14},
+    {0, 22, 14, 18},
+    {-3, 7, 12, 0},
+    {18, 0, -9, 20},
+    {0, 34, -2, -17},
+    {6, 22, 15, 0},
+    {2, 6, 0, 28},
+    {10, 8, 0, -25},
+    {24, 16, 0, 25}
+  };
+
 /*##################  HandleRow ##########################
-*   Purpose....: Handle a row       	   					      	        #
+*   Purpose....: Handle a row                                                                   #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -57,11 +89,12 @@ static void HandleRow(TQuizRow *Row)
 {
     quizfile->Write(Row, sizeof(TQuizRow));
 
-    printf("H9: %d AS: %d, NT: %d\r\n", Row->ID, Row->AsResult, Row->NtResult);
+//    printf("H9: %d AS: %d, NT: %d, Eye: %d\r\n", Row->ID, Row->AsResult, Row->NtResult, Row->EyeResult);
+    printf("%d\n", Row->EyeResult);
 }
 
 /*##################  UpdateScore ##########################
-*   Purpose....: Calculate & update a modified score based on current quiz-weights	   					      	        #
+*   Purpose....: Calculate & update a modified score based on current quiz-weights                                                              #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -69,46 +102,46 @@ static void HandleRow(TQuizRow *Row)
 *##########################################################################*/
 static void UpdateScore(TQuizRow *row)
 {
-	int grp;
-	int dx;
-	int i;
-	int val;
-	int w;
-	int sum;
-	int totsum;
+        int grp;
+        int dx;
+        int i;
+        int val;
+        int w;
+        int sum;
+        int totsum;
 
-	for (grp = 0; grp < 14; grp++)
-	{
-		sum = 0;
-		totsum = 0;
+        for (grp = 0; grp < 14; grp++)
+        {
+                sum = 0;
+                totsum = 0;
 
-		for (i = 0; i < 145; i++)
-		{
-			val = row->Quiz[i];
+                for (i = 0; i < 145; i++)
+                {
+                        val = row->Quiz[i];
 
-			if (val)
-			{
-				w = Gw[i][grp];
+                        if (val)
+                        {
+                                w = Gw[i][grp];
 
-				if (w < 0)
-				{
-					w = -w;
-					val = 3 - val;
-				}
-				else
-					val--;
+                                if (w < 0)
+                                {
+                                        w = -w;
+                                        val = 3 - val;
+                                }
+                                else
+                                        val--;
 
-				sum += val * w;
-				totsum += 2 * w;
-			}
-		}
+                                sum += val * w;
+                                totsum += 2 * w;
+                        }
+                }
 
 
-		if (totsum)
-			row->GroupResult[grp] = 100 * sum / totsum;
-		else
-			row->GroupResult[grp] = 0;
-	}
+                if (totsum)
+                        row->GroupResult[grp] = 100 * sum / totsum;
+                else
+                        row->GroupResult[grp] = 0;
+        }
 }
 
 /*##################  ProcessRow ##########################
@@ -123,12 +156,18 @@ static void ProcessRow(char *str)
     char *valstr;
     char *ptr;
     int fieldno;
-    int i;
+    int i, j;
     int val;
+    int minval, maxval;
+    int range;
+    int count = 0;
     int year, month, day;
     int hour, min, sec;
     TDateTime *time;
     TQuizRow Row;
+    int score = 0;
+
+    Row.EyeUnansw = 0;
 
     ptr = str;
     for (fieldno = 0; ptr; fieldno++)
@@ -223,16 +262,39 @@ static void ProcessRow(char *str)
                  i = fieldno - 16;
                  if (i < 28)
                  {
-                    Row.Quiz[150+i] = 0;
-                    Row.EyeArr[i] = atoi(valstr);
-                    if (Row.EyeArr[i])
+                    val = atoi(valstr);
+                    Row.EyeArr[i] = val;
+
+                    minval = maxval = EyeScore[i][0];
+                    
+                    for (j = 1; j < 4; j++)
                     {
-                        val = Row.EyeArr[i] - 1;
-                        if (val < 4)
-                        {
-                            Row.Quiz[150+i] = Ew[i][val];
-                        }
+                        if (EyeScore[i][j] > maxval)
+                            maxval = EyeScore[i][j];
+
+                        if (EyeScore[i][j] < minval)
+                            minval = EyeScore[i][j];
                     }
+
+                    if (val)
+                    {
+                        j = val - 1;
+                    
+                        val = EyeScore[i][j];
+                        val = val - minval;
+                        range = maxval - minval;
+                        val = val * 3 / range;
+                        if (val == 3)
+                            val--;
+
+                        Row.Quiz[150 + i] = val + 1;
+                                         
+                        score += EyeScore[i][j];
+                        count++;
+                    }
+                    else                                     
+                        Row.EyeUnansw++;
+
                  }
                  else
                     i -= 28;                    
@@ -242,6 +304,40 @@ static void ProcessRow(char *str)
         }
     }
 
+    if (count)
+    {
+        Row.EyeResult = 100 * score / count;
+
+        score = score / count;
+        if (score > 3)
+            score = 2;
+        if (score < 0)
+            score = 0;
+        score++;
+        Row.Quiz[178] = score;
+
+    }
+    else
+    {
+        Row.EyeResult = -1;
+        Row.Quiz[178] = 0;
+    }
+
+    switch (Row.EyeUnansw)
+    {
+        case 0:
+            Row.Quiz[179] = 1;
+            break;
+
+        case 1:
+            Row.Quiz[179] = 2;
+            break;
+
+        default:
+            Row.Quiz[179] = 3;
+            break;
+    }                
+        
     UpdateScore(&Row);
     HandleRow(&Row);
     AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 150);

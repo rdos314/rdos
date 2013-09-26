@@ -47,6 +47,26 @@ void ClosePca();
 
 static TFile *quizfile;
 
+static int SmileyScore[16] =    {
+                                    -3,
+                                    -32,
+                                    6,
+                                    9,
+                                    100,
+                                    -4,
+                                    28,
+                                    18,
+                                    60,
+                                    55,
+                                    -29,
+                                    0,
+                                    40,
+                                    98,
+                                    94,
+                                    90
+                                };
+                                    
+
 /*##################  HandleRow ##########################
 *   Purpose....: Handle a row                                                                   #
 *   In params..: *                                                          #
@@ -58,7 +78,8 @@ static void HandleRow(TQuizRow *Row)
 {
     quizfile->Write(Row, sizeof(TQuizRow));
 
-    printf("G3: %d AS: %d, NT: %d\r\n", Row->ID, Row->AsResult, Row->NtResult);
+//    printf("G3: %d AS: %d, NT: %d, Smiley: %d\r\n", Row->ID, Row->AsResult, Row->NtResult, Row->SmileyResult);
+    printf("%d\n", Row->SmileyResult);
 }
 
 /*##################  UpdateScore ##########################
@@ -125,11 +146,14 @@ static void ProcessRow(char *str)
     char *ptr;
     int fieldno;
     int i;
+    int j;
     int val;
     int year, month, day;
     int hour, min, sec;
     TDateTime *time;
     TQuizRow Row;
+    int count = 0;
+    int score = 0;
 
     ptr = str;
     for (fieldno = 0; ptr; fieldno++)
@@ -141,15 +165,15 @@ static void ProcessRow(char *str)
 
         str = ptr + 1;
 
-            switch (fieldno)
-                {
-                        case 0:
-                                Row.ID = atol(valstr);
-                                break;
+        switch (fieldno)
+        {
+            case 0:
+                Row.ID = atol(valstr);
+                break;
 
-                    case 1:
-                                Row.userid = atol(valstr);
-                                break;
+            case 1:
+                Row.userid = atol(valstr);
+                break;
 
             case 2:
                 sscanf(valstr+1, "%04d-%02d-%02d %02d:%02d:%02d",
@@ -172,81 +196,106 @@ static void ProcessRow(char *str)
                 delete time;
                 break;
 
-                        case 4:
-                                Row.BirthYear = atoi(valstr);
-                                break;
+            case 4:
+                Row.BirthYear = atoi(valstr);
+                break;
 
-                        case 5:
-                                Row.BirthMonth = atoi(valstr);
-                            break;
+            case 5:
+                Row.BirthMonth = atoi(valstr);
+                break;
 
-                        case 6:
-                                Row.Gender = atoi(valstr);
-                                break;
+            case 6:
+                Row.Gender = atoi(valstr);
+                break;
 
-                        case 7:
-                                Row.Country = atoi(valstr);
-                                break;
+            case 7:
+                Row.Country = atoi(valstr);
+                break;
 
-                        case 8:
-                                Row.Ancestry = atoi(valstr);
-                                break;
+            case 8:
+                Row.Ancestry = atoi(valstr);
+                break;
 
-                        case 9:
-                                Row.Aspie = atoi(valstr);
-                                break;
+            case 9:
+                Row.Aspie = atoi(valstr);
+                break;
 
-                        case 10:
-                                Row.ADHD = atoi(valstr);
-                                break;
+            case 10:
+                Row.ADHD = atoi(valstr);
+                break;
 
-                        case 11:
-                                Row.OCD = atoi(valstr);
-                                break;
+            case 11:
+                Row.OCD = atoi(valstr);
+                break;
 
-                        case 12:
-                                Row.Social = atoi(valstr);
-                                break;
+            case 12:
+                Row.Social = atoi(valstr);
+                break;
 
-                        case 13:
-                                Row.AsResult = atoi(valstr);
-                                break;
+            case 13:
+                Row.AsResult = atoi(valstr);
+                break;
 
-                        case 14:
-                                Row.NtResult = atoi(valstr);
-                                break;
+            case 14:
+                Row.NtResult = atoi(valstr);
+                break;
 
-                        default:
-                                i = fieldno - 15;
-                                if (i < 16)
-                                {
-                                    val = atoi(valstr);
-                                        switch (val)
-                                        {
-                                            case 1:
-                                                val = 2;
-                                                break;
+            default:
+                i = fieldno - 15;
+                if (i < 16)
+                {
+                    val = atoi(valstr);
 
-                                            case 2:
-                                                val = 1;
-                                                break;
+                    if (val)
+                    {
+                        j = val - 1;
 
-                                            default:
-                                                val = 0;
-                                        }
-                        Row.Quiz[150 + i] = val;
+                        if (j)
+                        {
+                            Row.Quiz[150+i] = 1;
+                            val = 0;
+                        }
+                        else
+                        {
+                            Row.Quiz[150+i] = 2;
+                            val = SmileyScore[i];
+                        }
+
+                        score += val;
+                        count++;
                     }
-                                else
-                                {
-                                        i -= 16;
-                                Row.Quiz[i] = atoi(valstr);
-                }
-                                break;
-                }
-        }
 
-        UpdateScore(&Row);
-        HandleRow(&Row);
+                }
+                else
+                {
+                    i -= 16;
+                    Row.Quiz[i] = atoi(valstr);
+                }
+                break;
+        }
+    }
+
+    if (count)
+    {
+        Row.SmileyResult = 100 * score / count;
+
+        score = score / count / 10;
+        if (score > 3)
+            score = 2;
+        if (score < 0)
+            score = 0;
+        score++;
+        Row.Quiz[166] = score;
+
+    }
+    else
+    {
+        Row.SmileyResult = -1;
+        Row.Quiz[166] = 0;
+    }
+
+    UpdateScore(&Row);
+    HandleRow(&Row);
     AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 166);
 }
 

@@ -18,6 +18,7 @@ struct TQuizRow
 	char Referer[100];
 	long AsResult;
 	long NtResult;
+	long SmileyResult;
 	char Quiz[200];
 	char GroupResult[ACTIVE_GROUP_COUNT];
 	char DxResult[DX_COUNT];

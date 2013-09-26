@@ -51,7 +51,7 @@
 #
 ##########################################################################*/
 TQuizH9::TQuizH9(const char *FileName)
-  : TQuiz(178),
+  : TQuiz(180),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -109,7 +109,7 @@ int TQuizH9::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizH9::GetQuizN()
 {
-        return 178;
+        return 180;
 }
 
 /*##########################################################################
@@ -502,6 +502,8 @@ void TQuizH9::SetupTexts()
   Quiz[175].MyGroup = GROUP_MIXED;
   Quiz[176].MyGroup = GROUP_MIXED;
   Quiz[177].MyGroup = GROUP_MIXED;
+  Quiz[178].MyGroup = GROUP_MIXED;
+  Quiz[179].MyGroup = GROUP_MIXED;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Do you or others think that you have unconventional ways of solving problems?";
@@ -682,6 +684,9 @@ void TQuizH9::SetupTexts()
   Quiz[175].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/26.jpg\">";
   Quiz[176].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/27.jpg\">";
   Quiz[177].Text = "<img width=530 height=215 src=\"http://www.rdos.net/mind-eyes/28.jpg\">";
+
+  Quiz[178].Text = "Eye score";
+  Quiz[179].Text = "Unanswered SBC";
 
 }
 
@@ -907,7 +912,7 @@ void TQuizH9::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 178; i++)
+    for (i = 0; i < 180; i++)
             DefineGlobalId(i, i);
 }
 
