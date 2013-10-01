@@ -82,6 +82,7 @@ protected:
         int FBackB;
         int FIndex;
         int FCount;
+        int FMultiImage;
 
         int FErase;
 

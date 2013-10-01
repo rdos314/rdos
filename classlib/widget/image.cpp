@@ -262,6 +262,7 @@ void TImageControl::Init()
 
         FLoadIni = 0;
         FAbortLoad = FALSE;
+        FMultiImage = FALSE;
 
         FBackR = 0;
         FBackG = 0;
@@ -635,6 +636,9 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
             }
         }
 
+        if (FirstNr != LastNr)
+            FMultiImage = TRUE;
+
         for (i = FirstNr; FCount < MaxCount && i <= LastNr; i++)
         {
             if (FAbortLoad)
@@ -973,6 +977,6 @@ void TImageControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
             dev->Blit(bitmap, 0, 0, xstart, ystart, bmx, bmy);
     }
 
-    if (IsVisible() && (FCount >= 2 || FLoader))
+    if (IsVisible() && (FCount >= 2 || FMultiImage))
         Redraw(FDelayArr[FIndex]);
 }
