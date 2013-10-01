@@ -79,6 +79,7 @@ TVp::TVp(TControlThread *control)
     FIncCount = 0;
     FHasCirc = FALSE;
     FHistoryCount = 0;
+    FMaxTank = 450;
 
     for (i = 0; i < 20; i++)
         ValidHeatArr[i] = FALSE;
@@ -299,6 +300,20 @@ void TVp::SetAmbient(int ref, int ambient)
     
         FValidAmbient = TRUE;
 
+        FMaxTank = 200;
+        
+        if (ambient < 150)
+            FMaxTank = 250;
+
+        if (ambient < 100)
+            FMaxTank = 300;
+
+        if (ambient < 50)
+            FMaxTank = 350;
+
+        if (ambient < 0)
+            FMaxTank = 450;
+           
         FSection.Leave();    
     }
 }
@@ -324,7 +339,7 @@ void TVp::SetCirc(int circ, long double speed)
     if (FCirc < 25)
         FVpOn = FALSE;
 
-    if (FCirc > 75)
+    if (FCirc > 75 && FTankTemp <= FMaxTank)
         FVpOn = TRUE;
         
     FSection.Leave();    
@@ -345,36 +360,43 @@ void TVp::UpdateVp(int diff)
     int diostat;
     int on = FVpOn;
 
+    FSection.Enter();
+
     if (on)
     {
-        on = FPrevOn;
-            
-        if (diff < 0)
+        if (FTankTemp > FMaxTank)
+            on = FALSE;
+        else
         {
-            FIncCount = 0;
+            on = FPrevOn;
             
-            if (!FHasLowTemp)
+            if (diff < 0)
             {
-                FLowTemp = FTankTemp - 5;
-                FHasLowTemp = TRUE;
+                FIncCount = 0;
+            
+                if (!FHasLowTemp)
+                {
+                    FLowTemp = FTankTemp - 5;
+                    FHasLowTemp = TRUE;
+                }
+
+                if (FTankTemp > FLowTemp + 5)
+                    on = FALSE;                
+                else
+                    on = TRUE;
             }
 
-            if (FTankTemp > FLowTemp + 5)
-                on = FALSE;                
-            else
-                on = TRUE;
-        }
-
-        if (diff > 0)
-        {
-            if (FIncCount)
+            if (diff > 0)
             {
-                FLowTemp = FTankTemp - 30;
-                FHasLowTemp = TRUE;
-                on = TRUE;
-            }
+                if (FIncCount)
+                {
+                    FLowTemp = FTankTemp - 30;
+                    FHasLowTemp = TRUE;
+                    on = TRUE;
+                }
 
-            FIncCount++;
+                FIncCount++;
+            }
         }
     }
 
@@ -409,6 +431,8 @@ void TVp::UpdateVp(int diff)
                 RdosToggleSerialLine(1, 4);
                 
     }
+
+    FSection.Leave();
 }
 
 /*##########################################################################

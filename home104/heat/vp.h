@@ -115,6 +115,8 @@ protected:
          int FAmbient;
          int FRef;
 
+         int FMaxTank;
+
          TControlThread *FControl;
 
          TSection FSection;

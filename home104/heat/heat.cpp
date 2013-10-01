@@ -455,8 +455,9 @@ int main()
             strcpy(str, "------");
 
         Label->SetText(str);
-        
-        ambient = 150;
+
+
+        ambient = (int)(100.0 * Climate->GetOutdoorTemperature());
 
         summer = FALSE;
 
@@ -528,7 +529,7 @@ int main()
         if (count)
         {
             Vp->SetTempError(temperrmax);
-            Vp->SetAmbient(refsum / count, 100); // 10C outside temperature
+            Vp->SetAmbient(refsum / count, ambient);
             Vp->SetCirc(circmax, Circ->GetSpeed());
         }
 
