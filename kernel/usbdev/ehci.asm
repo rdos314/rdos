@@ -99,6 +99,8 @@ ehc_async_head_va   DD ?
 
 ehc_spinlock        spinlock_typ <>
 
+ehc_hub_port_arr    DW 256 DUP(?)
+
 ehc_periodic_sel    DW ?
 ehc_periodic_phys   DD ?
 
@@ -1785,7 +1787,27 @@ ResetPipe Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateHubPort   Proc far
-    int 3
+    push bx
+    push dx
+;    
+    xor al,al
+    mov bx,OFFSET ehc_hub_port_arr
+
+ahpLoop:
+    mov dx,[bx]
+    or dx,dx
+    jz ahpOk
+;
+    add bx,2
+    inc al
+    jmp ahpLoop      
+
+ahpOk:
+    mov [bx],gs
+    clc
+;
+    pop dx
+    pop bx
     ret
 AllocateHubPort     Endp
     
@@ -2344,6 +2366,14 @@ afCompOk:
 afPowerOk:
     and al,0Fh
     mov ds:ehc_ports,al
+;
+    movzx cx,al
+    mov bx,OFFSET ehc_hub_port_arr
+
+afAllocPorts:
+    mov word ptr ds:[bx],-1
+    add bx,2
+    loop afAllocPorts        
 ;
     mov bx,es
     GetSelectorBaseSize
