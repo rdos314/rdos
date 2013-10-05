@@ -1736,8 +1736,22 @@ IsConnected   Proc far
     push si
 ;    
     mov es,fs:usbp_function_sel
-    movzx si,es:usbf_port
-;    
+    mov al,es:usbf_port
+    cmp al,ds:ehc_ports
+    jb icLocal
+
+icHub:
+    int 3
+    push gs
+    movzx si,al
+    shl si,1
+    mov gs,ds:[si].ehc_hub_port_arr
+    pop gs
+    clc
+    jmp icDone
+
+icLocal:    
+    movzx si,al    
     shl si,2
     mov es,ds:ehc_reg_sel
     mov eax,es:[si].HcPortSc

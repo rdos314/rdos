@@ -400,13 +400,21 @@ CreateHub   Endp
 HubAttach    Proc near
     int 3
     push ds
+    push ax
+    push bx
+;    
     mov ds,gs:hub_dev_sel
     call ds:allocate_hub_port_proc
     jc haDone
 ;    
     mov gs:[bx].hps_dev_port,al
+    xor ah,ah
+    mov bx,gs:hub_controller
+    NotifyUsbAttach
 
 haDone:    
+    pop bx
+    pop ax
     pop ds
     ret
 HubAttach   Endp
