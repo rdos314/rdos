@@ -72,9 +72,12 @@ uhd_current     DB ?
 
 usb_hub_descr   ENDS
 
+; must be less than 4 bytes!
+
 hub_port_status STRUC
 
 hps_status      DW ?
+hps_dev_port    DB ?
 
 hub_port_status ENDS
 
@@ -97,16 +100,16 @@ hub_status_size     DW ?
 hub_status_sel      DW ?
 hub_status_req      DW ?
 
+hub_power_time      DW ?
+hub_info            DW ?
+
 hub_dev_sel         DW ?
+
+hub_ports           DW ?
+hub_port_arr        DD MAX_HUB_PORTS DUP(?)
 
 hub_control_data    DB 8 DUP (?)
 hub_buf             DB HUB_BUF_SIZE DUP(?)
-
-hub_power_time      DW ?
-hub_info            DW ?
-hub_ports           DW ?
-
-hub_port_arr        DW MAX_HUB_PORTS DUP(?)
 
 hub_struc   ENDS
 
@@ -201,7 +204,8 @@ ProcessHubDescr  Proc near
 
 phdLoop:
     mov gs:[bx].hps_status,0
-    add bx,2
+    mov gs:[bx].hps_dev_port,0
+    add bx,4
     loop phdLoop
 ;               
     clc    
@@ -388,17 +392,22 @@ CreateHub   Endp
 ;   description:    Hub attach event
 ;
 ;   Parameters:     GS      Hub
-;                   DX      Port
+;                   BX      Port status
+;                   DX      Port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HubAttach    Proc near
     int 3
-    mov ax,gs:hub_dev_sel
-    or ax,ax
-    jnz haSelOk
+    push ds
+    mov ds,gs:hub_dev_sel
+    call ds:allocate_hub_port_proc
+    jc haDone
+;    
+    mov gs:[bx].hps_dev_port,al
 
-haSelOk:    
+haDone:    
+    pop ds
     ret
 HubAttach   Endp
 
@@ -480,7 +489,7 @@ upNotConnected:
     call HubDetach
 
 upNext:    
-    add bx,2
+    add bx,4
     inc si
     loop upLoop
 ;           
