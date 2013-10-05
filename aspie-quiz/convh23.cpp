@@ -45,6 +45,15 @@ void ClosePca();
 
 static TFile *quizfile;
 
+static int Score[22] =
+  {
+    132, 185, 163, 183, 170, 
+    266, 218, 186, 165, 164, 
+    255, 225, 226, 160, 230, 
+    234, 263, 191, 202, 195, 
+    153, 186
+  };
+
 /*##################  HandleRow ##########################
 *   Purpose....: Handle a row       	   					      	        #
 *   In params..: *                                                          #
@@ -56,7 +65,8 @@ static void HandleRow(TQuizRow *Row)
 {
     quizfile->Write(Row, sizeof(TQuizRow));
 
-    printf("H23: %d AS: %d, NT: %d\r\n", Row->ID, Row->AsResult, Row->NtResult);
+//    printf("H23: %d AS: %d, NT: %d\r\n", Row->ID, Row->AsResult, Row->NtResult);
+    printf("%d\n", Row->StimResult);
 }
 
 /*##################  UpdateScore ##########################
@@ -128,6 +138,8 @@ static void ProcessRow(char *str)
     int hour, min, sec;
     TDateTime *time;
     TQuizRow Row;
+    int count = 0;
+    int score = 0;
 
     ptr = str;
     for (fieldno = 0; ptr; fieldno++)
@@ -220,6 +232,11 @@ static void ProcessRow(char *str)
                 if (i < 23)
                 {
                     val = atoi(valstr);
+
+                    count++;
+                    if (val)
+                        score += Score[i];
+                    
                     switch (val)
                     {
                         case 0:
@@ -244,6 +261,8 @@ static void ProcessRow(char *str)
              
         }
     }
+
+    Row.StimResult = 100 * score / count;
 
     UpdateScore(&Row);
     HandleRow(&Row);
