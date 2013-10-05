@@ -2266,6 +2266,45 @@ ResetPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AllocateHubPort
+;
+;           DESCRIPTION:    Allocate Hub port
+;
+;       PARAMETERS:         DS      Function selector
+;                           GS      Hub
+;
+;       RETURNS:            AL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateHubPort   Proc far
+    stc
+    ret
+AllocateHubPort     Endp
+    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FreeHubPort
+;
+;           DESCRIPTION:    Free Hub port
+;
+;       PARAMETERS:         DS      Function selector
+;                           GS      Hub
+;                           AL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeHubPort   Proc far
+    stc
+    ret
+FreeHubPort     Endp
+    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UpdateQueue
 ;
 ;           DESCRIPTION:    Update done queue
@@ -2697,6 +2736,8 @@ ot14 DW OFFSET WaitForCompletion,   SEG code
 ot15 DW OFFSET ChangeAddress,       SEG code
 ot16 DW OFFSET IsConnected,     SEG code
 ot17 DW OFFSET ResetPipe,       SEG code
+ot18 DW OFFSET AllocateHubPort, SEG code
+ot19 DW OFFSET FreeHubPort,     SEG code
 
 InitFunction    Proc near
     push es
@@ -2708,7 +2749,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,18
+    mov cx,20
 
 ifTabLoop:
     lods dword ptr cs:[si]

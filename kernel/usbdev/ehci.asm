@@ -1773,6 +1773,44 @@ ResetPipe Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AllocateHubPort
+;
+;           DESCRIPTION:    Allocate Hub port
+;
+;       PARAMETERS:         DS      Function selector
+;                           GS      Hub
+;
+;       RETURNS:            AL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateHubPort   Proc far
+    int 3
+    ret
+AllocateHubPort     Endp
+    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FreeHubPort
+;
+;           DESCRIPTION:    Free Hub port
+;
+;       PARAMETERS:         DS      Function selector
+;                           GS      Hub
+;                           AL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeHubPort   Proc far
+    int 3
+    ret
+FreeHubPort     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UpdatePort
 ;
 ;           DESCRIPTION:    Update root-hub port status
@@ -2068,6 +2106,8 @@ et14 DW OFFSET WaitForCompletion,   SEG code
 et15 DW OFFSET ChangeAddress,       SEG code
 et16 DW OFFSET IsConnected,     SEG code
 et17 DW OFFSET ResetPipe,       SEG code
+et18 DW OFFSET AllocateHubPort, SEG code
+et19 DW OFFSET FreeHubPort,     SEG code
 ;
 ;           PARAMETERS:         BH          Bus
 ;                           BL          Device
@@ -2084,7 +2124,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,18
+    mov cx,20
 
 ifTabLoop:
     lods dword ptr cs:[si]

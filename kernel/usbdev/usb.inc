@@ -106,6 +106,14 @@ is_connected_proc      DD ?
 ; IN  FS        Pipe selector
 reset_pipe_proc        DD ?
 
+; IN  GS        Hub selector
+; OUT AL        Port
+allocate_hub_port_proc DD ?
+
+; IN  GS        Hub selector
+; IN  AL        Port
+free_hub_port_proc     DD ?
+
 usb_controller_id   DW ?
 usb_port_sel_arr    DW MAX_USB_HUB_PORTS DUP(?)
 usb_addr_arr        DW 128 DUP(?)
