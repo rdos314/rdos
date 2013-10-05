@@ -97,6 +97,8 @@ hub_status_size     DW ?
 hub_status_sel      DW ?
 hub_status_req      DW ?
 
+hub_dev_sel         DW ?
+
 hub_control_data    DB 8 DUP (?)
 hub_buf             DB HUB_BUF_SIZE DUP(?)
 
@@ -107,6 +109,14 @@ hub_ports           DW ?
 hub_port_arr        DW MAX_HUB_PORTS DUP(?)
 
 hub_struc   ENDS
+
+
+hub_dev_struc   STRUC
+
+hub_dev_base        usb_dev_struc <>
+
+hub_dev_struc   ENDS
+
 
 data    SEGMENT byte public 'DATA'
 
@@ -384,6 +394,11 @@ CreateHub   Endp
 
 HubAttach    Proc near
     int 3
+    mov ax,gs:hub_dev_sel
+    or ax,ax
+    jnz haSelOk
+
+haSelOk:    
     ret
 HubAttach   Endp
 
@@ -582,6 +597,7 @@ HexToAscii      ENDP
 ;
 ;   Parameters:     BX      Controller #
 ;                   AL      Device address
+;                   DS      USB device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -658,6 +674,7 @@ uaConfig:
     mov es:hub_intr,0
     mov es:hub_info,0
     mov es:hub_power_time,0
+    mov es:hub_dev_sel,ds
     mov ax,es
     mov gs,ax
     pop ax
@@ -792,6 +809,7 @@ usb_attach  Endp
 ;
 ;   Parameters:     BX      Controller #
 ;                   AL      Device address
+;                   DS      USB device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

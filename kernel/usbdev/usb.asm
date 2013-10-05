@@ -690,19 +690,21 @@ CloseDevice Endp
 ;
 ;           DESCRIPTION:    Run notification handlers for attach
 ;
-;           PARAMETERS:         BX      Controller #
-;               AL      Device address (1..128)
+;           PARAMETERS:     BX      Controller #
+;                           AL      Device address (1..128)
+;                           DS      USB device
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 trap_usb_attach PROC near
     push ds
+    push es
     push cx
     push si
 ;       
     mov cx,SEG data
-    mov ds,cx
-    mov cx,ds:usb_attach_hooks
+    mov es,cx
+    mov cx,es:usb_attach_hooks
     or cx,cx
     je trap_attach_done
     
@@ -710,15 +712,17 @@ trap_usb_attach PROC near
 
 trap_attach_loop:
     push ds
+    push es
     push ax
     push bx
     push cx
     push si
-    call fword ptr [si]
+    call fword ptr es:[si]
     pop si
     pop cx
     pop bx
     pop ax
+    pop es
     pop ds
 ;       
     add si,8
@@ -727,6 +731,7 @@ trap_attach_loop:
 trap_attach_done:
     pop si
     pop cx
+    pop es
     pop ds
     ret
 trap_usb_attach ENDP
@@ -739,19 +744,21 @@ trap_usb_attach ENDP
 ;
 ;           DESCRIPTION:    Run notification handlers for detach
 ;
-;           PARAMETERS:         BX      Controller #
-;               AL      Device address (1..128)
+;           PARAMETERS:     BX      Controller #
+;                           AL      Device address (1..128)
+;                           DS      USB device
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 trap_usb_detach PROC near
     push ds
+    push es
     push cx
     push si
 ;       
     mov cx,SEG data
-    mov ds,cx
-    mov cx,ds:usb_detach_hooks
+    mov es,cx
+    mov cx,es:usb_detach_hooks
     or cx,cx
     je trap_detach_done
     
@@ -759,15 +766,17 @@ trap_usb_detach PROC near
 
 trap_detach_loop:
     push ds
+    push es
     push ax
     push bx
     push cx
     push si
-    call fword ptr [si]
+    call fword ptr es:[si]
     pop si
     pop cx
     pop bx
     pop ax
+    pop es
     pop ds
 ;       
     add si,8
@@ -776,6 +785,7 @@ trap_detach_loop:
 trap_detach_done:
     pop si
     pop cx
+    pop es
     pop ds
     ret
 trap_usb_detach ENDP
