@@ -144,6 +144,7 @@ usbp_maxlen         DW ?
 usbp_usage          DW ?
 usbp_section        section_typ <>
 usbp_device_sel     DW ?
+usbp_hub_sel        DW ?
 usbp_config_sel     DW 16 DUP(?)
 
 usb_pipe_struc      ENDS
