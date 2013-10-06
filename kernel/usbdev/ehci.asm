@@ -536,6 +536,39 @@ rpDone:
     ret
 RemovePipe  Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupHub
+;
+;       DESCRIPTION:    Setup hub in pipe
+;
+;       PARAMETERS:     DS      Device
+;                       ES      Function
+;                       FS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupHub  Proc near
+    push ax
+    push si
+;    
+    mov fs:usbp_hub_sel,0
+    mov al,es:usbf_port
+    cmp al,ds:ehc_ports
+    jb shDone
+
+shHub:
+    movzx si,al
+    shl si,1
+    mov si,ds:[si].ehc_hub_port_arr
+    mov fs:usbp_hub_sel,si
+
+shDone:    
+    pop si
+    pop ax
+    ret
+SetupHub    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1182,7 +1215,8 @@ InsertQtd   Endp
 ;
 ;           DESCRIPTION:    Create control pipe
 ;
-;       PARAMETERS:     DS      Function selector
+;       PARAMETERS:     DS      Device selector
+;                       ES      Function selector
 ;
 ;       RETURNS:    FS      Pipe selector
 ;
@@ -1192,15 +1226,18 @@ CreateControl   Proc far
     push es
     pushad
 ;    
+    push es
     mov eax,SIZE ehci_pipe
     AllocateSmallGlobalMem
     xor di,di
     mov cx,ax
     xor al,al
     rep stosb
-;    
     mov ax,es
     mov fs,ax
+    pop es    
+    call SetupHub
+;    
     mov dx,flat_sel
     mov es,dx
     call AddControlQh
@@ -1248,6 +1285,7 @@ CreateIntr   Proc far
     push es
     pushad
 ;    
+    push es
     push ax
     mov eax,SIZE ehci_pipe
     AllocateSmallGlobalMem
@@ -1258,6 +1296,8 @@ CreateIntr   Proc far
     mov ax,es
     mov fs,ax
     pop ax
+    pop es
+    call SetupHub
 ;    
     mov dx,flat_sel
     mov es,dx

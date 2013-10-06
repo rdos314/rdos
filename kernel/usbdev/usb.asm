@@ -204,7 +204,6 @@ CreateDefaultControl    Proc near
     mov fs:usbp_mode,MODE_CONTROL
     mov fs:usbp_maxlen,8
     mov fs:usbp_device_sel,0
-    mov fs:usbp_hub_sel,0
     mov fs:usbp_usage,1
 ;    
     push ds
@@ -252,6 +251,7 @@ CreateDefaultControl    Endp
 ;           description:    Create bulk-pipe
 ;
 ;       parameters:     DS      USB device selector
+;                       ES      Usb function selector
 ;               CX      Max data size
 ;               DL      Pipe # (bit 7 is direction)
 ;
@@ -291,7 +291,6 @@ cbEndpointOk:
     mov fs:usbp_mode,MODE_BULK
     mov fs:usbp_maxlen,cx
     mov fs:usbp_device_sel,0
-    mov fs:usbp_hub_sel,0
     mov fs:usbp_usage,1
 ;
     push ds
@@ -316,6 +315,7 @@ CreateBulk    Endp
 ;           description:    Create interrupt-pipe
 ;
 ;       parameters:     DS      USB device selector
+;                       ES      USB function selector
 ;               CX      Max data size
 ;               DL      Pipe #
 ;               DH      Interval
@@ -348,7 +348,6 @@ CreateInterrupt    Proc near
     mov fs:usbp_mode,MODE_INTR
     mov fs:usbp_maxlen,cx
     mov fs:usbp_device_sel,0
-    mov fs:usbp_hub_sel,0
     mov fs:usbp_usage,1
 ;
     push ds
