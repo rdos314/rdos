@@ -1952,7 +1952,7 @@ upNotify:
     mov ax,200
     WaitMilliSec
 ;    
-    xor ah,ah
+    mov ah,2
     mov al,cl
     NotifyUsbAttach
     jmp upDone

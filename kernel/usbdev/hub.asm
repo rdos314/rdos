@@ -408,7 +408,24 @@ HubAttach    Proc near
     jc haDone
 ;    
     mov gs:[bx].hps_dev_port,al
-    xor ah,ah
+    test gs:[bx].hps_status,200h
+    jnz haLowSpeed
+;
+    test gs:[bx].hps_status,400h
+    jnz haHighSpeed
+
+haFullSpeed:
+    mov ah,1
+    jmp haAttach
+
+haHighSpeed:
+    mov ah,2
+    jmp haAttach
+
+haLowSpeed:
+    mov ah,0
+        
+haAttach:
     mov bx,gs:hub_controller
     NotifyUsbAttach
 

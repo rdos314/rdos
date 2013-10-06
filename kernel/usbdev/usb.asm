@@ -799,7 +799,10 @@ trap_usb_detach ENDP
 ;           description:    Notify USB attach event
 ;
 ;       parameters:     AL      Usb port
-;               AH      Speed, 0 = low speed
+;               AH      Speed
+;                           0 = Low speed
+;                           1 = Full speed
+;                           2 = High speed
 ;               DS      USB device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
