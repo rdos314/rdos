@@ -1771,30 +1771,29 @@ ChangeAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IsConnected   Proc far
-    push es
     push eax
     push si
 ;    
-    mov es,fs:usbp_function_sel
-    mov al,es:usbf_port
-    cmp al,ds:ehc_ports
-    jb icLocal
+    mov ax,fs:usbp_hub_sel
+    or ax,ax
+    jz icLocal    
 
 icHub:
     int 3
     push gs
-    movzx si,al
-    shl si,1
-    mov gs,ds:[si].ehc_hub_port_arr
+    mov gs,ax
     pop gs
     clc
     jmp icDone
 
 icLocal:    
-    movzx si,al    
+    push es
+    mov es,fs:usbp_function_sel
+    movzx si,es:usbf_port
     shl si,2
     mov es,ds:ehc_reg_sel
     mov eax,es:[si].HcPortSc
+    pop es
     test al,1
     clc
     jnz icDone
@@ -1804,7 +1803,6 @@ icLocal:
 icDone:
     pop si
     pop eax
-    pop es
     ret
 IsConnected Endp
 
