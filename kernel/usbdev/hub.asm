@@ -798,6 +798,40 @@ usb_detach  Proc far
     pop ds
     retf32
 usb_detach  Endp
+    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           IsUsbHubPortConnected
+;
+;   description:    Check if Hub port is connected
+;
+;   Parameters:     GS      Hub selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_usb_hub_port_connected_name  DB 'Is Usb Hub Port Connected', 0
+
+is_usb_hub_port_connected  Proc far
+    push ax
+    push si
+;    
+    mov si,dx
+    dec si
+    shl si,2
+    mov ax,gs:[si].hub_port_arr.hps_status
+    test al,1
+    clc
+    jnz iuhDone
+;    
+    stc
+
+iuhDone:
+    pop si
+    pop ax    
+    retf32
+is_usb_hub_port_connected  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -817,6 +851,12 @@ init    Proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET is_usb_hub_port_connected
+    mov edi,OFFSET is_usb_hub_port_connected_name
+    xor cl,cl
+    mov ax,is_usb_hub_port_connected_nr
+    RegisterOsGate
 ;
     mov edi,OFFSET usb_attach
     HookUsbAttach

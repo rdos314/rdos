@@ -99,7 +99,7 @@ ehc_async_head_va   DD ?
 
 ehc_spinlock        spinlock_typ <>
 
-ehc_hub_port_arr    DW 256 DUP(?)
+ehc_hub_port_arr    DD 256 DUP(?)
 
 ehc_periodic_sel    DW ?
 ehc_periodic_phys   DD ?
@@ -560,9 +560,12 @@ SetupHub  Proc near
 
 shHub:
     movzx si,al
-    shl si,1
-    mov si,ds:[si].ehc_hub_port_arr
-    mov fs:usbp_hub_sel,si
+    shl si,2
+    mov ax,word ptr ds:[si].ehc_hub_port_arr
+    mov fs:usbp_hub_sel,ax
+;    
+    mov ax,word ptr ds:[si+2].ehc_hub_port_arr
+    mov fs:usbp_hub_port,ax
 
 shDone:    
     pop si
@@ -1779,11 +1782,11 @@ IsConnected   Proc far
     jz icLocal    
 
 icHub:
-    int 3
     push gs
     mov gs,ax
+    mov dx,fs:usbp_hub_port
+    IsUsbHubPortConnected
     pop gs
-    clc
     jmp icDone
 
 icLocal:    
@@ -1832,7 +1835,8 @@ ResetPipe Endp
 ;           DESCRIPTION:    Allocate Hub port
 ;
 ;       PARAMETERS:         DS      Function selector
-;                           GS      Hub
+;                           GS      Hub Selector
+;                           DX      Hub port
 ;
 ;       RETURNS:            AL      Port
 ;
@@ -1840,25 +1844,26 @@ ResetPipe Endp
 
 AllocateHubPort   Proc far
     push bx
-    push dx
+    push si
 ;    
     xor al,al
     mov bx,OFFSET ehc_hub_port_arr
 
 ahpLoop:
-    mov dx,[bx]
-    or dx,dx
+    mov si,[bx]
+    or si,si
     jz ahpOk
 ;
-    add bx,2
+    add bx,4
     inc al
     jmp ahpLoop      
 
 ahpOk:
     mov [bx],gs
+    mov [bx+2],dx
     clc
 ;
-    pop dx
+    pop si
     pop bx
     ret
 AllocateHubPort     Endp
@@ -2423,8 +2428,8 @@ afPowerOk:
     mov bx,OFFSET ehc_hub_port_arr
 
 afAllocPorts:
-    mov word ptr ds:[bx],-1
-    add bx,2
+    mov dword ptr ds:[bx],-1
+    add bx,4
     loop afAllocPorts        
 ;
     mov bx,es

@@ -107,6 +107,7 @@ is_connected_proc      DD ?
 reset_pipe_proc        DD ?
 
 ; IN  GS        Hub selector
+; IN  DX        Hub port
 ; OUT AL        Port
 allocate_hub_port_proc DD ?
 
@@ -145,6 +146,7 @@ usbp_usage          DW ?
 usbp_section        section_typ <>
 usbp_device_sel     DW ?
 usbp_hub_sel        DW ?
+usbp_hub_port       DW ?
 usbp_config_sel     DW 16 DUP(?)
 
 usb_pipe_struc      ENDS

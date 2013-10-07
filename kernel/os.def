@@ -622,4 +622,6 @@ create_long_thread_info_nr  = 515
 
 has_long_mode_nr            = 516
 
+is_usb_hub_port_connected_nr = 517
+
 osgate_entries				= 520
