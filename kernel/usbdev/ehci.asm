@@ -33,6 +33,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\pcdev\pci.inc
 INCLUDE usb.inc
+INCLUDE hub.inc
 
 MAX_USB_DEVICES = 16
 
@@ -759,6 +760,38 @@ AddControlQh    PROC near
     mov ax,3008h
     mov es:[edx].qh_max_packet,ax
 ;
+    mov al,fs:usbp_speed
+    cmp al,2
+    je acqSpeedOk
+;
+    int 3
+    cmp al,0
+    je acqLowSpeed
+
+acqFullSpeed:
+    mov ah,0
+    jmp acqSetSpeed
+
+acqLowSpeed:
+    mov ah,10h
+
+acqSetSpeed:    
+    mov al,fs:usbp_endpoint
+    or al,ah
+    mov es:[edx].qh_endpoint,al
+;
+    push gs
+    mov ax,fs:usbp_hub_port
+    shl ax,7
+    or ax,0C000h    
+    mov gs,fs:usbp_hub_sel
+    or al,gs:hub_device
+    pop gs        
+    mov es:[edx].qh_hub_port,ax
+;
+    mov es:[edx].qh_c_mask,3Ch
+    
+acqSpeedOk:
     mov eax,ds:ehc_async_head_va
     or eax,eax
     jnz acqInsert
@@ -1053,6 +1086,8 @@ aiqProp:
     call AddIntrProp
 
 aiqDone:
+    mov es:[edx].qh_s_mask,1
+;    
     pop bp
     pop cx
     pop bx
@@ -1239,7 +1274,10 @@ CreateControl   Proc far
     mov ax,es
     mov fs,ax
     pop es    
+;    
     call SetupHub
+    mov al,es:usbf_speed
+    mov fs:usbp_speed,al
 ;    
     mov dx,flat_sel
     mov es,dx
@@ -1300,7 +1338,10 @@ CreateIntr   Proc far
     mov fs,ax
     pop ax
     pop es
+;    
     call SetupHub
+    mov al,es:usbf_speed
+    mov fs:usbp_speed,al
 ;    
     mov dx,flat_sel
     mov es,dx
