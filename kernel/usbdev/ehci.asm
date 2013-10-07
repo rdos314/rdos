@@ -591,7 +591,7 @@ InitQh  PROC near
     mov es:[edx].qh_link,1
     mov es:[edx].qh_adress,0
     mov es:[edx].qh_endpoint,0
-    mov es:[edx].qh_max_packet,0
+    mov es:[edx].qh_max_packet,3000h
     mov es:[edx].qh_s_mask,0
     mov es:[edx].qh_c_mask,0
     mov es:[edx].qh_hub_port,0C000h
@@ -790,6 +790,9 @@ acqSetSpeed:
     mov es:[edx].qh_hub_port,ax
 ;
     mov es:[edx].qh_c_mask,3Ch
+;    
+    mov ax,3808h
+    mov es:[edx].qh_max_packet,ax
     
 acqSpeedOk:
     mov eax,ds:ehc_async_head_va
@@ -920,6 +923,40 @@ AddIntrEntry    PROC near
     mov edi,ds:[bx+si].ehc_qh
 ;
     call AllocateQh 
+    mov es:[edx].qh_s_mask,1    
+;
+    mov al,fs:usbp_speed
+    cmp al,2
+    je aieSpeedOk
+;
+    int 3
+    cmp al,0
+    je aieLowSpeed
+
+aieFullSpeed:
+    mov ah,0
+    jmp aieSetSpeed
+
+aieLowSpeed:
+    mov ah,10h
+
+aieSetSpeed:    
+    mov al,fs:usbp_endpoint
+    or al,ah
+    mov es:[edx].qh_endpoint,al
+;
+    push gs
+    mov ax,fs:usbp_hub_port
+    shl ax,7
+    or ax,0C000h    
+    mov gs,fs:usbp_hub_sel
+    or al,gs:hub_device
+    pop gs        
+    mov es:[edx].qh_hub_port,ax
+;
+    mov es:[edx].qh_c_mask,3Ch
+    
+aieSpeedOk:
     mov ds:[bx+si].ehc_qh,edx
     inc ds:[bx+si].ehc_cnt
 ;
@@ -1086,8 +1123,6 @@ aiqProp:
     call AddIntrProp
 
 aiqDone:
-    mov es:[edx].qh_s_mask,1
-;    
     pop bp
     pop cx
     pop bx
@@ -1383,8 +1418,9 @@ AddSetup    Proc far
     mov edx,fs:esp_qh
     mov es:[edx].qh_size,0
 ;
-    mov ax,fs:usbp_maxlen
-    or ax,3800h
+    mov ax,es:[edx].qh_max_packet
+    and ax,0F800h
+    or ax,fs:usbp_maxlen
     mov es:[edx].qh_max_packet,ax
 ;
     pop edx
@@ -1574,7 +1610,10 @@ IsTransferDone   Proc far
 ;
     mov al,es:[edx].qh_status
     test al,40h
-    jnz itdOk
+    jz itdFail
+;
+    int 3
+    jmp itdOk
 
 itdFail:
     stc

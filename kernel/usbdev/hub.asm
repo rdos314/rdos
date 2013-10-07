@@ -336,7 +336,6 @@ CreateHub   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HubAttach    Proc near
-    int 3
     push ds
     push ax
     push bx
