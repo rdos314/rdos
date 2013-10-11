@@ -757,7 +757,8 @@ AddControlQh    PROC near
     or al,20h
     mov es:[edx].qh_endpoint,al
 ;    
-    mov ax,3008h
+    mov ax,fs:usbp_maxlen
+    or ax,3000h
     mov es:[edx].qh_max_packet,ax
 ;
     mov al,fs:usbp_speed
@@ -791,7 +792,8 @@ acqSetSpeed:
 ;
     mov es:[edx].qh_c_mask,3Ch
 ;    
-    mov ax,3808h
+    mov ax,fs:usbp_maxlen
+    or ax,3800h
     mov es:[edx].qh_max_packet,ax
     
 acqSpeedOk:
