@@ -594,7 +594,7 @@ InitQh  PROC near
     mov es:[edx].qh_max_packet,3000h
     mov es:[edx].qh_s_mask,0
     mov es:[edx].qh_c_mask,0
-    mov es:[edx].qh_hub_port,0C000h
+    mov es:[edx].qh_hub_port,4000h
     mov es:[edx].qh_current_qtd,0
     mov es:[edx].qh_next_qtd,1
     mov es:[edx].qh_alt_qtd,1
@@ -754,11 +754,10 @@ AddControlQh    PROC near
     mov es:[edx].qh_adress,al
 ;
     mov al,fs:usbp_endpoint
-    or al,20h
+    or al,60h
     mov es:[edx].qh_endpoint,al
 ;    
-    mov ax,fs:usbp_maxlen
-    or ax,3000h
+    mov ax,3008h
     mov es:[edx].qh_max_packet,ax
 ;
     mov al,fs:usbp_speed
@@ -779,12 +778,14 @@ acqLowSpeed:
 acqSetSpeed:    
     mov al,fs:usbp_endpoint
     or al,ah
+    or al,40h
     mov es:[edx].qh_endpoint,al
 ;
     push gs
     mov ax,fs:usbp_hub_port
+    dec ax
     shl ax,7
-    or ax,0C000h    
+    or ax,4000h    
     mov gs,fs:usbp_hub_sel
     or al,gs:hub_device
     pop gs        
@@ -792,8 +793,7 @@ acqSetSpeed:
 ;
     mov es:[edx].qh_c_mask,3Ch
 ;    
-    mov ax,fs:usbp_maxlen
-    or ax,3800h
+    mov ax,3808h
     mov es:[edx].qh_max_packet,ax
     
 acqSpeedOk:
@@ -950,7 +950,7 @@ aieSetSpeed:
     push gs
     mov ax,fs:usbp_hub_port
     shl ax,7
-    or ax,0C000h    
+    or ax,4000h    
     mov gs,fs:usbp_hub_sel
     or al,gs:hub_device
     pop gs        
@@ -1556,6 +1556,7 @@ AddStatusIn    Endp
 IssueTransfer    Proc far
     push es
     push eax
+    push ebx
     push edx
 ;    
     mov ax,flat_sel
@@ -1567,11 +1568,35 @@ IssueTransfer    Proc far
     and fs:esp_flags, NOT ESP_FLAG_TRANSFER_OK
     or fs:esp_flags, ESP_FLAG_TRANSFER_PENDING
 ;    
+    cmp fs:usbp_mode,MODE_CONTROL
+    jne itDo
+;
+    mov dx,0
+    mov ebx,fs:esp_pending
+    or ebx,ebx
+    jz itDo
+
+itLoop:    
+    or es:[ebx].qtd_size,dx
+;
+    mov eax,es:[ebx].qtd_next_va
+    or eax,eax
+    jz itLast
+;
+    xor dx,8000h
+    mov ebx,eax
+    jmp itLoop
+
+itLast:
+    or es:[ebx].qtd_size,8000h
+
+itDo:
     mov eax,fs:esp_first
     mov edx,fs:esp_qh
     mov es:[edx].qh_next_qtd,eax
 ;
     pop edx
+    pop ebx
     pop eax
     pop es    
     ret
