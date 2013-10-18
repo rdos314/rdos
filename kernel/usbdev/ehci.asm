@@ -783,7 +783,6 @@ acqSetSpeed:
 ;
     push gs
     mov ax,fs:usbp_hub_port
-    dec ax
     shl ax,7
     or ax,4000h    
     mov gs,fs:usbp_hub_sel
@@ -791,7 +790,7 @@ acqSetSpeed:
     pop gs        
     mov es:[edx].qh_hub_port,ax
 ;
-    mov es:[edx].qh_c_mask,3Ch
+    mov es:[edx].qh_c_mask,2
 ;    
     mov ax,3808h
     mov es:[edx].qh_max_packet,ax
@@ -926,12 +925,21 @@ AddIntrEntry    PROC near
 ;
     call AllocateQh 
     mov es:[edx].qh_s_mask,1    
+;    
+    mov al,fs:usbp_address
+    mov es:[edx].qh_adress,al
+;
+    mov al,fs:usbp_endpoint
+    or al,60h
+    mov es:[edx].qh_endpoint,al
+;    
+    mov ax,3008h
+    mov es:[edx].qh_max_packet,ax
 ;
     mov al,fs:usbp_speed
     cmp al,2
     je aieSpeedOk
 ;
-    int 3
     cmp al,0
     je aieLowSpeed
 
@@ -956,7 +964,7 @@ aieSetSpeed:
     pop gs        
     mov es:[edx].qh_hub_port,ax
 ;
-    mov es:[edx].qh_c_mask,3Ch
+    mov es:[edx].qh_c_mask,2
     
 aieSpeedOk:
     mov ds:[bx+si].ehc_qh,edx

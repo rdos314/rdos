@@ -411,6 +411,8 @@ UpdatePorts    Proc near
 upLoop:
     mov dx,si
     call GetPortStatus
+    jc upNext
+;    
     test ax,100h
     jnz upHasPower
 ;
