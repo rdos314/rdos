@@ -764,7 +764,6 @@ AddControlQh    PROC near
     cmp al,2
     je acqSpeedOk
 ;
-    int 3
     cmp al,0
     je acqLowSpeed
 
