@@ -483,7 +483,7 @@ void TVp::CalcLinearRegression(int Size)
 
     xydiff = sum;        
 
-    FCurrFlow = xydiff / xdiff2 * 3600.0;
+    FCurrFlow = xydiff / xdiff2;
 
     FCurrSlope = xydiff * Size / xdiff2;
     FCurrSl2 = xydiff * xydiff * Size / xdiff2 * Size / xdiff2;
@@ -567,7 +567,7 @@ void TVp::UpdateHistory(long double val)
         if (FCurrTurbulence < 20.0)
         {
             FValidPTank = TRUE;
-            PTank = 0.07 * VOLUME_TANK * FCurrFlow;
+            PTank = 4.186 * VOLUME_TANK * FCurrFlow;
             FCurrTemp = FCurrMean + FCurrSlope * 0.5;
             FTankTemp = (int)(FCurrTemp * 10.0);
             FValidTank = TRUE;
