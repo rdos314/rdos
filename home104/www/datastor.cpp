@@ -35,8 +35,8 @@
 
 #define STACK_SIZE      0x2000
 
-#define FALSE		    0
-#define TRUE		    !FALSE
+#define FALSE               0
+#define TRUE                !FALSE
 
 /*##########################################################################
 #
@@ -109,45 +109,45 @@ void TDataStore::CreateRootDir()
 ##########################################################################*/
 TFile *TDataStore::CreateDayFile(int year, int month, int day)
 {
-	 char str[20];
-	 char filename[256];
-	 TFile *file;
-	 int i, j;
-	 int filesize;
-	 TFile *File;
+         char str[20];
+         char filename[256];
+         TFile *file;
+         int i, j;
+         int filesize;
+         TFile *File;
 
-	sprintf(str, "%d", year);
-	strcpy(filename, FRootDir);
-	strcat(filename, "\\");
-	strcat(filename, str);
+        sprintf(str, "%d", year);
+        strcpy(filename, FRootDir);
+        strcat(filename, "\\");
+        strcat(filename, str);
 
-	if (!RdosSetCurDir(filename))
-		RdosMakeDir(filename);
+        if (!RdosSetCurDir(filename))
+                RdosMakeDir(filename);
 
-	sprintf(str, "%d\\%d", year, month);
-	strcpy(filename, FRootDir);
-	strcat(filename, "\\");
-	strcat(filename, str);
+        sprintf(str, "%d\\%d", year, month);
+        strcpy(filename, FRootDir);
+        strcat(filename, "\\");
+        strcat(filename, str);
 
-	if (!RdosSetCurDir(filename))
-		RdosMakeDir(filename);
+        if (!RdosSetCurDir(filename))
+                RdosMakeDir(filename);
 
-	sprintf(str, "%d\\%d\\%d.cot", year, month, day);
-	strcpy(filename, FRootDir);
-	strcat(filename, "\\");
-	strcat(filename, str);
+        sprintf(str, "%d\\%d\\%d.cot", year, month, day);
+        strcpy(filename, FRootDir);
+        strcat(filename, "\\");
+        strcat(filename, str);
 
-	File = new TFile(filename);
-	if (!File->IsOpen())
-	{
-		delete File;
-		File = new TFile(filename, 0);
-	}
+        File = new TFile(filename);
+        if (!File->IsOpen())
+        {
+                delete File;
+                File = new TFile(filename, 0);
+        }
 
-	if (File->IsOpen())
-		 File->SetPos(File->GetSize());
+        if (File->IsOpen())
+                 File->SetPos(File->GetSize());
 
-	return File;
+        return File;
 }
 
 /*##########################################################################
@@ -164,36 +164,36 @@ TFile *TDataStore::CreateDayFile(int year, int month, int day)
 void TDataStore::HandleMsg(TDeviceMsg *doc)
 {
     unsigned long msb, lsb;
-	TDeviceTag *header;
-	int year, month, day, hour;
-	int min, sec, ms, us;
-	TFile *file;
-	int size;
-	char *msg;
+        TDeviceTag *header;
+        int year, month, day, hour;
+        int min, sec, ms, us;
+        TFile *file;
+        int size;
+        char *msg;
 
-	header = doc->GetTag(LOG_TAG_HEADER);
-	 if (header)
-	{
-		msb = header->GetUnsignedInt(LOG_VAR_MsbTime, 0);
-		lsb = header->GetUnsignedInt(LOG_VAR_LsbTime, 0);
-		RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
-		RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
+        header = doc->GetTag(LOG_TAG_HEADER);
+         if (header)
+        {
+                msb = header->GetUnsignedInt(LOG_VAR_MsbTime, 0);
+                lsb = header->GetUnsignedInt(LOG_VAR_LsbTime, 0);
+                RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+                RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
 
-		if (FCurrYear == year && FCurrMonth == month && FCurrDay == day)
-			FBin.Update(doc);
-		else
-		{
-			FCurrYear = year;
-			FCurrMonth = month;
-			FCurrDay = day;
+                if (FCurrYear == year && FCurrMonth == month && FCurrDay == day)
+                        FBin.Update(doc);
+                else
+                {
+                        FCurrYear = year;
+                        FCurrMonth = month;
+                        FCurrDay = day;
 
-			FBin.Clear();
-			FBin.LoadCotex(FCurrYear, FCurrMonth, FCurrDay);
-			FBin.SaveBin(FCurrYear, FCurrMonth, FCurrDay);
-			FBin.Update(doc);
-		}
+                        FBin.Clear();
+                        FBin.LoadCotex(FCurrYear, FCurrMonth, FCurrDay);
+                        FBin.SaveBin(FCurrYear, FCurrMonth, FCurrDay);
+                        FBin.Update(doc);
+                }
 
-    	file = CreateDayFile(year, month, day);
+        file = CreateDayFile(year, month, day);
 
         size = doc->GetSize();
         msg = new char[size];
@@ -217,83 +217,83 @@ void TDataStore::HandleMsg(TDeviceMsg *doc)
 ##########################################################################*/
 void TDataStore::Execute()
 {
-    TSocket *socket;
+    TTcpSocket *socket;
     int size;
     int count;
-	char *msg;
-	unsigned long msb, lsb;
-	int year, month, day;
-	TDeviceMsg *doc;
-	char ch;
-	long NtpIp;
+    char *msg;
+    unsigned long msb, lsb;
+    int year, month, day;
+    TDeviceMsg *doc;
+    char ch;
+    long NtpIp;
     TDateTime time;
 
     FCurrYear = time.GetYear();
     FCurrMonth = time.GetMonth();
     FCurrDay = time.GetDay();
 
-	FBin.LoadCotex(FCurrYear, FCurrMonth, FCurrDay);
-	FBin.SaveBin(FCurrYear, FCurrMonth, FCurrDay);
+    FBin.LoadCotex(FCurrYear, FCurrMonth, FCurrDay);
+    FBin.SaveBin(FCurrYear, FCurrMonth, FCurrDay);
 
-	NtpIp = RdosNameToIp("ntp.lth.se");
+    NtpIp = RdosNameToIp("ntp.lth.se");
 
     while (FInstalled)
     {
-    	RdosSyncTime(NtpIp);
+        RdosSyncTime(NtpIp);
 
-        socket = new TSocket(FServerIp, FServerPort, 600000, 0x4000);
-		socket->WaitForConnection(600000);
+        socket = new TTcpSocket(FServerIp, FServerPort, 600000, 0x4000);
+        socket->WaitForConnection(600000);
 
-		while (socket->IsOpen())
-		{
-	        if (socket->WaitForChar(30000))
-			{
-		        count = socket->Read((char *)&size, 4);
-				if (count == 4)
-				{
-					msg = new char[size];
-				    count = socket->Read(msg, size);
+        while (socket->IsOpen())
+        {
+            if (socket->WaitForData(30000))
+            {
+                        count = socket->Read((char *)&size, 4);
+                                if (count == 4)
+                                {
+                                        msg = new char[size];
+                                    count = socket->Read(msg, size);
 
-				    if (count == size)
+                                    if (count == size)
                     {
                         doc = new TDeviceMsg(MAX_MSG_SIZE);
 
-			    		if (doc->Parse(COT_SIGN, msg, size))
-				    	{
-					    	delete msg;
-						    HandleMsg(doc);
+                                        if (doc->Parse(COT_SIGN, msg, size))
+                                        {
+                                                delete msg;
+                                                    HandleMsg(doc);
 
-						    if (NotifyData)
-						        (*NotifyData)(doc);
+                                                    if (NotifyData)
+                                                        (*NotifyData)(doc);
 
-    						ch = 0x6;
-	    					socket->Write(&ch, 1);
-		    				socket->Push();
-			    		}
-				    	else
-					    {
-						    delete msg;
-    						socket->Close();
-	    			    }
+                                                ch = 0x6;
+                                                socket->Write(&ch, 1);
+                                                socket->Push();
+                                        }
+                                        else
+                                            {
+                                                    delete msg;
+                                                socket->Close();
+                                    }
 
-		    			delete doc;
-			    	}
-				    else
-				        socket->Close();
-				}
-			}
-			else
-			{
-    	        socket->Push();
-    	        RdosWaitMilli(250);
-    	    }
+                                        delete doc;
+                                }
+                                    else
+                                        socket->Close();
+                                }
+                        }
+                        else
+                        {
+                socket->Push();
+                RdosWaitMilli(250);
+            }
         }
         delete socket;
 
-    	RdosGetTime(&msb, &lsb);
-    	lsb = 0;
-    	msb++;
-    	RdosWaitUntil(msb, lsb);
+        RdosGetTime(&msb, &lsb);
+        lsb = 0;
+        msb++;
+        RdosWaitUntil(msb, lsb);
         
     }
 }

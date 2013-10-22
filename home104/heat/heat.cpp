@@ -457,7 +457,7 @@ int main()
         Label->SetText(str);
 
 
-        ambient = (int)(100.0 * Climate->GetOutdoorTemperature());
+        ambient = (int)(10.0 * Climate->GetOutdoorTemperature());
 
         summer = FALSE;
 
@@ -483,7 +483,7 @@ int main()
 
         for (i = 0; i < 7; i++)
         {
-            if (RadArr[i] && RadArr[i]->IsOnline())
+            if (i != 4 && RadArr[i] && RadArr[i]->IsOnline())
             {
                 count++;
 

@@ -549,14 +549,14 @@ void TVp::UpdateHistory(long double val)
         index = 0;
 
         if (FHistoryCount <= 600)
-            CalcLinearRegression(n);
+            CalcLinearRegression(FHistoryCount);
         else
         {
             n = HistoryArr[index];
             index++;
             CalcLinearRegression(n);
             
-            while (HistoryArr[index] && FCurrTurbulence >= 10.0)
+            while (HistoryArr[index] && FCurrTurbulence >= 20.0)
             {
                 n = HistoryArr[index];
                 index++;
@@ -564,10 +564,10 @@ void TVp::UpdateHistory(long double val)
             }
         }
 
-        if (FCurrTurbulence < 10.0)
+        if (FCurrTurbulence < 20.0)
         {
             FValidPTank = TRUE;
-            PTank = 0.07 * VOLUME_TANK * FCurrSlope;
+            PTank = 0.07 * VOLUME_TANK * FCurrFlow;
             FCurrTemp = FCurrMean + FCurrSlope * 0.5;
             FTankTemp = (int)(FCurrTemp * 10.0);
             FValidTank = TRUE;
@@ -693,6 +693,9 @@ void TVp::Execute()
 
     FHeatSum = 0;
     FHeatCount = 0;
+    FCurrTemp = 0;
+    FCurrTurbulence = 0;
+    PTank = 0;
 
     RdosGetTime(&msb, &lsb);
     RdosDecodeMsbTics(msb, &year, &month, &day, &hour);

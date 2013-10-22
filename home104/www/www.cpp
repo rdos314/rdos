@@ -77,101 +77,101 @@ void HandleRealData(TDeviceMsg *doc)
 
         printf("%04d-%02d-%02d %02d.%02d", year, month, day, hour, min);
 
-	    tag = doc->GetTag(LOG_TAG_SOLAR24);
+            tag = doc->GetTag(LOG_TAG_SOLAR24);
 
         if (tag)
         {
             var = tag->GetVar(LOG_VAR_P);
             if (var)
-          	{
+                {
                 ival = var->GetFloat3();
                 val = (long double)ival;
                 val = val / 1000.0;
                 printf("%8.3LfW", val);
-       	    }
-       	}
+            }
+        }
 
-	    tag = doc->GetTag(LOG_TAG_TANK);
+            tag = doc->GetTag(LOG_TAG_TANK);
 
-	    if (tag)
-	    {
+            if (tag)
+            {
             var = tag->GetVar(LOG_VAR_P);
             if (var)
-          	{
+                {
                 ival = var->GetSignedInt();
                 val = (long double)ival;
                 val = val / 1000.0;
                 printf("%8.3LfkW", val);
-       	    }
-       	}
+            }
+        }
 
-	    tag = doc->GetTag(LOG_TAG_OUTDOOR);
+            tag = doc->GetTag(LOG_TAG_OUTDOOR);
 
         if (tag)
         {
             var = tag->GetVar(LOG_VAR_Temp);
             if (var)
-          	{
+                {
                 ival = var->GetFloat1();
 
-        		if (ival < 500 && ival > -500)
-		        {
+                        if (ival < 500 && ival > -500)
+                        {
                     val = (long double)ival;
                     val = val / 10.0;
                     printf("%6.1LfC", val);
                 }
-       	    }
+            }
     
             var = tag->GetVar(LOG_VAR_Humidity);
             if (var)
-	        {
+                {
                 ival = var->GetSignedInt();
 
-        		if (ival <= 100 && ival >= 0)
-		        {
+                        if (ival <= 100 && ival >= 0)
+                        {
                     val = (long double)ival;
                     printf("%4.0Lf%%", val);
-        	    }
-	        }
+                    }
+                }
 
-        	var = tag->GetVar(LOG_VAR_Windspeed);
-        	if (var)
-	        {
+                var = tag->GetVar(LOG_VAR_Windspeed);
+                if (var)
+                {
                 ival = var->GetFloat1();
 
-        		if (ival < 400 && ival >= 0)
-		        {
-				    val = (long double)ival;
-				    val = val / 10.0;
+                        if (ival < 400 && ival >= 0)
+                        {
+                                    val = (long double)ival;
+                                    val = val / 10.0;
                     printf("%5.1Lfm/s", val);
-        		 }
-	        }
+                         }
+                }
 
             var = tag->GetVar(LOG_VAR_Pressure);
             if (var)
-	        {
+                {
                 ival = var->GetFloat1();
 
-        		if (ival < 11000 && ival >= 9000)
-		        {
+                        if (ival < 11000 && ival >= 9000)
+                        {
                     val = (long double)ival;
                     val = val / 10.0;
                     printf("%7.1Lfhpa", val);
-        	    }
-	        }
+                    }
+                }
     
             var = tag->GetVar(LOG_VAR_Rain);
             if (var)
-	        {
+                {
                 ival = var->GetFloat1();
 
-        		if (ival > 0)
-		        {
+                        if (ival > 0)
+                        {
                     val = (long double)ival;
-	                val = val / 10.0;
+                        val = val / 10.0;
                     printf("%6.1Lfmm", val);
-        	    }
-        	}
+                    }
+                }
         }
         printf("\r\n");
      }
@@ -179,18 +179,18 @@ void HandleRealData(TDeviceMsg *doc)
 
 void cdecl main()
 {
-    TSocket *socket;
+    TTcpSocket *socket;
     int size;
     int count;
     char *msg;
     TDeviceMsg *doc;
     unsigned long Node;
     int i;
-	char ch;
+        char ch;
 
     TDataStore *DataStore;
 
-    Node = 0x4E01A8C0;
+    Node = 0x4301A8C0;
 
     for (i = 0; i < 10; i++)
     {
@@ -208,12 +208,12 @@ void cdecl main()
 
      for (;;)
      {
-          socket = new TSocket(Node, 601, 600000, 0x4000);
+          socket = new TTcpSocket(Node, 601, 600000, 0x4000);
           socket->WaitForConnection(600000);
 
           while (socket->IsOpen())
           {
-                if (socket->WaitForChar(25000))
+                if (socket->WaitForData(25000))
                 {
                     count = socket->Read((char *)&size, 4);
                     if (count == 4)
@@ -229,9 +229,9 @@ void cdecl main()
                             {
                                  delete msg;
                                 HandleRealData(doc);
-        						ch = 0x6;
-	        					socket->Write(&ch, 1);
-		        				socket->Push();
+                                                        ch = 0x6;
+                                                        socket->Write(&ch, 1);
+                                                        socket->Push();
                             }
                             else
                             { 
