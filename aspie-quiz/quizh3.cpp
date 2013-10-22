@@ -744,7 +744,7 @@ void TQuizH3::LoadPopulations()
 
                 All.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 
-                if (Row.Aspie)
+                if (Row.Aspie == 2)
                 {
                         if (Row.AsResult < Row.NtResult)
                                 LowAs.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
