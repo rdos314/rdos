@@ -426,22 +426,41 @@ upHasPower:
     test ax,1
     jz upNotConnected
 ;
-    test ax,2
-    jnz upIsEnabled
-;        
     mov gs:[bx].hps_status,ax
+    test ax,2
+    jnz upNext
+;        
+    mov ds,gs:hub_dev_sel
+    call ds:lock_enum_proc
+;
     mov dx,si
     mov ax,PORT_RESET
     call SetPortFeature    
-    jmp upNext
 
-upIsEnabled:
-    xchg ax,gs:[bx].hps_status
-    test ax,2
-    jnz upNext
+upWaitLoop:
+    mov dx,si
+    call GetPortStatus
+    jc upUnlock
 ;
+    test ax,1
+    jz upUnlock
+;
+    test ax,2
+    jnz upIsEnabled
+;
+    mov ax,25
+    WaitMilliSec
+    jmp upWaitLoop
+ 
+upIsEnabled:
+    mov gs:[bx].hps_status,ax
+;    
     mov dx,si
     call HubAttach 
+
+upUnlock:    
+    mov ds,gs:hub_dev_sel
+    call ds:unlock_enum_proc
     jmp upNext
 
 upNotConnected:
