@@ -791,6 +791,7 @@ usb_detach  Proc far
     push es
     pushad
 ;    
+    int 3
     mov dx,SEG data
     mov ds,dx
 ;        

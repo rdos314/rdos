@@ -79,6 +79,7 @@ uhc_io_base      DW ?
 
 uhc_pipe_list    DW ?
 uhc_spinlock     spinlock_typ <>
+uhc_section      section_typ <>
 
 uhc_pci_bus_dev  DW ?
 uhc_pci_func     DB ?
@@ -2347,6 +2348,38 @@ ResetPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           LockEnum
+;
+;           DESCRIPTION:    Lock enumeration process
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockEnum   Proc far
+    EnterSection ds:uhc_section
+    ret
+LockEnum   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockEnum
+;
+;           DESCRIPTION:    Unlock enumeration process
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockEnum   Proc far
+    LeaveSection ds:uhc_section
+    ret
+UnlockEnum   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           AllocateHubPort
 ;
 ;           DESCRIPTION:    Allocate Hub port
@@ -2512,8 +2545,10 @@ ut14 DW OFFSET WaitForCompletion,   SEG code
 ut15 DW OFFSET ChangeAddress,       SEG code
 ut16 DW OFFSET IsConnected,     SEG code
 ut17 DW OFFSET ResetPipe,       SEG code
-ut18 DW OFFSET AllocateHubPort, SEG code
-ut19 DW OFFSET FreeHubPort,     SEG code
+ut18 DW OFFSET LockEnum,        SEG code
+ut19 DW OFFSET UnlockEnum,      SEG code
+ut20 DW OFFSET AllocateHubPort, SEG code
+ut21 DW OFFSET FreeHubPort,     SEG code
 
 InitFunction    Proc near
     pushad
@@ -2530,7 +2565,7 @@ InitFunction    Proc near
 ;
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,20
+    mov cx,22
 
 ifTabLoop:
     lods dword ptr cs:[si]
@@ -2641,6 +2676,7 @@ AddFunction  Proc near
     mov ds:uhc_pci_func,ch
     mov ds:uhc_pipe_list,0
     InitSpinlock ds:uhc_spinlock
+    InitSection ds:uhc_section
 ;    
     mov eax,1000h
     AllocateBigLinear

@@ -313,6 +313,12 @@ void TVp::SetAmbient(int ref, int ambient)
 
         if (ambient < 0)
             FMaxTank = 450;
+
+        if (FTankTemp > FMaxTank)
+        {
+            FLowTemp = FTankTemp - 30;
+            FHasLowTemp = TRUE;
+        }
            
         FSection.Leave();    
     }

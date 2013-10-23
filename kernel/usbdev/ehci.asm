@@ -99,6 +99,7 @@ ehc_pipe_list       DW ?
 ehc_async_head_va   DD ?
 
 ehc_spinlock        spinlock_typ <>
+ehc_enum_section     section_typ <>
 
 ehc_hub_port_arr    DD 256 DUP(?)
 
@@ -1944,6 +1945,38 @@ ResetPipe Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           LockEnum
+;
+;           DESCRIPTION:    Lock enumeration process
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockEnum   Proc far
+    EnterSection ds:ehc_enum_section
+    ret
+LockEnum   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockEnum
+;
+;           DESCRIPTION:    Unlock enumeration process
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockEnum   Proc far
+    LeaveSection ds:ehc_enum_section
+    ret
+UnlockEnum   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           AllocateHubPort
 ;
 ;           DESCRIPTION:    Allocate Hub port
@@ -2062,6 +2095,8 @@ upAttach:
     jmp upDone
     
 upDoReset:    
+    call ds:lock_enum_proc
+;    
     mov eax,es:[si].HcPortSc
     and al,NOT 4
     or ax,100h
@@ -2077,7 +2112,7 @@ upDoReset:
 upResetLoop:
     mov eax,es:[si].HcPortSc
     test al,1
-    jz upDone
+    jz upUnlock
 ;    
     test ax,100h
     jz upResetDone
@@ -2095,14 +2130,17 @@ upResetDone:
     jnz upNotify
 ;    
     test ds:ehc_flags,EHC_COMPANION
-    jz upDone
+    jz upUnlock
 ;
     cmp cl,ds:ehc_comp_ports
-    jae upDone
+    jae upUnlock
 ;    
     mov eax,es:[si].HcPortSc
     or ax,2000h
     mov es:[si].HcPortSc,eax
+
+upUnlock:
+    call ds:unlock_enum_proc
     jmp upDone
         
 upNotify:
@@ -2112,6 +2150,7 @@ upNotify:
     mov ah,2
     mov al,cl
     NotifyUsbAttach
+    call ds:unlock_enum_proc
     jmp upDone
 
 upDetach:
@@ -2299,8 +2338,10 @@ et14 DW OFFSET WaitForCompletion,   SEG code
 et15 DW OFFSET ChangeAddress,       SEG code
 et16 DW OFFSET IsConnected,     SEG code
 et17 DW OFFSET ResetPipe,       SEG code
-et18 DW OFFSET AllocateHubPort, SEG code
-et19 DW OFFSET FreeHubPort,     SEG code
+et18 DW OFFSET LockEnum,        SEG code
+et19 DW OFFSET UnlockEnum,      SEG code
+et20 DW OFFSET AllocateHubPort, SEG code
+et21 DW OFFSET FreeHubPort,     SEG code
 ;
 ;           PARAMETERS:         BH          Bus
 ;                           BL          Device
@@ -2317,7 +2358,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,20
+    mov cx,22
 
 ifTabLoop:
     lods dword ptr cs:[si]
@@ -2497,6 +2538,7 @@ AddFunction  Proc near
     mov ds:ehc_pipe_list,0
     mov ds:ehc_async_head_va,0
     InitSpinlock ds:ehc_spinlock
+    InitSection ds:ehc_enum_section
 ;
     mov es,bp
     mov cl,es:hcp_CAPLEN

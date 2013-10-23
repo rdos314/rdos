@@ -143,6 +143,7 @@ ohc_pipe_list       DW ?
 ohc_reclaim_list    DD ?
 
 ohc_spinlock        spinlock_typ <>
+ohc_enum_section    section_typ <>
 
 ohc_root_ports      DW ?
 ohc_reset           DW ?
@@ -2266,6 +2267,38 @@ ResetPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           LockEnum
+;
+;           DESCRIPTION:    Lock enumeration process
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockEnum   Proc far
+    EnterSection ds:ohc_enum_section
+    ret
+LockEnum   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockEnum
+;
+;           DESCRIPTION:    Unlock enumeration process
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockEnum   Proc far
+    LeaveSection ds:ohc_enum_section
+    ret
+UnlockEnum   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           AllocateHubPort
 ;
 ;           DESCRIPTION:    Allocate Hub port
@@ -2736,8 +2769,10 @@ ot14 DW OFFSET WaitForCompletion,   SEG code
 ot15 DW OFFSET ChangeAddress,       SEG code
 ot16 DW OFFSET IsConnected,     SEG code
 ot17 DW OFFSET ResetPipe,       SEG code
-ot18 DW OFFSET AllocateHubPort, SEG code
-ot19 DW OFFSET FreeHubPort,     SEG code
+ot18 DW OFFSET LockEnum,        SEG code
+ot19 DW OFFSET UnlockEnum,      SEG code
+ot20 DW OFFSET AllocateHubPort,  SEG code
+ot21 DW OFFSET FreeHubPort,     SEG code
 
 InitFunction    Proc near
     push es
@@ -2749,7 +2784,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,20
+    mov cx,22
 
 ifTabLoop:
     lods dword ptr cs:[si]
@@ -2899,6 +2934,7 @@ AddFunction  Proc near
     rep stosd
 ;
     InitSpinlock ds:ohc_spinlock
+    InitSection ds:ohc_enum_section
     mov ds:ohc_pipe_list,0
     mov ds:ohc_reclaim_list,0
     mov ds:ohc_reset,0
