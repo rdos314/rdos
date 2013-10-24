@@ -1585,7 +1585,10 @@ IssueTransfer    Proc far
     jz itDo
 
 itLoop:    
-    or es:[ebx].qtd_size,dx
+    mov ax,es:[ebx].qtd_size
+    and ax,7FFFh
+    or ax,dx
+    mov es:[ebx].qtd_size,ax
 ;
     mov eax,es:[ebx].qtd_next_va
     or eax,eax
@@ -1728,8 +1731,12 @@ EndTransfer   Proc far
     mov edx,fs:esp_qh
     mov al,es:[edx].qh_status
     test al,40h
-    jnz etrDone
-;    
+    jz etrDecode
+;
+    int 3    
+    jmp etrDone
+
+etrDecode:    
     xor edx,edx
     xchg edx,fs:esp_pending
 ;
@@ -1745,6 +1752,7 @@ etrLoop:
 ;
     mov cx,es:[edx].qtd_buffer_size
     sub cx,es:[edx].qtd_size
+    and cx,7FFFh
     add bp,cx
 
 etrNext:

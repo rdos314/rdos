@@ -430,8 +430,10 @@ upHasPower:
     test ax,2
     jnz upNext
 ;        
+    push ds
     mov ds,gs:hub_dev_sel
     call ds:lock_enum_proc
+    pop ds
 ;
     mov dx,si
     mov ax,PORT_RESET
@@ -458,9 +460,11 @@ upIsEnabled:
     mov dx,si
     call HubAttach 
 
-upUnlock:    
+upUnlock:   
+    push ds 
     mov ds,gs:hub_dev_sel
     call ds:unlock_enum_proc
+    pop ds
     jmp upNext
 
 upNotConnected:
