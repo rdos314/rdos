@@ -38,6 +38,8 @@ public:
     TPrinterDevice(int Port);
     ~TPrinterDevice();
 
+    int GetHandle();
+
     virtual void DeviceName(char *Name, int MaxLen) const;
 
     virtual int IsOnline() const;

@@ -137,6 +137,22 @@ void TPrinterDevice::Init(int Port)
 
 /*##########################################################################
 #
+#   Name       : TPrinterDevice::GetHandle
+#
+#   Purpose....: Get handle
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPrinterDevice::GetHandle()
+{
+    return FHandle;
+}
+
+/*##########################################################################
+#
 #   Name       : TPrinterDevice::DeviceName
 #
 #   Purpose....: Returns device-name
