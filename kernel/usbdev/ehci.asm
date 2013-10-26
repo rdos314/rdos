@@ -805,7 +805,7 @@ acqSpeedOk:
     mov eax,ebx
     or al,2
     mov es:[edx].qh_link,eax
-    mov es:[edx].qh_link_va,edx
+    mov es:[edx].qh_link_va,0
 ;
     mov gs,ds:ehc_reg_sel
     mov gs:HcAsyncList,ebx
@@ -817,28 +817,29 @@ acqSpeedOk:
 
 acqInsert:
     push esi
-;    
-    mov esi,eax
-    mov eax,es:[esi].qh_link
-    mov es:[edx].qh_link,eax
-    mov eax,es:[esi].qh_link_va
-    mov es:[edx].qh_link_va,eax
-    mov eax,esi
-
-acqFindEnd:
-    cmp esi,es:[eax].qh_link_va
-    je acqEndFound
-;    
-    mov eax,es:[eax].qh_link_va
-    jmp acqFindEnd
-
-acqEndFound:
-    mov esi,ebx
-    or si,2
-    mov es:[eax].qh_link,esi
-    mov es:[eax].qh_link_va,edx
+    push edi
 ;
-    pop esi    
+    mov esi,eax
+    mov edi,es:[esi].qh_my_phys    
+
+acqInsLoop:
+    mov esi,eax    
+    mov eax,es:[esi].qh_link_va
+    or eax,eax
+    jnz acqInsLoop
+;
+    mov es:[edx].qh_link_va,0    
+    mov eax,edi
+    or al,2
+    mov es:[edx].qh_link,eax
+;
+    mov es:[esi].qh_link_va,edx
+    mov eax,ebx
+    or al,2
+    mov es:[esi].qh_link,eax
+;
+    pop edi
+    pop esi
 
 acqDone:
     mov eax,ebx

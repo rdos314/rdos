@@ -343,7 +343,7 @@ HubAttach    Proc near
     mov ds,gs:hub_dev_sel
     call ds:allocate_hub_port_proc
     jc haDone
-;    
+;
     mov gs:[bx].hps_dev_port,al
     test gs:[bx].hps_status,200h
     jnz haLowSpeed
@@ -363,7 +363,6 @@ haLowSpeed:
     mov ah,0
         
 haAttach:
-    mov bx,gs:hub_controller
     NotifyUsbAttach
 
 haDone:    

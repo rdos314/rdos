@@ -19,6 +19,7 @@ struct TQuizRow
 	long NtResult;
 	int CueId;
 	int CueResult;
+	long Result;
 	char Quiz[250];
 	char GroupResult[ACTIVE_GROUP_COUNT];
 };

@@ -45,6 +45,16 @@ void ClosePca();
 
 static TFile *quizfile;
 
+static int IntentScore[6][6] =
+  {
+    {0, -12, 29, -1, 4, -30},
+    {41, 0, 43, 13, 24, -1},
+    {-25, -55, 0, -27, -36, -70},
+    {26, -6, 14, 0, 11, 3},
+    {13, -13, 29, 14, 0, -18},
+    {57, -6, 51, 14, 55, 0}
+  };
+
 /*##################  HandleRow ##########################
 *   Purpose....: Handle a row       	   					      	        #
 *   In params..: *                                                          #
@@ -56,7 +66,8 @@ static void HandleRow(TQuizRow *Row)
 {
     quizfile->Write(Row, sizeof(TQuizRow));
 
-    printf("H16: %d AS: %d, NT: %d\r\n", Row->ID, Row->AsResult, Row->NtResult);
+//    printf("H16: %d AS: %d, NT: %d\r\n", Row->ID, Row->AsResult, Row->NtResult);
+    printf("%d\n", Row->Result);
 }
 
 /*##################  UpdateScore ##########################
@@ -229,6 +240,11 @@ static void ProcessRow(char *str)
              
         }
     }
+
+    if (Row.CueResult)
+        Row.Result = IntentScore[Row.CueId][Row.CueResult - 1];
+    else
+        Row.Result = 0;
 
     for (i = 0; i < 6; i++)
     {
