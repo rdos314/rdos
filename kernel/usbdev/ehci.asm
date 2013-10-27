@@ -1386,8 +1386,8 @@ CreateIntr   Proc far
     pop es
 ;    
     call SetupHub
-    mov al,es:usbf_speed
-    mov fs:usbp_speed,al
+    mov dl,es:usbf_speed
+    mov fs:usbp_speed,dl
 ;    
     mov dx,flat_sel
     mov es,dx
@@ -1455,7 +1455,41 @@ AddSetup    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddOut    Proc far
-    int 3
+    push es
+    push eax
+    push edx
+;    
+    call AllocateFillQtd
+;
+    mov al,0
+    call InsertQtd
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov edx,fs:esp_qh
+    mov es:[edx].qh_size,0
+;
+    mov al,fs:usbp_endpoint
+    or al,al
+    jz aoControl
+
+aoData:    
+    mov ax,es:[edx].qh_max_packet
+    and ax,0F000h
+    or ax,fs:usbp_maxlen
+    mov es:[edx].qh_max_packet,ax
+    jmp aoDone
+
+aoControl:    
+    mov ax,es:[edx].qh_max_packet
+    and ax,0F800h
+    or ax,fs:usbp_maxlen
+    mov es:[edx].qh_max_packet,ax
+
+aoDone:
+    pop edx
+    pop eax
+    pop es
     ret
 AddOut    Endp
 

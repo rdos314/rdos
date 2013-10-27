@@ -385,7 +385,18 @@ HubAttach   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HubDetach    Proc near
+    push ds
+    push ax
+    push bx
+;    
     int 3
+    mov ds,gs:hub_dev_sel
+    mov al,gs:[bx].hps_dev_port
+    NotifyUsbAttach
+;
+    pop bx
+    pop ax
+    pop ds
     ret
 HubDetach   Endp
 
