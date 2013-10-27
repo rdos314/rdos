@@ -392,7 +392,9 @@ HubDetach    Proc near
     int 3
     mov ds,gs:hub_dev_sel
     mov al,gs:[bx].hps_dev_port
-    NotifyUsbAttach
+    NotifyUsbDetach
+;    
+    call ds:free_hub_port_proc
 ;
     pop bx
     pop ax

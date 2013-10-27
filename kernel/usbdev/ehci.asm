@@ -1885,6 +1885,7 @@ GetDataSize   Endp
 
 ClosePipe   Proc far
     int 3
+    call RemovePipe
     ret
 ClosePipe   Endp
 
@@ -2067,13 +2068,20 @@ AllocateHubPort     Endp
 ;           DESCRIPTION:    Free Hub port
 ;
 ;       PARAMETERS:         DS      Function selector
-;                           GS      Hub
 ;                           AL      Port
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeHubPort   Proc far
-    int 3
+    push bx
+;    
+    movzx bx,al
+    shl bx,2
+    add bx,OFFSET ehc_hub_port_arr
+    mov dword ptr [bx],0
+    clc
+;
+    pop bx
     ret
 FreeHubPort     Endp
 
