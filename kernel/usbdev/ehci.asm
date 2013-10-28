@@ -1620,6 +1620,10 @@ IssueTransfer    Proc far
     jz itDo
 
 itLoop:    
+    mov al,es:[ebx].qtd_flags
+    and al,7Fh
+    mov es:[ebx].qtd_flags,al
+;
     mov ax,es:[ebx].qtd_size
     and ax,7FFFh
     or ax,dx
@@ -1635,6 +1639,9 @@ itLoop:
 
 itLast:
     or es:[ebx].qtd_size,8000h
+    mov al,es:[ebx].qtd_flags
+    or al,80h
+    mov es:[ebx].qtd_flags,al
 
 itDo:
     mov eax,fs:esp_first
