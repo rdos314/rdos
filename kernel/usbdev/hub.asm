@@ -115,7 +115,7 @@ ProcessHubDescr  Proc near
     GetSystemTime
     add eax,1000 * 1193    
     adc edx,0
-    mov bx,gs:hub_wait_handle
+    mov bx,gs:hub_control_wait
     WaitWithTimeout
 ;    
     mov bx,gs:hub_control_handle
@@ -154,6 +154,162 @@ ghdDone:
     ret
 ProcessHubDescr Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SetPortFeature
+;
+;   description:    Set port feature
+;
+;   Parameters:     GS      Hub
+;                   DX      Port
+;                   AX      Feature
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetPortFeature  Proc near
+    push es
+    pushad
+;    
+    mov bx,gs
+    mov es,bx
+    mov bx,gs:hub_control_handle
+;    
+    mov di,OFFSET hub_control_data
+    mov es:[di].usd_type,23h
+    mov es:[di].usd_req,SET_FEATURE
+    mov es:[di].usd_value,ax
+    mov es:[di].usd_index,dx
+    mov es:[di].usd_len,0
+    mov cx,8
+    WriteUsbControl
+    ReqUsbStatus
+    StartUsbTransaction
+;
+    GetSystemTime
+    add eax,1000 * 1193    
+    adc edx,0
+    mov bx,gs:hub_control_wait
+    WaitWithTimeout
+;    
+    mov bx,gs:hub_control_handle
+    WasUsbTransactionOk
+;
+    popad
+    pop es
+    ret
+SetPortFeature Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ClearPortFeature
+;
+;   description:    Clear port feature
+;
+;   Parameters:     GS      Hub
+;                   DX      Port
+;                   AX      Feature
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearPortFeature  Proc near
+    push es
+    pushad
+;    
+    mov bx,gs
+    mov es,bx
+    mov bx,gs:hub_control_handle
+;    
+    mov di,OFFSET hub_control_data
+    mov es:[di].usd_type,23h
+    mov es:[di].usd_req,CLEAR_FEATURE
+    mov es:[di].usd_value,ax
+    mov es:[di].usd_index,dx
+    mov es:[di].usd_len,0
+    mov cx,8
+    WriteUsbControl
+    ReqUsbStatus
+    StartUsbTransaction
+;
+    GetSystemTime
+    add eax,1000 * 1193    
+    adc edx,0
+    mov bx,gs:hub_control_wait
+    WaitWithTimeout
+;    
+    mov bx,gs:hub_control_handle
+    WasUsbTransactionOk
+;
+    popad
+    pop es
+    ret
+ClearPortFeature Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ClearPortChange
+;
+;   description:    Clear port change
+;
+;   Parameters:     GS      Hub
+;                   DX      Port
+;                   AX      Status change
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearPortChange  Proc near
+    test ax,1
+    jz cpcConnectOk
+;
+    push ax
+    mov ax,16
+    call ClearPortFeature
+    pop ax
+
+cpcConnectOk:    
+    test ax,2
+    jz cpcEnableOk
+;
+    push ax
+    mov ax,17
+    call ClearPortFeature
+    pop ax
+
+cpcEnableOk:
+    test ax,4
+    jz cpcSuspendOk
+;
+    push ax
+    mov ax,18
+    call ClearPortFeature
+    pop ax
+
+cpcSuspendOk:
+    test ax,8
+    jz cpcOverCurrentOk
+;
+    push ax
+    mov ax,19
+    call ClearPortFeature
+    pop ax
+
+cpcOverCurrentOk:
+    test ax,10h
+    jz cpcResetOk
+;
+    push ax
+    mov ax,20
+    call ClearPortFeature
+    pop ax
+                
+cpcResetOk:
+    ret
+ClearPortChange Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -197,19 +353,23 @@ GetPortStatus  Proc near
     WriteUsbStatus
     StartUsbTransaction
 ;
+    push edx
     GetSystemTime
     add eax,1000 * 1193    
     adc edx,0
-    mov bx,gs:hub_wait_handle
+    mov bx,gs:hub_control_wait
     WaitWithTimeout
+    pop edx
 ;    
     mov bx,gs:hub_control_handle
     WasUsbTransactionOk
     jc gpsDone
 ;    
     mov di,OFFSET hub_buf
-    mov ax,es:[di]
-    mov dx,es:[di+2]
+    mov ax,es:[di+2]
+    call ClearPortChange
+;
+    mov ax,es:[di]        
     clc    
 
 gpsDone:    
@@ -219,53 +379,6 @@ gpsDone:
     pop es
     ret
 GetPortStatus Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           SetPortFeature
-;
-;   description:    Set port feature
-;
-;   Parameters:     GS      Hub
-;                   DX      Port
-;                   AX      Feature
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetPortFeature  Proc near
-    push es
-    pushad
-;    
-    mov bx,gs
-    mov es,bx
-    mov bx,gs:hub_control_handle
-;    
-    mov di,OFFSET hub_control_data
-    mov es:[di].usd_type,23h
-    mov es:[di].usd_req,SET_FEATURE
-    mov es:[di].usd_value,ax
-    mov es:[di].usd_index,dx
-    mov es:[di].usd_len,0
-    mov cx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-;
-    GetSystemTime
-    add eax,1000 * 1193    
-    adc edx,0
-    mov bx,gs:hub_wait_handle
-    WaitWithTimeout
-;    
-    mov bx,gs:hub_control_handle
-    WasUsbTransactionOk
-;
-    popad
-    pop es
-    ret
-SetPortFeature Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -283,7 +396,7 @@ CreateHub  Proc near
     pushad
 ;
     CreateWait
-    mov gs:hub_wait_handle,bx
+    mov gs:hub_control_wait,bx
 ;
     mov bx,gs:hub_controller
     mov al,gs:hub_device
@@ -292,9 +405,12 @@ CreateHub  Proc near
     mov gs:hub_control_handle,bx
 ;
     mov ax,gs:hub_control_handle
-    mov bx,gs:hub_wait_handle
+    mov bx,gs:hub_control_wait
     xor ecx,ecx
     AddWaitForUsbPipe
+;
+    CreateWait
+    mov gs:hub_status_wait,bx
 ;    
     mov bx,gs:hub_controller
     mov al,gs:hub_device
@@ -302,6 +418,12 @@ CreateHub  Proc near
     OpenUsbPipe
     mov gs:hub_status_handle,bx
 ;
+    mov ax,gs:hub_status_handle
+    mov bx,gs:hub_status_wait
+    xor ecx,ecx
+    AddWaitForUsbPipe
+;
+    mov bx,gs:hub_status_handle
     CreateUsbReq
     mov gs:hub_status_req,bx
 ;
@@ -310,11 +432,6 @@ CreateHub  Proc near
     AllocateSmallGlobalMem
     mov gs:hub_status_sel,es
     AddReadUsbDataReq
-;
-    GetThread
-    mov bx,gs:hub_status_req
-    mov cx,gs:hub_status_size
-    StartUsbReq    
 ;
     popad
     pop es
@@ -432,6 +549,92 @@ InitPorts    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           UpdateOnePort
+;
+;   description:    Update ports
+;
+;   Parameters:     GS      Hub
+;                   DS      Device sel
+;                   BX      Status offset
+;                   SI      Port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateOnePort    Proc near
+    mov dx,si
+    call GetPortStatus
+    jc uopDone
+;    
+    mov gs:[bx].hps_status,ax
+;
+    test ax,100h
+    jz uopDone
+;
+    test ax,1
+    jz uopNotConnected
+;
+    test ax,2
+    jnz uopDone
+;
+    mov al,gs:[bx].hps_dev_port
+    or al,al
+    jnz uopHasPort
+;    
+    call ds:allocate_hub_port_proc
+    jc uopDone
+;
+    mov gs:[bx].hps_dev_port,al
+
+uopHasPort:
+    call ds:lock_enum_proc
+;
+    mov dx,si
+    mov ax,PORT_RESET
+    call SetPortFeature    
+
+uopWaitLoop:
+    mov dx,si
+    call GetPortStatus
+    jc uopUnlock
+;
+    test ax,1
+    jz uopUnlock
+;
+    test ax,2
+    jnz uopIsEnabled
+;
+    mov ax,25
+    WaitMilliSec
+    jmp uopWaitLoop
+ 
+uopIsEnabled:
+    mov gs:[bx].hps_status,ax
+;    
+    mov dx,si
+    call HubAttach 
+
+uopUnlock:   
+    call ds:unlock_enum_proc
+    jmp uopDone
+
+uopNotConnected:
+    mov al,gs:[bx].hps_dev_port
+    or al,al
+    jz uopDone
+;
+    mov dx,si
+    call HubDetach
+;    
+    call ds:free_hub_port_proc
+    mov gs:[bx].hps_dev_port,0
+
+uopDone:    
+    ret
+UpdateOnePort    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           UpdatePorts
 ;
 ;   description:    Update ports
@@ -449,74 +652,7 @@ UpdatePorts    Proc near
     mov si,1
 
 upLoop:
-    mov dx,si
-    call GetPortStatus
-    jc upNext
-;    
-    mov gs:[bx].hps_status,ax
-;
-    test ax,100h
-    jz upNext
-;
-    test ax,1
-    jz upNotConnected
-;
-    test ax,2
-    jnz upNext
-;
-    mov al,gs:[bx].hps_dev_port
-    or al,al
-    jnz upHasPort
-;    
-    call ds:allocate_hub_port_proc
-    jc upNext
-;
-    mov gs:[bx].hps_dev_port,al
-
-upHasPort:
-    call ds:lock_enum_proc
-;
-    mov dx,si
-    mov ax,PORT_RESET
-    call SetPortFeature    
-
-upWaitLoop:
-    mov dx,si
-    call GetPortStatus
-    jc upUnlock
-;
-    test ax,1
-    jz upUnlock
-;
-    test ax,2
-    jnz upIsEnabled
-;
-    mov ax,25
-    WaitMilliSec
-    jmp upWaitLoop
- 
-upIsEnabled:
-    mov gs:[bx].hps_status,ax
-;    
-    mov dx,si
-    call HubAttach 
-
-upUnlock:   
-    call ds:unlock_enum_proc
-    jmp upNext
-
-upNotConnected:
-    mov al,gs:[bx].hps_dev_port
-    or al,al
-    jz upNext
-;
-    mov dx,si
-    call HubDetach
-;    
-    call ds:free_hub_port_proc
-    mov gs:[bx].hps_dev_port,0
-
-upNext:    
+    call UpdateOnePort
     add bx,4
     inc si
     loop upLoop
@@ -524,37 +660,6 @@ upNext:
     popad
     ret
 UpdatePorts    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           PollStatus
-;
-;   description:    Poll Hub status
-;
-;   Parameters:     GS      Hub
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PollStatus    Proc near
-    mov bx,gs:hub_status_req
-    IsUsbReqStarted
-    jnc psStarted
-;
-    StartUsbReq
-    jmp psDone        
-
-psStarted:
-    IsUsbReqReady
-    jc psDone
-;
-    GetUsbReqData
-    mov ax,gs:hub_status_sel
-    StartUsbReq
-
-psDone:
-    ret
-PollStatus  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -578,14 +683,69 @@ hub_thread_handler:
 ;
     mov ds,gs:hub_dev_sel
     call InitPorts
-
-hub_thread_loop:
-    call UpdatePorts
 ;
     mov ax,gs:hub_power_time
     WaitMilliSec
+
+hub_thread_wait:
+    GetThread
+    mov bx,gs:hub_status_req
+    mov cx,gs:hub_status_size
+    StartUsbReq    
+
+hub_thread_wait_signal:
+    GetSystemTime
+    add eax,1000 * 1193    
+    adc edx,0
+    mov bx,gs:hub_status_wait
+    WaitWithTimeout
 ;
-    jmp hub_thread_loop
+    mov bx,gs:hub_status_req
+    IsUsbReqReady
+    jc hub_thread_wait_signal
+    
+    GetUsbReqData
+    cmp cx,gs:hub_status_size
+    je hub_thread_handle
+;
+    call UpdatePorts
+    jmp hub_thread_wait
+
+hub_thread_handle:
+    mov es,gs:hub_status_sel
+    mov bp,cx
+    mov bx,OFFSET hub_port_arr
+    mov si,1
+    xor di,di
+    mov al,es:[di]
+    shr al,1
+    mov cx,7
+            
+hub_thread_port_loop:    
+    test al,1
+    jz hub_thread_port_next
+;
+    push ax
+    push di
+    push bp
+    call UpdateOnePort
+    pop bp
+    pop di
+    pop ax
+
+hub_thread_port_next:
+    add bx,4
+    inc si
+    shr al,1
+    loop hub_thread_port_loop
+;
+    sub bp,1
+    jz hub_thread_wait    
+;
+    inc di
+    mov al,es:[di]
+    mov cx,8
+    jmp hub_thread_port_loop    
 
 hub_exit:
         

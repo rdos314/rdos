@@ -755,13 +755,8 @@ AddControlQh    PROC near
     EnterSection ds:ehc_section
     call AllocateQh
     mov ebx,eax
-;    
-    mov al,fs:usbp_address
-    mov es:[edx].qh_adress,al
 ;
-    mov al,fs:usbp_endpoint
-    or al,60h
-    mov es:[edx].qh_endpoint,al
+    mov es:[edx].qh_endpoint,60h
 ;    
     mov ax,3008h
     mov es:[edx].qh_max_packet,ax
@@ -781,9 +776,8 @@ acqLowSpeed:
     mov ah,10h
 
 acqSetSpeed:    
-    mov al,fs:usbp_endpoint
+    mov al,40h
     or al,ah
-    or al,40h
     mov es:[edx].qh_endpoint,al
 ;
     push gs
@@ -931,13 +925,8 @@ AddIntrEntry    PROC near
 ;
     call AllocateQh 
     mov es:[edx].qh_s_mask,1    
-;    
-    mov al,fs:usbp_address
-    mov es:[edx].qh_adress,al
 ;
-    mov al,fs:usbp_endpoint
-    or al,60h
-    mov es:[edx].qh_endpoint,al
+    mov es:[edx].qh_endpoint,60h
 ;    
     mov ax,3008h
     mov es:[edx].qh_max_packet,ax
@@ -957,9 +946,7 @@ aieLowSpeed:
     mov ah,10h
 
 aieSetSpeed:    
-    mov al,fs:usbp_endpoint
-    or al,ah
-    mov es:[edx].qh_endpoint,al
+    mov es:[edx].qh_endpoint,ah
 ;
     push gs
     mov ax,fs:usbp_hub_port
@@ -1652,6 +1639,16 @@ itDo:
     mov eax,fs:esp_first
     mov edx,fs:esp_qh
     mov es:[edx].qh_next_qtd,eax
+;
+    mov al,fs:usbp_address
+    mov es:[edx].qh_adress,al
+;    
+    mov al,fs:usbp_endpoint
+    and al,0Fh
+    mov ah,es:[edx].qh_endpoint
+    and ah,0F0h
+    or al,ah
+    mov es:[edx].qh_endpoint,al    
 ;
     pop edx
     pop ebx
