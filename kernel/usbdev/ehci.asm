@@ -2517,6 +2517,12 @@ ifResetDone:
     or al,1
     mov fs:HcCommand,eax
 ;
+    test ds:ehc_flags,EHC_COMPANION
+    jnz ifConfigOk
+;
+    mov fs:HcConfig,1
+
+ifConfigOk:
     xor cl,cl
 
 ifPortLoop:
