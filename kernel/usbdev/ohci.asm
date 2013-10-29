@@ -2816,6 +2816,8 @@ ifNotSmm:
 ;
     mov ax,25
     WaitMicroSec
+    WaitForEhci
+;    
     mov fs:HcFmInterval,edx
     mov fs:HcPeriodicStart,0
 ;

@@ -624,4 +624,6 @@ has_long_mode_nr            = 516
 
 is_usb_hub_port_connected_nr = 517
 
+wait_for_ehci_nr            = 518
+
 osgate_entries				= 520

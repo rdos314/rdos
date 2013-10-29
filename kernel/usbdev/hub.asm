@@ -330,6 +330,7 @@ CreateHub   Endp
 ;   description:    Hub attach event
 ;
 ;   Parameters:     GS      Hub
+;                   DS      Device sel
 ;                   BX      Port status
 ;                   DX      Port #
 ;
@@ -340,11 +341,6 @@ HubAttach    Proc near
     push ax
     push bx
 ;    
-    mov ds,gs:hub_dev_sel
-    call ds:allocate_hub_port_proc
-    jc haDone
-;
-    mov gs:[bx].hps_dev_port,al
     test gs:[bx].hps_status,200h
     jnz haLowSpeed
 ;
@@ -363,6 +359,7 @@ haLowSpeed:
     mov ah,0
         
 haAttach:
+    mov al,gs:[bx].hps_dev_port
     NotifyUsbAttach
 
 haDone:    
@@ -380,6 +377,7 @@ HubAttach   Endp
 ;   description:    Hub detach event
 ;
 ;   Parameters:     GS      Hub
+;                   DS      Device sel
 ;                   DX      Port
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -390,11 +388,8 @@ HubDetach    Proc near
     push bx
 ;    
     int 3
-    mov ds,gs:hub_dev_sel
     mov al,gs:[bx].hps_dev_port
     NotifyUsbDetach
-;    
-    call ds:free_hub_port_proc
 ;
     pop bx
     pop ax
@@ -405,11 +400,44 @@ HubDetach   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           InitPorts
+;
+;   description:    Init ports
+;
+;   Parameters:     GS      Hub
+;                   DS      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitPorts    Proc near
+    pushad
+;
+    mov cx,gs:hub_ports
+    mov bx,OFFSET hub_port_arr
+    mov si,1
+
+ipLoop:
+    mov dx,si
+    mov ax,PORT_POWER
+    call SetPortFeature    
+;
+    add bx,4
+    inc si
+    loop ipLoop
+;           
+    popad
+    ret
+InitPorts    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           UpdatePorts
 ;
 ;   description:    Update ports
 ;
 ;   Parameters:     GS      Hub
+;                   DS      Device sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -425,27 +453,28 @@ upLoop:
     call GetPortStatus
     jc upNext
 ;    
-    test ax,100h
-    jnz upHasPower
-;
     mov gs:[bx].hps_status,ax
-    mov dx,si
-    mov ax,PORT_POWER
-    call SetPortFeature    
-    jmp upNext
-
-upHasPower:
+;
+    test ax,100h
+    jz upNext
+;
     test ax,1
     jz upNotConnected
 ;
-    mov gs:[bx].hps_status,ax
     test ax,2
     jnz upNext
-;        
-    push ds
-    mov ds,gs:hub_dev_sel
+;
+    mov al,gs:[bx].hps_dev_port
+    or al,al
+    jnz upHasPort
+;    
+    call ds:allocate_hub_port_proc
+    jc upNext
+;
+    mov gs:[bx].hps_dev_port,al
+
+upHasPort:
     call ds:lock_enum_proc
-    pop ds
 ;
     mov dx,si
     mov ax,PORT_RESET
@@ -473,19 +502,19 @@ upIsEnabled:
     call HubAttach 
 
 upUnlock:   
-    push ds 
-    mov ds,gs:hub_dev_sel
     call ds:unlock_enum_proc
-    pop ds
     jmp upNext
 
 upNotConnected:
-    xchg ax,gs:[bx].hps_status
-    test ax,1
+    mov al,gs:[bx].hps_dev_port
+    or al,al
     jz upNext
 ;
     mov dx,si
     call HubDetach
+;    
+    call ds:free_hub_port_proc
+    mov gs:[bx].hps_dev_port,0
 
 upNext:    
     add bx,4
@@ -546,6 +575,9 @@ hub_thread_handler:
     call CreateHub
     call ProcessHubDescr
     jc hub_exit
+;
+    mov ds,gs:hub_dev_sel
+    call InitPorts
 
 hub_thread_loop:
     call UpdatePorts
@@ -826,7 +858,6 @@ usb_detach  Proc far
     push es
     pushad
 ;    
-    int 3
     mov dx,SEG data
     mov ds,dx
 ;        

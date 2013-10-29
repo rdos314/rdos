@@ -220,6 +220,11 @@ data    SEGMENT byte public 'DATA'
 EhciList128     DD ?
 EhciSection     section_typ <>
 EhciThread      DW ?
+
+WaitSection     section_typ <>
+WaitThreadArr   DW 3 DUP(?)
+Started         DW ?
+
 EhciFuncCount   DW ?
 EhciFuncArr     DW MAX_USB_DEVICES DUP(?)
 
@@ -2467,8 +2472,18 @@ ifIntDone:
     mov ch,ds:ehc_function
     mov cl,al
     ReadPciDword
-    add cl,4
+    test eax,1000000h
+    jnz ifHandoverOk
+;
+    or eax,1000000h
+    WritePciDword
+
     ReadPciDword
+    test eax,10000h    
+    jz ifHandoverOk
+;
+    mov ax,250
+    WaitMilliSec
     
 ifHandoverOk: 
     mov fs,ds:ehc_reg_sel
@@ -2501,7 +2516,6 @@ ifResetDone:
 ;
     or al,1
     mov fs:HcCommand,eax
-    mov fs:HcConfig,1
 ;
     xor cl,cl
 
@@ -2754,7 +2768,17 @@ etInitLoop:
 ;
     mov ax,20
     WaitMilliSec
-
+;
+    EnterSection ds:WaitSection
+    mov ds:Started,1
+    mov bx,ds:WaitThreadArr
+    Signal
+    mov bx,ds:WaitThreadArr+2
+    Signal
+    mov bx,ds:WaitThreadArr+4
+    Signal
+    LeaveSection ds:WaitSection
+    
 ehci_thread_loop:
     GetSystemTime
     add eax,119300
@@ -2808,6 +2832,66 @@ init_usb    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           WaitForEhci
+;
+;           DESCRIPTION:    Wait for EHCI to initialize
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_ehci_name  DB 'Wait For Ehci', 0
+
+wait_for_ehci   Proc far
+    push ds
+    push ax
+    push bx
+;
+    mov ax,SEG data
+    mov ds,ax
+;
+    EnterSection ds:WaitSection
+    mov ax,ds:Started
+    or ax,ax
+    jnz wfeDone    
+;
+    mov bx,OFFSET WaitThreadArr
+
+wfeLoop:
+    mov ax,ds:[bx]
+    or ax,ax
+    jz wfeFound
+;
+    add bx,2
+    jmp wfeLoop
+
+wfeFound:        
+    GetThread
+    mov ds:[bx],ax    
+    LeaveSection ds:WaitSection   
+
+wfeSignal:
+    WaitForSignal
+;    
+    EnterSection ds:WaitSection    
+    mov ax,ds:Started
+    or ax,ax
+    jz wfeSignal
+    
+wfeDone:
+    LeaveSection ds:WaitSection
+;    
+    pop bx
+    pop ax
+    pop ds
+    retf32
+wait_for_ehci   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Init
 ;
 ;           DESCRIPTION:    init device
@@ -2824,8 +2908,22 @@ Init    Proc far
     InitSection ds:EhciSection
     mov ds:EhciFuncCount,0
 ;
+    InitSection ds:WaitSection
+    mov ds:WaitThreadArr,0
+    mov ds:WaitThreadArr+2,0
+    mov ds:WaitThreadArr+4,0
+    mov ds:Started,0
+;
     mov ax,cs
+    mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET wait_for_ehci
+    mov edi,OFFSET wait_for_ehci_name
+    xor cl,cl
+    mov ax,wait_for_ehci_nr
+    RegisterOsGate
+;
     mov edi,OFFSET init_usb
     HookInitPci
     clc

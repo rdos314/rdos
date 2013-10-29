@@ -2588,6 +2588,7 @@ ifTabLoop:
 ; 
     mov ax,20
     WaitMilliSec
+    WaitForEhci
 ;
     mov dx,ds:uhc_io_base
     add dx,UsbCommandReg
