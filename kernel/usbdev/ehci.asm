@@ -223,7 +223,8 @@ EhciThread      DW ?
 
 WaitSection     section_typ <>
 WaitThreadArr   DW 3 DUP(?)
-Started         DW ?
+Started         DB ?
+IntOk           DB ?
 
 EhciFuncCount   DW ?
 EhciFuncArr     DW MAX_USB_DEVICES DUP(?)
@@ -351,6 +352,7 @@ eiNotPipe:
 ;
     mov ax,SEG data
     mov ds,ax
+    mov ds:IntOk,1
     mov bx,ds:EhciThread
     Signal
     jmp eiLoop
@@ -358,6 +360,83 @@ eiNotPipe:
 eiDone:
     retf32
 EhciInt  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ehci_timer
+;
+;           DESCRIPTION:    Timer that scans for status change in controller
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ehci_timer  Proc far
+    push edx
+    push eax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov cx,ds:EhciFuncCount
+    or cx,cx
+    jz etDone
+;    
+    mov si,OFFSET EhciFuncArr
+
+etLoop:
+    push ds
+    push cx
+    push si
+;    
+    mov ds,ds:[si]
+    mov es,ds:ehc_reg_sel
+;    
+    mov eax,es:HcStatus
+    and al,7
+    mov es:HcStatus,eax
+    jz etcPipe
+;    
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    mov bx,ds:EhciThread
+    Signal
+    pop ds
+
+etcPipe:    
+    call UpdatePipeList
+
+etcNext:
+    pop si
+    pop cx
+    pop ds
+;
+    add si,2
+    loop etLoop
+
+etDone:    
+    pop eax   
+    pop edx
+;    
+    mov cl,ds:IntOk
+    or cl,cl
+    jnz etEnd
+;    
+    GetSystemTime
+    add eax,1193
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov bx,cs
+    mov edi,OFFSET ehci_timer
+    StartTimer
+
+etEnd:    
+    retf32
+ehci_timer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2514,12 +2593,11 @@ ifResetDone:
     or al,1
     mov fs:HcCommand,eax
 ;
-    test ds:ehc_flags,EHC_COMPANION
-    jnz ifConfigOk
-;
+    mov ax,100
+    WaitMilliSec
+;    
     mov fs:HcConfig,1
-
-ifConfigOk:
+;
     xor cl,cl
 
 ifPortLoop:
@@ -2781,6 +2859,17 @@ etInitLoop:
     mov bx,ds:WaitThreadArr+4
     Signal
     LeaveSection ds:WaitSection
+;
+    mov ds:IntOk,0    
+;
+    GetSystemTime
+    add eax,11930
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov bx,cs
+    mov edi,OFFSET ehci_timer
+    StartTimer
     
 ehci_thread_loop:
     GetSystemTime
@@ -2856,8 +2945,8 @@ wait_for_ehci   Proc far
     mov ds,ax
 ;
     EnterSection ds:WaitSection
-    mov ax,ds:Started
-    or ax,ax
+    mov al,ds:Started
+    or al,al
     jnz wfeDone    
 ;
     mov bx,OFFSET WaitThreadArr
@@ -2879,8 +2968,8 @@ wfeSignal:
     WaitForSignal
 ;    
     EnterSection ds:WaitSection    
-    mov ax,ds:Started
-    or ax,ax
+    mov al,ds:Started
+    or al,al
     jz wfeSignal
     
 wfeDone:
@@ -2916,6 +3005,7 @@ Init    Proc far
     mov ds:WaitThreadArr+2,0
     mov ds:WaitThreadArr+4,0
     mov ds:Started,0
+    mov ds:IntOk,0
 ;
     mov ax,cs
     mov ds,ax
