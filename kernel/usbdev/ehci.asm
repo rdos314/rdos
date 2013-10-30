@@ -2860,7 +2860,9 @@ etInitLoop:
     Signal
     LeaveSection ds:WaitSection
 ;
-    mov ds:IntOk,0    
+    mov al,ds:IntOk
+    or al,al
+    jnz ehci_thread_loop
 ;
     GetSystemTime
     add eax,11930
