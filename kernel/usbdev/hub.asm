@@ -698,7 +698,8 @@ hub_thread_wait_signal:
     add eax,1000 * 1193    
     adc edx,0
     mov bx,gs:hub_status_wait
-    WaitWithTimeout
+;    WaitWithTimeout
+    WaitWithoutTimeout
 ;
     mov bx,gs:hub_status_req
     IsUsbReqReady
