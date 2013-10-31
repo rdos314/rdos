@@ -1765,6 +1765,10 @@ IsTransferDone   Proc far
     mov es,ax
 ;
     mov edx,fs:esp_qh
+    mov eax,es:[edx].qh_current_qtd
+    or eax,eax
+    jz itdFail
+;    
     mov eax,es:[edx].qh_next_qtd
     test al,1
     jnz itdOk
@@ -1857,7 +1861,7 @@ EndTransfer   Proc far
     jz etrDecode
 ;
     int 3    
-    jmp etrDone
+    jmp etrClear
 
 etrDecode:    
     xor edx,edx
@@ -1888,6 +1892,12 @@ etrNext:
 etrSaveOk:
     mov fs:esp_size,bp    
     or fs:esp_flags, ESP_FLAG_TRANSFER_OK
+
+etrClear:
+    mov edx,fs:esp_qh
+    mov es:[edx].qh_next_qtd,1
+    mov es:[edx].qh_current_qtd,0
+    mov es:[edx].qh_status,0    
 
 etrDone:
     pop bp
