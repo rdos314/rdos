@@ -65,6 +65,7 @@ ip_handle               DW ?
 curr_id             DW ?
 protocol_count      DW ?
 protocol_arr        DW 16 DUP(?)
+dhcp_no_netmask     DB ?
 
 data    ENDS
 
@@ -1730,9 +1731,10 @@ link_up_arp Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ip_name         DB 'IP',0
+ip_name             DB 'IP',0
 mask_name           DB 'NETMASK',0
-gateway_name    DB 'GATEWAY',0
+gateway_name        DB 'GATEWAY',0
+dhcp_no_mask_name   DB 'DHCP.NO.NETMASK',0
 
 init_tasking    Proc far
     push ds
@@ -1755,16 +1757,32 @@ init_tasking    Proc far
     call GetIPNumber
     mov ds:gateway,eax
 ;
+    mov ds:dhcp_no_netmask,0
+    mov di,OFFSET dhcp_no_mask_name
+    call GetValue       
+    jc iMaskValueOk
+;
+    mov ds:dhcp_no_netmask,al
+
+iMaskValueOk:
+    mov al,ds:dhcp_no_netmask
+    push ax
+;        
     call init_task_dhcp
 ;
     mov ax,cs
     mov ds,ax
     mov es,ax
 ;
+    pop ax
+    or al,al
+    jnz iMaskDone
+;    
     mov al,1
     mov edi,OFFSET define_mask
     AddDhcpOption
-;
+
+iMaskDone:
     mov al,3
     mov edi,OFFSET define_gateway
     AddDhcpOption
