@@ -5256,6 +5256,10 @@ start_paging:
     test al,40h
     jz start_paging32
 ;
+; fix for OHCI!
+;
+    jmp start_paging32
+
     jmp start_paging64        
 
 code    ENDS

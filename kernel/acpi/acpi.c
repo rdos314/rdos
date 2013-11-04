@@ -474,6 +474,17 @@ void UpdateThrottle(int diff)
     
 /*##########################################################################
 #
+#   Name       : ImplSoftReset
+#
+##########################################################################*/
+#pragma aux ImplSoftReset "*" rdosdev parm routine
+void __far ImplSoftReset()
+{
+    AcpiReset();
+}
+    
+/*##########################################################################
+#
 #   Name       : ImplUpdatePStateEist
 #
 ##########################################################################*/
@@ -2830,6 +2841,7 @@ int main()
     RdosRegisterUserGate(usergate_get_acpi_method, (__rdos_gate_callback *)&ImplGetAcpiMethod16, &ImplGetAcpiMethod32, "Get ACPI Method");
     RdosRegisterUserGate(usergate_get_acpi_device, (__rdos_gate_callback *)&ImplGetAcpiDevice16, &ImplGetAcpiDevice32, "Get ACPI Device");
     RdosRegisterBimodalUserGate(usergate_get_cpu_temperature, (__rdos_gate_callback *)&ImplGetCpuTemperature, "Get CPU Temperature");
+    RdosRegisterBimodalUserGate(usergate_soft_reset, (__rdos_gate_callback *)&ImplSoftReset, "Soft Reset");
 
     RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
 }
