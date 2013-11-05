@@ -337,7 +337,7 @@ EhciInt Proc far
 
 eiLoop:    
     mov eax,es:HcStatus
-    and al,7
+    and al,0Fh
     mov es:HcStatus,eax
     jz eiDone
 ;
@@ -2238,8 +2238,7 @@ upAttach:
     cmp cl,ds:ehc_comp_ports
     jae upDone
 ;    
-    mov eax,es:[si].HcPortSc
-    or ax,2000h
+    mov eax,3000h
     mov es:[si].HcPortSc,eax
     jmp upDone
     
@@ -2255,6 +2254,21 @@ upDoReset:
     WaitMilliSec
 ;
     mov eax,es:[si].HcPortSc
+    test al,4
+    jnz upHighSpeed
+;
+    test ds:ehc_flags,EHC_COMPANION
+    jz upUnlock
+;
+    cmp cl,ds:ehc_comp_ports
+    jae upUnlock
+;    
+    mov eax,es:[si].HcPortSc
+    or ax,2000h
+    mov es:[si].HcPortSc,eax
+    jmp upUnlock
+        
+upHighSpeed:    
     and ax,NOT 100h
     mov es:[si].HcPortSc,eax
     
@@ -2284,8 +2298,7 @@ upResetDone:
     cmp cl,ds:ehc_comp_ports
     jae upUnlock
 ;    
-    mov eax,es:[si].HcPortSc
-    or ax,2000h
+    mov eax,3000h
     mov es:[si].HcPortSc,eax
 
 upUnlock:
@@ -2629,7 +2642,7 @@ ifPowerOk:
     jmp ifPortLoop    
 
 ifPortDone:
-    mov eax,5
+    mov eax,0Fh
     mov fs:HcInterruptEnable,eax
 ;    
     call CreateInterrupt
@@ -2871,6 +2884,9 @@ etInitLoop:
     mov bx,ds:WaitThreadArr+4
     Signal
     LeaveSection ds:WaitSection
+;
+    mov ax,150
+    WaitMilliSec
 ;
     mov al,ds:IntOk
     or al,al
