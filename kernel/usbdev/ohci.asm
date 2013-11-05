@@ -148,6 +148,8 @@ ohc_enum_section    section_typ <>
 ohc_root_ports      DW ?
 ohc_reset           DW ?
 
+ohc_fm_reg          DD ?
+
 ohc_section     section_typ <>
 
 ohc_32_cnt      DB 32 DUP(?)
@@ -196,6 +198,11 @@ OhciCloseCount  DD ?
 OhciList32      DD ?
 OhciSection     section_typ <>
 OhciThread      DW ?
+
+WaitSection     section_typ <>
+WaitThreadArr   DW 3 DUP(?)
+Started         DB ?
+
 OhciFuncCount   DW ?
 OhciFuncArr     DW MAX_USB_DEVICES DUP(?)
 
@@ -2742,6 +2749,52 @@ ohci_timer  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           BiosHandoff
+;
+;           DESCRIPTION:    Do BIOS handoff
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BiosHandoff    Proc near
+    push fs
+    push eax
+;
+    mov fs,ds:ohc_reg_sel
+    test fs:HcControl,100h
+    jz bhDone
+;
+    or fs:HcCommandStatus,8    
+
+bhWait:
+    test fs:HcControl,100h    
+    jnz bhWait
+        
+bhDone: 
+    mov eax,fs:HcFmInterval
+    mov ds:ohc_fm_reg,eax
+;
+    mov eax,0C000007Fh    
+    mov fs:HcInterruptStatus,eax
+;    
+    or fs:HcCommandStatus,1
+;
+    mov ax,5
+    WaitMilliSec
+    mov eax,fs:HcControl
+    and al,NOT 0C0h
+    or al,40h
+    mov fs:HcControl,eax
+;
+    pop eax
+    pop fs
+    ret
+BiosHandoff    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitFunction
 ;
 ;           DESCRIPTION:    Init OHCI function
@@ -2796,49 +2849,16 @@ ifTabLoop:
 ;    
     InitSection ds:ohc_section
     mov fs,ds:ohc_reg_sel
-    mov ecx,fs:HcControl
-    and cl,0C0h
-    mov edx,fs:HcFmInterval
-    test fs:HcControl,100h
-    jz ifNotSmm
 ;
-    or fs:HcCommandStatus,8    
-
-ifWait:
-    test fs:HcControl,100h    
-    jnz ifWait
-        
-ifNotSmm: 
-    mov eax,0C000007Fh    
-    mov fs:HcInterruptStatus,eax
-;    
-    or fs:HcCommandStatus,1
-;
-    mov ax,25
-    WaitMicroSec
     WaitForEhci
 ;    
+    mov edx,ds:ohc_fm_reg
     mov fs:HcFmInterval,edx
     mov fs:HcPeriodicStart,0
-;
-    or cl,cl
-    jnz ifNotReset
-;
-    mov ax,5
-    WaitMilliSec
-    mov eax,fs:HcControl
-    and al,NOT 0C0h
-    or al,40h
-    mov fs:HcControl,eax
-        
-ifNotReset:        
-    cmp cl,80h
-    je ifOperational
-;
+;    
     mov ax,25
     WaitMilliSec    
-    
-ifOperational:    
+;    
     call CreateInterrupt
 ;    
     mov eax,ohc_hca_base
@@ -3057,6 +3077,37 @@ ohci_thread:
     mov si,OFFSET OhciFuncArr
     mov cx,ds:OhciFuncCount
 
+otHandoffLoop:
+    push ds
+    push cx
+    push si
+;    
+    mov ds,ds:[si]
+    call BiosHandoff
+;
+    pop si
+    pop cx    
+    pop ds
+;
+    add si,2
+    loop otHandoffLoop
+;
+    mov ax,20
+    WaitMilliSec
+;
+    EnterSection ds:WaitSection
+    mov ds:Started,1
+    mov bx,ds:WaitThreadArr
+    Signal
+    mov bx,ds:WaitThreadArr+2
+    Signal
+    mov bx,ds:WaitThreadArr+4
+    Signal
+    LeaveSection ds:WaitSection 
+;    
+    mov si,OFFSET OhciFuncArr
+    mov cx,ds:OhciFuncCount
+    
 otInitLoop:
     ClearSignal
     push ds
@@ -3072,8 +3123,7 @@ otInitLoop:
 ;
     add si,2
     loop otInitLoop
-;    
-    GetSystemTime
+GetSystemTime
     add eax,11930
     adc edx,0
     mov bx,cs
@@ -3181,6 +3231,66 @@ get_usb_close_count    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           WaitForOhci
+;
+;           DESCRIPTION:    Wait for OHCI to initialize
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_ohci_name  DB 'Wait For Ohci', 0
+
+wait_for_ohci   Proc far
+    push ds
+    push ax
+    push bx
+;
+    mov ax,SEG data
+    mov ds,ax
+;
+    EnterSection ds:WaitSection
+    mov al,ds:Started
+    or al,al
+    jnz wfoDone    
+;
+    mov bx,OFFSET WaitThreadArr
+
+wfoLoop:
+    mov ax,ds:[bx]
+    or ax,ax
+    jz wfoFound
+;
+    add bx,2
+    jmp wfoLoop
+
+wfoFound:        
+    GetThread
+    mov ds:[bx],ax    
+    LeaveSection ds:WaitSection   
+
+wfoSignal:
+    WaitForSignal
+;    
+    EnterSection ds:WaitSection    
+    mov al,ds:Started
+    or al,al
+    jz wfoSignal
+    
+wfoDone:
+    LeaveSection ds:WaitSection
+;    
+    pop bx
+    pop ax
+    pop ds
+    retf32
+wait_for_ohci   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Init
 ;
 ;           DESCRIPTION:    init device
@@ -3203,9 +3313,22 @@ Init    Proc far
     mov ds:OhciUsedBlocks,0
     mov ds:OhciCloseCount,0
 ;
+    InitSection ds:WaitSection
+    mov ds:WaitThreadArr,0
+    mov ds:WaitThreadArr+2,0
+    mov ds:WaitThreadArr+4,0
+    mov ds:Started,0
+;
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET wait_for_ohci
+    mov edi,OFFSET wait_for_ohci_name
+    xor cl,cl
+    mov ax,wait_for_ohci_nr
+    RegisterOsGate
+;    
     mov edi,OFFSET init_usb
     HookInitPci
 ;

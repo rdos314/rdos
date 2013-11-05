@@ -2843,6 +2843,8 @@ ehci_thread:
     GetThread
     mov ds:EhciThread,ax
 ;    
+    WaitForOhci
+;    
     mov si,OFFSET EhciFuncArr
     mov cx,ds:EhciFuncCount
 
