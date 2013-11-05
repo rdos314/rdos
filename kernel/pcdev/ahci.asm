@@ -3123,10 +3123,10 @@ drive_assign_next_part2:
     mov edx,edi
     FreeLinear
 ;    
-    push ax
-    mov ax,200
-    WaitMilliSec
-    pop ax
+;    push ax
+;    mov ax,200
+;    WaitMilliSec
+;    pop ax
     
     mov bx,gs:ap_disc_sel
     StartDisc
