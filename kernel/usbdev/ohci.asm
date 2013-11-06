@@ -2574,7 +2574,6 @@ upAttach:
     or bx,bx
     jnz upDone
 ;
-    int 3
     mov ax,50
     WaitMilliSec
 ;    

@@ -2225,7 +2225,6 @@ upAttach:
     or bx,bx
     jnz upDone
 ;
-    int 3
     mov ax,50
     WaitMilliSec
 ;
@@ -2253,6 +2252,13 @@ upDoReset:
     mov eax,es:[si].HcPortSc
     and al,NOT 4
     or ax,100h
+    mov es:[si].HcPortSc,eax
+;
+    mov ax,25
+    WaitMilliSec
+;    
+    mov eax,es:[si].HcPortSc
+    and ax,NOT 100h
     mov es:[si].HcPortSc,eax
 ;
     mov ax,25
