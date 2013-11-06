@@ -88,6 +88,7 @@ ehc_device          DB ?
 ehc_function        DB ?
 
 ehc_op_offs         DB ?
+ehc_eecp            DB ?
 ehc_flags           DW ?
 ehc_ports           DB ?
 ehc_debug_port      DB ?
@@ -2213,6 +2214,9 @@ UpdatePort   Proc near
     mov eax,es:[si].HcPortSc
     mov es:[si].HcPortSc,eax    ; reset change bit!    
 ; 
+    test ax,2000h
+    jnz upDone
+;    
     test al,1
     jz upDetach
     
@@ -2221,6 +2225,7 @@ upAttach:
     or bx,bx
     jnz upDone
 ;
+    int 3
     mov ax,50
     WaitMilliSec
 ;
@@ -2263,8 +2268,7 @@ upDoReset:
     cmp cl,ds:ehc_comp_ports
     jae upUnlock
 ;    
-    mov eax,es:[si].HcPortSc
-    or ax,2000h
+    mov ax,3000h
     mov es:[si].HcPortSc,eax
     jmp upUnlock
         
@@ -2534,7 +2538,42 @@ ifTabLoop:
     mov bh,ds:ehc_bus
     mov bl,ds:ehc_device
     mov ch,ds:ehc_function
+;    
+    mov al,ds:ehc_eecp
+    or al,al
+    cmp al,40h
+    jae ifLegacyFound
+;    
+    mov al,1
+    FindPciCapability
+    jc ifLegacyOff
+
+ifLegacyFound:
+    mov cl,al
+    add cl,2
+    ReadPciByte
+    or al,al
+    jz ifLegacyOff
 ;
+    inc cl
+    mov al,1
+    WritePciByte
+;
+    dec cl    
+    ReadPciByte
+    or al,al
+    jz ifLegacyDone
+;
+    mov ax,100
+    WaitMilliSec
+    
+ifLegacyDone:
+    add cx,2
+    ReadPciDword
+    xor eax,eax
+    WritePciDword
+        
+ifLegacyOff:
     GetPciMsi
     jc ifIrq
 ;
@@ -2721,6 +2760,9 @@ AddFunction  Proc near
     mov ds:ehc_op_offs,cl
     mov ds:ehc_flags,0
 ;
+    mov al,byte ptr es:hcp_HCCPARAMS+1
+    mov ds:ehc_eecp,al
+;    
     mov ax,es:hcp_HCSPARAMS+2
     test al,1
     jz afIndOk
