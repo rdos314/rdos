@@ -38,6 +38,29 @@ extern void InitTasking();
 
 int CurrRow = 0;
 int StartRow = 0;
+int Suspend = FALSE;
+
+/*##########################################################################
+#
+#   Name       : WriteEmpty
+#
+#   Purpose....: Write empty row
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void WriteEmpty(int Row)
+{
+    int i;
+
+    RdosSetForeColor(7);
+    RdosSetBackColor(0);
+
+    for (i = 0; i < 80; i++)
+        RdosWriteChar(' ');
+}
 
 /*##########################################################################
 #
@@ -63,10 +86,13 @@ void WriteOne(int Row, ThreadState *State)
     int started;
     int i;
 
-    if (Row == CurrRow)
+    if (Row == CurrRow - StartRow)
     {
         RdosSetForeColor(0);
         RdosSetBackColor(7);
+
+        if (Suspend)
+            RdosSuspendAndSignalThread(State->ID);
     }
     else
     {
@@ -189,10 +215,14 @@ void ProcessHandler()
     ThreadState state;
     int row;
     int absrow;
+    int lastrow;
     int WaitHandle = RdosCreateWait();
-    int key;
+    char key[4];
+    int val;
 
     RdosAddWaitForKeyboard(WaitHandle, 1);
+
+    Suspend = FALSE;
 
     for (;;)
     {
@@ -204,17 +234,51 @@ void ProcessHandler()
                 absrow = row - StartRow;
                 if (absrow < 25 && absrow >= 0)
                 {
+                    lastrow = absrow;
                     WriteOne(absrow, &state);
                 }
                 row++;
             }
         }
 
+        Suspend = FALSE;
+
+        for (i = lastrow + 1; i < 25; i++)
+            WriteEmpty(i);
+
         RdosWaitTimeout(WaitHandle, 100);
 
         if (RdosPollKeyboard())
         {
-            key = RdosReadKeyboard(); 
+            val = RdosReadKeyboard(); 
+            memcpy(key, &val, 4);
+
+            switch(key[0])
+            {
+                case 0:
+                    switch (key[1])
+                    {
+                        case 72:
+                            if (CurrRow > 0)
+                                CurrRow--;
+                            break;
+
+                        case 80:
+                            CurrRow++;
+                            break;
+                    }
+                    break;
+
+                case 's':
+                case 'S':
+                    Suspend = TRUE;
+                    break;
+            }
+               
+            if (CurrRow < 15)
+                StartRow = 0;
+            else
+                StartRow = CurrRow - 15;
         }
     }
 }
