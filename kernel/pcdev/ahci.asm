@@ -1853,7 +1853,14 @@ WaitForCompletion Proc near
     push si
 
 wfcLoop:
-    WaitForSignal
+    push eax
+    push edx
+    GetSystemTime
+    add eax,119300
+    adc edx,0
+    WaitForSignalWithTimeout
+    pop edx
+    pop eax
 ;
     mov ds,gs:ap_cmd_sel
     movzx si,al
