@@ -38,7 +38,7 @@
 #
 #   Name       : TSignalDevice::TSignalDevice
 #
-#   Purpose....: Constructor for TSignalDevice		                          
+#   Purpose....: Constructor for TSignalDevice                                    
 #
 #   In params..: *
 #   Out params.: *
@@ -47,7 +47,7 @@
 ##########################################################################*/
 TSignalDevice::TSignalDevice()
 {
-	Init();
+        Init();
 }
 
 /*##########################################################################
@@ -71,7 +71,7 @@ TSignalDevice::TSignalDevice(const char *IniSection)
 #
 #   Name       : TSignalDevice::~TSignalDevice
 #
-#   Purpose....: Destructor for TSignalDevice		                          
+#   Purpose....: Destructor for TSignalDevice                                     
 #
 #   In params..: *
 #   Out params.: *
@@ -95,14 +95,14 @@ TSignalDevice::~TSignalDevice()
 ##########################################################################*/
 void TSignalDevice::Init()
 {
-	FHandle = RdosCreateSignal();
+        FHandle = RdosCreateSignal();
 }
 
 /*##########################################################################
 #
 #   Name       : TSignalDevice::DeviceName
 #
-#   Purpose....: Device name		                          
+#   Purpose....: Device name                                      
 #
 #   In params..: *
 #   Out params.: *
@@ -111,7 +111,7 @@ void TSignalDevice::Init()
 ##########################################################################*/
 void TSignalDevice::DeviceName(char *Name, int MaxLen) const
 {
-	strncpy(Name, "SIGNAL", MaxLen);
+        strncpy(Name, "SIGNAL", MaxLen);
 }
 
 /*##########################################################################
@@ -127,7 +127,7 @@ void TSignalDevice::DeviceName(char *Name, int MaxLen) const
 void TSignalDevice::Add(TWait *Wait)
 {
     if (FHandle)
-    	RdosAddWaitForSignal(Wait->GetHandle(), FHandle, this);
+        RdosAddWaitForSignal(Wait->GetHandle(), FHandle, (int)this);
 }
 
 /*##########################################################################
@@ -143,7 +143,7 @@ void TSignalDevice::Add(TWait *Wait)
 ##########################################################################*/
 void TSignalDevice::Clear()
 {
-	RdosResetSignal(FHandle);
+        RdosResetSignal(FHandle);
 }
 
 /*##########################################################################
@@ -159,7 +159,7 @@ void TSignalDevice::Clear()
 ##########################################################################*/
 int TSignalDevice::IsSignalled()
 {
-	return RdosIsSignalled(FHandle);
+        return RdosIsSignalled(FHandle);
 }
 
 /*##########################################################################
@@ -175,7 +175,7 @@ int TSignalDevice::IsSignalled()
 ##########################################################################*/
 void TSignalDevice::Signal()
 {
-	RdosSetSignal(FHandle);
+        RdosSetSignal(FHandle);
 }
 
 /*##########################################################################

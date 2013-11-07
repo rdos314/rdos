@@ -114,7 +114,7 @@ void TUsbPipe::DeviceName(char *Name, int MaxLen) const
 void TUsbPipe::Add(TWait *Wait)
 {
         if (FHandle)
-                RdosAddWaitForUsbPipe(Wait->GetHandle(), FHandle, this);
+                RdosAddWaitForUsbPipe(Wait->GetHandle(), FHandle, (int)this);
 }
 
 /*##########################################################################

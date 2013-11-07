@@ -37,7 +37,7 @@
 #
 #   Name       : TKeyboardDevice::TKeyboardDevice
 #
-#   Purpose....: Constructor for TKeyboardDevice		                          
+#   Purpose....: Constructor for TKeyboardDevice                                          
 #
 #   In params..: *
 #   Out params.: *
@@ -46,7 +46,7 @@
 ##########################################################################*/
 TKeyboardDevice::TKeyboardDevice()
 {
-	Init();
+        Init();
 }
 
 /*##########################################################################
@@ -63,14 +63,14 @@ TKeyboardDevice::TKeyboardDevice()
 TKeyboardDevice::TKeyboardDevice(const char *IniSection)
   : TWaitDevice(IniSection)
 {
-	Init();
+        Init();
 }
 
 /*##########################################################################
 #
 #   Name       : TKeyboardDevice::~TKeyboardDevice
 #
-#   Purpose....: Destructor for TKeyboardDevice		                          
+#   Purpose....: Destructor for TKeyboardDevice                                   
 #
 #   In params..: *
 #   Out params.: *
@@ -93,11 +93,11 @@ TKeyboardDevice::~TKeyboardDevice()
 ##########################################################################*/
 void TKeyboardDevice::Init()
 {
-	OnKeyPress = 0;
-	OnKeyRelease = 0;
-	KeyPreview = 0;
-	Open();
-	Online();
+        OnKeyPress = 0;
+        OnKeyRelease = 0;
+        KeyPreview = 0;
+        Open();
+        Online();
 }
 
 /*##########################################################################
@@ -112,14 +112,14 @@ void TKeyboardDevice::Init()
 ##########################################################################*/
 void TKeyboardDevice::Add(TWait *Wait)
 {
-	RdosAddWaitForKeyboard(Wait->GetHandle(), this);
+        RdosAddWaitForKeyboard(Wait->GetHandle(), (int)this);
 }
 
 /*##########################################################################
 #
 #   Name       : TKeyboardDevice::DeviceName
 #
-#   Purpose....: Device name		                          
+#   Purpose....: Device name                                      
 #
 #   In params..: *
 #   Out params.: *
@@ -128,7 +128,7 @@ void TKeyboardDevice::Add(TWait *Wait)
 ##########################################################################*/
 void TKeyboardDevice::DeviceName(char *Name, int MaxLen) const
 {
-	strncpy(Name, "KEYBOARD", MaxLen);
+        strncpy(Name, "KEYBOARD", MaxLen);
 }
 
 /*##########################################################################
@@ -144,7 +144,7 @@ void TKeyboardDevice::DeviceName(char *Name, int MaxLen) const
 ##########################################################################*/
 void TKeyboardDevice::Clear()
 {
-	RdosClearKeyboard();
+        RdosClearKeyboard();
 }
 
 /*##########################################################################
@@ -154,16 +154,16 @@ void TKeyboardDevice::Clear()
 #   Purpose....: Peek for pending events
 #
 #   In params.: *
-#   Out params.: ExtKey		DOS compatible character & extended code
-#				 KeyState	State of keyboard
-#				 VirtualKey	Virtual key (same as M$ windows)
-#				 ScanCode	Scan code from keyboard
+#   Out params.: ExtKey         DOS compatible character & extended code
+#                                KeyState       State of keyboard
+#                                VirtualKey     Virtual key (same as M$ windows)
+#                                ScanCode       Scan code from keyboard
 #   Returns....: TRUE if data available
 #
 ##########################################################################*/
 int TKeyboardDevice::PeekEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode)
 {
-	return RdosPeekKeyEvent(ExtKey, KeyState, VirtualKey, ScanCode);
+        return RdosPeekKeyEvent(ExtKey, KeyState, VirtualKey, ScanCode);
 }
 
 /*##########################################################################
@@ -173,16 +173,16 @@ int TKeyboardDevice::PeekEvent(int *ExtKey, int *KeyState, int *VirtualKey, int 
 #   Purpose....: Read out pending event
 #
 #   In params.: *
-#   Out params.: ExtKey		DOS compatible character & extended code
-#				 KeyState	State of keyboard
-#				 VirtualKey	Virtual key (same as M$ windows)
-#				 ScanCode	Scan code from keyboard
+#   Out params.: ExtKey         DOS compatible character & extended code
+#                                KeyState       State of keyboard
+#                                VirtualKey     Virtual key (same as M$ windows)
+#                                ScanCode       Scan code from keyboard
 #   Returns....: TRUE if data available
 #
 ##########################################################################*/
 int TKeyboardDevice::ReadEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode)
 {
-	return RdosReadKeyEvent(ExtKey, KeyState, VirtualKey, ScanCode);
+        return RdosReadKeyEvent(ExtKey, KeyState, VirtualKey, ScanCode);
 }
 
 /*##########################################################################
@@ -237,22 +237,22 @@ int TKeyboardDevice::Poll() const
     int KeyState;
     int VirtualKey;
     int ScanCode;
-	int ok;
+        int ok;
 
-	ok = RdosPeekKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
+        ok = RdosPeekKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
 
-	while (ok && !IsStdKey(ExtKey, VirtualKey))
-	{
-		RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
-		ok = RdosPeekKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
-		while (ok && !IsStdKey(ExtKey, VirtualKey))
-		{
-			RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
-			ok = RdosPeekKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
-		}
-	}
+        while (ok && !IsStdKey(ExtKey, VirtualKey))
+        {
+                RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
+                ok = RdosPeekKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
+                while (ok && !IsStdKey(ExtKey, VirtualKey))
+                {
+                        RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
+                        ok = RdosPeekKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
+                }
+        }
 
-	return ok;
+        return ok;
 }
 
 /*##########################################################################
@@ -280,9 +280,9 @@ int TKeyboardDevice::Get()
 
     while (!ok)
     {      
-    	ok = RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
-    	if (ok && !IsStdKey(ExtKey, VirtualKey))
-    	    ok = FALSE;
+        ok = RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
+        if (ok && !IsStdKey(ExtKey, VirtualKey))
+            ok = FALSE;
     }
 
     return VirtualKey;
@@ -301,7 +301,7 @@ int TKeyboardDevice::Get()
 ##########################################################################*/
 void TKeyboardDevice::Put(int ch)
 {
-	RdosPutKeyboard(ch, ch, ch);
+        RdosPutKeyboard(ch, ch, ch);
 }
 
 /*##########################################################################
@@ -326,18 +326,18 @@ int TKeyboardDevice::IsPinPad()
 #
 #   Purpose....: Called when key is pressed
 #
-#   In params..: ExtKey		DOS compatible character & extended code
-#				 KeyState	State of keyboard
-#				 VirtualKey	Virtual key (same as M$ windows)
-#				 ScanCode	Scan code from keyboard
+#   In params..: ExtKey         DOS compatible character & extended code
+#                                KeyState       State of keyboard
+#                                VirtualKey     Virtual key (same as M$ windows)
+#                                ScanCode       Scan code from keyboard
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 void TKeyboardDevice::KeyPress(int ExtKey, int KeyState, int VirtualKey, int ScanCode)
 {
-	if (OnKeyPress)
-		(*OnKeyPress)(this, ExtKey, KeyState, VirtualKey, ScanCode);
+        if (OnKeyPress)
+                (*OnKeyPress)(this, ExtKey, KeyState, VirtualKey, ScanCode);
 }
 
 /*##########################################################################
@@ -346,18 +346,18 @@ void TKeyboardDevice::KeyPress(int ExtKey, int KeyState, int VirtualKey, int Sca
 #
 #   Purpose....: Called when key is released
 #
-#   In params..: ExtKey		DOS compatible character & extended code
-#				 KeyState	State of keyboard
-#				 VirtualKey	Virtual key (same as M$ windows)
-#				 ScanCode	Scan code from keyboard
+#   In params..: ExtKey         DOS compatible character & extended code
+#                                KeyState       State of keyboard
+#                                VirtualKey     Virtual key (same as M$ windows)
+#                                ScanCode       Scan code from keyboard
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 void TKeyboardDevice::KeyRelease(int ExtKey, int KeyState, int VirtualKey, int ScanCode)
 {
-	if (OnKeyRelease)
-		(*OnKeyRelease)(this, ExtKey, KeyState, VirtualKey, ScanCode);
+        if (OnKeyRelease)
+                (*OnKeyRelease)(this, ExtKey, KeyState, VirtualKey, ScanCode);
 }
 
 /*##########################################################################
@@ -373,33 +373,33 @@ void TKeyboardDevice::KeyRelease(int ExtKey, int KeyState, int VirtualKey, int S
 ##########################################################################*/
 void TKeyboardDevice::SignalNewData()
 {
-	int ExtKey;
-	int KeyState;
-	int VirtualKey;
-	int ScanCode;
+        int ExtKey;
+        int KeyState;
+        int VirtualKey;
+        int ScanCode;
 
     if (KeyPreview)
     {
-    	if (RdosPeekKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode))
-    	{
-    		if (IsStdKey(ExtKey, VirtualKey))
-    		{
-				if ((*KeyPreview)(this, VirtualKey))
-            	    RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
+        if (RdosPeekKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode))
+        {
+                if (IsStdKey(ExtKey, VirtualKey))
+                {
+                                if ((*KeyPreview)(this, VirtualKey))
+                    RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
             }
             else
-          	    RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
-        }     	    
+                    RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
+        }           
     }
     
     if (OnKeyPress || OnKeyRelease)
     {
-    	if (RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode))
-	    {
-    		if (ExtKey & 0x8000)
-	    		KeyRelease(ExtKey & 0x7FFF, KeyState, VirtualKey, ScanCode & 0x7F);
-		    else
-			    KeyPress(ExtKey & 0x7FFF, KeyState, VirtualKey, ScanCode & 0x7F);
-    	}
+        if (RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode))
+            {
+                if (ExtKey & 0x8000)
+                        KeyRelease(ExtKey & 0x7FFF, KeyState, VirtualKey, ScanCode & 0x7F);
+                    else
+                            KeyPress(ExtKey & 0x7FFF, KeyState, VirtualKey, ScanCode & 0x7F);
+        }
     }
 }

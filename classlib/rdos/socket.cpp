@@ -206,7 +206,7 @@ void TTcpSocket::DeviceName(char *Name, int MaxLen) const
 void TTcpSocket::Add(TWait *Wait)
 {
     if (FHandle)
-        RdosAddWaitForTcpConnection(Wait->GetHandle(), FHandle, this);
+        RdosAddWaitForTcpConnection(Wait->GetHandle(), FHandle, (int)this);
 }
 
 /*##################  TTcpSocket::IsOpen  ############################
@@ -502,7 +502,7 @@ void TUdpSocket::DeviceName(char *Name, int MaxLen) const
 void TUdpSocket::Add(TWait *Wait)
 {
     if (FHandle)
-        RdosAddWaitForUdpConnection(Wait->GetHandle(), FHandle, this);
+        RdosAddWaitForUdpConnection(Wait->GetHandle(), FHandle, (int)this);
 }
 
 /*##################  TUdpSocket::NotifyClose  ############################
@@ -833,7 +833,7 @@ void TSocketServerFactory::Insert(TSocketServer *server)
 ##########################################################################*/
 void TSocketServerFactory::Add(TWait *Wait)
 {
-        RdosAddWaitForTcpListen(Wait->GetHandle(), FListenHandle, this);
+        RdosAddWaitForTcpListen(Wait->GetHandle(), FListenHandle, (int)this);
 }
 
 /*##########################################################################
@@ -939,7 +939,7 @@ TUdpSocketListner::~TUdpSocketListner()
 void TUdpSocketListner::Add(TWait *Wait)
 {
     if (FHandle)
-        RdosAddWaitForUdpListen(Wait->GetHandle(), FHandle, this);
+        RdosAddWaitForUdpListen(Wait->GetHandle(), FHandle, (int)this);
 }
 
 /*##########################################################################

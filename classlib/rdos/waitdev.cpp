@@ -45,14 +45,14 @@
 ##########################################################################*/
 static void ThreadStartup(void *ptr)
 {
-	((TWait *)ptr)->Execute();
+        ((TWait *)ptr)->Execute();
 }
 
 /*##########################################################################
 #
 #   Name       : TWaitDevice::TWaitDevice
 #
-#   Purpose....: Constructor for TWaitDevice		                          
+#   Purpose....: Constructor for TWaitDevice                                      
 #
 #   In params..: *
 #   Out params.: *
@@ -61,14 +61,14 @@ static void ThreadStartup(void *ptr)
 ##########################################################################*/
 TWaitDevice::TWaitDevice()
 {
-	Init();
+        Init();
 }
 
 /*##########################################################################
 #
 #   Name       : TWaitDevice::TWaitDevice
 #
-#   Purpose....: Constructor for TWaitDevice		                          
+#   Purpose....: Constructor for TWaitDevice                                      
 #
 #   In params..: IniSection to read parameters from
 #   Out params.: *
@@ -78,14 +78,14 @@ TWaitDevice::TWaitDevice()
 TWaitDevice::TWaitDevice(const char *IniSection)
   : TDevice(IniSection)
 {
-	Init();
+        Init();
 }
 
 /*##########################################################################
 #
 #   Name       : TWaitDevice::~TWaitDevice
 #
-#   Purpose....: Destructor for TDevice		                          
+#   Purpose....: Destructor for TDevice                                   
 #
 #   In params..: *
 #   Out params.: *
@@ -94,8 +94,8 @@ TWaitDevice::TWaitDevice(const char *IniSection)
 ##########################################################################*/
 TWaitDevice::~TWaitDevice()
 {
-	if (FWait)
-	    delete FWait;
+        if (FWait)
+            delete FWait;
 }
 
 /*##########################################################################
@@ -124,12 +124,12 @@ void TWaitDevice::Init()
 #
 ##########################################################################*/
 void TWaitDevice::CreateWait()
-{	
+{       
     if (!FWait)
     {
         FWait = new TWait;
-		FWait->Add(this);
-	}
+                FWait->Add(this);
+        }
 }
 
 /*##########################################################################
@@ -144,7 +144,7 @@ void TWaitDevice::CreateWait()
 ##########################################################################*/
 void TWaitDevice::Remove(TWait *Wait)
 {
-	RdosRemoveWait(Wait->GetHandle(), this);
+        RdosRemoveWait(Wait->GetHandle(), (int)this);
 }
 
 /*##########################################################################
@@ -158,7 +158,7 @@ void TWaitDevice::Remove(TWait *Wait)
 #
 ##########################################################################*/
 TWaitDevice *TWaitDevice::WaitForever()
-{	
+{       
     if (!FWait)
         CreateWait();
 
@@ -179,7 +179,7 @@ TWaitDevice *TWaitDevice::WaitForever()
 #
 ##########################################################################*/
 TWaitDevice *TWaitDevice::WaitTimeout(int MilliSec)
-{	
+{       
     if (!FWait)
         CreateWait();
 
@@ -200,7 +200,7 @@ TWaitDevice *TWaitDevice::WaitTimeout(int MilliSec)
 #
 ##########################################################################*/
 TWaitDevice *TWaitDevice::WaitUntil(TDateTime &time)
-{	
+{       
     if (!FWait)
         CreateWait();
 
@@ -223,7 +223,7 @@ TWaitDevice *TWaitDevice::WaitUntil(TDateTime &time)
 ##########################################################################*/
 void TWaitDevice::StartHandler(const char *Name, int StackSize)
 {
-	Start(Name, StackSize);
+        Start(Name, StackSize);
 }
 
 /*##########################################################################
@@ -239,15 +239,15 @@ void TWaitDevice::StartHandler(const char *Name, int StackSize)
 ##########################################################################*/
 void TWaitDevice::Execute()
 {
-	for (;;)
-		WaitForever();
+        for (;;)
+                WaitForever();
 }
 
 /*##########################################################################
 #
 #   Name       : TWait::TWait
 #
-#   Purpose....: Constructor for TWait		                          
+#   Purpose....: Constructor for TWait                                    
 #
 #   In params..: *
 #   Out params.: *
@@ -257,16 +257,16 @@ void TWaitDevice::Execute()
 TWait::TWait()
 {
     FHandle = RdosCreateWait();
-	FInstalled = TRUE;
-	FThreadRunning = FALSE;
-	FWaitList = 0;
+        FInstalled = TRUE;
+        FThreadRunning = FALSE;
+        FWaitList = 0;
 }
 
 /*##########################################################################
 #
 #   Name       : TWait::~TWait
 #
-#   Purpose....: Destructor for TWait		                          
+#   Purpose....: Destructor for TWait                                     
 #
 #   In params..: *
 #   Out params.: *
@@ -277,17 +277,17 @@ TWait::~TWait()
 {
     TWaitList *ptr;
 
-	FInstalled = FALSE;
-	if (FThreadRunning)
-		RdosStopWait(FHandle);
+        FInstalled = FALSE;
+        if (FThreadRunning)
+                RdosStopWait(FHandle);
 
-	while (FThreadRunning)
-		RdosWaitMilli(25);
+        while (FThreadRunning)
+                RdosWaitMilli(25);
 
     while (FWaitList)
     {
         ptr = FWaitList->List;
-		FWaitList->WaitDev->Remove(this);
+                FWaitList->WaitDev->Remove(this);
         delete FWaitList;
         FWaitList = ptr;
     }
@@ -328,11 +328,11 @@ void TWait::Add(TWaitDevice *dev)
     
     dev->Add(this);
 
-	FListSection.Enter();
+        FListSection.Enter();
     entry->WaitDev = dev;
-	entry->List = FWaitList;
-	FWaitList = entry;
-	FListSection.Leave();
+        entry->List = FWaitList;
+        FWaitList = entry;
+        FListSection.Leave();
 }
 
 /*##########################################################################
@@ -348,32 +348,32 @@ void TWait::Add(TWaitDevice *dev)
 ##########################################################################*/
 void TWait::Remove(TWaitDevice *dev)
 {
-	TWaitList *ptr;
-	TWaitList *prev;
-	
-	FListSection.Enter();	
+        TWaitList *ptr;
+        TWaitList *prev;
+        
+        FListSection.Enter();   
 
-	prev = 0;
-	ptr = FWaitList;
-	while (ptr && ptr->WaitDev != dev)
+        prev = 0;
+        ptr = FWaitList;
+        while (ptr && ptr->WaitDev != dev)
     {
-		prev = ptr;
-		ptr = ptr->List;
+                prev = ptr;
+                ptr = ptr->List;
     }
 
     if (ptr->WaitDev == dev)
     {
-	 	 dev->Remove(this);
+                 dev->Remove(this);
 
-		 if (prev == 0)
-			 FWaitList = FWaitList->List;
-		else
-		    prev->List = ptr->List;
+                 if (prev == 0)
+                         FWaitList = FWaitList->List;
+                else
+                    prev->List = ptr->List;
 
-		delete ptr;
+                delete ptr;
     }
     
-	FListSection.Leave();
+        FListSection.Leave();
 }
 
 /*##########################################################################
@@ -382,14 +382,14 @@ void TWait::Remove(TWaitDevice *dev)
 #
 #   Purpose....: Start a thread that handles wait object
 #
-#   In params..: StackSize		Size of stack
+#   In params..: StackSize              Size of stack
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 void TWait::StartThreadHandler(const char *ThreadName, int StackSize)
 {
-	RdosCreateThread(ThreadStartup, ThreadName, this, StackSize);
+        RdosCreateThread(ThreadStartup, ThreadName, this, StackSize);
 }
 
 /*##########################################################################
@@ -421,13 +421,13 @@ TWaitDevice *TWait::Check()
 ##########################################################################*/
 TWaitDevice *TWait::WaitForever()
 {
-	TWaitDevice *Wait;
+        TWaitDevice *Wait;
 
     Wait = (TWaitDevice *)RdosWaitForever(FHandle);
-	if (Wait)
-		Wait->SignalNewData();
+        if (Wait)
+                Wait->SignalNewData();
 
-	return Wait;
+        return Wait;
 }
 
 /*##########################################################################
@@ -443,13 +443,13 @@ TWaitDevice *TWait::WaitForever()
 ##########################################################################*/
 TWaitDevice *TWait::WaitTimeout(int MilliSec)
 {
-	TWaitDevice *Wait;
+        TWaitDevice *Wait;
 
     Wait = (TWaitDevice *)RdosWaitTimeout(FHandle, MilliSec);
-	if (Wait)
-		Wait->SignalNewData();
+        if (Wait)
+                Wait->SignalNewData();
 
-	return Wait;
+        return Wait;
 }
 
 /*##########################################################################
@@ -465,13 +465,13 @@ TWaitDevice *TWait::WaitTimeout(int MilliSec)
 ##########################################################################*/
 TWaitDevice *TWait::WaitUntil(TDateTime &time)
 {
-	TWaitDevice *Wait;
+        TWaitDevice *Wait;
 
     Wait = (TWaitDevice *)RdosWaitUntilTimeout(FHandle, time.GetMsb(), time.GetLsb());
-	if (Wait)
-		Wait->SignalNewData();
+        if (Wait)
+                Wait->SignalNewData();
 
-	return Wait;
+        return Wait;
 }
 
 /*##########################################################################
@@ -503,12 +503,12 @@ void TWait::Abort()
 ##########################################################################*/
 void TWait::Execute()
 {
-	TWaitDevice *Wait;
+        TWaitDevice *Wait;
 
-	while (FInstalled)
-	{
-	    Wait = (TWaitDevice *)RdosWaitForever(FHandle);
-		if (Wait)
-			Wait->SignalNewData();
-	}
+        while (FInstalled)
+        {
+            Wait = (TWaitDevice *)RdosWaitForever(FHandle);
+                if (Wait)
+                        Wait->SignalNewData();
+        }
 }

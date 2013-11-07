@@ -403,8 +403,6 @@ int RDOSAPI RdosOpenDir(const char *PathName);
 void RDOSAPI RdosCloseDir(int Handle);
 int RDOSAPI RdosReadDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, long *FileSize, int *Attribute, unsigned long *MsbTime, unsigned long *LsbTime);
 
-#ifdef __RDOS__     // these are only available in user-mode
-
 void RDOSAPI RdosDefineFaultSave(int DiscNr, long StartSector, long Sectors);
 void RDOSAPI RdosClearFaultSave();
 int RDOSAPI RdosGetFaultThreadState(int ThreadNr, ThreadState *State);
@@ -413,8 +411,6 @@ int RDOSAPI RdosGetFaultThreadTss(int ThreadNr, Tss *tss);
 int RDOSAPI RdosGetThreadState(int ThreadNr, ThreadState *State);
 int RDOSAPI RdosSuspendThread(int Thread);
 int RDOSAPI RdosSuspendAndSignalThread(int Thread);
-
-#endif
 
 int RDOSAPI RdosGetImageHeader(int Adapter, int Entry, TRdosObjectHeader *Header);
 int RDOSAPI RdosGetImageData(int Adapter, int Entry, void *Buf);
@@ -489,24 +485,24 @@ void RDOSAPI RdosLeaveSection(int Handle);
 
 int RDOSAPI RdosCreateWait();
 void RDOSAPI RdosCloseWait(int Handle);
-void * RDOSAPI RdosCheckWait(int Handle);
-void * RDOSAPI RdosWaitForever(int Handle);
-void * RDOSAPI RdosWaitTimeout(int Handle, int MillSec);
-void * RDOSAPI RdosWaitUntilTimeout(int Handle, unsigned long msb, unsigned long lsb);
+int RDOSAPI RdosCheckWait(int Handle);
+int RDOSAPI RdosWaitForever(int Handle);
+int RDOSAPI RdosWaitTimeout(int Handle, int MillSec);
+int RDOSAPI RdosWaitUntilTimeout(int Handle, unsigned long msb, unsigned long lsb);
 void RDOSAPI RdosStopWait(int Handle);
-void RDOSAPI RdosRemoveWait(int Handle, void *ID);
-void RDOSAPI RdosAddWaitForKeyboard(int Handle, void *ID);
-void RDOSAPI RdosAddWaitForMouse(int Handle, void *ID);
-void RDOSAPI RdosAddWaitForCom(int Handle, int ComHandle, void *ID);
-void RDOSAPI RdosAddWaitForAdc(int Handle, int AdcHandle, void *ID);
-void RDOSAPI RdosAddWaitForSysLog(int Handle, int SyslogHandle, void *ID);
+void RDOSAPI RdosRemoveWait(int Handle, int ID);
+void RDOSAPI RdosAddWaitForKeyboard(int Handle, int ID);
+void RDOSAPI RdosAddWaitForMouse(int Handle, int ID);
+void RDOSAPI RdosAddWaitForCom(int Handle, int ComHandle, int ID);
+void RDOSAPI RdosAddWaitForAdc(int Handle, int AdcHandle, int ID);
+void RDOSAPI RdosAddWaitForSysLog(int Handle, int SyslogHandle, int ID);
 
 int RDOSAPI RdosCreateSignal();
 void RDOSAPI RdosResetSignal(int Handle);
 int RDOSAPI RdosIsSignalled(int Handle);
 void RDOSAPI RdosSetSignal(int Handle);
 void RDOSAPI RdosFreeSignal(int Handle);
-void RDOSAPI RdosAddWaitForSignal(int Handle, int SignalHandle, void *ID);
+void RDOSAPI RdosAddWaitForSignal(int Handle, int SignalHandle, int ID);
 
 long RDOSAPI RdosGetIp();
 long RDOSAPI RdosGetGateway();
@@ -522,12 +518,12 @@ void RDOSAPI RdosCloseUdpConnection(int Handle);
 void RDOSAPI RdosSendUdpConnection(int Handle, const char *Buf, int Size);
 int RDOSAPI RdosPeekUdpConnection(int Handle);
 int RDOSAPI RdosReadUdpConnection(int Handle, void *Buf, int Size);
-void RDOSAPI RdosAddWaitForUdpConnection(int Handle, int ConHandle, void *ID);
+void RDOSAPI RdosAddWaitForUdpConnection(int Handle, int ConHandle, int ID);
 
 int RDOSAPI RdosCreateTcpListen(int Port, int MaxConnections, int BufferSize);
 int RDOSAPI RdosGetTcpListen(int Handle);
 void RDOSAPI RdosCloseTcpListen(int Handle);
-void RDOSAPI RdosAddWaitForTcpListen(int Handle, int ConHandle, void *ID);
+void RDOSAPI RdosAddWaitForTcpListen(int Handle, int ConHandle, int ID);
 
 int RDOSAPI RdosCreateUdpListen(int Port, int MaxBufferedMessages);
 int RDOSAPI RdosGetUdpListenSize(int Handle);
@@ -536,11 +532,11 @@ int RDOSAPI RdosGetUdpListenPort(int Handle);
 int RDOSAPI RdosGetUdpListenData(int Handle, char *Buf, int Size);
 int RDOSAPI RdosClearUdpListen(int Handle);
 void RDOSAPI RdosCloseUdpListen(int Handle);
-void RDOSAPI RdosAddWaitForUdpListen(int Handle, int ConHandle, void *ID);
+void RDOSAPI RdosAddWaitForUdpListen(int Handle, int ConHandle, int ID);
 
 int RDOSAPI RdosOpenTcpConnection(int RemoteIp, int LocalPort, int RemotePort, int Timeout, int BufferSize);
 int RDOSAPI RdosWaitForTcpConnection(int Handle, long Timeout);
-void RDOSAPI RdosAddWaitForTcpConnection(int Handle, int ConHandle, void *ID);
+void RDOSAPI RdosAddWaitForTcpConnection(int Handle, int ConHandle, int ID);
 void RDOSAPI RdosCloseTcpConnection(int Handle);
 void RDOSAPI RdosDeleteTcpConnection(int Handle);
 void RDOSAPI RdosAbortTcpConnection(int Handle);
@@ -640,7 +636,7 @@ int RDOSAPI RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);
 void * RDOSAPI RdosGetModuleProc(int handle, const char *ProcName);
 char RDOSAPI RdosGetModuleFocusKey(int handle);
 
-void RDOSAPI RdosAddWaitForDebugEvent(int Handle, int ProcessHandle, void *ID);
+void RDOSAPI RdosAddWaitForDebugEvent(int Handle, int ProcessHandle, int ID);
 char RDOSAPI RdosGetDebugEvent(int handle, int *thread);
 void RDOSAPI RdosGetDebugEventData(int handle, void *buf);
 void RDOSAPI RdosClearDebugEvent(int handle);
@@ -705,7 +701,7 @@ void RDOSAPI RdosCloseUsbPipe(int handle);
 void RDOSAPI RdosResetUsbPipe(int handle);
 void RDOSAPI RdosLockUsbPipe(int handle);
 void RDOSAPI RdosUnlockUsbPipe(int handle);
-void RDOSAPI RdosAddWaitForUsbPipe(int Handle, int PipeHandle, void *ID);
+void RDOSAPI RdosAddWaitForUsbPipe(int Handle, int PipeHandle, int ID);
 void RDOSAPI RdosWriteUsbControl(int Handle, const char *buf, int size);
 void RDOSAPI RdosReqUsbData(int Handle, char *buf, int maxsize);
 int RDOSAPI RdosGetUsbDataSize(int Handle);

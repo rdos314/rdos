@@ -448,6 +448,9 @@ carddev_data_sel    EQU 0B18h
 
 long_dev_code_sel       EQU 0B20h
 
+tlist_code_sel      EQU 0B30h
+tlist_data_sel      EQU 0B38h
+
 debug_dev32_code_sel    EQU 0EF0h
 debug_dev32_data_sel    EQU 0EF8h
 

@@ -1104,7 +1104,7 @@ void TDebug::LogMsg(const char *Msg)
 void TDebug::Add(TWait *Wait)
 {
     if (FHandle)
-        RdosAddWaitForDebugEvent(Wait->GetHandle(), FHandle, this);
+        RdosAddWaitForDebugEvent(Wait->GetHandle(), FHandle, (int)this);
 }
 
 /*##########################################################################

@@ -5,7 +5,7 @@ C:\rdos\kernel\os\net.rdv C:\rdos\kernel\os\ip.rdv C:\rdos\kernel\os\ipc.rdv&
  C:\rdos\kernel\os\kdebug.rdv C:\rdos\kernel\os\com.rdv C:\rdos\kernel\os\fa&
 t.rdv C:\rdos\kernel\os\pcbios.rdv C:\rdos\kernel\os\wd.rdv C:\rdos\kernel\o&
 s\printer.rdv C:\rdos\kernel\os\inifile.rdv C:\rdos\kernel\os\carddev.rdv C:&
-\rdos\kernel\os\task.rdv .SYMBOLIC
+\rdos\kernel\os\task.rdv C:\rdos\kernel\os\tlist.rdv .SYMBOLIC
 
 !include C:\rdos\kernel\os\kernel.mk1
 !include C:\rdos\kernel\os\util.mk1
@@ -27,3 +27,4 @@ s\printer.rdv C:\rdos\kernel\os\inifile.rdv C:\rdos\kernel\os\carddev.rdv C:&
 !include C:\rdos\kernel\os\inifile.mk1
 !include C:\rdos\kernel\os\carddev.mk1
 !include C:\rdos\kernel\os\task.mk1
+!include C:\rdos\kernel\os\tlist.mk1

@@ -48,7 +48,7 @@
 ##########################################################################*/
 TAdcDevice::TAdcDevice(int channel)
 {
-	Init(channel);
+        Init(channel);
 }
 
 /*##########################################################################
@@ -65,7 +65,7 @@ TAdcDevice::TAdcDevice(int channel)
 TAdcDevice::TAdcDevice(const char *IniSection, int channel)
   : TWaitDevice(IniSection)
 {
-	Init(channel);
+        Init(channel);
 }
 
 /*##########################################################################
@@ -81,7 +81,7 @@ TAdcDevice::TAdcDevice(const char *IniSection, int channel)
 ##########################################################################*/
 TAdcDevice::~TAdcDevice()
 {
-	RdosCloseAdc(FHandle);
+        RdosCloseAdc(FHandle);
 }
 
 /*##########################################################################
@@ -91,24 +91,24 @@ TAdcDevice::~TAdcDevice()
 #   Purpose....: Init ADC device channel
 #
 #   In params..: Wait
-#				 Channel #
+#                                Channel #
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 void TAdcDevice::Init(int channel)
 {
-	FHandle = RdosOpenAdc(channel);
-	RdosDefineAdcTime(FHandle, FNextSample.GetMsb(), FNextSample.GetLsb());
-	FChannel = channel;
-	FSample = 0;
-	FDay = 0;
-	FHour = 0;
-	FMin = 0;
-	FSec = 1;
-	FMilli = 0;
-	FTics = 0;
-	OnSample = 0;
+        FHandle = RdosOpenAdc(channel);
+        RdosDefineAdcTime(FHandle, FNextSample.GetMsb(), FNextSample.GetLsb());
+        FChannel = channel;
+        FSample = 0;
+        FDay = 0;
+        FHour = 0;
+        FMin = 0;
+        FSec = 1;
+        FMilli = 0;
+        FTics = 0;
+        OnSample = 0;
 }
 
 /*##########################################################################
@@ -118,14 +118,14 @@ void TAdcDevice::Init(int channel)
 #   Purpose....: Add object to wait
 #
 #   In params..: Wait
-#				 Channel #
+#                                Channel #
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 void TAdcDevice::Add(TWait *Wait)
 {
-	RdosAddWaitForAdc(Wait->GetHandle(), FHandle, this);
+        RdosAddWaitForAdc(Wait->GetHandle(), FHandle, (int)this);
 }
 
 /*##########################################################################
@@ -134,18 +134,18 @@ void TAdcDevice::Add(TWait *Wait)
 #
 #   Purpose....: Get device-name
 #
-#   In params..: Name		Device name buffer
-#			   : MaxLen		Max length of name
+#   In params..: Name           Device name buffer
+#                          : MaxLen             Max length of name
 #   Out params.: *
 #   Returns....: Real value
 #
 ##########################################################################*/
 void TAdcDevice::DeviceName(char *Name, int MaxLen) const
 {
-	char str[80];
+        char str[80];
 
-	sprintf(str, "ADC channel #%d", FChannel);
-	strncpy(Name, str, MaxLen);
+        sprintf(str, "ADC channel #%d", FChannel);
+        strncpy(Name, str, MaxLen);
 }
 
 /*##########################################################################
@@ -161,7 +161,7 @@ void TAdcDevice::DeviceName(char *Name, int MaxLen) const
 ##########################################################################*/
 const char *TAdcDevice::GetUnit()
 {
-	return "mV";
+        return "mV";
 }
 
 /*##########################################################################
@@ -177,7 +177,7 @@ const char *TAdcDevice::GetUnit()
 ##########################################################################*/
 int TAdcDevice::GetChannel()
 {
-	return FChannel;
+        return FChannel;
 }
 
 /*##########################################################################
@@ -202,19 +202,19 @@ void TAdcDevice::Define(TSample *Sample)
 #
 #   Purpose....: Define sample interval
 #
-#   In params..: tics		tics
+#   In params..: tics           tics
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 void TAdcDevice::DefineInterval(long tics)
 {
-	FTics = tics;
-	FDay = 0;
-	FHour = 0;
-	FMin = 0;
-	FSec = 0;
-	FMilli = 0;
+        FTics = tics;
+        FDay = 0;
+        FHour = 0;
+        FMin = 0;
+        FSec = 0;
+        FMilli = 0;
 }
 
 /*##########################################################################
@@ -230,12 +230,12 @@ void TAdcDevice::DefineInterval(long tics)
 ##########################################################################*/
 void TAdcDevice::DefineInterval(long day, long hour, long min, long sec, long milli)
 {
-	FTics = 0;
-	FDay = day;
-	FHour = hour;
-	FMin = min;
-	FSec = sec;
-	FMilli = milli;
+        FTics = 0;
+        FDay = day;
+        FHour = hour;
+        FMin = min;
+        FSec = sec;
+        FMilli = milli;
 }
 
 /*##########################################################################
@@ -251,7 +251,7 @@ void TAdcDevice::DefineInterval(long day, long hour, long min, long sec, long mi
 ##########################################################################*/
 void TAdcDevice::DefineStart(TDateTime &StartTime)
 {
-	FNextSample.SetRaw(StartTime.GetMsb(), StartTime.GetLsb());
+        FNextSample.SetRaw(StartTime.GetMsb(), StartTime.GetLsb());
 }
 
 /*##########################################################################
@@ -260,14 +260,14 @@ void TAdcDevice::DefineStart(TDateTime &StartTime)
 #
 #   Purpose....: Convert from millivolt to real unit
 #
-#   In params..: Val	millivolt value
+#   In params..: Val    millivolt value
 #   Out params.: *
 #   Returns....: Real value
 #
 ##########################################################################*/
 long double TAdcDevice::MvToReal(long double value)
 {
-	return value;
+        return value;
 }
 
 /*##########################################################################
@@ -283,10 +283,10 @@ long double TAdcDevice::MvToReal(long double value)
 ##########################################################################*/
 long double TAdcDevice::Sample()
 {
-	int value;
+        int value;
 
-	value = RdosReadAdc(FHandle);
-	return MvToReal((long double)value / 32768.0 * 10000.0);
+        value = RdosReadAdc(FHandle);
+        return MvToReal((long double)value / 32768.0 * 10000.0);
 }
 
 /*##########################################################################
@@ -302,11 +302,11 @@ long double TAdcDevice::Sample()
 ##########################################################################*/
 void TAdcDevice::NotifySample(long double value)
 {
-	if (OnSample)
-		(*OnSample)(this, &FNextSample, value);
+        if (OnSample)
+                (*OnSample)(this, &FNextSample, value);
 
-	if (FSample)
-	    FSample->Add(&FNextSample, value);
+        if (FSample)
+            FSample->Add(&FNextSample, value);
 }
 
 /*##########################################################################
@@ -322,28 +322,28 @@ void TAdcDevice::NotifySample(long double value)
 ##########################################################################*/
 void TAdcDevice::SignalNewData()
 {
-	long double val;
+        long double val;
 
-	val = Sample();
-	NotifySample(val);
+        val = Sample();
+        NotifySample(val);
 
-	if (FTics)
-		FNextSample.AddTics(FTics);
+        if (FTics)
+                FNextSample.AddTics(FTics);
 
-	if (FDay)
-		FNextSample.AddDay(FDay);
+        if (FDay)
+                FNextSample.AddDay(FDay);
 
-	if (FHour)
-		FNextSample.AddHour(FHour);
+        if (FHour)
+                FNextSample.AddHour(FHour);
 
-	if (FMin)
-		FNextSample.AddMin(FMin);
+        if (FMin)
+                FNextSample.AddMin(FMin);
 
-	if (FSec)
-		FNextSample.AddSec(FSec);
+        if (FSec)
+                FNextSample.AddSec(FSec);
 
-	if (FMilli)
-		FNextSample.AddMilli(FMilli);
+        if (FMilli)
+                FNextSample.AddMilli(FMilli);
 
-	RdosDefineAdcTime(FHandle, FNextSample.GetMsb(), FNextSample.GetLsb());
+        RdosDefineAdcTime(FHandle, FNextSample.GetMsb(), FNextSample.GetLsb());
 }

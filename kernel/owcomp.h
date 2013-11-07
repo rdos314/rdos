@@ -736,6 +736,36 @@
     modify [ecx] \
     value [eax];
 
+#pragma aux RdosGetFaultThreadState = \
+    CallGate_get_fault_thread_state  \
+    CarryToBool \
+    parm [eax] [es edi] \
+    value [eax];
+
+#pragma aux RdosGetFaultThreadTss = \
+    CallGate_get_fault_thread_tss  \
+    CarryToBool \
+    parm [eax] [es edi] \
+    value [eax];
+
+#pragma aux RdosGetThreadState = \
+    CallGate_get_thread_state  \
+    CarryToBool \
+    parm [eax] [es edi] \
+    value [eax];
+
+#pragma aux RdosSuspendThread = \
+    CallGate_suspend_thread  \
+    CarryToBool \
+    parm [eax] \
+    value [eax];
+
+#pragma aux RdosSuspendAndSignalThread = \
+    CallGate_suspend_and_signal_thread  \
+    CarryToBool \
+    parm [eax] \
+    value [eax];
+
 #pragma aux RdosSoftReset = \
     CallGate_soft_reset;
 

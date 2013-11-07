@@ -113,7 +113,7 @@ void TMouseDevice::Init()
 ##########################################################################*/
 void TMouseDevice::Add(TWait *Wait)
 {
-        RdosAddWaitForMouse(Wait->GetHandle(), this);
+        RdosAddWaitForMouse(Wait->GetHandle(), (int)this);
 }
 
 /*##########################################################################
