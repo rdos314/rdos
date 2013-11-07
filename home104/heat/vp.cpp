@@ -301,18 +301,16 @@ void TVp::SetAmbient(int ref, int ambient)
         FValidAmbient = TRUE;
 
         FMaxTank = 200;
-        
+
         if (ambient < 150)
-            FMaxTank = 250;
+        {
+            FMaxTank = 420 - ambient;
 
-        if (ambient < 100)
-            FMaxTank = 300;
-
-        if (ambient < 50)
-            FMaxTank = 350;
-
-        if (ambient < 0)
-            FMaxTank = 450;
+            if (FMaxTank > 450)
+                FMaxTank = 450;
+        }
+        else
+            FMaxTank = 200;
 
         if (FTankTemp > FMaxTank)
         {
