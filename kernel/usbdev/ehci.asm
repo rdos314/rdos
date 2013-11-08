@@ -811,6 +811,27 @@ AllocateQtd     PROC near
     ret
 AllocateQtd  ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateInactiveQh
+;
+;       DESCRIPTION:    Allocate & initialize an inactive qh descriptor
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Flat sel
+;
+;       RETURNS:        EDX     Linear address of qh
+;                       EAX     Physical address of qh
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateInactiveQh      PROC near
+    call AllocateQh
+    mov es:[edx].qh_endpoint,80h
+    ret
+AllocateInactiveQh  ENDP
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1001,9 +1022,14 @@ AddIntrEntry    PROC near
 ;    
     mov si,ax
     shl si,3
-    mov edi,ds:[bx+si].ehc_qh
+    mov edx,ds:[bx+si].ehc_qh
+    mov al,es:[edx].qh_endpoint
+    test al,80h
+    jnz aieQhOk
 ;
     call AllocateQh 
+
+aieQhOk:
     mov es:[edx].qh_s_mask,1    
 ;
     mov es:[edx].qh_endpoint,60h
@@ -1040,60 +1066,29 @@ aieSetSpeed:
     mov es:[edx].qh_c_mask,2
     
 aieSpeedOk:
-    mov ds:[bx+si].ehc_qh,edx
     inc ds:[bx+si].ehc_cnt
 ;
-    or edi,edi
-    jnz aieIns
+    cmp edx,ds:[bx+si].ehc_qh
+    je aieDone
 ;
-    mov eax,1
-    jmp aieAdd
-        
-aieIns:
-    mov eax,es:[edi].qh_my_phys
-    or al,2
-
-aieAdd:    
+    int 3
+    mov edi,ds:[bx+si].ehc_qh
+    mov eax,es:[edi].qh_link_va
+    mov es:[edx].qh_link_va,eax
+    mov eax,es:[ecx].qh_link
     mov es:[edx].qh_link,eax    
-    mov es:[edx].qh_link_va,edi
-;
+;    
+    mov es:[edi].qh_link_va,edx
+    mov eax,es:[edx].qh_my_phys
+    or al,2
+    mov es:[edi].qh_link,eax    
+    
+aieDone:
     pop edi
     pop esi        
     pop eax
     ret
 AddIntrEntry    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           SetIntrPhys
-;
-;       DESCRIPTION:    Set intr physical
-;
-;       PARAMETERS:     DS      Function sel
-;                       ES      Flat sel
-;                       AX      Entry
-;                       EDX     QH linear
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetIntrPhys     PROC near
-    push ds
-    push eax
-    push si
-;    
-    mov si,ax
-    shl si,2
-    mov eax,es:[edx].qh_my_phys
-    or al,2
-    mov ds,ds:ehc_periodic_sel
-    mov ds:[si],eax
-;
-    pop si
-    pop eax
-    pop ds    
-    ret
-SetIntrPhys     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1115,29 +1110,10 @@ SetIntrPhys     Endp
 AddIntrProp     PROC near
     pushad
 ;    
-    shl cx,1
-;    
-    mov si,ax
-    shl si,3    
-    mov edi,ds:[bx+si].ehc_qh
-    or edi,edi
-    jz aipInsEmpty
-;
-    int 3
-    jmp aipNext
-
-aipInsEmpty:
-    mov ds:[bx+si].ehc_qh,edx
-    inc ds:[bx+si].ehc_cnt
-
-aipNext:    
+    shl cx,1    
     cmp bx,OFFSET ehc_1024
-    jne aipProp
-;
-    call SetIntrPhys
-    jmp aipDone
-
-aipProp:
+    je aipDone
+;    
     shl bp,1
     sub bx,bp
     call AddIntrProp    
@@ -1192,12 +1168,8 @@ aiqFound:
     call AddIntrEntry
 ;    
     cmp bx,OFFSET ehc_1024
-    jne aiqProp
+    je aiqDone
 ;
-    call SetIntrPhys
-    jmp aiqDone
-
-aiqProp:
     shl bp,1
     sub bx,bp
     call AddIntrProp    
@@ -2424,6 +2396,51 @@ UpdateUsb   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           LinkInterrupt
+;
+;       DESCRIPTION:    Link interrupts in tree
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Flat sel
+;                       BX      Table offset
+;                       CX      Table size / 2
+;                       AX      Entry
+;                       BP      Table size
+;                       EDX     QH to link
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LinkInterrupt     PROC near
+    pushad
+;    
+    shl cx,1    
+    mov si,ax
+    shl si,3    
+    mov edi,[bx+si].ehc_qh
+    mov es:[edi].qh_next_va,edx
+    mov edx,es:[edx].qh_my_phys
+    or dl,2
+    mov es:[edi].qh_link,edx    
+;
+    cmp bx,OFFSET ehc_1024
+    je liDone
+;   
+    mov edx,edi
+    shl bp,1
+    sub bx,bp
+    call LinkInterrupt 
+;
+    add ax,cx
+    call LinkInterrupt
+
+liDone:
+    popad
+    ret
+LinkInterrupt     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           CreateInterrupt
 ;
 ;   DESCRIPTION:    Creae interrupt lists
@@ -2438,10 +2455,49 @@ CreateInterrupt  Proc near
     push es
     push fs
     pushad
-;    
+;
     mov ax,flat_sel
     mov es,ax
 ;
+    call AllocateInactiveQh
+    or al,3
+    mov es:[edx].qh_link,eax
+;
+    mov bx,OFFSET ehc_1
+    push edx
+    call AllocateInactiveQh
+    mov ds:[bx].ehc_cnt,0
+    mov ds:[bx].ehc_qh,edx
+    pop eax
+;
+    mov es:[edx].qh_next_va,eax
+    mov eax,es:[eax].qh_my_phys
+    or al,3
+    mov es:[edx].qh_link,eax
+;
+    mov cx,2+4+8+16+32+64+128+256+512+1024 
+    mov bx,OFFSET ehc_1024
+
+ciInitLoop:
+    call AllocateInactiveQh
+    mov ds:[bx].ehc_cnt,0
+    mov ds:[bx].ehc_qh,edx
+;
+    add bx,8
+    loop ciInitLoop    
+
+    mov bx,OFFSET ehc_1
+    mov edx,ds:[bx].ehc_qh
+;    
+    mov bx,OFFSET ehc_2
+    mov cx,1
+    mov bp,2*8
+    xor ax,ax
+    call LinkInterrupt
+;
+    inc ax
+    call LinkInterrupt
+;    
     mov eax,1000h
     AllocateBigLinear
 ;
@@ -2457,12 +2513,16 @@ CreateInterrupt  Proc near
     mov ds:ehc_periodic_sel,bx
 ;
     mov cx,1024    
-    xor bx,bx
-    mov eax,1
+    mov si,OFFSET ehc_1024
+    xor di,di
 
 ciLoop:    
-    mov fs:[bx],eax
-    add bx,4
+    mov edx,ds:[si].ehc_qh
+    mov edx,es:[edx].qh_my_phys
+    or dl,2
+    mov fs:[di],edx
+    add si,8
+    add di,4
     loop ciLoop
 ;
     mov fs,ds:ehc_reg_sel
