@@ -1140,6 +1140,101 @@ acpi_fail:
     ret
 InitAcpiTables_    Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UseAcpiReset
+;
+;           DESCRIPTION:    Use ACPI Reset
+;
+;           RETURNS:        EAX     1 if use
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_name             DB 'ACPI.RESET',0
+
+    public UseAcpiReset_
+
+UseAcpiReset_    Proc near
+    push ds
+    push es
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET reset_name
+;    
+    LockSysEnv
+    mov ds,ebx
+    xor esi,esi
+    
+find_val:
+    push edi
+
+find_val_loop:
+    cmpsb
+    jnz find_val_next
+;       
+    mov al,es:[edi]
+    or al,al
+    jnz find_val_loop
+;
+    mov al,[esi]
+    cmp al,'='
+    je find_val_found
+
+find_val_next:
+    pop edi
+
+find_val_next_bp:
+    lodsb
+    or al,al
+    jnz find_val_next_bp
+;
+    mov al,[esi]
+    or al,al
+    jne find_val
+;
+    mov eax,1
+    jmp find_val_done
+
+find_val_found:
+    pop edi
+    inc esi  
+    xor eax,eax
+
+find_val_digit:
+    mov bl,[esi]
+    inc esi
+    sub bl,'0'
+    jc find_val_done
+;
+    cmp bl,10
+    jnc find_val_done
+;       
+    mov ecx,10
+    mul ecx
+    movzx ebx,bl
+    add eax,ebx
+    jmp find_val_digit
+
+find_val_done:
+    UnlockSysEnv
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop es    
+    pop ds
+    ret
+UseAcpiReset_     Endp
+
 _TEXT    ENDS
 
     END
