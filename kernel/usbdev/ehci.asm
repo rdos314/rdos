@@ -132,6 +132,8 @@ esp_pipe_base   usb_pipe_struc <>
 esp_qh          DD ?
 esp_prev        DW ?
 esp_next        DW ?
+esp_table       DW ?
+esp_entry       DW ?
 
 esp_pending     DD ?
 esp_first       DD ?
@@ -950,6 +952,66 @@ acqDone:
     ret
 AddControlQh  ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RemoveControlQh
+;
+;       DESCRIPTION:    Remove control qh
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Flat sel
+;                       FS      Pipe sel
+;                       EDX     Linear address of qh added
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveControlQh    PROC near
+    push eax
+    push edi
+;
+    test es:[edx].qh_endpoint,80h
+    jz rcqList
+
+rcqHead:
+    int 3
+    mov edi,es:[edx].qh_link_va
+    mov ds:ehc_async_head_va,edi
+    mov eax,es:[edi].qh_my_phys
+;
+    push es
+    mov es,ds:ehc_reg_sel
+    mov es:HcAsyncList,eax
+    pop es
+    jmp rcqFree
+
+rcqList:
+    mov edi,ds:ehc_async_head_va
+
+rcqSearch:    
+    or edi,edi
+    jz rcqFree
+;    
+    cmp edx,es:[edi].qh_link_va
+    je rcqFound
+;
+    mov edi,es:[edi].qh_link_va
+    jmp rcqSearch
+
+rcqFound:        
+    mov eax,es:[edx].qh_link_va
+    mov es:[edi].qh_link_va,eax
+;
+    mov eax,es:[edx].qh_link
+    mov es:[edi].qh_link,eax   
+
+rcqFree:
+    call FreeBlock128
+;
+    pop edi
+    pop eax
+    ret    
+RemoveControlQh  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1030,6 +1092,8 @@ AddIntrEntry    PROC near
     call AllocateQh 
 
 aieQhOk:
+    mov fs:esp_table,bx
+    mov fs:esp_entry,si
     mov es:[edx].qh_s_mask,1    
     mov es:[edx].qh_c_mask,2
 ;
@@ -1184,6 +1248,27 @@ aiqDone:
     pop fs    
     ret
 AddIntrQh   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RemoveIntrQh
+;
+;       DESCRIPTION:    Remove intr qh
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Flat sel
+;                       FS      Pipe sel
+;                       EDX     Linear address of qh added
+;                       BX      Table offset
+;                       SI      Entry offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveIntrQh    PROC near
+    int 3
+    ret
+RemoveIntrQh    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1831,9 +1916,13 @@ EndTransfer   Proc far
     mov edx,fs:esp_qh
     mov al,es:[edx].qh_status
     test al,40h
-    jz etrDecode
+    jnz etrFail
 ;
-    int 3    
+    or fs:esp_flags, ESP_FLAG_TRANSFER_OK
+    jmp etrDecode
+
+etrFail:    
+;    int 3    
 
 etrDecode:    
     xor edx,edx
@@ -1863,7 +1952,6 @@ etrNext:
         
 etrSaveOk:
     mov fs:esp_size,bp    
-    or fs:esp_flags, ESP_FLAG_TRANSFER_OK
 
 etrClear:
     mov edx,fs:esp_qh
@@ -1954,8 +2042,67 @@ GetDataSize   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClosePipe   Proc far
-    int 3
+    push es
+    pushad
+;    
     call RemovePipe
+;    
+    mov ax,flat_sel
+    mov es,ax
+;
+    EnterSection ds:ehc_section
+    xor edx,edx
+    xchg edx,fs:esp_pending
+    or edx,edx
+    jz cpReqFree
+
+cpReqLoop:
+    mov edi,es:[edx].qtd_next_va
+    call FreeBlock128
+    mov edx,edi
+    or edx,edx
+    jnz cpReqLoop
+
+cpReqFree:
+    mov edx,fs:esp_qh
+    mov al,fs:usbp_mode
+    cmp al,MODE_CONTROL
+    je cpControl
+;
+    cmp al,MODE_BULK
+    je cpBulk
+;    
+    cmp al,MODE_INTR
+    je cpIntr
+;    
+    int 3
+    jmp cpDelPipe
+
+cpControl:
+    call RemoveControlQh
+    jmp cpDelPipe
+
+cpBulk:
+    int 3
+    jmp cpDelPipe
+
+cpIntr:
+    int 3
+    mov bx,fs:esp_table
+    mov si,fs:esp_entry
+    call RemoveIntrQh
+    jmp cpDelPipe
+
+cpDelPipe:
+    LeaveSection ds:ehc_section
+    mov ax,fs
+    mov es,ax
+    xor ax,ax
+    mov fs,ax
+    FreeMem
+;
+    popad
+    pop es
     ret
 ClosePipe   Endp
 

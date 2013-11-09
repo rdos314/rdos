@@ -504,7 +504,6 @@ HubDetach    Proc near
     push ax
     push bx
 ;    
-    int 3
     mov al,gs:[bx].hps_dev_port
     NotifyUsbDetach
 ;
