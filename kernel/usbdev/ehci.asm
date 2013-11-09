@@ -134,6 +134,7 @@ esp_prev        DW ?
 esp_next        DW ?
 esp_table       DW ?
 esp_entry       DW ?
+esp_table_size  DW ?
 
 esp_pending     DD ?
 esp_first       DD ?
@@ -1072,6 +1073,7 @@ GetIntrEntry    Endp
 ;                       ES      Flat sel
 ;                       BX      Table offset
 ;                       AX      Entry
+;                       BP      Table size
 ;
 ;       RETURNS:        EDX     QH linear
 ;
@@ -1094,6 +1096,8 @@ AddIntrEntry    PROC near
 aieQhOk:
     mov fs:esp_table,bx
     mov fs:esp_entry,si
+    mov fs:esp_table_size,bp
+;    
     mov es:[edx].qh_s_mask,1    
     mov es:[edx].qh_c_mask,2
 ;
@@ -1135,7 +1139,6 @@ aieSpeedOk:
     cmp edx,ds:[bx+si].ehc_qh
     je aieDone
 ;
-    int 3
     mov edi,ds:[bx+si].ehc_qh
     mov eax,es:[edi].qh_link_va
     mov es:[edx].qh_link_va,eax
@@ -1173,6 +1176,10 @@ AddIntrEntry    Endp
 
 AddIntrProp     PROC near
     pushad
+;    
+    mov si,ax
+    shl si,3
+    inc ds:[bx+si].ehc_cnt
 ;    
     shl cx,1    
     cmp bx,OFFSET ehc_1024
@@ -1252,6 +1259,46 @@ AddIntrQh   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           RemoveIntrProp
+;
+;       DESCRIPTION:    Remove intr propagate in tree
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Flat sel
+;                       BX      Table offset
+;                       CX      Table size / 2
+;                       AX      Entry
+;                       EDX     QH linear
+;                       BP      Table size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveIntrProp     PROC near
+    pushad
+;    
+    mov si,ax
+    shl si,3
+    dec ds:[bx+si].ehc_cnt
+;
+    shl cx,1    
+    cmp bx,OFFSET ehc_1024
+    je ripDone
+;    
+    shl bp,1
+    sub bx,bp
+    call RemoveIntrProp    
+;
+    add ax,cx
+    call RemoveIntrProp
+
+ripDone:
+    popad
+    ret
+RemoveIntrProp     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           RemoveIntrQh
 ;
 ;       DESCRIPTION:    Remove intr qh
@@ -1260,13 +1307,72 @@ AddIntrQh   Endp
 ;                       ES      Flat sel
 ;                       FS      Pipe sel
 ;                       EDX     Linear address of qh added
-;                       BX      Table offset
-;                       SI      Entry offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RemoveIntrQh    PROC near
+    pushad
+;
+    mov bx,fs:esp_table
+    mov si,fs:esp_entry
+    mov bp,fs:esp_table_size
+    mov cx,bp
+    shr cx,4
+;    
+    mov edi,ds:[bx+si].ehc_qh
+    cmp edx,edi
+    jne riqSearch
+;
+    mov eax,es:[edx].qh_link_va
+    or eax,eax
+    jnz riqFirst
+;
+    mov es:[edx].qh_current_qtd,0
+    mov es:[edx].qh_next_qtd,1
+    mov es:[edx].qh_alt_qtd,1
+    mov es:[edx].qh_status,0
+    mov es:[edx].qh_endpoint,80h
+    jmp riqUpdate
+
+riqFirst:
     int 3
+        
+riqSearch:    
+    or edi,edi
+    jz riqFree
+;    
+    cmp edx,es:[edi].qh_link_va
+    je riqFound
+;
+    mov edi,es:[edi].qh_link_va
+    jmp riqSearch
+
+riqFound:        
+    mov eax,es:[edx].qh_link_va
+    mov es:[edi].qh_link_va,eax
+;
+    mov eax,es:[edx].qh_link
+    mov es:[edi].qh_link,eax   
+
+riqFree:
+    call FreeBlock128
+
+riqUpdate:
+    mov ax,si
+    shr ax,3
+;    
+    cmp bx,OFFSET ehc_1024
+    je riqDone
+;
+    shl bp,1
+    sub bx,bp
+    call RemoveIntrProp    
+;
+    add ax,cx
+    call RemoveIntrProp
+
+riqDone:    
+    popad
     ret
 RemoveIntrQh    Endp
 
@@ -2087,9 +2193,6 @@ cpBulk:
     jmp cpDelPipe
 
 cpIntr:
-    int 3
-    mov bx,fs:esp_table
-    mov si,fs:esp_entry
     call RemoveIntrQh
     jmp cpDelPipe
 

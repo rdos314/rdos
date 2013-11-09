@@ -146,6 +146,7 @@ phdLoop:
     add bx,4
     loop phdLoop
 ;               
+    mov gs:hub_attached,1
     clc    
 
 ghdDone:    
@@ -438,6 +439,39 @@ CreateHub  Proc near
     ret
 CreateHub   Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CloseHub
+;
+;   description:    Close hub
+;
+;   Parameters:     GS      Hub
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseHub  Proc near
+    push bx
+;
+    mov bx,gs:hub_status_req
+    CloseUsbReq
+;    
+    mov bx,gs:hub_status_handle
+    CloseUsbPipe
+;
+    mov bx,gs:hub_status_wait
+    CloseWait
+;    
+    mov bx,gs:hub_control_handle
+    CloseUsbPipe
+;    
+    mov bx,gs:hub_control_wait
+    CloseWait
+;
+    pop bx
+    ret
+CloseHub   Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -560,6 +594,10 @@ InitPorts    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateOnePort    Proc near
+    mov ax,gs:hub_attached
+    or ax,ax
+    jz uopDone
+;    
     mov dx,si
     call GetPortStatus
     jc uopDone
@@ -590,12 +628,14 @@ uopHasPort:
     mov dx,si
     mov ax,PORT_RESET
     call SetPortFeature    
+;
+    mov cx,10    
 
 uopWaitLoop:
     mov dx,si
     call GetPortStatus
     jc uopUnlock
-;
+;    
     test ax,1
     jz uopUnlock
 ;
@@ -604,7 +644,9 @@ uopWaitLoop:
 ;
     mov ax,25
     WaitMilliSec
-    jmp uopWaitLoop
+    loop uopWaitLoop
+;
+    jmp uopUnlock    
  
 uopIsEnabled:
     mov gs:[bx].hps_status,ax
@@ -671,7 +713,7 @@ UpdatePorts    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-hub_thread_handler:
+hub_thread_handler  Proc far
     mov gs,bx
     GetThread
     mov gs:hub_thread,ax
@@ -687,6 +729,10 @@ hub_thread_handler:
     WaitMilliSec
 
 hub_thread_wait:
+    mov ax,gs:hub_attached
+    or ax,ax
+    jz hub_exit
+;    
     GetThread
     mov bx,gs:hub_status_req
     mov cx,gs:hub_status_size
@@ -748,8 +794,18 @@ hub_thread_port_next:
     jmp hub_thread_port_loop    
 
 hub_exit:
+    xor ax,ax
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
+    call CloseHub
+    mov gs:hub_attached,-1
+;
+    mov ax,25
+    WaitMilliSec    
+    ret
+hub_thread_handler  Endp
         
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1016,18 +1072,80 @@ usb_attach  Endp
 usb_detach  Proc far
     push ds
     push es
+    push gs
     pushad
 ;    
     mov dx,SEG data
     mov ds,dx
-;        
+;
+    EnterSection ds:hub_section   
+    mov dx,ds:hub_list
+    xor si,si
+
+udLoop:    
+    or dx,dx
+    jz udNotMe
+;
+    mov gs,dx
+    cmp bx,gs:hub_controller
+    jne udNext
+;
+    cmp al,gs:hub_device
+    je udFound
+
+udNext:
+    mov si,dx
+    mov dx,gs:hub_next    
+    jmp udLoop
+
+udFound:    
+    or si,si
+    jz udFirst
+;
+    push es
+    mov ax,gs:hub_next
+    mov es,si
+    mov es:hub_next,ax
+    pop es
+    jmp udClose
+
+udFirst:    
+    mov ax,gs:hub_next
+    mov ds:hub_list,ax
+
+udClose:        
+    mov gs:hub_attached,0    
+    LeaveSection ds:hub_section   
+
+udSignal:    
+    mov bx,gs:hub_thread
+    Signal
+;
+    mov ax,25
+    WaitMilliSec    
+;
+    mov ax,gs:hub_attached
+    or ax,ax
+    jz udSignal    
+;    
+    mov ax,gs
+    mov es,ax
+    xor ax,ax
+    mov gs,ax
+    FreeMem
+    jmp udDone
+
+udNotMe:    
+    LeaveSection ds:hub_section   
+    
+udDone:    
     popad
+    pop gs
     pop es
     pop ds
     retf32
 usb_detach  Endp
     
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
