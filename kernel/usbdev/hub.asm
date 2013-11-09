@@ -794,11 +794,38 @@ hub_thread_port_next:
     jmp hub_thread_port_loop    
 
 hub_exit:
+    mov cx,gs:hub_ports
+    mov bx,OFFSET hub_port_arr
+    mov si,1
+
+hub_close_port_loop:
+    push bx
+    push cx
+    push si
+;    
+    mov al,gs:[bx].hps_dev_port
+    or al,al
+    jz hub_close_port_next
+;
+    mov dx,si
+    call HubDetach
+;    
+    call ds:free_hub_port_proc
+
+hub_close_port_next:    
+    pop si
+    pop cx
+    pop bx
+    add bx,4
+    inc si
+    loop hub_close_port_loop
+;
     xor ax,ax
     mov ds,ax
     mov es,ax
     mov fs,ax
     call CloseHub
+;    
     mov gs:hub_attached,-1
 ;
     mov ax,25
