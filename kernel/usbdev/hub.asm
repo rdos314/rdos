@@ -733,6 +733,7 @@ hub_thread_wait:
     or ax,ax
     jz hub_exit
 ;    
+    ClearSignal
     GetThread
     mov bx,gs:hub_status_req
     mov cx,gs:hub_status_size

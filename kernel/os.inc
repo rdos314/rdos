@@ -3172,6 +3172,10 @@ WaitForOhci   MACRO
     OsGate wait_for_ohci_nr
                     ENDM
 
+WaitForUhci   MACRO
+    OsGate wait_for_uhci_nr
+                    ENDM
+
 ; IN  DS      Usb device selector
 InitUsbDevice   MACRO
     OsGate init_usb_device_nr

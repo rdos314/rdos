@@ -2868,7 +2868,7 @@ ifLegacyFound:
     add cl,2
     ReadPciByte
     or al,al
-    jz ifLegacyOff
+    jz ifLegacyDone
 ;
     inc cl
     mov al,1
@@ -2883,7 +2883,7 @@ ifLegacyFound:
     WaitMilliSec
     
 ifLegacyDone:
-    add cx,2
+    add cl,2
     ReadPciDword
     xor eax,eax
     WritePciDword
@@ -2916,29 +2916,6 @@ ifIrq:
     RequestIrqHandler
 
 ifIntDone:    
-    mov al,1
-    FindPciCapability
-    jc ifHandoverOk
-;    
-    mov bh,ds:ehc_bus
-    mov bl,ds:ehc_device
-    mov ch,ds:ehc_function
-    mov cl,al
-    ReadPciDword
-    test eax,1000000h
-    jnz ifHandoverOk
-;
-    or eax,1000000h
-    WritePciDword
-
-    ReadPciDword
-    test eax,10000h    
-    jz ifHandoverOk
-;
-    mov ax,250
-    WaitMilliSec
-    
-ifHandoverOk: 
     mov fs,ds:ehc_reg_sel
     mov fs:HcSegmentSelector,0
 ;
@@ -3214,6 +3191,7 @@ ehci_thread:
     mov ds:EhciThread,ax
 ;    
     WaitForOhci
+    WaitForUhci
 ;    
     mov si,OFFSET EhciFuncArr
     mov cx,ds:EhciFuncCount

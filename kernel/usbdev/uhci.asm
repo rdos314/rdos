@@ -148,6 +148,11 @@ UhciCloseCount  DD ?
 UhciList32      DD ?
 UhciSection     section_typ <>
 UhciThread      DW ?
+
+WaitSection     section_typ <>
+WaitThreadArr   DW 3 DUP(?)
+Started         DB ?
+
 UhciCount       DW ?
 UhciFunc        DW 16 DUP (?)
 
@@ -2555,6 +2560,17 @@ InitFunction    Proc near
 ;
     mov bx,ds:uhc_pci_bus_dev
     mov ch,ds:uhc_pci_func
+;
+    cmp ch,2
+    jne ifNotLegacy
+;
+    int 3
+    mov cl,0C0h
+    ReadPciWord
+    mov ax,2000h
+    WritePciWord    
+    
+ifNotLegacy:    
     mov cl,PCI_interrupt_line
     ReadPciByte
 ;       
@@ -2574,6 +2590,8 @@ ifTabLoop:
     loop ifTabLoop    
 ;
     InitUsbDevice
+;
+    WaitForEhci
 ;    
     mov dx,ds:uhc_io_base
     add dx,SofReg
@@ -2951,6 +2969,16 @@ uhci_thread:
 ;    
     mov ax,750
     WaitMilliSec
+;
+    EnterSection ds:WaitSection
+    mov ds:Started,1
+    mov bx,ds:WaitThreadArr
+    Signal
+    mov bx,ds:WaitThreadArr+2
+    Signal
+    mov bx,ds:WaitThreadArr+4
+    Signal
+    LeaveSection ds:WaitSection 
 ;    
     mov bx,OFFSET UhciFunc
     mov cx,ds:UhciCount 
@@ -3080,6 +3108,66 @@ get_usb_close_count    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           WaitForUhci
+;
+;           DESCRIPTION:    Wait for UHCI to initialize
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_uhci_name  DB 'Wait For Uhci', 0
+
+wait_for_uhci   Proc far
+    push ds
+    push ax
+    push bx
+;
+    mov ax,SEG data
+    mov ds,ax
+;
+    EnterSection ds:WaitSection
+    mov al,ds:Started
+    or al,al
+    jnz wfuDone    
+;
+    mov bx,OFFSET WaitThreadArr
+
+wfuLoop:
+    mov ax,ds:[bx]
+    or ax,ax
+    jz wfuFound
+;
+    add bx,2
+    jmp wfuLoop
+
+wfuFound:        
+    GetThread
+    mov ds:[bx],ax    
+    LeaveSection ds:WaitSection   
+
+wfuSignal:
+    WaitForSignal
+;    
+    EnterSection ds:WaitSection    
+    mov al,ds:Started
+    or al,al
+    jz wfuSignal
+    
+wfuDone:
+    LeaveSection ds:WaitSection
+;    
+    pop bx
+    pop ax
+    pop ds
+    retf32
+wait_for_uhci   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Init
 ;
 ;           DESCRIPTION:    init device
@@ -3097,9 +3185,22 @@ Init    Proc far
     mov ds:UhciUsedBlocks,0
     mov ds:UhciCloseCount,0
 ;
+    InitSection ds:WaitSection
+    mov ds:WaitThreadArr,0
+    mov ds:WaitThreadArr+2,0
+    mov ds:WaitThreadArr+4,0
+    mov ds:Started,0
+;
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET wait_for_uhci
+    mov edi,OFFSET wait_for_uhci_name
+    xor cl,cl
+    mov ax,wait_for_uhci_nr
+    RegisterOsGate
+;    
     mov edi,OFFSET init_usb
     HookInitPci
 ;

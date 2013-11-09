@@ -626,5 +626,6 @@ is_usb_hub_port_connected_nr = 517
 
 wait_for_ehci_nr            = 518
 wait_for_ohci_nr            = 519
+wait_for_uhci_nr            = 520
 
-osgate_entries				= 520
+osgate_entries				= 540
