@@ -1031,6 +1031,7 @@ AddIntrEntry    PROC near
 
 aieQhOk:
     mov es:[edx].qh_s_mask,1    
+    mov es:[edx].qh_c_mask,2
 ;
     mov es:[edx].qh_endpoint,60h
 ;    
@@ -1041,6 +1042,7 @@ aieQhOk:
     cmp al,2
     je aieSpeedOk
 ;
+    mov es:[edx].qh_c_mask,1Ch
     cmp al,0
     je aieLowSpeed
 
@@ -1062,8 +1064,6 @@ aieSetSpeed:
     or al,gs:hub_device
     pop gs        
     mov es:[edx].qh_hub_port,ax
-;
-    mov es:[edx].qh_c_mask,2
     
 aieSpeedOk:
     inc ds:[bx+si].ehc_cnt
@@ -1834,7 +1834,6 @@ EndTransfer   Proc far
     jz etrDecode
 ;
     int 3    
-    jmp etrClear
 
 etrDecode:    
     xor edx,edx
