@@ -733,9 +733,12 @@ hub_thread_wait:
     or ax,ax
     jz hub_exit
 ;    
+    mov bx,gs:hub_status_req
+    IsUsbReqStarted
+    jnc hub_thread_wait_signal
+;
     ClearSignal
     GetThread
-    mov bx,gs:hub_status_req
     mov cx,gs:hub_status_size
     StartUsbReq    
 
@@ -744,8 +747,8 @@ hub_thread_wait_signal:
     add eax,1000 * 1193    
     adc edx,0
     mov bx,gs:hub_status_wait
-;    WaitWithTimeout
-    WaitWithoutTimeout
+    WaitWithTimeout
+;    WaitWithoutTimeout
 ;
     mov bx,gs:hub_status_req
     IsUsbReqReady
