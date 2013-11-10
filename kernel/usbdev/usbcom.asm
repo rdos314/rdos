@@ -510,6 +510,7 @@ reset_sio       PROC near
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
+    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -563,6 +564,7 @@ set_latency_timer       PROC near
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
+    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -627,6 +629,7 @@ set_baud_index_ok:
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
+    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -709,6 +712,7 @@ set_data_stop_ok:
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
+    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -962,6 +966,7 @@ enable_cts_ftdi PROC near
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
+    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -1020,6 +1025,7 @@ disable_cts_ftdi    PROC near
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
+    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -1078,6 +1084,7 @@ set_dtr_ftdi    Proc near
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
+    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -1136,6 +1143,7 @@ reset_dtr_ftdi  Proc near
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
+    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -1194,6 +1202,7 @@ set_rts_ftdi    Proc near
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
+    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -1252,6 +1261,7 @@ reset_rts_ftdi  Proc near
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
+    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -1315,6 +1325,7 @@ Fish    Proc near
     ReqUsbData
 ;    
     WriteUsbStatus
+    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -1377,6 +1388,7 @@ ReadLineState   Proc near
     pop es
 ;    
     WriteUsbStatus
+    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -1493,6 +1505,7 @@ WriteLineState  Proc near
     pop es
 ;    
     ReqUsbStatus
+    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -1550,6 +1563,7 @@ WriteControl    Proc near
     WriteUsbControl
 ;    
     ReqUsbStatus
+    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -1606,6 +1620,7 @@ Soup    Proc near
     WriteUsbControl
 ;    
     ReqUsbStatus
+    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -1922,6 +1937,7 @@ ecpIndexOk:
     WriteUsbControl
 ;    
     ReqUsbStatus
+    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -2241,6 +2257,7 @@ SetBaudMct      PROC near
     pop es
 ;    
     ReqUsbStatus
+    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -2316,6 +2333,7 @@ SendUnknownMct  Proc near
     pop es
 ;    
     ReqUsbStatus
+    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -2397,6 +2415,7 @@ scmValOk:
     pop es
 ;    
     ReqUsbStatus
+    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -2499,6 +2518,7 @@ slcParityOk:
     pop es
 ;    
     ReqUsbStatus
+    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -2586,6 +2606,7 @@ rmcDtrOk:
     pop es
 ;    
     ReqUsbStatus
+    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000

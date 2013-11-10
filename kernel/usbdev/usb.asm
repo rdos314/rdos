@@ -2378,15 +2378,6 @@ delete_handle   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start_wait_for_pipe     PROC far
-    push ds
-    push fs
-;    
-    mov fs,es:pw_pipe_sel
-    mov ds,es:pw_func_sel
-    call ds:issue_transfer_proc
-;       
-    pop fs
-    pop ds    
     retf32
 start_wait_for_pipe Endp
     
@@ -2402,16 +2393,6 @@ start_wait_for_pipe Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 stop_wait_for_pipe      PROC far
-    push ds
-    push fs
-;    
-    mov fs,es:pw_pipe_sel
-;    
-    mov ds,es:pw_func_sel   
-    call ds:end_transfer_proc
-;       
-    pop fs
-    pop ds    
     retf32
 stop_wait_for_pipe Endp
 
