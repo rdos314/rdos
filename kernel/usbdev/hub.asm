@@ -409,20 +409,12 @@ CreateHub  Proc near
     mov bx,gs:hub_control_wait
     xor ecx,ecx
     AddWaitForUsbPipe
-;
-    CreateWait
-    mov gs:hub_status_wait,bx
 ;    
     mov bx,gs:hub_controller
     mov al,gs:hub_device
     mov dl,gs:hub_intr
     OpenUsbPipe
     mov gs:hub_status_handle,bx
-;
-    mov ax,gs:hub_status_handle
-    mov bx,gs:hub_status_wait
-    xor ecx,ecx
-    AddWaitForUsbPipe
 ;
     mov bx,gs:hub_status_handle
     CreateUsbReq
@@ -458,9 +450,6 @@ CloseHub  Proc near
 ;    
     mov bx,gs:hub_status_handle
     CloseUsbPipe
-;
-    mov bx,gs:hub_status_wait
-    CloseWait
 ;    
     mov bx,gs:hub_control_handle
     CloseUsbPipe
@@ -746,9 +735,7 @@ hub_thread_wait_signal:
     GetSystemTime
     add eax,1000 * 1193    
     adc edx,0
-    mov bx,gs:hub_status_wait
-    WaitWithTimeout
-;    WaitWithoutTimeout
+    WaitForSignalWithTimeout
 ;
     mov bx,gs:hub_status_req
     IsUsbReqReady

@@ -61,9 +61,8 @@ hub_intr            DB ?
 
 hub_control_wait    DW ?
 hub_control_handle  DW ?
-hub_status_wait     DW ?
-hub_status_handle   DW ?
 
+hub_status_handle   DW ?
 hub_status_size     DW ?
 hub_status_sel      DW ?
 hub_status_req      DW ?
