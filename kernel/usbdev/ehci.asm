@@ -956,9 +956,9 @@ AddControlQh  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           RemoveControlQh
+;       NAME:           RemoveAsyncQh
 ;
-;       DESCRIPTION:    Remove control qh
+;       DESCRIPTION:    Remove async qh
 ;
 ;       PARAMETERS:     DS      Function sel
 ;                       ES      Flat sel
@@ -967,14 +967,14 @@ AddControlQh  ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-RemoveControlQh    PROC near
+RemoveAsyncQh    PROC near
     push eax
     push edi
 ;
     test es:[edx].qh_endpoint,80h
-    jz rcqList
+    jz raqList
 
-rcqHead:
+raqHead:
     int 3
     mov edi,es:[edx].qh_link_va
     mov ds:ehc_async_head_va,edi
@@ -984,35 +984,151 @@ rcqHead:
     mov es,ds:ehc_reg_sel
     mov es:HcAsyncList,eax
     pop es
-    jmp rcqFree
+    jmp raqFree
 
-rcqList:
+raqList:
     mov edi,ds:ehc_async_head_va
 
-rcqSearch:    
+raqSearch:    
     or edi,edi
-    jz rcqFree
+    jz raqFree
 ;    
     cmp edx,es:[edi].qh_link_va
-    je rcqFound
+    je raqFound
 ;
     mov edi,es:[edi].qh_link_va
-    jmp rcqSearch
+    jmp raqSearch
 
-rcqFound:        
+raqFound:        
     mov eax,es:[edx].qh_link_va
     mov es:[edi].qh_link_va,eax
 ;
     mov eax,es:[edx].qh_link
     mov es:[edi].qh_link,eax   
 
-rcqFree:
+raqFree:
     call FreeBlock128
 ;
     pop edi
     pop eax
     ret    
-RemoveControlQh  ENDP
+RemoveAsyncQh  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AddBulkQh
+;
+;       DESCRIPTION:    Add bulk qh
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Flat sel
+;                       FS      Pipe sel
+;
+;       RETURNS:        EDX     Linear address of qh added
+;                       EAX     Physical address of qh added
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddBulkQh    PROC near
+    push gs
+    push ebx
+;
+    EnterSection ds:ehc_section
+    call AllocateQh
+    mov ebx,eax
+;
+    mov es:[edx].qh_endpoint,20h
+;    
+    mov ax,3008h
+    mov es:[edx].qh_max_packet,ax
+;
+    mov al,fs:usbp_speed
+    cmp al,2
+    je abqSpeedOk
+;
+    cmp al,0
+    je abqLowSpeed
+
+abqFullSpeed:
+    mov ah,0
+    jmp abqSetSpeed
+
+abqLowSpeed:
+    mov ah,10h
+
+abqSetSpeed:    
+    mov al,ah
+    mov es:[edx].qh_endpoint,al
+;
+    push gs
+    mov ax,fs:usbp_hub_port
+    shl ax,7
+    or ax,4000h    
+    mov gs,fs:usbp_hub_sel
+    or al,gs:hub_device
+    pop gs        
+    mov es:[edx].qh_hub_port,ax
+;
+    mov es:[edx].qh_c_mask,2
+;    
+    mov ax,3008h
+    mov es:[edx].qh_max_packet,ax
+    
+abqSpeedOk:
+    mov eax,ds:ehc_async_head_va
+    or eax,eax
+    jnz abqInsert
+;
+    or es:[edx].qh_endpoint,80h
+    mov ds:ehc_async_head_va,edx
+    mov eax,ebx
+    or al,2
+    mov es:[edx].qh_link,eax
+    mov es:[edx].qh_link_va,0
+;
+    mov gs,ds:ehc_reg_sel
+    mov gs:HcAsyncList,ebx
+;
+    mov eax,gs:HcCommand
+    or al,20h
+    mov gs:HcCommand,eax
+    jmp abqDone
+
+abqInsert:
+    push esi
+    push edi
+;
+    mov esi,eax
+    mov edi,es:[esi].qh_my_phys    
+
+abqInsLoop:
+    mov esi,eax    
+    mov eax,es:[esi].qh_link_va
+    or eax,eax
+    jnz abqInsLoop
+;
+    mov es:[edx].qh_link_va,0    
+    mov eax,edi
+    or al,2
+    mov es:[edx].qh_link,eax
+;
+    mov es:[esi].qh_link_va,edx
+    mov eax,ebx
+    or al,2
+    mov es:[esi].qh_link,eax
+;
+    pop edi
+    pop esi
+
+abqDone:
+    mov eax,ebx
+    LeaveSection ds:ehc_section
+;    
+    pop ebx
+    pop gs
+    ret
+AddBulkQh  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1585,7 +1701,32 @@ CreateControl   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateBulk   Proc far
-    int 3
+    push es
+    pushad
+;    
+    push es
+    mov eax,SIZE ehci_pipe
+    AllocateSmallGlobalMem
+    xor di,di
+    mov cx,ax
+    xor al,al
+    rep stosb
+    mov ax,es
+    mov fs,ax
+    pop es    
+;    
+    call SetupHub
+    mov al,es:usbf_speed
+    mov fs:usbp_speed,al
+;    
+    mov dx,flat_sel
+    mov es,dx
+    call AddBulkQh
+    mov fs:esp_qh,edx
+    call InsertPipe
+;
+    popad
+    pop es
     ret
 CreateBulk   Endp
 
@@ -1752,6 +1893,29 @@ AddIn    Proc far
     mov al,1
     call InsertQtd
 ;
+    mov ax,flat_sel
+    mov es,ax
+    mov edx,fs:esp_qh
+    mov es:[edx].qh_size,0
+;
+    mov al,fs:usbp_endpoint
+    or al,al
+    jz aiControl
+
+aiData:    
+    mov ax,es:[edx].qh_max_packet
+    and ax,0F000h
+    or ax,fs:usbp_maxlen
+    mov es:[edx].qh_max_packet,ax
+    jmp aiDone
+
+aiControl:    
+    mov ax,es:[edx].qh_max_packet
+    and ax,0F800h
+    or ax,fs:usbp_maxlen
+    mov es:[edx].qh_max_packet,ax
+
+aiDone:
     pop edx
     pop eax
     pop es
@@ -2185,11 +2349,11 @@ cpReqFree:
     jmp cpDelPipe
 
 cpControl:
-    call RemoveControlQh
+    call RemoveAsyncQh
     jmp cpDelPipe
 
 cpBulk:
-    int 3
+    call RemoveAsyncQh
     jmp cpDelPipe
 
 cpIntr:
