@@ -125,6 +125,7 @@ unhook_page_proc                DW OFFSET local_unhook_page32
 get_thread_page_entry_proc      DW OFFSET local_get_thread_page_entry32
 set_thread_page_entry_proc      DW OFFSET local_set_thread_page_entry32
 get_thread_page_dir_proc        DW OFFSET local_get_thread_page_dir32
+has64_proc                      DW OFFSET local_has64_32
 
 p64_start:
 init_process_p64                DW OFFSET local_init_process64
@@ -158,6 +159,7 @@ unhook_page_p64                 DW OFFSET local_unhook_page64
 get_thread_page_entry_p64       DW OFFSET local_get_thread_page_entry64
 set_thread_page_entry_p64       DW OFFSET local_set_thread_page_entry64
 get_thread_page_dir_p64         DW OFFSET local_get_thread_page_dir64
+has64_p64                       DW OFFSET local_has64_64
 p64_end:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -340,6 +342,12 @@ init_page_table     PROC near
     mov edi,OFFSET get_thread_page_dir_name
     xor cl,cl
     mov ax,get_thread_page_dir_nr
+    RegisterOsGate
+;    
+    mov esi,OFFSET has_physical64
+    mov edi,OFFSET has_physical64_name
+    xor cl,cl
+    mov ax,has_physical64_nr
     RegisterOsGate
 ;    
     pop ds
@@ -1883,6 +1891,22 @@ local_get_thread_page_dir32    Proc near
     pop ds    
     ret
 local_get_thread_page_dir32    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_has64_32
+;
+;           DESCRIPTION:    Check for 64-bit addresses, 32-bit version
+;
+;           RETURNS:        NC      Has 64-bit addresses
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_has64_32  Proc near
+    stc
+    ret
+local_has64_32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3715,6 +3739,22 @@ local_get_thread_page_dir64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           local_has64_64
+;
+;           DESCRIPTION:    Check for 64-bit addresses, 64-bit version
+;
+;           RETURNS:        NC      Has 64-bit addresses
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_has64_64  Proc near
+    clc
+    ret
+local_has64_64  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           NotifyInitProcess
 ;
 ;           DESCRIPTION:    Notify init process
@@ -4243,6 +4283,24 @@ get_thread_page_dir    Proc far
     call cs:get_thread_page_dir_proc
     retf32
 get_thread_page_dir    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Has64
+;
+;           DESCRIPTION:    Check for 64-bit address
+;
+;           RETURNS:        NC      Has 64-bit addresses
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_physical64_name   DB 'Has Physical64',0
+
+has_physical64    Proc far
+    call cs:has64_proc
+    retf32
+has_physical64    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5255,11 +5313,6 @@ start_paging:
     mov eax,ds:cpu_feature_flags
     test al,40h
     jz start_paging32
-;
-; fix for OHCI!
-;
-    jmp start_paging32
-
     jmp start_paging64        
 
 code    ENDS

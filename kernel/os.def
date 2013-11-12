@@ -628,4 +628,6 @@ wait_for_ehci_nr            = 518
 wait_for_ohci_nr            = 519
 wait_for_uhci_nr            = 520
 
+has_physical64_nr           = 521
+
 osgate_entries				= 540

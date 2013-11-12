@@ -89,6 +89,7 @@ ehc_function        DB ?
 
 ehc_op_offs         DB ?
 ehc_eecp            DB ?
+ehc_hcc_flags       DB ?
 ehc_flags           DW ?
 ehc_ports           DB ?
 ehc_debug_port      DB ?
@@ -2582,6 +2583,33 @@ FreeHubPort     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           Has64Bit
+;
+;           DESCRIPTION:    Check for 64-bit support
+;
+;       PARAMETERS:         DS      Function selector
+;
+;       RETURNS:            NC      Supports 64-bit addresses
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Has64Bit   Proc far
+    test ds:ehc_hcc_flags,1
+    jz hb64Fail
+;
+    clc
+    jmp hb64Done    
+
+hb64Fail:    
+    stc
+
+hb64Done:    
+    ret
+Has64Bit     Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UpdatePort
 ;
 ;           DESCRIPTION:    Update root-hub port status
@@ -3002,6 +3030,7 @@ et18 DW OFFSET LockEnum,        SEG code
 et19 DW OFFSET UnlockEnum,      SEG code
 et20 DW OFFSET AllocateHubPort, SEG code
 et21 DW OFFSET FreeHubPort,     SEG code
+et22 DW OFFSET Has64Bit,        SEG code
 ;
 ;           PARAMETERS:         BH          Bus
 ;                           BL          Device
@@ -3231,6 +3260,9 @@ AddFunction  Proc near
     mov ds:ehc_op_offs,cl
     mov ds:ehc_flags,0
 ;
+    mov al,byte ptr es:hcp_HCCPARAMS
+    mov ds:ehc_hcc_flags,al
+;    
     mov al,byte ptr es:hcp_HCCPARAMS+1
     mov ds:ehc_eecp,al
 ;    

@@ -959,6 +959,11 @@ AllocateMultiplePhysical64    MACRO
     OsGate allocate_multiple_physical64_nr
                     ENDM
 
+; NC                Has 64 bit addresses
+HasPhysical64    MACRO
+    OsGate has_physical64_nr
+                    ENDM
+
 ; OUT EBX:EAX       Physical base address
 AllocatePhysical32    MACRO
     OsGate allocate_physical32_nr

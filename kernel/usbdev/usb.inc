@@ -119,6 +119,8 @@ allocate_hub_port_proc DD ?
 ; IN  AL        Port
 free_hub_port_proc     DD ?
 
+has_64bit_proc         DD ?
+
 usb_controller_id   DW ?
 usb_port_sel_arr    DW MAX_USB_HUB_PORTS DUP(?)
 usb_addr_arr        DW 128 DUP(?)

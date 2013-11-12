@@ -2345,6 +2345,24 @@ FreeHubPort     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           Has64Bit
+;
+;           DESCRIPTION:    Check for 64-bit support
+;
+;       PARAMETERS:         DS      Function selector
+;
+;       RETURNS:            NC      Supports 64-bit addresses
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Has64Bit   Proc far
+    stc
+    ret
+Has64Bit     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UpdateQueue
 ;
 ;           DESCRIPTION:    Update done queue
@@ -2826,6 +2844,7 @@ ot18 DW OFFSET LockEnum,        SEG code
 ot19 DW OFFSET UnlockEnum,      SEG code
 ot20 DW OFFSET AllocateHubPort,  SEG code
 ot21 DW OFFSET FreeHubPort,     SEG code
+ot22 DW OFFSET Has64Bit,        SEG code
 
 InitFunction    Proc near
     push es
@@ -2837,7 +2856,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,22
+    mov cx,23
 
 ifTabLoop:
     lods dword ptr cs:[si]
