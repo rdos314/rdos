@@ -725,7 +725,8 @@ hub_thread_wait:
     mov bx,gs:hub_status_req
     IsUsbReqStarted
     jnc hub_thread_wait_signal
-;
+
+hub_thread_restart:
     ClearSignal
     GetThread
     mov cx,gs:hub_status_size
@@ -739,8 +740,12 @@ hub_thread_wait_signal:
 ;
     mov bx,gs:hub_status_req
     IsUsbReqReady
-    jc hub_thread_wait_signal
-    
+    jnc hub_thread_is_ready
+;
+    int 3
+    jmp hub_thread_restart
+
+hub_thread_is_ready:    
     GetUsbReqData
     cmp cx,gs:hub_status_size
     je hub_thread_handle

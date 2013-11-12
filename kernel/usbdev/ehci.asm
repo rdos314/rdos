@@ -287,6 +287,14 @@ uplElemLoop:
     or edx,edx
     jz uplNext
 ;    
+    mov eax,es:[edx].qh_current_qtd
+    or eax,eax
+    jz uplNext
+;
+    mov al,es:[edx].qh_status
+    test al,80h
+    jnz uplNext
+;    
     mov eax,es:[edx].qh_next_qtd
     test al,1
     jz uplNext
@@ -1007,6 +1015,8 @@ raqFound:
     mov es:[edi].qh_link,eax   
 
 raqFree:
+    mov ax,10
+    WaitMilliSec
     call FreeBlock128
 ;
     pop edi
@@ -2595,7 +2605,6 @@ UpdatePort   Proc near
     movzx di,cl
     add di,di
 ;    
-    mov es,ds:ehc_reg_sel
     mov eax,es:[si].HcPortSc
     mov es:[si].HcPortSc,eax    ; reset change bit!    
 ; 
@@ -2745,6 +2754,12 @@ UpdateAllPorts   Proc near
     push cx
 ;    
     xor cl,cl
+    mov es,ds:ehc_reg_sel
+    mov eax,es:HcCommand
+    test al,1
+    jnz uaPortLoop
+;
+    int 3
 
 uaPortLoop:
     cmp cl,ds:ehc_ports
