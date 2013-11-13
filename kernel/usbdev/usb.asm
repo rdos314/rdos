@@ -191,7 +191,7 @@ CreateDefaultControl    Proc near
     push edi
 ;    
     push ax
-    call ds:create_control_proc
+    call fword ptr ds:create_control_proc
 ;    
     mov es:usbf_in_endpoint_arr,fs    
     mov es:usbf_out_endpoint_arr,fs    
@@ -224,16 +224,16 @@ CreateDefaultControl    Proc near
     mov es:usd_index,0
     mov es:usd_len,0
     mov cx,8
-    call ds:add_setup_proc
-    call ds:add_status_in_proc
-    call ds:issue_transfer_proc
+    call fword ptr ds:add_setup_proc
+    call fword ptr ds:add_status_in_proc
+    call fword ptr ds:issue_transfer_proc
     pop ax
 ;  
     mov fs:usbp_address,al
-    call ds:wait_for_completion_proc
+    call fword ptr ds:wait_for_completion_proc
     pushf
     FreeMem
-    call ds:change_address_proc
+    call fword ptr ds:change_address_proc
     popf
 ;
     pop edi
@@ -265,7 +265,7 @@ CreateBulk    Proc near
     push bx
     push dx
 ;    
-    call ds:create_bulk_proc    
+    call fword ptr ds:create_bulk_proc    
     movzx bx,dl
     and bx,0Fh
     add bx,bx    
@@ -331,7 +331,7 @@ CreateInterrupt    Proc near
     push dx
 ;    
     mov al,dh
-    call ds:create_interrupt_proc    
+    call fword ptr ds:create_interrupt_proc    
     movzx bx,dl
     and bx,0Fh
     add bx,bx    
@@ -400,22 +400,22 @@ GetDescr    Proc near
 ;    
     push cx
     mov cx,8
-    call ds:add_setup_proc
+    call fword ptr ds:add_setup_proc
     pop cx
 ;
     pop edi
     pop cx
     pop es
 ;    
-    call ds:add_in_proc
-    call ds:add_status_out_proc
-    call ds:issue_transfer_proc
-    call ds:wait_for_completion_proc
+    call fword ptr ds:add_in_proc
+    call fword ptr ds:add_status_out_proc
+    call fword ptr ds:issue_transfer_proc
+    call fword ptr ds:wait_for_completion_proc
 ;    
     pushf
     mov es,bx
     FreeMem    
-    call ds:get_data_size_proc
+    call fword ptr ds:get_data_size_proc
     popf
 ;
     pop bx
@@ -464,7 +464,7 @@ cpConfNext:
     add bx,2
     loop cpConfLoop    
 ;
-    call ds:close_pipe_proc
+    call fword ptr ds:close_pipe_proc
 ;
     pop ax
     verr ax
@@ -865,7 +865,7 @@ notify_usb_attach       Proc far
     AllocateSmallGlobalMem
 
 nuaRetry:
-    call ds:is_connected_proc
+    call fword ptr ds:is_connected_proc
     jc nuaDone
 ;
     xor edi,edi
@@ -880,7 +880,7 @@ nuaRetry:
     movzx eax,es:udd_len
     FreeMem
 ;
-    call ds:is_connected_proc
+    call fword ptr ds:is_connected_proc
     jc nuaDone
 ;    
     AllocateSmallGlobalMem
@@ -895,7 +895,7 @@ nuaRetry:
     xor bx,bx
 
 nuaLoop:
-    call ds:is_connected_proc
+    call fword ptr ds:is_connected_proc
     jc nuaDone
 ;    
     mov eax,8
@@ -908,7 +908,7 @@ nuaLoop:
     movzx eax,es:ucd_size
     FreeMem
 ;
-    call ds:is_connected_proc
+    call fword ptr ds:is_connected_proc
     jc nuaDone
 ;
     AllocateSmallGlobalMem
@@ -929,7 +929,7 @@ nuaLoop:
     jb nuaLoop
 
 nuaNotify:
-    call ds:is_connected_proc
+    call fword ptr ds:is_connected_proc
     jc nuaDone
 ;    
     xor ax,ax
@@ -1298,7 +1298,7 @@ ReqWriteControl Proc near
 ;       
     mov es,es:re_buf_sel
     xor edi,edi
-    call ds:add_setup_proc
+    call fword ptr ds:add_setup_proc
 ;       
     pop edi
     pop es      
@@ -1326,7 +1326,7 @@ ReqWriteData    Proc near
 ;       
     mov es,es:re_buf_sel
     xor edi,edi
-    call ds:add_out_proc
+    call fword ptr ds:add_out_proc
 ;       
     pop edi
     pop es      
@@ -1355,7 +1355,7 @@ ReqReadData     Proc near
     xor edi,edi
     mov cx,es:re_size
     mov es,es:re_buf_sel
-    call ds:add_in_proc
+    call fword ptr ds:add_in_proc
 ;       
     pop edi
     pop cx
@@ -1378,7 +1378,7 @@ ReqReadData Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReqStatusIn     Proc near
-    call ds:add_status_in_proc
+    call fword ptr ds:add_status_in_proc
     ret
 ReqStatusIn Endp
 
@@ -1397,7 +1397,7 @@ ReqStatusIn Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReqStatusOut    Proc near
-    call ds:add_status_out_proc
+    call fword ptr ds:add_status_out_proc
     ret
 ReqStatusOut Endp
 
@@ -1448,7 +1448,7 @@ surStart:
     mov ax,ds:[ebx].rh_list
     mov fs,ds:[ebx].rh_pipe_sel
     mov ds,ds:[ebx].rh_func_sel
-    call ds:end_transfer_proc
+    call fword ptr ds:end_transfer_proc
 
 surReqLoop:
     or ax,ax
@@ -1470,7 +1470,7 @@ surReqLoop:
 
 surIssue:
     ClearSignal
-    call ds:issue_transfer_proc
+    call fword ptr ds:issue_transfer_proc
 
 surDone:    
     pop ebx
@@ -1507,7 +1507,7 @@ stop_usb_req    Proc far
     push ds
     mov fs,ds:[ebx].rh_pipe_sel
     mov ds,ds:[ebx].rh_func_sel
-    call ds:end_transfer_proc
+    call fword ptr ds:end_transfer_proc
     pop ds
 ;
     mov ax,5
@@ -1604,7 +1604,7 @@ is_usb_req_ready    Proc far
     push ds
     mov fs,ds:[ebx].rh_pipe_sel
     mov ds,ds:[ebx].rh_func_sel
-    call ds:is_transfer_done_proc
+    call fword ptr ds:is_transfer_done_proc
     pop ds
     jc iurrDone
 ;
@@ -1654,7 +1654,7 @@ get_usb_req_data    Proc far
     mov fs,ds:[ebx].rh_pipe_sel
     mov ax,ds:[ebx].rh_list
     mov ds,ds:[ebx].rh_func_sel
-    call ds:was_transfer_ok_proc
+    call fword ptr ds:was_transfer_ok_proc
     jc gurdDone
 
 gurdReqLoop:
@@ -1667,7 +1667,7 @@ gurdReqLoop:
     cmp al,REQ_TYPE_READ_DATA
     jne gurdNext
 ;    
-    call ds:get_data_size_proc
+    call fword ptr ds:get_data_size_proc
     jmp gurdDone
 
 gurdNext:
@@ -1712,7 +1712,7 @@ close_usb_req   Proc far
     push ds
     mov fs,ds:[ebx].rh_pipe_sel
     mov ds,ds:[ebx].rh_func_sel
-    call ds:end_transfer_proc
+    call fword ptr ds:end_transfer_proc
     pop ds
 ;    
     mov ax,5
@@ -2031,10 +2031,10 @@ config_usb_device       Proc near
     mov es:usd_len,0
 ;    
     mov cx,8
-    call ds:add_setup_proc
-    call ds:add_status_in_proc
-    call ds:issue_transfer_proc
-    call ds:wait_for_completion_proc
+    call fword ptr ds:add_setup_proc
+    call fword ptr ds:add_status_in_proc
+    call fword ptr ds:issue_transfer_proc
+    call fword ptr ds:wait_for_completion_proc
 ;
     pushf
     FreeMem
@@ -2313,7 +2313,7 @@ reset_usb_pipe     Proc far
 ;
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
-    call ds:reset_pipe_proc
+    call fword ptr ds:reset_pipe_proc
 
 rupDone:
     pop ebx
@@ -2430,7 +2430,7 @@ is_pipe_idle    PROC far
 ;
     mov ds,es:pw_func_sel
     mov fs,es:pw_pipe_sel
-    call ds:is_transfer_done_proc
+    call fword ptr ds:is_transfer_done_proc
     cmc
 ;
     pop fs
@@ -2602,7 +2602,7 @@ write_usb_control16     Proc far
     movzx edi,di
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
-    call ds:add_setup_proc
+    call fword ptr ds:add_setup_proc
 
 wucDone16:
     pop cx
@@ -2626,7 +2626,7 @@ write_usb_control32     Proc far
 ;
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
-    call ds:add_setup_proc
+    call fword ptr ds:add_setup_proc
 
 wucDone32:
     pop cx
@@ -2665,7 +2665,7 @@ req_usb_data    Proc far
 ;
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
-    call ds:add_in_proc
+    call fword ptr ds:add_in_proc
 
 rudDone:
     pop ebx
@@ -2703,7 +2703,7 @@ get_usb_data_size16     Proc far
 ;
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
-    call ds:get_data_size_proc
+    call fword ptr ds:get_data_size_proc
     mov ax,cx
 
 gudDone16:
@@ -2726,7 +2726,7 @@ get_usb_data_size32     Proc far
 ;
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
-    call ds:get_data_size_proc
+    call fword ptr ds:get_data_size_proc
     movzx eax,cx
 
 gudDone32:
@@ -2767,7 +2767,7 @@ write_usb_data16    Proc far
     movzx edi,di
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
-    call ds:add_out_proc
+    call fword ptr ds:add_out_proc
 
 wudDone16:
     pop cx
@@ -2791,7 +2791,7 @@ write_usb_data32    Proc far
 ;
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
-    call ds:add_out_proc
+    call fword ptr ds:add_out_proc
 
 wudDone32:
     pop cx
@@ -2828,7 +2828,7 @@ req_usb_status  Proc far
 ;
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
-    call ds:add_status_in_proc
+    call fword ptr ds:add_status_in_proc
 
 rusDone:
     pop cx
@@ -2864,7 +2864,7 @@ write_usb_status    Proc far
 ;
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
-    call ds:add_status_out_proc
+    call fword ptr ds:add_status_out_proc
 
 wusDone:
     pop cx
@@ -2899,7 +2899,7 @@ start_usb_trans Proc far
 ;
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
-    call ds:issue_transfer_proc
+    call fword ptr ds:issue_transfer_proc
 
 sutDone:
     pop ebx
@@ -2935,7 +2935,7 @@ is_usb_trans_done       Proc far
 ;
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
-    call ds:is_transfer_done_proc
+    call fword ptr ds:is_transfer_done_proc
 
 iutdDone:
     pop ebx
@@ -2971,7 +2971,7 @@ was_usb_trans_ok    Proc far
 ;
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
-    call ds:was_transfer_ok_proc
+    call fword ptr ds:was_transfer_ok_proc
 
 wutoDone:
     pop ebx

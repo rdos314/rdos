@@ -44,82 +44,82 @@ USB_LOW_SPEED = 1
 usb_dev_struc   STRUC
 
 ; OUT FS        Pipe selector
-create_control_proc	DD ?
+create_control_proc	DD ?,?
 
 ; OUT FS        Pipe selector
-create_bulk_proc	DD ?
+create_bulk_proc	DD ?,?
 
 ; IN  AL        Interval
 ; OUT FS        Pipe selector
-create_interrupt_proc	DD ?
+create_interrupt_proc	DD ?,?
 
 ; IN  FS        Pipe selector
 ; IN  CX        Size
 ; IN  ES:EDI    Data
-add_setup_proc      DD ?
+add_setup_proc      DD ?,?
 
 ; IN  FS        Pipe selector
 ; IN  CX        Size
 ; IN  ES:EDI    Data
-add_out_proc      DD ?
+add_out_proc      DD ?,?
 
 ; IN  FS        Pipe selector
 ; IN  CX        Buffer size
 ; IN  ES:EDI    Buffer
-add_in_proc      DD ?
+add_in_proc      DD ?,?
 
 ; IN  FS        Pipe selector
-add_status_out_proc      DD ?
+add_status_out_proc      DD ?,?
 
 ; IN  FS        Pipe selector
-add_status_in_proc      DD ?
+add_status_in_proc      DD ?,?
 
 ; IN  FS        Pipe selector
-issue_transfer_proc      DD ?
+issue_transfer_proc      DD ?,?
 
 ;  IN FS        Is request ready?
-is_transfer_done_proc      DD ?
+is_transfer_done_proc      DD ?,?
 
 ; IN  FS        Pipe selector
-end_transfer_proc      DD ?
+end_transfer_proc      DD ?,?
 
 ; IN  FS        Pipe selector
 ; OUT NC        Transaction ok
-was_transfer_ok_proc      DD ?
+was_transfer_ok_proc      DD ?,?
 
 ; IN  FS        Pipe selector
 ; OUT CX        Returned size
-get_data_size_proc      DD ?
+get_data_size_proc      DD ?,?
 
 ; IN  FS        Pipe selector
-close_pipe_proc     DD ?
+close_pipe_proc     DD ?,?
 
 ; IN  FS        Pipe selector
-wait_for_completion_proc      DD ?
+wait_for_completion_proc      DD ?,?
 
 ; IN  FS        Pipe selector
-change_address_proc      DD ?
+change_address_proc      DD ?,?
 
 ;  IN FS        Is connected?
-is_connected_proc      DD ?
+is_connected_proc      DD ?,?
 
 ; IN  FS        Pipe selector
-reset_pipe_proc        DD ?
+reset_pipe_proc        DD ?,?
 
-lock_enum_proc         DD ?
+lock_enum_proc         DD ?,?
 
-unlock_enum_proc       DD ?
+unlock_enum_proc       DD ?,?
 
 ; IN  GS        Hub selector
 ; IN  DX        Hub port
 ; OUT AL        Port
-allocate_hub_port_proc DD ?
+allocate_hub_port_proc DD ?,?
 
 ; IN  GS        Hub selector
 ; IN  AL        Port
-free_hub_port_proc     DD ?
+free_hub_port_proc     DD ?,?
 
-has_64bit_proc         DD ?
+has_64bit_proc         DD ?,?
 
 usb_controller_id   DW ?
 usb_port_sel_arr    DW MAX_USB_HUB_PORTS DUP(?)

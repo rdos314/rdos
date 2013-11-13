@@ -2825,17 +2825,17 @@ write_hid_loop:
 ;    
     xor edi,edi
     mov ecx,8
-    call ds:add_setup_proc
+    call fword ptr ds:add_setup_proc
     FreeMem
 ;
     pop edi
     pop es    
 ;
     mov ecx,8
-    call ds:add_out_proc
-    call ds:add_status_in_proc
-    call ds:issue_transfer_proc
-    call ds:wait_for_completion_proc    
+    call fword ptr ds:add_out_proc
+    call fword ptr ds:add_status_in_proc
+    call fword ptr ds:issue_transfer_proc
+    call fword ptr ds:wait_for_completion_proc    
 ;    
     pop cx
 ;

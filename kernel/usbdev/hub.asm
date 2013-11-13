@@ -606,13 +606,13 @@ UpdateOnePort    Proc near
     or al,al
     jnz uopHasPort
 ;    
-    call ds:allocate_hub_port_proc
+    call fword ptr ds:allocate_hub_port_proc
     jc uopDone
 ;
     mov gs:[bx].hps_dev_port,al
 
 uopHasPort:
-    call ds:lock_enum_proc
+    call fword ptr ds:lock_enum_proc
 ;
     mov dx,si
     mov ax,PORT_RESET
@@ -644,7 +644,7 @@ uopIsEnabled:
     call HubAttach 
 
 uopUnlock:   
-    call ds:unlock_enum_proc
+    call fword ptr ds:unlock_enum_proc
     jmp uopDone
 
 uopNotConnected:
@@ -655,7 +655,7 @@ uopNotConnected:
     mov dx,si
     call HubDetach
 ;    
-    call ds:free_hub_port_proc
+    call fword ptr ds:free_hub_port_proc
     mov gs:[bx].hps_dev_port,0
 
 uopDone:    
@@ -806,7 +806,7 @@ hub_close_port_loop:
     mov dx,si
     call HubDetach
 ;    
-    call ds:free_hub_port_proc
+    call fword ptr ds:free_hub_port_proc
 
 hub_close_port_next:    
     pop si

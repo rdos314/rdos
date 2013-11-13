@@ -1542,7 +1542,7 @@ ccLinkPeriod:
 ;
     popad
     pop es
-    ret
+    retf32
 CreateControl   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1582,7 +1582,7 @@ CreateBulk   Proc far
 ;
     popad
     pop es
-    ret
+    retf32
 CreateBulk   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1636,7 +1636,7 @@ CreateIntr   Proc far
     popad
     pop gs
     pop es
-    ret
+    retf32
 CreateIntr  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1787,7 +1787,7 @@ asDone:
     popad
     pop es
     pop gs
-    ret
+    retf32
 AddSetup    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1812,7 +1812,7 @@ AddOut    Proc far
     call AddBuffer
 ;    
     pop edx
-    ret
+    retf32
 AddOut    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1837,7 +1837,7 @@ AddIn    Proc far
     call AddBuffer
 ;    
     pop edx
-    ret
+    retf32
 AddIn    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1871,7 +1871,7 @@ asoDone:
     pop edx
     pop ecx
     pop eax    
-    ret
+    retf32
 AddStatusOut    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1905,7 +1905,7 @@ asiDone:
     pop edx
     pop ecx
     pop eax    
-    ret
+    retf32
 AddStatusIn    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1949,13 +1949,13 @@ itDone:
     pop ecx
     pop eax
     pop es
-    ret
+    retf32
 IssueTransfer    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           IsTransferDone
+;           NAME:           LocalIsTransferDone
 ;
 ;           DESCRIPTION:    Check if transfer is done
 ;
@@ -1964,7 +1964,7 @@ IssueTransfer    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-IsTransferDone   Proc far
+LocalIsTransferDone   Proc near
     push es
     push eax
     push edx
@@ -1972,7 +1972,7 @@ IsTransferDone   Proc far
     test fs:usp_flags, USP_FLAG_TRANSFER_PENDING
     jz itdOk
 ;    
-    call IsConnected
+    call LocalIsConnected
     jc itdOk
 ;    
     mov ax,flat_sel
@@ -2013,6 +2013,23 @@ itdEnd:
     pop eax
     pop es
     ret
+LocalIsTransferDone   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IsTransferDone
+;
+;           DESCRIPTION:    Check if transfer is done
+;
+;       PARAMETERS:     DS      Function selector
+;               FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsTransferDone   Proc far
+    call LocalIsTransferDone
+    retf32
 IsTransferDone   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2034,17 +2051,17 @@ WaitForCompletion   Proc far
     jz wfcDone
 
 wfcWait:
-    call IsTransferDone
+    call LocalIsTransferDone
     jnc wfcDone
 ;
     WaitForSignal
     jmp wfcWait
 
 wfcDone:
-    call EndTransfer
+    call LocalEndTransfer
 ;    
     pop eax
-    ret
+    retf32
 WaitForCompletion   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2065,7 +2082,7 @@ WasTransferOk   Proc far
     test fs:usp_flags, USP_FLAG_TRANSFER_PENDING
     jz wtoNotPending
 ;
-    call EndTransfer
+    call LocalEndTransfer
 
 wtoNotPending:
     test fs:usp_flags, USP_FLAG_TRANSFER_OK
@@ -2078,13 +2095,13 @@ wtoOk:
     clc
 
 wtoDone:
-    ret
+    retf32
 WasTransferOk   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           EndTransfer
+;           NAME:           LocalEndTransfer
 ;
 ;           DESCRIPTION:    End transfer and get input data
 ;
@@ -2093,7 +2110,7 @@ WasTransferOk   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EndTransfer   Proc far
+LocalEndTransfer   Proc near
     push es
     push ax
     push edx
@@ -2136,6 +2153,23 @@ etDone:
     pop ax
     pop es
     ret
+LocalEndTransfer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           EndTransfer
+;
+;           DESCRIPTION:    End transfer and get input data
+;
+;       PARAMETERS:     DS      Function selector
+;               FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EndTransfer   Proc far
+    call LocalEndTransfer
+    retf32
 EndTransfer   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2160,7 +2194,7 @@ GetDataSize   Proc far
     mov cx,fs:usp_data_size
 
 gdsDone:
-    ret
+    retf32
 GetDataSize   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2253,7 +2287,7 @@ rpSetupDone:
     pop edx
     pop eax
     pop es
-    ret
+    retf32
 ClosePipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2269,13 +2303,13 @@ ClosePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ChangeAddress   Proc far
-    ret
+    retf32
 ChangeAddress   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           IsConnected
+;           NAME:           LocalIsConnected
 ;
 ;           DESCRIPTION:    Check if pipe is connected
 ;
@@ -2284,7 +2318,7 @@ ChangeAddress   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-IsConnected   Proc far
+LocalIsConnected   Proc near
     push es
     push ax
     push dx
@@ -2311,6 +2345,23 @@ icDone:
     pop ax
     pop es
     ret
+LocalIsConnected   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IsConnected
+;
+;           DESCRIPTION:    Check if pipe is connected
+;
+;       PARAMETERS:     DS      Function selector
+;               FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsConnected   Proc far
+    call LocalIsConnected
+    retf32
 IsConnected   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2347,7 +2398,7 @@ ResetPipe   Proc far
     pop dx
     pop ax
     pop es
-    ret
+    retf32
 ResetPipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2363,7 +2414,7 @@ ResetPipe   Endp
 
 LockEnum   Proc far
     EnterSection ds:uhc_section
-    ret
+    retf32
 LockEnum   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2379,7 +2430,7 @@ LockEnum   Endp
 
 UnlockEnum   Proc far
     LeaveSection ds:uhc_section
-    ret
+    retf32
 UnlockEnum   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2398,7 +2449,7 @@ UnlockEnum   Endp
 
 AllocateHubPort   Proc far
     stc
-    ret
+    retf32
 AllocateHubPort     Endp
     
 
@@ -2417,7 +2468,7 @@ AllocateHubPort     Endp
 
 FreeHubPort   Proc far
     stc
-    ret
+    retf32
 FreeHubPort     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2435,7 +2486,7 @@ FreeHubPort     Endp
 
 Has64Bit   Proc far
     stc
-    ret
+    retf32
 Has64Bit     Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2550,29 +2601,29 @@ UpdatePort   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 uhci_tab:
-ut00 DW OFFSET CreateControl,       SEG code
-ut01 DW OFFSET CreateBulk,          SEG code
-ut02 DW OFFSET CreateIntr,          SEG code
-ut03 DW OFFSET AddSetup,        SEG code
-ut04 DW OFFSET AddOut,          SEG code
-ut05 DW OFFSET AddIn,           SEG code
-ut06 DW OFFSET AddStatusOut,    SEG code
-ut07 DW OFFSET AddStatusIn,         SEG code
-ut08 DW OFFSET IssueTransfer,       SEG code
-ut09 DW OFFSET IsTransferDone,      SEG code
-ut10 DW OFFSET EndTransfer,     SEG code
-ut11 DW OFFSET WasTransferOk,       SEG code
-ut12 DW OFFSET GetDataSize,     SEG code
-ut13 DW OFFSET ClosePipe,       SEG code
-ut14 DW OFFSET WaitForCompletion,   SEG code
-ut15 DW OFFSET ChangeAddress,       SEG code
-ut16 DW OFFSET IsConnected,     SEG code
-ut17 DW OFFSET ResetPipe,       SEG code
-ut18 DW OFFSET LockEnum,        SEG code
-ut19 DW OFFSET UnlockEnum,      SEG code
-ut20 DW OFFSET AllocateHubPort, SEG code
-ut21 DW OFFSET FreeHubPort,     SEG code
-ut22 DW OFFSET Has64Bit,        SEG code
+ut00 DD OFFSET CreateControl,       SEG code
+ut01 DD OFFSET CreateBulk,          SEG code
+ut02 DD OFFSET CreateIntr,          SEG code
+ut03 DD OFFSET AddSetup,        SEG code
+ut04 DD OFFSET AddOut,          SEG code
+ut05 DD OFFSET AddIn,           SEG code
+ut06 DD OFFSET AddStatusOut,    SEG code
+ut07 DD OFFSET AddStatusIn,         SEG code
+ut08 DD OFFSET IssueTransfer,       SEG code
+ut09 DD OFFSET IsTransferDone,      SEG code
+ut10 DD OFFSET EndTransfer,     SEG code
+ut11 DD OFFSET WasTransferOk,       SEG code
+ut12 DD OFFSET GetDataSize,     SEG code
+ut13 DD OFFSET ClosePipe,       SEG code
+ut14 DD OFFSET WaitForCompletion,   SEG code
+ut15 DD OFFSET ChangeAddress,       SEG code
+ut16 DD OFFSET IsConnected,     SEG code
+ut17 DD OFFSET ResetPipe,       SEG code
+ut18 DD OFFSET LockEnum,        SEG code
+ut19 DD OFFSET UnlockEnum,      SEG code
+ut20 DD OFFSET AllocateHubPort, SEG code
+ut21 DD OFFSET FreeHubPort,     SEG code
+ut22 DD OFFSET Has64Bit,        SEG code
 
 InitFunction    Proc near
     pushad
@@ -2600,7 +2651,7 @@ ifNotLegacy:
 ;
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,23
+    mov cx,2*23
 
 ifTabLoop:
     lods dword ptr cs:[si]
