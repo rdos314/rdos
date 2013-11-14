@@ -2954,9 +2954,15 @@ delete_handle   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init    Proc far
-    mov bx,SEG data
-    mov ds,bx
+    public InitHid_
+
+InitHid_    Proc near
+    push ds
+    push es
+    pushad
+;    
+    mov ebx,SEG data
+    mov ds,ebx
     InitSection ds:hid_section
     mov ds:hid_dev_list,0
     mov ds:hid_detach_list,0
@@ -2966,9 +2972,9 @@ init    Proc far
     mov ds:hid_key_mod,0
     mov ds:hid_key_arr,0
 ;       
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
 ;
     mov ax,HID_HANDLE
     mov edi,OFFSET delete_handle
@@ -3012,9 +3018,13 @@ init    Proc far
     mov ax,write_hid_nr
     RegisterUserGate
     clc
+;
+    popad
+    pop es
+    pop ds    
     ret
-init    Endp
+InitHid_    Endp
 
 code    ENDS
 
-    END init
+    END
