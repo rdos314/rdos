@@ -904,8 +904,14 @@ GetModuleFocusKey	MACRO
 					ENDM
 
 ; OUT BX		Module handle
-GetCurrentModule	MACRO
-	UserGate get_current_module_nr
+GetCurrentDll	MACRO
+	UserGate get_current_dll_nr
+					ENDM
+
+; IN  BX		Module handle
+; OUT BX        Duplicated file handle
+DuplModuleFileHandle	MACRO
+	UserGate dupl_module_file_handle_nr
 					ENDM
 
 ; IN  ES:(E)DI	Module name

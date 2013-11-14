@@ -243,6 +243,18 @@ init_app    PROC near
     mov ax,free_dll_nr
     RegisterBimodalUserGate
 ;
+    mov si,OFFSET get_current_dll
+    mov di,OFFSET get_current_dll_name
+    xor dx,dx
+    mov ax,get_current_dll_nr
+    RegisterBimodalUserGate
+;
+    mov si,OFFSET dupl_module_file_handle
+    mov di,OFFSET dupl_module_file_handle_name
+    xor dx,dx
+    mov ax,dupl_module_file_handle_nr
+    RegisterBimodalUserGate
+;
     mov si,OFFSET get_module_focus_key
     mov di,OFFSET get_module_focus_key_name
     xor dx,dx
@@ -437,6 +449,8 @@ run_open_hooks  Proc near
     mov ds:app_load_dll_proc+4,0
     mov ds:app_patch_proc,0
     mov ds:app_patch_proc+4,0
+    mov ds:app_get_current_dll_proc,0
+    mov ds:app_get_current_dll_proc+4,0
 ;
     InitSection ds:app_lib_section
     mov ds:app_env,0
@@ -1450,6 +1464,53 @@ free_dll  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetCurrentDll
+;
+;           DESCRIPTION:    Get current DLL module handle
+;
+;       PARAMETERS:         ES:EDI      Code position
+;
+;       RETURNS:            BX          Module handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_current_dll_name       DB 'Get Current Dll',0
+
+get_current_dll  Proc far
+    push ebp
+    mov ebp,esp
+    push ds
+    push es
+    push eax
+    push edi
+;    
+    les edi,[ebp+4]    
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov eax,ds:app_get_current_dll_proc
+    or eax,ds:app_get_current_dll_proc+4
+    stc
+    jz get_current_dll_done
+;
+    call fword ptr ds:app_get_current_dll_proc
+    jc get_current_dll_done
+;
+    mov es,bx
+    mov bx,es:mod_handle
+
+get_current_dll_done:
+    pop edi
+    pop eax
+    pop es
+    pop ds    
+    pop ebp
+    retf32
+get_current_dll  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetModuleFocusKey
 ;
 ;           DESCRIPTION:    Get module focus key
@@ -1484,6 +1545,48 @@ get_module_focus_done:
     pop ds    
     retf32
 get_module_focus_key  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DuplModuleFileHandle
+;
+;           DESCRIPTION:    Dupl module file handle
+;
+;       PARAMETERS:         BX          Module handle
+;
+;       RETURNS:            BX          Duplicated file handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dupl_module_file_handle_name       DB 'Dupl Module File Handle',0
+
+dupl_module_file_handle  Proc far
+    push ds
+    push eax
+;    
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc dupl_module_file_handle_done
+;
+    mov bx,[ebx].mh_sel
+    or bx,bx
+    stc
+    jz dupl_module_file_handle_done
+;
+    mov ds,bx
+    mov eax,ds:mod_dupl_file_handle_proc
+    or eax,ds:mod_dupl_file_handle_proc+4
+    stc
+    jz dupl_module_file_handle_done
+;    
+    call fword ptr ds:mod_dupl_file_handle_proc
+
+dupl_module_file_handle_done:
+    pop eax
+    pop ds    
+    retf32
+dupl_module_file_handle  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

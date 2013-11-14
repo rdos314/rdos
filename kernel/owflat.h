@@ -2296,6 +2296,11 @@
     CallGate_calc_crc  \
     parm [ebx] [ax] [edi] [ecx] \
     value [ax];
+    
+#pragma aux RdosGetCurrentDllHandle = \
+    CallGate_get_current_dll  \
+    ValidateHandle \
+    value [ebx];
 
 #pragma aux RdosGetModuleHandle = \
     "mov eax,fs:[0x24]" \
@@ -2334,6 +2339,12 @@
 
 // ReadResource here
 // ReadBinaryResource here
+
+#pragma aux RdosDuplModuleFileHandle = \
+    CallGate_dupl_module_file_handle  \
+    ValidateHandle \
+    parm [ebx] \
+    value [ebx];
 
 #pragma aux RdosGetModuleProc = \
     CallGate_get_module_proc  \

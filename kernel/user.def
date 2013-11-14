@@ -431,7 +431,6 @@ set_fm_release_nr           = 366
 play_fm_note_nr             = 367
 
 get_thread_linear_nr        = 368
-get_current_module_nr       = 369
 
 get_module_focus_key_nr     = 370
 
@@ -670,5 +669,8 @@ get_udp_listen_port_nr          = 531
 get_udp_listen_data_nr          = 532
 clear_udp_listen_nr             = 533
 close_udp_listen_nr             = 534
+
+get_current_dll_nr              = 535
+dupl_module_file_handle_nr      = 536
 
 usergate_entries			    = 540

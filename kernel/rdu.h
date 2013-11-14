@@ -431,7 +431,6 @@
 #define usergate_play_fm_note 0x0000016F
 
 #define usergate_get_thread_linear 0x00000170
-#define usergate_get_current_module 0x00000171
 
 #define usergate_get_module_focus_key 0x00000172
 
@@ -670,6 +669,9 @@
 #define usergate_get_udp_listen_data 0x00000214
 #define usergate_clear_udp_listen 0x00000215
 #define usergate_close_udp_listen 0x00000216
+
+#define usergate_get_current_dll 0x00000217
+#define usergate_dupl_module_file_handle 0x00000218
 
 
 
@@ -1107,7 +1109,6 @@
 #define CallGate_play_fm_note 0x67 0x9a 111 1 0 0 3 0
 
 #define CallGate_get_thread_linear 0x67 0x9a 112 1 0 0 3 0
-#define CallGate_get_current_module 0x67 0x9a 113 1 0 0 3 0
 
 #define CallGate_get_module_focus_key 0x67 0x9a 114 1 0 0 3 0
 
@@ -1346,6 +1347,9 @@
 #define CallGate_get_udp_listen_data 0x67 0x9a 20 2 0 0 3 0
 #define CallGate_clear_udp_listen 0x67 0x9a 21 2 0 0 3 0
 #define CallGate_close_udp_listen 0x67 0x9a 22 2 0 0 3 0
+
+#define CallGate_get_current_dll 0x67 0x9a 23 2 0 0 3 0
+#define CallGate_dupl_module_file_handle 0x67 0x9a 24 2 0 0 3 0
 
 #else
 
@@ -1781,7 +1785,6 @@
 #define CallGate_play_fm_note 0x3e 0x67 0x9a 111 1 0 0 3 0
 
 #define CallGate_get_thread_linear 0x3e 0x67 0x9a 112 1 0 0 3 0
-#define CallGate_get_current_module 0x3e 0x67 0x9a 113 1 0 0 3 0
 
 #define CallGate_get_module_focus_key 0x3e 0x67 0x9a 114 1 0 0 3 0
 
@@ -2020,5 +2023,8 @@
 #define CallGate_get_udp_listen_data 0x3e 0x67 0x9a 20 2 0 0 3 0
 #define CallGate_clear_udp_listen 0x3e 0x67 0x9a 21 2 0 0 3 0
 #define CallGate_close_udp_listen 0x3e 0x67 0x9a 22 2 0 0 3 0
+
+#define CallGate_get_current_dll 0x3e 0x67 0x9a 23 2 0 0 3 0
+#define CallGate_dupl_module_file_handle 0x3e 0x67 0x9a 24 2 0 0 3 0
 
 #endif

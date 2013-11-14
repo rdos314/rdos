@@ -623,12 +623,14 @@ unsigned short int RDOSAPI RdosCalcCrc(int Handle, unsigned short int CrcVal, co
 
 #ifdef __RDOS__     // these are only available in user-mode
 
+int RDOSAPI RdosGetCurrentDllHandle();
 int RDOSAPI RdosGetModuleHandle();
 const char *RDOSAPI RdosGetExeName();
 const char *RDOSAPI RdosGetCmdLine();
 const char *RDOSAPI RdosGetOptions();
 int RDOSAPI RdosLoadDll(const char *Name);
 void RDOSAPI RdosFreeDll(int handle);
+int RDOSAPI RdosDuplModuleFileHandle(int handle);
 int RDOSAPI RdosGetModuleName(int handle, char *Buf, int Size);
 int RDOSAPI RdosReadResource(int handle, int ID, char *Buf, int Size);
 int RDOSAPI RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);

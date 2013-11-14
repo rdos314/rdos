@@ -47,7 +47,7 @@ TGraphicDevice::TGraphicDevice(int handle)
 	FBpp = 0;
 	FWidth = 0;
 	FHeight = 0;
-	FBitmapHandle = handle;
+	FBitmapHandle = RdosDuplicateBitmapHandle(handle);
     FColor = 0;
 	FLgop = LGOP_NONE;
 	FFilledStyle = FALSE;

@@ -622,6 +622,14 @@
 
 #define osgate_has_long_mode 516
 
+#define osgate_is_usb_hub_port_connected 517
+
+#define osgate_wait_for_ehci 518
+#define osgate_wait_for_ohci 519
+#define osgate_wait_for_uhci 520
+
+#define osgate_has_physical64 521
+
 
 
 
@@ -1247,4 +1255,12 @@
 #define OsGate_create_long_thread_info 0x3E 0x67 0x9a 3 2 0 0 2 0
 
 #define OsGate_has_long_mode 0x3E 0x67 0x9a 4 2 0 0 2 0
+
+#define OsGate_is_usb_hub_port_connected 0x3E 0x67 0x9a 5 2 0 0 2 0
+
+#define OsGate_wait_for_ehci 0x3E 0x67 0x9a 6 2 0 0 2 0
+#define OsGate_wait_for_ohci 0x3E 0x67 0x9a 7 2 0 0 2 0
+#define OsGate_wait_for_uhci 0x3E 0x67 0x9a 8 2 0 0 2 0
+
+#define OsGate_has_physical64 0x3E 0x67 0x9a 9 2 0 0 2 0
 

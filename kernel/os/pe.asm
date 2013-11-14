@@ -1203,6 +1203,9 @@ create_lib_size_ok:
 ;
     mov es:mod_free_dll_proc,0
 ;
+    mov es:mod_dupl_file_handle_proc,OFFSET dupl_file_handle_proc
+    mov es:mod_dupl_file_handle_proc+4,cs
+;
     mov es:mod_get_proc_proc,OFFSET get_module_proc
     mov es:mod_get_proc_proc+4,cs
 ;
@@ -1290,6 +1293,8 @@ InsertApp       Proc near
     mov ds:app_close_proc+4,cs
     mov ds:app_load_dll_proc,OFFSET load_dll
     mov ds:app_load_dll_proc+4,cs
+    mov ds:app_get_current_dll_proc,OFFSET get_current_dll
+    mov ds:app_get_current_dll_proc+4,cs
     mov ds:app_patch_proc,OFFSET section_patch
     mov ds:app_patch_proc+4,cs 
     mov word ptr ds:app_loader_name,OFFSET pe_loader_name
@@ -4967,6 +4972,41 @@ show_exception_text     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           get_current_dll
+;
+;           DESCRIPTION:    Get current DLL
+;
+;       PARAMETERS:         ES:EDI  entry point
+;
+;           RETURNS:        BX      Lib sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_current_dll    Proc far
+    push ds
+    push es
+    push eax
+    push edx
+    push edi
+;       
+    mov edx,edi
+    mov ax,flat_data_sel
+    mov ds,ax
+    and dx,0F000h
+    call FindLib
+    mov bx,es
+;
+    pop edi
+    pop edx
+    pop eax
+    pop es
+    pop ds    
+    ret
+get_current_dll     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           load_dll
 ;
 ;           DESCRIPTION:    Load DLL
@@ -5033,6 +5073,32 @@ free_dll    Proc far
     call FreePeDll
     ret
 free_dll    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DuplFileHandle
+;
+;           DESCRIPTION:    Duplicate file handle for module
+;
+;       PARAMETERS:         BX          Lib sel
+;                           
+;           RETURNS:        BX          Duplicated handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dupl_file_handle_proc Proc far
+    push es
+    push ax
+;    
+    mov es,bx
+    mov ax,es:lib_file_handle
+    DuplFile
+;
+    pop ax   
+    pop es
+    ret
+dupl_file_handle_proc    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

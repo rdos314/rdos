@@ -2290,7 +2290,7 @@ LocalIsConnected Endp
 
 IsConnected   Proc far
     call LocalIsConnected
-    ret
+    retf32
 IsConnected Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
