@@ -1408,22 +1408,22 @@ NumLock   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ActionTab:
-at0 DW OFFSET IgnoreKey
-at1 DW OFFSET StdKey
-at2 DW OFFSET CapsKey
-at3 DW OFFSET FuncKey
-at4 DW OFFSET NumKey
-at5 DW OFFSET DelKey
-at6 DW OFFSET IgnoreKey
-at7 DW OFFSET IgnoreKey
-at8 DW OFFSET EscKey
-at9 DW OFFSET IgnoreKey
-atA DW OFFSET IgnoreKey
-atB DW OFFSET IgnoreKey
-atC DW OFFSET IgnoreKey
-atD DW OFFSET IgnoreKey
-atE DW OFFSET IgnoreKey
-atF DW OFFSET IgnoreKey
+at0 DD OFFSET IgnoreKey
+at1 DD OFFSET StdKey
+at2 DD OFFSET CapsKey
+at3 DD OFFSET FuncKey
+at4 DD OFFSET NumKey
+at5 DD OFFSET DelKey
+at6 DD OFFSET IgnoreKey
+at7 DD OFFSET IgnoreKey
+at8 DD OFFSET EscKey
+at9 DD OFFSET IgnoreKey
+atA DD OFFSET IgnoreKey
+atB DD OFFSET IgnoreKey
+atC DD OFFSET IgnoreKey
+atD DD OFFSET IgnoreKey
+atE DD OFFSET IgnoreKey
+atF DD OFFSET IgnoreKey
 
 TranslateTab:
 ;       Ext     VK      Scan     Normal Shift   Alt     Ctrl    Action   Key descr
@@ -1685,22 +1685,22 @@ tkFE    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
 tkFF    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
 
 TranslateKey    Proc near
-    push bx
-    push si
+    push ebx
+    push esi
 ;    
-    movzx si,al
-    shl si,3
+    movzx esi,al
+    shl esi,3
     add si,OFFSET TranslateTab
-    mov dl,cs:[si].ts_vk
-    mov dh,cs:[si].ts_scan
-    mov cl,cs:[si].ts_action
+    mov dl,cs:[esi].ts_vk
+    mov dh,cs:[esi].ts_scan
+    mov cl,cs:[esi].ts_action
     and cl,0Fh
-    movzx bx,cl
-    add bx,bx
-    call word ptr cs:[bx].ActionTab
+    movzx ebx,cl
+    shl ebx,2
+    call dword ptr cs:[ebx].ActionTab
 ;
-    pop si
-    pop bx
+    pop esi
+    pop ebx
     ret
 TranslateKey    Endp
 
@@ -1727,29 +1727,29 @@ spDone:
 SendPress   Endp
 
 PressTab:
-ap0 DW OFFSET SendPress
-ap1 DW OFFSET SendPress
-ap2 DW OFFSET SendPress
-ap3 DW OFFSET SendPress
-ap4 DW OFFSET SendPress
-ap5 DW OFFSET SendPress
-ap6 DW OFFSET CapsLock
-ap7 DW OFFSET NumLock
+ap0 DD OFFSET SendPress
+ap1 DD OFFSET SendPress
+ap2 DD OFFSET SendPress
+ap3 DD OFFSET SendPress
+ap4 DD OFFSET SendPress
+ap5 DD OFFSET SendPress
+ap6 DD OFFSET CapsLock
+ap7 DD OFFSET NumLock
 
 ReportKeyPress  Proc near
     push ax
-    push bx
+    push ebx
     push cx
     push dx
 ;
     call TranslateKey
-    movzx bx,cl
-    add bx,bx
-    call word ptr cs:[bx].PressTab
+    movzx ebx,cl
+    shl ebx,2
+    call dword ptr cs:[ebx].PressTab
 ;
     pop dx
     pop cx
-    pop bx
+    pop ebx
     pop ax
     ret
 ReportKeyPress  Endp
@@ -1783,29 +1783,29 @@ srDone:
 SendRelease   Endp
 
 ReleaseTab:
-ar0 DW OFFSET SendRelease
-ar1 DW OFFSET SendRelease
-ar2 DW OFFSET SendRelease
-ar3 DW OFFSET SendRelease
-ar4 DW OFFSET SendRelease
-ar5 DW OFFSET SendRelease
-ar6 DW OFFSET IgnoreRelease
-ar7 DW OFFSET IgnoreRelease
+ar0 DD OFFSET SendRelease
+ar1 DD OFFSET SendRelease
+ar2 DD OFFSET SendRelease
+ar3 DD OFFSET SendRelease
+ar4 DD OFFSET SendRelease
+ar5 DD OFFSET SendRelease
+ar6 DD OFFSET IgnoreRelease
+ar7 DD OFFSET IgnoreRelease
 
 ReportKeyRelease  Proc near
     push ax
-    push bx
+    push ebx
     push cx
     push dx
 ;
     call TranslateKey
-    movzx bx,cl
-    add bx,bx
-    call word ptr cs:[bx].ReleaseTab
+    movzx ebx,cl
+    shl ebx,2
+    call dword ptr cs:[ebx].ReleaseTab
 ;
     pop dx
     pop cx
-    pop bx
+    pop ebx
     pop ax
     ret
 ReportKeyRelease  Endp
@@ -2137,7 +2137,7 @@ HandleKeyReport Endp
 
 hid_key_thread_name  DB 'USB Keyboard', 0
 
-hid_key_thread_pr  Proc far
+hid_key_thread_pr:
     mov ax,SEG data
     mov fs,ax
     GetThread
@@ -2244,8 +2244,7 @@ hktDone:
     mov fs:hid_key_mod,0
     mov fs:hid_key_arr,0
     mov fs:hid_key_thread,0
-    ret
-hid_key_thread_pr  Endp
+    TerminateThread
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2304,9 +2303,9 @@ SetupBootMouse    Proc near
 SetupBootMouse    Endp
 
 SetupBootTab:
-sbt00   DW OFFSET SetupBootInvalid
-sbt01   DW OFFSET SetupBootKeyboard
-sbt02   DW OFFSET SetupBootMouse
+sbt00   DD OFFSET SetupBootInvalid
+sbt01   DD OFFSET SetupBootKeyboard
+sbt02   DD OFFSET SetupBootMouse
 
 SetupBoot       Proc near
     push ds
@@ -2324,9 +2323,9 @@ SetupBoot       Proc near
     cmp al,3
     jae sbDone
 ;    
-    movzx di,es:hid_protocol
-    add di,di
-    call word ptr cs:[di].SetupBootTab
+    movzx edi,es:hid_protocol
+    shl edi,2
+    call dword ptr cs:[edi].SetupBootTab
 
 sbDone:
     pop dx
@@ -2431,7 +2430,7 @@ uaDone:
     popad
     pop es
     pop ds
-    retf32
+    ret
 usb_attach  Endp
     
 
@@ -2487,7 +2486,7 @@ udDone:
     popad
     pop es
     pop ds
-    retf32
+    ret
 usb_detach  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2554,7 +2553,7 @@ open_hid_done:
     pop ax
     pop es
     pop ds
-    retf32
+    ret
 open_hid    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2607,7 +2606,7 @@ chDone:
     pop ebx
     pop ax
     pop ds
-    retf32
+    ret
 close_hid  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2640,7 +2639,7 @@ get_hid_pipe  Proc far
 ghpDone:
     pop ebx
     pop ds
-    retf32
+    ret
 get_hid_pipe  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2763,7 +2762,7 @@ rdDone16:
     pop ebx
     pop eax
     pop ds
-    retf32
+    ret
 read_hid16  Endp
 
 read_hid32  Proc far
@@ -2786,7 +2785,7 @@ rdDone32:
     pop ebx
     pop eax
     pop ds
-    retf32
+    ret
 read_hid32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2883,7 +2882,7 @@ wrDone16:
     pop eax
     pop fs
     pop ds
-    retf32
+    ret
 write_hid16  Endp
 
 write_hid32  Proc far
@@ -2915,7 +2914,7 @@ wrDone32:
     pop eax
     pop fs
     pop ds
-    retf32
+    ret
 write_hid32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2943,7 +2942,7 @@ delete_handle_done:
     pop ebx
     pop ax
     pop ds
-    retf32
+    ret
 delete_handle   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2961,6 +2960,11 @@ init    Proc far
     InitSection ds:hid_section
     mov ds:hid_dev_list,0
     mov ds:hid_detach_list,0
+    mov ds:hid_key_thread,0
+    mov ds:hid_key_sel,0
+    mov ds:hid_mouse_sel,0
+    mov ds:hid_key_mod,0
+    mov ds:hid_key_arr,0
 ;       
     mov ax,cs
     mov ds,ax
