@@ -36,16 +36,18 @@ public:
     TImageControl(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
     TImageControl(TControl *control, int xstart, int ystart, int xsize, int ysize);
     TImageControl(TControlThread *dev);
-        TImageControl(TControl *control);
-        virtual ~TImageControl();
+    TImageControl(TControl *control);
+    virtual ~TImageControl();
 
-        static int IsImageControl(TControl *control);
+    void CreateImage(int bpp);
 
-        virtual void Set(const char *IniName, const char *IniSection);
+    static int IsImageControl(TControl *control);
 
-        void LoadImage(const char *FileName);
+    virtual void Set(const char *IniName, const char *IniSection);
 
-        TBitmapGraphicDevice *GetImage(int Id);
+    void LoadImage(const char *FileName);
+
+    TBitmapGraphicDevice *GetImage(int Id);
 
         const char *GetImage();
 

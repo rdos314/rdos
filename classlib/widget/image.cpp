@@ -768,6 +768,27 @@ void TImageControl::LoadImage(const char *FileName)
 
 /*##########################################################################
 #
+#   Name       : TImageControl::CreateImage
+#
+#   Purpose....: Create empty image
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TImageControl::CreateImage(int bpp)
+{
+    TBitmapGraphicDevice *bitmap = new TBitmapGraphicDevice(bpp, GetWidth(), GetHeight());
+
+    FImgArr[0] = bitmap;
+    FCount = 1;
+    FLoading = FALSE;
+    Redraw();
+}
+
+/*##########################################################################
+#
 #   Name       : TImageControl::GetImage
 #
 #   Purpose....: Get current image reference
