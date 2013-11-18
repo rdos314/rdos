@@ -840,7 +840,7 @@ AllocateQtd  ENDP
 
 AllocateInactiveQh      PROC near
     call AllocateQh
-    mov es:[edx].qh_endpoint,80h
+    mov es:[edx].qh_adress,80h
     ret
 AllocateInactiveQh  ENDP
 
@@ -1214,7 +1214,7 @@ AddIntrEntry    PROC near
     mov si,ax
     shl si,3
     mov edx,ds:[bx+si].ehc_qh
-    mov al,es:[edx].qh_endpoint
+    mov al,es:[edx].qh_adress
     test al,80h
     jnz aieQhOk
 ;
@@ -1228,7 +1228,7 @@ aieQhOk:
     mov es:[edx].qh_s_mask,1    
     mov es:[edx].qh_c_mask,2
 ;
-    mov es:[edx].qh_endpoint,60h
+    mov es:[edx].qh_endpoint,20h
 ;    
     mov ax,3008h
     mov es:[edx].qh_max_packet,ax
@@ -1458,7 +1458,7 @@ RemoveIntrQh    PROC near
     mov es:[edx].qh_next_qtd,1
     mov es:[edx].qh_alt_qtd,1
     mov es:[edx].qh_status,0
-    mov es:[edx].qh_endpoint,80h
+    mov es:[edx].qh_adress,80h
     jmp riqUpdate
 
 riqFirst:

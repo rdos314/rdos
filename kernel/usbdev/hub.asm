@@ -736,15 +736,15 @@ hub_thread_wait_signal:
     GetSystemTime
     add eax,1000 * 1193    
     adc edx,0
-    WaitForSignal
-;    WaitForSignalWithTimeout
+;    WaitForSignal
+    WaitForSignalWithTimeout
 ;
     mov bx,gs:hub_status_req
     IsUsbReqReady
     jnc hub_thread_is_ready
 ;
-    int 3
-    jmp hub_thread_restart
+    call UpdatePorts
+    jmp hub_thread_wait_signal
 
 hub_thread_is_ready:    
     GetUsbReqData
