@@ -736,7 +736,8 @@ hub_thread_wait_signal:
     GetSystemTime
     add eax,1000 * 1193    
     adc edx,0
-    WaitForSignalWithTimeout
+    WaitForSignal
+;    WaitForSignalWithTimeout
 ;
     mov bx,gs:hub_status_req
     IsUsbReqReady

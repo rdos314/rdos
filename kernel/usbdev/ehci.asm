@@ -1854,7 +1854,10 @@ AddOut    Proc far
     mov ax,flat_sel
     mov es,ax
     mov edx,fs:esp_qh
-    mov es:[edx].qh_size,0
+;    
+    mov ax,es:[edx].qh_size
+    and ax,8000h
+    mov es:[edx].qh_size,ax
 ;
     mov al,fs:usbp_endpoint
     or al,al
@@ -1907,7 +1910,10 @@ AddIn    Proc far
     mov ax,flat_sel
     mov es,ax
     mov edx,fs:esp_qh
-    mov es:[edx].qh_size,0
+;    
+    mov ax,es:[edx].qh_size
+    and ax,8000h
+    mov es:[edx].qh_size,ax
 ;
     mov al,fs:usbp_endpoint
     or al,al
@@ -2054,10 +2060,7 @@ itLast:
     mov es:[ebx].qtd_flags,al
 
 itDo:
-    mov eax,fs:esp_first
     mov edx,fs:esp_qh
-    mov es:[edx].qh_next_qtd,eax
-;
     mov al,fs:usbp_address
     mov es:[edx].qh_adress,al
 ;    
@@ -2067,6 +2070,9 @@ itDo:
     and ah,0F0h
     or al,ah
     mov es:[edx].qh_endpoint,al    
+;
+    mov eax,fs:esp_first
+    mov es:[edx].qh_next_qtd,eax
 ;
     pop edx
     pop ebx
@@ -2107,6 +2113,10 @@ LocalIsTransferDone   Proc near
     mov eax,es:[edx].qh_current_qtd
     or eax,eax
     jz itdFail
+;
+    mov al,es:[edx].qh_status
+    test al,80h
+    jnz itdFail
 ;    
     mov eax,es:[edx].qh_next_qtd
     test al,1
