@@ -43,6 +43,20 @@ struct THidDevice
 
 struct THidDevice *HidArr[MAX_HID_DEVICES];
 
+#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
+
+void __far ImplTestGate(const char *msg)
+{
+    long long val;
+
+    val = RdosGetLongSysTime();
+    
+    for (;;)
+    {
+        RdosWaitMilli(100);
+    }
+}
+
 /*##########################################################################
 #
 #   Name       : UsbAttach
@@ -124,4 +138,5 @@ int main()
         HidArr[i] = 0;
 
     InitHid();
+    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
 }
