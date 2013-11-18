@@ -31,7 +31,79 @@
 
 #include <stdio.h>
 
+#define MAX_HID_DEVICES 32
+
 extern void InitHid();
+
+struct THidDevice
+{
+    int Controller;
+    int Device;
+};
+
+struct THidDevice *HidArr[MAX_HID_DEVICES];
+
+/*##########################################################################
+#
+#   Name       : UsbAttach
+#
+#   Purpose....: USB attach notification
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux UsbAttach "*" rdosdev parm routine [ebx] [eax]
+void UsbAttach(int controller, int device)
+{
+    int i;
+    struct THidDevice *dev;
+
+    for (i = 0; i < MAX_HID_DEVICES; i++)
+    {
+        if (HidArr[i] == 0)
+        {
+            dev = (struct THidDevice *)RdosAllocateSmallGlobalMem(sizeof(struct THidDevice));
+            dev->Controller = controller;
+            dev->Device = device;
+            HidArr[i] = dev;        
+            break;
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : UsbDetach
+#
+#   Purpose....: USB detach notification
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux UsbDetach "*" rdosdev parm routine [ebx] [eax]
+void UsbDetach(int controller, int device)
+{
+    int i;
+    struct THidDevice *dev;
+
+    for (i = 0; i < MAX_HID_DEVICES; i++)
+    {
+        dev = HidArr[i];
+        if (dev)
+        {
+            if (dev->Controller == controller && dev->Device == device)
+            {
+                RdosFreeMem(RdosPointerToSelector(dev));
+                HidArr[i] = 0;
+                break;
+            }
+        }
+    }
+}
 
 /*##########################################################################
 #
@@ -46,5 +118,10 @@ extern void InitHid();
 ##########################################################################*/
 int main()
 {
+    int i;
+
+    for (i = 0; i < MAX_HID_DEVICES; i++)
+        HidArr[i] = 0;
+
     InitHid();
 }

@@ -2348,6 +2348,8 @@ SetupBoot   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    extern UsbAttach:near
+
 usb_attach  Proc far
     push ds
     push es
@@ -2409,6 +2411,15 @@ uaCheckNext:
 
 uaFound:
     ConfigUsbDevice
+;    
+    push eax
+    push ebx
+    movzx eax,al
+    movzx ebx,bx
+    call UsbAttach
+    pop ebx
+    pop eax
+;
     call GetDetached
     jc uaCreate
 ;
@@ -2446,10 +2457,20 @@ usb_attach  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    extern UsbDetach:near
+
 usb_detach  Proc far
     push ds
     push es
     pushad
+;    
+    push eax
+    push ebx
+    movzx eax,al
+    movzx ebx,bx
+    call UsbDetach
+    pop ebx
+    pop eax
 ;    
     mov dx,SEG data
     mov ds,dx
