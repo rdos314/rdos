@@ -47,13 +47,18 @@ struct THidDevice *HidArr[MAX_HID_DEVICES];
 
 void __far ImplTestGate(const char *msg)
 {
-    long long val;
+    int i;
+    int size;
+    struct THidDevice *dev;
+    char *buf = RdosAllocateSmallGlobalMem(0x1000);
 
-    val = RdosGetLongSysTime();
-    
-    for (;;)
+    for (i = 0; i < MAX_HID_DEVICES; i++)
     {
-        RdosWaitMilli(100);
+       dev = HidArr[i];
+       if (dev)
+       {
+           size = RdosGetUsbConfig(dev->Controller, dev->Device, 0, buf, 0x1000);
+       }
     }
 }
 
