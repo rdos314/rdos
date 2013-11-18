@@ -363,11 +363,13 @@ eiNotPipe:
     and al,NOT 1
     jz eiLoop
 ;
+    push ds
     mov ax,SEG data
     mov ds,ax
     mov ds:IntOk,1
     mov bx,ds:EhciThread
     Signal
+    pop ds
     jmp eiLoop
 
 eiDone:
