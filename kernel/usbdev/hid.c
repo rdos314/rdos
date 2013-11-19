@@ -31,34 +31,89 @@
 
 #include <stdio.h>
 
+#define FALSE 0
+#define TRUE !FALSE
+
 #define MAX_HID_DEVICES 32
 
 extern void InitHid();
+
+extern int GetReportDescr(struct THidDevice *dev, char *buf, int size, int interface);
+#pragma aux GetReportDescr parm routine [fs esi] [es edi] [ecx] [edx] value [eax]
+
+struct THidDescriptor
+{
+    unsigned char Len;
+    char Type;
+    char Ver[2];
+    char CountryCode;
+    char NumDescriptors;
+    char DescriptorType;
+    unsigned short int DescriptorLen;
+};
 
 struct THidDevice
 {
     int Controller;
     int Device;
+    int ControlPipe;
+    int ControlWait;
+    int ReportDescrSize;
+    char ReportDescrData[1];
 };
 
 struct THidDevice *HidArr[MAX_HID_DEVICES];
 
-#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
+/*##########################################################################
+#
+#   Name       : LoadReportDescr
+#
+#   Purpose....: Load report descriptor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int LoadReportDescr(struct THidDevice *dev)
+{
+    int size;
+    
+    dev->ControlPipe = RdosOpenUsbPipe(dev->Controller, dev->Device, 0);
+    dev->ControlWait = RdosCreateWait();
+    size = GetReportDescr(dev, dev->ReportDescrData, dev->ReportDescrSize, 0);
 
+    if (size == dev->ReportDescrSize)
+        return TRUE;
+    else
+    {
+        RdosCloseUsbPipe(dev->ControlPipe);
+        RdosCloseWait(dev->ControlWait);
+        return FALSE;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : Test gate
+#
+##########################################################################*/
+
+#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 void __far ImplTestGate(const char *msg)
 {
     int i;
-    int size;
     struct THidDevice *dev;
-    char *buf = RdosAllocateSmallGlobalMem(0x1000);
+    int size;
+    int ok;
 
     for (i = 0; i < MAX_HID_DEVICES; i++)
     {
-       dev = HidArr[i];
-       if (dev)
-       {
-           size = RdosGetUsbConfig(dev->Controller, dev->Device, 0, buf, 0x1000);
-       }
+        dev = HidArr[i];
+        if (dev)
+        {
+            ok = LoadReportDescr(dev);
+        }
     }
 }
 
@@ -78,18 +133,37 @@ void UsbAttach(int controller, int device)
 {
     int i;
     struct THidDevice *dev;
+    int size;
+    struct THidDescriptor *descr;
+    char *buf = RdosAllocateSmallGlobalMem(0x1000);
+    char *ptr;
 
     for (i = 0; i < MAX_HID_DEVICES; i++)
     {
         if (HidArr[i] == 0)
         {
-            dev = (struct THidDevice *)RdosAllocateSmallGlobalMem(sizeof(struct THidDevice));
-            dev->Controller = controller;
-            dev->Device = device;
-            HidArr[i] = dev;        
+            size = RdosGetUsbConfig(controller, device, 0, buf, 0x1000);
+                   
+            ptr = buf;
+            while (size > 0)
+            {
+                descr = (struct THidDescriptor *)ptr;
+                if (descr->Type == 0x21 && descr->DescriptorType == 0x22)
+                {
+                    dev = (struct THidDevice *)RdosAllocateSmallGlobalMem(sizeof(struct THidDevice) + descr->DescriptorLen);
+                    dev->Controller = controller;
+                    dev->Device = device;
+                    dev->ReportDescrSize = descr->DescriptorLen;
+                    HidArr[i] = dev;        
+                    break;
+                }
+                ptr += descr->Len;
+                size -= descr->Len;
+            }
             break;
         }
     }
+    RdosFreeMem(RdosPointerToSelector(buf));
 }
 
 /*##########################################################################

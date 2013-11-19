@@ -43,6 +43,17 @@ CAPS_LOCK = 6
 NUM_LOCK = 7
 ESC_KEY = 8
 
+; keep synchronized with hid.c!!
+
+hid_dev  STRUC
+
+hd_controller       DW ?,?
+hd_device           DB ?,?,?,?
+hd_control_pipe     DW ?,?
+hd_control_wait     DW ?,?
+
+hid_dev  ENDS
+
 trans_struc STRUC
 
 ts_ext      DB ?
@@ -687,6 +698,89 @@ rdLeave:
     ret
 RemoveDetached Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           GetReportDescr
+;
+;   Description:    Get report descriptor
+;
+;   Parameters:     FS:ESI      Hid device
+;                   ES:EDI      Buffer
+;                   ECX         Size
+;                   EDX         Interface
+;
+;   Returns:        EAX         Read size
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetReportDescr_
+
+GetReportDescr_   Proc near
+    push ebx
+    push ecx
+    push edx
+    push ebp
+;    
+    push es
+    push ecx
+    push edi
+;    
+    mov eax,8
+    AllocateSmallGlobalMem
+    mov es:usd_type,81h
+    mov es:usd_req,6
+    mov es:usd_value,2200h
+    mov es:usd_index,dx
+    mov es:usd_len,cx
+    xor edi,edi
+    mov ebp,es
+    mov bx,fs:[esi].hd_control_pipe
+;
+    LockUsbPipe
+    mov ecx,8
+    WriteUsbControl
+;    
+    pop edi
+    pop ecx
+    pop es
+;
+    ReqUsbData
+;    
+    WriteUsbStatus
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,fs:[esi].hd_control_wait
+    WaitWithTimeout
+;    
+    mov bx,fs:[esi].hd_control_pipe
+    WasUsbTransactionOk
+    jc grdFail
+;
+    GetUsbDataSize
+    jmp grdUnlock
+
+grdFail:
+    xor eax,eax
+    
+grdUnlock:    
+    UnlockUsbPipe
+;
+    push es
+    mov es,ebp
+    FreeMem
+    pop es
+;
+    pop ebp
+    pop edx
+    pop ecx
+    pop ebx
+    ret
+GetReportDescr_ Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
