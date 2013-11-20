@@ -95,6 +95,64 @@ int LoadReportDescr(struct THidDevice *dev)
 
 /*##########################################################################
 #
+#   Name       : GetReportItems
+#
+#   Purpose....: Get report item count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int GetReportItems(struct THidDevice *dev)
+{
+    int count = 0;
+    int size;
+    int len;
+    unsigned char *ptr;
+
+    ptr = (unsigned char *)dev->ReportDescrData;
+    size = dev->ReportDescrSize;
+
+    while (size)
+    {
+        if (*ptr == 0xFE)
+        {
+            len = ptr[1];
+            len += 3;
+        }
+        else
+        {
+            switch ((*ptr) & 3)
+            {
+                case 0:
+                    len = 0;
+                    break;
+
+                case 1:
+                    len = 1;
+                    break;
+
+                case 2:
+                    len = 2;
+                    break;
+
+                case 3:
+                    len = 4;
+                    break;
+            }
+            len++;
+        }
+        ptr += len;
+        size -= len;
+        count++;
+    }
+
+    return count;
+}
+
+/*##########################################################################
+#
 #   Name       : Test gate
 #
 ##########################################################################*/
@@ -106,6 +164,7 @@ void __far ImplTestGate(const char *msg)
     struct THidDevice *dev;
     int size;
     int ok;
+    int count;
 
     for (i = 0; i < MAX_HID_DEVICES; i++)
     {
@@ -113,6 +172,8 @@ void __far ImplTestGate(const char *msg)
         if (dev)
         {
             ok = LoadReportDescr(dev);
+            if (ok)
+                count = GetReportItems(dev);
         }
     }
 }
