@@ -2315,12 +2315,12 @@ NotifyDll       Proc near
     jc notify_dll_done
 
 notify_check_debug:
+    call Preload
     mov edi,es:lib_base
     xchg dx,es:lib_debug_lib
     or dx,dx
     jnz notify_dll_done
 ;
-    call Preload
     push ds
     push es
     mov ax,es
@@ -2592,11 +2592,11 @@ load_dll_do:
     mov es:lib_run_now,bp
     mov ecx,es:lib_size
     call LoadImportedDlls
+    call Preload
 ;
     or dx,dx
     jz load_dll_nodeb
 ;
-    call Preload
     push ds
     push es
     mov ax,es
@@ -3887,12 +3887,12 @@ spawn_param_ok:
     mov edi,es:lib_base
     mov es:lib_run_now,1
     call StartImportedDlls
+    call Preload
 ;
     mov dx,es:lib_debug_lib
     or dx,dx
     jz spawn_no_debug
 ;
-    call Preload
     push ds
     push es
     mov ax,es
