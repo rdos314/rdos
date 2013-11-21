@@ -673,4 +673,6 @@ close_udp_listen_nr             = 534
 get_current_dll_nr              = 535
 dupl_module_file_handle_nr      = 536
 
+get_hid_report_item_nr          = 537
+
 usergate_entries			    = 540

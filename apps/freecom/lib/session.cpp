@@ -77,6 +77,7 @@
 #include "sysinfo.h"
 #include "keyb.h"
 #include "acpi.h"
+#include "hid.h"
 #include "dev.h"
 #include "pci.h"
 #include "debug.h"
@@ -118,6 +119,7 @@ static TCommandFactory *erase;
 static TCommandFactory *exitcmd;
 static TCommandFactory *fd2file;
 static TCommandFactory *help;
+static TCommandFactory *hid;
 static TCommandFactory *info;
 static TCommandFactory *initfd;
 static TCommandFactory *inithd;
@@ -210,6 +212,7 @@ TSession::TSession()
         inithd = new TInitHdFactory;
         initfd = new TInitFdFactory;
         info = new TInfoFactory;
+        hid = new THidFactory;
         exitcmd = new TExitFactory;
         fd2file = new TFloppyToFileFactory;
         erase = new TEraseFactory;

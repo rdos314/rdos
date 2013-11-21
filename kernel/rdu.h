@@ -673,6 +673,8 @@
 #define usergate_get_current_dll 0x00000217
 #define usergate_dupl_module_file_handle 0x00000218
 
+#define usergate_get_hid_report_item 0x00000219
+
 
 
 #ifdef __FLAT__
@@ -1351,6 +1353,8 @@
 #define CallGate_get_current_dll 0x67 0x9a 23 2 0 0 3 0
 #define CallGate_dupl_module_file_handle 0x67 0x9a 24 2 0 0 3 0
 
+#define CallGate_get_hid_report_item 0x67 0x9a 25 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2026,5 +2030,7 @@
 
 #define CallGate_get_current_dll 0x3e 0x67 0x9a 23 2 0 0 3 0
 #define CallGate_dupl_module_file_handle 0x3e 0x67 0x9a 24 2 0 0 3 0
+
+#define CallGate_get_hid_report_item 0x3e 0x67 0x9a 25 2 0 0 3 0
 
 #endif

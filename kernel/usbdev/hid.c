@@ -52,12 +52,43 @@ struct THidDescriptor
     unsigned short int DescriptorLen;
 };
 
+typedef enum {MAIN_ITEM, GLOBAL_ITEM, LOCAL_ITEM} TItemType;
+
+typedef enum {
+         MAIN_RESV1,    GLOBAL_USAGE,       LOCAL_USE,     INV1,
+         MAIN_RESV2,    GLOBAL_LOG_MIN,     LOCAL_USE_MIN, INV2,
+         MAIN_RESV3,    GLOBAL_LOG_MAX,     LOCAL_USE_MAX, INV3,
+         MAIN_RESV4,    GLOBAL_PHYS_MIN,    LOCAL_DES_IND, INV4,
+         MAIN_RESV5,    GLOBAL_PHYS_MAX,    LOCAL_DES_MIN, INV5,
+         MAIN_RESV6,    GLOBAL_UNIT_EXP,    LOCAL_DES_MAX, INV6,
+         MAIN_RESV7,    GLOBAL_UNIT,        LOCAL_STR_IND, INV7,
+         MAIN_RESV8,    GLOBAL_REPORT_SIZE, LOCAL_STR_MIN, INV8,
+         MAIN_INPUT,    GLOBAL_REPORT_ID,   LOCAL_STR_MAX, INV9,
+         MAIN_OUTPUT,   GLOBAL_REPORT_COUNT,LOCAL_DELIM,   INV10,
+         MAIN_BEGIN,    GLOBAL_PUSH,        LOCAL_RESV1,   INV11,
+         MAIN_FEATURE,  GLOBAL_POP,         LOCAL_RESV2,   INV12,
+         MAIN_END,      GLOBAL_RESV1,       LOCAL_RESV3,   INV13,
+         MAIN_RESV9,    GLOBAL_RESV2,       LOCAL_RESV4,   INV14,
+         MAIN_RESV10,   GLOBAL_RESV3,       LOCAL_RESV5,   INV15,
+         MAIN_RESV11,   GLOBAL_RESV4,       LOCAL_RESV6,   INV16
+             } TItemTag;
+
+struct THidReportItem
+{
+    unsigned char Len;
+    TItemType Type;
+    TItemTag Tag;
+    char *Data;
+};
+
 struct THidDevice
 {
     int Controller;
     int Device;
     int ControlPipe;
     int ControlWait;
+    int ItemCount;
+    struct THidReportItem *ItemArr;
     int ReportDescrSize;
     char ReportDescrData[1];
 };
@@ -104,7 +135,7 @@ int LoadReportDescr(struct THidDevice *dev)
 #   Returns....: *
 #
 ##########################################################################*/
-int GetReportItems(struct THidDevice *dev)
+void GetReportItems(struct THidDevice *dev)
 {
     int count = 0;
     int size;
@@ -148,8 +179,78 @@ int GetReportItems(struct THidDevice *dev)
         count++;
     }
 
-    return count;
+    dev->ItemCount = count;
 }
+
+/*##########################################################################
+#
+#   Name       : LoadReportItems
+#
+#   Purpose....: Load report items
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void LoadReportItems(struct THidDevice *dev)
+{
+    int pos = 0;
+    int size;
+    int len;
+    unsigned char *ptr;
+    struct THidReportItem *item;
+
+    dev->ItemArr = (struct THidReportItem *)RdosAllocateSmallGlobalMem(dev->ItemCount * sizeof(struct THidReportItem));
+
+    ptr = (unsigned char *)dev->ReportDescrData;
+    size = dev->ReportDescrSize;
+    item = dev->ItemArr;
+
+    while (size)
+    {
+        if (*ptr == 0xFE)
+        {
+            len = ptr[1];
+            item->Len = len;
+            item->Type = 3;
+            item->Tag = ptr[2]; 
+            item->Data = ptr + 3;
+            len += 3;
+        }
+        else
+        {
+            switch ((*ptr) & 3)
+            {
+                case 0:
+                    len = 0;
+                    break;
+
+                case 1:
+                    len = 1;
+                    break;
+
+                case 2:
+                    len = 2;
+                    break;
+
+                case 3:
+                    len = 4;
+                    break;
+            }
+            item->Len = len;
+            item->Type = ((*ptr) >> 2) & 3;
+            item->Tag = ((*ptr) >> 2) & 0x3F; 
+            item->Data = ptr + 1;
+            len++;
+        }
+        ptr += len;
+        size -= len;
+        pos++;
+        item++;
+    }
+};
+
 
 /*##########################################################################
 #
@@ -164,7 +265,6 @@ void __far ImplTestGate(const char *msg)
     struct THidDevice *dev;
     int size;
     int ok;
-    int count;
 
     for (i = 0; i < MAX_HID_DEVICES; i++)
     {
@@ -173,9 +273,173 @@ void __far ImplTestGate(const char *msg)
         {
             ok = LoadReportDescr(dev);
             if (ok)
-                count = GetReportItems(dev);
+            {
+                GetReportItems(dev);
+                LoadReportItems(dev);
+            }
         }
     }
+}
+
+/*##########################################################################
+#
+#   Name       : ImplGetHidReportItem
+#
+#   Purpose....: Get HID report item
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetHidReportItem "*" rdosdev parm routine [eax] [edx] [es edi]
+void __far ImplGetHidReportItem(int Device, int Index, char *Buf)
+{
+    int i;
+    struct THidDevice *dev;
+    struct THidReportItem *item;
+    int size;
+    int ok = FALSE;
+
+    RdosSaveEax();
+
+    if (Device >= 0 && Device < MAX_HID_DEVICES)
+    {
+        dev = HidArr[Device];
+
+        if (dev)
+        {
+            if (Index >= 0 && Index < dev->ItemCount)
+            {
+                ok = TRUE;
+                
+                item = dev->ItemArr + Index;
+
+                switch (item->Tag)
+                {
+                    case MAIN_INPUT:
+                        strcpy(Buf, "Input");
+                        break;
+
+                    case MAIN_OUTPUT:
+                        strcpy(Buf, "Output");
+                        break;
+
+                    case MAIN_BEGIN:
+                        strcpy(Buf, "Collection");
+                        break;
+
+                    case MAIN_FEATURE:
+                        strcpy(Buf, "Feature");
+                        break;
+
+                    case MAIN_END:
+                        strcpy(Buf, "End Collection");
+                        break;
+
+                    case GLOBAL_USAGE:
+                        strcpy(Buf, "Global Usage");
+                        break;
+
+                    case GLOBAL_LOG_MIN:
+                        strcpy(Buf, "Logical Min");
+                        break;
+
+                    case GLOBAL_LOG_MAX:
+                        strcpy(Buf, "Logical Max");
+                        break;
+
+                    case GLOBAL_PHYS_MIN:
+                        strcpy(Buf, "Physical Min");
+                        break;
+
+                    case GLOBAL_PHYS_MAX:
+                        strcpy(Buf, "Physical Max");
+                        break;
+                        
+                    case GLOBAL_UNIT_EXP:
+                        strcpy(Buf, "Unit Exp");
+                        break;
+                        
+                    case GLOBAL_UNIT:
+                        strcpy(Buf, "Unit");
+                        break;
+                        
+                    case GLOBAL_REPORT_SIZE:
+                        strcpy(Buf, "Report Size");
+                        break;
+                        
+                    case GLOBAL_REPORT_ID:
+                        strcpy(Buf, "Report ID");
+                        break;
+                        
+                    case GLOBAL_REPORT_COUNT:
+                        strcpy(Buf, "Report Count");
+                        break;
+                                                
+                    case GLOBAL_PUSH:
+                        strcpy(Buf, "Push");
+                        break;
+                                                
+                    case GLOBAL_POP:
+                        strcpy(Buf, "Pop");
+                        break;
+                        
+                    case LOCAL_USE:
+                        strcpy(Buf, "Usage");
+                        break;
+
+                    case LOCAL_USE_MIN:
+                        strcpy(Buf, "Usage Min");
+                        break;
+
+                    case LOCAL_USE_MAX:
+                        strcpy(Buf, "Usage Max");
+                        break;
+
+                    case LOCAL_DES_IND:
+                        strcpy(Buf, "Descriptor Index");
+                        break;
+
+                    case LOCAL_DES_MIN:
+                        strcpy(Buf, "Descriptor Min");
+                        break;
+
+                    case LOCAL_DES_MAX:
+                        strcpy(Buf, "Descriptor Max");
+                        break;
+
+                    case LOCAL_STR_IND:
+                        strcpy(Buf, "String Index");
+                        break;
+
+                    case LOCAL_STR_MIN:
+                        strcpy(Buf, "String Min");
+                        break;
+
+                    case LOCAL_STR_MAX:
+                        strcpy(Buf, "String Max");
+                        break;
+
+                    case LOCAL_DELIM:
+                        strcpy(Buf, "Delimiter");
+                        break;
+
+                    default:
+                        strcpy(Buf, "Unknown");
+                        break;
+                }
+                
+            }
+        }
+    }
+
+    if (ok)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
+    RdosRestoreEax();
 }
 
 /*##########################################################################
@@ -278,5 +542,7 @@ int main()
         HidArr[i] = 0;
 
     InitHid();
+    RdosRegisterBimodalUserGate(usergate_get_hid_report_item, (__rdos_gate_callback *)&ImplGetHidReportItem, "Get Hid Report Item"); 
+
     RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
 }

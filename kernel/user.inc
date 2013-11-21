@@ -3412,6 +3412,15 @@ GetCpuTemperature      MACRO
 	UserGate get_cpu_temperature_nr
 	                ENDM
 
+;;;;;;;;;;; HID ;;;;;;;;;;
+
+;   IN  EAX         Device #
+;   IN  EDX         Item #
+;   IN  ES:(E)DI    HID item buffer
+GetHidReportItem      MACRO
+	UserGate get_hid_report_item_nr
+	                ENDM
+
 ;;;;;;;;;;; Touch ;;;;;;;;;;
 
 ;   OUT NC          Touch hardware available
