@@ -283,6 +283,85 @@ void __far ImplTestGate(const char *msg)
 
 /*##########################################################################
 #
+#   Name       : GetReportItemValue
+#
+#   Purpose....: Get report item value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int GetReportItemValue(struct THidReportItem *item)
+{
+    int val = 0;
+
+    switch (item->Len)
+    {
+        case 1:
+            memcpy(&val, item->Data, 1);
+            break;
+
+        case 2:
+            memcpy(&val, item->Data, 2);
+            break;
+
+        case 3:
+            memcpy(&val, item->Data, 3);
+            break;
+            
+        case 4:
+            memcpy(&val, item->Data, 4);
+            break;
+    }
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : AddReportItemValue
+#
+#   Purpose....: Add report item value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddReportItemValue(struct THidReportItem *item, char *buf)
+{
+    char str[10];    
+    int val = GetReportItemValue(item);
+    sprintf(str, " (%d)", val);
+    strcat(buf, str);     
+}
+
+/*##########################################################################
+#
+#   Name       : AddReportUsageItem
+#
+#   Purpose....: Add report usage item
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddReportUsageItem(struct THidReportItem *item, char *buf)
+{
+    char str[10];    
+    int val = GetReportItemValue(item);
+
+    if (item->Len == 4)
+        sprintf(str, " (%04hX)", val);
+    else    
+        sprintf(str, " (%02hX)", val);
+
+    strcat(buf, str);     
+}
+
+/*##########################################################################
+#
 #   Name       : ImplGetHidReportItem
 #
 #   Purpose....: Get HID report item
@@ -296,10 +375,12 @@ void __far ImplTestGate(const char *msg)
 void __far ImplGetHidReportItem(int Device, int Index, char *Buf)
 {
     int i;
+    int Ins;
     struct THidDevice *dev;
     struct THidReportItem *item;
     int size;
     int ok = FALSE;
+    int val;
 
     RdosSaveEax();
 
@@ -311,6 +392,24 @@ void __far ImplGetHidReportItem(int Device, int Index, char *Buf)
         {
             if (Index >= 0 && Index < dev->ItemCount)
             {
+                Ins = 0;
+                item = dev->ItemArr;
+                for (i = 0; i < Index; i++)
+                {
+                    if (item->Tag == MAIN_BEGIN)
+                        Ins++;
+                    if (item->Tag == MAIN_END)
+                        Ins--;
+                    item++;
+                }  
+
+                if (item->Tag == MAIN_END)
+                    Ins--;
+
+                Buf[0] = 0;
+                for (i = 0; i < Ins; i++)
+                    strcat(Buf, "  ");                  
+                
                 ok = TRUE;
                 
                 item = dev->ItemArr + Index;
@@ -318,115 +417,117 @@ void __far ImplGetHidReportItem(int Device, int Index, char *Buf)
                 switch (item->Tag)
                 {
                     case MAIN_INPUT:
-                        strcpy(Buf, "Input");
+                        strcat(Buf, "Input");
                         break;
 
                     case MAIN_OUTPUT:
-                        strcpy(Buf, "Output");
+                        strcat(Buf, "Output");
                         break;
 
                     case MAIN_BEGIN:
-                        strcpy(Buf, "Collection");
+                        strcat(Buf, "Collection");
                         break;
 
                     case MAIN_FEATURE:
-                        strcpy(Buf, "Feature");
+                        strcat(Buf, "Feature");
                         break;
 
                     case MAIN_END:
-                        strcpy(Buf, "End Collection");
+                        strcat(Buf, "End Collection");
                         break;
 
                     case GLOBAL_USAGE:
-                        strcpy(Buf, "Global Usage");
+                        strcat(Buf, "Usage Page");
+                        AddReportUsageItem(item, Buf);
                         break;
 
                     case GLOBAL_LOG_MIN:
-                        strcpy(Buf, "Logical Min");
+                        strcat(Buf, "Logical Min");
                         break;
 
                     case GLOBAL_LOG_MAX:
-                        strcpy(Buf, "Logical Max");
+                        strcat(Buf, "Logical Max");
                         break;
 
                     case GLOBAL_PHYS_MIN:
-                        strcpy(Buf, "Physical Min");
+                        strcat(Buf, "Physical Min");
                         break;
 
                     case GLOBAL_PHYS_MAX:
-                        strcpy(Buf, "Physical Max");
+                        strcat(Buf, "Physical Max");
                         break;
                         
                     case GLOBAL_UNIT_EXP:
-                        strcpy(Buf, "Unit Exp");
+                        strcat(Buf, "Unit Exp");
                         break;
                         
                     case GLOBAL_UNIT:
-                        strcpy(Buf, "Unit");
+                        strcat(Buf, "Unit");
                         break;
                         
                     case GLOBAL_REPORT_SIZE:
-                        strcpy(Buf, "Report Size");
+                        strcat(Buf, "Report Size");
                         break;
                         
                     case GLOBAL_REPORT_ID:
-                        strcpy(Buf, "Report ID");
+                        strcat(Buf, "Report ID");
                         break;
                         
                     case GLOBAL_REPORT_COUNT:
-                        strcpy(Buf, "Report Count");
+                        strcat(Buf, "Report Count");
                         break;
                                                 
                     case GLOBAL_PUSH:
-                        strcpy(Buf, "Push");
+                        strcat(Buf, "Push");
                         break;
                                                 
                     case GLOBAL_POP:
-                        strcpy(Buf, "Pop");
+                        strcat(Buf, "Pop");
                         break;
                         
                     case LOCAL_USE:
-                        strcpy(Buf, "Usage");
+                        strcat(Buf, "Usage ID");
+                        AddReportUsageItem(item, Buf);
                         break;
 
                     case LOCAL_USE_MIN:
-                        strcpy(Buf, "Usage Min");
+                        strcat(Buf, "Usage Min");
                         break;
 
                     case LOCAL_USE_MAX:
-                        strcpy(Buf, "Usage Max");
+                        strcat(Buf, "Usage Max");
                         break;
 
                     case LOCAL_DES_IND:
-                        strcpy(Buf, "Descriptor Index");
+                        strcat(Buf, "Descriptor Index");
                         break;
 
                     case LOCAL_DES_MIN:
-                        strcpy(Buf, "Descriptor Min");
+                        strcat(Buf, "Descriptor Min");
                         break;
 
                     case LOCAL_DES_MAX:
-                        strcpy(Buf, "Descriptor Max");
+                        strcat(Buf, "Descriptor Max");
                         break;
 
                     case LOCAL_STR_IND:
-                        strcpy(Buf, "String Index");
+                        strcat(Buf, "String Index");
                         break;
 
                     case LOCAL_STR_MIN:
-                        strcpy(Buf, "String Min");
+                        strcat(Buf, "String Min");
                         break;
 
                     case LOCAL_STR_MAX:
-                        strcpy(Buf, "String Max");
+                        strcat(Buf, "String Max");
                         break;
 
                     case LOCAL_DELIM:
-                        strcpy(Buf, "Delimiter");
+                        strcat(Buf, "Delimiter");
                         break;
 
                     default:
-                        strcpy(Buf, "Unknown");
+                        strcat(Buf, "Unknown");
                         break;
                 }
                 

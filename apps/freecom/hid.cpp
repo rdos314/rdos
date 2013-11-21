@@ -108,6 +108,9 @@ void THidCommand::ShowDevices()
         ok = RdosGetHidReportItem(DevNr, 0, ItemName);
         if (ok)
         {
+            sprintf(ItemName, "HID Device: %d\r\n", DevNr + 1);
+            Write(ItemName);
+            
             for (ObjNr = 0; ObjNr < 0x1000; ObjNr++)
             {
                 ok = RdosGetHidReportItem(DevNr, ObjNr, ItemName);
@@ -122,6 +125,7 @@ void THidCommand::ShowDevices()
         }
         else
             break;
+        Write("\r\n");
     }
 }
 
