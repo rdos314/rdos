@@ -49,9 +49,8 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TDes1::TDes1(const char *Key)
+TDes1::TDes1()
 {
-    SetupKey(Key);
 }
 
 /*##########################################################################
@@ -87,6 +86,117 @@ int TDes1::GetKeySize()
 
 /*##########################################################################
 #
+#   Name       : TDes1::SetupKey
+#
+#   Purpose....: Setup keys
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDes1::SetupKey(const char *Key)
+{
+    const unsigned char *ukey = (const unsigned char *)Key;
+    
+    CreateKey(ukey, EN0, ek);
+    CreateKey(ukey, DE1, dk);
+}
+
+/*##########################################################################
+#
+#   Name       : TDes1::Encrypt
+#
+#   Purpose....: Encrypt data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDes1::Encrypt(char *buf, int size)
+{
+    char *ptr = buf;
+    int len = size;
+    int i;
+    unsigned char pt[8];
+    unsigned char ct[8];
+
+    while (len)
+    {
+        if (len < 8)
+        {
+            memcpy(pt, ptr, len);
+            for (i = len; i < 8; i++)
+                pt[i] = 0;
+        }
+        else
+            memcpy(pt, ptr, 8);
+
+        EncryptBlock(pt, ct);
+
+        if (len < 8)
+        {
+            memcpy(ptr, ct, len);
+            len = 0;
+        }
+        else
+        {
+            memcpy(ptr, ct, 8);
+            ptr += 8;
+            len -= 8;
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TDes1::Decrypt
+#
+#   Purpose....: Decrypt data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDes1::Decrypt(char *buf, int size)
+{
+    char *ptr = buf;
+    int len = size;
+    int i;
+    unsigned char pt[8];
+    unsigned char ct[8];
+
+    while (len)
+    {
+        if (len < 8)
+        {
+            memcpy(ct, ptr, len);
+            for (i = len; i < 8; i++)
+                ct[i] = 0;
+        }
+        else
+            memcpy(ct, ptr, 8);
+
+        DecryptBlock(ct, pt);
+
+        if (len < 8)
+        {
+            memcpy(ptr, pt, len);
+            len = 0;
+        }
+        else
+        {
+            memcpy(ptr, pt, 8);
+            ptr += 8;
+            len -= 8;
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TDes1::Setup
 #
 #   Purpose....: Setup keys
@@ -98,8 +208,8 @@ int TDes1::GetKeySize()
 ##########################################################################*/
 void TDes1::Setup(const unsigned char *key)
 {
-    CreateKey(key, EN0, &ek);
-    CreateKey(key, DE1, &dk);
+    CreateKey(key, EN0, ek);
+    CreateKey(key, DE1, dk);
 }
 
 /*##########################################################################
@@ -117,13 +227,13 @@ void TDes1::EncryptBlock(const unsigned char *pt, unsigned char *ct)
 {
     unsigned long work[2];
 
-    LOAD32H(work[0], pt+0);
-    LOAD32H(work[1], pt+4);
+    work[0] = (unsigned long)RdosLoad32H(pt+0);
+    work[1] = (unsigned long)RdosLoad32H(pt+4);
 
-    DoDes(work, &ek);
+    DoDes(work, ek);
 
-    STORE32H((unsigned char *)work[0],(unsigned)(ct+0));
-    STORE32H((unsigned char *)work[1],(unsigned)(ct+4));
+    RdosStore32H((unsigned char *)(ct+0), (unsigned int)work[0]);
+    RdosStore32H((unsigned char *)(ct+4), (unsigned int)work[1]);
 }
 
 /*##########################################################################
@@ -141,13 +251,13 @@ void TDes1::DecryptBlock(const unsigned char *ct, unsigned char *pt)
 {
     unsigned long work[2];
 
-    LOAD32H(work[0], ct+0);
-    LOAD32H(work[1], ct+4);
+    work[0] = (unsigned long)RdosLoad32H(ct+0);
+    work[1] = (unsigned long)RdosLoad32H(ct+4);
 
-    DoDes(work, &dk);
+    DoDes(work, dk);
 
-    STORE32H((unsigned char *)work[0],(unsigned)(pt+0));
-    STORE32H((unsigned char *)work[1],(unsigned)(pt+4));
+    RdosStore32H((unsigned char *)(pt+0), (unsigned int)work[0]);
+    RdosStore32H((unsigned char *)(pt+4), (unsigned int)work[1]);
 }
 
 /*##########################################################################
@@ -245,13 +355,13 @@ int TDes1::Test()
         if (memcmp(cases[i].out, tmp, sizeof(tmp)) != 0) {
            return FALSE;
         }
-
-      /* now see if we can encrypt all zero bytes 1000 times, decrypt and come back where we started */
-      for (y = 0; y < 8; y++) tmp[y] = 0;
-      for (y = 0; y < 1000; y++) EncryptBlock(tmp, tmp);
-      for (y = 0; y < 1000; y++) DecryptBlock(tmp, tmp);
-      for (y = 0; y < 8; y++) if (tmp[y] != 0) return FALSE;
     }
+
+    /* now see if we can encrypt all zero bytes 1000 times, decrypt and come back where we started */
+    for (y = 0; y < 8; y++) tmp[y] = 0;
+    for (y = 0; y < 1000; y++) EncryptBlock(tmp, tmp);
+    for (y = 0; y < 1000; y++) DecryptBlock(tmp, tmp);
+    for (y = 0; y < 8; y++) if (tmp[y] != 0) return FALSE;
 
     return TRUE;
 }

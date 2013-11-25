@@ -35,7 +35,7 @@
 class TDes1 : public TDesBase
 {
 public:
-    TDes1(const char *Key);
+    TDes1();
     virtual ~TDes1();
 
     virtual int GetKeySize();
@@ -50,8 +50,8 @@ protected:
     void EncryptBlock(const unsigned char *Pt, unsigned char *Ct);
     void DecryptBlock(const unsigned char *Ct, unsigned char *Pt);
     
-    unsigned long ek;
-    unsigned long dk;
+    unsigned long ek[32];
+    unsigned long dk[32];
 };
 
 #endif
