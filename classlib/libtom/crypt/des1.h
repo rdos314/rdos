@@ -22,25 +22,36 @@
 #
 # The C++ porter of this program may be contacted at leif@rdos.net
 #
-# crypt.h
-# Crypt base class
+# des1.h
+# Single pass DES class
 #
 ########################################################################*/
 
-#ifndef _CRYPT_H
-#define _CRYPT_H
+#ifndef _DES1_H
+#define _DES1_H
 
-class TCrypt
+#include "desbase.h"
+
+class TDes1 : public TDesBase
 {
 public:
-    TCrypt();
-    virtual ~TCrypt();
+    TDes1(const char *Key);
+    virtual ~TDes1();
+
+    virtual int GetKeySize();
+    virtual void SetupKey(const char *Key);
+    virtual void Encrypt(char *buf, int size);
+    virtual void Decrypt(char *buf, int size);
+
+    int Test();
+
+protected:
+    void Setup(const unsigned char *Key);
+    void EncryptBlock(const unsigned char *Pt, unsigned char *Ct);
+    void DecryptBlock(const unsigned char *Ct, unsigned char *Pt);
     
-    virtual int GetKeySize() = 0;
-    virtual void SetupKey(const char *Key) = 0;
-    virtual void Encrypt(char *buf, int size) = 0;
-    virtual void Decrypt(char *buf, int size) = 0;
+    unsigned long ek;
+    unsigned long dk;
 };
 
 #endif
-

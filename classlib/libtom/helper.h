@@ -34,16 +34,16 @@ typedef unsigned long long ulong64;
 typedef unsigned int ulong32;
 
 void RdosStore32L(unsigned char *buf, unsigned int val);
-unsigned int RdosLoad32L(unsigned char *buf);
+unsigned int RdosLoad32L(const unsigned char *buf);
 
 void RdosStore64L(unsigned char *buf, unsigned long long val);
-unsigned long long RdosLoad64L(unsigned char *buf);
+unsigned long long RdosLoad64L(const unsigned char *buf);
 
 void RdosStore32H(unsigned char *buf, unsigned int val);
-unsigned int RdosLoad32H(unsigned char *buf);
+unsigned int RdosLoad32H(const unsigned char *buf);
 
 void RdosStore64H(unsigned char *buf, unsigned long long val);
-unsigned long long RdosLoad64H(unsigned char *buf);
+unsigned long long RdosLoad64H(const unsigned char *buf);
 
 unsigned int ROL(unsigned int val, int i);
 unsigned int ROLc(unsigned int val, int i);
