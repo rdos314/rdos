@@ -83,10 +83,15 @@ struct THidReportItem
 
 struct THidDevice
 {
+/* shared with asm */    
     int Controller;
     int Device;
     int ControlPipe;
     int ControlWait;
+
+/* not shared with asm */    
+    int DeviceNr;
+    int IsRunning;
     int ItemCount;
     struct THidReportItem *ItemArr;
     int ReportDescrSize;
@@ -97,16 +102,33 @@ struct THidDevice *HidArr[MAX_HID_DEVICES];
 
 /*##########################################################################
 #
-#   Name       : LoadReportDescr
+#   Name       : CloseHid
 #
-#   Purpose....: Load report descriptor
+#   Purpose....: Close HID
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int LoadReportDescr(struct THidDevice *dev)
+void CloseHid(struct THidDevice *dev)
+{
+    RdosCloseUsbPipe(dev->ControlPipe);
+    RdosCloseWait(dev->ControlWait);
+}
+
+/*##########################################################################
+#
+#   Name       : OpenHid
+#
+#   Purpose....: Open HID
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int OpenHid(struct THidDevice *dev)
 {
     int size;
     
@@ -118,8 +140,7 @@ int LoadReportDescr(struct THidDevice *dev)
         return TRUE;
     else
     {
-        RdosCloseUsbPipe(dev->ControlPipe);
-        RdosCloseWait(dev->ControlWait);
+        CloseHid(dev);
         return FALSE;
     }
 }
@@ -261,24 +282,6 @@ void LoadReportItems(struct THidDevice *dev)
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 void __far ImplTestGate(const char *msg)
 {
-    int i;
-    struct THidDevice *dev;
-    int size;
-    int ok;
-
-    for (i = 0; i < MAX_HID_DEVICES; i++)
-    {
-        dev = HidArr[i];
-        if (dev)
-        {
-            ok = LoadReportDescr(dev);
-            if (ok)
-            {
-                GetReportItems(dev);
-                LoadReportItems(dev);
-            }
-        }
-    }
 }
 
 /*##########################################################################
@@ -545,6 +548,47 @@ void __far ImplGetHidReportItem(int Device, int Index, char *Buf)
 
 /*##########################################################################
 #
+#   Name       : HidThread
+#
+#   Purpose....: Hid thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux HidThread "*" rdosdev parm routine [gs ebx]
+void __far HidThread(void *param)
+{
+    int Index;
+    int ok;
+    struct THidDevice *dev;
+
+    dev = (struct THidDevice *)param;
+    Index = dev->DeviceNr;
+
+    ok = OpenHid(dev);
+    if (ok)
+    {
+        GetReportItems(dev);
+        LoadReportItems(dev);
+    
+        for (;;)
+        {
+            if (!HidArr[Index])
+                break;
+
+            RdosWaitMilli(100);
+        }
+        CloseHid(dev);
+    }
+
+    dev->IsRunning = FALSE;
+    RdosTerminateThread();
+}
+
+/*##########################################################################
+#
 #   Name       : UsbAttach
 #
 #   Purpose....: USB attach notification
@@ -563,6 +607,7 @@ void UsbAttach(int controller, int device)
     struct THidDescriptor *descr;
     char *buf = RdosAllocateSmallGlobalMem(0x1000);
     char *ptr;
+    char ThreadName[64];
 
     for (i = 0; i < MAX_HID_DEVICES; i++)
     {
@@ -586,6 +631,11 @@ void UsbAttach(int controller, int device)
                 ptr += descr->Len;
                 size -= descr->Len;
             }
+
+            dev->DeviceNr = i;
+            dev->IsRunning = TRUE;
+            sprintf(ThreadName, "Hid %02hX.%02hX", controller, device);
+            RdosCreateKernelThread(5, 0x1000, HidThread, ThreadName, dev);
             break;
         }
     }
@@ -616,8 +666,12 @@ void UsbDetach(int controller, int device)
         {
             if (dev->Controller == controller && dev->Device == device)
             {
-                RdosFreeMem(RdosPointerToSelector(dev));
                 HidArr[i] = 0;
+
+                while (dev->IsRunning)
+                    RdosWaitMilli(100);
+
+                RdosFreeMem(RdosPointerToSelector(dev));
                 break;
             }
         }
