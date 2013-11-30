@@ -297,20 +297,20 @@ void __far ImplTestGate(const char *msg)
 ##########################################################################*/
 int GetReportItemValue(struct THidReportItem *item)
 {
+    signed char cval;
+    signed short int sval;
     int val = 0;
 
     switch (item->Len)
     {
         case 1:
-            memcpy(&val, item->Data, 1);
+            memcpy(&cval, item->Data, 1);
+            val = cval;
             break;
 
         case 2:
-            memcpy(&val, item->Data, 2);
-            break;
-
-        case 3:
-            memcpy(&val, item->Data, 3);
+            memcpy(&sval, item->Data, 2);
+            val = sval;
             break;
             
         case 4:
@@ -360,6 +360,229 @@ void AddReportUsageItem(struct THidReportItem *item, char *buf)
     else    
         sprintf(str, " (%02hX)", val);
 
+    strcat(buf, str);     
+}
+
+/*##########################################################################
+#
+#   Name       : AddReportControlItem
+#
+#   Purpose....: Add report input, output or feature value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddReportControlItem(struct THidReportItem *item, char *buf)
+{
+    int val = GetReportItemValue(item);
+
+    strcat(buf, " (");
+
+    if (val & 1)
+        strcat(buf, "Const");
+    else
+        strcat(buf, "Data");
+
+    if (val & 2)    
+        strcat(buf, ", Var");
+    else
+        strcat(buf, ", Array");
+
+    if (val & 4)
+        strcat(buf, ", Rel");
+    else
+        strcat(buf, ", Abs");
+
+    if (val & 8)
+        strcat(buf, ", Wrap");
+
+    if (val & 0x10)
+        strcat(buf, ", Non-lin");
+    else
+        strcat(buf, ", Lin");
+
+    if (val & 0x20 == 0)
+        strcat(buf, ", Pref");
+
+    if (val & 0x40)
+        strcat(buf, ", Null");
+
+    if (val & 0x80)
+        strcat(buf, ", Volatile");
+                
+    strcat(buf, ")");
+}
+
+/*##########################################################################
+#
+#   Name       : AddReportCollectionItem
+#
+#   Purpose....: Add report collection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddReportCollectionItem(struct THidReportItem *item, char *buf)
+{
+    int val = GetReportItemValue(item);
+
+    switch (val)
+    {
+        case 0:
+            strcat(buf, " (Physical)");
+            break;
+
+        case 1:
+            strcat(buf, " (Application)");
+            break;
+
+        case 2:
+            strcat(buf, " (Logical)");
+            break;
+
+        case 3:
+            strcat(buf, " (Report)");
+            break;
+
+        case 4:
+            strcat(buf, " (Array)");
+            break;
+
+        case 5:
+            strcat(buf, " (Usage Switch)");
+            break;
+
+        case 6:
+            strcat(buf, " (Usage Modified)");
+            break;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : AddReportUnitItem
+#
+#   Purpose....: Add report unit
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddReportUnitItem(struct THidReportItem *item, char *buf)
+{
+    int val = GetReportItemValue(item);
+    
+    strcat(buf, " (");
+
+    if (val & 0xF)
+    {
+        switch (val & 0xF)
+        {
+            case 1:
+                strcat(buf, "SI Lin");
+                break;
+
+            case 2:
+                strcat(buf, "SI Rot");
+                break;
+
+            case 3:
+                strcat(buf, "Eng Lin");
+                break;
+
+            case 4:
+                strcat(buf, "Eng Rot");
+                break;
+
+            default:
+                strcat(buf, "Resv");
+                break;
+        }
+
+        switch ((val & 0xF0) >> 4)
+        {
+            case 1:
+                strcat(buf, " cm");
+                break;
+
+            case 2:
+                strcat(buf, " radians");
+                break;
+
+            case 3:
+                strcat(buf, " inch");
+                break;
+
+            case 4:
+                strcat(buf, " degrees");
+                break;
+         }
+
+        switch ((val & 0xF00) >> 8)
+        {
+            case 1:
+            case 2:
+                strcat(buf, " gram");
+                break;
+
+            case 3:
+            case 4:
+                strcat(buf, " slug");
+                break;
+        }
+
+        if (val & 0xF000)
+            strcat(buf, " seconds");
+            
+        switch ((val & 0xF0000) >> 16)
+        {
+            case 1:
+            case 2:
+                strcat(buf, " kelvin");
+                break;
+
+            case 3:
+            case 4:
+                strcat(buf, " fahrenheit");
+                break;
+        }
+
+        if (val & 0xF00000)
+            strcat(buf, " ampere");
+
+        if (val & 0xF000000)
+            strcat(buf, " candela");
+    }
+
+    strcat(buf, ")");
+
+}
+
+/*##########################################################################
+#
+#   Name       : AddReportExpItem
+#
+#   Purpose....: Add report unit exponent
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddReportExpItem(struct THidReportItem *item, char *buf)
+{
+    char str[10];    
+    int val = GetReportItemValue(item);
+
+    if (val & 8)
+        val -= 0x10;
+
+    sprintf(str, " (%d)", val);
     strcat(buf, str);     
 }
 
@@ -421,18 +644,22 @@ void __far ImplGetHidReportItem(int Device, int Index, char *Buf)
                 {
                     case MAIN_INPUT:
                         strcat(Buf, "Input");
+                        AddReportControlItem(item, Buf);
                         break;
 
                     case MAIN_OUTPUT:
                         strcat(Buf, "Output");
+                        AddReportControlItem(item, Buf);
                         break;
 
                     case MAIN_BEGIN:
                         strcat(Buf, "Collection");
+                        AddReportCollectionItem(item, Buf);
                         break;
 
                     case MAIN_FEATURE:
                         strcat(Buf, "Feature");
+                        AddReportControlItem(item, Buf);
                         break;
 
                     case MAIN_END:
@@ -446,38 +673,47 @@ void __far ImplGetHidReportItem(int Device, int Index, char *Buf)
 
                     case GLOBAL_LOG_MIN:
                         strcat(Buf, "Logical Min");
+                        AddReportItemValue(item, Buf);
                         break;
 
                     case GLOBAL_LOG_MAX:
                         strcat(Buf, "Logical Max");
+                        AddReportItemValue(item, Buf);
                         break;
 
                     case GLOBAL_PHYS_MIN:
                         strcat(Buf, "Physical Min");
+                        AddReportItemValue(item, Buf);
                         break;
 
                     case GLOBAL_PHYS_MAX:
                         strcat(Buf, "Physical Max");
+                        AddReportItemValue(item, Buf);
                         break;
                         
                     case GLOBAL_UNIT_EXP:
                         strcat(Buf, "Unit Exp");
+                        AddReportExpItem(item, Buf);
                         break;
                         
                     case GLOBAL_UNIT:
                         strcat(Buf, "Unit");
+                        AddReportUnitItem(item, Buf);
                         break;
                         
                     case GLOBAL_REPORT_SIZE:
                         strcat(Buf, "Report Size");
+                        AddReportItemValue(item, Buf);
                         break;
                         
                     case GLOBAL_REPORT_ID:
                         strcat(Buf, "Report ID");
+                        AddReportItemValue(item, Buf);
                         break;
                         
                     case GLOBAL_REPORT_COUNT:
                         strcat(Buf, "Report Count");
+                        AddReportItemValue(item, Buf);
                         break;
                                                 
                     case GLOBAL_PUSH:
@@ -495,10 +731,12 @@ void __far ImplGetHidReportItem(int Device, int Index, char *Buf)
 
                     case LOCAL_USE_MIN:
                         strcat(Buf, "Usage Min");
+                        AddReportItemValue(item, Buf);
                         break;
 
                     case LOCAL_USE_MAX:
                         strcat(Buf, "Usage Max");
+                        AddReportItemValue(item, Buf);
                         break;
 
                     case LOCAL_DES_IND:
