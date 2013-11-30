@@ -80,6 +80,8 @@ protected:
     int FHasLowTemp;
     int FLowTemp;
 
+    int FOffCounter;
+
         int FValidTank;
         int FValidHeat;
 

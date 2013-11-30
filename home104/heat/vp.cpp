@@ -80,6 +80,7 @@ TVp::TVp(TControlThread *control)
     FHasCirc = FALSE;
     FHistoryCount = 0;
     FMaxTank = 450;
+    FOffCounter = 30;
 
     for (i = 0; i < 20; i++)
         ValidHeatArr[i] = FALSE;
@@ -304,7 +305,7 @@ void TVp::SetAmbient(int ref, int ambient)
 
         if (ambient < 150)
         {
-            FMaxTank = 370 - ambient;
+            FMaxTank = 400 - ambient;
 
             if (FMaxTank > 450)
                 FMaxTank = 450;
@@ -376,6 +377,9 @@ void TVp::UpdateVp(int diff)
             
             if (diff < 0)
             {
+                if (FOffCounter)
+                    FOffCounter--;
+                    
                 FIncCount = 0;
             
                 if (!FHasLowTemp)
@@ -384,7 +388,7 @@ void TVp::UpdateVp(int diff)
                     FHasLowTemp = TRUE;
                 }
 
-                if (FTankTemp > FLowTemp + 5)
+                if (FOffCounter == 0 && FTankTemp > FLowTemp + 5)
                     on = FALSE;                
                 else
                     on = TRUE;
@@ -392,6 +396,8 @@ void TVp::UpdateVp(int diff)
 
             if (diff > 0)
             {
+                FOffCounter = 30;
+                
                 if (FIncCount)
                 {
                     FLowTemp = FTankTemp - 30;
