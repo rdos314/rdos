@@ -379,6 +379,26 @@ void PrepareReportIds(struct THidDevice *dev)
 
 /*##########################################################################
 #
+#   Name       : InitReportEntry
+#
+#   Purpose....: Initialize report entry fields
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void InitReportEntry(struct THidReportEntry *entry)
+{
+    entry->UsagePage = 0;
+    entry->UsageId = 0;
+    entry->StartBit = 0;
+    entry->BitCount = 0;
+    entry->ItemParams = 0;
+}
+
+/*##########################################################################
+#
 #   Name       : CreateReportIdArrays
 #
 #   Purpose....: Create report ID arrays
@@ -404,11 +424,7 @@ void CreateReportIdArrays(struct THidDevice *dev)
             {
                 arr = (struct THidReportEntry *)RdosAllocateSmallGlobalMem(report->InputCount * sizeof(struct THidReportEntry));
                 for (i = 0; i < report->InputCount; i++)
-                {
-                    arr[i].UsagePage = 0;
-                    arr[i].UsageId = 0;
-                    arr[i].BitCount = 0;
-                }
+                    InitReportEntry(&arr[i]);
                 report->InputArr = arr;
             }            
 
@@ -416,11 +432,7 @@ void CreateReportIdArrays(struct THidDevice *dev)
             {
                 arr = (struct THidReportEntry *)RdosAllocateSmallGlobalMem(report->OutputCount * sizeof(struct THidReportEntry));
                 for (i = 0; i < report->OutputCount; i++)
-                {
-                    arr[i].UsagePage = 0;
-                    arr[i].UsageId = 0;
-                    arr[i].BitCount = 0;
-                }
+                    InitReportEntry(&arr[i]);
                 report->OutputArr = arr;
             }            
 
@@ -428,11 +440,7 @@ void CreateReportIdArrays(struct THidDevice *dev)
             {
                 arr = (struct THidReportEntry *)RdosAllocateSmallGlobalMem(report->FeatureCount * sizeof(struct THidReportEntry));
                 for (i = 0; i < report->FeatureCount; i++)
-                {
-                    arr[i].UsagePage = 0;
-                    arr[i].UsageId = 0;
-                    arr[i].BitCount = 0;
-                }
+                    InitReportEntry(&arr[i]);
                 report->FeatureArr = arr;
             }            
         }
