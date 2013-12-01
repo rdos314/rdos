@@ -35,6 +35,7 @@
 #define TRUE !FALSE
 
 #define MAX_HID_DEVICES 32
+#define MAX_REPORT_IDS  64
 
 extern void InitHid();
 
@@ -81,6 +82,34 @@ struct THidReportItem
     char *Data;
 };
 
+struct THidReportEntry
+{
+    int UsagePage;
+    int UsageId;
+
+    int StartBit;
+    int BitCount;
+
+    int ItemParams;
+};
+
+struct THidReportArr
+{
+    int Count;
+    struct THidReportEntry *Data[1];
+};
+
+struct THidReportIdEntry
+{
+    int InputCount;
+    int OutputCount;
+    int FeatureCount;
+    
+    struct THidReportArr *InputArr;
+    struct THidReportArr *OutputArr;
+    struct THidReportArr *FeatureArr;
+};
+    
 struct THidDevice
 {
 /* shared with asm */    
@@ -94,6 +123,7 @@ struct THidDevice
     int IsRunning;
     int ItemCount;
     struct THidReportItem *ItemArr;
+    struct THidReportIdEntry *ReportIdArr[MAX_REPORT_IDS];
     int ReportDescrSize;
     char ReportDescrData[1];
 };
@@ -272,6 +302,86 @@ void LoadReportItems(struct THidDevice *dev)
     }
 };
 
+/*##########################################################################
+#
+#   Name       : PrepareReportIds
+#
+#   Purpose....: Prepare report IDs
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void PrepareReportIds(struct THidDevice *dev)
+{
+
+    int HasReport = FALSE;
+    int Index;
+    int ReportId = 0;
+    struct THidReportItem *item;
+    struct THidReportIdEntry *CurrReport = 0;
+
+    for (Index = 0; Index < dev->ItemCount; Index++)
+    {
+        item = dev->ItemArr + Index;
+        if (item->Tag == GLOBAL_REPORT_ID)
+        {
+            ReportId = GetReportItemValue(item);
+            if (ReportId > 0 && ReportId < MAX_REPORT_IDS)
+            {
+                HasReport = TRUE;
+                CurrReport = (struct THidReportIdEntry *)RdosAllocateSmallGlobalMem(sizeof(struct THidReportIdEntry));
+                dev->ReportIdArr[ReportId] = CurrReport;
+
+                CurrReport->InputCount = 0;
+                CurrReport->OutputCount = 0;
+                CurrReport->FeatureCount = 0;
+                    
+                CurrReport->InputArr = 0;
+                CurrReport->OutputArr = 0;
+                CurrReport->FeatureArr = 0;
+            }
+            else
+                CurrReport = 0;
+        }
+
+        switch (item->Tag)
+        {
+            case MAIN_INPUT:
+            case MAIN_OUTPUT:
+            case MAIN_FEATURE:
+                if (!CurrReport && !HasReport)
+                {
+                    ReportId = 0;
+                    HasReport = TRUE;
+                    CurrReport = (struct THidReportIdEntry *)RdosAllocateSmallGlobalMem(sizeof(struct THidReportIdEntry));
+                    dev->ReportIdArr[ReportId] = CurrReport;
+
+                    CurrReport->InputCount = 0;
+                    CurrReport->OutputCount = 0;
+                    CurrReport->FeatureCount = 0;
+                    
+                    CurrReport->InputArr = 0;
+                    CurrReport->OutputArr = 0;
+                    CurrReport->FeatureArr = 0;
+                }
+                break;
+        }
+
+        if (CurrReport)
+        {                    
+            if (item->Tag == MAIN_INPUT)
+                CurrReport->InputCount++;
+            
+            if (item->Tag == MAIN_OUTPUT)
+                CurrReport->OutputCount++;
+
+            if (item->Tag == MAIN_FEATURE)
+                CurrReport->FeatureCount++;
+        }         
+    }
+}
 
 /*##########################################################################
 #
@@ -810,6 +920,7 @@ void __far HidThread(void *param)
     {
         GetReportItems(dev);
         LoadReportItems(dev);
+        PrepareReportIds(dev);
     
         for (;;)
         {
@@ -840,6 +951,7 @@ void __far HidThread(void *param)
 void UsbAttach(int controller, int device)
 {
     int i;
+    int j;
     struct THidDevice *dev;
     int size;
     struct THidDescriptor *descr;
@@ -869,6 +981,9 @@ void UsbAttach(int controller, int device)
                 ptr += descr->Len;
                 size -= descr->Len;
             }
+
+            for (j = 0; j < MAX_REPORT_IDS; j++)
+                dev->ReportIdArr[j] = 0;
 
             dev->DeviceNr = i;
             dev->IsRunning = TRUE;
