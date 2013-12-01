@@ -312,6 +312,7 @@ void PrepareReportIds(struct THidDevice *dev)
 
     int HasReport = FALSE;
     int Index;
+    int ReportCount = 1;
     int ReportId = 0;
     struct THidReportItem *item;
     struct THidReportIdEntry *CurrReport = 0;
@@ -361,18 +362,23 @@ void PrepareReportIds(struct THidDevice *dev)
                     CurrReport->FeatureArr = 0;
                 }
                 break;
+
+            case GLOBAL_REPORT_COUNT:
+                ReportCount = GetReportItemValue(item);
+                break;
+
         }
 
         if (CurrReport)
         {                    
             if (item->Tag == MAIN_INPUT)
-                CurrReport->InputCount++;
+                CurrReport->InputCount += ReportCount;
             
             if (item->Tag == MAIN_OUTPUT)
-                CurrReport->OutputCount++;
+                CurrReport->OutputCount += ReportCount;
 
             if (item->Tag == MAIN_FEATURE)
-                CurrReport->FeatureCount++;
+                CurrReport->FeatureCount += ReportCount;
         }         
     }
 }
