@@ -93,21 +93,15 @@ struct THidReportEntry
     int ItemParams;
 };
 
-struct THidReportArr
-{
-    int Count;
-    struct THidReportEntry *Data[1];
-};
-
 struct THidReportIdEntry
 {
     int InputCount;
     int OutputCount;
     int FeatureCount;
     
-    struct THidReportArr *InputArr;
-    struct THidReportArr *OutputArr;
-    struct THidReportArr *FeatureArr;
+    struct THidReportEntry *InputArr;
+    struct THidReportEntry *OutputArr;
+    struct THidReportEntry *FeatureArr;
 };
     
 struct THidDevice
@@ -381,6 +375,68 @@ void PrepareReportIds(struct THidDevice *dev)
                 CurrReport->FeatureCount++;
         }         
     }
+}
+
+/*##########################################################################
+#
+#   Name       : CreateReportIdArrays
+#
+#   Purpose....: Create report ID arrays
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void CreateReportIdArrays(struct THidDevice *dev)
+{
+    int i;
+    int ReportId;
+    struct THidReportIdEntry *report;
+    struct THidReportEntry *arr;
+
+    for (ReportId = 0; ReportId < MAX_REPORT_IDS; ReportId++)
+    {
+        report = dev->ReportIdArr[ReportId];
+        if (report)
+        {
+            if (report->InputCount)
+            {
+                arr = (struct THidReportEntry *)RdosAllocateSmallGlobalMem(report->InputCount * sizeof(struct THidReportEntry));
+                for (i = 0; i < report->InputCount; i++)
+                {
+                    arr[i].UsagePage = 0;
+                    arr[i].UsageId = 0;
+                    arr[i].BitCount = 0;
+                }
+                report->InputArr = arr;
+            }            
+
+            if (report->OutputCount)
+            {
+                arr = (struct THidReportEntry *)RdosAllocateSmallGlobalMem(report->OutputCount * sizeof(struct THidReportEntry));
+                for (i = 0; i < report->OutputCount; i++)
+                {
+                    arr[i].UsagePage = 0;
+                    arr[i].UsageId = 0;
+                    arr[i].BitCount = 0;
+                }
+                report->OutputArr = arr;
+            }            
+
+            if (report->FeatureCount)
+            {
+                arr = (struct THidReportEntry *)RdosAllocateSmallGlobalMem(report->FeatureCount * sizeof(struct THidReportEntry));
+                for (i = 0; i < report->FeatureCount; i++)
+                {
+                    arr[i].UsagePage = 0;
+                    arr[i].UsageId = 0;
+                    arr[i].BitCount = 0;
+                }
+                report->FeatureArr = arr;
+            }            
+        }
+    }    
 }
 
 /*##########################################################################
@@ -921,6 +977,7 @@ void __far HidThread(void *param)
         GetReportItems(dev);
         LoadReportItems(dev);
         PrepareReportIds(dev);
+        CreateReportIdArrays(dev);
     
         for (;;)
         {
