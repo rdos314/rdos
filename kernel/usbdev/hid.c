@@ -309,7 +309,6 @@ void LoadReportItems(struct THidDevice *dev)
 ##########################################################################*/
 void PrepareReportIds(struct THidDevice *dev)
 {
-
     int HasReport = FALSE;
     int Index;
     int ReportCount = 1;
@@ -462,6 +461,93 @@ void CreateReportIdArrays(struct THidDevice *dev)
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 void __far ImplTestGate(const char *msg)
 {
+    int i;
+    int Index;
+    int ReportCount = 1;
+    int ReportSize = 1;
+    int InputBit = 0;
+    int OutputBit = 0;
+    int FeatureBit = 0;
+    int InputEntry = 0;
+    int OutputEntry = 0;
+    int FeatureEntry = 0;
+    int ReportId = 0;
+    struct THidDevice *dev;
+    struct THidReportItem *item;
+    struct THidReportIdEntry *CurrReport = 0;
+    struct THidReportEntry *entry;
+
+    dev = HidArr[0];
+
+    CurrReport = dev->ReportIdArr[0];
+
+    for (Index = 0; Index < dev->ItemCount; Index++)
+    {
+        item = dev->ItemArr + Index;
+        if (item->Tag == GLOBAL_REPORT_ID)
+        {
+            InputBit = 0;
+            OutputBit = 0;
+            FeatureBit = 0;
+
+            InputEntry = 0;
+            OutputEntry = 0;
+            FeatureEntry = 0;
+            
+            ReportId = GetReportItemValue(item);
+            if (ReportId > 0 && ReportId < MAX_REPORT_IDS)
+                CurrReport = dev->ReportIdArr[ReportId];
+            else
+                CurrReport = 0;
+        }
+
+        if (CurrReport)
+        {                    
+            switch (item->Tag)
+            {
+                case GLOBAL_REPORT_SIZE:
+                    ReportSize = GetReportItemValue(item);
+                    break;
+
+                case GLOBAL_REPORT_COUNT:
+                    ReportCount = GetReportItemValue(item);
+                    break;
+
+                case MAIN_INPUT:
+                    for (i = 0; i < ReportCount; i++)
+                    {
+                        entry = &CurrReport->InputArr[InputEntry + i];
+                        entry->StartBit = InputBit;
+                        entry->BitCount = ReportSize;
+                        InputBit += ReportSize;
+                    }
+                    InputEntry += ReportCount;
+                    break;
+
+                case MAIN_OUTPUT:
+                    for (i = 0; i < ReportCount; i++)
+                    {
+                        entry = &CurrReport->OutputArr[OutputEntry + i];
+                        entry->StartBit = OutputBit;
+                        entry->BitCount = ReportSize;
+                        OutputBit += ReportSize;
+                    }
+                    OutputEntry += ReportCount;
+                    break;
+
+                case MAIN_FEATURE:
+                    for (i = 0; i < ReportCount; i++)
+                    {
+                        entry = &CurrReport->FeatureArr[FeatureEntry + i];
+                        entry->StartBit = FeatureBit;
+                        entry->BitCount = ReportSize;
+                        FeatureBit += ReportSize;
+                    }
+                    FeatureEntry += ReportCount;
+                    break;
+            }
+        }         
+    }
 }
 
 /*##########################################################################
