@@ -34,11 +34,10 @@ INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
 INCLUDE pci.inc
 
-MAX_SD_DEVICES = 32
+MAX_SD_DEVICES      = 32
+MAX_NAME_SIZE       = 24
 
-STATE_BAD       = 1
-STATE_INIT      = 2
-
+REG_STATE   = 24h
 REG_RESET   = 2Fh
 
 sd_device_struc STRUC
@@ -47,7 +46,6 @@ sd_reg_sel      DW ?
 sd_pci_bus      DB ?
 sd_pci_device   DB ?
 sd_pci_function DB ?
-sd_state        DB ?
 
 sd_device_struc ENDS
 
@@ -55,6 +53,9 @@ data    SEGMENT byte public 'DATA'
 
 sd_dev_count   DW ?
 sd_dev_arr     DW MAX_SD_DEVICES DUP (?)
+
+serv_name_ptr        DW ?
+serv_name_str        DB MAX_NAME_SIZE DUP(?)
 
 data    ENDS
 
@@ -170,7 +171,7 @@ ipdLoop:
     CreateDataSelector16
     pop cx
     mov fs,bx
-    mov fs:REG_RESET,1
+    mov byte ptr fs:REG_RESET,1
     pop bx
     call AddDevice
 ;
@@ -193,6 +194,8 @@ InitPciDev  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupInts Proc near
+    pushad
+;    
     mov bh,ds:sd_pci_bus
     mov bl,ds:sd_pci_device
     mov ch,ds:sd_pci_function
@@ -222,8 +225,25 @@ siIrq:
     RequestIrqHandler
 
 siOk:    
+    popad
     ret
 SetupInts   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ServThread
+;
+;           DESCRIPTION:    SDIO device server thread
+;
+;           PARAMETERS:     FS      SD device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_thread_name   DB 'SDIO ',0
+
+serv_thread:
+    int 3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -232,12 +252,12 @@ SetupInts   Endp
 ;
 ;           DESCRIPTION:    Setup device
 ;
-;           PARAMETERS:     DS     Device
+;           PARAMETERS:     DS      Device sel
+;                           DL      Device #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupDev    Proc near
-    int 3
     mov fs,ds:sd_reg_sel
     mov al,fs:REG_RESET
     and al,1
@@ -247,14 +267,26 @@ SetupDev    Proc near
     WaitMilliSec
     mov al,fs:REG_RESET
     and al,1
-    jz stdResetOk
-;
-    mov ds:sd_state, STATE_BAD    
-    jmp stdDone    
+    jnz stdDone
 
-stdResetOk:        
-    mov ds:sd_state, STATE_INIT
-
+stdResetOk:
+    mov ax,ds
+    mov fs,ax
+    mov ax,cs
+    mov ds,ax
+    mov ax,SEG data    
+    mov es,ax
+;    
+    mov al,dl
+    add al,'0'
+    mov si,es:serv_name_ptr
+    mov es:[si],al
+    mov edi,OFFSET serv_name_str
+    mov esi,OFFSET serv_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+    
 stdDone:    
     ret
 SetupDev    Endp
@@ -273,6 +305,7 @@ StartDevices Proc near
     mov ds,ax
     mov cx,ds:sd_dev_count
     mov bx,OFFSET sd_dev_arr
+    xor dl,dl
     or cx,cx
     jz sdvDone
 
@@ -280,16 +313,19 @@ sdvLoop:
     push ds
     push bx
     push cx
+    push dx
 ;
     mov ds,ds:[bx]
     call SetupInts
     call SetupDev
 ;
+    pop dx
     pop cx
     pop bx
     pop ds
 ;
     add bx,2
+    inc dl
     loop sdvLoop
 
 sdvDone:
@@ -299,7 +335,7 @@ StartDevices    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           sd
+;           NAME:           init_sd_thread
 ;
 ;           DESCRIPTION:    SD init thread
 ;
@@ -309,13 +345,32 @@ StartDevices    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-sd_name DB 'SD Card',0
+init_sd_name DB 'SD Card',0
 
-sd_thread:
-    int 3
+init_sd_thread:
+    mov ax,SEG data
+    mov ds,ax
+    mov es,ax
+;    
+    mov di,OFFSET serv_name_str
+    mov si,OFFSET serv_thread_name
+
+stdNameLoop:    
+    lods byte ptr cs:[si]
+    stosb
+    or al,al
+    jnz stdNameLoop
+;
+    dec di
+    mov ds:serv_name_ptr,di
+    mov al,'0'
+    stosb
+    xor al,al
+    stosb
+;    
     call InitPciDev
     call StartDevices
-    
+    TerminateThread
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -338,8 +393,8 @@ init_sd    Proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov di,OFFSET sd_name
-    mov si,OFFSET sd_thread
+    mov di,OFFSET init_sd_name
+    mov si,OFFSET init_sd_thread
     mov ax,4
     mov cx,stack0_size
     CreateThread
