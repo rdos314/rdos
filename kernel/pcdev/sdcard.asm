@@ -38,6 +38,13 @@ MAX_SD_DEVICES      = 32
 MAX_NAME_SIZE       = 24
 
 REG_BLOCK_SIZE          = 4
+REG_ARG                 = 8
+REG_TRANS_MODE          = 0Ch
+REG_CMD                 = 0Eh
+REG_RESP0               = 10h
+REG_RESP1               = 14h
+REG_RESP2               = 18h
+REG_RESP3               = 1Ch
 REG_STATE               = 24h
 REG_CONTROL             = 28h
 REG_POWER               = 29h
@@ -364,6 +371,78 @@ SetPower    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           WaitForCompletion
+;
+;           DESCRIPTION:    Wait for completion
+;
+;           PARAMETERS:     FS      SD io space
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForCompletion   Proc near
+
+wfcWait:
+    WaitForSignal
+    test ds:sd_pend_int,1
+    jz wfcWait
+;    
+    ret
+WaitForCompletion   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SendCmd0
+;
+;           DESCRIPTION:    Send CMD0
+;
+;           PARAMETERS:     FS      SD io space
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendCmd0    Proc near
+    mov ds:sd_pend_int,0
+    ClearSignal
+    mov dword ptr fs:REG_ARG,-1
+    mov word ptr fs:REG_TRANS_MODE,0
+    mov word ptr fs:REG_CMD,0
+    call WaitForCompletion
+    ret
+SendCmd0    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SendCmd8
+;
+;           DESCRIPTION:    Send CMD8
+;
+;           PARAMETERS:     FS      SD io space
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendCmd8    Proc near
+    mov ds:sd_pend_int,0
+    ClearSignal
+    mov dword ptr fs:REG_ARG,1A5h
+    mov word ptr fs:REG_TRANS_MODE,0
+    mov word ptr fs:REG_CMD,802h
+    call WaitForCompletion
+;
+    mov eax,fs:REG_RESP0
+    cmp eax,1A5h
+    clc
+    je sc8Done
+;
+    stc
+
+sc8Done:    
+    ret
+SendCmd8    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ServThread
 ;
 ;           DESCRIPTION:    SDIO device server thread
@@ -398,8 +477,15 @@ stInserted:
     call SetSdClock
     jc stFailed
 ;
-    int 3 
     call SetPower
+    jc stFailed
+;
+    mov ax,50
+    WaitMilliSec
+;
+    call SendCmd0        
+    call SendCmd8
+    int 3
     jc stFailed
 
 stFailed: 
