@@ -674,6 +674,7 @@
 #define usergate_dupl_module_file_handle 0x00000218
 
 #define usergate_get_hid_report_item 0x00000219
+#define usergate_get_hid_report_data 0x0000021A
 
 
 
@@ -1354,6 +1355,7 @@
 #define CallGate_dupl_module_file_handle 0x67 0x9a 24 2 0 0 3 0
 
 #define CallGate_get_hid_report_item 0x67 0x9a 25 2 0 0 3 0
+#define CallGate_get_hid_report_data 0x67 0x9a 26 2 0 0 3 0
 
 #else
 
@@ -2032,5 +2034,6 @@
 #define CallGate_dupl_module_file_handle 0x3e 0x67 0x9a 24 2 0 0 3 0
 
 #define CallGate_get_hid_report_item 0x3e 0x67 0x9a 25 2 0 0 3 0
+#define CallGate_get_hid_report_data 0x3e 0x67 0x9a 26 2 0 0 3 0
 
 #endif

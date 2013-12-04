@@ -3421,6 +3421,13 @@ GetHidReportItem      MACRO
 	UserGate get_hid_report_item_nr
 	                ENDM
 
+;   IN  EAX         Device #
+;   IN  EDX         Entry #
+;   IN  ES:(E)DI    HID data buffer
+GetHidReportData      MACRO
+	UserGate get_hid_report_data_nr
+	                ENDM
+
 ;;;;;;;;;;; Touch ;;;;;;;;;;
 
 ;   OUT NC          Touch hardware available

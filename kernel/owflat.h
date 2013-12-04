@@ -253,6 +253,12 @@
     parm [eax] [edx] [edi] \
     value [eax];
 
+#pragma aux RdosGetHidReportData = \
+    CallGate_get_hid_report_data  \
+    CarryToBool \
+    parm [eax] [edx] [edi] \
+    value [eax];
+
 #pragma aux RdosGetAudioDeviceCount = \
     "xor ecx,ecx" \
     CallGate_get_audio_device_count  \

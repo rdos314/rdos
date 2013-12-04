@@ -122,6 +122,20 @@ void THidCommand::ShowDevices()
                 else
                     break;
             }
+
+            Write("\r\n");
+            
+            for (ObjNr = 0; ObjNr < 0x1000; ObjNr++)
+            {
+                ok = RdosGetHidReportData(DevNr, ObjNr, ItemName);
+                if (ok)
+                {
+                    Write(ItemName);           
+                    Write("\r\n");
+                }
+                else
+                    break;
+            }
         }
         else
             break;
