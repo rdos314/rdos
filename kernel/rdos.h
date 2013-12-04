@@ -215,7 +215,9 @@ int RDOSAPI RdosGetPciDeviceIrq(int Index);
 int RDOSAPI RdosGetCpuTemperature();
 
 int RDOSAPI RdosGetHidReportItem(int Device, int Index, char *Name);
-int RDOSAPI RdosGetHidReportData(int Device, int Index, char *Name);
+int RDOSAPI RdosGetHidReportInputData(int Device, int Report, int Index, char *Name);
+int RDOSAPI RdosGetHidReportOutputData(int Device, int Report, int Index, char *Name);
+int RDOSAPI RdosGetHidReportFeatureData(int Device, int Report, int Index, char *Name);
 
 int RDOSAPI RdosGetAudioDeviceCount();
 int RDOSAPI RdosGetAudioCodecCount(int Device);

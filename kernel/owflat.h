@@ -253,10 +253,22 @@
     parm [eax] [edx] [edi] \
     value [eax];
 
-#pragma aux RdosGetHidReportData = \
-    CallGate_get_hid_report_data  \
+#pragma aux RdosGetHidReportInputData = \
+    CallGate_get_hid_report_input_data  \
     CarryToBool \
-    parm [eax] [edx] [edi] \
+    parm [eax] [ebx] [edx] [edi] \
+    value [eax];
+
+#pragma aux RdosGetHidReportOutputData = \
+    CallGate_get_hid_report_output_data  \
+    CarryToBool \
+    parm [eax] [ebx] [edx] [edi] \
+    value [eax];
+
+#pragma aux RdosGetHidReportFeatureData = \
+    CallGate_get_hid_report_feature_data  \
+    CarryToBool \
+    parm [eax] [ebx] [edx] [edi] \
     value [eax];
 
 #pragma aux RdosGetAudioDeviceCount = \

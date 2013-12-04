@@ -171,6 +171,78 @@ int OpenHid(struct THidDevice *dev)
 
 /*##########################################################################
 #
+#   Name       : GetReportItemSigned
+#
+#   Purpose....: Get report item signed value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int GetReportItemSigned(struct THidReportItem *item)
+{
+    signed char cval;
+    signed short int sval;
+    int val = 0;
+
+    switch (item->Len)
+    {
+        case 1:
+            memcpy(&cval, item->Data, 1);
+            val = cval;
+            break;
+
+        case 2:
+            memcpy(&sval, item->Data, 2);
+            val = sval;
+            break;
+            
+        case 4:
+            memcpy(&val, item->Data, 4);
+            break;
+    }
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : GetReportItemUnsigned
+#
+#   Purpose....: Get report item unsigned value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int GetReportItemUnsigned(struct THidReportItem *item)
+{
+    unsigned char cval;
+    unsigned short int sval;
+    unsigned int val = 0;
+
+    switch (item->Len)
+    {
+        case 1:
+            memcpy(&cval, item->Data, 1);
+            val = cval;
+            break;
+
+        case 2:
+            memcpy(&sval, item->Data, 2);
+            val = sval;
+            break;
+            
+        case 4:
+            memcpy(&val, item->Data, 4);
+            break;
+    }
+    return (int)val;
+}
+
+/*##########################################################################
+#
 #   Name       : GetReportItems
 #
 #   Purpose....: Get report item count
@@ -321,7 +393,7 @@ void PrepareReportIds(struct THidDevice *dev)
         item = dev->ItemArr + Index;
         if (item->Tag == GLOBAL_REPORT_ID)
         {
-            ReportId = GetReportItemValue(item);
+            ReportId = GetReportItemUnsigned(item);
             if (ReportId > 0 && ReportId < MAX_REPORT_IDS)
             {
                 HasReport = TRUE;
@@ -363,7 +435,7 @@ void PrepareReportIds(struct THidDevice *dev)
                 break;
 
             case GLOBAL_REPORT_COUNT:
-                ReportCount = GetReportItemValue(item);
+                ReportCount = GetReportItemUnsigned(item);
                 break;
 
         }
@@ -454,6 +526,124 @@ void CreateReportIdArrays(struct THidDevice *dev)
 
 /*##########################################################################
 #
+#   Name       : LoadReportIdArrays
+#
+#   Purpose....: Load report ID arrays
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void LoadReportIdArrays(struct THidDevice *dev)
+{
+    int i;
+    int Index;
+    int ReportCount = 1;
+    int ReportSize = 1;
+    int InputBit = 0;
+    int OutputBit = 0;
+    int FeatureBit = 0;
+    int InputEntry = 0;
+    int OutputEntry = 0;
+    int FeatureEntry = 0;
+    int ReportId = 0;
+    int UsagePage = 0;
+    int UsageId = 0;
+    struct THidReportItem *item;
+    struct THidReportIdEntry *CurrReport = 0;
+    struct THidReportEntry *entry;
+
+    CurrReport = dev->ReportIdArr[0];
+
+    for (Index = 0; Index < dev->ItemCount; Index++)
+    {
+        item = dev->ItemArr + Index;
+        if (item->Tag == GLOBAL_REPORT_ID)
+        {
+            InputBit = 0;
+            OutputBit = 0;
+            FeatureBit = 0;
+
+            InputEntry = 0;
+            OutputEntry = 0;
+            FeatureEntry = 0;
+            
+            ReportId = GetReportItemUnsigned(item);
+            if (ReportId > 0 && ReportId < MAX_REPORT_IDS)
+                CurrReport = dev->ReportIdArr[ReportId];
+            else
+                CurrReport = 0;
+        }
+
+        if (CurrReport)
+        {                    
+            switch (item->Tag)
+            {
+                case GLOBAL_REPORT_SIZE:
+                    ReportSize = GetReportItemUnsigned(item);
+                    break;
+
+                case GLOBAL_REPORT_COUNT:
+                    ReportCount = GetReportItemUnsigned(item);
+                    break;
+
+                case GLOBAL_USAGE:
+                    UsagePage = GetReportItemUnsigned(item);
+                    break;
+                    
+                case LOCAL_USE:
+                    UsageId = GetReportItemUnsigned(item);
+                    break;
+
+                case MAIN_INPUT:
+                    for (i = 0; i < ReportCount; i++)
+                    {
+                        entry = &CurrReport->InputArr[InputEntry + i];
+                        entry->StartBit = InputBit;
+                        entry->BitCount = ReportSize;
+                        entry->UsagePage = UsagePage;
+                        entry->UsageId = UsageId;
+                        entry->ItemParams = GetReportItemUnsigned(item);
+                        InputBit += ReportSize;
+                    }
+                    InputEntry += ReportCount;
+                    break;
+
+                case MAIN_OUTPUT:
+                    for (i = 0; i < ReportCount; i++)
+                    {
+                        entry = &CurrReport->OutputArr[OutputEntry + i];
+                        entry->StartBit = OutputBit;
+                        entry->BitCount = ReportSize;
+                        entry->UsagePage = UsagePage;
+                        entry->UsageId = UsageId;
+                        entry->ItemParams = GetReportItemUnsigned(item);
+                        OutputBit += ReportSize;
+                    }
+                    OutputEntry += ReportCount;
+                    break;
+
+                case MAIN_FEATURE:
+                    for (i = 0; i < ReportCount; i++)
+                    {
+                        entry = &CurrReport->FeatureArr[FeatureEntry + i];
+                        entry->StartBit = FeatureBit;
+                        entry->BitCount = ReportSize;
+                        entry->UsagePage = UsagePage;
+                        entry->UsageId = UsageId;
+                        entry->ItemParams = GetReportItemUnsigned(item);
+                        FeatureBit += ReportSize;
+                    }
+                    FeatureEntry += ReportCount;
+                    break;
+            }
+        }         
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : Test gate
 #
 ##########################################################################*/
@@ -494,7 +684,7 @@ void __far ImplTestGate(const char *msg)
             OutputEntry = 0;
             FeatureEntry = 0;
             
-            ReportId = GetReportItemValue(item);
+            ReportId = GetReportItemUnsigned(item);
             if (ReportId > 0 && ReportId < MAX_REPORT_IDS)
                 CurrReport = dev->ReportIdArr[ReportId];
             else
@@ -506,11 +696,11 @@ void __far ImplTestGate(const char *msg)
             switch (item->Tag)
             {
                 case GLOBAL_REPORT_SIZE:
-                    ReportSize = GetReportItemValue(item);
+                    ReportSize = GetReportItemUnsigned(item);
                     break;
 
                 case GLOBAL_REPORT_COUNT:
-                    ReportCount = GetReportItemValue(item);
+                    ReportCount = GetReportItemUnsigned(item);
                     break;
 
                 case MAIN_INPUT:
@@ -552,55 +742,38 @@ void __far ImplTestGate(const char *msg)
 
 /*##########################################################################
 #
-#   Name       : GetReportItemValue
+#   Name       : AddReportItemSigned
 #
-#   Purpose....: Get report item value
+#   Purpose....: Add report item signed value
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int GetReportItemValue(struct THidReportItem *item)
+void AddReportItemSigned(struct THidReportItem *item, char *buf)
 {
-    signed char cval;
-    signed short int sval;
-    int val = 0;
-
-    switch (item->Len)
-    {
-        case 1:
-            memcpy(&cval, item->Data, 1);
-            val = cval;
-            break;
-
-        case 2:
-            memcpy(&sval, item->Data, 2);
-            val = sval;
-            break;
-            
-        case 4:
-            memcpy(&val, item->Data, 4);
-            break;
-    }
-    return val;
+    char str[10];    
+    int val = GetReportItemSigned(item);
+    sprintf(str, " (%d)", val);
+    strcat(buf, str);     
 }
 
 /*##########################################################################
 #
-#   Name       : AddReportItemValue
+#   Name       : AddReportItemUnsigned
 #
-#   Purpose....: Add report item value
+#   Purpose....: Add report item unsigned value
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void AddReportItemValue(struct THidReportItem *item, char *buf)
+void AddReportItemUnsigned(struct THidReportItem *item, char *buf)
 {
     char str[10];    
-    int val = GetReportItemValue(item);
+    int val = GetReportItemUnsigned(item);
     sprintf(str, " (%d)", val);
     strcat(buf, str);     
 }
@@ -619,7 +792,7 @@ void AddReportItemValue(struct THidReportItem *item, char *buf)
 void AddReportUsageItem(struct THidReportItem *item, char *buf)
 {
     char str[10];    
-    int val = GetReportItemValue(item);
+    int val = GetReportItemUnsigned(item);
 
     if (item->Len == 4)
         sprintf(str, " (%04hX)", val);
@@ -631,7 +804,7 @@ void AddReportUsageItem(struct THidReportItem *item, char *buf)
 
 /*##########################################################################
 #
-#   Name       : AddReportControlItem
+#   Name       : AddReportControl
 #
 #   Purpose....: Add report input, output or feature value
 #
@@ -640,10 +813,8 @@ void AddReportUsageItem(struct THidReportItem *item, char *buf)
 #   Returns....: *
 #
 ##########################################################################*/
-void AddReportControlItem(struct THidReportItem *item, char *buf)
+void AddReportControl(char *buf, int val)
 {
-    int val = GetReportItemValue(item);
-
     strcat(buf, " (");
 
     if (val & 1)
@@ -683,6 +854,24 @@ void AddReportControlItem(struct THidReportItem *item, char *buf)
 
 /*##########################################################################
 #
+#   Name       : AddReportControlItem
+#
+#   Purpose....: Add report input, output or feature value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddReportControlItem(struct THidReportItem *item, char *buf)
+{
+    int val = GetReportItemUnsigned(item);
+
+    AddReportControl(buf, val);
+}
+
+/*##########################################################################
+#
 #   Name       : AddReportCollectionItem
 #
 #   Purpose....: Add report collection
@@ -694,7 +883,7 @@ void AddReportControlItem(struct THidReportItem *item, char *buf)
 ##########################################################################*/
 void AddReportCollectionItem(struct THidReportItem *item, char *buf)
 {
-    int val = GetReportItemValue(item);
+    int val = GetReportItemUnsigned(item);
 
     switch (val)
     {
@@ -741,7 +930,7 @@ void AddReportCollectionItem(struct THidReportItem *item, char *buf)
 ##########################################################################*/
 void AddReportUnitItem(struct THidReportItem *item, char *buf)
 {
-    int val = GetReportItemValue(item);
+    int val = GetReportItemUnsigned(item);
     
     strcat(buf, " (");
 
@@ -843,7 +1032,7 @@ void AddReportUnitItem(struct THidReportItem *item, char *buf)
 void AddReportExpItem(struct THidReportItem *item, char *buf)
 {
     char str[10];    
-    int val = GetReportItemValue(item);
+    int val = GetReportItemSigned(item);
 
     if (val & 8)
         val -= 0x10;
@@ -939,22 +1128,22 @@ void __far ImplGetHidReportItem(int Device, int Index, char *Buf)
 
                     case GLOBAL_LOG_MIN:
                         strcat(Buf, "Logical Min");
-                        AddReportItemValue(item, Buf);
+                        AddReportItemSigned(item, Buf);
                         break;
 
                     case GLOBAL_LOG_MAX:
                         strcat(Buf, "Logical Max");
-                        AddReportItemValue(item, Buf);
+                        AddReportItemSigned(item, Buf);
                         break;
 
                     case GLOBAL_PHYS_MIN:
                         strcat(Buf, "Physical Min");
-                        AddReportItemValue(item, Buf);
+                        AddReportItemSigned(item, Buf);
                         break;
 
                     case GLOBAL_PHYS_MAX:
                         strcat(Buf, "Physical Max");
-                        AddReportItemValue(item, Buf);
+                        AddReportItemSigned(item, Buf);
                         break;
                         
                     case GLOBAL_UNIT_EXP:
@@ -969,17 +1158,17 @@ void __far ImplGetHidReportItem(int Device, int Index, char *Buf)
                         
                     case GLOBAL_REPORT_SIZE:
                         strcat(Buf, "Report Size");
-                        AddReportItemValue(item, Buf);
+                        AddReportItemUnsigned(item, Buf);
                         break;
                         
                     case GLOBAL_REPORT_ID:
                         strcat(Buf, "Report ID");
-                        AddReportItemValue(item, Buf);
+                        AddReportItemUnsigned(item, Buf);
                         break;
                         
                     case GLOBAL_REPORT_COUNT:
                         strcat(Buf, "Report Count");
-                        AddReportItemValue(item, Buf);
+                        AddReportItemUnsigned(item, Buf);
                         break;
                                                 
                     case GLOBAL_PUSH:
@@ -997,12 +1186,12 @@ void __far ImplGetHidReportItem(int Device, int Index, char *Buf)
 
                     case LOCAL_USE_MIN:
                         strcat(Buf, "Usage Min");
-                        AddReportItemValue(item, Buf);
+                        AddReportUsageItem(item, Buf);
                         break;
 
                     case LOCAL_USE_MAX:
                         strcat(Buf, "Usage Max");
-                        AddReportItemValue(item, Buf);
+                        AddReportUsageItem(item, Buf);
                         break;
 
                     case LOCAL_DES_IND:
@@ -1052,6 +1241,187 @@ void __far ImplGetHidReportItem(int Device, int Index, char *Buf)
 
 /*##########################################################################
 #
+#   Name       : ImplGetHidReportInputData
+#
+#   Purpose....: Get HID report input data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetHidReportInputData "*" rdosdev parm routine [eax] [ebx] [edx] [es edi]
+void __far ImplGetHidReportInputData(int Device, int ReportId, int Index, char *Buf)
+{
+    struct THidDevice *dev;
+    struct THidReportIdEntry *report;
+    struct THidReportEntry *entry;
+    char str[80];
+    int ok = FALSE;
+
+    RdosSaveEax();
+
+    if (Device >= 0 && Device < MAX_HID_DEVICES)
+    {
+        dev = HidArr[Device];
+
+        if (dev)
+        {
+            if (ReportId >= 0 && ReportId < MAX_REPORT_IDS)
+            {
+                report = dev->ReportIdArr[ReportId];
+            
+                if (report)
+                {
+                    if (Index >= 0 && Index < report->InputCount)
+                    {
+                        ok = TRUE;
+                        
+                        entry = &report->InputArr[Index];
+
+                        sprintf(Buf, "bit %d-%d: ", entry->StartBit, entry->StartBit + entry->BitCount - 1);
+
+                        sprintf(str, "%02hX.%02hX ", entry->UsagePage, entry->UsageId);
+                        strcat(Buf, str);
+
+                        AddReportControl(Buf, entry->ItemParams);
+
+                    }
+                }
+            }
+        }
+    }
+
+    if (ok)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
+    RdosRestoreEax();
+}
+
+/*##########################################################################
+#
+#   Name       : ImplGetHidReportOutputData
+#
+#   Purpose....: Get HID report output data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetHidReportOutputData "*" rdosdev parm routine [eax] [ebx] [edx] [es edi]
+void __far ImplGetHidReportOutputData(int Device, int ReportId, int Index, char *Buf)
+{
+    struct THidDevice *dev;
+    struct THidReportIdEntry *report;
+    struct THidReportEntry *entry;
+    char str[80];
+    int ok = FALSE;
+
+    RdosSaveEax();
+
+    if (Device >= 0 && Device < MAX_HID_DEVICES)
+    {
+        dev = HidArr[Device];
+
+        if (dev)
+        {
+            if (ReportId >= 0 && ReportId < MAX_REPORT_IDS)
+            {
+                report = dev->ReportIdArr[ReportId];
+            
+                if (report)
+                {
+                    if (Index >= 0 && Index < report->OutputCount)
+                    {
+                        ok = TRUE;
+                        
+                        entry = &report->OutputArr[Index];
+
+                        sprintf(Buf, "bit %d-%d: ", entry->StartBit, entry->StartBit + entry->BitCount - 1);
+
+                        sprintf(str, "%02hX.%02hX ", entry->UsagePage, entry->UsageId);
+                        strcat(Buf, str);
+
+                        AddReportControl(Buf, entry->ItemParams);
+                    }
+                }
+            }
+        }
+    }
+
+    if (ok)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
+    RdosRestoreEax();
+}
+
+/*##########################################################################
+#
+#   Name       : ImplGetHidReportFeatureData
+#
+#   Purpose....: Get HID report feature data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetHidReportFeatureData "*" rdosdev parm routine [eax] [ebx] [edx] [es edi]
+void __far ImplGetHidReportFeatureData(int Device, int ReportId, int Index, char *Buf)
+{
+    struct THidDevice *dev;
+    struct THidReportIdEntry *report;
+    struct THidReportEntry *entry;
+    char str[80];
+    int ok = FALSE;
+
+    RdosSaveEax();
+
+    if (Device >= 0 && Device < MAX_HID_DEVICES)
+    {
+        dev = HidArr[Device];
+
+        if (dev)
+        {
+            if (ReportId >= 0 && ReportId < MAX_REPORT_IDS)
+            {
+                report = dev->ReportIdArr[ReportId];
+            
+                if (report)
+                {
+                    if (Index >= 0 && Index < report->FeatureCount)
+                    {
+                        ok = TRUE;
+                        
+                        entry = &report->FeatureArr[Index];
+
+                        sprintf(Buf, "bit %d-%d: ", entry->StartBit, entry->StartBit + entry->BitCount - 1);
+
+                        sprintf(str, "%02hX.%02hX ", entry->UsagePage, entry->UsageId);
+                        strcat(Buf, str);
+
+                        AddReportControl(Buf, entry->ItemParams);
+                    }
+                }
+            }
+        }
+    }
+
+    if (ok)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
+    RdosRestoreEax();
+}
+
+/*##########################################################################
+#
 #   Name       : HidThread
 #
 #   Purpose....: Hid thread
@@ -1078,6 +1448,7 @@ void __far HidThread(void *param)
         LoadReportItems(dev);
         PrepareReportIds(dev);
         CreateReportIdArrays(dev);
+        LoadReportIdArrays(dev);
     
         for (;;)
         {
@@ -1208,6 +1579,9 @@ int main()
 
     InitHid();
     RdosRegisterBimodalUserGate(usergate_get_hid_report_item, (__rdos_gate_callback *)&ImplGetHidReportItem, "Get Hid Report Item"); 
+    RdosRegisterBimodalUserGate(usergate_get_hid_report_input_data, (__rdos_gate_callback *)&ImplGetHidReportInputData, "Get Hid Report Input Data"); 
+    RdosRegisterBimodalUserGate(usergate_get_hid_report_output_data, (__rdos_gate_callback *)&ImplGetHidReportOutputData, "Get Hid Report Output Data"); 
+    RdosRegisterBimodalUserGate(usergate_get_hid_report_feature_data, (__rdos_gate_callback *)&ImplGetHidReportFeatureData, "Get Hid Report Feature Data"); 
 
     RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
 }

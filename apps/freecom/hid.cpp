@@ -101,6 +101,7 @@ void THidCommand::ShowDevices()
     int ok;
     char ItemName[256];
     int DevNr;
+    int ReportNr;
     int ObjNr;
 
     for (DevNr = 0; DevNr < 0x1000; DevNr++)
@@ -124,17 +125,74 @@ void THidCommand::ShowDevices()
             }
 
             Write("\r\n");
-            
-            for (ObjNr = 0; ObjNr < 0x1000; ObjNr++)
+
+            for (ReportNr = 0; ReportNr < 16; ReportNr++)
             {
-                ok = RdosGetHidReportData(DevNr, ObjNr, ItemName);
+                ok = RdosGetHidReportInputData(DevNr, ReportNr, 0, ItemName);
+                if (!ok)
+                    ok = RdosGetHidReportOutputData(DevNr, ReportNr, 0, ItemName);
+                if (!ok)
+                    ok = RdosGetHidReportFeatureData(DevNr, ReportNr, 0, ItemName);
+                
                 if (ok)
                 {
-                    Write(ItemName);           
-                    Write("\r\n");
+                    sprintf(ItemName, "Report ID: %d\r\n", ReportNr);
+                    Write(ItemName);
+        
+                    ok = RdosGetHidReportInputData(DevNr, ReportNr, 0, ItemName);
+                    if (ok)
+                    {
+                        Write("Input: \r\n");
+                        
+                        for (ObjNr = 0; ObjNr < 256; ObjNr++)
+                        {
+                            ok = RdosGetHidReportInputData(DevNr, ReportNr, ObjNr, ItemName);
+                            if (ok)
+                            {
+                                Write(ItemName);           
+                                Write("\r\n");
+                            }
+                            else
+                                break;
+                        }
+                    }
+
+                    ok = RdosGetHidReportOutputData(DevNr, ReportNr, 0, ItemName);
+                    if (ok)
+                    {
+                        Write("Output: \r\n");
+                        
+                        for (ObjNr = 0; ObjNr < 256; ObjNr++)
+                        {
+                            ok = RdosGetHidReportOutputData(DevNr, ReportNr, ObjNr, ItemName);
+                            if (ok)
+                            {
+                                Write(ItemName);           
+                                Write("\r\n");
+                            }
+                            else
+                                break;
+                        }
+                    }
+
+                    ok = RdosGetHidReportFeatureData(DevNr, ReportNr, 0, ItemName);
+                    if (ok)
+                    {
+                        Write("Output: \r\n");
+                        
+                        for (ObjNr = 0; ObjNr < 256; ObjNr++)
+                        {
+                            ok = RdosGetHidReportFeatureData(DevNr, ReportNr, ObjNr, ItemName);
+                            if (ok)
+                            {
+                                Write(ItemName);           
+                                Write("\r\n");
+                            }
+                            else
+                                break;
+                        }
+                    }
                 }
-                else
-                    break;
             }
         }
         else

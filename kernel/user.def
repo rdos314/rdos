@@ -674,6 +674,8 @@ get_current_dll_nr              = 535
 dupl_module_file_handle_nr      = 536
 
 get_hid_report_item_nr          = 537
-get_hid_report_data_nr          = 538
+get_hid_report_input_data_nr    = 538
+get_hid_report_output_data_nr   = 539
+get_hid_report_feature_data_nr  = 540
 
-usergate_entries			    = 540
+usergate_entries			    = 560

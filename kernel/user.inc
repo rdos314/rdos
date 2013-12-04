@@ -3422,10 +3422,27 @@ GetHidReportItem      MACRO
 	                ENDM
 
 ;   IN  EAX         Device #
+;   IN  EBX         Report #
 ;   IN  EDX         Entry #
 ;   IN  ES:(E)DI    HID data buffer
-GetHidReportData      MACRO
-	UserGate get_hid_report_data_nr
+GetHidReportInputData      MACRO
+	UserGate get_hid_report_input_data_nr
+	                ENDM
+
+;   IN  EAX         Device #
+;   IN  EBX         Report #
+;   IN  EDX         Entry #
+;   IN  ES:(E)DI    HID data buffer
+GetHidReportOutputData      MACRO
+	UserGate get_hid_report_output_data_nr
+	                ENDM
+
+;   IN  EAX         Device #
+;   IN  EBX         Report #
+;   IN  EDX         Entry #
+;   IN  ES:(E)DI    HID data buffer
+GetHidReportFeatureData      MACRO
+	UserGate get_hid_report_feature_data_nr
 	                ENDM
 
 ;;;;;;;;;;; Touch ;;;;;;;;;;
