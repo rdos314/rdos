@@ -37,12 +37,22 @@ INCLUDE pci.inc
 MAX_SD_DEVICES      = 32
 MAX_NAME_SIZE       = 24
 
-REG_STATE   = 24h
-REG_RESET   = 2Fh
+REG_BLOCK_SIZE          = 4
+REG_STATE               = 24h
+REG_CONTROL             = 28h
+REG_POWER               = 29h
+REG_CLK_CONTROL         = 2Ch
+REG_RESET               = 2Fh
+REG_INT_STATUS          = 30h
+REG_INT_STATUS_ENABLE   = 34h
+REG_INT_SIG_ENABLE      = 38h
+REG_CAP                 = 40h
 
 sd_device_struc STRUC
 
 sd_reg_sel      DW ?
+sd_serv_thread  DW ?
+sd_pend_int     DB ?
 sd_pci_bus      DB ?
 sd_pci_device   DB ?
 sd_pci_function DB ?
@@ -78,6 +88,16 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SdInt  Proc far
+    mov es,ds:sd_reg_sel
+    mov ax,es:REG_INT_STATUS
+    or ds:sd_pend_int,al
+;    
+    and word ptr es:REG_INT_STATUS_ENABLE, NOT 100h    
+    mov es:REG_INT_STATUS,al
+    or word ptr es:REG_INT_STATUS_ENABLE, 100h
+;
+    mov bx,ds:sd_serv_thread
+    Signal    
     retf32
 SdInt  Endp
 
@@ -232,6 +252,118 @@ SetupInts   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetSdClock
+;
+;           DESCRIPTION:    Set SDIO clk rate
+;
+;           PARAMETERS:     FS      SD io space
+;                           CX      Frequency, MHz
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetSdClock  Proc near
+    mov eax,fs:REG_CAP
+    shr ax,8
+    and ax,3Fh
+    xor dx,dx
+    div cx
+;
+    or dx,dx
+    jz sscMultOk
+;
+    inc ax
+
+sscMultOk:
+    xor cl,cl
+
+sscExpLoop:
+    test ax,8000h
+    jnz sscExpOk
+;
+    shl ax,1
+    inc cl
+;
+    or ax,ax
+    jnz sscExpLoop                
+
+sscExpOk:
+    test ax,7FFFh
+    jz sscWhole
+;
+    dec cl
+
+sscWhole:
+    mov ax,0FFFFh
+    shr ax,cl
+    inc ax
+    shr ax,2
+;
+    mov ah,al
+    mov al,1
+    mov fs:REG_CLK_CONTROL,ax
+    mov cx,100    
+
+sscWait:
+    mov ax,1
+    WaitMilliSec
+;
+    mov ax,fs:REG_CLK_CONTROL
+    test al,2
+    jnz sscOk
+;
+    loop sscWait
+;
+    stc
+    jmp sscDone
+
+sscOk:
+    or ax,4
+    mov fs:REG_CLK_CONTROL,ax       
+    clc
+    
+sscDone:
+    ret
+SetSdClock  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetPower
+;
+;           DESCRIPTION:    Turn on power
+;
+;           PARAMETERS:     FS      SD io space
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetPower  Proc near
+    mov eax,fs:REG_CAP
+    mov al,0Eh
+    test eax,1000000h
+    jnz spDo
+;
+    mov al,0Ch
+    test eax,2000000h    
+    jnz spDo
+;
+    mov al,0Ah
+
+spDo:
+    mov ah,fs:REG_POWER
+    or ah,al
+    mov al,fs:REG_CONTROL
+    and al,NOT 9Fh
+    mov fs:REG_CONTROL,ax
+;
+    or ah,1
+    mov fs:REG_CONTROL,ax
+    clc
+    ret
+SetPower    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ServThread
 ;
 ;           DESCRIPTION:    SDIO device server thread
@@ -243,8 +375,41 @@ SetupInts   Endp
 serv_thread_name   DB 'SDIO ',0
 
 serv_thread:
-    int 3
+    mov ax,fs
+    mov ds,ax
+    GetThread
+    mov ds:sd_serv_thread,ax
+    mov ds:sd_pend_int,0
+;    
+    mov fs,ds:sd_reg_sel
+    mov dword ptr fs:REG_BLOCK_SIZE,200h
+    mov word ptr fs:REG_INT_STATUS_ENABLE,1FFh
+    mov word ptr fs:REG_INT_SIG_ENABLE,1FFh
 
+stOff:
+    test dword ptr fs:REG_STATE,10000h
+    jnz stInserted
+;
+    WaitForSignal    
+    jmp stOff
+
+stInserted:
+    mov cx,25
+    call SetSdClock
+    jc stFailed
+;
+    int 3 
+    call SetPower
+    jc stFailed
+
+stFailed: 
+    mov byte ptr fs:REG_RESET,1
+;    
+    WaitForSignal
+    test dword ptr fs:REG_STATE,10000h
+    jnz stFailed
+    jmp stOff       
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
