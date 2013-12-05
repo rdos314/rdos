@@ -443,6 +443,69 @@ SendCmd8    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SendCmd2
+;
+;           DESCRIPTION:    Send CMD2
+;
+;           PARAMETERS:     FS      SD io space
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendCmd2    Proc near
+    mov ds:sd_pend_int,0
+    ClearSignal
+    mov dword ptr fs:REG_ARG,-1
+    mov word ptr fs:REG_TRANS_MODE,0
+    mov word ptr fs:REG_CMD,201h
+    call WaitForCompletion
+    ret
+SendCmd2    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SendCmd41
+;
+;           DESCRIPTION:    Send ACMD41
+;
+;           PARAMETERS:     FS      SD io space
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendCmd41    Proc near
+    mov ds:sd_pend_int,0
+    ClearSignal
+;
+    mov cx,100    
+
+sc41Retry:    
+    mov dword ptr fs:REG_ARG,50000000h
+    mov word ptr fs:REG_TRANS_MODE,0
+    mov word ptr fs:REG_CMD,2902h
+    call WaitForCompletion
+;
+    mov eax,fs:REG_RESP0
+    test eax,80000000h    
+    jz sc41PowerOk
+;
+    mov ax,25
+    WaitMilliSec
+;
+    loop sc41Retry
+;
+    stc
+    jmp sc41Done        
+    
+sc41PowerOk:
+    clc
+
+sc41Done:    
+    ret
+SendCmd41    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ServThread
 ;
 ;           DESCRIPTION:    SDIO device server thread
@@ -485,8 +548,10 @@ stInserted:
 ;
     call SendCmd0        
     call SendCmd8
-    int 3
     jc stFailed
+;    
+    int 3
+    call SendCmd2
 
 stFailed: 
     mov byte ptr fs:REG_RESET,1
