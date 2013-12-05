@@ -37,6 +37,11 @@
 #define MAX_HID_DEVICES 32
 #define MAX_REPORT_IDS  64
 
+#define MAX_USAGE_TAGS      128
+#define MAX_INPUT_TAGS      128
+#define MAX_OUTPUT_TAGS     128
+#define MAX_FEATURE_TAGS    128
+
 extern void InitHid();
 
 extern int GetReportDescr(struct THidDevice *dev, char *buf, int size, int interface);
@@ -120,6 +125,46 @@ struct THidDevice
     struct THidReportIdEntry *ReportIdArr[MAX_REPORT_IDS];
     int ReportDescrSize;
     char ReportDescrData[1];
+};
+
+struct TUsageCacheEntry
+{
+    int MinUsage;
+    int MaxUsage;
+};
+
+struct TTagCache
+{
+    int ReportCount;
+    int ReportSize;
+    
+    int InputBit;
+    int OutputBit;
+    int FeatureBit;
+
+    int InputEntry;
+    int OutputEntry;
+    int FeatureEntry;
+
+    struct THidReportIdEntry *CurrReport;
+
+    int HasMin;
+    int UsageMin;
+
+    int HasMax;
+    int UsageMax;
+
+    int UsageCount;
+    struct TUsageCacheEntry UsageArr[MAX_USAGE_TAGS];
+
+    int InputCount;
+    int InputArr[MAX_INPUT_TAGS];    
+
+    int OutputCount;
+    int OutputArr[MAX_OUTPUT_TAGS];    
+
+    int FeatureCount;
+    int FeatureArr[MAX_OUTPUT_TAGS];    
 };
 
 struct THidDevice *HidArr[MAX_HID_DEVICES];
@@ -644,6 +689,305 @@ void LoadReportIdArrays(struct THidDevice *dev)
 
 /*##########################################################################
 #
+#   Name       : InitReport
+#
+#   Purpose....: Init cache report
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void InitReport(struct TTagCache *cache)
+{
+    cache->InputBit = 0;
+    cache->OutputBit = 0;
+    cache->FeatureBit = 0;
+
+    cache->InputEntry = 0;
+    cache->OutputEntry = 0;
+    cache->FeatureEntry = 0;   
+
+    cache->CurrReport = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : CreateTagCache
+#
+#   Purpose....: Create tag cache
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+struct TTagCache *CreateTagCache()
+{
+    struct TTagCache *cache = RdosAllocateSmallGlobalMem(sizeof(struct TTagCache));
+
+    cache->UsageCount = 0;
+    cache->InputCount = 0;
+    cache->OutputCount = 0;
+    cache->FeatureCount = 0;    
+    cache->HasMin = FALSE;
+    cache->HasMax = FALSE;
+
+    InitReport(cache);
+
+    return cache;
+}
+
+/*##########################################################################
+#
+#   Name       : FreeTagCache
+#
+#   Purpose....: Free tag cache
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void FreeTagCache(struct TTagCache *cache)
+{
+    RdosFreeMem(RdosPointerToSelector(cache));
+}
+
+/*##########################################################################
+#
+#   Name       : ClearReport
+#
+#   Purpose....: Clear cache report
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void ClearCache(struct TTagCache *cache)
+{
+    cache->UsageCount = 0;
+    cache->InputCount = 0;
+    cache->OutputCount = 0;
+    cache->FeatureCount = 0;    
+    cache->HasMin = FALSE;
+    cache->HasMax = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : SetReport
+#
+#   Purpose....: Set report for cache
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void SetReport(struct TTagCache *cache, struct THidReportIdEntry *report)
+{
+    ClearCache(cache);
+    InitReport(cache);
+
+    cache->CurrReport = report;
+}
+
+/*##########################################################################
+#
+#   Name       : SetReportCount
+#
+#   Purpose....: Set report count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void SetReportCount(struct TTagCache *cache, int count)
+{
+    if (cache->CurrReport)
+    {
+        cache->ReportCount = count;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : SetReportSize
+#
+#   Purpose....: Set report size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void SetReportSize(struct TTagCache *cache, int size)
+{
+    if (cache->CurrReport)
+    {
+        cache->ReportSize = size;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : AddUsageMin
+#
+#   Purpose....: Add usage min
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddUsageMin(struct TTagCache *cache, int UsageId)
+{
+    struct TUsageCacheEntry *entry;
+
+    if (cache->CurrReport && cache->UsageCount < MAX_USAGE_TAGS)
+    {      
+        if (cache->HasMax)
+        {
+            entry = &cache->UsageArr[cache->UsageCount];
+            entry->MinUsage = UsageId;
+            entry->MaxUsage = cache->UsageMax;
+            cache->UsageCount++;
+            cache->HasMin = FALSE;
+            cache->HasMax = FALSE;
+        }
+        else
+        {
+            cache->UsageMin = UsageId;
+            cache->HasMin = TRUE;
+        }
+    }                    
+}
+
+/*##########################################################################
+#
+#   Name       : AddUsageMax
+#
+#   Purpose....: Add usage max
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddUsageMax(struct TTagCache *cache, int UsageId)
+{
+    struct TUsageCacheEntry *entry;
+
+    if (cache->CurrReport && cache->UsageCount < MAX_USAGE_TAGS)
+    {      
+        if (cache->HasMin)
+        {
+            entry = &cache->UsageArr[cache->UsageCount];
+            entry->MaxUsage = UsageId;
+            entry->MinUsage = cache->UsageMin;
+            cache->UsageCount++;
+            cache->HasMin = FALSE;
+            cache->HasMax = FALSE;
+        }
+        else
+        {
+            cache->UsageMax = UsageId;
+            cache->HasMax = TRUE;
+        }
+    }                    
+}
+
+/*##########################################################################
+#
+#   Name       : AddUsage
+#
+#   Purpose....: Add usage
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddUsage(struct TTagCache *cache, int UsageId)
+{
+    struct TUsageCacheEntry *entry;
+
+    if (cache->CurrReport && cache->UsageCount < MAX_USAGE_TAGS)
+    {      
+        entry = &cache->UsageArr[cache->UsageCount];
+        entry->MinUsage = UsageId;
+        entry->MaxUsage = UsageId;
+        cache->UsageCount++;
+        cache->HasMin = FALSE;
+        cache->HasMax = FALSE;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : AddInput
+#
+#   Purpose....: Add input
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddInput(struct TTagCache *cache, int Input)
+{
+    if (cache->CurrReport && cache->InputCount < MAX_INPUT_TAGS)
+    {      
+        cache->InputArr[cache->InputCount] = Input;
+        cache->InputCount++;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : AddOutput
+#
+#   Purpose....: Add output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddOutput(struct TTagCache *cache, int Output)
+{
+    if (cache->CurrReport && cache->OutputCount < MAX_OUTPUT_TAGS)
+    {      
+        cache->OutputArr[cache->OutputCount] = Output;
+        cache->OutputCount++;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : AddFeature
+#
+#   Purpose....: Add feature
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddFeature(struct TTagCache *cache, int Feature)
+{
+    if (cache->CurrReport && cache->FeatureCount < MAX_FEATURE_TAGS)
+    {      
+        cache->FeatureArr[cache->FeatureCount] = Feature;
+        cache->FeatureCount++;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : Test gate
 #
 ##########################################################################*/
@@ -651,93 +995,71 @@ void LoadReportIdArrays(struct THidDevice *dev)
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 void __far ImplTestGate(const char *msg)
 {
-    int i;
     int Index;
-    int ReportCount = 1;
-    int ReportSize = 1;
-    int InputBit = 0;
-    int OutputBit = 0;
-    int FeatureBit = 0;
-    int InputEntry = 0;
-    int OutputEntry = 0;
-    int FeatureEntry = 0;
-    int ReportId = 0;
+    int val;
     struct THidDevice *dev;
     struct THidReportItem *item;
-    struct THidReportIdEntry *CurrReport = 0;
-    struct THidReportEntry *entry;
+    struct TTagCache *cache;
 
     dev = HidArr[0];
 
-    CurrReport = dev->ReportIdArr[0];
+    cache = CreateTagCache();
+    SetReport(cache, dev->ReportIdArr[0]);
 
     for (Index = 0; Index < dev->ItemCount; Index++)
     {
         item = dev->ItemArr + Index;
-        if (item->Tag == GLOBAL_REPORT_ID)
+
+        switch (item->Tag)
         {
-            InputBit = 0;
-            OutputBit = 0;
-            FeatureBit = 0;
-
-            InputEntry = 0;
-            OutputEntry = 0;
-            FeatureEntry = 0;
+            case GLOBAL_REPORT_ID:
+                val = GetReportItemUnsigned(item);
+                if (val > 0 && val < MAX_REPORT_IDS)
+                SetReport(cache, dev->ReportIdArr[val]);
+                break;
             
-            ReportId = GetReportItemUnsigned(item);
-            if (ReportId > 0 && ReportId < MAX_REPORT_IDS)
-                CurrReport = dev->ReportIdArr[ReportId];
-            else
-                CurrReport = 0;
-        }
+            case GLOBAL_REPORT_SIZE:
+                val = GetReportItemUnsigned(item);
+                SetReportSize(cache, val);
+                break;
 
-        if (CurrReport)
-        {                    
-            switch (item->Tag)
-            {
-                case GLOBAL_REPORT_SIZE:
-                    ReportSize = GetReportItemUnsigned(item);
-                    break;
+            case GLOBAL_REPORT_COUNT:
+                val = GetReportItemUnsigned(item);
+                SetReportCount(cache, val);
+                break;
+                    
+            case LOCAL_USE:
+                val = GetReportItemUnsigned(item);
+                AddUsage(cache, val);
+                break;
 
-                case GLOBAL_REPORT_COUNT:
-                    ReportCount = GetReportItemUnsigned(item);
-                    break;
+            case LOCAL_USE_MIN:
+                val = GetReportItemUnsigned(item);
+                AddUsageMin(cache, val);
+                break;
 
-                case MAIN_INPUT:
-                    for (i = 0; i < ReportCount; i++)
-                    {
-                        entry = &CurrReport->InputArr[InputEntry + i];
-                        entry->StartBit = InputBit;
-                        entry->BitCount = ReportSize;
-                        InputBit += ReportSize;
-                    }
-                    InputEntry += ReportCount;
-                    break;
+            case LOCAL_USE_MAX:
+                val = GetReportItemUnsigned(item);
+                AddUsageMax(cache, val);
+                break;
+                
+            case MAIN_INPUT:
+                val = GetReportItemUnsigned(item);
+                AddInput(cache, val);
+                break;
 
-                case MAIN_OUTPUT:
-                    for (i = 0; i < ReportCount; i++)
-                    {
-                        entry = &CurrReport->OutputArr[OutputEntry + i];
-                        entry->StartBit = OutputBit;
-                        entry->BitCount = ReportSize;
-                        OutputBit += ReportSize;
-                    }
-                    OutputEntry += ReportCount;
-                    break;
+            case MAIN_OUTPUT:
+                val = GetReportItemUnsigned(item);
+                AddOutput(cache, val);
+                break;
 
-                case MAIN_FEATURE:
-                    for (i = 0; i < ReportCount; i++)
-                    {
-                        entry = &CurrReport->FeatureArr[FeatureEntry + i];
-                        entry->StartBit = FeatureBit;
-                        entry->BitCount = ReportSize;
-                        FeatureBit += ReportSize;
-                    }
-                    FeatureEntry += ReportCount;
-                    break;
-            }
+            case MAIN_FEATURE:
+                val = GetReportItemUnsigned(item);
+                AddFeature(cache, val);
+                break;
         }         
     }
+    FreeTagCache(cache);
 }
 
 /*##########################################################################
