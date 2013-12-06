@@ -90,7 +90,8 @@ struct THidReportItem
 struct THidReportEntry
 {
     int UsagePage;
-    int UsageId;
+    int UsageIdLow;
+    int UsageIdHigh;
 
     int StartBit;
     int BitCount;
@@ -135,6 +136,8 @@ struct TUsageCacheEntry
 
 struct TTagCache
 {
+    int UsagePage;
+    
     int ReportCount;
     int ReportSize;
     
@@ -513,7 +516,8 @@ void PrepareReportIds(struct THidDevice *dev)
 void InitReportEntry(struct THidReportEntry *entry)
 {
     entry->UsagePage = 0;
-    entry->UsageId = 0;
+    entry->UsageIdLow = 0;
+    entry->UsageIdHigh = 0;
     entry->StartBit = 0;
     entry->BitCount = 0;
     entry->ItemParams = 0;
@@ -648,7 +652,8 @@ void LoadReportIdArrays(struct THidDevice *dev)
                         entry->StartBit = InputBit;
                         entry->BitCount = ReportSize;
                         entry->UsagePage = UsagePage;
-                        entry->UsageId = UsageId;
+                        entry->UsageIdLow = UsageId;
+                        entry->UsageIdHigh = UsageId;
                         entry->ItemParams = GetReportItemUnsigned(item);
                         InputBit += ReportSize;
                     }
@@ -662,7 +667,8 @@ void LoadReportIdArrays(struct THidDevice *dev)
                         entry->StartBit = OutputBit;
                         entry->BitCount = ReportSize;
                         entry->UsagePage = UsagePage;
-                        entry->UsageId = UsageId;
+                        entry->UsageIdLow = UsageId;
+                        entry->UsageIdHigh = UsageId;
                         entry->ItemParams = GetReportItemUnsigned(item);
                         OutputBit += ReportSize;
                     }
@@ -676,7 +682,8 @@ void LoadReportIdArrays(struct THidDevice *dev)
                         entry->StartBit = FeatureBit;
                         entry->BitCount = ReportSize;
                         entry->UsagePage = UsagePage;
-                        entry->UsageId = UsageId;
+                        entry->UsageIdLow = UsageId;
+                        entry->UsageIdHigh = UsageId;
                         entry->ItemParams = GetReportItemUnsigned(item);
                         FeatureBit += ReportSize;
                     }
@@ -777,6 +784,356 @@ void ClearCache(struct TTagCache *cache)
 
 /*##########################################################################
 #
+#   Name       : DeleteUsageHead
+#
+#   Purpose....: Delete usage head if multiple entries
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void DeleteUsageHead(struct TTagCache *cache)
+{
+    int i;
+    
+    if (cache->UsageCount > 1)
+    {
+        for (i = 1; i < cache->UsageCount; i++)
+        {
+            cache->UsageArr[i - 1].MinUsage = cache->UsageArr[i].MinUsage;
+            cache->UsageArr[i - 1].MaxUsage = cache->UsageArr[i].MaxUsage;
+        }
+        cache->UsageCount--;    
+    }    
+}
+
+/*##########################################################################
+#
+#   Name       : DeleteInputHead
+#
+#   Purpose....: Delete input head
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void DeleteInputHead(struct TTagCache *cache)
+{
+    int i;
+
+    if (cache->InputCount > 1)
+    {    
+        for (i = 1; i < cache->InputCount; i++)
+            cache->InputArr[i - 1] = cache->InputArr[i];
+
+        cache->InputCount--;    
+    }    
+}
+
+/*##########################################################################
+#
+#   Name       : DeleteOutputHead
+#
+#   Purpose....: Delete output head
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void DeleteOutputHead(struct TTagCache *cache)
+{
+    int i;
+
+    if (cache->OutputCount > 1)
+    {    
+        for (i = 1; i < cache->OutputCount; i++)
+            cache->OutputArr[i - 1] = cache->OutputArr[i];
+
+        cache->OutputCount--;    
+    }    
+}
+
+/*##########################################################################
+#
+#   Name       : DeleteFeatureHead
+#
+#   Purpose....: Delete feature head
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void DeleteFeatureHead(struct TTagCache *cache)
+{
+    int i;
+
+    if (cache->FeatureCount > 1)
+    {    
+        for (i = 1; i < cache->FeatureCount; i++)
+            cache->FeatureArr[i - 1] = cache->FeatureArr[i];
+
+        cache->FeatureCount--;    
+    }    
+}
+
+/*##########################################################################
+#
+#   Name       : ProcessInputCache
+#
+#   Purpose....: Process input cache
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void ProcessInputCache(struct TTagCache *cache)
+{
+    int Count;
+    struct THidReportEntry *entry;
+
+    while (cache->InputCount && cache->ReportCount)
+    {
+        Count = cache->ReportCount;
+
+        while (Count)
+        {
+            if (cache->InputCount)
+            {
+                if (cache->UsageCount)
+                {
+                    entry = &cache->CurrReport->InputArr[cache->InputEntry];
+                    entry->StartBit = cache->InputBit;
+                    entry->BitCount = cache->ReportSize;
+                    entry->ItemParams = cache->InputArr[0];
+                    cache->InputBit += cache->ReportSize;
+
+                    if (entry->ItemParams & 0x2)
+                    {
+                         entry->UsageIdLow = cache->UsageArr[0].MinUsage;
+                         entry->UsageIdHigh = cache->UsageArr[0].MinUsage;
+    
+                         if (cache->UsageArr[0].MinUsage == cache->UsageArr[0].MaxUsage)
+                             DeleteUsageHead(cache);
+                         else
+                             cache->UsageArr[0].MinUsage++;                
+                    }   
+                    else
+                    {
+                        entry->UsageIdLow = cache->UsageArr[0].MinUsage;    
+                        entry->UsageIdHigh = cache->UsageArr[0].MaxUsage;    
+    
+                        DeleteUsageHead(cache);
+                    }
+
+                    entry->UsagePage = cache->UsagePage;
+                    cache->InputEntry++;
+                }
+                else
+                {   
+                    entry = &cache->CurrReport->InputArr[cache->InputEntry];
+                    entry->StartBit = cache->InputBit;
+                    entry->BitCount = cache->ReportSize;
+                    entry->ItemParams = cache->InputArr[0];
+                    cache->InputBit += cache->ReportSize;
+
+                    entry->UsageIdLow = -1;    
+                    entry->UsageIdHigh = -1;    
+                    entry->UsagePage = cache->UsagePage;
+                    cache->InputEntry++;
+                }
+
+                DeleteInputHead(cache);
+            }
+            Count--;
+        }    
+    }
+    cache->InputCount = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : ProcessOutputCache
+#
+#   Purpose....: Process output cache
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void ProcessOutputCache(struct TTagCache *cache)
+{
+    int Count;
+    struct THidReportEntry *entry;
+
+    while (cache->OutputCount && cache->ReportCount)
+    {
+        Count = cache->ReportCount;
+
+        while (Count)
+        {
+            if (cache->OutputCount)
+            {
+                if (cache->UsageCount)
+                {
+                    entry = &cache->CurrReport->OutputArr[cache->OutputEntry];
+                    entry->StartBit = cache->OutputBit;
+                    entry->BitCount = cache->ReportSize;
+                    entry->ItemParams = cache->OutputArr[0];
+                    cache->OutputBit += cache->ReportSize;
+
+                    if (entry->ItemParams & 0x2)
+                    {
+                         entry->UsageIdLow = cache->UsageArr[0].MinUsage;
+                         entry->UsageIdHigh = cache->UsageArr[0].MinUsage;
+ 
+                         if (cache->UsageArr[0].MinUsage == cache->UsageArr[0].MaxUsage)
+                             DeleteUsageHead(cache);
+                         else
+                             cache->UsageArr[0].MinUsage++;                
+                    }
+                    else
+                    {
+                        entry->UsageIdLow = cache->UsageArr[0].MinUsage;    
+                        entry->UsageIdHigh = cache->UsageArr[0].MaxUsage;    
+
+                        DeleteUsageHead(cache);
+                    }
+    
+                    entry->UsagePage = cache->UsagePage;
+                    cache->OutputEntry++;
+                }
+                else
+                {
+                    entry = &cache->CurrReport->OutputArr[cache->OutputEntry];
+                    entry->StartBit = cache->OutputBit;
+                    entry->BitCount = cache->ReportSize;
+                    entry->ItemParams = cache->OutputArr[0];
+                    cache->OutputBit += cache->ReportSize;
+
+                    entry->UsageIdLow = -1;    
+                    entry->UsageIdHigh = -1;    
+                    entry->UsagePage = cache->UsagePage;
+                    cache->OutputEntry++;
+                }
+
+                DeleteOutputHead(cache);
+            }
+            Count--;
+        }
+    }    
+    cache->OutputCount = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : ProcessFeatureCache
+#
+#   Purpose....: Process feature cache
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void ProcessFeatureCache(struct TTagCache *cache)
+{
+    int Count;
+    struct THidReportEntry *entry;
+
+    while (cache->FeatureCount && cache->ReportCount)
+    {
+        Count = cache->ReportCount;
+
+        while (Count)
+        {
+            if (cache->FeatureCount)
+            {
+                if (cache->UsageCount)
+                {
+                    entry = &cache->CurrReport->FeatureArr[cache->FeatureEntry];
+                    entry->StartBit = cache->FeatureBit;
+                    entry->BitCount = cache->ReportSize;
+                    entry->ItemParams = cache->FeatureArr[0];
+                    cache->FeatureBit += cache->ReportSize;
+
+                    if (entry->ItemParams & 0x2)
+                    {
+                         entry->UsageIdLow = cache->UsageArr[0].MinUsage;
+                         entry->UsageIdHigh = cache->UsageArr[0].MinUsage;
+    
+                         if (cache->UsageArr[0].MinUsage == cache->UsageArr[0].MaxUsage)
+                             DeleteUsageHead(cache);
+                         else
+                             cache->UsageArr[0].MinUsage++;                
+                    }
+                    else
+                    {
+                        entry->UsageIdLow = cache->UsageArr[0].MinUsage;    
+                        entry->UsageIdHigh = cache->UsageArr[0].MaxUsage;    
+    
+                        DeleteUsageHead(cache);
+                    }
+
+                    entry->UsagePage = cache->UsagePage;
+                    cache->FeatureEntry++;
+                }
+                else
+                {
+                    entry = &cache->CurrReport->FeatureArr[cache->FeatureEntry];
+                    entry->StartBit = cache->FeatureBit;
+                    entry->BitCount = cache->ReportSize;
+                    entry->ItemParams = cache->FeatureArr[0];
+                    cache->FeatureBit += cache->ReportSize;
+
+                    entry->UsageIdLow = -1;    
+                    entry->UsageIdHigh = -1;    
+                    entry->UsagePage = cache->UsagePage;
+                    cache->FeatureEntry++;
+                }
+
+                DeleteFeatureHead(cache);
+            }
+            Count--;
+        }
+    }    
+    cache->FeatureCount = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : ProcessCache
+#
+#   Purpose....: Process cache
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void ProcessCache(struct TTagCache *cache)
+{
+    if (cache->InputCount)
+        ProcessInputCache(cache);
+
+    if (cache->OutputCount)
+        ProcessOutputCache(cache);
+
+    if (cache->FeatureCount)
+        ProcessFeatureCache(cache);
+
+    cache->UsageCount = 0;
+    cache->HasMin = FALSE;
+    cache->HasMax = FALSE;
+}
+
+/*##########################################################################
+#
 #   Name       : SetReport
 #
 #   Purpose....: Set report for cache
@@ -788,10 +1145,28 @@ void ClearCache(struct TTagCache *cache)
 ##########################################################################*/
 void SetReport(struct TTagCache *cache, struct THidReportIdEntry *report)
 {
+    ProcessCache(cache);
     ClearCache(cache);
     InitReport(cache);
 
     cache->CurrReport = report;
+}
+
+/*##########################################################################
+#
+#   Name       : SetUsagePage
+#
+#   Purpose....: Set usage page
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void SetUsagePage(struct TTagCache *cache, int val)
+{
+    ProcessCache(cache);
+    cache->UsagePage = val;
 }
 
 /*##########################################################################
@@ -809,6 +1184,9 @@ void SetReportCount(struct TTagCache *cache, int count)
 {
     if (cache->CurrReport)
     {
+        if (cache->InputCount || cache->OutputCount || cache->FeatureCount)
+            ProcessCache(cache);
+            
         cache->ReportCount = count;
     }
 }
@@ -828,6 +1206,9 @@ void SetReportSize(struct TTagCache *cache, int size)
 {
     if (cache->CurrReport)
     {
+        if (cache->InputCount || cache->OutputCount || cache->FeatureCount)
+            ProcessCache(cache);
+            
         cache->ReportSize = size;
     }
 }
@@ -941,6 +1322,9 @@ void AddInput(struct TTagCache *cache, int Input)
 {
     if (cache->CurrReport && cache->InputCount < MAX_INPUT_TAGS)
     {      
+        if (cache->OutputCount || cache->FeatureCount)
+            ProcessCache(cache);
+            
         cache->InputArr[cache->InputCount] = Input;
         cache->InputCount++;
     }
@@ -961,6 +1345,9 @@ void AddOutput(struct TTagCache *cache, int Output)
 {
     if (cache->CurrReport && cache->OutputCount < MAX_OUTPUT_TAGS)
     {      
+        if (cache->InputCount || cache->FeatureCount)
+            ProcessCache(cache);
+            
         cache->OutputArr[cache->OutputCount] = Output;
         cache->OutputCount++;
     }
@@ -981,6 +1368,9 @@ void AddFeature(struct TTagCache *cache, int Feature)
 {
     if (cache->CurrReport && cache->FeatureCount < MAX_FEATURE_TAGS)
     {      
+        if (cache->InputCount || cache->OutputCount)
+            ProcessCache(cache);
+            
         cache->FeatureArr[cache->FeatureCount] = Feature;
         cache->FeatureCount++;
     }
@@ -1012,6 +1402,11 @@ void __far ImplTestGate(const char *msg)
 
         switch (item->Tag)
         {
+            case MAIN_BEGIN:
+            case MAIN_END:
+                ProcessCache(cache);
+                break;
+                
             case GLOBAL_REPORT_ID:
                 val = GetReportItemUnsigned(item);
                 if (val > 0 && val < MAX_REPORT_IDS)
@@ -1026,6 +1421,11 @@ void __far ImplTestGate(const char *msg)
             case GLOBAL_REPORT_COUNT:
                 val = GetReportItemUnsigned(item);
                 SetReportCount(cache, val);
+                break;
+
+            case GLOBAL_USAGE:
+                val = GetReportItemUnsigned(item);
+                SetUsagePage(cache, val);
                 break;
                     
             case LOCAL_USE:
@@ -1601,7 +2001,10 @@ void __far ImplGetHidReportInputData(int Device, int ReportId, int Index, char *
 
                         sprintf(Buf, "bit %d-%d: ", entry->StartBit, entry->StartBit + entry->BitCount - 1);
 
-                        sprintf(str, "%02hX.%02hX ", entry->UsagePage, entry->UsageId);
+                        if (entry->UsageIdLow == entry->UsageIdHigh)
+                            sprintf(str, "%02hX.%02hX ", entry->UsagePage, entry->UsageIdLow);
+                        else
+                            sprintf(str, "%02hX.%02hX-%02hX ", entry->UsagePage, entry->UsageIdLow, entry->UsageIdHigh);
                         strcat(Buf, str);
 
                         AddReportControl(Buf, entry->ItemParams);
@@ -1662,7 +2065,10 @@ void __far ImplGetHidReportOutputData(int Device, int ReportId, int Index, char 
 
                         sprintf(Buf, "bit %d-%d: ", entry->StartBit, entry->StartBit + entry->BitCount - 1);
 
-                        sprintf(str, "%02hX.%02hX ", entry->UsagePage, entry->UsageId);
+                        if (entry->UsageIdLow == entry->UsageIdHigh)
+                            sprintf(str, "%02hX.%02hX ", entry->UsagePage, entry->UsageIdLow);
+                        else
+                            sprintf(str, "%02hX.%02hX-%02hX ", entry->UsagePage, entry->UsageIdLow, entry->UsageIdHigh);
                         strcat(Buf, str);
 
                         AddReportControl(Buf, entry->ItemParams);
@@ -1722,7 +2128,10 @@ void __far ImplGetHidReportFeatureData(int Device, int ReportId, int Index, char
 
                         sprintf(Buf, "bit %d-%d: ", entry->StartBit, entry->StartBit + entry->BitCount - 1);
 
-                        sprintf(str, "%02hX.%02hX ", entry->UsagePage, entry->UsageId);
+                        if (entry->UsageIdLow == entry->UsageIdHigh)
+                            sprintf(str, "%02hX.%02hX ", entry->UsagePage, entry->UsageIdLow);
+                        else
+                            sprintf(str, "%02hX.%02hX-%02hX ", entry->UsagePage, entry->UsageIdLow, entry->UsageIdHigh);
                         strcat(Buf, str);
 
                         AddReportControl(Buf, entry->ItemParams);
