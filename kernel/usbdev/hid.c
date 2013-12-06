@@ -1381,9 +1381,7 @@ void __far ImplGetHidReportItem(int Device, int Index, char *Buf)
     int Ins;
     struct THidDevice *dev;
     struct THidReportItem *item;
-    int size;
     int ok = FALSE;
-    int val;
 
     RdosSaveEax();
 
@@ -1905,5 +1903,7 @@ int main()
     RdosRegisterBimodalUserGate(usergate_get_hid_report_output_data, (__rdos_gate_callback *)&ImplGetHidReportOutputData, "Get Hid Report Output Data"); 
     RdosRegisterBimodalUserGate(usergate_get_hid_report_feature_data, (__rdos_gate_callback *)&ImplGetHidReportFeatureData, "Get Hid Report Feature Data"); 
 
-    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
+    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate");
+
+    return TRUE;
 }
