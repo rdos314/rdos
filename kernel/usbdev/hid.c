@@ -1494,7 +1494,7 @@ void __far ImplTestGate(const char *msg)
     struct THidReportItem *item;
     struct TTagCache *cache;
 
-    dev = HidArr[1];
+    dev = HidArr[0];
 
     cache = CreateTagCache();
     SetReport(cache, dev->ReportIdArr[0]);
