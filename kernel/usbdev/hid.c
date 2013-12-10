@@ -1293,114 +1293,6 @@ void AddFeature(struct TTagCache *cache, int Feature)
 ##########################################################################*/
 void LoadReportIdArrays(struct THidDevice *dev)
 {
-/*
-    int i;
-    int Index;
-    int ReportCount = 1;
-    int ReportSize = 1;
-    int InputBit = 0;
-    int OutputBit = 0;
-    int FeatureBit = 0;
-    int InputEntry = 0;
-    int OutputEntry = 0;
-    int FeatureEntry = 0;
-    int ReportId = 0;
-    int UsagePage = 0;
-    int UsageId = 0;
-    struct THidReportItem *item;
-    struct THidReportIdEntry *CurrReport = 0;
-    struct THidReportEntry *entry;
-
-    CurrReport = dev->ReportIdArr[0];
-
-    for (Index = 0; Index < dev->ItemCount; Index++)
-    {
-        item = dev->ItemArr + Index;
-        if (item->Tag == GLOBAL_REPORT_ID)
-        {
-            InputBit = 0;
-            OutputBit = 0;
-            FeatureBit = 0;
-
-            InputEntry = 0;
-            OutputEntry = 0;
-            FeatureEntry = 0;
-            
-            ReportId = GetReportItemUnsigned(item);
-            if (ReportId > 0 && ReportId < MAX_REPORT_IDS)
-                CurrReport = dev->ReportIdArr[ReportId];
-            else
-                CurrReport = 0;
-        }
-
-        if (CurrReport)
-        {                    
-            switch (item->Tag)
-            {
-                case GLOBAL_REPORT_SIZE:
-                    ReportSize = GetReportItemUnsigned(item);
-                    break;
-
-                case GLOBAL_REPORT_COUNT:
-                    ReportCount = GetReportItemUnsigned(item);
-                    break;
-
-                case GLOBAL_USAGE:
-                    UsagePage = GetReportItemUnsigned(item);
-                    break;
-                    
-                case LOCAL_USE:
-                    UsageId = GetReportItemUnsigned(item);
-                    break;
-
-                case MAIN_INPUT:
-                    for (i = 0; i < ReportCount; i++)
-                    {
-                        entry = &CurrReport->InputArr[InputEntry + i];
-                        entry->StartBit = InputBit;
-                        entry->BitCount = ReportSize;
-                        entry->UsagePage = UsagePage;
-                        entry->UsageIdLow = UsageId;
-                        entry->UsageIdHigh = UsageId;
-                        entry->ItemParams = GetReportItemUnsigned(item);
-                        InputBit += ReportSize;
-                    }
-                    InputEntry += ReportCount;
-                    break;
-
-                case MAIN_OUTPUT:
-                    for (i = 0; i < ReportCount; i++)
-                    {
-                        entry = &CurrReport->OutputArr[OutputEntry + i];
-                        entry->StartBit = OutputBit;
-                        entry->BitCount = ReportSize;
-                        entry->UsagePage = UsagePage;
-                        entry->UsageIdLow = UsageId;
-                        entry->UsageIdHigh = UsageId;
-                        entry->ItemParams = GetReportItemUnsigned(item);
-                        OutputBit += ReportSize;
-                    }
-                    OutputEntry += ReportCount;
-                    break;
-
-                case MAIN_FEATURE:
-                    for (i = 0; i < ReportCount; i++)
-                    {
-                        entry = &CurrReport->FeatureArr[FeatureEntry + i];
-                        entry->StartBit = FeatureBit;
-                        entry->BitCount = ReportSize;
-                        entry->UsagePage = UsagePage;
-                        entry->UsageIdLow = UsageId;
-                        entry->UsageIdHigh = UsageId;
-                        entry->ItemParams = GetReportItemUnsigned(item);
-                        FeatureBit += ReportSize;
-                    }
-                    FeatureEntry += ReportCount;
-                    break;
-            }
-        }         
-    } */
-
     int Index;
     int val;
     struct THidReportItem *item;
@@ -1427,6 +1319,8 @@ void LoadReportIdArrays(struct THidDevice *dev)
                 val = GetReportItemUnsigned(item);
                 if (val > 0 && val < MAX_REPORT_IDS)
                     SetReport(cache, dev->ReportIdArr[val]);
+                else
+                    SetReport(cache, 0);
                 break;
             
             case GLOBAL_REPORT_SIZE:
@@ -1488,84 +1382,10 @@ void LoadReportIdArrays(struct THidDevice *dev)
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 void __far ImplTestGate(const char *msg)
 {
-    int Index;
-    int val;
     struct THidDevice *dev;
-    struct THidReportItem *item;
-    struct TTagCache *cache;
 
     dev = HidArr[0];
-
-    cache = CreateTagCache();
-    SetReport(cache, dev->ReportIdArr[0]);
-
-    for (Index = 0; Index < dev->ItemCount; Index++)
-    {
-        item = dev->ItemArr + Index;
-
-        switch (item->Tag)
-        {
-            case MAIN_BEGIN:
-            case MAIN_END:
-                ProcessCache(cache);
-                cache->UsageCount = 0;
-                cache->HasMin = FALSE;
-                cache->HasMax = FALSE;
-                break;
-                
-            case GLOBAL_REPORT_ID:
-                val = GetReportItemUnsigned(item);
-                if (val > 0 && val < MAX_REPORT_IDS)
-                    SetReport(cache, dev->ReportIdArr[val]);
-                break;
-            
-            case GLOBAL_REPORT_SIZE:
-                val = GetReportItemUnsigned(item);
-                SetReportSize(cache, val);
-                break;
-
-            case GLOBAL_REPORT_COUNT:
-                val = GetReportItemUnsigned(item);
-                SetReportCount(cache, val);
-                break;
-
-            case GLOBAL_USAGE:
-                val = GetReportItemUnsigned(item);
-                SetUsagePage(cache, val);
-                break;
-                    
-            case LOCAL_USE:
-                val = GetReportItemUnsigned(item);
-                AddUsage(cache, val);
-                break;
-
-            case LOCAL_USE_MIN:
-                val = GetReportItemUnsigned(item);
-                AddUsageMin(cache, val);
-                break;
-
-            case LOCAL_USE_MAX:
-                val = GetReportItemUnsigned(item);
-                AddUsageMax(cache, val);
-                break;
-                
-            case MAIN_INPUT:
-                val = GetReportItemUnsigned(item);
-                AddInput(cache, val);
-                break;
-
-            case MAIN_OUTPUT:
-                val = GetReportItemUnsigned(item);
-                AddOutput(cache, val);
-                break;
-
-            case MAIN_FEATURE:
-                val = GetReportItemUnsigned(item);
-                AddFeature(cache, val);
-                break;
-        }         
-    }
-    FreeTagCache(cache);
+    LoadReportIdArrays(dev);
 }
 
 /*##########################################################################
@@ -2175,15 +1995,21 @@ void __far ImplGetHidReportOutputData(int Device, int ReportId, int Index, char 
                         
                         entry = &report->OutputArr[Index];
 
-                        sprintf(Buf, "bit %d-%d: ", entry->StartBit, entry->StartBit + entry->BitCount - 1);
+                        if (entry->BitCount <= 1)
+                            sprintf(Buf, "bit %d: ", entry->StartBit);
+                        else                            
+                            sprintf(Buf, "bit %d-%d: ", entry->StartBit, entry->StartBit + entry->BitCount - 1);
 
-                        if (entry->UsageIdLow == entry->UsageIdHigh)
-                            sprintf(str, "%02hX.%02hX ", entry->UsagePage, entry->UsageIdLow);
-                        else
-                            sprintf(str, "%02hX.%02hX-%02hX ", entry->UsagePage, entry->UsageIdLow, entry->UsageIdHigh);
-                        strcat(Buf, str);
-
-                        AddReportControl(Buf, entry->ItemParams);
+                        if (entry->UsageIdLow != -1)
+                        {
+                            if (entry->UsageIdLow == entry->UsageIdHigh)
+                                sprintf(str, "%02hX.%02hX ", entry->UsagePage, entry->UsageIdLow);
+                            else
+                                sprintf(str, "%02hX.%02hX-%02hX ", entry->UsagePage, entry->UsageIdLow, entry->UsageIdHigh);
+                            strcat(Buf, str);
+    
+                            AddReportControl(Buf, entry->ItemParams);
+                        }
                     }
                 }
             }
@@ -2238,15 +2064,21 @@ void __far ImplGetHidReportFeatureData(int Device, int ReportId, int Index, char
                         
                         entry = &report->FeatureArr[Index];
 
-                        sprintf(Buf, "bit %d-%d: ", entry->StartBit, entry->StartBit + entry->BitCount - 1);
+                        if (entry->BitCount <= 1)
+                            sprintf(Buf, "bit %d: ", entry->StartBit);
+                        else                            
+                            sprintf(Buf, "bit %d-%d: ", entry->StartBit, entry->StartBit + entry->BitCount - 1);
 
-                        if (entry->UsageIdLow == entry->UsageIdHigh)
-                            sprintf(str, "%02hX.%02hX ", entry->UsagePage, entry->UsageIdLow);
-                        else
-                            sprintf(str, "%02hX.%02hX-%02hX ", entry->UsagePage, entry->UsageIdLow, entry->UsageIdHigh);
-                        strcat(Buf, str);
-
-                        AddReportControl(Buf, entry->ItemParams);
+                        if (entry->UsageIdLow != -1)
+                        {
+                            if (entry->UsageIdLow == entry->UsageIdHigh)
+                                sprintf(str, "%02hX.%02hX ", entry->UsagePage, entry->UsageIdLow);
+                            else
+                                sprintf(str, "%02hX.%02hX-%02hX ", entry->UsagePage, entry->UsageIdLow, entry->UsageIdHigh);
+                            strcat(Buf, str);
+    
+                            AddReportControl(Buf, entry->ItemParams);
+                        }
                     }
                 }
             }
