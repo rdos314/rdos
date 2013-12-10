@@ -38,9 +38,6 @@
 #define MAX_REPORT_IDS  64
 
 #define MAX_USAGE_TAGS      128
-#define MAX_INPUT_TAGS      128
-#define MAX_OUTPUT_TAGS     128
-#define MAX_FEATURE_TAGS    128
 
 extern void InitHid();
 
@@ -178,8 +175,33 @@ struct THidDevice *HidArr[MAX_HID_DEVICES];
 ##########################################################################*/
 void CloseHid(struct THidDevice *dev)
 {
+    int i;
+    struct THidReportIdEntry *report;
+    
     RdosCloseUsbPipe(dev->ControlPipe);
     RdosCloseWait(dev->ControlWait);
+
+    if (dev->ItemArr)
+        RdosFreeMem(RdosPointerToSelector(dev->ItemArr));
+
+    for (i = 0; i < MAX_REPORT_IDS; i++)
+    {
+        report = dev->ReportIdArr[i];
+        
+        if (report)
+        {
+            if (report->InputCount)
+                RdosFreeMem(RdosPointerToSelector(report->InputArr));
+
+            if (report->OutputCount)
+                RdosFreeMem(RdosPointerToSelector(report->OutputArr));
+
+            if (report->FeatureCount)
+                RdosFreeMem(RdosPointerToSelector(report->FeatureArr));
+
+            RdosFreeMem(RdosPointerToSelector(report));
+        }
+    }
 }
 
 /*##########################################################################
