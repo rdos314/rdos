@@ -100,12 +100,12 @@ void TDes3::SetupKey(const char *Key)
     const unsigned char *ukey = (const unsigned char *)Key;
     
     CreateKey(ukey, EN0, ek[0]);
-    CreateKey(ukey, DE1, ek[1]);
-    CreateKey(ukey, EN0, ek[2]);
+    CreateKey(ukey + 8, DE1, ek[1]);
+    CreateKey(ukey + 16, EN0, ek[2]);
     
     CreateKey(ukey, DE1, dk[2]);
-    CreateKey(ukey, EN0, dk[1]);
-    CreateKey(ukey, DE1, dk[0]);
+    CreateKey(ukey + 8, EN0, dk[1]);
+    CreateKey(ukey + 16, DE1, dk[0]);
 }
 
 /*##########################################################################
@@ -214,12 +214,12 @@ void TDes3::Decrypt(char *buf, int size)
 void TDes3::Setup(const unsigned char *key)
 {
     CreateKey(key, EN0, ek[0]);
-    CreateKey(key, DE1, ek[1]);
-    CreateKey(key, EN0, ek[2]);
+    CreateKey(key + 8, DE1, ek[1]);
+    CreateKey(key + 16, EN0, ek[2]);
     
     CreateKey(key, DE1, dk[2]);
-    CreateKey(key, EN0, dk[1]);
-    CreateKey(key, DE1, dk[0]);
+    CreateKey(key + 8, EN0, dk[1]);
+    CreateKey(key + 16, DE1, dk[0]);
 }
 
 /*##########################################################################
