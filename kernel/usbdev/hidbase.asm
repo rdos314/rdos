@@ -2448,9 +2448,44 @@ OpenHidDev_  Endp
     public CloseHidDev_
 
 CloseHidDev_ Proc near
+    push ds
     push eax
     push ebx
 ;
+    mov eax,SEG data
+    mov ds,ax
+    mov ax,ds:hid_key_sel
+    or ax,ax
+    jz chdKeyOk
+;    
+    mov ax,ds:hid_key_controller
+    cmp ax,fs:hid_controller
+    jnz chdKeyOk
+;
+    mov al,ds:hid_key_device
+    cmp al,fs:hid_device
+    jnz chdKeyOk
+;
+    mov ds:hid_key_sel,0
+    mov ds:hid_key_controller,0
+    mov ds:hid_key_device,0
+    mov ax,ds:hid_key_thread
+    or ax,ax
+    jz chdKeyOk
+
+chdStopKey:
+    push bx
+    mov bx,ds:hid_key_thread
+    Signal
+    or bx,bx
+    pop bx
+    jz chdKeyOk
+;    
+    mov ax,10
+    WaitMilliSec
+    jmp chdStopKey       
+    
+chdKeyOk:
     mov bx,fs:hid_control_handle
     CloseUsbPipe    
 ;
@@ -2468,6 +2503,7 @@ CloseHidDev_ Proc near
 ;
     pop ebx
     pop eax
+    pop ds
     ret
 CloseHidDev_ Endp
 
@@ -2581,48 +2617,10 @@ usb_detach  Proc far
     push es
     pushad
 ;    
-    push eax
-    push ebx
     movzx eax,al
     movzx ebx,bx
     call RemoveHid
-    pop ebx
-    pop eax
-;    
-    mov dx,SEG data
-    mov ds,dx
-;    
-    call GetHidSelOld
-    jc udDone
-;
-    cmp bx,ds:hid_key_sel
-    jne udKeyOk
-;
-    mov ds:hid_key_sel,0
-    mov ds:hid_key_controller,0
-    mov ds:hid_key_device,0
-    mov ax,ds:hid_key_thread
-    or ax,ax
-    jz udKeyOk
-
-udStopKey:
-    push bx
-    mov bx,ds:hid_key_thread
-    Signal
-    or bx,bx
-    pop bx
-    jz udKeyOk
-;    
-    mov ax,10
-    WaitMilliSec
-    jmp udStopKey       
-    
-udKeyOk:
-    call FreeHidSel
-    call RemoveHidSel
-    call InsertDetached
-        
-udDone:    
+;        
     popad
     pop es
     pop ds
