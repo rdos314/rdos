@@ -1023,14 +1023,10 @@ delete_handle   Endp
 
     public InitHid_
 
-    extrn InitKeyboard:near
-
 InitHid_    Proc near
     push ds
     push es
     pushad
-;
-    call InitKeyboard    
 ;       
     mov eax,cs
     mov ds,eax

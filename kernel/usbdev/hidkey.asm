@@ -108,10 +108,11 @@ code    SEGMENT byte public 'CODE'
 ;      
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public InitKeyboard
+    public InitKeyboard_
 
-InitKeyboard   Proc near
+InitKeyboard_   Proc near
     push ds
+    push ebx
 ;    
     mov ebx,SEG data
     mov ds,ebx
@@ -122,9 +123,10 @@ InitKeyboard   Proc near
     mov ds:hid_key_mod,0
     mov ds:hid_key_arr,0
 ;
+    pop ebx
     pop ds
     ret
-InitKeyboard    Endp
+InitKeyboard_    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
