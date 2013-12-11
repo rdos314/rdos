@@ -37,32 +37,39 @@ INCLUDE pci.inc
 MAX_SD_DEVICES      = 32
 MAX_NAME_SIZE       = 24
 
-REG_BLOCK_SIZE          = 4
-REG_ARG                 = 8
-REG_TRANS_MODE          = 0Ch
-REG_CMD                 = 0Eh
-REG_RESP0               = 10h
-REG_RESP1               = 14h
-REG_RESP2               = 18h
-REG_RESP3               = 1Ch
-REG_STATE               = 24h
-REG_CONTROL             = 28h
-REG_POWER               = 29h
-REG_CLK_CONTROL         = 2Ch
-REG_RESET               = 2Fh
-REG_INT_STATUS          = 30h
-REG_INT_STATUS_ENABLE   = 34h
-REG_INT_SIG_ENABLE      = 38h
-REG_CAP                 = 40h
+REG_BLOCK_SIZE              = 4
+REG_ARG                     = 8
+REG_TRANS_MODE              = 0Ch
+REG_CMD                     = 0Eh
+REG_RESP0                   = 10h
+REG_RESP1                   = 14h
+REG_RESP2                   = 18h
+REG_RESP3                   = 1Ch
+REG_STATE                   = 24h
+REG_CONTROL                 = 28h
+REG_POWER                   = 29h
+REG_CLK_CONTROL             = 2Ch
+REG_RESET                   = 2Fh
+REG_INT_STATUS              = 30h
+REG_INT_ERROR_STATUS        = 32h
+REG_INT_STATUS_ENABLE       = 34h
+REG_INT_ERROR_STATUS_ENABLE = 36h
+REG_INT_SIG_ENABLE          = 38h
+REG_INT_ERROR_SIG_ENABLE    = 3Ah
+REG_CAP                     = 40h
 
 sd_device_struc STRUC
 
 sd_reg_sel      DW ?
 sd_serv_thread  DW ?
+sd_pend_error   DW ?
 sd_pend_int     DB ?
 sd_pci_bus      DB ?
 sd_pci_device   DB ?
 sd_pci_function DB ?
+
+sd_ocr          DD ?
+sd_rca          DD ?
 
 sd_device_struc ENDS
 
@@ -97,8 +104,17 @@ code    SEGMENT byte public use16 'CODE'
 SdInt  Proc far
     mov es,ds:sd_reg_sel
     mov ax,es:REG_INT_STATUS
-    or ds:sd_pend_int,al
-;    
+    lock or ds:sd_pend_int,al
+    mov es:REG_INT_STATUS,ax
+;
+    test ah,80h
+    jz siNoError
+;
+    mov ax,es:REG_INT_ERROR_STATUS
+    lock or ds:sd_pend_error,ax
+    mov es:REG_INT_ERROR_STATUS,ax
+    
+siNoError:    
     and word ptr es:REG_INT_STATUS_ENABLE, NOT 100h    
     mov es:REG_INT_STATUS,al
     or word ptr es:REG_INT_STATUS_ENABLE, 100h
@@ -383,9 +399,16 @@ WaitForCompletion   Proc near
 
 wfcWait:
     WaitForSignal
+    test ds:sd_pend_error,1FFh
+    stc
+    jnz wfcDone
+;    
     test ds:sd_pend_int,1
     jz wfcWait
-;    
+;
+    clc
+
+wfcDone:    
     ret
 WaitForCompletion   Endp
 
@@ -402,8 +425,9 @@ WaitForCompletion   Endp
 
 SendCmd0    Proc near
     mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
     ClearSignal
-    mov dword ptr fs:REG_ARG,-1
+    mov dword ptr fs:REG_ARG,0
     mov word ptr fs:REG_TRANS_MODE,0
     mov word ptr fs:REG_CMD,0
     call WaitForCompletion
@@ -423,6 +447,7 @@ SendCmd0    Endp
 
 SendCmd8    Proc near
     mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
     ClearSignal
     mov dword ptr fs:REG_ARG,1A5h
     mov word ptr fs:REG_TRANS_MODE,0
@@ -443,6 +468,73 @@ SendCmd8    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SendAcmd41
+;
+;           DESCRIPTION:    Send ACMD41
+;
+;           PARAMETERS:     FS      SD io space
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendAcmd41    Proc near
+    mov esi,50100000h
+    mov eax,fs:REG_CAP
+    test eax,1000000h
+    jnz sac41HasOcr
+;
+    mov esi,50040000h
+    test eax,2000000h    
+    jnz sac41HasOcr
+;
+    stc
+    jmp sac41Done
+
+sac41HasOcr:
+    mov cx,100
+
+sac41Retry:    
+    mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
+    ClearSignal
+;
+    mov dword ptr fs:REG_ARG,0
+    mov word ptr fs:REG_TRANS_MODE,0
+    mov word ptr fs:REG_CMD,3702h
+    call WaitForCompletion
+    jc sac41Done
+;
+    mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
+    ClearSignal
+;    
+    mov dword ptr fs:REG_ARG,esi
+    mov word ptr fs:REG_TRANS_MODE,0
+    mov word ptr fs:REG_CMD,2902h
+    call WaitForCompletion
+;
+    mov eax,fs:REG_RESP0
+    test eax,80000000h    
+    jnz sac41PowerOk
+;
+    mov ax,25
+    WaitMilliSec
+;
+    loop sac41Retry
+;
+    stc
+    jmp sac41Done        
+    
+sac41PowerOk:
+    mov ds:sd_ocr,eax
+    clc
+
+sac41Done:    
+    ret
+SendAcmd41    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           SendCmd2
 ;
 ;           DESCRIPTION:    Send CMD2
@@ -453,10 +545,11 @@ SendCmd8    Endp
 
 SendCmd2    Proc near
     mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
     ClearSignal
-    mov dword ptr fs:REG_ARG,-1
+    mov dword ptr fs:REG_ARG,0
     mov word ptr fs:REG_TRANS_MODE,0
-    mov word ptr fs:REG_CMD,201h
+    mov word ptr fs:REG_CMD,202h
     call WaitForCompletion
     ret
 SendCmd2    Endp
@@ -464,44 +557,51 @@ SendCmd2    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SendCmd41
+;           NAME:           SendCmd3
 ;
-;           DESCRIPTION:    Send ACMD41
+;           DESCRIPTION:    Send CMD3
 ;
 ;           PARAMETERS:     FS      SD io space
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SendCmd41    Proc near
+SendCmd3    Proc near
     mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
+    ClearSignal
+    mov dword ptr fs:REG_ARG,0
+    mov word ptr fs:REG_TRANS_MODE,0
+    mov word ptr fs:REG_CMD,302h
+    call WaitForCompletion
+    mov eax,fs:REG_RESP0
+    xor ax,ax
+    mov ds:sd_rca,eax
+    ret
+SendCmd3    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SendCmd9
+;
+;           DESCRIPTION:    Send CMD9
+;
+;           PARAMETERS:     FS      SD io space
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendCmd9    Proc near
+    mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
     ClearSignal
 ;
-    mov cx,100    
-
-sc41Retry:    
-    mov dword ptr fs:REG_ARG,50000000h
+    mov eax,ds:sd_rca
+    mov dword ptr fs:REG_ARG,eax
     mov word ptr fs:REG_TRANS_MODE,0
-    mov word ptr fs:REG_CMD,2902h
+    mov word ptr fs:REG_CMD,901h
     call WaitForCompletion
-;
-    mov eax,fs:REG_RESP0
-    test eax,80000000h    
-    jz sc41PowerOk
-;
-    mov ax,25
-    WaitMilliSec
-;
-    loop sc41Retry
-;
-    stc
-    jmp sc41Done        
-    
-sc41PowerOk:
-    clc
-
-sc41Done:    
     ret
-SendCmd41    Endp
+SendCmd9    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -522,11 +622,15 @@ serv_thread:
     GetThread
     mov ds:sd_serv_thread,ax
     mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
 ;    
     mov fs,ds:sd_reg_sel
     mov dword ptr fs:REG_BLOCK_SIZE,200h
     mov word ptr fs:REG_INT_STATUS_ENABLE,1FFh
     mov word ptr fs:REG_INT_SIG_ENABLE,1FFh
+;
+    mov word ptr fs:REG_INT_ERROR_STATUS_ENABLE,3FFh
+    mov word ptr fs:REG_INT_ERROR_SIG_ENABLE,3FFh
 
 stOff:
     test dword ptr fs:REG_STATE,10000h
@@ -550,8 +654,17 @@ stInserted:
     call SendCmd8
     jc stFailed
 ;    
-    int 3
+    call SendAcmd41
+    jc stFailed
+;    
     call SendCmd2
+    jc stFailed
+;    
+    call SendCmd3
+    jc stFailed
+;    
+    int 3
+    call SendCmd9
 
 stFailed: 
     mov byte ptr fs:REG_RESET,1
