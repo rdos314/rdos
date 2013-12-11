@@ -44,8 +44,11 @@ extern void InitHid();
 extern int GetReportDescr(struct THidDevice *dev, char *buf, int size, int interface);
 #pragma aux GetReportDescr parm routine [fs esi] [es edi] [ecx] [edx] value [eax]
 
-extern void InitHidDev(struct THidDevice *dev, char *config);
-#pragma aux InitHidDev parm routine [fs esi] [es edi]
+extern void OpenHidDev(struct THidDevice *dev, char *config);
+#pragma aux OpenHidDev parm routine [fs esi] [es edi]
+
+extern void CloseHidDev(struct THidDevice *dev);
+#pragma aux CloseHidDev parm routine [fs esi]
 
 struct THidDescriptor
 {
@@ -201,9 +204,6 @@ void CloseHid(struct THidDevice *dev)
 {
     int i;
     struct THidReportIdEntry *report;
-    
-    RdosCloseUsbPipe(dev->ControlPipe);
-    RdosCloseWait(dev->ControlWait);
 
     if (dev->ItemArr)
         RdosFreeMem(RdosPointerToSelector(dev->ItemArr));
@@ -226,6 +226,8 @@ void CloseHid(struct THidDevice *dev)
             RdosFreeMem(RdosPointerToSelector(report));
         }
     }
+
+    CloseHidDev(dev);
 }
 
 /*##########################################################################
@@ -243,14 +245,17 @@ int OpenHid(struct THidDevice *dev)
 {
     int size;
 
-    InitHidDev(dev, dev->ConfigBuf);
+    OpenHidDev(dev, dev->ConfigBuf);
 
     size = GetReportDescr(dev, dev->ReportDescrData, dev->ReportDescrSize, 0);
 
     if (size == dev->ReportDescrSize)
         return TRUE;
     else
+    {
+        CloseHid(dev);
         return FALSE;
+    }
 }
 
 /*##########################################################################
@@ -2076,17 +2081,17 @@ void CreateHid(int controller, int device, char *config)
 
 /*##########################################################################
 #
-#   Name       : UsbDetach
+#   Name       : RemoveHid
 #
-#   Purpose....: USB detach notification
+#   Purpose....: Remove Hid dev
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux UsbDetach "*" rdosdev parm routine [ebx] [eax]
-void UsbDetach(int controller, int device)
+#pragma aux RemoveHid "*" rdosdev parm routine [ebx] [eax]
+void RemoveHid(int controller, int device)
 {
     int i;
     struct THidDevice *dev;

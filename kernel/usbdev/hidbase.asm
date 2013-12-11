@@ -68,10 +68,6 @@ hid_control_sel     DW ?
 hid_country_code    DB ?
 hid_descr_count     DB ?
 
-hid_device_nr       DD ?
-hid_running         DD ?
-hid_item_count      DD ?
-
 hid_device_struc   ENDS
 
 
@@ -137,18 +133,21 @@ hid_handle_struc       ENDS
 data    SEGMENT byte public 'DATA'
 
 hid_section     section_typ <>
-hid_key_sel     DW ?
-hid_mouse_sel   DW ?
-hid_dev_list    DW ?
-hid_detach_list DW ?
-hid_key_thread  DW ?
 
-hid_key_leds    DB ?
-hid_key_mod     DB ?
-hid_key_arr     DB 6 DUP(?)
+hid_key_sel             DW ?
+hid_key_controller      DW ?
+hid_key_device          DB ?
 
-hid_last_key    DB ?
-hid_last_time       DD ?
+hid_dev_list            DW ?
+hid_detach_list         DW ?
+hid_key_thread          DW ?
+
+hid_key_leds            DB ?
+hid_key_mod             DB ?
+hid_key_arr             DB 6 DUP(?)
+
+hid_last_key            DB ?
+hid_last_time           DD ?
 
 data    ENDS
 
@@ -238,7 +237,7 @@ FreeHidSel Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:       GetHidSel
+;           NAME:       GetHidSelOld
 ;
 ;           description:    Get HID device selector from controller and device
 ;
@@ -250,7 +249,7 @@ FreeHidSel Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetHidSel Proc near
+GetHidSelOld Proc near
     push ds
     push es
     push si
@@ -293,7 +292,7 @@ ghsDone:
     pop es
     pop ds
     ret
-GetHidSel   Endp
+GetHidSelOld   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2226,7 +2225,13 @@ SetupBootInvalid    Proc near
     ret
 SetupBootInvalid    Endp
 
-SetupBootKeyboard    Proc near
+SetupBootKeyboard    Proc near   
+    mov ax,es:hid_controller
+    mov ds:hid_key_controller,ax
+;
+    mov al,es:hid_device
+    mov ds:hid_key_device,al
+;        
     mov ds:hid_key_sel,bx
     call SetBootProtocol
     call SetIdle
@@ -2302,18 +2307,18 @@ SetupBoot   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:       InitHidDev
+;           NAME:       OpenHidDev
 ;
-;           description:    Init hid descriptor
+;           description:    Open hid descriptor
 ;
 ;           Parameters:     FS:ESI      Dev
 ;                           ES:EDI      First interface descriptor for device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public InitHidDev_
+    public OpenHidDev_
 
-InitHidDev_ Proc near
+OpenHidDev_ Proc near
     push ax
     push bx
     push dx
@@ -2415,6 +2420,8 @@ ihsDone:
 ;
     CreateWait
     mov fs:hid_control_wait,bx
+;    
+    mov fs:hid_intr_handle,0
 ;
     mov ebx,fs
     call SetupBoot    
@@ -2425,8 +2432,44 @@ ihsDone:
     pop bx
     pop ax
     ret
-InitHidDev_  Endp    
+OpenHidDev_  Endp    
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:       CloseHidDev
+;
+;           description:    Close hid descriptor
+;
+;           Parameters:     FS:ESI      Dev
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CloseHidDev_
+
+CloseHidDev_ Proc near
+    push eax
+    push ebx
+;
+    mov bx,fs:hid_control_handle
+    CloseUsbPipe    
+;
+    mov bx,fs:hid_intr_handle
+    CloseUsbPipe    
+;    
+    mov bx,fs:hid_control_wait
+    CloseWait
+;   
+    mov fs:hid_control_handle,0
+    mov fs:hid_intr_handle,0
+    mov fs:hid_control_wait,0
+    mov fs:hid_function_sel,0
+    mov fs:hid_control_sel,0
+;
+    pop ebx
+    pop eax
+    ret
+CloseHidDev_ Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2531,7 +2574,7 @@ usb_attach  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    extern UsbDetach:near
+    extern RemoveHid:near
 
 usb_detach  Proc far
     push ds
@@ -2542,20 +2585,22 @@ usb_detach  Proc far
     push ebx
     movzx eax,al
     movzx ebx,bx
-    call UsbDetach
+    call RemoveHid
     pop ebx
     pop eax
 ;    
     mov dx,SEG data
     mov ds,dx
 ;    
-    call GetHidSel
+    call GetHidSelOld
     jc udDone
 ;
     cmp bx,ds:hid_key_sel
     jne udKeyOk
 ;
     mov ds:hid_key_sel,0
+    mov ds:hid_key_controller,0
+    mov ds:hid_key_device,0
     mov ax,ds:hid_key_thread
     or ax,ax
     jz udKeyOk
@@ -2605,7 +2650,7 @@ open_hid    Proc far
     push es
     push ax
 ;    
-    call GetHidSel
+    call GetHidSelOld
     jc open_hid_done
 ;    
     push bx
@@ -3063,7 +3108,8 @@ InitHid_    Proc near
     mov ds:hid_detach_list,0
     mov ds:hid_key_thread,0
     mov ds:hid_key_sel,0
-    mov ds:hid_mouse_sel,0
+    mov ds:hid_key_controller,0
+    mov ds:hid_key_device,0
     mov ds:hid_key_mod,0
     mov ds:hid_key_arr,0
 ;       
