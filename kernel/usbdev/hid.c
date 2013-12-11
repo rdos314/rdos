@@ -117,9 +117,6 @@ struct THidReportIdEntry
     
 struct THidDevice
 {
-    short int Prev;
-    short int Next;
-    
     unsigned short int Controller;
     unsigned char Device;
 
