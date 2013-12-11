@@ -33,6 +33,7 @@ include ..\driver.def
 INCLUDE ..\os\protseg.def
 include ..\usbdev\usb.inc
 INCLUDE ..\handle.inc
+include hid.inc
 
 STD_KEY = 1
 CAPS_KEY = 2
@@ -42,32 +43,6 @@ DEL_KEY = 5
 CAPS_LOCK = 6
 NUM_LOCK = 7
 ESC_KEY = 8
-
-; keep synchronized with hid.c!!
-
-hid_device_struc   STRUC
-
-hid_controller      DW ?
-hid_device          DB ?
-
-hid_interface       DB ?
-hid_protocol        DB ?
-hid_intr_in         DB ?
-hid_control_handle  DW ?
-hid_control_wait    DW ?
-hid_intr_handle     DW ?
-hid_intr_buf        DW ?
-hid_intr_req        DW ?
-
-hid_function_sel    DW ?
-hid_control_sel     DW ?
-
-hid_country_code    DB ?
-hid_descr_count     DB ?
-
-hid_device_struc   ENDS
-
-
 
 trans_struc STRUC
 
