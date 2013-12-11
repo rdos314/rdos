@@ -237,67 +237,6 @@ FreeHidSel Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:       GetHidSelOld
-;
-;           description:    Get HID device selector from controller and device
-;
-;           Parameters:     BX      Controller #
-;               AL      Device address
-;
-;       Returns:    NC
-;               BX      HID selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetHidSelOld Proc near
-    push ds
-    push es
-    push si
-    push di
-;
-    mov di,SEG data
-    mov ds,di
-    EnterSection ds:hid_section
-;
-    mov di,ds:hid_dev_list
-    or di,di
-    jz ghsFail
-
-ghsCheck:
-    mov es,di
-    cmp al,es:hid_device
-    jne ghsNext
-;
-    cmp bx,es:hid_controller
-    je ghsOk
-
-ghsNext:
-    mov di,es:hid_next    
-    cmp di,ds:hid_dev_list
-    jne ghsCheck
-
-ghsFail:
-    stc
-    jmp ghsDone 
-
-ghsOk:
-    mov bx,es
-    clc
-
-ghsDone:   
-    LeaveSection ds:hid_section
-;    
-    pop di
-    pop si
-    pop es
-    pop ds
-    ret
-GetHidSelOld   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:       InsertHidSel
 ;
 ;           description:    Inserts a HID device selector into list of devices
@@ -2643,13 +2582,21 @@ usb_detach  Endp
 
 open_hid_name DB 'Open HID', 0
 
+    extrn GetHid:near
+
 open_hid    Proc far
     push ds
     push es
-    push ax
+    push eax
 ;    
-    call GetHidSelOld
-    jc open_hid_done
+    push edx
+    movzx ebx,bx
+    movzx eax,al
+    call GetHid
+    mov bx,ax
+    pop edx
+    or bx,bx
+    jz open_hid_done
 ;    
     push bx
     mov cx,SIZE hid_handle_struc

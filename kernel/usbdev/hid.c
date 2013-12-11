@@ -2117,6 +2117,34 @@ void RemoveHid(int controller, int device)
 
 /*##########################################################################
 #
+#   Name       : GetHid
+#
+#   Purpose....: Get Hid dev
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux GetHid "*" rdosdev parm routine [ebx] [eax]
+struct THidDevice *GetHid(int controller, int device)
+{
+    int i;
+    struct THidDevice *dev;
+
+    for (i = 0; i < MAX_HID_DEVICES; i++)
+    {
+        dev = HidArr[i];
+        if (dev)
+            if (dev->Controller == controller && dev->Device == device)
+                return dev;
+    }
+
+    return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : main
 #
 #   Purpose....: Initialization
