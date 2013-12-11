@@ -45,14 +45,36 @@ ESC_KEY = 8
 
 ; keep synchronized with hid.c!!
 
-hid_dev  STRUC
+hid_device_struc   STRUC
 
-hd_controller       DW ?,?
-hd_device           DB ?,?,?,?
-hd_control_pipe     DW ?,?
-hd_control_wait     DW ?,?
+hid_prev            DW ?
+hid_next            DW ?
 
-hid_dev  ENDS
+hid_controller      DW ?
+hid_device          DB ?
+
+hid_interface       DB ?
+hid_protocol        DB ?
+hid_intr_in         DB ?
+hid_control_handle  DW ?
+hid_control_wait    DW ?
+hid_intr_handle     DW ?
+hid_intr_buf        DW ?
+hid_intr_req        DW ?
+
+hid_function_sel    DW ?
+hid_control_sel     DW ?
+
+hid_country_code    DB ?
+hid_descr_count     DB ?
+
+hid_device_nr       DD ?
+hid_running         DD ?
+hid_item_count      DD ?
+
+hid_device_struc   ENDS
+
+
 
 trans_struc STRUC
 
@@ -101,31 +123,6 @@ uhad_descr_type      DB ?
 uhad_descr_len       DW ?
 
 usb_hid_arr_descr   ENDS
-
-hid_device_struc   STRUC
-
-hid_prev        DW ?
-hid_next        DW ?
-
-hid_controller      DW ?
-hid_device      DB ?
-
-hid_interface       DB ?
-hid_protocol        DB ?
-hid_intr_in         DB ?
-hid_control_handle  DW ?
-hid_control_wait    DW ?
-hid_intr_handle     DW ?
-hid_intr_buf        DW ?
-hid_intr_req        DW ?
-
-hid_function_sel    DW ?
-hid_control_sel     DW ?
-
-hid_country_code    DB ?
-hid_descr_count     DB ?
-
-hid_device_struc   ENDS
 
 hid_handle_struc       STRUC
 
@@ -237,134 +234,6 @@ FreeHidSel Proc near
     pop es    
     ret
 FreeHidSel Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:       InitHidSel
-;
-;           description:    Init hid descriptor
-;
-;           Parameters:     ES:DI   First interface descriptor for device
-;               BX      Hid sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitHidSel Proc near
-    push ds
-    push ax
-    push bx
-    push dx
-    push si
-    push di
-    mov ds,bx
-;
-    xor si,si
-    mov ds:hid_intr_in,0
-    mov ds:hid_interface,0
-    mov ds:hid_protocol,0
-    mov ds:hid_country_code,0
-    mov ds:hid_descr_count,0
-
-ihsCheckClass:
-    mov si,di
-    mov al,es:[di].uid_sub_class
-    cmp al,1
-    jne ihsCheckNext
-    jmp ihsFound
-
-ihsCheckLoop: 
-    mov al,es:[di].ucd_type
-    cmp al,4
-    jne ihsCheckNext
-;    
-    mov al,es:[di].uid_class
-    cmp al,3
-    je ihsCheckClass
-
-ihsCheckNext:
-    movzx cx,es:[di].ucd_len
-    add di,cx
-    cmp di,es:ucd_size
-    jb ihsCheckLoop
-;
-    or si,si
-    je ihsDone
-;
-    mov di,si    
-
-ihsFound:
-    mov al,es:[di].uid_id
-    mov ds:hid_interface,al
-    mov al,es:[di].uid_proto
-    mov ds:hid_protocol,al
-
-ihsDescrLoop:    
-    movzx cx,es:[di].ucd_len
-    add di,cx
-    cmp di,es:ucd_size
-    jnb ihsDone
-;    
-    mov al,es:[di].ucd_type
-    cmp al,21h
-    je ihsHidDescr
-;      
-    cmp al,5
-    je ihsEndDescr
-;
-    jmp ihsDone
-
-ihsHidDescr:
-    mov al,es:[di].uhd_country_code
-    mov ds:hid_country_code,al
-    mov al,es:[di].uhd_descr_count
-    mov ds:hid_descr_count,al    
-    jmp ihsDescrLoop
-
-ihsEndDescr:    
-    mov al,es:[di].ued_attrib
-    and al,3
-    cmp al,3
-    jne ihsDescrLoop
-;
-    mov al,es:[di].ued_address
-    test al,80h
-    jz ihsDescrLoop
-;
-    and al,8Fh    
-    mov ds:hid_intr_in,al    
-    jmp ihsDescrLoop
-
-ihsDone:    
-    mov bx,ds:hid_controller
-    mov al,ds:hid_device
-    xor dl,dl
-    OpenUsbPipe
-    mov ds:hid_control_handle,bx
-;
-    push ds
-    push fs    
-    GetUsbInfo
-    mov ax,ds
-    mov dx,fs
-    pop fs
-    pop ds        
-    mov ds:hid_function_sel,ax
-    mov ds:hid_control_sel,dx
-;
-    CreateWait
-    mov ds:hid_control_wait,bx
-;
-    pop di
-    pop si
-    pop dx
-    pop bx
-    pop ax
-    pop ds
-    ret
-InitHidSel  Endp    
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -736,7 +605,7 @@ GetReportDescr_   Proc near
     mov es:usd_len,cx
     xor edi,edi
     mov ebp,es
-    mov bx,fs:[esi].hd_control_pipe
+    mov bx,fs:[esi].hid_control_handle
 ;
     LockUsbPipe
     mov ecx,8
@@ -754,10 +623,10 @@ GetReportDescr_   Proc near
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
-    mov bx,fs:[esi].hd_control_wait
+    mov bx,fs:[esi].hid_control_wait
     WaitWithTimeout
 ;    
-    mov bx,fs:[esi].hd_control_pipe
+    mov bx,fs:[esi].hid_control_handle
     WasUsbTransactionOk
     jc grdFail
 ;
@@ -2433,6 +2302,135 @@ SetupBoot   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:       InitHidDev
+;
+;           description:    Init hid descriptor
+;
+;           Parameters:     FS:ESI      Dev
+;                           ES:EDI      First interface descriptor for device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public InitHidDev_
+
+InitHidDev_ Proc near
+    push ax
+    push bx
+    push dx
+    push esi
+    push edi
+;
+    xor esi,esi
+    mov fs:hid_intr_in,0
+    mov fs:hid_interface,0
+    mov fs:hid_protocol,0
+    mov fs:hid_country_code,0
+    mov fs:hid_descr_count,0
+
+ihsCheckClass:
+    mov esi,edi
+    mov al,es:[edi].uid_sub_class
+    cmp al,1
+    jne ihsCheckNext
+    jmp ihsFound
+
+ihsCheckLoop: 
+    mov al,es:[edi].ucd_type
+    cmp al,4
+    jne ihsCheckNext
+;    
+    mov al,es:[edi].uid_class
+    cmp al,3
+    je ihsCheckClass
+
+ihsCheckNext:
+    movzx ecx,es:[edi].ucd_len
+    add edi,ecx
+    cmp di,es:ucd_size
+    jb ihsCheckLoop
+;
+    or si,si
+    je ihsDone
+;
+    mov edi,esi    
+
+ihsFound:
+    mov al,es:[edi].uid_id
+    mov fs:hid_interface,al
+    mov al,es:[edi].uid_proto
+    mov fs:hid_protocol,al
+
+ihsDescrLoop:    
+    movzx cx,es:[edi].ucd_len
+    add di,cx
+    cmp di,es:ucd_size
+    jnb ihsDone
+;    
+    mov al,es:[edi].ucd_type
+    cmp al,21h
+    je ihsHidDescr
+;      
+    cmp al,5
+    je ihsEndDescr
+;
+    jmp ihsDone
+
+ihsHidDescr:
+    mov al,es:[edi].uhd_country_code
+    mov fs:hid_country_code,al
+    mov al,es:[edi].uhd_descr_count
+    mov fs:hid_descr_count,al    
+    jmp ihsDescrLoop
+
+ihsEndDescr:    
+    mov al,es:[edi].ued_attrib
+    and al,3
+    cmp al,3
+    jne ihsDescrLoop
+;
+    mov al,es:[edi].ued_address
+    test al,80h
+    jz ihsDescrLoop
+;
+    and al,8Fh    
+    mov fs:hid_intr_in,al    
+    jmp ihsDescrLoop
+
+ihsDone:    
+    mov bx,fs:hid_controller
+    mov al,fs:hid_device
+    xor dl,dl
+    OpenUsbPipe
+    mov fs:hid_control_handle,bx
+;
+    push ds
+    push fs    
+    GetUsbInfo
+    mov ax,ds
+    mov dx,fs
+    pop fs
+    pop ds        
+    mov fs:hid_function_sel,ax
+    mov fs:hid_control_sel,dx
+;
+    CreateWait
+    mov fs:hid_control_wait,bx
+;
+    mov ebx,fs
+    call SetupBoot    
+;
+    pop edi
+    pop esi
+    pop dx
+    pop bx
+    pop ax
+    ret
+InitHidDev_  Endp    
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:       usb_attach
 ;
 ;           description:    USB attach callback
@@ -2442,7 +2440,7 @@ SetupBoot   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    extern UsbAttach:near
+    extern CreateHid:near
 
 usb_attach  Proc far
     push ds
@@ -2454,19 +2452,19 @@ usb_attach  Proc far
     AllocateSmallGlobalMem
     mov cx,SIZE usb_device_descr
     pop ax
-    xor di,di
+    xor edi,edi
     push ax
     GetUsbDevice
     cmp ax,cx
     pop ax
-    jne uaDone
+    jne uaFail
 ;
     mov cl,es:udd_class
     or cl,cl
     je uaPossibleHid
 ;    
     cmp cl,3
-    jne uaDone
+    jne uaFail
 
 uaPossibleHid:
     xor dl,dl
@@ -2477,7 +2475,7 @@ uaPossibleHid:
     mov cx,ax
     pop ax
     or cx,cx
-    jz uaDone
+    jz uaFail
 ;
     mov dl,es:ucd_config_id
     xor di,di
@@ -2496,42 +2494,24 @@ uaCheckLoop:
 uaCheckNext:
     movzx cx,es:[di].ucd_len
     or cx,cx
-    jz uaDone
+    jz uaFail
 ;    
     add di,cx
     cmp di,es:ucd_size
     jb uaCheckLoop
+
+uaFail:
+    FreeMem    
     jmp uaDone
 
 uaFound:
     ConfigUsbDevice
-;    
-    push eax
-    push ebx
+    
     movzx eax,al
     movzx ebx,bx
-    call UsbAttach
-    pop ebx
-    pop eax
-;
-    call GetDetached
-    jc uaCreate
-;
-    call RemoveDetached
-    call InitHidSel
-    call SetupBoot
-    call InsertHidSel
-    jmp uaDone
-    
-uaCreate:    
-    call CreateHidSel
-    call InitHidSel
-    call SetupBoot
-    call InsertHidSel
+    call CreateHid
 
-uaDone:    
-    FreeMem
-;
+uaDone:
     popad
     pop es
     pop ds

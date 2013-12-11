@@ -44,6 +44,9 @@ extern void InitHid();
 extern int GetReportDescr(struct THidDevice *dev, char *buf, int size, int interface);
 #pragma aux GetReportDescr parm routine [fs esi] [es edi] [ecx] [edx] value [eax]
 
+extern void InitHidDev(struct THidDevice *dev, char *config);
+#pragma aux InitHidDev parm routine [fs esi] [es edi]
+
 struct THidDescriptor
 {
     unsigned char Len;
@@ -106,16 +109,37 @@ struct THidReportIdEntry
     struct THidReportEntry *OutputArr;
     struct THidReportEntry *FeatureArr;
 };
+
+/* shared with asm */    
     
 struct THidDevice
 {
-/* shared with asm */    
-    int Controller;
-    int Device;
-    int ControlPipe;
-    int ControlWait;
+    short int Prev;
+    short int Next;
+    
+    unsigned short int Controller;
+    unsigned char Device;
 
-/* not shared with asm */    
+    unsigned char Interface;
+    unsigned char Protocol;
+    unsigned char IntrIn;
+
+    short int ControlPipe;
+    short int ControlWait;
+
+    short int IntrHandle;
+    short int IntrBufSel;
+    short int IntrReq;
+
+    short int FunctionSel;
+    short int ControlSel;
+
+    unsigned char CountryCode;
+    unsigned char DescrCount;
+
+/* not shared */
+    char *ConfigBuf;
+    
     int DeviceNr;
     int IsRunning;
     int ItemCount;
@@ -218,18 +242,15 @@ void CloseHid(struct THidDevice *dev)
 int OpenHid(struct THidDevice *dev)
 {
     int size;
-    
-    dev->ControlPipe = RdosOpenUsbPipe(dev->Controller, dev->Device, 0);
-    dev->ControlWait = RdosCreateWait();
+
+    InitHidDev(dev, dev->ConfigBuf);
+
     size = GetReportDescr(dev, dev->ReportDescrData, dev->ReportDescrSize, 0);
 
     if (size == dev->ReportDescrSize)
         return TRUE;
     else
-    {
-        CloseHid(dev);
         return FALSE;
-    }
 }
 
 /*##########################################################################
@@ -1994,21 +2015,21 @@ void __far HidThread(void *param)
 
 /*##########################################################################
 #
-#   Name       : UsbAttach
+#   Name       : CreateHid
 #
-#   Purpose....: USB attach notification
+#   Purpose....: Create HID structure
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux UsbAttach "*" rdosdev parm routine [ebx] [eax]
-void UsbAttach(int controller, int device)
+#pragma aux CreateHid "*" rdosdev parm routine [ebx] [eax] [es edi]
+void CreateHid(int controller, int device, char *config)
 {
     int i;
     int j;
-    struct THidDevice *dev;
+    struct THidDevice *dev = 0;
     int size;
     struct THidDescriptor *descr;
     char *buf = RdosAllocateSmallGlobalMem(0x1000);
@@ -2043,6 +2064,8 @@ void UsbAttach(int controller, int device)
 
             dev->DeviceNr = i;
             dev->IsRunning = TRUE;
+            dev->ConfigBuf = config;
+
             sprintf(ThreadName, "Hid %02hX.%02hX", controller, device);
             RdosCreateKernelThread(5, 0x1000, HidThread, ThreadName, dev);
             break;
