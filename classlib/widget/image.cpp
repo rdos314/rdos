@@ -122,6 +122,7 @@ TLoaderThread::~TLoaderThread()
 *##########################################################################*/
 void TLoaderThread::StartLoad(TImageControl *img)
 {
+    img->FLoading++;    
     FSection.Enter();
     FCurrImg = img;
     FSection.Leave();
@@ -146,6 +147,7 @@ void TLoaderThread::Execute()
         if (FCurrImg)
         {
             FCurrImg->Load(MAX_IMAGE_COUNT);
+            FCurrImg->FLoading--;
             FCurrImg = 0;
         }
 
@@ -275,7 +277,7 @@ void TImageControl::Init()
         FIndex = MAX_IMAGE_COUNT;
 
         FLoader = 0;
-        FLoading = FALSE;
+        FLoading = 0;
 
         ControlType += TString(".IMAGE");
 }
@@ -723,7 +725,7 @@ void TImageControl::Load(int MaxCount)
 
     if (FLoadIni)
     {
-        FLoading = TRUE;
+        FLoading++;
         FCount = 0;
 
         FLoadIni->GotoSection(FLoadSection.GetData());
@@ -740,7 +742,7 @@ void TImageControl::Load(int MaxCount)
                     LoadOne(SeqPath, MaxCount);
             }
         }
-        FLoading = FALSE;
+        FLoading--;
     }
 }
 
@@ -759,10 +761,10 @@ void TImageControl::LoadImage(const char *FileName)
 {
     FImageName = TString(FileName);
 
-    FLoading = TRUE;
+    FLoading++;
     FCount = 0;
     LoadOne(FileName, 1);
-    FLoading = FALSE;
+    FLoading--;
     Redraw();
 }
 
@@ -783,7 +785,7 @@ void TImageControl::CreateImage(int bpp)
 
     FImgArr[0] = bitmap;
     FCount = 1;
-    FLoading = FALSE;
+    FLoading = 0;
     Redraw();
 }
 
