@@ -1647,61 +1647,6 @@ SetupBootKeyboard    Proc near
     ret
 SetupBootKeyboard    Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:       CheckCloseKeyboard
-;
-;           description:    Check for keyboard close
-;
-;           Parameters:     FS      dev
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public CheckCloseKeyboard
-
-CheckCloseKeyboard    Proc near   
-    push ds
-;    
-    mov eax,SEG data
-    mov ds,ax
-    mov ax,ds:hid_key_sel
-    or ax,ax
-    jz chdKeyOk
-;    
-    mov ax,ds:hid_key_controller
-    cmp ax,fs:hid_controller
-    jnz chdKeyOk
-;
-    mov al,ds:hid_key_device
-    cmp al,fs:hid_device
-    jnz chdKeyOk
-;
-    mov ds:hid_key_sel,0
-    mov ds:hid_key_controller,0
-    mov ds:hid_key_device,0
-    mov ax,ds:hid_key_thread
-    or ax,ax
-    jz chdKeyOk
-
-chdStopKey:
-    push bx
-    mov bx,ds:hid_key_thread
-    Signal
-    or bx,bx
-    pop bx
-    jz chdKeyOk
-;    
-    mov ax,10
-    WaitMilliSec
-    jmp chdStopKey       
-    
-chdKeyOk:
-    pop ds
-    ret
-CheckCloseKeyboard  Endp
-
 code    ENDS
 
     END

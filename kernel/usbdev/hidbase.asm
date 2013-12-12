@@ -401,14 +401,10 @@ OpenHidDev_  Endp
 
     public CloseHidDev_
 
-    extrn CheckCloseKeyboard:near
-
 CloseHidDev_ Proc near
     push ds
     push eax
     push ebx
-;
-    call CheckCloseKeyboard
 ;
     mov bx,fs:hid_control_handle
     CloseUsbPipe    
