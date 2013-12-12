@@ -209,8 +209,32 @@ WString
 COBJ
 50
 WVList
-0
+2
 51
+MRState
+52
+WString
+3
+WCC
+53
+WString
+21
+?????No optimizations
+1
+0
+54
+MRState
+55
+WString
+3
+WCC
+56
+WString
+26
+?????Fastest possible code
+1
+1
+57
 WVList
 0
 40
