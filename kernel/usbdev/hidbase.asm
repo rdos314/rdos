@@ -375,6 +375,7 @@ ihsDone:
 ;    
     mov fs:hid_intr_handle,0
     mov fs:hid_intr_size,0
+    mov fs:hid_intr_req,0
 ;
     mov ebx,fs
     call SetupBoot    
@@ -417,9 +418,21 @@ CloseHidDev_ Proc near
 ;    
     mov bx,fs:hid_control_wait
     CloseWait
-;   
-    mov fs:hid_control_handle,0
+;    
+    mov bx,fs:hid_intr_req
+    CloseUsbReq
+    mov fs:hid_intr_req,0
+    mov fs:hid_intr_buf,0
+;
+    mov bx,fs:hid_intr_handle
+    CloseUsbPipe    
     mov fs:hid_intr_handle,0
+;    
+    mov es,fs:hid_intr_buf
+    FreeMem
+;   
+    mov fs:hid_intr_buf,0
+    mov fs:hid_control_handle,0
     mov fs:hid_control_wait,0
     mov fs:hid_function_sel,0
     mov fs:hid_control_sel,0
@@ -429,6 +442,42 @@ CloseHidDev_ Proc near
     pop ds
     ret
 CloseHidDev_ Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:       OpenIntrPipe
+;
+;           description:    Open intr pipe and req
+;
+;           Parameters:     FS:ESI      Dev
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public OpenIntrPipe_
+
+OpenIntrPipe_ Proc near
+    push es
+    pushad
+;    
+    mov bx,fs:hid_controller
+    mov al,fs:hid_device
+    mov dl,fs:hid_intr_in
+    OpenUsbPipe
+    mov fs:hid_intr_handle,bx
+;
+    movzx eax,fs:hid_intr_size
+    AllocateSmallGlobalMem
+    mov fs:hid_intr_buf,es
+    mov cx,ax
+    CreateUsbReq
+    mov fs:hid_intr_req,bx
+    AddReadUsbDataReq
+;
+    popad
+    pop es
+    ret
+OpenIntrPipe_   Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

@@ -51,6 +51,9 @@ extern void OpenHidDev(struct THidDevice *dev, char *config);
 extern void CloseHidDev(struct THidDevice *dev);
 #pragma aux CloseHidDev parm routine [fs esi]
 
+extern void OpenIntrPipe(struct THidDevice *dev);
+#pragma aux OpenIntrPipe parm routine [fs esi]
+
 struct THidDescriptor
 {
     unsigned char Len;
@@ -2045,6 +2048,8 @@ void __far HidThread(void *param)
         PrepareReportIds(dev);
         CreateReportIdArrays(dev);
         LoadReportIdArrays(dev);
+        CreateIntrPipe(dev);
+        OpenIntrPipe(dev);
     
         for (;;)
         {

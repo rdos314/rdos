@@ -1532,23 +1532,18 @@ hid_key_thread_pr:
     mov ax,fs:hid_key_sel
     or ax,ax
     jz hktDone
-;    
+
+hktWait:    
     mov ds,ax    
-    mov bx,ds:hid_controller
-    mov al,ds:hid_device
-    mov dl,ds:hid_intr_in
-    OpenUsbPipe
-    mov ds:hid_intr_handle,bx
+    mov ax,25
+    WaitMilliSec
+;    
+    mov bx,ds:hid_intr_req
+    or bx,bx
+    jz hktWait
 ;
-    mov eax,8
-    AllocateSmallGlobalMem
-    mov ds:hid_intr_buf,es
-    mov cx,ax
-    CreateUsbReq
-    mov ds:hid_intr_req,bx
-    AddReadUsbDataReq
-    xor ax,ax
-    mov es,ax
+    mov ax,25
+    WaitMilliSec 
 
 hktDataLoop:
     mov ax,fs:hid_key_sel
@@ -1609,7 +1604,7 @@ hktExit:
     mov bx,ds:hid_intr_req
     CloseUsbReq
     mov ds:hid_intr_req,0
-    mov ds:hid_intr_buf,0
+
 ;
     mov bx,ds:hid_intr_handle
     CloseUsbPipe    
