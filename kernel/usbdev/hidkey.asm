@@ -76,8 +76,6 @@ hid_key_struc   ENDS
 
 data    SEGMENT byte public 'DATA'
 
-hid_key_thread          DW ?
-
 hid_key_leds            DB ?
 hid_key_mod             DB ?
 hid_key_arr             DB 6 DUP(?)
@@ -94,32 +92,6 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     .386p
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:       InitKeyboard
-;
-;           Description:    Init keyboard
-;      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public InitKeyboard_
-
-InitKeyboard_   Proc near
-    push ds
-    push ebx
-;    
-    mov ebx,SEG data
-    mov ds,ebx
-    mov ds:hid_key_thread,0
-    mov ds:hid_key_mod,0
-    mov ds:hid_key_arr,0
-;
-    pop ebx
-    pop ds
-    ret
-InitKeyboard_    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1501,12 +1473,12 @@ StartKeyboardHandler_   Proc near
     mov ds,ax
     mov ax,SEG data
     mov fs,ax
+;
+    mov fs:hid_key_mod,0
+    mov fs:hid_key_arr,0
 ;    
     call SetBootProtocol
     call SetIdle
-;    
-    GetThread
-    mov fs:hid_key_thread,ax
 ;
     mov al,3
     call UpdateLeds    
@@ -1588,7 +1560,6 @@ hktExit:
 hktDone:
     mov fs:hid_key_mod,0
     mov fs:hid_key_arr,0
-    mov fs:hid_key_thread,0
 ;
     popad
     pop fs

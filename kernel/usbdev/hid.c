@@ -40,7 +40,6 @@
 #define MAX_USAGE_TAGS      128
 
 extern void InitHid();
-extern void InitKeyboard();
 
 extern int GetReportDescr(struct THidDevice *dev, char *buf, int size, int interface);
 #pragma aux GetReportDescr parm routine [fs esi] [es edi] [ecx] [edx] value [eax]
@@ -2216,7 +2215,6 @@ int main()
         HidArr[i] = 0;
 
     InitHid();
-    InitKeyboard();
 
     RdosRegisterBimodalUserGate(usergate_get_hid_report_item, (__rdos_gate_callback *)&ImplGetHidReportItem, "Get Hid Report Item"); 
     RdosRegisterBimodalUserGate(usergate_get_hid_report_input_data, (__rdos_gate_callback *)&ImplGetHidReportInputData, "Get Hid Report Input Data"); 
