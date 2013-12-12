@@ -76,7 +76,6 @@ hid_key_struc   ENDS
 
 data    SEGMENT byte public 'DATA'
 
-hid_key_sel             DW ?
 hid_key_controller      DW ?
 hid_key_device          DB ?
 
@@ -117,7 +116,6 @@ InitKeyboard_   Proc near
     mov ebx,SEG data
     mov ds,ebx
     mov ds:hid_key_thread,0
-    mov ds:hid_key_sel,0
     mov ds:hid_key_controller,0
     mov ds:hid_key_device,0
     mov ds:hid_key_mod,0
@@ -338,11 +336,11 @@ SetIdle Endp
 ;           Description:    Update keyboard LEDs
 ;
 ;       Paramters:      AL      LED status
+;                       DS      Hid dev
 ;      
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateLeds   Proc near
-    push ds
     push es
     push eax
     push bx
@@ -350,13 +348,6 @@ UpdateLeds   Proc near
     push edx
     push di
 ;    
-    mov bx,SEG data
-    mov ds,bx
-    mov bx,ds:hid_key_sel
-    or bx,bx
-    jz ulDone
-;
-    mov ds,bx
     push ax
     mov eax,SIZE usb_setup_data + 1
     AllocateSmallGlobalMem
@@ -406,7 +397,6 @@ ulDone:
     pop bx
     pop eax
     pop es
-    pop ds    
     ret
 UpdateLeds Endp
 
@@ -1522,7 +1512,6 @@ StartKeyboardHandler_   Proc near
     mov ds,ax
     mov ax,SEG data
     mov fs,ax
-    mov fs:hid_key_sel,ds
 ;    
     GetThread
     mov fs:hid_key_thread,ax
@@ -1640,7 +1629,6 @@ SetupBootKeyboard    Proc near
     mov al,es:hid_device
     mov ds:hid_key_device,al
 ;        
-    mov ds:hid_key_sel,bx
     call SetBootProtocol
     call SetIdle
 ;
