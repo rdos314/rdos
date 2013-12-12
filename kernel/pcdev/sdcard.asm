@@ -37,7 +37,9 @@ INCLUDE pci.inc
 MAX_SD_DEVICES      = 32
 MAX_NAME_SIZE       = 24
 
+REG_SDMA                    = 0
 REG_BLOCK_SIZE              = 4
+REG_BLOCK_COUNT             = 6
 REG_ARG                     = 8
 REG_TRANS_MODE              = 0Ch
 REG_CMD                     = 0Eh
@@ -45,10 +47,12 @@ REG_RESP0                   = 10h
 REG_RESP1                   = 14h
 REG_RESP2                   = 18h
 REG_RESP3                   = 1Ch
+REG_BUF                     = 20h
 REG_STATE                   = 24h
 REG_CONTROL                 = 28h
 REG_POWER                   = 29h
 REG_CLK_CONTROL             = 2Ch
+REG_TIMEOUT                 = 2Eh
 REG_RESET                   = 2Fh
 REG_INT_STATUS              = 30h
 REG_INT_ERROR_STATUS        = 32h
@@ -60,16 +64,17 @@ REG_CAP                     = 40h
 
 sd_device_struc STRUC
 
-sd_reg_sel      DW ?
-sd_serv_thread  DW ?
-sd_pend_error   DW ?
-sd_pend_int     DB ?
-sd_pci_bus      DB ?
-sd_pci_device   DB ?
-sd_pci_function DB ?
+sd_reg_sel          DW ?
+sd_serv_thread      DW ?
+sd_pend_error       DW ?
+sd_pend_int         DB ?
+sd_pci_bus          DB ?
+sd_pci_device       DB ?
+sd_pci_function     DB ?
 
-sd_ocr          DD ?
-sd_rca          DD ?
+sd_ocr              DD ?
+sd_rca              DD ?
+sd_total_sectors    DD ?
 
 sd_device_struc ENDS
 
@@ -351,6 +356,51 @@ SetSdClock  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetDataTimeout
+;
+;           DESCRIPTION:    Set SDIO data timeout
+;
+;           PARAMETERS:     FS      SD io space
+;                           ECX      ms timeout
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetDataTimeout  Proc near
+    mov eax,fs:REG_CAP
+    mov dx,ax
+    and eax,3Fh
+    test dl,80h
+    jz sdtFreqOk
+;
+    mov edx,1000
+    mul edx
+
+sdtFreqOk:
+    mul ecx                
+;
+    shr eax,13
+    xor dl,dl
+    or eax,eax
+    jz sdtDo
+
+sdtShift:
+    inc dl
+    shr eax,1
+    jnz sdtShift                
+;
+    cmp dl,0Eh
+    jbe sdtDo
+;
+    mov dl,0Eh
+
+sdtDo:
+    mov fs:REG_TIMEOUT,dl    
+    ret
+SetDataTimeout  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           SetPower
 ;
 ;           DESCRIPTION:    Turn on power
@@ -571,7 +621,7 @@ SendCmd3    Proc near
     ClearSignal
     mov dword ptr fs:REG_ARG,0
     mov word ptr fs:REG_TRANS_MODE,0
-    mov word ptr fs:REG_CMD,302h
+    mov word ptr fs:REG_CMD,31Ah
     call WaitForCompletion
     mov eax,fs:REG_RESP0
     xor ax,ax
@@ -600,8 +650,134 @@ SendCmd9    Proc near
     mov word ptr fs:REG_TRANS_MODE,0
     mov word ptr fs:REG_CMD,901h
     call WaitForCompletion
+    jc sc9Done
+;
+    mov al,fs:REG_RESP0+0Eh
+    cmp al,40h
+    jne sc9Fail
+;
+    mov eax,fs:REG_RESP0+5
+    and eax,3FFFFh
+    shl eax,10
+    mov ds:sd_total_sectors,eax
+    clc
+    jmp sc9Done
+    
+sc9Fail:
+    stc
+
+sc9Done:        
     ret
 SendCmd9    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SendCmd7
+;
+;           DESCRIPTION:    Send CMD7
+;
+;           PARAMETERS:     FS      SD io space
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendCmd7    Proc near
+    mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
+    ClearSignal
+;
+    mov eax,ds:sd_rca
+    mov dword ptr fs:REG_ARG,eax
+    mov word ptr fs:REG_TRANS_MODE,0
+    mov word ptr fs:REG_CMD,71Ah
+    call WaitForCompletion
+    jc sc7Done
+;
+    mov eax,fs:REG_RESP0
+    clc
+       
+sc7Done:
+    ret
+SendCmd7    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SendAcmd6
+;
+;           DESCRIPTION:    Send ACMD6
+;
+;           PARAMETERS:     FS      SD io space
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendAcmd6    Proc near
+    mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
+    ClearSignal
+;
+    mov eax,ds:sd_rca
+    mov dword ptr fs:REG_ARG,eax
+    mov word ptr fs:REG_TRANS_MODE,0
+    mov word ptr fs:REG_CMD,371Ah
+    call WaitForCompletion
+    jc sac6Done
+;
+    mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
+    ClearSignal
+;    
+    mov dword ptr fs:REG_ARG,4
+    mov word ptr fs:REG_TRANS_MODE,0
+    mov word ptr fs:REG_CMD,61Ah
+    call WaitForCompletion
+    jc sac6Done
+;
+    mov al,fs:REG_CONTROL
+    or al,2
+    mov fs:REG_CONTROL,al
+
+sac6Done:
+    ret
+SendAcmd6    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadSector
+;
+;           DESCRIPTION:    Read a single sector
+;
+;           PARAMETERS:     FS      SD io space
+;                           EDX     Sector #
+;                           ECX     Sector count
+;                           EAX     Physical buffer base
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadSector    Proc near
+    mov fs:REG_SDMA,eax
+;    
+    mov fs:REG_BLOCK_COUNT,cx
+    mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
+    ClearSignal
+    mov dword ptr fs:REG_ARG,edx
+    mov word ptr fs:REG_TRANS_MODE,37h
+    mov word ptr fs:REG_CMD,123Ah
+;
+    mov ecx,128
+
+rsLoop:    
+    mov eax,fs:REG_BUF
+    loop rsLoop
+;        
+    call WaitForCompletion
+    jc rsDone
+
+rsDone:
+    ret
+ReadSector    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -663,8 +839,31 @@ stInserted:
     call SendCmd3
     jc stFailed
 ;    
-    int 3
     call SendCmd9
+    jc stFailed
+;
+    call SendCmd7
+    jc stFailed
+;
+    call SendAcmd6
+    jc stFailed
+;
+    int 3
+    mov ecx,1000
+    call SetDataTimeout
+;    
+    int 3    
+    mov eax,1000h
+    AllocateBigLinear
+    mov ax,flat_sel
+    mov es,ax
+    mov al,es:[edx]
+    GetPageEntry
+    and ax,0F000h
+;
+    mov ecx,1
+    xor edx,edx
+    call ReadSector
 
 stFailed: 
     mov byte ptr fs:REG_RESET,1

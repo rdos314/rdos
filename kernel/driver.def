@@ -353,6 +353,9 @@ vga_data_sel	    EQU 8A8h
 power_code_sel      EQU 8C0h
 power_data_sel      EQU 8C8h
 
+pckey_code_sel      EQU 8D0h
+pckey_data_sel      EQU 8D8h
+
 anio_code_sel		EQU 8F0h
 flash_disc_sel      EQU 8F8h
 
