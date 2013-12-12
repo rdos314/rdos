@@ -204,12 +204,11 @@ GetProtocol Endp
 ;
 ;           Description:    Set boot protocol
 ;
-;       Paramters:      BX      HID selector
+;       Paramters:      DS      HID selector
 ;      
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetBootProtocol   Proc near
-    push ds
     push es
     push eax
     push bx
@@ -217,7 +216,6 @@ SetBootProtocol   Proc near
     push edx
     push di
 ;    
-    mov ds,bx
     mov eax,SIZE usb_setup_data
     AllocateSmallGlobalMem
     mov cx,ax
@@ -255,7 +253,6 @@ SetBootProtocol   Proc near
     pop bx
     pop eax
     pop es
-    pop ds    
     ret
 SetBootProtocol Endp
 
@@ -267,12 +264,11 @@ SetBootProtocol Endp
 ;
 ;           Description:    Set idle to suitable range for auto-repeat of keys
 ;
-;       Paramters:      BX      HID selector
+;       Paramters:      DS      HID selector
 ;      
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetIdle   Proc near
-    push ds
     push es
     push eax
     push bx
@@ -280,7 +276,6 @@ SetIdle   Proc near
     push edx
     push di
 ;    
-    mov ds,bx
     mov eax,SIZE usb_setup_data
     AllocateSmallGlobalMem
     mov cx,ax
@@ -318,7 +313,6 @@ SetIdle   Proc near
     pop bx
     pop eax
     pop es
-    pop ds    
     ret
 SetIdle Endp
 
@@ -1508,6 +1502,9 @@ StartKeyboardHandler_   Proc near
     mov ax,SEG data
     mov fs,ax
 ;    
+    call SetBootProtocol
+    call SetIdle
+;    
     GetThread
     mov fs:hid_key_thread,ax
 ;
@@ -1600,29 +1597,6 @@ hktDone:
     ret
 StartKeyboardHandler_   Endp
         
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:       SetupBoot
-;
-;           description:    Setups boot device for keyboard or mouse
-;
-;           Parameters:     BX      HID selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public SetupBootKeyboard
-
-SetupBootKeyboard    Proc near   
-    mov ax,SEG data
-    mov ds,ax
-;        
-    call SetBootProtocol
-    call SetIdle
-;
-    ret
-SetupBootKeyboard    Endp
 
 code    ENDS
 

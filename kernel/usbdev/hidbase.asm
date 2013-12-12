@@ -231,8 +231,6 @@ GetReport Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    extrn SetupBootKeyboard:near
-
 SetupBoot       Proc near
     push ds
     push es
@@ -245,7 +243,6 @@ SetupBoot       Proc near
     jnz sbDone
 ;
     mov es:hid_intr_size,8
-    call SetupBootKeyboard
 
 sbDone:
     pop dx
