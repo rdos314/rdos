@@ -1510,17 +1510,22 @@ HandleKeyReport Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-hid_key_thread_name  DB 'USB Keyboard', 0
-
-hid_key_thread_pr:
+    public StartKeyboardHandler_
+    
+StartKeyboardHandler_   Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;    
+    mov ax,fs
+    mov ds,ax
     mov ax,SEG data
     mov fs,ax
+    mov fs:hid_key_sel,ds
+;    
     GetThread
     mov fs:hid_key_thread,ax
-;    
-    mov ax,fs:hid_key_sel
-    or ax,ax
-    jz hktDone
 ;
     mov al,3
     call UpdateLeds    
@@ -1529,26 +1534,16 @@ hid_key_thread_pr:
     mov ax,200
     WaitMilliSec
 ;
-    mov ax,fs:hid_key_sel
-    or ax,ax
-    jz hktDone
-
-hktWait:    
-    mov ds,ax    
-    mov ax,25
-    WaitMilliSec
-;    
-    mov bx,ds:hid_intr_req
-    or bx,bx
-    jz hktWait
+    mov eax,ds:hid_stop_req
+    or eax,eax
+    jnz hktDone
 ;
-    mov ax,25
-    WaitMilliSec 
+    mov bx,ds:hid_intr_req
 
 hktDataLoop:
-    mov ax,fs:hid_key_sel
-    or ax,ax
-    jz hktExit
+    mov eax,ds:hid_stop_req
+    or eax,eax
+    jnz hktExit
 ;        
     GetKeyboardState
     mov cx,ax
@@ -1604,7 +1599,6 @@ hktExit:
     mov bx,ds:hid_intr_req
     CloseUsbReq
     mov ds:hid_intr_req,0
-
 ;
     mov bx,ds:hid_intr_handle
     CloseUsbPipe    
@@ -1614,8 +1608,14 @@ hktDone:
     mov fs:hid_key_mod,0
     mov fs:hid_key_arr,0
     mov fs:hid_key_thread,0
-    TerminateThread
-
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+StartKeyboardHandler_   Endp
+        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1643,34 +1643,7 @@ SetupBootKeyboard    Proc near
     mov ds:hid_key_sel,bx
     call SetBootProtocol
     call SetIdle
-;    
-    mov ax,ds:hid_key_thread
-    or ax,ax
-    jnz sbkDone
 ;
-    mov ds:hid_key_thread,-1
-    push ds
-    push es
-    push cx
-    push si
-    push di
-;    
-    mov dx,cs
-    mov ds,dx
-    mov es,dx
-    mov di,OFFSET hid_key_thread_name
-    mov si,OFFSET hid_key_thread_pr
-    mov ax,2
-    mov cx,stack0_size
-    CreateThread
-;
-    pop di
-    pop si
-    pop cx
-    pop es
-    pop ds
-
-sbkDone:    
     ret
 SetupBootKeyboard    Endp
 

@@ -54,6 +54,9 @@ extern void CloseHidDev(struct THidDevice *dev);
 extern void OpenIntrPipe(struct THidDevice *dev);
 #pragma aux OpenIntrPipe parm routine [fs esi]
 
+extern void StartKeyboardHandler(struct THidDevice *dev);
+#pragma aux StartKeyboardHandler parm routine [fs esi]
+
 struct THidDescriptor
 {
     unsigned char Len;
@@ -141,6 +144,8 @@ struct THidDevice
 
     unsigned char CountryCode;
     unsigned char DescrCount;
+
+    int StopReq;
 
 /* not shared */
     char *ConfigBuf;
@@ -1267,7 +1272,7 @@ void LoadReportIdArrays(struct THidDevice *dev)
 #   Returns....: *
 #
 ##########################################################################*/
-void CreateIntrPipe(struct THidDevice *dev)
+int CreateIntrPipe(struct THidDevice *dev)
 {
     int i;
     int size;
@@ -1275,7 +1280,13 @@ void CreateIntrPipe(struct THidDevice *dev)
     struct THidReportIdEntry *report;
     struct THidReportEntry *entry;
     
-    if (!dev->IntrSize)
+    if (dev->IntrSize)
+    {
+        OpenIntrPipe(dev);
+        StartKeyboardHandler(dev);
+        return FALSE;
+    }
+    else
     {
         for (i = 0; i < MAX_REPORT_IDS; i++)
         {
@@ -1297,6 +1308,9 @@ void CreateIntrPipe(struct THidDevice *dev)
         size = 8 * size;
 
         dev->IntrSize = size;
+
+        OpenIntrPipe(dev);
+        return TRUE;
     }
 }
 
@@ -1309,9 +1323,6 @@ void CreateIntrPipe(struct THidDevice *dev)
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 void __far ImplTestGate(const char *msg)
 {
-    CreateIntrPipe(HidArr[0]);
-    CreateIntrPipe(HidArr[1]);
-    CreateIntrPipe(HidArr[2]);
 }
 
 /*##########################################################################
@@ -2048,16 +2059,10 @@ void __far HidThread(void *param)
         PrepareReportIds(dev);
         CreateReportIdArrays(dev);
         LoadReportIdArrays(dev);
-        CreateIntrPipe(dev);
-        OpenIntrPipe(dev);
-    
-        for (;;)
-        {
-            if (!HidArr[Index])
-                break;
+        if (CreateIntrPipe(dev))
+            while (!dev->StopReq)
+                RdosWaitMilli(100);
 
-            RdosWaitMilli(100);
-        }
         CloseHid(dev);
     }
 
@@ -2116,6 +2121,7 @@ void CreateHid(int controller, int device, char *config)
 
             dev->DeviceNr = i;
             dev->IsRunning = TRUE;
+            dev->StopReq = FALSE;
             dev->ConfigBuf = config;
 
             sprintf(ThreadName, "Hid %02hX.%02hX", controller, device);
@@ -2150,6 +2156,7 @@ void RemoveHid(int controller, int device)
         {
             if (dev->Controller == controller && dev->Device == device)
             {
+                dev->StopReq = TRUE;
                 HidArr[i] = 0;
 
                 while (dev->IsRunning)

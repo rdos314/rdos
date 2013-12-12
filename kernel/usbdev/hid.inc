@@ -48,5 +48,7 @@ hid_control_sel     DW ?
 hid_country_code    DB ?
 hid_descr_count     DB ?
 
+hid_stop_req        DD ?
+
 hid_device_struc   ENDS
 
