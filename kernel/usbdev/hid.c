@@ -129,6 +129,7 @@ struct THidDevice
     short int ControlWait;
 
     short int IntrHandle;
+    short int IntrSize;
     short int IntrBufSel;
     short int IntrReq;
 
@@ -1254,6 +1255,50 @@ void LoadReportIdArrays(struct THidDevice *dev)
 
 /*##########################################################################
 #
+#   Name       : CreateIntrPipe
+#
+#   Purpose....: Create intr pipe
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void CreateIntrPipe(struct THidDevice *dev)
+{
+    int i;
+    int size;
+    int maxsize = 0;
+    struct THidReportIdEntry *report;
+    struct THidReportEntry *entry;
+    
+    if (!dev->IntrSize)
+    {
+        for (i = 0; i < MAX_REPORT_IDS; i++)
+        {
+            report = dev->ReportIdArr[i];
+        
+            if (report && report->InputCount)
+            {
+                entry = &report->InputArr[report->InputCount - 1];
+                size = entry->StartBit + entry->BitCount;
+                if (size > maxsize)
+                    maxsize = size;                
+            }
+        }
+
+        size = maxsize;
+        size--;
+        size = size / 64;
+        size++;
+        size = 8 * size;
+
+        dev->IntrSize = size;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : Test gate
 #
 ##########################################################################*/
@@ -1261,10 +1306,9 @@ void LoadReportIdArrays(struct THidDevice *dev)
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 void __far ImplTestGate(const char *msg)
 {
-    struct THidDevice *dev;
-
-    dev = HidArr[0];
-    LoadReportIdArrays(dev);
+    CreateIntrPipe(HidArr[0]);
+    CreateIntrPipe(HidArr[1]);
+    CreateIntrPipe(HidArr[2]);
 }
 
 /*##########################################################################

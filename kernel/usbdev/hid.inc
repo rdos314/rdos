@@ -38,6 +38,7 @@ hid_intr_in         DB ?
 hid_control_handle  DW ?
 hid_control_wait    DW ?
 hid_intr_handle     DW ?
+hid_intr_size       DW ?
 hid_intr_buf        DW ?
 hid_intr_req        DW ?
 

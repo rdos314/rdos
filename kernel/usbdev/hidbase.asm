@@ -244,6 +244,7 @@ SetupBoot       Proc near
     cmp al,1
     jnz sbDone
 ;
+    mov es:hid_intr_size,8
     call SetupBootKeyboard
 
 sbDone:
@@ -373,6 +374,7 @@ ihsDone:
     mov fs:hid_control_wait,bx
 ;    
     mov fs:hid_intr_handle,0
+    mov fs:hid_intr_size,0
 ;
     mov ebx,fs
     call SetupBoot    
