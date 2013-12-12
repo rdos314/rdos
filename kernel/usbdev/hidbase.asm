@@ -225,7 +225,7 @@ GetReport Endp
 ;
 ;           NAME:       SetupBoot
 ;
-;           description:    Setups boot device for keyboard or mouse
+;           description:    Setups boot device for keyboard
 ;
 ;           Parameters:     BX      HID selector
 ;
@@ -374,9 +374,15 @@ ihsDone:
     mov fs:hid_intr_size,0
     mov fs:hid_intr_req,0
 ;
-    mov ebx,fs
-    call SetupBoot    
+    mov al,fs:hid_protocol
+    cmp al,1
+    jnz ihsEnd
 ;
+; this is for temporary for boot
+;
+    mov fs:hid_intr_size,8
+
+ihsEnd:
     pop edi
     pop esi
     pop dx

@@ -1496,7 +1496,7 @@ StartKeyboardHandler_   Proc near
 hktDataLoop:
     mov eax,ds:hid_stop_req
     or eax,eax
-    jnz hktExit
+    jnz hktDone
 ;        
     GetKeyboardState
     mov cx,ax
@@ -1545,17 +1545,6 @@ hktModHandled:
     call HandleKeyReport
     pop es
     jmp hktDataLoop
-
-hktExit:
-    xor ax,ax
-    mov es,ax
-    mov bx,ds:hid_intr_req
-    CloseUsbReq
-    mov ds:hid_intr_req,0
-;
-    mov bx,ds:hid_intr_handle
-    CloseUsbPipe    
-    mov ds:hid_intr_handle,0
     
 hktDone:
     mov fs:hid_key_mod,0
