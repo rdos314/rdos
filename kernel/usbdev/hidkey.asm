@@ -76,9 +76,6 @@ hid_key_struc   ENDS
 
 data    SEGMENT byte public 'DATA'
 
-hid_key_controller      DW ?
-hid_key_device          DB ?
-
 hid_key_thread          DW ?
 
 hid_key_leds            DB ?
@@ -116,8 +113,6 @@ InitKeyboard_   Proc near
     mov ebx,SEG data
     mov ds,ebx
     mov ds:hid_key_thread,0
-    mov ds:hid_key_controller,0
-    mov ds:hid_key_device,0
     mov ds:hid_key_mod,0
     mov ds:hid_key_arr,0
 ;
@@ -1622,12 +1617,6 @@ StartKeyboardHandler_   Endp
 SetupBootKeyboard    Proc near   
     mov ax,SEG data
     mov ds,ax
-;    
-    mov ax,es:hid_controller
-    mov ds:hid_key_controller,ax
-;
-    mov al,es:hid_device
-    mov ds:hid_key_device,al
 ;        
     call SetBootProtocol
     call SetIdle
