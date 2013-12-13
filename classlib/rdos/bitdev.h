@@ -39,6 +39,7 @@ public:
 	TBitmapGraphicDevice(const TBitmapGraphicDevice &dev);
 	TBitmapGraphicDevice(const TGraphicDevice &dev);
 	TBitmapGraphicDevice(TFont *font, const char *str);
+	~TBitmapGraphicDevice();
 
 protected:
 	TBitmapGraphicDevice(int Handle);

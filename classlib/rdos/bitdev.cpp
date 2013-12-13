@@ -117,3 +117,18 @@ TBitmapGraphicDevice::TBitmapGraphicDevice(TFont *font, const char *str)
     FBitmapHandle = RdosCreateStringBitmap(font->FFontHandle, str);
 	RdosGetBitmapInfo(FBitmapHandle, &FBpp, &FWidth, &FHeight, &FRowSize, &FLinear);
 }
+
+/*##########################################################################
+#
+#   Name       : TBitmapGraphicDevice::~TBitmapGraphicDevice
+#
+#   Purpose....: Desctructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TBitmapGraphicDevice::~TBitmapGraphicDevice()
+{
+}

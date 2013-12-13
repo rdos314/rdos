@@ -74,6 +74,22 @@ TPngBitmapDevice::TPngBitmapDevice(int handle)
 
 /*##########################################################################
 #
+#   Name       : TPngBitmapDevice::TPngBitmapDevice
+#
+#   Purpose....: Constructor for TPngBitmapDevice
+#
+#   In params..:                 width
+#                                height
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPngBitmapDevice::~TPngBitmapDevice()
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TPngBitmapDevice::Create
 #
 #   Purpose....: Create a bitmap from a PNG file
@@ -86,11 +102,16 @@ TPngBitmapDevice::TPngBitmapDevice(int handle)
 TPngBitmapDevice *TPngBitmapDevice::Create(const char *FileName, int r, int g, int b)
 {
     int handle;
+    TPngBitmapDevice *bitmap;
 
     handle = LoadPngBase(FileName);
 
     if (handle)
-        return new TPngBitmapDevice(handle);
+    {
+        bitmap = new TPngBitmapDevice(handle);
+        RdosCloseBitmap(handle);
+        return bitmap;
+    }
     else
         return 0;
 }

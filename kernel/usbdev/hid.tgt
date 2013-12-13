@@ -209,7 +209,7 @@ WString
 COBJ
 50
 WVList
-2
+3
 51
 MRState
 52
@@ -235,6 +235,18 @@ WString
 1
 1
 57
+MCState
+58
+WString
+3
+WCC
+59
+WString
+33
+?????Disable stack depth checking
+1
+1
+60
 WVList
 0
 40

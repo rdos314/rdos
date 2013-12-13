@@ -34,6 +34,7 @@ class TPngBitmapDevice : public TAlphaBitmapDevice
 {
 public:
 	TPngBitmapDevice(int width, int height);
+	virtual ~TPngBitmapDevice();
 
 	static TPngBitmapDevice *Create(const char *FileName, int BackR, int BackG, int BackB);
 	static int Save(const char *FileName, TGraphicDevice *bitmap);

@@ -34,7 +34,7 @@ class TAlphaBitmapDevice : public TBitmapGraphicDevice
 {
 public:	
 	TAlphaBitmapDevice(int width, int height);
-	~TAlphaBitmapDevice();
+	virtual ~TAlphaBitmapDevice();
 
 	TBitmapGraphicDevice *GetMaskBitmap();
 	TBitmapGraphicDevice *GetAlphaBitmap();
