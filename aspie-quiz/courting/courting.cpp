@@ -14,10 +14,59 @@
 #define FALSE   0
 #define TRUE    !FALSE
 
-TGraphicDevice *vbe;
-
 #define PI      3.1415926373
 #define SCALE   3
+
+class TMale;
+class TFemale;
+
+struct TMale
+{
+    TMale();
+    ~TMale();
+
+    void Show();
+    void Hide();
+    void Update();
+
+    TFemale *Female;
+
+    double X;
+    double Y;
+    double Rot;
+    double V;
+    double VRot;
+
+    int FCurrX;
+    int FCurrY;
+    double FCurrRot;
+};    
+
+struct TFemale
+{
+    TFemale();
+    ~TFemale();
+
+    void Show();
+    void Hide();
+    void Update();
+
+    TMale *Male;
+
+    double X;
+    double Y;
+    double Rot;
+    double V;
+    double VRot;
+
+    int FCurrX;
+    int FCurrY;
+    double FCurrRot;
+};    
+
+TGraphicDevice *vbe;
+TMale Male;
+TFemale Female;
 
 /*##########################################################################
 #
@@ -100,24 +149,192 @@ void HideCue(int x, int y, double rot)
 
 /*##########################################################################
 #
-#   Name       : OneStep
+#   Name       : TMale::TMale
 #
-#   Purpose....: Open step
+#   Purpose....: Male constructor
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void OneStep(int mx, int my, double mrot, int fx, int fy, double frot)
+TMale::TMale()
 {
-    ShowCue(FALSE, mx, my, mrot);
-    ShowCue(TRUE, fx, fy, frot);
+    X = 0.0;
+    Y = 0.0;
+    Rot = 0.0;
+    V = 0.0;
+    VRot = 0.0;
 
-    RdosWaitMilli(40);
+    Female = 0;
+}
 
-    HideCue(mx, my, mrot);
-    HideCue(fx, fy, frot);
+/*##########################################################################
+#
+#   Name       : TMale::~TMale
+#
+#   Purpose....: Male destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TMale::~TMale()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TMale::Show
+#
+#   Purpose....: Show male
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMale::Show()
+{
+    FCurrX = (int)X;
+    FCurrY = (int)Y;
+    FCurrRot = Rot;
+    
+    ShowCue(FALSE, FCurrX, FCurrY, FCurrRot);
+}
+
+/*##########################################################################
+#
+#   Name       : TMale::Hide
+#
+#   Purpose....: Hide male
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMale::Hide()
+{
+    HideCue(FCurrX, FCurrY, FCurrRot);
+}
+
+/*##########################################################################
+#
+#   Name       : TMale::Update
+#
+#   Purpose....: Update position
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMale::Update()
+{
+    double dx, dy;
+    
+    dx = -V * cos(VRot);
+    dy = -V * sin(VRot);
+
+    X += dx;
+    Y += dy;
+}
+
+/*##########################################################################
+#
+#   Name       : TFemale::TFemale
+#
+#   Purpose....: Female constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFemale::TFemale()
+{
+    X = 0.0;
+    Y = 0.0;
+    Rot = 0.0;
+    V = 0.0;
+    VRot = 0.0;
+
+    Male = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFemale::~TFemale
+#
+#   Purpose....: Female destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFemale::~TFemale()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TFemale::Show
+#
+#   Purpose....: Show female
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFemale::Show()
+{
+    FCurrX = (int)X;
+    FCurrY = (int)Y;
+    FCurrRot = Rot;
+    
+    ShowCue(TRUE, FCurrX, FCurrY, FCurrRot);
+}
+
+/*##########################################################################
+#
+#   Name       : TFemale::Hide
+#
+#   Purpose....: Hide female
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFemale::Hide()
+{
+    HideCue(FCurrX, FCurrY, FCurrRot);
+}
+
+/*##########################################################################
+#
+#   Name       : TFemale::Update
+#
+#   Purpose....: Update position
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFemale::Update()
+{
+    double dx, dy;
+    
+    dx = -V * cos(VRot);
+    dy = -V * sin(VRot);
+
+    X += dx;
+    Y += dy;
 }
 
 /*##########################################################################
@@ -134,46 +351,92 @@ void OneStep(int mx, int my, double mrot, int fx, int fy, double frot)
 int main()
 {
     int i;
-    int xm, ym;
-    int xf, yf;
-    double x, y;
-    double l;
-    double rot;
     
     vbe = new TVideoGraphicDevice(24, 1366, 768);
 //    vbe = new TVideoGraphicDevice(24, 640, 480);
 
-    xm = 200;
-    ym = 200;
-    
-    for (i = 0; i < 100; i++)
+
+    for (;;)
     {
-        xf = 150;
-        yf = 300 - i;
-
-        x = xm - xf;
-        y = ym - yf;        
-        l = sqrt(x * x + y * y);
-        rot = atan(y / x);
-
-        rot = (-PI / 2 + rot) / 2;
-        
-        OneStep(xm, ym, -PI / 2, xf, yf, rot);
-    }
+        Male.X = 170;
+        Male.Y = 220;
+        Male.V = 0;
+        Male.Rot = -PI / 2;
+        Male.VRot = -PI/ 2;
     
-    for (i = 0; i < 100; i++)
-    {
-        xf = 200 - 50 * cos(i * PI / 200);
-        yf = 200 - 50 * sin(i * PI / 200);
+        Female.X = 120;
+        Female.Y = 255;
+        Female.V = -1.0;
+        Female.Rot = -PI / 2;
+        Female.VRot = -PI / 2;
+    
+        for (i = 0; i < 5; i++)
+        {
+            Male.Show();
+            Female.Show();
 
-        x = xm - xf;
-        y = ym - yf;        
-        l = sqrt(x * x + y * y);
-        rot = atan(y / x);
+            RdosWaitMilli(40);
 
-        rot = (-PI / 2 + rot) / 2;
-        
-        OneStep(xm, ym, -PI / 2, xf, yf, rot);
+            Female.Rot += PI / 400;
+            Female.VRot = Female.Rot;
+
+            Male.Update();
+            Female.Update();
+
+            Male.Hide();
+            Female.Hide();
+        }
+    
+        for (i = 0; i < 75; i++)
+        {
+            Male.Show();
+            Female.Show();
+
+            RdosWaitMilli(40);
+
+            Female.Rot += PI / 200;
+            Female.VRot = Female.Rot;
+
+            Male.Update();
+            Female.Update();
+
+            Male.Hide();
+            Female.Hide();
+        }
+    
+        for (i = 0; i < 50; i++)
+        {
+            Male.Show();
+            Female.Show();
+
+            RdosWaitMilli(40);
+
+            Female.Rot -= PI / 200;
+            Female.VRot = Female.Rot;
+
+            Male.Update();
+            Female.Update();
+
+            Male.Hide();
+            Female.Hide();
+        }
+    
+        for (i = 0; i < 500; i++)
+        {
+            Male.Show();
+            Female.Show();
+
+            RdosWaitMilli(40);
+
+            Female.Rot -= PI / 300;
+            Female.VRot = Female.Rot;
+
+            Male.Update();
+            Female.Update();
+
+            Male.Hide();
+            Female.Hide();
+        }
     }
     
     return 0;        
