@@ -674,6 +674,57 @@ void TQuizH25::SetupTexts()
   Quiz[147].Text = "Do you have a good sense for what is the right thing to do socially?";
   Quiz[148].Text = "Do you find it easy to estimate the age of people?";
   Quiz[149].Text = "Are you gracious about criticism, correction and direction?";
+
+  Quiz[150].Text = "Do you show your feelings intensely?";
+  Quiz[151].Text = "Are your experiences so strong they hurt?";
+  Quiz[152].Text = "Do you experience things so strongly that is overpowers you?";
+  Quiz[153].Text = "Do little things change your emotions?";
+  Quiz[154].Text = "Do you experíence anger more intensely than others?";
+  Quiz[155].Text = "Are you very sensitive?";
+  Quiz[156].Text = "Do you worry a lot about little things?";
+  Quiz[157].Text = "Do you analyse your past mistakes a lot?";
+  Quiz[158].Text = "Do you feel guily even when you don't know if you have done something wrong?";
+  Quiz[159].Text = "Is your own welfare more important than others?";
+  Quiz[160].Text = "Do you tend to put your own needs first?";
+  Quiz[161].Text = "Does it bother you if your actions cause trouble for somenbody else?";
+  Quiz[162].Text = "Do you enjoy watching people get embarrased?";
+  Quiz[163].Text = "Do you do jobs systematically, step by step?";
+  Quiz[164].Text = "Do you do jobs thoroughly even when nobody is likely to ever see what you did?";
+  Quiz[165].Text = "Do you do everything to the best of your ability?";
+  Quiz[166].Text = "Do you break inconvinient rules?";
+  Quiz[167].Text = "Do you threaten people you disagree with with violence?";
+  Quiz[168].Text = "Do you dislike being separated from someone you love?";
+  Quiz[169].Text = "Do you only feel safe when you are with people you are close to?";
+  Quiz[170].Text = "Do you tend to follow people you are attached to around when worried?";
+  Quiz[171].Text = "Do you only feel comfortable when you have the company of people you are attached to?";
+  Quiz[172].Text = "Are you filled with panic when separated from those you love?";
+  Quiz[173].Text = "Do you worry about being abondoned by the person you love?";
+  Quiz[174].Text = "Is sex an important part of your life?";
+  Quiz[175].Text = "Are intimate relationships very important in your life?";
+  Quiz[176].Text = "Do you need someone to love?";
+  Quiz[177].Text = "Do you get great pleasure from making love?";
+  Quiz[178].Text = "Do you want to share your life with someone?";
+  Quiz[179].Text = "Is being accepted by others important to you?";
+  Quiz[180].Text = "Do you need people to approve of you?";
+  Quiz[181].Text = "Do you want to be looked up to and admired?";
+  Quiz[182].Text = "Do you need to be the centre of attention?";
+  Quiz[183].Text = "Do you work slowly on tasks you dislike?";
+  Quiz[184].Text = "Do you usually find faults with opinions that you don't share?";
+  Quiz[185].Text = "Do you think that your views are the only right ones?";
+  Quiz[186].Text = "Do you tend to like to help people by correcting them?";
+  Quiz[187].Text = "Do you enjoy telling people \"I told you so\"?";
+  Quiz[188].Text = "Do you argue a lot?";
+  Quiz[189].Text = "Do you rarely share your problems?";
+  Quiz[190].Text = "Do you dislike to ask people for help?";
+  Quiz[191].Text = "Do you like to do things spontanously?";
+  Quiz[192].Text = "Do you act on impulse?";
+  Quiz[193].Text = "Do you act first and think about the consequences later?";
+  Quiz[194].Text = "Do you give in when pressured?";
+  Quiz[195].Text = "Do you usually go along with people's suggestions?";
+  Quiz[196].Text = "Do you tend to believe what people say without questioning?";
+  Quiz[197].Text = "Is it hard for you to resist persuasive people?";
+  Quiz[198].Text = "Do you continually watch for signs of danger?";
+
 }
 
 /*##########################################################################
