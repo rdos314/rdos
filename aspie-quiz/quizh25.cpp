@@ -322,6 +322,12 @@ void TQuizH25::SetupTexts()
   Quiz[148].Reverse = TRUE;
   Quiz[149].Reverse = TRUE;
 
+  Quiz[174].Reverse = TRUE;
+  Quiz[175].Reverse = TRUE;
+  Quiz[177].Reverse = TRUE;
+  Quiz[178].Reverse = TRUE;
+  Quiz[191].Reverse = TRUE;
+
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[2].MyGroup = GROUP_ASPIE_TALENT;
