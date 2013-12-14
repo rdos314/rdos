@@ -15,7 +15,7 @@
 #define TRUE    !FALSE
 
 #define PI      3.1415926373
-#define SCALE   3
+#define SCALE   2
 
 class TMale;
 class TFemale;
@@ -28,6 +28,7 @@ struct TMale
     void Show();
     void Hide();
     void Update();
+    double GetFemaleDir();
 
     TFemale *Female;
 
@@ -50,6 +51,7 @@ struct TFemale
     void Show();
     void Hide();
     void Update();
+    double GetMaleDist();
 
     TMale *Male;
 
@@ -222,6 +224,31 @@ void TMale::Hide()
 
 /*##########################################################################
 #
+#   Name       : TMale::GetFemaleDir
+#
+#   Purpose....: Get female direction
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TMale::GetFemaleDir()
+{
+    double dx, dy;
+
+    dx = X - Female->X;
+    dy = Y - Female->Y;
+
+    if (dx > 0)
+        return PI + atan(dy / dx);
+    else
+        return atan(dy / dx);
+    
+}
+
+/*##########################################################################
+#
 #   Name       : TMale::Update
 #
 #   Purpose....: Update position
@@ -234,12 +261,23 @@ void TMale::Hide()
 void TMale::Update()
 {
     double dx, dy;
+    double turn;
     
-    dx = -V * cos(VRot);
-    dy = -V * sin(VRot);
+    dx = V * cos(VRot);
+    dy = V * sin(VRot);
 
     X += dx;
     Y += dy;
+
+    if (Female)
+    {
+        Rot = GetFemaleDir();
+        VRot = Rot - PI / 8;
+
+        turn = Female->VRot - Female->Rot;
+
+        V = (1.0 - turn / PI) * Female->V;
+    }
 }
 
 /*##########################################################################
@@ -317,6 +355,27 @@ void TFemale::Hide()
 
 /*##########################################################################
 #
+#   Name       : TFemale::GetMaleDist
+#
+#   Purpose....: Get male distance
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TFemale::GetMaleDist()
+{
+    double dx, dy;
+
+    dx = X - Male->X;
+    dy = Y - Male->Y;
+
+    return sqrt(dx * dx + dy * dy);
+}
+
+/*##########################################################################
+#
 #   Name       : TFemale::Update
 #
 #   Purpose....: Update position
@@ -328,13 +387,26 @@ void TFemale::Hide()
 ##########################################################################*/
 void TFemale::Update()
 {
+    double dist;
     double dx, dy;
     
-    dx = -V * cos(VRot);
-    dy = -V * sin(VRot);
+    if (Male)
+    {
+        dist = GetMaleDist();
+
+        if (dist > 25)
+            Rot = VRot;
+        else
+            Rot = VRot - PI / 2 * (25 - dist);
+    }
+    
+    dx = V * cos(VRot);
+    dy = V * sin(VRot);
 
     X += dx;
     Y += dy;
+
+    
 }
 
 /*##########################################################################
@@ -356,17 +428,23 @@ int main()
 //    vbe = new TVideoGraphicDevice(24, 640, 480);
 
 
+    vbe->SetDrawColor(255, 255, 255);
+    vbe->DrawLine(SCALE * 320, 0, SCALE * 320, SCALE * 240);
+    vbe->DrawLine(0, SCALE * 240, SCALE * 320, SCALE * 240);
+
     for (;;)
     {
-        Male.X = 170;
-        Male.Y = 220;
+        Male.Female = 0;
+        Male.X = 70;
+        Male.Y = 200;
         Male.V = 0;
         Male.Rot = -PI / 2;
         Male.VRot = -PI/ 2;
-    
-        Female.X = 120;
-        Female.Y = 255;
-        Female.V = -1.0;
+
+        Female.Male = 0;    
+        Female.X = 20;
+        Female.Y = 220;
+        Female.V = 1.0;
         Female.Rot = -PI / 2;
         Female.VRot = -PI / 2;
     
@@ -387,7 +465,7 @@ int main()
             Female.Hide();
         }
     
-        for (i = 0; i < 75; i++)
+        for (i = 0; i < 80; i++)
         {
             Male.Show();
             Female.Show();
@@ -403,7 +481,9 @@ int main()
             Male.Hide();
             Female.Hide();
         }
-    
+
+        Male.Female = &Female;
+        
         for (i = 0; i < 50; i++)
         {
             Male.Show();
@@ -420,16 +500,117 @@ int main()
             Male.Hide();
             Female.Hide();
         }
+
+        Female.Male = &Male;
+        Female.V = 0.75;
     
-        for (i = 0; i < 500; i++)
+        for (i = 0; i < 150; i++)
         {
             Male.Show();
             Female.Show();
 
             RdosWaitMilli(40);
 
-            Female.Rot -= PI / 300;
-            Female.VRot = Female.Rot;
+            Female.VRot -= PI / 400;
+
+            Male.Update();
+            Female.Update();
+
+            Male.Hide();
+            Female.Hide();
+        }
+    
+        for (i = 0; i < 100; i++)
+        {
+            Male.Show();
+            Female.Show();
+
+            RdosWaitMilli(40);
+
+            Female.VRot -= PI / 150;
+
+            Male.Update();
+            Female.Update();
+
+            Male.Hide();
+            Female.Hide();
+        }
+    
+        for (i = 0; i < 150; i++)
+        {
+            Male.Show();
+            Female.Show();
+
+            RdosWaitMilli(40);
+
+            Female.VRot -= PI / 400;
+
+            Male.Update();
+            Female.Update();
+
+            Male.Hide();
+            Female.Hide();
+        }
+    
+        for (i = 0; i < 50; i++)
+        {
+            Male.Show();
+            Female.Show();
+
+            RdosWaitMilli(40);
+
+            Female.VRot -= PI / 150;
+
+            Male.Update();
+            Female.Update();
+
+            Male.Hide();
+            Female.Hide();
+        }
+    
+        for (i = 0; i < 150; i++)
+        {
+            Male.Show();
+            Female.Show();
+
+            RdosWaitMilli(40);
+
+            Female.VRot -= PI / 400;
+
+            Male.Update();
+            Female.Update();
+
+            Male.Hide();
+            Female.Hide();
+        }
+
+        for (i = 0; i < 75; i++)
+        {
+            Male.Show();
+            Female.Show();
+
+            RdosWaitMilli(40);
+
+            if (Female.V > 0)
+                Female.V -= 0.01;
+
+            Female.VRot -= PI / 200;
+
+            Male.Update();
+            Female.Update();
+
+            Male.Hide();
+            Female.Hide();
+        }
+
+        for (i = 0; i < 75; i++)
+        {
+            Male.Show();
+            Female.Show();
+
+            RdosWaitMilli(40);
+
+            Female.V = 0;
 
             Male.Update();
             Female.Update();
