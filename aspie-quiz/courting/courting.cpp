@@ -10,6 +10,7 @@
 #include "waitdev.h"
 #include "keyboard.h"
 #include "mouse.h"
+#include "png.h"
 
 #define FALSE   0
 #define TRUE    !FALSE
@@ -69,6 +70,7 @@ struct TFemale
 TGraphicDevice *vbe;
 TMale Male;
 TFemale Female;
+int FileNr;
 
 /*##########################################################################
 #
@@ -411,6 +413,30 @@ void TFemale::Update()
 
 /*##########################################################################
 #
+#   Name       : SavePng
+#
+#   Purpose....: Save to PNG
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void SavePng()
+{
+    char FileName[256];
+    TBitmapGraphicDevice bitmap(24, SCALE * 210, SCALE * 140);
+
+    bitmap.Blit(vbe, 0, 0, 0, 0, SCALE * 210, SCALE * 140);
+
+    sprintf(FileName, "png\\%d.png", FileNr);
+    FileNr++;
+
+    TPngBitmapDevice::Save(FileName, &bitmap);    
+}
+
+/*##########################################################################
+#
 #   Name       : main
 #
 #   Purpose....: Main
@@ -429,29 +455,33 @@ int main()
 
 
     vbe->SetDrawColor(255, 255, 255);
-    vbe->DrawLine(SCALE * 320, 0, SCALE * 320, SCALE * 240);
-    vbe->DrawLine(0, SCALE * 240, SCALE * 320, SCALE * 240);
+    vbe->DrawLine(SCALE * 210, 0, SCALE * 210, SCALE * 140);
+    vbe->DrawLine(0, SCALE * 140, SCALE * 210, SCALE * 140);
 
-    for (;;)
+    FileNr = 1;
+    
+//    for (;;)
     {
         Male.Female = 0;
-        Male.X = 70;
-        Male.Y = 200;
+        Male.X = 200;
+        Male.Y = 30;
         Male.V = 0;
-        Male.Rot = -PI / 2;
-        Male.VRot = -PI/ 2;
+        Male.Rot = -PI;
+        Male.VRot = -PI;
 
         Female.Male = 0;    
-        Female.X = 20;
-        Female.Y = 220;
+        Female.X = 220;
+        Female.Y = 50;
         Female.V = 1.0;
-        Female.Rot = -PI / 2;
-        Female.VRot = -PI / 2;
+        Female.Rot = -PI;
+        Female.VRot = -PI;
     
         for (i = 0; i < 5; i++)
         {
             Male.Show();
             Female.Show();
+
+            SavePng();
 
             RdosWaitMilli(40);
 
@@ -465,10 +495,12 @@ int main()
             Female.Hide();
         }
     
-        for (i = 0; i < 80; i++)
+        for (i = 0; i < 50; i++)
         {
             Male.Show();
             Female.Show();
+
+            SavePng();
 
             RdosWaitMilli(40);
 
@@ -488,6 +520,8 @@ int main()
         {
             Male.Show();
             Female.Show();
+
+            SavePng();
 
             RdosWaitMilli(40);
 
@@ -509,9 +543,11 @@ int main()
             Male.Show();
             Female.Show();
 
+            SavePng();
+
             RdosWaitMilli(40);
 
-            Female.VRot -= PI / 400;
+            Female.VRot -= PI / 600;
 
             Male.Update();
             Female.Update();
@@ -520,10 +556,48 @@ int main()
             Female.Hide();
         }
     
-        for (i = 0; i < 100; i++)
+        for (i = 0; i < 80; i++)
         {
             Male.Show();
             Female.Show();
+
+            SavePng();
+
+            RdosWaitMilli(40);
+
+            Female.VRot -= PI / 150;
+
+            Male.Update();
+            Female.Update();
+
+            Male.Hide();
+            Female.Hide();
+        }
+    
+        for (i = 0; i < 200; i++)
+        {
+            Male.Show();
+            Female.Show();
+
+            SavePng();
+
+            RdosWaitMilli(40);
+
+            Female.VRot -= PI / 600;
+
+            Male.Update();
+            Female.Update();
+
+            Male.Hide();
+            Female.Hide();
+        }
+    
+        for (i = 0; i < 80; i++)
+        {
+            Male.Show();
+            Female.Show();
+
+            SavePng();
 
             RdosWaitMilli(40);
 
@@ -541,37 +615,7 @@ int main()
             Male.Show();
             Female.Show();
 
-            RdosWaitMilli(40);
-
-            Female.VRot -= PI / 400;
-
-            Male.Update();
-            Female.Update();
-
-            Male.Hide();
-            Female.Hide();
-        }
-    
-        for (i = 0; i < 50; i++)
-        {
-            Male.Show();
-            Female.Show();
-
-            RdosWaitMilli(40);
-
-            Female.VRot -= PI / 150;
-
-            Male.Update();
-            Female.Update();
-
-            Male.Hide();
-            Female.Hide();
-        }
-    
-        for (i = 0; i < 150; i++)
-        {
-            Male.Show();
-            Female.Show();
+            SavePng();
 
             RdosWaitMilli(40);
 
@@ -588,6 +632,8 @@ int main()
         {
             Male.Show();
             Female.Show();
+
+            SavePng();
 
             RdosWaitMilli(40);
 
@@ -607,6 +653,8 @@ int main()
         {
             Male.Show();
             Female.Show();
+
+            SavePng();
 
             RdosWaitMilli(40);
 
