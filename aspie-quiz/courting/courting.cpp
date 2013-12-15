@@ -458,7 +458,7 @@ int main()
     vbe->DrawLine(SCALE * 210, 0, SCALE * 210, SCALE * 140);
     vbe->DrawLine(0, SCALE * 140, SCALE * 210, SCALE * 140);
 
-    FileNr = 1;
+    FileNr = 1000;
     
 //    for (;;)
     {
