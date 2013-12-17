@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# convh27.cpp
-# Convert exported quiz-h27 to binary file
+# convh28.cpp
+# Convert exported quiz-h28 to binary file
 #
 ########################################################################*/
 #include <stdio.h>
@@ -31,7 +31,7 @@
 
 #include "pop.h"
 #include "file.h"
-#include "quizdh27.h"
+#include "quizdh28.h"
 #include "convg.h"
 
 #define FALSE 0
@@ -56,7 +56,7 @@ static void HandleRow(TQuizRow *Row)
 {
     quizfile->Write(Row, sizeof(TQuizRow));
 
-    printf("H27: %d AS: %d, NT: %d\r\n", Row->ID, Row->AsResult, Row->NtResult);
+    printf("H28: %d AS: %d, NT: %d\r\n", Row->ID, Row->AsResult, Row->NtResult);
 }
 
 /*##################  UpdateScore ##########################
@@ -231,24 +231,24 @@ static void ProcessRow(char *str)
     AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 192);
 }
 
-/*################## ConvH27 ##########################
-*   Purpose....: Convert quiz h27                                                         #
+/*################## ConvH28 ##########################
+*   Purpose....: Convert quiz h28                                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void ConvH27()
+void ConvH28()
 {
     char buf[MAX_IN_ROW];
     int size;
     long pos = 0;
-    TFile infile("raw\\aspie-quiz-h27.csv");
-    TFile outfile("bin\\quizh27.bin", 0);
+    TFile infile("raw\\aspie-quiz-h28.csv");
+    TFile outfile("bin\\quizh28.bin", 0);
     char *ptr;
 
     quizfile = &outfile;
-    OpenPca("H27");
+    OpenPca("H28");
 
     size = infile.Read(buf, MAX_IN_ROW);
     buf[size] = 0;
