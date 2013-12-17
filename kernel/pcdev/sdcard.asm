@@ -763,7 +763,7 @@ ReadSector    Proc near
     mov ds:sd_pend_error,0
     ClearSignal
     mov dword ptr fs:REG_ARG,edx
-    mov word ptr fs:REG_TRANS_MODE,37h
+    mov word ptr fs:REG_TRANS_MODE,10h
     mov word ptr fs:REG_CMD,123Ah
 ;
     mov ecx,128
@@ -848,7 +848,6 @@ stInserted:
     call SendAcmd6
     jc stFailed
 ;
-    int 3
     mov ecx,1000
     call SetDataTimeout
 ;    
