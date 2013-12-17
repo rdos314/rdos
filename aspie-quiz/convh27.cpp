@@ -215,7 +215,11 @@ static void ProcessRow(char *str)
                  break;
 
             case 15:
-                 Row.Quiz[192] = atoi(valstr);
+                 val = atoi(valstr);
+                 if (val < 4)
+                     val = 4;
+                 val -= 3;
+                 Row.Quiz[192] = val;
                  break;
 
             default:
