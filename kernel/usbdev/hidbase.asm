@@ -63,6 +63,12 @@ hh_sys_intr_handle      DW ?
 
 hid_handle_struc       ENDS
 
+data    SEGMENT byte public 'DATA'
+
+hid_input_arr   DW 256 DUP(?)
+
+data    ENDS
+
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
 code    SEGMENT byte public 'CODE'
@@ -1063,6 +1069,66 @@ delete_handle_done:
 delete_handle   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           register_hid_input
+;
+;           DESCRIPTION:    Register HID input
+;
+;           PARAMETERS:     ES:EDI      Callback
+;                           AL          Usage ID
+;                           AH          Usage page
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+register_hid_input_name     DB 'Register HID Input',0
+
+register_hid_input  Proc far
+    push ds
+    push ebx
+    push edx
+;
+    mov ebx,SEG data
+    mov ds,ebx
+    movzx ebx,ah
+    shl ebx,1
+    mov dx,ds:[ebx].hid_input_arr
+    or dx,dx
+    jnz rhiHasPage
+;
+    push es
+    push eax
+    push ecx
+    push edi
+;    
+    mov eax,2 * 256
+    AllocateSmallGlobalMem
+    mov edx,es
+    mov ecx,256
+    xor edi,edi
+    xor eax,eax
+    rep stosw
+;
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    mov ds:[ebx].hid_input_arr,dx
+
+rhiHasPage:
+    mov ds,edx
+    movzx ebx,al
+    shl ebx,3
+    mov ds:[ebx],edi
+    mov ds:[ebx+4],es
+;
+    pop edx
+    pop ebx
+    pop ds
+    ret
+register_hid_input  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           init
@@ -1078,6 +1144,13 @@ InitHid_    Proc near
     push es
     pushad
 ;       
+    mov eax,SEG data
+    mov es,eax
+    mov ecx,256
+    mov edi,OFFSET hid_input_arr
+    xor eax,eax
+    rep stosw
+;
     mov eax,cs
     mov ds,eax
     mov es,eax
@@ -1091,6 +1164,12 @@ InitHid_    Proc near
 ;
     mov edi,OFFSET usb_detach
     HookUsbDetach
+;
+    mov esi,OFFSET register_hid_input
+    mov edi,OFFSET register_hid_input_name
+    xor dx,dx
+    mov ax,register_hid_input_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET open_hid
     mov edi,OFFSET open_hid_name

@@ -3377,6 +3377,16 @@ IsAudioOutCompleted      MACRO
     OsGate is_audio_out_completed_nr
                         ENDM
 
+;;;;;;;;;; Hid ;;;;;;;;;
+
+; IN    ES:EDI  Callback
+; IN    AH      Usage Page
+; IN    AL      Usage ID
+RegisterHidInput      MACRO
+    OsGate register_hid_input_nr
+                        ENDM
+
+
 ;;;;;;;;;; Printer ;;;;;;;;;
 
 ;   AX      Controller #

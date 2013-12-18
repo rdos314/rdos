@@ -2217,13 +2217,12 @@ int main()
         HidArr[i] = 0;
 
     InitHid();
+    InitMouse();
 
     RdosRegisterBimodalUserGate(usergate_get_hid_report_item, (__rdos_gate_callback *)&ImplGetHidReportItem, "Get Hid Report Item"); 
     RdosRegisterBimodalUserGate(usergate_get_hid_report_input_data, (__rdos_gate_callback *)&ImplGetHidReportInputData, "Get Hid Report Input Data"); 
     RdosRegisterBimodalUserGate(usergate_get_hid_report_output_data, (__rdos_gate_callback *)&ImplGetHidReportOutputData, "Get Hid Report Output Data"); 
     RdosRegisterBimodalUserGate(usergate_get_hid_report_feature_data, (__rdos_gate_callback *)&ImplGetHidReportFeatureData, "Get Hid Report Feature Data"); 
-
-    InitMouse();
 
     RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate");
 

@@ -46,6 +46,32 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           MouseX
+;
+;           DESCRIPTION:    Mouse x callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mouse_x Proc far
+    ret
+mouse_x Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MouseY
+;
+;           DESCRIPTION:    Mouse y callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mouse_y Proc far
+    ret
+mouse_y Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitMouse
 ;
 ;           DESCRIPTION:    Init mouse
@@ -55,6 +81,24 @@ code    SEGMENT byte public 'CODE'
     public InitMouse_
     
 InitMouse_   Proc near
+    push es
+    push eax
+    push edi
+;
+    mov eax,cs
+    mov es,eax
+;
+    mov edi,OFFSET mouse_x
+    mov ax,930h
+    RegisterHidInput
+;
+    mov edi,OFFSET mouse_y
+    mov ax,931h
+    RegisterHidInput
+;
+    pop edi
+    pop eax
+    pop es    
     ret
 InitMouse_   Endp
         

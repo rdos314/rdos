@@ -630,6 +630,8 @@
 
 #define osgate_has_physical64 521
 
+#define osgate_register_hid_input 522
+
 
 
 
@@ -1263,4 +1265,6 @@
 #define OsGate_wait_for_uhci 0x3E 0x67 0x9a 8 2 0 0 2 0
 
 #define OsGate_has_physical64 0x3E 0x67 0x9a 9 2 0 0 2 0
+
+#define OsGate_register_hid_input 0x3E 0x67 0x9a 10 2 0 0 2 0
 
