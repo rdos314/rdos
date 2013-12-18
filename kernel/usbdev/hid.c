@@ -58,6 +58,9 @@ extern void OpenIntrPipe(struct THidDevice *dev);
 extern void StartKeyboardHandler(struct THidDevice *dev);
 #pragma aux StartKeyboardHandler parm routine [fs esi]
 
+extern void HidThreadHandler(struct THidDevice *dev);
+#pragma aux HidThreadHandler parm routine [fs esi]
+
 struct THidDescriptor
 {
     unsigned char Len;
@@ -1304,9 +1307,11 @@ int CreateIntrPipe(struct THidDevice *dev)
 
         size = maxsize;
         size--;
-        size = size / 64;
+        size = size / 8;
         size++;
-        size = 8 * size;
+
+        if (!dev->ReportIdArr[0])
+            size++;
 
         dev->IntrSize = size;
 
@@ -2062,7 +2067,7 @@ void __far HidThread(void *param)
         LoadReportIdArrays(dev);
         if (CreateIntrPipe(dev))
             while (!dev->StopReq)
-                RdosWaitMilli(100);
+                HidThreadHandler(dev);
 
         CloseHid(dev);
     }

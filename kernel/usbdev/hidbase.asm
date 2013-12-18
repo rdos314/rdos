@@ -1131,6 +1131,52 @@ register_hid_input  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           HidThreadHandler
+;
+;       description:    Hid thread handler
+;
+;       parameters:     FS:ESI
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public HidThreadHandler_
+
+HidThreadHandler_    Proc near
+    push ds
+    push es
+    pushad
+;
+    mov bx,fs:hid_intr_req
+
+hthLoop:
+    mov eax,fs:hid_stop_req
+    or eax,eax
+    jnz hthDone
+;    
+    GetThread
+    StartUsbReq
+    WaitForSignal
+;       
+    IsUsbReqReady
+    jc hthLoop
+;    
+    GetUsbReqData
+    jc hthLoop
+;    
+    int 3
+    mov es,fs:hid_intr_buf
+    jmp hthLoop
+
+hthDone:
+    popad
+    pop es
+    pop ds       
+    ret
+HidThreadHandler_    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           init
 ;
 ;           description:    Init device
