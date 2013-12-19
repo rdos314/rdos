@@ -38,6 +38,7 @@
 #define MAX_REPORT_IDS  64
 
 #define MAX_USAGE_TAGS      128
+#define MAX_HID_TABLES      4
 
 extern void InitHid();
 
@@ -144,11 +145,20 @@ struct THidReportEntry
     int ItemParams;
 };
 
+struct THidTable
+{
+    int Index;
+    int Handle;
+};
+
 struct THidReportIdEntry
 {
     int InputCount;
     int OutputCount;
     int FeatureCount;
+
+    int TableCount;
+    struct THidTable TableArr[MAX_HID_TABLES];
     
     struct THidReportEntry *InputArr;
     struct THidReportEntry *OutputArr;
@@ -245,6 +255,7 @@ struct THidDevice *HidArr[MAX_HID_DEVICES];
 void CloseHid(struct THidDevice *dev)
 {
     int i;
+    int j;
     struct THidReportIdEntry *report;
 
     if (dev->ItemArr)
@@ -256,6 +267,9 @@ void CloseHid(struct THidDevice *dev)
         
         if (report)
         {
+            for (j = 0; j < report->TableCount; j++)
+                HidClose(report->TableArr[j].Index, report->TableArr[j].Handle);
+            
             if (report->InputCount)
                 RdosFreeMem(RdosPointerToSelector(report->InputArr));
 
@@ -1219,8 +1233,15 @@ void LoadReportIdArrays(struct THidDevice *dev)
 {
     int Index;
     int val;
+    int Report;
+    int Inp;
+    int Count;
+    int Handle;
+    int ok;
     struct THidReportItem *item;
     struct TTagCache *cache;
+    struct THidReportIdEntry *report;
+    struct THidReportEntry *entry;
 
     cache = CreateTagCache();
     SetReport(cache, dev->ReportIdArr[0]);
@@ -1293,7 +1314,37 @@ void LoadReportIdArrays(struct THidDevice *dev)
         }         
     }
     FreeTagCache(cache);
-    
+
+    Count = GetHidTableCount();
+
+    for (Report = 0; Report < MAX_REPORT_IDS; Report++)
+    {
+        report = dev->ReportIdArr[Report];
+        
+        if (report)
+        {
+            report->TableCount = 0;
+            
+            for (Index = 0; Index < Count; Index++)
+            {
+                Handle = HidBegin(Index);
+
+                for (Inp = 0; Inp < report->InputCount; Inp++)
+                {
+                    entry = &report->InputArr[Inp];
+                    HidDefine(Index, Handle, Inp, entry->UsagePage, entry->UsageIdLow, entry->ItemParams);
+                }
+
+                ok = HidEnd(Index, Handle);        
+                if (ok)
+                {
+                    report->TableArr[report->TableCount].Index = Index;
+                    report->TableArr[report->TableCount].Handle = Handle; 
+                    report->TableCount++;
+                }
+            }
+        }
+    }    
 }
 
 /*##########################################################################
