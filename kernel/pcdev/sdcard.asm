@@ -934,6 +934,19 @@ idDone:
     ret
 InitDevice  Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       DISCBUF_THREAD
+;
+;       DESCRIPTION:    Thread to handle disc buffer queue
+;
+;       PARAMETERS:     FS      Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+discbuf_thread:
+    int 3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -942,7 +955,7 @@ InitDevice  Endp
 ;
 ;       DESCRIPTION:    Calculate various parameters
 ;
-;       PARAMETERS:     DS      Disc
+;       PARAMETERS:     DS      Device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1005,7 +1018,6 @@ CalcParam       Endp
 ;
 ;       PARAMETERS:     AL      UNIT #
 ;                       DS      Device
-;                       ES:EDI  4k buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1026,11 +1038,35 @@ InstallUnit    Proc near
     mov ds:sd_disc_sel,bx
 ;
     call CalcParam
+    mov ax,ds:sd_sectors_per_unit
+    mov dx,ds:sd_units
+    mov cx,512
+    mov si,-1
+    mov di,-1
+    mov bx,ds:sd_disc_sel
+    SetDiscParam
+;
+    push ds
+    push es
+    push fs
 ;    
-    mov fs,ds:sd_reg_sel
-    mov ecx,1
-    xor edx,edx
-    call ReadPioSector
+    mov ax,ds
+    mov fs,ax
+    mov ax,cs
+    mov ds,ax
+;
+    mov ax,SEG data    
+    mov es,ax
+    mov di,OFFSET name_str
+    mov si,OFFSET discbuf_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+;
+    pop fs    
+    pop es
+    pop ds
+    clc
 ;
     popad
     pop gs
@@ -1117,12 +1153,6 @@ StartAllDevices    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitAllDevices Proc near
-    mov eax,1000h
-    AllocateBigLinear
-    mov ax,flat_sel
-    mov es,ax
-    mov edi,edx
-;    
     mov ax,SEG data
     mov ds,ax
     mov cx,ds:sd_dev_count
@@ -1188,7 +1218,6 @@ iadLoop:
     or al,al
     jz iadNext
 ;    
-    int 3
     mov ax,bx
     sub ax,OFFSET sd_dev_arr
     shr ax,1
@@ -1260,6 +1289,17 @@ disc_assign    Endp
 
 drive_assign1   Proc far
     int 3
+    mov eax,1000h
+    AllocateBigLinear
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,edx    
+;
+    mov ds,bx
+    mov fs,ds:sd_reg_sel
+    mov ecx,1
+    xor edx,edx
+    call ReadPioSector
     retf32
 drive_assign1   Endp
 
