@@ -79,13 +79,15 @@ sd_total_sectors    DD ?
 
 sd_device_struc ENDS
 
+SERV_NAME_SIZE = 16
+
 data    SEGMENT byte public 'DATA'
 
-sd_dev_count   DW ?
-sd_dev_arr     DW MAX_SD_DEVICES DUP (?)
+sd_dev_count    DW ?
+sd_dev_arr      DW MAX_SD_DEVICES DUP (?)
 
-serv_name_ptr        DW ?
-serv_name_str        DB MAX_NAME_SIZE DUP(?)
+unit_ptr        DW ?
+name_str        DB SERV_NAME_SIZE DUP(?)
 
 data    ENDS
 
@@ -929,46 +931,29 @@ InitDevice  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ServThread
+;       NAME:           Install unit
 ;
-;           DESCRIPTION:    SDIO device server thread
-;
-;           PARAMETERS:     FS      SD device sel
+;       PARAMETERS:     AL      UNIT #
+;                       DX      IO BASE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-serv_thread_name   DB 'SDIO ',0
-
-serv_thread:
-    mov ax,fs
-    mov ds,ax
-    GetThread
-    mov ds:sd_serv_thread,ax
-    mov ds:sd_pend_int,0
-    mov ds:sd_pend_error,0
-
-stOff:    
-    call InitDevice
-    jc stFailed
+install_unit    Proc near
+    push es
+    pushad
 ;    
-    mov eax,1000h
-    AllocateBigLinear
-    mov ax,flat_sel
+    mov ax,SEG data
     mov es,ax
-    mov edi,edx
+    mov di,es:unit_ptr
+    push ax
+    add al,'0'
+    mov es:[di],al
+    pop ax
 ;
-    mov ecx,1
-    xor edx,edx
-    call ReadPioSector
-    int 3
-
-stFailed: 
-    mov byte ptr fs:REG_RESET,1
-;    
-    WaitForSignal
-    test dword ptr fs:REG_STATE,10000h
-    jnz stFailed
-    jmp stOff       
+    popad
+    pop es
+    ret
+install_unit    Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1153,7 +1138,28 @@ InstallAllDevices    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+disc_name   DB 'SDIO ',0
+
 disc_assign    Proc far
+    int 3
+    mov ax,SEG data
+    mov es,ax
+    mov di,OFFSET name_str
+    mov si,OFFSET disc_name
+
+disc_assign_name_loop:    
+    lods byte ptr cs:[si]
+    stosb
+    or al,al
+    jnz disc_assign_name_loop
+;
+    dec di
+    mov es:unit_ptr,di
+    mov al,'0'
+    stosb
+    xor al,al
+    stosb
+;
     call StartAllDevices
     call InitAllDevices
     call InstallAllDevices
