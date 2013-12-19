@@ -780,34 +780,6 @@ DisconnectPullup    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SendCmd6
-;
-;           DESCRIPTION:    Send CMD6
-;
-;           PARAMETERS:     FS      SD io space
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendCmd6    Proc near
-    mov ds:sd_pend_int,0
-    mov ds:sd_pend_error,0
-    ClearSignal
-;    
-    mov dword ptr fs:REG_ARG,80000000h
-    mov word ptr fs:REG_TRANS_MODE,10h
-    mov word ptr fs:REG_CMD,63Ah
-    call WaitForCompletion
-    jc sc6Done
-;
-    mov eax,fs:REG_RESP0
-
-sc6Done:
-    ret
-SendCmd6    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           ReadSector
 ;
 ;           DESCRIPTION:    Read a single sector
@@ -815,11 +787,17 @@ SendCmd6    Endp
 ;           PARAMETERS:     FS      SD io space
 ;                           EDX     Sector #
 ;                           ECX     Sector count
-;                           EAX     Physical buffer base
+;                           ES:EDI  Buffer
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadSector    Proc near
+    push edi
+;    
+;    mov al,es:[edx]
+;    GetPageEntry
+;    and ax,0F000h
+;
     mov fs:REG_SDMA,eax
 ;    
     mov fs:REG_BLOCK_COUNT,cx
@@ -834,12 +812,14 @@ ReadSector    Proc near
 
 rsLoop:    
     mov eax,fs:REG_BUF
+    stos dword ptr es:[edi]
     loop rsLoop
 ;        
     call WaitForCompletion
     jc rsDone
 
 rsDone:
+    pop edi
     ret
 ReadSector    Endp
 
@@ -908,24 +888,17 @@ stInserted:
     call SendCmd7
     jc stFailed
 ;
-;    call SendAcmd6
-;    jc stFailed
-;
     mov ecx,1000
     call SetDataTimeout
 ;
     int 3    
     call DisconnectPullup
-    call SendCmd6
-    jc stFailed    
 ;    
     mov eax,1000h
     AllocateBigLinear
     mov ax,flat_sel
     mov es,ax
-    mov al,es:[edx]
-    GetPageEntry
-    and ax,0F000h
+    mov edi,edx
 ;
     mov ecx,1
     xor edx,edx
