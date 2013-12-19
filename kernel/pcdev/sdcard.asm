@@ -73,6 +73,9 @@ sd_pci_bus          DB ?
 sd_pci_device       DB ?
 sd_pci_function     DB ?
 
+sd_disc_nr          DB ?
+sd_disc_sel         DW ?
+
 sd_ocr              DD ?
 sd_rca              DD ?
 sd_total_sectors    DD ?
@@ -943,11 +946,17 @@ InstallUnit    Proc near
     push gs
     pushad
 ;    
-    mov dx,SEG data
-    mov gs,dx
-    mov di,gs:unit_ptr
+    mov bx,SEG data
+    mov gs,bx
+    mov bx,gs:unit_ptr
     add al,'0'
-    mov gs:[di],al
+    mov gs:[bx],al
+;
+    mov bx,ds
+    mov ecx,10000h
+    InstallDisc    
+    mov ds:sd_disc_nr,al
+    mov ds:sd_disc_sel,bx
 ;
     mov fs,ds:sd_reg_sel
     mov ecx,1
