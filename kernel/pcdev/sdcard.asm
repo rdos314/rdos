@@ -1091,6 +1091,102 @@ stdNameLoop:
 ;    
     call StartDevices
     TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       DISC_ASSIGN
+;
+;       DESCRIPTION:    Assign SD discs
+;
+;       PARAMETERS:     
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disc_assign    Proc far
+    int 3
+    retf32
+disc_assign    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       DRIVE_ASSIGN1
+;
+;       DESCRIPTION:    Drive assign, pass 1
+;
+;       PARAMETERS:     BX      Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+drive_assign1   Proc far
+    int 3
+    retf32
+drive_assign1   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       DRIVE_ASSIGN2
+;
+;       DESCRIPTION:    Drive assign, pass 2
+;
+;       PARAMETERS:     BX      Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+drive_assign2   Proc far
+    int 3
+    retf32
+drive_assign2   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       DEMAND_MOUNT
+;
+;       DESCRIPTION:    Mount disc drive on demand
+;
+;       PARAMETERS:     BX      Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+demand_mount    Proc far
+    retf32
+demand_mount    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       ERASE
+;
+;       DESCRIPTION:    Erase sectors
+;
+;       PARAMETERS:     BX      Disc handle
+;           EDX     Start sector
+;           ECX     Number of sectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+erase   Proc far
+    stc
+    retf32
+erase   Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       disc_ctrl
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disc_ctrl:
+dcp0  DD OFFSET disc_assign,    SEG code
+dc01  DD OFFSET drive_assign1,  SEG code
+dc02  DD OFFSET drive_assign2,  SEG code
+dc03  DD OFFSET demand_mount,   SEG code
+dc04  DD OFFSET erase,          SEG code
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1112,6 +1208,21 @@ init_sd    Proc far
 ;
     call InitPciDev
 ;    
+    mov ax,SEG data
+    mov ds,ax
+    mov cx,ds:sd_dev_count
+    or cx,cx
+    jz init_sd_exit
+;    
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET disc_ctrl
+    HookInitDisc
+
+init_sd_exit:
+    EndDiscHandler
+;    
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -1119,7 +1230,7 @@ init_sd    Proc far
     mov si,OFFSET init_sd_thread
     mov ax,4
     mov cx,stack0_size
-    CreateThread
+;    CreateThread
 ;
     popa
     pop es
@@ -1143,6 +1254,8 @@ init_sd    Endp
 init    PROC far
     mov ax,SEG data
     mov ds,ax
+    mov ds:sd_dev_count,0
+    BeginDiscHandler
 ;    
     mov ax,cs
     mov es,ax
