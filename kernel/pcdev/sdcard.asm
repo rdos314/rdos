@@ -78,7 +78,10 @@ sd_disc_sel         DW ?
 
 sd_ocr              DD ?
 sd_rca              DD ?
+
 sd_total_sectors    DD ?
+sd_sectors_per_unit DW ?
+sd_units            DW ?
 
 sd_device_struc ENDS
 
@@ -931,6 +934,70 @@ idDone:
     ret
 InitDevice  Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       CalcParam
+;
+;       DESCRIPTION:    Calculate various parameters
+;
+;       PARAMETERS:     DS      Disc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CalcParam       Proc near
+    pushad
+;
+    mov eax,1
+    mov edx,ds:sd_total_sectors
+
+calc_param_norm_loop:
+    shl eax,1
+    shr edx,1
+    cmp eax,edx
+    jc calc_param_norm_loop
+;
+    mov esi,edx
+    mov ebx,esi
+    mov ecx,edx
+
+calc_param_chs_loop:
+    xor edx,edx
+    mov eax,ds:sd_total_sectors
+    div esi
+    cmp ecx,edx
+    jc calc_param_chs_next
+;       
+    mov ecx,edx
+    mov ebx,esi
+    or edx,edx
+    jz calc_param_chs_ok
+
+calc_param_chs_next:
+    inc esi
+    cmp esi,eax
+    jbe calc_param_chs_loop
+;
+    xor edx,edx
+    mov eax,ds:sd_total_sectors
+    div ebx
+
+calc_param_chs_ok:
+    mov edx,eax
+    mov eax,ebx
+;
+    mov ds:sd_sectors_per_unit,ax
+    mov ds:sd_units,dx
+    mul dx
+    push dx
+    push ax
+    pop ds:sd_total_sectors
+;
+    popad
+    ret
+CalcParam       Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -958,6 +1025,8 @@ InstallUnit    Proc near
     mov ds:sd_disc_nr,al
     mov ds:sd_disc_sel,bx
 ;
+    call CalcParam
+;    
     mov fs,ds:sd_reg_sel
     mov ecx,1
     xor edx,edx
