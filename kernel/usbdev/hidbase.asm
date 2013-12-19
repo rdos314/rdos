@@ -63,9 +63,13 @@ hh_sys_intr_handle      DW ?
 
 hid_handle_struc       ENDS
 
+MAX_TABLES  = 32
+
 data    SEGMENT byte public 'DATA'
 
-hid_input_arr   DW 256 DUP(?)
+hid_table_count DW ?
+
+hid_table_arr   DD 2 * MAX_TABLES DUP(?)
 
 data    ENDS
 
@@ -1075,9 +1079,7 @@ delete_handle   Endp
 ;
 ;           DESCRIPTION:    Register HID input
 ;
-;           PARAMETERS:     ES:EDI      Callback
-;                           AL          Usage ID
-;                           AH          Usage page
+;           PARAMETERS:     ES:EDI      Callback table
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1086,43 +1088,15 @@ register_hid_input_name     DB 'Register HID Input',0
 register_hid_input  Proc far
     push ds
     push ebx
-    push edx
 ;
     mov ebx,SEG data
     mov ds,ebx
-    movzx ebx,ah
-    shl ebx,1
-    mov dx,ds:[ebx].hid_input_arr
-    or dx,dx
-    jnz rhiHasPage
-;
-    push es
-    push eax
-    push ecx
-    push edi
-;    
-    mov eax,2 * 256
-    AllocateSmallGlobalMem
-    mov edx,es
-    mov ecx,256
-    xor edi,edi
-    xor eax,eax
-    rep stosw
-;
-    pop edi
-    pop ecx
-    pop eax
-    pop es
-    mov ds:[ebx].hid_input_arr,dx
-
-rhiHasPage:
-    mov ds,edx
-    movzx ebx,al
+    movzx ebx,ds:hid_table_count
     shl ebx,3
-    mov ds:[ebx],edi
-    mov ds:[ebx+4],es
-;
-    pop edx
+    mov ds:[ebx].hid_table_arr,edi
+    mov ds:[ebx+4].hid_table_arr,es
+    inc ds:hid_table_count
+;    
     pop ebx
     pop ds
     ret
@@ -1191,11 +1165,8 @@ InitHid_    Proc near
     pushad
 ;       
     mov eax,SEG data
-    mov es,eax
-    mov ecx,256
-    mov edi,OFFSET hid_input_arr
-    xor eax,eax
-    rep stosw
+    mov ds,eax
+    mov ds:hid_table_count,0
 ;
     mov eax,cs
     mov ds,eax

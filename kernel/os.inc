@@ -3379,9 +3379,7 @@ IsAudioOutCompleted      MACRO
 
 ;;;;;;;;;; Hid ;;;;;;;;;
 
-; IN    ES:EDI  Callback
-; IN    AH      Usage Page
-; IN    AL      Usage ID
+; IN    ES:EDI  Hid table
 RegisterHidInput      MACRO
     OsGate register_hid_input_nr
                         ENDM
