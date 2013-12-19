@@ -204,7 +204,6 @@ hid_set_physical   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hid_end   Proc far
-    int 3
     push es
     push eax
 ;
@@ -237,6 +236,25 @@ heDone:
     pop es
     ret
 hid_end   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           hid_close
+;
+;   DESCRIPTION:    Close
+;
+;   PARAMETERS:     BX      Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hid_close   Proc far
+    push es
+    mov es,ebx
+    FreeMem
+    pop es
+    ret
+hid_close   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -305,9 +323,10 @@ h01 DD OFFSET hid_define,       SEG code
 h02 DD OFFSET hid_set_logical,  SEG code
 h03 DD OFFSET hid_set_physical, SEG code
 h04 DD OFFSET hid_end,          SEG code
-h05 DD OFFSET hid_begin_report, SEG code
-h06 DD OFFSET hid_add_report,   SEG code
-h07 DD OFFSET hid_end_report,   SEG code
+h05 DD OFFSET hid_close,        SEG code
+h06 DD OFFSET hid_begin_report, SEG code
+h07 DD OFFSET hid_add_report,   SEG code
+h08 DD OFFSET hid_end_report,   SEG code
 
     public InitMouse_
     

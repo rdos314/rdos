@@ -79,6 +79,9 @@ extern void HidSetPhysical(int Index, int Handle, int Entry, int PhysMin, int Ph
 extern int HidEnd(int Index, int Handle);
 #pragma aux HidEnd parm routine [edi] [ebx] value [eax] 
 
+extern void HidClose(int Index, int Handle);
+#pragma aux HidClose parm routine [edi] [ebx]
+
 extern void HidBeginReport(int Index, int Handle);
 #pragma aux HidBeginReport parm routine [edi] [ebx]
 
@@ -1382,6 +1385,8 @@ void __far ImplTestGate(const char *msg)
         }
 
         ok = HidEnd(i, Handle);        
+        if (ok)
+            HidClose(i, Handle);
     }    
 }
 

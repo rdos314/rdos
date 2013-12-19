@@ -81,6 +81,9 @@ hid_set_physical_proc       DD ?,?
 hid_end_proc                DD ?,?
 
 ; IN  BX    Handle / selector
+hid_close_proc              DD ?,?
+
+; IN  BX    Handle / selector
 hid_begin_report_proc       DD ?,?
 
 ; IN  BX    Handle / selector

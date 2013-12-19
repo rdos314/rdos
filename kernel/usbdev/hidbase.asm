@@ -288,6 +288,36 @@ HidEnd_   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           HidClose
+;
+;   Description:    Close hid
+;
+;   Parameters:     EDI     Table #
+;                   EBX     Handle
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public HidClose_
+
+HidClose_   Proc near
+    push ds
+    push edi
+;    
+    mov eax,SEG data
+    mov ds,eax
+;    
+    shl edi,3
+    lds edi,ds:[edi].hid_table_arr
+    call fword ptr ds:[edi].hid_close_proc
+;    
+    pop edi    
+    pop ds
+    ret
+HidClose_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           HidBeginReport
 ;
 ;   Description:    Begin report
