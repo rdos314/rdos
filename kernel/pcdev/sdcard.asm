@@ -934,26 +934,30 @@ InitDevice  Endp
 ;       NAME:           Install unit
 ;
 ;       PARAMETERS:     AL      UNIT #
-;                       DX      IO BASE
+;                       DS      Device
+;                       ES:EDI  4k buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-install_unit    Proc near
-    push es
+InstallUnit    Proc near
+    push gs
     pushad
 ;    
-    mov ax,SEG data
-    mov es,ax
-    mov di,es:unit_ptr
-    push ax
+    mov dx,SEG data
+    mov gs,dx
+    mov di,gs:unit_ptr
     add al,'0'
-    mov es:[di],al
-    pop ax
+    mov gs:[di],al
+;
+    mov fs,ds:sd_reg_sel
+    mov ecx,1
+    xor edx,edx
+    call ReadPioSector
 ;
     popad
-    pop es
+    pop gs
     ret
-install_unit    Endp
+InstallUnit    Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1107,10 +1111,10 @@ iadLoop:
     jz iadNext
 ;    
     int 3
-    mov fs,ds:sd_reg_sel
-    mov ecx,1
-    xor edx,edx
-    call ReadPioSector
+    mov ax,bx
+    sub ax,OFFSET sd_dev_arr
+    shr ax,1
+    call InstallUnit
 
 iadNext:
     pop edi
@@ -1141,7 +1145,6 @@ InstallAllDevices    Endp
 disc_name   DB 'SDIO ',0
 
 disc_assign    Proc far
-    int 3
     mov ax,SEG data
     mov es,ax
     mov di,OFFSET name_str
