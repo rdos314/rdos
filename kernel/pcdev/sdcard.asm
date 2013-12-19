@@ -808,9 +808,9 @@ DisconnectPullup    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ReadSector
+;           NAME:           ReadPioSector
 ;
-;           DESCRIPTION:    Read a single sector
+;           DESCRIPTION:    Read sectors using PIO method
 ;
 ;           PARAMETERS:     FS      SD io space
 ;                           EDX     Sector #
@@ -819,39 +819,108 @@ DisconnectPullup    Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadSector    Proc near
+ReadPioSector    Proc near
+    push eax
+    push ecx
     push edi
-;    
-;    mov al,es:[edx]
-;    GetPageEntry
-;    and ax,0F000h
-;    mov fs:REG_SDMA,eax
-;
 ;    
     mov fs:REG_BLOCK_COUNT,cx
     mov ds:sd_pend_int,0
     mov ds:sd_pend_error,0
     ClearSignal
     mov dword ptr fs:REG_ARG,edx
-    mov word ptr fs:REG_TRANS_MODE,10h
+    mov word ptr fs:REG_TRANS_MODE,30h
     mov word ptr fs:REG_CMD,123Ah
+
+rpsSectorLoop:    
     call WaitForRead
-    jc rsDone
+    jc rpsDone
 ;
+    mov ds:sd_pend_int,0
+    push ecx
     mov ecx,128
 
-rsLoop:    
+rpsLoop:    
     mov eax,fs:REG_BUF
     stos dword ptr es:[edi]
-    loop rsLoop        
+    loop rpsLoop        
+;
+    pop ecx
+    loop rpsSectorLoop    
 ;
     clc    
 
-rsDone:
-    int 3
+rpsDone:
     pop edi
+    pop ecx
+    pop eax
     ret
-ReadSector    Endp
+ReadPioSector    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitDevice
+;
+;           DESCRIPTION:    Init device from RESET state
+;
+;           PARAMETERS:     DS      Device
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitDevice    Proc near
+    mov fs,ds:sd_reg_sel
+    mov dword ptr fs:REG_BLOCK_SIZE,200h
+    mov word ptr fs:REG_INT_STATUS_ENABLE,1FFh
+    mov word ptr fs:REG_INT_SIG_ENABLE,1FFh
+;
+    mov word ptr fs:REG_INT_ERROR_STATUS_ENABLE,3FFh
+    mov word ptr fs:REG_INT_ERROR_SIG_ENABLE,3FFh
+
+idOff:
+    test dword ptr fs:REG_STATE,10000h
+    jnz idInserted
+;
+    WaitForSignal    
+    jmp idOff
+
+idInserted:
+    call SetDefaultSdClock
+    jc idFailed
+;
+    call SetPower
+    jc idFailed
+;
+    mov ax,50
+    WaitMilliSec
+;
+    call SendCmd0        
+    call SendCmd8
+    jc idFailed
+;    
+    call SendAcmd41
+    jc idFailed
+;    
+    call SendCmd2
+    jc idFailed
+;    
+    call SendCmd3
+    jc idFailed
+;    
+    call SendCmd9
+    jc idFailed
+;
+    call SendCmd7
+    jc idFailed
+;
+    mov ecx,1000
+    call SetDataTimeout
+    call DisconnectPullup
+    clc
+
+idFailed:
+    ret
+InitDevice  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -873,54 +942,10 @@ serv_thread:
     mov ds:sd_serv_thread,ax
     mov ds:sd_pend_int,0
     mov ds:sd_pend_error,0
-;    
-    mov fs,ds:sd_reg_sel
-    mov dword ptr fs:REG_BLOCK_SIZE,200h
-    mov word ptr fs:REG_INT_STATUS_ENABLE,1FFh
-    mov word ptr fs:REG_INT_SIG_ENABLE,1FFh
-;
-    mov word ptr fs:REG_INT_ERROR_STATUS_ENABLE,3FFh
-    mov word ptr fs:REG_INT_ERROR_SIG_ENABLE,3FFh
 
-stOff:
-    test dword ptr fs:REG_STATE,10000h
-    jnz stInserted
-;
-    WaitForSignal    
-    jmp stOff
-
-stInserted:
-    call SetDefaultSdClock
+stOff:    
+    call InitDevice
     jc stFailed
-;
-    call SetPower
-    jc stFailed
-;
-    mov ax,50
-    WaitMilliSec
-;
-    call SendCmd0        
-    call SendCmd8
-    jc stFailed
-;    
-    call SendAcmd41
-    jc stFailed
-;    
-    call SendCmd2
-    jc stFailed
-;    
-    call SendCmd3
-    jc stFailed
-;    
-    call SendCmd9
-    jc stFailed
-;
-    call SendCmd7
-    jc stFailed
-;
-    mov ecx,1000
-    call SetDataTimeout
-    call DisconnectPullup
 ;    
     mov eax,1000h
     AllocateBigLinear
@@ -930,7 +955,7 @@ stInserted:
 ;
     mov ecx,1
     xor edx,edx
-    call ReadSector
+    call ReadPioSector
     int 3
 
 stFailed: 
@@ -1064,7 +1089,6 @@ stdNameLoop:
     xor al,al
     stosb
 ;    
-    call InitPciDev
     call StartDevices
     TerminateThread
     
@@ -1086,6 +1110,8 @@ init_sd    Proc far
     push es
     pusha
 ;
+    call InitPciDev
+;    
     mov ax,cs
     mov ds,ax
     mov es,ax
