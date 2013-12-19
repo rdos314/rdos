@@ -68,6 +68,7 @@ sd_reg_sel          DW ?
 sd_serv_thread      DW ?
 sd_pend_error       DW ?
 sd_pend_int         DB ?
+sd_ok               DB ?
 sd_pci_bus          DB ?
 sd_pci_device       DB ?
 sd_pci_function     DB ?
@@ -881,8 +882,7 @@ idOff:
     test dword ptr fs:REG_STATE,10000h
     jnz idInserted
 ;
-    WaitForSignal    
-    jmp idOff
+    jmp idFailed
 
 idInserted:
     call SetDefaultSdClock
@@ -917,8 +917,12 @@ idInserted:
     call SetDataTimeout
     call DisconnectPullup
     clc
+    jmp idDone
 
 idFailed:
+    mov ds:sd_ok,0
+
+idDone:
     ret
 InitDevice  Endp
 
@@ -979,34 +983,15 @@ stFailed:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupDev    Proc near
+    mov ds:sd_ok,1
     mov fs,ds:sd_reg_sel
     mov al,fs:REG_RESET
     and al,1
-    jz stdResetOk
+    clc
+    jz stdDone
 ;
-    mov ax,100
-    WaitMilliSec
-    mov al,fs:REG_RESET
-    and al,1
-    jnz stdDone
-
-stdResetOk:
-    mov ax,ds
-    mov fs,ax
-    mov ax,cs
-    mov ds,ax
-    mov ax,SEG data    
-    mov es,ax
-;    
-    mov al,dl
-    add al,'0'
-    mov si,es:serv_name_ptr
-    mov es:[si],al
-    mov edi,OFFSET serv_name_str
-    mov esi,OFFSET serv_thread
-    mov ax,2
-    mov cx,stack0_size
-    CreateThread
+    mov ds:sd_ok,0
+    stc
     
 stdDone:    
     ret
@@ -1015,28 +1000,30 @@ SetupDev    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           StartDevices
+;           NAME:           StartAllDevices
 ;
-;           DESCRIPTION:    Start SD device
+;           DESCRIPTION:    Start all SD devices
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartDevices Proc near
+StartAllDevices Proc near
     mov ax,SEG data
     mov ds,ax
     mov cx,ds:sd_dev_count
     mov bx,OFFSET sd_dev_arr
     xor dl,dl
     or cx,cx
-    jz sdvDone
+    jz sadvDone
 
-sdvLoop:
+sadvLoop:
     push ds
     push bx
     push cx
     push dx
 ;
     mov ds,ds:[bx]
+    GetThread
+    mov ds:sd_serv_thread,ax    
     call SetupInts
     call SetupDev
 ;
@@ -1047,50 +1034,113 @@ sdvLoop:
 ;
     add bx,2
     inc dl
-    loop sdvLoop
+    loop sadvLoop
 
-sdvDone:
+sadvDone:
     ret
-StartDevices    Endp        
+StartAllDevices    Endp        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           init_sd_thread
+;           NAME:           InitAllDevices
 ;
-;           DESCRIPTION:    SD init thread
-;
-;       PARAMETERS:     
-;
-;           RETURNS:        
+;           DESCRIPTION:    Init all SD devices
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_sd_name DB 'SD Card',0
-
-init_sd_thread:
+InitAllDevices Proc near
+    mov eax,1000h
+    AllocateBigLinear
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,edx
+;    
     mov ax,SEG data
     mov ds,ax
-    mov es,ax
-;    
-    mov di,OFFSET serv_name_str
-    mov si,OFFSET serv_thread_name
+    mov cx,ds:sd_dev_count
+    mov bx,OFFSET sd_dev_arr
+    xor dl,dl
+    or cx,cx
+    jz iadvDone
 
-stdNameLoop:    
-    lods byte ptr cs:[si]
-    stosb
-    or al,al
-    jnz stdNameLoop
+iadvLoop:
+    push ds
+    push bx
+    push cx
+    push dx
 ;
-    dec di
-    mov ds:serv_name_ptr,di
-    mov al,'0'
-    stosb
-    xor al,al
-    stosb
+    mov ds,ds:[bx]
+    mov al,ds:sd_ok
+    or al,al
+    jz iadvNext
 ;    
-    call StartDevices
-    TerminateThread
+    call InitDevice
+
+iadvNext:
+    pop dx
+    pop cx
+    pop bx
+    pop ds
+;
+    add bx,2
+    inc dl
+    loop iadvLoop
+
+iadvDone:
+    ret
+InitAllDevices    Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InstallAllDevices
+;
+;           DESCRIPTION:    Install all SD devices
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InstallAllDevices Proc near
+    mov ax,SEG data
+    mov ds,ax
+    mov cx,ds:sd_dev_count
+    mov bx,OFFSET sd_dev_arr
+    xor dl,dl
+    or cx,cx
+    jz iadDone
+
+iadLoop:
+    push ds
+    push bx
+    push cx
+    push dx
+    push edi
+;
+    mov ds,ds:[bx]
+    mov al,ds:sd_ok
+    or al,al
+    jz iadNext
+;    
+    int 3
+    mov fs,ds:sd_reg_sel
+    mov ecx,1
+    xor edx,edx
+    call ReadPioSector
+
+iadNext:
+    pop edi
+    pop dx
+    pop cx
+    pop bx
+    pop ds
+;
+    add bx,2
+    inc dl
+    loop iadLoop
+
+iadDone:
+    ret
+InstallAllDevices    Endp        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1104,7 +1154,9 @@ stdNameLoop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 disc_assign    Proc far
-    int 3
+    call StartAllDevices
+    call InitAllDevices
+    call InstallAllDevices
     retf32
 disc_assign    Endp
 
@@ -1222,15 +1274,6 @@ init_sd    Proc far
 
 init_sd_exit:
     EndDiscHandler
-;    
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov di,OFFSET init_sd_name
-    mov si,OFFSET init_sd_thread
-    mov ax,4
-    mov cx,stack0_size
-;    CreateThread
 ;
     popa
     pop es
