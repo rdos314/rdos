@@ -280,16 +280,16 @@ SetupInts   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetSdClock
+;           NAME:           SetDefaultSdClock
 ;
-;           DESCRIPTION:    Set SDIO clk rate
+;           DESCRIPTION:    Set default SDIO clk rate
 ;
 ;           PARAMETERS:     FS      SD io space
-;                           CX      Frequency, MHz
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetSdClock  Proc near
+SetDefaultSdClock  Proc near
+    mov cx,25
     mov eax,fs:REG_CAP
     shr ax,8
     and ax,3Fh
@@ -297,30 +297,30 @@ SetSdClock  Proc near
     div cx
 ;
     or dx,dx
-    jz sscMultOk
+    jz sdscMultOk
 ;
     inc ax
 
-sscMultOk:
+sdscMultOk:
     xor cl,cl
 
-sscExpLoop:
+sdscExpLoop:
     test ax,8000h
-    jnz sscExpOk
+    jnz sdscExpOk
 ;
     shl ax,1
     inc cl
 ;
     or ax,ax
-    jnz sscExpLoop                
+    jnz sdscExpLoop                
 
-sscExpOk:
+sdscExpOk:
     test ax,7FFFh
-    jz sscWhole
+    jz sdscWhole
 ;
     dec cl
 
-sscWhole:
+sdscWhole:
     mov ax,0FFFFh
     shr ax,cl
     inc ax
@@ -331,27 +331,27 @@ sscWhole:
     mov fs:REG_CLK_CONTROL,ax
     mov cx,100    
 
-sscWait:
+sdscWait:
     mov ax,1
     WaitMilliSec
 ;
     mov ax,fs:REG_CLK_CONTROL
     test al,2
-    jnz sscOk
+    jnz sdscOk
 ;
-    loop sscWait
+    loop sdscWait
 ;
     stc
-    jmp sscDone
+    jmp sdscDone
 
-sscOk:
+sdscOk:
     or ax,4
     mov fs:REG_CLK_CONTROL,ax       
     clc
     
-sscDone:
+sdscDone:
     ret
-SetSdClock  Endp
+SetDefaultSdClock  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -527,12 +527,12 @@ SendCmd8    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SendAcmd41    Proc near
-    mov esi,50100000h
+    mov esi,51100000h
     mov eax,fs:REG_CAP
     test eax,1000000h
     jnz sac41HasOcr
 ;
-    mov esi,50040000h
+    mov esi,51040000h
     test eax,2000000h    
     jnz sac41HasOcr
 ;
@@ -744,6 +744,70 @@ SendAcmd6    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           DisconnectPullup
+;
+;           DESCRIPTION:    Disconnect pullup
+;
+;           PARAMETERS:     FS      SD io space
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DisconnectPullup    Proc near
+    mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
+    ClearSignal
+;
+    mov eax,ds:sd_rca
+    mov dword ptr fs:REG_ARG,eax
+    mov word ptr fs:REG_TRANS_MODE,0
+    mov word ptr fs:REG_CMD,371Ah
+    call WaitForCompletion
+    jc dpDone
+;
+    mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
+    ClearSignal
+;    
+    mov dword ptr fs:REG_ARG,0
+    mov word ptr fs:REG_TRANS_MODE,0
+    mov word ptr fs:REG_CMD,2A1Ah
+    call WaitForCompletion
+
+dpDone:
+    ret
+DisconnectPullup    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SendCmd6
+;
+;           DESCRIPTION:    Send CMD6
+;
+;           PARAMETERS:     FS      SD io space
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendCmd6    Proc near
+    mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
+    ClearSignal
+;    
+    mov dword ptr fs:REG_ARG,80000000h
+    mov word ptr fs:REG_TRANS_MODE,10h
+    mov word ptr fs:REG_CMD,63Ah
+    call WaitForCompletion
+    jc sc6Done
+;
+    mov eax,fs:REG_RESP0
+
+sc6Done:
+    ret
+SendCmd6    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ReadSector
 ;
 ;           DESCRIPTION:    Read a single sector
@@ -816,8 +880,7 @@ stOff:
     jmp stOff
 
 stInserted:
-    mov cx,25
-    call SetSdClock
+    call SetDefaultSdClock
     jc stFailed
 ;
     call SetPower
@@ -845,13 +908,17 @@ stInserted:
     call SendCmd7
     jc stFailed
 ;
-    call SendAcmd6
-    jc stFailed
+;    call SendAcmd6
+;    jc stFailed
 ;
     mov ecx,1000
     call SetDataTimeout
-;    
+;
     int 3    
+    call DisconnectPullup
+    call SendCmd6
+    jc stFailed    
+;    
     mov eax,1000h
     AllocateBigLinear
     mov ax,flat_sel
