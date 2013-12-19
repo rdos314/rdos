@@ -1366,7 +1366,7 @@ void __far ImplTestGate(const char *msg)
     int j;
     int ok;
 
-    dev = HidArr[0];
+    dev = HidArr[2];
     report = dev->ReportIdArr[1];
 
     Count = GetHidTableCount();

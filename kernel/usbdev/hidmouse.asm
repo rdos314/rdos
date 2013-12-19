@@ -35,6 +35,18 @@ include ..\usbdev\usb.inc
 INCLUDE ..\handle.inc
 include hid.inc
 
+hid_mouse   STRUC
+
+hid_left_index      DW ?
+hid_mid_index       DW ?
+hid_right_index     DW ?
+
+hid_x_index         DW ?
+hid_y_index         DW ?
+hid_scroll_index    DW ?
+
+hid_mouse   ENDS
+
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
 code    SEGMENT byte public 'CODE'
@@ -42,32 +54,6 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     .386p
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           MouseX
-;
-;           DESCRIPTION:    Mouse x callback
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-mouse_x Proc far
-    ret
-mouse_x Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           MouseY
-;
-;           DESCRIPTION:    Mouse y callback
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-mouse_y Proc far
-    ret
-mouse_y Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -81,7 +67,22 @@ mouse_y Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hid_begin   Proc far
-    int 3
+    push es
+    push eax
+;    
+    mov eax,SIZE hid_mouse
+    AllocateSmallGlobalMem
+    mov es:hid_left_index,-1
+    mov es:hid_mid_index,-1
+    mov es:hid_right_index,-1
+;    
+    mov es:hid_x_index,-1
+    mov es:hid_y_index,-1
+    mov es:hid_scroll_index,-1
+    mov ebx,es
+;
+    pop eax
+    pop es    
     ret
 hid_begin   Endp
 
@@ -101,7 +102,52 @@ hid_begin   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hid_define   Proc far
-    int 3
+    push ds
+    mov ds,ebx
+;
+    cmp cx,901h
+    jne hdNotLeft
+;
+    mov ds:hid_left_index,si
+
+hdNotLeft:
+    cmp cx,902h
+    jne hdNotRight
+;
+    mov ds:hid_right_index,si
+
+hdNotRight:                
+    cmp cx,903h
+    jne hdNotMid
+;
+    mov ds:hid_mid_index,si
+
+hdNotMid: 
+    cmp cx,130h
+    jne hdNotX
+;
+    test dx,4
+    jz hdNotX
+;
+    mov ds:hid_x_index,si
+
+hdNotX:                   
+    cmp cx,131h
+    jne hdNotY
+;
+    test dx,4
+    jz hdNotY
+;    
+    mov ds:hid_y_index,si
+
+hdNotY:                   
+    cmp cx,138h
+    jne hdNotScroll
+;
+    mov ds:hid_scroll_index,si
+
+hdNotScroll:                   
+    pop ds
     ret
 hid_define   Endp
 
@@ -159,6 +205,36 @@ hid_set_physical   Endp
 
 hid_end   Proc far
     int 3
+    push es
+    push eax
+;
+    mov es,ebx
+    mov ax,es:hid_left_index
+    add ax,1
+    jc heFail
+;
+    mov ax,es:hid_right_index
+    add ax,1
+    jc heFail
+;
+    mov ax,es:hid_x_index
+    add ax,1
+    jc heFail
+;
+    mov ax,es:hid_y_index
+    add ax,1
+    jc heFail
+;
+    clc
+    jmp heDone                
+
+heFail:
+    FreeMem
+    stc
+        
+heDone:
+    pop eax    
+    pop es
     ret
 hid_end   Endp
 
