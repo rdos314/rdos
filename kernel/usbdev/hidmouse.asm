@@ -82,7 +82,7 @@ mouse_y Endp
 
 hid_begin   Proc far
     int 3
-    retf32
+    ret
 hid_begin   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -102,7 +102,7 @@ hid_begin   Endp
 
 hid_define   Proc far
     int 3
-    retf32
+    ret
 hid_define   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -121,7 +121,7 @@ hid_define   Endp
 
 hid_set_logical   Proc far
     int 3
-    retf32
+    ret
 hid_set_logical   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -140,7 +140,7 @@ hid_set_logical   Endp
 
 hid_set_physical   Proc far
     int 3
-    retf32
+    ret
 hid_set_physical   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -159,7 +159,7 @@ hid_set_physical   Endp
 
 hid_end   Proc far
     int 3
-    retf32
+    ret
 hid_end   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -175,7 +175,7 @@ hid_end   Endp
 
 hid_begin_report   Proc far
     int 3
-    retf32
+    ret
 hid_begin_report   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -195,7 +195,7 @@ hid_begin_report   Endp
 
 hid_add_report   Proc far
     int 3
-    retf32
+    ret
 hid_add_report   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -211,7 +211,7 @@ hid_add_report   Endp
 
 hid_end_report   Proc far
     int 3
-    retf32
+    ret
 hid_end_report   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

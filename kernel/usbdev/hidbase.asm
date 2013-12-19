@@ -85,6 +85,312 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           GetHidTableCount
+;
+;   Description:    Get number of hid tables
+;
+;   Returns:        EAX         Table entries
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetHidTableCount_
+
+GetHidTableCount_   Proc near
+    push ds
+    mov eax,SEG data
+    mov ds,eax
+    movzx eax,ds:hid_table_count
+    pop ds
+    ret
+GetHidTableCount_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HidBegin
+;
+;   Description:    Begin initialization
+;
+;   Parameters:     EDI     Table #
+;
+;   Returns:        EBX     Handle
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public HidBegin_
+
+HidBegin_   Proc near
+    push ds
+    push edi
+;    
+    push eax
+    mov eax,SEG data
+    mov ds,eax
+    pop eax
+;    
+    shl edi,3
+    lds edi,ds:[edi].hid_table_arr
+    call fword ptr ds:[edi].hid_begin_proc
+;
+    pop edi    
+    pop ds
+    ret
+HidBegin_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HidDefine
+;
+;   Description:    Define entry
+;
+;   Parameters:     EDI     Table #
+;                   EBX     Handle
+;                   ECX     Usage page
+;                   EAX     Usage ID
+;                   EDX     Item params
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public HidDefine_
+
+HidDefine_   Proc near
+    push ds
+    push eax
+    push ecx
+    push edi
+;    
+    mov ch,cl
+    mov cl,al
+    mov eax,SEG data
+    mov ds,eax
+;    
+    shl edi,3
+    lds edi,ds:[edi].hid_table_arr
+    call fword ptr ds:[edi].hid_define_proc
+;
+    pop edi    
+    pop ecx
+    pop eax
+    pop ds
+    ret
+HidDefine_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HidSetLogical
+;
+;   Description:    Set logical range
+;
+;   Parameters:     EDI     Table #
+;                   EBX     Handle
+;                   EAX     Logical min
+;                   EDX     Logical max
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public HidSetLogical_
+
+HidSetLogical_   Proc near
+    push ds
+    push edi
+;    
+    push eax
+    mov eax,SEG data
+    mov ds,eax
+    pop eax
+;    
+    shl edi,3
+    lds edi,ds:[edi].hid_table_arr
+    call fword ptr ds:[edi].hid_set_logical_proc
+;
+    pop edi    
+    pop ds
+    ret
+HidSetLogical_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HidSetPhysical
+;
+;   Description:    Set physical range
+;
+;   Parameters:     EDI     Table #
+;                   EBX     Handle
+;                   EAX     Physical min
+;                   EDX     Physical max
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public HidSetPhysical_
+
+HidSetPhysical_   Proc near
+    push ds
+    push edi
+;    
+    push eax
+    mov eax,SEG data
+    mov ds,eax
+    pop eax
+;    
+    shl edi,3
+    lds edi,ds:[edi].hid_table_arr
+    call fword ptr ds:[edi].hid_set_physical_proc
+;
+    pop edi    
+    pop ds
+    ret
+HidSetPhysical_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HidEnd
+;
+;   Description:    End initialization
+;
+;   Parameters:     EDI     Table #
+;                   EBX     Handle
+;
+;   Returns:        EAX     = 1, keep
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public HidEnd_
+
+HidEnd_   Proc near
+    push ds
+    push edi
+;    
+    mov eax,SEG data
+    mov ds,eax
+;    
+    shl edi,3
+    lds edi,ds:[edi].hid_table_arr
+    call fword ptr ds:[edi].hid_end_proc
+    jc heFail
+
+heOk:
+    mov eax,1
+    jmp heDone
+
+heFail:
+    xor eax,eax
+
+heDone:    
+    pop edi    
+    pop ds
+    ret
+HidEnd_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HidBeginReport
+;
+;   Description:    Begin report
+;
+;   Parameters:     EDI     Table #
+;                   EBX     Handle
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public HidBeginReport_
+
+HidBeginReport_   Proc near
+    push ds
+    push edi
+;    
+    push eax
+    mov eax,SEG data
+    mov ds,eax
+    pop eax
+;    
+    shl edi,3
+    lds edi,ds:[edi].hid_table_arr
+    call fword ptr ds:[edi].hid_begin_report_proc
+;
+    pop edi    
+    pop ds
+    ret
+HidBeginReport_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HidAddReport
+;
+;   Description:    Add report item
+;
+;   Parameters:     EDI     Table #
+;                   EBX     Handle
+;                   ECX     Usage page
+;                   EDX     Usage ID
+;                   EAX     Value
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public HidAddReport_
+
+HidAddReport_   Proc near
+    push ds
+    push ecx
+    push edx
+    push edi
+;    
+    mov ch,cl
+    mov cl,dl
+    mov edx,SEG data
+    mov ds,edx
+;    
+    shl edi,3
+    lds edi,ds:[edi].hid_table_arr
+    call fword ptr ds:[edi].hid_add_report_proc
+;
+    pop edi    
+    pop edx
+    pop ecx
+    pop ds
+    ret
+HidAddReport_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HidEndReport
+;
+;   Description:    End report
+;
+;   Parameters:     EDI     Table #
+;                   EBX     Handle
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public HidEndReport_
+
+HidEndReport_   Proc near
+    push ds
+    push edi
+;    
+    push eax
+    mov eax,SEG data
+    mov ds,eax
+    pop eax
+;    
+    shl edi,3
+    lds edi,ds:[edi].hid_table_arr
+    call fword ptr ds:[edi].hid_end_report_proc
+;
+    pop edi    
+    pop ds
+    ret
+HidEndReport_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           GetReportDescr
 ;
 ;   Description:    Get report descriptor

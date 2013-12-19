@@ -61,6 +61,34 @@ extern void StartKeyboardHandler(struct THidDevice *dev);
 extern void HidThreadHandler(struct THidDevice *dev);
 #pragma aux HidThreadHandler parm routine [fs esi]
 
+extern int GetHidTableCount();
+#pragma aux GetHidTableCount value [eax]
+
+extern int HidBegin(int Index);
+#pragma aux HidBegin parm routine [edi] value [ebx]
+
+extern void HidDefine(int Index, int Handle, int Entry, int UsagePage, int UsageId, int ItemParams);
+#pragma aux HidDefine parm routine [edi] [ebx] [esi] [ecx] [eax] [edx] 
+
+extern void HidSetLogical(int Index, int Handle, int Entry, int LogMin, int LogMax);
+#pragma aux HidSetLogical parm routine [edi] [ebx] [esi] [eax] [edx] 
+
+extern void HidSetPhysical(int Index, int Handle, int Entry, int PhysMin, int PhysMax);
+#pragma aux HidSetPhysical parm routine [edi] [ebx] [esi] [eax] [edx] 
+
+extern int HidEnd(int Index, int Handle);
+#pragma aux HidEnd parm routine [edi] [ebx] value [eax] 
+
+extern void HidBeginReport(int Index, int Handle);
+#pragma aux HidBeginReport parm routine [edi] [ebx]
+
+extern void HidAddReport(int Index, int Handle, int Entry, int UsagePage, int UsageId, int Value);
+#pragma aux HidAddReport parm routine [edi] [ebx] [esi] [ecx] [edx] [eax]
+
+extern void HidEndReport(int Index, int Handle);
+#pragma aux HidEndReport parm routine [edi] [ebx]
+
+
 struct THidDescriptor
 {
     unsigned char Len;
@@ -1329,6 +1357,32 @@ int CreateIntrPipe(struct THidDevice *dev)
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 void __far ImplTestGate(const char *msg)
 {
+    struct THidDevice *dev;
+    struct THidReportIdEntry *report;
+    struct THidReportEntry *entry;
+    int Count;
+    int Handle;
+    int i;
+    int j;
+    int ok;
+
+    dev = HidArr[0];
+    report = dev->ReportIdArr[1];
+
+    Count = GetHidTableCount();
+
+    for (i = 0; i < Count; i++)
+    {
+        Handle = HidBegin(i);
+
+        for (j = 0; j < report->InputCount; j++)
+        {
+            entry = &report->InputArr[j];
+            HidDefine(i, Handle, j, entry->UsagePage, entry->UsageIdLow, entry->ItemParams);
+        }
+
+        ok = HidEnd(i, Handle);        
+    }    
 }
 
 /*##########################################################################
