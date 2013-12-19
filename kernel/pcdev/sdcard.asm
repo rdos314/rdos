@@ -465,6 +465,34 @@ WaitForCompletion   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           WaitForRead
+;
+;           DESCRIPTION:    Wait for read data
+;
+;           PARAMETERS:     FS      SD io space
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForRead   Proc near
+
+wfrWait:
+    WaitForSignal
+    test ds:sd_pend_error,1FFh
+    stc
+    jnz wfcDone
+;    
+    test ds:sd_pend_int,20h
+    jz wfrWait
+;
+    clc
+
+wfrDone:    
+    ret
+WaitForRead   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           SendCmd0
 ;
 ;           DESCRIPTION:    Send CMD0
@@ -797,8 +825,8 @@ ReadSector    Proc near
 ;    mov al,es:[edx]
 ;    GetPageEntry
 ;    and ax,0F000h
+;    mov fs:REG_SDMA,eax
 ;
-    mov fs:REG_SDMA,eax
 ;    
     mov fs:REG_BLOCK_COUNT,cx
     mov ds:sd_pend_int,0
@@ -807,18 +835,20 @@ ReadSector    Proc near
     mov dword ptr fs:REG_ARG,edx
     mov word ptr fs:REG_TRANS_MODE,10h
     mov word ptr fs:REG_CMD,123Ah
+    call WaitForRead
+    jc rsDone
 ;
     mov ecx,128
 
 rsLoop:    
     mov eax,fs:REG_BUF
     stos dword ptr es:[edi]
-    loop rsLoop
-;        
-    call WaitForCompletion
-    jc rsDone
+    loop rsLoop        
+;
+    clc    
 
 rsDone:
+    int 3
     pop edi
     ret
 ReadSector    Endp
@@ -890,8 +920,6 @@ stInserted:
 ;
     mov ecx,1000
     call SetDataTimeout
-;
-    int 3    
     call DisconnectPullup
 ;    
     mov eax,1000h
@@ -903,6 +931,7 @@ stInserted:
     mov ecx,1
     xor edx,edx
     call ReadSector
+    int 3
 
 stFailed: 
     mov byte ptr fs:REG_RESET,1
