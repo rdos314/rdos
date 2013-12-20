@@ -851,13 +851,21 @@ ReadPioSector    Proc near
     mov ds:sd_pend_error,0
     ClearSignal
     mov dword ptr fs:REG_ARG,edx
-    mov word ptr fs:REG_TRANS_MODE,30h
+    mov word ptr fs:REG_TRANS_MODE,36h
     mov word ptr fs:REG_CMD,123Ah
 
 rpsSectorLoop:    
-    call WaitForRead
-    jc rpsDone
-;
+    test word ptr fs:REG_STATE,800h
+    jnz rpsDo
+;    
+    WaitForSignal
+    test ds:sd_pend_error,1FFh
+    jz rpsSectorLoop
+;    
+    stc   
+    jmp rpsDone
+
+rpsDo:
     mov ds:sd_pend_int,0
     push ecx
     mov ecx,128
@@ -1666,10 +1674,9 @@ InstallPartition    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 drive_assign1   Proc far
-    int 3
     mov ds,bx
     mov fs,ds:sd_reg_sel
-
+;
     mov eax,1000h
     AllocateBigLinear
     mov ax,flat_sel
@@ -1706,6 +1713,103 @@ drive_assign1   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           InstallExtended
+;
+;   DESCRIPTION:    Install extended partion on drive
+;
+;   PARAMETERS:     DS      Device sel
+;                   ES      FLAT_SEL
+;                   FS      Disc sel
+;                   EDX     Current sector
+;                   EDI     200H buffer with partition sector
+;                   ESI     Partition offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InstallExtended Proc near
+    mov ebp,edx
+    mov eax,1000h
+    AllocateBigLinear
+    mov edi,edx
+;
+    mov ecx,1
+    mov edx,ebp
+    call ReadPioSector
+;
+    mov esi,1BEh
+
+install_ext_loop1:
+    mov cl,es:[esi+edi].part_type
+    or cl,cl
+    jz install_ext_next_part1
+;
+    cmp cl,5
+    je install_ext_next_part1
+;
+    cmp cl,0Fh
+    je install_ext_next_part1
+;
+    push ebp
+    push edi
+;
+    mov eax,es:[esi+edi].part_sectors
+    mov edx,es:[esi+edi].part_start_sector
+    add edx,ebp
+
+install_ext_do:
+    call InstallPartition
+    pop edi
+    pop ebp
+
+install_ext_next_part1:
+    add si,10h
+    cmp si,1FEh
+    jne install_ext_loop1
+;
+    mov esi,1BEh
+
+install_ext_loop2:
+    mov cl,es:[esi+edi].part_type
+    or cl,cl
+    jz install_ext_next_part2
+;
+    cmp cl,5
+    je install_ext_install2
+;
+    cmp cl,0Fh
+    jne install_ext_next_part2
+
+install_ext_install2:
+    push esi
+    push edi
+    push ebp
+;
+    mov edx,es:[esi+edi].part_start_sector
+    add edx,ebp
+
+install_ext_link:
+    call InstallExtended
+;
+    pop ebp
+    pop edi
+    pop esi
+
+install_ext_next_part2:
+    add si,10h
+    cmp si,1FEh
+    jne install_ext_loop2
+
+install_ext_done:
+    mov ecx,1000h
+    mov edx,edi
+    FreeLinear
+    ret
+InstallExtended Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:       DRIVE_ASSIGN2
 ;
 ;       DESCRIPTION:    Drive assign, pass 2
@@ -1715,7 +1819,57 @@ drive_assign1   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 drive_assign2   Proc far
+    mov ds,bx
+    mov fs,ds:sd_reg_sel
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,edx    
+;
+    mov ecx,1
+    xor edx,edx
+    call ReadPioSector
+;
     int 3
+    mov esi,1BEh
+
+drive_assign_loop2:
+    mov cl,es:[esi+edi].part_type
+    or cl,cl
+    jz drive_assign_next_part2
+;
+    cmp cl,5
+    je drive_assign_install2
+;
+    cmp cl,0Fh
+    jne drive_assign_next_part2
+
+drive_assign_install2:
+    push esi
+    push edi
+;
+    mov edx,es:[esi+edi].part_start_sector
+
+drive_assign_ext:
+    call InstallExtended
+;
+    pop edi
+    pop esi
+
+drive_assign_next_part2:
+    add si,10h
+    cmp si,1FEh
+    jne drive_assign_loop2
+;
+    mov ecx,1000h
+    mov edx,edi
+    FreeLinear
+;    
+    mov bx,ds:sd_disc_sel
+    StartDisc
+;    
     retf32
 drive_assign2   Endp
 
