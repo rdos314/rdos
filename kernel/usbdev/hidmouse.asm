@@ -37,6 +37,9 @@ include hid.inc
 
 hid_mouse   STRUC
 
+hid_report_offset   DD ?
+hid_report_sel      DW ?
+
 hid_left_index      DW ?
 hid_mid_index       DW ?
 hid_right_index     DW ?
@@ -62,7 +65,9 @@ code    SEGMENT byte public 'CODE'
 ;
 ;   DESCRIPTION:    Begin initialization
 ;
-;   RETURNS:        BX      Handle
+;   Parameters:     FS:ESI    Report struct
+;
+;   RETURNS:        BX        Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -72,6 +77,10 @@ hid_begin   Proc far
 ;    
     mov eax,SIZE hid_mouse
     AllocateSmallGlobalMem
+;
+    mov es:hid_report_offset,esi
+    mov es:hid_report_sel,fs    
+;
     mov es:hid_left_index,-1
     mov es:hid_mid_index,-1
     mov es:hid_right_index,-1
@@ -95,8 +104,9 @@ hid_begin   Endp
 ;
 ;   PARAMETERS:     BX      Handle
 ;                   SI      Entry #
-;                   CL      Usage ID
-;                   CH      Usage page
+;                   AL      Usage ID low
+;                   AH      Usage ID high
+;                   CL      Usage page
 ;                   EDX     Item params
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -105,25 +115,32 @@ hid_define   Proc far
     push ds
     mov ds,ebx
 ;
-    cmp cx,901h
+    cmp cl,9
+    jne hdNotButton
+;
+    cmp al,1
     jne hdNotLeft
 ;
     mov ds:hid_left_index,si
 
 hdNotLeft:
-    cmp cx,902h
+    cmp al,2
     jne hdNotRight
 ;
     mov ds:hid_right_index,si
 
 hdNotRight:                
-    cmp cx,903h
-    jne hdNotMid
+    cmp al,3
+    jne hdDone
 ;
     mov ds:hid_mid_index,si
+    jmp hdDone
 
-hdNotMid: 
-    cmp cx,130h
+hdNotButton:
+    cmp cl,1 
+    jne hdDone
+;
+    cmp al,30h
     jne hdNotX
 ;
     test dx,4
@@ -132,7 +149,7 @@ hdNotMid:
     mov ds:hid_x_index,si
 
 hdNotX:                   
-    cmp cx,131h
+    cmp al,31h
     jne hdNotY
 ;
     test dx,4
@@ -141,53 +158,15 @@ hdNotX:
     mov ds:hid_y_index,si
 
 hdNotY:                   
-    cmp cx,138h
-    jne hdNotScroll
+    cmp al,38h
+    jne hdDone
 ;
     mov ds:hid_scroll_index,si
 
-hdNotScroll:                   
+hdDone:                   
     pop ds
     ret
 hid_define   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           hid_set_logical
-;
-;   DESCRIPTION:    Set logical properties
-;
-;   PARAMETERS:     BX      Handle
-;                   SI      Entry #
-;                   EAX     Logical min
-;                   EDX     Logical max
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hid_set_logical   Proc far
-    int 3
-    ret
-hid_set_logical   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           hid_set_physical
-;
-;   DESCRIPTION:    Set physical properties
-;
-;   PARAMETERS:     BX      Handle
-;                   SI      Entry #
-;                   EAX     Physical min
-;                   EDX     Physical max
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hid_set_physical   Proc far
-    int 3
-    ret
-hid_set_physical   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -259,54 +238,19 @@ hid_close   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           hid_begin_report
+;   NAME:           hid_handle_report
 ;
-;   DESCRIPTION:    Begin report
-;
-;   PARAMETERS:     BX      Handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hid_begin_report   Proc far
-    int 3
-    ret
-hid_begin_report   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           hid_add_report
-;
-;   DESCRIPTION:    Add report item
+;   DESCRIPTION:    Handle report
 ;
 ;   PARAMETERS:     BX      Handle
-;                   SI      Entry #
-;                   EAX     Value
-;                   CL      Usage ID
-;                   CH      Usage page
+;                   FS:ESI  Report data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-hid_add_report   Proc far
+hid_handle_report   Proc far
     int 3
     ret
-hid_add_report   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           hid_end_report
-;
-;   DESCRIPTION:    End report
-;
-;   PARAMETERS:     BX      Handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hid_end_report   Proc far
-    int 3
-    ret
-hid_end_report   Endp
+hid_handle_report   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -320,13 +264,9 @@ hid_end_report   Endp
 hid_tab:
 h00 DD OFFSET hid_begin,        SEG code
 h01 DD OFFSET hid_define,       SEG code
-h02 DD OFFSET hid_set_logical,  SEG code
-h03 DD OFFSET hid_set_physical, SEG code
-h04 DD OFFSET hid_end,          SEG code
-h05 DD OFFSET hid_close,        SEG code
-h06 DD OFFSET hid_begin_report, SEG code
-h07 DD OFFSET hid_add_report,   SEG code
-h08 DD OFFSET hid_end_report,   SEG code
+h02 DD OFFSET hid_end,          SEG code
+h03 DD OFFSET hid_close,        SEG code
+h04 DD OFFSET hid_handle_report,SEG code
 
     public InitMouse_
     

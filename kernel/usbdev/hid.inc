@@ -54,46 +54,27 @@ hid_device_struc   ENDS
 
 hid_table       STRUC
 
-; OUT BX    Handle / selector
+; IN  FS:ESI    Report struct
+; OUT BX        Handle / selector
 hid_begin_proc              DD ?,?
 
-; IN  BX    Handle / selector
-; IN  SI    Entry #
-; IN  CL    Usage ID
-; IN  CH    Usage page
-; IN  EDX   Item params
+; IN  BX        Handle / selector
+; IN  SI        Entry #
+; IN  CL        Usage Page
+; IN  AL        Usage ID low
+; IN  AH        Usage ID high
+; IN  EDX       Item params
 hid_define_proc             DD ?,?
 
-; IN  BX    Handle / selector
-; IN  SI    Entry #
-; IN  EAX   Logical min
-; IN  EDX   Logical max
-hid_set_logical_proc        DD ?,?
-
-; IN  BX    Handle / selector
-; IN  SI    Entry #
-; IN  EAX   Physical min
-; IN  EDX   Physical max
-hid_set_physical_proc       DD ?,?
-
-; IN  BX    Handle / selector
-; OUT NC    Handle active
+; IN  BX        Handle / selector
+; OUT NC        Handle active
 hid_end_proc                DD ?,?
 
-; IN  BX    Handle / selector
+; IN  BX        Handle / selector
 hid_close_proc              DD ?,?
 
-; IN  BX    Handle / selector
-hid_begin_report_proc       DD ?,?
-
-; IN  BX    Handle / selector
-; IN  EAX   Value
-; IN  SI    Entry #
-; IN  CL    Usage ID
-; IN  CH    Usage page
-hid_add_report_proc         DD ?,?
-
-; IN  BX    Handle / selector
-hid_end_report_proc         DD ?,?
+; IN  BX        Handle / selector
+; IN  FS:ESI    Report data
+hid_handle_report_proc      DD ?,?
 
 hid_table   ENDS

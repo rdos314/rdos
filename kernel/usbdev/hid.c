@@ -59,23 +59,17 @@ extern void OpenIntrPipe(struct THidDevice *dev);
 extern void StartKeyboardHandler(struct THidDevice *dev);
 #pragma aux StartKeyboardHandler parm routine [fs esi]
 
-extern void HidThreadHandler(struct THidDevice *dev);
-#pragma aux HidThreadHandler parm routine [fs esi]
+extern char *WaitForReport(struct THidDevice *dev);
+#pragma aux WaitForReport parm routine [fs esi] value [es edi]
 
 extern int GetHidTableCount();
 #pragma aux GetHidTableCount value [eax]
 
-extern int HidBegin(int Index);
-#pragma aux HidBegin parm routine [edi] value [ebx]
+extern int HidBegin(int Index, struct THidReportIdEntry *Report);
+#pragma aux HidBegin parm routine [edi] [fs esi] value [ebx]
 
-extern void HidDefine(int Index, int Handle, int Entry, int UsagePage, int UsageId, int ItemParams);
+extern void HidDefine(int Index, int Handle, int Entry, int UsagePage, int Usage, int ItemParams);
 #pragma aux HidDefine parm routine [edi] [ebx] [esi] [ecx] [eax] [edx] 
-
-extern void HidSetLogical(int Index, int Handle, int Entry, int LogMin, int LogMax);
-#pragma aux HidSetLogical parm routine [edi] [ebx] [esi] [eax] [edx] 
-
-extern void HidSetPhysical(int Index, int Handle, int Entry, int PhysMin, int PhysMax);
-#pragma aux HidSetPhysical parm routine [edi] [ebx] [esi] [eax] [edx] 
 
 extern int HidEnd(int Index, int Handle);
 #pragma aux HidEnd parm routine [edi] [ebx] value [eax] 
@@ -83,14 +77,8 @@ extern int HidEnd(int Index, int Handle);
 extern void HidClose(int Index, int Handle);
 #pragma aux HidClose parm routine [edi] [ebx]
 
-extern void HidBeginReport(int Index, int Handle);
-#pragma aux HidBeginReport parm routine [edi] [ebx]
-
-extern void HidAddReport(int Index, int Handle, int Entry, int UsagePage, int UsageId, int Value);
-#pragma aux HidAddReport parm routine [edi] [ebx] [esi] [ecx] [edx] [eax]
-
-extern void HidEndReport(int Index, int Handle);
-#pragma aux HidEndReport parm routine [edi] [ebx]
+extern void HidHandleReport(int Index, int Handle, char *ReportData);
+#pragma aux HidHandleReport parm routine [edi] [ebx] [fs esi]
 
 
 struct THidDescriptor
@@ -1327,12 +1315,12 @@ void LoadReportIdArrays(struct THidDevice *dev)
             
             for (Index = 0; Index < Count; Index++)
             {
-                Handle = HidBegin(Index);
+                Handle = HidBegin(Index, report);
 
                 for (Inp = 0; Inp < report->InputCount; Inp++)
                 {
                     entry = &report->InputArr[Inp];
-                    HidDefine(Index, Handle, Inp, entry->UsagePage, entry->UsageIdLow, entry->ItemParams);
+                    HidDefine(Index, Handle, Inp, entry->UsagePage, entry->UsageIdLow + (entry->UsageIdHigh << 8), entry->ItemParams);
                 }
 
                 ok = HidEnd(Index, Handle);        
@@ -1411,34 +1399,6 @@ int CreateIntrPipe(struct THidDevice *dev)
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 void __far ImplTestGate(const char *msg)
 {
-    struct THidDevice *dev;
-    struct THidReportIdEntry *report;
-    struct THidReportEntry *entry;
-    int Count;
-    int Handle;
-    int i;
-    int j;
-    int ok;
-
-    dev = HidArr[2];
-    report = dev->ReportIdArr[1];
-
-    Count = GetHidTableCount();
-
-    for (i = 0; i < Count; i++)
-    {
-        Handle = HidBegin(i);
-
-        for (j = 0; j < report->InputCount; j++)
-        {
-            entry = &report->InputArr[j];
-            HidDefine(i, Handle, j, entry->UsagePage, entry->UsageIdLow, entry->ItemParams);
-        }
-
-        ok = HidEnd(i, Handle);        
-        if (ok)
-            HidClose(i, Handle);
-    }    
 }
 
 /*##########################################################################
@@ -2161,8 +2121,12 @@ void __far ImplGetHidReportFeatureData(int Device, int ReportId, int Index, char
 void __far HidThread(void *param)
 {
     int Index;
+    int Table;
     int ok;
+    int Report;
     struct THidDevice *dev;
+    struct THidReportIdEntry *report;
+    char *ReportData;
 
     dev = (struct THidDevice *)param;
     Index = dev->DeviceNr;
@@ -2176,9 +2140,28 @@ void __far HidThread(void *param)
         CreateReportIdArrays(dev);
         LoadReportIdArrays(dev);
         if (CreateIntrPipe(dev))
+        {
             while (!dev->StopReq)
-                HidThreadHandler(dev);
+            {
+                ReportData = WaitForReport(dev);
 
+                if (dev->ReportIdArr[0])
+                    Report = 0;
+                else
+                {
+                    Report = *ReportData;
+                    ReportData++;
+                }
+
+                report = dev->ReportIdArr[Report];
+
+                if (report)
+                    for (Table = 0; Table < report->TableCount; Table++)
+                        HidHandleReport(report->TableArr[Table].Index,
+                                        report->TableArr[Table].Handle,
+                                        ReportData); 
+            }
+        }
         CloseHid(dev);
     }
 

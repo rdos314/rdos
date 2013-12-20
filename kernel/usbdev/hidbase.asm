@@ -112,6 +112,7 @@ GetHidTableCount_   Endp
 ;   Description:    Begin initialization
 ;
 ;   Parameters:     EDI     Table #
+;                   FS:ESI  Report struc
 ;
 ;   Returns:        EBX     Handle
 ;      
@@ -147,7 +148,8 @@ HidBegin_   Endp
 ;   Parameters:     EDI     Table #
 ;                   EBX     Handle
 ;                   ECX     Usage page
-;                   EAX     Usage ID
+;                   AL      Usage ID low
+;                   AH      Usage ID high
 ;                   EDX     Item params
 ;      
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -160,10 +162,10 @@ HidDefine_   Proc near
     push ecx
     push edi
 ;    
-    mov ch,cl
-    mov cl,al
+    push eax
     mov eax,SEG data
     mov ds,eax
+    pop eax
 ;    
     shl edi,3
     lds edi,ds:[edi].hid_table_arr
@@ -175,74 +177,6 @@ HidDefine_   Proc near
     pop ds
     ret
 HidDefine_   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           HidSetLogical
-;
-;   Description:    Set logical range
-;
-;   Parameters:     EDI     Table #
-;                   EBX     Handle
-;                   EAX     Logical min
-;                   EDX     Logical max
-;      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public HidSetLogical_
-
-HidSetLogical_   Proc near
-    push ds
-    push edi
-;    
-    push eax
-    mov eax,SEG data
-    mov ds,eax
-    pop eax
-;    
-    shl edi,3
-    lds edi,ds:[edi].hid_table_arr
-    call fword ptr ds:[edi].hid_set_logical_proc
-;
-    pop edi    
-    pop ds
-    ret
-HidSetLogical_   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           HidSetPhysical
-;
-;   Description:    Set physical range
-;
-;   Parameters:     EDI     Table #
-;                   EBX     Handle
-;                   EAX     Physical min
-;                   EDX     Physical max
-;      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public HidSetPhysical_
-
-HidSetPhysical_   Proc near
-    push ds
-    push edi
-;    
-    push eax
-    mov eax,SEG data
-    mov ds,eax
-    pop eax
-;    
-    shl edi,3
-    lds edi,ds:[edi].hid_table_arr
-    call fword ptr ds:[edi].hid_set_physical_proc
-;
-    pop edi    
-    pop ds
-    ret
-HidSetPhysical_   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -318,18 +252,19 @@ HidClose_   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           HidBeginReport
+;   NAME:           HidHandleReport
 ;
-;   Description:    Begin report
+;   Description:    Handle report
 ;
 ;   Parameters:     EDI     Table #
 ;                   EBX     Handle
+;                   FS:ESI  Report data
 ;      
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public HidBeginReport_
+    public HidHandleReport_
 
-HidBeginReport_   Proc near
+HidHandleReport_   Proc near
     push ds
     push edi
 ;    
@@ -340,83 +275,12 @@ HidBeginReport_   Proc near
 ;    
     shl edi,3
     lds edi,ds:[edi].hid_table_arr
-    call fword ptr ds:[edi].hid_begin_report_proc
+    call fword ptr ds:[edi].hid_handle_report_proc
 ;
     pop edi    
     pop ds
     ret
-HidBeginReport_   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           HidAddReport
-;
-;   Description:    Add report item
-;
-;   Parameters:     EDI     Table #
-;                   EBX     Handle
-;                   ECX     Usage page
-;                   EDX     Usage ID
-;                   EAX     Value
-;      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public HidAddReport_
-
-HidAddReport_   Proc near
-    push ds
-    push ecx
-    push edx
-    push edi
-;    
-    mov ch,cl
-    mov cl,dl
-    mov edx,SEG data
-    mov ds,edx
-;    
-    shl edi,3
-    lds edi,ds:[edi].hid_table_arr
-    call fword ptr ds:[edi].hid_add_report_proc
-;
-    pop edi    
-    pop edx
-    pop ecx
-    pop ds
-    ret
-HidAddReport_   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           HidEndReport
-;
-;   Description:    End report
-;
-;   Parameters:     EDI     Table #
-;                   EBX     Handle
-;      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public HidEndReport_
-
-HidEndReport_   Proc near
-    push ds
-    push edi
-;    
-    push eax
-    mov eax,SEG data
-    mov ds,eax
-    pop eax
-;    
-    shl edi,3
-    lds edi,ds:[edi].hid_table_arr
-    call fword ptr ds:[edi].hid_end_report_proc
-;
-    pop edi    
-    pop ds
-    ret
-HidEndReport_   Endp
+HidHandleReport_   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1441,48 +1305,47 @@ register_hid_input  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           HidThreadHandler
+;       NAME:           WaitForReport
 ;
-;       description:    Hid thread handler
+;       description:    Wait for report
 ;
-;       parameters:     FS:ESI
+;       parameters:     FS:ESI      Device
+;
+;       RETURNS:        ES:EDI      Report data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public HidThreadHandler_
+    public WaitForReport_
 
-HidThreadHandler_    Proc near
+WaitForReport_    Proc near
     push ds
-    push es
-    pushad
+    push bx
 ;
     mov bx,fs:hid_intr_req
-
-hthLoop:
-    mov eax,fs:hid_stop_req
-    or eax,eax
-    jnz hthDone
-;    
     GetThread
     StartUsbReq
     WaitForSignal
 ;       
     IsUsbReqReady
-    jc hthLoop
+    jc wfrFail
 ;    
     GetUsbReqData
-    jc hthLoop
-;    
-    int 3
-    mov es,fs:hid_intr_buf
-    jmp hthLoop
+    jnc wfrOk
 
-hthDone:
-    popad
-    pop es
-    pop ds       
+wfrFail:
+    xor edi,edi
+    mov es,edi
+    jmp wfrDone
+
+wfrOk:    
+    mov es,fs:hid_intr_buf
+    xor edi,edi
+
+wfrDone:
+    pop bx
+    pop ds
     ret
-HidThreadHandler_    Endp
+WaitForReport_    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
