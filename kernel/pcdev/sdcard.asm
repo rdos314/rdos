@@ -954,6 +954,131 @@ idFailed:
 idDone:
     ret
 InitDevice  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       read_drive
+;
+;       DESCRIPTION:    Read drive
+;
+;       PARAMETERS:     DS      Device sel
+;                       FS      IO sel
+;                       ESI     Disc handle array
+;                       ECX     Entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_drive      Proc near
+
+read_drive_loop:
+    movzx edx,es:[edi].dh_unit
+    movzx eax,ds:sd_sectors_per_unit
+    mul edx
+    movzx ebx,es:[edi].dh_sector
+    add eax,ebx
+    mov edx,eax
+;    
+    push ecx
+    push edi
+    mov ecx,1
+    mov edi,es:[edi].dh_data
+    call ReadPioSector
+    pop edi
+    pop ecx
+    jnc read_drive_ok
+
+read_drive_fail:
+    int 3
+    mov es:[edi].dh_state,STATE_BAD
+    mov bx,ds:sd_disc_sel
+    DiscRequestCompleted
+;
+    add esi,4
+    mov edi,es:[esi]
+    sub cx,1
+    jnz read_drive_loop
+    jmp read_drive_done
+
+read_drive_ok:
+    mov eax,es:[edi].dh_data
+    mov es:[edi].dh_state,STATE_USED
+    mov bx,ds:sd_disc_sel
+    DiscRequestCompleted
+;
+    add esi,4
+    mov edi,es:[esi]
+    sub cx,1
+    jnz read_drive_loop
+
+read_drive_done:
+    ret
+read_drive      Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       write_drive
+;
+;       DESCRIPTION:    Perform a write request
+;
+;       PARAMETERS:     DS      Device sel
+;                       FS      IO sel
+;                       ESI     Disc handle array
+;                       ECX     Entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_drive     Proc near
+    int 3
+    ret
+write_drive     Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       perform_one
+;
+;       DESCRIPTION:    Perform one request
+;
+;       PARAMETERS:     DS      Device sel
+;                       FS      IO sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+perform_one     Proc near
+
+perform_one_loop:
+    GetThread
+    mov ds:sd_serv_thread,ax
+;
+    mov ecx,255
+    GetDiscRequestArray
+    jc perform_one_done
+;
+    mov edi,es:[esi]
+    mov al,es:[edi].dh_state
+    cmp al,STATE_EMPTY
+    je perform_one_read
+;
+    cmp al,STATE_DIRTY
+    je perform_one_write
+;
+    cmp al,STATE_SEQ
+    jne perform_one_done
+
+perform_one_write:
+    call write_drive
+    jmp perform_one_loop
+
+perform_one_read:
+    call read_drive
+    jmp perform_one_loop
+
+perform_one_done:
+    ret
+perform_one     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -967,7 +1092,6 @@ InitDevice  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 discbuf_thread:
-    int 3
     mov ax,fs
     mov ds,ax
     mov fs,ds:sd_reg_sel    
@@ -976,12 +1100,8 @@ discbuf_thread:
     mov bx,ds:sd_disc_sel
 
 discbuf_thread_loop:
-    WaitForDiscRequest
-;
-    GetThread
-    mov ds:sd_serv_thread,ax
-;    
-;    call perform_one
+    WaitForDiscRequest    
+    call perform_one
     jmp discbuf_thread_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1847,7 +1967,6 @@ drive_assign2   Proc far
     xor edx,edx
     call ReadPioSector
 ;
-    int 3
     mov esi,1BEh
 
 drive_assign_loop2:
