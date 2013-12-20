@@ -80,8 +80,11 @@ extern void HidClose(int Index, int Handle);
 extern void HidHandleReport(int Index, int Handle, char *ReportData);
 #pragma aux HidHandleReport parm routine [edi] [ebx] [fs esi]
 
-extern int GetValue(char *Buf, int StartBit, int BitCount);
-#pragma aux GetValue parm routine [es edi] [edx] [ecx] value [eax]
+extern int GetSignedValue(char *Buf, int StartBit, int BitCount);
+#pragma aux GetSignedValue parm routine [es edi] [edx] [ecx] value [eax]
+
+extern int GetUnsignedValue(char *Buf, int StartBit, int BitCount);
+#pragma aux GetUnsignedValue parm routine [es edi] [edx] [ecx] value [eax]
 
 struct THidDescriptor
 {
@@ -1394,17 +1397,17 @@ int CreateIntrPipe(struct THidDevice *dev)
 
 /*##########################################################################
 #
-#   Name       : ImplGetHidValue
+#   Name       : ImplGetSignedHidValue
 #
-#   Purpose....: Get HID value
+#   Purpose....: Get signed HID value
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux ImplGetHidValue "*" rdosdev parm routine [es edi] [fs esi] [ebx] value [eax]
-int __far ImplGetHidValue(struct THidReportIdEntry *report, char *buf, int entry)
+#pragma aux ImplGetSignedHidValue "*" rdosdev parm routine [es edi] [fs esi] [ebx] value [eax]
+int __far ImplGetSignedHidValue(struct THidReportIdEntry *report, char *buf, int entry)
 {
     struct THidReportEntry *Entry = &report->InputArr[entry];
     int StartBit = Entry->StartBit;
@@ -1416,7 +1419,34 @@ int __far ImplGetHidValue(struct THidReportIdEntry *report, char *buf, int entry
     if (BitCount > 32)
         BitCount = 32;
     
-    return GetValue(buf, StartBit, BitCount);    
+    return GetSignedValue(buf, StartBit, BitCount);    
+}
+
+/*##########################################################################
+#
+#   Name       : ImplGetUnsignedHidValue
+#
+#   Purpose....: Get unsigned HID value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetUnsignedHidValue "*" rdosdev parm routine [es edi] [fs esi] [ebx] value [eax]
+int __far ImplGetUnsignedHidValue(struct THidReportIdEntry *report, char *buf, int entry)
+{
+    struct THidReportEntry *Entry = &report->InputArr[entry];
+    int StartBit = Entry->StartBit;
+    int BitCount = Entry->BitCount;
+
+    if (BitCount < 0)
+        BitCount = 0;
+
+    if (BitCount > 32)
+        BitCount = 32;
+    
+    return GetUnsignedValue(buf, StartBit, BitCount);    
 }
 
 /*##########################################################################
@@ -2346,7 +2376,8 @@ int main()
     InitHid();
     InitMouse();
 
-    RdosRegisterOsGate(osgate_get_hid_value, (__rdos_gate_callback *)&ImplGetHidValue, "Get Hid Value"); 
+    RdosRegisterOsGate(osgate_get_signed_hid_value, (__rdos_gate_callback *)&ImplGetSignedHidValue, "Get Signed Hid Value"); 
+    RdosRegisterOsGate(osgate_get_unsigned_hid_value, (__rdos_gate_callback *)&ImplGetUnsignedHidValue, "Get Unsigned Hid Value"); 
 
     RdosRegisterBimodalUserGate(usergate_get_hid_report_item, (__rdos_gate_callback *)&ImplGetHidReportItem, "Get Hid Report Item"); 
     RdosRegisterBimodalUserGate(usergate_get_hid_report_input_data, (__rdos_gate_callback *)&ImplGetHidReportInputData, "Get Hid Report Input Data"); 

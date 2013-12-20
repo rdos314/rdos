@@ -82,23 +82,6 @@ code    SEGMENT byte public 'CODE'
     .386p
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           GetValue
-;
-;   Description:    Get value from report
-;
-;   Parameters:     ES:EDI      Report data
-;                   EDX         Start bit
-;                   ECX         Bit count
-;
-;   Returns:        EAX         Value
-;      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public GetValue_
-
 tv:
 tv0  DD 000000000h
 tv1  DD 000000001h
@@ -134,7 +117,24 @@ tv30 DD 03FFFFFFFh
 tv31 DD 07FFFFFFFh
 tv32 DD 0FFFFFFFFh
 
-GetValue_   Proc near
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           GetUnsignedValue
+;
+;   Description:    Get unsigned value from report
+;
+;   Parameters:     ES:EDI      Report data
+;                   EDX         Start bit
+;                   ECX         Bit count
+;
+;   Returns:        EAX         Value
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetUnsignedValue_
+
+GetUnsignedValue_   Proc near
     push ecx
     push edx
     push esi
@@ -152,7 +152,86 @@ GetValue_   Proc near
     pop edx
     pop ecx        
     ret
-GetValue_   Endp
+GetUnsignedValue_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           GetSignedValue
+;
+;   Description:    Get signed value from report
+;
+;   Parameters:     ES:EDI      Report data
+;                   EDX         Start bit
+;                   ECX         Bit count
+;
+;   Returns:        EAX         Value
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+sv:
+sv0  DD 000000000h
+sv1  DD 000000001h
+sv2  DD 000000002h
+sv3  DD 000000004h
+sv4  DD 000000008h
+sv5  DD 000000010h
+sv6  DD 000000020h
+sv7  DD 000000040h
+sv8  DD 000000080h
+sv9  DD 000000100h
+sv10 DD 000000200h
+sv11 DD 000000400h
+sv12 DD 000000800h
+sv13 DD 000001000h
+sv14 DD 000002000h
+sv15 DD 000004000h
+sv16 DD 000008000h
+sv17 DD 000010000h
+sv18 DD 000020000h
+sv19 DD 000040000h
+sv20 DD 000080000h
+sv21 DD 000100000h
+sv22 DD 000200000h
+sv23 DD 000400000h
+sv24 DD 000800000h
+sv25 DD 001000000h
+sv26 DD 002000000h
+sv27 DD 004000000h
+sv28 DD 008000000h
+sv29 DD 010000000h
+sv30 DD 020000000h
+sv31 DD 040000000h
+sv32 DD 080000000h
+
+    public GetSignedValue_
+
+GetSignedValue_   Proc near
+    push ecx
+    push edx
+    push esi
+;    
+    mov esi,ecx
+    mov ecx,edx
+    shr edx,3
+    and cl,7
+    mov eax,es:[edi+edx]
+    shr eax,cl
+    shl esi,2
+    and eax,cs:[esi].tv
+    test eax,cs:[esi].sv
+    jz gsvDone
+;
+    mov edx,cs:[esi].tv
+    not edx
+    or eax,edx
+    
+gsvDone:
+    pop esi
+    pop edx
+    pop ecx        
+    ret
+GetSignedValue_   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

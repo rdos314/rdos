@@ -3388,8 +3388,16 @@ RegisterHidInput      MACRO
 ; IN    FS:ESI  Report data
 ; IN    EBX     Entry #
 ; OUT   EAX     Value
-GetHidValue      MACRO
-    OsGate get_hid_value_nr
+GetSignedHidValue      MACRO
+    OsGate get_signed_hid_value_nr
+                        ENDM
+
+; IN    ES:EDI  Hid report
+; IN    FS:ESI  Report data
+; IN    EBX     Entry #
+; OUT   EAX     Value
+GetUnsignedHidValue      MACRO
+    OsGate get_unsigned_hid_value_nr
                         ENDM
 
 

@@ -258,12 +258,12 @@ hid_handle_report   Proc far
     mov edi,ds:hid_report_offset
     mov es,ds:hid_report_sel
     movzx ebx,ds:hid_x_index
-    GetHidValue
+    GetSignedHidValue
 ;
     mov edi,ds:hid_report_offset
     mov es,ds:hid_report_sel
     movzx ebx,ds:hid_y_index
-    GetHidValue
+    GetSignedHidValue
 ;
     popad
     pop fs
