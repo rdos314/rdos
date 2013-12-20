@@ -487,30 +487,30 @@ WaitForCompletion   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WaitForRead
+;           NAME:           WaitForTransferComplete
 ;
-;           DESCRIPTION:    Wait for read data
+;           DESCRIPTION:    Wait for transfer complete
 ;
 ;           PARAMETERS:     FS      SD io space
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WaitForRead   Proc near
+WaitForTransferComplete   Proc near
 
-wfrWait:
+wftcWait:
     WaitForSignal
     test ds:sd_pend_error,1FFh
     stc
-    jnz wfcDone
+    jnz wftcDone
 ;    
-    test ds:sd_pend_int,20h
-    jz wfrWait
+    test ds:sd_pend_int,2
+    jz wftcWait
 ;
     clc
 
-wfrDone:    
+wftcDone:    
     ret
-WaitForRead   Endp
+WaitForTransferComplete   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -890,6 +890,67 @@ ReadPioSector    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           WritePioSector
+;
+;           DESCRIPTION:    Write sectors using PIO method
+;
+;           PARAMETERS:     FS      SD io space
+;                           EDX     Sector #
+;                           ECX     Sector count
+;                           ES:EDI  Buffer
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WritePioSector    Proc near
+    push eax
+    push ecx
+    push edi
+;    
+    mov fs:REG_BLOCK_COUNT,cx
+    mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
+    ClearSignal
+    mov dword ptr fs:REG_ARG,edx
+    mov word ptr fs:REG_TRANS_MODE,26h
+    mov word ptr fs:REG_CMD,193Ah
+
+wpsSectorLoop:    
+    test word ptr fs:REG_STATE,400h
+    jnz wpsDo
+;    
+    WaitForSignal
+    test ds:sd_pend_error,1FFh
+    jz wpsSectorLoop
+;    
+    stc   
+    jmp wpsDone
+
+wpsDo:
+    mov ds:sd_pend_int,0
+    push ecx
+    mov ecx,128
+
+wpsLoop: 
+    mov eax,es:[edi]
+    mov fs:REG_BUF,eax
+    add edi,4
+    loop wpsLoop        
+;
+    pop ecx
+    loop wpsSectorLoop    
+;
+    call WaitForTransferComplete
+
+wpsDone:
+    pop edi
+    pop ecx
+    pop eax
+    ret
+WritePioSector    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitDevice
 ;
 ;           DESCRIPTION:    Init device from RESET state
@@ -1030,7 +1091,48 @@ read_drive      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 write_drive     Proc near
+
+write_drive_loop:
+    movzx edx,es:[edi].dh_unit
+    movzx eax,ds:sd_sectors_per_unit
+    mul edx
+    movzx ebx,es:[edi].dh_sector
+    add eax,ebx
+    mov edx,eax
+;    
+    push ecx
+    push edi
+    mov ecx,1
+    mov edi,es:[edi].dh_data
+    call WritePioSector
+    pop edi
+    pop ecx
+    jnc write_drive_ok
+
+write_drive_fail:
     int 3
+    mov es:[edi].dh_state,STATE_BAD
+    mov bx,ds:sd_disc_sel
+    DiscRequestCompleted
+;       
+    add esi,4
+    mov edi,es:[esi]
+    sub cx,1
+    jnz write_drive_loop
+    jmp write_drive_done
+
+write_drive_ok:
+    mov eax,es:[edi].dh_data
+    mov es:[edi].dh_state,STATE_USED
+    mov bx,ds:sd_disc_sel
+    DiscRequestCompleted
+;
+    add esi,4
+    mov edi,es:[esi]
+    sub cx,1
+    jnz write_drive_loop
+
+write_drive_done:
     ret
 write_drive     Endp
 
