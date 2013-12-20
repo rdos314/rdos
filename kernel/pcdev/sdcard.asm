@@ -1091,45 +1091,86 @@ read_drive      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 write_drive     Proc near
+    mov edi,es:[esi]
 
 write_drive_loop:
+    mov ebp,1
+    movzx edx,es:[edi].dh_unit
+    movzx eax,ds:sd_sectors_per_unit
+    mul edx
+    movzx ebx,es:[edi].dh_sector
+    add eax,ebx
+    mov ebx,eax
+
+write_drive_more:
+    cmp ecx,ebp
+    jbe write_drive_do
+;
+    mov edx,es:[edi].dh_data
+    add edx,200h
+;
+    mov eax,ebp
+    shl eax,2
+    mov edi,es:[esi+eax]
+;
+    cmp edx,es:[edi].dh_data
+    jnz write_drive_do
+;    
+    movzx edx,es:[edi].dh_unit
+    movzx eax,ds:sd_sectors_per_unit
+    mul edx
+    movzx edx,es:[edi].dh_sector
+    add eax,edx
+    inc ebx
+    cmp eax,ebx
+    jne write_drive_do
+;
+    inc ebp
+    jmp write_drive_more        
+
+write_drive_do:    
+    mov edi,es:[esi]
     movzx edx,es:[edi].dh_unit
     movzx eax,ds:sd_sectors_per_unit
     mul edx
     movzx ebx,es:[edi].dh_sector
     add eax,ebx
     mov edx,eax
-;    
+;
     push ecx
-    push edi
-    mov ecx,1
+    mov ecx,ebp
     mov edi,es:[edi].dh_data
-    call WritePioSector
-    pop edi
+    call WritePioSector    
     pop ecx
+    mov edi,es:[esi]
     jnc write_drive_ok
 
 write_drive_fail:
     int 3
+    mov edi,es:[esi]
     mov es:[edi].dh_state,STATE_BAD
     mov bx,ds:sd_disc_sel
     DiscRequestCompleted
-;       
     add esi,4
-    mov edi,es:[esi]
-    sub cx,1
+    dec cx
+    sub bp,1
+    jnz write_drive_fail
+;
+    or cx,cx
     jnz write_drive_loop
     jmp write_drive_done
 
 write_drive_ok:
-    mov eax,es:[edi].dh_data
+    mov edi,es:[esi]
     mov es:[edi].dh_state,STATE_USED
     mov bx,ds:sd_disc_sel
     DiscRequestCompleted
-;
     add esi,4
-    mov edi,es:[esi]
-    sub cx,1
+    dec cx
+    sub bp,1
+    jnz write_drive_ok
+;
+    or cx,cx
     jnz write_drive_loop
 
 write_drive_done:

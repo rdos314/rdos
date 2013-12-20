@@ -352,13 +352,18 @@ int TInitHdCommand::Execute(char *param)
         {
             LoadBootLoader(Disc);
 
-            DiscPart = new TDiscPartition(Disc);
-            Part = DiscPart->PartArr[0];
-            if (Part)
-                if (Part->Start <= FLoaderSectors + 1)
-                    ok = Part->IsFree();
+            if (FOptI)
+                ok = TRUE;
+            else
+            {
+                DiscPart = new TDiscPartition(Disc);
+                Part = DiscPart->PartArr[0];
+                if (Part)
+                    if (Part->Start <= FLoaderSectors + 1)
+                        ok = Part->IsFree();
 
-            delete DiscPart;
+                delete DiscPart;
+            }
 
             if (!ok)
             {
