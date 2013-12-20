@@ -968,6 +968,21 @@ InitDevice  Endp
 
 discbuf_thread:
     int 3
+    mov ax,fs
+    mov ds,ax
+    mov fs,ds:sd_reg_sel    
+    mov ax,flat_sel
+    mov es,ax
+    mov bx,ds:sd_disc_sel
+
+discbuf_thread_loop:
+    WaitForDiscRequest
+;
+    GetThread
+    mov ds:sd_serv_thread,ax
+;    
+;    call perform_one
+    jmp discbuf_thread_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
