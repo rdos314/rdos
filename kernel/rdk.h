@@ -631,6 +631,7 @@
 #define osgate_has_physical64 521
 
 #define osgate_register_hid_input 522
+#define osgate_get_hid_value 523
 
 
 
@@ -1267,4 +1268,5 @@
 #define OsGate_has_physical64 0x3E 0x67 0x9a 9 2 0 0 2 0
 
 #define OsGate_register_hid_input 0x3E 0x67 0x9a 10 2 0 0 2 0
+#define OsGate_get_hid_value 0x3E 0x67 0x9a 11 2 0 0 2 0
 

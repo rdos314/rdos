@@ -85,6 +85,78 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           GetValue
+;
+;   Description:    Get value from report
+;
+;   Parameters:     ES:EDI      Report data
+;                   EDX         Start bit
+;                   ECX         Bit count
+;
+;   Returns:        EAX         Value
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetValue_
+
+tv:
+tv0  DD 000000000h
+tv1  DD 000000001h
+tv2  DD 000000003h
+tv3  DD 000000007h
+tv4  DD 00000000Fh
+tv5  DD 00000001Fh
+tv6  DD 00000003Fh
+tv7  DD 00000007Fh
+tv8  DD 0000000FFh
+tv9  DD 0000001FFh
+tv10 DD 0000003FFh
+tv11 DD 0000007FFh
+tv12 DD 000000FFFh
+tv13 DD 000001FFFh
+tv14 DD 000003FFFh
+tv15 DD 000007FFFh
+tv16 DD 00000FFFFh
+tv17 DD 00001FFFFh
+tv18 DD 00003FFFFh
+tv19 DD 00007FFFFh
+tv20 DD 0000FFFFFh
+tv21 DD 0001FFFFFh
+tv22 DD 0003FFFFFh
+tv23 DD 0007FFFFFh
+tv24 DD 000FFFFFFh
+tv25 DD 001FFFFFFh
+tv26 DD 003FFFFFFh
+tv27 DD 007FFFFFFh
+tv28 DD 00FFFFFFFh
+tv29 DD 01FFFFFFFh
+tv30 DD 03FFFFFFFh
+tv31 DD 07FFFFFFFh
+tv32 DD 0FFFFFFFFh
+
+GetValue_   Proc near
+    push ecx
+    push edx
+    push esi
+;    
+    mov esi,ecx
+    mov ecx,edx
+    shr edx,3
+    and cl,7
+    mov eax,es:[edi+edx]
+    shr eax,cl
+    shl esi,2
+    and eax,cs:[esi].tv
+;
+    pop esi
+    pop edx
+    pop ecx        
+    ret
+GetValue_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           GetHidTableCount
 ;
 ;   Description:    Get number of hid tables
@@ -676,9 +748,10 @@ OpenIntrPipe_ Proc near
     mov fs:hid_intr_handle,bx
 ;
     movzx eax,fs:hid_intr_size
+    add eax,4
     AllocateSmallGlobalMem
     mov fs:hid_intr_buf,es
-    mov cx,ax
+    mov cx,fs:hid_intr_size
     CreateUsbReq
     mov fs:hid_intr_req,bx
     AddReadUsbDataReq

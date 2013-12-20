@@ -249,6 +249,26 @@ hid_close   Endp
 
 hid_handle_report   Proc far
     int 3
+    push ds
+    push es
+    push fs
+    pushad
+;    
+    mov ds,ebx
+    mov edi,ds:hid_report_offset
+    mov es,ds:hid_report_sel
+    movzx ebx,ds:hid_x_index
+    GetHidValue
+;
+    mov edi,ds:hid_report_offset
+    mov es,ds:hid_report_sel
+    movzx ebx,ds:hid_y_index
+    GetHidValue
+;
+    popad
+    pop fs
+    pop es
+    pop ds
     ret
 hid_handle_report   Endp
 
