@@ -519,104 +519,6 @@ GetReportDescr_ Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:       GetReport
-;
-;           Description:    Get current input report
-;
-;       Parameters:     BX      HID selector
-;
-;       Returns:    ES      8-byte report data
-;      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetReport   Proc near
-    push ds
-    push bx
-    push cx
-    push edx
-    push di
-;    
-    mov ds,bx
-    mov eax,8
-    AllocateSmallGlobalMem
-    mov cx,ax
-    mov es:usd_type,0A1h
-    mov es:usd_req,1
-    mov es:usd_value,100h
-    movzx ax,ds:hid_interface
-    mov es:usd_index,ax
-    mov es:usd_len,8
-    xor di,di
-    mov bx,ds:hid_control_handle
-;
-    LockUsbPipe
-    mov cx,8
-    WriteUsbControl
-;
-    mov cx,8
-    ReqUsbData
-;    
-    WriteUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,ds:hid_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:hid_control_handle
-    WasUsbTransactionOk
-;    
-    pushf
-    UnlockUsbPipe
-    popf
-;
-    pop di
-    pop edx
-    pop cx
-    pop bx
-    pop ds    
-    ret
-GetReport Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:       SetupBoot
-;
-;           description:    Setups boot device for keyboard
-;
-;           Parameters:     BX      HID selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupBoot       Proc near
-    push ds
-    push es
-    push ax
-    push dx
-;
-    mov es,bx
-    mov al,es:hid_protocol
-    cmp al,1
-    jnz sbDone
-;
-    mov es:hid_intr_size,8
-
-sbDone:
-    pop dx
-    pop ax
-    pop es
-    pop ds
-    ret
-SetupBoot   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:       OpenHidDev
 ;
 ;           description:    Open hid descriptor
@@ -734,14 +636,6 @@ ihsDone:
     mov fs:hid_intr_handle,0
     mov fs:hid_intr_size,0
     mov fs:hid_intr_req,0
-;
-    mov al,fs:hid_protocol
-    cmp al,1
-    jnz ihsEnd
-;
-; this is for temporary for boot
-;
-    mov fs:hid_intr_size,8
 
 ihsEnd:
     pop edi

@@ -37,6 +37,7 @@ include hid.inc
 
 MAX_BIT_ENTRIES = 16
 MAX_ARRAY_ENTRIES = 16
+MAX_KEYS = 32
 
 hid_key   STRUC
 
@@ -53,6 +54,9 @@ hid_bit_key_arr         DB MAX_BIT_ENTRIES DUP(?)
 
 hid_arr_index_count     DW ?
 hid_arr_index_arr       DW MAX_ARRAY_ENTRIES DUP(?)
+
+hid_was_pressed_arr     DW MAX_KEYS DUP(?)
+hid_is_pressed_arr      DW MAX_KEYS DUP(?)
 
 hid_key   ENDS
 
@@ -1582,6 +1586,155 @@ StartKeyboardHandler_   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           AddHidKey
+;
+;   DESCRIPTION:    Add key to is pressed list
+;
+;   PARAMETERS:     DS      Sel
+;                   AL      Key
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddHidKey   Proc near
+    push ebx
+    push ecx
+;
+    mov ebx,OFFSET hid_is_pressed_arr
+    mov ecx,MAX_KEYS
+
+ahkLoop:
+    mov ah,ds:[ebx]
+    or ah,ah
+    jz ahkDo
+;
+    inc ebx
+    loop ahkLoop
+;
+    jmp ahkDone
+
+ahkDo:
+    mov ds:[ebx],al
+
+ahkDone:            
+    pop ecx
+    pop ebx
+    ret
+AddHidKey   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           HandleHidPressed
+;
+;       DESCRIPTION:    Handle newly pressed keys
+;
+;       PARAMETERS:     DS      sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleHidPressed  Proc near
+    push ecx
+    push esi
+    push edi
+;
+    mov esi,OFFSET hid_was_pressed_arr
+    mov ecx,MAX_KEYS
+
+hhpLoop:
+    mov al,ds:[esi]
+    or al,al
+    jz hhpDone
+;
+    push ecx
+    mov edi,OFFSET hid_is_pressed_arr
+    mov ecx,MAX_KEYS
+
+hhpFindLoop:
+    mov ah,ds:[edi]
+    or ah,ah
+    je hhpNew
+;
+    cmp al,ah
+    je hhpNext
+;
+    inc edi
+    loop hhpFindLoop
+
+hhpNew:
+    int 3
+;    call ReportKeyPress
+
+hhpNext:
+    pop ecx
+    inc esi
+    loop hhpLoop
+
+hhpDone:
+    pop edi
+    pop esi
+    pop ecx
+    ret
+HandleHidPressed  Endp    
+    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           HandleHidReleased
+;
+;       DESCRIPTION:    Handle newly released keys
+;
+;       PARAMETERS:     DS      sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleHidReleased  Proc near
+    push ecx
+    push esi
+    push edi
+;
+    mov esi,OFFSET hid_is_pressed_arr
+    mov ecx,MAX_KEYS
+
+hhrLoop:
+    mov al,ds:[esi]
+    or al,al
+    jz hhrDone
+;
+    push ecx
+    mov edi,OFFSET hid_was_pressed_arr
+    mov ecx,MAX_KEYS
+
+hhrFindLoop:
+    mov ah,ds:[edi]
+    or ah,ah
+    je hhrNew
+;
+    cmp al,ah
+    je hhrNext
+;
+    inc edi
+    loop hhrFindLoop
+
+hhrNew:
+    int 3
+;    call ReportKeyRelease
+
+hhrNext:
+    pop ecx
+    inc esi
+    loop hhrLoop
+
+hhrDone:
+    pop edi
+    pop esi
+    pop ecx
+    ret
+HandleHidReleased  Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           hid_begin
 ;
 ;   DESCRIPTION:    Begin initialization
@@ -1595,6 +1748,8 @@ StartKeyboardHandler_   Endp
 hid_begin   Proc far
     push es
     push eax
+    push ecx
+    push edi
 ;    
     mov eax,SIZE hid_key
     AllocateSmallGlobalMem
@@ -1608,8 +1763,16 @@ hid_begin   Proc far
 ;
     mov es:hid_bit_index_count,0
     mov es:hid_arr_index_count,0
+;
+    mov ecx,MAX_KEYS
+    mov edi,OFFSET hid_is_pressed_arr
+    xor ax,ax
+    rep stosw
+;
     mov ebx,es
 ;
+    pop edi
+    pop ecx
     pop eax
     pop es    
     ret
@@ -1763,8 +1926,85 @@ hid_handle_report   Proc far
     push fs
     pushad
 ;
-    int 3
+    mov ds,ebx
+    mov es,ebx
 ;
+    push esi
+    mov ecx,MAX_KEYS
+    mov esi,OFFSET hid_is_pressed_arr
+    mov edi,OFFSET hid_was_pressed_arr
+    rep movsw
+    pop esi
+;
+    mov ecx,MAX_KEYS
+    mov edi,OFFSET hid_is_pressed_arr
+    xor ax,ax
+    rep stosw
+;
+    movzx ecx,ds:hid_bit_index_count
+    or ecx,ecx
+    jz hhrBitOk
+;
+    mov ebx,OFFSET hid_bit_index_arr
+    mov edx,OFFSET hid_bit_key_arr
+
+hhrBitLoop:    
+    push ebx
+    push ecx
+    push edx
+;
+    movzx ebx,word ptr ds:[ebx]
+    mov edi,ds:hid_report_offset
+    mov es,ds:hid_report_sel
+    GetUnsignedHidValue
+;
+    pop edx
+    pop ecx
+    pop ebx
+;
+    or al,al
+    jz hhrBitNext
+;
+    mov al,ds:[edx]
+    call AddHidKey
+            
+hhrBitNext:
+    inc edx
+    add ebx,2
+    loop hhrBitLoop
+
+hhrBitOk:    
+    movzx ecx,ds:hid_arr_index_count
+    or ecx,ecx
+    jz hhrArrOk
+;
+    mov ebx,OFFSET hid_arr_index_arr
+
+hhrArrLoop:    
+    push ebx
+    push ecx
+;    
+    movzx ebx,word ptr ds:[ebx]
+    mov edi,ds:hid_report_offset
+    mov es,ds:hid_report_sel
+    GetUnsignedHidValue
+;    
+    pop ecx
+    pop ebx
+;    
+    or al,al
+    jz hhrArrNext
+;
+    call AddHidKey
+            
+hhrArrNext:
+    add ebx,2
+    loop hhrArrLoop
+
+hhrArrOk:    
+    call HandleHidReleased
+    call HandleHidPressed
+;    
     popad
     pop fs
     pop es
