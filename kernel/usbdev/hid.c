@@ -90,6 +90,9 @@ extern int GetUnsignedValue(char *Buf, int StartBit, int BitCount);
 extern void SetIdle(struct THidDevice *dev, int ReportId, int Value);
 #pragma aux SetIdle parm routine [fs esi] [ebx] [eax]
 
+extern int CreateOutputReport(struct THidDevice *dev, int ReportId, int Size);
+#pragma aux CreateOutputReport parm routine [fs esi] [ebx] [ecx] value [eax]
+
 struct THidDescriptor
 {
     unsigned char Len;
@@ -169,6 +172,8 @@ struct THidReportIdEntry
 
     int TableCount;
     struct THidTable TableArr[MAX_HID_TABLES];
+
+    int OutputHandle;
     
     struct THidReportEntry *InputArr;
     struct THidReportEntry *OutputArr;
@@ -573,6 +578,8 @@ void PrepareReportIds(struct THidDevice *dev)
                 CurrReport->InputArr = 0;
                 CurrReport->OutputArr = 0;
                 CurrReport->FeatureArr = 0;
+
+                CurrReport->OutputHandle = 0;
             }
             else
                 CurrReport = 0;
@@ -600,6 +607,8 @@ void PrepareReportIds(struct THidDevice *dev)
                     CurrReport->InputArr = 0;
                     CurrReport->OutputArr = 0;
                     CurrReport->FeatureArr = 0;
+
+                    CurrReport->OutputHandle = 0;                
                 }
                 break;
 
@@ -1627,6 +1636,38 @@ struct THidReportIdEntry *GetOutputReport(struct THidDevice *dev, int UsagePage,
 
 /*##########################################################################
 #
+#   Name       : GetOutputReportSize
+#
+#   Purpose....: Get output report size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int GetOutputReportSize(struct THidReportIdEntry *report)
+{
+    int size = 0;
+    struct THidReportEntry *entry;
+    
+    if (report && report->OutputCount)
+    {
+        entry = &report->InputArr[report->OutputCount - 1];
+        size = entry->StartBit + entry->BitCount;
+    }
+
+    if (size)
+    {
+        size--;
+        size = size / 8;
+        size++;
+    }
+
+    return size;
+}
+
+/*##########################################################################
+#
 #   Name       : ImplGetSignedHidOutput
 #
 #   Purpose....: Get signed HID output
@@ -1642,10 +1683,16 @@ int __far ImplGetSignedHidOutput(int DevSel, int Usage)
     struct THidDevice *dev = (struct THidDevice *)RdosSelectorToPointer(DevSel);
     int UsagePage = (Usage >> 8) & 0xFF;
     int UsageId = Usage & 0xFF;
+    int size;
     struct THidReportIdEntry *report;
 
     report = GetOutputReport(dev, UsagePage, UsageId);
-    
+
+    if (!report->OutputHandle)
+    {
+        size = GetOutputReportSize(report);
+        report->OutputHandle = CreateOutputReport(dev, report->ReportId, size);
+    }    
 }
 
 /*##########################################################################
@@ -1664,8 +1711,17 @@ int __far ImplGetUnsignedHidOutput(int DevSel, int Usage)
 {
     struct THidDevice *dev = (struct THidDevice *)RdosSelectorToPointer(DevSel);
     int UsagePage = (Usage >> 8) & 0xFF;
-    int UsageID = Usage & 0xFF;
-    
+    int UsageId = Usage & 0xFF;
+    int size;
+    struct THidReportIdEntry *report;
+
+    report = GetOutputReport(dev, UsagePage, UsageId);
+
+    if (!report->OutputHandle)
+    {
+        size = GetOutputReportSize(report);
+        report->OutputHandle = CreateOutputReport(dev, report->ReportId, size);
+    }        
 }
 
 /*##########################################################################

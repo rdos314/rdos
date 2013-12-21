@@ -437,6 +437,28 @@ HidHandleReport_   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           CreateOutputReport
+;
+;   Description:    Handle report
+;
+;   Parameters:     FS:ESI  Device
+;                   BX      Report ID
+;                   CX      Report size
+;
+;   Returns:        EAX     Handle
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateOutputReport_
+
+CreateOutputReport_   Proc near
+    mov eax,1
+    ret
+CreateOutputReport_ Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           GetReportDescr
 ;
 ;   Description:    Get report descriptor
