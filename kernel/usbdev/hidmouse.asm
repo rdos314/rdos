@@ -48,6 +48,10 @@ hid_x_index         DW ?
 hid_y_index         DW ?
 hid_scroll_index    DW ?
 
+hid_buttons         DW ?
+hid_delta_x         DW ?
+hid_delta_y         DW ?
+
 hid_mouse   ENDS
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
@@ -248,7 +252,6 @@ hid_close   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hid_handle_report   Proc far
-    int 3
     push ds
     push es
     push fs
@@ -259,11 +262,34 @@ hid_handle_report   Proc far
     mov es,ds:hid_report_sel
     movzx ebx,ds:hid_x_index
     GetSignedHidValue
+    mov ds:hid_delta_x,ax
 ;
     mov edi,ds:hid_report_offset
     mov es,ds:hid_report_sel
     movzx ebx,ds:hid_y_index
     GetSignedHidValue
+    mov ds:hid_delta_y,ax
+;
+    mov ds:hid_buttons,0    
+;
+    mov edi,ds:hid_report_offset
+    mov es,ds:hid_report_sel
+    movzx ebx,ds:hid_left_index
+    GetSignedHidValue
+    or ds:hid_buttons,ax
+;
+    mov edi,ds:hid_report_offset
+    mov es,ds:hid_report_sel
+    movzx ebx,ds:hid_right_index
+    GetSignedHidValue
+    shl ax,1
+    or ds:hid_buttons,ax
+;   
+    mov ax,ds:hid_buttons
+    mov cx,ds:hid_delta_x
+    mov dx,ds:hid_delta_y
+    neg dx
+    UpdateMouse
 ;
     popad
     pop fs

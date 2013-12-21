@@ -2931,6 +2931,7 @@ InitMouse       MACRO
                     ENDM
 
 ;   IN  AX          Button status
+;                   bit 1 = left, bit 2 = right, bit 3 = mid
 ;   IN  CX          Delta X
 ;   IN  DX          Delta Y
 UpdateMouse     MACRO
