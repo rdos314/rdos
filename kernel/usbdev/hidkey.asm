@@ -1624,6 +1624,61 @@ AddHidKey   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           HandleHidShift
+;
+;       DESCRIPTION:    Handle shift key state
+;
+;       PARAMETERS:     DS      sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hst:
+hstE0 DB 4
+hstE1 DB 1
+hstE2 DB 2
+hstE3 DB 0
+hstE4 DB 4
+hstE5 DB 1
+hstE6 DB 2
+hstE7 DB 0
+
+HandleHidShift  Proc near
+    pushad
+;
+    mov esi,OFFSET hid_is_pressed_arr
+    mov ecx,MAX_KEYS
+    xor dx,dx
+
+hhsLoop:
+    mov al,ds:[esi]    
+    or al,al
+    jz hhsDone
+;
+    sub al,0E0h
+    jc hhsNext
+;
+    cmp al,8
+    jae hhsNext
+;
+    movzx ebx,al
+    mov al,cs:[ebx].hst
+    or dl,al
+        
+hhsNext:
+    inc esi
+    loop hhsLoop
+
+hhsDone:
+    mov ax,dx
+    SetKeyboardState
+;    
+    popad
+    ret
+HandleHidShift  Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           HandleHidPressed
 ;
 ;       DESCRIPTION:    Handle newly pressed keys
@@ -2000,6 +2055,7 @@ hhrArrNext:
     loop hhrArrLoop
 
 hhrArrOk:    
+    call HandleHidShift
     call HandleHidReleased
     call HandleHidPressed
 ;    
