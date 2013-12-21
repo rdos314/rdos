@@ -3389,22 +3389,46 @@ RegisterHidInput      MACRO
 ; IN    FS:ESI  Report data
 ; IN    EBX     Entry #
 ; OUT   EAX     Value
-GetSignedHidValue      MACRO
-    OsGate get_signed_hid_value_nr
+GetSignedHidInput      MACRO
+    OsGate get_signed_hid_input_nr
                         ENDM
 
 ; IN    ES:EDI  Hid report
 ; IN    FS:ESI  Report data
 ; IN    EBX     Entry #
 ; OUT   EAX     Value
-GetUnsignedHidValue      MACRO
-    OsGate get_unsigned_hid_value_nr
+GetUnsignedHidInput      MACRO
+    OsGate get_unsigned_hid_input_nr
                         ENDM
 
 ; IN    ES:EDI  Hid report
 ; IN    EAX     Value
 SetHidIdle      MACRO
     OsGate set_hid_idle_nr
+                        ENDM
+
+; IN    BX      Device
+; IN    CH      Usage page
+; IN    CL      Usage ID
+; OUT   EAX     Value
+GetSignedHidOutput      MACRO
+    OsGate get_signed_hid_output_nr
+                        ENDM
+
+; IN    BX      Device
+; IN    CH      Usage page
+; IN    CL      Usage ID
+; OUT   EAX     Value
+GetUnsignedHidOutput      MACRO
+    OsGate get_unsigned_hid_output_nr
+                        ENDM
+
+; IN    BX      Device
+; IN    CH      Usage page
+; IN    CL      Usage ID
+; IN    EAX     Value
+SetHidOutput      MACRO
+    OsGate set_hid_output_nr
                         ENDM
 
 ;;;;;;;;;; Printer ;;;;;;;;;

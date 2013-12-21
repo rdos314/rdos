@@ -261,13 +261,13 @@ hid_handle_report   Proc far
     mov edi,ds:hid_report_offset
     mov es,ds:hid_report_sel
     movzx ebx,ds:hid_x_index
-    GetSignedHidValue
+    GetSignedHidInput
     mov ds:hid_delta_x,ax
 ;
     mov edi,ds:hid_report_offset
     mov es,ds:hid_report_sel
     movzx ebx,ds:hid_y_index
-    GetSignedHidValue
+    GetSignedHidInput
     mov ds:hid_delta_y,ax
 ;
     mov ds:hid_buttons,0    
@@ -275,13 +275,13 @@ hid_handle_report   Proc far
     mov edi,ds:hid_report_offset
     mov es,ds:hid_report_sel
     movzx ebx,ds:hid_left_index
-    GetSignedHidValue
+    GetSignedHidInput
     or ds:hid_buttons,ax
 ;
     mov edi,ds:hid_report_offset
     mov es,ds:hid_report_sel
     movzx ebx,ds:hid_right_index
-    GetSignedHidValue
+    GetSignedHidInput
     shl ax,1
     or ds:hid_buttons,ax
 ;   

@@ -631,8 +631,11 @@ wait_for_uhci_nr            = 520
 has_physical64_nr           = 521
 
 register_hid_input_nr       = 522
-get_signed_hid_value_nr     = 523
-get_unsigned_hid_value_nr   = 524
+get_signed_hid_input_nr     = 523
+get_unsigned_hid_input_nr   = 524
 set_hid_idle_nr             = 525
+get_signed_hid_output_nr    = 526
+get_unsigned_hid_output_nr  = 527
+set_hid_output_nr           = 528
 
 osgate_entries				= 540

@@ -1537,17 +1537,17 @@ int CreateIntrPipe(struct THidDevice *dev)
 
 /*##########################################################################
 #
-#   Name       : ImplGetSignedHidValue
+#   Name       : ImplGetSignedHidInput
 #
-#   Purpose....: Get signed HID value
+#   Purpose....: Get signed HID input
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux ImplGetSignedHidValue "*" rdosdev parm routine [es edi] [fs esi] [ebx] value [eax]
-int __far ImplGetSignedHidValue(struct THidReportIdEntry *report, char *buf, int entry)
+#pragma aux ImplGetSignedHidInput "*" rdosdev parm routine [es edi] [fs esi] [ebx] value [eax]
+int __far ImplGetSignedHidInput(struct THidReportIdEntry *report, char *buf, int entry)
 {
     struct THidReportEntry *Entry = &report->InputArr[entry];
     int StartBit = Entry->StartBit;
@@ -1564,17 +1564,17 @@ int __far ImplGetSignedHidValue(struct THidReportIdEntry *report, char *buf, int
 
 /*##########################################################################
 #
-#   Name       : ImplGetUnsignedHidValue
+#   Name       : ImplGetUnsignedHidInput
 #
-#   Purpose....: Get unsigned HID value
+#   Purpose....: Get unsigned HID input
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux ImplGetUnsignedHidValue "*" rdosdev parm routine [es edi] [fs esi] [ebx] value [eax]
-int __far ImplGetUnsignedHidValue(struct THidReportIdEntry *report, char *buf, int entry)
+#pragma aux ImplGetUnsignedHidInput "*" rdosdev parm routine [es edi] [fs esi] [ebx] value [eax]
+int __far ImplGetUnsignedHidInput(struct THidReportIdEntry *report, char *buf, int entry)
 {
     struct THidReportEntry *Entry = &report->InputArr[entry];
     int StartBit = Entry->StartBit;
@@ -2581,8 +2581,8 @@ int main()
     InitKey();
     InitMouse();
 
-    RdosRegisterOsGate(osgate_get_signed_hid_value, (__rdos_gate_callback *)&ImplGetSignedHidValue, "Get Signed Hid Value"); 
-    RdosRegisterOsGate(osgate_get_unsigned_hid_value, (__rdos_gate_callback *)&ImplGetUnsignedHidValue, "Get Unsigned Hid Value"); 
+    RdosRegisterOsGate(osgate_get_signed_hid_input, (__rdos_gate_callback *)&ImplGetSignedHidInput, "Get Signed Hid Input"); 
+    RdosRegisterOsGate(osgate_get_unsigned_hid_input, (__rdos_gate_callback *)&ImplGetUnsignedHidInput, "Get Unsigned Hid Input"); 
     RdosRegisterOsGate(osgate_set_hid_idle, (__rdos_gate_callback *)&ImplSetHidIdle, "Set Hid Idle"); 
 
     RdosRegisterBimodalUserGate(usergate_get_hid_report_item, (__rdos_gate_callback *)&ImplGetHidReportItem, "Get Hid Report Item"); 

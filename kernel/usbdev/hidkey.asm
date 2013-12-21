@@ -1510,7 +1510,7 @@ hhrBitLoop:
     movzx ebx,word ptr ds:[ebx]
     mov edi,ds:hid_report_offset
     mov es,ds:hid_report_sel
-    GetUnsignedHidValue
+    GetUnsignedHidInput
 ;
     pop edx
     pop ecx
@@ -1541,7 +1541,7 @@ hhrArrLoop:
     movzx ebx,word ptr ds:[ebx]
     mov edi,ds:hid_report_offset
     mov es,ds:hid_report_sel
-    GetUnsignedHidValue
+    GetUnsignedHidInput
 ;    
     pop ecx
     pop ebx
