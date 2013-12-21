@@ -41,6 +41,8 @@ MAX_KEYS = 32
 
 hid_key   STRUC
 
+hid_device_sel          DW ?
+
 hid_report_offset       DD ?
 hid_report_sel          DW ?
 
@@ -1282,6 +1284,7 @@ HandleHidReleased  Endp
 ;   DESCRIPTION:    Begin initialization
 ;
 ;   Parameters:     FS:ESI    Report struct
+;                   GS:EBX    Device
 ;
 ;   RETURNS:        BX        Handle
 ;
@@ -1298,6 +1301,7 @@ hid_begin   Proc far
 ;
     mov es:hid_report_offset,esi
     mov es:hid_report_sel,fs    
+    mov es:hid_device_sel,gs
 ;
     mov es:hid_num_lock_index,-1
     mov es:hid_caps_lock_index,-1
@@ -1420,11 +1424,18 @@ hid_end   Proc far
     mov ax,es:hid_arr_index_count
     or ax,es:hid_bit_index_count
     or ax,ax
-    clc
-    jnz heDone
+    jnz heOk
 ;
     FreeMem
     stc
+    jmp heDone
+
+heOk:
+    mov edi,es:hid_report_offset
+    mov es,es:hid_report_sel
+    mov eax,0Ch
+    SetHidIdle
+    clc
         
 heDone:
     pop eax    

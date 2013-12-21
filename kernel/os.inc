@@ -3401,6 +3401,11 @@ GetUnsignedHidValue      MACRO
     OsGate get_unsigned_hid_value_nr
                         ENDM
 
+; IN    ES:EDI  Hid report
+; IN    EAX     Value
+SetHidIdle      MACRO
+    OsGate set_hid_idle_nr
+                        ENDM
 
 ;;;;;;;;;; Printer ;;;;;;;;;
 

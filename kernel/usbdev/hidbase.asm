@@ -264,6 +264,7 @@ GetHidTableCount_   Endp
 ;
 ;   Parameters:     EDI     Table #
 ;                   FS:ESI  Report struc
+;                   GS:EBX  Device
 ;
 ;   Returns:        EBX     Handle
 ;      
@@ -579,15 +580,19 @@ SetHidProtocol Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:       SetIdle
+;       NAME:       SetIdle
 ;
-;           Description:    Set idle to suitable range for auto-repeat of keys
+;       Description:    Set idle value
 ;
 ;       Paramters:      FS      HID selector
+;                       EBX     Report ID
+;                       EAX     Idle time
 ;      
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetIdle   Proc near
+    public SetIdle_
+    
+SetIdle_   Proc near
     push es
     push eax
     push ebx
@@ -595,12 +600,16 @@ SetIdle   Proc near
     push edx
     push edi
 ;    
+    mov ah,al
+    mov al,bl
+    push ax
     mov eax,SIZE usb_setup_data
     AllocateSmallGlobalMem
     mov cx,ax
     mov es:usd_type,21h
     mov es:usd_req,0Ah
-    mov es:usd_value,0C00h  ; 12 * 4ms = 48ms (20 chars per second)
+    pop ax
+    mov es:usd_value,ax
     movzx ax,fs:hid_interface
     mov es:usd_index,ax
     mov es:usd_len,0
@@ -633,7 +642,7 @@ SetIdle   Proc near
     pop eax
     pop es
     ret
-SetIdle Endp
+SetIdle_ Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -761,7 +770,6 @@ ihsDone:
     jnz ihsEnd
 ;
     call SetHidProtocol
-    call SetIdle
 
 ihsEnd:
     pop edi

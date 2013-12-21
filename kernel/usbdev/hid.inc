@@ -55,6 +55,7 @@ hid_device_struc   ENDS
 hid_table       STRUC
 
 ; IN  FS:ESI    Report struct
+; IN  GS:EBX    Device
 ; OUT BX        Handle / selector
 hid_begin_proc              DD ?,?
 

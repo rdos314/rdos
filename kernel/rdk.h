@@ -633,6 +633,7 @@
 #define osgate_register_hid_input 522
 #define osgate_get_signed_hid_value 523
 #define osgate_get_unsigned_hid_value 524
+#define osgate_set_hid_idle 525
 
 
 
@@ -1271,4 +1272,5 @@
 #define OsGate_register_hid_input 0x3E 0x67 0x9a 10 2 0 0 2 0
 #define OsGate_get_signed_hid_value 0x3E 0x67 0x9a 11 2 0 0 2 0
 #define OsGate_get_unsigned_hid_value 0x3E 0x67 0x9a 12 2 0 0 2 0
+#define OsGate_set_hid_idle 0x3E 0x67 0x9a 13 2 0 0 2 0
 

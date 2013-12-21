@@ -66,8 +66,8 @@ extern char *WaitForReport(struct THidDevice *dev);
 extern int GetHidTableCount();
 #pragma aux GetHidTableCount value [eax]
 
-extern int HidBegin(int Index, struct THidReportIdEntry *Report);
-#pragma aux HidBegin parm routine [edi] [fs esi] value [ebx]
+extern int HidBegin(int Index, struct THidDevice *Dev, struct THidReportIdEntry *Report);
+#pragma aux HidBegin parm routine [edi] [gs ebx] [fs esi] value [ebx]
 
 extern void HidDefine(int Index, int Handle, int Entry, int UsagePage, int Usage, int ItemParams);
 #pragma aux HidDefine parm routine [edi] [ebx] [esi] [ecx] [eax] [edx] 
@@ -86,6 +86,9 @@ extern int GetSignedValue(char *Buf, int StartBit, int BitCount);
 
 extern int GetUnsignedValue(char *Buf, int StartBit, int BitCount);
 #pragma aux GetUnsignedValue parm routine [es edi] [edx] [ecx] value [eax]
+
+extern void SetIdle(struct THidDevice *dev, int ReportId, int Value);
+#pragma aux SetIdle parm routine [fs esi] [ebx] [eax]
 
 struct THidDescriptor
 {
@@ -153,8 +156,13 @@ struct THidTable
     int Handle;
 };
 
+struct THidDevice;
+
 struct THidReportIdEntry
 {
+    struct THidDevice *Device;
+    int ReportId;
+    
     int InputCount;
     int OutputCount;
     int FeatureCount;
@@ -555,6 +563,9 @@ void PrepareReportIds(struct THidDevice *dev)
                 CurrReport = (struct THidReportIdEntry *)RdosAllocateSmallGlobalMem(sizeof(struct THidReportIdEntry));
                 dev->ReportIdArr[ReportId] = CurrReport;
 
+                CurrReport->Device = dev;
+                CurrReport->ReportId = ReportId;
+
                 CurrReport->InputCount = 0;
                 CurrReport->OutputCount = 0;
                 CurrReport->FeatureCount = 0;
@@ -578,6 +589,9 @@ void PrepareReportIds(struct THidDevice *dev)
                     HasReport = TRUE;
                     CurrReport = (struct THidReportIdEntry *)RdosAllocateSmallGlobalMem(sizeof(struct THidReportIdEntry));
                     dev->ReportIdArr[ReportId] = CurrReport;
+
+                    CurrReport->Device = dev;
+                    CurrReport->ReportId = ReportId;
 
                     CurrReport->InputCount = 0;
                     CurrReport->OutputCount = 0;
@@ -1430,7 +1444,7 @@ void LoadReportIdArrays(struct THidDevice *dev)
             
             for (Index = 0; Index < Count; Index++)
             {
-                Handle = HidBegin(Index, report);
+                Handle = HidBegin(Index, dev, report);
 
                 for (Inp = 0; Inp < report->InputCount; Inp++)
                 {
@@ -1557,6 +1571,26 @@ int __far ImplGetUnsignedHidValue(struct THidReportIdEntry *report, char *buf, i
         BitCount = 32;
     
     return GetUnsignedValue(buf, StartBit, BitCount);    
+}
+
+/*##########################################################################
+#
+#   Name       : ImplSetHidIdle
+#
+#   Purpose....: Set HID idle time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplSetHidIdle "*" rdosdev parm routine [es edi] [eax] 
+void __far ImplSetHidIdle(struct THidReportIdEntry *report, int value)
+{
+    struct THidDevice *dev = report->Device;
+    int ReportId = report->ReportId;
+
+    SetIdle(dev, ReportId, value);
 }
 
 /*##########################################################################
@@ -2532,6 +2566,7 @@ int main()
 
     RdosRegisterOsGate(osgate_get_signed_hid_value, (__rdos_gate_callback *)&ImplGetSignedHidValue, "Get Signed Hid Value"); 
     RdosRegisterOsGate(osgate_get_unsigned_hid_value, (__rdos_gate_callback *)&ImplGetUnsignedHidValue, "Get Unsigned Hid Value"); 
+    RdosRegisterOsGate(osgate_set_hid_idle, (__rdos_gate_callback *)&ImplSetHidIdle, "Set Hid Idle"); 
 
     RdosRegisterBimodalUserGate(usergate_get_hid_report_item, (__rdos_gate_callback *)&ImplGetHidReportItem, "Get Hid Report Item"); 
     RdosRegisterBimodalUserGate(usergate_get_hid_report_input_data, (__rdos_gate_callback *)&ImplGetHidReportInputData, "Get Hid Report Input Data"); 
