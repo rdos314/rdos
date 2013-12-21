@@ -1299,15 +1299,8 @@ void LoadReportIdArrays(struct THidDevice *dev)
 {
     int Index;
     int val;
-    int Report;
-    int Inp;
-    int Count;
-    int Handle;
-    int ok;
     struct THidReportItem *item;
     struct TTagCache *cache;
-    struct THidReportIdEntry *report;
-    struct THidReportEntry *entry;
 
     cache = CreateTagCache();
     SetReport(cache, dev->ReportIdArr[0]);
@@ -1431,6 +1424,29 @@ void LoadReportIdArrays(struct THidDevice *dev)
         }         
     }
     FreeTagCache(cache);
+}
+
+/*##########################################################################
+#
+#   Name       : StartInputReports
+#
+#   Purpose....: Start input reports
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void StartInputReports(struct THidDevice *dev)
+{
+    int Index;
+    int Count;
+    int Report;
+    int Inp;
+    int Handle;
+    int ok;
+    struct THidReportIdEntry *report;
+    struct THidReportEntry *entry;
 
     Count = GetHidTableCount();
 
@@ -1461,7 +1477,7 @@ void LoadReportIdArrays(struct THidDevice *dev)
                 }
             }
         }
-    }    
+    }
 }
 
 /*##########################################################################
@@ -2379,6 +2395,7 @@ void __far HidThread(void *param)
         PrepareReportIds(dev);
         CreateReportIdArrays(dev);
         LoadReportIdArrays(dev);
+        StartInputReports(dev);
         if (CreateIntrPipe(dev))
         {
             while (!dev->StopReq)
