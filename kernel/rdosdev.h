@@ -815,6 +815,9 @@ void RdosOpenAudioOut(short int rate);
 void RdosCloseAudioOut();
 void RdosSendAudioOut(int left_sel, int right_sel, int samples);
 
+int RdosGetUnsignedHidOutput(int Sel, int Usage);
+int RdosGetSignedHidOutput(int Sel, int Usage);
+
 /* 32-bit compact memory model (device-drivers) */
 
 // check carry flag, and set eax=0 if set and eax=1 if clear
@@ -2197,6 +2200,17 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     "pop es" \
     "pop ds" \
     parm [eax] [edx] [ecx];
+
+#pragma aux RdosGetSignedHidOutput = \
+    OsGate_get_signed_hid_output \
+    parm [ebx] [ecx] \
+    value [eax];
+
+#pragma aux RdosGetUnsignedHidOutput = \
+    OsGate_get_unsigned_hid_output \
+    parm [ebx] [ecx] \
+    value [eax];
+    
 
 #ifdef __cplusplus
 }

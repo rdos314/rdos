@@ -48,10 +48,6 @@ hid_report_sel          DW ?
 
 hid_shift_state         DW ?
 
-hid_num_lock_index      DW ?
-hid_caps_lock_index     DW ?
-hid_scroll_lock_index   DW ?
-
 hid_bit_index_count     DW ?
 hid_bit_index_arr       DW MAX_BIT_ENTRIES DUP(?)
 hid_bit_key_arr         DB MAX_BIT_ENTRIES DUP(?)
@@ -61,6 +57,10 @@ hid_arr_index_arr       DW MAX_ARRAY_ENTRIES DUP(?)
 
 hid_was_pressed_arr     DW MAX_KEYS DUP(?)
 hid_is_pressed_arr      DW MAX_KEYS DUP(?)
+
+hid_num_lock            DB ?
+hid_caps_lock           DB ?
+hid_scroll_lock         DB ?
 
 hid_key   ENDS
 
@@ -1303,9 +1303,9 @@ hid_begin   Proc far
     mov es:hid_report_sel,fs    
     mov es:hid_device_sel,gs
 ;
-    mov es:hid_num_lock_index,-1
-    mov es:hid_caps_lock_index,-1
-    mov es:hid_scroll_lock_index,-1
+    mov es:hid_num_lock,0
+    mov es:hid_caps_lock,0
+    mov es:hid_scroll_lock,0
 ;
     mov es:hid_shift_state,0
     mov es:hid_bit_index_count,0
@@ -1347,7 +1347,7 @@ hid_define   Proc far
     mov ds,ebx
 ;
     cmp cl,7
-    jne hdNotKey
+    jne hdDone
 ;    
     test dx,1
     jnz hdDone
@@ -1371,30 +1371,6 @@ hdArray:
 ;
     inc ds:hid_arr_index_count
     jmp hdDone
-
-hdNotKey:
-    cmp cl,8
-    jne hdDone
-
-hdLed:
-    cmp al,1
-    jne hdNotNumLock
-;
-    mov ds:hid_num_lock_index,si
-    jmp hdDone
-
-hdNotNumLock:
-    cmp al,2
-    jne hdNotCapsLock
-;
-    mov ds:hid_caps_lock_index,si
-    jmp hdDone
-
-hdNotCapsLock:
-    cmp al,3
-    jne hdDone
-;
-    mov ds:hid_scroll_lock_index,si
 
 hdDone:          
     pop ebx
@@ -1431,10 +1407,28 @@ hid_end   Proc far
     jmp heDone
 
 heOk:
+    push es
     mov edi,es:hid_report_offset
     mov es,es:hid_report_sel
     mov eax,0Ch
     SetHidIdle
+    pop es
+;
+    int 3
+    mov bx,es:hid_device_sel
+    mov cx,801h
+    GetUnsignedHidOutput
+    mov es:hid_num_lock,al
+;        
+    mov bx,es:hid_device_sel
+    mov cx,802h
+    GetUnsignedHidOutput
+    mov es:hid_caps_lock,al
+;        
+    mov bx,es:hid_device_sel
+    mov cx,803h
+    GetUnsignedHidOutput
+    mov es:hid_scroll_lock,al
     clc
         
 heDone:
