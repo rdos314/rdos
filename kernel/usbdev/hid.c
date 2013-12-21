@@ -1591,6 +1591,42 @@ int __far ImplGetUnsignedHidInput(struct THidReportIdEntry *report, char *buf, i
 
 /*##########################################################################
 #
+#   Name       : GetOutputReport
+#
+#   Purpose....: Get output report
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+struct THidReportIdEntry *GetOutputReport(struct THidDevice *dev, int UsagePage, int UsageId)
+{
+    int ReportId;
+    int Index;
+    struct THidReportIdEntry *report;
+    struct THidReportEntry *entry;
+
+    for (ReportId = 0; ReportId < MAX_REPORT_IDS; ReportId++)
+    {
+        report = dev->ReportIdArr[ReportId];
+        
+        if (report)
+        {
+            for (Index = 0; Index < report->OutputCount; Index++)
+            {
+                entry = &report->OutputArr[Index];
+
+                if (entry->UsagePage == UsagePage && entry->UsageIdLow == UsageId)
+                    return report;
+            }
+        }
+    }
+    return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : ImplGetSignedHidOutput
 #
 #   Purpose....: Get signed HID output
@@ -1605,7 +1641,10 @@ int __far ImplGetSignedHidOutput(int DevSel, int Usage)
 {
     struct THidDevice *dev = (struct THidDevice *)RdosSelectorToPointer(DevSel);
     int UsagePage = (Usage >> 8) & 0xFF;
-    int UsageID = Usage & 0xFF;
+    int UsageId = Usage & 0xFF;
+    struct THidReportIdEntry *report;
+
+    report = GetOutputReport(dev, UsagePage, UsageId);
     
 }
 
