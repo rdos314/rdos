@@ -35,6 +35,27 @@ include ..\usbdev\usb.inc
 INCLUDE ..\handle.inc
 include hid.inc
 
+MAX_BIT_ENTRIES = 16
+MAX_ARRAY_ENTRIES = 16
+
+hid_key   STRUC
+
+hid_report_offset       DD ?
+hid_report_sel          DW ?
+
+hid_num_lock_index      DW ?
+hid_caps_lock_index     DW ?
+hid_scroll_lock_index   DW ?
+
+hid_bit_index_count     DW ?
+hid_bit_index_arr       DW MAX_BIT_ENTRIES DUP(?)
+hid_bit_key_arr         DB MAX_BIT_ENTRIES DUP(?)
+
+hid_arr_index_count     DW ?
+hid_arr_index_arr       DW MAX_ARRAY_ENTRIES DUP(?)
+
+hid_key   ENDS
+
 STD_KEY = 1
 CAPS_KEY = 2
 FUNC_KEY = 3
@@ -1556,6 +1577,234 @@ hktDone:
     pop ds
     ret
 StartKeyboardHandler_   Endp
+        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           hid_begin
+;
+;   DESCRIPTION:    Begin initialization
+;
+;   Parameters:     FS:ESI    Report struct
+;
+;   RETURNS:        BX        Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hid_begin   Proc far
+    push es
+    push eax
+;    
+    mov eax,SIZE hid_key
+    AllocateSmallGlobalMem
+;
+    mov es:hid_report_offset,esi
+    mov es:hid_report_sel,fs    
+;
+    mov es:hid_num_lock_index,-1
+    mov es:hid_caps_lock_index,-1
+    mov es:hid_scroll_lock_index,-1
+;
+    mov es:hid_bit_index_count,0
+    mov es:hid_arr_index_count,0
+    mov ebx,es
+;
+    pop eax
+    pop es    
+    ret
+hid_begin   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           hid_define
+;
+;   DESCRIPTION:    Define entry
+;
+;   PARAMETERS:     BX      Handle
+;                   SI      Entry #
+;                   AL      Usage ID low
+;                   AH      Usage ID high
+;                   CL      Usage page
+;                   EDX     Item params
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hid_define   Proc far
+    push ds
+    push ebx
+    mov ds,ebx
+;
+    cmp cl,7
+    jne hdNotKey
+;    
+    test dx,1
+    jnz hdDone
+;    
+    test dx,2
+    jz hdArray
+
+hdBit:
+    mov bx,ds:hid_bit_index_count
+    mov ds:[bx].hid_bit_key_arr,al
+    shl bx,1
+    mov ds:[bx].hid_bit_index_arr,si
+;
+    inc ds:hid_bit_index_count
+    jmp hdDone
+
+hdArray:
+    mov bx,ds:hid_arr_index_count
+    shl bx,1
+    mov ds:[bx].hid_arr_index_arr,si
+;
+    inc ds:hid_arr_index_count
+    jmp hdDone
+
+hdNotKey:
+    cmp cl,8
+    jne hdDone
+
+hdLed:
+    cmp al,1
+    jne hdNotNumLock
+;
+    mov ds:hid_num_lock_index,si
+    jmp hdDone
+
+hdNotNumLock:
+    cmp al,2
+    jne hdNotCapsLock
+;
+    mov ds:hid_caps_lock_index,si
+    jmp hdDone
+
+hdNotCapsLock:
+    cmp al,3
+    jne hdDone
+;
+    mov ds:hid_scroll_lock_index,si
+
+hdDone:          
+    pop ebx
+    pop ds
+    ret
+hid_define   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           hid_end
+;
+;   DESCRIPTION:    End initialization
+;
+;   PARAMETERS:     BX      Handle
+;
+;   RETURNS:        NC      Use
+;                   CY      Discard
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hid_end   Proc far
+    push es
+    push eax
+;
+    mov es,ebx
+    mov ax,es:hid_arr_index_count
+    or ax,es:hid_bit_index_count
+    or ax,ax
+    clc
+    jnz heDone
+;
+    FreeMem
+    stc
+        
+heDone:
+    pop eax    
+    pop es
+    ret
+hid_end   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           hid_close
+;
+;   DESCRIPTION:    Close
+;
+;   PARAMETERS:     BX      Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hid_close   Proc far
+    push es
+    mov es,ebx
+    FreeMem
+    pop es
+    ret
+hid_close   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           hid_handle_report
+;
+;   DESCRIPTION:    Handle report
+;
+;   PARAMETERS:     BX      Handle
+;                   FS:ESI  Report data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hid_handle_report   Proc far
+    push ds
+    push es
+    push fs
+    pushad
+;
+    int 3
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+hid_handle_report   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitKey
+;
+;           DESCRIPTION:    Init keyboard
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hid_tab:
+h00 DD OFFSET hid_begin,        SEG code
+h01 DD OFFSET hid_define,       SEG code
+h02 DD OFFSET hid_end,          SEG code
+h03 DD OFFSET hid_close,        SEG code
+h04 DD OFFSET hid_handle_report,SEG code
+
+    public InitKey_
+    
+InitKey_   Proc near
+    push es
+    push eax
+    push edi
+;
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET hid_tab
+    RegisterHidInput
+;
+    pop edi
+    pop eax
+    pop es    
+    ret
+InitKey_   Endp
         
 
 code    ENDS

@@ -42,6 +42,7 @@
 
 extern void InitHid();
 
+extern void InitKey();
 extern void InitMouse();
 
 extern int GetReportDescr(struct THidDevice *dev, char *buf, int size, int interface);
@@ -136,6 +137,14 @@ struct THidReportEntry
     int BitCount;
 
     int ItemParams;
+
+    int HasLogical;
+    int LogicalMin;
+    int LogicalMax;
+
+    int HasPhysical;
+    int PhysicalMin;
+    int PhysicalMax;
 };
 
 struct THidTable
@@ -227,6 +236,14 @@ struct TTagCache
     int UsageMax;
 
     int UsageEmpty;
+
+    int HasLogical;
+    int LogicalMin;
+    int LogicalMax;
+
+    int HasPhysical;
+    int PhysicalMin;
+    int PhysicalMax;
 
     int UsageCount;
     struct TUsageCacheEntry UsageArr[MAX_USAGE_TAGS];
@@ -611,6 +628,8 @@ void InitReportEntry(struct THidReportEntry *entry)
     entry->StartBit = 0;
     entry->BitCount = 0;
     entry->ItemParams = 0;
+    entry->HasLogical = FALSE;
+    entry->HasPhysical = FALSE;
 }
 
 /*##########################################################################
@@ -707,6 +726,8 @@ struct TTagCache *CreateTagCache()
     cache->UsageCount = 0;
     cache->HasMin = FALSE;
     cache->HasMax = FALSE;
+    cache->HasLogical = FALSE;
+    cache->HasPhysical = FALSE;
 
     InitReport(cache);
 
@@ -745,6 +766,8 @@ void ClearCache(struct TTagCache *cache)
     cache->UsageCount = 0;
     cache->HasMin = FALSE;
     cache->HasMax = FALSE;
+    cache->HasLogical = FALSE;
+    cache->HasPhysical = FALSE;
 }
 
 /*##########################################################################
@@ -800,6 +823,12 @@ void ProcessInputCache(struct TTagCache *cache, int val)
             entry = &cache->CurrReport->InputArr[cache->InputEntry];
             entry->StartBit = cache->InputBit;
             entry->BitCount = cache->ReportSize;
+            entry->HasLogical = cache->HasLogical;
+            entry->LogicalMin = cache->LogicalMin;
+            entry->LogicalMax = cache->LogicalMax;
+            entry->HasPhysical = cache->HasPhysical;
+            entry->PhysicalMin = cache->PhysicalMin;
+            entry->PhysicalMax = cache->PhysicalMax;
             entry->ItemParams = val;
             cache->InputBit += cache->ReportSize;
 
@@ -830,6 +859,12 @@ void ProcessInputCache(struct TTagCache *cache, int val)
             entry->StartBit = cache->InputBit;
             entry->BitCount = cache->ReportSize;
             entry->ItemParams = val;
+            entry->HasLogical = cache->HasLogical;
+            entry->LogicalMin = cache->LogicalMin;
+            entry->LogicalMax = cache->LogicalMax;
+            entry->HasPhysical = cache->HasPhysical;
+            entry->PhysicalMin = cache->PhysicalMin;
+            entry->PhysicalMax = cache->PhysicalMax;
             cache->InputBit += cache->ReportSize;
 
             entry->UsageIdLow = -1;    
@@ -873,6 +908,12 @@ void ProcessOutputCache(struct TTagCache *cache, int val)
             entry->StartBit = cache->OutputBit;
             entry->BitCount = cache->ReportSize;
             entry->ItemParams = val;
+            entry->HasLogical = cache->HasLogical;
+            entry->LogicalMin = cache->LogicalMin;
+            entry->LogicalMax = cache->LogicalMax;
+            entry->HasPhysical = cache->HasPhysical;
+            entry->PhysicalMin = cache->PhysicalMin;
+            entry->PhysicalMax = cache->PhysicalMax;
             cache->OutputBit += cache->ReportSize;
 
             if (entry->ItemParams & 0x2)
@@ -902,6 +943,12 @@ void ProcessOutputCache(struct TTagCache *cache, int val)
             entry->StartBit = cache->OutputBit;
             entry->BitCount = cache->ReportSize;
             entry->ItemParams = val;
+            entry->HasLogical = cache->HasLogical;
+            entry->LogicalMin = cache->LogicalMin;
+            entry->LogicalMax = cache->LogicalMax;
+            entry->HasPhysical = cache->HasPhysical;
+            entry->PhysicalMin = cache->PhysicalMin;
+            entry->PhysicalMax = cache->PhysicalMax;
             cache->OutputBit += cache->ReportSize;
 
             entry->UsageIdLow = -1;    
@@ -945,6 +992,12 @@ void ProcessFeatureCache(struct TTagCache *cache, int val)
             entry->StartBit = cache->FeatureBit;
             entry->BitCount = cache->ReportSize;
             entry->ItemParams = val;
+            entry->HasLogical = cache->HasLogical;
+            entry->LogicalMin = cache->LogicalMin;
+            entry->LogicalMax = cache->LogicalMax;
+            entry->HasPhysical = cache->HasPhysical;
+            entry->PhysicalMin = cache->PhysicalMin;
+            entry->PhysicalMax = cache->PhysicalMax;
             cache->FeatureBit += cache->ReportSize;
     
             if (entry->ItemParams & 0x2)
@@ -974,6 +1027,12 @@ void ProcessFeatureCache(struct TTagCache *cache, int val)
             entry->StartBit = cache->FeatureBit;
             entry->BitCount = cache->ReportSize;
             entry->ItemParams = val;
+            entry->HasLogical = cache->HasLogical;
+            entry->LogicalMin = cache->LogicalMin;
+            entry->LogicalMax = cache->LogicalMax;
+            entry->HasPhysical = cache->HasPhysical;
+            entry->PhysicalMin = cache->PhysicalMin;
+            entry->PhysicalMax = cache->PhysicalMax;
             cache->FeatureBit += cache->ReportSize;
 
             entry->UsageIdLow = -1;    
@@ -1250,8 +1309,10 @@ void LoadReportIdArrays(struct THidDevice *dev)
                 cache->UsageCount = 0;
                 cache->HasMin = FALSE;
                 cache->HasMax = FALSE;
+                cache->HasLogical = FALSE;
+                cache->HasPhysical = FALSE;
                 break;
-                
+
             case GLOBAL_REPORT_ID:
                 val = GetReportItemUnsigned(item);
                 if (val > 0 && val < MAX_REPORT_IDS)
@@ -1304,6 +1365,55 @@ void LoadReportIdArrays(struct THidDevice *dev)
                 val = GetReportItemUnsigned(item);
                 AddFeature(cache, val);
                 break;
+                
+            case GLOBAL_LOG_MIN:
+                val = GetReportItemSigned(item);
+                if (cache->HasLogical)
+                    cache->LogicalMin = val;
+                else
+                {
+                    cache->LogicalMin = val;
+                    cache->LogicalMax = val;
+                    cache->HasLogical = TRUE;
+                }
+                break;
+                
+            case GLOBAL_LOG_MAX:
+                val = GetReportItemSigned(item);
+                if (cache->HasLogical)
+                    cache->LogicalMax = val;
+                else
+                {
+                    cache->LogicalMin = val;
+                    cache->LogicalMax = val;
+                    cache->HasLogical = TRUE;
+                }
+                break;
+                                
+            case GLOBAL_PHYS_MIN:
+                val = GetReportItemSigned(item);
+                if (cache->HasPhysical)
+                    cache->PhysicalMin = val;
+                else
+                {
+                    cache->PhysicalMin = val;
+                    cache->PhysicalMax = val;
+                    cache->HasPhysical = TRUE;
+                }
+                break;
+                                                
+            case GLOBAL_PHYS_MAX:
+                val = GetReportItemSigned(item);
+                if (cache->HasPhysical)
+                    cache->PhysicalMax = val;
+                else
+                {
+                    cache->PhysicalMin = val;
+                    cache->PhysicalMax = val;
+                    cache->HasPhysical = TRUE;
+                }
+                break;
+                
         }         
     }
     FreeTagCache(cache);
@@ -2013,6 +2123,18 @@ void __far ImplGetHidReportInputData(int Device, int ReportId, int Index, char *
                             AddReportControl(Buf, entry->ItemParams);
                         }
 
+                        if (entry->HasLogical)
+                        {
+                            sprintf(str, " Logical [%d, %d]", entry->LogicalMin, entry->LogicalMax);
+                            strcat(Buf, str);                          
+                        }
+
+                        if (entry->HasPhysical)
+                        {
+                            sprintf(str, " Physical [%d, %d]", entry->PhysicalMin, entry->PhysicalMax);
+                            strcat(Buf, str);                          
+                        }
+
                     }
                 }
             }
@@ -2082,6 +2204,19 @@ void __far ImplGetHidReportOutputData(int Device, int ReportId, int Index, char 
     
                             AddReportControl(Buf, entry->ItemParams);
                         }
+
+                        if (entry->HasLogical)
+                        {
+                            sprintf(str, " Logical [%d, %d]", entry->LogicalMin, entry->LogicalMax);
+                            strcat(Buf, str);                          
+                        }
+
+                        if (entry->HasPhysical)
+                        {
+                            sprintf(str, " Physical [%d, %d]", entry->PhysicalMin, entry->PhysicalMax);
+                            strcat(Buf, str);                          
+                        }
+
                     }
                 }
             }
@@ -2150,6 +2285,18 @@ void __far ImplGetHidReportFeatureData(int Device, int ReportId, int Index, char
                             strcat(Buf, str);
     
                             AddReportControl(Buf, entry->ItemParams);
+                        }
+
+                        if (entry->HasLogical)
+                        {
+                            sprintf(str, " Logical [%d, %d]", entry->LogicalMin, entry->LogicalMax);
+                            strcat(Buf, str);                          
+                        }
+
+                        if (entry->HasPhysical)
+                        {
+                            sprintf(str, " Physical [%d, %d]", entry->PhysicalMin, entry->PhysicalMax);
+                            strcat(Buf, str);                          
                         }
                     }
                 }
@@ -2374,6 +2521,7 @@ int main()
         HidArr[i] = 0;
 
     InitHid();
+    InitKey();
     InitMouse();
 
     RdosRegisterOsGate(osgate_get_signed_hid_value, (__rdos_gate_callback *)&ImplGetSignedHidValue, "Get Signed Hid Value"); 
