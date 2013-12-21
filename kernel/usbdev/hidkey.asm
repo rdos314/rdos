@@ -44,6 +44,8 @@ hid_key   STRUC
 hid_report_offset       DD ?
 hid_report_sel          DW ?
 
+hid_shift_state         DW ?
+
 hid_num_lock_index      DW ?
 hid_caps_lock_index     DW ?
 hid_scroll_lock_index   DW ?
@@ -117,142 +119,6 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     .386p
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:       GetProtocol
-;
-;           Description:    Get active protocol
-;
-;       Paramters:      BX      HID selector
-;
-;       RETURNS:    AL      Protocol
-;      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetProtocol   Proc near
-    push ds
-    push es
-    push bx
-    push cx
-    push edx
-    push di
-;    
-    mov ds,bx
-    mov eax,SIZE usb_setup_data + 1
-    AllocateSmallGlobalMem
-    mov cx,ax
-    mov es:usd_type,0A1h
-    mov es:usd_req,3
-    mov es:usd_value,0
-    movzx ax,ds:hid_interface
-    mov es:usd_index,ax
-    mov es:usd_len,1
-    xor di,di
-    mov bx,ds:hid_control_handle
-;
-    LockUsbPipe
-    mov cx,8
-    WriteUsbControl
-;
-    mov cx,1
-    xor di,di
-    ReqUsbData
-;    
-    WriteUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,ds:hid_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:hid_control_handle
-    WasUsbTransactionOk
-    mov al,-1
-    jc gpDone
-;
-    xor di,di
-    mov al,es:[di]
-    clc
-    
-gpDone:    
-    pushf
-    FreeMem
-    UnlockUsbPipe
-    popf
-;
-    pop di
-    pop edx
-    pop cx
-    pop bx
-    pop es
-    pop ds    
-    ret
-GetProtocol Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:       SetBootProtocol
-;
-;           Description:    Set boot protocol
-;
-;       Paramters:      DS      HID selector
-;      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetBootProtocol   Proc near
-    push es
-    push eax
-    push bx
-    push cx
-    push edx
-    push di
-;    
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    mov es:usd_type,21h
-    mov es:usd_req,0Bh
-    mov es:usd_value,0
-    movzx ax,ds:hid_interface
-    mov es:usd_index,ax
-    mov es:usd_len,0
-    xor di,di
-    mov bx,ds:hid_control_handle
-;
-    LockUsbPipe
-    mov cx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-    FreeMem
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,ds:hid_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:hid_control_handle
-    WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
-;
-    pop di
-    pop edx
-    pop cx
-    pop bx
-    pop eax
-    pop es
-    ret
-SetBootProtocol Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -664,6 +530,7 @@ DelKey  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EscKey   Proc near
+    push ax
     push cx
     GetKeyboardState
     mov cx,ax
@@ -676,6 +543,7 @@ EscKey   Proc near
 
 escStd:
     pop cx
+    pop ax
     call StdKey
     ret
 EscKey  Endp
@@ -699,14 +567,11 @@ EscKey  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CapsLock   Proc near
-    push cx
-;    
-    GetKeyboardState
+    mov ax,ds:hid_shift_state
     xor ax,caps_active
+    mov ds:hid_shift_state,ax
     SetKeyboardState
     xor ax,ax
-;
-    pop cx    
     ret
 CapsLock   Endp
     
@@ -730,14 +595,11 @@ CapsLock   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NumLock   Proc near
-    push cx
-;    
-    GetKeyboardState
+    mov ax,ds:hid_shift_state
     xor ax,num_active
+    mov ds:hid_shift_state,ax
     SetKeyboardState
     xor ax,ax
-;
-    pop cx    
     ret
 NumLock   Endp
 
@@ -1161,322 +1023,6 @@ ReportKeyRelease  Proc near
     ret
 ReportKeyRelease  Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UpdateShiftState
-;
-;           DESCRIPTION:    Update shift-key state
-;
-;       PARAMETERS:     AL      Modifier keys
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateShiftState  Proc near
-    push ax
-    push bx
-    push cx
-;    
-    mov bl,al
-    GetKeyboardState
-    mov cx,ax
-    and ax,NOT (shift_pressed OR alt_pressed OR ctrl_pressed)
-;     
-    test bl,MOD_LEFT_CTRL OR MOD_RIGHT_CTRL
-    jz ussCtrlOK
-;
-    or ax,ctrl_pressed
-
-ussCtrlOk:
-    test bl,MOD_LEFT_SHIFT OR MOD_RIGHT_SHIFT
-    jz ussShiftOk
-;
-    or ax,shift_pressed
-
-ussShiftOk:
-    test bl,MOD_LEFT_ALT OR MOD_RIGHT_ALT
-    jz ussAltOk
-;
-    or ax,alt_pressed
-
-ussAltOk: 
-    cmp ax,cx
-    je ussDone
-;
-    SetKeyboardState
-;
-    xor cx,ax
-    test cx,shift_pressed
-    jz ussShiftDone
-;
-    mov dl,10h
-    mov dh,2Ah
-    test ax,shift_pressed
-    jz ussShiftRel
-
-ussShiftPress:
-    push ax
-    xor ax,ax
-    PutKeyboardCode
-    pop ax
-    jmp ussShiftDone
-
-ussShiftRel:
-    push ax
-    or dh,80h
-    mov ax,80h
-    PutKeyboardCode
-    pop ax
-
-ussShiftDone:
-    test cx,alt_pressed
-    jz ussAltDone
-;
-    mov dl,12h
-    mov dh,38h
-    test ax,alt_pressed
-    jz ussAltRel
-
-ussAltPress:
-    push ax
-    xor ax,ax
-    PutKeyboardCode
-    pop ax
-    jmp ussAltDone
-
-ussAltRel:
-    push ax
-    or dh,80h
-    mov ax,80h
-    PutKeyboardCode
-    pop ax
-
-ussAltDone:
-    test cx,ctrl_pressed
-    jz ussDone
-;
-    mov dl,11h
-    mov dh,1Dh
-    test ax,ctrl_pressed
-    jz ussCtrlRel
-
-ussCtrlPress:
-    push ax
-    xor ax,ax
-    PutKeyboardCode
-    pop ax
-    jmp ussDone
-
-ussCtrlRel:
-    push ax
-    or dh,80h
-    mov ax,80h
-    PutKeyboardCode
-    pop ax
-
-ussDone:
-    pop cx
-    pop bx
-    pop ax    
-    ret
-UpdateShiftState    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           HandlePressed
-;
-;           DESCRIPTION:    Handle newly pressed keys
-;
-;       PARAMETERS:     ES      USB report
-;               FS      HID data sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HandlePressed  Proc near
-    push cx
-    push si
-    push di
-;
-    mov si,OFFSET hk_key_arr
-    mov cx,6
-
-hpLoop:
-    mov al,es:[si]
-    or al,al
-    jz hpDone
-;
-    push cx
-    mov di,OFFSET hid_key_arr
-    mov cx,6
-
-hpFindLoop:
-    mov ah,fs:[di]
-    or ah,ah
-    je hpNew
-;
-    cmp al,ah
-    je hpNext
-;
-    inc di
-    loop hpFindLoop
-
-hpNew:
-    push eax
-    push edx
-    GetSystemTime
-    mov fs:hid_last_time,eax
-    pop edx
-    pop eax
-;
-    mov fs:hid_last_key,al
-    call ReportKeyPress
-
-hpNext:
-    pop cx
-    inc si
-    loop hpLoop
-
-hpDone:
-    pop di
-    pop si
-    pop cx
-    ret
-HandlePressed  Endp    
-    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           HandleReleased
-;
-;           DESCRIPTION:    Handle newly released keys
-;
-;       PARAMETERS:     ES      USB report
-;               FS      HID data sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HandleReleased  Proc near
-    push cx
-    push si
-    push di
-;
-    mov si,OFFSET hid_key_arr
-    mov cx,6
-
-hrLoop:
-    mov al,fs:[si]
-    or al,al
-    jz hrDone
-;
-    push cx
-    mov di,OFFSET hk_key_arr
-    mov cx,6
-
-hrFindLoop:
-    mov ah,es:[di]
-    or ah,ah
-    je hrNew
-;
-    cmp al,ah
-    je hrNext
-;
-    inc di
-    loop hrFindLoop
-
-hrNew:
-    cmp al,fs:hid_last_key
-    jne hrReport
-;
-    mov fs:hid_last_key,0
-
-hrReport:    
-    call ReportKeyRelease
-
-hrNext:
-    pop cx
-    inc si
-    loop hrLoop
-
-hrDone:
-    pop di
-    pop si
-    pop cx
-    ret
-HandleReleased  Endp    
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           HandleKeyReport
-;
-;           DESCRIPTION:    Handles keyboard report
-;
-;       PARAMETERS:     ES      USB report
-;               FS      HID data sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HandleKeyReport Proc near
-    mov cx,6
-    xor si,si
-    xor di,di
-
-hkpCompLoop:
-    mov al,es:[si].hk_key_arr
-    cmp al,fs:[di].hid_key_arr
-    jne hkpChanged
-;
-    or al,al
-    jz hkpRepeat
-;
-    inc si
-    inc di
-    loop hkpCompLoop
-;
-    jmp hkpDone    
-
-hkpChanged:
-    call HandleReleased
-    call HandlePressed
-;    
-    mov cx,6
-    xor si,si
-    xor di,di
-
-hkpCopyLoop:
-    mov al,es:[si].hk_key_arr
-    mov fs:[di].hid_key_arr,al
-    inc si
-    inc di
-    loop hkpCopyLoop
-
-hkpRepeat:
-    mov al,fs:hid_last_key
-    or al,al
-    jz hkpDone
-;
-    mov al,fs:hid_key_arr
-    or al,al
-    jz hkpDone
-;
-    GetSystemTime
-    sub eax,fs:hid_last_time
-    cmp eax,1193 * 500
-    jc hkpDone
-;
-    mov al,fs:hid_last_key
-    call ReportKeyPress
-
-hkpDone:
-    ret
-HandleKeyReport Endp   
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1502,7 +1048,6 @@ StartKeyboardHandler_   Proc near
     mov fs:hid_key_mod,0
     mov fs:hid_key_arr,0
 ;    
-    call SetBootProtocol
     call SetIdle
 ;
     mov al,3
@@ -1564,10 +1109,10 @@ hktLedsOk:
     je hktModHandled
 ;
     mov fs:hid_key_mod,al
-    call UpdateShiftState
+;    call UpdateShiftState
 
 hktModHandled:
-    call HandleKeyReport
+;    call HandleKeyReport
     pop es
     jmp hktDataLoop
     
@@ -1647,7 +1192,8 @@ HandleHidShift  Proc near
 ;
     mov esi,OFFSET hid_is_pressed_arr
     mov ecx,MAX_KEYS
-    xor dx,dx
+    mov dx,ds:hid_shift_state
+    xor dl,dl
 
 hhsLoop:
     mov al,ds:[esi]    
@@ -1669,9 +1215,7 @@ hhsNext:
     loop hhsLoop
 
 hhsDone:
-    mov ax,dx
-    SetKeyboardState
-;    
+    mov ds:hid_shift_state,dx    
     popad
     ret
 HandleHidShift  Endp    
@@ -1716,6 +1260,10 @@ hhpFindLoop:
     loop hhpFindLoop
 
 hhpNew:
+    push ax
+    mov ax,ds:hid_shift_state
+    SetKeyboardState
+    pop ax
     call ReportKeyPress
 
 hhpNext:
@@ -1814,6 +1362,7 @@ hid_begin   Proc far
     mov es:hid_caps_lock_index,-1
     mov es:hid_scroll_lock_index,-1
 ;
+    mov es:hid_shift_state,0
     mov es:hid_bit_index_count,0
     mov es:hid_arr_index_count,0
 ;
