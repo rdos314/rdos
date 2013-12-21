@@ -519,6 +519,125 @@ GetReportDescr_ Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SetHidProtocol
+;
+;       Description:    Set HID protocol
+;
+;       Paramters:      FS      HID selector
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetHidProtocol   Proc near
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push edi
+;    
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    mov es:usd_type,21h
+    mov es:usd_req,0Bh
+    mov es:usd_value,1
+    movzx ax,fs:hid_interface
+    mov es:usd_index,ax
+    mov es:usd_len,0
+    xor di,di
+    mov bx,fs:hid_control_handle
+;
+    LockUsbPipe
+    mov cx,8
+    WriteUsbControl
+    ReqUsbStatus
+    StartUsbTransaction
+    FreeMem
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,fs:hid_control_wait
+    WaitWithTimeout
+;    
+    mov bx,fs:hid_control_handle
+    WasUsbTransactionOk
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+SetHidProtocol Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:       SetIdle
+;
+;           Description:    Set idle to suitable range for auto-repeat of keys
+;
+;       Paramters:      FS      HID selector
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetIdle   Proc near
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push edi
+;    
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    mov es:usd_type,21h
+    mov es:usd_req,0Ah
+    mov es:usd_value,0C00h  ; 12 * 4ms = 48ms (20 chars per second)
+    movzx ax,fs:hid_interface
+    mov es:usd_index,ax
+    mov es:usd_len,0
+    xor di,di
+    mov bx,fs:hid_control_handle
+;
+    LockUsbPipe
+    mov cx,8
+    WriteUsbControl
+    ReqUsbStatus
+    StartUsbTransaction
+    FreeMem
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,fs:hid_control_wait
+    WaitWithTimeout
+;    
+    mov bx,fs:hid_control_handle
+    WasUsbTransactionOk
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+SetIdle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:       OpenHidDev
 ;
 ;           description:    Open hid descriptor
@@ -636,6 +755,13 @@ ihsDone:
     mov fs:hid_intr_handle,0
     mov fs:hid_intr_size,0
     mov fs:hid_intr_req,0
+;
+    mov al,fs:hid_protocol
+    cmp al,1
+    jnz ihsEnd
+;
+    call SetHidProtocol
+    call SetIdle
 
 ihsEnd:
     pop edi

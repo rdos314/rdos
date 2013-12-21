@@ -2351,21 +2351,27 @@ void __far HidThread(void *param)
             {
                 ReportData = WaitForReport(dev);
 
-                if (dev->ReportIdArr[0])
-                    Report = 0;
-                else
+                if (dev->StopReq)
+                    break;
+
+                if (ReportData)
                 {
-                    Report = *ReportData;
-                    ReportData++;
-                }
+                    if (dev->ReportIdArr[0])
+                        Report = 0;
+                    else
+                    {
+                        Report = *ReportData;
+                        ReportData++;
+                    }
 
-                report = dev->ReportIdArr[Report];
+                    report = dev->ReportIdArr[Report];
 
-                if (report)
-                    for (Table = 0; Table < report->TableCount; Table++)
-                        HidHandleReport(report->TableArr[Table].Index,
+                    if (report)
+                        for (Table = 0; Table < report->TableCount; Table++)
+                            HidHandleReport(report->TableArr[Table].Index,
                                         report->TableArr[Table].Handle,
                                         ReportData); 
+                }
             }
         }
         CloseHid(dev);

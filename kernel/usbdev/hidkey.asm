@@ -120,65 +120,6 @@ code    SEGMENT byte public 'CODE'
 
     .386p
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:       SetIdle
-;
-;           Description:    Set idle to suitable range for auto-repeat of keys
-;
-;       Paramters:      DS      HID selector
-;      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetIdle   Proc near
-    push es
-    push eax
-    push bx
-    push cx
-    push edx
-    push di
-;    
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    mov es:usd_type,21h
-    mov es:usd_req,0Ah
-    mov es:usd_value,0C00h  ; 12 * 4ms = 48ms (20 chars per second)
-    movzx ax,ds:hid_interface
-    mov es:usd_index,ax
-    mov es:usd_len,0
-    xor di,di
-    mov bx,ds:hid_control_handle
-;
-    LockUsbPipe
-    mov cx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-    FreeMem
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,ds:hid_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:hid_control_handle
-    WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
-;
-    pop di
-    pop edx
-    pop cx
-    pop bx
-    pop eax
-    pop es
-    ret
-SetIdle Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1048,7 +989,7 @@ StartKeyboardHandler_   Proc near
     mov fs:hid_key_mod,0
     mov fs:hid_key_arr,0
 ;    
-    call SetIdle
+;    call SetIdle
 ;
     mov al,3
     call UpdateLeds    
