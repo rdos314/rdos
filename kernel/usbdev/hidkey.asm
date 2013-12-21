@@ -1637,7 +1637,7 @@ HandleHidPressed  Proc near
     push esi
     push edi
 ;
-    mov esi,OFFSET hid_was_pressed_arr
+    mov esi,OFFSET hid_is_pressed_arr
     mov ecx,MAX_KEYS
 
 hhpLoop:
@@ -1646,7 +1646,7 @@ hhpLoop:
     jz hhpDone
 ;
     push ecx
-    mov edi,OFFSET hid_is_pressed_arr
+    mov edi,OFFSET hid_was_pressed_arr
     mov ecx,MAX_KEYS
 
 hhpFindLoop:
@@ -1661,8 +1661,7 @@ hhpFindLoop:
     loop hhpFindLoop
 
 hhpNew:
-    int 3
-;    call ReportKeyPress
+    call ReportKeyPress
 
 hhpNext:
     pop ecx
@@ -1693,7 +1692,7 @@ HandleHidReleased  Proc near
     push esi
     push edi
 ;
-    mov esi,OFFSET hid_is_pressed_arr
+    mov esi,OFFSET hid_was_pressed_arr
     mov ecx,MAX_KEYS
 
 hhrLoop:
@@ -1702,7 +1701,7 @@ hhrLoop:
     jz hhrDone
 ;
     push ecx
-    mov edi,OFFSET hid_was_pressed_arr
+    mov edi,OFFSET hid_is_pressed_arr
     mov ecx,MAX_KEYS
 
 hhrFindLoop:
@@ -1717,8 +1716,7 @@ hhrFindLoop:
     loop hhrFindLoop
 
 hhrNew:
-    int 3
-;    call ReportKeyRelease
+    call ReportKeyRelease
 
 hhrNext:
     pop ecx
