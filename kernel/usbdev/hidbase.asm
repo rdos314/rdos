@@ -63,6 +63,14 @@ hh_sys_intr_handle      DW ?
 
 hid_handle_struc       ENDS
 
+hid_output_struc        STRUC
+
+ho_dev      DW ?
+ho_size     DW ?
+ho_buf      DB ?
+
+hid_output_struc        ENDS
+
 MAX_TABLES  = 32
 
 data    SEGMENT byte public 'DATA'
@@ -439,7 +447,7 @@ HidHandleReport_   Endp
 ;
 ;   NAME:           CreateOutputReport
 ;
-;   Description:    Handle report
+;   Description:    Create output report
 ;
 ;   Parameters:     FS:ESI  Device
 ;                   BX      Report ID
@@ -452,9 +460,42 @@ HidHandleReport_   Endp
     public CreateOutputReport_
 
 CreateOutputReport_   Proc near
-    mov eax,1
+    push es
+;    
+    movzx eax,cx
+    add eax,4
+    add eax,OFFSET ho_buf
+    AllocateSmallGlobalMem
+;
+    mov es:ho_dev,fs
+    mov es:ho_size,cx
+;
+    mov eax,es    
+;
+    pop es
     ret
 CreateOutputReport_ Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           FreeOutputReport
+;
+;   Description:    Free output report
+;
+;   Parameters:     EBX     Handle
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public FreeOutputReport_
+
+FreeOutputReport_   Proc near
+    push es
+    mov es,ebx
+    FreeMem
+    pop es
+    ret
+FreeOutputReport_ Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

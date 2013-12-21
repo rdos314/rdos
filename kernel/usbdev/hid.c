@@ -93,6 +93,9 @@ extern void SetIdle(struct THidDevice *dev, int ReportId, int Value);
 extern int CreateOutputReport(struct THidDevice *dev, int ReportId, int Size);
 #pragma aux CreateOutputReport parm routine [fs esi] [ebx] [ecx] value [eax]
 
+extern void FreeOutputReport(int Handle);
+#pragma aux FreeOutputReport parm routine [ebx]
+
 struct THidDescriptor
 {
     unsigned char Len;
@@ -301,6 +304,9 @@ void CloseHid(struct THidDevice *dev)
 
             if (report->FeatureCount)
                 RdosFreeMem(RdosPointerToSelector(report->FeatureArr));
+
+            if (report->OutputHandle)
+                FreeOutputReport(report->OutputHandle);
 
             RdosFreeMem(RdosPointerToSelector(report));
         }
