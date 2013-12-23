@@ -221,6 +221,9 @@ hdNotX:
     cmp al,31h
     jne hdDone
 ;
+    test dx,4
+    jnz hdDone
+;
     movzx eax,ds:hid_coord_count
     or eax,eax
     jz hdAddY
