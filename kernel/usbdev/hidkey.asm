@@ -61,10 +61,6 @@ hid_arr_index_arr       DW MAX_ARRAY_ENTRIES DUP(?)
 hid_was_pressed_arr     DW MAX_KEYS DUP(?)
 hid_is_pressed_arr      DW MAX_KEYS DUP(?)
 
-hid_num_lock            DB ?
-hid_caps_lock           DB ?
-hid_scroll_lock         DB ?
-
 hid_key   ENDS
 
 STD_KEY = 1
@@ -419,6 +415,34 @@ CapsLock   Proc near
     xor ax,caps_active
     mov ds:hid_shift_state,ax    
     SetKeyboardState
+;
+    mov ax,ds:hid_shift_state
+    and ax,caps_active
+    jz clOff
+
+clOn:
+    mov al,1
+    jmp clSet
+
+clOff:
+    xor al,al
+
+clSet: 
+    push fs
+    push ecx
+    push esi
+;           
+    mov esi,ds:hid_output_offset
+    mov fs,ds:hid_output_sel
+;    
+    mov cx,802h
+    SetHidOutput
+    UpdateHidOutput    
+;
+    pop esi
+    pop ecx
+    pop fs    
+;    
     xor ax,ax
     ret
 CapsLock   Endp
@@ -1103,10 +1127,6 @@ hid_begin   Proc far
     mov es:hid_report_sel,fs    
     mov es:hid_device_sel,gs
 ;
-    mov es:hid_num_lock,0
-    mov es:hid_caps_lock,0
-    mov es:hid_scroll_lock,0
-;
     mov es:hid_shift_state,0
     mov es:hid_bit_index_count,0
     mov es:hid_arr_index_count,0
@@ -1229,17 +1249,14 @@ heOk:
     mov cx,801h
     xor al,al
     SetHidOutput
-    mov es:hid_num_lock,al
 ;        
     mov cx,802h
     xor al,al
     SetHidOutput
-    mov es:hid_caps_lock,al
 ;        
     mov cx,803h
     xor al,al
     SetHidOutput
-    mov es:hid_scroll_lock,al
 ;
     UpdateHidOutput    
     clc
@@ -1248,9 +1265,6 @@ heOk:
 heNoOut:
     mov es:hid_output_offset,0
     mov es:hid_output_sel,0
-    mov es:hid_num_lock,0
-    mov es:hid_caps_lock,0
-    mov es:hid_scroll_lock,0
     clc
         
 heDone:

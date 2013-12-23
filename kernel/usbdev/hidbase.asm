@@ -599,7 +599,6 @@ SendOutputReport_   Proc near
 ;    
     ReqUsbStatus
     StartUsbTransaction
-    FreeMem
 ;    
     GetSystemTime
     add eax,1193 * 1000
