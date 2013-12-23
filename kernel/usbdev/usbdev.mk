@@ -1,7 +1,7 @@
 project : C:\rdos\kernel\usbdev\usb.rdv C:\rdos\kernel\usbdev\ohci.rdv C:\rd&
 os\kernel\usbdev\ehci.rdv C:\rdos\kernel\usbdev\uhci.rdv C:\rdos\kernel\usbd&
-ev\hid.rdv C:\rdos\kernel\usbdev\usbcom.rdv C:\rdos\kernel\usbdev\hub.rdv .S&
-YMBOLIC
+ev\hid.rdv C:\rdos\kernel\usbdev\usbcom.rdv C:\rdos\kernel\usbdev\hub.rdv C:&
+\rdos\kernel\usbdev\usbdisc.rdv .SYMBOLIC
 
 !include C:\rdos\kernel\usbdev\usb.mk1
 !include C:\rdos\kernel\usbdev\ohci.mk1
@@ -10,3 +10,4 @@ YMBOLIC
 !include C:\rdos\kernel\usbdev\hid.mk1
 !include C:\rdos\kernel\usbdev\usbcom.mk1
 !include C:\rdos\kernel\usbdev\hub.mk1
+!include C:\rdos\kernel\usbdev\usbdisc.mk1

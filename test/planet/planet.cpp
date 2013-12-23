@@ -449,12 +449,9 @@ void cdecl main()
         int i;
 
         RdosWaitMilli(250);
-//      bpp = 1;
-//      width = 240;
-//      height = 128;
         bpp = 24;
-        width = 800;
-        height = 600;
+        width = 1366;
+        height = 768;
         VbeHandle = RdosSetVideoMode(&bpp, &width, &height, &rowsize, &buf);
         if (VbeHandle == 0)
         {
