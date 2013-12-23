@@ -637,5 +637,7 @@ set_hid_idle_nr             = 525
 find_hid_output_report_nr   = 526
 set_hid_output_nr           = 527
 update_hid_output_nr        = 528
+get_hid_log_min_nr          = 529
+get_hid_log_max_nr          = 530
 
 osgate_entries				= 540

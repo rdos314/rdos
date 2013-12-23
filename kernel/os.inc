@@ -3386,6 +3386,20 @@ RegisterHidInput      MACRO
                         ENDM
 
 ; IN    ES:EDI  Hid report
+; IN    EBX     Entry #
+; OUT   EAX     Value
+GetHidLogMin      MACRO
+    OsGate get_hid_log_min_nr
+                        ENDM
+
+; IN    ES:EDI  Hid report
+; IN    EBX     Entry #
+; OUT   EAX     Value
+GetHidLogMax      MACRO
+    OsGate get_hid_log_max_nr
+                        ENDM
+
+; IN    ES:EDI  Hid report
 ; IN    FS:ESI  Report data
 ; IN    EBX     Entry #
 ; OUT   EAX     Value

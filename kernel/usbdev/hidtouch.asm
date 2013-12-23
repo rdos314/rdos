@@ -42,6 +42,9 @@ coord_struc STRUC
 c_x_index   DW ?,?
 c_y_index   DW ?,?
 
+c_x_size    DD ?
+c_y_size    DD ?
+
 c_x1        DD ?
 c_y1        DD ?
 
@@ -57,7 +60,7 @@ hid_report_sel      DW ?
 
 hid_coord_count     DW ?
 
-hid_coord_arr       DB MAX_POINTS * 24 DUP(?)
+hid_coord_arr       DB MAX_POINTS * 32 DUP(?)
 
 hid_touch   ENDS
 
@@ -243,24 +246,64 @@ hid_define   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hid_end   Proc far
-    push es
-    push eax
+    push fs
+    pushad
 ;
-    mov es,ebx
-    mov ax,es:hid_coord_count
+    mov fs,ebx
+    mov ax,fs:hid_coord_count
     or ax,ax
     jz heFail
 ;    
+    push es
+    push ebx
+    push ecx
+    push edi
+;    
+    movzx ecx,ax
+    mov ebx,OFFSET hid_coord_arr
+
+heLoop:
+    push ecx
+;    
+    push ebx
+    mov edi,fs:hid_report_offset
+    mov es,fs:hid_report_sel
+    mov bx,fs:[ebx].c_x_index
+    GetHidLogMax
+    pop ebx
+    mov fs:[ebx].c_x_size,eax
+;    
+    push ebx
+    mov edi,fs:hid_report_offset
+    mov es,fs:hid_report_sel
+    mov bx,fs:[ebx].c_y_index
+    GetHidLogMax
+    pop ebx
+    mov fs:[ebx].c_y_size,eax
+;
+    pop ecx
+;    
+    add ebx,SIZE coord_struc
+    loop heLoop
+;
+    pop edi  
+    pop ecx
+    pop ebx
+    pop es
     clc
     jmp heDone                
 
 heFail:
+    mov eax,fs
+    mov es,eax
+    xor eax,eax
+    mov fs,eax
     FreeMem
     stc
         
 heDone:
-    pop eax    
-    pop es
+    popad
+    pop fs
     ret
 hid_end   Endp
 

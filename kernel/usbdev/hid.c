@@ -1604,6 +1604,50 @@ int __far ImplGetUnsignedHidInput(struct THidReportIdEntry *report, char *buf, i
 
 /*##########################################################################
 #
+#   Name       : ImplGetHidLogMin
+#
+#   Purpose....: Get logical min
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetHidLogMin "*" rdosdev parm routine [es edi] [ebx] value [eax]
+int __far ImplGetHidLogMin(struct THidReportIdEntry *report, int entry)
+{
+    struct THidReportEntry *Entry = &report->InputArr[entry];
+
+    if (Entry->HasLogical)
+        return Entry->LogicalMin;
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : ImplGetHidLogMax
+#
+#   Purpose....: Get logical max
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetHidLogMax "*" rdosdev parm routine [es edi] [ebx] value [eax]
+int __far ImplGetHidLogMax(struct THidReportIdEntry *report, int entry)
+{
+    struct THidReportEntry *Entry = &report->InputArr[entry];
+
+    if (Entry->HasLogical)
+        return Entry->LogicalMax;
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : GetOutputReport
 #
 #   Purpose....: Get output report
@@ -2769,6 +2813,9 @@ int main()
     RdosRegisterOsGate(osgate_get_signed_hid_input, (__rdos_gate_callback *)&ImplGetSignedHidInput, "Get Signed Hid Input"); 
     RdosRegisterOsGate(osgate_get_unsigned_hid_input, (__rdos_gate_callback *)&ImplGetUnsignedHidInput, "Get Unsigned Hid Input"); 
     RdosRegisterOsGate(osgate_set_hid_idle, (__rdos_gate_callback *)&ImplSetHidIdle, "Set Hid Idle"); 
+
+    RdosRegisterOsGate(osgate_get_hid_log_min, (__rdos_gate_callback *)&ImplGetHidLogMin, "Get Hid Log Min"); 
+    RdosRegisterOsGate(osgate_get_hid_log_max, (__rdos_gate_callback *)&ImplGetHidLogMax, "Get Hid Log Max"); 
 
     RdosRegisterOsGate(osgate_find_hid_output_report, (__rdos_gate_callback *)&ImplFindHidOutput, "Find Hid Output"); 
     RdosRegisterOsGate(osgate_set_hid_output, (__rdos_gate_callback *)&ImplSetHidOutput, "Set Hid Output"); 
