@@ -44,6 +44,7 @@ extern void InitHid();
 
 extern void InitKey();
 extern void InitMouse();
+extern void InitTouch();
 
 extern int GetReportDescr(struct THidDevice *dev, char *buf, int size, int interface);
 #pragma aux GetReportDescr parm routine [fs esi] [es edi] [ecx] [edx] value [eax]
@@ -2763,6 +2764,7 @@ int main()
     InitHid();
     InitKey();
     InitMouse();
+    InitTouch();
 
     RdosRegisterOsGate(osgate_get_signed_hid_input, (__rdos_gate_callback *)&ImplGetSignedHidInput, "Get Signed Hid Input"); 
     RdosRegisterOsGate(osgate_get_unsigned_hid_input, (__rdos_gate_callback *)&ImplGetUnsignedHidInput, "Get Unsigned Hid Input"); 
