@@ -42,14 +42,18 @@ coord_struc STRUC
 c_x_index   DW ?,?
 c_y_index   DW ?,?
 
+c_tip_index DW ?
+
 c_x_size    DD ?
 c_y_size    DD ?
 
-c_x1        DD ?
-c_y1        DD ?
+c_tip       DW ?
 
-c_x2        DD ?
-c_y2        DD ?
+c_x1        DW ?
+c_y1        DW ?
+
+c_x2        DW ?
+c_y2        DW ?
 
 coord_struc ENDS
 
@@ -122,8 +126,43 @@ hid_define   Proc far
     push ds
     push eax
     push edx
-;    
+;   
     mov ds,ebx    
+    cmp cl,0Dh
+    jne hdNotTip
+;
+    cmp al,42h
+    jne hdDone
+;
+    movzx eax,ds:hid_coord_count
+    or eax,eax
+    jz hdAddTip
+;
+    dec eax
+    mov edx,SIZE coord_struc
+    mul edx
+    add eax,OFFSET hid_coord_arr
+    mov dx,ds:[eax].c_tip_index
+    add dx,1
+    jnc hdAddTip
+;
+    mov ds:[eax].c_tip_index,si
+    jmp hdDone
+
+hdAddTip:
+    movzx eax,ds:hid_coord_count
+    inc ds:hid_coord_count
+    mov edx,SIZE coord_struc
+    mul edx
+    add eax,OFFSET hid_coord_arr
+    mov ds:[eax].c_tip_index,si
+    mov ds:[eax].c_x_index,-1
+    mov ds:[eax].c_y_index,-1
+    mov ds:[eax].c_x_index+2,-1
+    mov ds:[eax].c_y_index+2,-1
+    jmp hdDone
+            
+hdNotTip:    
     cmp cl,1 
     jne hdDone
 ;
@@ -171,6 +210,7 @@ hdAddX:
     mov edx,SIZE coord_struc
     mul edx
     add eax,OFFSET hid_coord_arr
+    mov ds:[eax].c_tip_index,-1
     mov ds:[eax].c_x_index,si
     mov ds:[eax].c_y_index,-1
     mov ds:[eax].c_x_index+2,-1
@@ -219,6 +259,7 @@ hdAddY:
     mov edx,SIZE coord_struc
     mul edx
     add eax,OFFSET hid_coord_arr
+    mov ds:[eax].c_tip_index,-1
     mov ds:[eax].c_x_index,-1
     mov ds:[eax].c_y_index,si
     mov ds:[eax].c_x_index+2,-1
@@ -349,6 +390,23 @@ hid_handle_report   Proc far
     mov ebx,OFFSET hid_coord_arr
 
 hhrLoop:
+    mov ax,es:[ebx].c_tip_index
+    add ax,1
+    jc hhrTipDone
+;
+    push es
+    push ebx
+    push ecx
+    movzx ebx,es:[ebx].c_tip_index
+    mov edi,es:hid_report_offset
+    mov es,es:hid_report_sel
+    GetUnsignedHidInput
+    pop ecx
+    pop ebx
+    pop es
+    mov es:[ebx].c_tip,ax
+        
+hhrTipDone:
     push es
     push ebx
     push ecx
@@ -362,8 +420,8 @@ hhrLoop:
     mov edx,32767
     mul edx
     div es:[ebx].c_x_size    
-    mov es:[ebx].c_x1,eax
-    mov es:[ebx].c_x2,eax
+    mov es:[ebx].c_x1,ax
+    mov es:[ebx].c_x2,ax
 ;
     push es
     push ebx
@@ -378,8 +436,8 @@ hhrLoop:
     mov edx,32767
     mul edx
     div es:[ebx].c_y_size    
-    mov es:[ebx].c_y1,eax
-    mov es:[ebx].c_y2,eax
+    mov es:[ebx].c_y1,ax
+    mov es:[ebx].c_y2,ax
 ;
     mov ax,es:[ebx].c_x_index+2
     add ax,1
@@ -398,7 +456,7 @@ hhrLoop:
     mov edx,32767
     mul edx
     div es:[ebx].c_x_size    
-    mov es:[ebx].c_x2,eax
+    mov es:[ebx].c_x2,ax
 ;
     push es
     push ebx
@@ -413,7 +471,7 @@ hhrLoop:
     mov edx,32767
     mul edx
     div es:[ebx].c_y_size    
-    mov es:[ebx].c_y2,eax
+    mov es:[ebx].c_y2,ax
 
 hhrNext:
     add ebx,SIZE coord_struc
@@ -421,9 +479,9 @@ hhrNext:
     jnz hhrLoop    
 ;
     mov ebx,OFFSET hid_coord_arr
-    mov ecx,es:[ebx].c_x1
-    mov edx,es:[ebx].c_y1
-    mov ax,1
+    mov cx,es:[ebx].c_x1
+    mov dx,es:[ebx].c_y1
+    mov ax,es:[ebx].c_tip
     SetMouse
 ;
     popad
