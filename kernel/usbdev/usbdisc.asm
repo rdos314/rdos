@@ -123,7 +123,19 @@ uaFail:
     jmp uaDone
 
 uaFound:
+    mov cl,es:[di].uid_sub_class
+    cmp cl,6
+    jne uaFail
+;
+    mov cl,es:[di].uid_proto
+    cmp cl,50h
+    jne uaFail
+;        
     int 3
+    ConfigUsbDevice
+;    
+    movzx eax,al
+    movzx ebx,bx
     FreeMem
 
 uaDone:    
