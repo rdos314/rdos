@@ -98,14 +98,6 @@ MOD_RIGHT_SHIFT = 20h
 MOD_RIGHT_ALT   = 40h
 MOD_RIGHT_GUI   = 80h
 
-hid_key_struc   STRUC
-
-hk_modifiers    DB ?
-hk_resv     DB ?
-hk_key_arr      DB 6 DUP(?)
-
-hid_key_struc   ENDS
-
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
 code    SEGMENT byte public 'CODE'
@@ -213,8 +205,7 @@ IgnoreKey   Endp
 
 StdKey   Proc near
     push cx
-    GetKeyboardState
-    mov cx,ax
+    mov cx,ds:hid_shift_state
     mov al,dh
     call GetKey
     pop cx
@@ -241,8 +232,7 @@ StdKey   Endp
 
 CapsKey   Proc near
     push cx
-    GetKeyboardState
-    mov cx,ax
+    mov cx,ds:hid_shift_state
     and cx,107h
     xor cl,ch
     and cx,7
@@ -272,8 +262,7 @@ CapsKey   Endp
 
 FuncKey   Proc near
     push cx
-    GetKeyboardState
-    mov cx,ax
+    mov cx,ds:hid_shift_state
     test cx,ctrl_pressed
     jz fkNorm
 ;
@@ -314,8 +303,7 @@ NumKey   Proc near
     push cx
     push si
 ;
-    GetKeyboardState
-    mov cx,ax
+    mov cx,ds:hid_shift_state
     mov al,dh
 ;
     and cx,205h
@@ -358,8 +346,7 @@ NumKey   Endp
 
 DelKey   Proc near
     push cx
-    GetKeyboardState
-    mov cx,ax
+    mov cx,ds:hid_shift_state
 ;
     and cx,alt_pressed OR ctrl_pressed
     cmp cx,alt_pressed OR ctrl_pressed
@@ -394,8 +381,7 @@ DelKey  Endp
 EscKey   Proc near
     push ax
     push cx
-    GetKeyboardState
-    mov cx,ax
+    mov cx,ds:hid_shift_state
 ;
     and cx,alt_pressed OR ctrl_pressed
     cmp cx,alt_pressed OR ctrl_pressed
@@ -431,7 +417,7 @@ EscKey  Endp
 CapsLock   Proc near
     mov ax,ds:hid_shift_state
     xor ax,caps_active
-    mov ds:hid_shift_state,ax
+    mov ds:hid_shift_state,ax    
     SetKeyboardState
     xor ax,ax
     ret
