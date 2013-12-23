@@ -2201,17 +2201,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
     "pop ds" \
     parm [eax] [edx] [ecx];
 
-#pragma aux RdosGetSignedHidOutput = \
-    OsGate_get_signed_hid_output \
-    parm [ebx] [ecx] \
-    value [eax];
-
-#pragma aux RdosGetUnsignedHidOutput = \
-    OsGate_get_unsigned_hid_output \
-    parm [ebx] [ecx] \
-    value [eax];
-    
-
 #ifdef __cplusplus
 }
 #endif

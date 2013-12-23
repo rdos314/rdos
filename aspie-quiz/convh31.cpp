@@ -216,12 +216,16 @@ static void ProcessRow(char *str)
 
             case 15:
                  val = atoi(valstr);
-                 Row.Quiz[193] = val;
+                 Row.Quiz[194] = val;
                  break;
 
             case 16:
                  val = atoi(valstr);
-                 Row.Quiz[194] = val;
+                 if (val > 60)
+                     val = 0;
+                 else
+                    val = 1 + val / 10;
+                 Row.Quiz[195] = val;
                  break;
 
             default:

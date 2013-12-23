@@ -96,6 +96,15 @@ extern int CreateOutputReport(struct THidDevice *dev, int ReportId, int Size);
 extern void FreeOutputReport(int Handle);
 #pragma aux FreeOutputReport parm routine [ebx]
 
+extern void *GetOutputBuf(int Handle);
+#pragma aux GetOutputBuf parm routine [ebx] value [es edi]
+
+extern void SetValue(int Handle, int StartBit, int BitCount, int Value);
+#pragma aux SetValue parm routine [ebx] [edx] [ecx] [eax]
+
+extern void SendOutputReport(int Handle);
+#pragma aux SendOutputReport parm routine [ebx]
+
 struct THidDescriptor
 {
     unsigned char Len;
@@ -1674,17 +1683,17 @@ int GetOutputReportSize(struct THidReportIdEntry *report)
 
 /*##########################################################################
 #
-#   Name       : ImplGetSignedHidOutput
+#   Name       : ImplFindHidOutput
 #
-#   Purpose....: Get signed HID output
+#   Purpose....: Find HID output
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux ImplGetSignedHidOutput "*" rdosdev parm routine [ebx] [ecx] value [eax]
-int __far ImplGetSignedHidOutput(int DevSel, int Usage)
+#pragma aux ImplFindHidOutput "*" rdosdev parm routine [ebx] [ecx] value [fs esi]
+struct THidReportIdEntry * __far ImplFindHidOutput(int DevSel, int Usage)
 {
     struct THidDevice *dev = (struct THidDevice *)RdosSelectorToPointer(DevSel);
     int UsagePage = (Usage >> 8) & 0xFF;
@@ -1694,40 +1703,77 @@ int __far ImplGetSignedHidOutput(int DevSel, int Usage)
 
     report = GetOutputReport(dev, UsagePage, UsageId);
 
-    if (!report->OutputHandle)
+    if (report && !report->OutputHandle)
     {
         size = GetOutputReportSize(report);
         report->OutputHandle = CreateOutputReport(dev, report->ReportId, size);
     }    
+
+    if (report)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
+    return report;
 }
 
 /*##########################################################################
 #
-#   Name       : ImplGetUnsignedHidOutput
+#   Name       : ImplSetHidOutput
 #
-#   Purpose....: Get unsigned HID output
+#   Purpose....: Set HID output
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux ImplGetUnsignedHidOutput "*" rdosdev parm routine [ebx] [ecx] value [eax]
-int __far ImplGetUnsignedHidOutput(int DevSel, int Usage)
+#pragma aux ImplSetHidOutput "*" rdosdev parm routine [fs esi] [ecx] [eax] value
+void __far ImplSetHidOutput(struct THidReportIdEntry *Report, int Usage, int Value)
 {
-    struct THidDevice *dev = (struct THidDevice *)RdosSelectorToPointer(DevSel);
     int UsagePage = (Usage >> 8) & 0xFF;
     int UsageId = Usage & 0xFF;
-    int size;
-    struct THidReportIdEntry *report;
+    int Index;
+    struct THidReportEntry *entry;
+    int StartBit;
+    int BitCount;
 
-    report = GetOutputReport(dev, UsagePage, UsageId);
-
-    if (!report->OutputHandle)
+    for (Index = 0; Index < Report->OutputCount; Index++)
     {
-        size = GetOutputReportSize(report);
-        report->OutputHandle = CreateOutputReport(dev, report->ReportId, size);
-    }        
+        entry = &Report->OutputArr[Index];
+
+        if (entry->UsagePage == UsagePage && entry->UsageIdLow == UsageId)
+        {
+            StartBit = entry->StartBit;
+            BitCount = entry->BitCount;
+
+            if (BitCount < 0)
+                BitCount = 0;
+
+            if (BitCount > 32)
+                BitCount = 32;
+    
+            SetValue(Report->OutputHandle, StartBit, BitCount, Value);    
+            break;
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : ImplUpdateHidOutput
+#
+#   Purpose....: Update HID output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplUpdateHidOutput "*" rdosdev parm routine [fs esi]
+void __far ImplUpdateHidOutput(struct THidReportIdEntry *Report)
+{
+    SendOutputReport(Report->OutputHandle);
 }
 
 /*##########################################################################
@@ -1762,7 +1808,7 @@ void __far ImplTestGate(const char *msg)
     int Sel = RdosPointerToSelector(HidArr[1]);
     int Val;
 
-    Val = RdosGetSignedHidOutput(Sel, 0x801);    
+//    Val = RdosGetSignedHidOutput(Sel, 0x801);    
 }
 
 /*##########################################################################
@@ -2729,8 +2775,10 @@ int main()
     RdosRegisterOsGate(osgate_get_signed_hid_input, (__rdos_gate_callback *)&ImplGetSignedHidInput, "Get Signed Hid Input"); 
     RdosRegisterOsGate(osgate_get_unsigned_hid_input, (__rdos_gate_callback *)&ImplGetUnsignedHidInput, "Get Unsigned Hid Input"); 
     RdosRegisterOsGate(osgate_set_hid_idle, (__rdos_gate_callback *)&ImplSetHidIdle, "Set Hid Idle"); 
-    RdosRegisterOsGate(osgate_get_signed_hid_output, (__rdos_gate_callback *)&ImplGetSignedHidOutput, "Get Signed Hid Output"); 
-    RdosRegisterOsGate(osgate_get_unsigned_hid_output, (__rdos_gate_callback *)&ImplGetUnsignedHidOutput, "Get Unsigned Hid Output"); 
+
+    RdosRegisterOsGate(osgate_find_hid_output_report, (__rdos_gate_callback *)&ImplFindHidOutput, "Find Hid Output"); 
+    RdosRegisterOsGate(osgate_set_hid_output, (__rdos_gate_callback *)&ImplSetHidOutput, "Set Hid Output"); 
+    RdosRegisterOsGate(osgate_update_hid_output, (__rdos_gate_callback *)&ImplUpdateHidOutput, "Update Hid Output"); 
 
     RdosRegisterBimodalUserGate(usergate_get_hid_report_item, (__rdos_gate_callback *)&ImplGetHidReportItem, "Get Hid Report Item"); 
     RdosRegisterBimodalUserGate(usergate_get_hid_report_input_data, (__rdos_gate_callback *)&ImplGetHidReportInputData, "Get Hid Report Input Data"); 

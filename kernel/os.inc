@@ -3410,25 +3410,23 @@ SetHidIdle      MACRO
 ; IN    BX      Device
 ; IN    CH      Usage page
 ; IN    CL      Usage ID
-; OUT   EAX     Value
-GetSignedHidOutput      MACRO
-    OsGate get_signed_hid_output_nr
+; OUT   NC      Found
+; OUT   FS:ESI  Report
+FindHidOutputReport      MACRO
+    OsGate find_hid_output_report_nr
                         ENDM
 
-; IN    BX      Device
-; IN    CH      Usage page
-; IN    CL      Usage ID
-; OUT   EAX     Value
-GetUnsignedHidOutput      MACRO
-    OsGate get_unsigned_hid_output_nr
-                        ENDM
-
-; IN    BX      Device
+; IN    FS:ESI  Report
 ; IN    CH      Usage page
 ; IN    CL      Usage ID
 ; IN    EAX     Value
 SetHidOutput      MACRO
     OsGate set_hid_output_nr
+                        ENDM
+
+; IN    FS:ESI  Report
+UpdateHidOutput      MACRO
+    OsGate update_hid_output_nr
                         ENDM
 
 ;;;;;;;;;; Printer ;;;;;;;;;

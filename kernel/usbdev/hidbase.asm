@@ -65,9 +65,15 @@ hid_handle_struc       ENDS
 
 hid_output_struc        STRUC
 
-ho_dev      DW ?
-ho_size     DW ?
-ho_buf      DB ?
+ho_dev          DW ?
+ho_size         DW ?
+ho_req_type     DB ?
+ho_req          DB ?
+ho_report_id    DB ?
+ho_report_type  DB ?
+ho_interface    DW ?
+ho_report_len   DW ?
+ho_buf          DB ?
 
 hid_output_struc        ENDS
 
@@ -461,6 +467,8 @@ HidHandleReport_   Endp
 
 CreateOutputReport_   Proc near
     push es
+    push ecx
+    push edi
 ;    
     movzx eax,cx
     add eax,4
@@ -470,8 +478,25 @@ CreateOutputReport_   Proc near
     mov es:ho_dev,fs
     mov es:ho_size,cx
 ;
+    push ecx
+    movzx ecx,cx
+    mov edi,OFFSET ho_buf
+    xor al,al
+    rep stosb    
+    pop ecx
+;
+    mov es:ho_req_type,21h
+    mov es:ho_req,9
+    mov es:ho_report_id,bl
+    mov es:ho_report_type,2
+    movzx ax,fs:hid_interface
+    mov es:ho_interface,ax
+    mov es:ho_report_len,cx
+;
     mov eax,es    
 ;
+    pop edi
+    pop ecx
     pop es
     ret
 CreateOutputReport_ Endp
@@ -500,6 +525,45 @@ FreeOutputReport_ Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           SetValue
+;
+;   Description:    Set output value
+;
+;   Parameters:     EBX     Handle
+;                   EDX     Start bit
+;                   ECX     Bit count
+;                   EAX     Value
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public SetValue_
+
+SetValue_   Proc near
+    int 3
+    ret
+SetValue_ Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SendOutputReport
+;
+;   Description:    Send output report
+;
+;   Parameters:     EBX     Handle
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public SendOutputReport_
+
+SendOutputReport_   Proc near
+    int 3
+    ret
+SendOutputReport_ Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           GetReportDescr
 ;
 ;   Description:    Get report descriptor
@@ -524,7 +588,7 @@ GetReportDescr_   Proc near
     push es
     push ecx
     push edi
-;    
+;   
     mov eax,8
     AllocateSmallGlobalMem
     mov es:usd_type,81h
@@ -604,7 +668,8 @@ SetHidProtocol   Proc near
     mov cx,ax
     mov es:usd_type,21h
     mov es:usd_req,0Bh
-    mov es:usd_value,1
+;    mov es:usd_value,1
+    mov es:usd_value,0
     movzx ax,fs:hid_interface
     mov es:usd_index,ax
     mov es:usd_len,0

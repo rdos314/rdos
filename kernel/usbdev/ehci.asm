@@ -2234,7 +2234,7 @@ LocalEndTransfer   Proc near
     jmp etrDecode
 
 etrFail:    
-;    int 3    
+    int 3    
 
 etrDecode:    
     xor edx,edx

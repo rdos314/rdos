@@ -46,6 +46,9 @@ hid_device_sel          DW ?
 hid_report_offset       DD ?
 hid_report_sel          DW ?
 
+hid_output_offset       DD ?
+hid_output_sel          DW ?
+
 hid_shift_state         DW ?
 
 hid_bit_index_count     DW ?
@@ -1394,7 +1397,11 @@ hid_define   Endp
 
 hid_end   Proc far
     push es
+    push fs
     push eax
+    push ebx
+    push ecx
+    push esi
 ;
     mov es,ebx
     mov ax,es:hid_arr_index_count
@@ -1417,22 +1424,45 @@ heOk:
     int 3
     mov bx,es:hid_device_sel
     mov cx,801h
-    GetUnsignedHidOutput
+    FindHidOutputReport
+    jc heNoOut
+;    
+    mov es:hid_output_offset,esi
+    mov es:hid_output_sel,fs
+;    
+    mov cx,801h
+    mov al,1
+    SetHidOutput
     mov es:hid_num_lock,al
 ;        
-    mov bx,es:hid_device_sel
     mov cx,802h
-    GetUnsignedHidOutput
+    mov al,1
+    SetHidOutput
     mov es:hid_caps_lock,al
 ;        
-    mov bx,es:hid_device_sel
     mov cx,803h
-    GetUnsignedHidOutput
+    mov al,1
+    SetHidOutput
     mov es:hid_scroll_lock,al
+;
+    UpdateHidOutput    
+    clc
+    jmp heDone
+    
+heNoOut:
+    mov es:hid_output_offset,0
+    mov es:hid_output_sel,0
+    mov es:hid_num_lock,0
+    mov es:hid_caps_lock,0
+    mov es:hid_scroll_lock,0
     clc
         
 heDone:
+    pop esi
+    pop ecx
+    pop ebx
     pop eax    
+    pop fs
     pop es
     ret
 hid_end   Endp

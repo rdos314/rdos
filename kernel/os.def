@@ -634,8 +634,8 @@ register_hid_input_nr       = 522
 get_signed_hid_input_nr     = 523
 get_unsigned_hid_input_nr   = 524
 set_hid_idle_nr             = 525
-get_signed_hid_output_nr    = 526
-get_unsigned_hid_output_nr  = 527
-set_hid_output_nr           = 528
+find_hid_output_report_nr   = 526
+set_hid_output_nr           = 527
+update_hid_output_nr        = 528
 
 osgate_entries				= 540

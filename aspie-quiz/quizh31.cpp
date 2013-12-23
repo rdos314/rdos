@@ -51,7 +51,7 @@
 #
 ##########################################################################*/
 TQuizH31::TQuizH31(const char *FileName)
-  : TQuiz(195),
+  : TQuiz(196),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -97,7 +97,7 @@ int TQuizH31::GetPcaCount()
 *##########################################################################*/
 int TQuizH31::GetCatCount(int Question)
 {
-    if (Question >= 193)
+    if (Question >= 194)
         return 5;
     else
         return 3;
@@ -112,7 +112,7 @@ int TQuizH31::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizH31::GetQuizN()
 {
-    return 195;
+    return 196;
 }
 
 /*##########################################################################
@@ -522,6 +522,7 @@ void TQuizH31::SetupTexts()
   Quiz[192].MyGroup = GROUP_MIXED;
   Quiz[193].MyGroup = GROUP_MIXED;
   Quiz[194].MyGroup = GROUP_MIXED;
+  Quiz[195].MyGroup = GROUP_MIXED;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Do you or others think that you have unconventional ways of solving problems?";
@@ -717,9 +718,10 @@ void TQuizH31::SetupTexts()
   Quiz[190].Text = "Do you believe in fate when it comes to love?";
   Quiz[191].Text = "Do you like to follow (walk behind) people you are attached to?";
   Quiz[192].Text = "Do you like to be followed (walked behind) by people you are attached to?";
+  Quiz[193].Text = "Do you like to be followed (walked behind) by people you are attracted to?";
 
-  Quiz[193].Text = "Courting vs following";
-  Quiz[194].Text = "View time";
+  Quiz[194].Text = "Courting vs following";
+  Quiz[195].Text = "View time";
 
 }
 
@@ -904,7 +906,7 @@ void TQuizH31::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 195; i++)
+    for (i = 0; i < 196; i++)
             DefineGlobalId(i, i);
 }
 
