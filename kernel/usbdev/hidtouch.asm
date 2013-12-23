@@ -124,7 +124,6 @@ hid_define   Proc far
     cmp cl,1 
     jne hdDone
 ;
-    int 3
     cmp al,30h
     jne hdNotX
 ;
@@ -244,7 +243,6 @@ hid_define   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hid_end   Proc far
-    int 3
     push es
     push eax
 ;
@@ -303,6 +301,70 @@ hid_handle_report   Proc far
     push es
     push fs
     pushad
+;    
+    mov es,ebx
+    movzx ecx,es:hid_coord_count
+    mov ebx,OFFSET hid_coord_arr
+
+hhrLoop:
+    push es
+    push ebx
+    push ecx
+    movzx ebx,es:[ebx].c_x_index
+    mov edi,es:hid_report_offset
+    mov es,es:hid_report_sel
+    GetUnsignedHidInput
+    pop ecx
+    pop ebx
+    pop es
+    mov es:[ebx].c_x1,eax
+    mov es:[ebx].c_x2,eax
+;
+    push es
+    push ebx
+    push ecx
+    movzx ebx,es:[ebx].c_y_index
+    mov edi,es:hid_report_offset
+    mov es,es:hid_report_sel
+    GetUnsignedHidInput
+    pop ecx
+    pop ebx
+    pop es
+    mov es:[ebx].c_y1,eax
+    mov es:[ebx].c_y2,eax
+;
+    mov ax,es:[ebx].c_x_index+2
+    add ax,1
+    jc hhrNext
+;    
+    push es
+    push ebx
+    push ecx
+    movzx ebx,es:[ebx].c_x_index+2
+    mov edi,es:hid_report_offset
+    mov es,es:hid_report_sel
+    GetUnsignedHidInput
+    pop ecx
+    pop ebx
+    pop es
+    mov es:[ebx].c_x2,eax
+;
+    push es
+    push ebx
+    push ecx
+    movzx ebx,es:[ebx].c_y_index+2
+    mov edi,es:hid_report_offset
+    mov es,es:hid_report_sel
+    GetUnsignedHidInput
+    pop ecx
+    pop ebx
+    pop es
+    mov es:[ebx].c_y2,eax
+
+hhrNext:
+    add ebx,SIZE coord_struc
+    sub ecx,1
+    jnz hhrLoop    
 ;
     popad
     pop fs
