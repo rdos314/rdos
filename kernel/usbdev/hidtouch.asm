@@ -339,7 +339,6 @@ hid_close   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hid_handle_report   Proc far
-    int 3
     push ds
     push es
     push fs
@@ -360,6 +359,9 @@ hhrLoop:
     pop ecx
     pop ebx
     pop es
+    mov edx,32767
+    mul edx
+    div es:[ebx].c_x_size    
     mov es:[ebx].c_x1,eax
     mov es:[ebx].c_x2,eax
 ;
@@ -373,6 +375,9 @@ hhrLoop:
     pop ecx
     pop ebx
     pop es
+    mov edx,32767
+    mul edx
+    div es:[ebx].c_y_size    
     mov es:[ebx].c_y1,eax
     mov es:[ebx].c_y2,eax
 ;
@@ -390,6 +395,9 @@ hhrLoop:
     pop ecx
     pop ebx
     pop es
+    mov edx,32767
+    mul edx
+    div es:[ebx].c_x_size    
     mov es:[ebx].c_x2,eax
 ;
     push es
@@ -402,12 +410,21 @@ hhrLoop:
     pop ecx
     pop ebx
     pop es
+    mov edx,32767
+    mul edx
+    div es:[ebx].c_y_size    
     mov es:[ebx].c_y2,eax
 
 hhrNext:
     add ebx,SIZE coord_struc
     sub ecx,1
     jnz hhrLoop    
+;
+    mov ebx,OFFSET hid_coord_arr
+    mov ecx,es:[ebx].c_x1
+    mov edx,es:[ebx].c_y1
+    mov ax,1
+    SetMouse
 ;
     popad
     pop fs
