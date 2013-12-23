@@ -50,6 +50,24 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           UsbDiscThread
+;
+;           DESCRIPTION:    Disc handler thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disc_thread_name  DB 'USB Disc', 0
+
+disc_thread:
+    int 3
+    mov eax,ebx
+    shr eax,16
+;
+    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           usb_attach
 ;
 ;   description:    USB attach callback
@@ -133,10 +151,22 @@ uaFound:
 ;        
     int 3
     ConfigUsbDevice
+;
+    FreeMem
 ;    
     movzx eax,al
+    shl eax,16
     movzx ebx,bx
-    FreeMem
+    or ebx,eax
+;    
+    mov dx,cs
+    mov ds,dx
+    mov es,dx
+    mov edi,OFFSET disc_thread_name
+    mov esi,OFFSET disc_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
 
 uaDone:    
     popad
