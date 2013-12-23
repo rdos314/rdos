@@ -33,6 +33,13 @@ include ..\driver.def
 INCLUDE ..\os\protseg.def
 include ..\usbdev\usb.inc
 
+disc_struc   STRUC
+
+disc_controller      DW ?
+disc_device          DB ?
+
+disc_struc  ENDS
+
 data    SEGMENT byte public 'DATA'
 
 filler  DB ?
@@ -56,14 +63,47 @@ code    SEGMENT byte public 'CODE'
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-disc_thread_name  DB 'USB Disc', 0
-
 disc_thread:
     int 3
-    mov eax,ebx
-    shr eax,16
-;
     
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HexToAscii
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     AL      Number to convert
+;
+;   RETURNS:        AX      Ascii result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HexToAscii      PROC near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+HexToAscii      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -77,6 +117,8 @@ disc_thread:
 ;                   DS      USB device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disc_name    DB 'Usb Disc ', 0
 
 usb_attach  Proc far
     push ds
@@ -149,24 +191,57 @@ uaFound:
     cmp cl,50h
     jne uaFail
 ;        
-    int 3
     ConfigUsbDevice
 ;
-    FreeMem
+    push es
+    push eax
+    mov eax,SIZE disc_struc
+    AllocateSmallGlobalMem
+    pop eax
+    mov es:disc_controller,bx
+    mov es:disc_device,al
+    mov ax,es
+    mov gs,ax
+    pop es
+;
+    xor di,di
+    mov si,OFFSET disc_name
+
+uaCopyDev:
+    mov al,cs:[si]
+    inc si
+    or al,al
+    jz uaCopyDone
+;
+    stosb
+    jmp uaCopyDev
+
+uaCopyDone:
+    mov ax,gs:disc_controller
+    call HexToAscii
+    stosw
+;
+    mov al,'.'
+    stosb
+;
+    mov al,gs:disc_device
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
 ;    
-    movzx eax,al
-    shl eax,16
-    movzx ebx,bx
-    or ebx,eax
+    mov bx,gs
+    xor di,di
 ;    
     mov dx,cs
     mov ds,dx
-    mov es,dx
-    mov edi,OFFSET disc_thread_name
     mov esi,OFFSET disc_thread
     mov ax,2
     mov cx,stack0_size
     CreateThread
+;
+    FreeMem
 
 uaDone:    
     popad
