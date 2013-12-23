@@ -65,7 +65,6 @@ usb_attach  Proc far
     push es
     pushad
 ;
-    int 3
     push ax
     mov eax,1000h
     AllocateSmallGlobalMem
@@ -76,17 +75,58 @@ usb_attach  Proc far
     GetUsbDevice
     cmp ax,cx
     pop ax
-    jne uaDone
+    jne uaFail
 ;
     mov cl,es:udd_class
+    or cl,cl
+    je uaPossible
+;    
     cmp cl,8
-    jne uaDone
+    jne uaFail
+
+uaPossible:
+    xor dl,dl
+    mov cx,1000h
+    xor di,di
+    push ax
+    GetUsbConfig
+    mov cx,ax
+    pop ax
+    or cx,cx
+    jz uaFail
 ;
+    mov dl,es:ucd_config_id
+    xor di,di
+    movzx cx,es:ucd_len
+    add di,cx
+
+uaCheckLoop:
+    mov cl,es:[di].ucd_type
+    cmp cl,4
+    jne uaCheckNext
+;    
+    mov cl,es:[di].uid_class
+    cmp cl,8
+    je uaFound
+
+uaCheckNext:
+    movzx cx,es:[di].ucd_len
+    or cx,cx
+    jz uaFail
+;    
+    add di,cx
+    cmp di,es:ucd_size
+    jb uaCheckLoop
+
+uaFail:
+    FreeMem    
     jmp uaDone
 
-uaDone:    
+uaFound:
+    int 3
     FreeMem
-;
+
+uaDone:    
     popad
     pop es
     pop ds
