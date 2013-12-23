@@ -51,6 +51,8 @@ hid_output_sel          DW ?
 
 hid_shift_state         DW ?
 
+hid_repeat_timeout      DD ?,?
+
 hid_bit_index_count     DW ?
 hid_bit_index_arr       DW MAX_BIT_ENTRIES DUP(?)
 hid_bit_key_arr         DB MAX_BIT_ENTRIES DUP(?)
@@ -1059,6 +1061,16 @@ hhpNew:
     SetKeyboardState
     pop ax
     call ReportKeyPress
+;
+    push eax
+    push edx
+    GetSystemTime
+    add eax,1193 * 500
+    adc edx,0
+    mov ds:hid_repeat_timeout,eax  
+    mov ds:hid_repeat_timeout+4,edx  
+    pop edx
+    pop eax
 
 hhpNext:
     pop ecx
@@ -1114,6 +1126,8 @@ hhrFindLoop:
 
 hhrNew:
     call ReportKeyRelease
+    mov ds:hid_repeat_timeout,-1
+    mov ds:hid_repeat_timeout+4,-1
 
 hhrNext:
     pop ecx
@@ -1126,6 +1140,42 @@ hhrDone:
     pop ecx
     ret
 HandleHidReleased  Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           HandleHidRepeat
+;
+;       DESCRIPTION:    Handle repeat
+;
+;       PARAMETERS:     DS      sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleHidRepeat  Proc near
+    push eax
+    push edx
+;
+    GetSystemTime
+    sub eax,ds:hid_repeat_timeout
+    sbb edx,ds:hid_repeat_timeout+4
+    jc hhrepDone
+;
+    mov ax,ds:hid_is_pressed_arr
+    or ah,ah
+    jnz hhrepDone
+;
+    push ax
+    mov ax,ds:hid_shift_state
+    SetKeyboardState
+    pop ax
+    call ReportKeyPress
+    
+hhrepDone:    
+    pop edx
+    pop eax
+    ret
+HandleHidRepeat Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1248,6 +1298,9 @@ hid_end   Proc far
     push esi
 ;
     mov es,ebx
+    mov es:hid_repeat_timeout,-1
+    mov es:hid_repeat_timeout+4,-1
+;
     mov ax,es:hid_arr_index_count
     or ax,es:hid_bit_index_count
     or ax,ax
@@ -1420,6 +1473,7 @@ hhrArrOk:
     call HandleHidShift
     call HandleHidReleased
     call HandleHidPressed
+    call HandleHidRepeat
 ;    
     popad
     pop fs
