@@ -1421,7 +1421,6 @@ heOk:
     SetHidIdle
     pop es
 ;
-    int 3
     mov bx,es:hid_device_sel
     mov cx,801h
     FindHidOutputReport
@@ -1431,17 +1430,17 @@ heOk:
     mov es:hid_output_sel,fs
 ;    
     mov cx,801h
-    mov al,1
+    xor al,al
     SetHidOutput
     mov es:hid_num_lock,al
 ;        
     mov cx,802h
-    mov al,1
+    xor al,al
     SetHidOutput
     mov es:hid_caps_lock,al
 ;        
     mov cx,803h
-    mov al,1
+    xor al,al
     SetHidOutput
     mov es:hid_scroll_lock,al
 ;

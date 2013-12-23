@@ -1728,7 +1728,7 @@ struct THidReportIdEntry * __far ImplFindHidOutput(int DevSel, int Usage)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux ImplSetHidOutput "*" rdosdev parm routine [fs esi] [ecx] [eax] value
+#pragma aux ImplSetHidOutput "*" rdosdev parm routine [fs esi] [ecx] [eax]
 void __far ImplSetHidOutput(struct THidReportIdEntry *Report, int Usage, int Value)
 {
     int UsagePage = (Usage >> 8) & 0xFF;
@@ -1737,6 +1737,8 @@ void __far ImplSetHidOutput(struct THidReportIdEntry *Report, int Usage, int Val
     struct THidReportEntry *entry;
     int StartBit;
     int BitCount;
+
+    _asm push esi;
 
     for (Index = 0; Index < Report->OutputCount; Index++)
     {
@@ -1757,6 +1759,8 @@ void __far ImplSetHidOutput(struct THidReportIdEntry *Report, int Usage, int Val
             break;
         }
     }
+
+    _asm pop esi;
 }
 
 /*##########################################################################

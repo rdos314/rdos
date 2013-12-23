@@ -539,7 +539,30 @@ FreeOutputReport_ Endp
     public SetValue_
 
 SetValue_   Proc near
-    int 3
+    push es
+    pushad
+;    
+    mov es,ebx
+    mov edi,OFFSET ho_buf
+;
+    mov esi,ecx
+    mov ecx,edx
+    shr edx,3
+    and cl,7
+    shl esi,2
+;    
+    and eax,cs:[esi].tv
+    shl eax,cl
+;
+    mov ebx,cs:[esi].tv
+    not ebx
+    rol ebx,cl
+    and ebx,es:[edi+edx]
+    or eax,ebx
+    mov es:[edi+edx],eax
+;
+    popad
+    pop es
     ret
 SetValue_ Endp
 
@@ -557,7 +580,42 @@ SetValue_ Endp
     public SendOutputReport_
 
 SendOutputReport_   Proc near
-    int 3
+    push ds
+    push es
+    pushad
+;   
+    mov es,ebx
+    mov ds,es:ho_dev
+    mov bx,ds:hid_control_handle
+;
+    LockUsbPipe
+    mov edi,OFFSET ho_req_type
+    mov ecx,8
+    WriteUsbControl
+;
+    mov edi,OFFSET ho_buf
+    mov cx,ds:ho_size
+    WriteUsbData
+;    
+    ReqUsbStatus
+    StartUsbTransaction
+    FreeMem
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:hid_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:hid_control_handle
+    WasUsbTransactionOk
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    popad
+    pop es
+    pop ds    
     ret
 SendOutputReport_ Endp
 
