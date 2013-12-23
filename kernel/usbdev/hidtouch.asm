@@ -39,11 +39,14 @@ MAX_POINTS  = 10
 
 coord_struc STRUC
 
-c_x_index   DW ?
-c_y_index   DW ?
+c_x_index   DW ?,?
+c_y_index   DW ?,?
 
-c_x         DD ?
-c_y         DD ?
+c_x1        DD ?
+c_y1        DD ?
+
+c_x2        DD ?
+c_y2        DD ?
 
 coord_struc ENDS
 
@@ -54,7 +57,7 @@ hid_report_sel      DW ?
 
 hid_coord_count     DW ?
 
-hid_coord_arr       DB MAX_POINTS * 12 DUP(?)
+hid_coord_arr       DB MAX_POINTS * 24 DUP(?)
 
 hid_touch   ENDS
 
@@ -80,7 +83,6 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hid_begin   Proc far
-    int 3
     push es
     push eax
 ;    
@@ -114,7 +116,6 @@ hid_begin   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hid_define   Proc far
-    int 3
     push ds
     push eax
     push edx
@@ -123,6 +124,7 @@ hid_define   Proc far
     cmp cl,1 
     jne hdDone
 ;
+    int 3
     cmp al,30h
     jne hdNotX
 ;
@@ -133,57 +135,92 @@ hid_define   Proc far
     or eax,eax
     jz hdAddX
 ;
-    push edx
     dec eax
     mov edx,SIZE coord_struc
     mul edx
+    add eax,OFFSET hid_coord_arr
     mov dx,ds:[eax].c_x_index
     add dx,1
-    pop edx
-    jc hdAddX
+    jnc hdCheckY
 ;
     mov ds:[eax].c_x_index,si
     jmp hdDone
 
+hdCheckY:
+    mov dx,ds:[eax].c_y_index
+    add dx,1
+    jc hdX2
+;
+    mov dx,ds:[eax].c_y_index+2
+    add dx,1
+    jc hdAddX
+
+hdX2:
+    mov dx,ds:[eax].c_x_index+2
+    add dx,1
+    jnc hdAddX
+;    
+    mov ds:[eax].c_x_index+2,si
+    jmp hdDone
+        
 hdAddX:
     movzx eax,ds:hid_coord_count
     inc ds:hid_coord_count
     mov edx,SIZE coord_struc
     mul edx
+    add eax,OFFSET hid_coord_arr
     mov ds:[eax].c_x_index,si
     mov ds:[eax].c_y_index,-1
+    mov ds:[eax].c_x_index+2,-1
+    mov ds:[eax].c_y_index+2,-1
     jmp hdDone
 
 hdNotX:                   
     cmp al,31h
     jne hdDone
 ;
-    test dx,4
-    jnz hdDone
-;
     movzx eax,ds:hid_coord_count
     or eax,eax
     jz hdAddY
 ;
-    push edx
     dec eax
     mov edx,SIZE coord_struc
     mul edx
+    add eax,OFFSET hid_coord_arr
     mov dx,ds:[eax].c_y_index
     add dx,1
-    pop edx
-    jc hdAddY
+    jnc hdCheckX
 ;
     mov ds:[eax].c_y_index,si
     jmp hdDone
 
+hdCheckX:
+    mov dx,ds:[eax].c_x_index
+    add dx,1
+    jc hdY2
+;
+    mov dx,ds:[eax].c_x_index+2
+    add dx,1
+    jc hdAddY
+
+hdY2:
+    mov dx,ds:[eax].c_y_index+2
+    add dx,1
+    jnc hdAddY
+;    
+    mov ds:[eax].c_y_index+2,si
+    jmp hdDone
+        
 hdAddY:
     movzx eax,ds:hid_coord_count
     inc ds:hid_coord_count
     mov edx,SIZE coord_struc
     mul edx
+    add eax,OFFSET hid_coord_arr
     mov ds:[eax].c_x_index,-1
     mov ds:[eax].c_y_index,si
+    mov ds:[eax].c_x_index+2,-1
+    mov ds:[eax].c_y_index+2,-1
 
 hdDone:    
     pop edx
