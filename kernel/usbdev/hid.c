@@ -57,9 +57,6 @@ extern void CloseHidDev(struct THidDevice *dev);
 extern void OpenIntrPipe(struct THidDevice *dev);
 #pragma aux OpenIntrPipe parm routine [fs esi]
 
-extern void StartKeyboardHandler(struct THidDevice *dev);
-#pragma aux StartKeyboardHandler parm routine [fs esi]
-
 extern char *WaitForReport(struct THidDevice *dev);
 #pragma aux WaitForReport parm routine [fs esi] value [es edi]
 
@@ -1523,40 +1520,31 @@ int CreateIntrPipe(struct THidDevice *dev)
     struct THidReportIdEntry *report;
     struct THidReportEntry *entry;
     
-    if (dev->IntrSize)
+    for (i = 0; i < MAX_REPORT_IDS; i++)
     {
-        OpenIntrPipe(dev);
-        StartKeyboardHandler(dev);
-        return FALSE;
-    }
-    else
-    {
-        for (i = 0; i < MAX_REPORT_IDS; i++)
-        {
-            report = dev->ReportIdArr[i];
+        report = dev->ReportIdArr[i];
         
-            if (report && report->InputCount)
-            {
-                entry = &report->InputArr[report->InputCount - 1];
-                size = entry->StartBit + entry->BitCount;
-                if (size > maxsize)
-                    maxsize = size;                
-            }
+        if (report && report->InputCount)
+        {
+            entry = &report->InputArr[report->InputCount - 1];
+            size = entry->StartBit + entry->BitCount;
+            if (size > maxsize)
+                maxsize = size;                
         }
+    }
 
-        size = maxsize;
-        size--;
-        size = size / 8;
+    size = maxsize;
+    size--;
+    size = size / 8;
+    size++;
+
+    if (!dev->ReportIdArr[0])
         size++;
 
-        if (!dev->ReportIdArr[0])
-            size++;
+    dev->IntrSize = size;
 
-        dev->IntrSize = size;
-
-        OpenIntrPipe(dev);
-        return TRUE;
-    }
+    OpenIntrPipe(dev);
+    return TRUE;
 }
 
 /*##########################################################################

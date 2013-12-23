@@ -106,17 +106,6 @@ hk_key_arr      DB 6 DUP(?)
 
 hid_key_struc   ENDS
 
-data    SEGMENT byte public 'DATA'
-
-hid_key_leds            DB ?
-hid_key_mod             DB ?
-hid_key_arr             DB 6 DUP(?)
-
-hid_last_key            DB ?
-hid_last_time           DD ?
-
-data    ENDS
-
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
 code    SEGMENT byte public 'CODE'
@@ -124,79 +113,6 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     .386p
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:       UpdateLeds
-;
-;           Description:    Update keyboard LEDs
-;
-;       Paramters:      AL      LED status
-;                       DS      Hid dev
-;      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateLeds   Proc near
-    push es
-    push eax
-    push bx
-    push cx
-    push edx
-    push di
-;    
-    push ax
-    mov eax,SIZE usb_setup_data + 1
-    AllocateSmallGlobalMem
-    mov cx,ax
-    pop ax
-    mov di,SIZE usb_setup_data
-    stosb
-;    
-    mov es:usd_type,21h
-    mov es:usd_req,9
-    mov es:usd_value,200h
-    movzx ax,ds:hid_interface
-    mov es:usd_index,ax
-    mov es:usd_len,1
-;   
-    xor di,di
-    mov bx,ds:hid_control_handle
-;
-    LockUsbPipe
-    mov cx,8
-    WriteUsbControl
-;
-    mov di,SIZE usb_setup_data
-    mov cx,1
-    WriteUsbData
-;    
-    ReqUsbStatus
-    StartUsbTransaction
-    FreeMem
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,ds:hid_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:hid_control_handle
-    WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
-
-ulDone:
-    pop di
-    pop edx
-    pop cx
-    pop bx
-    pop eax
-    pop es
-    ret
-UpdateLeds Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -968,111 +884,6 @@ ReportKeyRelease  Proc near
     pop ax
     ret
 ReportKeyRelease  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           HidKeyThread
-;
-;           DESCRIPTION:    USB keyboard handler thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public StartKeyboardHandler_
-    
-StartKeyboardHandler_   Proc near
-    push ds
-    push es
-    push fs
-    pushad
-;    
-    mov ax,fs
-    mov ds,ax
-    mov ax,SEG data
-    mov fs,ax
-;
-    mov fs:hid_key_mod,0
-    mov fs:hid_key_arr,0
-;    
-;    call SetIdle
-;
-    mov al,3
-    call UpdateLeds    
-    mov fs:hid_key_leds,al
-;
-    mov ax,200
-    WaitMilliSec
-;
-    mov eax,ds:hid_stop_req
-    or eax,eax
-    jnz hktDone
-;
-    mov bx,ds:hid_intr_req
-
-hktDataLoop:
-    mov eax,ds:hid_stop_req
-    or eax,eax
-    jnz hktDone
-;        
-    GetKeyboardState
-    mov cx,ax
-    xor al,al
-    test cx,num_active
-    jz hktNumOk
-;
-    or al,1
-
-hktNumOk:
-    test cx,caps_active
-    jz hktCapsOk
-;
-    or al,2
-
-hktCapsOk:
-    cmp al,fs:hid_key_leds
-    je hktLedsOK
-;    
-    mov fs:hid_key_leds,al
-    mov al,fs:hid_key_leds
-    call UpdateLeds
-
-hktLedsOk:
-    GetThread
-    StartUsbReq
-    WaitForSignal
-;       
-    IsUsbReqReady
-    jc hktDataLoop
-;    
-    GetUsbReqData
-    cmp cx,8
-    jne hktDataLoop
-;
-    push es
-    mov es,ds:hid_intr_buf
-    mov al,es:hk_modifiers
-    cmp al,fs:hid_key_mod
-    je hktModHandled
-;
-    mov fs:hid_key_mod,al
-;    call UpdateShiftState
-
-hktModHandled:
-;    call HandleKeyReport
-    pop es
-    jmp hktDataLoop
-    
-hktDone:
-    mov fs:hid_key_mod,0
-    mov fs:hid_key_arr,0
-;
-    popad
-    pop fs
-    pop es
-    pop ds
-    ret
-StartKeyboardHandler_   Endp
-        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
