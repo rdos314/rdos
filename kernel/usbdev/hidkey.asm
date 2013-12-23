@@ -471,6 +471,33 @@ NumLock   Proc near
     xor ax,num_active
     mov ds:hid_shift_state,ax
     SetKeyboardState
+;
+    mov ax,ds:hid_shift_state
+    and ax,num_active
+    jz nlOff
+
+nlOn:
+    mov al,1
+    jmp nlSet
+
+nlOff:
+    xor al,al
+
+nlSet: 
+    push fs
+    push ecx
+    push esi
+;           
+    mov esi,ds:hid_output_offset
+    mov fs,ds:hid_output_sel
+;    
+    mov cx,801h
+    SetHidOutput
+    UpdateHidOutput    
+;
+    pop esi
+    pop ecx
+    pop fs    
     xor ax,ax
     ret
 NumLock   Endp
