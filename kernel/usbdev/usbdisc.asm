@@ -50,6 +50,8 @@ disc_bulk_out_wait      DW ?
 disc_controller         DW ?
 disc_device             DB ?
 
+disc_sectors            DD ?
+
 disc_serial             DB ?
 disc_vendor             DW ?
 disc_prod               DW ?
@@ -72,8 +74,7 @@ disc_csw_status         DB ?
 ;
 
 ; capacity
-disc_sectors            DD ?
-disc_sector_size        DD ?
+disc_cap                DD ?,?
 
 ; inquiry
 disc_peri               DB ?
@@ -334,7 +335,7 @@ ReadCapacity Proc near
 ;    
     mov ax,fs
     mov es,ax    
-    mov edi,OFFSET disc_sectors
+    mov edi,OFFSET disc_cap
     mov ecx,8
     call ReceiveData
     jc rcDone
@@ -342,23 +343,75 @@ ReadCapacity Proc near
     call ReceiveCsw
     jc rcDone
 ;
-    int 3
-    mov eax,fs:disc_sectors
+    mov eax,fs:disc_cap+4
+    xchg al,ah
+    rol eax,16
+    xchg al,ah
+    cmp eax,200h
+    stc
+    jnz rcDone
+;    
+    mov eax,fs:disc_cap
     xchg al,ah
     rol eax,16
     xchg al,ah
     mov fs:disc_sectors,eax
-;
-    mov eax,fs:disc_sector_size
-    xchg al,ah
-    rol eax,16
-    xchg al,ah
-    mov fs:disc_sector_size,eax
     clc
 
 rcDone:
     ret
 ReadCapacity Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ReadSector
+;
+;   DESCRIPTION:    Read sector
+;
+;   PARAMETERS:     FS      Disc sel
+;                   ES:EDI  Buffer
+;                   EDX     Sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadSector Proc near
+    mov ecx,200h
+    mov fs:disc_cbw_tag,edx
+    mov fs:disc_cbw_transfer_len,ecx
+    mov fs:disc_cbw_flags,80h
+    mov fs:disc_cbw_cmd_len,10
+    mov fs:disc_cbw_cmd_data,28h
+    mov fs:disc_cbw_cmd_data+1,0
+;
+    mov eax,edx
+    xchg al,ah
+    rol eax,16
+    xchg al,ah
+    mov dword ptr fs:disc_cbw_cmd_data+2,eax
+;
+    mov fs:disc_cbw_cmd_data+6,0
+;
+    mov ax,1
+    xchg al,ah    
+    mov word ptr fs:disc_cbw_cmd_data+7,ax
+;
+    mov fs:disc_cbw_cmd_data+9,0
+;
+    push edi
+    call SendCbw
+    pop edi
+    jc rsDone
+;    
+    mov ecx,200h
+    call ReceiveData
+    jc rsDone
+;    
+    call ReceiveCsw
+
+rsDone:
+    ret
+ReadSector Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -408,8 +461,17 @@ disc_thread:
     call RequestSense
     jc dtEnd
 ;
-    int 3
     call ReadCapacity
+    jc dtEnd
+;
+    int 3    
+    mov eax,1000h
+    AllocateBigLinear
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,edx    
+    xor edx,edx
+    call ReadSector
 
 dtEnd: 
     int 3   
