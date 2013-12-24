@@ -67,6 +67,15 @@ disc_csw_tag            DD ?
 disc_csw_residue        DD ?
 disc_csw_status         DB ?
 
+;
+; do not reorganize, connected to responses
+;
+
+; capacity
+disc_sectors            DD ?
+disc_sector_size        DD ?
+
+; inquiry
 disc_peri               DB ?
 disc_removable          DB ?
 disc_ver                DB ?
@@ -76,6 +85,9 @@ disc_intq_resv          DB 4 DUP(?)
 disc_vendor_str         DB 8 DUP(?)
 disc_prod_str           DB 16 DUP(?)
 disc_rev_str            DB 4 DUP(?)
+
+; request sense
+disc_sense_data         DB 18 DUP(?)
    
 disc_struc  ENDS
 
@@ -254,6 +266,103 @@ Inquiry Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           RequestSense
+;
+;   DESCRIPTION:    Request sense data
+;
+;   PARAMETERS:     FS      Disc sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RequestSense Proc near
+    mov fs:disc_cbw_tag,0E000EEEEh
+    mov fs:disc_cbw_transfer_len,18
+    mov fs:disc_cbw_flags,80h
+    mov fs:disc_cbw_cmd_len,6
+    mov fs:disc_cbw_cmd_data,3
+    mov fs:disc_cbw_cmd_data+1,0
+    mov fs:disc_cbw_cmd_data+2,0
+    mov fs:disc_cbw_cmd_data+3,0
+    mov fs:disc_cbw_cmd_data+4,18
+    mov fs:disc_cbw_cmd_data+5,0
+;
+    call SendCbw
+    jc reqsDone
+;    
+    mov ax,fs
+    mov es,ax    
+    mov edi,OFFSET disc_sense_data
+    mov ecx,18
+    call ReceiveData
+    jc reqsDone
+;    
+    call ReceiveCsw
+
+reqsDone:
+    ret
+RequestSense Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ReadCapacity
+;
+;   DESCRIPTION:    Read capacity data
+;
+;   PARAMETERS:     FS      Disc sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadCapacity Proc near
+    mov fs:disc_cbw_tag,0D000DDDDh
+    mov fs:disc_cbw_transfer_len,8
+    mov fs:disc_cbw_flags,80h
+    mov fs:disc_cbw_cmd_len,10
+    mov fs:disc_cbw_cmd_data,25h
+    mov fs:disc_cbw_cmd_data+1,0
+    mov fs:disc_cbw_cmd_data+2,0
+    mov fs:disc_cbw_cmd_data+3,0
+    mov fs:disc_cbw_cmd_data+4,0
+    mov fs:disc_cbw_cmd_data+5,0
+    mov fs:disc_cbw_cmd_data+6,0
+    mov fs:disc_cbw_cmd_data+7,0
+    mov fs:disc_cbw_cmd_data+8,0
+    mov fs:disc_cbw_cmd_data+9,0
+;
+    call SendCbw
+    jc rcDone
+;    
+    mov ax,fs
+    mov es,ax    
+    mov edi,OFFSET disc_sectors
+    mov ecx,8
+    call ReceiveData
+    jc rcDone
+;    
+    call ReceiveCsw
+    jc rcDone
+;
+    int 3
+    mov eax,fs:disc_sectors
+    xchg al,ah
+    rol eax,16
+    xchg al,ah
+    mov fs:disc_sectors,eax
+;
+    mov eax,fs:disc_sector_size
+    xchg al,ah
+    rol eax,16
+    xchg al,ah
+    mov fs:disc_sector_size,eax
+    clc
+
+rcDone:
+    ret
+ReadCapacity Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UsbDiscThread
 ;
 ;           DESCRIPTION:    Disc handler thread
@@ -294,10 +403,17 @@ disc_thread:
     AddWaitForUsbPipe
 ;
     call Inquiry    
+    jc dtEnd
+;    
+    call RequestSense
+    jc dtEnd
+;
     int 3
-    
-    
-        
+    call ReadCapacity
+
+dtEnd: 
+    int 3   
+           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
