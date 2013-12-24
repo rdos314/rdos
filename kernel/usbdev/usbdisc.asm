@@ -50,6 +50,9 @@ disc_bulk_out_wait      DW ?
 disc_controller         DW ?
 disc_device             DB ?
 
+disc_nr                 DB ?
+disc_handle             DW ?
+
 disc_sectors            DD ?
 
 disc_serial             DB ?
@@ -376,6 +379,9 @@ ReadCapacity Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadSector Proc near
+    push es
+    pushad
+;    
     mov ecx,200h
     mov fs:disc_cbw_tag,edx
     mov fs:disc_cbw_transfer_len,ecx
@@ -410,6 +416,8 @@ ReadSector Proc near
     call ReceiveCsw
 
 rsDone:
+    popad
+    pop es
     ret
 ReadSector Endp
 
@@ -465,6 +473,12 @@ disc_thread:
     jc dtEnd
 ;
     int 3    
+    mov bx,fs
+    mov ecx,10000h
+    InstallDisc
+    mov fs:disc_nr,al
+    mov fs:disc_handle,bx
+;
     mov eax,1000h
     AllocateBigLinear
     mov ax,flat_sel
