@@ -889,7 +889,6 @@ SetupDrives Endp
 start_thread_name   DB 'Start Usb Disc', 0
 
 start_thread:
-    int 3
     mov fs,bx
     mov bx,fs:disc_handle
     StartDisc
@@ -958,7 +957,6 @@ disc_thread:
     mov bx,fs:disc_handle
     SetDiscParam
 ;
-    int 3    
     call SetupDrives
 ;       
     mov bx,fs
@@ -971,6 +969,7 @@ disc_thread:
     mov cx,stack0_size
     CreateThread
 ;
+    int 3    
     
 dtEnd: 
     int 3   
