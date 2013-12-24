@@ -41,6 +41,12 @@ disc_bulk_out_pipe      DB ?
 disc_bulk_in_maxsize    DW ?
 disc_bulk_out_maxsize   DW ?
 
+disc_bulk_in_handle     DW ?
+disc_bulk_out_handle    DW ?
+
+disc_bulk_in_wait       DW ?
+disc_bulk_out_wait      DW ?
+
 disc_controller         DW ?
 disc_device             DB ?
 
@@ -48,6 +54,29 @@ disc_serial             DB ?
 disc_vendor             DW ?
 disc_prod               DW ?
 
+disc_cbw_sign           DD ?
+disc_cbw_tag            DD ?
+disc_cbw_transfer_len   DD ?
+disc_cbw_flags          DB ?
+disc_cbw_lun            DB ?
+disc_cbw_cmd_len        DB ?
+disc_cbw_cmd_data       DB 10 DUP(?)
+
+disc_csw_sign           DD ?
+disc_csw_tag            DD ?
+disc_csw_residue        DD ?
+disc_csw_status         DB ?
+
+disc_peri               DB ?
+disc_removable          DB ?
+disc_ver                DB ?
+disc_resp_form          DB ?
+disc_add_len            DB ?
+disc_intq_resv          DB 4 DUP(?)
+disc_vendor_str         DB 8 DUP(?)
+disc_prod_str           DB 16 DUP(?)
+disc_rev_str            DB 4 DUP(?)
+   
 disc_struc  ENDS
 
 data    SEGMENT byte public 'DATA'
@@ -67,6 +96,164 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           SendCbw
+;
+;   DESCRIPTION:    Send CBW
+;
+;   PARAMETERS:     FS      Disc sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendCbw Proc near
+    push es
+    mov ax,fs
+    mov es,ax
+;    
+    mov bx,fs:disc_bulk_out_handle
+    mov edi,OFFSET disc_cbw_sign
+    mov ecx,31
+    WriteUsbData
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,fs:disc_bulk_out_wait
+    WaitWithTimeout
+;    
+    mov bx,fs:disc_bulk_out_handle
+    WasUsbTransactionOk
+;   
+    pop es    
+    ret
+SendCbw Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ReceiveCsw
+;
+;   DESCRIPTION:    Receive CSW
+;
+;   PARAMETERS:     FS      Disc sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveCsw Proc near
+    push es
+;
+    mov ax,fs
+    mov es,ax
+;    
+    mov bx,fs:disc_bulk_in_handle
+    mov edi,OFFSET disc_csw_sign
+    mov ecx,13
+    ReqUsbData
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,fs:disc_bulk_in_wait
+    WaitWithTimeout
+;    
+    mov bx,fs:disc_bulk_in_handle
+    WasUsbTransactionOk
+    jc rcswDone
+;
+    mov eax,fs:disc_csw_sign
+    cmp eax,53425355h
+    stc
+    jne rcswDone
+;
+    mov eax,fs:disc_csw_tag
+    cmp eax,fs:disc_cbw_tag
+    stc
+    jne rcswDone
+;
+    mov al,fs:disc_csw_status
+    or al,al
+    stc
+    jnz rcswDone
+;    
+    clc
+
+rcswDone:        
+    pop es    
+    ret
+ReceiveCsw Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ReceiveData
+;
+;   DESCRIPTION:    Receive data
+;
+;   PARAMETERS:     FS      Disc sel
+;                   ES:EDI  Buffer
+;                   ECX     Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveData Proc near
+    mov bx,fs:disc_bulk_in_handle
+    ReqUsbData
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,fs:disc_bulk_in_wait
+    WaitWithTimeout
+;    
+    mov bx,fs:disc_bulk_in_handle
+    WasUsbTransactionOk
+    ret
+ReceiveData Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           Inquiry
+;
+;   DESCRIPTION:    Send inquiry
+;
+;   PARAMETERS:     FS      Disc sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Inquiry Proc near
+    mov fs:disc_cbw_tag,0F000FFFFh
+    mov fs:disc_cbw_transfer_len,36
+    mov fs:disc_cbw_flags,80h
+    mov fs:disc_cbw_cmd_len,6
+    mov fs:disc_cbw_cmd_data,12h
+    mov fs:disc_cbw_cmd_data+1,0
+    mov fs:disc_cbw_cmd_data+2,0
+    mov fs:disc_cbw_cmd_data+3,0
+    mov fs:disc_cbw_cmd_data+4,36
+    mov fs:disc_cbw_cmd_data+5,0
+;
+    call SendCbw
+    jc inqDone
+;    
+    mov ax,fs
+    mov es,ax    
+    mov edi,OFFSET disc_peri
+    mov ecx,36
+    call ReceiveData
+    jc inqDone
+;    
+    call ReceiveCsw
+
+inqDone:
+    ret
+Inquiry Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UsbDiscThread
 ;
 ;           DESCRIPTION:    Disc handler thread
@@ -74,8 +261,41 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 disc_thread:
-    int 3
     mov fs,bx
+    mov fs:disc_cbw_sign,43425355h
+    mov fs:disc_cbw_lun,0
+;
+    mov bx,fs:disc_controller
+    movzx ax,fs:disc_device
+    mov dl,fs:disc_bulk_in_pipe
+    OpenUsbPipe
+    mov fs:disc_bulk_in_handle,bx
+;
+    CreateWait
+    mov fs:disc_bulk_in_wait,bx
+;    
+    mov ax,fs:disc_bulk_in_handle
+    mov bx,fs:disc_bulk_in_wait
+    movzx ecx,bx
+    AddWaitForUsbPipe
+;
+    mov bx,fs:disc_controller
+    movzx ax,fs:disc_device
+    mov dl,fs:disc_bulk_out_pipe
+    OpenUsbPipe
+    mov fs:disc_bulk_out_handle,bx
+;
+    CreateWait
+    mov fs:disc_bulk_out_wait,bx
+;    
+    mov ax,fs:disc_bulk_out_handle
+    mov bx,fs:disc_bulk_out_wait
+    movzx ecx,bx
+    AddWaitForUsbPipe
+;
+    call Inquiry    
+    int 3
+    
     
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
