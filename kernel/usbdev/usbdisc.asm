@@ -54,6 +54,8 @@ disc_nr                 DB ?
 disc_handle             DW ?
 
 disc_sectors            DD ?
+disc_sectors_per_unit   DW ?
+disc_units              DW ?
 
 disc_serial             DB ?
 disc_vendor             DW ?
@@ -108,6 +110,69 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     .386p
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       CalcParam
+;
+;       DESCRIPTION:    Calculate various parameters
+;
+;       PARAMETERS:     FS      Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CalcParam       Proc near
+    pushad
+;
+    mov eax,1
+    mov edx,fs:disc_sectors
+
+calc_param_norm_loop:
+    shl eax,1
+    shr edx,1
+    cmp eax,edx
+    jc calc_param_norm_loop
+;
+    mov esi,edx
+    mov ebx,esi
+    mov ecx,edx
+
+calc_param_chs_loop:
+    xor edx,edx
+    mov eax,fs:disc_sectors
+    div esi
+    cmp ecx,edx
+    jc calc_param_chs_next
+;       
+    mov ecx,edx
+    mov ebx,esi
+    or edx,edx
+    jz calc_param_chs_ok
+
+calc_param_chs_next:
+    inc esi
+    cmp esi,eax
+    jbe calc_param_chs_loop
+;
+    xor edx,edx
+    mov eax,fs:disc_sectors
+    div ebx
+
+calc_param_chs_ok:
+    mov edx,eax
+    mov eax,ebx
+;
+    mov fs:disc_sectors_per_unit,ax
+    mov fs:disc_units,dx
+    mul dx
+    push dx
+    push ax
+    pop fs:disc_sectors
+;
+    popad
+    ret
+CalcParam       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -478,6 +543,15 @@ disc_thread:
     InstallDisc
     mov fs:disc_nr,al
     mov fs:disc_handle,bx
+;
+    call CalcParam
+    mov ax,fs:disc_sectors_per_unit
+    mov dx,fs:disc_units
+    mov cx,512
+    mov si,-1
+    mov di,-1
+    mov bx,fs:disc_handle
+    SetDiscParam
 ;
     mov eax,1000h
     AllocateBigLinear
