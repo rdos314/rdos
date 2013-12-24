@@ -35,8 +35,14 @@ include ..\usbdev\usb.inc
 
 disc_struc   STRUC
 
-disc_controller      DW ?
-disc_device          DB ?
+disc_bulk_in_pipe       DB ?
+disc_bulk_out_pipe      DB ?
+
+disc_bulk_in_maxsize    DW ?
+disc_bulk_out_maxsize   DW ?
+
+disc_controller         DW ?
+disc_device             DB ?
 
 disc_struc  ENDS
 
@@ -65,6 +71,7 @@ code    SEGMENT byte public 'CODE'
 
 disc_thread:
     int 3
+    mov fs,bx
     
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -204,6 +211,39 @@ uaFound:
     mov gs,ax
     pop es
 ;
+    xor di,di
+    movzx cx,es:ucd_len
+    add di,cx
+
+uaDescrLoop:
+    mov cl,es:[di].udd_type
+    cmp cl,5
+    jne uaDescrNext
+;
+    mov cl,es:[di].ued_address
+    test cl,80h    
+    jnz uaBulkIn
+
+uaDescrBulkOut:
+    and cl,0Fh
+    mov gs:disc_bulk_out_pipe,cl
+    mov bx,es:[di].ued_maxsize
+    mov gs:disc_bulk_out_maxsize,bx
+    jmp uaDescrNext
+
+uaBulkIn:
+    and cl,8Fh
+    mov gs:disc_bulk_in_pipe,cl
+    mov bx,es:[di].ued_maxsize
+    mov gs:disc_bulk_in_maxsize,bx
+    
+uaDescrNext:    
+    movzx cx,es:[di].ucd_len
+    add di,cx
+    cmp di,es:ucd_size
+    jb uaDescrLoop    
+
+uaDescrDone:
     xor di,di
     mov si,OFFSET disc_name
 

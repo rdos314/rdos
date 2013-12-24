@@ -216,6 +216,9 @@ static void ProcessRow(char *str)
 
             case 15:
                  val = atoi(valstr);
+                 if (val < 3)
+                     val = 3;
+                 val -= 2;
                  Row.Quiz[194] = val;
                  break;
 

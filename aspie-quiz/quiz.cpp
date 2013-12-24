@@ -12146,7 +12146,7 @@ void TQuiz::WriteIntercorr(const char *filename)
                         ival = -ival;
                 }
 
-                corrlev = 0.9 * val;
+                corrlev = 0.5 * val;
 
                 sprintf(str, ".%02d)", ival);
                 file.Write(str);
@@ -12165,7 +12165,7 @@ void TQuiz::WriteIntercorr(const char *filename)
                         else
                                 CorrArr[k] = 0.0;
 
-                    if (CorrArr[k] * CorrArr[k] < 0.04)
+                    if (CorrArr[k] * CorrArr[k] < 0.004)
                         CorrArr[k] = 0.0;
 
                 }
