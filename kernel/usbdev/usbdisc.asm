@@ -615,6 +615,35 @@ ReceiveData Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           WriteData
+;
+;   DESCRIPTION:    Write data
+;
+;   PARAMETERS:     FS      Disc sel
+;                   ES:EDI  Buffer
+;                   ECX     Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteData Proc near
+    mov bx,fs:disc_bulk_out_handle
+    UserGateForce32 write_usb_data_nr
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,fs:disc_bulk_out_wait
+    WaitWithTimeout
+;    
+    mov bx,fs:disc_bulk_out_handle
+    WasUsbTransactionOk
+    ret
+WriteData Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           Inquiry
 ;
 ;   DESCRIPTION:    Send inquiry
@@ -808,6 +837,62 @@ ReadSector Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           WriteSector
+;
+;   DESCRIPTION:    Write sector
+;
+;   PARAMETERS:     FS      Disc sel
+;                   ES:EDI  Buffer
+;                   EDX     Sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteSector Proc near
+    push es
+    pushad
+;    
+    mov ecx,200h
+    mov fs:disc_cbw_tag,edx
+    mov fs:disc_cbw_transfer_len,ecx
+    mov fs:disc_cbw_flags,0
+    mov fs:disc_cbw_cmd_len,10
+    mov fs:disc_cbw_cmd_data,2Ah
+    mov fs:disc_cbw_cmd_data+1,0
+;
+    mov eax,edx
+    xchg al,ah
+    rol eax,16
+    xchg al,ah
+    mov dword ptr fs:disc_cbw_cmd_data+2,eax
+;
+    mov fs:disc_cbw_cmd_data+6,0
+;
+    mov ax,1
+    xchg al,ah    
+    mov word ptr fs:disc_cbw_cmd_data+7,ax
+;
+    mov fs:disc_cbw_cmd_data+9,0
+;
+    push edi
+    call SendCbw
+    pop edi
+    jc wsDone
+;    
+    mov ecx,200h
+    call WriteData
+    jc wsDone
+;    
+    call ReceiveCsw
+
+wsDone:
+    popad
+    pop es
+    ret
+WriteSector Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           SetupDrives
 ;
 ;       DESCRIPTION:    Setup drives
@@ -927,22 +1012,22 @@ rdLoop:
     mov edi,es:[edi].dh_data
     call ReadSector
     pop edi
-    jnc rsOk 
+    jnc rdOk 
     
-rsFail:
+rdFail:
     int 3
     mov es:[edi].dh_state,STATE_BAD
     mov bx,fs:disc_handle
     DiscRequestCompleted
-    jmp rsNext
+    jmp rdNext
 
-rsOk:
+rdOk:
     mov eax,es:[edi].dh_data
     mov es:[edi].dh_state,STATE_USED
     mov bx,fs:disc_handle
     DiscRequestCompleted
 
-rsNext:
+rdNext:
     pop esi
     pop ecx  
     add esi,4  
@@ -966,7 +1051,46 @@ read_drive      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 write_drive     Proc near
+
+wdLoop:    
+    push ecx
+    push esi
+;    
+    mov edi,es:[esi]
+;
+    movzx edx,es:[edi].dh_unit
+    movzx eax,fs:disc_sectors_per_unit
+    mul edx
+    movzx ebx,es:[edi].dh_sector
+    add eax,ebx
+    mov edx,eax
+;    
+    push edi
+    mov edi,es:[edi].dh_data
+    call WriteSector
+    pop edi
+    jnc wdOk 
+    
+wdFail:
     int 3
+    mov es:[edi].dh_state,STATE_BAD
+    mov bx,fs:disc_handle
+    DiscRequestCompleted
+    jmp wdNext
+
+wdOk:
+    mov eax,es:[edi].dh_data
+    mov es:[edi].dh_state,STATE_USED
+    mov bx,fs:disc_handle
+    DiscRequestCompleted
+
+wdNext:
+    pop esi
+    pop ecx  
+    add esi,4  
+    sub ecx,1
+    jnz wdLoop
+;
     ret
 write_drive     Endp
     

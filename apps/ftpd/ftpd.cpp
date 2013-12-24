@@ -127,6 +127,8 @@ void cdecl main()
     Factory.AddUser("l-drive", "rdos", "l:\\");
     Factory.AddUser("m-drive", "rdos", "m:\\");
     Factory.AddUser("n-drive", "rdos", "n:\\");
+    Factory.AddUser("x-drive", "rdos", "x:\\");
+    Factory.AddUser("y-drive", "rdos", "y:\\");
     Factory.AddUser("z-drive", "rdos", "z:\\");
     Factory.OnCommand = WriteCommand;
     Factory.SetDataPort(2100);
