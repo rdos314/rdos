@@ -44,6 +44,10 @@ disc_bulk_out_maxsize   DW ?
 disc_controller         DW ?
 disc_device             DB ?
 
+disc_serial             DB ?
+disc_vendor             DW ?
+disc_prod               DW ?
+
 disc_struc  ENDS
 
 data    SEGMENT byte public 'DATA'
@@ -144,12 +148,19 @@ usb_attach  Proc far
     pop ax
     jne uaFail
 ;
+    mov cx,es:udd_vendor
+    push cx
+    mov cx,es:udd_prod
+    push cx
+    movzx cx,es:udd_num
+    push cx
+;    
     mov cl,es:udd_class
     or cl,cl
     je uaPossible
 ;    
     cmp cl,8
-    jne uaFail
+    jne uaFailPop
 
 uaPossible:
     xor dl,dl
@@ -160,7 +171,7 @@ uaPossible:
     mov cx,ax
     pop ax
     or cx,cx
-    jz uaFail
+    jz uaFailPop
 ;
     mov dl,es:ucd_config_id
     xor di,di
@@ -179,11 +190,16 @@ uaCheckLoop:
 uaCheckNext:
     movzx cx,es:[di].ucd_len
     or cx,cx
-    jz uaFail
+    jz uaFailPop
 ;    
     add di,cx
     cmp di,es:ucd_size
     jb uaCheckLoop
+
+uaFailPop:
+    pop cx    
+    pop cx    
+    pop cx    
 
 uaFail:
     FreeMem    
@@ -211,6 +227,15 @@ uaFound:
     mov gs,ax
     pop es
 ;
+    pop cx
+    mov gs:disc_serial,cl
+;
+    pop cx
+    mov gs:disc_prod,cx
+;
+    pop cx
+    mov gs:disc_vendor,cx
+;        
     xor di,di
     movzx cx,es:ucd_len
     add di,cx
