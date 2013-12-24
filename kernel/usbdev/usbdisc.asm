@@ -880,6 +880,23 @@ SetupDrives Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;   Start thread
+;
+;   BX      Disc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_thread_name   DB 'Start Usb Disc', 0
+
+start_thread:
+    int 3
+    mov fs,bx
+    mov bx,fs:disc_handle
+    StartDisc
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;   Disc thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -943,7 +960,18 @@ disc_thread:
 ;
     int 3    
     call SetupDrives
-
+;       
+    mov bx,fs
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET start_thread
+    mov edi,OFFSET start_thread_name
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+;
+    
 dtEnd: 
     int 3   
            
