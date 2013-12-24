@@ -46,6 +46,12 @@ part_sectors        DD ?
 
 part_struc      ENDS
 
+drive_struc STRUC
+
+drive_nr                DB ?
+
+drive_struc ENDS
+
 disc_struc   STRUC
 
 disc_bulk_in_pipe       DB ?
@@ -69,6 +75,8 @@ disc_handle             DW ?
 disc_sectors            DD ?
 disc_sectors_per_unit   DW ?
 disc_units              DW ?
+
+disc_drive_arr          DW 4 DUP(?)
 
 disc_serial             DB ?
 disc_vendor             DW ?
@@ -808,6 +816,11 @@ ReadSector Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupDrives Proc near
+    mov fs:disc_drive_arr,0
+    mov fs:disc_drive_arr+2,0
+    mov fs:disc_drive_arr+4,0
+    mov fs:disc_drive_arr+6,0
+;
     mov eax,1000h
     AllocateBigLinear
     mov ax,flat_sel
@@ -816,6 +829,7 @@ SetupDrives Proc near
     xor edx,edx
     call ReadSector
 ;
+    mov bp,OFFSET disc_drive_arr
     mov esi,1BEh
 
 sdLoop:
@@ -830,8 +844,29 @@ sdLoop:
     pop es
     jc sdNext
 ;    
+    push es
+    mov eax,SIZE drive_struc
+    AllocateSmallGlobalMem
+    mov fs:[bp],es
+    AllocateDynamicDrive
+    mov es:drive_nr,al
+    pop es
+;
+    mov edx,es:[esi+edi].part_start_sector
+    mov ecx,es:[esi+edi].part_sectors
+    mov ah,fs:disc_nr
+    OpenDrive
+;
+    push es
+    push edi
+    mov cl,es:[esi+edi].part_type
+    call GetFs
+    InstallFileSystem
+    pop edi
+    pop es
 
 sdNext:
+    add bp,2
     add si,10h
     cmp si,1FEh
     jne sdLoop
