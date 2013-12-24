@@ -31,6 +31,7 @@ include ..\user.def
 include ..\user.inc
 include ..\driver.def
 INCLUDE ..\os\protseg.def
+INCLUDE ..\drive.inc
 include ..\usbdev\usb.inc
 
 part_struc      STRUC
@@ -893,6 +894,123 @@ start_thread:
     mov bx,fs:disc_handle
     StartDisc
     TerminateThread
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       read_drive
+;
+;       DESCRIPTION:    Read drive
+;
+;       PARAMETERS:     FS      Disc selector
+;               ESI     Disc handle array
+;               ECX     Entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_drive      Proc near
+
+rdLoop:    
+    push ecx
+    push esi
+;    
+    mov edi,es:[esi]
+;
+    movzx edx,es:[edi].dh_unit
+    movzx eax,fs:disc_sectors_per_unit
+    mul edx
+    movzx ebx,es:[edi].dh_sector
+    add eax,ebx
+    mov edx,eax
+;    
+    push edi
+    mov edi,es:[edi].dh_data
+    call ReadSector
+    pop edi
+    jnc rsOk 
+    
+rsFail:
+    int 3
+    mov es:[edi].dh_state,STATE_BAD
+    mov bx,fs:disc_handle
+    DiscRequestCompleted
+    jmp rsNext
+
+rsOk:
+    mov eax,es:[edi].dh_data
+    mov es:[edi].dh_state,STATE_USED
+    mov bx,fs:disc_handle
+    DiscRequestCompleted
+
+rsNext:
+    pop esi
+    pop ecx  
+    add esi,4  
+    sub ecx,1
+    jnz rdLoop
+;
+    ret
+read_drive      Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       write_drive
+;
+;       DESCRIPTION:    Perform a write request
+;
+;       PARAMETERS:     FS      Disc selector
+;               ESI     Disc handle array
+;               ECX     Entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_drive     Proc near
+    int 3
+    ret
+write_drive     Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       perform_one
+;
+;       DESCRIPTION:    Perform one request
+;
+;       PARAMETERS:     FS      Disc selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+perform_one     Proc near
+
+perform_one_loop:
+    mov ecx,255
+    GetDiscRequestArray
+    jc perform_one_done
+;
+    mov edi,es:[esi]
+    mov al,es:[edi].dh_state
+    cmp al,STATE_EMPTY
+    je perform_one_read
+;
+    cmp al,STATE_DIRTY
+    je perform_one_write
+;
+    cmp al,STATE_SEQ
+    jne perform_one_done
+
+perform_one_write:
+    call write_drive
+    jmp perform_one_loop
+
+perform_one_read:
+    call read_drive
+    jmp perform_one_loop
+
+perform_one_done:
+    ret
+perform_one     Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -969,7 +1087,14 @@ disc_thread:
     mov cx,stack0_size
     CreateThread
 ;
-    int 3    
+    mov ax,flat_sel
+    mov es,ax
+    mov bx,fs:disc_handle
+
+discbuf_thread_loop:
+    WaitForDiscRequest
+    call perform_one
+    jmp discbuf_thread_loop
     
 dtEnd: 
     int 3   
