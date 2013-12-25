@@ -34,6 +34,8 @@ INCLUDE ..\os\protseg.def
 INCLUDE ..\drive.inc
 include ..\usbdev\usb.inc
 
+MAX_DISCS   = 16
+
 part_struc      STRUC
 
 part_status         DB ?
@@ -121,7 +123,8 @@ disc_struc  ENDS
 
 data    SEGMENT byte public 'DATA'
 
-filler  DB ?
+disc_device_count   DW ?
+disc_device_arr     DW MAX_DISCS DUP(?)
 
 data    ENDS
 
@@ -1143,6 +1146,14 @@ perform_one     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 disc_thread:
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov si,ds:disc_device_count
+    add si,si
+    mov ds:[si].disc_device_arr,bx
+    inc ds:disc_device_count
+;
     mov fs,bx
     mov fs:disc_cbw_sign,43425355h
     mov fs:disc_cbw_lun,0
@@ -1479,6 +1490,33 @@ usb_detach  Proc far
     push es
     push gs
     pushad
+;
+    int 3    
+    mov dx,SEG data
+    mov ds,dx
+    mov si,OFFSET disc_device_arr
+    mov cx,ds:disc_device_count
+    or cx,cx
+    jz udDone
+
+udCheckLoop:
+    mov dx,[si]
+    or dx,dx
+    jz udCheckNext
+;
+    mov es,dx
+    cmp bx,es:disc_controller
+    jne udCheckNext
+;
+    cmp al,es:disc_device
+    jne udCheckNext
+;
+    int 3    
+
+udCheckNext:
+    add si,2    
+    sub cx,1
+    jnz udCheckLoop
     
 udDone:    
     popad
@@ -1500,6 +1538,7 @@ usb_detach  Endp
 init    Proc far
     mov bx,SEG data
     mov ds,bx
+    mov ds:disc_device_count,0
 ;       
     mov ax,cs
     mov ds,ax
