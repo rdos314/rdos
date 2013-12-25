@@ -2865,6 +2865,8 @@ stop_file_enter:
     CallFileSystem fs_flush_proc
     jc stop_leave_done
 ;
+    mov bx,fs_sys_data_sel
+    mov ds,bx
     movzx si,al
     add si,si
     mov bx,ds:[si].fs_sel
@@ -2872,8 +2874,8 @@ stop_file_enter:
     clc
     jz stop_leave_done
 ;
-    push ds
     mov ds,bx
+    push ds
     mov bx,ds:fs_root_dir_sel
     or bx,bx
     clc
