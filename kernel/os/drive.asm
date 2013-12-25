@@ -1756,6 +1756,7 @@ stop_drives_loop:
     mov ax,si
     sub ax,OFFSET drive_def_arr
     shr ax,1
+    int 3
     StopFileSystem
 
 stop_drives_next:

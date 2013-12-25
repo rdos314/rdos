@@ -2841,9 +2841,18 @@ stop_file_system    Proc far
     mov ds,bx
     mov bx,flat_sel
     mov es,bx
+;
+    movzx si,al
+    add si,si
+    mov bx,ds:[si].fs_sel
+    or bx,bx
+    clc
+    jz stop_leave_done
+;
+    mov ds,bx    
     cli
-    mov al,ds:fs_access_parse
-    or al,al
+    mov cl,ds:fs_access_parse
+    or cl,cl
     jz stop_file_enter
 ;
     sti
@@ -2892,7 +2901,7 @@ stop_done:
     pop fs
     pop es
     pop ds
-    ret
+    retf32
 stop_file_system    Endp
 
 
