@@ -527,6 +527,12 @@ long TPartitionTable::ChsToLba(const char *Data)
         if (BiosSector == 0)
                 return 0;
 
+        if (FSectorsPerCyl == 0xFFFF)
+            return 0;
+
+        if (FHeads == 0xFFFF)
+            return 0;
+
         return BiosSector + FSectorsPerCyl * (BiosHead + FHeads * BiosCyl) - 1;
 }
 

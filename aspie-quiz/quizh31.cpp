@@ -97,7 +97,7 @@ int TQuizH31::GetPcaCount()
 *##########################################################################*/
 int TQuizH31::GetCatCount(int Question)
 {
-    if (Question >= 194)
+    if (Question >= 195)
         return 5;
     else
         return 3;
@@ -330,6 +330,7 @@ void TQuizH31::SetupTexts()
   Quiz[160].Reverse = TRUE;
   Quiz[174].Reverse = TRUE;
   Quiz[175].Reverse = TRUE;
+  Quiz[179].Reverse = TRUE;
   Quiz[184].Reverse = TRUE;
   Quiz[192].Reverse = TRUE;
   Quiz[193].Reverse = TRUE;
@@ -374,7 +375,7 @@ void TQuizH31::SetupTexts()
   Quiz[36].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[37].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[38].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[39].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[39].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[40].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[41].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[42].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -487,7 +488,7 @@ void TQuizH31::SetupTexts()
   Quiz[148].MyGroup = GROUP_NT_SENSORY;
   Quiz[149].MyGroup = GROUP_ENVIRONMENT;
 
-  Quiz[150].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[150].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[151].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[152].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[153].MyGroup = GROUP_MIXED;
@@ -499,9 +500,9 @@ void TQuizH31::SetupTexts()
   Quiz[159].MyGroup = GROUP_NT_SOCIAL;
   Quiz[160].MyGroup = GROUP_NT_SOCIAL;
   Quiz[161].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[162].MyGroup = GROUP_MIXED;
-  Quiz[163].MyGroup = GROUP_MIXED;
-  Quiz[164].MyGroup = GROUP_MIXED;
+  Quiz[162].MyGroup = GROUP_ASPIE_OBSESSION;
+  Quiz[163].MyGroup = GROUP_ASPIE_OBSESSION;
+  Quiz[164].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[165].MyGroup = GROUP_NT_SOCIAL;
   Quiz[166].MyGroup = GROUP_NT_SOCIAL;
   Quiz[167].MyGroup = GROUP_MIXED;
@@ -512,26 +513,26 @@ void TQuizH31::SetupTexts()
   Quiz[172].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[173].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[174].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[175].MyGroup = GROUP_MIXED;
+  Quiz[175].MyGroup = GROUP_NT_OBSESSION;
   Quiz[176].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[177].MyGroup = GROUP_NT_OBSESSION;
   Quiz[178].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[179].MyGroup = GROUP_MIXED;
-  Quiz[180].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[179].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[180].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[181].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[182].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[183].MyGroup = GROUP_MIXED;
+  Quiz[182].MyGroup = GROUP_ASPIE_OBSESSION;
+  Quiz[183].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[184].MyGroup = GROUP_NT_OBSESSION;
   Quiz[185].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[186].MyGroup = GROUP_MIXED;
+  Quiz[186].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[187].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[188].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[189].MyGroup = GROUP_MIXED;
+  Quiz[189].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[190].MyGroup = GROUP_MIXED;
   Quiz[191].MyGroup = GROUP_ASPIE_NVC;
   Quiz[192].MyGroup = GROUP_NT_SOCIAL;
   Quiz[193].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[194].MyGroup = GROUP_MIXED;
+  Quiz[194].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[195].MyGroup = GROUP_MIXED;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";

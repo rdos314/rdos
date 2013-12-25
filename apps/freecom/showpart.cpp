@@ -216,7 +216,7 @@ void TShowPartitionCommand::ShowTreeTable(TPartitionTable *Part)
 
         TotalSpace = Part->GetTotalSpace();
 
-        sprintf(str, "\r\n%08lX-%08lX %15.3f MB\r\n",
+        sprintf(str, "%08lX-%08lX %15.3f MB\r\n",
                                 Part->Start,
                                 Part->Start + Part->Size - 1,
                                 TotalSpace);
@@ -251,6 +251,8 @@ void TShowPartitionCommand::ShowTreeTable(TPartitionTable *Part)
 ##########################################################################*/
 void TShowPartitionCommand::ShowTree(TDiscPartition *Part)
 {
+        Write("\r\n");
+
         FMsg.printf(TEXT_SHOWPART_DISC_SHORT, Part->GetDisc()->GetDiscNr());
         Write(FMsg.GetData());
 
@@ -275,6 +277,8 @@ void TShowPartitionCommand::ShowTable(TDiscPartition *Part)
         TDisc *Disc;
 
         Disc = Part->GetDisc();
+
+        Write("\r\n");
 
         FMsg.printf(TEXT_SHOWPART_DISC_LONG, Disc->GetDiscNr(), Disc->GetTotalSectors(), Disc->GetSectorsPerCyl(), Disc->GetHeads());
         Write(FMsg.GetData());
