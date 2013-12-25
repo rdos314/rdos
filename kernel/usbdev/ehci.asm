@@ -986,6 +986,7 @@ RemoveAsyncQh    PROC near
     jz raqList
 
 raqHead:
+    int 3
     mov edi,es:[edx].qh_link_va
     mov ds:ehc_async_head_va,edi
     mov eax,es:[edi].qh_my_phys
