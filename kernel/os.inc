@@ -2642,6 +2642,11 @@ GetDiscRequestArray     MACRO
     OsGate get_disc_request_array_nr
                     ENDM
 
+;       IN      BX      Disc sel
+StopDiscRequest      MACRO
+    OsGate stop_disc_request_nr
+                    ENDM
+
 ;       IN      AL          Drive #
 ;       IN      AH          Disc # or 0
 ;       IN      EDX         Start sector

@@ -52,6 +52,7 @@ drive_wait_struc    ENDS
 disc_def_struc      STRUC
 
 disc_nr                 DB ?
+disc_stopped            DB ?
 disc_units                  DW ?
 disc_bytes_per_sector   DW ?
 disc_sectors_per_unit   DW ?
@@ -1891,6 +1892,33 @@ register_disc_change    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           stop_disc_request
+;
+;           DESCRIPTION:    stop disc request
+;
+;           PARAMETERS:     BX          Disc selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_disc_request_name      DB 'Stop Disc Request', 0
+
+stop_disc_request   Proc far
+    push ds
+    push bx
+;
+    mov ds,bx
+    mov ds:disc_stopped,1
+    mov bx,ds:disc_thread
+    Signal
+;
+    pop bx
+    pop ds
+    retf32
+stop_disc_request   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           wait_for_disc_request
 ;
 ;           DESCRIPTION:    wait for a new disc request
@@ -1923,10 +1951,16 @@ wait_for_disc_req_loop:
     RequestSpinlock ds:disc_spinlock
     mov ebx,ds:disc_pend_list
     or ebx,ebx
-    jnz wait_for_disc_req_done
+    jnz wait_for_disc_req_done    
 ;
     ReleaseSpinlock ds:disc_spinlock
     sti
+;
+    mov al,ds:disc_stopped
+    or al,al
+    stc
+    jnz wait_for_disc_req_end
+;    
     WaitForSignal
     mov ds:disc_thread,0
     jmp wait_for_disc_req_loop
@@ -1934,7 +1968,10 @@ wait_for_disc_req_loop:
 wait_for_disc_req_done:
     mov ds:disc_thread,0
     ReleaseSpinlock ds:disc_spinlock
-;
+    clc
+    jmp wait_for_disc_req_end
+
+wait_for_disc_req_end:
     popad
     pop es
     pop ds
@@ -2578,6 +2615,7 @@ install_disc_loop:
     sub ax,OFFSET disc_def_arr
     shr ax,1
     mov ds:disc_nr,al
+    mov ds:disc_stopped,0
     mov ds:disc_handle_list,0
     mov ds:disc_data_list,0
     mov ds:disc_pend_list,0
@@ -5245,6 +5283,11 @@ init    PROC far
     mov esi,OFFSET stop_disc
     mov edi,OFFSET stop_disc_name
     mov ax,stop_disc_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET stop_disc_request
+    mov edi,OFFSET stop_disc_request_name
+    mov ax,stop_disc_request_nr
     RegisterOsGate
 ;
     mov esi,OFFSET wait_for_disc_request

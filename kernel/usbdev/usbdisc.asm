@@ -1237,6 +1237,8 @@ dtStart:
 
 discbuf_thread_loop:
     WaitForDiscRequest
+    jc dtEnd
+;    
     call perform_one
     jmp discbuf_thread_loop
     
@@ -1519,7 +1521,8 @@ udCheckLoop:
     cmp al,es:disc_device
     jne udCheckNext
 ;
-    int 3    
+    mov bx,es:disc_handle
+    StopDiscRequest
 
 udCheckNext:
     add si,2    
