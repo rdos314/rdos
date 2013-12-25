@@ -1155,7 +1155,7 @@ disc_thread:
     inc ds:disc_device_count
 
 dtCheckCompleted:
-    HasDiscHandlersCompleted
+    CondBeginDiscHandler
     jnc dtStart
 ;
     mov ax,50
@@ -1196,13 +1196,13 @@ dtStart:
     AddWaitForUsbPipe
 ;
     call Inquiry    
-    jc dtEnd
+    jc dtFailed
 ;    
     call RequestSense
-    jc dtEnd
+    jc dtFailed
 ;
     call ReadCapacity
-    jc dtEnd
+    jc dtFailed
 ;
     mov bx,fs
     mov ecx,10000h
@@ -1220,6 +1220,7 @@ dtStart:
     SetDiscParam
 ;
     call SetupDrives
+    EndDiscHandler
 ;       
     mov bx,fs
     mov ax,cs
@@ -1241,9 +1242,28 @@ discbuf_thread_loop:
 ;    
     call perform_one
     jmp discbuf_thread_loop
+
+dtFailed:
+    EndDiscHandler    
     
 dtEnd: 
     int 3   
+;
+    mov bx,fs:disc_bulk_in_wait
+    CloseWait
+;
+    mov bx,fs:disc_bulk_in_handle
+    CloseUsbPipe
+;
+    mov bx,fs:disc_bulk_out_wait
+    CloseWait
+;
+    mov bx,fs:disc_bulk_out_handle
+    CloseUsbPipe
+;
+    mov bx,fs:disc_handle
+    StopDisc    
+    int 3
            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

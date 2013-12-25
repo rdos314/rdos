@@ -2541,9 +2541,9 @@ EndDiscHandler    MACRO
     OsGate end_disc_handler_nr
                     ENDM
 
-; OUT NC      Disc handlers done
-HasDiscHandlersCompleted    MACRO
-    OsGate has_disc_handlers_completed_nr
+; OUT NC      Disc handler started
+CondBeginDiscHandler    MACRO
+    OsGate cond_begin_disc_handler_nr
                     ENDM
             
 ;       ES:EDI   Disc system table

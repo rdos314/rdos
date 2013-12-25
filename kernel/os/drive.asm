@@ -144,16 +144,17 @@ boot_struc          ENDS
 
 data    SEGMENT byte public 'DATA'
 
-disc_params         DB ?
-disc_curr_param     DW ?
-disc_param_arr      DD MAX_DRIVES DUP(?,?)
-disc_def_arr        DW MAX_DRIVES DUP(?)
-drive_def_arr       DW MAX_DRIVES DUP(?)
-drive_wait_arr      DB 4*DRIVE_WAIT_NUM DUP(?)
-drive_wait_free     DW ?
-drive_wait_count    DW ?
-disc_handlers       DW ?
-disc_start_thread   DW ?
+disc_params             DB ?
+disc_curr_param         DW ?
+disc_param_arr          DD MAX_DRIVES DUP(?,?)
+disc_def_arr            DW MAX_DRIVES DUP(?)
+drive_def_arr           DW MAX_DRIVES DUP(?)
+drive_wait_arr          DB 4*DRIVE_WAIT_NUM DUP(?)
+drive_wait_free         DW ?
+drive_wait_count        DW ?
+disc_handler_section    section_typ <>
+disc_handlers           DW ?
+disc_start_thread       DW ?
 
 data    ENDS
 
@@ -4879,7 +4880,9 @@ begin_disc_handler  Proc far
     push ax
     mov ax,SEG data
     mov ds,ax
+    EnterSection ds:disc_handler_section
     inc ds:disc_handlers
+    LeaveSection ds:disc_handler_section
     pop ax
     pop ds
     retf32
@@ -4903,6 +4906,7 @@ end_disc_handler  Proc far
 ;
     mov ax,SEG data
     mov ds,ax
+    EnterSection ds:disc_handler_section
     sub ds:disc_handlers,1
     jnz edhDone
 ;
@@ -4910,6 +4914,7 @@ end_disc_handler  Proc far
     Signal
 
 edhDone:
+    LeaveSection ds:disc_handler_section
     pop bx
     pop ax
     pop ds
@@ -4919,32 +4924,35 @@ end_disc_handler  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           HasDiscHandlersCompleted
+;           NAME:           CondBeginDiscHandler
 ;
-;           DESCRIPTION:    Check if disc handlers have completed
+;           DESCRIPTION:    Conditionally begin disc handler
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-has_disc_handlers_completed_name     DB 'Has Disc Handlers Completed',0
+cond_begin_disc_handler_name     DB 'Cond Begin Disc Handler',0
 
-has_disc_handlers_completed  Proc far
+cond_begin_disc_handler  Proc far
     push ds
     push ax
 ;
     mov ax,SEG data
     mov ds,ax
+    EnterSection ds:disc_handler_section
     mov ax,ds:disc_handlers
     or ax,ax
-    clc
-    jz hdhcDone
-;  
     stc
+    jnz hdhcDone
+;  
+    inc ds:disc_handlers
+    clc
 
 hdhcDone:    
+    LeaveSection ds:disc_handler_section
     pop ax
     pop ds
     retf32
-has_disc_handlers_completed  Endp
+cond_begin_disc_handler  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5204,7 +5212,6 @@ init_disc       Proc far
     ClearSignal
     GetThread
     mov ds:disc_start_thread,ax
-
     sub ds:disc_handlers,1
     jz init_disc_do
 
@@ -5220,6 +5227,10 @@ init_disc_do:
     call run_disc_assign
     call run_drive_assign1
     call run_drive_assign2
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:disc_start_thread,0
     retf32
 init_disc       Endp
 
@@ -5255,9 +5266,9 @@ init    PROC far
     mov ax,end_disc_handler_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET has_disc_handlers_completed
-    mov edi,OFFSET has_disc_handlers_completed_name
-    mov ax,has_disc_handlers_completed_nr
+    mov esi,OFFSET cond_begin_disc_handler
+    mov edi,OFFSET cond_begin_disc_handler_name
+    mov ax,cond_begin_disc_handler_nr
     RegisterOsGate
 ;
     mov esi,OFFSET install_disc
@@ -5494,9 +5505,9 @@ init    PROC far
 ;
     mov bx,SEG data
     mov es,bx
+    InitSection es:disc_handler_section
     mov es:disc_params,0
     mov es:disc_handlers,1
-    mov es:disc_thread,0
 ;
     mov cx,MAX_DRIVES
     mov di,OFFSET disc_def_arr

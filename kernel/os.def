@@ -639,7 +639,7 @@ set_hid_output_nr           = 527
 update_hid_output_nr        = 528
 get_hid_log_min_nr          = 529
 get_hid_log_max_nr          = 530
-has_disc_handlers_completed_nr  = 531
+cond_begin_disc_handler_nr  = 531
 stop_disc_request_nr        = 532
 
 osgate_entries				= 540
