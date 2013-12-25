@@ -2881,7 +2881,6 @@ stop_file_enter:
     clc
     jz stop_leave_pop_done
 ;
-    int 3
     push bx
     call IsFlushable
     pop bx

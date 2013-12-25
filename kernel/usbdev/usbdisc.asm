@@ -123,7 +123,6 @@ disc_struc  ENDS
 
 data    SEGMENT byte public 'DATA'
 
-disc_device_count   DW ?
 disc_device_arr     DW MAX_DISCS DUP(?)
 
 data    ENDS
@@ -1146,13 +1145,6 @@ perform_one     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 disc_thread:
-    mov ax,SEG data
-    mov ds,ax
-;
-    mov si,ds:disc_device_count
-    add si,si
-    mov ds:[si].disc_device_arr,bx
-    inc ds:disc_device_count
 
 dtCheckCompleted:
     CondBeginDiscHandler
@@ -1163,6 +1155,26 @@ dtCheckCompleted:
     jmp dtCheckCompleted
 
 dtStart:
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov si,OFFSET disc_device_arr
+    mov cx,MAX_DISCS
+
+dtInsDiscLoop:
+    mov ax,ds:[si]
+    or ax,ax
+    jz dtInsDo
+;
+    add si,2
+    loop dtInsDiscLoop
+;
+    int 3
+    jmp dtDelDone
+
+dtInsDo:
+    mov ds:[si],bx
+;
     mov fs,bx
     mov fs:disc_cbw_sign,43425355h
     mov fs:disc_cbw_lun,0
@@ -1247,8 +1259,6 @@ dtFailed:
     EndDiscHandler    
     
 dtEnd: 
-    int 3   
-;
     mov bx,fs:disc_bulk_in_wait
     CloseWait
 ;
@@ -1264,7 +1274,33 @@ dtEnd:
     mov bx,fs:disc_handle
     StopDisc    
     int 3
-           
+    mov bx,fs
+    mov es,bx
+    xor ax,ax
+    mov fs,ax
+    mov ax,SEG data
+    mov ds,ax
+;    
+    mov si,OFFSET disc_device_arr
+    mov cx,MAX_DISCS
+
+dtDelDiscLoop:
+    cmp bx,ds:[si]
+    je dtDelDo
+;
+    add si,2
+    loop dtDelDiscLoop
+;
+    jmp dtDelDone
+
+dtDelDo:
+    mov word ptr ds:[si],0
+
+dtDelDone:
+    mov es,bx
+    FreeMem        
+    TerminateThread
+               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1525,9 +1561,7 @@ usb_detach  Proc far
     mov dx,SEG data
     mov ds,dx
     mov si,OFFSET disc_device_arr
-    mov cx,ds:disc_device_count
-    or cx,cx
-    jz udDone
+    mov cx,MAX_DISCS
 
 udCheckLoop:
     mov dx,[si]
@@ -1569,7 +1603,14 @@ usb_detach  Endp
 init    Proc far
     mov bx,SEG data
     mov ds,bx
-    mov ds:disc_device_count,0
+    mov cx,MAX_DISCS
+    mov si,OFFSET disc_device_arr
+    xor ax,ax
+
+iArrLoop:
+    mov ds:[si],ax
+    add si,2
+    loop iArrLoop   
 ;       
     mov ax,cs
     mov ds,ax

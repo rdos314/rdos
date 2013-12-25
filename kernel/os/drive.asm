@@ -1756,13 +1756,33 @@ stop_drives_loop:
     mov ax,si
     sub ax,OFFSET drive_def_arr
     shr ax,1
-    int 3
     StopFileSystem
+    CloseDrive
 
 stop_drives_next:
     add si,2
     loop stop_drives_loop   
 ;
+    mov ax,SEG data
+    mov ds,ax
+    mov si,OFFSET disc_def_arr
+    mov cx,MAX_DRIVES
+
+stop_disc_loop:
+    cmp bx,[si]
+    je stop_disc_do
+;
+    add si,2
+    loop stop_disc_loop
+;
+    jmp stop_disc_done
+
+stop_disc_do:
+    mov word ptr ds:[si],0
+    mov es,bx
+    FreeMem            
+
+stop_disc_done:
     popa
     pop es
     pop ds
@@ -2801,7 +2821,6 @@ allocate_dynamic_drive_done:
     retf32
 allocate_dynamic_drive  Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2864,7 +2883,6 @@ open_drive_done:
     retf32
 open_drive      Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2879,10 +2897,33 @@ open_drive      Endp
 close_drive_name    DB 'Close Drive',0
 
 close_drive     Proc far
-    int 3
+    push ds
+    push ax
+    push bx
+;
     FlushDrive
+    mov bx,SEG data
+    mov ds,bx
+    movzx bx,al
+    shl bx,1
+    xor ax,ax
+    xchg ax,[bx].drive_def_arr
+    or ax,ax
+    jz cdrDone
+;       
+    cmp ax,-1
+    je cdrDone
+;    
+    mov es,ax
+    FreeMem    
+
+cdrDone:
+    pop bx
+    pop ax
+    pop ds
     retf32
-close_drive     Endp
+close_drive    Endp
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
