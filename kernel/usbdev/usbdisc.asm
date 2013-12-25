@@ -1273,7 +1273,7 @@ dtEnd:
 ;
     mov bx,fs:disc_handle
     StopDisc    
-    int 3
+;    
     mov bx,fs
     mov es,bx
     xor ax,ax

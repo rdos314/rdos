@@ -3230,7 +3230,12 @@ lock_sector     PROC far
     shl bx,1
     mov ax,SEG data
     mov ds,ax
-    mov ds,ds:[bx].drive_def_arr
+    mov ax,ds:[bx].drive_def_arr
+    or ax,ax
+    stc
+    jz lock_done
+;
+    mov ds,ax
     mov ax,flat_sel
     mov es,ax
     cmp edx,ds:drive_sectors
