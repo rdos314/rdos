@@ -1153,7 +1153,16 @@ disc_thread:
     add si,si
     mov ds:[si].disc_device_arr,bx
     inc ds:disc_device_count
+
+dtCheckCompleted:
+    HasDiscHandlersCompleted
+    jnc dtStart
 ;
+    mov ax,50
+    WaitMilliSec
+    jmp dtCheckCompleted
+
+dtStart:
     mov fs,bx
     mov fs:disc_cbw_sign,43425355h
     mov fs:disc_cbw_lun,0
@@ -1491,7 +1500,6 @@ usb_detach  Proc far
     push gs
     pushad
 ;
-    int 3    
     mov dx,SEG data
     mov ds,dx
     mov si,OFFSET disc_device_arr

@@ -639,6 +639,7 @@
 #define osgate_update_hid_output 528
 #define osgate_get_hid_log_min 529
 #define osgate_get_hid_log_max 530
+#define osgate_has_disc_handlers_completed 531
 
 
 
@@ -1283,4 +1284,5 @@
 #define OsGate_update_hid_output 0x3E 0x67 0x9a 16 2 0 0 2 0
 #define OsGate_get_hid_log_min 0x3E 0x67 0x9a 17 2 0 0 2 0
 #define OsGate_get_hid_log_max 0x3E 0x67 0x9a 18 2 0 0 2 0
+#define OsGate_has_disc_handlers_completed 0x3E 0x67 0x9a 19 2 0 0 2 0
 

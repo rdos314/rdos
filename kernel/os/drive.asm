@@ -4881,6 +4881,36 @@ end_disc_handler  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           HasDiscHandlersCompleted
+;
+;           DESCRIPTION:    Check if disc handlers have completed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_disc_handlers_completed_name     DB 'Has Disc Handlers Completed',0
+
+has_disc_handlers_completed  Proc far
+    push ds
+    push ax
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:disc_handlers
+    or ax,ax
+    clc
+    jz hdhcDone
+;  
+    stc
+
+hdhcDone:    
+    pop ax
+    pop ds
+    retf32
+has_disc_handlers_completed  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           HOOK_INIT_DISC
 ;
 ;           DESCRIPTION:    Add an InitDisc hook
@@ -5185,6 +5215,11 @@ init    PROC far
     mov esi,OFFSET end_disc_handler
     mov edi,OFFSET end_disc_handler_name
     mov ax,end_disc_handler_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET has_disc_handlers_completed
+    mov edi,OFFSET has_disc_handlers_completed_name
+    mov ax,has_disc_handlers_completed_nr
     RegisterOsGate
 ;
     mov esi,OFFSET install_disc
