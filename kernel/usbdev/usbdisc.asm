@@ -1158,8 +1158,6 @@ write_drive     Proc near
 
 wdLoop:    
     push ecx
-    push esi
-;    
     mov edi,es:[esi]
 ;
     movzx edx,es:[edi].dh_unit
@@ -1168,18 +1166,53 @@ wdLoop:
     movzx ebx,es:[edi].dh_sector
     add eax,ebx
     mov edx,eax
+    mov ebx,edx
+    mov ebp,1
+;
+    push esi    
+
+wdSizeLoop:
+    cmp ecx,ebp
+    jbe wdDoTrans
+;
+    add esi,4
+    mov edi,es:[esi]
+;
+    push ebx
+    movzx edx,es:[edi].dh_unit
+    movzx eax,fs:disc_sectors_per_unit
+    mul edx
+    movzx ebx,es:[edi].dh_sector
+    add eax,ebx
+    mov edx,eax
+    pop ebx
+;
+    inc ebx
+    cmp ebx,edx
+    jne wdDoTrans
+;
+    inc ebp
+    jmp wdSizeLoop            
+
+wdDoTrans:
+    pop esi
 ;    
-    push edi
-    mov edi,es:[edi].dh_data
+    mov edi,es:[esi]
+    movzx edx,es:[edi].dh_unit
+    movzx eax,fs:disc_sectors_per_unit
+    mul edx
+    movzx ebx,es:[edi].dh_sector
+    add eax,ebx
+    mov edx,eax
 ;    
-    mov ecx,200h
+    shl ebp,9
     mov fs:disc_cbw_tag,edx
-    mov fs:disc_cbw_transfer_len,ecx
+    mov fs:disc_cbw_transfer_len,ebp
     mov fs:disc_cbw_flags,0
     mov fs:disc_cbw_cmd_len,10
     mov fs:disc_cbw_cmd_data,2Ah
     mov fs:disc_cbw_cmd_data+1,0
-;
+;    
     mov eax,edx
     xchg al,ah
     rol eax,16
@@ -1188,45 +1221,80 @@ wdLoop:
 ;
     mov fs:disc_cbw_cmd_data+6,0
 ;
-    mov ax,1
+    shr ebp,9
+    mov ax,bp
     xchg al,ah    
     mov word ptr fs:disc_cbw_cmd_data+7,ax
-;
     mov fs:disc_cbw_cmd_data+9,0
 ;
-    push edi
     call SendCbw
-    pop edi
-    jc wdCont
+    jc wdFail
 ;    
+    push ebp
+    push esi
+
+wdBufLoop:  
+    mov edi,es:[esi]
+    mov edi,es:[edi].dh_data
     mov ecx,200h
-    call WriteData
-    jc wdCont
+    mov bx,fs:disc_bulk_out_handle
+    UserGateForce32 write_usb_data_nr
+;
+    add esi,4
+    sub ebp,1
+    jnz wdBufLoop
+;
+    pop esi
+    pop ebp
+;
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,fs:disc_bulk_out_wait
+    WaitWithTimeout
+;    
+    mov bx,fs:disc_bulk_out_handle
+    WasUsbTransactionOk
+    jc wdFail
 ;    
     call ReceiveCsw
-
-wdCont:
-    pop edi
-    jnc wdOk 
+    jnc wdOk
     
 wdFail:
     int 3
-    mov es:[edi].dh_state,STATE_BAD
+    pop ecx
+
+wdFailLoop:    
+    mov edi,es:[esi]
+    mov eax,es:[edi].dh_data
+    mov es:[eax].dh_state,STATE_BAD
     mov bx,fs:disc_handle
     DiscRequestCompleted
+    add esi,4
+    sub ecx,1
+    sub ebp,1
+    jnz wdFailLoop
+;    
     jmp wdNext
 
 wdOk:
+    pop ecx
+
+wdOkLoop:
+    mov edi,es:[esi]
     mov eax,es:[edi].dh_data
     mov es:[edi].dh_state,STATE_USED
     mov bx,fs:disc_handle
     DiscRequestCompleted
+    add esi,4
+    sub ecx,1
+    sub ebp,1
+    jnz wdOkLoop
 
 wdNext:
-    pop esi
-    pop ecx  
-    add esi,4  
-    sub ecx,1
+    or ecx,ecx
     jnz wdLoop
 ;
     ret
