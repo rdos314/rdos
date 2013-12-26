@@ -2669,6 +2669,10 @@ hb64Fail:
     stc
 
 hb64Done:    
+;
+; test only!
+;
+    stc
     retf32
 Has64Bit     Endp
     

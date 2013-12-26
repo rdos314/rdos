@@ -52,12 +52,24 @@ SET_INTERFACE = 11
 SYNC_FRAME = 12
 
 
+pipe_copy_struc     STRUC
+
+pc_user_offset  DD ?
+pc_user_sel     DW ?
+pc_usb_linear   DD ?
+pc_size         DD ?
+pc_write_back   DB ?
+
+pipe_copy_struc     ENDS
+
 pipe_handle_struc       STRUC
 
 up_base         handle_header <>
 up_func_sel     DW ?
-up_pipe_sel         DW ?
-up_pipe     DB ?
+up_pipe_sel     DW ?
+up_pipe         DB ?
+up_copy         DB ?
+up_list         DW ?
 
 pipe_handle_struc       ENDS
 
@@ -2188,11 +2200,27 @@ oupOut:
     jmp oupFail
 
 oupCreateHandle:    
+    xor dh,dh
+    push ds
+    mov ax,es
+    mov ds,ax
+    call fword ptr ds:has_64bit_proc
+    pop ds
+    jnc oupAlloc
+;
+    HasPhysical64
+    jc oupAlloc
+;
+    mov dh,1
+
+oupAlloc:
     mov cx,SIZE pipe_handle_struc
     AllocateHandle
     mov [ebx].up_func_sel,es
     mov [ebx].up_pipe_sel,di
     mov [ebx].up_pipe,dl
+    mov [ebx].up_copy,dh
+    mov [ebx].up_list,0
     mov [ebx].hh_sign,USB_PIPE_HANDLE
     mov bx,[ebx].hh_handle
 ;
