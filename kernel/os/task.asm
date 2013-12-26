@@ -7899,7 +7899,7 @@ create_initial_tss    PROC near
     add edx,stack0_size
     mov ds:p_kernel_stack,edx
 ;    
-    mov eax,OFFSET tss32_io_bitmap + 2000h
+    mov ecx,OFFSET tss32_io_bitmap + 2000h
     mov edx,edi
     AllocateGdt
     CreateTssSelector

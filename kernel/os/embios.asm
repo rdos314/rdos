@@ -106,6 +106,9 @@ int15:
     cmp ah,5Fh
     je int15_err
 ;
+    cmp ah,4Eh
+    je int15_err    
+;
     int 3
 
 int15_err:
