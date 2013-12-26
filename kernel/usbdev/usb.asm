@@ -1362,13 +1362,15 @@ create_usb_req   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AddWriteUsbControlReq
+;       NAME:           AddWriteUsbControlReq
 ;
-;           description:    Add write control req
+;       description:    Add write control req
 ;
 ;       parameters:     BX      Req handle
-;               CX      Size of data
-;               ES      Data selector (do not free)
+;                       CX      Size of data
+;                       AX      Additional data size
+;
+;       Returns:        ES      Data selector (do not free)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1376,25 +1378,32 @@ add_write_usb_control_req_name DB 'Add Write USB control req', 0
 
 add_write_usb_control_req       Proc far
     push ds
-    push es
-    push ax
+    push eax
     push ebx
 ;
+    push ax
     mov ax,USB_REQ_HANDLE
     DerefHandle
+    pop ax
     jc awucDone
 ;
+    push ds
+    mov ds,ds:[ebx].rh_func_sel
+    movzx eax,ax
+    call AllocateBufSel     
     mov ax,es
+    pop ds
+;    
     call AddReqBlock
     mov es:re_type,REQ_TYPE_WRITE_CONTROL
     mov es:re_size,cx
     mov es:re_buf_sel,ax
+    mov es,ax    
     clc
     
 awucDone:    
     pop ebx
-    pop ax
-    pop es
+    pop eax
     pop ds
     retf32
 add_write_usb_control_req   Endp
@@ -1403,13 +1412,15 @@ add_write_usb_control_req   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AddWriteUsbDataReq
+;       NAME:           AddWriteUsbDataReq
 ;
-;           description:    Add write data req
+;       description:    Add write data req
 ;
 ;       parameters:     BX      Req handle
-;               CX      Size of data
-;               ES      Data selector (do not free)
+;                       CX      Size of data
+;                       AX      Additional data size
+;               
+;       Returns:        ES      Data selector (do not free)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1417,25 +1428,33 @@ add_write_usb_data_req_name DB 'Add Write USB data req', 0
 
 add_write_usb_data_req  Proc far
     push ds
-    push es
     push ax
     push ebx
 ;
+    push ax
     mov ax,USB_REQ_HANDLE
     DerefHandle
+    pop ax
     jc awudDone
 ;
+    push ds
+    mov ds,ds:[ebx].rh_func_sel
+    add ax,cx
+    movzx eax,ax
+    call AllocateBufSel     
     mov ax,es
+    pop ds
+;
     call AddReqBlock
     mov es:re_type,REQ_TYPE_WRITE_DATA
     mov es:re_size,cx
     mov es:re_buf_sel,ax
+    mov es,ax    
     clc
     
 awudDone:    
     pop ebx
     pop ax
-    pop es
     pop ds
     retf32
 add_write_usb_data_req   Endp
@@ -1444,13 +1463,15 @@ add_write_usb_data_req   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AddReadUsbDataReq
+;       NAME:           AddReadUsbDataReq
 ;
-;           description:    Add read data req
+;       description:    Add read data req
 ;
 ;       parameters:     BX      Req handle
-;               CX      Size of data
-;               ES      Data selector (do not free)
+;                       CX      Size of data
+;                       AX      Additional data size
+;               
+;       Returns:        ES      Data selector (do not free)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1458,25 +1479,33 @@ add_read_usb_data_req_name DB 'Add Read USB data req', 0
 
 add_read_usb_data_req   Proc far
     push ds
-    push es
     push ax
     push ebx
 ;
+    push ax
     mov ax,USB_REQ_HANDLE
     DerefHandle
+    pop ax
     jc arudDone
 ;
+    push ds
+    mov ds,ds:[ebx].rh_func_sel
+    add ax,cx
+    movzx eax,ax
+    call AllocateBufSel     
     mov ax,es
+    pop ds
+;
     call AddReqBlock
     mov es:re_type,REQ_TYPE_READ_DATA
     mov es:re_size,cx
     mov es:re_buf_sel,ax
+    mov es,ax
     clc
     
 arudDone:    
     pop ebx
     pop ax
-    pop es
     pop ds
     retf32
 add_read_usb_data_req   Endp
@@ -3483,19 +3512,19 @@ init    Proc far
     mov esi,OFFSET add_write_usb_control_req
     mov edi,OFFSET add_write_usb_control_req_name
     xor cl,cl
-    mov ax,add_write_usb_control_req_nr
+    mov ax,add_write_usb_control_req_new_nr
     RegisterOsGate
 ;
     mov esi,OFFSET add_write_usb_data_req
     mov edi,OFFSET add_write_usb_data_req_name
     xor cl,cl
-    mov ax,add_write_usb_data_req_nr
+    mov ax,add_write_usb_data_req_new_nr
     RegisterOsGate
 ;
     mov esi,OFFSET add_read_usb_data_req
     mov edi,OFFSET add_read_usb_data_req_name
     xor cl,cl
-    mov ax,add_read_usb_data_req_nr
+    mov ax,add_read_usb_data_req_new_nr
     RegisterOsGate
 ;
     mov esi,OFFSET add_usb_status_in_req

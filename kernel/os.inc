@@ -3244,23 +3244,26 @@ CreateUsbReq      MACRO
                         
 ; IN  BX    Req handle
 ; IN  CX    Size of data
-; IN  ES    Selector (do not free)
-AddWriteUsbContolReq      MACRO
-    OsGate add_write_usb_control_req_nr
+; IN  AX    Additional data space
+; OUT ES    Selector (do not free)
+AddWriteUsbContolReqNew      MACRO
+    OsGate add_write_usb_control_req_new_nr
                         ENDM
                         
 ; IN  BX    Req handle
 ; IN  CX    Size of data
-; IN  ES    Selector (do not free)
-AddWriteUsbDataReq      MACRO
-    OsGate add_write_usb_data_req_nr
+; IN  AX    Additional data space
+; OUT ES    Selector (do not free)
+AddWriteUsbDataReqNew      MACRO
+    OsGate add_write_usb_data_req_new_nr
                         ENDM
 
 ; IN  BX    Req handle
 ; IN  CX    Size of data
-; IN  ES    Selector (do not free)
-AddReadUsbDataReq      MACRO
-    OsGate add_read_usb_data_req_nr
+; IN  AX    Additional data space
+; OUT ES    Selector (do not free)
+AddReadUsbDataReqNew      MACRO
+    OsGate add_read_usb_data_req_new_nr
                         ENDM
 
 ; IN  BX    Req handle

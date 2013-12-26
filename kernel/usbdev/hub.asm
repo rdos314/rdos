@@ -421,10 +421,9 @@ CreateHub  Proc near
     mov gs:hub_status_req,bx
 ;
     mov cx,gs:hub_status_size
-    movzx eax,cx
-    AllocateSmallGlobalMem
+    xor ax,ax
+    AddReadUsbDataReqNew
     mov gs:hub_status_sel,es
-    AddReadUsbDataReq
 ;
     popad
     pop es

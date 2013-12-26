@@ -1039,14 +1039,13 @@ OpenIntrPipe_ Proc near
     OpenUsbPipe
     mov fs:hid_intr_handle,bx
 ;
-    movzx eax,fs:hid_intr_size
-    add eax,4
-    AllocateSmallGlobalMem
-    mov fs:hid_intr_buf,es
-    mov cx,fs:hid_intr_size
     CreateUsbReq
     mov fs:hid_intr_req,bx
-    AddReadUsbDataReq
+;
+    mov cx,fs:hid_intr_size
+    mov ax,4
+    AddReadUsbDataReqNew
+    mov fs:hid_intr_buf,es
 ;
     popad
     pop es
@@ -1224,13 +1223,13 @@ open_hid    Proc far
     OpenUsbPipe
     mov ds:hid_intr_handle,bx
 ;
-    mov eax,8
-    AllocateSmallGlobalMem
-    mov ds:hid_intr_buf,es
-    mov cx,ax
     CreateUsbReq
     mov ds:hid_intr_req,bx
-    AddReadUsbDataReq
+;
+    mov cx,8
+    xor ax,ax
+    AddReadUsbDataReqNew
+    mov ds:hid_intr_buf,es
 ;    
     GetThread
     xor cx,cx

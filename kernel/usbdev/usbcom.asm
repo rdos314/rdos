@@ -3208,15 +3208,6 @@ CreatePortMct   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenPort    Proc near
-    movzx eax,ds:uds_in_size
-    AllocateSmallGlobalMem
-    mov ds:uds_in_buffer,es
-;
-    movzx eax,ds:uds_out_size
-    inc eax
-    AllocateSmallGlobalMem
-    mov ds:uds_out_buffer,es
-;
     mov bx,ds:cd_controller
     mov ax,ds:cd_device
     mov dl,ds:uds_bulk_in
@@ -3225,9 +3216,11 @@ OpenPort    Proc near
 ;
     CreateUsbReq
     mov ds:uds_in_req,bx    
+;    
     mov cx,ds:uds_in_size
-    mov es,ds:uds_in_buffer
-    AddReadUsbDataReq
+    xor ax,ax
+    AddReadUsbDataReqNew
+    mov ds:uds_in_buffer,es
 ;
     mov bx,ds:cd_controller
     mov ax,ds:cd_device
@@ -3237,17 +3230,15 @@ OpenPort    Proc near
 ;
     CreateUsbReq
     mov ds:uds_out_req,bx
+;    
     mov cx,ds:uds_out_size
-    mov es,ds:uds_out_buffer
-    AddWriteUsbDataReq
+    mov ax,1
+    AddWriteUsbDataReqNew
+    mov ds:uds_out_buffer,es
 ;
     mov dl,ds:uds_intr_in
     or dl,dl
     jz opDone
-;    
-    movzx eax,ds:uds_in_size
-    AllocateSmallGlobalMem
-    mov ds:uds_intr_buffer,es
 ;    
     mov bx,ds:cd_controller
     mov ax,ds:cd_device
@@ -3256,9 +3247,11 @@ OpenPort    Proc near
 ;    
     CreateUsbReq
     mov ds:uds_intr_req,bx
+;
     mov cx,ds:uds_in_size
-    mov es,ds:uds_intr_buffer
-    AddReadUsbDataReq
+    xor ax,ax
+    AddReadUsbDataReqNew
+    mov ds:uds_intr_buffer,es
 
 opDone:        
     ret
