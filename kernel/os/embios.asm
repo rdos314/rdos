@@ -429,13 +429,6 @@ rom_loop:
     push word ptr 0
     CallVm
 ;
-    mov ax,flat_sel
-    mov ds,ax
-    mov bx,10h * 4
-    push dword ptr ds:[bx]
-    mov ax,3
-    CallVm
-;
     ret    
 InitBios    Endp
 
@@ -502,6 +495,13 @@ bios_process:
 ;    
     mov ax,1
     WaitMilliSec
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov bx,10h * 4
+    push dword ptr ds:[bx]
+    mov ax,3
+    CallVm
 
 bios_bitmap_done:
     mov ax,SEG data
