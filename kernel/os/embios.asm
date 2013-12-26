@@ -388,7 +388,6 @@ rom_loop:
     add edx,1000h
     loop rom_loop
 ;
-    int 3
     AllocatePhysical32
     mov edx,0F0000h
     or ax,7
@@ -450,6 +449,12 @@ rom_loop:
 ;    
     mov ax,1
     WaitMilliSec
+;
+    int 3
+    push word ptr 0F000h
+    push word ptr 0
+    CallVm
+    int 3
 
 bios_bitmap_done:
     mov ax,SEG data
