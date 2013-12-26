@@ -54,11 +54,11 @@ SYNC_FRAME = 12
 
 pipe_copy_struc     STRUC
 
+pc_next         DW ?
 pc_user_offset  DD ?
 pc_user_sel     DW ?
 pc_usb_linear   DD ?
-pc_size         DD ?
-pc_write_back   DB ?
+pc_size         DW ?
 
 pipe_copy_struc     ENDS
 
@@ -130,6 +130,230 @@ code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateBuf32
+;
+;       description:    Allocate 32-bit buffer
+;
+;       parameters:     CX      Size
+;
+;       Returns:        EDX     Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateBuf32   Proc near
+    push eax
+    push ebx
+    push ecx
+;
+    movzx eax,cx
+    AllocateBigLinear
+;
+    push edx
+
+abLoop:
+    AllocatePhysical32
+    mov al,13h
+    SetPageEntry
+    add edx,1000h
+    loop abLoop
+;
+    pop edx
+;
+    pop ecx
+    pop ebx
+    pop eax        
+    ret
+AllocateBuf32   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           HandleReadData
+;
+;       description:    Handle read data request
+;
+;       parameters:     DS:EBX  Handle data
+;                       ES:EDI  Buffer
+;                       CX      Size
+;
+;       Returns:        ES:EDI  Buffer to use
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleReadData  Proc near
+    push eax
+;    
+    mov al,ds:[ebx].up_copy
+    or al,al
+    jz hrdDone
+;
+    push esi
+    push edx
+;    
+    call AllocateBuf32
+;
+    mov si,es
+    mov eax,SIZE pipe_copy_struc
+    AllocateSmallGlobalMem
+    mov es:pc_user_offset,edi
+    mov es:pc_user_sel,si
+    mov es:pc_usb_linear,edx
+    mov es:pc_size,cx
+;
+    mov ax,ds:[ebx].up_list
+    mov es:pc_next,ax
+    mov ds:[ebx].up_list,es
+;
+    mov edi,edx
+    mov ax,flat_sel
+    mov es,ax
+;        
+    pop edx
+    pop esi
+
+hrdDone:
+    pop eax    
+    ret
+HandleReadData  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           HandleWriteData
+;
+;       description:    Handle write data request
+;
+;       parameters:     DS:EBX  Handle data
+;                       ES:EDI  Buffer
+;                       CX      Size
+;
+;       Returns:        ES:EDI  Buffer to use
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleWriteData  Proc near
+    push eax
+;    
+    mov al,ds:[ebx].up_copy
+    or al,al
+    jz hwdDone
+;
+    push edx
+;    
+    call AllocateBuf32
+;
+    push ds
+    push esi
+    push ecx
+;
+    mov esi,edi
+    mov ax,es
+    mov ds,ax
+    mov edi,edx
+    mov ax,flat_sel
+    mov es,ax
+    movzx ecx,cx
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    pop ecx
+    pop esi
+    pop ds
+;    
+    mov eax,SIZE pipe_copy_struc
+    AllocateSmallGlobalMem
+    mov es:pc_user_offset,0
+    mov es:pc_user_sel,0
+    mov es:pc_usb_linear,edx
+    mov es:pc_size,cx
+;
+    mov ax,ds:[ebx].up_list
+    mov es:pc_next,ax
+    mov ds:[ebx].up_list,es
+;
+    mov edi,edx
+    mov ax,flat_sel
+    mov es,ax
+;        
+    pop edx
+
+hwdDone:
+    pop eax    
+    ret
+HandleWriteData  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CleanupData
+;
+;       description:    Cleanup after data transfer
+;
+;       parameters:     DS:EBX  Handle data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CleanupData  Proc near  
+    push eax
+;    
+    xor ax,ax
+    xchg ax,ds:[ebx].up_list
+
+cdLoop:    
+    or ax,ax
+    jz cdDone
+;
+    push es
+    mov es,ax
+;
+    mov ax,es:pc_user_sel
+    or ax,ax
+    jz cdCopyOk
+;
+    push ds
+    push es
+    push ecx
+    push esi
+    push edi
+;    
+    movzx ecx,es:pc_size
+    mov esi,es:pc_usb_linear
+    mov ax,flat_sel
+    mov ds,ax
+    mov edi,es:pc_user_offset
+    mov es,es:pc_user_sel
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop es
+    pop ds  
+
+cdCopyOk:      
+    push ecx
+    push edx
+;    
+    mov edx,es:pc_usb_linear
+    movzx ecx,es:pc_size
+    FreeLinear
+;
+    pop edx
+    pop ecx   
+;     
+    mov ax,es:pc_next
+    FreeMem
+;
+    pop es    
+    jmp cdLoop
+
+cdDone:
+    pop eax       
+    ret
+CleanupData  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2270,6 +2494,8 @@ close_usb_pipe  Proc far
     DerefHandle
     jc cupDone
 ;
+    call CleanupData
+;    
     push ds
     push ebx
     mov dl,ds:[ebx].up_pipe
@@ -2339,6 +2565,8 @@ reset_usb_pipe     Proc far
     DerefHandle
     jc rupDone
 ;
+    call CleanupData
+;    
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
     call fword ptr ds:reset_pipe_proc
@@ -2372,6 +2600,8 @@ delete_handle   Proc far
 ;
     push ds
     push ebx
+;
+    call CleanupData    
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
     sub fs:usbp_usage,1
@@ -2627,10 +2857,17 @@ write_usb_control16     Proc far
     DerefHandle
     jc wucDone16
 ;
+    push es
+    push edi
+;    
     movzx edi,di
+    call HandleWriteData
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
     call fword ptr ds:add_setup_proc
+;
+    pop edi
+    pop es
 
 wucDone16:
     pop cx
@@ -2652,9 +2889,16 @@ write_usb_control32     Proc far
     DerefHandle
     jc wucDone32
 ;
+    push es
+    push edi
+;
+    call HandleWriteData    
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
     call fword ptr ds:add_setup_proc
+;
+    pop edi
+    pop es    
 
 wucDone32:
     pop cx
@@ -2691,9 +2935,16 @@ req_usb_data    Proc far
     DerefHandle
     jc rudDone
 ;
+    push es
+    push edi
+;
+    call HandleReadData    
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
     call fword ptr ds:add_in_proc
+;
+    pop edi
+    pop es    
 
 rudDone:
     pop ebx
@@ -2729,6 +2980,7 @@ get_usb_data_size16     Proc far
     DerefHandle
     jc gudDone16
 ;
+    call CleanupData
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
     call fword ptr ds:get_data_size_proc
@@ -2752,6 +3004,7 @@ get_usb_data_size32     Proc far
     DerefHandle
     jc gudDone32
 ;
+    call CleanupData
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
     call fword ptr ds:get_data_size_proc
@@ -2792,10 +3045,17 @@ write_usb_data16    Proc far
     DerefHandle
     jc wudDone16
 ;
+    push es
+    push edi
+;    
     movzx edi,di
+    call HandleWriteData
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
     call fword ptr ds:add_out_proc
+;
+    pop edi
+    pop es
 
 wudDone16:
     pop cx
@@ -2817,9 +3077,16 @@ write_usb_data32    Proc far
     DerefHandle
     jc wudDone32
 ;
+    push es
+    push edi
+;
+    call HandleWriteData    
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
     call fword ptr ds:add_out_proc
+;   
+    pop edi
+    pop es    
 
 wudDone32:
     pop cx
@@ -2997,6 +3264,7 @@ was_usb_trans_ok    Proc far
     DerefHandle
     jc wutoDone
 ;
+    call CleanupData
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
     call fword ptr ds:was_transfer_ok_proc
