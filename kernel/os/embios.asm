@@ -361,7 +361,6 @@ HandleOutputSel Endp
 bios_name       DB 'Emulated BIOS',0
 
 bios_process:
-    int 3
     mov al,16
     SetBitness
 ;
@@ -389,6 +388,7 @@ rom_loop:
     add edx,1000h
     loop rom_loop
 ;
+    int 3
     AllocatePhysical32
     mov edx,0F0000h
     or ax,7
