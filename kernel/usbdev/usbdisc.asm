@@ -1012,7 +1012,41 @@ rdLoop:
 ;    
     push edi
     mov edi,es:[edi].dh_data
-    call ReadSector
+;    
+    mov ecx,200h
+    mov fs:disc_cbw_tag,edx
+    mov fs:disc_cbw_transfer_len,ecx
+    mov fs:disc_cbw_flags,80h
+    mov fs:disc_cbw_cmd_len,10
+    mov fs:disc_cbw_cmd_data,28h
+    mov fs:disc_cbw_cmd_data+1,0
+;
+    mov eax,edx
+    xchg al,ah
+    rol eax,16
+    xchg al,ah
+    mov dword ptr fs:disc_cbw_cmd_data+2,eax
+;
+    mov fs:disc_cbw_cmd_data+6,0
+;
+    mov ax,1
+    xchg al,ah    
+    mov word ptr fs:disc_cbw_cmd_data+7,ax
+;
+    mov fs:disc_cbw_cmd_data+9,0
+;
+    push edi
+    call SendCbw
+    pop edi
+    jc rdCont
+;    
+    mov ecx,200h
+    call ReceiveData
+    jc rdCont
+;    
+    call ReceiveCsw
+
+rdCont:    
     pop edi
     jnc rdOk 
     
@@ -1069,7 +1103,41 @@ wdLoop:
 ;    
     push edi
     mov edi,es:[edi].dh_data
-    call WriteSector
+;    
+    mov ecx,200h
+    mov fs:disc_cbw_tag,edx
+    mov fs:disc_cbw_transfer_len,ecx
+    mov fs:disc_cbw_flags,0
+    mov fs:disc_cbw_cmd_len,10
+    mov fs:disc_cbw_cmd_data,2Ah
+    mov fs:disc_cbw_cmd_data+1,0
+;
+    mov eax,edx
+    xchg al,ah
+    rol eax,16
+    xchg al,ah
+    mov dword ptr fs:disc_cbw_cmd_data+2,eax
+;
+    mov fs:disc_cbw_cmd_data+6,0
+;
+    mov ax,1
+    xchg al,ah    
+    mov word ptr fs:disc_cbw_cmd_data+7,ax
+;
+    mov fs:disc_cbw_cmd_data+9,0
+;
+    push edi
+    call SendCbw
+    pop edi
+    jc wdCont
+;    
+    mov ecx,200h
+    call WriteData
+    jc wdCont
+;    
+    call ReceiveCsw
+
+wdCont:
     pop edi
     jnc wdOk 
     
