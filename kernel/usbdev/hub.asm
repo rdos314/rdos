@@ -423,7 +423,7 @@ CreateHub  Proc near
 ;
     mov cx,gs:hub_status_size
     xor ax,ax
-    AddReadUsbDataReqNew
+    AddReadUsbDataReq
     mov gs:hub_status_sel,es
 ;
     popad
@@ -446,7 +446,7 @@ CloseHub  Proc near
     push bx
 ;
     mov bx,gs:hub_status_req
-    CloseUsbReq
+    CloseUsbReqNew
 ;    
     mov bx,gs:hub_status_handle
     CloseUsbPipe

@@ -2038,6 +2038,16 @@ crFreeLoop:
     jz crFreeHandle
 ;
     mov es,ax
+    mov ax,es:re_buf_sel
+    or ax,ax
+    jz crBufFree
+;
+    push es
+    mov es,ax
+    FreeMem
+    pop es
+    
+crBufFree:    
     mov ax,es:re_next    
     FreeMem
     jmp crFreeLoop
@@ -3512,19 +3522,19 @@ init    Proc far
     mov esi,OFFSET add_write_usb_control_req
     mov edi,OFFSET add_write_usb_control_req_name
     xor cl,cl
-    mov ax,add_write_usb_control_req_new_nr
+    mov ax,add_write_usb_control_req_nr
     RegisterOsGate
 ;
     mov esi,OFFSET add_write_usb_data_req
     mov edi,OFFSET add_write_usb_data_req_name
     xor cl,cl
-    mov ax,add_write_usb_data_req_new_nr
+    mov ax,add_write_usb_data_req_nr
     RegisterOsGate
 ;
     mov esi,OFFSET add_read_usb_data_req
     mov edi,OFFSET add_read_usb_data_req_name
     xor cl,cl
-    mov ax,add_read_usb_data_req_new_nr
+    mov ax,add_read_usb_data_req_nr
     RegisterOsGate
 ;
     mov esi,OFFSET add_usb_status_in_req

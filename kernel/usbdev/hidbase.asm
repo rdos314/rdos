@@ -996,16 +996,13 @@ CloseHidDev_ Proc near
     CloseWait
 ;    
     mov bx,fs:hid_intr_req
-    CloseUsbReq
+    CloseUsbReqNew
     mov fs:hid_intr_req,0
     mov fs:hid_intr_buf,0
 ;
     mov bx,fs:hid_intr_handle
     CloseUsbPipe    
     mov fs:hid_intr_handle,0
-;    
-    mov es,fs:hid_intr_buf
-    FreeMem
 ;   
     mov fs:hid_intr_buf,0
     mov fs:hid_control_handle,0
@@ -1047,7 +1044,7 @@ OpenIntrPipe_ Proc near
 ;
     mov cx,fs:hid_intr_size
     mov ax,4
-    AddReadUsbDataReqNew
+    AddReadUsbDataReq
     mov fs:hid_intr_buf,es
 ;
     popad
@@ -1256,7 +1253,7 @@ open_hid    Proc far
     mov bx,ds:[ebx].hh_intr_req
     mov cx,8
     xor ax,ax
-    AddReadUsbDataReqNew
+    AddReadUsbDataReq
     pop bx
     mov ds:[ebx].hh_intr_buf,es
 ;    
@@ -1311,14 +1308,8 @@ close_hid  Proc far
 ;    
     push bx
     mov bx,ds:[ebx].hh_intr_req
-    CloseUsbReq
+    CloseUsbReqNew
     pop bx
-;    
-    push es
-    mov es,ds:[ebx].hh_intr_buf
-    FreeMem
-    pop es
-;
 ;    
     FreeHandle
     clc

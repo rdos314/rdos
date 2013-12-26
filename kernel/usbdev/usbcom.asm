@@ -3219,7 +3219,7 @@ OpenPort    Proc near
 ;    
     mov cx,ds:uds_in_size
     xor ax,ax
-    AddReadUsbDataReqNew
+    AddReadUsbDataReq
     mov ds:uds_in_buffer,es
 ;
     mov bx,ds:cd_controller
@@ -3233,7 +3233,7 @@ OpenPort    Proc near
 ;    
     mov cx,ds:uds_out_size
     mov ax,1
-    AddWriteUsbDataReqNew
+    AddWriteUsbDataReq
     mov ds:uds_out_buffer,es
 ;
     mov dl,ds:uds_intr_in
@@ -3250,7 +3250,7 @@ OpenPort    Proc near
 ;
     mov cx,ds:uds_in_size
     xor ax,ax
-    AddReadUsbDataReqNew
+    AddReadUsbDataReq
     mov ds:uds_intr_buffer,es
 
 opDone:        
@@ -3277,7 +3277,7 @@ ClosePort    Proc near
     mov es,ax
 ;    
     mov bx,ds:uds_in_req
-    CloseUsbReq
+    CloseUsbReqNew
     mov ds:uds_in_req,0
 ;
     mov bx,ds:uds_in_handle
@@ -3285,7 +3285,7 @@ ClosePort    Proc near
     mov ds:uds_in_handle,0
 ;
     mov bx,ds:uds_out_req
-    CloseUsbReq
+    CloseUsbReqNew
     mov ds:uds_out_req,0
 ;
     mov bx,ds:uds_out_handle
@@ -3296,7 +3296,7 @@ ClosePort    Proc near
     or bx,bx
     jz cIntrReqDone
 ;
-    CloseUsbReq
+    CloseUsbReqNew
     mov ds:uds_intr_req,0
 
 cIntrReqDone:
@@ -3308,20 +3308,8 @@ cIntrReqDone:
     mov ds:uds_intr_handle,0
 
 cIntrHandleDone:    
-    mov es,ds:uds_in_buffer
-    FreeMem    
     mov ds:uds_in_buffer,0
-;
-    mov es,ds:uds_out_buffer
-    FreeMem    
     mov ds:uds_out_buffer,0
-;
-    mov bx,ds:uds_intr_buffer
-    or bx,bx
-    jz cIntrMemDone
-;
-    mov es,bx
-    FreeMem
     mov ds:uds_intr_buffer,0
 
 cIntrMemDone:    
