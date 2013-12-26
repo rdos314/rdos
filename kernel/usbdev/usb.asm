@@ -172,6 +172,50 @@ AllocateBuf32   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AllocateBufSel
+;
+;       description:    Allocate buffer selector
+;
+;       parameters:     EAX     Size
+;                       DS      USB device sel
+;
+;       Returns:        ES      Selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateBufSel   Proc near
+    call fword ptr ds:has_64bit_proc
+    jnc abfNorm
+;
+    HasPhysical64
+    jc abfNorm
+
+abf32:
+    push bx
+    push ecx
+    push edx
+;
+    mov ecx,eax
+    call AllocateBuf32
+    AllocateGdt
+    CreateDataSelector16
+    mov es,bx
+;
+    pop edx
+    pop ecx
+    pop bx    
+    jmp abfDone
+
+abfNorm:
+    AllocateSmallGlobalMem
+
+abfDone:        
+    ret
+AllocateBufSel   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           HandleReadData
 ;
 ;       description:    Handle read data request
@@ -449,7 +493,7 @@ CreateDefaultControl    Proc near
     pop ds
 ;    
     mov eax,8
-    AllocateSmallGlobalMem
+    call AllocateBufSel
     xor edi,edi
     mov es:usd_type,0
     mov es:usd_req,SET_ADDRESS
@@ -624,7 +668,7 @@ GetDescr    Proc near
 ;    
     push ax
     mov eax,8
-    AllocateSmallGlobalMem
+    call AllocateBufSel
     mov bx,es
     pop ax
     xor edi,edi
@@ -1098,7 +1142,7 @@ notify_usb_attach       Proc far
     jc nuaDone
 ;
     mov eax,8
-    AllocateSmallGlobalMem
+    call AllocateBufSel
 
 nuaRetry:
     call fword ptr ds:is_connected_proc
@@ -1119,7 +1163,7 @@ nuaRetry:
     call fword ptr ds:is_connected_proc
     jc nuaDone
 ;    
-    AllocateSmallGlobalMem
+    call AllocateBufSel
     xor edi,edi
     mov cx,ax
     mov ax,100h
@@ -1135,7 +1179,7 @@ nuaLoop:
     jc nuaDone
 ;    
     mov eax,8
-    AllocateSmallGlobalMem
+    call AllocateBufSel
     xor edi,edi
     mov cx,8
     mov al,bl
@@ -1147,7 +1191,7 @@ nuaLoop:
     call fword ptr ds:is_connected_proc
     jc nuaDone
 ;
-    AllocateSmallGlobalMem
+    call AllocateBufSel
     xor edi,edi
     mov cx,ax
     mov al,bl
@@ -2257,7 +2301,7 @@ config_usb_device       Proc near
 ;
     mov fs,si    
     mov eax,8
-    AllocateSmallGlobalMem
+    call AllocateBufSel
     xor edi,edi
     mov es:usd_type,0
     mov es:usd_req,SET_CONFIG
