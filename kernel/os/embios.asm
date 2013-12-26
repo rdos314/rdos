@@ -74,7 +74,12 @@ code    SEGMENT byte public 'CODE'
 ;
 
 bios_start:
-    int 3
+    xor bx,bx
+    mov ds,bx
+    mov bx,15h * 4
+    mov word ptr ds:[bx],OFFSET int15
+    mov word ptr ds:[bx+2],cs    
+;
     mov bx,0C000h
     mov ds,bx
     mov ax,ds:[0]
@@ -88,9 +93,28 @@ bios_start:
     dw 0C000h
 
 nocall:
-    iretd
+    iret
 
+default_int:
+    int 3
+    iret
 
+int15:
+    push bp
+    mov bp,sp
+;    
+    cmp ah,5Fh
+    je int15_err
+;
+    int 3
+
+int15_err:
+    mov ah,86h
+    or byte ptr [bp+6],1
+;
+    pop bp
+    iret    
+        
 bios_end:
 
 ;
@@ -372,9 +396,15 @@ bios_process:
     or ax,7
     SetPageEntry
 ;
+    mov ax,0F000h
+    shl eax,16
+    mov ax,OFFSET default_int
     xor edi,edi
+    mov ecx,100h    
+    rep stos dword ptr es:[edi]
+;
     xor eax,eax
-    mov ecx,400h
+    mov ecx,300h
     rep stos dword ptr es:[edi]
 ;
     xor ebx,ebx
@@ -450,11 +480,16 @@ rom_loop:
     mov ax,1
     WaitMilliSec
 ;
-    int 3
     push word ptr 0F000h
     push word ptr 0
     CallVm
-    int 3
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov bx,10h * 4
+    push dword ptr ds:[bx]
+    mov ax,3
+    CallVm
 
 bios_bitmap_done:
     mov ax,SEG data

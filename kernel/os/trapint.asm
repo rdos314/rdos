@@ -1430,12 +1430,33 @@ trap_13:
     push ax
     push ds
 ;
+    test byte ptr [ebp+2].trap_eflags,2
+    jz t13_enter_patch
+;
+    mov bx,flat_sel
+    mov ds,bx
+    movzx ebx,word ptr [ebp].trap_cs
+    shl ebx,4
+    add ebx,dword ptr [ebp].trap_eip
+    mov al,ds:[ebx]    
+    cmp al,0CCh
+    jne t13_vm_em
+;   
+    inc dword ptr [ebp].trap_eip
+    pop ds
+    pop ax
+    mov al,3    
+    push ax
+    push ds
+
+t13_vm_em:    
+    call emulate
+    jmp t13_end
+
+t13_enter_patch:
     mov ax,system_data_sel
     mov ds,ax
     call ds:enter_patch_proc
-;
-    test byte ptr [ebp+2].trap_eflags,2
-    jnz t13_default
     
 t13_prot:    
     mov ds,[ebp].trap_cs
