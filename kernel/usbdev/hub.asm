@@ -32,6 +32,7 @@ include ..\user.inc
 include ..\driver.def
 INCLUDE ..\os\protseg.def
 include ..\usbdev\usb.inc
+include ..\usbdev\usbdev.inc
 include ..\usbdev\hub.inc
 
 GET_STATUS = 0

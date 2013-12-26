@@ -35,6 +35,10 @@ include ..\usbdev\usb.inc
 INCLUDE ..\handle.inc
 include hid.inc
 
+; should be removed!!
+
+include ..\usbdev\usbdev.inc
+
 usb_hid_descr  STRUC
 
 uhd_len         DB ?

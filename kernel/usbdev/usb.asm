@@ -35,6 +35,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\wait.inc
 INCLUDE usb.inc
+INCLUDE usbdev.inc
 
 MAX_ATTACH_HOOKS = 32
 MAX_DETACH_HOOKS = 32
@@ -50,7 +51,6 @@ SET_CONFIG = 9
 GET_INTERFACE = 10
 SET_INTERFACE = 11
 SYNC_FRAME = 12
-
 
 pipe_copy_struc     STRUC
 

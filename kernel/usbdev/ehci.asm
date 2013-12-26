@@ -33,6 +33,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\pcdev\pci.inc
 INCLUDE usb.inc
+INCLUDE usbdev.inc
 INCLUDE hub.inc
 
 MAX_USB_DEVICES = 16
