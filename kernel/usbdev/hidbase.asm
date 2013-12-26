@@ -35,10 +35,6 @@ include ..\usbdev\usb.inc
 INCLUDE ..\handle.inc
 include hid.inc
 
-; should be removed!!
-
-include ..\usbdev\usbdev.inc
-
 usb_hid_descr  STRUC
 
 uhd_len         DB ?
@@ -61,11 +57,14 @@ hid_handle_struc       STRUC
 
 hh_base                 handle_header <>
 hh_hid_sel              DW ?
-hh_sys_control_handle   DW ?
-hh_sys_control_wait     DW ?
-hh_sys_intr_handle      DW ?
+hh_control_handle       DW ?
+hh_control_wait         DW ?
+hh_intr_handle          DW ?
+hh_intr_req             DW ?
+hh_intr_buf             DW ?
 
 hid_handle_struc       ENDS
+
 
 hid_output_struc        STRUC
 
@@ -1214,34 +1213,61 @@ open_hid    Proc far
     pop ax
     mov [ebx].hh_hid_sel,ax
     mov [ebx].hh_sign,HID_HANDLE
-    mov bx,[ebx].hh_handle
+    mov es,ax
 ;    
-    push ax
     push bx
-    push dx
-;    
-    mov ds,ax
-    mov bx,ds:hid_controller
-    mov al,ds:hid_device
-    mov dl,ds:hid_intr_in
+    mov bx,es:hid_controller
+    mov al,es:hid_device
+    xor dl,dl
     OpenUsbPipe
-    mov ds:hid_intr_handle,bx
+    mov ax,bx
+    pop bx
+    mov ds:[ebx].hh_control_handle,ax
 ;
+    push bx
+    CreateWait
+    mov ax,bx
+    mov ds:[ebx].hh_control_wait,ax
+;
+    push bx
+    mov ax,ds:[ebx].hh_control_handle
+    mov bx,ds:[ebx].hh_control_wait
+    movzx ecx,bx
+    AddWaitForUsbPipe
+    pop bx
+;    
+    push bx
+    mov bx,es:hid_controller
+    mov al,es:hid_device
+    mov dl,es:hid_intr_in
+    OpenUsbPipe
+    mov ax,bx
+    pop bx
+    mov ds:[ebx].hh_intr_handle,ax
+;
+    push bx
+    mov bx,ds:[ebx].hh_intr_handle
     CreateUsbReq
-    mov ds:hid_intr_req,bx
+    mov ax,bx
+    pop bx
+    mov ds:[ebx].hh_intr_req,ax
 ;
+    push bx
+    mov bx,ds:[ebx].hh_intr_req
     mov cx,8
     xor ax,ax
     AddReadUsbDataReqNew
-    mov ds:hid_intr_buf,es
+    pop bx
+    mov ds:[ebx].hh_intr_buf,es
 ;    
+    push bx
+    mov bx,ds:[ebx].hh_intr_req
     GetThread
     xor cx,cx
     StartUsbReq
-;
-    pop dx
     pop bx
-    pop ax    
+;    
+    mov bx,[ebx].hh_handle   
     clc
 
 open_hid_done:        
@@ -1273,26 +1299,26 @@ close_hid  Proc far
     DerefHandle
     jc chDone
 ;
-    push ds
-    push es
     push bx
-;    
-    mov ds,[ebx].hh_hid_sel
-;
-    mov bx,ds:hid_intr_handle
+    mov bx,ds:[ebx].hh_control_handle
     CloseUsbPipe    
+    pop bx
+;
+    push bx
+    mov bx,ds:[ebx].hh_intr_handle
+    CloseUsbPipe    
+    pop bx
 ;    
-    mov bx,ds:hid_intr_req
+    push bx
+    mov bx,ds:[ebx].hh_intr_req
     CloseUsbReq
+    pop bx
 ;    
-    mov es,ds:hid_intr_buf
+    push es
+    mov es,ds:[ebx].hh_intr_buf
     FreeMem
-;
-    mov ds:hid_intr_handle,0
-;
-    pop bx    
     pop es
-    pop ds
+;
 ;    
     FreeHandle
     clc
@@ -1364,8 +1390,10 @@ read_hid    Proc near
     mov esi,eax
 
 read_hid_loop:
-    mov bx,ds:hid_intr_req
+    push bx
+    mov bx,ds:[ebx].hh_intr_req
     IsUsbReqReady
+    pop bx
     jnc read_hid_get_data
 ;    
     push cx
@@ -1375,15 +1403,23 @@ read_hid_loop:
     WaitForSignalWithTimeout
     pop cx
 ;    
+    push bx
+    mov bx,ds:[ebx].hh_intr_req
     IsUsbReqReady
+    pop bx
     jc read_hid_fail
 
 read_hid_get_data:    
     push es
+    push bx
     push cx
+;    
+    mov bx,ds:[ebx].hh_intr_req
     GetUsbReqData
+;
     mov ax,cx
     pop cx
+    pop bx
     pop es
     jc read_hid_fail
 ;
@@ -1398,11 +1434,16 @@ read_hid_get_data:
     stos dword ptr es:[edi]
 ;    
     push es
+    push bx
     push cx
+;
+    mov bx,ds:[ebx].hh_intr_req
     GetThread
     xor cx,cx
     StartUsbReq
+;    
     pop cx
+    pop bx
     pop es
 ;
     sub cx,8
@@ -1412,15 +1453,23 @@ read_hid_get_data:
     jmp read_hid_done
 
 read_hid_fail:    
+    push bx
+    mov bx,ds:[ebx].hh_intr_req
     IsUsbReqStarted
+    pop bx
     jnc read_hid_fail_done
 ;
     push es
+    push bx
     push cx
+;    
+    mov bx,ds:[ebx].hh_intr_req
     GetThread
     xor cx,cx
     StartUsbReq
+;    
     pop cx
+    pop bx
     pop es
 
 read_hid_fail_done:
@@ -1448,7 +1497,6 @@ read_hid16  Proc far
     jc rdDone16
 ;
     movzx edi,di
-    mov ds,[ebx].hh_hid_sel
     call read_hid
 
 rdDone16:
@@ -1472,7 +1520,6 @@ read_hid32  Proc far
     pop eax
     jc rdDone32
 ;
-    mov ds,[ebx].hh_hid_sel
     call read_hid
 
 rdDone32:
@@ -1519,17 +1566,30 @@ write_hid_loop:
 ;    
     xor edi,edi
     mov ecx,8
-    call fword ptr ds:add_setup_proc
+    push bx
+    mov bx,ds:[ebx].hh_control_handle
+    WriteUsbControl
+    pop bx
     FreeMem
 ;
     pop edi
     pop es    
 ;
+    push bx
+    mov bx,ds:[ebx].hh_control_handle
     mov ecx,8
-    call fword ptr ds:add_out_proc
-    call fword ptr ds:add_status_in_proc
-    call fword ptr ds:issue_transfer_proc
-    call fword ptr ds:wait_for_completion_proc    
+    WriteUsbData
+    ReqUsbStatus
+    StartUsbTransaction
+    pop bx
+;    
+    push bx
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:[ebx].hh_control_wait
+    WaitWithTimeout
+    pop bx
 ;    
     pop cx
 ;
@@ -1560,14 +1620,6 @@ write_hid16  Proc far
     jc wrDone16
 ;
     movzx edi,di
-    mov ds,[ebx].hh_hid_sel
-    mov ax,ds:hid_function_sel
-    or ax,ax
-    stc
-    jz wrDone16
-;    
-    mov fs,ds:hid_control_sel
-    mov ds,ax
     call write_hid
 
 wrDone16:
@@ -1593,14 +1645,6 @@ write_hid32  Proc far
     pop eax
     jc wrDone32
 ;
-    mov ds,[ebx].hh_hid_sel
-    mov ax,ds:hid_function_sel
-    or ax,ax
-    stc
-    jz wrDone32
-;    
-    mov fs,ds:hid_control_sel
-    mov ds,ax
     call write_hid
 
 wrDone32:
