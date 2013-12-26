@@ -7850,6 +7850,76 @@ create_tss32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           CreateInitialTss
+;
+;   DESCRIPTION:    Create initial TSS
+;
+;   PARAMETERS:     DS          Thread
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_initial_tss    PROC near
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov ax,flat_sel
+    mov es,ax
+;    
+    mov eax,OFFSET tss32_io_bitmap + 2000h
+    mov ecx,eax
+    AllocateSmallLinear
+    mov edi,edx
+;    
+    push ecx
+    push edi
+    xor al,al
+    rep stos byte ptr es:[edi]
+    pop edi
+    pop ecx
+;
+    mov es:[edi].tss32_bitmap,OFFSET tss32_io_bitmap
+;    
+    mov eax,stack0_size
+    AllocateBigLinear
+    AllocateGdt
+    mov ecx,eax
+    CreateDataSelector32
+;    
+    mov es:[edi].tss32_esp0,stack0_size
+    mov es:[edi].tss32_ess0,bx
+;    
+    mov ds:p_kernel_esp,stack0_size
+    mov ds:p_kernel_ss,bx
+    mov es,bx
+    mov es:[0],bx
+;
+    add edx,stack0_size
+    mov ds:p_kernel_stack,edx
+;    
+    mov eax,OFFSET tss32_io_bitmap + 2000h
+    mov edx,edi
+    AllocateGdt
+    CreateTssSelector
+    mov ds:p_tss_sel,bx
+    mov ds:p_futex_id,bx
+;    
+    sldt dx
+    mov ds:p_ldt,dx
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+create_initial_tss    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           CreateTss64
 ;
 ;   DESCRIPTION:    Create 64-bit TSS
@@ -8999,7 +9069,7 @@ init_first_process      Proc near
 ;
     mov ax,es
     mov ds,ax
-    call create_tss32
+    call create_initial_tss
 ;
     call create_first_thread
     call init_process_block

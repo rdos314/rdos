@@ -374,20 +374,15 @@ HandleOutputSel Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       bios_process
+;       NAME:           InitBios
 ;
-;       DESCRIPTION:    BIOS process
+;       DESCRIPTION:    Init BIOS
 ;
 ;       PARAMETERS:     
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-bios_name       DB 'Emulated BIOS',0
-
-bios_process:
-    mov al,16
-    SetBitness
-;
+InitBios    Proc near
     mov ax,flat_sel
     mov es,ax    
 ;
@@ -430,6 +425,34 @@ rom_loop:
     mov ecx,OFFSET bios_end - OFFSET bios_start
     rep movs es:[edi],ds:[esi]
 ;
+    push word ptr 0F000h
+    push word ptr 0
+    CallVm
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov bx,10h * 4
+    push dword ptr ds:[bx]
+    mov ax,3
+    CallVm
+;
+    ret    
+InitBios    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       bios_process
+;
+;       DESCRIPTION:    BIOS process
+;
+;       PARAMETERS:     
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+bios_name       DB 'Emulated BIOS',0
+
+bios_process:
     GetThread
     mov ds,ax
 ;    
@@ -479,17 +502,6 @@ rom_loop:
 ;    
     mov ax,1
     WaitMilliSec
-;
-    push word ptr 0F000h
-    push word ptr 0
-    CallVm
-;
-    mov ax,flat_sel
-    mov ds,ax
-    mov bx,10h * 4
-    push dword ptr ds:[bx]
-    mov ax,3
-    CallVm
 
 bios_bitmap_done:
     mov ax,SEG data
@@ -635,6 +647,9 @@ init_process    PROC far
     push ds
     push es
     pusha
+;
+    call InitBios
+;    
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -642,7 +657,8 @@ init_process    PROC far
     mov edi,OFFSET bios_name
     mov ecx,stack0_size
     mov ax,5
-    CreateProcess
+    CreateThread
+;    
     popa
     pop es
     pop ds
