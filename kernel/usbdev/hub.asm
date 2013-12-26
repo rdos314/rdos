@@ -446,7 +446,7 @@ CloseHub  Proc near
     push bx
 ;
     mov bx,gs:hub_status_req
-    CloseUsbReqNew
+    CloseUsbReq
 ;    
     mov bx,gs:hub_status_handle
     CloseUsbPipe

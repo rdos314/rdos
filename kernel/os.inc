@@ -3307,7 +3307,7 @@ GetUsbReqData      MACRO
                         ENDM
 
 ; IN  BX    Req handle
-CloseUsbReqNew      MACRO
+CloseUsbReq      MACRO
     OsGate close_usb_req_nr
                         ENDM
 

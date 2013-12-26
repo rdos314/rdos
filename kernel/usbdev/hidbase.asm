@@ -996,7 +996,7 @@ CloseHidDev_ Proc near
     CloseWait
 ;    
     mov bx,fs:hid_intr_req
-    CloseUsbReqNew
+    CloseUsbReq
     mov fs:hid_intr_req,0
     mov fs:hid_intr_buf,0
 ;
@@ -1308,7 +1308,7 @@ close_hid  Proc far
 ;    
     push bx
     mov bx,ds:[ebx].hh_intr_req
-    CloseUsbReqNew
+    CloseUsbReq
     pop bx
 ;    
     FreeHandle
