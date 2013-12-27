@@ -726,6 +726,55 @@ void UpdateAmdK10(int diff)
     
 /*##########################################################################
 #
+#   Name       : InitIntelPss
+#
+##########################################################################*/
+void InitIntelPss()
+{
+    int i;
+    int StateId = (int)ReadMsr(INTEL_PERF_STATUS) & 0xFFFF;
+
+    PowerState = 0;
+
+    for (i = 0; i < PowerStateCount; i++)
+        if (StateId == PowerStateArr[i]->Status)
+            PowerState = i;
+}
+    
+/*##########################################################################
+#
+#   Name       : ImplUpdatePStateIntelPss
+#
+##########################################################################*/
+#pragma aux ImplUpdatePStateIntelPss "*" rdosdev parm routine
+void __far ImplUpdatePStateIntelPss()
+{
+    WriteMsr(INTEL_PERF_CTL, PowerState);
+}
+    
+/*##########################################################################
+#
+#   Name       : UpdateIntelPss
+#
+##########################################################################*/
+void UpdateIntelPss(int diff)
+{
+    int NewState = PowerState + diff;
+
+    if (NewState < 0)
+        NewState = 0;
+
+    if (NewState >= PowerStateCount)
+        NewState = PowerStateCount - 1;
+
+    if (PowerState != NewState)
+        PowerState = NewState;
+
+    ReqPStateUpdate(ActiveProcessors);
+}
+    
+/*##########################################################################
+#
 #   Name       : StartCore
 #
 ##########################################################################*/
@@ -2763,34 +2812,43 @@ void __far InitTasking()
 
     if (strstr(CpuVendor, "Intel"))
     {
-        if (GetExtFeatureFlags() & 0x80)
+        if (PowerStateCount)
         {
-            if ((CpuInfo & 0xFFFFF0) == 0x106C0)
+            RdosRegisterOsGate(osgate_update_pstate, &ImplUpdatePStateIntelPss, "Update P-State IntelPss");
+            power_init_proc = InitIntelPss;
+            power_update_proc = UpdateIntelPss;
+        }
+        else
+        {
+            if (GetExtFeatureFlags() & 0x80)
             {
+                if ((CpuInfo & 0xFFFFF0) == 0x106C0)
+                {
 
-                status = ReadMsr(INTEL_PERF_STATUS);
-                CurrFid = (status >> 8) & 0xFF;
-                CurrVid = status & 0xFF;
+                    status = ReadMsr(INTEL_PERF_STATUS);
+                    CurrFid = (status >> 8) & 0xFF;
+                    CurrVid = status & 0xFF;
                 
-                status = status >> 32;
+                    status = status >> 32;
 
-                MinVid = (status >> 16) & 0xFF;
-                MaxVid = status & 0xFF;
-                MinFid = (status >> 24) & 0xFF;
-                MaxFid = (status >> 8) & 0xFF;
+                    MinVid = (status >> 16) & 0xFF;
+                    MaxVid = status & 0xFF;
+                    MinFid = (status >> 24) & 0xFF;
+                    MaxFid = (status >> 8) & 0xFF;
 
-                if (MaxVid > MinVid && MaxFid > MinFid)
-                {
-                    RdosRegisterOsGate(osgate_update_pstate, &ImplUpdatePStateEist, "Update P-State Eist");
-                    power_init_proc = InitEist;
-                    power_update_proc = UpdateEist;
-                }
-                else
-                {
-                    MinVid = 0;
-                    MaxVid = 0;
-                    MinFid = 0;
-                    MaxFid = 0;
+                    if (MaxVid > MinVid && MaxFid > MinFid)
+                    {
+                        RdosRegisterOsGate(osgate_update_pstate, &ImplUpdatePStateEist, "Update P-State Eist");
+                        power_init_proc = InitEist;
+                        power_update_proc = UpdateEist;
+                    }
+                    else
+                    {
+                        MinVid = 0;
+                        MaxVid = 0;
+                        MinFid = 0;
+                        MaxFid = 0;
+                    }
                 }
             }
         }
@@ -2848,5 +2906,5 @@ int main()
     RdosRegisterUserGate(usergate_get_acpi_device, (__rdos_gate_callback *)&ImplGetAcpiDevice16, &ImplGetAcpiDevice32, "Get ACPI Device");
     RdosRegisterBimodalUserGate(usergate_get_cpu_temperature, (__rdos_gate_callback *)&ImplGetCpuTemperature, "Get CPU Temperature");
 
-//    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
+    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
 }
