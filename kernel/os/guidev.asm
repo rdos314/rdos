@@ -39,6 +39,7 @@ INCLUDE ..\os.inc
         extrn init_keyboard:near
         extrn init_mouse:near
         extrn init_video:near
+        extrn init_pcfont:near
 
 code    SEGMENT byte public 'CODE'
 
@@ -58,6 +59,7 @@ code    SEGMENT byte public 'CODE'
 
 init    PROC far
     call init_focus
+    call init_pcfont
     call init_keyboard
     call init_mouse
     call init_video

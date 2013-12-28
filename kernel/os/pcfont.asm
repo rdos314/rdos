@@ -33,6 +33,12 @@ INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 
+proc_data   STRUC
+
+pdDummy DB ?
+
+proc_data   ENDS
+
         .386p
 
 code    SEGMENT byte public 'CODE'
@@ -310,8 +316,6 @@ fFD db 000h, 000h, 070h, 0D8h, 018h, 030h, 060h, 0C8h, 0F8h, 000h, 000h, 000h, 0
 fFE db 000h, 000h, 000h, 000h, 000h, 0F8h, 0F8h, 0F8h, 0F8h, 0F8h, 0F8h, 0F8h, 0F8h, 0F8h, 000h, 000h, 000h, 000h, 000h
 fFF db 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h
 
-    public GetPcFontChar
-
 GetPcFontChar    PROC near
     push ax
     push dx
@@ -330,44 +334,286 @@ GetPcFontChar    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;   NAME:           GetPcColor
+;   NAME:           WritePcTextChar
 ;
-;   DESCRIPTION:    Convert text-color to RGB
+;   DESCRIPTION:    Write character in text mode
 ;
-;   PARAMETERS:     AL      Color
-;
-;   RETURNS:        EAX     RGB value
+;   PARAMETERS:     AL          Char
+;                   BL          Fore color
+;                   BH          Back color
+;                   CX          Column
+;                   DX          Row
+;                   ESI         Row len in bytes
+;                   ES:EDI      Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-colortab:
-ct00 DD 0000000h
-ct01 DB 00000AAh
-ct02 DB 000AA00h
-ct03 DB 000AAAAh
-ct04 DB 0AA0000h
-ct05 DB 0AA00AAh
-ct06 DB 0AA5500h
-ct07 DB 0AAAAAAh
-ct08 DB 0555555h
-ct09 DB 05555FFh
-ct0A DB 055FF55h
-ct0B DB 055FFFFh
-ct0C DB 0FF5555h
-ct0D DB 0FF55FFh
-ct0E DB 0FFFF55h
-ct0F DB 0FFFFFFh
-
-    public GetPcColor
-    
-GetPcColor  Proc near
-    push ebx
-    movzx ebx,al
-    shl ebx,2
-    mov eax,cs:[ebx].colortab
-    pop ebx    
+WritePcTextChar Proc near
+    push eax
+    push edx
+    push edi
+;
+    mov ah,bh
+    shl ah,4
+    or ah,bl
+    push ax
+;    
+    mov ax,80
+    mul dx
+    add ax,cx
+    add ax,ax
+    movzx eax,ax
+    add edi,eax
+;
+    pop ax
+    mov es:[edi],ax
+;
+    pop edi
+    pop edx
+    pop eax        
     ret
-GetPcColor  Endp
+WritePcTextChar Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           WritePcLfb24Char
+;
+;   DESCRIPTION:    Write character in 24-bit LFB mode
+;
+;   PARAMETERS:     AL          Char
+;                   BL          Fore color
+;                   BH          Back color
+;                   CX          Column
+;                   DX          Row
+;                   ESI         Row len in bytes
+;                   ES:EDI      Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+colortab2432:
+ct2300 DD 0000000h
+ct2301 DB 00000AAh
+ct2302 DB 000AA00h
+ct2303 DB 000AAAAh
+ct2304 DB 0AA0000h
+ct2305 DB 0AA00AAh
+ct2306 DB 0AA5500h
+ct2307 DB 0AAAAAAh
+ct2308 DB 0555555h
+ct2309 DB 05555FFh
+ct230A DB 055FF55h
+ct230B DB 055FFFFh
+ct230C DB 0FF5555h
+ct230D DB 0FF55FFh
+ct230E DB 0FFFF55h
+ct230F DB 0FFFFFFh
+
+fore_color  EQU -4
+back_color  EQU -8
+
+WritePcLfb24Char    Proc near
+    push ebp
+    mov ebp,esp
+    sub esp,8
+    pushad
+;
+    push ebx
+    movzx ebx,bl
+    shl ebx,2
+    mov ebx,cs:[ebx].colortab2432
+    mov [ebp].fore_color,ebx
+    pop ebx
+;
+    movzx ebx,bh
+    shl ebx,2
+    mov ebx,cs:[ebx].colortab2432
+    mov [ebp].back_color,ebx
+;
+    push eax
+    movzx eax,dx        
+    mov edx,19
+    mul edx
+    mul esi
+    add edi,eax
+    movzx eax,cx
+    mov edx,eax
+    add eax,eax
+    add eax,edx
+    add edi,eax
+    pop eax
+;    
+    call GetPcFontChar
+    mov ecx,19
+
+w24RowLoop:    
+    push ecx
+    push edi    
+    mov ecx,8
+    mov al,cs:[ebx]
+
+w24BitLoop:
+    test al,1
+    jz w24BitOff
+
+w24BitOn:    
+    mov edx,[ebp].fore_color
+    jmp w24BitSet
+
+w24BitOff:    
+    mov edx,[ebp].back_color
+
+w24BitSet:    
+    mov es:[edi],dx
+    shr edx,16
+    mov es:[edi+2],dl
+    add edi,3
+    shr al,1
+    loop w24BitLoop
+;
+    pop edi
+    pop ecx
+    inc ebx
+    add edi,esi
+    loop w24RowLoop        
+;
+    popad
+    add esp,8
+    pop ebp        
+    ret
+WritePcLfb24Char    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           WritePcLfb32Char
+;
+;   DESCRIPTION:    Write character in 32-bit LFB mode
+;
+;   PARAMETERS:     AL          Char
+;                   BL          Fore color
+;                   BH          Back color
+;                   CX          Column
+;                   DX          Row
+;                   ESI         Row len in bytes
+;                   ES:EDI      Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WritePcLfb32Char    Proc near
+    push ebp
+    mov ebp,esp
+    sub esp,8
+    pushad
+;
+    push ebx
+    movzx ebx,bl
+    shl ebx,2
+    mov ebx,cs:[ebx].colortab2432
+    mov [ebp].fore_color,ebx
+    pop ebx
+;
+    movzx ebx,bh
+    shl ebx,2
+    mov ebx,cs:[ebx].colortab2432
+    mov [ebp].back_color,ebx
+;
+    push eax
+    movzx eax,dx        
+    mov edx,19
+    mul edx
+    mul esi
+    add edi,eax
+    movzx eax,cx
+    mov edx,eax
+    add eax,eax
+    add eax,edx
+    add edi,eax
+    pop eax
+;    
+    call GetPcFontChar
+    mov ecx,19
+
+w32RowLoop:    
+    push ecx
+    push edi    
+    mov ecx,8
+    mov al,cs:[ebx]
+
+w32BitLoop:
+    test al,1
+    jz w32BitOff
+
+w32BitOn:    
+    mov edx,[ebp].fore_color
+    jmp w32BitSet
+
+w32BitOff:    
+    mov edx,[ebp].back_color
+
+w32BitSet:    
+    mov es:[edi],edx
+    add edi,4
+    shr al,1
+    loop w32BitLoop
+;
+    pop edi
+    pop ecx
+    inc ebx
+    add edi,esi
+    loop w32RowLoop        
+;
+    popad
+    add esp,8
+    pop ebp        
+    ret
+WritePcLfb32Char    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           Test gate
+;
+;   DESCRIPTION:    Test gate
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_gate_name  DB 'Test Gate', 0
+
+test_gate   Proc far
+    ret
+test_gate   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           InitPcFont
+;
+;           DESCRIPTION:    Init PC font driver
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public init_pcfont
+            
+init_pcfont      PROC near
+    mov eax,SIZE proc_data
+    mov bx,pcfont_data_sel
+    AllocateFixedProcessMem
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;
+    mov esi,OFFSET test_gate
+    mov edi,OFFSET test_gate_name
+    xor dx,dx
+    mov ax,test_gate_nr
+    RegisterBimodalUserGate
+;
+    ret
+init_pcfont ENDP
 
 code    ENDS
 
