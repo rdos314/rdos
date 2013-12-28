@@ -83,6 +83,8 @@ code    SEGMENT byte public 'CODE'
     extrn init_bitmap:near
     extrn init_sprite:near
 
+    extrn set_pcfont_mode:near
+
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

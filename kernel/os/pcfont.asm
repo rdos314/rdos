@@ -32,10 +32,13 @@ INCLUDE ..\os.def
 INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE ..\video.inc
 
 proc_data   STRUC
 
-pdDummy DB ?
+pd_base     DD ?
+pd_row_size DW ?
+pd_bpp      DW ?
 
 proc_data   ENDS
 
@@ -44,6 +47,37 @@ proc_data   ENDS
 code    SEGMENT byte public 'CODE'
 
         assume cs:code
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           set_pcfont_mode
+;
+;   DESCRIPTION:    Notify current video mode for process
+;
+;   PARAMETERS:     DS      Video struc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public set_pcfont_mode
+
+set_pcfont_mode Proc near
+    push es
+    push ebx
+;    
+    mov ebx,pcfont_data_sel
+    mov es,ebx
+    mov ebx,ds:v_app_base
+    mov es:pd_base,ebx
+    mov bx,ds:v_row_size
+    mov es:pd_row_size,bx
+    movzx bx,ds:v_bpp
+    mov es:pd_bpp,bx
+;
+    pop ebx
+    pop es    
+    ret
+set_pcfont_mode Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -581,6 +615,10 @@ WritePcLfb32Char    Endp
 test_gate_name  DB 'Test Gate', 0
 
 test_gate   Proc far
+    push ds
+    mov ebx,pcfont_data_sel
+    mov ds,ebx
+    pop ds
     ret
 test_gate   Endp
 

@@ -10,6 +10,8 @@ void main()
     char *str[50];
     int *param;
 
+    RdosSetTextMode();
+
     RdosTestGate();
 
     for (;;)
