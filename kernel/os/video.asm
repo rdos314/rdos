@@ -325,6 +325,7 @@ set_video_mode_next:
 
 set_video_mode_ok:
     mov ds,ds:v_handle
+    call set_pcfont_mode
     mov bx,ds:v_bitmap
     mov cx,ds:v_width
     mov dx,ds:v_height

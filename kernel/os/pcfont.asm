@@ -36,6 +36,8 @@ INCLUDE ..\video.inc
 
 proc_data   STRUC
 
+pd_tab      DD ?
+
 pd_base     DD ?
 pd_row_size DW ?
 pd_bpp      DW ?
@@ -47,37 +49,6 @@ proc_data   ENDS
 code    SEGMENT byte public 'CODE'
 
         assume cs:code
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;   NAME:           set_pcfont_mode
-;
-;   DESCRIPTION:    Notify current video mode for process
-;
-;   PARAMETERS:     DS      Video struc
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public set_pcfont_mode
-
-set_pcfont_mode Proc near
-    push es
-    push ebx
-;    
-    mov ebx,pcfont_data_sel
-    mov es,ebx
-    mov ebx,ds:v_app_base
-    mov es:pd_base,ebx
-    mov bx,ds:v_row_size
-    mov es:pd_row_size,bx
-    movzx bx,ds:v_bpp
-    mov es:pd_bpp,bx
-;
-    pop ebx
-    pop es    
-    ret
-set_pcfont_mode Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -602,6 +573,121 @@ w32BitSet:
     pop ebp        
     ret
 WritePcLfb32Char    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;  Invalid-mode table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InvProc   Proc near
+    ret
+InvProc    Endp
+
+inv_mode_tab:
+imt00  DD OFFSET InvProc
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;  Text-mode table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+text_mode_tab:
+tmt00  DD OFFSET WritePcTextChar
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;  LFB 24 table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+lfb24_mode_tab:
+l2400  DD OFFSET WritePcLfb24Char
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;  LFB 32 table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+lfb32_mode_tab:
+l3200  DD OFFSET WritePcLfb32Char
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           set_pcfont_mode
+;
+;   DESCRIPTION:    Notify current video mode for process
+;
+;   PARAMETERS:     DS      Video struc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+bpp_tab:
+bpp00   DD OFFSET text_mode_tab
+bpp01   DD OFFSET inv_mode_tab
+bpp02   DD OFFSET inv_mode_tab
+bpp03   DD OFFSET inv_mode_tab
+bpp04   DD OFFSET inv_mode_tab
+bpp05   DD OFFSET inv_mode_tab
+bpp06   DD OFFSET inv_mode_tab
+bpp07   DD OFFSET inv_mode_tab
+bpp08   DD OFFSET inv_mode_tab
+bpp09   DD OFFSET inv_mode_tab
+bpp10   DD OFFSET inv_mode_tab
+bpp11   DD OFFSET inv_mode_tab
+bpp12   DD OFFSET inv_mode_tab
+bpp13   DD OFFSET inv_mode_tab
+bpp14   DD OFFSET inv_mode_tab
+bpp15   DD OFFSET inv_mode_tab
+bpp16   DD OFFSET inv_mode_tab
+bpp17   DD OFFSET inv_mode_tab
+bpp18   DD OFFSET inv_mode_tab
+bpp19   DD OFFSET inv_mode_tab
+bpp20   DD OFFSET inv_mode_tab
+bpp21   DD OFFSET inv_mode_tab
+bpp22   DD OFFSET inv_mode_tab
+bpp23   DD OFFSET inv_mode_tab
+bpp24   DD OFFSET lfb24_mode_tab
+bpp25   DD OFFSET inv_mode_tab
+bpp26   DD OFFSET inv_mode_tab
+bpp27   DD OFFSET inv_mode_tab
+bpp28   DD OFFSET inv_mode_tab
+bpp29   DD OFFSET inv_mode_tab
+bpp30   DD OFFSET inv_mode_tab
+bpp31   DD OFFSET inv_mode_tab
+bpp32   DD OFFSET lfb32_mode_tab
+
+    public set_pcfont_mode
+
+set_pcfont_mode Proc near
+    push es
+    push ebx
+;    
+    mov ebx,pcfont_data_sel
+    mov es,ebx
+    mov ebx,ds:v_app_base
+    mov es:pd_base,ebx
+    mov bx,ds:v_row_size
+    mov es:pd_row_size,bx
+    movzx ebx,ds:v_bpp
+    mov es:pd_bpp,bx
+    cmp bl,32
+    jbe set_mode_do
+;
+    mov bl,2
+
+set_mode_do:
+    shl ebx,2
+    mov ebx,cs:[ebx].bpp_tab
+    mov es:pd_tab,ebx    
+;
+    pop ebx
+    pop es    
+    ret
+set_pcfont_mode Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
