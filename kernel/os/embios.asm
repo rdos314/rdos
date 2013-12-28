@@ -377,6 +377,32 @@ HandleOutputSel Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           InitOptionRom
+;
+;       DESCRIPTION:    Init option ROMs
+;
+;       PARAMETERS:     
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitOptionRom    Proc near
+    mov bx,300h
+    xor ax,ax
+    FindPciClassAll
+    jc iorDone
+;
+    mov cl,30h
+    mov eax,0FFFFF000h
+    WritePciDword   
+    ReadPciDword
+    
+iorDone:
+    ret
+InitOptionRom   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           InitBios
 ;
 ;       DESCRIPTION:    Init BIOS
@@ -430,6 +456,13 @@ rom_loop:
 ;
     push word ptr 0F000h
     push word ptr 0
+    CallVm
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov bx,10h * 4
+    push dword ptr ds:[bx]
+    mov ax,3
     CallVm
 ;
     ret    
@@ -498,13 +531,6 @@ bios_process:
 ;    
     mov ax,1
     WaitMilliSec
-;
-    mov ax,flat_sel
-    mov ds,ax
-    mov bx,10h * 4
-    push dword ptr ds:[bx]
-    mov ax,3
-    CallVm
 
 bios_bitmap_done:
     mov ax,SEG data
@@ -700,7 +726,7 @@ init    PROC far
     mov ds,ax
     mov es,ax
     mov edi,OFFSET init_process
-    HookInitTasking
+    HookInitPci
 ;
     mov esi,OFFSET v86_bios_int
     mov edi,OFFSET v86_bios_int_name
