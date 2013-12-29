@@ -34,6 +34,15 @@ INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\driver.def
 
+mmap_struc  STRUC
+
+mmap_len    DD ?
+mmap_base   DD ?,?
+mmap_size   DD ?,?
+mmap_type   DD ?
+
+mmap_struc  ENDS
+
 small_linear_struc      STRUC
 slf_prev    DD ?
 slf_next    DD ?
@@ -678,6 +687,68 @@ init_mem_sels   PROC near
 ;
     mov ds:multiboot_sel,es
     mov ds:multiboot_size,cx    
+;    
+    mov ax,system_data_sel
+    mov es,ax
+;    
+    mov cx,es:multiboot_size
+    mov ds,es:multiboot_sel
+    xor di,di
+;   
+    movzx eax,cx
+    AllocateSmallGlobalMem
+    
+OutLoop:  
+    push cx
+    push di
+    xor si,si
+    xor di,di    
+    mov ebx,-1
+    mov ebp,ebx
+
+InLoop:
+    mov eax,ds:[si].mmap_base
+    mov edx,ds:[si].mmap_base+4
+    sub eax,ebx
+    sbb edx,ebp
+    jnc InNext
+;
+    mov ebx,ds:[si].mmap_base
+    mov ebp,ds:[si].mmap_base+4
+    mov di,si
+
+InNext:
+    mov eax,ds:[si].mmap_len
+    add ax,4
+    add si,ax
+    cmp si,cx
+    jnz InLoop
+;
+    mov si,di
+    pop di
+    pop cx    
+;
+    push cx
+    push si
+    mov ecx,ds:[si].mmap_len
+    add cx,4
+    rep movs byte ptr es:[di],ds:[si]
+    pop si
+    pop cx
+;
+    mov eax,-1
+    mov ds:[si].mmap_base,eax
+    mov ds:[si].mmap_base+4,eax
+;
+    cmp di,cx
+    jnz OutLoop
+;
+    mov bx,es
+    mov ax,system_data_sel
+    mov ds,ax    
+    xchg bx,ds:multiboot_sel
+    mov es,bx
+    FreeMem
 ;
     popad
     pop es
