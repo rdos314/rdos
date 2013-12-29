@@ -3147,6 +3147,8 @@ ifTabLoop:
 
 ifLegacyFound:
     mov cl,al
+    ReadPciDword
+;    
     add cl,2
     ReadPciByte
     or al,al
@@ -3163,6 +3165,15 @@ ifLegacyFound:
 ;
     mov ax,100
     WaitMilliSec
+;    
+    add cl,2
+    ReadPciDword
+    xor eax,eax
+    WritePciDword
+;    
+    mov fs,ds:ehc_reg_sel
+    mov fs:HcConfig,0
+    jmp ifLegacyOff
     
 ifLegacyDone:
     add cl,2

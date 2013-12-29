@@ -2607,8 +2607,7 @@ BiosHandoff    Proc near
     mov bx,ds:uhc_pci_bus_dev
     mov ch,ds:uhc_pci_func
     mov cl,0C0h
-    ReadPciWord
-    mov ax,2000h
+    mov ax,8F00h
     WritePciWord    
 ;
     popad
@@ -2841,7 +2840,6 @@ PollFunction  Proc near
     or ax,ax
     jz pfStatusOk
 ;
-    int 3
     mov ds:uhc_status,0
 
 pfStatusOk:
