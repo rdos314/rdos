@@ -611,6 +611,50 @@ CheckDriveWait  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           Fixup_data
+;
+;           DESCRIPTION:    Fixup data for 32-bit only discs
+;
+;           PARAMETERS:     DS          Disc selector
+;                           ESI         Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+fixup_data   PROC near
+    test ds:disc_flags,DISC_FLAG_USE32
+    jz fdDone
+;
+    push eax
+    push ebx
+    push edx
+;    
+    mov edx,esi
+    GetPageEntry
+    test al,1
+    jz fdAlloc
+;
+    or ebx,ebx
+    jz fdInRange
+;
+    int 3
+
+fdAlloc:            
+    AllocatePhysical32
+    mov al,13h
+    SetPageEntry
+
+fdInRange:
+    pop edx    
+    pop ebx
+    pop eax
+
+fdDone:    
+    ret
+fixup_data   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ALLOCATE_DATA
 ;
 ;           DESCRIPTION:    Allocate data
@@ -3807,6 +3851,8 @@ req_sector      PROC far
 req_inrange:
     add edx,ds:drive_start_sector
     mov ds,ds:drive_disc
+    call fixup_data
+;
     push edx
     pop ax
     pop dx
@@ -3941,6 +3987,8 @@ define_sector   PROC far
 define_inrange:
     add edx,ds:drive_start_sector
     mov ds,ds:drive_disc
+    call fixup_data
+;    
     push edx
     pop ax
     pop dx
