@@ -84,6 +84,7 @@ code    SEGMENT byte public 'CODE'
     extrn init_sprite:near
 
     extrn set_pcfont_mode:near
+    extrn read_pcfont:near
     extrn write_pcfont:near
 
     
@@ -368,9 +369,11 @@ invert_mouse    PROC far
     mov ds,ax
     pop ax
     mov ds,ds:v_handle
-    call fword ptr ds:v_read_char_proc
+;    call fword ptr ds:v_read_char_proc
+    call read_pcfont
     xchg bl,bh
-    call fword ptr ds:v_write_char_proc
+;    call fword ptr ds:v_write_char_proc
+    call write_pcfont
     pop ds
     ret
 invert_mouse    ENDP
@@ -761,7 +764,8 @@ get_char_attrib PROC far
     pop ax
     mov dx,ds:p_row
     mov cx,ds:p_col
-    CallVideo v_read_char_proc
+;    CallVideo v_read_char_proc
+    call read_pcfont
     ShowMouse
 ;
     pop dx
@@ -2816,7 +2820,8 @@ read_video_attrib       PROC far
     mov ds,ax
     mov dx,ds:p_row
     mov cx,ds:p_col
-    CallVideo v_read_char_proc
+;    CallVideo v_read_char_proc
+    call read_pcfont
     mov ah,bh
     shl ah,4
     or ah,bl

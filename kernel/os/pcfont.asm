@@ -899,6 +899,48 @@ write_pcfont    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           ReadPcFont
+;
+;   DESCRIPTION:    Read char using PC font
+;
+;   PARAMETERS:     CX          Column
+;                   DX          Row
+;
+;   RETURNS:        AL          Char
+;                   BL          Fore color
+;                   BH          Back color
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public read_pcfont
+
+read_pcfont Proc near
+    push ds
+    push dx
+    push edi
+;
+    mov ax,80
+    mul dx
+    add ax,cx
+    add ax,ax
+    movzx edi,ax
+    mov ax,pcfont_data_sel
+    mov ds,ax
+    mov ax,[edi].pd_display
+    mov bh,ah
+    mov bl,ah
+    shr bh,4
+    and bl,0Fh
+;
+    pop edi
+    pop dx
+    pop ds
+    ret
+read_pcfont Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           init_process
 ;
 ;   DESCRIPTION:    Init process
