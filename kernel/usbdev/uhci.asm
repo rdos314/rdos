@@ -274,7 +274,7 @@ UhciInt Proc far
     call UpdatePipeList
 
 uiDone:
-    ret
+    retf32
 UhciInt  Endp
 
 
@@ -2629,26 +2629,24 @@ ut22 DD OFFSET Has64Bit,        SEG code
 InitFunction    Proc near
     pushad
 ;
+;
+;    cmp ch,2
+;    jne ifNotLegacy
+;
     mov bx,ds:uhc_pci_bus_dev
     mov ch,ds:uhc_pci_func
-;
-    cmp ch,2
-    jne ifNotLegacy
-;
-    int 3
     mov cl,0C0h
     ReadPciWord
     mov ax,2000h
     WritePciWord    
     
 ifNotLegacy:    
-    mov cl,PCI_interrupt_line
-    ReadPciByte
-;       
+    GetPciIrqNr
+    mov ah,14h
     mov di,cs
     mov es,di
-    mov di,OFFSET UhciInt   
-;       RequestIrqHandler
+    mov edi,OFFSET UhciInt
+    RequestIrqHandler
 ;
     mov si,OFFSET uhci_tab
     xor di,di
@@ -3042,7 +3040,6 @@ uhci_thread:
     WaitMilliSec
 ;
     EnterSection ds:WaitSection
-    mov ds:Started,1
     mov bx,ds:WaitThreadArr
     Signal
     mov bx,ds:WaitThreadArr+2
@@ -3062,6 +3059,7 @@ uhci_func_loop:
     add bx,2
     loop uhci_func_loop
 ;
+    mov ds:Started,1
     GetSystemTime
     add eax,11930
     adc edx,0
