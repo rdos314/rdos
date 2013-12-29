@@ -2593,6 +2593,31 @@ UpdatePort   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           BiosHandoff
+;
+;           DESCRIPTION:    Do BIOS handoff
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BiosHandoff    Proc near
+    pushad
+;
+    mov bx,ds:uhc_pci_bus_dev
+    mov ch,ds:uhc_pci_func
+    mov cl,0C0h
+    ReadPciWord
+    mov ax,2000h
+    WritePciWord    
+;
+    popad
+    ret
+BiosHandoff Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitFunction
 ;
 ;           DESCRIPTION:    Init UHCI function
@@ -2629,18 +2654,9 @@ ut22 DD OFFSET Has64Bit,        SEG code
 InitFunction    Proc near
     pushad
 ;
-;
-;    cmp ch,2
-;    jne ifNotLegacy
-;
     mov bx,ds:uhc_pci_bus_dev
     mov ch,ds:uhc_pci_func
-    mov cl,0C0h
-    ReadPciWord
-    mov ax,2000h
-    WritePciWord    
-    
-ifNotLegacy:    
+;    
     GetPciIrqNr
     mov ah,14h
     mov di,cs
@@ -3036,8 +3052,28 @@ uhci_thread:
     GetThread
     mov ds:UhciThread,ax
 ;    
-    mov ax,750
+    mov si,OFFSET UhciFunc
+    mov cx,ds:UhciCount 
+
+utHandoffLoop:
+    push ds
+    push cx
+    push si
+;    
+    mov ds,ds:[si]
+    call BiosHandoff
+;
+    pop si
+    pop cx    
+    pop ds
+;
+    add si,2
+    loop utHandoffLoop
+;    
+    mov ax,50
     WaitMilliSec
+;
+    mov ds:Started,1
 ;
     EnterSection ds:WaitSection
     mov bx,ds:WaitThreadArr
@@ -3058,8 +3094,7 @@ uhci_func_loop:
     pop ds
     add bx,2
     loop uhci_func_loop
-;
-    mov ds:Started,1
+;    
     GetSystemTime
     add eax,11930
     adc edx,0
