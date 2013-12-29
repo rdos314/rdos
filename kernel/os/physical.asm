@@ -979,6 +979,182 @@ allocate_multiple_physical32      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;    NAME:          GET_PHYSICAL_ENTRY_Type
+;
+;    DESCRIPTION:   Get physical entry type
+;
+;    PARAMETERS:    EBX         Entry #
+;
+;    RETURNS:       NC          OK
+;                   EAX         Type
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_physical_entry_type_name  DB 'Get Physical Entry Type',0
+
+get_physical_entry_type   PROC far
+    push ds
+    push ecx
+    push esi
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    movzx ecx,ds:multiboot_size
+    mov ds,ds:multiboot_sel
+;
+    or cx,cx
+    jz gpetFail
+;
+    xor esi,esi    
+    or bx,bx
+    jz gpetFound
+
+gpetLoop:
+    mov eax,ds:[esi].mmap_len
+    add eax,4
+    add esi,eax
+    cmp esi,ecx
+    je gpetFail
+;
+    sub bx,1
+    jnz gpetLoop
+
+gpetFound:
+    mov eax,ds:[esi].mmap_type
+    clc
+    jmp gpetDone
+    
+gpetFail:
+    stc
+
+gpetDone:            
+    pop esi
+    pop ecx
+    pop ds
+    retf32
+get_physical_entry_type   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;    NAME:          GET_PHYSICAL_ENTRY_BASE
+;
+;    DESCRIPTION:   Get physical entry base
+;
+;    PARAMETERS:    EBX         Entry #
+;
+;    RETURNS:       NC          OK
+;                   EDX:EAX     Base
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_physical_entry_base_name  DB 'Get Physical Entry Base',0
+
+get_physical_entry_base   PROC far
+    push ds
+    push ecx
+    push esi
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    movzx ecx,ds:multiboot_size
+    mov ds,ds:multiboot_sel
+;
+    or cx,cx
+    jz gpebFail
+;
+    xor esi,esi    
+    or bx,bx
+    jz gpebFound
+
+gpebLoop:
+    mov eax,ds:[esi].mmap_len
+    add eax,4
+    add esi,eax
+    cmp esi,ecx
+    je gpebFail
+;
+    sub bx,1
+    jnz gpebLoop
+
+gpebFound:
+    mov eax,ds:[esi].mmap_base
+    mov ebx,ds:[esi].mmap_base+4
+    clc
+    jmp gpebDone
+    
+gpebFail:
+    stc
+
+gpebDone:            
+    pop esi
+    pop ecx
+    pop ds
+    retf32
+get_physical_entry_base   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;    NAME:          GET_PHYSICAL_ENTRY_Size
+;
+;    DESCRIPTION:   Get physical entry size
+;
+;    PARAMETERS:    EBX         Entry #
+;
+;    RETURNS:       NC          OK
+;                   EDX:EAX     Size
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_physical_entry_size_name  DB 'Get Physical Entry Size',0
+
+get_physical_entry_size   PROC far
+    push ds
+    push ecx
+    push esi
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    movzx ecx,ds:multiboot_size
+    mov ds,ds:multiboot_sel
+;
+    or cx,cx
+    jz gpesFail
+;
+    xor esi,esi    
+    or bx,bx
+    jz gpesFound
+
+gpesLoop:
+    mov eax,ds:[esi].mmap_len
+    add eax,4
+    add esi,eax
+    cmp esi,ecx
+    je gpesFail
+;
+    sub bx,1
+    jnz gpesLoop
+
+gpesFound:
+    mov eax,ds:[esi].mmap_size
+    mov ebx,ds:[esi].mmap_size+4
+    clc
+    jmp gpesDone
+    
+gpesFail:
+    stc
+
+gpesDone:            
+    pop esi
+    pop ecx
+    pop ds
+    retf32
+get_physical_entry_size   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GET_FREE_PHYSICAL_MEM
 ;
 ;           DESCRIPTION:    Get free physical memory
@@ -1438,6 +1614,24 @@ init_physical_gates     PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET get_physical_entry_type
+    mov edi,OFFSET get_physical_entry_type_name
+    xor dx,dx
+    mov ax,get_physical_entry_type_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_physical_entry_base
+    mov edi,OFFSET get_physical_entry_base_name
+    xor dx,dx
+    mov ax,get_physical_entry_base_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_physical_entry_size
+    mov edi,OFFSET get_physical_entry_size_name
+    xor dx,dx
+    mov ax,get_physical_entry_size_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_free_physical_mem
     mov edi,OFFSET get_free_physical_name

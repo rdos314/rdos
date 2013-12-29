@@ -678,4 +678,8 @@ get_hid_report_input_data_nr    = 538
 get_hid_report_output_data_nr   = 539
 get_hid_report_feature_data_nr  = 540
 
+get_physical_entry_type_nr      = 541
+get_physical_entry_base_nr      = 542
+get_physical_entry_size_nr      = 543
+
 usergate_entries			    = 560

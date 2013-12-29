@@ -1674,6 +1674,14 @@ Shows system resources
 INFO
 .
 
+:TEXT_INFO_PHYS_HEADER
+Physical memory map:
+.
+
+:TEXT_INFO_PHYS_ENTRY
+ %08lX_%08lX-%08lX_%08lX
+.
+
 :TEXT_INFO_PHYSICAL
 Free physical memory: %d.%05d MB
 .

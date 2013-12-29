@@ -155,11 +155,45 @@ int TInfoCommand::Execute(char *param)
     int CpuVer;
     int FeatureBits;
     int Freq;
+    int Entry;
+    int Type;
+    long long Base;
+    long long Size;
+    unsigned int LsbStart, MsbStart;
+    unsigned int LsbEnd, MsbEnd;
 
     InitOptions();
 
     if (LeadOptions(&param, 0) != E_None)
         return 1;
+
+    FMsg.printf(TEXT_INFO_PHYS_HEADER);
+    Write(FMsg.GetData());
+
+    Entry = 0;
+    Type = -1;
+    while (Type)
+    {
+        Type = RdosGetPhysicalEntryType(Entry);
+        if (Type)
+        {
+            if (Type == 1)
+            {
+                Base = RdosGetPhysicalEntryBase(Entry);
+                Size = RdosGetPhysicalEntrySize(Entry);         
+
+                LsbStart = (unsigned int)Base;
+                MsbStart = (unsigned int)(Base >> 32);  
+
+                LsbEnd = (unsigned int)(Base + Size - 1);
+                MsbEnd = (unsigned int)((Base + Size - 1) >> 32);  
+
+                FMsg.printf(TEXT_INFO_PHYS_ENTRY, MsbStart, LsbStart, MsbEnd, LsbEnd);
+                Write(FMsg.GetData());
+            }  
+            Entry++;
+        }
+    }
 
     PhysMem = RdosGetFreePhysical();
     mb = (int)(PhysMem / 1024LL / 1024LL);

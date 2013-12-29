@@ -720,6 +720,22 @@
     CallGate_get_free_physical  \
     value [edx eax];
 
+#pragma aux RdosGetPhysicalEntryType = \
+    CallGate_get_physical_entry_type  \
+    ValidateEax \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosGetPhysicalEntryBase = \
+    CallGate_get_physical_entry_base  \
+    parm [ebx] \
+    value [ebx eax];
+
+#pragma aux RdosGetPhysicalEntrySize = \
+    CallGate_get_physical_entry_size  \
+    parm [ebx] \
+    value [ebx eax];
+
 #pragma aux RdosGetFreeGdt = \
     CallGate_get_free_gdt  \
     "movzx eax,ax"  \

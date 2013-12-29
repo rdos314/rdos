@@ -168,6 +168,24 @@ IsValidUserGate	MACRO
 
 ;;;;;;;;;;;;;; MEMORY ;;;;;;;;;;;;;;;;;;;
 
+; IN  BX		Entry #
+; OUT EAX       Type
+GetPhysicalEntryType	MACRO
+	UserGate get_physical_entry_type_nr
+				ENDM
+
+; IN  BX		Entry #
+; OUT EBX:EAX   Base
+GetPhysicalEntryBase	MACRO
+	UserGate get_physical_entry_base_nr
+				ENDM
+
+; IN  BX		Entry #
+; OUT EBX:EAX   Size
+GetPhysicalEntrySize	MACRO
+	UserGate get_physical_entry_size_nr
+				ENDM
+
 ;	EAX		Number of free physical bytes
 GetFreePhysical	MACRO
 	UserGate get_free_physical_nr
