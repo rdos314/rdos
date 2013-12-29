@@ -649,10 +649,44 @@ init_mem_sels   PROC near
     mov eax,SIZE long_mem_seg
     mov bx,long_mem_sel
     AllocateFixedProgramMem
-;
+;    
     mov ax,system_data_sel
     mov es,ax
 ;
+    mov eax,es:ram2_size
+    or eax,eax
+    jz init_mem_has_multiboot
+;
+    push es
+    mov eax,30h
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov ds,ax
+    pop es
+;
+    xor si,si
+    mov ds:[si].mmap_len,14h
+    mov ds:[si].mmap_base,0
+    mov ds:[si].mmap_base+4,0
+    mov eax,es:ram1_size
+    mov ds:[si].mmap_size,eax
+    mov ds:[si].mmap_size+4,0
+    mov ds:[si].mmap_type,1
+;
+    add si,18h
+    mov ds:[si].mmap_len,14h
+    mov eax,es:ram2_base
+    mov ds:[si].mmap_base,eax
+    mov ds:[si].mmap_base+4,0
+    mov eax,es:ram2_size
+    mov ds:[si].mmap_size,eax
+    mov ds:[si].mmap_size+4,0
+    mov ds:[si].mmap_type,1
+    mov es:multiboot_sel,ds
+    mov es:multiboot_size,30h
+    jmp imsDone        
+    
+init_mem_has_multiboot:
     mov eax,2000h
     AllocateBigLinear
     mov esi,edx
@@ -749,7 +783,8 @@ InNext:
     xchg bx,ds:multiboot_sel
     mov es,bx
     FreeMem
-;
+
+imsDone:
     popad
     pop es
     pop ds
