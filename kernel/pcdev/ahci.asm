@@ -1921,8 +1921,12 @@ GetDriveParams  Proc near
     mov es,ax    
     mov eax,1000h
     AllocateBigLinear
+    push ebx
+    AllocatePhysical32
+    mov al,13h
+    SetPageEntry
+    pop ebx
     mov esi,edx
-    mov al,es:[esi]
 ;    
     mov ax,SEG data
     mov ds,ax
@@ -2945,8 +2949,12 @@ drive_assign1   Proc far
     mov es,ax
     mov eax,1000h
     AllocateBigLinear
+    push ebx
+    AllocatePhysical32
+    mov al,13h
+    SetPageEntry
+    pop ebx
     mov edi,edx
-    mov byte ptr es:[edi],0
 ;    
     xor edx,edx
     call ReadSector
@@ -2993,8 +3001,12 @@ InstallExtended Proc near
     mov ebp,edx
     mov eax,1000h
     AllocateBigLinear
+    push ebx
+    AllocatePhysical32
+    mov al,13h
+    SetPageEntry
+    pop ebx
     mov edi,edx
-    mov byte ptr es:[edi],0
 ;
     mov edx,ebp
     call ReadSector
@@ -3090,8 +3102,12 @@ drive_assign2   Proc far
 ;
     mov eax,1000h
     AllocateBigLinear
+    push ebx
+    AllocatePhysical32
+    mov al,13h
+    SetPageEntry
+    pop ebx
     mov edi,edx
-    mov byte ptr es:[edi],0
 ;    
     xor edx,edx
     call ReadSector
