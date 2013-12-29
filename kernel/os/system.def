@@ -177,6 +177,9 @@ shut_spinlock       DW ?
 
 patch_section		section_typ <>
 
+multiboot_size      DW ?
+multiboot_sel       DW ?
+
 system_size			DB ?
 
 system_seg	ENDS

@@ -613,9 +613,9 @@ init_program_mem    ENDP
     public init_mem_sels
 
 init_mem_sels   PROC near
-    pusha
     push ds
     push es
+    pushad
 ;
     AllocatePhysical64
     and ax,0F000h
@@ -641,9 +641,47 @@ init_mem_sels   PROC near
     mov bx,long_mem_sel
     AllocateFixedProgramMem
 ;
+    mov ax,system_data_sel
+    mov es,ax
+;
+    mov eax,2000h
+    AllocateBigLinear
+    mov esi,edx
+    mov ebp,edx
+    xor ebx,ebx
+    mov eax,es:multiboot_mmap_addr
+    and ax,0F000h
+    or al,67h
+    SetPageEntry
+;
+    add edx,1000h
+    add eax,1000h    
+    SetPageEntry
+;
+    mov eax,es:multiboot_mmap_addr
+    and eax,0FFFh
+    or esi,eax
+    movzx eax,es:multiboot_mmap_len
+    AllocateSmallGlobalMem
+    mov ecx,eax
+;
+    mov ax,flat_sel
+    mov ds,ax
+;
+    push ecx
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]        
+    pop ecx
+;
+    mov ax,system_data_sel
+    mov ds,ax
+;
+    mov ds:multiboot_sel,es
+    mov ds:multiboot_size,cx    
+;
+    popad
     pop es
     pop ds
-    popa
     ret
 init_mem_sels   ENDP
 

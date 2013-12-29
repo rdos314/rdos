@@ -33,6 +33,7 @@ INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\video.inc
+INCLUDE system.def
 
 proc_data   STRUC
 
@@ -984,25 +985,39 @@ init_process    Endp
 
 test_gate_name  DB 'Test Gate', 0
 
+mmap_struc  STRUC
+
+mmap_len    DD ?
+mmap_base   DD ?,?
+mmap_size   DD ?,?
+mmap_type   DD ?
+
+mmap_struc  ENDS
+
 test_gate   Proc far
     push ds
     push es
     pushad
 ;    
-    mov ebx,pcfont_data_sel
-    mov ds,ebx
-    mov al,'b'
-    mov bl,7
-    mov bh,0
-    mov cx,1
-    mov dx,1
-    movzx esi,ds:pd_row_size
-    mov di,flat_sel
-    mov es,di
-    mov edi,ds:pd_base
-    mov ebp,ds:pd_tab
-    mov ds,ds:pd_sel
-    call dword ptr cs:[ebp]
+    mov ax,system_data_sel
+    mov es,ax
+;   
+    mov cx,es:multiboot_size
+    mov ds,es:multiboot_sel
+    xor ebx,ebx
+    
+rriLoop:    
+    mov esi,ds:[ebx].mmap_base
+    mov edi,ds:[ebx].mmap_base+4
+;
+    mov esi,ds:[ebx].mmap_size    
+    mov edi,ds:[ebx].mmap_size+4
+;
+    mov eax,ds:[ebx].mmap_len
+    add eax,4
+    add ebx,eax
+    cmp ebx,ecx
+    jnz rriLoop
 ;
     popad    
     pop es
