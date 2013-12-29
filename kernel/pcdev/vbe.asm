@@ -1717,7 +1717,7 @@ init_vbe    PROC near
     mov es,ax
 ;
     mov edi,OFFSET init_vbe_thread
-    HookInitTasking
+    HookInitPci
     ret
 init_vbe    Endp
 
