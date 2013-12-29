@@ -43,6 +43,8 @@ pd_row_size DW ?
 pd_bpp      DW ?
 pd_sel      DW ?
 
+pd_display  DW 25 * 80 DUP(?)
+
 proc_data   ENDS
 
         .386p
@@ -378,6 +380,10 @@ WritePcTextChar Proc near
     pop ax
     mov es:[edi],ax
 ;
+    mov bx,pcfont_data_sel
+    mov es,bx
+    mov es:[edi].pd_display,ax    
+;
     pop edi
     pop edx
     pop eax        
@@ -430,6 +436,27 @@ WritePcLfb24Char    Proc near
     mov ebp,esp
     sub esp,12
     pushad
+;
+    push es
+    push edx
+;
+    push eax   
+    mov ax,80
+    mul dx
+    add ax,cx
+    add ax,ax
+    movzx edx,ax    
+    mov ax,pcfont_data_sel
+    mov es,ax
+    pop eax
+;    
+    mov ah,bh
+    shl ah,4
+    or ah,bl
+    mov es:[edx].pd_display,ax    
+;   
+    pop edx
+    pop es
 ;
     push ebx
     movzx ebx,bl
@@ -570,6 +597,27 @@ WritePcLfb32Char    Proc near
     mov ebp,esp
     sub esp,12
     pushad
+;
+    push es
+    push edx
+;
+    push eax   
+    mov ax,80
+    mul dx
+    add ax,cx
+    add ax,ax
+    movzx edx,ax    
+    mov ax,pcfont_data_sel
+    mov es,ax
+    pop eax
+;    
+    mov ah,bh
+    shl ah,4
+    or ah,bl
+    mov es:[edx].pd_display,ax    
+;   
+    pop edx
+    pop es
 ;
     push ebx
     movzx ebx,bl
@@ -858,19 +906,28 @@ write_pcfont    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_process   Proc far
-    push ds
-    push ebx
+    push es
+    push eax
+    push ecx
+    push edi
 ;
-    mov ebx,pcfont_data_sel
-    mov ds,ebx
-    mov ds:pd_base,0B8000h
-    mov ds:pd_row_size,80    
-    mov ds:pd_tab,OFFSET text_mode_tab
-    mov ds:pd_sel,0
-    mov ds:pd_bpp,0
+    mov edi,pcfont_data_sel
+    mov es,edi
+    mov es:pd_base,0B8000h
+    mov es:pd_row_size,80    
+    mov es:pd_tab,OFFSET text_mode_tab
+    mov es:pd_sel,0
+    mov es:pd_bpp,0
+;    
+    mov edi,OFFSET pd_display
+    mov ecx,25 * 80
+    mov ax,720h
+    rep stos word ptr es:[edi]
 ;
-    pop ebx
-    pop ds
+    pop edi
+    pop ecx
+    pop eax
+    pop es
     ret
 init_process    Endp    
         
