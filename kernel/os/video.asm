@@ -84,6 +84,7 @@ code    SEGMENT byte public 'CODE'
     extrn init_sprite:near
 
     extrn set_pcfont_mode:near
+    extrn write_pcfont:near
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -554,7 +555,8 @@ UpdatePos       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteNormal     PROC near
-    CallVideo v_write_char_proc
+    call write_pcfont
+;    CallVideo v_write_char_proc
     inc cx
     ret
 WriteNormal     ENDP
@@ -578,7 +580,8 @@ WriteNormal     ENDP
 WriteSkip       PROC near
     push ax
     mov al,' '
-    CallVideo v_write_char_proc
+    call write_pcfont
+;    CallVideo v_write_char_proc
     inc cx
     pop ax
     ret
@@ -605,7 +608,8 @@ WriteTab    PROC near
     mov al,' '
 
 write_tab_more:
-    CallVideo v_write_char_proc
+    call write_pcfont
+;    CallVideo v_write_char_proc
     inc cx
     test cx,3
     jnz write_tab_more
@@ -1086,7 +1090,8 @@ write_attr_string_loop16:
     shr bh,4
     and bx,0F0Fh
     add di,2
-    CallVideo v_write_char_proc
+    call write_pcfont
+;    CallVideo v_write_char_proc
     inc cx
     sub si,1
     jnz write_attr_string_loop16
@@ -1117,7 +1122,8 @@ write_attr_string_loop32:
     shr bh,4
     and bx,0F0Fh
     add edi,2
-    CallVideo v_write_char_proc
+    call write_pcfont   
+;    CallVideo v_write_char_proc
     inc cx
     sub esi,1
     jnz write_attr_string_loop32
@@ -2857,7 +2863,8 @@ write_ch_attr   PROC far
     jz write_ch_attr_done
 
 write_ch_attr_loop:
-    CallVideo v_write_char_proc
+    call write_pcfont
+;    CallVideo v_write_char_proc
     inc cx
     call UpdatePos
     sub si,1
@@ -2906,7 +2913,8 @@ write_ch    PROC far
     jz write_ch_done
 
 write_ch_loop:
-    CallVideo v_write_char_proc
+    call write_pcfont
+;    CallVideo v_write_char_proc
     inc cx
     call UpdatePos
     sub si,1
@@ -3059,7 +3067,8 @@ write_stg_not_lf:
     jmp write_stg_one_done
 
 write_stg_not_del:
-    CallVideo v_write_char_proc
+    call write_pcfont
+;    CallVideo v_write_char_proc
     inc cx
 
 write_stg_one_done:

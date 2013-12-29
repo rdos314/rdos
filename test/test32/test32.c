@@ -11,6 +11,8 @@ void main()
     int *param;
     int bpp, width, height, rowsize, linear;
 
+    RdosTestGate();
+
     bpp = 24;
     width = 1366;
     height = 768;
@@ -20,8 +22,6 @@ void main()
     RdosTestGate();
 
     RdosSetTextMode();
-
-    RdosTestGate();
 
 
     for (;;)
