@@ -2545,6 +2545,10 @@ EndDiscHandler    MACRO
 CondBeginDiscHandler    MACRO
     OsGate cond_begin_disc_handler_nr
                     ENDM
+
+SetDiscUse32    MACRO
+    OsGate set_disc_use32_nr
+                    ENDM
             
 ;       ES:EDI   Disc system table
 HookInitDisc    MACRO

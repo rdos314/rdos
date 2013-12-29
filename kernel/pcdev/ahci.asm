@@ -2609,6 +2609,10 @@ req_discbuf_thread:
     mov ax,fs
     mov gs,ax
     mov bx,gs:ap_disc_sel
+    test gs:ap_cap,HBA_CAP_S64A
+    jnz req_discbuf_loop
+;
+    SetDiscUse32
 
 req_discbuf_loop:
     WaitForDiscRequest

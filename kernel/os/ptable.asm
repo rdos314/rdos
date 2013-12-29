@@ -5313,8 +5313,8 @@ start_paging:
     mov eax,ds:cpu_feature_flags
     test al,40h
     jz start_paging32
-;    jmp start_paging64        
-    jmp start_paging32
+    jmp start_paging64        
+;    jmp start_paging32
 
 code    ENDS
 

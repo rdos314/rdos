@@ -49,10 +49,13 @@ dws_thread              DW ?
 
 drive_wait_struc    ENDS
 
+DISC_FLAG_STOPPED       = 1
+DISC_FLAG_USE32         = 2
+
 disc_def_struc      STRUC
 
 disc_nr                 DB ?
-disc_stopped            DB ?
+disc_flags              DB ?
 disc_units                  DW ?
 disc_bytes_per_sector   DW ?
 disc_sectors_per_unit   DW ?
@@ -628,6 +631,16 @@ allocate_data   PROC near
 ;
     mov eax,1000h
     AllocateBigLinear
+    test ds:disc_flags,DISC_FLAG_USE32
+    jz allocate_data_phys_ok
+;
+    push ebx
+    AllocatePhysical32
+    mov al,13h
+    SetPageEntry
+    pop ebx
+
+allocate_data_phys_ok:    
     movzx ecx,ds:disc_bytes_per_sector
     mov ds:disc_data_list,edx
 allocate_init_data_loop:
@@ -1883,6 +1896,27 @@ set_param_max:
     retf32
 set_disc_param  Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SET_DISC_USE32
+;
+;           DESCRIPTION:    Set disc to always allocte 32-bit physical blocks
+;
+;           PARAMETERS:     BX          Disc sel
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_disc_use32_name     DB 'Set Disc Use32',0
+
+set_disc_use32  Proc far
+    push ds
+    mov ds,bx
+    or ds:disc_flags,DISC_FLAG_USE32
+    pop ds
+    retf32
+set_disc_use32  Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1929,7 +1963,7 @@ stop_disc_request   Proc far
     push bx
 ;
     mov ds,bx
-    mov ds:disc_stopped,1
+    or ds:disc_flags,DISC_FLAG_STOPPED
     mov bx,ds:disc_thread
     Signal
 ;
@@ -1978,8 +2012,7 @@ wait_for_disc_req_loop:
     ReleaseSpinlock ds:disc_spinlock
     sti
 ;
-    mov al,ds:disc_stopped
-    or al,al
+    test ds:disc_flags,DISC_FLAG_STOPPED
     stc
     jnz wait_for_disc_req_end
 ;    
@@ -2637,7 +2670,7 @@ install_disc_loop:
     sub ax,OFFSET disc_def_arr
     shr ax,1
     mov ds:disc_nr,al
-    mov ds:disc_stopped,0
+    mov ds:disc_flags,0
     mov ds:disc_handle_list,0
     mov ds:disc_data_list,0
     mov ds:disc_pend_list,0
@@ -5326,6 +5359,11 @@ init    PROC far
     mov esi,OFFSET set_disc_param
     mov edi,OFFSET set_disc_param_name
     mov ax,set_disc_param_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET set_disc_use32
+    mov edi,OFFSET set_disc_use32_name
+    mov ax,set_disc_use32_nr
     RegisterOsGate
 ;
     mov esi,OFFSET register_disc_change
