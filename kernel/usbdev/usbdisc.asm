@@ -708,6 +708,9 @@ RequestSense Proc near
     call SendCbw
     jc reqsDone
 ;    
+    mov ax,100
+    WaitMilliSec
+;    
     mov ax,fs
     mov es,ax    
     mov edi,OFFSET disc_sense_data
