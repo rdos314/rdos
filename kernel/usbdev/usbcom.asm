@@ -3454,7 +3454,11 @@ PollWrite    Proc near
 ;   
     xor cx,cx
     mov bp,ds:uds_out_size
-    mov es,ds:uds_out_buffer
+    mov ax,ds:uds_out_buffer
+    or ax,ax
+    jz pwDone
+;    
+    mov es,ax
     mov ds,ds:uds_port_sel
     mov al,ds:ups_timer_active
     or al,al
