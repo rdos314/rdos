@@ -960,14 +960,6 @@ ClearReceiver    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenPipes   Proc near
-    movzx eax,ds:kr_max_in
-    AllocateSmallGlobalMem
-    mov ds:kr_in_buffer,es
-;
-    mov eax,MAX_OUT_SIZE
-    AllocateSmallGlobalMem
-    mov ds:kr_out_buffer,es
-;
     mov bx,ds:kr_controller
     mov ax,ds:kr_device
     mov dl,ds:kr_in_pipe
@@ -977,8 +969,8 @@ OpenPipes   Proc near
     CreateUsbReq
     mov ds:kr_in_req,bx    
     mov cx,ds:kr_max_in
-    mov es,ds:kr_in_buffer
     AddReadUsbDataReq
+    mov ds:kr_in_buffer,es
 ;
     mov bx,ds:kr_controller
     mov ax,ds:kr_device
@@ -989,8 +981,8 @@ OpenPipes   Proc near
     CreateUsbReq
     mov ds:kr_out_req,bx
     mov cx,MAX_OUT_SIZE
-    mov es,ds:kr_out_buffer
     AddWriteUsbDataReq
+    mov ds:kr_out_buffer,es
 ;
     ret
 OpenPipes   Endp    
@@ -1026,14 +1018,7 @@ ClosePipes    Proc near
     mov bx,ds:kr_out_handle
     CloseUsbPipe    
     mov ds:kr_out_handle,0
-;
-    mov es,ds:kr_in_buffer
-    mov es,ds:kr_in_buffer
-    FreeMem    
     mov ds:kr_in_buffer,0
-;
-    mov es,ds:kr_out_buffer
-    FreeMem    
     mov ds:kr_out_buffer,0
 ;
     lock or ds:kr_flag,FLAG_CLOSED
