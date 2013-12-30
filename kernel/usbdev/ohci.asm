@@ -2967,7 +2967,20 @@ ifTabLoop:
 
 ifPortsOk:    
     mov ds:ohc_root_ports,ax
+;
+    mov cx,ds:ohc_root_ports
+    or cx,cx
+    jz ifPowerDone
 ;    
+    xor si,si
+    mov eax,100h
+
+ifPowerLoop:    
+    mov fs:[si].HcRhPortStatus,eax
+    add si,4
+    loop ifPowerLoop
+
+ifPowerDone:
     popad
     pop es
     pop ds

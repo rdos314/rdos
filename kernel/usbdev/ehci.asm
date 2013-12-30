@@ -2739,6 +2739,21 @@ upAttach:
     cmp cl,ds:ehc_comp_ports
     jae upDone
 ;    
+    mov eax,es:[si].HcPortSc
+    and al,NOT 4
+    or ax,100h
+    mov es:[si].HcPortSc,eax
+;
+    mov ax,25
+    WaitMilliSec
+;    
+    mov eax,es:[si].HcPortSc
+    and ax,NOT 100h
+    mov es:[si].HcPortSc,eax
+;
+    mov ax,25
+    WaitMilliSec
+;    
     mov eax,3000h
     mov es:[si].HcPortSc,eax
     jmp upDone
