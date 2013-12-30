@@ -3155,7 +3155,8 @@ ifTabLoop:
     or al,al
     cmp al,40h
     jae ifLegacyFound
-;    
+
+ifCheckCap:    
     mov al,1
     FindPciCapability
     jc ifLegacyOff
@@ -3163,9 +3164,12 @@ ifTabLoop:
 ifLegacyFound:
     mov cl,al
     ReadPciDword
+;
+    cmp al,1
+    jne ifCheckCap    
 ;    
+    shr eax,16
     add cl,2
-    ReadPciByte
     or al,al
     jz ifLegacyDone
 ;
@@ -3228,7 +3232,7 @@ ifIntDone:
     mov fs:HcSegmentSelector,0
 ;
     mov eax,fs:HcCommand
-    and al,NOT 1
+    and al,NOT 31h
     mov fs:HcCommand,eax
 ;    
     mov ax,25
