@@ -733,7 +733,7 @@ ihResetDone:
     add dx,REG_TCR
     in eax,dx
     and ax,NOT 700h
-    or ax,600h
+    or ax,400h
     out dx,eax
 ;
     mov dx,ds:IoBase
@@ -741,9 +741,9 @@ ihResetDone:
     in eax,dx
     or eax,10000h
     and ax,1FFFh    
-    or ax,0E000h
+    or ax,8000h
     and ax,NOT 700h
-    or ax,600h
+    or ax,400h
     and al,0C0h
     or al,0Ah
     out dx,eax
