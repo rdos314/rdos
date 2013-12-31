@@ -703,6 +703,10 @@ UpdatePorts    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hub_thread_handler  Proc far
+    xor ax,ax
+    mov ds,ax
+    mov es,ax
+;    
     mov gs,bx
     GetThread
     mov gs:hub_thread,ax

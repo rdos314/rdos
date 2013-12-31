@@ -2685,6 +2685,187 @@ Has64Bit     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           AttachThread
+;
+;   DESCRIPTION:    Attach thread
+;
+;   PARAMETERS:     FS      Function selector
+;                   BL      Port # (0..EHCI ports)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+attach_thread_name  DB 'EHCI Attach', 0
+
+attach_thread:
+    mov cl,bl
+    mov ax,fs
+    mov ds,ax
+    mov es,ds:ehc_reg_sel
+;    
+    movzx si,cl
+    shl si,2
+    movzx di,cl
+    add di,di
+;    
+    GetThread
+    mov ds:[di].usb_attach_thread_arr,ax
+;
+    mov dx,10
+
+atCheck:    
+    mov ax,5
+    WaitMilliSec
+;
+    mov eax,es:[si].HcPortSc
+    test al,1
+    jz atDone
+;
+    sub dx,1
+    jnz atCheck
+;
+    and ax,0C00h
+    cmp ax,400h
+    jne atDoReset
+;
+    test ds:ehc_flags,EHC_COMPANION
+    jz atDone
+;
+    cmp cl,ds:ehc_comp_ports
+    jae atDone
+;    
+    mov eax,3000h
+    mov es:[si].HcPortSc,eax
+    jmp atDone
+    
+atDoReset:    
+    call fword ptr ds:lock_enum_proc
+;    
+    mov eax,es:[si].HcPortSc
+    and al,NOT 4
+    or ax,100h
+    mov es:[si].HcPortSc,eax
+;
+    mov ax,25
+    WaitMilliSec
+;    
+    mov eax,es:[si].HcPortSc
+    and ax,NOT 100h
+    mov es:[si].HcPortSc,eax
+;
+    mov ax,25
+    WaitMilliSec
+;
+    mov eax,es:[si].HcPortSc
+    test al,4
+    jnz atHighSpeed
+;
+    test ds:ehc_flags,EHC_COMPANION
+    jz atUnlock
+;
+    cmp cl,ds:ehc_comp_ports
+    jae atUnlock
+;    
+    mov ax,3000h
+    mov es:[si].HcPortSc,eax
+    jmp atUnlock
+        
+atHighSpeed:    
+    and ax,NOT 100h
+    mov es:[si].HcPortSc,eax
+    
+atResetLoop:
+    mov eax,es:[si].HcPortSc
+    test al,1
+    jz atUnlock
+;    
+    test ax,100h
+    jz atResetDone
+;
+    mov ax,5
+    WaitMilliSec
+    jmp atResetLoop
+
+atResetDone:
+    mov ax,2
+    WaitMilliSec
+;
+    mov eax,es:[si].HcPortSc
+    test al,4
+    jnz atNotify
+;    
+    test ds:ehc_flags,EHC_COMPANION
+    jz atUnlock
+;
+    cmp cl,ds:ehc_comp_ports
+    jae atUnlock
+;    
+    mov eax,3000h
+    mov es:[si].HcPortSc,eax
+    jmp atUnlock
+        
+atNotify:
+    mov dx,40
+
+atWaitNotify:    
+    mov ax,5
+    WaitMilliSec
+;
+    mov eax,es:[si].HcPortSc
+    test al,1
+    jz atUnlock
+;
+    sub dx,1
+    jnz atWaitNotify
+;    
+    mov ah,2
+    mov al,cl
+    NotifyUsbAttach
+
+atUnlock:
+    call fword ptr ds:unlock_enum_proc
+
+atDone:
+    mov ds:[di].usb_attach_thread_arr,0
+    TerminateThread
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           DetachThread
+;
+;   DESCRIPTION:    Detach thread
+;
+;   PARAMETERS:     FS      Function selector
+;                   BL      Port # (0..EHCI ports)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+detach_thread_name  DB 'EHCI Detach', 0
+
+detach_thread:
+    mov cl,bl
+    mov ax,fs
+    mov ds,ax
+    mov es,ds:ehc_reg_sel
+;
+    movzx si,cl
+    shl si,2
+    movzx di,cl
+    add di,di
+;    
+    GetThread
+    mov ds:[di].usb_detach_thread_arr,ax
+;    
+    mov al,cl
+    NotifyUsbDetach
+;
+    mov ds:[di].usb_detach_thread_arr,0
+    TerminateThread
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UpdatePort
 ;
 ;           DESCRIPTION:    Update root-hub port status
@@ -2695,13 +2876,10 @@ Has64Bit     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdatePort   Proc near
+    push ds
     push es
-    push ax
-    push bx
-    push cx
-    push dx
-    push si
-    push di
+    push fs
+    pushad
 ;    
     movzx si,cl
     shl si,2
@@ -2722,119 +2900,23 @@ upAttach:
     or bx,bx
     jnz upDone
 ;
-    mov ax,50
-    WaitMilliSec
+    mov bx,ds:[di].usb_attach_thread_arr
+    or bx,bx
+    jnz upDone
 ;
-    mov eax,es:[si].HcPortSc
-    test al,1
-    jz upDone
+    mov ds:[di].usb_attach_thread_arr,-1
+    mov bx,ds
+    mov fs,bx
+    mov bx,cx
 ;
-    and ax,0C00h
-    cmp ax,400h
-    jne upDoReset
-;
-    test ds:ehc_flags,EHC_COMPANION
-    jz upDone
-;
-    cmp cl,ds:ehc_comp_ports
-    jae upDone
-;    
-    mov eax,es:[si].HcPortSc
-    and al,NOT 4
-    or ax,100h
-    mov es:[si].HcPortSc,eax
-;
-    mov ax,25
-    WaitMilliSec
-;    
-    mov eax,es:[si].HcPortSc
-    and ax,NOT 100h
-    mov es:[si].HcPortSc,eax
-;
-    mov ax,25
-    WaitMilliSec
-;    
-    mov eax,3000h
-    mov es:[si].HcPortSc,eax
-    jmp upDone
-    
-upDoReset:    
-    call fword ptr ds:lock_enum_proc
-;    
-    mov eax,es:[si].HcPortSc
-    and al,NOT 4
-    or ax,100h
-    mov es:[si].HcPortSc,eax
-;
-    mov ax,25
-    WaitMilliSec
-;    
-    mov eax,es:[si].HcPortSc
-    and ax,NOT 100h
-    mov es:[si].HcPortSc,eax
-;
-    mov ax,25
-    WaitMilliSec
-;
-    mov eax,es:[si].HcPortSc
-    test al,4
-    jnz upHighSpeed
-;
-    test ds:ehc_flags,EHC_COMPANION
-    jz upUnlock
-;
-    cmp cl,ds:ehc_comp_ports
-    jae upUnlock
-;    
-    mov ax,3000h
-    mov es:[si].HcPortSc,eax
-    jmp upUnlock
-        
-upHighSpeed:    
-    and ax,NOT 100h
-    mov es:[si].HcPortSc,eax
-    
-upResetLoop:
-    mov eax,es:[si].HcPortSc
-    test al,1
-    jz upUnlock
-;    
-    test ax,100h
-    jz upResetDone
-;
-    mov ax,5
-    WaitMilliSec
-    jmp upResetLoop
-
-upResetDone:
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET attach_thread_name
+    mov esi,OFFSET attach_thread
     mov ax,2
-    WaitMilliSec
-;
-    mov eax,es:[si].HcPortSc
-    test al,4
-    jnz upNotify
-;    
-    test ds:ehc_flags,EHC_COMPANION
-    jz upUnlock
-;
-    cmp cl,ds:ehc_comp_ports
-    jae upUnlock
-;    
-    mov eax,3000h
-    mov es:[si].HcPortSc,eax
-
-upUnlock:
-    call fword ptr ds:unlock_enum_proc
-    jmp upDone
-        
-upNotify:
-    mov ax,200
-    WaitMilliSec
-;    
-    mov ah,2
-    mov al,cl
-    NotifyUsbAttach
-    call fword ptr ds:unlock_enum_proc
+    mov cx,stack0_size
+    CreateThread
     jmp upDone
 
 upDetach:
@@ -2842,17 +2924,29 @@ upDetach:
     or bx,bx
     jz upDone
 ;    
-    mov al,cl
-    NotifyUsbDetach
+    mov bx,ds:[di].usb_detach_thread_arr
+    or bx,bx
+    jnz upDone
+;
+    mov ds:[di].usb_detach_thread_arr,-1    
+    mov bx,ds
+    mov fs,bx
+    mov bx,cx
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET detach_thread_name
+    mov esi,OFFSET detach_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
             
 upDone:    
-    pop di
-    pop si    
-    pop dx
-    pop cx
-    pop bx
-    pop ax
+    popad
+    pop fs
     pop es
+    pop ds    
     ret
 UpdatePort   Endp
 
