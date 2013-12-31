@@ -50,6 +50,8 @@ hid_descr_count     DB ?
 
 hid_stop_req        DD ?
 
+hid_thread          DD ?
+
 hid_device_struc   ENDS
 
 hid_table       STRUC

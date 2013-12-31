@@ -216,6 +216,7 @@ struct THidDevice
     unsigned char DescrCount;
 
     int StopReq;
+    int Thread;
 
 /* not shared */
     char *ConfigBuf;
@@ -2713,6 +2714,7 @@ void CreateHid(int controller, int device, char *config)
             dev->IsRunning = TRUE;
             dev->StopReq = FALSE;
             dev->ConfigBuf = config;
+            dev->Thread = 0;
 
             sprintf(ThreadName, "Hid %02hX.%02hX", controller, device);
             RdosCreateKernelThread(5, 0x1000, HidThread, ThreadName, dev);
@@ -2750,7 +2752,12 @@ void RemoveHid(int controller, int device)
                 HidArr[i] = 0;
 
                 while (dev->IsRunning)
-                    RdosWaitMilli(100);
+                {
+                    RdosSignal(dev->Thread);
+                    RdosWaitMilli(25);
+                }
+
+                RdosWaitMilli(25);
 
                 RdosFreeMem(RdosPointerToSelector(dev));
                 break;

@@ -176,7 +176,7 @@ AllocateBuf32   Endp
 ;
 ;       description:    Allocate buffer selector
 ;
-;       parameters:     EAX     Size
+;       parameters:     AX      Size
 ;                       DS      USB device sel
 ;
 ;       Returns:        ES      Selector
@@ -195,6 +195,7 @@ abf32:
     push ecx
     push edx
 ;
+    movzx eax,ax
     mov ecx,eax
     call AllocateBuf32
     AllocateGdt
@@ -1156,7 +1157,7 @@ notify_usb_attach       Proc far
 
 nuaRetry:
     call fword ptr ds:is_connected_proc
-    jc nuaDone
+    jc nuaFreeDone
 ;
     xor edi,edi
     mov cx,8
@@ -1227,6 +1228,10 @@ nuaNotify:
     mov bx,ds:usb_controller_id
     mov al,fs:usbp_address
     call trap_usb_attach
+    jmp nuaDone
+
+nuaFreeDone:
+    FreeMem    
     
 nuaDone:
     popad

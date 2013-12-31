@@ -859,6 +859,10 @@ OpenHidDev_ Proc near
     mov fs:hid_protocol,0
     mov fs:hid_country_code,0
     mov fs:hid_descr_count,0
+;
+    GetThread
+    movzx eax,ax
+    mov fs:hid_thread,eax
 
 ihsCheckClass:
     mov esi,edi

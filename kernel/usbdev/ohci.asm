@@ -2255,7 +2255,7 @@ ChangeAddress   Endp
 
 LocalIsConnected   Proc near
     push es
-    push ax
+    push eax
     push dx
     push si
 ;    
@@ -2274,7 +2274,7 @@ LocalIsConnected   Proc near
 icDone:
     pop si
     pop dx
-    pop ax
+    pop eax
     pop es
     ret
 LocalIsConnected Endp
