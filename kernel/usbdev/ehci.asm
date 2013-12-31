@@ -3647,7 +3647,7 @@ etInitLoop:
     
 ehci_thread_loop:
     GetSystemTime
-    add eax,119300
+    add eax,1193 * 250
     adc edx,0
     WaitForSignalWithTimeout
 ;

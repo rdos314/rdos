@@ -2756,13 +2756,20 @@ upNoReset:
 upAttach:
     mov bx,ds:[di].usb_port_sel_arr
     or bx,bx
-    jnz upDone
+    jnz upCheckTimeout
 ;
     mov bx,ds:[di].usb_attach_thread_arr
-    or bx,bx
-    jnz upDone
+    or bx,ds:[di].usb_detach_thread_arr
+    jnz upCheckTimeout
 ;
     mov ds:[di].usb_attach_thread_arr,-1
+    GetSystemTime
+    add eax,1193 * 2500
+    adc edx,0
+    shl di,1
+    mov ds:[di].usb_timeout_arr,eax
+    mov ds:[di].usb_timeout_arr+4,edx
+;    
     mov bx,ds
     mov fs,bx
     mov bx,cx
@@ -2780,13 +2787,20 @@ upAttach:
 upDetach:
     mov bx,ds:[di].usb_port_sel_arr
     or bx,bx
-    jz upDone
+    jz upCheckTimeout
 ;    
-    mov bx,ds:[di].usb_detach_thread_arr
-    or bx,bx
-    jnz upDone
+    mov bx,ds:[di].usb_attach_thread_arr
+    or bx,ds:[di].usb_detach_thread_arr
+    jnz upCheckTimeout
 ;
     mov ds:[di].usb_detach_thread_arr,-1    
+    GetSystemTime
+    add eax,1193 * 2500
+    adc edx,0
+    shl di,1
+    mov ds:[di].usb_timeout_arr,eax
+    mov ds:[di].usb_timeout_arr+4,edx
+;    
     mov bx,ds
     mov fs,bx
     mov bx,cx
@@ -2799,6 +2813,34 @@ upDetach:
     mov ax,2
     mov cx,stack0_size
     CreateThread
+    jmp upDone
+
+upCheckTimeout:
+    mov bx,ds:[di].usb_attach_thread_arr
+    or bx,bx
+    jz upCheckDetach
+;
+    shl di,1
+    GetSystemTime
+    sub eax,ds:[di].usb_timeout_arr
+    sbb edx,ds:[di].usb_timeout_arr+4
+    jc upDone
+;
+    Signal
+    jmp upDone    
+
+upCheckDetach:    
+    mov bx,ds:[di].usb_detach_thread_arr
+    or bx,bx
+    jz upDone
+;
+    shl di,1
+    GetSystemTime
+    sub eax,ds:[di].usb_timeout_arr
+    sbb edx,ds:[di].usb_timeout_arr+4
+    jc upDone
+;
+    Signal
             
 upDone:    
     popad
@@ -3333,7 +3375,10 @@ GetSystemTime
     call UpdateUsb
 
 ohci_thread_loop:
-    WaitForSignal
+    GetSystemTime
+    add eax,1193 * 250
+    adc edx,0
+    WaitForSignalWithTimeout
     call UpdateUsb
     jmp ohci_thread_loop
 
