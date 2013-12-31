@@ -65,6 +65,7 @@ data    SEGMENT byte public 'DATA'
 hub_list        DW ?
 
 hub_section     section_typ <>
+hub_port_section    section_typ <>
 
 data    ENDS
 
@@ -143,6 +144,7 @@ ProcessHubDescr  Proc near
 
 phdLoop:
     mov gs:[bx].hps_status,0
+    mov gs:[bx].hps_req_reset,0
     mov gs:[bx].hps_dev_port,0
     mov gs:[bx].hps_attach_thread,0
     mov gs:[bx].hps_detach_thread,0
@@ -316,7 +318,7 @@ cpcResetOk:
 ClearPortChange Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
+
 ;
 ;   NAME:           GetPortStatus
 ;
@@ -569,6 +571,99 @@ ipLoop:
     popad
     ret
 InitPorts    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AttachThread
+;
+;   DESCRIPTION:    Attach thread
+;
+;   PARAMETERS:     GS      Hub selector
+;                   FS      Device selector
+;                   BX      Port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+attach_thread_name  DB 'Hub Attach', 0
+
+attach_thread:
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:hub_port_section
+;
+    mov si,bx
+    dec bx
+    shl bx,4
+    add bx,OFFSET hub_port_arr
+    mov ax,fs
+    mov ds,ax
+;    
+    GetThread
+    mov gs:[bx].hps_attach_thread,ax
+;
+    mov al,gs:[bx].hps_dev_port
+    or al,al
+    jnz atHasPort
+;
+    mov dx,si
+    call fword ptr ds:allocate_hub_port_proc
+    jc atDone
+;
+    mov gs:[bx].hps_dev_port,al
+
+atHasPort:
+    call fword ptr ds:lock_enum_proc
+;    
+    mov ax,gs:hub_attached
+    or ax,ax
+    jz atFreeUnlock
+;
+    mov gs:[bx].hps_req_reset,1
+    mov cx,40
+
+atWaitLoop:
+    mov ax,gs:hub_attached
+    or ax,ax
+    jz atFreeUnlock
+;
+    mov ax,gs:[bx].hps_status
+    test ax,1
+    jz atFreeUnlock
+;
+    test ax,2
+    jnz atIsEnabled
+;
+    mov ax,25
+    WaitMilliSec
+    loop atWaitLoop
+;
+    jmp atFreeUnlock    
+ 
+atIsEnabled:
+    mov dx,si
+    call HubAttach 
+    jmp atUnlock
+
+atFreeUnlock:
+    mov al,gs:[bx].hps_dev_port
+    or al,al
+    jz atUnlock
+;    
+    call fword ptr ds:free_hub_port_proc
+    mov gs:[bx].hps_dev_port,0
+
+atUnlock:   
+    call fword ptr ds:unlock_enum_proc
+
+atDone:
+    mov gs:[bx].hps_attach_thread,0
+;    
+    mov ax,SEG data
+    mov ds,ax
+    LeaveSection ds:hub_port_section
+;
+    TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -588,7 +683,18 @@ UpdateOnePort    Proc near
     mov ax,gs:hub_attached
     or ax,ax
     jz uopDone
-;    
+;
+    xor al,al
+    xchg al,gs:[bx].hps_req_reset    
+    or al,al
+    jz uopResetOk
+;
+    mov dx,si
+    mov ax,PORT_RESET
+    call SetPortFeature
+    jmp uopDone
+    
+uopResetOk:
     mov dx,si
     call GetPortStatus
     jc uopDone
@@ -602,51 +708,33 @@ UpdateOnePort    Proc near
     jz uopNotConnected
 ;
     test ax,2
-    jnz uopDone
+    jnz uopCheckTimeout
 ;
-    mov al,gs:[bx].hps_dev_port
-    or al,al
-    jnz uopHasPort
-;    
-    call fword ptr ds:allocate_hub_port_proc
-    jc uopDone
+    mov ax,gs:[bx].hps_attach_thread
+    or ax,gs:[bx].hps_detach_thread
+    jnz uopCheckTimeout
 ;
-    mov gs:[bx].hps_dev_port,al
-
-uopHasPort:
-    call fword ptr ds:lock_enum_proc
+    mov gs:[bx].hps_attach_thread,-1
+    GetSystemTime
+    add eax,1193 * 2500
+    adc edx,0
+    mov gs:[bx].hps_timeout,eax
+    mov gs:[bx].hps_timeout+4,edx
 ;
-    mov dx,si
-    mov ax,PORT_RESET
-    call SetPortFeature    
+    mov bx,ds
+    mov fs,bx
+    mov bx,si
 ;
-    mov cx,10    
-
-uopWaitLoop:
-    mov dx,si
-    call GetPortStatus
-    jc uopUnlock
-;    
-    test ax,1
-    jz uopUnlock
-;
-    test ax,2
-    jnz uopIsEnabled
-;
-    mov ax,25
-    WaitMilliSec
-    loop uopWaitLoop
-;
-    jmp uopUnlock    
- 
-uopIsEnabled:
-    mov gs:[bx].hps_status,ax
-;    
-    mov dx,si
-    call HubAttach 
-
-uopUnlock:   
-    call fword ptr ds:unlock_enum_proc
+    push ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET attach_thread_name
+    mov esi,OFFSET attach_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+    pop ds
     jmp uopDone
 
 uopNotConnected:
@@ -659,6 +747,59 @@ uopNotConnected:
 ;    
     call fword ptr ds:free_hub_port_proc
     mov gs:[bx].hps_dev_port,0
+
+uopCheckTimeout:
+    mov ax,gs:[bx].hps_attach_thread
+    or ax,ax
+    jz uopCheckDetach
+;
+    cmp ax,-1
+    jnz uopTimeoutAttach
+;    
+    GetSystemTime
+    add eax,1193 * 2500
+    adc edx,0
+    mov gs:[bx].hps_timeout,eax
+    mov gs:[bx].hps_timeout+4,edx
+    jmp uopDone
+
+uopTimeoutAttach:    
+    GetSystemTime
+    sub eax,gs:[bx].hps_timeout
+    sbb edx,gs:[bx].hps_timeout+4
+    jc uopDone
+;
+    push bx
+    mov bx,gs:[bx].hps_attach_thread
+    Signal
+    pop bx
+    jmp uopDone    
+
+uopCheckDetach:    
+    mov ax,gs:[bx].hps_detach_thread
+    or ax,ax
+    jz uopDone
+;
+    cmp ax,-1
+    jnz uopTimeoutDetach
+;    
+    GetSystemTime
+    add eax,1193 * 2500
+    adc edx,0
+    mov gs:[bx].hps_timeout,eax
+    mov gs:[bx].hps_timeout+4,edx
+    jmp uopDone
+
+uopTimeoutDetach:    
+    GetSystemTime
+    sub eax,gs:[bx].hps_timeout
+    sbb edx,gs:[bx].hps_timeout+4
+    jc uopDone
+;
+    push bx
+    mov bx,gs:[bx].hps_detach_thread
+    Signal
+    pop bx
 
 uopDone:    
     ret
@@ -740,7 +881,7 @@ hub_thread_restart:
 
 hub_thread_wait_signal:
     GetSystemTime
-    add eax,1000 * 1193    
+    add eax,250 * 1193    
     adc edx,0
 ;    WaitForSignal
     WaitForSignalWithTimeout
@@ -1223,6 +1364,7 @@ init    Proc far
     mov ds,bx
     mov ds:hub_list,0
     InitSection ds:hub_section
+    InitSection ds:hub_port_section
 ;       
     mov ax,cs
     mov ds,ax

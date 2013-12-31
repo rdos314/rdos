@@ -102,7 +102,8 @@ ehc_pipe_list       DW ?
 ehc_async_head_va   DD ?
 
 ehc_spinlock        spinlock_typ <>
-ehc_enum_section     section_typ <>
+ehc_enum_section    section_typ <>
+ehc_hub_section     section_typ <>
 
 ehc_hub_port_arr    DD 256 DUP(?)
 
@@ -2609,6 +2610,7 @@ AllocateHubPort   Proc far
 ;    
     xor al,al
     mov bx,OFFSET ehc_hub_port_arr
+    EnterSection ds:ehc_hub_section
 
 ahpLoop:
     mov si,[bx]
@@ -2622,6 +2624,7 @@ ahpLoop:
 ahpOk:
     mov [bx],gs
     mov [bx+2],dx
+    LeaveSection ds:ehc_hub_section
     clc
 ;
     pop si
@@ -2648,7 +2651,9 @@ FreeHubPort   Proc far
     movzx bx,al
     shl bx,2
     add bx,OFFSET ehc_hub_port_arr
+    EnterSection ds:ehc_hub_section
     mov dword ptr [bx],0
+    LeaveSection ds:ehc_hub_section
     clc
 ;
     pop bx
@@ -3494,6 +3499,7 @@ AddFunction  Proc near
     mov ds:ehc_async_head_va,0
     InitSpinlock ds:ehc_spinlock
     InitSection ds:ehc_enum_section
+    InitSection ds:ehc_hub_section
 ;
     mov es,bp
     mov cl,es:hcp_CAPLEN

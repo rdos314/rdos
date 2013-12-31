@@ -49,6 +49,7 @@ hps_detach_thread   DW ?
 
 hps_status          DW ?
 hps_dev_port        DB ?
+hps_req_reset       DB ?
 
 hub_port_status ENDS
 
