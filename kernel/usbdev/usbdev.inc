@@ -106,9 +106,9 @@ is_connected_proc      DD ?,?
 ; IN  FS        Pipe selector
 reset_pipe_proc        DD ?,?
 
-lock_enum_proc         DD ?,?
+obs_lock_enum_proc         DD ?,?
 
-unlock_enum_proc       DD ?,?
+obs_unlock_enum_proc       DD ?,?
 
 ; IN  GS        Hub selector
 ; IN  DX        Hub port

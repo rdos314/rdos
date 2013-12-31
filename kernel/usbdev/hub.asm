@@ -65,7 +65,6 @@ data    SEGMENT byte public 'DATA'
 hub_list        DW ?
 
 hub_section     section_typ <>
-hub_port_section    section_typ <>
 
 data    ENDS
 
@@ -504,7 +503,7 @@ haLowSpeed:
         
 haAttach:
     mov al,gs:[bx].hps_dev_port
-    NotifyUsbAttach
+    LockedNotifyUsbAttach
 
 haDone:    
     pop bx
@@ -588,19 +587,12 @@ InitPorts    Endp
 attach_thread_name  DB 'Hub Attach', 0
 
 attach_thread:
-    mov ax,SEG data
-    mov ds,ax
-    EnterSection ds:hub_port_section
-;
     mov si,bx
     dec bx
     shl bx,4
     add bx,OFFSET hub_port_arr
     mov ax,fs
     mov ds,ax
-;    
-    GetThread
-    mov gs:[bx].hps_attach_thread,ax
 ;
     mov al,gs:[bx].hps_dev_port
     or al,al
@@ -613,7 +605,10 @@ attach_thread:
     mov gs:[bx].hps_dev_port,al
 
 atHasPort:
-    call fword ptr ds:lock_enum_proc
+    LockUsb
+;    
+    GetThread
+    mov gs:[bx].hps_attach_thread,ax
 ;    
     mov ax,gs:hub_attached
     or ax,ax
@@ -643,7 +638,7 @@ atWaitLoop:
 atIsEnabled:
     mov dx,si
     call HubAttach 
-    jmp atUnlock
+    jmp atDone
 
 atFreeUnlock:
     mov al,gs:[bx].hps_dev_port
@@ -654,14 +649,10 @@ atFreeUnlock:
     mov gs:[bx].hps_dev_port,0
 
 atUnlock:   
-    call fword ptr ds:unlock_enum_proc
+    UnlockUsb
 
 atDone:
     mov gs:[bx].hps_attach_thread,0
-;    
-    mov ax,SEG data
-    mov ds,ax
-    LeaveSection ds:hub_port_section
 ;
     TerminateThread
 
@@ -1248,6 +1239,8 @@ usb_detach  Proc far
 ;    
     mov dx,SEG data
     mov ds,dx
+    xor dx,dx
+    mov es,dx
 ;
     EnterSection ds:hub_section   
     mov dx,ds:hub_list
@@ -1364,7 +1357,6 @@ init    Proc far
     mov ds,bx
     mov ds:hub_list,0
     InitSection ds:hub_section
-    InitSection ds:hub_port_section
 ;       
     mov ax,cs
     mov ds,ax

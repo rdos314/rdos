@@ -102,7 +102,6 @@ ehc_pipe_list       DW ?
 ehc_async_head_va   DD ?
 
 ehc_spinlock        spinlock_typ <>
-ehc_enum_section    section_typ <>
 ehc_hub_section     section_typ <>
 
 ehc_hub_port_arr    DD 256 DUP(?)
@@ -2569,7 +2568,7 @@ ResetPipe Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockEnum   Proc far
-    EnterSection ds:ehc_enum_section
+;    EnterSection ds:ehc_enum_section
     retf32
 LockEnum   Endp
 
@@ -2585,7 +2584,7 @@ LockEnum   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlockEnum   Proc far
-    LeaveSection ds:ehc_enum_section
+;    LeaveSection ds:ehc_enum_section
     retf32
 UnlockEnum   Endp
 
@@ -2743,7 +2742,7 @@ atCheck:
     jmp atDone
     
 atDoReset:    
-    call fword ptr ds:lock_enum_proc
+    LockUsb
 ;    
     mov eax,es:[si].HcPortSc
     and al,NOT 4
@@ -2824,10 +2823,11 @@ atWaitNotify:
 ;    
     mov ah,2
     mov al,cl
-    NotifyUsbAttach
+    LockedNotifyUsbAttach
+    jmp atDone
 
 atUnlock:
-    call fword ptr ds:unlock_enum_proc
+    UnlockUsb
 
 atDone:
     mov ds:[di].usb_attach_thread_arr,0
@@ -3498,7 +3498,7 @@ AddFunction  Proc near
     mov ds:ehc_pipe_list,0
     mov ds:ehc_async_head_va,0
     InitSpinlock ds:ehc_spinlock
-    InitSection ds:ehc_enum_section
+;    InitSection ds:ehc_enum_section
     InitSection ds:ehc_hub_section
 ;
     mov es,bp

@@ -2570,7 +2570,8 @@ epNotify:
     pop cx
     and ah,1
     mov al,cl
-    NotifyUsbAttach
+    LockUsb
+    LockedNotifyUsbAttach
     jmp upDone
 
 upDetach:

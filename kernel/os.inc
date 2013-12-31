@@ -3204,8 +3204,16 @@ InitUsbDevice   MACRO
 ; IN  AL      Port #
 ; IN  AH      Low speed = 1, high speed / full speed = 0
 ; IN  DS      Usb device selector
-NotifyUsbAttach MACRO
-    OsGate notify_usb_attach_nr
+LockedNotifyUsbAttach MACRO
+    OsGate locked_notify_usb_attach_nr
+                    ENDM
+
+LockUsb MACRO
+    OsGate lock_usb_nr
+                    ENDM
+
+UnlockUsb MACRO
+    OsGate unlock_usb_nr
                     ENDM
 
 ; IN  AL      Port #

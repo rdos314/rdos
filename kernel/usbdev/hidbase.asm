@@ -1166,6 +1166,9 @@ usb_detach  Proc far
     push es
     pushad
 ;    
+    xor ecx,ecx
+    mov es,ecx
+;    
     movzx eax,al
     movzx ebx,bx
     call RemoveHid

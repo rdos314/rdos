@@ -113,6 +113,8 @@ req_entry_struc ENDS
 
 data    SEGMENT byte public 'DATA'
 
+usb_enum_section    section_typ <>
+
 usb_dev_count       DW ?
 usb_dev_arr     DW 256 DUP(?)
 
@@ -525,6 +527,13 @@ CreateDefaultControl    Proc near
     pushf
     FreeMem
     call fword ptr ds:change_address_proc
+;
+    push ds
+    mov cx,SEG data
+    mov ds,cx
+    LeaveSection ds:usb_enum_section
+    pop ds
+;        
     popf
 ;
     pop edi
@@ -1083,13 +1092,56 @@ trap_detach_done:
     ret
 trap_usb_detach ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LockUsb
+;
+;           description:    Lock USB (for RESET)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+lock_usb_name DB 'Lock USB', 0
+
+lock_usb       Proc far
+    push ds
+    push ax
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:usb_enum_section
+    pop ax
+    pop ds
+    retf32
+lock_usb    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           NotifyUsbAttach
+;           NAME:           UnlockUsb
 ;
-;           description:    Notify USB attach event
+;           description:    Unlock USB (for RESET)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unlock_usb_name DB 'Unlock USB', 0
+
+unlock_usb       Proc far
+    push ds
+    push ax
+    mov ax,SEG data
+    mov ds,ax
+    LeaveSection ds:usb_enum_section
+    pop ax
+    pop ds
+    retf32
+unlock_usb    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LockedNotifyUsbAttach
+;
+;           description:    Locked notify USB attach event
 ;
 ;       parameters:     AL      Usb port
 ;               AH      Speed
@@ -1100,9 +1152,9 @@ trap_usb_detach ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-notify_usb_attach_name DB 'Notify USB Attach', 0
+locked_notify_usb_attach_name DB 'Locked Notify USB Attach', 0
 
-notify_usb_attach       Proc far
+locked_notify_usb_attach       Proc far
     push gs
     push fs
     push es
@@ -1239,7 +1291,7 @@ nuaDone:
     pop fs
     pop gs
     retf32
-notify_usb_attach   Endp
+locked_notify_usb_attach   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3484,6 +3536,13 @@ hook_usb_detach   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    Proc far
+    mov ax,SEG data
+    mov ds,ax
+    InitSection ds:usb_enum_section
+    mov ds:usb_dev_count,0
+    mov ds:usb_attach_hooks,0
+    mov ds:usb_detach_hooks,0
+;
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -3498,10 +3557,22 @@ init    Proc far
     mov ax,init_usb_device_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET notify_usb_attach
-    mov edi,OFFSET notify_usb_attach_name
+    mov esi,OFFSET lock_usb
+    mov edi,OFFSET lock_usb_name
     xor cl,cl
-    mov ax,notify_usb_attach_nr
+    mov ax,lock_usb_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET unlock_usb
+    mov edi,OFFSET unlock_usb_name
+    xor cl,cl
+    mov ax,unlock_usb_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET locked_notify_usb_attach
+    mov edi,OFFSET locked_notify_usb_attach_name
+    xor cl,cl
+    mov ax,locked_notify_usb_attach_nr
     RegisterOsGate
 ;
     mov esi,OFFSET notify_usb_detach

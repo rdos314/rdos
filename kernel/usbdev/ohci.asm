@@ -2637,7 +2637,8 @@ atWaitNotify:
     shr ah,1
     and ah,1
     mov al,cl
-    NotifyUsbAttach
+    LockUsb
+    LockedNotifyUsbAttach
 
 atDone:
     mov ds:[di].usb_attach_thread_arr,0
@@ -2744,7 +2745,8 @@ upWaitRes:
     shr ah,1
     and ah,1
     mov al,cl
-    NotifyUsbAttach
+    LockUsb
+    LockedNotifyUsbAttach
     jmp upDone
     
 upNoReset:
