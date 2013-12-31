@@ -2561,6 +2561,121 @@ upReclaimOk:
 upNoReclaim:    
     ret
 UpdateReclaim   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AttachThread
+;
+;   DESCRIPTION:    Attach thread
+;
+;   PARAMETERS:     FS      Function selector
+;                   BL      Port # (0..OHCI ports)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+attach_thread_name  DB 'OHCI Attach', 0
+
+attach_thread:
+    mov cl,bl
+    mov ax,fs
+    mov ds,ax
+    mov es,ds:ohc_reg_sel
+;    
+    movzx si,cl
+    shl si,2
+    movzx di,cl
+    add di,di
+;    
+    GetThread
+    mov ds:[di].usb_attach_thread_arr,ax
+;
+    mov dx,10
+
+atCheck:    
+    mov ax,5
+    WaitMilliSec
+;
+    mov eax,es:[si].HcRhPortStatus
+    test al,1
+    jz atDone
+;
+    sub dx,1
+    jnz atCheck
+;    
+    mov eax,10h
+    mov es:[si].HcRhPortStatus,eax
+
+atResetLoop:
+    mov ax,5
+    WaitMilliSec
+;
+    mov eax,es:[si].HcRhPortStatus
+    test al,1
+    jz atDone
+;    
+    test al,10h
+    jnz atResetLoop
+; 
+    mov eax,2
+    mov es:[si].HcRhPortStatus,eax
+;
+    mov dx,40
+
+atWaitNotify:    
+    mov ax,5
+    WaitMilliSec
+;
+    mov eax,es:[si].HcRhPortStatus
+    test al,1
+    jz atDone
+;
+    sub dx,1
+    jnz atWaitNotify
+;    
+    mov eax,es:[si].HcRhPortStatus
+    shr ah,1
+    and ah,1
+    mov al,cl
+    NotifyUsbAttach
+
+atDone:
+    mov ds:[di].usb_attach_thread_arr,0
+    TerminateThread
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           DetachThread
+;
+;   DESCRIPTION:    Detach thread
+;
+;   PARAMETERS:     FS      Function selector
+;                   BL      Port # (0..OHCI ports)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+detach_thread_name  DB 'OHCI Detach', 0
+
+detach_thread:
+    mov cl,bl
+    mov ax,fs
+    mov ds,ax
+    mov es,ds:ohc_reg_sel
+;    
+    movzx si,cl
+    shl si,2
+    movzx di,cl
+    add di,di
+;    
+    GetThread
+    mov ds:[di].usb_detach_thread_arr,ax
+;    
+    mov al,cl
+    NotifyUsbDetach
+;
+    mov ds:[di].usb_detach_thread_arr,0
+    TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2575,13 +2690,10 @@ UpdateReclaim   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdatePort   Proc near
+    push ds
     push es
-    push ax
-    push bx
-    push cx
-    push dx
-    push si
-    push di
+    push fs
+    pushad
 ;    
     movzx si,cl
     shl si,2
@@ -2646,35 +2758,23 @@ upAttach:
     or bx,bx
     jnz upDone
 ;
-    mov ax,50
-    WaitMilliSec
-;    
-    mov eax,10h
-    mov es:[si].HcRhPortStatus,eax
-
-upResetLoop:
-    mov ax,5
-    WaitMilliSec
+    mov bx,ds:[di].usb_attach_thread_arr
+    or bx,bx
+    jnz upDone
 ;
-    mov eax,es:[si].HcRhPortStatus
-    test al,1
-    jz upDone
-;    
-    test al,10h
-    jnz upResetLoop
-; 
-    mov eax,2
-    mov es:[si].HcRhPortStatus,eax
-    
-epNotify:
-    mov ax,200
-    WaitMilliSec
-;    
-    mov eax,es:[si].HcRhPortStatus
-    shr ah,1
-    and ah,1
-    mov al,cl
-    NotifyUsbAttach
+    mov ds:[di].usb_attach_thread_arr,-1
+    mov bx,ds
+    mov fs,bx
+    mov bx,cx
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET attach_thread_name
+    mov esi,OFFSET attach_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
     jmp upDone
 
 upDetach:
@@ -2682,17 +2782,29 @@ upDetach:
     or bx,bx
     jz upDone
 ;    
-    mov al,cl
-    NotifyUsbDetach
+    mov bx,ds:[di].usb_detach_thread_arr
+    or bx,bx
+    jnz upDone
+;
+    mov ds:[di].usb_detach_thread_arr,-1    
+    mov bx,ds
+    mov fs,bx
+    mov bx,cx
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET detach_thread_name
+    mov esi,OFFSET detach_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
             
 upDone:    
-    pop di
-    pop si    
-    pop dx
-    pop cx
-    pop bx
-    pop ax
+    popad
+    pop fs
     pop es
+    pop ds    
     ret
 UpdatePort   Endp
 
