@@ -39,43 +39,47 @@ uhd_current     DB ?
 
 usb_hub_descr   ENDS
 
-; must be less than 4 bytes!
+; must be less than 16 bytes!
 
 hub_port_status STRUC
 
-hps_status      DW ?
-hps_dev_port    DB ?
+hps_timeout         DD ?,?
+hps_attach_thread   DW ?
+hps_detach_thread   DW ?
+
+hps_status          DW ?
+hps_dev_port        DB ?
 
 hub_port_status ENDS
 
 hub_struc   STRUC
 
-hub_next            DW ?
+hub_next                DW ?
 
-hub_thread          DW ?
-hub_attached        DW ?
+hub_thread              DW ?
+hub_attached            DW ?
 
-hub_controller      DW ?
-hub_device          DB ?
-hub_intr            DB ?
+hub_controller          DW ?
+hub_device              DB ?
+hub_intr                DB ?
 
-hub_control_wait    DW ?
-hub_control_handle  DW ?
+hub_control_wait        DW ?
+hub_control_handle      DW ?
 
-hub_status_handle   DW ?
-hub_status_size     DW ?
-hub_status_sel      DW ?
-hub_status_req      DW ?
+hub_status_handle       DW ?
+hub_status_size         DW ?
+hub_status_sel          DW ?
+hub_status_req          DW ?
 
-hub_power_time      DW ?
-hub_info            DW ?
+hub_power_time          DW ?
+hub_info                DW ?
 
-hub_dev_sel         DW ?
+hub_dev_sel             DW ?
 
-hub_ports           DW ?
-hub_port_arr        DD MAX_HUB_PORTS DUP(?)
+hub_ports               DW ?
+hub_port_arr            DB 16 * MAX_HUB_PORTS DUP(?)
 
-hub_control_data    DB 8 DUP (?)
-hub_buf             DB HUB_BUF_SIZE DUP(?)
+hub_control_data        DB 8 DUP (?)
+hub_buf                 DB HUB_BUF_SIZE DUP(?)
 
 hub_struc   ENDS

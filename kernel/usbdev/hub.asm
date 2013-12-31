@@ -144,7 +144,9 @@ ProcessHubDescr  Proc near
 phdLoop:
     mov gs:[bx].hps_status,0
     mov gs:[bx].hps_dev_port,0
-    add bx,4
+    mov gs:[bx].hps_attach_thread,0
+    mov gs:[bx].hps_detach_thread,0
+    add bx,16
     loop phdLoop
 ;               
     mov gs:hub_attached,1
@@ -471,7 +473,7 @@ CloseHub   Endp
 ;
 ;   Parameters:     GS      Hub
 ;                   DS      Device sel
-;                   BX      Port status
+;                   BX      Port array
 ;                   DX      Port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -518,7 +520,7 @@ HubAttach   Endp
 ;
 ;   Parameters:     GS      Hub
 ;                   DS      Device sel
-;                   DX      Port
+;                   DX      Port array
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -560,7 +562,7 @@ ipLoop:
     mov ax,PORT_POWER
     call SetPortFeature    
 ;
-    add bx,4
+    add bx,16
     inc si
     loop ipLoop
 ;           
@@ -577,7 +579,7 @@ InitPorts    Endp
 ;
 ;   Parameters:     GS      Hub
 ;                   DS      Device sel
-;                   BX      Status offset
+;                   BX      Port arr
 ;                   SI      Port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -683,7 +685,7 @@ UpdatePorts    Proc near
 
 upLoop:
     call UpdateOnePort
-    add bx,4
+    add bx,16
     inc si
     loop upLoop
 ;           
@@ -781,7 +783,7 @@ hub_thread_port_loop:
     pop ax
 
 hub_thread_port_next:
-    add bx,4
+    add bx,16
     inc si
     shr al,1
     loop hub_thread_port_loop
@@ -817,7 +819,7 @@ hub_close_port_next:
     pop si
     pop cx
     pop bx
-    add bx,4
+    add bx,16
     inc si
     loop hub_close_port_loop
 ;
@@ -1193,7 +1195,7 @@ is_usb_hub_port_connected  Proc far
 ;    
     mov si,dx
     dec si
-    shl si,2
+    shl si,4
     mov ax,gs:[si].hub_port_arr.hps_status
     test al,1
     clc
