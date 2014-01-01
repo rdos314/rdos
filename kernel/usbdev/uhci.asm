@@ -1680,8 +1680,11 @@ AddBuffer    Proc near
     jmp abDone
 
 abHasData:
-    push ecx
     mov bx,es
+    cmp bx,flat_sel
+    je abLoop
+;    
+    push ecx
     GetSelectorBaseSize
     add edx,edi
     sub ecx,edi
