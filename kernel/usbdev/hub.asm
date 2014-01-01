@@ -615,6 +615,15 @@ atHasPort:
     jz atFreeUnlock
 ;
     mov gs:[bx].hps_req_reset,1
+
+atWaitReset:
+    mov ax,5
+    WaitMilliSec
+;
+    mov al,gs:[bx].hps_req_reset
+    or al,al
+    jnz atWaitReset    
+;    
     mov cx,40
 
 atWaitLoop:
@@ -655,7 +664,44 @@ atDone:
     mov gs:[bx].hps_attach_thread,0
 ;
     TerminateThread
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           DetachThread
+;
+;   DESCRIPTION:    Detach thread
+;
+;   PARAMETERS:     GS      Hub selector
+;                   FS      Device selector
+;                   BX      Port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+detach_thread_name  DB 'Hub Detach', 0
+
+detach_thread:
+    mov si,bx
+    dec bx
+    shl bx,4
+    add bx,OFFSET hub_port_arr
+    mov ax,fs
+    mov ds,ax
+;    
+    GetThread
+    mov gs:[bx].hps_detach_thread,ax
+;
+    mov dx,si
+    call HubDetach
+;    
+    call fword ptr ds:free_hub_port_proc
+    mov gs:[bx].hps_dev_port,0
+
+dtDone:
+    mov gs:[bx].hps_detach_thread,0
+;
+    TerminateThread
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -675,14 +721,17 @@ UpdateOnePort    Proc near
     or ax,ax
     jz uopDone
 ;
-    xor al,al
-    xchg al,gs:[bx].hps_req_reset    
+    mov al,gs:[bx].hps_req_reset    
     or al,al
     jz uopResetOk
 ;
     mov dx,si
     mov ax,PORT_RESET
     call SetPortFeature
+;
+    mov ax,10
+    WaitMilliSec
+    mov gs:[bx].hps_req_reset,0
     jmp uopDone
     
 uopResetOk:
@@ -733,11 +782,32 @@ uopNotConnected:
     or al,al
     jz uopDone
 ;
-    mov dx,si
-    call HubDetach
-;    
-    call fword ptr ds:free_hub_port_proc
-    mov gs:[bx].hps_dev_port,0
+    mov ax,gs:[bx].hps_attach_thread
+    or ax,gs:[bx].hps_detach_thread
+    jnz uopCheckTimeout
+;
+    mov gs:[bx].hps_detach_thread,-1
+    GetSystemTime
+    add eax,1193 * 2500
+    adc edx,0
+    mov gs:[bx].hps_timeout,eax
+    mov gs:[bx].hps_timeout+4,edx
+;
+    mov bx,ds
+    mov fs,bx
+    mov bx,si
+;
+    push ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET detach_thread_name
+    mov esi,OFFSET detach_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+    pop ds
+    jmp uopDone
 
 uopCheckTimeout:
     mov ax,gs:[bx].hps_attach_thread
@@ -816,7 +886,16 @@ UpdatePorts    Proc near
     mov si,1
 
 upLoop:
+    push bx
+    push cx
+    push si
+;    
     call UpdateOnePort
+;
+    pop si
+    pop cx
+    pop bx 
+;      
     add bx,16
     inc si
     loop upLoop

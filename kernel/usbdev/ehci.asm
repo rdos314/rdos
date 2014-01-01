@@ -2138,7 +2138,7 @@ LocalIsTransferDone   Proc near
     test al,40h
     jz itdFail
 ;
-    int 3
+;    int 3
     jmp itdOk
 
 itdFail:
@@ -2811,7 +2811,7 @@ atNotify:
     mov dx,40
 
 atWaitNotify:    
-    mov ax,5
+    mov ax,10
     WaitMilliSec
 ;
     mov eax,es:[si].HcPortSc
