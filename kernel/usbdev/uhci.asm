@@ -2583,14 +2583,7 @@ UpdatePort   Proc near
     jz upDetach
 ;
     test ax,200h
-    jz upAttach
-;    
-    mov bx,ds:[si].usb_port_sel_arr
-    or bx,bx
-    jz upDone
-;    
-    mov al,cl
-    NotifyUsbDetach
+    jnz upDone
     
 upAttach:
     mov bx,ds:[si].usb_port_sel_arr
