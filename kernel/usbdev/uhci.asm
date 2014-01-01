@@ -2553,6 +2553,39 @@ Has64Bit   Proc far
     retf32
 Has64Bit     Endp
     
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AttachThread
+;
+;   DESCRIPTION:    Attach thread
+;
+;   PARAMETERS:     FS      Function selector
+;                   BX      Attach param
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+attach_thread_name  DB 'UHCI Attach', 0
+
+attach_thread:
+    mov cl,bl
+    mov ax,fs
+    mov ds,ax
+;    
+    movzx di,cl
+    add di,di
+;    
+    GetThread
+    mov ds:[di].usb_attach_thread_arr,ax
+;
+    mov ax,bx
+    LockUsb
+    LockedNotifyUsbAttach
+;
+    mov ds:[di].usb_attach_thread_arr,0
+    TerminateThread
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2590,6 +2623,10 @@ upAttach:
     or bx,bx
     jnz upDone
 ;
+    mov bx,ds:[si].usb_attach_thread_arr
+    or bx,ds:[si].usb_detach_thread_arr
+    jnz upCheckTimeout
+;
     or ax,200h
     out dx,ax
 ;
@@ -2626,8 +2663,28 @@ epNotify:
     pop cx
     and ah,1
     mov al,cl
-    LockUsb
-    LockedNotifyUsbAttach
+;
+    push ax
+    mov ds:[si].usb_attach_thread_arr,-1
+    GetSystemTime
+    add eax,1193 * 2500
+    adc edx,0
+    shl si,1
+    mov ds:[si].usb_timeout_arr,eax
+    mov ds:[si].usb_timeout_arr+4,edx
+    pop bx
+;    
+    mov dx,ds
+    mov fs,dx
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET attach_thread_name
+    mov esi,OFFSET attach_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
     jmp upDone
 
 upDetach:
@@ -2637,6 +2694,8 @@ upDetach:
 ;    
     mov al,cl
     NotifyUsbDetach
+
+upCheckTimeout:
             
 upDone:    
     pop si    
