@@ -2732,7 +2732,7 @@ upDetach:
     GetSystemTime
     add eax,1193 * 500
     adc edx,0
-    shl di,1
+    shl si,1
     mov ds:[si].usb_timeout_arr,eax
     mov ds:[si].usb_timeout_arr+4,edx
 ;    
@@ -2751,6 +2751,31 @@ upDetach:
     jmp upDone
 
 upCheckTimeout:
+    mov bx,ds:[si].usb_attach_thread_arr
+    or bx,bx
+    jz upCheckDetach
+;
+    shl si,1
+    GetSystemTime
+    sub eax,ds:[si].usb_timeout_arr
+    sbb edx,ds:[si].usb_timeout_arr+4
+    jc upDone
+;
+    Signal
+    jmp upDone    
+
+upCheckDetach:    
+    mov bx,ds:[si].usb_detach_thread_arr
+    or bx,bx
+    jz upDone
+;
+    shl si,1
+    GetSystemTime
+    sub eax,ds:[si].usb_timeout_arr
+    sbb edx,ds:[si].usb_timeout_arr+4
+    jc upDone
+;
+    Signal
             
 upDone:    
     pop si    
