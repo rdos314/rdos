@@ -756,7 +756,7 @@ uopResetOk:
 ;
     mov gs:[bx].hps_attach_thread,-1
     GetSystemTime
-    add eax,1193 * 2500
+    add eax,1193 * 500
     adc edx,0
     mov gs:[bx].hps_timeout,eax
     mov gs:[bx].hps_timeout+4,edx
@@ -788,7 +788,7 @@ uopNotConnected:
 ;
     mov gs:[bx].hps_detach_thread,-1
     GetSystemTime
-    add eax,1193 * 2500
+    add eax,1193 * 500
     adc edx,0
     mov gs:[bx].hps_timeout,eax
     mov gs:[bx].hps_timeout+4,edx
@@ -818,7 +818,7 @@ uopCheckTimeout:
     jnz uopTimeoutAttach
 ;    
     GetSystemTime
-    add eax,1193 * 2500
+    add eax,1193 * 500
     adc edx,0
     mov gs:[bx].hps_timeout,eax
     mov gs:[bx].hps_timeout+4,edx
@@ -845,7 +845,7 @@ uopCheckDetach:
     jnz uopTimeoutDetach
 ;    
     GetSystemTime
-    add eax,1193 * 2500
+    add eax,1193 * 500
     adc edx,0
     mov gs:[bx].hps_timeout,eax
     mov gs:[bx].hps_timeout+4,edx
@@ -865,6 +865,111 @@ uopTimeoutDetach:
 uopDone:    
     ret
 UpdateOnePort    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           UpdateClosedPort
+;
+;   description:    Update closed port
+;
+;   Parameters:     GS      Hub
+;                   DS      Device sel
+;                   BX      Port arr
+;                   SI      Port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateClosedPort    Proc near
+    mov gs:[bx].hps_status,0
+;
+    mov al,gs:[bx].hps_dev_port
+    or al,al
+    jz ucpCheckTimeout
+;
+    mov ax,gs:[bx].hps_attach_thread
+    or ax,gs:[bx].hps_detach_thread
+    jnz ucpCheckTimeout
+;
+    mov gs:[bx].hps_detach_thread,-1
+    GetSystemTime
+    add eax,1193 * 500
+    adc edx,0
+    mov gs:[bx].hps_timeout,eax
+    mov gs:[bx].hps_timeout+4,edx
+;
+    mov bx,ds
+    mov fs,bx
+    mov bx,si
+;
+    push ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET detach_thread_name
+    mov esi,OFFSET detach_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+    pop ds
+    jmp ucpDone
+
+ucpCheckTimeout:
+    mov ax,gs:[bx].hps_attach_thread
+    or ax,ax
+    jz ucpCheckDetach
+;
+    cmp ax,-1
+    jnz ucpTimeoutAttach
+;    
+    GetSystemTime
+    add eax,1193 * 500
+    adc edx,0
+    mov gs:[bx].hps_timeout,eax
+    mov gs:[bx].hps_timeout+4,edx
+    jmp ucpDone
+
+ucpTimeoutAttach:    
+    GetSystemTime
+    sub eax,gs:[bx].hps_timeout
+    sbb edx,gs:[bx].hps_timeout+4
+    jc ucpDone
+;
+    push bx
+    mov bx,gs:[bx].hps_attach_thread
+    Signal
+    pop bx
+    jmp ucpDone    
+
+ucpCheckDetach:    
+    mov ax,gs:[bx].hps_detach_thread
+    or ax,ax
+    jz ucpDone
+;
+    cmp ax,-1
+    jnz ucpTimeoutDetach
+;    
+    GetSystemTime
+    add eax,1193 * 500
+    adc edx,0
+    mov gs:[bx].hps_timeout,eax
+    mov gs:[bx].hps_timeout+4,edx
+    jmp ucpDone
+
+ucpTimeoutDetach:    
+    GetSystemTime
+    sub eax,gs:[bx].hps_timeout
+    sbb edx,gs:[bx].hps_timeout+4
+    jc ucpDone
+;
+    push bx
+    mov bx,gs:[bx].hps_detach_thread
+    Signal
+    pop bx
+
+ucpDone:    
+    ret
+UpdateClosedPort    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1008,32 +1113,38 @@ hub_thread_port_next:
     jmp hub_thread_port_loop    
 
 hub_exit:
+    mov gs:hub_attached,0
+
+hub_wait_retry:
     mov cx,gs:hub_ports
     mov bx,OFFSET hub_port_arr
     mov si,1
+    xor dx,dx
 
-hub_close_port_loop:
-    push bx
-    push cx
-    push si
-;    
-    mov al,gs:[bx].hps_dev_port
-    or al,al
-    jz hub_close_port_next
+hub_wait_port_loop:
+    movzx ax,gs:[bx].hps_dev_port
+    or ax,gs:[bx].hps_attach_thread
+    or ax,gs:[bx].hps_detach_thread
+    jz hub_wait_next_port
 ;
-    mov dx,si
-    call HubDetach
-;    
-    call fword ptr ds:free_hub_port_proc
+    inc dx
+    pusha
+    call UpdateClosedPort
+    popa
 
-hub_close_port_next:    
-    pop si
-    pop cx
-    pop bx
+hub_wait_next_port:    
     add bx,16
     inc si
-    loop hub_close_port_loop
+    loop hub_wait_port_loop
+;   
+    or dx,dx
+    jz hub_wait_done
 ;
+    mov ax,10
+    WaitMilliSec
+    jmp hub_wait_retry
+
+hub_wait_done:
     xor ax,ax
     mov ds,ax
     mov es,ax
