@@ -915,7 +915,7 @@ UpdatePorts    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-hub_thread_handler  Proc far
+hub_thread_handler:
     xor ax,ax
     mov ds,ax
     mov es,ax
@@ -1044,8 +1044,8 @@ hub_close_port_next:
 ;
     mov ax,25
     WaitMilliSec    
-    ret
-hub_thread_handler  Endp
+;
+    TerminateThread    
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1357,7 +1357,13 @@ udFirst:
     mov ds:hub_list,ax
 
 udClose:        
+    mov ax,gs:hub_attached
+    cmp ax,-1
+    je udLeave
+;
     mov gs:hub_attached,0    
+
+udLeave:    
     LeaveSection ds:hub_section   
 
 udSignal:    
@@ -1368,8 +1374,8 @@ udSignal:
     WaitMilliSec    
 ;
     mov ax,gs:hub_attached
-    or ax,ax
-    jz udSignal    
+    cmp ax,-1
+    jne udSignal    
 ;    
     mov ax,gs
     mov es,ax
