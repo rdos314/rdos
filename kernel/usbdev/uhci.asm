@@ -264,18 +264,22 @@ UhciInt Proc far
     mov dx,ds:uhc_io_base
     add dx,UsbStatusReg
 ;
-    in ax,dx
-    or ax,ax
-    jz uiDone
-;    
+    in ax,dx    
     or ds:uhc_status,ax
     out dx,ax
-;    
-    call UpdatePipeList
+    int 3
+;
+    test al,20h
+    jz uiNonFatal
+;
+    SoftReset
 
-uiDone:
+uiNonFatal:
+    call UpdatePipeList
+;    
     retf32
 UhciInt  Endp
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -578,7 +582,7 @@ AllocateTd      PROC near
     call AllocateBlock32
     mov es:[edx].utd_link,1
     mov es:[edx].utd_va_link,0
-    mov es:[edx].utd_control, 18000000h
+    mov es:[edx].utd_control, 19000000h
     test fs:usbp_speed,USB_LOW_SPEED
     jz atSpeedOk
 ;
@@ -2550,7 +2554,7 @@ upAttach:
     push cx
     mov cx,10
 
- epLoop:
+epLoop:
     in ax,dx
     test ax,4
     clc
@@ -2659,7 +2663,14 @@ InitFunction    Proc near
 ;
     mov bx,ds:uhc_pci_bus_dev
     mov ch,ds:uhc_pci_func
-;    
+    cmp ch,2
+    jne ifNotLegacy
+;
+    mov cl,0C0h
+    xor ax,ax
+    WritePciWord   
+    
+ifNotLegacy:    
     GetPciIrqNr
     mov ah,14h
     mov di,cs
@@ -2704,8 +2715,12 @@ ifTabLoop:
 ;
     mov dx,ds:uhc_io_base
     add dx,UsbIntReg
-;    mov ax,0Fh
-    xor ax,ax
+    mov ax,0Fh
+    out dx,ax
+;
+    mov dx,ds:uhc_io_base
+    add dx,UsbStatusReg
+    in ax,dx
     out dx,ax
 ;
     mov dx,ds:uhc_io_base
@@ -2769,12 +2784,14 @@ AddFunction  Proc near
     push es
     pushad
 ;    
+    push cx
     mov eax,SIZE uhci_func_sel
     AllocateSmallGlobalMem
     mov cx,ax
     xor al,al
     xor di,di
     rep stosb
+    pop cx
 ;    
     mov ax,es
     mov ds,ax
@@ -2889,71 +2906,44 @@ PollFunction    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PciVendorTab:
-pci00   DW 1106h, 3038h
-pci01   DW 8086h, 24D2h
-pci02   DW 8086h, 24D4h
-pci03   DW 8086h, 24D7h
-pci04   DW 8086h, 24DEh
-pci05   DW 8086h, 24C2h
-pci06   DW 8086h, 27C8h
-pci07   DW 8086h, 27C9h
-pci08   DW 8086h, 27CAh
-pci09   DW 8086h, 27CBh
-pci0A   DW 8086h, 2830h
-pci0B   DW 8086h, 2831h
-pci0C   DW 8086h, 2832h
-pci0D   DW 8086h, 2834h
-pci0E   DW 8086h, 2835h
-pci0F   DW 0,     0
-
 InitPciAdapter  Proc near
-    mov si,OFFSET PciVendorTab
-
-init_pci_loop:
     xor ax,ax
-    mov dx,cs:[si]
-    mov cx,cs:[si+2]
-    or dx,dx
-    stc
-    jz init_pci_done
+    mov bh,0Ch
+    mov bl,3
+    mov ch,0
+    FindPciClass
+    jc init_pci_done
 ;
-    FindPciDevice
-    jnc init_pci_found
-
-init_pci_next:
-    add si,4
-    jmp init_pci_loop
-
-init_pci_found:
     mov cl,20h
     ReadPciDword
     mov dx,ax
     and dx,0FFE0h
-    mov bp,dx
+    mov bp,ax
     call AddFunction
 ;       
-    mov ax,1
+    mov dx,1
 
 init_pci_next_device:
-    mov dx,cs:[si]
-    mov cx,cs:[si+2]
-    FindPciDevice
-    jc init_pci_next
+    mov ax,dx
+    mov bh,0Ch
+    mov bl,3
+    mov ch,0
+    FindPciClass
+    jc init_pci_done
 ;       
-    push ax
     mov cl,20h
     ReadPciDword
+    cmp ax,bp
+    je init_pci_done
+;       
+    push dx
     mov dx,ax
     and dx,0FFE0h
-    pop ax
-    cmp dx,bp
-    je init_pci_next
-;       
     call AddFunction
-    inc ax
+    pop dx
+    inc dx
     jmp init_pci_next_device
-
+    
 init_pci_done:
     ret
 InitPciAdapter  Endp
@@ -3107,7 +3097,10 @@ uhci_func_loop:
     StartTimer
 
 uhci_handle_loop:
-    WaitForSignal    
+    GetSystemTime
+    add eax,1193 * 250
+    adc edx,0
+    WaitForSignalWithTimeout
 ;    
     mov cx,ds:UhciCount 
     mov bx,OFFSET UhciFunc
