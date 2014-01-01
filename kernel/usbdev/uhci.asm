@@ -250,6 +250,63 @@ UpdatePipeList  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           port_timer
+;
+;           DESCRIPTION:    Port timer
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+port_timer  Proc far
+    push edx
+    push eax
+;    
+    xor si,si
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov cx,ds:UhciCount 
+    mov bx,OFFSET UhciFunc
+
+timer_func_loop:
+    push ds
+    mov ds,[bx]
+;
+    mov dx,ds:uhc_io_base
+    add dx,UsbStatusReg
+;
+    in ax,dx    
+    test al,20h
+    jz tNonFatal
+;
+    SoftReset
+
+tNonFatal:
+    call UpdatePipeList
+;
+    pop ds
+    add bx,2
+    loop timer_func_loop
+;
+    pop eax   
+    pop edx
+;    
+    add eax,1193
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov bx,cs
+    mov edi,OFFSET port_timer
+    StartTimer
+    retf32
+port_timer  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UhciInt
 ;
 ;           DESCRIPTION:    UHCI interrupt
@@ -267,7 +324,6 @@ UhciInt Proc far
     in ax,dx    
     or ds:uhc_status,ax
     out dx,ax
-    int 3
 ;
     test al,20h
     jz uiNonFatal
@@ -2715,7 +2771,8 @@ ifTabLoop:
 ;
     mov dx,ds:uhc_io_base
     add dx,UsbIntReg
-    mov ax,0Fh
+;    mov ax,0Fh
+    xor ax,ax
     out dx,ax
 ;
     mov dx,ds:uhc_io_base
@@ -2856,38 +2913,13 @@ AddFunction   Endp
 
 PollFunction  Proc near
     pusha
-;
-    mov ax,ds:uhc_status
-    or ax,ax
-    jz pfStatusOk
-;
-    mov ds:uhc_status,0
-
-pfStatusOk:
-    mov dx,ds:uhc_io_base
-    add dx,PortscReg1
-    in ax,dx
-    mov bx,ax
-    and bx,0Ah
-    jz pfNotReg1
 ;    
-    out dx,ax
     mov cl,0
     call UpdatePort
-
-pfNotReg1:
-    mov dx,ds:uhc_io_base
-    add dx,PortscReg2
-    in ax,dx
-    mov bx,ax
-    and bx,0Ah
-    jz pfNotReg2
 ;    
-    out dx,ax
     mov cl,1
     call UpdatePort
-
-pfNotReg2:
+;
     popa
     ret
 PollFunction    Endp
@@ -2947,87 +2979,6 @@ init_pci_next_device:
 init_pci_done:
     ret
 InitPciAdapter  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           port_timer
-;
-;           DESCRIPTION:    Port timer
-;
-;       PARAMETERS:     
-;
-;           RETURNS:        
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-port_timer  Proc far
-    push edx
-    push eax
-;    
-    xor si,si
-    mov ax,SEG data
-    mov ds,ax
-;
-    mov cx,ds:UhciCount 
-    mov bx,OFFSET UhciFunc
-
-timer_func_loop:
-    push ds
-    mov ds,[bx]
-;
-    mov dx,ds:uhc_io_base
-    add dx,UsbStatusReg
-;
-    in ax,dx    
-    test al,20h
-    jz tNonFatal
-;
-    SoftReset
-
-tNonFatal:
-    call UpdatePipeList
-;    
-    mov dx,ds:uhc_io_base
-    add dx,PortscReg1
-    in ax,dx
-    and ax,0Ah
-    jz timer_not_reg1
-;    
-    inc si
-
-timer_not_reg1:
-    add dx,2
-    in ax,dx
-    and ax,0Ah
-    jz timer_not_reg2
-;    
-    inc si
-
-timer_not_reg2:
-    pop ds
-    add bx,2
-    loop timer_func_loop
-;
-    or si,si
-    jz timer_no_action
-;
-    mov bx,ds:UhciThread
-    Signal
-
-timer_no_action:    
-    pop eax   
-    pop edx
-;    
-    add eax,1193
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov bx,cs
-    mov edi,OFFSET port_timer
-    StartTimer
-    retf32
-port_timer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
