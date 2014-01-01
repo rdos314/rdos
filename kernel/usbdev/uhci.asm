@@ -2586,6 +2586,38 @@ attach_thread:
     mov ds:[di].usb_attach_thread_arr,0
     TerminateThread
     
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           DetachThread
+;
+;   DESCRIPTION:    Detach thread
+;
+;   PARAMETERS:     FS      Function selector
+;                   BL      Port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+detach_thread_name  DB 'UHCI Detach', 0
+
+detach_thread:
+    mov cl,bl
+    mov ax,fs
+    mov ds,ax
+;    
+    movzx di,cl
+    add di,di
+;    
+    GetThread
+    mov ds:[di].usb_detach_thread_arr,ax
+;
+    mov al,cl
+    NotifyUsbDetach
+;
+    mov ds:[di].usb_detach_thread_arr,0
+    TerminateThread
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2667,7 +2699,7 @@ epNotify:
     push ax
     mov ds:[si].usb_attach_thread_arr,-1
     GetSystemTime
-    add eax,1193 * 2500
+    add eax,1193 * 500
     adc edx,0
     shl si,1
     mov ds:[si].usb_timeout_arr,eax
@@ -2691,9 +2723,32 @@ upDetach:
     mov bx,ds:[si].usb_port_sel_arr
     or bx,bx
     jz upDone
+;
+    mov bx,ds:[si].usb_attach_thread_arr
+    or bx,ds:[si].usb_detach_thread_arr
+    jnz upCheckTimeout
+;
+    mov ds:[si].usb_detach_thread_arr,-1    
+    GetSystemTime
+    add eax,1193 * 500
+    adc edx,0
+    shl di,1
+    mov ds:[si].usb_timeout_arr,eax
+    mov ds:[si].usb_timeout_arr+4,edx
 ;    
-    mov al,cl
-    NotifyUsbDetach
+    mov bx,ds
+    mov fs,bx
+    mov bx,cx
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET detach_thread_name
+    mov esi,OFFSET detach_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+    jmp upDone
 
 upCheckTimeout:
             
