@@ -2317,7 +2317,7 @@ ResetPipe   Proc far
     mov cl,es:usbf_port
     mov ax,1
     shl ax,cl
-    or ds:ohc_reset,ax
+    lock or ds:ohc_reset,ax
 ;
     pop cx
     pop ax
@@ -2781,7 +2781,7 @@ UpdatePort   Proc near
     jz upNoReset
 ;
     not ax
-    and ds:ohc_reset,ax
+    lock and ds:ohc_reset,ax
 ;        
     mov eax,es:[si].HcRhPortStatus
     test al,1
@@ -2914,6 +2914,7 @@ upCheckDetach:
     jc upDone
 ;
     Signal
+    jmp upDone
             
 upCheckReset:    
     mov bx,ds:[di].usb_reset_thread_arr

@@ -98,6 +98,8 @@ ehc_comp_ports      DB ?
 
 ehc_section         section_typ <>
 
+ehc_reset           DW ?
+
 ehc_pipe_list       DW ?
 ehc_async_head_va   DD ?
 
@@ -2555,8 +2557,19 @@ IsConnected Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ResetPipe   Proc far
-    int 3
-    stc
+    push es
+    push ax
+    push cx
+;    
+    mov es,fs:usbp_function_sel
+    mov cl,es:usbf_port
+    mov ax,1
+    shl ax,cl
+    or ds:ehc_reset,ax
+;
+    pop cx
+    pop ax
+    pop es
     retf32
 ResetPipe Endp
 
@@ -2871,6 +2884,77 @@ detach_thread:
     mov ds:[di].usb_detach_thread_arr,0
     TerminateThread
 
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ResetThread
+;
+;   DESCRIPTION:    Reset thread
+;
+;   PARAMETERS:     FS      Function selector
+;                   BL      Port # (0..OHCI ports)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_thread_name  DB 'EHCI Reset', 0
+
+reset_thread:
+    mov cl,bl
+    mov ax,fs
+    mov ds,ax
+    mov es,ds:ehc_reg_sel
+;    
+    movzx si,cl
+    shl si,2
+    movzx di,cl
+    add di,di
+;    
+    GetThread
+    mov ds:[di].usb_reset_thread_arr,ax
+;    
+    mov eax,es:[si].HcPortSc
+    and al,NOT 4
+    or ax,100h
+    mov es:[si].HcPortSc,eax
+;    
+    mov al,cl
+    NotifyUsbDetach
+;    
+    LockUsb
+;
+    mov ax,25
+    WaitMilliSec
+;    
+    mov eax,es:[si].HcPortSc
+    and ax,NOT 100h
+    mov es:[si].HcPortSc,eax
+;
+    mov dx,40
+
+rtWaitNotify:    
+    mov ax,10
+    WaitMilliSec
+;
+    mov eax,es:[si].HcPortSc
+    test al,1
+    jz rtUnlock
+;
+    sub dx,1
+    jnz rtWaitNotify
+;    
+    mov ah,2
+    mov al,cl
+    LockedNotifyUsbAttach
+    jmp rtDone
+
+rtUnlock:
+    UnlockUsb    
+
+rtDone:
+    mov ds:[di].usb_reset_thread_arr,0
+    TerminateThread
+        
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2897,7 +2981,52 @@ UpdatePort   Proc near
 ;    
     mov eax,es:[si].HcPortSc
     mov es:[si].HcPortSc,eax    ; reset change bit!    
-; 
+;    
+    mov ax,1
+    shl ax,cl
+    test ax,ds:ehc_reset
+    jz upNoReset
+;
+    not ax
+    lock and ds:ehc_reset,ax
+;        
+    mov eax,es:[si].HcPortSc
+    test al,1
+    jz upNoReset
+;
+    mov bx,ds:[di].usb_port_sel_arr
+    or bx,bx
+    jz upNoReset
+;    
+    mov bx,ds:[di].usb_attach_thread_arr
+    or bx,ds:[di].usb_detach_thread_arr
+    or bx,ds:[di].usb_reset_thread_arr
+    jnz upCheckTimeout
+;
+    mov ds:[di].usb_reset_thread_arr,-1
+    GetSystemTime
+    add eax,1193 * 500
+    adc edx,0
+    shl di,1
+    mov ds:[di].usb_timeout_arr,eax
+    mov ds:[di].usb_timeout_arr+4,edx
+;    
+    mov bx,ds
+    mov fs,bx
+    mov bx,cx
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET reset_thread_name
+    mov esi,OFFSET reset_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+    jmp upDone
+    
+upNoReset:
+    mov eax,es:[si].HcPortSc
     test ax,2000h
     jnz upDone
 ;    
@@ -2911,6 +3040,7 @@ upAttach:
 ;
     mov bx,ds:[di].usb_attach_thread_arr
     or bx,ds:[di].usb_detach_thread_arr
+    or bx,ds:[di].usb_reset_thread_arr
     jnz upCheckTimeout
 ;
     mov ds:[di].usb_attach_thread_arr,-1
@@ -2942,6 +3072,7 @@ upDetach:
 ;    
     mov bx,ds:[di].usb_attach_thread_arr
     or bx,ds:[di].usb_detach_thread_arr
+    or bx,ds:[di].usb_reset_thread_arr
     jnz upCheckTimeout
 ;
     mov ds:[di].usb_detach_thread_arr,-1    
@@ -2983,6 +3114,20 @@ upCheckTimeout:
 upCheckDetach:    
     mov bx,ds:[di].usb_detach_thread_arr
     or bx,bx
+    jz upCheckReset
+;
+    shl di,1
+    GetSystemTime
+    sub eax,ds:[di].usb_timeout_arr
+    sbb edx,ds:[di].usb_timeout_arr+4
+    jc upDone
+;
+    Signal
+    jmp upDone
+            
+upCheckReset:    
+    mov bx,ds:[di].usb_reset_thread_arr
+    or bx,bx
     jz upDone
 ;
     shl di,1
@@ -2992,7 +3137,7 @@ upCheckDetach:
     jc upDone
 ;
     Signal
-            
+                
 upDone:    
     popad
     pop fs
@@ -3500,6 +3645,7 @@ AddFunction  Proc near
 ;
     mov ds:ehc_reg_sel,bp
     mov ds:ehc_pipe_list,0
+    mov ds:ehc_reset,0
     mov ds:ehc_async_head_va,0
     InitSpinlock ds:ehc_spinlock
 ;    InitSection ds:ehc_enum_section
