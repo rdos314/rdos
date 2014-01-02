@@ -628,8 +628,6 @@ wait_for_ehci_nr            = 518
 wait_for_ohci_nr            = 519
 wait_for_uhci_nr            = 520
 
-has_physical64_nr           = 521
-
 register_hid_input_nr       = 522
 get_signed_hid_input_nr     = 523
 get_unsigned_hid_input_nr   = 524

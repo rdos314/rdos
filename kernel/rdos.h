@@ -310,6 +310,9 @@ void RDOSAPI RdosDebugNext();
 
 #endif
 
+int RDOSAPI RdosHasPhysical64();
+int RDOSAPI RdosUsesPae();
+
 long long RDOSAPI RdosGetFreePhysical();
 int RDOSAPI RdosGetPhysicalEntryType(int Entry);
 long long RDOSAPI RdosGetPhysicalEntryBase(int Entry);

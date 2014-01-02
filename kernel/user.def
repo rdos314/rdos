@@ -682,4 +682,7 @@ get_physical_entry_type_nr      = 541
 get_physical_entry_base_nr      = 542
 get_physical_entry_size_nr      = 543
 
+has_physical64_nr               = 544
+uses_pae_nr                     = 545
+
 usergate_entries			    = 560

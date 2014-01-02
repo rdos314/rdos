@@ -126,6 +126,7 @@ get_thread_page_entry_proc      DW OFFSET local_get_thread_page_entry32
 set_thread_page_entry_proc      DW OFFSET local_set_thread_page_entry32
 get_thread_page_dir_proc        DW OFFSET local_get_thread_page_dir32
 has64_proc                      DW OFFSET local_has64_32
+uses_pae_proc                   DW OFFSET local_uses_pae32
 
 p64_start:
 init_process_p64                DW OFFSET local_init_process64
@@ -160,6 +161,7 @@ get_thread_page_entry_p64       DW OFFSET local_get_thread_page_entry64
 set_thread_page_entry_p64       DW OFFSET local_set_thread_page_entry64
 get_thread_page_dir_p64         DW OFFSET local_get_thread_page_dir64
 has64_p64                       DW OFFSET local_has64_64
+uses_pae_p64                    DW OFFSET local_uses_pae64
 p64_end:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -343,12 +345,18 @@ init_page_table     PROC near
     xor cl,cl
     mov ax,get_thread_page_dir_nr
     RegisterOsGate
-;    
+;
     mov esi,OFFSET has_physical64
     mov edi,OFFSET has_physical64_name
-    xor cl,cl
+    xor dx,dx
     mov ax,has_physical64_nr
-    RegisterOsGate
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET uses_pae
+    mov edi,OFFSET uses_pae_name
+    xor dx,dx
+    mov ax,uses_pae_nr
+    RegisterBimodalUserGate
 ;    
     pop ds
     popa
@@ -1907,6 +1915,22 @@ local_has64_32  Proc near
     stc
     ret
 local_has64_32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           uses_pae32
+;
+;           DESCRIPTION:    Check for PAE paging, 32-bit version
+;
+;           RETURNS:        NC     Uses PAE paging
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_uses_pae32  Proc near
+    stc
+    ret
+local_uses_pae32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3755,6 +3779,22 @@ local_has64_64  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           local_uses_pae64
+;
+;           DESCRIPTION:    Check for PAE paging, 64-bit version
+;
+;           RETURNS:        NC      Uses PAE
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_uses_pae64  Proc near
+    clc
+    ret
+local_uses_pae64  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           NotifyInitProcess
 ;
 ;           DESCRIPTION:    Notify init process
@@ -4301,6 +4341,24 @@ has_physical64    Proc far
     call cs:has64_proc
     retf32
 has_physical64    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UsesPae
+;
+;           DESCRIPTION:    Check for PAE paging
+;
+;           RETURNS:        NC      Uses PAE
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uses_pae_name   DB 'Uses Pae',0
+
+uses_pae    Proc far
+    call cs:uses_pae_proc
+    retf32
+uses_pae    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

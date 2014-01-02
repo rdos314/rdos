@@ -716,6 +716,16 @@
     CallGate_clear_break  \
     parm [ebx] [eax];
 
+#pragma aux RdosHasPhysical64 = \
+    CallGate_has_physical64  \
+    CarryToBool \
+    value [eax];
+
+#pragma aux RdosUsesPae = \
+    CallGate_uses_pae  \
+    CarryToBool \
+    value [eax];
+
 #pragma aux RdosGetFreePhysical = \
     CallGate_get_free_physical  \
     value [edx eax];

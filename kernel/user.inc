@@ -186,6 +186,16 @@ GetPhysicalEntrySize	MACRO
 	UserGate get_physical_entry_size_nr
 				ENDM
 
+; NC                Has 64 bit addresses
+HasPhysical64    MACRO
+    UserGate has_physical64_nr
+                    ENDM
+
+; NC                Has 64 bit addresses
+UsesPae    MACRO
+    UserGate uses_pae_nr
+                    ENDM
+
 ;	EAX		Number of free physical bytes
 GetFreePhysical	MACRO
 	UserGate get_free_physical_nr

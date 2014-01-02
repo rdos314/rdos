@@ -682,6 +682,9 @@
 #define usergate_get_physical_entry_base 0x0000021E
 #define usergate_get_physical_entry_size 0x0000021F
 
+#define usergate_has_physical64 0x00000220
+#define usergate_uses_pae 0x00000221
+
 
 
 #ifdef __FLAT__
@@ -1369,6 +1372,9 @@
 #define CallGate_get_physical_entry_base 0x67 0x9a 30 2 0 0 3 0
 #define CallGate_get_physical_entry_size 0x67 0x9a 31 2 0 0 3 0
 
+#define CallGate_has_physical64 0x67 0x9a 32 2 0 0 3 0
+#define CallGate_uses_pae 0x67 0x9a 33 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2053,5 +2059,8 @@
 #define CallGate_get_physical_entry_type 0x3e 0x67 0x9a 29 2 0 0 3 0
 #define CallGate_get_physical_entry_base 0x3e 0x67 0x9a 30 2 0 0 3 0
 #define CallGate_get_physical_entry_size 0x3e 0x67 0x9a 31 2 0 0 3 0
+
+#define CallGate_has_physical64 0x3e 0x67 0x9a 32 2 0 0 3 0
+#define CallGate_uses_pae 0x3e 0x67 0x9a 33 2 0 0 3 0
 
 #endif
