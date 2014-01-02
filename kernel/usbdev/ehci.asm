@@ -896,11 +896,15 @@ acqSetSpeed:
     or al,ah
     mov es:[edx].qh_endpoint,al
 ;
+    mov ax,fs:usbp_hub_sel
+    or ax,ax
+    jz acqDone
+;    
     push gs
+    mov gs,ax
     mov ax,fs:usbp_hub_port
     shl ax,7
     or ax,4000h    
-    mov gs,fs:usbp_hub_sel
     or al,gs:hub_device
     pop gs        
     mov es:[edx].qh_hub_port,ax

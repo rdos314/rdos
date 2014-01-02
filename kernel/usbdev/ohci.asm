@@ -2603,6 +2603,8 @@ atCheck:
     sub dx,1
     jnz atCheck
 ;    
+    LockUsb
+;    
     mov eax,10h
     mov es:[si].HcRhPortStatus,eax
 
@@ -2612,7 +2614,7 @@ atResetLoop:
 ;
     mov eax,es:[si].HcRhPortStatus
     test al,1
-    jz atDone
+    jz atUnlock
 ;    
     test al,10h
     jnz atResetLoop
@@ -2628,7 +2630,7 @@ atWaitNotify:
 ;
     mov eax,es:[si].HcRhPortStatus
     test al,1
-    jz atDone
+    jz atUnlock
 ;
     sub dx,1
     jnz atWaitNotify
@@ -2637,8 +2639,11 @@ atWaitNotify:
     shr ah,1
     and ah,1
     mov al,cl
-    LockUsb
     LockedNotifyUsbAttach
+    jmp atDone
+
+atUnlock:
+    UnlockUsb    
 
 atDone:
     mov ds:[di].usb_attach_thread_arr,0
@@ -2677,6 +2682,74 @@ detach_thread:
 ;
     mov ds:[di].usb_detach_thread_arr,0
     TerminateThread
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ResetThread
+;
+;   DESCRIPTION:    Reset thread
+;
+;   PARAMETERS:     FS      Function selector
+;                   BL      Port # (0..OHCI ports)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_thread_name  DB 'OHCI Reset', 0
+
+reset_thread:
+    mov cl,bl
+    mov ax,fs
+    mov ds,ax
+    mov es,ds:ohc_reg_sel
+;    
+    movzx si,cl
+    shl si,2
+    movzx di,cl
+    add di,di
+;    
+    GetThread
+    mov ds:[di].usb_reset_thread_arr,ax
+;
+    mov eax,10h
+    mov es:[si].HcRhPortStatus,eax
+;    
+    mov al,cl
+    NotifyUsbDetach
+;    
+    LockUsb
+
+rtWaitRes:        
+    mov ax,5
+    WaitMilliSec
+;
+    mov eax,es:[si].HcRhPortStatus
+    test al,1
+    jz rtUnlock
+;
+    test al,10h
+    jnz rtWaitRes
+;    
+    mov eax,2
+    mov es:[si].HcRhPortStatus,eax
+;    
+    mov ax,200
+    WaitMilliSec
+;    
+    mov eax,es:[si].HcRhPortStatus
+    shr ah,1
+    and ah,1
+    mov al,cl
+    LockedNotifyUsbAttach
+    jmp rtDone
+
+rtUnlock:
+    UnlockUsb    
+
+rtDone:
+    mov ds:[di].usb_reset_thread_arr,0
+    TerminateThread
+        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2718,35 +2791,31 @@ UpdatePort   Proc near
     or bx,bx
     jz upNoReset
 ;    
-    mov eax,10h
-    mov es:[si].HcRhPortStatus,eax
-
-upWaitRes:        
-    mov ax,5
-    WaitMilliSec
+    mov bx,ds:[di].usb_attach_thread_arr
+    or bx,ds:[di].usb_detach_thread_arr
+    or bx,ds:[di].usb_reset_thread_arr
+    jnz upCheckTimeout
 ;
-    mov eax,es:[si].HcRhPortStatus
-    test al,1
-    jz upDetach
+    mov ds:[di].usb_reset_thread_arr,-1
+    GetSystemTime
+    add eax,1193 * 2500
+    adc edx,0
+    shl di,1
+    mov ds:[di].usb_timeout_arr,eax
+    mov ds:[di].usb_timeout_arr+4,edx
+;    
+    mov bx,ds
+    mov fs,bx
+    mov bx,cx
 ;
-    test al,10h
-    jnz upWaitRes
-;    
-    mov al,cl
-    NotifyUsbDetach
-;    
-    mov eax,2
-    mov es:[si].HcRhPortStatus,eax
-;    
-    mov ax,200
-    WaitMilliSec
-;    
-    mov eax,es:[si].HcRhPortStatus
-    shr ah,1
-    and ah,1
-    mov al,cl
-    LockUsb
-    LockedNotifyUsbAttach
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET reset_thread_name
+    mov esi,OFFSET reset_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
     jmp upDone
     
 upNoReset:
@@ -2762,6 +2831,7 @@ upAttach:
 ;
     mov bx,ds:[di].usb_attach_thread_arr
     or bx,ds:[di].usb_detach_thread_arr
+    or bx,ds:[di].usb_reset_thread_arr
     jnz upCheckTimeout
 ;
     mov ds:[di].usb_attach_thread_arr,-1
@@ -2793,6 +2863,7 @@ upDetach:
 ;    
     mov bx,ds:[di].usb_attach_thread_arr
     or bx,ds:[di].usb_detach_thread_arr
+    or bx,ds:[di].usb_reset_thread_arr
     jnz upCheckTimeout
 ;
     mov ds:[di].usb_detach_thread_arr,-1    
@@ -2833,6 +2904,19 @@ upCheckTimeout:
 
 upCheckDetach:    
     mov bx,ds:[di].usb_detach_thread_arr
+    or bx,bx
+    jz upCheckReset
+;
+    shl di,1
+    GetSystemTime
+    sub eax,ds:[di].usb_timeout_arr
+    sbb edx,ds:[di].usb_timeout_arr+4
+    jc upDone
+;
+    Signal
+            
+upCheckReset:    
+    mov bx,ds:[di].usb_reset_thread_arr
     or bx,bx
     jz upDone
 ;
