@@ -180,6 +180,8 @@ patch_section		section_typ <>
 multiboot_size      DW ?
 multiboot_sel       DW ?
 
+has_phys64          DB ?
+
 system_size			DB ?
 
 system_seg	ENDS

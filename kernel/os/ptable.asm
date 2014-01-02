@@ -41,6 +41,15 @@ ELSE
     .386p
 ENDIF
 
+mmap_struc  STRUC
+
+mmap_len    DD ?
+mmap_base   DD ?,?
+mmap_size   DD ?,?
+mmap_type   DD ?
+
+mmap_struc  ENDS
+
     extrn local_get_selector_base_size:near
     extrn local_create_data_sel16:near
     extrn local_allocate_physical:near
@@ -125,7 +134,6 @@ unhook_page_proc                DW OFFSET local_unhook_page32
 get_thread_page_entry_proc      DW OFFSET local_get_thread_page_entry32
 set_thread_page_entry_proc      DW OFFSET local_set_thread_page_entry32
 get_thread_page_dir_proc        DW OFFSET local_get_thread_page_dir32
-has64_proc                      DW OFFSET local_has64_32
 uses_pae_proc                   DW OFFSET local_uses_pae32
 
 p64_start:
@@ -160,7 +168,6 @@ unhook_page_p64                 DW OFFSET local_unhook_page64
 get_thread_page_entry_p64       DW OFFSET local_get_thread_page_entry64
 set_thread_page_entry_p64       DW OFFSET local_set_thread_page_entry64
 get_thread_page_dir_p64         DW OFFSET local_get_thread_page_dir64
-has64_p64                       DW OFFSET local_has64_64
 uses_pae_p64                    DW OFFSET local_uses_pae64
 p64_end:
 
@@ -1899,22 +1906,6 @@ local_get_thread_page_dir32    Proc near
     pop ds    
     ret
 local_get_thread_page_dir32    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           local_has64_32
-;
-;           DESCRIPTION:    Check for 64-bit addresses, 32-bit version
-;
-;           RETURNS:        NC      Has 64-bit addresses
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-local_has64_32  Proc near
-    stc
-    ret
-local_has64_32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3763,22 +3754,6 @@ local_get_thread_page_dir64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           local_has64_64
-;
-;           DESCRIPTION:    Check for 64-bit addresses, 64-bit version
-;
-;           RETURNS:        NC      Has 64-bit addresses
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-local_has64_64  Proc near
-    clc
-    ret
-local_has64_64  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           local_uses_pae64
 ;
 ;           DESCRIPTION:    Check for PAE paging, 64-bit version
@@ -4338,7 +4313,21 @@ get_thread_page_dir    Endp
 has_physical64_name   DB 'Has Physical64',0
 
 has_physical64    Proc far
-    call cs:has64_proc
+    push ds
+    push ax
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov al,ds:has_phys64
+    or al,al
+    stc
+    jz hp64Done
+;
+    clc    
+
+hp64Done:
+    pop ax
+    pop ds
     retf32
 has_physical64    Endp
 
@@ -5410,6 +5399,7 @@ has_long_mode   Proc near
 ;    
     mov ax,system_data_sel
     mov ds,ax
+;
     mov cx,ds:rom_modules
     mov bx,OFFSET rom_adapters
 
@@ -5428,6 +5418,73 @@ has_long_ok:
     pop ds 
     ret
 has_long_mode   Endp  
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           local_has64
+;
+;           DESCRIPTION:    Check for 64-bit physical address
+;
+;           RETURNS:        NC      Has 64-bit address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_has64   PROC near
+    push ds
+    pushad
+;
+    mov ax,system_data_sel
+    mov ds,ax
+;
+    mov eax,ds:ram2_size
+    or eax,eax
+    jnz h64Fail
+;
+    movzx ecx,ds:multiboot_size
+    mov esi,ds:multiboot_mmap_addr
+    or ecx,ecx
+    jz h64Fail
+;
+    mov ax,flat_sel
+    mov ds,ax    
+
+h64Loop:
+    mov eax,ds:[esi].mmap_type
+    cmp eax,1
+    jne h64Next
+;
+    mov eax,ds:[esi].mmap_base
+    mov ebx,ds:[esi].mmap_base+4
+    add eax,ds:[esi].mmap_size
+    adc ebx,ds:[esi].mmap_size+4
+    sub eax,1
+    sbb ebx,0
+    or ebx,ebx
+    jnz h64Ok
+
+h64Next:    
+    mov eax,ds:[esi].mmap_len
+    add eax,4
+    add esi,eax
+    sub ecx,eax
+    ja h64Loop
+
+h64Fail:
+    stc
+    jmp h64Done
+
+h64Ok:        
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:has_phys64,1
+    clc
+
+h64Done:            
+    popad
+    pop ds
+    ret
+local_has64   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5449,15 +5506,18 @@ start_paging:
 ;
     mov ds:long_base,0
     mov ds:long_size,0
+    mov ds:has_phys64,0
 ;
     mov eax,ds:cpu_feature_flags
     test al,40h
     jz start_paging32
 ;
     call has_long_mode
-    jc start_paging32
+    jnc start_paging64        
 ;
-    jmp start_paging64        
+    call local_has64    
+    jnc start_paging64        
+    jmp start_paging32
 
 code    ENDS
 
