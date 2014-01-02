@@ -5511,12 +5511,13 @@ start_paging:
     mov eax,ds:cpu_feature_flags
     test al,40h
     jz start_paging32
+;    
+    call local_has64    
+    jnc start_paging64        
 ;
     call has_long_mode
     jnc start_paging64        
 ;
-    call local_has64    
-    jnc start_paging64        
     jmp start_paging32
 
 code    ENDS
