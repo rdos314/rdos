@@ -1682,6 +1682,18 @@ Physical memory map:
  %08lX_%08lX-%08lX_%08lX
 .
 
+:TEXT_INFO_PAGING32
+32-bit paging
+.
+
+:TEXT_INFO_PAE32
+32-bit PAE paging
+.
+
+:TEXT_INFO_PAE64
+64-bit PAE paging
+.
+
 :TEXT_INFO_PHYSICAL
 Free physical memory: %d.%05d MB
 .

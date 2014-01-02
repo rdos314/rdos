@@ -195,6 +195,26 @@ int TInfoCommand::Execute(char *param)
         }
     }
 
+    if (RdosUsesPae())
+    {
+        if (RdosHasPhysical64())
+        {
+            FMsg.printf(TEXT_INFO_PAE64);
+            Write(FMsg.GetData());
+        }
+        else
+        {
+            FMsg.printf(TEXT_INFO_PAE32);
+            Write(FMsg.GetData());
+        }
+    }
+    else
+    {
+        FMsg.printf(TEXT_INFO_PAGING32);
+        Write(FMsg.GetData());
+    }
+        
+    
     PhysMem = RdosGetFreePhysical();
     mb = (int)(PhysMem / 1024LL / 1024LL);
     kb = PhysMem - (long long)mb * 1024LL * 1024LL;
