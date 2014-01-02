@@ -32,8 +32,8 @@
 #include "rdos.h"
 #include "disc.h"
 #include "part.h"
-#include "idedisc.h"
 #include "fatpart.h"
+#include "file.h"
 
 #define BOOT_LOADER_SECTORS     16
 
@@ -191,6 +191,88 @@ void ShowPart()
 
 /*##########################################################################
 #
+#   Name       : GetDiscCount
+#
+#   Purpose....: Get number of discs
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int GetDiscCount()
+{
+    int DiscNr;
+    TDisc *Disc;
+    int count = 0;
+    
+    for (DiscNr = 0; DiscNr < 16; DiscNr++)
+    {
+        Disc = new TDisc(DiscNr);
+        if (Disc->IsValid())
+            count++;
+
+        delete Disc;
+    }
+    return count;
+}
+
+/*##########################################################################
+#
+#   Name       : FindUsb
+#
+#   Purpose....: Find USB disc
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int FindUsb()
+{
+    int DiscNr;
+    TDisc *Disc;
+    int i;
+    int count = 0;
+    TDiscPartition *DiscPart;
+    TPartition *Part = 0;
+    TDrive *Drive;
+    
+    for (DiscNr = 0; DiscNr < 16; DiscNr++)
+    {
+        Disc = new TDisc(DiscNr);
+        if (Disc->IsValid())
+        {
+            DiscPart = new TDiscPartition(Disc);
+
+            for (i = 0; i < DiscPart->PartCount; i++)
+            {
+                Part = DiscPart->PartArr[i];
+
+                if (Part)
+                {
+                    Drive = Part->GetDrive();
+
+                    if (Drive)
+                    {
+                        if (Drive->GetDriveNr() == 'Y' - 'A')
+                        {
+                            delete DiscPart;
+                            delete Disc;
+                            return DiscNr;
+                        }
+                    }
+                }
+            }
+            delete DiscPart;
+        }
+        delete Disc;
+    }
+    return -1;
+}
+
+/*##########################################################################
+#
 #   Name       : FindCf
 #
 #   Purpose....: Find possible CF disk
@@ -210,9 +292,14 @@ int FindCf()
     {
         Disc = new TDisc(DiscNr);
         if (Disc->IsValid())
+        {
             Sectors = Disc->GetTotalSectors();
-            if (Sectors > 7000000 && Sectors < 8000000)
+            if (Sectors > 7000000 && Sectors < 16000000)
+            {
+                delete Disc;
                 return DiscNr;
+            }
+        }
         delete Disc;
     }
     return -1;
@@ -253,7 +340,7 @@ void LoadBootLoader(TDisc *Disc)
 #   Returns....: *
 #
 ##########################################################################*/
-void WriteMbrSector(TDisc *Disc, int IdeDisc)
+void WriteMbrSector(TDisc *Disc, int DiscNr)
 {
     char *BootSector;
     TBootParam bootp;
@@ -270,7 +357,7 @@ void WriteMbrSector(TDisc *Disc, int IdeDisc)
     bootp.Heads = Disc->GetHeads();
     bootp.HiddenSectors = LoaderSectors;
     bootp.Sectors = Disc->GetTotalSectors();
-    bootp.Drive = 0x80 + IdeDisc;
+    bootp.Drive = 0x80 + DiscNr;
     bootp.Resv7 = 0;
     bootp.Signature = 0;
     bootp.Serial = 0;
@@ -340,7 +427,7 @@ void MakeBootable(int DiscNr)
     TDiscPartition *DiscPart;
     TPartition *Part;
     
-    Disc = new TIdeDisc(DiscNr);
+    Disc = new TDisc(DiscNr);
     ok = Disc->IsValid();
 
     if (ok)
@@ -387,7 +474,7 @@ int MakeBootPart(int DiscNr)
     TDiscPartition *DiscPart;
     TFat16PartitionFactory fact;
 
-    Disc = new TIdeDisc(DiscNr);
+    Disc = new TDisc(DiscNr);
 
     if (Disc->IsValid())
     {
@@ -445,50 +532,228 @@ int RemoveDisc(int DiscNr)
     TDiscPartition *DiscPart;
     int ok = FALSE;
 
-    Disc = new TIdeDisc(DiscNr);
+    Disc = new TDisc(DiscNr);
 
-        if (Disc->IsValid())
+    if (Disc->IsValid())
+    {
+        DiscPart = new TDiscPartition(Disc);
+        ok = RemovePart(DiscPart);
+        delete DiscPart;
+    }
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : GetPartCount
+#
+#   Purpose....: Get disc partition count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int GetPartCount(int DiscNr)
+{
+    int i;
+    int count = 0;
+    TDisc *Disc;
+    TDiscPartition *DiscPart;
+    TPartition *Part = 0;
+
+    Disc = new TDisc(DiscNr);
+
+    if (Disc->IsValid())
+    {
+        DiscPart = new TDiscPartition(Disc);
+
+        for (i = 0; i < DiscPart->PartCount; i++)
         {
-                DiscPart = new TDiscPartition(Disc);
-                ok = RemovePart(DiscPart);
-                delete DiscPart;
+            Part = DiscPart->PartArr[i];
+
+            if (Part && Part->IsFs())
+                count++;
         }
-        return ok;
+
+        delete DiscPart;
+    }
+
+    return count;
+}
+
+/*##########################################################################
+#
+#   Name       : HasBoot
+#
+#   Purpose....: Check for boot-file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int HasBoot()
+{
+    TFile file("c:\\rdos.bin");
+
+    return file.IsOpen();
+}
+
+/*##########################################################################
+#
+#   Name       : CopyBootFile
+#
+#   Purpose....: Copy boot-file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int CopyBootFile(const char *FileName)
+{
+    TFile *infile;
+    TFile *outfile;
+    char *buf;
+    int size;
+    char str[256];
+
+    strcpy(str, "y:\\boot\\");
+    strcat(str, FileName);
+
+    infile = new TFile(str);
+
+    if (infile->IsOpen())
+    {
+        strcpy(str, "c:\\");
+        strcat(str, FileName);
+        outfile = new TFile(str, 0);
+        
+        buf = new char[0x10000];
+
+        size = 1;
+        while (size)
+        {
+            size = infile->Read(buf, 0x10000);
+            if (size)
+                outfile->Write(buf, size);
+        }
+
+        delete infile;
+        delete outfile;
+        delete buf;
+
+        return TRUE;
+    }
+
+    delete infile;
+    return FALSE;
+            
 }
 
 int main()
 {
     int DiscNr;
+    int UsbDiscNr;
     int ok = FALSE;
+    int DiscCount;
+    int i;
     
     RdosWaitMilli(2500);
-    DiscNr = FindCf();
-    if (DiscNr >= 0)
-    {
-        ok = RemoveDisc(DiscNr);
 
-        if (ok)
+    printf("Waiting for USB disc.");
+
+    for (i = 0; i < 100; i++)
+    {
+        DiscCount = GetDiscCount();
+
+        if (DiscCount == 2)
         {
-            printf("Removing partitions...");
-            RdosWaitMilli(2000);
-            RdosSoftReset();
+            UsbDiscNr = FindUsb();
+
+            if (UsbDiscNr >= 0)
+                break;
         }
-            
-        printf("Formatting disk...");
-        MakeBootable(DiscNr);
-        ok = MakeBootPart(DiscNr);
+        printf(".");
+        RdosWaitMilli(250);
     }
 
     printf("\r\n");
 
-    if (ok)
+    if (DiscCount != 2)
     {
-        RdosWaitMilli(5000);
+        ShowPart();
+        RdosWaitMilli(25000);
+        RdosSoftReset();
+    }
+    
+    DiscNr = FindCf();
+    if (DiscNr >= 0 && DiscNr != UsbDiscNr)
+    {
+        switch (GetPartCount(DiscNr))
+        {
+            case 0:            
+                RdosWriteSerialRaw(0, 10, 3);
 
-        printf("Disk ok\r\n");
+                printf("Formatting disk...");
+                MakeBootable(DiscNr);
+                ok = MakeBootPart(DiscNr);
+                RdosWaitMilli(5000);
+                RdosSoftReset();
+                break;
 
-        for (;;)
-            RdosWaitMilli(1000);
+            case 1:
+                if (HasBoot())
+                {
+                    RdosWriteSerialRaw(0, 10, 2);
+                
+                    RemoveDisc(DiscNr);
+                    printf("Removing partitions...");
+                    RdosWaitMilli(2000);
+                    RdosSoftReset();
+                }
+
+                RdosWriteSerialRaw(0, 10, 4);
+
+                RdosWaitMilli(1000);
+    
+                printf("Copying boot\r\n");
+
+                if (!CopyBootFile("rdos.bin"))
+                {
+                    printf("Retrying\r\n");
+                    RdosWaitMilli(2000);
+                    RdosSoftReset();
+                }
+
+                CopyBootFile("system.ini");                
+
+                RdosWaitMilli(5000);
+    
+                printf("Disc ok\r\n");
+                printf("Remove USB disc to continue\r\n");
+
+                RdosWriteSerialRaw(0, 10, 5);
+
+                while (GetDiscCount() == 2)
+                    RdosWaitMilli(1000);
+
+                printf("Rebooting\r\n");
+                RdosWaitMilli(1000);
+                RdosSoftReset();
+                    
+                break;
+
+            default:
+                RdosWriteSerialRaw(0, 10, 2);
+                
+                RemoveDisc(DiscNr);
+                printf("Removing partitions...");
+                RdosWaitMilli(2000);
+                RdosSoftReset();
+                break;
+        }
     }
     else
     {

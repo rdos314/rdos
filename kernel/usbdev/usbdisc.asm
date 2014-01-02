@@ -1352,6 +1352,8 @@ perform_one     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 disc_thread:
+    xor ax,ax
+    mov es,ax
 
 dtCheckCompleted:
     CondBeginDiscHandler
