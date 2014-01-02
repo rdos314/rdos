@@ -1580,6 +1580,9 @@ CreateControl   Proc far
 ;
     mov eax,1000h
     AllocateBigLinear
+    AllocatePhysical32
+    mov al,13h
+    SetPageEntry
     mov es:usp_setup_linear,edx
 ;    
     mov ax,es

@@ -301,6 +301,12 @@ AllocateBlock32 PROC near
 ;    
     mov ecx,32
     mov ds:OhciList32,edx
+;
+    push ebx    
+    AllocatePhysical32
+    mov al,13h
+    SetPageEntry
+    pop ebx
     
 allocate_block32_loop:
     mov eax,edx
@@ -599,15 +605,20 @@ AllocateTd  ENDP
 
 CreateSyncBlock    Proc near
     push eax
+    push ebx
     push ecx
     push edx
 ;    
     mov eax,1000h
     AllocateBigLinear
+    AllocatePhysical32
+    mov al,13h
+    SetPageEntry
     mov fs:osp_sync_linear,edx
 ;    
     pop edx
     pop ecx
+    pop ebx
     pop eax    
     ret
 CreateSyncBlock Endp
@@ -1302,6 +1313,9 @@ CreateControl   Proc far
 ;
     mov eax,1000h
     AllocateBigLinear
+    AllocatePhysical32
+    mov al,13h
+    SetPageEntry
     mov es:osp_setup_linear,edx
 ;    
     mov ax,es
