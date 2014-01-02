@@ -5348,6 +5348,88 @@ start_paging_global_done64:
 start_paging64    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           has_adapter_long_mode
+;
+;           DESCRIPTION:    Check adapter for long mode
+;
+;           PARAMETERS:     EDX     base address
+;
+;           RETURNS:        NC      Has long mode driver
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_adapter_long_mode Proc near
+    push ds
+    push ax
+    push edx
+;    
+    mov ax,flat_sel
+    mov ds,ax
+
+has_adapter_loop:
+    mov ax,[edx].typ
+    cmp ax,RdosEnd
+    je has_adapter_fail
+;    
+    cmp ax,RdosLongMode
+    je has_adapter_ok
+;    
+    add edx,[edx].len
+    jmp has_adapter_loop
+
+has_adapter_fail:
+    stc
+    jmp has_adapter_done    
+
+has_adapter_ok:
+    clc
+    
+has_adapter_done:
+    pop edx
+    pop ax
+    pop ds
+    ret
+has_adapter_long_mode Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           has_long_mode
+;
+;           DESCRIPTION:    Check for long mode driver
+;
+;           RETURNS:        NC      Has long mode
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_long_mode   Proc near
+    push ds
+    pushad
+;    
+    mov ax,system_data_sel
+    mov ds,ax
+    mov cx,ds:rom_modules
+    mov bx,OFFSET rom_adapters
+
+has_long_loop:
+    mov edx,[bx].adapter_base
+    call has_adapter_long_mode
+    jnc has_long_ok
+;    
+    add bx,SIZE adapter_typ
+    loop has_long_loop   
+;
+    stc 
+
+has_long_ok:
+    popad
+    pop ds 
+    ret
+has_long_mode   Endp  
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           start_paging
@@ -5371,8 +5453,11 @@ start_paging:
     mov eax,ds:cpu_feature_flags
     test al,40h
     jz start_paging32
+;
+    call has_long_mode
+    jc start_paging32
+;
     jmp start_paging64        
-;    jmp start_paging32
 
 code    ENDS
 
