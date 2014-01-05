@@ -58,6 +58,9 @@ int main(int argc, char **argv)
         printf("read data\r\n");
         Quiz[0] = new TQuizH31("bin\\quizh31.bin");
 
+        printf("factors\r\n");
+        Quiz[0]->WriteFactors("res\\factors.csv");
+
         printf("write no answer\r\n");
         Quiz[0]->WriteNoAnswerStats("res\\noans.txt");
 
