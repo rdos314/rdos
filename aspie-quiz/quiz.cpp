@@ -719,8 +719,11 @@ void TQuiz::WriteFactors(const char *filename)
 
     for (i = 0; i < GetQuizN(); i++)
     {
-        sprintf(str, "F%03d; %d\r\n", i, Quiz[i].MyGroup + 1);
-        file.Write(str);
+        if (Quiz[i].MyGroup != GROUP_MIXED)
+        {
+            sprintf(str, "F%03d; %d\r\n", i, Quiz[i].MyGroup + 1);
+            file.Write(str);
+        }
     }
 
 }
