@@ -58,7 +58,7 @@
 #define PCA_TYPE_ASIA           7
 #define PCA_TYPE_FINAL          8
 
-#define GROUP_COUNT             10
+#define GROUP_COUNT             11
 
 #define GROUP_ASPIE_TALENT      0
 #define GROUP_NT_TALENT         1
@@ -69,7 +69,8 @@
 #define GROUP_ASPIE_REL         6
 #define GROUP_NT_REL            7
 #define GROUP_SEX               8
-#define GROUP_MIXED             9
+#define GROUP_ASPIE_SENSORY     9
+#define GROUP_MIXED             10
 
 #define POP_TYPE_COUNT			25
 
