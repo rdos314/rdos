@@ -58,23 +58,18 @@
 #define PCA_TYPE_ASIA           7
 #define PCA_TYPE_FINAL          8
 
-#define GROUP_COUNT             15
+#define GROUP_COUNT             10
 
 #define GROUP_ASPIE_TALENT      0
 #define GROUP_NT_TALENT         1
-#define GROUP_ASPIE_OBSESSION   2
-#define GROUP_NT_OBSESSION      3
-#define GROUP_ASPIE_SOCIAL      4
-#define GROUP_NT_SOCIAL         5
-#define GROUP_ASPIE_NVC         6
-#define GROUP_NT_NVC            7
-#define GROUP_ASPIE_HUNTING     8
-#define GROUP_NT_HUNTING        9
-#define GROUP_ASPIE_SENSORY     10
-#define GROUP_NT_SENSORY        11
-#define GROUP_ENVIRONMENT       12
-#define GROUP_ASPIE_BIOLOGY     13
-#define GROUP_MIXED             14
+#define GROUP_ASPIE_SOCIAL      2
+#define GROUP_NT_SOCIAL         3
+#define GROUP_ASPIE_NVC         4
+#define GROUP_NT_NVC            5
+#define GROUP_ASPIE_REL         6
+#define GROUP_NT_REL            7
+#define GROUP_SEX               8
+#define GROUP_MIXED             9
 
 #define POP_TYPE_COUNT			25
 
@@ -259,6 +254,8 @@ class TQuiz
 public:
     TQuiz(int questions);
     ~TQuiz();
+
+    void WriteFactors(const char *filename);
 
     void WriteReferers(const char *filename);
     void WriteSumaryTable(const char *filename, int OnlyMixed);

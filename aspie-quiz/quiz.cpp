@@ -587,15 +587,6 @@ void TQuiz::Init()
 
 #ifdef ENGLISH
 
-        Group[GROUP_ASPIE_BIOLOGY].PosName = "Aspie biology";
-        Group[GROUP_ASPIE_BIOLOGY].NegName = "NT biology";
-
-        Group[GROUP_ASPIE_SENSORY].PosName = "Aspie perception";
-        Group[GROUP_ASPIE_SENSORY].NegName = "Aspie perception problem";
-
-        Group[GROUP_NT_SENSORY].PosName = "NT perception problem";
-        Group[GROUP_NT_SENSORY].NegName = "NT perception";
-
         Group[GROUP_ASPIE_TALENT].PosName = "Aspie ability";
         Group[GROUP_ASPIE_TALENT].NegName = "Aspie ability problem";
 
@@ -614,20 +605,14 @@ void TQuiz::Init()
         Group[GROUP_NT_NVC].PosName = "NT communication problem";
         Group[GROUP_NT_NVC].NegName = "NT communication";
 
-        Group[GROUP_ASPIE_OBSESSION].PosName = "Aspie compulsion";
-        Group[GROUP_ASPIE_OBSESSION].NegName = "Aspie compulsion problem";
+        Group[GROUP_ASPIE_REL].PosName = "Aspie relation";
+        Group[GROUP_ASPIE_REL].NegName = "Aspie relation problem";
 
-        Group[GROUP_ASPIE_HUNTING].PosName = "Aspie hunting";
-        Group[GROUP_ASPIE_HUNTING].NegName = "Aspie hunting problem";
+        Group[GROUP_NT_REL].PosName = "NT relation problem";
+        Group[GROUP_NT_REL].NegName = "NT relation";
 
-        Group[GROUP_NT_HUNTING].PosName = "NT hunting problem";
-        Group[GROUP_NT_HUNTING].NegName = "NT hunting";
-
-        Group[GROUP_ENVIRONMENT].PosName = "Environment problem";
-        Group[GROUP_ENVIRONMENT].NegName = "Environment";
-
-        Group[GROUP_NT_OBSESSION].PosName = "NT compulsion problem";
-        Group[GROUP_NT_OBSESSION].NegName = "NT compulsion";
+        Group[GROUP_SEX].PosName = "Aspie sexual";
+        Group[GROUP_SEX].NegName = "Aspie sexual problem";
 
         Group[GROUP_MIXED].PosName = "Aspie mixed";
         Group[GROUP_MIXED].NegName = "NT mixed";
@@ -716,6 +701,28 @@ void TQuiz::Init()
         Dx[DX_SOCIAL_PHOBIA].Name = "Social Fobi";
 
 #endif
+}
+
+/*##################  TQuiz::WriteFactors ##########################
+*   Purpose....: Export factors for STATA                                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteFactors(const char *filename)
+{
+    char str[80];
+    int i;
+    TFile file(filename, 0);
+
+
+    for (i = 0; i < GetQuizN(); i++)
+    {
+        sprintf(str, "F%03d; %d\r\n", i, Quiz[i].MyGroup + 1);
+        file.Write(str);
+    }
+
 }
 
 /*##################  TQuiz::ExportExcelCase ##########################
@@ -1186,17 +1193,6 @@ void TQuiz::WriteSetupTexts(const char *filename)
         file.Write(str);
         switch (group)
         {
-            case GROUP_ASPIE_BIOLOGY:
-                file.Write("GROUP_ASPIE_BIOLOGY");
-                break;
-
-                        case GROUP_ASPIE_SENSORY:
-                file.Write("GROUP_ASPIE_SENSORY");
-                                         break;
-
-            case GROUP_NT_SENSORY:
-                file.Write("GROUP_NT_SENSORY");
-                                         break;
 
                         case GROUP_ASPIE_TALENT:
                                 file.Write("GROUP_ASPIE_TALENT");
@@ -1222,25 +1218,18 @@ void TQuiz::WriteSetupTexts(const char *filename)
                 file.Write("GROUP_NT_NVC");
                                          break;
 
-            case GROUP_ASPIE_OBSESSION:
-                                         file.Write("GROUP_ASPIE_OBSESSION");
+            case GROUP_ASPIE_REL:
+                                         file.Write("GROUP_ASPIE_RELATION");
                 break;
 
-            case GROUP_ASPIE_HUNTING:
-                                         file.Write("GROUP_ASPIE_HUNTING");
+            case GROUP_NT_REL:
+                                         file.Write("GROUP_NT_RELATION");
                                 break;
 
-            case GROUP_ENVIRONMENT:
-                                file.Write("GROUP_ENVIRONMENT");
-                                break;
+            case GROUP_SEX:
+                                         file.Write("GROUP_ASPIE_SEX");
+                break;
 
-                        case GROUP_NT_OBSESSION:
-                                file.Write("GROUP_NT_OBSESSION");
-                                break;
-
-                        case GROUP_NT_HUNTING:
-                                file.Write("GROUP_NT_HUNTING");
-                                break;
 
                         default:
                                 file.Write("GROUP_MIXED");
@@ -8213,10 +8202,6 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 {
         switch (Group)
         {
-            case GROUP_ASPIE_BIOLOGY:
-                file->Write("ASPIE_BIOLOGY");
-                break;
-
             case GROUP_ASPIE_TALENT:
                 file->Write("ASPIE_ABILITY");
                 break;
@@ -8241,25 +8226,18 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
                 file->Write("NT_NVC");
                 break;
                     
-                case GROUP_ASPIE_OBSESSION:
-                file->Write("ASPIE_OBSESSION");
+                case GROUP_ASPIE_REL:
+                file->Write("ASPIE_RELATION");
                 break;
                     
-                case GROUP_NT_OBSESSION:
-                file->Write("NT_OBSESSION");
+                case GROUP_NT_REL:
+                file->Write("NT_RELATION");
                 break;
                     
-                case GROUP_ASPIE_HUNTING:
-                file->Write("ASPIE_HUNTING");
+                case GROUP_SEX:
+                file->Write("ASPIE_SEX");
                 break;
                     
-            case GROUP_ENVIRONMENT:
-                        file->Write("ENVIRONMENT");
-                break;
-                    
-                case GROUP_NT_HUNTING:
-                        file->Write("NT_HUNTING");
-                break;
                     
             case GROUP_MIXED:
                 file->Write("MIXED");
@@ -12146,7 +12124,7 @@ void TQuiz::WriteIntercorr(const char *filename)
                         ival = -ival;
                 }
 
-                corrlev = 0.5 * val;
+                corrlev = 0.9 * val;
 
                 sprintf(str, ".%02d)", ival);
                 file.Write(str);
@@ -12165,7 +12143,7 @@ void TQuiz::WriteIntercorr(const char *filename)
                         else
                                 CorrArr[k] = 0.0;
 
-                    if (CorrArr[k] * CorrArr[k] < 0.004)
+                    if (CorrArr[k] * CorrArr[k] < 0.04)
                         CorrArr[k] = 0.0;
 
                 }
