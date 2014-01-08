@@ -593,6 +593,12 @@ void TQuiz::Init()
         Group[GROUP_NT_TALENT].PosName = "NT ability problem";
         Group[GROUP_NT_TALENT].NegName = "NT ability";
 
+        Group[GROUP_ASPIE_EMOTION].PosName = "Aspie emotion";
+        Group[GROUP_ASPIE_EMOTION].NegName = "Aspie emotion problem";
+
+        Group[GROUP_NT_EMOTION].PosName = "NT emotion problem";
+        Group[GROUP_NT_EMOTION].NegName = "NT emotion";
+
         Group[GROUP_ASPIE_SOCIAL].PosName = "Aspie social";
         Group[GROUP_ASPIE_SOCIAL].NegName = "Aspie social problem";
 
@@ -639,72 +645,6 @@ void TQuiz::Init()
         Dx[DX_TS].Name = "Tourette";
         Dx[DX_SCHIZOPHRENIA].Name = "Schizophrenia";
         Dx[DX_SOCIAL_PHOBIA].Name = "Social Phobia";
-
-#endif
-
-#ifdef SWEDISH
-
-        Group[GROUP_ASPIE_BIOLOGY].PosName = "Aspie biologi";
-        Group[GROUP_ASPIE_BIOLOGY].NegName = "NT biologi";
-
-        Group[GROUP_ASPIE_SENSORY].PosName = "Aspie perception";
-        Group[GROUP_ASPIE_SENSORY].NegName = "Aspie perception problem";
-
-        Group[GROUP_NT_SENSORY].PosName = "NT perception problem";
-        Group[GROUP_NT_SENSORY].NegName = "NT perception";
-
-        Group[GROUP_ASPIE_TALENT].PosName = "Aspie talang";
-        Group[GROUP_ASPIE_TALENT].NegName = "Aspie talang problem";
-
-        Group[GROUP_NT_TALENT].PosName = "NT talang problem";
-        Group[GROUP_NT_TALENT].NegName = "NT talang";
-
-        Group[GROUP_ASPIE_SOCIAL].PosName = "Aspie social";
-        Group[GROUP_ASPIE_SOCIAL].NegName = "Aspie social problem";
-
-        Group[GROUP_NT_SOCIAL].PosName = "NT social problem";
-        Group[GROUP_NT_SOCIAL].NegName = "NT social";
-
-        Group[GROUP_ASPIE_NVC].PosName = "Aspie kommunikation";
-        Group[GROUP_ASPIE_NVC].NegName = "Aspie kommunikation problem";
-
-        Group[GROUP_NT_NVC].PosName = "NT kommunikation problem";
-        Group[GROUP_NT_NVC].NegName = "NT kommunikation";
-
-        Group[GROUP_ASPIE_OBSESSION].PosName = "Aspie tvång";
-        Group[GROUP_ASPIE_OBSESSION].NegName = "Aspie tvång problem";
-
-        Group[GROUP_ASPIE_HUNTING].PosName = "Aspie jakt";
-        Group[GROUP_ASPIE_HUNTING].NegName = "Aspie jakt problem";
-
-        Group[GROUP_NT_HUNTING].PosName = "NT jakt problem";
-        Group[GROUP_NT_HUNTING].NegName = "NT jakt";
-
-        Group[GROUP_ENVIRONMENT].PosName = "Miljö problem";
-        Group[GROUP_ENVIRONMENT].NegName = "Miljö";
-
-        Group[GROUP_NT_OBSESSION].PosName = "NT tvång problem";
-        Group[GROUP_NT_OBSESSION].NegName = "NT tvång";
-
-        Group[GROUP_MIXED].PosName = "Aspie blandat";
-        Group[GROUP_MIXED].NegName = "NT blandat";
-
-        Dx[DX_AUTISM].Name = "Autism";
-        Dx[DX_AS].Name = "AS/HFA/PDD";
-        Dx[DX_ADD].Name = "ADD/ADHD";
-        Dx[DX_HYPERLEXIA].Name = "Hyperlexi";
-        Dx[DX_DYSPRAXIA].Name = "Dyspraxi";
-        Dx[DX_DYSLEXIA].Name = "Dyslexi";
-        Dx[DX_DYSCALCULIA].Name = "Dykcalkuli";
-        Dx[DX_OCD].Name = "OCD";
-        Dx[DX_ODD].Name = "ODD";
-        Dx[DX_SYNAESTHESIA].Name = "Synestesi";
-        Dx[DX_PA].Name = "PA";
-        Dx[DX_DYSGRAPHIA].Name = "Dysgrafi";
-        Dx[DX_BIPOLAR].Name = "Bipolär";
-        Dx[DX_TS].Name = "Tourette";
-        Dx[DX_SCHIZOPHRENIA].Name = "Schizofreni";
-        Dx[DX_SOCIAL_PHOBIA].Name = "Social Fobi";
 
 #endif
 }
@@ -1209,6 +1149,14 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
                                 case GROUP_NT_TALENT:
                                 file.Write("GROUP_NT_TALENT");
+                                break;
+
+                        case GROUP_ASPIE_EMOTION:
+                                file.Write("GROUP_ASPIE_EMOTION");
+                                break;
+
+                                case GROUP_NT_EMOTION:
+                                file.Write("GROUP_NT_EMOTION");
                                 break;
 
                         case GROUP_ASPIE_SOCIAL:
@@ -8228,6 +8176,14 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
                     
             case GROUP_NT_TALENT:
                 file->Write("ASPIE_DISABILITY");
+                break;
+
+            case GROUP_ASPIE_EMOTION:
+                file->Write("ASPIE_EMOTION");
+                break;
+                    
+            case GROUP_NT_EMOTION:
+                file->Write("NT_EMOTION");
                 break;
                     
                 case GROUP_ASPIE_SOCIAL:
