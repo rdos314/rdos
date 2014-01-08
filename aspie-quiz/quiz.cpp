@@ -617,14 +617,17 @@ void TQuiz::Init()
         Group[GROUP_NT_REL].PosName = "NT relation problem";
         Group[GROUP_NT_REL].NegName = "NT relation";
 
-        Group[GROUP_SEX].PosName = "Aspie sexual";
-        Group[GROUP_SEX].NegName = "Aspie sexual problem";
+        Group[GROUP_ASPIE_AUTH].PosName = "Aspie authority";
+        Group[GROUP_ASPIE_AUTH].NegName = "Aspie authority problem";
 
         Group[GROUP_ASPIE_SENSORY].PosName = "Aspie sensory";
         Group[GROUP_ASPIE_SENSORY].NegName = "Aspie sensory problem";
 
         Group[GROUP_NT_SENSORY].PosName = "NT sensory problem";
         Group[GROUP_NT_SENSORY].NegName = "NT sensory";
+
+        Group[GROUP_NDNT].PosName = "Aspie";
+        Group[GROUP_NDNT].NegName = "NT";
 
         Group[GROUP_MIXED].PosName = "Aspie mixed";
         Group[GROUP_MIXED].NegName = "NT mixed";
@@ -1183,8 +1186,8 @@ void TQuiz::WriteSetupTexts(const char *filename)
                                          file.Write("GROUP_NT_RELATION");
                                 break;
 
-            case GROUP_SEX:
-                                         file.Write("GROUP_ASPIE_SEX");
+            case GROUP_ASPIE_AUTH:
+                                         file.Write("GROUP_ASPIE_AUTH");
 
                 break;
 
@@ -1195,6 +1198,11 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_NT_SENSORY:
                                          file.Write("GROUP_NT_SENSORY");
+
+                break;
+
+            case GROUP_NDNT:
+                                         file.Write("GROUP_NDNT");
 
                 break;
 
@@ -6988,7 +6996,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
                 file.Write("p <");
                   WriteFieldFooter(file);
 
-                for (grp = 0; grp < GROUP_COUNT - 1; grp++)
+                for (grp = 0; grp < GROUP_COUNT - 2; grp++)
         {
             WriteFieldHeader(file, 4);
                         sprintf(str, "G:%d", grp + 1);
@@ -7044,7 +7052,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
             while (quiz)
             {
                                 NormCorr[cross] = 0.0;
-                                for (j = 0; j < GROUP_COUNT - 1; j++)
+                                for (j = 0; j < GROUP_COUNT - 2; j++)
                                 {
                                         val = quiz->Quiz[q].Group[j].Corr;
                                         if (val >= NormCorr[cross])
@@ -7083,7 +7091,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
                         while (quiz)
             {
                 NormCorr[cross] = 0.0;
-                                for (j = 0; j < GROUP_COUNT - 1; j++)
+                                for (j = 0; j < GROUP_COUNT - 2; j++)
                                 {
                                         val = quiz->Quiz[q].Group[j].Corr;
                                         if (val >= NormCorr[cross])
@@ -7101,7 +7109,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
                         }
                         WriteFieldFooter(file);
 
-                        for (j = 0; j < GROUP_COUNT - 1; j++)
+                        for (j = 0; j < GROUP_COUNT - 2; j++)
                         {
                                 cross = 0;
                                 TopQuiz->ClearUsed(TopQuestion);
@@ -8210,8 +8218,8 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
                 file->Write("NT_RELATION");
                 break;
                     
-                case GROUP_SEX:
-                file->Write("ASPIE_SEX");
+                case GROUP_ASPIE_AUTH:
+                file->Write("ASPIE_AUTHORITY");
                 break;
                     
                     
@@ -8221,6 +8229,11 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
                                         
                 case GROUP_NT_SENSORY:
                 file->Write("NT_SENSORY");
+                break;
+                    
+                    
+                case GROUP_NDNT:
+                file->Write("ASPIE_NT");
                 break;
                     
                     
