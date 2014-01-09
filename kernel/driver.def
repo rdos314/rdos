@@ -461,6 +461,12 @@ sd_card_data_sel    EQU 0B48h
 usb_disc_code_sel   EQU 0B50h
 usb_disc_data_sel   EQU 0B58h
 
+can_code_sel        EQU 0B60h
+can_data_sel        EQU 0B68h
+
+can_com_code_sel    EQU 0B70h
+can_com_data_sel    EQU 0B78h
+
 debug_dev32_code_sel    EQU 0EF0h
 debug_dev32_data_sel    EQU 0EF8h
 

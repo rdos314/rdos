@@ -4,7 +4,8 @@ rdv C:\rdos\kernel\pcdev\floppy.rdv C:\rdos\kernel\pcdev\stdcom.rdv C:\rdos\&
 kernel\pcdev\vga.rdv C:\rdos\kernel\pcdev\apic.rdv C:\rdos\kernel\pcdev\keym&
 ap.rdv C:\rdos\kernel\pcdev\ps2keym.rdv C:\rdos\kernel\pcdev\ps2key.rdv C:\r&
 dos\kernel\pcdev\pcshut.exe C:\rdos\kernel\pcdev\pnp.rdv C:\rdos\kernel\pcde&
-v\ahci.rdv C:\rdos\kernel\pcdev\sdcard.rdv .SYMBOLIC
+v\ahci.rdv C:\rdos\kernel\pcdev\sdcard.rdv C:\rdos\kernel\pcdev\can.rdv .SYM&
+BOLIC
 
 !include C:\rdos\kernel\pcdev\pci.mk1
 !include C:\rdos\kernel\pcdev\rtc.mk1
@@ -22,3 +23,4 @@ v\ahci.rdv C:\rdos\kernel\pcdev\sdcard.rdv .SYMBOLIC
 !include C:\rdos\kernel\pcdev\pnp.mk1
 !include C:\rdos\kernel\pcdev\ahci.mk1
 !include C:\rdos\kernel\pcdev\sdcard.mk1
+!include C:\rdos\kernel\pcdev\can.mk1
