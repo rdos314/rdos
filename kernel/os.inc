@@ -3489,3 +3489,11 @@ NotifyIrData      MACRO
     OsGate notify_ir_data_nr
                         ENDM
 
+
+;;;;;;;;;; CAN com ;;;;;;;;;
+
+; OUT EAX       Number of devices
+StartCanCom      MACRO
+    OsGate start_can_com_nr
+                        ENDM
+

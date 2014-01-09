@@ -643,4 +643,6 @@ stop_disc_request_nr        = 532
 lock_usb_nr                 = 533
 unlock_usb_nr               = 534
 
+start_can_com_nr            = 535
+
 osgate_entries				= 540
