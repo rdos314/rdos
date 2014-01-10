@@ -95,7 +95,7 @@ init_can    Proc far
     mov esi,OFFSET can_thread
     mov ax,2
     mov cx,stack0_size
-    CreateThread
+;    CreateThread
 ;
     popa
     pop es
