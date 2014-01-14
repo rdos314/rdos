@@ -36,6 +36,7 @@ INCLUDE pci.inc
 
 CANCONT     = 0
 CANBITT     = 0Ch
+CANBRPE     = 18h
 
 data    SEGMENT byte public 'DATA'
 
@@ -107,6 +108,9 @@ SetupBitTiming  Proc near
     mov eax,41h
     mov es:CANCONT,eax
     mov es:CANBITT,edx
+;
+    mov eax,0
+    mov es:CANBRPE,eax
 ;
     mov eax,1
     mov es:CANCONT,eax        
