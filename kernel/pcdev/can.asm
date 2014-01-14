@@ -34,9 +34,12 @@ INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
 INCLUDE pci.inc
 
+CANCONT     = 0
+CANBITT     = 0Ch
+
 data    SEGMENT byte public 'DATA'
 
-dummy   DB ?
+can_sel DW ?
 
 data    ENDS
 
@@ -55,6 +58,157 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CanInt
+;
+;           DESCRIPTION:    CAN-bus interrupt
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CanInt  Proc far
+    retf32
+CanInt  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SetupBitTiming
+;
+;   DESCRIPTION:    Setup bit timing
+;
+;   PARAMETERS:     ES      CAN sel
+;                   AL      TSEG1
+;                   AH      TSEG2
+;                   CL      Baud divisor
+;                   BL      SJW
+;
+;   RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupBitTiming  Proc near
+    pushad
+;    
+    xor edx,edx
+    dec cl
+    mov dl,cl
+    dec bl
+    shl bl,6
+    or dl,bl
+    dec al
+    mov dh,al
+    dec ah
+    shl ah,4
+    or dh,ah
+;
+    mov eax,41h
+    mov es:CANCONT,eax
+    mov es:CANBITT,edx
+;
+    mov eax,1
+    mov es:CANCONT,eax        
+;
+    popad  
+    ret
+SetupBitTiming  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SetupDevice
+;
+;   DESCRIPTION:    Setup device
+;
+;   RETURNS:        NC      OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupDevice  Proc near
+    xor ax,ax
+    mov bh,0Ch
+    mov bl,9
+    FindPciClassAll
+    jc sdDone
+;
+    push cx
+    mov eax,1000h    
+    AllocateBigLinear
+    pop cx
+;        
+    mov cl,14h
+    ReadPciDword
+;
+    push ebx
+    push ecx
+;
+    mov si,ax
+    and si,0E00h
+    and ax,0F000h
+    mov al,67h
+    xor ebx,ebx
+    SetPageEntry
+;
+    AllocateGdt
+    or dx,si
+    mov ecx,200h
+    CreateDataSelector16
+    mov ds,bx
+;    
+    pop ecx
+    pop ebx    
+;
+    GetPciMsi
+    jc sdIrq
+
+sdMsi:
+    push cx
+    mov cx,1
+    mov al,12h
+    AllocateInts
+    pop cx
+    jc sdIrq
+;    
+    mov dl,1
+    SetupPciMsi
+;    
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET CanInt
+    RequestMsiHandler
+    jmp sdConf
+
+sdIrq:
+    GetPciIrqNr
+    mov ah,12h
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET CanInt    
+    RequestIrqHandler
+
+sdConf:
+    mov ax,ds
+    mov es,ax
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:can_sel,es
+;
+    mov al,8
+    mov ah,8
+    mov bl,4
+    mov cl,1
+    call SetupBitTiming
+    clc
+
+sdDone:
+    ret
+SetupDevice Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           can_thread
 ;
 ;           DESCRIPTION:    CAN thread
@@ -69,6 +223,10 @@ can_thread_name DB 'CAN-bus', 0
 
 can_thread:
     int 3
+    mov ax,SEG data
+    mov ds,ax
+    mov es,ds:can_sel
+    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -88,6 +246,9 @@ init_can    Proc far
     push es
     pusha
 ;
+    call SetupDevice
+    jc icDone
+;    
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -95,8 +256,9 @@ init_can    Proc far
     mov esi,OFFSET can_thread
     mov ax,2
     mov cx,stack0_size
-;    CreateThread
-;
+    CreateThread
+
+icDone:
     popa
     pop es
     pop ds
