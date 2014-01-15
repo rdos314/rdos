@@ -3490,10 +3490,27 @@ NotifyIrData      MACRO
                         ENDM
 
 
+;;;;;;;;;; CAN bus ;;;;;;;;;
+
+; IN  EDX:EAX   Data
+; IN  CL        Size (0..8)
+; IN  EBX       Identifier
+SendCanBusMsg      MACRO
+    OsGate send_can_bus_msg_nr
+                        ENDM
+                        
+; IN  ES:EDI    Hook callback
+;     IN  EDX:EAX   Data
+;     IN  CL        Size (0..8)
+;     IN  EBX       Identifier
+;     OUT NC        Message handled
+HookCanBusMsg      MACRO
+    OsGate hook_can_bus_msg_nr
+                        ENDM
+
 ;;;;;;;;;; CAN com ;;;;;;;;;
 
 ; OUT EAX       Number of devices
 StartCanCom      MACRO
     OsGate start_can_com_nr
                         ENDM
-

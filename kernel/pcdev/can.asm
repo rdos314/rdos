@@ -34,13 +34,31 @@ INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
 INCLUDE pci.inc
 
+MAX_CAN_HOOKS   = 16
+
 CANCONT     = 0
 CANBITT     = 0Ch
 CANBRPE     = 18h
 
+can_msg_struc   STRUC
+
+cm_id       DD ?
+cm_data     DD ?,?
+cm_size     DD ?
+
+can_msg_struc   ENDS
+
 data    SEGMENT byte public 'DATA'
 
-can_sel DW ?
+can_sel             DW ?
+
+can_send_section    section_typ <>
+
+can_send_used       DD ?
+can_send_arr        DB 32 * 16 DUP(?)
+
+can_hook_count      DW ?
+can_hook_arr        DD MAX_CAN_HOOKS DUP(?,?)
 
 data    ENDS
 
@@ -235,6 +253,97 @@ can_thread:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           SendCanBusMsg
+;
+;   DESCRIPTION:    Send CAN bus message
+;
+;   PARAMETERS:     EDX:EAX     Data
+;                   CL          Size (0..8)
+;                   EBX         Identifier
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_can_bus_msg_name   DB 'Send CAN Bus Message', 0
+
+send_can_bus_msg    Proc far
+    push ds
+    push ecx
+    push esi
+    push edi
+;    
+    int 3
+    mov si,SEG data
+    mov ds,si
+
+scRetry:    
+    EnterSection ds:can_send_section
+;    
+    mov esi,ds:can_send_used
+    not esi
+    bsf edi,esi
+    jnz scDo
+;
+    LeaveSection ds:can_send_section
+;
+    mov ax,10
+    WaitMilliSec
+    jmp scRetry
+
+scDo:    
+    bts ds:can_send_used,edi
+    shl edi,4
+    add edi,OFFSET can_send_arr
+;
+    movzx ecx,cl
+    mov ds:[edi].cm_id,ebx
+    mov ds:[edi].cm_data,eax
+    mov ds:[edi].cm_data+4,edx
+    mov ds:[edi].cm_size,ecx
+;
+    LeaveSection ds:can_send_section
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop ds    
+    retf32
+send_can_bus_msg    Endp    
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HookCanBusMsg
+;
+;   DESCRIPTION:    Register callback for received CAN bus messages
+;
+;   PARAMETERS:     ES:EDI      Callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_can_bus_msg_name   DB 'Hook CAN Bus Message', 0
+
+hook_can_bus_msg    Proc far
+    push ds
+    push bx
+;    
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,ds:can_hook_count
+    shl bx,3
+    add bx,OFFSET can_hook_arr
+    mov ds:[bx],edi
+    mov ds:[bx+4],es
+    inc ds:can_hook_count
+;
+    pop bx
+    pop ds    
+    retf32
+hook_can_bus_msg    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Init_can
 ;
 ;           DESCRIPTION:    inits adpater
@@ -283,10 +392,28 @@ init_can    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:can_hook_count,0
+    InitSection ds:can_send_section
+    mov ds:can_send_used,0
+;    
     mov ax,cs
     mov es,ax
+    mov ds,ax
     mov edi,OFFSET init_can
     HookInitPci
+;
+    mov esi,OFFSET send_can_bus_msg
+    mov edi,OFFSET send_can_bus_msg_name
+    mov ax,send_can_bus_msg_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET hook_can_bus_msg
+    mov edi,OFFSET hook_can_bus_msg_name
+    mov ax,hook_can_bus_msg_nr
+    RegisterOsGate
+;    
     clc
     ret
 init    ENDP
