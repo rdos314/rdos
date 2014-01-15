@@ -36,9 +36,46 @@ INCLUDE pci.inc
 
 MAX_CAN_HOOKS   = 16
 
-CANCONT     = 0
-CANBITT     = 0Ch
-CANBRPE     = 18h
+CAN_CONT     = 0
+CAN_BITT     = 0Ch
+CAN_INT      = 10h
+CAN_BRPE     = 18h
+
+IF1_CREQ    = 20h
+IF1_CMASK   = 24h
+IF1_MASK1   = 28h
+IF1_MASK2   = 2Ch
+IF1_ID1     = 30h
+IF1_ID2     = 34h
+IF1_MCONT   = 38h
+IF1_DATA1   = 3Ch
+IF1_DATA2   = 40h
+IF1_DATA3   = 44h
+IF1_DATA4   = 48h
+
+IF2_CREQ    = 80h
+IF2_CMASK   = 84h
+IF2_MASK1   = 88h
+IF2_MASK2   = 8Ch
+IF2_ID1     = 90h
+IF2_ID2     = 94h
+IF2_MCONT   = 98h
+IF2_DATA1   = 9Ch
+IF2_DATA2   = 0A0h
+IF2_DATA3   = 0A4h
+IF2_DATA4   = 0A8h
+
+CAN_TREQ1   = 100h
+CAN_TREQ2   = 104h
+
+CAN_NDATA1  = 120h
+CAN_NDATA2  = 124h
+
+CAN_IPEND1  = 140h
+CAN_IPEND2  = 144h
+
+CAN_MVAL1   = 160h
+CAN_MVAL2   = 164h
 
 can_msg_struc   STRUC
 
@@ -126,14 +163,14 @@ SetupBitTiming  Proc near
     or dh,ah
 ;
     mov eax,41h
-    mov es:CANCONT,eax
-    mov es:CANBITT,edx
+    mov es:CAN_CONT,eax
+    mov es:CAN_BITT,edx
 ;
     mov eax,0
-    mov es:CANBRPE,eax
+    mov es:CAN_BRPE,eax
 ;
     mov eax,1
-    mov es:CANCONT,eax        
+    mov es:CAN_CONT,eax        
 ;
     popad  
     ret
@@ -233,6 +270,79 @@ SetupDevice Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           WaitForIf1
+;
+;   DESCRIPTION:    Wait for IF1 to become ready
+;
+;   PARAMETERS:     ES      Can sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForIf1  Proc near
+    test es:IF1_CREQ,8000h
+    jz wf1Done
+;
+    push ax
+    mov ax,1
+    WaitMicroSec
+    pop ax 
+    jmp WaitForIf1   
+
+wf1Done:
+    ret
+WaitForIf1  Endp 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           InitReceiveMsg
+;
+;   DESCRIPTION:    Init receive message
+;
+;   PARAMETERS:     ES      Can sel
+;                   BX      Message #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitReceiveMsg  Proc near
+    push eax
+;
+    call WaitForIf1
+;    
+    mov eax,480h
+    mov es:IF1_MCONT,eax
+;
+    mov eax,0FCh
+    mov es:IF1_CMASK,eax
+;
+    mov eax,0FFFFh
+    mov es:IF1_MASK1,eax
+;
+    mov eax,3FFFh
+    mov es:IF1_MASK2,eax
+;
+    mov eax,0
+    mov es:IF1_ID1,eax
+;
+    mov eax,8000h    
+    mov es:IF1_ID2,eax
+;
+    movzx eax,bx
+    or bx,bx
+    jnz irmSend
+;
+    mov ax,20h
+
+irmSend:
+    mov es:IF1_CREQ,eax
+;    
+    pop eax
+    ret
+InitReceiveMsg  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CanThread
 ;
 ;           DESCRIPTION:    CAN thread
@@ -251,6 +361,19 @@ can_thread_pr:
     GetThread
     mov ds:can_thread,ax
     mov es,ds:can_sel
+;
+    int 3
+    mov bx,1
+
+init_rx_msg:
+    call InitReceiveMsg
+    inc bx
+    cmp bx,10h
+    jbe init_rx_msg
+;
+    mov eax,es:CAN_MVAL1
+    mov eax,es:CAN_MVAL2
+        
     WaitForSignal
 ;
     int 3
