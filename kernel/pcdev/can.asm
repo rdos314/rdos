@@ -52,6 +52,8 @@ data    SEGMENT byte public 'DATA'
 
 can_sel             DW ?
 
+can_thread          DW ?
+
 can_send_section    section_typ <>
 
 can_send_used       DD ?
@@ -231,7 +233,7 @@ SetupDevice Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           can_thread
+;           NAME:           CanThread
 ;
 ;           DESCRIPTION:    CAN thread
 ;
@@ -243,11 +245,15 @@ SetupDevice Endp
 
 can_thread_name DB 'CAN-bus', 0
 
-can_thread:
-    int 3
+can_thread_pr:
     mov ax,SEG data
     mov ds,ax
+    GetThread
+    mov ds:can_thread,ax
     mov es,ds:can_sel
+    WaitForSignal
+;
+    int 3
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -271,7 +277,6 @@ send_can_bus_msg    Proc far
     push esi
     push edi
 ;    
-    int 3
     mov si,SEG data
     mov ds,si
 
@@ -301,6 +306,8 @@ scDo:
     mov ds:[edi].cm_size,ecx
 ;
     LeaveSection ds:can_send_section
+    mov bx,ds:can_thread
+    Signal
 ;
     pop edi
     pop esi
@@ -366,7 +373,7 @@ init_can    Proc far
     mov ds,ax
     mov es,ax
     mov edi,OFFSET can_thread_name
-    mov esi,OFFSET can_thread
+    mov esi,OFFSET can_thread_pr
     mov ax,2
     mov cx,stack0_size
     CreateThread
