@@ -127,6 +127,7 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CanInt  Proc far
+    int 3
     retf32
 CanInt  Endp
 
@@ -295,6 +296,39 @@ WaitForIf1  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           InitEmptyMsg
+;
+;   DESCRIPTION:    Init empty message
+;
+;   PARAMETERS:     ES      Can sel
+;                   BX      Message #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitEmptyMsg  Proc near
+    push eax
+;
+    call WaitForIf1
+;
+    mov eax,0A8h
+    mov es:IF1_CMASK,eax
+;
+    mov eax,0
+    mov es:IF1_ID1,eax
+;
+    mov eax,0
+    mov es:IF1_ID2,eax
+;
+    movzx eax,bx
+    mov es:IF1_CREQ,eax
+;
+    pop eax
+    ret
+InitEmptyMsg    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           InitReceiveMsg
 ;
 ;   DESCRIPTION:    Init receive message
@@ -328,12 +362,6 @@ InitReceiveMsg  Proc near
     mov es:IF1_ID2,eax
 ;
     movzx eax,bx
-    or bx,bx
-    jnz irmSend
-;
-    mov ax,20h
-
-irmSend:
     mov es:IF1_CREQ,eax
 ;    
     pop eax
@@ -362,7 +390,6 @@ can_thread_pr:
     mov ds:can_thread,ax
     mov es,ds:can_sel
 ;
-    int 3
     mov bx,1
 
 init_rx_msg:
@@ -370,13 +397,21 @@ init_rx_msg:
     inc bx
     cmp bx,10h
     jbe init_rx_msg
+
+init_tx_msg:
+    call InitEmptyMsg
+    inc bx
+    cmp bx,20h
+    jbe init_tx_msg
 ;
-    mov eax,es:CAN_MVAL1
-    mov eax,es:CAN_MVAL2
-        
+    call WaitForIf1
+;    
     WaitForSignal
 ;
     int 3
+    mov eax,es:CAN_MVAL1
+    mov eax,es:CAN_MVAL2
+        
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
