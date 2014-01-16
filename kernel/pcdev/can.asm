@@ -257,10 +257,10 @@ sdConf:
     mov ds,ax
     mov ds:can_sel,es
 ;
-    mov al,8
-    mov ah,8
-    mov bl,4
-    mov cl,1
+    mov al,8    ; TSEG 1
+    mov ah,8    ; TSEG 2
+    mov bl,4    ; SJW
+    mov cl,1    ; Divisor
     call SetupBitTiming
     clc
 
