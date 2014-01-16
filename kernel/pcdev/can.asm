@@ -346,7 +346,7 @@ InitReceiveMsg  Proc near
     mov eax,480h
     mov es:IF1_MCONT,eax
 ;
-    mov eax,0FCh
+    mov eax,0F8h
     mov es:IF1_CMASK,eax
 ;
     mov eax,0FFFFh
@@ -367,6 +367,88 @@ InitReceiveMsg  Proc near
     pop eax
     ret
 InitReceiveMsg  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ReadMsg
+;
+;   DESCRIPTION:    Read message into IF1
+;
+;   PARAMETERS:     ES      Can sel
+;                   BX      Message #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadMsg  Proc near
+    push eax
+;
+    call WaitForIf1
+;
+    mov eax,7Fh
+    mov es:IF1_CMASK,eax
+;
+    movzx eax,bx
+    mov es:IF1_CREQ,eax
+;
+    call WaitForIf1
+;    
+    pop eax
+    ret
+ReadMsg  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           StartSend
+;
+;   DESCRIPTION:    Start send on IF1
+;
+;   PARAMETERS:     ES      Can sel
+;                   BX      Message #
+;                   DS:SI   Message struc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartSend  Proc near
+    push eax
+;
+    call WaitForIf1
+;
+    mov eax,0BFh
+    mov es:IF1_CMASK,eax
+;    
+    mov eax,880h
+    add eax,ds:[si].cm_size
+    mov es:IF1_MCONT,eax
+;
+    mov eax,ds:[si].cm_id
+    movzx eax,ax
+    mov es:IF1_ID1,eax
+;
+    mov eax,ds:[si].cm_id
+    shr eax,16
+    or ax,0A000h
+    mov es:IF1_ID2,eax
+;
+    movzx eax,word ptr ds:[si].cm_data
+    mov es:IF1_DATA1,eax
+;
+    movzx eax,word ptr ds:[si+2].cm_data
+    mov es:IF1_DATA2,eax
+;
+    movzx eax,word ptr ds:[si+4].cm_data
+    mov es:IF1_DATA3,eax
+;
+    movzx eax,word ptr ds:[si+6].cm_data
+    mov es:IF1_DATA4,eax
+;
+    movzx eax,bx
+    mov es:IF1_CREQ,eax
+;    
+    pop eax
+    ret
+StartSend  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -409,9 +491,15 @@ init_tx_msg:
     WaitForSignal
 ;
     int 3
-    mov eax,es:CAN_MVAL1
-    mov eax,es:CAN_MVAL2
-        
+    mov eax,0
+    mov es:CAN_CONT,eax        
+
+ctLoop:
+    int 3
+    mov bx,11h
+    mov si,OFFSET can_send_arr
+    call StartSend
+    int 3
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
