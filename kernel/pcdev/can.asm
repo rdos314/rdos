@@ -39,6 +39,7 @@ MAX_CAN_HOOKS   = 16
 CAN_CONT     = 0
 CAN_BITT     = 0Ch
 CAN_INT      = 10h
+CAN_OPT      = 14h
 CAN_BRPE     = 18h
 
 IF1_CREQ    = 20h
@@ -90,6 +91,7 @@ data    SEGMENT byte public 'DATA'
 can_sel             DW ?
 
 can_thread          DW ?
+can_int_reg         DW ?
 
 can_send_section    section_typ <>
 
@@ -127,7 +129,15 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CanInt  Proc far
-    int 3
+    mov es,ds:can_sel
+    mov eax,es:CAN_INT
+    mov ds:can_int_reg,ax
+;    
+    mov eax,0Ch
+    mov es:CAN_CONT,eax
+;
+    mov bx,ds:can_thread
+    Signal
     retf32
 CanInt  Endp
 
@@ -217,7 +227,10 @@ SetupDevice  Proc near
     or dx,si
     mov ecx,200h
     CreateDataSelector16
+    mov es,bx
+    mov bx,SEG data
     mov ds,bx
+    mov ds:can_sel,es
 ;    
     pop ecx
     pop ebx    
@@ -251,16 +264,12 @@ sdIrq:
     RequestIrqHandler
 
 sdConf:
-    mov ax,ds
-    mov es,ax
-    mov ax,SEG data
-    mov ds,ax
-    mov ds:can_sel,es
+    mov es,ds:can_sel
 ;
-    mov al,8    ; TSEG 1
-    mov ah,8    ; TSEG 2
-    mov bl,4    ; SJW
-    mov cl,1    ; Divisor
+    mov al,6    ; TSEG 1
+    mov ah,3    ; TSEG 2
+    mov bl,3    ; SJW
+    mov cl,5    ; Divisor
     call SetupBitTiming
     clc
 
@@ -491,7 +500,13 @@ init_tx_msg:
     WaitForSignal
 ;
     int 3
-    mov eax,0
+;
+; code for sampling point
+;
+;    mov eax,20h
+;    mov es:CAN_OPT,eax
+;        
+    mov eax,0Eh
     mov es:CAN_CONT,eax        
 
 ctLoop:
@@ -500,6 +515,9 @@ ctLoop:
     mov si,OFFSET can_send_arr
     call StartSend
     int 3
+    WaitForSignal
+    int 3
+    mov ax,ds:can_int_reg
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
