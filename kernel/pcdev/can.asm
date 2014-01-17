@@ -97,6 +97,7 @@ can_int_reg         DW ?
 can_send_section    section_typ <>
 
 can_send_clear      DD ?
+can_send_pend       DD ?
 can_send_used       DD ?
 can_send_arr        DB 16 * 16 DUP(?)
 
@@ -600,21 +601,43 @@ can_thread_pr:
     mov ds,ax
     GetThread
     mov ds:can_thread,ax
-    mov es,ds:can_sel
-;    
-    WaitForSignal
-;
-    int 3
+    mov es,ds:can_sel    
 
 ctLoop:
-    int 3
+    WaitForSignal
+;
+    EnterSection ds:can_send_section
+    xor eax,eax
+    xchg eax,ds:can_send_clear
+    not eax
+    and ds:can_send_used,eax
+;
+    xor eax,eax
+    xchg eax,ds:can_send_pend
+;
+    mov cx,10h
     mov bx,11h
     mov si,OFFSET can_send_arr
+
+ctSendLoop:
+    or eax,eax
+    jz ctSendOk
+;    
+    test eax,1
+    jz ctSendNext
+;
     call StartSend
-    int 3
-    WaitForSignal
-    int 3
-    mov eax,ds:can_send_clear
+
+ctSendNext:
+    shr eax,1
+    add si,16
+    inc bx
+    sub cx,1
+    jnz ctSendLoop    
+    
+ctSendOk:     
+    LeaveSection ds:can_send_section
+    jmp ctLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -633,9 +656,12 @@ send_can_bus_msg_name   DB 'Send CAN Bus Message', 0
 
 send_can_bus_msg    Proc far
     push ds
+    push ebx
     push ecx
     push esi
     push edi
+;    
+    shl ebx,18
 ;    
     mov si,SEG data
     mov ds,si
@@ -658,6 +684,7 @@ scRetry:
 
 scDo:    
     bts ds:can_send_used,edi
+    bts ds:can_send_pend,edi
     shl edi,4
     add edi,OFFSET can_send_arr
 ;
@@ -674,6 +701,7 @@ scDo:
     pop edi
     pop esi
     pop ecx
+    pop ebx
     pop ds    
     retf32
 send_can_bus_msg    Endp    
@@ -767,6 +795,7 @@ init    PROC far
     InitSection ds:can_send_section
     mov ds:can_send_used,0
     mov ds:can_send_clear,0
+    mov ds:can_send_pend,0
 ;    
     mov ax,cs
     mov es,ax
