@@ -171,6 +171,33 @@ ClearTxMsg  Proc near
     call WaitForIf2    
     ret
 ClearTxMsg    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ReadTxMsg
+;
+;   DESCRIPTION:    Read message into IF2
+;
+;   PARAMETERS:     ES      Can sel
+;                   BX      Message #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadTxMsg  Proc near
+    push eax
+;
+    mov eax,7Fh
+    mov es:IF2_CMASK,eax
+;
+    movzx eax,bx
+    mov es:IF2_CREQ,eax
+;
+    call WaitForIf2
+;    
+    pop eax
+    ret
+ReadTxMsg  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -346,16 +373,16 @@ InitReceiveMsg  Proc near
 ;
     call WaitForIf1
 ;    
-    mov eax,480h
+    mov eax,1480h
     mov es:IF1_MCONT,eax
 ;
     mov eax,0F8h
     mov es:IF1_CMASK,eax
 ;
-    mov eax,0FFFFh
+    mov eax,0
     mov es:IF1_MASK1,eax
 ;
-    mov eax,3FFFh
+    mov eax,0
     mov es:IF1_MASK2,eax
 ;
     mov eax,0
@@ -605,7 +632,21 @@ can_thread_pr:
 
 ctLoop:
     WaitForSignal
+    mov bx,ds:can_int_reg
+    or bx,bx
+    jz ctTx
 ;
+    int 3
+    call ReadMsg    
+;    
+    mov eax,es:IF1_ID2
+    test ax,8000h
+    jz ctTx
+;
+    and ax,1FFFh
+    shr ax,2    
+
+ctTx:
     EnterSection ds:can_send_section
     xor eax,eax
     xchg eax,ds:can_send_clear
@@ -678,7 +719,7 @@ scRetry:
 ;
     LeaveSection ds:can_send_section
 ;
-    mov ax,10
+    mov ax,1
     WaitMilliSec
     jmp scRetry
 
