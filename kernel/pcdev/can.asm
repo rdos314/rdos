@@ -37,6 +37,7 @@ INCLUDE pci.inc
 MAX_CAN_HOOKS   = 16
 
 CAN_CONT     = 0
+CAN_STAT     = 4
 CAN_BITT     = 0Ch
 CAN_INT      = 10h
 CAN_OPT      = 14h
@@ -95,8 +96,9 @@ can_int_reg         DW ?
 
 can_send_section    section_typ <>
 
+can_send_clear      DD ?
 can_send_used       DD ?
-can_send_arr        DB 32 * 16 DUP(?)
+can_send_arr        DB 16 * 16 DUP(?)
 
 can_hook_count      DW ?
 can_hook_arr        DD MAX_CAN_HOOKS DUP(?,?)
@@ -118,6 +120,60 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           WaitForIf2
+;
+;   DESCRIPTION:    Wait for IF2 to become ready
+;
+;   PARAMETERS:     ES      Can sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForIf2  Proc near
+    test word ptr es:IF2_CREQ,8000h
+    jz wf2Done
+;
+    pause
+    jmp WaitForIf2
+
+wf2Done:
+    ret
+WaitForIf2  Endp 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ClearTxMsg
+;
+;   DESCRIPTION:    Clear TX buf
+;
+;   PARAMETERS:     ES      Can sel
+;                   BX      Message #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearTxMsg  Proc near
+    mov eax,0B8h
+    mov es:IF2_CMASK,eax
+;
+    mov eax,0
+    mov es:IF2_ID1,eax
+;
+    mov eax,0
+    mov es:IF2_ID2,eax
+;
+    mov eax,0
+    mov es:IF2_MCONT,eax
+;
+    movzx eax,bx
+    mov es:IF2_CREQ,eax
+;
+    call WaitForIf2    
+    ret
+ClearTxMsg    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CanInt
 ;
 ;           DESCRIPTION:    CAN-bus interrupt
@@ -130,14 +186,41 @@ code    SEGMENT byte public use16 'CODE'
 
 CanInt  Proc far
     mov es,ds:can_sel
+
+ciLoop:    
     mov eax,es:CAN_INT
-    mov ds:can_int_reg,ax
+    test ax,8000h
+    jz ciReg
+
+ciStatus:
+    mov eax,es:CAN_STAT
+    test ax,20h
+    jnz ciSignal    
+    jmp ciLoop
+    
+ciReg:
+    or eax,eax
+    jz ciDone
 ;    
+    mov ebx,eax
+    cmp ebx,10h
+    jbe ciRec
+;
+    call ClearTxMsg
+    sub ebx,11h
+    lock bts ds:can_send_clear,ebx
+    jmp ciSignal
+
+ciRec:
+    mov ds:can_int_reg,ax
     mov eax,0Ch
     mov es:CAN_CONT,eax
-;
+
+ciSignal:
     mov bx,ds:can_thread
     Signal
+
+ciDone:    
     retf32
 CanInt  Endp
 
@@ -186,6 +269,140 @@ SetupBitTiming  Proc near
     popad  
     ret
 SetupBitTiming  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           WaitForIf1
+;
+;   DESCRIPTION:    Wait for IF1 to become ready
+;
+;   PARAMETERS:     ES      Can sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForIf1  Proc near
+    test word ptr es:IF1_CREQ,8000h
+    jz wf1Done
+;
+    pause
+    jmp WaitForIf1   
+
+wf1Done:
+    ret
+WaitForIf1  Endp 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           InitEmptyMsg
+;
+;   DESCRIPTION:    Init empty message
+;
+;   PARAMETERS:     ES      Can sel
+;                   BX      Message #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitEmptyMsg  Proc near
+    push eax
+;
+    call WaitForIf1
+;
+    mov eax,0B8h
+    mov es:IF1_CMASK,eax
+;
+    mov eax,0
+    mov es:IF1_ID1,eax
+;
+    mov eax,0
+    mov es:IF1_ID2,eax
+;
+    mov eax,0
+    mov es:IF1_MCONT,eax
+;
+    movzx eax,bx
+    mov es:IF1_CREQ,eax
+;
+    pop eax
+    ret
+InitEmptyMsg    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           InitReceiveMsg
+;
+;   DESCRIPTION:    Init receive message
+;
+;   PARAMETERS:     ES      Can sel
+;                   BX      Message #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitReceiveMsg  Proc near
+    push eax
+;
+    call WaitForIf1
+;    
+    mov eax,480h
+    mov es:IF1_MCONT,eax
+;
+    mov eax,0F8h
+    mov es:IF1_CMASK,eax
+;
+    mov eax,0FFFFh
+    mov es:IF1_MASK1,eax
+;
+    mov eax,3FFFh
+    mov es:IF1_MASK2,eax
+;
+    mov eax,0
+    mov es:IF1_ID1,eax
+;
+    mov eax,8000h    
+    mov es:IF1_ID2,eax
+;
+    movzx eax,bx
+    mov es:IF1_CREQ,eax
+;    
+    pop eax
+    ret
+InitReceiveMsg  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           InitMsg
+;
+;   DESCRIPTION:    Init msg buffers
+;
+;   PARAMETERS:     ES      CAN sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitMsg  Proc near
+    push bx
+;
+    mov bx,1
+
+init_rx_msg:
+    call InitReceiveMsg
+    inc bx
+    cmp bx,10h
+    jbe init_rx_msg
+
+init_tx_msg:
+    call InitEmptyMsg
+    inc bx
+    cmp bx,20h
+    jbe init_tx_msg
+;
+    call WaitForIf1
+;
+    pop bx
+    ret
+InitMsg Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -271,111 +488,15 @@ sdConf:
     mov bl,3    ; SJW
     mov cl,5    ; Divisor
     call SetupBitTiming
+    call InitMsg
+;    
+    mov eax,0Eh
+    mov es:CAN_CONT,eax        
     clc
 
 sdDone:
     ret
 SetupDevice Endp   
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           WaitForIf1
-;
-;   DESCRIPTION:    Wait for IF1 to become ready
-;
-;   PARAMETERS:     ES      Can sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WaitForIf1  Proc near
-    test es:IF1_CREQ,8000h
-    jz wf1Done
-;
-    push ax
-    mov ax,1
-    WaitMicroSec
-    pop ax 
-    jmp WaitForIf1   
-
-wf1Done:
-    ret
-WaitForIf1  Endp 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           InitEmptyMsg
-;
-;   DESCRIPTION:    Init empty message
-;
-;   PARAMETERS:     ES      Can sel
-;                   BX      Message #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitEmptyMsg  Proc near
-    push eax
-;
-    call WaitForIf1
-;
-    mov eax,0A8h
-    mov es:IF1_CMASK,eax
-;
-    mov eax,0
-    mov es:IF1_ID1,eax
-;
-    mov eax,0
-    mov es:IF1_ID2,eax
-;
-    movzx eax,bx
-    mov es:IF1_CREQ,eax
-;
-    pop eax
-    ret
-InitEmptyMsg    Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           InitReceiveMsg
-;
-;   DESCRIPTION:    Init receive message
-;
-;   PARAMETERS:     ES      Can sel
-;                   BX      Message #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitReceiveMsg  Proc near
-    push eax
-;
-    call WaitForIf1
-;    
-    mov eax,480h
-    mov es:IF1_MCONT,eax
-;
-    mov eax,0F8h
-    mov es:IF1_CMASK,eax
-;
-    mov eax,0FFFFh
-    mov es:IF1_MASK1,eax
-;
-    mov eax,3FFFh
-    mov es:IF1_MASK2,eax
-;
-    mov eax,0
-    mov es:IF1_ID1,eax
-;
-    mov eax,8000h    
-    mov es:IF1_ID2,eax
-;
-    movzx eax,bx
-    mov es:IF1_CREQ,eax
-;    
-    pop eax
-    ret
-InitReceiveMsg  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -480,34 +601,10 @@ can_thread_pr:
     GetThread
     mov ds:can_thread,ax
     mov es,ds:can_sel
-;
-    mov bx,1
-
-init_rx_msg:
-    call InitReceiveMsg
-    inc bx
-    cmp bx,10h
-    jbe init_rx_msg
-
-init_tx_msg:
-    call InitEmptyMsg
-    inc bx
-    cmp bx,20h
-    jbe init_tx_msg
-;
-    call WaitForIf1
 ;    
     WaitForSignal
 ;
     int 3
-;
-; code for sampling point
-;
-;    mov eax,20h
-;    mov es:CAN_OPT,eax
-;        
-    mov eax,0Eh
-    mov es:CAN_CONT,eax        
 
 ctLoop:
     int 3
@@ -517,8 +614,7 @@ ctLoop:
     int 3
     WaitForSignal
     int 3
-    mov ax,ds:can_int_reg
-    
+    mov eax,ds:can_send_clear
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -550,7 +646,9 @@ scRetry:
     mov esi,ds:can_send_used
     not esi
     bsf edi,esi
-    jnz scDo
+;
+    cmp edi,10h
+    jb scDo
 ;
     LeaveSection ds:can_send_section
 ;
@@ -668,6 +766,7 @@ init    PROC far
     mov ds:can_hook_count,0
     InitSection ds:can_send_section
     mov ds:can_send_used,0
+    mov ds:can_send_clear,0
 ;    
     mov ax,cs
     mov es,ax
