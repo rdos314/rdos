@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# h31.cpp
-# Analyze H31
+# je1.cpp
+# Analyze JE1
 #
 ########################################################################*/
 #include <stdio.h>
@@ -31,7 +31,7 @@
 #include <math.h>
 
 #include "file.h"
-#include "quizh31.h"
+#include "quizje1.h"
 
 #include "pop.h"
 
@@ -41,7 +41,7 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-TQuizH31 *Quiz[50];
+TQuizJE1 *Quiz[50];
 
 /*##################  main ##########################
 *   Purpose....: Program entry-point                                                            #
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
         int g;
         
         printf("read data\r\n");
-        Quiz[0] = new TQuizH31("bin\\quizh31.bin");
+        Quiz[0] = new TQuizJE1("bin\\quizje1.bin");
 
         printf("factors\r\n");
         Quiz[0]->WriteFactors("res\\factors.csv");
@@ -65,18 +65,18 @@ int main(int argc, char **argv)
         Quiz[0]->WriteNoAnswerStats("res\\noans.txt");
 
         printf("import\r\n");
-        Quiz[0]->ImportMvsp("pca-done\\allH31.txt", PCA_TYPE_ALL);
-        Quiz[0]->ImportMvsp("pca-done\\maleH31.txt", PCA_TYPE_MALE);
-        Quiz[0]->ImportMvsp("pca-done\\femH31.txt", PCA_TYPE_FEMALE);
-        Quiz[0]->ImportMvspAspie("pca-done\\grpH31.txt");
+        Quiz[0]->ImportMvsp("pca-done\\allJE1.txt", PCA_TYPE_ALL);
+        Quiz[0]->ImportMvsp("pca-done\\maleJE1.txt", PCA_TYPE_MALE);
+        Quiz[0]->ImportMvsp("pca-done\\femJE1.txt", PCA_TYPE_FEMALE);
+        Quiz[0]->ImportMvspAspie("pca-done\\grpJE1.txt");
 
         printf("details\r\n");
 
-         Quiz[0]->WriteSumaryTable("res\\quizh31.htm", FALSE);
+         Quiz[0]->WriteSumaryTable("res\\quizje1.htm", FALSE);
 
         printf("rel\r\n");
 
-         Quiz[0]->WriteIntercorr("res\\relh31.htm");
+         Quiz[0]->WriteIntercorr("res\\relje1.htm");
 
      printf("calc global\r\n");
         Quiz[0]->CalcGlobal();

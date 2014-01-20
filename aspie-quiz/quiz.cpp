@@ -4621,8 +4621,24 @@ void TQuiz::ImportMvspAspie(const char *filename)
 
         while (size = infile.Read(buf, 4096))
         {
+            rowstr = strstr(buf, "variable loadings");
+            if (rowstr)
+            {
+                pos += (rowstr - buf);
+                break;
+            }
+            else
+                pos += MAX_IN_ROW - 25;
+
+            infile.SetPos(pos);
+        }
+        
+        infile.SetPos(pos);
+
+        while (size = infile.Read(buf, 4096))
+        {
                 buf[size] = 0;
-                rowstr = strstr(buf, "#");
+                rowstr = strstr(buf, "C");
                 if (rowstr)
                 {
                         rowstr++;
@@ -11345,6 +11361,55 @@ void TQuiz::WritePhpGlobalQuestions(const char *filename)
                 }
             }
         } 
+    }
+}
+
+/*##################  TQuiz::WriteCsvGroupWeighting ##########################
+*   Purpose....: Write average group correlation in CSV-format for current quiz                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteCsvGroupWeighting(const char *filename)
+{
+    long double val;
+    int grp;
+    int dx;
+    int q;
+    int GlobalId;
+    int ival;
+    char str[80];
+    TFile file(filename, 0);
+
+    for (q = 0; q < N; q++)
+    {
+        GlobalId = GetGlobalId(q);
+
+        for (grp = 0; grp < GROUP_COUNT - 1; grp++)
+        {
+            if (GlobalAxisCount[GlobalId][grp])
+            {
+                val = GlobalAxisSum[GlobalId][grp] / GlobalAxisCount[GlobalId][grp];
+                if (val < 0)
+                    val = 0;
+            }
+            else
+                val = 0;
+
+            if (Quiz[q].Reverse)
+                val = -val;
+
+            ival = round(100.0 * val);
+
+            sprintf(str, "%d", ival);
+            file.Write(str);
+
+            if (grp != GROUP_COUNT - 2)
+                file.Write(", ");
+
+        }
+        file.Write("\r\n");
     }
 }
 
