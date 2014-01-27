@@ -310,6 +310,7 @@ void TQuizJE2::SetupTexts()
   Quiz[115].Reverse = TRUE;
   Quiz[124].Reverse = TRUE;
   Quiz[125].Reverse = TRUE;
+  Quiz[127].Reverse = TRUE;
   Quiz[128].Reverse = TRUE;
   Quiz[145].Reverse = TRUE;
   Quiz[146].Reverse = TRUE;
@@ -414,7 +415,7 @@ void TQuizJE2::SetupTexts()
   Quiz[93].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[94].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[95].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[96].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[96].MyGroup = GROUP_MIXED;
   Quiz[97].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[98].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[99].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -434,12 +435,12 @@ void TQuizJE2::SetupTexts()
   Quiz[113].MyGroup = GROUP_NT_SOCIAL;
   Quiz[114].MyGroup = GROUP_NT_SOCIAL;
   Quiz[115].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[116].MyGroup = GROUP_ASPIE_ATTACH;
+  Quiz[116].MyGroup = GROUP_NDNT;
   Quiz[117].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[118].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[119].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[120].MyGroup = GROUP_ASPIE_ATTACH;
-  Quiz[121].MyGroup = GROUP_ASPIE_ATTACH;
+  Quiz[121].MyGroup = GROUP_MIXED;
   Quiz[122].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[123].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[124].MyGroup = GROUP_NT_ATTACH;
