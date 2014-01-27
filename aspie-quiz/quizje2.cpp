@@ -399,10 +399,10 @@ void TQuizJE2::SetupTexts()
   Quiz[78].MyGroup = GROUP_NT_NVC;
   Quiz[79].MyGroup = GROUP_NT_NVC;
   Quiz[80].MyGroup = GROUP_NT_NVC;
-  Quiz[81].MyGroup = GROUP_ASPIE_CONTACT;
-  Quiz[82].MyGroup = GROUP_ASPIE_CONTACT;
+  Quiz[81].MyGroup = GROUP_MIXED;
+  Quiz[82].MyGroup = GROUP_MIXED;
   Quiz[83].MyGroup = GROUP_ASPIE_CONTACT;
-  Quiz[84].MyGroup = GROUP_ASPIE_CONTACT;
+  Quiz[84].MyGroup = GROUP_MIXED;
   Quiz[85].MyGroup = GROUP_ASPIE_CONTACT;
   Quiz[86].MyGroup = GROUP_NT_CONTACT;
   Quiz[87].MyGroup = GROUP_NT_CONTACT;
@@ -445,7 +445,7 @@ void TQuizJE2::SetupTexts()
   Quiz[124].MyGroup = GROUP_NT_ATTACH;
   Quiz[125].MyGroup = GROUP_NT_ATTACH;
   Quiz[126].MyGroup = GROUP_NT_ATTACH;
-  Quiz[127].MyGroup = GROUP_NT_ATTACH;
+  Quiz[127].MyGroup = GROUP_MIXED;
   Quiz[128].MyGroup = GROUP_NT_ATTACH;
   
   Quiz[129].MyGroup = GROUP_MIXED;
@@ -471,15 +471,15 @@ void TQuizJE2::SetupTexts()
   Quiz[148].MyGroup = GROUP_MIXED;
   Quiz[149].MyGroup = GROUP_MIXED;
 
-  Quiz[150].MyGroup = GROUP_MIXED;
+  Quiz[150].MyGroup = GROUP_ASPIE_CONTACT;
   Quiz[151].MyGroup = GROUP_MIXED;
-  Quiz[152].MyGroup = GROUP_MIXED;
-  Quiz[153].MyGroup = GROUP_MIXED;
-  Quiz[154].MyGroup = GROUP_MIXED;
-  Quiz[155].MyGroup = GROUP_MIXED;
+  Quiz[152].MyGroup = GROUP_ASPIE_CONTACT;
+  Quiz[153].MyGroup = GROUP_ASPIE_ATTACH;
+  Quiz[154].MyGroup = GROUP_ASPIE_ATTACH;
+  Quiz[155].MyGroup = GROUP_ASPIE_CONTACT;
   Quiz[156].MyGroup = GROUP_MIXED;
-  Quiz[157].MyGroup = GROUP_MIXED;
-  Quiz[158].MyGroup = GROUP_MIXED;
+  Quiz[157].MyGroup = GROUP_ASPIE_ATTACH;
+  Quiz[158].MyGroup = GROUP_ASPIE_CONTACT;
 
  Quiz[0].Text = "Do you become frustrated if an activity that is important to you gets interrupted?";
  Quiz[1].Text = "Before doing something or going somewhere, do you need to have a picture in your mind of what's going to happen so as to be able to prepare yourself mentally first?";
