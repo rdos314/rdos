@@ -3498,14 +3498,32 @@ NotifyIrData      MACRO
 SendCanBusMsg      MACRO
     OsGate send_can_bus_msg_nr
                         ENDM
-                        
+
 ; IN  ES:EDI    Hook callback
 ;     IN  EDX:EAX   Data
 ;     IN  CL        Size (0..8)
 ;     IN  EBX       Identifier
-;     OUT NC        Message handled
-HookCanBusMsg      MACRO
-    OsGate hook_can_bus_msg_nr
+;     OUT NC        Handled
+HookCanGenericBusMsg      MACRO
+    OsGate hook_can_gen_bus_msg_nr
+                        ENDM
+
+; IN  EAX       Identifier 
+; IN  EDX       Identifier mask
+; IN  DS        Param
+; IN  ES:EDI    Hook callback
+;     IN  DS        Param
+;     IN  EDX:EAX   Data
+;     IN  CL        Size (0..8)
+;     IN  EBX       Identifier
+; OUT BX        Buffer #
+CreateCanIdHook      MACRO
+    OsGate create_can_id_hook_nr
+                        ENDM
+
+; IN  BX        Buffer #
+DeleteCanIdHook      MACRO
+    OsGate delete_can_id_hook_nr
                         ENDM
 
 ;;;;;;;;;; CAN com ;;;;;;;;;

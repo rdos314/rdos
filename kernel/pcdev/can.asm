@@ -34,7 +34,7 @@ INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
 INCLUDE pci.inc
 
-MAX_CAN_HOOKS   = 16
+MAX_GEN_HOOK_COUNT  = 16
 
 CAN_CONT     = 0
 CAN_STAT     = 4
@@ -87,22 +87,38 @@ cm_size     DD ?
 
 can_msg_struc   ENDS
 
+id_hook_struc   STRUC
+
+ih_id       DD ?
+ih_mask     DD ?
+ih_offset   DD ?
+ih_sel      DW ?
+ih_param    DW ?
+
+id_hook_struc   ENDS
+
 data    SEGMENT byte public 'DATA'
 
-can_sel             DW ?
+can_sel                 DW ?
 
-can_thread          DW ?
-can_int_reg         DW ?
+can_thread              DW ?
+can_int_reg             DW ?
 
-can_send_section    section_typ <>
+can_send_section        section_typ <>
+can_rec_section         section_typ <>
 
-can_send_clear      DD ?
-can_send_pend       DD ?
-can_send_used       DD ?
-can_send_arr        DB 16 * 16 DUP(?)
+can_send_clear          DD ?
+can_send_pend           DD ?
+can_send_used           DD ?
+can_send_arr            DB 16 * 16 DUP(?)
 
-can_hook_count      DW ?
-can_hook_arr        DD MAX_CAN_HOOKS DUP(?,?)
+can_rec_pend            DD ?
+can_rec_arr             DB 16 * 16 DUP(?)
+
+can_id_hook_arr         DD 15 * 4 DUP(?)
+
+can_gen_hook_count      DW ?
+can_gen_hook_arr        DD MAX_GEN_HOOK_COUNT DUP(?,?)
 
 data    ENDS
 
@@ -198,6 +214,65 @@ ReadTxMsg  Proc near
     pop eax
     ret
 ReadTxMsg  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ReadRxMsg
+;
+;   DESCRIPTION:    Read rx Msg into buffer
+;
+;   PARAMETERS:     ES      Can sel
+;                   BX      Message #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadRxMsg  Proc near
+    mov eax,7Fh
+    mov es:IF2_CMASK,eax
+;
+    movzx eax,bx
+    mov es:IF2_CREQ,eax
+;
+    call WaitForIf2
+;
+    dec bx
+    mov cl,bl
+    mov eax,1
+    shl eax,cl
+    lock or ds:can_rec_pend,eax
+;
+    shl bx,4
+    add bx,OFFSET can_rec_arr
+;
+    mov ax,es:IF2_ID2
+    and ax,1FFFh
+    shl eax,16
+    mov ax,es:IF2_ID1
+    mov ds:[bx].cm_id,eax
+;
+    mov ax,es:IF2_DATA2
+    shl eax,16
+    mov ax,es:IF2_DATA1
+    mov ds:[bx].cm_data,eax
+;
+    mov ax,es:IF2_DATA4
+    shl eax,16
+    mov ax,es:IF2_DATA3
+    mov ds:[bx].cm_data+4,eax
+;    
+    mov al,es:IF2_MCONT
+    and al,0Fh
+    test al,8
+    jz rmLenOk
+;
+    mov al,8
+
+rmLenOk:
+    movzx eax,al
+    mov ds:[bx].cm_size,eax   
+    ret
+ReadRxMsg  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -241,6 +316,9 @@ ciReg:
 
 ciRec:
     mov ds:can_int_reg,ax
+    mov bx,ax
+    call ReadRxMsg
+;    
     mov eax,0Ch
     mov es:CAN_CONT,eax
 
@@ -323,16 +401,16 @@ WaitForIf1  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           InitEmptyMsg
+;   NAME:           ClearIdFilter
 ;
-;   DESCRIPTION:    Init empty message
+;   DESCRIPTION:    Clear ID filter (empty msg)
 ;
 ;   PARAMETERS:     ES      Can sel
 ;                   BX      Message #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InitEmptyMsg  Proc near
+ClearIdFilter  Proc near
     push eax
 ;
     call WaitForIf1
@@ -354,14 +432,69 @@ InitEmptyMsg  Proc near
 ;
     pop eax
     ret
-InitEmptyMsg    Endp
+ClearIdFilter    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SetupIdFilter
+;
+;   DESCRIPTION:    Setup ID filter
+;
+;   PARAMETERS:     ES      Can sel
+;                   BX      Message #
+;                   EAX     ID
+;                   EDX     Mask
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupIdFilter  Proc near
+    push eax
+    push esi
+    push edi
+;
+    mov esi,eax
+    mov edi,edx
+    call WaitForIf1
+;    
+    mov eax,1480h
+    mov es:IF1_MCONT,eax
+;
+    mov eax,0F8h
+    mov es:IF1_CMASK,eax
+;
+    movzx eax,di
+    mov es:IF1_MASK1,eax
+;
+    mov eax,edi
+    shr eax,16
+    and eax,1FFFh
+    mov es:IF1_MASK2,eax
+;
+    movzx eax,si
+    mov es:IF1_ID1,eax
+;
+    mov eax,esi
+    shr eax,16
+    and eax,1FFFh
+    or ax,8000h
+    mov es:IF1_ID2,eax
+;
+    movzx eax,bx
+    mov es:IF1_CREQ,eax
+;    
+    pop edi
+    pop esi
+    pop eax
+    ret
+SetupIdFilter    Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;   NAME:           InitReceiveMsg
 ;
-;   DESCRIPTION:    Init receive message
+;   DESCRIPTION:    Init receive msg
 ;
 ;   PARAMETERS:     ES      Can sel
 ;                   BX      Message #
@@ -414,14 +547,18 @@ InitMsg  Proc near
 ;
     mov bx,1
 
-init_rx_msg:
-    call InitReceiveMsg
+init_id_msg:
+    call ClearIdFilter
     inc bx
     cmp bx,10h
-    jbe init_rx_msg
+    jb init_id_msg
+;        
+    call InitReceiveMsg
+    inc bx
+;
 
 init_tx_msg:
-    call InitEmptyMsg
+    call ClearIdFilter
     inc bx
     cmp bx,20h
     jbe init_tx_msg
@@ -529,35 +666,6 @@ SetupDevice Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           ReadMsg
-;
-;   DESCRIPTION:    Read message into IF1
-;
-;   PARAMETERS:     ES      Can sel
-;                   BX      Message #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadMsg  Proc near
-    push eax
-;
-    call WaitForIf1
-;
-    mov eax,7Fh
-    mov es:IF1_CMASK,eax
-;
-    movzx eax,bx
-    mov es:IF1_CREQ,eax
-;
-    call WaitForIf1
-;    
-    pop eax
-    ret
-ReadMsg  Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;   NAME:           StartSend
 ;
 ;   DESCRIPTION:    Start send on IF1
@@ -607,6 +715,63 @@ StartSend  Proc near
     pop eax
     ret
 StartSend  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HandleReceive
+;
+;   DESCRIPTION:    Handle receive
+;
+;   PARAMETERS:     ES      Can sel
+;                   BX      Message #
+;                   DS:SI   Message struc
+;                   EDX     Message mask
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleReceive   Proc near
+    push eax
+    push di
+;    
+    mov di,si
+    sub di,OFFSET can_rec_arr
+    add di,OFFSET can_id_hook_arr
+    mov ax,ds:[di].ih_sel
+    or ax,ax
+    jz hrClear    
+;  
+    push ds
+    push es 
+    push ebx     
+    push ecx
+    push edx
+;    
+    mov ax,ds
+    mov es,ax
+    mov ds,es:[di].ih_param
+    mov eax,es:[si].cm_data
+    mov edx,es:[si].cm_data+4
+    mov ecx,es:[si].cm_size
+    mov ebx,es:[si].cm_id
+    call fword ptr es:[di].ih_offset
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
+
+hrClear:    
+    mov eax,edx
+    not eax
+    lock and ds:can_rec_pend,eax
+;
+    pop di
+    pop eax
+    ret
+HandleReceive   Endp    
+    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -632,19 +797,27 @@ can_thread_pr:
 
 ctLoop:
     WaitForSignal
-    mov bx,ds:can_int_reg
-    or bx,bx
+    mov eax,ds:can_rec_pend
+    or eax,eax
     jz ctTx
 ;
-    int 3
-    call ReadMsg    
-;    
-    mov eax,es:IF1_ID2
-    test ax,8000h
-    jz ctTx
+    mov si,OFFSET can_rec_arr
+    mov bx,1
+    mov cx,10h
+    mov edx,1
+
+ctRecLoop:
+    mov eax,ds:can_rec_pend
+    test eax,edx
+    jz ctRecNext
 ;
-    and ax,1FFFh
-    shr ax,2    
+    call HandleReceive    
+
+ctRecNext:    
+    inc bx
+    add si,16
+    shl edx,1
+    loop ctRecLoop
 
 ctTx:
     EnterSection ds:can_send_section
@@ -702,8 +875,6 @@ send_can_bus_msg    Proc far
     push esi
     push edi
 ;    
-    shl ebx,18
-;    
     mov si,SEG data
     mov ds,si
 
@@ -747,7 +918,6 @@ scDo:
     retf32
 send_can_bus_msg    Endp    
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -759,25 +929,150 @@ send_can_bus_msg    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-hook_can_bus_msg_name   DB 'Hook CAN Bus Message', 0
+hook_gen_bus_msg_name   DB 'Hook General CAN Bus Message', 0
 
-hook_can_bus_msg    Proc far
+hook_gen_bus_msg    Proc far
     push ds
     push bx
 ;    
     mov bx,SEG data
     mov ds,bx
-    mov bx,ds:can_hook_count
+    mov bx,ds:can_gen_hook_count
     shl bx,3
-    add bx,OFFSET can_hook_arr
+    add bx,OFFSET can_gen_hook_arr
     mov ds:[bx],edi
     mov ds:[bx+4],es
-    inc ds:can_hook_count
+    inc ds:can_gen_hook_count
 ;
     pop bx
     pop ds    
     retf32
-hook_can_bus_msg    Endp    
+hook_gen_bus_msg    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CreateCanIdHook
+;
+;   DESCRIPTION:    Create an id-based filter hook
+;
+;   PARAMETERS:     EAX       Identifier 
+;                   EDX       Identifier mask
+;                   DS        Param
+;                   ES:EDI    Hook callback
+;                       DS        Param
+;                       EDX:EAX   Data
+;                       CL        Size (0..8)
+;                       EBX       Identifier
+;
+;   RETURNS:        BX        Buffer #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_id_hook_name   DB 'Create CAN ID Hook', 0
+
+create_id_hook    Proc far
+    push ds
+    push es
+    push cx
+    push esi
+    push bp
+;    
+    mov bp,ds
+    mov bx,SEG data
+    mov ds,bx
+;
+    mov bx,OFFSET can_id_hook_arr
+    mov cx,15
+
+cihLoop:
+    mov si,ds:[bx].ih_sel
+    or si,si
+    jz cihFound
+;
+    add bx,16        
+    loop cihLoop
+;
+    stc
+    jmp cihDone
+
+cihFound:
+    EnterSection ds:can_rec_section
+    mov ds:[bx].ih_id,eax
+    mov ds:[bx].ih_mask,edx
+    mov ds:[bx].ih_param,bp
+    mov ds:[bx].ih_offset,edi
+    mov ds:[bx].ih_sel,es
+;            
+    sub bx,OFFSET can_id_hook_arr
+    shr bx,4
+    inc bx
+;
+    mov es,ds:can_sel
+    call SetupIdFilter
+    LeaveSection ds:can_rec_section    
+    clc
+    
+cihDone:
+    pop bp
+    pop esi
+    pop cx
+    pop es
+    pop ds    
+    retf32
+create_id_hook    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           DeleteCanIdHook
+;
+;   DESCRIPTION:    Delete an id-based filter hook
+;
+;   PARAMETERS:     BX        Buffer #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_id_hook_name   DB 'Delete CAN ID Hook', 0
+
+delete_id_hook    Proc far    
+    or bx,bx
+    jz dihDone
+;
+    cmp bx,15
+    jae dihDone
+;        
+    push ds
+    push es
+    push ax
+    push bx
+;    
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:can_rec_section
+    mov es,ds:can_sel
+    call ClearIdFilter
+;    
+    dec bx
+    shl bx,4
+    add bx,OFFSET can_id_hook_arr
+    mov ds:[bx].ih_id,0
+    mov ds:[bx].ih_mask,0
+    mov ds:[bx].ih_param,0
+    mov ds:[bx].ih_offset,0
+    mov ds:[bx].ih_sel,0
+;
+    LeaveSection ds:can_rec_section    
+;    
+    pop bx
+    pop ax
+    pop es
+    pop ds    
+    
+dihDone:
+    clc
+    retf32
+delete_id_hook    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -832,11 +1127,19 @@ init_can    Endp
 init    PROC far
     mov ax,SEG data
     mov ds,ax
-    mov ds:can_hook_count,0
+    mov es,ax
+    mov ds:can_gen_hook_count,0
+    InitSection ds:can_rec_section
     InitSection ds:can_send_section
     mov ds:can_send_used,0
     mov ds:can_send_clear,0
     mov ds:can_send_pend,0
+    mov ds:can_rec_pend,0
+;
+    mov di,OFFSET can_id_hook_arr
+    mov cx,4 * 15
+    xor eax,eax
+    rep stosd
 ;    
     mov ax,cs
     mov es,ax
@@ -849,9 +1152,19 @@ init    PROC far
     mov ax,send_can_bus_msg_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET hook_can_bus_msg
-    mov edi,OFFSET hook_can_bus_msg_name
-    mov ax,hook_can_bus_msg_nr
+    mov esi,OFFSET hook_gen_bus_msg
+    mov edi,OFFSET hook_gen_bus_msg_name
+    mov ax,hook_can_gen_bus_msg_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET create_id_hook
+    mov edi,OFFSET create_id_hook_name
+    mov ax,create_can_id_hook_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET delete_id_hook
+    mov edi,OFFSET delete_id_hook_name
+    mov ax,delete_can_id_hook_nr
     RegisterOsGate
 ;    
     clc

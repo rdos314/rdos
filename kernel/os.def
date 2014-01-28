@@ -646,6 +646,8 @@ unlock_usb_nr               = 534
 start_can_com_nr            = 535
 
 send_can_bus_msg_nr         = 536
-hook_can_bus_msg_nr         = 537
+hook_can_gen_bus_msg_nr     = 537
+create_can_id_hook_nr       = 538
+delete_can_id_hook_nr       = 539
 
 osgate_entries				= 540
