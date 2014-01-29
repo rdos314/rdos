@@ -318,9 +318,13 @@ ciRec:
     mov ds:can_int_reg,ax
     mov bx,ax
     call ReadRxMsg
-;    
-    mov eax,0Ch
-    mov es:CAN_CONT,eax
+;
+    mov eax,es:CAN_INT
+    test ax,8000h
+    jnz ciSignal
+;
+    or ax,ax
+    jnz ciRec    
 
 ciSignal:
     mov bx,ds:can_thread
