@@ -6,23 +6,11 @@
 
 void main()
 {
-    int i;
-    char *str[50];
-    int *param;
-    int bpp, width, height, rowsize, linear;
+    int handle;
+    int count = RdosGetMaxComPort();
 
-    RdosTestGate();
-
-    bpp = 24;
-    width = 1366;
-    height = 768;
+    handle = RdosOpenCom(count - 6, 9600, 'N', 8, 1, 0x1000, 0x1000);
     
-    RdosSetVideoMode(&bpp, &width, &height, &rowsize, &linear);
-
-    RdosTestGate();
-
-    RdosSetTextMode();
-
 
     for (;;)
         RdosWaitMilli(1000); 
