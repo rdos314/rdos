@@ -17,6 +17,9 @@ void main()
         if (RdosPollKeyboard())
         {
             ch = (char)RdosReadKeyboard();
+            if (ch == 0x1b)
+                return;
+
             serial.Write(ch);
             RdosWriteChar(ch);        
         }
