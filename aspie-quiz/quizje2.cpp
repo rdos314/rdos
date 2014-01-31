@@ -51,7 +51,7 @@
 #
 ##########################################################################*/
 TQuizJE2::TQuizJE2(const char *FileName)
-  : TQuiz(159),
+  : TQuiz(161),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -109,7 +109,7 @@ int TQuizJE2::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizJE2::GetQuizN()
 {
-    return 159;
+    return 161;
 }
 
 /*##########################################################################
@@ -642,6 +642,8 @@ void TQuizJE2::SetupTexts()
  Quiz[156].Text = "Do you only enjoy hugs from people you are attached to?";
  Quiz[157].Text = "Have people you formed strong attachments to taken advantage of you?";
  Quiz[158].Text = "Do you enjoy role playing?";
+ Quiz[159].Text = "Would you accept polyamory if you knew your partner would?";
+ Quiz[160].Text = "Do you enjoy role playing computer games?";
 
 }
 
@@ -826,7 +828,7 @@ void TQuizJE2::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 159; i++)
+    for (i = 0; i < 161; i++)
             DefineGlobalId(i, i);
 }
 
