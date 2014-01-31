@@ -33,7 +33,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\pcdev\pci.inc
 INCLUDE ..\os\net.inc
 
-RX_DESCR_COUNT = 32
+RX_DESCR_COUNT = 64
 TX_DESCR_COUNT = 32
 
 ; The EEPROM commands include the alway-set leading bit.
@@ -413,7 +413,7 @@ rrLoop:
     sub cx,1
     jnz rrLoop   
 ;
-    sub di,16
+    sub di,32
     or es:[di].rx_flags,RX_EOR
 ;
     popad
@@ -774,6 +774,8 @@ InitHardware    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ResetHardware    Proc near
+    mov ds:Isr,0
+;
     mov dx,ds:IoBase
     add dx,REG_CR
     in al,dx
@@ -798,20 +800,8 @@ rhResetWait:
 
 rhResetDone:
     pop cx
-;
-    mov dx,ds:IoBase
-    add dx,REG_9346CR
-    mov al,0C0h
-    out dx,al
-;
-    mov dx,ds:IoBase
-    add dx,REG_CCR
-    in ax,dx
-    and ax,NOT 260h
-    or al,8
-    out dx,ax 
-;
-    call ResetRxRing
+
+rhDone:    
     mov dx,ds:IoBase
     add dx,REG_RDSAR + 4
     xor eax,eax
@@ -821,7 +811,6 @@ rhResetDone:
     mov eax,ds:RxRingPhys
     out dx,eax
 ;
-    call ResetTxRing    
     mov dx,ds:IoBase
     add dx,REG_TNPDS + 4
     xor eax,eax
@@ -847,54 +836,27 @@ rhResetDone:
     out dx,al           
 ;
     mov dx,ds:IoBase
-    add dx,REG_CONFIG3
-    in al,dx
-    or al,40h
-    out dx,al
-;    
-    mov dx,ds:IoBase
-    add dx,REG_9346CR
-    mov al,0
-    out dx,al
-;    
-    mov dx,ds:IoBase
     add dx,REG_CR
     in al,dx
     or al,0Ch
     out dx,al
 ;    
     mov dx,ds:IoBase
-    add dx,REG_TCR
-    in eax,dx
-    and ax,NOT 700h
-    or ax,400h
-    out dx,eax
+    add dx,REG_ISR
+    in ax,dx
+    out dx,ax
+    xor ax,ax
+    out dx,ax
 ;
     mov dx,ds:IoBase
-    add dx,REG_RCR
-    in eax,dx
-    or eax,10000h
-    and ax,1FFFh    
-    or ax,8000h
-    and ax,NOT 700h
-    or ax,400h
-    and al,0C0h
-    or al,0Ah
-    out dx,eax
-    clc
-
-rhDone:
-    mov ds:Isr,0
-;    
-    mov dx,ds:IoBase
-    add dx,REG_PHYAR
-    mov eax,80008000h
-    out dx,eax
-;    
-    mov dx,ds:IoBase
     add dx,REG_TPPoll
-    mov al,1
+    mov al,40h
     out dx,al    
+;
+    mov ds:Isr,0
+    mov dx,ds:IoBase
+    add dx,REG_ISR
+    in ax,dx
     ret
 ResetHardware    Endp
 
@@ -1138,7 +1100,7 @@ preview_next:
     test ds:Isr,IR_FOVW OR IR_RDU
     jz preview_failed
 ;
-    int 3
+    mov ax,ds:Isr
     call ResetHardware    
 
 preview_failed:
