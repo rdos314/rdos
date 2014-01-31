@@ -7,7 +7,6 @@
 
 void main()
 {
-    int handle;
     int i;
     char ch;
     int count = RdosGetMaxComPort();
@@ -18,7 +17,7 @@ void main()
         if (RdosPollKeyboard())
         {
             ch = (char)RdosReadKeyboard();
-            RdosWriteCom(handle, ch);
+            serial.Write(ch);
             RdosWriteChar(ch);        
         }
         if (serial.WaitForChar(10))
