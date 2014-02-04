@@ -368,7 +368,7 @@ void TQuizJE2::SetupTexts()
   Quiz[46].MyGroup = GROUP_ASPIE_NVC;
   Quiz[47].MyGroup = GROUP_ASPIE_NVC;
   Quiz[48].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[49].MyGroup = GROUP_MIXED;
+  Quiz[49].MyGroup = GROUP_ASPIE_NVC;
   Quiz[50].MyGroup = GROUP_ASPIE_NVC;
   Quiz[51].MyGroup = GROUP_ASPIE_NVC;
   Quiz[52].MyGroup = GROUP_ASPIE_NVC;
@@ -401,10 +401,10 @@ void TQuizJE2::SetupTexts()
   Quiz[79].MyGroup = GROUP_NT_NVC;
   Quiz[80].MyGroup = GROUP_NT_SOCIAL;
   Quiz[81].MyGroup = GROUP_ASPIE_CONTACT;
-  Quiz[82].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[82].MyGroup = GROUP_ASPIE_CONTACT;
   Quiz[83].MyGroup = GROUP_ASPIE_CONTACT;
   Quiz[84].MyGroup = GROUP_ASPIE_CONTACT;
-  Quiz[85].MyGroup = GROUP_ASPIE_CONTACT;
+  Quiz[85].MyGroup = GROUP_MIXED;
   Quiz[86].MyGroup = GROUP_NT_SOCIAL;
   Quiz[87].MyGroup = GROUP_NT_CONTACT;
   Quiz[88].MyGroup = GROUP_NT_SOCIAL;
@@ -430,9 +430,9 @@ void TQuizJE2::SetupTexts()
   Quiz[108].MyGroup = GROUP_NT_SOCIAL;
   Quiz[109].MyGroup = GROUP_NT_SOCIAL;
   Quiz[110].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[111].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[112].MyGroup = GROUP_NT_CONTACT;
-  Quiz[113].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[111].MyGroup = GROUP_MIXED;
+  Quiz[112].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[113].MyGroup = GROUP_MIXED;
   Quiz[114].MyGroup = GROUP_NT_SOCIAL;
   Quiz[115].MyGroup = GROUP_NT_SOCIAL;
   Quiz[116].MyGroup = GROUP_ASPIE_ATTACH;
@@ -440,31 +440,31 @@ void TQuizJE2::SetupTexts()
   Quiz[118].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[119].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[120].MyGroup = GROUP_ASPIE_ATTACH;
-  Quiz[121].MyGroup = GROUP_ASPIE_ATTACH;
+  Quiz[121].MyGroup = GROUP_MIXED;
   Quiz[122].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[123].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[124].MyGroup = GROUP_NT_ATTACH;
   Quiz[125].MyGroup = GROUP_NT_ATTACH;
   Quiz[126].MyGroup = GROUP_NT_ATTACH;
-  Quiz[127].MyGroup = GROUP_NT_ATTACH;
+  Quiz[127].MyGroup = GROUP_MIXED;
   Quiz[128].MyGroup = GROUP_NT_ATTACH;
   
-  Quiz[129].MyGroup = GROUP_MIXED;
-  Quiz[130].MyGroup = GROUP_MIXED;
+  Quiz[129].MyGroup = GROUP_NT_NVC;
+  Quiz[130].MyGroup = GROUP_NT_NVC;
   Quiz[131].MyGroup = GROUP_NT_SOCIAL;
   Quiz[132].MyGroup = GROUP_NT_SOCIAL;
   Quiz[133].MyGroup = GROUP_NT_NVC;
-  Quiz[134].MyGroup = GROUP_MIXED;
+  Quiz[134].MyGroup = GROUP_NT_NVC;
   Quiz[135].MyGroup = GROUP_MIXED;
-  Quiz[136].MyGroup = GROUP_MIXED;
+  Quiz[136].MyGroup = GROUP_NT_NVC;
   Quiz[137].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[138].MyGroup = GROUP_NT_NVC;
   Quiz[139].MyGroup = GROUP_NT_NVC;
   Quiz[140].MyGroup = GROUP_MIXED;
-  Quiz[141].MyGroup = GROUP_MIXED;
-  Quiz[142].MyGroup = GROUP_MIXED;
+  Quiz[141].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[142].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[143].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[144].MyGroup = GROUP_MIXED;
+  Quiz[144].MyGroup = GROUP_ASPIE_SOCIAL;
 
   Quiz[145].MyGroup = GROUP_NT_NVC;
   Quiz[146].MyGroup = GROUP_NT_TALENT;
@@ -473,14 +473,16 @@ void TQuizJE2::SetupTexts()
   Quiz[149].MyGroup = GROUP_NT_NVC;
 
   Quiz[150].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[151].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[152].MyGroup = GROUP_ASPIE_CONTACT;
+  Quiz[151].MyGroup = GROUP_NT_NVC;
+  Quiz[152].MyGroup = GROUP_MIXED;
   Quiz[153].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[154].MyGroup = GROUP_ASPIE_ATTACH;
-  Quiz[155].MyGroup = GROUP_ASPIE_CONTACT;
-  Quiz[156].MyGroup = GROUP_MIXED;
+  Quiz[155].MyGroup = GROUP_MIXED;
+  Quiz[156].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[157].MyGroup = GROUP_ASPIE_ATTACH;
-  Quiz[158].MyGroup = GROUP_ASPIE_CONTACT;
+  Quiz[158].MyGroup = GROUP_MIXED;
+  Quiz[159].MyGroup = GROUP_ASPIE_CONTACT;
+  Quiz[160].MyGroup = GROUP_MIXED;
 
  Quiz[0].Text = "Do you become frustrated if an activity that is important to you gets interrupted?";
  Quiz[1].Text = "Before doing something or going somewhere, do you need to have a picture in your mind of what's going to happen so as to be able to prepare yourself mentally first?";
