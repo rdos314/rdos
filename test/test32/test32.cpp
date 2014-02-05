@@ -10,7 +10,13 @@ void main()
     int i;
     char ch;
     int count = RdosGetMaxComPort();
-    TSerialDevice serial(count - 6, 9600, 'N', 8, 1);
+    TSerialDevice serial(count - 3, 9600, 'N', 8, 1);
+
+    for (;;)
+    {
+        serial.Write('a');
+        RdosWaitMilli(2);
+    }        
 
     for (;;)
     {
