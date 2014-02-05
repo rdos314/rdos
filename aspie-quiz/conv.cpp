@@ -112,6 +112,8 @@ void ConvH31();
 void ConvJE1();
 void ConvJE2();
 
+void ConvJ1();
+
 void ConvRu();
 
 #define MAX_QUESTIONS 400
@@ -529,9 +531,10 @@ int main(int argc, char **argv)
     ConvH30();
     ConvH31();
     ConvJE1();
+    ConvJE2();
 */
 
-    ConvJE2();
+    ConvJ1();
         
     return 0;
 }
