@@ -10,11 +10,17 @@ void main()
     int i;
     char ch;
     int count = RdosGetMaxComPort();
-    TSerialDevice serial(count - 3, 9600, 'N', 8, 1);
+    TSerialDevice serial1(count - 3, 9600, 'N', 8, 1);
+    TSerialDevice serial2(count - 2, 9600, 'N', 8, 1);
+    TSerialDevice serial3(count - 1, 9600, 'N', 8, 1);
+    TSerialDevice serial4(count - 0, 9600, 'N', 8, 1);
 
     for (;;)
     {
-        serial.Write('a');
+        serial1.Write('a');
+        serial2.Write('b');
+        serial3.Write('c');
+        serial4.Write('d');
         RdosWaitMilli(2);
     }        
 
@@ -26,12 +32,12 @@ void main()
             if (ch == 0x1b)
                 return;
 
-            serial.Write(ch);
+            serial1.Write(ch);
             RdosWriteChar(ch);        
         }
-        if (serial.WaitForChar(10))
+        if (serial1.WaitForChar(10))
         {
-            ch = serial.Read();
+            ch = serial1.Read();
             RdosWriteChar(ch);        
         }                       
     }
