@@ -686,5 +686,6 @@ has_physical64_nr               = 544
 uses_pae_nr                     = 545
 
 get_can_module_info_nr          = 546
+check_can_serial_port_nr        = 547
 
 usergate_entries			    = 560

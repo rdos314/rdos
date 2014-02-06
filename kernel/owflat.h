@@ -1034,19 +1034,24 @@
     value [eax];
 
 #pragma aux RdosGetCanModuleInfo = \
-    "push edx" \
     CallGate_get_can_module_info  \
     CarryToBool \
-    "movzx ebx,bx" \
-    "mov [esi],ebx" \
     "movzx ecx,cx" \
-    "mov [edi],ecx" \
-    "movzx ecx,dx" \
-    "pop edx" \
-    "mov [edx],ecx" \
-    parm [eax] [esi] [edi] [edx] \
+    "mov [esi],ecx" \
+    "movzx edx,dx" \
+    "mov [edi],edx" \
+    parm [eax] [esi] [edi] \
     value [eax] \
-    modify [ebx ecx];
+    modify [ecx edx];
+
+#pragma aux RdosCheckCanSerialPort = \
+    CallGate_check_can_serial_port  \
+    "mov [esi],eax" \
+    "mov [edi],edx" \
+    CarryToBool \
+    parm [eax] [esi] [edi] \
+    value [eax] \
+    modify [edx];
 
 #pragma aux RdosOpenFile = \
     CallGate_open_file  \

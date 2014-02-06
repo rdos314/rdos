@@ -686,6 +686,7 @@
 #define usergate_uses_pae 0x00000221
 
 #define usergate_get_can_module_info 0x00000222
+#define usergate_check_can_serial_port 0x00000223
 
 
 
@@ -1378,6 +1379,7 @@
 #define CallGate_uses_pae 0x67 0x9a 33 2 0 0 3 0
 
 #define CallGate_get_can_module_info 0x67 0x9a 34 2 0 0 3 0
+#define CallGate_check_can_serial_port 0x67 0x9a 35 2 0 0 3 0
 
 #else
 
@@ -2068,5 +2070,6 @@
 #define CallGate_uses_pae 0x3e 0x67 0x9a 33 2 0 0 3 0
 
 #define CallGate_get_can_module_info 0x3e 0x67 0x9a 34 2 0 0 3 0
+#define CallGate_check_can_serial_port 0x3e 0x67 0x9a 35 2 0 0 3 0
 
 #endif

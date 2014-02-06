@@ -3483,9 +3483,15 @@ HasTouch      MACRO
 ;;;;;;;;;;; Can modules ;;;;;;;;;;
 
 ;   IN  EAX         Device #
-;   OUT BX          First com port
 ;   OUT CX          Number of com ports
 ;   OUT DX          Module type
 GetCanModuleInfo      MACRO
 	UserGate get_can_module_info_nr
+						ENDM
+
+;	IN  AL		    Serial port #
+;   OUT EAX         Can module
+;   OUT EDX         Can port
+CheckCanSerialPort      MACRO
+	UserGate check_can_serial_port_nr
 						ENDM
