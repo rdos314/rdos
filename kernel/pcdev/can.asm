@@ -652,10 +652,10 @@ sdIrq:
 sdConf:
     mov es,ds:can_sel
 ;
-    mov al,6    ; TSEG 1
-    mov ah,3    ; TSEG 2
-    mov bl,3    ; SJW
-    mov cl,5    ; Divisor
+    mov al,16    ; TSEG 1
+    mov ah,7    ; TSEG 2
+    mov bl,4    ; SJW
+    mov cl,1    ; Divisor
     call SetupBitTiming
     call InitMsg
 ;    
