@@ -685,4 +685,6 @@ get_physical_entry_size_nr      = 543
 has_physical64_nr               = 544
 uses_pae_nr                     = 545
 
+get_can_module_info_nr          = 546
+
 usergate_entries			    = 560

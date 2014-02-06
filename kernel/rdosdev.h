@@ -2082,10 +2082,10 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
     "pop ds" \
     parm [edx];
 
-#pragma aux RdosNotifyUsbAttach = \
+#pragma aux RdosLockedNotifyUsbAttach = \
     "push ds" \
     "mov ds,edx" \
-    OsGate_notify_usb_attach \
+    OsGate_locked_notify_usb_attach \
     "pop ds" \
     parm [edx] [al] [ah];
 

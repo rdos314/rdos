@@ -3479,3 +3479,13 @@ GetHidReportFeatureData      MACRO
 HasTouch      MACRO
 	UserGate has_touch_nr
 						ENDM
+
+;;;;;;;;;;; Can modules ;;;;;;;;;;
+
+;   IN  EAX         Device #
+;   OUT BX          First com port
+;   OUT CX          Number of com ports
+;   OUT DX          Module type
+GetCanModuleInfo      MACRO
+	UserGate get_can_module_info_nr
+						ENDM

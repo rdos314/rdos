@@ -247,6 +247,7 @@
 #define osgate_insert_dir_entry 241
 #define osgate_insert_file_entry 242
 #define osgate_hook_file_system_started 243
+#define osgate_set_disc_use32 244
 
 #define osgate_get_file_info 247
 #define osgate_dupl_file_info 248
@@ -322,8 +323,7 @@
 #define osgate_notify_ethernet_packet 300
 
 #define osgate_init_usb_device 301
-#define osgate_notify_usb_attach 302
-
+#define osgate_locked_notify_usb_attach 302
 #define osgate_notify_usb_detach 304
 
 #define osgate_add_com_port 305
@@ -628,8 +628,6 @@
 #define osgate_wait_for_ohci 519
 #define osgate_wait_for_uhci 520
 
-#define osgate_has_physical64 521
-
 #define osgate_register_hid_input 522
 #define osgate_get_signed_hid_input 523
 #define osgate_get_unsigned_hid_input 524
@@ -639,7 +637,18 @@
 #define osgate_update_hid_output 528
 #define osgate_get_hid_log_min 529
 #define osgate_get_hid_log_max 530
-#define osgate_has_disc_handlers_completed 531
+#define osgate_cond_begin_disc_handler 531
+#define osgate_stop_disc_request 532
+
+#define osgate_lock_usb 533
+#define osgate_unlock_usb 534
+
+#define osgate_start_can_com 535
+
+#define osgate_send_can_bus_msg 536
+#define osgate_hook_can_gen_bus_msg 537
+#define osgate_create_can_id_hook 538
+#define osgate_delete_can_id_hook 539
 
 
 
@@ -892,6 +901,7 @@
 #define OsGate_insert_dir_entry 0x3E 0x67 0x9a 241 0 0 0 2 0
 #define OsGate_insert_file_entry 0x3E 0x67 0x9a 242 0 0 0 2 0
 #define OsGate_hook_file_system_started 0x3E 0x67 0x9a 243 0 0 0 2 0
+#define OsGate_set_disc_use32 0x3E 0x67 0x9a 244 0 0 0 2 0
 
 #define OsGate_get_file_info 0x3E 0x67 0x9a 247 0 0 0 2 0
 #define OsGate_dupl_file_info 0x3E 0x67 0x9a 248 0 0 0 2 0
@@ -967,8 +977,7 @@
 #define OsGate_notify_ethernet_packet 0x3E 0x67 0x9a 44 1 0 0 2 0
 
 #define OsGate_init_usb_device 0x3E 0x67 0x9a 45 1 0 0 2 0
-#define OsGate_notify_usb_attach 0x3E 0x67 0x9a 46 1 0 0 2 0
-
+#define OsGate_locked_notify_usb_attach 0x3E 0x67 0x9a 46 1 0 0 2 0
 #define OsGate_notify_usb_detach 0x3E 0x67 0x9a 48 1 0 0 2 0
 
 #define OsGate_add_com_port 0x3E 0x67 0x9a 49 1 0 0 2 0
@@ -1273,8 +1282,6 @@
 #define OsGate_wait_for_ohci 0x3E 0x67 0x9a 7 2 0 0 2 0
 #define OsGate_wait_for_uhci 0x3E 0x67 0x9a 8 2 0 0 2 0
 
-#define OsGate_has_physical64 0x3E 0x67 0x9a 9 2 0 0 2 0
-
 #define OsGate_register_hid_input 0x3E 0x67 0x9a 10 2 0 0 2 0
 #define OsGate_get_signed_hid_input 0x3E 0x67 0x9a 11 2 0 0 2 0
 #define OsGate_get_unsigned_hid_input 0x3E 0x67 0x9a 12 2 0 0 2 0
@@ -1284,5 +1291,16 @@
 #define OsGate_update_hid_output 0x3E 0x67 0x9a 16 2 0 0 2 0
 #define OsGate_get_hid_log_min 0x3E 0x67 0x9a 17 2 0 0 2 0
 #define OsGate_get_hid_log_max 0x3E 0x67 0x9a 18 2 0 0 2 0
-#define OsGate_has_disc_handlers_completed 0x3E 0x67 0x9a 19 2 0 0 2 0
+#define OsGate_cond_begin_disc_handler 0x3E 0x67 0x9a 19 2 0 0 2 0
+#define OsGate_stop_disc_request 0x3E 0x67 0x9a 20 2 0 0 2 0
+
+#define OsGate_lock_usb 0x3E 0x67 0x9a 21 2 0 0 2 0
+#define OsGate_unlock_usb 0x3E 0x67 0x9a 22 2 0 0 2 0
+
+#define OsGate_start_can_com 0x3E 0x67 0x9a 23 2 0 0 2 0
+
+#define OsGate_send_can_bus_msg 0x3E 0x67 0x9a 24 2 0 0 2 0
+#define OsGate_hook_can_gen_bus_msg 0x3E 0x67 0x9a 25 2 0 0 2 0
+#define OsGate_create_can_id_hook 0x3E 0x67 0x9a 26 2 0 0 2 0
+#define OsGate_delete_can_id_hook 0x3E 0x67 0x9a 27 2 0 0 2 0
 

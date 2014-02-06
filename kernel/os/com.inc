@@ -51,6 +51,8 @@ cd_device                   DW ?
 cd_open                     DB ?
 cd_line_reserved            DB ?
 
+cd_com_port                 DB ?
+
 com_device_struc   ENDS
 
 com_port_struc	STRUC

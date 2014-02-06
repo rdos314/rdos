@@ -1325,8 +1325,12 @@ add_com_port_name       DB 'Add Com Port',0
 
 add_com_port    Proc far
     push ds
+    push es
     push bx
-    push dx
+;    
+    mov bx,SEG data
+    mov es,bx
+    mov bx,es:s_port_count
 ;
     mov ds:cd_set_dtr_proc,0
     mov ds:cd_set_dtr_proc+4,0
@@ -1337,22 +1341,17 @@ add_com_port    Proc far
     mov ds:cd_get_line_state_proc,0
     mov ds:cd_get_line_state_proc+4,0
     mov ds:cd_line_reserved,0
-    mov ds:cd_line_reserved+4,0
     mov ds:cd_controller,ax
     mov ds:cd_device,dx
     mov ds:cd_open,0
+    mov ds:cd_com_port,bl
 ;
-    mov dx,ds
-    mov bx,SEG data
-    mov ds,bx
-;
-    mov bx,ds:s_port_count
     add bx,bx
-    mov ds:[bx].s_port_arr,dx
-    inc ds:s_port_count
+    mov es:[bx].s_port_arr,ds
+    inc es:s_port_count
 ;
-    pop dx
     pop bx
+    pop es
     pop ds    
     retf32
 add_com_port    Endp

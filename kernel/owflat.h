@@ -1033,6 +1033,21 @@
     parm [ebx] [edi] \
     value [eax];
 
+#pragma aux RdosGetCanModuleInfo = \
+    "push edx" \
+    CallGate_get_can_module_info  \
+    CarryToBool \
+    "movzx ebx,bx" \
+    "mov [esi],ebx" \
+    "movzx ecx,cx" \
+    "mov [edi],ecx" \
+    "movzx ecx,dx" \
+    "pop edx" \
+    "mov [edx],ecx" \
+    parm [eax] [esi] [edi] [edx] \
+    value [eax] \
+    modify [ebx ecx];
+
 #pragma aux RdosOpenFile = \
     CallGate_open_file  \
     ValidateHandle  \

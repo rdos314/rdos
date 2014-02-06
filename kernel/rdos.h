@@ -377,6 +377,8 @@ int RDOSAPI RdosHadCardDevInserted(int Handle);
 void RDOSAPI RdosClearCardDevInserted(int Handle);
 int RDOSAPI RdosWaitForCard(int Handle, char *Strip);
 
+int RDOSAPI RdosGetCanModuleInfo(int Module, int *ComBase, int *ComCount, int *Id);
+
 int RDOSAPI RdosOpenFile(const char *FileName, char Access);
 int RDOSAPI RdosCreateFile(const char *FileName, int Attrib);
 void RDOSAPI RdosCloseFile(int Handle);
