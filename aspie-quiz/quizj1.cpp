@@ -477,11 +477,11 @@ void TQuizJ1::SetupTexts()
   Quiz[143].MyGroup = GROUP_NT_ATTACH;
   Quiz[144].MyGroup = GROUP_NT_ATTACH;
 
-  Quiz[145].MyGroup = GROUP_MIXED;
-  Quiz[146].MyGroup = GROUP_MIXED;
-  Quiz[147].MyGroup = GROUP_MIXED;
+  Quiz[145].MyGroup = GROUP_NT_NVC;
+  Quiz[146].MyGroup = GROUP_NT_NVC;
+  Quiz[147].MyGroup = GROUP_NT_TALENT;
   Quiz[148].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[149].MyGroup = GROUP_MIXED;
+  Quiz[149].MyGroup = GROUP_NT_NVC;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Before doing something or going somewhere, do you need to have a picture in your mind of what's going to happen so as to be able to prepare yourself mentally first?";
