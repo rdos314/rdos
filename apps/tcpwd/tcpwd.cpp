@@ -38,19 +38,27 @@
 
 int main(int argc, char **argv)
 {
-    char LogFile[256];
+    int Handle;
+    char Path[256];
+    char str[80];
 
-    LogFile[0] = 0;
+    Path[0] = 0;
     
     if (argc > 1)
     {
-        strcpy(LogFile, argv[1]);
-        strlwr(LogFile);
+        
+        strcpy(Path, argv[1]);
+        strlwr(Path);
+
+        if (Path[1] == ':')
+            RdosSetCurDrive(Path[0] - 'a');
+
+        RdosSetCurDir(Path);
     }
 
     TWdSupplFactory *suppl;
-    TWdSocketServerFactory fact(0xDEB, 16, 0x7000, LogFile);
-
+    TWdSocketServerFactory fact(0xDEB, 16, 0x7000, "");
+    
     suppl = new TWdFileFactory(&fact);
     suppl = new TWdFileInfoFactory(&fact);
     suppl = new TWdEnvFactory(&fact);
@@ -59,5 +67,6 @@ int main(int argc, char **argv)
     suppl = new TWdAsyncFactory(&fact);
 
     for (;;)
-        fact.WaitForever();
+        RdosWaitMilli(250);
+//        fact.WaitForever();
 }
