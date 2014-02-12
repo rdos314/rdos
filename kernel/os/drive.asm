@@ -4897,6 +4897,10 @@ format_do:
 
 format_perf:
     dec ecx
+    or edx,edx
+    jz format_mbr
+    
+format_part:    
     push edx
     push es
     mov dx,flat_sel
@@ -4952,7 +4956,54 @@ format_name_next:
     ModifySector
     UnlockSector
     pop edx
+    jmp format_do_sys
+
+format_mbr:
+    push edx
+    push es
+    mov dx,flat_sel
+    mov es,dx
+    mov dx,cs
+    mov ds,dx
+    xor edx,edx
+    LockSector
+    pop es
+;       
+    push cx
+    push esi
+;       
+    mov dx,flat_sel
+    mov ds,dx
+    xor di,di
+    mov cx,8
+    lea esi,[esi].boot_param.boot_fs
+
+format_mbr_name_loop:
+    mov dl,es:[di]
+    or dl,dl
+    jz format_mbr_name_space
 ;
+    inc di
+    mov [esi],dl
+    inc esi
+    jmp format_mbr_name_next
+
+format_mbr_name_space:
+    mov dl,' '
+    mov [esi],dl
+    inc esi    
+
+format_mbr_name_next:
+    loop format_mbr_name_loop
+;
+    pop esi    
+    pop cx
+;       
+    ModifySector
+    UnlockSector
+    pop edx
+
+format_do_sys:
     xor di,di
     FormatFileSystem
     jc format_fail

@@ -902,7 +902,6 @@ SetupDMA    Proc near
     cmp eax,1000000h
     jc setup_dma_inrange
 ;
-    int 3
     FreePhysical
 
 setup_dma_alloc:

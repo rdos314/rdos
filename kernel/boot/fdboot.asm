@@ -1320,6 +1320,8 @@ LoadAdapter     Proc near
 ;    
     mov ax,cs
     mov es,ax
+    mov ax,DATA_SEG
+    mov ds,ax
 
 laClusterLoop:
     call GetCurrentSector
