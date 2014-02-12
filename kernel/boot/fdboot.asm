@@ -34,6 +34,8 @@
 DATA_SEG = 6000h
 MAX_IMAGES = 20
 
+IMAGE_BASE = 121000h
+
 boot_struc      STRUC
 
 boot_jmp                                        DB ?,?,?
@@ -78,13 +80,23 @@ fat_file_size   DD ?
 fat_dir_struc   ENDS
 
 
-bios_mem_type   STRUC
+mmap_struc  STRUC
 
-mem_base    DD ?, ?
-mem_size    DD ?, ?
-mem_type    DD ?
+mmap_len    DD ?
+mmap_base   DD ?,?
+mmap_size   DD ?,?
+mmap_type   DD ?
 
-bios_mem_type   ENDS
+mmap_struc  ENDS
+
+bios_mem_struc  STRUC
+
+bmap_base   DD ?,?
+bmap_size   DD ?,?
+bmap_type   DD ?
+bmap_acpi   DD ?
+
+bios_mem_struc  ENDS
 
 _TEXT segment byte public use16 'CODE'
 
@@ -245,6 +257,85 @@ WriteAsciiz     Proc near
 WriteAsciizDone:
         ret
 WriteAsciiz     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetMemMap
+;
+;       DESCRIPTION:    Get memory map
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMemMap   Proc near
+    push es
+    pushad
+;    
+    mov ax,9E00h
+    mov es,ax
+;
+    xor di,di
+    xor ebx,ebx
+    mov es:[edi],ebx
+;    
+    mov di,4    
+    mov eax,20
+    stosd
+    xor ebp,ebp
+    mov edx,534D4150h
+    mov eax,0E820h
+    mov ecx,24    
+    mov es:[di].bmap_acpi,1
+    int 15h
+    jc gmmFail
+;
+    mov edx,534D4150h
+    cmp eax,edx
+    jne gmmFail
+;
+    test ebx,ebx
+    jz gmmFail
+;
+    jmp gmmValidate
+
+gmmLoop:
+    mov eax,0E820h
+    mov es:[di].bmap_acpi,1
+    mov ecx,24
+    int 15h
+    jc gmmEnd         
+;
+    mov edx,534D4150h
+
+gmmValidate:
+    jcxz gmmNext
+;
+    test es:[di].bmap_acpi,1
+    jz gmmNext
+;
+    mov ecx,es:[di].bmap_size
+    or ecx,es:[di].bmap_size+4
+    jz gmmNext
+;
+    add ebp,SIZE mmap_struc
+    add di,OFFSET bmap_acpi
+    mov eax,20
+    stosd
+
+gmmNext:
+    test ebx,ebx
+    jne gmmLoop
+
+gmmEnd:
+    xor di,di
+    mov eax,ebp
+    stosd
+        
+gmmFail:
+    popad
+    pop es   
+    ret
+GetMemMap   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1046,34 +1137,56 @@ ClearScreen Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GateA20
+;           NAME:           GateA20
 ;
-;               DESCRIPTION:    Enable A20 line
+;           DESCRIPTION:    Enable A20 line
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GateA20 Proc near
+    xor cx,cx
+
 wait_gate1:
-        in al,64h
-        and al,2
-        jnz wait_gate1
-        mov al,0D1h
-        out 64h,al
+    sub cx,1
+    jz gate_done
+;    
+    in al,64h
+    and al,2
+    jnz wait_gate1
+;    
+    mov al,0D1h
+    out 64h,al
+;    
+    xor cx,cx
+
 wait_gate2:
-        in al,64h
-        and al,2
-        jnz wait_gate2
-        mov al,0DFh
-        out 60h,al
+    sub cx,1
+    jz gate_done
+;    
+    in al,64h
+    and al,2
+    jnz wait_gate2
+;    
+    mov al,0DFh
+    out 60h,al
+;    
+    xor cx,cx
+
 wait_gate3:
-        in al,64h
-        and al,2
-        jnz wait_gate3
-        xor cx,cx
+    sub cx,1
+    jz gate_done
+;    
+    in al,64h
+    and al,2
+    jnz wait_gate3
+    
+    xor cx,cx
 gate_wait:
-        inc ax
-        loop gate_wait
-        ret
+    inc ax
+    loop gate_wait
+
+gate_done:
+    ret
 GateA20 Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1251,106 +1364,6 @@ LoadAdapter     Endp
 
 LoadAdapterDone DB 'Load adapter done',0
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;               NAME:                   GetRamSize
-;
-;               DESCRIPTION:    Get size of physical memory
-;
-;               RETURNS:                ECX             Number of bytes of physical memory
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-bios_buf bios_mem_type <>
-
-GetRamSize      Proc near
-    push ds
-    push es
-    push eax
-    push ebx
-    push di
-;
-    mov ax,cs
-    mov es,ax
-    mov di,OFFSET bios_buf
-    xor ebx,ebx
-
-GetRamSizeRetry:    
-    mov eax,0E820h
-    mov ecx,20
-    mov edx,534D4150h
-    int 15h
-    jc GetRamSizeScan
-;
-    cmp eax,534D4150h
-    jne GetRamSizeScan
-;
-    mov eax,cs:bios_buf.mem_type
-    cmp eax,1
-    jne GetRamSizeNext 
-;
-    mov ecx,cs:bios_buf.mem_base
-    cmp ecx,100000h
-    jb GetRamSizeNext
-;
-    add ecx,cs:bios_buf.mem_size
-    jmp GetRamSizeExit
-
-GetRamSizeNext:
-    or ebx,ebx
-    jnz GetRamSizeRetry
-    
-GetRamSizeScan:
-    mov word ptr cs:GetRamSizeRmCs,cs
-    cli
-    mov eax,cr0
-    or al,1
-    mov cr0,eax
-;
-    db 0EAh
-    dw OFFSET GetRamSizePm
-    dw 20h
-
-GetRamSizePm:
-    mov ax,flat_sel
-    mov ds,ax
-    mov ebx,110000h
-    mov eax,851A7EC2h
-
-GetRamSizeLoop:
-    mov [ebx],eax
-    cmp eax,[ebx]
-    jne GetRamSizeDone
-    add ebx,1000h
-    jnc GetRamSizeLoop
-
-GetRamSizeDone:
-    mov ax,source_sel
-    mov ds,ax
-;
-    mov eax,cr0
-    and al,NOT 1
-    mov cr0,eax
-;
-    db 0EAh
-    dw OFFSET GetRamSizeRm
-GetRamSizeRmCs:
-    dw 0
-
-GetRamSizeRm:
-    mov ecx,ebx
-    sti
-
-GetRamSizeExit: 
-    pop di
-    pop ebx
-    pop eax
-    pop es
-    pop ds
-    ret
-GetRamSize      Endp
-
 ReadError       db 'Cannot read rdos.bin',0Dh,0Ah,0
 LoadMsg         db 0Dh,0Ah,'Loading Rdos operating system',0
 
@@ -1382,9 +1395,10 @@ part_stop:
     public Start
 
 Start:
+    mov cs:DefaultBoot,al
+    call GetMemMap
     sti
     mov cs:DriveNr,dl
-    mov cs:DefaultBoot,al
     mov ax,DATA_SEG
     mov ds,ax
     xor bx,bx
@@ -1455,16 +1469,11 @@ LoadDefaultOk:
         call WriteAsciiz
         call GateA20
         call InitGdt
-        call GetRamSize
-        mov edi,ecx
+        mov edi,IMAGE_BASE
         mov ecx,cs:ImageSize
         dec ecx
         and cx,0F000h
         add ecx,1000h
-        push ecx
-        pop ax
-        pop ax
-        sub edi,ecx
         push edi
         push ecx
         call LoadAdapter
