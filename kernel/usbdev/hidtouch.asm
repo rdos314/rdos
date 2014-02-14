@@ -68,6 +68,7 @@ hid_coord_arr       DB MAX_POINTS * 32 DUP(?)
 
 hid_touch   ENDS
 
+
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
 code    SEGMENT byte public 'CODE'
@@ -298,6 +299,24 @@ hid_end   Proc far
     or ax,ax
     jz heFail
 ;    
+    push ds
+    push es
+    pushad
+;
+    mov eax,cs
+    mov ds,eax
+    mov es,eax    
+;    
+    mov esi,OFFSET has_touch
+    mov edi,OFFSET has_touch_name
+    xor dx,dx
+    mov ax,has_touch_nr
+    RegisterBimodalUserGate
+;
+    popad
+    pop es
+    pop ds
+;
     push es
     push ebx
     push ecx
@@ -497,6 +516,24 @@ hid_handle_report   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           HasTouch
+;
+;           DESCRIPTION:    Check if touch is available
+;
+;           RETURNS:        NC      Touch available
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_touch_name DB 'Has Touch',0
+
+has_touch      Proc far
+    clc
+    ret
+has_touch  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitTouch
 ;
 ;           DESCRIPTION:    Init touch
@@ -513,11 +550,13 @@ h04 DD OFFSET hid_handle_report,SEG code
     public InitTouch_
     
 InitTouch_   Proc near
+    push ds
     push es
     push eax
     push edi
-;
+;    
     mov eax,cs
+    mov ds,eax
     mov es,eax
     mov edi,OFFSET hid_tab
     RegisterHidInput
@@ -525,6 +564,7 @@ InitTouch_   Proc near
     pop edi
     pop eax
     pop es    
+    pop ds
     ret
 InitTouch_   Endp
         
