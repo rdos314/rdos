@@ -55,6 +55,16 @@ struct TPartHeader
     int EntryCrc32;
 };
 
+struct TPartEntry
+{
+    char PartGuid[16];
+    char UniqueGuid[16];
+    long long FirstLba;
+    long long LastLba;
+    long long Attrib;
+    short int Name[36];
+};
+
 static int crc32_tab[] =
 {
         0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f,
@@ -165,8 +175,16 @@ void TGptDiscPartition::Update()
 {
     char Buf[512];
     struct TPartHeader *PartHeader;
+    char *EntryBuf;
+    char *ptr;
     unsigned int Crc32;
     unsigned int ThisCrc32;
+    int count;
+    int size;
+    int i;
+    int sectors;
+    int Lba;
+    struct TPartEntry *EntryData;
 
     FDisc->Read(1, Buf, 512);
 
@@ -180,6 +198,29 @@ void TGptDiscPartition::Update()
 
         if (Crc32 == ThisCrc32)
         {
+            if (PartHeader->EntrySize == sizeof(struct TPartEntry))
+            {
+                count = PartHeader->EntryCount;                
+                sectors = count * sizeof(struct TPartEntry) / 512;
+                size = sectors * 512;
+                EntryBuf = new char[size];
+                ptr = EntryBuf;
+                EntryData = (struct TPartEntry *)EntryBuf;
+
+                for (i = 0; i < sectors; i++)
+                {
+                    Lba = i + (int)PartHeader->EntryLba;
+                    FDisc->Read(Lba, ptr, 512);
+                    ptr += 512;
+                }
+                                
+                Crc32 = CalcCrc32(EntryBuf, size);
+                if (PartHeader->EntryCrc32 == Crc32)
+                {
+                }
+                
+                delete EntryBuf;
+            }
         }        
     }
 }
