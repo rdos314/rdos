@@ -41,6 +41,7 @@ random_proc_seg STRUC
 mtsect   section_typ <>
 mt      DD N DUP(?)
 mti     DW ?
+uuid_nr DW ?
     
 random_proc_seg ENDS
 
@@ -174,6 +175,82 @@ get_random_do:
     retf32
 get_random    Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateUuid
+;
+;       DESCRIPTION:    Create UUID
+;
+;       PARAMETERS:     ES:(E)DI    Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_uuid_name    DB 'Create UUID', 0
+
+create_uuid Proc near
+    push ds
+    push eax
+    push edx
+    push esi
+;    
+    mov ax,random_proc_sel
+    mov ds,ax
+;
+    GetSystemTime
+    stos dword ptr es:[edi]
+    mov eax,edx
+    stos word ptr es:[edi]
+;
+    ror eax,16
+    and ah,0Fh
+    or ah,10h
+    stos word ptr es:[edi]
+;
+    EnterSection ds:mtsect
+    mov ax,ds:uuid_nr
+    inc ax
+    mov ds:uuid_nr,ax
+    LeaveSection ds:mtsect    
+;
+    and ah,1Fh
+    or ah,80h
+    xchg al,ah
+    stos byte ptr es:[edi]
+    xchg al,ah
+    stos byte ptr es:[edi]
+;
+    UserGateForce32 get_mac_address_nr
+    jnc cuDone
+;
+    GetRandom
+    stos dword ptr es:[edi]
+;
+    GetRandom
+    stos word ptr es:[edi]
+
+cuDone:
+    pop esi
+    pop edx
+    pop eax
+    pop ds
+    ret
+create_uuid Endp    
+
+create_uuid32   Proc far
+    push edi
+    call create_uuid
+    pop edi
+    retf32
+create_uuid32   Endp
+
+create_uuid16   Proc far
+    push edi
+    movzx edi,di
+    call create_uuid
+    pop edi
+    retf32
+create_uuid16   Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -236,34 +313,41 @@ init_program    Endp
 ;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public init_random
+    public init_random
 
 init_random     PROC near
-        push ds
-        push es
-        pusha
+    push ds
+    push es
+    pusha
 ;
-        mov bx,random_proc_sel
-        mov eax,SIZE random_proc_seg
-        AllocateFixedProgramMem
+    mov bx,random_proc_sel
+    mov eax,SIZE random_proc_seg
+    AllocateFixedProgramMem
 ;
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;
-        mov edi,OFFSET init_program
-        HookStartProgram
+    mov edi,OFFSET init_program
+    HookStartProgram
 ;
-        mov esi,OFFSET get_random
-        mov edi,OFFSET get_random_name
-        xor dx,dx
-        mov ax,get_random_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET get_random
+    mov edi,OFFSET get_random_name
+    xor dx,dx
+    mov ax,get_random_nr
+    RegisterBimodalUserGate
 ;
-        popa
-        pop es
-        pop ds
-        ret
+    mov ebx,OFFSET create_uuid16
+    mov esi,OFFSET create_uuid32
+    mov edi,OFFSET create_uuid_name
+    mov dx,virt_es_in
+    mov ax,create_uuid_nr
+    RegisterUserGate
+;
+    popa
+    pop es
+    pop ds
+    ret
 init_random     ENDP
 
 code    ENDS

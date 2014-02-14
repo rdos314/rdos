@@ -688,6 +688,9 @@
 #define usergate_get_can_module_info 0x00000222
 #define usergate_check_can_serial_port 0x00000223
 
+#define usergate_get_mac_address 0x00000224
+#define usergate_create_uuid 0x00000225
+
 
 
 #ifdef __FLAT__
@@ -1381,6 +1384,9 @@
 #define CallGate_get_can_module_info 0x67 0x9a 34 2 0 0 3 0
 #define CallGate_check_can_serial_port 0x67 0x9a 35 2 0 0 3 0
 
+#define CallGate_get_mac_address 0x67 0x9a 36 2 0 0 3 0
+#define CallGate_create_uuid 0x67 0x9a 37 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2071,5 +2077,8 @@
 
 #define CallGate_get_can_module_info 0x3e 0x67 0x9a 34 2 0 0 3 0
 #define CallGate_check_can_serial_port 0x3e 0x67 0x9a 35 2 0 0 3 0
+
+#define CallGate_get_mac_address 0x3e 0x67 0x9a 36 2 0 0 3 0
+#define CallGate_create_uuid 0x3e 0x67 0x9a 37 2 0 0 3 0
 
 #endif

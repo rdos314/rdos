@@ -688,4 +688,7 @@ uses_pae_nr                     = 545
 get_can_module_info_nr          = 546
 check_can_serial_port_nr        = 547
 
+get_mac_address_nr              = 548
+create_uuid_nr                  = 549
+
 usergate_entries			    = 560

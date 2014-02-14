@@ -200,6 +200,9 @@ int RDOSAPI RdosGetCharSize(const char *str);
 long RDOSAPI RdosGetLongRandom();
 long RDOSAPI RdosGetRandom(long range);
 
+int RDOSAPI RdosGetMac(char *mac);
+void RDOSAPI RdosCreateUuid(char *uuid);
+
 long RDOSAPI RdosGetAcpiStatus();
 int RDOSAPI RdosGetAcpiObject(int Index, char *AcpiName);
 int RDOSAPI RdosGetAcpiMethod(int Object, int Index, char *AcpiName);

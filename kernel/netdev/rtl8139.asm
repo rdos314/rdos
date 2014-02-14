@@ -1142,6 +1142,52 @@ InitSecondaryPciAdapter Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetMacAddress
+;
+;       DESCRIPTION:    Get Mac address
+;
+;       PARAMETERS:     ES:(E)DI    Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_mac_address_name    DB 'Get Mac Address', 0
+
+get_mac_address Proc near
+    push ds
+    push esi
+    push ecx
+;    
+    mov si,ether_data_sel
+    mov ds,si
+    mov esi,OFFSET EthernetAddress  
+    mov ecx,3
+    rep movs word ptr es:[edi],ds:[esi]
+    clc
+;
+    pop ecx
+    pop esi
+    pop ds
+    ret
+get_mac_address Endp    
+
+get_mac_address32   Proc far
+    push edi
+    call get_mac_address
+    pop edi
+    retf32
+get_mac_address32   Endp
+
+get_mac_address16   Proc far
+    push edi
+    movzx edi,di
+    call get_mac_address
+    pop edi
+    retf32
+get_mac_address16   Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Init_net
 ;
 ;           DESCRIPTION:    inits adpater
@@ -1186,6 +1232,13 @@ Init    Proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov ebx,OFFSET get_mac_address16
+    mov esi,OFFSET get_mac_address32
+    mov edi,OFFSET get_mac_address_name
+    mov dx,virt_es_in
+    mov ax,get_mac_address_nr
+    RegisterUserGate
 ;
     mov eax,SIZE data
     mov bx,ether_data_sel

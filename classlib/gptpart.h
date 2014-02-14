@@ -32,6 +32,21 @@
 #include "disc.h"
 #include "drive.h"
 
+#define MAX_GPT_PART_COUNT  128
+
+class TGptPartition
+{
+public:
+	TGptPartition(TDisc *Disc, const char *Guid, long long StartSector, long long EndSector, const short int *Name);
+
+	int Usable;
+	long Start;
+	long Size;
+	TDisc *FDisc;
+	char GuidStr[40];
+	char Name[40];
+};
+
 class TGptDiscPartition
 {
 public:
@@ -40,6 +55,7 @@ public:
 	void Update();
 	TDisc *GetDisc();
 
+	TGptPartition *PartArr[MAX_GPT_PART_COUNT];
 	int PartCount;
 
 protected:

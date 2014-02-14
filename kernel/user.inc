@@ -725,6 +725,17 @@ GetRandom   MACRO
     UserGate get_random_nr
             ENDM
 
+;   IN  ES:(E)DI      Buffer
+GetMacAddress   MACRO
+    UserGate get_mac_address_nr
+            ENDM
+
+;   IN  ES:(E)DI      Buffer
+CreateUuid   MACRO
+    UserGate create_uuid_nr
+            ENDM
+
+
 
 ;;;;;;;;;;; IPC ;;;;;;;;;;;;;;;
 

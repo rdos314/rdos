@@ -33,6 +33,7 @@
 #include <stdio.h>
 
 #include "gptpart.h"
+#include "rdos.h"
 
 #define FALSE   0
 #define TRUE    !FALSE
@@ -137,6 +138,91 @@ static unsigned int CalcCrc32(const char *buf, int size)
 }
 
 
+/*##################  UuidToStr  #############
+*   Purpose....: Convert UUID to string                                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+static void UuidToStr(const char *uuid, char *str)
+{
+    int ival;
+    int *ip;
+    short int sval;
+    short int *sp;
+
+    ip = (int *)uuid;
+    ival = *ip;
+    sprintf(str, "%08lX-", ival);
+
+    sp = (short int *)(uuid + 4); 
+    sval = *sp;
+    sprintf(str+9, "%04hX-", sval);
+    
+    sp = (short int *)(uuid + 6); 
+    sval = *sp;
+    sprintf(str+14, "%04hX-", sval);
+
+    sp = (short int *)(uuid + 8); 
+    sval = RdosSwapShort(*sp);
+    sprintf(str+19, "%04hX-", sval);
+
+    sp = (short int *)(uuid + 10); 
+    sval = RdosSwapShort(*sp);
+    sprintf(str+24, "%04hX", sval);
+
+    sp = (short int *)(uuid + 12); 
+    sval = RdosSwapShort(*sp);
+    sprintf(str+28, "%04hX", sval);
+
+    sp = (short int *)(uuid + 14); 
+    sval = RdosSwapShort(*sp);
+    sprintf(str+32, "%04hX", sval);
+}
+
+/*##################  TGptPartition::TDiscPartition  #############
+*   Purpose....: Partition constructor                                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+TGptPartition::TGptPartition(TDisc *Disc, const char *Guid, long long StartSector, long long EndSector, const short int *Name16)
+{
+    int i;
+    const short int *sptr;
+    char *ptr;
+    
+    if (EndSector <= 0xFFFFFFFF && StartSector > 0)
+    {
+        Usable = TRUE;
+        Start = (long)StartSector;
+        Size = (long)(EndSector - StartSector) + 1;
+        FDisc = Disc;
+        UuidToStr(Guid, GuidStr);
+
+        sptr = Name16;
+        ptr = Name;
+
+        for (i = 0; i < 40; i++)
+        {
+            *ptr = (char)(*sptr);
+
+            if (*ptr == 0)
+                break;
+                
+            ptr++;
+            sptr++;
+        }
+        *ptr = 0;
+        
+    }
+    else
+        Usable = FALSE;
+}
+
+
 /*##################  TGptDiscPartition::TGptDiscPartition  #############
 *   Purpose....: Disc partition constructor                                                                         #
 *   In params..: *                                                          #
@@ -175,6 +261,7 @@ void TGptDiscPartition::Update()
 {
     char Buf[512];
     struct TPartHeader *PartHeader;
+    TGptPartition *part;
     char *EntryBuf;
     char *ptr;
     unsigned int Crc32;
@@ -185,6 +272,8 @@ void TGptDiscPartition::Update()
     int sectors;
     int Lba;
     struct TPartEntry *EntryData;
+    char uuid[16];
+    char uuidstr[40];
 
     FDisc->Read(1, Buf, 512);
 
@@ -217,8 +306,25 @@ void TGptDiscPartition::Update()
                 Crc32 = CalcCrc32(EntryBuf, size);
                 if (PartHeader->EntryCrc32 == Crc32)
                 {
+                    for (i = 0; i < PartHeader->EntryCount; i++)
+                    {
+                        part = new TGptPartition(   FDisc, 
+                                                    EntryData->PartGuid,
+                                                    EntryData->FirstLba,
+                                                    EntryData->LastLba,
+                                                    EntryData->Name);
+
+                        if (part->Usable)
+                        {
+                            PartArr[PartCount] = part;
+                            PartCount++;
+                        }
+                        else
+                            delete part;                        
+
+                        EntryData++;                        
+                    }
                 }
-                
                 delete EntryBuf;
             }
         }        

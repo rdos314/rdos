@@ -71,6 +71,16 @@
     value [edx] \
     modify [eax];
 
+#pragma aux RdosGetMac = \
+    CallGate_get_mac_address  \
+    CarryToBool \
+    parm [edi] \
+    value [eax];
+
+#pragma aux RdosCreateUuid = \
+    CallGate_create_uuid  \
+    parm [edi];
+
 #pragma aux RdosGetAcpiStatus = \
     CallGate_get_acpi_status  \
     "jnc AcpiDone" \
