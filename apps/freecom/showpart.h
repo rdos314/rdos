@@ -31,6 +31,7 @@
 #include "cmd.h"
 #include "cmdfact.h"
 #include "part.h"
+#include "gptpart.h"
 
 class TShowPartitionFactory : public TCommandFactory
 {
@@ -57,6 +58,7 @@ protected:
     void ShowTree(TDiscPartition *Part);
     void ShowTable(TDiscPartition *Part);
     int Show(TDisc *Disc);
+    void ShowGpt(TDisc *Disc);
 	
 	int FOptD;
 

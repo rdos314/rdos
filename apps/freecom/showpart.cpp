@@ -292,6 +292,26 @@ void TShowPartitionCommand::ShowTable(TDiscPartition *Part)
 
 /*##########################################################################
 #
+#   Name       : TShowPartitionCommand::ShowGpt
+#
+#   Purpose....: Show GPT partitions
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TShowPartitionCommand::ShowGpt(TDisc *Disc)
+{
+    TGptDiscPartition *DiscPart;
+
+    DiscPart = new TGptDiscPartition(Disc);
+
+    delete DiscPart;
+}
+
+/*##########################################################################
+#
 #   Name       : TShowPartitionCommand::Show
 #
 #   Purpose....: Show result
@@ -303,19 +323,29 @@ void TShowPartitionCommand::ShowTable(TDiscPartition *Part)
 ##########################################################################*/
 int TShowPartitionCommand::Show(TDisc *Disc)
 {
-        TDiscPartition *DiscPart;
+    TDiscPartition *DiscPart;
 
-        if (Disc->IsValid())
+    if (Disc->IsValid())
+    {            
+        DiscPart = new TDiscPartition(Disc);
+
+        if (DiscPart->PartCount > 0 && DiscPart->PartArr[0]->GetType() == 0xEE)
         {
-                DiscPart = new TDiscPartition(Disc);
-                if (FOptD)
-                        ShowTree(DiscPart);
-                else
-                        ShowTable(DiscPart);
-                delete DiscPart;
-                return TRUE;
+            ShowGpt(Disc);
+            delete DiscPart;
+            return TRUE;
         }
-        return FALSE;
+        else
+        {
+            if (FOptD)
+                ShowTree(DiscPart);
+            else
+                ShowTable(DiscPart);
+            delete DiscPart;
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 
 /*##########################################################################
