@@ -39,12 +39,18 @@ class TGptPartition
 public:
 	TGptPartition(TDisc *Disc, const char *Guid, long long StartSector, long long EndSector, const short int *Name);
 
+    double GetTotalSpace();
+
 	int Usable;
 	long Start;
 	long Size;
 	TDisc *FDisc;
 	char GuidStr[40];
 	char Name[40];
+
+protected:
+    void GetMsFsName();
+	
 };
 
 class TGptDiscPartition

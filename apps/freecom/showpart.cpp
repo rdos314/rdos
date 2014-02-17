@@ -303,9 +303,34 @@ void TShowPartitionCommand::ShowTable(TDiscPartition *Part)
 ##########################################################################*/
 void TShowPartitionCommand::ShowGpt(TDisc *Disc)
 {
+    int i;
     TGptDiscPartition *DiscPart;
+    TGptPartition *Entry;
+    long double TotalSpace;
+    char name[10];
+    char str[80];
 
     DiscPart = new TGptDiscPartition(Disc);
+
+    for (i = 0; i < DiscPart->PartCount; i++)
+    {
+        Entry = DiscPart->PartArr[i];
+
+        memcpy(name, Entry->Name, 8);
+        name[8] = 0;
+        TotalSpace = Entry->GetTotalSpace();
+
+        sprintf(str,
+                    "%d: %s %08lX-%08lX %8s %8ld MB\r\n",
+                    i,
+                    Entry->GuidStr,
+                    Entry->Start,
+                    Entry->Start + Entry->Size - 1,
+                    Entry->Name,
+                    (int)TotalSpace);
+
+        Write(str);        
+    }
 
     delete DiscPart;
 }

@@ -216,12 +216,62 @@ TGptPartition::TGptPartition(TDisc *Disc, const char *Guid, long long StartSecto
             sptr++;
         }
         *ptr = 0;
+
+        GetMsFsName();
         
     }
     else
         Usable = FALSE;
 }
 
+/*##################  TGptPartition::GetMsFsName  #############
+*   Purpose....: Get partition Microsoft FS name                                                              #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+void TGptPartition::GetMsFsName()
+{
+    char Buf[512];
+    int i;
+
+    if (Start < FDisc->GetTotalSectors())
+    {
+        FDisc->Read(Start, Buf, 512);
+
+        switch (Buf[3])
+        {
+            case 'M':
+                memcpy(Name, &Buf[0x52], 8);
+                Name[8] = 0;
+                break;
+
+            default:
+                memcpy(Name, &Buf[3], 8);
+                Name[8] = 0;
+                break;
+        }
+
+        for (i = 7; i; i--)
+            if (Name[i] == ' ')
+                Name[i] = 0;
+            else
+                break;
+    }
+}
+
+/*##################  TGptPartition::GetTotalSpace  #############
+*   Purpose....: Get total space in MB                                                              #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+double TGptPartition::GetTotalSpace()
+{
+    return (double)Size * (double)512 / (double)0x100000;
+}
 
 /*##################  TGptDiscPartition::TGptDiscPartition  #############
 *   Purpose....: Disc partition constructor                                                                         #
