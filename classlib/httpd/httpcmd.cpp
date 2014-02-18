@@ -755,6 +755,31 @@ void THttpCommand::WriteFile(TPathName &path, const char *ContentType)
 
 /*##########################################################################
 #
+#   Name       : THttpCommand::WriteResponse
+#
+#   Purpose....: Write response
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCommand::SendData(const char *Data, const char *ContentType)
+{
+    int Size = strlen(Data);
+    
+    WriteStartHeader(200);
+    WriteOption("Accept-Ranges", "bytes");
+    WriteOption("Content-Type", ContentType);
+    WriteLongOption("Content-Length", Size);
+    WriteEndHeader();
+
+    FServer->Write(Data, Size);
+    FServer->Push();
+}
+
+/*##########################################################################
+#
 #   Name       : THttpCommand::StartPush
 #
 #   Purpose....: Start server push

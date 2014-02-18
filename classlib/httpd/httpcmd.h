@@ -91,6 +91,8 @@ protected:
 	void WriteFile(TPathName &path, const char *ContentType);
 	void WriteError(int ErrorCode);
 
+    void SendData(const char *Data, const char *ContentType);
+
 	void StartPush();
 	int PushFile(TPathName &path, const char *ContentType, int ReloadTimeout);
 

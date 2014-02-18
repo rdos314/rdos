@@ -42,7 +42,7 @@ friend class THttpCustomDirFactory;
 friend class THttpCommand;
 
 public:
-	THttpCustomPage(THttpCommand *Cmd, const char *FileName, const char *Param);
+	THttpCustomPage(THttpCommand *Cmd, const char *ReqName, const char *Param);
 	virtual ~THttpCustomPage();
 
 protected:
@@ -55,9 +55,14 @@ protected:
 	void StartPush();
 	int PushFile(TPathName &path, const char *ContentType, int ReloadTimeout);
 
+    void Write(const char *str);
+    void SendData(const char *ContentType);
+
 	THttpCommand *FCmd;
 	TString FFileName;
 	TString FParam;
+
+	TString FData;
 };
 
 class THttpCustomPageFactory
@@ -74,8 +79,6 @@ public:
 	TString FReqName;
 
 protected:
-    TString CreateUniqueFile(THttpCommand *Cmd);
-
 	THttpCustomPageFactory *FList;
 	THttpCommand *FCmd;
 };
@@ -94,8 +97,6 @@ public:
 	TString FReqName;
 
 protected:
-    TString CreateUniqueFile(THttpCommand *Cmd);
-
 	THttpCustomDirFactory *FList;
 	THttpCommand *FCmd;
 };

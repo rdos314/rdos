@@ -67,7 +67,7 @@ THttpCustomPage::THttpCustomPage(THttpCommand *Cmd, const char *FileName, const 
 ##########################################################################*/
 THttpCustomPage::~THttpCustomPage()
 {
-	TPathName path(FFileName);
+        TPathName path(FFileName);
 
     path.DeleteFile();
 }
@@ -133,7 +133,40 @@ void THttpCustomPage::StartPush()
 ##########################################################################*/
 int THttpCustomPage::PushFile(TPathName &path, const char *ContentType, int ReloadTimeout)
 {
-	return FCmd->PushFile(path, ContentType, ReloadTimeout);
+        return FCmd->PushFile(path, ContentType, ReloadTimeout);
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCustomPage::Write
+#
+#   Purpose....: Write string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCustomPage::Write(const char *str)
+{
+    FData += str;
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCustomPage::SendData
+#
+#   Purpose....: Send data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCustomPage::SendData(const char *ContentType)
+{
+    FCmd->SendData(FData.GetData(), ContentType);
+    FData = "";
 }
 
 /*##########################################################################
@@ -149,7 +182,7 @@ int THttpCustomPage::PushFile(TPathName &path, const char *ContentType, int Relo
 ##########################################################################*/
 void THttpCustomPage::Get(const char *Name)
 {
-	FCmd->GetFile(Name);
+        FCmd->GetFile(Name);
 }
 
 /*##########################################################################
@@ -216,22 +249,6 @@ THttpCustomPageFactory::~THttpCustomPageFactory()
 
 /*##########################################################################
 #
-#   Name       : THttpCustomPageFactory::CreateUniqueFile
-#
-#   Purpose....: Create an unique filename
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TString THttpCustomPageFactory::CreateUniqueFile(THttpCommand *Cmd)
-{
-    return Cmd->FServer->CreateUniqueFile();
-}
-
-/*##########################################################################
-#
 #   Name       : THttpCustomPageFactory::Create
 #
 #   Purpose....: Create custom page instance
@@ -243,8 +260,7 @@ TString THttpCustomPageFactory::CreateUniqueFile(THttpCommand *Cmd)
 ##########################################################################*/
 THttpCustomPage *THttpCustomPageFactory::Create(THttpCommand *Cmd, const char *Param)
 {
-	TString tempname = CreateUniqueFile(Cmd);
-	return new THttpCustomPage(Cmd, tempname.GetData(), Param);
+    return new THttpCustomPage(Cmd, FReqName.GetData(), Param);
 }
 
 /*##########################################################################
@@ -280,22 +296,6 @@ THttpCustomDirFactory::~THttpCustomDirFactory()
 
 /*##########################################################################
 #
-#   Name       : THttpCustomDirFactory::CreateUniqueFile
-#
-#   Purpose....: Create an unique filename
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TString THttpCustomDirFactory::CreateUniqueFile(THttpCommand *Cmd)
-{
-    return Cmd->FServer->CreateUniqueFile();
-}
-
-/*##########################################################################
-#
 #   Name       : THttpCustomDirFactory::Create
 #
 #   Purpose....: Create custom page instance
@@ -307,6 +307,5 @@ TString THttpCustomDirFactory::CreateUniqueFile(THttpCommand *Cmd)
 ##########################################################################*/
 THttpCustomPage *THttpCustomDirFactory::Create(THttpCommand *Cmd, const char *Param)
 {
-	TString tempname = CreateUniqueFile(Cmd);
-	return new THttpCustomPage(Cmd, tempname.GetData(), Param);
+        return new THttpCustomPage(Cmd, FReqName.GetData(), Param);
 }
