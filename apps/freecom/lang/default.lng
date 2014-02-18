@@ -1494,6 +1494,14 @@ Disc %d
 %d: -- No entry
 .
 
+:TEXT_SHOWPART_DISC_GPT
+Disc %d %08lX
+.
+
+:TEXT_SHOWPART_GPT_HEADER
+  DRV      SECTORS       FILESYS      SIZE GUID
+.
+
 :TEXT_CMDHELP_RMPART
 Remove harddrive partition
 

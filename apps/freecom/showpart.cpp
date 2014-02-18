@@ -312,8 +312,15 @@ void TShowPartitionCommand::ShowGpt(TDisc *Disc)
 
     DiscPart = new TGptDiscPartition(Disc);
 
+    FMsg.printf(TEXT_SHOWPART_DISC_GPT, Disc->GetDiscNr(), Disc->GetTotalSectors());
+    Write(FMsg.GetData());
+
+    FMsg.Load(TEXT_SHOWPART_GPT_HEADER);
+    Write(FMsg.GetData());
+
     for (i = 0; i < DiscPart->PartCount; i++)
     {
+
         Entry = DiscPart->PartArr[i];
 
         memcpy(name, Entry->Name, 8);
@@ -321,13 +328,13 @@ void TShowPartitionCommand::ShowGpt(TDisc *Disc)
         TotalSpace = Entry->GetTotalSpace();
 
         sprintf(str,
-                    "%d: %s %08lX-%08lX %8s %8ld MB\r\n",
+                    "%d: -- %08lX-%08lX %8s %6ld MB %s\r\n",
                     i,
-                    Entry->GuidStr,
                     Entry->Start,
                     Entry->Start + Entry->Size - 1,
                     Entry->Name,
-                    (int)TotalSpace);
+                    (int)TotalSpace,
+                    Entry->GuidStr);
 
         Write(str);        
     }
