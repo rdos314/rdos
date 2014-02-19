@@ -67,9 +67,6 @@ THttpCustomPage::THttpCustomPage(THttpCommand *Cmd, const char *FileName, const 
 ##########################################################################*/
 THttpCustomPage::~THttpCustomPage()
 {
-        TPathName path(FFileName);
-
-    path.DeleteFile();
 }
 
 /*##########################################################################
