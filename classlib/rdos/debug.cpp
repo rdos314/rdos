@@ -369,8 +369,12 @@ void TDebugThread::ActivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList
     {
         if ((b->Sel & 0x3) == 0x3)
         {
-            RdosReadThreadMem(ThreadID, b->Sel, b->Offset, &b->Instr, 1);
-            RdosWriteThreadMem(ThreadID, b->Sel, b->Offset, &brinstr, 1);
+            if (!b->IsActive)
+            {
+                RdosReadThreadMem(ThreadID, b->Sel, b->Offset, &b->Instr, 1);
+                RdosWriteThreadMem(ThreadID, b->Sel, b->Offset, &brinstr, 1);
+                b->IsActive = TRUE;
+            }
         }
         else
         {
@@ -417,7 +421,10 @@ void TDebugThread::DeactivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchLi
         while (b)
         {
             if ((b->Sel & 0x3) == 0x3)
+            {
                 RdosWriteThreadMem(ThreadID, b->Sel, b->Offset, &b->Instr, 1);
+                b->IsActive = FALSE;
+            }
             else
             {
                 if (bnum < 4)
@@ -958,6 +965,7 @@ TDebugBreak::TDebugBreak(int sel, long offset, int Hw)
     Instr = 0xCC;
     Next = 0;
     UseHw = Hw;
+    IsActive = FALSE;
 }
 
 /*##########################################################################
@@ -1518,6 +1526,9 @@ void TDebug::SetCurrentThread(int ThreadID)
 
     FSection.Enter();
 
+    if (CurrentThread)
+        CurrentThread->DeactivateBreaks(BreakList, WatchList);
+        
     t = ThreadList;
     while (t && t->ThreadID != ThreadID)
         t = t->Next;
@@ -2555,8 +2566,15 @@ void TDebug::SignalNewData()
             LogMsg("Terminate thread");
             HandleTerminateThread(thread);
             FThreadChanged = TRUE;
-            if (CurrentThread->ThreadID == thread)
-                CurrentThread = 0;
+            if (CurrentThread)
+            {
+                CurrentThread->DeactivateBreaks(BreakList, WatchList);
+                if (CurrentThread->ThreadID == thread)
+                    CurrentThread = 0;
+            }
+            CurrentThread = ThreadList;
+            if (CurrentThread)
+                CurrentThread->ActivateBreaks(BreakList, WatchList);
             break;
 
         case EVENT_TERMINATE_PROCESS:

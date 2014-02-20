@@ -92,6 +92,7 @@ public:
     char Instr;
 
     int UseHw;
+    int IsActive;
 
     TDebugBreak *Next;
 };
