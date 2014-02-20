@@ -931,7 +931,7 @@ void THttpCommand::Get(const char *Name)
 ##########################################################################*/
 void THttpCommand::HandlePost(THttpCustomPage *page, const char *name)
 {
-        char *ptr;
+    char *ptr;
     char *nextptr;
     char *valptr;
     
@@ -941,8 +941,15 @@ void THttpCommand::HandlePost(THttpCustomPage *page, const char *name)
 
         while (ptr && *ptr)
         {
-            nextptr = strchr(ptr, '&');   
-            if (nextptr)
+            while (*ptr == 0xd || *ptr == 0xa)
+                ptr++;
+        
+            nextptr = ptr;
+
+            while (*nextptr && *nextptr != '&' && *nextptr != 0xd && *nextptr != 0xa)
+                nextptr++;                
+
+            if (*nextptr)
             {
                 *nextptr = 0;
                 nextptr++;
@@ -956,11 +963,11 @@ void THttpCommand::HandlePost(THttpCustomPage *page, const char *name)
                 page->Post(ptr, valptr);
             }
 
-                        ptr = nextptr;
+            ptr = nextptr;
         }
     }
 
-        page->Post(name);
+    page->Post(name);
 }
 
 /*##########################################################################
