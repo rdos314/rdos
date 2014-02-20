@@ -371,8 +371,10 @@ req_name_str        DB MAX_NAME_SIZE DUP(?)
 notify_name_ptr     DW ?
 notify_name_str     DB MAX_NAME_SIZE DUP(?)
 
-has_efi             DB ?
 fs_name             DB 10 DUP(?)
+
+has_efi             DB ?
+has_disc            DB ?
 
 data    ENDS
 
@@ -3608,12 +3610,22 @@ disc_assign Endp
 drive_assign1   Proc far
     mov gs,bx
 ;    
-    AllocateStaticDrive
-;    
     mov ax,SEG data
     mov ds,ax
     mov ax,flat_sel
     mov es,ax
+;
+    mov ds:has_efi,1
+;
+    mov al,ds:has_disc
+    or al,al
+    jnz drive_assign_has_disc1
+;        
+    AllocateStaticDrive
+    mov ds:has_disc,1
+    mov ds:has_efi,0
+
+drive_assign_has_disc1:    
     mov eax,1000h
     AllocateBigLinear
     push ebx
@@ -3636,6 +3648,8 @@ drive_assign_loop1:
     cmp cl,0EEh
     je drive_assign_gpt1
 ;
+    mov ax,SEG data
+    mov ds,ax
     mov al,ds:has_efi
     or al,al
     jnz drive_assign_efi_ok1
@@ -3662,6 +3676,8 @@ drive_assign_free1:
     mov edx,edi
     FreeLinear
 ;
+    mov ax,SEG data
+    mov ds,ax
     mov al,ds:has_efi
     or al,al
     jnz drive_assign_done1
@@ -3916,6 +3932,7 @@ init_ahci    Proc far
     mov ax,SEG data
     mov ds,ax
     mov ds:has_efi,0
+    mov ds:has_disc,0
     mov cx,ds:ahci_dev_count
     or cx,cx
     jz iaDone
