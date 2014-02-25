@@ -203,6 +203,46 @@ void WriteRev(struct TValArr *entry)
     }  
 }
 
+/*##################  WriteInv ##########################
+*   Purpose....: Write inverted entry                                                                      #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteInv(struct TValArr *entry)
+{
+    int i;
+    int val;
+    char str[12];
+    
+    for (i = 0; i < entry->Count; i++)
+    {
+        val = entry->Quiz[i];
+
+        if (ReverseArr[i])
+        {
+            switch (val)
+            {
+                case 1:
+                    val = 3;
+                    break;
+
+                case 3:
+                    val = 1;
+                    break;
+            }
+        }
+
+        if (i == entry->Count - 1)            
+            sprintf(str, "%d\r\n", val);
+        else
+            sprintf(str, "%d,", val);
+
+        PcaFile->Write(str);
+    }  
+}
+
 /*##################  WriteAllPca ##########################
 *   Purpose....: Write PCA, whole population                                                                      #
 *   In params..: *                                                          #
@@ -335,6 +375,35 @@ void WriteGroupPca()
     PcaFile = 0;
 }
 
+/*##################  WriteInverted ##########################
+*   Purpose....: Write inverted, whole population                                                                      #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteInverted()
+{
+    char str[80];
+    int i;
+
+    printf("Inverted\r\n");
+
+    CalcReverse();
+
+    strcpy(str, "pca\\inv");
+    strcat(str, Suffix);
+    strcat(str, ".csv");
+
+    PcaFile = new TFile(str, 0);
+    
+    for (i = 0; i < ValueCount; i++)
+        WriteInv(&ValArr[i]);
+
+    delete PcaFile;
+    PcaFile = 0;
+}
+
 /*##################  OpenPca ##########################
 *   Purpose....: Open PCA                                                                      #
 *   In params..: *                                                          #
@@ -376,6 +445,7 @@ void ClosePca()
     WriteMalePca();
     WriteFemalePca();
     WriteGroupPca();
+    WriteInverted();
 
     if (ValArr)
         delete ValArr;
