@@ -111,8 +111,8 @@ void ConvH31();
 
 void ConvJE1();
 void ConvJE2();
-
 void ConvJ1();
+void ConvJE4();
 
 void ConvRu();
 
@@ -602,9 +602,10 @@ int main(int argc, char **argv)
     ConvH31();
     ConvJE1();
     ConvJE2();
+    ConvJ1();
 */
 
-    ConvJ1();
+    ConvJE4();
         
     return 0;
 }
