@@ -60,6 +60,7 @@ REG_INT_STATUS_ENABLE       = 34h
 REG_INT_ERROR_STATUS_ENABLE = 36h
 REG_INT_SIG_ENABLE          = 38h
 REG_INT_ERROR_SIG_ENABLE    = 3Ah
+REG_CONTROL2                = 3Eh
 REG_CAP                     = 40h
 
 part_struc      STRUC
@@ -635,6 +636,28 @@ SendAcmd41    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SendCmd11
+;
+;           DESCRIPTION:    Send CMD11
+;
+;           PARAMETERS:     FS      SD io space
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendCmd11    Proc near
+    mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
+    ClearSignal
+    mov dword ptr fs:REG_ARG,0
+    mov word ptr fs:REG_TRANS_MODE,0
+    mov word ptr fs:REG_CMD,1102h
+    call WaitForCompletion
+    ret
+SendCmd11    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           SendCmd2
 ;
 ;           DESCRIPTION:    Send CMD2
@@ -990,7 +1013,21 @@ idInserted:
 ;    
     call SendAcmd41
     jc idFailed
+;
+    test ds:sd_ocr,01000000h
+    jz idVoltOk
+;
+    mov ax,fs:REG_CONTROL2
+    or ax,8
+    mov fs:REG_CONTROL2,ax
+;
+    call SendCmd11    
+    jc idFailed
 ;    
+    mov ax,100
+    WaitMilliSec
+
+idVoltOk:
     call SendCmd2
     jc idFailed
 ;    
