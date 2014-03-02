@@ -51,7 +51,7 @@
 #
 ##########################################################################*/
 TQuizJE4::TQuizJE4(const char *FileName)
-  : TQuiz(153),
+  : TQuiz(157),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -109,7 +109,7 @@ int TQuizJE4::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizJE4::GetQuizN()
 {
-    return 153;
+    return 157;
 }
 
 /*##########################################################################
@@ -331,6 +331,7 @@ void TQuizJE4::SetupTexts()
   Quiz[148].Reverse = TRUE;
   Quiz[149].Reverse = TRUE;
   Quiz[152].Reverse = TRUE;
+  Quiz[155].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
@@ -341,7 +342,7 @@ void TQuizJE4::SetupTexts()
   Quiz[6].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[7].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[8].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[9].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[9].MyGroup = GROUP_NT_TALENT;
   Quiz[10].MyGroup = GROUP_NT_TALENT;
   Quiz[11].MyGroup = GROUP_NT_TALENT;
   Quiz[12].MyGroup = GROUP_NT_TALENT;
@@ -385,11 +386,11 @@ void TQuizJE4::SetupTexts()
   Quiz[50].MyGroup = GROUP_ASPIE_NVC;
   Quiz[51].MyGroup = GROUP_ASPIE_NVC;
   Quiz[52].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[53].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[53].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[54].MyGroup = GROUP_ASPIE_NVC;
   Quiz[55].MyGroup = GROUP_ASPIE_NVC;
   Quiz[56].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[57].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[57].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[58].MyGroup = GROUP_ASPIE_NVC;
   Quiz[59].MyGroup = GROUP_ASPIE_NVC;
   Quiz[60].MyGroup = GROUP_ASPIE_NVC;
@@ -452,12 +453,12 @@ void TQuizJE4::SetupTexts()
   Quiz[117].MyGroup = GROUP_NT_SOCIAL;
   Quiz[118].MyGroup = GROUP_NT_SOCIAL;
   Quiz[119].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[120].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[120].MyGroup = GROUP_NT_CONTACT;
   Quiz[121].MyGroup = GROUP_NT_SOCIAL;
   Quiz[122].MyGroup = GROUP_NT_SOCIAL;
   Quiz[123].MyGroup = GROUP_NT_SOCIAL;
   Quiz[124].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[125].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[125].MyGroup = GROUP_MIXED;
   Quiz[126].MyGroup = GROUP_NT_SOCIAL;
   Quiz[127].MyGroup = GROUP_NT_SOCIAL;
   Quiz[128].MyGroup = GROUP_NT_SOCIAL;
@@ -468,7 +469,7 @@ void TQuizJE4::SetupTexts()
   Quiz[133].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[134].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[135].MyGroup = GROUP_ASPIE_ATTACH;
-  Quiz[136].MyGroup = GROUP_ASPIE_ATTACH;
+  Quiz[136].MyGroup = GROUP_MIXED;
   Quiz[137].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[138].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[139].MyGroup = GROUP_ASPIE_ATTACH;
@@ -477,14 +478,18 @@ void TQuizJE4::SetupTexts()
   Quiz[142].MyGroup = GROUP_NT_ATTACH;
   Quiz[143].MyGroup = GROUP_NT_ATTACH;
   Quiz[144].MyGroup = GROUP_NT_ATTACH;
-  Quiz[145].MyGroup = GROUP_MIXED;
-  Quiz[146].MyGroup = GROUP_MIXED;
-  Quiz[147].MyGroup = GROUP_MIXED;
-  Quiz[148].MyGroup = GROUP_MIXED;
-  Quiz[149].MyGroup = GROUP_MIXED;
+  Quiz[145].MyGroup = GROUP_NT_NVC;
+  Quiz[146].MyGroup = GROUP_ASPIE_CONTACT;
+  Quiz[147].MyGroup = GROUP_NT_TALENT;
+  Quiz[148].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[149].MyGroup = GROUP_NT_SENSORY;
   Quiz[150].MyGroup = GROUP_NT_CONTACT;
   Quiz[151].MyGroup = GROUP_NT_TALENT;
   Quiz[152].MyGroup = GROUP_NT_NVC;
+  Quiz[153].MyGroup = GROUP_MIXED;
+  Quiz[154].MyGroup = GROUP_ASPIE_ATTACH;
+  Quiz[155].MyGroup = GROUP_MIXED;
+  Quiz[156].MyGroup = GROUP_MIXED;
 
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
@@ -640,6 +645,10 @@ void TQuizJE4::SetupTexts()
   Quiz[150].Text = "Do you avoid being the centre of attention?";
   Quiz[151].Text = "Do you work slowly on jobs you dislike?";
   Quiz[152].Text = "Does it feel natural for you to say 'thank you' and 'sorry'?";
+  Quiz[153].Text = "Would you put a lot of time and effort into getting the attention of a potential partner";
+  Quiz[154].Text = "Do you feel an urge to show people you like your favorite places?";
+  Quiz[155].Text = "Do you spend a lot of time and effort on your appearance in order to attract potential mates?";
+  Quiz[156].Text = "Would you spend a lot of time actively seeking out a potential partner, possibly even going to the same places and/or activities as him/her?"; 
 }
 
 /*##########################################################################
@@ -823,7 +832,7 @@ void TQuizJE4::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 153; i++)
+    for (i = 0; i < 157; i++)
             DefineGlobalId(i, i);
 }
 
