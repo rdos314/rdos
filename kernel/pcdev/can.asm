@@ -83,7 +83,8 @@ can_msg_struc   STRUC
 
 cm_id       DD ?
 cm_data     DD ?,?
-cm_size     DD ?
+cm_size     DW ?
+cm_msg      DW ?
 
 can_msg_struc   ENDS
 
@@ -113,7 +114,7 @@ can_send_used           DD ?
 can_send_arr            DB 16 * 16 DUP(?)
 
 can_rec_pend            DD ?
-can_rec_arr             DB 16 * 16 DUP(?)
+can_rec_arr             DB 32 * 16 DUP(?)
 
 can_id_hook_arr         DD 15 * 4 DUP(?)
 
@@ -232,18 +233,32 @@ ReadRxMsg  Proc near
     mov es:IF2_CMASK,eax
 ;
     movzx eax,bx
+    mov dx,bx
     mov es:IF2_CREQ,eax
 ;
     call WaitForIf2
+
+rmRetry:
+    mov eax,ds:can_rec_pend
+    not eax
+    or eax,eax
+    jz rmNoBuf
 ;
-    dec bx
-    mov cl,bl
-    mov eax,1
-    shl eax,cl
-    lock or ds:can_rec_pend,eax
-;
+    bsf ebx,eax
+    lock bts ds:can_rec_pend,ebx
+    jnc rmGet
+    jmp rmRetry 
+
+rmNoBuf:
+    int 3
+
+rmNoBufStop:
+    jmp rmNoBufStop
+
+rmGet:            
     shl bx,4
     add bx,OFFSET can_rec_arr
+    mov ds:[bx].cm_msg,dx
 ;
     mov ax,es:IF2_ID2
     and ax,1FFFh
@@ -261,7 +276,16 @@ ReadRxMsg  Proc near
     mov ax,es:IF2_DATA3
     mov ds:[bx].cm_data+4,eax
 ;    
-    mov al,es:IF2_MCONT
+    mov ax,es:IF2_MCONT
+    test ax,4000h
+    jz rmNoLost
+;
+    int 3
+
+rmLost:
+    jmp rmLost
+    
+rmNoLost:    
     and al,0Fh
     test al,8
     jz rmLenOk
@@ -269,8 +293,8 @@ ReadRxMsg  Proc near
     mov al,8
 
 rmLenOk:
-    movzx eax,al
-    mov ds:[bx].cm_size,eax   
+    movzx ax,al
+    mov ds:[bx].cm_size,ax   
     ret
 ReadRxMsg  Endp
 
@@ -290,7 +314,37 @@ ReadRxMsg  Endp
 CanInt  Proc far
     mov es,ds:can_sel
 
-ciLoop:    
+ciReadLoop:
+    mov ax,es:CAN_NDATA1
+    or ax,ax
+    jz ciWriteLoop    
+;
+    mov cx,16
+    mov bx,1
+    mov dx,1
+
+ciReadCheck:    
+    test dx,es:CAN_NDATA1
+    jz ciReadNext
+;    
+    push bx
+    push cx
+    push dx
+    call ReadRxMsg
+    pop dx
+    pop cx
+    pop bx
+
+ciReadNext:
+    shl dx,1
+    inc bx
+    loop ciReadCheck
+;
+    mov bx,ds:can_thread
+    Signal
+    jmp ciReadLoop    
+    
+ciWriteLoop:    
     mov eax,es:CAN_INT
     test ax,8000h
     jz ciReg
@@ -299,7 +353,7 @@ ciStatus:
     mov eax,es:CAN_STAT
     test ax,20h
     jnz ciSignal    
-    jmp ciLoop
+    jmp ciWriteLoop
     
 ciReg:
     or eax,eax
@@ -307,24 +361,15 @@ ciReg:
 ;    
     mov ebx,eax
     cmp ebx,10h
-    jbe ciRec
+    jbe ciReadLoop
 ;
     call ClearTxMsg
     sub ebx,11h
     lock bts ds:can_send_clear,ebx
-    jmp ciSignal
-
-ciRec:
-    mov ds:can_int_reg,ax
-    mov bx,ax
-    call ReadRxMsg
-;
-    mov eax,es:CAN_INT
-    test ax,8000h
-    jnz ciSignal
-;
-    or ax,ax
-    jnz ciRec    
+;    
+    mov bx,ds:can_thread
+    Signal
+    jmp ciWriteLoop
 
 ciSignal:
     mov bx,ds:can_thread
@@ -689,7 +734,7 @@ StartSend  Proc near
     mov es:IF1_CMASK,eax
 ;    
     mov eax,880h
-    add eax,ds:[si].cm_size
+    add ax,ds:[si].cm_size
     mov es:IF1_MCONT,eax
 ;
     mov eax,ds:[si].cm_id
@@ -728,7 +773,6 @@ StartSend  Endp
 ;   DESCRIPTION:    Handle receive
 ;
 ;   PARAMETERS:     ES      Can sel
-;                   BX      Message #
 ;                   DS:SI   Message struc
 ;                   EDX     Message mask
 ;
@@ -738,8 +782,9 @@ HandleReceive   Proc near
     push eax
     push di
 ;    
-    mov di,si
-    sub di,OFFSET can_rec_arr
+    mov di,ds:[si].cm_msg
+    dec di    
+    shl di,4
     add di,OFFSET can_id_hook_arr
     mov ax,ds:[di].ih_sel
     or ax,ax
@@ -756,7 +801,7 @@ HandleReceive   Proc near
     mov ds,es:[di].ih_param
     mov eax,es:[si].cm_data
     mov edx,es:[si].cm_data+4
-    mov ecx,es:[si].cm_size
+    movzx ecx,es:[si].cm_size
     mov ebx,es:[si].cm_id
     call fword ptr es:[di].ih_offset
 ;
@@ -804,10 +849,11 @@ ctLoop:
     mov eax,ds:can_rec_pend
     or eax,eax
     jz ctTx
-;
+
+ctRecRetry:
     mov si,OFFSET can_rec_arr
     mov bx,1
-    mov cx,10h
+    mov cx,20h
     mov edx,1
 
 ctRecLoop:
@@ -822,6 +868,10 @@ ctRecNext:
     add si,16
     shl edx,1
     loop ctRecLoop
+;    
+    mov eax,ds:can_rec_pend
+    or eax,eax
+    jnz ctRecRetry
 
 ctTx:
     EnterSection ds:can_send_section
@@ -855,6 +905,11 @@ ctSendNext:
     
 ctSendOk:     
     LeaveSection ds:can_send_section
+;    
+    mov eax,ds:can_rec_pend
+    or eax,eax
+    jnz ctRecRetry
+;
     jmp ctLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -904,11 +959,11 @@ scDo:
     shl edi,4
     add edi,OFFSET can_send_arr
 ;
-    movzx ecx,cl
+    movzx cx,cl
     mov ds:[edi].cm_id,ebx
     mov ds:[edi].cm_data,eax
     mov ds:[edi].cm_data+4,edx
-    mov ds:[edi].cm_size,ecx
+    mov ds:[edi].cm_size,cx
 ;
     LeaveSection ds:can_send_section
     mov bx,ds:can_thread
