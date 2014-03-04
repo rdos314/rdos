@@ -80,7 +80,7 @@ int THttpSocketServer::IsEmpty(const char *s)
 ##########################################################################*/
 int THttpSocketServer::IsArgDelim(char ch)
 {
-        return isspace(ch) || iscntrl(ch) || strchr(",;=", ch);
+        return isspace(ch) || iscntrl(ch) || strchr(",;=?", ch);
 }
 
 /*##########################################################################
