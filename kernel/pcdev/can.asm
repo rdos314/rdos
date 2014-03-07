@@ -170,6 +170,8 @@ WaitForIf2  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClearTxMsg  Proc near
+    call WaitForIf2    
+;
     mov eax,0B8h
     mov es:IF2_CMASK,eax
 ;
@@ -203,6 +205,7 @@ ClearTxMsg    Endp
 
 ReadTxMsg  Proc near
     push eax
+    call WaitForIf2    
 ;
     mov eax,7Fh
     mov es:IF2_CMASK,eax
@@ -229,6 +232,8 @@ ReadTxMsg  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadRxMsg  Proc near
+    call WaitForIf2    
+;
     mov eax,7Fh
     mov es:IF2_CMASK,eax
 ;
@@ -803,6 +808,12 @@ HandleReceive   Proc near
     mov edx,es:[si].cm_data+4
     movzx ecx,es:[si].cm_size
     mov ebx,es:[si].cm_id
+    cmp cx,1
+    je hrOk
+;
+    int 3
+
+hrOk:        
     call fword ptr es:[di].ih_offset
 ;
     pop edx
