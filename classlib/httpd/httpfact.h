@@ -42,6 +42,7 @@ public:
 	virtual TSocketServer *Create(TTcpSocket *Socket);
 
 	void (*OnCommand)(THttpSocketServer *server, const char *str);
+	int (*OnAuthorize)(THttpSocketServer *server, const char *user, const char *passw);
 
 	TString RootDir;
 	int KeepAlive;

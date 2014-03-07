@@ -75,6 +75,7 @@ public:
 	TString CreateUniqueFile();
 
 	void (*OnCommand)(THttpSocketServer *server, const char *str);
+	int (*OnAuthorize)(THttpSocketServer *server, const char *user, const char *passw);
 
 	static int IsEmpty(const char *s);
 	static int IsArgDelim(char ch);

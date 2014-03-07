@@ -36,8 +36,22 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+
+/*##################  Authorize ##########################
+*   Purpose....: Authorize                                                             #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int Authorize(THttpSocketServer *server, const char *user, const char *passw)
+{
+    return FALSE;
+}
+
+
 /*##################  WriteCommand ##########################
-*   Purpose....: Write command echo	   					      	        #
+*   Purpose....: Write command echo                                                             #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -45,11 +59,11 @@
 *##########################################################################*/
 void WriteCommand(THttpSocketServer *server, const char *str)
 {
-	printf(str);
+        printf(str);
 }
 
 /*##################  main ##########################
-*   Purpose....: Program entry-point	   					      	        #
+*   Purpose....: Program entry-point                                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -57,13 +71,14 @@ void WriteCommand(THttpSocketServer *server, const char *str)
 *##########################################################################*/
 void cdecl main()
 {
-	THttpSocketServerFactory *Factory = new THttpSocketServerFactory(80, 50, 0x4000);
-	TWait *Wait = new TWait;
+        THttpSocketServerFactory *Factory = new THttpSocketServerFactory(80, 50, 0x4000);
+        TWait *Wait = new TWait;
 
-	Factory->OnCommand = WriteCommand;
-	Factory->RootDir = "d:\\wwwroot";
-	Wait->Add(Factory);
-	for (;;)
-		Wait->WaitForever();
+        Factory->OnCommand = WriteCommand;
+        Factory->OnAuthorize = Authorize;
+        Factory->RootDir = "d:\\wwwroot";
+        Wait->Add(Factory);
+        for (;;)
+                Wait->WaitForever();
 }
 

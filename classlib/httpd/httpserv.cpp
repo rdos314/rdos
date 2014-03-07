@@ -252,6 +252,7 @@ THttpSocketServer::THttpSocketServer(const char *Name, int StackSize, TTcpSocket
   : TSocketServer(Name, StackSize, Socket)
 {
         OnCommand = 0;
+        OnAuthorize = 0;
         FSocketBuf = 0;
         FPageList = 0;
         FDirList = 0;

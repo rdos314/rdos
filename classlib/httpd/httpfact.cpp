@@ -86,6 +86,7 @@ THttpSocketServerFactory::~THttpSocketServerFactory()
 void THttpSocketServerFactory::Init()
 {
     OnCommand = 0;
+    OnAuthorize = 0;
     KeepAlive = 15;
     FPageList = 0;
     FDirList = 0;
@@ -166,6 +167,7 @@ TSocketServer *THttpSocketServerFactory::Create(TTcpSocket *Socket)
 
 	server = new THttpSocketServer("HTTP", 0x2000, Socket);
 	server->OnCommand = OnCommand;
+	server->OnAuthorize = OnAuthorize;
 	server->RootDir = RootDir;
 	server->KeepAlive = KeepAlive;
 	server->FPageList = FPageList;

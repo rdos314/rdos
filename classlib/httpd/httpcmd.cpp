@@ -620,20 +620,23 @@ void THttpCommand::WriteTimeOption(const char *option, TDateTime &time)
 ##########################################################################*/
 const char *THttpCommand::GetErrorText(int ErrorCode)
 {
-         switch (ErrorCode)
+    switch (ErrorCode)
     {
         case 200:
             return "OK";
 
         case 304:
             return "NOT MODIFIED";
-            
-        case 404:
-                                return "NOT FOUND";
 
+        case 401:
+            return "UNATHORIZED";
+                
+        case 404:
+            return "NOT FOUND";
+            
         default:
             return "UNKNOWN ERROR";
-        }
+    }
 }
 
 /*##########################################################################
@@ -697,9 +700,13 @@ void THttpCommand::WriteError(int ErrorCode)
     char str[256];
 
     sprintf(str, "<html><body><h2>RDOS Webserver</h2>%s (%d)</body></html>",
-            GetErrorText(ErrorCode), ErrorCode);
+    GetErrorText(ErrorCode), ErrorCode);
 
     WriteStartHeader(ErrorCode);
+
+    if (ErrorCode == 401)
+        WriteOption("WWW-Authenticate", "Basic realm=\"rdos\"");
+    
     WriteOption("Content-Type", "text/html");
     WriteLongOption("Content-Length", strlen(str));
     WriteEndHeader();
@@ -891,31 +898,36 @@ void THttpCommand::GetFile(const char *Name)
 ##########################################################################*/
 void THttpCommand::Get(const char *Name)
 {
-        THttpCustomPageFactory *pagefact; 
-        THttpCustomDirFactory *dirfact; 
+    THttpCustomPageFactory *pagefact; 
+    THttpCustomDirFactory *dirfact; 
 
+    if (FServer->OnAuthorize)
+        WriteError(401);
+    else
+    {
         pagefact = FServer->FindPage(Name);
 
         if (pagefact)
         {
-                THttpCustomPage *page = pagefact->Create(this, Name);
-                page->Get(Name);
-                delete page;
+            THttpCustomPage *page = pagefact->Create(this, Name);
+            page->Get(Name);
+            delete page;
         }
         else
         {
-                dirfact = FServer->FindDir(Name);
+            dirfact = FServer->FindDir(Name);
 
-                if (dirfact)
-                {
-                        THttpCustomPage *page = dirfact->Create(this, Name);
-                        page->Get(Name);
-                        delete page;
-                }
-                else
-                        GetFile(Name);
+            if (dirfact)
+            {
+                THttpCustomPage *page = dirfact->Create(this, Name);
+                page->Get(Name);
+                delete page;
+            }
+            else
+                GetFile(Name);
         }
-        FServer->Push();
+    }
+    FServer->Push();
 }
 
 /*##########################################################################
