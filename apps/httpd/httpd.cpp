@@ -46,7 +46,7 @@
 *##########################################################################*/
 int Authorize(THttpSocketServer *server, const char *user, const char *passw)
 {
-    return FALSE;
+    return TRUE;
 }
 
 

@@ -70,6 +70,7 @@ protected:
     void Post(const char *Name);
 	void Execute(const char *Name);
 
+    void CheckAuthorization(const char *param);
 	void AddArg(const char *name);
 	void AddArg(char *sBeg, char **sEnd);
 	void Split(char *s);
@@ -106,6 +107,8 @@ protected:
 
 	THttpOption *FOptList;
 	int FOptCount;
+
+	int FAuthOk;
 
 	int FMajor;
 	int FMinor;
