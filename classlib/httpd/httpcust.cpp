@@ -47,9 +47,8 @@
 #   Returns....: *
 #
 ##########################################################################*/
-THttpCustomPage::THttpCustomPage(THttpCommand *Cmd, const char *FileName, const char *Param)
-  : FFileName(FileName),
-    FParam(Param)
+THttpCustomPage::THttpCustomPage(THttpCommand *Cmd, const char *FileName)
+  : FFileName(FileName)
 {
     FCmd = Cmd;
 }
@@ -225,8 +224,8 @@ void THttpCustomPage::Post(const char *Var, const char *Val)
 #
 ##########################################################################*/
 THttpCustomPageFactory::THttpCustomPageFactory(const char *ReqName)
-  : FReqName(ReqName)
 {
+    FReqNameList.AddLast(TString(ReqName));
 }
 
 /*##########################################################################
@@ -255,9 +254,25 @@ THttpCustomPageFactory::~THttpCustomPageFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-THttpCustomPage *THttpCustomPageFactory::Create(THttpCommand *Cmd, const char *Param)
+THttpCustomPage *THttpCustomPageFactory::Create(THttpCommand *Cmd, const char *ReqName)
 {
-    return new THttpCustomPage(Cmd, FReqName.GetData(), Param);
+    return new THttpCustomPage(Cmd, ReqName);
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCustomPageFactory::AddName
+#
+#   Purpose....: Add another request name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCustomPageFactory::AddName(const char *ReqName)
+{
+    FReqNameList.AddLast(TString(ReqName));
 }
 
 /*##########################################################################
@@ -272,8 +287,8 @@ THttpCustomPage *THttpCustomPageFactory::Create(THttpCommand *Cmd, const char *P
 #
 ##########################################################################*/
 THttpCustomDirFactory::THttpCustomDirFactory(const char *ReqName)
-  : FReqName(ReqName)
 {
+    FReqNameList.AddLast(TString(ReqName));
 }
 
 /*##########################################################################
@@ -302,7 +317,23 @@ THttpCustomDirFactory::~THttpCustomDirFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-THttpCustomPage *THttpCustomDirFactory::Create(THttpCommand *Cmd, const char *Param)
+THttpCustomPage *THttpCustomDirFactory::Create(THttpCommand *Cmd, const char *ReqName)
 {
-        return new THttpCustomPage(Cmd, FReqName.GetData(), Param);
+        return new THttpCustomPage(Cmd, ReqName);
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCustomDirFactory::AddName
+#
+#   Purpose....: Add another request name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCustomDirFactory::AddName(const char *ReqName)
+{
+    FReqNameList.AddLast(TString(ReqName));
 }

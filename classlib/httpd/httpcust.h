@@ -30,6 +30,7 @@
 
 #include "file.h"
 #include "path.h"
+#include "strlist.h"
 
 class THttpCommand;
 class THttpSocketServer;
@@ -42,7 +43,7 @@ friend class THttpCustomDirFactory;
 friend class THttpCommand;
 
 public:
-	THttpCustomPage(THttpCommand *Cmd, const char *ReqName, const char *Param);
+	THttpCustomPage(THttpCommand *Cmd, const char *ReqName);
 	virtual ~THttpCustomPage();
 
 protected:
@@ -60,7 +61,6 @@ protected:
 
 	THttpCommand *FCmd;
 	TString FFileName;
-	TString FParam;
 
 	TString FData;
 };
@@ -73,10 +73,12 @@ friend class THttpSocketServerFactory;
 public:
 	THttpCustomPageFactory(const char *ReqName);
 	virtual ~THttpCustomPageFactory();
+	
+	virtual THttpCustomPage *Create(THttpCommand *cmd, const char *ReqName);
 
-	virtual THttpCustomPage *Create(THttpCommand *cmd, const char *Param);
+    void AddName(const char *ReqName);
 
-	TString FReqName;
+	TStringList FReqNameList;
 
 protected:
 	THttpCustomPageFactory *FList;
@@ -92,9 +94,11 @@ public:
 	THttpCustomDirFactory(const char *ReqName);
 	virtual ~THttpCustomDirFactory();
 
-	virtual THttpCustomPage *Create(THttpCommand *cmd, const char *Param);
+	virtual THttpCustomPage *Create(THttpCommand *cmd, const char *ReqName);
 
-	TString FReqName;
+    void AddName(const char *ReqName);
+
+	TStringList FReqNameList;
 
 protected:
 	THttpCustomDirFactory *FList;
