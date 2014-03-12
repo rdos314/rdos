@@ -150,6 +150,39 @@ void DecodeBase64(const char *instr, char *outstr)
 
 /*##########################################################################
 #
+#   Name       : THttpArg::THttpParam
+#
+#   Purpose....: Constructor for THttpParam
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THttpParam::THttpParam(const char *name, const char *value)
+  : FName(name),
+    FValue(value)
+{
+    FList = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : THttpParam::~THttpParam
+#
+#   Purpose....: Destructor for THttpParam
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THttpParam::~THttpParam()
+{
+}
+
+/*##########################################################################
+#
 #   Name       : THttpArg::THttpArg
 #
 #   Purpose....: Constructor for THttpArg
@@ -199,6 +232,7 @@ THttpCommand::THttpCommand(THttpSocketServer *Server, TString Method, TString Pa
 {
         FServer = Server;
         FArgList = 0;
+        FParamList = 0;
         FOptCount = 0;
         FOptList = 0;
         FContentData = 0;
@@ -219,6 +253,7 @@ THttpCommand::THttpCommand(THttpSocketServer *Server, TString Method, TString Pa
 ##########################################################################*/
 THttpCommand::~THttpCommand()
 {
+    THttpParam *param;
     THttpArg *arg;
     THttpOption *opt;
 
@@ -228,7 +263,15 @@ THttpCommand::~THttpCommand()
         FArgList = arg->FList;
         delete arg;
         arg = FArgList;
-        }
+    }
+
+    param = FParamList;
+    while (param)
+    {
+        FParamList = param->FList;
+        delete param;
+        param = FParamList;
+    }
 
     opt = FOptList;
     while (opt)
@@ -236,10 +279,10 @@ THttpCommand::~THttpCommand()
         FOptList = opt->FList;
         delete opt;
         opt = FOptList;
-        }
+    }
 
-        if (FContentData)
-            delete FContentData;
+    if (FContentData)
+        delete FContentData;
 }
 
 /*##########################################################################
@@ -519,6 +562,71 @@ void THttpCommand::AddOpt(char *name, char *param)
 
 /*##########################################################################
 #
+#   Name       : THttpCommand::AddParam
+#
+#   Purpose....: Add a parameter
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *THttpCommand::AddParam(char *p)
+{
+    THttpParam *param;
+    THttpParam *curr;
+    char *pstr = p;
+    char *vstr = 0;
+    char ch;
+
+    while (*p)
+    {
+        if (*p == '=')
+        {
+            *p = 0;
+            vstr = p + 1;
+            break;
+        }
+        else
+            p++;
+    }
+
+    if (vstr)
+    {
+        p = vstr;
+        while (*p)
+        {
+            if (isalnum(*p))
+                p++;
+            else
+            {
+                ch = *p;
+                *p = 0;
+
+                param = new THttpParam(pstr, vstr);
+                param->FList = 0;
+                curr = FParamList;
+   
+                if (curr)
+                {
+                    while (curr->FList)
+                        curr = curr->FList;
+
+                    curr->FList = param;
+                }
+                else
+                    FParamList = param;    
+
+                *p = ch;
+                return p;
+            }
+        }        
+    }                           
+    return p;
+}
+
+/*##########################################################################
+#
 #   Name       : THttpCommand::Split
 #
 #   Purpose....: Split line into arguments
@@ -531,9 +639,34 @@ void THttpCommand::AddOpt(char *name, char *param)
 void THttpCommand::Split(char *s)
 {
     char *start;
+    char *pstart;
 
     if (s)
     {
+        start = strchr(s, '?');
+        if (start)
+        {
+            *start = 0;
+            pstart = start + 1;
+        
+            start = SkipDelim(s);
+            while (*start)
+            {
+                AddArg(start, &s);
+                start = SkipDelim(s);
+            }
+
+            start = pstart;
+                    
+            while (start)
+            {
+                s = AddParam(pstart);
+                start = strchr(s, '&');
+                if (start)
+                    pstart = start + 1;
+            }               
+        } 
+        
         start = SkipDelim(s);
         while (*start)
         {

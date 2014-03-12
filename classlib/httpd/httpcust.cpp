@@ -47,10 +47,11 @@
 #   Returns....: *
 #
 ##########################################################################*/
-THttpCustomPage::THttpCustomPage(THttpCommand *Cmd, const char *FileName)
+THttpCustomPage::THttpCustomPage(THttpCommand *Cmd, const char *FileName, THttpParam *Param)
   : FFileName(FileName)
 {
     FCmd = Cmd;
+    FParam = Param;
 }
 
 /*##########################################################################
@@ -256,7 +257,7 @@ THttpCustomPageFactory::~THttpCustomPageFactory()
 ##########################################################################*/
 THttpCustomPage *THttpCustomPageFactory::Create(THttpCommand *Cmd, const char *ReqName)
 {
-    return new THttpCustomPage(Cmd, ReqName);
+    return new THttpCustomPage(Cmd, ReqName, Cmd->FParamList);
 }
 
 /*##########################################################################
@@ -319,7 +320,7 @@ THttpCustomDirFactory::~THttpCustomDirFactory()
 ##########################################################################*/
 THttpCustomPage *THttpCustomDirFactory::Create(THttpCommand *Cmd, const char *ReqName)
 {
-        return new THttpCustomPage(Cmd, ReqName);
+        return new THttpCustomPage(Cmd, ReqName, Cmd->FParamList);
 }
 
 /*##########################################################################

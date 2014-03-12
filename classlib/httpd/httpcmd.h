@@ -46,6 +46,17 @@ public:
 	THttpArg *FList;
 };
 
+class THttpParam
+{
+public:
+    THttpParam(const char *name, const char *value);
+    ~THttpParam();
+
+    TString FName;
+    TString FValue;
+	THttpParam *FList;
+};
+
 class THttpCommand : public THttpParser
 {
 friend class THttpCustomPage;
@@ -99,8 +110,11 @@ protected:
 
 	char *SkipOptDelim(char *p);
 	void AddOpt(char *name, char *param);
+	char *AddParam(char *p);
 
 	THttpCommand *FList;
+
+	THttpParam *FParamList;
 
 	THttpArg *FArgList;
 	int FArgCount;

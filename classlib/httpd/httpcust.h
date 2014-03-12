@@ -32,6 +32,7 @@
 #include "path.h"
 #include "strlist.h"
 
+class THttpParam;
 class THttpCommand;
 class THttpSocketServer;
 class THttpSocketServerFactory;
@@ -43,7 +44,7 @@ friend class THttpCustomDirFactory;
 friend class THttpCommand;
 
 public:
-	THttpCustomPage(THttpCommand *Cmd, const char *ReqName);
+	THttpCustomPage(THttpCommand *Cmd, const char *ReqName, THttpParam *Param);
 	virtual ~THttpCustomPage();
 
 protected:
@@ -60,6 +61,7 @@ protected:
     void SendData(const char *ContentType);
 
 	THttpCommand *FCmd;
+	THttpParam *FParam;
 	TString FFileName;
 
 	TString FData;
