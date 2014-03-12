@@ -1189,8 +1189,8 @@ void THttpCommand::Get(const char *Name)
 
         if (pagefact)
         {
-            THttpCustomPage *page = pagefact->Create(this, Name);
-            page->Get(Name);
+            THttpCustomPage *page = pagefact->Create(this);
+            page->Get(Name, Name, FParamList);
             delete page;
         }
         else
@@ -1199,8 +1199,8 @@ void THttpCommand::Get(const char *Name)
 
             if (dirfact)
             {
-                THttpCustomPage *page = dirfact->Create(this, Name);
-                page->Get(Name);
+                THttpCustomPage *page = dirfact->Create(this);
+                page->Get(Name, Name, FParamList);
                 delete page;
             }
             else
@@ -1259,7 +1259,7 @@ void THttpCommand::HandlePost(THttpCustomPage *page, const char *name)
         }
     }
 
-    page->Post(name);
+    page->Post(name, name, FParamList);
 }
 
 /*##########################################################################
@@ -1282,7 +1282,7 @@ void THttpCommand::Post(const char *Name)
 
     if (pagefact)
     {
-        THttpCustomPage *page = pagefact->Create(this, Name);
+        THttpCustomPage *page = pagefact->Create(this);
         HandlePost(page, Name);
         delete page;
     }
@@ -1292,7 +1292,7 @@ void THttpCommand::Post(const char *Name)
 
         if (dirfact)
         {
-            THttpCustomPage *page = dirfact->Create(this, Name);
+            THttpCustomPage *page = dirfact->Create(this);
             HandlePost(page, Name);
             delete page;
         }

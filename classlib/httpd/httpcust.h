@@ -44,12 +44,12 @@ friend class THttpCustomDirFactory;
 friend class THttpCommand;
 
 public:
-	THttpCustomPage(THttpCommand *Cmd, const char *ReqName, THttpParam *Param);
+	THttpCustomPage(THttpCommand *Cmd);
 	virtual ~THttpCustomPage();
 
 protected:
-	virtual void Get(const char *Name);
-	virtual void Post(const char *Name);
+	virtual void Get(const char *MatchName, const char *UrlName, THttpParam *Param);
+	virtual void Post(const char *MatchName, const char *UrlName, THttpParam *Param);
 	virtual void Post(const char *Var, const char *Val);
 
 	void WriteError(int ErrorCode);
@@ -61,8 +61,6 @@ protected:
     void SendData(const char *ContentType);
 
 	THttpCommand *FCmd;
-	THttpParam *FParam;
-	TString FFileName;
 
 	TString FData;
 };
@@ -76,7 +74,7 @@ public:
 	THttpCustomPageFactory(const char *ReqName);
 	virtual ~THttpCustomPageFactory();
 	
-	virtual THttpCustomPage *Create(THttpCommand *cmd, const char *ReqName);
+	virtual THttpCustomPage *Create(THttpCommand *cmd);
 
     void AddName(const char *ReqName);
 
@@ -96,7 +94,7 @@ public:
 	THttpCustomDirFactory(const char *ReqName);
 	virtual ~THttpCustomDirFactory();
 
-	virtual THttpCustomPage *Create(THttpCommand *cmd, const char *ReqName);
+	virtual THttpCustomPage *Create(THttpCommand *cmd);
 
     void AddName(const char *ReqName);
 

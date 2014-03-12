@@ -47,11 +47,9 @@
 #   Returns....: *
 #
 ##########################################################################*/
-THttpCustomPage::THttpCustomPage(THttpCommand *Cmd, const char *FileName, THttpParam *Param)
-  : FFileName(FileName)
+THttpCustomPage::THttpCustomPage(THttpCommand *Cmd)
 {
     FCmd = Cmd;
-    FParam = Param;
 }
 
 /*##########################################################################
@@ -177,9 +175,9 @@ void THttpCustomPage::SendData(const char *ContentType)
 #   Returns....: *
 #
 ##########################################################################*/
-void THttpCustomPage::Get(const char *Name)
+void THttpCustomPage::Get(const char *MatchName, const char *ReqName, THttpParam *Param)
 {
-        FCmd->GetFile(Name);
+        FCmd->GetFile(ReqName);
 }
 
 /*##########################################################################
@@ -193,9 +191,9 @@ void THttpCustomPage::Get(const char *Name)
 #   Returns....: *
 #
 ##########################################################################*/
-void THttpCustomPage::Post(const char *Name)
+void THttpCustomPage::Post(const char *MatchName, const char *ReqName, THttpParam *Param)
 {
-    Get(Name);
+    Get(MatchName, ReqName, Param);
 }
 
 /*##########################################################################
@@ -255,9 +253,9 @@ THttpCustomPageFactory::~THttpCustomPageFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-THttpCustomPage *THttpCustomPageFactory::Create(THttpCommand *Cmd, const char *ReqName)
+THttpCustomPage *THttpCustomPageFactory::Create(THttpCommand *Cmd)
 {
-    return new THttpCustomPage(Cmd, ReqName, Cmd->FParamList);
+    return new THttpCustomPage(Cmd);
 }
 
 /*##########################################################################
@@ -318,9 +316,9 @@ THttpCustomDirFactory::~THttpCustomDirFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-THttpCustomPage *THttpCustomDirFactory::Create(THttpCommand *Cmd, const char *ReqName)
+THttpCustomPage *THttpCustomDirFactory::Create(THttpCommand *Cmd)
 {
-        return new THttpCustomPage(Cmd, ReqName, Cmd->FParamList);
+        return new THttpCustomPage(Cmd);
 }
 
 /*##########################################################################
