@@ -985,7 +985,7 @@ void THttpCommand::WriteError(int ErrorCode)
     WriteStartHeader(ErrorCode);
 
     if (ErrorCode == 401)
-        WriteOption("WWW-Authenticate", "Basic realm=\"rdos\"");
+        WriteOption("WWW-Authenticate", "Basic");
     
     WriteOption("Content-Type", "text/html");
     WriteLongOption("Content-Length", strlen(str));

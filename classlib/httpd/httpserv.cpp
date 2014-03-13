@@ -277,6 +277,118 @@ THttpSocketServer::~THttpSocketServer()
 
 /*##########################################################################
 #
+#   Name       : THttpSocketServer::IsMatch
+#
+#   Purpose....: Check if file matches search criteria
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int THttpSocketServer::IsMatch(const char *Search, const char *FileName)
+{
+	TString FileStr(FileName);
+	TString SearchStr(Search);
+	const char *FilePtr;
+	const char *SearchPtr;
+	char ch;
+	const char *LastFilePtr = 0;
+	const char *LastSearchPtr = 0;
+
+	FileStr.Upper();
+	SearchStr.Upper();
+
+	if (SearchStr.GetSize() == 0)
+		return TRUE;
+
+	FilePtr = FileStr.GetData();
+	SearchPtr = SearchStr.GetData();
+
+	if (!strcmp(SearchPtr, "*.*"))
+		return TRUE;
+
+	if (!strcmp(SearchPtr, "*."))
+	{
+		if (strchr(FilePtr, '.'))
+			return FALSE;
+		else
+			return TRUE;
+	}
+
+	for (;;)
+	{
+		while (*SearchPtr && *FilePtr)
+		{
+			switch (*SearchPtr)
+			{
+				case '*':
+					ch = *(SearchPtr + 1);
+					if (ch)
+					{
+						if (ch == *FilePtr)
+						{
+							LastSearchPtr = SearchPtr;
+							SearchPtr += 2;
+							FilePtr++;
+							LastFilePtr = FilePtr;
+						}
+						else
+							FilePtr++;
+					}
+					else
+						FilePtr++;
+					break;
+	
+				case '?':
+					SearchPtr++;
+					FilePtr++;
+					break;
+
+				default:
+					if (*SearchPtr == *FilePtr)
+					{
+						SearchPtr++;
+						FilePtr++;
+					}
+					else
+					{
+						if (LastFilePtr)
+						{
+							FilePtr = LastFilePtr;
+							SearchPtr = LastSearchPtr;
+							LastFilePtr = 0;
+							LastSearchPtr = 0;
+						}
+						else
+							return FALSE;
+					}
+					break;
+			}
+		}
+
+		if (*SearchPtr == 0 && *FilePtr == 0)
+			return TRUE;
+		else
+		{
+			if (*SearchPtr == '*' && *(SearchPtr+1) == 0)
+				return TRUE;
+
+			if (LastFilePtr)
+			{
+				FilePtr = LastFilePtr;
+				SearchPtr = LastSearchPtr;
+				LastFilePtr = 0;
+				LastSearchPtr = 0;
+			}
+			else
+				return FALSE;
+		}
+	}
+}
+
+/*##########################################################################
+#
 #   Name       : THttpSocketServer::FindPage
 #
 #   Purpose....: Find custom page
