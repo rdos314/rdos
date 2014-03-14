@@ -463,7 +463,10 @@ void THttpCommand::CheckAuthorization(const char *param)
             passw++;
             
             if (FServer->OnAuthorize)
+            {
+                FUser = TString(str);
                 FAuthOk = (*FServer->OnAuthorize)(FServer, str, passw);
+            }
         }
                     
         delete str;

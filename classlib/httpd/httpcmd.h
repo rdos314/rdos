@@ -133,6 +133,7 @@ protected:
 
 	TString FMethod;
 	TString FCmdLine;
+	TString FUser;
 	THttpSocketServer *FServer;
 };
 

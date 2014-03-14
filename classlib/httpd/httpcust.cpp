@@ -69,6 +69,25 @@ THttpCustomPage::~THttpCustomPage()
 
 /*##########################################################################
 #
+#   Name       : THttpCustomPage::GetUser
+#
+#   Purpose....: Get logged-in user
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *THttpCustomPage::GetUser()
+{
+    if (FCmd->FAuthOk)
+        return FCmd->FUser.GetData();
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : THttpCustomPage::WriteError
 #
 #   Purpose....: Write error

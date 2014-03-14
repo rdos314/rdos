@@ -48,6 +48,8 @@ public:
 	virtual ~THttpCustomPage();
 
 protected:
+    const char *GetUser();
+
 	virtual void Get(const char *MatchName, const char *UrlName, THttpParam *Param);
 	virtual void Post(const char *MatchName, const char *UrlName, THttpParam *Param);
 	virtual void Post(const char *Var, const char *Val);
