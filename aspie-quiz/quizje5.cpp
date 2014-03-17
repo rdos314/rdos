@@ -51,7 +51,7 @@
 #
 ##########################################################################*/
 TQuizJE5::TQuizJE5(const char *FileName)
-  : TQuiz(150),
+  : TQuiz(152),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -109,7 +109,7 @@ int TQuizJE5::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizJE5::GetQuizN()
 {
-    return 150;
+    return 152;
 }
 
 /*##########################################################################
@@ -631,6 +631,8 @@ void TQuizJE5::SetupTexts()
   Quiz[147].Text = "Can you easily remember verbal instructions?";
   Quiz[148].Text = "Are you gracious about criticism, correction and direction?";
   Quiz[149].Text = "Do you find it easy to estimate the age of people?";
+  Quiz[150].Text = "Do you enjoy listening to people that whisper?";
+  Quiz[151].Text = "Do you get a pleasurable tingling sensation in the head, scalp or back of the body in response to certain sounds?";
 }
 
 /*##########################################################################
@@ -814,7 +816,7 @@ void TQuizJE5::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 150; i++)
+    for (i = 0; i < 152; i++)
             DefineGlobalId(i, i);
 }
 
