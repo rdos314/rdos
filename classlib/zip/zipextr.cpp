@@ -67,11 +67,34 @@ static const unsigned *crctab = get_crc_table();
 ##########################################################################*/
 TUnzipExtractor::TUnzipExtractor(int InputFileHandle, TUnzipFile *File, const char *DestFileName)
 {
+    char filename[256];    
+    const char *srcptr;
+    char *destptr;
+    int dirhandle;
     FInBuf = new char[INBUFSIZ + 4];    /* 4 extra for hold[] (below) */
     FOutBuf = new char[WSIZE + 1];
     FTmpOutBuf = 0;
 
     FCurrCrcVal = 0;
+
+    srcptr = DestFileName;
+    destptr = filename;
+    
+    while (*srcptr)
+    {
+        if (*srcptr == '\\' || *srcptr == '/')
+        {
+            *destptr = 0;
+            dirhandle = RdosOpenDir(filename);
+            if (dirhandle)
+                RdosCloseDir(dirhandle);
+            else
+                RdosMakeDir(filename);
+        }
+        *destptr = *srcptr;            
+        srcptr++;
+        destptr++;
+    }    
 
     FInputHandle = RdosDuplFile(InputFileHandle);
     FOutputHandle = RdosCreateFile(DestFileName, 0);

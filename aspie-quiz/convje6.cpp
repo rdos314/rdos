@@ -167,7 +167,22 @@ static void ProcessRow(char *str)
                  break;
 
             case 16:
-                 Row.Quiz[151] = atoi(valstr);
+                 val = atoi(valstr);
+                 if (val < 5)
+                    val = 0;
+                 else
+                 {
+                     if (val < 45)
+                        val = 1;
+                     else
+                     {
+                        if (val > 90)
+                            val = 3;
+                        else
+                            val = 2;
+                     }
+                 }
+                 Row.Quiz[151] = val;
                  break;
 
             default:

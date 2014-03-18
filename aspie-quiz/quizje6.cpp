@@ -102,9 +102,6 @@ int TQuizJE6::GetCatCount(int Question)
         case 150:
             return 5;
 
-        case 151:
-            return 1100;
-
         default:
             return 3;
     }
