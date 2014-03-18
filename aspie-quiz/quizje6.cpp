@@ -51,7 +51,7 @@
 #
 ##########################################################################*/
 TQuizJE6::TQuizJE6(const char *FileName)
-  : TQuiz(152),
+  : TQuiz(154),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -100,6 +100,7 @@ int TQuizJE6::GetCatCount(int Question)
     switch (Question)
     {
         case 150:
+        case 152:
             return 5;
 
         default:
@@ -116,7 +117,7 @@ int TQuizJE6::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizJE6::GetQuizN()
 {
-    return 152;
+    return 154;
 }
 
 /*##########################################################################
@@ -488,7 +489,8 @@ void TQuizJE6::SetupTexts()
   Quiz[149].MyGroup = GROUP_MIXED;
   Quiz[150].MyGroup = GROUP_MIXED;
   Quiz[151].MyGroup = GROUP_MIXED;
-
+  Quiz[152].MyGroup = GROUP_MIXED;
+  Quiz[153].MyGroup = GROUP_MIXED;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Before doing something or going somewhere, do you need to have a picture in your mind of what's going to happen so as to be able to prepare yourself mentally first?";
@@ -643,6 +645,9 @@ void TQuizJE6::SetupTexts()
 
   Quiz[150].Text = "Violett - Rate";
   Quiz[151].Text = "Violett - Time";
+
+  Quiz[152].Text = "Chick - Rate";
+  Quiz[153].Text = "Chick - Time";
 }
 
 /*##########################################################################
@@ -826,7 +831,7 @@ void TQuizJE6::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 152; i++)
+    for (i = 0; i < 154; i++)
             DefineGlobalId(i, i);
 }
 

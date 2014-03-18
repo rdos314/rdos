@@ -185,15 +185,38 @@ static void ProcessRow(char *str)
                  Row.Quiz[151] = val;
                  break;
 
+            case 17:
+                 Row.Quiz[152] = atoi(valstr);
+                 break;
+
+            case 18:
+                 val = atoi(valstr);
+                 if (val < 5)
+                    val = 0;
+                 else
+                 {
+                     if (val < 45)
+                        val = 1;
+                     else
+                     {
+                        if (val > 90)
+                            val = 3;
+                        else
+                            val = 2;
+                     }
+                 }
+                 Row.Quiz[153] = val;
+                 break;
+
             default:
-                 i = fieldno - 17;
+                 i = fieldno - 19;
                  Row.Quiz[i] = atoi(valstr);
                  break;
         }
     }
 
     HandleRow(&Row);
-    AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 152);
+    AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 154);
 }
 
 /*################## ConvJE6 ##########################
